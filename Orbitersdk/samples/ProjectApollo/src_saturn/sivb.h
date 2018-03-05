@@ -302,6 +302,8 @@ public:
 	///
 	double GetTotalMass();
 
+	virtual double GetPayloadMass();
+
 	///
 	/// \brief Get main battery power.
 	/// \return Power in joules.

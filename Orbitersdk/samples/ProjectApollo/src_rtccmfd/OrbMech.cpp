@@ -412,6 +412,32 @@ double power(double b, double e)
 	return res;
 }
 
+double calculateDifferenceBetweenAngles(double firstAngle, double secondAngle)
+{
+	if (firstAngle > PI2)
+	{
+		firstAngle -= PI2;
+	}
+	else if (firstAngle < 0)
+	{
+		firstAngle += PI2;
+	}
+
+	if (secondAngle > PI2)
+	{
+		secondAngle -= PI2;
+	}
+	else if (secondAngle < 0)
+	{
+		secondAngle += PI2;
+	}
+
+	double difference = secondAngle - firstAngle;
+	while (difference < -PI) difference += PI2;
+	while (difference > PI) difference -= PI2;
+	return difference;
+}
+
 void f_and_g(double x, double t, double ro, double a, double &f, double &g, double mu)	//calculates the Lagrange f and g coefficients
 {
 	double z;
@@ -2429,6 +2455,12 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	range = theta_0*r_P;
 
 	return t;
+}
+
+double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri)
+{
+	VECTOR3 R2, V2;
+	return timetoperi_integ(R, V, MJD, gravref, ref_peri, R2, V2);
 }
 
 double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2)
@@ -5596,6 +5628,44 @@ double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *
 
 
 	return dvar;
+}
+
+void RotatePerigeeToSpecifiedLongitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE plan, double lng_des, int N, double mu, double &dv, double &dTIG, double &dt)
+{
+	VECTOR3 H, V_apo, R_peri, V_peri, R2, V2, R_TIG, V_TIG;
+	double dv_iter, dt1, dt2,lat, lng, dlng, e, h, T_p, dTIG_iter, dtheta, sin_theta;
+	int n;
+
+	n = 0;
+	dv_iter = 0.0;
+	dlng = 1.0;
+
+	H = crossp(R, V);
+	h = length(H);
+	e = length(crossp(V, H) / mu - R / length(R));
+
+	while (abs(dlng) > 0.005*RAD && n <= 100)
+	{
+		sin_theta = dv_iter / 2.0*h / mu / e;
+		sin_theta = min(max(sin_theta, -1.0), 1.0);
+		dtheta = -asin(sin_theta);
+		dTIG_iter = time_theta(R, V, dtheta, mu);
+		oneclickcoast(R, V, mjd, dTIG_iter, R_TIG, V_TIG, plan, plan);
+
+		V_apo = V_TIG + unit(R_TIG)*dv_iter;
+		T_p = period(R_TIG, V_apo, mu);
+		dt1 = T_p * (double)N;
+		oneclickcoast(R_TIG, V_apo, mjd + dTIG_iter / 24.0 / 3600.0, dt1, R2, V2, plan, plan);
+		dt2 = timetoperi_integ(R2, V2, mjd + (dTIG_iter + dt1) / 24.0 / 3600.0, plan, plan, R_peri, V_peri);
+		latlong_from_J2000(R_peri, mjd + (dTIG_iter + dt1 + dt2) / 24.0 / 3600.0, plan, lat, lng);
+		dlng = calculateDifferenceBetweenAngles(lng_des, lng);
+		dv_iter += sin(dlng)*mu*e / length(R_TIG) / length(V_TIG);
+		n++;
+	}
+
+	dv = dv_iter;
+	dt = dt1 + dt2;
+	dTIG = dTIG_iter;
 }
 
 }

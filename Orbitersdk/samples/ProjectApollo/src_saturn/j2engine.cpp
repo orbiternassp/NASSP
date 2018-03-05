@@ -115,8 +115,6 @@ void J2Engine::Timestep(double simdt)
 
 	if (EngineStop)
 	{
-		EngineRunning = false;
-
 		if (ThrustLevel > 0.0)
 		{
 			ThrustTimer += simdt;
@@ -138,6 +136,7 @@ void J2Engine::Timestep(double simdt)
 						// Engine is completely shut down at 1.5 second
 						ThrustLevel = 0.0;
 						vessel->SetThrusterLevel(th_j2, ThrustLevel);
+						EngineRunning = false;
 					}
 				}
 			}

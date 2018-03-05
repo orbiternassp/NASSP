@@ -337,6 +337,8 @@ void Saturn::SystemsInit() {
 
 	CMTunnel = (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
 
+	SetPipeMaxFlow("HYDRAULIC:CSMTUNNELUNDOCKED", 1000.0 / LBH);
+
 	SetPipeMaxFlow("HYDRAULIC:O2SMSUPPLYINLET1", 100./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:O2SMSUPPLYINLET2", 100./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:O2SURGETANKINLET1", 100./ LBH);
@@ -859,7 +861,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //h_Pipe* csmtunnelpipe = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
 //double *pressequalFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE:FLOW");
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
-
+	
 
 #ifdef _DEBUG
 
@@ -907,6 +909,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *O2Tank1Outsize = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:OUT:SIZE");
 
 	//sprintf(oapiDebugString(), "O2SMINSize %f O2tank1smsupplyflow %f O2T1Outsize %f", *o2smsupplyinsize, *o2tank1smsupplyflow, *O2Tank1Outsize);
+	//sprintf(oapiDebugString(), "EMERG FLOW %lf ", *O2flowCabinEmer*LBH);
 
 	double *pressSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:PRESS");
 	double *tempSuit=(double*)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:TEMP");
@@ -2637,6 +2640,8 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 	{
 		atm.TunnelPressurePSI = (*pCSMTunnelPressure)*PSI;
 	}
+
+	//sprintf(oapiDebugString(), "CabinReg %lf O2Demand %lf Direct %lf SuitTest %lf CabRepress %lf Emerg %lf", atm.CabinRegulatorFlowLBH, atm.O2DemandFlowLBH, atm.DirectO2FlowLBH, atm.SuitTestFlowLBH, atm.CabinRepressFlowLBH, atm.EmergencyCabinRegulatorFlowLBH);
 }
 
 
