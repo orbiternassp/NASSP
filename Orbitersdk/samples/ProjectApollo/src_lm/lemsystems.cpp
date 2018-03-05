@@ -2288,22 +2288,14 @@ void LEM_XLBControl::UpdateFlow(double dt){
 	if(lem == NULL){ return; }
 	// Do we have power from the other side?
 	double sVoltage = lem->CSMToLEMPowerSource.Voltage();	
-	// Is the CDR XLunar tie closed?
-	if(lem->CDRXLunarBusTieCB.GetState() == 1){
+	// Is the CSM Power relay latched?
+	if(lem->CSMToLEMPowerConnector.csm_power_latch == 1){
 		// Yes, we can put voltage on the CDR bus
 		dc_output.SetVoltage(sVoltage);
 	}else{
-		// No -- Are we tied to the LMP bus, and is the XLunar tie closed on the LMP side?
-		if(((lem->CDRCrossTieBalCB.GetState() == 1 || lem->CDRCrossTieBusCB.GetState() == 1) &&
-			(lem->LMPCrossTieBalCB.GetState() == 1 || lem->LMPCrossTieBusCB.GetState() == 1)) &&
-			lem->LMPXLunarBusTieCB.GetState() == 1){
-			// Yes, we can put voltage on the CDR bus and it get there.
-			dc_output.SetVoltage(sVoltage);
-		}else{
 			// No, we have no return path, so we have no voltage.
 			dc_output.SetVoltage(0);
 		}
-	}
 	// Handle switchery
 	switch(lem->CSMToLEMPowerConnector.csm_power_latch){
 		case 1:
