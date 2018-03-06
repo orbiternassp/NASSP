@@ -89,9 +89,7 @@ bool LEMPowerConnector::ReceiveMessage(Connector *from, ConnectorMessage &m) {
 		// Relay Event
 		// When connected, the CSM feeds the LM via two 7.5A umbilicals. Both feed the same stuff, they are redundant.
 		// The CSM power comes in via the CDRs DC bus and returns to the CSM via the CDR and LMP XLUNAR busses.
-		// That means in order to have CSM power, you need to have either:
-		//   A: CDR XLUNAR CB closed
-		//   B: LMP XLUNAR CB closed with the bus cross-tie CBs closed.
+		// The XLUNAR busses are latched to the CDR and LMP negative busses to provide return when LM PWR switch is in CSM.
 		// When CSM power is commanded on, it turns off the descent ECAs and prevents them from being turned back on.
 		// Ascent power is not affected.
 		// The ECA design makes it impossible to charge the LM batteries from the CSM power supply, since it prevents current from flowing backwards.
