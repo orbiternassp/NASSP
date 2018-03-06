@@ -1619,12 +1619,13 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	AscentEmptyMassKg = ls.AscentEmptyKg;
 
 	agc.SetMissionInfo(ApolloNo, CSMName);
-	aea.SetMissionInfo(ApolloNo);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
 
 	// Sounds are initialized during the first timestep
+	// or here
+	PostLoadSetup();
 
 	return true;
 }
