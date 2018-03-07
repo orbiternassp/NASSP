@@ -101,9 +101,8 @@ void Sat5Abort1::Setup(bool sm)
 	ClearAttExhaustRefs();
 	
 	double TCP = -102.5 + STG0O - TCPO;
-
 	double Mass = 3100000;
-	double ro = 30;
+	double ro = 5;
 	TOUCHDOWNVTX td[4];
 	double x_target = -0.05;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
