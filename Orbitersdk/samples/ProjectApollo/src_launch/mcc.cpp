@@ -2240,6 +2240,33 @@ void MCC::TimeStep(double simdt){
 			case MST_F_TRANSLUNAR8: //Block Data 2 to MCC-2
 				UpdateMacro(UTP_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 22.0*3600.0 + 30.0*60.0, 6, MST_F_TRANSLUNAR9);
 				break;
+			case MST_F_TRANSLUNAR9: //MCC-2 to Lunar Flyby PAD
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 30.0*3600.0 + 30.0*60.0, 11, MST_F_TRANSLUNAR10);
+				break;
+			case MST_F_TRANSLUNAR10: //Lunar Flyby PAD to State Vector update
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.TLI + 42.0*3600.0, 12, MST_F_TRANSLUNAR11);
+				break;
+			case MST_F_TRANSLUNAR11: //State Vector update to MCC-3 update
+				UpdateMacro(UTP_UPLINKONLY, cm->MissionTime > rtcc->calcParams.LOI - 23.0*3600.0 - 30.0*60.0, 100, MST_F_TRANSLUNAR12);
+				break;
+			case MST_F_TRANSLUNAR12: //MCC-3 update to MCC-4 update
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 6.0*3600.0 - 30.0*60.0, 13, MST_F_TRANSLUNAR13);
+				break;
+			case MST_F_TRANSLUNAR13: //MCC-4 update to PC+2 update
+				UpdateMacro(UTP_P30MANEUVER, SubStateTime > 5.0*60.0, 14, MST_F_TRANSLUNAR14);
+				break;
+			case MST_F_TRANSLUNAR14: //PC+2 update to Preliminary LOI-1 update
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 4.0*3600.0 - 30.0*60.0, 15, MST_F_TRANSLUNAR15);
+				break;
+			case MST_F_TRANSLUNAR15: //Preliminary LOI-1 update to TEI-1 update
+				UpdateMacro(UTP_P47MANEUVER, SubStateTime > 5.0*60.0, 20, MST_F_TRANSLUNAR16);
+				break;
+			case MST_F_TRANSLUNAR16: //TEI-1 update to TEI-4 update
+				UpdateMacro(UTP_P47MANEUVER, SubStateTime > 5.0*60.0, 30, MST_F_TRANSLUNAR17);
+				break;
+			case MST_F_TRANSLUNAR17: //TEI-4 update to Rev 1 Map Update
+				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 2.0*3600.0 - 15.0*60.0, 31, MST_F_TRANSLUNAR18);
+				break;
 			}
 			break;
 		}
@@ -3701,27 +3728,30 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1 && padState > -1) {
+			if (SubStateTime > 1 && subThreadStatus == 0) {
 				if (scrubbed)
 				{
-					if (upDescr[0] != 0)
-					{
-						addMessage(upDescr);
-					}
 					freePad();
 					scrubbed = false;
-					setSubState(6);
 				}
 				else
 				{
-
 					addMessage("You can has PAD");
 					if (padAutoShow == true && padState == 0) { drawPad(); }
-					// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+				}
+
+				//Do we have an uplink?
+				if (upString[0] != 0)
+				{
+					// We really should test for P00 and proceed since that would be visible to the ground.
 					addMessage("Ready for uplink?");
 					sprintf(PCOption_Text, "Ready for uplink");
 					PCOption_Enabled = true;
 					setSubState(2);
+				}
+				else
+				{
+					setSubState(6);
 				}
 			}
 			break;
@@ -3729,7 +3759,7 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 		case 3: // Negative response / not ready for uplink
 			break;
 		case 4: // Ready for uplink
-			if (SubStateTime > 1 && padState > -1) {
+			if (SubStateTime > 1 && subThreadStatus == 0) {
 				// The uplink should also be ready, so flush the uplink buffer to the CMC
 				this->CM_uplink_buffer();
 				// uplink_size = 0; // Reset

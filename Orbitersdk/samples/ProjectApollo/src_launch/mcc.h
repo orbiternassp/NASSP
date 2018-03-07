@@ -415,6 +415,24 @@
 #define MST_F_TRANSLUNAR8	28
 // Ends at MCC-2 update
 #define MST_F_TRANSLUNAR9	29
+// Ends at Flyby PAD update
+#define MST_F_TRANSLUNAR10	30
+// Ends at State Vector Update
+#define MST_F_TRANSLUNAR11	31
+// Ends at MCC-3 update
+#define MST_F_TRANSLUNAR12	32
+// Ends at MCC-4 update
+#define MST_F_TRANSLUNAR13	33
+// Ends at PC+2 update
+#define MST_F_TRANSLUNAR14	34
+// Ends at Preliminary LOI-1 update
+#define MST_F_TRANSLUNAR15	35
+// Ends at TEI-1 update
+#define MST_F_TRANSLUNAR16	36
+// Ends at TEI-4 update
+#define MST_F_TRANSLUNAR17	37
+// Ends at rev 1 map update
+#define MST_F_TRANSLUNAR18	38
 
 // Ground Station Information Structure
 struct GroundStation {

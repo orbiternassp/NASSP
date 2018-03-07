@@ -1880,6 +1880,7 @@ int ARCore::subThread()
 		opt.dV_LVLH = dV_LVLH;
 		opt.dV_LVLH2 = LOI_dV_LVLH;
 		opt.GETbase = GETbase;
+		opt.LSAzi = LOIazi;
 		opt.LSLat = LSLat;
 		opt.LSLng = LSLng;
 		opt.mission = mission;

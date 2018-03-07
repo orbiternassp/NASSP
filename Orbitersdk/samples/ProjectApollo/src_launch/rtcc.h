@@ -183,6 +183,7 @@ struct EntryResults
 	double latitude, longitude;
 	double GET05G, GET400K, RTGO, VIO, ReA;
 	int precision;
+	SV sv_postburn;
 };
 
 
@@ -243,7 +244,8 @@ struct REFSMMATOpt
 	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2, 8 = LS during TLC
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
-	double LSLat; //latitude for the landign site REFSMMAT
+	double LSLat; //latitude for the landing site REFSMMAT
+	double LSAzi; //approach azimuth for the landing site REFSMMAT
 	int mission; //Just for the launch REFSMMAT
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool HeadsUp = true; //Orientation during the maneuver
@@ -782,6 +784,7 @@ private:
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	SV coast(SV sv0, double dt);
 	double PericynthionTime(VESSEL* vessel);
+	SV FindPericynthion(SV sv0);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
 
 	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);

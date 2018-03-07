@@ -3538,7 +3538,13 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "%s has been scrubbed.", manname);
+			sprintf(upDesc, "%s has been scrubbed. CSM state vector.", manname);
+
+			sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+			}
 		}
 		else
 		{
@@ -3562,6 +3568,461 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 				strncpy(upString, uplinkdata, 1024 * 3);
 				sprintf(upDesc, "CSM state vector, target load");
 			}
+		}
+	}
+	break;
+	case 12: //Lunar Flyby PAD
+	{
+		RTEFlybyOpt entopt;
+		EntryResults res;
+		AP11ManPADOpt opt;
+		SV sv;
+		double GETbase;
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = getGETBase();
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		entopt.EntryLng = -165.0*RAD;
+		entopt.GETbase = GETbase;
+		entopt.returnspeed = 0;
+		entopt.FlybyType = 0;
+		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
+		entopt.vessel = calcParams.src;
+
+		RTEFlybyTargeting(&entopt, &res);
+
+		SV sv_peri = FindPericynthion(res.sv_postburn);
+		double h_peri = length(sv_peri.R) - oapiGetSize(oapiGetObjectByName("Moon"));
+
+		opt.alt = LSAlt;
+		opt.dV_LVLH = res.dV_LVLH;
+		opt.engopt = 0;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
+		opt.TIG = res.P30TIG;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 1;
+
+		AP11ManeuverPAD(&opt, *form);
+
+		sprintf(form->purpose, "Flyby");
+		sprintf(form->remarks, "Height of pericynthion is %.0f NM", h_peri / 1852.0);
+		form->lat = res.latitude*DEG;
+		form->lng = res.longitude*DEG;
+		form->RTGO = res.RTGO;
+		form->VI0 = res.VIO / 0.3048;
+		form->GET05G = res.GET05G;
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
+
+		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
+	}
+	break;
+	case 13: //MCC-3
+	{
+		AP11ManPADOpt manopt;
+		LOIMan loiopt;
+		MCCNodeMan opt;
+		VECTOR3 dV_LVLH, dV_LOI;
+		SV sv, sv_peri, sv_node;
+		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
+		int engopt;
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = getGETBase();
+		r_M = oapiGetSize(oapiGetObjectByName("Moon"));
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		loiopt.alt = LSAlt;
+		loiopt.azi = LSAzi;
+		loiopt.csmlmdocked = true;
+		loiopt.GETbase = GETbase;
+		loiopt.h_apo = 170.0*1852.0;
+		loiopt.h_peri = 60.0*1852.0;
+		loiopt.impulsive = RTCC_IMPULSIVE;
+		loiopt.lat = LSLat;
+		loiopt.lng = LSLng;
+		loiopt.t_land = t_land;
+		loiopt.vessel = calcParams.src;
+
+		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node);
+
+		sv_peri = FindPericynthion(sv);
+
+		h_peri = length(sv_peri.R) - r_M;
+		h_node = length(sv_node.R) - r_M;
+
+		//Maneuver execution criteria
+		if (h_peri > 50.0*1852.0 && h_peri < 70.0*1852.0)
+		{
+			if (h_node > 50.0*1852.0 && h_node < 75.0*1852.0)
+			{
+				scrubbed = true;
+			}
+		}
+
+		if (scrubbed)
+		{
+			sprintf(upDesc, "MCC-3 has been scrubbed. CSM state vector.");
+
+			sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+			}
+		}
+		else
+		{
+			MCCGET = calcParams.LOI - 22.0*3600.0;
+
+			opt.lat = calcParams.lat_node;
+			opt.lng = calcParams.lng_node;
+			opt.NodeGET = calcParams.GET_node;
+			opt.h_node = calcParams.alt_node;
+			opt.csmlmdocked = true;
+			opt.GETbase = GETbase;
+			opt.MCCGET = MCCGET;
+			opt.vessel = calcParams.src;
+
+			TranslunarMidcourseCorrectionTargetingNodal(&opt, dV_LVLH, P30TIG);
+
+			engopt = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
+
+			manopt.dV_LVLH = dV_LVLH;
+			manopt.engopt = engopt;
+			manopt.GETbase = GETbase;
+			manopt.HeadsUp = false;
+			manopt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
+			manopt.TIG = P30TIG;
+			manopt.vessel = calcParams.src;
+			manopt.vesseltype = 1;
+
+			AP11ManeuverPAD(&manopt, *form);
+			sprintf(form->purpose, "MCC-3");
+
+			sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load");
+			}
+		}
+	}
+	break;
+	case 14: //MCC-4
+	{
+		LOIMan loiopt;
+		REFSMMATOpt refsopt;
+		VECTOR3 dV_LVLH, dV_LOI;
+		SV sv, sv_peri, sv_node;
+		MATRIX3 REFSMMAT;
+		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
+		int engopt;
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = getGETBase();
+		r_M = oapiGetSize(oapiGetObjectByName("Moon"));
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		loiopt.alt = LSAlt;
+		loiopt.azi = LSAzi;
+		loiopt.csmlmdocked = true;
+		loiopt.GETbase = GETbase;
+		loiopt.h_apo = 170.0*1852.0;
+		loiopt.h_peri = 60.0*1852.0;
+		loiopt.impulsive = RTCC_IMPULSIVE;
+		loiopt.lat = LSLat;
+		loiopt.lng = LSLng;
+		loiopt.t_land = t_land;
+		loiopt.vessel = calcParams.src;
+
+		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node);
+
+		sv_peri = FindPericynthion(sv);
+
+		h_peri = length(sv_peri.R) - r_M;
+		h_node = length(sv_node.R) - r_M;
+
+		//Maneuver execution criteria
+		if (h_peri > 50.0*1852.0 && h_peri < 70.0*1852.0)
+		{
+			if (h_node > 50.0*1852.0 && h_node < 75.0*1852.0)
+			{
+				scrubbed = true;
+			}
+		}
+
+		//REFSMMAT calculation
+		refsopt.GETbase = GETbase;
+		refsopt.LSAzi = LSAzi;
+		refsopt.LSLat = LSLat;
+		refsopt.LSLng = LSLng;
+		refsopt.REFSMMATopt = 8;
+		refsopt.REFSMMATTime = t_land;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		if (scrubbed)
+		{
+			sprintf(upDesc, "MCC-4 has been scrubbed. CSM state vector, Landing Site REFSMMAT.");
+
+			sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+			}
+		}
+		else
+		{
+			AP11ManPADOpt manopt;
+			MCCNodeMan opt;
+
+			MCCGET = calcParams.LOI - 5.0*3600.0;
+
+			opt.lat = calcParams.lat_node;
+			opt.lng = calcParams.lng_node;
+			opt.NodeGET = calcParams.GET_node;
+			opt.h_node = calcParams.alt_node;
+			opt.csmlmdocked = true;
+			opt.GETbase = GETbase;
+			opt.MCCGET = MCCGET;
+			opt.vessel = calcParams.src;
+
+			TranslunarMidcourseCorrectionTargetingNodal(&opt, dV_LVLH, P30TIG);
+
+			engopt = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
+
+			manopt.dV_LVLH = dV_LVLH;
+			manopt.engopt = engopt;
+			manopt.GETbase = GETbase;
+			manopt.HeadsUp = false;
+			manopt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
+			manopt.TIG = P30TIG;
+			manopt.vessel = calcParams.src;
+			manopt.vesseltype = 1;
+
+			AP11ManeuverPAD(&manopt, *form);
+			sprintf(form->purpose, "MCC-4");
+
+			sprintf(uplinkdata, "%s%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load, Landing Site REFSMMAT");
+			}
+		}
+
+	}
+	break;
+	case 15: //PC+2 UPDATE
+	{
+		RTEFlybyOpt entopt;
+		EntryResults res;
+		AP11ManPADOpt opt;
+		double GETbase;
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = getGETBase();
+
+		entopt.EntryLng = -165.0*RAD;
+		entopt.returnspeed = 2;
+		entopt.GETbase = GETbase;
+		entopt.FlybyType = 1;
+		entopt.vessel = calcParams.src;
+
+		RTEFlybyTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
+
+		opt.alt = LSAlt;
+		opt.dV_LVLH = res.dV_LVLH;
+		opt.engopt = 0;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
+		opt.TIG = res.P30TIG;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 0;
+
+		AP11ManeuverPAD(&opt, *form);
+
+		if (!REFSMMATDecision(form->Att*RAD))
+		{
+			REFSMMATOpt refsopt;
+			MATRIX3 REFSMMAT;
+
+			refsopt.dV_LVLH = res.dV_LVLH;
+			refsopt.GETbase = GETbase;
+			refsopt.P30TIG = res.P30TIG;
+			refsopt.REFSMMATopt = 0;
+			refsopt.vessel = calcParams.src;
+
+			REFSMMAT = REFSMMATCalc(&refsopt);
+
+			opt.HeadsUp = true;
+			opt.REFSMMAT = REFSMMAT;
+			AP11ManeuverPAD(&opt, *form);
+
+			sprintf(form->remarks, "Requires realignment to preferred REFSMMAT");
+		}
+		sprintf(form->purpose, "PC+2");
+		form->lat = res.latitude*DEG;
+		form->lng = res.longitude*DEG;
+		form->RTGO = res.RTGO;
+		form->VI0 = res.VIO / 0.3048;
+		form->GET05G = res.GET05G;
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
+	}
+	break;
+	case 20:	// MISSION F PRELIMINARY LOI-1 MANEUVER
+	case 21:	// MISSION F LOI-1 MANEUVER
+	{
+		LOIMan opt;
+		AP11ManPADOpt manopt;
+		double GETbase, P30TIG;
+		VECTOR3 dV_LVLH;
+		SV sv;
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = getGETBase();
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		opt.csmlmdocked = true;
+		opt.GETbase = GETbase;
+		opt.h_apo = 170.0*1852.0;
+		opt.h_peri = 60.0*1852.0;
+		opt.alt = LSAlt;
+		opt.azi = LSAzi;
+		opt.lat = LSLat;
+		opt.lng = LSLng;
+		opt.t_land = t_land;
+		opt.vessel = calcParams.src;
+
+		LOITargeting(&opt, dV_LVLH, P30TIG);
+
+		manopt.alt = LSAlt;
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.engopt = 0;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.src;
+		manopt.vesseltype = 1;
+
+		AP11ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "LOI-1");
+		sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
+
+		TimeofIgnition = P30TIG;
+		DeltaV_LVLH = dV_LVLH;
+
+		if (fcn == 21)
+		{
+			sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load");
+			}
+		}
+	}
+	break;
+	case 30: //TEI-1 UPDATE (PRE LOI)
+	case 31: //TEI-4 UPDATE (PRE LOI)
+	{
+		TEIOpt entopt;
+		EntryResults res;
+		AP11ManPADOpt opt;
+		double GETbase;
+		SV sv0, sv1, sv2;
+		char manname[8];
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = getGETBase();
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+		sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+
+		if (fcn == 30)
+		{
+			sprintf(manname, "TEI-1");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else
+		{
+			sprintf(manname, "TEI-4");
+			sv2 = coast(sv1, 3.5*2.0*3600.0);
+		}
+
+		entopt.EntryLng = -165.0*RAD;
+		entopt.GETbase = GETbase;
+		entopt.returnspeed = 1;
+		entopt.RV_MCC = sv2;
+		entopt.useSV = true;
+		entopt.vessel = calcParams.src;
+
+		TEITargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
+
+		opt.alt = LSAlt;
+		opt.dV_LVLH = res.dV_LVLH;
+		opt.engopt = 0;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
+		opt.RV_MCC = sv1;
+		opt.TIG = res.P30TIG;
+		opt.useSV = true;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 0;
+
+		AP11ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, manname);
+		form->lat = res.latitude*DEG;
+		form->lng = res.longitude*DEG;
+		form->RTGO = res.RTGO;
+		form->VI0 = res.VIO / 0.3048;
+		form->GET05G = res.GET05G;
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
+	}
+	break;
+	case 100: //GENERIC CSM STATE VECTOR UPDATE
+	{
+		SV sv;
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		sprintf(uplinkdata, "%s", CMCStateVectorUpdate(sv, true, AGCEpoch));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
 		}
 	}
 	break;
@@ -5058,11 +5519,72 @@ double RTCC::getGETBase()
 
 MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 {
+	VECTOR3 UX, UY, UZ;
+	OBJHANDLE hMoon, hEarth;
+
+	hMoon = oapiGetObjectByName("Moon");
+	hEarth = oapiGetObjectByName("Earth");
+
+	//Here the options that don't require a state vector or thrust parameters
+	if (opt->REFSMMATopt == 4)
+	{
+		//For now a default LC-39A, 72° launch
+		return OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, opt->GETbase, 72 * RAD);
+	}
+	else if (opt->REFSMMATopt == 6)
+	{
+		double *MoonPos;
+		double PTCMJD;
+		VECTOR3 R_ME;
+
+		MoonPos = new double[12];
+
+		PTCMJD = opt->REFSMMATTime / 24.0 / 3600.0 + opt->GETbase;
+
+		CELBODY *cMoon = oapiGetCelbodyInterface(hMoon);
+
+		cMoon->clbkEphemeris(PTCMJD, EPHEM_TRUEPOS, MoonPos);
+
+		R_ME = -_V(MoonPos[0], MoonPos[1], MoonPos[2]);
+
+		UX = unit(crossp(_V(0.0, 1.0, 0.0), unit(R_ME)));
+		//UX = mul(Rot, _V(UX.x, UX.z, UX.y));
+		UX = _V(UX.x, UX.z, UX.y);
+
+		UZ = _V(0.0, 0.0, -1.0);
+		UY = crossp(UZ, UX);
+		return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	}
+	else if (opt->REFSMMATopt == 8)
+	{
+		MATRIX3 Rot2;
+		VECTOR3 R_P, R_LS, R_LPO, V_LPO, H_LPO, axis, H_C;
+		double LSMJD;
+
+		R_P = unit(_V(cos(opt->LSLng)*cos(opt->LSLat), sin(opt->LSLat), sin(opt->LSLng)*cos(opt->LSLat)));
+		LSMJD = opt->REFSMMATTime / 24.0 / 3600.0 + opt->GETbase;
+		Rot2 = OrbMech::GetRotationMatrix(oapiGetObjectByName("Moon"), LSMJD);
+
+		R_LS = mul(Rot2, R_P);
+		R_LS = _V(R_LS.x, R_LS.z, R_LS.y);
+
+		OrbMech::adbar_from_rv(1.0, 1.0, opt->LSLng, opt->LSLat, PI05, opt->LSAzi, R_LPO, V_LPO);
+		H_LPO = crossp(R_LPO, V_LPO);
+		axis = unit(H_LPO);
+		H_C = unit(rhmul(Rot2, axis));
+
+		UX = unit(R_LS);
+		UZ = unit(crossp(H_C, R_LS));
+		UY = crossp(UZ, UX);
+
+		return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	}
+
 	double SVMJD, dt, LMmass;
-	VECTOR3 R_A, V_A, UX, UY, UZ, X_B;
+	VECTOR3 R_A, V_A, X_B;
 	VECTOR3 DV_P, DV_C, V_G, X_SM, Y_SM, Z_SM;
 	double theta_T;
-	OBJHANDLE hMoon, hEarth, gravref;
+	OBJHANDLE gravref;
 	SV sv0, sv2;
 	THGROUP_TYPE th_main;
 
@@ -5076,9 +5598,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	}
 
 	gravref = AGCGravityRef(opt->vessel);
-
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
 
 	opt->vessel->GetRelativePos(gravref, R_A);
 	opt->vessel->GetRelativeVel(gravref, V_A);
@@ -5102,7 +5621,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	sv0.R = R_A;
 	sv0.V = V_A;
 
-	if (opt->REFSMMATopt == 7 || opt->REFSMMATopt == 8)
+	if (opt->REFSMMATopt == 7)
 	{
 		SV sv1;
 
@@ -5118,12 +5637,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		sv2 = sv0;
 	}
 
-	if (opt->REFSMMATopt == 4)
-	{
-		//For now a default LC-39A, 72° launch
-		return OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, opt->GETbase, 72*RAD);
-	}
-	else if (opt->REFSMMATopt == 5 || opt->REFSMMATopt == 8)
+	if (opt->REFSMMATopt == 5)
 	{
 		double LSMJD;
 		VECTOR3 R_P, R_LS, H_C;
@@ -5148,30 +5662,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		UZ = unit(crossp(H_C, R_LS));
 		UY = crossp(UZ, UX);
 
-		return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	}
-	else if (opt->REFSMMATopt == 6)
-	{
-		double *MoonPos;
-		double PTCMJD;
-		VECTOR3 R_ME;
-
-		MoonPos = new double[12];
-
-		PTCMJD = opt->REFSMMATTime / 24.0 / 3600.0 + opt->GETbase;
-
-		CELBODY *cMoon = oapiGetCelbodyInterface(hMoon);
-
-		cMoon->clbkEphemeris(PTCMJD, EPHEM_TRUEPOS, MoonPos);
-
-		R_ME = -_V(MoonPos[0], MoonPos[1], MoonPos[2]);
-
-		UX = unit(crossp(_V(0.0, 1.0, 0.0), unit(R_ME)));
-		//UX = mul(Rot, _V(UX.x, UX.z, UX.y));
-		UX = _V(UX.x, UX.z, UX.y);
-
-		UZ = _V(0.0, 0.0, -1.0);
-		UY = crossp(UZ, UX);
 		return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 	}
 	else
@@ -5300,53 +5790,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		}
 		//
 	}
-
-	/*a = REFSMMAT;
-
-	if (REFSMMATupl == 0)
-	{
-	if (vesseltype == CSM)
-	{
-	REFSMMAToct[1] = 306;
-	}
-	else
-	{
-	REFSMMAToct[1] = 3606;
-	}
-	}
-	else
-	{
-	if (vesseltype == CSM)
-	{
-	REFSMMAToct[1] = 1735;
-	}
-	else
-	{
-	REFSMMAToct[1] = 1733;
-	}
-	}
-
-	REFSMMAToct[0] = 24;
-	REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
-	REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
-	REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
-	REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
-	REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
-	REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
-	REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
-	REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
-	REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
-	REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
-	REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
-	REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
-	REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
-	REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
-	REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
-	REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
-	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
-	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
-
-	REFSMMATcur = REFSMMATopt;*/
 }
 
 double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculates the required DV vector of a coelliptic burn
@@ -5818,7 +6261,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 	ta[0] = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
 	ta[1] = PI2 - ta[0];												//Calculates the second possible true anomaly of the desired orbit
 
-	if (opt->vesseltype = 0)
+	if (opt->vesseltype == 0)
 	{
 		f_T = SPS_THRUST;
 		isp = SPS_ISP;
@@ -8059,6 +8502,9 @@ void RTCC::RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res)
 	sv_tig.R = flybycalc->Rig;
 	sv_tig.V = flybycalc->Vig;
 
+	res->sv_postburn = sv_tig;
+	res->sv_postburn.V = flybycalc->Vig_apo;
+
 	FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, flybycalc->Vig_apo - flybycalc->Vig, true, Llambda, t_slip);
 
 	OrbMech::oneclickcoast(flybycalc->Rig, flybycalc->Vig, flybycalc->TIG, t_slip, R_cor, V_cor, hMoon, hMoon);
@@ -8551,6 +8997,13 @@ double RTCC::PericynthionTime(VESSEL *vessel)
 
 	dt = OrbMech::timetoperi(R0, V0, mu);
 	return (SVMJD-GETbase)*24.0*3600.0 + dt;
+}
+
+SV RTCC::FindPericynthion(SV sv0)
+{
+	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
+	double dt = OrbMech::timetoperi_integ(sv0.R, sv0.V, sv0.MJD, sv0.gravref, hMoon);
+	return coast(sv0, dt);
 }
 
 bool RTCC::NC1NC2Program(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh_F, double n_H1, int s, double dh, double n_C, VECTOR3 &dV_NC1_LVLH, double &dh_NC2, double &dv_NC2, double &t_NC2, VECTOR3 &dV_NC2_LVLH, double &dv_NCC, double &t_NCC, double &t_NSR, VECTOR3 &dV_NSR, bool NPC)

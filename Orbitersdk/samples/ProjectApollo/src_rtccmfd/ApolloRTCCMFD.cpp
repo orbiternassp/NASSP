@@ -761,10 +761,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 			}
 		}
-		else if (G->REFSMMATopt == 5)
+		else if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 		{
-			skp->Text(5 * W / 8, 2 * H / 14, "Landing Site", 12);
-
 			GET_Display(Buffer, G->t_Land);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 
@@ -773,13 +771,26 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%f°", G->LSLng*DEG);
 			skp->Text((int)(5.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
 
-			if (G->REFSMMATdirect == true)
+			if (G->REFSMMATopt == 8)
 			{
-				skp->Text((int)(0.5 * W / 8), 12 * H / 14, "Direct", 6);
+				skp->Text(5 * W / 8, 2 * H / 14, "LS during TLC", 13);
+
+				skp->Text((int)(5.5 * W / 8), 11 * H / 14, "Azimuth:", 8);
+				sprintf(Buffer, "%f°", G->LOIazi*DEG);
+				skp->Text((int)(5.5 * W / 8), 12 * H / 14, Buffer, strlen(Buffer));
 			}
 			else
 			{
-				skp->Text((int)(0.5 * W / 8), 12 * H / 14, "MCC", 3);
+				skp->Text(5 * W / 8, 2 * H / 14, "Landing Site", 12);
+
+				if (G->REFSMMATdirect == true)
+				{
+					skp->Text((int)(0.5 * W / 8), 12 * H / 14, "Direct", 6);
+				}
+				else
+				{
+					skp->Text((int)(0.5 * W / 8), 12 * H / 14, "MCC", 3);
+				}
 			}
 
 		}
@@ -790,24 +801,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->REFSMMATTime);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 		}
-		else if (G->REFSMMATopt == 7 || G->REFSMMATopt == 8)
+		else if (G->REFSMMATopt == 7)
 		{
-			if (G->REFSMMATopt == 7)
-			{
-				skp->Text(5 * W / 8, 2 * H / 14, "LOI-2", 5);
-			}
-			else
-			{
-				skp->Text(5 * W / 8, 2 * H / 14, "LS during TLC", 13);
-
-				GET_Display(Buffer, G->t_Land);
-				skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
-
-				sprintf(Buffer, "%f°", G->LSLat*DEG);
-				skp->Text((int)(5.5 * W / 8), 8 * H / 14, Buffer, strlen(Buffer));
-				sprintf(Buffer, "%f°", G->LSLng*DEG);
-				skp->Text((int)(5.5 * W / 8), 10 * H / 14, Buffer, strlen(Buffer));
-			}
+			skp->Text(5 * W / 8, 2 * H / 14, "LOI-2", 5);
 
 			skp->Text(1 * W / 8, 8 * H / 21, "MCC", 3);
 			GET_Display(Buffer, G->TLCC_TIG);
