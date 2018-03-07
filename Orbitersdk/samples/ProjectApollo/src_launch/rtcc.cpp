@@ -4012,6 +4012,20 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.EI = res.GET400K;
 	}
 	break;
+	case 40: //REV 1 MAP UPDATE
+	{
+		SV sv0, sv1, sv2;
+
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		sv2 = coast(sv1, -30.0*60.0);
+
+		LunarOrbitMapUpdate(sv2, getGETBase(), *form);
+		form->Rev = 1;
+	}
+	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
 	{
 		SV sv;
@@ -8603,6 +8617,33 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 	res->dV_LVLH = mul(Q_Xx, Llambda);
 
 	delete teicalc;
+}
+
+void RTCC::LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad)
+{
+	double ttoLOS, ttoAOS, ttoSS, ttoSR, ttoPM;
+	OBJHANDLE hEarth, hSun;
+
+	double t_lng;
+
+	hEarth = oapiGetObjectByName("Earth");
+	hSun = oapiGetObjectByName("Sun");
+
+	ttoLOS = OrbMech::sunrise(sv0.R, sv0.V, sv0.MJD, sv0.gravref, hEarth, 0, 0, true);
+	ttoAOS = OrbMech::sunrise(sv0.R, sv0.V, sv0.MJD, sv0.gravref, hEarth, 1, 0, true);
+
+	pad.LOSGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoLOS;
+	pad.AOSGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoAOS;
+
+	ttoSS = OrbMech::sunrise(sv0.R, sv0.V, sv0.MJD, sv0.gravref, hSun, 0, 0, true);
+	ttoSR = OrbMech::sunrise(sv0.R, sv0.V, sv0.MJD, sv0.gravref, hSun, 1, 0, true);
+
+	pad.SSGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoSS;
+	pad.SRGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoSR;
+
+	t_lng = OrbMech::P29TimeOfLongitude(sv0.R, sv0.V, sv0.MJD, sv0.gravref, -150.0*RAD);
+	ttoPM = (t_lng - sv0.MJD)*24.0 * 3600.0;
+	pad.PMGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoPM;
 }
 
 SV RTCC::coast(SV sv0, double dt)

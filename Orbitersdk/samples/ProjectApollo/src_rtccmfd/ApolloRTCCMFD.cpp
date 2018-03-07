@@ -1695,23 +1695,23 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(6 * W / 8, 4 * H / 14, "Moon", 4);
 
-			GET_Display(Buffer2, G->LOSGET);
+			GET_Display(Buffer2, G->mapupdate.LOSGET);
 			sprintf(Buffer, "LOS %s", Buffer2);
 			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer2, G->SRGET);
+			GET_Display(Buffer2, G->mapupdate.SRGET);
 			sprintf(Buffer, "SR  %s", Buffer2);
 			skp->Text(1 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer2, G->PMGET);
+			GET_Display(Buffer2, G->mapupdate.PMGET);
 			sprintf(Buffer, "PM  %s", Buffer2);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer2, G->AOSGET);
+			GET_Display(Buffer2, G->mapupdate.AOSGET);
 			sprintf(Buffer, "AOS %s", Buffer2);
 			skp->Text(1 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer2, G->SSGET);
+			GET_Display(Buffer2, G->mapupdate.SSGET);
 			sprintf(Buffer, "SS  %s", Buffer2);
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}

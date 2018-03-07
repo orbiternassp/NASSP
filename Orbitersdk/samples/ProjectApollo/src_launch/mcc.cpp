@@ -2267,6 +2267,12 @@ void MCC::TimeStep(double simdt){
 			case MST_F_TRANSLUNAR17: //TEI-4 update to Rev 1 Map Update
 				UpdateMacro(UTP_P47MANEUVER, cm->MissionTime > rtcc->calcParams.LOI - 2.0*3600.0 - 15.0*60.0, 31, MST_F_TRANSLUNAR18);
 				break;
+			case MST_F_TRANSLUNAR18: //Rev 1 Map Update to LOI-1 update
+				UpdateMacro(UTP_MAPUPDATE, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 30.0*60.0, 40, MST_F_TRANSLUNAR19);
+				break;
+			case MST_F_TRANSLUNAR19: //LOI-1 update to Rev 2 Map Update
+				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 15.0*60.0, 21, MST_F_TRANSLUNAR19);
+				break;
 			}
 			break;
 		}
@@ -2817,6 +2823,15 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_STARCHKPAD_Att", form->Att[0]);
 			SAVE_DOUBLE("MCC_STARCHKPAD_TAlign", form->TAlign[0]);
 		}
+		else if (padNumber == 12)
+		{
+			AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
+
+			SAVE_INT("MCC_AP10MAPUPDATE_REV", form->Rev);
+			SAVE_DOUBLE("MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
+			SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
+			SAVE_DOUBLE("MCC_AP10MAPUPDATE_PMGET", form->PMGET);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3089,6 +3104,15 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_STARCHKPAD_Att", form->Att[0]);
 			LOAD_DOUBLE("MCC_STARCHKPAD_TAlign", form->TAlign[0]);
 		}
+		else if (padNumber == 12)
+		{
+			AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
+
+			LOAD_INT("MCC_AP10MAPUPDATE_REV", form->Rev);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_PMGET", form->PMGET);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -3324,6 +3348,24 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case 12: //AP10MAPUPDATE
+	{
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
+
+		int hh, mm;
+		double ss;
+
+		sprintf(buffer, "MAP UPDATE REV %d\n", form->Rev);
+		SStoHHMMSS(form->LOSGET, hh, mm, ss);
+		sprintf(buffer, "%sLOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+		SStoHHMMSS(form->PMGET, hh, mm, ss);
+		sprintf(buffer, "%s150°W: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+		SStoHHMMSS(form->AOSGET, hh, mm, ss);
+		sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	default:
 		sprintf(buffer,"Unknown padNumber %d",padNumber);
 		oapiAnnotationSetText(NHpad,buffer);
@@ -3378,6 +3420,9 @@ void MCC::allocPad(int Number){
 		break;
 	case 11: // STARCHKPAD
 		padForm = calloc(1, sizeof(STARCHKPAD));
+		break;
+	case 12: // AP10MAPUPDATE
+		padForm = calloc(1, sizeof(AP10MAPUPDATE));
 		break;
 
 	default:
@@ -4296,6 +4341,58 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			break;
 		}
 	}
+	else if (type == UTP_MAPUPDATE) //map update without uplink
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(12); // Allocate Map Update PAD
+
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1 && padState > -1) {
+				if (scrubbed)
+				{
+					if (upDescr[0] != 0)
+					{
+						addMessage(upDescr);
+					}
+					freePad();
+					scrubbed = false;
+					setSubState(2);
+				}
+				else
+				{
+					addMessage("You can has PAD");
+					if (padAutoShow == true && padState == 0) { drawPad(); }
+					setSubState(2);
+				}
+			}
+			break;
+		case 2: // Await burn
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
+			{
+				SlowIfDesired();
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
 }
 
 void MCC::subThreadMacro(int type, int updatenumber)
@@ -4454,6 +4551,15 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	else if (type == UTP_P37PAD)
 	{
 		P37PAD * form = (P37PAD *)padForm;
+		// Ask RTCC for numbers
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+	}
+	else if (type == UTP_MAPUPDATE)
+	{
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
 		// Ask RTCC for numbers
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Done filling form, OK to show

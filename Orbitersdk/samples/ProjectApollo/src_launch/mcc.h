@@ -275,6 +275,7 @@
 #define UTP_STARCHKPAD		11
 #define UTP_LGCUPLINKDIRECT	12
 #define UTP_P37PAD			13
+#define UTP_MAPUPDATE		14
 #define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
@@ -433,6 +434,8 @@
 #define MST_F_TRANSLUNAR17	37
 // Ends at rev 1 map update
 #define MST_F_TRANSLUNAR18	38
+// Ends at LOI-1 update
+#define MST_F_TRANSLUNAR19	39
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -705,6 +708,19 @@ struct AP11AGSSVPAD
 	double DEDA265; //CSM Velocity Y
 	double DEDA266; //CSM Velocity Z
 	double DEDA272; //CSM Epoch Time
+};
+
+// APOLLO 10 MAP UPDATE
+
+
+struct AP10MAPUPDATE
+{
+	int Rev;		//Revolution of update
+	double LOSGET;	//Time of LOS
+	double AOSGET;	//Time of AOS
+	double PMGET;	//Time of meridian crossing (150°W)
+	double SSGET;	//Time of sunset
+	double SRGET;	//Time of sunrise
 };
 
 class LEM;

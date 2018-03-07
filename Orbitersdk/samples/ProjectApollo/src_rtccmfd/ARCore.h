@@ -208,7 +208,8 @@ public:
 	bool EntryPADdirect;
 
 	//MAP UPDATE PAGE
-	double LOSGET, AOSGET, SSGET, SRGET, PMGET, GSAOSGET, GSLOSGET;
+	AP10MAPUPDATE mapupdate;
+	double GSAOSGET, GSLOSGET;
 	int mappage, mapgs;
 
 	//TLCC PAGE

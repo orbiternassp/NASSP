@@ -317,11 +317,11 @@ ARCore::ARCore(VESSEL* v)
 	sxtstardtime = 0.0;
 	ManPADdirect = true;
 	P37GET400K = 0.0;
-	LOSGET = 0.0;
-	AOSGET = 0.0;
-	SSGET = 0.0;
-	SRGET = 0.0;
-	PMGET = 0.0;
+	mapupdate.LOSGET = 0.0;
+	mapupdate.AOSGET = 0.0;
+	mapupdate.SSGET = 0.0;
+	mapupdate.SRGET = 0.0;
+	mapupdate.PMGET = 0.0;
 	mappage = 1;
 	mapgs = 0;
 	GSAOSGET = 0.0;
@@ -954,55 +954,24 @@ void ARCore::TPIPAD()
 
 void ARCore::MapUpdate()
 {
-	VECTOR3 R, V;
-	double MJD;
-	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
-	vessel->GetRelativePos(gravref, R);
-	vessel->GetRelativeVel(gravref, V);
-	MJD = oapiGetSimMJD();
-
-	R = _V(R.x, R.z, R.y);
-	V = _V(V.x, V.z, V.y);
+	SV sv0 = rtcc->StateVectorCalc(vessel);
 
 	if (mappage == 0)
 	{
 		int gstat;
 		double ttoGSAOS, ttoGSLOS;
 
-		gstat = OrbMech::findNextAOS(R, V, MJD, gravref);
+		gstat = OrbMech::findNextAOS(sv0.R, sv0.V, sv0.MJD, sv0.gravref);
 
-		OrbMech::groundstation(R, V, MJD, gravref, groundstations[gstat][0], groundstations[gstat][1], 1, ttoGSAOS);
-		OrbMech::groundstation(R, V, MJD, gravref, groundstations[gstat][0], groundstations[gstat][1], 0, ttoGSLOS);
-		GSAOSGET = (MJD - GETbase)*24.0*3600.0 + ttoGSAOS;
-		GSLOSGET = (MJD - GETbase)*24.0*3600.0 + ttoGSLOS;
+		OrbMech::groundstation(sv0.R, sv0.V, sv0.MJD, sv0.gravref, groundstations[gstat][0], groundstations[gstat][1], 1, ttoGSAOS);
+		OrbMech::groundstation(sv0.R, sv0.V, sv0.MJD, sv0.gravref, groundstations[gstat][0], groundstations[gstat][1], 0, ttoGSLOS);
+		GSAOSGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoGSAOS;
+		GSLOSGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoGSLOS;
 		mapgs = gstat;
 	}
 	else
 	{
-		double ttoLOS, ttoAOS, ttoSS, ttoSR, ttoPM;
-		OBJHANDLE hEarth, hSun;
-
-		double t_lng;
-
-		hEarth = oapiGetObjectByName("Earth");
-		hSun = oapiGetObjectByName("Sun");
-
-		ttoLOS = OrbMech::sunrise(R, V, MJD, gravref, hEarth, 0, 0, true);
-		ttoAOS = OrbMech::sunrise(R, V, MJD, gravref, hEarth, 1, 0, true);
-
-		LOSGET = (MJD - GETbase)*24.0*3600.0 + ttoLOS;
-		AOSGET = (MJD - GETbase)*24.0*3600.0 + ttoAOS;
-
-		ttoSS = OrbMech::sunrise(R, V, MJD, gravref, hSun, 0, 0, true);
-		ttoSR = OrbMech::sunrise(R, V, MJD, gravref, hSun, 1, 0, true);
-
-		SSGET = (MJD - GETbase)*24.0*3600.0 + ttoSS;
-		SRGET = (MJD - GETbase)*24.0*3600.0 + ttoSR;
-
-		t_lng = OrbMech::P29TimeOfLongitude(R, V, MJD, gravref, -150.0*RAD);
-		ttoPM = (t_lng - MJD)*24.0 * 3600.0;
-		//ttoPM = OrbMech::findlongitude(R, V, MJD, gravref, -150.0 * RAD);
-		PMGET = (MJD - GETbase)*24.0*3600.0 + ttoPM;
+		rtcc->LunarOrbitMapUpdate(sv0, GETbase, mapupdate);
 	}
 }
 
