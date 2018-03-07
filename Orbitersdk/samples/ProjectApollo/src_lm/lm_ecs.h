@@ -306,6 +306,8 @@ public:
 	double GetAscWaterTank2TempF();
 	bool GetSuitFan1Failure();
 	bool GetSuitFan2Failure();
+	bool GetPrimGlycolLowLevel();
+	bool GetSecGlycolLowLevel();
 	bool IsSuitCircuitReliefValveOpen();
 	bool IsCabinGasReturnValveOpen();
 	bool GetGlycolPump2Failure();
@@ -321,8 +323,24 @@ public:
 	double *Secondary_CL_Glycol_Press;						// Pressure before and after pumps
 	double *Primary_CL_Glycol_Temp;							// Temperature before and after pumps
 	double *Secondary_CL_Glycol_Temp;						// Temperature before and after pumps
-	double *Primary_Glycol_Accu;								// Glycol Accumulator
-	double *Secondary_Glycol_Accu;								// Glycol Accumulator
+	double *Primary_Glycol_Accu;								// Glycol Accumulator mass
+	double *Primary_Glycol_Pump_Manifold;						// Pump manifold mass
+	double *Primary_Glycol_HXCooling;						// HXCooling mass
+	double *Primary_Glycol_Loop1;							// Loop 1 mass
+	double *Primary_Glycol_WaterHX;							// Water glycol HX mass
+	double *Primary_Glycol_Loop2;							// Loop 2 mass
+	double *Primary_Glycol_HXHeating;						// HXHeating mass
+	double *Primary_Glycol_EvapIn;							// Evap inlet mass
+	double *Primary_Glycol_EvapOut;							// Evap outlet mass
+	double *Primary_Glycol_AscCooling;						// Ascent battery cooling mass
+	double *Primary_Glycol_DesCooling;						// Descent battery cooling mass
+	double *Secondary_Glycol_Accu;								// Glycol Accumulator mass
+	double *Secondary_Glycol_Pump_Manifold;					// Pump manifold mass
+	double *Secondary_Glycol_Loop1;							// Loop 1 mass
+	double *Secondary_Glycol_AscCooling;					// Ascent battery cooling mass
+	double *Secondary_Glycol_Loop2;								// Loop 2 mass
+	double *Secondary_Glycol_EvapIn;							// Evap inlet mass
+	double *Secondary_Glycol_EvapOut;							// Evap outlet mass
 	double *Water_Sep1_Flow, *Water_Sep2_Flow;					// Water separators RPM
 	int *Asc_H2O_To_PLSS, *Des_H2O_To_PLSS;						// PLSS Water Fill valves
 	int *Water_Tank_Selector;									// WT selection valve

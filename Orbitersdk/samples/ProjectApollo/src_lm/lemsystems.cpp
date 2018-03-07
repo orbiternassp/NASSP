@@ -1873,7 +1873,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
 */
 
-	//sprintf(oapiDebugString(), "ASC1P %lf ASC2P %lf PrimAccuMass %lf SecAccuMass %lf", *asco2tk1press*PSI, *asco2tk2press*PSI, *primglycolmass*LBS, *secglycolmass*LBS);
+	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
 
 	//sprintf(oapiDebugString(), "GlyTmp %lf GlyCoolTmp %lf HXCTmp %lf GlyHeatTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf LP %lf LT %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*glycolsuitheattemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67);
 	//sprintf(oapiDebugString(), "CO2CP %lf SFMP %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf SC Mass: %lf", *primCO2CanisterPress*PSI, *suitfanmanifoldPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval, (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldMass + *hxcoolingMass));
@@ -2980,10 +2980,10 @@ void LEM_LR::LoadState(FILEHANDLE scn,char *end_str){
 
 double LEM_LR::GetAntennaTempF(){
 	if (lem->stage < 2) {
-		return KelvinToFahrenheit(0);
+		return KelvinToFahrenheit(antenna->GetTemp());
 	}
 	else {
-		return KelvinToFahrenheit(antenna->GetTemp());
+		return KelvinToFahrenheit(0);
 	}
 }
 
@@ -3892,6 +3892,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	// 6DS2 ASC PROP LOW
 	// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
 	// Blanket pressure in fuel or oxi lines at the bi-propellant valves of the ascent stage below 120 psia
+	// FIXME: Finish this!
 	LightStatus[1][0] = 1;
 
 	// 6DS3 HI/LO HELIUM REG OUTLET PRESS
@@ -4110,8 +4111,8 @@ void LEM_CWEA::TimeStep(double simdt){
 	if(lem->TempMonitorRotary.GetState() != 0 && (lem->RR.GetAntennaTempF() < -54.07 || lem->RR.GetAntennaTempF() > 147.69)){
 		LightStatus[2][6] = 1;
 	}
-	if(lem->TempMonitorRotary.GetState() != 1 && (lem->LR.GetAntennaTempF() < -15.6 || lem->LR.GetAntennaTempF() > 148.9)){
-		LightStatus[2][6] = 1; //Needs to not be looked at after staging as the LR is no loger attached.
+	if(lem->stage < 2 && lem->TempMonitorRotary.GetState() != 1 && (lem->LR.GetAntennaTempF() < -15.6 || lem->LR.GetAntennaTempF() > 148.9)){
+		LightStatus[2][6] = 1; //Needs to not be looked at after staging as the LR is no longer attached.
 	}
 	if (lem->TempMonitorRotary.GetState() != 6 && (lem->SBandSteerable.GetAntennaTempF() < -64.08 || lem->SBandSteerable.GetAntennaTempF() > 152.63)) {
 		LightStatus[2][6] = 1;
@@ -4153,7 +4154,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	LightStatus[2][7] = 0;
 	if (GlycolWarningDisabled == 0) {
 		if (lem->ecs.GetPrimaryGlycolTempF() > 50.0) { LightStatus[2][7] = 1; }
-		if (lem->ecs.GetPrimaryGlycolQuantity() < 4.5 || lem->ecs.GetSecondaryGlycolQuantity() < 0.065) { LightStatus[2][7] = 1; }
+		if (lem->ecs.GetPrimaryGlycolQuantity() < 2.5 || lem->ecs.GetSecondaryGlycolQuantity() < 0.5) { LightStatus[2][7] = 1; }
 	}
 	if (lem->GlycolRotary.GetState() == 0 && LightStatus[2][7] != 0){
 		GlycolWarningDisabled = 1;
@@ -4183,7 +4184,7 @@ void LEM_CWEA::TimeStep(double simdt){
 		LightStatus[4][7] = 1;
 	}
 
-	// RendezVous Radar Caution
+	// Rendezvous Radar Caution
 
 	LightStatus[2][5]=0;
 	if(lem->RendezvousRadarRotary.GetState()==0 && lem->RR.IsRadarDataGood() == 0 ) {

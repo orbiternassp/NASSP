@@ -960,8 +960,25 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Secondary_CL_Glycol_Press = 0;  // Zero this, system will fill from accu
 	Primary_CL_Glycol_Temp = 0;  // 40 in the accu, 0 other side of the pump
 	Secondary_CL_Glycol_Temp = 0; // 40 in the accu, 0 other side of the pump
-	Primary_Glycol_Accu = 0; // Cubic inches of coolant
-	Secondary_Glycol_Accu = 0; // Cubic inches of coolant
+	Primary_Glycol_Accu = 0;								// Glycol Accumulator mass
+	Primary_Glycol_Pump_Manifold = 0;					// Pump manifold mass
+	Primary_Glycol_HXCooling = 0;						// HXCooling mass
+	Primary_Glycol_Loop1 = 0;							// Loop 1 mass
+	Primary_Glycol_WaterHX = 0;							// Water glycol HX mass
+	Primary_Glycol_Loop2 = 0;							// Loop 2 mass
+	Primary_Glycol_HXHeating = 0;						// HXHeating mass
+	Primary_Glycol_EvapIn = 0;							// Evap inlet mass
+	Primary_Glycol_EvapOut = 0;							// Evap outlet mass
+	Primary_Glycol_AscCooling = 0;						// Ascent battery cooling mass
+	Primary_Glycol_DesCooling = 0;						// Descent battery cooling mass
+	Secondary_Glycol_Accu;								// Glycol Accumulator mass
+	Secondary_Glycol_Pump_Manifold = 0;					// Pump manifold mass
+	Secondary_Glycol_Loop1 = 0;							// Loop 1 mass
+	Secondary_Glycol_AscCooling = 0;					// Ascent battery cooling mass
+	Secondary_Glycol_Loop2 = 0;							// Loop 2 mass
+	Secondary_Glycol_EvapIn = 0;						// Evap inlet mass
+	Secondary_Glycol_EvapOut = 0;						// Evap outlet mass
+
 	// Open valves as would be for IVT
 	Des_O2 = 0;
 	Des_H2O_To_PLSS = 0;
@@ -1146,7 +1163,38 @@ double LEM_ECS::GetPrimaryGlycolQuantity() {
 	if (!Primary_Glycol_Accu) {
 		Primary_Glycol_Accu = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:MASS");
 	}
-	return *Primary_Glycol_Accu * LBS;
+	if (!Primary_Glycol_Pump_Manifold) {
+		Primary_Glycol_Pump_Manifold = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD:MASS");
+	}
+	if (!Primary_Glycol_HXCooling) {
+		Primary_Glycol_HXCooling = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXCOOLING:MASS");
+	}
+	if (!Primary_Glycol_Loop1) {
+		Primary_Glycol_Loop1 = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP1:MASS");
+	}
+	if (!Primary_Glycol_WaterHX) {
+		Primary_Glycol_WaterHX = (double*)sdk.GetPointerByString("HYDRAULIC:WATERGLYCOLHX:MASS");
+	}
+	if (!Primary_Glycol_Loop2) {
+		Primary_Glycol_Loop2 = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLLOOP2:MASS");
+	}
+	if (!Primary_Glycol_HXHeating) {
+		Primary_Glycol_HXHeating = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLSUITHXHEATING:MASS");
+	}
+	if (!Primary_Glycol_EvapIn) {
+		Primary_Glycol_EvapIn = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:MASS");
+	}
+	if (!Primary_Glycol_EvapOut) {
+		Primary_Glycol_EvapOut = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPOUTLET:MASS");
+	}
+	if (!Primary_Glycol_AscCooling) {
+		Primary_Glycol_AscCooling = (double*)sdk.GetPointerByString("HYDRAULIC:ASCBATCOOLING:MASS");
+	}
+	if (!Primary_Glycol_DesCooling) {
+		Primary_Glycol_DesCooling = (double*)sdk.GetPointerByString("HYDRAULIC:DESBATCOOLING:MASS");
+	}
+	return (*Primary_Glycol_Accu + *Primary_Glycol_Pump_Manifold + *Primary_Glycol_HXCooling + *Primary_Glycol_Loop1 + *Primary_Glycol_WaterHX + *Primary_Glycol_Loop2 +
+		*Primary_Glycol_HXHeating + *Primary_Glycol_EvapIn + *Primary_Glycol_EvapOut + *Primary_Glycol_AscCooling + *Primary_Glycol_DesCooling) * LBS;
 }
 
 double LEM_ECS::GetPrimaryGlycolTempF() {
@@ -1167,7 +1215,26 @@ double LEM_ECS::GetSecondaryGlycolQuantity() {
 	if (!Secondary_Glycol_Accu) {
 		Secondary_Glycol_Accu = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR:MASS");
 	}
-	return *Secondary_Glycol_Accu * LBS;
+	if (!Secondary_Glycol_Pump_Manifold) {
+		Secondary_Glycol_Pump_Manifold = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLPUMPFANMANIFOLD:MASS");
+	}
+	if (!Secondary_Glycol_Loop1) {
+		Secondary_Glycol_Loop1 = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP1:MASS");
+	}
+	if (!Secondary_Glycol_AscCooling) {
+		Secondary_Glycol_AscCooling = (double*)sdk.GetPointerByString("HYDRAULIC:SECASCBATCOOLING:MASS");
+	}
+	if (!Secondary_Glycol_Loop2) {
+		Secondary_Glycol_Loop2 = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLLOOP2:MASS");
+	}
+	if (!Secondary_Glycol_EvapIn) {
+		Secondary_Glycol_EvapIn = (double*)sdk.GetPointerByString("HYDRAULIC:SECEVAPINLET:MASS");
+	}
+	if (!Secondary_Glycol_EvapOut) {
+		Secondary_Glycol_EvapOut = (double*)sdk.GetPointerByString("HYDRAULIC:SECEVAPOUTLET:MASS");
+	}
+	return (*Secondary_Glycol_Accu + *Secondary_Glycol_Pump_Manifold + *Secondary_Glycol_Loop1 + *Secondary_Glycol_AscCooling + *Secondary_Glycol_Loop2
+		+ *Secondary_Glycol_EvapIn + *Secondary_Glycol_EvapOut)* LBS;
 }
 
 double LEM_ECS::GetSecondaryGlycolTempF() {
@@ -1243,6 +1310,26 @@ bool LEM_ECS::GetSuitFan2Failure()
 		{
 			return true;
 		}
+	}
+
+	return false;
+}
+
+bool LEM_ECS::GetPrimGlycolLowLevel()
+{
+	if (lem->ecs.GetPrimaryGlycolQuantity() < 2.5)
+	{
+			return true;
+	}
+
+	return false;
+}
+
+bool LEM_ECS::GetSecGlycolLowLevel()
+{
+	if (lem->ecs.GetSecondaryGlycolQuantity() < 0.5)
+	{
+		return true;
 	}
 
 	return false;
