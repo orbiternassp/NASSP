@@ -294,6 +294,8 @@ public:
 	double AscentWaterTank1Quantity();
 	double AscentWaterTank2Quantity();
 	double DescentWaterTankQuantity();
+	double GetPrimaryGlycolQuantity();
+	double GetSecondaryGlycolQuantity();
 	double GetPrimaryGlycolPressure();
 	double GetSecondaryGlycolPressure();
 	double GetPrimaryGlycolTempF();

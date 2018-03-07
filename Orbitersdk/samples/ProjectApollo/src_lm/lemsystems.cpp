@@ -1544,7 +1544,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-///*
+/*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1871,9 +1871,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:PRESS");
 	double *lmtunneltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:TEMP");
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
-//*/
+*/
 
-	sprintf(oapiDebugString(), "ASC1P %lf ASC2P %lf", *asco2tk1press*PSI, *asco2tk2press*PSI);
+	//sprintf(oapiDebugString(), "ASC1P %lf ASC2P %lf PrimAccuMass %lf SecAccuMass %lf", *asco2tk1press*PSI, *asco2tk2press*PSI, *primglycolmass*LBS, *secglycolmass*LBS);
 
 	//sprintf(oapiDebugString(), "GlyTmp %lf GlyCoolTmp %lf HXCTmp %lf GlyHeatTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf LP %lf LT %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*glycolsuitheattemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67);
 	//sprintf(oapiDebugString(), "CO2CP %lf SFMP %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf SC Mass: %lf", *primCO2CanisterPress*PSI, *suitfanmanifoldPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval, (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldMass + *hxcoolingMass));
@@ -3860,6 +3860,7 @@ LEM_CWEA::LEM_CWEA(){
 	lem = NULL;	
 	CabinLowPressLt = 0;
 	WaterWarningDisabled = 0;
+	GlycolWarningDisabled = 0;
 }
 
 void LEM_CWEA::Init(LEM *s){
@@ -4147,9 +4148,16 @@ void LEM_CWEA::TimeStep(double simdt){
 	if(lem->ecs.AscentOxyTank1PressurePSI() < 99.6){ LightStatus[1][7] = 1; }
 
 	// 6DS38 GLYCOL FAILURE CAUTION
-	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ water evap outlet > 49.98F
+	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ accumulator > 50F
 	// Disabled by Glycol Pump to INST(SEC) position
-	LightStatus[2][7] = 1;
+	LightStatus[2][7] = 0;
+	if (GlycolWarningDisabled == 0) {
+		if (lem->ecs.GetPrimaryGlycolTempF() > 50.0) { LightStatus[2][7] = 1; }
+		if (lem->ecs.GetPrimaryGlycolQuantity() < 4.5 || lem->ecs.GetSecondaryGlycolQuantity() < 0.065) { LightStatus[2][7] = 1; }
+	}
+	if (lem->GlycolRotary.GetState() == 0 && LightStatus[2][7] != 0){
+		GlycolWarningDisabled = 1;
+	}
 
 	// 6DS39 WATER QUANTITY CAUTION
 	// On when:

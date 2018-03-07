@@ -1142,6 +1142,13 @@ double LEM_ECS::GetPrimaryGlycolPressure() {
 	return *Primary_CL_Glycol_Press * PSI;
 }
 
+double LEM_ECS::GetPrimaryGlycolQuantity() {
+	if (!Primary_Glycol_Accu) {
+		Primary_Glycol_Accu = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:MASS");
+	}
+	return *Primary_Glycol_Accu * LBS;
+}
+
 double LEM_ECS::GetPrimaryGlycolTempF() {
 	if (!Primary_CL_Glycol_Temp) {
 		Primary_CL_Glycol_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLACCUMULATOR:TEMP");
@@ -1154,6 +1161,13 @@ double LEM_ECS::GetSecondaryGlycolPressure() {
 		Secondary_CL_Glycol_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLPUMPFANMANIFOLD:PRESS");
 	}
 	return *Secondary_CL_Glycol_Press * PSI;
+}
+
+double LEM_ECS::GetSecondaryGlycolQuantity() {
+	if (!Secondary_Glycol_Accu) {
+		Secondary_Glycol_Accu = (double*)sdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR:MASS");
+	}
+	return *Secondary_Glycol_Accu * LBS;
 }
 
 double LEM_ECS::GetSecondaryGlycolTempF() {
