@@ -989,13 +989,6 @@ bool LEMBatterySwitch::SwitchTo(int newState, bool dontspring)
 {
 	//sprintf(oapiDebugString(),"NewState %d",newState);
 	if (LEMThreePosSwitch::SwitchTo(newState, dontspring)) {
-		// Check for control power
-		if (afl == 1) {
-			if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
-		}
-		else {
-			if (lem->CDRDesECAContCB.Voltage() < 24 && lem->LMPDesECAContCB.Voltage() < 24) { return true; }
-		}
 		switch (state) {
 		case THREEPOSSWITCH_UP:
 			switch (srcno) {
@@ -1014,6 +1007,13 @@ bool LEMBatterySwitch::SwitchTo(int newState, bool dontspring)
 			}
 			break;
 		case THREEPOSSWITCH_DOWN:
+			// Check for control power
+			if (afl == 1) {
+				if (lem->CDRAscECAContCB.Voltage() < 24 && lem->LMPAscECAContCB.Voltage() < 24) { return true; }
+			}
+			else {
+				if (lem->CDRDesECAContCB.Voltage() < 24 && lem->LMPDesECAContCB.Voltage() < 24) { return true; }
+			}
 			if (eca->dc_source_tb != NULL) {
 				eca->dc_source_tb->SetState(0);
 			}

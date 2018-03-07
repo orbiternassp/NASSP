@@ -235,13 +235,13 @@ void LEM::SystemsInit()
 	Battery4 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:DSC_BATTERY_D");
 	Battery5 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_A");
 	Battery6 = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:ASC_BATTERY_B");
-	LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");
+	//LunarBattery = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:LUNAR_BATTERY");  //Lunar battery not used on early LM's and will stay commented out until a J Mission LM is created
 	EDBatteryA = (Battery *)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_A");
 	EDBatteryB = (Battery *)Panelsdk.GetPointerByString("ELECTRIC:BATTERY_ED_B");
 
 	// Batteries 1-4 and the Lunar Stay Battery are jettisoned with the descent stage.
 
-	// ECA #1 (DESCENT stage, LMP DC bus)
+	// ECA #1 (DESCENT stage, LMP 28V DC bus)
 	ECA_1a.Init(this, Battery1, 2); // Battery 1 starts on LV
 	ECA_1b.Init(this, Battery2, 0);
 	ECA_1a.dc_source_tb = &DSCBattery1TB;
@@ -249,7 +249,7 @@ void LEM::SystemsInit()
 	ECA_1b.dc_source_tb = &DSCBattery2TB;
 	ECA_1b.dc_source_tb->SetState(0); // Initialize to off
 
-	// ECA #2 (DESCENT stage, CDR DC bus)
+	// ECA #2 (DESCENT stage, CDR 28V DC bus)
 	ECA_2a.Init(this, Battery3, 0);
 	ECA_2b.Init(this, Battery4, 2); 
 	ECA_2a.dc_source_tb = &DSCBattery3TB;
@@ -297,7 +297,7 @@ void LEM::SystemsInit()
 
 	// Main busses can be fed from the ECAs via the BAT FEED TIE CBs,
 	// the other bus via the CROSS TIE BUS / CROSS TIE BAL LOADS CBs,
-	// or the CSM via the XLUNAR bus and associated etcetera.
+	// or the CSM via the XLUNAR bus floating ground return.
 	// At this point, we have the sum of all battery feeds on BTB D and the XLUNAR feeds on BTB A
 	BTB_CDR_D.Init(this,&CDRBatteryFeedTieCB1,&CDRBatteryFeedTieCB2); // Tie dual CBs together for CDR bus
 	BTB_LMP_D.Init(this,&LMPBatteryFeedTieCB1,&LMPBatteryFeedTieCB2); // Tie dual CBs together for LMP bus
