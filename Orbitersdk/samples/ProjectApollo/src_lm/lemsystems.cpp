@@ -1989,29 +1989,29 @@ void LEM::GetRCSStatus(int index, LMRCSStatus &rs)
 
 	if (index >= LM_RCS_QUAD_1 && index <= LM_RCS_QUAD_4)
 	{
-		RCSPropellantSource *quad = 0;
+		h_Radiator *quad = 0;
 		switch (index)
 		{
 		case LM_RCS_QUAD_1:
-			quad = &LMQuad1RCS;
+			quad = LMQuad1RCS;
 			break;
 
 		case LM_RCS_QUAD_2:
-			quad = &LMQuad2RCS;
+			quad = LMQuad2RCS;
 			break;
 
 		case LM_RCS_QUAD_3:
-			quad = &LMQuad3RCS;
+			quad = LMQuad3RCS;
 			break;
 
 		case LM_RCS_QUAD_4:
-			quad = &LMQuad4RCS;
+			quad = LMQuad4RCS;
 			break;
 		}
 
 		if (quad)
 		{
-			rs.QuadTempF = quad->GetQuadTempF();
+			quad->GetTemp();
 		}
 
 		return;

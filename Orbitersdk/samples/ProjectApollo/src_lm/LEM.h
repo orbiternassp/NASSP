@@ -1872,10 +1872,6 @@ protected:
 	// RCS
 	RCSPropellantSource RCSA;
 	RCSPropellantSource RCSB;
-	RCSPropellantSource LMQuad1RCS;
-	RCSPropellantSource LMQuad2RCS;
-	RCSPropellantSource LMQuad3RCS;
-	RCSPropellantSource LMQuad4RCS;
 	RCS_TCA tca1A;
 	RCS_TCA tca2A;
 	RCS_TCA tca3A;
