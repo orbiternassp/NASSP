@@ -3637,15 +3637,34 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 		e = coe.e;
 		theta0 = coe.TA;
 
-		a = h*h / mu * 1.0 / (1.0 - e*e);
-		T = PI2 / sqrt(mu)*OrbMech::power(a, 3.0 / 2.0);
-		n = PI2 / T;
-		E_0 = 2.0 * atan(sqrt((1.0 - e) / (1.0 + e))*tan(theta0 / 2.0));
-		t_0 = (E_0 - e*sin(E_0)) / n;
-		E_1 = 2.0 * atan(sqrt((1.0 - e) / (1.0 + e))*tan(v1 / 2.0));
-		t_f = (E_1 - e*sin(E_1)) / n;
-		dt_alt = dt;
-		dt = t_f - t_0;
+		if (e > 1.0)
+		{
+			VECTOR3 R1, V1;
+			double ddt;
+
+			rv_from_r0v0(R, V, dt, R1, V1, mu);
+
+			coe = coe_from_sv(R1, V1, mu);
+			h = coe.h;
+			e = coe.e;
+			theta0 = coe.TA;
+
+			dt_alt = dt;
+			ddt = time_theta(R1, V1, calculateDifferenceBetweenAngles(theta0, v1), mu);
+			dt += ddt;
+		}
+		else
+		{
+			a = h * h / mu * 1.0 / (1.0 - e * e);
+			T = PI2 / sqrt(mu)*OrbMech::power(a, 3.0 / 2.0);
+			n = PI2 / T;
+			E_0 = 2.0 * atan(sqrt((1.0 - e) / (1.0 + e))*tan(theta0 / 2.0));
+			t_0 = (E_0 - e * sin(E_0)) / n;
+			E_1 = 2.0 * atan(sqrt((1.0 - e) / (1.0 + e))*tan(v1 / 2.0));
+			t_f = (E_1 - e * sin(E_1)) / n;
+			dt_alt = dt;
+			dt = t_f - t_0;
+		}
 
 		if (dt < 0 && future)
 		{

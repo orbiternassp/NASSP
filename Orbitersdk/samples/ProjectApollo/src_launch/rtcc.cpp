@@ -4015,15 +4015,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 40: //REV 1 MAP UPDATE
 	{
 		SV sv0, sv1, sv2;
+		AP10MAPUPDATE upd_hyper, upd_ellip;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
 		sv0 = StateVectorCalc(calcParams.src);
+		LunarOrbitMapUpdate(sv0, getGETBase(), upd_hyper);
+		
 		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
 		sv2 = coast(sv1, -30.0*60.0);
+		LunarOrbitMapUpdate(sv2, getGETBase(), upd_ellip);
 
-		LunarOrbitMapUpdate(sv2, getGETBase(), *form);
 		form->Rev = 1;
+		form->AOSGET = upd_ellip.AOSGET;
+		form->LOSGET = upd_hyper.LOSGET;
+		form->PMGET = upd_hyper.PMGET;
 	}
 	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
