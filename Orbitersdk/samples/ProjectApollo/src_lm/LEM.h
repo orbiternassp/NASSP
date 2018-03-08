@@ -597,6 +597,10 @@ public:
 	Pump *PrimGlyPump2;
 	Pump *SecGlyPump;
 	Pump *LCGPump; 
+	Boiler *RCSHtr1Quad1;
+	Boiler *RCSHtr1Quad2;
+	Boiler *RCSHtr1Quad3;
+	Boiler *RCSHtr1Quad4;
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);

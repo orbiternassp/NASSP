@@ -848,6 +848,19 @@ void LEM::SystemsInit()
 	tca3B.Init(this, 4);
 	tca4B.Init(this, 2);
 
+	RCSSysQuad1Switch.WireTo(&RCS_QUAD_1_LMP_HTR_CB);
+	RCSSysQuad2Switch.WireTo(&RCS_QUAD_2_LMP_HTR_CB);
+	RCSSysQuad3Switch.WireTo(&RCS_QUAD_3_LMP_HTR_CB);
+	RCSSysQuad4Switch.WireTo(&RCS_QUAD_4_LMP_HTR_CB);
+	RCSHtr1Quad1 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS1");
+	RCSHtr1Quad2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS1");
+	RCSHtr1Quad3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS1");
+	RCSHtr1Quad4 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS1");
+	RCSHtr1Quad1->WireTo(&RCS_QUAD_1_CDR_HTR_CB);
+	RCSHtr1Quad2->WireTo(&RCS_QUAD_2_CDR_HTR_CB);
+	RCSHtr1Quad3->WireTo(&RCS_QUAD_3_CDR_HTR_CB);
+	RCSHtr1Quad4->WireTo(&RCS_QUAD_4_CDR_HTR_CB);
+
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
 	CDR_TTCA.Init(this);

@@ -2715,6 +2715,64 @@ void LEM::SetSwitches(int panel) {
 }
 
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
+
+	//RCS Heaters//
+
+	//RCS Heater 2
+	if (s == &RCSSysQuad1Switch) {
+		Boiler * htr = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS2");
+		if (RCSSysQuad1Switch.GetState() == 2) {
+			htr->SetPumpAuto();
+		}
+		else if (RCSSysQuad1Switch.GetState() == 0) {
+			htr->SetPumpOff();
+		}
+		else {
+			htr->SetPumpOn();
+		}
+	}
+
+	//RCS Heater 2
+	if (s == &RCSSysQuad1Switch) {
+		Boiler * htr = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS2");
+		if (RCSSysQuad1Switch.GetState() == 2) {
+			htr->SetPumpAuto();
+		}
+		else if (RCSSysQuad1Switch.GetState() == 0) {
+			htr->SetPumpOff();
+		}
+		else {
+			htr->SetPumpOn();
+		}
+	}
+
+	//RCS Heater 3
+	if (s == &RCSSysQuad1Switch) {
+		Boiler * htr = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS2");
+		if (RCSSysQuad1Switch.GetState() == 2) {
+			htr->SetPumpAuto();
+		}
+		else if (RCSSysQuad1Switch.GetState() == 0) {
+			htr->SetPumpOff();
+		}
+		else {
+			htr->SetPumpOn();
+		}
+	}
+
+	//RCS Heater 4
+	if (s == &RCSSysQuad1Switch) {
+		Boiler * htr = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS2");
+		if (RCSSysQuad1Switch.GetState() == 2) {
+			htr->SetPumpAuto();
+		}
+		else if (RCSSysQuad1Switch.GetState() == 0) {
+			htr->SetPumpOff();
+		}
+		else {
+			htr->SetPumpOn();
+		}
+	}
 }
 
 void LEM::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
