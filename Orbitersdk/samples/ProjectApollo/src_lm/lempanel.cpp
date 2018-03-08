@@ -2714,64 +2714,43 @@ void LEM::SetSwitches(int panel) {
 	ForwardHatchReliefValve.Init(0, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchValveSwitchRow);
 }
 
+void LEM::RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
+
+	if (s->IsUp())
+		*pump = SP_PUMP_AUTO;
+	else if (s->IsCenter())
+		*pump = SP_PUMP_OFF;
+	else if (s->IsDown())
+		*pump = SP_PUMP_ON;
+}
+
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
 
-	//RCS Heaters//
+	//RCS Switchable Heaters//
 
-	//RCS Heater 2
+	//RCS Heater 1
 	if (s == &RCSSysQuad1Switch) {
-		Boiler * htr = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS2");
-		if (RCSSysQuad1Switch.GetState() == 2) {
-			htr->SetPumpAuto();
-		}
-		else if (RCSSysQuad1Switch.GetState() == 0) {
-			htr->SetPumpOff();
-		}
-		else {
-			htr->SetPumpOn();
-		}
-	}
+		RCSHeaterSwitchToggled(s,
+			(int*)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS2:PUMP"));
 
+	}
 	//RCS Heater 2
-	if (s == &RCSSysQuad1Switch) {
-		Boiler * htr = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS2");
-		if (RCSSysQuad1Switch.GetState() == 2) {
-			htr->SetPumpAuto();
-		}
-		else if (RCSSysQuad1Switch.GetState() == 0) {
-			htr->SetPumpOff();
-		}
-		else {
-			htr->SetPumpOn();
-		}
-	}
+	else if (s == &RCSSysQuad2Switch) {
+		RCSHeaterSwitchToggled(s,
+			(int*)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS2:PUMP"));
 
+	}
 	//RCS Heater 3
-	if (s == &RCSSysQuad1Switch) {
-		Boiler * htr = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS2");
-		if (RCSSysQuad1Switch.GetState() == 2) {
-			htr->SetPumpAuto();
-		}
-		else if (RCSSysQuad1Switch.GetState() == 0) {
-			htr->SetPumpOff();
-		}
-		else {
-			htr->SetPumpOn();
-		}
-	}
+	else if (s == &RCSSysQuad3Switch) {
+		RCSHeaterSwitchToggled(s,
+			(int*)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS2:PUMP"));
 
+	}
 	//RCS Heater 4
-	if (s == &RCSSysQuad1Switch) {
-		Boiler * htr = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS2");
-		if (RCSSysQuad1Switch.GetState() == 2) {
-			htr->SetPumpAuto();
-		}
-		else if (RCSSysQuad1Switch.GetState() == 0) {
-			htr->SetPumpOff();
-		}
-		else {
-			htr->SetPumpOn();
-		}
+	else if (s == &RCSSysQuad4Switch) {
+		RCSHeaterSwitchToggled(s,
+			(int*)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS2:PUMP"));
+
 	}
 }
 

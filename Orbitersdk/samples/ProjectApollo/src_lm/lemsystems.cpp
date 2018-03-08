@@ -848,10 +848,6 @@ void LEM::SystemsInit()
 	tca3B.Init(this, 4);
 	tca4B.Init(this, 2);
 
-	RCSSysQuad1Switch.WireTo(&RCS_QUAD_1_LMP_HTR_CB);
-	RCSSysQuad2Switch.WireTo(&RCS_QUAD_2_LMP_HTR_CB);
-	RCSSysQuad3Switch.WireTo(&RCS_QUAD_3_LMP_HTR_CB);
-	RCSSysQuad4Switch.WireTo(&RCS_QUAD_4_LMP_HTR_CB);
 	RCSHtr1Quad1 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS1");
 	RCSHtr1Quad2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS1");
 	RCSHtr1Quad3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS1");
@@ -860,6 +856,20 @@ void LEM::SystemsInit()
 	RCSHtr1Quad2->WireTo(&RCS_QUAD_2_CDR_HTR_CB);
 	RCSHtr1Quad3->WireTo(&RCS_QUAD_3_CDR_HTR_CB);
 	RCSHtr1Quad4->WireTo(&RCS_QUAD_4_CDR_HTR_CB);
+
+	RCSHtr2Quad1 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS2");
+	RCSHtr2Quad2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS2");
+	RCSHtr2Quad3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS2");
+	RCSHtr2Quad4 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS2");
+	RCSHtr2Quad1->WireTo(&RCS_QUAD_1_LMP_HTR_CB);
+	RCSHtr2Quad2->WireTo(&RCS_QUAD_2_LMP_HTR_CB);
+	RCSHtr2Quad3->WireTo(&RCS_QUAD_3_LMP_HTR_CB);
+	RCSHtr2Quad4->WireTo(&RCS_QUAD_4_LMP_HTR_CB);
+
+	LMQuad1RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD1");
+	LMQuad2RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD2");
+	LMQuad3RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD3");
+	LMQuad4RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD4");
 
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
@@ -1972,6 +1982,42 @@ void LEM::ConnectTunnelToCabinVent()
 
 	pipe->in = &tank->OUT_valve;
 }
+
+void LEM::GetRCSStatus(int index, LMRCSStatus &rs)
+{
+	rs.QuadTempF = 0;
+
+	if (index >= LM_RCS_QUAD_1 && index <= LM_RCS_QUAD_4)
+	{
+		RCSPropellantSource *quad = 0;
+		switch (index)
+		{
+		case LM_RCS_QUAD_1:
+			quad = &LMQuad1RCS;
+			break;
+
+		case LM_RCS_QUAD_2:
+			quad = &LMQuad2RCS;
+			break;
+
+		case LM_RCS_QUAD_3:
+			quad = &LMQuad3RCS;
+			break;
+
+		case LM_RCS_QUAD_4:
+			quad = &LMQuad4RCS;
+			break;
+		}
+
+		if (quad)
+		{
+			rs.QuadTempF = quad->GetQuadTempF();
+		}
+
+		return;
+	}
+}
+
 
 
 //

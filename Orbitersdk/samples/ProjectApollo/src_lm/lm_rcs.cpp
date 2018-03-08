@@ -82,9 +82,10 @@ RCSPropellantSource::~RCSPropellantSource()
 
 }
 
-void RCSPropellantSource::Init(THRUSTER_HANDLE *th, Pyro *rcshsp, RCSPropellantSource *otherSys, int q1th1, int q2th1, int q3th1, int q4th1)
+void RCSPropellantSource::Init(THRUSTER_HANDLE *th, h_Radiator *qd, Pyro *rcshsp, RCSPropellantSource *otherSys, int q1th1, int q2th1, int q3th1, int q4th1)
 {
 	thrusters = th;
+	quad = qd;
 	RCSHeliumSupplyPyros = rcshsp;
 	otherSystem = otherSys;
 	quadThruster1ID[0] = q1th1;
@@ -377,6 +378,11 @@ double RCSPropellantSource::GetRCSPropellantQuantity()
 double RCSPropellantSource::GetFuelTankTempF()
 {
 	return 70.0;
+}
+
+double RCSPropellantSource::GetQuadTempF() 
+{
+	return KelvinToFahrenheit(quad->GetTemp());
 }
 
 void RCSPropellantSource::SaveState(FILEHANDLE scn, char *start_str, char *end_str)

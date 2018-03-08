@@ -43,7 +43,7 @@ public:
 	RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p, bool hasXFeedValve);
 	virtual ~RCSPropellantSource();
 
-	void Init(THRUSTER_HANDLE *th, Pyro *rcshsp, RCSPropellantSource *otherSys, int q1th1, int q2th1, int q3th1, int q4th1);
+	void Init(THRUSTER_HANDLE *th, h_Radiator *qd, Pyro *rcshsp, RCSPropellantSource *otherSys, int q1th1, int q2th1, int q3th1, int q4th1);
 	void Timestep(double simt, double simdt);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -59,6 +59,7 @@ public:
 	double GetRCSOxidManifoldPressPSI();
 	double GetRCSPropellantQuantity();
 	double GetFuelTankTempF();
+	double GetQuadTempF();
 
 	LEMRCSValve *GetMainShutoffValve() { return &mainShutoffValve; }
 	LEMRCSValve *GetQuad1IsolationValve() { return &quad1IsolationValve; }
@@ -97,6 +98,7 @@ protected:
 
 	RCSPropellantSource *otherSystem;
 	THRUSTER_HANDLE *thrusters;
+	h_Radiator *quad;
 	Pyro *RCSHeliumSupplyPyros;
 	int quadThruster1ID[4];
 	PROPELLANT_HANDLE prop;
