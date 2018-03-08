@@ -656,6 +656,8 @@ void SCERA2::Timestep()
 	SA3.SetOutput(2, lem->ecs.GetSuitFan1Failure());
 	//Suit fan 2 fail (GF1084X)
 	SA3.SetOutput(6, lem->ecs.GetSuitFan2Failure());
+	//Primary Glycol LLS (GF2041X) & Secondary Glycol LLS (GF2042X)
+	SA3.SetOutput(3, lem->ecs.GetPrimGlycolLowLevel() || lem->ecs.GetSecGlycolLowLevel());
 	//Emergency oxygen valve electrically open (GF3572)
 	SA3.SetOutput(8, lem->CabinRepressValve.GetEmergencyCabinRepressRelay());
 

@@ -60,7 +60,6 @@ void Sat1Abort1::init()
 void Sat1Abort1::Setup(bool sm)
 {
 	SetSize (25);
-	SetCOG_elev (21.2);
 	SetEmptyMass (185500.0);
 	SetMaxFuelMass (407100);
 	SetFuelMass(407100);
@@ -82,7 +81,37 @@ void Sat1Abort1::Setup(bool sm)
 	ClearMeshes();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
-	SetTouchdownPoints (_V(0,-1.0,-22.185), _V(-.7,.7,-22.185), _V(.7,.7,-22.185));
+	
+	//SetTouchdownPoints (_V(0,-1.0,-22.185), _V(-.7,.7,-22.185), _V(.7,.7,-22.185));
+
+	double TCP = -39.5;
+	double Mass = 592600;
+	double ro = 1;
+	TOUCHDOWNVTX td[4];
+	double x_target = -0.05;
+	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(Mass*stiffness));
+	for (int i = 0; i<4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.y = -sin(30 * RAD)*ro;
+	td[0].pos.z = TCP;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * ro;
+	td[1].pos.z = TCP;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -sin(30 * RAD)*ro;
+	td[2].pos.z = TCP;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = TCP + 60;
+
+	SetTouchdownPoints(td, 4);
+	
 	VECTOR3 mesh_dir=_V(0,0,-18.7);
 	AddMesh (hSat1stg1, &mesh_dir);
     mesh_dir=_V(0,0,-2.5);

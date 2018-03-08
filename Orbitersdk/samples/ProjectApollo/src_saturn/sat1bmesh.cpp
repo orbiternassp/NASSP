@@ -625,11 +625,17 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if (stage == LAUNCH_STAGE_SIVB && new_stage == CM_STAGE)
 	{
-		ofs1= _V(0, 0, 4.7);
+		ofs1= _V(0, 0, 4.35);
 		vel1 = _V(0,0,-2);
 	}
 	
-	if ((stage == LAUNCH_STAGE_SIVB && new_stage != CM_STAGE) || stage == STAGE_ORBIT_SIVB)
+	if (stage == STAGE_ORBIT_SIVB && new_stage == CM_STAGE)
+	{
+		ofs1 = _V(0, 0, 4.35);
+		vel1 = _V(0, 0, -0.2);
+	}
+
+	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)
 	{
 	 	ofs1 = _V(0, 0, 1.7);
 		vel1 = _V(0, 0, 0);
@@ -713,7 +719,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		ShiftCentreOfMass (_V(0,0,12.25));
 	}
 
-	if ((stage == LAUNCH_STAGE_SIVB && new_stage != CM_STAGE) || stage == STAGE_ORBIT_SIVB)
+	if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage != CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;
@@ -797,28 +803,59 @@ void Saturn1b::SeparateStage (int new_stage)
 
 	if ((stage == PRELAUNCH_STAGE || stage == LAUNCH_STAGE_ONE) && new_stage >= CSM_LEM_STAGE)
 	{
-		vs1.vrot.x = 0.0;
-		vs1.vrot.y = 0.0;
-		vs1.vrot.z = 0.0;
-		StageS.play();
-		habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
-		
-		Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
-		stage1->SetState(new_stage == CM_STAGE);
+		VESSELSTATUS2 vs3;
+		memset(&vs3, 0, sizeof(vs3));
+		vs3.version = 2;
 
-		if (new_stage == CSM_LEM_STAGE)
-		{
-			SetCSMStage();
+		GetStatusEx(&vs3);
+		StageS.play();
+
+		if (vs3.status == 1) {
+			vs3.vrot.x = 39.5;
+
+			habort = oapiCreateVesselEx("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", &vs3);
+
+			Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
+			stage1->SetState(new_stage == CM_STAGE);
+
+			if (new_stage == CSM_LEM_STAGE)
+			{
+				vs3.vrot.x = 39.5 + 28.4;
+				DefSetStateEx(&vs3);
+				SetCSMStage();
+			}
+			else
+			{
+				vs3.vrot.x = 39.5 + 31;
+				DefSetStateEx(&vs3);
+				SetReentryStage();
+			}
 		}
 		else
 		{
-			SetReentryStage();
+			vs1.vrot.x = 0.0;
+			vs1.vrot.y = 0.0;
+			vs1.vrot.z = 0.0;
+		
+			habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
+
+			Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
+			stage1->SetState(new_stage == CM_STAGE);
+
+			if (new_stage == CSM_LEM_STAGE)
+			{
+				SetCSMStage();
+				ShiftCentreOfMass(_V(0, 0, 32.55));
+			}
+			else
+			{
+				SetReentryStage();
+				ShiftCentreOfMass(_V(0, 0, 35.15));
+			}
 		}
-
-		ShiftCentreOfMass(_V(0, 0, 35.15));
 	}
-
-	if (stage == LAUNCH_STAGE_SIVB && new_stage == CM_STAGE)
+		
+    if ((stage == LAUNCH_STAGE_SIVB || stage == STAGE_ORBIT_SIVB) && new_stage == CM_STAGE)
 	{
 		vs1.vrot.x = 0.0;
 		vs1.vrot.y = 0.0;

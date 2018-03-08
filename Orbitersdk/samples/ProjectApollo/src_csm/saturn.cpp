@@ -2647,7 +2647,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 
 		getIT = oapiGetAltitude(habort,&altabort);
 
-		if (altabort < 100 && getIT > 0) {
+		if (altabort < 30 && getIT > 0) {
 			oapiDeleteVessel(habort,GetHandle());
 			habort = NULL;
 		}
