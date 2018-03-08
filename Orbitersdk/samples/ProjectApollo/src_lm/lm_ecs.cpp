@@ -971,7 +971,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Primary_Glycol_EvapOut = 0;							// Evap outlet mass
 	Primary_Glycol_AscCooling = 0;						// Ascent battery cooling mass
 	Primary_Glycol_DesCooling = 0;						// Descent battery cooling mass
-	Secondary_Glycol_Accu;								// Glycol Accumulator mass
+	Secondary_Glycol_Accu = 0;								// Glycol Accumulator mass
 	Secondary_Glycol_Pump_Manifold = 0;					// Pump manifold mass
 	Secondary_Glycol_Loop1 = 0;							// Loop 1 mass
 	Secondary_Glycol_AscCooling = 0;					// Ascent battery cooling mass
