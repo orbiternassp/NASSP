@@ -198,6 +198,12 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 	MT_Enabled = false;
 	AbortMode = 0;
 	LastAOSUpdate=0;
+	CM_MoonPosition[0] = 0;
+	CM_MoonPosition[1] = 0;
+	CM_MoonPosition[2] = 0;
+	CM_Prev_MoonPosition[0] = 0;
+	CM_Prev_MoonPosition[1] = 0;
+	CM_Prev_MoonPosition[2] = 0;
 	// Reset ground stations
 	int x=0;
 	while(x<MAX_GROUND_STATION){
@@ -231,6 +237,7 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 	NHpad = 0;
 	StateTime = 0;
 	SubStateTime = 0;
+	MoonRevTime = 0;
 	PCOption_Enabled = false;
 	PCOption_Text[0] = 0;
 	NCOption_Enabled = false;
@@ -737,6 +744,7 @@ void MCC::TimeStep(double simdt){
 				// If we just crossed the rev line, count it (from -180 it jumps to 180)
 				if (CM_Prev_MoonPosition[1] < 0 && CM_MoonPosition[1] >= 0 && cm->stage >= STAGE_ORBIT_SIVB) {
 					MoonRev++;
+					MoonRevTime = 0.0;
 					sprintf(buf, "Rev %d", MoonRev);
 					addMessage(buf);
 				}
@@ -800,6 +808,7 @@ void MCC::TimeStep(double simdt){
 		// Clock timers
 		StateTime += simdt;
 		SubStateTime += simdt;
+		MoonRevTime += simdt;
 		// Handle global mission states
 		switch(MissionState){			
 		case MST_INIT:
@@ -2271,7 +2280,19 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_MAPUPDATE, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 30.0*60.0, 40, MST_F_TRANSLUNAR19);
 				break;
 			case MST_F_TRANSLUNAR19: //LOI-1 update to Rev 2 Map Update
-				UpdateMacro(UTP_P30MANEUVER, cm->MissionTime > rtcc->calcParams.LOI + 15.0*60.0, 21, MST_F_TRANSLUNAR19);
+				UpdateMacro(UTP_P30MANEUVER, MoonRev >= 1 && MoonRevTime > 30.0*60.0, 21, MST_F_LUNAR_ORBIT1);
+				break;
+			case MST_F_LUNAR_ORBIT1: //Rev 2 Map Update to LOI-2 update
+				UpdateMacro(UTP_MAPUPDATE, MoonRev >= 2 && MoonRevTime > 30.0*60.0, 41, MST_F_LUNAR_ORBIT2);
+				break;
+			case MST_F_LUNAR_ORBIT2: //LOI-2 update to TEI-5 update
+				UpdateMacro(UTP_P30MANEUVER, SubStateTime > 5.0*60.0, 22, MST_F_LUNAR_ORBIT3);
+				break;
+			case MST_F_LUNAR_ORBIT3: //TEI-5 update to Rev 3 Map Update
+				UpdateMacro(UTP_P30MANEUVER, SubStateTime > 5.0*60.0, 32, MST_F_LUNAR_ORBIT4);
+				break;
+			case MST_F_LUNAR_ORBIT4: //Rev 3 Map Update to 
+				UpdateMacro(UTP_MAPUPDATE, MoonRev >= 3 && MoonRevTime > 30.0*60.0, 42, MST_F_LUNAR_ORBIT4);
 				break;
 			}
 			break;
@@ -2588,6 +2609,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	// Floats
 	SAVE_DOUBLE("MCC_StateTime", StateTime);
 	SAVE_DOUBLE("MCC_SubStateTime", SubStateTime);
+	SAVE_DOUBLE("MCC_MoonRevTime", MoonRevTime);
 	// Strings
 	if (PCOption_Enabled == true) { SAVE_STRING("MCC_PCOption_Text", PCOption_Text); }
 	if (NCOption_Enabled == true) { SAVE_STRING("MCC_NCOption_Text", NCOption_Text); }
@@ -2863,6 +2885,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_INT("MCC_AbortMode", AbortMode);
 		LOAD_DOUBLE("MCC_StateTime", StateTime);
 		LOAD_DOUBLE("MCC_SubStateTime", SubStateTime);
+		LOAD_DOUBLE("MCC_MoonRevTime", MoonRevTime);
 		LOAD_STRING("MCC_PCOption_Text", PCOption_Text, 32);
 		LOAD_STRING("MCC_NCOption_Text", NCOption_Text, 32);
 		LOAD_INT("MCC_padNumber", padNumber);

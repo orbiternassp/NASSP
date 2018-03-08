@@ -3949,8 +3949,55 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 22:	// MISSION F LOI-2 MANEUVER
+	{
+		LOI2Man opt;
+		AP11ManPADOpt manopt;
+		double GETbase, P30TIG;
+		VECTOR3 dV_LVLH;
+		SV sv;
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = getGETBase();
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		opt.alt = LSAlt;
+		opt.csmlmdocked = true;
+		opt.GETbase = GETbase;
+		opt.h_circ = 60.0*1852.0;
+		opt.vessel = calcParams.src;
+
+		LOI2Targeting(&opt, dV_LVLH, P30TIG);
+
+		manopt.alt = LSAlt;
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.engopt = 0;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(AGCEpoch);
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.src;
+		manopt.vesseltype = 1;
+
+		AP11ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "LOI-2");
+
+		TimeofIgnition = P30TIG;
+		DeltaV_LVLH = dV_LVLH;
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCExternalDeltaVUpdate(P30TIG, dV_LVLH));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
+		}
+	}
+	break;
 	case 30: //TEI-1 UPDATE (PRE LOI)
 	case 31: //TEI-4 UPDATE (PRE LOI)
+	case 32: //TEI-5 UPDATE (PRE LOI-2)
 	{
 		TEIOpt entopt;
 		EntryResults res;
@@ -3970,10 +4017,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(manname, "TEI-1");
 			sv2 = coast(sv1, 0.5*2.0*3600.0);
 		}
-		else
+		else if (fcn == 31)
 		{
 			sprintf(manname, "TEI-4");
 			sv2 = coast(sv1, 3.5*2.0*3600.0);
+		}
+		else if (fcn == 32)
+		{
+			sprintf(manname, "TEI-5");
+			sv2 = coast(sv1, 2.5*2.0*3600.0);
 		}
 
 		entopt.EntryLng = -165.0*RAD;
@@ -3983,7 +4035,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.useSV = true;
 		entopt.vessel = calcParams.src;
 
-		TEITargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
+		TEITargeting(&entopt, &res);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -4030,6 +4082,19 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->AOSGET = upd_ellip.AOSGET;
 		form->LOSGET = upd_hyper.LOSGET;
 		form->PMGET = upd_hyper.PMGET;
+	}
+	break;
+	case 41: //REV 2 MAP UPDATE
+	case 42: //REV 3 MAP UPDATE
+	{
+		SV sv0;
+
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		LunarOrbitMapUpdate(sv0, getGETBase(), *form);
+
+		form->Rev = fcn - 39;
 	}
 	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE

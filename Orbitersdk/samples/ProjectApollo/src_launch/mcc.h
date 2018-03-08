@@ -436,6 +436,14 @@
 #define MST_F_TRANSLUNAR18	38
 // Ends at LOI-1 update
 #define MST_F_TRANSLUNAR19	39
+// Ends at rev 2 map update
+#define MST_F_LUNAR_ORBIT1	100
+// Ends at LOI-2 update
+#define MST_F_LUNAR_ORBIT2	101
+// Ends at TEI-5 update
+#define MST_F_LUNAR_ORBIT3	102
+// Ends at rev 3 map update
+#define MST_F_LUNAR_ORBIT4	103
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -799,6 +807,7 @@ public:
 	int AbortMode;											// Abort mode
 	double StateTime;										// Time in this state
 	double SubStateTime;									// Time in this substate
+	double MoonRevTime;										// Time in this lunar revolution
 
 	// PAD FORMS
 	int padState;											// PAD display state
