@@ -702,7 +702,6 @@ double TempMonitorInd::QueryValue()
 	default:
 		return 0;
 	}
-	//return 40;
 }
 
 void TempMonitorInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
