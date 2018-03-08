@@ -1983,10 +1983,8 @@ void LEM::ConnectTunnelToCabinVent()
 	pipe->in = &tank->OUT_valve;
 }
 
-void LEM::GetRCSStatus(int index, LMRCSStatus &rs)
+double LEM::GetRCSQuadTempF(int index)
 {
-	rs.QuadTempF = 0;
-
 	if (index >= LM_RCS_QUAD_1 && index <= LM_RCS_QUAD_4)
 	{
 		h_Radiator *quad = 0;
@@ -2008,14 +2006,9 @@ void LEM::GetRCSStatus(int index, LMRCSStatus &rs)
 			quad = LMQuad4RCS;
 			break;
 		}
-
-		if (quad)
-		{
-			quad->GetTemp();
-		}
-
-		return;
+		return (KelvinToFahrenheit(quad->GetTemp()));
 	}
+		return 0;
 }
 
 

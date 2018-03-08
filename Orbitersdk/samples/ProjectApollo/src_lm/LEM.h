@@ -584,7 +584,7 @@ public:
 	void SetPipeMaxFlow(char *pipe, double flow);
 	h_Pipe* GetLMTunnelPipe();
 	void ConnectTunnelToCabinVent();
-	void GetRCSStatus(int index, LMRCSStatus &rs);
+	double GetRCSQuadTempF(int index);
 	virtual void GetECSStatus(LEMECSStatus &ecs);
 	virtual void SetCrewNumber(int number);
 	virtual void SetCDRInSuit();
