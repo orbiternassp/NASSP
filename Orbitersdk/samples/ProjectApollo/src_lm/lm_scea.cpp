@@ -504,7 +504,7 @@ void SCERA1::Timestep()
 	//Cabin temperature (GF1651)
 	SA21.SetOutput(2, scale_data(lem->ecs.GetCabinTempF(), 20.0, 120.0));
 
-	sprintf(oapiDebugString(), "V %lf T %lf", lem->scera1.GetVoltage(20, 4)*2.2, lem->GetRCSQuadTempF(0));
+	//sprintf(oapiDebugString(), "V %lf T %lf", lem->scera1.GetVoltage(20, 4)*2.2, lem->GetRCSQuadTempF(0));
 }
 
 double SCERA1::GetVoltage(int sa, int chan)
