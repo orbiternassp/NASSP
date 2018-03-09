@@ -490,10 +490,25 @@ void SCERA1::Timestep()
 	//APS oxidizer bipropellant valve inlet pressure (GP1503)
 	SA19.SetOutput(4, scale_data(lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI(), 0.0, 250.0));
 
+	//Quad 4 temperature (GR6001T)
+	SA20.SetOutput(1, scale_data(lem->GetRCSQuadTempF(3), 20.0, 200.0));
+	//Quad 3 temperature (GR6002T)
+	SA20.SetOutput(2, scale_data(lem->GetRCSQuadTempF(2), 20.0, 200.0));
+	//Quad 2 temperature (GR6003T)
+	SA20.SetOutput(3, scale_data(lem->GetRCSQuadTempF(1), 20.0, 200.0));
+	//Quad 1 temperature (GR6004T)
+	SA20.SetOutput(4, scale_data(lem->GetRCSQuadTempF(0), 20.0, 200.0));
+
 	//Suit inlet temperature (GF1281)
 	SA21.SetOutput(1, scale_data(lem->ecs.GetSuitTempF(), 20.0, 120.0));
 	//Cabin temperature (GF1651)
 	SA21.SetOutput(2, scale_data(lem->ecs.GetCabinTempF(), 20.0, 120.0));
+	//Landing radar antenna temperature (GN7563T)
+	SA21.SetOutput(3, scale_data(lem->LR.GetAntennaTempF(), -200.0, 200.0));
+	//Rendezvous radar antenna temperature (GN7723T)
+	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
+
+	//sprintf(oapiDebugString(), "V %lf T %lf", lem->scera1.GetVoltage(20, 4), lem->GetRCSQuadTempF(0));
 }
 
 double SCERA1::GetVoltage(int sa, int chan)
@@ -699,6 +714,8 @@ void SCERA2::Timestep()
 	//RCS Fuel tank B temperature (GR2122)
 	SA20.SetOutput(3, scale_data(lem->RCSB.GetFuelTankTempF(), 20.0, 120.0));
 
+	//S-Band antenna temperature (GT0454T)
+	SA21.SetOutput(1, scale_data(lem->SBandSteerable.GetAntennaTempF(), -200.0, 200.0));
 	//Ascent water line no. 1 temperature (GF4585T)
 	SA21.SetOutput(3, scale_data(lem->ecs.GetAscWaterTank1TempF(), -200.0, 200.0));
 	//Ascent water line no. 2 temperature (GF4586T)
