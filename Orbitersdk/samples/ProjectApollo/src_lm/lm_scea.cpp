@@ -490,10 +490,21 @@ void SCERA1::Timestep()
 	//APS oxidizer bipropellant valve inlet pressure (GP1503)
 	SA19.SetOutput(4, scale_data(lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI(), 0.0, 250.0));
 
+	//Quad 4 temperature (GR6001)
+	SA20.SetOutput(1, scale_data(lem->GetRCSQuadTempF(3), 20.0, 200.0));
+	//Quad 3 temperature (GR6002)
+	SA20.SetOutput(2, scale_data(lem->GetRCSQuadTempF(2), 20.0, 200.0));
+	//Quad 2 temperature (GR6003)
+	SA20.SetOutput(3, scale_data(lem->GetRCSQuadTempF(1), 20.0, 200.0));
+	//Quad 1 temperature (GR6004)
+	SA20.SetOutput(4, scale_data(lem->GetRCSQuadTempF(0), 20.0, 200.0));
+
 	//Suit inlet temperature (GF1281)
 	SA21.SetOutput(1, scale_data(lem->ecs.GetSuitTempF(), 20.0, 120.0));
 	//Cabin temperature (GF1651)
 	SA21.SetOutput(2, scale_data(lem->ecs.GetCabinTempF(), 20.0, 120.0));
+
+	//sprintf(oapiDebugString(), "V %lf T %lf", lem->scera1.GetVoltage(20, 4)*2.2, lem->GetRCSQuadTempF(0));
 }
 
 double SCERA1::GetVoltage(int sa, int chan)

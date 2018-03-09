@@ -848,6 +848,29 @@ void LEM::SystemsInit()
 	tca3B.Init(this, 4);
 	tca4B.Init(this, 2);
 
+	RCSHtr1Quad1 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS1");
+	RCSHtr1Quad2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS1");
+	RCSHtr1Quad3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS1");
+	RCSHtr1Quad4 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS1");
+	RCSHtr1Quad1->WireTo(&RCS_QUAD_1_CDR_HTR_CB);
+	RCSHtr1Quad2->WireTo(&RCS_QUAD_2_CDR_HTR_CB);
+	RCSHtr1Quad3->WireTo(&RCS_QUAD_3_CDR_HTR_CB);
+	RCSHtr1Quad4->WireTo(&RCS_QUAD_4_CDR_HTR_CB);
+
+	RCSHtr2Quad1 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS2");
+	RCSHtr2Quad2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS2");
+	RCSHtr2Quad3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS2");
+	RCSHtr2Quad4 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS2");
+	RCSHtr2Quad1->WireTo(&RCS_QUAD_1_LMP_HTR_CB);
+	RCSHtr2Quad2->WireTo(&RCS_QUAD_2_LMP_HTR_CB);
+	RCSHtr2Quad3->WireTo(&RCS_QUAD_3_LMP_HTR_CB);
+	RCSHtr2Quad4->WireTo(&RCS_QUAD_4_LMP_HTR_CB);
+
+	LMQuad1RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD1");
+	LMQuad2RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD2");
+	LMQuad3RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD3");
+	LMQuad4RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD4");
+
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
 	CDR_TTCA.Init(this);
@@ -1866,6 +1889,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *RRHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater:ISON");
 	double *LRHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-LR-Antenna-Heater:ISON");
 
+	double *QD1Temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD1:TEMP");
+	double *QD2Temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD2:TEMP");
+	double *QD3Temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD3:TEMP");
+	double *QD4Temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD4:TEMP");
+
 	//CSM LM Connection
 	double *lmcabinpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	double *lmtunnelpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:PRESS");
@@ -1873,6 +1901,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
 */
 
+	//sprintf(oapiDebugString(), "Quad 1 %lf Quad 2 %lf Quad 3 %lf Quad 4 %lf", KelvinToFahrenheit(*QD1Temp), KelvinToFahrenheit(*QD2Temp), KelvinToFahrenheit(*QD3Temp), KelvinToFahrenheit(*QD4Temp));
 	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
 
 	//sprintf(oapiDebugString(), "GlyTmp %lf GlyCoolTmp %lf HXCTmp %lf GlyHeatTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf LP %lf LT %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*glycolsuitheattemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67);
@@ -1959,6 +1988,35 @@ void LEM::ConnectTunnelToCabinVent()
 
 	pipe->in = &tank->OUT_valve;
 }
+
+double LEM::GetRCSQuadTempF(int index)
+{
+	if (index >= LM_RCS_QUAD_1 && index <= LM_RCS_QUAD_4)
+	{
+		h_Radiator *quad = 0;
+		switch (index)
+		{
+		case LM_RCS_QUAD_1:
+			quad = LMQuad1RCS;
+			break;
+
+		case LM_RCS_QUAD_2:
+			quad = LMQuad2RCS;
+			break;
+
+		case LM_RCS_QUAD_3:
+			quad = LMQuad3RCS;
+			break;
+
+		case LM_RCS_QUAD_4:
+			quad = LMQuad4RCS;
+			break;
+		}
+		return (KelvinToFahrenheit(quad->GetTemp()));
+	}
+		return 0;
+}
+
 
 
 //
