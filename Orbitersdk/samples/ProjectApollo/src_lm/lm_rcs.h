@@ -97,7 +97,6 @@ protected:
 
 	RCSPropellantSource *otherSystem;
 	THRUSTER_HANDLE *thrusters;
-	h_Radiator *quad;
 	Pyro *RCSHeliumSupplyPyros;
 	int quadThruster1ID[4];
 	PROPELLANT_HANDLE prop;
