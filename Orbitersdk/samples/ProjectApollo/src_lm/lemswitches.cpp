@@ -301,7 +301,7 @@ double LMCO2Meter::QueryValue()
 
 {
 	if(!lem){ return 0; }
-	return lem->ecs.GetSensorCO2MMHg();
+	return lem->scera1.GetVoltage(5, 2)*6.0;
 }
 
 void LMCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
