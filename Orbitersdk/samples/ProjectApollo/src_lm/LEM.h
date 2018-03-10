@@ -97,12 +97,6 @@ typedef struct {
 	bool lmpInSuit;
 } LEMECSStatus;
 
-// LM RCS status
-
-typedef struct {
-	double QuadTempF;
-} LMRCSStatus;
-
 // Systems things
 
 // XLunar Bus Controller Voltage Source

@@ -4193,8 +4193,10 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Restoration of normal CO2 pressure
 	// Restoration of normal water separator speed
 	// Selection of #2 suit fan
-	// FIXME: Turned off for now.
+	// FIXME: Only works for CO2 right now, needs other failure logic
 	LightStatus[0][7] = 0;
+	if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6/6)) { LightStatus[0][7] = 1; }
+	//if (lem->SuitFanRotary.GetState() == 2) { LightStatus[0][7] = 0; }
 
 	// 6DS37 OXYGEN QUANTITY CAUTION
 	// On when:
