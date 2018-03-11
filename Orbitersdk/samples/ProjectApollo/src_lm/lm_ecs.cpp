@@ -363,8 +363,6 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 	// Valve in motion
 	if (cabinRepressValve->in->pz) return;
 
-	EmergencyCabinRepressRelay = false;
-
 	//MANUAL
 	if (cabinRepressValveSwitch->GetState() == 0)
 	{
@@ -381,7 +379,7 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 	{
 		cabinRepressValve->flowMax = 396.0 / LBH;
 
-		if (cabinRepressCB->IsPowered() && !pressRegulatorASwitch->GetState() == 0 && !pressRegulatorBSwitch->GetState() == 0)
+		if (cabinRepressCB->IsPowered() && (pressRegulatorASwitch->GetState() != 0 || pressRegulatorBSwitch->GetState() != 0))
 		{
 			//Cabin pressure
 			double cabinpress = cabinRepressValve->out->parent->space.Press;
@@ -394,6 +392,7 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 			else if (cabinpress > 4.7 / PSI && cabinRepressValve->in->open == 1)
 			{
 				cabinRepressValve->in->Close();
+				EmergencyCabinRepressRelay = false;
 			}
 		}
 		else

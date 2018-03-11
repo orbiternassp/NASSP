@@ -3916,7 +3916,6 @@ void CrossPointer::LoadState(FILEHANDLE scn) {
 
 LEM_CWEA::LEM_CWEA(){
 	lem = NULL;	
-	CabinLowPressLt = 0;
 	WaterWarningDisabled = 0;
 	GlycolWarningDisabled = 0;
 }
@@ -3967,10 +3966,9 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On if fuel/oxi in descent stage below 2 minutes endurance @ 25% power prior to staging.
 	// (This turns out to be 5.6%)
 	// Master Alarm and Tone are disabled if this is active.
-	if(lem->stage < 2 && lem->DPS.thrustOn && lem->DPSPropellant.PropellantLevelLow()){
+	LightStatus[3][0] = 0;
+	if (lem->stage < 2 && lem->DPS.thrustOn && lem->scera2.GetSwitch(12, 3)->IsClosed()) {
 		LightStatus[3][0] = 1;
-	}else{
-		LightStatus[3][0] = 0;
 	}
 
 	// 6DS6 CES AC VOLTAGE FAILURE
@@ -4037,27 +4035,20 @@ void LEM_CWEA::TimeStep(double simdt){
 
 	// 6DS14 DC BUS VOLTAGE FAILURE
 	// On when CDR or SE DC bus below 26.5 V.
-	if(lem->CDRs28VBus.Voltage() < 26.5 || lem->LMPs28VBus.Voltage() < 26.5){
+	LightStatus[3][2] = 0;
+	if(lem->scera1.GetVoltage(15, 3) < (26.5*0.125) || lem->scera2.GetVoltage(8, 3) < (26.5*0.125)){
 		LightStatus[3][2] = 1;
-	}else{
-		LightStatus[3][2] = 0;
 	}
 
 	// 6DS16 CABIN LOW PRESSURE WARNING
 	// On when cabin pressure below 4.15 psia (+/- 0.3 psia)
 	// Off when cabin pressure above 4.65 psia (+/- 0.25 psia)
+	// Controlled by GF3572X
 	// Disabled when both Atmosphere Revitalization Section Pressure Regulator Valves in EGRESS or CLOSE position.
-	if(lem->ecs.GetCabinPressurePSI() < 4.15){
-		CabinLowPressLt = 1;
-	}
-	if(lem->ecs.GetCabinPressurePSI() > 4.65 && CabinLowPressLt){
-		CabinLowPressLt = 0;
-	}
-	// FIXME: Need to check valve when enabled
-	if(CabinLowPressLt){
+	// Disabled when CABIN REPRESS is in MANUAL position
+	LightStatus[0][3] = 0;
+	if(lem->scera2.GetVoltage(3, 8) > 2.5 && lem->CabinRepressValveSwitch.GetState() != 0){
 		LightStatus[0][3] = 1;
-	}else{
-		LightStatus[0][3] = 0;
 	}
 
 	// 6DS17 SUIT/FAN LOW PRESSURE WARNING

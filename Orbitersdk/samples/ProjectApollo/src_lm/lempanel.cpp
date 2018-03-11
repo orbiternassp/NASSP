@@ -3360,7 +3360,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_DC_BUS_LIGHT:
 		/*
-		if () {																		//Needs control logic
+		if () {																		//Needs control logic to indicate DC bus or main feeder grounded
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3373,7 +3373,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_BAT_FAULT_LIGHT:
 		/*
-		if () {																		//Needs control logic
+		if () {																		//Needs control logic to indicate overcurrent, reverse current, or over temp of selected battery
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {

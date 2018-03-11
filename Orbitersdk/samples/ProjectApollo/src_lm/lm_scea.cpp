@@ -508,7 +508,7 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	//sprintf(oapiDebugString(), "RPM %lf Pump 1 Fail %d Pump 2 Fail V %lf H2O V %lf", lem->ecs.GetWaterSeparatorRPM(), lem->scera2.GetSwitch(12, 2)->IsClosed(), lem->scera2.GetVoltage(13, 3), lem->scera1.GetVoltage(5, 3));
+	//sprintf(oapiDebugString(), "V %lf R %d", lem->scera2.GetVoltage(3, 8), lem->CabinRepressValve.GetEmergencyCabinRepressRelay());
 }
 
 double SCERA1::GetVoltage(int sa, int chan)
@@ -700,6 +700,8 @@ void SCERA2::Timestep()
 	//Descent oxygen tank pressure (GF3584)
 	SA8.SetOutput(1, scale_data(lem->ecs.DescentOxyTankPressurePSI(), 0.0, 304.0));
 	SA8.SetOutput(2, scale_data(lem->ecs.DescentOxyTankPressurePSI(), 0.0, 3000.0));
+	//LMP bus voltage (GC0302V)
+	SA8.SetOutput(3, scale_data(lem->LMPs28VBus.Voltage(), 0.0, 40.0));
 
 	//Cooling pump no. 1 failure (GF2936)
 	SA12.SetOutput(2, lem->PrimGlycolPumpController.GetGlycolPumpFailRelay());
@@ -708,6 +710,9 @@ void SCERA2::Timestep()
 
 	//Coolant pump no. 2 failure (GF2935)
 	SA13.SetOutput(3, lem->ecs.GetGlycolPump2Failure());
+
+	//LMP bus voltage (GC0302V)
+	SA15.SetOutput(1, scale_data(lem->LMPs28VBus.Voltage(), 0.0, 40.0));
 
 	//RCS Fuel tank A temperature (GR2121)
 	SA20.SetOutput(2, scale_data(lem->RCSA.GetFuelTankTempF(), 20.0, 120.0));

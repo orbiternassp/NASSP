@@ -345,7 +345,6 @@ public:
 	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
 
 	int LightStatus[5][8];		// 1 = lit, 2 = not
-	int CabinLowPressLt;		// FF for this
 	int WaterWarningDisabled;   // FF for this
 	int GlycolWarningDisabled;   // FF for this
 	LEM *lem;					// Pointer at LEM
