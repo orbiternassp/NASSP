@@ -767,7 +767,9 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&INV_2, false);
 
 	// ECS
-	CabinRepressValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
+	CabinPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), 4.70/PSI, 4.07/PSI);
+	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50 / PSI, 2.90 / PSI);
+	CabinRepressValve.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
 		&ECS_CABIN_REPRESS_CB, &CabinRepressValveSwitch, &PressRegAValve, &PressRegBValve);
 	SuitCircuitPressureRegulatorA.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegAValve);
@@ -1442,6 +1444,8 @@ void LEM::SystemsInternalTimestep(double simdt)
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
+		CabinPressureSwitch.SystemTimestep(tFactor);
+		SuitPressureSwitch.SystemTimestep(tFactor);
 		CabinRepressValve.SystemTimestep(tFactor);
 		SuitCircuitPressureRegulatorA.SystemTimestep(tFactor);
 		SuitCircuitPressureRegulatorB.SystemTimestep(tFactor);

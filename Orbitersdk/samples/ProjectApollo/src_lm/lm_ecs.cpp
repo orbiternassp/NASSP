@@ -337,8 +337,39 @@ void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
 	}
 }
 
+LEMPressureSwitch::LEMPressureSwitch()
+{
+	switchtank = NULL;
+	maxpress = NULL;
+	minpress = NULL;
+	PressureSwitch = true;
+
+}
+
+void LEMPressureSwitch::Init(h_Tank *st, double max, double min)
+{
+	switchtank = st;
+	maxpress = max;
+	minpress = min;
+}
+
+void LEMPressureSwitch::SystemTimestep(double simdt)
+{
+	double press = switchtank->space.Press;
+
+	if (press < minpress)
+	{
+		PressureSwitch = true;
+	}
+	else if (press > maxpress)
+	{
+		PressureSwitch = false;
+	}
+}
+
 LEMCabinRepressValve::LEMCabinRepressValve()
 {
+	lem = NULL;
 	cabinRepressValve = NULL;
 	cabinRepressValveSwitch = NULL;
 	cabinRepressCB = NULL;
@@ -347,8 +378,9 @@ LEMCabinRepressValve::LEMCabinRepressValve()
 	EmergencyCabinRepressRelay = false;
 }
 
-void LEMCabinRepressValve::Init(h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs)
+void LEMCabinRepressValve::Init(LEM *l, h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs)
 {
+	lem = l;
 	cabinRepressValve = crv;
 	cabinRepressValveSwitch = crvs;
 	cabinRepressCB = crcb;
@@ -384,12 +416,12 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 			//Cabin pressure
 			double cabinpress = cabinRepressValve->out->parent->space.Press;
 
-			if (cabinpress < 4.07 / PSI && cabinRepressValve->in->open == 0)
+			if (lem->CabinPressureSwitch.GetPressureSwitch() != 0 && cabinRepressValve->in->open == 0)
 			{
 				cabinRepressValve->in->Open();
 				EmergencyCabinRepressRelay = true;
 			}
-			else if (cabinpress > 4.7 / PSI && cabinRepressValve->in->open == 1)
+			else if (lem->CabinPressureSwitch.GetPressureSwitch() == 0 && cabinRepressValve->in->open == 1)
 			{
 				cabinRepressValve->in->Close();
 				EmergencyCabinRepressRelay = false;

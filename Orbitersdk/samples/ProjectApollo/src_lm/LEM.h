@@ -1834,6 +1834,8 @@ protected:
 
 	// ECS
 	LEM_ECS ecs;
+	LEMPressureSwitch CabinPressureSwitch;
+	LEMPressureSwitch SuitPressureSwitch;
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorA;
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorB;
 	LEMCabinRepressValve CabinRepressValve;
@@ -1955,6 +1957,7 @@ protected:
 	friend class TempMonitorInd;
 	friend class RCS_TCA;
 	friend class LEM_ECS;
+	friend class LEMCabinRepressValve;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
