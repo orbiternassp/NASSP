@@ -3341,16 +3341,12 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_H2OSEP_LIGHT:
-		/*
-		if () {																		//Needs control logic
+		if (scera1.GetVoltage(5, 3) < 1.1) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
 		}
-		return true;
-		*/
-		oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
 		return true;
 
 	case AID_GLYCOL_LIGHT:
