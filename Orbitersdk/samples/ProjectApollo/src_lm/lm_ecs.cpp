@@ -904,11 +904,11 @@ void LEMSuitFanDPSensor::SystemTimestep(double simdt)
 
 	double DPSensor = suitCircuitHeatExchangerCoolingTank->space.Press - suitFanManifoldTank->space.Press;
 
-	if (PressureSwitch == false && DPSensor < 1.0 / PSI)
+	if (PressureSwitch == false && DPSensor <=  6.0 / INH2O)
 	{
 		PressureSwitch = true;
 	}
-	else if (PressureSwitch == true && DPSensor > 1.33 / PSI)
+	else if (PressureSwitch == true && DPSensor >= 8.0 / INH2O)
 	{
 		PressureSwitch = false;
 	}
@@ -1254,7 +1254,7 @@ double LEM_ECS::GetSelectedGlycolTempF()
 	return GetPrimaryGlycolTempF();
 }
 
-double LEM_ECS::GetWaterSeparatorRPM()
+double LEM_ECS::GetWaterSeparatorRPM()	//These need a delay to spool down and up so the H2O sep light does not come on for about 2 min when the fan is turned off or on
 {
 	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
 
@@ -1267,10 +1267,10 @@ double LEM_ECS::GetWaterSeparatorRPM()
 
 	if (*Water_Sep1_Flow > *Water_Sep2_Flow)
 	{
-		return (*Water_Sep1_Flow)*100.0;
+		return (*Water_Sep1_Flow)*4235.29;  //Gives max flow through water separator = 3600rpm
 	}
 	
-	return (*Water_Sep2_Flow)*100.0;
+	return (*Water_Sep2_Flow)*4235.29;	//Gives max flow through water separator = 3600rpm
 }
 
 double LEM_ECS::GetAscWaterTank1TempF()

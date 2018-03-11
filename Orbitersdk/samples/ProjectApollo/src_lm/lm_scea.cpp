@@ -344,7 +344,7 @@ void SCERA1::Timestep()
 	//CO2 partial pressure (GF1521)
 	SA5.SetOutput(2, scale_data(lem->ecs.GetSensorCO2MMHg(), 0.0, 30.0));
 	//Water separator no. 1 and 2 (GF9999)
-	SA5.SetOutput(3, scale_data(lem->ecs.GetWaterSeparatorRPM(), 500.0, 3600.0));
+	SA5.SetOutput(3, scale_data(lem->ecs.GetWaterSeparatorRPM(), 0.0, 3600.0));
 
 	//Helium pressure tank A (GR1101)
 	SA6.SetOutput(1, scale_data(lem->RCSA.GetRCSHeliumPressPSI(), 0.0, 3500.0));
@@ -508,7 +508,7 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	//sprintf(oapiDebugString(), "V %lf T %lf", lem->scera1.GetVoltage(20, 4), lem->GetRCSQuadTempF(0));
+	//sprintf(oapiDebugString(), "RPM %lf Pump 1 Fail %d Pump 2 Fail V %lf H2O V %lf", lem->ecs.GetWaterSeparatorRPM(), lem->scera2.GetSwitch(12, 2)->IsClosed(), lem->scera2.GetVoltage(13, 3), lem->scera1.GetVoltage(5, 3));
 }
 
 double SCERA1::GetVoltage(int sa, int chan)

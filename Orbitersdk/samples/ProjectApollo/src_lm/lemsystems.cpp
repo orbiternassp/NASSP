@@ -4061,12 +4061,11 @@ void LEM_CWEA::TimeStep(double simdt){
 	}
 
 	// 6DS17 SUIT/FAN LOW PRESSURE WARNING
-	// On when suit pressure below 3.12 psia or #2 suit circulation fan fails.
-	// Suit fan failure alarm disabled when Suit Fan DP Control CB is open.
-	// FIXME: IMPLEMENT #2 SUIT CIRC FAN TEST
-	if(lem->ECS_SUIT_FAN_DP_CB.GetState() == 0 && lem->ecs.GetSuitPressurePSI() < 3.12){
-		LightStatus[1][3] = 1;
-	}
+	// On when suit pressure below 3.11 psia or #2 suit fan fails.
+	// Suit fan failure alarm disabled when Suit Fan DP Control CB is open by de energizing K12.
+	LightStatus[1][3] = 0;
+	if (lem->scera1.GetVoltage(5, 1) < (3.11 / 2)) { LightStatus[1][3] = 1; }
+	if (lem->scera2.GetVoltage(3, 6) > 2.5) { LightStatus[1][3] = 1; }
 
 	// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 	// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
@@ -4193,9 +4192,10 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Restoration of normal CO2 pressure
 	// Restoration of normal water separator speed
 	// Selection of #2 suit fan
-	// FIXME: Only works for CO2 right now, needs other failure logic
 	LightStatus[0][7] = 0;
 	if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6/6)) { LightStatus[0][7] = 1; }
+	if (lem->scera2.GetSwitch(12, 2)->IsClosed()) { LightStatus[0][7] = 1; } //Coolant pump 1 failure
+	if (lem->GlycolRotary.GetState() == 2 && lem->scera2.GetVoltage(13, 3) > 2.5) { LightStatus[0][7] = 1; } //Coolant pump 2 failure
 	//if (lem->SuitFanRotary.GetState() == 2) { LightStatus[0][7] = 0; }
 
 	// 6DS37 OXYGEN QUANTITY CAUTION
@@ -4204,9 +4204,14 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Less than 99.6 psia in ascent oxygen tank #1
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[1][7] = 0;
-	if(lem->stage < 2 && (lem->ecs.AscentOxyTank1PressurePSI() < 681.6 || lem->ecs.AscentOxyTank2PressurePSI() < 682.4)){ LightStatus[1][7] = 1; }
-	if(lem->stage < 2 && (lem->ecs.DescentOxyTankPressurePSI() < 135)){ LightStatus[1][7] = 1; }
-	if(lem->ecs.AscentOxyTank1PressurePSI() < 99.6){ LightStatus[1][7] = 1; }
+	if (WaterWarningDisabled == 0) {
+		if (lem->stage < 2 && (lem->ecs.AscentOxyTank1PressurePSI() < 681.6 || lem->ecs.AscentOxyTank2PressurePSI() < 682.4)) { LightStatus[1][7] = 1; }
+		if (lem->stage < 2 && (lem->ecs.DescentOxyTankPressurePSI() < 135)) { LightStatus[1][7] = 1; }
+		if (lem->ecs.AscentOxyTank1PressurePSI() < 99.6) { LightStatus[1][7] = 1; }
+	}
+	if (lem->QtyMonRotary.GetState() == 0 && LightStatus[1][7] != 0) {
+		WaterWarningDisabled = 1;
+	}
 
 	// 6DS38 GLYCOL FAILURE CAUTION
 	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ accumulator > 50F
