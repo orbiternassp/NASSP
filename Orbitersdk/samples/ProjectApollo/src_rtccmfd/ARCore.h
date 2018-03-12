@@ -208,7 +208,8 @@ public:
 	bool EntryPADdirect;
 
 	//MAP UPDATE PAGE
-	double LOSGET, AOSGET, SSGET, SRGET, PMGET, GSAOSGET, GSLOSGET;
+	AP10MAPUPDATE mapupdate;
+	double GSAOSGET, GSLOSGET;
 	int mappage, mapgs;
 
 	//TLCC PAGE
@@ -241,11 +242,9 @@ public:
 	double LOI_TIG;
 
 	//LANDMARK TRACKING PAGE
+	AP11LMARKTRKPAD landmarkpad;
 	double LmkLat, LmkLng;
 	double LmkTime;
-	double LmkT1, LmkT2;
-	double LmkRange;
-	double LmkN89Lat, LmkN89Alt;
 
 	//VECPOINT PAGE
 	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z

@@ -1695,23 +1695,23 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(6 * W / 8, 4 * H / 14, "Moon", 4);
 
-			GET_Display(Buffer2, G->LOSGET);
+			GET_Display(Buffer2, G->mapupdate.LOSGET);
 			sprintf(Buffer, "LOS %s", Buffer2);
 			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer2, G->SRGET);
+			GET_Display(Buffer2, G->mapupdate.SRGET);
 			sprintf(Buffer, "SR  %s", Buffer2);
 			skp->Text(1 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer2, G->PMGET);
+			GET_Display(Buffer2, G->mapupdate.PMGET);
 			sprintf(Buffer, "PM  %s", Buffer2);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer2, G->AOSGET);
+			GET_Display(Buffer2, G->mapupdate.AOSGET);
 			sprintf(Buffer, "AOS %s", Buffer2);
 			skp->Text(1 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 
-			GET_Display(Buffer2, G->SSGET);
+			GET_Display(Buffer2, G->mapupdate.SSGET);
 			sprintf(Buffer, "SS  %s", Buffer2);
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
@@ -1828,29 +1828,29 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.3f°", G->LmkLng*DEG);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-		GET_Display(Buffer2, G->LmkT1);
+		GET_Display(Buffer2, G->landmarkpad.T1);
 		sprintf(Buffer, "T1: %s (HOR)", Buffer2);
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer2, G->LmkT2);
+		GET_Display(Buffer2, G->landmarkpad.T2);
 		sprintf(Buffer, "T2: %s (35°)", Buffer2);
 		skp->Text(4 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->LmkRange > 0)
+		if (G->landmarkpad.CRDist > 0)
 		{
-			sprintf(Buffer, "%.1f NM North", G->LmkRange / 1852.0);
+			sprintf(Buffer, "%.1f NM North", G->landmarkpad.CRDist / 1852.0);
 		}
 		else
 		{
-			sprintf(Buffer, "%.1f NM South", abs(G->LmkRange) / 1852.0);
+			sprintf(Buffer, "%.1f NM South", abs(G->landmarkpad.CRDist) / 1852.0);
 		}
 		
 		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 8, 9 * H / 14, "N89", 3);
-		sprintf(Buffer, "Lat %+07.3f°", G->LmkN89Lat*DEG);
+		sprintf(Buffer, "Lat %+07.3f°", G->landmarkpad.Lat);
 		skp->Text(4 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "Long/2 %+07.3f°", G->LmkLng*DEG*0.5);
+		sprintf(Buffer, "Long/2 %+07.3f°", G->landmarkpad.Lng05);
 		skp->Text(4 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "Alt %+07.2f NM", G->LmkN89Alt/1852.0);
+		sprintf(Buffer, "Alt %+07.2f NM", G->landmarkpad.Alt);
 		skp->Text(4 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 14)

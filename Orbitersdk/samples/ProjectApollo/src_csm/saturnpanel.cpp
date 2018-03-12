@@ -1754,6 +1754,7 @@ void Saturn::SetSwitches(int panel) {
 
 	LMPowerSwitchRow.Init(AID_LMPOWERSWITCH, MainPanel);
 	LMPowerSwitch.Init( 0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], LMPowerSwitchRow, this);
+	LMPowerSwitch.SetDelayTime(1);
 
 	PostLDGVentValveLeverRow.Init(AID_POSTLANDINGVENTVALVELEVER, MainPanel);
 	PostLDGVentValveLever.Init( 0, 0, 50, 158, srf[SRF_POSTLDGVENTVLVLEVER], srf[SRF_BORDER_50x158], PostLDGVentValveLeverRow);
