@@ -2896,7 +2896,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	OELEMENTS coe;
 	VECTOR3 P, Q;
 	//double beta1, beta2, p, A,B, C, D, tol, f, f_dot, f_ddot,x, R_E, sinv, cosv, v, x_alt,mu,f0,f1;
-	double tol, R_E, f, beta1, beta2, a, b, c, d, e, p, q, QQ, D0, D1, S, DD, phi, SS,sinx,pp, alpha, cond, aa, mu;
+	double tol, R_E, f, beta1, beta2, a, b, c, d, e, p, q, D0, D1, S, DD, SS, sinx, pp, alpha, cond, aa, mu;
 	double x[4];
 	double cosv[2], sinv[2];
 	int j;
@@ -2940,7 +2940,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 
 	a = pow(alpha,4)*pow(coe.e, 4) - 2.0*pow(alpha, 2)*(beta2*beta2 - beta1*beta1)*coe.e*coe.e + pow(beta1*beta1 + beta2*beta2, 2);
 	b = 4.0*pow(alpha, 4)*pow(coe.e, 3) - 4.0*pow(alpha, 2)*(beta2*beta2 - beta1*beta1)*coe.e;
-	c = 6.0*pow(alpha, 4)*coe.e*coe.e - 2.0*pow(alpha, 2)*(beta2*beta2 - beta1*beta1) - 2.0*pow(alpha, 2)*pow(1.0 - beta2*beta2, 1)*coe.e*coe.e + 2.0*(beta2*beta2 - beta1*beta1)*(1.0 - beta2*beta2) - 4.0*beta1*beta1*beta2*beta2;
+	c = 6.0*pow(alpha, 4)*coe.e*coe.e - 2.0*pow(alpha, 2)*(beta2*beta2 - beta1*beta1) - 2.0*pow(alpha, 2)*(1.0 - beta2*beta2)*coe.e*coe.e + 2.0*(beta2*beta2 - beta1*beta1)*(1.0 - beta2*beta2) - 4.0*beta1*beta1*beta2*beta2;
 	d = 4.0*pow(alpha, 4)*coe.e - 4.0*pow(alpha, 2)*(1.0 - beta2*beta2)*coe.e;
 	e = pow(alpha, 4) - 2.0*pow(alpha, 2)*(1.0 - beta2*beta2) + pow(1.0 - beta2*beta2,2);
 
@@ -2951,11 +2951,15 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	DD = -(D1*D1 - 4.0*D0*D0*D0)/27.0;
 	if (DD > 0)
 	{
+		double phi;
+
 		phi = acos(D1 / (2.0*sqrt(D0*D0*D0)));
 		S = 0.5*sqrt(-2.0 / 3.0*pp + 2.0 / 3.0 / a*sqrt(D0)*cos(phi / 3.0));
 	}
 	else
 	{
+		double QQ;
+
 		QQ = OrbMech::power((D1 + sqrt(D1*D1 - 4.0*D0*D0*D0)) / 2.0, 1.0 / 3.0);
 		S = 0.5*sqrt(-2.0 / 3.0*pp + 1.0 / (3.0*a)*(QQ + D0 / QQ));
 	}
@@ -2966,6 +2970,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 
 	j = 0;
 
+	//Select the two physicals solutions from the (up to) four real roots of the quartic
 	for (int i = 0; i < 4; i++)
 	{
 		sinx = sqrt(1.0 - x[i] * x[i]);
@@ -2993,9 +2998,13 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 			}
 		}
 	}
+
+	//Choose entry vs. exit
+	double dSS0 = 2.0*p*p*(beta2*cosv[0] - beta1 * sinv[0])*(beta1*cosv[0] + beta2 * sinv[0]) - 2.0*R_E*R_E*coe.e*sinv[0] * (coe.e*cosv[0] + 1.0);
+
 	if (rise)
 	{
-		if (-4.0*a*sinv[0] * pow(cosv[0], 3) - 3.0*b*sinv[0] * pow(cosv[0], 2) - 2.0*c*sinv[0] * cosv[0] < 0)
+		if (dSS0 < 0)
 		{
 			v1 = atan2(sinv[0], cosv[0]);
 		}
@@ -3006,7 +3015,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	}
 	else
 	{
-		if (-4.0*a*sinv[0] * pow(cosv[0], 3) - 3.0*b*sinv[0] * pow(cosv[0], 2) - 2.0*c*sinv[0] * cosv[0] > 0)
+		if (dSS0 > 0)
 		{
 			v1 = atan2(sinv[0], cosv[0]);
 		}
@@ -3015,93 +3024,6 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 			v1 = atan2(sinv[1], cosv[1]);
 		}
 	}
-
-	/*x = 0;
-	x_alt = 1;
-
-
-
-	f0 = A - B + D;
-	f1 = A + B + D;
-	//if (f0*f1 <= 0)
-	//{
-		while (abs(f) > tol && abs(x - x_alt) > 1e-12)
-		{
-			f = A*x*x + B*x + C*x*sqrt(1.0 - x*x) + D;
-			f_dot = 2.0*A*x + B + C*(1.0 - 2.0*x*x) / sqrt(1.0 - x*x);
-			f_ddot = 2.0*A + C*x*(2.0*x*x*x - 3.0) / OrbMech::power(1.0 - x*x, 1.5);
-			x_alt = x;
-			x = x - f / (f*f_ddot / (2.0*f_dot));
-			if (x > 1.0)
-			{
-				x -= 2.0;
-			}
-			else if (x < -1.0)
-			{
-				x += 2.0;
-			}
-		}
-		cosv = x;
-		sinv = sqrt(1.0 - cosv*cosv);
-		if (beta1*cosv + beta2*sinv<0)
-		{
-			v = atan2(sinv, cosv);
-		}
-		else
-		{
-			v = atan2(-sinv, cosv);
-		}
-		if (f_dot>0)
-		{
-			v1 = v;
-		}
-		else
-		{
-			v2 = v;
-		}
-		f = 1;
-		x = 0.999;
-		x_alt = 1;
-
-		while (abs(f) > tol && abs(x - x_alt) > 1e-12)
-		{
-			f = A*x*x + B*x + C*x*sqrt(1.0 - x*x) + D;
-			f_dot = 2.0*A*x + B + C*(1.0 - 2.0*x*x) / sqrt(1.0 - x*x);
-			f_ddot = 2.0*A + C*x*(2.0*x*x*x - 3.0) / OrbMech::power(1.0 - x*x, 1.5);
-			x_alt = x;
-			x = x - f / (f*f_ddot / (2.0*f_dot));//
-			if (x > 1.0)
-			{
-				x -= 2.0;
-			}
-			else if (x < -1.0)
-			{
-				x += 2.0;
-			}
-		}
-		cosv = x;
-		sinv = sqrt(1.0 - cosv*cosv);
-		if (beta1*cosv + beta2*sinv<0)
-		{
-			v = atan2(sinv, cosv);
-		}
-		else
-		{
-			v = atan2(-sinv, cosv);
-		}
-		if (f_dot>0)
-		{
-			v1 = v;
-		}
-		else
-		{
-			v2 = v;
-		}
-	//}
-	//else
-	//{
-	//	v1 = v2 = 0;
-	//}*/
 }
 
 bool sight(VECTOR3 R1, VECTOR3 R2, double R_E)
@@ -3576,7 +3498,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	//CELBODY *cSun = oapiGetCelbodyInterface(hSun);
 
 	OELEMENTS coe;
-	double h, e, theta0, a, T, n, E_0, t_0, E_1, dt, t_f, dt_alt;
+	double h, e, theta0, a, E_0, t_0, E_1, dt, t_f, dt_alt;
 
 	dt = 0;
 	dt_alt = 1;
@@ -3655,6 +3577,8 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 		}
 		else
 		{
+			double T, n;
+
 			a = h * h / mu * 1.0 / (1.0 - e * e);
 			T = PI2 / sqrt(mu)*OrbMech::power(a, 3.0 / 2.0);
 			n = PI2 / T;
@@ -3664,11 +3588,11 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 			t_f = (E_1 - e * sin(E_1)) / n;
 			dt_alt = dt;
 			dt = t_f - t_0;
-		}
 
-		if (dt < 0 && future)
-		{
-			dt += T;
+			if (dt < 0 && future)
+			{
+				dt += T;
+			}
 		}
 	}
 
