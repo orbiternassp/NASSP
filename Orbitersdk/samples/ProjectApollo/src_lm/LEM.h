@@ -48,6 +48,7 @@
 #include "lm_rcs.h"
 #include "lm_ecs.h"
 #include "lemconnector.h"
+#include "lm_cwea.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -331,24 +332,6 @@ protected:
 #define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
 #define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
 #define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
-
-
-// Caution and Warning Electronics Assembly
-class LEM_CWEA{
-public:
-	LEM_CWEA();
-	void Init(LEM *s);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
-	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf);
-	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
-
-	int LightStatus[5][8];		// 1 = lit, 2 = not
-	int WaterWarningDisabled;   // FF for this
-	int GlycolWarningDisabled;   // FF for this
-	LEM *lem;					// Pointer at LEM
-};
 
 ///
 /// \ingroup LEM
