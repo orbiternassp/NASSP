@@ -4228,7 +4228,7 @@ void LEM_CWEA::TimeStep(double simdt){
 	LightStatus[3][7] = 0;
 	if(WaterWarningDisabled == 0){
 		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantity() < 0.1594)){ LightStatus[3][7] = 1; }
-		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1Quantity()  < 0.9478 || lem->ecs.AscentWaterTank2Quantity() < 0.9479)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1Quantity()  < 0.9478 || lem->ecs.AscentWaterTank2Quantity() < 0.9478)){ LightStatus[3][7] = 1; }
 		if(abs(lem->ecs.AscentWaterTank1Quantity() - lem->ecs.AscentWaterTank2Quantity()) > 0.01) { LightStatus[3][7] = 1; }
 	}
 	if(lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0){

@@ -3315,7 +3315,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}return true;
 
 	case AID_RR_NOTRACK:
-		if(RR.IsDCPowered() && !RR.IsRadarDataGood() || LampToneTestRotary.GetState() == 6){ // The AC side is only needed for the transmitter
+		if(CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (RR.IsDCPowered() && !RR.IsRadarDataGood() || LampToneTestRotary.GetState() == 6)){ // The AC side is only needed for the transmitter
 			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,34,34,34, SURF_PREDEF_CK); // Light On
 		}else{
 			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,0,34,34, SURF_PREDEF_CK); // Light Off
@@ -3323,7 +3323,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_CO2_LIGHT:
-		if (ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6) || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6)) {
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6) || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6))) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3332,7 +3332,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_SUITFAN_LIGHT:
-		if (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6) {
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6)) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3341,7 +3341,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_H2OSEP_LIGHT:
-		if (scera1.GetVoltage(5, 3) < 1.1 || LampToneTestRotary.GetState() == 6) {
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (scera1.GetVoltage(5, 3) < 1.1 || LampToneTestRotary.GetState() == 6)) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3350,7 +3350,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_GLYCOL_LIGHT:
-		if (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6) {
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6)) {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3359,7 +3359,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_DC_BUS_LIGHT:
-		if (LampToneTestRotary.GetState() == 6) {								//Needs control logic to indicate DC bus or main feeder grounded
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (LampToneTestRotary.GetState() == 6)) {								//Needs control logic to indicate DC bus or main feeder grounded
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
@@ -3368,7 +3368,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_BAT_FAULT_LIGHT:
-		if (LampToneTestRotary.GetState() == 6) {								//Needs control logic to indicate overcurrent, reverse current, or over temp of selected battery
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (LampToneTestRotary.GetState() == 6)) {								//Needs control logic to indicate overcurrent, reverse current, or over temp of selected battery
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {

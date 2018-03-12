@@ -415,9 +415,6 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 
 		if (cabinRepressCB->IsPowered() && (pressRegulatorASwitch->GetState() != 0 || pressRegulatorBSwitch->GetState() != 0))
 		{
-			//Cabin pressure
-			double cabinpress = cabinRepressValve->out->parent->space.Press;
-
 			if (lem->CabinPressureSwitch.GetPressureSwitch() != 0 && cabinRepressValve->in->open == 0)
 			{
 				cabinRepressValve->in->Open();
@@ -426,7 +423,10 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 			{
 				cabinRepressValve->in->Close();
 			}
-			EmergencyCabinRepressRelay = true;
+			if (cabinRepressValve->in->open)
+				{
+				EmergencyCabinRepressRelay = true;
+				}
 		}
 		else
 		{
