@@ -313,16 +313,17 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// Restoration of normal water separator speed
 	// Selection of #2 suit fan
 	LightStatus[0][7] = 0;
-	if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6 / 6)) { LightStatus[0][7] = 1; }
+	if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6 / 6)) { LightStatus[0][7] = 1; }	// CO2 Partial Pressure > 7.6mm
 	if (lem->scera2.GetSwitch(12, 2)->IsClosed()) { LightStatus[0][7] = 1; } //Coolant pump 1 failure
 	if (lem->GlycolRotary.GetState() == 2 && lem->scera2.GetVoltage(13, 3) > 2.5) { LightStatus[0][7] = 1; } //Coolant pump 2 failure
-																											 //if (lem->SuitFanRotary.GetState() == 2) { LightStatus[0][7] = 0; }
+	if (lem->SuitFanRotary.GetState() == 1 && lem->scera2.GetVoltage(3, 5) > 2.5) { LightStatus[0][7] = 1; } //Suit fan 1 failure
+	if (lem->scera1.GetVoltage(5, 3) < 1.1) { LightStatus[0][7] = 1; } //Water separator failure
 
-																											 // 6DS37 OXYGEN QUANTITY CAUTION
-																											 // On when:
-																											 // < 135 psia in descent oxygen tank, or Less than full (<682.4 / 681.6 psia) ascent oxygen tanks, WHEN NOT STAGED
-																											 // Less than 99.6 psia in ascent oxygen tank #1
-																											 // Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
+	// 6DS37 OXYGEN QUANTITY CAUTION
+	// On when:
+	// < 135 psia in descent oxygen tank, or Less than full (<682.4 / 681.6 psia) ascent oxygen tanks, WHEN NOT STAGED
+	// Less than 99.6 psia in ascent oxygen tank #1
+	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[1][7] = 0;
 	if (WaterWarningDisabled == 0) {
 		if (lem->stage < 2 && (lem->ecs.AscentOxyTank1PressurePSI() < 681.6 || lem->ecs.AscentOxyTank2PressurePSI() < 682.4)) { LightStatus[1][7] = 1; }
