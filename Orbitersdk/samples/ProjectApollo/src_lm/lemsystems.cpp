@@ -767,7 +767,9 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&INV_2, false);
 
 	// ECS
-	CabinRepressValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
+	CabinPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), 4.70/PSI, 4.07/PSI);
+	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50/PSI, 2.90/PSI);
+	CabinRepressValve.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
 		&ECS_CABIN_REPRESS_CB, &CabinRepressValveSwitch, &PressRegAValve, &PressRegBValve);
 	SuitCircuitPressureRegulatorA.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegAValve);
@@ -1442,6 +1444,8 @@ void LEM::SystemsInternalTimestep(double simdt)
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
+		CabinPressureSwitch.SystemTimestep(tFactor);
+		SuitPressureSwitch.SystemTimestep(tFactor);
 		CabinRepressValve.SystemTimestep(tFactor);
 		SuitCircuitPressureRegulatorA.SystemTimestep(tFactor);
 		SuitCircuitPressureRegulatorB.SystemTimestep(tFactor);
@@ -3916,7 +3920,6 @@ void CrossPointer::LoadState(FILEHANDLE scn) {
 
 LEM_CWEA::LEM_CWEA(){
 	lem = NULL;	
-	CabinLowPressLt = 0;
 	WaterWarningDisabled = 0;
 	GlycolWarningDisabled = 0;
 }
@@ -3967,10 +3970,9 @@ void LEM_CWEA::TimeStep(double simdt){
 	// On if fuel/oxi in descent stage below 2 minutes endurance @ 25% power prior to staging.
 	// (This turns out to be 5.6%)
 	// Master Alarm and Tone are disabled if this is active.
-	if(lem->stage < 2 && lem->DPS.thrustOn && lem->DPSPropellant.PropellantLevelLow()){
+	LightStatus[3][0] = 0;
+	if (lem->stage < 2 && lem->DPS.thrustOn && lem->scera2.GetSwitch(12, 3)->IsClosed()) {
 		LightStatus[3][0] = 1;
-	}else{
-		LightStatus[3][0] = 0;
 	}
 
 	// 6DS6 CES AC VOLTAGE FAILURE
@@ -4037,27 +4039,20 @@ void LEM_CWEA::TimeStep(double simdt){
 
 	// 6DS14 DC BUS VOLTAGE FAILURE
 	// On when CDR or SE DC bus below 26.5 V.
-	if(lem->CDRs28VBus.Voltage() < 26.5 || lem->LMPs28VBus.Voltage() < 26.5){
+	LightStatus[3][2] = 0;
+	if(lem->scera1.GetVoltage(15, 3) < (26.5*0.125) || lem->scera2.GetVoltage(8, 3) < (26.5*0.125)){
 		LightStatus[3][2] = 1;
-	}else{
-		LightStatus[3][2] = 0;
 	}
 
 	// 6DS16 CABIN LOW PRESSURE WARNING
 	// On when cabin pressure below 4.15 psia (+/- 0.3 psia)
 	// Off when cabin pressure above 4.65 psia (+/- 0.25 psia)
+	// Controlled by GF3572X
 	// Disabled when both Atmosphere Revitalization Section Pressure Regulator Valves in EGRESS or CLOSE position.
-	if(lem->ecs.GetCabinPressurePSI() < 4.15){
-		CabinLowPressLt = 1;
-	}
-	if(lem->ecs.GetCabinPressurePSI() > 4.65 && CabinLowPressLt){
-		CabinLowPressLt = 0;
-	}
-	// FIXME: Need to check valve when enabled
-	if(CabinLowPressLt){
+	// Disabled when CABIN REPRESS is in MANUAL position
+	LightStatus[0][3] = 0;
+	if(lem->scera2.GetVoltage(3, 8) > 2.5 && lem->CabinRepressValveSwitch.GetState() != 0){
 		LightStatus[0][3] = 1;
-	}else{
-		LightStatus[0][3] = 0;
 	}
 
 	// 6DS17 SUIT/FAN LOW PRESSURE WARNING
@@ -4232,8 +4227,8 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[3][7] = 0;
 	if(WaterWarningDisabled == 0){
-		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantity() < 0.1)){ LightStatus[3][7] = 1; }
-		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1Quantity()  < 0.99 || lem->ecs.AscentWaterTank2Quantity() < 0.99)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantity() < 0.1594)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1Quantity()  < 0.9478 || lem->ecs.AscentWaterTank2Quantity() < 0.9478)){ LightStatus[3][7] = 1; }
 		if(abs(lem->ecs.AscentWaterTank1Quantity() - lem->ecs.AscentWaterTank2Quantity()) > 0.01) { LightStatus[3][7] = 1; }
 	}
 	if(lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0){
@@ -4250,7 +4245,6 @@ void LEM_CWEA::TimeStep(double simdt){
 	}
 
 	// Rendezvous Radar Caution
-
 	LightStatus[2][5]=0;
 	if(lem->RendezvousRadarRotary.GetState()==0 && lem->RR.IsRadarDataGood() == 0 ) {
 		LightStatus[2][5]=1;
@@ -4273,6 +4267,7 @@ void LEM_CWEA::TimeStep(double simdt){
 				break;
 			case 3: // ENG PB & C/W 2
 				// Light engine START/STOP lights and Panel 1 second bank warning lamps
+				// FIX ME: Lit engine start/stop light bmp and logic needed
 				LightStatus[0][2] = 1; LightStatus[1][2] = 1; LightStatus[2][2] = 1; LightStatus[3][2] = 1; LightStatus[4][2] = 1;
 				LightStatus[0][3] = 1; LightStatus[1][3] = 1; LightStatus[2][3] = 1; LightStatus[3][3] = 1; LightStatus[4][3] = 1;
 				break;
@@ -4288,8 +4283,7 @@ void LEM_CWEA::TimeStep(double simdt){
 				break;
 			case 6: // COMPNT
 				// Light component caution and Lunar Contact lights
-				// FIXME: IMPLEMENT THIS
-				// Lunar Contact lights are lit in clbkPanelRedrawEvent code
+				// Lunar Contact and Component lights are lit in clbkPanelRedrawEvent code
 				break;
 		}
 	}

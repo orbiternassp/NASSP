@@ -101,15 +101,32 @@ protected:
 	RotationalSwitch *SuitCircuitReliefValveSwitch;
 };
 
+class LEMPressureSwitch
+{
+public:
+	LEMPressureSwitch();
+	void Init(h_Tank *st, double max, double min);
+	void SystemTimestep(double simdt);
+
+	bool GetPressureSwitch() { return PressureSwitch; }
+protected:
+	h_Tank *switchtank;
+	double maxpress;
+	double minpress;
+
+	bool PressureSwitch;
+};
+
 class LEMCabinRepressValve
 {
 public:
 	LEMCabinRepressValve();
-	void Init(h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs);
+	void Init(LEM *l, h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs);
 	void SystemTimestep(double simdt);
 
 	bool GetEmergencyCabinRepressRelay() { return EmergencyCabinRepressRelay; }
 protected:
+	LEM *lem;
 	h_Pipe *cabinRepressValve;
 	CircuitBrakerSwitch *cabinRepressCB;
 	RotationalSwitch *cabinRepressValveSwitch;
