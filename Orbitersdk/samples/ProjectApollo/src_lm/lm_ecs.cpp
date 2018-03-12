@@ -340,8 +340,8 @@ void LEMSuitCircuitReliefValve::SystemTimestep(double simdt)
 LEMPressureSwitch::LEMPressureSwitch()
 {
 	switchtank = NULL;
-	maxpress = NULL;
-	minpress = NULL;
+	maxpress = 0;
+	minpress = 0;
 	PressureSwitch = true;
 
 }
@@ -395,6 +395,8 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 	// Valve in motion
 	if (cabinRepressValve->in->pz) return;
 
+	EmergencyCabinRepressRelay = false;
+
 	//MANUAL
 	if (cabinRepressValveSwitch->GetState() == 0)
 	{
@@ -419,13 +421,12 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 			if (lem->CabinPressureSwitch.GetPressureSwitch() != 0 && cabinRepressValve->in->open == 0)
 			{
 				cabinRepressValve->in->Open();
-				EmergencyCabinRepressRelay = true;
 			}
 			else if (lem->CabinPressureSwitch.GetPressureSwitch() == 0 && cabinRepressValve->in->open == 1)
 			{
 				cabinRepressValve->in->Close();
-				EmergencyCabinRepressRelay = false;
 			}
+			EmergencyCabinRepressRelay = true;
 		}
 		else
 		{
