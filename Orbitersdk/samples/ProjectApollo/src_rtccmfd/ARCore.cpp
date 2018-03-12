@@ -394,11 +394,12 @@ ARCore::ARCore(VESSEL* v)
 	LmkLat = 0;
 	LmkLng = 0;
 	LmkTime = 0;
-	LmkT1 = 0;
-	LmkT2 = 0;
-	LmkRange = 0;
-	LmkN89Alt = 0;
-	LmkN89Lat = 0;
+	landmarkpad.T1 = 0;
+	landmarkpad.T2 = 0;
+	landmarkpad.CRDist = 0;
+	landmarkpad.Alt = 0;
+	landmarkpad.Lat = 0;
+	landmarkpad.Lng05 = 0;
 
 	VECdirection = 0;
 	VECbody = NULL;
@@ -724,52 +725,15 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 
 void ARCore::LmkCalc()
 {
-	VECTOR3 RA0_orb, VA0_orb, RA0, VA0, R_P, RA1, VA1, u;
-	double SVMJD, dt1, dt2, get, MJDguess, sinl, gamma, r_0;
-	OBJHANDLE hEarth, hMoon, gravref;
+	LMARKTRKPADOpt opt;
 
-	hEarth = oapiGetObjectByName("Earth");
-	hMoon = oapiGetObjectByName("Moon");
-	gravref = rtcc->AGCGravityRef(vessel);
+	opt.GETbase = GETbase;
+	opt.lat = LmkLat;
+	opt.LmkTime = LmkTime;
+	opt.lng = LmkLng;
+	opt.vessel = vessel;
 
-	vessel->GetRelativePos(gravref, RA0_orb);
-	vessel->GetRelativeVel(gravref, VA0_orb);
-	SVMJD = oapiGetSimMJD();
-	get = (SVMJD - GETbase)*24.0*3600.0;
-	MJDguess = GETbase + LmkTime / 24.0 / 3600.0;
-
-	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);
-	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
-
-	R_P = unit(_V(cos(LmkLng)*cos(LmkLat), sin(LmkLat), sin(LmkLng)*cos(LmkLat)))*oapiGetSize(gravref);
-
-	OrbMech::oneclickcoast(RA0, VA0, SVMJD, LmkTime - get, RA1, VA1, gravref, gravref);
-
-	dt1 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 180.0*RAD, gravref, LmkRange);
-	dt2 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 145.0*RAD, gravref, LmkRange);
-
-	LmkT1 = dt1 + (MJDguess - GETbase) * 24.0 * 60.0 * 60.0;
-	LmkT2 = dt2 + (MJDguess - GETbase) * 24.0 * 60.0 * 60.0;
-
-	u = unit(_V(R_P.x, R_P.z, R_P.y));
-	sinl = u.z;
-	
-	if (gravref == hEarth)
-	{
-		double a, b, r_F;
-		a = 6378166;
-		b = 6356784;
-		gamma = b*b / a / a;
-		r_F = sqrt(b*b / (1.0 - (1.0 - b*b / a / a)*(1.0 - sinl*sinl)));
-		r_0 = r_F;
-	}
-	else
-	{
-		gamma = 1.0;
-		r_0 = oapiGetSize(gravref);
-	}
-	LmkN89Lat = atan2(u.z, gamma*sqrt(u.x*u.x + u.y*u.y));
-	LmkN89Alt = length(R_P) - r_0;
+	rtcc->LandmarkTrackingPAD(&opt, landmarkpad);
 }
 
 void ARCore::LOICalc()

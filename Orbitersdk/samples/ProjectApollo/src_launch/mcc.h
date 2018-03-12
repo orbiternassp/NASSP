@@ -276,6 +276,7 @@
 #define UTP_LGCUPLINKDIRECT	12
 #define UTP_P37PAD			13
 #define UTP_MAPUPDATE		14
+#define UTP_LMRKTRACKPAD	15
 #define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
@@ -437,13 +438,27 @@
 // Ends at LOI-1 update
 #define MST_F_TRANSLUNAR19	39
 // Ends at rev 2 map update
-#define MST_F_LUNAR_ORBIT1	100
+#define MST_F_LUNAR_ORBIT_LOI_DAY_1		100
 // Ends at LOI-2 update
-#define MST_F_LUNAR_ORBIT2	101
+#define MST_F_LUNAR_ORBIT_LOI_DAY_2		101
 // Ends at TEI-5 update
-#define MST_F_LUNAR_ORBIT3	102
+#define MST_F_LUNAR_ORBIT_LOI_DAY_3		102
 // Ends at rev 3 map update
-#define MST_F_LUNAR_ORBIT4	103
+#define MST_F_LUNAR_ORBIT_LOI_DAY_4		103
+// Ends at F-1 landmark tracking rev 4 update
+#define MST_F_LUNAR_ORBIT_LOI_DAY_5		104
+// Ends at B-1 landmark tracking rev 4 update
+#define MST_F_LUNAR_ORBIT_LOI_DAY_6		105
+// Ends at rev 4 map update
+#define MST_F_LUNAR_ORBIT_LOI_DAY_7		106
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LOI_DAY_8		107
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LOI_DAY_9		108
+// Ends at TEI-10 update
+#define MST_F_LUNAR_ORBIT_LOI_DAY_10	109
+// Ends at sleep period
+#define MST_F_LUNAR_ORBIT_LOI_DAY_11	110
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -720,7 +735,6 @@ struct AP11AGSSVPAD
 
 // APOLLO 10 MAP UPDATE
 
-
 struct AP10MAPUPDATE
 {
 	int Rev;		//Revolution of update
@@ -729,6 +743,19 @@ struct AP10MAPUPDATE
 	double PMGET;	//Time of meridian crossing (150°W)
 	double SSGET;	//Time of sunset
 	double SRGET;	//Time of sunrise
+};
+
+// APOLLO 11 LANDMARK TRACKING PAD
+
+struct AP11LMARKTRKPAD
+{
+	char LmkID[128];	// Landmark ID
+	double T1;			// T1 time (landmark over horizon)
+	double T2;			// T2 time (spacecraft at 35° elevation from landmark)
+	double CRDist;		// landmark distance to ground track
+	double Lat;			// landmark latitude
+	double Lng05;		// landmark longitude divided by 2
+	double Alt;			// landmark altitude
 };
 
 class LEM;

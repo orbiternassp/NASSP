@@ -3998,6 +3998,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 30: //TEI-1 UPDATE (PRE LOI)
 	case 31: //TEI-4 UPDATE (PRE LOI)
 	case 32: //TEI-5 UPDATE (PRE LOI-2)
+	case 33: //TEI-10 UPDATE
 	{
 		TEIOpt entopt;
 		EntryResults res;
@@ -4010,7 +4011,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GETbase = getGETBase();
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
-		sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+
+		if (fcn == 30 || fcn == 31 || fcn == 32)
+		{
+			sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		}
+		else
+		{
+			sv1 = sv0;
+		}
 
 		if (fcn == 30)
 		{
@@ -4026,6 +4035,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(manname, "TEI-5");
 			sv2 = coast(sv1, 2.5*2.0*3600.0);
+		}
+		else if (fcn == 33)
+		{
+			sprintf(manname, "TEI-10");
+			sv2 = coast(sv1, 5.5*2.0*3600.0);
 		}
 
 		entopt.EntryLng = -165.0*RAD;
@@ -4085,7 +4099,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 41: //REV 2 MAP UPDATE
-	case 42: //REV 3 MAP UPDATE
+	case 43: //REV 4 MAP UPDATE
 	{
 		SV sv0;
 
@@ -4095,6 +4109,55 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarOrbitMapUpdate(sv0, getGETBase(), *form);
 
 		form->Rev = fcn - 39;
+	}
+	break;
+	case 42: //REV 3 MAP UPDATE
+	{
+		SV sv0, sv1;
+		AP10MAPUPDATE upd_preloi, upd_postloi;
+
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		LunarOrbitMapUpdate(sv0, getGETBase(), upd_preloi);
+
+		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		LunarOrbitMapUpdate(sv0, getGETBase(), upd_postloi);
+
+		form->Rev = 3;
+		form->AOSGET = upd_postloi.AOSGET;
+		form->LOSGET = upd_preloi.LOSGET;
+		form->PMGET = upd_preloi.PMGET;
+	}
+	break;
+	case 50: //REV 4 LANDMARK TRACKING PAD F-1
+	case 51: //REV 4 LANDMARK TRACKING PAD B-1
+	{
+		LMARKTRKPADOpt opt;
+
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
+
+		opt.GETbase = getGETBase();
+		opt.vessel = calcParams.src;
+
+		if (fcn == 50)
+		{
+			sprintf(form->LmkID, "F-1");
+			opt.alt = 0;
+			opt.lat = 1.6*RAD;
+			opt.LmkTime = OrbMech::HHMMSSToSS(82, 27, 0);
+			opt.lng = 86.88*RAD;
+		}
+		else
+		{
+			sprintf(form->LmkID, "B-1");
+			opt.alt = -1.54*1852.0;
+			opt.lat = 2.522*RAD;
+			opt.LmkTime = OrbMech::HHMMSSToSS(82, 45, 0);
+			opt.lng = 35.036*RAD;
+		}
+
+		LandmarkTrackingPAD(&opt, *form);
 	}
 	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
@@ -8715,6 +8778,60 @@ void RTCC::LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad)
 	t_lng = OrbMech::P29TimeOfLongitude(sv0.R, sv0.V, sv0.MJD, sv0.gravref, -150.0*RAD);
 	ttoPM = (t_lng - sv0.MJD)*24.0 * 3600.0;
 	pad.PMGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoPM;
+}
+
+void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
+{
+	VECTOR3 RA0_orb, VA0_orb, RA0, VA0, R_P, RA1, VA1, u;
+	double SVMJD, dt1, dt2, get, MJDguess, sinl, gamma, r_0, LmkRange;
+	OBJHANDLE hEarth, hMoon, gravref;
+
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	gravref = AGCGravityRef(opt->vessel);
+
+	opt->vessel->GetRelativePos(gravref, RA0_orb);
+	opt->vessel->GetRelativeVel(gravref, VA0_orb);
+	SVMJD = oapiGetSimMJD();
+	get = (SVMJD - opt->GETbase)*24.0*3600.0;
+	MJDguess = opt->GETbase + opt->LmkTime / 24.0 / 3600.0;
+
+	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);
+	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
+
+	R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)))*(oapiGetSize(gravref) + opt->alt);
+
+	OrbMech::oneclickcoast(RA0, VA0, SVMJD, opt->LmkTime - get, RA1, VA1, gravref, gravref);
+
+	dt1 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 180.0*RAD, gravref, LmkRange);
+	dt2 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 145.0*RAD, gravref, LmkRange);
+
+	pad.T1 = dt1 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
+	pad.T2 = dt2 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
+
+	u = unit(_V(R_P.x, R_P.z, R_P.y));
+	sinl = u.z;
+
+	if (gravref == hEarth)
+	{
+		double a, b, r_F;
+		a = 6378166;
+		b = 6356784;
+		gamma = b * b / a / a;
+		r_F = sqrt(b*b / (1.0 - (1.0 - b * b / a / a)*(1.0 - sinl * sinl)));
+		r_0 = r_F;
+	}
+	else
+	{
+		gamma = 1.0;
+		r_0 = oapiGetSize(gravref);
+	}
+
+	pad.Alt = (length(R_P) - r_0) / 1852.0;
+	pad.CRDist = LmkRange / 1852.0;
+
+	pad.Lat = atan2(u.z, gamma*sqrt(u.x*u.x + u.y*u.y))*DEG;
+	pad.Lng05 = opt->lng / 2.0*DEG;
 }
 
 SV RTCC::coast(SV sv0, double dt)

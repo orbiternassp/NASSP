@@ -2280,19 +2280,37 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_MAPUPDATE, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 30.0*60.0, 40, MST_F_TRANSLUNAR19);
 				break;
 			case MST_F_TRANSLUNAR19: //LOI-1 update to Rev 2 Map Update
-				UpdateMacro(UTP_P30MANEUVER, MoonRev >= 1 && MoonRevTime > 30.0*60.0, 21, MST_F_LUNAR_ORBIT1);
+				UpdateMacro(UTP_P30MANEUVER, MoonRev >= 1 && MoonRevTime > 30.0*60.0, 21, MST_F_LUNAR_ORBIT_LOI_DAY_1);
 				break;
-			case MST_F_LUNAR_ORBIT1: //Rev 2 Map Update to LOI-2 update
-				UpdateMacro(UTP_MAPUPDATE, MoonRev >= 2 && MoonRevTime > 30.0*60.0, 41, MST_F_LUNAR_ORBIT2);
+			case MST_F_LUNAR_ORBIT_LOI_DAY_1: //Rev 2 Map Update to LOI-2 update
+				UpdateMacro(UTP_MAPUPDATE, MoonRev >= 2 && MoonRevTime > 30.0*60.0, 41, MST_F_LUNAR_ORBIT_LOI_DAY_2);
 				break;
-			case MST_F_LUNAR_ORBIT2: //LOI-2 update to TEI-5 update
-				UpdateMacro(UTP_P30MANEUVER, SubStateTime > 5.0*60.0, 22, MST_F_LUNAR_ORBIT3);
+			case MST_F_LUNAR_ORBIT_LOI_DAY_2: //LOI-2 update to TEI-5 update
+				UpdateMacro(UTP_P30MANEUVER, SubStateTime > 5.0*60.0, 22, MST_F_LUNAR_ORBIT_LOI_DAY_3);
 				break;
-			case MST_F_LUNAR_ORBIT3: //TEI-5 update to Rev 3 Map Update
-				UpdateMacro(UTP_P30MANEUVER, SubStateTime > 5.0*60.0, 32, MST_F_LUNAR_ORBIT4);
+			case MST_F_LUNAR_ORBIT_LOI_DAY_3: //TEI-5 update to Rev 3 Map Update
+				UpdateMacro(UTP_P30MANEUVER, SubStateTime > 5.0*60.0, 32, MST_F_LUNAR_ORBIT_LOI_DAY_4);
 				break;
-			case MST_F_LUNAR_ORBIT4: //Rev 3 Map Update to 
-				UpdateMacro(UTP_MAPUPDATE, MoonRev >= 3 && MoonRevTime > 30.0*60.0, 42, MST_F_LUNAR_ORBIT4);
+			case MST_F_LUNAR_ORBIT_LOI_DAY_4: //Rev 3 Map Update to landmark tracking rev 4 update
+				UpdateMacro(UTP_MAPUPDATE, MoonRev >= 3 && MoonRevTime > 45.0*60.0, 42, MST_F_LUNAR_ORBIT_LOI_DAY_5);
+				break;
+			case MST_F_LUNAR_ORBIT_LOI_DAY_5: //F-1 landmark tracking update to B-1 landmark tracking update
+				UpdateMacro(UTP_LMRKTRACKPAD, SubStateTime > 3.0*60.0, 50, MST_F_LUNAR_ORBIT_LOI_DAY_6);
+				break;
+			case MST_F_LUNAR_ORBIT_LOI_DAY_6: //B-1 landmark tracking update to rev 4 map update
+				UpdateMacro(UTP_LMRKTRACKPAD, SubStateTime > 3.0*60.0, 51, MST_F_LUNAR_ORBIT_LOI_DAY_7);
+				break;
+			case MST_F_LUNAR_ORBIT_LOI_DAY_7: //Rev 4 map update to state vector update
+				UpdateMacro(UTP_MAPUPDATE, MoonRev >= 4 && MoonRevTime > 3600.0, 43, MST_F_LUNAR_ORBIT_LOI_DAY_8);
+				break;
+			case MST_F_LUNAR_ORBIT_LOI_DAY_8: //State vector update to state vector update
+				UpdateMacro(UTP_UPLINKONLY, MoonRev >= 5 && MoonRevTime > 30.0*60.0, 100, MST_F_LUNAR_ORBIT_LOI_DAY_9);
+				break;
+			case MST_F_LUNAR_ORBIT_LOI_DAY_9: //State vector update to TEI-10 update
+				UpdateMacro(UTP_UPLINKONLY, true, 100, MST_F_LUNAR_ORBIT_LOI_DAY_10);
+				break;
+			case MST_F_LUNAR_ORBIT_LOI_DAY_10: //TEI-10 update to
+				UpdateMacro(UTP_P47MANEUVER, MoonRev >= 10 && MoonRevTime > 30.0*60.0, 33, MST_F_LUNAR_ORBIT_LOI_DAY_11);
 				break;
 			}
 			break;
@@ -2854,6 +2872,18 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_PMGET", form->PMGET);
 		}
+		else if (padNumber == 13)
+		{
+			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
+
+			SAVE_STRING("MCC_AP11LMARKTRKPAD_LmkID", form->LmkID);
+			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_Alt", form->Alt);
+			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_CRDist", form->CRDist);
+			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_Lat", form->Lat);
+			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_Lng05", form->Lng05);
+			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_T1", form->T1);
+			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_T2", form->T2);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3136,6 +3166,18 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
 			LOAD_DOUBLE("MCC_AP10MAPUPDATE_PMGET", form->PMGET);
 		}
+		else if (padNumber == 13)
+		{
+			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
+
+			LOAD_STRING("MCC_AP11LMARKTRKPAD_LmkID", form->LmkID, 128);
+			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_Alt", form->Alt);
+			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_CRDist", form->CRDist);
+			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_Lat", form->Lat);
+			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_Lng05", form->Lng05);
+			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_T1", form->T1);
+			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_T2", form->T2);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -3389,6 +3431,33 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case 13:
+	{
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
+
+		int hh, mm;
+		double ss;
+
+		sprintf(buffer, "P22 AUTO OPTICS\nLMK ID %s\n", form->LmkID);
+		SStoHHMMSS(form->T1, hh, mm, ss);
+		sprintf(buffer, "%sT1 %03d:%02d:%02.f (HOR)\n", buffer, hh, mm, ss);
+		SStoHHMMSS(form->T2, hh, mm, ss);
+		sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
+
+		if (form->CRDist > 0)
+		{
+			sprintf(buffer, "%s%02.f NM North\n", buffer,form->CRDist);
+		}
+		else
+		{
+			sprintf(buffer, "%s%02.f NM South\n", buffer, abs(form->CRDist));
+		}
+
+		sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n", buffer, form->Lat, form->Lng05, form->Alt);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	default:
 		sprintf(buffer,"Unknown padNumber %d",padNumber);
 		oapiAnnotationSetText(NHpad,buffer);
@@ -3446,6 +3515,9 @@ void MCC::allocPad(int Number){
 		break;
 	case 12: // AP10MAPUPDATE
 		padForm = calloc(1, sizeof(AP10MAPUPDATE));
+		break;
+	case 13: // AP11LMARKTRKPAD
+		padForm = calloc(1, sizeof(AP11LMARKTRKPAD));
 		break;
 
 	default:
@@ -4416,6 +4488,58 @@ void MCC::UpdateMacro(int type, bool condition, int updatenumber, int nextupdate
 			break;
 		}
 	}
+	else if (type == UTP_LMRKTRACKPAD) //landmark tracking PAD without uplink
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(13); // Allocate Landmark Tracking PAD
+
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1 && padState > -1) {
+				if (scrubbed)
+				{
+					if (upDescr[0] != 0)
+					{
+						addMessage(upDescr);
+					}
+					freePad();
+					scrubbed = false;
+					setSubState(2);
+				}
+				else
+				{
+					addMessage("You can has PAD");
+					if (padAutoShow == true && padState == 0) { drawPad(); }
+					setSubState(2);
+				}
+			}
+			break;
+		case 2: // Await burn
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
+			{
+				SlowIfDesired();
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
 }
 
 void MCC::subThreadMacro(int type, int updatenumber)
@@ -4583,6 +4707,15 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	else if (type == UTP_MAPUPDATE)
 	{
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
+		// Ask RTCC for numbers
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		// Done filling form, OK to show
+		padState = 0;
+		// Pretend we did the math
+	}
+	else if (type == UTP_LMRKTRACKPAD)
+	{
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 		// Ask RTCC for numbers
 		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
 		// Done filling form, OK to show
