@@ -129,6 +129,29 @@
 // ASTP is a manned CSM launched with a Saturn 1B to earth orbit to dock with Soyuz 19.
 #define MTP_ASTP			11
 
+//UPDATE TYPES
+#define UTP_PADONLY				0
+#define UTP_PADWITHCMCUPLINK	1
+#define UTP_CMCUPLINKONLY		2
+#define UTP_LGCUPLINKDIRECT		3
+#define UTP_NONE				99
+
+// PAD Types
+#define PT_AP7BLK			1
+#define PT_P27PAD			2
+#define PT_AP7NAV			3
+#define PT_AP7MNV			4
+#define PT_AP7TPI			5
+#define PT_AP7ENT			6
+#define PT_P37PAD			7
+#define PT_AP11MNV			8
+#define PT_AP11ENT			9
+#define PT_TLIPAD			10
+#define PT_STARCHKPAD		11
+#define PT_AP10MAPUPDATE	12
+#define PT_AP11LMARKTRKPAD	13
+#define PT_NONE				99
+
 // MISSION STATES: GLOBAL
 // The init state is supposed to set up the MCC state engine for the mission and dispatch accordingly. Not called when reloading.
 #define MST_INIT			0
@@ -259,25 +282,6 @@
 #define MST_C_COAST60		71
 #define MST_C_ABORT			75
 // Entered on abort from orbit, works like COAST13, goes to MST_ORBIT_ENTRY
-
-//UPDATE TYPES
-#define UTP_BLOCKDATA		0
-#define UTP_P47MANEUVER		1
-#define UTP_P30MANEUVER		2
-#define UTP_TPI				3
-#define UTP_ENTRY			4
-#define UTP_UPLINKONLY		5
-#define UTP_SVNAVCHECK		6
-#define UTP_P27PAD			7
-#define UTP_TLIPAD			8
-#define UTP_LUNARENTRY		9
-#define UTP_FINALLUNARENTRY 10
-#define UTP_STARCHKPAD		11
-#define UTP_LGCUPLINKDIRECT	12
-#define UTP_P37PAD			13
-#define UTP_MAPUPDATE		14
-#define UTP_LMRKTRACKPAD	15
-#define UTP_NONE			99
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
@@ -796,7 +800,7 @@ public:
 	void drawPad();											// Draw PAD display
 	void allocPad(int Number);								// Allocate memory for PAD form
 	void freePad();											// Free memory occupied by PAD form
-	void UpdateMacro(int type, bool condition, int updatenumber, int nextupdate, bool altcriterium = false, bool altcondition = false, int altnextupdate = 0);
+	void UpdateMacro(int type, int padtype, bool condition, int updatenumber, int nextupdate, bool altcriterium = false, bool altcondition = false, int altnextupdate = 0);
 	int  subThread();										// Subthread entry point
 	int startSubthread(int fcn, int type);					// Subthread start request
 	void subThreadMacro(int type, int updatenumber);
