@@ -508,7 +508,7 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	//sprintf(oapiDebugString(), "V %lf R %d", lem->scera2.GetVoltage(3, 8), lem->CabinRepressValve.GetEmergencyCabinRepressRelay());
+	//sprintf(oapiDebugString(), "R %d CPS %d SPS %d", lem->CabinRepressValve.GetEmergencyCabinRepressRelay(), lem->CabinPressureSwitch.GetPressureSwitch(), lem->SuitPressureSwitch.GetPressureSwitch());
 }
 
 double SCERA1::GetVoltage(int sa, int chan)

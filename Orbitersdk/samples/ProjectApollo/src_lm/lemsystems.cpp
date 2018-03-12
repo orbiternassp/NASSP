@@ -768,7 +768,7 @@ void LEM::SystemsInit()
 
 	// ECS
 	CabinPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), 4.70/PSI, 4.07/PSI);
-	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50 / PSI, 2.90 / PSI);
+	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50/PSI, 2.90/PSI);
 	CabinRepressValve.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
 		&ECS_CABIN_REPRESS_CB, &CabinRepressValveSwitch, &PressRegAValve, &PressRegBValve);
 	SuitCircuitPressureRegulatorA.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT"),
@@ -4227,8 +4227,8 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[3][7] = 0;
 	if(WaterWarningDisabled == 0){
-		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantity() < 0.1)){ LightStatus[3][7] = 1; }
-		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1Quantity()  < 0.99 || lem->ecs.AscentWaterTank2Quantity() < 0.99)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.DescentWaterTankQuantity() < 0.1594)){ LightStatus[3][7] = 1; }
+		if(lem->stage < 2 && (lem->ecs.AscentWaterTank1Quantity()  < 0.9478 || lem->ecs.AscentWaterTank2Quantity() < 0.9479)){ LightStatus[3][7] = 1; }
 		if(abs(lem->ecs.AscentWaterTank1Quantity() - lem->ecs.AscentWaterTank2Quantity()) > 0.01) { LightStatus[3][7] = 1; }
 	}
 	if(lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0){
@@ -4245,7 +4245,6 @@ void LEM_CWEA::TimeStep(double simdt){
 	}
 
 	// Rendezvous Radar Caution
-
 	LightStatus[2][5]=0;
 	if(lem->RendezvousRadarRotary.GetState()==0 && lem->RR.IsRadarDataGood() == 0 ) {
 		LightStatus[2][5]=1;
@@ -4268,6 +4267,7 @@ void LEM_CWEA::TimeStep(double simdt){
 				break;
 			case 3: // ENG PB & C/W 2
 				// Light engine START/STOP lights and Panel 1 second bank warning lamps
+				// FIX ME: Lit engine start/stop light bmp and logic needed
 				LightStatus[0][2] = 1; LightStatus[1][2] = 1; LightStatus[2][2] = 1; LightStatus[3][2] = 1; LightStatus[4][2] = 1;
 				LightStatus[0][3] = 1; LightStatus[1][3] = 1; LightStatus[2][3] = 1; LightStatus[3][3] = 1; LightStatus[4][3] = 1;
 				break;
@@ -4283,8 +4283,7 @@ void LEM_CWEA::TimeStep(double simdt){
 				break;
 			case 6: // COMPNT
 				// Light component caution and Lunar Contact lights
-				// FIXME: IMPLEMENT THIS
-				// Lunar Contact lights are lit in clbkPanelRedrawEvent code
+				// Lunar Contact and Component lights are lit in clbkPanelRedrawEvent code
 				break;
 		}
 	}
