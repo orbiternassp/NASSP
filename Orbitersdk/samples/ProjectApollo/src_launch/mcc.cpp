@@ -2309,8 +2309,17 @@ void MCC::TimeStep(double simdt){
 			case MST_F_LUNAR_ORBIT_LOI_DAY_9: //State vector update to TEI-10 update
 				UpdateMacro(UTP_UPLINKONLY, true, 100, MST_F_LUNAR_ORBIT_LOI_DAY_10);
 				break;
-			case MST_F_LUNAR_ORBIT_LOI_DAY_10: //TEI-10 update to
-				UpdateMacro(UTP_P47MANEUVER, MoonRev >= 10 && MoonRevTime > 30.0*60.0, 33, MST_F_LUNAR_ORBIT_LOI_DAY_11);
+			case MST_F_LUNAR_ORBIT_LOI_DAY_10: //TEI-10 update to LLS-2 update
+				UpdateMacro(UTP_P47MANEUVER, MoonRev >= 10 && MoonRevTime > 30.0*60.0, 33, MST_F_LUNAR_ORBIT_DOI_DAY_1);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_1: //LLS-2 update to LLS-2 track PAD
+				UpdateMacro(UTP_UPLINKONLY, true, 60, MST_F_LUNAR_ORBIT_DOI_DAY_2);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_2: //LLS-2 track PAD to rev 11 map update
+				UpdateMacro(UTP_LMRKTRACKPAD, SubStateTime > 3.0*60.0, 52, MST_F_LUNAR_ORBIT_DOI_DAY_3);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_3: //Rev 11 map update to CSM DAP update
+				UpdateMacro(UTP_MAPUPDATE, MoonRev >= 10 && MoonRevTime > 3600.0, 44, MST_F_LUNAR_ORBIT_DOI_DAY_4);
 				break;
 			}
 			break;

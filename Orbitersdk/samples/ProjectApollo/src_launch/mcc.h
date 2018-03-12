@@ -457,8 +457,14 @@
 #define MST_F_LUNAR_ORBIT_LOI_DAY_9		108
 // Ends at TEI-10 update
 #define MST_F_LUNAR_ORBIT_LOI_DAY_10	109
-// Ends at sleep period
-#define MST_F_LUNAR_ORBIT_LOI_DAY_11	110
+// Ends at LLS-2 update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_1		200
+// Ends at LLS-2 track PAD update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_2		201
+// Ends at rev 11 map update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_3		202
+// Ends at CSM DAP update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_4		203
 
 // Ground Station Information Structure
 struct GroundStation {

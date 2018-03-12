@@ -4100,6 +4100,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 41: //REV 2 MAP UPDATE
 	case 43: //REV 4 MAP UPDATE
+	case 44: //REV 11 MAP UPDATE
 	{
 		SV sv0;
 
@@ -4108,7 +4109,18 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, getGETBase(), *form);
 
-		form->Rev = fcn - 39;
+		if (fcn == 41)
+		{
+			form->Rev = 2;
+		}
+		else if (fcn == 43)
+		{
+			form->Rev = 4;
+		}
+		else if (fcn == 44)
+		{
+			form->Rev = 11;
+		}
 	}
 	break;
 	case 42: //REV 3 MAP UPDATE
@@ -4132,6 +4144,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 50: //REV 4 LANDMARK TRACKING PAD F-1
 	case 51: //REV 4 LANDMARK TRACKING PAD B-1
+	case 52: //REV 11 LANDMARK TRACKING PAD LLS-2
 	{
 		LMARKTRKPADOpt opt;
 
@@ -4148,7 +4161,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.LmkTime = OrbMech::HHMMSSToSS(82, 27, 0);
 			opt.lng = 86.88*RAD;
 		}
-		else
+		else if (fcn == 51)
 		{
 			sprintf(form->LmkID, "B-1");
 			opt.alt = -1.54*1852.0;
@@ -4156,8 +4169,41 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.LmkTime = OrbMech::HHMMSSToSS(82, 45, 0);
 			opt.lng = 35.036*RAD;
 		}
+		else if (fcn == 52)
+		{
+			sprintf(form->LmkID, "130");
+			opt.alt = -1.73*1852.0;
+			opt.lat = 1.266*RAD;
+			opt.LmkTime = OrbMech::HHMMSSToSS(96, 35, 0);
+			opt.lng = 23.678*RAD;
+		}
 
 		LandmarkTrackingPAD(&opt, *form);
+	}
+	break;
+	case 60: //STATE VETOR and LLS 2 REFSMMAT UPLINK
+	{
+		MATRIX3 REFSMMAT;
+		SV sv;
+		REFSMMATOpt opt;
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		opt.GETbase = getGETBase();
+		opt.LSLat = LSLat;
+		opt.LSLng = LSLng;
+		opt.REFSMMATopt = 5;
+		opt.REFSMMATTime = t_land;
+		opt.vessel = calcParams.src;
+
+		REFSMMAT = REFSMMATCalc(&opt);
+
+		sprintf(uplinkdata, "%s%s", CMCStateVectorUpdate(sv, true, AGCEpoch), CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, LLS2 REFSMMAT");
+		}
 	}
 	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
