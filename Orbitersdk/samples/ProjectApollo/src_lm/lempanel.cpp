@@ -1678,6 +1678,10 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_RANGE_TAPE,    					_R(1052,  660, 1096,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RATE_TAPE,    					_R(1103,  660, 1138,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEM_PANEL_5,                      _R(  33, 1548,  593, 1889), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CO2_LIGHT,						_R(1897, 1094, 1931, 1128), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_SUITFAN_LIGHT,					_R(1821, 1071, 1855, 1105), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_H2OSEP_LIGHT,					_R(1943, 1094, 1977, 1128), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_GLYCOL_LIGHT,					_R(1822, 950, 1856, 984), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 
 		oapiRegisterPanelArea (AID_LMP_MANUAL_ENGINE_STOP_SWITCH,	_R(2160, 1609, 2228, 1678), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 
@@ -1706,6 +1710,12 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_RIGHTMONITORSWITCHES,				_R (333,  532,  368,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_GLYCOLSUITFANROTARIES,			_R(  31,  746,  116,  951), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_QTYMONROTARY,						_R( 215,  806,  300,  891), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_CO2_LIGHT,						 _R( 221, 914, 255, 948), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_SUITFAN_LIGHT,					_R( 145, 891, 179, 925), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_H2OSEP_LIGHT,						 _R( 266, 914, 300, 948), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_GLYCOL_LIGHT,						 _R( 145, 770, 179, 804), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_DC_BUS_LIGHT,						_R( 1559, 864, 1593, 898), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_BAT_FAULT_LIGHT,					_R( 1831, 775, 1865, 809), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -1728,6 +1738,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_FDAILOWERSWITCHROW,				_R(1520,  740, 1696,  780), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_ENGINETHRUSTCONTSWITCHES,			_R(1592,  826, 1702,  938), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_MPS_REG_CONTROLS_LEFT,			_R(1736,  738, 1772,  945), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_MPS_REG_CONTROLS_RIGHT,			_R(1810,  738, 1846, 945), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RANGE_TAPE,						_R(1826,  480, 1870,  643), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RATE_TAPE,						_R(1877,  480, 1915,  643), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_MPS_OXID_QUANTITY_INDICATOR,		_R(1839,   65, 1878,   86), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
@@ -1837,6 +1848,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_TRACK_MODE_SWITCH,_R( 976, 1092, 1010, 1123), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_VHF_SEL_KNOB,	_R( 1252,  994, 1337, 1079), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LM_P12_COMM_ANT_SBD_SEL_KNOB,	_R( 1252, 1158, 1337, 1243), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				 PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_DC_BUS_LIGHT,						_R( 46, 864, 80, 898), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_BAT_FAULT_LIGHT,					 _R( 318, 775, 352, 809), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				 PANEL_MAP_BACKGROUND);
 	
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -2714,7 +2727,44 @@ void LEM::SetSwitches(int panel) {
 	ForwardHatchReliefValve.Init(0, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchValveSwitchRow);
 }
 
+void LEM::RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
+
+	if (s->IsUp())
+		*pump = SP_PUMP_AUTO;
+	else if (s->IsCenter())
+		*pump = SP_PUMP_OFF;
+	else if (s->IsDown())
+		*pump = SP_PUMP_ON;
+}
+
 void LEM::PanelSwitchToggled(ToggleSwitch *s) {
+
+	//RCS Switchable Heaters//
+
+	//RCS Heater 1
+	if (s == &RCSSysQuad1Switch) {
+		RCSHeaterSwitchToggled(s,
+			(int*)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS2:PUMP"));
+
+	}
+	//RCS Heater 2
+	else if (s == &RCSSysQuad2Switch) {
+		RCSHeaterSwitchToggled(s,
+			(int*)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS2:PUMP"));
+
+	}
+	//RCS Heater 3
+	else if (s == &RCSSysQuad3Switch) {
+		RCSHeaterSwitchToggled(s,
+			(int*)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS2:PUMP"));
+
+	}
+	//RCS Heater 4
+	else if (s == &RCSSysQuad4Switch) {
+		RCSHeaterSwitchToggled(s,
+			(int*)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS2:PUMP"));
+
+	}
 }
 
 void LEM::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
@@ -3270,6 +3320,68 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}else{
 			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,0,34,34, SURF_PREDEF_CK); // Light Off
 		}
+		return true;
+
+	case AID_CO2_LIGHT:
+		if (ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6) || CO2CanisterSelectSwitch.GetState() == 0)) {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		}
+		else {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
+		}
+		return true;
+
+	case AID_SUITFAN_LIGHT:
+		if (SuitFanDPSensor.GetSuitFanFail() == true) {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		}
+		else {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
+		}
+		return true;
+
+	case AID_H2OSEP_LIGHT:
+		if (scera1.GetVoltage(5, 3) < 1.1) {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		}
+		else {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
+		}
+		return true;
+
+	case AID_GLYCOL_LIGHT:
+		if (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true) {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		}
+		else {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
+		}
+		return true;
+
+	case AID_DC_BUS_LIGHT:
+		/*
+		if () {																		//Needs control logic
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		}
+		else {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
+		}
+		return true;
+		*/
+		oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
+		return true;
+
+	case AID_BAT_FAULT_LIGHT:
+		/*
+		if () {																		//Needs control logic
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		}
+		else {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
+		}
+		return true;
+		*/
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
 		return true;
 
 	case AID_CONTACTLIGHT2:

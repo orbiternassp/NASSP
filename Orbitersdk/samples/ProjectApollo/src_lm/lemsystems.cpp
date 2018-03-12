@@ -848,6 +848,29 @@ void LEM::SystemsInit()
 	tca3B.Init(this, 4);
 	tca4B.Init(this, 2);
 
+	RCSHtr1Quad1 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS1");
+	RCSHtr1Quad2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS1");
+	RCSHtr1Quad3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS1");
+	RCSHtr1Quad4 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS1");
+	RCSHtr1Quad1->WireTo(&RCS_QUAD_1_CDR_HTR_CB);
+	RCSHtr1Quad2->WireTo(&RCS_QUAD_2_CDR_HTR_CB);
+	RCSHtr1Quad3->WireTo(&RCS_QUAD_3_CDR_HTR_CB);
+	RCSHtr1Quad4->WireTo(&RCS_QUAD_4_CDR_HTR_CB);
+
+	RCSHtr2Quad1 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD1HTRSYS2");
+	RCSHtr2Quad2 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD2HTRSYS2");
+	RCSHtr2Quad3 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD3HTRSYS2");
+	RCSHtr2Quad4 = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:QUAD4HTRSYS2");
+	RCSHtr2Quad1->WireTo(&RCS_QUAD_1_LMP_HTR_CB);
+	RCSHtr2Quad2->WireTo(&RCS_QUAD_2_LMP_HTR_CB);
+	RCSHtr2Quad3->WireTo(&RCS_QUAD_3_LMP_HTR_CB);
+	RCSHtr2Quad4->WireTo(&RCS_QUAD_4_LMP_HTR_CB);
+
+	LMQuad1RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD1");
+	LMQuad2RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD2");
+	LMQuad3RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD3");
+	LMQuad4RCS = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD4");
+
 	//ACA and TTCA
 	CDR_ACA.Init(this, &ACAPropSwitch);
 	CDR_TTCA.Init(this);
@@ -1866,6 +1889,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *RRHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater:ISON");
 	double *LRHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-LR-Antenna-Heater:ISON");
 
+	double *QD1Temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD1:TEMP");
+	double *QD2Temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD2:TEMP");
+	double *QD3Temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD3:TEMP");
+	double *QD4Temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMRCSQUAD4:TEMP");
+
 	//CSM LM Connection
 	double *lmcabinpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
 	double *lmtunnelpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:PRESS");
@@ -1873,6 +1901,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
 */
 
+	//sprintf(oapiDebugString(), "Quad 1 %lf Quad 2 %lf Quad 3 %lf Quad 4 %lf", KelvinToFahrenheit(*QD1Temp), KelvinToFahrenheit(*QD2Temp), KelvinToFahrenheit(*QD3Temp), KelvinToFahrenheit(*QD4Temp));
 	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
 
 	//sprintf(oapiDebugString(), "GlyTmp %lf GlyCoolTmp %lf HXCTmp %lf GlyHeatTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf LP %lf LT %lf", (*primglycoltemp)* 1.8 - 459.67, (*glycolsuitcooltemp)* 1.8 - 459.67, (*hxcoolingTemp)* 1.8 - 459.67, (*glycolsuitheattemp)* 1.8 - 459.67, (*hxheatingTemp)* 1.8 - 459.67, (*SuitCircuitTemp)* 1.8 - 459.67, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67);
@@ -1959,6 +1988,35 @@ void LEM::ConnectTunnelToCabinVent()
 
 	pipe->in = &tank->OUT_valve;
 }
+
+double LEM::GetRCSQuadTempF(int index)
+{
+	if (index >= LM_RCS_QUAD_1 && index <= LM_RCS_QUAD_4)
+	{
+		h_Radiator *quad = 0;
+		switch (index)
+		{
+		case LM_RCS_QUAD_1:
+			quad = LMQuad1RCS;
+			break;
+
+		case LM_RCS_QUAD_2:
+			quad = LMQuad2RCS;
+			break;
+
+		case LM_RCS_QUAD_3:
+			quad = LMQuad3RCS;
+			break;
+
+		case LM_RCS_QUAD_4:
+			quad = LMQuad4RCS;
+			break;
+		}
+		return (KelvinToFahrenheit(quad->GetTemp()));
+	}
+		return 0;
+}
+
 
 
 //
@@ -4003,12 +4061,11 @@ void LEM_CWEA::TimeStep(double simdt){
 	}
 
 	// 6DS17 SUIT/FAN LOW PRESSURE WARNING
-	// On when suit pressure below 3.12 psia or #2 suit circulation fan fails.
-	// Suit fan failure alarm disabled when Suit Fan DP Control CB is open.
-	// FIXME: IMPLEMENT #2 SUIT CIRC FAN TEST
-	if(lem->ECS_SUIT_FAN_DP_CB.GetState() == 0 && lem->ecs.GetSuitPressurePSI() < 3.12){
-		LightStatus[1][3] = 1;
-	}
+	// On when suit pressure below 3.11 psia or #2 suit fan fails.
+	// Suit fan failure alarm disabled when Suit Fan DP Control CB is open by de energizing K12.
+	LightStatus[1][3] = 0;
+	if (lem->scera1.GetVoltage(5, 1) < (3.11 / 2)) { LightStatus[1][3] = 1; }
+	if (lem->scera2.GetVoltage(3, 6) > 2.5) { LightStatus[1][3] = 1; }
 
 	// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 	// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
@@ -4135,8 +4192,11 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Restoration of normal CO2 pressure
 	// Restoration of normal water separator speed
 	// Selection of #2 suit fan
-	// FIXME: Turned off for now.
 	LightStatus[0][7] = 0;
+	if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6/6)) { LightStatus[0][7] = 1; }
+	if (lem->scera2.GetSwitch(12, 2)->IsClosed()) { LightStatus[0][7] = 1; } //Coolant pump 1 failure
+	if (lem->GlycolRotary.GetState() == 2 && lem->scera2.GetVoltage(13, 3) > 2.5) { LightStatus[0][7] = 1; } //Coolant pump 2 failure
+	//if (lem->SuitFanRotary.GetState() == 2) { LightStatus[0][7] = 0; }
 
 	// 6DS37 OXYGEN QUANTITY CAUTION
 	// On when:
@@ -4144,9 +4204,14 @@ void LEM_CWEA::TimeStep(double simdt){
 	// Less than 99.6 psia in ascent oxygen tank #1
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[1][7] = 0;
-	if(lem->stage < 2 && (lem->ecs.AscentOxyTank1PressurePSI() < 681.6 || lem->ecs.AscentOxyTank2PressurePSI() < 682.4)){ LightStatus[1][7] = 1; }
-	if(lem->stage < 2 && (lem->ecs.DescentOxyTankPressurePSI() < 135)){ LightStatus[1][7] = 1; }
-	if(lem->ecs.AscentOxyTank1PressurePSI() < 99.6){ LightStatus[1][7] = 1; }
+	if (WaterWarningDisabled == 0) {
+		if (lem->stage < 2 && (lem->ecs.AscentOxyTank1PressurePSI() < 681.6 || lem->ecs.AscentOxyTank2PressurePSI() < 682.4)) { LightStatus[1][7] = 1; }
+		if (lem->stage < 2 && (lem->ecs.DescentOxyTankPressurePSI() < 135)) { LightStatus[1][7] = 1; }
+		if (lem->ecs.AscentOxyTank1PressurePSI() < 99.6) { LightStatus[1][7] = 1; }
+	}
+	if (lem->QtyMonRotary.GetState() == 0 && LightStatus[1][7] != 0) {
+		WaterWarningDisabled = 1;
+	}
 
 	// 6DS38 GLYCOL FAILURE CAUTION
 	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ accumulator > 50F

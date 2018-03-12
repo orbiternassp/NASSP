@@ -83,6 +83,11 @@ enum LMRCSThrusters
 	LMRCS_A4D
 };
 
+#define LM_RCS_QUAD_1		0
+#define LM_RCS_QUAD_2		1
+#define LM_RCS_QUAD_3		2
+#define LM_RCS_QUAD_4		3
+
 // LM ECS status
 
 typedef struct {
@@ -91,7 +96,6 @@ typedef struct {
 	bool cdrInSuit;
 	bool lmpInSuit;
 } LEMECSStatus;
-
 
 // Systems things
 
@@ -561,6 +565,7 @@ public:
 	void SetGenericStageState(int stat);
 	void PostLoadSetup();
 
+	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
@@ -573,6 +578,7 @@ public:
 	void SetPipeMaxFlow(char *pipe, double flow);
 	h_Pipe* GetLMTunnelPipe();
 	void ConnectTunnelToCabinVent();
+	double GetRCSQuadTempF(int index);
 	virtual void GetECSStatus(LEMECSStatus &ecs);
 	virtual void SetCrewNumber(int number);
 	virtual void SetCDRInSuit();
@@ -596,7 +602,21 @@ public:
 	Pump *PrimGlyPump1;
 	Pump *PrimGlyPump2;
 	Pump *SecGlyPump;
-	Pump *LCGPump; 
+	Pump *LCGPump;
+
+	Boiler *RCSHtr1Quad1;
+	Boiler *RCSHtr1Quad2;
+	Boiler *RCSHtr1Quad3;
+	Boiler *RCSHtr1Quad4;
+	Boiler *RCSHtr2Quad1;
+	Boiler *RCSHtr2Quad2;
+	Boiler *RCSHtr2Quad3;
+	Boiler *RCSHtr2Quad4;
+
+	h_Radiator *LMQuad1RCS;
+	h_Radiator *LMQuad2RCS;
+	h_Radiator *LMQuad3RCS;
+	h_Radiator *LMQuad4RCS;
 
 	// DS20060416 RCS management
 	void SetRCSJet(int jet,bool fire);
