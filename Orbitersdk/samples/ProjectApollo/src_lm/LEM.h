@@ -345,7 +345,6 @@ public:
 	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
 
 	int LightStatus[5][8];		// 1 = lit, 2 = not
-	int CabinLowPressLt;		// FF for this
 	int WaterWarningDisabled;   // FF for this
 	int GlycolWarningDisabled;   // FF for this
 	LEM *lem;					// Pointer at LEM
@@ -1835,6 +1834,8 @@ protected:
 
 	// ECS
 	LEM_ECS ecs;
+	LEMPressureSwitch CabinPressureSwitch;
+	LEMPressureSwitch SuitPressureSwitch;
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorA;
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorB;
 	LEMCabinRepressValve CabinRepressValve;
@@ -1956,6 +1957,7 @@ protected:
 	friend class TempMonitorInd;
 	friend class RCS_TCA;
 	friend class LEM_ECS;
+	friend class LEMCabinRepressValve;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
