@@ -718,18 +718,6 @@ double CircuitBrakerSwitch::Current()
 	return Amperes;
 }
 
-double CircuitBrakerSwitch::Frequency()
-{
-	if ((state != 0) && SRC && SRC->IsEnabled()) {
-		Volts = SRC->Voltage();
-		if (Volts > 112.0)
-			Hertz = 400;
-		else
-			Hertz = 0.0;
-	}
-	return Hertz;
-}
-
 void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
