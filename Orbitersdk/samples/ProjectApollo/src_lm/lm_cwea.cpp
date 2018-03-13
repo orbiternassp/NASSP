@@ -194,7 +194,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// On when less than 10 seconds of ascent propellant/oxidizer remains.
 	// Disabled when ascent engine is not firing.
 	// FIXME: This test probably used a fixed setpoint instead of division. Investigate.
-	if (lem->ph_Asc && lem->APS.thrustOn && lem->GetPropellantFlowrate(lem->ph_Asc) > 0 && (lem->GetPropellantMass(lem->ph_Asc) / lem->GetPropellantFlowrate(lem->ph_Asc) < 10)) {
+	if (lem->ph_Asc && lem->APS.thrustOn && lem->GetPropellantFlowrate(lem->ph_Asc) > 0.0 && (lem->GetPropellantMass(lem->ph_Asc) / lem->GetPropellantFlowrate(lem->ph_Asc) < 10.0)) {
 		LightStatus[1][4] = 1;
 	}
 	else {
@@ -218,7 +218,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// On when AC bus voltage below 112V or frequency below 398hz or above 402hz.
 	// Disabled when AC Power switch is off.
 	if (lem->EPSInverterSwitch.GetState() != THREEPOSSWITCH_DOWN) {
-		if (lem->ACBusA.Voltage() < 112 || lem->ACBusB.Voltage() < 112) {
+		if (lem->ACBusA.Voltage() < 112.0 || lem->ACBusB.Voltage() < 112.0) {
 			LightStatus[0][5] = 1;
 		}
 		else {
@@ -252,8 +252,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// On when either ATCA solenoid driver power supply fails.
 	// Disabled by stage deadface open or Abort PB press.
 	LightStatus[4][5] = 0;
-	if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP && lem->CDR_SCS_ATCA_CB.Voltage() < 24) { LightStatus[4][5] = 1; }
-	if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_DOWN && lem->SCS_ATCA_AGS_CB.Voltage() < 24) { LightStatus[4][5] = 1; }
+	if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP && lem->CDR_SCS_ATCA_CB.Voltage() < 24.0) { LightStatus[4][5] = 1; }
+	if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_DOWN && lem->SCS_ATCA_AGS_CB.Voltage() < 24.0) { LightStatus[4][5] = 1; }
 	// FIXME: Handle stage DF and abort PB disables
 
 	// 6DS31 EDS RELAY FAILURE
@@ -278,9 +278,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// LR Assembly < -15.6F or > 148.9F
 	// Disabled when Temperature Monitor switch selects affected assembly.
 	LightStatus[2][6] = 0;
-	if (lem->TempMonitorRotary.GetState() != 0 && (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200) / 80) || lem->RR.GetAntennaTempF() > ((147.69 + 200) / 80))) {LightStatus[2][6] = 1;}
-	if (lem->stage < 2 && lem->TempMonitorRotary.GetState() != 1 && (lem->scera1.GetVoltage(21, 3) < ((-15.6 + 200) / 80) || lem->scera1.GetVoltage(21, 3) > ((148.9 + 200) / 80))) {LightStatus[2][6] = 1;}
-	if (lem->TempMonitorRotary.GetState() != 6 && (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200) / 80) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200) / 80))) {LightStatus[2][6] = 1;}
+	if (lem->TempMonitorRotary.GetState() != 0 && (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0))) {LightStatus[2][6] = 1;}
+	if (lem->stage < 2 && lem->TempMonitorRotary.GetState() != 1 && (lem->scera1.GetVoltage(21, 3) < ((-15.6 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 3) > ((148.9 + 200.0) / 80.0))) {LightStatus[2][6] = 1;}
+	if (lem->TempMonitorRotary.GetState() != 6 && (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0))) {LightStatus[2][6] = 1;}
 
 	// 6DS34 CWEA POWER FAILURE CAUTION
 	// On when any CWEA power supply indicates failure.
@@ -300,7 +300,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// Restoration of normal water separator speed
 	// Selection of #2 suit fan
 	LightStatus[0][7] = 0;
-	if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6 / 6)) { LightStatus[0][7] = 1; }	// CO2 Partial Pressure > 7.6mm
+	if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6 / 6.0)) { LightStatus[0][7] = 1; }	// CO2 Partial Pressure > 7.6mm
 	if (lem->scera2.GetSwitch(12, 2)->IsClosed()) { LightStatus[0][7] = 1; } //Coolant pump 1 failure
 	if (lem->GlycolRotary.GetState() == 2 && lem->scera2.GetVoltage(13, 3) > 2.5) { LightStatus[0][7] = 1; } //Coolant pump 2 failure
 	if (lem->SuitFanRotary.GetState() == 1 && lem->scera2.GetVoltage(3, 5) > 2.5) { LightStatus[0][7] = 1; } //Suit fan 1 failure
@@ -313,9 +313,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[1][7] = 0;
 	if (WaterWarningDisabled == 0) {
-		if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 1) < (681.6/200) || lem->scera1.GetVoltage(7, 2) < (682.4/200))) { LightStatus[1][7] = 1; }
-		if (lem->stage < 2 && (lem->scera2.GetVoltage(8, 2) < (135/600))) { LightStatus[1][7] = 1; }
-		if (lem->scera1.GetVoltage(7, 1) < (99.6/200)) { LightStatus[1][7] = 1; }
+		if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 1) < (681.6/200.0) || lem->scera1.GetVoltage(7, 2) < (682.4/200.0))) { LightStatus[1][7] = 1; }
+		if (lem->stage < 2 && (lem->scera2.GetVoltage(8, 2) < (135.0/600.0))) { LightStatus[1][7] = 1; }
+		if (lem->scera1.GetVoltage(7, 1) < (99.6/200.0)) { LightStatus[1][7] = 1; }
 	}
 	if (lem->QtyMonRotary.GetState() == 0 && LightStatus[1][7] != 0) {
 		WaterWarningDisabled = 1;
@@ -326,7 +326,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// Disabled by Glycol Pump to INST(SEC) position
 	LightStatus[2][7] = 0;
 		if (lem->GlycolRotary.GetState() != 0 && lem->scera2.GetVoltage(3, 3) > 2.5) { LightStatus[2][7] = 1; }	//Glycol LLS
-		if (lem->GlycolRotary.GetState() != 0 && lem->scera1.GetVoltage(10, 1) > ((50-20)/20)) { LightStatus[2][7] = 1; } //Glycol temp > 50F (1.5V scaled)
+		if (lem->GlycolRotary.GetState() != 0 && lem->scera1.GetVoltage(10, 1) > ((50.0 - 20.0) / 20.0)) { LightStatus[2][7] = 1; } //Glycol temp > 50F (1.5V scaled)
 
 	// 6DS39 WATER QUANTITY CAUTION
 	// On when:
@@ -337,7 +337,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 	if (WaterWarningDisabled == 0) {
 		if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 3) < (0.1594 / 0.2))) { LightStatus[3][7] = 1; }
 		if (lem->stage < 2 && (lem->scera1.GetVoltage(8, 1)  < (0.9478 / 0.2) || lem->scera1.GetVoltage(8, 2)  < (0.9478 / 0.2))) { LightStatus[3][7] = 1; }
-		if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2))/((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2))/2))>=0.15) { LightStatus[3][7] = 1; }
+		if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2))/((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2))/2.0))>=0.15) { LightStatus[3][7] = 1; }
 	}
 	if (lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0) {
 		WaterWarningDisabled = 1;
