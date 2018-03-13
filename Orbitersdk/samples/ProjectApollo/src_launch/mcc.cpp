@@ -92,56 +92,15 @@ void MCC::clbkLoadStateEx(FILEHANDLE scn, void *status)
 		}
 		else if (!strnicmp(line, "CSMNAME", 7))
 		{
-			VESSEL *v;
-			OBJHANDLE hCSM;
 			strncpy(CSMName, line + 8, 64);
-			hCSM = oapiGetObjectByName(CSMName);
-			if (hCSM != NULL)
-			{
-				v = oapiGetVesselInterface(hCSM);
-
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") ||
-					!stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
-					!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
-					!stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
-					cm = (Saturn *)v;
-					rtcc->calcParams.src = cm;
-				}
-			}
 		}
 		else if (!strnicmp(line, "LVNAME", 6))
 		{
-			VESSEL *v;
-			OBJHANDLE hLV;
 			strncpy(LVName, line + 7, 64);
-			hLV = oapiGetObjectByName(LVName);
-			if (hLV != NULL)
-			{
-				v = oapiGetVesselInterface(hLV);
-
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
-					!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) {
-					sivb = (SIVB *)v;
-				}
-			}
 		}
 		else if (!strnicmp(line, "LEMNAME", 7))
 		{
-			VESSEL *v;
-			OBJHANDLE hLEM;
 			strncpy(LEMName, line + 8, 64);
-			hLEM = oapiGetObjectByName(LEMName);
-			if (hLEM != NULL)
-			{
-				v = oapiGetVesselInterface(hLEM);
-
-				if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
-					!stricmp(v->GetClassName(), "ProjectApollo/LEM") ||
-					!stricmp(v->GetClassName(), "ProjectApollo\\LEMSaturn") ||
-					!stricmp(v->GetClassName(), "ProjectApollo/LEMSaturn")){
-					lm = (LEM *)v;
-				}
-			}
 		}
 		else if (!strnicmp(line, MCC_START_STRING, sizeof(MCC_START_STRING))) {
 			LoadState(scn);
@@ -157,6 +116,63 @@ void MCC::clbkPreStep(double simt, double simdt, double mjd)
 {
 	// Update Ground Data
 	TimeStep(simdt);
+}
+
+void MCC::clbkPostCreation()
+{
+	VESSEL *v;
+	OBJHANDLE hVessel;
+
+	//CSM
+	if (CSMName[0])
+	{
+		hVessel = oapiGetObjectByName(CSMName);
+		if (hVessel != NULL)
+		{
+			v = oapiGetVesselInterface(hVessel);
+
+			if (!stricmp(v->GetClassName(), "ProjectApollo\\Saturn5") ||
+				!stricmp(v->GetClassName(), "ProjectApollo/Saturn5") ||
+				!stricmp(v->GetClassName(), "ProjectApollo\\Saturn1b") ||
+				!stricmp(v->GetClassName(), "ProjectApollo/Saturn1b")) {
+				cm = (Saturn *)v;
+				rtcc->calcParams.src = cm;
+			}
+		}
+	}
+
+	//S-IVB
+	if (LVName[0])
+	{
+		hVessel = oapiGetObjectByName(LVName);
+		if (hVessel != NULL)
+		{
+			v = oapiGetVesselInterface(hVessel);
+
+			if (!stricmp(v->GetClassName(), "ProjectApollo\\sat5stg3") ||
+				!stricmp(v->GetClassName(), "ProjectApollo/sat5stg3")) {
+				sivb = (SIVB *)v;
+			}
+		}
+	}
+
+	//LEM
+	if (LEMName[0])
+	{
+		hVessel = oapiGetObjectByName(LEMName);
+		if (hVessel != NULL)
+		{
+			v = oapiGetVesselInterface(hVessel);
+
+			if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
+				!stricmp(v->GetClassName(), "ProjectApollo/LEM") ||
+				!stricmp(v->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+				!stricmp(v->GetClassName(), "ProjectApollo/LEMSaturn")) {
+				lm = (LEM *)v;
+				rtcc->calcParams.tgt = lm;
+			}
+		}
+	}
 }
 
 DLLCLBK void InitModule(HINSTANCE hDLL)
@@ -2321,6 +2337,9 @@ void MCC::TimeStep(double simdt){
 			case MST_F_LUNAR_ORBIT_DOI_DAY_3: //Rev 11 map update to CSM DAP update
 				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 10 && MoonRevTime > 3600.0, 44, MST_F_LUNAR_ORBIT_DOI_DAY_4);
 				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_4: //CSM DAP update to LM DAP Load PAD
+				UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, MoonRev >= 11 && MoonRevTime > 30.0*60.0, 61, MST_F_LUNAR_ORBIT_DOI_DAY_5);
+				break;
 			}
 			break;
 		}
@@ -2893,6 +2912,15 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_T1", form->T1);
 			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_T2", form->T2);
 		}
+		else if (padNumber == PT_AP10DAPDATA)
+		{
+			AP10DAPDATA * form = (AP10DAPDATA *)padForm;
+
+			SAVE_DOUBLE("MCC_AP10DAPDATA_OtherVehicleWeight", form->OtherVehicleWeight);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3187,6 +3215,15 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_T1", form->T1);
 			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_T2", form->T2);
 		}
+		else if (padNumber == PT_AP10DAPDATA)
+		{
+			AP10DAPDATA * form = (AP10DAPDATA *)padForm;
+
+			LOAD_DOUBLE("MCC_AP10DAPDATA_OtherVehicleWeight", form->OtherVehicleWeight);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -3244,7 +3281,7 @@ void MCC::drawPad(){
 		// NO PAD (*knifed*)
 		oapiAnnotationSetText(NHpad, "No PAD");
 		break;
-	case 1: //AP7BLK
+	case PT_AP7BLK:
 		{
 			AP7BLK * form = (AP7BLK *)padForm;
 			sprintf(buffer, "BLOCK DATA\n");
@@ -3258,7 +3295,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
-	case 2: //P27PAD
+	case PT_P27PAD:
 		{
 			P27PAD * form = (P27PAD *)padForm;
 			format_time(tmpbuf, form->GET[0]);
@@ -3272,7 +3309,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
-	case 3: // AP7NAV
+	case PT_AP7NAV:
 		{
 			AP7NAV * form = (AP7NAV *)padForm;
 			format_time_prec(tmpbuf, form->NavChk[0]);
@@ -3280,7 +3317,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
-	case 4: // AP7MNV
+	case PT_AP7MNV:
 		{
 			int hh, mm;
 			double ss;
@@ -3292,7 +3329,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad,buffer);
 		}
 		break;
-	case 5: //AP7TPI
+	case PT_AP7TPI:
 		{
 			AP7TPI * form = (AP7TPI *)padForm;
 			format_time_prec(tmpbuf, form->GETI);
@@ -3326,7 +3363,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
-	case 6: //APTENT
+	case PT_AP7ENT:
 		{
 			AP7ENT * form = (AP7ENT *)padForm;
 			int hh, mm, hh2, mm2;
@@ -3337,7 +3374,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
-	case 7: //P37PAD
+	case PT_P37PAD:
 		{
 			P37PAD * form = (P37PAD *)padForm;
 			sprintf(buffer, "P37 BLOCK DATA\n");
@@ -3351,7 +3388,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
-	case 8: //AP11MNV
+	case PT_AP11MNV:
 		{
 			AP11MNV * form = (AP11MNV *)padForm;
 
@@ -3371,7 +3408,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
-	case 9: //AP11ENT
+	case PT_AP11ENT:
 		{
 			AP11ENT * form = (AP11ENT *)padForm;
 
@@ -3391,7 +3428,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
-	case 10: //TLIPAD
+	case PT_TLIPAD:
 		{
 			TLIPAD * form = (TLIPAD *)padForm;
 
@@ -3406,7 +3443,7 @@ void MCC::drawPad(){
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 	break;
-	case 11: //STARCHKPAD
+	case PT_STARCHKPAD:
 	{
 		STARCHKPAD * form = (STARCHKPAD *)padForm;
 
@@ -3422,7 +3459,7 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
-	case 12: //AP10MAPUPDATE
+	case PT_AP10MAPUPDATE:
 	{
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
 
@@ -3440,7 +3477,7 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
-	case 13:
+	case PT_AP11LMARKTRKPAD:
 	{
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
@@ -3463,6 +3500,15 @@ void MCC::drawPad(){
 		}
 
 		sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n", buffer, form->Lat, form->Lng05, form->Alt);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP10DAPDATA:
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)padForm;
+
+		sprintf(buffer, "DAP PAD\n%+06.0f\n%+06.0f\n%+07.2f\n%+07.2f", form->ThisVehicleWeight, form->OtherVehicleWeight, form->PitchTrim, form->YawTrim);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3527,6 +3573,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP11LMARKTRKPAD: // AP11LMARKTRKPAD
 		padForm = calloc(1, sizeof(AP11LMARKTRKPAD));
+		break;
+	case PT_AP10DAPDATA: // AP10DAPDATA
+		padForm = calloc(1, sizeof(AP10DAPDATA));
 		break;
 
 	default:
@@ -3907,7 +3956,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			setSubState(1);
 			// FALL INTO
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
-			if (SubStateTime > 1) {
+			if (SubStateTime > 1 && subThreadStatus == 0) {
 				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
 				addMessage("Ready for uplink?");
 				sprintf(PCOption_Text, "Ready for uplink");

@@ -69,6 +69,10 @@ RTCC::RTCC()
 	calcParams.lat_node = 0.0;
 	calcParams.lng_node = 0.0;
 	calcParams.LOI = 0.0;
+	calcParams.DOI = 0.0;
+	calcParams.TLAND = 0.0;
+	calcParams.src = NULL;
+	calcParams.tgt = NULL;
 	REFSMMATType = 0;
 }
 
@@ -3244,7 +3248,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	double LSLng = 23.647*RAD;
 	double LSAlt = -3073.263;
 	double LSAzi = -91.0*RAD;
-	double t_land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
 	double EMPLat = -4.933294*RAD;
 
 	switch (fcn) {
@@ -3475,6 +3478,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			calcParams.LOI = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
 		}
 
+		if (calcParams.TLAND == 0)
+		{
+			calcParams.TLAND = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
+		}
+
 		double TLIbase = floor((TimeofIgnition / 60.0) + 0.5)*60.0; //Round TLI ignition time to next minute
 
 		MCC1GET= TLIbase + 9.0*3600.0;
@@ -3503,7 +3511,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.LSlat = LSLat;
 		opt.LSlng = LSLng;
 		opt.PeriGET = calcParams.LOI;
-		opt.t_land = t_land;
+		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.src;
 
 		//Evaluate MCC-3 DV
@@ -3656,7 +3664,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.impulsive = RTCC_IMPULSIVE;
 		loiopt.lat = LSLat;
 		loiopt.lng = LSLng;
-		loiopt.t_land = t_land;
+		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
 
 		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node);
@@ -3748,7 +3756,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.impulsive = RTCC_IMPULSIVE;
 		loiopt.lat = LSLat;
 		loiopt.lng = LSLng;
-		loiopt.t_land = t_land;
+		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
 
 		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node);
@@ -3773,7 +3781,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.LSLat = LSLat;
 		refsopt.LSLng = LSLng;
 		refsopt.REFSMMATopt = 8;
-		refsopt.REFSMMATTime = t_land;
+		refsopt.REFSMMATTime = calcParams.TLAND;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
@@ -3916,7 +3924,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.azi = LSAzi;
 		opt.lat = LSLat;
 		opt.lng = LSLng;
-		opt.t_land = t_land;
+		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.src;
 
 		LOITargeting(&opt, dV_LVLH, P30TIG);
@@ -4184,16 +4192,35 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 60: //STATE VETOR and LLS 2 REFSMMAT UPLINK
 	{
 		MATRIX3 REFSMMAT;
+		double GETbase, t_PDI, t_land, CR;
 		SV sv;
 		REFSMMATOpt opt;
+		DOIMan doiopt;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = getGETBase();
 
-		opt.GETbase = getGETBase();
+		doiopt.alt = LSAlt;
+		doiopt.csmlmdocked = false;
+		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
+		doiopt.GETbase = GETbase;
+		doiopt.lat = LSLat;
+		doiopt.lng = LSLng;
+		doiopt.N = 0;
+		doiopt.opt = 0;
+		doiopt.vessel = calcParams.tgt;
+		doiopt.vesseltype = 1;
+
+		DOITargeting(&doiopt, DeltaV_LVLH, TimeofIgnition, t_PDI, t_land, CR);
+
+		calcParams.DOI = TimeofIgnition;
+		calcParams.TLAND = t_land;
+
+		opt.GETbase = GETbase;
 		opt.LSLat = LSLat;
 		opt.LSLng = LSLng;
 		opt.REFSMMATopt = 5;
-		opt.REFSMMATTime = t_land;
+		opt.REFSMMATTime = calcParams.TLAND;
 		opt.vessel = calcParams.src;
 
 		REFSMMAT = REFSMMATCalc(&opt);
@@ -4204,6 +4231,13 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM state vector, LLS2 REFSMMAT");
 		}
+	}
+	break;
+	case 61: //CSM DAP DATA
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		CSMDAPUpdate(calcParams.src, *form);
 	}
 	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
@@ -5197,6 +5231,34 @@ void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 	pad.Vg = opt->dV_LVLH / 0.3048;
 	pad.dH_TPI = TPIPAD_dH / 1852.0;
 	pad.dH_Max = TPIPAD_ddH / 1852.0;
+}
+
+void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
+{
+	double CSMmass, LMmass, p_T, y_T;
+
+	CSMmass = v->GetMass();
+	LMmass = GetDockedVesselMass(v);
+
+	CalcSPSGimbalTrimAngles(CSMmass, LMmass, p_T, y_T);
+
+	pad.ThisVehicleWeight = CSMmass / 0.45359237;
+	pad.OtherVehicleWeight = LMmass / 0.45359237;
+	pad.PitchTrim = p_T * DEG + 2.15;
+	pad.YawTrim = y_T * DEG - 0.95;
+}
+
+void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
+{
+	double CSMmass, LMmass;
+
+	LMmass = v->GetMass();
+	CSMmass = GetDockedVesselMass(v);
+
+	pad.ThisVehicleWeight = LMmass / 0.45359237;
+	pad.OtherVehicleWeight = CSMmass / 0.45359237;
+	pad.PitchTrim = 6.0;
+	pad.YawTrim = 6.0;
 }
 
 void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
@@ -8397,6 +8459,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_EI", calcParams.EI);
 	SAVE_DOUBLE("RTCC_TLI", calcParams.TLI);
 	SAVE_DOUBLE("RTCC_LOI", calcParams.LOI);
+	SAVE_DOUBLE("RTCC_DOI", calcParams.DOI);
+	SAVE_DOUBLE("RTCC_TLAND", calcParams.TLAND);
 	SAVE_DOUBLE("RTCC_alt_node", calcParams.alt_node);
 	SAVE_DOUBLE("RTCC_GET_node", calcParams.GET_node);
 	SAVE_DOUBLE("RTCC_lat_node", calcParams.lat_node);
@@ -8426,6 +8490,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_EI", calcParams.EI);
 		LOAD_DOUBLE("RTCC_TLI", calcParams.TLI);
 		LOAD_DOUBLE("RTCC_LOI", calcParams.LOI);
+		LOAD_DOUBLE("RTCC_DOI", calcParams.DOI);
+		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);
 		LOAD_DOUBLE("RTCC_alt_node", calcParams.alt_node);
 		LOAD_DOUBLE("RTCC_GET_node", calcParams.GET_node);
 		LOAD_DOUBLE("RTCC_lat_node", calcParams.lat_node);

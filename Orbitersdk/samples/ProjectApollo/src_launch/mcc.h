@@ -150,6 +150,7 @@
 #define PT_STARCHKPAD		11
 #define PT_AP10MAPUPDATE	12
 #define PT_AP11LMARKTRKPAD	13
+#define PT_AP10DAPDATA		14
 #define PT_NONE				99
 
 // MISSION STATES: GLOBAL
@@ -469,6 +470,8 @@
 #define MST_F_LUNAR_ORBIT_DOI_DAY_3		202
 // Ends at CSM DAP update
 #define MST_F_LUNAR_ORBIT_DOI_DAY_4		203
+// Ends at LM DAP Load PAD update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_5		204
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -768,6 +771,16 @@ struct AP11LMARKTRKPAD
 	double Alt;			// landmark altitude
 };
 
+// APOLLO 10 DAP DATA PAD
+
+struct AP10DAPDATA
+{
+	double ThisVehicleWeight;	// CSM weight (or LM for LM DAP PAD)
+	double OtherVehicleWeight;	// LM weight (or CSM for LM DAP PAD)
+	double PitchTrim;			// Pitch gimbal trim
+	double YawTrim;				// Yaw gimbal trim (or roll for LM DAP PAD)
+};
+
 class LEM;
 class Saturn;
 class SIVB;
@@ -783,6 +796,7 @@ public:
 	
 	void Init();											// Initialization
 	void clbkPreStep(double simt, double simdt, double mjd);
+	void clbkPostCreation();
 	void TimeStep(double simdt);					        // Timestep
 	virtual void keyDown(DWORD key);						// Notification of keypress	
 	void addMessage(char *msg);								// Add message into buffer

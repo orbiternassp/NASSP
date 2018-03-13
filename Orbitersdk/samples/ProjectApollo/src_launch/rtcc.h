@@ -640,12 +640,14 @@ struct LMARKTRKPADOpt
 struct calculationParameters {
 	Saturn *src;	// Our ship
 	VESSEL *tgt;	// Target ship
-	double TEI;		// Time of TEI
 	double TLI;		// Time of TLI
-	double EI;		// Time of Entry Interface
-	double LOI;		// Time of LOI/Pericynthion
 	VECTOR3 R_TLI;	//TLI cutoff position vector
 	VECTOR3 V_TLI;	//TLI cutoff velocity vector
+	double LOI;		// Time of LOI/Pericynthion
+	double DOI;		// Time of DOI
+	double TLAND;	// Time of landing
+	double TEI;		// Time of TEI
+	double EI;		// Time of Entry Interface
 	double lat_node;
 	double lng_node;
 	double alt_node;
@@ -728,6 +730,8 @@ public:
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
+	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
+	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
 	void TEITargeting(TEIOpt *opt, EntryResults *res);
 	void RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad);
