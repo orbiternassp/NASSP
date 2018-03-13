@@ -36,7 +36,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 LEM_CWEA::LEM_CWEA() {
 	lem = NULL;
 	WaterWarningDisabled = 0;
-	GlycolWarningDisabled = 0;
 }
 
 void LEM_CWEA::Init(LEM *s) {
@@ -261,14 +260,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// On when any EDS relay fails.
 	// Failures of stage relays disabled when stage relay switch in RESET position.
 	// Disabled when MASTER ARM is ON or if ABORT STAGE commanded.
-	if ((lem->eds.RelayBoxA.GetStageRelayMonitor() || lem->eds.RelayBoxA.GetStageRelayMonitor()) && !(lem->EDMasterArm.IsUp() || lem->AbortStageSwitch.GetState() == 0))
-	{
-		LightStatus[0][6] = 1;
-	}
-	else
-	{
-		LightStatus[0][6] = 0;
-	}
+	LightStatus[0][6] = 0;
+	if ((lem->eds.RelayBoxA.GetStageRelayMonitor() || lem->eds.RelayBoxA.GetStageRelayMonitor()) && !(lem->EDMasterArm.IsUp() || lem->AbortStageSwitch.GetState() == 0)){LightStatus[0][6] = 1;}
 
 	// 6DS32 RCS FAILURE CAUTION
 	// On when helium pressure in either RCS system below 1700 psia.
@@ -285,9 +278,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// LR Assembly < -15.6F or > 148.9F
 	// Disabled when Temperature Monitor switch selects affected assembly.
 	LightStatus[2][6] = 0;
-	if (lem->TempMonitorRotary.GetState() != 0 && (lem->RR.GetAntennaTempF() < -54.07 || lem->RR.GetAntennaTempF() > 147.69)) {LightStatus[2][6] = 1;}
-	if (lem->stage < 2 && lem->TempMonitorRotary.GetState() != 1 && (lem->LR.GetAntennaTempF() < -15.6 || lem->LR.GetAntennaTempF() > 148.9)) {LightStatus[2][6] = 1;}
-	if (lem->TempMonitorRotary.GetState() != 6 && (lem->SBandSteerable.GetAntennaTempF() < -64.08 || lem->SBandSteerable.GetAntennaTempF() > 152.63)) {LightStatus[2][6] = 1;}
+	if (lem->TempMonitorRotary.GetState() != 0 && (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200) / 80) || lem->RR.GetAntennaTempF() > ((147.69 + 200) / 80))) {LightStatus[2][6] = 1;}
+	if (lem->stage < 2 && lem->TempMonitorRotary.GetState() != 1 && (lem->scera1.GetVoltage(21, 3) < ((-15.6 + 200) / 80) || lem->scera1.GetVoltage(21, 3) > ((148.9 + 200) / 80))) {LightStatus[2][6] = 1;}
+	if (lem->TempMonitorRotary.GetState() != 6 && (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200) / 80) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200) / 80))) {LightStatus[2][6] = 1;}
 
 	// 6DS34 CWEA POWER FAILURE CAUTION
 	// On when any CWEA power supply indicates failure.
@@ -332,13 +325,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// On when glycol qty low in primary coolant loop or primary loop glycol temp @ accumulator > 50F
 	// Disabled by Glycol Pump to INST(SEC) position
 	LightStatus[2][7] = 0;
-	if (GlycolWarningDisabled == 0) {
-		if (lem->scera2.GetVoltage(3, 3) > 2.5) { LightStatus[2][7] = 1; }	//Glycol LLS
-		if (lem->scera1.GetVoltage(10, 1) > ((50-20)/20)) { LightStatus[2][7] = 1; } //Glycol temp > 50F
-	}
-	if (lem->GlycolRotary.GetState() == 0 && LightStatus[2][7] != 0) {
-		GlycolWarningDisabled = 1;
-	}
+		if (lem->GlycolRotary.GetState() != 0 && lem->scera2.GetVoltage(3, 3) > 2.5) { LightStatus[2][7] = 1; }	//Glycol LLS
+		if (lem->GlycolRotary.GetState() != 0 && lem->scera1.GetVoltage(10, 1) > ((50-20)/20)) { LightStatus[2][7] = 1; } //Glycol temp > 50F (1.5V scaled)
 
 	// 6DS39 WATER QUANTITY CAUTION
 	// On when:
@@ -347,8 +335,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 	LightStatus[3][7] = 0;
 	if (WaterWarningDisabled == 0) {
-		if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 3) < (15.94 / 0.2))) { LightStatus[3][7] = 1; }
-		if (lem->stage < 2 && (lem->scera1.GetVoltage(8, 1)  < (94.78 / 0.2) || lem->scera1.GetVoltage(8, 2)  < (94.78 / 0.2))) { LightStatus[3][7] = 1; }
+		if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 3) < (0.1594 / 0.2))) { LightStatus[3][7] = 1; }
+		if (lem->stage < 2 && (lem->scera1.GetVoltage(8, 1)  < (0.9478 / 0.2) || lem->scera1.GetVoltage(8, 2)  < (0.9478 / 0.2))) { LightStatus[3][7] = 1; }
 		if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2))/((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2))/2))>=0.15) { LightStatus[3][7] = 1; }
 	}
 	if (lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0) {
