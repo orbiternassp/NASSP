@@ -169,6 +169,7 @@ protected:
 
     double Amperes; //status
 	double Volts;   //
+	double Hertz;
 	double power_load;	//how much do we need to produce
 };
 
