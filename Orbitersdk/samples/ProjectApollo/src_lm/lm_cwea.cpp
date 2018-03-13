@@ -275,11 +275,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// On when:
 	// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
 	// RR Assembly < -54.07F or > 147.69F
-	// LR Assembly < -15.6F or > 148.9F
+	// Quad temps and LR temp do not turn the light on
 	// Disabled when Temperature Monitor switch selects affected assembly.
 	LightStatus[2][6] = 0;
 	if (lem->TempMonitorRotary.GetState() != 0 && (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0))) {LightStatus[2][6] = 1;}
-	if (lem->stage < 2 && lem->TempMonitorRotary.GetState() != 1 && (lem->scera1.GetVoltage(21, 3) < ((-15.6 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 3) > ((148.9 + 200.0) / 80.0))) {LightStatus[2][6] = 1;}
 	if (lem->TempMonitorRotary.GetState() != 6 && (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0))) {LightStatus[2][6] = 1;}
 
 	// 6DS34 CWEA POWER FAILURE CAUTION
