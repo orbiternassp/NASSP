@@ -2622,7 +2622,6 @@ void LEM_INV::UpdateFlow(double dt){
 	// Reset these before pass
 	Volts = 0;
 	Amperes = 0;
-	Hertz = 0;
 
 	// If not active, die.
 	if(!active){ return; }
@@ -2633,7 +2632,6 @@ void LEM_INV::UpdateFlow(double dt){
 		// Then supply the bus
 		if(dc_input->Voltage() > 24){		  // Above 24V input
 			Volts = 115.0;                    // Regulator supplies 115V
-			Hertz = 400.0;					  // 400Hz
 		}else{                                // Otherwise
 			Volts = dc_input->Voltage()*4.8;  // Falls out of regulation
 		}                                     // until the load trips the CB
