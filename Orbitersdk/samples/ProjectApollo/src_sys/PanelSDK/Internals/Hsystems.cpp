@@ -1320,9 +1320,6 @@ void h_WaterSeparator::refresh(double dt) {
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
 		flow = fanned.GetMass() / dt;
 
-		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
-		h2oremovalrateRPM = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
-
 		// RPM Calculation
 		double delay, drpmcmd, rpmcmdsign, drpm;
 
@@ -1341,16 +1338,19 @@ void h_WaterSeparator::refresh(double dt) {
 		}
 		RPM += drpm;
 
-		sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf remrate %lf remrtRPM %lf ratio %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow, h2oremovalrate, h2oremovalrateRPM, h2oremovalratio);
-
 		h2oremovalratio = (RPM / rpmcmd);
 		if ((h2oremovalratio) > 1)
 			h2oremovalratio = 1;
 
+		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
+		h2oremovalrateRPM = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
+
+		sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf remrate %lf remrtRPM %lf ratio %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow, h2oremovalrate, h2oremovalrateRPM, h2oremovalratio);
+
 		// separate water
 		h_volume h2o_volume;
 		h2o_volume.Void();
-		h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass;
+		h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass * h2oremovalratio;
 		h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
 		h2o_volume.GetQ();
 		// ... and pump it to waste valve	
