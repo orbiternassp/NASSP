@@ -509,7 +509,6 @@ void SCERA1::Timestep()
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
 	//sprintf(oapiDebugString(), "SCEV %lf CBV %lf", lem->scera1.GetVoltage(17, 1), lem->AC_A_BUS_VOLT_CB.Voltage());
-	sprintf(oapiDebugString(), "RPM %lf", lem->ecs.GetWaterSeparatorRPM());
 }
 
 double SCERA1::GetVoltage(int sa, int chan)

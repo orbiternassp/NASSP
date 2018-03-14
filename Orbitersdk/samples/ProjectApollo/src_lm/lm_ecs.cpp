@@ -685,7 +685,7 @@ void LEMWaterSepRPM::SystemTimestep(double simdt)
 	flow = watersep->flow;
 	rpmcmd =  flow*4235.29;  //Gives max flow through water separator = 3600rpm
 
-	delay = 1.00;	// Gives delay for WS spool up/spin down
+	delay = 7.50;	// Gives delay for WS spool up/spin down
 
 	drpmcmd = rpmcmd - RPM;
 	rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
@@ -698,6 +698,8 @@ void LEMWaterSepRPM::SystemTimestep(double simdt)
 		drpm = drpmcmd;
 	}
 	RPM += drpm;
+
+	sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow);
 }
 
 double LEMWaterSepRPM::WaterSepRPM()
