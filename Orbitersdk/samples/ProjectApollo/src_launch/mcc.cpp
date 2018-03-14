@@ -2340,6 +2340,18 @@ void MCC::TimeStep(double simdt){
 			case MST_F_LUNAR_ORBIT_DOI_DAY_4: //CSM DAP update to LM DAP Load PAD
 				UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, MoonRev >= 11 && MoonRevTime > 30.0*60.0, 61, MST_F_LUNAR_ORBIT_DOI_DAY_5);
 				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_5: //LM DAP Load PAD to LM IMU gyro torquing angle update
+				UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, MoonRev >= 11 && MoonRevTime > 50.0*60.0, 62, MST_F_LUNAR_ORBIT_DOI_DAY_8);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_8: //LM IMU gyro torquing angle update to LGC activation update
+				UpdateMacro(UTP_PADONLY, PT_GENERIC, MoonRev >= 11 && MoonRevTime > 60.0*60.0, 63, MST_F_LUNAR_ORBIT_DOI_DAY_9);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_9: //LGC activation update to separation update
+				UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, MoonRev >= 11 && MoonRevTime > 65.0*60.0, 64, MST_F_LUNAR_ORBIT_DOI_DAY_10);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_10: //Separation update to AGS K Factor update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 11 && MoonRevTime > 70.0*60.0, 70, MST_F_LUNAR_ORBIT_DOI_DAY_11);
+				break;
 			}
 			break;
 		}
@@ -2921,6 +2933,12 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
 		}
+		else if (padNumber == PT_GENERIC)
+		{
+			GENERICPAD * form = (GENERICPAD *)padForm;
+
+			SAVE_STRING("MCC_GENERICPAD_paddata", form->paddata);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3224,6 +3242,12 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
 		}
+		else if (padNumber == PT_GENERIC)
+		{
+			GENERICPAD * form = (GENERICPAD *)padForm;
+
+			LOAD_STRING("MCC_GENERICPAD_paddata", form->paddata, 512);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -3513,6 +3537,13 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_GENERIC:
+	{
+		GENERICPAD * form = (GENERICPAD *)padForm;
+		sprintf(buffer, form->paddata);
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	default:
 		sprintf(buffer,"Unknown padNumber %d",padNumber);
 		oapiAnnotationSetText(NHpad,buffer);
@@ -3576,6 +3607,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP10DAPDATA: // AP10DAPDATA
 		padForm = calloc(1, sizeof(AP10DAPDATA));
+		break;
+	case PT_GENERIC: // GENERICPAD
+		padForm = calloc(1, sizeof(GENERICPAD));
 		break;
 
 	default:
@@ -3948,7 +3982,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 		break;
 		}
 	}
-	else if (type == UTP_CMCUPLINKONLY)//SV uplink without PAD
+	else if (type == UTP_CMCUPLINKONLY)//CMC uplink without PAD
 	{
 		switch (SubState) {
 		case 0:
@@ -3982,6 +4016,69 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			break;
 		case 5: // Await uplink completion
 			if (cm->pcm.mcc_size == 0) {
+				addMessage("Uplink completed!");
+				NCOption_Enabled = true;
+				sprintf(NCOption_Text, "Repeat uplink");
+				setSubState(6);
+			}
+			break;
+		case 6: // Await burn
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
+			{
+				SlowIfDesired();
+				setState(nextupdate);
+			}
+			break;
+		case 7: //Repeat uplink
+		{
+			NCOption_Enabled = false;
+			setSubState(0);
+		}
+		break;
+		}
+	}
+	else if (type == UTP_LGCUPLINKONLY)//LGC uplink without PAD
+	{
+		switch (SubState) {
+		case 0:
+			startSubthread(updatenumber, type); // Start subthread to fill PAD
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1 && subThreadStatus == 0) {
+				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
+				addMessage("Ready for uplink?");
+				sprintf(PCOption_Text, "Ready for uplink");
+				PCOption_Enabled = true;
+				setSubState(2);
+			}
+			break;
+		case 2: // Awaiting user response
+		case 3: // Negative response / not ready for uplink
+			break;
+		case 4: // Ready for uplink
+			if (SubStateTime > 1) {
+				// The uplink should also be ready, so flush the uplink buffer to the CMC
+				this->LM_uplink_buffer();
+				// uplink_size = 0; // Reset
+				PCOption_Enabled = false; // No longer needed
+				if (upDescr[0] != 0)
+				{
+					addMessage(upDescr);
+				}
+				setSubState(5);
+			}
+			break;
+		case 5: // Await uplink completion
+			if (lm->VHF.mcc_size == 0) {
 				addMessage("Uplink completed!");
 				NCOption_Enabled = true;
 				sprintf(NCOption_Text, "Repeat uplink");
@@ -4086,6 +4183,16 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
+		}
+	}
+	else if (type == UTP_LGCUPLINKONLY)
+	{
+		// Ask RTCC for numbers
+		// Do math
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		// Give resulting uplink string to CMC
+		if (upString[0] != 0) {
+			this->pushLGCUplinkString(upString);
 		}
 	}
 	else if (type == UTP_LGCUPLINKDIRECT)

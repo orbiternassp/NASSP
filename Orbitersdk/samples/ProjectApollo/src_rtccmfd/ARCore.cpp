@@ -2139,6 +2139,8 @@ int ARCore::subThread()
 	case 10:	//DOI Targeting
 	{
 		DOIMan opt;
+		VECTOR3 DOI_DV_imp;
+		double DOI_TIG_imp;
 
 		if (vesseltype < 2)
 		{
@@ -2167,7 +2169,7 @@ int ARCore::subThread()
 		opt.PeriAng = DOI_PeriAng;
 		opt.opt = DOI_option;
 
-		rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, t_Land, DOI_CR);
+		rtcc->DOITargeting(&opt, DOI_DV_imp, DOI_TIG_imp, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, t_Land, DOI_CR);
 
 		P30TIG = DOI_TIG;
 		dV_LVLH = DOI_dV_LVLH;

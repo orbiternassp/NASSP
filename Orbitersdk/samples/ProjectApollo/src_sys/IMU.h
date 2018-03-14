@@ -155,6 +155,8 @@ protected:
 
 	// Allow the MFD to touch our privates
 	friend class ProjectApolloMFD;
+	// And the RTCC as well
+	friend class RTCC;
 };
 
 //

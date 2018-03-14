@@ -134,6 +134,7 @@
 #define UTP_PADWITHCMCUPLINK	1
 #define UTP_CMCUPLINKONLY		2
 #define UTP_LGCUPLINKDIRECT		3
+#define UTP_LGCUPLINKONLY		4
 #define UTP_NONE				99
 
 // PAD Types
@@ -152,6 +153,7 @@
 #define PT_AP11LMARKTRKPAD	13
 #define PT_AP10DAPDATA		14
 #define PT_NONE				99
+#define PT_GENERIC			100
 
 // MISSION STATES: GLOBAL
 // The init state is supposed to set up the MCC state engine for the mission and dispatch accordingly. Not called when reloading.
@@ -472,6 +474,18 @@
 #define MST_F_LUNAR_ORBIT_DOI_DAY_4		203
 // Ends at LM DAP Load PAD update
 #define MST_F_LUNAR_ORBIT_DOI_DAY_5		204
+// Ends at LM map update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_6		205
+// Ends at LM S-Band pointing angles update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_7		206
+// Ends at LM IMU gyro torquing angle update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_8		207
+// Ends at LGC activation update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_9		208
+// Ends at separation update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_10	209
+// Ends at AGS K Factor update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_11	210
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -779,6 +793,13 @@ struct AP10DAPDATA
 	double OtherVehicleWeight;	// LM weight (or CSM for LM DAP PAD)
 	double PitchTrim;			// Pitch gimbal trim
 	double YawTrim;				// Yaw gimbal trim (or roll for LM DAP PAD)
+};
+
+//GENERIC STRING
+
+struct GENERICPAD
+{
+	char paddata[512];	// generic PAD string
 };
 
 class LEM;
