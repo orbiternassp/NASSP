@@ -1296,14 +1296,19 @@ h_WaterSeparator::h_WaterSeparator(char *i_name, double i_flowmax, h_Valve* in_v
 	flowMax = i_flowmax;
 
 	h2oremovalrate = 0;
+	h2oremovalrateRPM = 0;
 	flow = 0;
+	RPM = 0;
+	h2oremovalratio = 0;
+	rpmcmd = 0;
 }
 
 void h_WaterSeparator::refresh(double dt) {
 
 	h2oremovalrate = 0;
+	h2oremovalrateRPM = 0;
 	flow = 0;
-	RPM = 0;
+
 	if ((!in) || (!out)) return;
 
 	if (out->open && in->open) {
@@ -1311,9 +1316,14 @@ void h_WaterSeparator::refresh(double dt) {
 		double delta_p = in->GetPress() - out->GetPress();
 		if (delta_p < 0)
 			delta_p = 0;
+		
+		h2oremovalratio = (RPM / rpmcmd);
+		if ((h2oremovalratio) > 1)
+			h2oremovalratio = 1;
 
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
 		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
+		h2oremovalrateRPM = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
 
 		// separate water
 		h_volume h2o_volume;
@@ -1333,11 +1343,11 @@ void h_WaterSeparator::refresh(double dt) {
 		fanned.GetQ();
 		out->Flow(fanned);
 	}
-
-	double delay, drpmcmd, rpmcmd, rpmcmdsign, drpm;
-	rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
+	// RPM Calculation
+	double delay, drpmcmd, rpmcmdsign, drpm;
 
 	delay = 7.50;	// Gives delay for WS spool up/spin down
+	rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
 
 	drpmcmd = rpmcmd - RPM;
 	rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
@@ -1351,7 +1361,7 @@ void h_WaterSeparator::refresh(double dt) {
 	}
 	RPM += drpm;
 
-	sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow);
+	sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf remrate %lf remrtRPM %lf ratio %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow, h2oremovalrate, h2oremovalrateRPM, h2oremovalratio);
 }
 
 h_HeatLoad::h_HeatLoad(char *i_name, therm_obj *i_target)
