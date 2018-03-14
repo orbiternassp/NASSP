@@ -134,6 +134,12 @@ public:
 	virtual double Current();
 
 	///
+	/// \brief Get the frequency.
+	/// \return Frequency in Hertz.
+	///
+	virtual double Frequency();
+
+	///
 	/// \brief Get the current power load.
 	/// \return Power load in Watts.
 	///
@@ -169,6 +175,7 @@ protected:
 
     double Amperes; //status
 	double Volts;   //
+	double Hertz;
 	double power_load;	//how much do we need to produce
 };
 

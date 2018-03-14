@@ -43,6 +43,7 @@ e_object::e_object()
 
 	Volts = 0.0;
 	Amperes = 0.0;
+	Hertz = 0.0;
 }
 
 void e_object::refresh(double dt)
@@ -97,6 +98,18 @@ double e_object::Current()
 		if (SRC)
 			return SRC->Current();
 		return Amperes;
+	}
+
+	return 0.0;
+}
+
+double e_object::Frequency()
+
+{
+	if (IsEnabled()) {
+		if (SRC)
+			return SRC->Frequency();
+		return Hertz;
 	}
 
 	return 0.0;
