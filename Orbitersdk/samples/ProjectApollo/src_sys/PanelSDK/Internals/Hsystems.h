@@ -346,6 +346,7 @@ public:
 	double h2oremovalrate;
 	double flow;	// in g/s
 	double flowMax;
+	double RPM;
 };
 
 class h_HeatLoad : public h_object {

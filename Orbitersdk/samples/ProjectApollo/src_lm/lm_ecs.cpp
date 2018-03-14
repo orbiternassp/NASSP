@@ -668,45 +668,6 @@ void LEMCabinGasReturnValve::SystemTimestep(double simdt)
 	}
 }
 
-LEMWaterSepRPM::LEMWaterSepRPM()
-{
-	watersep = NULL;
-	RPM = 0;
-}
-
-void LEMWaterSepRPM::Init(h_WaterSeparator *ws)
-{
-	watersep = ws;
-}
-
-void LEMWaterSepRPM::SystemTimestep(double simdt)
-{
-	double delay, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow;
-	flow = watersep->flow;
-	rpmcmd =  flow*4235.29;  //Gives max flow through water separator = 3600rpm
-
-	delay = 7.50;	// Gives delay for WS spool up/spin down
-
-	drpmcmd = rpmcmd - RPM;
-	rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
-	if (abs(drpmcmd)>delay*simdt)
-	{
-		drpm = rpmcmdsign * delay*simdt;
-	}
-	else
-	{
-		drpm = drpmcmd;
-	}
-	RPM += drpm;
-
-	sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow);
-}
-
-double LEMWaterSepRPM::WaterSepRPM()
-{
-	return RPM;
-}
-
 LEMWaterSeparationSelector::LEMWaterSeparationSelector()
 {
 	WaterSeparationSelectorValve = NULL;
@@ -1058,7 +1019,6 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Cabin_Press = 0; Cabin_Temp = 0;
 	Suit_Press = 0; Suit_Temp = 0;
 	SuitCircuit_CO2 = 0; HX_CO2 = 0;
-	Water_Sep1_Flow = 0; Water_Sep2_Flow = 0;
 	Water_Sep1_RPM = 0; Water_Sep2_RPM = 0;
 	Suit_Circuit_Relief = 0;
 	Cabin_Gas_Return = 0;
@@ -1330,11 +1290,18 @@ double LEM_ECS::GetWaterSeparatorRPM()
 {
 	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
 
-	if (lem->WaterSep1.WaterSepRPM() > lem->WaterSep2.WaterSepRPM())
-	{
-		return lem->WaterSep1.WaterSepRPM();
+	if (!Water_Sep1_RPM) {
+		Water_Sep1_RPM = (double*)sdk.GetPointerByString("HYDRAULIC:WATERSEP1:RPM");
 	}
-	return lem->WaterSep2.WaterSepRPM();
+	if (!Water_Sep2_RPM) {
+		Water_Sep2_RPM = (double*)sdk.GetPointerByString("HYDRAULIC:WATERSEP2:RPM");
+	}
+
+		if (*Water_Sep1_RPM > *Water_Sep2_RPM)
+	{
+			return (*Water_Sep1_RPM);
+	}
+		return (*Water_Sep2_RPM);
 }
 
 double LEM_ECS::GetAscWaterTank1TempF()

@@ -198,19 +198,6 @@ protected:
 	RotationalSwitch *cabinGasReturnValveSwitch;
 };
 
-class LEMWaterSepRPM
-{
-public:
-	LEMWaterSepRPM();
-	void Init(h_WaterSeparator *ws);
-	void SystemTimestep(double simdt);
-	double WaterSepRPM();
-
-protected:
-	h_WaterSeparator *watersep;
-	double RPM;
-};
-
 class LEMWaterSeparationSelector
 {
 public:
@@ -371,8 +358,7 @@ public:
 	double *Secondary_Glycol_Loop2;								// Loop 2 mass
 	double *Secondary_Glycol_EvapIn;							// Evap inlet mass
 	double *Secondary_Glycol_EvapOut;							// Evap outlet mass
-	double *Water_Sep1_Flow, *Water_Sep2_Flow;					// Water separators flow
-	double Water_Sep1_RPM, Water_Sep2_RPM;						// Water separators RPM
+	double *Water_Sep1_RPM, *Water_Sep2_RPM;					// Water separators RPM
 	int *Asc_H2O_To_PLSS, *Des_H2O_To_PLSS;						// PLSS Water Fill valves
 	int *Water_Tank_Selector;									// WT selection valve
 	int *Pri_Evap_Flow_1, *Pri_Evap_Flow_2;						// Primary evaporator flow valves

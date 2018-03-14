@@ -795,8 +795,6 @@ void LEM::SystemsInit()
 		&CO2CanisterPrimVent);
 	SecCO2CanisterVent.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECCO2CANISTER"),
 		&CO2CanisterSecVent);
-	WaterSep1.Init((h_WaterSeparator *)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEP1"));
-	WaterSep2.Init((h_WaterSeparator *)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEP2"));
 	WaterSeparationSelector.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&WaterSepSelectSwitch);
 	CabinFan.Init(&ECS_CABIN_FAN_1_CB, &ECS_CABIN_FAN_CONT_CB, &PressRegAValve, &PressRegBValve, (Pump *)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN"));
@@ -1459,8 +1457,6 @@ void LEM::SystemsInternalTimestep(double simdt)
 		CO2CanisterSelect.SystemTimestep(tFactor);
 		PrimCO2CanisterVent.SystemTimestep(tFactor);
 		SecCO2CanisterVent.SystemTimestep(tFactor);
-		WaterSep1.SystemTimestep(tFactor);
-		WaterSep2.SystemTimestep(tFactor);
 		WaterSeparationSelector.SystemTimestep(tFactor);
 		WaterTankSelect.SystemTimestep(tFactor);
 		CabinFan.SystemTimestep(tFactor);

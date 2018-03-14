@@ -1303,6 +1303,7 @@ void h_WaterSeparator::refresh(double dt) {
 
 	h2oremovalrate = 0;
 	flow = 0;
+	RPM = 0;
 	if ((!in) || (!out)) return;
 
 	if (out->open && in->open) {
@@ -1332,6 +1333,25 @@ void h_WaterSeparator::refresh(double dt) {
 		fanned.GetQ();
 		out->Flow(fanned);
 	}
+
+	double delay, drpmcmd, rpmcmd, rpmcmdsign, drpm;
+	rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
+
+	delay = 7.50;	// Gives delay for WS spool up/spin down
+
+	drpmcmd = rpmcmd - RPM;
+	rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
+	if (abs(drpmcmd)>delay*dt)
+	{
+		drpm = rpmcmdsign * delay*dt;
+	}
+	else
+	{
+		drpm = drpmcmd;
+	}
+	RPM += drpm;
+
+	sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow);
 }
 
 h_HeatLoad::h_HeatLoad(char *i_name, therm_obj *i_target)
