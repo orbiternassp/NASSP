@@ -1316,14 +1316,36 @@ void h_WaterSeparator::refresh(double dt) {
 		double delta_p = in->GetPress() - out->GetPress();
 		if (delta_p < 0)
 			delta_p = 0;
-		
+
+		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
+		flow = fanned.GetMass() / dt;
+
+		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
+		h2oremovalrateRPM = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
+
+		// RPM Calculation
+		double delay, drpmcmd, rpmcmdsign, drpm;
+
+		delay = 6.50;	// Gives delay for WS spool up/spin down
+		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
+
+		drpmcmd = rpmcmd - RPM;
+		rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
+		if (abs(drpmcmd)>delay*dt)
+		{
+			drpm = rpmcmdsign * delay*dt;
+		}
+		else
+		{
+			drpm = drpmcmd;
+		}
+		RPM += drpm;
+
+		sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf remrate %lf remrtRPM %lf ratio %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow, h2oremovalrate, h2oremovalrateRPM, h2oremovalratio);
+
 		h2oremovalratio = (RPM / rpmcmd);
 		if ((h2oremovalratio) > 1)
 			h2oremovalratio = 1;
-
-		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
-		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
-		h2oremovalrateRPM = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
 
 		// separate water
 		h_volume h2o_volume;
@@ -1343,25 +1365,6 @@ void h_WaterSeparator::refresh(double dt) {
 		fanned.GetQ();
 		out->Flow(fanned);
 	}
-	// RPM Calculation
-	double delay, drpmcmd, rpmcmdsign, drpm;
-
-	delay = 7.50;	// Gives delay for WS spool up/spin down
-	rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
-
-	drpmcmd = rpmcmd - RPM;
-	rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
-	if (abs(drpmcmd)>delay*dt)
-	{
-		drpm = rpmcmdsign * delay*dt;
-	}
-	else
-	{
-		drpm = drpmcmd;
-	}
-	RPM += drpm;
-
-	sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf remrate %lf remrtRPM %lf ratio %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow, h2oremovalrate, h2oremovalrateRPM, h2oremovalratio);
 }
 
 h_HeatLoad::h_HeatLoad(char *i_name, therm_obj *i_target)
