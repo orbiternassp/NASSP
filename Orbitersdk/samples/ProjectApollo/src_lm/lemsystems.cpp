@@ -3047,7 +3047,7 @@ double LEM_LR::GetAntennaTempF(){
 		return KelvinToFahrenheit(antenna->GetTemp());
 	}
 	else {
-		return KelvinToFahrenheit(0);
+		return KelvinToFahrenheit(0.0);
 	}
 }
 

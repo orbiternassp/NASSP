@@ -1297,12 +1297,16 @@ h_WaterSeparator::h_WaterSeparator(char *i_name, double i_flowmax, h_Valve* in_v
 
 	h2oremovalrate = 0;
 	flow = 0;
+	RPM = 0;
+	h2oremovalratio = 0;
+	rpmcmd = 0;
 }
 
 void h_WaterSeparator::refresh(double dt) {
 
 	h2oremovalrate = 0;
 	flow = 0;
+
 	if ((!in) || (!out)) return;
 
 	if (out->open && in->open) {
@@ -1312,20 +1316,48 @@ void h_WaterSeparator::refresh(double dt) {
 			delta_p = 0;
 
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
-		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
+		flow = fanned.GetMass() / dt;
 
-		// separate water
-		h_volume h2o_volume;
-		h2o_volume.Void();
-		h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass;
-		h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
-		h2o_volume.GetQ();
-		// ... and pump it to waste valve	
-		H20waste->Flow(h2o_volume);
+		// RPM Calculation
+		double delay, drpmcmd, rpmcmdsign, drpm;
 
-		fanned.composition[SUBSTANCE_H2O].mass =
-			fanned.composition[SUBSTANCE_H2O].vapor_mass =
-			fanned.composition[SUBSTANCE_H2O].Q = 0;
+		delay = 7.0;	// Gives delay for WS spool up/spin down RPM/sec
+
+		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
+
+		drpmcmd = rpmcmd - RPM;
+		rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
+		if (abs(drpmcmd)>delay*dt)
+		{
+			drpm = rpmcmdsign * delay*dt;
+		}
+		else
+		{
+			drpm = drpmcmd;
+		}
+		RPM += drpm;
+
+		if (flow != 0) {
+			h2oremovalratio = (RPM / rpmcmd);
+			if ((h2oremovalratio) > 1)
+				h2oremovalratio = 1;
+
+			h2oremovalrate = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
+
+			// separate water
+			h_volume h2o_volume;
+			h2o_volume.Void();
+			h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass * h2oremovalratio;
+			h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
+			h2o_volume.GetQ();
+
+			// ... and pump it to waste valve	
+			H20waste->Flow(h2o_volume);
+
+			fanned.composition[SUBSTANCE_H2O].mass =
+				fanned.composition[SUBSTANCE_H2O].vapor_mass =
+				fanned.composition[SUBSTANCE_H2O].Q = 0;
+		}
 
 		// flow to output
 		flow = fanned.GetMass() / dt;

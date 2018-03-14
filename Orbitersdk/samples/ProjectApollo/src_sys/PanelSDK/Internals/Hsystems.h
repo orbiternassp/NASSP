@@ -344,8 +344,11 @@ public:
 	virtual void* GetComponent(char *component_name);
 
 	double h2oremovalrate;
+	double h2oremovalratio;
 	double flow;	// in g/s
 	double flowMax;
+	double RPM;
+	double rpmcmd;
 };
 
 class h_HeatLoad : public h_object {
