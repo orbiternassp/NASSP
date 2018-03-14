@@ -1321,7 +1321,7 @@ void h_WaterSeparator::refresh(double dt) {
 		// RPM Calculation
 		double delay, drpmcmd, rpmcmdsign, drpm;
 
-		delay = 7.0;	// Gives delay for WS spool up/spin down
+		delay = 7.0;	// Gives delay for WS spool up/spin down RPM/sec
 
 		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
 
@@ -1339,7 +1339,7 @@ void h_WaterSeparator::refresh(double dt) {
 
 		if (flow != 0) {
 			h2oremovalratio = (RPM / rpmcmd);
-			if ((h2oremovalratio) > 1 || rpmcmd == 0)
+			if ((h2oremovalratio) > 1)
 				h2oremovalratio = 1;
 
 			h2oremovalrate = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
