@@ -344,7 +344,6 @@ public:
 	virtual void* GetComponent(char *component_name);
 
 	double h2oremovalrate;
-	double h2oremovalrateRPM;
 	double h2oremovalratio;
 	double flow;	// in g/s
 	double flowMax;
