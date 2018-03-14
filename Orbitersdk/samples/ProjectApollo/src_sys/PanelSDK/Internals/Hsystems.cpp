@@ -1323,7 +1323,7 @@ void h_WaterSeparator::refresh(double dt) {
 		// RPM Calculation
 		double delay, drpmcmd, rpmcmdsign, drpm;
 
-		delay = 6.50;	// Gives delay for WS spool up/spin down
+		delay = 7.0;	// Gives delay for WS spool up/spin down
 		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
 
 		drpmcmd = rpmcmd - RPM;
@@ -1345,8 +1345,6 @@ void h_WaterSeparator::refresh(double dt) {
 		h2oremovalrate = fanned.composition[SUBSTANCE_H2O].mass / dt;
 		h2oremovalrateRPM = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
 
-		sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf remrate %lf remrtRPM %lf ratio %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow, h2oremovalrate, h2oremovalrateRPM, h2oremovalratio);
-
 		// separate water
 		h_volume h2o_volume;
 		h2o_volume.Void();
@@ -1364,6 +1362,8 @@ void h_WaterSeparator::refresh(double dt) {
 		flow = fanned.GetMass() / dt;
 		fanned.GetQ();
 		out->Flow(fanned);
+	
+		sprintf(oapiDebugString(), "RPM %lf drpmcmd %lf rpmcmd %lf rpmcmdsign %lf drpm %lf flow %lf remrate %lf remrtRPM %lf ratio %lf", RPM, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow, h2oremovalrate, h2oremovalrateRPM, h2oremovalratio);
 	}
 }
 
