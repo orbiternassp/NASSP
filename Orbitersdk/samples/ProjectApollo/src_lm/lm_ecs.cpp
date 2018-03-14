@@ -668,6 +668,43 @@ void LEMCabinGasReturnValve::SystemTimestep(double simdt)
 	}
 }
 
+LEMWaterSepRPM::LEMWaterSepRPM()
+{
+	watersep = NULL;
+	RPM = 0;
+}
+
+void LEMWaterSepRPM::Init(h_WaterSeparator *ws)
+{
+	watersep = ws;
+}
+
+void LEMWaterSepRPM::SystemTimestep(double simdt)
+{
+	double delay, drpmcmd, rpmcmd, rpmcmdsign, drpm, flow;
+	flow = watersep->flow;
+	rpmcmd =  flow*4235.29;  //Gives max flow through water separator = 3600rpm
+
+	delay = 1.00;	// Gives delay for WS spool up/spin down
+
+	drpmcmd = rpmcmd - RPM;
+	rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
+	if (abs(drpmcmd)>delay*simdt)
+	{
+		drpm = rpmcmdsign * delay*simdt;
+	}
+	else
+	{
+		drpm = drpmcmd;
+	}
+	RPM += drpm;
+}
+
+double LEMWaterSepRPM::WaterSepRPM()
+{
+	return RPM;
+}
+
 LEMWaterSeparationSelector::LEMWaterSeparationSelector()
 {
 	WaterSeparationSelectorValve = NULL;
@@ -1020,6 +1057,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Suit_Press = 0; Suit_Temp = 0;
 	SuitCircuit_CO2 = 0; HX_CO2 = 0;
 	Water_Sep1_Flow = 0; Water_Sep2_Flow = 0;
+	Water_Sep1_RPM = 0; Water_Sep2_RPM = 0;
 	Suit_Circuit_Relief = 0;
 	Cabin_Gas_Return = 0;
 	Asc_Water1Temp = 0; Asc_Water2Temp = 0;
@@ -1286,23 +1324,15 @@ double LEM_ECS::GetSelectedGlycolTempF()
 	return GetPrimaryGlycolTempF();
 }
 
-double LEM_ECS::GetWaterSeparatorRPM()	//These need a delay to spool down and up so the H2O sep light does not come on for about 2 min when the fan is turned off or on
+double LEM_ECS::GetWaterSeparatorRPM()
 {
 	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
 
-	if (!Water_Sep1_Flow) {
-		Water_Sep1_Flow = (double*)sdk.GetPointerByString("HYDRAULIC:WATERSEP1:FLOW");
-	}
-	if (!Water_Sep2_Flow) {
-		Water_Sep2_Flow = (double*)sdk.GetPointerByString("HYDRAULIC:WATERSEP2:FLOW");
-	}
-
-	if (*Water_Sep1_Flow > *Water_Sep2_Flow)
+	if (lem->WaterSep1.WaterSepRPM() > lem->WaterSep2.WaterSepRPM())
 	{
-		return (*Water_Sep1_Flow)*4235.29;  //Gives max flow through water separator = 3600rpm
+		return lem->WaterSep1.WaterSepRPM();
 	}
-	
-	return (*Water_Sep2_Flow)*4235.29;	//Gives max flow through water separator = 3600rpm
+	return lem->WaterSep2.WaterSepRPM();
 }
 
 double LEM_ECS::GetAscWaterTank1TempF()

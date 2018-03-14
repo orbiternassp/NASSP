@@ -1832,6 +1832,8 @@ protected:
 	LEMCO2CanisterSelect CO2CanisterSelect;
 	LEMCO2CanisterVent PrimCO2CanisterVent;
 	LEMCO2CanisterVent SecCO2CanisterVent;
+	LEMWaterSepRPM WaterSep1;
+	LEMWaterSepRPM WaterSep2;
 	LEMWaterSeparationSelector WaterSeparationSelector;
 	LEMCabinFan CabinFan;
 	LEMWaterTankSelect WaterTankSelect;
