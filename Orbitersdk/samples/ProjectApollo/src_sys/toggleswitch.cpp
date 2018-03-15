@@ -718,6 +718,14 @@ double CircuitBrakerSwitch::Current()
 	return Amperes;
 }
 
+double CircuitBrakerSwitch::Frequency()
+{
+	if ((state != 0) && SRC)
+		return SRC->Frequency();
+
+	return 0.0;
+}
+
 void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
