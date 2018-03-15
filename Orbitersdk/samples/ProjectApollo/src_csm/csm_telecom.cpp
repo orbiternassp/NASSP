@@ -517,17 +517,25 @@ void USB::SaveState(FILEHANDLE scn) {
 // Unifed S-Band System
 HGA::HGA(){
 	sat = NULL;
-	Pitch = 0;
-	Yaw = 0;
+	Alpha = 0;
+	Beta = 0;
+	Gamma = 0;
 	SignalStrength = 0;
+	PitchRes = 0;
+	YawRes = 0;
+	scanlimit = false;
 	scanlimitwarn = false;
 }
 
 void HGA::Init(Saturn *vessel){
 	sat = vessel;
-	Pitch = 0;
-	Yaw = 180;
+	Alpha = 180.0*RAD;
+	Beta = 0;
+	Gamma = 90.0*RAD;
+	PitchRes = 0;
+	YawRes = 180.0*RAD;
 	SignalStrength = 0;
+	scanlimit = false;
 	scanlimitwarn = false;
 }
 
@@ -535,6 +543,9 @@ bool HGA::IsPowered()
 {
 	// Do we have a HGA?
 	if (sat->NoHGA) return false;
+
+	// Fully deployed antenna boom operates micro switch; separated SM deenergized power switch
+	if (sat->GetStage() != CSM_LEM_STAGE) return false;
 
 	// Do we have power?
 	if (!sat->GHAPowerSwitch.IsUp()) return false;		// Switched off
@@ -548,9 +559,6 @@ bool HGA::IsPowered()
 
 // Draw power
 void HGA::SystemTimestep(double simdt) {	
-	
-	//Do we still have a SM?
-	if (sat->GetStage() > CSM_LEM_STAGE) return;
 	
 	// Do we have power?
 	if (!IsPowered()) return;
@@ -568,47 +576,97 @@ void HGA::SystemTimestep(double simdt) {
 }
 
 // Do work
-void HGA::TimeStep(double simt, double simdt) {
-	SignalStrength = 0;
-	scanlimitwarn = false;
-
+void HGA::TimeStep(double simt, double simdt)
+{
 	// Do we have power and a SM?
-	if (!IsPowered() || sat->GetStage() > CSM_LEM_STAGE) return;
+	if (!IsPowered())
+	{
+		SignalStrength = 0;
+		scanlimitwarn = false;
+		scanlimit = false;
 
-	double PitchCmd, YawCmd, gain;
+		return;
+	}
+
+	double gain;
+	double AAxisCmd, BAxisCmd, CAxisCmd;
 
 	//Only manual acquisition active
 	if (sat->GHATrackSwitch.IsCenter())
 	{
+		double PitchCmd, YawCmd;
+
 		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*30.0 + 90.0;
 		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*30.0;
+
+		//Command Resolver
+		VECTOR3 U_RB;
+		U_RB = PitchYawToBodyVector(PitchCmd*RAD, YawCmd*RAD);
+		BodyToAC(U_RB, AAxisCmd, CAxisCmd);
+		BAxisCmd = 0.0;
+
+		//sprintf(oapiDebugString(), "PitchCmd: %lf° YawCmd: %lf° AAxisCmd: %lf° CAxisCmd: %lf°", PitchCmd, YawCmd, AAxisCmd*DEG, CAxisCmd*DEG);
 	}
 	else
 	{
-		PitchCmd = 0.0;
-		YawCmd = 180.0;
+		AAxisCmd = 180.0*RAD;
+		BAxisCmd = 0.0;
+		CAxisCmd = 90.0*RAD;
 	}
 
-	//TBD: Convert to A- and C-Axis
+	//SERVO DRIVE
 
-	//5°/s rate limit, not based on documentation; arbitrary for the moment; TBD: Drive A-, B-, and C-Axis
-	ServoDrive(Pitch, PitchCmd, 5.0, simdt);
-	ServoDrive(Yaw, YawCmd, 5.0, simdt);
+	//5°/s rate limit, not based on documentation; arbitrary for the moment
+	ServoDrive(Alpha, AAxisCmd, 5.0*RAD, simdt);
+	ServoDrive(Beta, BAxisCmd, 5.0*RAD, simdt);
+	ServoDrive(Gamma, CAxisCmd, 5.0*RAD, simdt);
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R, AxVec;
-	MATRIX3 Rot, AxRot;
+	//GIMBAL LIMITS
+	if (Alpha > PI2)
+	{
+		Alpha = PI2;
+	}
+	else if (Alpha < -PI2)
+	{
+		Alpha = -PI2;
+	}
+	if (Beta > 23.5*RAD)
+	{
+		Beta = 23.5*RAD;
+	}
+	else if (Beta < -23.5*RAD)
+	{
+		Beta = -23.5*RAD;
+	}
+	if (Gamma > 125.0*RAD)
+	{
+		Gamma = 125.0*RAD;
+	}
+	else if (Gamma < -4.0*RAD)
+	{
+		Gamma = -4.0*RAD;
+	}
+
+	//sprintf(oapiDebugString(), "AAxisCmd: %lf° CAxisCmd: %lf° Alpha: %lf° Gamma: %lf°", AAxisCmd*DEG, CAxisCmd*DEG, Alpha*DEG, Gamma*DEG);
+
+	//READOUT RESOLVER
+	VECTOR3 U_Readout;
+	U_Readout = ABCToBody(Alpha, 0, Gamma);
+	BodyVectorToPitchYaw(U_Readout, PitchRes, YawRes);
+
+	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
+
+	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	MATRIX3 Rot;
 	double relang, beamwidth, Moonrelang;
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 
 	//Unit vector of antenna in vessel's local frame
-	U_RP = unit(_V(sin(Pitch*RAD + PI05)*sin(Yaw*RAD), -cos(Pitch*RAD + PI05), sin(Pitch*RAD + PI05)*cos(Yaw*RAD)));
-
-	AxRot = _M(0.0, cos(52.25*RAD), -sin(52.25*RAD), -1.0, 0.0, 0.0, 0.0, sin(52.25*RAD), cos(52.25*RAD));
-
-	AxVec = mul(AxRot,_V(sin(Pitch*RAD), -sin(Pitch*RAD)*cos(Yaw*RAD), cos(Pitch*RAD)*cos(Yaw*RAD)));
-
+	U_RP = ABCToBody(Alpha, Beta, Gamma);
+	//Convert from Apollo CSM coordinate system to left-handed Orbiter coordinate system
+	U_RP = _V(U_RP.y, -U_RP.z, U_RP.x);
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
@@ -657,21 +715,31 @@ void HGA::TimeStep(double simt, double simdt) {
 		SignalStrength = 0.0;
 	}
 
-	double YawScal, scanlim, scanlimwarn;
-	//Scaling for function
-	YawScal = (Yaw - 180.0) / 116.8332;
+	double scanlim, scanlimwarn;
 
 	//Scan limit function
-	scanlim = -6.2637*pow(YawScal, 7) + 8.4309*pow(YawScal, 6) + 31.9103*pow(YawScal, 5) - 36.7725*pow(YawScal, 4) - 75.4615*pow(YawScal, 3) + 40.4809*pow(YawScal, 2) + 83.0710*YawScal + 10.5345;
+	scanlim = 11.0*RAD*sin(2.0*Alpha - PI05) + 105.0*RAD;
 	//Scan limit warning function
-	scanlimwarn = -3.4845*pow(YawScal, 7) + 13.4789*pow(YawScal, 6) + 22.5672*pow(YawScal, 5) - 56.3628*pow(YawScal, 4) - 69.5117*pow(YawScal, 3) + 57.5809*pow(YawScal, 2) + 84.4028*YawScal - 7.2412;
+	scanlimwarn = 11.0*RAD*sin(2.0*Alpha - PI05) + PI05;
 
-	if (Pitch > scanlimwarn)
+	if (Gamma > scanlim)
+	{
+		scanlimit = true;
+	}
+	else
+	{
+		scanlimit = false;
+	}
+	if (Gamma > scanlimwarn)
 	{
 		scanlimitwarn = true;
 	}
+	else
+	{
+		scanlimitwarn = false;
+	}
 
-	//sprintf(oapiDebugString(), "Pitch: %lf° Yaw: %lf° SignalStrength %lf RelAng %lf, AxVec: %f %f %f", Pitch, Yaw, SignalStrength, relang*DEG, AxVec.x, AxVec.y, AxVec.z);
+	//sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
 }
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
@@ -694,6 +762,63 @@ void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double si
 
 }
 
+VECTOR3 HGA::PitchYawToBodyVector(double pit, double ya)
+{
+	return _V(cos(ya)*cos(pit), sin(ya)*cos(pit), -sin(pit));
+}
+
+void HGA::BodyVectorToPitchYaw(VECTOR3 U_R, double &pitch, double &yaw)
+{
+	VECTOR3 RP, U_RP, U_X, U_Y, U_Z;
+	double x;
+
+	U_X = _V(1, 0, 0);
+	U_Y = _V(0, 1, 0);
+	U_Z = _V(0, 0, 1);
+
+	RP = U_R - U_Z * dotp(U_R, U_Z);
+	U_RP = unit(RP);
+	yaw = acos(dotp(U_RP, U_X));
+	x = dotp(U_RP, U_Y);
+	if (x < 0)
+	{
+		yaw = PI2 - yaw;
+	}
+	pitch = acos(dotp(U_R, U_Z)) - PI05;
+}
+
+void HGA::BodyToAC(VECTOR3 U_R, double &alpha, double &gamma)
+{
+	MATRIX3 MB_apo, MC_apo;
+	VECTOR3 U_R3;
+	double theta;
+
+	theta = -52.25*RAD;
+
+	MB_apo = _M(cos(theta), 0.0, -sin(theta), 0.0, 1.0, 0.0, sin(theta), 0.0, cos(theta));
+	MC_apo = _M(0.0, -1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+
+	U_R3 = mul(MB_apo, mul(MC_apo, U_R));
+	alpha = atan2(U_R3.z, U_R3.y);
+	gamma = acos(U_R3.x);
+}
+
+VECTOR3 HGA::ABCToBody(double alpha, double beta, double gamma)
+{
+	MATRIX3 M1, M2, MB, MC;
+	VECTOR3 U_R3;
+	double theta;
+
+	theta = -52.25*RAD;
+
+	U_R3 = _V(cos(gamma), sin(gamma), 0.0);
+	M2 = _M(cos(beta), 0.0, sin(beta), 0.0, 1.0, 0.0, -sin(beta), 0.0, cos(beta));
+	M1 = _M(1.0, 0.0, 0.0, 0.0, cos(alpha), -sin(alpha), 0.0, sin(alpha), cos(alpha));
+	MB = _M(cos(theta), 0.0, sin(theta), 0.0, 1.0, 0.0, -sin(theta), 0.0, cos(theta));
+	MC = _M(0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+	return mul(MC, mul(MB, mul(M1, mul(M2, U_R3))));
+}
+
 bool HGA::ScanLimitWarning()
 {
 	return scanlimitwarn;
@@ -701,14 +826,14 @@ bool HGA::ScanLimitWarning()
 
 // Load
 void HGA::LoadState(char *line) {
-	sscanf(line + 15, "%lf %lf", &Pitch, &Yaw);
+	sscanf(line + 15, "%lf %lf %lf", &Alpha, &Beta, &Gamma);
 }
 
 // Save
 void HGA::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf", Pitch, Yaw);
+	sprintf(buffer, "%lf %lf %lf", Alpha, Beta, Gamma);
 
 	oapiWriteScenario_string(scn, "HIGHGAINANTENNA", buffer);
 }

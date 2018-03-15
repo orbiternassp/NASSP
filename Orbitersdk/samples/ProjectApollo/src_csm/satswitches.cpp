@@ -2326,7 +2326,7 @@ bool CSMLMPowerSwitch::SwitchTo(int newState)
 }
 
 double SaturnHighGainAntennaPitchMeter::QueryValue(){
-	return Sat->hga.Pitch;
+	return Sat->hga.GetResolvedPitch();
 }
 
 void SaturnHighGainAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
@@ -2346,7 +2346,7 @@ void SaturnHighGainAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawS
 }
 
 double SaturnHighGainAntennaYawMeter::QueryValue(){
-	return Sat->hga.Yaw;
+	return Sat->hga.GetResolvedYaw();
 }
 
 void SaturnHighGainAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
