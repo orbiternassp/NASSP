@@ -475,7 +475,10 @@ void SCERA1::Timestep()
 	//Abort sensor assembly voltage (GH3215)
 	SA15.SetOutput(4, scale_data(lem->SCS_ASA_CB.Voltage(), 0.0, 40.0));
 
-	//Inverter bus voltage (GC0071)
+	//AC bus frequency (GC0155)
+	SA16.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Frequency(), 380.0, 420.0));
+
+	//AC bus voltage (GC0071)
 	SA17.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
 
 	//Commander's bus voltage (GC0301)
@@ -508,7 +511,7 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	//sprintf(oapiDebugString(), "SCEV %lf CBV %lf", lem->scera1.GetVoltage(17, 1), lem->AC_A_BUS_VOLT_CB.Voltage());
+	sprintf(oapiDebugString(), "CBFV %lf CBF %lf CBVV %lf CBV %lf", lem->scera1.GetVoltage(16, 1), lem->AC_A_BUS_VOLT_CB.Frequency(), lem->scera1.GetVoltage(17, 1), lem->AC_A_BUS_VOLT_CB.Voltage());
 }
 
 double SCERA1::GetVoltage(int sa, int chan)

@@ -218,7 +218,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// On when AC bus voltage below 112V or frequency below 398hz or above 402hz.
 	// Disabled when AC Power switch is off.
 	LightStatus[0][5] = 0;
-	if (lem->EPSInverterSwitch.GetState() != THREEPOSSWITCH_DOWN && lem->scera1.GetVoltage(17, 1) < (112.0 / 25.0)) { LightStatus[0][5] = 1;}
+	if (lem->EPSInverterSwitch.GetState() != THREEPOSSWITCH_DOWN) {
+		if (lem->scera1.GetVoltage(16, 1) >= ((402.0 - 380.0)/8.0) || lem->scera1.GetVoltage(16, 1) <= ((398.0 - 380.0) / 8.0) ) { LightStatus[0][5] = 1; }
+		if (lem->scera1.GetVoltage(17, 1) <= (112.0 / 25.0)) { LightStatus[0][5] = 1; }
+	}
 
 	// 6DS27 BATTERY FAILURE CAUTION
 	// On when over-current, reverse-current, or over-temperature condition occurs in any ascent or descent battery.
