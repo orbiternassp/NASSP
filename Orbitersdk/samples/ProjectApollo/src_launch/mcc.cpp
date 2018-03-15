@@ -3931,6 +3931,10 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 				}
 				else
 				{
+					if (upDescr[0] != 0)
+					{
+						addMessage(upDescr);
+					}
 					setSubState(6);
 				}
 			}
