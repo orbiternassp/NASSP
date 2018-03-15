@@ -511,7 +511,7 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	sprintf(oapiDebugString(), "CBFV %lf CBF %lf CBVV %lf CBV %lf", lem->scera1.GetVoltage(16, 1), lem->AC_A_BUS_VOLT_CB.Frequency(), lem->scera1.GetVoltage(17, 1), lem->AC_A_BUS_VOLT_CB.Voltage());
+	//sprintf(oapiDebugString(), "CBFV %lf CBF %lf CBVV %lf CBV %lf", lem->scera1.GetVoltage(16, 1), lem->AC_A_BUS_VOLT_CB.Frequency(), lem->scera1.GetVoltage(17, 1), lem->AC_A_BUS_VOLT_CB.Voltage());
 }
 
 double SCERA1::GetVoltage(int sa, int chan)
