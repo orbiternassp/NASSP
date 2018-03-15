@@ -141,6 +141,7 @@ public:
 	SCEA_SA_5051();
 	void Reset();
 	double GetVoltage(int chan) { return Output[chan - 1]; }
+	void SetOutput(int n, double val) { Output[n - 1] = val; }
 protected:
 	double Output[3];
 };
