@@ -672,6 +672,7 @@ public:
 
 	double Voltage();
 	double Current();
+	double Frequency();
 	void DrawPower(double watts);
 
 	///

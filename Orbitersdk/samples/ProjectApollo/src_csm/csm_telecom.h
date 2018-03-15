@@ -387,12 +387,24 @@ public:
 	bool ScanLimitWarning();
 	bool IsPowered();
 
-	Saturn *sat;								// Ship we're installed in
-	double Pitch;								// Antenna Pitch
-	double Yaw;									// Antenna Yaw
-	bool scanlimitwarn;
+	double GetResolvedPitch() { return PitchRes * DEG; }
+	double GetResolvedYaw() { return YawRes * DEG; }
+
 private:
+	VECTOR3 PitchYawToBodyVector(double pit, double ya);
+	void BodyVectorToPitchYaw(VECTOR3 U_R, double &pitch, double &yaw);
+	void BodyToAC(VECTOR3 U_R, double &alpha, double &gamma);
+	VECTOR3 ABCToBody(double alpha, double beta, double gamma);
 	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
+
+	Saturn *sat;								// Ship we're installed in
+	double Alpha;								// Antenna alpha
+	double Beta;								// Antenna beta
+	double Gamma;								// Antenna gamma
+	double PitchRes;
+	double YawRes;
+	bool scanlimit;
+	bool scanlimitwarn;
 };
 
 //S-Band Omnidirectional Antenna system
