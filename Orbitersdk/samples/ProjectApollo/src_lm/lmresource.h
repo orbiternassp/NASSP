@@ -30,11 +30,11 @@
 #define AID_SWITCH_PANEL_RIGHT          35
 #define AID_ABORT                       36
 #define AID_BMAG_SWITCHES               37
-#define AID_MASTER_ALARM2               38
+#define AID_LEM_MA_RIGHT                38
 #define AID_dVTHRUST_SWITCHES           39
 #define AID_SWITCH_SEP                  40
 #define AID_CONTACTLIGHT1               41
-#define AID_MASTER_ALARM                42
+#define AID_LEM_MA_LEFT                 42
 #define AID_CWS_LIGHTS_LEFT             43
 #define AID_CWS_LIGHTS_RIGHT            44
 #define AID_EVENT_TIMER                 45
@@ -823,6 +823,7 @@
 #define AID_GLYCOL_LIGHT				1097
 #define AID_DC_BUS_LIGHT				1098
 #define AID_BAT_FAULT_LIGHT				1099
+#define IDB_LEM_MASTERALARM				2000
 
 #define IDB_LEM_FDAI_ROLL               10006
 

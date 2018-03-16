@@ -1330,6 +1330,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_F_HATCH_REL_VLV] = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_REL_VLV));
 		srf[SRF_LEM_INTLK_OVRD]     = oapiCreateSurface(LOADBMP(IDB_LEM_INTLK_OVRD));
 		srf[SRF_RED_INDICATOR] = oapiCreateSurface(LOADBMP(IDB_RED_INDICATOR));
+		srf[SRF_LEM_MASTERALARM] = oapiCreateSurface(LOADBMP(IDB_LEM_MASTERALARM));
 		
 		//
 		// Flashing borders.
@@ -1442,6 +1443,7 @@ void LEM::InitPanel (int panel)
 		// is visible.
 		//
 
+		oapiSetSurfaceColourKey(srf[SRF_LEM_MASTERALARM], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x29], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x61], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_55x111], g_Param.col[4]);
@@ -3158,12 +3160,13 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	case AID_AOT_SHAFT_KNOB:
-		if (my >=90 && my <= 155 ){
-			optics.OpticsShaft++; 
-		} else if (my >= 0 && my <= 90){
+		if (my >= 90 && my <= 155) {
+			optics.OpticsShaft++;
+		}
+		else if (my >= 0 && my <= 90) {
 			optics.OpticsShaft--;
 		}
-		optics.OpticsShaft = (optics.OpticsShaft+6) % 6;
+		optics.OpticsShaft = (optics.OpticsShaft + 6) % 6;
 		ButtonClick();
 		//Load panel to trigger change of the default camera direction
 		if (PanelId == LMPANEL_AOTZOOM)
@@ -3172,7 +3175,12 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	// panel 1 events:
+	case AID_LEM_MA_LEFT:
+	case AID_LEM_MA_RIGHT:
+		ButtonClick();
+		return CWEA.CheckMasterAlarmMouseClick(event);
+
+		// panel 1 events:
 	}
 	return false;
 }
@@ -3620,11 +3628,11 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_COAS:
-		if(COASswitch){
-			oapiBlt(surf,srf[0],0,0,146,0,301,298);
+		if (COASswitch) {
+			oapiBlt(surf, srf[0], 0, 0, 146, 0, 301, 298);
 		}
-		else{
-			oapiBlt(surf,srf[0],0,0,448,0,301,298);
+		else {
+			oapiBlt(surf, srf[0], 0, 0, 448, 0, 301, 298);
 		}
 		return true;
 
@@ -3635,9 +3643,15 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		RadarTape.RenderRate(surf, srf[SRF_RADAR_TAPE]);
 		return true;
 
+	case AID_LEM_MA_LEFT:
+	case AID_LEM_MA_RIGHT:
+		CWEA.RenderMasterAlarm(surf, srf[SRF_LEM_MASTERALARM], NULL);
+		return true;
+
 	}
 	return false;
 }
+
 
 void LEM::PanelRefreshForwardHatch() {
 
