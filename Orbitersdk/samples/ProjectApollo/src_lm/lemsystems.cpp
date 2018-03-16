@@ -1470,6 +1470,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		scera2.SystemTimestep(tFactor);
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		EventTimerDisplay.SystemTimestep(tFactor);
+		CWEA.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);

@@ -424,7 +424,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 	}
 }
 
-void LEM_CWEA::SystemTimeStep(double simdt) {
+void LEM_CWEA::SystemTimestep(double simdt) {
 
 }
 
@@ -518,12 +518,12 @@ void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDL
 
 bool LEM_CWEA::CheckMasterAlarmMouseClick(int event) {
 	if (event & PANEL_MOUSE_LBDOWN) {
-		sprintf(oapiDebugString(), "Master alarm pressed!");
+		//sprintf(oapiDebugString(), "Master alarm pressed!");
 		SetMasterAlarm(true);
 		
 	}
 	else if (event & PANEL_MOUSE_LBUP) {
-		sprintf(oapiDebugString(), "Master alarm depressed!");
+		//sprintf(oapiDebugString(), "Master alarm depressed!");
 		SetMasterAlarm(false);
 		
 	}

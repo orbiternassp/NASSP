@@ -34,7 +34,7 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	bool IsPowered();
 	void TimeStep(double simdt);
-	void SystemTimeStep(double simdt);
+	void SystemTimestep(double simdt);
 	void SetMasterAlarm(bool alarm);
 	void SetAlarmTone(bool tone);
 
