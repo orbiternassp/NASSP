@@ -486,7 +486,7 @@ void SCERA1::Timestep()
 	//Frequency inverter bus (GC0155F)
 	SA18.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Frequency(), 380.0, 420.0));
 	//Inverter bus voltage (GC0071V)
-	SA18.SetOutput(2, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 105.0, 125.0));
+	SA18.SetOutput(2, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
 	//Commander's bus voltage (GC0301)
 	SA18.SetOutput(3, scale_data(lem->CDRs28VBus.Voltage(), 0.0, 40.0));
 

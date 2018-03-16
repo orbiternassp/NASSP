@@ -1212,7 +1212,8 @@ void LEMRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s)
 double LEMDCVoltMeter::QueryValue()
 
 {
-	switch(lem->EPSMonitorSelectRotary.GetState()){
+	if (!lem) { return 0; }
+	switch (lem->EPSMonitorSelectRotary) {
 		case 0: // ED/OFF
 			return(lem->scera1.GetVoltage(7, 4) * 8.0);
 			break;
@@ -1241,7 +1242,7 @@ double LEMDCVoltMeter::QueryValue()
 			return(lem->scera2.GetVoltage(8, 3) * 8.0);
 			break;
 		case 9: // AC BUS
-			return(lem->scera1.GetVoltage(18, 2) * 4.0 + 105.0);
+			return((lem->scera1.GetVoltage(18, 2) * 25.0)/3.125);	//3.125 factor from AOH
 			break;		
 		default:
 			return 0.0;
@@ -1260,7 +1261,8 @@ void LEMDCVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
 
 // DC Ammeter
 double LEMDCAmMeter::QueryValue(){	
-	switch(lem->EPSMonitorSelectRotary.GetState()){
+	if (!lem) { return 0; }
+	switch (lem->EPSMonitorSelectRotary) {
 		case 0: // ED/OFF
 			return 0.0; // Means either off or unloaded ED battery
 			break;

@@ -1235,12 +1235,12 @@ protected:
 	//////////////////
 
 	SwitchRow EPSP14VoltMeterSwitchRow;
-	DCVoltMeter EPSDCVoltMeter;
+	LEMDCVoltMeter EPSDCVoltMeter;
 
 	VoltageAttenuator ACVoltsAttenuator;
 
 	SwitchRow EPSP14AmMeterSwitchRow;
-	DCAmpMeter EPSDCAmMeter;
+	LEMDCAmMeter EPSDCAmMeter;
 	
 	SwitchRow EPSLeftControlArea;
 	PowerStateRotationalSwitch EPSMonitorSelectRotary;
