@@ -824,6 +824,7 @@
 #define AID_DC_BUS_LIGHT				1098
 #define AID_BAT_FAULT_LIGHT				1099
 #define IDB_LEM_MASTERALARM				2000
+#define IDB_BORDER_47x43                2001
 
 #define IDB_LEM_FDAI_ROLL               10006
 
