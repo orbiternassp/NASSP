@@ -383,7 +383,7 @@ void LEM::InitSwitches() {
 	EPSMonitorSelectRotary.AddPosition(9,120);
 	EPSMonitorSelectRotary.Register(PSH, "EPSMonitorSelectRotary", 0);
 	EPSEDVoltSelect.Register(PSH, "EPSEDVoltSelect", THREEPOSSWITCH_CENTER);
-
+	/*
 	EPSMonitorSelectRotary.SetSource(0, &EPSEDVoltSelect);
 	if(stage < 2){
 		EPSMonitorSelectRotary.SetSource(1, Battery1);
@@ -404,7 +404,7 @@ void LEM::InitSwitches() {
 	EPSMonitorSelectRotary.SetSource(7, &CDRDCBusVoltCB);
 	EPSMonitorSelectRotary.SetSource(8, &LMPDCBusVoltCB);
 	EPSMonitorSelectRotary.SetSource(9, &ACVoltsAttenuator);
-	
+	*/
 	EPSDCVoltMeter.Register(PSH,"EPSDCVoltMeter", 19, 42, 3);
 	EPSDCAmMeter.Register(PSH,"EPSDCAmMeter", 0, 120, 3);
 	DSCBattery1TB.Register(PSH, "DSCBattery1TB", 2);
