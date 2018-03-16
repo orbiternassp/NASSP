@@ -1329,8 +1329,8 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_F_HATCH_HNDL]   = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_HANDLE));
 		srf[SRF_LEM_F_HATCH_REL_VLV] = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_REL_VLV));
 		srf[SRF_LEM_INTLK_OVRD]     = oapiCreateSurface(LOADBMP(IDB_LEM_INTLK_OVRD));
-		srf[SRF_RED_INDICATOR] = oapiCreateSurface(LOADBMP(IDB_RED_INDICATOR));
-		srf[SRF_LEM_MASTERALARM] = oapiCreateSurface(LOADBMP(IDB_LEM_MASTERALARM));
+		srf[SRF_RED_INDICATOR]		= oapiCreateSurface(LOADBMP(IDB_RED_INDICATOR));
+		srf[SRF_LEM_MASTERALARM]	 = oapiCreateSurface(LOADBMP(IDB_LEM_MASTERALARM));
 		
 		//
 		// Flashing borders.
