@@ -685,22 +685,22 @@ double TempMonitorInd::QueryValue()
 	if (!lem) { return 0; }
 	switch (lem->TempMonitorRotary) {
 	case 0: // RR
-		return lem->scera1.GetVoltage(21, 4) * 80 - 200;
+		return lem->scera1.GetVoltage(21, 4) * 80.0 - 200.0;
 	case 1: // LR
-		return lem->scera1.GetVoltage(21, 3) * 80 - 200;
+		return lem->scera1.GetVoltage(21, 3) * 80.0 - 200.0;
 		//Quad temperatures are scaled to the proper display increments
 	case 2: // Quad 1
-		return lem->scera1.GetVoltage(20, 4) * 23 + 50;  //Scaled for the right hand scale of the display
+		return lem->scera1.GetVoltage(20, 4) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
 	case 3: // Quad 2
-		return lem->scera1.GetVoltage(20, 3) * 23 + 50;  //Scaled for the right hand scale of the display
+		return lem->scera1.GetVoltage(20, 3) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
 	case 4: // Quad 3
-		return lem->scera1.GetVoltage(20, 2) * 23 + 50;  //Scaled for the right hand scale of the display
+		return lem->scera1.GetVoltage(20, 2) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
 	case 5: // Quad 4
-		return lem->scera1.GetVoltage(20, 1) * 23 + 50;  //Scaled for the right hand scale of the display
+		return lem->scera1.GetVoltage(20, 1) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
 	case 6: // S-Band
-		return lem->scera2.GetVoltage(21, 1) * 80 - 200;
+		return lem->scera2.GetVoltage(21, 1) * 80.0 - 200.0;
 	default:
-		return 0;
+		return 0.0;
 	}
 }
 
@@ -1214,52 +1214,37 @@ double LEMDCVoltMeter::QueryValue()
 {
 	switch(lem->EPSMonitorSelectRotary.GetState()){
 		case 0: // ED/OFF
-			switch(lem->EPSEDVoltSelect.GetState()){
-				case THREEPOSSWITCH_UP:		// ED Battery A
-				case THREEPOSSWITCH_DOWN:	// ED Battery B
-					return 37.1; // Fake unloaded battery
-					break;
-				case THREEPOSSWITCH_CENTER: // OFF
-					return 0;
-					break;
-				default:
-					return 0;
-					break;
-			}
+			return(lem->scera1.GetVoltage(7, 4) * 8.0);
 			break;
 		case 1: // Battery 1
-			if(lem->Battery1){ return(lem->Battery1->Voltage()); }else{ return 0; }
+			return(lem->scera2.GetVoltage(16, 1) * 8.0);
 			break;
 		case 2: // Battery 2
-			if(lem->Battery2){ return(lem->Battery2->Voltage()); }else{ return 0; }
+			return(lem->scera2.GetVoltage(16, 2) * 8.0);
 			break;
 		case 3: // Battery 3
-			if(lem->Battery3){ return(lem->Battery3->Voltage()); }else{ return 0; }
+			return(lem->scera2.GetVoltage(16, 3) * 8.0);
 			break;
 		case 4: // Battery 4
-			if(lem->Battery4){ return(lem->Battery4->Voltage()); }else{ return 0; }
+			return(lem->scera2.GetVoltage(16, 4) * 8.0);
 			break;
 		case 5: // Battery 5
-			if(lem->Battery5){ return(lem->Battery5->Voltage()); }else{ return 0; }
+			return(lem->scera2.GetVoltage(17, 1) * 8.0);
 			break;
 		case 6: // Battery 6
-			if(lem->Battery6){ return(lem->Battery6->Voltage()); }else{ return 0; }
+			return(lem->scera2.GetVoltage(18, 1) * 8.0);
 			break;
 		case 7: // CDR DC BUS
-			return(lem->CDRs28VBus.Voltage());
+			return(lem->scera1.GetVoltage(18, 3) * 8.0);
 			break;
 		case 8: // LMP DC BUS
-			return(lem->LMPs28VBus.Voltage());
+			return(lem->scera2.GetVoltage(8, 3) * 8.0);
 			break;
-		case 9: // AC BUS (?)
-			if(lem->ACBusA.Voltage() > 85){
-				return(lem->ACBusA.Voltage()-85);
-			}else{
-				return(0);
-			}
+		case 9: // AC BUS
+			return(lem->scera1.GetVoltage(18, 2) * 4.0 + 105.0);
 			break;		
 		default:
-			return(0);
+			return 0.0;
 	}
 }
 
@@ -1277,23 +1262,23 @@ void LEMDCVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
 double LEMDCAmMeter::QueryValue(){	
 	switch(lem->EPSMonitorSelectRotary.GetState()){
 		case 0: // ED/OFF
-			return 0; // Means either off or unloaded ED battery
+			return 0.0; // Means either off or unloaded ED battery
 			break;
 		case 1: // Battery 1
 			if(lem->Battery1 && lem->Battery1->Voltage() > 0){ 
-				return(lem->Battery1->PowerLoad()/lem->Battery1->Voltage()); }else{ return 0; }
+				return((lem->Battery1->PowerLoad()/lem->Battery1->Voltage())*2.0); }else{ return 0; }
 			break;
 		case 2: // Battery 2
 			if(lem->Battery2 && lem->Battery2->Voltage() > 0){
-				return(lem->Battery2->PowerLoad()/lem->Battery2->Voltage()); }else{ return 0; }
+				return((lem->Battery2->PowerLoad()/lem->Battery2->Voltage())*2.0); }else{ return 0; }
 			break;
 		case 3: // Battery 3
 			if(lem->Battery3 && lem->Battery3->Voltage() > 0){
-				return(lem->Battery3->PowerLoad()/lem->Battery3->Voltage()); }else{ return 0; }
+				return((lem->Battery3->PowerLoad()/lem->Battery3->Voltage())*2.0); }else{ return 0; }
 			break;
 		case 4: // Battery 4
 			if(lem->Battery4 && lem->Battery4->Voltage() > 0){
-				return(lem->Battery4->PowerLoad()/lem->Battery4->Voltage()); }else{ return 0; }
+				return((lem->Battery4->PowerLoad()/lem->Battery4->Voltage())*2.0); }else{ return 0; }
 			break;
 		case 5: // Battery 5
 			if(lem->Battery5 && lem->Battery5->Voltage() > 0){
@@ -1304,22 +1289,16 @@ double LEMDCAmMeter::QueryValue(){
 				return(lem->Battery6->PowerLoad()/lem->Battery6->Voltage()); }else{ return 0; }
 			break;
 		case 7: // CDR DC BUS
-			if(lem->CDRs28VBus.Voltage() > 0){
-				return(lem->CDRs28VBus.PowerLoad()/lem->CDRs28VBus.Voltage()); }else{ return 0; }
+			return 0.0; // No current is read for this
 			break;
 		case 8: // LMP DC BUS
-			if(lem->LMPs28VBus.Voltage() > 0){
-				return(lem->LMPs28VBus.PowerLoad()/lem->LMPs28VBus.Voltage()); }else{ return 0; }
+			return 0.0; // No current is read for this
 			break;
-		case 9: // AC BUS (?)
-			if(lem->ACBusA.Voltage() > 0){
-				return(lem->ACBusA.PowerLoad()/lem->ACBusA.Voltage());
-			}else{
-				return(0);
-			}
-			break;		
+		case 9: // AC BUS
+			return 0.0; // No current is read for this
+			break;	
 		default:
-			return(0);
+			return 0.0;
 	}	
 }
 
