@@ -3225,7 +3225,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_LM_CWS_RIGHT:
 		CWEA.RedrawRight(surf,srf[SRF_CWSLIGHTS]);
 		return true;
-		
+
 	case AID_DSKY_LIGHTS:
 		if (ApolloNo >= 15 && ApolloNo != 1301)
 		{

@@ -24,6 +24,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "soundlib.h"
+#include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
@@ -33,12 +34,16 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 // CWEA 
 
-LEM_CWEA::LEM_CWEA() {
+LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	lem = NULL;
+	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
+	MasterAlarm = false;
+	AlarmTone = true;
+
 	WaterWarningDisabled = 0;
 }
 
-void LEM_CWEA::Init(LEM *s) {
+void LEM_CWEA::Init(LEM *s, e_object *cwea_pwr, e_object *ma_pwr) {
 	int row = 0, col = 0;
 	while (col < 8) {
 		while (row < 5) {
@@ -47,7 +52,24 @@ void LEM_CWEA::Init(LEM *s) {
 		}
 		row = 0; col++;
 	}
+	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
+	WireTo(cwea_pwr);
 	lem = s;
+}
+
+bool LEM_CWEA::IsPowered() {
+	if (Voltage() > SP_MIN_DCVOLTAGE)
+		 return true;
+
+	return false;
+}
+
+void LEM_CWEA::SetMasterAlarm(bool alarm) {
+	MasterAlarm = alarm;
+}
+
+void LEM_CWEA::SetAlarmTone(bool tone) {
+	AlarmTone = tone;
 }
 
 void LEM_CWEA::TimeStep(double simdt) {
@@ -56,6 +78,15 @@ void LEM_CWEA::TimeStep(double simdt) {
 	ChannelValue val30;
 	ChannelValue val33;
 	ChannelValue val163;
+
+	if (MasterAlarm && AlarmTone && IsPowered()) {
+		if (!MasterAlarmSound.isPlaying()) {
+			MasterAlarmSound.play(LOOP, 255);
+		}
+	}
+	else {
+		MasterAlarmSound.stop();
+	}
 
 	if (lem == NULL) { return; }
 	val11 = lem->agc.GetOutputChannel(011);
@@ -354,12 +385,15 @@ void LEM_CWEA::TimeStep(double simdt) {
 	if (lem->LTG_MASTER_ALARM_CB.Voltage() > 0) {
 		switch (lem->LampToneTestRotary.GetState()) {
 		case 0: // OFF
+			SetMasterAlarm(false);
+			break;
 		case 7: // OFF
-		default:
+			SetMasterAlarm(false);
 			break;
 		case 1: // ALARM/TONE
 				// Light MASTER ALARM and sound tone
 				// FIXME: IMPLEMENT THIS
+			SetMasterAlarm(true);
 			break;
 		case 2: // C/W 1
 				// Light Panel 1 first bank warning lamps
@@ -388,6 +422,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 			break;
 		}
 	}
+}
+
+void LEM_CWEA::SystemTimeStep(double simdt) {
+
 }
 
 void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -462,4 +500,32 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
 		}
 		row = 0; col++;
 	}
+}
+
+void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border) {
+
+			//
+			// Draw the master alarm lit bitmap.
+			//
+		if (MasterAlarm)
+		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 47, 43);
+
+			/*if (border)
+					oapiBlt(surf, border, 0, 0, 0, 0, 45, 36, SURF_PREDEF_CK);
+			*/
+		
+}
+
+bool LEM_CWEA::CheckMasterAlarmMouseClick(int event) {
+	if (event & PANEL_MOUSE_LBDOWN) {
+		sprintf(oapiDebugString(), "Master alarm pressed!");
+		SetMasterAlarm(true);
+		
+	}
+	else if (event & PANEL_MOUSE_LBUP) {
+		sprintf(oapiDebugString(), "Master alarm depressed!");
+		SetMasterAlarm(false);
+		
+	}
+	return true;
 }
