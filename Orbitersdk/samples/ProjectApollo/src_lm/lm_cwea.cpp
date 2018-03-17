@@ -42,7 +42,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	WaterWarningDisabled = 0;
 }
 
-void LEM_CWEA::Init(LEM *s, CircuitBrakerSwitch *cwea_cb, CircuitBrakerSwitch *ma_cb) {
+void LEM_CWEA::Init(LEM *s, e_object *cwea_pwr, e_object *ma_pwr) {
 	int row = 0, col = 0;
 	while (col < 8) {
 		while (row < 5) {
@@ -51,9 +51,8 @@ void LEM_CWEA::Init(LEM *s, CircuitBrakerSwitch *cwea_cb, CircuitBrakerSwitch *m
 		}
 		row = 0; col++;
 	}
-	cwea_pwr = cwea_cb;
-	ma_pwr = ma_cb;
 	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
+
 	lem = s;
 }
 
