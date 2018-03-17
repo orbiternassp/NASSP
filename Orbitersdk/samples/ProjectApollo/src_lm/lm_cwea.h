@@ -29,14 +29,15 @@ class LEM;
 class LEM_CWEA : public e_object {
 public:
 	LEM_CWEA(SoundLib &s);
-	void Init(LEM *s, e_object *cwea_pwr, e_object *ma_pwr);
+	void Init(LEM *s, CircuitBrakerSwitch *cwea_pwr, CircuitBrakerSwitch *ma_pwr);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	bool IsPowered();
+	bool IsMAPowered();
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SetMasterAlarm(bool alarm);
-	void SetAlarmTone(bool tone);
+	void PushMasterAlarm();
 
 	bool CheckMasterAlarmMouseClick(int event);
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border);
@@ -47,7 +48,8 @@ protected:
 	int LightStatus[5][8];		// 1 = lit, 2 = not
 	int WaterWarningDisabled;   // FF for this
 	bool MasterAlarm;
-	bool AlarmTone;
+	CircuitBrakerSwitch *ma_pwr;
+	CircuitBrakerSwitch *cwea_pwr;
 
 	SoundLib &soundlib;
 	Sound MasterAlarmSound;

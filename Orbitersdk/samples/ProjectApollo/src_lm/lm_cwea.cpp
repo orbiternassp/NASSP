@@ -38,12 +38,11 @@ LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	lem = NULL;
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
-	AlarmTone = true;
 
 	WaterWarningDisabled = 0;
 }
 
-void LEM_CWEA::Init(LEM *s, e_object *cwea_pwr, e_object *ma_pwr) {
+void LEM_CWEA::Init(LEM *s, CircuitBrakerSwitch *cwea_cb, CircuitBrakerSwitch *ma_cb) {
 	int row = 0, col = 0;
 	while (col < 8) {
 		while (row < 5) {
@@ -52,24 +51,28 @@ void LEM_CWEA::Init(LEM *s, e_object *cwea_pwr, e_object *ma_pwr) {
 		}
 		row = 0; col++;
 	}
+	cwea_pwr = cwea_cb;
+	ma_pwr = ma_cb;
 	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
-	WireTo(cwea_pwr);
 	lem = s;
 }
 
 bool LEM_CWEA::IsPowered() {
-	if (Voltage() > SP_MIN_DCVOLTAGE)
+	if (cwea_pwr->Voltage() > 24.0)
 		 return true;
+
+	return false;
+}
+
+bool LEM_CWEA::IsMAPowered() {
+	if (ma_pwr->Voltage() > 24.0)
+		return true;
 
 	return false;
 }
 
 void LEM_CWEA::SetMasterAlarm(bool alarm) {
 	MasterAlarm = alarm;
-}
-
-void LEM_CWEA::SetAlarmTone(bool tone) {
-	AlarmTone = tone;
 }
 
 void LEM_CWEA::TimeStep(double simdt) {
@@ -79,7 +82,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 	ChannelValue val33;
 	ChannelValue val163;
 
-	if (MasterAlarm && AlarmTone && IsPowered()) {
+	if (MasterAlarm && IsMAPowered()) {
 		if (!MasterAlarmSound.isPlaying()) {
 			MasterAlarmSound.play(LOOP, 255);
 		}
@@ -385,10 +388,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 	if (lem->LTG_MASTER_ALARM_CB.Voltage() > 0) {
 		switch (lem->LampToneTestRotary.GetState()) {
 		case 0: // OFF
-			SetMasterAlarm(false);
+			PushMasterAlarm();
 			break;
 		case 7: // OFF
-			SetMasterAlarm(false);
+			PushMasterAlarm();
 			break;
 		case 1: // ALARM/TONE
 				// Light MASTER ALARM and sound tone
@@ -516,16 +519,18 @@ void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDL
 		
 }
 
+void LEM_CWEA::PushMasterAlarm()
+
+{
+	if (IsMAPowered()) {
+		MasterAlarmSound.stop();
+		SetMasterAlarm(false);
+	}
+}
+
 bool LEM_CWEA::CheckMasterAlarmMouseClick(int event) {
 	if (event & PANEL_MOUSE_LBDOWN) {
-		//sprintf(oapiDebugString(), "Master alarm pressed!");
-		SetMasterAlarm(true);
-		
-	}
-	else if (event & PANEL_MOUSE_LBUP) {
-		//sprintf(oapiDebugString(), "Master alarm depressed!");
-		SetMasterAlarm(false);
-		
+		PushMasterAlarm();
 	}
 	return true;
 }

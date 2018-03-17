@@ -530,7 +530,7 @@ void LEM::SystemsInit()
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 	// CWEA
-	CWEA.Init(this, &INST_CWEA_CB, NULL);
+	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB);
 
 	// COMM
 	omni_fwd.Init(this);
