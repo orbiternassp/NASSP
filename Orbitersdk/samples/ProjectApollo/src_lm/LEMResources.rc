@@ -204,7 +204,7 @@ IDB_LEM_FWD_HATCH_OPEN  BITMAP                  "..\\Bitmaps\\lem_forward_hatch_
 IDB_LEM_UPPER_HATCH_OPEN BITMAP                 "..\\Bitmaps\\lem_upper_hatch_open.bmp"
 IDB_LEM_MASTERALARM	    BITMAP                  "..\\Bitmaps\\lem_master_alarm.bmp"
 
-#endif    // French (France) resources
+#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
