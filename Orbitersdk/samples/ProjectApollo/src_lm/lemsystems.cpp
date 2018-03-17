@@ -530,7 +530,7 @@ void LEM::SystemsInit()
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 	// CWEA
-	CWEA.Init(this);
+	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB);
 
 	// COMM
 	omni_fwd.Init(this);
@@ -1470,6 +1470,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		scera2.SystemTimestep(tFactor);
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		EventTimerDisplay.SystemTimestep(tFactor);
+		CWEA.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);

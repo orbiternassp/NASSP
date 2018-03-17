@@ -433,6 +433,7 @@ public:
 		SRF_BORDER_34x33,
 		SRF_BORDER_29x29,
 		SRF_BORDER_34x31,
+		SRF_BORDER_47x43,
 		SRF_BORDER_50x158,
 		SRF_BORDER_38x52,
 		SRF_BORDER_34x34,
@@ -504,6 +505,7 @@ public:
 		SRF_LEM_F_HATCH_REL_VLV,
 	    SRF_LEM_INTLK_OVRD,
 		SRF_RED_INDICATOR,
+		SRF_LEM_MASTERALARM,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1235,12 +1237,12 @@ protected:
 	//////////////////
 
 	SwitchRow EPSP14VoltMeterSwitchRow;
-	DCVoltMeter EPSDCVoltMeter;
+	LEMDCVoltMeter EPSDCVoltMeter;
 
 	VoltageAttenuator ACVoltsAttenuator;
 
 	SwitchRow EPSP14AmMeterSwitchRow;
-	DCAmpMeter EPSDCAmMeter;
+	LEMDCAmMeter EPSDCAmMeter;
 	
 	SwitchRow EPSLeftControlArea;
 	PowerStateRotationalSwitch EPSMonitorSelectRotary;

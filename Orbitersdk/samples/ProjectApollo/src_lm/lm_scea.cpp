@@ -361,6 +361,8 @@ void SCERA1::Timestep()
 	SA7.SetOutput(2, scale_data(lem->ecs.AscentOxyTank2PressurePSI(), 0.0, 1000.0));
 	//Descent tank water quantity (GF4500)
 	SA7.SetOutput(3, scale_data(lem->ecs.DescentWaterTankQuantity(), 0.0, 1.0));
+	//Selected ED battery voltage (GY0703U)
+	SA7.SetOutput(4, scale_data(lem->EPSEDVoltSelect.Voltage(), 0.0, 40.0));	// Needs to be preconditioned before entering SCEA
 
 	//Ascent tank no. 1 water quantity (GF4582)
 	SA8.SetOutput(1, scale_data(lem->ecs.AscentWaterTank1Quantity(), 0.0, 1.0));
@@ -475,12 +477,16 @@ void SCERA1::Timestep()
 	//Abort sensor assembly voltage (GH3215)
 	SA15.SetOutput(4, scale_data(lem->SCS_ASA_CB.Voltage(), 0.0, 40.0));
 
-	//AC bus frequency (GC0155)
+	//Inverter bus frequency (GC0155F)
 	SA16.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Frequency(), 380.0, 420.0));
 
-	//AC bus voltage (GC0071)
+	//Inverter bus voltage (GC0071V)
 	SA17.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
 
+	//Frequency inverter bus (GC0155F)
+	SA18.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Frequency(), 380.0, 420.0));
+	//Inverter bus voltage (GC0071V)
+	SA18.SetOutput(2, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
 	//Commander's bus voltage (GC0301)
 	SA18.SetOutput(3, scale_data(lem->CDRs28VBus.Voltage(), 0.0, 40.0));
 
@@ -716,6 +722,22 @@ void SCERA2::Timestep()
 
 	//LMP bus voltage (GC0302V)
 	SA15.SetOutput(1, scale_data(lem->LMPs28VBus.Voltage(), 0.0, 40.0));
+
+	//Battery 1 voltage (GC0101V)
+	SA16.SetOutput(1, scale_data(lem->Battery1->Voltage(), 0.0, 40.0));
+	//Battery 2 voltage (GC0102V)
+	SA16.SetOutput(2, scale_data(lem->Battery2->Voltage(), 0.0, 40.0));
+	//Battery 3 voltage (GC0103V)
+	SA16.SetOutput(3, scale_data(lem->Battery3->Voltage(), 0.0, 40.0));
+	//Battery 4 voltage (GC0104V)
+	SA16.SetOutput(4, scale_data(lem->Battery4->Voltage(), 0.0, 40.0));
+
+	//Battery 5 voltage (GC0105V)
+	SA17.SetOutput(1, scale_data(lem->Battery5->Voltage(), 0.0, 40.0));
+
+	//Battery 6 voltage (GC0106V)
+	SA18.SetOutput(1, scale_data(lem->Battery6->Voltage(), 0.0, 40.0));
+
 
 	//RCS Fuel tank A temperature (GR2121)
 	SA20.SetOutput(2, scale_data(lem->RCSA.GetFuelTankTempF(), 20.0, 120.0));
