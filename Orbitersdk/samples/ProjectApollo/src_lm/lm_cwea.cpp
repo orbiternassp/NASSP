@@ -379,12 +379,16 @@ void LEM_CWEA::TimeStep(double simdt) {
 			}
 		}
 		else {
+			// CW1
 			LightStatus[0][0] = 0; LightStatus[1][0] = 0; LightStatus[2][0] = 0; LightStatus[3][0] = 0; LightStatus[4][0] = 0;
 			LightStatus[0][1] = 0; LightStatus[1][1] = 0; LightStatus[2][1] = 0; LightStatus[3][1] = 0; LightStatus[4][1] = 0;
+			// CW2
 			LightStatus[0][2] = 0; LightStatus[1][2] = 0; LightStatus[2][2] = 0; LightStatus[3][2] = 0; LightStatus[4][2] = 0;
 			LightStatus[0][3] = 0; LightStatus[1][3] = 0; LightStatus[2][3] = 0; LightStatus[3][3] = 0; LightStatus[4][3] = 0;
+			// CW3
 			LightStatus[0][4] = 0; LightStatus[1][4] = 0; LightStatus[2][4] = 0; LightStatus[3][4] = 0; LightStatus[4][4] = 0;
 			LightStatus[0][5] = 0; LightStatus[1][5] = 0; LightStatus[2][5] = 0; /* LightStatus[3][5] = 0; */ LightStatus[4][5] = 0; // LDG RDR lamp only for LM10+
+			// CW4, CWEA PWR light remains illuminated when CWEA not powered
 			LightStatus[0][6] = 0; LightStatus[1][6] = 0; LightStatus[2][6] = 0; LightStatus[3][6] = 1; LightStatus[4][6] = 0;
 			LightStatus[0][7] = 0; LightStatus[1][7] = 0; LightStatus[2][7] = 0; LightStatus[3][7] = 0; LightStatus[4][7] = 0;
 		}
@@ -393,9 +397,11 @@ void LEM_CWEA::TimeStep(double simdt) {
 	// CWEA TEST SWITCH FUNCTIONALITY
 	switch (lem->LampToneTestRotary.GetState()) {
 	case 0: // OFF
+		//Need to check if the OFF position resets the MA
 		PushMasterAlarm();
 		break;
 	case 7: // OFF
+		//Need to check if the OFF position resets the MA
 		PushMasterAlarm();
 		break;
 	case 1: // ALARM/TONE
