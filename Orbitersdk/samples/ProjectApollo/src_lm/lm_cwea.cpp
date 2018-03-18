@@ -35,6 +35,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 // CWEA 
 
 LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
+	cwea_pwr = NULL;
+	ma_pwr = NULL;
+	ltg_pwr = NULL;
 	lem = NULL;
 
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
