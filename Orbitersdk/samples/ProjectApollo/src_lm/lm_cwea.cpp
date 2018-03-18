@@ -36,13 +36,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	lem = NULL;
+
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 
 	WaterWarningDisabled = 0;
 }
 
-void LEM_CWEA::Init(LEM *s, e_object *cwea_pwr, e_object *ma_pwr) {
+void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma) {
 	int row = 0, col = 0;
 	while (col < 8) {
 		while (row < 5) {
@@ -53,18 +54,20 @@ void LEM_CWEA::Init(LEM *s, e_object *cwea_pwr, e_object *ma_pwr) {
 	}
 	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 
-	lem = s;
+	cwea_pwr = cwea;
+	ma_pwr = ma;
+	lem = l;
 }
 
 bool LEM_CWEA::IsPowered() {
-	if (cwea_pwr->Voltage() > 24.0)
+	if (cwea_pwr->Voltage() > SP_MIN_DCVOLTAGE)
 		 return true;
 
 	return false;
 }
 
 bool LEM_CWEA::IsMAPowered() {
-	if (ma_pwr->Voltage() > 24.0)
+	if (ma_pwr->Voltage() > SP_MIN_DCVOLTAGE)
 		return true;
 
 	return false;

@@ -29,7 +29,7 @@ class LEM;
 class LEM_CWEA : public e_object {
 public:
 	LEM_CWEA(SoundLib &s);
-	void Init(LEM *s, e_object *cwea_pwr, e_object *ma_pwr);
+	void Init(LEM *l, e_object *cwea, e_object *ma);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	bool IsPowered();

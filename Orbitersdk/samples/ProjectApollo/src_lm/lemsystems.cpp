@@ -529,6 +529,7 @@ void LEM::SystemsInit()
 	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB);
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
+
 	// CWEA
 	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB);
 
