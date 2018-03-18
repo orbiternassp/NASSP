@@ -29,11 +29,12 @@ class LEM;
 class LEM_CWEA : public e_object {
 public:
 	LEM_CWEA(SoundLib &s);
-	void Init(LEM *l, e_object *cwea, e_object *ma);
+	void Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	bool IsPowered();
+	bool IsCWEAPowered();
 	bool IsMAPowered();
+	bool IsLTGPowered();
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SetMasterAlarm(bool alarm);
@@ -51,6 +52,7 @@ protected:
 
 	e_object *cwea_pwr;
 	e_object *ma_pwr;
+	e_object *ltg_pwr;
 
 	SoundLib &soundlib;
 	Sound MasterAlarmSound;

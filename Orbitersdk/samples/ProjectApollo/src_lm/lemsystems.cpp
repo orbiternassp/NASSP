@@ -531,7 +531,7 @@ void LEM::SystemsInit()
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
 	// CWEA
-	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB);
+	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, &LTG_ANUN_DOCK_COMPNT_CB);
 
 	// COMM
 	omni_fwd.Init(this);
@@ -567,8 +567,6 @@ void LEM::SystemsInit()
 	COMM_CDR_AUDIO_CB.WireTo(&CDRs28VBus);
 	COMM_SE_AUDIO_CB.MaxAmps = 2.0;
 	COMM_SE_AUDIO_CB.WireTo(&LMPs28VBus);
-	INST_CWEA_CB.MaxAmps = 2.0;
-	INST_CWEA_CB.WireTo(&LMPs28VBus);
 	INST_SIG_SENSOR_CB.MaxAmps = 2.0;
 	INST_SIG_SENSOR_CB.WireTo(&LMPs28VBus);
 	INST_PCMTEA_CB.MaxAmps = 2.0;
