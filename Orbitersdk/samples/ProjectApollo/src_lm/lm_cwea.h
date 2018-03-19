@@ -46,7 +46,11 @@ public:
 	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
 
 protected:
-	int LightStatus[5][8];		// 1 = lit, 2 = not
+	void SetLight(int row, int column, int state, bool TriggerMA = true);
+	void SetLightStates(int state);
+	void SetColumnLightStates(int col, int state);
+
+	int LightStatus[5][8];		// 0 = not lit, 1 = lit, 2 = light doesn't exist
 	int WaterWarningDisabled;   // FF for this
 	bool MasterAlarm;
 
