@@ -28,7 +28,7 @@ class LEM;
 
 class LEM_CWEA : public e_object {
 public:
-	LEM_CWEA(SoundLib &s);
+	LEM_CWEA(SoundLib &s, Sound &buttonsound);
 	void Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -59,6 +59,7 @@ protected:
 	e_object *ltg_pwr;
 
 	SoundLib &soundlib;
+	Sound &ButtonSound;
 	Sound MasterAlarmSound;
 
 	LEM *lem;					// Pointer at LEM

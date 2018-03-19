@@ -34,7 +34,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 // CWEA 
 
-LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
+LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(buttonsound) {
 	cwea_pwr = NULL;
 	ma_pwr = NULL;
 	ltg_pwr = NULL;
@@ -582,6 +582,7 @@ void LEM_CWEA::PushMasterAlarm()
 		MasterAlarmSound.stop();
 		SetMasterAlarm(false);
 	}
+	ButtonSound.play(NOLOOP, 255);
 }
 
 bool LEM_CWEA::CheckMasterAlarmMouseClick(int event) {
