@@ -85,8 +85,11 @@ bool LEM_CWEA::IsLTGPowered() {
 }
 
 void LEM_CWEA::SetMasterAlarm(bool alarm) {
-	if (IsMAPowered())
-	MasterAlarm = alarm;
+	if (IsMAPowered()) {
+		MasterAlarm = alarm;
+	}
+	else
+		MasterAlarm = false;
 }
 
 void LEM_CWEA::TimeStep(double simdt) {
