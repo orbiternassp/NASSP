@@ -78,5 +78,6 @@
 #define RCSSUSTAIN_SOUND			"attsustain40stereo1_mod.WAV"
 #define HATCHOPEN_SOUND				"hatch_open.wav"
 #define HATCHCLOSE_SOUND			"hatch_close.wav"
+#define LM_MASTERALARM_SOUND	    "alarm_lm.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"
