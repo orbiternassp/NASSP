@@ -122,18 +122,25 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Not dimmable. Master Alarm associated with this failure cannot be silenced.
 			SetLight(3, 6, 0);
 
-			// 6DS2 ASC PROP LOW
+			// 6DS2 ASC PRESS LOW
 			// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
-			// Blanket pressure in fuel or oxi lines at the bi-propellant valves of the ascent stage below 120 psia
-			// FIXME: Finish this!
-			SetLight(1, 0, 1);
+			lightlogic = false;
+			if (lem->stage < 2) {
+				if (lem->GetAPSPropellant()->GetAscentHelium1PressPSI() < 2772.8 || lem->GetAPSPropellant()->GetAscentHelium2PressPSI() < 2773.0) {
+					lightlogic = true;
+				}
+			}
+			if (lightlogic)
+				SetLight(1, 0, 1);
+			else
+				SetLight(1, 0, 0);
 
 			// 6DS3 HI/LO HELIUM REG OUTLET PRESS
 			// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 			// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
 			lightlogic = false;
 			if (lem->stage < 2 && lem->deca.GetK10() && lem->deca.GetK23()) {
-				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220) {
+				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260.0 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220.0) {
 					lightlogic = true;
 				}
 			}
@@ -155,7 +162,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Either CES AC voltage (26V or 28V) out of tolerance.
 			// This power is provided by the ATCA main power supply and spins the RGAs and operate the AEA reference.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
-			if (lem->SCS_ATCA_CB.Voltage() > 24 || lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER)
+			if (lem->SCS_ATCA_CB.Voltage() > 24.0 || lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER)
 				SetLight(0, 1, 0);
 			else
 				SetLight(0, 1, 1);
@@ -164,7 +171,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Any CES DC voltage out of tolerance.
 			// All of these are provided by the ATCA main power supply.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
-			if (lem->SCS_ATCA_CB.Voltage() > 24 || lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER)
+			if (lem->SCS_ATCA_CB.Voltage() > 24.0 || lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER)
 				SetLight(1, 1, 0);
 			else
 				SetLight(1, 1, 1);
@@ -204,11 +211,18 @@ void LEM_CWEA::TimeStep(double simdt) {
 			SetLight(0, 2, 0);
 
 			// 6DS12 RCS A REGULATOR FAILURE
+			// RCS helium line pressure above 218.8 pisa or below 164.4 psia. Disabled when main shutoff solenoid valves close.
+			if (lem->scera1.GetVoltage(12, 1) < 2.5 && (lem->scera1.GetVoltage(6, 3) > (218.8/70.0) || lem->scera1.GetVoltage(6, 3) < (164.4/70.0)))
+				SetLight(1, 2, 1);
+			else
+				SetLight(1, 2, 0);
+
 			// 6DS13 RCS B REGULATOR FAILURE
-			// RCS helium line pressure above 205 pisa or below 165 psia. Disabled when main shutoff solenoid valves close.
-			// FIXME: Implement this.
-			SetLight(1, 2, 1);
-			SetLight(2, 2, 1);
+			// RCS helium line pressure above 218.8 pisa or below 164.4 psia. Disabled when main shutoff solenoid valves close.
+			if (lem->scera1.GetVoltage(12, 2) < 2.5 && (lem->scera1.GetVoltage(6, 4) > (218.8 / 70.0) || lem->scera1.GetVoltage(6, 4) < (164.4 / 70.0)))
+				SetLight(2, 2, 1);
+			else
+				SetLight(2, 2, 0);
 
 			// 6DS14 DC BUS VOLTAGE FAILURE
 			// On when CDR or SE DC bus below 26.5 V.
@@ -238,7 +252,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 
 			// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 			// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
-			if (lem->APSPropellant.GetHeliumRegulator1OutletPressurePSI() > 220.0)
+			if (lem->scera1.GetVoltage(8, 3) > (219.5/60.0))
 				SetLight(0, 4, 1);
 			else
 				SetLight(0, 4, 0);
@@ -284,12 +298,14 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 			// On when RR indicates Data-Not-Good.
 			// Disabled when RR mode switch is not set to AUTO TRACK.
-			if (lem->RendezvousRadarRotary.GetState() == 0 && lem->RR.IsRadarDataGood() == 0)
+			// AOH states light comes on if RR loses track, does not specify if it is on during initial lock on, need to investigate.
+			if (!lem->RR.IsDCPowered() || lem->RendezvousRadarRotary.GetState() == 0 && lem->RR.IsRadarDataGood() == 0)
 				SetLight(2, 5, 0);
 			else
 				SetLight(2, 5, 1);
 
-			// 6DS29 LANDING RADAR was not present on LM-7 thru LM-9!
+			// 6DS29 LANDING RADAR 
+			// Was not present on LM-7 thru LM-9!
 			SetLight(3, 5, 2);
 
 			// 6DS30 PRE-AMPLIFIER POWER FAILURE CAUTION
@@ -321,7 +337,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS32 RCS FAILURE CAUTION
 			// On when helium pressure in either RCS system below 1700 psia.
 			// Disabled when RCS TEMP/PRESS MONITOR switch in HELIUM position.
-			if (lem->TempPressMonRotary.GetState() != 0)
+			if (lem->TempPressMonRotary.GetState() != 0 && (lem->scera1.GetVoltage(6, 1) < (1696.1/700.0) || lem->scera1.GetVoltage(6, 2) < (1696.1 / 700.0)))
 				SetLight(1, 6, 1);
 			else
 				SetLight(1, 6, 0);
@@ -445,7 +461,6 @@ void LEM_CWEA::TimeStep(double simdt) {
 	switch (lem->LampToneTestRotary.GetState()) {
 	case 0: // OFF
 	case 7: // OFF
-		//Need to check if the OFF position resets the MA
 		break;
 	case 1: // ALARM/TONE
 		SetMasterAlarm(true);
@@ -487,7 +502,7 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 	if (IsCWEAPowered()) {
 		cwea_pwr->DrawPower(11.48);
 	}
-	else if (IsMAPowered() && MasterAlarm == true)
+	else if (MasterAlarm == true)
 		ma_pwr->DrawPower(7.2);
 
 }

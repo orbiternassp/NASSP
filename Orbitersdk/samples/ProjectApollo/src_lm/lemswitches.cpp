@@ -1751,11 +1751,11 @@ double LEMDigitalHeliumPressureMeter::QueryValue()
 	}
 	else if (source->GetState() == 5)
 	{
-		return lem->GetAPSPropellant()->GetAscentHelium1PressPSI();
+		return lem->scera1.GetVoltage(8, 4) * 800.0;
 	}
 	else if (source->GetState() == 6)
 	{
-		return lem->GetAPSPropellant()->GetAscentHelium1PressPSI();
+		return lem->scera1.GetVoltage(19, 1) * 800.0;
 	}
 
 	return 0;
