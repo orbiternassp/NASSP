@@ -404,7 +404,7 @@ void LEM::InitSwitches() {
 	EPSMonitorSelectRotary.SetSource(7, &CDRDCBusVoltCB);
 	EPSMonitorSelectRotary.SetSource(8, &LMPDCBusVoltCB);
 	EPSMonitorSelectRotary.SetSource(9, &ACVoltsAttenuator);
-	
+
 	EPSDCVoltMeter.Register(PSH,"EPSDCVoltMeter", 19, 42, 3);
 	EPSDCAmMeter.Register(PSH,"EPSDCAmMeter", 0, 120, 3);
 	DSCBattery1TB.Register(PSH, "DSCBattery1TB", 2);
@@ -2369,12 +2369,10 @@ void LEM::SetSwitches(int panel) {
 	LMPBatteryFeedTieCB2.Init(1211, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &BTB_LMP_C, 100.0);
 
 	EPSP14VoltMeterSwitchRow.Init(AID_LM_EPS_DC_VOLTMETER, MainPanel);
-	EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, &EPSMonitorSelectRotary);
-	EPSDCVoltMeter.SetSurface(srf[SRF_LMSIGNALSTRENGTH], 99, 98); // Should be SRF_DCVOLTS but that is invalid for some reason?
+	EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, this);
 
 	EPSP14AmMeterSwitchRow.Init(AID_LM_EPS_DC_AMMETER, MainPanel);
-	EPSDCAmMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14AmMeterSwitchRow, &EPSMonitorSelectRotary);
-	EPSDCAmMeter.SetSurface(srf[SRF_LMSIGNALSTRENGTH], 99, 98); // Should be SRF_DCAMPS but that is invalid for some reason?
+	EPSDCAmMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14AmMeterSwitchRow, this);
 
 	EPSLeftControlArea.Init(AID_LM_EPS_LEFT_CONTROLS, MainPanel);
 	EPSInverterSwitch.Init(142, 135, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], EPSLeftControlArea, this, &INV_1, &INV_2);
