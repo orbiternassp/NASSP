@@ -85,11 +85,8 @@ bool LEM_CWEA::IsLTGPowered() {
 }
 
 void LEM_CWEA::SetMasterAlarm(bool alarm) {
-	if (IsMAPowered()) {
-		MasterAlarm = alarm;
-	}
-	else
-		MasterAlarm = false;
+	if (IsMAPowered())
+	MasterAlarm = alarm;
 }
 
 void LEM_CWEA::TimeStep(double simdt) {
@@ -106,8 +103,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			MasterAlarmSound.play(LOOP, 255);
 		}
 	}
-	else {
+	else if (!IsMAPowered() ){
 		MasterAlarmSound.stop();
+		MasterAlarm = false;
 	}
 
 	if (lem == NULL) { return; }
