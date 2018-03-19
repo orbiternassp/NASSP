@@ -3184,7 +3184,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 	case AID_LEM_MA_LEFT:
 	case AID_LEM_MA_RIGHT:
-		ButtonClick();
 		return CWEA.CheckMasterAlarmMouseClick(event);
 
 		// panel 1 events:
