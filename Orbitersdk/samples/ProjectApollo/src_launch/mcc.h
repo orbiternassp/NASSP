@@ -135,6 +135,7 @@
 #define UTP_CMCUPLINKONLY		2
 #define UTP_LGCUPLINKDIRECT		3
 #define UTP_LGCUPLINKONLY		4
+#define UTP_PADWITHLGCUPLINK	5
 #define UTP_NONE				99
 
 // PAD Types
@@ -152,6 +153,7 @@
 #define PT_AP10MAPUPDATE	12
 #define PT_AP11LMARKTRKPAD	13
 #define PT_AP10DAPDATA		14
+#define PT_AP11LMMNV		15
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -486,6 +488,14 @@
 #define MST_F_LUNAR_ORBIT_DOI_DAY_10	209
 // Ends at AGS K Factor update
 #define MST_F_LUNAR_ORBIT_DOI_DAY_11	210
+// Ends at DOI update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_12	211
+// Ends at PDI Abort update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_13	212
+// Ends at Phasing update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_14	213
+// Ends at CSM state vector update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_15	214
 
 // Ground Station Information Structure
 struct GroundStation {

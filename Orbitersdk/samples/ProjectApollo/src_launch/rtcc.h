@@ -778,7 +778,7 @@ public:
 private:
 	void OrbitAdjustCalc(SV sv_tig, double r_apo, double r_peri, double inc, VECTOR3 &DV);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	MATRIX3 GetREFSMMATfromAGC(double AGCEpoch);
+	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
 	double GetClockTimeFromAGC(agc_t *agc);
 	double GetTEPHEMFromAGC(agc_t *agc);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
@@ -787,7 +787,7 @@ private:
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive, bool csmlmdocked = false);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
-	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
+	char* AGCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
 	char* AGCStateVectorUpdate(SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
 	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, bool AGCCoordSystem = false);
 	char* AGCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
