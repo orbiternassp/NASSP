@@ -85,6 +85,7 @@ bool LEM_CWEA::IsLTGPowered() {
 }
 
 void LEM_CWEA::SetMasterAlarm(bool alarm) {
+	if (IsMAPowered())
 	MasterAlarm = alarm;
 }
 
@@ -567,16 +568,11 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
 
 void LEM_CWEA::RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border) {
 
-			//
-			// Draw the master alarm lit bitmap.
-			//
-		if (MasterAlarm)
+	//
+	// Draw the master alarm lit bitmap.
+	//
+	if (MasterAlarm)
 		oapiBlt(surf, alarmLit, 0, 0, 0, 0, 47, 43);
-
-			/*if (border)
-					oapiBlt(surf, border, 0, 0, 0, 0, 45, 36, SURF_PREDEF_CK);
-			*/
-		
 }
 
 void LEM_CWEA::PushMasterAlarm()
