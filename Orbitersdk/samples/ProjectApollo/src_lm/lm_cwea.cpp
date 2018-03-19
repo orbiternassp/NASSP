@@ -267,6 +267,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 				if (lem->scera1.GetVoltage(16, 1) >= ((402.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 1) <= ((398.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(17, 1) <= (112.0 / 25.0)) {
 					LightStatus[0][5] = 1;
 				}
+			}
 
 				// 6DS27 BATTERY FAILURE CAUTION
 				// On when over-current, reverse-current, or over-temperature condition occurs in any ascent or descent battery.
@@ -414,7 +415,6 @@ void LEM_CWEA::TimeStep(double simdt) {
 				LightStatus[0][6] = 0; LightStatus[1][6] = 0; LightStatus[2][6] = 0; LightStatus[3][6] = 1; LightStatus[4][6] = 0;
 				LightStatus[0][7] = 0; LightStatus[1][7] = 0; LightStatus[2][7] = 0; LightStatus[3][7] = 0; LightStatus[4][7] = 0;
 			}
-		}
 	}
 
 	// CWEA TEST SWITCH FUNCTIONALITY
@@ -459,6 +459,12 @@ void LEM_CWEA::TimeStep(double simdt) {
 }
 
 void LEM_CWEA::SystemTimestep(double simdt) {
+
+	if (IsCWEAPowered()) {
+		cwea_pwr->DrawPower(11.48);
+	}
+	else if (IsMAPowered() && MasterAlarm == true)
+		ma_pwr->DrawPower(7.2);
 
 }
 
