@@ -180,10 +180,18 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// On when any AGS power supply signals a failure, when AGS raises failure signal, or ASA heater fails.
 			// Disabled when AGS status switch is OFF.
 			// FIXME: Finish this!
-			if (lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_DOWN)
-				SetLight(2, 1, 0);
+			lightlogic = false;
+			if (WaterWarningDisabled == 0) {
+				if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN && !lem->SCS_ASA_CB.IsPowered()) { lightlogic = true; }
+			}
+			if (lightlogic)
+				SetLight(1, 7, 1);
 			else
-				SetLight(2, 1, 1);
+				SetLight(1, 7, 0);
+
+			if (lem->QtyMonRotary.GetState() == 0) {
+				WaterWarningDisabled = 1;
+			}
 
 			// 6DS9 LGC FAILURE
 			// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
@@ -298,7 +306,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 			// On when RR indicates Data-Not-Good.
 			// Disabled when RR mode switch is not set to AUTO TRACK.
-			// AOH states light comes on if RR loses track, does not specify if it is on during initial lock on, need to investigate.
+			// AOH states light comes on if RR loses track, need to investigate and implement accordingly.
 			if (!lem->RR.IsDCPowered() || lem->RendezvousRadarRotary.GetState() == 0 && lem->RR.IsRadarDataGood() == 0)
 				SetLight(2, 5, 0);
 			else
@@ -399,7 +407,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			else
 				SetLight(1, 7, 0);
 
-			if (lem->QtyMonRotary.GetState() == 0 && LightStatus[1][7] != 0) {
+			if (lem->QtyMonRotary.GetState() == 0) {
 				WaterWarningDisabled = 1;
 			}
 
