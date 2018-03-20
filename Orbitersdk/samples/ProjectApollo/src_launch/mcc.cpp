@@ -2945,6 +2945,25 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
 		}
+		else if (padNumber == PT_AP11LMMNV)
+		{
+			AP11LMMNV * form = (AP11LMMNV *)padForm;
+
+			SAVE_V3("MCC_AP11LMMNV_Att", form->Att);
+			SAVE_INT("MCC_AP11LMMNV_BSSStar", form->BSSStar);
+			SAVE_DOUBLE("MCC_AP11LMMNV_burntime", form->burntime);
+			SAVE_V3("MCC_AP11LMMNV_dV", form->dV);
+			SAVE_DOUBLE("MCC_AP11LMMNV_dVR", form->dVR);
+			SAVE_V3("MCC_AP11LMMNV_dV_AGS", form->dV_AGS);
+			SAVE_DOUBLE("MCC_AP11LMMNV_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP11LMMNV_HA", form->HA);
+			SAVE_DOUBLE("MCC_AP11LMMNV_HP", form->HP);
+			SAVE_DOUBLE("MCC_AP11LMMNV_LMWeight", form->LMWeight);
+			SAVE_STRING("MCC_AP11LMMNV_purpose", form->purpose);
+			SAVE_STRING("MCC_AP11LMMNV_remarks", form->remarks);
+			SAVE_DOUBLE("MCC_AP11LMMNV_SPA", form->SPA);
+			SAVE_DOUBLE("MCC_AP11LMMNV_SXP", form->SXP);
+		}
 		else if (padNumber == PT_GENERIC)
 		{
 			GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3253,6 +3272,25 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+		}
+		else if (padNumber == PT_AP11LMMNV)
+		{
+			AP11LMMNV * form = (AP11LMMNV *)padForm;
+
+			LOAD_V3("MCC_AP11LMMNV_Att", form->Att);
+			LOAD_INT("MCC_AP11LMMNV_BSSStar", form->BSSStar);
+			LOAD_DOUBLE("MCC_AP11LMMNV_burntime", form->burntime);
+			LOAD_V3("MCC_AP11LMMNV_dV", form->dV);
+			LOAD_DOUBLE("MCC_AP11LMMNV_dVR", form->dVR);
+			LOAD_V3("MCC_AP11LMMNV_dV_AGS", form->dV_AGS);
+			LOAD_DOUBLE("MCC_AP11LMMNV_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP11LMMNV_HA", form->HA);
+			LOAD_DOUBLE("MCC_AP11LMMNV_HP", form->HP);
+			LOAD_DOUBLE("MCC_AP11LMMNV_LMWeight", form->LMWeight);
+			LOAD_STRING("MCC_AP11LMMNV_purpose", form->purpose, 64);
+			LOAD_STRING("MCC_AP11LMMNV_remarks", form->remarks, 128);
+			LOAD_DOUBLE("MCC_AP11LMMNV_SPA", form->SPA);
+			LOAD_DOUBLE("MCC_AP11LMMNV_SXP", form->SXP);
 		}
 		else if (padNumber == PT_GENERIC)
 		{

@@ -71,7 +71,9 @@ RTCC::RTCC()
 	calcParams.lng_node = 0.0;
 	calcParams.LOI = 0.0;
 	calcParams.DOI = 0.0;
+	calcParams.PDI = 0.0;
 	calcParams.TLAND = 0.0;
+	calcParams.TPI = 0.0;
 	calcParams.src = NULL;
 	calcParams.tgt = NULL;
 	REFSMMATType = 0;
@@ -4367,12 +4369,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManPADOpt opt;
 
 		VECTOR3 dV_LVLH_imp;
-		double GETbase, t_PDI, t_land, CR, t_DOI_imp;
-		SV sv;
+		double GETbase, t_PDI, t_land, CR, t_DOI_imp, t_TPI_guess;
+		SV sv_CSM, sv;
 		DOIMan doiopt;
+		char GETbuffer[64];
 
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 
+		sv_CSM = StateVectorCalc(calcParams.src);
 		sv = StateVectorCalc(calcParams.tgt);
 		GETbase = getGETBase();
 
@@ -4403,6 +4407,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.vessel = calcParams.tgt;
 
 		AP11LMManeuverPAD(&opt, *form);
+
+		t_TPI_guess = OrbMech::HHMMSSToSS(105, 9, 0);
+		calcParams.TPI = FindOrbitalMidnight(sv_CSM, GETbase, t_TPI_guess);
+		OrbMech::format_time(GETbuffer, calcParams.TPI);
+		sprintf(form->remarks, "TPI time: %s, N equal to 1", GETbuffer);
 
 		sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv, false, AGCEpoch, GETbase), AGCExternalDeltaVUpdate(TimeofIgnition, DeltaV_LVLH, LGCDeltaVAddr));
 		if (upString != NULL) {
@@ -8664,7 +8673,9 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLI", calcParams.TLI);
 	SAVE_DOUBLE("RTCC_LOI", calcParams.LOI);
 	SAVE_DOUBLE("RTCC_DOI", calcParams.DOI);
+	SAVE_DOUBLE("RTCC_PDI", calcParams.PDI);
 	SAVE_DOUBLE("RTCC_TLAND", calcParams.TLAND);
+	SAVE_DOUBLE("RTCC_TPI", calcParams.TPI);
 	SAVE_DOUBLE("RTCC_alt_node", calcParams.alt_node);
 	SAVE_DOUBLE("RTCC_GET_node", calcParams.GET_node);
 	SAVE_DOUBLE("RTCC_lat_node", calcParams.lat_node);
@@ -8695,7 +8706,9 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLI", calcParams.TLI);
 		LOAD_DOUBLE("RTCC_LOI", calcParams.LOI);
 		LOAD_DOUBLE("RTCC_DOI", calcParams.DOI);
+		LOAD_DOUBLE("RTCC_PDI", calcParams.PDI);
 		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);
+		LOAD_DOUBLE("RTCC_TPI", calcParams.TPI);
 		LOAD_DOUBLE("RTCC_alt_node", calcParams.alt_node);
 		LOAD_DOUBLE("RTCC_GET_node", calcParams.GET_node);
 		LOAD_DOUBLE("RTCC_lat_node", calcParams.lat_node);
@@ -9549,6 +9562,22 @@ SV RTCC::FindPericynthion(SV sv0)
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	double dt = OrbMech::timetoperi_integ(sv0.R, sv0.V, sv0.MJD, sv0.gravref, hMoon);
 	return coast(sv0, dt);
+}
+
+double RTCC::FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess)
+{
+	SV sv1;
+	double GET_SV, dt, ttoMidnight;
+
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+
+	GET_SV = OrbMech::GETfromMJD(sv.MJD, GETbase);
+	dt = t_TPI_guess - GET_SV;
+
+	sv1 = coast(sv, dt);
+
+	ttoMidnight = OrbMech::sunrise(sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, 1, 1, false);
+	return t_TPI_guess + ttoMidnight;
 }
 
 bool RTCC::NC1NC2Program(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh_F, double n_H1, int s, double dh, double n_C, VECTOR3 &dV_NC1_LVLH, double &dh_NC2, double &dv_NC2, double &t_NC2, VECTOR3 &dV_NC2_LVLH, double &dv_NCC, double &t_NCC, double &t_NSR, VECTOR3 &dV_NSR, bool NPC)

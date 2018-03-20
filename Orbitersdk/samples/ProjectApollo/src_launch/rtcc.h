@@ -645,7 +645,9 @@ struct calculationParameters {
 	VECTOR3 V_TLI;	//TLI cutoff velocity vector
 	double LOI;		// Time of LOI/Pericynthion
 	double DOI;		// Time of DOI
+	double PDI;		// Time of PDI
 	double TLAND;	// Time of landing
+	double TPI;		// Time of TPI
 	double TEI;		// Time of TEI
 	double EI;		// Time of Entry Interface
 	double lat_node;
@@ -805,6 +807,7 @@ private:
 	double PericynthionTime(VESSEL* vessel);
 	SV FindPericynthion(SV sv0);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
+	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
 
 	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
