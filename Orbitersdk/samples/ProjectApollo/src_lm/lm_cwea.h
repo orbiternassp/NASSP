@@ -51,8 +51,15 @@ protected:
 	void SetColumnLightStates(int col, int state);
 
 	int LightStatus[5][8];		// 0 = not lit, 1 = lit, 2 = light doesn't exist
-	bool WaterWarningDisabled;   // FF for this
-	bool AutoTrackEnabled;   // FF for this
+	bool DesRegWarnFF;   // Flip Flop
+	bool AGSWarnFF;   // Flip Flop
+	bool CESDCWarnFF;   // Flip Flop
+	bool CESACWarnFF;   // Flip Flop
+	bool RRHeaterCautFF;   // Flip Flop
+	bool SBDHeaterCautFF;   // Flip Flop
+	bool OxygenCautFF;   // All 3 Flip Flops in O2 Caution 
+	bool WaterCautFF;   // All 3 Flip Flops in H2O Caution 
+	bool RRCautFF;   // Flip Flop
 	bool MasterAlarm;
 
 	e_object *cwea_pwr;
