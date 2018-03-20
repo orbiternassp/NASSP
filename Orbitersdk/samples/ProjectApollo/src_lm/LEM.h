@@ -244,6 +244,7 @@ public:
 	bool IsDCPowered(); 
 	bool IsACPowered();
 	bool IsRadarDataGood() { return radarDataGood;};
+	bool GetNoTrackSignal() { return NoTrackSignal; }
 
 private:
 
@@ -260,6 +261,7 @@ private:
 	double tsangle[2];
 	int    isTracking;
 	bool   radarDataGood;
+	bool NoTrackSignal;
 	double trunnionAngle;
 	double shaftAngle;
 	double trunnionVel;

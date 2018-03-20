@@ -2214,7 +2214,7 @@ void LEM_ECAch::UpdateFlow(double dt){
 			break;
 		case 2: // LV
 			if(dc_source != NULL){
-				Volts =   (dc_source->Voltage()*0.93);
+				Volts =   (dc_source->Voltage()*0.85);
 				Amperes = dc_source->Current();
 			}
 			break;
@@ -3058,6 +3058,8 @@ LEM_RR::LEM_RR()
 	lem = NULL;	
 	RREHeat = 0;
 	RRESECHeat = 0;
+	NoTrackSignal = false;
+	radarDataGood = false;
 }
 
 void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat,  h_HeatLoad *rreh, h_HeatLoad *secrreh) {
@@ -3176,11 +3178,22 @@ void LEM_RR::TimeStep(double simdt){
 	}
 	*/
 
+	//NO TRACK RELAY
+	if (IsDCPowered() && !radarDataGood)
+	{
+		NoTrackSignal = true;
+	}
+	else
+	{
+		NoTrackSignal = false;
+	}
+
 	if (!IsPowered() ) { 
 		val33[RRPowerOnAuto] = 0;
 		val33[RRDataGood] = 0;
 		lem->agc.SetInputChannel(033, val33);
 		SignalStrength = 0.0;
+		radarDataGood = false;
 		return;
 	}
 

@@ -3332,7 +3332,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_RR_NOTRACK:
-		if(CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (RR.IsDCPowered() && !RR.IsRadarDataGood() || LampToneTestRotary.GetState() == 6)){ // The AC side is only needed for the transmitter
+		if(CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6)){ // The AC side is only needed for the transmitter
 			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,34,34,34, SURF_PREDEF_CK); // Light On
 		}else{
 			oapiBlt(surf,srf[SRF_RR_NOTRACK],0,0,0,0,34,34, SURF_PREDEF_CK); // Light Off
