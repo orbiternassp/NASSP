@@ -823,6 +823,10 @@
 #define AID_GLYCOL_LIGHT				1097
 #define AID_DC_BUS_LIGHT				1098
 #define AID_BAT_FAULT_LIGHT				1099
+#define IDB_LEM_MASTERALARM             2000
+#define AID_LEM_MA_LEFT                 2001
+#define AID_LEM_MA_RIGHT                2002
+#define IDB_BORDER_47x43                2003
 
 #define IDB_LEM_FDAI_ROLL               10006
 

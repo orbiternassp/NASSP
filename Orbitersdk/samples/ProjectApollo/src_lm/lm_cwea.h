@@ -24,18 +24,43 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-// Caution and Warning Electronics Assembly
-class LEM_CWEA {
+class LEM;
+
+class LEM_CWEA : public e_object {
 public:
-	LEM_CWEA();
-	void Init(LEM *s);
+	LEM_CWEA(SoundLib &s, Sound &buttonsound);
+	void Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
+	bool IsCWEAPowered();
+	bool IsMAPowered();
+	bool IsLTGPowered();
 	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
+	void SetMasterAlarm(bool alarm);
+	void PushMasterAlarm();
+
+	bool CheckMasterAlarmMouseClick(int event);
+	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border);
 	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf);
 	void RedrawRight(SURFHANDLE sf, SURFHANDLE ssf);
 
-	int LightStatus[5][8];		// 1 = lit, 2 = not
+protected:
+	void SetLight(int row, int column, int state, bool TriggerMA = true);
+	void SetLightStates(int state);
+	void SetColumnLightStates(int col, int state);
+
+	int LightStatus[5][8];		// 0 = not lit, 1 = lit, 2 = light doesn't exist
 	int WaterWarningDisabled;   // FF for this
+	bool MasterAlarm;
+
+	e_object *cwea_pwr;
+	e_object *ma_pwr;
+	e_object *ltg_pwr;
+
+	SoundLib &soundlib;
+	Sound &ButtonSound;
+	Sound MasterAlarmSound;
+
 	LEM *lem;					// Pointer at LEM
 };

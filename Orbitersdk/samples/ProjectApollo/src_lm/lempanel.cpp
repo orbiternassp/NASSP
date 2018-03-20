@@ -1329,7 +1329,8 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_F_HATCH_HNDL]   = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_HANDLE));
 		srf[SRF_LEM_F_HATCH_REL_VLV] = oapiCreateSurface(LOADBMP(IDB_LEM_FWD_REL_VLV));
 		srf[SRF_LEM_INTLK_OVRD]     = oapiCreateSurface(LOADBMP(IDB_LEM_INTLK_OVRD));
-		srf[SRF_RED_INDICATOR] = oapiCreateSurface(LOADBMP(IDB_RED_INDICATOR));
+		srf[SRF_RED_INDICATOR]		= oapiCreateSurface(LOADBMP(IDB_RED_INDICATOR));
+		srf[SRF_LEM_MASTERALARM]	 = oapiCreateSurface(LOADBMP(IDB_LEM_MASTERALARM));
 		
 		//
 		// Flashing borders.
@@ -1344,6 +1345,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_34x33]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x33));
 		srf[SRF_BORDER_29x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_29x29));
 		srf[SRF_BORDER_34x31]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x31));
+		srf[SRF_BORDER_47x43]		= oapiCreateSurface (LOADBMP(IDB_BORDER_47x43));
 		srf[SRF_BORDER_50x158]		= oapiCreateSurface (LOADBMP (IDB_BORDER_50x158));
 		srf[SRF_BORDER_38x52]		= oapiCreateSurface (LOADBMP (IDB_BORDER_38x52));
 		srf[SRF_BORDER_34x34]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x34));
@@ -1436,6 +1438,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey(srf[SRF_LEM_F_HATCH_HNDL],      g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_F_HATCH_REL_VLV],   g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_INTLK_OVRD],        g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_LEM_MASTERALARM],		g_Param.col[4]);
         
 		//
 		// Borders need to set the center color to transparent so only the outline
@@ -1451,6 +1454,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x33], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_29x29], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x31], g_Param.col[4]);
+		oapiSetSurfaceColourKey(srf[SRF_BORDER_47x43],  g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_50x158], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_38x52], g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_BORDER_34x34], g_Param.col[4]);
@@ -1630,6 +1634,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CONTACTLIGHT2,					_R(1962, 1221, 2010, 1269), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTXPOINTERSWITCH,				_R( 938,  515,  972,  544), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_GUIDCONTSWITCHROW,				_R(1269,  627, 1304,  823), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_MA_LEFT,						_R( 651, 620, 698,  663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTMONITORSWITCHES,				_R( 659,  712,  693,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_FDAILOWERSWITCHROW,				_R( 746,  920,  922,  959), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MPS_REG_CONTROLS_LEFT,			_R( 962,  918,  998, 1125), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -1637,6 +1642,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_ENGINETHRUSTCONTSWITCHES,		_R( 819, 1006,  928, 1117), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PROPELLANTSWITCHES,				_R(1092,  991, 1154, 1112), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_HELIUMMONROTARY,					_R(1192,  992, 1276, 1076), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_MA_RIGHT,						_R(2005, 620, 2052, 663), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_RIGHTMONITORSWITCHES,			_R(2008,  712, 2042,  824), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_TEMPPRESSMONROTARY,				_R(1396, 1002, 1480, 1086), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_ACAPROPSWITCH,					_R(1620, 1012, 1654, 1051), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1707,6 +1713,7 @@ bool LEM::clbkLoadPanel (int id) {
 		hBmpFDAIRollIndicator = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_FDAI_ROLLINDICATOR));
 
 		oapiRegisterPanelArea(AID_XPOINTERLMP,						_R( 237,  246,  374,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_MA_RIGHT, _R(328, 440, 375, 483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RIGHTMONITORSWITCHES,				_R (333,  532,  368,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_GLYCOLSUITFANROTARIES,			_R(  31,  746,  116,  951), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_QTYMONROTARY,						_R( 215,  806,  300,  891), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1733,6 +1740,7 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_EVENT_TIMER,						_R(1671,  106, 1752,  128), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_CONTACTLIGHT1,					_R(1704,  246, 1753,  295), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEFTXPOINTERSWITCH,				_R(1712,  335, 1747,  365), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_MA_LEFT, _R(1425, 440, 1472, 483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEFTMONITORSWITCHES,				_R(1433,  532, 1467,  645), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_XPOINTERCDR,						_R(1449,  246, 1586,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_FDAILOWERSWITCHROW,				_R(1520,  740, 1696,  780), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				  PANEL_MAP_BACKGROUND);
@@ -1779,6 +1787,7 @@ bool LEM::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea(AID_LEFTXPOINTERSWITCH,               _R(1540, 133, 1574, 162),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_GUIDCONTSWITCHROW,                _R(1846, 245, 1881, 441),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LEM_MA_LEFT, _R(1228, 238, 1275, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_LEFTMONITORSWITCHES,              _R(1236, 330, 1270, 442),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_FDAILOWERSWITCHROW,               _R(1323, 538, 1499, 577),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_MPS_REG_CONTROLS_LEFT,            _R(1539, 536, 1575, 743),   PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
@@ -3158,12 +3167,13 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		return true;
 
 	case AID_AOT_SHAFT_KNOB:
-		if (my >=90 && my <= 155 ){
-			optics.OpticsShaft++; 
-		} else if (my >= 0 && my <= 90){
+		if (my >= 90 && my <= 155) {
+			optics.OpticsShaft++;
+		}
+		else if (my >= 0 && my <= 90) {
 			optics.OpticsShaft--;
 		}
-		optics.OpticsShaft = (optics.OpticsShaft+6) % 6;
+		optics.OpticsShaft = (optics.OpticsShaft + 6) % 6;
 		ButtonClick();
 		//Load panel to trigger change of the default camera direction
 		if (PanelId == LMPANEL_AOTZOOM)
@@ -3172,7 +3182,11 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		}
 		return true;
 
-	// panel 1 events:
+	case AID_LEM_MA_LEFT:
+	case AID_LEM_MA_RIGHT:
+		return CWEA.CheckMasterAlarmMouseClick(event);
+
+		// panel 1 events:
 	}
 	return false;
 }
@@ -3225,7 +3239,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_LM_CWS_RIGHT:
 		CWEA.RedrawRight(surf,srf[SRF_CWSLIGHTS]);
 		return true;
-		
+
 	case AID_DSKY_LIGHTS:
 		if (ApolloNo >= 15 && ApolloNo != 1301)
 		{
@@ -3310,7 +3324,14 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_CONTACTLIGHT1:
 		if (SCS_ENG_CONT_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)){
 			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,0,0,0,48,48, SURF_PREDEF_CK);//
-		}return true;
+		}
+		return true;
+
+	case AID_CONTACTLIGHT2:
+		if (SCS_ATCA_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)) {
+			oapiBlt(surf, srf[SRF_CONTACTLIGHT], 0, 0, 0, 0, 48, 48, SURF_PREDEF_CK);//
+		}
+		return true;
 
 	case AID_RR_NOTRACK:
 		if(CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (RR.IsDCPowered() && !RR.IsRadarDataGood() || LampToneTestRotary.GetState() == 6)){ // The AC side is only needed for the transmitter
@@ -3321,8 +3342,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_CO2_LIGHT:
-		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6) || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6))) {
-			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered()) {
+			if (INST_CWEA_CB.IsPowered() && ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6))) {
+				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+			}
+			else if (CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
+				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+			}
 		}
 		else {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
@@ -3331,7 +3357,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_SUITFAN_LIGHT:
 		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6)) {
-			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
@@ -3339,8 +3365,10 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_H2OSEP_LIGHT:
-		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (scera1.GetVoltage(5, 3) < 1.1 || LampToneTestRotary.GetState() == 6)) {
-			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered()) {
+			if (INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < 1.1 || LampToneTestRotary.GetState() == 6)) {
+				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+			}
 		}
 		else {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
@@ -3373,11 +3401,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
 		}
 		return true;
-
-	case AID_CONTACTLIGHT2:
-		if (SCS_ATCA_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)){
-			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,0,0,0,48,48, SURF_PREDEF_CK);//
-		}return true;
 
 	case AID_SEQ_LIGHT1:
 		if (eds.RelayBoxA.GetStageRelayMonitor() && stage < 2 || LampToneTestRotary.GetState() == 6) {
@@ -3620,11 +3643,11 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_COAS:
-		if(COASswitch){
-			oapiBlt(surf,srf[0],0,0,146,0,301,298);
+		if (COASswitch) {
+			oapiBlt(surf, srf[0], 0, 0, 146, 0, 301, 298);
 		}
-		else{
-			oapiBlt(surf,srf[0],0,0,448,0,301,298);
+		else {
+			oapiBlt(surf, srf[0], 0, 0, 448, 0, 301, 298);
 		}
 		return true;
 
@@ -3635,9 +3658,15 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		RadarTape.RenderRate(surf, srf[SRF_RADAR_TAPE]);
 		return true;
 
+	case AID_LEM_MA_LEFT:
+	case AID_LEM_MA_RIGHT:
+		CWEA.RenderMasterAlarm(surf, srf[SRF_LEM_MASTERALARM], NULL);
+		return true;
+
 	}
 	return false;
 }
+
 
 void LEM::PanelRefreshForwardHatch() {
 
