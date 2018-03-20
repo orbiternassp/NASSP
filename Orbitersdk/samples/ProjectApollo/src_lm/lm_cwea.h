@@ -51,8 +51,8 @@ protected:
 	void SetColumnLightStates(int col, int state);
 
 	int LightStatus[5][8];		// 0 = not lit, 1 = lit, 2 = light doesn't exist
-	int WaterWarningDisabled;   // FF for this
-	int AutoTrackDisabled;   // FF for this
+	bool WaterWarningDisabled;   // FF for this
+	bool AutoTrackEnabled;   // FF for this
 	bool MasterAlarm;
 
 	e_object *cwea_pwr;

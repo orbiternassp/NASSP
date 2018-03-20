@@ -185,6 +185,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			lightlogic = false;
 			if (WaterWarningDisabled == 0) {
 				if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN && !lem->SCS_ASA_CB.IsPowered()) { lightlogic = true; }
+				if (lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER && (!lem->CDR_SCS_AEA_CB.IsPowered() || !lem->SCS_AEA_CB.IsPowered())) { lightlogic = true; }
 			}
 			if (lightlogic)
 				SetLight(1, 7, 1);
@@ -308,20 +309,13 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 			// On when RR indicates Data-Not-Good.
 			// Disabled when RR mode switch is not set to AUTO TRACK.
-			// AOH states light comes on if RR loses track, need to investigate and implement accordingly.
-			lightlogic = false;
-			if (AutoTrackDisabled == 0) {
-				if (!lem->RR.IsPowered() || lem->scera2.GetVoltage(2, 1) > 2.5) { lightlogic = true; }
-			}
+			if (lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { AutoTrackEnabled = 0; }
+			else if (lem->RendezvousRadarRotary.GetState() == 0) { AutoTrackEnabled = 0; }
 
-			if (lightlogic)
-				SetLight(3, 7, 1);
+			if (AutoTrackEnabled == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { SetLight(3, 7, 1); }
+
 			else
 				SetLight(3, 7, 0);
-
-			if (lem->RendezvousRadarRotary.GetState() != 0) {
-				AutoTrackDisabled = 1;
-			}
 
 			// 6DS29 LANDING RADAR 
 			// Was not present on LM-7 thru LM-9!
@@ -521,7 +515,7 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 	if (IsCWEAPowered()) {
 		cwea_pwr->DrawPower(11.48);
 	}
-	else if (MasterAlarm == true)
+	if (MasterAlarm == true)
 		ma_pwr->DrawPower(7.2);
 
 }
@@ -531,7 +525,8 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	oapiWriteLine(scn, start_str);
 
 	papiWriteScenario_bool(scn, "MASTERALARM", MasterAlarm);
-	oapiWriteScenario_int(scn, "WATERWARNINGDISABLED", WaterWarningDisabled);
+	papiWriteScenario_bool(scn, "WATERWARNINGDISABLED", WaterWarningDisabled);
+	papiWriteScenario_bool(scn, "AUTOTRACKENABLED", AutoTrackEnabled);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
@@ -551,7 +546,7 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		}
 
 		papiReadScenario_bool(line, "MASTERALARM", MasterAlarm);
-		papiReadScenario_int(line, "WATERWARNINGDISABLED", WaterWarningDisabled);
+		papiWriteScenario_bool(scn, "WATERWARNINGDISABLED", WaterWarningDisabled);
 		papiReadScenario_intarr(line, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);
