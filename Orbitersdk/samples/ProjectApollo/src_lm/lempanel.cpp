@@ -1405,6 +1405,8 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey	(srf[SRF_FDAINEEDLES],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LEM_COAS1],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LEM_COAS2],			g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_DCVOLTS],				g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_DCAMPS],				g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LMYAWDEGS],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LMPITCHDEGS],			g_Param.col[4]);
 		oapiSetSurfaceColourKey	(srf[SRF_LMSIGNALSTRENGTH],		g_Param.col[4]);
@@ -2374,10 +2376,10 @@ void LEM::SetSwitches(int panel) {
 	LMPBatteryFeedTieCB2.Init(1211, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel16CB4SwitchRow, &BTB_LMP_C, 100.0);
 
 	EPSP14VoltMeterSwitchRow.Init(AID_LM_EPS_DC_VOLTMETER, MainPanel);
-	EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, this);
+	EPSDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14VoltMeterSwitchRow, this, srf[SRF_DCVOLTS]);
 
 	EPSP14AmMeterSwitchRow.Init(AID_LM_EPS_DC_AMMETER, MainPanel);
-	EPSDCAmMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14AmMeterSwitchRow, this);
+	EPSDCAmMeter.Init(g_Param.pen[4], g_Param.pen[4], EPSP14AmMeterSwitchRow, this, srf[SRF_DCAMPS]);
 
 	EPSLeftControlArea.Init(AID_LM_EPS_LEFT_CONTROLS, MainPanel);
 	EPSInverterSwitch.Init(142, 135, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], EPSLeftControlArea, this, &INV_1, &INV_2);

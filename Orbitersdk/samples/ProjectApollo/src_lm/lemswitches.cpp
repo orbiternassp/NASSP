@@ -1209,6 +1209,13 @@ void LEMRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s)
 }
 
 // DC Voltmeter
+
+void LEMDCVoltMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
 double LEMDCVoltMeter::QueryValue()
 
 {
@@ -1260,6 +1267,13 @@ void LEMDCVoltMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
 }
 
 // DC Ammeter
+
+void LEMDCAmMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
+{
+	LEMRoundMeter::Init(p0, p1, row, s);
+	FrameSurface = frameSurface;
+}
+
 double LEMDCAmMeter::QueryValue(){	
 	if (!lem) { return 0; }
 	switch (lem->EPSMonitorSelectRotary) {

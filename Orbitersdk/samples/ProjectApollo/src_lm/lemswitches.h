@@ -112,6 +112,7 @@ protected:
 
 class LEMDCVoltMeter: public LEMRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -123,6 +124,7 @@ protected:
 
 class LEMDCAmMeter: public LEMRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
