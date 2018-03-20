@@ -2214,7 +2214,7 @@ void LEM_ECAch::UpdateFlow(double dt){
 			break;
 		case 2: // LV
 			if(dc_source != NULL){
-				Volts =   (dc_source->Voltage()*0.93);
+				Volts =   (dc_source->Voltage()*0.85);
 				Amperes = dc_source->Current();
 			}
 			break;
