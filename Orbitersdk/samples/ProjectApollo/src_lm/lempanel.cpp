@@ -1293,8 +1293,6 @@ void LEM::InitPanel (int panel)
 		srf[SRF_FDAIOFFFLAG]		= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
 		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_LEM_FDAI_NEEDLES));
 		srf[SRF_CIRCUITBRAKER]		= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
-		srf[SRF_BORDER_34x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
-		srf[SRF_BORDER_34x61]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
 		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DCVOLTS]			= oapiCreateSurface (LOADBMP (IDB_LMDCVOLTS));
@@ -1331,6 +1329,11 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_INTLK_OVRD]     = oapiCreateSurface(LOADBMP(IDB_LEM_INTLK_OVRD));
 		srf[SRF_RED_INDICATOR]		= oapiCreateSurface(LOADBMP(IDB_RED_INDICATOR));
 		srf[SRF_LEM_MASTERALARM]	 = oapiCreateSurface(LOADBMP(IDB_LEM_MASTERALARM));
+		srf[SRF_DEDA_KEY]			= oapiCreateSurface(LOADBMP(IDB_DEDA_KEY));
+		srf[SRF_DEDA_LIGHTS]		= oapiCreateSurface(LOADBMP(IDB_DEDA_LIGHTS));
+		srf[SRF_ORDEAL_ROTARY]		= oapiCreateSurface(LOADBMP(IDB_ORDEAL_ROTARY));
+		srf[SRF_ORDEAL_PANEL]		= oapiCreateSurface(LOADBMP(IDB_ORDEAL_PANEL));
+		srf[SRF_TW_NEEDLE]			= oapiCreateSurface(LOADBMP(IDB_TW_NEEDLE));
 		
 		//
 		// Flashing borders.
@@ -1375,13 +1378,6 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_1001x240]    = oapiCreateSurface (LOADBMP (IDB_BORDER_1001x240));
 		srf[SRF_BORDER_360x316]     = oapiCreateSurface (LOADBMP (IDB_BORDER_360x316));
 		srf[SRF_BORDER_178x187]     = oapiCreateSurface (LOADBMP (IDB_BORDER_178x187));
-		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
-		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
-		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
-		srf[SRF_DEDA_LIGHTS]		= oapiCreateSurface (LOADBMP (IDB_DEDA_LIGHTS));
-		srf[SRF_ORDEAL_ROTARY]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
-		srf[SRF_ORDEAL_PANEL]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_PANEL));
-		srf[SRF_TW_NEEDLE]			= oapiCreateSurface (LOADBMP (IDB_TW_NEEDLE));
 
 		//
 		// Set color keys where appropriate.

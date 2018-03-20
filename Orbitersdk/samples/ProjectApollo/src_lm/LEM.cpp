@@ -238,8 +238,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 }
 
 LEM::~LEM()
-
 {
+	ReleaseSurfaces();
+
 #ifdef DIRECTSOUNDENABLED
     sevent.Stop();
 	sevent.Done();
