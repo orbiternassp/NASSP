@@ -384,7 +384,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->TempMonitorRotary.GetState() == 0) { RRHeaterCautFF = 1; }
 			if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 1; }
 
-			if (RRHeaterCautFF == 0 && lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) {lightlogic = true; }			
+			if (RRHeaterCautFF == 0 && lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { lightlogic = true; }			
 			if (SBDHeaterCautFF == 0 && (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0))) { lightlogic = true; }
 
 			if (lightlogic)
