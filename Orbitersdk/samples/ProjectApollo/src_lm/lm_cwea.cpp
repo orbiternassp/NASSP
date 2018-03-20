@@ -309,7 +309,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// On when RR indicates Data-Not-Good.
 			// Disabled when RR mode switch is not set to AUTO TRACK.
 			// AOH states light comes on if RR loses track, need to investigate and implement accordingly.
-			if (!lem->RR.IsDCPowered() || lem->RendezvousRadarRotary.GetState() != 0 && lem->RR.IsRadarDataGood() == 0)
+			if (!lem->RR.IsDCPowered() || lem->RendezvousRadarRotary.GetState() == 0 && lem->RR.IsRadarDataGood() == 0)
 				SetLight(2, 5, 0);
 			else
 				SetLight(2, 5, 1);
