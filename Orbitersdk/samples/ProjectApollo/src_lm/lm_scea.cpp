@@ -517,7 +517,6 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	//sprintf(oapiDebugString(), "CBFV %lf CBF %lf CBVV %lf CBV %lf", lem->scera1.GetVoltage(16, 1), lem->AC_A_BUS_VOLT_CB.Frequency(), lem->scera1.GetVoltage(17, 1), lem->AC_A_BUS_VOLT_CB.Voltage());
 }
 
 double SCERA1::GetVoltage(int sa, int chan)
@@ -671,6 +670,8 @@ void SCERA2::Timestep()
 		return;
 	}
 
+	//Rendezvous Radar No Track (GN7621X)
+	SA2.SetOutput(1, lem->RR.GetNoTrackSignal());
 	//APS fuel tank low level (GP0908)
 	SA2.SetOutput(6, lem->APSPropellant.GetFuelLowLevel());
 	//APS oxidizer tank low level (GP1408)
@@ -750,6 +751,9 @@ void SCERA2::Timestep()
 	SA21.SetOutput(3, scale_data(lem->ecs.GetAscWaterTank1TempF(), -200.0, 200.0));
 	//Ascent water line no. 2 temperature (GF4586T)
 	SA21.SetOutput(4, scale_data(lem->ecs.GetAscWaterTank2TempF(), -200.0, 200.0));
+
+	//sprintf(oapiDebugString(), "RRV %lf", lem->scera2.GetVoltage(2, 1));
+
 }
 
 void SCERA2::SystemTimestep(double simdt)

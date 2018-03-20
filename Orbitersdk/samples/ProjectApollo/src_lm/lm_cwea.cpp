@@ -309,10 +309,19 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// On when RR indicates Data-Not-Good.
 			// Disabled when RR mode switch is not set to AUTO TRACK.
 			// AOH states light comes on if RR loses track, need to investigate and implement accordingly.
-			if (!lem->RR.IsDCPowered() || lem->RendezvousRadarRotary.GetState() == 0 && lem->RR.IsRadarDataGood() == 0)
-				SetLight(2, 5, 0);
+			lightlogic = false;
+			if (AutoTrackDisabled == 0) {
+				if (!lem->RR.IsPowered() || lem->scera2.GetVoltage(2, 1) > 2.5) { lightlogic = true; }
+			}
+
+			if (lightlogic)
+				SetLight(3, 7, 1);
 			else
-				SetLight(2, 5, 1);
+				SetLight(3, 7, 0);
+
+			if (lem->RendezvousRadarRotary.GetState() != 0) {
+				AutoTrackDisabled = 1;
+			}
 
 			// 6DS29 LANDING RADAR 
 			// Was not present on LM-7 thru LM-9!
@@ -442,7 +451,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			else
 				SetLight(3, 7, 0);
 
-			if (lem->QtyMonRotary.GetState() == 0 && LightStatus[3][7] != 0) {
+			if (lem->QtyMonRotary.GetState() == 0) {
 				WaterWarningDisabled = 1;
 			}
 
