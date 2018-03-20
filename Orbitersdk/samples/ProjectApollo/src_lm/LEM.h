@@ -1943,6 +1943,7 @@ protected:
 	friend class RCS_TCA;
 	friend class LEM_ECS;
 	friend class LEMCabinRepressValve;
+	friend class LEMDigitalHeliumPressureMeter;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

@@ -645,7 +645,9 @@ struct calculationParameters {
 	VECTOR3 V_TLI;	//TLI cutoff velocity vector
 	double LOI;		// Time of LOI/Pericynthion
 	double DOI;		// Time of DOI
+	double PDI;		// Time of PDI
 	double TLAND;	// Time of landing
+	double TPI;		// Time of TPI
 	double TEI;		// Time of TEI
 	double EI;		// Time of Entry Interface
 	double lat_node;
@@ -778,7 +780,7 @@ public:
 private:
 	void OrbitAdjustCalc(SV sv_tig, double r_apo, double r_peri, double inc, VECTOR3 &DV);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	MATRIX3 GetREFSMMATfromAGC(double AGCEpoch);
+	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
 	double GetClockTimeFromAGC(agc_t *agc);
 	double GetTEPHEMFromAGC(agc_t *agc);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
@@ -787,7 +789,7 @@ private:
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive, bool csmlmdocked = false);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
-	char* CMCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH);
+	char* AGCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
 	char* AGCStateVectorUpdate(SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
 	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, bool AGCCoordSystem = false);
 	char* AGCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
@@ -805,6 +807,7 @@ private:
 	double PericynthionTime(VESSEL* vessel);
 	SV FindPericynthion(SV sv0);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
+	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
 
 	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);

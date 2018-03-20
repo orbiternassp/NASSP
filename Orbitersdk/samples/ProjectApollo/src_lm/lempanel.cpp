@@ -1293,8 +1293,6 @@ void LEM::InitPanel (int panel)
 		srf[SRF_FDAIOFFFLAG]		= oapiCreateSurface (LOADBMP (IDB_FDAIOFFFLAG));
 		srf[SRF_FDAINEEDLES]		= oapiCreateSurface (LOADBMP (IDB_LEM_FDAI_NEEDLES));
 		srf[SRF_CIRCUITBRAKER]		= oapiCreateSurface (LOADBMP (IDB_CIRCUITBRAKER));
-		srf[SRF_BORDER_34x29]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x29));
-		srf[SRF_BORDER_34x61]		= oapiCreateSurface (LOADBMP (IDB_BORDER_34x61));
 		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
 		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
 		srf[SRF_DCVOLTS]			= oapiCreateSurface (LOADBMP (IDB_LMDCVOLTS));
@@ -1331,6 +1329,11 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_INTLK_OVRD]     = oapiCreateSurface(LOADBMP(IDB_LEM_INTLK_OVRD));
 		srf[SRF_RED_INDICATOR]		= oapiCreateSurface(LOADBMP(IDB_RED_INDICATOR));
 		srf[SRF_LEM_MASTERALARM]	 = oapiCreateSurface(LOADBMP(IDB_LEM_MASTERALARM));
+		srf[SRF_DEDA_KEY]			= oapiCreateSurface(LOADBMP(IDB_DEDA_KEY));
+		srf[SRF_DEDA_LIGHTS]		= oapiCreateSurface(LOADBMP(IDB_DEDA_LIGHTS));
+		srf[SRF_ORDEAL_ROTARY]		= oapiCreateSurface(LOADBMP(IDB_ORDEAL_ROTARY));
+		srf[SRF_ORDEAL_PANEL]		= oapiCreateSurface(LOADBMP(IDB_ORDEAL_PANEL));
+		srf[SRF_TW_NEEDLE]			= oapiCreateSurface(LOADBMP(IDB_TW_NEEDLE));
 		
 		//
 		// Flashing borders.
@@ -1375,13 +1378,6 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_1001x240]    = oapiCreateSurface (LOADBMP (IDB_BORDER_1001x240));
 		srf[SRF_BORDER_360x316]     = oapiCreateSurface (LOADBMP (IDB_BORDER_360x316));
 		srf[SRF_BORDER_178x187]     = oapiCreateSurface (LOADBMP (IDB_BORDER_178x187));
-		srf[SRF_LEM_COAS1]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS1));
-		srf[SRF_LEM_COAS2]			= oapiCreateSurface (LOADBMP (IDB_LEM_COAS2));
-		srf[SRF_DEDA_KEY]			= oapiCreateSurface (LOADBMP (IDB_DEDA_KEY));
-		srf[SRF_DEDA_LIGHTS]		= oapiCreateSurface (LOADBMP (IDB_DEDA_LIGHTS));
-		srf[SRF_ORDEAL_ROTARY]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
-		srf[SRF_ORDEAL_PANEL]		= oapiCreateSurface (LOADBMP (IDB_ORDEAL_PANEL));
-		srf[SRF_TW_NEEDLE]			= oapiCreateSurface (LOADBMP (IDB_TW_NEEDLE));
 
 		//
 		// Set color keys where appropriate.
@@ -3184,7 +3180,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 
 	case AID_LEM_MA_LEFT:
 	case AID_LEM_MA_RIGHT:
-		ButtonClick();
 		return CWEA.CheckMasterAlarmMouseClick(event);
 
 		// panel 1 events:
@@ -3325,7 +3320,14 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_CONTACTLIGHT1:
 		if (SCS_ENG_CONT_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)){
 			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,0,0,0,48,48, SURF_PREDEF_CK);//
-		}return true;
+		}
+		return true;
+
+	case AID_CONTACTLIGHT2:
+		if (SCS_ATCA_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)) {
+			oapiBlt(surf, srf[SRF_CONTACTLIGHT], 0, 0, 0, 0, 48, 48, SURF_PREDEF_CK);//
+		}
+		return true;
 
 	case AID_RR_NOTRACK:
 		if(CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (RR.IsDCPowered() && !RR.IsRadarDataGood() || LampToneTestRotary.GetState() == 6)){ // The AC side is only needed for the transmitter
@@ -3336,8 +3338,13 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_CO2_LIGHT:
-		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6) || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6))) {
-			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered()) {
+			if (INST_CWEA_CB.IsPowered() && ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6))) {
+				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+			}
+			else if (CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
+				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+			}
 		}
 		else {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
@@ -3346,7 +3353,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_SUITFAN_LIGHT:
 		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6)) {
-			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
@@ -3354,8 +3361,10 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_H2OSEP_LIGHT:
-		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && (scera1.GetVoltage(5, 3) < 1.1 || LampToneTestRotary.GetState() == 6)) {
-			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered()) {
+			if (INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < 1.1 || LampToneTestRotary.GetState() == 6)) {
+				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
+			}
 		}
 		else {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
@@ -3388,11 +3397,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
 		}
 		return true;
-
-	case AID_CONTACTLIGHT2:
-		if (SCS_ATCA_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)){
-			oapiBlt(surf,srf[SRF_CONTACTLIGHT],0,0,0,0,48,48, SURF_PREDEF_CK);//
-		}return true;
 
 	case AID_SEQ_LIGHT1:
 		if (eds.RelayBoxA.GetStageRelayMonitor() && stage < 2 || LampToneTestRotary.GetState() == 6) {

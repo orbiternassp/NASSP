@@ -2352,6 +2352,18 @@ void MCC::TimeStep(double simdt){
 			case MST_F_LUNAR_ORBIT_DOI_DAY_10: //Separation update to AGS K Factor update
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 11 && MoonRevTime > 70.0*60.0, 70, MST_F_LUNAR_ORBIT_DOI_DAY_11);
 				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_11: //AGS K Factor update to DOI update
+				UpdateMacro(UTP_PADONLY, PT_GENERIC, MoonRev >= 12 && MoonRevTime > 30.0*60.0, 65, MST_F_LUNAR_ORBIT_DOI_DAY_12);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_12: //DOI update to PDI Abort update
+				UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 71, MST_F_LUNAR_ORBIT_DOI_DAY_13);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_13: //PDI Abort update to Phasing update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 72, MST_F_LUNAR_ORBIT_DOI_DAY_14);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_14: //Phasing update to CSM state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 12 && MoonRevTime > 45.0*60.0, 73, MST_F_LUNAR_ORBIT_DOI_DAY_15);
+				break;
 			}
 			break;
 		}
@@ -2933,6 +2945,25 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
 		}
+		else if (padNumber == PT_AP11LMMNV)
+		{
+			AP11LMMNV * form = (AP11LMMNV *)padForm;
+
+			SAVE_V3("MCC_AP11LMMNV_Att", form->Att);
+			SAVE_INT("MCC_AP11LMMNV_BSSStar", form->BSSStar);
+			SAVE_DOUBLE("MCC_AP11LMMNV_burntime", form->burntime);
+			SAVE_V3("MCC_AP11LMMNV_dV", form->dV);
+			SAVE_DOUBLE("MCC_AP11LMMNV_dVR", form->dVR);
+			SAVE_V3("MCC_AP11LMMNV_dV_AGS", form->dV_AGS);
+			SAVE_DOUBLE("MCC_AP11LMMNV_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP11LMMNV_HA", form->HA);
+			SAVE_DOUBLE("MCC_AP11LMMNV_HP", form->HP);
+			SAVE_DOUBLE("MCC_AP11LMMNV_LMWeight", form->LMWeight);
+			SAVE_STRING("MCC_AP11LMMNV_purpose", form->purpose);
+			SAVE_STRING("MCC_AP11LMMNV_remarks", form->remarks);
+			SAVE_DOUBLE("MCC_AP11LMMNV_SPA", form->SPA);
+			SAVE_DOUBLE("MCC_AP11LMMNV_SXP", form->SXP);
+		}
 		else if (padNumber == PT_GENERIC)
 		{
 			GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3242,6 +3273,25 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
 		}
+		else if (padNumber == PT_AP11LMMNV)
+		{
+			AP11LMMNV * form = (AP11LMMNV *)padForm;
+
+			LOAD_V3("MCC_AP11LMMNV_Att", form->Att);
+			LOAD_INT("MCC_AP11LMMNV_BSSStar", form->BSSStar);
+			LOAD_DOUBLE("MCC_AP11LMMNV_burntime", form->burntime);
+			LOAD_V3("MCC_AP11LMMNV_dV", form->dV);
+			LOAD_DOUBLE("MCC_AP11LMMNV_dVR", form->dVR);
+			LOAD_V3("MCC_AP11LMMNV_dV_AGS", form->dV_AGS);
+			LOAD_DOUBLE("MCC_AP11LMMNV_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP11LMMNV_HA", form->HA);
+			LOAD_DOUBLE("MCC_AP11LMMNV_HP", form->HP);
+			LOAD_DOUBLE("MCC_AP11LMMNV_LMWeight", form->LMWeight);
+			LOAD_STRING("MCC_AP11LMMNV_purpose", form->purpose, 64);
+			LOAD_STRING("MCC_AP11LMMNV_remarks", form->remarks, 128);
+			LOAD_DOUBLE("MCC_AP11LMMNV_SPA", form->SPA);
+			LOAD_DOUBLE("MCC_AP11LMMNV_SXP", form->SXP);
+		}
 		else if (padNumber == PT_GENERIC)
 		{
 			GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3537,6 +3587,25 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP11LMMNV:
+	{
+		AP11LMMNV * form = (AP11LMMNV *)padForm;
+
+		int hh, hh2, mm, mm2;
+		double ss, ss2;
+
+		sprintf(buffer, "P30 LM MANEUVER");
+		SStoHHMMSS(form->GETI, hh, mm, ss);
+		SStoHHMMSS(form->burntime, hh2, mm2, ss2);
+
+		sprintf(buffer, "%s\n%s PURPOSE\n%+06d HRS N33\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY LOCAL\n%+07.1f DVZ VERT\n"
+			"%+07.1f HA N42\n%+07.1f HP\n%+07.1f DVR\nXXX%d:%02.0f BT\nXXX%03.0f R FDAI\nXXX%03.0f P INER\n%+07.1f DVX AGS N86\n%+07.1f DVY AGS\n%+07.1f DVZ AGS\n"
+			"XXX%03d BSS\nXX%+05.1f SPA\nXXX%+04.1f SXP\nRemarks:\n%s\n",
+			buffer, form->purpose, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->HA, form->HP, form->dVR, mm2, ss2, form->Att.x, form->Att.y, 
+			form->dV_AGS.x,form->dV_AGS.y,form->dV_AGS.z, form->BSSStar, form->SPA, form->SXP, form->remarks);
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3607,6 +3676,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP10DAPDATA: // AP10DAPDATA
 		padForm = calloc(1, sizeof(AP10DAPDATA));
+		break;
+	case PT_AP11LMMNV: // AP11LMMNV
+		padForm = calloc(1, sizeof(AP11LMMNV));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));
@@ -3924,7 +3996,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 				if (upString[0] != 0)
 				{
 					// We really should test for P00 and proceed since that would be visible to the ground.
-					addMessage("Ready for uplink?");
+					addMessage("CSM: Ready for uplink?");
 					sprintf(PCOption_Text, "Ready for uplink");
 					PCOption_Enabled = true;
 					setSubState(2);
@@ -3996,7 +4068,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
 			if (SubStateTime > 1 && subThreadStatus == 0) {
 				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
-				addMessage("Ready for uplink?");
+				addMessage("CSM: Ready for uplink?");
 				sprintf(PCOption_Text, "Ready for uplink");
 				PCOption_Enabled = true;
 				setSubState(2);
@@ -4049,6 +4121,99 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 		break;
 		}
 	}
+	else if (type == UTP_PADWITHLGCUPLINK)//PAD with LGC uplinks
+	{
+		switch (SubState) {
+		case 0:
+			allocPad(padtype); // Allocate PAD
+			if (padForm != NULL) {
+				// If success
+				startSubthread(updatenumber, type); // Start subthread to fill PAD
+			}
+			else {
+				// ERROR STATE
+			}
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1 && subThreadStatus == 0) {
+				if (scrubbed)
+				{
+					freePad();
+					scrubbed = false;
+				}
+				else
+				{
+					addMessage("You can has PAD");
+					if (padAutoShow == true && padState == 0) { drawPad(); }
+				}
+
+				//Do we have an uplink?
+				if (upString[0] != 0)
+				{
+					// We really should test for P00 and proceed since that would be visible to the ground.
+					addMessage("LM: Ready for uplink?");
+					sprintf(PCOption_Text, "Ready for uplink");
+					PCOption_Enabled = true;
+					setSubState(2);
+				}
+				else
+				{
+					if (upDescr[0] != 0)
+					{
+						addMessage(upDescr);
+					}
+					setSubState(6);
+				}
+			}
+			break;
+		case 2: // Awaiting user response
+		case 3: // Negative response / not ready for uplink
+			break;
+		case 4: // Ready for uplink
+			if (SubStateTime > 1 && subThreadStatus == 0) {
+				// The uplink should also be ready, so flush the uplink buffer to the CMC
+				this->LM_uplink_buffer();
+				// uplink_size = 0; // Reset
+				PCOption_Enabled = false; // No longer needed
+				if (upDescr[0] != 0)
+				{
+					addMessage(upDescr);
+				}
+				setSubState(5);
+			}
+			break;
+		case 5: // Await uplink completion
+			if (lm->VHF.mcc_size == 0) {
+				addMessage("Uplink completed!");
+				NCOption_Enabled = true;
+				sprintf(NCOption_Text, "Repeat uplink");
+				setSubState(6);
+			}
+			break;
+		case 6: // Await burn
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
+			{
+				SlowIfDesired();
+				setState(nextupdate);
+			}
+			break;
+		case 7: //Repeat uplink
+		{
+			NCOption_Enabled = false;
+			setSubState(0);
+		}
+		break;
+		}
+	}
 	else if (type == UTP_LGCUPLINKONLY)//LGC uplink without PAD
 	{
 		switch (SubState) {
@@ -4059,7 +4224,7 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
 			if (SubStateTime > 1 && subThreadStatus == 0) {
 				// Completed. We really should test for P00 and proceed since that would be visible to the ground.
-				addMessage("Ready for uplink?");
+				addMessage("LM: Ready for uplink?");
 				sprintf(PCOption_Text, "Ready for uplink");
 				PCOption_Enabled = true;
 				setSubState(2);
@@ -4167,7 +4332,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Done filling form, OK to show
 		padState = 0;
 	}
-	if (type == UTP_PADWITHCMCUPLINK)
+	else if (type == UTP_PADWITHCMCUPLINK)
 	{
 		// Ask RTCC for numbers
 		// Do math
@@ -4188,6 +4353,18 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
 		}
+	}
+	if (type == UTP_PADWITHLGCUPLINK)
+	{
+		// Ask RTCC for numbers
+		// Do math
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		// Give resulting uplink string to LGC
+		if (upString[0] != 0) {
+			this->pushLGCUplinkString(upString);
+		}
+		// Done filling form, OK to show
+		padState = 0;
 	}
 	else if (type == UTP_LGCUPLINKONLY)
 	{

@@ -5240,6 +5240,16 @@ double GETfromMJD(double MJD, double GETBase)
 	return (MJD - GETBase)*24.0*3600.0;
 }
 
+void format_time(char *buf, double time) {
+	buf[0] = 0; // Clobber
+	int hours, minutes, seconds;
+	if (time < 0) { return; } // don't do that
+	hours = (int)(time / 3600);
+	minutes = (int)((time / 60) - (hours * 60));
+	seconds = (int)((time - (hours * 3600)) - (minutes * 60));
+	sprintf(buf, "%03d:%02d:%02d", hours, minutes, seconds);
+}
+
 double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat)
 {
 	MATRIX3 Rot;

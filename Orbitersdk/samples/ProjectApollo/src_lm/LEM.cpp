@@ -203,7 +203,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	tcdu(agc, RegOPTY, 0141, 0),
 	aea(Panelsdk, deda),
 	deda(this,soundlib, aea),
-	CWEA(soundlib),
+	CWEA(soundlib, Bclick),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
 	APSPropellant(ph_Asc, Panelsdk),
@@ -238,8 +238,9 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 }
 
 LEM::~LEM()
-
 {
+	ReleaseSurfaces();
+
 #ifdef DIRECTSOUNDENABLED
     sevent.Stop();
 	sevent.Done();
@@ -1200,6 +1201,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
 			SBandSteerable.LoadState(line);
 		}
+		else if (!strnicmp(line, CWEA_START_STRING, sizeof(CWEA_START_STRING))) {
+			CWEA.LoadState(scn, CWEA_END_STRING);
+		}
 		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
 			ForwardHatch.LoadState(line);
 		}
@@ -1527,6 +1531,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save COMM
 	SBand.SaveState(scn);
 	SBandSteerable.SaveState(scn);
+
+	// Save CWEA
+	CWEA.SaveState(scn, CWEA_START_STRING, CWEA_END_STRING);
 
 	// Save ECS
 	ForwardHatch.SaveState(scn);
