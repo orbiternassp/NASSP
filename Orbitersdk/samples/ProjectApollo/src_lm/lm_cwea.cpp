@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEMcomputer.h"
 #include "lm_channels.h"
 #include "LEM.h"
+#include "papi.h"
 #include "lm_cwea.h"
 
 // CWEA 
@@ -516,12 +517,38 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 
 }
 
-void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+{
+	oapiWriteLine(scn, start_str);
 
+	papiWriteScenario_bool(scn, "MASTERALARM", MasterAlarm);
+	oapiWriteScenario_int(scn, "WATERWARNINGDISABLED", WaterWarningDisabled);
+	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
+	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
+	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
+	papiWriteScenario_intarr(scn, "LIGHTSTATUS3", &LightStatus[3][0], 8);
+	papiWriteScenario_intarr(scn, "LIGHTSTATUS4", &LightStatus[4][0], 8);
+
+	oapiWriteLine(scn, end_str);
 }
 
-void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str) {
+void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
+{
+	char *line;
 
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str))) {
+			return;
+		}
+
+		papiReadScenario_bool(line, "MASTERALARM", MasterAlarm);
+		papiReadScenario_int(line, "WATERWARNINGDISABLED", WaterWarningDisabled);
+		papiReadScenario_intarr(line, "LIGHTSTATUS0", &LightStatus[0][0], 8);
+		papiReadScenario_intarr(line, "LIGHTSTATUS1", &LightStatus[1][0], 8);
+		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);
+		papiReadScenario_intarr(line, "LIGHTSTATUS3", &LightStatus[3][0], 8);
+		papiReadScenario_intarr(line, "LIGHTSTATUS4", &LightStatus[4][0], 8);
+	}
 }
 
 void LEM_CWEA::RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf) {

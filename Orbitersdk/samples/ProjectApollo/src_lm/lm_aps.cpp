@@ -79,7 +79,12 @@ void APSPropellantSource::Timestep(double simt, double simdt)
 
 	double p;
 
-	if (!source_prop)
+	if (our_vessel->stage < 2)
+	{
+		helium1PressurePSI = 3020.0;
+		helium2PressurePSI = 3020.0;
+	}
+	else if (!source_prop)
 	{
 		p = 0;
 		helium1PressurePSI = 0;

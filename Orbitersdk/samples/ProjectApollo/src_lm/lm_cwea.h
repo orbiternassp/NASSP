@@ -64,3 +64,6 @@ protected:
 
 	LEM *lem;					// Pointer at LEM
 };
+
+#define CWEA_START_STRING   "CWEA_BEGIN"
+#define CWEA_END_STRING     "CWEA_END"

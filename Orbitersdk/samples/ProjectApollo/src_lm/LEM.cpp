@@ -1200,6 +1200,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
 			SBandSteerable.LoadState(line);
 		}
+		else if (!strnicmp(line, CWEA_START_STRING, sizeof(CWEA_START_STRING))) {
+			CWEA.LoadState(scn, CWEA_END_STRING);
+		}
 		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
 			ForwardHatch.LoadState(line);
 		}
@@ -1527,6 +1530,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save COMM
 	SBand.SaveState(scn);
 	SBandSteerable.SaveState(scn);
+
+	// Save CWEA
+	CWEA.SaveState(scn, CWEA_START_STRING, CWEA_END_STRING);
 
 	// Save ECS
 	ForwardHatch.SaveState(scn);
