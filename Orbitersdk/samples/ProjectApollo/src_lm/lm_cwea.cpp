@@ -203,8 +203,13 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// FIXME: Finish this!
 			lightlogic = false;
 			if (AGSWarnFF == 0) {
-				if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN && !lem->SCS_ASA_CB.IsPowered()) { lightlogic = true; }
-				if (lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER && (!lem->CDR_SCS_AEA_CB.IsPowered() || !lem->SCS_AEA_CB.IsPowered())) { lightlogic = true; }
+				if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
+					if (lem->scera1.GetVoltage(10, 5) > (145.0 / 40.0)) { lightlogic = true; } // ASA Temp opens the +12VDC circuit causing the light, not directly connected like this, please change!
+					else if (lem->scera1.GetVoltage(10, 5) < (130.0 / 40.0)) { lightlogic = false; }
+					if (!lem->SCS_ASA_CB.IsPowered()) { lightlogic = true; }
+					if (!lem->CDR_SCS_AEA_CB.IsPowered() && !lem->SCS_AEA_CB.IsPowered()) { lightlogic = true; }
+				}
+				//Needs logic for AEA test signal so that when proper breakers are in and switch moved from stby to opr, the light comes on
 			}
 			if (lightlogic)
 				SetLight(1, 7, 1);

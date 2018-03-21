@@ -73,6 +73,7 @@ public:
 	void Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr, h_HeatLoad *asah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
+	double GetASATempF();
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void PulseTimestep(int* AttPulses);

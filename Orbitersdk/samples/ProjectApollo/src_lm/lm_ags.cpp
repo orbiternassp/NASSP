@@ -299,6 +299,12 @@ VECTOR3 LEM_ASA::GetGravityVector()
 	return a_dP;
 }
 
+double LEM_ASA::GetASATempF() {
+
+	return KelvinToFahrenheit(hsink->GetTemp());
+
+	}
+
 void LEM_ASA::SystemTimestep(double simdt)
 {
 	if (IsPowered())
