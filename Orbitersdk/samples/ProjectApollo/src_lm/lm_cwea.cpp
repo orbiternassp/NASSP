@@ -87,7 +87,7 @@ bool LEM_CWEA::IsMAPowered() {
 }
 
 bool LEM_CWEA::IsLTGPowered() {
-	if (ltg_pwr->Voltage() > SP_MIN_DCVOLTAGE || lem->LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE)
+	if (ltg_pwr->Voltage() > SP_MIN_DCVOLTAGE || lem->CDR_LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE)
 		return true;
 
 	return false;
@@ -204,9 +204,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			lightlogic = false;
 			if (AGSWarnFF == 0) {
 				if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
-					if (lem->scera1.GetVoltage(10, 5) > (145.0 / 40.0)) { lightlogic = true; } // ASA Temp opens the +12VDC circuit causing the light, not directly connected like this, please change!
-					else if (lem->scera1.GetVoltage(10, 5) < (130.0 / 40.0)) { lightlogic = false; }
-					if (!lem->SCS_ASA_CB.IsPowered()) { lightlogic = true; }
+					if (lem->scera1.GetVoltage(10, 2) > ((145.0 - 20.0)/36.0)) { lightlogic = true; } // ASA Temp opens the +12VDC circuit causing the light, not directly connected like this, please change!
+					else if (lem->scera1.GetVoltage(10, 2) < ((130.0 - 20.0) / 36.0)) { lightlogic = false; }
+					if (!lem->SCS_ASA_CB.IsPowered()) { lightlogic = true; } // ASA 28VDC from the SCEA, no scaling so how do we implement this?  Also need a 12VDC and freq
 					if (!lem->CDR_SCS_AEA_CB.IsPowered() && !lem->SCS_AEA_CB.IsPowered()) { lightlogic = true; }
 				}
 				//Needs logic for AEA test signal so that when proper breakers are in and switch moved from stby to opr, the light comes on

@@ -386,12 +386,12 @@ void SCERA1::Timestep()
 
 	//Water sublimator coolant outlet temperature (GF9998)
 	SA10.SetOutput(1, scale_data(lem->ecs.GetSelectedGlycolTempF(), 20.0, 120.0));
+	//ASA Temperature (GI3301T)
+	SA10.SetOutput(2, scale_data(lem->asa.GetASATempF(), 20.0, 200.0));
 	//DPS oxidizer tank no. 1 fuel bulk temperature (GQ4218)
 	SA10.SetOutput(3, scale_data(lem->DPSPropellant.GetOxidizerTank1BulkTempF(), 20.0, 120.0));
 	//DPS oxidizer tank no. 2 fuel bulk temperature (GQ4219)
 	SA10.SetOutput(4, scale_data(lem->DPSPropellant.GetOxidizerTank2BulkTempF(), 20.0, 120.0));
-	//ASA Temperature (GI3301T)
-	SA10.SetOutput(5, scale_data(lem->asa.GetASATempF(), 20.0, 200.0));
 
 	//RCS thrust chamber pressure B4U (GR5031)
 	SA11.SetOutput(1, lem->GetRCSThrusterLevel(LMRCS_B4U) > 0.5);
@@ -522,6 +522,8 @@ void SCERA1::Timestep()
 	SA21.SetOutput(3, scale_data(lem->LR.GetAntennaTempF(), -200.0, 200.0));
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
+
+	sprintf(oapiDebugString(), "ASAV %lf ASAT %lf", lem->scera1.GetVoltage(10, 2), lem->asa.GetASATempF());
 
 }
 
@@ -763,8 +765,6 @@ void SCERA2::Timestep()
 	SA21.SetOutput(3, scale_data(lem->ecs.GetAscWaterTank1TempF(), -200.0, 200.0));
 	//Ascent water line no. 2 temperature (GF4586T)
 	SA21.SetOutput(4, scale_data(lem->ecs.GetAscWaterTank2TempF(), -200.0, 200.0));
-
-	//sprintf(oapiDebugString(), "RRV %lf", lem->scera2.GetVoltage(2, 1));
 
 }
 
