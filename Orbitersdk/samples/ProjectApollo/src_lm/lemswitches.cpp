@@ -1087,11 +1087,6 @@ bool LEMDeadFaceSwitch::SwitchTo(int newState, bool dontspring)
 				lem->DES_LMPs28VBusB.WireTo(&lem->ECA_1b);
 				lem->DES_CDRs28VBusA.WireTo(&lem->ECA_2a);
 				lem->DES_CDRs28VBusB.WireTo(&lem->ECA_2b);
-				// Reconnect EPS monitor stuff
-				lem->EPSMonitorSelectRotary.SetSource(1, lem->Battery1);
-				lem->EPSMonitorSelectRotary.SetSource(2, lem->Battery2);
-				lem->EPSMonitorSelectRotary.SetSource(3, lem->Battery3);
-				lem->EPSMonitorSelectRotary.SetSource(4, lem->Battery4);
 				lem->DSCBattFeedTB.SetState(1);
 			}
 			break;
@@ -1102,10 +1097,6 @@ bool LEMDeadFaceSwitch::SwitchTo(int newState, bool dontspring)
 			lem->DES_LMPs28VBusB.Disconnect();
 			lem->DES_CDRs28VBusA.Disconnect();
 			lem->DES_CDRs28VBusB.Disconnect();
-			lem->EPSMonitorSelectRotary.SetSource(1, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(2, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(3, NULL);
-			lem->EPSMonitorSelectRotary.SetSource(4, NULL);
 			lem->DSCBattFeedTB.SetState(0);
 			break;
 		}

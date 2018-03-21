@@ -465,12 +465,6 @@ void LEM_EDS::TimeStep(double simdt) {
 		lem->DES_LMPs28VBusB.Disconnect();
 		lem->DES_CDRs28VBusA.Disconnect();
 		lem->DES_CDRs28VBusB.Disconnect();
-		// Disconnect monitor select rotaries
-		lem->EPSMonitorSelectRotary.SetSource(1, NULL);
-		lem->EPSMonitorSelectRotary.SetSource(2, NULL);
-		lem->EPSMonitorSelectRotary.SetSource(3, NULL);
-		lem->EPSMonitorSelectRotary.SetSource(4, NULL);
-		lem->EPSEDVoltSelect.SetSource(0, NULL);
 		// Change descent TB
 		lem->DSCBattFeedTB.SetState(0);
 		Deadface = true;

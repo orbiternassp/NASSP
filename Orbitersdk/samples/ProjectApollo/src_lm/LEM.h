@@ -1247,7 +1247,7 @@ protected:
 	LEMDCAmMeter EPSDCAmMeter;
 	
 	SwitchRow EPSLeftControlArea;
-	PowerStateRotationalSwitch EPSMonitorSelectRotary;
+	RotationalSwitch  EPSMonitorSelectRotary;
 	LEMInverterSwitch EPSInverterSwitch;
 	ThreeSourceSwitch EPSEDVoltSelect;
 
