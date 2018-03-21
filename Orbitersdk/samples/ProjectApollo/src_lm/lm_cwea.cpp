@@ -188,10 +188,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// All of these are provided by the ATCA main power supply.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
 			if (CESDCWarnFF == 0) {
-				if (lem->SCS_ATCA_CB.Voltage() < 24.0) { SetLight(0, 1, 1); }
+				if (lem->SCS_ATCA_CB.Voltage() < 24.0) { SetLight(1, 1, 1); }
 			}
 			else
-				SetLight(0, 1, 0);
+				SetLight(1, 1, 0);
 
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) {
 				CESDCWarnFF = 1;
@@ -200,21 +200,19 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS8 AGS FAILURE
 			// On when any AGS power supply signals a failure, when AGS raises failure signal, or ASA heater fails.
 			// Disabled when AGS status switch is OFF.
-			// FIXME: Finish this!
 			lightlogic = false;
 			if (AGSWarnFF == 0) {
 				if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
-					if (lem->scera1.GetVoltage(10, 2) > ((145.0 - 20.0)/36.0)) { lightlogic = true; } // ASA Temp opens the +12VDC circuit causing the light, not directly connected like this, please change!
-					else if (lem->scera1.GetVoltage(10, 2) < ((130.0 - 20.0) / 36.0)) { lightlogic = false; }
-					if (!lem->SCS_ASA_CB.IsPowered()) { lightlogic = true; } // ASA 28VDC from the SCEA, no scaling so how do we implement this?  Also need a 12VDC and freq
-					if (!lem->CDR_SCS_AEA_CB.IsPowered() && !lem->SCS_AEA_CB.IsPowered()) { lightlogic = true; }
+					if (lem->scera1.GetVoltage(15, 4) > (13.2/2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC
+					if (lem->scera2.GetVoltage(15, 2) > (30.8 / 8.0) || lem->scera1.GetVoltage(15, 2) < (25.2 / 8.0)) { lightlogic = true; } // ASA +28VDC 
+					if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
+					if (lem->scera1.GetVoltage(4, 1) > 2.5) { lightlogic = true; }
 				}
-				//Needs logic for AEA test signal so that when proper breakers are in and switch moved from stby to opr, the light comes on
 			}
 			if (lightlogic)
-				SetLight(1, 7, 1);
+				SetLight(2, 1, 1);
 			else
-				SetLight(1, 7, 0);
+				SetLight(2, 1, 0);
 
 			if (lem->QtyMonRotary.GetState() == 0) {
 				AGSWarnFF = 1;
@@ -336,10 +334,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 0; }
 			else if (lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 0; }
 
-			if (RRCautFF == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { SetLight(3, 7, 1); }
+			if (RRCautFF == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { SetLight(2, 5, 1); }
 
 			else
-				SetLight(3, 7, 0);
+				SetLight(2, 5, 0);
 
 			// 6DS29 LANDING RADAR 
 			// Was not present on LM-7 thru LM-9!  **What about LM 3-5?  Unlikely but need to research**
@@ -387,9 +385,11 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Disabled when Temperature Monitor switch selects affected assembly.
 			lightlogic = false;
 			if (lem->TempMonitorRotary.GetState() == 0) { RRHeaterCautFF = 1; }
+			else{ RRHeaterCautFF = 0; }
 			if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 1; }
+			else { SBDHeaterCautFF = 0; }
 
-			if (RRHeaterCautFF == 0 && lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { lightlogic = true; }			
+			if (RRHeaterCautFF == 0 && (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0))) { lightlogic = true; }			
 			if (SBDHeaterCautFF == 0 && (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0))) { lightlogic = true; }
 
 			if (lightlogic)

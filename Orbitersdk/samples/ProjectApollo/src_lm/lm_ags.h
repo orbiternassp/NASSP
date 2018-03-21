@@ -73,17 +73,21 @@ public:
 	void Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr, h_HeatLoad *asah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	double GetASATempF();
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
+	bool IsHeaterPowered();
+	bool IsPowered();
+	double GetASATempF();
+	double GetASA12V();
+	double GetASAFreq();
+	double GetASA28V();
+
 	void PulseTimestep(int* AttPulses);
 	MATRIX3 transpose_matrix(MATRIX3 a);
 	VECTOR3 MatrixToEuler(MATRIX3 mat);
 	LEM *lem;					// Pointer at LEM
 protected:
 
-	bool IsHeaterPowered();
-	bool IsPowered();
 	void TurnOn();
 	void TurnOff();
 
@@ -148,6 +152,7 @@ public:
 	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
 	bool IsPowered();
 	bool IsACPowered();
+	bool GetTestModeFailure();
 	LEM *lem;					// Pointer at LEM
 	h_HeatLoad *aeaHeat;
 	h_HeatLoad *secaeaHeat;

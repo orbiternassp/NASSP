@@ -322,6 +322,8 @@ void SCERA1::Timestep()
 	//RCS thrust chamber pressure B1L (GR5046)
 	SA3.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_B1L) > 0.5);
 
+	//AEA Test mode fail (GI3232X)
+	SA4.SetOutput(1, lem->aea.GetTestModeFailure());
 	//Jet Driver B4U Output (GH1418V)
 	SA4.SetOutput(3, lem->atca.jet_request[LMRCS_B4U] == 1);
 	//Jet Driver B4F Output (GH1420V)
@@ -338,8 +340,6 @@ void SCERA1::Timestep()
 	SA4.SetOutput(9, lem->atca.jet_request[LMRCS_B3A] == 1);
 	//Jet Driver A3R Output (GH1425V)
 	SA4.SetOutput(10, lem->atca.jet_request[LMRCS_A3R] == 1);
-	//AEA Test mode fail (GI3232X)
-	//Needs data here
 
 	//Suit outlet pressure (GF1301)
 	SA5.SetOutput(1, scale_data(lem->ecs.GetSuitPressurePSI(), 0.0, 10.0));
@@ -479,12 +479,12 @@ void SCERA1::Timestep()
 	//Commander's bus voltage (GC0301)
 	SA15.SetOutput(3, scale_data(lem->CDRs28VBus.Voltage(), 0.0, 40.0));
 	//Abort sensor assembly +12VDC (GI3215V)
-	//Needs 12V data here
+	SA15.SetOutput(4, scale_data(lem->asa.GetASA12V(), 0.0, 14.0));
 
 	//Inverter bus frequency (GC0155F)
 	SA16.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Frequency(), 380.0, 420.0));
-	//Abort sensor assembly Frequency (GI3233F)
-	//Needs 12V data here
+	//Abort sensor assembly frequency (GI3233F)
+	SA16.SetOutput(2, scale_data(lem->asa.GetASAFreq(), 380.0, 420.0));
 
 	//Inverter bus voltage (GC0071V)
 	SA17.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
@@ -523,7 +523,7 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	sprintf(oapiDebugString(), "ASAV %lf ASAT %lf", lem->scera1.GetVoltage(10, 2), lem->asa.GetASATempF());
+	sprintf(oapiDebugString(), "AEATest %i AEATestV %lf ASAT %lf", lem->aea.GetTestModeFailure(), lem->scera1.GetVoltage(4, 1), lem->asa.GetASATempF());
 
 }
 
@@ -736,7 +736,7 @@ void SCERA2::Timestep()
 	//LMP bus voltage (GC0302V)
 	SA15.SetOutput(1, scale_data(lem->LMPs28VBus.Voltage(), 0.0, 40.0));
 	//Abort sensor assembly +28VDC (GI3214V)
-	SA15.SetOutput(2, scale_data(lem->SCS_ASA_CB.Voltage(), 0.0, 40.0)); //Is this scaled in the SCEA?
+	SA15.SetOutput(2, scale_data(lem->asa.GetASA28V(), 0.0, 40.0));
 
 	//Battery 1 voltage (GC0101V)
 	SA16.SetOutput(1, scale_data(lem->Battery1->Voltage(), 0.0, 40.0));
