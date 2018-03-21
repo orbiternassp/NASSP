@@ -75,6 +75,7 @@ RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p, boo
 	//Open at launch
 	primOxidInterconnectValve.SetState(true);
 	primFuelInterconnectValve.SetState(true);
+	mainShutoffValve.SetState(true);
 }
 
 RCSPropellantSource::~RCSPropellantSource()
