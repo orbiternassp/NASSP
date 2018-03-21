@@ -199,14 +199,11 @@ void LEM_CWEA::TimeStep(double simdt) {
 			}
 
 			// 6DS8 AGS FAILURE
-			// On when any AGS power supply signals a failure, when AGS raises failure signal, or ASA heater fails.
+			// On when any ASA power supply signals a failure, when AGS raises failure signal, or ASA overtemp.
 			// Disabled when AGS status switch is OFF.
 			lightlogic = false;
 			if (lem->QtyMonRotary.GetState() == 0) { AGSWarnFF = 0; }
-			else
-				AGSWarnFF = 1;
-
-			if (AGSWarnFF != 0 && lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) { lightlogic = true; } // AEA Test Mode Fail
+			else if (lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) { AGSWarnFF = 1; } // AEA Test Mode Fail
 
 			if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
 				if (lem->scera1.GetVoltage(15, 4) > (13.2 / 2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC
@@ -214,7 +211,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 				if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
 			}
 
-			if (lightlogic)
+			if (lightlogic || AGSWarnFF == 1)
 				SetLight(2, 1, 1);
 			else
 				SetLight(2, 1, 0);
