@@ -542,11 +542,26 @@ void Battery::PUNLOAD(double watts)
 	power_load -= watts;
 }
 
-double Battery::Current()
+double Battery::Voltage()
+{
+	if (IsEnabled())
+	{
+		return Volts;
+	}
 
+	return 0.0;
+}
+
+double Battery::Current()
 {
 //	sprintf(oapiDebugString(), "%s: Current = %gA (%g watts/%gV)", name, Amperes, power_load, Volts);
-	return Amperes;
+
+	if (IsEnabled())
+	{
+		return Amperes;
+	}
+
+	return 0.0;
 }
 
 void Battery::UpdateFlow(double dt)

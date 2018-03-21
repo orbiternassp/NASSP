@@ -272,7 +272,7 @@ public:
     virtual void Load(char *line);
 	virtual void Save(FILEHANDLE scn);
 	void* GetComponent(char *component_name);
-	double Voltage() { return Volts; };
+	double Voltage();
 	double Current();
 	double Capacity() { return power; };
 	virtual therm_obj* GetThermalInterface(){return (therm_obj*)this;};
