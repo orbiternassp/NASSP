@@ -389,7 +389,7 @@ double LEM_ASA::GetASATempF() {
 double LEM_ASA::GetASA12V() {
 	if (IsPowered())
 		return 12.0;
-	else if (lem->scera1.GetVoltage(10, 2) > ((145.0 - 20.0) / 36.0))
+	else if (GetASATempF() > 145.0)
 		return 0;
 	else
 		return 0;
