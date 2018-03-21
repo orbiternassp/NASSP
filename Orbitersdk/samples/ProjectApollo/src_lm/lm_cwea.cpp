@@ -44,16 +44,16 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 
-	//Initialize all FF's as "set"
-	DesRegWarnFF = 1;
-	AGSWarnFF = 1;
-	CESDCWarnFF = 1;
-	CESACWarnFF = 1;
-	RRHeaterCautFF = 1;
-	SBDHeaterCautFF = 1;
-	OxygenCautFF = 1;
-	WaterCautFF = 1;
-	RRCautFF = 1;
+	//Initialize all FF's as "reset"
+	DesRegWarnFF = 0;
+	AGSWarnFF = 0;
+	CESDCWarnFF = 0;
+	CESACWarnFF = 0;
+	RRHeaterCautFF = 0;
+	SBDHeaterCautFF = 0;
+	OxygenCautFF = 0;
+	WaterCautFF = 0;
+	RRCautFF = 0;
 }
 
 void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg ) {
@@ -203,7 +203,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Disabled when AGS status switch is OFF.
 			lightlogic = false;
 			if (lem->QtyMonRotary.GetState() == 0) { AGSWarnFF = 0; }
-			else if (lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) { AGSWarnFF = 1; } // AEA Test Mode Fail
+			if (lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) { AGSWarnFF = 1; } // AEA Test Mode Fail
 
 			if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
 				if (lem->scera1.GetVoltage(15, 4) > (13.2 / 2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC
