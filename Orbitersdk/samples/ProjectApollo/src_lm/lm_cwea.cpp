@@ -44,15 +44,16 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 
-	DesRegWarnFF = 0;
-	AGSWarnFF = 0;
-	CESDCWarnFF = 0;
-	CESACWarnFF = 0;
-	RRHeaterCautFF = 0;
-	SBDHeaterCautFF = 0;
-	OxygenCautFF = 0;
-	WaterCautFF = 0;
-	RRCautFF = 0;
+	//Initialize all FF's as "set"
+	DesRegWarnFF = 1;
+	AGSWarnFF = 1;
+	CESDCWarnFF = 1;
+	CESACWarnFF = 1;
+	RRHeaterCautFF = 1;
+	SBDHeaterCautFF = 1;
+	OxygenCautFF = 1;
+	WaterCautFF = 1;
+	RRCautFF = 1;
 }
 
 void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg ) {
@@ -173,41 +174,39 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Either CES AC voltage (26V or 28V) out of tolerance.
 			// This power is provided by the ATCA main power supply and spins the RGAs and operate the AEA reference.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
-			if (CESACWarnFF == 0) {
+			if (CESACWarnFF == 1) {
 				if (lem->SCS_ATCA_CB.Voltage() < 24.0) { SetLight(0, 1, 1); }
 			}
 			else
 				SetLight(0, 1, 0);
 
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) {
-				CESACWarnFF = 1;
+				CESACWarnFF = 0;
 			}
 
 			// 6DS7 CES DC VOLTAGE FAILURE
 			// Any CES DC voltage out of tolerance.
 			// All of these are provided by the ATCA main power supply.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
-			if (CESDCWarnFF == 0) {
+			if (CESDCWarnFF == 1) {
 				if (lem->SCS_ATCA_CB.Voltage() < 24.0) { SetLight(1, 1, 1); }
 			}
 			else
 				SetLight(1, 1, 0);
 
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) {
-				CESDCWarnFF = 1;
+				CESDCWarnFF = 0;
 			}
 
 			// 6DS8 AGS FAILURE
 			// On when any AGS power supply signals a failure, when AGS raises failure signal, or ASA heater fails.
 			// Disabled when AGS status switch is OFF.
 			lightlogic = false;
-			if (AGSWarnFF == 0) {
-				if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
-					if (lem->scera1.GetVoltage(15, 4) > (13.2/2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC
-					if (lem->scera2.GetVoltage(15, 2) > (30.8 / 8.0) || lem->scera1.GetVoltage(15, 2) < (25.2 / 8.0)) { lightlogic = true; } // ASA +28VDC 
-					if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
-					if (lem->scera1.GetVoltage(4, 1) > 2.5) { lightlogic = true; }
-				}
+			if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
+				if (AGSWarnFF != 0 && lem->scera1.GetVoltage(4, 1) > 2.5) { lightlogic = true; AGSWarnFF = 1; } // AEA Test Mode Fail
+				if (lem->scera1.GetVoltage(15, 4) > (13.2 / 2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC
+				if (lem->scera2.GetVoltage(15, 2) > (30.8 / 8.0) || lem->scera1.GetVoltage(15, 2) < (25.2 / 8.0)) { lightlogic = true; } // ASA +28VDC 
+				if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
 			}
 			if (lightlogic)
 				SetLight(2, 1, 1);
@@ -215,7 +214,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 				SetLight(2, 1, 0);
 
 			if (lem->QtyMonRotary.GetState() == 0) {
-				AGSWarnFF = 1;
+				AGSWarnFF = 0;
 			}
 
 			// 6DS9 LGC FAILURE
@@ -426,7 +425,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Less than 99.6 psia in ascent oxygen tank #1
 			// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 			lightlogic = false;
-			if (OxygenCautFF == 0) {
+			if (OxygenCautFF == 1) {
 				if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 1) < (681.6 / 200.0) || lem->scera1.GetVoltage(7, 2) < (682.4 / 200.0))) { lightlogic = true; }
 				if (lem->stage < 2 && (lem->scera2.GetVoltage(8, 2) < (135.0 / 600.0))) { lightlogic = true; }
 				if (lem->scera1.GetVoltage(7, 1) < (99.6 / 200.0)) { lightlogic = true; }
@@ -437,7 +436,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 				SetLight(1, 7, 0);
 
 			if (lem->QtyMonRotary.GetState() == 0) {
-				OxygenCautFF = 1;
+				OxygenCautFF = 0;
 			}
 
 			// 6DS38 GLYCOL FAILURE CAUTION
@@ -458,7 +457,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Unequal levels in either ascent tank
 			// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
 			lightlogic = false;
-			if (WaterCautFF == 0) {
+			if (WaterCautFF == 1) {
 				if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 3) < (0.1594 / 0.2))) { lightlogic = true; }
 				if (lem->stage < 2 && (lem->scera1.GetVoltage(8, 1) < (0.9478 / 0.2) || lem->scera1.GetVoltage(8, 2) < (0.9478 / 0.2))) { lightlogic = true; }
 				if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15) { lightlogic = true; }
@@ -470,7 +469,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 				SetLight(3, 7, 0);
 
 			if (lem->QtyMonRotary.GetState() == 0) {
-				WaterCautFF = 1;
+				WaterCautFF = 0;
 			}
 
 			// 6DS40 S-BAND RECEIVER FAILURE CAUTION

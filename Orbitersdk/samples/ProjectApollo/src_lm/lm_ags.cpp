@@ -403,7 +403,7 @@ double LEM_ASA::GetASA28V() {
 }
 
 double LEM_ASA::GetASAFreq() {
-	if (IsPowered())
+	if (IsPowered() && lem->aea.IsPowered())
 		return 400.0;
 	else
 		return 0;
