@@ -403,7 +403,7 @@ double LEM_ASA::GetASA28V() {
 }
 
 double LEM_ASA::GetASAFreq() {
-	if (IsPowered() && lem->aea.IsPowered())
+	if (IsPowered() && (lem->CDR_SCS_AEA_CB.Voltage() > SP_MIN_DCVOLTAGE || lem->SCS_AEA_CB.Voltage() > SP_MIN_DCVOLTAGE))
 		return 400.0;
 	else
 		return 0;
