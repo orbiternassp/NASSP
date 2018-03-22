@@ -140,8 +140,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 					lightlogic = true;
 				}
 			}
-			if (lightlogic)
+			if (lightlogic) {
 				SetLight(1, 0, 1);
+			}
 			else
 				SetLight(1, 0, 0);
 
@@ -155,8 +156,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 					lightlogic = true;
 				}
 			}
-			if (lightlogic)
+			if (lightlogic) {
 				SetLight(2, 0, 1);
+			}
 			else
 				SetLight(2, 0, 0);
 
@@ -176,8 +178,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESACWarnFF = 0; }
 			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESACWarnFF = 1; }
 
-			if (CESACWarnFF == 1)
+			if (CESACWarnFF == 1) {
 				SetLight(2, 1, 1);
+			}
 			else
 				SetLight(2, 1, 0);
 
@@ -188,8 +191,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESDCWarnFF = 0; }
 			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESDCWarnFF = 1; }
 
-			if (CESDCWarnFF == 1)
+			if (CESDCWarnFF == 1) {
 				SetLight(2, 1, 1);
+			}
 			else
 				SetLight(2, 1, 0);
 
@@ -207,7 +211,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			}
 
 			if (lightlogic || AGSWarnFF == 1)
+			{
 				SetLight(2, 1, 1);
+			}
 			else
 				SetLight(2, 1, 0);
 
@@ -310,8 +316,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 					lightlogic = true;
 				}
 			}
-			if (lightlogic)
+			if (lightlogic) {
 				SetLight(0, 5, 1);
+			}
 			else
 				SetLight(0, 5, 0);
 
@@ -324,11 +331,12 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 			// On when RR indicates Data-Not-Good.
 			// Disabled when RR mode switch is not set to AUTO TRACK.
-			if (lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 0; }
-			else if (lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 0; }
+			// FIX ME!
+			if (lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
 
-			if (RRCautFF == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { SetLight(2, 5, 1); }
-
+			if (lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { 
+				SetLight(2, 5, 1); 
+			}
 			else
 				SetLight(2, 5, 0);
 
@@ -346,8 +354,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_DOWN && lem->SCS_ATCA_AGS_CB.Voltage() < 24.0) {
 				lightlogic = true;
 			}
-			if (lightlogic)
-				SetLight(4, 5, 1);
+			if (lightlogic) {
+			SetLight(4, 5, 1);
+			}
 			else
 				SetLight(4, 5, 0);
 
@@ -382,8 +391,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterCautFF = 1; }
 			if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterCautFF = 1; }
 
-			if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1)
+			if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1) {
 				SetLight(2, 6, 1);
+			}
 			else
 				SetLight(2, 6, 0);
 
@@ -405,8 +415,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->SuitFanRotary.GetState() == 1 && lem->scera2.GetVoltage(3, 5) > 2.5) { lightlogic = true; } //Suit fan 1 failure
 			if (lem->scera1.GetVoltage(5, 3) < (792.5/720.0)) { lightlogic = true; } //Water separator failure
 
-			if (lightlogic)
+			if (lightlogic) {
 				SetLight(0, 7, 1);
+			}
 			else
 				SetLight(0, 7, 0);
 
@@ -426,8 +437,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			}
 			if (lem->scera1.GetVoltage(7, 1) < (99.6 / 200.0)) { OxygenCautFF3 = 1; } // Staged low ASC tank 1
 
-			if (OxygenCautFF1 == 1 || OxygenCautFF2 == 1 || OxygenCautFF3 == 1)
+			if (OxygenCautFF1 == 1 || OxygenCautFF2 == 1 || OxygenCautFF3 == 1) { 
 				SetLight(1, 7, 1);
+			}
 			else
 				SetLight(1, 7, 0);
 
@@ -438,8 +450,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->GlycolRotary.GetState() != 0 && lem->scera2.GetVoltage(3, 3) > 2.5) { lightlogic = true; }	// Glycol LLS
 			if (lem->GlycolRotary.GetState() != 0 && lem->scera1.GetVoltage(10, 1) > ((50.0 - 20.0) / 20.0)) { lightlogic = true; } // Glycol temp > 50F
 
-			if (lightlogic)
+			if (lightlogic) {
 				SetLight(2, 7, 1);
+			}
 			else
 				SetLight(2, 7, 0);
 
@@ -459,8 +472,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			}
 			if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15) { WaterCautFF3 = 1; } // Staged ASC tank unbalance
 
-			if (WaterCautFF1 == 1 || WaterCautFF2 == 1 || WaterCautFF3 == 1)
+			if (WaterCautFF1 == 1 || WaterCautFF2 == 1 || WaterCautFF3 == 1){
 				SetLight(3, 7, 1);
+				}
 			else
 				SetLight(3, 7, 0);
 
@@ -523,6 +537,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Lunar Contact and Component lights are lit in clbkPanelRedrawEvent code
 		break;
 	}
+
+	sprintf(oapiDebugString(), "O2FF1 %i O2FF1 %i O2FF1 %i WFF1 %i WFF1 %i WFF1 %i", OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3);
 }
 
 void LEM_CWEA::SystemTimestep(double simdt) {
