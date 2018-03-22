@@ -57,8 +57,12 @@ protected:
 	bool CESACWarnFF;   // Flip Flop
 	bool RRHeaterCautFF;   // Flip Flop
 	bool SBDHeaterCautFF;   // Flip Flop
-	bool OxygenCautFF;   // All 3 Flip Flops in O2 Caution 
-	bool WaterCautFF;   // All 3 Flip Flops in H2O Caution 
+	bool OxygenCautFF1;   // Flip Flop
+	bool OxygenCautFF2;   // Flip Flop
+	bool OxygenCautFF3;   // Flip Flop
+	bool WaterCautFF1;   // Flip Flop
+	bool WaterCautFF2;   // Flip Flop
+	bool WaterCautFF3;   // Flip Flop
 	bool RRCautFF;   // Flip Flop
 	bool MasterAlarm;
 

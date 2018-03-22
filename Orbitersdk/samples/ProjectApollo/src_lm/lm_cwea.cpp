@@ -49,10 +49,9 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	AGSWarnFF = 0;
 	CESDCWarnFF = 0;
 	CESACWarnFF = 0;
-	RRHeaterCautFF = 0;
-	SBDHeaterCautFF = 0;
-	OxygenCautFF = 0;
-	WaterCautFF = 0;
+	RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
+	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
+	WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
 	RRCautFF = 0;
 }
 
@@ -174,29 +173,25 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Either CES AC voltage (26V or 28V) out of tolerance.
 			// This power is provided by the ATCA main power supply and spins the RGAs and operate the AEA reference.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
-			if (CESACWarnFF == 1) {
-				if (lem->SCS_ATCA_CB.Voltage() < 24.0) { SetLight(0, 1, 1); }
-			}
-			else
-				SetLight(0, 1, 0);
+			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESACWarnFF = 0; }
+			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESACWarnFF = 1; }
 
-			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) {
-				CESACWarnFF = 0;
-			}
+			if (CESACWarnFF == 1)
+				SetLight(2, 1, 1);
+			else
+				SetLight(2, 1, 0);
 
 			// 6DS7 CES DC VOLTAGE FAILURE
 			// Any CES DC voltage out of tolerance.
 			// All of these are provided by the ATCA main power supply.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
-			if (CESDCWarnFF == 1) {
-				if (lem->SCS_ATCA_CB.Voltage() < 24.0) { SetLight(1, 1, 1); }
-			}
-			else
-				SetLight(1, 1, 0);
+			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESDCWarnFF = 0; }
+			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESDCWarnFF = 1; }
 
-			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) {
-				CESDCWarnFF = 0;
-			}
+			if (CESDCWarnFF == 1)
+				SetLight(2, 1, 1);
+			else
+				SetLight(2, 1, 0);
 
 			// 6DS8 AGS FAILURE
 			// On when any ASA power supply signals a failure, when AGS raises failure signal, or ASA overtemp.
@@ -206,8 +201,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) { AGSWarnFF = 1; } // AEA Test Mode Fail
 
 			if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
-				if (lem->scera1.GetVoltage(15, 4) > (13.2 / 2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC
-				if (lem->scera2.GetVoltage(15, 2) > (30.8 / 8.0) || lem->scera2.GetVoltage(15, 2) < (25.2 / 8.0)) { lightlogic = true; } // ASA +28VDC 
+				if (lem->scera1.GetVoltage(15, 4) > (13.2 / 2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC **Open circuit by overtemp condition**
+				if (lem->scera2.GetVoltage(15, 2) > (30.8 / 8.0) || lem->scera2.GetVoltage(15, 2) < (25.2 / 8.0)) { lightlogic = true; } // ASA +28VDC  
 				if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
 			}
 
@@ -243,7 +238,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 
 			// 6DS12 RCS A REGULATOR FAILURE
 			// RCS helium line pressure above 218.8 pisa or below 164.4 psia. Disabled when main shutoff solenoid valves close.
-			if (lem->scera1.GetVoltage(12, 1) < 2.5 && (lem->scera1.GetVoltage(6, 3) > (218.8/70.0) || lem->scera1.GetVoltage(6, 3) < (164.4/70.0)))
+			if (lem->scera1.GetVoltage(12, 1) < 2.5 && (lem->scera1.GetVoltage(6, 3) > (218.8 / 70.0) || lem->scera1.GetVoltage(6, 3) < (164.4 / 70.0)))
 				SetLight(1, 2, 1);
 			else
 				SetLight(1, 2, 0);
@@ -283,7 +278,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 
 			// 6DS21 HIGH HELIUM REGULATOR OUTLET PRESSURE CAUTION
 			// On when helium pressure downstream of regulators in ascent helium lines above 220 psia.
-			if (lem->scera1.GetVoltage(8, 3) > (219.5/60.0))
+			if (lem->scera1.GetVoltage(8, 3) > (219.5 / 60.0))
 				SetLight(0, 4, 1);
 			else
 				SetLight(0, 4, 0);
@@ -309,7 +304,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS26 INVERTER FAILURE CAUTION
 			// On when AC bus voltage below 112V or frequency below 398hz or above 402hz.
 			// Disabled when AC Power switch is off.
-			lightlogic =false;
+			lightlogic = false;
 			if (lem->EPSInverterSwitch.GetState() != THREEPOSSWITCH_DOWN) {
 				if (lem->scera1.GetVoltage(16, 1) >= ((402.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 1) <= ((398.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(17, 1) <= (112.0 / 25.0)) {
 					lightlogic = true;
@@ -370,7 +365,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS32 RCS FAILURE CAUTION
 			// On when helium pressure in either RCS system below 1700 psia.
 			// Disabled when RCS TEMP/PRESS MONITOR switch in HELIUM position.
-			if (lem->TempPressMonRotary.GetState() != 0 && (lem->scera1.GetVoltage(6, 1) < (1696.1/700.0) || lem->scera1.GetVoltage(6, 2) < (1696.1 / 700.0)))
+			if (lem->TempPressMonRotary.GetState() != 0 && (lem->scera1.GetVoltage(6, 1) < (1696.1 / 700.0) || lem->scera1.GetVoltage(6, 2) < (1696.1 / 700.0)))
 				SetLight(1, 6, 1);
 			else
 				SetLight(1, 6, 0);
@@ -381,16 +376,13 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// RR Assembly < -54.07F or > 147.69F
 			// Quad temps and LR temp do not turn the light on
 			// Disabled when Temperature Monitor switch selects affected assembly.
-			lightlogic = false;
-			if (lem->TempMonitorRotary.GetState() == 0) { RRHeaterCautFF = 1; }
-			else{ RRHeaterCautFF = 0; }
-			if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 1; }
-			else { SBDHeaterCautFF = 0; }
+			if (lem->TempMonitorRotary.GetState() == 0) { RRHeaterCautFF = 0; }
+			if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterCautFF = 1; }
 
-			if (RRHeaterCautFF == 0 && (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0))) { lightlogic = true; }			
-			if (SBDHeaterCautFF == 0 && (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0))) { lightlogic = true; }
+			if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 0; }
+			if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterCautFF = 1; }
 
-			if (lightlogic)
+			if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1)
 				SetLight(2, 6, 1);
 			else
 				SetLight(2, 6, 0);
@@ -411,8 +403,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->scera2.GetSwitch(12, 2)->IsClosed()) { lightlogic = true; } //Coolant pump 1 failure
 			if (lem->GlycolRotary.GetState() == 2 && lem->scera2.GetVoltage(13, 3) > 2.5) { lightlogic = true; } //Coolant pump 2 failure
 			if (lem->SuitFanRotary.GetState() == 1 && lem->scera2.GetVoltage(3, 5) > 2.5) { lightlogic = true; } //Suit fan 1 failure
-			if (lem->scera1.GetVoltage(5, 3) < 1.1) { lightlogic = true; } //Water separator failure
-			
+			if (lem->scera1.GetVoltage(5, 3) < (792.5/720.0)) { lightlogic = true; } //Water separator failure
+
 			if (lightlogic)
 				SetLight(0, 7, 1);
 			else
@@ -423,27 +415,28 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// < 135 psia in descent oxygen tank, or Less than full (<682.4 / 681.6 psia) ascent oxygen tanks, WHEN NOT STAGED
 			// Less than 99.6 psia in ascent oxygen tank #1
 			// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
-			lightlogic = false;
-			if (OxygenCautFF == 1) {
-				if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 1) < (681.6 / 200.0) || lem->scera1.GetVoltage(7, 2) < (682.4 / 200.0))) { lightlogic = true; }
-				if (lem->stage < 2 && (lem->scera2.GetVoltage(8, 2) < (135.0 / 600.0))) { lightlogic = true; }
-				if (lem->scera1.GetVoltage(7, 1) < (99.6 / 200.0)) { lightlogic = true; }
+			if (lem->QtyMonRotary.GetState() == 0) { 
+				OxygenCautFF1 = 0;
+				OxygenCautFF2 = 0;
+				OxygenCautFF3 = 0;
 			}
-			if (lightlogic)
+			if (lem->stage < 2) {
+				if (lem->scera1.GetVoltage(7, 1) < (681.6 / 200.0) || lem->scera1.GetVoltage(7, 2) < (682.4 / 200.0)) { OxygenCautFF1 = 1; } // Unstaged less than full ASC tanks
+				if (lem->scera2.GetVoltage(8, 2) < (135.0 / 600.0)) { OxygenCautFF2 = 1; } // Unstaged low DES tank
+			}
+			if (lem->scera1.GetVoltage(7, 1) < (99.6 / 200.0)) { OxygenCautFF3 = 1; } // Staged low ASC tank 1
+
+			if (OxygenCautFF1 == 1 || OxygenCautFF2 == 1 || OxygenCautFF3 == 1)
 				SetLight(1, 7, 1);
 			else
 				SetLight(1, 7, 0);
-
-			if (lem->QtyMonRotary.GetState() == 0) {
-				OxygenCautFF = 0;
-			}
 
 			// 6DS38 GLYCOL FAILURE CAUTION
 			// On when glycol qty low in primary coolant loop or primary loop glycol temp @ accumulator > 50F
 			// Disabled by Glycol Pump to INST(SEC) position
 			lightlogic = false;
-			if (lem->GlycolRotary.GetState() != 0 && lem->scera2.GetVoltage(3, 3) > 2.5) { lightlogic = true; }	//Glycol LLS
-			if (lem->GlycolRotary.GetState() != 0 && lem->scera1.GetVoltage(10, 1) > ((50.0 - 20.0) / 20.0)) { lightlogic = true; } //Glycol temp > 50F (1.5V scaled)
+			if (lem->GlycolRotary.GetState() != 0 && lem->scera2.GetVoltage(3, 3) > 2.5) { lightlogic = true; }	// Glycol LLS
+			if (lem->GlycolRotary.GetState() != 0 && lem->scera1.GetVoltage(10, 1) > ((50.0 - 20.0) / 20.0)) { lightlogic = true; } // Glycol temp > 50F
 
 			if (lightlogic)
 				SetLight(2, 7, 1);
@@ -455,21 +448,21 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// NOT STAGED: Descent water tank < 15.94% or < 94.78% in either ascent tank
 			// Unequal levels in either ascent tank
 			// Off by positioning O2/H20 QTY MON switch to CWEA RESET position.
-			lightlogic = false;
-			if (WaterCautFF == 1) {
-				if (lem->stage < 2 && (lem->scera1.GetVoltage(7, 3) < (0.1594 / 0.2))) { lightlogic = true; }
-				if (lem->stage < 2 && (lem->scera1.GetVoltage(8, 1) < (0.9478 / 0.2) || lem->scera1.GetVoltage(8, 2) < (0.9478 / 0.2))) { lightlogic = true; }
-				if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15) { lightlogic = true; }
+			if (lem->QtyMonRotary.GetState() == 0) { 
+				WaterCautFF1 = 0; 
+				WaterCautFF2 = 0;
+				WaterCautFF3 = 0;
 			}
+			if (lem->stage < 2) {
+				if (lem->scera1.GetVoltage(7, 3) < (0.1594 / 0.2)) { WaterCautFF1 = 1; } // Unstaged, DES tank < 15.94%
+				if (lem->scera1.GetVoltage(8, 1) < (0.9478 / 0.2) || lem->scera1.GetVoltage(8, 2) < (0.9478 / 0.2)) { WaterCautFF2 = 1; } // Unstaged, ASC tank < 94.78%
+			}
+			if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15) { WaterCautFF3 = 1; } // Staged ASC tank unbalance
 
-			if (lightlogic)
+			if (WaterCautFF1 == 1 || WaterCautFF2 == 1 || WaterCautFF3 == 1)
 				SetLight(3, 7, 1);
 			else
 				SetLight(3, 7, 0);
-
-			if (lem->QtyMonRotary.GetState() == 0) {
-				WaterCautFF = 0;
-			}
 
 			// 6DS40 S-BAND RECEIVER FAILURE CAUTION
 			// On when AGC signal lost.
@@ -553,8 +546,12 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "CESACWARNFF", CESACWarnFF);
 	papiWriteScenario_bool(scn, "RRHEATERCAUTFF", RRHeaterCautFF);
 	papiWriteScenario_bool(scn, "SBDHEATERCAUTFF", SBDHeaterCautFF);
-	papiWriteScenario_bool(scn, "OXYGENCAUTFF", OxygenCautFF);
-	papiWriteScenario_bool(scn, "WATERCAUTFF", WaterCautFF);
+	papiWriteScenario_bool(scn, "OXYGENCAUTFF", OxygenCautFF1);
+	papiWriteScenario_bool(scn, "OXYGENCAUTFF", OxygenCautFF2);
+	papiWriteScenario_bool(scn, "OXYGENCAUTFF", OxygenCautFF3);
+	papiWriteScenario_bool(scn, "WATERCAUTFF", WaterCautFF1);
+	papiWriteScenario_bool(scn, "WATERCAUTFF", WaterCautFF2);
+	papiWriteScenario_bool(scn, "WATERCAUTFF", WaterCautFF3);
 	papiWriteScenario_bool(scn, "RRCAUTFF", RRCautFF);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
@@ -581,8 +578,12 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "CESACWARNFF", CESACWarnFF);
 		papiReadScenario_bool(line, "RRHEATERCAUTFF", RRHeaterCautFF);
 		papiReadScenario_bool(line, "SBDHEATERCAUTFF", SBDHeaterCautFF);
-		papiReadScenario_bool(line, "OXYGENCAUTFF", OxygenCautFF);
-		papiReadScenario_bool(line, "WATERCAUTFF", WaterCautFF);
+		papiReadScenario_bool(line, "OXYGENCAUTFF1", OxygenCautFF1);
+		papiReadScenario_bool(line, "OXYGENCAUTFF2", OxygenCautFF2);
+		papiReadScenario_bool(line, "OXYGENCAUTFF3", OxygenCautFF3);
+		papiReadScenario_bool(line, "WATERCAUTFF1", WaterCautFF1);
+		papiReadScenario_bool(line, "WATERCAUTFF2", WaterCautFF2);
+		papiReadScenario_bool(line, "WATERCAUTFF3", WaterCautFF3);
 		papiReadScenario_bool(line, "RRCAUTFF", RRCautFF);
 		papiReadScenario_intarr(line, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS1", &LightStatus[1][0], 8);

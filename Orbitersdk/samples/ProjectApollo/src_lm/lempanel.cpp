@@ -3346,7 +3346,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_H2OSEP_LIGHT:
 		if (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered()) {
-			if (INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < 1.1 || LampToneTestRotary.GetState() == 6)) {
+			if (INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
 				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 			}
 		}
