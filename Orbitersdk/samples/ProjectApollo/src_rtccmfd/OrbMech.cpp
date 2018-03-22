@@ -4919,6 +4919,37 @@ bool QDRTPI(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, doub
 	return true;
 }
 
+double CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH, double mu)
+{
+	int s_F;
+	double c_I, dv, tt, e_H, dvo, eps2, p_H, e_Ho;
+	VECTOR3 u, R_A2, V_A2, V_A1F, R_PH2, V_PH2;
+
+	p_H = c_I = 0.0;
+	s_F = 0;
+	dv = 50.0*0.3048;
+	eps2 = 1.0;
+
+	u = unit(crossp(R_P2, V_P2));
+	R_A1 = unit(R_A1 - u * dotp(R_A1, u))*length(R_A1);
+	V_A1 = unit(V_A1 - u * dotp(V_A1, u))*length(V_A1);
+
+	do
+	{
+		V_A1F = V_A1 + unit(crossp(u, R_A1))*dv;
+		OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, tt);
+		//t_H2 = t_H1 + tt;
+		OrbMech::RADUP(R_P2, V_P2, R_A2, mu, R_PH2, V_PH2);
+		e_H = length(R_PH2) - length(R_A2) - DH;
+		if (p_H == 0 || abs(e_H) >= eps2)
+		{
+			ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
+		}
+	} while (abs(e_H) >= eps2);
+
+	return dv;
+}
+
 MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V)
 {
 	VECTOR3 i, j, k;
@@ -5240,7 +5271,7 @@ double GETfromMJD(double MJD, double GETBase)
 	return (MJD - GETBase)*24.0*3600.0;
 }
 
-void format_time(char *buf, double time) {
+void format_time_HHMMSS(char *buf, double time) {
 	buf[0] = 0; // Clobber
 	int hours, minutes, seconds;
 	if (time < 0) { return; } // don't do that
@@ -5248,6 +5279,15 @@ void format_time(char *buf, double time) {
 	minutes = (int)((time / 60) - (hours * 60));
 	seconds = (int)((time - (hours * 3600)) - (minutes * 60));
 	sprintf(buf, "%03d:%02d:%02d", hours, minutes, seconds);
+}
+
+void format_time_MMSS(char *buf, double time) {
+	buf[0] = 0; // Clobber
+	int minutes, seconds;
+	if (time < 0) { return; } // don't do that
+	minutes = (int)(time / 60);
+	seconds = (int)(time - (minutes * 60));
+	sprintf(buf, "%d:%02d", minutes, seconds);
 }
 
 double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat)

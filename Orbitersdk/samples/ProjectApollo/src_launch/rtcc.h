@@ -81,11 +81,13 @@ struct LambertMan //Data for Lambert targeting
 	int axis;	//Multi-axis or horizontal burn
 	int Perturbation; //Spherical or non-spherical gravity
 	VECTOR3 Offset; //Offset vector
-	double PhaseAngle; //Phase angle to target, will overwrite offset
+	double PhaseAngle = 0.0; //Phase angle to target, will overwrite offset
 	//bool prograde; //Prograde or retrograde solution
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;		//State vector as input
 };
 
 struct AP7ManPADOpt
@@ -647,6 +649,9 @@ struct calculationParameters {
 	double DOI;		// Time of DOI
 	double PDI;		// Time of PDI
 	double TLAND;	// Time of landing
+	double Insertion; // Time of Insertion
+	double Phasing;	// Time of Phasing
+	double CSI;		// Time of CSI
 	double TPI;		// Time of TPI
 	double TEI;		// Time of TEI
 	double EI;		// Time of Entry Interface
@@ -808,6 +813,7 @@ private:
 	SV FindPericynthion(SV sv0);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
 	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
+	void RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 
 	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL);
