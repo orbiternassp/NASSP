@@ -377,9 +377,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Quad temps and LR temp do not turn the light on
 			// Disabled when Temperature Monitor switch selects affected assembly.
 			if (lem->TempMonitorRotary.GetState() == 0) { RRHeaterCautFF = 0; }
-			if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterCautFF = 1; }
-
 			if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 0; }
+
+			if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterCautFF = 1; }
 			if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterCautFF = 1; }
 
 			if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1)
