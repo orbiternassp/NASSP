@@ -179,10 +179,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESACWarnFF = 1; }
 
 			if (CESACWarnFF == 1) {
-				SetLight(2, 1, 1);
+				SetLight(0, 1, 1);
 			}
 			else
-				SetLight(2, 1, 0);
+				SetLight(0, 1, 0);
 
 			// 6DS7 CES DC VOLTAGE FAILURE
 			// Any CES DC voltage out of tolerance.
@@ -192,10 +192,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESDCWarnFF = 1; }
 
 			if (CESDCWarnFF == 1) {
-				SetLight(2, 1, 1);
+				SetLight(1, 1, 1);
 			}
 			else
-				SetLight(2, 1, 0);
+				SetLight(1, 1, 0);
 
 			// 6DS8 AGS FAILURE
 			// On when any ASA power supply signals a failure, when AGS raises failure signal, or ASA overtemp.
@@ -210,7 +210,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 				if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
 			}
 
-			if (lightlogic || AGSWarnFF == 1)
+			if (lightlogic)
 			{
 				SetLight(2, 1, 1);
 			}
