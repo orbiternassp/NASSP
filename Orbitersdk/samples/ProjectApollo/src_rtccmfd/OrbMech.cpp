@@ -2294,11 +2294,12 @@ double GetPlanetCurrentRotation(OBJHANDLE plan, double t)
 	return r;
 }
 
-double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref)
+double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref, bool s)
 {
-	double w_A, w_P, r_A, v_A, r_P, v_P, alpha, t, dt, E_err, E_A;
+	double w_A, w_P, r_A, v_A, r_P, v_P, alpha, t, dt, E_err, E_A, mu;
 	VECTOR3 u, R_A, V_A, R_P, V_P, U_L, U_P;
 
+	mu = GGRAV * oapiGetMass(gravref);
 	t = 0;
 	E_err = 1.0;
 	dt = 10.0;
@@ -2320,8 +2321,16 @@ double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double m
 		alpha = E + sign(dotp(crossp(R_A, R_P), u))*acos(dotp(R_A / r_A, R_P / r_P));
 		dt = (alpha - PI + sign(r_P - r_A)*(PI - acos(r_A*cos(E) / r_P))) / (w_A - w_P);
 
-		oneclickcoast(R_A, V_A, mjd0+t/24.0/3600.0, dt, R_A, V_A, gravref, gravref);
-		oneclickcoast(R_P, V_P, mjd0+t/24.0/3600.0, dt, R_P, V_P, gravref, gravref);
+		if (s == true)
+		{
+			oneclickcoast(R_A, V_A, mjd0 + t / 24.0 / 3600.0, dt, R_A, V_A, gravref, gravref);
+			oneclickcoast(R_P, V_P, mjd0 + t / 24.0 / 3600.0, dt, R_P, V_P, gravref, gravref);
+		}
+		else
+		{
+			rv_from_r0v0(R_A, V_A, dt, R_A, V_A, mu);
+			rv_from_r0v0(R_P, V_P, dt, R_P, V_P, mu);
+		}
 		t += dt;
 		r_A = length(R_A);
 		v_A = length(V_A);
@@ -4816,7 +4825,7 @@ void REVUP(VECTOR3 R, VECTOR3 V, double n, double mu, VECTOR3 &R1, VECTOR3 &V1, 
 	double a;
 
 	a = 1.0 / (2.0/length(R) - dotp(V, V) / mu);
-	t = n*2.0*PI*sqrt(power(a, 3) / mu);
+	t = n * PI2*sqrt(power(a, 3.0) / mu);
 	rv_from_r0v0(R, V, t, R1, V1, mu);
 }
 
@@ -4948,6 +4957,22 @@ double CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH
 	} while (abs(e_H) >= eps2);
 
 	return dv;
+}
+
+VECTOR3 CoellipticDV(VECTOR3 R_A2, VECTOR3 R_PC, VECTOR3 V_PC, double mu)
+{
+	VECTOR3 u;
+	double dH, v_PV, epsilon, a_P, a_A, v_AV, v_AH;
+
+	u = unit(crossp(R_PC, V_PC));
+	dH = length(R_PC) - length(R_A2);
+	v_PV = dotp(V_PC, R_A2 / length(R_A2));
+	epsilon = (length(V_PC)*length(V_PC)) / 2.0 - mu / length(R_PC);
+	a_P = -mu / (2.0 * epsilon);
+	a_A = a_P - dH;
+	v_AV = v_PV * power((a_P / a_A), 1.5);
+	v_AH = sqrt(mu*(2.0 / length(R_A2) - 1.0 / a_A) - (v_AV*v_AV));
+	return unit(crossp(u, R_A2))*v_AH + unit(R_A2)*v_AV;
 }
 
 MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V)

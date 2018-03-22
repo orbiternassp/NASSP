@@ -4436,7 +4436,38 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 72: //PHASING MANEUVER
+	case 72: //PDI ABORT MANEUVER
+	{
+		AP11LMManPADOpt opt;
+		DKIOpt dkiopt;
+		SV sv_LM, sv_CSM, sv_DOI;
+		double GETbase, dt_peri, t_Abort, t_TPI_guess, t_TPI_Abort;
+
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+		GETbase = getGETBase();
+
+		sv_CSM = StateVectorCalc(calcParams.src);
+		sv_LM = StateVectorCalc(calcParams.tgt);
+		sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv_LM, 0.0);
+
+		dt_peri = OrbMech::timetoperi_integ(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, sv_DOI.gravref);
+		t_Abort = (sv_DOI.MJD - GETbase)*24.0*3600.0 + dt_peri;
+
+		t_TPI_guess = OrbMech::HHMMSSToSS(103, 9, 0);
+		t_TPI_Abort = FindOrbitalMidnight(sv_CSM, GETbase, t_TPI_guess);
+
+		dkiopt.DH = 15.0*1852.0;
+		dkiopt.E = 26.6*RAD;
+		dkiopt.GETbase = GETbase;
+		dkiopt.sv_A = sv_DOI;
+		dkiopt.sv_P = sv_CSM;
+		dkiopt.t_TIG = t_Abort;
+		dkiopt.t_TPI = t_TPI_Abort;
+
+		DockingInitiationProcessor(&dkiopt);
+	}
+	break;
+	case 73: //PHASING MANEUVER
 	{
 		AP11LMManPADOpt opt;
 		LambertMan lamopt;
@@ -11187,4 +11218,64 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 
 	t_Ins = t_Insertion;
 	CSI = t_CSI;
+}
+
+void RTCC::DockingInitiationProcessor(DKIOpt *opt)
+{
+	SV sv_AP, sv_TPI, sv_PC;
+	VECTOR3 u, R_AP, V_AP, V_APF, R_AH, V_AH, V_AHF, R_AC, V_AC, R_PC, V_PC, V_ACF, R_PJ, V_PJ, R_AFD, R_AF, V_AF;
+	double mu, dv_P, p_P, dt_PH, p_H, c_P, c_H, eps_H, eps_P, dv_H, dt_HC, t_H, t_C, e_H, dv_Ho, dv_Po, e_Ho, e_Po, e_P;
+	int s_H, s_P;
+
+	eps_H = 1.0;		//meters
+	eps_P = 0.000004;	//radians
+	s_P = 0;
+	p_P = c_P = 0.0;
+	dv_P = 100.0*0.3048;
+	dv_H = 0.0;
+	mu = GGRAV * oapiGetMass(opt->sv_A.gravref);
+
+	sv_AP = coast(opt->sv_A, opt->t_TIG - OrbMech::GETfromMJD(opt->sv_A.MJD, opt->GETbase));
+	sv_TPI = coast(opt->sv_P, opt->t_TPI - OrbMech::GETfromMJD(opt->sv_P.MJD, opt->GETbase));
+
+	OrbMech::QDRTPI(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, sv_TPI.gravref, mu, opt->DH, opt->E, 0, R_PJ, V_PJ);
+	R_AFD = R_PJ - unit(R_PJ)*opt->DH;
+
+	u = unit(crossp(sv_TPI.R, sv_TPI.V));
+
+	R_AP = unit(sv_AP.R - u * dotp(sv_AP.R, u))*length(sv_AP.R);
+	V_AP = unit(sv_AP.V - u * dotp(sv_AP.V, u))*length(sv_AP.V);
+
+	do
+	{
+		V_APF = V_AP + unit(crossp(u, R_AP))*dv_P;
+		OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
+		t_H = opt->t_TIG + dt_PH;
+
+		p_H = c_H = 0.0;
+		s_H = 0;
+
+		do
+		{
+			V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
+			OrbMech::REVUP(R_AH, V_AHF, 0.5, mu, R_AC, V_AC, dt_HC);
+			t_C = t_H + dt_HC;
+			OrbMech::RADUP(sv_TPI.R, sv_TPI.V, R_AC, mu, R_PC, V_PC);
+			e_H = length(R_PC) - length(R_AC) - opt->DH;
+
+			if (p_H == 0 || abs(e_H) >= eps_H)
+			{
+				OrbMech::ITER(c_H, s_H, e_H, p_H, dv_H, e_Ho, dv_Ho);
+			}
+		} while (abs(e_H) >= eps_H);
+
+		V_ACF = OrbMech::CoellipticDV(R_AC, R_PC, V_PC, mu);
+		OrbMech::rv_from_r0v0(R_AC, V_ACF, opt->t_TPI - t_C, R_AF, V_AF, mu);
+		e_P = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
+
+		if (p_P == 0 || abs(e_P) >= eps_P)
+		{
+			OrbMech::ITER(c_P, s_P, e_P, p_P, dv_P, e_Po, dv_Po);
+		}
+	} while (abs(e_P) >= eps_P);
 }

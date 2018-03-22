@@ -638,6 +638,17 @@ struct LMARKTRKPADOpt
 	double alt = 0;	//landmark altitude
 };
 
+struct DKIOpt
+{
+	SV sv_A;
+	SV sv_P;
+	double GETbase;
+	double t_TIG;
+	double t_TPI;
+	double DH;
+	double E;
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;	// Our ship
@@ -769,6 +780,7 @@ public:
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
+	void DockingInitiationProcessor(DKIOpt *opt);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
