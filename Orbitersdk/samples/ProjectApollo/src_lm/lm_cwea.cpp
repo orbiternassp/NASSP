@@ -410,10 +410,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Selection of #2 suit fan
 			lightlogic = false;
 			if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6 / 6.0)) { lightlogic = true; }	// CO2 Partial Pressure > 7.6mm
-			if (lem->scera2.GetSwitch(12, 2)->IsClosed()) { lightlogic = true; } //Coolant pump 1 failure
-			if (lem->GlycolRotary.GetState() == 2 && lem->scera2.GetVoltage(13, 3) > 2.5) { lightlogic = true; } //Coolant pump 2 failure
-			if (lem->SuitFanRotary.GetState() == 1 && lem->scera2.GetVoltage(3, 5) > 2.5) { lightlogic = true; } //Suit fan 1 failure
-			if (lem->scera1.GetVoltage(5, 3) < (792.5/720.0)) { lightlogic = true; } //Water separator failure
+			if (lem->scera2.GetVoltage(13, 3) > 2.5) { lightlogic = true; } // Glycol pump failure
+			if (lem->SuitFanRotary.GetState() == 1 && lem->scera2.GetVoltage(3, 5) > 2.5) { lightlogic = true; } // Suit fan 1 failure
+			if (lem->scera1.GetVoltage(5, 3) < (792.5/720.0)) { lightlogic = true; } // Water separator failure
 
 			if (lightlogic) {
 				SetLight(0, 7, 1);
@@ -435,7 +434,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 				if (lem->scera1.GetVoltage(7, 1) < (681.6 / 200.0) || lem->scera1.GetVoltage(7, 2) < (682.4 / 200.0)) { OxygenCautFF1 = 1; } // Unstaged less than full ASC tanks
 				if (lem->scera2.GetVoltage(8, 2) < (135.0 / 600.0)) { OxygenCautFF2 = 1; } // Unstaged low DES tank
 			}
-			if (lem->scera1.GetVoltage(7, 1) < (99.6 / 200.0)) { OxygenCautFF3 = 1; } // Staged low ASC tank 1
+			if (lem->scera1.GetVoltage(7, 1) < (99.6 / 200.0)) { OxygenCautFF3 = 1; } // Low ASC tank 1
 
 			if (OxygenCautFF1 == 1 || OxygenCautFF2 == 1 || OxygenCautFF3 == 1) { 
 				SetLight(1, 7, 1);
@@ -538,7 +537,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 		break;
 	}
 
-	sprintf(oapiDebugString(), "O2FF1 %i O2FF1 %i O2FF1 %i WFF1 %i WFF1 %i WFF1 %i", OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3);
+	//sprintf(oapiDebugString(), "MA %i AGS %i DC %i AC %i RR %i SB %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i", MasterAlarm, AGSWarnFF, CESDCWarnFF, CESACWarnFF, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3);
 }
 
 void LEM_CWEA::SystemTimestep(double simdt) {
