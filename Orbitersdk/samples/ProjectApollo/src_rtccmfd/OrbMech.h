@@ -251,7 +251,8 @@ namespace OrbMech {
 	VECTOR3 r_from_latlong(double lat, double lng, double r);
 	double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat);
 	double GETfromMJD(double MJD, double GETBase);
-	void format_time(char *buf, double time);
+	void format_time_HHMMSS(char *buf, double time);
+	void format_time_MMSS(char *buf, double time);
 	bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
 	bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
@@ -274,6 +275,7 @@ namespace OrbMech {
 	void COE(VECTOR3 R, VECTOR3 V, double h, double mu, VECTOR3 &R_C, VECTOR3 &V_C);
 	void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double &xo, double dx0 = 1.0);
 	bool QDRTPI(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J);
+	double CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH, double mu);
 	double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep);
 	void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &radius);
 	void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl);
