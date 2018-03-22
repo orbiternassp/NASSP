@@ -546,12 +546,12 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "CESACWARNFF", CESACWarnFF);
 	papiWriteScenario_bool(scn, "RRHEATERCAUTFF", RRHeaterCautFF);
 	papiWriteScenario_bool(scn, "SBDHEATERCAUTFF", SBDHeaterCautFF);
-	papiWriteScenario_bool(scn, "OXYGENCAUTFF", OxygenCautFF1);
-	papiWriteScenario_bool(scn, "OXYGENCAUTFF", OxygenCautFF2);
-	papiWriteScenario_bool(scn, "OXYGENCAUTFF", OxygenCautFF3);
-	papiWriteScenario_bool(scn, "WATERCAUTFF", WaterCautFF1);
-	papiWriteScenario_bool(scn, "WATERCAUTFF", WaterCautFF2);
-	papiWriteScenario_bool(scn, "WATERCAUTFF", WaterCautFF3);
+	papiWriteScenario_bool(scn, "OXYGENCAUTFF1", OxygenCautFF1);
+	papiWriteScenario_bool(scn, "OXYGENCAUTFF2", OxygenCautFF2);
+	papiWriteScenario_bool(scn, "OXYGENCAUTFF3", OxygenCautFF3);
+	papiWriteScenario_bool(scn, "WATERCAUTFF1", WaterCautFF1);
+	papiWriteScenario_bool(scn, "WATERCAUTFF2", WaterCautFF2);
+	papiWriteScenario_bool(scn, "WATERCAUTFF3", WaterCautFF3);
 	papiWriteScenario_bool(scn, "RRCAUTFF", RRCautFF);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
