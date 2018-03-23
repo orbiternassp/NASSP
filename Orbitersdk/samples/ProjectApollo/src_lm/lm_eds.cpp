@@ -317,7 +317,10 @@ void LEM_EDRelayBox::LoadState(FILEHANDLE scn, char *end_str) {
 }
 
 // EXPLOSIVE DEVICES SYSTEM
-LEM_EDS::LEM_EDS() {
+LEM_EDS::LEM_EDS() :
+	HeliumPressurizationDelayA(6.0),
+	HeliumPressurizationDelayB(6.0)
+{
 	lem = NULL;
 	LG_Deployed = FALSE;
 	Deadface = false;
@@ -337,8 +340,19 @@ void LEM_EDS::TimeStep(double simdt) {
 	if (lem->stage < 2)
 	{
 		RelayBoxA.Timestep(simdt);
+		HeliumPressurizationDelayA.Timestep(simdt);
 	}
 	RelayBoxB.Timestep(simdt);
+	HeliumPressurizationDelayB.Timestep(simdt);
+
+	if (RelayBoxA.GetDescentEngineOnRelay())
+	{
+		HeliumPressurizationDelayA.SetRunning(true);
+	}
+	if (RelayBoxB.GetDescentEngineOnRelay())
+	{
+		HeliumPressurizationDelayB.SetRunning(true);
+	}
 
 	bool pyroA = false, pyroB = false;
 
@@ -616,6 +630,8 @@ void LEM_EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "LG_DEP", LG_Deployed);
 	oapiWriteScenario_int(scn, "DEADFACE", Deadface);
+	HeliumPressurizationDelayA.SaveState(scn, "HEPRESSDELAYA_BEGIN", "HEPRESSDELAYA_END");
+	HeliumPressurizationDelayB.SaveState(scn, "HEPRESSDELAYB_BEGIN", "HEPRESSDELAYB_END");
 	if (lem->stage < 2)
 		RelayBoxA.SaveState(scn, "LEM_EDS_RELAYBOXA_BEGIN", "LEM_EDS_RELAYBOX_END");
 	RelayBoxB.SaveState(scn, "LEM_EDS_RELAYBOXB_BEGIN", "LEM_EDS_RELAYBOX_END");
@@ -634,9 +650,15 @@ void LEM_EDS::LoadState(FILEHANDLE scn, char *end_str) {
 			sscanf(line + 6, "%d", &dec);
 			LG_Deployed = (bool)(dec != 0);
 		}
-		if (!strnicmp(line, "DEADFACE", 8)) {
+		else if (!strnicmp(line, "DEADFACE", 8)) {
 			sscanf(line + 8, "%d", &dec);
 			Deadface = (bool)(dec != 0);
+		}
+		else if (!strnicmp(line, "HEPRESSDELAYA_BEGIN", sizeof("HEPRESSDELAYA_BEGIN"))) {
+			HeliumPressurizationDelayA.LoadState(scn, "HEPRESSDELAYA_END");
+		}
+		else if (!strnicmp(line, "HEPRESSDELAYB_BEGIN", sizeof("HEPRESSDELAYB_BEGIN"))) {
+			HeliumPressurizationDelayB.LoadState(scn, "HEPRESSDELAYB_END");
 		}
 		if (!strnicmp(line, "LEM_EDS_RELAYBOXA_BEGIN", sizeof("LEM_EDS_RELAYBOXA_BEGIN"))) {
 			RelayBoxA.LoadState(scn, "LEM_EDS_RELAYBOX_END");
