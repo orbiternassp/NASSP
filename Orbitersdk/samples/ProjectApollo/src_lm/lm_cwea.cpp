@@ -132,14 +132,16 @@ void LEM_CWEA::TimeStep(double simdt) {
 			else
 				SetLight(1, 0, 0);
 
-			// 6DS3 HI/LO HELIUM REG OUTLET PRESS
+			// 6DS3 DES HI/LO HELIUM REG OUTLET PRESS
 			// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 			// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
-			// Contains a flip flop that is only reset by GSE, not implemented yet
-			if (lem->stage < 2 && lem->deca.GetK10() && lem->deca.GetK23()) {
-				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260.0 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220.0) {
-					SetLight(2, 0, 1);
-				}
+			lightlogic = false;
+			if (lem->scera1.GetVoltage(3, 9) > 2.5) { DesRegWarnFF = 1; }//Needs OR Time Delay (6 sec) here
+			if (lem->stage < 2) {
+				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260.0 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220.0) { lightlogic = true;}
+			}
+			if (lightlogic && DesRegWarnFF == 1) {
+				SetLight(2, 0, 1);
 			}
 			else
 				SetLight(2, 0, 0);

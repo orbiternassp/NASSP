@@ -1088,6 +1088,16 @@ void DECA::Timestep(double simdt) {
 		DEArm = false;
 	}
 
+	//DPS Arm
+	if (lem->SCS_DECA_PWR_CB.IsPowered() && (lem->deca.GetK1() || lem->deca.GetK23()))
+		{
+		engArm = true;
+		}
+	else
+	{
+		engArm = false;
+	}
+
 	//DECA Power Supply Failure
 	if (DEArm && !powered)
 	{

@@ -322,6 +322,8 @@ void SCERA1::Timestep()
 	SA3.SetOutput(7, lem->GetRCSThrusterLevel(LMRCS_A1F) > 0.5);
 	//RCS thrust chamber pressure B1L (GR5046)
 	SA3.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_B1L) > 0.5);
+	//DPS Arm (GH1348X)
+	SA3.SetOutput(9, lem->deca.GetEngArm());
 
 	//AEA Test mode fail (GI3232X)
 	SA4.SetOutput(1, lem->aea.GetTestModeFailure());
