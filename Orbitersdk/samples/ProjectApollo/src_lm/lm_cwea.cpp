@@ -28,7 +28,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
-#include "lm_channels.h"
 #include "LEM.h"
 #include "papi.h"
 #include "lm_cwea.h"
@@ -101,12 +100,6 @@ void LEM_CWEA::SetMasterAlarm(bool alarm) {
 }
 
 void LEM_CWEA::TimeStep(double simdt) {
-	ChannelValue val11;
-	ChannelValue val13;
-	ChannelValue val30;
-	ChannelValue val33;
-	ChannelValue val163;
-
 	bool lightlogic;
 
 	if (MasterAlarm && IsMAPowered()) {
@@ -120,11 +113,6 @@ void LEM_CWEA::TimeStep(double simdt) {
 	}
 
 	if (lem == NULL) { return; }
-	val11 = lem->agc.GetOutputChannel(011);
-	val13 = lem->agc.GetOutputChannel(013);
-	val30 = lem->agc.GetInputChannel(030);
-	val33 = lem->agc.GetInputChannel(033);
-	val163 = lem->agc.GetOutputChannel(0163);
 
 	if (IsLTGPowered()) {
 		if (IsCWEAPowered()) {
@@ -218,7 +206,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS9 LGC FAILURE
 			// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
 			// Disabled by Guidance Control switch in AGS position.
-			if ((val163[Ch163DSKYWarn]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP)
+			if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP && lem->scera2.GetVoltage(3, 11) > 2.5)
 				SetLight(3, 1, 1);
 			else
 				SetLight(3, 1, 0);
@@ -226,7 +214,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS10 ISS FAILURE
 			// On when ISS power supply fails, PIPA fails while main engine thrusting, gimbal servo fails, CDU fails.
 			// Disabled by Guidance Control switch in AGS position.
-			if ((val11[ISSWarning] || val33[PIPAFailed] || val30[IMUCDUFailure] || val30[IMUFailure]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP)
+			if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP && lem->scera2.GetVoltage(3, 12) > 2.5)
 				SetLight(4, 1, 1);
 			else
 				SetLight(4, 1, 0);

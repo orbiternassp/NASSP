@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
+#include "lm_channels.h"
 #include "LEM.h"
 #include "lm_scea.h"
 
@@ -669,6 +670,9 @@ void SCERA2::Reset()
 
 void SCERA2::Timestep()
 {
+	ChannelValue val11;
+	ChannelValue val163;
+
 	if (!Operate) {
 		if (IsPowered())
 			Operate = true;
@@ -679,6 +683,9 @@ void SCERA2::Timestep()
 		Reset();
 		return;
 	}
+
+	val11 = lem->agc.GetOutputChannel(011);
+	val163 = lem->agc.GetOutputChannel(0163);
 
 	//Rendezvous Radar No Track (GN7621X)
 	SA2.SetOutput(1, lem->RR.GetNoTrackSignal());
@@ -697,6 +704,11 @@ void SCERA2::Timestep()
 	SA3.SetOutput(3, lem->ecs.GetPrimGlycolLowLevel() || lem->ecs.GetSecGlycolLowLevel());
 	//Emergency oxygen valve electrically open (GF3572)
 	SA3.SetOutput(8, lem->CabinRepressValve.GetEmergencyCabinRepressRelay());
+	//LGC Warning (GG9001X)
+	SA3.SetOutput(11, val163[Ch163DSKYWarn]);
+	//ISS Warning (GG9002X)
+	SA3.SetOutput(12, val11[ISSWarning]);
+
 
 	//CO2 secondary cartridge (GF1241)
 	SA5.SetOutput(1, lem->CO2CanisterSelectSwitch.GetState() == 0);
