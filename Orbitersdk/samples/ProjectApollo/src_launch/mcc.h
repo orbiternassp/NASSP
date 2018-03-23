@@ -494,8 +494,10 @@
 #define MST_F_LUNAR_ORBIT_DOI_DAY_13	212
 // Ends at Phasing update
 #define MST_F_LUNAR_ORBIT_DOI_DAY_14	213
-// Ends at CSM state vector update
+// Ends at LGC CSM state vector update
 #define MST_F_LUNAR_ORBIT_DOI_DAY_15	214
+// Ends at CMC CSM+LM state vector update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_16	215
 
 // Ground Station Information Structure
 struct GroundStation {

@@ -4975,6 +4975,11 @@ VECTOR3 CoellipticDV(VECTOR3 R_A2, VECTOR3 R_PC, VECTOR3 V_PC, double mu)
 	return unit(crossp(u, R_A2))*v_AH + unit(R_A2)*v_AV;
 }
 
+VECTOR3 ApplyHorizontalDV(VECTOR3 R, VECTOR3 V, double dv)
+{
+	return unit(crossp(unit(crossp(R, V)), R))*dv;
+}
+
 MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V)
 {
 	VECTOR3 i, j, k;
