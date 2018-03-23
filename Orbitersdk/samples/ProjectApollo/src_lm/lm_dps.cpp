@@ -663,9 +663,12 @@ void DPSGimbalActuator::Timestep(double simt, double simdt) {
 		GimbalTimestep(simdt);
 	}
 
+	gimbalfail = false;
+
 	// Only 6.0 degrees of travel allowed.
-	if (position > 6.0) { position = 6.0; }
-	if (position < -6.0) { position = -6.0; }
+	if (position > 6.0) { position = 6.0; gimbalfail = true; }
+	if (position < -6.0) {position = -6.0; gimbalfail = true; }
+
 
 	//sprintf(oapiDebugString(), "position %.3f commandedPosition %d lgcPosition %d", position, commandedPosition, lgcPosition);
 }
