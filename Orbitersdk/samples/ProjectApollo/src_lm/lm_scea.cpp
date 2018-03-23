@@ -526,8 +526,6 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	//sprintf(oapiDebugString(), "Sig %lf SBDV %lf", lem->SBand.rcvr_agc_voltage, lem->scera1.GetVoltage(5, 4));
-
 }
 
 double SCERA1::GetVoltage(int sa, int chan)
@@ -704,11 +702,14 @@ void SCERA2::Timestep()
 	SA3.SetOutput(3, lem->ecs.GetPrimGlycolLowLevel() || lem->ecs.GetSecGlycolLowLevel());
 	//Emergency oxygen valve electrically open (GF3572)
 	SA3.SetOutput(8, lem->CabinRepressValve.GetEmergencyCabinRepressRelay());
+	//Pitch Trim Fail (GH1323X)
+	SA3.SetOutput(9, lem->deca.GetK21());
+	//Roll Trim Fail (GH1330X)
+	SA3.SetOutput(10, lem->deca.GetK22());
 	//LGC Warning (GG9001X)
 	SA3.SetOutput(11, val163[Ch163DSKYWarn]);
 	//ISS Warning (GG9002X)
 	SA3.SetOutput(12, val11[ISSWarning]);
-
 
 	//CO2 secondary cartridge (GF1241)
 	SA5.SetOutput(1, lem->CO2CanisterSelectSwitch.GetState() == 0);
@@ -779,6 +780,8 @@ void SCERA2::Timestep()
 	SA21.SetOutput(3, scale_data(lem->ecs.GetAscWaterTank1TempF(), -200.0, 200.0));
 	//Ascent water line no. 2 temperature (GF4586T)
 	SA21.SetOutput(4, scale_data(lem->ecs.GetAscWaterTank2TempF(), -200.0, 200.0));
+
+	//sprintf(oapiDebugString(), "LGCV %lf ISSV %lf", lem->scera2.GetVoltage(3, 11), lem->scera2.GetVoltage(3, 12));
 
 }
 

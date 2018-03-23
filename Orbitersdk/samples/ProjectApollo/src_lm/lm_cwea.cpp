@@ -124,15 +124,11 @@ void LEM_CWEA::TimeStep(double simdt) {
 
 			// 6DS2 ASC PRESS LOW
 			// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
-			lightlogic = false;
 			if (lem->stage < 2) {
 				if (lem->GetAPSPropellant()->GetAscentHelium1PressPSI() < 2772.8 || lem->GetAPSPropellant()->GetAscentHelium2PressPSI() < 2773.0) {
-					lightlogic = true;
+					SetLight(1, 0, 1);
 				}
 			}
-
-			if (lightlogic)
-				SetLight(1, 0, 1);
 			else
 				SetLight(1, 0, 0);
 
@@ -140,15 +136,11 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 			// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
 			// Contains a flip flop that is only reset by GSE, not implemented yet
-			lightlogic = false;
 			if (lem->stage < 2 && lem->deca.GetK10() && lem->deca.GetK23()) {
 				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260.0 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220.0) {
-					lightlogic = true;
+					SetLight(2, 0, 1);
 				}
 			}
-
-			if (lightlogic)
-				SetLight(2, 0, 1);
 			else
 				SetLight(2, 0, 0);
 
@@ -287,8 +279,11 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// On when difference in commanded and actual descent engine trim position is detected.
 			// Enabled when descent engine armed and engine gimbal switch is enabled.
 			// Disabled by stage deadface open.
-			if (lem->stage < 2 && (abs(lem->DPS.pitchGimbalActuator.GetPosition()) >= 6.0 || abs(lem->DPS.rollGimbalActuator.GetPosition()) >= 6.0))
-				SetLight(2, 4, 1);
+			if (lem->stage < 2) {
+				if (lem->scera2.GetVoltage(3, 9) > 2.5 || lem->scera2.GetVoltage(3, 10) > 2.5) {
+					SetLight(2, 4, 1);
+				}
+			}
 			else
 				SetLight(2, 4, 0);
 

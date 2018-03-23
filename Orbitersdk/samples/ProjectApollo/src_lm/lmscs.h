@@ -144,6 +144,8 @@ public:
 	bool GetK1() { return K1; }
 	bool GetK10() { return K10; }
 	bool GetK16() { return K16; }
+	bool GetK21() { return K21; }
+	bool GetK22() { return K22; }
 	bool GetK23() { return K23; }
 	bool GetThrustOn() { return engOn; }
 	double GetAutoThrustVoltage() { return AutoThrust * 12.0; }
