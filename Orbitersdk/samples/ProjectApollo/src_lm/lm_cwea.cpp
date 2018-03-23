@@ -134,18 +134,19 @@ void LEM_CWEA::TimeStep(double simdt) {
 
 			// 6DS3 DES HI/LO HELIUM REG OUTLET PRESS
 			// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
-			// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
+			// Pressure in descent helium lines downstream of the regulators is above 259.1 psia or below 219.2 psia.
 			lightlogic = false;
-			//Need a way to reset FF here
-			if (lem->scera1.GetVoltage(3, 9) > 2.5 || lem->eds.GetHeliumPressDelayContactClosed()) { DesRegWarnFF = 1; }//Needs OR Time Delay (6 sec) here
+			if (lem->scera1.GetVoltage(3, 9) > 2.5 || lem->eds.GetHeliumPressDelayContactClosed()) { DesRegWarnFF = 1; }
 			if (lem->stage < 2) {
-				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260.0 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220.0) { lightlogic = true;}
+				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 259.1 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 219.2) { lightlogic = true;} //Pressure is default at 245 so this will not be true until He MP is simulated
 			}
 			if (lightlogic && DesRegWarnFF == 1) {
 				SetLight(2, 0, 1);
 			}
 			else
 				SetLight(2, 0, 0);
+
+			//sprintf(oapiDebugString(), "LL %i DPSHe %lf DCFF %i", lightlogic, lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI(), DesRegWarnFF);
 
 			// 6DS4 DESCENT PROPELLANT LOW
 			// On if fuel/oxi in descent stage below 2 minutes endurance @ 25% power prior to staging.
@@ -483,6 +484,18 @@ void LEM_CWEA::TimeStep(double simdt) {
 
 			//CWEA PWR
 			SetLight(3, 6, 1);
+
+			//Reset all FF's
+			DesRegWarnFF = 0;
+			AGSWarnFF = 0;
+			CESDCWarnFF = 0;
+			CESACWarnFF = 0;
+			RCSCautFF1 = 0; RCSCautFF2 = 0;
+			RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
+			OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
+			WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
+			RRCautFF = 0;
+			SBDCautFF = 0;
 		}
 	}
 
