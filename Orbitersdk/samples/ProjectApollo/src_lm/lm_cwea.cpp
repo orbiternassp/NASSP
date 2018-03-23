@@ -136,7 +136,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 			// Pressure in descent helium lines downstream of the regulators is above 260 psia or below 220 psia.
 			lightlogic = false;
-			if (lem->scera1.GetVoltage(3, 9) > 2.5) { DesRegWarnFF = 1; }//Needs OR Time Delay (6 sec) here
+			//Need a way to reset FF here
+			if (lem->scera1.GetVoltage(3, 9) > 2.5 || lem->eds.GetHeliumPressDelayContactClosed()) { DesRegWarnFF = 1; }//Needs OR Time Delay (6 sec) here
 			if (lem->stage < 2) {
 				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 260.0 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 220.0) { lightlogic = true;}
 			}
