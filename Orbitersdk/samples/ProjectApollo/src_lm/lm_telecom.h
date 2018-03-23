@@ -226,8 +226,10 @@ class LM_SBandAntenna
 public:
 	LM_SBandAntenna() { SignalStrength = 0.0; }
 	double GetSignalStrength() { return SignalStrength; }
+	double GetSignalStrengthdB() { return SignalStrentghdB; }
 protected:
 	double SignalStrength;						// Signal Strength (0-100)
+	double SignalStrentghdB;					// Signal strentgh converted to dB **not sure if this is right but used for CWEA for now**
 };
 
 // S-Band system

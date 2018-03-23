@@ -53,6 +53,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
 	WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
 	RRCautFF = 0;
+	SBDCautFF = 0;
 }
 
 void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg ) {
@@ -140,9 +141,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 					lightlogic = true;
 				}
 			}
-			if (lightlogic) {
+
+			if (lightlogic)
 				SetLight(1, 0, 1);
-			}
 			else
 				SetLight(1, 0, 0);
 
@@ -156,9 +157,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 					lightlogic = true;
 				}
 			}
-			if (lightlogic) {
+
+			if (lightlogic)
 				SetLight(2, 0, 1);
-			}
 			else
 				SetLight(2, 0, 0);
 
@@ -178,9 +179,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESACWarnFF = 0; }
 			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESACWarnFF = 1; }
 
-			if (CESACWarnFF == 1) {
+			if (CESACWarnFF == 1)
 				SetLight(0, 1, 1);
-			}
 			else
 				SetLight(0, 1, 0);
 
@@ -191,9 +191,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESDCWarnFF = 0; }
 			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESDCWarnFF = 1; }
 
-			if (CESDCWarnFF == 1) {
+			if (CESDCWarnFF == 1)
 				SetLight(1, 1, 1);
-			}
 			else
 				SetLight(1, 1, 0);
 
@@ -210,19 +209,16 @@ void LEM_CWEA::TimeStep(double simdt) {
 				if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
 			}
 
-			if (lightlogic)
-			{
+			if (lightlogic || AGSWarnFF == 1)
 				SetLight(2, 1, 1);
-			}
 			else
 				SetLight(2, 1, 0);
 
 			// 6DS9 LGC FAILURE
 			// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
 			// Disabled by Guidance Control switch in AGS position.
-			if ((val163[Ch163DSKYWarn]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP) {
+			if ((val163[Ch163DSKYWarn]) && lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP)
 				SetLight(3, 1, 1);
-			}
 			else
 				SetLight(3, 1, 0);
 
@@ -316,9 +312,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 					lightlogic = true;
 				}
 			}
-			if (lightlogic) {
+
+			if (lightlogic)
 				SetLight(0, 5, 1);
-			}
 			else
 				SetLight(0, 5, 0);
 
@@ -354,9 +350,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_DOWN && lem->SCS_ATCA_AGS_CB.Voltage() < 24.0) {
 				lightlogic = true;
 			}
-			if (lightlogic) {
+
+			if (lightlogic)
 			SetLight(4, 5, 1);
-			}
 			else
 				SetLight(4, 5, 0);
 
@@ -391,9 +387,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterCautFF = 1; }
 			if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterCautFF = 1; }
 
-			if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1) {
+			if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1)
 				SetLight(2, 6, 1);
-			}
 			else
 				SetLight(2, 6, 0);
 
@@ -414,9 +409,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->SuitFanRotary.GetState() == 1 && lem->scera2.GetVoltage(3, 5) > 2.5) { lightlogic = true; } // Suit fan 1 failure
 			if (lem->scera1.GetVoltage(5, 3) < (792.5/720.0)) { lightlogic = true; } // Water separator failure
 
-			if (lightlogic) {
+			if (lightlogic)
 				SetLight(0, 7, 1);
-			}
 			else
 				SetLight(0, 7, 0);
 
@@ -436,9 +430,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			}
 			if (lem->scera1.GetVoltage(7, 1) < (99.6 / 200.0)) { OxygenCautFF3 = 1; } // Low ASC tank 1
 
-			if (OxygenCautFF1 == 1 || OxygenCautFF2 == 1 || OxygenCautFF3 == 1) { 
+			if (OxygenCautFF1 == 1 || OxygenCautFF2 == 1 || OxygenCautFF3 == 1)
 				SetLight(1, 7, 1);
-			}
 			else
 				SetLight(1, 7, 0);
 
@@ -449,9 +442,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			if (lem->GlycolRotary.GetState() != 0 && lem->scera2.GetVoltage(3, 3) > 2.5) { lightlogic = true; }	// Glycol LLS
 			if (lem->GlycolRotary.GetState() != 0 && lem->scera1.GetVoltage(10, 1) > ((50.0 - 20.0) / 20.0)) { lightlogic = true; } // Glycol temp > 50F
 
-			if (lightlogic) {
+			if (lightlogic)
 				SetLight(2, 7, 1);
-			}
 			else
 				SetLight(2, 7, 0);
 
@@ -471,17 +463,21 @@ void LEM_CWEA::TimeStep(double simdt) {
 			}
 			if ((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15) { WaterCautFF3 = 1; } // Staged ASC tank unbalance
 
-			if (WaterCautFF1 == 1 || WaterCautFF2 == 1 || WaterCautFF3 == 1){
+			if (WaterCautFF1 == 1 || WaterCautFF2 == 1 || WaterCautFF3 == 1)
 				SetLight(3, 7, 1);
-				}
 			else
 				SetLight(3, 7, 0);
 
 			// 6DS40 S-BAND RECEIVER FAILURE CAUTION
-			// On when AGC signal lost.
+			// On when reciever signal lost.
 			// Off when Range/TV function switch to OFF/RESET
 			// Disabled when Range/TV switch is not in TV/CWEA ENABLE position
-			if (lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_DOWN)
+			if (lem->SBandRangeSwitch.GetState() != THREEPOSSWITCH_DOWN) {
+				if (lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_CENTER) { SBDCautFF = 0; }
+				if (lem->scera1.GetVoltage(5, 4) < 1.071) { SBDCautFF = 1; }
+			}
+
+			if (SBDCautFF = 1)
 				SetLight(4, 7, 1);
 			else
 				SetLight(4, 7, 0);
@@ -568,6 +564,7 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "WATERCAUTFF2", WaterCautFF2);
 	papiWriteScenario_bool(scn, "WATERCAUTFF3", WaterCautFF3);
 	papiWriteScenario_bool(scn, "RRCAUTFF", RRCautFF);
+	papiWriteScenario_bool(scn, "SBDCAUTFF", SBDCautFF);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
@@ -600,6 +597,7 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "WATERCAUTFF2", WaterCautFF2);
 		papiReadScenario_bool(line, "WATERCAUTFF3", WaterCautFF3);
 		papiReadScenario_bool(line, "RRCAUTFF", RRCautFF);
+		papiReadScenario_bool(line, "SBDCAUTFF", SBDCautFF);
 		papiReadScenario_intarr(line, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);

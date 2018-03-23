@@ -64,6 +64,7 @@ protected:
 	bool WaterCautFF2;   // Flip Flop
 	bool WaterCautFF3;   // Flip Flop
 	bool RRCautFF;   // Flip Flop
+	bool SBDCautFF;   // Flip Flop
 	bool MasterAlarm;
 
 	e_object *cwea_pwr;
