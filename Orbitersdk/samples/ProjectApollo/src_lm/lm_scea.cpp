@@ -348,7 +348,7 @@ void SCERA1::Timestep()
 	//Water separator no. 1 and 2 (GF9999)
 	SA5.SetOutput(3, scale_data(lem->ecs.GetWaterSeparatorRPM(), 0.0, 3600.0));
 	//S-band reciever signal (GT0994V)
-	//SA5.SetOutput(4, scale_data(lem->SBandSteerable.GetSignalStrengthdB, -140.0, -50.0);
+	SA5.SetOutput(4, scale_data(lem->SBand.rcvr_agc_voltage, 0.0, 100.0));	// Needs to be preconditioned before entering SCEA
 
 	//Helium pressure tank A (GR1101)
 	SA6.SetOutput(1, scale_data(lem->RCSA.GetRCSHeliumPressPSI(), 0.0, 3500.0));
@@ -525,7 +525,7 @@ void SCERA1::Timestep()
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
 
-	//sprintf(oapiDebugString(), "AEATest %i AEATestV %lf ASA12V %lf ASA28V %lf ASAF %lf", lem->aea.GetTestModeFailure(), lem->scera1.GetVoltage(4, 1), lem->scera1.GetVoltage(15, 4), lem->scera2.GetVoltage(15, 2), lem->scera1.GetVoltage(16, 2));
+	sprintf(oapiDebugString(), "Sig %lf SBDV %lf", lem->SBand.rcvr_agc_voltage, lem->scera1.GetVoltage(5, 4));
 
 }
 

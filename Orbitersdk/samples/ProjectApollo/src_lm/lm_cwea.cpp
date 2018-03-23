@@ -472,12 +472,10 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// On when reciever signal lost.
 			// Off when Range/TV function switch to OFF/RESET
 			// Disabled when Range/TV switch is not in TV/CWEA ENABLE position
-			if (lem->SBandRangeSwitch.GetState() != THREEPOSSWITCH_DOWN) {
-				if (lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_CENTER) { SBDCautFF = 0; }
-				if (lem->scera1.GetVoltage(5, 4) < 1.071) { SBDCautFF = 1; }
-			}
+			if (lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_CENTER) { SBDCautFF = 0; }
+			if (lem->scera1.GetVoltage(5, 4) < 1.071) { SBDCautFF = 1; }
 
-			if (SBDCautFF = 1)
+			if (lem->SBandRangeSwitch.GetState() == THREEPOSSWITCH_DOWN && SBDCautFF == 1)
 				SetLight(4, 7, 1);
 			else
 				SetLight(4, 7, 0);

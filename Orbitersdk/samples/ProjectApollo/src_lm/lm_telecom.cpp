@@ -2355,7 +2355,6 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	moving = false;
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
-	SignalStrentghdB = 0.0;
 }
 
 void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
@@ -2491,8 +2490,6 @@ void LEM_SteerableAnt::TimeStep(double simdt){
 	{
 		SignalStrength = 0.0;
 	}
-
-	SignalStrentghdB = ((SignalStrength+140.0)/18.0);
 
 	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", relang*DEG, SignalStrength);
 	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
