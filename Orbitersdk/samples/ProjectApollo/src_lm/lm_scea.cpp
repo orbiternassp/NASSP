@@ -348,7 +348,7 @@ void SCERA1::Timestep()
 	//Water separator no. 1 and 2 (GF9999)
 	SA5.SetOutput(3, scale_data(lem->ecs.GetWaterSeparatorRPM(), 0.0, 3600.0));
 	//S-band reciever signal (GT0994V)
-	SA5.SetOutput(4, scale_data(lem->SBandSteerable.GetSignalStrengthdB, -140.0, -50.0));
+	//SA5.SetOutput(4, scale_data(lem->SBandSteerable.GetSignalStrengthdB, -140.0, -50.0);
 
 	//Helium pressure tank A (GR1101)
 	SA6.SetOutput(1, scale_data(lem->RCSA.GetRCSHeliumPressPSI(), 0.0, 3500.0));
