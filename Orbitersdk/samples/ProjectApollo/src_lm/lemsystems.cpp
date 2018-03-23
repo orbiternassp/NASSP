@@ -823,7 +823,7 @@ void LEM::SystemsInit()
 	scca3.Init(this);
 
 	// DPS and APS
-	DPSPropellant.Init(&PROP_PQGS_CB);
+	DPSPropellant.Init(this, &PROP_PQGS_CB);
 	DPS.Init(this);
 	DPS.pitchGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
 	DPS.rollGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);

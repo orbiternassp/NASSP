@@ -123,7 +123,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			SetLight(3, 6, 0);
 
 			// 6DS2 ASC PRESS LOW
-			// Pressure of either ascent helium tanks below 2773 psia prior to staging, - This reason goes out when stage deadface opens.
+			// Pressure of either ascent helium tanks below 2773 psia prior to staging
+			// Disabled when stage deadface opens.
 			if (lem->stage < 2) {
 				if (lem->GetAPSPropellant()->GetAscentHelium1PressPSI() < 2772.8 || lem->GetAPSPropellant()->GetAscentHelium2PressPSI() < 2773.0) {
 					SetLight(1, 0, 1);
@@ -152,7 +153,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// On if fuel/oxi in descent stage below 2 minutes endurance @ 25% power prior to staging.
 			// (This turns out to be 5.6%)
 			// Master Alarm and Tone are disabled if this is active.
-			if (lem->stage < 2 && lem->DPS.thrustOn && lem->scera2.GetSwitch(12, 3)->IsClosed())
+			//if (lem->stage < 2 && lem->DPS.thrustOn && lem->scera2.GetSwitch(12, 3)->IsClosed())
+			if (lem->scera2.GetSwitch(12, 3)->IsClosed()) // Only the quantity sets off the light, DPS "on" logic cut and capped from MA logic
 				SetLight(3, 0, 1, false);
 			else
 				SetLight(3, 0, 0, false);
@@ -161,6 +163,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Either CES AC voltage (26V or 28V) out of tolerance.
 			// This power is provided by the ATCA main power supply and spins the RGAs and operate the AEA reference.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
+			// Needs RGA data
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESACWarnFF = 0; }
 			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESACWarnFF = 1; }
 
@@ -173,6 +176,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Any CES DC voltage out of tolerance.
 			// All of these are provided by the ATCA main power supply.
 			// Disabled by Gyro Test Control in POS RT or NEG RT position.
+			// Needs RGA data
 			if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESDCWarnFF = 0; }
 			if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESDCWarnFF = 1; }
 

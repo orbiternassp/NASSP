@@ -742,7 +742,7 @@ void SCERA2::Timestep()
 
 	//Cooling pump no. 1 failure (GF2936)
 	SA12.SetOutput(2, lem->PrimGlycolPumpController.GetGlycolPumpFailRelay());
-	//Descent propellant tanks (liquid level low) (GQ4455)
+	//Descent propellant tanks (liquid level low) (GQ4455X)
 	SA12.SetOutput(3, lem->DPSPropellant.PropellantLevelLow());
 
 	//Coolant pump no. 2 failure (GF2935)

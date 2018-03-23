@@ -90,11 +90,14 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 
 	//Open by default
 	PrimaryHeRegulatorShutoffValve.SetState(true);
+
+	lem = NULL;
 }
 
-void DPSPropellantSource::Init(e_object *dc1)
+void DPSPropellantSource::Init(LEM *l, e_object *dc1)
 {
 	GaugingPower = dc1;
+	lem = l;
 }
 
 void DPSPropellantSource::Timestep(double simt, double simdt)
@@ -363,7 +366,7 @@ double DPSPropellantSource::GetFuelTank2BulkTempF()
 
 bool DPSPropellantSource::PropellantLevelLow()
 {
-	if (IsGaugingPowered() && (fuel1LevelLow || fuel2LevelLow || oxid1LevelLow || oxid2LevelLow))
+	if (lem->stage < 2 && IsGaugingPowered() && (fuel1LevelLow || fuel2LevelLow || oxid1LevelLow || oxid2LevelLow))
 		return true;
 
 	return false;
