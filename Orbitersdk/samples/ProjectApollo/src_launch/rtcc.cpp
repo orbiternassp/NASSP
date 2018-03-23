@@ -3258,7 +3258,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc)
 {
 	char uplinkdata[1000];
-	bool preliminary = true;
+	bool preliminary = false;
 	bool scrubbed = false;
 
 	//Hardcoded for now, better solution at some point...
@@ -4437,7 +4437,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 72: //PHASING MANEUVER
+	case 72: //PRELIMINARY PHASING MANEUVER
+		preliminary = true;
+	case 73: //PHASING MANEUVER
 	{
 		AP11LMManPADOpt opt;
 		LambertMan lamopt;
@@ -4451,7 +4453,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = getGETBase();
 
 		sv = StateVectorCalc(calcParams.tgt);
-		sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv, 0.0);
+
+		if (preliminary)
+		{
+			sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv, 0.0);
+		}
+		else
+		{
+			sv_DOI = sv;
+		}
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
 		lamopt.GETbase = GETbase;
@@ -4494,7 +4504,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 	}
 	break;
-	case 73: //PDI ABORT MANEUVER
+	case 74: //PDI ABORT MANEUVER
 	{
 		AP11LMManPADOpt opt;
 		DKIOpt dkiopt;

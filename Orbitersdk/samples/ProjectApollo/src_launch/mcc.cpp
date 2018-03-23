@@ -2362,13 +2362,16 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 72, MST_F_LUNAR_ORBIT_DOI_DAY_14);
 				break;
 			case MST_F_LUNAR_ORBIT_DOI_DAY_14: //PDI Abort update to LGC CSM state vector update
-				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 12 && MoonRevTime > 50.0*60.0, 73, MST_F_LUNAR_ORBIT_DOI_DAY_15);
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 12 && MoonRevTime > 50.0*60.0, 74, MST_F_LUNAR_ORBIT_DOI_DAY_15);
 				break;
 			case MST_F_LUNAR_ORBIT_DOI_DAY_15: //LGC CSM state vector update to CMC CSM+LM state vector update
 				UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, MoonRev >= 12 && MoonRevTime > 1.0*3600.0 + 10.0*60.0, 100, MST_F_LUNAR_ORBIT_DOI_DAY_16);
 				break;
-			case MST_F_LUNAR_ORBIT_DOI_DAY_16: //CMC CSM+LM state vector update to 
-				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 13 && MoonRevTime > 55.0*60.0, 101, MST_F_LUNAR_ORBIT_DOI_DAY_16);
+			case MST_F_LUNAR_ORBIT_DOI_DAY_16: //CMC CSM+LM state vector update to final phasing update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 13 && MoonRevTime > 40.0*60.0, 101, MST_F_LUNAR_ORBIT_DOI_DAY_17);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_17: //Final phasing update to CSM backup insertion update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 13 && MoonRevTime > 55.0*60.0, 73, MST_F_LUNAR_ORBIT_DOI_DAY_18);
 				break;
 			}
 			break;
