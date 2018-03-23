@@ -49,6 +49,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	AGSWarnFF = 0;
 	CESDCWarnFF = 0;
 	CESACWarnFF = 0;
+	RCSCautFF1 = 0; RCSCautFF2 = 0;
 	RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
 	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
 	WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
@@ -321,7 +322,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS27 BATTERY FAILURE CAUTION
 			// On when over-current, reverse-current, or over-temperature condition occurs in any ascent or descent battery.
 			// Disabled if affected battery is turned off.
-			// FIXME: We'll ignore this for now.
+			// FIXME: We'll ignore this for now until these data points are implemented in the ECA
 			SetLight(1, 5, 0);
 
 			// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
@@ -370,7 +371,14 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS32 RCS FAILURE CAUTION
 			// On when helium pressure in either RCS system below 1700 psia.
 			// Disabled when RCS TEMP/PRESS MONITOR switch in HELIUM position.
-			if (lem->TempPressMonRotary.GetState() != 0 && (lem->scera1.GetVoltage(6, 1) < (1696.1 / 700.0) || lem->scera1.GetVoltage(6, 2) < (1696.1 / 700.0)))
+			if (lem->TempPressMonRotary.GetState() == 0) { 
+				RCSCautFF1 = 0; 
+				RCSCautFF2 = 0;
+			}
+			if (lem->scera1.GetVoltage(6, 1) < (1696.1 / 700.0)) { RCSCautFF1 = 1; }
+			if (lem->scera1.GetVoltage(6, 2) < (1696.1 / 700.0)) { RCSCautFF2 = 1; }
+
+			if (RCSCautFF1 == 1 || RCSCautFF2 == 1)
 				SetLight(1, 6, 1);
 			else
 				SetLight(1, 6, 0);
@@ -531,7 +539,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 		break;
 	}
 
-	//sprintf(oapiDebugString(), "MA %i AGS %i DC %i AC %i RR %i SB %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i", MasterAlarm, AGSWarnFF, CESDCWarnFF, CESACWarnFF, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3);
+	//sprintf(oapiDebugString(), "MA %i AGS %i DC %i AC %i RRH %i SBH %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i SBD", MasterAlarm, AGSWarnFF, CESDCWarnFF, CESACWarnFF, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3, SBDCautFF);
 }
 
 void LEM_CWEA::SystemTimestep(double simdt) {
@@ -553,6 +561,8 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "AGSWARNFF", AGSWarnFF);
 	papiWriteScenario_bool(scn, "CESDCWARNFF", CESDCWarnFF);
 	papiWriteScenario_bool(scn, "CESACWARNFF", CESACWarnFF);
+	papiWriteScenario_bool(scn, "RCSCAUTFF1", RCSCautFF1);
+	papiWriteScenario_bool(scn, "RCSCAUTFF2", RCSCautFF2);
 	papiWriteScenario_bool(scn, "RRHEATERCAUTFF", RRHeaterCautFF);
 	papiWriteScenario_bool(scn, "SBDHEATERCAUTFF", SBDHeaterCautFF);
 	papiWriteScenario_bool(scn, "OXYGENCAUTFF1", OxygenCautFF1);
@@ -586,6 +596,8 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "AGSWARNFF", AGSWarnFF);
 		papiReadScenario_bool(line, "CESDCWARNFF", CESDCWarnFF);
 		papiReadScenario_bool(line, "CESACWARNFF", CESACWarnFF);
+		papiReadScenario_bool(line, "RCSCAUTFF1", RCSCautFF1);
+		papiReadScenario_bool(line, "RCSCAUTFF2", RCSCautFF2);
 		papiReadScenario_bool(line, "RRHEATERCAUTFF", RRHeaterCautFF);
 		papiReadScenario_bool(line, "SBDHEATERCAUTFF", SBDHeaterCautFF);
 		papiReadScenario_bool(line, "OXYGENCAUTFF1", OxygenCautFF1);

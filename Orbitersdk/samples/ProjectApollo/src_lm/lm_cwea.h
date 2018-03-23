@@ -55,6 +55,8 @@ protected:
 	bool AGSWarnFF;   // Flip Flop
 	bool CESDCWarnFF;   // Flip Flop
 	bool CESACWarnFF;   // Flip Flop
+	bool RCSCautFF1;   // Flip Flop
+	bool RCSCautFF2;   // Flip Flop
 	bool RRHeaterCautFF;   // Flip Flop
 	bool SBDHeaterCautFF;   // Flip Flop
 	bool OxygenCautFF1;   // Flip Flop
