@@ -502,6 +502,8 @@
 #define MST_F_LUNAR_ORBIT_DOI_DAY_17	216
 // Ends at CSM backup insertion update
 #define MST_F_LUNAR_ORBIT_DOI_DAY_18	217
+// Ends at LM insertion update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_19	218
 
 // Ground Station Information Structure
 struct GroundStation {

@@ -638,7 +638,7 @@ struct LMARKTRKPADOpt
 	double alt = 0;	//landmark altitude
 };
 
-struct DKIOpt
+struct DKIOpt	//Docking Initiation Processor
 {
 	SV sv_A;
 	SV sv_P;
@@ -647,6 +647,19 @@ struct DKIOpt
 	double t_TPI;
 	double DH;
 	double E;
+};
+
+struct SPQOpt //Coelliptic Sequence Processor
+{
+	SV sv_A;
+	SV sv_P;
+	double GETbase;
+	double t_TIG;
+	double t_TPI;	// Only for calculation type = 0
+	double DH;		// Only for calculation type = 1
+	double E;
+	int type;		//0 = fixed TIG at TPI, 1 = fixed DH at CDH
+	int maneuver;	//0 = CSI, 1 = CDH
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -782,6 +795,7 @@ public:
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	void DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &t_CSI);
+	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -814,7 +828,9 @@ private:
 	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	char* CMCEntryUpdate(double LatSPL, double LngSPL);
 	void IncrementAGCTime(char *list, double dt);
+	void TLANDUpdate(char *list, double t_land, int tlandaddr);
 	char* V71Update(int* emem, int n);
+	void V72Update(int *emem, int n, char* list);
 	char* SunburstAttitudeManeuver(VECTOR3 imuangles);
 	char* SunburstLMPCommand(int code);
 	char* SunburstMassUpdate(double masskg);

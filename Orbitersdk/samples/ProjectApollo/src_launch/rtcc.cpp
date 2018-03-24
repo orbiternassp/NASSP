@@ -4376,6 +4376,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv_CSM, sv, sv_DOI;
 		DOIMan doiopt;
 		char GETbuffer[64];
+		char TLANDbuffer[64];
 
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 
@@ -4429,7 +4430,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(GETbuffer, calcParams.TPI);
 		sprintf(form->remarks, "%sTPI time: %s, N equal to 1", form->remarks, GETbuffer);
 
-		sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv, false, AGCEpoch, GETbase), AGCExternalDeltaVUpdate(TimeofIgnition, DeltaV_LVLH, LGCDeltaVAddr));
+		TLANDUpdate(TLANDbuffer, calcParams.TLAND, 2400);
+
+		sprintf(uplinkdata, "%s%s%s", AGCStateVectorUpdate(sv, false, AGCEpoch, GETbase), AGCExternalDeltaVUpdate(TimeofIgnition, DeltaV_LVLH, LGCDeltaVAddr), TLANDbuffer);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
@@ -4493,15 +4496,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "Phasing");
 
-		MJD_LS = OrbMech::P29TimeOfLongitude(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, LSLng);
-		t_LS = (MJD_LS - GETbase)*24.0*3600.0;
-		MJD_100E = OrbMech::P29TimeOfLongitude(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, 100.0*RAD);
-		t_100E = (MJD_100E - GETbase)*24.0*3600.0;
+		if (preliminary)
+		{
+			MJD_LS = OrbMech::P29TimeOfLongitude(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, LSLng);
+			t_LS = (MJD_LS - GETbase)*24.0*3600.0;
+			MJD_100E = OrbMech::P29TimeOfLongitude(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, 100.0*RAD);
+			t_100E = (MJD_100E - GETbase)*24.0*3600.0;
 
-		OrbMech::format_time_MMSS(GETbuffer, P30TIG - t_100E);
-		OrbMech::format_time_MMSS(GETbuffer2, P30TIG - t_LS);
-		sprintf(form->remarks, "100-degree east time is %s. Site 2 time is %s", GETbuffer, GETbuffer2);
-
+			OrbMech::format_time_MMSS(GETbuffer, P30TIG - t_100E);
+			OrbMech::format_time_MMSS(GETbuffer2, P30TIG - t_LS);
+			sprintf(form->remarks, "100-degree east time is %s. Site 2 time is %s", GETbuffer, GETbuffer2);
+		}
 	}
 	break;
 	case 74: //PDI ABORT MANEUVER
@@ -4557,6 +4562,97 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(GETbuffer, t_CSI);
 		OrbMech::format_time_HHMMSS(GETbuffer2, t_TPI_Abort);
 		sprintf(form->remarks, "CSI time: %s, TPI time: %s, N equal to 1", GETbuffer, GETbuffer2);
+	}
+	break;
+	case 75: //CSM BACKUP INSERTION UPDATE
+	{
+		AP11ManPADOpt opt;
+		LambertMan lamopt;
+		SV sv, sv_Ins;
+		VECTOR3 dV_LVLH;
+		double GETbase, P30TIG;
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		sv = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+
+		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
+		lamopt.GETbase = GETbase;
+		lamopt.impulsive = RTCC_NONIMPULSIVE;
+		lamopt.N = 0;
+		lamopt.Offset = -_V(-110.0*1852.0, 0.0, 14.7*1852.0);
+		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lamopt.T1 = calcParams.Insertion + 3.0*60.0;
+		lamopt.T2 = calcParams.CSI;
+		lamopt.target = calcParams.tgt;
+		lamopt.vessel = calcParams.src;
+		lamopt.vesseltype = 0;
+
+		LambertTargeting(&lamopt, dV_LVLH, P30TIG);
+
+		opt.alt = LSAlt;
+		opt.dV_LVLH = dV_LVLH;
+		opt.engopt = 0;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = true;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 0;
+
+		AP11ManeuverPAD(&opt, *form);
+
+		sv_Ins = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv, 0.0);
+
+		SPQOpt coeopt;
+		SV sv_LM;
+		VECTOR3 dV_CSI;
+		double t_TPI;
+		char GETbuffer[64], GETbuffer2[64];
+
+		sv_LM = StateVectorCalc(calcParams.tgt);
+
+		coeopt.DH = -15.0*1852.0;
+		coeopt.E = 208.3*RAD;
+		coeopt.GETbase = GETbase;
+		coeopt.maneuver = 0;
+		coeopt.sv_A = sv_Ins;
+		coeopt.sv_P = sv_LM;
+		coeopt.type = 1;
+		coeopt.t_TIG = calcParams.CSI;
+
+		ConcentricRendezvousProcessor(&coeopt, dV_CSI, t_TPI);
+
+		OrbMech::format_time_HHMMSS(GETbuffer, calcParams.CSI);
+		OrbMech::format_time_HHMMSS(GETbuffer2, t_TPI);
+		sprintf(form->remarks, "CSI: %s, TPI: %s, N equals 1", GETbuffer, GETbuffer2);
+	}
+	break;
+	case 76: //LM INSERTION UPDATE
+	{
+		AP11LMManPADOpt opt;
+		LambertMan lamopt;
+		VECTOR3 dV_LVLH;
+		double GETbase, P30TIG;
+
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		GETbase = getGETBase();
+
+		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
+		lamopt.GETbase = GETbase;
+		lamopt.impulsive = RTCC_NONIMPULSIVE;
+		lamopt.N = 0;
+		lamopt.Offset = _V(-147.0*1852.0, 0.0, 14.7*1852.0);
+		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lamopt.T1 = calcParams.Insertion;
+		lamopt.T2 = calcParams.CSI;
+		lamopt.target = calcParams.src;
+		lamopt.vessel = calcParams.tgt;
+		lamopt.vesseltype = 1;
+
+		LambertTargeting(&lamopt, dV_LVLH, P30TIG);
 	}
 	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
@@ -8468,6 +8564,30 @@ char* RTCC::V71Update(int *emem, int n)
 	return list;
 }
 
+void RTCC::TLANDUpdate(char *list, double t_land, int tlandaddr)
+{
+	int emem[5];
+	emem[0] = 5;
+
+	emem[1] = tlandaddr;
+	emem[3] = tlandaddr + 1;
+
+	emem[2] = OrbMech::DoubleToBuffer(t_land*100.0, 28, 1);
+	emem[4] = OrbMech::DoubleToBuffer(t_land*100.0, 28, 0);
+
+	V72Update(emem, 5, list);
+}
+
+void RTCC::V72Update(int *emem, int n, char* list)
+{
+	sprintf(list, "V72E%dE", emem[0]);
+	for (int i = 1;i < n;i++)
+	{
+		sprintf(list, "%s%dE", list, emem[i]);
+	}
+	sprintf(list, "%sV33E", list);
+}
+
 char* RTCC::SunburstAttitudeManeuver(VECTOR3 imuangles)
 {
 	int emem[3];
@@ -11198,6 +11318,7 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 	t_Phasing = t_TIG;
 	dt = 7017.0;
 	dt2 = 3028.0;
+	dv_CSI = 50.0*0.3048;
 	DH = 15.0*1852.0;
 	ddt = 10.0;
 
@@ -11266,9 +11387,10 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 
 		//CSI Targeting
 		sv_P_CSI = coast(sv_P0, t_CSI - OrbMech::GETfromMJD(sv_P0.MJD, GETbase));
-		dv_CSI = OrbMech::CSIToDH(sv_CSI.R, sv_CSI.V, sv_P_CSI.R, sv_P_CSI.V, DH, mu);
+		OrbMech::CSIToDH(sv_CSI.R, sv_CSI.V, sv_P_CSI.R, sv_P_CSI.V, DH, mu, dv_CSI);
 		sv_CSI_apo = sv_CSI;
-		sv_CSI_apo.V = sv_CSI.V + unit(crossp(unit(crossp(sv_CSI.R, sv_CSI.V)), sv_CSI.R))*dv_CSI;
+		sv_CSI_apo.V = sv_CSI.V + OrbMech::ApplyHorizontalDV(sv_CSI.R, sv_CSI.V, dv_CSI);
+
 		//CDH Targeting
 		T_P = OrbMech::period(sv_CSI_apo.R, sv_CSI_apo.V, mu);
 		t_CDH = t_CSI + T_P / 2.0;
@@ -11295,10 +11417,9 @@ void RTCC::DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &
 {
 	SV sv_AP, sv_TPI, sv_PC;
 	VECTOR3 u, R_AP, V_AP, V_APF, R_AH, V_AH, V_AHF, R_AC, V_AC, R_PC, V_PC, V_ACF, R_PJ, V_PJ, R_AFD, R_AF, V_AF;
-	double mu, dv_P, p_P, dt_PH, p_H, c_P, c_H, eps_H, eps_P, dv_H, dt_HC, t_H, t_C, e_H, dv_Ho, dv_Po, e_Ho, e_Po, e_P;
-	int s_H, s_P;
+	double mu, dv_P, p_P, dt_PH, c_P, eps_P, dv_H, dt_HC, t_H, t_C, dv_Po, e_Po, e_P;
+	int s_P;
 
-	eps_H = 1.0;		//meters
 	eps_P = 0.000004;	//radians
 	s_P = 0;
 	p_P = c_P = 0.0;
@@ -11323,22 +11444,11 @@ void RTCC::DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &
 		OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
 		t_H = opt->t_TIG + dt_PH;
 
-		p_H = c_H = 0.0;
-		s_H = 0;
-
-		do
-		{
-			V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
-			OrbMech::REVUP(R_AH, V_AHF, 0.5, mu, R_AC, V_AC, dt_HC);
-			t_C = t_H + dt_HC;
-			OrbMech::RADUP(sv_TPI.R, sv_TPI.V, R_AC, mu, R_PC, V_PC);
-			e_H = length(R_PC) - length(R_AC) - opt->DH;
-
-			if (p_H == 0 || abs(e_H) >= eps_H)
-			{
-				OrbMech::ITER(c_H, s_H, e_H, p_H, dv_H, e_Ho, dv_Ho);
-			}
-		} while (abs(e_H) >= eps_H);
+		OrbMech::CSIToDH(R_AH, V_AH, sv_TPI.R, sv_TPI.V, opt->DH, mu, dv_H);
+		V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
+		OrbMech::REVUP(R_AH, V_AHF, 0.5, mu, R_AC, V_AC, dt_HC);
+		t_C = t_H + dt_HC;
+		OrbMech::RADUP(sv_TPI.R, sv_TPI.V, R_AC, mu, R_PC, V_PC);
 
 		V_ACF = OrbMech::CoellipticDV(R_AC, R_PC, V_PC, mu);
 		OrbMech::rv_from_r0v0(R_AC, V_ACF, opt->t_TPI - t_C, R_AF, V_AF, mu);
@@ -11352,4 +11462,49 @@ void RTCC::DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &
 
 	DV_Phasing = OrbMech::ApplyHorizontalDV(sv_AP.R, sv_AP.V, dv_P);
 	t_CSI = t_H;
+}
+
+void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI)
+{
+	SV sv_A1, sv_P1;
+	VECTOR3 u, R_A1, V_A1, V_A1F, R_A2, V_A2, R_P2, V_P2, R_PC, V_PC, V_A2F;
+	double dv_CSI, mu, dt_1, t_CDH, dt_TPI;
+
+	dv_CSI = 0.0;
+
+	mu = GGRAV * oapiGetMass(opt->sv_A.gravref);
+	sv_A1 = coast(opt->sv_A, opt->t_TIG - OrbMech::GETfromMJD(opt->sv_A.MJD, opt->GETbase));
+	sv_P1 = coast(opt->sv_P, opt->t_TIG - OrbMech::GETfromMJD(opt->sv_P.MJD, opt->GETbase));
+
+	u = unit(crossp(sv_P1.R, sv_P1.V));
+
+	R_A1 = unit(sv_A1.R - u * dotp(sv_A1.R, u))*length(sv_A1.R);
+	V_A1 = unit(sv_A1.V - u * dotp(sv_A1.V, u))*length(sv_A1.V);
+
+	//CDH calculation
+	if (opt->maneuver == 1)
+	{
+		DV_coe = OrbMech::CoellipticDV(R_A1, sv_P1.R, sv_P1.V, mu) - V_A1;
+		t_TPI = opt->t_TPI;
+		return;
+	}
+
+	if (opt->type == 0)
+	{
+		t_TPI = opt->t_TPI;
+	}
+	else
+	{
+		OrbMech::CSIToDH(R_A1, V_A1, sv_P1.R, sv_P1.V, opt->DH, mu, dv_CSI);
+		V_A1F = V_A1 + unit(crossp(u, R_A1))*dv_CSI;
+		OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
+		t_CDH = opt->t_TIG + dt_1;
+		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A2, mu, R_PC, V_PC);
+		V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
+		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt->t_TIG, R_P2, V_P2, mu);
+		dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt->E, mu);
+
+		DV_coe = V_A1F - V_A1;
+		t_TPI = t_CDH + dt_TPI;
+	}
 }
