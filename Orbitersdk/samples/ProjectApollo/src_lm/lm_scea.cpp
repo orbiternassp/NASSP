@@ -699,9 +699,9 @@ void SCERA2::Timestep()
 
 	//Rendezvous Radar No Track (GN7621X)
 	SA2.SetOutput(1, lem->RR.GetNoTrackSignal());
-	//APS fuel tank low level (GP0908)
+	//APS fuel tank low level (GP0908X)
 	SA2.SetOutput(6, lem->APSPropellant.GetFuelLowLevel());
-	//APS oxidizer tank low level (GP1408)
+	//APS oxidizer tank low level (GP1408X)
 	SA2.SetOutput(7, lem->APSPropellant.GetOxidLowLevel());
 	//AGS Warmup (GI3305X)
 	//Needs data here
@@ -783,7 +783,6 @@ void SCERA2::Timestep()
 
 	//Battery 6 voltage (GC0106V)
 	SA18.SetOutput(1, scale_data(lem->Battery6->Voltage(), 0.0, 40.0));
-
 
 	//RCS Fuel tank A temperature (GR2121)
 	SA20.SetOutput(2, scale_data(lem->RCSA.GetFuelTankTempF(), 20.0, 120.0));

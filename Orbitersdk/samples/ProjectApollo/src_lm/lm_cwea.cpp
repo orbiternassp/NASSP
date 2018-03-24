@@ -139,7 +139,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 			lightlogic = false;
 			if (lem->scera1.GetVoltage(3, 9) > 2.5 || lem->eds.GetHeliumPressDelayContactClosed()) { DesRegWarnFF = 1; }
 			if (lem->stage < 2) {
-				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 259.1 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 219.2) { lightlogic = true;} //Pressure is default at 245 so this will not be true until He MP is simulated
+				if (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 259.1 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 219.2) { lightlogic = true; } //Pressure is default at 245 so this will not be true until He MP is simulated
 			}
 			if (lightlogic && DesRegWarnFF == 1) {
 				SetLight(2, 0, 1);
@@ -222,10 +222,15 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// 6DS11 RCS TCA WARNING
 			// RCS fire command exists with no resulting chamber pressure,
 			// chamber pressure present when no fire command exists,
-			// opposing colinear jets on simultaneously
+			// opposing colinear jets on simultaneously.
 			// Disabled when failing TCA isol valve closes.
-			// FIXME: Implement this test.
-			SetLight(0, 2, 0);
+			if (lem->tca1A.GetTCAFailure() || lem->tca1B.GetTCAFailure() ||
+				lem->tca2A.GetTCAFailure() || lem->tca2B.GetTCAFailure() ||
+				lem->tca3A.GetTCAFailure() || lem->tca3B.GetTCAFailure() ||
+				lem->tca4A.GetTCAFailure() || lem->tca4B.GetTCAFailure())
+				SetLight(0, 5, 1);
+			else
+				SetLight(0, 5, 0);
 
 			// 6DS12 RCS A REGULATOR FAILURE
 			// RCS helium line pressure above 218.8 pisa or below 164.4 psia. Disabled when main shutoff solenoid valves close.
@@ -275,11 +280,13 @@ void LEM_CWEA::TimeStep(double simdt) {
 				SetLight(0, 4, 0);
 
 			// 6DS22 ASCENT PROPELLANT LOW QUANTITY CAUTION
-			// On when less than 10 seconds of ascent propellant/oxidizer remains.
+			// On when less than 10 seconds of ascent propellant/oxidizer remains, <= 2.2%
 			// Disabled when ascent engine is not firing.
-			// FIXME: This test probably used a fixed setpoint instead of division. Investigate.
-			if (lem->ph_Asc && lem->APS.thrustOn && lem->GetPropellantFlowrate(lem->ph_Asc) > 0.0 && (lem->GetPropellantMass(lem->ph_Asc) / lem->GetPropellantFlowrate(lem->ph_Asc) < 10.0))
-				SetLight(1, 4, 1);
+			if (lem->APS.thrustOn) {
+				if (lem->scera2.GetVoltage(2, 6) > 2.5 || lem->scera2.GetVoltage(2, 7) > 2.5){ 
+					SetLight(1, 4, 1);
+				}
+			}
 			else
 				SetLight(1, 4, 0);
 
@@ -347,14 +354,14 @@ void LEM_CWEA::TimeStep(double simdt) {
 			else
 				SetLight(4, 5, 0);
 
-			// FIXME: Handle stage DF and abort PB disables
-
 			// 6DS31 EDS RELAY FAILURE
 			// On when any EDS relay fails.
 			// Failures of stage relays disabled when stage relay switch in RESET position.
 			// Disabled when MASTER ARM is ON or if ABORT STAGE commanded.
-			if ((lem->scera1.GetVoltage(14, 11) > 2.5 || lem->scera1.GetVoltage(14, 12) > 2.5) && !(lem->EDMasterArm.IsUp() || lem->AbortStageSwitch.GetState() == 0))
-				SetLight(0, 6, 1);
+			if (!(lem->EDMasterArm.IsUp() || lem->AbortStageSwitch.GetState() == 0)) {
+				if (lem->scera1.GetVoltage(14, 11) > 2.5 || lem->scera1.GetVoltage(14, 12) > 2.5)
+					SetLight(0, 6, 1);
+			}
 			else
 				SetLight(0, 6, 0);
 
@@ -488,7 +495,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 			//CWEA PWR
 			SetLight(3, 6, 1);
 
-			//Reset all FF's
+			//Reset all CWEA logic FF's 
+			//Not sure if this is how it's done but the behavior is correct
 			DesRegWarnFF = 0;
 			AGSWarnFF = 0;
 			CESDCWarnFF = 0;
@@ -499,6 +507,16 @@ void LEM_CWEA::TimeStep(double simdt) {
 			WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
 			RRCautFF = 0;
 			SBDCautFF = 0;
+
+			//Reset TCA FF's
+			lem->tca1A.GetTCAFailureFlipFlop()->Reset();
+			lem->tca1B.GetTCAFailureFlipFlop()->Reset();
+			lem->tca2A.GetTCAFailureFlipFlop()->Reset();
+			lem->tca2B.GetTCAFailureFlipFlop()->Reset();
+			lem->tca3A.GetTCAFailureFlipFlop()->Reset();
+			lem->tca3B.GetTCAFailureFlipFlop()->Reset();
+			lem->tca4A.GetTCAFailureFlipFlop()->Reset();
+			lem->tca4B.GetTCAFailureFlipFlop()->Reset();
 		}
 	}
 
