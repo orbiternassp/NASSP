@@ -65,7 +65,7 @@ void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg ) {
 		}
 		row = 0; col++;
 	}
-	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
+	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND, INTERNAL_ONLY);
 
 	cwea_pwr = cwea;
 	ma_pwr = ma;

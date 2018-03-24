@@ -704,7 +704,7 @@ void SCERA2::Timestep()
 	//APS oxidizer tank low level (GP1408X)
 	SA2.SetOutput(7, lem->APSPropellant.GetOxidLowLevel());
 	//AGS Warmup (GI3305X)
-	//Needs data here
+	SA2.SetOutput(11, lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER);
 
 	//Suit fan 1 fail (GF1083X)
 	SA3.SetOutput(2, lem->ecs.GetSuitFan1Failure());
@@ -758,7 +758,7 @@ void SCERA2::Timestep()
 	//Coolant pump no. 2 failure (GF2935)
 	SA13.SetOutput(3, lem->ecs.GetGlycolPump2Failure());
 	//AGS Standby (GI3306X)
-	//Needs data here
+	SA13.SetOutput(5, lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER);
 
 	//Prim -4.7VDC (GH1488V)
 	SA15.SetOutput(1, scale_data(lem->atca.GetPrimPowerVoltage(), -9.4169, -3.3929));
