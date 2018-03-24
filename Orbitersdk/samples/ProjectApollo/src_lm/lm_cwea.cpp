@@ -321,8 +321,9 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// Disabled when RR mode switch is not set to AUTO TRACK.
 			// FIX ME!
 			if (lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
+			else if (lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 0; }
 
-			if (lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { 
+			if (RRCautFF == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
 				SetLight(2, 5, 1); 
 			}
 			else
@@ -542,7 +543,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 		break;
 	}
 
-	//sprintf(oapiDebugString(), "MA %i AGS %i DC %i AC %i RRH %i SBH %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i SBD", MasterAlarm, AGSWarnFF, CESDCWarnFF, CESACWarnFF, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3, SBDCautFF);
+	//sprintf(oapiDebugString(), "MA %i AGS %i DC %i AC %i RCS1 %i RCS2 %i RRH %i SBH %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i SBD %i", MasterAlarm, AGSWarnFF, CESDCWarnFF, CESACWarnFF, RCSCautFF1, RCSCautFF2, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3, SBDCautFF);
 }
 
 void LEM_CWEA::SystemTimestep(double simdt) {
