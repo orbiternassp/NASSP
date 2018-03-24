@@ -49,8 +49,11 @@ protected:
 	void SetLight(int row, int column, int state, bool TriggerMA = true);
 	void SetLightStates(int state);
 	void SetColumnLightStates(int col, int state);
+	void TurnOn();
+	void TurnOff();
 
 	int LightStatus[5][8];		// 0 = not lit, 1 = lit, 2 = light doesn't exist
+	bool Operate;
 	bool DesRegWarnFF;   // Flip Flop
 	bool AGSWarnFF;   // Flip Flop
 	bool CESDCWarnFF;   // Flip Flop
