@@ -194,7 +194,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 
 			if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
 				if (lem->scera1.GetVoltage(15, 4) > (13.2 / 2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC **Open circuit by overtemp condition**
-				if (lem->scera2.GetVoltage(15, 2) > (30.8 / 8.0) || lem->scera2.GetVoltage(15, 2) < (25.2 / 8.0)) { lightlogic = true; } // ASA +28VDC  
+				if (lem->scera2.GetVoltage(15, 3) > (30.8 / 8.0) || lem->scera2.GetVoltage(15, 3) < (25.2 / 8.0)) { lightlogic = true; } // ASA +28VDC  
 				if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
 			}
 
@@ -243,7 +243,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 
 			// 6DS14 DC BUS VOLTAGE FAILURE
 			// On when CDR or SE DC bus below 26.5 V.
-			if (lem->scera1.GetVoltage(15, 3) < (26.5*0.125) || lem->scera2.GetVoltage(8, 3) < (26.5*0.125))
+			if (lem->scera1.GetVoltage(15, 3) < (26.5*0.125) || lem->scera2.GetVoltage(15, 4) < (26.5*0.125))
 				SetLight(3, 2, 1);
 			else
 				SetLight(3, 2, 0);
@@ -337,15 +337,13 @@ void LEM_CWEA::TimeStep(double simdt) {
 			// On when either ATCA solenoid driver power supply fails.
 			// Disabled by stage deadface open or Abort PB press.
 			lightlogic = false;
-			if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP && lem->CDR_SCS_ATCA_CB.Voltage() < 24.0) {
-				lightlogic = true;
-			}
-			if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_DOWN && lem->SCS_ATCA_AGS_CB.Voltage() < 24.0) {
-				lightlogic = true;
+			if (lem->scera1.GetVoltage(2, 9) < 2.5 && lem->stage < 2) {
+				if (lem->scera2.GetVoltage(15, 1) < ((-5.2 + 9.4169) / 1.2048) || lem->scera2.GetVoltage(15, 1) > ((-4.2 + 9.4169) / 1.2048)) { lightlogic = true; }
+				if (lem->scera2.GetVoltage(15, 2) < ((-5.2 + 9.4169) / 1.2048) || lem->scera2.GetVoltage(15, 2) > ((-4.2 + 9.4169) / 1.2048)) { lightlogic = true; }
 			}
 
 			if (lightlogic)
-			SetLight(4, 5, 1);
+				SetLight(4, 5, 1);
 			else
 				SetLight(4, 5, 0);
 

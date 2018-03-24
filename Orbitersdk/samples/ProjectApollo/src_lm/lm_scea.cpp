@@ -309,6 +309,8 @@ void SCERA1::Timestep()
 	SA2.SetOutput(7, lem->atca.jet_request[LMRCS_B1L] == 1);
 	//Jet Driver A1F Output (GH1432V)
 	SA2.SetOutput(8, lem->atca.jet_request[LMRCS_A1F] == 1);
+	//Abort Command (GY0050X)
+	SA2.SetOutput(9, lem->SCS_ENG_CONT_CB.IsPowered() && lem->AbortSwitch.GetState() == 0);
 
 	//RCS thrust chamber pressure A2A (GR5041)
 	SA3.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_A2A) > 0.5);
@@ -758,10 +760,14 @@ void SCERA2::Timestep()
 	//AGS Standby (GI3306X)
 	//Needs data here
 
-	//LMP bus voltage (GC0302V)
-	SA15.SetOutput(1, scale_data(lem->LMPs28VBus.Voltage(), 0.0, 40.0));
+	//Prim -4.7VDC (GH1488V)
+	SA15.SetOutput(1, scale_data(lem->atca.GetPrimPowerVoltage(), -9.4169, -3.3929));
+	//Backup -4.7VDC (GH1489V)
+	SA15.SetOutput(2, scale_data(lem->atca.GetBackupPowerVoltage(), -9.4169, -3.3929));
 	//Abort sensor assembly +28VDC (GI3214V)
-	SA15.SetOutput(2, scale_data(lem->asa.GetASA28V(), 0.0, 40.0));
+	SA15.SetOutput(3, scale_data(lem->asa.GetASA28V(), 0.0, 40.0));
+	//LMP bus voltage (GC0302V)
+	SA15.SetOutput(4, scale_data(lem->LMPs28VBus.Voltage(), 0.0, 40.0));
 
 	//Battery 1 voltage (GC0101V)
 	SA16.SetOutput(1, scale_data(lem->Battery1->Voltage(), 0.0, 40.0));

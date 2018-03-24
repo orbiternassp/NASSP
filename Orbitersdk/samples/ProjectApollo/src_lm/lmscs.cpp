@@ -169,6 +169,23 @@ void ATCA::Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl){
 	SECATCAHeat = sechl;
 	int x=0; while(x < 16){ jet_request[x] = 0; jet_last_request[x] = 0; jet_start[x] = 0; jet_stop[x] = 0; x++; }
 }
+
+double ATCA::GetPrimPowerVoltage() {
+	if (lem->CDR_SCS_ATCA_CB.IsPowered())
+	{
+		return -4.7;
+	}
+	else
+		return 0.0;
+}
+double ATCA::GetBackupPowerVoltage() {
+	if (lem->SCS_ATCA_AGS_CB.IsPowered())
+	{
+		return -4.7;
+	}
+	else
+		return 0.0;
+}
 // GuidContSwitch is the Guidance Control switch
 
 void ATCA::Timestep(double simt, double simdt){

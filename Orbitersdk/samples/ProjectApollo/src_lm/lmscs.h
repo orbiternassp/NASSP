@@ -53,6 +53,8 @@ class ATCA {
 public:
 	ATCA();								// Cons
 	void Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl);				// Init
+	double GetPrimPowerVoltage();
+	double GetBackupPowerVoltage();
 	void Timestep(double simt, double simdt);			// Timestep
 	void SystemTimestep(double simdt);
 	void ProcessLGC(int ch, int val);   // To process LGC commands
