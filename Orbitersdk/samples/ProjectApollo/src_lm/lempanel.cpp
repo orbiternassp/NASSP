@@ -3383,7 +3383,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_SEQ_LIGHT1:
-		if (eds.RelayBoxA.GetStageRelayMonitor() && stage < 2 || LampToneTestRotary.GetState() == 6) {
+		if (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6) {
 			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 0, 0, 33, 30);
 		}
 		else {
@@ -3392,7 +3392,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_SEQ_LIGHT2:
-		if (eds.RelayBoxB.GetStageRelayMonitor() || LampToneTestRotary.GetState() == 6) {
+		if (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6) {
 			oapiBlt(surf, srf[SRF_SEQ_LIGHT], 0, 0, 0, 0, 33, 30);
 		}
 		else {

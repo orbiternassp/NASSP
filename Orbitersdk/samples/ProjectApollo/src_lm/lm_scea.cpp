@@ -433,6 +433,10 @@ void SCERA1::Timestep()
 	SA12.SetOutput(6, !lem->APSPropellant.GetHeliumValve1()->IsOpen());
 	//APS helium secondary line solenoid valve closed (GP0320)
 	SA12.SetOutput(7, !lem->APSPropellant.GetHeliumValve2()->IsOpen());
+	//ED Relay A K1-K6 (GY0201X)
+	SA12.SetOutput(11, lem->eds.RelayBoxA.GetStageRelayMonitor());
+	//ED Relay B K1-K6 (GY0202X)
+	SA12.SetOutput(12, lem->eds.RelayBoxB.GetStageRelayMonitor());
 
 	//Thrust chamber assembly solenoid valve A4 closed (GR9661)
 	SA13.SetOutput(1, !lem->RCSA.GetQuad4IsolationValve()->IsOpen());
@@ -476,6 +480,10 @@ void SCERA1::Timestep()
 	SA14.SetOutput(7, !lem->RCSA.GetQuad1IsolationValve()->IsOpen());
 	//Thrust chamber assembly solenoid valve B1 closed (GR9668)
 	SA14.SetOutput(8, !lem->RCSB.GetQuad1IsolationValve()->IsOpen());
+	//ED Relay A K1-K6 (GY0201X)
+	SA12.SetOutput(11, lem->eds.RelayBoxA.GetStageRelayMonitor());
+	//ED Relay B K1-K6 (GY0202X)
+	SA12.SetOutput(12, lem->eds.RelayBoxB.GetStageRelayMonitor());
 
 	//Automatic thrust command voltage (GH1331)
 	SA15.SetOutput(1, scale_data(lem->deca.GetAutoThrustVoltage(), 0.0, 12.0));
