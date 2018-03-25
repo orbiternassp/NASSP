@@ -380,6 +380,35 @@ bool LEM_ASA::IsPowered()
 	return true;
 }
 
+double LEM_ASA::GetASATempF() {
+
+	return KelvinToFahrenheit(hsink->GetTemp());
+
+}
+
+double LEM_ASA::GetASA12V() {
+	if (IsPowered())
+		return 12.0;
+	else if (GetASATempF() > 145.0)
+		return 0;
+	else
+		return 0;
+}
+
+double LEM_ASA::GetASA28V() {
+	if (IsPowered())
+		return 28.0;
+	else
+		return 0;
+}
+
+double LEM_ASA::GetASAFreq() {
+	if (IsPowered() && (lem->CDR_SCS_AEA_CB.Voltage() > SP_MIN_DCVOLTAGE || lem->SCS_AEA_CB.Voltage() > SP_MIN_DCVOLTAGE))
+		return 400.0;
+	else
+		return 0;
+}
+
 void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 {
 	oapiWriteLine(scn, start_str);
@@ -875,6 +904,15 @@ bool LEM_AEA::IsACPowered()
 {
 	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE) {	return false; }
 	return true;
+}
+
+bool LEM_AEA::GetTestModeFailure()
+{
+		if (!IsPowered())
+			return false;
+		AGSChannelValue40 agsval40;
+		agsval40 = OutputPorts[IO_ODISCRETES];
+		return ~agsval40[AGSTestModeFailure];
 }
 
 void LEM_AEA::InitVirtualAGS(char *binfile)
