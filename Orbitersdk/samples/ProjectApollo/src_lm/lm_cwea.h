@@ -38,6 +38,7 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SetMasterAlarm(bool alarm);
+	void IsAutoTrackChanged();
 	void PushMasterAlarm();
 
 	bool CheckMasterAlarmMouseClick(int event);
@@ -71,6 +72,7 @@ protected:
 	bool RRCautFF;   // Flip Flop
 	bool SBDCautFF;   // Flip Flop
 	bool MasterAlarm;
+	bool AutoTrackChanged;
 
 	e_object *cwea_pwr;
 	e_object *ma_pwr;
