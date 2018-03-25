@@ -335,14 +335,20 @@ void LEM_CWEA::TimeStep(double simdt) {
 		// On when RR indicates Data-Not-Good.
 		// Disabled when RR mode switch is not set to AUTO TRACK.
 		// FIX ME!
-		if (lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
-		else if (lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 0; }
+		bool AutoTrackChanged;
+		if (RRCautFF == 0) { AutoTrackChanged = 0; }
+		if (lem->RendezvousRadarRotary.GetState() != 0 && AutoTrackChanged == 0) { AutoTrackChanged = 1; }
+
+		if (lem->RendezvousRadarRotary.GetState() == 0 && lem->scera2.GetVoltage(2, 1) > 2.5 && AutoTrackChanged == 1) { RRCautFF = 0; }
+		if (RRCautFF == 0 && lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
 
 		if (RRCautFF == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
 			SetLight(2, 5, 1);
 		}
 		else
 			SetLight(2, 5, 0);
+
+		sprintf(oapiDebugString(), "RRC %i ATC %i SCV %lf", RRCautFF, AutoTrackChanged, lem->scera2.GetVoltage(2, 1));
 
 		// 6DS29 LANDING RADAR 
 		// Was not present on LM-7 thru LM-9!  **What about LM 3-5?  Unlikely but need to research**
