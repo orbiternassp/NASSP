@@ -347,7 +347,7 @@ void LEM_CWEA::TimeStep(double simdt) {
 		else
 			SetLight(2, 5, 0);
 
-		sprintf(oapiDebugString(), "RRC %i ATC %i SCV %lf", RRCautFF, AutoTrackChanged, lem->scera2.GetVoltage(2, 1));
+		//sprintf(oapiDebugString(), "RRC %i ATC %i SCV %lf", RRCautFF, AutoTrackChanged, lem->scera2.GetVoltage(2, 1));
 
 		// 6DS29 LANDING RADAR 
 		// Was not present on LM-7 thru LM-9!  **What about LM 3-5?  Unlikely but need to research**
