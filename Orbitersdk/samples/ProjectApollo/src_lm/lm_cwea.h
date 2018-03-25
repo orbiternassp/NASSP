@@ -49,9 +49,27 @@ protected:
 	void SetLight(int row, int column, int state, bool TriggerMA = true);
 	void SetLightStates(int state);
 	void SetColumnLightStates(int col, int state);
+	void TurnOn();
+	void TurnOff();
 
 	int LightStatus[5][8];		// 0 = not lit, 1 = lit, 2 = light doesn't exist
-	int WaterWarningDisabled;   // FF for this
+	bool Operate;
+	bool DesRegWarnFF;   // Flip Flop
+	bool AGSWarnFF;   // Flip Flop
+	bool CESDCWarnFF;   // Flip Flop
+	bool CESACWarnFF;   // Flip Flop
+	bool RCSCautFF1;   // Flip Flop
+	bool RCSCautFF2;   // Flip Flop
+	bool RRHeaterCautFF;   // Flip Flop
+	bool SBDHeaterCautFF;   // Flip Flop
+	bool OxygenCautFF1;   // Flip Flop
+	bool OxygenCautFF2;   // Flip Flop
+	bool OxygenCautFF3;   // Flip Flop
+	bool WaterCautFF1;   // Flip Flop
+	bool WaterCautFF2;   // Flip Flop
+	bool WaterCautFF3;   // Flip Flop
+	bool RRCautFF;   // Flip Flop
+	bool SBDCautFF;   // Flip Flop
 	bool MasterAlarm;
 
 	e_object *cwea_pwr;

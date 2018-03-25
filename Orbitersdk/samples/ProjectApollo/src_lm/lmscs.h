@@ -53,6 +53,8 @@ class ATCA {
 public:
 	ATCA();								// Cons
 	void Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl);				// Init
+	double GetPrimPowerVoltage();
+	double GetBackupPowerVoltage();
 	void Timestep(double simt, double simdt);			// Timestep
 	void SystemTimestep(double simdt);
 	void ProcessLGC(int ch, int val);   // To process LGC commands
@@ -144,8 +146,11 @@ public:
 	bool GetK1() { return K1; }
 	bool GetK10() { return K10; }
 	bool GetK16() { return K16; }
+	bool GetK21() { return K21; }
+	bool GetK22() { return K22; }
 	bool GetK23() { return K23; }
 	bool GetThrustOn() { return engOn; }
+	bool GetEngArm() { return engArm; }
 	double GetAutoThrustVoltage() { return AutoThrust * 12.0; }
 	double GetManualThrustVoltage() { return ManualThrust * 14.6; }
 
@@ -157,7 +162,7 @@ protected:
 	e_object *dc_source;			     // DC source to use when powered
 	bool powered;					 // Data valid flag.
 	int pitchactuatorcommand, rollactuatorcommand;
-	bool engOn, DEArm;
+	bool engOn, DEArm, engArm;
 	double AutoThrust, ManualThrust;
 	double lgcAutoThrust;
 

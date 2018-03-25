@@ -58,7 +58,7 @@ class DPSPropellantSource : public LEMPropellantSource {
 public:
 	DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p);
 
-	void Init(e_object *dc1);
+	void Init(LEM *l, e_object *dc1);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetFuelPercent();
@@ -111,6 +111,7 @@ protected:
 	DPSValve FuelVentValve2;
 
 	e_object *GaugingPower;
+	LEM *lem;					// Pointer at LEM
 };
 
 

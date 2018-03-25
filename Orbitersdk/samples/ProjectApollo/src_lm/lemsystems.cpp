@@ -823,7 +823,7 @@ void LEM::SystemsInit()
 	scca3.Init(this);
 
 	// DPS and APS
-	DPSPropellant.Init(&PROP_PQGS_CB);
+	DPSPropellant.Init(this, &PROP_PQGS_CB);
 	DPS.Init(this);
 	DPS.pitchGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
 	DPS.rollGimbalActuator.Init(this, &EngGimbalEnableSwitch, &DECA_GMBL_AC_CB);
@@ -2110,7 +2110,12 @@ void LEM::CheckDescentStageSystems()
 		DES_LMPs28VBusB.Disconnect();
 		DES_CDRs28VBusA.Disconnect();
 		DES_CDRs28VBusB.Disconnect();
+		Battery1->Disable();
+		Battery2->Disable();
+		Battery3->Disable();
+		Battery4->Disable();
 		DSCBattFeedTB.SetState(0);
+		EDBatteryA->Disable();
 
 		//ECS
 
