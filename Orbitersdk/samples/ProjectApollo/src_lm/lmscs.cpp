@@ -1105,16 +1105,6 @@ void DECA::Timestep(double simdt) {
 		DEArm = false;
 	}
 
-	//DPS Arm
-	if (lem->SCS_DECA_PWR_CB.IsPowered() && (lem->deca.GetK1() || lem->deca.GetK23()))
-		{
-		engArm = true;
-		}
-	else
-	{
-		engArm = false;
-	}
-
 	//DECA Power Supply Failure
 	if (DEArm && !powered)
 	{
@@ -1472,6 +1462,14 @@ void DECA::SystemTimestep(double simdt) {
 
 	if (powered && dc_source)
 		dc_source->DrawPower(10.6);  // take DC power
+}
+
+bool DECA::GetEngArm()
+{
+	if (lem->stage < 2 && dc_source && dc_source->Voltage() > SP_MIN_DCVOLTAGE && (K1 || K23))
+		return true;
+
+	return false;
 }
 
 void DECA::SaveState(FILEHANDLE scn) {
