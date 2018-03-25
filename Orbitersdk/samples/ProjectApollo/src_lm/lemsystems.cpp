@@ -3964,7 +3964,7 @@ void LEM_TLE::Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad
 
 bool LEM_TLE::IsPowered()
 {
-	if (TrackCB->Voltage() > SP_MIN_DCVOLTAGE) {
+	if (TrackCB->Voltage() > SP_MIN_DCVOLTAGE && TrackSwitch == THREEPOSSWITCH_DOWN) {
 		return true;
 	}
 	return false;
@@ -3977,7 +3977,7 @@ void LEM_TLE::TimeStep(double simdt)
 
 void LEM_TLE::SystemTimestep(double simdt)
 {
-	if (IsPowered() && TrackSwitch == THREEPOSSWITCH_DOWN) {
+	if (IsPowered()) {
 		TrackCB->DrawPower(120.0);
 		TLEHeat->GenerateHeat(60.0);
 		SecTLEHeat->GenerateHeat(60.0);
