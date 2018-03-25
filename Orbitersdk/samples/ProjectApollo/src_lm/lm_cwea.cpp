@@ -623,6 +623,7 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "WATERCAUTFF3", WaterCautFF3);
 	papiWriteScenario_bool(scn, "RRCAUTFF", RRCautFF);
 	papiWriteScenario_bool(scn, "SBDCAUTFF", SBDCautFF);
+	papiWriteScenario_bool(scn, "AUTOTRACKCHANGED", AutoTrackChanged);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
@@ -659,6 +660,7 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "WATERCAUTFF3", WaterCautFF3);
 		papiReadScenario_bool(line, "RRCAUTFF", RRCautFF);
 		papiReadScenario_bool(line, "SBDCAUTFF", SBDCautFF);
+		papiReadScenario_bool(line, "AUTOTRACKCHANGED", AutoTrackChanged);
 		papiReadScenario_intarr(line, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);
