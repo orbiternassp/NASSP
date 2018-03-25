@@ -335,19 +335,19 @@ protected:
 #define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
 #define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
 
-class TLE
+class LEM_TLE
 {
 public:
-	TLE();
-	void Init(LEM *s, e_object *dc_src, ToggleSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh);
+	LEM_TLE();
+	void Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();
 protected:
-	LEM * lem;
-	e_object *dc_source;
-	ToggleSwitch *TrackSwitch;
+	LEM *lem;
+	e_object *TrackCB;
+	ThreePosSwitch *TrackSwitch;
 	h_HeatLoad *TLEHeat;
 	h_HeatLoad *SecTLEHeat;
 
@@ -936,8 +936,6 @@ protected:
 
 	SwitchRow QtyMonRotaryRow;
 	RotationalSwitch QtyMonRotary;
-
-	TLE TLE;
 
 	/////////////////
 	// LEM panel 3 //
@@ -1839,6 +1837,9 @@ protected:
 	LM_VHF VHF;
 	LM_SBAND SBand;
 
+	//Lighting
+	LEM_TLE tle;
+
 	// ECS
 	LEM_ECS ecs;
 	LEMPressureSwitch CabinPressureSwitch;
@@ -1910,6 +1911,7 @@ protected:
 	friend class LEM_LR;
 	friend class LEM_RR;
 	friend class LEM_RadarTape;
+	friend class LEM_TLE;
 
 	friend class LEM_ASA;
 	friend class LEM_AEA;
