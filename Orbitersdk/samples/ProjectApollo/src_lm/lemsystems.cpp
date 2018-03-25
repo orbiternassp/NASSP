@@ -533,7 +533,7 @@ void LEM::SystemsInit()
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
 	// CWEA
-	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, &LTG_ANUN_DOCK_COMPNT_CB);
+	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECCWEAHEAT"));
 
 	// COMM
 	omni_fwd.Init(this);
@@ -3967,7 +3967,7 @@ bool TLE::IsPowered()
 
 void TLE::TimeStep(double simdt)
 {
-	
+	//Need to add controls for an external strobe light here, 60 flashes per minute.
 }
 
 void TLE::SystemTimestep(double simdt)

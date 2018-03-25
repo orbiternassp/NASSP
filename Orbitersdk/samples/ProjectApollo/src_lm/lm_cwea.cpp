@@ -58,7 +58,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	SBDCautFF = 0;
 }
 
-void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg ) {
+void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg, h_HeatLoad *cweah, h_HeatLoad *seccweah) {
 	int row = 0, col = 0;
 	while (col < 8) {
 		while (row < 5) {
@@ -73,6 +73,8 @@ void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg ) {
 	ma_pwr = ma;
 	ltg_pwr = ltg;
 	lem = l;
+	CWEAHeat = cweah;
+	SecCWEAHeat = seccweah;
 }
 
 bool LEM_CWEA::IsCWEAPowered() {
@@ -555,6 +557,8 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 
 	if (IsCWEAPowered()) {
 		cwea_pwr->DrawPower(11.48);
+		CWEAHeat->GenerateHeat(5.74);
+		SecCWEAHeat->GenerateHeat(5.74);
 	}
 	if (MasterAlarm == true)
 		ma_pwr->DrawPower(7.2);
