@@ -456,6 +456,8 @@ void LEM::SystemsInit()
 	NUM_LTG_AC_CB.MaxAmps = 2.0;
 	NUM_LTG_AC_CB.WireTo(&ACBusB);
 
+	TLE.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECTLEHEAT"));
+
 	// LGC and DSKY
 	LGC_DSKY_CB.MaxAmps = 7.5;
 	LGC_DSKY_CB.WireTo(&CDRs28VBus);
@@ -1437,9 +1439,9 @@ void LEM::SystemsInternalTimestep(double simdt)
 		fdaiRight.SystemTimestep(tFactor);
 		LR.SystemTimestep(tFactor);
 		RR.SystemTimestep(tFactor);
-		RadarTape.SystemTimeStep(tFactor);
-		crossPointerLeft.SystemTimeStep(tFactor);
-		crossPointerRight.SystemTimeStep(tFactor);
+		RadarTape.SystemTimestep(tFactor);
+		crossPointerLeft.SystemTimestep(tFactor);
+		crossPointerRight.SystemTimestep(tFactor);
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
@@ -1470,6 +1472,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		EventTimerDisplay.SystemTimestep(tFactor);
 		CWEA.SystemTimestep(tFactor);
+		TLE.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
@@ -1553,6 +1556,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tca4B.Timestep(simdt);
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
+	TLE.TimeStep(simdt);
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();
@@ -3719,7 +3723,7 @@ void LEM_RadarTape::TimeStep(double simdt) {
 	dispRate  = 2881 - 82 -  (int)(reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
 }
 
-void LEM_RadarTape::SystemTimeStep(double simdt) {
+void LEM_RadarTape::SystemTimestep(double simdt) {
 	if (!IsPowered())
 		return;
 
@@ -3842,7 +3846,7 @@ bool CrossPointer::IsPowered()
 	return true;
 }
 
-void CrossPointer::SystemTimeStep(double simdt)
+void CrossPointer::SystemTimestep(double simdt)
 {
 	if (IsPowered() && dc_source)
 		dc_source->DrawPower(8.0);  // take DC power
@@ -3933,5 +3937,44 @@ void CrossPointer::LoadState(FILEHANDLE scn) {
 			return;
 		}
 
+	}
+}
+
+//Tracking Light Electronics
+
+TLE::TLE()
+{
+	lem = NULL;
+
+}
+
+void TLE::Init(LEM *s, e_object *dc_src, ToggleSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh)
+{
+	lem = s;
+	dc_source = dc_src;
+	TrackSwitch = tracksw;
+	TLEHeat = tleh;
+	SecTLEHeat = sectleh;
+}
+
+bool TLE::IsPowered()
+{
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE) {
+		return false;
+	}
+	return true;
+}
+
+void TLE::TimeStep(double simdt)
+{
+	
+}
+
+void TLE::SystemTimestep(double simdt)
+{
+	if (IsPowered() && TrackSwitch == THREEPOSSWITCH_DOWN) {
+		dc_source->DrawPower(120.0);
+		TLEHeat->GenerateHeat(60.0);
+		SecTLEHeat->GenerateHeat(60.0);
 	}
 }

@@ -289,7 +289,7 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
-	void SystemTimeStep(double simdt);
+	void SystemTimestep(double simdt);
 	void setRange(double range) { reqRange = range; };
 	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
@@ -317,7 +317,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void TimeStep(double simdt);
-	void SystemTimeStep(double simdt);
+	void SystemTimestep(double simdt);
 	void GetVelocities(double &vx, double &vy);
 
 	bool IsPowered();
@@ -334,6 +334,24 @@ protected:
 #define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
 #define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
 #define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
+
+class TLE
+{
+public:
+	TLE();
+	void Init(LEM *s, e_object *dc_src, ToggleSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh);
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
+
+	bool IsPowered();
+protected:
+	LEM * lem;
+	e_object *dc_source;
+	ToggleSwitch *TrackSwitch;
+	h_HeatLoad *TLEHeat;
+	h_HeatLoad *SecTLEHeat;
+
+};
 
 ///
 /// \ingroup LEM
@@ -918,6 +936,8 @@ protected:
 
 	SwitchRow QtyMonRotaryRow;
 	RotationalSwitch QtyMonRotary;
+
+	TLE TLE;
 
 	/////////////////
 	// LEM panel 3 //
