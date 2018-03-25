@@ -101,11 +101,6 @@ void LEM_CWEA::SetMasterAlarm(bool alarm) {
 	MasterAlarm = alarm;
 }
 
-void LEM_CWEA::IsAutoTrackChanged() {
-	if (lem->RendezvousRadarRotary.GetState() != 0)
-		AutoTrackChanged = 1;
-}
-
 void LEM_CWEA::TimeStep(double simdt) {
 	bool lightlogic;
 
@@ -341,6 +336,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 		// On when RR indicates Data-Not-Good.
 		// Disabled when RR mode switch is not set to AUTO TRACK.
 		// FIX ME!
+		if (lem->RendezvousRadarRotary.GetState() != 0) { AutoTrackChanged = 1;}
+
 		if (lem->RendezvousRadarRotary.GetState() == 0 && AutoTrackChanged == 1) { RRCautFF = 0; AutoTrackChanged = 0; }
 		else if (RRCautFF == 0 && lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
 

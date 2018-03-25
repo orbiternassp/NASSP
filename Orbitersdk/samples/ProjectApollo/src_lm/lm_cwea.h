@@ -38,7 +38,6 @@ public:
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SetMasterAlarm(bool alarm);
-	void IsAutoTrackChanged();
 	void PushMasterAlarm();
 
 	bool CheckMasterAlarmMouseClick(int event);
