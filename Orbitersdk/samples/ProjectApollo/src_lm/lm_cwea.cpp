@@ -39,6 +39,8 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	ma_pwr = NULL;
 	ltg_pwr = NULL;
 	lem = NULL;
+	CWEAHeat = 0;
+	SecCWEAHeat = 0;
 
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;

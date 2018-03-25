@@ -3945,6 +3945,10 @@ void CrossPointer::LoadState(FILEHANDLE scn) {
 TLE::TLE()
 {
 	lem = NULL;
+	dc_source = NULL;
+	TrackSwitch = NULL;
+	TLEHeat = 0;
+	SecTLEHeat = 0;
 
 }
 
