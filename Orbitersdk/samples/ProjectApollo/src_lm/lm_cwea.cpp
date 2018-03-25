@@ -335,7 +335,6 @@ void LEM_CWEA::TimeStep(double simdt) {
 		// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 		// On when RR indicates Data-Not-Good.
 		// Disabled when RR mode switch is not set to AUTO TRACK.
-		// FIX ME!
 		if (lem->RendezvousRadarRotary.GetState() != 0) { AutoTrackChanged = 1;}
 
 		if (lem->RendezvousRadarRotary.GetState() == 0 && AutoTrackChanged == 1) { RRCautFF = 0; AutoTrackChanged = 0; }
