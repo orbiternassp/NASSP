@@ -1575,7 +1575,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-
+	/*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1907,9 +1907,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:PRESS");
 	double *lmtunneltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:TEMP");
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
+	*/
 
 
-    sprintf(oapiDebugString(), "TLEHeat %lf CWEAHeat %lf Powered %i", *TLEHeat, *CWEAHeat, tle.IsPowered());
 	//sprintf(oapiDebugString(), "Quad 1 %lf Quad 2 %lf Quad 3 %lf Quad 4 %lf", KelvinToFahrenheit(*QD1Temp), KelvinToFahrenheit(*QD2Temp), KelvinToFahrenheit(*QD3Temp), KelvinToFahrenheit(*QD4Temp));
 	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
 
@@ -3964,7 +3964,7 @@ void LEM_TLE::Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad
 
 bool LEM_TLE::IsPowered()
 {
-	if (TrackCB->Voltage() > SP_MIN_DCVOLTAGE && TrackSwitch == THREEPOSSWITCH_DOWN) {
+	if (TrackCB->Voltage() > SP_MIN_DCVOLTAGE && TrackSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		return true;
 	}
 	return false;
