@@ -35,7 +35,7 @@ public:
 	bool IsCWEAPowered();
 	bool IsMAPowered();
 	bool IsLTGPowered();
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void SetMasterAlarm(bool alarm);
 	void PushMasterAlarm();

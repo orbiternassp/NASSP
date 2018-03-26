@@ -176,7 +176,7 @@ class LM_VHF {
 public:
 	LM_VHF();
 	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
-	void TimeStep(double simt);        // TimeStep
+	void Timestep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
 	LEM *lem;					   // Ship we're installed in
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
@@ -235,7 +235,7 @@ class LM_SBAND {
 public:
 	LM_SBAND();
 	void Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph);	       // Initialization
-	void TimeStep(double simt);        // TimeStep
+	void Timestep(double simt);        // Timestep
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -260,7 +260,7 @@ public:
 	void Init(LEM *s, h_Radiator *an, Boiler *anheat);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);			// System Timestep
 	bool IsPowered();
 	double GetAntennaTempF();
@@ -288,7 +288,7 @@ class LM_OMNI :public LM_SBandAntenna {
 public:
 	LM_OMNI(VECTOR3 dir);
 	void Init(LEM *vessel);	// Initialization
-	void TimeStep();			// TimeStep
+	void Timestep();			// Timestep
 protected:
 	LEM *lem;					// Ship we're installed in
 	VECTOR3 direction;

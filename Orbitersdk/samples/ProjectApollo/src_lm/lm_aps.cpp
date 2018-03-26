@@ -333,7 +333,7 @@ void LEM_APS::Init(LEM *s) {
 	lem = s;
 }
 
-void LEM_APS::TimeStep(double simdt) {
+void LEM_APS::Timestep(double simdt) {
 	if (lem == NULL) { return; }
 
 	ChamberPressure = 0.0;

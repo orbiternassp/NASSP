@@ -42,7 +42,7 @@ void MechanicalAccelerometer::Init(VESSEL* v)
 	vessel = v;
 }
 
-void MechanicalAccelerometer::TimeStep(double simdt) {
+void MechanicalAccelerometer::Timestep(double simdt) {
 
 	VECTOR3 arot, w, vel;
 

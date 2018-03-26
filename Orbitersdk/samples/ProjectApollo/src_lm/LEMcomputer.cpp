@@ -501,7 +501,7 @@ bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
 	return true;
 }
 
-void LMOptics::TimeStep(double simdt) {
+void LMOptics::Timestep(double simdt) {
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
 
 	/*if (ReticleMoved)
