@@ -2376,6 +2376,9 @@ void MCC::TimeStep(double simdt){
 			case MST_F_LUNAR_ORBIT_DOI_DAY_18: //CSM backup insertion update to LM insertion update
 				UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 13 && MoonRevTime > 1.0*3600.0 + 25.0*60.0, 75, MST_F_LUNAR_ORBIT_DOI_DAY_19);
 				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_19: //LM insertion update to CSM backup insertion update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 14 && MoonRevTime > 30.0*60.0, 76, MST_F_LUNAR_ORBIT_DOI_DAY_19);
+				break;
 			}
 			break;
 		}

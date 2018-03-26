@@ -5343,6 +5343,11 @@ double GETfromMJD(double MJD, double GETBase)
 	return (MJD - GETBase)*24.0*3600.0;
 }
 
+double MJDfromGET(double GET, double GETBase)
+{
+	return GETBase + GET / 24.0 / 3600.0;
+}
+
 void format_time_HHMMSS(char *buf, double time) {
 	buf[0] = 0; // Clobber
 	int hours, minutes, seconds;

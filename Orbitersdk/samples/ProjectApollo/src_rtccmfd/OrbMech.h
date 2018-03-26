@@ -252,6 +252,7 @@ namespace OrbMech {
 	VECTOR3 r_from_latlong(double lat, double lng, double r);
 	double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat);
 	double GETfromMJD(double MJD, double GETBase);
+	double MJDfromGET(double GET, double GETBase);
 	void format_time_HHMMSS(char *buf, double time);
 	void format_time_MMSS(char *buf, double time);
 	bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
