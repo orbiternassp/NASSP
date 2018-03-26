@@ -636,7 +636,6 @@ void LEM::SeparateStage (UINT stage)
 void LEM::SetLmLandedMesh() {
 
 	ClearMeshes();
-	ClearBeacons();
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
 	UINT meshidx = AddMesh (hLMLanded, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -653,9 +652,6 @@ void LEM::SetLmLandedMesh() {
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
-
-	// Exterior lights
-	SetTrackLight();
 
 	Landed = true;
 }
