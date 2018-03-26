@@ -2727,8 +2727,8 @@ double LEM_INV::calc_hlpw_util(double maxw, int index)
 void LEM_INV::SystemTimestep(double simdt)
 {
 	if (active) {
-		InvHeat->GenerateHeat(10.0);	//FIX ME! Needs actual heat generated, this number just a placeholder
-		SecInvHeat->GenerateHeat(10.0);
+		InvHeat->GenerateHeat(heatloss/2.0);
+		SecInvHeat->GenerateHeat(heatloss/2.0);
 	}
 }
 
