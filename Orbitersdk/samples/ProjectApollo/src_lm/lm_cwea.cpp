@@ -370,10 +370,8 @@ void LEM_CWEA::TimeStep(double simdt) {
 		// On when any EDS relay fails.
 		// Failures of stage relays disabled when stage relay switch in RESET position.
 		// Disabled when MASTER ARM is ON or if ABORT STAGE commanded.
-		if (!(lem->EDMasterArm.IsUp() || lem->AbortStageSwitch.GetState() == 0)) {
-			if (lem->scera1.GetVoltage(14, 11) > 2.5 || lem->scera1.GetVoltage(14, 12) > 2.5)
-				SetLight(0, 6, 1);
-		}
+		if (!(lem->EDMasterArm.IsUp() || lem->scca1.GetK19()) && (lem->scera1.GetVoltage(14, 11) > 2.5 || lem->scera1.GetVoltage(14, 12) > 2.5))
+			SetLight(0, 6, 1);
 		else
 			SetLight(0, 6, 0);
 

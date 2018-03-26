@@ -257,6 +257,7 @@ public:
 	bool GetK15() { return K15; }
 	bool GetK17() { return K17; }
 	bool GetK18() { return K18; }
+	bool GetK19() { return K19; }
 	bool GetK20() { return K20; }
 	bool GetK203() { return K203; }
 	bool GetK204() { return K204; }
