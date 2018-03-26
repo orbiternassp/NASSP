@@ -2377,7 +2377,16 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 13 && MoonRevTime > 1.0*3600.0 + 25.0*60.0, 75, MST_F_LUNAR_ORBIT_DOI_DAY_19);
 				break;
 			case MST_F_LUNAR_ORBIT_DOI_DAY_19: //LM insertion update to CSM backup insertion update
-				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 14 && MoonRevTime > 30.0*60.0, 76, MST_F_LUNAR_ORBIT_DOI_DAY_19);
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 14 && MoonRevTime > 30.0*60.0, 77, MST_F_LUNAR_ORBIT_DOI_DAY_20);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_20: //CSM backup insertion update to LM insertion update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 3.0*60.0, 76, MST_F_LUNAR_ORBIT_DOI_DAY_21);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_21: //LM insertion update to CMC LM state vector update
+				UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, MoonRev >= 14 && MoonRevTime > 1.0*3600.0 + 5.0*60.0, 78, MST_F_LUNAR_ORBIT_DOI_DAY_22);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_22: //CMC LM state vector update to CSI update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 102, MST_F_LUNAR_ORBIT_DOI_DAY_22);
 				break;
 			}
 			break;

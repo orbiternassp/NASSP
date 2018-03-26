@@ -4570,7 +4570,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->remarks, "CSI time: %s, TPI time: %s, N equal to 1", GETbuffer, GETbuffer2);
 	}
 	break;
-	case 75: //CSM BACKUP INSERTION UPDATE
+	case 75: //PRELIMINARY CSM BACKUP INSERTION UPDATE
+		preliminary = true;
+	case 76: //CSM BACKUP INSERTION UPDATE
 	{
 		AP11ManPADOpt opt;
 		LambertMan lamopt;
@@ -4608,6 +4610,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.vesseltype = 0;
 
 		AP11ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "Backup Insertion");
 
 		sv_Ins = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv_CSM, 0.0);
 
@@ -4630,9 +4633,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(GETbuffer, calcParams.CSI);
 		OrbMech::format_time_HHMMSS(GETbuffer2, t_TPI);
 		sprintf(form->remarks, "CSI: %s, TPI: %s, N equals 1", GETbuffer, GETbuffer2);
+
+		if (preliminary == false)
+		{
+			sprintf(uplinkdata, "%s", AGCStateVectorUpdate(sv_CSM, true, AGCEpoch, GETbase));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector");
+			}
+		}
 	}
 	break;
-	case 76: //LM INSERTION UPDATE
+	case 77: //PRELIMINARY LM INSERTION UPDATE
+		preliminary = true;
+	case 78: //LM INSERTION UPDATE
 	{
 		AP11LMManPADOpt opt;
 		LambertMan lamopt;
@@ -4674,6 +4689,19 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.vessel = calcParams.tgt;
 
 		AP11LMManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "Insertion");
+
+		if (preliminary == false)
+		{
+			sprintf(form->remarks, "LM ascent stage weight is %.0lf", form->LMWeight);
+
+			sprintf(uplinkdata, "%s", AGCStateVectorUpdate(sv_CSM, true, AGCEpoch, GETbase));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector");
+			}
+		}
 	}
 	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
@@ -4706,6 +4734,22 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM and LM state vectors");
+		}
+	}
+	break;
+	case 102: //GENERIC LM STATE VECTOR UPDATE
+	{
+		SV sv;
+		double GETbase;
+
+		sv = StateVectorCalc(calcParams.tgt); //State vector for uplink
+		GETbase = getGETBase();
+
+		sprintf(uplinkdata, "%s", AGCStateVectorUpdate(sv, false, AGCEpoch, GETbase));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector");
 		}
 	}
 	break;
