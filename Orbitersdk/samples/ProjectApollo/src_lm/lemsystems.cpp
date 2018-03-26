@@ -388,7 +388,9 @@ void LEM::SystemsInit()
 	LMPInverter2CB.WireTo(&LMPs28VBus);
 	// AC Inverters
 	INV_1.dc_input = &CDRInverter1CB;	
-	INV_2.dc_input = &LMPInverter2CB; 	
+	INV_2.dc_input = &LMPInverter2CB; 
+	INV_1.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:INVHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECINVHEAT"));
+	INV_2.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:INVHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECINVHEAT"));
 	// AC bus voltmeter breaker
 	AC_A_BUS_VOLT_CB.MaxAmps = 2.0;
 	AC_A_BUS_VOLT_CB.WireTo(&ACBusA);
@@ -1473,6 +1475,8 @@ void LEM::SystemsInternalTimestep(double simdt)
 		EventTimerDisplay.SystemTimestep(tFactor);
 		CWEA.SystemTimestep(tFactor);
 		tle.SystemTimestep(tFactor);
+		INV_1.SystemTimestep(tFactor);
+		INV_2.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
@@ -2615,10 +2619,14 @@ LEM_INV::LEM_INV(){
 	lem = NULL;
 	active = 0;
 	dc_input = NULL;
+	InvHeat = 0;
+	SecInvHeat = 0;
 }
 
-void LEM_INV::Init(LEM *s){
+void LEM_INV::Init(LEM *s, h_HeatLoad *invh, h_HeatLoad *secinvh){
 	lem = s;
+	InvHeat = invh;
+	SecInvHeat = secinvh;
 }
 
 void LEM_INV::DrawPower(double watts)
@@ -2661,6 +2669,14 @@ void LEM_INV::UpdateFlow(double dt){
 	*/
 	// Reset for next pass
 	e_object::UpdateFlow(dt);
+}
+
+void LEM_INV::SystemTimestep(double simdt)
+{
+	if (active) {
+		InvHeat->GenerateHeat(10.0);	//FIX ME! Needs actual heat generated, this number just a placeholder
+		SecInvHeat->GenerateHeat(10.0);
+	}
 }
 
 // Landing Radar

@@ -182,12 +182,15 @@ public:
 class LEM_INV : public e_object {
 public:
 	LEM_INV();							// Cons
-	void Init(LEM *s);
-	void UpdateFlow(double dt);
+	void Init(LEM *s, h_HeatLoad *invh, h_HeatLoad *secinvh);
 	void DrawPower(double watts);
+	void UpdateFlow(double dt);
+	void SystemTimestep(double simdt);
 	int active;
 	LEM *lem;					// Pointer at LM
 	e_object *dc_input;
+	h_HeatLoad *InvHeat;
+	h_HeatLoad *SecInvHeat;
 };
 
 // Landing Radar
