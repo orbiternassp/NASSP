@@ -105,7 +105,7 @@ void LEM_CWEA::SetMasterAlarm(bool alarm) {
 	MasterAlarm = alarm;
 }
 
-void LEM_CWEA::TimeStep(double simdt) {
+void LEM_CWEA::Timestep(double simdt) {
 	bool lightlogic;
 
 	if (MasterAlarm && IsMAPowered()) {

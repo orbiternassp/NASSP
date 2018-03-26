@@ -1028,7 +1028,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 void LEM_ECS::Init(LEM *s) {
 	lem = s;
 }
-void LEM_ECS::TimeStep(double simdt) {
+void LEM_ECS::Timestep(double simdt) {
 	if (lem == NULL) { return; }
 	// **** Atmosphere Revitalization Section ****
 	// First, get air from the suits and/or the cabin into the system.

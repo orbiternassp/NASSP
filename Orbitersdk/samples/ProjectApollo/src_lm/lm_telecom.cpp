@@ -214,7 +214,7 @@ void LM_VHF::SystemTimestep(double simdt) {
 	}
 }
 
-void LM_VHF::TimeStep(double simt){
+void LM_VHF::Timestep(double simt){
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
 		sprintf(oapiDebugString(),"%s",wsk_emsg);
@@ -2120,7 +2120,7 @@ void LM_SBAND::SystemTimestep(double simdt) {
 	}
 }
 
-void LM_SBAND::TimeStep(double simt){
+void LM_SBAND::Timestep(double simt){
 	if(lem == NULL){ return; } // Do nothing if not initialized
 	
 	if (lem->Panel12SBandAntSelKnob.GetState() == 0)
@@ -2376,7 +2376,7 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
 }
 
-void LEM_SteerableAnt::TimeStep(double simdt){
+void LEM_SteerableAnt::Timestep(double simdt){
 	if(lem == NULL){ return; }
 	// Draw DC power from COMM_SBAND_ANT_CB to position.
 	// Use 7.6 watts to move the antenna and 0.7 watts to maintain auto track.
@@ -2558,7 +2558,7 @@ void LM_OMNI::Init(LEM *vessel) {
 	hEarth = oapiGetObjectByName("Earth");
 }
 
-void LM_OMNI::TimeStep()
+void LM_OMNI::Timestep()
 {
 	VECTOR3 U_RP, pos, R_E, R_M, U_R;
 	MATRIX3 Rot;

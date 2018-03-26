@@ -105,7 +105,7 @@ void LEM_ASA::TurnOff()
 	Initialized = false;
 }
 
-void LEM_ASA::TimeStep(double simdt){
+void LEM_ASA::Timestep(double simdt){
 	if(lem == NULL){ return; }
 	// AGS OFF  = ASA heaters active (OFF mode)
 	// AGS STBY = ASA fully active   (WARMUP mode, becomes OPERATE mode when temp allows)
@@ -484,7 +484,7 @@ void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah){
 	secaeaHeat = secaeah;
 }
 
-void LEM_AEA::TimeStep(double simt, double simdt){
+void LEM_AEA::Timestep(double simt, double simdt){
 	if(lem == NULL){ return; }
 
 	if (!IsPowered()) return;
@@ -1136,7 +1136,7 @@ void LEM_DEDA::Init(e_object *powered)
 	FirstTimeStep = true;
 }
 
-void LEM_DEDA::TimeStep(double simdt){
+void LEM_DEDA::Timestep(double simdt){
 	if(lem == NULL){ return; }
 
 	if(FirstTimeStep)
