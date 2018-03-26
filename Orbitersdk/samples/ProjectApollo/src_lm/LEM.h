@@ -555,7 +555,6 @@ public:
 	void SetFwdHatchMesh();
 	void SetOvhdHatchMesh();
 	void SetTrackLight();
-	void SetTrackLightAscent();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	virtual void PlayCountSound(bool StartStop) {};

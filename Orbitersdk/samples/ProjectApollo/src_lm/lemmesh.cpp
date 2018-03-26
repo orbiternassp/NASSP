@@ -141,6 +141,7 @@ void LEM::SetLmVesselDockStage()
 	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
+	ClearBeacons();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
@@ -202,9 +203,6 @@ void LEM::SetLmVesselDockStage()
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
-
-	// Exterior lights
-	SetTrackLight();
 	
 	if (!ph_Dsc)
 	{
@@ -265,6 +263,9 @@ void LEM::SetLmVesselDockStage()
 	VECTOR3 lpd_dir = _V(-0.191, 1.827, 0.383);
 	lpdgret = AddMesh(hLPDgret, &lpd_dir);
 	SetLPDMesh();
+
+	// Exterior lights
+	SetTrackLight();
 }
 
 void LEM::SetLmVesselHoverStage()
@@ -282,6 +283,7 @@ void LEM::SetLmVesselHoverStage()
 	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
+	ClearBeacons();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
@@ -351,9 +353,6 @@ void LEM::SetLmVesselHoverStage()
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
-
-	// Exterior lights
-	SetTrackLight();
 
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -432,6 +431,9 @@ void LEM::SetLmVesselHoverStage()
 	VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
 	lpdgext = AddMesh(hLPDgext, &lpd_dir);
 	SetLPDMesh();
+
+	// Exterior lights
+	SetTrackLight();
 }
 
 void LEM::SetLmAscentHoverStage()
@@ -449,6 +451,7 @@ void LEM::SetLmAscentHoverStage()
 	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
 	ClearMeshes();
+	ClearBeacons();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
@@ -494,9 +497,6 @@ void LEM::SetLmAscentHoverStage()
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
-
-	// Exterior lights
-	SetTrackLightAscent();
 	
 	if (!ph_Asc)
 	{
@@ -563,6 +563,9 @@ void LEM::SetLmAscentHoverStage()
 	VECTOR3 lpd_dir = _V(-0.191, -0.02, 0.383);
 	lpdgret = AddMesh(hLPDgret, &lpd_dir);
 	SetLPDMesh();
+
+	// Exterior lights
+	SetTrackLight();
 }
 
 void LEM::SeparateStage (UINT stage)
@@ -633,6 +636,7 @@ void LEM::SeparateStage (UINT stage)
 void LEM::SetLmLandedMesh() {
 
 	ClearMeshes();
+	ClearBeacons();
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
 	UINT meshidx = AddMesh (hLMLanded, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
@@ -709,25 +713,15 @@ void LEM::SetOvhdHatchMesh() {
 void LEM::SetTrackLight() {
 	
 	static VECTOR3 beaconPos = _V(0.05, 1.44, 2.58);
+	static VECTOR3 beaconPosAsc = _V(0.053, -0.41, 2.576);
 	static VECTOR3 beaconCol = _V(1, 1, 1);
 	trackLight.shape = BEACONSHAPE_STAR;
-	trackLight.pos = &beaconPos;
-	trackLight.col = &beaconCol;
-	trackLight.size = 0.5;
-	trackLight.falloff = 0.5;
-	trackLight.period = 1.0;
-	trackLight.duration = 0.1;
-	trackLight.tofs = 0;
-	trackLight.active = false;
-	AddBeacon(&trackLight);
-}
-
-void LEM::SetTrackLightAscent() {
-
-	static VECTOR3 beaconPos = _V(0.053, -0.41, 2.576);
-	static VECTOR3 beaconCol = _V(1, 1, 1);
-	trackLight.shape = BEACONSHAPE_STAR;
-	trackLight.pos = &beaconPos;
+	if (stage == 2) {
+		trackLight.pos = &beaconPosAsc;
+	}
+	else {
+		trackLight.pos = &beaconPos;
+	}
 	trackLight.col = &beaconCol;
 	trackLight.size = 0.5;
 	trackLight.falloff = 0.5;
