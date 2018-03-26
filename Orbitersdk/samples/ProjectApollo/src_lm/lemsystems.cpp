@@ -1420,7 +1420,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 	double tFactor = __min(mintFactor, simdt);
 	while (simdt > 0) {
 
-		// Each timestep is passed to the SPSDK
+		// Each Timestep is passed to the SPSDK
 		// to perform internal computations on the 
 		// systems.
 
@@ -1496,9 +1496,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// After that come all other systems simesteps
 	agc.Timestep(MissionTime, simdt);						// Do work
 	dsky.Timestep(MissionTime);								// Do work
-	asa.TimeStep(simdt);									// Do work
-	aea.TimeStep(MissionTime, simdt);
-	deda.TimeStep(simdt);
+	asa.Timestep(simdt);									// Do work
+	aea.Timestep(MissionTime, simdt);
+	deda.Timestep(simdt);
 	imu.Timestep(simdt);								// Do work
 	tcdu.Timestep(simdt);
 	scdu.Timestep(simdt);
@@ -1519,31 +1519,31 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	atca.Timestep(simt, simdt);
 	rga.Timestep(simdt);
 	ordeal.Timestep(simdt);
-	mechanicalAccelerometer.TimeStep(simdt);
+	mechanicalAccelerometer.Timestep(simdt);
 	fdaiLeft.Timestep(MissionTime, simdt);
 	fdaiRight.Timestep(MissionTime, simdt);
 	MissionTimerDisplay.Timestep(MissionTime, simdt, false);
 	EventTimerDisplay.Timestep(MissionTime, simdt, false);
 	JoystickTimestep(simdt);
-	eds.TimeStep(simdt);
-	optics.TimeStep(simdt);
-	LR.TimeStep(simdt);
-	RR.TimeStep(simdt);
-	RadarTape.TimeStep(MissionTime);
-	crossPointerLeft.TimeStep(simdt);
-	crossPointerRight.TimeStep(simdt);
-	SBandSteerable.TimeStep(simdt);
-	omni_fwd.TimeStep();
-	omni_aft.TimeStep();
-	SBand.TimeStep(simt);
-	ecs.TimeStep(simdt);
+	eds.Timestep(simdt);
+	optics.Timestep(simdt);
+	LR.Timestep(simdt);
+	RR.Timestep(simdt);
+	RadarTape.Timestep(MissionTime);
+	crossPointerLeft.Timestep(simdt);
+	crossPointerRight.Timestep(simdt);
+	SBandSteerable.Timestep(simdt);
+	omni_fwd.Timestep();
+	omni_aft.Timestep();
+	SBand.Timestep(simt);
+	ecs.Timestep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
 	DPSPropellant.Timestep(simt, simdt);
-	DPS.TimeStep(simt, simdt);
+	DPS.Timestep(simt, simdt);
 	APSPropellant.Timestep(simt, simdt);
-	APS.TimeStep(simdt);
+	APS.Timestep(simdt);
 	RCSA.Timestep(simt, simdt);
 	RCSB.Timestep(simt, simdt);
 	tca1A.Timestep(simdt);
@@ -1556,11 +1556,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tca4B.Timestep(simdt);
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
-	tle.TimeStep(simdt);
+	tle.Timestep(simdt);
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();
-	CWEA.TimeStep(simdt);
+	CWEA.Timestep(simdt);
 
 	//Treat LM O2 as gas every timestep
 	DesO2Tank->BoilAllAndSetTemp(294.261);
@@ -2758,7 +2758,7 @@ bool LEM_LR::IsPowered()
 }
 
 
-void LEM_LR::TimeStep(double simdt){
+void LEM_LR::Timestep(double simdt){
 	if(lem == NULL){ return; }
 	// char debugmsg[256];
 	ChannelValue val12;
@@ -3214,7 +3214,7 @@ double LEM_RR::GetTrunnionErrorSignal()
 }
 
 
-void LEM_RR::TimeStep(double simdt){
+void LEM_RR::Timestep(double simdt){
 
 	ChannelValue val12;
 	ChannelValue val13;
@@ -3720,7 +3720,7 @@ void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src){
 	ac_source = ac_src;
 }
 
-void LEM_RadarTape::TimeStep(double simdt) {
+void LEM_RadarTape::Timestep(double simdt) {
 	
 	if (!IsPowered())
 	{
@@ -3906,7 +3906,7 @@ void CrossPointer::SystemTimestep(double simdt)
 		dc_source->DrawPower(8.0);  // take DC power
 }
 
-void CrossPointer::TimeStep(double simdt)
+void CrossPointer::Timestep(double simdt)
 {
 	if (!IsPowered())
 	{
@@ -4023,7 +4023,7 @@ bool LEM_TLE::IsPowered()
 	return false;
 }
 
-void LEM_TLE::TimeStep(double simdt)
+void LEM_TLE::Timestep(double simdt)
 {
 	//Need to add controls for an external strobe light here, 60 flashes per minute.
 }

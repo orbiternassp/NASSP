@@ -203,7 +203,7 @@ public:
 	void Init(LEM *s, e_object *dc_src, h_Radiator *ant, Boiler *anheat, h_HeatLoad *hl);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	double GetAntennaTempF();
 	bool IsRangeDataGood() { return rangeGood == 1; };
@@ -233,7 +233,7 @@ public:
 	void Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
@@ -294,7 +294,7 @@ public:
 	void Init(LEM *s, e_object * dc_src, e_object *ac_src);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void setRange(double range) { reqRange = range; };
 	void setRate(double rate) { reqRate = rate ; }; 
@@ -322,7 +322,7 @@ public:
 	void Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void GetVelocities(double &vx, double &vy);
 
@@ -346,7 +346,7 @@ class LEM_TLE
 public:
 	LEM_TLE();
 	void Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();

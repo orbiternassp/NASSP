@@ -112,7 +112,7 @@ public:
 	void Init(LEM *s); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	bool GetHeliumPressDelayContactClosed() { return HeliumPressurizationDelayA.ContactClosed() || HeliumPressurizationDelayB.ContactClosed(); }
 
 	LEM *lem;					// Pointer at LEM

@@ -335,7 +335,7 @@ void LEM_EDS::Init(LEM *s) {
 	RelayBoxB.Init(lem, &lem->EDS_CB_LOGIC_B, &lem->ED28VBusB, lem->EDBatteryB);
 }
 
-void LEM_EDS::TimeStep(double simdt) {
+void LEM_EDS::Timestep(double simdt) {
 	
 	if (lem->stage < 2)
 	{

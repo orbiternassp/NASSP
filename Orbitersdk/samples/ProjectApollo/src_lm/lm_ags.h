@@ -73,7 +73,7 @@ public:
 	void Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr, h_HeatLoad *asah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	bool IsHeaterPowered();
 	bool IsPowered();
@@ -121,7 +121,7 @@ public:
 	void Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simt, double simdt);
+	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	void InitVirtualAGS(char *binfile);
 	void SetInputPortBit(int port, int bit, bool val);
@@ -224,7 +224,7 @@ public:
 	// Timestep to run programs.
 	//
 
-	void TimeStep(double simt);
+	void Timestep(double simt);
 	void SystemTimestep(double simdt);
 
 	void ProcessChannel27(int val);

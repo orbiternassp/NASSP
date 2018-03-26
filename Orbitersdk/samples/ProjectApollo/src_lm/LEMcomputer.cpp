@@ -126,7 +126,7 @@ void LEMcomputer::agcTimestep(double simt, double simdt)
 		SingleTimestep();
 		ThisTime += 0.00001171875;								// Add time
 		if ((ThisTime - lem->VHF.last_update) > 0.00015625) {	// If a step is needed
-			lem->VHF.TimeStep(ThisTime);						// do it
+			lem->VHF.Timestep(ThisTime);						// do it
 		}
 		x++;
 	}
@@ -203,7 +203,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			// Reset last cycling time
 			LastCycled = 0;
 			// We should issue telemetry though.
-			lem->VHF.TimeStep(simt);
+			lem->VHF.Timestep(simt);
 
 		// and do nothing more.
 		return;
@@ -501,7 +501,7 @@ bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
 	return true;
 }
 
-void LMOptics::TimeStep(double simdt) {
+void LMOptics::Timestep(double simdt) {
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
 
 	/*if (ReticleMoved)

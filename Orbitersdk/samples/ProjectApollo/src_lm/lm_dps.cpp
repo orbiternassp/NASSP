@@ -469,7 +469,7 @@ void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 	}
 }
 
-void LEM_DPS::TimeStep(double simt, double simdt) {
+void LEM_DPS::Timestep(double simt, double simdt) {
 	if (lem == NULL) { return; }
 	if (lem->stage > 1) { return; }
 

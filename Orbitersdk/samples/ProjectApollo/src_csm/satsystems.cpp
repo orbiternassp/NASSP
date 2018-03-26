@@ -570,7 +570,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		secs.Timestep(MissionTime, simdt);
 		els.Timestep(MissionTime, simdt);
 		ordeal.Timestep(simdt);
-		mechanicalAccelerometer.TimeStep(simdt);
+		mechanicalAccelerometer.Timestep(simdt);
 		MissionTimerDisplay.Timestep(simt, simdt, false);
 		MissionTimer306Display.Timestep(simt, simdt, false);
 		EventTimerDisplay.Timestep(simt, simdt, true);
