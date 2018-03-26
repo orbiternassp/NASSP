@@ -43,6 +43,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 	Operate = false;
+	AutoTrackChanged = true;
 
 	//Initialize all FF's as "reset"
 	DesRegWarnFF = 0;
@@ -334,15 +335,18 @@ void LEM_CWEA::TimeStep(double simdt) {
 		// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 		// On when RR indicates Data-Not-Good.
 		// Disabled when RR mode switch is not set to AUTO TRACK.
-		// FIX ME!
-		if (lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
-		else if (lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 0; }
+		if (lem->RendezvousRadarRotary.GetState() != 0) { AutoTrackChanged = 1;}
+
+		if (lem->RendezvousRadarRotary.GetState() == 0 && AutoTrackChanged == 1) { RRCautFF = 0; AutoTrackChanged = 0; }
+		else if (RRCautFF == 0 && lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
 
 		if (RRCautFF == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
 			SetLight(2, 5, 1);
 		}
 		else
 			SetLight(2, 5, 0);
+
+		//sprintf(oapiDebugString(), "RRC %i ATC %i SCV %lf", RRCautFF, AutoTrackChanged, lem->scera2.GetVoltage(2, 1));
 
 		// 6DS29 LANDING RADAR 
 		// Was not present on LM-7 thru LM-9!  **What about LM 3-5?  Unlikely but need to research**
@@ -619,6 +623,7 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "WATERCAUTFF3", WaterCautFF3);
 	papiWriteScenario_bool(scn, "RRCAUTFF", RRCautFF);
 	papiWriteScenario_bool(scn, "SBDCAUTFF", SBDCautFF);
+	papiWriteScenario_bool(scn, "AUTOTRACKCHANGED", AutoTrackChanged);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
@@ -655,6 +660,7 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "WATERCAUTFF3", WaterCautFF3);
 		papiReadScenario_bool(line, "RRCAUTFF", RRCautFF);
 		papiReadScenario_bool(line, "SBDCAUTFF", SBDCautFF);
+		papiReadScenario_bool(line, "AUTOTRACKCHANGED", AutoTrackChanged);
 		papiReadScenario_intarr(line, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);
