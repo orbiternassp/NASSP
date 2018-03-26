@@ -551,6 +551,8 @@ public:
 	void SetLPDMesh();
 	void SetFwdHatchMesh();
 	void SetOvhdHatchMesh();
+	void SetTrackLight();
+	void SetTrackLightAscent();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	virtual void PlayCountSound(bool StartStop) {};
@@ -1665,6 +1667,9 @@ protected:
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
 	THGROUP_HANDLE thg_dust;
+
+	// Exterior light definitions
+	BEACONLIGHTSPEC trackLight;                   // tracking light
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1

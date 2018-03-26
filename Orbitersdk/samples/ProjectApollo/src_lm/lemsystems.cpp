@@ -4025,7 +4025,12 @@ bool LEM_TLE::IsPowered()
 
 void LEM_TLE::Timestep(double simdt)
 {
-	//Need to add controls for an external strobe light here, 60 flashes per minute.
+	if (LEM_TLE::IsPowered()) {
+		lem->trackLight.active = true;
+	}
+	else {
+		lem->trackLight.active = false;
+	}
 }
 
 void LEM_TLE::SystemTimestep(double simdt)

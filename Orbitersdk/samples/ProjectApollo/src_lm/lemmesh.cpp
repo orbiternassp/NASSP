@@ -202,6 +202,9 @@ void LEM::SetLmVesselDockStage()
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
+
+	// Exterior lights
+	SetTrackLight();
 	
 	if (!ph_Dsc)
 	{
@@ -349,6 +352,9 @@ void LEM::SetLmVesselHoverStage()
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
 
+	// Exterior lights
+	SetTrackLight();
+
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
@@ -488,6 +494,9 @@ void LEM::SetLmAscentHoverStage()
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
+
+	// Exterior lights
+	SetTrackLightAscent();
 	
 	if (!ph_Asc)
 	{
@@ -641,6 +650,9 @@ void LEM::SetLmLandedMesh() {
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
 
+	// Exterior lights
+	SetTrackLight();
+
 	Landed = true;
 }
 
@@ -692,6 +704,38 @@ void LEM::SetOvhdHatchMesh() {
 	else {
 		SetMeshVisibilityMode(ovhdhatch, MESHVIS_VCEXTERNAL);
 	}
+}
+
+void LEM::SetTrackLight() {
+	
+	static VECTOR3 beaconPos = _V(0.05, 1.44, 2.58);
+	static VECTOR3 beaconCol = _V(1, 1, 1);
+	trackLight.shape = BEACONSHAPE_STAR;
+	trackLight.pos = &beaconPos;
+	trackLight.col = &beaconCol;
+	trackLight.size = 0.5;
+	trackLight.falloff = 0.5;
+	trackLight.period = 1.0;
+	trackLight.duration = 0.1;
+	trackLight.tofs = 0;
+	trackLight.active = false;
+	AddBeacon(&trackLight);
+}
+
+void LEM::SetTrackLightAscent() {
+
+	static VECTOR3 beaconPos = _V(0.053, -0.41, 2.576);
+	static VECTOR3 beaconCol = _V(1, 1, 1);
+	trackLight.shape = BEACONSHAPE_STAR;
+	trackLight.pos = &beaconPos;
+	trackLight.col = &beaconCol;
+	trackLight.size = 0.5;
+	trackLight.falloff = 0.5;
+	trackLight.period = 1.0;
+	trackLight.duration = 0.1;
+	trackLight.tofs = 0;
+	trackLight.active = false;
+	AddBeacon(&trackLight);
 }
 
 void LEMLoadMeshes()
