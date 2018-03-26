@@ -456,6 +456,8 @@ void LEM::SystemsInit()
 	NUM_LTG_AC_CB.MaxAmps = 2.0;
 	NUM_LTG_AC_CB.WireTo(&ACBusB);
 
+	tle.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECTLEHEAT"));
+
 	// LGC and DSKY
 	LGC_DSKY_CB.MaxAmps = 7.5;
 	LGC_DSKY_CB.WireTo(&CDRs28VBus);
@@ -531,7 +533,7 @@ void LEM::SystemsInit()
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
 	// CWEA
-	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, &LTG_ANUN_DOCK_COMPNT_CB);
+	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECCWEAHEAT"));
 
 	// COMM
 	omni_fwd.Init(this);
@@ -1437,9 +1439,9 @@ void LEM::SystemsInternalTimestep(double simdt)
 		fdaiRight.SystemTimestep(tFactor);
 		LR.SystemTimestep(tFactor);
 		RR.SystemTimestep(tFactor);
-		RadarTape.SystemTimeStep(tFactor);
-		crossPointerLeft.SystemTimeStep(tFactor);
-		crossPointerRight.SystemTimeStep(tFactor);
+		RadarTape.SystemTimestep(tFactor);
+		crossPointerLeft.SystemTimestep(tFactor);
+		crossPointerRight.SystemTimestep(tFactor);
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
@@ -1470,6 +1472,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		EventTimerDisplay.SystemTimestep(tFactor);
 		CWEA.SystemTimestep(tFactor);
+		tle.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
@@ -1553,6 +1556,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tca4B.Timestep(simdt);
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
+	tle.TimeStep(simdt);
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();
@@ -1571,7 +1575,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-/*
+	/*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1903,7 +1907,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:PRESS");
 	double *lmtunneltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:TEMP");
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
-*/
+	*/
+
 
 	//sprintf(oapiDebugString(), "Quad 1 %lf Quad 2 %lf Quad 3 %lf Quad 4 %lf", KelvinToFahrenheit(*QD1Temp), KelvinToFahrenheit(*QD2Temp), KelvinToFahrenheit(*QD3Temp), KelvinToFahrenheit(*QD4Temp));
 	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
@@ -3719,7 +3724,7 @@ void LEM_RadarTape::TimeStep(double simdt) {
 	dispRate  = 2881 - 82 -  (int)(reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
 }
 
-void LEM_RadarTape::SystemTimeStep(double simdt) {
+void LEM_RadarTape::SystemTimestep(double simdt) {
 	if (!IsPowered())
 		return;
 
@@ -3842,7 +3847,7 @@ bool CrossPointer::IsPowered()
 	return true;
 }
 
-void CrossPointer::SystemTimeStep(double simdt)
+void CrossPointer::SystemTimestep(double simdt)
 {
 	if (IsPowered() && dc_source)
 		dc_source->DrawPower(8.0);  // take DC power
@@ -3933,5 +3938,48 @@ void CrossPointer::LoadState(FILEHANDLE scn) {
 			return;
 		}
 
+	}
+}
+
+//Tracking Light Electronics
+
+LEM_TLE::LEM_TLE()
+{
+	lem = NULL;
+	TrackCB = NULL;
+	TrackSwitch = NULL;
+	TLEHeat = 0;
+	SecTLEHeat = 0;
+
+}
+
+void LEM_TLE::Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh)
+{
+	lem = l;
+	TrackCB = trk_cb;
+	TrackSwitch = tracksw;
+	TLEHeat = tleh;
+	SecTLEHeat = sectleh;
+}
+
+bool LEM_TLE::IsPowered()
+{
+	if (TrackCB->Voltage() > SP_MIN_DCVOLTAGE && TrackSwitch->GetState() == THREEPOSSWITCH_DOWN) {
+		return true;
+	}
+	return false;
+}
+
+void LEM_TLE::TimeStep(double simdt)
+{
+	//Need to add controls for an external strobe light here, 60 flashes per minute.
+}
+
+void LEM_TLE::SystemTimestep(double simdt)
+{
+	if (IsPowered()) {
+		TrackCB->DrawPower(120.0);
+		TLEHeat->GenerateHeat(60.0);
+		SecTLEHeat->GenerateHeat(60.0);
 	}
 }
