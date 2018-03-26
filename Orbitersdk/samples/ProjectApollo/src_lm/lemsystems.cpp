@@ -4041,7 +4041,7 @@ bool LEM_TLE::IsPowered()
 
 void LEM_TLE::Timestep(double simdt)
 {
-	if (LEM_TLE::IsPowered()) {
+	if (IsPowered()) {
 		lem->trackLight.active = true;
 	}
 	else {
