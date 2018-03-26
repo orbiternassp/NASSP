@@ -188,6 +188,12 @@ public:
 	int active;
 	LEM *lem;					// Pointer at LM
 	e_object *dc_input;
+protected:
+	double BASE_HLPW[19]; // Base heat loss per watt factors, calculated from LM-1 Systems Handbook
+	double heatloss;
+private:
+	double get_hlpw(double base_hlpw_factor);
+	double calc_hlpw_util(double maxw, int index);
 };
 
 // Landing Radar

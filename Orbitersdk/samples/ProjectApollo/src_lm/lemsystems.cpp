@@ -2615,6 +2615,27 @@ LEM_INV::LEM_INV(){
 	lem = NULL;
 	active = 0;
 	dc_input = NULL;
+	heatloss = 0.0;
+
+	BASE_HLPW[0] = 40.0;	//0W AC output
+	BASE_HLPW[1] = 41.0;	//20W
+	BASE_HLPW[2] = 42.5;	//40W
+	BASE_HLPW[3] = 45.0;	//60W
+	BASE_HLPW[4] = 48.0;	//80W
+	BASE_HLPW[5] = 51.0;	//100W
+	BASE_HLPW[6] = 54.5;	//120W
+	BASE_HLPW[7] = 58.5;	//140W
+	BASE_HLPW[8] = 63.0;	//160W
+	BASE_HLPW[9] = 68.0;	//180W
+	BASE_HLPW[10] = 73.0;	//200W
+	BASE_HLPW[11] = 78.0;	//220W
+	BASE_HLPW[12] = 83.5;	//240W
+	BASE_HLPW[13] = 89.0;	//260W
+	BASE_HLPW[14] = 94.5;	//280W
+	BASE_HLPW[15] = 100.0;	//300W
+	BASE_HLPW[16] = 105.5;	//320W
+	BASE_HLPW[17] = 111.5;	//340W
+	BASE_HLPW[18] = 117.5;	//360W
 }
 
 void LEM_INV::Init(LEM *s){
@@ -2633,13 +2654,16 @@ void LEM_INV::UpdateFlow(double dt){
 	Volts = 0;
 	Amperes = 0;
 	Hertz = 0;
+	heatloss = 0;
 
 	// If not active, die.
 	if(!active){ return; }
 
 	if(dc_input != NULL){
-		// First take power from source
-		dc_input->DrawPower(power_load*2.5);  // Add inefficiency
+		// First calculate heat loss
+		heatloss = get_hlpw(power_load);
+		// Then take power from source
+		dc_input->DrawPower(power_load + heatloss);  // Add inefficiency
 		// Then supply the bus
 		if(dc_input->Voltage() > 24){		  // Above 24V input
 			Volts = 115.0;                    // Regulator supplies 115V
@@ -2661,6 +2685,35 @@ void LEM_INV::UpdateFlow(double dt){
 	*/
 	// Reset for next pass
 	e_object::UpdateFlow(dt);
+}
+
+double LEM_INV::get_hlpw(double base_hlpw_factor)
+{
+	if (base_hlpw_factor < 20.0) return(calc_hlpw_util(base_hlpw_factor, 0));
+	if (base_hlpw_factor < 40.0) return(calc_hlpw_util(base_hlpw_factor, 1));
+	if (base_hlpw_factor < 60.0) return(calc_hlpw_util(base_hlpw_factor, 2));
+	if (base_hlpw_factor < 80.0) return(calc_hlpw_util(base_hlpw_factor, 3));
+	if (base_hlpw_factor < 100.0) return(calc_hlpw_util(base_hlpw_factor, 4));
+	if (base_hlpw_factor < 120.0) return(calc_hlpw_util(base_hlpw_factor, 5));
+	if (base_hlpw_factor < 140.0) return(calc_hlpw_util(base_hlpw_factor, 6));
+	if (base_hlpw_factor < 160.0) return(calc_hlpw_util(base_hlpw_factor, 7));
+	if (base_hlpw_factor < 180.0) return(calc_hlpw_util(base_hlpw_factor, 8));
+	if (base_hlpw_factor < 200.0) return(calc_hlpw_util(base_hlpw_factor, 9));
+	if (base_hlpw_factor < 220.0) return(calc_hlpw_util(base_hlpw_factor, 10));
+	if (base_hlpw_factor < 240.0) return(calc_hlpw_util(base_hlpw_factor, 11));
+	if (base_hlpw_factor < 260.0) return(calc_hlpw_util(base_hlpw_factor, 12));
+	if (base_hlpw_factor < 280.0) return(calc_hlpw_util(base_hlpw_factor, 13));
+	if (base_hlpw_factor < 300.0) return(calc_hlpw_util(base_hlpw_factor, 14));
+	if (base_hlpw_factor < 320.0) return(calc_hlpw_util(base_hlpw_factor, 15));
+	if (base_hlpw_factor < 340.0) return(calc_hlpw_util(base_hlpw_factor, 16));
+
+	//340W and higher uses the same data points
+	return calc_hlpw_util(base_hlpw_factor, 17);
+}
+
+double LEM_INV::calc_hlpw_util(double maxw, int index)
+{
+	return (BASE_HLPW[index + 1] - BASE_HLPW[index]) / 20.0*(maxw - 20.0*(double)index) + BASE_HLPW[index];
 }
 
 // Landing Radar
