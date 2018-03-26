@@ -2294,7 +2294,7 @@ double GetPlanetCurrentRotation(OBJHANDLE plan, double t)
 	return r;
 }
 
-double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref, bool s)
+double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref)
 {
 	double w_A, w_P, r_A, v_A, r_P, v_P, alpha, t, dt, E_err, E_A, mu;
 	VECTOR3 u, R_A, V_A, R_P, V_P, U_L, U_P;
@@ -2320,17 +2320,8 @@ double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double m
 		w_P = dotp(V_P, unit(crossp(crossp(R_P, V_P), R_P)) / r_P);
 		alpha = E + sign(dotp(crossp(R_A, R_P), u))*acos(dotp(R_A / r_A, R_P / r_P));
 		dt = (alpha - PI + sign(r_P - r_A)*(PI - acos(r_A*cos(E) / r_P))) / (w_A - w_P);
-
-		if (s == true)
-		{
-			oneclickcoast(R_A, V_A, mjd0 + t / 24.0 / 3600.0, dt, R_A, V_A, gravref, gravref);
-			oneclickcoast(R_P, V_P, mjd0 + t / 24.0 / 3600.0, dt, R_P, V_P, gravref, gravref);
-		}
-		else
-		{
-			rv_from_r0v0(R_A, V_A, dt, R_A, V_A, mu);
-			rv_from_r0v0(R_P, V_P, dt, R_P, V_P, mu);
-		}
+		oneclickcoast(R_A, V_A, mjd0 + t / 24.0 / 3600.0, dt, R_A, V_A, gravref, gravref);
+		oneclickcoast(R_P, V_P, mjd0 + t / 24.0 / 3600.0, dt, R_P, V_P, gravref, gravref);
 		t += dt;
 		r_A = length(R_A);
 		v_A = length(V_A);
@@ -2339,6 +2330,54 @@ double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double m
 		U_L = unit(R_P - R_A);
 		U_P = unit(U_L - R_A*dotp(U_L, R_A) / r_A / r_A);
 		E_A = acos(dotp(U_L, U_P*sign(dotp(U_P, crossp(u, R_A)))));
+		if (dotp(U_L, R_A) < 0)
+		{
+			E_A = PI2 - E_A;
+		}
+		E_err = E - E_A;
+	}
+	return t;
+}
+
+double findelev_conic(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double E, double mu)
+{
+	double w_A, w_P, r_A, v_A, r_P, v_P, alpha, t, dt, E_err, E_A;
+	VECTOR3 u, R_A, V_A, R_P, V_P, U_L, U_P;
+
+	t = 0;
+	E_err = 1.0;
+	dt = 10.0;
+	R_A = R_A0;
+	V_A = V_A0;
+	R_P = R_P0;
+	V_P = V_P0;
+
+	r_A = length(R_A);
+	v_A = length(V_A);
+	r_P = length(R_P);
+	v_P = length(V_P);
+
+	while (abs(E_err) > 0.005*RAD || abs(dt)>1.0)
+	{
+		u = unit(crossp(R_A, V_A));
+		w_A = dotp(V_A, unit(crossp(u, R_A)) / r_A);
+		w_P = dotp(V_P, unit(crossp(crossp(R_P, V_P), R_P)) / r_P);
+		alpha = E + sign(dotp(crossp(R_A, R_P), u))*acos(dotp(R_A / r_A, R_P / r_P));
+		dt = (alpha - PI + sign(r_P - r_A)*(PI - acos(r_A*cos(E) / r_P))) / (w_A - w_P);
+		rv_from_r0v0(R_A, V_A, dt, R_A, V_A, mu);
+		rv_from_r0v0(R_P, V_P, dt, R_P, V_P, mu);
+		t += dt;
+		r_A = length(R_A);
+		v_A = length(V_A);
+		r_P = length(R_P);
+		v_P = length(V_P);
+		U_L = unit(R_P - R_A);
+		U_P = unit(U_L - R_A * dotp(U_L, R_A) / r_A / r_A);
+		E_A = acos(dotp(U_L, U_P*sign(dotp(U_P, crossp(u, R_A)))));
+		if (dotp(U_L, R_A) < 0)
+		{
+			E_A = PI2 - E_A;
+		}
 		E_err = E - E_A;
 	}
 	return t;
@@ -4928,15 +4967,14 @@ bool QDRTPI(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, doub
 	return true;
 }
 
-double CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH, double mu)
+bool CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH, double mu, double &dv)
 {
 	int s_F;
-	double c_I, dv, tt, e_H, dvo, eps2, p_H, e_Ho;
+	double c_I, tt, e_H, dvo, eps2, p_H, e_Ho;
 	VECTOR3 u, R_A2, V_A2, V_A1F, R_PH2, V_PH2;
 
 	p_H = c_I = 0.0;
 	s_F = 0;
-	dv = 50.0*0.3048;
 	eps2 = 1.0;
 
 	u = unit(crossp(R_P2, V_P2));
@@ -4953,10 +4991,14 @@ double CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH
 		if (p_H == 0 || abs(e_H) >= eps2)
 		{
 			ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
+			if (s_F == 1)
+			{
+				return false;
+			}
 		}
 	} while (abs(e_H) >= eps2);
 
-	return dv;
+	return true;
 }
 
 VECTOR3 CoellipticDV(VECTOR3 R_A2, VECTOR3 R_PC, VECTOR3 V_PC, double mu)
@@ -5299,6 +5341,11 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 double GETfromMJD(double MJD, double GETBase)
 {
 	return (MJD - GETBase)*24.0*3600.0;
+}
+
+double MJDfromGET(double GET, double GETBase)
+{
+	return GETBase + GET / 24.0 / 3600.0;
 }
 
 void format_time_HHMMSS(char *buf, double time) {

@@ -150,7 +150,7 @@ public:
 	bool GetK22() { return K22; }
 	bool GetK23() { return K23; }
 	bool GetThrustOn() { return engOn; }
-	bool GetEngArm() { return engArm; }
+	bool GetEngArm();
 	double GetAutoThrustVoltage() { return AutoThrust * 12.0; }
 	double GetManualThrustVoltage() { return ManualThrust * 14.6; }
 
@@ -162,7 +162,7 @@ protected:
 	e_object *dc_source;			     // DC source to use when powered
 	bool powered;					 // Data valid flag.
 	int pitchactuatorcommand, rollactuatorcommand;
-	bool engOn, DEArm, engArm;
+	bool engOn, DEArm;
 	double AutoThrust, ManualThrust;
 	double lgcAutoThrust;
 
@@ -257,6 +257,7 @@ public:
 	bool GetK15() { return K15; }
 	bool GetK17() { return K17; }
 	bool GetK18() { return K18; }
+	bool GetK19() { return K19; }
 	bool GetK20() { return K20; }
 	bool GetK203() { return K203; }
 	bool GetK204() { return K204; }

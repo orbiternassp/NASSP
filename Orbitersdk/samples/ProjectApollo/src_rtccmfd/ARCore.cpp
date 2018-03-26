@@ -262,7 +262,6 @@ ARCore::ARCore(VESSEL* v)
 	entrynominal = 1;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
-	DeorbitEngineOpt = 0;
 
 	SVSlot = true; //true = CSM; false = Other
 	J2000Pos = _V(0.0, 0.0, 0.0);
@@ -305,7 +304,9 @@ ARCore::ARCore(VESSEL* v)
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	EntryPADdirect = false; //false = Entry PAD with MCC/Deorbit burn, true = Direct Entry
-	ManPADSPS = 0;
+	csmenginetype = 0;
+	lmenginetype = 0;
+	directiontype = 0;
 	TPIPAD_AZ = 0.0;
 	TPIPAD_dH = 0.0;
 	TPIPAD_dV_LOS = _V(0.0, 0.0, 0.0);
@@ -315,7 +316,7 @@ ARCore::ARCore(VESSEL* v)
 	TPIPAD_ddH = 0.0;
 	TPIPAD_BT = _V(0.0, 0.0, 0.0);
 	sxtstardtime = 0.0;
-	ManPADdirect = true;
+	PDIPADdirect = true;
 	P37GET400K = 0.0;
 	mapupdate.LOSGET = 0.0;
 	mapupdate.AOSGET = 0.0;
@@ -1684,36 +1685,44 @@ int ARCore::subThread()
 	case 1: //Lambert Targeting
 	{
 		LambertMan opt;
+		SV sv_A, sv_P;
+		VECTOR3 dV;
+		int poweredvesseltype;
+		double attachedMass;
+
+		sv_A = rtcc->StateVectorCalc(vessel);
+		sv_P = rtcc->StateVectorCalc(target);
+
 		opt.axis = !lambertmultiaxis;
 		opt.GETbase = GETbase;
-		opt.impulsive = RTCC_NONIMPULSIVE;
 		opt.N = N;
 		opt.Offset = offvec;
 		opt.Perturbation = lambertopt;
 		opt.PhaseAngle = 0.0;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
 		opt.T1 = T1;
 		opt.T2 = T2;
-		opt.target = target;
-		opt.vessel = vessel;
 
 		if (vesseltype < 2)
 		{
-			opt.vesseltype = 0;
+			poweredvesseltype = RTCC_VESSELTYPE_CSM;
 		}
 		else
 		{
-			opt.vesseltype = 1;
+			poweredvesseltype = RTCC_VESSELTYPE_LM;
 		}
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
-			opt.csmlmdocked = false;
+			attachedMass = 0.0;
 		}
 		else
 		{
-			opt.csmlmdocked = true;
+			attachedMass = rtcc->GetDockedVesselMass(target);
 		}
-		rtcc->LambertTargeting(&opt, dV_LVLH, P30TIG);
+		rtcc->LambertTargeting(&opt, dV);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, RTCC_ENGINETYPE_SPSDPS, attachedMass, dV, P30TIG, dV_LVLH);
 		LambertdeltaV = dV_LVLH;
 
 		Result = 0;
@@ -2096,7 +2105,8 @@ int ARCore::subThread()
 			AP11ManPADOpt opt;
 
 			opt.dV_LVLH = dV_LVLH;
-			opt.engopt = ManPADSPS;
+			opt.directiontype = directiontype;
+			opt.enginetype = csmenginetype;
 			opt.GETbase = GETbase;
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
@@ -2113,7 +2123,8 @@ int ARCore::subThread()
 			AP11LMManPADOpt opt;
 
 			opt.dV_LVLH = dV_LVLH;
-			opt.engopt = ManPADSPS;
+			opt.directiontype = directiontype;
+			opt.enginetype = lmenginetype;
 			opt.GETbase = GETbase;
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
@@ -2701,7 +2712,7 @@ int ARCore::subThread()
 
 		double rad = oapiGetSize(oapiGetObjectByName("Moon"));
 
-		opt.direct = ManPADdirect;
+		opt.direct = PDIPADdirect;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = HeadsUp;
 		opt.REFSMMAT = REFSMMAT;
@@ -2737,7 +2748,7 @@ int ARCore::subThread()
 		
 		opt.GETbase = GETbase;
 
-		if (DeorbitEngineOpt == 0)
+		if (csmenginetype == RTCC_ENGINETYPE_SPSDPS)
 		{
 			opt.impulsive = RTCC_NONIMPULSIVE;
 		}

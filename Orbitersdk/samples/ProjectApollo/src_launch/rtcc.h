@@ -47,6 +47,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_VESSELTYPE_CSM 0
 #define RTCC_VESSELTYPE_LM 1
 
+#define RTCC_ENGINETYPE_RCS 0
+#define RTCC_ENGINETYPE_SPSDPS 1
+#define RTCC_ENGINETYPE_APS 2
+
+#define RTCC_DIRECTIONTYPE_PLUSX 0
+#define RTCC_DIRECTIONTYPE_MINUSX 1
+
 const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40140.62691,
 	40211.535417,
@@ -72,8 +79,6 @@ struct SV
 
 struct LambertMan //Data for Lambert targeting
 {
-	VESSEL* vessel; //Vessel executing the burn
-	VESSEL* target; //Target vessel
 	double GETbase; //usually MJD at launch
 	double T1;	//GET of the maneuver
 	double T2;	// GET of the arrival
@@ -82,12 +87,8 @@ struct LambertMan //Data for Lambert targeting
 	int Perturbation; //Spherical or non-spherical gravity
 	VECTOR3 Offset; //Offset vector
 	double PhaseAngle = 0.0; //Phase angle to target, will overwrite offset
-	//bool prograde; //Prograde or retrograde solution
-	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
-	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
+	SV sv_A;		//Chaser state vector
+	SV sv_P;		//Target state vector
 };
 
 struct AP7ManPADOpt
@@ -96,7 +97,8 @@ struct AP7ManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int engopt; //0 = SPS, 1 = RCS+X, 2 = RCS-X
+	int enginetype = 1; //0 = RCS, 1 = SPS
+	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime; //time delay for the sextant star check (in case no star is available during the maneuver)
@@ -112,7 +114,8 @@ struct AP11ManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int engopt; //0 = SPS, 1 = RCS+X, 2 = RCS-X
+	int enginetype = 1; //0 = RCS, 1 = SPS
+	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
@@ -128,7 +131,8 @@ struct AP11LMManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int engopt; //0 = DPS, 1 = RCS+X, 2 = RCS-X
+	int enginetype = 1; //0 = RCS, 1 = DPS, 2 = APS
+	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
@@ -638,7 +642,7 @@ struct LMARKTRKPADOpt
 	double alt = 0;	//landmark altitude
 };
 
-struct DKIOpt
+struct DKIOpt	//Docking Initiation Processor
 {
 	SV sv_A;
 	SV sv_P;
@@ -647,6 +651,19 @@ struct DKIOpt
 	double t_TPI;
 	double DH;
 	double E;
+};
+
+struct SPQOpt //Coelliptic Sequence Processor
+{
+	SV sv_A;
+	SV sv_P;
+	double GETbase;
+	double t_TIG;
+	double t_TPI;	// Only for calculation type = 0
+	double DH;		// Only for calculation type = 1
+	double E;
+	int type;		//0 = fixed TIG at TPI, 1 = fixed DH at CDH
+	int maneuver;	//0 = CSI, 1 = CDH
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -724,7 +741,8 @@ public:
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
-	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV_LVLH, double &P30TIG);
+	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV);
+	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV, VECTOR3 &dV_LVLH);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
@@ -759,7 +777,7 @@ public:
 	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
 	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip);
 	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out);
-	void PoweredFlightProcessor(SV sv0, double MJD_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, double &MJD_TIG, VECTOR3 &dV_LVLH);
+	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, double &GET_TIG, VECTOR3 &dV_LVLH);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
@@ -782,6 +800,7 @@ public:
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	void DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &t_CSI);
+	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -805,7 +824,7 @@ private:
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
-	LambertMan set_lambertoptions(VESSEL* vessel, VESSEL* target, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle, int impulsive, bool csmlmdocked = false);
+	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	char* AGCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
 	char* AGCStateVectorUpdate(SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
@@ -814,7 +833,9 @@ private:
 	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	char* CMCEntryUpdate(double LatSPL, double LngSPL);
 	void IncrementAGCTime(char *list, double dt);
+	void TLANDUpdate(char *list, double t_land, int tlandaddr);
 	char* V71Update(int* emem, int n);
+	void V72Update(int *emem, int n, char* list);
 	char* SunburstAttitudeManeuver(VECTOR3 imuangles);
 	char* SunburstLMPCommand(int code);
 	char* SunburstMassUpdate(double masskg);

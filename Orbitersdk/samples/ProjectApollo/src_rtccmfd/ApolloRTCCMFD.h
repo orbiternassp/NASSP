@@ -123,7 +123,8 @@ public:
 	void menuEntryUpdateUpload();
 	void set_spherical();
 	void menuSwitchHeadsUp();
-	void menuSwitchManPADDirect();
+	void menuManDirection();
+	void menuSwitchPDIPADDirect();
 	void menuCalcManPAD();
 	void menuSetManPADPage();
 	void menuCalcEntryPAD();

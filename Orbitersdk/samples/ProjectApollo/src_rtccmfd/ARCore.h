@@ -104,6 +104,9 @@ public:
 	double t_Land;				//Time of landing
 	bool inhibUplLOS;
 	bool PADSolGood;
+	int csmenginetype;				// 0 = RCS, 1 = SPS
+	int lmenginetype;				// 0 = RCS, 1 = DPS, 2 = APS
+	int directiontype;			// 0 = +X, 1 = -X (RCS only)
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
@@ -170,7 +173,6 @@ public:
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
-	int DeorbitEngineOpt; //0 = SPS, 1 = RCS
 	int FlybyType;	//1 = Flyby, 2 = PC+2
 
 	//STATE VECTOR PAGE
@@ -194,11 +196,10 @@ public:
 	VECTOR3 TPIPAD_dV_LOS, TPIPAD_BT;
 	double TPIPAD_dH, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_AZ, TPIPAD_ddH;
 	int manpadopt; //0 = Maneuver PAD, 1 = TPI PAD, 2 = TLI PAD
-	int ManPADSPS; //0=SPS, 1=RCS +X, 2=RCS -X
 	double sxtstardtime;
 	TLIPAD tlipad;
 	AP11PDIPAD pdipad;
-	bool ManPADdirect;
+	bool PDIPADdirect;
 
 	///ENTRY PAD PAGE
 	AP11ENT lunarentrypad;
