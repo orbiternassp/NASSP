@@ -289,7 +289,7 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void TimeStep(double simdt);
-	void SystemTimeStep(double simdt);
+	void SystemTimestep(double simdt);
 	void setRange(double range) { reqRange = range; };
 	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
@@ -317,7 +317,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void TimeStep(double simdt);
-	void SystemTimeStep(double simdt);
+	void SystemTimestep(double simdt);
 	void GetVelocities(double &vx, double &vy);
 
 	bool IsPowered();
@@ -334,6 +334,24 @@ protected:
 #define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
 #define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
 #define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
+
+class LEM_TLE
+{
+public:
+	LEM_TLE();
+	void Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh);
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
+
+	bool IsPowered();
+protected:
+	LEM *lem;
+	e_object *TrackCB;
+	ThreePosSwitch *TrackSwitch;
+	h_HeatLoad *TLEHeat;
+	h_HeatLoad *SecTLEHeat;
+
+};
 
 ///
 /// \ingroup LEM
@@ -1819,6 +1837,9 @@ protected:
 	LM_VHF VHF;
 	LM_SBAND SBand;
 
+	//Lighting
+	LEM_TLE tle;
+
 	// ECS
 	LEM_ECS ecs;
 	LEMPressureSwitch CabinPressureSwitch;
@@ -1890,6 +1911,7 @@ protected:
 	friend class LEM_LR;
 	friend class LEM_RR;
 	friend class LEM_RadarTape;
+	friend class LEM_TLE;
 
 	friend class LEM_ASA;
 	friend class LEM_AEA;
