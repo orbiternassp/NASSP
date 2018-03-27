@@ -4704,6 +4704,48 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 80: //CSI UPDATE
+	{
+		AP10CSIPADOpt manopt;
+		SPQOpt opt;
+		SV sv_CSM, sv_LM, sv_CSI;
+		MATRIX3 Q_Xx;
+		VECTOR3 dV, dV_LVLH;
+		double GETbase, t_TPI;
+
+		AP10CSI * form = (AP10CSI *)pad;
+
+		sv_CSM = StateVectorCalc(calcParams.src);
+		sv_LM = StateVectorCalc(calcParams.tgt);
+		GETbase = getGETBase();
+
+		opt.DH = 15.0*1852.0;
+		opt.E = 26.6*RAD;
+		opt.GETbase = GETbase;
+		opt.maneuver = 0;
+		opt.sv_A = sv_LM;
+		opt.sv_P = sv_CSM;
+		opt.type = 0;
+		opt.t_TIG = calcParams.CSI;
+		opt.t_TPI = calcParams.TPI;
+
+		ConcentricRendezvousProcessor(&opt, dV, t_TPI);
+
+		sv_CSI = coast(sv_LM, opt.t_TIG - OrbMech::GETfromMJD(sv_LM.MJD, GETbase));
+		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
+		dV_LVLH = mul(Q_Xx, dV);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_APS;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv0 = sv_LM;
+		manopt.t_CSI = calcParams.CSI;
+		manopt.t_TPI = calcParams.TPI;
+
+		AP10CSIPAD(&manopt, *form);
+	}
+	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
 	{
 		SV sv;
@@ -5110,6 +5152,94 @@ void RTCC::LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, 
 
 		step = 0;
 	}
+}
+
+void RTCC::AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad)
+{
+	SV sv1, sv2;
+	MATRIX3 Q_Xx, M, M_R;
+	VECTOR3 V_G, UX, UY, UZ, IMUangles, FDAIangles;
+	double dt, v_e, F, F_average, ManPADBurnTime, bt;
+	int step;
+
+	dt = opt->t_CSI - (opt->sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
+	sv1 = coast(opt->sv0, dt);
+
+	//Engine parameters
+	if (opt->enginetype == RTCC_ENGINETYPE_RCS)
+	{
+		v_e = 2706.64;
+		F = 400 * 4.448222;
+	}
+	else if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
+	{
+		v_e = DPS_ISP;
+		F = DPS_THRUST;
+	}
+	else
+	{
+		v_e = APS_ISP;
+		F = APS_THRUST;
+	}
+
+	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
+	{
+		//Estimates for average thrust (relevant for finite burntime compensation), complete and variable burntime
+		LMThrottleProgram(F, v_e, sv1.mass, length(opt->dV_LVLH), F_average, ManPADBurnTime, bt, step);
+	}
+	else
+	{
+		F_average = F;
+	}
+
+	sv2 = ExecuteManeuver(NULL, opt->GETbase, opt->t_CSI, opt->dV_LVLH, sv1, 0.0, Q_Xx, V_G, F_average, v_e);
+
+	UX = unit(V_G);
+
+	if (abs(dotp(UX, unit(sv1.R))) < cos(0.01*RAD))
+	{
+		UY = unit(crossp(UX, sv1.R));
+	}
+	else
+	{
+		UY = unit(crossp(UX, sv1.V));
+	}
+	UZ = unit(crossp(UX, UY));
+
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
+
+	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.y = atan2(((sin(IMUangles.y)*cos(IMUangles.x) + cos(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z)), (cos(IMUangles.y)*cos(IMUangles.x) - sin(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z));
+	}
+
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.x = atan2(sin(IMUangles.z), cos(IMUangles.z)*cos(IMUangles.x));
+	}
+
+	if (FDAIangles.x < 0)
+	{
+		FDAIangles.x += PI2;
+	}
+	if (FDAIangles.y < 0)
+	{
+		FDAIangles.y += PI2;
+	}
+	if (FDAIangles.z < 0)
+	{
+		FDAIangles.z += PI2;
+	}
+
+	pad.PLM_FDAI = FDAIangles.y*DEG;
+	pad.t_CSI = opt->t_CSI;
+	pad.t_TPI = opt->t_TPI;
+	pad.dV_LVLH = opt->dV_LVLH / 0.3048;
+	pad.dV_AGS = mul(Q_Xx, V_G) / 0.3048;
 }
 
 void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
@@ -9157,28 +9287,31 @@ SV RTCC::ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 
 	VECTOR3 UX, UY, UZ, DV, DV_P, DV_C;
 	SV sv2, sv3;
 
-	if (vessel->GetGroupThruster(THGROUP_MAIN, 0))
+	if (vessel)
 	{
-		if (F == 0.0)
+		if (vessel->GetGroupThruster(THGROUP_MAIN, 0))
 		{
-			F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
-		}
+			if (F == 0.0)
+			{
+				F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
+			}
 
-		if (isp == 0.0)
-		{
-			isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
+			if (isp == 0.0)
+			{
+				isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
+			}
 		}
-	}
-	else
-	{
-		if (F == 0.0)
+		else
 		{
-			F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_HOVER, 0));
-		}
+			if (F == 0.0)
+			{
+				F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_HOVER, 0));
+			}
 
-		if (isp == 0.0)
-		{
-			isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_HOVER, 0));
+			if (isp == 0.0)
+			{
+				isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_HOVER, 0));
+			}
 		}
 	}
 
@@ -11532,6 +11665,37 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t
 
 	if (opt->type == 0)
 	{
+		VECTOR3 R_P3, V_P3, R_PJ, V_PJ, R_AF, V_AF, R_AFD;
+		double p_C, c_C, eps_C, e_C, e_Co, dv_CSIo;
+		int s_C;
+
+		eps_C = 0.000004;	//radians
+		p_C = c_C = 0.0;
+		s_C = 0;
+		dv_CSI = 10.0*0.3048;
+
+		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, opt->t_TPI - opt->t_TIG, R_P3, V_P3, mu);
+		OrbMech::QDRTPI(R_P3, V_P3, opt->GETbase + opt->t_TPI / 24.0 / 3600.0, sv_P1.gravref, mu, opt->DH, opt->E, 0, R_PJ, V_PJ);
+		R_AFD = R_PJ - unit(R_PJ)*opt->DH;
+
+		do
+		{
+			V_A1F = V_A1 + unit(crossp(u, R_A1))*dv_CSI;
+			OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
+			t_CDH = opt->t_TIG + dt_1;
+			OrbMech::RADUP(R_P3, V_P3, R_A2, mu, R_PC, V_PC);
+			V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
+			OrbMech::rv_from_r0v0(R_A2, V_A2F, opt->t_TPI - t_CDH, R_AF, V_AF, mu);
+
+			e_C = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
+
+			if (p_C == 0 || abs(e_C) >= eps_C)
+			{
+				OrbMech::ITER(c_C, s_C, e_C, p_C, dv_CSI, e_Co, dv_CSIo);
+			}
+		} while (abs(e_C) >= eps_C);
+
+		DV_coe = V_A1F - V_A1;
 		t_TPI = opt->t_TPI;
 	}
 	else
