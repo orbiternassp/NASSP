@@ -621,6 +621,8 @@ void LEM::SystemsInit()
 	CabinFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN");
 	SuitFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN1");
 	SuitFan2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN2");
+	SuitFan1Heat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFAN1HEAT");
+	SuitFan2Heat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFAN2HEAT");
 	PrimGlyPump1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP1");
 	PrimGlyPump2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP2");
 	SecGlyPump = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SECGLYCOLPUMP");
@@ -1574,8 +1576,16 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//System Generated Heat
 
 	//Secondary Glycol Pump Heat
-	if (SecGlyPump->IsEnabled()) {
+	if (SecGlyPump->pumping) {
 		SecGlyPumpHeat->GenerateHeat(30.5);
+	}
+
+	//Suit Fan Heat
+	if (SuitFan1->pumping) {
+		SuitFan1Heat->GenerateHeat(163.0);
+	}
+	if (SuitFan2->pumping) {
+		SuitFan2Heat->GenerateHeat(163.0);
 	}
 
 	// Debug tests //

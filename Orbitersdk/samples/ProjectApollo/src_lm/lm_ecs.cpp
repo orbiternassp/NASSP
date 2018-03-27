@@ -739,13 +739,16 @@ void LEMCabinFan::SystemTimestep(double simdt)
 	if (cabinFan1CB->IsPowered() && !cabinFanSwitch)
 	{
 		cabinFan->SetPumpOn();
-		cabinFanHeat->GenerateHeat(36.5);
 		CabinFanSound();
 	}
 	else
 	{
 		cabinFan->SetPumpOff();
 		StopCabinFanSound();
+	}
+
+	if (cabinFan->pumping) {
+		cabinFanHeat->GenerateHeat(36.5);
 	}
 }
 
@@ -891,11 +894,18 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if ((glycolRotary->GetState() == 2 || GlycolAutoTransferRelay) && glycolPump2CB->IsPowered())
 	{
 		glycolPump2->SetPumpOn();
-		glycolPump1Heat->GenerateHeat(30.5);
 	}
 	else
 	{
 		glycolPump2->SetPumpOff();
+	}
+
+	if (glycolPump1->pumping) {
+		glycolPump1Heat->GenerateHeat(30.5);
+	}
+
+	if (glycolPump2->pumping) {
+		glycolPump2Heat->GenerateHeat(30.5);
 	}
 
 	//sprintf(oapiDebugString(), "DP %f DPSwitch %d ATRelay %d Pump1 %d Pump2 %d", DPSensor*PSI, PressureSwitch, GlycolAutoTransferRelay, glycolPump1->h_pump, glycolPump2->h_pump);
