@@ -447,18 +447,8 @@ void LEM::SystemsInit()
 	RCSXFeedTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 
 	// Lighting
-	CDR_LTG_UTIL_CB.MaxAmps = 2.0;
-	CDR_LTG_UTIL_CB.WireTo(&CDRs28VBus);
-	CDR_LTG_ANUN_DOCK_COMPNT_CB.MaxAmps = 2.0;
-	CDR_LTG_ANUN_DOCK_COMPNT_CB.WireTo(&CDRs28VBus);
-	LTG_ANUN_DOCK_COMPNT_CB.MaxAmps = 2.0;
-	LTG_ANUN_DOCK_COMPNT_CB.WireTo(&LMPs28VBus);
-	LTG_FLOOD_CB.MaxAmps = 5.0;
-	LTG_FLOOD_CB.WireTo(&LMPs28VBus);
-	NUM_LTG_AC_CB.MaxAmps = 2.0;
-	NUM_LTG_AC_CB.WireTo(&ACBusB);
-
 	tle.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECTLEHEAT"));
+	DockLights.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, &ExteriorLTGSwitch);
 
 	// LGC and DSKY
 	LGC_DSKY_CB.MaxAmps = 7.5;
@@ -634,6 +624,7 @@ void LEM::SystemsInit()
 	PrimGlyPump1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP1");
 	PrimGlyPump2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP2");
 	SecGlyPump = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SECGLYCOLPUMP");
+	SecGlyPumpHeat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:GLYPUMPSECHEAT");
 	LCGPump = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:LCGPUMP");
 
 	PrimGlyPump1->WireTo(&ECS_GLYCOL_PUMP_1_CB);
@@ -800,7 +791,8 @@ void LEM::SystemsInit()
 		&CO2CanisterSecVent);
 	WaterSeparationSelector.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&WaterSepSelectSwitch);
-	CabinFan.Init(&ECS_CABIN_FAN_1_CB, &ECS_CABIN_FAN_CONT_CB, &PressRegAValve, &PressRegBValve, (Pump *)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN"));
+	CabinFan.Init(&ECS_CABIN_FAN_1_CB, &ECS_CABIN_FAN_CONT_CB, &PressRegAValve, &PressRegBValve, (Pump *)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN"),
+		(h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINFANHEAT"));
 	WaterTankSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OTANKSELECT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OSURGETANK"),
 		&WaterTankSelectValve);
@@ -808,7 +800,9 @@ void LEM::SystemsInit()
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMGLYCOLPUMPMANIFOLD"),
 		(Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP1"),
 		(Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP2"),
-		&GlycolRotary, &ECS_GLYCOL_PUMP_1_CB, &ECS_GLYCOL_PUMP_2_CB, &ECS_GLYCOL_PUMP_AUTO_XFER_CB);
+		&GlycolRotary, &ECS_GLYCOL_PUMP_1_CB, &ECS_GLYCOL_PUMP_2_CB, &ECS_GLYCOL_PUMP_AUTO_XFER_CB,
+		(h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:GLYPUMP1HEAT"),
+		(h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:GLYPUMP2HEAT"));
 	SuitFanDPSensor.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLD"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&ECS_SUIT_FAN_DP_CB);
@@ -1475,6 +1469,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		EventTimerDisplay.SystemTimestep(tFactor);
 		CWEA.SystemTimestep(tFactor);
 		tle.SystemTimestep(tFactor);
+		DockLights.SystemTimestep(tFactor);
 		INV_1.SystemTimestep(tFactor);
 		INV_2.SystemTimestep(tFactor);
 
@@ -1516,7 +1511,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	}
 
 	// FIXME: Draw power for lighting system.
-	// I can't find the actual power draw anywhere.
+	// This will be done in the LCA and individual lighting components
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
@@ -1561,6 +1556,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	deca.Timestep(simdt);
 	gasta.Timestep(simt);
 	tle.Timestep(simdt);
+	DockLights.Timestep(simdt);
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();
@@ -1574,6 +1570,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	O2Manifold->BoilAllAndSetTemp(294.261);
 	PressRegA->BoilAllAndSetTemp(285.928);
 	PressRegB->BoilAllAndSetTemp(285.928);
+
+	//System Generated Heat
+
+	//Secondary Glycol Pump Heat
+	if (SecGlyPump->IsEnabled()) {
+		SecGlyPumpHeat->GenerateHeat(30.5);
+	}
 
 	// Debug tests //
 

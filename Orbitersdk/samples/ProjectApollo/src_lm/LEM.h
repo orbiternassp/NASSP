@@ -502,6 +502,8 @@ public:
 	Pump *SecGlyPump;
 	Pump *LCGPump;
 
+	h_HeatLoad *SecGlyPumpHeat;
+
 	Boiler *RCSHtr1Quad1;
 	Boiler *RCSHtr1Quad2;
 	Boiler *RCSHtr1Quad3;
@@ -1736,6 +1738,7 @@ protected:
 
 	//Lighting
 	LEM_TLE tle;
+	LEM_DockLights DockLights;
 
 	// ECS
 	LEM_ECS ecs;
@@ -1809,6 +1812,7 @@ protected:
 	friend class LEM_RR;
 	friend class LEM_RadarTape;
 	friend class LEM_TLE;
+	friend class LEM_DockLights;
 
 	friend class LEM_ASA;
 	friend class LEM_AEA;

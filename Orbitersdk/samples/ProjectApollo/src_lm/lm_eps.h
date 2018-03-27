@@ -139,3 +139,20 @@ protected:
 	h_HeatLoad *SecTLEHeat;
 
 };
+
+class LEM_DockLights
+{
+public:
+	LEM_DockLights();
+	void Init(LEM *l, e_object *cdr_cb, e_object *lmp_cb, ThreePosSwitch *docksw);
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+	bool IsPowered();
+protected:
+	LEM * lem;
+	e_object *CDRDockCB;
+	e_object *LMPDockCB;
+	ThreePosSwitch *DockSwitch;
+
+};
