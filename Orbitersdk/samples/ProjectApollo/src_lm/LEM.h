@@ -50,6 +50,7 @@
 #include "lemconnector.h"
 #include "lm_cwea.h"
 #include "lm_eps.h"
+#include "LEMcomputer.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392

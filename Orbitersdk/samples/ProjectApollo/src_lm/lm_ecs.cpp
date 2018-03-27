@@ -25,8 +25,6 @@
 #include "Orbitersdk.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "LEMcomputer.h"
 #include "LEM.h"
 #include "lm_ecs.h"
 

@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "connector.h"
 
 class LEM;
+class LEMcomputer;
 
 class LEMConnector : public Connector
 {

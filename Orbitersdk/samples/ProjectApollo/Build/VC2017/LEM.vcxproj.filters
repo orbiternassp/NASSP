@@ -257,9 +257,6 @@
     <ClInclude Include="..\..\src_csm\csmcautionwarning.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src_csm\CSMcomputer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src_csm\dockingprobe.h">
       <Filter>Header Files</Filter>
     </ClInclude>

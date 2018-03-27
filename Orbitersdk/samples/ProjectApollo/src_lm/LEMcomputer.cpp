@@ -33,7 +33,6 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "papi.h"
 #include "saturn.h"

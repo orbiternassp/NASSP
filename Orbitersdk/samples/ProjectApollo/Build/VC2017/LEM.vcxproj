@@ -403,7 +403,6 @@
     <ClInclude Include="..\..\src_sys\checklistController.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_csm\csmcautionwarning.h" />
-    <ClInclude Include="..\..\src_csm\CSMcomputer.h" />
     <ClInclude Include="..\..\src_csm\dockingprobe.h" />
     <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\dsky.h" />

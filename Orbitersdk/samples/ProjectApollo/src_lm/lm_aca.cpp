@@ -25,8 +25,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Orbitersdk.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "LEMcomputer.h"
 #include "lm_aca.h"
 #include "LEM.h"
 
