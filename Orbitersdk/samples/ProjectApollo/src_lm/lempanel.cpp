@@ -286,7 +286,7 @@ void LEM::InitSwitches() {
 	SidePanelsSwitch.Register(PSH, "SidePanelsSwitch", false);
 	FloodSwitch.Register(PSH, "FloodSwitch",  THREEPOSSWITCH_DOWN);
 	RightXPointerSwitch.Register(PSH, "RightXPointerSwitch", true);
-	ExteriorLTGSwitch.Register(PSH, "ExteriorLTGSwitch", THREEPOSSWITCH_CENTER);
+	ExteriorLTGSwitch.Register(PSH, "ExteriorLTGSwitch", THREEPOSSWITCH_UP);
 	LeftACA4JetSwitch.Register(PSH, "LeftACA4JetSwitch", TOGGLESWITCH_UP);
 	LeftTTCATranslSwitch.Register(PSH, "LeftTTCATranslSwitch", TOGGLESWITCH_UP);
 	RightACA4JetSwitch.Register(PSH, "RightACA4JetSwitch", TOGGLESWITCH_UP);
