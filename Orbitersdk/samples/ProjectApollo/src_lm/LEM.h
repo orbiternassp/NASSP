@@ -49,6 +49,7 @@
 #include "lm_ecs.h"
 #include "lemconnector.h"
 #include "lm_cwea.h"
+#include "lm_eps.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -99,105 +100,6 @@ typedef struct {
 } LEMECSStatus;
 
 // Systems things
-
-// XLunar Bus Controller Voltage Source
-class LEM_XLBSource : public e_object {
-public:
-	LEM_XLBSource();							// Cons
-	void SetVoltage(double v);
-	void DrawPower(double watts);
-};
-
-
-// XLunar Bus Controller
-class LEM_XLBControl : public e_object {
-public:
-	LEM_XLBControl();	// Cons
-	void Init(LEM *s);
-	void UpdateFlow(double dt);
-	void DrawPower(double watts);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-
-	LEM *lem;					// Pointer at LEM
-	LEM_XLBSource dc_output;	// DC output
-};
-
-// Electrical Control Assembly Subchannel
-class LEM_ECAch : public e_object {
-public:
-	LEM_ECAch();								 // Cons
-	void Init(LEM *s,e_object *src, int inp); // Init
-	void UpdateFlow(double dt);
-	void DrawPower(double watts);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-
-	IndicatorSwitch *dc_source_tb;    // Pointer at TB
-	LEM *lem;					// Pointer at LEM
-	e_object *dc_source;		// Associated battery
-	int input;                  // Channel input selector
-};
-
-// Bus feed controller object
-class LEM_BusFeed : public e_object {
-public:
-	LEM_BusFeed();							// Cons
-	void Init(LEM *s,e_object *sra,e_object *srb); // Init
-	void UpdateFlow(double dt);
-	void DrawPower(double watts);
-
-	LEM *lem;					// Pointer at LEM
-	e_object *dc_source_a;		// This has two inputs.
-	e_object *dc_source_b;
-};
-
-// Voltage source item for cross-tie balancer
-class LEM_BCTSource : public e_object {
-public:
-	LEM_BCTSource();							// Cons
-	void SetVoltage(double v);
-};
-
-// Bus cross-tie balancer object
-class LEM_BusCrossTie : public e_object {
-public:
-	LEM_BusCrossTie();	// Cons
-	void LEM_BusCrossTie::Init(LEM *s,DCbus *sra,DCbus *srb,CircuitBrakerSwitch *cb1,CircuitBrakerSwitch *cb2,CircuitBrakerSwitch *cb3,CircuitBrakerSwitch *cb4);
-	void UpdateFlow(double dt);
-	void DrawPower(double watts);
-
-	LEM *lem;					// Pointer at LEM
-	DCbus *dc_bus_cdr;
-	DCbus *dc_bus_lmp;
-	LEM_BCTSource dc_output_cdr;
-	LEM_BCTSource dc_output_lmp;
-	CircuitBrakerSwitch *lmp_bus_cb,*lmp_bal_cb;
-	CircuitBrakerSwitch *cdr_bus_cb,*cdr_bal_cb;
-	double last_cdr_ld;
-	double last_lmp_ld;
-};
-
-// Inverter
-class LEM_INV : public e_object {
-public:
-	LEM_INV();							// Cons
-	void Init(LEM *s, h_HeatLoad *invh, h_HeatLoad *secinvh);
-	void DrawPower(double watts);
-	void UpdateFlow(double dt);
-	void SystemTimestep(double simdt);
-	int active;
-	LEM *lem;					// Pointer at LM
-	e_object *dc_input;
-protected:
-	double BASE_HLPW[19]; // Base heat loss per watt factors, calculated from LM-1 Systems Handbook
-	double heatloss;
-private:
-	double get_hlpw(double base_hlpw_factor);
-	double calc_hlpw_util(double maxw, int index);
-	h_HeatLoad *InvHeat;
-	h_HeatLoad *SecInvHeat;
-};
 
 // Landing Radar
 class LEM_LR : public e_object{
@@ -343,24 +245,6 @@ protected:
 #define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
 #define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
 #define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
-
-class LEM_TLE
-{
-public:
-	LEM_TLE();
-	void Init(LEM *l, e_object *trk_cb, ThreePosSwitch *tracksw, h_HeatLoad *tleh, h_HeatLoad *sectleh);
-	void Timestep(double simdt);
-	void SystemTimestep(double simdt);
-
-	bool IsPowered();
-protected:
-	LEM *lem;
-	e_object *TrackCB;
-	ThreePosSwitch *TrackSwitch;
-	h_HeatLoad *TLEHeat;
-	h_HeatLoad *SecTLEHeat;
-
-};
 
 ///
 /// \ingroup LEM

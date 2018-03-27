@@ -1129,21 +1129,15 @@ void LEMInverterSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURF
 
 bool LEMInverterSwitch::ChangeState(int newState){
 	switch(newState){
-		case THREEPOSSWITCH_UP:      // INV 2			
-			if(inv1 != NULL){ inv1->active = 0; }
-			if(inv2 != NULL){ inv2->active = 1; }
+		case THREEPOSSWITCH_UP:      // INV 2
 			lem->ACBusA.WireTo(&lem->AC_A_INV_2_FEED_CB);
 			lem->ACBusB.WireTo(&lem->AC_B_INV_2_FEED_CB);
 			break;
 		case THREEPOSSWITCH_CENTER:  // INV 1
-			if(inv1 != NULL){ inv1->active = 1; }
-			if(inv2 != NULL){ inv2->active = 0; }			
 			lem->ACBusA.WireTo(&lem->AC_A_INV_1_FEED_CB);
 			lem->ACBusB.WireTo(&lem->AC_B_INV_1_FEED_CB);
 			break;
-		case THREEPOSSWITCH_DOWN:    // OFF				
-			if(inv1 != NULL){ inv1->active = 0; }
-			if(inv2 != NULL){ inv2->active = 0; }
+		case THREEPOSSWITCH_DOWN:    // OFF
 			lem->ACBusA.Disconnect();
 			lem->ACBusB.Disconnect();
 			break;

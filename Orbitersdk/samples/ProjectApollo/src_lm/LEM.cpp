@@ -1015,14 +1015,10 @@ void LEM::PostLoadSetup()
 	// Also cause the AC busses to wire up
 	switch (EPSInverterSwitch.GetState()) {
 	case THREEPOSSWITCH_UP:      // INV 2
-		INV_1.active = 0;
-		INV_2.active = 1;
 		ACBusA.WireTo(&AC_A_INV_2_FEED_CB);
 		ACBusB.WireTo(&AC_B_INV_2_FEED_CB);
 		break;
 	case THREEPOSSWITCH_CENTER:  // INV 1
-		INV_1.active = 1;
-		INV_2.active = 0;
 		ACBusA.WireTo(&AC_A_INV_1_FEED_CB);
 		ACBusB.WireTo(&AC_B_INV_1_FEED_CB);
 		break;

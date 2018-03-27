@@ -161,6 +161,7 @@
     <ClCompile Include="..\..\src_lm\lm_dps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_ecs.cpp" />
     <ClCompile Include="..\..\src_lm\lm_eds.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_eps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_programer.cpp" />
     <ClCompile Include="..\..\src_lm\lm_rcs.cpp" />
     <ClCompile Include="..\..\src_lm\lm_scea.cpp" />
@@ -373,6 +374,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src_lm\lemconnector.h" />
     <ClInclude Include="..\..\src_lm\LEMSaturn.h" />
+    <ClInclude Include="..\..\src_lm\lm_eps.h" />
     <ClInclude Include="..\..\src_lm\lmresource.h" />
     <ClInclude Include="..\..\src_lm\lm_aca.h" />
     <ClInclude Include="..\..\src_lm\lm_aps.h" />
