@@ -25,9 +25,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Orbitersdk.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "LEMcomputer.h"
-#include "lm_channels.h"
 #include "LEM.h"
 #include "lm_eps.h"
 
@@ -700,7 +697,14 @@ bool LEM_DockLights::IsPowered()
 
 void LEM_DockLights::Timestep(double simdt)
 {
-	//Control for the actual lights goes here
+	int i;
+
+	if (IsPowered()) {
+		for (i = 0; i < 5; i++) lem->dockingLights[i].active = true;
+	}
+	else {
+		for (i = 0; i < 5; i++) lem->dockingLights[i].active = false;
+	}
 }
 
 void LEM_DockLights::SystemTimestep(double simdt)

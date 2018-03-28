@@ -4952,7 +4952,7 @@ bool QDRTPI(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, doub
 			rv_from_r0v0(R, V, t, R_J, V_J, mu);
 		}
 
-		e_T = PI05 - E_L - asin(((length(R_J) - dh)*cos(E_L) / length(R))) - acos(dotp(unit(R), unit(R_J)))*sign(dotp(crossp(R_J, R), crossp(R, V)));
+		e_T = PI05 - E_L - asin(((length(R_J) - dh)*cos(E_L) / length(R))) - acos2(dotp(unit(R), unit(R_J)))*sign(dotp(crossp(R_J, R), crossp(R, V)));
 
 		if (abs(e_T) >= eps1)
 		{

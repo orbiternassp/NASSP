@@ -35,7 +35,6 @@
 #include "soundlib.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "LEMcomputer.h"
 #include "lm_channels.h"
 #include "mcc.h"
 

@@ -142,6 +142,17 @@ struct AP11LMManPADOpt
 	double alt = 0.0;	//Altitude above mean radius
 };
 
+struct AP10CSIPADOpt
+{
+	SV sv0;
+	double GETbase;
+	double t_CSI;
+	double t_TPI;
+	VECTOR3 dV_LVLH;
+	MATRIX3 REFSMMAT;
+	int enginetype;
+};
+
 struct AP7TPIPADOpt
 {
 	VESSEL* vessel; //vessel
@@ -766,6 +777,7 @@ public:
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
+	void AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad);
 	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
 	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
 	void TEITargeting(TEIOpt *opt, EntryResults *res);

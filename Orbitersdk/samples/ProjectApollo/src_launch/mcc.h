@@ -154,6 +154,7 @@
 #define PT_AP11LMARKTRKPAD	13
 #define PT_AP10DAPDATA		14
 #define PT_AP11LMMNV		15
+#define PT_AP10CSI			16
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -510,6 +511,10 @@
 #define MST_F_LUNAR_ORBIT_DOI_DAY_21	220
 // Ends at CMC LM state vector update
 #define MST_F_LUNAR_ORBIT_DOI_DAY_22	221
+// Ends at CSI update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_23	222
+// Ends at APS depletion update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_24	223
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -819,6 +824,17 @@ struct AP10DAPDATA
 	double YawTrim;				// Yaw gimbal trim (or roll for LM DAP PAD)
 };
 
+//APOLLO 10 CSI PAD
+
+struct AP10CSI
+{
+	double t_CSI;
+	double t_TPI;
+	VECTOR3 dV_LVLH;
+	double PLM_FDAI;
+	VECTOR3 dV_AGS;
+};
+
 //GENERIC STRING
 
 struct GENERICPAD
@@ -916,7 +932,7 @@ public:
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer
-	unsigned char uplink_data[1024];						// Uplink buffer
+	unsigned char uplink_data[2048];						// Uplink buffer
 
 	// CAPCOM INTERFACE
 	NOTEHANDLE NHmenu;										// Menu notification handle

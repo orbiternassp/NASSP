@@ -2386,7 +2386,10 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, MoonRev >= 14 && MoonRevTime > 1.0*3600.0 + 5.0*60.0, 78, MST_F_LUNAR_ORBIT_DOI_DAY_22);
 				break;
 			case MST_F_LUNAR_ORBIT_DOI_DAY_22: //CMC LM state vector update to CSI update
-				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 102, MST_F_LUNAR_ORBIT_DOI_DAY_22);
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 102, MST_F_LUNAR_ORBIT_DOI_DAY_23);
+				break;
+			case MST_F_LUNAR_ORBIT_DOI_DAY_23: //CSI update to 
+				UpdateMacro(UTP_PADONLY, PT_AP10CSI, MoonRev >= 16 && MoonRevTime > 40.0*60.0, 80, MST_F_LUNAR_ORBIT_DOI_DAY_24);
 				break;
 			}
 			break;
@@ -2581,7 +2584,7 @@ void MCC::pushUplinkData(unsigned char data) {
 
 // Uplink string to CM
 int MCC::CM_uplink(const unsigned char *data, int len) {
-	int remsize = 1024;
+	int remsize = 2048;
 	remsize -= cm->pcm.mcc_size;
 	// if (cm->pcm.mcc_size > 0) { return -1; } // If busy, bail
 	if (len > remsize) { return -2; } // Too long!
@@ -2592,7 +2595,7 @@ int MCC::CM_uplink(const unsigned char *data, int len) {
 
 // Uplink string to LM
 int MCC::LM_uplink(const unsigned char *data, int len) {
-	int remsize = 1024;
+	int remsize = 2048;
 	remsize -= lm->VHF.mcc_size;
 	// if (lm->pcm.mcc_size > 0) { return -1; } // If busy, bail
 	if (len > remsize) { return -2; } // Too long!
@@ -2988,6 +2991,16 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP11LMMNV_SPA", form->SPA);
 			SAVE_DOUBLE("MCC_AP11LMMNV_SXP", form->SXP);
 		}
+		else if (padNumber == PT_AP10CSI)
+		{
+			AP10CSI * form = (AP10CSI *)padForm;
+
+			SAVE_DOUBLE("MCC_AP10CSI_t_CSI", form->t_CSI);
+			SAVE_DOUBLE("MCC_AP10CSI_t_TPI", form->t_TPI);
+			SAVE_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
+			SAVE_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
+			SAVE_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+		}
 		else if (padNumber == PT_GENERIC)
 		{
 			GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3316,6 +3329,16 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP11LMMNV_SPA", form->SPA);
 			LOAD_DOUBLE("MCC_AP11LMMNV_SXP", form->SXP);
 		}
+		else if (padNumber == PT_AP10CSI)
+		{
+			AP10CSI * form = (AP10CSI *)padForm;
+
+			LOAD_DOUBLE("MCC_AP10CSI_t_CSI", form->t_CSI);
+			LOAD_DOUBLE("MCC_AP10CSI_t_TPI", form->t_TPI);
+			LOAD_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
+			LOAD_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
+			LOAD_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+		}
 		else if (padNumber == PT_GENERIC)
 		{
 			GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3630,6 +3653,24 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP10CSI:
+	{
+		AP10CSI * form = (AP10CSI *)padForm;
+
+		int hh, hh2, mm, mm2;
+		double ss, ss2;
+
+		sprintf(buffer, "P32 CSI UPDATE");
+		SStoHHMMSS(form->t_CSI, hh, mm, ss);
+		SStoHHMMSS(form->t_TPI, hh2, mm2, ss2);
+
+		sprintf(buffer, "%s\n%+06d HR N11\n%+06d MIN TIG\n%+07.2f SEC CSI\n%+06d HR N37\n%+06d MIN TIG\n%+07.2f SEC TPI\n%+07.1f DVX LOCAL N81\n%+07.1f DVY VERT\n"
+			"XXX%03.0f PLM FDAI\n%+07.1f DVX AGS N86\n%+07.1f DVY AGS\n%+07.1f DVZ AGS\n", buffer, hh, mm, ss, hh2, mm2, ss2, form->dV_LVLH.x, form->dV_LVLH.y,
+			form->PLM_FDAI, form->dV_AGS.x, form->dV_AGS.y, form->dV_AGS.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3703,6 +3744,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP11LMMNV: // AP11LMMNV
 		padForm = calloc(1, sizeof(AP11LMMNV));
+		break;
+	case PT_AP10CSI: // AP10CSI
+		padForm = calloc(1, sizeof(AP10CSI));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));
