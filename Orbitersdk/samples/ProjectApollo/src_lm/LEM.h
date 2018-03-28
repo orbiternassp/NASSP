@@ -1874,6 +1874,8 @@ protected:
 	friend class LEM_ECS;
 	friend class LEMCabinRepressValve;
 	friend class LEMDigitalHeliumPressureMeter;
+	friend class EngineStopButton;
+	friend class EngineStartButton;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;
