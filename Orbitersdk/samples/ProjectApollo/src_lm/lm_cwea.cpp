@@ -138,10 +138,8 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS2 ASC PRESS LOW
 		// Pressure of either ascent helium tanks below 2773 psia prior to staging
 		// Disabled when stage deadface opens.
-		if (lem->stage < 2) {
-			if (lem->GetAPSPropellant()->GetAscentHelium1PressPSI() < 2772.8 || lem->GetAPSPropellant()->GetAscentHelium2PressPSI() < 2773.0) {
+		if (lem->stage < 2 && (lem->GetAPSPropellant()->GetAscentHelium1PressPSI() < 2772.8 || lem->GetAPSPropellant()->GetAscentHelium2PressPSI() < 2773.0)) {
 				SetLight(1, 0, 1);
-			}
 		}
 		else
 			SetLight(1, 0, 0);
