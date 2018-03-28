@@ -1316,8 +1316,9 @@ double LEMVoltCB::Current()
 	return Amperes;
 }
 
-void EngineStartButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton) {
+void EngineStartButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton, LEM *l) {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
 	this->stopbutton = stopbutton;
 }
 
@@ -1352,13 +1353,38 @@ bool EngineStartButton::Push()
 	return false;
 }
 
-void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton) {
+void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
+
+	if ((lem->CDR_LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE || lem->LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE) && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
+		if (IsUp())
+		{
+			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
+		}
+		else
+		{
+			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset + width, yOffset + height, width, height, SURF_PREDEF_CK);
+		}
+	}
+	else {
+		if (IsUp())
+		{
+			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+		}
+		else
+		{
+			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset + width, yOffset, width, height, SURF_PREDEF_CK);
+		}
+	}
+}
+
+void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton, LEM *l) {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	lem = l;
 	this->startbutton = startbutton;
 }
 
 bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
-
+	
 	int OldState = state;
 
 	if (!visible) return false;
@@ -1390,6 +1416,30 @@ bool EngineStopButton::Push()
 	}
 
 	return false;
+}
+
+void EngineStopButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
+	
+	if ((lem->CDR_LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE || lem->LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE) && (lem->LampToneTestRotary.GetState() == 3 || IsUp())){
+		if (IsUp())
+		{
+			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
+		}
+		else
+		{
+			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset + width, yOffset + height, width, height, SURF_PREDEF_CK);
+		}
+	}
+	else {
+		if (IsUp())
+		{
+			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+		}
+		else
+		{
+			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset + width, yOffset, width, height, SURF_PREDEF_CK);
+		}
+	}
 }
 
 bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
