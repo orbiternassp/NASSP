@@ -3575,13 +3575,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
 
-			calcParams.alt_node = res.NodeAlt;
-			calcParams.lat_node = res.NodeLat;
-			calcParams.lng_node = res.NodeLng;
-			calcParams.GET_node = res.NodeGET;
-			calcParams.LOI = res.PericynthionGET;
-			dV_LVLH = res.dV_LVLH;
-			P30TIG = res.P30TIG;
+			//Scrub MCC-1 if DV is less than 50 ft/s
+			if (fcn == 10 && length(res.dV_LVLH) < 50.0*0.3048)
+			{
+				scrubbed = true;
+			}
+			else
+			{
+				calcParams.alt_node = res.NodeAlt;
+				calcParams.lat_node = res.NodeLat;
+				calcParams.lng_node = res.NodeLng;
+				calcParams.GET_node = res.NodeGET;
+				calcParams.LOI = res.PericynthionGET;
+				dV_LVLH = res.dV_LVLH;
+				P30TIG = res.P30TIG;
+			}
 		}
 
 		if (scrubbed)
@@ -4711,13 +4719,18 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv_CSM, sv_LM, sv_CSI;
 		MATRIX3 Q_Xx;
 		VECTOR3 dV, dV_LVLH;
-		double GETbase, t_TPI;
+		double GETbase, t_TPI, dt_apo, mu;
 
 		AP10CSI * form = (AP10CSI *)pad;
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
 		GETbase = getGETBase();
+
+		//CSI at apolune
+		mu = GGRAV * oapiGetMass(sv_LM.gravref);
+		dt_apo = OrbMech::timetoapo(sv_LM.R, sv_LM.V, mu);
+		calcParams.CSI = OrbMech::GETfromMJD(sv_LM.MJD, GETbase) + dt_apo;
 
 		opt.DH = 15.0*1852.0;
 		opt.E = 26.6*RAD;
