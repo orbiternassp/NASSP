@@ -244,33 +244,17 @@ void LEM::SystemsInit()
 	// ECA #1 (DESCENT stage, LMP 28V DC bus)
 	ECA_1a.Init(this, Battery1, 2); // Battery 1 starts on LV
 	ECA_1b.Init(this, Battery2, 0);
-	ECA_1a.dc_source_tb = &DSCBattery1TB;
-	ECA_1a.dc_source_tb->SetState(2); // Initialize to LV
-	ECA_1b.dc_source_tb = &DSCBattery2TB;
-	ECA_1b.dc_source_tb->SetState(0); // Initialize to off
 
 	// ECA #2 (DESCENT stage, CDR 28V DC bus)
 	ECA_2a.Init(this, Battery3, 0);
 	ECA_2b.Init(this, Battery4, 2); 
-	ECA_2a.dc_source_tb = &DSCBattery3TB;
-	ECA_2a.dc_source_tb->SetState(0); 
-	ECA_2b.dc_source_tb = &DSCBattery4TB;
-	ECA_2b.dc_source_tb->SetState(2);
 
 	// ECA #1 and #2 are JETTISONED with the descent stage.
 	// ECA #3 and #4 have no low voltage taps and can feed either bus.
 	ECA_3a.Init(this, Battery5, 0);
 	ECA_3b.Init(this, Battery5, 0);
-	ECA_3a.dc_source_tb = &ASCBattery5ATB;
-	ECA_3a.dc_source_tb->SetState(0); // Initialize to off
-	ECA_3b.dc_source_tb = &ASCBattery5BTB;
-	ECA_3b.dc_source_tb->SetState(0); // Initialize to off
 	ECA_4a.Init(this, Battery6, 0);
 	ECA_4b.Init(this, Battery6, 0);
-	ECA_4a.dc_source_tb = &ASCBattery6ATB;
-	ECA_4a.dc_source_tb->SetState(0); // Initialize to off
-	ECA_4b.dc_source_tb = &ASCBattery6BTB;
-	ECA_4b.dc_source_tb->SetState(0); // Initialize to off
 
 	// Descent Stage Deadface Bus Stubs wire to the ECAs
 	// stage is not defined here, so we can't do this.

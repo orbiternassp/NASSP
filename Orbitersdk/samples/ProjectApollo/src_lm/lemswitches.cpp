@@ -993,15 +993,9 @@ bool LEMBatterySwitch::SwitchTo(int newState, bool dontspring)
 			switch (srcno) {
 			case 1: // HV
 				eca->input = 1;
-				if (eca->dc_source_tb != NULL) {
-					eca->dc_source_tb->SetState(1);
-				}
 				break;
 			case 2: // LV
 				eca->input = 2;
-				if (eca->dc_source_tb != NULL) {
-					eca->dc_source_tb->SetState(2);
-				}
 				break;
 			}
 			break;
@@ -1012,9 +1006,6 @@ bool LEMBatterySwitch::SwitchTo(int newState, bool dontspring)
 			}
 			else {
 				if (lem->CDRDesECAContCB.Voltage() < 24 && lem->LMPDesECAContCB.Voltage() < 24) { return true; }
-			}
-			if (eca->dc_source_tb != NULL) {
-				eca->dc_source_tb->SetState(0);
 			}
 			eca->input = 0;
 			break;
@@ -1648,6 +1639,40 @@ int LEMSCEATalkback::GetState()
 	else
 		// Should this fail open?
 		state = (failOpen ? 1 : 0);
+
+	return state;
+}
+
+LEMDoubleSCEATalkback::LEMDoubleSCEATalkback()
+{
+	ssswitch1 = 0;
+	ssswitch2 = 0;
+}
+
+void LEMDoubleSCEATalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s1, SCEA_SolidStateSwitch *s2)
+
+{
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row);
+	ssswitch1 = s1;
+	ssswitch2 = s2;
+}
+
+int LEMDoubleSCEATalkback::GetState()
+
+{
+	if (SRC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		if (ssswitch1 && ssswitch1->IsClosed())
+			state = 1;
+		else if (ssswitch2 && ssswitch2->IsClosed())
+			state = 2;
+		else
+			state = 0;
+	}
+	else
+	{
+		state = 0;
+	}
 
 	return state;
 }

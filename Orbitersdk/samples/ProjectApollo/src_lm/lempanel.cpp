@@ -2391,17 +2391,17 @@ void LEM::SetSwitches(int panel) {
 	DSCCDRBat4LVSwitch.SetDelayTime(1);
 
 	DSCBatteryTBSwitchRow.Init(AID_DSC_BATTERY_TALKBACKS, MainPanel);
-	DSCBattery1TB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
-	DSCBattery2TB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
-	DSCBattery3TB.Init(152, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
-	DSCBattery4TB.Init(222, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
+	DSCBattery1TB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 1), scera2.GetSwitch(4, 2));
+	DSCBattery2TB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 3), scera2.GetSwitch(4, 4));
+	DSCBattery3TB.Init(152, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 5), scera2.GetSwitch(4, 6));
+	DSCBattery4TB.Init(222, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow, scera2.GetSwitch(4, 7), scera2.GetSwitch(4, 8));
 	DSCBattFeedTB.Init(292, 0, 23, 23, srf[SRF_INDICATOR], DSCBatteryTBSwitchRow);
 
 	ASCBatteryTBSwitchRow.Init(AID_ASC_BATTERY_TALKBACKS, MainPanel);
-	ASCBattery5ATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow);
-	ASCBattery5BTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow);
-	ASCBattery6ATB.Init(138, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow);
-	ASCBattery6BTB.Init(221, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow);
+	ASCBattery5ATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 11), false);
+	ASCBattery5BTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 9), false);
+	ASCBattery6ATB.Init(138, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 10), false);
+	ASCBattery6BTB.Init(221, 0, 23, 23, srf[SRF_INDICATOR], ASCBatteryTBSwitchRow, scera2.GetSwitch(4, 12), false);
 
 	ASCBatterySwitchRow.Init(AID_ASC_BATTERY_SWITCHES, MainPanel);
 	ASCBat5SESwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], ASCBatterySwitchRow, this, &ECA_3a, 1, 1);

@@ -57,7 +57,6 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
-	IndicatorSwitch *dc_source_tb;    // Pointer at TB
 	LEM *lem;					// Pointer at LEM
 	e_object *dc_source;		// Associated battery
 	int input;                  // Channel input selector

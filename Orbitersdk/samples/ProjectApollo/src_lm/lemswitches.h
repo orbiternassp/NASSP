@@ -525,6 +525,17 @@ protected:
 	SCEA_SolidStateSwitch * ssswitch;
 };
 
+class LEMDoubleSCEATalkback : public IndicatorSwitch {
+public:
+	LEMDoubleSCEATalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s1, SCEA_SolidStateSwitch *s2);
+	int GetState();
+
+protected:
+	SCEA_SolidStateSwitch * ssswitch1;
+	SCEA_SolidStateSwitch * ssswitch2;
+};
+
 class LEMRCSQuadTalkback : public IndicatorSwitch {
 public:
 	LEMRCSQuadTalkback();

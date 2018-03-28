@@ -1183,17 +1183,17 @@ protected:
 	LEMBatterySwitch DSCCDRBat4LVSwitch;	
 
 	SwitchRow DSCBatteryTBSwitchRow;
-	IndicatorSwitch DSCBattery1TB;
-	IndicatorSwitch DSCBattery2TB;
-	IndicatorSwitch DSCBattery3TB;
-	IndicatorSwitch DSCBattery4TB;
+	LEMDoubleSCEATalkback DSCBattery1TB;
+	LEMDoubleSCEATalkback DSCBattery2TB;
+	LEMDoubleSCEATalkback DSCBattery3TB;
+	LEMDoubleSCEATalkback DSCBattery4TB;
 	IndicatorSwitch DSCBattFeedTB;
 
 	SwitchRow ASCBatteryTBSwitchRow;
-	IndicatorSwitch ASCBattery5ATB;
-	IndicatorSwitch ASCBattery5BTB;
-	IndicatorSwitch ASCBattery6ATB;
-	IndicatorSwitch ASCBattery6BTB;
+	LEMSCEATalkback ASCBattery5ATB;
+	LEMSCEATalkback ASCBattery5BTB;
+	LEMSCEATalkback ASCBattery6ATB;
+	LEMSCEATalkback ASCBattery6BTB;
 
 	SwitchRow ASCBatterySwitchRow;
 	LEMBatterySwitch ASCBat5SESwitch;

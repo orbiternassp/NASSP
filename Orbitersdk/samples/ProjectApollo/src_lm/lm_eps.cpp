@@ -31,7 +31,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 // ELECTRICAL CONTROL ASSEMBLY SUBCHANNEL
 LEM_ECAch::LEM_ECAch() {
 	lem = NULL;
-	dc_source_tb = NULL;
 	input = -1; // Flag uninit
 }
 
