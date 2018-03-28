@@ -440,6 +440,7 @@ public:
 	void SetFwdHatchMesh();
 	void SetOvhdHatchMesh();
 	void SetTrackLight();
+	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	virtual void PlayCountSound(bool StartStop) {};
@@ -502,6 +503,10 @@ public:
 	Pump *PrimGlyPump2;
 	Pump *SecGlyPump;
 	Pump *LCGPump;
+
+	h_HeatLoad *SuitFan1Heat;
+	h_HeatLoad *SuitFan2Heat;
+	h_HeatLoad *SecGlyPumpHeat;
 
 	Boiler *RCSHtr1Quad1;
 	Boiler *RCSHtr1Quad2;
@@ -1557,6 +1562,7 @@ protected:
 
 	// Exterior light definitions
 	BEACONLIGHTSPEC trackLight;                   // tracking light
+	BEACONLIGHTSPEC dockingLights[5];             // docking lights
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
@@ -1737,6 +1743,7 @@ protected:
 
 	//Lighting
 	LEM_TLE tle;
+	LEM_DockLights DockLights;
 
 	// ECS
 	LEM_ECS ecs;
@@ -1810,6 +1817,7 @@ protected:
 	friend class LEM_RR;
 	friend class LEM_RadarTape;
 	friend class LEM_TLE;
+	friend class LEM_DockLights;
 
 	friend class LEM_ASA;
 	friend class LEM_AEA;

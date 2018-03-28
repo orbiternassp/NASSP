@@ -213,7 +213,7 @@ class LEMCabinFan
 {
 public:
 	LEMCabinFan(Sound &cabinfanS);
-	void Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf);
+	void Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf, h_HeatLoad *cfh);
 	void SystemTimestep(double simdt);
 protected:
 
@@ -226,6 +226,7 @@ protected:
 	RotationalSwitch *pressRegulatorBSwitch;
 	Pump *cabinFan;
 	Sound &cabinfansound;
+	h_HeatLoad *cabinFanHeat;
 };
 
 class LEMWaterTankSelect
@@ -244,7 +245,7 @@ class LEMPrimGlycolPumpController
 {
 public:
 	LEMPrimGlycolPumpController();
-	void Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb);
+	void Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
@@ -260,6 +261,8 @@ protected:
 	CircuitBrakerSwitch *glycolPump1CB;
 	CircuitBrakerSwitch *glycolPump2CB;
 	CircuitBrakerSwitch *glycolPumpAutoTransferCB;
+	h_HeatLoad *glycolPump1Heat;
+	h_HeatLoad *glycolPump2Heat;
 
 	//7K8 (Latching)
 	bool GlycolAutoTransferRelay;

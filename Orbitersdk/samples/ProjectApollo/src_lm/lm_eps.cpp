@@ -670,3 +670,44 @@ void LEM_TLE::SystemTimestep(double simdt)
 		SecTLEHeat->GenerateHeat(60.0);
 	}
 }
+
+LEM_DockLights::LEM_DockLights()
+{
+	lem = NULL;
+	CDRDockCB = NULL;
+	LMPDockCB = NULL;
+	DockSwitch = NULL;
+}
+
+void LEM_DockLights::Init(LEM *l, e_object *cdr_cb, e_object *lmp_cb, ThreePosSwitch *docksw)
+{
+	lem = l;
+	CDRDockCB = cdr_cb;
+	LMPDockCB = lmp_cb;
+	DockSwitch = docksw;
+}
+
+bool LEM_DockLights::IsPowered()
+{
+	if ((CDRDockCB->Voltage() > SP_MIN_DCVOLTAGE || LMPDockCB->Voltage() > SP_MIN_DCVOLTAGE) && DockSwitch->GetState() == THREEPOSSWITCH_UP) {
+		return true;
+	}
+	return false;
+}
+
+void LEM_DockLights::Timestep(double simdt)
+{
+	int i;
+
+	if (IsPowered()) {
+		for (i = 0; i < 5; i++) lem->dockingLights[i].active = true;
+	}
+	else {
+		for (i = 0; i < 5; i++) lem->dockingLights[i].active = false;
+	}
+}
+
+void LEM_DockLights::SystemTimestep(double simdt)
+{
+	//This will need power draw through and heat generated to the LCA
+}

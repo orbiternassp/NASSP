@@ -707,15 +707,17 @@ LEMCabinFan::LEMCabinFan(Sound &cabinfanS) : cabinfansound(cabinfanS)
 	pressRegulatorASwitch = NULL;
 	pressRegulatorBSwitch = NULL;
 	cabinFan = NULL;
+	cabinFanHeat = 0;
 }
 
-void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf)
+void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf, h_HeatLoad *cfh)
 {
 	cabinFan1CB = cf1cb;
 	cabinFanContCB = cfccb;
 	pressRegulatorASwitch = pras;
 	pressRegulatorBSwitch = prbs;
 	cabinFan = cf;
+	cabinFanHeat = cfh;
 }
 
 void LEMCabinFan::SystemTimestep(double simdt)
@@ -736,14 +738,15 @@ void LEMCabinFan::SystemTimestep(double simdt)
 	{
 		cabinFan->SetPumpOn();
 		CabinFanSound();
-
-		//TBD: Switching heat exchanger on I guess?
 	}
 	else
 	{
 		cabinFan->SetPumpOff();
 		StopCabinFanSound();
-		//TBD: Switching heat exchanger off I guess?
+	}
+
+	if (cabinFan->pumping) {
+		cabinFanHeat->GenerateHeat(36.5);
 	}
 }
 
@@ -819,13 +822,15 @@ LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
 	glycolRotary = NULL;
 	glycolPump1 = NULL;
 	glycolPump2 = NULL;
+	glycolPump1Heat = 0;
+	glycolPump2Heat = 0;
 
 	GlycolAutoTransferRelay = false;
 	GlycolPumpFailRelay = false;
 	PressureSwitch = true;
 }
 
-void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb)
+void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h)
 {
 	primGlycolAccumulatorTank = pgat;
 	primGlycolPumpManifoldTank = pgpmt;
@@ -835,6 +840,8 @@ void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, P
 	glycolPump1CB = gp1cb;
 	glycolPump2CB = gp2cb;
 	glycolPumpAutoTransferCB = gpatcb;
+	glycolPump1Heat = gp1h;
+	glycolPump2Heat = gp2h;
 }
 
 void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
@@ -874,6 +881,7 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
 	{
 		glycolPump1->SetPumpOn();
+		glycolPump1Heat->GenerateHeat(30.5);
 	}
 	else
 	{
@@ -888,6 +896,14 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	else
 	{
 		glycolPump2->SetPumpOff();
+	}
+
+	if (glycolPump1->pumping) {
+		glycolPump1Heat->GenerateHeat(30.5);
+	}
+
+	if (glycolPump2->pumping) {
+		glycolPump2Heat->GenerateHeat(30.5);
 	}
 
 	//sprintf(oapiDebugString(), "DP %f DPSwitch %d ATRelay %d Pump1 %d Pump2 %d", DPSensor*PSI, PressureSwitch, GlycolAutoTransferRelay, glycolPump1->h_pump, glycolPump2->h_pump);
