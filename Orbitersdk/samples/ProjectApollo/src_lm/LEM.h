@@ -439,6 +439,7 @@ public:
 	void SetFwdHatchMesh();
 	void SetOvhdHatchMesh();
 	void SetTrackLight();
+	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 
 	virtual void PlayCountSound(bool StartStop) {};
@@ -1560,6 +1561,7 @@ protected:
 
 	// Exterior light definitions
 	BEACONLIGHTSPEC trackLight;                   // tracking light
+	BEACONLIGHTSPEC dockingLights[5];             // docking lights
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
