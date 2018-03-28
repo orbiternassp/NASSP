@@ -322,7 +322,7 @@ public:
 	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
-	unsigned char mcc_data[1024];	// MCC-provided incoming data
+	unsigned char mcc_data[2048];	// MCC-provided incoming data
 
 	bool registerSocket(SOCKET sock);
 
@@ -394,7 +394,7 @@ private:
 	VECTOR3 PitchYawToBodyVector(double pit, double ya);
 	void BodyVectorToPitchYaw(VECTOR3 U_R, double &pitch, double &yaw);
 	void BodyToAC(VECTOR3 U_R, double &alpha, double &gamma);
-	VECTOR3 ABCToBody(double alpha, double beta, double gamma);
+	VECTOR3 ABCAndVectorToBody(double alpha, double beta, double gamma, VECTOR3 U_R);
 	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 
 	Saturn *sat;								// Ship we're installed in
@@ -405,6 +405,9 @@ private:
 	double YawRes;
 	bool scanlimit;
 	bool scanlimitwarn;
+	double HornSignalStrength[4];
+
+	VECTOR3 U_Horn[4];
 };
 
 //S-Band Omnidirectional Antenna system

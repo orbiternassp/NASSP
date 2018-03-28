@@ -2584,7 +2584,7 @@ void MCC::pushUplinkData(unsigned char data) {
 
 // Uplink string to CM
 int MCC::CM_uplink(const unsigned char *data, int len) {
-	int remsize = 1024;
+	int remsize = 2048;
 	remsize -= cm->pcm.mcc_size;
 	// if (cm->pcm.mcc_size > 0) { return -1; } // If busy, bail
 	if (len > remsize) { return -2; } // Too long!
@@ -2595,7 +2595,7 @@ int MCC::CM_uplink(const unsigned char *data, int len) {
 
 // Uplink string to LM
 int MCC::LM_uplink(const unsigned char *data, int len) {
-	int remsize = 1024;
+	int remsize = 2048;
 	remsize -= lm->VHF.mcc_size;
 	// if (lm->pcm.mcc_size > 0) { return -1; } // If busy, bail
 	if (len > remsize) { return -2; } // Too long!

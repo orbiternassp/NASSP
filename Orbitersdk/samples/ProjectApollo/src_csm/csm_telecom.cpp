@@ -525,6 +525,18 @@ HGA::HGA(){
 	YawRes = 0;
 	scanlimit = false;
 	scanlimitwarn = false;
+
+	for (int i = 0;i < 0;i++)
+	{
+		HornSignalStrength[i] = 0.0;
+	}
+
+	double angdiff = 1.0*RAD;
+
+	U_Horn[0] = _V(cos(angdiff), 0.0, -sin(angdiff));
+	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));
+	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);
+	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);
 }
 
 void HGA::Init(Saturn *vessel){
@@ -609,6 +621,11 @@ void HGA::TimeStep(double simt, double simdt)
 	}
 	else
 	{
+		double AzimuthErrorSignal, ElevationErrorSignal;
+
+		AzimuthErrorSignal = (HornSignalStrength[0] - HornSignalStrength[1])*0.25;
+		ElevationErrorSignal = (HornSignalStrength[2] - HornSignalStrength[3])*0.25;
+
 		AAxisCmd = 180.0*RAD;
 		BAxisCmd = 0.0;
 		CAxisCmd = 90.0*RAD;
@@ -651,7 +668,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//READOUT RESOLVER
 	VECTOR3 U_Readout;
-	U_Readout = ABCToBody(Alpha, 0, Gamma);
+	U_Readout = ABCAndVectorToBody(Alpha, 0, Gamma, _V(1.0, 0.0, 0.0));
 	BodyVectorToPitchYaw(U_Readout, PitchRes, YawRes);
 
 	//sprintf(oapiDebugString(), "Alpha: %lf° Gamma: %lf° PitchRes: %lf° YawRes: %lf°", Alpha*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG);
@@ -663,21 +680,11 @@ void HGA::TimeStep(double simt, double simdt)
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 
-	//Unit vector of antenna in vessel's local frame
-	U_RP = ABCToBody(Alpha, Beta, Gamma);
-	//Convert from Apollo CSM coordinate system to left-handed Orbiter coordinate system
-	U_RP = _V(U_RP.y, -U_RP.z, U_RP.x);
-
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	sat->GetGlobalPos(pos);
 	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
-	
-	//Calculate antenna pointing vector in global frame
-	U_R = mul(Rot, U_RP);
-	//relative angle between antenna pointing vector and direction of Earth
-	relang = acos(dotp(U_R, unit(R_E - pos)));
 
 	//Not based on reality and just for testing: relative angle greater beamwidth no signal strength, uses cosine function to get increase of signal strength from 0 to 100
 	if (sat->GHABeamSwitch.IsUp())		//Wide
@@ -698,21 +705,44 @@ void HGA::TimeStep(double simt, double simdt)
 
 	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
 
-	if (relang < PI05/a)
-	{
-		SignalStrength = cos(a*relang)*cos(a*relang)*gain;
-	}
-	else
-	{
-		SignalStrength = 0.0;
-	}
-
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
 
 	if (Moonrelang > cos(asin(oapiGetSize(hMoon) / length(R_M - pos))))
 	{
 		SignalStrength = 0.0;
+		for (int i = 0;i < 4;i++)
+		{
+			HornSignalStrength[i] = 0.0;
+		}
+	}
+	else
+	{
+		for (int i = 0;i < 4;i++)
+		{
+			//Unit vector of antenna in vessel's local frame
+			U_RP = ABCAndVectorToBody(Alpha, Beta, Gamma, U_Horn[i]);
+			//Convert from Apollo CSM coordinate system to left-handed Orbiter coordinate system
+			U_RP = _V(U_RP.y, -U_RP.z, U_RP.x);
+
+			//Calculate antenna pointing vector in global frame
+			U_R = mul(Rot, U_RP);
+			//relative angle between antenna pointing vector and direction of Earth
+			relang = acos(dotp(U_R, unit(R_E - pos)));
+
+			if (relang < PI05 / a)
+			{
+				HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*gain;
+			}
+			else
+			{
+				HornSignalStrength[i] = 0.0;
+			}
+		}
+
+		SignalStrength = (HornSignalStrength[0] + HornSignalStrength[1] + HornSignalStrength[2] + HornSignalStrength[3]) / 4.0;
+
+		//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
 	}
 
 	double scanlim, scanlimwarn;
@@ -803,20 +833,19 @@ void HGA::BodyToAC(VECTOR3 U_R, double &alpha, double &gamma)
 	gamma = acos(U_R3.x);
 }
 
-VECTOR3 HGA::ABCToBody(double alpha, double beta, double gamma)
+VECTOR3 HGA::ABCAndVectorToBody(double alpha, double beta, double gamma, VECTOR3 U_R)
 {
-	MATRIX3 M1, M2, MB, MC;
-	VECTOR3 U_R3;
+	MATRIX3 M1, M2, M3, MB, MC;
 	double theta;
 
 	theta = -52.25*RAD;
 
-	U_R3 = _V(cos(gamma), sin(gamma), 0.0);
+	M3 = _M(cos(gamma), -sin(gamma), 0.0, sin(gamma), cos(gamma), 0.0, 0.0, 0.0, 1.0);
 	M2 = _M(cos(beta), 0.0, sin(beta), 0.0, 1.0, 0.0, -sin(beta), 0.0, cos(beta));
 	M1 = _M(1.0, 0.0, 0.0, 0.0, cos(alpha), -sin(alpha), 0.0, sin(alpha), cos(alpha));
 	MB = _M(cos(theta), 0.0, sin(theta), 0.0, 1.0, 0.0, -sin(theta), 0.0, cos(theta));
 	MC = _M(0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-	return mul(MC, mul(MB, mul(M1, mul(M2, U_R3))));
+	return mul(MC, mul(MB, mul(M1, mul(M2, mul(M3, U_R)))));
 }
 
 bool HGA::ScanLimitWarning()

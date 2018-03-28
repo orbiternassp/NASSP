@@ -932,7 +932,7 @@ public:
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer
-	unsigned char uplink_data[1024];						// Uplink buffer
+	unsigned char uplink_data[2048];						// Uplink buffer
 
 	// CAPCOM INTERFACE
 	NOTEHANDLE NHmenu;										// Menu notification handle
