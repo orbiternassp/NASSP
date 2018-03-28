@@ -700,7 +700,14 @@ bool LEM_DockLights::IsPowered()
 
 void LEM_DockLights::Timestep(double simdt)
 {
-	//Control for the actual lights goes here
+	int i;
+
+	if (IsPowered()) {
+		for (i = 0; i < 5; i++) lem->dockingLights[i].active = true;
+	}
+	else {
+		for (i = 0; i < 5; i++) lem->dockingLights[i].active = false;
+	}
 }
 
 void LEM_DockLights::SystemTimestep(double simdt)
