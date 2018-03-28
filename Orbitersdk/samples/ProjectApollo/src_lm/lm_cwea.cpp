@@ -519,13 +519,12 @@ void LEM_CWEA::Timestep(double simdt) {
 		break;
 	case 3: // ENG PB & C/W 2
 			// Light engine START/STOP lights and Panel 1 second bank warning lamps
-			// FIX ME: Lit engine start/stop light bmp and logic needed
+			// ENG PB lights are lit in the EngineStopButton & EngineStartButton code
 		SetColumnLightStates(2, 1);
 		SetColumnLightStates(3, 1);
 		break;
 	case 4: // C/W 3
 			// Light Panel 2 first bank warning lamps;
-		
 		SetColumnLightStates(4, 1);
 		SetColumnLightStates(5, 1);
 		
