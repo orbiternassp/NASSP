@@ -623,7 +623,6 @@ void LEM_INV::SystemTimestep(double simdt)
 }
 
 //Tracking Light Electronics
-
 LEM_TLE::LEM_TLE()
 {
 	lem = NULL;
@@ -670,6 +669,7 @@ void LEM_TLE::SystemTimestep(double simdt)
 	}
 }
 
+//Docking Lights
 LEM_DockLights::LEM_DockLights()
 {
 	lem = NULL;
@@ -709,4 +709,145 @@ void LEM_DockLights::Timestep(double simdt)
 void LEM_DockLights::SystemTimestep(double simdt)
 {
 	//This will need power draw through and heat generated to the LCA
+}
+
+//Utility Lights (Uncomment when panel is created)
+/*
+LEM_UtilLights::LEM_UtilLights()
+{
+	lem = NULL;
+	UtlCB = NULL;
+	CDRSwitch = NULL;
+	LMPSwitch = NULL;
+	UtlLtgHeat = 0;
+}
+
+void LEM_UtilLights::Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h)
+{
+	lem = l;
+	UtlCB = utl_cb;
+	CDRSwitch = cdr_sw;
+	LMPSwitch = lmp_sw;
+	UtlLtgHeat = util_h;
+}
+
+bool LEM_UtilLights::IsPowered()
+{
+	if (UtlCB->Voltage() > SP_MIN_DCVOLTAGE) {
+		return true;
+	}
+	return false;
+}
+
+void LEM_UtilLights::Timestep(double simdt)
+{
+	//Can be used to draw lit UTIL Lights
+}
+
+void LEM_UtilLights::SystemTimestep(double simdt)
+{
+	//CDR Utility Lights Dim
+	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
+		UtlCB->DrawPower(2.2);
+		UtlLtgHeat->GenerateHeat(2.178);
+	}
+	//CDR Utility Lights Bright
+	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
+		UtlCB->DrawPower(6.15);
+		UtlLtgHeat->GenerateHeat(6.1);
+	}
+
+	//LMP Utility Lights Dim
+	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
+		UtlCB->DrawPower(1.76);
+		UtlLtgHeat->GenerateHeat(1.74);
+	}
+	//LMP Utility Lights Bright
+	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
+		UtlCB->DrawPower(3.3);
+		UtlLtgHeat->GenerateHeat(3.267);
+	}
+}
+*/
+//COAS Lights
+LEM_COASLights::LEM_COASLights()
+{
+	lem = NULL;
+	COASCB = NULL;
+	COASSwitch = NULL;
+	COASHeat = 0;
+}
+
+void LEM_COASLights::Init(LEM *l, e_object *coas_cb, ThreePosSwitch *coas_sw, h_HeatLoad *coas_h)
+{
+	lem = l;
+	COASCB = coas_cb;
+	COASSwitch = coas_sw;
+	COASHeat = coas_h;
+}
+
+bool LEM_COASLights::IsPowered()
+{
+	if (COASCB->Voltage() > SP_MIN_DCVOLTAGE) {
+		return true;
+	}
+	return false;
+}
+
+void LEM_COASLights::Timestep(double simdt)
+{
+	//Can be used to draw lit COAS
+}
+
+void LEM_COASLights::SystemTimestep(double simdt)
+{
+	if (IsPowered() && COASSwitch->GetState() != THREEPOSSWITCH_CENTER) {
+		COASCB->DrawPower(8.4);
+		COASHeat->GenerateHeat(8.4);
+	}
+}
+
+//Flood Lights
+LEM_FloodLights::LEM_FloodLights()
+{
+	lem = NULL;
+	FloodCB = NULL;
+	FloodSwitch = NULL;
+	FloodHeat = 0;
+}
+
+void LEM_FloodLights::Init(LEM *l, e_object *flood_cb, ThreePosSwitch *flood_sw, RotationalSwitch *pnl_3_rty, RotationalSwitch *pnl_5_rty, h_HeatLoad *flood_h)
+{
+	lem = l;
+	FloodCB = flood_cb;
+	FloodSwitch = flood_sw;
+	Panel3Rotary = pnl_3_rty;
+	Panel5Rotary = pnl_5_rty;
+	FloodHeat = flood_h;
+}
+
+bool LEM_FloodLights::IsPowered()
+{
+	if (FloodCB->Voltage() > SP_MIN_DCVOLTAGE) {
+		return true;
+	}
+	return false;
+}
+
+bool LEM_FloodLights::IsHatchOpen()
+{
+	if (lem->OverheadHatch.IsOpen()) {
+		return true;
+	}
+	return false;
+}
+
+void LEM_FloodLights::Timestep(double simdt)
+{
+	//Can be used to light floods
+}
+
+void LEM_FloodLights::SystemTimestep(double simdt)
+{
+
 }

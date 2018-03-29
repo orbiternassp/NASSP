@@ -1744,6 +1744,9 @@ protected:
 	//Lighting
 	LEM_TLE tle;
 	LEM_DockLights DockLights;
+	//LEM_UtilLights UtilLights;
+	LEM_COASLights COASLights;
+	LEM_FloodLights FloodLights;
 
 	// ECS
 	LEM_ECS ecs;
@@ -1818,6 +1821,9 @@ protected:
 	friend class LEM_RadarTape;
 	friend class LEM_TLE;
 	friend class LEM_DockLights;
+	//friend class LEM_UtilLights;
+	friend class LEM_COASLights;
+	friend class LEM_FloodLights;
 
 	friend class LEM_ASA;
 	friend class LEM_AEA;
