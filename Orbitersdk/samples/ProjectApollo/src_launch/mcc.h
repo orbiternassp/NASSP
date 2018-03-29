@@ -515,6 +515,20 @@
 #define MST_F_LUNAR_ORBIT_DOI_DAY_23	222
 // Ends at APS depletion update
 #define MST_F_LUNAR_ORBIT_DOI_DAY_24	223
+// Ends at TEI-22 update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_25	224
+// Ends at APS depletion burn
+#define MST_F_LUNAR_ORBIT_DOI_DAY_26	225
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_27	226
+// Ends at rev 22 map update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_28	227
+// Ends at LLS 2 photo PAD update
+#define MST_F_LUNAR_ORBIT_DOI_DAY_29	228
+// Ends at rev 23 map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_1	300
+// Ends at TEI-23 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_2	301
 
 // Ground Station Information Structure
 struct GroundStation {

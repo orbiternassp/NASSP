@@ -4047,6 +4047,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 31: //TEI-4 UPDATE (PRE LOI)
 	case 32: //TEI-5 UPDATE (PRE LOI-2)
 	case 33: //TEI-10 UPDATE
+	case 34: //TEI-22 UPDATE
 	{
 		TEIOpt entopt;
 		EntryResults res;
@@ -4087,6 +4088,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 33)
 		{
 			sprintf(manname, "TEI-10");
+			sv2 = coast(sv1, 5.5*2.0*3600.0);
+		}
+		else if (fcn == 34)
+		{
+			sprintf(manname, "TEI-22");
 			sv2 = coast(sv1, 5.5*2.0*3600.0);
 		}
 
@@ -4149,13 +4155,24 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 41: //REV 2 MAP UPDATE
 	case 43: //REV 4 MAP UPDATE
 	case 44: //REV 11 MAP UPDATE
+	case 45: //REV 22 MAP UPDATE
 	{
-		SV sv0;
+		SV sv0, sv1;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
 		sv0 = StateVectorCalc(calcParams.src);
-		LunarOrbitMapUpdate(sv0, getGETBase(), *form);
+
+		if (fcn == 45)
+		{
+			sv1 = coast(sv0, 2.0*4.0*3600.0);
+		}
+		else
+		{
+			sv1 = sv0;
+		}
+
+		LunarOrbitMapUpdate(sv1, getGETBase(), *form);
 
 		if (fcn == 41)
 		{
@@ -4168,6 +4185,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 44)
 		{
 			form->Rev = 11;
+		}
+		else if (fcn == 45)
+		{
+			form->Rev = 22;
+		}
+		else if (fcn == 46)
+		{
+			form->Rev = 23;
 		}
 	}
 	break;
@@ -4712,7 +4737,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 80: //CSI UPDATE
+	case 79: //CSI UPDATE
 	{
 		AP10CSIPADOpt manopt;
 		SPQOpt opt;
@@ -4757,6 +4782,58 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.t_TPI = calcParams.TPI;
 
 		AP10CSIPAD(&manopt, *form);
+	}
+	break;
+	case 80: //APS DEPLETION UPDATE
+	{
+		AP11LMManPADOpt opt;
+		SV sv, sv1, sv2;
+		MATRIX3 Q_Xx;
+		VECTOR3 UX, UY, UZ, DV, DV_P, DV_C, V_G, dV_LVLH;
+		double GETbase, MJD_depletion, t_Depletion_guess, t_Depletion, dv, theta_T;
+
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		GETbase = getGETBase();
+		t_Depletion_guess = OrbMech::HHMMSSToSS(108, 0, 0);
+		dv = 4600.0*0.3048;
+
+		sv = StateVectorCalc(calcParams.tgt);
+		sv1 = coast(sv, t_Depletion_guess - OrbMech::GETfromMJD(sv.MJD, GETbase));
+
+		MJD_depletion = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, 0.0);
+		t_Depletion = OrbMech::GETfromMJD(MJD_depletion, GETbase);
+		sv2 = coast(sv1, t_Depletion - t_Depletion_guess);
+
+		UY = unit(crossp(sv2.V, sv2.R));
+		UZ = unit(-sv2.R);
+		UX = crossp(UY, UZ);
+		Q_Xx = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+		DV = UX * dv;
+		DV_P = UX * dv;
+
+		theta_T = -length(crossp(sv2.R, sv2.V))*dv*sv2.mass / OrbMech::power(length(sv2.R), 2.0) / APS_THRUST;
+		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
+		V_G = DV_C;
+		dV_LVLH = mul(Q_Xx, V_G);
+
+		opt.alt = LSAlt;
+		opt.dV_LVLH = dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_APS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.REFSMMAT= GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		opt.TIG = t_Depletion;
+		opt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&opt, *form);
+
+		sprintf(uplinkdata, "%s", AGCStateVectorUpdate(sv, false, AGCEpoch, GETbase));
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector");
+		}
 	}
 	break;
 	case 100: //GENERIC CSM STATE VECTOR UPDATE
