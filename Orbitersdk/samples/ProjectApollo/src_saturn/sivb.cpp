@@ -397,6 +397,22 @@ void SIVB::SetS4b()
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {-0.8660254, -0.5, 0 };
 
+	// Docking Lights
+	static VECTOR3 beaconPos[5] = { { 0.32, -2.55, 11.55 },{ 0.05, 1.75, 11.98 },{ -0.22, -2.55, 11.55 },{ -2.805, 0.3, 9.9 },{ 2.1, 0.3, 10.3 } };
+	static VECTOR3 beaconCol[4] = { { 1, 1, 1 },{ 1, 1, 0 },{ 1, 0, 0 },{ 0, 1, 0 } };
+	for (int i = 0; i < 5; i++) {
+		dockingLights[i].shape = BEACONSHAPE_DIFFUSE;
+		dockingLights[i].pos = beaconPos + i;
+		dockingLights[i].col = (i < 2 ? beaconCol : i < 3 ? beaconCol + 1 : i < 4 ? beaconCol + 2 : beaconCol + 3);
+		dockingLights[i].size = 0.15;
+		dockingLights[i].falloff = 0.5;
+		dockingLights[i].period = 0.0;
+		dockingLights[i].duration = 1.0;
+		dockingLights[i].tofs = 0;
+		dockingLights[i].active = false;
+		AddBeacon(dockingLights + i);
+	}
+
 	if (SaturnVStage)
 	{
 		if (LowRes) {
@@ -782,6 +798,15 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// For a Saturn V SIVB, at some point it will dump all remaining fuel out the engine nozzle to
 	// thrust it out of the way of the CSM.
 	//
+
+	// Docking lights handling
+
+	if (panelProc >= 0.1 && PayloadType == PAYLOAD_LEM) {
+		for (int i = 0; i < 5; i++) dockingLights[i].active = true;
+	}
+	else {
+		for (int i = 0; i < 5; i++) dockingLights[i].active = false;
+	}
 
 	sivbsys->Timestep(simdt);
 	iu->Timestep(MissionTime, simt, simdt, mjd);

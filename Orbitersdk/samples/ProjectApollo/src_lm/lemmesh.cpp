@@ -750,8 +750,8 @@ void LEM::SetDockingLights() {
 			dockingLights[i].pos = beaconPos+i;
 		}
 		dockingLights[i].col = (i < 2 ? beaconCol : i < 3 ? beaconCol+1 : i < 4 ? beaconCol+2 : beaconCol+3);
-		dockingLights[i].size = 0.1;
-		dockingLights[i].falloff = 0.7;
+		dockingLights[i].size = 0.15;
+		dockingLights[i].falloff = 0.5;
 		dockingLights[i].period = 0.0;
 		dockingLights[i].duration = 1.0;
 		dockingLights[i].tofs = 0;
