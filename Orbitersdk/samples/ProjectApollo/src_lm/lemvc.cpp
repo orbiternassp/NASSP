@@ -164,10 +164,10 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_FWDHATCH:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 0.055, 1.26));
+						SetCameraOffset(_V(0, -1.495, 1.5));
 					}
 					else {
-						SetCameraOffset(_V(0, 1.90, 1.26));
+						SetCameraOffset(_V(0, 0.35, 1.5));
 					}
 					break;
 			}

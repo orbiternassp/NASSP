@@ -397,7 +397,7 @@ void SIVB::SetS4b()
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {-0.8660254, -0.5, 0 };
 
-	// Docking Lights
+	// LM Docking Lights
 	static VECTOR3 beaconPos[5] = { { 0.32, -2.55, 11.55 },{ 0.05, 1.75, 11.98 },{ -0.22, -2.55, 11.55 },{ -2.805, 0.3, 9.9 },{ 2.1, 0.3, 10.3 } };
 	static VECTOR3 beaconCol[4] = { { 1, 1, 1 },{ 1, 1, 0 },{ 1, 0, 0 },{ 0, 1, 0 } };
 	for (int i = 0; i < 5; i++) {
@@ -799,7 +799,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	// Docking lights handling
+	// LM Docking lights handling
 
 	if (panelProc >= 0.1 && PayloadType == PAYLOAD_LEM) {
 		for (int i = 0; i < 5; i++) dockingLights[i].active = true;
