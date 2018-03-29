@@ -419,6 +419,9 @@ protected:
 	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
 	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 
+	// Exterior light definitions
+	BEACONLIGHTSPEC dockingLights[5];             // docking lights
+
 	//
 	// LM PAD
 	//
