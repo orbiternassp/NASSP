@@ -224,12 +224,15 @@ public:
 
 	bool IsPowered();
 	bool IsHatchOpen();
+	double GetLMPRotaryVoltage();
+	double GetCDRRotaryVoltage();
+	double GetPowerDraw();
 protected:
 	LEM * lem;
 	e_object *FloodCB;
 	ThreePosSwitch *FloodSwitch;
-	RotationalSwitch *Panel3Rotary;
-	RotationalSwitch *Panel5Rotary;
+	RotationalSwitch *LMPRotary;
+	RotationalSwitch *CDRRotary;
 	h_HeatLoad *FloodHeat;
 
 };

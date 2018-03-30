@@ -935,6 +935,8 @@ LEM_FloodLights::LEM_FloodLights()
 	lem = NULL;
 	FloodCB = NULL;
 	FloodSwitch = NULL;
+	LMPRotary = NULL;
+	CDRRotary = NULL;
 	FloodHeat = 0;
 }
 
@@ -943,8 +945,8 @@ void LEM_FloodLights::Init(LEM *l, e_object *flood_cb, ThreePosSwitch *flood_sw,
 	lem = l;
 	FloodCB = flood_cb;
 	FloodSwitch = flood_sw;
-	Panel3Rotary = pnl_3_rty;
-	Panel5Rotary = pnl_5_rty;
+	LMPRotary = pnl_3_rty;
+	CDRRotary = pnl_5_rty;
 	FloodHeat = flood_h;
 }
 
@@ -964,6 +966,43 @@ bool LEM_FloodLights::IsHatchOpen()
 	return false;
 }
 
+double LEM_FloodLights::GetLMPRotaryVoltage()
+{
+	if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN) 
+	{
+		return 28.0;
+	}
+	else if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
+	{
+			return ((double)LMPRotary->GetState() + 0.6154) / 0.2857;	//Returns 2V-28V, need to check if max dim is actually 2V
+	}
+	else	
+	{
+		return 0.0;
+	}
+}
+
+double LEM_FloodLights::GetCDRRotaryVoltage()
+{
+	if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN)
+	{
+		return 28.0;
+	}
+	else if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
+	{
+		return ((double)CDRRotary->GetState() + 0.6154) / 0.2857;	//Returns 2V-28V, need to check if max dim is actually 2V
+	}
+	else
+	{
+		return 0.0;
+	}
+}
+
+double LEM_FloodLights::GetPowerDraw()
+{
+	return (GetLMPRotaryVoltage() + GetCDRRotaryVoltage()) * 1.4271;  //Assumes linear scaling
+}
+
 void LEM_FloodLights::Timestep(double simdt)
 {
 	//Can be used to light floods
@@ -971,5 +1010,6 @@ void LEM_FloodLights::Timestep(double simdt)
 
 void LEM_FloodLights::SystemTimestep(double simdt)
 {
-
+	FloodCB->DrawPower(GetPowerDraw());
+	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V
 }
