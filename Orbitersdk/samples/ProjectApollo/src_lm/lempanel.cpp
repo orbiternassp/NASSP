@@ -2947,30 +2947,39 @@ void LEM::MousePanel_MFDButton(int mfd, int event, int mx, int my) {
 
 	if (oapiGetMFDMode(mfd) != MFD_NONE) {
 		if (my > 330 && my < 352) {
-			if (mx > 67 && mx < 96) {
-				ButtonClick();
-				oapiToggleMFD_on(mfd);
-			} else if (mx > 295 && mx < 324) {
-				ButtonClick();
-				oapiSendMFDKey(mfd, OAPI_KEY_F1);	
-			} else if (mx > 329 && mx < 356) {
-				ButtonClick();
-				oapiSendMFDKey(mfd, OAPI_KEY_GRAVE);	
-			}
-		} else if (mx > 10 && mx < 38 && my > 53 && my < 294) {
-			if ((my - 53) % 44 < 21) {
-				int bt = (my - 53) / 44 + 0;
-				ButtonClick();
-				oapiProcessMFDButton (mfd, bt, event);
-			}
-		} else if (mx > 386 && mx < 416 && my > 53 && my < 294) {
-			if ((my - 53) % 44 < 21) {
-				int bt = (my - 53) / 44 + 6;
-				ButtonClick();
-				oapiProcessMFDButton (mfd, bt, event);
+			if (event & PANEL_MOUSE_LBDOWN) {
+				if (mx > 67 && mx < 96) {
+					ButtonClick();
+					oapiToggleMFD_on(mfd);
+				}
+				else if (mx > 295 && mx < 324) {
+					ButtonClick();
+					oapiSendMFDKey(mfd, OAPI_KEY_F1);
+				}
+				else if (mx > 329 && mx < 356) {
+					ButtonClick();
+					oapiSendMFDKey(mfd, OAPI_KEY_GRAVE);
+				}
 			}
 		}
-	} else {
+		else if (mx > 10 && mx < 38 && my > 53 && my < 294) {
+			if ((my - 53) % 44 < 21) {
+				int bt = (my - 53) / 44 + 0;
+				if (event & PANEL_MOUSE_LBDOWN)
+					ButtonClick();
+				oapiProcessMFDButton(mfd, bt, event);
+			}
+		}
+		else if (mx > 386 && mx < 416 && my > 53 && my < 294) {
+			if ((my - 53) % 44 < 21) {
+				int bt = (my - 53) / 44 + 6;
+				if (event & PANEL_MOUSE_LBDOWN)
+					ButtonClick();
+				oapiProcessMFDButton(mfd, bt, event);
+			}
+		}
+	}
+	else if (event & PANEL_MOUSE_LBDOWN) {
 		ButtonClick();
 		oapiToggleMFD_on(mfd);
 	}
