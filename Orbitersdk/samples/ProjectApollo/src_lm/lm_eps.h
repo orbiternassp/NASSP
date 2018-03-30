@@ -226,6 +226,8 @@ public:
 	bool IsHatchOpen();
 	double GetLMPRotaryVoltage();
 	double GetCDRRotaryVoltage();
+	double GetALLPowerDraw();
+	double GetOVHDFWDPowerDraw();
 	double GetPowerDraw();
 protected:
 	LEM * lem;

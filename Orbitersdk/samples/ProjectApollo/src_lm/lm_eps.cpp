@@ -968,39 +968,39 @@ bool LEM_FloodLights::IsHatchOpen()
 
 double LEM_FloodLights::GetLMPRotaryVoltage()
 {
-	if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN) 
-	{
-		return 28.0;
-	}
-	else if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
+	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
 	{
 			return ((double)LMPRotary->GetState() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
 	}
-	else	
-	{
 		return 0.0;
-	}
 }
 
 double LEM_FloodLights::GetCDRRotaryVoltage()
 {
-	if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN)
-	{
-		return 28.0;
-	}
-	else if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
+	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
 	{
 		return ((double)CDRRotary->GetState() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
 	}
-	else
-	{
 		return 0.0;
+}
+
+double LEM_FloodLights::GetALLPowerDraw()	//These lamps are not dimmable
+{
+	if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN)
+	{
+		return 50.626;  //34 lamps at 1.489W/lamp 
 	}
+	return 0.0;
+}
+
+double LEM_FloodLights::GetOVHDFWDPowerDraw()	//Dimmable CDR and LMP lamps
+{
+	return (GetLMPRotaryVoltage() + GetCDRRotaryVoltage()) * 0.37225;  //Assumes linear scaling, 12 lamps at 1.489W/lamp
 }
 
 double LEM_FloodLights::GetPowerDraw()
 {
-	return (GetLMPRotaryVoltage() + GetCDRRotaryVoltage()) * 1.4271;  //Assumes linear scaling
+	return (GetOVHDFWDPowerDraw() + GetALLPowerDraw());
 }
 
 void LEM_FloodLights::Timestep(double simdt)
