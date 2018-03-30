@@ -143,15 +143,36 @@ class LEM_DockLights
 {
 public:
 	LEM_DockLights();
-	void Init(LEM *l, e_object *cdr_cb, e_object *lmp_cb, ThreePosSwitch *docksw);
+	void Init(LEM *l, ThreePosSwitch *docksw);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();
 protected:
 	LEM * lem;
-	e_object *CDRDockCB;
-	e_object *LMPDockCB;
 	ThreePosSwitch *DockSwitch;
 
+};
+
+class LEM_LCA
+{
+public:
+	LEM_LCA();
+	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb);
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	double GetCompDockVoltage();
+	double GetAnnunVoltage();
+	double GetNumericVoltage();
+	double GetIntegralVoltage();
+protected:
+	bool HasDCPower;
+	double DCOutputVoltage;
+
+	LEM *lem;
+	e_object *CDRAnnunDockCompCB;
+	e_object *LMPAnnunDockCompCB;
 };

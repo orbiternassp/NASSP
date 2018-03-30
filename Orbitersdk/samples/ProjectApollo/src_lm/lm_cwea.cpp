@@ -37,7 +37,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(buttonsound) {
 	cwea_pwr = NULL;
 	ma_pwr = NULL;
-	ltg_pwr = NULL;
 	lem = NULL;
 	CWEAHeat = 0;
 	SecCWEAHeat = 0;
@@ -60,7 +59,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	SBDCautFF = 0;
 }
 
-void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg, h_HeatLoad *cweah, h_HeatLoad *seccweah) {
+void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah, h_HeatLoad *seccweah) {
 	int row = 0, col = 0;
 	while (col < 8) {
 		while (row < 5) {
@@ -73,7 +72,6 @@ void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, e_object *ltg, h_HeatL
 
 	cwea_pwr = cwea;
 	ma_pwr = ma;
-	ltg_pwr = ltg;
 	lem = l;
 	CWEAHeat = cweah;
 	SecCWEAHeat = seccweah;
@@ -94,7 +92,14 @@ bool LEM_CWEA::IsMAPowered() {
 }
 
 bool LEM_CWEA::IsLTGPowered() {
-	if (ltg_pwr->Voltage() > SP_MIN_DCVOLTAGE || lem->CDR_LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE)
+	if (lem->lca.GetAnnunVoltage() > 2.25)
+		return true;
+
+	return false;
+}
+
+bool LEM_CWEA::IsCWPWRLTGPowered() {
+	if (lem->lca.GetCompDockVoltage() > 2.25)
 		return true;
 
 	return false;
@@ -710,11 +715,25 @@ void LEM_CWEA::RedrawRight(SURFHANDLE sf, SURFHANDLE ssf) {
 			dx = 217; break;
 		}
 		while (row < 5) {
-			if (LightStatus[row][col + 4] == 1 && IsLTGPowered()) {
-				dy = 134;
+			if (row == 3 && col == 2)
+			{
+				//Condition for C/W PWR light
+				if (LightStatus[row][col + 4] == 1 && IsCWPWRLTGPowered()) {
+					dy = 134;
+				}
+				else {
+					dy = 7;
+				}
 			}
-			else {
-				dy = 7;
+			else
+			{
+				//All others
+				if (LightStatus[row][col + 4] == 1 && IsLTGPowered()) {
+					dy = 134;
+				}
+				else {
+					dy = 7;
+				}
 			}
 			if (LightStatus[row][col + 4] == 2) {
 				// Special Hack: This Lamp Doesn't Exist

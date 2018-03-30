@@ -432,7 +432,8 @@ void LEM::SystemsInit()
 
 	// Lighting
 	tle.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECTLEHEAT"));
-	DockLights.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, &ExteriorLTGSwitch);
+	DockLights.Init(this, &ExteriorLTGSwitch);
+	lca.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB);
 
 	// LGC and DSKY
 	LGC_DSKY_CB.MaxAmps = 7.5;
@@ -509,7 +510,7 @@ void LEM::SystemsInit()
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
 	// CWEA
-	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECCWEAHEAT"));
+	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECCWEAHEAT"));
 
 	// COMM
 	omni_fwd.Init(this);
@@ -1456,6 +1457,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		CWEA.SystemTimestep(tFactor);
 		tle.SystemTimestep(tFactor);
 		DockLights.SystemTimestep(tFactor);
+		lca.SystemTimestep(tFactor);
 		INV_1.SystemTimestep(tFactor);
 		INV_2.SystemTimestep(tFactor);
 
@@ -1543,6 +1545,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	gasta.Timestep(simt);
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
+	lca.Timestep(simdt);
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();
