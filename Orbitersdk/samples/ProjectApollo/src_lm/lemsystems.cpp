@@ -607,6 +607,7 @@ void LEM::SystemsInit()
 	DesH2OTank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESH2OTANK");
 	DesBatCooling = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESBATCOOLING");
 	CabinFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN");
+	CabinHeat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT");
 	SuitFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN1");
 	SuitFan2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN2");
 	SuitFan1Heat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFAN1HEAT");
@@ -625,7 +626,7 @@ void LEM::SystemsInit()
 	SecGlyPump->WireTo(&ECS_GLYCOL_PUMP_SEC_CB);
 	LCGPump->WireTo(&ECS_LGC_PUMP_CB);
 
-	//Initialize LM ECS
+	//Initialize LM ECS Tanks
 	DesO2Tank->BoilAllAndSetTemp(294.261);
 	AscO2Tank1->BoilAllAndSetTemp(294.261);
 	AscO2Tank2->BoilAllAndSetTemp(294.261);
@@ -1583,6 +1584,12 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	}
 	if (SuitFan2->pumping) {
 		SuitFan2Heat->GenerateHeat(163.0);
+	}
+
+	//Seq Camera Power/Heat
+	if (CAMR_SEQ_CB.Voltage() > SP_MIN_DCVOLTAGE) {
+		CAMR_SEQ_CB.DrawPower(14.0);
+		CabinHeat->GenerateHeat(14.0);
 	}
 
 	// Debug tests //

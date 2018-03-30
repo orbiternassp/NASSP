@@ -504,6 +504,7 @@ public:
 	Pump *SecGlyPump;
 	Pump *LCGPump;
 
+	h_HeatLoad *CabinHeat;
 	h_HeatLoad *SuitFan1Heat;
 	h_HeatLoad *SuitFan2Heat;
 	h_HeatLoad *SecGlyPumpHeat;
