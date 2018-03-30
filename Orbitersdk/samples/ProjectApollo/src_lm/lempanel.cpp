@@ -435,7 +435,7 @@ void LEM::InitSwitches() {
 	LtgFloodOhdFwdKnob.AddPosition(6,  60);
 	LtgFloodOhdFwdKnob.AddPosition(7,  90);
 	LtgFloodOhdFwdKnob.AddPosition(8, 120);
-	LtgFloodOhdFwdKnob.Register(PSH, "LtgFloodOhdFwdKnob", 1);
+	LtgFloodOhdFwdKnob.Register(PSH, "LtgFloodOhdFwdKnob", 0);
 
 	LtgAnunNumKnob.AddPosition(0, 240);
 	LtgAnunNumKnob.AddPosition(1, 270);
