@@ -974,7 +974,7 @@ double LEM_FloodLights::GetLMPRotaryVoltage()
 	}
 	else if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
 	{
-			return ((double)LMPRotary->GetState() + 0.6154) / 0.2857;	//Returns 2V-28V, need to check if max dim is actually 2V
+			return ((double)LMPRotary->GetState() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
 	}
 	else	
 	{
@@ -990,7 +990,7 @@ double LEM_FloodLights::GetCDRRotaryVoltage()
 	}
 	else if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
 	{
-		return ((double)CDRRotary->GetState() + 0.6154) / 0.2857;	//Returns 2V-28V, need to check if max dim is actually 2V
+		return ((double)CDRRotary->GetState() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
 	}
 	else
 	{
