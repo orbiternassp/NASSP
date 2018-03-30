@@ -968,7 +968,7 @@ bool LEM_FloodLights::IsHatchOpen()
 
 double LEM_FloodLights::GetLMPRotaryVoltage()
 {
-	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
+	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() != THREEPOSSWITCH_CENTER))
 	{
 			return ((double)LMPRotary->GetState() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
 	}
@@ -977,7 +977,7 @@ double LEM_FloodLights::GetLMPRotaryVoltage()
 
 double LEM_FloodLights::GetCDRRotaryVoltage()
 {
-	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
+	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() != THREEPOSSWITCH_CENTER))
 	{
 		return ((double)CDRRotary->GetState() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
 	}
@@ -1012,4 +1012,6 @@ void LEM_FloodLights::SystemTimestep(double simdt)
 {
 	FloodCB->DrawPower(GetPowerDraw());
 	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V
+
+	sprintf(oapiDebugString(), "Flood CB Power %lf", FloodCB->PowerLoad());
 }
