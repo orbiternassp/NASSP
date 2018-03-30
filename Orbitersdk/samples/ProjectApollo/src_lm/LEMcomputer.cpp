@@ -462,20 +462,9 @@ void LMOptics::Init(LEM *vessel) {
 }
 
 void LMOptics::SystemTimestep(double simdt) {
-	if (lem->AOT_LAMP_ACA_CB.Voltage() > SP_MIN_ACVOLTAGE && lem->AOT_LAMP_ACB_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	if (lem->AOTLampFeeder.Voltage() > SP_MIN_ACVOLTAGE)
 	{
-		lem->AOT_LAMP_ACA_CB.DrawPower(9.3 / 2.0);
-		lem->AOT_LAMP_ACB_CB.DrawPower(9.3 / 2.0);
-		lem->CabinHeat->GenerateHeat(9.3);
-	}
-	else if (lem->AOT_LAMP_ACA_CB.Voltage() < SP_MIN_ACVOLTAGE && lem->AOT_LAMP_ACB_CB.Voltage() > SP_MIN_ACVOLTAGE)
-	{
-		lem->AOT_LAMP_ACB_CB.DrawPower(9.3);
-		lem->CabinHeat->GenerateHeat(9.3);
-	}
-	else if (lem->AOT_LAMP_ACA_CB.Voltage() > SP_MIN_ACVOLTAGE && lem->AOT_LAMP_ACB_CB.Voltage() < SP_MIN_ACVOLTAGE)
-	{
-		lem->AOT_LAMP_ACA_CB.DrawPower(9.3);
+		lem->AOTLampFeeder.DrawPower(9.3);
 		lem->CabinHeat->GenerateHeat(9.3);
 	}
 

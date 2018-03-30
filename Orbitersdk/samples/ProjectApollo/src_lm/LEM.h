@@ -1446,6 +1446,7 @@ protected:
 	OrdealRotationalSwitch ORDEALAltSetRotary;
 
 	LEMPanelOrdeal PanelOrdeal;		// Dummy switch/display for checklist controller
+	PowerMerge AOTLampFeeder;
 
 	int ordealEnabled;
 
