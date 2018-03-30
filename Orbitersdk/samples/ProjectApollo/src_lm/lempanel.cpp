@@ -359,7 +359,7 @@ void LEM::InitSwitches() {
 	FloodRotary.AddPosition(6,  60);
 	FloodRotary.AddPosition(7,  90);
 	FloodRotary.AddPosition(8, 120);
-	FloodRotary.Register(PSH, "FloodRotary", 8);
+	FloodRotary.Register(PSH, "FloodRotary", 1);
 
 	LampToneTestRotary.AddPosition(0, 250);
 	LampToneTestRotary.AddPosition(1, 290);
@@ -425,6 +425,7 @@ void LEM::InitSwitches() {
 	LtgORideNumSwitch.Register(PSH,"LtgORideNumSwitch",TOGGLESWITCH_DOWN);
 	LtgORideIntegralSwitch.Register(PSH,"LtgORideIntegralSwitch",TOGGLESWITCH_DOWN);
 	LtgSidePanelsSwitch.Register(PSH,"LtgSidePanelsSwitch",TOGGLESWITCH_DOWN);
+
 	LtgFloodOhdFwdKnob.AddPosition(0, 240);
 	LtgFloodOhdFwdKnob.AddPosition(1, 270);
 	LtgFloodOhdFwdKnob.AddPosition(2, 300);
@@ -434,7 +435,8 @@ void LEM::InitSwitches() {
 	LtgFloodOhdFwdKnob.AddPosition(6,  60);
 	LtgFloodOhdFwdKnob.AddPosition(7,  90);
 	LtgFloodOhdFwdKnob.AddPosition(8, 120);
-	LtgFloodOhdFwdKnob.Register(PSH, "LtgFloodOhdFwdKnob", 8);
+	LtgFloodOhdFwdKnob.Register(PSH, "LtgFloodOhdFwdKnob", 0);
+
 	LtgAnunNumKnob.AddPosition(0, 240);
 	LtgAnunNumKnob.AddPosition(1, 270);
 	LtgAnunNumKnob.AddPosition(2, 300);
@@ -445,6 +447,7 @@ void LEM::InitSwitches() {
 	LtgAnunNumKnob.AddPosition(7,  90);
 	LtgAnunNumKnob.AddPosition(8, 120);
 	LtgAnunNumKnob.Register(PSH, "LtgAnunNumKnob", 0);
+
 	LtgIntegralKnob.AddPosition(0, 240);
 	LtgIntegralKnob.AddPosition(1, 270);
 	LtgIntegralKnob.AddPosition(2, 300);
@@ -455,6 +458,7 @@ void LEM::InitSwitches() {
 	LtgIntegralKnob.AddPosition(7,  90);
 	LtgIntegralKnob.AddPosition(8, 120);
 	LtgIntegralKnob.Register(PSH, "LtgIntegralKnob", 0);
+
 	ManualEngineStart.Register(PSH, "ManualEngineStart", 0);
 	CDRManualEngineStop.Register(PSH, "CDRManualEngineStop", 0);
 	LMPManualEngineStop.Register(PSH, "LMPManualEngineStop", 0);
