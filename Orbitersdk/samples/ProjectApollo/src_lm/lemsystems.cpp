@@ -1596,15 +1596,15 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//Cabin Window Heaters
 	//We will assume heat generated is radiated into space
 
-	//Docking Window
+	//Overhead Docking Window
 	if (HTR_DOCK_WINDOW_CB.Voltage() > SP_MIN_DCVOLTAGE) {
 		HTR_DOCK_WINDOW_CB.DrawPower(24.0);
 	}
-	//Docking Window
+	//CDR Forward Window
 	if (CDR_WND_HTR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) {
 		CDR_WND_HTR_AC_CB.DrawPower(61.8);
 	}
-	//Docking Window
+	//LMP Forward Window
 	if (SE_WND_HTR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) {
 		SE_WND_HTR_AC_CB.DrawPower(61.8);
 	}
