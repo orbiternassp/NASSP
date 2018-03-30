@@ -1744,6 +1744,7 @@ protected:
 	//Lighting
 	LEM_TLE tle;
 	LEM_DockLights DockLights;
+	LEM_LCA lca;
 	//LEM_UtilLights UtilLights;
 	LEM_COASLights COASLights;
 	LEM_FloodLights FloodLights;
@@ -1882,6 +1883,7 @@ protected:
 	friend class LEMDigitalHeliumPressureMeter;
 	friend class EngineStopButton;
 	friend class EngineStartButton;
+	friend class LEM_LCA;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

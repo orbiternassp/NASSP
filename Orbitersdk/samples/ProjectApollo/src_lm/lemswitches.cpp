@@ -1355,7 +1355,7 @@ bool EngineStartButton::Push()
 
 void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 
-	if ((lem->CDR_LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE || lem->LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE) && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
+	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
 		if (IsUp())
 		{
 			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
@@ -1420,7 +1420,7 @@ bool EngineStopButton::Push()
 
 void EngineStopButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	
-	if ((lem->CDR_LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE || lem->LTG_ANUN_DOCK_COMPNT_CB.Voltage() > SP_MIN_DCVOLTAGE) && (lem->LampToneTestRotary.GetState() == 3 || IsUp())){
+	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())){
 		if (IsUp())
 		{
 			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);

@@ -1196,6 +1196,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
 			SBandSteerable.LoadState(line);
 		}
+		else if (!strnicmp(line, "LCA_START", sizeof("LCA_START"))) {
+			lca.LoadState(scn,"LCA_END");
+		}
 		else if (!strnicmp(line, CWEA_START_STRING, sizeof(CWEA_START_STRING))) {
 			CWEA.LoadState(scn, CWEA_END_STRING);
 		}
@@ -1526,6 +1529,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save COMM
 	SBand.SaveState(scn);
 	SBandSteerable.SaveState(scn);
+
+	// Save Lighting
+	lca.SaveState(scn, "LCA_START", "LCA_END");
 
 	// Save CWEA
 	CWEA.SaveState(scn, CWEA_START_STRING, CWEA_END_STRING);

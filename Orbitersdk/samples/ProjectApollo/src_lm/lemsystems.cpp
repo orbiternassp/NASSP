@@ -432,7 +432,8 @@ void LEM::SystemsInit()
 
 	// Lighting
 	tle.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECTLEHEAT"));
-	DockLights.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, &ExteriorLTGSwitch);
+	DockLights.Init(this, &ExteriorLTGSwitch);
+	lca.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LCAHEAT"));
 	//UtilLights.Init(this, &CDR_LTG_UTIL_CB, NULL, NULL, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));	//NULL needs to be the util ltg switches when the panel is created
 	COASLights.Init(this, &COAS_DC_CB, &CDRCOASSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
@@ -512,7 +513,7 @@ void LEM::SystemsInit()
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
 	// CWEA
-	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECCWEAHEAT"));
+	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECCWEAHEAT"));
 
 	// COMM
 	omni_fwd.Init(this);
@@ -1459,6 +1460,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		CWEA.SystemTimestep(tFactor);
 		tle.SystemTimestep(tFactor);
 		DockLights.SystemTimestep(tFactor);
+		lca.SystemTimestep(tFactor);
 		//UtilLights.SystemTimestep(tFactor);
 		COASLights.SystemTimestep(tFactor);
 		FloodLights.SystemTimestep(tFactor);
@@ -1549,9 +1551,11 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	gasta.Timestep(simt);
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
+	lca.Timestep(simdt);
 	//UtilLights.Timestep(simdt);
 	COASLights.Timestep(simdt);
 	FloodLights.Timestep(simdt);
+
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();

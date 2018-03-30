@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Orbitersdk.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
+#include "papi.h"
 #include "LEM.h"
 #include "lm_eps.h"
 
@@ -673,22 +674,18 @@ void LEM_TLE::SystemTimestep(double simdt)
 LEM_DockLights::LEM_DockLights()
 {
 	lem = NULL;
-	CDRDockCB = NULL;
-	LMPDockCB = NULL;
 	DockSwitch = NULL;
 }
 
-void LEM_DockLights::Init(LEM *l, e_object *cdr_cb, e_object *lmp_cb, ThreePosSwitch *docksw)
+void LEM_DockLights::Init(LEM *l, ThreePosSwitch *docksw)
 {
 	lem = l;
-	CDRDockCB = cdr_cb;
-	LMPDockCB = lmp_cb;
 	DockSwitch = docksw;
 }
 
 bool LEM_DockLights::IsPowered()
 {
-	if ((CDRDockCB->Voltage() > SP_MIN_DCVOLTAGE || LMPDockCB->Voltage() > SP_MIN_DCVOLTAGE) && DockSwitch->GetState() == THREEPOSSWITCH_UP) {
+	if (lem->lca.GetCompDockVoltage() > 2.0 && DockSwitch->GetState() == THREEPOSSWITCH_UP) {
 		return true;
 	}
 	return false;
@@ -711,62 +708,187 @@ void LEM_DockLights::SystemTimestep(double simdt)
 	//This will need power draw through and heat generated to the LCA
 }
 
+//LIGHTING CONTROL ASSEMBLY
+
+LEM_LCA::LEM_LCA()
+{
+	lem = NULL;
+	CDRAnnunDockCompCB = NULL;
+	LMPAnnunDockCompCB = NULL;
+	HasDCPower = false;
+	LCAHeat = 0;
+}
+
+void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h)
+{
+	lem = l;
+	CDRAnnunDockCompCB = cdrcb;
+	LMPAnnunDockCompCB = lmpcb;
+	LCAHeat = lca_h;
+}
+
+void LEM_LCA::Timestep(double simdt)
+{
+	if (lem->CSMToLEMPowerConnector.csm_power_latch == 0 && CDRAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		HasDCPower = true;
+	}
+	else if (LMPAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		HasDCPower = true;
+	}
+	else
+	{
+		HasDCPower = false;
+	}
+}
+
+
+void LEM_LCA::SystemTimestep(double simdt)
+{
+
+}
+
+double LEM_LCA::GetCompDockVoltage()
+{
+	if (HasDCPower)
+	{
+		return 5.5;
+	}
+
+	return 0.0;
+}
+
+double LEM_LCA::GetAnnunVoltage()
+{
+	if (HasDCPower)
+	{
+		if (lem->LtgORideAnunSwitch.IsUp())
+		{
+			return 5.0;
+		}
+		else
+		{
+			return 3.0 / 8.0*(double)lem->LtgAnunNumKnob.GetState() + 2.0;
+		}
+	}
+
+	return 0.0;
+}
+
+double LEM_LCA::GetNumericVoltage()
+{
+	if (lem->NUM_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		if (lem->LtgORideNumSwitch.IsUp())
+		{
+			return 75.0;
+		}
+		else
+		{
+			return 60.0 / 8.0*(double)lem->LtgAnunNumKnob.GetState() + 15.0;
+		}
+	}
+
+	return 0.0;
+}
+
+double LEM_LCA::GetIntegralVoltage()
+{
+	if (lem->INTGL_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		if (lem->LtgORideIntegralSwitch.IsUp())
+		{
+			return 115.0;
+		}
+		else
+		{
+			return 90.0 / 8.0*(double)lem->LtgIntegralKnob.GetState() + 20.0;
+		}
+	}
+
+	return 0.0;
+}
+
+void LEM_LCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+
+{
+	oapiWriteLine(scn, start_str);
+	papiWriteScenario_bool(scn, "HASDCPOWER", HasDCPower);
+	oapiWriteLine(scn, end_str);
+}
+
+void LEM_LCA::LoadState(FILEHANDLE scn, char *end_str)
+
+{
+	char *line;
+	int dec = 0;
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len))
+			return;
+
+		papiReadScenario_bool(line, "HASDCPOWER", HasDCPower);
+	}
+}
+
 //Utility Lights (Uncomment when panel is created)
 /*
 LEM_UtilLights::LEM_UtilLights()
 {
-	lem = NULL;
-	UtlCB = NULL;
-	CDRSwitch = NULL;
-	LMPSwitch = NULL;
-	UtlLtgHeat = 0;
+lem = NULL;
+UtlCB = NULL;
+CDRSwitch = NULL;
+LMPSwitch = NULL;
+UtlLtgHeat = 0;
 }
 
 void LEM_UtilLights::Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h)
 {
-	lem = l;
-	UtlCB = utl_cb;
-	CDRSwitch = cdr_sw;
-	LMPSwitch = lmp_sw;
-	UtlLtgHeat = util_h;
+lem = l;
+UtlCB = utl_cb;
+CDRSwitch = cdr_sw;
+LMPSwitch = lmp_sw;
+UtlLtgHeat = util_h;
 }
 
 bool LEM_UtilLights::IsPowered()
 {
-	if (UtlCB->Voltage() > SP_MIN_DCVOLTAGE) {
-		return true;
-	}
-	return false;
+if (UtlCB->Voltage() > SP_MIN_DCVOLTAGE) {
+return true;
+}
+return false;
 }
 
 void LEM_UtilLights::Timestep(double simdt)
 {
-	//Can be used to draw lit UTIL Lights
+//Can be used to draw lit UTIL Lights
 }
 
 void LEM_UtilLights::SystemTimestep(double simdt)
 {
-	//CDR Utility Lights Dim
-	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
-		UtlCB->DrawPower(2.2);
-		UtlLtgHeat->GenerateHeat(2.178);
-	}
-	//CDR Utility Lights Bright
-	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
-		UtlCB->DrawPower(6.15);
-		UtlLtgHeat->GenerateHeat(6.1);
-	}
+//CDR Utility Lights Dim
+if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
+UtlCB->DrawPower(2.2);
+UtlLtgHeat->GenerateHeat(2.178);
+}
+//CDR Utility Lights Bright
+else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
+UtlCB->DrawPower(6.15);
+UtlLtgHeat->GenerateHeat(6.1);
+}
 
-	//LMP Utility Lights Dim
-	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
-		UtlCB->DrawPower(1.76);
-		UtlLtgHeat->GenerateHeat(1.74);
-	}
-	//LMP Utility Lights Bright
-	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
-		UtlCB->DrawPower(3.3);
-		UtlLtgHeat->GenerateHeat(3.267);
-	}
+//LMP Utility Lights Dim
+if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
+UtlCB->DrawPower(1.76);
+UtlLtgHeat->GenerateHeat(1.74);
+}
+//LMP Utility Lights Bright
+else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
+UtlCB->DrawPower(3.3);
+UtlLtgHeat->GenerateHeat(3.267);
+}
 }
 */
 //COAS Lights
