@@ -995,7 +995,7 @@ double LEM_FloodLights::GetALLPowerDraw()	//These lamps are not dimmable
 
 double LEM_FloodLights::GetOVHDFWDPowerDraw()	//Dimmable CDR and LMP lamps
 {
-	return (GetLMPRotaryVoltage() + GetCDRRotaryVoltage()) * 0.37225;  //Assumes linear scaling, 12 lamps at 1.489W/lamp
+	return (GetLMPRotaryVoltage() + GetCDRRotaryVoltage()) * 0.319;  //Assumes linear scaling, 12 lamps at 1.489W/lamp
 }
 
 double LEM_FloodLights::GetPowerDraw()
@@ -1012,6 +1012,4 @@ void LEM_FloodLights::SystemTimestep(double simdt)
 {
 	FloodCB->DrawPower(GetPowerDraw());
 	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V
-
-	sprintf(oapiDebugString(), "Flood CB Power %lf", FloodCB->PowerLoad());
 }
