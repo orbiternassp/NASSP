@@ -462,12 +462,17 @@ void LMOptics::Init(LEM *vessel) {
 }
 
 void LMOptics::SystemTimestep(double simdt) {
+	if (lem->AOTLampFeeder.Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		lem->AOTLampFeeder.DrawPower(9.3);
+		lem->CabinHeat->GenerateHeat(9.3);
+	}
 
-	// LEM Optics is a manual system... no power required.
-	// There were however heaters that would keep the optics from freezing or fogging.
-	// Might want to implment those...
-
-
+	if (lem->HTR_AOT_CB.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		lem->HTR_AOT_CB.DrawPower(5.6);
+		lem->CabinHeat->GenerateHeat(5.6);	//Not sure if all AOT heat radiates into the cabin, but since the heaters/mirrors are in the cabin portion of the AOT, we will do this.
+	}
 }
 
 bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
