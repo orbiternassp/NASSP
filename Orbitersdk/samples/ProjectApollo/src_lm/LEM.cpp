@@ -1025,36 +1025,40 @@ void LEM::PostLoadSetup()
 	case THREEPOSSWITCH_DOWN:    // OFF	
 		break;                   // Handled later
 	}
-	HRESULT         hr;
 
-	// Having read the configuration file, set up DirectX...	
-	hr = DirectInput8Create(dllhandle, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
-	if (!FAILED(hr)) {
-		int x = 0;
-		// Enumerate attached joysticks until we find 2 or run out.
-		dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
-		if (js_enabled == 0) {   // Did we get anything?			
-			dx8ppv->Release(); // No. Close down DirectInput
-			dx8ppv = NULL;     // otherwise it won't get closed later
-			//sprintf(oapiDebugString(), "DX8JS: No joysticks found");
-		}
-		else {
-			while (x < js_enabled) {                                // For each joystick
-				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
-				dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
-				dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
-																  // Z-axis detection
-				if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
-					js_current = x;
-					dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+	//Don't enumerate joysticks when none are desired to be used
+	if (rhc_id > -1 && thc_id > -1)
+	{
+		HRESULT         hr;
+		// Having read the configuration file, set up DirectX...	
+		hr = DirectInput8Create(dllhandle, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
+		if (!FAILED(hr)) {
+			int x = 0;
+			// Enumerate attached joysticks until we find 2 or run out.
+			dx8ppv->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, this, DIEDFL_ATTACHEDONLY);
+			if (js_enabled == 0) {   // Did we get anything?			
+				dx8ppv->Release(); // No. Close down DirectInput
+				dx8ppv = NULL;     // otherwise it won't get closed later
+				sprintf(oapiDebugString(), "DX8JS: No joysticks found");
+			}
+			else {
+				while (x < js_enabled) {                                // For each joystick
+					dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
+					dx8_jscaps[x].dwSize = sizeof(dx8_jscaps[x]);     // Initialize size of capabilities data structure
+					dx8_joystick[x]->GetCapabilities(&dx8_jscaps[x]); // Get capabilities
+																	  // Z-axis detection
+					if ((rhc_id == x && rhc_auto) || (thc_id == x && thc_auto)) {
+						js_current = x;
+						dx8_joystick[x]->EnumObjects(EnumAxesCallback, this, DIDFT_AXIS | DIDFT_POV);
+					}
+					x++;                                              // Next!
 				}
-				x++;                                              // Next!
 			}
 		}
-	}
-	else {
-		// We can't print an error message this early in initialization, so save this reason for later investigation.
-		dx8_failure = hr;
+		else {
+			// We can't print an error message this early in initialization, so save this reason for later investigation.
+			dx8_failure = hr;
+		}
 	}
 }
 
