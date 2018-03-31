@@ -3787,7 +3787,7 @@ void Saturn::GenericLoadStateSetup()
 		if(js_enabled == 0){   // Did we get anything?			
 			dx8ppv->Release(); // No. Close down DirectInput
 			dx8ppv = NULL;     // otherwise it won't get closed later
-			sprintf(oapiDebugString(),"DX8JS: No joysticks found");
+			//sprintf(oapiDebugString(),"DX8JS: No joysticks found");
 		}else{
 			while(x < js_enabled){                                // For each joystick
 				dx8_joystick[x]->SetDataFormat(&c_dfDIJoystick2); // Use DIJOYSTATE2 structure to report data
