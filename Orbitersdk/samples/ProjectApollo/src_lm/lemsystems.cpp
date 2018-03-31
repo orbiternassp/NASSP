@@ -1593,6 +1593,22 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		CabinHeat->GenerateHeat(14.0);
 	}
 
+	//Cabin Window Heaters
+	//We will assume heat generated is radiated into space
+
+	//Overhead Docking Window
+	if (HTR_DOCK_WINDOW_CB.Voltage() > SP_MIN_DCVOLTAGE) {
+		HTR_DOCK_WINDOW_CB.DrawPower(24.0);
+	}
+	//CDR Forward Window
+	if (CDR_WND_HTR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) {
+		CDR_WND_HTR_AC_CB.DrawPower(61.8);
+	}
+	//LMP Forward Window
+	if (SE_WND_HTR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) {
+		SE_WND_HTR_AC_CB.DrawPower(61.8);
+	}
+
 	// Debug tests //
 
 	//ECS Debug Lines//
