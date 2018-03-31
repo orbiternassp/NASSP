@@ -224,7 +224,7 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS9 LGC FAILURE
 		// On when any LGC power supply signals a failure, scaler fails, LGC restarts, counter fails, or LGC raises failure signal.
 		// Disabled by Guidance Control switch in AGS position.
-		if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP && lem->scera2.GetVoltage(3, 11) > 2.5)
+		if (!lem->scera2.GetSwitch(3, 5)->IsClosed() && lem->scera2.GetVoltage(3, 11) > 2.5)
 			SetLight(3, 1, 1);
 		else
 			SetLight(3, 1, 0);
@@ -232,7 +232,7 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS10 ISS FAILURE
 		// On when ISS power supply fails, PIPA fails while main engine thrusting, gimbal servo fails, CDU fails.
 		// Disabled by Guidance Control switch in AGS position.
-		if (lem->GuidContSwitch.GetState() == TOGGLESWITCH_UP && lem->scera2.GetVoltage(3, 12) > 2.5)
+		if (!lem->scera2.GetSwitch(3, 5)->IsClosed() && lem->scera2.GetVoltage(3, 12) > 2.5)
 			SetLight(4, 1, 1);
 		else
 			SetLight(4, 1, 0);
