@@ -224,7 +224,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	OverheadHatch(HatchOpenSound, HatchCloseSound),
 	CabinFan(CabinFans),
 	ecs(Panelsdk),
-	CSMToLEMECSConnector(this)
+	CSMToLEMECSConnector(this),
+	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;

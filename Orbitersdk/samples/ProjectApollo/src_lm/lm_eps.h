@@ -158,7 +158,7 @@ class LEM_LCA
 {
 public:
 	LEM_LCA();
-	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb);
+	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -175,4 +175,66 @@ protected:
 	LEM *lem;
 	e_object *CDRAnnunDockCompCB;
 	e_object *LMPAnnunDockCompCB;
+	h_HeatLoad *LCAHeat;
+
+};
+/*
+class LEM_UtilLights
+{
+public:
+LEM_UtilLights();
+void Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h);
+void Timestep(double simdt);
+void SystemTimestep(double simdt);
+
+bool IsPowered();
+protected:
+LEM * lem;
+e_object *UtlCB;
+ThreePosSwitch *CDRSwitch;
+ThreePosSwitch *LMPSwitch;
+h_HeatLoad *UtlLtgHeat;
+
+};
+*/
+class LEM_COASLights
+{
+public:
+	LEM_COASLights();
+	void Init(LEM *l, e_object *coas_cb, ThreePosSwitch *coas_sw, h_HeatLoad *coas_h);
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+	bool IsPowered();
+protected:
+	LEM * lem;
+	e_object *COASCB;
+	ThreePosSwitch *COASSwitch;
+	h_HeatLoad *COASHeat;
+
+};
+
+class LEM_FloodLights
+{
+public:
+	LEM_FloodLights();
+	void Init(LEM *l, e_object *flood_cb, ThreePosSwitch *flood_sw, RotationalSwitch *pnl_3_rty, RotationalSwitch *pnl_5_rty, h_HeatLoad *flood_h);
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+	bool IsPowered();
+	bool IsHatchOpen();
+	double GetLMPRotaryVoltage();
+	double GetCDRRotaryVoltage();
+	double GetALLPowerDraw();
+	double GetOVHDFWDPowerDraw();
+	double GetPowerDraw();
+protected:
+	LEM * lem;
+	e_object *FloodCB;
+	ThreePosSwitch *FloodSwitch;
+	RotationalSwitch *LMPRotary;
+	RotationalSwitch *CDRRotary;
+	h_HeatLoad *FloodHeat;
+
 };

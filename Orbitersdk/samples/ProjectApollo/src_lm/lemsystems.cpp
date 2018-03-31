@@ -433,7 +433,11 @@ void LEM::SystemsInit()
 	// Lighting
 	tle.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECTLEHEAT"));
 	DockLights.Init(this, &ExteriorLTGSwitch);
-	lca.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB);
+	lca.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LCAHEAT"));
+	//UtilLights.Init(this, &CDR_LTG_UTIL_CB, NULL, NULL, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));	//NULL needs to be the util ltg switches when the panel is created
+	COASLights.Init(this, &COAS_DC_CB, &CDRCOASSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
+	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
+	AOTLampFeeder.WireToBuses(&AOT_LAMP_ACA_CB, &AOT_LAMP_ACB_CB);
 
 	// LGC and DSKY
 	LGC_DSKY_CB.MaxAmps = 7.5;
@@ -604,6 +608,7 @@ void LEM::SystemsInit()
 	DesH2OTank = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESH2OTANK");
 	DesBatCooling = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESBATCOOLING");
 	CabinFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN");
+	CabinHeat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT");
 	SuitFan1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN1");
 	SuitFan2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:SUITFAN2");
 	SuitFan1Heat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFAN1HEAT");
@@ -622,7 +627,7 @@ void LEM::SystemsInit()
 	SecGlyPump->WireTo(&ECS_GLYCOL_PUMP_SEC_CB);
 	LCGPump->WireTo(&ECS_LGC_PUMP_CB);
 
-	//Initialize LM ECS
+	//Initialize LM ECS Tanks
 	DesO2Tank->BoilAllAndSetTemp(294.261);
 	AscO2Tank1->BoilAllAndSetTemp(294.261);
 	AscO2Tank2->BoilAllAndSetTemp(294.261);
@@ -779,7 +784,7 @@ void LEM::SystemsInit()
 	WaterSeparationSelector.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&WaterSepSelectSwitch);
 	CabinFan.Init(&ECS_CABIN_FAN_1_CB, &ECS_CABIN_FAN_CONT_CB, &PressRegAValve, &PressRegBValve, (Pump *)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN"),
-		(h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINFANHEAT"));
+		(h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	WaterTankSelect.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OTANKSELECT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2OSURGETANK"),
 		&WaterTankSelectValve);
@@ -1458,6 +1463,9 @@ void LEM::SystemsInternalTimestep(double simdt)
 		tle.SystemTimestep(tFactor);
 		DockLights.SystemTimestep(tFactor);
 		lca.SystemTimestep(tFactor);
+		//UtilLights.SystemTimestep(tFactor);
+		COASLights.SystemTimestep(tFactor);
+		FloodLights.SystemTimestep(tFactor);
 		INV_1.SystemTimestep(tFactor);
 		INV_2.SystemTimestep(tFactor);
 
@@ -1546,6 +1554,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
 	lca.Timestep(simdt);
+	//UtilLights.Timestep(simdt);
+	COASLights.Timestep(simdt);
+	FloodLights.Timestep(simdt);
+
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();
@@ -1573,6 +1585,12 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	}
 	if (SuitFan2->pumping) {
 		SuitFan2Heat->GenerateHeat(163.0);
+	}
+
+	//Seq Camera Power/Heat
+	if (CAMR_SEQ_CB.Voltage() > SP_MIN_DCVOLTAGE) {
+		CAMR_SEQ_CB.DrawPower(14.0);
+		CabinHeat->GenerateHeat(14.0);
 	}
 
 	// Debug tests //
