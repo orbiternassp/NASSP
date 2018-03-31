@@ -819,7 +819,7 @@ double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the 
 			}
 		}
 	}
-	if (LightStatus[3][6])
+	if (LightStatus[3][6] == 1)
 	{
 		counter = counter - 1;
 	}
@@ -828,7 +828,7 @@ double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the 
 
 double LEM_CWEA::GetCWBulbPowerLoad()	//Returns bulb draw if the cw power light is lit
 {
-	if (LightStatus[3][6])
+	if (LightStatus[3][6] ==1)
 	{
 		return 1.18;
 	}
@@ -837,5 +837,5 @@ double LEM_CWEA::GetCWBulbPowerLoad()	//Returns bulb draw if the cw power light 
 
 double LEM_CWEA::GetPowerLoad()
 {
-	return GetNumberLightsOn() * 1.18;	//Approximatly 1.18W per bulb, used for LCA dimming power calculation
+	return GetNumberLightsOn() * 1.18;	//Approx 1.18W per bulb, used for LCA dimming power calculation
 }
