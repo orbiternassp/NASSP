@@ -2401,10 +2401,64 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 100, MST_F_LUNAR_ORBIT_DOI_DAY_28);
 				break;
 			case MST_F_LUNAR_ORBIT_DOI_DAY_28: //Rev 22 map update to rev 23 map update
-				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 22 && MoonRevTime > 1.0*3600.0, 45, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_1);
+				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 22 && MoonRevTime > 55.0*60.0, 45, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_1);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_1: //Rev 23 map update to TEI-23 update
 				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, SubStateTime > 3.0*60.0, 46, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_2);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_2: //TEI-23 update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP11MNV, true, 35, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_3);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_3: //State vector update to state vector update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 23 && MoonRevTime > 1.0*3600.0, 100, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_5);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_5: //State vector update to landmark tracking update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 100, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_6);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_6: //Landmark tracking rev 24 update to TEI-24 update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 53, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_7);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_7: //TEI-24 update to rev 24 map update
+				UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 36, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_8);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_8: //Rev 24 map update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 24 && MoonRevTime > 1.0*3600.0 + 5.0*60.0, 47, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_9);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_9: //State vector update to TEI-25 update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 100, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_10);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_10: //TEI-25 update to landmark tracking rev 25 update
+				UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 37, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_11);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_11: //Landmark tracking rev 25 update to rev 25 map update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 54, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_12);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_12: //Rev 25 map update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 25 && MoonRevTime > 1.0*3600.0 + 5.0*60.0, 48, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_13);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_13: //State vector update to TEI-26 update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 100, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_14);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_14: //TEI-26 update to landmark tracking rev 26 update
+				UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 38, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_15);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_15: //Landmark tracking rev 26 update to rev 26 map update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 55, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_16);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_16: //Rev 26 map update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 26 && MoonRevTime > 1.0*3600.0 + 5.0*60.0, 49, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_17);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_17: //State vector update to TEI-27 update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 100, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_18);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_18: //TEI-27 update to landmark tracking rev 27 update
+				UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 39, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_19);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_19: //Landmark tracking rev 27 update to rev 27 map update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 56, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_20);
+				break;
+			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_20: //Rev 27 map update to TEI-29 update
+				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 27 && MoonRevTime > 40.0*60.0, 140, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_21);
 				break;
 			}
 			break;
@@ -2968,15 +3022,28 @@ void MCC::SaveState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 13)
 		{
+			char tmpbuf[64];
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
-			SAVE_STRING("MCC_AP11LMARKTRKPAD_LmkID", form->LmkID);
-			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_Alt", form->Alt);
-			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_CRDist", form->CRDist);
-			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_Lat", form->Lat);
-			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_Lng05", form->Lng05);
-			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_T1", form->T1);
-			SAVE_DOUBLE("MCC_AP11LMARKTRKPAD_T2", form->T2);
+			SAVE_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
+
+			for (int i = 0;i < form->entries;i++)
+			{
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_LmkID[%d]", i);
+				SAVE_STRING(tmpbuf, form->LmkID[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_Alt[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Alt[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_CRDist[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->CRDist[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_Lat[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Lat[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_Lng05[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Lng05[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_T1[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->T1[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_T2[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->T2[i]);
+			}
 		}
 		else if (padNumber == PT_AP10DAPDATA)
 		{
@@ -3306,15 +3373,28 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 13)
 		{
+			char tmpbuf[64];
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
-			LOAD_STRING("MCC_AP11LMARKTRKPAD_LmkID", form->LmkID, 128);
-			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_Alt", form->Alt);
-			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_CRDist", form->CRDist);
-			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_Lat", form->Lat);
-			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_Lng05", form->Lng05);
-			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_T1", form->T1);
-			LOAD_DOUBLE("MCC_AP11LMARKTRKPAD_T2", form->T2);
+			LOAD_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
+
+			for (int i = 0;i < form->entries;i++)
+			{
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_LmkID[%d]", i);
+				LOAD_STRING(tmpbuf, form->LmkID[i], 128);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_Alt[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Alt[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_CRDist[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->CRDist[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_Lat[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Lat[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_Lng05[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Lng05[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_T1[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->T1[i]);
+				sprintf(tmpbuf, "MCC_AP11LMARKTRKPAD_T2[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->T2[i]);
+			}
 		}
 		else if (padNumber == PT_AP10DAPDATA)
 		{
@@ -3620,22 +3700,27 @@ void MCC::drawPad(){
 		int hh, mm;
 		double ss;
 
-		sprintf(buffer, "P22 AUTO OPTICS\nLMK ID %s\n", form->LmkID);
-		SStoHHMMSS(form->T1, hh, mm, ss);
-		sprintf(buffer, "%sT1 %03d:%02d:%02.f (HOR)\n", buffer, hh, mm, ss);
-		SStoHHMMSS(form->T2, hh, mm, ss);
-		sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
+		sprintf(buffer, "P22 AUTO OPTICS\n");
 
-		if (form->CRDist > 0)
+		for (int i = 0;i < form->entries;i++)
 		{
-			sprintf(buffer, "%s%02.f NM North\n", buffer,form->CRDist);
-		}
-		else
-		{
-			sprintf(buffer, "%s%02.f NM South\n", buffer, abs(form->CRDist));
-		}
+			sprintf(buffer, "%sLMK ID %s\n", buffer, form->LmkID[i]);
+			SStoHHMMSS(form->T1[i], hh, mm, ss);
+			sprintf(buffer, "%sT1 %03d:%02d:%02.f (HOR)\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->T2[i], hh, mm, ss);
+			sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
 
-		sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n", buffer, form->Lat, form->Lng05, form->Alt);
+			if (form->CRDist > 0)
+			{
+				sprintf(buffer, "%s%02.f NM North\n", buffer, form->CRDist[i]);
+			}
+			else
+			{
+				sprintf(buffer, "%s%02.f NM South\n", buffer, abs(form->CRDist[i]));
+			}
+
+			sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n", buffer, form->Lat[i], form->Lng05[i], form->Alt[i]);
+		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}

@@ -647,10 +647,11 @@ struct LMARKTRKPADOpt
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	double LmkTime; //initial guess for time over landmark
-	double lat;		//landmark latitude
-	double lng;		//landmark longitude
-	double alt = 0;	//landmark altitude
+	double LmkTime[4]; //initial guess for time over landmark
+	double lat[4];		//landmark latitude
+	double lng[4];		//landmark longitude
+	double alt[4] = { 0,0,0,0 };	//landmark altitude
+	int entries;
 };
 
 struct DKIOpt	//Docking Initiation Processor

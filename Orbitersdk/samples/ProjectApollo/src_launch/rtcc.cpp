@@ -4043,11 +4043,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 30: //TEI-1 UPDATE (PRE LOI)
-	case 31: //TEI-4 UPDATE (PRE LOI)
+	case 30: //TEI-1 UPDATE (PRE LOI-1)
+	case 31: //TEI-4 UPDATE (PRE LOI-1)
 	case 32: //TEI-5 UPDATE (PRE LOI-2)
 	case 33: //TEI-10 UPDATE
 	case 34: //TEI-22 UPDATE
+	case 35: //TEI-23 UPDATE
+	case 36: //TEI-24 UPDATE
+	case 37: //TEI-25 UPDATE
+	case 38: //TEI-26 UPDATE
+	case 39: //TEI-27 UPDATE
 	{
 		TEIOpt entopt;
 		EntryResults res;
@@ -4094,6 +4099,31 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(manname, "TEI-22");
 			sv2 = coast(sv1, 5.5*2.0*3600.0);
+		}
+		else if (fcn == 35)
+		{
+			sprintf(manname, "TEI-23");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 36)
+		{
+			sprintf(manname, "TEI-24");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 37)
+		{
+			sprintf(manname, "TEI-25");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 38)
+		{
+			sprintf(manname, "TEI-26");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 39)
+		{
+			sprintf(manname, "TEI-27");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
 		}
 
 		entopt.EntryLng = -165.0*RAD;
@@ -4156,6 +4186,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 43: //REV 4 MAP UPDATE
 	case 44: //REV 11 MAP UPDATE
 	case 45: //REV 22 MAP UPDATE
+	case 46: //REV 23 MAP UPDATE
+	case 47: //REV 24 MAP UPDATE
+	case 48: //REV 25 MAP UPDATE
+	case 49: //REV 26 MAP UPDATE
+	case 140: //REV 27 MAP UPDATE
 	{
 		SV sv0, sv1;
 
@@ -4186,13 +4221,13 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			form->Rev = 11;
 		}
-		else if (fcn == 45)
+		else if (fcn == 45 || fcn == 46 || fcn == 47 || fcn == 48 || fcn == 49)
 		{
-			form->Rev = 22;
+			form->Rev = fcn - 23;
 		}
-		else if (fcn == 46)
+		else if (fcn == 140)
 		{
-			form->Rev = 23;
+			form->Rev = 27;
 		}
 	}
 	break;
@@ -4218,6 +4253,10 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 50: //REV 4 LANDMARK TRACKING PAD F-1
 	case 51: //REV 4 LANDMARK TRACKING PAD B-1
 	case 52: //REV 11 LANDMARK TRACKING PAD LLS-2
+	case 53: //REV 24 LANDMARK TRACKING PADs
+	case 54: //REV 25 LANDMARK TRACKING PADs
+	case 55: //REV 26 LANDMARK TRACKING PADs
+	case 56: //REV 27 LANDMARK TRACKING PADs
 	{
 		LMARKTRKPADOpt opt;
 
@@ -4228,27 +4267,83 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (fcn == 50)
 		{
-			sprintf(form->LmkID, "F-1");
-			opt.alt = 0;
-			opt.lat = 1.6*RAD;
-			opt.LmkTime = OrbMech::HHMMSSToSS(82, 27, 0);
-			opt.lng = 86.88*RAD;
+			sprintf(form->LmkID[0], "F-1");
+			opt.alt[0] = 0;
+			opt.lat[0] = 1.6*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(82, 27, 0);
+			opt.lng[0] = 86.88*RAD;
+			opt.entries = 1;
 		}
 		else if (fcn == 51)
 		{
-			sprintf(form->LmkID, "B-1");
-			opt.alt = -1.54*1852.0;
-			opt.lat = 2.522*RAD;
-			opt.LmkTime = OrbMech::HHMMSSToSS(82, 45, 0);
-			opt.lng = 35.036*RAD;
+			sprintf(form->LmkID[0], "B-1");
+			opt.alt[0] = -1.54*1852.0;
+			opt.lat[0] = 2.522*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(82, 45, 0);
+			opt.lng[0] = 35.036*RAD;
+			opt.entries = 1;
 		}
 		else if (fcn == 52)
 		{
-			sprintf(form->LmkID, "130");
-			opt.alt = -1.73*1852.0;
-			opt.lat = 1.266*RAD;
-			opt.LmkTime = OrbMech::HHMMSSToSS(96, 35, 0);
-			opt.lng = 23.678*RAD;
+			sprintf(form->LmkID[0], "130");
+			opt.alt[0] = -1.73*1852.0;
+			opt.lat[0] = 1.266*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(96, 35, 0);
+			opt.lng[0] = 23.678*RAD;
+			opt.entries = 1;
+		}
+		else if (fcn == 53 || fcn == 54 || fcn == 55 || fcn == 56)
+		{
+			if (fcn == 53)
+			{
+				opt.LmkTime[0] = OrbMech::HHMMSSToSS(121, 26, 0);
+				opt.LmkTime[1] = OrbMech::HHMMSSToSS(121, 41, 0);
+				opt.LmkTime[2] = OrbMech::HHMMSSToSS(121, 54, 0);
+				opt.LmkTime[3] = OrbMech::HHMMSSToSS(122, 15, 0);
+			}
+			else if (fcn == 54)
+			{
+				opt.LmkTime[0] = OrbMech::HHMMSSToSS(123, 24, 0);
+				opt.LmkTime[1] = OrbMech::HHMMSSToSS(123, 39, 0);
+				opt.LmkTime[2] = OrbMech::HHMMSSToSS(123, 52, 0);
+				opt.LmkTime[3] = OrbMech::HHMMSSToSS(124, 13, 0);
+			}
+			else if (fcn == 55)
+			{
+				opt.LmkTime[0] = OrbMech::HHMMSSToSS(125, 22, 0);
+				opt.LmkTime[1] = OrbMech::HHMMSSToSS(125, 37, 0);
+				opt.LmkTime[2] = OrbMech::HHMMSSToSS(125, 50, 0);
+				opt.LmkTime[3] = OrbMech::HHMMSSToSS(126, 11, 0);
+			}
+			else if (fcn == 56)
+			{
+				opt.LmkTime[0] = OrbMech::HHMMSSToSS(127, 20, 0);
+				opt.LmkTime[1] = OrbMech::HHMMSSToSS(127, 35, 0);
+				opt.LmkTime[2] = OrbMech::HHMMSSToSS(127, 48, 0);
+				opt.LmkTime[3] = OrbMech::HHMMSSToSS(128, 9, 0);
+			}
+
+			sprintf(form->LmkID[0], "CP-1");
+			opt.alt[0] = 0.0;
+			opt.lat[0] = 0.875*RAD;
+			opt.lng[0] = 170.146*RAD;
+
+			sprintf(form->LmkID[1], "CP-2");
+			opt.alt[1] = 0.0;
+			opt.lat[1] = 1.0*RAD;
+			opt.lng[1] = 127.4*RAD;
+
+			sprintf(form->LmkID[2], "F-1");
+			opt.alt[2] = 0.0;
+			opt.lat[2] = 1.6*RAD;
+			opt.lng[2] = 86.88*RAD;
+
+			sprintf(form->LmkID[3], "130");
+			opt.alt[3] = -1.73*1852.0;
+			opt.lat[3] = 1.266*RAD;
+			opt.lng[3] = 23.678*RAD;
+
+			opt.entries = 4;
 		}
 
 		LandmarkTrackingPAD(&opt, *form);
@@ -9664,44 +9759,49 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 	opt->vessel->GetRelativeVel(gravref, VA0_orb);
 	SVMJD = oapiGetSimMJD();
 	get = (SVMJD - opt->GETbase)*24.0*3600.0;
-	MJDguess = opt->GETbase + opt->LmkTime / 24.0 / 3600.0;
-
 	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);
 	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
 
-	R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)))*(oapiGetSize(gravref) + opt->alt);
-
-	OrbMech::oneclickcoast(RA0, VA0, SVMJD, opt->LmkTime - get, RA1, VA1, gravref, gravref);
-
-	dt1 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 180.0*RAD, gravref, LmkRange);
-	dt2 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 145.0*RAD, gravref, LmkRange);
-
-	pad.T1 = dt1 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
-	pad.T2 = dt2 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
-
-	u = unit(_V(R_P.x, R_P.z, R_P.y));
-	sinl = u.z;
-
-	if (gravref == hEarth)
+	for (int i = 0;i < opt->entries;i++)
 	{
-		double a, b, r_F;
-		a = 6378166;
-		b = 6356784;
-		gamma = b * b / a / a;
-		r_F = sqrt(b*b / (1.0 - (1.0 - b * b / a / a)*(1.0 - sinl * sinl)));
-		r_0 = r_F;
-	}
-	else
-	{
-		gamma = 1.0;
-		r_0 = oapiGetSize(gravref);
+		MJDguess = opt->GETbase + opt->LmkTime[i] / 24.0 / 3600.0;
+
+		R_P = unit(_V(cos(opt->lng[i])*cos(opt->lat[i]), sin(opt->lat[i]), sin(opt->lng[i])*cos(opt->lat[i])))*(oapiGetSize(gravref) + opt->alt[i]);
+
+		OrbMech::oneclickcoast(RA0, VA0, SVMJD, opt->LmkTime[i] - get, RA1, VA1, gravref, gravref);
+
+		dt1 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 180.0*RAD, gravref, LmkRange);
+		dt2 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 145.0*RAD, gravref, LmkRange);
+
+		pad.T1[i] = dt1 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
+		pad.T2[i] = dt2 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
+
+		u = unit(_V(R_P.x, R_P.z, R_P.y));
+		sinl = u.z;
+
+		if (gravref == hEarth)
+		{
+			double a, b, r_F;
+			a = 6378166;
+			b = 6356784;
+			gamma = b * b / a / a;
+			r_F = sqrt(b*b / (1.0 - (1.0 - b * b / a / a)*(1.0 - sinl * sinl)));
+			r_0 = r_F;
+		}
+		else
+		{
+			gamma = 1.0;
+			r_0 = oapiGetSize(gravref);
+		}
+
+		pad.Alt[i] = (length(R_P) - r_0) / 1852.0;
+		pad.CRDist[i] = LmkRange / 1852.0;
+
+		pad.Lat[i] = atan2(u.z, gamma*sqrt(u.x*u.x + u.y*u.y))*DEG;
+		pad.Lng05[i] = opt->lng[i] / 2.0*DEG;
 	}
 
-	pad.Alt = (length(R_P) - r_0) / 1852.0;
-	pad.CRDist = LmkRange / 1852.0;
-
-	pad.Lat = atan2(u.z, gamma*sqrt(u.x*u.x + u.y*u.y))*DEG;
-	pad.Lng05 = opt->lng / 2.0*DEG;
+	pad.entries = opt->entries;
 }
 
 SV RTCC::coast(SV sv0, double dt)

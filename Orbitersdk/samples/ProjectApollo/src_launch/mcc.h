@@ -529,6 +529,44 @@
 #define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_1	300
 // Ends at TEI-23 update
 #define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_2	301
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_3	302
+// Ends at strip photo update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_4	303
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_5	304
+// Ends at landmark tracking rev 24 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_6	305
+// Ends at TEI-24 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_7	306
+// Ends at rev 24 map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_8	307
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_9	308
+// Ends at TEI-25 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_10	309
+// Ends at landmark tracking rev 25 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_11	310
+// Ends at rev 25 map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_12	311
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_13	312
+// Ends at TEI-26 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_14	313
+// Ends at landmark tracking rev 26 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_15	314
+// Ends at rev 26 map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_16	315
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_17	316
+// Ends at TEI-27 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_18	317
+// Ends at landmark tracking rev 27 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_19	318
+// Ends at rev 27 map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_20	319
+// Ends at TEI-29 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_21	320
 
 // Ground Station Information Structure
 struct GroundStation {
@@ -819,13 +857,14 @@ struct AP10MAPUPDATE
 
 struct AP11LMARKTRKPAD
 {
-	char LmkID[128];	// Landmark ID
-	double T1;			// T1 time (landmark over horizon)
-	double T2;			// T2 time (spacecraft at 35° elevation from landmark)
-	double CRDist;		// landmark distance to ground track
-	double Lat;			// landmark latitude
-	double Lng05;		// landmark longitude divided by 2
-	double Alt;			// landmark altitude
+	int entries;
+	char LmkID[4][128];		// Landmark ID
+	double T1[4];			// T1 time (landmark over horizon)
+	double T2[4];			// T2 time (spacecraft at 35° elevation from landmark)
+	double CRDist[4];		// landmark distance to ground track
+	double Lat[4];			// landmark latitude
+	double Lng05[4];		// landmark longitude divided by 2
+	double Alt[4];			// landmark altitude
 };
 
 // APOLLO 10 DAP DATA PAD

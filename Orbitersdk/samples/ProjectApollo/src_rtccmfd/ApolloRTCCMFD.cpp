@@ -1832,29 +1832,29 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.3f°", G->LmkLng*DEG);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-		GET_Display(Buffer2, G->landmarkpad.T1);
+		GET_Display(Buffer2, G->landmarkpad.T1[0]);
 		sprintf(Buffer, "T1: %s (HOR)", Buffer2);
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer2, G->landmarkpad.T2);
+		GET_Display(Buffer2, G->landmarkpad.T2[0]);
 		sprintf(Buffer, "T2: %s (35°)", Buffer2);
 		skp->Text(4 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->landmarkpad.CRDist > 0)
+		if (G->landmarkpad.CRDist[0] > 0)
 		{
-			sprintf(Buffer, "%.1f NM North", G->landmarkpad.CRDist / 1852.0);
+			sprintf(Buffer, "%.1f NM North", G->landmarkpad.CRDist[0] / 1852.0);
 		}
 		else
 		{
-			sprintf(Buffer, "%.1f NM South", abs(G->landmarkpad.CRDist) / 1852.0);
+			sprintf(Buffer, "%.1f NM South", abs(G->landmarkpad.CRDist[0]) / 1852.0);
 		}
 		
 		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		skp->Text(4 * W / 8, 9 * H / 14, "N89", 3);
-		sprintf(Buffer, "Lat %+07.3f°", G->landmarkpad.Lat);
+		sprintf(Buffer, "Lat %+07.3f°", G->landmarkpad.Lat[0]);
 		skp->Text(4 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "Long/2 %+07.3f°", G->landmarkpad.Lng05);
+		sprintf(Buffer, "Long/2 %+07.3f°", G->landmarkpad.Lng05[0]);
 		skp->Text(4 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "Alt %+07.2f NM", G->landmarkpad.Alt);
+		sprintf(Buffer, "Alt %+07.2f NM", G->landmarkpad.Alt[0]);
 		skp->Text(4 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 14)

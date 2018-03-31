@@ -395,12 +395,12 @@ ARCore::ARCore(VESSEL* v)
 	LmkLat = 0;
 	LmkLng = 0;
 	LmkTime = 0;
-	landmarkpad.T1 = 0;
-	landmarkpad.T2 = 0;
-	landmarkpad.CRDist = 0;
-	landmarkpad.Alt = 0;
-	landmarkpad.Lat = 0;
-	landmarkpad.Lng05 = 0;
+	landmarkpad.T1[0] = 0;
+	landmarkpad.T2[0] = 0;
+	landmarkpad.CRDist[0] = 0;
+	landmarkpad.Alt[0] = 0;
+	landmarkpad.Lat[0] = 0;
+	landmarkpad.Lng05[0] = 0;
 
 	VECdirection = 0;
 	VECbody = NULL;
@@ -729,10 +729,11 @@ void ARCore::LmkCalc()
 	LMARKTRKPADOpt opt;
 
 	opt.GETbase = GETbase;
-	opt.lat = LmkLat;
-	opt.LmkTime = LmkTime;
-	opt.lng = LmkLng;
+	opt.lat[0] = LmkLat;
+	opt.LmkTime[0] = LmkTime;
+	opt.lng[0] = LmkLng;
 	opt.vessel = vessel;
+	opt.entries = 1;
 
 	rtcc->LandmarkTrackingPAD(&opt, landmarkpad);
 }
