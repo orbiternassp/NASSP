@@ -544,7 +544,6 @@ void LEM_CWEA::Timestep(double simdt) {
 			// Lunar Contact and Component lights are lit in clbkPanelRedrawEvent code
 		break;
 	}
-
 	//sprintf(oapiDebugString(), "AGS %i DC %i AC %i RCS1 %i RCS2 %i RRH %i SBH %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i SBD %i", AGSWarnFF, CESDCWarnFF, CESACWarnFF, RCSCautFF1, RCSCautFF2, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3, SBDCautFF);
 }
 
@@ -805,4 +804,38 @@ void LEM_CWEA::SetColumnLightStates(int col, int state)
 	{
 		LightStatus[i][col] = state;
 	}
+}
+
+double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the cw power light
+{
+	int counter = 0;
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 0; j < 8; j++)
+		{
+			if (LightStatus[i][j] == 1)
+			{
+				counter++;
+			}
+		}
+	}
+	if (LightStatus[3][6])
+	{
+		counter = counter - 1;
+	}
+	return counter;
+}
+
+double LEM_CWEA::GetCWBulbPowerLoad()	//Returns bulb draw if the cw power light is lit
+{
+	if (LightStatus[3][6])
+	{
+		return 1.18;
+	}
+	return 0.0;
+}
+
+double LEM_CWEA::GetPowerLoad()
+{
+	return GetNumberLightsOn() * 1.18;	//Approximatly 1.18W per bulb, used for LCA dimming power calculation
 }

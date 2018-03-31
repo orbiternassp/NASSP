@@ -40,6 +40,9 @@ public:
 	void SystemTimestep(double simdt);
 	void SetMasterAlarm(bool alarm);
 	void PushMasterAlarm();
+	double GetNumberLightsOn();
+	double GetPowerLoad();
+	double GetCWBulbPowerLoad();
 
 	bool CheckMasterAlarmMouseClick(int event);
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border);
