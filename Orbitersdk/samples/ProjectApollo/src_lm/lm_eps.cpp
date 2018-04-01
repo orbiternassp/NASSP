@@ -821,6 +821,15 @@ double LEM_LCA::GetAnnunVoltage()
 	return 0.0;
 }
 
+double LEM_LCA::GetAnnunDimPct()
+{
+	if (GetAnnunVoltage() > 2.0)
+	{
+		return GetAnnunVoltage() / 5.0;
+	}
+	return 0.0;
+}
+
 double LEM_LCA::GetNumericVoltage()
 {
 	if (lem->NUM_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
