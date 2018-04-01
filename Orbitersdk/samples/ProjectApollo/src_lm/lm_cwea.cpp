@@ -885,7 +885,8 @@ double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light 
 	if (LightStatus[3][6] == 1 && lem->LampToneTestRotary != 5) {
 		return 1.18;
 	}
-	else if (lem->LampToneTestRotary == 2) {
+	
+	if (lem->LampToneTestRotary == 2) {
 		return (GetCWBank1Lights() - 2) * 1.18;
 	}
 	else if (lem->LampToneTestRotary == 3) {
@@ -897,8 +898,7 @@ double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light 
 	else if (lem->LampToneTestRotary == 5) {
 		return (GetCWBank4Lights() - 1) * 1.18;
 	}
-	else
-		return 0.0;
+	return 0.0;
 }
 
 double LEM_CWEA::GetDimmableLoad()
