@@ -887,16 +887,16 @@ double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the cw power light 
 		return 1.18;
 	}
 	else if (lem->LampToneTestRotary == 2) {
-		return GetCWBank1Lights() * 1.18;
+		return (GetCWBank1Lights() - 2) * 1.18;
 	}
 	else if (lem->LampToneTestRotary == 3) {
-		return GetCWBank2Lights() * 1.18;
+		return (GetCWBank2Lights() - 4) * 1.18;
 	}
 	else if (lem->LampToneTestRotary == 4) {
-		return GetCWBank3Lights() * 1.18;
+		return (GetCWBank3Lights() - 3) * 1.18;	//Assumes no landing radar light right now
 	}
 	else if (lem->LampToneTestRotary == 5) {
-		return GetCWBank4Lights() * 1.18;
+		return (GetCWBank4Lights() - 1) * 1.18;
 	}
 	else
 		return 0.0;
