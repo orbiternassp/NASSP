@@ -1857,8 +1857,9 @@ int ARCore::subThread()
 		REFSMMAT = rtcc->REFSMMATCalc(&opt);
 
 		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13, REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23, REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
-
 		a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
+		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
+
 
 		if (REFSMMATupl == 0)
 		{
@@ -2425,8 +2426,8 @@ int ARCore::subThread()
 			TLCCFRIncl = res.FRInclination;
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
-			TLCCFRLat = res.SplashdownLat;
-			TLCCFRLng = res.SplashdownLng;
+			TLCCFRLat = EntryLatcor = res.SplashdownLat;
+			TLCCFRLng = EntryLngcor = res.SplashdownLng;
 		}
 		else if (TLCCmaneuver == 2)
 		{
@@ -2523,8 +2524,8 @@ int ARCore::subThread()
 				TLCCNodeGET = res.NodeGET;
 				TLCCFRIncl = res.FRInclination;
 				TLCCEMPLatcor = res.EMPLatitude;
-				TLCCFRLat = res.SplashdownLat;
-				TLCCFRLng = res.SplashdownLng;
+				TLCCFRLat = EntryLatcor = res.SplashdownLat;
+				TLCCFRLng = EntryLngcor = res.SplashdownLng;
 
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;
@@ -2632,8 +2633,8 @@ int ARCore::subThread()
 				TLCCPeriGETcor = res.PericynthionGET;
 				TLCCReentryGET = res.EntryInterfaceGET;
 				TLCCFRIncl = res.FRInclination;
-				TLCCFRLat = res.SplashdownLat;
-				TLCCFRLng = res.SplashdownLng;
+				TLCCFRLat = EntryLatcor = res.SplashdownLat;
+				TLCCFRLng = EntryLngcor = res.SplashdownLng;
 
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;
@@ -2680,8 +2681,8 @@ int ARCore::subThread()
 				TLCCPeriGETcor = res.PericynthionGET;
 				TLCCReentryGET = res.EntryInterfaceGET;
 				TLCCFRIncl = res.FRInclination;
-				TLCCFRLat = res.SplashdownLat;
-				TLCCFRLng = res.SplashdownLng;
+				TLCCFRLat = EntryLatcor = res.SplashdownLat;
+				TLCCFRLng = EntryLngcor = res.SplashdownLng;
 				TLCCEMPLatcor = res.EMPLatitude;
 
 				P30TIG = TLCC_TIG;
