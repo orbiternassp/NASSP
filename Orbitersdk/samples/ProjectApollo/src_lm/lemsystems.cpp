@@ -752,6 +752,9 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&INV_1, false);
 	Panelsdk.AddElectrical(&INV_2, false);
 
+	//Lighting Control Assembly
+	Panelsdk.AddElectrical(&lca, false);
+
 	// ECS
 	CabinPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), 4.70/PSI, 4.07/PSI);
 	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50/PSI, 2.90/PSI);
@@ -1553,7 +1556,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	gasta.Timestep(simt);
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
-	lca.Timestep(simdt);
 	//UtilLights.Timestep(simdt);
 	COASLights.Timestep(simdt);
 	FloodLights.Timestep(simdt);

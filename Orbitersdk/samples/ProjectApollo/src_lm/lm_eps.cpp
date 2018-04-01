@@ -717,6 +717,7 @@ LEM_LCA::LEM_LCA()
 	LMPAnnunDockCompCB = NULL;
 	HasDCPower = false;
 	LCAHeat = 0;
+	AC_power_load = 0;
 }
 
 void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h)
@@ -727,20 +728,62 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h)
 	LCAHeat = lca_h;
 }
 
-void LEM_LCA::Timestep(double simdt)
+void LEM_LCA::DrawDCPower(double watts)
 {
+	power_load += watts;
+};
+
+void LEM_LCA::DrawACPower(double watts)
+{
+	AC_power_load += watts;
+};
+
+void LEM_LCA::UpdateFlow(double dt)
+{
+	int csrc = 0;
+	double PowerDrawPerSource;
+	double CDR_Volts = 0;
+	double LMP_Volts = 0;
+
+	HasDCPower = false;
+
 	if (lem->CSMToLEMPowerConnector.csm_power_latch == 0 && CDRAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE)
 	{
+		CDR_Volts = CDRAnnunDockCompCB->Voltage();
 		HasDCPower = true;
+		csrc++;
 	}
-	else if (LMPAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE)
+
+	if (LMPAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE)
 	{
+		LMP_Volts = LMPAnnunDockCompCB->Voltage();
 		HasDCPower = true;
+		csrc++;
 	}
-	else
+
+	// Compute draw
+	if (csrc > 1) {
+		PowerDrawPerSource = power_load / 2.0;
+	}
+	else {
+		PowerDrawPerSource = power_load;
+	}
+
+	if (CDR_Volts > 0) {
+		CDRAnnunDockCompCB->DrawPower(PowerDrawPerSource);
+	}
+	if (LMP_Volts > 0) {
+		LMPAnnunDockCompCB->DrawPower(PowerDrawPerSource);
+	}
+
+	power_load = 0.0;
+
+	if (lem->NUM_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
 	{
-		HasDCPower = false;
+		lem->NUM_LTG_AC_CB.DrawPower(AC_power_load);
 	}
+
+	AC_power_load = 0.0;
 }
 
 

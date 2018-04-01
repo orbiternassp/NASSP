@@ -154,15 +154,18 @@ protected:
 
 };
 
-class LEM_LCA
+class LEM_LCA : public e_object
 {
 public:
 	LEM_LCA();
 	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h);
-	void Timestep(double simdt);
+	void UpdateFlow(double dt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
+
+	void DrawDCPower(double watts);
+	void DrawACPower(double watts);
 
 	double GetCompDockVoltage();
 	double GetAnnunVoltage();
@@ -176,6 +179,8 @@ protected:
 	e_object *CDRAnnunDockCompCB;
 	e_object *LMPAnnunDockCompCB;
 	h_HeatLoad *LCAHeat;
+
+	double AC_power_load;
 
 };
 /*
