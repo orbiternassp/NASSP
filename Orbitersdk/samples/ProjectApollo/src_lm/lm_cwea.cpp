@@ -545,7 +545,6 @@ void LEM_CWEA::Timestep(double simdt) {
 		break;
 	}
 
-	sprintf(oapiDebugString(), "CW1 %lf CW2 %lf CW3 %lf CW4 %lf Dim %lf NonDim %lf", GetCWBank1Lights(), GetCWBank2Lights(), GetCWBank3Lights(), GetCWBank4Lights(), GetDimmableLoad(), GetNonDimmableLoad());
 	//sprintf(oapiDebugString(), "AGS %i DC %i AC %i RCS1 %i RCS2 %i RRH %i SBH %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i SBD %i", AGSWarnFF, CESDCWarnFF, CESACWarnFF, RCSCautFF1, RCSCautFF2, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3, SBDCautFF);
 }
 
@@ -881,7 +880,7 @@ double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the 
 	return GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights();
 }
 
-double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the cw power light is lit or a lamp test is active
+double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light is lit or a lamp test is active
 {
 	if (LightStatus[3][6] == 1 && lem->LampToneTestRotary != 5) {
 		return 1.18;
