@@ -2431,7 +2431,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 37, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_11);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_11: //Landmark tracking rev 25 update to rev 25 map update
-				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 54, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_12);
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 54, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_12);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_12: //Rev 25 map update to state vector update
 				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 25 && MoonRevTime > 1.0*3600.0 + 5.0*60.0, 48, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_13);
@@ -2443,7 +2443,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 38, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_15);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_15: //Landmark tracking rev 26 update to rev 26 map update
-				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 55, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_16);
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 55, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_16);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_16: //Rev 26 map update to state vector update
 				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 26 && MoonRevTime > 1.0*3600.0 + 5.0*60.0, 49, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_17);
@@ -2455,7 +2455,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 39, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_19);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_19: //Landmark tracking rev 27 update to rev 27 map update
-				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 56, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_20);
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 56, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_20);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_20: //Rev 27 map update to TEI-29 update
 				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 27 && MoonRevTime > 40.0*60.0, 140, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_21);
