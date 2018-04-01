@@ -131,7 +131,7 @@ public:
 
 	bool IsPowered();
 protected:
-	LEM * lem;
+	LEM *lem;
 	e_object *TrackCB;
 	ThreePosSwitch *TrackSwitch;
 	h_HeatLoad *TLEHeat;
@@ -149,7 +149,7 @@ public:
 
 	bool IsPowered();
 protected:
-	LEM * lem;
+	LEM *lem;
 	ThreePosSwitch *DockSwitch;
 
 };
@@ -189,7 +189,7 @@ void SystemTimestep(double simdt);
 
 bool IsPowered();
 protected:
-LEM * lem;
+LEM *lem;
 e_object *UtlCB;
 ThreePosSwitch *CDRSwitch;
 ThreePosSwitch *LMPSwitch;
@@ -207,7 +207,7 @@ public:
 
 	bool IsPowered();
 protected:
-	LEM * lem;
+	LEM *lem;
 	e_object *COASCB;
 	ThreePosSwitch *COASSwitch;
 	h_HeatLoad *COASHeat;
@@ -230,7 +230,7 @@ public:
 	double GetOVHDFWDPowerDraw();
 	double GetPowerDraw();
 protected:
-	LEM * lem;
+	LEM *lem;
 	e_object *FloodCB;
 	ThreePosSwitch *FloodSwitch;
 	RotationalSwitch *LMPRotary;

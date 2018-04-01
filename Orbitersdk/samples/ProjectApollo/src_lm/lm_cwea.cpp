@@ -544,6 +544,8 @@ void LEM_CWEA::Timestep(double simdt) {
 			// Lunar Contact and Component lights are lit in clbkPanelRedrawEvent code
 		break;
 	}
+
+	sprintf(oapiDebugString(), "CW1 %lf CW2 %lf CW3 %lf CW4 %lf Dim %lf NonDim %lf", GetCWBank1Lights(), GetCWBank2Lights(), GetCWBank3Lights(), GetCWBank4Lights(), GetDimmableLoad(), GetNonDimmableLoad());
 	//sprintf(oapiDebugString(), "AGS %i DC %i AC %i RCS1 %i RCS2 %i RRH %i SBH %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i SBD %i", AGSWarnFF, CESDCWarnFF, CESACWarnFF, RCSCautFF1, RCSCautFF2, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3, SBDCautFF);
 }
 
@@ -806,12 +808,60 @@ void LEM_CWEA::SetColumnLightStates(int col, int state)
 	}
 }
 
-double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the cw power light
+double LEM_CWEA::GetCWBank1Lights()	
 {
 	int counter = 0;
 	for (int i = 0; i < 5; i++)
 	{
-		for (int j = 0; j < 8; j++)
+		for (int j = 0; j < 2; j++)
+		{
+			if (LightStatus[i][j] == 1)
+			{
+				counter++;
+			}
+		}
+	}
+	return counter;
+}
+
+double LEM_CWEA::GetCWBank2Lights()
+{
+	int counter = 0;
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 2; j < 4; j++)
+		{
+			if (LightStatus[i][j] == 1)
+			{
+				counter++;
+			}
+		}
+	}
+	return counter;
+}
+
+double LEM_CWEA::GetCWBank3Lights()
+{
+	int counter = 0;
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 4; j < 6; j++)
+		{
+			if (LightStatus[i][j] == 1)
+			{
+				counter++;
+			}
+		}
+	}
+	return counter;
+}
+
+double LEM_CWEA::GetCWBank4Lights()
+{
+	int counter = 0;
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 6; j < 8; j++)
 		{
 			if (LightStatus[i][j] == 1)
 			{
@@ -826,16 +876,49 @@ double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the 
 	return counter;
 }
 
-double LEM_CWEA::GetCWBulbPowerLoad()	//Returns bulb draw if the cw power light is lit
+double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the cw power light
 {
-	if (LightStatus[3][6] ==1)
-	{
-		return 1.18;
-	}
-	return 0.0;
+	return GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights();
 }
 
-double LEM_CWEA::GetPowerLoad()
+double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the cw power light is lit or a lamp test is active
 {
-	return GetNumberLightsOn() * 1.18;	//Approx 1.18W per bulb, used for LCA dimming power calculation
+	if (LightStatus[3][6] == 1 && lem->LampToneTestRotary != 5) {
+		return 1.18;
+	}
+	else if (lem->LampToneTestRotary == 2) {
+		return GetCWBank1Lights() * 1.18;
+	}
+	else if (lem->LampToneTestRotary == 3) {
+		return GetCWBank2Lights() * 1.18;
+	}
+	else if (lem->LampToneTestRotary == 4) {
+		return GetCWBank3Lights() * 1.18;
+	}
+	else if (lem->LampToneTestRotary == 5) {
+		return GetCWBank4Lights() * 1.18;
+	}
+	else
+		return 0.0;
+}
+
+double LEM_CWEA::GetDimmableLoad()
+{
+	if (lem->LampToneTestRotary == 0 || lem->LampToneTestRotary == 1 || lem->LampToneTestRotary == 6 || lem->LampToneTestRotary == 7) {
+		return GetNumberLightsOn() * 1.18;	//Approx 1.18W per bulb, used for LCA dimming power calculation
+	}
+	else if (lem->LampToneTestRotary == 2) {
+		return (GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18;
+	}
+	else if (lem->LampToneTestRotary == 3) {
+		return (GetCWBank1Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18;
+	}
+	else if (lem->LampToneTestRotary == 4) {
+		return (GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank4Lights()) * 1.18;
+	}
+	else if (lem->LampToneTestRotary == 5) {
+		return (GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights()) * 1.18;
+	}
+	else
+		return 0.0;
 }
