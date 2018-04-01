@@ -56,7 +56,6 @@ public:
 protected:
 	void SetLight(int row, int column, int state, bool TriggerMA = true);
 	void SetLightStates(int state);
-	void SetColumnLightStates(int col, int state);
 	void TurnOn();
 	void TurnOff();
 

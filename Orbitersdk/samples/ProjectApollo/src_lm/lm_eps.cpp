@@ -769,6 +769,8 @@ void LEM_LCA::UpdateFlow(double dt)
 		PowerDrawPerSource = power_load;
 	}
 
+	//sprintf(oapiDebugString(), "%f %f", power_load, AC_power_load);
+
 	if (CDR_Volts > 0) {
 		CDRAnnunDockCompCB->DrawPower(PowerDrawPerSource);
 	}

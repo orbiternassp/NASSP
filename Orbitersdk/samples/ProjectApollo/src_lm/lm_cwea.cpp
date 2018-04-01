@@ -517,27 +517,46 @@ void LEM_CWEA::Timestep(double simdt) {
 		break;
 	case 2: // C/W 1
 			// Light Panel 1 first bank warning lamps
-		SetColumnLightStates(0, 1);
-		SetColumnLightStates(1, 1);
+		LightStatus[1][0] = 1;
+		LightStatus[2][0] = 1;
+		LightStatus[3][0] = 1;
+		LightStatus[0][1] = 1;
+		LightStatus[1][1] = 1;
+		LightStatus[2][1] = 1;
+		LightStatus[3][1] = 1;
+		LightStatus[4][1] = 1;
 		break;
 	case 3: // ENG PB & C/W 2
 			// Light engine START/STOP lights and Panel 1 second bank warning lamps
 			// ENG PB lights are lit in the EngineStopButton & EngineStartButton code
-		SetColumnLightStates(2, 1);
-		SetColumnLightStates(3, 1);
+		LightStatus[0][2] = 1;
+		LightStatus[1][2] = 1;
+		LightStatus[2][2] = 1;
+		LightStatus[3][2] = 1;
+		LightStatus[0][3] = 1;
+		LightStatus[1][3] = 1;
 		break;
 	case 4: // C/W 3
 			// Light Panel 2 first bank warning lamps;
-		SetColumnLightStates(4, 1);
-		SetColumnLightStates(5, 1);
-		
-		//hack
-		LightStatus[3][5] = 2;
+		LightStatus[0][4] = 1;
+		LightStatus[1][4] = 1;
+		LightStatus[2][4] = 1;
+		LightStatus[0][5] = 1;
+		LightStatus[1][5] = 1;
+		LightStatus[2][5] = 1;
+		LightStatus[4][5] = 1;
 		break;
 	case 5: // C/W 4
 			// Light Panel 2 second bank warning lamps;
-		SetColumnLightStates(6, 1);
-		SetColumnLightStates(7, 1);
+		LightStatus[0][6] = 1;
+		LightStatus[1][6] = 1;
+		LightStatus[2][6] = 1;
+		LightStatus[3][6] = 1;
+		LightStatus[0][7] = 1;
+		LightStatus[1][7] = 1;
+		LightStatus[2][7] = 1;
+		LightStatus[3][7] = 1;
+		LightStatus[4][7] = 1;
 		break;
 	case 6: // COMPNT
 			// Light component caution and Lunar Contact lights
@@ -555,6 +574,8 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 		CWEAHeat->GenerateHeat(5.74);
 		SecCWEAHeat->GenerateHeat(5.74);
 	}
+	if (IsLTGPowered())
+		lem->lca.DrawDCPower(GetDimmableLoad() + GetNonDimmableLoad());
 	if (MasterAlarm == true)
 		ma_pwr->DrawPower(7.2);
 
@@ -799,14 +820,6 @@ void LEM_CWEA::SetLightStates(int state)
 	}
 }
 
-void LEM_CWEA::SetColumnLightStates(int col, int state)
-{
-	for (int i = 0;i < 5;i++)
-	{
-		LightStatus[i][col] = state;
-	}
-}
-
 double LEM_CWEA::GetCWBank1Lights()	
 {
 	int counter = 0;
@@ -887,16 +900,16 @@ double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light 
 	}
 	
 	if (lem->LampToneTestRotary == 2) {
-		return (GetCWBank1Lights() - 2) * 1.18;
+		return GetCWBank1Lights() * 1.18;
 	}
 	else if (lem->LampToneTestRotary == 3) {
-		return (GetCWBank2Lights() - 4) * 1.18;
+		return GetCWBank2Lights() * 1.18;
 	}
 	else if (lem->LampToneTestRotary == 4) {
-		return (GetCWBank3Lights() - 3) * 1.18;	//Assumes no landing radar light right now
+		return GetCWBank3Lights() * 1.18;
 	}
 	else if (lem->LampToneTestRotary == 5) {
-		return (GetCWBank4Lights() - 1) * 1.18;
+		return GetCWBank4Lights() * 1.18;
 	}
 	return 0.0;
 }
