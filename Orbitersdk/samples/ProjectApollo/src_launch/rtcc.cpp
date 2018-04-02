@@ -4053,6 +4053,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 37: //TEI-25 UPDATE
 	case 38: //TEI-26 UPDATE
 	case 39: //TEI-27 UPDATE
+	case 130: //TEI-29 UPDATE
+	case 131: //TEI-30 UPDATE
+	case 132: //PRELIMINARY TEI-31 UPDATE
+	case 133: //FINAL TEI-31 UPDATE
+	case 134: //TEI-32 UPDATE
 	{
 		TEIOpt entopt;
 		EntryResults res;
@@ -4125,6 +4130,31 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(manname, "TEI-27");
 			sv2 = coast(sv1, 0.5*2.0*3600.0);
 		}
+		else if (fcn == 130)
+		{
+			sprintf(manname, "TEI-29");
+			sv2 = coast(sv1, 1.5*2.0*3600.0);
+		}
+		else if (fcn == 131)
+		{
+			sprintf(manname, "TEI-30");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 132)
+		{
+			sprintf(manname, "TEI-31");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 133)
+		{
+			sprintf(manname, "TEI-31");
+			sv2 = sv1;
+		}
+		else if (fcn == 134)
+		{
+			sprintf(manname, "TEI-32");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
@@ -4155,11 +4185,27 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
 
-		//Save parameters for further use
-		SplashLatitude = res.latitude;
-		SplashLongitude = res.longitude;
-		calcParams.TEI = res.P30TIG;
-		calcParams.EI = res.GET400K;
+		if (fcn != 134)
+		{
+			//Save parameters for further use
+			SplashLatitude = res.latitude;
+			SplashLongitude = res.longitude;
+			calcParams.TEI = res.P30TIG;
+			calcParams.EI = res.GET400K;
+		}
+
+		if (fcn == 133)
+		{
+			TimeofIgnition = res.P30TIG;
+			DeltaV_LVLH = res.dV_LVLH;
+
+			sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv0, true, AGCEpoch, GETbase, true), AGCExternalDeltaVUpdate(TimeofIgnition, DeltaV_LVLH));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "State vectors, target load");
+			}
+		}
 	}
 	break;
 	case 40: //REV 1 MAP UPDATE
@@ -4191,6 +4237,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 48: //REV 25 MAP UPDATE
 	case 49: //REV 26 MAP UPDATE
 	case 140: //REV 27 MAP UPDATE
+	case 141: //REV 29 MAP UPDATE
+	case 142: //REV 30 MAP UPDATE
+	case 143: //REV 31 MAP UPDATE
 	{
 		SV sv0, sv1;
 
@@ -4201,6 +4250,10 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (fcn == 45)
 		{
 			sv1 = coast(sv0, 2.0*4.0*3600.0);
+		}
+		else if (fcn == 141)
+		{
+			sv1 = coast(sv0, 1.0*2.0*3600.0);
 		}
 		else
 		{
@@ -4229,6 +4282,18 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			form->Rev = 27;
 		}
+		else if (fcn == 141)
+		{
+			form->Rev = 29;
+		}
+		else if (fcn == 142)
+		{
+			form->Rev = 30;
+		}
+		else if (fcn == 143)
+		{
+			form->Rev = 31;
+		}
 	}
 	break;
 	case 42: //REV 3 MAP UPDATE
@@ -4250,6 +4315,25 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->PMGET = upd_preloi.PMGET;
 	}
 	break;
+	case 144: //TEI MAP UPDATE
+	{
+		SV sv0, sv1;
+		AP10MAPUPDATE upd_pretei, upd_posttei;
+
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		LunarOrbitMapUpdate(sv0, getGETBase(), upd_pretei);
+
+		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		LunarOrbitMapUpdate(sv0, getGETBase(), upd_posttei);
+
+		form->Rev = 32;
+		form->AOSGET = upd_posttei.AOSGET;
+		form->LOSGET = upd_pretei.LOSGET;
+		form->PMGET = upd_pretei.PMGET;
+	}
+	break;
 	case 50: //REV 4 LANDMARK TRACKING PAD F-1
 	case 51: //REV 4 LANDMARK TRACKING PAD B-1
 	case 52: //REV 11 LANDMARK TRACKING PAD LLS-2
@@ -4257,6 +4341,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 54: //REV 25 LANDMARK TRACKING PADs
 	case 55: //REV 26 LANDMARK TRACKING PADs
 	case 56: //REV 27 LANDMARK TRACKING PADs
+	case 57: //REV 30 LANDMARK TRACKING PADs
 	{
 		LMARKTRKPADOpt opt;
 
@@ -4344,6 +4429,22 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.lng[3] = 23.678*RAD;
 
 			opt.entries = 4;
+		}
+		else if (fcn == 57)
+		{
+			sprintf(form->LmkID[0], "B-1");
+			opt.alt[0] = -1.54*1852.0;
+			opt.lat[0] = 2.522*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(134, 0, 0);
+			opt.lng[0] = 35.036*RAD;
+
+			sprintf(form->LmkID[1], "150");
+			opt.alt[1] = -1.05*1852.0;
+			opt.lat[1] = 0.283*RAD;
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(134, 12, 0);
+			opt.lng[1] = -1.428*RAD;
+
+			opt.entries = 2;
 		}
 
 		LandmarkTrackingPAD(&opt, *form);
