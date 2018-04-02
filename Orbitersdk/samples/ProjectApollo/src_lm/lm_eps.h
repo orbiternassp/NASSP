@@ -169,6 +169,7 @@ public:
 
 	double GetCompDockVoltage();
 	double GetAnnunVoltage();
+	double GetAnnunDimPct();
 	double GetNumericVoltage();
 	double GetIntegralVoltage();
 protected:
