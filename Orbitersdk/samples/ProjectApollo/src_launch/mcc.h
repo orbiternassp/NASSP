@@ -597,6 +597,30 @@
 #define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_35	334
 // Ends at PTC REFSMMAT update
 #define MST_F_TRANSEARTH_1	400
+// Ends at state vector update
+#define MST_F_TRANSEARTH_2	401
+// Ends at state vector update
+#define MST_F_TRANSEARTH_3	402
+// Ends at MCC-5 update
+#define MST_F_TRANSEARTH_4	403
+// Ends at preliminary MCC-6 update
+#define MST_F_TRANSEARTH_5	404
+// Ends at Entry PAD update
+#define MST_F_TRANSEARTH_6	405
+// Ends at MCC-6 update
+#define MST_F_TRANSEARTH_7	406
+// Ends at Entry PAD update
+#define MST_F_TRANSEARTH_8	407
+// Ends at MCC-7 decision update
+#define MST_F_TRANSEARTH_9	408
+// Ends at MCC-7 update
+#define MST_F_TRANSEARTH_10	409
+// Ends at Entry PAD update
+#define MST_F_TRANSEARTH_11	410
+// Ends at final entry update
+#define MST_F_TRANSEARTH_12	411
+// Ends at CM/SM separation
+#define MST_F_TRANSEARTH_13	412
 
 // Ground Station Information Structure
 struct GroundStation {
