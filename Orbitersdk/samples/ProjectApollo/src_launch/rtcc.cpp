@@ -10436,11 +10436,11 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 {
 	//For CSM, LM or CSM/LM docked maneuvers
 	//INPUT:
-	//vesseltype: thrusting vessel, 0 = CSM, 1 = LM
+	//vesseltype: thrusting vessel, 0 = CSM, 1 = LM, 2 = S-IVB
 	//sv: State vector at impulsive TIG
 	//attachedMass: mass of the attached vessel, 0 if no vessel present
 	//DV: Delta velocity of impulsive thrusting maneuver
-	//engine: 0 = use RCS, 1 = use SPS/DPS engine, 2 = use APS engine
+	//engine: 0 = use RCS (LOX dump for S-IVB), 1 = use SPS/DPS engine, 2 = use APS engine
 	//
 	//OUTPUT:
 	//DV_imp: non-impulsive delta velocity
@@ -10451,39 +10451,63 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 
 	sv_out.gravref = sv.gravref;
 
-	if (engine == 0)
+	//CSM
+	if (vesseltype == 0)
 	{
-		isp = 2706.64;
-		F_average = 400 * 4.448222;
-	}
-	else
-	{
-		if (vesseltype == 0)
+		//RCS
+		if (engine == 0)
+		{
+			isp = 2706.64;
+			F_average = 400.0*4.448222;
+		}
+		//SPS
+		else
 		{
 			f_T = SPS_THRUST;
 			isp = SPS_ISP;
 
 			F_average = f_T;
 		}
-		else
+	}
+	//LM
+	else if (vesseltype == 1)
+	{
+		//RCS
+		if (engine == 0)
+		{
+			isp = 2706.64;
+			F_average = 400.0*4.448222;
+		}
+		//DPS
+		else if (engine == 1)
 		{
 			double bt, bt_var;
 			int step;
 
-			if (engine == 1)
-			{
-				f_T = DPS_THRUST;
-				isp = DPS_ISP;
+			f_T = DPS_THRUST;
+			isp = DPS_ISP;
 
-				LMThrottleProgram(f_T, isp, sv.mass + attachedMass, length(DV), F_average, bt, bt_var, step);
-			}
-			else
-			{
-				f_T = APS_THRUST;
-				isp = APS_ISP;
+			LMThrottleProgram(f_T, isp, sv.mass + attachedMass, length(DV), F_average, bt, bt_var, step);
+		}
+		//APS
+		else
+		{
+			f_T = APS_THRUST;
+			isp = APS_ISP;
 
-				F_average = f_T;
-			}
+			F_average = f_T;
+		}
+	}
+	//S-IVB
+	else
+	{
+		//LOX Dump
+		if (engine == 0)
+		{
+			f_T = 3300.0;
+			isp = 157.0;
+
+			F_average = f_T;
 		}
 	}
 
