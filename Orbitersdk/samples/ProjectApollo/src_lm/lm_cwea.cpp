@@ -473,12 +473,12 @@ void LEM_CWEA::Timestep(double simdt) {
 		if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 0; }
 
 		//Set CW Light
-		if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1 || QD1HeaterCautFF || QD2HeaterCautFF || QD3HeaterCautFF || QD4HeaterCautFF)
+		if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1 || QD1HeaterCautFF == 1 || QD2HeaterCautFF == 1 || QD3HeaterCautFF == 1 || QD4HeaterCautFF == 1)
 			SetLight(2, 6, 1);
 		else
 			SetLight(2, 6, 0);
 
-		sprintf(oapiDebugString(), "QD1HFF %i QD1HLogic %i QD1Prev %i", QD1HeaterCautFF, QD1HeaterLogic, QD1HeaterPrev);
+		sprintf(oapiDebugString(), "QD1HFF %i QD1HLogic %i QD1Prev %i QD2HFF %i QD3HFF %i QD4HFF %i", QD1HeaterCautFF, QD1HeaterLogic, QD1HeaterPrev, QD2HeaterCautFF, QD3HeaterCautFF, QD4HeaterCautFF);
 
 		// 6DS36 ECS FAILURE CAUTION
 		// On when:
