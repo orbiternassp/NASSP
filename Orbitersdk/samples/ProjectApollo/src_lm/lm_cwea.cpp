@@ -409,7 +409,6 @@ void LEM_CWEA::Timestep(double simdt) {
 			{
 				RRHeaterCautFF = 1;
 			}
-			RRHeaterLogic = 0;
 			break;
 		}
 
