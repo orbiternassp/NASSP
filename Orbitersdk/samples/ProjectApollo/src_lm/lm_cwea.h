@@ -79,7 +79,7 @@ protected:
 	bool SBDCautFF;   // Flip Flop
 	bool MasterAlarm;
 	bool AutoTrackChanged;
-	bool RRHeaterLogic;
+	bool RRPrev;
 
 	e_object *cwea_pwr;
 	e_object *ma_pwr;

@@ -45,7 +45,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	MasterAlarm = false;
 	Operate = false;
 	AutoTrackChanged = true;
-	RRHeaterLogic = false;
+	RRPrev = false;
 
 	//Initialize all FF's as "reset"
 	DesRegWarnFF = 0;
@@ -401,18 +401,18 @@ void LEM_CWEA::Timestep(double simdt) {
 		// RR Assembly < -54.07F or > 147.69F
 		// Quad temps and LR temp do not turn the light on
 		// Disabled when Temperature Monitor switch selects affected assembly.
+		bool RRHeaterLogic = false;
+
 		if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterLogic = 1; }
 		else { RRHeaterLogic = 0; }
 
-		while (RRHeaterLogic == 0) {
-			if (RRHeaterLogic == 1 && RRHeaterCautFF == 0)
-			{
-				RRHeaterCautFF = 1;
-			}
-			break;
+		if (RRPrev == 0 && RRHeaterLogic == 1)
+		{
+			RRHeaterCautFF = 1;
 		}
+		RRPrev = RRHeaterLogic;
 
-		if (lem->TempMonitorRotary.GetState() == 0) { RRHeaterCautFF = 0; }
+		if (lem->TempMonitorRotary.GetState() == 0 && RRHeaterCautFF == 1) { RRHeaterCautFF = 0; }
 
 		if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 0; }
 		else if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterCautFF = 1; }
