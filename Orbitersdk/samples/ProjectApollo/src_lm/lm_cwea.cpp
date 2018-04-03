@@ -44,8 +44,15 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 	Operate = false;
+
+	//Logic states
 	AutoTrackChanged = true;
-	RRPrev = true;
+	RRHeaterPrev = false;
+	SBDHeaterPrev = false;
+	QD1HeaterPrev = false;
+	QD2HeaterPrev = false;
+	QD3HeaterPrev = false;
+	QD4HeaterPrev = false;
 
 	//Initialize all FF's as "reset"
 	DesRegWarnFF = 0;
@@ -53,7 +60,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	CESDCWarnFF = 0;
 	CESACWarnFF = 0;
 	RCSCautFF1 = 0; RCSCautFF2 = 0;
-	RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
+	RRHeaterCautFF = 0; SBDHeaterCautFF = 0; QD1HeaterCautFF; QD2HeaterCautFF; QD3HeaterCautFF; QD4HeaterCautFF;
 	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
 	WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
 	RRCautFF = 0;
@@ -397,32 +404,81 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		// 6DS33 HEATER FAILURE CAUTION
 		// On when:
-		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
+		// LR temp cut and capped from CW logic
+
 		// RR Assembly < -54.07F or > 147.69F
-		// Quad temps and LR temp do not turn the light on
-		// Disabled when Temperature Monitor switch selects affected assembly.
 		bool RRHeaterLogic = false;
 
 		if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterLogic = 1; }
 		else { RRHeaterLogic = 0; }
 
-		if (RRPrev == 0 && RRHeaterLogic == 1)
-		{
-			RRHeaterCautFF = 1;
-		}
-		RRPrev = RRHeaterLogic;
+		if (RRHeaterPrev == 0 && RRHeaterLogic == 1) { RRHeaterCautFF = 1; }
+		RRHeaterPrev = RRHeaterLogic;
 
 		if (lem->TempMonitorRotary.GetState() == 0 && RRHeaterCautFF == 1) { RRHeaterCautFF = 0; }
 
-		sprintf(oapiDebugString(), "RRHFF %i RRHLogic %i Prev %i", RRHeaterCautFF, RRHeaterLogic, RRPrev);
+		// RCS Quads < 113F  or > 241F, cut and capped on LM-8 and subsequent
+		//Quad 1
+		bool QD1HeaterLogic = false;
+
+		if (lem->scera1.GetVoltage(20, 4) < ((113.0 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 4) > ((241.0 - 20.0) / 36.0)) { QD1HeaterLogic = 1; }
+		else { QD1HeaterLogic = 0; }
+
+		if (QD1HeaterPrev == 0 && QD1HeaterLogic == 1) { QD1HeaterCautFF = 1; }
+		QD1HeaterPrev = QD1HeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 2 && QD1HeaterCautFF == 1) { QD1HeaterCautFF = 0; }
+
+		//Quad 2
+		bool QD2HeaterLogic = false;
+
+		if (lem->scera1.GetVoltage(20, 3) < ((113.0 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 3) > ((241.0 - 20.0) / 36.0)) { QD2HeaterLogic = 1; }
+		else { QD2HeaterLogic = 0; }
+
+		if (QD2HeaterPrev == 0 && QD2HeaterLogic == 1) { QD2HeaterCautFF = 1; }
+		QD2HeaterPrev = QD2HeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 3 && QD2HeaterCautFF == 1) { QD1HeaterCautFF = 0; }
+
+		//Quad 3
+		bool QD3HeaterLogic = false;
+
+		if (lem->scera1.GetVoltage(20, 2) < ((113.0 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 2) > ((241.0 - 20.0) / 36.0)) { QD3HeaterLogic = 1; }
+		else { QD3HeaterLogic = 0; }
+
+		if (QD3HeaterPrev == 0 && QD3HeaterLogic == 1) { QD3HeaterCautFF = 1; }
+		QD3HeaterPrev = QD3HeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 4 && QD3HeaterCautFF == 1) { QD3HeaterCautFF = 0; }
+
+		//Quad 4
+		bool QD4HeaterLogic = false;
+
+		if (lem->scera1.GetVoltage(20, 1) < ((113.0 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 1) > ((241.0 - 20.0) / 36.0)) { QD4HeaterLogic = 1; }
+		else { QD4HeaterLogic = 0; }
+
+		if (QD4HeaterPrev == 0 && QD4HeaterLogic == 1) { QD4HeaterCautFF = 1; }
+		QD4HeaterPrev = QD4HeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 5 && QD1HeaterCautFF == 1) { QD1HeaterCautFF = 0; }
+
+		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
+		bool SBDHeaterLogic = false;
+
+		if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterLogic = 1; }
+
+		if (SBDHeaterPrev == 0 && SBDHeaterLogic == 1) { SBDHeaterCautFF = 1; }
+		SBDHeaterPrev = SBDHeaterLogic;
 
 		if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 0; }
-		else if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterCautFF = 1; }
 
-		if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1)
+		//Set CW Light
+		if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1 || QD1HeaterCautFF || QD2HeaterCautFF || QD3HeaterCautFF || QD4HeaterCautFF)
 			SetLight(2, 6, 1);
 		else
 			SetLight(2, 6, 0);
+
+		sprintf(oapiDebugString(), "QD1HFF %i QD1HLogic %i QD1Prev %i", QD1HeaterCautFF, QD1HeaterLogic, QD1HeaterPrev);
 
 		// 6DS36 ECS FAILURE CAUTION
 		// On when:
