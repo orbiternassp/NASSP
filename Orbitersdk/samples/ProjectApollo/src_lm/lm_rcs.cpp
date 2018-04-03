@@ -73,6 +73,10 @@ RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p, boo
 	primOxidInterconnectValve.SetState(true);
 	primFuelInterconnectValve.SetState(true);
 	mainShutoffValve.SetState(true);
+	quad1IsolationValve.SetState(true);
+	quad2IsolationValve.SetState(true);
+	quad3IsolationValve.SetState(true);
+	quad4IsolationValve.SetState(true);
 }
 
 RCSPropellantSource::~RCSPropellantSource()

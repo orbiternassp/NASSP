@@ -567,6 +567,60 @@
 #define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_20	319
 // Ends at TEI-29 update
 #define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_21	320
+// Ends at rev 29 map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_22	321
+// Ends at LLS 3 photo update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_23	322
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_24	323
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_25	324
+// Ends at TEI-30 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_26	325
+// Ends at landmark tracking rev 30 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_27	326
+// Ends at rev 30 map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_28	327
+// Ends at preliminary TEI-31 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_29	328
+// Ends at rev 31 map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_30	329
+// Ends at strip photo update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_31	330
+// Ends at state vector update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_32	331
+// Ends at final TEI-31 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_33	332
+// Ends at TEI-32 update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_34	333
+// Ends at TEI map update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_35	334
+// Ends at PTC REFSMMAT update
+#define MST_F_TRANSEARTH_1	400
+// Ends at state vector update
+#define MST_F_TRANSEARTH_2	401
+// Ends at state vector update
+#define MST_F_TRANSEARTH_3	402
+// Ends at MCC-5 update
+#define MST_F_TRANSEARTH_4	403
+// Ends at preliminary MCC-6 update
+#define MST_F_TRANSEARTH_5	404
+// Ends at Entry PAD update
+#define MST_F_TRANSEARTH_6	405
+// Ends at MCC-6 update
+#define MST_F_TRANSEARTH_7	406
+// Ends at Entry PAD update
+#define MST_F_TRANSEARTH_8	407
+// Ends at MCC-7 decision update
+#define MST_F_TRANSEARTH_9	408
+// Ends at MCC-7 update
+#define MST_F_TRANSEARTH_10	409
+// Ends at Entry PAD update
+#define MST_F_TRANSEARTH_11	410
+// Ends at final entry update
+#define MST_F_TRANSEARTH_12	411
+// Ends at CM/SM separation
+#define MST_F_TRANSEARTH_13	412
 
 // Ground Station Information Structure
 struct GroundStation {

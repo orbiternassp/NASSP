@@ -1736,14 +1736,14 @@ LEMRCSQuadTalkback::LEMRCSQuadTalkback()
 void LEMRCSQuadTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, TCA_FlipFlop *tcaf)
 
 {
-	IndicatorSwitch::Init(xp, yp, w, h, surf, row, false);
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, true);
 	ssswitch = s;
 	tcaFailure = tcaf;
 }
 
 int LEMRCSQuadTalkback::GetState()
 {
-	if (ssswitch && tcaFailure && SRC && (SRC->Voltage() > SP_MIN_DCVOLTAGE))
+	if (ssswitch && tcaFailure)
 	{
 		if (tcaFailure->IsSet())
 			state = 2;

@@ -4053,6 +4053,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 37: //TEI-25 UPDATE
 	case 38: //TEI-26 UPDATE
 	case 39: //TEI-27 UPDATE
+	case 130: //TEI-29 UPDATE
+	case 131: //TEI-30 UPDATE
+	case 132: //PRELIMINARY TEI-31 UPDATE
+	case 133: //FINAL TEI-31 UPDATE
+	case 134: //TEI-32 UPDATE
 	{
 		TEIOpt entopt;
 		EntryResults res;
@@ -4125,6 +4130,31 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(manname, "TEI-27");
 			sv2 = coast(sv1, 0.5*2.0*3600.0);
 		}
+		else if (fcn == 130)
+		{
+			sprintf(manname, "TEI-29");
+			sv2 = coast(sv1, 1.5*2.0*3600.0);
+		}
+		else if (fcn == 131)
+		{
+			sprintf(manname, "TEI-30");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 132)
+		{
+			sprintf(manname, "TEI-31");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 133)
+		{
+			sprintf(manname, "TEI-31");
+			sv2 = sv1;
+		}
+		else if (fcn == 134)
+		{
+			sprintf(manname, "TEI-32");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
@@ -4155,11 +4185,27 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
 
-		//Save parameters for further use
-		SplashLatitude = res.latitude;
-		SplashLongitude = res.longitude;
-		calcParams.TEI = res.P30TIG;
-		calcParams.EI = res.GET400K;
+		if (fcn != 134)
+		{
+			//Save parameters for further use
+			SplashLatitude = res.latitude;
+			SplashLongitude = res.longitude;
+			calcParams.TEI = res.P30TIG;
+			calcParams.EI = res.GET400K;
+		}
+
+		if (fcn == 133)
+		{
+			TimeofIgnition = res.P30TIG;
+			DeltaV_LVLH = res.dV_LVLH;
+
+			sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv0, true, AGCEpoch, GETbase, true), AGCExternalDeltaVUpdate(TimeofIgnition, DeltaV_LVLH));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "State vectors, target load");
+			}
+		}
 	}
 	break;
 	case 40: //REV 1 MAP UPDATE
@@ -4191,6 +4237,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 48: //REV 25 MAP UPDATE
 	case 49: //REV 26 MAP UPDATE
 	case 140: //REV 27 MAP UPDATE
+	case 141: //REV 29 MAP UPDATE
+	case 142: //REV 30 MAP UPDATE
+	case 143: //REV 31 MAP UPDATE
 	{
 		SV sv0, sv1;
 
@@ -4201,6 +4250,10 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (fcn == 45)
 		{
 			sv1 = coast(sv0, 2.0*4.0*3600.0);
+		}
+		else if (fcn == 141)
+		{
+			sv1 = coast(sv0, 1.0*2.0*3600.0);
 		}
 		else
 		{
@@ -4229,6 +4282,18 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			form->Rev = 27;
 		}
+		else if (fcn == 141)
+		{
+			form->Rev = 29;
+		}
+		else if (fcn == 142)
+		{
+			form->Rev = 30;
+		}
+		else if (fcn == 143)
+		{
+			form->Rev = 31;
+		}
 	}
 	break;
 	case 42: //REV 3 MAP UPDATE
@@ -4250,6 +4315,25 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->PMGET = upd_preloi.PMGET;
 	}
 	break;
+	case 144: //TEI MAP UPDATE
+	{
+		SV sv0, sv1;
+		AP10MAPUPDATE upd_pretei, upd_posttei;
+
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		LunarOrbitMapUpdate(sv0, getGETBase(), upd_pretei);
+
+		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		LunarOrbitMapUpdate(sv0, getGETBase(), upd_posttei);
+
+		form->Rev = 32;
+		form->AOSGET = upd_posttei.AOSGET;
+		form->LOSGET = upd_pretei.LOSGET;
+		form->PMGET = upd_pretei.PMGET;
+	}
+	break;
 	case 50: //REV 4 LANDMARK TRACKING PAD F-1
 	case 51: //REV 4 LANDMARK TRACKING PAD B-1
 	case 52: //REV 11 LANDMARK TRACKING PAD LLS-2
@@ -4257,6 +4341,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 54: //REV 25 LANDMARK TRACKING PADs
 	case 55: //REV 26 LANDMARK TRACKING PADs
 	case 56: //REV 27 LANDMARK TRACKING PADs
+	case 57: //REV 30 LANDMARK TRACKING PADs
 	{
 		LMARKTRKPADOpt opt;
 
@@ -4344,6 +4429,22 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.lng[3] = 23.678*RAD;
 
 			opt.entries = 4;
+		}
+		else if (fcn == 57)
+		{
+			sprintf(form->LmkID[0], "B-1");
+			opt.alt[0] = -1.54*1852.0;
+			opt.lat[0] = 2.522*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(134, 0, 0);
+			opt.lng[0] = 35.036*RAD;
+
+			sprintf(form->LmkID[1], "150");
+			opt.alt[1] = -1.05*1852.0;
+			opt.lat[1] = 0.283*RAD;
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(134, 12, 0);
+			opt.lng[1] = -1.428*RAD;
+
+			opt.entries = 2;
 		}
 
 		LandmarkTrackingPAD(&opt, *form);
@@ -4928,6 +5029,264 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "LM state vector");
+		}
+	}
+	break;
+	case 90: //MCC-5 UPDATE
+	case 91: //PRELIMINARY MCC-6 UPDATE
+	case 92: //MCC-6 UPDATE
+	case 93: //MCC-7 DECISION
+	case 94: //MCC-7 UPDATE
+	{
+		EntryOpt entopt;
+		EntryResults res;
+		AP11ManPADOpt opt;
+		double GETbase, MCCtime;
+		MATRIX3 REFSMMAT;
+		char manname[8];
+		SV sv;
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		//Just so things don't break
+		if (calcParams.TEI == 0)
+		{
+			calcParams.TEI = OrbMech::HHMMSSToSS(137, 20, 0);
+		}
+		if (calcParams.EI == 0)
+		{
+			calcParams.EI = OrbMech::HHMMSSToSS(191, 50, 0);
+		}
+
+		if (fcn == 90)
+		{
+			MCCtime = calcParams.TEI + 15.0*3600.0;
+			sprintf(manname, "MCC-5");
+		}
+		else if (fcn == 91 || fcn == 92)
+		{
+			MCCtime = calcParams.EI - 15.0*3600.0;
+			sprintf(manname, "MCC-6");
+		}
+		else if (fcn == 93 || fcn == 94)
+		{
+			MCCtime = calcParams.EI - 2.0*3600.0;
+			sprintf(manname, "MCC-7");
+		}
+
+		//Only corridor control after EI-24h
+		if (MCCtime > calcParams.EI - 24.0*3600.0)
+		{
+			entopt.type = RTCC_ENTRY_CORRIDOR;
+		}
+		else
+		{
+			entopt.type = RTCC_ENTRY_MCC;
+		}
+
+		GETbase = getGETBase();
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		entopt.entrylongmanual = true;
+		entopt.GETbase = GETbase;
+		entopt.impulsive = RTCC_NONIMPULSIVE;
+		entopt.lng = -165.0*RAD;
+		entopt.ReA = 0;
+		entopt.TIGguess = MCCtime;
+		entopt.vessel = calcParams.src;
+
+		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
+
+		//Apollo 10 Mission Rules
+		if (MCCtime > calcParams.EI - 50.0*3600.0)
+		{
+			if (length(res.dV_LVLH) < 1.0*0.3048)
+			{
+				scrubbed = true;
+			}
+		}
+		else
+		{
+			if (length(res.dV_LVLH) < 2.0*0.3048)
+			{
+				scrubbed = true;
+			}
+		}
+
+		if (fcn == 94)
+		{
+			REFSMMATOpt refsopt;
+			refsopt.GETbase = GETbase;
+			refsopt.dV_LVLH = res.dV_LVLH;
+			refsopt.P30TIG = res.P30TIG;
+			refsopt.REFSMMATdirect = false;
+			refsopt.REFSMMATopt = 3;
+			refsopt.vessel = calcParams.src;
+
+			REFSMMAT = REFSMMATCalc(&refsopt);
+		}
+		else
+		{
+			REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		}
+
+		if (scrubbed)
+		{
+			sprintf(upDesc, "%s has been scrubbed.", manname);
+
+			//Entry prediction without maneuver
+			EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
+
+			res.dV_LVLH = _V(0, 0, 0);
+			res.P30TIG = entopt.TIGguess;
+		}
+		else
+		{
+			opt.dV_LVLH = res.dV_LVLH;
+			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
+			opt.GETbase = GETbase;
+			opt.HeadsUp = false;
+			opt.REFSMMAT = REFSMMAT;
+			opt.TIG = res.P30TIG;
+			opt.vessel = calcParams.src;
+			opt.vesseltype = 0;
+
+			AP11ManeuverPAD(&opt, *form);
+			sprintf(form->purpose, manname);
+			form->lat = res.latitude*DEG;
+			form->lng = res.longitude*DEG;
+			form->RTGO = res.RTGO;
+			form->VI0 = res.VIO / 0.3048;
+			form->GET05G = res.GET05G;
+		}
+
+		if (scrubbed)
+		{
+			//Scrubbed MCC-5 and MCC-6
+			if (fcn == 90 || fcn == 91 || fcn == 92)
+			{
+				sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase), CMCEntryUpdate(res.latitude, res.longitude));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM state vector, entry target");
+				}
+			}
+			//Scrubbed MCC-7
+			else if (fcn == 94)
+			{
+				sprintf(uplinkdata, "%s%s%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase), CMCEntryUpdate(res.latitude, res.longitude), CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM state vector, entry target, Entry REFSMMAT");
+				}
+			}
+		}
+		else
+		{
+			//MCC-5 and MCC-6
+			if (fcn == 90 || fcn == 91 || fcn == 92)
+			{
+				sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase), CMCRetrofireExternalDeltaVUpdate(res.latitude, res.longitude, res.P30TIG, res.dV_LVLH));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM state vector, target load");
+				}
+			}
+			//MCC-7
+			else if (fcn == 94)
+			{
+				sprintf(uplinkdata, "%s%s%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase), CMCRetrofireExternalDeltaVUpdate(res.latitude, res.longitude, res.P30TIG, res.dV_LVLH), CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+				}
+			}
+		}
+
+		//Save for further use
+		calcParams.EI = res.GET400K;
+		DeltaV_LVLH = res.dV_LVLH;
+		TimeofIgnition = res.P30TIG;
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+	}
+	break;
+	case 96: //ENTRY PAD (ASSUMES NO MCC-6, but MCC-7)
+	case 97: //ENTRY PAD (ASSUMES MCC-6)
+	case 98: //ENTRY PAD (ASSUMES MCC-7)
+	case 99: //FINAL LUNAR ENTRY PAD
+	{
+		AP11ENT * form = (AP11ENT *)pad;
+
+		SV sv;
+		LunarEntryPADOpt entopt;
+		MATRIX3 REFSMMAT;
+		double GETbase;
+
+		GETbase = getGETBase();
+		sv = StateVectorCalc(calcParams.src);
+
+		if (length(DeltaV_LVLH) != 0.0 && fcn != 99)
+		{
+			entopt.direct = false;
+		}
+		else
+		{
+			entopt.direct = true;
+		}
+
+		if (fcn == 99)
+		{
+			REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		}
+		else
+		{
+			REFSMMATOpt refsopt;
+			refsopt.GETbase = GETbase;
+			refsopt.dV_LVLH = DeltaV_LVLH;
+			refsopt.P30TIG = TimeofIgnition;
+			refsopt.REFSMMATdirect = false;
+			refsopt.REFSMMATopt = 3;
+			refsopt.vessel = calcParams.src;
+
+			REFSMMAT = REFSMMATCalc(&refsopt);
+		}
+
+		entopt.dV_LVLH = DeltaV_LVLH;
+		entopt.GETbase = GETbase;
+		entopt.lat = SplashLatitude;
+		entopt.lng = SplashLongitude;
+		entopt.P30TIG = TimeofIgnition;
+		entopt.REFSMMAT = REFSMMAT;
+		entopt.vessel = calcParams.src;
+
+		LunarEntryPAD(&entopt, *form);
+		sprintf(form->Area[0], "MIDPAC");
+		if (entopt.direct == false)
+		{
+			if (fcn == 97)
+			{
+				sprintf(form->remarks[0], "Assumes MCC6");
+			}
+			else if (fcn == 98)
+			{
+				sprintf(form->remarks[0], "Assumes MCC7");
+			}
+		}
+
+		if (fcn == 99)
+		{
+			sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase, true), CMCEntryUpdate(SplashLatitude, SplashLongitude));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+			}
 		}
 	}
 	break;

@@ -87,6 +87,8 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 
 	//Open by default
 	PrimaryHeRegulatorShutoffValve.SetState(true);
+	FuelVentValve2.SetState(true);
+	OxidVentValve2.SetState(true);
 
 	lem = NULL;
 }
