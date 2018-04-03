@@ -162,6 +162,21 @@ static PARTICLESTREAMSPEC stagingvent_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 0.1, 0.1
 };
 
+// "fuel venting" particle streams
+static PARTICLESTREAMSPEC fuel_venting_spec = {
+	0,		// flag
+	0.8,	// size
+	30,		// rate
+	2,	    // velocity
+	0.5,    // velocity distribution
+	20,		// lifetime
+	0.15,	// growthrate
+	0.5,    // atmslowdown 
+	PARTICLESTREAMSPEC::DIFFUSE,
+	PARTICLESTREAMSPEC::LVL_FLAT, 0.6, 0.6,
+	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
+};
+
 static MESHHANDLE hsat5stg1;
 static MESHHANDLE hsat5intstg;
 static MESHHANDLE hsat5intstg4;
@@ -1013,6 +1028,13 @@ void SaturnV::SetThirdStageEngines (double offset)
 	thg_ver = CreateThrusterGroup (th_ver, 2, THGROUP_USER);
 
 	sivb->RecalculateEngineParameters(THRUST_THIRD_VAC);
+
+	// LOX venting thruster
+
+	th_3rd_lox = CreateThruster(m_exhaust_pos1, _V(0, 0, 1), 3300.0, ph_3rd, 157.0, 157.0);
+
+	fuel_venting_spec.tex = oapiRegisterParticleTexture("ProjectApollo/Contrail_SaturnVenting");
+	AddExhaustStream(th_3rd_lox, &fuel_venting_spec);
 }
 
 void SaturnV::SeparateStage (int new_stage)
