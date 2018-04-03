@@ -417,11 +417,11 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		if (lem->TempMonitorRotary.GetState() == 0 && RRHeaterCautFF == 1) { RRHeaterCautFF = 0; }
 
-		// RCS Quads < 113F  or > 241F, cut and capped on LM-8 and subsequent
+		// RCS Quads < 118.8F  or > 190.5F, cut and capped on LM-8 and subsequent
 		//Quad 1
 		bool QD1HeaterLogic = false;
 
-		if (lem->scera1.GetVoltage(20, 4) < ((113.0 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 4) > ((241.0 - 20.0) / 36.0)) { QD1HeaterLogic = 1; }
+		if (lem->scera1.GetVoltage(20, 4) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 4) > ((190.5 - 20.0) / 36.0)) { QD1HeaterLogic = 1; }
 		else { QD1HeaterLogic = 0; }
 
 		if (QD1HeaterPrev == 0 && QD1HeaterLogic == 1) { QD1HeaterCautFF = 1; }
@@ -432,18 +432,18 @@ void LEM_CWEA::Timestep(double simdt) {
 		//Quad 2
 		bool QD2HeaterLogic = false;
 
-		if (lem->scera1.GetVoltage(20, 3) < ((113.0 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 3) > ((241.0 - 20.0) / 36.0)) { QD2HeaterLogic = 1; }
+		if (lem->scera1.GetVoltage(20, 3) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 3) > ((190.5 - 20.0) / 36.0)) { QD2HeaterLogic = 1; }
 		else { QD2HeaterLogic = 0; }
 
 		if (QD2HeaterPrev == 0 && QD2HeaterLogic == 1) { QD2HeaterCautFF = 1; }
 		QD2HeaterPrev = QD2HeaterLogic;
 
-		if (lem->TempMonitorRotary.GetState() == 3 && QD2HeaterCautFF == 1) { QD1HeaterCautFF = 0; }
+		if (lem->TempMonitorRotary.GetState() == 3 && QD2HeaterCautFF == 1) { QD2HeaterCautFF = 0; }
 
 		//Quad 3
 		bool QD3HeaterLogic = false;
 
-		if (lem->scera1.GetVoltage(20, 2) < ((113.0 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 2) > ((241.0 - 20.0) / 36.0)) { QD3HeaterLogic = 1; }
+		if (lem->scera1.GetVoltage(20, 2) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 2) > ((190.5 - 20.0) / 36.0)) { QD3HeaterLogic = 1; }
 		else { QD3HeaterLogic = 0; }
 
 		if (QD3HeaterPrev == 0 && QD3HeaterLogic == 1) { QD3HeaterCautFF = 1; }
@@ -454,13 +454,13 @@ void LEM_CWEA::Timestep(double simdt) {
 		//Quad 4
 		bool QD4HeaterLogic = false;
 
-		if (lem->scera1.GetVoltage(20, 1) < ((113.0 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 1) > ((241.0 - 20.0) / 36.0)) { QD4HeaterLogic = 1; }
+		if (lem->scera1.GetVoltage(20, 1) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 1) > ((190.5 - 20.0) / 36.0)) { QD4HeaterLogic = 1; }
 		else { QD4HeaterLogic = 0; }
 
 		if (QD4HeaterPrev == 0 && QD4HeaterLogic == 1) { QD4HeaterCautFF = 1; }
 		QD4HeaterPrev = QD4HeaterLogic;
 
-		if (lem->TempMonitorRotary.GetState() == 5 && QD1HeaterCautFF == 1) { QD1HeaterCautFF = 0; }
+		if (lem->TempMonitorRotary.GetState() == 5 && QD4HeaterCautFF == 1) { QD4HeaterCautFF = 0; }
 
 		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
 		bool SBDHeaterLogic = false;
