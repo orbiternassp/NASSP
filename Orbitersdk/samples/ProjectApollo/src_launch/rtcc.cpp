@@ -7717,7 +7717,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		//FiniteBurntimeCompensation(opt->vesseltype, sv_node, attachedMass,)
 
 
-		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
+		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 
 		OrbMech::oneclickcoast(sv_node.R, sv_node.V, sv_node.MJD, t_slip, R_cor, V_cor, hMoon, hMoon); //Calculate the state vector at the corrected ignition time
 
@@ -7914,7 +7914,7 @@ void RTCC::TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, 
 
 	m1 = (sv0.mass - m0)*exp(-boil*dt1);
 
-	OrbMech::impulsive(sv1.R, sv1.V, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
+	OrbMech::impulsive(sv1.R, sv1.V, TIGMJD, hEarth, f_T, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
 
 	OrbMech::oneclickcoast(sv1.R, sv1.V, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
 
@@ -8009,7 +8009,7 @@ void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *r
 
 	m1 = (sv0.mass - m0)*exp(-boil*dt1);
 
-	OrbMech::impulsive(sv2.R, sv2.V, TIGMJD, hEarth, f_T, isp, m0 + m1, DV, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
+	OrbMech::impulsive(sv2.R, sv2.V, TIGMJD, hEarth, f_T, f_T, isp, m0 + m1, DV, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
 
 	OrbMech::oneclickcoast(sv2.R, sv2.V, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
 
@@ -10459,14 +10459,14 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 		if (engine == 0)
 		{
 			isp = 2706.64;
-			F_average = 400.0*4.448222;
+			f_T = 400.0*4.448222;
+			F_average = f_T;
 		}
 		//SPS
 		else
 		{
 			f_T = SPS_THRUST;
 			isp = SPS_ISP;
-
 			F_average = f_T;
 		}
 	}
@@ -10477,7 +10477,8 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 		if (engine == 0)
 		{
 			isp = 2706.64;
-			F_average = 400.0*4.448222;
+			f_T = 400.0*4.448222;
+			F_average = f_T;
 		}
 		//DPS
 		else if (engine == 1)
@@ -10495,7 +10496,6 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 		{
 			f_T = APS_THRUST;
 			isp = APS_ISP;
-
 			F_average = f_T;
 		}
 	}
@@ -10507,12 +10507,11 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 		{
 			f_T = 3300.0;
 			isp = 157.0;
-
 			F_average = f_T;
 		}
 	}
 
-	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
+	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, f_T, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
 
 	sv_out.mass -= attachedMass;
 }
