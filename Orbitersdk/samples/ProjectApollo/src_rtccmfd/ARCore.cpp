@@ -425,6 +425,7 @@ ARCore::ARCore(VESSEL* v)
 	dkiresult.dv_CSI = 0.0;
 	dkiresult.t_CSI = 0.0;
 	dkiresult.t_TPI = 0.0;
+	dkiresult.DV_CDH = _V(0, 0, 0);
 
 	if (mission == 8)
 	{

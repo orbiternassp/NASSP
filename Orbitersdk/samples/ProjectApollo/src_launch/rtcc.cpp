@@ -5657,24 +5657,58 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV, VECTOR3 &dV_LVLH)
 
 void RTCC::LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step)
 {
-	double bt, dv_10p, mass40p, bt_40p, dv_40p, mass100p, bt_100p;
+	double bt, dv_10p, mass40p, bt_40p, dv_40p, mass100p, bt_100p, time_10p, v_G, F_L, K4, mintime, t_throttleup;
+	bool S_TH;
+
+	F_L = 200.0*4.448222;
+	K4 = 1050.0*4.448222;
+
+	mintime = 4.0;
+	t_throttleup = 26.0;
+
+	v_G = dV_LVLH - 4.0*F_L / mass;
+	if (v_G*mass / K4 < 95.0)
+	{
+		//LGC won't throttle up to 100% at 26 seconds
+		S_TH = true;
+	}
+	else
+	{
+		//LGC will throttle up to 100% at 26 seconds
+		S_TH = false;
+	}
+
+	if (mass > 30000.0)
+	{
+		//heavy docked burn, throttle up to 40% at 5 seconds
+		time_10p = 5.0;
+	}
+	else
+	{
+		//undocked or light docked burn, throttle up to 40% at 15 seconds
+		time_10p = 15.0;
+	}
+
+	//Throttle Profile:
+	//Basic principle: spend at least 4 seconds at one throttle setting before cutoff
+	//Burntime at 10% smaller than 21 seconds: full burn at 10%
+	//
 
 	bt = v_e / (0.1*F) *(mass)*(1.0 - exp(-dV_LVLH / v_e)); //burn time at 10% thrust
 
-	if (bt > 5.0 + 16.0)	//Burn longer than 5+16 seconds at 10%
+	if (bt > time_10p + mintime * 0.4 / 0.1)	//Burn longer than 4 seconds at 40%
 	{
-
-		dv_10p = v_e*log((mass) / (mass - 0.1*F / v_e*5.0)); //Five seconds at 10%
-		mass40p = mass - 0.1*F / v_e*5.0;
+		dv_10p = v_e * log((mass) / (mass - 0.1*F / v_e * time_10p)); //Five seconds at 10%
+		mass40p = mass - 0.1*F / v_e * time_10p;
 		bt_40p = v_e / (0.4*F) *(mass40p)*(1.0 - exp(-(dV_LVLH - dv_10p) / v_e)); // rest burn time at 40% thrust
 
-		if (bt_40p > 21.0 + 10.0)	//Burn at 40% longer than 21+10 seconds
+		if (S_TH == false)	//LGC will throttle up to 100% at 26 seconds
 		{
-			dv_40p = v_e*log((mass40p) / (mass40p - 0.4*F / v_e*21.0)); //21 seconds at 40%
-			mass100p = mass40p - 0.4*F / v_e*21.0;
-			bt_100p = v_e / F *(mass100p)*(1.0 - exp(-(dV_LVLH - dv_10p - dv_40p) / v_e)); // rest burn time at 100% thrust
+			dv_40p = v_e * log((mass40p) / (mass40p - 0.4*F / v_e * (t_throttleup - time_10p))); //21 seconds at 40%
+			mass100p = mass40p - 0.4*F / v_e * (t_throttleup - time_10p);
+			bt_100p = v_e / F * (mass100p)*(1.0 - exp(-(dV_LVLH - dv_10p - dv_40p) / v_e)); // rest burn time at 100% thrust
 
-			F_average = (0.1 * 5.0 + 0.4*21.0 + bt_100p) / (21.0 + 5.0 + bt_100p)*F;
+			F_average = (0.1 * time_10p + 0.4*(t_throttleup - time_10p) + bt_100p) / (t_throttleup + bt_100p)*F;
 			ManPADBurnTime = bt_100p + 26.0;
 			bt_var = bt_100p;
 
@@ -5682,8 +5716,8 @@ void RTCC::LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, 
 		}
 		else
 		{
-			F_average = (0.1 * 5.0 + 0.4*bt_40p) / (bt_40p + 5.0)*F;
-			ManPADBurnTime = bt_40p + 5.0;
+			F_average = (0.1 * time_10p + 0.4*bt_40p) / (bt_40p + time_10p)*F;
+			ManPADBurnTime = bt_40p + time_10p;
 			bt_var = bt_40p;
 
 			step = 1;
