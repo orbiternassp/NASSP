@@ -136,23 +136,23 @@ void APSPropellantSource::Timestep(double simt, double simdt)
 	heliumRegulatorManifoldPressurePSI = (heliumRegulator1OutletPressurePSI + heliumRegulator2OutletPressurePSI) / 2.0;
 
 	//Fuel Tank
-	if (FuelCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 138.5*p / pMaxForPressures)
+	if (FuelCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 133.5*p / pMaxForPressures)
 	{
 		FuelTankUllagePressurePSI = max(0.0, heliumRegulatorManifoldPressurePSI - 2.0);
 	}
 	else
 	{
-		FuelTankUllagePressurePSI = 138.5*p / pMaxForPressures;
+		FuelTankUllagePressurePSI = 133.5*p / pMaxForPressures;
 	}
 
 	//Oxidizer Tank
-	if (OxidCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 138.5*p / pMaxForPressures)
+	if (OxidCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 133.5*p / pMaxForPressures)
 	{
 		OxidTankUllagePressurePSI = max(0.0, heliumRegulatorManifoldPressurePSI - 2.0);
 	}
 	else
 	{
-		OxidTankUllagePressurePSI = 138.5*p / pMaxForPressures;
+		OxidTankUllagePressurePSI = 133.5*p / pMaxForPressures;
 	}
 
 	FuelTrimOrificeOutletPressurePSI = max(0.0, FuelTankUllagePressurePSI - 14.0);
