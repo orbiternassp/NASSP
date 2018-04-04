@@ -1003,3 +1003,24 @@ double LEM_CWEA::GetDimmableLoad()
 	else
 		return 0.0;
 }
+
+//CWEA Flip Flop handling
+CWEAFlipFlop::CWEAFlipFlop()
+{
+	lem = NULL;
+}
+
+void CWEAFlipFlop::Init(LEM *l)
+{
+	lem = l;
+}
+
+void CWEAFlipFlop::SetFF(bool FF)
+{
+	FF = 1;
+}
+
+void CWEAFlipFlop::ResetFF(bool FF)
+{
+	FF = 0;
+}

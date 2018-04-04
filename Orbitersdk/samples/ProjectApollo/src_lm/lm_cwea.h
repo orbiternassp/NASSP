@@ -103,5 +103,17 @@ protected:
 	LEM *lem;					// Pointer at LEM
 };
 
+class CWEAFlipFlop
+{
+public:
+	CWEAFlipFlop();
+	void Init(LEM *l);
+	void SetFF(bool FF);
+	void ResetFF(bool FF);
+
+protected:
+	LEM * lem;
+};
+
 #define CWEA_START_STRING   "CWEA_BEGIN"
 #define CWEA_END_STRING     "CWEA_END"
