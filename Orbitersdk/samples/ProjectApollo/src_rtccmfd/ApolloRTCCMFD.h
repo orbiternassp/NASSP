@@ -222,6 +222,8 @@ public:
 	void menuSetTEIPage();
 	void menuSetEntryUpdatePage();
 	void menuSetP37PADPage();
+	void menuSetRendezvousPage();
+	void menuSetDKIPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -286,6 +288,12 @@ public:
 	void menuNavCheckPADCalc();
 	void menuSetNavCheckGET();
 	void set_NavCheckGET(double time);
+	void menuDKICalc();
+	void DKITIGDialogue();
+	void set_DKITIG(double time);
+	void menuCycleDKIMode();
+	void menuSetDKIElevation();
+	void set_DKIElevation(double elev);
 
 protected:
 	oapi::Font *font;

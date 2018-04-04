@@ -660,9 +660,20 @@ struct DKIOpt	//Docking Initiation Processor
 	SV sv_P;
 	double GETbase;
 	double t_TIG;
-	double t_TPI;
+	double t_TPI_guess;
 	double DH;
 	double E;
+	int mode = 0;	//0 = TPI on time, 1 = TPI at orbital midnight
+};
+
+struct DKIResults
+{
+	VECTOR3 DV_Phasing;
+	double t_CSI;
+	double dv_CSI;
+	double t_CDH;
+	VECTOR3 DV_CDH;
+	double t_TPI;
 };
 
 struct SPQOpt //Coelliptic Sequence Processor
@@ -812,8 +823,9 @@ public:
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
-	void DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &t_CSI);
+	void DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
+	SV coast(SV sv0, double dt);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -855,7 +867,6 @@ private:
 	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
-	SV coast(SV sv0, double dt);
 	double PericynthionTime(VESSEL* vessel);
 	SV FindPericynthion(SV sv0);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);

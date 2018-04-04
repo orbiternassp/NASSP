@@ -516,7 +516,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		GET_Display(Buffer, G->CDHtime);
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f NM", G->DH);
+		sprintf(Buffer, "%f NM", G->DH / 1852.0);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		/*int hh,mm,ss;
@@ -1868,12 +1868,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(7 * W / 8, (int)(0.5 * H / 14), "LM", 2);
 		}
 
-		skp->Text(1 * W / 8, 2 * H / 14, "Lambert", 7);
-		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic", 10);
-		skp->Text(1 * W / 8, 6 * H / 14, "Orbit Adjustment", 16);
-		skp->Text(1 * W / 8, 8 * H / 14, "Translunar", 10);
-		skp->Text(1 * W / 8, 10 * H / 14, "Lunar Insertion", 15);
-		skp->Text(1 * W / 8, 12 * H / 14, "Entry", 5);
+		skp->Text(1 * W / 8, 2 * H / 14, "Rendezvous", 10);
+		skp->Text(1 * W / 8, 4 * H / 14, "Orbit Adjustment", 16);
+		skp->Text(1 * W / 8, 6 * H / 14, "Translunar", 10);
+		skp->Text(1 * W / 8, 8 * H / 14, "Lunar Insertion", 15);
+		skp->Text(1 * W / 8, 10 * H / 14, "Entry", 5);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "DOI", 3);
 		skp->Text(5 * W / 8, 4 * H / 14, "Plane Change", 12);
@@ -2268,7 +2267,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
 		skp->Text(1 * W / 8, 8 * H / 14, "Erasable Memory Programs", 24);
 
-		skp->Text(5 * W / 8, 2 * H / 14, "Skylab Rendezvous", 17);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
@@ -2938,6 +2936,70 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%s 400K", Buffer);
 		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 	}
+	else if (screen == 32)
+	{
+		skp->Text(1 * W / 8, 2 * H / 14, "Lambert Targeting", 17);
+		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic", 10);
+		skp->Text(1 * W / 8, 6 * H / 14, "Docking Initiation Processor", 28);
+		skp->Text(1 * W / 8, 8 * H / 14, "Skylab Rendezvous", 17);
+	}
+	else if (screen == 33)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Docking Initiate", 16);
+
+		GET_Display(Buffer, G->DKI_TIG);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->t_TPIguess);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->DKI_Mode == 0)
+		{
+			skp->Text(1 * W / 8, 6 * H / 14, "TPI on time", 11);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 6 * H / 14, "TPI at orbital midnight", 23);
+		}
+
+		sprintf(Buffer, "%.1f NM", G->DH / 1852.0);
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2f°", G->lambertelev*DEG);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(5 * W / 8, 5 * H / 21, "Phasing:", 8);
+		GET_Display(Buffer, G->P30TIG);
+		skp->Text(5 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
+		skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
+		skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
+		skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 11 * H / 21, "CSI:", 4);
+		GET_Display(Buffer, G->dkiresult.t_CSI);
+		skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_CSI / 0.3048);
+		skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 15 * H / 21, "CDH:", 4);
+		GET_Display(Buffer, G->dkiresult.t_CDH);
+		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f ft/s", length(G->dkiresult.DV_CDH) / 0.3048);
+		skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 19 * H / 21, "TPI:", 4);
+		GET_Display(Buffer, G->dkiresult.t_TPI);
+		skp->Text(5 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+
+	}
 	return true;
 }
 
@@ -3271,6 +3333,18 @@ void ApolloRTCCMFD::menuSetEntryUpdatePage()
 void ApolloRTCCMFD::menuSetP37PADPage()
 {
 	screen = 31;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetRendezvousPage()
+{
+	screen = 32;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetDKIPage()
+{
+	screen = 33;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -3925,7 +3999,7 @@ bool DHInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_DH(double DH)
 {
-	this->G->DH = DH;
+	this->G->DH = DH * 1852.0;
 }
 
 void ApolloRTCCMFD::phasedialogue()
@@ -5751,7 +5825,7 @@ void ApolloRTCCMFD::menuSetPCLanded()
 void ApolloRTCCMFD::menuSetTPIguess()
 {
 	bool TPIGuessInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", TPIGuessInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the GET for TPI (Format: hhh:mm:ss)", TPIGuessInput, 0, 20, (void*)this);
 }
 
 bool TPIGuessInput(void *id, char *str, void *data)
@@ -5980,6 +6054,70 @@ void ApolloRTCCMFD::menuRequestLTMFD()
 			}
 		}
 	}
+}
+
+void ApolloRTCCMFD::menuDKICalc()
+{
+	if (G->target != NULL)
+	{
+		G->DKICalc();
+	}
+}
+
+void ApolloRTCCMFD::DKITIGDialogue()
+{
+	bool DKITIGInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the time of ignition (Format: hhh:mm:ss)", DKITIGInput, 0, 20, (void*)this);
+}
+
+bool DKITIGInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_DKITIG(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DKITIG(double time)
+{
+	G->DKI_TIG = time;
+}
+
+void ApolloRTCCMFD::menuCycleDKIMode()
+{
+	if (G->DKI_Mode < 1)
+	{
+		G->DKI_Mode++;
+	}
+	else
+	{
+		G->DKI_Mode = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuSetDKIElevation()
+{
+	bool DKIElevInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Elevation in degrees:", DKIElevInput, 0, 20, (void*)this);
+}
+
+bool DKIElevInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_DKIElevation(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DKIElevation(double elev)
+{
+	this->G->lambertelev = elev * RAD;
 }
 
 void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)

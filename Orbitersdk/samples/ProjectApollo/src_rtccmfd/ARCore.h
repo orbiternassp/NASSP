@@ -52,6 +52,7 @@ public:
 	void LandingSiteUplink();
 	void VecPointCalc();
 	void TerrainModelCalc();
+	void DKICalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -118,6 +119,11 @@ public:
 	VECTOR3 offvec;			//Lambert offset vector
 	double angdeg;			//Phase angle for target offset
 	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
+
+	//DOCKING INITIATION
+	double DKI_TIG;		//Impulsive time of ignition
+	int DKI_Mode;		//0 = TPI on time, 1 = TPI at orbital midnight
+	DKIResults dkiresult;
 
 	//CDH PAGE
 	double CDHtime;	//Time of the CDH maneuver

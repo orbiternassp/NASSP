@@ -418,6 +418,14 @@ ARCore::ARCore(VESSEL* v)
 
 	AGSKFactor = 90.0*3600.0;
 
+	DKI_Mode = 0;
+	DKI_TIG = 0.0;
+	dkiresult.DV_Phasing = _V(0, 0, 0);
+	dkiresult.t_CDH = 0.0;
+	dkiresult.dv_CSI = 0.0;
+	dkiresult.t_CSI = 0.0;
+	dkiresult.t_TPI = 0.0;
+
 	if (mission == 8)
 	{
 		LSLat = 2.6317*RAD;
@@ -829,6 +837,11 @@ void ARCore::TLCCCalc()
 void ARCore::PDI_PAD()
 {
 	startSubthread(16);
+}
+
+void ARCore::DKICalc()
+{
+	startSubthread(19);
 }
 
 void ARCore::EntryPAD()
@@ -1753,7 +1766,7 @@ int ARCore::subThread()
 		}
 
 		opt.CDHtimemode = CDHtimemode;
-		opt.DH = DH*1852.0;
+		opt.DH = DH;
 		opt.GETbase = GETbase;
 		opt.impulsive = RTCC_NONIMPULSIVE;
 		opt.target = target;
@@ -1762,7 +1775,7 @@ int ARCore::subThread()
 
 		dH_CDH = rtcc->CDHcalc(&opt, CDHdeltaV, CDHtime_cor);
 
-		DH = dH_CDH / 1852.0;
+		DH = dH_CDH;
 
 		P30TIG = CDHtime_cor;
 		dV_LVLH = CDHdeltaV;
@@ -2836,6 +2849,40 @@ int ARCore::subThread()
 		P30TIG = EntryTIGcor;
 		dV_LVLH = Entry_DV;
 		entryprecision = res.precision;
+
+		Result = 0;
+	}
+	break;
+	case 19: //Docking Initiation Processor
+	{
+		DKIOpt opt;
+		SV sv_A, sv_P;
+		int poweredvesseltype;
+		OBJHANDLE hSun = oapiGetObjectByName("Sun");
+
+		sv_A = rtcc->StateVectorCalc(vessel);
+		sv_P = rtcc->StateVectorCalc(target);
+
+		opt.DH = DH;
+		opt.E = lambertelev;
+		opt.GETbase = GETbase;
+		opt.mode = DKI_Mode;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.t_TIG = DKI_TIG;
+		opt.t_TPI_guess = t_TPIguess;
+
+		if (vesseltype < 2)
+		{
+			poweredvesseltype = RTCC_VESSELTYPE_CSM;
+		}
+		else
+		{
+			poweredvesseltype = RTCC_VESSELTYPE_LM;
+		}
+
+		rtcc->DockingInitiationProcessor(opt, dkiresult);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, RTCC_ENGINETYPE_SPSDPS, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
 
 		Result = 0;
 	}

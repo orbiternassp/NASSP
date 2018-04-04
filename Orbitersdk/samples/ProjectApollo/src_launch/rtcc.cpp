@@ -4750,9 +4750,10 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMManPADOpt opt;
 		DKIOpt dkiopt;
+		DKIResults dkires;
 		SV sv_LM, sv_CSM, sv_DOI, sv_Phasing;
-		VECTOR3 DV_Phasing, dV_LVLH;
-		double GETbase, dt_peri, t_Abort, t_TPI_guess, t_TPI_Abort, t_CSI, P30TIG;
+		VECTOR3 dV_LVLH;
+		double GETbase, dt_peri, t_Abort, t_TPI_guess, t_TPI_Abort, P30TIG;
 		char GETbuffer[64], GETbuffer2[64];
 
 		AP11LMMNV * form = (AP11LMMNV *)pad;
@@ -4774,10 +4775,10 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dkiopt.sv_A = sv_DOI;
 		dkiopt.sv_P = sv_CSM;
 		dkiopt.t_TIG = t_Abort;
-		dkiopt.t_TPI = t_TPI_Abort;
+		dkiopt.t_TPI_guess = t_TPI_Abort;
 
-		DockingInitiationProcessor(&dkiopt, DV_Phasing, t_CSI);
-		PoweredFlightProcessor(sv_DOI, GETbase, t_Abort, 1, 1, 0.0, DV_Phasing, P30TIG, dV_LVLH);
+		DockingInitiationProcessor(dkiopt, dkires);
+		PoweredFlightProcessor(sv_DOI, GETbase, t_Abort, 1, 1, 0.0, dkires.DV_Phasing, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.csmlmdocked = false;
@@ -4794,7 +4795,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "PDI Abort");
 
-		OrbMech::format_time_HHMMSS(GETbuffer, t_CSI);
+		OrbMech::format_time_HHMMSS(GETbuffer, dkires.t_CSI);
 		OrbMech::format_time_HHMMSS(GETbuffer2, t_TPI_Abort);
 		sprintf(form->remarks, "CSI time: %s, TPI time: %s, N equal to 1", GETbuffer, GETbuffer2);
 	}
@@ -12160,9 +12161,9 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 	CSI = t_CSI;
 }
 
-void RTCC::DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &t_CSI)
+void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 {
-	SV sv_AP, sv_TPI, sv_PC;
+	SV sv_AP, sv_TPI_guess, sv_TPI, sv_PC;
 	VECTOR3 u, R_AP, V_AP, V_APF, R_AH, V_AH, V_AHF, R_AC, V_AC, R_PC, V_PC, V_ACF, R_PJ, V_PJ, R_AFD, R_AF, V_AF;
 	double mu, dv_P, p_P, dt_PH, c_P, eps_P, dv_H, dt_HC, t_H, t_C, dv_Po, e_Po, e_P;
 	int s_P;
@@ -12172,13 +12173,28 @@ void RTCC::DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &
 	p_P = c_P = 0.0;
 	dv_P = 100.0*0.3048;
 	dv_H = 0.0;
-	mu = GGRAV * oapiGetMass(opt->sv_A.gravref);
+	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
 
-	sv_AP = coast(opt->sv_A, opt->t_TIG - OrbMech::GETfromMJD(opt->sv_A.MJD, opt->GETbase));
-	sv_TPI = coast(opt->sv_P, opt->t_TPI - OrbMech::GETfromMJD(opt->sv_P.MJD, opt->GETbase));
+	sv_AP = coast(opt.sv_A, opt.t_TIG - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
+	sv_TPI_guess = coast(opt.sv_P, opt.t_TPI_guess - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 
-	OrbMech::QDRTPI(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, sv_TPI.gravref, mu, opt->DH, opt->E, 0, R_PJ, V_PJ);
-	R_AFD = R_PJ - unit(R_PJ)*opt->DH;
+	if (opt.mode == 0)
+	{
+		sv_TPI = sv_TPI_guess;
+		res.t_TPI = opt.t_TPI_guess;
+	}
+	else
+	{
+		OBJHANDLE hSun = oapiGetObjectByName("Sun");
+		double ttoMidnight;
+
+		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, sv_TPI_guess.gravref, hSun, 1, 1, false);
+		res.t_TPI = opt.t_TPI_guess + ttoMidnight;
+		sv_TPI = coast(sv_TPI_guess, res.t_TPI - opt.t_TPI_guess);
+	}
+
+	OrbMech::QDRTPI(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, sv_TPI.gravref, mu, opt.DH, opt.E, 0, R_PJ, V_PJ);
+	R_AFD = R_PJ - unit(R_PJ)*opt.DH;
 
 	u = unit(crossp(sv_TPI.R, sv_TPI.V));
 
@@ -12189,16 +12205,16 @@ void RTCC::DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &
 	{
 		V_APF = V_AP + unit(crossp(u, R_AP))*dv_P;
 		OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
-		t_H = opt->t_TIG + dt_PH;
+		t_H = opt.t_TIG + dt_PH;
 
-		OrbMech::CSIToDH(R_AH, V_AH, sv_TPI.R, sv_TPI.V, opt->DH, mu, dv_H);
+		OrbMech::CSIToDH(R_AH, V_AH, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_H);
 		V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
 		OrbMech::REVUP(R_AH, V_AHF, 0.5, mu, R_AC, V_AC, dt_HC);
 		t_C = t_H + dt_HC;
 		OrbMech::RADUP(sv_TPI.R, sv_TPI.V, R_AC, mu, R_PC, V_PC);
 
 		V_ACF = OrbMech::CoellipticDV(R_AC, R_PC, V_PC, mu);
-		OrbMech::rv_from_r0v0(R_AC, V_ACF, opt->t_TPI - t_C, R_AF, V_AF, mu);
+		OrbMech::rv_from_r0v0(R_AC, V_ACF, res.t_TPI - t_C, R_AF, V_AF, mu);
 		e_P = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
 
 		if (p_P == 0 || abs(e_P) >= eps_P)
@@ -12207,8 +12223,11 @@ void RTCC::DockingInitiationProcessor(DKIOpt *opt, VECTOR3 &DV_Phasing, double &
 		}
 	} while (abs(e_P) >= eps_P);
 
-	DV_Phasing = OrbMech::ApplyHorizontalDV(sv_AP.R, sv_AP.V, dv_P);
-	t_CSI = t_H;
+	res.DV_Phasing = OrbMech::ApplyHorizontalDV(sv_AP.R, sv_AP.V, dv_P);
+	res.t_CSI = t_H;
+	res.dv_CSI = dv_H;
+	res.t_CDH = t_C;
+	res.DV_CDH = V_ACF - V_AC;
 }
 
 void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI)

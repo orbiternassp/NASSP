@@ -4988,7 +4988,8 @@ bool CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH, 
 		//t_H2 = t_H1 + tt;
 		OrbMech::RADUP(R_P2, V_P2, R_A2, mu, R_PH2, V_PH2);
 		e_H = length(R_PH2) - length(R_A2) - DH;
-		if (p_H == 0 || abs(e_H) >= eps2)
+
+		if (abs(e_H) >= eps2)
 		{
 			ITER(c_I, s_F, e_H, p_H, dv, e_Ho, dvo);
 			if (s_F == 1)
