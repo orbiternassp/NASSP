@@ -64,6 +64,7 @@ SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	FailInit = false;
 
 	FailureTimer = 0.0;
+	J2DefaultThrust = 0.0;
 
 	j2engines[0] = &j2engine1;
 	j2engines[1] = &j2engine2;
