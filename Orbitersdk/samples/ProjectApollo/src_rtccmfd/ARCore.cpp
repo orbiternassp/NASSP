@@ -1707,6 +1707,28 @@ int ARCore::startSubthread(int fcn) {
 int ARCore::subThread()
 {
 	int Result = 0;
+
+	int poweredvesseltype, poweredenginetype;
+
+	if (vesseltype < 2)
+	{
+		poweredvesseltype = RTCC_VESSELTYPE_CSM;
+	}
+	else
+	{
+		poweredvesseltype = RTCC_VESSELTYPE_LM;
+	}
+
+	if (vesseltype >= 2 && !lemdescentstage)
+	{
+		poweredenginetype = RTCC_ENGINETYPE_APS;
+	}
+	else
+	{
+		poweredenginetype = RTCC_ENGINETYPE_SPSDPS;
+	}
+
+
 	subThreadStatus = 2; // Running
 	switch (subThreadMode) {
 	case 0: // Test
@@ -1718,7 +1740,6 @@ int ARCore::subThread()
 		LambertMan opt;
 		SV sv_A, sv_P;
 		VECTOR3 dV;
-		int poweredvesseltype;
 		double attachedMass;
 
 		sv_A = rtcc->StateVectorCalc(vessel);
@@ -1733,18 +1754,7 @@ int ARCore::subThread()
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.T1 = T1;
-		opt.T2 = T2;
-
-		if (vesseltype < 2)
-		{
-			poweredvesseltype = RTCC_VESSELTYPE_CSM;
-		}
-		else
-		{
-			poweredvesseltype = RTCC_VESSELTYPE_LM;
-		}
-
-		
+		opt.T2 = T2;		
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -1755,7 +1765,7 @@ int ARCore::subThread()
 			attachedMass = rtcc->GetDockedVesselMass(target);
 		}
 		rtcc->LambertTargeting(&opt, dV);
-		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, RTCC_ENGINETYPE_SPSDPS, attachedMass, dV, P30TIG, dV_LVLH);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, dV, P30TIG, dV_LVLH);
 		LambertdeltaV = dV_LVLH;
 
 		Result = 0;
@@ -2876,7 +2886,6 @@ int ARCore::subThread()
 	{
 		DKIOpt opt;
 		SV sv_A, sv_P;
-		int poweredvesseltype;
 		OBJHANDLE hSun = oapiGetObjectByName("Sun");
 
 		sv_A = rtcc->StateVectorCalc(vessel);
@@ -2891,17 +2900,8 @@ int ARCore::subThread()
 		opt.t_TIG = DKI_TIG;
 		opt.t_TPI_guess = t_TPIguess;
 
-		if (vesseltype < 2)
-		{
-			poweredvesseltype = RTCC_VESSELTYPE_CSM;
-		}
-		else
-		{
-			poweredvesseltype = RTCC_VESSELTYPE_LM;
-		}
-
 		rtcc->DockingInitiationProcessor(opt, dkiresult);
-		rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, GetPowEngType(), 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
 
 		Result = 0;
 	}
