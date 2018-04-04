@@ -169,11 +169,14 @@ void SIISystems::Timestep(double simdt)
 	//Failure code
 	FailureTimer += simdt;
 
-	for (int i = 0;i < 5;i++)
+	if (vessel->GetDamageModel())
 	{
-		if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && !j2engines[i]->GetFailed())
+		for (int i = 0;i < 5;i++)
 		{
-			j2engines[i]->SetFailed();
+			if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && !j2engines[i]->GetFailed())
+			{
+				j2engines[i]->SetFailed();
+			}
 		}
 	}
 }

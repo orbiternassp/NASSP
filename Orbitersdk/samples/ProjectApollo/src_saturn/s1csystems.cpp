@@ -365,11 +365,14 @@ void SICSystems::Timestep(double simdt, bool liftoff)
 	if (liftoff)
 		FailureTimer += simdt;
 
-	for (int i = 0;i < 5;i++)
+	if (vessel->GetDamageModel())
 	{
-		if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
+		for (int i = 0;i < 5;i++)
 		{
-			f1engines[i]->SetFailed();
+			if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
+			{
+				f1engines[i]->SetFailed();
+			}
 		}
 	}
 
