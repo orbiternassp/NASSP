@@ -5,6 +5,7 @@
 #include "csmcomputer.h"
 #include "IMU.h"
 #include "saturn.h"
+#include "LEM.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -53,6 +54,7 @@ ARCore::ARCore(VESSEL* v)
 	LSAlt = 0.0;
 	manpadopt = 0;
 	vesseltype = 0;
+	lemdescentstage = true;
 
 	for (int i = 0; i < 20; i++)
 	{
@@ -229,6 +231,21 @@ ARCore::ARCore(VESSEL* v)
 	else
 	{
 		g_Data.uplinkLEM = 1;
+
+		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
+			!stricmp(vessel->GetClassName(), "ProjectApollo/LEM") ||
+			!stricmp(vessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+			!stricmp(vessel->GetClassName(), "ProjectApollo/LEMSaturn")) {
+			LEM *lem = (LEM *)vessel;
+			if (lem->GetStage() < 2)
+			{
+				lemdescentstage = true;
+			}
+			else
+			{
+				lemdescentstage = false;
+			}
+		}
 	}
 	for (int i = 0; i < 24; i++)
 	{
@@ -304,8 +321,7 @@ ARCore::ARCore(VESSEL* v)
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	EntryPADdirect = false; //false = Entry PAD with MCC/Deorbit burn, true = Direct Entry
-	csmenginetype = 0;
-	lmenginetype = 0;
+	enginetype = 0;
 	directiontype = 0;
 	TPIPAD_AZ = 0.0;
 	TPIPAD_dH = 0.0;
@@ -1728,6 +1744,8 @@ int ARCore::subThread()
 			poweredvesseltype = RTCC_VESSELTYPE_LM;
 		}
 
+		
+
 		if (vesseltype == 0 || vesseltype == 2)
 		{
 			attachedMass = 0.0;
@@ -2122,7 +2140,7 @@ int ARCore::subThread()
 
 			opt.dV_LVLH = dV_LVLH;
 			opt.directiontype = directiontype;
-			opt.enginetype = csmenginetype;
+			opt.enginetype = enginetype;
 			opt.GETbase = GETbase;
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
@@ -2140,7 +2158,7 @@ int ARCore::subThread()
 
 			opt.dV_LVLH = dV_LVLH;
 			opt.directiontype = directiontype;
-			opt.enginetype = lmenginetype;
+			opt.enginetype = GetPowEngType();
 			opt.GETbase = GETbase;
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
@@ -2764,7 +2782,7 @@ int ARCore::subThread()
 		
 		opt.GETbase = GETbase;
 
-		if (csmenginetype == RTCC_ENGINETYPE_SPSDPS)
+		if (enginetype == RTCC_ENGINETYPE_SPSDPS)
 		{
 			opt.impulsive = RTCC_NONIMPULSIVE;
 		}
@@ -2883,7 +2901,7 @@ int ARCore::subThread()
 		}
 
 		rtcc->DockingInitiationProcessor(opt, dkiresult);
-		rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, RTCC_ENGINETYPE_SPSDPS, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, GetPowEngType(), 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
 
 		Result = 0;
 	}
@@ -2927,4 +2945,24 @@ int ARCore::REFSMMAT_Address()
 		addr -= 02;
 	}
 	return addr;
+}
+
+int ARCore::GetPowEngType()
+{
+	int poweredenginetype;
+
+	if (enginetype == 0)
+	{
+		poweredenginetype = RTCC_ENGINETYPE_RCS;
+	}
+	else if (enginetype == 1 && vesseltype >= 2 && !lemdescentstage)
+	{
+		poweredenginetype = RTCC_ENGINETYPE_APS;
+	}
+	else
+	{
+		poweredenginetype = RTCC_ENGINETYPE_SPSDPS;
+	}
+
+	return poweredenginetype;
 }

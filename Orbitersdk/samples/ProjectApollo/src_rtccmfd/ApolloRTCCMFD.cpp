@@ -1015,6 +1015,18 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 4 * H / 14, "LM/CSM docked", 13);
 		}
 
+		if (G->vesseltype >= 2)
+		{
+			if (G->lemdescentstage)
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "Descent Stage", 13);
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "Ascent Stage", 12);
+			}
+		}
+
 		skp->Text(1 * W / 8, 8 * H / 14, "Sxt/Star Check:", 15);
 		sprintf(Buffer, "%.0f min", G->sxtstardtime);
 		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
@@ -1069,15 +1081,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM/LM", 6);
 				}
 
-				if (G->csmenginetype == RTCC_ENGINETYPE_SPSDPS)
+				if (G->enginetype == RTCC_ENGINETYPE_SPSDPS)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "SPS", 3);
 				}
-				else if (G->csmenginetype == RTCC_ENGINETYPE_RCS && G->directiontype == RTCC_DIRECTIONTYPE_PLUSX)
+				else if (G->enginetype == RTCC_ENGINETYPE_RCS && G->directiontype == RTCC_DIRECTIONTYPE_PLUSX)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS +X", 6);
 				}
-				else if (G->csmenginetype == RTCC_ENGINETYPE_RCS && G->directiontype == RTCC_DIRECTIONTYPE_MINUSX)
+				else if (G->enginetype == RTCC_ENGINETYPE_RCS && G->directiontype == RTCC_DIRECTIONTYPE_MINUSX)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS -X", 6);
 				}
@@ -1132,7 +1144,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "%+06.0f WGT", G->manpad.Weight);
 				skp->Text((int)(3.5 * W / 8), 3 * H / 26, Buffer, strlen(Buffer));
 
-				if (G->csmenginetype == RTCC_ENGINETYPE_SPSDPS)
+				if (G->enginetype == RTCC_ENGINETYPE_SPSDPS)
 				{
 					sprintf(Buffer, "%+07.2f PTRIM", G->manpad.pTrim);
 					skp->Text((int)(3.5 * W / 8), 4 * H / 26, Buffer, strlen(Buffer));
@@ -1224,21 +1236,21 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			{
 				skp->Text(5 * W / 8, (int)(0.5 * H / 14), "P30 LM Maneuver", 15);
 
-				if (G->lmenginetype == RTCC_ENGINETYPE_SPSDPS)
+				if (G->enginetype == 1 && G->lemdescentstage)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "DPS", 3);
 				}
-				else if (G->lmenginetype == RTCC_ENGINETYPE_RCS && G->directiontype == RTCC_DIRECTIONTYPE_PLUSX)
+				else if (G->enginetype == 1 && !G->lemdescentstage)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "APS", 3);
+				}
+				else if (G->enginetype == 0 && G->directiontype == RTCC_DIRECTIONTYPE_PLUSX)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS +X", 6);
 				}
-				else if (G->lmenginetype == RTCC_ENGINETYPE_RCS && G->directiontype == RTCC_DIRECTIONTYPE_MINUSX)
+				else if (G->enginetype == 0 && G->directiontype == RTCC_DIRECTIONTYPE_MINUSX)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS -X", 6);
-				}
-				else if (G->lmenginetype == RTCC_ENGINETYPE_APS)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "APS", 3);
 				}
 
 				if (G->vesseltype == 2)
@@ -2587,7 +2599,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 10 * H / 14, "Min DV", 6);
 		}
 
-		if (G->csmenginetype == RTCC_ENGINETYPE_SPSDPS)
+		if (G->enginetype == RTCC_ENGINETYPE_SPSDPS)
 		{
 			skp->Text(1 * W / 8, 12 * H / 14, "SPS Deorbit", 11);
 		}
@@ -4580,28 +4592,15 @@ void ApolloRTCCMFD::menuSwitchManPADEngine()
 {
 	if (G->manpadopt == 0)
 	{
-		if (G->vesseltype < 2)
+		if (G->enginetype < 1)
 		{
-			if (G->csmenginetype < 1)
-			{
-				G->csmenginetype++;
-			}
-			else
-			{
-				G->csmenginetype = 0;
-			}
+			G->enginetype++;
 		}
 		else
 		{
-			if (G->lmenginetype < 2)
-			{
-				G->lmenginetype++;
-			}
-			else
-			{
-				G->lmenginetype = 0;
-			}
+			G->enginetype = 0;
 		}
+
 	}
 }
 
@@ -4721,7 +4720,27 @@ void ApolloRTCCMFD::menuChangeVesselType()
 	else
 	{
 		G->g_Data.uplinkLEM = 1;
+
+		if (!stricmp(G->vessel->GetClassName(), "ProjectApollo\\LEM") ||
+			!stricmp(G->vessel->GetClassName(), "ProjectApollo/LEM") ||
+			!stricmp(G->vessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+			!stricmp(G->vessel->GetClassName(), "ProjectApollo/LEMSaturn")) {
+			LEM *lem = (LEM *)G->vessel;
+			if (lem->GetStage() < 2)
+			{
+				G->lemdescentstage = true;
+			}
+			else
+			{
+				G->lemdescentstage = false;
+			}
+		}
 	}
+}
+
+void ApolloRTCCMFD::menuCycleLMStage()
+{
+	G->lemdescentstage = !G->lemdescentstage;
 }
 
 void ApolloRTCCMFD::menuUpdateLiftoffTime()
@@ -4996,13 +5015,13 @@ void ApolloRTCCMFD::menuSwitchEntryNominal()
 
 void ApolloRTCCMFD::menuSwitchDeorbitEngineOption()
 {
-	if (G->csmenginetype < 1)
+	if (G->enginetype < 1)
 	{
-		G->csmenginetype++;
+		G->enginetype++;
 	}
 	else
 	{
-		G->csmenginetype = 0;
+		G->enginetype = 0;
 	}
 }
 

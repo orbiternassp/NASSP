@@ -160,6 +160,7 @@ public:
 	void menuSetAGCEpoch();
 	void set_AGCEpoch(double mjd);
 	void menuChangeVesselType();
+	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
 	void cycleREFSMMATupl();
 	void set_svtarget();

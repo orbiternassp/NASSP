@@ -442,6 +442,7 @@ public:
 	void SetTrackLight();
 	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
+	UINT GetStage() { return stage; }
 
 	virtual void PlayCountSound(bool StartStop) {};
 	virtual void PlaySepsSound(bool StartStop) {};

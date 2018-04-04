@@ -101,12 +101,12 @@ public:
 	double P30TIG;				//Maneuver GET
 	VECTOR3 dV_LVLH;			//LVLH maneuver vector
 	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
 	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
 	double t_Land;				//Time of landing
 	bool inhibUplLOS;
 	bool PADSolGood;
-	int csmenginetype;				// 0 = RCS, 1 = SPS
-	int lmenginetype;				// 0 = RCS, 1 = DPS, 2 = APS
+	int enginetype;				// 0 = RCS, 1 = SPS or DPS or APS
 	int directiontype;			// 0 = +X, 1 = -X (RCS only)
 
 	//LAMBERT PAGE
@@ -304,6 +304,9 @@ public:
 
 	//NAV CHECK PAGE
 	AP7NAV navcheckpad;
+
+	protected:
+		int GetPowEngType();
 
 private:
 	//VECTOR3 RA2, VA2, RP2, VP2;
