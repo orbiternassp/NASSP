@@ -634,11 +634,14 @@ void SIBSystems::Timestep(double simdt, bool liftoff)
 		FailureTimer += simdt;
 	}
 
-	for (int i = 0;i < 8;i++)
+	if (vessel->GetDamageModel())
 	{
-		if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
+		for (int i = 0;i < 8;i++)
 		{
-			h1engines[i]->SetFailed();
+			if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
+			{
+				h1engines[i]->SetFailed();
+			}
 		}
 	}
 

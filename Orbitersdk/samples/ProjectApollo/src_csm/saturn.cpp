@@ -1638,8 +1638,7 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		int st, en;
 		double tim;
 		sscanf(line + 10, "%d %d %lf", &st, &en, &tim);
-		if (GetDamageModel())
-			SetEngineFailure(st, en, tim);
+		SetEngineFailure(st, en, tim);
 	}
 	else if (!strnicmp(line, "PLATFAIL", 8)) {
 		sscanf(line + 8, "%lf", &PlatFail);
