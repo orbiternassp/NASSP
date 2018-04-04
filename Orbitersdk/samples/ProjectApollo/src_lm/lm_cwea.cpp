@@ -44,7 +44,15 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 	Operate = false;
+
+	//Logic states
 	AutoTrackChanged = true;
+	RRHeaterPrev = false;
+	SBDHeaterPrev = false;
+	QD1HeaterPrev = false;
+	QD2HeaterPrev = false;
+	QD3HeaterPrev = false;
+	QD4HeaterPrev = false;
 
 	//Initialize all FF's as "reset"
 	DesRegWarnFF = 0;
@@ -52,7 +60,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	CESDCWarnFF = 0;
 	CESACWarnFF = 0;
 	RCSCautFF1 = 0; RCSCautFF2 = 0;
-	RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
+	RRHeaterCautFF = 0; SBDHeaterCautFF = 0; QD1HeaterCautFF = 0; QD2HeaterCautFF = 0; QD3HeaterCautFF = 0; QD4HeaterCautFF = 0;
 	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
 	WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
 	RRCautFF = 0;
@@ -141,10 +149,19 @@ void LEM_CWEA::Timestep(double simdt) {
 		SetLight(3, 6, 0);
 
 		// 6DS2 ASC PRESS LOW
-		// Pressure of either ascent helium tanks below 2773 psia prior to staging
+		// Pressure of either ascent helium tanks < 2773 psia prior to staging
 		// Disabled when stage deadface opens.
+		lightlogic = false;
 		if (lem->stage < 2 && (lem->GetAPSPropellant()->GetAscentHelium1PressPSI() < 2772.8 || lem->GetAPSPropellant()->GetAscentHelium2PressPSI() < 2773.0)) {
-				SetLight(1, 0, 1);
+			lightlogic = true;
+		}
+		// Fuel and oxidizer pressure < 119.8 psia prior to staging, cut and capped from the CWEA on LM-8 and subsequent
+		if (((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->stage < 2) && (lem->APSPropellant.GetFuelTrimOrificeOutletPressurePSI() < 119.8 || lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI() < 119.8)) {
+			lightlogic = true;
+		}
+
+		if (lightlogic) {
+			SetLight(1, 0, 1);
 		}
 		else
 			SetLight(1, 0, 0);
@@ -396,20 +413,81 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		// 6DS33 HEATER FAILURE CAUTION
 		// On when:
-		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
+		// LR temp cut and capped from CW logic
+
 		// RR Assembly < -54.07F or > 147.69F
-		// Quad temps and LR temp do not turn the light on
-		// Disabled when Temperature Monitor switch selects affected assembly.
-		if (lem->TempMonitorRotary.GetState() == 0) { RRHeaterCautFF = 0; }
-		else if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterCautFF = 1; }
+		bool RRHeaterLogic = false;
+
+		if (lem->scera1.GetVoltage(21, 4) < ((-54.07 + 200.0) / 80.0) || lem->scera1.GetVoltage(21, 4) > ((147.69 + 200.0) / 80.0)) { RRHeaterLogic = 1; }
+		else { RRHeaterLogic = 0; }
+
+		if (RRHeaterPrev == 0 && RRHeaterLogic == 1) { RRHeaterCautFF = 1; }
+		RRHeaterPrev = RRHeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 0 && RRHeaterCautFF == 1) { RRHeaterCautFF = 0; }
+
+		// RCS Quads < 118.8F  or > 190.5F, cut and capped on LM-8 and subsequent
+		//Quad 1
+		bool QD1HeaterLogic = false;
+
+		if ((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->scera1.GetVoltage(20, 4) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 4) > ((190.5 - 20.0) / 36.0)) { QD1HeaterLogic = 1; }
+		else { QD1HeaterLogic = 0; }
+
+		if (QD1HeaterPrev == 0 && QD1HeaterLogic == 1) { QD1HeaterCautFF = 1; }
+		QD1HeaterPrev = QD1HeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 2 && QD1HeaterCautFF == 1) { QD1HeaterCautFF = 0; }
+
+		//Quad 2
+		bool QD2HeaterLogic = false;
+
+		if ((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->scera1.GetVoltage(20, 3) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 3) > ((190.5 - 20.0) / 36.0)) { QD2HeaterLogic = 1; }
+		else { QD2HeaterLogic = 0; }
+
+		if (QD2HeaterPrev == 0 && QD2HeaterLogic == 1) { QD2HeaterCautFF = 1; }
+		QD2HeaterPrev = QD2HeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 3 && QD2HeaterCautFF == 1) { QD2HeaterCautFF = 0; }
+
+		//Quad 3
+		bool QD3HeaterLogic = false;
+
+		if ((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->scera1.GetVoltage(20, 2) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 2) > ((190.5 - 20.0) / 36.0)) { QD3HeaterLogic = 1; }
+		else { QD3HeaterLogic = 0; }
+
+		if (QD3HeaterPrev == 0 && QD3HeaterLogic == 1) { QD3HeaterCautFF = 1; }
+		QD3HeaterPrev = QD3HeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 4 && QD3HeaterCautFF == 1) { QD3HeaterCautFF = 0; }
+
+		//Quad 4
+		bool QD4HeaterLogic = false;
+
+		if ((lem->ApolloNo < 14 || lem->ApolloNo == 1301) && lem->scera1.GetVoltage(20, 1) < ((118.8 - 20.0) / 36.0) || lem->scera1.GetVoltage(20, 1) > ((190.5 - 20.0) / 36.0)) { QD4HeaterLogic = 1; }
+		else { QD4HeaterLogic = 0; }
+
+		if (QD4HeaterPrev == 0 && QD4HeaterLogic == 1) { QD4HeaterCautFF = 1; }
+		QD4HeaterPrev = QD4HeaterLogic;
+
+		if (lem->TempMonitorRotary.GetState() == 5 && QD4HeaterCautFF == 1) { QD4HeaterCautFF = 0; }
+
+		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
+		bool SBDHeaterLogic = false;
+
+		if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterLogic = 1; }
+
+		if (SBDHeaterPrev == 0 && SBDHeaterLogic == 1) { SBDHeaterCautFF = 1; }
+		SBDHeaterPrev = SBDHeaterLogic;
 
 		if (lem->TempMonitorRotary.GetState() == 6) { SBDHeaterCautFF = 0; }
-		else if (lem->scera2.GetVoltage(21, 1) < ((-64.08 + 200.0) / 80.0) || lem->scera2.GetVoltage(21, 1) > ((153.63 + 200.0) / 80.0)) { SBDHeaterCautFF = 1; }
 
-		if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1)
+		//Set CW Light
+		if (RRHeaterCautFF == 1 || SBDHeaterCautFF == 1 || QD1HeaterCautFF == 1 || QD2HeaterCautFF == 1 || QD3HeaterCautFF == 1 || QD4HeaterCautFF == 1)
 			SetLight(2, 6, 1);
 		else
 			SetLight(2, 6, 0);
+
+		//sprintf(oapiDebugString(), "QD1HFF %i QD1HLogic %i QD1Prev %i QD2HFF %i QD3HFF %i QD4HFF %i", QD1HeaterCautFF, QD1HeaterLogic, QD1HeaterPrev, QD2HeaterCautFF, QD3HeaterCautFF, QD4HeaterCautFF);
 
 		// 6DS36 ECS FAILURE CAUTION
 		// On when:
@@ -563,9 +641,6 @@ void LEM_CWEA::Timestep(double simdt) {
 			// Lunar Contact and Component lights are lit in clbkPanelRedrawEvent code
 		break;
 	}
-
-	//sprintf(oapiDebugString(), "Dim %lf NonDim %lf Dim pct %lf", GetDimmableLoad(), GetNonDimmableLoad(), lem->lca.GetAnnunDimPct());
-	//sprintf(oapiDebugString(), "AGS %i DC %i AC %i RCS1 %i RCS2 %i RRH %i SBH %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i SBD %i", AGSWarnFF, CESDCWarnFF, CESACWarnFF, RCSCautFF1, RCSCautFF2, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3, SBDCautFF);
 }
 
 void LEM_CWEA::SystemTimestep(double simdt) {
@@ -636,6 +711,10 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "RCSCAUTFF2", RCSCautFF2);
 	papiWriteScenario_bool(scn, "RRHEATERCAUTFF", RRHeaterCautFF);
 	papiWriteScenario_bool(scn, "SBDHEATERCAUTFF", SBDHeaterCautFF);
+	papiWriteScenario_bool(scn, "QD1HEATERCAUTFF", QD1HeaterCautFF);
+	papiWriteScenario_bool(scn, "QD2HEATERCAUTFF", QD2HeaterCautFF);
+	papiWriteScenario_bool(scn, "QD3HEATERCAUTFF", QD3HeaterCautFF);
+	papiWriteScenario_bool(scn, "QD4HEATERCAUTFF", QD4HeaterCautFF);
 	papiWriteScenario_bool(scn, "OXYGENCAUTFF1", OxygenCautFF1);
 	papiWriteScenario_bool(scn, "OXYGENCAUTFF2", OxygenCautFF2);
 	papiWriteScenario_bool(scn, "OXYGENCAUTFF3", OxygenCautFF3);
@@ -645,6 +724,12 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "RRCAUTFF", RRCautFF);
 	papiWriteScenario_bool(scn, "SBDCAUTFF", SBDCautFF);
 	papiWriteScenario_bool(scn, "AUTOTRACKCHANGED", AutoTrackChanged);
+	papiWriteScenario_bool(scn, "RRHEATERPREV", RRHeaterPrev);
+	papiWriteScenario_bool(scn, "SBDHEATERPREV", SBDHeaterPrev);
+	papiWriteScenario_bool(scn, "QD1HEATERPREV", QD1HeaterPrev);
+	papiWriteScenario_bool(scn, "QD2HEATERPREV", QD2HeaterPrev);
+	papiWriteScenario_bool(scn, "QD3HEATERPREV", QD3HeaterPrev);
+	papiWriteScenario_bool(scn, "QD4HEATERPREV", QD4HeaterPrev);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
@@ -673,6 +758,10 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "RCSCAUTFF2", RCSCautFF2);
 		papiReadScenario_bool(line, "RRHEATERCAUTFF", RRHeaterCautFF);
 		papiReadScenario_bool(line, "SBDHEATERCAUTFF", SBDHeaterCautFF);
+		papiReadScenario_bool(line, "QD1HEATERCAUTFF", QD1HeaterCautFF);
+		papiReadScenario_bool(line, "QD2HEATERCAUTFF", QD2HeaterCautFF);
+		papiReadScenario_bool(line, "QD3HEATERCAUTFF", QD3HeaterCautFF);
+		papiReadScenario_bool(line, "QD4HEATERCAUTFF", QD4HeaterCautFF);
 		papiReadScenario_bool(line, "OXYGENCAUTFF1", OxygenCautFF1);
 		papiReadScenario_bool(line, "OXYGENCAUTFF2", OxygenCautFF2);
 		papiReadScenario_bool(line, "OXYGENCAUTFF3", OxygenCautFF3);
@@ -682,6 +771,12 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "RRCAUTFF", RRCautFF);
 		papiReadScenario_bool(line, "SBDCAUTFF", SBDCautFF);
 		papiReadScenario_bool(line, "AUTOTRACKCHANGED", AutoTrackChanged);
+		papiReadScenario_bool(line, "RRHEATERPREV", RRHeaterPrev);
+		papiReadScenario_bool(line, "SBDHEATERPREV", SBDHeaterPrev);
+		papiReadScenario_bool(line, "QD1HEATERPREV", QD1HeaterPrev);
+		papiReadScenario_bool(line, "QD2HEATERPREV", QD2HeaterPrev);
+		papiReadScenario_bool(line, "QD3HEATERPREV", QD3HeaterPrev);
+		papiReadScenario_bool(line, "QD4HEATERPREV", QD4HeaterPrev);
 		papiReadScenario_intarr(line, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);

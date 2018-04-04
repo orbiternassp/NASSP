@@ -69,6 +69,10 @@ protected:
 	bool RCSCautFF2;   // Flip Flop
 	bool RRHeaterCautFF;   // Flip Flop
 	bool SBDHeaterCautFF;   // Flip Flop
+	bool QD1HeaterCautFF;	// Flip Flop
+	bool QD2HeaterCautFF;	// Flip Flop
+	bool QD3HeaterCautFF;	// Flip Flop
+	bool QD4HeaterCautFF;	// Flip Flop
 	bool OxygenCautFF1;   // Flip Flop
 	bool OxygenCautFF2;   // Flip Flop
 	bool OxygenCautFF3;   // Flip Flop
@@ -77,8 +81,15 @@ protected:
 	bool WaterCautFF3;   // Flip Flop
 	bool RRCautFF;   // Flip Flop
 	bool SBDCautFF;   // Flip Flop
+
 	bool MasterAlarm;
 	bool AutoTrackChanged;
+	bool RRHeaterPrev;
+	bool SBDHeaterPrev;
+	bool QD1HeaterPrev;
+	bool QD2HeaterPrev;
+	bool QD3HeaterPrev;
+	bool QD4HeaterPrev;
 
 	e_object *cwea_pwr;
 	e_object *ma_pwr;

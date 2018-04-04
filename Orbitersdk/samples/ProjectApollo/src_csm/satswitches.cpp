@@ -2280,7 +2280,7 @@ bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my)
 	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
 		// First -- Are we docked?
 		if(sat->dockingprobe.IsHardDocked() == false){ return true; }
-		// Umbilical connected? (Supposed to be by docking!)
+		// Umbilical connected? (Supposed to be after LM Pressurization and hatch removal)
 		if(sat->CSMToLEMConnector.connectedTo == NULL){ return true; }
 		ConnectorMessage msg;
 		ConnectorMessageValue mval;
