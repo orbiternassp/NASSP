@@ -487,7 +487,7 @@ void LEM_CWEA::Timestep(double simdt) {
 		else
 			SetLight(2, 6, 0);
 
-		sprintf(oapiDebugString(), "QD1HFF %i QD1HLogic %i QD1Prev %i QD2HFF %i QD3HFF %i QD4HFF %i", QD1HeaterCautFF, QD1HeaterLogic, QD1HeaterPrev, QD2HeaterCautFF, QD3HeaterCautFF, QD4HeaterCautFF);
+		//sprintf(oapiDebugString(), "QD1HFF %i QD1HLogic %i QD1Prev %i QD2HFF %i QD3HFF %i QD4HFF %i", QD1HeaterCautFF, QD1HeaterLogic, QD1HeaterPrev, QD2HeaterCautFF, QD3HeaterCautFF, QD4HeaterCautFF);
 
 		// 6DS36 ECS FAILURE CAUTION
 		// On when:
@@ -641,8 +641,6 @@ void LEM_CWEA::Timestep(double simdt) {
 			// Lunar Contact and Component lights are lit in clbkPanelRedrawEvent code
 		break;
 	}
-
-	//sprintf(oapiDebugString(), "AGS %i DC %i AC %i RCS1 %i RCS2 %i RRH %i SBH %i RRC %i O21 %i O22 %i O23 %i W1 %i W2 %i W3 %i SBD %i", AGSWarnFF, CESDCWarnFF, CESACWarnFF, RCSCautFF1, RCSCautFF2, RRHeaterCautFF, SBDHeaterCautFF, RRCautFF, OxygenCautFF1, OxygenCautFF2, OxygenCautFF3, WaterCautFF1, WaterCautFF2, WaterCautFF3, SBDCautFF);
 }
 
 void LEM_CWEA::SystemTimestep(double simdt) {
