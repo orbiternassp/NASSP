@@ -674,7 +674,9 @@ struct DKIOpt	//Docking Initiation Processor
 	int N_HC = 1;			//Number of revs between CSI and CDH
 
 	double dt_TPI_sunrise = 16.0*60.0;
-	double DeltaT_PBH;	//Delta time between phasing and boost/CSI
+	double DeltaT_PBH = 55.0*60.0;	//Delta time between phasing and boost/CSI
+	double DeltaT_BHAM = 60.0*60.0;	//Delta time between boost and HAM
+	double Delta_HAMH = 60.0*60.0;	//Delta time between HAM and CSI
 };
 
 struct DKIResults

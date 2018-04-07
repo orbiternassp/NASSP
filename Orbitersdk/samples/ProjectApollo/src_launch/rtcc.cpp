@@ -12276,7 +12276,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	if (opt.plan == 2)
 	{
 		OrbMech::CSIToDH(R_AP, V_AP, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_P);
-		V_APF = V_AP + tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, 0.0));
+		V_APF = V_AP + tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, dv_rad_const));
 
 		OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
 		t_H = opt.t_TIG + dt_PH;
@@ -12318,7 +12318,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 				}
 				else
 				{
-					dt_PB = 55.0*60.0;//opt.DeltaT_PBH;
+					dt_PB = opt.DeltaT_PBH;
 				}
 
 				t_B = opt.t_TIG + dt_PB;
@@ -12332,7 +12332,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 				}
 				else
 				{
-					dt_BHAM = 3600.0;
+					dt_BHAM = opt.DeltaT_BHAM;
 					OrbMech::rv_from_r0v0(R_AB, V_ABF, dt_BHAM, R_AHAM, V_AHAM, mu);
 				}
 
@@ -12344,7 +12344,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 				}
 				else
 				{
-					dt_HAMH = 3600.0;
+					dt_HAMH = opt.Delta_HAMH;
 					OrbMech::rv_from_r0v0(R_AHAM, V_AHAM, dt_HAMH, R_AH, V_AH, mu);
 				}
 
@@ -12362,7 +12362,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 				}
 				else
 				{
-					dt_PH = 3600.0;
+					dt_PH = opt.DeltaT_PBH;
 					OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PH, R_AH, V_AH, mu);
 				}
 

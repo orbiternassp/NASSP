@@ -3079,17 +3079,29 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 6 * H / 14, "TPI at X minutes before sunrise:", 32);
+			skp->Text(1 * W / 8, 6 * H / 14, "TPI at X min before sunrise:", 28);
 		}
 
 		if (G->DKI_TPI_Mode == 2)
 		{
-			sprintf(Buffer, "%.1f minutes", G->DKI_dt_TPI_sunrise / 60.0);
+			sprintf(Buffer, "%.1f min", G->DKI_dt_TPI_sunrise / 60.0);
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		sprintf(Buffer, "%d", G->DKI_N);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->DKI_Maneuver_Line == false)
+		{
+			sprintf(Buffer, "%.1f min", G->DKI_dt_PBH / 60.0);
+			skp->Text(6 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.1f min", G->DKI_dt_BHAM / 60.0);
+			skp->Text(6 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.1f min", G->DKI_dt_HAMH / 60.0);
+			skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }
@@ -6178,7 +6190,14 @@ bool DKITIGInput(void *id, char *str, void *data)
 {
 	int hh, mm, ss, t1time;
 	double pdidt;
-	if (sscanf(str, "PDI+%lf", &pdidt) == 1)
+	if (strcmp(str, "PeT") == 0)
+	{
+		double pet;
+		pet = ((ApolloRTCCMFD*)data)->timetoperi();
+		((ApolloRTCCMFD*)data)->set_DKITIG(pet);
+		return true;
+	}
+	else if (sscanf(str, "PDI+%lf", &pdidt) == 1)
 	{
 		((ApolloRTCCMFD*)data)->set_DKITIG_DT_PDI(pdidt * 60.0);
 		return true;
@@ -6302,6 +6321,81 @@ bool DKINInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_DKIN(int N)
 {
 	G->DKI_N = N;
+}
+
+void ApolloRTCCMFD::menuDKIDeltaT1()
+{
+	if (G->DKI_Maneuver_Line == false)
+	{
+		bool DKIDT1Input(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the time between abort and Boost/CSI:", DKIDT1Input, 0, 20, (void*)this);
+	}
+}
+
+bool DKIDT1Input(void *id, char *str, void *data)
+{
+	double dt;
+	if (sscanf(str, "%lf", &dt) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_DKIDT1(dt);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DKIDT1(double dt)
+{
+	G->DKI_dt_PBH = dt * 60.0;
+}
+
+void ApolloRTCCMFD::menuDKIDeltaT2()
+{
+	if (G->DKI_Maneuver_Line == false)
+	{
+		bool DKIDT2Input(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the time between boost and HAM:", DKIDT2Input, 0, 20, (void*)this);
+	}
+}
+
+bool DKIDT2Input(void *id, char *str, void *data)
+{
+	double dt;
+	if (sscanf(str, "%lf", &dt) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_DKIDT2(dt);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DKIDT2(double dt)
+{
+	G->DKI_dt_BHAM = dt * 60.0;
+}
+
+void ApolloRTCCMFD::menuDKIDeltaT3()
+{
+	if (G->DKI_Maneuver_Line == false)
+	{
+		bool DKIDT3Input(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the time between HAM and CSI:", DKIDT3Input, 0, 20, (void*)this);
+	}
+}
+
+bool DKIDT3Input(void *id, char *str, void *data)
+{
+	double dt;
+	if (sscanf(str, "%lf", &dt) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_DKIDT3(dt);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DKIDT3(double dt)
+{
+	G->DKI_dt_HAMH = dt * 60.0;
 }
 
 void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)

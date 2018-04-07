@@ -127,6 +127,9 @@ public:
 	bool DKI_Maneuver_Line;	//false = define relative times, true = 0.5 revolutions between maneuvers
 	bool DKI_Radial_DV;	//false = horizontal maneuver, true = 50 ft/s radial component
 	double DKI_dt_TPI_sunrise;
+	double DKI_dt_PBH;	//Delta time between phasing and boost/CSI
+	double DKI_dt_BHAM;	//Delta time between boost and HAM
+	double DKI_dt_HAMH;	//Delta time between HAM and CSI
 	int DKI_N;		//Half revolutions between CSI and CDH
 	DKIResults dkiresult;
 

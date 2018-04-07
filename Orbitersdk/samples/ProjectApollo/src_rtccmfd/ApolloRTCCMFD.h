@@ -304,6 +304,12 @@ public:
 	void set_DKITPIDT(double time);
 	void DKINDialogue();
 	void set_DKIN(int N);
+	void menuDKIDeltaT1();
+	void set_DKIDT1(double dt);
+	void menuDKIDeltaT2();
+	void set_DKIDT2(double dt);
+	void menuDKIDeltaT3();
+	void set_DKIDT3(double dt);
 
 protected:
 	oapi::Font *font;
