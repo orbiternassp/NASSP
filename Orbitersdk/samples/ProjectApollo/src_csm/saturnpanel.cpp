@@ -1592,14 +1592,14 @@ void Saturn::AddLeftCenterLowerPanelAreas(int offset)
 	oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,					_R(1605 + offset,  951, 1639 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CONTORLLERSWITCHES,							_R(1496 + offset, 1090, 1639 + offset, 1119), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 
-	MFDSPEC mfds_gnleft  =     {{ 1008 + 58 + offset,  1726 + 13, 1008 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
-	MFDSPEC mfds_gnuser1 =     {{ 1444 + 58 + offset,  1726 + 13, 1444 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
+	MFDSPEC mfds_gnleft  =     {{ 1048 + 58 + offset,  1726 + 13, 1048 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
+	MFDSPEC mfds_gnuser1 =     {{ 1484 + 58 + offset,  1726 + 13, 1484 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
 
 	oapiRegisterMFD(MFD_LEFT, mfds_gnleft);
 	oapiRegisterMFD(MFD_USER1, mfds_gnuser1);
 
-	oapiRegisterPanelArea (AID_MFDGNLEFT,									_R(1008 + offset, 1726, 1008 + 425 + offset, 1726 + 354), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_MFDGNUSER1,									_R(1444 + offset, 1726, 1444 + 425 + offset, 1726 + 354), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MFDGNLEFT,									_R(1048 + offset, 1726, 1048 + 425 + offset, 1726 + 354), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MFDGNUSER1,									_R(1484 + offset, 1726, 1484 + 425 + offset, 1726 + 354), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 
 	// "Accelerator" areas
 	oapiRegisterPanelArea (AID_SWITCHTO_SEXTANT1,	     				    _R(1620 + offset,  585, 1760 + offset,  690), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
@@ -1608,14 +1608,14 @@ void Saturn::AddLeftCenterLowerPanelAreas(int offset)
 
 void Saturn::AddCenterLowerPanelAreas(int offset)
 {
-	MFDSPEC mfds_gnuser2 =     {{ 1880 + 58 + offset,  1726 + 13, 1880 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
-	MFDSPEC mfds_gnright =     {{ 2316 + 58 + offset,  1726 + 13, 2316 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
+	MFDSPEC mfds_gnuser2 =     {{ 1920 + 58 + offset,  1726 + 13, 1920 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
+	MFDSPEC mfds_gnright =     {{ 2356 + 58 + offset,  1726 + 13, 2356 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
 
 	oapiRegisterMFD(MFD_USER2, mfds_gnuser2);
 	oapiRegisterMFD(MFD_RIGHT, mfds_gnright);		
 
-	oapiRegisterPanelArea (AID_MFDGNUSER2,									_R(1880 + offset, 1726, 1880 + 425 + offset, 1726 + 354), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_MFDGNRIGHT,									_R(2316 + offset, 1726, 2316 + 425 + offset, 1726 + 354), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MFDGNUSER2,									_R(1920 + offset, 1726, 1920 + 425 + offset, 1726 + 354), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MFDGNRIGHT,									_R(2356 + offset, 1726, 2356 + 425 + offset, 1726 + 354), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN|PANEL_MOUSE_LBPRESSED, PANEL_MAP_BACKGROUND);
 
 	oapiRegisterPanelArea (AID_CWS_GNLIGHTS,								_R(2102 + offset,  925, 2102+53 + offset, 925+76), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_MASTER_ALARM3,								_R(2104 + offset, 1036, 2149 + offset, 1072), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
