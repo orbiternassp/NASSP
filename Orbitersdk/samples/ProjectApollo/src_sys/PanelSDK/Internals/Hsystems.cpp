@@ -486,7 +486,7 @@ void h_volume::ThermalComps(double dt) {
 	double m_i=0;
 	double NV=0;
 	double PNV=0;
-	double tNV;
+	double tNV=0;
 	//some sums we need
 	for (i = 0; i < MAX_SUB; i++) {
 		m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];
@@ -506,7 +506,7 @@ void h_volume::ThermalComps(double dt) {
 		tNV = (composition[i].mass - composition[i].vapor_mass) / density;
 		NV += tNV;
 
-		PNV += tNV / BULK_MOD[composition[i].subst_type];;
+		PNV += tNV / BULK_MOD[composition[i].subst_type];
 	}
 
 	m_i = -m_i * R_CONST * Temp;

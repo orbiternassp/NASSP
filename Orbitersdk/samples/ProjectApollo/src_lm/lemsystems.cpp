@@ -1615,7 +1615,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-	/*
+	///*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1947,8 +1947,32 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:PRESS");
 	double *lmtunneltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:TEMP");
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
-	*/
 
+	//LM Prop Tanks
+	double *lmdesfuel1mass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESFUEL1:MASS");
+	double *lmdesfuel1press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESFUEL1:PRESS");
+	double *lmdesfuel1AZppress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESFUEL1:AZ_PPRESS");
+	double *lmdesfuel1Heppress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESFUEL1:HE_PPRESS");
+	double *lmdesfuel1temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESFUEL1:TEMP");
+	double *lmdesfuel2mass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESFUEL2:MASS");
+	double *lmdesfuel2press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESFUEL2:PRESS");
+	double *lmdesfuel2temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESFUEL2:TEMP");
+	double *lmdesox1mass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESOXIDIZER1:MASS");
+	double *lmdesox1press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESOXIDIZER1:PRESS");
+	double *lmdesox1temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESOXIDIZER1:TEMP");
+	double *lmdesox2mass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESOXIDIZER2:MASS");
+	double *lmdesox2press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESOXIDIZER2:PRESS");
+	double *lmdesox2temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESOXIDIZER2:TEMP");
+
+	double *lmdesGHe1mass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESGHE1:MASS");
+	double *lmdesGHe1press = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESGHE1:PRESS");
+	double *lmdesGHe1temp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESGHE1:TEMP"); 
+
+	//*/
+
+	sprintf(oapiDebugString(), "DHe1Mass %lf DHe1Press %lf DFHe1Temp %lf DF1Mass %lf DF1Press %lf DF1Temp %lf AZPP %lf HePP %lf", *lmdesGHe1mass*LBS, *lmdesGHe1press*PSI, KelvinToFahrenheit(*lmdesGHe1temp), *lmdesfuel1mass*LBS, *lmdesfuel1press*PSI, KelvinToFahrenheit(*lmdesfuel1temp), *lmdesfuel1AZppress*PSI, *lmdesfuel1Heppress*PSI);
+	//sprintf(oapiDebugString(), "DHe1Mass %lf DHe1Press %lf DFHe1Temp %lf", *lmdesGHe1mass*LBS, *lmdesGHe1press*PSI, KelvinToFahrenheit(*lmdesGHe1temp));
+	//sprintf(oapiDebugString(), "DF1Mass %lf DF1Press %lf DF1Temp %lf DF2Mass %lf DF2Press %lf DF2Temp %lf", *lmdesfuel1mass*LBS, *lmdesfuel1press*PSI, KelvinToFahrenheit(*lmdesfuel1temp), *lmdesfuel2mass*LBS, *lmdesfuel2press*PSI, KelvinToFahrenheit(*lmdesfuel2temp));
 	//sprintf(oapiDebugString(), "LM Cabin: %lf LM Tunnel: %lf", *lmcabinpress*PSI, *lmtunnelpress*PSI);
 	//sprintf(oapiDebugString(), "Quad 1 %lf Quad 2 %lf Quad 3 %lf Quad 4 %lf", KelvinToFahrenheit(*QD1Temp), KelvinToFahrenheit(*QD2Temp), KelvinToFahrenheit(*QD3Temp), KelvinToFahrenheit(*QD4Temp));
 	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
