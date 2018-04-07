@@ -2616,10 +2616,12 @@ double timetoperi(VECTOR3 R, VECTOR3 V, double mu)
 	return 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1.0 - alpha*r0)*OrbMech::power(chi, 3.0) * stumpS(alpha*chi*chi) + r0*chi);
 }
 
-double timetoapo(VECTOR3 R, VECTOR3 V, double mu)
+double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s)
 {
+	//s = 1: ensure the next apoapsis is returned
+
 	OELEMENTS coe;
-	double a, chi, alpha, r0, vr0;
+	double a, chi, alpha, r0, vr0, dt;
 
 	coe = coe_from_sv(R, V, mu);
 	//[h e RA incl w TA a]
@@ -2634,7 +2636,16 @@ double timetoapo(VECTOR3 R, VECTOR3 V, double mu)
 
 	r0 = length(R);
 	vr0 = dotp(R, V) / r0;
-	return 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1.0 - alpha*r0)*OrbMech::power(chi, 3.0) * stumpS(alpha*chi*chi) + r0*chi);
+	dt = 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1.0 - alpha*r0)*OrbMech::power(chi, 3.0) * stumpS(alpha*chi*chi) + r0*chi);
+
+	if (s == 0 || dt >= 0)
+	{
+		return dt;
+	}
+
+	double T_P = period(R, V, mu);
+
+	return dt + T_P;
 }
 
 double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)

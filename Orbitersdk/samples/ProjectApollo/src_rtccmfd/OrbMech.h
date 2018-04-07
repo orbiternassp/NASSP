@@ -201,7 +201,7 @@ namespace OrbMech {
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);
-	double timetoapo(VECTOR3 R, VECTOR3 V, double mu);
+	double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s = 0);
 	double timetonode_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 u_node, VECTOR3 &R2, VECTOR3 &V2);
 	double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu);
 	double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout);

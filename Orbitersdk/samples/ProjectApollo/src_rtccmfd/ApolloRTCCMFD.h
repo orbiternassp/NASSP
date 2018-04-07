@@ -225,6 +225,7 @@ public:
 	void menuSetP37PADPage();
 	void menuSetRendezvousPage();
 	void menuSetDKIPage();
+	void menuSetDKIOptionsPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -292,9 +293,17 @@ public:
 	void menuDKICalc();
 	void DKITIGDialogue();
 	void set_DKITIG(double time);
-	void menuCycleDKIMode();
+	void set_DKITIG_DT_PDI(double dt);
+	void menuCycleDKIProfile();
+	void menuCycleDKITPIMode();
 	void menuSetDKIElevation();
 	void set_DKIElevation(double elev);
+	void menuCycleDKIManeuverLine();
+	void menuCycleDKIRadialComponent();
+	void DKITPIDTDialogue();
+	void set_DKITPIDT(double time);
+	void DKINDialogue();
+	void set_DKIN(int N);
 
 protected:
 	oapi::Font *font;
