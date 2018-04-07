@@ -12194,12 +12194,22 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 	CSI = t_CSI;
 }
 
-void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
+bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 {
 	// NOMENCLATURE:
 	// R = position vector, V = velocity vector
 	// A = active vehicle, P = passive vehicle
 	// P = phasing maneuver, B = boost, HAM = height adjustment, H = height maneuver, C = coelliptic maneuver, F = final maneuver (TPI)
+
+	//Check on N
+	if (opt.plan == 0 || opt.plan == 1)
+	{
+		if (opt.N_HC % 2 == 0) return false;
+	}
+	else if (opt.plan == 2)
+	{
+		if (opt.N_HC % 2 != 0) return false;
+	}
 
 	SV sv_AP, sv_TPI_guess, sv_TPI, sv_PC;
 	VECTOR3 u, R_AP, V_AP, V_APF, R_AH, V_AH, V_AHF, R_AC, V_AC, R_PC, V_PC, V_ACF, R_PJ, V_PJ, R_AFD, R_AF, V_AF;
@@ -12263,95 +12273,126 @@ void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	R_AP = unit(sv_AP.R - u * dotp(sv_AP.R, u))*length(sv_AP.R);
 	V_AP = unit(sv_AP.V - u * dotp(sv_AP.V, u))*length(sv_AP.V);
 
-	do
+	if (opt.plan == 2)
 	{
-		V_APF = V_AP + tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, dv_rad_const));
+		OrbMech::CSIToDH(R_AP, V_AP, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_P);
+		V_APF = V_AP + tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, 0.0));
 
-		if (opt.plan == 1)
+		OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
+		t_H = opt.t_TIG + dt_PH;
+
+		do
 		{
-			VECTOR3 R_AB, V_AB, V_ABF, R_AHAM, V_AHAM;
-			double dt_PB, t_B, dv_B, t_HAM, dt_BHAM, dt_HAMH;
+			V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
+			OrbMech::REVUP(R_AH, V_AHF, 0.5*(double)opt.N_HC, mu, R_AC, V_AC, dt_HC);
+			t_C = t_H + dt_HC;
 
-			dv_B = 10.0*0.3048;
+			OrbMech::RADUP(sv_TPI.R, sv_TPI.V, R_AC, mu, R_PC, V_PC);
+			V_ACF = OrbMech::CoellipticDV(R_AC, R_PC, V_PC, mu);
 
-			if (opt.maneuverline)
-			{
-				dt_PB = OrbMech::timetoapo(R_AP, V_APF, mu, 1);
-			}
-			else
-			{
-				dt_PB = 55.0*60.0;//opt.DeltaT_PBH;
-			}
-			
-			t_B = opt.t_TIG + dt_PB;
-			OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PB, R_AB, V_AB, mu);
+			OrbMech::rv_from_r0v0(R_AC, V_ACF, res.t_TPI - t_C, R_AF, V_AF, mu);
+			e_P = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
 
-			V_ABF = V_AB + unit(crossp(u, R_AB))*dv_B;
-
-			if (opt.maneuverline)
+			if (p_P == 0 || abs(e_P) >= eps_P)
 			{
-				OrbMech::REVUP(R_AB, V_ABF, 0.5, mu, R_AHAM, V_AHAM, dt_BHAM);
+				OrbMech::ITER(c_P, s_P, e_P, p_P, dv_H, e_Po, dv_Po);
 			}
-			else
-			{
-				dt_BHAM = 3600.0;
-				OrbMech::rv_from_r0v0(R_AB, V_ABF, dt_BHAM, R_AHAM, V_AHAM, mu);
-			}
-			
-			t_HAM = t_B + dt_BHAM;
-
-			if (opt.maneuverline)
-			{
-				OrbMech::REVUP(R_AHAM, V_AHAM, 0.5, mu, R_AH, V_AH, dt_HAMH);
-			}
-			else
-			{
-				dt_HAMH = 3600.0;
-				OrbMech::rv_from_r0v0(R_AHAM, V_AHAM, dt_HAMH, R_AH, V_AH, mu);
-			}
-			
-			t_H = t_HAM + dt_HAMH;
-
-			res.t_Boost = t_B;
-			res.dv_Boost = dv_B;
-			res.t_HAM = t_HAM;
-		}
-		else
+		} while (abs(e_P) >= eps_P);
+	}
+	else
+	{
+		do
 		{
-			if (opt.maneuverline)
+			V_APF = V_AP + tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, dv_rad_const));
+
+			if (opt.plan == 1)
 			{
-				OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
+				VECTOR3 R_AB, V_AB, V_ABF, R_AHAM, V_AHAM;
+				double dt_PB, t_B, dv_B, t_HAM, dt_BHAM, dt_HAMH;
+
+				dv_B = 10.0*0.3048;
+
+				if (opt.maneuverline)
+				{
+					dt_PB = OrbMech::timetoapo(R_AP, V_APF, mu, 1);
+				}
+				else
+				{
+					dt_PB = 55.0*60.0;//opt.DeltaT_PBH;
+				}
+
+				t_B = opt.t_TIG + dt_PB;
+				OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PB, R_AB, V_AB, mu);
+
+				V_ABF = V_AB + unit(crossp(u, R_AB))*dv_B;
+
+				if (opt.maneuverline)
+				{
+					OrbMech::REVUP(R_AB, V_ABF, 0.5, mu, R_AHAM, V_AHAM, dt_BHAM);
+				}
+				else
+				{
+					dt_BHAM = 3600.0;
+					OrbMech::rv_from_r0v0(R_AB, V_ABF, dt_BHAM, R_AHAM, V_AHAM, mu);
+				}
+
+				t_HAM = t_B + dt_BHAM;
+
+				if (opt.maneuverline)
+				{
+					OrbMech::REVUP(R_AHAM, V_AHAM, 0.5, mu, R_AH, V_AH, dt_HAMH);
+				}
+				else
+				{
+					dt_HAMH = 3600.0;
+					OrbMech::rv_from_r0v0(R_AHAM, V_AHAM, dt_HAMH, R_AH, V_AH, mu);
+				}
+
+				t_H = t_HAM + dt_HAMH;
+
+				res.t_Boost = t_B;
+				res.dv_Boost = dv_B;
+				res.t_HAM = t_HAM;
 			}
 			else
 			{
-				dt_PH = 3600.0;
-				OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PH, R_AH, V_AH, mu);
+				if (opt.maneuverline)
+				{
+					OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
+				}
+				else
+				{
+					dt_PH = 3600.0;
+					OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PH, R_AH, V_AH, mu);
+				}
+
+				t_H = opt.t_TIG + dt_PH;
 			}
-			
-			t_H = opt.t_TIG + dt_PH;
-		}
 
-		OrbMech::CSIToDH(R_AH, V_AH, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_H);
-		V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
-		OrbMech::REVUP(R_AH, V_AHF, 0.5*(double)opt.N_HC, mu, R_AC, V_AC, dt_HC);
-		t_C = t_H + dt_HC;
-		OrbMech::RADUP(sv_TPI.R, sv_TPI.V, R_AC, mu, R_PC, V_PC);
+			OrbMech::CSIToDH(R_AH, V_AH, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_H);
+			V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
+			OrbMech::REVUP(R_AH, V_AHF, 0.5*(double)opt.N_HC, mu, R_AC, V_AC, dt_HC);
+			t_C = t_H + dt_HC;
+			OrbMech::RADUP(sv_TPI.R, sv_TPI.V, R_AC, mu, R_PC, V_PC);
 
-		V_ACF = OrbMech::CoellipticDV(R_AC, R_PC, V_PC, mu);
-		OrbMech::rv_from_r0v0(R_AC, V_ACF, res.t_TPI - t_C, R_AF, V_AF, mu);
-		e_P = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
+			V_ACF = OrbMech::CoellipticDV(R_AC, R_PC, V_PC, mu);
+			OrbMech::rv_from_r0v0(R_AC, V_ACF, res.t_TPI - t_C, R_AF, V_AF, mu);
+			e_P = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
 
-		if (p_P == 0 || abs(e_P) >= eps_P)
-		{
-			OrbMech::ITER(c_P, s_P, e_P, p_P, dv_P, e_Po, dv_Po);
-		}
-	} while (abs(e_P) >= eps_P);
+			if (p_P == 0 || abs(e_P) >= eps_P)
+			{
+				OrbMech::ITER(c_P, s_P, e_P, p_P, dv_P, e_Po, dv_Po);
+			}
+		} while (abs(e_P) >= eps_P);
+	}
 
 	res.DV_Phasing = tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, dv_rad_const));
 	res.t_CSI = t_H;
 	res.dv_CSI = dv_H;
 	res.t_CDH = t_C;
 	res.DV_CDH = V_ACF - V_AC;
+
+	return true;
 }
 
 void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI)

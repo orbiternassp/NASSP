@@ -2981,9 +2981,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "CSI/CDH Sequence", 16);
 		}
-		else
+		else if(G->DKI_Profile == 1)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "HAM-CSI/CDH Sequence", 20);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Rescue-2 Sequence", 17);
 		}
 
 		GET_Display(Buffer, G->DKI_TIG);
@@ -6200,7 +6204,7 @@ void ApolloRTCCMFD::set_DKITIG_DT_PDI(double dt)
 
 void ApolloRTCCMFD::menuCycleDKIProfile()
 {
-	if (G->DKI_Profile < 1)
+	if (G->DKI_Profile < 2)
 	{
 		G->DKI_Profile++;
 	}

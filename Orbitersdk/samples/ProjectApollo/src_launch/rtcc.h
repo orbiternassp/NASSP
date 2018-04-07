@@ -667,6 +667,7 @@ struct DKIOpt	//Docking Initiation Processor
 	//DKI RENDEZVOUS PLANS:
 	//0 = Phasing, CSI 0.5 revs later, CDH 0.5 revs later
 	//1 = Phasing with +50 ft/s DVZ, at apolune, CDH 0.5 revs later
+	//2 = Height, CSI (Phasing) 0.5 revs later, CDH 2xN revs later
 	int plan = 0;
 	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
 	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
@@ -836,7 +837,7 @@ public:
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
-	void DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
+	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
 	SV coast(SV sv0, double dt);
 
