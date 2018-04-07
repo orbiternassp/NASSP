@@ -434,14 +434,20 @@ ARCore::ARCore(VESSEL* v)
 
 	AGSKFactor = 90.0*3600.0;
 
-	DKI_Mode = 0;
+	DKI_Profile = 0;
+	DKI_TPI_Mode = 0;
+	DKI_Radial_DV = false;
 	DKI_TIG = 0.0;
+	DKI_Maneuver_Line = true;
 	dkiresult.DV_Phasing = _V(0, 0, 0);
 	dkiresult.t_CDH = 0.0;
 	dkiresult.dv_CSI = 0.0;
 	dkiresult.t_CSI = 0.0;
 	dkiresult.t_TPI = 0.0;
 	dkiresult.DV_CDH = _V(0, 0, 0);
+	dkiresult.t_Boost = 0.0;
+	dkiresult.dv_Boost = 0.0;
+	dkiresult.t_HAM = 0.0;
 
 	if (mission == 8)
 	{
@@ -2894,7 +2900,10 @@ int ARCore::subThread()
 		opt.DH = DH;
 		opt.E = lambertelev;
 		opt.GETbase = GETbase;
-		opt.mode = DKI_Mode;
+		opt.maneuverline = DKI_Maneuver_Line;
+		opt.plan = DKI_Profile;
+		opt.radial_dv = DKI_Radial_DV;
+		opt.tpimode = DKI_TPI_Mode;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.t_TIG = DKI_TIG;

@@ -149,6 +149,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_vec(scn, "LambertdeltaV", G->LambertdeltaV);
 	oapiWriteScenario_int(scn, "LAMBERTOPT", G->lambertopt);
 	papiWriteScenario_bool(scn, "LAMBERTMULTI", G->lambertmultiaxis);
+	papiWriteScenario_double(scn, "lambertelev", G->lambertelev);
 	papiWriteScenario_vec(scn, "CDHdeltaV", G->CDHdeltaV);
 	if (G->target != NULL)
 	{
@@ -240,6 +241,13 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "DOIGET", G->DOIGET);
 	papiWriteScenario_double(scn, "DOI_PERIANG", G->DOI_PeriAng);
 
+	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
+	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
+	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
+	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
+	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
+	papiWriteScenario_bool(scn, "DKI_Radial_DV", G->DKI_Radial_DV);
+
 	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
 
 }
@@ -275,6 +283,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_vec(line, "LambertdeltaV", G->LambertdeltaV);
 		papiReadScenario_int(line, "LAMBERTOPT", G->lambertopt);
 		papiReadScenario_bool(line, "LAMBERTMULTI", G->lambertmultiaxis);
+		papiReadScenario_double(line, "lambertelev", G->lambertelev);
 		papiReadScenario_vec(line, "CDHdeltaV", G->CDHdeltaV);
 
 		istarget = papiReadScenario_string(line, "TARGET", Buffer2);
@@ -373,6 +382,13 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "DOI_N", G->DOI_N);
 		papiReadScenario_double(line, "DOIGET", G->DOIGET);
 		papiReadScenario_double(line, "DOI_PERIANG", G->DOI_PeriAng);
+
+		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
+		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
+		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
+		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
+		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
+		papiReadScenario_bool(line, "DKI_Radial_DV", G->DKI_Radial_DV);
 
 		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
@@ -2959,24 +2975,33 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Docking Initiate", 16);
 
-		GET_Display(Buffer, G->DKI_TIG);
-		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->t_TPIguess);
-		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-
-		if (G->DKI_Mode == 0)
+		if (G->DKI_Profile == 0)
 		{
-			skp->Text(1 * W / 8, 6 * H / 14, "TPI on time", 11);
+			skp->Text(1 * W / 8, 2 * H / 14, "CSI/CDH Sequence", 16);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 6 * H / 14, "TPI at orbital midnight", 23);
+			skp->Text(1 * W / 8, 2 * H / 14, "HAM-CSI/CDH Sequence", 20);
+		}
+
+		GET_Display(Buffer, G->DKI_TIG);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->t_TPIguess);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->DKI_TPI_Mode == 0)
+		{
+			skp->Text(1 * W / 8, 8 * H / 14, "TPI on time", 11);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 8 * H / 14, "TPI at orbital midnight", 23);
 		}
 
 		sprintf(Buffer, "%.1f NM", G->DH / 1852.0);
-		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", G->lambertelev*DEG);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2f°", G->lambertelev*DEG);
+		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->target != NULL)
 		{
@@ -2995,22 +3020,57 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
 		skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 8, 11 * H / 21, "CSI:", 4);
-		GET_Display(Buffer, G->dkiresult.t_CSI);
-		skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_CSI / 0.3048);
-		skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		if (G->DKI_Profile == 1)
+		{
+			skp->Text(4 * W / 8, 13 * H / 21, "Boost:", 6);
+			GET_Display(Buffer, G->dkiresult.t_Boost);
+			skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_Boost / 0.3048);
+			skp->Text(5 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 8, 15 * H / 21, "CDH:", 4);
-		GET_Display(Buffer, G->dkiresult.t_CDH);
+			skp->Text(4 * W / 8, 15 * H / 21, "HAM:", 4);
+			GET_Display(Buffer, G->dkiresult.t_HAM);
+			skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(4 * W / 8, 16 * H / 21, "CSI:", 4);
+		GET_Display(Buffer, G->dkiresult.t_CSI);
 		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f ft/s", length(G->dkiresult.DV_CDH) / 0.3048);
+		sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_CSI / 0.3048);
 		skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 8, 19 * H / 21, "TPI:", 4);
+		skp->Text(4 * W / 8, 18 * H / 21, "CDH:", 4);
+		GET_Display(Buffer, G->dkiresult.t_CDH);
+		skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f ft/s", length(G->dkiresult.DV_CDH) / 0.3048);
+		skp->Text(5 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(4 * W / 8, 20 * H / 21, "TPI:", 4);
 		GET_Display(Buffer, G->dkiresult.t_TPI);
 		skp->Text(5 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 
+	}
+	else if (screen == 34)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "DKI Options", 11);
+
+		if (G->DKI_Maneuver_Line)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Maneuver Line", 13);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Specified DTs", 13);
+		}
+
+		if (G->DKI_Radial_DV)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "-50 ft/s radial component", 25);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "Horizontal maneuver", 19);
+		}
 	}
 	return true;
 }
@@ -3357,6 +3417,12 @@ void ApolloRTCCMFD::menuSetRendezvousPage()
 void ApolloRTCCMFD::menuSetDKIPage()
 {
 	screen = 33;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetDKIOptionsPage()
+{
+	screen = 34;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6106,16 +6172,38 @@ void ApolloRTCCMFD::set_DKITIG(double time)
 	G->DKI_TIG = time;
 }
 
-void ApolloRTCCMFD::menuCycleDKIMode()
+void ApolloRTCCMFD::menuCycleDKIProfile()
 {
-	if (G->DKI_Mode < 1)
+	if (G->DKI_Profile < 1)
 	{
-		G->DKI_Mode++;
+		G->DKI_Profile++;
 	}
 	else
 	{
-		G->DKI_Mode = 0;
+		G->DKI_Profile = 0;
 	}
+}
+
+void ApolloRTCCMFD::menuCycleDKITPIMode()
+{
+	if (G->DKI_TPI_Mode < 1)
+	{
+		G->DKI_TPI_Mode++;
+	}
+	else
+	{
+		G->DKI_TPI_Mode = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuCycleDKIManeuverLine()
+{
+	G->DKI_Maneuver_Line = !G->DKI_Maneuver_Line;
+}
+
+void ApolloRTCCMFD::menuCycleDKIRadialComponent()
+{
+	G->DKI_Radial_DV = !G->DKI_Radial_DV;
 }
 
 void ApolloRTCCMFD::menuSetDKIElevation()

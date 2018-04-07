@@ -122,7 +122,10 @@ public:
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
-	int DKI_Mode;		//0 = TPI on time, 1 = TPI at orbital midnight
+	int DKI_Profile;	//0 = Four-impulse: Phasing/CSI/CDH/TPI, 1 = Six-Impulse: Phasing/Boost/HAM/CSI/CDH/TPI
+	int DKI_TPI_Mode;	//0 = TPI on time, 1 = TPI at orbital midnight
+	bool DKI_Maneuver_Line;	//false = define relative times, true = 0.5 revolutions between maneuvers
+	bool DKI_Radial_DV;	//false = horizontal maneuver, true = 50 ft/s radial component
 	DKIResults dkiresult;
 
 	//CDH PAGE

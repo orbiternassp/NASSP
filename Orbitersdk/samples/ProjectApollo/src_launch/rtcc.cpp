@@ -12196,9 +12196,14 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 
 void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 {
+	// NOMENCLATURE:
+	// R = position vector, V = velocity vector
+	// A = active vehicle, P = passive vehicle
+	// P = phasing maneuver, B = boost, HAM = height adjustment, H = height maneuver, C = coelliptic maneuver, F = final maneuver (TPI)
+
 	SV sv_AP, sv_TPI_guess, sv_TPI, sv_PC;
 	VECTOR3 u, R_AP, V_AP, V_APF, R_AH, V_AH, V_AHF, R_AC, V_AC, R_PC, V_PC, V_ACF, R_PJ, V_PJ, R_AFD, R_AF, V_AF;
-	double mu, dv_P, p_P, dt_PH, c_P, eps_P, dv_H, dt_HC, t_H, t_C, dv_Po, e_Po, e_P;
+	double mu, dv_P, p_P, dt_PH, c_P, eps_P, dv_H, dt_HC, t_H, t_C, dv_Po, e_Po, e_P, dv_rad_const;
 	int s_P;
 
 	eps_P = 0.000004;	//radians
@@ -12208,10 +12213,19 @@ void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	dv_H = 0.0;
 	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
 
+	if (opt.radial_dv == false)
+	{
+		dv_rad_const = 0.0;
+	}
+	else
+	{
+		dv_rad_const = -50.0*0.3048;
+	}
+
 	sv_AP = coast(opt.sv_A, opt.t_TIG - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
 	sv_TPI_guess = coast(opt.sv_P, opt.t_TPI_guess - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 
-	if (opt.mode == 0)
+	if (opt.tpimode == 0)
 	{
 		sv_TPI = sv_TPI_guess;
 		res.t_TPI = opt.t_TPI_guess;
@@ -12236,9 +12250,71 @@ void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 
 	do
 	{
-		V_APF = V_AP + unit(crossp(u, R_AP))*dv_P;
-		OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
-		t_H = opt.t_TIG + dt_PH;
+		V_APF = V_AP + tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, dv_rad_const));
+
+		if (opt.plan == 1)
+		{
+			VECTOR3 R_AB, V_AB, V_ABF, R_AHAM, V_AHAM;
+			double dt_PB, t_B, dv_B, t_HAM, dt_BHAM, dt_HAMH;
+
+			dv_B = 10.0*0.3048;
+
+			if (opt.maneuverline)
+			{
+				dt_PB = OrbMech::timetoapo(R_AP, V_APF, mu, 1);
+			}
+			else
+			{
+				dt_PB = 55.0*60.0;//opt.DeltaT_PBH;
+			}
+			
+			t_B = opt.t_TIG + dt_PB;
+			OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PB, R_AB, V_AB, mu);
+
+			V_ABF = V_AB + unit(crossp(u, R_AB))*dv_B;
+
+			if (opt.maneuverline)
+			{
+				OrbMech::REVUP(R_AB, V_ABF, 0.5, mu, R_AHAM, V_AHAM, dt_BHAM);
+			}
+			else
+			{
+				dt_BHAM = 3600.0;
+				OrbMech::rv_from_r0v0(R_AB, V_ABF, dt_BHAM, R_AHAM, V_AHAM, mu);
+			}
+			
+			t_HAM = t_B + dt_BHAM;
+
+			if (opt.maneuverline)
+			{
+				OrbMech::REVUP(R_AHAM, V_AHAM, 0.5, mu, R_AH, V_AH, dt_HAMH);
+			}
+			else
+			{
+				dt_HAMH = 3600.0;
+				OrbMech::rv_from_r0v0(R_AHAM, V_AHAM, dt_HAMH, R_AH, V_AH, mu);
+			}
+			
+			t_H = t_HAM + dt_HAMH;
+
+			res.t_Boost = t_B;
+			res.dv_Boost = dv_B;
+			res.t_HAM = t_HAM;
+		}
+		else
+		{
+			if (opt.maneuverline)
+			{
+				OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
+			}
+			else
+			{
+				dt_PH = 3600.0;
+				OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PH, R_AH, V_AH, mu);
+			}
+			
+			t_H = opt.t_TIG + dt_PH;
+		}
 
 		OrbMech::CSIToDH(R_AH, V_AH, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_H);
 		V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
@@ -12256,7 +12332,7 @@ void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 		}
 	} while (abs(e_P) >= eps_P);
 
-	res.DV_Phasing = OrbMech::ApplyHorizontalDV(sv_AP.R, sv_AP.V, dv_P);
+	res.DV_Phasing = tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, dv_rad_const));
 	res.t_CSI = t_H;
 	res.dv_CSI = dv_H;
 	res.t_CDH = t_C;

@@ -663,12 +663,23 @@ struct DKIOpt	//Docking Initiation Processor
 	double t_TPI_guess;
 	double DH;
 	double E;
-	int mode = 0;	//0 = TPI on time, 1 = TPI at orbital midnight
+	int tpimode = 0;	//0 = TPI on time, 1 = TPI at orbital midnight
+	//DKI RENDEZVOUS PLANS:
+	//0 = Phasing, CSI 0.5 revs later, CDH 0.5 revs later
+	//1 = Phasing with +50 ft/s DVZ, at apolune, CDH 0.5 revs later
+	int plan = 0;
+	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
+	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
+
+	double DeltaT_PBH;	//Delta time between phasing and boost/CSI
 };
 
 struct DKIResults
 {
 	VECTOR3 DV_Phasing;
+	double t_Boost;
+	double dv_Boost;
+	double t_HAM;
 	double t_CSI;
 	double dv_CSI;
 	double t_CDH;
