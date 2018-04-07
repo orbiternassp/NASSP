@@ -1130,9 +1130,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Rendezvous profile", 0, 'P' },
 		{ "Time of phasing maneuver", 0, 'T' },
 		{ "Time of TPI maneuver", 0, 'L' },
-		{ "TPI mode", 0, 'O' },
 		{ "Delta Height", 0, 'D' },
 		{ "Elevation angle at TPI", 0, 'E' },
+	{ "", 0, ' ' },
 
 		{ "Target name", 0, 'V' },
 		{ "Calculate maneuver", 0, 'C' },
@@ -1147,9 +1147,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("PRO", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleDKIProfile);
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::DKITIGDialogue);
 	RegisterFunction("TPI", OAPI_KEY_L, &ApolloRTCCMFD::menuSetTPIguess);
-	RegisterFunction("MOD", OAPI_KEY_O, &ApolloRTCCMFD::menuCycleDKITPIMode);
 	RegisterFunction("DH", OAPI_KEY_D, &ApolloRTCCMFD::DHdialogue);
 	RegisterFunction("E", OAPI_KEY_E, &ApolloRTCCMFD::menuSetDKIElevation);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("TGT", OAPI_KEY_V, &ApolloRTCCMFD::set_target);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuDKICalc);
@@ -1163,9 +1163,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "Maneuver line or times", 0, 'L' },
 		{ "Fixed radial component", 0, 'R' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "TPI mode", 0, 'O' },
+		{ "TPI time before sunrise", 0, 'S' },
+		{ "Revs between CSI and CDH", 0, 'N' },
 		{ "", 0, ' ' },
 
 		{ "", 0, ' ' },
@@ -1180,10 +1180,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("MAN", OAPI_KEY_L, &ApolloRTCCMFD::menuCycleDKIManeuverLine);
 	RegisterFunction("RAD", OAPI_KEY_R, &ApolloRTCCMFD::menuCycleDKIRadialComponent);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TPI", OAPI_KEY_O, &ApolloRTCCMFD::menuCycleDKITPIMode);
+	RegisterFunction("SUN", OAPI_KEY_S, &ApolloRTCCMFD::DKITPIDTDialogue);
+	RegisterFunction("N", OAPI_KEY_N, &ApolloRTCCMFD::DKINDialogue);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);

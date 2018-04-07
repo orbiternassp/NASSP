@@ -12233,10 +12233,25 @@ void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	else
 	{
 		OBJHANDLE hSun = oapiGetObjectByName("Sun");
-		double ttoMidnight;
 
-		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, sv_TPI_guess.gravref, hSun, 1, 1, false);
-		res.t_TPI = opt.t_TPI_guess + ttoMidnight;
+		if (opt.tpimode == 1)
+		{
+
+			double ttoMidnight;
+			ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, sv_TPI_guess.gravref, hSun, 1, 1, false);
+			res.t_TPI = opt.t_TPI_guess + ttoMidnight;
+			sv_TPI = coast(sv_TPI_guess, res.t_TPI - opt.t_TPI_guess);
+		}
+		else
+		{
+			SV sv_sunrise_guess;
+			double ttoSunrise;
+
+			sv_sunrise_guess = coast(sv_TPI_guess, opt.dt_TPI_sunrise);
+			ttoSunrise = OrbMech::sunrise(sv_sunrise_guess.R, sv_sunrise_guess.V, sv_sunrise_guess.MJD, sv_sunrise_guess.gravref, hSun, 1, 0, false);
+			res.t_TPI = opt.t_TPI_guess + ttoSunrise;
+		}
+
 		sv_TPI = coast(sv_TPI_guess, res.t_TPI - opt.t_TPI_guess);
 	}
 
@@ -12318,7 +12333,7 @@ void RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 
 		OrbMech::CSIToDH(R_AH, V_AH, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_H);
 		V_AHF = V_AH + unit(crossp(u, R_AH))*dv_H;
-		OrbMech::REVUP(R_AH, V_AHF, 0.5, mu, R_AC, V_AC, dt_HC);
+		OrbMech::REVUP(R_AH, V_AHF, 0.5*(double)opt.N_HC, mu, R_AC, V_AC, dt_HC);
 		t_C = t_H + dt_HC;
 		OrbMech::RADUP(sv_TPI.R, sv_TPI.V, R_AC, mu, R_PC, V_PC);
 

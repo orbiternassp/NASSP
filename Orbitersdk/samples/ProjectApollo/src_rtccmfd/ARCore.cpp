@@ -439,6 +439,8 @@ ARCore::ARCore(VESSEL* v)
 	DKI_Radial_DV = false;
 	DKI_TIG = 0.0;
 	DKI_Maneuver_Line = true;
+	DKI_dt_TPI_sunrise = 16.0*60.0;
+	DKI_N = 1;
 	dkiresult.DV_Phasing = _V(0, 0, 0);
 	dkiresult.t_CDH = 0.0;
 	dkiresult.dv_CSI = 0.0;
@@ -2901,9 +2903,11 @@ int ARCore::subThread()
 		opt.E = lambertelev;
 		opt.GETbase = GETbase;
 		opt.maneuverline = DKI_Maneuver_Line;
+		opt.N_HC = DKI_N;
 		opt.plan = DKI_Profile;
 		opt.radial_dv = DKI_Radial_DV;
 		opt.tpimode = DKI_TPI_Mode;
+		opt.dt_TPI_sunrise = DKI_dt_TPI_sunrise;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.t_TIG = DKI_TIG;
