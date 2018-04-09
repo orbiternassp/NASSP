@@ -53,6 +53,7 @@ public:
 	void VecPointCalc();
 	void TerrainModelCalc();
 	void DKICalc();
+	void DAPPADCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -313,6 +314,9 @@ public:
 
 	//NAV CHECK PAGE
 	AP7NAV navcheckpad;
+
+	//DAP PAD PAGE
+	AP10DAPDATA DAP_PAD;
 
 	protected:
 		int GetPowEngType();

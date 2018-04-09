@@ -2279,6 +2279,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 10 * H / 14, "Nav Check PAD", 13);
 		skp->Text(1 * W / 8, 12 * H / 14, "P37 PAD", 7);
 
+		skp->Text(5 * W / 8, 2 * H / 14, "DAP PAD", 7);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 21)
@@ -3110,6 +3111,20 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 35)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "DAP PAD", 7);
+
+		sprintf(Buffer, "%+06.0f WT N47", G->DAP_PAD.ThisVehicleWeight);
+		skp->Text((int)(3.5 * W / 8), 5 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.0f", G->DAP_PAD.OtherVehicleWeight);
+		skp->Text((int)(3.5 * W / 8), 6 * H / 21, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.2f GMBL N48", G->DAP_PAD.PitchTrim);
+		skp->Text((int)(3.5 * W / 8), 7 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.2f", G->DAP_PAD.YawTrim);
+		skp->Text((int)(3.5 * W / 8), 8 * H / 21, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -3461,6 +3476,12 @@ void ApolloRTCCMFD::menuSetDKIPage()
 void ApolloRTCCMFD::menuSetDKIOptionsPage()
 {
 	screen = 34;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetDAPPADPage()
+{
+	screen = 35;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6403,6 +6424,11 @@ bool DKIDT3Input(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_DKIDT3(double dt)
 {
 	G->DKI_dt_HAMH = dt * 60.0;
+}
+
+void ApolloRTCCMFD::menuDAPPADCalc()
+{
+	G->DAPPADCalc();
 }
 
 void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
