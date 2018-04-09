@@ -499,11 +499,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		sprintf(Buffer, "XOFF %f NM", G->offvec.x/1852.0);
+		sprintf(Buffer, "XOFF %.3f NM", G->offvec.x/1852.0);
 		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "YOFF %f NM", G->offvec.y/1852.0);
+		sprintf(Buffer, "YOFF %.3f NM", G->offvec.y/1852.0);
 		skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "ZOFF %f NM", G->offvec.z/1852.0);
+		sprintf(Buffer, "ZOFF %.3f NM", G->offvec.z/1852.0);
 		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 2)
@@ -2510,9 +2510,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
-		skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+		if (G->LunarLiftoffTimeOption == 0 || G->LunarLiftoffTimeOption == 1)
+		{
+			skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
+			GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
+			skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+		}
 
 		skp->Text(1 * W / 8, 18 * H / 21, "TPF:", 4);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
@@ -2520,11 +2523,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->LunarLiftoffTimeOption == 0)
 		{
-			skp->Text(5 * W / 8, 2 * H / 14, "Concentric Profile", 18);
+			skp->Text(4 * W / 8, 2 * H / 14, "Concentric Profile", 18);
+		}
+		else if (G->LunarLiftoffTimeOption == 1)
+		{
+			skp->Text(4 * W / 8, 2 * H / 14, "Direct Profile", 14);
 		}
 		else
 		{
-			skp->Text(5 * W / 8, 2 * H / 14, "Direct Profile", 14);
+			skp->Text(4 * W / 8, 2 * H / 14, "Time Critical Profile", 21);
 		}
 
 		if (G->target != NULL)
@@ -6087,7 +6094,7 @@ void ApolloRTCCMFD::menuLunarLiftoffCalc()
 
 void ApolloRTCCMFD::menuLunarLiftoffTimeOption()
 {
-	if (G->LunarLiftoffTimeOption < 1)
+	if (G->LunarLiftoffTimeOption < 2)
 	{
 		G->LunarLiftoffTimeOption++;
 	}

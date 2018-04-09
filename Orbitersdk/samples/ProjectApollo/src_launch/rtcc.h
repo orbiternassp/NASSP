@@ -615,7 +615,7 @@ struct LunarLiftoffTimeOpt
 	double t_TPIguess;		//GET of TPI maneuver
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
-	int opt;		// 0 = Concentric Profile, 1 = Direct Profile
+	int opt;		// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
 };
 
 struct LunarLiftoffResults

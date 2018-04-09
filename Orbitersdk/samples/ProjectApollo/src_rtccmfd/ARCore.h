@@ -119,6 +119,7 @@ public:
 	VECTOR3 offvec;			//Lambert offset vector
 	double angdeg;			//Phase angle for target offset
 	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
+	int twoimpulsemode;		//0 = NCC/NSR, 1 = TPI/TPF
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
@@ -304,7 +305,7 @@ public:
 	//Lunar Liftoff Time Prediction
 	LunarLiftoffResults LunarLiftoffTimes;
 	double t_TPIguess;
-	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile
+	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99
