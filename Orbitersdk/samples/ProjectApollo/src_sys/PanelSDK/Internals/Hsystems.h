@@ -38,7 +38,7 @@
 #define SUBSTANCE_N2O4			7
 #define SUBSTANCE_He			8
 
-#define R_CONST					8309.280615
+#define R_CONST					8314.4621	//(L*Pa)/(mol*K)
 							//		O2			H2			H20			N2			CO2			GLYCOL			Aerozine-50		N2O4			He
 const double MMASS		[MAX_SUB]=	{31.998,	2.01588,	18.01528,	28.0134,	44.01,		33.434432,		92.146,			92.01,			4.00260		};		//g/mol
 //const double SPECIFICC	[MAX_SUB]=	{0.918,		1.434,		4.18,		1.040,		0.858,		3.568952,		2.9056392,		1.270			5.193		};		//J/g-K .. assume constant
@@ -47,7 +47,7 @@ const double VAPENTH	[MAX_SUB]=	{213.13,	445.46,		2260.0,		198.83,		347.0,		1769
 const double VAPPRESS	[MAX_SUB]=	{1314841.0,	4925221.0,	39441.0,	1528361.0,	493284.0,	25639.45,		21722.212986,	206782.99342,	14778377.09 };		//Pa @ 273.00K
 const double VAPGRAD	[MAX_SUB]=	{6556.0,	19045.0,	680.0,		7228.0,		4800.0,		52.87,			111.1,			1754.255683,	874.9447005 };		//Pa/K.. assume linear dependence of PV / K
 const double L_DENSITY	[MAX_SUB]=	{1141.0,	70.0,		1000.0,		807.0,		1014.0,		1038.5,			899.0,			1450.0,			0.164		};		//g/L @ 103kPa ..assume constant wrt. temp
-const double BULK_MOD	[MAX_SUB]=	{32e6,		24e6,		2.18e6,		32e6,		32e6,		2.55e6,			1.47397e6,		1.362e6,		50e6		};		//Pa .. assume constant
+const double BULK_MOD	[MAX_SUB]=	{32e6,		24e6,		2.18e6,		32e6,		32e6,		2.55e6,			1.47397e6,		1.362e6,		10e6		};		//Pa .. assume constant and converted from m^3 to L
 const double CRITICAL_P [MAX_SUB]=  {350115.0,	89631.0,	1523741.0,	234421.0,	508833.0,	3097574.75,		11692906.154,	10132500.0,		226968.0224 };		//Pa.. critical pressure
 const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,		256.9525,		607.15,			431.15,			5.19		};		//K.. critical temperature
 
@@ -66,7 +66,7 @@ class h_substance
 	double Q;						// (J) total enthalpy (NOT thermal energy)
 	double vapor_mass;				// mass(gr) of this block that exists in vapour state
 
-	//these two are not propagated trough block maneuvers..
+	//these two are not propagated through block maneuvers..
 	//instead they are re-computed by generating parent
 	double p_press;					// partial pressure (Pa), computed using current Q ..
 	double Temp;					// temp of this substance, again, based on Q
@@ -98,7 +98,7 @@ class h_volume
 	double Press;					//total press.. sum of all p_press (Pa)
 	double Temp;					//averaged temp of volume.. (K)
 	double Volume;					//liters
-	void ThermalComps(double dt);			//levels temp troughout all subst...much like stirring a tank,only instanaeously
+	void ThermalComps(double dt);	//levels temp troughout all subst...much like stirring a tank,only instanaeously
 	void Void();					//empty all inside the volume
 };
 h_substance _substance(int s_type,double i_mass, double i_Q,float i_vm);

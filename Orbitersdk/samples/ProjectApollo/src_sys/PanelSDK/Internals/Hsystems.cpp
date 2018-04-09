@@ -489,7 +489,12 @@ void h_volume::ThermalComps(double dt) {
 	double tNV=0;
 	//some sums we need
 	for (i = 0; i < MAX_SUB; i++) {
-		m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];
+		if (composition[i].vapor_mass > 0) {
+			m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];	//Units of mol
+		}
+		else {
+			m_i += composition[i].mass / MMASS[composition[i].subst_type];	//Units of mol
+		}
 
 		// temperature dependency of the density is assumed 1 to 2 g/l
 		double density = L_DENSITY[composition[i].subst_type];
@@ -503,32 +508,33 @@ void h_volume::ThermalComps(double dt) {
 			// Correction term is 0 at H2 boiling point (20K), the other factors are "empirical"
 			density += 0.03333 * Temp * Temp - 4.3333 * Temp + 73.3333;
 		}
-		tNV = (composition[i].mass - composition[i].vapor_mass) / density;
-		NV += tNV;
+		tNV = (composition[i].mass - composition[i].vapor_mass) / density;	//Units of L
+		NV += tNV;	//Units of L
 
-		PNV += tNV / BULK_MOD[composition[i].subst_type];
+		PNV += tNV / BULK_MOD[composition[i].subst_type];	//Units of L/Pa
 	}
 
-	m_i = -m_i * R_CONST * Temp;
-	NV = Volume - NV;
+	m_i = -m_i * R_CONST * Temp;	//Units of L*Pa
+	NV = Volume - NV;	//Units of L
 
-	double delta = NV * NV - 4.0 * m_i * PNV; //delta of quadric eq. P^2*PNV+ P*NV + m_i = 0
+	double delta = (NV * NV) - (4.0 * m_i * PNV); //delta of quadric eq. P^2*PNV+ P*NV + m_i = 0
 	if (PNV)
-		Press = (-NV + sqrt(delta)) / 2.0 / PNV;	//only first solution is always valid. why is there a second?
+		Press = (-NV + sqrt(delta)) / (2.0 * PNV);	//Units of Pa **only first solution is always valid. why is there a second?
 	else
 		Press = 0;
 
 	NV = Volume - NV;
 	double air_volume = Volume - NV + Press * PNV;
+
 	for (i = 0; i < MAX_SUB; i++) {
 		//recompute the vapor press
 		vap_press = VAPPRESS[composition[i].subst_type] - (273.0 - Temp) * VAPGRAD[composition[i].subst_type];//this is vapor pressure of current substance
 		if (vap_press > Press)	//need to boil material if any
 			Q += composition[i].Boil(dt);
 		else
-		    Q += composition[i].Condense(dt);
+			Q += composition[i].Condense(dt);
 
-		composition[i].p_press = R_CONST * Temp * composition[i].vapor_mass / MMASS[composition[i].subst_type] / air_volume;
+			composition[i].p_press = R_CONST * Temp * (composition[i].vapor_mass / MMASS[composition[i].subst_type]) / air_volume;
 	}
 }
 
