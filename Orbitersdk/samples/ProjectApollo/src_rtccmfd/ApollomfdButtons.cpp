@@ -1168,9 +1168,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Revs between CSI and CDH", 0, 'N' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Time between abort and Boost/CSI", 0, 'E' },
+		{ "Time between Boost and HAM", 0, 'V' },
+		{ "Time between HAM and CSI", 0, 'Q' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to DKI page", 0, 'B' },
@@ -1185,9 +1185,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("N", OAPI_KEY_N, &ApolloRTCCMFD::DKINDialogue);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("DT1", OAPI_KEY_E, &ApolloRTCCMFD::menuDKIDeltaT1);
+	RegisterFunction("DT2", OAPI_KEY_V, &ApolloRTCCMFD::menuDKIDeltaT2);
+	RegisterFunction("DT3", OAPI_KEY_Q, &ApolloRTCCMFD::menuDKIDeltaT3);
 	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDKIPage);

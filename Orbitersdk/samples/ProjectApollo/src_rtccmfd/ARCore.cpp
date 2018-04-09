@@ -441,6 +441,7 @@ ARCore::ARCore(VESSEL* v)
 	DKI_Maneuver_Line = true;
 	DKI_dt_TPI_sunrise = 16.0*60.0;
 	DKI_N = 1;
+	DKI_dt_PBH = DKI_dt_BHAM = DKI_dt_HAMH = 3600.0;
 	dkiresult.DV_Phasing = _V(0, 0, 0);
 	dkiresult.t_CDH = 0.0;
 	dkiresult.dv_CSI = 0.0;
@@ -2912,6 +2913,9 @@ int ARCore::subThread()
 		opt.sv_P = sv_P;
 		opt.t_TIG = DKI_TIG;
 		opt.t_TPI_guess = t_TPIguess;
+		opt.DeltaT_BHAM = DKI_dt_BHAM;
+		opt.DeltaT_PBH = DKI_dt_PBH;
+		opt.Delta_HAMH = DKI_dt_HAMH;
 
 		rtcc->DockingInitiationProcessor(opt, dkiresult);
 		rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);

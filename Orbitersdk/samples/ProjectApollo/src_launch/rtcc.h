@@ -667,13 +667,16 @@ struct DKIOpt	//Docking Initiation Processor
 	//DKI RENDEZVOUS PLANS:
 	//0 = Phasing, CSI 0.5 revs later, CDH 0.5 revs later
 	//1 = Phasing with +50 ft/s DVZ, at apolune, CDH 0.5 revs later
+	//2 = Height, CSI (Phasing) 0.5 revs later, CDH 2xN revs later
 	int plan = 0;
 	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
 	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
 	int N_HC = 1;			//Number of revs between CSI and CDH
 
 	double dt_TPI_sunrise = 16.0*60.0;
-	double DeltaT_PBH;	//Delta time between phasing and boost/CSI
+	double DeltaT_PBH = 55.0*60.0;	//Delta time between phasing and boost/CSI
+	double DeltaT_BHAM = 60.0*60.0;	//Delta time between boost and HAM
+	double Delta_HAMH = 60.0*60.0;	//Delta time between HAM and CSI
 };
 
 struct DKIResults
@@ -836,7 +839,7 @@ public:
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
-	void DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
+	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
 	SV coast(SV sv0, double dt);
 
