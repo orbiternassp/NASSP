@@ -807,7 +807,7 @@ public:
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad);
 	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
-	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
+	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc = false);
 	void TEITargeting(TEIOpt *opt, EntryResults *res);
 	void RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad);

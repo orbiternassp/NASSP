@@ -883,7 +883,7 @@ void ARCore::DAPPADCalc()
 	}
 	else
 	{
-		rtcc->LMDAPUpdate(vessel, DAP_PAD);
+		rtcc->LMDAPUpdate(vessel, DAP_PAD, lemdescentstage == false);
 	}
 }
 

@@ -6430,11 +6430,29 @@ void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
 	pad.YawTrim = y_T * DEG - 0.95;
 }
 
-void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
+void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc)
 {
 	double CSMmass, LMmass;
 
-	LMmass = v->GetMass();
+	if (asc)
+	{
+		if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
+			!stricmp(v->GetClassName(), "ProjectApollo/LEM") ||
+			!stricmp(v->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+			!stricmp(v->GetClassName(), "ProjectApollo/LEMSaturn")) {
+			LEM *lem = (LEM *)v;
+			LMmass = lem->GetAscentStageMass();
+		}
+		else
+		{
+			LMmass = v->GetMass();
+		}
+	}
+	else
+	{
+		LMmass = v->GetMass();
+	}
+
 	CSMmass = GetDockedVesselMass(v);
 
 	pad.ThisVehicleWeight = LMmass / 0.45359237;
