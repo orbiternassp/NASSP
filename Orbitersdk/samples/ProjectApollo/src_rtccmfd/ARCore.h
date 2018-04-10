@@ -318,6 +318,9 @@ public:
 	//DAP PAD PAGE
 	AP10DAPDATA DAP_PAD;
 
+	//LVDC PAGE
+	double LVDCLaunchAzimuth;
+
 	protected:
 		int GetPowEngType();
 

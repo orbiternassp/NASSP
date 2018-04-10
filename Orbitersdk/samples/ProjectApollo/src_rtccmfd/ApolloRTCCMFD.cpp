@@ -2298,6 +2298,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
 		skp->Text(1 * W / 8, 8 * H / 14, "Erasable Memory Programs", 24);
 
+		skp->Text(5 * W / 8, 2 * H / 14, "LVDC", 4);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
@@ -3125,6 +3126,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+07.2f", G->DAP_PAD.YawTrim);
 		skp->Text((int)(3.5 * W / 8), 8 * H / 21, Buffer, strlen(Buffer));
 	}
+	else if (screen == 36)
+	{
+		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "LVDC", 4);
+
+		sprintf(Buffer, "Launch Azimuth: %.4f°", G->LVDCLaunchAzimuth*DEG);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+
+	}
 	return true;
 }
 
@@ -3482,6 +3492,12 @@ void ApolloRTCCMFD::menuSetDKIOptionsPage()
 void ApolloRTCCMFD::menuSetDAPPADPage()
 {
 	screen = 35;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLVDCPage()
+{
+	screen = 36;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6429,6 +6445,40 @@ void ApolloRTCCMFD::set_DKIDT3(double dt)
 void ApolloRTCCMFD::menuDAPPADCalc()
 {
 	G->DAPPADCalc();
+}
+
+void ApolloRTCCMFD::menuLaunchAzimuthCalc()
+{
+	if (!stricmp(G->vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(G->vessel->GetClassName(), "ProjectApollo/Saturn5")) {
+
+		SaturnV *SatV = (SaturnV*)G->vessel;
+		if (SatV->iu)
+		{
+			LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+
+			double day = 0.0;
+			double T_L = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - SatV->GetMissionTime() - 17.0;
+			double t_D = T_L - lvdc->T_LO;
+			//t_D = TABLE15.target[tgt_index].t_D;
+
+			//Azimuth determination
+			if (lvdc->t_DS0 <= t_D && t_D < lvdc->t_DS1)
+			{
+				G->LVDCLaunchAzimuth = lvdc->hx[0][0] + lvdc->hx[0][1] * ((t_D - lvdc->t_D1) / lvdc->t_SD1) + lvdc->hx[0][2] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 2) + lvdc->hx[0][3] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 3) + lvdc->hx[0][4] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 4);
+			}
+			else if (lvdc->t_DS1 <= t_D && t_D < lvdc->t_DS2)
+			{
+				G->LVDCLaunchAzimuth = lvdc->hx[1][0] + lvdc->hx[1][1] * ((t_D - lvdc->t_D2) / lvdc->t_SD2) + lvdc->hx[1][2] * pow((t_D - lvdc->t_D2) / lvdc->t_SD2, 2) + lvdc->hx[1][3] * pow((t_D - lvdc->t_D2) / lvdc->t_SD2, 3) + lvdc->hx[1][4] * pow((t_D - lvdc->t_D2) / lvdc->t_SD2, 4);
+			}
+			else
+			{
+				G->LVDCLaunchAzimuth = lvdc->hx[2][0] + lvdc->hx[2][1] * ((t_D - lvdc->t_D3) / lvdc->t_SD3) + lvdc->hx[2][2] * pow((t_D - lvdc->t_D3) / lvdc->t_SD3, 2) + lvdc->hx[2][3] * pow((t_D - lvdc->t_D3) / lvdc->t_SD3, 3) + lvdc->hx[2][4] * pow((t_D - lvdc->t_D3) / lvdc->t_SD3, 4);
+			}
+
+			G->LVDCLaunchAzimuth *= RAD;
+		}
+	}
 }
 
 void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)

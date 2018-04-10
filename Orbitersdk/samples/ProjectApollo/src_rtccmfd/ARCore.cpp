@@ -636,6 +636,8 @@ ARCore::ARCore(VESSEL* v)
 	EMPUplinkType = 0;
 	EMPUplinkNumber = 0;
 
+	LVDCLaunchAzimuth = 0.0;
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
