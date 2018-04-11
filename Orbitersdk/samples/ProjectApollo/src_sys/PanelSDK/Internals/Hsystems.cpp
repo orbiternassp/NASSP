@@ -489,12 +489,7 @@ void h_volume::ThermalComps(double dt) {
 	double tNV=0;
 	//some sums we need
 	for (i = 0; i < MAX_SUB; i++) {
-		if (composition[i].vapor_mass > 0) {
-			m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];	//Units of mol
-		}
-		else {
-			m_i += composition[i].mass / MMASS[composition[i].subst_type];	//Units of mol
-		}
+		m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];	//Units of mol
 
 		// temperature dependency of the density is assumed 1 to 2 g/l
 		double density = L_DENSITY[composition[i].subst_type];
@@ -534,7 +529,7 @@ void h_volume::ThermalComps(double dt) {
 		else
 			Q += composition[i].Condense(dt);
 
-			composition[i].p_press = R_CONST * Temp * (composition[i].vapor_mass / MMASS[composition[i].subst_type]) / air_volume;
+		composition[i].p_press = R_CONST * Temp * (composition[i].vapor_mass / MMASS[composition[i].subst_type]) / air_volume;
 	}
 }
 
