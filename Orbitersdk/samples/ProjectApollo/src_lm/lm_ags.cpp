@@ -697,6 +697,15 @@ unsigned int LEM_AEA::GetInputChannel(int channel)
 	return val;
 }
 
+bool LEM_AEA::GetInputChannelBit(int channel, int bit)
+
+{
+	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+		return false;
+
+	return (GetInputChannel(channel) & (1 << (bit))) != 0;
+}
+
 void LEM_AEA::SetAGSAttitudeError(int Type, int Data)
 {
 	int DataVal;
@@ -841,6 +850,16 @@ void LEM_AEA::SetPGNSIntegratorRegister(int channel, int val)
 		valx &= 0377774;
 		SetInputPort(IO_2004, valx);
 	}
+}
+
+void LEM_AEA::SetDownlinkTelemetryRegister(int val)
+{
+	SetInputPort(IO_6200, val << 2);
+}
+
+void LEM_AEA::PGNCSDownlinkStopPulse()
+{
+	SetInputPortBit(IO_2020, AGSDownlinkTelemetryStopDiscrete, false);
 }
 
 VECTOR3 LEM_AEA::GetTotalAttitude()

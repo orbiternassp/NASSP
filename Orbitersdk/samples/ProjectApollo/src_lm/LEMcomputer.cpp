@@ -350,6 +350,12 @@ void LEMcomputer::ProcessChannel143(ChannelValue val) {
 	}
 }
 
+void LEMcomputer::ProcessChannel34(ChannelValue val)
+{
+	lem->aea.SetDownlinkTelemetryRegister(((OutputChannel[013] & 0100) << 9) | val.to_ulong());
+	lem->aea.PGNCSDownlinkStopPulse();
+}
+
 void LEMcomputer::ProcessIMUCDUReadCount(int channel, int val) {
 	SetErasable(0, channel, val);
 	lem->aea.SetPGNSIntegratorRegister(channel, val);

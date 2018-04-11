@@ -70,6 +70,7 @@ protected:
 	void ProcessChannel141(ChannelValue val);
 	void ProcessChannel142(ChannelValue val);
 	void ProcessChannel143(ChannelValue val);
+	void ProcessChannel34(ChannelValue val);
 
 	//
 	// log file for autoland debugging
