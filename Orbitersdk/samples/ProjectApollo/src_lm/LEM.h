@@ -642,7 +642,6 @@ protected:
 	void SystemsInit();
 	void SystemsInternalTimestep(double simdt);
 	void JoystickTimestep(double simdt);
-	void ComputerTimestep(double simt, double simdt);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);
 	//
 	// Save/Load support functions.

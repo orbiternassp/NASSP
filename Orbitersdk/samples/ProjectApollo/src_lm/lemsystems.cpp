@@ -1405,21 +1405,6 @@ void LEM::JoystickTimestep(double simdt)
 	}
 }
 
-void LEM::ComputerTimestep(double simt, double simdt)
-{
-	double tFactor = __min(0.001, simdt);
-	double simtFactor = simt - simdt + tFactor;
-	while (simdt > 0) {
-
-		agc.Timestep(simtFactor, tFactor);						// Do work
-		aea.Timestep(simtFactor, tFactor);
-
-		simdt -= tFactor;
-		tFactor = __min(0.001, simdt);
-		simtFactor = simt - simdt + tFactor;
-	}
-}
-
 void LEM::SystemsInternalTimestep(double simdt)
 {
 	double mintFactor = __max(simdt / 100.0, 0.5);
@@ -1507,9 +1492,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SystemsInternalTimestep(simdt);
 
 	// After that come all other systems simesteps
-	ComputerTimestep(simt, simdt);
+	agc.Timestep(MissionTime, simdt);						// Do work
 	dsky.Timestep(MissionTime);								// Do work
 	asa.Timestep(simdt);									// Do work
+	aea.Timestep(MissionTime, simdt);
 	deda.Timestep(simdt);
 	imu.Timestep(simdt);								// Do work
 	tcdu.Timestep(simdt);
