@@ -636,6 +636,8 @@ ARCore::ARCore(VESSEL* v)
 	EMPUplinkType = 0;
 	EMPUplinkNumber = 0;
 
+	LVDCLaunchAzimuth = 0.0;
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
@@ -702,6 +704,11 @@ ARCore::ARCore(VESSEL* v)
 	agssvpad.DEDA265 = 0.0;
 	agssvpad.DEDA266 = 0.0;
 	agssvpad.DEDA272 = 0.0;
+
+	DAP_PAD.OtherVehicleWeight = 0.0;
+	DAP_PAD.PitchTrim = 0.0;
+	DAP_PAD.ThisVehicleWeight = 0.0;
+	DAP_PAD.YawTrim = 0.0;
 }
 
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
@@ -868,6 +875,18 @@ void ARCore::PDI_PAD()
 void ARCore::DKICalc()
 {
 	startSubthread(19);
+}
+
+void ARCore::DAPPADCalc()
+{
+	if (vesseltype < 2)
+	{
+		rtcc->CSMDAPUpdate(vessel, DAP_PAD);
+	}
+	else
+	{
+		rtcc->LMDAPUpdate(vessel, DAP_PAD, lemdescentstage == false);
+	}
 }
 
 void ARCore::EntryPAD()

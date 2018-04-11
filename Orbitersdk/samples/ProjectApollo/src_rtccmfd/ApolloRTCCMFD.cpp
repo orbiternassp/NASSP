@@ -499,11 +499,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		sprintf(Buffer, "XOFF %f NM", G->offvec.x/1852.0);
+		sprintf(Buffer, "XOFF %.3f NM", G->offvec.x/1852.0);
 		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "YOFF %f NM", G->offvec.y/1852.0);
+		sprintf(Buffer, "YOFF %.3f NM", G->offvec.y/1852.0);
 		skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "ZOFF %f NM", G->offvec.z/1852.0);
+		sprintf(Buffer, "ZOFF %.3f NM", G->offvec.z/1852.0);
 		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 2)
@@ -2279,6 +2279,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 10 * H / 14, "Nav Check PAD", 13);
 		skp->Text(1 * W / 8, 12 * H / 14, "P37 PAD", 7);
 
+		skp->Text(5 * W / 8, 2 * H / 14, "DAP PAD", 7);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 21)
@@ -2297,6 +2298,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
 		skp->Text(1 * W / 8, 8 * H / 14, "Erasable Memory Programs", 24);
 
+		skp->Text(5 * W / 8, 2 * H / 14, "LVDC", 4);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
@@ -2510,9 +2512,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
-		skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+		if (G->LunarLiftoffTimeOption == 0 || G->LunarLiftoffTimeOption == 1)
+		{
+			skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
+			GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
+			skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+		}
 
 		skp->Text(1 * W / 8, 18 * H / 21, "TPF:", 4);
 		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
@@ -2520,11 +2525,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->LunarLiftoffTimeOption == 0)
 		{
-			skp->Text(5 * W / 8, 2 * H / 14, "Concentric Profile", 18);
+			skp->Text(4 * W / 8, 2 * H / 14, "Concentric Profile", 18);
+		}
+		else if (G->LunarLiftoffTimeOption == 1)
+		{
+			skp->Text(4 * W / 8, 2 * H / 14, "Direct Profile", 14);
 		}
 		else
 		{
-			skp->Text(5 * W / 8, 2 * H / 14, "Direct Profile", 14);
+			skp->Text(4 * W / 8, 2 * H / 14, "Time Critical Profile", 21);
 		}
 
 		if (G->target != NULL)
@@ -3103,6 +3112,29 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 35)
+	{
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "DAP PAD", 7);
+
+		sprintf(Buffer, "%+06.0f WT N47", G->DAP_PAD.ThisVehicleWeight);
+		skp->Text((int)(3.5 * W / 8), 5 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.0f", G->DAP_PAD.OtherVehicleWeight);
+		skp->Text((int)(3.5 * W / 8), 6 * H / 21, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.2f GMBL N48", G->DAP_PAD.PitchTrim);
+		skp->Text((int)(3.5 * W / 8), 7 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.2f", G->DAP_PAD.YawTrim);
+		skp->Text((int)(3.5 * W / 8), 8 * H / 21, Buffer, strlen(Buffer));
+	}
+	else if (screen == 36)
+	{
+		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "LVDC", 4);
+
+		sprintf(Buffer, "Launch Azimuth: %.4f°", G->LVDCLaunchAzimuth*DEG);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+
+	}
 	return true;
 }
 
@@ -3454,6 +3486,18 @@ void ApolloRTCCMFD::menuSetDKIPage()
 void ApolloRTCCMFD::menuSetDKIOptionsPage()
 {
 	screen = 34;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetDAPPADPage()
+{
+	screen = 35;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLVDCPage()
+{
+	screen = 36;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6087,7 +6131,7 @@ void ApolloRTCCMFD::menuLunarLiftoffCalc()
 
 void ApolloRTCCMFD::menuLunarLiftoffTimeOption()
 {
-	if (G->LunarLiftoffTimeOption < 1)
+	if (G->LunarLiftoffTimeOption < 2)
 	{
 		G->LunarLiftoffTimeOption++;
 	}
@@ -6396,6 +6440,45 @@ bool DKIDT3Input(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_DKIDT3(double dt)
 {
 	G->DKI_dt_HAMH = dt * 60.0;
+}
+
+void ApolloRTCCMFD::menuDAPPADCalc()
+{
+	G->DAPPADCalc();
+}
+
+void ApolloRTCCMFD::menuLaunchAzimuthCalc()
+{
+	if (!stricmp(G->vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(G->vessel->GetClassName(), "ProjectApollo/Saturn5")) {
+
+		SaturnV *SatV = (SaturnV*)G->vessel;
+		if (SatV->iu)
+		{
+			LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+
+			double day = 0.0;
+			double T_L = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - SatV->GetMissionTime() - 17.0;
+			double t_D = T_L - lvdc->T_LO;
+			//t_D = TABLE15.target[tgt_index].t_D;
+
+			//Azimuth determination
+			if (lvdc->t_DS0 <= t_D && t_D < lvdc->t_DS1)
+			{
+				G->LVDCLaunchAzimuth = lvdc->hx[0][0] + lvdc->hx[0][1] * ((t_D - lvdc->t_D1) / lvdc->t_SD1) + lvdc->hx[0][2] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 2) + lvdc->hx[0][3] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 3) + lvdc->hx[0][4] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 4);
+			}
+			else if (lvdc->t_DS1 <= t_D && t_D < lvdc->t_DS2)
+			{
+				G->LVDCLaunchAzimuth = lvdc->hx[1][0] + lvdc->hx[1][1] * ((t_D - lvdc->t_D2) / lvdc->t_SD2) + lvdc->hx[1][2] * pow((t_D - lvdc->t_D2) / lvdc->t_SD2, 2) + lvdc->hx[1][3] * pow((t_D - lvdc->t_D2) / lvdc->t_SD2, 3) + lvdc->hx[1][4] * pow((t_D - lvdc->t_D2) / lvdc->t_SD2, 4);
+			}
+			else
+			{
+				G->LVDCLaunchAzimuth = lvdc->hx[2][0] + lvdc->hx[2][1] * ((t_D - lvdc->t_D3) / lvdc->t_SD3) + lvdc->hx[2][2] * pow((t_D - lvdc->t_D3) / lvdc->t_SD3, 2) + lvdc->hx[2][3] * pow((t_D - lvdc->t_D3) / lvdc->t_SD3, 3) + lvdc->hx[2][4] * pow((t_D - lvdc->t_D3) / lvdc->t_SD3, 4);
+			}
+
+			G->LVDCLaunchAzimuth *= RAD;
+		}
+	}
 }
 
 void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)

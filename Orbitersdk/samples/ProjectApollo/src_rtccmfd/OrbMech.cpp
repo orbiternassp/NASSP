@@ -4704,6 +4704,60 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
 }
 
+void LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double t_L_guess, double &t_IG, double &t_TPF, double &v_LH, double &v_LV)
+{
+	MATRIX3 Rot;
+	VECTOR3 R_1, V_1, R_2, V_2, R_PF, V_PF, U_N, U_L, R_L, R_AF, R_PC, V_PC;
+	double t_L, r_M, mu, r_Ins, r_A, dt, e_Ins, h_Ins, theta_2, MJD_L, MJD_TPF, dt_S, theta_S, dt_2, sw, theta_u;
+	int n;
+
+	r_M = length(R_LS);
+	mu = GGRAV * oapiGetMass(hMoon);
+	t_L = t_L_guess;
+
+	v_LV = 0.0;
+	r_Ins = r_M + h_1;
+	R_1 = _V(r_Ins, 0, 0);
+	r_A = r_M + 60.0*1852.0;
+	dt = 100.0;
+	n = 0;
+
+	while (n < 10 && abs(dt) > 0.1)
+	{
+		e_Ins = (r_A - r_Ins) / (r_A + r_Ins);
+		h_Ins = sqrt(r_A*mu*(1.0 - e_Ins));
+		v_LH = mu / h_Ins * (1.0 + e_Ins);
+		V_1 = _V(0.0, v_LH, 0);
+		REVUP(R_1, V_1, 0.5, mu, R_2, V_2, dt_2);
+		theta_2 = PI;
+
+		MJD_L = GETbase + t_L / 24.0 / 3600.0;
+		MJD_TPF = MJD_L + (dt_1 + dt_2) / 24.0 / 3600.0;
+		oneclickcoast(R_P, V_P, MJD_P, (MJD_TPF - MJD_P)*24.0*3600.0, R_PF, V_PF, hMoon, hMoon);
+
+		Rot = GetRotationMatrix(hMoon, MJD_L);
+		R_L = rhmul(Rot, R_LS);
+		U_N = unit(crossp(R_PF, V_PF));
+		U_L = unit(R_L - U_N * dotp(U_N, R_L));
+
+		dt_S = dt_1 + dt_2;
+		theta_S = theta_1 + theta_2;
+		R_AF = (U_L*cos(theta_S) + crossp(U_N, U_L)*sin(theta_S))*r_A;
+
+		RADUP(R_PF, V_PF, R_AF, mu, R_PC, V_PC);
+		r_A = length(R_PC);
+
+		sw = sign(dotp(U_N, crossp(R_AF, R_PF)));
+		theta_u = sw * acos(dotp(unit(R_AF), unit(R_PF))) + PI * (1.0 - sw);
+		dt = time_theta(R_PF, V_PF, theta_u, mu);
+		t_L -= dt;
+		n++;
+	}
+
+	t_IG = t_L;
+	t_TPF = t_L + dt_S;
+}
+
 void LunarLiftoffTimePredictionDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double &t_TPI, double theta_F, double &t_IG, double &t_TPF, double &v_LH, double &v_LV)
 {
 	MATRIX3 Rot;
@@ -4766,6 +4820,7 @@ void LunarLiftoffTimePredictionDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double
 		dt = time_theta(R_6, V_6, theta_u, mu);
 		t_L -= dt;
 		t_TPI -= dt;
+		n++;
 	}
 
 	t_IG = t_L;

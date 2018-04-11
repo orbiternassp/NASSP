@@ -615,7 +615,7 @@ struct LunarLiftoffTimeOpt
 	double t_TPIguess;		//GET of TPI maneuver
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
-	int opt;		// 0 = Concentric Profile, 1 = Direct Profile
+	int opt;		// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
 };
 
 struct LunarLiftoffResults
@@ -807,7 +807,7 @@ public:
 	void AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad);
 	void AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad);
 	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
-	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
+	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc = false);
 	void TEITargeting(TEIOpt *opt, EntryResults *res);
 	void RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad);

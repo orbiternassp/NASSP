@@ -6430,11 +6430,29 @@ void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
 	pad.YawTrim = y_T * DEG - 0.95;
 }
 
-void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
+void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc)
 {
 	double CSMmass, LMmass;
 
-	LMmass = v->GetMass();
+	if (asc)
+	{
+		if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
+			!stricmp(v->GetClassName(), "ProjectApollo/LEM") ||
+			!stricmp(v->GetClassName(), "ProjectApollo\\LEMSaturn") ||
+			!stricmp(v->GetClassName(), "ProjectApollo/LEMSaturn")) {
+			LEM *lem = (LEM *)v;
+			LMmass = lem->GetAscentStageMass();
+		}
+		else
+		{
+			LMmass = v->GetMass();
+		}
+	}
+	else
+	{
+		LMmass = v->GetMass();
+	}
+
 	CSMmass = GetDockedVesselMass(v);
 
 	pad.ThisVehicleWeight = LMmass / 0.45359237;
@@ -11972,11 +11990,20 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 		OrbMech::LunarLiftoffTimePredictionCFP(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_CSI, t_CDH, t_TPF, v_LH, v_LV);
 	}
-	else
+	else if (opt->opt == 1)
 	{
 		t_TPI = opt->t_TPIguess;
 
 		OrbMech::LunarLiftoffTimePredictionDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_TPF, v_LH, v_LV);
+	}
+	else if (opt->opt == 2)
+	{
+		double t_L_guess;
+
+		t_L_guess = opt->t_TPIguess - 3600.0 - 5.0*60.0;
+
+		OrbMech::LunarLiftoffTimePredictionTCDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, t_L_guess, t_IG, t_TPF, v_LH, v_LV);
+
 	}
 	res->t_L = t_IG;
 	res->t_Ins = t_IG + dt_1;

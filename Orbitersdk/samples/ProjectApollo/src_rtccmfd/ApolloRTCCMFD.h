@@ -310,6 +310,10 @@ public:
 	void set_DKIDT2(double dt);
 	void menuDKIDeltaT3();
 	void set_DKIDT3(double dt);
+	void menuSetDAPPADPage();
+	void menuDAPPADCalc();
+	void menuSetLVDCPage();
+	void menuLaunchAzimuthCalc();
 
 protected:
 	oapi::Font *font;

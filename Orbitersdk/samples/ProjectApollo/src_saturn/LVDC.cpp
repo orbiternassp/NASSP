@@ -5165,7 +5165,7 @@ void LVDCSV::TimeStep(double simdt) {
 			}
 			else
 			{
-				Azimuth = hx[2][0] + hx[2][1]*((t_D - t_D3) / t_SD3) + hx[2][2]*pow((t_D - t_D1) / t_SD3, 2) + hx[2][3]*pow((t_D - t_D3) / t_SD3, 3) + hx[2][4]*pow((t_D - t_D3) / t_SD3, 4);
+				Azimuth = hx[2][0] + hx[2][1]*((t_D - t_D3) / t_SD3) + hx[2][2]*pow((t_D - t_D3) / t_SD3, 2) + hx[2][3]*pow((t_D - t_D3) / t_SD3, 3) + hx[2][4]*pow((t_D - t_D3) / t_SD3, 4);
 			}
 
 			if (i_op)

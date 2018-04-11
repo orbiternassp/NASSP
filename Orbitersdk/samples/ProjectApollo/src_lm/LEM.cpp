@@ -1744,3 +1744,13 @@ void LEM::RCSSoundTimestep() {
 		RCSSustainSound.stop();
 	}
 }
+
+double LEM::GetAscentStageMass()
+{
+	if (stage < 2)
+	{
+		return GetMass() - GetPropellantMass(ph_Dsc) - DescentEmptyMassKg;
+	}
+
+	return GetMass();
+}
