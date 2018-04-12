@@ -2508,7 +2508,7 @@ void MCC::TimeStep(double simdt){
 				{
 					MissionPhase = MMST_TE_COAST;
 				}
-				if (cm->MissionTime > rtcc->calcParams.TEI + 40 * 60)
+				if (cm->MissionTime > rtcc->calcParams.TEI + 35.0*60.0)
 				{
 					SlowIfDesired();
 					setState(MST_F_TRANSEARTH_2);
