@@ -501,6 +501,12 @@ void* h_Tank::GetComponent(char *component_name) {
 		 return &(space.composition[4].p_press);
 	if (!strnicmp (component_name, "H2O_PPRESS",10 ))
 		 return &(space.composition[2].p_press);
+	if (!strnicmp(component_name, "AZ_PPRESS", 9))
+		return &(space.composition[6].p_press);
+	if (!strnicmp(component_name, "N2O4_PPRESS", 11))
+		return &(space.composition[7].p_press);
+	if (!strnicmp(component_name, "HE_PPRESS", 9))
+		return &(space.composition[8].p_press);
 	if (!strnicmp (component_name, "H2_VAPORMASS", 12))
 		 return &(space.composition[1].vapor_mass);
 	if (!strnicmp (component_name, "O2_VAPORMASS", 12))
