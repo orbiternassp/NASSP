@@ -4133,17 +4133,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 130)
 		{
 			sprintf(manname, "TEI-29");
-			sv2 = coast(sv1, 1.5*2.0*3600.0);
+			sv2 = coast(sv1, 2.5*2.0*3600.0);
 		}
 		else if (fcn == 131)
 		{
 			sprintf(manname, "TEI-30");
-			sv2 = coast(sv1, 0.5*2.0*3600.0);
+			sv2 = coast(sv1, 1.0*2.0*3600.0);
 		}
 		else if (fcn == 132)
 		{
 			sprintf(manname, "TEI-31");
-			sv2 = coast(sv1, 0.5*2.0*3600.0);
+			sv2 = coast(sv1, 1.0*2.0*3600.0);
 		}
 		else if (fcn == 133)
 		{
@@ -4153,7 +4153,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 134)
 		{
 			sprintf(manname, "TEI-32");
-			sv2 = coast(sv1, 0.5*2.0*3600.0);
+			sv2 = coast(sv1, 1.5*2.0*3600.0);
 		}
 
 		entopt.EntryLng = -165.0*RAD;
@@ -4326,7 +4326,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarOrbitMapUpdate(sv0, getGETBase(), upd_pretei);
 
 		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
-		LunarOrbitMapUpdate(sv0, getGETBase(), upd_posttei);
+		LunarOrbitMapUpdate(sv1, getGETBase(), upd_posttei);
 
 		form->Rev = 32;
 		form->AOSGET = upd_posttei.AOSGET;

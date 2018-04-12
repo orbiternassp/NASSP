@@ -2480,7 +2480,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 131, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_27);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_27: //Landmark tracking rev 30 update to rev 30 map update
-				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 5.0*60.0, 57, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_28);
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 57, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_28);
 				break;
 			case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_28: //Rev 30 map update to preliminary TEI-31 update
 				UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 30 && MoonRevTime > 1.0*3600.0 + 15.0*60.0, 142, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_29);
@@ -3818,7 +3818,7 @@ void MCC::drawPad(){
 			SStoHHMMSS(form->T2[i], hh, mm, ss);
 			sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
 
-			if (form->CRDist > 0)
+			if (form->CRDist[i] > 0)
 			{
 				sprintf(buffer, "%s%02.f NM North\n", buffer, form->CRDist[i]);
 			}
