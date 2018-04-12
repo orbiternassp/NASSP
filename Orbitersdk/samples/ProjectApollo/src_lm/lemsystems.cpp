@@ -619,8 +619,6 @@ void LEM::SystemsInit()
 	SecGlyPumpHeat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:GLYPUMPSECHEAT");
 	LCGPump = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:LCGPUMP");
 
-	DesGHe = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:DESGHE");
-
 	PrimGlyPump1->WireTo(&ECS_GLYCOL_PUMP_1_CB);
 	PrimGlyPump2->WireTo(&ECS_GLYCOL_PUMP_2_CB);
 	CabinFan1->WireTo(&ECS_CABIN_FAN_1_CB);
@@ -1576,11 +1574,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	PressRegA->BoilAllAndSetTemp(285.928);
 	PressRegB->BoilAllAndSetTemp(285.928);
 
-	//Test He Valves
-	if (QtyMonRotary.GetState() == 0) {
-		DesGHe->OUT_valve.Open();
-	}
-
 	//System Generated Heat
 
 	//Secondary Glycol Pump Heat
@@ -1622,7 +1615,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-	///*
+	/*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1975,9 +1968,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmdesGHepress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESGHE:PRESS");
 	double *lmdesGHetemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:DESGHE:TEMP"); 
 
-	//*/
+	*/
 
-	sprintf(oapiDebugString(), "DHe1Mass %lf DHe1Press %lf DFHe1Temp %lf DF1Mass %lf DF1Press %lf DF1Temp %lf AZPP %lf HePP %lf", *lmdesGHemass*LBS, *lmdesGHepress*PSI, KelvinToFahrenheit(*lmdesGHetemp), *lmdesfuel1mass*LBS, *lmdesfuel1press*PSI, KelvinToFahrenheit(*lmdesfuel1temp), *lmdesfuel1AZppress*PSI, *lmdesfuel1Heppress*PSI);
+	//sprintf(oapiDebugString(), "DHe1Mass %lf DHe1Press %lf DFHe1Temp %lf DF1Mass %lf DF1Press %lf DF1Temp %lf AZPP %lf HePP %lf", *lmdesGHemass*LBS, *lmdesGHepress*PSI, KelvinToFahrenheit(*lmdesGHetemp), *lmdesfuel1mass*LBS, *lmdesfuel1press*PSI, KelvinToFahrenheit(*lmdesfuel1temp), *lmdesfuel1AZppress*PSI, *lmdesfuel1Heppress*PSI);
 	//sprintf(oapiDebugString(), "DHe1Mass %lf DHe1Press %lf DFHe1Temp %lf", *lmdesGHe1mass*LBS, *lmdesGHe1press*PSI, KelvinToFahrenheit(*lmdesGHe1temp));
 	//sprintf(oapiDebugString(), "DF1Mass %lf DF1Press %lf DF1Temp %lf DF2Mass %lf DF2Press %lf DF2Temp %lf", *lmdesfuel1mass*LBS, *lmdesfuel1press*PSI, KelvinToFahrenheit(*lmdesfuel1temp), *lmdesfuel2mass*LBS, *lmdesfuel2press*PSI, KelvinToFahrenheit(*lmdesfuel2temp));
 	//sprintf(oapiDebugString(), "LM Cabin: %lf LM Tunnel: %lf", *lmcabinpress*PSI, *lmtunnelpress*PSI);
