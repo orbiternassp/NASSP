@@ -98,7 +98,7 @@ class h_volume
 	double Press;					//total press.. sum of all p_press (Pa)
 	double Temp;					//averaged temp of volume.. (K)
 	double Volume;					//liters
-	void ThermalComps(double dt);	//levels temp troughout all subst...much like stirring a tank,only instanaeously
+	void ThermalComps(double dt);	//levels temp throughout all subst...much like stirring a tank,only instanaeously
 	void Void();					//empty all inside the volume
 };
 h_substance _substance(int s_type,double i_mass, double i_Q,float i_vm);
