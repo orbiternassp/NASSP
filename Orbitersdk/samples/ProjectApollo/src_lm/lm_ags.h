@@ -23,6 +23,7 @@
   **************************************************************************/
 
 #include "yaAGS/aea_engine.h"
+#include <queue>
 
 class LEM_DEDA;
 
@@ -194,9 +195,7 @@ protected:
 	double Altitude;
 	double AltitudeRate;
 
-	int DownlinkQueueSize;
-	int DownlinkQueue[3];
-	int TestCounter;
+	std::queue<uint16_t> ags_queue;
 
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
 	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0);

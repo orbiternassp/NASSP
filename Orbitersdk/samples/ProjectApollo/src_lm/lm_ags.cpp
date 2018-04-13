@@ -469,13 +469,6 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	Altitude = 0.0;
 	AltitudeRate = 0.0;
 
-	DownlinkQueueSize = 0;
-	for (int i = 0;i < 3;i++)
-	{
-		DownlinkQueue[i] = 0;
-	}
-	TestCounter = 0;
-
 	//
 	// Virtual AGS.
 	//
@@ -538,23 +531,16 @@ void LEM_AEA::Timestep(double simt, double simdt) {
 			ASACycleCounter -= 1024;
 		}
 
-		if ((vags.InputPorts[IO_2020] & 0200000) != 0)
+		//PGNS to AGS downlink queue
+		if (((vags.InputPorts[IO_2020] & 0200000) != 0) && (ags_queue.size() > 0))
 		{
-			if (DownlinkQueueSize > 0)
-			{
-				SetInputPort(IO_6200, DownlinkQueue[2]);
-				DownlinkQueue[2] = DownlinkQueue[1];
-				DownlinkQueue[1] = DownlinkQueue[0];
-				DownlinkQueueSize--;
-
-				PGNCSDownlinkStopPulse();
-			}
+			SetInputPort(IO_6200, ags_queue.front() << 2);
+			ags_queue.pop();
+			PGNCSDownlinkStopPulse();
 		}
 	}
 
 	LastCycled += (0.0000009765625 * CycleCount);
-
-	sprintf(oapiDebugString(), "%d", DownlinkQueueSize);
 }
 
 void LEM_AEA::SystemTimestep(double simdt)
@@ -876,19 +862,7 @@ void LEM_AEA::SetPGNSIntegratorRegister(int channel, int val)
 
 void LEM_AEA::SetDownlinkTelemetryRegister(int val)
 {
-	if (DownlinkQueueSize < 3)
-	{
-		DownlinkQueue[2] = DownlinkQueue[1];
-		DownlinkQueue[1] = DownlinkQueue[0];
-		DownlinkQueue[0] = val << 2;
-		DownlinkQueueSize++;
-
-		PGNCSDownlinkStopPulse();
-	}
-
-	//SetInputPort(IO_6200, val << 2);
-	//PGNCSDownlinkStopPulse();
-	//TestCounter++;
+	if (ags_queue.size() < 3) ags_queue.push(val);
 }
 
 void LEM_AEA::PGNCSDownlinkStopPulse()
