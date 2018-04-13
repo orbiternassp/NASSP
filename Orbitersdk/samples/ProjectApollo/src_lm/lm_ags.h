@@ -194,6 +194,10 @@ protected:
 	double Altitude;
 	double AltitudeRate;
 
+	int DownlinkQueueSize;
+	int DownlinkQueue[3];
+	int TestCounter;
+
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
 	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0);
 	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
