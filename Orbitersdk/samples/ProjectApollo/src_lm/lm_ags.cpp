@@ -438,15 +438,15 @@ void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str)
 		papiReadScenario_vec(line, "LASTGLOBALVEL", LastGlobalVel);
 		papiReadScenario_vec(line, "REMAININGDELTAVEL", RemainingDeltaVel);
 		papiReadScenario_double(line, "LASTSIMDT", LastSimDT);
-		papiReadScenario_bool(line, "INITIALIZED", Initialized);
-		papiReadScenario_bool(line, "OPERATE", Operate);
-		papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
+papiReadScenario_bool(line, "INITIALIZED", Initialized);
+papiReadScenario_bool(line, "OPERATE", Operate);
+papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
 	}
 }
 
 // Abort Electronics Assembly
 LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) {
-	lem = NULL;	
+	lem = NULL;
 	AEAInitialized = false;
 	FlightProgram = 0;
 	PowerSwitch = 0;
@@ -476,14 +476,14 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	vags.ags_clientdata = this;
 }
 
-void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah){
+void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah) {
 	lem = s;
 	aeaHeat = aeah;
 	secaeaHeat = secaeah;
 }
 
-void LEM_AEA::Timestep(double simt, double simdt){
-	if(lem == NULL){ return; }
+void LEM_AEA::Timestep(double simt, double simdt) {
+	if (lem == NULL) { return; }
 
 	if (!IsPowered()) return;
 
@@ -529,6 +529,14 @@ void LEM_AEA::Timestep(double simt, double simdt){
 			vags.InputPorts[IO_6100] &= 0377700;
 
 			ASACycleCounter -= 1024;
+		}
+
+		//PGNS to AGS downlink queue
+		if (((vags.InputPorts[IO_2020] & 0200000) != 0) && (ags_queue.size() > 0))
+		{
+			SetInputPort(IO_6200, ags_queue.front() << 2);
+			ags_queue.pop();
+			PGNCSDownlinkStopPulse();
 		}
 	}
 
@@ -697,6 +705,15 @@ unsigned int LEM_AEA::GetInputChannel(int channel)
 	return val;
 }
 
+bool LEM_AEA::GetInputChannelBit(int channel, int bit)
+
+{
+	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+		return false;
+
+	return (GetInputChannel(channel) & (1 << (bit))) != 0;
+}
+
 void LEM_AEA::SetAGSAttitudeError(int Type, int Data)
 {
 	int DataVal;
@@ -841,6 +858,16 @@ void LEM_AEA::SetPGNSIntegratorRegister(int channel, int val)
 		valx &= 0377774;
 		SetInputPort(IO_2004, valx);
 	}
+}
+
+void LEM_AEA::SetDownlinkTelemetryRegister(int val)
+{
+	if (ags_queue.size() < 3) ags_queue.push(val);
+}
+
+void LEM_AEA::PGNCSDownlinkStopPulse()
+{
+	SetInputPortBit(IO_2020, AGSDownlinkTelemetryStopDiscrete, false);
 }
 
 VECTOR3 LEM_AEA::GetTotalAttitude()

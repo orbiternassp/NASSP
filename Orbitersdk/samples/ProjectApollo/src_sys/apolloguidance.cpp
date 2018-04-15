@@ -814,6 +814,9 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 			val33.Value = val;
 		} */
 		break;
+	case 034:
+		ProcessChannel34(val);
+		break;
 	}
 }
 
@@ -829,6 +832,9 @@ void ApolloGuidance::ProcessChannel6(ChannelValue val){
 
 // DS20060226 Stubs for optics controls and TVC
 void ApolloGuidance::ProcessChannel14(ChannelValue val){
+}
+
+void ApolloGuidance::ProcessChannel34(ChannelValue val) {
 }
 
 void ApolloGuidance::ProcessChannel140(ChannelValue val){

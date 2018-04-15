@@ -23,6 +23,7 @@
   **************************************************************************/
 
 #include "yaAGS/aea_engine.h"
+#include <queue>
 
 class LEM_DEDA;
 
@@ -129,6 +130,7 @@ public:
 	void SetOutputChannel(int Type, int Data);
 	unsigned int GetOutputChannel(int channel);
 	unsigned int GetInputChannel(int channel);
+	bool GetInputChannelBit(int channel, int bit);
 	void SetMissionInfo(int MissionNo);
 	void SetFlightProgram(int FP);
 	void PadLoad(unsigned int address, unsigned int value);
@@ -139,6 +141,8 @@ public:
 	void SetLateralVelocity(int Data);
 	void SetAltitudeAltitudeRate(int Data);
 	void SetPGNSIntegratorRegister(int channel, int val);
+	void SetDownlinkTelemetryRegister(int val);
+	void PGNCSDownlinkStopPulse();
 
 	double GetLateralVelocity();
 	double GetAltitude();
@@ -190,6 +194,8 @@ protected:
 
 	double Altitude;
 	double AltitudeRate;
+
+	std::queue<uint16_t> ags_queue;
 
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
 	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0);
