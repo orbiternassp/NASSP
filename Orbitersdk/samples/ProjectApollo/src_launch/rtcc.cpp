@@ -86,33 +86,33 @@ void RTCC::Init(MCC *ptr)
 {
 	mcc = ptr;
 }
-bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
 {
 	bool scrubbed = false;
 
 	switch (mission)
 	{
 	case MTP_B:
-		scrubbed = CalculationMTP_B(fcn, pad, upString, upDesc);
+		scrubbed = CalculationMTP_B(fcn, pad, upString, upDesc, upMessage);
 		break;
 	case MTP_C:
-		scrubbed = CalculationMTP_C(fcn, pad, upString, upDesc);
+		scrubbed = CalculationMTP_C(fcn, pad, upString, upDesc, upMessage);
 		break;
 	case MTP_C_PRIME:
-		scrubbed = CalculationMTP_C_PRIME(fcn, pad, upString, upDesc);
+		scrubbed = CalculationMTP_C_PRIME(fcn, pad, upString, upDesc, upMessage);
 		break;
 	case MTP_D:
-		scrubbed = CalculationMTP_D(fcn, pad, upString, upDesc);
+		scrubbed = CalculationMTP_D(fcn, pad, upString, upDesc, upMessage);
 		break;
 	case MTP_F:
-		scrubbed = CalculationMTP_F(fcn, pad, upString, upDesc);
+		scrubbed = CalculationMTP_F(fcn, pad, upString, upDesc, upMessage);
 		break;
 	}
 
 	return scrubbed;
 }
 
-bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
 {
 	char* uplinkdata = new char[1000];
 
@@ -271,7 +271,7 @@ bool RTCC::CalculationMTP_B(int fcn, LPVOID &pad, char * upString, char * upDesc
 	return false;
 }
 
-bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
 {
 	char* uplinkdata = new char[1000];
 	bool preliminary = true;
@@ -678,7 +678,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	return scrubbed;
 }
 
-bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
 {
 	char* uplinkdata = new char[1000];
 	bool preliminary = true;
@@ -990,7 +990,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "%s has been scrubbed.", manname);
+			sprintf(upMessage, "%s has been scrubbed.", manname);
 		}
 		else
 		{
@@ -1618,7 +1618,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "%s has been scrubbed.", manname);
+			sprintf(upMessage, "%s has been scrubbed.", manname);
 
 			//Entry prediction without maneuver
 			EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
@@ -1785,7 +1785,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	return scrubbed;
 }
 
-bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
 {
 	char* uplinkdata = new char[1000];
 	bool preliminary = true;
@@ -1933,7 +1933,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "Second Phasing Maneuver not necessary.");
+			sprintf(upMessage, "Second Phasing Maneuver not necessary.");
 		}
 		else
 		{
@@ -2066,7 +2066,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "NCC2 has been scrubbed.");
+			sprintf(upMessage, "NCC2 has been scrubbed.");
 		}
 		else
 		{
@@ -3274,7 +3274,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	return scrubbed;
 }
 
-bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc)
+bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
 {
 	char uplinkdata[1000];
 	bool preliminary = false;
@@ -3594,7 +3594,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "%s has been scrubbed. CSM state vector.", manname);
+			sprintf(upMessage, "%s has been scrubbed.", manname);
+			sprintf(upDesc, "CSM state vector");
 
 			sprintf(uplinkdata, "%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase));
 			if (upString != NULL) {
@@ -3730,7 +3731,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "MCC-3 has been scrubbed. CSM state vector.");
+			sprintf(upMessage, "MCC-3 has been scrubbed");
+			sprintf(upDesc, "CSM state vector");
 
 			sprintf(uplinkdata, "%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase));
 			if (upString != NULL) {
@@ -3829,7 +3831,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "MCC-4 has been scrubbed. CSM state vector, Landing Site REFSMMAT.");
+			sprintf(upMessage, "MCC-4 has been scrubbed");
+			sprintf(upDesc, "CSM state vector, Landing Site REFSMMAT");
 
 			sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase), CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
 			if (upString != NULL) {
@@ -5134,8 +5137,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (scrubbed)
 		{
-			sprintf(upDesc, "%s has been scrubbed.", manname);
-
 			//Entry prediction without maneuver
 			EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
 
@@ -5167,21 +5168,30 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			//Scrubbed MCC-5 and MCC-6
 			if (fcn == 90 || fcn == 91 || fcn == 92)
 			{
+				sprintf(upMessage, "%s has been scrubbed", manname);
+				sprintf(upDesc, "CSM state vector, entry target");
+
 				sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase), CMCEntryUpdate(res.latitude, res.longitude));
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, entry target");
 				}
+			}
+			//MCC-7 decision
+			else if (fcn == 93)
+			{
+				sprintf(upMessage, "%s has been scrubbed", manname);
 			}
 			//Scrubbed MCC-7
 			else if (fcn == 94)
 			{
+				sprintf(upDesc, "%s has been scrubbed", manname);
+				sprintf(upDesc, "CSM state vector, entry target, Entry REFSMMAT");
+
 				sprintf(uplinkdata, "%s%s%s", AGCStateVectorUpdate(sv, true, AGCEpoch, GETbase), CMCEntryUpdate(res.latitude, res.longitude), CMCDesiredREFSMMATUpdate(REFSMMAT, AGCEpoch));
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, entry target, Entry REFSMMAT");
 				}
 			}
 		}
@@ -5196,6 +5206,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 					strncpy(upString, uplinkdata, 1024 * 3);
 					sprintf(upDesc, "CSM state vector, target load");
 				}
+			}
+			//MCC-7 decision
+			else if (fcn == 93)
+			{
+				sprintf(upMessage, "%s will be executed", manname);
 			}
 			//MCC-7
 			else if (fcn == 94)
@@ -5286,7 +5301,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+				sprintf(upDesc, "State vectors, entry update");
 			}
 		}
 	}

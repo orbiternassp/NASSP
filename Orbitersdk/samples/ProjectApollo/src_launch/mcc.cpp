@@ -261,6 +261,7 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 	scrubbed = false;
 	upString[0] = 0;
 	upDescr[0] = 0;
+	upMessage[0] = 0;
 	subThreadStatus = 0;
 
 	// Ground Systems Init
@@ -1827,9 +1828,9 @@ void MCC::TimeStep(double simdt){
 						if (SubStateTime > 1 && padState > -1) {
 							if (scrubbed)
 							{
-								if (upDescr[0] != 0)
+								if (upMessage[0] != 0)
 								{
-									addMessage(upDescr);
+									addMessage(upMessage);
 								}
 								freePad();
 								scrubbed = false;
@@ -2530,7 +2531,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 91, MST_F_TRANSEARTH_7);
 				break;
 			case MST_F_TRANSEARTH_7: //Entry PAD update to MCC-6 update
-				UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 16.0*3600.0 + 45.0*60.0, 96, MST_F_TRANSEARTH_8);
+				UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 16.0*3600.0 - 45.0*60.0, 96, MST_F_TRANSEARTH_8);
 				break;
 			case MST_F_TRANSEARTH_8: //MCC-6 update to Entry PAD update
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 92, MST_F_TRANSEARTH_9);
@@ -4208,9 +4209,9 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			if (SubStateTime > 1 && padState > -1) {
 				if (scrubbed)
 				{
-					if (upDescr[0] != 0)
+					if (upMessage[0] != 0)
 					{
-						addMessage(upDescr);
+						addMessage(upMessage);
 					}
 					freePad();
 					scrubbed = false;
@@ -4259,6 +4260,10 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			if (SubStateTime > 1 && subThreadStatus == 0) {
 				if (scrubbed)
 				{
+					if (upMessage[0] != 0)
+					{
+						addMessage(upMessage);
+					}
 					freePad();
 					scrubbed = false;
 				}
@@ -4415,6 +4420,10 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			if (SubStateTime > 1 && subThreadStatus == 0) {
 				if (scrubbed)
 				{
+					if (upMessage[0] != 0)
+					{
+						addMessage(upMessage);
+					}
 					freePad();
 					scrubbed = false;
 				}
@@ -4592,6 +4601,39 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			break;
 		}
 	}
+	else if (type == UTP_NONE) //calculation with an optional message, without uplink
+	{
+		switch (SubState) {
+		case 0:
+			startSubthread(updatenumber, type); // Start subthread
+			setSubState(1);
+			// FALL INTO
+		case 1: // Await pad read-up time (however long it took to compute it and give it to capcom)
+			if (SubStateTime > 1 && subThreadStatus == 0) {
+				if (upMessage[0] != 0)
+				{
+					addMessage(upMessage);
+				}
+				setSubState(2);
+			}
+			break;
+		case 2: // Await burn
+			if (altcriterium)
+			{
+				if (altcondition)
+				{
+					SlowIfDesired();
+					setState(altnextupdate);
+				}
+			}
+			else if (condition)
+			{
+				SlowIfDesired();
+				setState(nextupdate);
+			}
+			break;
+		}
+	}
 }
 
 void MCC::subThreadMacro(int type, int updatenumber)
@@ -4604,7 +4646,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	if (type == UTP_PADONLY)
 	{
 		// Ask RTCC for numbers
-		rtcc->Calculation(MissionType, updatenumber, padForm);
+		rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr, upMessage);
 		// Done filling form, OK to show
 		padState = 0;
 	}
@@ -4612,7 +4654,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		// Ask RTCC for numbers
 		// Do math
-		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr, upMessage);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -4624,7 +4666,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		// Ask RTCC for numbers
 		// Do math
-		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr, upMessage);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
@@ -4634,7 +4676,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		// Ask RTCC for numbers
 		// Do math
-		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr, upMessage);
 		// Give resulting uplink string to LGC
 		if (upString[0] != 0) {
 			this->pushLGCUplinkString(upString);
@@ -4646,7 +4688,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		// Ask RTCC for numbers
 		// Do math
-		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr, upMessage);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushLGCUplinkString(upString);
@@ -4656,7 +4698,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	{
 		// Ask RTCC for numbers
 		// Do math
-		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr);
+		scrubbed = rtcc->Calculation(MissionType, updatenumber, padForm, upString, upDescr, upMessage);
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushLGCUplinkString(upString);
@@ -4664,7 +4706,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	}
 	else if (type == UTP_NONE)
 	{
-		scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm);
+		scrubbed = rtcc->Calculation(MissionType, subThreadMode, padForm, upString, upDescr, upMessage);
 	}
 }
 
