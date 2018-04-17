@@ -506,7 +506,7 @@ void h_volume::ThermalComps(double dt) {
 		tNV = (composition[i].mass - composition[i].vapor_mass) / density;	//Units of L
 		NV += tNV;	//Units of L
 
-		PNV += tNV / BULK_MOD[composition[i].subst_type];	//Units of L/Pa
+		PNV += tNV / BULK_MOD[composition[i].subst_type];;	//Units of L/Pa
 	}
 
 	m_i = -m_i * R_CONST * Temp;	//Units of L*Pa
