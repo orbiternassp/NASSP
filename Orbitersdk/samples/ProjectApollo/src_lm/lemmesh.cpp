@@ -726,7 +726,7 @@ void LEM::SetTrackLight() {
 	}
 	trackLight.col = &beaconCol;
 	trackLight.size = 0.5;
-	trackLight.falloff = 0.5;
+	trackLight.falloff = 0.8;
 	trackLight.period = 1.0;
 	trackLight.duration = 0.1;
 	trackLight.tofs = 0;
@@ -742,7 +742,7 @@ void LEM::SetDockingLights() {
 	static VECTOR3 beaconPosAsc[5] = { { 0.32 + xoffset, 1.52 + yoffset, 2.55 + zoffset },{ 0.05 + xoffset, 1.95 + yoffset, -1.75 + zoffset },{ -0.22 + xoffset, 1.52 + yoffset, 2.55 + zoffset },{ -2.805 + xoffset, -0.1 + yoffset, -0.3 + zoffset },{ 2.1 + xoffset, 0.28 + yoffset, -0.3 + zoffset } };
 	static VECTOR3 beaconCol[4] = { { 1, 1, 1 },{ 1, 1, 0 },{ 1, 0, 0 },{ 0, 1, 0 } };
 	for (i = 0; i < 5; i++) {
-		dockingLights[i].shape = BEACONSHAPE_DIFFUSE;
+		dockingLights[i].shape = BEACONSHAPE_STAR;
 		if (stage == 2) {
 			dockingLights[i].pos = beaconPosAsc+i;
 		}
@@ -750,8 +750,8 @@ void LEM::SetDockingLights() {
 			dockingLights[i].pos = beaconPos+i;
 		}
 		dockingLights[i].col = (i < 2 ? beaconCol : i < 3 ? beaconCol+1 : i < 4 ? beaconCol+2 : beaconCol+3);
-		dockingLights[i].size = 0.15;
-		dockingLights[i].falloff = 0.5;
+		dockingLights[i].size = 0.12;
+		dockingLights[i].falloff = 0.8;
 		dockingLights[i].period = 0.0;
 		dockingLights[i].duration = 1.0;
 		dockingLights[i].tofs = 0;
