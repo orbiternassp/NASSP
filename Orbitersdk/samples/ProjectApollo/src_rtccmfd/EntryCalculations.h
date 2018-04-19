@@ -156,7 +156,7 @@ private:
 class Flyby
 {
 public:
-	Flyby(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int FlybyType);
+	Flyby(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int FlybyType, double Inclination = 0.0, bool Ascending = true);
 	bool Flybyiter();
 
 	int precision;
@@ -167,6 +167,8 @@ public:
 	double EntryAng;
 	VECTOR3 Rig, Vig, Vig_apo;
 	double TIG;
+	double ReturnInclination;
+	double FlybyPeriAlt;
 private:
 	OBJHANDLE hMoon, hEarth;
 	VECTOR3 DV;
@@ -183,6 +185,8 @@ private:
 	bool INRFVsign;
 	double mjd0;
 	double dv[3], TIGvar[3];
+	double IncDes;
+	bool Asc;
 };
 
 class TEI

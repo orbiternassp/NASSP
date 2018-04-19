@@ -279,6 +279,7 @@ ARCore::ARCore(VESSEL* v)
 	entrynominal = 1;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
+	FlybyPeriAlt = 0.0;
 
 	SVSlot = true; //true = CSM; false = Other
 	J2000Pos = _V(0.0, 0.0, 0.0);
@@ -2896,6 +2897,8 @@ int ARCore::subThread()
 		opt.vessel = vessel;
 		opt.entrylongmanual = entrylongmanual;
 		opt.TIGguess = EntryTIG;
+		opt.Inclination = TLCCFRDesiredInclination;
+		opt.Ascending = TLCCAscendingNode;
 
 		rtcc->RTEFlybyTargeting(&opt, &res);//Entry_DV, EntryTIGcor, EntryLatcor, EntryLngcor, P37GET400K, EntryRTGO, EntryVIO, EntryAngcor);
 
@@ -2909,6 +2912,8 @@ int ARCore::subThread()
 		P30TIG = EntryTIGcor;
 		dV_LVLH = Entry_DV;
 		entryprecision = res.precision;
+		TLCCFRIncl = res.Incl;
+		FlybyPeriAlt = res.FlybyAlt;
 
 		Result = 0;
 	}

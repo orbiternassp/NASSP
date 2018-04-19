@@ -960,12 +960,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Est. Time of Ignition", 0, 'T' },
 		{ "Manual longitude or zone", 0, 'L' },
 		{ "Des. Landing Long", 0, 'O' },
-		{ "", 0, ' ' },
 		{ "Return Speed", 0, 'S' },
-		{ "Maneuver Type", 0, 'E' },
+		{ "FR Inclination", 0, 'I' },
+		{ "Ascending or Descending Node", 0, 'N' },
 
+		{ "Maneuver Type", 0, 'E' },
 		{ "Calculate Entry", 0, 'C' },
-		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Uplink to AGC", 0, 'U' },
@@ -977,12 +977,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::EntryTimeDialogue);
 	RegisterFunction("LMO", OAPI_KEY_L, &ApolloRTCCMFD::EntryLongitudeModeDialogue);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::EntryLngDialogue);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("SPE", OAPI_KEY_S, &ApolloRTCCMFD::menuSwitchReturnSpeed);
-	RegisterFunction("TYP", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchFlybyType);
+	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::menuSetTLCCDesiredInclination);
+	RegisterFunction("ASC", OAPI_KEY_N, &ApolloRTCCMFD::menuSwitchTLCCAscendingNode);
 
+	RegisterFunction("TYP", OAPI_KEY_E, &ApolloRTCCMFD::menuSwitchFlybyType);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuRTEFlybyCalc);
-	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuEntryUpload);

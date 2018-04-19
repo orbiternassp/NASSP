@@ -198,7 +198,7 @@ struct EntryResults
 	VECTOR3 dV_LVLH;
 	double P30TIG;
 	double latitude, longitude;
-	double GET05G, GET400K, RTGO, VIO, ReA, Incl;
+	double GET05G, GET400K, RTGO, VIO, ReA, Incl, FlybyAlt;
 	int precision;
 	SV sv_postburn;
 };
@@ -249,6 +249,8 @@ struct RTEFlybyOpt
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool entrylongmanual = true; //Targeting a landing zone or a manual landing longitude
 	int vesseltype = 0;			//0 = CSM, 1 = LM
+	double Inclination = 0.0;	//Specified return inclination
+	bool Ascending = true;		//Ascending or descending node
 };
 
 struct REFSMMATOpt

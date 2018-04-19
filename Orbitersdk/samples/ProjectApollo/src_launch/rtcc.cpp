@@ -10004,7 +10004,7 @@ void RTCC::RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res)
 		MJDguess = opt->GETbase + opt->TIGguess / 24.0 / 3600.0;
 	}
 
-	flybycalc = new Flyby(R0M, V0M, SVMJD, gravref, MJDguess, opt->EntryLng, opt->entrylongmanual, opt->returnspeed, opt->FlybyType);
+	flybycalc = new Flyby(R0M, V0M, SVMJD, gravref, MJDguess, opt->EntryLng, opt->entrylongmanual, opt->returnspeed, opt->FlybyType, opt->Inclination, opt->Ascending);
 
 	while (!endi)
 	{
@@ -10024,6 +10024,8 @@ void RTCC::RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res)
 	res->RTGO = 1285.0 - 3437.7468*acos(dotp(unit(flybycalc->R_EI), unit(R05G)));
 	res->VIO = length(V05G);
 	res->precision = flybycalc->precision;
+	res->Incl = flybycalc->ReturnInclination;
+	res->FlybyAlt = flybycalc->FlybyPeriAlt;
 
 	if (opt->csmlmdocked)
 	{

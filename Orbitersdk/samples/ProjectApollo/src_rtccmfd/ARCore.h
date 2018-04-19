@@ -190,6 +190,7 @@ public:
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
 	int FlybyType;	//1 = Flyby, 2 = PC+2
+	double FlybyPeriAlt;
 
 	//STATE VECTOR PAGE
 	bool SVSlot;

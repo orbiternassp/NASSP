@@ -2121,7 +2121,7 @@ OBJHANDLE Entry::AGCGravityRef(VESSEL *vessel)
 	return gravref;
 }
 
-Flyby::Flyby(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int FlybyType)
+Flyby::Flyby(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int FlybyType, double Inclination, bool Ascending)
 {
 	VECTOR3 R1B, V1B;
 
@@ -2191,15 +2191,38 @@ Flyby::Flyby(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJ
 	cMoon = oapiGetCelbodyInterface(hMoon);
 	ii = 0;
 	precision = 1;
+	ReturnInclination = 0.0;
+
+	IncDes = Inclination;
+	Asc = Ascending;
 }
 
 bool Flyby::Flybyiter()
 {
 	double theta_long, theta_lat, dlng, dt;
+	double ratest, dectest, radtest, InclFRGuess;
 
 	EIMJD = TIG + DT_TEI_EI / 24.0 / 3600.0;
 
-	Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI);
+	OrbMech::GetLunarEquatorialCoordinates(TIG, ratest, dectest, radtest);
+
+	if (IncDes != 0)
+	{
+		if (IncDes < abs(dectest) + 2.0*RAD)
+		{
+			InclFRGuess = abs(dectest) + 2.0*RAD;
+		}
+		else
+		{
+			InclFRGuess = IncDes;
+		}
+
+		Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI, InclFRGuess, Asc);
+	}
+	else
+	{
+		Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI);
+	}
 
 	EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
 
@@ -2244,7 +2267,7 @@ bool Flyby::Flybyiter()
 	else
 	{
 		double sing, cosg, x2;
-		VECTOR3 i, j, k, N;
+		VECTOR3 i, j, k, N, H_EI_equ, R_peri, V_peri;
 		MATRIX3 Q_Xx;
 		j = unit(crossp(Vig, Rig));
 		k = unit(-Rig);
@@ -2259,6 +2282,12 @@ bool Flyby::Flybyiter()
 		cosg = dotp(unit(R_EI), unit(V_EI));
 		x2 = cosg / sing;
 		EntryAng = atan(x2);
+
+		H_EI_equ = rhtmul(OrbMech::GetRotationMatrix(hEarth, EIMJD), unit(N));
+		ReturnInclination = acos(H_EI_equ.z);
+
+		OrbMech::timetoperi_integ(Rig, Vig_apo, TIG, hMoon, hMoon, R_peri, V_peri);
+		FlybyPeriAlt = length(R_peri) - oapiGetSize(hMoon);
 
 		return true;
 	}
