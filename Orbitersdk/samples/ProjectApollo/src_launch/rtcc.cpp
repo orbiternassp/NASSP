@@ -10093,8 +10093,8 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 	{
 		MJDguess = opt->GETbase + opt->TIGguess / 24.0 / 3600.0;
 	}
-
-	teicalc = new TEI(sv0.R, sv0.V, sv0.MJD, sv0.gravref, MJDguess, opt->EntryLng, opt->entrylongmanual, opt->returnspeed, opt->RevsTillTEI);
+	
+	teicalc = new TEI(sv0.R, sv0.V, sv0.MJD, sv0.gravref, MJDguess, opt->EntryLng, opt->entrylongmanual, opt->returnspeed, opt->RevsTillTEI, opt->Inclination, opt->Ascending);
 
 	while (!endi)
 	{
@@ -10114,6 +10114,7 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 	res->RTGO = 1285.0 - 3437.7468*acos(dotp(unit(teicalc->R_EI), unit(R05G)));
 	res->VIO = length(V05G);
 	res->precision = teicalc->precision;
+	res->Incl = teicalc->ReturnInclination;
 
 	if (opt->csmlmdocked)
 	{

@@ -2299,6 +2299,8 @@ int ARCore::subThread()
 		opt.vessel = vessel;
 		opt.entrylongmanual = entrylongmanual;
 		opt.TIGguess = EntryTIG;
+		opt.Inclination = TLCCFRDesiredInclination;
+		opt.Ascending = TLCCAscendingNode;
 
 		rtcc->TEITargeting(&opt, &res);//Entry_DV, EntryTIGcor, EntryLatcor, EntryLngcor, P37GET400K, EntryRTGO, EntryVIO, EntryAngcor);
 
@@ -2312,6 +2314,7 @@ int ARCore::subThread()
 		P30TIG = EntryTIGcor;
 		dV_LVLH = Entry_DV;
 		entryprecision = res.precision;
+		TLCCFRIncl = res.Incl;
 		
 		Result = 0;
 	}

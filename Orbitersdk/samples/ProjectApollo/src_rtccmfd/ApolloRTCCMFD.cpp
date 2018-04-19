@@ -2904,15 +2904,27 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->returnspeed == 0)
 		{
-			skp->Text(1 * W / 8, 10 * H / 14, "Slow Return", 11);
+			skp->Text(1 * W / 8, 8 * H / 14, "Slow Return", 11);
 		}
 		else if (G->returnspeed == 1)
 		{
-			skp->Text(1 * W / 8, 10 * H / 14, "Normal Return", 13);
+			skp->Text(1 * W / 8, 8 * H / 14, "Normal Return", 13);
 		}
 		else if (G->returnspeed == 2)
 		{
-			skp->Text(1 * W / 8, 10 * H / 14, "Fast Return", 11);
+			skp->Text(1 * W / 8, 8 * H / 14, "Fast Return", 11);
+		}
+
+		sprintf(Buffer, "%.3f°", G->TLCCFRDesiredInclination*DEG);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->TLCCAscendingNode)
+		{
+			skp->Text(1 * W / 8, 12 * H / 14, "Ascending Node", 14);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 12 * H / 14, "Descending Node", 15);
 		}
 
 		if (G->subThreadStatus > 0)
@@ -2921,17 +2933,21 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 
 		GET_Display(Buffer, G->EntryTIGcor);
-		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f° Lat", G->EntryLatcor*DEG);
-		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f° Lng", G->EntryLngcor*DEG);
-		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.3f° ReA", G->EntryAngcor*DEG);
-		skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 		GET_Display(Buffer, G->P37GET400K);
 		sprintf(Buffer, "%s RRT", Buffer);
-		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 11 * H / 21, "FR Inclination:", 15);
+		sprintf(Buffer, "%.3f°", G->TLCCFRIncl*DEG);
+		skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
 		skp->Text(5 * W / 8, 11 * H / 14, "DVY", 3);
@@ -5297,7 +5313,7 @@ void ApolloRTCCMFD::set_TLand(double time)
 
 void ApolloRTCCMFD::menuSetTLCCDesiredInclination()
 {
-	if (G->TLCCmaneuver == 8)
+	if (G->TLCCmaneuver == 8 || screen == 29)
 	{
 		bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the desired inclination:", TLCCDesiredInclinationInput, 0, 20, (void*)this);
@@ -5321,7 +5337,7 @@ void ApolloRTCCMFD::set_TLCCDesiredInclination(double inc)
 
 void ApolloRTCCMFD::menuSwitchTLCCAscendingNode()
 {
-	if (G->TLCCmaneuver == 8)
+	if (G->TLCCmaneuver == 8 || screen == 29)
 	{
 		G->TLCCAscendingNode = !G->TLCCAscendingNode;
 	}

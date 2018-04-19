@@ -994,9 +994,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Est. Time of Ignition", 0, 'T' },
 		{ "Manual longitude or zone", 0, 'L' },
 		{ "Des. Landing Long", 0, 'O' },
-		{ "", 0, ' ' },
 		{ "Return Speed", 0, 'S' },
-		{ "", 0, ' ' },
+		{ "FR Inclination", 0, 'I' },
+		{ "Ascending or Descending Node", 0, 'N' },
 
 		{ "Calculate TEI", 0, 'C' },
 		{ "", 0, ' ' },
@@ -1011,9 +1011,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::EntryTimeDialogue);
 	RegisterFunction("LMO", OAPI_KEY_L, &ApolloRTCCMFD::EntryLongitudeModeDialogue);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::EntryLngDialogue);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("SPE", OAPI_KEY_S, &ApolloRTCCMFD::menuSwitchReturnSpeed);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::menuSetTLCCDesiredInclination);
+	RegisterFunction("ASC", OAPI_KEY_N, &ApolloRTCCMFD::menuSwitchTLCCAscendingNode);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuTEICalc);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);

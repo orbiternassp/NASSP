@@ -159,7 +159,7 @@ namespace EntryCalculations
 		EntryRET = t32 + dt22;
 	}
 	
-	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI)
+	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl, bool asc)
 	{
 		VECTOR3 R_I_star, delta_I_star, delta_I_star_dot, R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I_apo;
 		VECTOR3 dV_I_sstar, R_m, V_m;
@@ -192,7 +192,14 @@ namespace EntryCalculations
 			{
 				R_I_sstar = R_m + R_I_star + delta_I_star;
 				V_I_sstar = V_m + V_I_star + delta_I_star_dot;
-				Abort(R_I_sstar, V_I_sstar, RCON, (t_EI - t_I)*24.0*3600.0, mu_E, dV_I_sstar, R_EI, V_EI);
+				if (Incl != 0)
+				{
+					Abort_plane(R_I_sstar, V_I_sstar, t_I, RCON, (t_EI - t_I)*24.0*3600.0, mu_E, Incl, asc, dV_I_sstar, R_EI, V_EI);
+				}
+				else
+				{
+					Abort(R_I_sstar, V_I_sstar, RCON, (t_EI - t_I)*24.0*3600.0, mu_E, dV_I_sstar, R_EI, V_EI);
+				}
 				V_I_sstar = V_I_sstar + dV_I_sstar;
 				V_I_star = V_I_sstar - V_m - delta_I_star_dot;
 				OrbMech::INRFV(R_I, V_I_star, r_s, INRFVsign, mu_M, V_I_apo, R_S, dt_S);
@@ -233,6 +240,51 @@ namespace EntryCalculations
 			v2 = length(V_EI);
 			x2_apo = x2;
 			x2 = D1 + D2*v2 + D3*v2*v2 + D4*v2*v2*v2;
+			x2_err = x2 - x2_apo;
+		}
+		DV = V2 - V0;
+	}
+
+	void Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, bool asc, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI)
+	{
+		double k4, D1, D2, D3, D4, x2, v2, x2_apo, x2_err, ra, dec, Omega, MJD_EI;
+		VECTOR3 V2, R0_equ, U_H;
+		MATRIX3 Rot;
+		OBJHANDLE hEarth;
+
+		hEarth = oapiGetObjectByName("Earth");
+
+		k4 = -0.10453;
+		D1 = 1.6595;
+		D2 = -4.8760771e-4;
+		D3 = 4.5419476e-8;
+		D4 = -1.4317675e-12;
+
+		x2 = k4;
+		x2_err = 1.0;
+
+		MJD_EI = MJD0 + dt / 24.0 / 3600.0;
+		Rot = OrbMech::GetRotationMatrix(hEarth, MJD_EI);
+		R0_equ = rhtmul(Rot, R0);
+		OrbMech::ra_and_dec_from_r(R0_equ, ra, dec);
+		if (asc)
+		{
+			Omega = ra + asin(tan(dec) / tan(Incl)) + PI;
+		}
+		else
+		{
+			Omega = ra - asin(tan(dec) / tan(Incl));
+		}
+		U_H = unit(_V(sin(Omega)*sin(Incl), -cos(Omega)*sin(Incl), cos(Incl)));
+		U_H = rhmul(Rot, U_H);
+
+		while (abs(x2_err) > 0.00001)
+		{
+			time_reentry_plane(R0, U_H, RCON, x2, dt, mu, V2, R_EI, V_EI);
+
+			v2 = length(V_EI);
+			x2_apo = x2;
+			x2 = D1 + D2 * v2 + D3 * v2*v2 + D4 * v2*v2*v2;
 			x2_err = x2 - x2_apo;
 		}
 		DV = V2 - V0;
@@ -306,6 +358,86 @@ namespace EntryCalculations
 		while (abs(dt_err)>0.005)
 		{
 			p = theta2 / (theta1 - x*x);
+			V = (U_R1*x + U_H)*theta3*sqrt(p);
+			dt_act = OrbMech::time_radius(R0, V, r1, -1.0, mu);
+
+			dt_err = dt - dt_act;
+
+			if (i == 0)
+			{
+				dx = -dxmax;
+			}
+			else
+			{
+				dx = (x - x_old) / (dt_err - dt_err_old)*dt_err;
+				if (abs(dx) > dxmax)
+				{
+					dx = OrbMech::sign(dx)*dxmax;
+				}
+			}
+
+			dt_err_old = dt_err;
+			x_old = x;
+			x -= dx;
+
+			i++;
+		}
+		OrbMech::rv_from_r0v0(R0, V, dt, R_EI, V_EI, mu);
+	}
+
+	void time_reentry_plane(VECTOR3 R0, VECTOR3 eta, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI)
+	{
+		VECTOR3 U_R1, U_H;
+		double r0, lambda, MA1, MA2, beta1, beta5, theta1, theta2, theta3, beta10, xmin, xmax, dxmax, C0, C1, C2, C3, x, dx;
+		double x_old, dt_err, p, dt_act, dt_err_old;
+		int i;
+
+		MA1 = -6.986643e7;
+		C0 = 1.81000432e8;
+		C1 = 1.5078514;
+		C2 = -6.49993054e-9;
+		C3 = 9.769389245e-18;
+
+		U_R1 = unit(R0);
+		r0 = length(R0);
+		U_H = unit(crossp(eta, R0));
+
+		MA2 = C0 + C1 * r0 + C2 * r0*r0 + C3 * r0*r0*r0;
+
+		lambda = r0 / r1;
+		beta1 = 1.0 + x2 * x2;
+		beta5 = lambda * beta1;
+		theta1 = beta5 * lambda - 1.0;
+		theta2 = 2.0*r0*(lambda - 1.0);
+		theta3 = sqrt(mu) / r0;
+		beta10 = beta5 * (MA1 - r0) / (MA1 - r1) - 1.0;
+		if (beta10 < 0.0)
+		{
+			xmin = 0.0;
+		}
+		else
+		{
+			xmin = -sqrt(beta10);
+		}
+		dxmax = -xmin / 16.0;
+		beta10 = beta5 * (MA2 - r0) / (MA2 - r1) - 1.0;
+		if (beta10 < 0.0)
+		{
+			xmax = 0.0;
+		}
+		else
+		{
+			xmax = sqrt(beta10);
+		}
+
+
+		x = xmin;
+		dx = dxmax;
+		dt_err = 10.0;
+		i = 0;
+		while (abs(dt_err)>0.005)
+		{
+			p = theta2 / (theta1 - x * x);
 			V = (U_R1*x + U_H)*theta3*sqrt(p);
 			dt_act = OrbMech::time_radius(R0, V, r1, -1.0, mu);
 
@@ -2132,7 +2264,7 @@ bool Flyby::Flybyiter()
 	}
 }
 
-TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int RevsTillTEI)
+TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int RevsTillTEI, double Inclination, bool Ascending)
 {
 	VECTOR3 R1B, V1B;
 
@@ -2194,15 +2326,38 @@ TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDgue
 	jj = 0;
 	dTIG = 30.0;
 	precision = 1;
+	ReturnInclination = 0.0;
+
+	IncDes = Inclination;
+	Asc = Ascending;
 }
 
 bool TEI::TEIiter()
 {
 	double theta_long, theta_lat, dlng, dt;
+	double ratest, dectest, radtest, InclFRGuess;
 
 	EIMJD = TIG + DT_TEI_EI / 24.0 / 3600.0;
 
-	Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI);
+	OrbMech::GetLunarEquatorialCoordinates(TIG, ratest, dectest, radtest);
+
+	if (IncDes != 0)
+	{
+		if (IncDes < abs(dectest) + 2.0*RAD)
+		{
+			InclFRGuess = abs(dectest) + 2.0*RAD;
+		}
+		else
+		{
+			InclFRGuess = IncDes;
+		}
+
+		Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI, InclFRGuess, Asc);
+	}
+	else
+	{
+		Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI);
+	}	
 
 	EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
 
@@ -2282,7 +2437,7 @@ bool TEI::TEIiter()
 		else
 		{
 			double sing, cosg, x2;
-			VECTOR3 i, j, k, N;
+			VECTOR3 i, j, k, N, H_EI_equ;
 			MATRIX3 Q_Xx;
 			j = unit(crossp(Vig, Rig));
 			k = unit(-Rig);
@@ -2297,6 +2452,9 @@ bool TEI::TEIiter()
 			cosg = dotp(unit(R_EI), unit(V_EI));
 			x2 = cosg / sing;
 			EntryAng = atan(x2);
+
+			H_EI_equ = rhtmul(OrbMech::GetRotationMatrix(hEarth, EIMJD), unit(N));
+			ReturnInclination = acos(H_EI_equ.z);
 
 			return true;
 		}
