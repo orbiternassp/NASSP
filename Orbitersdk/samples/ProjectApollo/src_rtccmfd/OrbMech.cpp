@@ -5767,6 +5767,50 @@ double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *
 	return dvar;
 }
 
+bool SolveSystem(int n, double *A, double *b, double *x, double *det)
+{
+	int e = 0, *p = new int[n];
+	for (int i = 0;i<n;i++) p[i] = i;
+	for (int k = 0;k<n;k++) {
+		int r = 0; double d = 0.0;
+		for (int s = k;s<n;s++) if (fabs(A[s*n + k])>d) { d = fabs(A[s*n + k]); r = s; }
+		if (d == 0.0) { delete[]p; return false; }
+		if (r != k) { // Do Swaps
+			for (int i = 0;i<n;i++) { double x = A[k*n + i]; A[k*n + i] = A[r*n + i]; A[r*n + i] = x; }
+			int x = p[k]; p[k] = p[r]; p[r] = x; e++;
+		}
+		for (int i = k + 1;i<n;i++) { A[i*n + k] /= A[k*n + k]; for (int j = k + 1;j<n;j++) A[i*n + j] -= (A[i*n + k] * A[k*n + j]); }
+	}
+	for (int i = 0;i<n;i++) { x[i] = b[p[i]];	for (int j = 0;j<i;j++) x[i] -= A[i*n + j] * x[j]; }
+	for (int i = n - 1;i >= 0;i--) { for (int j = i + 1;j<n;j++) x[i] -= A[i*n + j] * x[j]; x[i] /= A[i*n + i]; }
+	if (det) { *det = 1.0; for (int i = 0;i<n;i++) *det *= A[i*n + i]; if (e & 1) *det *= -1.0; }
+	delete[]p;
+	return true;
+}
+
+
+bool SolveSeries(double *x, double *y, int ndata, double *out, int m)
+{
+
+	double *v = new double[m];
+	double *q = new double[m];
+	double *M = new double[m*m];
+
+	memset(M, 0, m*m * sizeof(double));
+	memset(q, 0, m * sizeof(double));
+
+	for (int i = 0;i<ndata;i++) {
+		v[0] = 1.0;
+		for (int f = 1;f<m;f++) v[f] = v[f - 1] * x[i];
+		for (int f = 0;f<m;f++) for (int g = 0;g<m;g++) M[f*m + g] += (v[f] * v[g]);
+		for (int f = 0;f<m;f++) q[f] += (v[f] * y[i]);
+	}
+
+	bool bRet = SolveSystem(m, M, q, out, NULL);
+	delete[]v; delete[]q; delete[]M;
+	return bRet;
+}
+
 void RotatePerigeeToSpecifiedLongitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE plan, double lng_des, int N, double mu, double &dv, double &dTIG, double &dt)
 {
 	VECTOR3 H, V_apo, R_peri, V_peri, R2, V2, R_TIG, V_TIG;

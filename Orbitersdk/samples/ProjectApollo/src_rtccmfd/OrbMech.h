@@ -282,6 +282,8 @@ namespace OrbMech {
 	VECTOR3 CoellipticDV(VECTOR3 R_A2, VECTOR3 R_PC, VECTOR3 V_PC, double mu);
 	VECTOR3 ApplyHorizontalDV(VECTOR3 R, VECTOR3 V, double dv);
 	double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep);
+	bool SolveSystem(int n, double *A, double *b, double *x, double *det);
+	bool SolveSeries(double *x, double *y, int ndata, double *out, int m);
 	void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &radius);
 	void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl);
 	void EclToEMP(VECTOR3 R_Ecl, VECTOR3 V_Ecl, double MJD, VECTOR3 &R_EMP, VECTOR3 &V_EMP);

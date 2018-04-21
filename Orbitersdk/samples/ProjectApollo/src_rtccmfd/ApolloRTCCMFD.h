@@ -314,6 +314,14 @@ public:
 	void menuDAPPADCalc();
 	void menuSetLVDCPage();
 	void menuLaunchAzimuthCalc();
+	void menuSetAGCEphemerisPage();
+	void menuSetAGCEphemBRCSEpoch();
+	void set_AGCEphemBRCSEpoch(double mjd);
+	void menuSetAGCEphemTEphemZero();
+	void set_AGCEphemTEphemZero(double mjd);
+	void menuSetAGCEphemTIMEM0();
+	void set_AGCEphemTIMEM0(double mjd);
+	void menuGenerateAGCEphemeris();
 
 protected:
 	oapi::Font *font;

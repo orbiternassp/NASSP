@@ -639,6 +639,10 @@ ARCore::ARCore(VESSEL* v)
 
 	LVDCLaunchAzimuth = 0.0;
 
+	AGCEphemBRCSEpoch = AGCEpoch;
+	AGCEphemTEphemZero = 40038.0;
+	AGCEphemTIMEM0 = floor(GETbase) + 6.5;
+
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
 	earthentrypad.DRE[0] = 0;
@@ -888,6 +892,11 @@ void ARCore::DAPPADCalc()
 	{
 		rtcc->LMDAPUpdate(vessel, DAP_PAD, lemdescentstage == false);
 	}
+}
+
+void ARCore::GenerateAGCEphemeris()
+{
+	AGCEphemeris(AGCEphemTIMEM0, AGCEphemBRCSEpoch, AGCEphemTEphemZero);
 }
 
 void ARCore::EntryPAD()

@@ -24,6 +24,7 @@
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARCore.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\EphemProg.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

@@ -2300,6 +2300,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(5 * W / 8, 2 * H / 14, "LVDC", 4);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
+		skp->Text(5 * W / 8, 6 * H / 14, "AGC Ephemeris", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 22)
@@ -3172,8 +3173,21 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "Launch Azimuth: %.4f°", G->LVDCLaunchAzimuth*DEG);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 37)
+	{
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "AGC Ephemeris Generator", 23);
 
+		skp->Text(1 * W / 8, 2 * H / 14, "Epoch of BRCS:", 14);
+		skp->Text(1 * W / 8, 4 * H / 14, "TEphemZero:", 11);
+		skp->Text(1 * W / 8, 6 * H / 14, "TIMEM0:", 7);
 
+		sprintf(Buffer, "%f", G->AGCEphemBRCSEpoch);
+		skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->AGCEphemTEphemZero);
+		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->AGCEphemTIMEM0);
+		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 	}
 	return true;
 }
@@ -3538,6 +3552,12 @@ void ApolloRTCCMFD::menuSetDAPPADPage()
 void ApolloRTCCMFD::menuSetLVDCPage()
 {
 	screen = 36;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetAGCEphemerisPage()
+{
+	screen = 37;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6519,6 +6539,74 @@ void ApolloRTCCMFD::menuLaunchAzimuthCalc()
 			G->LVDCLaunchAzimuth *= RAD;
 		}
 	}
+}
+
+void ApolloRTCCMFD::menuSetAGCEphemBRCSEpoch()
+{
+	bool AGCEphemBRCSEpochInput(void* id, char *str, void *data);
+	oapiOpenInputBox("MJD of BRCS epoch:", AGCEphemBRCSEpochInput, 0, 20, (void*)this);
+}
+
+bool AGCEphemBRCSEpochInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_AGCEphemBRCSEpoch(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCEphemBRCSEpoch(double mjd)
+{
+	this->G->AGCEphemBRCSEpoch = mjd;
+}
+
+void ApolloRTCCMFD::menuSetAGCEphemTEphemZero()
+{
+	bool AGCEphemTEphemZeroInput(void* id, char *str, void *data);
+	oapiOpenInputBox("MJD of previous July 1st, midnight:", AGCEphemTEphemZeroInput, 0, 20, (void*)this);
+}
+
+bool AGCEphemTEphemZeroInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_AGCEphemTEphemZero(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCEphemTEphemZero(double mjd)
+{
+	this->G->AGCEphemTEphemZero = mjd;
+}
+
+void ApolloRTCCMFD::menuSetAGCEphemTIMEM0()
+{
+	bool AGCEphemTIMEM0Input(void* id, char *str, void *data);
+	oapiOpenInputBox("MJD of ephemeris time reference:", AGCEphemTIMEM0Input, 0, 20, (void*)this);
+}
+
+bool AGCEphemTIMEM0Input(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_AGCEphemTIMEM0(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCEphemTIMEM0(double mjd)
+{
+	this->G->AGCEphemTIMEM0 = mjd;
+}
+
+void ApolloRTCCMFD::menuGenerateAGCEphemeris()
+{
+	G->GenerateAGCEphemeris();
 }
 
 void ApolloRTCCMFD::SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)

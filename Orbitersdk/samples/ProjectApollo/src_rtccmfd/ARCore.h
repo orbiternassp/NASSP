@@ -82,6 +82,12 @@ public:
 	void StartIMFDRequest();
 	void StopIMFDRequest();
 
+	//EPHEM PROGRAM
+	void GenerateAGCEphemeris();
+	int agcCelBody_RH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
+	int agcCelBody_LH(CELBODY *Cel, double mjd, int Flags, VECTOR3 *Pos = NULL, VECTOR3 *Vel = NULL);
+	void AGCEphemeris(double T0, double Epoch, double TEphem0);
+
 	// SUBTHREAD MANAGEMENT
 	HANDLE hThread;
 	int subThreadMode;										// What should the subthread do?
@@ -321,6 +327,11 @@ public:
 
 	//LVDC PAGE
 	double LVDCLaunchAzimuth;
+
+	//AGC EPHEMERIS
+	double AGCEphemBRCSEpoch;
+	double AGCEphemTEphemZero;
+	double AGCEphemTIMEM0;
 
 	protected:
 		int GetPowEngType();
