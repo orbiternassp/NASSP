@@ -484,6 +484,8 @@ void ATCA::Timestep(double simt, double simdt){
 			}
 		}
 
+		//sprintf(oapiDebugString(), "Thrust Logic Input Error: %f %f %f", thrustLogicInputError.x, thrustLogicInputError.y, thrustLogicInputError.z);
+
 		//TRANSLATIONAL COMMANDS
 		if (lem->SCS_ATCA_AGS_CB.IsPowered())
 		{
@@ -606,6 +608,9 @@ void ATCA::Timestep(double simt, double simdt){
 		//8
 		SummingAmplifierOutput[7] = 0.0 - thrustLogicInputError.y - (K1 ? 0.0 : thrustLogicInputError.x) - translationCommands.x;
 
+		//sprintf(oapiDebugString(), "Summing Amplifiers: %f %f %f %f %f %f %f %f", SummingAmplifierOutput[0], SummingAmplifierOutput[1], SummingAmplifierOutput[2],
+		//	SummingAmplifierOutput[3], SummingAmplifierOutput[4], SummingAmplifierOutput[5], SummingAmplifierOutput[6], SummingAmplifierOutput[7]);
+
 		//PULSE RATIO (DE)MODULATOR
 
 		for (int i = 0;i < 8;i++)
@@ -623,6 +628,8 @@ void ATCA::Timestep(double simt, double simdt){
 				PRMOffTime[i] = 0.0;
 			}
 		}
+
+		//sprintf(oapiDebugString(), "PRM: %d %d %d %d %d %d %d %d", PRMPulse[0], PRMPulse[1], PRMPulse[2], PRMPulse[3], PRMPulse[4], PRMPulse[5], PRMPulse[6], PRMPulse[7]);
 	}
 	else
 	{
