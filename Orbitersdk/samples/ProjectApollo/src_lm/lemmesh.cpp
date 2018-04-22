@@ -726,7 +726,7 @@ void LEM::SetTrackLight() {
 	}
 	trackLight.col = &beaconCol;
 	trackLight.size = 0.5;
-	trackLight.falloff = 0.8;
+	trackLight.falloff = 0.5;
 	trackLight.period = 1.0;
 	trackLight.duration = 0.1;
 	trackLight.tofs = 0;
