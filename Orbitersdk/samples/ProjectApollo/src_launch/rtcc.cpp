@@ -11964,11 +11964,12 @@ bool RTCC::TLMCIntegratedFlybyToInclinationSubprocessor(SV sv_mcc, double h_peri
 void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res)
 {
 	VECTOR3 R_LS;
-	double lat, lng, r, dt_1, h_1, theta_1, theta_Ins, v_LV, v_LH, DH, E, theta_F, t_TPI, t_IG, t_CSI, t_CDH, t_TPF;
+	double dt_1, h_1, theta_1, theta_Ins, v_LV, v_LH, DH, E, theta_F, t_TPI, t_IG, t_CSI, t_CDH, t_TPF, R_M;
 	SV sv_P, sv_TPI;
 	OBJHANDLE hMoon;
 
 	hMoon = oapiGetObjectByName("Moon");
+	R_M = oapiGetSize(hMoon);
 
 	if (opt->useSV)
 	{
@@ -11990,9 +11991,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 	t_CSI = 0;
 	t_CDH = 0;
 
-	opt->vessel->GetEquPos(lng, lat, r);
-
-	R_LS = OrbMech::r_from_latlong(lat, lng, r);
+	R_LS = OrbMech::r_from_latlong(opt->lat, opt->lng, R_M + opt->alt);
 
 	if (opt->opt == 0)
 	{

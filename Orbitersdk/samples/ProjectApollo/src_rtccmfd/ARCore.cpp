@@ -2783,7 +2783,23 @@ int ARCore::subThread()
 		opt.opt = LunarLiftoffTimeOption;
 		opt.target = target;
 		opt.t_TPIguess = t_TPIguess;
-		opt.vessel = vessel;
+
+		if (vessel->GroundContact())
+		{
+			double lng, lat, rad;
+			vessel->GetEquPos(lng, lat, rad);
+
+			opt.alt = rad - oapiGetSize(oapiGetObjectByName("Moon"));
+			opt.lat = lat;
+			opt.lng = lng;
+
+		}
+		else
+		{
+			opt.alt = LSAlt;
+			opt.lat = LSLat;
+			opt.lng = LSLng;
+		}
 
 		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffTimes);
 

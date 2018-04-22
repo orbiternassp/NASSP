@@ -613,7 +613,9 @@ struct SkylabRendezvousResults
 
 struct LunarLiftoffTimeOpt
 {
-	VESSEL* vessel;		//vessel
+	double lat;
+	double lng;
+	double alt;
 	VESSEL* target;		//Target vessel
 	double GETbase;		//usually MJD at launch
 	double t_TPIguess;		//GET of TPI maneuver
