@@ -1518,7 +1518,7 @@ void LEMSaturn::JettisonNosecap()
 		char VName[256];
 
 		// Use VC offset to calculate the optics cover offset
-		VECTOR3 ofs = _V(0, 0, 22.7 + 0.25);
+		VECTOR3 ofs = _V(0, 0, 18.2);
 		VECTOR3 vel = { 0.0, 0.0, 2.5 };
 		VESSELSTATUS vs4b;
 		GetStatus(vs4b);
