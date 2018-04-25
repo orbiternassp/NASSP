@@ -44,6 +44,7 @@ ARCore::ARCore(VESSEL* v)
 	mission = 0;
 	GETbase = LaunchMJD[0];
 	AGCEpoch = 40221.525;
+	AGCEphemTEphemZero = 40038.0;
 	REFSMMAT = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	REFSMMATTime = 0.0;
 	REFSMMATopt = 4;
@@ -96,84 +97,98 @@ ARCore::ARCore(VESSEL* v)
 		mission = 11;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 40586.767239;
+		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Eagle") == 0)
 	{
 		mission = 11;
 		vesseltype = 2;
 		AGCEpoch = 40586.767239;
+		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Yankee Clipper") == 0)
 	{
 		mission = 12;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 40586.767239;
+		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Intrepid") == 0)
 	{
 		mission = 12;
 		vesseltype = 2;
 		AGCEpoch = 40586.767239;
+		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Odyssey") == 0)
 	{
 		mission = 13;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 40586.767239;
+		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Aquarius") == 0)
 	{
 		mission = 13;
 		vesseltype = 2;
 		AGCEpoch = 40586.767239;
+		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Kitty Hawk") == 0)
 	{
 		mission = 14;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.067*RAD);
 		AGCEpoch = 40952.009432;
+		AGCEphemTEphemZero = 40768.0;
 	}
 	else if (strcmp(v->GetName(), "Antares") == 0)
 	{
 		mission = 14;
 		vesseltype = 2;
 		AGCEpoch = 40952.009432;
+		AGCEphemTEphemZero = 40768.0;
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
 	{
 		mission = 15;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 80.088*RAD);
 		AGCEpoch = 41317.251625;
+		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Falcon") == 0)
 	{
 		mission = 15;
 		vesseltype = 2;
 		AGCEpoch = 41317.251625;
+		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Casper") == 0)
 	{
 		mission = 16;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 41317.251625;
+		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Orion") == 0)
 	{
 		mission = 16;
 		vesseltype = 2;
 		AGCEpoch = 41317.251625;
+		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "America") == 0)
 	{
 		mission = 17;
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[mission - 7], 72.0*RAD);
 		AGCEpoch = 41317.251625;
+		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Challenger") == 0)
 	{
 		mission = 17;
 		vesseltype = 2;
 		AGCEpoch = 41317.251625;
+		AGCEphemTEphemZero = 41133.0;
 	}
 	GETbase = LaunchMJD[mission - 7];
 
@@ -640,8 +655,7 @@ ARCore::ARCore(VESSEL* v)
 	LVDCLaunchAzimuth = 0.0;
 
 	AGCEphemBRCSEpoch = AGCEpoch;
-	AGCEphemTEphemZero = 40038.0;
-	AGCEphemTIMEM0 = floor(GETbase) + 6.5;
+	AGCEphemTIMEM0 = floor(GETbase) + 6.75;
 
 	earthentrypad.Att400K[0] = _V(0, 0, 0);
 	earthentrypad.BankAN[0] = 0;
