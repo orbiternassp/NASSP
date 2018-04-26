@@ -431,10 +431,18 @@ void LEM::SetLmVesselHoverStage()
 	}
 
 	//Set fwd footpad mesh to be visible from LPD window
-	VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
-	lpdgext = AddMesh(hLPDgext, &lpd_dir);
+	if (NoLegs)
+	{
+		VECTOR3 lpd_dir = _V(-0.191, 1.827, 0.383);
+		lpdgret = AddMesh(hLPDgret, &lpd_dir);	
+	}
+	else
+	{
+		VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
+		lpdgext = AddMesh(hLPDgext, &lpd_dir);
+	}
 	SetLPDMesh();
-
+	
 	// Exterior lights
 	SetTrackLight();
 	SetDockingLights();
@@ -678,10 +686,16 @@ void LEM::SetLPDMesh() {
 
 	if (stage == 1) {
 		if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
-			SetMeshVisibilityMode(lpdgext, MESHVIS_COCKPIT);
+			if (NoLegs) {
+				SetMeshVisibilityMode(lpdgret, MESHVIS_COCKPIT);
+			}
+			else {
+				SetMeshVisibilityMode(lpdgext, MESHVIS_COCKPIT);
+			}
 		}
 		else {
 			SetMeshVisibilityMode(lpdgext, MESHVIS_NEVER);
+			SetMeshVisibilityMode(lpdgret, MESHVIS_NEVER);
 		}
 	}
 }
