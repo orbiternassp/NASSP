@@ -442,7 +442,7 @@ void LEM::SetLmVesselHoverStage()
 		lpdgext = AddMesh(hLPDgext, &lpd_dir);
 	}
 	SetLPDMesh();
-	
+
 	// Exterior lights
 	SetTrackLight();
 	SetDockingLights();
