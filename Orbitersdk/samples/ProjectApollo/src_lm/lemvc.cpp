@@ -194,8 +194,10 @@ void LEM::SetView() {
 			SaveFOV = oapiCameraAperture();
 			InFOV = false;
 		}
-		//set FOV to 60 degrees
-		oapiCameraSetAperture(RAD * 30.0);
+		//set FOV to 60 degrees (except for lower resolutions)
+		DWORD w, h;
+		oapiGetViewportSize(&w, &h);
+		oapiCameraSetAperture(atan(tan(RAD*30.0)*min(h / 1050.0, 1.0)));
 	}
 	else if (PanelId == LMPANEL_DOCKVIEW) {
 		// if this is the first time we've been here, save the current FOV

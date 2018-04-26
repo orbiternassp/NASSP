@@ -119,12 +119,12 @@ void DrawReticle (HDC hDC, double angle, int dimmer)
 	MoveToEx (hDC, RETICLE_X_CENTER, RETICLE_Y_CENTER, 0); LineTo(hDC, xend, yend);
 	int i;
 	double theta,b, r;
-	b = - RETICLE_RADIUS / (2*PI);
+	b = -RETICLE_RADIUS / tan(PI2*30.0 / 360.0);
 	POINT ScrewPt[RETICLE_SCREW_NPTS];
 	// Draw Archemedes screw #1
 	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
 		theta = 2*PI / RETICLE_SCREW_NPTS * i;
-		r = b*theta;
+		r = b * tan(theta*30.0 / 360.0);
 		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle+RETICLE_SPLIT_ANGLE+PI));
 		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle+RETICLE_SPLIT_ANGLE+PI));
 	}
@@ -132,7 +132,7 @@ void DrawReticle (HDC hDC, double angle, int dimmer)
 	// Draw Archemedes screw #2
 	for (i = 0; i < RETICLE_SCREW_NPTS; i++){
 		theta = 2*PI / RETICLE_SCREW_NPTS * i;
-		r = b*theta;
+		r = b * tan(theta*30.0 / 360.0);
 		ScrewPt[i].x = RETICLE_X_CENTER - (int)(r*sin(theta+angle-RETICLE_SPLIT_ANGLE+PI));
 		ScrewPt[i].y = RETICLE_Y_CENTER - (int)(r*cos(theta+angle-RETICLE_SPLIT_ANGLE+PI));
 	}
