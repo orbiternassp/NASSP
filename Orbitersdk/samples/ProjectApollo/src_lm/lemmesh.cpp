@@ -597,12 +597,19 @@ void LEM::SeparateStage (UINT stage)
 		char VName[256];
 		strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 		hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
-		
+
 		Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-		dscstage->SetState(0);
-		
-		SetLmAscentHoverStage();
+		if (NoLegs)
+		{
+			dscstage->SetState(10);
 		}
+		else
+		{
+			dscstage->SetState(0);
+		}
+
+		SetLmAscentHoverStage();
+	}
 	
 	if (stage == 1)	{
 		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
@@ -615,10 +622,16 @@ void LEM::SeparateStage (UINT stage)
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 			
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-			if (Landed) {
+			if (Landed) 
+			{
 				dscstage->SetState(1);
 			}
-			else {
+			else if (NoLegs)
+			{
+				dscstage->SetState(10);
+			}
+			else
+			{
 				dscstage->SetState(11);
 			}
 			
@@ -633,10 +646,16 @@ void LEM::SeparateStage (UINT stage)
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 			
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-			if (Landed) {
+			if (Landed)
+			{
 				dscstage->SetState(1);
 			}
-			else {
+			else if (NoLegs)
+			{
+				dscstage->SetState(10);
+			}
+			else
+			{
 				dscstage->SetState(11);
 			}
 			
