@@ -31,6 +31,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 static int refcount = 0;
 static MESHHANDLE LM_Descent;
 static MESHHANDLE LM_Descent2;
+static MESHHANDLE LM_DescentNoLeg;
 static MESHHANDLE hLemProbes;
 
 //
@@ -205,6 +206,11 @@ void Sat5LMDSC::Setup()
 			AddMesh(hLemProbes, &probe_dir);
 		}
 	}
+
+	if (state == 10) {
+		VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
+		AddMesh(LM_DescentNoLeg, &mesh_dir);
+	}
 }
 
 void Sat5LMDSC::SetState(int stage)
@@ -250,6 +256,7 @@ DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 	if (!refcount++) {
 		LM_Descent = oapiLoadMeshGlobal("ProjectApollo/LM_Descent");
 		LM_Descent2 = oapiLoadMeshGlobal("ProjectApollo/LM_Descent2");
+		LM_DescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentNoLeg");
 		hLemProbes = oapiLoadMeshGlobal("ProjectApollo/LM_ContactProbes");
 		seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 	}

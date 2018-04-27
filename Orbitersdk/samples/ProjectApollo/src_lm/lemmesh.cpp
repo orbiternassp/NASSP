@@ -431,8 +431,16 @@ void LEM::SetLmVesselHoverStage()
 	}
 
 	//Set fwd footpad mesh to be visible from LPD window
-	VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
-	lpdgext = AddMesh(hLPDgext, &lpd_dir);
+	if (NoLegs)
+	{
+		VECTOR3 lpd_dir = _V(-0.191, 1.827, 0.383);
+		lpdgret = AddMesh(hLPDgret, &lpd_dir);	
+	}
+	else
+	{
+		VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
+		lpdgext = AddMesh(hLPDgext, &lpd_dir);
+	}
 	SetLPDMesh();
 
 	// Exterior lights
@@ -589,12 +597,19 @@ void LEM::SeparateStage (UINT stage)
 		char VName[256];
 		strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 		hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
-		
+
 		Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-		dscstage->SetState(0);
-		
-		SetLmAscentHoverStage();
+		if (NoLegs)
+		{
+			dscstage->SetState(10);
 		}
+		else
+		{
+			dscstage->SetState(0);
+		}
+
+		SetLmAscentHoverStage();
+	}
 	
 	if (stage == 1)	{
 		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
@@ -607,10 +622,16 @@ void LEM::SeparateStage (UINT stage)
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 			
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-			if (Landed) {
+			if (Landed) 
+			{
 				dscstage->SetState(1);
 			}
-			else {
+			else if (NoLegs)
+			{
+				dscstage->SetState(10);
+			}
+			else
+			{
 				dscstage->SetState(11);
 			}
 			
@@ -625,10 +646,16 @@ void LEM::SeparateStage (UINT stage)
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 			
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-			if (Landed) {
+			if (Landed)
+			{
 				dscstage->SetState(1);
 			}
-			else {
+			else if (NoLegs)
+			{
+				dscstage->SetState(10);
+			}
+			else
+			{
 				dscstage->SetState(11);
 			}
 			
@@ -678,10 +705,16 @@ void LEM::SetLPDMesh() {
 
 	if (stage == 1) {
 		if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
-			SetMeshVisibilityMode(lpdgext, MESHVIS_COCKPIT);
+			if (NoLegs) {
+				SetMeshVisibilityMode(lpdgret, MESHVIS_COCKPIT);
+			}
+			else {
+				SetMeshVisibilityMode(lpdgext, MESHVIS_COCKPIT);
+			}
 		}
 		else {
 			SetMeshVisibilityMode(lpdgext, MESHVIS_NEVER);
+			SetMeshVisibilityMode(lpdgret, MESHVIS_NEVER);
 		}
 	}
 }
