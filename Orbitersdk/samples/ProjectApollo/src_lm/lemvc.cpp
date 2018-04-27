@@ -233,6 +233,7 @@ bool LEM::clbkLoadVC (int id)
 		InVC = true;
 		InPanel = false;
 		SetView();
+		SetLPDMesh();
 		return true;
 
 	default:

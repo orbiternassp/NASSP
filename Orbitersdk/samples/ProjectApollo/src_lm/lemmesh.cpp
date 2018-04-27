@@ -263,7 +263,8 @@ void LEM::SetLmVesselDockStage()
 	//Set part of ascent stage mesh to be visible from LPD window
 	VECTOR3 lpd_dir = _V(-0.191, 1.827, 0.383);
 	lpdgret = AddMesh(hLPDgret, &lpd_dir);
-	SetLPDMesh();
+	lpdgext = -1;
+	SetLPDMeshRet();
 
 	// Exterior lights
 	SetTrackLight();
@@ -434,14 +435,17 @@ void LEM::SetLmVesselHoverStage()
 	if (NoLegs)
 	{
 		VECTOR3 lpd_dir = _V(-0.191, 1.827, 0.383);
-		lpdgret = AddMesh(hLPDgret, &lpd_dir);	
+		lpdgret = AddMesh(hLPDgret, &lpd_dir);
+		lpdgext = -1;
+		SetLPDMeshRet();
 	}
 	else
 	{
 		VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
 		lpdgext = AddMesh(hLPDgext, &lpd_dir);
+		lpdgret = -1;
+		SetLPDMeshExt();
 	}
-	SetLPDMesh();
 
 	// Exterior lights
 	SetTrackLight();
@@ -575,7 +579,8 @@ void LEM::SetLmAscentHoverStage()
 	//Set part of ascent stage mesh to be visible from LPD window
 	VECTOR3 lpd_dir = _V(-0.191, -0.02, 0.383);
 	lpdgret = AddMesh(hLPDgret, &lpd_dir);
-	SetLPDMesh();
+	lpdgext = -1;
+	SetLPDMeshRet();
 
 	// Exterior lights
 	SetTrackLight();
@@ -675,7 +680,8 @@ void LEM::SetLmLandedMesh() {
 
 	//Set fwd footpad mesh to be visible from LPD window
 	lpdgext = AddMesh(hLPDgext, &mesh_dir);
-	SetLPDMesh();
+	lpdgret = -1;
+	SetLPDMeshExt();
 
 	// Forward Hatch
 	VECTOR3 hatch_dir = _V(-0.003, -0.03, 0.004);
@@ -690,6 +696,12 @@ void LEM::SetLmLandedMesh() {
 }
 
 void LEM::SetLPDMesh() {
+
+	SetLPDMeshRet();
+	SetLPDMeshExt();
+}
+
+void LEM::SetLPDMeshRet() {
 	
 	if (lpdgret == -1)
 		return;
@@ -704,17 +716,28 @@ void LEM::SetLPDMesh() {
 	}
 
 	if (stage == 1) {
-		if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
-			if (NoLegs) {
-				SetMeshVisibilityMode(lpdgret, MESHVIS_COCKPIT);
-			}
-			else {
-				SetMeshVisibilityMode(lpdgext, MESHVIS_COCKPIT);
-			}
+		if ((InPanel && PanelId == LMPANEL_LPDWINDOW) && NoLegs) {
+			SetMeshVisibilityMode(lpdgret, MESHVIS_COCKPIT);
 		}
-		else {
-			SetMeshVisibilityMode(lpdgext, MESHVIS_NEVER);
+		else
+		{
 			SetMeshVisibilityMode(lpdgret, MESHVIS_NEVER);
+		}
+	}
+}
+
+void LEM::SetLPDMeshExt() {
+
+	if (lpdgext == -1)
+		return;
+
+	if (stage == 1) {
+		if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
+			SetMeshVisibilityMode(lpdgext, MESHVIS_COCKPIT);
+		}
+		else
+		{
+			SetMeshVisibilityMode(lpdgext, MESHVIS_NEVER);
 		}
 	}
 }
