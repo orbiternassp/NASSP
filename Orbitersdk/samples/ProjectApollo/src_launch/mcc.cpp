@@ -3594,7 +3594,7 @@ void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds)
 
 // Draw PAD display
 void MCC::drawPad(){
-	char buffer[512];
+	char buffer[1024];
 	char tmpbuf[36];
 	char tmpbuf2[36];
 	if(padNumber > 0 && padForm == NULL){
@@ -4641,6 +4641,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 	// Clobber string
 	upString[0] = 0;
 	upDescr[0] = 0;
+	upMessage[0] = 0;
 	uplink_size = 0;
 
 	if (type == UTP_PADONLY)
