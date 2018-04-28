@@ -6,6 +6,10 @@
 
 namespace EntryCalculations
 {
+	double MSFNTargetLine(double vel);
+	double ContingencyTargetLine(double vel);
+	double ReentryTargetLine(double vel);
+	double ReentryTargetLineTan(double vel);
 	void augekugel(double ve, double gammae, double &phie, double &Te);
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double &lambda, double &phi);
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET);
@@ -73,7 +77,6 @@ private:
 	int f2;
 	double dlngapo, dt0, x2, x2_apo;
 	double EMSAlt;
-	double D1, D2, D3, D4;
 	double k1, k2, k3, k4;
 	double phi2;
 	double earthorbitangle; //31.7° nominal angled reentry DV vector
@@ -139,7 +142,6 @@ private:
 	int f2;
 	double dlngapo,dt0, x2, x2_apo;
 	double EMSAlt;
-	double D1, D2, D3, D4;
 	double k1, k2, k3, k4;
 	int revcor;
 	double phi2;

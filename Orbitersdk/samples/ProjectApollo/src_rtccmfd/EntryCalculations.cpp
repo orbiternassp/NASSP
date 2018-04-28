@@ -2,6 +2,39 @@
 
 namespace EntryCalculations
 {
+	double MSFNTargetLine(double vel)
+	{
+		double p[5] = { 0.00121266974385589, -0.00314699220471432, 0.00451174679775115, -0.01930571294038886, -0.08929066075148474 };
+		double mu[2] = { 9601.2, 1121.63363002364 };
+		double velx = (vel - mu[0]) / mu[1];
+		
+		return p[0] * pow(velx, 4) + p[1] * pow(velx, 3) + p[2] * pow(velx, 2) + p[3] * velx + p[4];
+	}
+
+	double ContingencyTargetLine(double vel)
+	{
+		double p[5] = { 7.34500793893373e-004, -1.80949113585896e-003, 3.11632297116317e-003, -1.29246176989648e-002, -1.00605540452627e-001 };
+		double mu[2] = { 9601.2, 1121.63363002364 };
+		double velx = (vel - mu[0]) / mu[1];
+
+		return p[0] * pow(velx, 4) + p[1] * pow(velx, 3) + p[2] * pow(velx, 2) + p[3] * velx + p[4];
+	}
+
+	double ReentryTargetLine(double vel)
+	{
+		if (vel > 30000.0*0.3048)
+		{
+			return ContingencyTargetLine(vel);
+		}
+
+		return MSFNTargetLine(vel);
+	}
+
+	double ReentryTargetLineTan(double vel)
+	{
+		return tan(ReentryTargetLine(vel));
+	}
+
 	void augekugel(double ve, double gammae, double &phie, double &Te)
 	{
 		double vefps, gammaedeg, K1, K2;
@@ -221,14 +254,10 @@ namespace EntryCalculations
 
 	void Abort(VECTOR3 R0, VECTOR3 V0, double RCON, double dt, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI)
 	{
-		double k4, D1, D2, D3, D4, x2, v2, x2_apo, x2_err;
+		double k4, x2, v2, x2_apo, x2_err;
 		VECTOR3 V2;
 
 		k4 = -0.10453;
-		D1 = 1.6595;
-		D2 = -4.8760771e-4;
-		D3 = 4.5419476e-8;
-		D4 = -1.4317675e-12;
 
 		x2 = k4;
 		x2_err = 1.0;
@@ -239,7 +268,7 @@ namespace EntryCalculations
 
 			v2 = length(V_EI);
 			x2_apo = x2;
-			x2 = D1 + D2*v2 + D3*v2*v2 + D4*v2*v2*v2;
+			x2 = ReentryTargetLineTan(v2);
 			x2_err = x2 - x2_apo;
 		}
 		DV = V2 - V0;
@@ -247,7 +276,7 @@ namespace EntryCalculations
 
 	void Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, bool asc, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI)
 	{
-		double k4, D1, D2, D3, D4, x2, v2, x2_apo, x2_err, ra, dec, Omega, MJD_EI;
+		double k4, x2, v2, x2_apo, x2_err, ra, dec, Omega, MJD_EI;
 		VECTOR3 V2, R0_equ, U_H;
 		MATRIX3 Rot;
 		OBJHANDLE hEarth;
@@ -255,10 +284,6 @@ namespace EntryCalculations
 		hEarth = oapiGetObjectByName("Earth");
 
 		k4 = -0.10453;
-		D1 = 1.6595;
-		D2 = -4.8760771e-4;
-		D3 = 4.5419476e-8;
-		D4 = -1.4317675e-12;
 
 		x2 = k4;
 		x2_err = 1.0;
@@ -284,7 +309,7 @@ namespace EntryCalculations
 
 			v2 = length(V_EI);
 			x2_apo = x2;
-			x2 = D1 + D2 * v2 + D3 * v2*v2 + D4 * v2*v2*v2;
+			x2 = ReentryTargetLineTan(v2);
 			x2_err = x2 - x2_apo;
 		}
 		DV = V2 - V0;
@@ -555,9 +580,6 @@ EarthEntry::EarthEntry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, 
 	C1 = 1.5078514;
 	C2 = -6.49993054e-9;
 	C3 = 9.769389245e-18;
-	D2 = -4.8760771e-4;
-	D3 = 4.5419476e-8;
-	D4 = -1.4317675e-12;
 	k1 = 7.0e6;
 	k2 = 6.495e6;
 	k3 = -0.06105;//-0.043661;
@@ -607,14 +629,6 @@ EarthEntry::EarthEntry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, 
 	OrbMech::oneclickcoast(R0B, V0B, mjd, dt0, R11B, V11B, gravref, hEarth);
 
 	x2 = OrbMech::cot(PI05 - EntryAng);
-	if (length(R11B) > k1)
-	{
-		D1 = 1.6595;
-	}
-	else
-	{
-		D1 = 1.6865;//1.69107;//1.6865;
-	}
 
 	EMSAlt = 284643.0*0.3048;
 
@@ -799,7 +813,7 @@ void EarthEntry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VE
 		{
 			double v2;
 			v2 = length(VEI);
-			x2 = D1 + D2*v2 + D3*v2*v2 + D4*v2*v2*v2;
+			x2 = EntryCalculations::ReentryTargetLineTan(v2);
 		}
 		else
 		{
@@ -1360,9 +1374,6 @@ Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GET
 	C1 = 1.5078514;
 	C2 = -6.49993054e-9;
 	C3 = 9.769389245e-18;
-	D2 = -4.8760771e-4;
-	D3 = 4.5419476e-8;
-	D4 = -1.4317675e-12;
 	k1 = 7.0e6;
 	k2 = 6.495e6;
 	k3 = -0.06105;//-0.043661;
@@ -1412,14 +1423,6 @@ Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GET
 	OrbMech::oneclickcoast(R0B, V0B, mjd, dt0, R11B, V11B, gravref, hEarth);
 
 	x2 = OrbMech::cot(PI05 - EntryAng);
-	if (length(R11B) > k1)
-	{
-		D1 = 1.6595;
-	}
-	else
-	{
-		D1 = 1.6865;//1.69107;//1.6865;
-	}
 
 	EMSAlt = 297431.0*0.3048;
 	revcor = -5;
@@ -1541,7 +1544,7 @@ void Entry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI)
 		{
 			double v2;
 			v2 = length(VEI);
-			x2 = D1 + D2*v2 + D3*v2*v2 + D4*v2*v2*v2;
+			x2 = EntryCalculations::ReentryTargetLineTan(v2);
 		}
 		else
 		{
