@@ -825,9 +825,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 	}
 	
-	//Set visbility flag for LPD view meshes
-	SetLPDMesh();
-	
 	//
 	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't
 	// play any sounds, or plays LEM sounds rather than astronauts sounds. We need to delay

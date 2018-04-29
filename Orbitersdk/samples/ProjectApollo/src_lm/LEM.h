@@ -437,6 +437,8 @@ public:
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
 	void SetLPDMesh();
+	void SetLPDMeshRet();
+	void SetLPDMeshExt();
 	void SetFwdHatchMesh();
 	void SetOvhdHatchMesh();
 	void SetTrackLight();
