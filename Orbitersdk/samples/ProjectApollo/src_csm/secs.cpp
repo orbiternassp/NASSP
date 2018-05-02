@@ -686,13 +686,20 @@ void MESC::Timestep(double simdt)
 
 	if (SequentialPyroBus() && CanardDeploy)
 	{
-		//TBD: Actually deploy canard
+		if (Sat->LESAttached)
+		{
+			Sat->canard.Deploy();
+		}
 	}
 
 	//Pitch Control Motor
 	if (LESMotorFire && Sat->secs.rcsc.GetMode1ASignal())
 	{
 		PitchControlMotorFire = true;
+	}
+	else
+	{
+		PitchControlMotorFire = false;
 	}
 
 	//Fire Pitch Control Motor

@@ -84,8 +84,6 @@ MESHHANDLE hCMPEVA;
 MESHHANDLE hopticscover;
 MESHHANDLE hcmdocktgt;
 
-extern void CoeffFunc(double aoa, double M, double Re ,double *cl ,double *cm  ,double *cd);
-
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
 // "O2 venting" particle streams
@@ -159,6 +157,85 @@ PARTICLESTREAMSPEC urinedump_spec = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
+void CMCoeffFunc(double aoa, double M, double Re, double *cl, double *cm, double *cd)
+
+{
+	const int nlift = 11;
+	double factor, dfact, lfact, frac, drag, lift;
+	static const double AOA[nlift] =
+	{ -180.*RAD,-160.*RAD,-150.*RAD,-120.*RAD,-90.*RAD,0 * RAD,90.*RAD,120.*RAD,150.*RAD,160.*RAD,180.*RAD };
+	static const double Mach[17] = { 0.0,0.7,0.9,1.1,1.2,1.35,1.65,2.0,3.0,5.0,8.0,10.5,13.5,18.2,21.5,31.0,50.0 };
+	static const double LFactor[17] = { 0.3,0.392,0.466,0.607,0.641,0.488,0.446,0.435,0.416,0.415,0.405,0.400,0.385,0.385,0.375,0.35,0.33 };
+	static const double DFactor[17] = { 0.9,0.944,0.991,1.068,1.044,1.270,1.28,1.267,1.213,1.134,1.15,1.158,1.18,1.18,1.193,1.224,1.25 };
+	static const double CL[nlift] = { 0.0,-0.9,-1.1,-0.5,0.0,0.0,0.0,0.5,1.1,0.9,0.0 };
+	static const double CM[nlift] = { 0.0,0.004,0.006,0.012,0.015,0.0,-0.015,-0.012,-0.006,-0.004,0. };
+	static const double CD[nlift] = { 1.143,1.0,1.0,0.8,0.8,0.8,0.8,0.8,1.0,1.0,1.143 };
+	int j;
+	factor = -5.0;
+	dfact = 1.05;
+	lfact = 0.94;
+	for (j = 0; (j < 16) && (Mach[j + 1] < M); j++);
+	frac = (M - Mach[j]) / (Mach[j + 1] - Mach[j]);
+	drag = dfact * (frac*DFactor[j + 1] + (1.0 - frac)*DFactor[j]);
+	lift = drag * lfact*(frac*LFactor[j + 1] + (1.0 - frac)*LFactor[j]);
+	for (j = 0; (j < nlift - 1) && (AOA[j + 1] < aoa); j++);
+	frac = (aoa - AOA[j]) / (AOA[j + 1] - AOA[j]);
+	*cd = drag * (frac*CD[j + 1] + (1.0 - frac)*CD[j]);
+	*cl = lift * (frac*CL[j + 1] + (1.0 - frac)*CL[j]);
+	*cm = factor * (frac*CM[j + 1] + (1.0 - frac)*CM[j]);
+}
+
+void CMLETVertCoeffFunc(double aoa, double M, double Re, double *cl, double *cm, double *cd)
+
+{
+	const int nlift = 19;
+	double factor, frac, drag, lift;
+	static const double AOA[nlift] =
+	{ -180.*RAD,-160.*RAD,-150.*RAD,-120.*RAD,-90.*RAD,-40.*RAD,-30.*RAD,-20.*RAD,-10.*RAD,0 * RAD,10.*RAD,20.*RAD,30.*RAD,40.*RAD,90.*RAD,120.*RAD,150.*RAD,160.*RAD,180.*RAD };
+	static const double Mach[17] = { 0.0,0.7,0.9,1.1,1.2,1.35,1.65,2.0,3.0,5.0,8.0,10.5,13.5,18.2,21.5,31.0,50.0 };
+	static const double LFactor[17] = { 0.3,0.392,0.466,0.607,0.641,0.488,0.446,0.435,0.416,0.415,0.405,0.400,0.385,0.385,0.375,0.35,0.33 };
+	static const double DFactor[17] = { 0.9,0.944,0.991,1.068,1.044,1.270,1.28,1.267,1.213,1.134,1.15,1.158,1.18,1.18,1.193,1.224,1.25 };
+	static const double CL[nlift] = { 0.0,-0.9,-1.1,-0.5,0.0,-0.316196,-0.239658,-0.193466,-0.110798,0.0,0.110798,0.193466,0.239658,0.316196,0.0,0.5,1.1,0.9,0.0 };
+	static const double CM[nlift] = { 0.0,-0.02,-0.03,-0.06,-0.075,0.08,0.1,0.11,0.09,0.0,-0.09,-0.11,-0.1,-0.08,0.075,0.06,0.03,0.02,0. };
+	static const double CD[nlift] = { 1.143,1.0,1.0,0.8,0.8,0.72946,0.65157,0.63798,0.65136,0.5778,0.65136,0.63798,0.65157,0.72946,0.8,0.8,1.0,1.0,1.143 };
+	int j;
+	factor = 2.0;
+	for (j = 0; (j < 16) && (Mach[j + 1] < M); j++);
+	frac = (M - Mach[j]) / (Mach[j + 1] - Mach[j]);
+	drag = (frac*DFactor[j + 1] + (1.0 - frac)*DFactor[j]);
+	lift = drag * (frac*LFactor[j + 1] + (1.0 - frac)*LFactor[j]);
+	for (j = 0; (j < nlift - 1) && (AOA[j + 1] < aoa); j++);
+	frac = (aoa - AOA[j]) / (AOA[j + 1] - AOA[j]);
+	*cd = drag * (frac*CD[j + 1] + (1.0 - frac)*CD[j]);
+	*cl = lift * (frac*CL[j + 1] + (1.0 - frac)*CL[j]);
+	*cm = factor * (frac*CM[j + 1] + (1.0 - frac)*CM[j]);
+}
+
+void CMLETHoriCoeffFunc(double aoa, double M, double Re, double *cl, double *cm, double *cd)
+
+{
+	const int nlift = 19;
+	double factor, frac, drag, lift;
+	static const double AOA[nlift] =
+	{ -180.*RAD,-160.*RAD,-150.*RAD,-120.*RAD,-90.*RAD,-40.*RAD,-30.*RAD,-20.*RAD,-10.*RAD,0 * RAD,10.*RAD,20.*RAD,30.*RAD,40.*RAD,90.*RAD,120.*RAD,150.*RAD,160.*RAD,180.*RAD };
+	static const double Mach[17] = { 0.0,0.7,0.9,1.1,1.2,1.35,1.65,2.0,3.0,5.0,8.0,10.5,13.5,18.2,21.5,31.0,50.0 };
+	static const double LFactor[17] = { 0.3,0.392,0.466,0.607,0.641,0.488,0.446,0.435,0.416,0.415,0.405,0.400,0.385,0.385,0.375,0.35,0.33 };
+	static const double DFactor[17] = { 0.9,0.944,0.991,1.068,1.044,1.270,1.28,1.267,1.213,1.134,1.15,1.158,1.18,1.18,1.193,1.224,1.25 };
+	static const double CL[nlift] = { 0.0,-0.9,-1.1,-0.5,0.0,-0.316196,-0.239658,-0.193466,-0.110798,0.0,0.110798,0.193466,0.239658,0.316196,0.0,0.5,1.1,0.9,0.0 };
+	static const double CM[nlift] = { 0.0,0.02,0.03,0.06,0.075,-0.08,-0.1,-0.11,-0.09,0.0,0.09,0.11,0.1,0.08,-0.075,-0.06,-0.03,-0.02,0. };
+	static const double CD[nlift] = { 1.143,1.0,1.0,0.8,0.8,0.72946,0.65157,0.63798,0.65136,0.5778,0.65136,0.63798,0.65157,0.72946,0.8,0.8,1.0,1.0,1.143 };
+	int j;
+	factor = 2.0;
+	for (j = 0; (j < 16) && (Mach[j + 1] < M); j++);
+	frac = (M - Mach[j]) / (Mach[j + 1] - Mach[j]);
+	drag = (frac*DFactor[j + 1] + (1.0 - frac)*DFactor[j]);
+	lift = drag * (frac*LFactor[j + 1] + (1.0 - frac)*LFactor[j]);
+	for (j = 0; (j < nlift - 1) && (AOA[j + 1] < aoa); j++);
+	frac = (aoa - AOA[j]) / (AOA[j + 1] - AOA[j]);
+	*cd = drag * (frac*CD[j + 1] + (1.0 - frac)*CD[j]);
+	*cl = lift * (frac*CL[j + 1] + (1.0 - frac)*CL[j]);
+	*cm = factor * (frac*CM[j + 1] + (1.0 - frac)*CM[j]);
+}
 
 void SaturnInitMeshes()
 
@@ -861,6 +938,7 @@ void Saturn::SetReentryStage ()
     ClearThrusters();
 	ClearPropellants();
 	ClearAirfoilDefinitions();
+	ClearVariableDragElements();
 	ClearEngineIndicators();
 	ClearLVGuidLight();
 	ClearLVRateLight();
@@ -907,6 +985,8 @@ void Saturn::SetReentryStage ()
 	{
 		SetPMI(_V(15.0, 15.0, 1.5));
 		SetRotDrag(_V(1.5, 1.5, 0.003));
+
+		CreateVariableDragElement(canard.StatePtr(), 2.5, _V(0.0, 2.5, 11.43));
 	}
 	else
 	{
@@ -916,8 +996,16 @@ void Saturn::SetReentryStage ()
 	SetCrossSections (_V(9.17,7.13,7.0));
 	SetCW(1.5, 1.5, 1.2, 1.2);
 	SetSurfaceFrictionCoeff(1, 1);
-	if (GetFlightModel() >= 1 && !LESAttached) {
-		CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.12, 1.12), CoeffFunc, 3.5, 11.95, 1.0);
+	if (GetFlightModel() >= 1) {
+		if (LESAttached)
+		{
+			CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.0, 1.12), CMLETVertCoeffFunc, 3.5, 11.95/2.0, 1.0);
+			CreateAirfoil(LIFT_HORIZONTAL, _V(0.0, 0.0, 1.12), CMLETHoriCoeffFunc, 3.5, 11.95/2.0, 1.0);
+		}
+		else
+		{
+			CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.12, 1.12), CMCoeffFunc, 3.5, 11.95, 1.0);
+		}
     }
 
 	SetReentryMeshes();

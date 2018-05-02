@@ -77,6 +77,7 @@ public:
 	bool GetSIBLowLevelSensorsDry();
 	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
+	double GetSIThrustLevel();
 
 protected:
 
@@ -84,7 +85,6 @@ protected:
 
 	OBJHANDLE hSoyuz;
 	OBJHANDLE hAstpDM;
-	double LiftCoeff (double aoa);
 
 	void SetupMeshes();
 	void SetFirstStage ();

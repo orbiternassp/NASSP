@@ -380,9 +380,9 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
 
 		if (sat->GetMissionTime() < -2.0)
-			liftoffStreamLevel = (sat->GetMissionTime() + 4.9) / 2.9;
+			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() + 4.9) / 2.9;
 		else
-			liftoffStreamLevel = 1;
+			liftoffStreamLevel = sat->GetSIThrustLevel();
 
 		// T-1s or later?
 		if (sat->GetMissionTime() > -1) {
@@ -403,11 +403,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			SetAnimation(mastAnim, mastProc);
 		}
 
-		liftoffStreamLevel = 1;
-
-		
 		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		sat = (Saturn *)oapiGetVesselInterface(hLV);
+
+		liftoffStreamLevel = sat->GetSIThrustLevel();
 
 		// Disconnect IU Umbilical
 		if (sat->GetMissionTime() >= -0.05) {
@@ -425,7 +424,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
 		if (sat->GetMissionTime() < 13.0)
-			liftoffStreamLevel = (sat->GetMissionTime() - 13.0) / -5.0;
+			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() - 13.0) / -5.0;
 		else
 		{
 			liftoffStreamLevel = 0;

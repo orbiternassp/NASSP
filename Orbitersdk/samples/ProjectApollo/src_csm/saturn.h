@@ -59,6 +59,7 @@
 #include "payload.h"
 #include "csmcomputer.h"
 #include "qball.h"
+#include "canard.h"
 #include "siisystems.h"
 #include "sivbsystems.h"
 
@@ -949,6 +950,7 @@ public:
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
 	virtual void SetSIEngineStart(int n) = 0;
+	virtual double GetSIThrustLevel() = 0;
 
 	virtual void ActivateStagingVent() {}
 
@@ -3643,6 +3645,7 @@ protected:
 	ELS els;
 
 	QBall qball;
+	LETCanard canard;
 
 	Pyro CMSMPyros;
 	Pyro CMDockingRingPyros;

@@ -100,6 +100,8 @@ public:
 	bool GetSIIEngineOut();
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 
+	double GetSIThrustLevel();
+
 	//
 	// Functions that external code shouldn't need to access.
 	//

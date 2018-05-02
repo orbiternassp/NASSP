@@ -1332,6 +1332,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (LESAttached)
 	{
 		qball.SaveState(scn, QBALL_START_STRING, QBALL_END_STRING);
+		canard.SaveState(scn, CANARD_START_STRING, CANARD_END_STRING);
 	}
 
 	if (stage < LAUNCH_STAGE_TWO)
@@ -1943,6 +1944,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, QBALL_START_STRING, sizeof(QBALL_START_STRING))) {
 		qball.LoadState(scn, QBALL_END_STRING);
+	}
+	else if (!strnicmp(line, CANARD_START_STRING, sizeof(CANARD_START_STRING))) {
+		canard.LoadState(scn, CANARD_END_STRING);
 	}
 	else if (!strnicmp(line, SISYSTEMS_START_STRING, sizeof(SISYSTEMS_START_STRING))) {
 		LoadSI(scn);
