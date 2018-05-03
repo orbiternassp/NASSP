@@ -765,6 +765,9 @@ public:
 	/// \param AbortJettison If we're jettisoning during an abort, the BPC will take the docking probe with it.
 	///
 	void JettisonLET(bool AbortJettison = false);
+	void DeployCanard();
+	void CMLETAirfoilConfig();
+	void CMLETCanardAirfoilConfig();
 
 	///
 	/// This function can be used during the countdown to update the MissionTime. Since we launch when

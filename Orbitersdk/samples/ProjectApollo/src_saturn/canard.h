@@ -31,6 +31,7 @@ public:
 
 	void Deploy() { state = 1.0; }
 	inline const double *StatePtr() const { return &state; }
+	bool IsDeployed() { return state > 0.5; }
 protected:
 	double state;
 };

@@ -114,6 +114,8 @@ protected:
 	bool Mode1ASignal;
 
 	Saturn *Sat;
+
+	//NOTEHANDLE RCSCDisplay;
 };
 
 //Master Events Sequence Controller
@@ -274,6 +276,8 @@ protected:
 	EventTimer *EventTimerDisplay;
 
 	CircuitBrakerSwitch *EDSLogicBreaker;
+
+	//NOTEHANDLE MESCDisplay;
 };
 
 //Lunar Docking Events Controller
@@ -470,7 +474,7 @@ protected:
 	
 	//Drogue Parachute Deploy
 	DelayTimer TD1;
-	//Pilot parachute Deploy
+	//Pilot Parachute Deploy
 	DelayTimer TD3;
 
 	CircuitBrakerSwitch *ELSBatteryBreaker;
@@ -479,6 +483,8 @@ protected:
 	MESC* mesc;
 
 	Saturn *Sat;
+
+	//NOTEHANDLE ELSCDisplay;
 
 	friend class PCVB;
 };

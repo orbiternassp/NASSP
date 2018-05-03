@@ -59,6 +59,9 @@ TD8(42.0)
 	CMTransferMotor2 = false;
 
 	Mode1ASignal = false;
+
+	//RCSCDisplay = oapiCreateAnnotation(false, 0.65, _V(1, 1, 0));
+	//oapiAnnotationSetPos(RCSCDisplay, 0.66, 0.1, 0.99, 1);
 }
 
 void RCSC::TimerTimestep(double simdt)
@@ -228,6 +231,62 @@ void RCSC::Timestep(double simdt)
 	{
 		FuelAndOxidBypassPurgeB = false;
 	}
+
+	//Mode 1A Display
+	/*char buffer[1024];
+	sprintf(buffer, "REACTION CONTROL SYSTEM CONTROLLER - MODE 1A\n\n");
+	if (OxidizerDumpA)
+	{
+		sprintf(buffer, "%sOxidizer Dump Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sOxidizer Dump Relay - Deenergized\n", buffer);
+	}
+	if (InterconnectAndPropellantBurnA)
+	{
+		sprintf(buffer, "%sHelium & Oxidizer Interconnect Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sHelium & Oxidizer Interconnect Relay - Deenergized\n", buffer);
+	}
+	sprintf(buffer, "%sCM RCS Fuel Dump Timer %.2f s\n", buffer, TD3.GetTime());
+	sprintf(buffer, "%sCM RCS Purge Timer %.2f s\n", buffer, TD5.GetTime());
+	if (FuelAndOxidBypassPurgeA)
+	{
+		sprintf(buffer, "%sFuel & Oxidizer Bypass Purge Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sFuel & Oxidizer Bypass Purge Relay - Deenergized\n", buffer);
+	}
+	if (GetOxidizerDumpRelay())
+	{
+		sprintf(buffer, "%sOxidizer Dumping - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sOxidizer Dumping - Deenergized\n", buffer);
+	}
+	if (GetFuelDumpRelay())
+	{
+		sprintf(buffer, "%sFuel Dumping - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sFuel Dumping - Deenergized\n", buffer);
+	}
+	if (GetOxidFuelPurgeRelay())
+	{
+		sprintf(buffer, "%sOxidizer & Fuel Purging - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sOxidizer & Fuel Purging - Deenergized\n", buffer);
+	}
+
+	oapiAnnotationSetText(RCSCDisplay, buffer);*/
 }
 
 void RCSC::ControlVessel(Saturn *v)
@@ -392,6 +451,7 @@ MESC::MESC():
 	LiftoffFlag = false;
 
 	EDSLogicBreaker = NULL;
+	//MESCDisplay = NULL;
 }
 
 void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem, int IsSysA)
@@ -408,6 +468,9 @@ void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch 
 	Sat = v;
 	OtherMESC = OtherMESCSystem;
 	IsSystemA = IsSysA;
+
+	//MESCDisplay = oapiCreateAnnotation(false, 0.65, _V(1, 1, 0));
+	//oapiAnnotationSetPos(MESCDisplay, 0, 0.1, 0.33, 1);
 }
 
 void MESC::TimerTimestep(double simdt)
@@ -686,10 +749,7 @@ void MESC::Timestep(double simdt)
 
 	if (SequentialPyroBus() && CanardDeploy)
 	{
-		if (Sat->LESAttached)
-		{
-			Sat->canard.Deploy();
-		}
+		Sat->DeployCanard();
 	}
 
 	//Pitch Control Motor
@@ -893,6 +953,133 @@ void MESC::Timestep(double simdt)
 	{
 		FwdHeatshieldJett = false;
 	}
+
+	//Mode 1A Display
+	/*char buffer[1024];
+	sprintf(buffer, "MASTER EVENTS SEQUENCE CONTROLLER - MODE 1A\n\n");
+	if (Sat->THCRotary.IsCounterClockwise())
+	{
+		sprintf(buffer, "%sTHC - CCW\n", buffer);
+	}
+	else if (Sat->THCRotary.IsClockwise())
+	{
+		sprintf(buffer, "%sTHC - CW\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sTHC - Neutral\n", buffer);
+	}
+	if (BoosterCutoffAbortStartRelay)
+	{
+		sprintf(buffer, "%sBooster Cutoff & Abort Start Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sBooster Cutoff & Abort Start Relay - Deenergized\n", buffer);
+	}
+	if (LETPhysicalSeparationMonitor)
+	{
+		sprintf(buffer, "%sLET Physical Separation Monitor Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sLET Physical Separation Monitor Relay - Deenergized\n", buffer);
+	}
+	if (LESAbortRelay)
+	{
+		sprintf(buffer, "%sLES Abort Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sLES Abort Relay - Deenergized\n", buffer);
+	}
+	if (CMSMDeadFace)
+	{
+		sprintf(buffer, "%sCM/SM Deadface Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sCM/SM Deadface Relay - Deenergized\n", buffer);
+	}
+	if (CMRCSPress)
+	{
+		sprintf(buffer, "%sCM RCS Press Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sCM RCS Press Relay - Deenergized\n", buffer);
+	}
+	sprintf(buffer, "%sCM/SM Separate Delay Timer %.2f s\n", buffer, TD3.GetTime());
+	if (CMSMSeparateRelay)
+	{
+		sprintf(buffer, "%sCM/SM Separate Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sCM/SM Separate Relay - Deenergized\n", buffer);
+	}
+	if (LESMotorFire)
+	{
+		sprintf(buffer, "%sLES Motor Fire Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sLES Motor Fire Relay - Deenergized\n", buffer);
+	}
+	if (PitchControlMotorFire)
+	{
+		sprintf(buffer, "%sPitch Control Motor Fire Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sPitch Control Motor Fire Relay - Deenergized\n", buffer);
+	}
+	sprintf(buffer, "%sPyro Cutout Delay Timer %.2f s\n", buffer, TD23.GetTime());
+	if (PyroCutout)
+	{
+		sprintf(buffer, "%sPyro Cutout Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sPyro Cutout Relay - Deenergized\n", buffer);
+	}
+	sprintf(buffer, "%sCanard Deploy Timer %.2f s\n", buffer, TD5.GetTime());
+	if (CanardDeploy)
+	{
+		sprintf(buffer, "%sCanard Deploy Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sCanard Deploy Relay - Deenergized\n", buffer);
+	}
+	sprintf(buffer, "%sELS Activate Timer %.2f s\n", buffer, TD7.GetTime());
+	if (ELSActivateRelay)
+	{
+		sprintf(buffer, "%sELS Activate Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sELS Activate Relay - Deenergized\n", buffer);
+	}
+	if (LETJettisonAndFrangibleNutsRelay)
+	{
+		sprintf(buffer, "%sTower Jettison Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sTower Jettison Relay - Deenergized\n", buffer);
+	}
+	sprintf(buffer, "%sApex Cover Jettison Timer %.2f s\n", buffer, TD17.GetTime());
+	if (ApexCoverJettison)
+	{
+		sprintf(buffer, "%sApex Cover Jettison Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sApex Cover Jettison Relay - Deenergized\n", buffer);
+	}
+
+	oapiAnnotationSetText(MESCDisplay, buffer);*/
 }
 
 bool MESC::SequentialLogicBus()
@@ -1626,6 +1813,7 @@ ELSC::ELSC():
 	mesc = NULL;
 
 	Sat = NULL;
+	//ELSCDisplay = NULL;
 }
 
 void ELSC::Init(Saturn *v, CircuitBrakerSwitch *ELSBatteryCB, MESC* ConnectedMESC, ELSC *OtherELSCSystem)
@@ -1634,6 +1822,9 @@ void ELSC::Init(Saturn *v, CircuitBrakerSwitch *ELSBatteryCB, MESC* ConnectedMES
 	mesc = ConnectedMESC;
 	OtherELSC = OtherELSCSystem;
 	Sat = v;
+
+	//ELSCDisplay = oapiCreateAnnotation(false, 0.65, _V(1, 1, 0));
+	//oapiAnnotationSetPos(ELSCDisplay, 0.33, 0.1, 0.66, 1);
 }
 
 void ELSC::TimerTimestep(double simdt)
@@ -1684,6 +1875,38 @@ void ELSC::Timestep(double simdt)
 	{
 		PilotParachuteDeploy = false;
 	}
+
+	//Mode 1A Display
+	/*char buffer[1024];
+	sprintf(buffer, "EARTH LANDING SEQUENCE CONTROLLER - MODE 1A\n\n");
+	if (BaroswitchLockIn)
+	{
+		sprintf(buffer, "%sBaroswitch Lock-In Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sBaroswitch Lock-In Relay - Deenergized\n", buffer);
+	}
+	sprintf(buffer, "%sDrogue Parachute Timer %.2f s\n", buffer, TD1.GetTime());
+	if (DrogueParachuteDeploy)
+	{
+		sprintf(buffer, "%sDrogue Parachute Deploy Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sDrogue Parachute Deploy Relay - Deenergized\n", buffer);
+	}
+	sprintf(buffer, "%sMain Parachute Timer %.2f s\n", buffer, TD3.GetTime());
+	if (PilotParachuteDeploy)
+	{
+		sprintf(buffer, "%sMain Parachute Deploy Relay - Energized\n", buffer);
+	}
+	else
+	{
+		sprintf(buffer, "%sMain Parachute Deploy Relay - Deenergized\n", buffer);
+	}
+
+	oapiAnnotationSetText(ELSCDisplay, buffer);*/
 }
 
 bool ELSC::ELSBatteryPower()
