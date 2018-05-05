@@ -3722,12 +3722,17 @@ void ApolloRTCCMFD::t1dialogue()
 bool T1GETInput(void *id, char *str, void *data)
 {
 	int hh, mm, ss, t1time;
-	double elev;
+	double elev, pdidt;
 	if (sscanf(str, "E=%lf", &elev) == 1)
-		{
-			((ApolloRTCCMFD*)data)->set_lambertelev(elev);
-			return true;
-		}
+	{
+		((ApolloRTCCMFD*)data)->set_lambertelev(elev);
+		return true;
+	}
+	else if (sscanf(str, "PDI+%lf", &pdidt) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_t1(pdidt * 60.0);
+		return true;
+	}
 	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		t1time = ss + 60 * (mm + 60 * hh);
@@ -3740,6 +3745,11 @@ bool T1GETInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_t1(double t1)
 {
 	this->G->T1 = t1;
+}
+
+void ApolloRTCCMFD::set_t1_PDI(double dt)
+{
+	G->T1 = G->pdipad.GETI + dt;
 }
 
 void ApolloRTCCMFD::OrbAdjGETDialogue()
