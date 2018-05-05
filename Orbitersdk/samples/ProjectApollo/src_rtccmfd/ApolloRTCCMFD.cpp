@@ -3730,7 +3730,7 @@ bool T1GETInput(void *id, char *str, void *data)
 	}
 	else if (sscanf(str, "PDI+%lf", &pdidt) == 1)
 	{
-		((ApolloRTCCMFD*)data)->set_t1(pdidt * 60.0);
+		((ApolloRTCCMFD*)data)->set_t1_PDI(pdidt * 60.0);
 		return true;
 	}
 	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
