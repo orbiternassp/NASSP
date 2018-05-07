@@ -3764,7 +3764,7 @@ void MCC::drawPad(){
 			format_time(tmpbuf, form->TB6P);
 			SStoHHMMSS(form->BurnTime, hh, mm, ss);
 
-			sprintf(buffer, "%s\n%s TB6p\nXXX%03.0f R\nXXX%03.0f P	TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P	SEP\nXXX%03.0f Y\nXXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y\n", buffer, tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z, form->ExtATT.x, form->ExtATT.y, form->ExtATT.z);
+			sprintf(buffer, "%s\n%s TB6p\nXXX%03.0f R\nXXX%03.0f P TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P SEP\nXXX%03.0f Y\nXXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y", buffer, tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z, form->ExtATT.x, form->ExtATT.y, form->ExtATT.z);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 	break;
@@ -4673,7 +4673,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 			this->pushCMCUplinkString(upString);
 		}
 	}
-	if (type == UTP_PADWITHLGCUPLINK)
+	else if (type == UTP_PADWITHLGCUPLINK)
 	{
 		// Ask RTCC for numbers
 		// Do math

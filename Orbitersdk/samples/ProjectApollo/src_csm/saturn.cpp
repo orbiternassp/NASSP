@@ -585,7 +585,7 @@ void Saturn::initSaturn()
 
 	ISP_PCM_SL = 1931.91005;
 	ISP_PCM_VAC = 1971.13665;
-	THRUST_VAC_PCM = 6271.4;
+	THRUST_VAC_PCM = 12542.8;
 
 	//
 	// Propellant handles.

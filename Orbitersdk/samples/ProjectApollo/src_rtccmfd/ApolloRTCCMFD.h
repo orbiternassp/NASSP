@@ -41,6 +41,7 @@ public:
 
 	void t1dialogue();
 	void set_t1(double t1);
+	void set_t1_PDI(double t1);
 	void t2dialogue();
 	void set_t2(double t2, bool t1dep);
 	void CDHtimedialogue();
