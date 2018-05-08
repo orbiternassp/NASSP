@@ -289,9 +289,9 @@ struct CDHOpt
 struct AP7BLKOpt
 {
 	int n; //number of PAD entries
-	double *lng; //pointer to splashdown longitudes
-	double *GETI; //pointer to ignition times
-	char **area; //pointer to splashdown areas
+	std::vector<double> lng; //Splashdown longitudes
+	std::vector<double> GETI; //Ignition times
+	std::vector<std::string> area; //Splashdown areas
 };
 
 struct AP11BLKOpt
