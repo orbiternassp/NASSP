@@ -645,6 +645,53 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BlockData(&opt, *form);
 	}
 	break;
+	case 18: //DOCKED DPS BURN - REFSMMAT AND SV FOR CMC
+	{
+		GMPOpt gmpopt;
+		SV sv0;
+		VECTOR3 dV_LVLH;
+		double GETbase, P30TIG;
+
+		GETbase = getGETBase();
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		gmpopt.csmlmdocked = true;
+		gmpopt.GETbase = GETbase;
+		gmpopt.impulsive = RTCC_NONIMPULSIVE;
+		gmpopt.rot_ang = 6.9*RAD;
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49,42,0);
+		gmpopt.type = 7;
+		gmpopt.vessel = calcParams.tgt;
+
+		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+
+		if (fcn == 18)
+		{
+			TimeofIgnition = P30TIG;
+			DeltaV_LVLH = dV_LVLH;
+
+			REFSMMATOpt refsopt;
+			MATRIX3 REFSMMAT;
+
+			refsopt.P30TIG = P30TIG;
+			refsopt.dV_LVLH = dV_LVLH;
+			refsopt.REFSMMATopt = 0;
+			refsopt.vessel = calcParams.tgt;
+			refsopt.vesseltype = 3;
+			refsopt.csmlmdocked = true;
+			refsopt.GETbase = GETbase;
+
+			REFSMMAT = REFSMMATCalc(&refsopt);
+
+			sprintf(uplinkdata, "%s%s", AGCStateVectorUpdate(sv0, true, AGCEpoch, GETbase, true), AGCREFSMMATUpdate(REFSMMAT, AGCEpoch));
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, Verb 66, REFSMMAT");
+			}
+		}
+	}
+	break;
 	}
 
 	return scrubbed;
@@ -8594,6 +8641,46 @@ void RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TI
 		sv_tig_imp = coast(sv2, dTIG);
 
 		DV = unit(sv_tig_imp.R)*dv;
+	}
+	else if (opt->type == 7)
+	{
+		SV sv2;
+		OELEMENTS coe;
+		MATRIX3 Rot;
+		VECTOR3 R1_equ, V1_equ;
+		double theta, cos_u_initial, ta_initial, dtheta, dt, ddt;
+		int n;
+
+		dt = 0.0;
+		ddt = 1.0;
+		n = 0;
+
+		while (abs(ddt) > 0.01 && n < 10)
+		{
+			sv2 = coast(sv1, dt);
+
+			Rot = OrbMech::GetObliquityMatrix(sv2.gravref, sv2.MJD);
+			R1_equ = rhtmul(Rot, sv2.R);
+			V1_equ = rhtmul(Rot, sv2.V);
+			coe = OrbMech::coe_from_sv(R1_equ, V1_equ, mu);
+
+			theta = acos(pow(cos(coe.i), 2.0) + pow(sin(coe.i), 2.0)*cos(opt->rot_ang));
+			cos_u_initial = tan(coe.i)*(cos(opt->rot_ang) - cos(theta)) / sin(theta);
+			ta_initial = acos(cos_u_initial) - coe.w;
+			dtheta = ta_initial - coe.TA;
+			ddt = OrbMech::time_theta(R1_equ, V1_equ, dtheta, mu);
+			dt += ddt;
+			n++;
+		}
+
+		//cos_u_final = cos(coe.i)*sin(coe.i)*((1.0 - cos(opt->rot_ang)) / sin(theta));
+
+		//sv_tig_imp.R = rhmul(Rot, R2_equ);
+		//sv_tig_imp.V = rhmul(Rot, V2_equ);
+
+		sv_tig_imp = sv2;
+
+		DV = OrbMech::RotateVelocityVector(sv_tig_imp.R, sv_tig_imp.V, theta);
 	}
 
 	MATRIX3 Q_Xx;

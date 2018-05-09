@@ -519,6 +519,7 @@ struct GMPOpt
 	//4 = Circularize orbit at specified altitude
 	//5 = Rotate velocity vector, specify apoapsis altitude
 	//6 = Rotate line of apsides, perigee at specific longitude
+	//7 = Optimal node shift maneuver
 	int type = 0;
 	double GETbase; //usually MJD at launch
 	VESSEL* vessel;
