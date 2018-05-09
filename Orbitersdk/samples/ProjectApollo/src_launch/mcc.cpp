@@ -2013,8 +2013,11 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY2STATE6: //Block Data 4 to Block Data 5
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 40 * 60 * 60 + 10 * 60, 16, MST_D_DAY3STATE1);
 				break;
-			case MST_D_DAY3STATE1: //Block Data 5
+			case MST_D_DAY3STATE1: //Block Data 5 to Docked DPS Burn
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 41 * 60 * 60 + 10 * 60, 17, MST_D_DAY3STATE2);
+				break;
+			case MST_D_DAY3STATE2: //Block Data 5 to CMC Docked DPS Update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 45 * 60 * 60 + 10 * 60, 18, MST_D_DAY3STATE3);
 				break;
 			}
 			break;

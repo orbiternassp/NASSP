@@ -289,16 +289,16 @@ struct CDHOpt
 struct AP7BLKOpt
 {
 	int n; //number of PAD entries
-	double *lng; //pointer to splashdown longitudes
-	double *GETI; //pointer to ignition times
-	char **area; //pointer to splashdown areas
+	std::vector<double> lng; //Splashdown longitudes
+	std::vector<double> GETI; //Ignition times
+	std::vector<std::string> area; //Splashdown areas
 };
 
 struct AP11BLKOpt
 {
 	int n; //number of PAD entries
-	double *lng; //pointer to splashdown longitudes
-	double *GETI; //pointer to ignition times
+	std::vector<double> lng; //Splashdown longitudes
+	std::vector<double> GETI; //Ignition times
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 };
@@ -519,6 +519,7 @@ struct GMPOpt
 	//4 = Circularize orbit at specified altitude
 	//5 = Rotate velocity vector, specify apoapsis altitude
 	//6 = Rotate line of apsides, perigee at specific longitude
+	//7 = Optimal node shift maneuver
 	int type = 0;
 	double GETbase; //usually MJD at launch
 	VESSEL* vessel;
@@ -873,19 +874,19 @@ private:
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
-	char* AGCExternalDeltaVUpdate(double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
-	char* AGCStateVectorUpdate(SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
-	char* CMCDesiredREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, bool AGCCoordSystem = false);
-	char* AGCREFSMMATUpdate(MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
-	char* CMCRetrofireExternalDeltaVUpdate(double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
-	char* CMCEntryUpdate(double LatSPL, double LngSPL);
+	void AGCExternalDeltaVUpdate(char *str, double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
+	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
+	void CMCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool AGCCoordSystem = false);
+	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
+	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
+	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
 	void IncrementAGCTime(char *list, double dt);
 	void TLANDUpdate(char *list, double t_land, int tlandaddr);
-	char* V71Update(int* emem, int n);
-	void V72Update(int *emem, int n, char* list);
-	char* SunburstAttitudeManeuver(VECTOR3 imuangles);
-	char* SunburstLMPCommand(int code);
-	char* SunburstMassUpdate(double masskg);
+	void V71Update(char *list, int* emem, int n);
+	void V72Update(char *list, int *emem, int n);
+	void SunburstAttitudeManeuver(char *list, VECTOR3 imuangles);
+	void SunburstLMPCommand(char *list, int code);
+	void SunburstMassUpdate(char *list, double masskg);
 	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
