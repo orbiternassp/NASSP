@@ -2346,7 +2346,7 @@ void Saturn::UpdatePayloadMass()
 {
 	switch (SIVBPayload) {
 	case PAYLOAD_LEM:
-		S4PL_Mass = LMAscentEmptyMassKg + LMDescentEmptyMassKg + LMAscentFuelMassKg + LMDescentFuelMassKg;
+		S4PL_Mass = LMAscentEmptyMassKg + LMDescentEmptyMassKg + LMAscentFuelMassKg + LMDescentFuelMassKg + 2.0*LM_RCS_FUEL_PER_TANK;
 		break;
 
 	case PAYLOAD_ASTP:
