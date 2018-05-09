@@ -3672,6 +3672,16 @@ VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA)
 	return U_LOS;
 }
 
+VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL)
+{
+	VECTOR3 U_OAN, S_SM, U_LOS;
+
+	U_OAN = _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+	S_SM = mul(transpose_matrix(SMNB), U_OAN);
+	U_LOS = mul(transpose_matrix(REFSMMAT), S_SM);
+	return U_LOS;
+}
+
 int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 {
 	VECTOR3 ustar;
@@ -5600,6 +5610,38 @@ void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &
 	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
 }
 
+void AOTcheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct)
+{
+	MATRIX3 SMNB, Q1, Q2, Q3;
+	double OGA, IGA, MGA;
+	VECTOR3 U_LOS;
+	int star;
+
+	OGA = IMU.x;
+	IGA = IMU.y;
+	MGA = IMU.z;
+
+	Q1 = _MRy(IGA);
+	Q2 = _MRz(MGA);
+	Q3 = _MRx(OGA);
+
+	SMNB = mul(Q3, mul(Q2, Q1));
+
+	U_LOS = AOTULOS(REFSMMAT, SMNB, 0.0, 0.0);
+	star = OrbMech::FindNearestStar(U_LOS, R_C, R_E, 50.0*RAD);
+
+	if (star == -1)
+	{
+		staroct = 0;
+	}
+	else
+	{
+		staroct = decimal_octal(star + 1);
+	}
+
+	//sprintf(oapiDebugString(), "%d, %f, %f", staroct, SA*DEG, TA*DEG);
+}
+
 double imulimit(double a)
 {
 	if (a < 0)
@@ -5749,13 +5791,21 @@ double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *
 
 		dvar = OrbMech::quadratic(var, obj) - varguess;// +(SVMJD - TIGMJD)*24.0*3600.0;
 
+		//if the calculated change (dvar) is greater than maxstep, limit change to maxstep
 		if (abs(dvar)>maxstep)
 		{
 			dvar = OrbMech::sign(dvar)*maxstep;
+
+			//If it tries to limit dvar twice in a row, we could get a bad result. So use maxstep/2 instead.
+			if (varguess + dvar - var[1] == 0)
+			{
+				dvar = OrbMech::sign(dvar)*maxstep / 2.0;
+			}
 		}
 	}
 
 	varguess += dvar;
+
 	c++;
 
 	if (c > 100)
