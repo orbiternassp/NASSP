@@ -3603,7 +3603,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double TLIbase = floor((TimeofIgnition / 60.0) + 0.5)*60.0; //Round TLI ignition time to next minute
 
 		MCC1GET= TLIbase + 9.0*3600.0;
-		MCC2GET = TLIbase + 25.0*3600.0;
+		MCC2GET = TLIbase + 24.0*3600.0;
 		MCC3GET = calcParams.LOI - 22.0*3600.0;
 
 		AP11MNV * form = (AP11MNV *)pad;
