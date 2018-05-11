@@ -483,10 +483,11 @@ void h_volume::ThermalComps(double dt) {
 		Temp = 0;
 
 	//2. Compute average Press
-	double m_i=0;
-	double NV=0;
-	double PNV=0;
-	double tNV=0;
+	double m_i = 0;
+	double NV = 0;
+	double PNV = 0;
+	double tNV = 0;
+
 	//some sums we need
 	for (i = 0; i < MAX_SUB; i++) {
 		m_i += composition[i].vapor_mass / MMASS[composition[i].subst_type];	//Units of mol
@@ -523,8 +524,9 @@ void h_volume::ThermalComps(double dt) {
 
 	for (i = 0; i < MAX_SUB; i++) {
 		//recompute the vapor press
-		vap_press = VAPPRESS[composition[i].subst_type] - (273.0 - Temp) * VAPGRAD[composition[i].subst_type];//this is vapor pressure of current substance
-		if (vap_press > Press)	//need to boil material if any
+		vap_press = VAPPRESS[composition[i].subst_type] - (273.0 - Temp) * VAPGRAD[composition[i].subst_type];  //this is vapor pressure of current substance
+		//need to boil material if vapor pressure > pressure, otherwise condense
+		if (vap_press > Press)	
 			Q += composition[i].Boil(dt);
 		else
 			Q += composition[i].Condense(dt);
