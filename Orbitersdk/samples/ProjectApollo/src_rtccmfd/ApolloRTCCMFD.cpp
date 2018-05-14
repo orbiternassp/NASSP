@@ -6528,12 +6528,13 @@ void ApolloRTCCMFD::menuLaunchAzimuthCalc()
 			LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
 
 			double day = 0.0;
-			double T_L = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - SatV->GetMissionTime() - 17.0;
+			double MJD_GRR = oapiGetSimMJD() - (SatV->GetMissionTime() + 17.0) / 24.0 / 3600.0;
+			double T_L = modf(MJD_GRR, &day)*24.0*3600.0;
 			double t_D = T_L - lvdc->T_LO;
 			//t_D = TABLE15.target[tgt_index].t_D;
 
 			//Azimuth determination
-			if (lvdc->t_DS0 <= t_D && t_D < lvdc->t_DS1)
+			if (t_D < lvdc->t_DS1)
 			{
 				G->LVDCLaunchAzimuth = lvdc->hx[0][0] + lvdc->hx[0][1] * ((t_D - lvdc->t_D1) / lvdc->t_SD1) + lvdc->hx[0][2] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 2) + lvdc->hx[0][3] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 3) + lvdc->hx[0][4] * pow((t_D - lvdc->t_D1) / lvdc->t_SD1, 4);
 			}
