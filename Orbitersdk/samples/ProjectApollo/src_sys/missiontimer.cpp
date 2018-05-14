@@ -40,31 +40,29 @@
 #include "papi.h"
 
 MissionTimer::MissionTimer(PanelSDK &p) : DCPower(0, p)
-
 {
 	Running = false;
 	CountUp = TIMER_COUNT_UP;
 	TimerTrash = false;
 	DimmerRotationalSwitch = NULL;
-	srand((unsigned int)time(NULL)); // time gives 64bit 'time_t', srand wants int. We specify unsigned int because data loss doesn't matter.
+	srand((unsigned int) time(NULL));
 
 	Reset();
 }
 
 MissionTimer::~MissionTimer()
-
 {
 	// Nothing for now.
 }
 
-void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c) {
+void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c)
+{
 	DCPower.WireToBuses(a, b);
 	WireTo(c);
 	DimmerRotationalSwitch = dimmer;
 }
 
 void MissionTimer::Reset()
-
 {
 	hours = 0;
 	minutes = 0;
@@ -73,7 +71,6 @@ void MissionTimer::Reset()
 }
 
 void MissionTimer::Garbage()
-
 {
 	hours = rand() % 1000;
 	minutes = rand() % 60;
@@ -82,7 +79,6 @@ void MissionTimer::Garbage()
 }
 
 void MissionTimer::UpdateHours(int n)
-
 {
 	if (!IsPowered())
 		return;
@@ -103,7 +99,6 @@ void MissionTimer::UpdateHours(int n)
 }
 
 void MissionTimer::UpdateMinutes(int n)
-
 {
 	if (!IsPowered())
 		return;
@@ -124,7 +119,6 @@ void MissionTimer::UpdateMinutes(int n)
 }
 
 void MissionTimer::UpdateSeconds(int n)
-
 {
 	if (!IsPowered())
 		return;
@@ -146,7 +140,9 @@ void MissionTimer::UpdateSeconds(int n)
 
 bool MissionTimer::IsPowered()
 {
-	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; } // DC
+	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE)
+		return false;
+
 	return true;
 }
 
@@ -169,8 +165,7 @@ void MissionTimer::SystemTimestep(double simdt)
 
 void EventTimer::SystemTimestep(double simdt)
 {
-	if (IsPowered())
-	{
+	if (IsPowered()) {
 		if (Running)
 			DCPower.DrawPower(5.0);
 		else
@@ -194,13 +189,12 @@ void LEMEventTimer::SystemTimestep(double simdt)
 //
 
 void MissionTimer::Timestep(double simt, double deltat, bool persistent)
-
 {
-	//sprintf(oapiDebugString(), "Timer status. Garbage: %d Powered: %d DC: %f AC: %f", TimerTrash, IsPowered(), DCPower.Voltage() ,Voltage());
+	//sprintf(oapiDebugString(), "Timer status. Garbage: %d Powered: %d DC: %f AC: %f", TimerTrash, IsPowered(), DCPower.Voltage(), Voltage());
 	if (!IsPowered()) {
-		if (!TimerTrash && !persistent) {
+		if (!TimerTrash && !persistent)
 			Garbage();
-		}
+
 		return;
 	}
 
@@ -209,19 +203,16 @@ void MissionTimer::Timestep(double simt, double deltat, bool persistent)
 	if (Running && (CountUp != TIMER_COUNT_NONE)) {
 		double t = GetTime();
 
-		if (CountUp) {
+		if (CountUp)
 			t += deltat;
-		}
-		else {
+		else
 			t -= deltat;
-		}
 
 		SetTime(t);
 	}
 }
 
 double MissionTimer::GetTime()
-
 {
 	double t;
 
@@ -234,7 +225,6 @@ double MissionTimer::GetTime()
 //
 
 void MissionTimer::SetTime(double t)
-
 {
 	if (t < 0.0) {
 		Reset();
@@ -246,14 +236,15 @@ void MissionTimer::SetTime(double t)
 
 	hours = (secs / 3600);
 	secs -= (hours * 3600);
+
 	while (hours > 999)
 		hours -= 1000;
+
 	minutes = (secs / 60);
 	seconds = secs - (60 * minutes);
 }
 
 void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
-
 {
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
@@ -293,7 +284,6 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 }
 
 void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
-
 {
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
@@ -332,31 +322,33 @@ void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm)
 	oapiBlt(surf, digits, 0, 0 + 123, 21 * (Curdigit - (Curdigit2 * 10)), 0, 21, 19);
 }
 
-void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent) {
+void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent)
+{
 	oapiWriteLine(scn, start_str);
 	papiWriteScenario_bool(scn, "RUNNING", Running);
 	oapiWriteScenario_int(scn, "COUNTUP", CountUp);
-	if (!persistent) {
+	if (!persistent)
 		papiWriteScenario_bool(scn, "TIMERTRASH", TimerTrash);
-	}
 	papiWriteScenario_double(scn, "MTD", GetTime());
 	oapiWriteLine(scn, end_str);
 }
 
-void MissionTimer::LoadState(FILEHANDLE scn, char *end_str) {
+void MissionTimer::LoadState(FILEHANDLE scn, char *end_str)
+{
 	char *line;
 	int tmp = 0; // Used in boolean type loader
 	int end_len = strlen(end_str);
 	float ftcp;
 
 	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, end_str, end_len)) {
+		if (!strnicmp(line, end_str, end_len))
 			break;
-		}
+
 		if (!strnicmp(line, "MTD", 3)) {
 			sscanf(line + 3, "%f", &ftcp);
 			SetTime(ftcp);
 		}
+
 		papiReadScenario_bool(line, "RUNNING", Running);
 		papiReadScenario_int(line, "COUNTUP", CountUp);
 		papiReadScenario_bool(line, "TIMERTRASH", TimerTrash);
@@ -364,7 +356,6 @@ void MissionTimer::LoadState(FILEHANDLE scn, char *end_str) {
 }
 
 LEMEventTimer::LEMEventTimer(PanelSDK &p) : EventTimer(p)
-
 {
 	//
 	// Nothing for now
@@ -379,7 +370,6 @@ LEMEventTimer::~LEMEventTimer()
 }
 
 void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
-
 {
 	// Don't do this if not powered.
 	if (!IsPowered() || !IsDisplayPowered())
@@ -400,7 +390,7 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 	Curdigit2 = minutes / 10;
 	oapiBlt(surf, digits, 20, 0, 19 * (Curdigit-(Curdigit2*10)), 0, 19,21);
 
-	//oapiBlt(surf, digits, 37,0, 192,0,4,19);
+	//oapiBlt(surf, digits, 37, 0, 192, 0, 4, 19);
 
 	// second display on two digit
 	Curdigit = seconds / 10;
@@ -413,13 +403,11 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 }
 
 EventTimer::EventTimer(PanelSDK &p) : MissionTimer(p)
-
 {
 
 }
 
 EventTimer::~EventTimer()
-
 {
 	//
 	// Nothing for now
@@ -427,7 +415,6 @@ EventTimer::~EventTimer()
 }
 
 void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
-
 {
 	//
 	// Digits are 13x18.
@@ -455,7 +442,6 @@ void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits)
 }
 
 void EventTimer::Render90(SURFHANDLE surf, SURFHANDLE digits)
-
 {
 	//
 	// Digits are 13x18.
