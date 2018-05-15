@@ -5155,7 +5155,7 @@ void LVDCSV::TimeStep(double simdt) {
 			fprintf(lvlog, "Time into launch window = %f\r\n", t_D);
 
 			//Azimuth determination
-			if (t_DS0 <= t_D && t_D < t_DS1)
+			if (t_D < t_DS1)
 			{
 				Azimuth = hx[0][0] + hx[0][1]*((t_D - t_D1) / t_SD1) + hx[0][2]*pow((t_D - t_D1) / t_SD1, 2) + hx[0][3]*pow((t_D - t_D1) / t_SD1, 3) + hx[0][4]*pow((t_D - t_D1) / t_SD1, 4);
 			}
