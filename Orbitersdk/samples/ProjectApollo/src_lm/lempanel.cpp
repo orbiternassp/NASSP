@@ -284,7 +284,7 @@ void LEM::InitSwitches() {
 	RCSSysQuad3Switch.Register(PSH, "RCSSysQuad3Switch",  THREEPOSSWITCH_CENTER);
 	RCSSysQuad4Switch.Register(PSH, "RCSSysQuad4Switch",  THREEPOSSWITCH_CENTER);
 	SidePanelsSwitch.Register(PSH, "SidePanelsSwitch", false);
-	FloodSwitch.Register(PSH, "FloodSwitch",  THREEPOSSWITCH_DOWN);
+	FloodSwitch.Register(PSH, "FloodSwitch", THREEPOSSWITCH_CENTER);
 	RightXPointerSwitch.Register(PSH, "RightXPointerSwitch", true);
 	ExteriorLTGSwitch.Register(PSH, "ExteriorLTGSwitch", THREEPOSSWITCH_UP);
 	LeftACA4JetSwitch.Register(PSH, "LeftACA4JetSwitch", TOGGLESWITCH_UP);
@@ -359,7 +359,7 @@ void LEM::InitSwitches() {
 	FloodRotary.AddPosition(6,  60);
 	FloodRotary.AddPosition(7,  90);
 	FloodRotary.AddPosition(8, 120);
-	FloodRotary.Register(PSH, "FloodRotary", 1);
+	FloodRotary.Register(PSH, "FloodRotary", 8);
 
 	LampToneTestRotary.AddPosition(0, 250);
 	LampToneTestRotary.AddPosition(1, 290);
@@ -435,7 +435,7 @@ void LEM::InitSwitches() {
 	LtgFloodOhdFwdKnob.AddPosition(6,  60);
 	LtgFloodOhdFwdKnob.AddPosition(7,  90);
 	LtgFloodOhdFwdKnob.AddPosition(8, 120);
-	LtgFloodOhdFwdKnob.Register(PSH, "LtgFloodOhdFwdKnob", 0);
+	LtgFloodOhdFwdKnob.Register(PSH, "LtgFloodOhdFwdKnob", 8);
 
 	LtgAnunNumKnob.AddPosition(0, 240);
 	LtgAnunNumKnob.AddPosition(1, 270);
