@@ -310,6 +310,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	bool scrubbed = false;
 
 	double AGCEpoch = 40221.525;
+	int LGCREFSAddrOffs = -2;
 
 	switch (fcn) {
 	case 1: //GENERIC CSM STATE VECTOR UPDATE
@@ -352,7 +353,48 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 3: //DAYLIGHT STAR CHECK
+	case 3: //GENERIC CSM AND LM STATE VECTOR UPDATE
+	{
+		SV sv_CSM, sv_LM;
+		double GETbase;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv_CSM = StateVectorCalc(calcParams.src);
+		sv_LM = StateVectorCalc(calcParams.tgt);
+		GETbase = getGETBase();
+
+		AGCStateVectorUpdate(buffer1, sv_CSM, true, AGCEpoch, GETbase);
+		AGCStateVectorUpdate(buffer2, sv_LM, false, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and LM state vectors");
+		}
+	}
+	break;
+	case 4: //GENERIC LM STATE VECTOR UPDATE
+	{
+		SV sv;
+		double GETbase;
+		char buffer1[1000];
+
+		sv = StateVectorCalc(calcParams.tgt); //State vector for uplink
+		GETbase = getGETBase();
+
+		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector");
+		}
+	}
+	break;
+	case 9: //DAYLIGHT STAR CHECK
 	{
 		STARCHKPAD * form = (STARCHKPAD *)pad;
 
@@ -366,22 +408,16 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 
 		AP7ManPADOpt opt;
-		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD;
+		double GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
-		SV sv0, sv1;
+		SV sv0;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
-
 		GETbase = getGETBase();
-		NomTIG = OrbMech::HHMMSSToSS(6.0, 1.0, 40.0);
-		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
-		dt1 = NomTIG - sv0GET;
-		sv1 = coast(sv0, dt1 - 10.0*60.0);
 
-		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -167.675*RAD);	//find 167.675°W
-		P30TIG = round((TIGMJD - GETbase)*24.0*3600.0 / 60.0)*60.0;	//Round to next minute
+		P30TIG = OrbMech::HHMMSSToSS(5, 59, 0);
 		dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
 
 		opt.GETbase = GETbase;
@@ -702,8 +738,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 18: //DOCKED DPS BURN - REFSMMAT AND SV FOR CMC
+	case 21: //DOCKED DPS BURN - REFSMMAT AND SV FOR LGC
 	{
 		GMPOpt gmpopt;
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
 		SV sv0;
 		VECTOR3 dV_LVLH;
 		double GETbase, P30TIG;
@@ -721,35 +760,196 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
 
+		TimeofIgnition = P30TIG;
+		DeltaV_LVLH = dV_LVLH;
+
+		refsopt.P30TIG = P30TIG;
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.tgt;
+		refsopt.vesseltype = 3;
+		refsopt.csmlmdocked = true;
+		refsopt.GETbase = GETbase;
+		refsopt.HeadsUp = false;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		//CMC UPDATE
 		if (fcn == 18)
 		{
-			TimeofIgnition = P30TIG;
-			DeltaV_LVLH = dV_LVLH;
-
-			REFSMMATOpt refsopt;
-			MATRIX3 REFSMMAT;
 			char buffer1[1000];
 			char buffer2[1000];
 
-			refsopt.P30TIG = P30TIG;
-			refsopt.dV_LVLH = dV_LVLH;
-			refsopt.REFSMMATopt = 0;
-			refsopt.vessel = calcParams.tgt;
-			refsopt.vesseltype = 3;
-			refsopt.csmlmdocked = true;
-			refsopt.GETbase = GETbase;
-
-			REFSMMAT = REFSMMATCalc(&refsopt);
-
 			AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
-			AGCREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+			AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, Verb 66, REFSMMAT");
+				sprintf(upDesc, "CSM state vector, Verb 66, Desired REFSMMAT");
 			}
+		}
+		//LGC UPDATE
+		else
+		{
+			AP11LMMNV * form = (AP11LMMNV *)pad;
+
+			AP10DAPDATA dappad;
+			AP11LMManPADOpt manopt;
+			LEM *lem;
+			double TEPHEM0, tephem, t_AGC, t_actual, deltaT;
+			char buffer1[1000];
+			char buffer2[1000];
+			char clockupdate[128];
+
+			lem = (LEM *)calcParams.tgt;
+			TEPHEM0 = 40038.;
+
+			tephem = GetTEPHEMFromAGC(&lem->agc.vagc);
+			t_AGC = GetClockTimeFromAGC(&lem->agc.vagc);
+
+			tephem = (tephem / 8640000.) + TEPHEM0;
+			t_actual = (oapiGetSimMJD() - tephem) * 8640000.;
+			deltaT = t_actual - t_AGC;
+
+			IncrementAGCTime(clockupdate, deltaT);
+
+			manopt.csmlmdocked = true;
+			manopt.dV_LVLH = dV_LVLH;
+			manopt.enginetype = 1;
+			manopt.GETbase = GETbase;
+			manopt.HeadsUp = false;
+			manopt.REFSMMAT = REFSMMAT;
+			manopt.TIG = P30TIG;
+			manopt.vessel = calcParams.tgt;
+
+			AP11LMManeuverPAD(&manopt, *form);
+			LMDAPUpdate(calcParams.tgt, dappad);
+
+			sprintf(form->remarks, "LM weight is %.0f, CSM weight is %.0f", dappad.ThisVehicleWeight, dappad.OtherVehicleWeight);
+
+			AGCStateVectorUpdate(buffer1, sv0, false, AGCEpoch, GETbase);
+			AGCREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch, LGCREFSAddrOffs);
+
+			sprintf(uplinkdata, "%s%s%s", clockupdate, buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "Clock update, LM state vector, REFSMMAT");
+			}
+		}
+	}
+	break;
+	case 19: //LM AOT STAR OBSERVATION PAD
+	{
+		AP9AOTSTARPAD * form = (AP9AOTSTARPAD *)pad;
+
+		form->CSMAtt = _V(79.0, 358.0, 309.0);
+		form->Detent = 2;
+		form->GET = OrbMech::HHMMSSToSS(43, 55, 0);
+		form->Star = 015;
+	}
+	break;
+	case 20: //BLOCK DATA 6
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 6;
+		double lng[] = { -62.1*RAD, -157.9*RAD, -157.9*RAD, -145.0*RAD, 161.9*RAD, 150.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(51,4,32),OrbMech::HHMMSSToSS(53,58,9),OrbMech::HHMMSSToSS(55,29,8),OrbMech::HHMMSSToSS(56,53,16),OrbMech::HHMMSSToSS(58,39,31),OrbMech::HHMMSSToSS(60,2,28) };
+		std::string area[] = { "033-1A", "034-4A", "035-4A", "036-3A", "037-4A", "038-3B" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 22: //GYRO TORQUING ANGLES
+	{
+		TORQANG * form = (TORQANG *)pad;
+		LEM *lem = (LEM *)calcParams.tgt;
+
+		VECTOR3 lmn20, csmn20, V42angles;
+
+		csmn20.x = calcParams.src->imu.Gimbal.X;
+		csmn20.y = calcParams.src->imu.Gimbal.Y;
+		csmn20.z = calcParams.src->imu.Gimbal.Z;
+
+		lmn20.x = lem->imu.Gimbal.X;
+		lmn20.y = lem->imu.Gimbal.Y;
+		lmn20.z = lem->imu.Gimbal.Z;
+
+		V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
+
+		form->V42Angles.x = V42angles.x*DEG;
+		form->V42Angles.y = V42angles.y*DEG;
+		form->V42Angles.z = V42angles.z*DEG;
+	}
+	break;
+	case 23: //SPS-5
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		GMPOpt opt;
+		AP7ManPADOpt manopt;
+		REFSMMATOpt refsopt;
+		SV sv;
+		MATRIX3 REFSMMAT;
+		VECTOR3 dV_LVLH;
+		double P30TIG, GETbase;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+
+		opt.csmlmdocked = true;
+		opt.GETbase = GETbase;
+		opt.h_peri = 133.0*1852.0;
+		opt.impulsive = RTCC_NONIMPULSIVE;
+		opt.TIG_GET = OrbMech::HHMMSSToSS(54, 25, 16);
+		opt.type = 4;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 0;
+
+		GeneralManeuverProcessor(&opt, dV_LVLH, P30TIG);
+
+		refsopt.csmlmdocked = true;
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.GETbase = GETbase;
+		refsopt.HeadsUp = false;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.src;
+		refsopt.vesseltype = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = REFSMMAT;
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.src;
+		manopt.vesseltype = 1;
+
+		AP7ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "SPS-5");
+
+		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase, true);
+		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, target load");
 		}
 	}
 	break;
@@ -1135,7 +1335,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 				AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
 				AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
-				CMCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 				if (upString != NULL) {
@@ -1647,7 +1847,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		refsopt.vessel = calcParams.src;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
-		CMCDesiredREFSMMATUpdate(buffer1, REFSMMAT, AGCEpoch);
+		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, AGCEpoch);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1860,7 +2060,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 				AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-				CMCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 				if (upString != NULL) {
@@ -2049,7 +2249,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 		CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-		CMCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+		AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 		if (upString != NULL) {
@@ -3191,7 +3391,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 		CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-		CMCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+		AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 		if (upString != NULL) {
@@ -3562,7 +3762,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		MATRIX3 REFSMMAT = _M(-0.5, -0.8660254, 0.0, -0.79453912, 0.45872741, 0.39784005, -0.34453959, 0.19892003, -0.91745479);
 
-		CMCDesiredREFSMMATUpdate(buffer1, REFSMMAT, AGCEpoch, true);
+		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, AGCEpoch, true);
 		sprintf(uplinkdata, "%s", buffer1);
 
 		if (upString != NULL) {
@@ -3692,7 +3892,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			manopt.dV_LVLH = dV_LVLH;
 			manopt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
 			manopt.GETbase = GETbase;
-			manopt.HeadsUp = false;
+			manopt.HeadsUp = true;
 			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 			manopt.TIG = P30TIG;
 			manopt.vessel = calcParams.src;
@@ -3938,7 +4138,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(upDesc, "CSM state vector, Landing Site REFSMMAT");
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			CMCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+			AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -3981,7 +4181,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
-			CMCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+			AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 			sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 			if (upString != NULL) {
@@ -4623,7 +4823,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&opt);
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-		CMCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -4649,7 +4849,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 63: //GYRO TORQUING ANGLES
 	{
-		GENERICPAD * form = (GENERICPAD *)pad;
+		TORQANG * form = (TORQANG *)pad;
 		LEM *lem = (LEM *)calcParams.tgt;
 
 		VECTOR3 lmn20, csmn20, V42angles;
@@ -4664,7 +4864,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
 
-		sprintf(form->paddata, "GYRO TORQUING ANGLES\nX %+07.3f\nY %+07.3f\n Z %+07.3f", V42angles.x*DEG, V42angles.y*DEG, V42angles.z*DEG);
+		form->V42Angles.x = V42angles.x*DEG;
+		form->V42Angles.y = V42angles.y*DEG;
+		form->V42Angles.z = V42angles.z*DEG;
 	}
 	break;
 	case 64: //LGC ACTIVATION UPDATE
@@ -5361,7 +5563,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 				AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
-				CMCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 				if (upString != NULL) {
@@ -5402,7 +5604,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 				AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-				CMCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 				if (upString != NULL) {
@@ -9653,7 +9855,7 @@ void RTCC::SunburstMassUpdate(char *list, double masskg)
 	sprintf(list, "V24N1E1320E%dE%dER", emem[0], emem[1]);
 }
 
-void RTCC::CMCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool AGCCoordSystem)
+void RTCC::AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc, bool AGCCoordSystem)
 {
 	MATRIX3 a;
 	int emem[24];
@@ -9668,7 +9870,14 @@ void RTCC::CMCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoc
 	}
 
 	emem[0] = 24;
-	emem[1] = 306;
+	if (cmc)
+	{
+		emem[1] = 306;
+	}
+	else
+	{
+		emem[1] = 3606;
+	}
 	emem[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
 	emem[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
 	emem[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
