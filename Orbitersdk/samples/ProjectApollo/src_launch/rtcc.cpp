@@ -895,13 +895,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
+		AP10DAPDATA dappad;
 		GMPOpt opt;
 		AP7ManPADOpt manopt;
 		REFSMMATOpt refsopt;
 		SV sv;
 		MATRIX3 REFSMMAT;
 		VECTOR3 dV_LVLH;
-		double P30TIG, GETbase;
+		double P30TIG, GETbase, dv_T;
 		char buffer1[1000];
 		char buffer2[1000];
 
@@ -918,6 +919,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.vesseltype = 0;
 
 		GeneralManeuverProcessor(&opt, dV_LVLH, P30TIG);
+
+		//ensure 40+ seconds burntime
+		dv_T = OrbMech::DVFromBurnTime(41.4, SPS_THRUST, SPS_ISP, calcParams.src->GetMass() + calcParams.tgt->GetMass());
+		dV_LVLH.y = -sqrt(max(0, dv_T * dv_T - dV_LVLH.x*dV_LVLH.x - dV_LVLH.z*dV_LVLH.z));
 
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
@@ -942,6 +947,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "SPS-5");
 
+		CSMDAPUpdate(calcParams.src, dappad);
+		sprintf(form->remarks, "LM weight is %.0f", dappad.OtherVehicleWeight);
+
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase, true);
 		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
@@ -951,6 +959,24 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM state vector, Verb 66, target load");
 		}
+	}
+	break;
+	case 24: //BLOCK DATA 7
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 6;
+		double lng[] = { 145.0*RAD, -12.0*RAD, -23.0*RAD, -32.0*RAD, -27.0*RAD, -29.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(61,35,8),OrbMech::HHMMSSToSS(62,29,34),OrbMech::HHMMSSToSS(64,2,26),OrbMech::HHMMSSToSS(65,35,55),OrbMech::HHMMSSToSS(67,12,51),OrbMech::HHMMSSToSS(68,46,52) };
+		std::string area[] = { "039-3A", "040-AC", "041-AC", "042-AC", "043-2A", "044-AC" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
 	}
 	break;
 	}
