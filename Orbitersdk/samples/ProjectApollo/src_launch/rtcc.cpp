@@ -979,6 +979,57 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BlockData(&opt, *form);
 	}
 	break;
+	case 25: //BLOCK DATA 8
+	{
+
+	}
+	break;
+	case 26: //EVA REFSMMAT
+	{
+		MATRIX3 REFSMMAT, MX, MY;
+		VECTOR3 R_SC, UX, UY, UZ;
+		double MJD, GETbase;
+		OBJHANDLE hSun;
+		SV sv;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+
+		MJD = oapiGetSimMJD();
+		hSun = oapiGetObjectByName("Sun");
+		calcParams.src->GetRelativePos(hSun, R_SC);
+
+		UZ = -unit(R_SC);
+		UY = unit(crossp(UZ, _V(0.0, 0.0, 1.0)));
+		UX = crossp(UY, UZ);
+
+		MY = OrbMech::_MRy(-15.0*RAD);
+		MX = OrbMech::_MRx(-80.0*RAD);
+		REFSMMAT = mul(MX, mul(MY, _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z)));
+
+		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase, true);
+		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, EVA REFSMMAT");
+		}
+	}
+	break;
+	case 27: //BLOCK DATA 9
+	{
+
+	}
+	break;
+	case 28: //BLOCK DATA 10
+	{
+
+	}
+	break;
 	}
 
 	return scrubbed;
