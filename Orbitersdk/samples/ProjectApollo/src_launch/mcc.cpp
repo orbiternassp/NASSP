@@ -2043,8 +2043,11 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY3STATE11: //SV Update to Block Data 7
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 56 * 60 * 60 + 40 * 60, 2, MST_D_DAY3STATE12);
 				break;
-			case MST_D_DAY3STATE12: //Block Data 7 to CMC state vector updates
+			case MST_D_DAY3STATE12: //Block Data 7 to Block Data 8
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 67 * 60 * 60 + 30 * 60, 24, MST_D_DAY4STATE1);
+				break;
+			case MST_D_DAY4STATE1: //Block Data 8 to EVA REFSMMAT Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 69 * 60 * 60 + 55 * 60, 25, MST_D_DAY4STATE2);
 				break;
 			}
 			break;
