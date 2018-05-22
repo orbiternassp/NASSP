@@ -5415,6 +5415,12 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
+double DVFromBurnTime(double bt, double thrust, double isp, double mass)
+{
+	double mf = mass - thrust / isp * bt;
+	return isp * log(mass / mf);
+}
+
 double GETfromMJD(double MJD, double GETBase)
 {
 	return (MJD - GETBase)*24.0*3600.0;
