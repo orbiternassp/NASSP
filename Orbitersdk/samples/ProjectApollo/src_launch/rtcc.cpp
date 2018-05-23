@@ -93,7 +93,7 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 	EntryResults res;
 	double v_e, m1, Vc;
 
-	char weather[10] = "GOOD";
+	char weather[] = "GOOD";
 
 	v_e = calcParams.src->GetThrusterIsp0(calcParams.src->GetGroupThruster(THGROUP_MAIN, 0));
 
