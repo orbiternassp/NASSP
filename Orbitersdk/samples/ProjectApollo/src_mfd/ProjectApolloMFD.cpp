@@ -1615,7 +1615,7 @@ void ProjectApolloMFD::menuVAGCCoreDump()
 void ProjectApolloMFD::menuSetCrewNumber()
 {
 	bool CrewNumberInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Crew number [0-3]:", CrewNumberInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Crew number in cabin [0-3]:", CrewNumberInput, 0, 20, (void*)this);
 }
 
 void ProjectApolloMFD::menuSetCDRInSuit()

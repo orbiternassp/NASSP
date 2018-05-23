@@ -155,6 +155,8 @@
 #define PT_AP10DAPDATA		14
 #define PT_AP11LMMNV		15
 #define PT_AP10CSI			16
+#define PT_AP9AOTSTARPAD	17
+#define PT_TORQANG			18
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -405,6 +407,21 @@
 #define MST_D_DAY3STATE1	30
 #define MST_D_DAY3STATE2	31
 #define MST_D_DAY3STATE3	32
+#define MST_D_DAY3STATE4	33
+#define MST_D_DAY3STATE5	34
+#define MST_D_DAY3STATE6	35
+#define MST_D_DAY3STATE7	36
+#define MST_D_DAY3STATE8	37
+#define MST_D_DAY3STATE9	38
+#define MST_D_DAY3STATE10	39
+#define MST_D_DAY3STATE11	40
+#define MST_D_DAY3STATE12	41
+#define MST_D_DAY4STATE1	50
+#define MST_D_DAY4STATE2	51
+#define MST_D_DAY4STATE3	52
+#define MST_D_DAY4STATE4	53
+#define MST_D_DAY5STATE1	60
+#define MST_D_DAY5STATE2	61
 
 // MISSION STATES: MISSION F
 #define MST_F_INSERTION		10
@@ -941,6 +958,23 @@ struct AP10CSI
 	VECTOR3 dV_LVLH;
 	double PLM_FDAI;
 	VECTOR3 dV_AGS;
+};
+
+//APOLLO 9 LM AOT STAR OBSERVATION PAD
+
+struct AP9AOTSTARPAD
+{
+	double GET;		//Ground elapsed time of star observation
+	int Detent;		//AOT detent position to be used
+	int Star;		//Nav star to be used for test
+	VECTOR3 CSMAtt;	//Inertial CSM attitude
+};
+
+//GYRO TORQUING ANGLES
+
+struct TORQANG
+{
+	VECTOR3 V42Angles;
 };
 
 //GENERIC STRING

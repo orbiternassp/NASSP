@@ -149,6 +149,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_launch\rtcc.cpp" />
+    <ClCompile Include="..\..\src_launch\RTCC_Mission_B.cpp" />
+    <ClCompile Include="..\..\src_launch\RTCC_Mission_C.cpp" />
+    <ClCompile Include="..\..\src_launch\RTCC_Mission_Calculations.cpp" />
+    <ClCompile Include="..\..\src_launch\RTCC_Mission_C_PRIME.cpp" />
+    <ClCompile Include="..\..\src_launch\RTCC_Mission_D.cpp" />
+    <ClCompile Include="..\..\src_launch\RTCC_Mission_F.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_launch\mcc.cpp" />

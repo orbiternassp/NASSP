@@ -156,6 +156,7 @@ public:
 	//4 = Circularize orbit at specified altitude
 	//5 = Rotate velocity vector, specify apoapsis altitude
 	//6 = Rotate line of apsides, perigee at specific longitude, TIG at perigee
+	//7 = Optimal node shift maneuver
 	int GMPType;
 	bool OrbAdjAltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double apo_desnm;	//Desired apoapsis altitude in NM

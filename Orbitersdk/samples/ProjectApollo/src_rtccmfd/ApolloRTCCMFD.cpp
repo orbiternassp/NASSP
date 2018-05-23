@@ -605,6 +605,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "Rotate line of apsides at periapsis", 35);
 		}
+		else if (G->GMPType == 7)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Optimal node shift maneuver", 27);
+		}
 
 		GET_Display(Buffer, G->SPSGET);
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -626,7 +630,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%f °", G->incdeg);
 			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 		}
-		else if (G->GMPType == 5)
+		else if (G->GMPType == 5 || G->GMPType == 7)
 		{
 			sprintf(Buffer, "%f °", G->GMPRotationAngle*DEG);
 			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
@@ -3624,7 +3628,7 @@ void ApolloRTCCMFD::set_getbase()
 
 void ApolloRTCCMFD::menuCycleOrbAdjOptions()
 {
-	if (G->GMPType >= 6)
+	if (G->GMPType >= 7)
 	{
 		G->GMPType = 0;
 	}
@@ -4166,7 +4170,7 @@ void ApolloRTCCMFD::OrbAdjIncDialogue()
 		bool OrbAdjIncInput(void* id, char *str, void *data);
 		oapiOpenInputBox("Inclination in degrees:", OrbAdjIncInput, 0, 20, (void*)this);
 	}
-	else if (G->GMPType == 5)
+	else if (G->GMPType == 5 || G->GMPType == 7)
 	{
 		bool OrbAdjIncInput(void* id, char *str, void *data);
 		oapiOpenInputBox("Rotation angle in degrees:", OrbAdjIncInput, 0, 20, (void*)this);
@@ -4194,9 +4198,9 @@ void ApolloRTCCMFD::set_OrbAdjInc(double inc)
 	{
 		this->G->incdeg = inc;
 	}
-	else if (G->GMPType == 5)
+	else if (G->GMPType == 5 || G->GMPType == 7)
 	{
-		this->G->GMPRotationAngle = inc*RAD;
+		this->G->GMPRotationAngle = inc * RAD;
 	}
 	else if (G->GMPType == 6)
 	{

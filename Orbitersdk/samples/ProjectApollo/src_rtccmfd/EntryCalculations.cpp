@@ -199,7 +199,7 @@ namespace EntryCalculations
 		double t_S, tol, dt_S, r_s, EntryInterface, RCON;
 		OBJHANDLE hEarth, hMoon;
 		CELBODY *cMoon;
-		double *MoonPos;
+		double MoonPos[12];
 
 		hEarth = oapiGetObjectByName("Earth");
 		hMoon = oapiGetObjectByName("Moon");
@@ -210,7 +210,6 @@ namespace EntryCalculations
 		RCON = oapiGetSize(hEarth) + EntryInterface;
 		tol = 20.0;
 
-		MoonPos = new double[12];
 		cMoon->clbkEphemeris(t_I, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
 
 		R_m = _V(MoonPos[0], MoonPos[2], MoonPos[1]);

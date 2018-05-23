@@ -1987,7 +1987,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 6 * 60 * 60 + 15 * 60, 10, MST_D_DAY1STATE2);
 				break;
 			case MST_D_DAY1STATE2: //Daylight Star Check to SV Update
-				UpdateMacro(UTP_PADONLY, PT_STARCHKPAD, cm->MissionTime > 7 * 60 * 60 + 20 * 60, 3, MST_D_DAY1STATE3);
+				UpdateMacro(UTP_PADONLY, PT_STARCHKPAD, cm->MissionTime > 7 * 60 * 60 + 20 * 60, 9, MST_D_DAY1STATE3);
 				break;
 			case MST_D_DAY1STATE3: //SV Update to Block Data 2
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 8 * 60 * 60 + 27 * 60, 2, MST_D_DAY1STATE4);
@@ -2013,11 +2013,53 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY2STATE6: //Block Data 4 to Block Data 5
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 40 * 60 * 60 + 10 * 60, 16, MST_D_DAY3STATE1);
 				break;
-			case MST_D_DAY3STATE1: //Block Data 5 to Docked DPS Burn
+			case MST_D_DAY3STATE1: //Block Data 5 to CMC Docked DPS Burn Update
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 41 * 60 * 60 + 10 * 60, 17, MST_D_DAY3STATE2);
 				break;
-			case MST_D_DAY3STATE2: //Block Data 5 to CMC Docked DPS Update
-				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 45 * 60 * 60 + 10 * 60, 18, MST_D_DAY3STATE3);
+			case MST_D_DAY3STATE2: //CMC Docked DPS Burn Update to LM AOT STAR OBS PAD
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 18, MST_D_DAY3STATE3);
+				break;
+			case MST_D_DAY3STATE3: //LM AOT STAR OBS PAD to Block Data 6
+				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, cm->MissionTime > 47 * 60 * 60 + 10 * 60, 19, MST_D_DAY3STATE5);
+				break;
+			case MST_D_DAY3STATE5: //Block Data 6 to CMC state vector updates
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 48 * 60 * 60, 20, MST_D_DAY3STATE6);
+				break;
+			case MST_D_DAY3STATE6: //CMC state vector updates to LGC Docked DPS Burn Update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 48 * 60 * 60 + 10 * 60, 3, MST_D_DAY3STATE7);
+				break;
+			case MST_D_DAY3STATE7: //LGC Docked DPS Burn Update to LGC Gyro Torquing Angles
+				UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 21, MST_D_DAY3STATE8);
+				break;
+			case MST_D_DAY3STATE8: //LGC Gyro Torquing Angles to LGC Gyro Torquing Angles
+				UpdateMacro(UTP_PADONLY, PT_TORQANG, cm->MissionTime > 49 * 60 * 60 + 5 * 60, 22, MST_D_DAY3STATE9);
+				break;
+			case MST_D_DAY3STATE9: //LGC Gyro Torquing Angles to SPS-5
+				UpdateMacro(UTP_PADONLY, PT_TORQANG, cm->MissionTime > 52 * 60 * 60 + 50 * 60, 22, MST_D_DAY3STATE10);
+				break;
+			case MST_D_DAY3STATE10: //SPS-5 to SV Update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 55 * 60 * 60 + 30 * 60, 23, MST_D_DAY3STATE11);
+				break;
+			case MST_D_DAY3STATE11: //SV Update to Block Data 7
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 56 * 60 * 60 + 40 * 60, 2, MST_D_DAY3STATE12);
+				break;
+			case MST_D_DAY3STATE12: //Block Data 7 to Block Data 8
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 67 * 60 * 60 + 30 * 60, 24, MST_D_DAY4STATE1);
+				break;
+			case MST_D_DAY4STATE1: //Block Data 8 to EVA REFSMMAT Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 69 * 60 * 60 + 55 * 60, 25, MST_D_DAY4STATE2);
+				break;
+			case MST_D_DAY4STATE2: //EVA REFSMMAT Update to state vector update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 77 * 60 * 60 + 45 * 60, 26, MST_D_DAY4STATE3);
+				break;
+			case MST_D_DAY4STATE3: //State vector update to Block Data 9
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 78 * 60 * 60 + 10 * 60, 2, MST_D_DAY4STATE4);
+				break;
+			case MST_D_DAY3STATE4: //Block Data 9 to Block Data 10
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 87 * 60 * 60 + 15 * 60, 27, MST_D_DAY5STATE1);
+				break;
+			case MST_D_DAY5STATE1: //Block Data 10 to Rendezvous REFSMMAT update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 89 * 60 * 60 + 5 * 60, 28, MST_D_DAY5STATE2);
 				break;
 			}
 			break;
@@ -2352,7 +2394,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, MoonRev >= 11 && MoonRevTime > 50.0*60.0, 62, MST_F_LUNAR_ORBIT_DOI_DAY_8);
 				break;
 			case MST_F_LUNAR_ORBIT_DOI_DAY_8: //LM IMU gyro torquing angle update to LGC activation update
-				UpdateMacro(UTP_PADONLY, PT_GENERIC, MoonRev >= 11 && MoonRevTime > 60.0*60.0, 63, MST_F_LUNAR_ORBIT_DOI_DAY_9);
+				UpdateMacro(UTP_PADONLY, PT_TORQANG, MoonRev >= 11 && MoonRevTime > 60.0*60.0, 63, MST_F_LUNAR_ORBIT_DOI_DAY_9);
 				break;
 			case MST_F_LUNAR_ORBIT_DOI_DAY_9: //LGC activation update to separation update
 				UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, MoonRev >= 11 && MoonRevTime > 65.0*60.0, 64, MST_F_LUNAR_ORBIT_DOI_DAY_10);
@@ -3201,6 +3243,21 @@ void MCC::SaveState(FILEHANDLE scn) {
 
 			SAVE_STRING("MCC_GENERICPAD_paddata", form->paddata);
 		}
+		else if (padNumber == PT_AP9AOTSTARPAD)
+		{
+			AP9AOTSTARPAD *form = (AP9AOTSTARPAD*)padForm;
+
+			SAVE_DOUBLE("MCC_AP9AOTSTARPAD_GET", form->GET);
+			SAVE_INT("MCC_AP9AOTSTARPAD_Detent", form->Detent);
+			SAVE_INT("MCC_AP9AOTSTARPAD_Star", form->Star);
+			SAVE_V3("MCC_AP9AOTSTARPAD_CSMAtt", form->CSMAtt);
+		}
+		else if (padNumber == PT_TORQANG)
+		{
+			TORQANG *form = (TORQANG*)padForm;
+
+			SAVE_V3("MCC_TORQANG_V42Angles", form->V42Angles);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3552,6 +3609,21 @@ void MCC::LoadState(FILEHANDLE scn) {
 
 			LOAD_STRING("MCC_GENERICPAD_paddata", form->paddata, 512);
 		}
+		else if (padNumber == PT_AP9AOTSTARPAD)
+		{
+			AP9AOTSTARPAD *form = (AP9AOTSTARPAD*)padForm;
+
+			LOAD_DOUBLE("MCC_AP9AOTSTARPAD_GET", form->GET);
+			LOAD_INT("MCC_AP9AOTSTARPAD_Detent", form->Detent);
+			LOAD_INT("MCC_AP9AOTSTARPAD_Star", form->Star);
+			LOAD_V3("MCC_AP9AOTSTARPAD_CSMAtt", form->CSMAtt);
+		}
+		else if (padNumber == PT_TORQANG)
+		{
+			TORQANG *form = (TORQANG*)padForm;
+
+			LOAD_V3("MCC_TORQANG_V42Angles", form->V42Angles);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -3883,6 +3955,30 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP9AOTSTARPAD:
+	{
+		AP9AOTSTARPAD * form = (AP9AOTSTARPAD *)padForm;
+
+		int hh, mm;
+		double ss;
+
+		sprintf(buffer, "LM AOT STAR OBSERVATION");
+		SStoHHMMSS(form->GET, hh, mm, ss);
+
+		sprintf(buffer, "%s\n%03d HR\n%02d MIN\n%02.0f SEC\n%d AOT DETENT\n%02o NAV STAR\n%03.0f R\n%03.0f P\n%03.0f Y", buffer, hh, mm, ss, form->Detent, form->Star, form->CSMAtt.x, form->CSMAtt.y, form->CSMAtt.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_TORQANG:
+	{
+		TORQANG *form = (TORQANG*)padForm;
+
+		sprintf(buffer, "GYRO TORQUING ANGLES\nX %+07.3f\nY %+07.3f\n Z %+07.3f", form->V42Angles.x, form->V42Angles.y, form->V42Angles.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3959,6 +4055,12 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP10CSI: // AP10CSI
 		padForm = calloc(1, sizeof(AP10CSI));
+		break;
+	case PT_AP9AOTSTARPAD: // AP9AOTSTARPAD
+		padForm = calloc(1, sizeof(AP9AOTSTARPAD));
+		break;
+	case PT_TORQANG: // TORQANG
+		padForm = calloc(1, sizeof(TORQANG));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

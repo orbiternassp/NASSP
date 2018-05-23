@@ -23,6 +23,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #if !defined(_PA_RTCC_H)
 #define _PA_RTCC_H
+
+#include <vector>
+
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"
 
@@ -876,7 +879,7 @@ private:
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	void AGCExternalDeltaVUpdate(char *str, double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
-	void CMCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool AGCCoordSystem = false);
+	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
 	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
 	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
 	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);

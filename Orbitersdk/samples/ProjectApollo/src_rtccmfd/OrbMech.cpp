@@ -1023,7 +1023,8 @@ VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VE
 void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, bool direct, double mu, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2)
 {
 	VECTOR3 r_1_cf, v_2_cf, c;
-	double cos_psi, sin_psi, A, B, C, r_1, v_2, theta, *AA, *RR, sin_beta_2, v_1, f, g, p, sgn;
+	double cos_psi, sin_psi, A, B, C, r_1, v_2, theta, sin_beta_2, v_1, f, g, p, sgn;
+	double AA[5], RR[4];
 	int N;
 
 	if (direct)
@@ -1034,9 +1035,6 @@ void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, bool direct, double mu, VECTOR3
 	{
 		sgn = -1.0;
 	}
-
-	AA = new double[5];
-	RR = new double[4];
 
 	r_1 = length(R_1);
 	v_2 = length(V_2);
@@ -1926,8 +1924,7 @@ void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHA
 {
 	VECTOR3 RP_M, VP_M, R_EM, V_EM, RP_E, VP_E;
 	double dt, MJD, mu_M, phi4;
-	double *MoonPos;
-	MoonPos = new double[12];
+	double MoonPos[12];
 	CELBODY *cMoon;
 	cMoon = oapiGetCelbodyInterface(hMoon);
 
@@ -1992,8 +1989,7 @@ void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHA
 
 void GetLunarEphemeris(double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM)
 {
-	double *MoonPos;
-	MoonPos = new double[12];
+	double MoonPos[12];
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	CELBODY *cMoon;
 	cMoon = oapiGetCelbodyInterface(hMoon);
@@ -2793,8 +2789,7 @@ void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJH
 
 	VECTOR3 RP_M, VP_M, R_EM, V_EM, RP_E, VP_E;
 	double mu_M, mu_E, r_SPH, dt, MJD_patch, dt2;
-	double *MoonPos;
-	MoonPos = new double[12];
+	double MoonPos[12];
 	CELBODY *cMoon;
 	cMoon = oapiGetCelbodyInterface(hMoon);
 
@@ -3537,15 +3532,11 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 {
 	//midnight = 0-> rise=0:sunset, rise=1:sunrise
 	//midnight = 1-> rise=0:midday, rise=1:midnight
-	double *PlanPos, *SunPos;
-	PlanPos = new double[12];
-	SunPos = new double[12];
+	double PlanPos[12];
 	VECTOR3 PlanVec, R_EM, R_SE;
 	OBJHANDLE hEarth, hMoon, hSun;
 	double mu, v1;
 	unsigned char options;
-
-
 
 	mu = GGRAV*oapiGetMass(planet);
 
@@ -3554,7 +3545,6 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	hSun = oapiGetObjectByName("Sun");
 
 	CELBODY *cPlan = oapiGetCelbodyInterface(planet);
-	//CELBODY *cSun = oapiGetCelbodyInterface(hSun);
 
 	OELEMENTS coe;
 	double h, e, theta0, a, E_0, t_0, E_1, dt, t_f, dt_alt;
@@ -3575,7 +3565,6 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 			else
 			{
 				R_EM = _V(PlanPos[0], PlanPos[2], PlanPos[1]);
-				//R_ES = -mul(Rot, _V(EarthVec.x, EarthVec.z, EarthVec.y));
 			}
 			options = cEarth->clbkEphemeris(MJD + dt / 24.0 / 3600.0, EPHEM_TRUEPOS, PlanPos);
 			if (options & EPHEM_POLAR)
@@ -3585,7 +3574,6 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 			else
 			{
 				R_SE = _V(PlanPos[0], PlanPos[2], PlanPos[1]);
-				//R_ES = -mul(Rot, _V(EarthVec.x, EarthVec.z, EarthVec.y));
 			}
 			PlanVec = -(R_EM + R_SE);
 		}
@@ -3600,7 +3588,6 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 			else
 			{
 				PlanVec = -_V(PlanPos[0], PlanPos[2], PlanPos[1]);
-				//R_ES = -mul(Rot, _V(EarthVec.x, EarthVec.z, EarthVec.y));
 			}
 		}
 
@@ -3705,6 +3692,7 @@ int FindNearestStar(VECTOR3 U_LOS, VECTOR3 R_C, double R_E, double ang_max)
 
 VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 {
+	int starset[3][2];
 	double a,SA,TA,dTA;
 	VECTOR3 s_SMA, s_SMB, s_NBA, s_NBB, imuang;
 	MATRIX3 SBNB,SMNB;
@@ -3713,12 +3701,6 @@ VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 	TA = 7.5*RAD;
 	SA = PI;
 
-	int** starset;
-	starset = new int*[2];
-	for (int i = 0; i < 3;i++)
-	{
-		starset[i] = new int[2];
-	}
 	starset[0][0] = 29;
 	starset[0][1] = 34;
 
@@ -3728,14 +3710,14 @@ VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
 	starset[2][0] = 20;
 	starset[2][1] = 27;
 
+	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
+
 	for (set = 0; set < 3; set++)
 	{
 		s_SMA = navstars[starset[set][0]];
 		s_SMB = navstars[starset[set][1]];
 
 		dTA = dotp(s_SMA, s_SMB);
-
-		SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
 
 		s_NBA = mul(SBNB, _V(sin(TA)*cos(SA), sin(TA)*sin(SA), cos(TA)));
 		s_NBB = mul(SBNB, _V(sin(TA - dTA)*cos(SA), sin(TA - dTA)*sin(SA), cos(TA - dTA)));
@@ -5415,6 +5397,12 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
+double DVFromBurnTime(double bt, double thrust, double isp, double mass)
+{
+	double mf = mass - thrust / isp * bt;
+	return isp * log(mass / mf);
+}
+
 double GETfromMJD(double MJD, double GETBase)
 {
 	return (MJD - GETBase)*24.0*3600.0;
@@ -5707,8 +5695,7 @@ VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20) //LM noun 20 and CSM nou
 MATRIX3 EMPMatrix(double MJD)
 {
 	VECTOR3 R_EM, V_EM, X, Y, Z;
-	double *MoonPos;
-	MoonPos = new double[12];
+	double MoonPos[12];
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	CELBODY *cMoon;
 
@@ -5730,8 +5717,7 @@ void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &
 {
 	MATRIX3 Rot;
 	VECTOR3 R_EM, R_EM2;
-	double *MoonPos;
-	MoonPos = new double[12];
+	double MoonPos[12];
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 	CELBODY *cMoon;
@@ -5971,8 +5957,7 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 
 	B = 1;
 
-	double *EarthPos;
-	EarthPos = new double[12];
+	double EarthPos[12];
 	VECTOR3 EarthVec, EarthVecVel;
 
 	cEarth->clbkEphemeris(mjd0 + t_F/2.0/24.0/3600.0, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
@@ -5982,6 +5967,8 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	R_ES0 = -EarthVec;
 	V_ES0 = -EarthVecVel;
 	W_ES = length(crossp(R_ES0, V_ES0) / OrbMech::power(length(R_ES0), 2.0));
+
+	delete[] JCoeff;
 }
 
 bool CoastIntegrator::iteration()
@@ -6011,10 +5998,8 @@ bool CoastIntegrator::iteration()
 		{
 			if (rr > r_SPH)
 			{
-				double MJD, *MoonPos;
+				double MJD, MoonPos[12];
 				VECTOR3 R_EM, V_PQ;
-
-				MoonPos = new double[12];
 
 				MJD = mjd0 + t / 86400.0;
 				cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
@@ -6052,14 +6037,14 @@ bool CoastIntegrator::iteration()
 				nu = _V(0, 0, 0);// [0 0 0]';
 				x = 0;
 				tau = 0;
+
+				delete[] JCoeff;
 			}
 		}
 		else
 		{
-			double MJD, *MoonPos;
+			double MJD, MoonPos[12];
 			VECTOR3 R_EM, V_PQ;
-
-			MoonPos = new double[12];
 
 			MJD = mjd0 + t / 86400.0;
 			cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
@@ -6100,6 +6085,8 @@ bool CoastIntegrator::iteration()
 				nu = _V(0, 0, 0);// [0 0 0]';
 				x = 0;
 				tau = 0;
+
+				delete[] JCoeff;
 			}
 		}
 	}
@@ -6157,10 +6144,8 @@ bool CoastIntegrator::iteration()
 		}
 		else if (planet != outplanet)
 		{
-			double MJD, *MoonPos;
+			double MJD, MoonPos[12];
 			VECTOR3 R_EM, V_PQ, V_EM;
-
-			MoonPos = new double[12];
 
 			MJD = mjd0 + t / 86400.0;
 			cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
@@ -6246,8 +6231,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 	{
 		double q_Q, q_S, MJD;
 		VECTOR3 R_SC, R_PS, R_EM, R_ES, V_ES;
-		double *MoonPos;
-		MoonPos = new double[12];
+		double MoonPos[12];
 
 		MJD = mjd0 + t / 86400.0;
 
