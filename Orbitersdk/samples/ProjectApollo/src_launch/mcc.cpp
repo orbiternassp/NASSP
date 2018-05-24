@@ -2043,8 +2043,23 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY3STATE11: //SV Update to Block Data 7
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 56 * 60 * 60 + 40 * 60, 2, MST_D_DAY3STATE12);
 				break;
-			case MST_D_DAY3STATE12: //Block Data 7 to CMC state vector updates
+			case MST_D_DAY3STATE12: //Block Data 7 to Block Data 8
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 67 * 60 * 60 + 30 * 60, 24, MST_D_DAY4STATE1);
+				break;
+			case MST_D_DAY4STATE1: //Block Data 8 to EVA REFSMMAT Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 69 * 60 * 60 + 55 * 60, 25, MST_D_DAY4STATE2);
+				break;
+			case MST_D_DAY4STATE2: //EVA REFSMMAT Update to state vector update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 77 * 60 * 60 + 45 * 60, 26, MST_D_DAY4STATE3);
+				break;
+			case MST_D_DAY4STATE3: //State vector update to Block Data 9
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 78 * 60 * 60 + 10 * 60, 2, MST_D_DAY4STATE4);
+				break;
+			case MST_D_DAY3STATE4: //Block Data 9 to Block Data 10
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 87 * 60 * 60 + 15 * 60, 27, MST_D_DAY5STATE1);
+				break;
+			case MST_D_DAY5STATE1: //Block Data 10 to Rendezvous REFSMMAT update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 89 * 60 * 60 + 5 * 60, 28, MST_D_DAY5STATE2);
 				break;
 			}
 			break;

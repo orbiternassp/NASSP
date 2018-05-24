@@ -23,6 +23,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #if !defined(_PA_RTCC_H)
 #define _PA_RTCC_H
+
+#include <vector>
+
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"
 
