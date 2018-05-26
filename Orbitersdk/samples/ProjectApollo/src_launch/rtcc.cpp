@@ -104,6 +104,12 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 	entopt.ReA = 0;
 	entopt.entrylongmanual = true;
 
+	for (int i = 0;i < 8;i++)
+	{
+		pad.Area[i][0] = 0;
+		pad.Wx[i][0] = 0;
+	}
+
 	for (int i = 0;i < opt->n;i++)
 	{
 		entopt.lng = opt->lng[i];
@@ -1738,7 +1744,22 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	hEarth = oapiGetObjectByName("Earth");
 
 	//Here the options that don't require a state vector or thrust parameters
-	if (opt->REFSMMATopt == 4)
+	if (opt->REFSMMATopt == 9)
+	{
+		MATRIX3 M;
+		VECTOR3 X_NB, Y_NB, Z_NB, X_NB_apo, Y_NB_apo, Z_NB_apo;
+
+		M = OrbMech::CALCSMSC(opt->IMUAngles);
+		X_NB_apo = _V(M.m11, M.m12, M.m13);
+		Y_NB_apo = _V(M.m21, M.m22, M.m23);
+		Z_NB_apo = _V(M.m31, M.m32, M.m33);
+		X_NB = tmul(opt->PresentREFSMMAT, X_NB_apo);
+		Y_NB = tmul(opt->PresentREFSMMAT, Y_NB_apo);
+		Z_NB = tmul(opt->PresentREFSMMAT, Z_NB_apo);
+
+		return _M(X_NB.x, X_NB.y, X_NB.z, Y_NB.x, Y_NB.y, Y_NB.z, Z_NB.x, Z_NB.y, Z_NB.z);
+	}
+	else if (opt->REFSMMATopt == 4)
 	{
 		//For now a default LC-39A, 72° launch
 		return OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, opt->GETbase, 72 * RAD);
@@ -7260,4 +7281,24 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t
 		DV_coe = V_A1F - V_A1;
 		t_TPI = t_CDH + dt_TPI;
 	}
+}
+
+VECTOR3 RTCC::HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT)
+{
+	MATRIX3 SMNB, MY, MX;
+	VECTOR3 R_SC, UX, UY, UZ;
+	OBJHANDLE hSun;
+
+	hSun = oapiGetObjectByName("Sun");
+	v->GetRelativePos(hSun, R_SC);
+	R_SC = _V(R_SC.x, R_SC.z, R_SC.y);
+	UZ = -unit(R_SC);
+	UY = unit(crossp(UZ, _V(0.0, 0.0, 1.0)));
+	UX = crossp(UY, UZ);
+
+	SMNB = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	MY = OrbMech::_MRy(-15.0*RAD);
+	MX = OrbMech::_MRx(-80.0*RAD);
+	SMNB = mul(MX, mul(MY, SMNB));
+	return OrbMech::CALCGAR(REFSMMAT, SMNB);
 }

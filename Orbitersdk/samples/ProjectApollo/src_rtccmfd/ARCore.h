@@ -272,6 +272,7 @@ public:
 	double LmkTime;
 
 	//VECPOINT PAGE
+	int VECoption;		//0 = Point SC at body, 1 = Open hatch thermal control
 	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z
 	OBJHANDLE VECbody;	//handle for the desired body
 	VECTOR3 VECangles;	//IMU angles
