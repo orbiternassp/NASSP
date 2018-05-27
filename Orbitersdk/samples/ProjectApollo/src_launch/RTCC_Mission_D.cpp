@@ -727,28 +727,24 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 26: //EVA REFSMMAT
 	{
-		MATRIX3 REFSMMAT, MX, MY;
-		VECTOR3 R_SC, UX, UY, UZ;
-		double MJD, GETbase;
-		OBJHANDLE hSun;
+		REFSMMATOpt opt;
+		MATRIX3 REFSMMAT, E;
+		VECTOR3 GA;
+		double GETbase;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv = StateVectorCalc(calcParams.src);
 		GETbase = getGETBase();
+		E = { 1,0,0, 0,1,0, 0,0,1 };
 
-		MJD = oapiGetSimMJD();
-		hSun = oapiGetObjectByName("Sun");
-		calcParams.src->GetRelativePos(hSun, R_SC);
+		GA = HatchOpenThermalControl(calcParams.src, E);
 
-		UZ = -unit(R_SC);
-		UY = unit(crossp(UZ, _V(0.0, 0.0, 1.0)));
-		UX = crossp(UY, UZ);
-
-		MY = OrbMech::_MRy(-15.0*RAD);
-		MX = OrbMech::_MRx(-80.0*RAD);
-		REFSMMAT = mul(MX, mul(MY, _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z)));
+		opt.IMUAngles = GA;
+		opt.PresentREFSMMAT = E;
+		opt.REFSMMATopt = 9;
+		REFSMMAT = REFSMMATCalc(&opt);
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase, true);
 		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
@@ -781,7 +777,20 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 28: //BLOCK DATA 10
 	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
 
+		int n = 7;
+		double lng[] = { -31.9*RAD, -27.0*RAD, -27.9*RAD, -62.9*RAD, -62.9*RAD, -62.5*RAD, -63.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(89,19,18),OrbMech::HHMMSSToSS(90,55,37),OrbMech::HHMMSSToSS(92,29,25),OrbMech::HHMMSSToSS(93,55,38),OrbMech::HHMMSSToSS(95,29,25),OrbMech::HHMMSSToSS(97,3,12),OrbMech::HHMMSSToSS(98,37,15) };
+		std::string area[] = { "057-AC", "058-2A", "059-AC", "060-1A", "061-1B", "062-1B", "63-1A" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
 	}
 	break;
 	}

@@ -434,6 +434,7 @@ ARCore::ARCore(VESSEL* v)
 	landmarkpad.Lat[0] = 0;
 	landmarkpad.Lng05[0] = 0;
 
+	VECoption = 0;
 	VECdirection = 0;
 	VECbody = NULL;
 	VECangles = _V(0, 0, 0);
@@ -1633,56 +1634,63 @@ bool ARCore::vesselinLOS()
 
 void ARCore::VecPointCalc()
 {
-	VECTOR3 vPos, pPos, relvec, UX, UY, UZ, loc;
-	MATRIX3 M, M_R;
-	double p_T, y_T;
-	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
+	if (VECoption == 0)
+	{
+		VECTOR3 vPos, pPos, relvec, UX, UY, UZ, loc;
+		MATRIX3 M, M_R;
+		double p_T, y_T;
+		OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
 
-	p_T = 0;
-	y_T = 0;
-	
-	if (VECdirection == 1)
-	{
-		p_T = PI;
-		y_T = 0;
-	}
-	else if (VECdirection == 2)
-	{
 		p_T = 0;
-		y_T = PI05;
-	}
-	else if (VECdirection == 3)
-	{
-		p_T = 0;
-		y_T = -PI05;
-	}
-	else if (VECdirection == 4)
-	{
-		p_T = -PI05;
 		y_T = 0;
+
+		if (VECdirection == 1)
+		{
+			p_T = PI;
+			y_T = 0;
+		}
+		else if (VECdirection == 2)
+		{
+			p_T = 0;
+			y_T = PI05;
+		}
+		else if (VECdirection == 3)
+		{
+			p_T = 0;
+			y_T = -PI05;
+		}
+		else if (VECdirection == 4)
+		{
+			p_T = -PI05;
+			y_T = 0;
+		}
+		else if (VECdirection == 5)
+		{
+			p_T = PI05;
+			y_T = 0;
+		}
+
+		vessel->GetGlobalPos(vPos);
+		oapiGetGlobalPos(VECbody, &pPos);
+		vessel->GetRelativePos(gravref, loc);
+
+		relvec = unit(pPos - vPos);
+		relvec = _V(relvec.x, relvec.z, relvec.y);
+		loc = _V(loc.x, loc.z, loc.y);
+
+		UX = relvec;
+		UY = unit(crossp(UX, -loc));
+		UZ = unit(crossp(UX, crossp(UX, -loc)));
+
+		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+		M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
+
+		VECangles = OrbMech::CALCGAR(REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
 	}
-	else if (VECdirection == 5)
+	else
 	{
-		p_T = PI05;
-		y_T = 0;
+		VECangles = rtcc->HatchOpenThermalControl(vessel, REFSMMAT);
 	}
-
-	vessel->GetGlobalPos(vPos);
-	oapiGetGlobalPos(VECbody, &pPos);
-	vessel->GetRelativePos(gravref, loc);
-
-	relvec = unit(pPos - vPos);
-	relvec = _V(relvec.x, relvec.z, relvec.y);
-	loc = _V(loc.x, loc.z, loc.y);
-	
-	UX = relvec;
-	UY = unit(crossp(UX, -loc));
-	UZ = unit(crossp(UX, crossp(UX, -loc)));
-
-	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-	M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-
-	VECangles = OrbMech::CALCGAR(REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
 }
 
 void ARCore::TerrainModelCalc()
@@ -1938,6 +1946,8 @@ int ARCore::subThread()
 		opt.vessel = vessel;
 		opt.vesseltype = vesseltype;
 		opt.HeadsUp = REFSMMATHeadsUp;
+		opt.PresentREFSMMAT = REFSMMAT;
+		opt.IMUAngles = VECangles;
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{

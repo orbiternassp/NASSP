@@ -265,7 +265,7 @@ struct REFSMMATOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	double P30TIG2; //Time of Ignition 2nd maneuver
 	VECTOR3 dV_LVLH2; //Delta V in LVLH coordinates 2nd maneuver
-	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2, 8 = LS during TLC
+	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2, 8 = LS during TLC, 9 = Attitude
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landing site REFSMMAT
@@ -274,6 +274,8 @@ struct REFSMMATOpt
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool HeadsUp = true; //Orientation during the maneuver
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	MATRIX3 PresentREFSMMAT;	//Present REFSMMAT (for option 9)
+	VECTOR3 IMUAngles;			//Desired Attitude (for option 9)
 };
 
 struct CDHOpt
@@ -852,6 +854,7 @@ public:
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
 	SV coast(SV sv0, double dt);
+	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

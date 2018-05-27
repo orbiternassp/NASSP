@@ -2055,7 +2055,7 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY4STATE3: //State vector update to Block Data 9
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 78 * 60 * 60 + 10 * 60, 2, MST_D_DAY4STATE4);
 				break;
-			case MST_D_DAY3STATE4: //Block Data 9 to Block Data 10
+			case MST_D_DAY4STATE4: //Block Data 9 to Block Data 10
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 87 * 60 * 60 + 15 * 60, 27, MST_D_DAY5STATE1);
 				break;
 			case MST_D_DAY5STATE1: //Block Data 10 to Rendezvous REFSMMAT update
@@ -3690,7 +3690,7 @@ void MCC::drawPad(){
 			{
 				format_time(tmpbuf, form->GETI[i]);
 				format_time(tmpbuf2, form->GETI[i + 4]);
-				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s     %s WX\n\n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
+				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s %s WX    \n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
 		}

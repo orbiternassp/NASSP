@@ -847,6 +847,22 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+07.1f DVZ", G->LOI_dV_LVLH.z / 0.3048);
 			skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
 		}
+		else if (G->REFSMMATopt == 9)
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "REFS from Attitude", 18);
+
+			skp->Text((int)(0.5 * W / 8), 9 * H / 21, "Current REFSMMAT:", 17);
+			REFSMMATName(Buffer, G->REFSMMATcur);
+			skp->Text((int)(0.5 * W / 8), 10 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text((int)(0.5 * W / 8), 12 * H / 21, "Attitude:", 9);
+			sprintf(Buffer, "%+07.2f R", G->VECangles.x*DEG);
+			skp->Text((int)(0.5 * W / 8), 13 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.2f P", G->VECangles.y*DEG);
+			skp->Text((int)(0.5 * W / 8), 14 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.2f Y", G->VECangles.z*DEG);
+			skp->Text((int)(0.5 * W / 8), 15 * H / 21, Buffer, strlen(Buffer));
+		}
 
 		for (int i = 0; i < 20; i++)
 		{
@@ -1915,42 +1931,54 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 15)
 	{
-		if (G->VECbody != NULL)
+		if (G->VECoption == 0)
 		{
-			oapiGetObjectName(G->VECbody, Buffer, 20);
-			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 2 * H / 14, "Point SC at body", 16);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Open hatch thermal control", 26);
 		}
 
-		if (G->VECdirection == 0)
+		if (G->VECoption == 0)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "+X", 2);
-		}
-		else if (G->VECdirection == 1)
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "-X", 2);
-		}
-		else if (G->VECdirection == 2)
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "+Y", 2);
-		}
-		else if (G->VECdirection == 3)
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "-Y", 2);
-		}
-		else if (G->VECdirection == 4)
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "+Z", 2);
-		}
-		else if (G->VECdirection == 5)
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "-Z", 2);
+			if (G->VECbody != NULL)
+			{
+				oapiGetObjectName(G->VECbody, Buffer, 20);
+				skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			}
+
+			if (G->VECdirection == 0)
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "+X", 2);
+			}
+			else if (G->VECdirection == 1)
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "-X", 2);
+			}
+			else if (G->VECdirection == 2)
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "+Y", 2);
+			}
+			else if (G->VECdirection == 3)
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "-Y", 2);
+			}
+			else if (G->VECdirection == 4)
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "+Z", 2);
+			}
+			else if (G->VECdirection == 5)
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "-Z", 2);
+			}
 		}
 
-		sprintf(Buffer, "XXX%03.0f R", G->VECangles.x*DEG);
+		sprintf(Buffer, "%+07.2f R", G->VECangles.x*DEG);
 		skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "XXX%03.0f P", G->VECangles.y*DEG);
+		sprintf(Buffer, "%+07.2f P", G->VECangles.y*DEG);
 		skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "XXX%03.0f Y", G->VECangles.z*DEG);
+		sprintf(Buffer, "%+07.2f Y", G->VECangles.z*DEG);
 		skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 16)
@@ -3318,6 +3346,10 @@ char* ApolloRTCCMFD::REFSMMATName(char* Buff, int n)
 	{
 		sprintf(Buff, "Landing Site");
 	}
+	else if (n == 9)
+	{
+		sprintf(Buff, "REFS from Att");
+	}
 	else
 	{
 		sprintf(Buff, "Unknown Type");
@@ -3327,7 +3359,7 @@ char* ApolloRTCCMFD::REFSMMATName(char* Buff, int n)
 
 void ApolloRTCCMFD::CycleREFSMMATopt()
 {
-	if (G->REFSMMATopt < 8)
+	if (G->REFSMMATopt < 9)
 	{
 		G->REFSMMATopt++;
 	}
@@ -5065,6 +5097,18 @@ void ApolloRTCCMFD::cycleVECDirOpt()
 	else
 	{
 		G->VECdirection = 0;
+	}
+}
+
+void ApolloRTCCMFD::cycleVECPOINTOpt()
+{
+	if (G->VECoption < 1)
+	{
+		G->VECoption++;
+	}
+	else
+	{
+		G->VECoption = 0;
 	}
 }
 

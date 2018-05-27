@@ -323,6 +323,7 @@ public:
 	void menuSetAGCEphemTIMEM0();
 	void set_AGCEphemTIMEM0(double mjd);
 	void menuGenerateAGCEphemeris();
+	void cycleVECPOINTOpt();
 
 protected:
 	oapi::Font *font;
