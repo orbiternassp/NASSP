@@ -5967,7 +5967,10 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	R_ES0 = -EarthVec;
 	V_ES0 = -EarthVecVel;
 	W_ES = length(crossp(R_ES0, V_ES0) / OrbMech::power(length(R_ES0), 2.0));
+}
 
+CoastIntegrator::~CoastIntegrator()
+{
 	delete[] JCoeff;
 }
 
