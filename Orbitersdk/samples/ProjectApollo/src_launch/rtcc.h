@@ -92,6 +92,8 @@ struct LambertMan //Data for Lambert targeting
 	double PhaseAngle = 0.0; //Phase angle to target, will overwrite offset
 	SV sv_A;		//Chaser state vector
 	SV sv_P;		//Target state vector
+	bool NCC_NSR_Flag = false;	//true = NCC/NSR combination, false = TPI/TPF combination
+	double Elevation;	//Elevation angle at TPI
 };
 
 struct AP7ManPADOpt
@@ -220,6 +222,13 @@ struct TLMCCResults
 	double NodeGET;
 	double EMPLatitude;
 	double FRInclination;
+};
+
+struct TwoImpulseResuls
+{
+	VECTOR3 dV;
+	VECTOR3 dV_LVLH;
+	double t_TPI;
 };
 
 struct TEIOpt
@@ -792,8 +801,7 @@ public:
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
-	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV);
-	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV, VECTOR3 &dV_LVLH);
+	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);

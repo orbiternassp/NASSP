@@ -1515,8 +1515,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMManPADOpt opt;
 		LambertMan lamopt;
+		TwoImpulseResuls res;
 		SV sv_CSM, sv_LM, sv_DOI;
-		VECTOR3 dV, dV_LVLH;
+		VECTOR3 dV_LVLH;
 		double GETbase, MJD_LS, t_LS, P30TIG, MJD_100E, t_100E;
 		char GETbuffer[64];
 		char GETbuffer2[64];
@@ -1546,8 +1547,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T1 = calcParams.Phasing;
 		lamopt.T2 = calcParams.Insertion;
 
-		LambertTargeting(&lamopt, dV);
-		PoweredFlightProcessor(sv_DOI, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV, P30TIG, dV_LVLH);
+		LambertTargeting(&lamopt, res);
+		PoweredFlightProcessor(sv_DOI, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;
@@ -1636,8 +1637,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11ManPADOpt opt;
 		LambertMan lamopt;
+		TwoImpulseResuls res;
 		SV sv_CSM, sv_LM, sv_Ins;
-		VECTOR3 dV, dV_LVLH;
+		VECTOR3 dV_LVLH;
 		double GETbase, P30TIG;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -1656,8 +1658,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T1 = calcParams.Insertion + 3.0*60.0;
 		lamopt.T2 = calcParams.CSI;
 
-		LambertTargeting(&lamopt, dV);
-		PoweredFlightProcessor(sv_CSM, GETbase, lamopt.T1, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV, P30TIG, dV_LVLH);
+		LambertTargeting(&lamopt, res);
+		PoweredFlightProcessor(sv_CSM, GETbase, lamopt.T1, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;
@@ -1715,8 +1717,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMManPADOpt opt;
 		LambertMan lamopt;
+		TwoImpulseResuls res;
 		SV sv_CSM, sv_LM;
-		VECTOR3 dV, dV_LVLH;
+		VECTOR3 dV_LVLH;
 		double GETbase, P30TIG;
 
 		AP11LMMNV * form = (AP11LMMNV *)pad;
@@ -1738,8 +1741,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T1 = calcParams.Insertion;
 		lamopt.T2 = calcParams.CSI;
 
-		LambertTargeting(&lamopt, dV);
-		PoweredFlightProcessor(sv_LM, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, dV, P30TIG, dV_LVLH);
+		LambertTargeting(&lamopt, res);
+		PoweredFlightProcessor(sv_LM, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, res.dV, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;
