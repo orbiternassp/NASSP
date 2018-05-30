@@ -128,6 +128,7 @@ class CoastIntegrator
 {
 public:
 	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, OBJHANDLE planet, OBJHANDLE outplanet);
+	~CoastIntegrator();
 	bool iteration();
 
 	VECTOR3 R2, V2;

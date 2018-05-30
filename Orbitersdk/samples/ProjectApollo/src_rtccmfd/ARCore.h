@@ -126,7 +126,8 @@ public:
 	VECTOR3 offvec;			//Lambert offset vector
 	double angdeg;			//Phase angle for target offset
 	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
-	int twoimpulsemode;		//0 = NCC/NSR, 1 = TPI/TPF
+	int twoimpulsemode;		//0 = General, 1 = NCC/NSR, 2 = TPI/TPF
+	double TwoImpulse_TPI;	//TPI time calculated by the NCC/NSR option
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition

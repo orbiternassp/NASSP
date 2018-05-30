@@ -311,16 +311,9 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	}
 }
 
-void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV)
+void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 {
-	VECTOR3 dV_LVLH;
-
-	LambertTargeting(lambert, dV, dV_LVLH);
-}
-
-void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV, VECTOR3 &dV_LVLH)
-{
-	SV sv_A1, sv_P2;
+	SV sv_A1, sv_A1_apo, sv_A2, sv_P2;
 	double dt1, dt1_apo, dt2, mu;
 	OBJHANDLE gravref;
 	bool prograde;
@@ -380,6 +373,10 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV, VECTOR3 &dV_LVLH)
 	if (lambert->Perturbation == RTCC_LAMBERT_PERTURBED)
 	{
 		VA1_apo = OrbMech::Vinti(sv_A1.R, sv_A1.V, RP2off, sv_A1.MJD, dt2, lambert->N, prograde, gravref, gravref, gravref, _V(0.0, 0.0, 0.0)); //Vinti Targeting: For non-spherical gravity
+	
+		sv_A1_apo = sv_A1;
+		sv_A1_apo.V = VA1_apo;
+		sv_A2 = coast(sv_A1_apo, dt2);
 	}
 	else
 	{
@@ -391,15 +388,41 @@ void RTCC::LambertTargeting(LambertMan *lambert, VECTOR3 &dV, VECTOR3 &dV_LVLH)
 		{
 			OrbMech::xaxislambert(sv_A1.R, sv_A1.V, RP2off, dt2, lambert->N, prograde, mu, VA1_apo, lambert->Offset.z);	//Lambert Targeting
 		}
+
+		sv_A1_apo = sv_A1;
+		sv_A1_apo.V = VA1_apo;
+		sv_A2 = sv_A1_apo;
+		OrbMech::rv_from_r0v0(sv_A1_apo.R, sv_A1_apo.V, dt2, sv_A2.R, sv_A2.V, mu);
 	}
 
 	Q_Xx = OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V);
-	dV = VA1_apo - sv_A1.V;
-	dV_LVLH = mul(Q_Xx, dV);
+	res.dV = VA1_apo - sv_A1.V;
+	res.dV_LVLH = mul(Q_Xx, res.dV);
 
 	if (lambert->axis == RTCC_LAMBERT_XAXIS)
 	{
-		dV_LVLH.y = 0.0;
+		res.dV_LVLH.y = 0.0;
+	}
+
+	if (lambert->NCC_NSR_Flag)
+	{
+		SV sv_A2_apo;
+		VECTOR3 u, R_A2, V_A2, R_PC, V_PC, DV;
+		double dt_TPI;
+
+		sv_A2_apo = sv_A2;
+
+		u = unit(crossp(sv_P2.R, sv_P2.V));
+
+		R_A2 = unit(sv_A2.R - u * dotp(sv_A2.R, u))*length(sv_A2.R);
+		V_A2 = unit(sv_A2.V - u * dotp(sv_A2.V, u))*length(sv_A2.V);
+
+		OrbMech::RADUP(sv_P2.R, sv_P2.V, R_A2, mu, R_PC, V_PC);
+		DV = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu) - V_A2;
+		sv_A2_apo.V += DV;
+
+		dt_TPI = OrbMech::findelev(sv_A2_apo.R, sv_A2_apo.V, sv_P2.R, sv_P2.V, sv_P2.MJD, lambert->Elevation, gravref);
+		res.t_TPI = OrbMech::GETfromMJD(sv_P2.MJD, lambert->GETbase) + dt_TPI;
 	}
 }
 
@@ -5874,14 +5897,14 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 	else if (opt->man == 5)	//TPI
 	{
 		LambertMan lambert;
-		VECTOR3 dV;
+		TwoImpulseResuls lamres;
 		double dt;
 
 		dt = OrbMech::time_theta(sv_W.R, sv_W.V, 140.0*RAD, GGRAV*oapiGetMass(gravref));
 		lambert = set_lambertoptions(sv_C, sv_W, opt->GETbase, opt->t_C, opt->t_C + dt, 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 0), 0);
-		LambertTargeting(&lambert, dV, dV_LVLH);
+		LambertTargeting(&lambert, lamres);
 
-		res->dV_LVLH = dV_LVLH;
+		res->dV_LVLH = dV_LVLH = lamres.dV_LVLH;
 		res->P30TIG = opt->t_C;
 
 		return true;
@@ -5889,14 +5912,14 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 	else if (opt->man == 6)	//TPM
 	{
 		LambertMan lambert;
-		VECTOR3 dV;
+		TwoImpulseResuls lamres;
 		double dt;
 
 		dt = OrbMech::time_theta(sv_W.R, sv_W.V, 140.0*RAD, GGRAV*oapiGetMass(gravref));
 		lambert = set_lambertoptions(sv_C, sv_W, opt->GETbase, opt->t_C, opt->t_TPI + dt, 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 0), 0);
-		LambertTargeting(&lambert, dV, dV_LVLH);
+		LambertTargeting(&lambert, lamres);
 
-		res->dV_LVLH = dV_LVLH;
+		res->dV_LVLH = dV_LVLH = lamres.dV_LVLH;
 		res->P30TIG = opt->t_C;
 
 		return true;
@@ -6909,6 +6932,7 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 	//Plan 1: Phasing (fixed TIG), Insertion, CSI at apolune, CDH, TPI at midnight (Apollo 10)
 
 	LambertMan lamopt, lamopt2;
+	TwoImpulseResuls lamres;
 	double t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, mu, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
 	VECTOR3 dV_Phasing, dV_Insertion, dV_CDH, DVX;
 	MATRIX3 Q_Xx;
@@ -6946,7 +6970,9 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 		lamopt.T2 = t_Insertion;
 		lamopt.sv_A = sv_Phasing;
 
-		LambertTargeting(&lamopt, dV_Phasing);
+		LambertTargeting(&lamopt, lamres);
+		dV_Phasing = lamres.dV;
+
 		sv_Phasing_apo = sv_Phasing;
 		sv_Phasing_apo.V += dV_Phasing;
 
@@ -6961,7 +6987,8 @@ void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GE
 			lamopt2.T2 = t_CSI;
 			lamopt2.sv_A = sv_Phasing_apo;
 
-			LambertTargeting(&lamopt2, dV_Insertion);
+			LambertTargeting(&lamopt2, lamres);
+			dV_Insertion = lamres.dV;
 
 			sv_Insertion = coast(sv_Phasing_apo, t_Insertion - t_Phasing);
 			sv_Insertion_apo = sv_Insertion;

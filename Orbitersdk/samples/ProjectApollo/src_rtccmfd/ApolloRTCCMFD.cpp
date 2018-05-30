@@ -149,6 +149,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_vec(scn, "LambertdeltaV", G->LambertdeltaV);
 	oapiWriteScenario_int(scn, "LAMBERTOPT", G->lambertopt);
 	papiWriteScenario_bool(scn, "LAMBERTMULTI", G->lambertmultiaxis);
+	oapiWriteScenario_int(scn, "TWOIMPULSEMODE", G->twoimpulsemode);
 	papiWriteScenario_double(scn, "lambertelev", G->lambertelev);
 	papiWriteScenario_vec(scn, "CDHdeltaV", G->CDHdeltaV);
 	if (G->target != NULL)
@@ -284,6 +285,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_vec(line, "LambertdeltaV", G->LambertdeltaV);
 		papiReadScenario_int(line, "LAMBERTOPT", G->lambertopt);
 		papiReadScenario_bool(line, "LAMBERTMULTI", G->lambertmultiaxis);
+		papiReadScenario_int(line, "TWOIMPULSEMODE", G->twoimpulsemode);
 		papiReadScenario_double(line, "lambertelev", G->lambertelev);
 		papiReadScenario_vec(line, "CDHdeltaV", G->CDHdeltaV);
 
@@ -446,7 +448,18 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Lambert", 7);
 
-		skp->Text(1 * W / 8, 2 * H / 14, "GET", 3);
+		if (G->twoimpulsemode == 0)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "General", 7);
+		}
+		else if (G->twoimpulsemode == 1)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "NCC/NSR", 7);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TPI/TPF", 7);
+		}
 
 		GET_Display(Buffer, G->T1);
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -464,17 +477,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 10 * H / 14, "X-Axis", 6);
 		}
-
-		skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
-		skp->Text(5 * W / 8, 11 * H / 14, "DVY", 3);
-		skp->Text(5 * W / 8, 12 * H / 14, "DVZ", 3);
-
-		AGC_Display(Buffer, G->LambertdeltaV.x / 0.3048);
-		skp->Text(6 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, G->LambertdeltaV.y / 0.3048);
-		skp->Text(6 * W / 8, 11 * H / 14, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, G->LambertdeltaV.z / 0.3048);
-		skp->Text(6 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
 		/*if (G->orient == 0)
 		{
@@ -499,12 +501,38 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		sprintf(Buffer, "XOFF %.3f NM", G->offvec.x/1852.0);
-		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "YOFF %.3f NM", G->offvec.y/1852.0);
-		skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "ZOFF %.3f NM", G->offvec.z/1852.0);
-		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		if (G->twoimpulsemode != 2)
+		{
+			sprintf(Buffer, "XOFF %.3f NM", G->offvec.x / 1852.0);
+			skp->Text(5 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "YOFF %.3f NM", G->offvec.y / 1852.0);
+			skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "ZOFF %.3f NM", G->offvec.z / 1852.0);
+			skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+		}
+
+		GET_Display(Buffer, G->P30TIG);
+		skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 11 * H / 21, "DVX", 3);
+		skp->Text(5 * W / 8, 12 * H / 21, "DVY", 3);
+		skp->Text(5 * W / 8, 13 * H / 21, "DVZ", 3);
+
+		AGC_Display(Buffer, G->LambertdeltaV.x / 0.3048);
+		skp->Text(6 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->LambertdeltaV.y / 0.3048);
+		skp->Text(6 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->LambertdeltaV.z / 0.3048);
+		skp->Text(6 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+
+		if (G->twoimpulsemode == 1)
+		{
+			skp->Text(5 * W / 8, 15 * H / 21, "Elevation Angle:", 16);
+			sprintf(Buffer, "%.2f°", G->lambertelev*DEG);
+			skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+			GET_Display(Buffer, G->TwoImpulse_TPI);
+			skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+		}
 	}
 	else if (screen == 2)
 	{
@@ -4263,9 +4291,11 @@ void ApolloRTCCMFD::set_DH(double DH)
 
 void ApolloRTCCMFD::phasedialogue()
 {
-	bool PhaseInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the phase angle:", PhaseInput, 0, 20, (void*)this);
-
+	if (G->twoimpulsemode != 2)
+	{
+		bool PhaseInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the phase angle:", PhaseInput, 0, 20, (void*)this);
+	}
 }
 
 bool PhaseInput(void *id, char *str, void *data)
@@ -4654,6 +4684,18 @@ void ApolloRTCCMFD::menuSVUpload()
 		{
 			G->LandingSiteUplink();
 		}
+	}
+}
+
+void ApolloRTCCMFD::menuCycleTwoImpulseOption()
+{
+	if (G->twoimpulsemode < 2)
+	{
+		G->twoimpulsemode++;
+	}
+	else
+	{
+		G->twoimpulsemode = 0;
 	}
 }
 
@@ -5053,8 +5095,11 @@ void ApolloRTCCMFD::cycleREFSMMATHeadsUp()
 
 void ApolloRTCCMFD::offvecdialogue()
 {
-	bool OffVecInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the offset (x.x x.x x.x):", OffVecInput, 0, 20, (void*)this);
+	if (G->twoimpulsemode != 2)
+	{
+		bool OffVecInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the offset (x.x x.x x.x):", OffVecInput, 0, 20, (void*)this);
+	}
 }
 
 bool OffVecInput(void *id, char *str, void *data)

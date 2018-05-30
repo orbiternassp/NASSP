@@ -123,6 +123,7 @@ public:
 	void menuEntryUpload();
 	void menuEntryUpdateUpload();
 	void set_spherical();
+	void menuCycleTwoImpulseOption();
 	void menuSwitchHeadsUp();
 	void menuManDirection();
 	void menuSwitchPDIPADDirect();

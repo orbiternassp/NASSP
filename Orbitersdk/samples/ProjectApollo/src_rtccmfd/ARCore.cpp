@@ -32,9 +32,13 @@ ARCore::ARCore(VESSEL* v)
 	DH = 0;
 	N = 0;
 	this->vessel = v;
-	lambertelev = 0.0;
+
+	lambertelev = 26.6*RAD;
 	LambertdeltaV = _V(0, 0, 0);
 	lambertopt = 0;
+	twoimpulsemode = 0;
+	TwoImpulse_TPI = 0.0;
+
 	CDHdeltaV = _V(0, 0, 0);
 	target = NULL;
 	offvec = _V(0, 0, 0);
@@ -1798,17 +1802,26 @@ int ARCore::subThread()
 	case 1: //Lambert Targeting
 	{
 		LambertMan opt;
+		TwoImpulseResuls res;
 		SV sv_A, sv_P;
-		VECTOR3 dV;
 		double attachedMass;
 
 		sv_A = rtcc->StateVectorCalc(vessel);
 		sv_P = rtcc->StateVectorCalc(target);
 
 		opt.axis = !lambertmultiaxis;
+		opt.Elevation = lambertelev;
 		opt.GETbase = GETbase;
 		opt.N = N;
-		opt.Offset = offvec;
+		opt.NCC_NSR_Flag = (twoimpulsemode == 1);
+		if (twoimpulsemode != 2)
+		{
+			opt.Offset = offvec;
+		}
+		else
+		{
+			opt.Offset = _V(0, 0, 0);
+		}
 		opt.Perturbation = lambertopt;
 		opt.PhaseAngle = 0.0;
 		opt.sv_A = sv_A;
@@ -1824,9 +1837,14 @@ int ARCore::subThread()
 		{
 			attachedMass = rtcc->GetDockedVesselMass(target);
 		}
-		rtcc->LambertTargeting(&opt, dV);
-		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, dV, P30TIG, dV_LVLH);
+		rtcc->LambertTargeting(&opt, res);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, P30TIG, dV_LVLH);
 		LambertdeltaV = dV_LVLH;
+
+		if (twoimpulsemode == 1)
+		{
+			TwoImpulse_TPI = res.t_TPI;
+		}
 
 		Result = 0;
 	}

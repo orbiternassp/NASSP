@@ -57,16 +57,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu1, sizeof(mnu1) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("OPT", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleTwoImpulseOption);
 	RegisterFunction("T1", OAPI_KEY_M, &ApolloRTCCMFD::t1dialogue);
 	RegisterFunction("T2", OAPI_KEY_A, &ApolloRTCCMFD::t2dialogue);
 	RegisterFunction("N", OAPI_KEY_N, &ApolloRTCCMFD::revdialogue);
 	RegisterFunction("AXI", OAPI_KEY_U, &ApolloRTCCMFD::set_lambertaxis);
 	RegisterFunction("SPH", OAPI_KEY_G, &ApolloRTCCMFD::set_spherical);
-	//RegisterFunction("ORI", OAPI_KEY_O, &ApolloRTCCMFD::set_orient);
 
 	RegisterFunction("TGT", OAPI_KEY_V, &ApolloRTCCMFD::set_target);
-	//RegisterFunction("OFF", OAPI_KEY_D, &ApolloRTCCMFD::menuSetOffsetPage);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::lambertcalc);
 	RegisterFunction("OFF", OAPI_KEY_O, &ApolloRTCCMFD::offvecdialogue);
 	RegisterFunction("PHA", OAPI_KEY_P, &ApolloRTCCMFD::phasedialogue);
