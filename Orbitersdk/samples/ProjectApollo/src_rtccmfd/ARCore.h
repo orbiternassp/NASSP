@@ -115,6 +115,7 @@ public:
 	bool PADSolGood;
 	int enginetype;				// 0 = RCS, 1 = SPS or DPS or APS
 	int directiontype;			// 0 = +X, 1 = -X (RCS only)
+	double t_TPI;				// Generally used TPI time
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
@@ -128,6 +129,7 @@ public:
 	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
 	int twoimpulsemode;		//0 = General, 1 = NCC/NSR, 2 = TPI/TPF
 	double TwoImpulse_TPI;	//TPI time calculated by the NCC/NSR option
+	double TwoImpulse_PhaseAngle;	//Phase angle of chaser relative to target at T2 time
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
@@ -300,7 +302,7 @@ public:
 	bool SkylabSolGood;
 	VECTOR3 Skylab_dV_NSR, Skylab_dV_NCC;//, Skylab_dV_NPC;
 	double Skylab_dH_NC2, Skylab_dv_NC2, Skylab_dv_NCC;
-	double Skylab_t_NC1, Skylab_t_NC2, Skylab_t_NCC, Skylab_t_NSR, Skylab_t_TPI, Skylab_dt_TPM; //Skylab_t_NPC
+	double Skylab_t_NC1, Skylab_t_NC2, Skylab_t_NCC, Skylab_t_NSR, Skylab_dt_TPM; //Skylab_t_NPC
 
 	//PC Page
 	double PCAlignGET;		//time when the orbit is aligned with the landing site

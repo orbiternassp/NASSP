@@ -90,7 +90,7 @@ public:
 	void menuCycleOrbAdjAltRef();
 	void phasedialogue();
 	void set_getbase();
-	void calcphaseoff(double angdeg);
+	void set_TIPhaseAngle(double angdeg);
 	void CDHcalc();
 	void lambertcalc();
 	char* GET_Display(char * Buff, double time);
@@ -257,7 +257,7 @@ public:
 	void set_SkylabDH2(double dh);
 	void menuSetSkylabEL();
 	void set_SkylabEL(double E_L);
-	void set_SkylabTPI(double time);
+	void set_t_TPI(double time);
 	void menuCyclePlaneChange();
 	void menuCyclePCManeuver();
 	void set_SkylabDTTPM(double dt);

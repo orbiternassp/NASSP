@@ -32,12 +32,14 @@ ARCore::ARCore(VESSEL* v)
 	DH = 0;
 	N = 0;
 	this->vessel = v;
+	t_TPI = 0.0;
 
 	lambertelev = 26.6*RAD;
 	LambertdeltaV = _V(0, 0, 0);
 	lambertopt = 0;
 	twoimpulsemode = 0;
 	TwoImpulse_TPI = 0.0;
+	TwoImpulse_PhaseAngle = 0.0;
 
 	CDHdeltaV = _V(0, 0, 0);
 	target = NULL;
@@ -627,7 +629,7 @@ ARCore::ARCore(VESSEL* v)
 	Skylab_E_L = 0.0;
 	SkylabSolGood = true;
 	Skylab_dV_NSR = Skylab_dV_NCC = _V(0, 0, 0);
-	Skylab_dH_NC2 = Skylab_dv_NC2 = Skylab_t_NC1 = Skylab_t_NC2 = Skylab_dv_NCC = Skylab_t_NCC = Skylab_t_NSR = Skylab_t_TPI = Skylab_dt_TPM = 0.0;
+	Skylab_dH_NC2 = Skylab_dv_NC2 = Skylab_t_NC1 = Skylab_t_NC2 = Skylab_dv_NCC = Skylab_t_NCC = Skylab_t_NSR = Skylab_dt_TPM = 0.0;
 	Skylab_NPCOption = Skylab_PCManeuver = false;
 
 	PCAlignGET = 0.0;
@@ -1814,16 +1816,11 @@ int ARCore::subThread()
 		opt.GETbase = GETbase;
 		opt.N = N;
 		opt.NCC_NSR_Flag = (twoimpulsemode == 1);
-		if (twoimpulsemode != 2)
-		{
-			opt.Offset = offvec;
-		}
-		else
-		{
-			opt.Offset = _V(0, 0, 0);
-		}
+		opt.use_XYZ_Offset = (twoimpulsemode != 1);
+		opt.Offset = offvec;
+		opt.DH = DH;
 		opt.Perturbation = lambertopt;
-		opt.PhaseAngle = 0.0;
+		opt.PhaseAngle = TwoImpulse_PhaseAngle;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.T1 = T1;
@@ -2383,7 +2380,7 @@ int ARCore::subThread()
 		opt.DH2 = SkylabDH2;
 		opt.n_C = Skylab_n_C;
 		opt.target = target;
-		opt.t_TPI = Skylab_t_TPI;
+		opt.t_TPI = t_TPI;
 		opt.PCManeuver = Skylab_PCManeuver;
 		opt.NPCOption = Skylab_NPCOption;
 		opt.vessel = vessel;
@@ -2410,11 +2407,11 @@ int ARCore::subThread()
 		}
 		else if (Skylabmaneuver == 5)
 		{
-			opt.t_C = Skylab_t_TPI;
+			opt.t_C = t_TPI;
 		}
 		else if (Skylabmaneuver == 6)
 		{
-			opt.t_C = Skylab_t_TPI + Skylab_dt_TPM;
+			opt.t_C = t_TPI + Skylab_dt_TPM;
 		}
 		else if (Skylabmaneuver == 7)
 		{
@@ -2434,7 +2431,7 @@ int ARCore::subThread()
 		{
 			if (Skylabmaneuver == 0)
 			{
-				Skylab_t_TPI = res.t_TPI;
+				t_TPI = res.t_TPI;
 			}
 			else
 			{
@@ -2844,6 +2841,7 @@ int ARCore::subThread()
 		}
 
 		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffTimes);
+		t_TPI = LunarLiftoffTimes.t_TPI;
 
 		Result = 0;
 	}
@@ -3013,6 +3011,7 @@ int ARCore::subThread()
 
 		rtcc->DockingInitiationProcessor(opt, dkiresult);
 		rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
+		t_TPI = dkiresult.t_TPI;
 
 		Result = 0;
 	}

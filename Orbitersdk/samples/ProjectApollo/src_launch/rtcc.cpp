@@ -349,13 +349,13 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	VECTOR3 RP2off, VP2off;
 	double angle;
 
-	if (lambert->PhaseAngle != 0.0)
+	if (lambert->use_XYZ_Offset)
 	{
-		angle = lambert->PhaseAngle;
+		angle = lambert->Offset.x / length(sv_P2.R);
 	}
 	else
 	{
-		angle = lambert->Offset.x / length(sv_P2.R);
+		angle = lambert->PhaseAngle;
 	}
 
 	OrbMech::rv_from_r0v0_ta(sv_P2.R, sv_P2.V, angle, RP2off, VP2off, mu);
@@ -368,7 +368,14 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	i = crossp(j, k);
 	Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
-	RP2off = RP2off + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
+	if (lambert->use_XYZ_Offset)
+	{
+		RP2off = RP2off + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
+	}
+	else
+	{
+		RP2off = RP2off + tmul(Q_Xx2, _V(0.0, 0.0, lambert->DH));
+	}
 
 	if (lambert->Perturbation == RTCC_LAMBERT_PERTURBED)
 	{
@@ -1951,12 +1958,12 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 			dt = OrbMech::time_radius_integ(sv2.R, sv2.V, sv2.MJD, oapiGetSize(hEarth) + 400000.0*0.3048, -1, sv2.gravref, hEarth, sv4.R, sv4.V);
 		}
 
-		UY = unit(crossp(sv4.V, sv4.R));
-		UZ = unit(-sv4.R);
-		UX = crossp(UY, UZ);
-
 		if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1)
 		{
+			UY = unit(crossp(sv4.V, sv4.R));
+			UZ = unit(-sv4.R);
+			UX = crossp(UY, UZ);
+
 			double headsswitch;
 
 			if (opt->HeadsUp)
@@ -2040,6 +2047,19 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		}
 		else
 		{
+			if (opt->vesseltype < 2)
+			{
+				UY = unit(crossp(sv4.V, sv4.R));
+				UZ = unit(-sv4.R);
+				UX = crossp(UY, UZ);
+			}
+			else
+			{
+				UX = unit(sv4.R);
+				UY = unit(crossp(sv4.V, sv4.R));
+				UZ = unit(crossp(UX, UY));
+			}
+
 			return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		}
 		//

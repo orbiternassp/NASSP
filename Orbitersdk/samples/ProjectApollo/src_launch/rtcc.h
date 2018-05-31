@@ -89,10 +89,12 @@ struct LambertMan //Data for Lambert targeting
 	int axis;	//Multi-axis or horizontal burn
 	int Perturbation; //Spherical or non-spherical gravity
 	VECTOR3 Offset; //Offset vector
-	double PhaseAngle = 0.0; //Phase angle to target, will overwrite offset
+	double PhaseAngle; //Phase angle to target
+	double DH;					//Delta height at arrival
 	SV sv_A;		//Chaser state vector
 	SV sv_P;		//Target state vector
 	bool NCC_NSR_Flag = false;	//true = NCC/NSR combination, false = TPI/TPF combination
+	bool use_XYZ_Offset = true;	//true = use offset vector, false = use phase angle and DH
 	double Elevation;	//Elevation angle at TPI
 };
 
