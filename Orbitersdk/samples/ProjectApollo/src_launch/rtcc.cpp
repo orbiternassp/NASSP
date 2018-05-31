@@ -1958,12 +1958,12 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 			dt = OrbMech::time_radius_integ(sv2.R, sv2.V, sv2.MJD, oapiGetSize(hEarth) + 400000.0*0.3048, -1, sv2.gravref, hEarth, sv4.R, sv4.V);
 		}
 
-		UY = unit(crossp(sv4.V, sv4.R));
-		UZ = unit(-sv4.R);
-		UX = crossp(UY, UZ);
-
 		if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1)
 		{
+			UY = unit(crossp(sv4.V, sv4.R));
+			UZ = unit(-sv4.R);
+			UX = crossp(UY, UZ);
+
 			double headsswitch;
 
 			if (opt->HeadsUp)
@@ -2047,6 +2047,19 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		}
 		else
 		{
+			if (opt->vesseltype < 2)
+			{
+				UY = unit(crossp(sv4.V, sv4.R));
+				UZ = unit(-sv4.R);
+				UX = crossp(UY, UZ);
+			}
+			else
+			{
+				UX = unit(sv4.R);
+				UY = unit(crossp(sv4.V, sv4.R));
+				UZ = unit(crossp(UX, UY));
+			}
+
 			return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		}
 		//
