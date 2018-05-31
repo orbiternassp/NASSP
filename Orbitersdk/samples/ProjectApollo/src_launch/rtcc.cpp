@@ -349,13 +349,13 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	VECTOR3 RP2off, VP2off;
 	double angle;
 
-	if (lambert->PhaseAngle != 0.0)
+	if (lambert->use_XYZ_Offset)
 	{
-		angle = lambert->PhaseAngle;
+		angle = lambert->Offset.x / length(sv_P2.R);
 	}
 	else
 	{
-		angle = lambert->Offset.x / length(sv_P2.R);
+		angle = lambert->PhaseAngle;
 	}
 
 	OrbMech::rv_from_r0v0_ta(sv_P2.R, sv_P2.V, angle, RP2off, VP2off, mu);
@@ -368,7 +368,14 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	i = crossp(j, k);
 	Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
-	RP2off = RP2off + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
+	if (lambert->use_XYZ_Offset)
+	{
+		RP2off = RP2off + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
+	}
+	else
+	{
+		RP2off = RP2off + tmul(Q_Xx2, _V(0.0, 0.0, lambert->DH));
+	}
 
 	if (lambert->Perturbation == RTCC_LAMBERT_PERTURBED)
 	{

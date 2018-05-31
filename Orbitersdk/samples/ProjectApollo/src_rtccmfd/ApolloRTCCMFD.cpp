@@ -225,7 +225,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "SKYLAB_NC2", G->Skylab_t_NC2);
 	papiWriteScenario_double(scn, "SKYLAB_NCC", G->Skylab_t_NCC);
 	papiWriteScenario_double(scn, "SKYLAB_NSR", G->Skylab_t_NSR);
-	papiWriteScenario_double(scn, "SKYLAB_TPI", G->Skylab_t_TPI);
+	papiWriteScenario_double(scn, "t_TPI", G->t_TPI);
 	//papiWriteScenario_double(scn, "SKYLAB_NPC", G->Skylab_t_NPC);
 	papiWriteScenario_double(scn, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
 	papiWriteScenario_double(scn, "SKYLAB_E_L", G->Skylab_E_L);
@@ -369,7 +369,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "SKYLAB_NC2", G->Skylab_t_NC2);
 		papiReadScenario_double(line, "SKYLAB_NCC", G->Skylab_t_NCC);
 		papiReadScenario_double(line, "SKYLAB_NSR", G->Skylab_t_NSR);
-		papiReadScenario_double(line, "SKYLAB_TPI", G->Skylab_t_TPI);
+		papiReadScenario_double(line, "t_TPI", G->t_TPI);
 		//papiReadScenario_double(line, "SKYLAB_NPC", G->Skylab_t_NPC);
 		papiReadScenario_double(line, "SKYLAB_DTTPM", G->Skylab_dt_TPM);
 		papiReadScenario_double(line, "SKYLAB_E_L", G->Skylab_E_L);
@@ -501,7 +501,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (G->twoimpulsemode != 2)
+		if (G->twoimpulsemode == 0)
 		{
 			sprintf(Buffer, "XOFF %.3f NM", G->offvec.x / 1852.0);
 			skp->Text(5 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
@@ -509,6 +509,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "ZOFF %.3f NM", G->offvec.z / 1852.0);
 			skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+		}
+		else if (G->twoimpulsemode == 1)
+		{
+			skp->Text((int)(4.5 * H / 8), 6 * H / 21, "PHASE", 5);
+			skp->Text((int)(4.5 * H / 8), 7 * H / 21, "DEL H", 5);
+			sprintf(Buffer, "%.3f°", G->TwoImpulse_PhaseAngle*DEG);
+			skp->Text(6 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3f NM", G->DH / 1852.0);
+			skp->Text(6 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
 		}
 
 		GET_Display(Buffer, G->P30TIG);
@@ -530,8 +539,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 15 * H / 21, "Elevation Angle:", 16);
 			sprintf(Buffer, "%.2f°", G->lambertelev*DEG);
 			skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, 17 * H / 21, "Actual TPI Time:", 16);
 			GET_Display(Buffer, G->TwoImpulse_TPI);
-			skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, 19 * H / 21, "Desired TPI Time:", 17);
+			GET_Display(Buffer, G->t_TPI);
+			skp->Text(5 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 2)
@@ -2098,7 +2111,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		if (G->Skylabmaneuver < 7)
 		{
 			skp->Text(4 * W / 8, 5 * H / 21, "TPI", 3);
-			GET_Display(Buffer, G->Skylab_t_TPI);
+			GET_Display(Buffer, G->t_TPI);
 			skp->Text(5 * W / 8, 5 * H / 21, Buffer, strlen(Buffer));
 		}
 
@@ -3081,7 +3094,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "Lambert Targeting", 17);
 		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic", 10);
 		skp->Text(1 * W / 8, 6 * H / 14, "Docking Initiation Processor", 28);
-		skp->Text(1 * W / 8, 8 * H / 14, "Skylab Rendezvous", 17);
+		skp->Text(1 * W / 8, 8 * H / 14, "Skylab Rendezvous and TPI Search", 32);
 	}
 	else if (screen == 33)
 	{
@@ -4291,7 +4304,7 @@ void ApolloRTCCMFD::set_DH(double DH)
 
 void ApolloRTCCMFD::phasedialogue()
 {
-	if (G->twoimpulsemode != 2)
+	if (G->twoimpulsemode == 1)
 	{
 		bool PhaseInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the phase angle:", PhaseInput, 0, 20, (void*)this);
@@ -4302,35 +4315,15 @@ bool PhaseInput(void *id, char *str, void *data)
 {
 	if (strlen(str)<20)
 	{
-		((ApolloRTCCMFD*)data)->calcphaseoff(atof(str));
+		((ApolloRTCCMFD*)data)->set_TIPhaseAngle(atof(str));
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::calcphaseoff(double angdeg)
+void ApolloRTCCMFD::set_TIPhaseAngle(double angdeg)
 {
-	double epsilon,vel,r_p,mu,a,angrad,off;
-	VECTOR3 R_P, V_P;
-	OBJHANDLE gravref;
-
-	this->G->angdeg = angdeg;
-
-	if (G->target != NULL)
-	{
-		gravref = G->target->GetGravityRef();
-		mu = GGRAV*oapiGetMass(gravref);
-		G->target->GetRelativePos(gravref, R_P);
-		G->target->GetRelativeVel(gravref, V_P);
-		vel = length(V_P);
-		r_p = length(R_P);
-		epsilon = vel*vel / 2.0 - mu / r_p;
-		a = -mu / (2.0 * epsilon);
-		angrad = angdeg*RAD;
-		off = a*angrad;
-
-		G->offvec.x = off;
-	}
+	G->TwoImpulse_PhaseAngle = angdeg * RAD;
 }
 
 void ApolloRTCCMFD::xdialogue()
@@ -5095,10 +5088,14 @@ void ApolloRTCCMFD::cycleREFSMMATHeadsUp()
 
 void ApolloRTCCMFD::offvecdialogue()
 {
-	if (G->twoimpulsemode != 2)
+	if (G->twoimpulsemode == 0)
 	{
 		bool OffVecInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the offset (x.x x.x x.x):", OffVecInput, 0, 20, (void*)this);
+	}
+	else if (G->twoimpulsemode == 1)
+	{
+		DHdialogue();
 	}
 }
 
@@ -5892,7 +5889,7 @@ void ApolloRTCCMFD::menuSetSkylabGET()
 		VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
 
 		dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, SVMJD, G->Skylab_E_L, gravref);
-		G->Skylab_t_TPI = dt1 + (SVMJD - G->GETbase) * 24.0 * 60.0 * 60.0;
+		G->t_TPI = dt1 + (SVMJD - G->GETbase) * 24.0 * 60.0 * 60.0;
 	}
 	else if (G->Skylabmaneuver == 6)
 	{
@@ -5912,7 +5909,7 @@ bool SkylabGETInput(void *id, char *str, void *data)
 	if (sscanf(str, "TPI=%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		t1time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_SkylabTPI(t1time);
+		((ApolloRTCCMFD*)data)->set_t_TPI(t1time);
 		return true;
 	}
 	else if (strcmp(str, "PeT") == 0)
@@ -5977,9 +5974,9 @@ void ApolloRTCCMFD::set_SkylabDTTPM(double dt)
 	this->G->Skylab_dt_TPM = dt*60.0;
 }
 
-void ApolloRTCCMFD::set_SkylabTPI(double time)
+void ApolloRTCCMFD::set_t_TPI(double time)
 {
-	G->Skylab_t_TPI = time;
+	G->t_TPI = time;
 }
 
 void ApolloRTCCMFD::menuSkylabCalc()

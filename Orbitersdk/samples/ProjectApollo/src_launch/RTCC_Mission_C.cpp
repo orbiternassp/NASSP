@@ -242,7 +242,19 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GET_TIG_imp = OrbMech::HHMMSSToSS(26, 25, 0);
 
-		lambert = set_lambertoptions(sv_A, sv_P, GETBase, GET_TIG_imp, OrbMech::HHMMSSToSS(28, 0, 0), 1, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD);
+		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
+		lambert.DH = 8.0*1852.0;
+		lambert.Elevation = 27.45*RAD;
+		lambert.GETbase = GETBase;
+		lambert.N = 1;
+		lambert.NCC_NSR_Flag = true;
+		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lambert.PhaseAngle = -1.32*RAD;
+		lambert.sv_A = sv_A;
+		lambert.sv_P = sv_P;
+		lambert.T1 = GET_TIG_imp;
+		lambert.T2 = OrbMech::HHMMSSToSS(28, 0, 0);
+		lambert.use_XYZ_Offset = false;
 
 		LambertTargeting(&lambert, res);
 		PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
@@ -304,7 +316,20 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETBase = getGETBase();
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 
-		lambert = set_lambertoptions(sv_A, sv_P, GETBase, GET_TIG_imp, OrbMech::HHMMSSToSS(28, 0, 0), 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD);
+		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
+		lambert.DH = 8.0*1852.0;
+		lambert.Elevation = 27.45*RAD;
+		lambert.GETbase = GETBase;
+		lambert.N = 0;
+		lambert.NCC_NSR_Flag = true;
+		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lambert.PhaseAngle = -1.32*RAD;
+		lambert.sv_A = sv_A;
+		lambert.sv_P = sv_P;
+		lambert.T1 = GET_TIG_imp;
+		lambert.T2 = OrbMech::HHMMSSToSS(28, 0, 0);
+		lambert.use_XYZ_Offset = false;
+
 		LambertTargeting(&lambert, res);
 
 		if (length(res.dV) < 10.0*0.3048)
