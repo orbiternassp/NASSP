@@ -1163,7 +1163,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Fixed radial component", 0, 'R' },
 		{ "TPI mode", 0, 'O' },
 		{ "TPI time before sunrise", 0, 'S' },
-		{ "Revs between CSI and CDH", 0, 'N' },
+		{ "Half-revs between CSI and CDH", 0, 'N' },
 		{ "", 0, ' ' },
 
 		{ "Time between abort and Boost/CSI", 0, 'E' },

@@ -1469,9 +1469,8 @@ bool ProjectApolloMFD::SetTimebaseUpdate(char *rstr)
 	return false;
 }
 
-void ProjectApolloMFD::CalculateV42Angles()
+void ProjectApolloMFD::GetCSM()
 {
-
 	OBJHANDLE object;
 	VESSEL *vessel;
 
@@ -1509,6 +1508,7 @@ void ProjectApolloMFD::CalculateV42Angles()
 	if (object == NULL) {
 		object = oapiGetVesselByName("America"); // A17
 	}
+
 	if (object != NULL) {
 		vessel = oapiGetVesselInterface(object);
 		// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
@@ -1517,23 +1517,42 @@ void ProjectApolloMFD::CalculateV42Angles()
 			!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
 			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
 			saturn = (Saturn *)vessel;
-
-			if (saturn && lem)
-			{
-				VECTOR3 lmn20, csmn20;
-
-				csmn20.x = saturn->imu.Gimbal.X;
-				csmn20.y = saturn->imu.Gimbal.Y;
-				csmn20.z = saturn->imu.Gimbal.Z;
-
-				lmn20.x = lem->imu.Gimbal.X;
-				lmn20.y = lem->imu.Gimbal.Y;
-				lmn20.z = lem->imu.Gimbal.Z;
-
-				g_Data.V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
-			}
 		}
 	}
+}
+
+void ProjectApolloMFD::CalculateV42Angles()
+{
+	GetCSM();
+	
+	if (saturn && lem)
+	{
+		VECTOR3 lmn20, csmn20;
+
+		csmn20.x = saturn->imu.Gimbal.X;
+		csmn20.y = saturn->imu.Gimbal.Y;
+		csmn20.z = saturn->imu.Gimbal.Z;
+
+		lmn20.x = lem->imu.Gimbal.X;
+		lmn20.y = lem->imu.Gimbal.Y;
+		lmn20.z = lem->imu.Gimbal.Z;
+
+		g_Data.V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
+	}
+
+	saturn = NULL;
+}
+
+void ProjectApolloMFD::menuPressEnterOnCMCLGC()
+{
+	GetCSM();
+
+	if (saturn)
+	{
+		lem->DskySwitchEnter.SetState(true);
+		saturn->DskySwitchEnter.SetState(true);
+	}
+
 	saturn = NULL;
 }
 

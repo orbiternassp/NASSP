@@ -172,7 +172,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Back", 0, 'B' },
 		{ 0,0,0 },
 		{ 0,0,0 },
-		{ 0,0,0 },
+		{ "Press ENTR on DSKY in CSM and LM",0,'E' },
 		{ "Calculate V42 Angles", 0, 'F' }
 	};
 
@@ -180,8 +180,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("ENT", OAPI_KEY_E, &ProjectApolloMFD::menuPressEnterOnCMCLGC);
 	RegisterFunction("V42", OAPI_KEY_F, &ProjectApolloMFD::CalculateV42Angles);
 }
 

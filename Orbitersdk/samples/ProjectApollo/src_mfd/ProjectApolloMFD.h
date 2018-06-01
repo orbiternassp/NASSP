@@ -53,6 +53,7 @@ public:
 	bool SetSwitchSelectorChannel(char *rstr);
 	bool SetTimebaseUpdate(char *rstr);
 	void CalculateV42Angles(void);
+	void menuPressEnterOnCMCLGC(void);
 
 	void menuVoid();
 	void menuSetMainPage();
@@ -96,6 +97,9 @@ public:
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 protected:
+
+	void GetCSM();
+
 	HBITMAP hBmpLogo;
 	DWORD width;
 	DWORD height;
