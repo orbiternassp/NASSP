@@ -1175,7 +1175,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 						CMattitude.y = saturn->imu.Gimbal.Y; // INNER
 						CMattitude.z = saturn->imu.Gimbal.Z; // MIDDLE
 						// Docking tunnel angle is assumed to be zero.
-						LMattitude = OrbMech::LMDockedAlignment(CMattitude, g_Data.lmAlignType);
+						LMattitude = OrbMech::LMDockedCoarseAlignment(CMattitude, g_Data.lmAlignType);
 						// We should obtain and print CSM time, but...
 						// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
 						// Just initialize from the mission timer.
@@ -1546,7 +1546,7 @@ void ProjectApolloMFD::CalculateV42Angles()
 		lmn20.y = lem->imu.Gimbal.Y;
 		lmn20.z = lem->imu.Gimbal.Z;
 
-		g_Data.V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20, g_Data.lmAlignType);
+		g_Data.V42angles = OrbMech::LMDockedFineAlignment(lmn20, csmn20, g_Data.lmAlignType);
 	}
 
 	saturn = NULL;

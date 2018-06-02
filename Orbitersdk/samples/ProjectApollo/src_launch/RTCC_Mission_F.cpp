@@ -1336,7 +1336,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lmn20.y = lem->imu.Gimbal.Y;
 		lmn20.z = lem->imu.Gimbal.Z;
 
-		V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
+		V42angles = OrbMech::LMDockedFineAlignment(lmn20, csmn20);
 
 		form->V42Angles.x = V42angles.x*DEG;
 		form->V42Angles.y = V42angles.y*DEG;
