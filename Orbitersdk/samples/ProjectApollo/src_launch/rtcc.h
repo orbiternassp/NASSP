@@ -694,7 +694,7 @@ struct DKIOpt	//Docking Initiation Processor
 	int plan = 0;
 	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
 	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
-	int N_HC = 1;			//Number of revs between CSI and CDH
+	int N_HC = 1;			//Number of half revs between CSI and CDH
 
 	double dt_TPI_sunrise = 16.0*60.0;
 	double DeltaT_PBH = 55.0*60.0;	//Delta time between phasing and boost/CSI
@@ -742,6 +742,7 @@ struct calculationParameters {
 	double Insertion; // Time of Insertion
 	double Phasing;	// Time of Phasing
 	double CSI;		// Time of CSI
+	double CDH;		// Time of CDH
 	double TPI;		// Time of TPI
 	double TEI;		// Time of TEI
 	double EI;		// Time of Entry Interface
@@ -749,6 +750,7 @@ struct calculationParameters {
 	double lng_node;
 	double alt_node;
 	double GET_node;
+	MATRIX3 StoredREFSMMAT;
 };
 
 //For LVDC
@@ -910,6 +912,8 @@ private:
 	SV FindPericynthion(SV sv0);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
 	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
+	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
+	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	void RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 
 	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);

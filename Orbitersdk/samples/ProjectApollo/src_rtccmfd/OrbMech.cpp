@@ -5681,13 +5681,53 @@ double quadratic(double *T, double *DV)
 	return x;
 }
 
-VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20) //LM noun 20 and CSM noun 20
+VECTOR3 LMDockedAlignment(VECTOR3 csmang, bool samerefs)
+{
+	MATRIX3 LM_REFS, CSM_REFS;
+
+	LM_REFS = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
+	if (samerefs)
+	{
+		CSM_REFS = LM_REFS;
+	}
+	else
+	{
+		CSM_REFS = _M(LM_REFS.m31, LM_REFS.m32, LM_REFS.m33, LM_REFS.m21, LM_REFS.m22, LM_REFS.m23, -LM_REFS.m11, -LM_REFS.m12, -LM_REFS.m13);
+	}
+
+	return LMIMU_from_CSMIMU(CSM_REFS, LM_REFS, csmang);
+}
+
+VECTOR3 LMIMU_from_CSMIMU(MATRIX3 CSM_REFSMMAT, MATRIX3 LM_REFSMMAT, VECTOR3 csmang)
+{
+	MATRIX3 csmmat, RX, RY, lmmat, lmmat2;
+	double DockingAngle;
+
+	DockingAngle = 0.0;
+
+	csmmat = OrbMech::CALCSMSC(csmang);
+	RX = OrbMech::_MRx(60.0*RAD - DockingAngle);
+	RY = OrbMech::_MRy(180.0*RAD);
+	lmmat = mul(RY, mul(RX, csmmat));
+	lmmat2 = mul(lmmat, mul(CSM_REFSMMAT, transpose_matrix(LM_REFSMMAT)));
+
+	return OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), lmmat2);
+}
+
+VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20, bool samerefs) //LM noun 20 and CSM noun 20
 {
 	MATRIX3 lmmat, csmmat, summat, expmat;
 
 	lmmat = OrbMech::CALCSMSC(lmn20);
 	csmmat = OrbMech::CALCSMSC(csmn20);
-	summat = OrbMech::CALCSMSC(_V(300.0*RAD, PI, 0.0));
+	if (samerefs)
+	{
+		summat = OrbMech::CALCSMSC(_V(300.0*RAD, PI, 0.0));
+	}
+	else
+	{
+		summat = OrbMech::CALCSMSC(_V(300.0*RAD, PI05, 0.0));
+	}
 	expmat = mul(summat, csmmat);
 	return OrbMech::CALCGTA(mul(OrbMech::transpose_matrix(expmat), lmmat));
 }

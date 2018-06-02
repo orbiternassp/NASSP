@@ -793,6 +793,105 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BlockData(&opt, *form);
 	}
 	break;
+	case 29: //CSM Rendezvous REFSMMAT Update
+	{
+		//Rendezvous Plan
+
+		SV sv0, sv1, sv2;
+		double GETbase;
+		sv0 = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+
+		//Step 1: Find TPI0 time (25.5 minutes before sunrise)
+		double TPI0_guess, TPI0_sunrise_guess, TPI0_sunrise, TPI0, dt_sunrise;
+		dt_sunrise = 25.5*60.0;
+		TPI0_guess = OrbMech::HHMMSSToSS(95, 0, 0);
+		TPI0_sunrise_guess = TPI0_guess + dt_sunrise;
+		TPI0_sunrise = FindOrbitalSunrise(sv0, GETbase, TPI0_sunrise_guess);
+		TPI0 = TPI0_sunrise - dt_sunrise;
+
+		//Step 2: Phasing is 70 minutes before TPI0
+		calcParams.Phasing = TPI0 - 70.0*60.0;
+
+		//Step 3: Insertion is 111:42 minutes after Phasing
+		calcParams.Insertion = calcParams.Phasing + 111.0*60.0 + 42.0;
+
+		//Step 4: CSI is at 5° AOS of the TAN pass
+		double CSI_guess, lat_TAN, lng_TAN, AOS_TAN, LOS_TAN;
+		lat_TAN = groundstations[13][0];
+		lng_TAN = groundstations[13][1];
+		CSI_guess  = calcParams.Insertion + 40.0*60.0;
+		sv2 = coast(sv0, CSI_guess - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+		FindRadarAOSLOS(sv2, GETbase, lat_TAN, lng_TAN, AOS_TAN, LOS_TAN);
+		calcParams.CSI = AOS_TAN;
+
+		//Step 5: CDH is placed 44 minutes after CSI
+		calcParams.CDH = calcParams.CSI + 44.0*60.0;
+
+		//Step 6: Find TPI0 time (25.5 minutes before sunrise)
+		double TPI_guess, TPI_sunrise_guess, TPI_sunrise;
+		TPI_guess = OrbMech::HHMMSSToSS(98, 0, 0);
+		TPI_sunrise_guess = TPI_guess + dt_sunrise;
+		TPI_sunrise = FindOrbitalSunrise(sv0, GETbase, TPI_sunrise_guess);
+		calcParams.TPI = TPI_sunrise - dt_sunrise;
+
+		//Calculate LM REFSMMAT
+		REFSMMATOpt opt;
+		MATRIX3 REFSMMAT, A;
+
+		opt.GETbase = GETbase;
+		opt.REFSMMATopt = 2;
+		opt.REFSMMATTime = calcParams.TPI;
+		opt.vessel = calcParams.tgt;
+		opt.vesseltype = 3;
+
+		calcParams.StoredREFSMMAT = REFSMMATCalc(&opt);
+
+		//Convert LM REFSMMAT to CSM REFSMMAT
+		A = calcParams.StoredREFSMMAT;
+		REFSMMAT = _M(A.m31, A.m32, A.m33, A.m21, A.m22, A.m23, -A.m11, -A.m12, -A.m13);
+
+		char buffer1[1000];
+		char buffer2[1000];
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
+		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, Desired REFSMMAT");
+		}
+	}
+	break;
+	case 30: //LM Rendezvous REFSMMAT UPdate
+	{
+		MATRIX3 REFSMMAT;
+		SV sv0;
+		double GETbase;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+
+		REFSMMAT = calcParams.StoredREFSMMAT;
+
+		char buffer1[1000];
+		char buffer2[1000];
+		char buffer3[1000];
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase);
+		AGCStateVectorUpdate(buffer2, sv0, false, AGCEpoch, GETbase);
+		AGCREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch, LGCREFSAddrOffs);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector, CSM state vector, REFSMMAT");
+		}
+	}
+	break;
 	}
 
 	return scrubbed;

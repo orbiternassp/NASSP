@@ -2058,8 +2058,11 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY4STATE4: //Block Data 9 to Block Data 10
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 87 * 60 * 60 + 15 * 60, 27, MST_D_DAY5STATE1);
 				break;
-			case MST_D_DAY5STATE1: //Block Data 10 to Rendezvous REFSMMAT update
+			case MST_D_DAY5STATE1: //Block Data 10 to CSM Rendezvous REFSMMAT update
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 89 * 60 * 60 + 5 * 60, 28, MST_D_DAY5STATE2);
+				break;
+			case MST_D_DAY5STATE2: //CSM Rendezvous REFSMMAT update to LM Rendezvous REFSMMAT update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 91 * 60 * 60 + 10 * 60, 29, MST_D_DAY5STATE3);
 				break;
 			}
 			break;

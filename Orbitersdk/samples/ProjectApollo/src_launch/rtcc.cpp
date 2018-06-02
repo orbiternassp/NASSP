@@ -76,10 +76,12 @@ RTCC::RTCC()
 	calcParams.Insertion = 0.0;
 	calcParams.Phasing = 0.0;
 	calcParams.CSI = 0.0;
+	calcParams.CDH = 0.0;
 	calcParams.TPI = 0.0;
 	calcParams.src = NULL;
 	calcParams.tgt = NULL;
 	REFSMMATType = 0;
+	calcParams.StoredREFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void RTCC::Init(MCC *ptr)
@@ -4543,6 +4545,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 	SAVE_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 	SAVE_DOUBLE("RTCC_CSI", calcParams.CSI);
+	SAVE_DOUBLE("RTCC_CDH", calcParams.CDH);
 	SAVE_DOUBLE("RTCC_TPI", calcParams.TPI);
 	SAVE_DOUBLE("RTCC_alt_node", calcParams.alt_node);
 	SAVE_DOUBLE("RTCC_GET_node", calcParams.GET_node);
@@ -4554,6 +4557,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_V3("RTCC_R_TLI", calcParams.R_TLI);
 	SAVE_V3("RTCC_V_TLI", calcParams.V_TLI);
 	oapiWriteLine(scn, RTCC_END_STRING);
+	// Matrizes
+	SAVE_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
 }
 
 // Load State
@@ -4578,7 +4583,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);
 		LOAD_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 		LOAD_DOUBLE("RTCC_Phasing", calcParams.Phasing);
-		LOAD_DOUBLE("RTCC_CSI", calcParams.CSI);
+		LOAD_DOUBLE("RTCC_CDH", calcParams.CDH);
 		LOAD_DOUBLE("RTCC_TPI", calcParams.TPI);
 		LOAD_DOUBLE("RTCC_alt_node", calcParams.alt_node);
 		LOAD_DOUBLE("RTCC_GET_node", calcParams.GET_node);
@@ -4587,6 +4592,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_V3("RTCC_DVLVLH", DeltaV_LVLH);
 		LOAD_V3("RTCC_R_TLI", calcParams.R_TLI);
 		LOAD_V3("RTCC_V_TLI", calcParams.V_TLI);
+		LOAD_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
 	}
 	return;
 }
@@ -5501,6 +5507,36 @@ double RTCC::FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess)
 
 	ttoMidnight = OrbMech::sunrise(sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, 1, 1, false);
 	return t_TPI_guess + ttoMidnight;
+}
+
+void RTCC::FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS)
+{
+	VECTOR3 R_P;
+	double LmkRange, dt1, dt2;
+
+	R_P = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*oapiGetSize(sv.gravref);
+
+	dt1 = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 175.0*RAD, sv.gravref, LmkRange);
+	dt2 = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 5.0*RAD, sv.gravref, LmkRange);
+
+	GET_AOS = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt1;
+	GET_LOS = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt2;
+}
+
+double RTCC::FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess)
+{
+	SV sv1;
+	double GET_SV, dt, ttoSunrise;
+
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+
+	GET_SV = OrbMech::GETfromMJD(sv.MJD, GETbase);
+	dt = t_sunrise_guess - GET_SV;
+
+	sv1 = coast(sv, dt);
+
+	ttoSunrise = OrbMech::sunrise(sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false, false);
+	return t_sunrise_guess + ttoSunrise;
 }
 
 bool RTCC::NC1NC2Program(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh_F, double n_H1, int s, double dh, double n_C, VECTOR3 &dV_NC1_LVLH, double &dh_NC2, double &dv_NC2, double &t_NC2, VECTOR3 &dV_NC2_LVLH, double &dv_NCC, double &t_NCC, double &t_NSR, VECTOR3 &dV_NSR, bool NPC)
