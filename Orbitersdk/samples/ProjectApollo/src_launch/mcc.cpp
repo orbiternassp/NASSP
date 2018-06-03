@@ -2073,6 +2073,10 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY5STATE5: //Gyro torquing angles update to Phasing update
 				UpdateMacro(UTP_PADONLY, PT_TORQANG, cm->MissionTime > 92 * 60 * 60 + 5 * 60, 31, MST_D_DAY5STATE6);
 				break;
+			case MST_D_DAY5STATE6: //Phasing update to
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, cm->MissionTime > 95 * 60 * 60 + 10 * 60, 32, MST_D_DAY5STATE7);
+				break;
+
 			}
 			break;
 		case MTP_F:

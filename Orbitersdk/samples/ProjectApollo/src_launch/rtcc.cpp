@@ -4556,9 +4556,9 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_V3("RTCC_DVLVLH", DeltaV_LVLH);
 	SAVE_V3("RTCC_R_TLI", calcParams.R_TLI);
 	SAVE_V3("RTCC_V_TLI", calcParams.V_TLI);
-	oapiWriteLine(scn, RTCC_END_STRING);
 	// Matrizes
 	SAVE_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
+	oapiWriteLine(scn, RTCC_END_STRING);
 }
 
 // Load State
@@ -4583,6 +4583,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);
 		LOAD_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 		LOAD_DOUBLE("RTCC_Phasing", calcParams.Phasing);
+		LOAD_DOUBLE("RTCC_CSI", calcParams.CSI);
 		LOAD_DOUBLE("RTCC_CDH", calcParams.CDH);
 		LOAD_DOUBLE("RTCC_TPI", calcParams.TPI);
 		LOAD_DOUBLE("RTCC_alt_node", calcParams.alt_node);
@@ -6983,9 +6984,9 @@ void RTCC::CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &p_T, d
 	y_T = atan2(0.95 * RAD * 5.0, 5.0 + x1);
 }
 
-void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI)
+void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI)
 {
-	//Plan 1: Phasing (fixed TIG), Insertion, CSI at apolune, CDH, TPI at midnight (Apollo 10)
+	//Plan: Phasing (fixed TIG), Insertion, CSI at apolune, CDH, TPI at midnight (Apollo 10)
 
 	LambertMan lamopt, lamopt2;
 	TwoImpulseResuls lamres;

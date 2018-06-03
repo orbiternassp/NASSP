@@ -140,7 +140,7 @@ struct AP11LMManPADOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int enginetype = 1; //0 = RCS, 1 = DPS, 2 = APS
 	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
-	bool HeadsUp; //Orientation during the maneuver
+	bool HeadsUp = false; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
@@ -914,7 +914,8 @@ private:
 	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
 	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
 	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
-	void RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
+	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
+	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 
 	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
