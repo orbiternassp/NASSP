@@ -959,7 +959,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(GETbuffer1, t_Sep);
 		OrbMech::format_time_HHMMSS(GETbuffer2, t_TPI0);
 
-		sprintf(form->remarks, "Your SEP time: %s; TPI: %s", GETbuffer1, GETbuffer2);
+		sprintf(form->purpose, "Phasing");
+		sprintf(form->remarks, "Your SEP time: %s, TPI0: %s", GETbuffer1, GETbuffer2);
 	}
 	break;
 	}
