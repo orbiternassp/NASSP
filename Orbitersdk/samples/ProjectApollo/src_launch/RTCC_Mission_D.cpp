@@ -1039,6 +1039,46 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "Insertion");
 	}
 	break;
+	case 35: //CSI UPDATE
+	{
+		AP10CSI * form = (AP10CSI *)pad;
+
+		AP10CSIPADOpt manopt;
+		SPQOpt opt;
+		SV sv_A, sv_P, sv_CSI;
+		MATRIX3 Q_Xx;
+		VECTOR3 dV, dV_LVLH;
+		double GETbase, t_TPI;
+
+		GETbase = getGETBase();
+		sv_A = StateVectorCalc(calcParams.tgt);
+		sv_P = StateVectorCalc(calcParams.src);
+
+		opt.E = 27.5*RAD;
+		opt.GETbase = GETbase;
+		opt.maneuver = 0;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.type = 0;
+		opt.t_TIG = calcParams.CSI;
+		opt.t_TPI = calcParams.TPI;
+
+		ConcentricRendezvousProcessor(&opt, dV, t_TPI);
+		sv_CSI = coast(sv_A, opt.t_TIG - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
+		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
+		dV_LVLH = mul(Q_Xx, dV);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_APS;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv0 = sv_A;
+		manopt.t_CSI = calcParams.CSI;
+		manopt.t_TPI = calcParams.TPI;
+
+		AP10CSIPAD(&manopt, *form);
+	}
+	break;
 	}
 
 	return scrubbed;

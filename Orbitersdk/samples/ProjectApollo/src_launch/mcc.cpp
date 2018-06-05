@@ -2080,10 +2080,10 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, cm->MissionTime > 95 * 60 * 60 + 10 * 60, 33, MST_D_DAY5STATE8);
 				break;
 			case MST_D_DAY5STATE8: //Insertion update to CSI update
-				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, rtcc->calcParams.Insertion + 15.0*60.0, 34, MST_D_DAY5STATE9);
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, cm->MissionTime > rtcc->calcParams.Insertion + 10.0*60.0, 34, MST_D_DAY5STATE9);
 				break;
 			case MST_D_DAY5STATE9: //CSI update to CDH update
-				UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->calcParams.CSI + 20.0*60.0, 35, MST_D_DAY5STATE10);
+				UpdateMacro(UTP_PADONLY, PT_AP10CSI, cm->MissionTime > rtcc->calcParams.CSI + 15.0*60.0, 35, MST_D_DAY5STATE10);
 				break;
 
 			}
