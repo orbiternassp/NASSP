@@ -1195,6 +1195,65 @@ void RTCC::AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad)
 	pad.dH_Max = TPIPAD_ddH / 1852.0;
 }
 
+void RTCC::AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad)
+{
+	SV sv_A1, sv_P1;
+	MATRIX3 Rot1, Rot2, M;
+	VECTOR3 u, U_L, dV_LOS, IMUangles, FDAIangles, R1, R2, R3;
+	double R, Rdot;
+
+	sv_A1 = coast(opt->sv_A, opt->TIG - OrbMech::GETfromMJD(opt->sv_A.MJD, opt->GETbase));
+	sv_P1 = coast(opt->sv_P, opt->TIG - OrbMech::GETfromMJD(opt->sv_P.MJD, opt->GETbase));
+	Rot1 = OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V);
+
+	u = unit(crossp(sv_A1.R, sv_A1.V));
+	U_L = unit(sv_P1.R - sv_A1.R);
+	R1 = U_L;
+	R2 = unit(crossp(crossp(u, R1), R1));
+	R3 = crossp(R1, R2);
+	Rot2 = _M(R1.x, R1.y, R1.z, R2.x, R2.y, R2.z, R3.x, R3.y, R3.z);
+
+	dV_LOS = mul(Rot2, tmul(Rot1, opt->dV_LVLH));
+
+	R = abs(length(sv_P1.R - sv_A1.R));
+	Rdot = dotp(sv_P1.V - sv_A1.V, U_L);
+
+	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), Rot1));
+
+	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.y = atan2(((sin(IMUangles.y)*cos(IMUangles.x) + cos(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z)), (cos(IMUangles.y)*cos(IMUangles.x) - sin(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z));
+	}
+
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.x = atan2(sin(IMUangles.z), cos(IMUangles.z)*cos(IMUangles.x));
+	}
+
+	if (FDAIangles.x < 0)
+	{
+		FDAIangles.x += PI2;
+	}
+	if (FDAIangles.y < 0)
+	{
+		FDAIangles.y += PI2;
+	}
+	if (FDAIangles.z < 0)
+	{
+		FDAIangles.z += PI2;
+	}
+
+	pad.Att = _V(OrbMech::imulimit(FDAIangles.x*DEG), OrbMech::imulimit(FDAIangles.y*DEG), OrbMech::imulimit(FDAIangles.z*DEG));
+	pad.Backup_dV = dV_LOS / 0.3048;
+	pad.dVR = length(opt->dV_LVLH);
+	pad.GETI = opt->TIG;
+	pad.R = R / 1852.0;
+	pad.Rdot = Rdot / 0.3048;
+	pad.Vg = opt->dV_LVLH / 0.3048;
+}
+
 void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
 {
 	double CSMmass, LMmass, p_T, y_T;

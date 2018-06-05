@@ -169,6 +169,16 @@ struct AP7TPIPADOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 };
 
+struct AP9LMTPIPADOpt
+{
+	SV sv_A; //Chaser state vector
+	SV sv_P; //Target state vector
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	MATRIX3 REFSMMAT;	//REFSMMAT
+};
+
 struct EarthEntryOpt
 {
 	VESSEL* vessel; //Reentry vessel
@@ -801,6 +811,7 @@ public:
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
+	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);

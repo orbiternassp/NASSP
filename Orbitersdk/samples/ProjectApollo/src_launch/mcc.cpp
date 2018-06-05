@@ -2073,8 +2073,17 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY5STATE5: //Gyro torquing angles update to Phasing update
 				UpdateMacro(UTP_PADONLY, PT_TORQANG, cm->MissionTime > 92 * 60 * 60 + 5 * 60, 31, MST_D_DAY5STATE6);
 				break;
-			case MST_D_DAY5STATE6: //Phasing update to
-				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, cm->MissionTime > 95 * 60 * 60 + 10 * 60, 32, MST_D_DAY5STATE7);
+			case MST_D_DAY5STATE6: //Phasing update to TPI0 update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, cm->MissionTime > 94 * 60 * 60 + 30 * 60, 32, MST_D_DAY5STATE7);
+				break;
+			case MST_D_DAY5STATE7: //TPI0 update to Insertion update
+				UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, cm->MissionTime > 95 * 60 * 60 + 10 * 60, 33, MST_D_DAY5STATE8);
+				break;
+			case MST_D_DAY5STATE8: //Insertion update to CSI update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, rtcc->calcParams.Insertion + 15.0*60.0, 34, MST_D_DAY5STATE9);
+				break;
+			case MST_D_DAY5STATE9: //CSI update to CDH update
+				UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->calcParams.CSI + 20.0*60.0, 35, MST_D_DAY5STATE10);
 				break;
 
 			}
@@ -3274,6 +3283,18 @@ void MCC::SaveState(FILEHANDLE scn) {
 
 			SAVE_V3("MCC_TORQANG_V42Angles", form->V42Angles);
 		}
+		else if (padNumber == PT_AP9LMTPI)
+		{
+			AP9LMTPI * form = (AP9LMTPI *)padForm;
+
+			SAVE_DOUBLE("MCC_AP9LMTPI_dVR", form->dVR);
+			SAVE_DOUBLE("MCC_AP9LMTPI_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP9LMTPI_R", form->R);
+			SAVE_DOUBLE("MCC_AP9LMTPI_Rdot", form->Rdot);
+			SAVE_V3("MCC_AP9LMTPI_Att", form->Att);
+			SAVE_V3("MCC_AP9LMTPI_Backup_dV", form->Backup_dV);
+			SAVE_V3("MCC_AP9LMTPI_Vg", form->Vg);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3640,6 +3661,18 @@ void MCC::LoadState(FILEHANDLE scn) {
 
 			LOAD_V3("MCC_TORQANG_V42Angles", form->V42Angles);
 		}
+		else if (padNumber == PT_AP9LMTPI)
+		{
+			AP9LMTPI * form = (AP9LMTPI *)padForm;
+
+			LOAD_DOUBLE("MCC_AP9LMTPI_dVR", form->dVR);
+			LOAD_DOUBLE("MCC_AP9LMTPI_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP9LMTPI_R", form->R);
+			LOAD_DOUBLE("MCC_AP9LMTPI_Rdot", form->Rdot);
+			LOAD_V3("MCC_AP9LMTPI_Att", form->Att);
+			LOAD_V3("MCC_AP9LMTPI_Backup_dV", form->Backup_dV);
+			LOAD_V3("MCC_AP9LMTPI_Vg", form->Vg);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -3995,6 +4028,21 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP9LMTPI:
+	{
+		AP9LMTPI * form = (AP9LMTPI *)padForm;
+		int hh, mm;
+		double ss;
+
+		SStoHHMMSS(form->GETI, hh, mm, ss);
+
+		sprintf(buffer, "TPI UPDATE (P34)\n%+06d HR N37\n%+06d MIN TIG\n%+07.2f SEC TPI\n%+07.1f DVX N81\n%+07.1f DVY LOCAL\n%+07.1f DVZ VERT\n%+07.1f DVR N42\n"
+			"XXX%03.0f RLM FDAI N18\nXXX%03.0f PLM INER\n%+07.2f R TPI N54\n%+07.1f RDOT TPI\n%+07.1f F/A (+/-) N59\n%+07.1f L/R (-/+) DV\n%+07.1f U/D (-/+) LOS", 
+			hh, mm, ss, form->Vg.x, form->Vg.y, form->Vg.z, form->dVR, form->Att.x, form->Att.y, form->R, form->Rdot, form->Backup_dV.x, form->Backup_dV.y, form->Backup_dV.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -4077,6 +4125,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_TORQANG: // TORQANG
 		padForm = calloc(1, sizeof(TORQANG));
+		break;
+	case PT_AP9LMTPI: // AP9LMTPI
+		padForm = calloc(1, sizeof(AP9LMTPI));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

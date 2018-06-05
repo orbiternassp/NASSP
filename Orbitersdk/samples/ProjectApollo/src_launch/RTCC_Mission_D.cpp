@@ -919,6 +919,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		mu = GGRAV * oapiGetMass(sv.gravref);
 
 		DMissionRendezvousPlan(sv, GETbase, t_TPI0);
+		//Store the TPI0 time here, the nominal TPI time is already stored in calcParams.TPI
+		TimeofIgnition = t_TPI0;
 
 		eps = length(sv.V)*length(sv.V) / 2.0 - mu / length(sv.R);
 		a = -mu / (2.0*eps);
@@ -961,6 +963,80 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sprintf(form->purpose, "Phasing");
 		sprintf(form->remarks, "Your SEP time: %s, TPI0: %s", GETbuffer1, GETbuffer2);
+	}
+	break;
+	case 33: //TPI0 MANEUVER
+	{
+		AP9LMTPI * form = (AP9LMTPI *)pad;
+
+		SV sv_A, sv_P;
+		LambertMan opt;
+		AP9LMTPIPADOpt manopt;
+		TwoImpulseResuls res;
+		double GETbase, mu;
+
+		sv_P = StateVectorCalc(calcParams.src);
+		sv_A = StateVectorCalc(calcParams.tgt);
+		GETbase = getGETBase();
+		mu = GGRAV * oapiGetMass(sv_P.gravref);
+
+		opt.GETbase = GETbase;
+		opt.N = 0;
+		opt.Offset = _V(0, 0, 0);
+		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.T1 = TimeofIgnition;
+		opt.T2 = TimeofIgnition + OrbMech::time_theta(sv_P.R, sv_P.V, 130.0*RAD, mu);
+
+		LambertTargeting(&opt, res);
+
+		manopt.dV_LVLH = res.dV_LVLH;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv_A = sv_A;
+		manopt.sv_P = sv_P;
+		manopt.TIG = opt.T1;
+
+		AP9LMTPIPAD(&manopt, *form);
+	}
+	break;
+	case 34: //INSERTION MANEUVER
+	{
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		CDHOpt opt;
+		AP11LMManPADOpt manopt;
+		SV sv0;
+		VECTOR3 dV_LVLH;
+		double TIG, GETbase, P30TIG;
+
+		sv0 = StateVectorCalc(calcParams.tgt);
+		GETbase = getGETBase();
+
+		TIG = calcParams.Insertion;
+
+		opt.CDHtimemode = 0;
+		opt.GETbase = GETbase;
+		opt.impulsive = RTCC_NONIMPULSIVE;
+		opt.target = calcParams.src;
+		opt.TIG = TIG;
+		opt.vessel = calcParams.tgt;
+		opt.vesseltype = 1;
+
+		CDHcalc(&opt, dV_LVLH, P30TIG);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&manopt, *form);
+
+		sprintf(form->purpose, "Insertion");
 	}
 	break;
 	}
