@@ -122,6 +122,20 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 5: //CSM DAP DATA
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		CSMDAPUpdate(calcParams.src, *form);
+	}
+	break;
+	case 6: //LM DAP DATA
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		LMDAPUpdate(calcParams.tgt, *form);
+	}
+	break;
 	case 9: //DAYLIGHT STAR CHECK
 	{
 		STARCHKPAD * form = (STARCHKPAD *)pad;
@@ -612,7 +626,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lmn20.y = lem->imu.Gimbal.Y;
 		lmn20.z = lem->imu.Gimbal.Z;
 
-		V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
+		V42angles = OrbMech::LMDockedFineAlignment(lmn20, csmn20);
 
 		form->V42Angles.x = V42angles.x*DEG;
 		form->V42Angles.y = V42angles.y*DEG;
@@ -793,7 +807,201 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BlockData(&opt, *form);
 	}
 	break;
+	case 29: //CSM Rendezvous REFSMMAT Update
+	{
+		//Rendezvous Plan
+
+		SV sv0, sv1, sv2;
+		double GETbase, t_TPI0;
+		sv0 = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+
+		DMissionRendezvousPlan(sv0, GETbase, t_TPI0);
+
+		//Calculate LM REFSMMAT
+		REFSMMATOpt opt;
+		MATRIX3 REFSMMAT, A;
+
+		opt.GETbase = GETbase;
+		opt.REFSMMATopt = 2;
+		opt.REFSMMATTime = calcParams.TPI;
+		opt.vessel = calcParams.tgt;
+		opt.vesseltype = 3;
+
+		calcParams.StoredREFSMMAT = REFSMMATCalc(&opt);
+
+		//Convert LM REFSMMAT to CSM REFSMMAT
+		A = calcParams.StoredREFSMMAT;
+		REFSMMAT = _M(A.m31, A.m32, A.m33, A.m21, A.m22, A.m23, -A.m11, -A.m12, -A.m13);
+
+		char buffer1[1000];
+		char buffer2[1000];
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
+		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, Desired REFSMMAT");
+		}
+	}
+	break;
+	case 30: //LM Rendezvous REFSMMAT Update
+	{
+		MATRIX3 REFSMMAT;
+		SV sv0;
+		double GETbase;
+
+		AP7NAV * form = (AP7NAV *)pad;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+
+		REFSMMAT = calcParams.StoredREFSMMAT;
+
+		char buffer1[1000];
+		char buffer2[1000];
+		char buffer3[1000];
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase);
+		AGCStateVectorUpdate(buffer2, sv0, false, AGCEpoch, GETbase);
+		AGCREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch, LGCREFSAddrOffs);
+
+		NavCheckPAD(sv0, *form, GETbase);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector, CSM state vector, REFSMMAT");
+		}
+	}
+	break;
+	case 31: //LM GYRO TORQUING ANGLES
+	{
+		TORQANG * form = (TORQANG *)pad;
+		LEM *lem = (LEM *)calcParams.tgt;
+
+		VECTOR3 lmn20, csmn20, V42angles;
+
+		csmn20.x = calcParams.src->imu.Gimbal.X;
+		csmn20.y = calcParams.src->imu.Gimbal.Y;
+		csmn20.z = calcParams.src->imu.Gimbal.Z;
+
+		lmn20.x = lem->imu.Gimbal.X;
+		lmn20.y = lem->imu.Gimbal.Y;
+		lmn20.z = lem->imu.Gimbal.Z;
+
+		V42angles = OrbMech::LMDockedFineAlignment(lmn20, csmn20, false);
+
+		form->V42Angles.x = V42angles.x*DEG;
+		form->V42Angles.y = V42angles.y*DEG;
+		form->V42Angles.z = V42angles.z*DEG;
+	}
+	break;
+	case 32: //LM PHASING MANEUVER
+	{
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		AP11LMManPADOpt opt;
+		SV sv, sv1;
+		MATRIX3 Q_Xx;
+		VECTOR3 dV_LVLH, DV;
+		double mu, eps, a, n0, n1, n2, dt1, dt2, dh1, dh2, dphase, dv, dphase_bias, t_TPI0, GETbase, P30TIG, t_Sep;
+
+		//about 10NM less phasing in the coelliptic orbit above
+		dphase_bias = 0.0027987178;
+
+		sv = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+		mu = GGRAV * oapiGetMass(sv.gravref);
+
+		DMissionRendezvousPlan(sv, GETbase, t_TPI0);
+
+		eps = length(sv.V)*length(sv.V) / 2.0 - mu / length(sv.R);
+		a = -mu / (2.0*eps);
+		n0 = sqrt(mu / pow(a, 3));
+
+		dt1 = calcParams.CSI - calcParams.Insertion;
+		dt2 = calcParams.TPI - calcParams.CDH;
+
+		dh2 = 10.0*1852.0;
+		n2 = sqrt(mu / pow((a - dh2), 3));
+		dphase = (n2 - n0)*dt2 - dphase_bias;
+
+		n1 = -dphase / dt1 + n0;
+		dh1 = OrbMech::power(mu / (n1*n1), 1.0 / 3.0) - a;
+		dv = dh1 * n0;
+
+		sv1 = coast(sv, calcParams.Phasing - OrbMech::GETfromMJD(sv.MJD, GETbase));
+		Q_Xx = OrbMech::LVLH_Matrix(sv1.R, sv1.V);
+		DV = tmul(Q_Xx, _V(0, 0, -dv));
+
+		PoweredFlightProcessor(sv, GETbase, calcParams.Phasing, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, P30TIG, dV_LVLH);
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&opt, *form);
+
+		t_Sep = calcParams.Phasing - 45.0*60.0;
+
+		char GETbuffer1[64];
+		char GETbuffer2[64];
+
+		OrbMech::format_time_HHMMSS(GETbuffer1, t_Sep);
+		OrbMech::format_time_HHMMSS(GETbuffer2, t_TPI0);
+
+		sprintf(form->purpose, "Phasing");
+		sprintf(form->remarks, "Your SEP time: %s, TPI0: %s", GETbuffer1, GETbuffer2);
+	}
+	break;
 	}
 
 	return scrubbed;
+}
+
+void RTCC::DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0)
+{
+	SV sv2;
+
+	//Step 1: Find TPI0 time (25.5 minutes before sunrise)
+	double TPI0_guess, TPI0_sunrise_guess, TPI0_sunrise, dt_sunrise;
+	dt_sunrise = 25.5*60.0;
+	TPI0_guess = OrbMech::HHMMSSToSS(95, 0, 0);
+	TPI0_sunrise_guess = TPI0_guess + dt_sunrise;
+	TPI0_sunrise = FindOrbitalSunrise(sv_A0, GETbase, TPI0_sunrise_guess);
+	t_TPI0 = TPI0_sunrise - dt_sunrise;
+
+	//Step 2: Phasing is 70 minutes before TPI0
+	calcParams.Phasing = t_TPI0 - 70.0*60.0;
+
+	//Step 3: Insertion is 111:42 minutes after Phasing
+	calcParams.Insertion = calcParams.Phasing + 111.0*60.0 + 42.0;
+
+	//Step 4: CSI is two minutes (rounded) into after 5° AOS of the TAN pass
+	double CSI_guess, lat_TAN, lng_TAN, AOS_TAN, LOS_TAN;
+	lat_TAN = groundstations[13][0];
+	lng_TAN = groundstations[13][1];
+	CSI_guess = calcParams.Insertion + 40.0*60.0;
+	sv2 = coast(sv_A0, CSI_guess - OrbMech::GETfromMJD(sv_A0.MJD, GETbase));
+	FindRadarAOSLOS(sv2, GETbase, lat_TAN, lng_TAN, AOS_TAN, LOS_TAN);
+	calcParams.CSI = (floor(AOS_TAN / 60.0) + 2.0)*60.0;
+
+	//Step 5: CDH is placed 44.4 minutes after CSI
+	calcParams.CDH = calcParams.CSI + 44.4*60.0;
+
+	//Step 6: Find TPI0 time (25.5 minutes before sunrise)
+	double TPI_guess, TPI_sunrise_guess, TPI_sunrise;
+	TPI_guess = OrbMech::HHMMSSToSS(98, 0, 0);
+	TPI_sunrise_guess = TPI_guess + dt_sunrise;
+	TPI_sunrise = FindOrbitalSunrise(sv_A0, GETbase, TPI_sunrise_guess);
+	calcParams.TPI = TPI_sunrise - dt_sunrise;
 }

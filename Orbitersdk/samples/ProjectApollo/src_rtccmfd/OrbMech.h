@@ -344,7 +344,10 @@ namespace OrbMech {
 	double HHMMSSToSS(double H, double M, double S);
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	void rv_from_adbar(VECTOR3 R, VECTOR3 V, double &rmag, double &vmag, double &rtasc, double &decl, double &fpav, double &az);
-	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20);
+	VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs);
+	VECTOR3 LMIMU_from_CSMIMU(MATRIX3 CSM_REFSMMAT, MATRIX3 LM_REFSMMAT, VECTOR3 csmang);
+	VECTOR3 LMDockedFineAlignment(VECTOR3 lmang, VECTOR3 csmang, bool samerefs = true);
+	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20, MATRIX3 LM_REFSMMAT, MATRIX3 CSM_REFSMMAT);
 	//Earth-Moon-Plane Matrix, converts ecliptic coordinates to EMP coordinates.
 	MATRIX3 EMPMatrix(double MJD);
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);

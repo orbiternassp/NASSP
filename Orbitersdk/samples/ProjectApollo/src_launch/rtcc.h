@@ -140,7 +140,7 @@ struct AP11LMManPADOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int enginetype = 1; //0 = RCS, 1 = DPS, 2 = APS
 	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
-	bool HeadsUp; //Orientation during the maneuver
+	bool HeadsUp = false; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
@@ -694,7 +694,7 @@ struct DKIOpt	//Docking Initiation Processor
 	int plan = 0;
 	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
 	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
-	int N_HC = 1;			//Number of revs between CSI and CDH
+	int N_HC = 1;			//Number of half revs between CSI and CDH
 
 	double dt_TPI_sunrise = 16.0*60.0;
 	double DeltaT_PBH = 55.0*60.0;	//Delta time between phasing and boost/CSI
@@ -742,6 +742,7 @@ struct calculationParameters {
 	double Insertion; // Time of Insertion
 	double Phasing;	// Time of Phasing
 	double CSI;		// Time of CSI
+	double CDH;		// Time of CDH
 	double TPI;		// Time of TPI
 	double TEI;		// Time of TEI
 	double EI;		// Time of Entry Interface
@@ -749,6 +750,7 @@ struct calculationParameters {
 	double lng_node;
 	double alt_node;
 	double GET_node;
+	MATRIX3 StoredREFSMMAT;
 };
 
 //For LVDC
@@ -910,7 +912,10 @@ private:
 	SV FindPericynthion(SV sv0);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
 	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
-	void RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
+	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
+	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
+	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
+	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 
 	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);

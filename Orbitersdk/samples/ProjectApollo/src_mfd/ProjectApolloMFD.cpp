@@ -102,6 +102,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	int iuUplinkSwitSelChannel;
 	int iuUplinkResult;
 	double iuUplinkTimebaseUpdateTime;
+	bool lmAlignType;	//true = same REFSMMAT; false = nominal alignments
 
 	VECTOR3 V42angles;
 
@@ -158,6 +159,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.iuUplinkSwitSelStage = 0;
 	g_Data.iuUplinkSwitSelChannel = 1;
 	g_Data.iuUplinkResult = 0;
+	g_Data.lmAlignType = true;
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -1169,13 +1171,11 @@ void ProjectApolloMFD::Update (HDC hDC)
 						unsigned short tephem[3];
 						// Obtain CM attitude.
 						// It would be better to call GetTotalAttitude() but for some reason VC++ refuses to link it properly. Sigh.
-						CMattitude.x = saturn->imu.Gimbal.X*DEG; // OUTER
-						CMattitude.y = saturn->imu.Gimbal.Y*DEG; // INNER
-						CMattitude.z = saturn->imu.Gimbal.Z*DEG; // MIDDLE
+						CMattitude.x = saturn->imu.Gimbal.X; // OUTER
+						CMattitude.y = saturn->imu.Gimbal.Y; // INNER
+						CMattitude.z = saturn->imu.Gimbal.Z; // MIDDLE
 						// Docking tunnel angle is assumed to be zero.
-						LMattitude.x = 300-CMattitude.x; if(LMattitude.x < 0){ LMattitude.x += 360; }
-						LMattitude.y = 180+CMattitude.y; if(LMattitude.y > 360){ LMattitude.y -= 360; }
-						LMattitude.z = 360-CMattitude.z; if(LMattitude.z < 0){ LMattitude.x += 360; }
+						LMattitude = OrbMech::LMDockedCoarseAlignment(CMattitude, g_Data.lmAlignType);
 						// We should obtain and print CSM time, but...
 						// the update delay of the MFD makes time correction less than one second a pain at best, so we won't bother for now.
 						// Just initialize from the mission timer.
@@ -1186,9 +1186,9 @@ void ProjectApolloMFD::Update (HDC hDC)
 						sprintf(buffer,"TEPHEM: %05o %05o %05o",tephem[0],tephem[1],tephem[2]);
 						TextOut(hDC, width / 2, (int) (height * 0.4), buffer, strlen(buffer));
 						// Format gimbal angles and print them
-						sprintf(buffer, "CSM O/I/M: %3.2f %3.2f %3.2f", CMattitude.x, CMattitude.y, CMattitude.z);
+						sprintf(buffer, "CSM O/I/M: %3.2f %3.2f %3.2f", CMattitude.x*DEG, CMattitude.y*DEG, CMattitude.z*DEG);
 						TextOut(hDC, width / 2, (int) (height * 0.45), buffer, strlen(buffer));
-						sprintf(buffer, "LM O/I/M: %3.2f %3.2f %3.2f", LMattitude.x, LMattitude.y, LMattitude.z);
+						sprintf(buffer, "LM O/I/M: %3.2f %3.2f %3.2f", LMattitude.x*DEG, LMattitude.y*DEG, LMattitude.z*DEG);
 						TextOut(hDC, width / 2, (int) (height * 0.5), buffer, strlen(buffer));
 
 						//Docked IMU Fine Alignment
@@ -1196,6 +1196,15 @@ void ProjectApolloMFD::Update (HDC hDC)
 
 						sprintf(buffer, "V42: %+07.3f %+07.3f %+07.3f", g_Data.V42angles.x*DEG, g_Data.V42angles.y*DEG, g_Data.V42angles.z*DEG);
 						TextOut(hDC, width / 2, (int)(height * 0.7), buffer, strlen(buffer));
+
+						if (g_Data.lmAlignType)
+						{
+							TextOut(hDC, width / 2, (int)(height * 0.85), "Alignment: Identical", 20);
+						}
+						else
+						{
+							TextOut(hDC, width / 2, (int)(height * 0.85), "Alignment: LVLH", 15);
+						}
 
 						saturn = NULL; // Clobber
 				}
@@ -1469,9 +1478,8 @@ bool ProjectApolloMFD::SetTimebaseUpdate(char *rstr)
 	return false;
 }
 
-void ProjectApolloMFD::CalculateV42Angles()
+void ProjectApolloMFD::GetCSM()
 {
-
 	OBJHANDLE object;
 	VESSEL *vessel;
 
@@ -1509,6 +1517,7 @@ void ProjectApolloMFD::CalculateV42Angles()
 	if (object == NULL) {
 		object = oapiGetVesselByName("America"); // A17
 	}
+
 	if (object != NULL) {
 		vessel = oapiGetVesselInterface(object);
 		// If some jerk names the S4B a CM name instead this will probably screw up, but who would do that?
@@ -1517,24 +1526,48 @@ void ProjectApolloMFD::CalculateV42Angles()
 			!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
 			!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
 			saturn = (Saturn *)vessel;
-
-			if (saturn && lem)
-			{
-				VECTOR3 lmn20, csmn20;
-
-				csmn20.x = saturn->imu.Gimbal.X;
-				csmn20.y = saturn->imu.Gimbal.Y;
-				csmn20.z = saturn->imu.Gimbal.Z;
-
-				lmn20.x = lem->imu.Gimbal.X;
-				lmn20.y = lem->imu.Gimbal.Y;
-				lmn20.z = lem->imu.Gimbal.Z;
-
-				g_Data.V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
-			}
 		}
 	}
+}
+
+void ProjectApolloMFD::CalculateV42Angles()
+{
+	GetCSM();
+	
+	if (saturn && lem)
+	{
+		VECTOR3 lmn20, csmn20;
+
+		csmn20.x = saturn->imu.Gimbal.X;
+		csmn20.y = saturn->imu.Gimbal.Y;
+		csmn20.z = saturn->imu.Gimbal.Z;
+
+		lmn20.x = lem->imu.Gimbal.X;
+		lmn20.y = lem->imu.Gimbal.Y;
+		lmn20.z = lem->imu.Gimbal.Z;
+
+		g_Data.V42angles = OrbMech::LMDockedFineAlignment(lmn20, csmn20, g_Data.lmAlignType);
+	}
+
 	saturn = NULL;
+}
+
+void ProjectApolloMFD::menuPressEnterOnCMCLGC()
+{
+	GetCSM();
+
+	if (saturn)
+	{
+		lem->DskySwitchEnter.SetState(true);
+		saturn->DskySwitchEnter.SetState(true);
+	}
+
+	saturn = NULL;
+}
+
+void ProjectApolloMFD::menuCycleLMAlignType()
+{
+	g_Data.lmAlignType = !g_Data.lmAlignType;
 }
 
 void ProjectApolloMFD::menuVoid(){}

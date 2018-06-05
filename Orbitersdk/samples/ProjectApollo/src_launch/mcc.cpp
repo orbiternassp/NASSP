@@ -2058,9 +2058,25 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY4STATE4: //Block Data 9 to Block Data 10
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 87 * 60 * 60 + 15 * 60, 27, MST_D_DAY5STATE1);
 				break;
-			case MST_D_DAY5STATE1: //Block Data 10 to Rendezvous REFSMMAT update
+			case MST_D_DAY5STATE1: //Block Data 10 to CSM Rendezvous REFSMMAT update
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 89 * 60 * 60 + 5 * 60, 28, MST_D_DAY5STATE2);
 				break;
+			case MST_D_DAY5STATE2: //CSM Rendezvous REFSMMAT update to LM DAP update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 91 * 60 * 60, 29, MST_D_DAY5STATE3);
+				break;
+			case MST_D_DAY5STATE3: //LM DAP update to LM Rendezvous REFSMMAT update
+				UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, cm->MissionTime > 91 * 60 * 60 + 10 * 60, 6, MST_D_DAY5STATE4);
+				break;
+			case MST_D_DAY5STATE4: //LM Rendezvous REFSMMAT update to gyro torquing angles update
+				UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP7NAV, cm->MissionTime > 91 * 60 * 60 + 15 * 60, 30, MST_D_DAY5STATE5);
+				break;
+			case MST_D_DAY5STATE5: //Gyro torquing angles update to Phasing update
+				UpdateMacro(UTP_PADONLY, PT_TORQANG, cm->MissionTime > 92 * 60 * 60 + 5 * 60, 31, MST_D_DAY5STATE6);
+				break;
+			case MST_D_DAY5STATE6: //Phasing update to
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, cm->MissionTime > 95 * 60 * 60 + 10 * 60, 32, MST_D_DAY5STATE7);
+				break;
+
 			}
 			break;
 		case MTP_F:

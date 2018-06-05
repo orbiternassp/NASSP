@@ -76,10 +76,12 @@ RTCC::RTCC()
 	calcParams.Insertion = 0.0;
 	calcParams.Phasing = 0.0;
 	calcParams.CSI = 0.0;
+	calcParams.CDH = 0.0;
 	calcParams.TPI = 0.0;
 	calcParams.src = NULL;
 	calcParams.tgt = NULL;
 	REFSMMATType = 0;
+	calcParams.StoredREFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
 void RTCC::Init(MCC *ptr)
@@ -4543,6 +4545,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 	SAVE_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 	SAVE_DOUBLE("RTCC_CSI", calcParams.CSI);
+	SAVE_DOUBLE("RTCC_CDH", calcParams.CDH);
 	SAVE_DOUBLE("RTCC_TPI", calcParams.TPI);
 	SAVE_DOUBLE("RTCC_alt_node", calcParams.alt_node);
 	SAVE_DOUBLE("RTCC_GET_node", calcParams.GET_node);
@@ -4553,6 +4556,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_V3("RTCC_DVLVLH", DeltaV_LVLH);
 	SAVE_V3("RTCC_R_TLI", calcParams.R_TLI);
 	SAVE_V3("RTCC_V_TLI", calcParams.V_TLI);
+	// Matrizes
+	SAVE_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
 	oapiWriteLine(scn, RTCC_END_STRING);
 }
 
@@ -4579,6 +4584,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 		LOAD_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 		LOAD_DOUBLE("RTCC_CSI", calcParams.CSI);
+		LOAD_DOUBLE("RTCC_CDH", calcParams.CDH);
 		LOAD_DOUBLE("RTCC_TPI", calcParams.TPI);
 		LOAD_DOUBLE("RTCC_alt_node", calcParams.alt_node);
 		LOAD_DOUBLE("RTCC_GET_node", calcParams.GET_node);
@@ -4587,6 +4593,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_V3("RTCC_DVLVLH", DeltaV_LVLH);
 		LOAD_V3("RTCC_R_TLI", calcParams.R_TLI);
 		LOAD_V3("RTCC_V_TLI", calcParams.V_TLI);
+		LOAD_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
 	}
 	return;
 }
@@ -5501,6 +5508,36 @@ double RTCC::FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess)
 
 	ttoMidnight = OrbMech::sunrise(sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, 1, 1, false);
 	return t_TPI_guess + ttoMidnight;
+}
+
+void RTCC::FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS)
+{
+	VECTOR3 R_P;
+	double LmkRange, dt1, dt2;
+
+	R_P = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*oapiGetSize(sv.gravref);
+
+	dt1 = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 175.0*RAD, sv.gravref, LmkRange);
+	dt2 = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 5.0*RAD, sv.gravref, LmkRange);
+
+	GET_AOS = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt1;
+	GET_LOS = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt2;
+}
+
+double RTCC::FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess)
+{
+	SV sv1;
+	double GET_SV, dt, ttoSunrise;
+
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+
+	GET_SV = OrbMech::GETfromMJD(sv.MJD, GETbase);
+	dt = t_sunrise_guess - GET_SV;
+
+	sv1 = coast(sv, dt);
+
+	ttoSunrise = OrbMech::sunrise(sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false, false);
+	return t_sunrise_guess + ttoSunrise;
 }
 
 bool RTCC::NC1NC2Program(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh_F, double n_H1, int s, double dh, double n_C, VECTOR3 &dV_NC1_LVLH, double &dh_NC2, double &dv_NC2, double &t_NC2, VECTOR3 &dV_NC2_LVLH, double &dv_NCC, double &t_NCC, double &t_NSR, VECTOR3 &dV_NSR, bool NPC)
@@ -6945,112 +6982,6 @@ void RTCC::CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &p_T, d
 	x1 = LMmass / (CSMmass + LMmass)*6.2;
 	p_T = atan2(-2.15 * RAD * 5.0, 5.0 + x1);
 	y_T = atan2(0.95 * RAD * 5.0, 5.0 + x1);
-}
-
-void RTCC::RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI)
-{
-	//Plan 1: Phasing (fixed TIG), Insertion, CSI at apolune, CDH, TPI at midnight (Apollo 10)
-
-	LambertMan lamopt, lamopt2;
-	TwoImpulseResuls lamres;
-	double t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, mu, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
-	VECTOR3 dV_Phasing, dV_Insertion, dV_CDH, DVX;
-	MATRIX3 Q_Xx;
-	SV sv_P0, sv_P_CSI, sv_Phasing, sv_Phasing_apo, sv_Insertion, sv_Insertion_apo, sv_CSI, sv_CSI_apo, sv_CDH, sv_CDH_apo, sv_P_CDH;
-
-	mu = GGRAV * oapiGetMass(sv_A0.gravref);
-
-	t_Phasing = t_TIG;
-	dt = 7017.0;
-	dt2 = 3028.0;
-	dv_CSI = 50.0*0.3048;
-	DH = 15.0*1852.0;
-	ddt = 10.0;
-
-	sv_P0 = StateVectorCalc(target);
-
-	lamopt.GETbase = GETbase;
-	lamopt.N = 0;
-	lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);
-	lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
-	lamopt.T1 = t_Phasing;
-	lamopt.sv_P = sv_P0;
-
-	lamopt2 = lamopt;
-	lamopt2.Offset = _V(-147.0*1852.0, 0.0, 14.7*1852.0);
-
-	t_sv0 = OrbMech::GETfromMJD(sv_A0.MJD, GETbase);
-	sv_Phasing = coast(sv_A0, t_Phasing - t_sv0);
-
-	//Loop
-	while (abs(ddt) > 1.0)
-	{
-		t_Insertion = t_Phasing + dt;
-		
-		lamopt.T2 = t_Insertion;
-		lamopt.sv_A = sv_Phasing;
-
-		LambertTargeting(&lamopt, lamres);
-		dV_Phasing = lamres.dV;
-
-		sv_Phasing_apo = sv_Phasing;
-		sv_Phasing_apo.V += dV_Phasing;
-
-		ddt2 = 1.0;
-
-		//Loop
-		while (abs(ddt2) > 0.1)
-		{
-			t_CSI = t_Insertion + dt2;
-
-			lamopt2.T1 = t_Insertion;
-			lamopt2.T2 = t_CSI;
-			lamopt2.sv_A = sv_Phasing_apo;
-
-			LambertTargeting(&lamopt2, lamres);
-			dV_Insertion = lamres.dV;
-
-			sv_Insertion = coast(sv_Phasing_apo, t_Insertion - t_Phasing);
-			sv_Insertion_apo = sv_Insertion;
-			sv_Insertion_apo.V += dV_Insertion;
-
-			sv_CSI = coast(sv_Insertion_apo, t_CSI - t_Insertion);
-			T_P = OrbMech::period(sv_CSI.R, sv_CSI.V, mu);
-			ddt2 = OrbMech::timetoapo(sv_CSI.R, sv_CSI.V, mu);
-
-			if (ddt2 > T_P / 2.0)
-			{
-				ddt2 = ddt2 - T_P;
-			}
-			dt2 += ddt2;
-		}
-
-		//CSI Targeting
-		sv_P_CSI = coast(sv_P0, t_CSI - OrbMech::GETfromMJD(sv_P0.MJD, GETbase));
-		OrbMech::CSIToDH(sv_CSI.R, sv_CSI.V, sv_P_CSI.R, sv_P_CSI.V, DH, mu, dv_CSI);
-		sv_CSI_apo = sv_CSI;
-		sv_CSI_apo.V = sv_CSI.V + OrbMech::ApplyHorizontalDV(sv_CSI.R, sv_CSI.V, dv_CSI);
-
-		//CDH Targeting
-		T_P = OrbMech::period(sv_CSI_apo.R, sv_CSI_apo.V, mu);
-		t_CDH = t_CSI + T_P / 2.0;
-		NSRProgram(sv_CSI_apo, sv_P_CSI, GETbase, 0.0, t_CDH, 0.0, dV_CDH);
-		sv_CDH = coast(sv_CSI_apo, t_CDH - t_CSI);
-		Q_Xx = OrbMech::LVLH_Matrix(sv_CDH.R, sv_CDH.V);
-		DVX = tmul(Q_Xx, dV_CDH);
-		sv_CDH_apo = sv_CDH;
-		sv_CDH_apo.V += DVX;
-		sv_P_CDH = coast(sv_P_CSI, t_CDH - t_CSI);
-
-		//Find TPI time and recycle
-		dt_TPI = OrbMech::findelev(sv_CDH_apo.R, sv_CDH_apo.V, sv_P_CDH.R, sv_P_CDH.V, sv_CDH_apo.MJD, 26.6*RAD, sv_CDH_apo.gravref);
-		t_TPI_apo = t_CDH + dt_TPI;
-		ddt = t_TPI - t_TPI_apo;
-		dt += ddt;
-	}
-
-	t_Ins = t_Insertion;
-	CSI = t_CSI;
 }
 
 bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)

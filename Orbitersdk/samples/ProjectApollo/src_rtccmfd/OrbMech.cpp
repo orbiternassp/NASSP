@@ -5681,15 +5681,75 @@ double quadratic(double *T, double *DV)
 	return x;
 }
 
-VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20) //LM noun 20 and CSM noun 20
+VECTOR3 LMDockedFineAlignment(VECTOR3 lmang, VECTOR3 csmang, bool samerefs)
 {
-	MATRIX3 lmmat, csmmat, summat, expmat;
+	MATRIX3 LM_REFS, CSM_REFS;
+
+	LM_REFS = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
+	if (samerefs)
+	{
+		//REFSMMAT in CMC and LGC identical
+		CSM_REFS = LM_REFS;
+	}
+	else
+	{
+		//LVLH REFSMMAT in both CMC and LM
+		CSM_REFS = _M(LM_REFS.m31, LM_REFS.m32, LM_REFS.m33, LM_REFS.m21, LM_REFS.m22, LM_REFS.m23, -LM_REFS.m11, -LM_REFS.m12, -LM_REFS.m13);
+	}
+
+	return finealignLMtoCSM(lmang, csmang, CSM_REFS, LM_REFS);
+}
+
+VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20, MATRIX3 LM_REFSMMAT, MATRIX3 CSM_REFSMMAT)
+{
+	MATRIX3 lmmat, csmmat, RX, RY, summat, expmat;
+	double DockingAngle;
+
+	DockingAngle = 0.0;
 
 	lmmat = OrbMech::CALCSMSC(lmn20);
 	csmmat = OrbMech::CALCSMSC(csmn20);
-	summat = OrbMech::CALCSMSC(_V(300.0*RAD, PI, 0.0));
-	expmat = mul(summat, csmmat);
+	RX = OrbMech::_MRx(60.0*RAD - DockingAngle);
+	RY = OrbMech::_MRy(180.0*RAD);
+	summat = mul(RY, mul(RX, csmmat));
+	expmat = mul(summat, transpose_matrix(mul(CSM_REFSMMAT, transpose_matrix(LM_REFSMMAT))));
+
 	return OrbMech::CALCGTA(mul(OrbMech::transpose_matrix(expmat), lmmat));
+}
+
+VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs)
+{
+	MATRIX3 LM_REFS, CSM_REFS;
+
+	LM_REFS = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
+	if (samerefs)
+	{
+		//REFSMMAT in CMC and LGC identical
+		CSM_REFS = LM_REFS;
+	}
+	else
+	{
+		//LVLH REFSMMAT in both CMC and LM
+		CSM_REFS = _M(LM_REFS.m31, LM_REFS.m32, LM_REFS.m33, LM_REFS.m21, LM_REFS.m22, LM_REFS.m23, -LM_REFS.m11, -LM_REFS.m12, -LM_REFS.m13);
+	}
+
+	return LMIMU_from_CSMIMU(CSM_REFS, LM_REFS, csmang);
+}
+
+VECTOR3 LMIMU_from_CSMIMU(MATRIX3 CSM_REFSMMAT, MATRIX3 LM_REFSMMAT, VECTOR3 csmang)
+{
+	MATRIX3 csmmat, RX, RY, lmmat, lmmat2;
+	double DockingAngle;
+
+	DockingAngle = 0.0;
+
+	csmmat = OrbMech::CALCSMSC(csmang);
+	RX = OrbMech::_MRx(60.0*RAD - DockingAngle);
+	RY = OrbMech::_MRy(180.0*RAD);
+	lmmat = mul(RY, mul(RX, csmmat));
+	lmmat2 = mul(lmmat, mul(CSM_REFSMMAT, transpose_matrix(LM_REFSMMAT)));
+
+	return OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), lmmat2);
 }
 
 MATRIX3 EMPMatrix(double MJD)
