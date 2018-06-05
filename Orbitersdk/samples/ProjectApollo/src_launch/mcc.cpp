@@ -2085,6 +2085,9 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY5STATE9: //CSI update to CDH update
 				UpdateMacro(UTP_PADONLY, PT_AP10CSI, cm->MissionTime > rtcc->calcParams.CSI + 15.0*60.0, 35, MST_D_DAY5STATE10);
 				break;
+			case MST_D_DAY5STATE10: //CDH update to TPI update
+				UpdateMacro(UTP_PADONLY, PT_AP9LMCDH, cm->MissionTime > rtcc->calcParams.CDH + 15.0*60.0, 36, MST_D_DAY5STATE11);
+				break;
 
 			}
 			break;
@@ -3295,6 +3298,15 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP9LMTPI_Backup_dV", form->Backup_dV);
 			SAVE_V3("MCC_AP9LMTPI_Vg", form->Vg);
 		}
+		else if (padNumber == PT_AP9LMCDH)
+		{
+			AP9LMCDH * form = (AP9LMCDH *)padForm;
+
+			SAVE_DOUBLE("MCC_AP9LMCDH_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP9LMCDH_Pitch", form->Pitch);
+			SAVE_V3("MCC_AP9LMCDH_Vg", form->Vg);
+			SAVE_V3("MCC_AP9LMCDH_Vg_AGS", form->Vg_AGS);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3673,6 +3685,15 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_AP9LMTPI_Backup_dV", form->Backup_dV);
 			LOAD_V3("MCC_AP9LMTPI_Vg", form->Vg);
 		}
+		else if (padNumber == PT_AP9LMCDH)
+		{
+			AP9LMCDH * form = (AP9LMCDH *)padForm;
+
+			LOAD_DOUBLE("MCC_AP9LMCDH_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP9LMCDH_Pitch", form->Pitch);
+			LOAD_V3("MCC_AP9LMCDH_Vg", form->Vg);
+			LOAD_V3("MCC_AP9LMCDH_Vg_AGS", form->Vg_AGS);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -4043,6 +4064,21 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP9LMCDH:
+	{
+		AP9LMCDH * form = (AP9LMCDH *)padForm;
+		int hh, mm;
+		double ss;
+
+		SStoHHMMSS(form->GETI, hh, mm, ss);
+
+		sprintf(buffer, "CDH UPDATE (P33)\n%+06d HR N31\n%+06d MIN TIG\n%+07.2f SEC CDH\n%+07.1f DVX N81\n%+07.1f DVY LOCAL\n%+07.1f DVZ VERT\n"
+			"XXX%03.0f PLM INER\n%+07.1f DVX N86\n%+07.1f DVZ AGS",
+			hh, mm, ss, form->Vg.x, form->Vg.y, form->Vg.z, form->Pitch, form->Vg_AGS.x, form->Vg_AGS.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -4128,6 +4164,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP9LMTPI: // AP9LMTPI
 		padForm = calloc(1, sizeof(AP9LMTPI));
+		break;
+	case PT_AP9LMCDH: // AP9LMCDH
+		padForm = calloc(1, sizeof(AP9LMCDH));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

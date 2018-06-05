@@ -1079,6 +1079,45 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10CSIPAD(&manopt, *form);
 	}
 	break;
+	case 36: //CDH UPDATE
+	{
+		AP9LMCDH * form = (AP9LMCDH *)pad;
+
+		AP9LMCDHPADOpt manopt;
+		SPQOpt opt;
+		SV sv_A, sv_P, sv_CDH;
+		MATRIX3 Q_Xx;
+		VECTOR3 dV, dV_LVLH;
+		double GETbase, t_TPI, mu;
+
+		GETbase = getGETBase();
+		sv_A = StateVectorCalc(calcParams.tgt);
+		sv_P = StateVectorCalc(calcParams.src);
+
+		mu = GGRAV * oapiGetMass(sv_A.gravref);
+		calcParams.CDH = calcParams.CSI + OrbMech::period(sv_A.R, sv_A.V, mu) / 2.0;
+
+		opt.GETbase = GETbase;
+		opt.maneuver = 1;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.type = 0;
+		opt.t_TIG = calcParams.CDH;
+
+		ConcentricRendezvousProcessor(&opt, dV, t_TPI);
+		sv_CDH = coast(sv_A, opt.t_TIG - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
+		Q_Xx = OrbMech::LVLH_Matrix(sv_CDH.R, sv_CDH.V);
+		dV_LVLH = mul(Q_Xx, dV);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv_A = sv_A;
+		manopt.TIG = calcParams.CDH;
+
+		AP9LMCDHPAD(&manopt, *form);
+	}
+	break;
 	}
 
 	return scrubbed;

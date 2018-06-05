@@ -179,6 +179,15 @@ struct AP9LMTPIPADOpt
 	MATRIX3 REFSMMAT;	//REFSMMAT
 };
 
+struct AP9LMCDHPADOpt
+{
+	SV sv_A; //Chaser state vector
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	MATRIX3 REFSMMAT;	//REFSMMAT
+};
+
 struct EarthEntryOpt
 {
 	VESSEL* vessel; //Reentry vessel
@@ -812,6 +821,7 @@ public:
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
 	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
+	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);

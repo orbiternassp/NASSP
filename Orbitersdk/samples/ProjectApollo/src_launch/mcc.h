@@ -158,6 +158,7 @@
 #define PT_AP9AOTSTARPAD	17
 #define PT_TORQANG			18
 #define PT_AP9LMTPI			19
+#define PT_AP9LMCDH			20
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -431,6 +432,7 @@
 #define MST_D_DAY5STATE8	67
 #define MST_D_DAY5STATE9	68
 #define MST_D_DAY5STATE10	69
+#define MST_D_DAY5STATE11	70
 
 // MISSION STATES: MISSION F
 #define MST_F_INSERTION		10
@@ -772,6 +774,14 @@ struct AP9LMTPI {
 	double R;			// Range from chaser to target
 	double Rdot;		// Range rate
 	VECTOR3 Backup_dV;	// Backup "line-of-sight to Target" dV (fore/aft, left/right, up/down)
+};
+
+// APOLLO 9 - CONSTANT DELTA HEIGHT
+struct AP9LMCDH {
+	double GETI;		// TIG
+	VECTOR3 Vg;			// Velocity to be gained
+	double Pitch;		// FDAI pitch angle
+	VECTOR3 Vg_AGS;		// AGS velocity to be gained
 };
 
 // CSM STAR CHECK UPDATE

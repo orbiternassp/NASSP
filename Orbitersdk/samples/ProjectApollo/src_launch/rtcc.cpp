@@ -1254,6 +1254,49 @@ void RTCC::AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad)
 	pad.Vg = opt->dV_LVLH / 0.3048;
 }
 
+void RTCC::AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad)
+{
+	SV sv_A1;
+	MATRIX3 Rot1, M;
+	VECTOR3 IMUangles, FDAIangles, V_G;
+
+	sv_A1 = coast(opt->sv_A, opt->TIG - OrbMech::GETfromMJD(opt->sv_A.MJD, opt->GETbase));
+	Rot1 = OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V);
+	V_G = tmul(Rot1, opt->dV_LVLH);
+
+	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), Rot1));
+
+	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.y = atan2(((sin(IMUangles.y)*cos(IMUangles.x) + cos(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z)), (cos(IMUangles.y)*cos(IMUangles.x) - sin(IMUangles.y)*sin(IMUangles.z)*sin(IMUangles.x)) / cos(FDAIangles.z));
+	}
+
+	if (abs(sin(FDAIangles.z)) != 1.0)
+	{
+		FDAIangles.x = atan2(sin(IMUangles.z), cos(IMUangles.z)*cos(IMUangles.x));
+	}
+
+	if (FDAIangles.x < 0)
+	{
+		FDAIangles.x += PI2;
+	}
+	if (FDAIangles.y < 0)
+	{
+		FDAIangles.y += PI2;
+	}
+	if (FDAIangles.z < 0)
+	{
+		FDAIangles.z += PI2;
+	}
+
+	pad.Pitch = OrbMech::imulimit(FDAIangles.y*DEG);
+	pad.Vg_AGS = mul(Rot1, V_G) / 0.3048;
+	pad.GETI = opt->TIG;
+	pad.Vg = opt->dV_LVLH / 0.3048;
+}
+
 void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
 {
 	double CSMmass, LMmass, p_T, y_T;
@@ -7264,7 +7307,8 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t
 	//CDH calculation
 	if (opt->maneuver == 1)
 	{
-		DV_coe = OrbMech::CoellipticDV(R_A1, sv_P1.R, sv_P1.V, mu) - V_A1;
+		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A1, mu, R_PC, V_PC);
+		DV_coe = OrbMech::CoellipticDV(R_A1, R_PC, V_PC, mu) - V_A1;
 		t_TPI = opt->t_TPI;
 		return;
 	}
