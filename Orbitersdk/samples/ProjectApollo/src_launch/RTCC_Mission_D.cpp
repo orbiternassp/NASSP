@@ -1118,6 +1118,48 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP9LMCDHPAD(&manopt, *form);
 	}
 	break;
+	case 37: //TPI MANEUVER
+	{
+		AP9LMTPI * form = (AP9LMTPI *)pad;
+
+		SV sv_A, sv_P, sv_A1, sv_P1;
+		LambertMan opt;
+		AP9LMTPIPADOpt manopt;
+		TwoImpulseResuls res;
+		double GETbase, mu, dt;
+
+		sv_P = StateVectorCalc(calcParams.src);
+		sv_A = StateVectorCalc(calcParams.tgt);
+		GETbase = getGETBase();
+		mu = GGRAV * oapiGetMass(sv_P.gravref);
+
+		sv_A1 = coast(sv_A, calcParams.TPI - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
+		sv_P1 = coast(sv_P, calcParams.TPI - OrbMech::GETfromMJD(sv_P.MJD, GETbase));
+
+		dt = OrbMech::findelev(sv_A1.R, sv_A1.V, sv_P1.R, sv_P1.V, sv_A1.MJD, 27.5*RAD, sv_A1.gravref);
+		calcParams.TPI += dt;
+
+		opt.GETbase = GETbase;
+		opt.N = 0;
+		opt.Offset = _V(0, 0, 0);
+		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.T1 = calcParams.TPI;
+		opt.T2 = opt.T1 + OrbMech::time_theta(sv_P.R, sv_P.V, 130.0*RAD, mu);
+
+		LambertTargeting(&opt, res);
+
+		manopt.dV_LVLH = res.dV_LVLH;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv_A = sv_A;
+		manopt.sv_P = sv_P;
+		manopt.TIG = opt.T1;
+
+		AP9LMTPIPAD(&manopt, *form);
+	}
+	break;
 	}
 
 	return scrubbed;

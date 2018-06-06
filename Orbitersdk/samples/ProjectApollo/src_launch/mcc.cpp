@@ -2088,6 +2088,9 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY5STATE10: //CDH update to TPI update
 				UpdateMacro(UTP_PADONLY, PT_AP9LMCDH, cm->MissionTime > rtcc->calcParams.CDH + 15.0*60.0, 36, MST_D_DAY5STATE11);
 				break;
+			case MST_D_DAY5STATE11: //TPI update to 
+				UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, cm->MissionTime > 99.0*3600.0 + 55.0*60.0, 37, MST_D_DAY5STATE12);
+				break;
 
 			}
 			break;
