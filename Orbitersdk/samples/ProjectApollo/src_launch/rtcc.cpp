@@ -568,7 +568,7 @@ void RTCC::AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad)
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 
-	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), M_R));
 
 	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
 	if (abs(sin(FDAIangles.z)) != 1.0)
@@ -714,7 +714,7 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 
 	ManPADDVR = length(opt->dV_LVLH);
 
-	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), M_R));
 	pad.IMUAtt = IMUangles;
 
 	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
@@ -848,7 +848,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 
 		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-		M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
+		M_RTM = mul(OrbMech::tmat(M_R), M);
 
 		ManPADDVC = length(opt->dV_LVLH)*cos(p_T)*cos(y_T);// -60832.18 / m1;
 	}
@@ -878,7 +878,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 
 	ManPADBurnTime = v_e / F *(sv1.mass + LMmass)*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
 
-	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), M_R));
 	//sprintf(oapiDebugString(), "%f, %f, %f", IMUangles.x*DEG, IMUangles.y*DEG, IMUangles.z*DEG);
 
 	GDCangles = OrbMech::backupgdcalignment(opt->REFSMMAT, sv1.R, oapiGetSize(sv1.gravref), GDCset);
@@ -1022,7 +1022,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-		M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
+		M_RTM = mul(OrbMech::tmat(M_R), M);
 
 		pad.Vc = length(opt->dV_LVLH)*cos(p_T)*cos(y_T);// -60832.18 / m1;
 	}
@@ -1049,7 +1049,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	}
-	Att = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
+	Att = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), M_R));
 	//sprintf(oapiDebugString(), "%f, %f, %f", IMUangles.x*DEG, IMUangles.y*DEG, IMUangles.z*DEG);
 
 	//GDCangles = OrbMech::backupgdcalignment(REFSMMAT, R1B, oapiGetSize(gravref), GDCset);
@@ -1219,7 +1219,7 @@ void RTCC::AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad)
 	Rdot = dotp(sv_P1.V - sv_A1.V, U_L);
 
 	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), Rot1));
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), Rot1));
 
 	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
 	if (abs(sin(FDAIangles.z)) != 1.0)
@@ -1265,7 +1265,7 @@ void RTCC::AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad)
 	V_G = tmul(Rot1, opt->dV_LVLH);
 
 	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), Rot1));
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), Rot1));
 
 	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
 	if (abs(sin(FDAIangles.z)) != 1.0)
@@ -2114,7 +2114,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 
 				M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 				M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
-				M_RTM = mul(OrbMech::transpose_matrix(M_R), M);
+				M_RTM = mul(OrbMech::tmat(M_R), M);
 				X_SM = mul(M_RTM, _V(1.0, 0.0, 0.0));
 				Y_SM = mul(M_RTM, _V(0.0, 1.0, 0.0));
 				Z_SM = mul(M_RTM, _V(0.0, 0.0, 1.0));
@@ -4120,7 +4120,7 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 
 	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 	M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::transpose_matrix(M), M_R));
+	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), M_R));
 
 	FDAIangles.z = asin(-cos(IMUangles.z)*sin(IMUangles.x));
 	if (abs(sin(FDAIangles.z)) != 1.0)
@@ -4353,7 +4353,7 @@ void RTCC::AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoc
 	}
 	else
 	{
-		a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
+		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
 	}
 
 	emem[0] = 24;
@@ -4398,7 +4398,7 @@ void RTCC::AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int 
 	}
 	else
 	{
-		a = mul(REFSMMAT, OrbMech::transpose_matrix(OrbMech::J2000EclToBRCS(AGCEpoch)));
+		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
 	}
 
 	emem[0] = 24;
@@ -5265,7 +5265,7 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 	//Find TB6 start
 	//Determination of S-bar and S-bar-dot
 	theta_E = lvdc.theta_EO + lvdc.omega_E*lvdc.t_D;
-	MX_EPH = mul(OrbMech::transpose_matrix(lvdc.MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+	MX_EPH = mul(OrbMech::tmat(lvdc.MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
 	T_P = mul(MX_EPH, unit(lvdc.TargetVector));
 
 	MJD_TST = MJD_GRR + (lvdc.TB5 + lvdc.T_ST) / 24.0 / 3600.0;
@@ -5652,6 +5652,34 @@ double RTCC::FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess)
 
 	ttoSunrise = OrbMech::sunrise(sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false, false);
 	return t_sunrise_guess + ttoSunrise;
+}
+
+VECTOR3 RTCC::PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle)
+{
+	MATRIX3 Rot, C_LSM, R_ML, C_MSM;
+	VECTOR3 s_REF, U_D, U_OAN, U_A, U_DL, U_AL, U_R, GA;
+	double EL, AZ, A;
+
+	s_REF = navstars[star - 1];
+	U_D = mul(REFSMMAT, s_REF);
+
+	EL = 45.0*RAD;
+	AZ = 60.0*RAD*((double)AOTdetent) - 120.0*RAD;
+
+	U_OAN = _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+	Rot = OrbMech::CSMBodyToLMBody(dockingangle);
+	U_A = tmul(Rot, U_OAN);
+
+	C_LSM = OrbMech::tmat(OrbMech::CALCSMNB(_V(0, 0, 0)));
+	U_DL = tmul(C_LSM, U_D);
+	U_AL = U_A;
+	U_R = -unit(crossp(U_DL, U_AL));
+	A = acos(dotp(U_AL, U_DL));
+	R_ML = OrbMech::ROTCOMP(U_R, A);
+	C_MSM = mul(C_LSM, R_ML);
+	GA = OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), OrbMech::tmat(C_MSM));
+
+	return GA;
 }
 
 bool RTCC::NC1NC2Program(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh_F, double n_H1, int s, double dh, double n_C, VECTOR3 &dV_NC1_LVLH, double &dh_NC2, double &dv_NC2, double &t_NC2, VECTOR3 &dV_NC2_LVLH, double &dv_NCC, double &t_NCC, double &t_NSR, VECTOR3 &dV_NSR, bool NPC)

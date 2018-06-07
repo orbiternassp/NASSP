@@ -2236,7 +2236,7 @@ MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi)
 	Rot3 = _M(UX10.x, UX10.y, UX10.z, UY10.x, UY10.y, UY10.z, UZ10.x, UZ10.y, UZ10.z);
 	Rot4 = _M(1.0, 0.0, 0.0, 0.0, cos(-azi), -sin(-azi), 0.0, sin(-azi), cos(-azi));
 
-	return mul(transpose_matrix(Rot4), mul(Rot3, mul(Rot2, transpose_matrix(Rot1))));
+	return mul(tmat(Rot4), mul(Rot3, mul(Rot2, tmat(Rot1))));
 }
 
 double GetPlanetCurrentRotation(OBJHANDLE plan, double t)
@@ -2284,7 +2284,7 @@ double GetPlanetCurrentRotation(OBJHANDLE plan, double t)
 	Rot5 = _M(cos(L_ecl), 0.0, -sin(L_ecl), 0.0, 1.0, 0.0, sin(L_ecl), 0.0, cos(L_ecl));
 	Rot6 = _M(1.0, 0.0, 0.0, 0.0, cos(e_ecl), -sin(e_ecl), 0.0, sin(e_ecl), cos(e_ecl));
 	R_ecl = mul(Rot5, Rot6);
-	R_off = mul(transpose_matrix(R_ecl), mul(R_ref, R_rel));
+	R_off = mul(tmat(R_ecl), mul(R_ref, R_rel));
 	phi_off = atan(-R_off.m13 / R_off.m11);
 	r = phi + phi_off;
 	return r;
@@ -3654,8 +3654,8 @@ VECTOR3 ULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double TA, double SA)
 	a = -0.5676353234;
 	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
 	U_NB = mul(SBNB, _V(sin(TA)*cos(SA), sin(TA)*sin(SA), cos(TA)));
-	S_SM = mul(transpose_matrix(SMNB), U_NB);
-	U_LOS = mul(transpose_matrix(REFSMMAT), S_SM);
+	S_SM = mul(tmat(SMNB), U_NB);
+	U_LOS = mul(tmat(REFSMMAT), S_SM);
 	return U_LOS;
 }
 
@@ -3664,8 +3664,8 @@ VECTOR3 AOTULOS(MATRIX3 REFSMMAT, MATRIX3 SMNB, double AZ, double EL)
 	VECTOR3 U_OAN, S_SM, U_LOS;
 
 	U_OAN = _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
-	S_SM = mul(transpose_matrix(SMNB), U_OAN);
-	U_LOS = mul(transpose_matrix(REFSMMAT), S_SM);
+	S_SM = mul(tmat(SMNB), U_OAN);
+	U_LOS = mul(tmat(REFSMMAT), S_SM);
 	return U_LOS;
 }
 
@@ -3769,7 +3769,7 @@ double determinant(MATRIX3 a)
 	return a.m11*a.m22*a.m33 + a.m12*a.m23*a.m31 + a.m13*a.m21*a.m32 - a.m13*a.m22*a.m31 - a.m12*a.m21*a.m33 - a.m11*a.m23*a.m32;
 }
 
-MATRIX3 transpose_matrix(MATRIX3 a)
+MATRIX3 tmat(MATRIX3 a)
 {
 	MATRIX3 b;
 
@@ -4467,7 +4467,7 @@ void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA)
 
 	a = -0.5676353234;
 	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
-	NBSB = transpose_matrix(SBNB);
+	NBSB = tmat(SBNB);
 
 	S_SB = mul(NBSB, mul(SMNB, S_SM));
 	U_TPA = unit(crossp(Z_SB, S_SB));
@@ -4489,7 +4489,7 @@ void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP)
 
 	a = -PI05;
 	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
-	NBSB = transpose_matrix(SBNB);
+	NBSB = tmat(SBNB);
 
 	S_SB = mul(NBSB, mul(SMNB, S_SM));
 	
@@ -4514,6 +4514,33 @@ MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB)
 	Z = X_SM*X_NB.z + Y_SM*Y_NB.z + Z_SM*Z_NB.z;
 
 	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+}
+
+MATRIX3 CALCSMNB(VECTOR3 GA)
+{
+	MATRIX3 SMNB, Q1, Q2, Q3;
+	double OGA, IGA, MGA;
+
+	OGA = GA.x;
+	IGA = GA.y;
+	MGA = GA.z;
+
+	Q1 = _MRy(IGA);
+	Q2 = _MRz(MGA);
+	Q3 = _MRx(OGA);
+
+	SMNB = mul(Q3, mul(Q2, Q1));
+
+	return SMNB;
+}
+
+MATRIX3 ROTCOMP(VECTOR3 U_R, double A)
+{
+	MATRIX3 I, R;
+	
+	I = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
+	R = I * cos(A) + tensorp(U_R, U_R)*(1.0 - cos(A)) + skew(U_R)*sin(A);
+	return R;
 }
 
 void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
@@ -5712,9 +5739,9 @@ VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20, MATRIX3 LM_REFSMMAT, MAT
 	RX = OrbMech::_MRx(60.0*RAD - DockingAngle);
 	RY = OrbMech::_MRy(180.0*RAD);
 	summat = mul(RY, mul(RX, csmmat));
-	expmat = mul(summat, transpose_matrix(mul(CSM_REFSMMAT, transpose_matrix(LM_REFSMMAT))));
+	expmat = mul(summat, tmat(mul(CSM_REFSMMAT, tmat(LM_REFSMMAT))));
 
-	return OrbMech::CALCGTA(mul(OrbMech::transpose_matrix(expmat), lmmat));
+	return OrbMech::CALCGTA(mul(OrbMech::tmat(expmat), lmmat));
 }
 
 VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs)
@@ -5747,9 +5774,19 @@ VECTOR3 LMIMU_from_CSMIMU(MATRIX3 CSM_REFSMMAT, MATRIX3 LM_REFSMMAT, VECTOR3 csm
 	RX = OrbMech::_MRx(60.0*RAD - DockingAngle);
 	RY = OrbMech::_MRy(180.0*RAD);
 	lmmat = mul(RY, mul(RX, csmmat));
-	lmmat2 = mul(lmmat, mul(CSM_REFSMMAT, transpose_matrix(LM_REFSMMAT)));
+	lmmat2 = mul(lmmat, mul(CSM_REFSMMAT, tmat(LM_REFSMMAT)));
 
 	return OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), lmmat2);
+}
+
+MATRIX3 CSMBodyToLMBody(double da)
+{
+	MATRIX3 RX, RY;
+
+	RX = OrbMech::_MRx(60.0*RAD - da);
+	RY = OrbMech::_MRy(180.0*RAD);
+
+	return mul(RY, RX);
 }
 
 MATRIX3 EMPMatrix(double MJD)

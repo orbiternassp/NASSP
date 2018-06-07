@@ -1164,10 +1164,19 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP9AOTSTARPAD * form = (AP9AOTSTARPAD *)pad;
 
-		form->CSMAtt = _V(353.6, 328.1, 36.5);
+		SV sv;
+		MATRIX3 REFSMMAT;
+		VECTOR3 GA;
+
 		form->Detent = 2;
 		form->GET = OrbMech::HHMMSSToSS(99, 30, 0);
 		form->Star = 015;
+
+		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		sv = StateVectorCalc(calcParams.src);
+
+		GA = PointAOTWithCSM(REFSMMAT, sv, form->Detent, form->Star, 0.0);
+		form->CSMAtt = GA * DEG;
 	}
 	break;
 	case 39: //LM BURN TO DEPLETION UPDATE

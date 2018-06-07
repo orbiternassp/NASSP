@@ -936,6 +936,7 @@ private:
 	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
 	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
+	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
 	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 

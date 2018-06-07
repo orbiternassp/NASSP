@@ -233,6 +233,8 @@ namespace OrbMech {
 	void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP);
 	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
 	MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB);
+	MATRIX3 CALCSMNB(VECTOR3 GA);
+	MATRIX3 ROTCOMP(VECTOR3 U_R, double A);
 	VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
 	//void rungeinteg(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	//void adfunc(double* dfdt, double t, double* f);
@@ -306,7 +308,7 @@ namespace OrbMech {
 
 	MATRIX3 inverse(MATRIX3 a);
 	double determinant(MATRIX3 a);
-	MATRIX3 transpose_matrix(MATRIX3 a);
+	MATRIX3 tmat(MATRIX3 a);
 	template <typename T> int sign(T val);
 	int DoubleToBuffer(double x, double q, int m);
 	double cot(double a);
@@ -331,6 +333,7 @@ namespace OrbMech {
 	void fDot_and_gDot(double x, double r, double ro, double a, double &fdot, double &gdot, double mu);
 	double atan3(double x, double y);
 	double imulimit(double a);
+	MATRIX3 tensorp(VECTOR3 u, VECTOR3 v);
 	MATRIX3 skew(VECTOR3 u);
 	VECTOR3 RotateVector(VECTOR3 yaxis, double angle, VECTOR3 pos);
 	double OctToDouble(int oct1, int oct2);
@@ -346,6 +349,7 @@ namespace OrbMech {
 	void rv_from_adbar(VECTOR3 R, VECTOR3 V, double &rmag, double &vmag, double &rtasc, double &decl, double &fpav, double &az);
 	VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs);
 	VECTOR3 LMIMU_from_CSMIMU(MATRIX3 CSM_REFSMMAT, MATRIX3 LM_REFSMMAT, VECTOR3 csmang);
+	MATRIX3 CSMBodyToLMBody(double da);
 	VECTOR3 LMDockedFineAlignment(VECTOR3 lmang, VECTOR3 csmang, bool samerefs = true);
 	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20, MATRIX3 LM_REFSMMAT, MATRIX3 CSM_REFSMMAT);
 	//Earth-Moon-Plane Matrix, converts ecliptic coordinates to EMP coordinates.
