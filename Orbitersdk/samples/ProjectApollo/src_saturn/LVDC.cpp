@@ -6598,7 +6598,7 @@ restartprep:
 			//Determination of S-bar and S-bar-dot
 			theta_E = theta_EO + TVRATE * t_D;
 
-			MX_EPH = mul(OrbMech::transpose_matrix(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+			MX_EPH = mul(OrbMech::tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
 
 			T_P = mul(MX_EPH, unit(TargetVector));
 			N = unit(crossp(PosS, DotS));

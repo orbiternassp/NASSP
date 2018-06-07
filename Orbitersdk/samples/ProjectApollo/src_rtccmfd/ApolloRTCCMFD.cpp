@@ -2616,13 +2616,20 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(5 * W / 8, 7 * H / 14, "Horizontal Velocity:", 20);
-		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LH / 0.3048);
-		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		if (G->LunarLiftoffTimeOption == 1)
+		{
+			skp->Text(5 * W / 8, 6 * H / 14, "DT Insertion-TPI:", 17);
+			sprintf(Buffer, "%.1f min", G->DT_Ins_TPI / 60.0);
+			skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+		}
 
-		skp->Text(5 * W / 8, 9 * H / 14, "Vertical Velocity:", 18);
-		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LV / 0.3048);
+		skp->Text(5 * W / 8, 9 * H / 14, "Horizontal Velocity:", 20);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LH / 0.3048);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 11 * H / 14, "Vertical Velocity:", 18);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LV / 0.3048);
+		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 24)
 	{
@@ -6299,6 +6306,30 @@ void ApolloRTCCMFD::menuLunarLiftoffTimeOption()
 	{
 		G->LunarLiftoffTimeOption = 0;
 	}
+}
+
+void ApolloRTCCMFD::menuSetLiftoffDT()
+{
+	if (G->LunarLiftoffTimeOption == 1)
+	{
+		bool LiftoffDTInput(void* id, char *str, void *data);
+		oapiOpenInputBox("DT between insertion and TPI:", LiftoffDTInput, 0, 20, (void*)this);
+	}
+}
+
+bool LiftoffDTInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_LiftoffDT(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LiftoffDT(double dt)
+{
+	G->DT_Ins_TPI = dt * 60.0;
 }
 
 void ApolloRTCCMFD::menuSetEMPUplinkP99()

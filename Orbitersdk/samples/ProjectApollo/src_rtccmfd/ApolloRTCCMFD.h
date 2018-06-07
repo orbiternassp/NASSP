@@ -271,6 +271,8 @@ public:
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLunarLiftoffTimeOption();
+	void menuSetLiftoffDT();
+	void set_LiftoffDT(double dt);
 	void set_TPIguess(double time);
 	void menuSetEMPUplinkP99();
 	void menuEMPUplink();

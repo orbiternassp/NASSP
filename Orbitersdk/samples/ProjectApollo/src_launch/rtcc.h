@@ -169,6 +169,25 @@ struct AP7TPIPADOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 };
 
+struct AP9LMTPIPADOpt
+{
+	SV sv_A; //Chaser state vector
+	SV sv_P; //Target state vector
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	MATRIX3 REFSMMAT;	//REFSMMAT
+};
+
+struct AP9LMCDHPADOpt
+{
+	SV sv_A; //Chaser state vector
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	MATRIX3 REFSMMAT;	//REFSMMAT
+};
+
 struct EarthEntryOpt
 {
 	VESSEL* vessel; //Reentry vessel
@@ -639,6 +658,7 @@ struct LunarLiftoffTimeOpt
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	int opt;		// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	double dt_2;	//Fixed time from insertion to TPI for direct profile
 };
 
 struct LunarLiftoffResults
@@ -801,6 +821,8 @@ public:
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
+	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
+	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
@@ -914,6 +936,8 @@ private:
 	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
 	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
 	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
+	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
+	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
 	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 

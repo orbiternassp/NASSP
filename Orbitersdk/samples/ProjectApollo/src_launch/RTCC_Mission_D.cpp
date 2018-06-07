@@ -919,6 +919,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		mu = GGRAV * oapiGetMass(sv.gravref);
 
 		DMissionRendezvousPlan(sv, GETbase, t_TPI0);
+		//Store the TPI0 time here, the nominal TPI time is already stored in calcParams.TPI
+		TimeofIgnition = t_TPI0;
 
 		eps = length(sv.V)*length(sv.V) / 2.0 - mu / length(sv.R);
 		a = -mu / (2.0*eps);
@@ -961,6 +963,263 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sprintf(form->purpose, "Phasing");
 		sprintf(form->remarks, "Your SEP time: %s, TPI0: %s", GETbuffer1, GETbuffer2);
+	}
+	break;
+	case 33: //TPI0 MANEUVER
+	{
+		AP9LMTPI * form = (AP9LMTPI *)pad;
+
+		SV sv_A, sv_P;
+		LambertMan opt;
+		AP9LMTPIPADOpt manopt;
+		TwoImpulseResuls res;
+		double GETbase, mu;
+
+		sv_P = StateVectorCalc(calcParams.src);
+		sv_A = StateVectorCalc(calcParams.tgt);
+		GETbase = getGETBase();
+		mu = GGRAV * oapiGetMass(sv_P.gravref);
+
+		opt.GETbase = GETbase;
+		opt.N = 0;
+		opt.Offset = _V(0, 0, 0);
+		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.T1 = TimeofIgnition;
+		opt.T2 = TimeofIgnition + OrbMech::time_theta(sv_P.R, sv_P.V, 130.0*RAD, mu);
+
+		LambertTargeting(&opt, res);
+
+		manopt.dV_LVLH = res.dV_LVLH;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv_A = sv_A;
+		manopt.sv_P = sv_P;
+		manopt.TIG = opt.T1;
+
+		AP9LMTPIPAD(&manopt, *form);
+	}
+	break;
+	case 34: //INSERTION MANEUVER
+	{
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		CDHOpt opt;
+		AP11LMManPADOpt manopt;
+		SV sv0;
+		VECTOR3 dV_LVLH;
+		double TIG, GETbase, P30TIG;
+
+		sv0 = StateVectorCalc(calcParams.tgt);
+		GETbase = getGETBase();
+
+		TIG = calcParams.Insertion;
+
+		opt.CDHtimemode = 0;
+		opt.GETbase = GETbase;
+		opt.impulsive = RTCC_NONIMPULSIVE;
+		opt.target = calcParams.src;
+		opt.TIG = TIG;
+		opt.vessel = calcParams.tgt;
+		opt.vesseltype = 1;
+
+		CDHcalc(&opt, dV_LVLH, P30TIG);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&manopt, *form);
+
+		sprintf(form->purpose, "Insertion");
+	}
+	break;
+	case 35: //CSI UPDATE
+	{
+		AP10CSI * form = (AP10CSI *)pad;
+
+		AP10CSIPADOpt manopt;
+		SPQOpt opt;
+		SV sv_A, sv_P, sv_CSI;
+		MATRIX3 Q_Xx;
+		VECTOR3 dV, dV_LVLH;
+		double GETbase, t_TPI;
+
+		GETbase = getGETBase();
+		sv_A = StateVectorCalc(calcParams.tgt);
+		sv_P = StateVectorCalc(calcParams.src);
+
+		opt.E = 27.5*RAD;
+		opt.GETbase = GETbase;
+		opt.maneuver = 0;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.type = 0;
+		opt.t_TIG = calcParams.CSI;
+		opt.t_TPI = calcParams.TPI;
+
+		ConcentricRendezvousProcessor(&opt, dV, t_TPI);
+		sv_CSI = coast(sv_A, opt.t_TIG - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
+		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
+		dV_LVLH = mul(Q_Xx, dV);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_APS;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv0 = sv_A;
+		manopt.t_CSI = calcParams.CSI;
+		manopt.t_TPI = calcParams.TPI;
+
+		AP10CSIPAD(&manopt, *form);
+	}
+	break;
+	case 36: //CDH UPDATE
+	{
+		AP9LMCDH * form = (AP9LMCDH *)pad;
+
+		AP9LMCDHPADOpt manopt;
+		SPQOpt opt;
+		SV sv_A, sv_P, sv_CDH;
+		MATRIX3 Q_Xx;
+		VECTOR3 dV, dV_LVLH;
+		double GETbase, t_TPI, mu;
+
+		GETbase = getGETBase();
+		sv_A = StateVectorCalc(calcParams.tgt);
+		sv_P = StateVectorCalc(calcParams.src);
+
+		mu = GGRAV * oapiGetMass(sv_A.gravref);
+		calcParams.CDH = calcParams.CSI + OrbMech::period(sv_A.R, sv_A.V, mu) / 2.0;
+
+		opt.GETbase = GETbase;
+		opt.maneuver = 1;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.type = 0;
+		opt.t_TIG = calcParams.CDH;
+
+		ConcentricRendezvousProcessor(&opt, dV, t_TPI);
+		sv_CDH = coast(sv_A, opt.t_TIG - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
+		Q_Xx = OrbMech::LVLH_Matrix(sv_CDH.R, sv_CDH.V);
+		dV_LVLH = mul(Q_Xx, dV);
+
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv_A = sv_A;
+		manopt.TIG = calcParams.CDH;
+
+		AP9LMCDHPAD(&manopt, *form);
+	}
+	break;
+	case 37: //TPI MANEUVER
+	{
+		AP9LMTPI * form = (AP9LMTPI *)pad;
+
+		SV sv_A, sv_P, sv_A1, sv_P1;
+		LambertMan opt;
+		AP9LMTPIPADOpt manopt;
+		TwoImpulseResuls res;
+		double GETbase, mu, dt;
+
+		sv_P = StateVectorCalc(calcParams.src);
+		sv_A = StateVectorCalc(calcParams.tgt);
+		GETbase = getGETBase();
+		mu = GGRAV * oapiGetMass(sv_P.gravref);
+
+		sv_A1 = coast(sv_A, calcParams.TPI - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
+		sv_P1 = coast(sv_P, calcParams.TPI - OrbMech::GETfromMJD(sv_P.MJD, GETbase));
+
+		dt = OrbMech::findelev(sv_A1.R, sv_A1.V, sv_P1.R, sv_P1.V, sv_A1.MJD, 27.5*RAD, sv_A1.gravref);
+		calcParams.TPI += dt;
+
+		opt.GETbase = GETbase;
+		opt.N = 0;
+		opt.Offset = _V(0, 0, 0);
+		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.T1 = calcParams.TPI;
+		opt.T2 = opt.T1 + OrbMech::time_theta(sv_P.R, sv_P.V, 130.0*RAD, mu);
+
+		LambertTargeting(&opt, res);
+
+		manopt.dV_LVLH = res.dV_LVLH;
+		manopt.GETbase = GETbase;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.sv_A = sv_A;
+		manopt.sv_P = sv_P;
+		manopt.TIG = opt.T1;
+
+		AP9LMTPIPAD(&manopt, *form);
+	}
+	break;
+	case 38: //LM DOCKED P52 PAD
+	{
+		AP9AOTSTARPAD * form = (AP9AOTSTARPAD *)pad;
+
+		SV sv;
+		MATRIX3 REFSMMAT;
+		VECTOR3 GA;
+
+		form->Detent = 2;
+		form->GET = OrbMech::HHMMSSToSS(99, 30, 0);
+		form->Star = 015;
+
+		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		sv = StateVectorCalc(calcParams.src);
+
+		GA = PointAOTWithCSM(REFSMMAT, sv, form->Detent, form->Star, 0.0);
+		form->CSMAtt = GA * DEG;
+	}
+	break;
+	case 39: //LM BURN TO DEPLETION UPDATE
+	{
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		AP10DAPDATA dappad;
+		AP11LMManPADOpt opt;
+		SV sv0, sv1, sv_TIG;
+		MATRIX3 Rot;
+		VECTOR3 dV_LVLH, DV, dV_LVLH_imp;
+		double GETbase, TIG, P30TIG, dv;
+
+		GETbase = getGETBase();
+		sv0 = StateVectorCalc(calcParams.tgt);
+		sv1 = coast(sv0, OrbMech::HHMMSSToSS(102, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+
+		//Mid Pass Texas
+		double lat_TEX, lng_TEX;
+		lat_TEX = groundstations[10][0];
+		lng_TEX = groundstations[10][1];
+		FindRadarMidPass(sv1, GETbase, lat_TEX, lng_TEX, TIG);
+
+		dv = 7427.5*0.3048;
+		dV_LVLH_imp = _V(dv*cos(45.0*RAD), dv*sin(45.0*RAD), 0.0);
+		sv_TIG = coast(sv0, TIG - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+		Rot = OrbMech::LVLH_Matrix(sv_TIG.R, sv_TIG.V);
+		DV = tmul(Rot, dV_LVLH_imp);
+
+		PoweredFlightProcessor(sv0, GETbase, TIG, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, DV, P30TIG, dV_LVLH);
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_APS;
+		opt.GETbase = GETbase;
+		opt.REFSMMAT= GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&opt, *form);
+
+		LMDAPUpdate(calcParams.tgt, dappad);
+		sprintf(form->purpose, "APS Depletion");
+		sprintf(form->remarks, "LM weight is %.0f", dappad.ThisVehicleWeight);
 	}
 	break;
 	}
