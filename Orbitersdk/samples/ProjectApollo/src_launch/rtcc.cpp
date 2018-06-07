@@ -7001,7 +7001,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 	{
 		t_TPI = opt->t_TPIguess;
 
-		OrbMech::LunarLiftoffTimePredictionDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_TPF, v_LH, v_LV);
+		OrbMech::LunarLiftoffTimePredictionDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, opt->dt_2, DH, E, t_TPI, theta_F, t_IG, t_TPF, v_LH, v_LV);
 	}
 	else if (opt->opt == 2)
 	{

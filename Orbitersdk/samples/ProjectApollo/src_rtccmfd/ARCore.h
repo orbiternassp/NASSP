@@ -319,6 +319,7 @@ public:
 	LunarLiftoffResults LunarLiftoffTimes;
 	double t_TPIguess;
 	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
+	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99

@@ -647,6 +647,7 @@ ARCore::ARCore(VESSEL* v)
 
 	LunarLiftoffTimeOption = 0;
 	t_TPIguess = 0.0;
+	DT_Ins_TPI = 40.0*60.0;
 	LunarLiftoffTimes.t_CDH = 0.0;
 	LunarLiftoffTimes.t_CSI = 0.0;
 	LunarLiftoffTimes.t_Ins = 0.0;
@@ -2822,6 +2823,7 @@ int ARCore::subThread()
 		opt.opt = LunarLiftoffTimeOption;
 		opt.target = target;
 		opt.t_TPIguess = t_TPIguess;
+		opt.dt_2 = DT_Ins_TPI;
 
 		if (vessel->GroundContact())
 		{

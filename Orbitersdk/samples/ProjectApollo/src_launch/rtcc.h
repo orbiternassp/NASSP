@@ -658,6 +658,7 @@ struct LunarLiftoffTimeOpt
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	int opt;		// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	double dt_2;	//Fixed time from insertion to TPI for direct profile
 };
 
 struct LunarLiftoffResults
