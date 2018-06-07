@@ -1160,6 +1160,59 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP9LMTPIPAD(&manopt, *form);
 	}
 	break;
+	case 38: //LM DOCKED P52 PAD
+	{
+		AP9AOTSTARPAD * form = (AP9AOTSTARPAD *)pad;
+
+		form->CSMAtt = _V(353.6, 328.1, 36.5);
+		form->Detent = 2;
+		form->GET = OrbMech::HHMMSSToSS(99, 30, 0);
+		form->Star = 015;
+	}
+	break;
+	case 39: //LM BURN TO DEPLETION UPDATE
+	{
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		AP10DAPDATA dappad;
+		AP11LMManPADOpt opt;
+		SV sv0, sv1, sv_TIG;
+		MATRIX3 Rot;
+		VECTOR3 dV_LVLH, DV, dV_LVLH_imp;
+		double GETbase, TIG, P30TIG, dv;
+
+		GETbase = getGETBase();
+		sv0 = StateVectorCalc(calcParams.tgt);
+		sv1 = coast(sv0, OrbMech::HHMMSSToSS(102, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+
+		//Mid Pass Texas
+		double lat_TEX, lng_TEX;
+		lat_TEX = groundstations[10][0];
+		lng_TEX = groundstations[10][1];
+		FindRadarMidPass(sv1, GETbase, lat_TEX, lng_TEX, TIG);
+
+		dv = 7427.5*0.3048;
+		dV_LVLH_imp = _V(dv*cos(45.0*RAD), dv*sin(45.0*RAD), 0.0);
+		sv_TIG = coast(sv0, TIG - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+		Rot = OrbMech::LVLH_Matrix(sv_TIG.R, sv_TIG.V);
+		DV = tmul(Rot, dV_LVLH_imp);
+
+		PoweredFlightProcessor(sv0, GETbase, TIG, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, DV, P30TIG, dV_LVLH);
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_APS;
+		opt.GETbase = GETbase;
+		opt.REFSMMAT= GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&opt, *form);
+
+		LMDAPUpdate(calcParams.tgt, dappad);
+		sprintf(form->purpose, "APS Depletion");
+		sprintf(form->remarks, "LM weight is %.0f", dappad.ThisVehicleWeight);
+	}
+	break;
 	}
 
 	return scrubbed;

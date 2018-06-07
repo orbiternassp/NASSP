@@ -5626,6 +5626,18 @@ void RTCC::FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double
 	GET_LOS = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt2;
 }
 
+void RTCC::FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid)
+{
+	VECTOR3 R_P;
+	double LmkRange, dt;
+
+	R_P = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*oapiGetSize(sv.gravref);
+
+	dt = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 90.0*RAD, sv.gravref, LmkRange);
+
+	GET_Mid = OrbMech::GETfromMJD(sv.MJD, GETbase) + dt;
+}
+
 double RTCC::FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess)
 {
 	SV sv1;
