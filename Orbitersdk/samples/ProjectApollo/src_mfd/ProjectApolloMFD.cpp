@@ -1556,7 +1556,7 @@ void ProjectApolloMFD::menuPressEnterOnCMCLGC()
 {
 	GetCSM();
 
-	if (saturn)
+	if (lem && saturn)
 	{
 		lem->DskySwitchEnter.SetState(true);
 		saturn->DskySwitchEnter.SetState(true);
