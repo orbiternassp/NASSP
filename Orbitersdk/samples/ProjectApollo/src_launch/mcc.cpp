@@ -2103,6 +2103,15 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY5STATE15: //LM jettison attitude update to Block Data 11
 				UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->MissionTime > 100.0*3600.0 + 35.0*60.0, 41, MST_D_DAY5STATE16);
 				break;
+			case MST_D_DAY5STATE16: //Block Data 11 to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 103.0*3600.0 + 5.0*60.0, 42, MST_D_DAY5STATE17);
+				break;
+			case MST_D_DAY5STATE17: //State vector update to Block Data 12
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 104.0*3600.0 + 15.0*60.0, 2, MST_D_DAY5STATE18);
+				break;
+			case MST_D_DAY5STATE18: //Block Data 12 to Block Data 13
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 114.0*3600.0 + 55.0*60.0, 43, MST_D_DAY6STATE1);
+				break;
 			}
 			break;
 		case MTP_F:
