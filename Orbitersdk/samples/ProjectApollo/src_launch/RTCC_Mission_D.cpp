@@ -1276,6 +1276,42 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->paddata, "CSM Jettison Attitude: roll %.1f, pitch %.1f, yaw %.1f", dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
 	}
 	break;
+	case 42: //BLOCK DATA 11
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 4;
+		double lng[] = { 144.6*RAD, 148.5*RAD, 144.6*RAD, 139.0*RAD};
+		double GETI[] = { OrbMech::HHMMSSToSS(104,20,28),OrbMech::HHMMSSToSS(105,54,57),OrbMech::HHMMSSToSS(107,27,50),OrbMech::HHMMSSToSS(109,0,44) };
+		std::string area[] = { "066-3A", "067-3B", "068-3A", "069-CC"};
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 43: //BLOCK DATA 12
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 5;
+		double lng[] = { -160.0*RAD, -160.0*RAD, -33.0*RAD, -31.0*RAD, -32.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(110,53,53),OrbMech::HHMMSSToSS(112,27,57),OrbMech::HHMMSSToSS(113,9,29),OrbMech::HHMMSSToSS(114,39,6), OrbMech::HHMMSSToSS(116, 12, 55) };
+		std::string area[] = { "070-CC", "071-CC", "72-AC", "73-2A", "74-AC" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
 	}
 
 	return scrubbed;
