@@ -133,7 +133,7 @@ public:
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
-	int DKI_Profile;	//0 = Four-impulse: Phasing/CSI/CDH/TPI, 1 = Six-Impulse: Phasing/Boost/HAM/CSI/CDH/TPI, 2 = Four-impulse rescue: Height/CSI/CDH/TPI
+	int DKI_Profile;	//0 = Four-impulse: Phasing/CSI/CDH/TPI, 1 = Six-Impulse: Phasing/Boost/HAM/CSI/CDH/TPI, 2 = Four-impulse rescue: Height/CSI/CDH/TPI, 3 = Calculate TPI time only
 	int DKI_TPI_Mode;	//0 = TPI on time, 1 = TPI at orbital midnight, 2 = TPI at X minutes before sunrise
 	bool DKI_Maneuver_Line;	//false = define relative times, true = 0.5 revolutions between maneuvers
 	bool DKI_Radial_DV;	//false = horizontal maneuver, true = 50 ft/s radial component
@@ -275,7 +275,7 @@ public:
 	double LmkTime;
 
 	//VECPOINT PAGE
-	int VECoption;		//0 = Point SC at body, 1 = Open hatch thermal control
+	int VECoption;		//0 = Point SC at body, 1 = Open hatch thermal control, 2 = Point AOT with CSM
 	int VECdirection;	//0 = +X, 1 = -X, 2 = +Y,3 = -Y,4 = +Z, 5 = -Z
 	OBJHANDLE VECbody;	//handle for the desired body
 	VECTOR3 VECangles;	//IMU angles

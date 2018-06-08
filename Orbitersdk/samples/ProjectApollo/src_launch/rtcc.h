@@ -711,6 +711,7 @@ struct DKIOpt	//Docking Initiation Processor
 	//0 = Phasing, CSI 0.5 revs later, CDH 0.5 revs later
 	//1 = Phasing with +50 ft/s DVZ, at apolune, CDH 0.5 revs later
 	//2 = Height, CSI (Phasing) 0.5 revs later, CDH 2xN revs later
+	//3 = Just calculate TPI time
 	int plan = 0;
 	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
 	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
@@ -746,6 +747,19 @@ struct SPQOpt //Coelliptic Sequence Processor
 	double E;
 	int type;		//0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int maneuver;	//0 = CSI, 1 = CDH
+};
+
+struct DockAlignOpt	//Docking Alignment Processor
+{
+	//Option 1: LM REFSMMAT from CSM REFSMMAT, CSM attitude, docking angle and LM gimbal angles
+	//Option 2: LM gimbal angles from CSM REFSMMAT, LM REFSMMAT, CSM gimbal angles and docking angle
+	//Option 3: CSM gimbal angles from CSM REFSMMAT, LM REFSMMAT, LM gimbal angles and docking angle
+	int type;
+	MATRIX3 CSM_REFSMMAT;
+	MATRIX3 LM_REFSMMAT;
+	VECTOR3 CSMAngles;
+	VECTOR3 LMAngles;
+	double DockingAngle = 0.0;
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -889,6 +903,8 @@ public:
 	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
 	SV coast(SV sv0, double dt);
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
+	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
+	void DockingAlignmentProcessor(DockAlignOpt &opt);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -937,7 +953,6 @@ private:
 	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
 	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
-	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
 	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 

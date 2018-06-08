@@ -5670,7 +5670,7 @@ VECTOR3 RTCC::PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, 
 	Rot = OrbMech::CSMBodyToLMBody(dockingangle);
 	U_A = tmul(Rot, U_OAN);
 
-	C_LSM = OrbMech::tmat(OrbMech::CALCSMNB(_V(0, 0, 0)));
+	C_LSM = OrbMech::tmat(OrbMech::CALCSMSC(_V(0, 0, 0)));
 	U_DL = tmul(C_LSM, U_D);
 	U_AL = U_A;
 	U_R = -unit(crossp(U_DL, U_AL));
@@ -7164,7 +7164,6 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 		dv_rad_const = -50.0*0.3048;
 	}
 
-	sv_AP = coast(opt.sv_A, opt.t_TIG - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
 	sv_TPI_guess = coast(opt.sv_P, opt.t_TPI_guess - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 
 	if (opt.tpimode == 0)
@@ -7196,6 +7195,11 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 
 		sv_TPI = coast(sv_TPI_guess, res.t_TPI - opt.t_TPI_guess);
 	}
+
+	//If we just needed the TPI time, return here
+	if (opt.plan == 3) return true;
+
+	sv_AP = coast(opt.sv_A, opt.t_TIG - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
 
 	OrbMech::QDRTPI(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, sv_TPI.gravref, mu, opt.DH, opt.E, 0, R_PJ, V_PJ);
 	R_AFD = R_PJ - unit(R_PJ)*opt.DH;
@@ -7422,4 +7426,55 @@ VECTOR3 RTCC::HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT)
 	MX = OrbMech::_MRx(-80.0*RAD);
 	SMNB = mul(MX, mul(MY, SMNB));
 	return OrbMech::CALCGAR(REFSMMAT, SMNB);
+}
+
+void RTCC::DockingAlignmentProcessor(DockAlignOpt &opt)
+{
+	//Option 1: LM REFSMMAT from CSM REFSMMAT, CSM attitude, docking angle and LM gimbal angles
+	//Option 2: LM gimbal angles from CSM REFSMMAT, LM REFSMMAT, CSM gimbal angles and docking angle
+	//Option 3: CSM gimbal angles from CSM REFSMMAT, LM REFSMMAT, LM gimbal angles and docking angle
+	//Coordinate Systems:
+	//Navigation Base (NB)
+	//Stable Member (SM)
+	//Basic Reference Coordinate System (BRCS)
+	//REFSMMAT is BRCS to SM
+
+	MATRIX3 M_NBCSM_NBLM;
+
+	M_NBCSM_NBLM = OrbMech::CSMBodyToLMBody(opt.DockingAngle);
+
+	if (opt.type == 1)
+	{
+		MATRIX3 M_SMCSM_NBCSM, M_SMLM_NBLM, M_BRCS_NBCSM, M_BRCS_NBLM, M_BRCS_SMLM;
+
+		M_SMCSM_NBCSM = OrbMech::CALCSMSC(opt.CSMAngles);
+		M_SMLM_NBLM = OrbMech::CALCSMSC(opt.LMAngles);
+		M_BRCS_NBCSM = mul(M_SMCSM_NBCSM, opt.CSM_REFSMMAT);
+		M_BRCS_NBLM = mul(M_NBCSM_NBLM, M_BRCS_NBCSM);
+		M_BRCS_SMLM = mul(OrbMech::tmat(M_SMLM_NBLM), M_BRCS_NBLM);
+
+		opt.LM_REFSMMAT = M_BRCS_SMLM;
+	}
+	else if (opt.type == 2)
+	{
+		MATRIX3 M_SMCSM_NBCSM, M_SMLM_SMCSM, M_SMCSM_NBLM, M_SMLM_NBLM;
+
+		M_SMCSM_NBCSM = OrbMech::CALCSMSC(opt.CSMAngles);
+		M_SMLM_SMCSM = mul(opt.CSM_REFSMMAT, OrbMech::tmat(opt.LM_REFSMMAT));
+		M_SMCSM_NBLM = mul(M_NBCSM_NBLM, M_SMCSM_NBCSM);
+		M_SMLM_NBLM = mul(M_SMCSM_NBLM, M_SMLM_SMCSM);
+
+		opt.LMAngles = OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), M_SMLM_NBLM);
+	}
+	else if (opt.type == 3)
+	{
+		MATRIX3 M_SMLM_NBLM, M_SMCSM_NBCSM, M_SMCSM_SMLM, M_SMCSM_NBLM;
+
+		M_SMLM_NBLM = OrbMech::CALCSMSC(opt.LMAngles);
+		M_SMCSM_SMLM = mul(opt.LM_REFSMMAT, OrbMech::tmat(opt.CSM_REFSMMAT));
+		M_SMCSM_NBLM = mul(M_SMLM_NBLM, M_SMCSM_SMLM);
+		M_SMCSM_NBCSM = mul(OrbMech::tmat(M_NBCSM_NBLM), M_SMCSM_NBLM);
+
+		opt.CSMAngles = OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), M_SMCSM_NBCSM);
+	}
 }
