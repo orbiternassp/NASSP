@@ -1065,5 +1065,5 @@ void LEM_FloodLights::Timestep(double simdt)
 void LEM_FloodLights::SystemTimestep(double simdt)
 {
 	FloodCB->DrawPower(GetPowerDraw());
-	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V
+	FloodHeat->GenerateHeat((GetPowerDraw()*0.356)*0.75);	//Assumes linear relationship between heat and power draw based on maximum at 28V, 75% of power load to heat (just a guess!)
 }
