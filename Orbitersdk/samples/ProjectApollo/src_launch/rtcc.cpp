@@ -3235,6 +3235,11 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 	OrbMech::EclToEMP(sv_node4.R, sv_node4.V, sv_node4.MJD, R_EMP4, V_EMP4);
 	OrbMech::latlong_from_r(R_EMP4, lat_nd4, lng_nd4);
 
+	if (lng_nd4 < 0.0)
+	{
+		lng_nd4 += PI2;
+	}
+
 	h_nd4 = length(R_EMP4) - oapiGetSize(hMoon);
 
 	//Step 5: Converge precision trajectory to optimized LOI conditions

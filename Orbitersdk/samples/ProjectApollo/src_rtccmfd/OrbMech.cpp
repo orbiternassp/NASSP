@@ -6108,6 +6108,7 @@ bool CoastIntegrator::iteration()
 				R_E = oapiGetSize(planet);
 				mu = oapiGetMass(planet)*GGRAV;
 				jcount = oapiGetPlanetJCoeffCount(planet);
+				delete[] JCoeff;
 				JCoeff = new double[jcount];
 				for (int i = 0; i < jcount; i++)
 				{
@@ -6128,8 +6129,6 @@ bool CoastIntegrator::iteration()
 				nu = _V(0, 0, 0);// [0 0 0]';
 				x = 0;
 				tau = 0;
-
-				delete[] JCoeff;
 			}
 		}
 		else
@@ -6156,6 +6155,7 @@ bool CoastIntegrator::iteration()
 				R_E = oapiGetSize(planet);
 				mu = oapiGetMass(planet)*GGRAV;
 				jcount = oapiGetPlanetJCoeffCount(planet);
+				delete[] JCoeff;
 				JCoeff = new double[jcount];
 				for (int i = 0; i < jcount; i++)
 				{
@@ -6176,8 +6176,6 @@ bool CoastIntegrator::iteration()
 				nu = _V(0, 0, 0);// [0 0 0]';
 				x = 0;
 				tau = 0;
-
-				delete[] JCoeff;
 			}
 		}
 	}
