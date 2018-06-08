@@ -2091,11 +2091,17 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY5STATE11: //TPI update to LM realign attitude update
 				UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, cm->MissionTime > 99.0*3600.0 + 15.0*60.0, 37, MST_D_DAY5STATE12);
 				break;
-			case MST_D_DAY5STATE12: //LM realign attitude update to LM burn to depletion update
-				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, cm->MissionTime > 99.0*3600.0 + 55.0*60.0, 38, MST_D_DAY5STATE13);
+			case MST_D_DAY5STATE12: //LM realign attitude update to LM realign attitude update
+				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, SubStateTime > 2.0*60.0, 38, MST_D_DAY5STATE13);
 				break;
-			case MST_D_DAY5STATE13: //LM burn to depletion update to LM jettison attitude update
-				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 39, MST_D_DAY5STATE14);
+			case MST_D_DAY5STATE13: //LM realign attitude update to LM burn to depletion update
+				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, cm->MissionTime > 99.0*3600.0 + 55.0*60.0, 39, MST_D_DAY5STATE14);
+				break;
+			case MST_D_DAY5STATE14: //LM burn to depletion update to LM jettison attitude update
+				UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 40, MST_D_DAY5STATE15);
+				break;
+			case MST_D_DAY5STATE15: //LM jettison attitude update to Block Data 11
+				UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->MissionTime > 100.0*3600.0 + 35.0*60.0, 41, MST_D_DAY5STATE16);
 				break;
 			}
 			break;

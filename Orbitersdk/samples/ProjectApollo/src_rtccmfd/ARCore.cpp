@@ -1694,9 +1694,15 @@ void ARCore::VecPointCalc()
 
 		VECangles = OrbMech::CALCGAR(REFSMMAT, mul(OrbMech::tmat(M), M_R));
 	}
-	else
+	else if (VECoption == 1)
 	{
 		VECangles = rtcc->HatchOpenThermalControl(vessel, REFSMMAT);
+	}
+	else
+	{
+		SV sv;
+
+		rtcc->PointAOTWithCSM(REFSMMAT, sv, 2, 1, 0.0);
 	}
 }
 
@@ -3012,7 +3018,10 @@ int ARCore::subThread()
 		opt.Delta_HAMH = DKI_dt_HAMH;
 
 		rtcc->DockingInitiationProcessor(opt, dkiresult);
-		rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
+		if (DKI_Profile != 3)
+		{
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
+		}
 		t_TPI = dkiresult.t_TPI;
 
 		Result = 0;

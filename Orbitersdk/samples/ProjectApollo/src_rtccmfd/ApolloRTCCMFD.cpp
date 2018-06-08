@@ -3101,7 +3101,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "Lambert Targeting", 17);
 		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic", 10);
 		skp->Text(1 * W / 8, 6 * H / 14, "Docking Initiation Processor", 28);
-		skp->Text(1 * W / 8, 8 * H / 14, "Skylab Rendezvous and TPI Search", 32);
+		skp->Text(1 * W / 8, 8 * H / 14, "Skylab Rendezvous", 17);
 	}
 	else if (screen == 33)
 	{
@@ -3115,20 +3115,30 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "HAM-CSI/CDH Sequence", 20);
 		}
-		else
+		else if (G->DKI_Profile == 2)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "Rescue-2 Sequence", 17);
 		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "TPI Time Only", 13);
+		}
 
-		GET_Display(Buffer, G->DKI_TIG);
-		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		if (G->DKI_Profile != 3)
+		{
+			GET_Display(Buffer, G->DKI_TIG);
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		}
 		GET_Display(Buffer, G->t_TPIguess);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.1f NM", G->DH / 1852.0);
-		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f°", G->lambertelev*DEG);
-		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		if (G->DKI_Profile != 3)
+		{
+			sprintf(Buffer, "%.1f NM", G->DH / 1852.0);
+			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2f°", G->lambertelev*DEG);
+			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		}
 
 		if (G->target != NULL)
 		{
@@ -3136,41 +3146,44 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(5 * W / 8, 5 * H / 21, "Phasing:", 8);
-		GET_Display(Buffer, G->P30TIG);
-		skp->Text(5 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
-
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
-		skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
-		skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
-		skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
-
-		if (G->DKI_Profile == 1)
+		if (G->DKI_Profile != 3)
 		{
-			skp->Text(4 * W / 8, 13 * H / 21, "Boost:", 6);
-			GET_Display(Buffer, G->dkiresult.t_Boost);
-			skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_Boost / 0.3048);
-			skp->Text(5 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, 5 * H / 21, "Phasing:", 8);
+			GET_Display(Buffer, G->P30TIG);
+			skp->Text(5 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(4 * W / 8, 15 * H / 21, "HAM:", 4);
-			GET_Display(Buffer, G->dkiresult.t_HAM);
-			skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
+			skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
+			skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
+			skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+
+			if (G->DKI_Profile == 1)
+			{
+				skp->Text(4 * W / 8, 13 * H / 21, "Boost:", 6);
+				GET_Display(Buffer, G->dkiresult.t_Boost);
+				skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_Boost / 0.3048);
+				skp->Text(5 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+
+				skp->Text(4 * W / 8, 15 * H / 21, "HAM:", 4);
+				GET_Display(Buffer, G->dkiresult.t_HAM);
+				skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			}
+
+			skp->Text(4 * W / 8, 16 * H / 21, "CSI:", 4);
+			GET_Display(Buffer, G->dkiresult.t_CSI);
+			skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_CSI / 0.3048);
+			skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(4 * W / 8, 18 * H / 21, "CDH:", 4);
+			GET_Display(Buffer, G->dkiresult.t_CDH);
+			skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f ft/s", length(G->dkiresult.DV_CDH) / 0.3048);
+			skp->Text(5 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 		}
-
-		skp->Text(4 * W / 8, 16 * H / 21, "CSI:", 4);
-		GET_Display(Buffer, G->dkiresult.t_CSI);
-		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_CSI / 0.3048);
-		skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
-
-		skp->Text(4 * W / 8, 18 * H / 21, "CDH:", 4);
-		GET_Display(Buffer, G->dkiresult.t_CDH);
-		skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f ft/s", length(G->dkiresult.DV_CDH) / 0.3048);
-		skp->Text(5 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 
 		skp->Text(4 * W / 8, 20 * H / 21, "TPI:", 4);
 		GET_Display(Buffer, G->dkiresult.t_TPI);
@@ -6458,7 +6471,7 @@ void ApolloRTCCMFD::set_DKITIG_DT_PDI(double dt)
 
 void ApolloRTCCMFD::menuCycleDKIProfile()
 {
-	if (G->DKI_Profile < 2)
+	if (G->DKI_Profile < 3)
 	{
 		G->DKI_Profile++;
 	}

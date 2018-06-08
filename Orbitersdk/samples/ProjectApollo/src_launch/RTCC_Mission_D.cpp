@@ -1160,7 +1160,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP9LMTPIPAD(&manopt, *form);
 	}
 	break;
-	case 38: //LM DOCKED P52 PAD
+	case 38: //LM DOCKED P52 PAD (STAR 15)
+	case 39: //LM DOCKED P52 PAD (STAR 25)
 	{
 		AP9AOTSTARPAD * form = (AP9AOTSTARPAD *)pad;
 
@@ -1170,7 +1171,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		form->Detent = 2;
 		form->GET = OrbMech::HHMMSSToSS(99, 30, 0);
-		form->Star = 015;
+		if (fcn == 38)
+		{
+			form->Star = 015;
+		}
+		else
+		{
+			form->Star = 025;
+		}
 
 		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 		sv = StateVectorCalc(calcParams.src);
@@ -1179,7 +1187,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->CSMAtt = GA * DEG;
 	}
 	break;
-	case 39: //LM BURN TO DEPLETION UPDATE
+	case 40: //LM BURN TO DEPLETION UPDATE
 	{
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 
@@ -1189,6 +1197,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MATRIX3 Rot;
 		VECTOR3 dV_LVLH, DV, dV_LVLH_imp;
 		double GETbase, TIG, P30TIG, dv;
+		char buffer1[1000];
 
 		GETbase = getGETBase();
 		sv0 = StateVectorCalc(calcParams.tgt);
@@ -1201,12 +1210,15 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		FindRadarMidPass(sv1, GETbase, lat_TEX, lng_TEX, TIG);
 
 		dv = 7427.5*0.3048;
-		dV_LVLH_imp = _V(dv*cos(45.0*RAD), dv*sin(45.0*RAD), 0.0);
+		dV_LVLH_imp = _V(dv*cos(45.0*RAD), -dv*sin(45.0*RAD), 0.0);
 		sv_TIG = coast(sv0, TIG - OrbMech::GETfromMJD(sv0.MJD, GETbase));
 		Rot = OrbMech::LVLH_Matrix(sv_TIG.R, sv_TIG.V);
 		DV = tmul(Rot, dV_LVLH_imp);
 
 		PoweredFlightProcessor(sv0, GETbase, TIG, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, DV, P30TIG, dV_LVLH);
+
+		TimeofIgnition = P30TIG;
+		DeltaV_LVLH = dV_LVLH;
 
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_APS;
@@ -1220,6 +1232,48 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LMDAPUpdate(calcParams.tgt, dappad);
 		sprintf(form->purpose, "APS Depletion");
 		sprintf(form->remarks, "LM weight is %.0f", dappad.ThisVehicleWeight);
+
+		AGCStateVectorUpdate(buffer1, sv0, false, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector");
+		}
+	}
+	break;
+	case 41: //LM JETTISON ATTITUDE
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		AP11LMMNV manpad;
+		AP11LMManPADOpt opt;
+		MATRIX3 A;
+		double GETbase;
+
+		GETbase = getGETBase();
+
+		opt.dV_LVLH = DeltaV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_APS;
+		opt.GETbase = GETbase;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		opt.TIG = TimeofIgnition;
+		opt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&opt, manpad);
+
+		DockAlignOpt dockopt;
+
+		A = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
+		dockopt.LM_REFSMMAT = A;
+		dockopt.CSM_REFSMMAT = _M(A.m31, A.m32, A.m33, A.m21, A.m22, A.m23, -A.m11, -A.m12, -A.m13);
+		dockopt.LMAngles = manpad.IMUAtt;
+		dockopt.type = 3;
+
+		DockingAlignmentProcessor(dockopt);
+
+		sprintf(form->paddata, "CSM Jettison Attitude: roll %.1f, pitch %.1f, yaw %.1f", dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
 	}
 	break;
 	}

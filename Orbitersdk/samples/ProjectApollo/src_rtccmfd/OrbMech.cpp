@@ -4516,24 +4516,6 @@ MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB)
 	return _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
 }
 
-MATRIX3 CALCSMNB(VECTOR3 GA)
-{
-	MATRIX3 SMNB, Q1, Q2, Q3;
-	double OGA, IGA, MGA;
-
-	OGA = GA.x;
-	IGA = GA.y;
-	MGA = GA.z;
-
-	Q1 = _MRy(IGA);
-	Q2 = _MRz(MGA);
-	Q3 = _MRx(OGA);
-
-	SMNB = mul(Q3, mul(Q2, Q1));
-
-	return SMNB;
-}
-
 MATRIX3 ROTCOMP(VECTOR3 U_R, double A)
 {
 	MATRIX3 I, R;
@@ -5775,15 +5757,14 @@ VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs)
 
 VECTOR3 LMIMU_from_CSMIMU(MATRIX3 CSM_REFSMMAT, MATRIX3 LM_REFSMMAT, VECTOR3 csmang)
 {
-	MATRIX3 csmmat, RX, RY, lmmat, lmmat2;
+	MATRIX3 csmmat, M_CSM_LM, lmmat, lmmat2;
 	double DockingAngle;
 
 	DockingAngle = 0.0;
 
-	csmmat = OrbMech::CALCSMSC(csmang);
-	RX = OrbMech::_MRx(60.0*RAD - DockingAngle);
-	RY = OrbMech::_MRy(180.0*RAD);
-	lmmat = mul(RY, mul(RX, csmmat));
+	csmmat = CALCSMSC(csmang);
+	M_CSM_LM = CSMBodyToLMBody(DockingAngle);
+	lmmat = mul(M_CSM_LM, csmmat);
 	lmmat2 = mul(lmmat, mul(CSM_REFSMMAT, tmat(LM_REFSMMAT)));
 
 	return OrbMech::CALCGAR(_M(1, 0, 0, 0, 1, 0, 0, 0, 1), lmmat2);
