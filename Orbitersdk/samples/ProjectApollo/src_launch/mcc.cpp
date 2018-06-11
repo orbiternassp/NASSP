@@ -2112,6 +2112,24 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY5STATE18: //Block Data 12 to Block Data 13
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 114.0*3600.0 + 55.0*60.0, 43, MST_D_DAY6STATE1);
 				break;
+			case MST_D_DAY6STATE1: //Block Data 13 to SPS-6 Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 119.0*3600.0 + 40.0*60.0, 44, MST_D_DAY6STATE2);
+				break;
+			case MST_D_DAY6STATE2: //SPS-6 Update to state vector update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > 126.0*3600.0 + 50.0*60.0, 45, MST_D_DAY6STATE5);
+				break;
+			case MST_D_DAY6STATE5: //State vector update to Block Data 14
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 128.0*3600.0 + 35.0*60.0, 2, MST_D_DAY6STATE6);
+				break;
+			case MST_D_DAY6STATE6: //Block Data 14 to Block Data 15
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 140.0*3600.0 + 5.0*60.0, 46, MST_D_DAY7STATE1);
+				break;
+			case MST_D_DAY7STATE1: //Block Data 15 to Landmark Tracking Align update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 141.0*3600.0 + 35.0*60.0, 47, MST_D_DAY7STATE2);
+				break;
+			case MST_D_DAY7STATE2: //Landmark Tracking Align update to Landmark Tracking Update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 142.0*3600.0 + 35.0*60.0, 48, MST_D_DAY7STATE3);
+				break;
 			}
 			break;
 		case MTP_F:
@@ -3343,6 +3361,8 @@ void MCC::LoadState(FILEHANDLE scn) {
 	int tmp = 0; // Used in boolean type loader
 	bool padisallocated = false;
 
+	char tmpbuf[64];
+
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, MCC_END_STRING, sizeof(MCC_END_STRING))) {
 			break;
@@ -3377,8 +3397,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		if (padNumber == 1)
 		{
-			char tmpbuf[36];
-
 			AP7BLK * form = (AP7BLK *)padForm;
 
 			for (int i = 0;i < 8;i++)
@@ -3399,7 +3417,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 2)
 		{
-			char tmpbuf[36];
 			P27PAD * form = (P27PAD *)padForm;
 
 			LOAD_DOUBLE("MCC_P27PAD_alt", form->alt);
@@ -3501,7 +3518,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 7)
 		{
-			char tmpbuf[36];
 			P37PAD * form = (P37PAD *)padForm;
 
 			for (int i = 0;i < 3;i++)
@@ -3614,7 +3630,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 13)
 		{
-			char tmpbuf[64];
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
 			LOAD_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);

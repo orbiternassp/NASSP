@@ -1312,6 +1312,97 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BlockData(&opt, *form);
 	}
 	break;
+	case 44: //BLOCK DATA 13
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 8;
+		double lng[] = { -68.2*RAD, -33.0*RAD, -32.9*RAD, -69.0*RAD, -170.5*RAD, -170.5*RAD, -170.5*RAD, -160.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(117,39,36),OrbMech::HHMMSSToSS(119,17,43),OrbMech::HHMMSSToSS(120,52,15),OrbMech::HHMMSSToSS(122,17,41), 
+			OrbMech::HHMMSSToSS(125, 3, 53), OrbMech::HHMMSSToSS(126, 36, 9), OrbMech::HHMMSSToSS(128, 9, 44), OrbMech::HHMMSSToSS(129, 46, 43) };
+		std::string area[] = { "075-1A", "076-2B", "77-2B", "78-1A", "79-4A", "80-4B", "81-4A", "82-DC" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 45: //SPS-6
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		AP7ManPADOpt opt;
+		REFSMMATOpt refsopt;
+		GMPOpt gmpopt;
+		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD, TIG;
+		VECTOR3 dV_LVLH;
+		MATRIX3 REFSMMAT;
+		SV sv0, sv1;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		GETbase = getGETBase();
+		NomTIG = OrbMech::HHMMSSToSS(122, 1, 0);
+		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
+		dt1 = NomTIG - sv0GET;
+		sv1 = coast(sv0, dt1 - 10.0*60.0);
+
+		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -110.0*RAD);	//find 110.0°W
+		TIG = (TIGMJD - GETbase)*24.0*3600.0;
+
+		gmpopt.csmlmdocked = true;
+		gmpopt.GETbase = GETbase;
+		gmpopt.h_apo = 272.0*1852.0;
+		gmpopt.impulsive = RTCC_NONIMPULSIVE;
+		gmpopt.rot_ang = 0.67*RAD;
+		gmpopt.TIG_GET = TIG;
+		gmpopt.type = 5;
+		gmpopt.vessel = calcParams.src;
+
+		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+
+		refsopt.csmlmdocked = true;
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.GETbase = GETbase;
+		refsopt.HeadsUp = false;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.src;
+		refsopt.vesseltype = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.navcheckGET = P30TIG - 30.0*60.0;
+		opt.REFSMMAT = REFSMMAT;
+		opt.sxtstardtime = -30.0*60.0;
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 1;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "SPS-4");
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
+		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, target load");
+		}
+	}
+	break;
 	}
 
 	return scrubbed;
