@@ -1991,38 +1991,8 @@ int ARCore::subThread()
 		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
 		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
 
-
-		if (REFSMMATupl == 0)
-		{
-			if (vesseltype < 2)
-			{
-				REFSMMAToct[1] = 306;
-			}
-			else
-			{
-				REFSMMAToct[1] = 3606;
-			}
-		}
-		else
-		{
-			REFSMMAToct[1] = REFSMMAT_Address();
-
-			if (vesseltype < 2)
-			{
-				REFSMMAToct[1] = 1735;
-			}
-			else
-			{
-				REFSMMAToct[1] = 1733;
-			}
-
-			if (mission >= 14)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
-			{
-				REFSMMAToct[1] -= 2;
-			}
-		}
-
 		REFSMMAToct[0] = 24;
+		REFSMMAToct[1] = REFSMMATUplinkAddress();
 		REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
 		REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
 		REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
@@ -3070,7 +3040,7 @@ void ARCore::StopIMFDRequest() {
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
 }
 
-int ARCore::REFSMMAT_Address()
+int ARCore::REFSMMATOctalAddress()
 {
 	int addr;
 
@@ -3087,6 +3057,41 @@ int ARCore::REFSMMAT_Address()
 	{
 		addr -= 02;
 	}
+	return addr;
+}
+
+int ARCore::REFSMMATUplinkAddress()
+{
+	int addr;
+
+	if (REFSMMATupl == 0)
+	{
+		if (vesseltype < 2)
+		{
+			addr = 306;
+		}
+		else
+		{
+			addr = 3606;
+		}
+	}
+	else
+	{
+		if (vesseltype < 2)
+		{
+			addr = 1735;
+		}
+		else
+		{
+			addr = 1733;
+		}
+
+		if (mission >= 14)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
+		{
+			addr -= 2;
+		}
+	}
+
 	return addr;
 }
 

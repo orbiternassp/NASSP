@@ -25,7 +25,7 @@
 
 int g_MFDmode; // identifier for new MFD mode
 ARCore *GCoreData[32];
-OBJHANDLE GCoreVessel[32];
+VESSEL *GCoreVessel[32];
 int nGutsUsed;
 char Buffer[100];
 bool initialised = false;
@@ -4168,6 +4168,38 @@ void ApolloRTCCMFD::calcREFSMMAT()
 	G->REFSMMATCalc();
 }
 
+void ApolloRTCCMFD::menuSendREFSMMATToOtherVessel()
+{
+	if (G->target != NULL)
+	{
+		OBJHANDLE itertarget;
+		ARCore *core;
+
+		for (int i = 0;i < nGutsUsed;i++)
+		{
+			itertarget = GCoreVessel[i];
+
+			if (G->target == itertarget)
+			{
+				core = GCoreData[i];
+
+				core->REFSMMAT = G->REFSMMAT;
+				core->REFSMMATcur = G->REFSMMATcur;
+				core->REFSMMATopt = G->REFSMMATopt;
+
+				for (int i = 0;i < 20;i++)
+				{
+					core->REFSMMAToct[i] = G->REFSMMAToct[i];
+				}
+
+				core->REFSMMAToct[1] = core->REFSMMATUplinkAddress();
+
+				return;
+			}
+		}
+	}
+}
+
 void ApolloRTCCMFD::menuLSLat()
 {
 	bool LSLatInput(void* id, char *str, void *data);
@@ -5256,7 +5288,7 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 	unsigned short REFSoct[20];
 	int REFSMMATaddress;
 
-	REFSMMATaddress = G->REFSMMAT_Address();
+	REFSMMATaddress = G->REFSMMATOctalAddress();
 
 	REFSoct[2] = vagc->Erasable[0][REFSMMATaddress];
 	REFSoct[3] = vagc->Erasable[0][REFSMMATaddress + 1];

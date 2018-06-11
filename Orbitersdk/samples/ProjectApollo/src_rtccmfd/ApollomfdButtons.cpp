@@ -177,7 +177,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Time of Alignment", 0, 'G' },
 		{ "Uplink option", 0, 'K' },
 		{ "Heads up/down for P30", 0, 'H' },
-		{ "", 0, ' ' },
+		{ "Send REFSMMAT to MFD of target", 0, 'S' },
 		{ "REFSMMAT from AGC", 0, 'D' },
 		{ "Direct/MCC", 0, 'E' },
 
@@ -194,7 +194,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::REFSMMATTimeDialogue);
 	RegisterFunction("TYP", OAPI_KEY_K, &ApolloRTCCMFD::cycleREFSMMATupl);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::cycleREFSMMATHeadsUp);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("SEN", OAPI_KEY_S, &ApolloRTCCMFD::menuSendREFSMMATToOtherVessel);
 	RegisterFunction("DWN", OAPI_KEY_D, &ApolloRTCCMFD::GetREFSMMATfromAGC);
 	RegisterFunction("MCC", OAPI_KEY_E, &ApolloRTCCMFD::menuREFSMMATdirect);
 

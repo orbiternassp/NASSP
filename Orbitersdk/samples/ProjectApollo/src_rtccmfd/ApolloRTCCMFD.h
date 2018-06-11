@@ -75,6 +75,7 @@ public:
 	void cycleREFSMMATHeadsUp();
 	void set_REFSMMATTime(double time);
 	void calcREFSMMAT();
+	void menuSendREFSMMATToOtherVessel();
 	void OrbAdjApoDialogue();
 	void set_OrbAdjApo(double apo);
 	void OrbAdjPeriDialogue();

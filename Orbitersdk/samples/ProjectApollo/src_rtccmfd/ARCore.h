@@ -75,7 +75,8 @@ public:
 	void PDI_PAD();
 	void MapUpdate();
 	void NavCheckPAD();
-	int REFSMMAT_Address();
+	int REFSMMATOctalAddress();
+	int REFSMMATUplinkAddress();
 
 	int startSubthread(int fcn);
 	int subThread();
