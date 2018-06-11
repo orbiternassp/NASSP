@@ -13,16 +13,17 @@
 // ==============================================================
 
 #define STRICT
-#define ORBITER_MODULE
 
 #include "ApolloRTCCMFD.h"
 #include "papi.h"
 #include "LVDC.h"
 #include "iu.h"
+#include "ARoapiModule.h"
 
 // ==============================================================
 // Global variables
 
+ARoapiModule *g_coreMod;
 int g_MFDmode; // identifier for new MFD mode
 ARCore *GCoreData[32];
 VESSEL *GCoreVessel[32];
@@ -31,33 +32,10 @@ char Buffer[100];
 bool initialised = false;
 
 // ==============================================================
-// API interface
-
-DLLCLBK void InitModule (HINSTANCE hDLL)
-{
-	static char *name = "Apollo RTCC MFD";   // MFD mode name
-	MFDMODESPECEX spec;
-	spec.name = name;
-	spec.key = OAPI_KEY_T;                // MFD mode selection key
-	spec.context = NULL;
-	spec.msgproc = ApolloRTCCMFD::MsgProc;  // MFD mode callback function
-
-	// Register the new MFD mode with Orbiter
-	g_MFDmode = oapiRegisterMFDMode (spec);
-	nGutsUsed = 0;
-}
-
-DLLCLBK void ExitModule (HINSTANCE hDLL)
-{
-	// Unregister the custom MFD mode when the module is unloaded
-	oapiUnregisterMFDMode (g_MFDmode);
-}
-
-// ==============================================================
 // MFD class implementation
 
 // Constructor
-ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel)
+ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 : MFD2 (w, h, vessel)
 {
 	//font = oapiCreateFont(w / 20, true, "Arial", FONT_NORMAL, 0);
@@ -89,15 +67,6 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 {
 	oapiReleaseFont (font);
 	// Add MFD cleanup code here
-}
-
-DLLCLBK void opcPreStep(double SimT, double SimDT, double mjd) {
-	//if (initialised) {
-	for (int i = 0; i < nGutsUsed; i++)
-	{
-		GCoreData[i]->MinorCycle(SimT, SimDT, mjd);
-	}
-	//}
 }
 
 // Return button labels
@@ -3686,18 +3655,6 @@ void ApolloRTCCMFD::menuLastPage()
 		screen = 2;
 	}
 	coreButtons.SelectPage(this, screen);
-}
-
-// MFD message parser
-int ApolloRTCCMFD::MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
-{
-	switch (msg) {
-	case OAPI_MSG_MFD_OPENED:
-		// Our new MFD mode has been selected, so we create the MFD and
-		// return a pointer to it.
-		return (int)(new ApolloRTCCMFD (LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam));
-	}
-	return 0;
 }
 
 void ApolloRTCCMFD::set_getbase()
