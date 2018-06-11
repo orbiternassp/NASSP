@@ -456,7 +456,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LOIMan loiopt;
 		MCCNodeMan opt;
 		VECTOR3 dV_LVLH, dV_LOI;
-		SV sv, sv_peri, sv_node;
+		SV sv, sv_peri, sv_node, sv_postLOI;
 		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -477,7 +477,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
 
-		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node);
+		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node, sv_postLOI);
 
 		sv_peri = FindPericynthion(sv);
 
@@ -555,7 +555,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LOIMan loiopt;
 		REFSMMATOpt refsopt;
 		VECTOR3 dV_LVLH, dV_LOI;
-		SV sv, sv_peri, sv_node;
+		SV sv, sv_peri, sv_node, sv_postLOI;
 		MATRIX3 REFSMMAT;
 		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
 
@@ -577,7 +577,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
 
-		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node);
+		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node, sv_postLOI);
 
 		sv_peri = FindPericynthion(sv);
 
@@ -738,7 +738,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
-		SV sv;
+		SV sv, sv_n, sv_postLOI;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -757,7 +757,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.src;
 
-		LOITargeting(&opt, dV_LVLH, P30TIG);
+		LOITargeting(&opt, dV_LVLH, P30TIG, sv_n, sv_postLOI);
 
 		manopt.alt = LSAlt;
 		manopt.dV_LVLH = dV_LVLH;

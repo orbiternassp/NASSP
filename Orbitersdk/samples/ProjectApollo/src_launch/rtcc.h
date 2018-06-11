@@ -448,6 +448,9 @@ struct MCCNFRMan
 	double t_land;		//time of landing
 	double LOIh_apo;		//apolune altitude
 	double LOIh_peri;		//perilune altitude
+	int N;				//Revs between DOI and PDI
+	int DOIType;		//0 = Normal DOI, 1 = DOI as LOI-2
+	double DOIPeriAng;	//Angle between landing site and perilune
 };
 
 struct MCCFlybyMan
@@ -526,6 +529,7 @@ struct DOIMan
 	int vesseltype = 0;			//0 = CSM, 1 = LM
 	int N = 0;	// Revolutions between DOI and PDI
 	double PeriAng = 15.0*RAD;	//Angle from landing site to perilune
+	int impulsive = RTCC_NONIMPULSIVE;	//Calculated with nonimpulsive maneuver compensation or without
 };
 
 struct PCMan
@@ -853,9 +857,9 @@ public:
 	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyMan *opt, TLMCCResults *res, int &step);
-	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_post);
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);

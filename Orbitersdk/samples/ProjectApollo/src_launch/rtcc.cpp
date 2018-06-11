@@ -2353,6 +2353,14 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 	return dt1 + (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
 }
 
+void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp)
+{
+	VECTOR3 dV;
+	double CR, t_L, t_PDI, TIG;
+
+	DOITargeting(opt, dV_LVLH_imp, P30TIG_imp, dV, TIG, t_PDI, t_L, CR);
+}
+
 void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR)
 {
 	double SVMJD, GET, mass, LMmass, h_DP, theta_F, t_F, mu, t_DOI, t_slip, CSMmass;
@@ -2411,25 +2419,28 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp, V
 
 	OrbMech::oneclickcoast(R0B, V0B, SVMJD, t_DOI - GET, RA2, VA2, hMoon, hMoon);
 
-	SV sv_tig;
-
-	sv_tig.gravref = hMoon;
-	sv_tig.mass = CSMmass;
-	sv_tig.MJD = opt->GETbase + t_DOI / 24.0 / 3600.0;
-	sv_tig.R = RA2;
-	sv_tig.V = VA2;
-
-	FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, DV_DOI, true, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
-
-	OrbMech::rv_from_r0v0(RA2, VA2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
-
 	Q_Xx = OrbMech::LVLH_Matrix(RA2, VA2);
 	dV_LVLH_imp = mul(Q_Xx, DV_DOI);
 	P30TIG_imp = t_DOI;
 
-	Q_Xx = OrbMech::LVLH_Matrix(R2_cor, V2_cor);
-	dV_LVLH = mul(Q_Xx, Llambda);
-	P30TIG = t_DOI + t_slip;
+	if (opt->impulsive == RTCC_NONIMPULSIVE)
+	{
+		SV sv_tig;
+
+		sv_tig.gravref = hMoon;
+		sv_tig.mass = CSMmass;
+		sv_tig.MJD = opt->GETbase + t_DOI / 24.0 / 3600.0;
+		sv_tig.R = RA2;
+		sv_tig.V = VA2;
+
+		FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, DV_DOI, true, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
+
+		OrbMech::rv_from_r0v0(RA2, VA2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
+
+		Q_Xx = OrbMech::LVLH_Matrix(R2_cor, V2_cor);
+		dV_LVLH = mul(Q_Xx, Llambda);
+		P30TIG = t_DOI + t_slip;
+	}
 }
 
 void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
@@ -2507,14 +2518,7 @@ void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	P30TIG = opt->EarliestGET + dt + t_slip;
 }
 
-void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
-{
-	SV sv_node;
-
-	LOITargeting(opt, dV_LVLH, P30TIG, sv_node);
-}
-
-void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node)
+void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_post)
 {
 	SV sv0, sv1;
 	VECTOR3 axis, u_LPO, H, u_LAH, u_node, p, q, H_LPO;
@@ -2685,6 +2689,12 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 		dV_LVLH = mul(Q_Xx, Llambda);
 		P30TIG = GET_node + t_slip;
+
+		sv_post = sv_node;
+		sv_post.R = R_cut;
+		sv_post.V = V_cut;
+		sv_post.MJD = MJD_cut;
+		sv_post.mass = m_cut;
 	}
 	else
 	{
@@ -2692,6 +2702,10 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 		dV_LVLH = mul(Q_Xx, DV[sol]);
 		P30TIG = GET_node;
+
+		sv_post = sv_node;
+		sv_post.R = R_ref[sol];
+		sv_post.V = V_ref[sol];
 	}
 
 }
@@ -6367,7 +6381,7 @@ bool RTCC::TLMCFlyby(SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess,
 
 bool RTCC::TLMCConic_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, SV &sv_reentry, double &lat_EMPcor)
 {
-	SV sv_p, sv_n, sv_r;
+	SV sv_p, sv_n, sv_r, sv_postLOI;
 	LOIMan loiopt;
 	VECTOR3 target, DV_LOI, DV_MCC, step;
 	double TIG_LOI, dV_T, lat_iter, mu_E, mu_M;
@@ -6427,7 +6441,7 @@ bool RTCC::TLMCConic_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double
 		sv_p.MJD = sv_mcc.MJD + (dt1 + dt2) / 24.0 / 3600.0;
 
 		loiopt.RV_MCC = sv_p;
-		LOITargeting(&loiopt, DV_LOI, TIG_LOI, sv_n);
+		LOITargeting(&loiopt, DV_LOI, TIG_LOI, sv_n, sv_postLOI);
 
 		dV_T = length(DV_LOI) + length(DV_MCC);
 		OrbMech::QuadraticIterator(c_I, s_F, lat_iter, latarr, dvarr, dV_T, 0.02*RAD, 0.2*RAD);
@@ -6448,7 +6462,7 @@ bool RTCC::TLMCConic_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double
 
 bool RTCC::TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, SV &sv_reentry, double &lat_EMPcor)
 {
-	SV sv_p, sv_r, sv_n;
+	SV sv_p, sv_r, sv_n, sv_postLOI;
 	LOIMan loiopt;
 	VECTOR3 target, DV_LOI, DV_MCC, step;
 	double TIG_LOI, dV_T, lat_iter, mu_E, mu_M;
@@ -6493,7 +6507,7 @@ bool RTCC::TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_pe
 		DV_MCC = OrbMech::TLMCIntegratedFlybyIterator(sv_mcc.R, sv_mcc.V, sv_mcc.MJD, sv_mcc.gravref, DV_MCC, target, step);
 
 		loiopt.RV_MCC.V = sv_mcc.V + DV_MCC;
-		LOITargeting(&loiopt, DV_LOI, TIG_LOI, sv_n);
+		LOITargeting(&loiopt, DV_LOI, TIG_LOI, sv_n, sv_postLOI);
 
 		dV_T = length(DV_LOI) + length(DV_MCC);
 		OrbMech::QuadraticIterator(c_I, s_F, lat_iter, latarr, dvarr, dV_T, 0.02*RAD, 0.2*RAD);
@@ -6524,14 +6538,15 @@ bool RTCC::TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_pe
 
 bool RTCC::TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor)
 {
-	SV sv_p, sv_mcc_apo, sv_n;
-	VECTOR3 R_EMP, V_EMP, DV_LOI, var_converged, RP_M, VP_M, var_guess, DV_MCC, step;
-	double lng_peri_guess, dt, dt1, mu_E, mu_M, TIG_LOI, dV_T, r_peri, v_peri_guess, azi_peri_guess, v_peri_conv, azi_peri_conv, lng_peri_conv;
+	SV sv_p, sv_mcc_apo, sv_n, sv_postLOI;
+	VECTOR3 R_EMP, V_EMP, DV_LOI, var_converged, RP_M, VP_M, var_guess, DV_MCC, step, DV_DOI;
+	double lng_peri_guess, dt, dt1, mu_E, mu_M, TIG_LOI, dV_T, r_peri, v_peri_guess, azi_peri_guess, v_peri_conv, azi_peri_conv, lng_peri_conv, TIG_DOI;
 	double rtemp, lattemp, fpatemp, lat_iter;
 	double dLat, dV_To;
 	int c_I;
 	OBJHANDLE hMoon, hEarth;
 	LOIMan loiopt;
+	DOIMan doiopt;
 
 	loiopt.alt = opt->alt;
 	loiopt.azi = opt->azi;
@@ -6546,6 +6561,19 @@ bool RTCC::TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, doub
 	loiopt.vessel = opt->vessel;
 	loiopt.impulsive = RTCC_IMPULSIVE;
 	loiopt.type = opt->type;
+
+	doiopt.alt = opt->alt;
+	doiopt.csmlmdocked = opt->csmlmdocked;
+	doiopt.GETbase = opt->GETbase;
+	doiopt.impulsive = RTCC_IMPULSIVE;
+	doiopt.lat = opt->LSlat;
+	doiopt.lng = opt->LSlng;
+	doiopt.N = opt->N;
+	doiopt.opt = opt->DOIType;
+	doiopt.useSV = true;
+	doiopt.vessel = opt->vessel;
+	doiopt.vesseltype = 0;
+	doiopt.PeriAng = opt->DOIPeriAng;
 
 	c_I = 0;
 	dLat = 0.0;
@@ -6593,14 +6621,23 @@ bool RTCC::TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, doub
 		OrbMech::EMPToEcl(R_EMP, V_EMP, sv_p.MJD, sv_p.R, sv_p.V);
 
 		OrbMech::rv_from_r0v0_tb(sv_p.R, sv_p.V, sv_p.MJD, hMoon, sv_mcc.gravref, -dt, sv_mcc_apo.R, sv_mcc_apo.V);
-
 		DV_MCC = sv_mcc_apo.V - sv_mcc.V;
 
 		loiopt.RV_MCC = sv_p;
+		LOITargeting(&loiopt, DV_LOI, TIG_LOI, sv_n, sv_postLOI);
 
-		LOITargeting(&loiopt, DV_LOI, TIG_LOI, sv_n);
+		if (doiopt.opt == 1)
+		{
+			doiopt.EarliestGET = TIG_LOI + 3.0*3600.0;
+			doiopt.RV_MCC = sv_postLOI;
+			DOITargeting(&doiopt, DV_DOI, TIG_DOI);
+		}
+		else
+		{
+			DV_DOI = _V(0, 0, 0);
+		}
 
-		dV_T = length(DV_LOI) + length(DV_MCC);
+		dV_T = length(DV_DOI) + length(DV_LOI) + length(DV_MCC);
 
 		if (c_I == 0)
 		{
@@ -6636,7 +6673,7 @@ bool RTCC::TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, doub
 
 bool RTCC::TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor)
 {
-	SV sv_p, sv_mcc_apo, sv_n;
+	SV sv_p, sv_mcc_apo, sv_n, sv_postLOI;
 	VECTOR3 R_EMP, V_EMP, DV_LOI, var_converged, var_guess, DV_MCC, step;
 	double lng_peri_guess, dt, mu_E, mu_M, TIG_LOI, dV_T, r_peri, v_peri_guess, azi_peri_guess, v_peri_conv, azi_peri_conv, lng_peri_conv;
 	double rtemp, lattemp, fpatemp, lat_iter;
@@ -6711,7 +6748,7 @@ bool RTCC::TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_
 
 		loiopt.RV_MCC = sv_p;
 
-		LOITargeting(&loiopt, DV_LOI, TIG_LOI, sv_n);
+		LOITargeting(&loiopt, DV_LOI, TIG_LOI, sv_n, sv_postLOI);
 
 		dV_T = length(DV_LOI) + length(DV_MCC);
 

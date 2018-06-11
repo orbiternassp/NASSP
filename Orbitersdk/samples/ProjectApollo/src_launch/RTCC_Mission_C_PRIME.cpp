@@ -358,6 +358,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				REFSMMATOpt refsopt;
 				double P30TIG_LOI;
 				VECTOR3 dV_LVLH_LOI;
+				SV sv_n, sv_postLOI;
 
 				sv.mass = calcParams.src->GetMass();
 
@@ -374,7 +375,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt2.t_land = t_land;
 				opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv, 0);
 
-				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI);
+				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, sv_n, sv_postLOI);
 
 				refsopt.dV_LVLH = dV_LVLH;
 				refsopt.dV_LVLH2 = dV_LVLH_LOI;
@@ -441,7 +442,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
-		SV sv;
+		SV sv, sv_n, sv_postLOI;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -460,7 +461,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.t_land = t_land;
 		opt.vessel = calcParams.src;
 
-		LOITargeting(&opt, dV_LVLH, P30TIG);
+		LOITargeting(&opt, dV_LVLH, P30TIG, sv_n, sv_postLOI);
 
 		manopt.alt = LSAlt;
 		manopt.dV_LVLH = dV_LVLH;

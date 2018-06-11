@@ -4586,9 +4586,9 @@ void LunarLandingPrediction2(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, V
 
 	dt = t_E - t_0;
 	oneclickcoast(R_0, V_0, GETbase + t_0 / 24.0 / 3600.0, dt, R_D, V_D, plan, plan);
-	dt2 = 0.0;//timetoperi_integ(R_D, V_D, GETbase + (t_0 + dt) / 24.0 / 3600.0, plan, plan, R_DOI, V_DOI);
-	R_DOI = R_D;
-	V_DOI = V_D;
+	dt2 = timetoperi_integ(R_D, V_D, GETbase + (t_0 + dt) / 24.0 / 3600.0, plan, plan, R_DOI, V_DOI);
+	//R_DOI = R_D;
+	//V_DOI = V_D;
 
 	r_DOI = length(R_DOI);
 	U_N = unit(crossp(R_DOI, V_DOI));

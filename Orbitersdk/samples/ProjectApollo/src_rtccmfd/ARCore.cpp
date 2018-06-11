@@ -2048,6 +2048,7 @@ int ARCore::subThread()
 		if (LOImaneuver == 0 || LOImaneuver == 1)
 		{
 			LOIMan loiopt;
+			SV sv_n, sv_postLOI;
 
 			loiopt.GETbase = GETbase;
 			loiopt.h_apo = LOIapo;
@@ -2089,7 +2090,7 @@ int ARCore::subThread()
 				loiopt.RV_MCC = RV2;
 			}
 
-			rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG);
+			rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG, sv_n, sv_postLOI);
 			P30TIG = LOI_TIG;
 			dV_LVLH = LOI_dV_LVLH;
 
@@ -2706,6 +2707,9 @@ int ARCore::subThread()
 			opt.t_land = t_Land;
 			opt.azi = LOIazi;
 			opt.h_peri = TLCCLAHPeriAlt;
+			opt.N = DOI_N;
+			opt.DOIType = DOI_option;
+			opt.DOIPeriAng = DOI_PeriAng;
 
 			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingNonFreeReturn(&opt, &res);
 
