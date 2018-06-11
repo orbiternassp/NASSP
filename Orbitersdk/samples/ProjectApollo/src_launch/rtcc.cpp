@@ -2353,19 +2353,17 @@ double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double 
 	return dt1 + (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
 }
 
-void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp)
+void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG)
 {
-	VECTOR3 dV;
-	double CR, t_L, t_PDI, TIG;
+	double CR, t_L, t_PDI;
 
-	DOITargeting(opt, dV_LVLH_imp, P30TIG_imp, dV, TIG, t_PDI, t_L, CR);
+	DOITargeting(opt, dv, P30TIG, t_PDI, t_L, CR);
 }
 
-void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR)
+void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG, double &t_PDI, double &t_L, double &CR)
 {
-	double SVMJD, GET, mass, LMmass, h_DP, theta_F, t_F, mu, t_DOI, t_slip, CSMmass;
-	VECTOR3 R_A, V_A, R0B, V0B, R_LSA, DV_DOI, RA2, VA2, Llambda, R2_cor, V2_cor;
-	MATRIX3 Q_Xx;
+	double SVMJD, GET, h_DP, theta_F, t_F, mu, t_DOI;
+	VECTOR3 R_A, V_A, R0B, V0B, R_LSA;
 	OBJHANDLE hMoon, gravref;
 
 	hMoon = oapiGetObjectByName("Moon");
@@ -2376,7 +2374,6 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp, V
 		V0B = opt->RV_MCC.V;
 		SVMJD = opt->RV_MCC.MJD;
 		gravref = opt->RV_MCC.gravref;
-		CSMmass = opt->RV_MCC.mass;
 	}
 	else
 	{
@@ -2386,21 +2383,9 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp, V
 		SVMJD = oapiGetSimMJD();
 		R0B = _V(R_A.x, R_A.z, R_A.y);
 		V0B = _V(V_A.x, V_A.z, V_A.y);
-		CSMmass = opt->vessel->GetMass();
 	}
 
 	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
-
-	if (opt->csmlmdocked)
-	{
-		LMmass = GetDockedVesselMass(opt->vessel);
-	}
-	else
-	{
-		LMmass = 0.0;
-	}
-	mass = LMmass + CSMmass;
-
 
 	R_LSA = _V(cos(opt->lng)*cos(opt->lat), sin(opt->lng)*cos(opt->lat), sin(opt->lat))*(oapiGetSize(hMoon) + opt->alt);
 	h_DP = 50000.0*0.3048;
@@ -2410,37 +2395,14 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp, V
 
 	if (opt->opt == 0)
 	{
-		OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+		OrbMech::LunarLandingPrediction(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV, CR);
 	}
 	else
 	{
-		OrbMech::LunarLandingPrediction2(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, 1.0, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV_DOI, CR);
+		OrbMech::LunarLandingPrediction2(R0B, V0B, GET, opt->EarliestGET, R_LSA, h_DP, 1.0, theta_F, t_F, hMoon, opt->GETbase, mu, opt->N, t_DOI, t_PDI, t_L, DV, CR);
 	}
 
-	OrbMech::oneclickcoast(R0B, V0B, SVMJD, t_DOI - GET, RA2, VA2, hMoon, hMoon);
-
-	Q_Xx = OrbMech::LVLH_Matrix(RA2, VA2);
-	dV_LVLH_imp = mul(Q_Xx, DV_DOI);
-	P30TIG_imp = t_DOI;
-
-	if (opt->impulsive == RTCC_NONIMPULSIVE)
-	{
-		SV sv_tig;
-
-		sv_tig.gravref = hMoon;
-		sv_tig.mass = CSMmass;
-		sv_tig.MJD = opt->GETbase + t_DOI / 24.0 / 3600.0;
-		sv_tig.R = RA2;
-		sv_tig.V = VA2;
-
-		FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, DV_DOI, true, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
-
-		OrbMech::rv_from_r0v0(RA2, VA2, t_slip, R2_cor, V2_cor, mu);//Calculate the state vector at the corrected ignition time
-
-		Q_Xx = OrbMech::LVLH_Matrix(R2_cor, V2_cor);
-		dV_LVLH = mul(Q_Xx, Llambda);
-		P30TIG = t_DOI + t_slip;
-	}
+	P30TIG = t_DOI;
 }
 
 void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
@@ -6565,7 +6527,6 @@ bool RTCC::TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, doub
 	doiopt.alt = opt->alt;
 	doiopt.csmlmdocked = opt->csmlmdocked;
 	doiopt.GETbase = opt->GETbase;
-	doiopt.impulsive = RTCC_IMPULSIVE;
 	doiopt.lat = opt->LSlat;
 	doiopt.lng = opt->LSlng;
 	doiopt.N = opt->N;

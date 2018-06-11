@@ -547,6 +547,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCNodeAlt = 58.0*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
+		DOI_option = 1;
 	}
 	else if (mission == 14)
 	{
@@ -566,6 +567,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 		AGSKFactor = 100.0*3600.0;
+		DOI_option = 1;
 	}
 	else if (mission == 15)
 	{
@@ -584,6 +586,7 @@ ARCore::ARCore(VESSEL* v)
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 		AGSKFactor = 100.0*3600.0;
 		DOI_PeriAng = 16.0*RAD;
+		DOI_option = 1;
 	}
 	else if (mission == 16)
 	{
@@ -601,6 +604,7 @@ ARCore::ARCore(VESSEL* v)
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 		DOI_PeriAng = 16.0*RAD;
+		DOI_option = 1;
 	}
 	else if (mission == 17)
 	{
@@ -619,6 +623,7 @@ ARCore::ARCore(VESSEL* v)
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 		AGSKFactor = 110.0*3600.0;
 		DOI_PeriAng = -10.0*RAD;
+		DOI_option = 1;
 	}
 
 	Skylabmaneuver = 0;
@@ -2278,9 +2283,12 @@ int ARCore::subThread()
 	break;
 	case 10:	//DOI Targeting
 	{
+		SV sv;
 		DOIMan opt;
 		VECTOR3 DOI_DV_imp;
-		double DOI_TIG_imp;
+		double DOI_TIG_imp, attachedMass;
+
+		sv = rtcc->StateVectorCalc(vessel);
 
 		if (vesseltype < 2)
 		{
@@ -2309,7 +2317,17 @@ int ARCore::subThread()
 		opt.PeriAng = DOI_PeriAng;
 		opt.opt = DOI_option;
 
-		rtcc->DOITargeting(&opt, DOI_DV_imp, DOI_TIG_imp, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, t_Land, DOI_CR);
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			attachedMass = 0.0;
+		}
+		else
+		{
+			attachedMass = rtcc->GetDockedVesselMass(target);
+		}
+
+		rtcc->DOITargeting(&opt, DOI_DV_imp, DOI_TIG_imp, DOI_t_PDI, t_Land, DOI_CR);
+		rtcc->PoweredFlightProcessor(sv, GETbase, DOI_TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, DOI_DV_imp, DOI_TIG, DOI_dV_LVLH);
 
 		P30TIG = DOI_TIG;
 		dV_LVLH = DOI_dV_LVLH;

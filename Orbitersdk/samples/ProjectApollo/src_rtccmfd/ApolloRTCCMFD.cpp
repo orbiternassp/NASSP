@@ -238,6 +238,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "PCTIG", G->PC_TIG);
 	papiWriteScenario_vec(scn, "PC_DV_LVLH", G->PC_dV_LVLH);
 
+	oapiWriteScenario_int(scn, "DOI_option", G->DOI_option);
 	oapiWriteScenario_int(scn, "DOI_N", G->DOI_N);
 	papiWriteScenario_double(scn, "DOIGET", G->DOIGET);
 	papiWriteScenario_double(scn, "DOI_PERIANG", G->DOI_PeriAng);
@@ -382,6 +383,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "PCTIG", G->PC_TIG);
 		papiReadScenario_vec(line, "PC_DV_LVLH", G->PC_dV_LVLH);
 
+		papiReadScenario_int(line, "DOI_option", G->DOI_option);
 		papiReadScenario_int(line, "DOI_N", G->DOI_N);
 		papiReadScenario_double(line, "DOIGET", G->DOIGET);
 		papiReadScenario_double(line, "DOI_PERIANG", G->DOI_PeriAng);

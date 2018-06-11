@@ -1260,8 +1260,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 60: //STATE VETOR and LLS 2 REFSMMAT UPLINK
 	{
 		MATRIX3 REFSMMAT;
-		VECTOR3 dV_LVLH_imp;
-		double GETbase, t_PDI, t_land, CR, t_DOI_imp;
+		VECTOR3 DV;
+		double GETbase, t_PDI, t_land, CR;
 		SV sv;
 		REFSMMATOpt opt;
 		DOIMan doiopt;
@@ -1282,9 +1282,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		doiopt.vessel = calcParams.tgt;
 		doiopt.vesseltype = 1;
 
-		DOITargeting(&doiopt, dV_LVLH_imp, t_DOI_imp, DeltaV_LVLH, TimeofIgnition, t_PDI, t_land, CR);
-
-		calcParams.DOI = t_DOI_imp;
+		DOITargeting(&doiopt, DV, TimeofIgnition, t_PDI, t_land, CR);
+		calcParams.DOI = TimeofIgnition;
 		calcParams.TLAND = t_land;
 
 		opt.GETbase = GETbase;
@@ -1436,7 +1435,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMManPADOpt opt;
 
-		VECTOR3 dV_LVLH_imp;
+		VECTOR3 DV;
 		double GETbase, t_PDI, t_land, CR, t_DOI_imp, t_TPI_guess;
 		SV sv_CSM, sv, sv_DOI;
 		DOIMan doiopt;
@@ -1462,10 +1461,12 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		doiopt.vessel = calcParams.tgt;
 		doiopt.vesseltype = 1;
 
-		DOITargeting(&doiopt, dV_LVLH_imp, t_DOI_imp, DeltaV_LVLH, TimeofIgnition, t_PDI, t_land, CR);
+		DOITargeting(&doiopt, DV, t_DOI_imp, t_PDI, t_land, CR);
 
 		calcParams.DOI = t_DOI_imp;
 		calcParams.TLAND = t_land;
+
+		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, TimeofIgnition, DeltaV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.csmlmdocked = false;
