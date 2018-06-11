@@ -1844,7 +1844,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			attachedMass = rtcc->GetDockedVesselMass(target);
+			attachedMass = rtcc->GetDockedVesselMass(vessel);
 		}
 		rtcc->LambertTargeting(&opt, res);
 		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, P30TIG, dV_LVLH);
@@ -2293,7 +2293,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			attachedMass = rtcc->GetDockedVesselMass(target);
+			attachedMass = rtcc->GetDockedVesselMass(vessel);
 		}
 
 		rtcc->DOITargeting(&opt, DOI_DV_imp, DOI_TIG_imp, DOI_t_PDI, t_Land, DOI_CR);

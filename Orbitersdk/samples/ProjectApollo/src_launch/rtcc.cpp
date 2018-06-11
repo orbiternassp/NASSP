@@ -6589,7 +6589,7 @@ bool RTCC::TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, doub
 
 		if (doiopt.opt == 1)
 		{
-			doiopt.EarliestGET = TIG_LOI + 3.0*3600.0;
+			doiopt.EarliestGET = TIG_LOI + 3.5*3600.0;
 			doiopt.RV_MCC = sv_postLOI;
 			DOITargeting(&doiopt, DV_DOI, TIG_DOI);
 		}
