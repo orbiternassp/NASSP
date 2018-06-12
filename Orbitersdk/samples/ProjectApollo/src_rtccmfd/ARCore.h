@@ -262,6 +262,7 @@ public:
 	bool TLCCAscendingNode;
 	double TLCCFRDesiredInclination;
 	int TLCCIterationStep;
+	double TLCCRev2MeridianGET;
 
 	//LOI PAGE
 	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2

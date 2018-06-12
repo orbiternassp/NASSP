@@ -243,6 +243,7 @@ struct TLMCCResults
 	double NodeGET;
 	double EMPLatitude;
 	double FRInclination;
+	double t_Rev2Meridian;
 };
 
 struct TwoImpulseResuls

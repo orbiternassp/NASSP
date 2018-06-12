@@ -2597,24 +2597,12 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 	h = sqrt(mu*a*(1.0 - e*e));
 
 	double ta[2];
-	double f_T, isp, t_slip, MJD_cut, m_cut;
-	VECTOR3 Llambda, R_cut, V_cut, R_cor, V_cor, DV[2], R_ref[2], V_ref[2];
+	VECTOR3 DV[2], R_ref[2], V_ref[2];
 	MATRIX3 Q_Xx;
 	int sol;
 
 	ta[0] = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
 	ta[1] = PI2 - ta[0];												//Calculates the second possible true anomaly of the desired orbit
-
-	if (opt->vesseltype == 0)
-	{
-		f_T = SPS_THRUST;
-		isp = SPS_ISP;
-	}
-	else
-	{
-		f_T = DPS_THRUST;
-		isp = DPS_ISP;
-	}
 
 	for (int ii = 0;ii < 2;ii++)
 	{
@@ -2637,11 +2625,21 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		sol = 0;
 	}
 
-
 	if (opt->impulsive == RTCC_NONIMPULSIVE)
 	{
-		//FiniteBurntimeCompensation(opt->vesseltype, sv_node, attachedMass,)
+		VECTOR3 Llambda, R_cut, V_cut, R_cor, V_cor;
+		double f_T, isp, t_slip, MJD_cut, m_cut;;
 
+		if (opt->vesseltype == 0)
+		{
+			f_T = SPS_THRUST;
+			isp = SPS_ISP;
+		}
+		else
+		{
+			f_T = DPS_THRUST;
+			isp = DPS_ISP;
+		}
 
 		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 
@@ -3226,6 +3224,36 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 	res->NodeAlt = length(sv_node4.R) - oapiGetSize(hMoon);
 	res->NodeGET = (sv_node4.MJD - opt->GETbase)*24.0*3600.0;
 
+	//Calculate LOI DV
+	LOIMan loiopt;
+	double TIG_LOI, MJD_meridian;
+	VECTOR3 dV_LOI;
+	SV sv_node6, sv_postLOI, sv_postLOI2;
+
+	sv_node4.mass = sv1.mass;
+
+	loiopt.alt = opt->alt;
+	loiopt.azi = opt->azi;
+	loiopt.csmlmdocked = opt->csmlmdocked;
+	loiopt.GETbase = opt->GETbase;
+	loiopt.h_apo = opt->LOIh_apo;
+	loiopt.h_peri = opt->LOIh_peri;
+	loiopt.impulsive = RTCC_NONIMPULSIVE;
+	loiopt.lat = opt->LSlat;
+	loiopt.lng = opt->LSlng;
+	loiopt.RV_MCC = sv_node4;
+	loiopt.type = opt->type;
+	loiopt.t_land = opt->t_land;
+	loiopt.useSV = true;
+	loiopt.vessel = opt->vessel;
+	loiopt.vesseltype = opt->vesseltype;
+
+	LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node6, sv_postLOI);
+	sv_postLOI2 = coast(sv_postLOI, 3600.0);
+	MJD_meridian = OrbMech::P29TimeOfLongitude(sv_postLOI2.R, sv_postLOI2.V, sv_postLOI2.MJD, sv_postLOI2.gravref, 180.0*RAD);
+	res->t_Rev2Meridian = OrbMech::GETfromMJD(MJD_meridian, opt->GETbase);
+
+	//Finite burntime compensation
 	FiniteBurntimeCompensation(opt->vesseltype, sv1, LMmass, DV5, true, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
 	sv_tig = coast(sv1, t_slip);
 

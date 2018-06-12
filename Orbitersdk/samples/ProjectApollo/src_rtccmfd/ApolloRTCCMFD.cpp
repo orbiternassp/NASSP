@@ -2371,11 +2371,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else if (G->TLCCmaneuver == 5)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 4: Nonfree-return BAP, Fixed LPO, LS", 49);
+			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 4: Non-FR BAP, Fixed LPO, LS", 41);
 		}
 		else if (G->TLCCmaneuver == 6)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 5: Nonfree-return BAP, Free LPO, LS", 48);
+			skp->Text(1 * W / 8, 2 * H / 14, "TLMCC Option 5: Non-FR BAP, Free LPO, LS", 40);
 		}
 		else if (G->TLCCmaneuver == 7)
 		{
@@ -2482,6 +2482,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else if (G->TLCCmaneuver == 5 || G->TLCCmaneuver == 6)
 		{
+			skp->Text(1 * W / 8, 8 * H / 14, "Rev 2 Meridian Crossing:", 24);
+			GET_Display(Buffer, G->TLCCRev2MeridianGET);
+			skp->Text(1 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+
 			GET_Display(Buffer, G->TLCCPeriGET);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 

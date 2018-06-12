@@ -410,6 +410,7 @@ ARCore::ARCore(VESSEL* v)
 	TLCCAscendingNode = true;
 	TLCCFRDesiredInclination = 0.0;
 	TLCCIterationStep = 0;
+	TLCCRev2MeridianGET = 0.0;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -2710,6 +2711,7 @@ int ARCore::subThread()
 				TLCCNodeAlt = res.NodeAlt;
 				TLCCNodeGET = res.NodeGET;
 				TLCCEMPLatcor = res.EMPLatitude;
+				TLCCRev2MeridianGET = res.t_Rev2Meridian;
 
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;
