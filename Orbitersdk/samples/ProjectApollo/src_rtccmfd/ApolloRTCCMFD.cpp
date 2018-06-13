@@ -183,6 +183,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_vec(scn, "LOIDV", G->LOI_dV_LVLH);
 	papiWriteScenario_double(scn, "TLCCTIG", G->TLCC_TIG);
 	papiWriteScenario_double(scn, "LOITIG", G->LOI_TIG);
+	oapiWriteScenario_int(scn, "LOIEllipseRotation", G->LOIEllipseRotation);
 	papiWriteScenario_vec(scn, "R_TLI", G->R_TLI);
 	papiWriteScenario_vec(scn, "V_TLI", G->V_TLI);
 
@@ -211,6 +212,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "DOI_N", G->DOI_N);
 	papiWriteScenario_double(scn, "DOIGET", G->DOIGET);
 	papiWriteScenario_double(scn, "DOI_PERIANG", G->DOI_PeriAng);
+	papiWriteScenario_double(scn, "DOI_alt", G->DOI_alt);
 
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
@@ -328,6 +330,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_vec(line, "LOIDV", G->LOI_dV_LVLH);
 		papiReadScenario_double(line, "TLCCTIG", G->TLCC_TIG);
 		papiReadScenario_double(line, "LOITIG", G->LOI_TIG);
+		papiReadScenario_int(line, "LOIEllipseRotation", G->LOIEllipseRotation);
 		papiReadScenario_vec(line, "R_TLI", G->R_TLI);
 		papiReadScenario_vec(line, "V_TLI", G->V_TLI);
 
@@ -356,6 +359,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "DOI_N", G->DOI_N);
 		papiReadScenario_double(line, "DOIGET", G->DOIGET);
 		papiReadScenario_double(line, "DOI_PERIANG", G->DOI_PeriAng);
+		papiReadScenario_double(line, "DOI_alt", G->DOI_alt);
 
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
