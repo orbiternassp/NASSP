@@ -180,6 +180,7 @@ public:
 	void menuSetLOIPage();
 	void menuSwitchLOIManeuver();
 	void menuSwitchLOIOption();
+	void menuCycleLOIEllipseOption();
 	void menuSwitchTLCCManeuver();
 	void menuSetTLCCGET();
 	void set_TLCCGET(double time);
@@ -240,6 +241,8 @@ public:
 	void set_DOIRevs(int N);
 	void menuSetDOIPeriAng();
 	void set_DOIPeriAng(double ang);
+	void menuSetDOIPeriAlt();
+	void set_DOIPeriAlt(double alt);
 	void menuDOICalc();
 	void menuSetDOIPage();
 	void menuDOIOption();

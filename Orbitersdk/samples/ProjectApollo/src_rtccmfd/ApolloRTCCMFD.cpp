@@ -1784,7 +1784,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 12)
 	{
-		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Lunar Insertion", 15);
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Insertion", 15);
 
 		if (G->LOImaneuver == 0 || G->LOImaneuver == 1)
 		{
@@ -1840,14 +1840,26 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 			}
 
+			skp->Text(5 * W / 8, 6 * H / 21, "Landing site:", 13);
 			sprintf(Buffer, "%.3f°", G->LSLat*DEG);
-			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-
+			skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%.3f°", G->LSLng*DEG);
-			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
+			skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
-			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+
+			if (G->LOIEllipseRotation == 0)
+			{
+				skp->Text(5 * W / 8, 8 * H / 14, "Min DV", 6);
+			}
+			else if (G->LOIEllipseRotation == 1)
+			{
+				skp->Text(5 * W / 8, 8 * H / 14, "Solution 1", 10);
+			}
+			else if (G->LOIEllipseRotation == 2)
+			{
+				skp->Text(5 * W / 8, 8 * H / 14, "Solution 2", 10);
+			}
 
 			GET_Display(Buffer, G->LOI_TIG);
 			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
@@ -2024,26 +2036,30 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(5 * W / 8, 6 * H / 14, "Uplink TLAND", 12);
 
-		skp->Text(4 * W / 8, 11 * H / 21, "DOI:", 4);
-		skp->Text(4 * W / 8, 12 * H / 21, "PDI:", 4);
-		skp->Text(4 * W / 8, 13 * H / 21, "t_L:", 4);
-		skp->Text(4 * W / 8, 14 * H / 21, "CR:", 3);
+		skp->Text(4 * W / 8, 3 * H / 21, "Landing Parameters:", 19);
+		skp->Text(4 * W / 8, 4 * H / 21, "DOI:", 4);
+		skp->Text(4 * W / 8, 5 * H / 21, "PDI:", 4);
+		skp->Text(4 * W / 8, 6 * H / 21, "t_L:", 4);
+		skp->Text(4 * W / 8, 7 * H / 21, "CR:", 3);
 
 		GET_Display(Buffer, G->DOI_TIG);
-		skp->Text(5 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 4 * H / 21, Buffer, strlen(Buffer));
 
 		GET_Display(Buffer, G->DOI_t_PDI);
-		skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 5 * H / 21, Buffer, strlen(Buffer));
 
 		GET_Display(Buffer, G->t_Land);
-		skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.1f NM", G->DOI_CR / 1852.0);
-		skp->Text(5 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(4 * W / 8, 16 * H / 21, "DVX", 3);
-		skp->Text(4 * W / 8, 17 * H / 21, "DVY", 3);
-		skp->Text(4 * W / 8, 18 * H / 21, "DVZ", 3);
+		sprintf(Buffer, "%.0f ft", G->DOI_alt / 0.3048);
+		skp->Text(6 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 16 * H / 21, "DVX", 3);
+		skp->Text(5 * W / 8, 17 * H / 21, "DVY", 3);
+		skp->Text(5 * W / 8, 18 * H / 21, "DVZ", 3);
 
 		sprintf(Buffer, "%+07.1f", G->DOI_dV_LVLH.x / 0.3048);
 		skp->Text(6 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
@@ -2488,6 +2504,20 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			GET_Display(Buffer, G->TLCCPeriGET);
 			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 15 * H / 21, "LOI DV:", 7);
+			sprintf(Buffer, "%+07.1f %+07.1f %+07.1f", G->LOI_dV_LVLH.x / 0.3048, G->LOI_dV_LVLH.y / 0.3048, G->LOI_dV_LVLH.z / 0.3048);
+			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+
+			if (G->DOI_option == 1)
+			{
+				skp->Text(1 * W / 8, 17 * H / 21, "DOI DV:", 7);
+				sprintf(Buffer, "%+07.1f %+07.1f %+07.1f", G->DOI_dV_LVLH.x / 0.3048, G->DOI_dV_LVLH.y / 0.3048, G->DOI_dV_LVLH.z / 0.3048);
+				skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+				skp->Text(1 * W / 8, 19 * H / 21, "Orbit after DOI:", 16);
+				sprintf(Buffer, "%.1f x %.1f", G->TLCCPostDOIApoAlt / 1852.0, G->TLCCPostDOIPeriAlt / 1852.0);
+				skp->Text(1 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+			}
 
 			sprintf(Buffer, "%.5f°", G->TLCCNonFreeReturnEMPLat*DEG);
 			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
@@ -5382,6 +5412,21 @@ void ApolloRTCCMFD::menuSwitchLOIOption()
 	}
 }
 
+void ApolloRTCCMFD::menuCycleLOIEllipseOption()
+{
+	if (G->LOImaneuver < 2)
+	{
+		if (G->LOIEllipseRotation < 2)
+		{
+			G->LOIEllipseRotation++;
+		}
+		else
+		{
+			G->LOIEllipseRotation = 0;
+		}
+	}
+}
+
 void ApolloRTCCMFD::menuSwitchTLCCManeuver()
 {
 	if (G->TLCCmaneuver < 8)
@@ -5830,6 +5875,27 @@ bool DOIPeriAngInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_DOIPeriAng(double ang)
 {
 	this->G->DOI_PeriAng = ang*RAD;
+}
+
+void ApolloRTCCMFD::menuSetDOIPeriAlt()
+{
+	bool DOIPeriAltInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the perilune altitude above the landing site:", DOIPeriAltInput, 0, 20, (void*)this);
+}
+
+bool DOIPeriAltInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_DOIPeriAlt(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DOIPeriAlt(double alt)
+{
+	this->G->DOI_alt = alt * 0.3048;
 }
 
 void ApolloRTCCMFD::menuDOIOption()
