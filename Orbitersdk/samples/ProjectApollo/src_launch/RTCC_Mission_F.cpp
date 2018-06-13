@@ -1272,15 +1272,13 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = getGETBase();
 
 		doiopt.alt = LSAlt;
-		doiopt.csmlmdocked = false;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
 		doiopt.GETbase = GETbase;
 		doiopt.lat = LSLat;
 		doiopt.lng = LSLng;
 		doiopt.N = 0;
 		doiopt.opt = 0;
-		doiopt.vessel = calcParams.tgt;
-		doiopt.vesseltype = 1;
+		doiopt.sv0 = sv;
 
 		DOITargeting(&doiopt, DV, TimeofIgnition, t_PDI, t_land, CR);
 		calcParams.DOI = TimeofIgnition;
@@ -1451,15 +1449,13 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = getGETBase();
 
 		doiopt.alt = LSAlt;
-		doiopt.csmlmdocked = false;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
 		doiopt.GETbase = GETbase;
 		doiopt.lat = LSLat;
 		doiopt.lng = LSLng;
 		doiopt.N = 0;
 		doiopt.opt = 0;
-		doiopt.vessel = calcParams.tgt;
-		doiopt.vesseltype = 1;
+		doiopt.sv0 = sv;
 
 		DOITargeting(&doiopt, DV, t_DOI_imp, t_PDI, t_land, CR);
 

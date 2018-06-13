@@ -243,6 +243,10 @@ struct TLMCCResults
 	double NodeGET;
 	double EMPLatitude;
 	double FRInclination;
+	double t_Rev2Meridian;
+	VECTOR3 dV_LVLH_LOI;
+	VECTOR3 dV_LVLH_DOI;
+	double h_peri_postDOI, h_apo_postDOI;
 };
 
 struct TwoImpulseResuls
@@ -451,6 +455,8 @@ struct MCCNFRMan
 	int N;				//Revs between DOI and PDI
 	int DOIType;		//0 = Normal DOI, 1 = DOI as LOI-2
 	double DOIPeriAng;	//Angle between landing site and perilune
+	int LOIEllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
+	double DOIPeriAlt = 50000.0*0.3048; //perilune altitude above landing site
 };
 
 struct MCCFlybyMan
@@ -500,6 +506,7 @@ struct LOIMan
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
 	int impulsive = RTCC_NONIMPULSIVE;	//Calculated with nonimpulsive maneuver compensation or without
+	int EllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 };
 
 struct LOI2Man
@@ -517,18 +524,15 @@ struct LOI2Man
 struct DOIMan
 {
 	int opt;		//0 = DOI from circular orbit, 1 = DOI as LOI-2
-	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double EarliestGET;	//Earliest GET for the DOI maneuver
 	double lat; //landing site latitude
 	double lng; //landing site longitude
 	double alt;	//altitude of the landing site
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
-	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
+	SV sv0;		//State vector as input
 	int N = 0;	// Revolutions between DOI and PDI
 	double PeriAng = 15.0*RAD;	//Angle from landing site to perilune
+	double PeriAlt = 50000.0*0.3048; //perilune altitude above landing site
 };
 
 struct PCMan

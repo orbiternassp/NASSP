@@ -262,6 +262,8 @@ public:
 	bool TLCCAscendingNode;
 	double TLCCFRDesiredInclination;
 	int TLCCIterationStep;
+	double TLCCRev2MeridianGET;
+	double TLCCPostDOIPeriAlt, TLCCPostDOIApoAlt;
 
 	//LOI PAGE
 	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2
@@ -269,6 +271,7 @@ public:
 	double LOIapo, LOIperi, LOIazi, LOI2Alt;
 	VECTOR3 LOI_dV_LVLH;
 	double LOI_TIG;
+	int LOIEllipseRotation;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 
 	//LANDMARK TRACKING PAGE
 	AP11LMARKTRKPAD landmarkpad;
@@ -290,6 +293,7 @@ public:
 	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
 	double DOI_PeriAng;					//Angle from landing site to 
 	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
+	double DOI_alt;						//perilune altitude above landing site
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC

@@ -26,12 +26,11 @@
 
 class ApolloRTCCMFD: public MFD2 {
 public:
-	ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel);
+	ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im);
 	~ApolloRTCCMFD ();
 	char *ButtonLabel (int bt);
 	int ButtonMenu (const MFDBUTTONMENU **menu) const;
 	bool Update (oapi::Sketchpad *skp);
-	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 	bool ConsumeButton(int bt, int event);
 	bool ConsumeKeyBuffered(DWORD key);
 	void WriteStatus(FILEHANDLE scn) const;
@@ -181,6 +180,7 @@ public:
 	void menuSetLOIPage();
 	void menuSwitchLOIManeuver();
 	void menuSwitchLOIOption();
+	void menuCycleLOIEllipseOption();
 	void menuSwitchTLCCManeuver();
 	void menuSetTLCCGET();
 	void set_TLCCGET(double time);
@@ -241,6 +241,8 @@ public:
 	void set_DOIRevs(int N);
 	void menuSetDOIPeriAng();
 	void set_DOIPeriAng(double ang);
+	void menuSetDOIPeriAlt();
+	void set_DOIPeriAlt(double alt);
 	void menuDOICalc();
 	void menuSetDOIPage();
 	void menuDOIOption();
