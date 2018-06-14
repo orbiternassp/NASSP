@@ -292,42 +292,52 @@ void LEM::SetLmVesselHoverStage()
 	ClearAttExhaustRefs();
 
 	double Mass = 7137.75;
-	double ro = 4;
-	TOUCHDOWNVTX td[7];
+	double ro = 4.25;
+	TOUCHDOWNVTX td[8];
 	double x_target = -0.25;
 	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
 	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<7; i++) {
-		td[i].damping = damping;
+	for (int i = 0; i<8; i++) {
+		if (i < 5) {
+			td[i].damping = damping;
+			td[i].stiffness = stiffness;
+		}
+		else {
+			td[i].damping = damping / 100;
+			td[i].stiffness = stiffness / 100;
+		}
 		td[i].mu = 3;
 		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
 	}
+
 	td[0].pos.x = 0;
 	td[0].pos.y = -3.86;
-	td[0].pos.z = 1 * ro;
-	td[1].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.z = ro;
+	td[1].pos.x = -ro;
 	td[1].pos.y = -3.86;
-	td[1].pos.z = -sin(30 * RAD)*ro;
-	td[2].pos.x = cos(30 * RAD)*ro;
+	td[1].pos.z = 0;
+	td[2].pos.x = 0;
 	td[2].pos.y = -3.86;
-	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.z = -ro;
+	td[3].pos.x = ro;
 	td[3].pos.y = -3.86;
-	td[3].pos.z = sin(30 * RAD)*ro;
-	td[4].pos.x = -cos(30 * RAD)*ro;
-	td[4].pos.y = -3.86;
-	td[4].pos.z = sin(30 * RAD)*ro;
-	td[5].pos.x = 0;
-	td[5].pos.y = -3.86;
-	td[5].pos.z = -1 * ro;
+	td[3].pos.z = 0;
+	td[4].pos.x = 0;
+	td[4].pos.y = 3.86;
+	td[4].pos.z = 0;
+	td[5].pos.x = -ro;
+	td[5].pos.y = -5.57;
+	td[5].pos.z = 0;
 	td[6].pos.x = 0;
-	td[6].pos.y = 3.86;
-	td[6].pos.z = 0;
+	td[6].pos.y = -5.57;
+	td[6].pos.z = -ro;
+	td[7].pos.x = ro;
+	td[7].pos.y = -5.57;
+	td[7].pos.z = 0;
 
-	SetTouchdownPoints(td, 7);
-	
-	VSSetTouchdownPoints(GetHandle(), _V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
+	SetTouchdownPoints(td, 8);
+
+	//VSSetTouchdownPoints(GetHandle(), _V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
 
 	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
 	UINT meshidx;
@@ -500,7 +510,7 @@ void LEM::SetLmAscentHoverStage()
 
 	SetTouchdownPoints(td, 4);
 
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
+	//VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 
 	VECTOR3 mesh_dir=_V(-0.191,-0.02,0.383);	
 	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);
