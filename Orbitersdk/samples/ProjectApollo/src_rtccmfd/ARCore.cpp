@@ -525,15 +525,16 @@ ARCore::ARCore(VESSEL* v)
 		LOIapo = 168.9*1852.0;
 		LOIperi = 58.7*1852.0;
 		TLCCFreeReturnEMPLat = -1.962929*RAD;
-		TLCCNonFreeReturnEMPLat = 3.800381*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 32.0, 15.0);
+		TLCCNonFreeReturnEMPLat = 3.35412*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 45.0);
 		TLCCFlybyPeriAlt = 1851.7*1852.0;
-		TLCCNodeLat = 1.23*RAD;
-		TLCCNodeLng = 165.23*RAD;
+		TLCCNodeLat = 0.49*RAD;
+		TLCCNodeLng = 162.54*RAD;
 		TLCCNodeAlt = 59.9*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 		AGSKFactor = 100.0*3600.0;
+		LOIEllipseRotation = 1;
 	}
 	else if (mission == 13)
 	{
@@ -544,11 +545,11 @@ ARCore::ARCore(VESSEL* v)
 		LOIapo = 168.3*1852.0;
 		LOIperi = 57.0*1852.0;		
 		TLCCFreeReturnEMPLat = 0.108105*RAD;
-		TLCCNonFreeReturnEMPLat = -0.203331*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 29.0, 30.0);
+		TLCCNonFreeReturnEMPLat = -0.20553*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 28.0, 50.0);
 		TLCCFlybyPeriAlt = 210*1852.0;
 		TLCCNodeLat = 3.69*RAD;
-		TLCCNodeLng = 176.76*RAD;
+		TLCCNodeLng = 176.67*RAD;
 		TLCCNodeAlt = 57.24*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
@@ -584,17 +585,18 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		LOIapo = 170.0*1852.0;
 		LOIperi = 58.3*1852.0;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -16.904842*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(78.0, 35.0, 00.5);
+		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -16.89137*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(78.0, 35.0, 10.0);
 		TLCCFlybyPeriAlt = TLCCNodeAlt = 66.18*1852.0;
-		TLCCNodeLat = -23.3*RAD;
-		TLCCNodeLng = 171.7*RAD;
+		TLCCNodeLat = -23.28*RAD;
+		TLCCNodeLng = 171.57*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 		AGSKFactor = 100.0*3600.0;
 		DOI_PeriAng = 16.0*RAD;
 		DOI_option = 1;
 		DOI_N = 11;
+		LOIEllipseRotation = 1;
 	}
 	else if (mission == 16)
 	{
@@ -622,12 +624,12 @@ ARCore::ARCore(VESSEL* v)
 		LSAlt = -1.95*1852.0;
 		LOIazi = -90.0*RAD;
 		LOIapo = 170.8*1852.0;
-		LOIperi = 51.4*1852.0;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -12.695335*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 59.0, 25.0);
+		LOIperi = 52.6*1852.0;
+		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -11.11101*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 58.0, 54.0);
 		TLCCFlybyPeriAlt = TLCCNodeAlt = 49.35*1852.0;
-		TLCCNodeLat = -10.68*RAD;
-		TLCCNodeLng = 165.01*RAD;
+		TLCCNodeLat = -9.52*RAD;
+		TLCCNodeLng = 161.21*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 		AGSKFactor = 110.0*3600.0;
@@ -635,6 +637,7 @@ ARCore::ARCore(VESSEL* v)
 		DOI_option = 1;
 		DOI_N = 10;
 		DOI_alt = 84000.0*0.3048;
+		LOIEllipseRotation = 1;
 	}
 
 	Skylabmaneuver = 0;
