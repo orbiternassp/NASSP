@@ -565,17 +565,18 @@ ARCore::ARCore(VESSEL* v)
 		LOIapo = 170.0*1852.0;
 		LOIperi = 57.1*1852.0;
 		TLCCFreeReturnEMPLat = -0.048722*RAD;
-		TLCCNonFreeReturnEMPLat = -3.672093*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 41.0, 14.0);
+		TLCCNonFreeReturnEMPLat = -4.66089*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 41.0, 01.0);
 		TLCCFlybyPeriAlt = 2030.9*1852.0;
-		TLCCNodeLat = 3.15*RAD;
-		TLCCNodeLng = 174.82*RAD;
+		TLCCNodeLat = 2.15*RAD;
+		TLCCNodeLng = 170.81*RAD;
 		TLCCNodeAlt = 56.34*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 		AGSKFactor = 100.0*3600.0;
 		DOI_option = 1;
 		DOI_N = 11;
+		LOIEllipseRotation = 1;
 	}
 	else if (mission == 15)
 	{
