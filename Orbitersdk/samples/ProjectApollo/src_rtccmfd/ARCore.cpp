@@ -607,16 +607,17 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		LOIapo = 170.6*1852.0;
 		LOIperi = 58.5*1852.0;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 5.529042*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);
+		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 5.28257*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 32.0);
 		TLCCFlybyPeriAlt = TLCCNodeAlt = 71.26*1852.0;
-		TLCCNodeLat = 7.8*RAD;
-		TLCCNodeLng = 176.8*RAD;
+		TLCCNodeLat = 7.95*RAD;
+		TLCCNodeLng = 173.04*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 		DOI_PeriAng = 16.0*RAD;
 		DOI_option = 1;
 		DOI_N = 10;
+		LOIEllipseRotation = 1;
 	}
 	else if (mission == 17)
 	{
