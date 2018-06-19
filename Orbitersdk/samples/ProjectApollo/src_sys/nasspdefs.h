@@ -392,6 +392,7 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 //#define LM_DES_H2O_CAPACITY 151046.2592		///< in g, 333 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
 //#define LM_ASC_H2O_CAPACITY 19277.67573		///< in g, 42.5 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
 #define LM_DES_H2O_CAPACITY 114795.157			//Pad fill 76%
+//#define LM_DES_H2O_CAPACITY 229590.3			//Pad fill 76% for J-Mission Conversion
 #define LM_ASC_H2O_CAPACITY 14651.03355			//Pad fill 76%
 
 #endif
