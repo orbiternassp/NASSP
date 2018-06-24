@@ -1238,7 +1238,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.GetQ();
 		SRC->space.GetMass();
 			
-		double heat = 10.0 * number * dt;  //heat
+		double heat = 30.0 * number * dt;  //heat
 		t->thermic(heat);
 	}
 }
