@@ -2651,7 +2651,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 92, MST_F_TRANSEARTH_9);
 				break;
 			case MST_F_TRANSEARTH_9: //Entry PAD update to MCC-7 decision update
-				UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 6.0*3600.0, 97, MST_F_TRANSEARTH_10);
+				UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 5.0*3600.0 - 45.0*60.0, 97, MST_F_TRANSEARTH_10);
 				break;
 			case MST_F_TRANSEARTH_10: //MCC-7 decision update to MCC-7 update
 				UpdateMacro(UTP_NONE, PT_NONE, cm->MissionTime > rtcc->calcParams.EI - 4.5*3600.0, 93, MST_F_TRANSEARTH_11);

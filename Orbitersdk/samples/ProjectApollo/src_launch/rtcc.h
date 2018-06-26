@@ -26,6 +26,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include <vector>
 
+struct COMBELEMENTS;
+
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"
 
@@ -56,6 +58,66 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #define RTCC_DIRECTIONTYPE_PLUSX 0
 #define RTCC_DIRECTIONTYPE_MINUSX 1
+
+#define RTCC_GMP_PCE 1
+#define RTCC_GMP_PCL 2
+#define RTCC_GMP_PCT 3
+#define RTCC_GMP_CRL 4
+//Circularization at a specified height
+#define RTCC_GMP_CRH 5
+#define RTCC_GMP_HOL 6
+#define RTCC_GMP_HOT 7
+#define RTCC_GMP_HAO 8
+#define RTCC_GMP_HPO 9
+#define RTCC_GMP_NST 10
+#define RTCC_GMP_NSO 11
+#define RTCC_GMP_HBT 12
+#define RTCC_GMP_HBH 13
+#define RTCC_GMP_HBO 14
+#define RTCC_GMP_FCT 15
+#define RTCC_GMP_FCL 16
+#define RTCC_GMP_FCH 17
+#define RTCC_GMP_FCA 18
+#define RTCC_GMP_FCP 19
+#define RTCC_GMP_FCE 20
+#define RTCC_GMP_NHT 21
+//Combination maneuver to change both apogee and perigee and shift the node at a specified longitude
+#define RTCC_GMP_NHL 22
+#define RTCC_GMP_SAL 23
+#define RTCC_GMP_SAA 24
+#define RTCC_GMP_PHL 25
+#define RTCC_GMP_PHT 26
+#define RTCC_GMP_PHA 27
+#define RTCC_GMP_PHP 28
+#define RTCC_GMP_CPL 29
+#define RTCC_GMP_CPH 30
+#define RTCC_GMP_SAT 31
+//Maneuver to shift line-of-apsides some angle and keep the same apogee and perigee altitudes
+#define RTCC_GMP_SAO 32
+//Maneuver to change both apogee and perigee at a specified longitude
+#define RTCC_GMP_HBL 33
+#define RTCC_GMP_CNL 34
+#define RTCC_GMP_CNH 35
+//Height maneuver and node shift at a specified longitude
+#define RTCC_GMP_HNL 36
+#define RTCC_GMP_HNT 37
+#define RTCC_GMP_HNA 38
+#define RTCC_GMP_HNP 39
+#define RTCC_GMP_CRT 40
+#define RTCC_GMP_CRA 41
+#define RTCC_GMP_CRP 42
+#define RTCC_GMP_CPT 43
+#define RTCC_GMP_CPA 44
+#define RTCC_GMP_CPP 45
+#define RTCC_GMP_CNT 46
+#define RTCC_GMP_CNA 47
+#define RTCC_GMP_CNP 48
+#define RTCC_GMP_PCH 49
+#define RTCC_GMP_NSH 50
+//Node shift at a longitude
+#define RTCC_GMP_NSL 51
+#define RTCC_GMP_HOH 52
+#define RTCC_GMP_HAS 53
 
 const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40140.62691,
@@ -562,26 +624,26 @@ struct GMPOpt
 	//5 = Rotate velocity vector, specify apoapsis altitude
 	//6 = Rotate line of apsides, perigee at specific longitude
 	//7 = Optimal node shift maneuver
-	int type = 0;
+	int ManeuverCode;
 	double GETbase; //usually MJD at launch
-	VESSEL* vessel;
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
-	int impulsive = 1; //Calculated with nonimpulsive maneuver compensation or without
-	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
+	SV RV_MCC;		//State vector as inputn or without
 	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double LSAlt;	//Landing site altitude, if used
-	int vesseltype = 0;			//0 = CSM, 1 = LM
 
 	//maneuver parameters
 
-	double TIG_GET;	//time of ignition, used for options 0 and 1
-	double h_apo;	//apoapsis altitude, used for options 0 and 1
-	double h_peri;	//periapsis altitude, used for option 0
-	double inc;		//orbital inclination, used for option 0
-	double rot_ang;	//rotate velocity vector, used for option 5
-	double lng;		//Longitude, used for option 6
-	int N;			//Number of orbits, used for option 6
+	double TIG_GET;	//Threshold time or time of ignition
+	double dW;		//Desired wedge angle change
+	double long_D;	//Desired maneuver longitude
+	double H_D;		//Desired maneuver height
+	double dH_D;	//Desired change in height
+	double dLAN;	//Desired change in the ascending node
+	double H_A;		//Desired apogee height after the maneuver
+	double H_P;		//Desired perigee height after the maneuver
+	double dV;		//Input incremental velocity magnitude of the maneuver
+	double Pitch;	//Input pitch of the maneuver
+	double Yaw;		//Input yaw of the maneuver
+	double dLOA;	//Line-of-apsides shift
 };
 
 struct TLIPADOpt
@@ -865,8 +927,8 @@ public:
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &TOA);
+	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
+	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, COMBELEMENTS &coe_before, COMBELEMENTS &coe_after);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);

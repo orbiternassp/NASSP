@@ -231,34 +231,26 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
 		GMPOpt gmpopt;
-		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD, TIG;
-		VECTOR3 dV_LVLH;
+		double GETbase, P30TIG, TIG_imp;
+		VECTOR3 dV_LVLH, dV_imp;
 		MATRIX3 REFSMMAT;
-		SV sv0, sv1;
+		SV sv0;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
-
 		GETbase = getGETBase();
-		NomTIG = OrbMech::HHMMSSToSS(22.0, 12.0, 0.0);
-		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
-		dt1 = NomTIG - sv0GET;
-		sv1 = coast(sv0, dt1 - 10.0*60.0);
 
-		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -64.783*RAD);	//find 64.783°W
-		TIG = (TIGMJD - GETbase)*24.0*3600.0;
-
-		gmpopt.csmlmdocked = true;
+		gmpopt.dH_D = 64.0*1852.0;
+		gmpopt.dLAN = 2.87*RAD;
 		gmpopt.GETbase = GETbase;
-		gmpopt.h_apo = 192.0*1852.0;
-		gmpopt.impulsive = RTCC_NONIMPULSIVE;
-		gmpopt.rot_ang = 1.89*RAD;
-		gmpopt.TIG_GET = TIG;
-		gmpopt.type = 5;
-		gmpopt.vessel = calcParams.src;
+		gmpopt.long_D = -64.68563*RAD;
+		gmpopt.ManeuverCode = RTCC_GMP_HNL;
+		gmpopt.RV_MCC = sv0;
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(21.0, 40.0, 0.0);
 
-		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, P30TIG, dV_LVLH);
 
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
@@ -306,34 +298,26 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
 		GMPOpt gmpopt;
-		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD, TIG;
-		VECTOR3 dV_LVLH;
+		double GETbase, P30TIG, TIG_imp;
+		VECTOR3 dV_LVLH, dV_imp;
 		MATRIX3 REFSMMAT;
-		SV sv0, sv1;
+		SV sv0;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
-
 		GETbase = getGETBase();
-		NomTIG = OrbMech::HHMMSSToSS(25.0, 18.0, 30.0);
-		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
-		dt1 = NomTIG - sv0GET;
-		sv1 = coast(sv0, dt1 - 10.0*60.0);
 
-		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -70.0*RAD);	//find 70.0°W
-		TIG = (TIGMJD - GETbase)*24.0*3600.0;
-
-		gmpopt.csmlmdocked = true;
+		gmpopt.dH_D = 78.0*1852.0;
+		gmpopt.dLAN = 10.0*RAD;
 		gmpopt.GETbase = GETbase;
-		gmpopt.h_apo = 272.0*1852.0;
-		gmpopt.impulsive = RTCC_NONIMPULSIVE;
-		gmpopt.rot_ang = 5.7*RAD;
-		gmpopt.TIG_GET = TIG;
-		gmpopt.type = 5;
-		gmpopt.vessel = calcParams.src;
+		gmpopt.long_D = -80.60192*RAD;
+		gmpopt.ManeuverCode = RTCC_GMP_HNL;
+		gmpopt.RV_MCC = sv0;
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(24.0, 50.0, 0.0);
 
-		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, P30TIG, dV_LVLH);
 
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
@@ -378,34 +362,25 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
 		GMPOpt gmpopt;
-		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD, TIG;
-		VECTOR3 dV_LVLH;
+		double GETbase, P30TIG, TIG_imp;
+		VECTOR3 dV_LVLH, dV_imp;
 		MATRIX3 REFSMMAT;
-		SV sv0, sv1;
+		SV sv0;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
-
 		GETbase = getGETBase();
-		NomTIG = OrbMech::HHMMSSToSS(28.0, 28.0, 20.0);
-		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
-		dt1 = NomTIG - sv0GET;
-		sv1 = coast(sv0, dt1 - 10.0*60.0);
 
-		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -110.0*RAD);	//find 110.0°W
-		TIG = (TIGMJD - GETbase)*24.0*3600.0;
-
-		gmpopt.csmlmdocked = true;
+		gmpopt.dLAN = 1.0*RAD;
 		gmpopt.GETbase = GETbase;
-		gmpopt.h_apo = 272.0*1852.0;
-		gmpopt.impulsive = RTCC_NONIMPULSIVE;
-		gmpopt.rot_ang = 0.67*RAD;
-		gmpopt.TIG_GET = TIG;
-		gmpopt.type = 5;
-		gmpopt.vessel = calcParams.src;
+		gmpopt.long_D = -97.37588*RAD;
+		gmpopt.ManeuverCode = RTCC_GMP_NSL;
+		gmpopt.RV_MCC = sv0;
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(28, 0, 0);
 
-		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, P30TIG, dV_LVLH);
 
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
@@ -480,27 +455,26 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 18: //DOCKED DPS BURN - REFSMMAT AND SV FOR CMC
-	case 21: //DOCKED DPS BURN - REFSMMAT AND SV FOR LGC
 	{
 		GMPOpt gmpopt;
 		REFSMMATOpt refsopt;
 		MATRIX3 REFSMMAT;
 		SV sv0;
-		VECTOR3 dV_LVLH;
-		double GETbase, P30TIG;
+		VECTOR3 dV_LVLH, dV_imp;
+		double GETbase, P30TIG, TIG_imp;
 
 		GETbase = getGETBase();
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		gmpopt.csmlmdocked = true;
+		gmpopt.dLAN = 6.9*RAD;
 		gmpopt.GETbase = GETbase;
-		gmpopt.impulsive = RTCC_NONIMPULSIVE;
-		gmpopt.rot_ang = 6.9*RAD;
-		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 42, 0);
-		gmpopt.type = 7;
-		gmpopt.vessel = calcParams.tgt;
+		gmpopt.long_D = -80.60192*RAD;
+		gmpopt.ManeuverCode = RTCC_GMP_NSL;
+		gmpopt.RV_MCC = sv0;
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 10, 0);
 
-		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.tgt), dV_imp, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -515,71 +489,19 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.HeadsUp = false;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
+		calcParams.StoredREFSMMAT = REFSMMAT;
 
-		//CMC UPDATE
-		if (fcn == 18)
-		{
-			char buffer1[1000];
-			char buffer2[1000];
+		char buffer1[1000];
+		char buffer2[1000];
 
-			AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
-			AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
+		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
 
-			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, Verb 66, Desired REFSMMAT");
-			}
-		}
-		//LGC UPDATE
-		else
-		{
-			AP11LMMNV * form = (AP11LMMNV *)pad;
-
-			AP10DAPDATA dappad;
-			AP11LMManPADOpt manopt;
-			LEM *lem;
-			double TEPHEM0, tephem, t_AGC, t_actual, deltaT;
-			char buffer1[1000];
-			char buffer2[1000];
-			char clockupdate[128];
-
-			lem = (LEM *)calcParams.tgt;
-			TEPHEM0 = 40038.;
-
-			tephem = GetTEPHEMFromAGC(&lem->agc.vagc);
-			t_AGC = GetClockTimeFromAGC(&lem->agc.vagc);
-
-			tephem = (tephem / 8640000.) + TEPHEM0;
-			t_actual = (oapiGetSimMJD() - tephem) * 8640000.;
-			deltaT = t_actual - t_AGC;
-
-			IncrementAGCTime(clockupdate, deltaT);
-
-			manopt.csmlmdocked = true;
-			manopt.dV_LVLH = dV_LVLH;
-			manopt.enginetype = 1;
-			manopt.GETbase = GETbase;
-			manopt.HeadsUp = false;
-			manopt.REFSMMAT = REFSMMAT;
-			manopt.TIG = P30TIG;
-			manopt.vessel = calcParams.tgt;
-
-			AP11LMManeuverPAD(&manopt, *form);
-			LMDAPUpdate(calcParams.tgt, dappad);
-
-			sprintf(form->remarks, "LM weight is %.0f, CSM weight is %.0f", dappad.ThisVehicleWeight, dappad.OtherVehicleWeight);
-
-			AGCStateVectorUpdate(buffer1, sv0, false, AGCEpoch, GETbase);
-			AGCREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch, LGCREFSAddrOffs);
-
-			sprintf(uplinkdata, "%s%s%s", clockupdate, buffer1, buffer2);
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "Clock update, LM state vector, REFSMMAT");
-			}
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, Desired REFSMMAT");
 		}
 	}
 	break;
@@ -609,6 +531,45 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 21: //DOCKED DPS BURN - REFSMMAT AND SV FOR LGC
+	{
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		AP10DAPDATA dappad;
+		AP11LMManPADOpt manopt;
+		SV sv0;
+		double GETbase;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		GETbase = getGETBase();
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		manopt.csmlmdocked = true;
+		manopt.dV_LVLH = DeltaV_LVLH;
+		manopt.enginetype = 1;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = calcParams.StoredREFSMMAT;
+		manopt.TIG = TimeofIgnition;
+		manopt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&manopt, *form);
+		LMDAPUpdate(calcParams.tgt, dappad);
+
+		sprintf(form->remarks, "LM weight is %.0f, CSM weight is %.0f", dappad.ThisVehicleWeight, dappad.OtherVehicleWeight);
+
+		AGCStateVectorUpdate(buffer1, sv0, false, AGCEpoch, GETbase, true);
+		AGCREFSMMATUpdate(buffer2, calcParams.StoredREFSMMAT, AGCEpoch, LGCREFSAddrOffs);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector, V66, REFSMMAT");
+		}
 	}
 	break;
 	case 22: //GYRO TORQUING ANGLES
@@ -643,24 +604,22 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMATOpt refsopt;
 		SV sv;
 		MATRIX3 REFSMMAT;
-		VECTOR3 dV_LVLH;
-		double P30TIG, GETbase, dv_T;
+		VECTOR3 dV_LVLH, dV_imp;
+		double P30TIG, GETbase, dv_T, TIG_imp;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv = StateVectorCalc(calcParams.src);
 		GETbase = getGETBase();
 
-		opt.csmlmdocked = true;
 		opt.GETbase = GETbase;
-		opt.h_peri = 133.0*1852.0;
-		opt.impulsive = RTCC_NONIMPULSIVE;
-		opt.TIG_GET = OrbMech::HHMMSSToSS(54, 25, 16);
-		opt.type = 4;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
+		opt.H_D = 133.0*1852.0;
+		opt.ManeuverCode = RTCC_GMP_CRH;
+		opt.RV_MCC = sv;
+		opt.TIG_GET = OrbMech::HHMMSSToSS(54, 0, 0);
 
-		GeneralManeuverProcessor(&opt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&opt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, P30TIG, dV_LVLH);
 
 		//ensure 40+ seconds burntime
 		dv_T = OrbMech::DVFromBurnTime(41.4, SPS_THRUST, SPS_ISP, calcParams.src->GetMass() + calcParams.tgt->GetMass());
@@ -1338,43 +1297,34 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		REFSMMATOpt refsopt;
 		GMPOpt gmpopt;
-		double GETbase, P30TIG, NomTIG, sv0GET, dt1, TIGMJD, TIG;
-		VECTOR3 dV_LVLH;
+		double GETbase, P30TIG, TIG_imp;
+		VECTOR3 dV_LVLH, dV_imp;
 		MATRIX3 REFSMMAT;
-		SV sv0, sv1;
+		SV sv0;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
-
 		GETbase = getGETBase();
-		NomTIG = OrbMech::HHMMSSToSS(122, 1, 0);
-		sv0GET = (sv0.MJD - GETbase)*24.0*3600.0;
-		dt1 = NomTIG - sv0GET;
-		sv1 = coast(sv0, dt1 - 10.0*60.0);
 
-		TIGMJD = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, sv1.gravref, -110.0*RAD);	//find 110.0°W
-		TIG = (TIGMJD - GETbase)*24.0*3600.0;
-
-		gmpopt.csmlmdocked = true;
 		gmpopt.GETbase = GETbase;
-		gmpopt.h_apo = 272.0*1852.0;
-		gmpopt.impulsive = RTCC_NONIMPULSIVE;
-		gmpopt.rot_ang = 0.67*RAD;
-		gmpopt.TIG_GET = TIG;
-		gmpopt.type = 5;
-		gmpopt.vessel = calcParams.src;
+		gmpopt.H_A = 123.1*1852.0;
+		gmpopt.H_P = 108.5*1852.0;
+		gmpopt.long_D = 110.0*RAD;
+		gmpopt.ManeuverCode = RTCC_GMP_HBL;
+		gmpopt.RV_MCC = sv0;
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(121, 30, 0);
 
-		GeneralManeuverProcessor(&gmpopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
 
-		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
 		refsopt.HeadsUp = false;
 		refsopt.P30TIG = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
-		refsopt.vesseltype = 1;
+		refsopt.vesseltype = 0;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
@@ -1390,7 +1340,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.vesseltype = 1;
 
 		AP7ManeuverPAD(&opt, *form);
-		sprintf(form->purpose, "SPS-4");
+		sprintf(form->purpose, "SPS-6");
 
 		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
 		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);

@@ -2501,6 +2501,139 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	return t;
 }
 
+double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref)
+{
+	VECTOR3 R2, V2;
+
+	return timetoapo_integ(R, V, MJD, gravref, R2, V2);
+}
+
+double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 &R2, VECTOR3 &V2)
+{
+	OBJHANDLE hMoon;
+	OELEMENTS coe;
+	VECTOR3 R0, V0, R1, V1;
+	double mu, dt, dt_total, T_p;
+	int n, nmax;
+
+	hMoon = oapiGetObjectByName("Moon");
+	mu = GGRAV * oapiGetMass(gravref);
+	dt_total = 0.0;
+	n = 0;
+	nmax = 20;
+
+	R0 = R;
+	V0 = V;
+
+	coe = coe_from_sv(R0, V0, mu);
+	T_p = period(R0, V0, mu);
+
+	if (coe.e > 0.005 || gravref == hMoon)
+	{
+		dt = timetoapo(R0, V0, mu);
+		oneclickcoast(R, V, MJD, dt, R1, V1, gravref, gravref);
+
+		dt_total += dt;
+
+		do
+		{
+			dt = timetoapo(R1, V1, mu);
+			T_p = period(R1, V1, mu);
+			if (dt_total + dt > T_p)
+			{
+				dt -= T_p;
+			}
+			oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, dt, R1, V1, gravref, gravref);
+			dt_total += dt;
+			n++;
+		} while (abs(dt) > 0.01 && nmax >= n);
+
+	}
+	else
+	{
+		MATRIX3 Rot;
+		VECTOR3 Rt[3], Vt[3], Rt_equ, Vt_equ, R11, R12, V11, V12;
+		double u[3], r[3], gamma, u0, ux, uy, du1, du2, dt1, dt2, vr;
+
+		R1 = R0;
+		V1 = V0;
+
+		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, 0.0*60.0, Rt[0], Vt[0], gravref, gravref);
+		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, 15.0*60.0, Rt[1], Vt[1], gravref, gravref);
+		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, 30.0*60.0, Rt[2], Vt[2], gravref, gravref);
+
+		Rot = GetObliquityMatrix(gravref, MJD + dt_total / 24.0 / 3600.0);
+
+		for (int i = 0;i < 3;i++)
+		{
+			Rt_equ = rhtmul(Rot, Rt[i]);
+			Vt_equ = rhtmul(Rot, Vt[i]);
+			coe = coe_from_sv(Rt_equ, Vt_equ, mu);
+
+			r[i] = length(Rt_equ);
+			u[i] = fmod(coe.w + coe.TA, PI2);
+		}
+
+		gamma = (r[0] - r[1]) / (r[0] - r[2]);
+		u0 = atan2(sin(u[0]) - sin(u[1]) - gamma * (sin(u[0]) - sin(u[2])), gamma*(cos(u[2]) - cos(u[0])) - cos(u[1]) + cos(u[0]));
+
+		ux = u0 + PI05;
+		uy = u0 - PI05;
+
+		du1 = fmod(ux - u[0], PI2);
+		du2 = fmod(uy - u[0], PI2);
+
+		dt1 = time_theta(R1, V1, du1, mu);
+		if (dt1 < 0 && n == 0)
+		{
+			dt1 += T_p;
+		}
+		dt2 = time_theta(R1, V1, du2, mu);
+		if (dt2 < 0 && n == 0)
+		{
+			dt2 += T_p;
+		}
+
+		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, dt1, R11, V11, gravref, gravref);
+		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, dt2, R12, V12, gravref, gravref);
+
+		if (length(R11) > length(R12))
+		{
+			dt = dt1;
+			R1 = R11;
+			V1 = V11;
+		}
+		else
+		{
+			dt = dt2;
+			R1 = R12;
+			V1 = V12;
+		}
+
+		dt_total += dt;
+
+		dt = 10.0;
+
+		do
+		{
+			oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, dt, R1, V1, gravref, gravref);
+			dt_total += dt;
+			vr = dotp(R1, V1) / length(R1);
+			if (dt*vr < 0)
+			{
+				dt = -dt * 0.5;
+			}
+
+			n++;
+		} while (abs(dt) > 0.01);
+	}
+
+	R2 = R1;
+	V2 = V1;
+
+	return dt_total;
+}
+
 double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri)
 {
 	VECTOR3 R2, V2;
@@ -5453,6 +5586,7 @@ void format_time_MMSS(char *buf, double time) {
 
 double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat)
 {
+	OELEMENTS coe;
 	MATRIX3 Rot;
 	VECTOR3 R0, V0, R0_equ, V0_equ, R1, V1, R1_equ, V1_equ, H, u;
 	double dt, ddt, mu, Tguess, mjd0, sgn, sign2, inc, cosI, sinBeta, cosBeta, sinBeta2, cosBeta2, l1, l0, lat_now, dl, lat_des;
@@ -5491,6 +5625,8 @@ double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double 
 		oneclickcoast(R0, V0, mjd0, dt, R1, V1, gravref, gravref);
 		R1_equ = rhtmul(Rot, R1);
 		V1_equ = rhtmul(Rot, V1);
+		coe = coe_from_sv(R1_equ, V1_equ, mu);
+		Tguess = PI2 * sqrt(pow(coe.RA, 3) / mu);
 
 		H = crossp(R1_equ, V1_equ);
 		cosI = H.z / length(H);
@@ -5518,6 +5654,10 @@ double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double 
 
 		dl = l1 - l0;
 		ddt = Tguess*dl / PI2;
+		if (ddt > Tguess / 2.0)
+		{
+			ddt -= Tguess;
+		}
 		if (abs(ddt) > 100.0)
 		{
 			ddt = sign(ddt)*100.0;
@@ -5527,6 +5667,60 @@ double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double 
 	}
 	Rlat = R1;
 	Vlat = V1;
+
+	return dt;
+}
+
+double FindNextEquatorialCrossing(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref)
+{
+	OELEMENTS coe;
+	MATRIX3 Rot;
+	VECTOR3 R0, V0, R0_equ, V0_equ, R1, V1, R1_equ, V1_equ;
+	double mu, u_b, u_d, du, ddt, dt, mjd0;
+	int n, nmax;
+
+	mu = GGRAV * oapiGetMass(gravref);
+	Rot = GetObliquityMatrix(gravref, mjd);
+	R0 = R;
+	V0 = V;
+	mjd0 = mjd;
+	dt = 0.0;
+	ddt = 1.0;
+	n = 0;
+	nmax = 10;
+
+	R0_equ = rhtmul(Rot, R0);
+	V0_equ = rhtmul(Rot, V0);
+	coe = coe_from_sv(R0_equ, V0_equ, mu);
+	u_b = fmod(coe.TA + coe.w, PI2);
+	if (u_b >= PI)
+	{
+		u_d = 0;
+	}
+	else
+	{
+		u_d = PI;
+	}
+
+
+	while (abs(ddt) > 0.01 && nmax >= n)
+	{
+		oneclickcoast(R0, V0, mjd0, dt, R1, V1, gravref, gravref);
+		R1_equ = rhtmul(Rot, R1);
+		V1_equ = rhtmul(Rot, V1);
+
+		coe = coe_from_sv(R1_equ, V1_equ, mu);
+		u_b = fmod(coe.TA + coe.w, PI2);
+
+		du = u_d - u_b;
+		if (du < 0)
+		{
+			du += PI2;
+		}
+		ddt = time_theta(R0_equ, V0_equ, du, mu);
+		dt += ddt;
+		n++;
+	}
 
 	return dt;
 }
@@ -5971,6 +6165,123 @@ void RotatePerigeeToSpecifiedLongitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHAND
 	dv = dv_iter;
 	dt = dt1 + dt2;
 	dTIG = dTIG_iter;
+}
+
+OELEMENTS NodeShift(OELEMENTS coe_b, double dLAN)
+{
+	OELEMENTS coe_a;
+	double u_b, cos_u_a, sin_u_a, u_a, cos_dw, sin_dw, dw;
+
+	u_b = fmod(coe_b.TA + coe_b.w, PI2);
+
+	coe_a.h = coe_b.h;
+	coe_a.e = coe_b.e;
+	coe_a.TA = coe_b.TA;
+
+	cos_u_a = cos(dLAN)*cos(u_b) + sin(dLAN)*sin(u_b)*cos(coe_b.i);
+	sin_u_a = sqrt(1.0 - cos_u_a * cos_u_a);
+	if (u_b > PI)
+	{
+		sin_u_a = -sin_u_a;
+	}
+	u_a = atan2(sin_u_a, cos_u_a);
+	cos_dw = (cos(dLAN) - cos(u_b)*cos(u_a)) / (sin(u_b)*sin(u_a));
+	sin_dw = (sin(dLAN)*sin(coe_b.i)) / sin(u_a);
+	dw = atan2(sin_dw, cos_dw);
+	coe_a.i = acos(cos(coe_b.i)*cos(dw) - sin(coe_b.i)*sin(dw)*cos(u_b));
+	coe_a.RA = fmod(coe_b.RA + dLAN, PI2);
+	coe_a.w = u_a - coe_a.TA;
+
+	return coe_a;
+}
+
+OELEMENTS PlaneChange(OELEMENTS coe_b, double dW)
+{
+	OELEMENTS coe_a;
+	double u_b, sin_dLAN, cos_dLAN, dLAN, sin_u_a, cos_u_a, u_a;
+
+	coe_a.h = coe_b.h;
+	coe_a.e = coe_b.e;
+	coe_a.TA = coe_b.TA;
+
+	u_b = coe_b.TA + coe_b.w;
+	coe_a.i = acos(cos(coe_b.i)*cos(dW) - sin(coe_b.i)*sin(dW)*cos(u_b));
+	sin_dLAN = (sin(dW)*sin(u_b)) / sin(coe_a.i);
+	cos_dLAN = (cos(dW) - cos(coe_b.i)*cos(coe_a.i)) / (sin(coe_b.i)*sin(coe_a.i));
+	dLAN = atan2(sin_dLAN, cos_dLAN);
+	coe_a.RA = coe_b.RA + dLAN;
+	sin_u_a = (sin(u_b)*sin(coe_b.i)) / sin(coe_a.i);
+	cos_u_a = cos(u_b)*cos(dLAN) + sin(u_b)*sin(dLAN)*cos(coe_b.i);
+	u_a = atan2(sin_u_a, cos_u_a);
+	coe_a.w = u_a - coe_b.TA;
+
+	return coe_a;
+}
+
+OELEMENTS ApoapsisPeriapsisChange(OELEMENTS coe_b, double mu, double r_A, double r_P)
+{
+	OELEMENTS coe_a;
+	double u_b, r, a_a;
+
+	u_b = coe_b.TA + coe_b.w;
+	r = coe_b.h*coe_b.h / mu * 1.0 / (1.0 + coe_b.e*cos(coe_b.TA));
+
+	if (r < r_P)
+	{
+		r_P = r;
+	}
+	if (r > r_A)
+	{
+		r_A = r;
+	}
+
+	a_a = (r_A + r_P) / 2.0;
+	coe_a.e = abs((a_a - r_P) / a_a);
+	coe_a.h = sqrt(a_a*mu*(1.0 - coe_a.e*coe_a.e));
+	coe_a.TA = acos((a_a*(1.0 - coe_a.e * coe_a.e) - r) / (coe_a.e*r));
+	if (coe_b.TA > PI)
+	{
+		coe_a.TA = PI2 - coe_a.TA;
+	}
+	coe_a.i = coe_b.i;
+	coe_a.RA = coe_b.RA;
+	coe_a.w = u_b - coe_a.TA;
+
+	return coe_a;
+}
+
+VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu)
+{
+	VECTOR3 R3, V3, am, V_HF;
+	double dt3, r_D, dv_H, e_H, eps, p_H, c_I, e_Ho, dv_Ho;
+	int s_F;
+
+	OrbMech::REVUP(R, V, 0.5, mu, R3, V3, dt3);
+	r_D = length(R3) + dh;
+	am = unit(crossp(R, V));
+	dv_H = 0.0;
+	eps = 1.0;
+	p_H = c_I = 0.0;
+	s_F = 0;
+
+	do
+	{
+		V_HF = V + unit(crossp(am, R))*dv_H;
+		OrbMech::REVUP(R, V_HF, 0.5, mu, R3, V3, dt3);
+
+		e_H = length(R3) - r_D;
+
+		if (p_H == 0 || abs(e_H) >= eps)
+		{
+			OrbMech::ITER(c_I, s_F, e_H, p_H, dv_H, e_Ho, dv_Ho);
+			if (s_F == 1)
+			{
+				return _V(0, 0, 0);
+			}
+		}
+	} while (abs(e_H) >= eps);
+
+	return V_HF - V;
 }
 
 }

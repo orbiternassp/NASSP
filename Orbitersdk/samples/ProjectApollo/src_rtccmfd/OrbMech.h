@@ -88,12 +88,25 @@ const double groundstations[NUMBEROFGROUNDSTATIONS][2] = {
 
 struct OELEMENTS
 {
-	double h;
-	double e;
-	double i;
-	double RA;
-	double w;
-	double TA;
+	double h = 0.0;
+	double e = 0.0;
+	double i = 0.0;
+	double RA = 0.0;
+	double w = 0.0;
+	double TA = 0.0;
+};
+
+struct ADELEMENTS
+{
+	double a = 0.0;
+	double H_A = 0.0;
+	double H_P = 0.0;
+};
+
+struct COMBELEMENTS
+{
+	ORBITPARAM param;
+	ELEMENTS elem;
 };
 
 struct TLMCConstants
@@ -200,6 +213,8 @@ namespace OrbMech {
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
+	double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref);
+	double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 &R2, VECTOR3 &V2);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);
 	double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s = 0);
@@ -254,6 +269,7 @@ namespace OrbMech {
 	VECTOR3 r_from_latlong(double lat, double lng);
 	VECTOR3 r_from_latlong(double lat, double lng, double r);
 	double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat);
+	double FindNextEquatorialCrossing(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref);
 	double GETfromMJD(double MJD, double GETBase);
 	double MJDfromGET(double GET, double GETBase);
 	void format_time_HHMMSS(char *buf, double time);
@@ -293,6 +309,10 @@ namespace OrbMech {
 	void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl);
 	void EclToEMP(VECTOR3 R_Ecl, VECTOR3 V_Ecl, double MJD, VECTOR3 &R_EMP, VECTOR3 &V_EMP);
 	void RotatePerigeeToSpecifiedLongitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE plan, double lng_des, int N, double mu, double &dv, double &dTIG, double &dt);
+	OELEMENTS PlaneChange(OELEMENTS coe_b, double dW);
+	OELEMENTS NodeShift(OELEMENTS coe_b, double dLAN);
+	OELEMENTS ApoapsisPeriapsisChange(OELEMENTS coe_b, double mu, double r_A, double r_P);
+	VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu);
 	//private:
 		//VESSEL* vessel;
 		//double mu;
