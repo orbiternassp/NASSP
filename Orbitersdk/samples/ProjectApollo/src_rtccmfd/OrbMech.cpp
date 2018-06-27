@@ -2834,7 +2834,7 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 	}
 	else
 	{
-		double cosE, sinE, E;
+		double cosE, sinE, E, dE;
 		double sinE0, cosE0, E0;
 
 		cosE = (1.0 - r / a) / e;
@@ -2884,7 +2884,12 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 		{
 			E = E + PI2;
 		}
-		x = sqrt(a)*(E - E0);
+		dE = E - E0;
+		if (abs(dE) > PI)
+		{
+			dE = dE - PI2*sign(dE);
+		}
+		x = sqrt(a)*(dE);
 	}
 
 	dt = (r0*vr0 / sqrt(mu)*x*x*stumpC(alpha*x*x) + (1.0 - alpha*r0)*x*x*x*stumpS(alpha*x*x) + r0*x) / sqrt(mu);
@@ -2957,21 +2962,24 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout, VECTOR3 &RPRE, VECTOR3 &VPRE)
 {
-	double dt1, sing, cosg, x2PRE, dt21,beta12,beta4,RF,phi4,dt21apo,beta13,dt2,beta14,mu;
+	double dt1, sing, cosg, x2PRE, dt21, beta12, beta4, RF, phi4, dt21apo, beta13, dt2, beta14, mu;
 	VECTOR3 N, R0out, V0out;
+	int n, nmax;
 
 	mu = GGRAV*oapiGetMass(gravout);
 	beta12 = 1.0;
 	dt21apo = 100000000.0;
 	dt2 = 0.0;
 	dt21 = 1.0;
+	n = 0;
+	nmax = 15;
 
 	oneclickcoast(R, V, mjd0, 0.0, R0out, V0out, gravref, gravout);
 	dt1 = time_radius(R0out, V0out, r, s, mu);
 
 	oneclickcoast(R, V, mjd0, dt1, RPRE, VPRE, gravref, gravout);
 
-	while (abs(beta12) > 0.000007 && abs(dt21)>0.01)
+	while (abs(beta12) > 0.000007 && abs(dt21)>0.01 && nmax >= n)
 	{
 		N = crossp(unit(RPRE), unit(VPRE));
 		sing = length(N);
@@ -3014,6 +3022,7 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 			oneclickcoast(RPRE, VPRE, mjd0 + (dt1 + dt2) / 24.0 / 3600.0, dt21, RPRE, VPRE, gravout, gravout);
 			dt2 += dt21;
 		}
+		n++;
 	}
 	return dt1 + dt2;
 }
@@ -6238,7 +6247,7 @@ OELEMENTS ApoapsisPeriapsisChange(OELEMENTS coe_b, double mu, double r_A, double
 	a_a = (r_A + r_P) / 2.0;
 	coe_a.e = abs((a_a - r_P) / a_a);
 	coe_a.h = sqrt(a_a*mu*(1.0 - coe_a.e*coe_a.e));
-	coe_a.TA = acos((a_a*(1.0 - coe_a.e * coe_a.e) - r) / (coe_a.e*r));
+	coe_a.TA = acos2((a_a*(1.0 - coe_a.e * coe_a.e) - r) / (coe_a.e*r));
 	if (coe_b.TA > PI)
 	{
 		coe_a.TA = PI2 - coe_a.TA;

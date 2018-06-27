@@ -3685,9 +3685,9 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 		sv2 = coast(sv1, dt2);
 	}
 	//Time
-	else if (code == RTCC_GMP_PCT || code == RTCC_GMP_HOT || code == RTCC_GMP_NST || code == RTCC_GMP_HBT || code == RTCC_GMP_HBT || 
-		code == RTCC_GMP_FCT || code == RTCC_GMP_NHT || code == RTCC_GMP_PHT || code == RTCC_GMP_SAT || code == RTCC_GMP_HNT || 
-		code == RTCC_GMP_CRT || code == RTCC_GMP_CPT || code == RTCC_GMP_CNT)
+	else if (code == RTCC_GMP_PCT || code == RTCC_GMP_HOT || code == RTCC_GMP_NST || code == RTCC_GMP_HBT || code == RTCC_GMP_FCT ||
+		code == RTCC_GMP_NHT || code == RTCC_GMP_PHT || code == RTCC_GMP_SAT || code == RTCC_GMP_HNT || code == RTCC_GMP_CRT ||
+		code == RTCC_GMP_CPT || code == RTCC_GMP_CNT)
 	{
 		sv2 = sv1;
 	}
