@@ -140,35 +140,35 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu4[] =
 	{
-		{ "Maneuver type", 0, 'M' },
-		{ "GET of the Maneuver", 0, 'G' },
-		{ "Apoapsis altitude", 0, 'A' },
-		{ "Periapsis altitude", 0, 'P' },
-		{ "Desired Inclination", 0, 'I' },
+		{ "Set input", 0, 'S' },
+		{ "Previous Item", 0, 'P' },
+		{ "Next Item", 0, 'N' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 		{ "Altitude reference", 0, 'R' },
 
 		{ "Calculate", 0, 'C' },
-		{ "Number of Revolutions", 0, 'N' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "Upload to AGC", 0, 'L' },
+		{ "", 0, ' ' },
+		{ "Upload to AGC", 0, 'U' },
 		{ "Back to menu", 0, 'B' },
 	};
 
 	RegisterPage(mnu4, sizeof(mnu4) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuCycleOrbAdjOptions);
-	RegisterFunction("GET", OAPI_KEY_T, &ApolloRTCCMFD::OrbAdjGETDialogue);
-	RegisterFunction("APO", OAPI_KEY_A, &ApolloRTCCMFD::OrbAdjApoDialogue);
-	RegisterFunction("PER", OAPI_KEY_P, &ApolloRTCCMFD::OrbAdjPeriDialogue);
-	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::OrbAdjIncDialogue);
-	RegisterFunction("ALT", OAPI_KEY_R, &ApolloRTCCMFD::menuCycleOrbAdjAltRef);
+	RegisterFunction("SET", OAPI_KEY_S, &ApolloRTCCMFD::menuSetGMPInput);
+	RegisterFunction("<<", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleGMPMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleGMPMarkerUp);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ALT", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleOrbAdjAltRef);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::OrbAdjCalc);
-	RegisterFunction("REV", OAPI_KEY_N, &ApolloRTCCMFD::OrbAdjRevDialogue);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("UPL", OAPI_KEY_L, &ApolloRTCCMFD::menuP30Upload);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuP30Upload);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
 

@@ -230,17 +230,38 @@ ARCore::ARCore(VESSEL* v)
 	REFSMMATdirect = true;
 	REFSMMATHeadsUp = true;
 
-	GMPType = 0;
+	GMPManeuverCode = 0;
+	GMPManeuverPoint = 0;
+	GMPManeuverType = 0;
 	OrbAdjAltRef = true;
 	OrbAdjDVX = _V(0, 0, 0);
 	SPSGET = 0.0;
-	apo_desnm = 0;
-	peri_desnm = 0;
-	incdeg = 0;
-	GMPRotationAngle = 0.0;
-	GMPLongitude = 0.0;
-	GMPTOA = 0.0;
+	GMPApogeeHeight = 0;
+	GMPPerigeeHeight = 0;
+	GMPWedgeAngle = 0.0;
+	GMPManeuverLongitude = 0.0;
+	GMPManeuverHeight = 0.0;
+	GMPHeightChange = 0.0;
+	GMPNodeShiftAngle = 0.0;
+	GMPDeltaVInput = 0.0;
+	GMPPitch = 0.0;
+	GMPYaw = 0.0;
 	GMPRevs = 0;
+	GMPApseLineRotAngle = 0.0;
+	GMPCoe_before.elem.e = 0.0;
+	GMPCoe_before.elem.i = 0.0;
+	GMPCoe_before.elem.theta = 0.0;
+	GMPCoe_before.param.ApD = 0.0;
+	GMPCoe_before.param.PeD = 0.0;
+	GMPCoe_before.param.T = 0.0;
+	GMPCoe_before.param.TrA = 0.0;
+	GMPCoe_after.elem.e = 0.0;
+	GMPCoe_after.elem.i = 0.0;
+	GMPCoe_after.elem.theta = 0.0;
+	GMPCoe_after.param.ApD = 0.0;
+	GMPCoe_after.param.PeD = 0.0;
+	GMPCoe_after.param.T = 0.0;
+	GMPCoe_after.param.TrA = 0.0;
 
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
@@ -524,6 +545,7 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -75.0*RAD;
 		LOIapo = 168.9*1852.0;
 		LOIperi = 58.7*1852.0;
+		LOIEllipseRotation = 1;
 		TLCCFreeReturnEMPLat = -1.962929*RAD;
 		TLCCNonFreeReturnEMPLat = 3.35412*RAD;
 		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 45.0);
@@ -534,7 +556,6 @@ ARCore::ARCore(VESSEL* v)
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 		AGSKFactor = 100.0*3600.0;
-		LOIEllipseRotation = 1;
 	}
 	else if (mission == 13)
 	{
@@ -543,7 +564,8 @@ ARCore::ARCore(VESSEL* v)
 		LSAlt = -0.76*1852.0;
 		LOIazi = -93.9*RAD;
 		LOIapo = 168.3*1852.0;
-		LOIperi = 57.0*1852.0;		
+		LOIperi = 57.0*1852.0;
+		LOIEllipseRotation = 1;
 		TLCCFreeReturnEMPLat = 0.108105*RAD;
 		TLCCNonFreeReturnEMPLat = -0.20553*RAD;
 		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 28.0, 50.0);
@@ -564,12 +586,13 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -76.31*RAD;
 		LOIapo = 170.0*1852.0;
 		LOIperi = 57.1*1852.0;
+		LOIEllipseRotation = 1;
 		TLCCFreeReturnEMPLat = -0.048722*RAD;
-		TLCCNonFreeReturnEMPLat = -3.672093*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 41.0, 14.0);
+		TLCCNonFreeReturnEMPLat = -4.66089*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 41.0, 01.0);
 		TLCCFlybyPeriAlt = 2030.9*1852.0;
-		TLCCNodeLat = 3.15*RAD;
-		TLCCNodeLng = 174.82*RAD;
+		TLCCNodeLat = 2.15*RAD;
+		TLCCNodeLng = 170.81*RAD;
 		TLCCNodeAlt = 56.34*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
@@ -585,6 +608,7 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		LOIapo = 170.0*1852.0;
 		LOIperi = 58.3*1852.0;
+		LOIEllipseRotation = 1;
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -16.89137*RAD;
 		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(78.0, 35.0, 10.0);
 		TLCCFlybyPeriAlt = TLCCNodeAlt = 66.18*1852.0;
@@ -596,7 +620,6 @@ ARCore::ARCore(VESSEL* v)
 		DOI_PeriAng = 16.0*RAD;
 		DOI_option = 1;
 		DOI_N = 11;
-		LOIEllipseRotation = 1;
 	}
 	else if (mission == 16)
 	{
@@ -606,11 +629,12 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -91.0*RAD;
 		LOIapo = 170.6*1852.0;
 		LOIperi = 58.5*1852.0;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 5.529042*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 13.4);
+		LOIEllipseRotation = 1;
+		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 5.28257*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 32.0);
 		TLCCFlybyPeriAlt = TLCCNodeAlt = 71.26*1852.0;
-		TLCCNodeLat = 7.8*RAD;
-		TLCCNodeLng = 176.8*RAD;
+		TLCCNodeLat = 7.95*RAD;
+		TLCCNodeLng = 173.04*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 		DOI_PeriAng = 16.0*RAD;
@@ -625,6 +649,7 @@ ARCore::ARCore(VESSEL* v)
 		LOIazi = -90.0*RAD;
 		LOIapo = 170.8*1852.0;
 		LOIperi = 52.6*1852.0;
+		LOIEllipseRotation = 1;
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -11.11101*RAD;
 		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 58.0, 54.0);
 		TLCCFlybyPeriAlt = TLCCNodeAlt = 49.35*1852.0;
@@ -637,7 +662,6 @@ ARCore::ARCore(VESSEL* v)
 		DOI_option = 1;
 		DOI_N = 10;
 		DOI_alt = 84000.0*0.3048;
-		LOIEllipseRotation = 1;
 	}
 
 	Skylabmaneuver = 0;
@@ -1916,42 +1940,41 @@ int ARCore::subThread()
 	case 3:	//Orbital Adjustment Targeting
 	{
 		GMPOpt opt;
-		OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
+		SV sv0;
+		double TIG_imp, attachedMass;
+		VECTOR3 dV_imp;
 
-		opt.type = GMPType;
+		sv0 = rtcc->StateVectorCalc(vessel);
+
+		opt.ManeuverCode = GMPManeuverCode;
 		opt.GETbase = GETbase;
-		opt.h_apo = apo_desnm * 1852.0;
-		opt.h_peri = peri_desnm * 1852.0;
-		opt.impulsive = RTCC_NONIMPULSIVE;
-		opt.inc = incdeg*RAD;
+		opt.H_A = GMPApogeeHeight;
+		opt.H_P = GMPPerigeeHeight;
+		opt.dH_D = GMPHeightChange;
 		opt.TIG_GET = SPSGET;
-		opt.vessel = vessel;
-		opt.useSV = false;
 		opt.AltRef = OrbAdjAltRef;
+		opt.dLAN = GMPNodeShiftAngle;
 		opt.LSAlt = LSAlt;
-		opt.rot_ang = GMPRotationAngle;
-		opt.lng = GMPLongitude;
-		opt.N = GMPRevs;
-
-		if (vesseltype < 2)
-		{
-			opt.vesseltype = 0;
-		}
-		else
-		{
-			opt.vesseltype = 1;
-		}
+		opt.dW = GMPWedgeAngle;
+		opt.long_D = GMPManeuverLongitude;
+		opt.H_D = GMPManeuverHeight;
+		opt.dV = GMPDeltaVInput;
+		opt.Pitch = GMPPitch;
+		opt.Yaw = GMPYaw;
+		opt.dLOA = GMPApseLineRotAngle;
+		opt.RV_MCC = sv0;
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
-			opt.csmlmdocked = false;
+			attachedMass = 0.0;
 		}
 		else
 		{
-			opt.csmlmdocked = true;
+			attachedMass = rtcc->GetDockedVesselMass(vessel);
 		}
 
-		rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, P30TIG, GMPTOA);
+		rtcc->GeneralManeuverProcessor(&opt, dV_imp, TIG_imp, GMPCoe_before, GMPCoe_after);
+		rtcc->PoweredFlightProcessor(sv0, GETbase, TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, dV_imp, P30TIG, OrbAdjDVX);
 
 		dV_LVLH = OrbAdjDVX;
 
@@ -3123,4 +3146,303 @@ int ARCore::GetPowEngType()
 	}
 
 	return poweredenginetype;
+}
+
+void ARCore::DetermineGMPCode()
+{
+	int code = 0;
+
+	if (GMPManeuverType == 0)
+	{
+		if (GMPManeuverPoint == 1)
+		{
+			//PCE: Plane Change at equatorial crossing
+			code = 1;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//PCL: Plane change at a specified longitude
+			code = 2;
+		}
+		else if (GMPManeuverPoint == 4)
+		{
+			//PCH: Plane change at a height
+			code = 49;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//PCT: Plane change at a specified time
+			code = 3;
+		}
+	}
+	else if (GMPManeuverType == 1)
+	{
+		if (GMPManeuverPoint == 0)
+		{
+			//CRA: Circularization maneuver at apogee
+			code = 41;
+		}
+		else if (GMPManeuverPoint == 2)
+		{
+			//CRA: Circularization maneuver at perigee
+			code = 42;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//CRL: Circularization maneuver at a specified longitude
+			code = 4;
+		}
+		else if (GMPManeuverPoint == 4)
+		{
+			//CRH: Circularization maneuver at a specified height
+			code = 5;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//CRT: Circularization maneuver at a specified time
+			code = 40;
+		}
+	}
+	else if (GMPManeuverType == 2)
+	{
+		if (GMPManeuverPoint == 0)
+		{
+			//HAO: Height maneuver at apogee
+			code = 8;
+		}
+		else if (GMPManeuverPoint == 2)
+		{
+			//HPO: Height maneuver at perigee
+			code = 9;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//HOL: Height maneuver at a specified longitude
+			code = 6;
+		}
+		else if (GMPManeuverPoint == 4)
+		{
+			//HOH: Height maneuver at a height
+			code = 52;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//HOL: Height maneuver at a specified time
+			code = 7;
+		}
+	}
+	else if (GMPManeuverType == 3)
+	{
+		if (GMPManeuverPoint == 4)
+		{
+			//NSH: Node shift maneuver at a height
+			code = 50;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//NSL: Node shift maneuver at a longitude
+			code = 51;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//NST: Node shift maneuver at a specified time
+			code = 10;
+		}
+		else if (GMPManeuverPoint == 6)
+		{
+			//NSO: Optimum node shift maneuver
+			code = 11;
+		}
+	}
+	else if (GMPManeuverType == 4)
+	{
+		if (GMPManeuverPoint == 3)
+		{
+			//HBL: Maneuver to change both apogee and perigee at a specified longitude
+			code = 33;
+		}
+		else if (GMPManeuverPoint == 4)
+		{
+			//HBH: Maneuver to change both apogee and perigee at a specified height
+			code = 13;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//HBT: Maneuver to change both apogee and perigee at a specified time
+			code = 12;
+		}
+		else if (GMPManeuverPoint == 6)
+		{
+			//HBO: Optimum maneuver to change both apogee and perigee
+			code = 14;
+		}
+	}
+	else if (GMPManeuverType == 5)
+	{
+		if (GMPManeuverPoint == 0)
+		{
+			//FCA: Input maneuver at an apogee
+			code = 18;
+		}
+		else if (GMPManeuverPoint == 1)
+		{
+			//FCE: Input maneuver at an equatorial crossing
+			code = 20;
+		}
+		else if (GMPManeuverPoint == 2)
+		{
+			//FCP: Input maneuver at an perigee
+			code = 19;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//FCL: Input maneuver at a specified longitude
+			code = 16;
+		}
+		else if (GMPManeuverPoint == 4)
+		{
+			//FCH: Input maneuver at a specified height
+			code = 17;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//FCT: Input maneuver at a specified time
+			code = 15;
+		}
+	}
+	else if (GMPManeuverType == 6)
+	{
+		if (GMPManeuverPoint == 3)
+		{
+			//NHL: Combination maneuver to change both apogee and perigee and shift the node at a specified longitude
+			code = 22;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//NHT: Combination maneuver to change both apogee and perigee and shift the node at a specified time
+			code = 21;
+		}
+	}
+	else if (GMPManeuverType == 7)
+	{
+		if (GMPManeuverPoint == 3)
+		{
+			//SAL: Maneuver to shift line-of-apsides some angle at a specified longitude
+			code = 23;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//SAT: Maneuver to shift line-of-apsides some angle at a specified time
+			code = 31;
+		}
+		else if (GMPManeuverPoint == 6)
+		{
+			//SAO: Maneuver to shift line-of-apsides some angle and keep the same apogee and perigee altitudes
+			code = 32;
+		}
+	}
+	else if (GMPManeuverType == 8)
+	{
+		if (GMPManeuverPoint == 0)
+		{
+			//PHA: Combination height maneuver and a plane change at an apogee
+			code = 27;
+		}
+		else if (GMPManeuverPoint == 2)
+		{
+			//PHP: Combination height maneuver and a plane change at an perigee
+			code = 28;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//PHL: Combination height maneuver and a plane change at a specified longitude
+			code = 25;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//PHT: Combination height maneuver and a plane change at a specified time
+			code = 26;
+		}
+	}
+	else if (GMPManeuverType == 9)
+	{
+		if (GMPManeuverPoint == 0)
+		{
+			//CPA: Combination circularization maneuver and a plane change at apogee
+			code = 44;
+		}
+		else if (GMPManeuverPoint == 2)
+		{
+			//CPP: Combination circularization maneuver and a plane change at perigee
+			code = 45;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//CPL: Combination circularization maneuver and a plane change at a specified longitude
+			code = 29;
+		}
+		else if (GMPManeuverPoint == 4)
+		{
+			//CPH: Combination circularization maneuver and a plane change at a specified altitude
+			code = 30;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//CPT: Combination circularization maneuver and a plane change at a specified time
+			code = 43;
+		}
+	}
+	else if (GMPManeuverType == 10)
+	{
+		if (GMPManeuverPoint == 0)
+		{
+			//CNA: Circularization and node shift at apogee
+			code = 47;
+		}
+		else if (GMPManeuverPoint == 2)
+		{
+			//CNP: Circularization and node shift at perigee
+			code = 48;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//CNL: Circularization and node shift at a specified longitude
+			code = 34;
+		}
+		else if (GMPManeuverPoint == 4)
+		{
+			//CNH: Circularization and node shift at a specified height
+			code = 35;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//CNT: Circularization and node shift maneuver at a specified time
+			code = 46;
+		}
+	}
+	else if (GMPManeuverType == 11)
+	{
+		if (GMPManeuverPoint == 0)
+		{
+			//HNA: Height maneuver and node shift at apogee
+			code = 38;
+		}
+		else if (GMPManeuverPoint == 2)
+		{
+			//HNP: Height maneuver and node shift at perigee
+			code = 39;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			//HNL: Height maneuver and node shift at a specified longitude
+			code = 36;
+		}
+		else if (GMPManeuverPoint == 5)
+		{
+			//HNT: Height maneuver and node shift at a specified time
+			code = 37;
+		}
+	}
+
+	GMPManeuverCode = code;
 }

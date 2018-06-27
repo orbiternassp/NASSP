@@ -575,30 +575,30 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
-		VECTOR3 dV_LVLH;
-		double P30TIG, GETbase;
-		OBJHANDLE gravref;
+		VECTOR3 dV_LVLH, dV_imp;
+		double P30TIG, GETbase, TIG_imp;
 		MATRIX3 REFSMMAT;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		GETbase = getGETBase();
-		gravref = AGCGravityRef(calcParams.src);
-
 		sv = StateVectorCalc(calcParams.src);
 
+		orbopt.AltRef = 1;
 		orbopt.GETbase = GETbase;
-		orbopt.h_apo = 160.1*1852.0;
-		orbopt.h_peri = 90.3*1852.0;
-		orbopt.inc = 31.26*RAD;
-		orbopt.TIG_GET = OrbMech::HHMMSSToSS(75, 48, 0);
-		orbopt.useSV = false;
-		orbopt.vessel = calcParams.src;
-		orbopt.impulsive = RTCC_NONIMPULSIVE;
-		orbopt.csmlmdocked = false;
+		orbopt.H_A = 160.1*1852.0;
+		orbopt.H_P = 90.3*1852.0;
+		//Over Carnarvon
+		orbopt.long_D = 113.72595*RAD;
+		orbopt.ManeuverCode = RTCC_GMP_NHL;
+		//Gives DV we had previously, needs fixing eventually
+		orbopt.dLAN = 0.3*RAD;
+		orbopt.RV_MCC = sv;
+		orbopt.TIG_GET= OrbMech::HHMMSSToSS(75, 18, 0);
 
-		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -730,7 +730,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double t_burn, F, m, dv, GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
-		OBJHANDLE gravref;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
@@ -740,7 +739,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
 		dv = F / m * t_burn;
-		gravref = AGCGravityRef(calcParams.src);
 
 		sv = StateVectorCalc(calcParams.src);
 
@@ -858,32 +856,29 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
-		VECTOR3 dV_LVLH, Rlat, Vlat;
-		double P30TIG, GETbase, TIGguess;
-		OBJHANDLE gravref;
+		VECTOR3 dV_LVLH, dV_imp;
+		double P30TIG, GETbase, TIG_imp;
 		MATRIX3 REFSMMAT;
-		SV sv, sv1;
+		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		GETbase = getGETBase();
-		gravref = AGCGravityRef(calcParams.src);
-		TIGguess = OrbMech::HHMMSSToSS(165, 0, 0);
-
 		sv = StateVectorCalc(calcParams.src);
 
-		sv1 = coast(sv, TIGguess - (sv.MJD - GETbase)*24.0*3600.0);
-
+		orbopt.AltRef = 1;
 		orbopt.GETbase = GETbase;
-		orbopt.h_apo = 240.6*1852.0;
-		orbopt.h_peri = 89.8*1852.0;
-		orbopt.inc = 30.09*RAD;
-		orbopt.TIG_GET = TIGguess + OrbMech::findlatitude(sv1.R, sv1.V, GETbase + TIGguess / 24.0 / 3600.0, gravref, 28.7319*RAD, true, Rlat, Vlat);//OrbMech::HHMMSSToSS(165, 0, 0);
-		orbopt.vessel = calcParams.src;
-		orbopt.impulsive = RTCC_IMPULSIVE;
-		orbopt.csmlmdocked = false;
+		orbopt.H_A = 240.6*1852.0;
+		orbopt.H_P = 89.8*1852.0;
+		//Eastern Test Range
+		orbopt.long_D = -88.455*RAD;
+		orbopt.dLAN = -6.7*RAD;
+		orbopt.ManeuverCode = RTCC_GMP_NHL;
+		orbopt.RV_MCC = sv;
+		orbopt.TIG_GET = OrbMech::HHMMSSToSS(164, 30, 0);
 
-		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -1018,7 +1013,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double t_burn, F, m, dv, GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
-		OBJHANDLE gravref;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
@@ -1028,10 +1022,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
 		dv = F / m * t_burn;
-		gravref = AGCGravityRef(calcParams.src);
 
 		sv = StateVectorCalc(calcParams.src);
-
 		dV_LVLH = _V(0.0, dv, 0.0);
 		GETbase = getGETBase();
 		P30TIG = OrbMech::HHMMSSToSS(210, 8, 0);
@@ -1142,30 +1134,25 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
-		VECTOR3 dV_LVLH;
-		double P30TIG, GETbase;
-		OBJHANDLE gravref;
+		VECTOR3 dV_LVLH, dV_imp;
+		double P30TIG, GETbase, TIG_imp;
 		MATRIX3 REFSMMAT;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		GETbase = getGETBase();
-		gravref = AGCGravityRef(calcParams.src);
-
 		sv = StateVectorCalc(calcParams.src);
 
+		orbopt.dLOA = -22.5*RAD;
 		orbopt.GETbase = GETbase;
-		orbopt.h_apo = 230.3*1852.0;
-		orbopt.h_peri = 90.0*1852.0;
-		orbopt.inc = 29.88*RAD;
-		orbopt.TIG_GET = OrbMech::HHMMSSToSS(239, 6, 12);
-		orbopt.useSV = false;
-		orbopt.vessel = calcParams.src;
-		orbopt.impulsive = RTCC_NONIMPULSIVE;
-		orbopt.csmlmdocked = false;
+		orbopt.ManeuverCode = RTCC_GMP_SAO;
+		orbopt.RV_MCC = sv;
+		orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 35, 0);
 
-		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
+		dV_LVLH.y = -100.0*0.3048;
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;

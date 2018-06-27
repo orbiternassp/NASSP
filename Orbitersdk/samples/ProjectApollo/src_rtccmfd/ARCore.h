@@ -77,6 +77,7 @@ public:
 	void NavCheckPAD();
 	int REFSMMATOctalAddress();
 	int REFSMMATUplinkAddress();
+	void DetermineGMPCode();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -153,25 +154,45 @@ public:
 	VECTOR3 CDHdeltaV;
 
 	//ORBIT ADJUSTMENT PAGE
-	//0 = Fixed TIG, specify inclination, apoapsis and periapsis altitude
-	//1 = Fixed TIG, specify apoapsis altitude
-	//2 = Fixed TIG, specify periapsis altitude
-	//3 = Fixed TIG, circularize orbit
-	//4 = Circularize orbit at specified altitude
-	//5 = Rotate velocity vector, specify apoapsis altitude
-	//6 = Rotate line of apsides, perigee at specific longitude, TIG at perigee
-	//7 = Optimal node shift maneuver
-	int GMPType;
+	int GMPManeuverCode; //Maneuver code
 	bool OrbAdjAltRef;	//0 = use mean radius, 1 = use launchpad or landing site radius
-	double apo_desnm;	//Desired apoapsis altitude in NM
-	double peri_desnm;	//Desired periapsis altitude in NM
-	double incdeg;		//Desired inclination in degrees
-	double GMPRotationAngle;
-	double GMPLongitude;
-	double GMPTOA;		//Time of Arrival
+	double GMPApogeeHeight;		//Desired apoapsis height
+	double GMPPerigeeHeight;	//Desired periapsis height
+	double GMPWedgeAngle;
+	double GMPManeuverHeight;
+	double GMPManeuverLongitude;
+	double GMPHeightChange;
+	double GMPNodeShiftAngle;
+	double GMPDeltaVInput;
+	double GMPPitch;
+	double GMPYaw;
+	double GMPApseLineRotAngle;
 	int GMPRevs;
 	double SPSGET;		//Maneuver GET
 	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
+	//0 = Apogee
+	//1 = Equatorial crossing
+	//2 = Perigee
+	//3 = Longitude
+	//4 = Height
+	//5 = Time
+	//6 = Optimum
+	int GMPManeuverPoint;
+	//0 = Plane Change
+	//1 = Circularization
+	//2 = Height Change
+	//3 = Node Shift
+	//4 = Apogee and perigee change
+	//5 = Input maneuver
+	//6 = Combination apogee/perigee change and node shift
+	//7 = Shift line-of-apsides
+	//8 = Combination height maneuver and plane change
+	//9 = Combination circularization and plane change
+	//10 = Combination circularization and node shift
+	//11 = Combination height maneuver and node shift
+	int GMPManeuverType;
+	COMBELEMENTS GMPCoe_before;
+	COMBELEMENTS GMPCoe_after;
 
 	//REFSMMAT PAGE
 	double REFSMMATTime;

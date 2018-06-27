@@ -75,26 +75,32 @@ public:
 	void set_REFSMMATTime(double time);
 	void calcREFSMMAT();
 	void menuSendREFSMMATToOtherVessel();
-	void OrbAdjApoDialogue();
-	void set_OrbAdjApo(double apo);
-	void OrbAdjPeriDialogue();
-	void set_OrbAdjPeri(double peri);
-	void OrbAdjIncDialogue();
-	void set_OrbAdjInc(double inc);
+	void GMPInput1Dialogue();
+	void set_GMPInput1(double val);
+	void GMPInput2Dialogue();
+	void set_GMPInput2(double val);
+	void GMPInput3Dialogue();
+	void set_GMPInput3(double val);
+	void GMPInput4Dialogue();
+	void set_GMPInput4(double val);
 	void OrbAdjGETDialogue();
 	void set_OrbAdjGET(double SPSGET);
 	void OrbAdjRevDialogue();
 	void set_OrbAdjRevs(int N);
 	void OrbAdjCalc();
-	void menuCycleOrbAdjOptions();
+	void menuCycleGMPManeuverPoint();
+	void menuCycleGMPManeuverType();
+	void menuCycleGMPMarkerUp();
+	void menuCycleGMPMarkerDown();
+	void menuSetGMPInput();
 	void menuCycleOrbAdjAltRef();
 	void phasedialogue();
 	void set_getbase();
 	void set_TIPhaseAngle(double angdeg);
 	void CDHcalc();
 	void lambertcalc();
-	char* GET_Display(char * Buff, double time);
-	char* AGC_Display(char * Buff, double time);
+	void GET_Display(char * Buff, double time);
+	void AGC_Display(char * Buff, double time);
 	char* REFSMMATName(char* Buff, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	double timetoperi();
@@ -330,12 +336,16 @@ public:
 	void set_AGCEphemTIMEM0(double mjd);
 	void menuGenerateAGCEphemeris();
 	void cycleVECPOINTOpt();
+	void GMPManeuverTypeName(char *buffer, int typ);
+	void GMPManeuverPointName(char *buffer, int point);
+	void GMPManeuverCodeName(char *buffer, int code);
 
 protected:
 	oapi::Font *font;
 	Saturn *saturn;
 	LEM *lem;
 	int screen;
+	int marker;
 	static struct ScreenData {
 		int screen;
 	} screenData;
