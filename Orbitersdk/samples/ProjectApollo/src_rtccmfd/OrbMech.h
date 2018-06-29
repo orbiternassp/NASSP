@@ -88,12 +88,25 @@ const double groundstations[NUMBEROFGROUNDSTATIONS][2] = {
 
 struct OELEMENTS
 {
-	double h;
-	double e;
-	double i;
-	double RA;
-	double w;
-	double TA;
+	double h = 0.0;
+	double e = 0.0;
+	double i = 0.0;
+	double RA = 0.0;
+	double w = 0.0;
+	double TA = 0.0;
+};
+
+struct ADELEMENTS
+{
+	double a = 0.0;
+	double H_A = 0.0;
+	double H_P = 0.0;
+};
+
+struct COMBELEMENTS
+{
+	ORBITPARAM param;
+	ELEMENTS elem;
 };
 
 struct TLMCConstants
@@ -128,6 +141,7 @@ class CoastIntegrator
 {
 public:
 	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, OBJHANDLE planet, OBJHANDLE outplanet);
+	~CoastIntegrator();
 	bool iteration();
 
 	VECTOR3 R2, V2;
@@ -199,6 +213,8 @@ namespace OrbMech {
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
+	double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref);
+	double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 &R2, VECTOR3 &V2);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
 	double timetoperi_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);
 	double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s = 0);
@@ -232,6 +248,7 @@ namespace OrbMech {
 	void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP);
 	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
 	MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB);
+	MATRIX3 ROTCOMP(VECTOR3 U_R, double A);
 	VECTOR3 backupgdcalignment(MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
 	//void rungeinteg(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	//void adfunc(double* dfdt, double t, double* f);
@@ -252,6 +269,7 @@ namespace OrbMech {
 	VECTOR3 r_from_latlong(double lat, double lng);
 	VECTOR3 r_from_latlong(double lat, double lng, double r);
 	double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double lat, bool up, VECTOR3 &Rlat, VECTOR3 &Vlat);
+	double FindNextEquatorialCrossing(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref);
 	double GETfromMJD(double MJD, double GETBase);
 	double MJDfromGET(double GET, double GETBase);
 	void format_time_HHMMSS(char *buf, double time);
@@ -274,7 +292,7 @@ namespace OrbMech {
 	void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
 	void AOTcheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct);
 	void LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double t_L_guess, double &t_IG, double &t_TPF, double &v_LH, double &v_LV);
-	void LunarLiftoffTimePredictionDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double &t_TPI, double theta_F, double &t_IG, double &t_TPF, double &v_LH, double &v_LV);
+	void LunarLiftoffTimePredictionDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double dt_2, double DH, double E, double &t_TPI, double theta_F, double &t_IG, double &t_TPF, double &v_LH, double &v_LV);
 	void LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double t_TPI, double theta_F, double &t_IG, double &t_CSI, double &t_CDH, double &t_TPF, double &v_LH, double &v_LV);
 	void REVUP(VECTOR3 R, VECTOR3 V, double n, double mu, VECTOR3 &R1, VECTOR3 &V1, double &t);
 	void RADUP(VECTOR3 R_W, VECTOR3 V_W, VECTOR3 R_C, double mu, VECTOR3 &R_W1, VECTOR3 &V_W1);
@@ -291,6 +309,10 @@ namespace OrbMech {
 	void EMPToEcl(VECTOR3 R_EMP, VECTOR3 V_EMP, double MJD, VECTOR3 &R_Ecl, VECTOR3 &V_Ecl);
 	void EclToEMP(VECTOR3 R_Ecl, VECTOR3 V_Ecl, double MJD, VECTOR3 &R_EMP, VECTOR3 &V_EMP);
 	void RotatePerigeeToSpecifiedLongitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE plan, double lng_des, int N, double mu, double &dv, double &dTIG, double &dt);
+	OELEMENTS PlaneChange(OELEMENTS coe_b, double dW);
+	OELEMENTS NodeShift(OELEMENTS coe_b, double dLAN);
+	OELEMENTS ApoapsisPeriapsisChange(OELEMENTS coe_b, double mu, double r_A, double r_P);
+	VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu);
 	//private:
 		//VESSEL* vessel;
 		//double mu;
@@ -305,7 +327,7 @@ namespace OrbMech {
 
 	MATRIX3 inverse(MATRIX3 a);
 	double determinant(MATRIX3 a);
-	MATRIX3 transpose_matrix(MATRIX3 a);
+	MATRIX3 tmat(MATRIX3 a);
 	template <typename T> int sign(T val);
 	int DoubleToBuffer(double x, double q, int m);
 	double cot(double a);
@@ -330,6 +352,7 @@ namespace OrbMech {
 	void fDot_and_gDot(double x, double r, double ro, double a, double &fdot, double &gdot, double mu);
 	double atan3(double x, double y);
 	double imulimit(double a);
+	MATRIX3 tensorp(VECTOR3 u, VECTOR3 v);
 	MATRIX3 skew(VECTOR3 u);
 	VECTOR3 RotateVector(VECTOR3 yaxis, double angle, VECTOR3 pos);
 	double OctToDouble(int oct1, int oct2);
@@ -343,7 +366,11 @@ namespace OrbMech {
 	double HHMMSSToSS(double H, double M, double S);
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	void rv_from_adbar(VECTOR3 R, VECTOR3 V, double &rmag, double &vmag, double &rtasc, double &decl, double &fpav, double &az);
-	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20);
+	VECTOR3 LMDockedCoarseAlignment(VECTOR3 csmang, bool samerefs);
+	VECTOR3 LMIMU_from_CSMIMU(MATRIX3 CSM_REFSMMAT, MATRIX3 LM_REFSMMAT, VECTOR3 csmang);
+	MATRIX3 CSMBodyToLMBody(double da);
+	VECTOR3 LMDockedFineAlignment(VECTOR3 lmang, VECTOR3 csmang, bool samerefs = true);
+	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20, MATRIX3 LM_REFSMMAT, MATRIX3 CSM_REFSMMAT);
 	//Earth-Moon-Plane Matrix, converts ecliptic coordinates to EMP coordinates.
 	MATRIX3 EMPMatrix(double MJD);
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);

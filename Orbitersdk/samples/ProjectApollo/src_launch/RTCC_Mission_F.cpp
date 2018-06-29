@@ -456,7 +456,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LOIMan loiopt;
 		MCCNodeMan opt;
 		VECTOR3 dV_LVLH, dV_LOI;
-		SV sv, sv_peri, sv_node;
+		SV sv, sv_peri, sv_node, sv_postLOI;
 		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -477,7 +477,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
 
-		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node);
+		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node, sv_postLOI);
 
 		sv_peri = FindPericynthion(sv);
 
@@ -555,7 +555,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LOIMan loiopt;
 		REFSMMATOpt refsopt;
 		VECTOR3 dV_LVLH, dV_LOI;
-		SV sv, sv_peri, sv_node;
+		SV sv, sv_peri, sv_node, sv_postLOI;
 		MATRIX3 REFSMMAT;
 		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
 
@@ -577,7 +577,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.t_land = calcParams.TLAND;
 		loiopt.vessel = calcParams.src;
 
-		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node);
+		LOITargeting(&loiopt, dV_LOI, TIG_LOI, sv_node, sv_postLOI);
 
 		sv_peri = FindPericynthion(sv);
 
@@ -738,7 +738,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
-		SV sv;
+		SV sv, sv_n, sv_postLOI;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -757,7 +757,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.src;
 
-		LOITargeting(&opt, dV_LVLH, P30TIG);
+		LOITargeting(&opt, dV_LVLH, P30TIG, sv_n, sv_postLOI);
 
 		manopt.alt = LSAlt;
 		manopt.dV_LVLH = dV_LVLH;
@@ -1260,8 +1260,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 60: //STATE VETOR and LLS 2 REFSMMAT UPLINK
 	{
 		MATRIX3 REFSMMAT;
-		VECTOR3 dV_LVLH_imp;
-		double GETbase, t_PDI, t_land, CR, t_DOI_imp;
+		VECTOR3 DV;
+		double GETbase, t_PDI, t_land, CR;
 		SV sv;
 		REFSMMATOpt opt;
 		DOIMan doiopt;
@@ -1272,19 +1272,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = getGETBase();
 
 		doiopt.alt = LSAlt;
-		doiopt.csmlmdocked = false;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
 		doiopt.GETbase = GETbase;
 		doiopt.lat = LSLat;
 		doiopt.lng = LSLng;
 		doiopt.N = 0;
 		doiopt.opt = 0;
-		doiopt.vessel = calcParams.tgt;
-		doiopt.vesseltype = 1;
+		doiopt.sv0 = sv;
 
-		DOITargeting(&doiopt, dV_LVLH_imp, t_DOI_imp, DeltaV_LVLH, TimeofIgnition, t_PDI, t_land, CR);
-
-		calcParams.DOI = t_DOI_imp;
+		DOITargeting(&doiopt, DV, TimeofIgnition, t_PDI, t_land, CR);
+		calcParams.DOI = TimeofIgnition;
 		calcParams.TLAND = t_land;
 
 		opt.GETbase = GETbase;
@@ -1336,7 +1333,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lmn20.y = lem->imu.Gimbal.Y;
 		lmn20.z = lem->imu.Gimbal.Z;
 
-		V42angles = OrbMech::finealignLMtoCSM(lmn20, csmn20);
+		V42angles = OrbMech::LMDockedFineAlignment(lmn20, csmn20);
 
 		form->V42Angles.x = V42angles.x*DEG;
 		form->V42Angles.y = V42angles.y*DEG;
@@ -1436,7 +1433,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMManPADOpt opt;
 
-		VECTOR3 dV_LVLH_imp;
+		VECTOR3 DV;
 		double GETbase, t_PDI, t_land, CR, t_DOI_imp, t_TPI_guess;
 		SV sv_CSM, sv, sv_DOI;
 		DOIMan doiopt;
@@ -1452,20 +1449,20 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = getGETBase();
 
 		doiopt.alt = LSAlt;
-		doiopt.csmlmdocked = false;
 		doiopt.EarliestGET = OrbMech::HHMMSSToSS(99, 0, 0);
 		doiopt.GETbase = GETbase;
 		doiopt.lat = LSLat;
 		doiopt.lng = LSLng;
 		doiopt.N = 0;
 		doiopt.opt = 0;
-		doiopt.vessel = calcParams.tgt;
-		doiopt.vesseltype = 1;
+		doiopt.sv0 = sv;
 
-		DOITargeting(&doiopt, dV_LVLH_imp, t_DOI_imp, DeltaV_LVLH, TimeofIgnition, t_PDI, t_land, CR);
+		DOITargeting(&doiopt, DV, t_DOI_imp, t_PDI, t_land, CR);
 
 		calcParams.DOI = t_DOI_imp;
 		calcParams.TLAND = t_land;
+
+		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, TimeofIgnition, DeltaV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.csmlmdocked = false;
@@ -1490,7 +1487,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_TPI_guess = OrbMech::HHMMSSToSS(105, 9, 0);
 		calcParams.TPI = FindOrbitalMidnight(sv_CSM, GETbase, t_TPI_guess);
 
-		RendezvousPlanner(calcParams.tgt, calcParams.src, sv_DOI, GETbase, calcParams.Phasing, calcParams.TPI, calcParams.Insertion, calcParams.CSI);
+		FMissionRendezvousPlan(calcParams.tgt, calcParams.src, sv_DOI, GETbase, calcParams.Phasing, calcParams.TPI, calcParams.Insertion, calcParams.CSI);
 
 		OrbMech::format_time_HHMMSS(GETbuffer, calcParams.CSI);
 		sprintf(form->remarks, "CSI time: %s, ", GETbuffer);
@@ -1515,8 +1512,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMManPADOpt opt;
 		LambertMan lamopt;
+		TwoImpulseResuls res;
 		SV sv_CSM, sv_LM, sv_DOI;
-		VECTOR3 dV, dV_LVLH;
+		VECTOR3 dV_LVLH;
 		double GETbase, MJD_LS, t_LS, P30TIG, MJD_100E, t_100E;
 		char GETbuffer[64];
 		char GETbuffer2[64];
@@ -1546,8 +1544,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T1 = calcParams.Phasing;
 		lamopt.T2 = calcParams.Insertion;
 
-		LambertTargeting(&lamopt, dV);
-		PoweredFlightProcessor(sv_DOI, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV, P30TIG, dV_LVLH);
+		LambertTargeting(&lamopt, res);
+		PoweredFlightProcessor(sv_DOI, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;
@@ -1636,8 +1634,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11ManPADOpt opt;
 		LambertMan lamopt;
+		TwoImpulseResuls res;
 		SV sv_CSM, sv_LM, sv_Ins;
-		VECTOR3 dV, dV_LVLH;
+		VECTOR3 dV_LVLH;
 		double GETbase, P30TIG;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -1656,8 +1655,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T1 = calcParams.Insertion + 3.0*60.0;
 		lamopt.T2 = calcParams.CSI;
 
-		LambertTargeting(&lamopt, dV);
-		PoweredFlightProcessor(sv_CSM, GETbase, lamopt.T1, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV, P30TIG, dV_LVLH);
+		LambertTargeting(&lamopt, res);
+		PoweredFlightProcessor(sv_CSM, GETbase, lamopt.T1, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;
@@ -1715,8 +1714,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMManPADOpt opt;
 		LambertMan lamopt;
+		TwoImpulseResuls res;
 		SV sv_CSM, sv_LM;
-		VECTOR3 dV, dV_LVLH;
+		VECTOR3 dV_LVLH;
 		double GETbase, P30TIG;
 
 		AP11LMMNV * form = (AP11LMMNV *)pad;
@@ -1738,8 +1738,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T1 = calcParams.Insertion;
 		lamopt.T2 = calcParams.CSI;
 
-		LambertTargeting(&lamopt, dV);
-		PoweredFlightProcessor(sv_LM, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, dV, P30TIG, dV_LVLH);
+		LambertTargeting(&lamopt, res);
+		PoweredFlightProcessor(sv_LM, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, res.dV, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;
@@ -2240,4 +2240,110 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 
 	return scrubbed;
+}
+
+void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI)
+{
+	//Plan: Phasing (fixed TIG), Insertion, CSI at apolune, CDH, TPI at midnight (Apollo 10)
+
+	LambertMan lamopt, lamopt2;
+	TwoImpulseResuls lamres;
+	double t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, mu, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
+	VECTOR3 dV_Phasing, dV_Insertion, dV_CDH, DVX;
+	MATRIX3 Q_Xx;
+	SV sv_P0, sv_P_CSI, sv_Phasing, sv_Phasing_apo, sv_Insertion, sv_Insertion_apo, sv_CSI, sv_CSI_apo, sv_CDH, sv_CDH_apo, sv_P_CDH;
+
+	mu = GGRAV * oapiGetMass(sv_A0.gravref);
+
+	t_Phasing = t_TIG;
+	dt = 7017.0;
+	dt2 = 3028.0;
+	dv_CSI = 50.0*0.3048;
+	DH = 15.0*1852.0;
+	ddt = 10.0;
+
+	sv_P0 = StateVectorCalc(target);
+
+	lamopt.GETbase = GETbase;
+	lamopt.N = 0;
+	lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);
+	lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
+	lamopt.T1 = t_Phasing;
+	lamopt.sv_P = sv_P0;
+
+	lamopt2 = lamopt;
+	lamopt2.Offset = _V(-147.0*1852.0, 0.0, 14.7*1852.0);
+
+	t_sv0 = OrbMech::GETfromMJD(sv_A0.MJD, GETbase);
+	sv_Phasing = coast(sv_A0, t_Phasing - t_sv0);
+
+	//Loop
+	while (abs(ddt) > 1.0)
+	{
+		t_Insertion = t_Phasing + dt;
+
+		lamopt.T2 = t_Insertion;
+		lamopt.sv_A = sv_Phasing;
+
+		LambertTargeting(&lamopt, lamres);
+		dV_Phasing = lamres.dV;
+
+		sv_Phasing_apo = sv_Phasing;
+		sv_Phasing_apo.V += dV_Phasing;
+
+		ddt2 = 1.0;
+
+		//Loop
+		while (abs(ddt2) > 0.1)
+		{
+			t_CSI = t_Insertion + dt2;
+
+			lamopt2.T1 = t_Insertion;
+			lamopt2.T2 = t_CSI;
+			lamopt2.sv_A = sv_Phasing_apo;
+
+			LambertTargeting(&lamopt2, lamres);
+			dV_Insertion = lamres.dV;
+
+			sv_Insertion = coast(sv_Phasing_apo, t_Insertion - t_Phasing);
+			sv_Insertion_apo = sv_Insertion;
+			sv_Insertion_apo.V += dV_Insertion;
+
+			sv_CSI = coast(sv_Insertion_apo, t_CSI - t_Insertion);
+			T_P = OrbMech::period(sv_CSI.R, sv_CSI.V, mu);
+			ddt2 = OrbMech::timetoapo(sv_CSI.R, sv_CSI.V, mu);
+
+			if (ddt2 > T_P / 2.0)
+			{
+				ddt2 = ddt2 - T_P;
+			}
+			dt2 += ddt2;
+		}
+
+		//CSI Targeting
+		sv_P_CSI = coast(sv_P0, t_CSI - OrbMech::GETfromMJD(sv_P0.MJD, GETbase));
+		OrbMech::CSIToDH(sv_CSI.R, sv_CSI.V, sv_P_CSI.R, sv_P_CSI.V, DH, mu, dv_CSI);
+		sv_CSI_apo = sv_CSI;
+		sv_CSI_apo.V = sv_CSI.V + OrbMech::ApplyHorizontalDV(sv_CSI.R, sv_CSI.V, dv_CSI);
+
+		//CDH Targeting
+		T_P = OrbMech::period(sv_CSI_apo.R, sv_CSI_apo.V, mu);
+		t_CDH = t_CSI + T_P / 2.0;
+		NSRProgram(sv_CSI_apo, sv_P_CSI, GETbase, 0.0, t_CDH, 0.0, dV_CDH);
+		sv_CDH = coast(sv_CSI_apo, t_CDH - t_CSI);
+		Q_Xx = OrbMech::LVLH_Matrix(sv_CDH.R, sv_CDH.V);
+		DVX = tmul(Q_Xx, dV_CDH);
+		sv_CDH_apo = sv_CDH;
+		sv_CDH_apo.V += DVX;
+		sv_P_CDH = coast(sv_P_CSI, t_CDH - t_CSI);
+
+		//Find TPI time and recycle
+		dt_TPI = OrbMech::findelev(sv_CDH_apo.R, sv_CDH_apo.V, sv_P_CDH.R, sv_P_CDH.V, sv_CDH_apo.MJD, 26.6*RAD, sv_CDH_apo.gravref);
+		t_TPI_apo = t_CDH + dt_TPI;
+		ddt = t_TPI - t_TPI_apo;
+		dt += ddt;
+	}
+
+	t_Ins = t_Insertion;
+	CSI = t_CSI;
 }

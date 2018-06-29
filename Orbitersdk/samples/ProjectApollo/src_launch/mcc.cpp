@@ -2055,11 +2055,80 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY4STATE3: //State vector update to Block Data 9
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 78 * 60 * 60 + 10 * 60, 2, MST_D_DAY4STATE4);
 				break;
-			case MST_D_DAY3STATE4: //Block Data 9 to Block Data 10
+			case MST_D_DAY4STATE4: //Block Data 9 to Block Data 10
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 87 * 60 * 60 + 15 * 60, 27, MST_D_DAY5STATE1);
 				break;
-			case MST_D_DAY5STATE1: //Block Data 10 to Rendezvous REFSMMAT update
+			case MST_D_DAY5STATE1: //Block Data 10 to CSM Rendezvous REFSMMAT update
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 89 * 60 * 60 + 5 * 60, 28, MST_D_DAY5STATE2);
+				break;
+			case MST_D_DAY5STATE2: //CSM Rendezvous REFSMMAT update to LM DAP update
+				UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > 91 * 60 * 60, 29, MST_D_DAY5STATE3);
+				break;
+			case MST_D_DAY5STATE3: //LM DAP update to LM Rendezvous REFSMMAT update
+				UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, cm->MissionTime > 91 * 60 * 60 + 10 * 60, 6, MST_D_DAY5STATE4);
+				break;
+			case MST_D_DAY5STATE4: //LM Rendezvous REFSMMAT update to gyro torquing angles update
+				UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP7NAV, cm->MissionTime > 91 * 60 * 60 + 15 * 60, 30, MST_D_DAY5STATE5);
+				break;
+			case MST_D_DAY5STATE5: //Gyro torquing angles update to Phasing update
+				UpdateMacro(UTP_PADONLY, PT_TORQANG, cm->MissionTime > 92 * 60 * 60 + 5 * 60, 31, MST_D_DAY5STATE6);
+				break;
+			case MST_D_DAY5STATE6: //Phasing update to TPI0 update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, cm->MissionTime > 94 * 60 * 60 + 30 * 60, 32, MST_D_DAY5STATE7);
+				break;
+			case MST_D_DAY5STATE7: //TPI0 update to Insertion update
+				UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, cm->MissionTime > 95 * 60 * 60 + 10 * 60, 33, MST_D_DAY5STATE8);
+				break;
+			case MST_D_DAY5STATE8: //Insertion update to CSI update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, cm->MissionTime > rtcc->calcParams.Insertion + 10.0*60.0, 34, MST_D_DAY5STATE9);
+				break;
+			case MST_D_DAY5STATE9: //CSI update to CDH update
+				UpdateMacro(UTP_PADONLY, PT_AP10CSI, cm->MissionTime > rtcc->calcParams.CSI + 15.0*60.0, 35, MST_D_DAY5STATE10);
+				break;
+			case MST_D_DAY5STATE10: //CDH update to TPI update
+				UpdateMacro(UTP_PADONLY, PT_AP9LMCDH, cm->MissionTime > rtcc->calcParams.CDH + 15.0*60.0, 36, MST_D_DAY5STATE11);
+				break;
+			case MST_D_DAY5STATE11: //TPI update to LM realign attitude update
+				UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, cm->MissionTime > 99.0*3600.0 + 15.0*60.0, 37, MST_D_DAY5STATE12);
+				break;
+			case MST_D_DAY5STATE12: //LM realign attitude update to LM realign attitude update
+				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, SubStateTime > 2.0*60.0, 38, MST_D_DAY5STATE13);
+				break;
+			case MST_D_DAY5STATE13: //LM realign attitude update to LM burn to depletion update
+				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, cm->MissionTime > 99.0*3600.0 + 55.0*60.0, 39, MST_D_DAY5STATE14);
+				break;
+			case MST_D_DAY5STATE14: //LM burn to depletion update to LM jettison attitude update
+				UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 40, MST_D_DAY5STATE15);
+				break;
+			case MST_D_DAY5STATE15: //LM jettison attitude update to Block Data 11
+				UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->MissionTime > 100.0*3600.0 + 35.0*60.0, 41, MST_D_DAY5STATE16);
+				break;
+			case MST_D_DAY5STATE16: //Block Data 11 to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 103.0*3600.0 + 5.0*60.0, 42, MST_D_DAY5STATE17);
+				break;
+			case MST_D_DAY5STATE17: //State vector update to Block Data 12
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 104.0*3600.0 + 15.0*60.0, 2, MST_D_DAY5STATE18);
+				break;
+			case MST_D_DAY5STATE18: //Block Data 12 to Block Data 13
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 114.0*3600.0 + 55.0*60.0, 43, MST_D_DAY6STATE1);
+				break;
+			case MST_D_DAY6STATE1: //Block Data 13 to SPS-6 Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 119.0*3600.0 + 40.0*60.0, 44, MST_D_DAY6STATE2);
+				break;
+			case MST_D_DAY6STATE2: //SPS-6 Update to state vector update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 126.0*3600.0 + 50.0*60.0, 45, MST_D_DAY6STATE5);
+				break;
+			case MST_D_DAY6STATE5: //State vector update to Block Data 14
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 128.0*3600.0 + 35.0*60.0, 2, MST_D_DAY6STATE6);
+				break;
+			case MST_D_DAY6STATE6: //Block Data 14 to Block Data 15
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 140.0*3600.0 + 5.0*60.0, 46, MST_D_DAY7STATE1);
+				break;
+			case MST_D_DAY7STATE1: //Block Data 15 to Landmark Tracking Align update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 141.0*3600.0 + 35.0*60.0, 47, MST_D_DAY7STATE2);
+				break;
+			case MST_D_DAY7STATE2: //Landmark Tracking Align update to Landmark Tracking Update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 142.0*3600.0 + 35.0*60.0, 48, MST_D_DAY7STATE3);
 				break;
 			}
 			break;
@@ -2582,7 +2651,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 92, MST_F_TRANSEARTH_9);
 				break;
 			case MST_F_TRANSEARTH_9: //Entry PAD update to MCC-7 decision update
-				UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 6.0*3600.0, 97, MST_F_TRANSEARTH_10);
+				UpdateMacro(UTP_PADONLY, PT_AP11ENT, cm->MissionTime > rtcc->calcParams.EI - 5.0*3600.0 - 45.0*60.0, 97, MST_F_TRANSEARTH_10);
 				break;
 			case MST_F_TRANSEARTH_10: //MCC-7 decision update to MCC-7 update
 				UpdateMacro(UTP_NONE, PT_NONE, cm->MissionTime > rtcc->calcParams.EI - 4.5*3600.0, 93, MST_F_TRANSEARTH_11);
@@ -3258,6 +3327,27 @@ void MCC::SaveState(FILEHANDLE scn) {
 
 			SAVE_V3("MCC_TORQANG_V42Angles", form->V42Angles);
 		}
+		else if (padNumber == PT_AP9LMTPI)
+		{
+			AP9LMTPI * form = (AP9LMTPI *)padForm;
+
+			SAVE_DOUBLE("MCC_AP9LMTPI_dVR", form->dVR);
+			SAVE_DOUBLE("MCC_AP9LMTPI_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP9LMTPI_R", form->R);
+			SAVE_DOUBLE("MCC_AP9LMTPI_Rdot", form->Rdot);
+			SAVE_V3("MCC_AP9LMTPI_Att", form->Att);
+			SAVE_V3("MCC_AP9LMTPI_Backup_dV", form->Backup_dV);
+			SAVE_V3("MCC_AP9LMTPI_Vg", form->Vg);
+		}
+		else if (padNumber == PT_AP9LMCDH)
+		{
+			AP9LMCDH * form = (AP9LMCDH *)padForm;
+
+			SAVE_DOUBLE("MCC_AP9LMCDH_GETI", form->GETI);
+			SAVE_DOUBLE("MCC_AP9LMCDH_Pitch", form->Pitch);
+			SAVE_V3("MCC_AP9LMCDH_Vg", form->Vg);
+			SAVE_V3("MCC_AP9LMCDH_Vg_AGS", form->Vg_AGS);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3270,6 +3360,8 @@ void MCC::LoadState(FILEHANDLE scn) {
 	char *line;
 	int tmp = 0; // Used in boolean type loader
 	bool padisallocated = false;
+
+	char tmpbuf[64];
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, MCC_END_STRING, sizeof(MCC_END_STRING))) {
@@ -3305,8 +3397,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		if (padNumber == 1)
 		{
-			char tmpbuf[36];
-
 			AP7BLK * form = (AP7BLK *)padForm;
 
 			for (int i = 0;i < 8;i++)
@@ -3327,7 +3417,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 2)
 		{
-			char tmpbuf[36];
 			P27PAD * form = (P27PAD *)padForm;
 
 			LOAD_DOUBLE("MCC_P27PAD_alt", form->alt);
@@ -3429,7 +3518,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 7)
 		{
-			char tmpbuf[36];
 			P37PAD * form = (P37PAD *)padForm;
 
 			for (int i = 0;i < 3;i++)
@@ -3542,7 +3630,6 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (padNumber == 13)
 		{
-			char tmpbuf[64];
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
 			LOAD_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
@@ -3624,6 +3711,27 @@ void MCC::LoadState(FILEHANDLE scn) {
 
 			LOAD_V3("MCC_TORQANG_V42Angles", form->V42Angles);
 		}
+		else if (padNumber == PT_AP9LMTPI)
+		{
+			AP9LMTPI * form = (AP9LMTPI *)padForm;
+
+			LOAD_DOUBLE("MCC_AP9LMTPI_dVR", form->dVR);
+			LOAD_DOUBLE("MCC_AP9LMTPI_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP9LMTPI_R", form->R);
+			LOAD_DOUBLE("MCC_AP9LMTPI_Rdot", form->Rdot);
+			LOAD_V3("MCC_AP9LMTPI_Att", form->Att);
+			LOAD_V3("MCC_AP9LMTPI_Backup_dV", form->Backup_dV);
+			LOAD_V3("MCC_AP9LMTPI_Vg", form->Vg);
+		}
+		else if (padNumber == PT_AP9LMCDH)
+		{
+			AP9LMCDH * form = (AP9LMCDH *)padForm;
+
+			LOAD_DOUBLE("MCC_AP9LMCDH_GETI", form->GETI);
+			LOAD_DOUBLE("MCC_AP9LMCDH_Pitch", form->Pitch);
+			LOAD_V3("MCC_AP9LMCDH_Vg", form->Vg);
+			LOAD_V3("MCC_AP9LMCDH_Vg_AGS", form->Vg_AGS);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 	}
@@ -3690,7 +3798,7 @@ void MCC::drawPad(){
 			{
 				format_time(tmpbuf, form->GETI[i]);
 				format_time(tmpbuf2, form->GETI[i + 4]);
-				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s     %s WX\n\n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
+				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s %s WX    \n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
 		}
@@ -3979,6 +4087,36 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP9LMTPI:
+	{
+		AP9LMTPI * form = (AP9LMTPI *)padForm;
+		int hh, mm;
+		double ss;
+
+		SStoHHMMSS(form->GETI, hh, mm, ss);
+
+		sprintf(buffer, "TPI UPDATE (P34)\n%+06d HR N37\n%+06d MIN TIG\n%+07.2f SEC TPI\n%+07.1f DVX N81\n%+07.1f DVY LOCAL\n%+07.1f DVZ VERT\n%+07.1f DVR N42\n"
+			"XXX%03.0f RLM FDAI N18\nXXX%03.0f PLM INER\n%+07.2f R TPI N54\n%+07.1f RDOT TPI\n%+07.1f F/A (+/-) N59\n%+07.1f L/R (-/+) DV\n%+07.1f U/D (-/+) LOS", 
+			hh, mm, ss, form->Vg.x, form->Vg.y, form->Vg.z, form->dVR, form->Att.x, form->Att.y, form->R, form->Rdot, form->Backup_dV.x, form->Backup_dV.y, form->Backup_dV.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP9LMCDH:
+	{
+		AP9LMCDH * form = (AP9LMCDH *)padForm;
+		int hh, mm;
+		double ss;
+
+		SStoHHMMSS(form->GETI, hh, mm, ss);
+
+		sprintf(buffer, "CDH UPDATE (P33)\n%+06d HR N31\n%+06d MIN TIG\n%+07.2f SEC CDH\n%+07.1f DVX N81\n%+07.1f DVY LOCAL\n%+07.1f DVZ VERT\n"
+			"XXX%03.0f PLM INER\n%+07.1f DVX N86\n%+07.1f DVZ AGS",
+			hh, mm, ss, form->Vg.x, form->Vg.y, form->Vg.z, form->Pitch, form->Vg_AGS.x, form->Vg_AGS.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -4061,6 +4199,12 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_TORQANG: // TORQANG
 		padForm = calloc(1, sizeof(TORQANG));
+		break;
+	case PT_AP9LMTPI: // AP9LMTPI
+		padForm = calloc(1, sizeof(AP9LMTPI));
+		break;
+	case PT_AP9LMCDH: // AP9LMCDH
+		padForm = calloc(1, sizeof(AP9LMCDH));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

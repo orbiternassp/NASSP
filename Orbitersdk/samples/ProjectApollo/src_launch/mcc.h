@@ -157,6 +157,8 @@
 #define PT_AP10CSI			16
 #define PT_AP9AOTSTARPAD	17
 #define PT_TORQANG			18
+#define PT_AP9LMTPI			19
+#define PT_AP9LMCDH			20
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -422,6 +424,31 @@
 #define MST_D_DAY4STATE4	53
 #define MST_D_DAY5STATE1	60
 #define MST_D_DAY5STATE2	61
+#define MST_D_DAY5STATE3	62
+#define MST_D_DAY5STATE4	63
+#define MST_D_DAY5STATE5	64
+#define MST_D_DAY5STATE6	65
+#define MST_D_DAY5STATE7	66
+#define MST_D_DAY5STATE8	67
+#define MST_D_DAY5STATE9	68
+#define MST_D_DAY5STATE10	69
+#define MST_D_DAY5STATE11	70
+#define MST_D_DAY5STATE12	71
+#define MST_D_DAY5STATE13	72
+#define MST_D_DAY5STATE14	73
+#define MST_D_DAY5STATE15	74
+#define MST_D_DAY5STATE16	75
+#define MST_D_DAY5STATE17	76
+#define MST_D_DAY5STATE18	77
+#define MST_D_DAY6STATE1	90
+#define MST_D_DAY6STATE2	91
+#define MST_D_DAY6STATE3	92
+#define MST_D_DAY6STATE4	93
+#define MST_D_DAY6STATE5	94
+#define MST_D_DAY6STATE6	95
+#define MST_D_DAY7STATE1	100
+#define MST_D_DAY7STATE2	101
+#define MST_D_DAY7STATE3	102
 
 // MISSION STATES: MISSION F
 #define MST_F_INSERTION		10
@@ -752,6 +779,25 @@ struct AP7ENT{
 	double PB_RetBBO[2];// Ret to begin blackout
 	double PB_RetEBO[2];// Ret to end blackout
 	double PB_RetDrog[2];// Ret to drogue deploy
+};
+
+// APOLLO 9 - TERMINAL PHASE INITIATE
+struct AP9LMTPI {
+	double GETI;		// TIG
+	VECTOR3 Vg;			// P40 velocity to be gained
+	double dVR;			// Total dV
+	VECTOR3 Att;		// Attitude at TIG (only Roll and Pitch)
+	double R;			// Range from chaser to target
+	double Rdot;		// Range rate
+	VECTOR3 Backup_dV;	// Backup "line-of-sight to Target" dV (fore/aft, left/right, up/down)
+};
+
+// APOLLO 9 - CONSTANT DELTA HEIGHT
+struct AP9LMCDH {
+	double GETI;		// TIG
+	VECTOR3 Vg;			// Velocity to be gained
+	double Pitch;		// FDAI pitch angle
+	VECTOR3 Vg_AGS;		// AGS velocity to be gained
 };
 
 // CSM STAR CHECK UPDATE

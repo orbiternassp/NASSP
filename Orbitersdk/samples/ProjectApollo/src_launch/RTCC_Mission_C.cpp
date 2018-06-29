@@ -42,10 +42,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 1: // MISSION C PHASING BURN
 	{
 		LambertMan lambert;
+		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
 		SV sv_A, sv_P;
 		double GET_TIG;
-		VECTOR3 dV, dV_LVLH;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -55,12 +55,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GET_TIG = OrbMech::HHMMSSToSS(3, 20, 0);
 
 		lambert = set_lambertoptions(sv_A, sv_P, getGETBase(), GET_TIG, OrbMech::HHMMSSToSS(26, 25, 0), 15, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0);
-		LambertTargeting(&lambert, dV, dV_LVLH);
+		LambertTargeting(&lambert, res);
 
 		opt.GETbase = getGETBase();
 		opt.vessel = calcParams.src;
 		opt.TIG = GET_TIG;
-		opt.dV_LVLH = dV_LVLH;
+		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_RCS;
 		opt.directiontype = RTCC_DIRECTIONTYPE_MINUSX;
 		opt.HeadsUp = false;
@@ -157,9 +157,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP7ManPADOpt opt;
 		LambertMan lambert;
+		TwoImpulseResuls res;
 		SV sv_A, sv_P;
 		double GET_TIG;
-		VECTOR3 dV, dV_LVLH;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -170,9 +170,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		lambert = set_lambertoptions(sv_A, sv_P, getGETBase(), OrbMech::HHMMSSToSS(15, 52, 0), OrbMech::HHMMSSToSS(26, 25, 0), 7, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0);
 
-		LambertTargeting(&lambert, dV, dV_LVLH);
+		LambertTargeting(&lambert, res);
 
-		if (length(dV_LVLH) < 1.0*0.3048)
+		if (length(res.dV_LVLH) < 1.0*0.3048)
 		{
 			scrubbed = true;
 		}
@@ -186,8 +186,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.GETbase = getGETBase();
 			opt.vessel = calcParams.src;
 			opt.TIG = GET_TIG;
-			opt.dV_LVLH = dV_LVLH;
-			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
+			opt.dV_LVLH = res.dV_LVLH;
+			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
 			opt.HeadsUp = true;
 			opt.sxtstardtime = 0;
 			opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -224,9 +224,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 6: //MISSION C PRELIMINARY NCC1 MANEUVER
 	{
 		LambertMan lambert;
+		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
+		VECTOR3 dV_LVLH;
 		double GET_TIG_imp, P30TIG, GETBase;
-		VECTOR3 dV, dV_LVLH;
 		SV sv_A, sv_P;
 		char buffer1[1000];
 		char buffer2[1000];
@@ -241,10 +242,22 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GET_TIG_imp = OrbMech::HHMMSSToSS(26, 25, 0);
 
-		lambert = set_lambertoptions(sv_A, sv_P, GETBase, GET_TIG_imp, OrbMech::HHMMSSToSS(28, 0, 0), 1, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD);
+		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
+		lambert.DH = 8.0*1852.0;
+		lambert.Elevation = 27.45*RAD;
+		lambert.GETbase = GETBase;
+		lambert.N = 1;
+		lambert.NCC_NSR_Flag = true;
+		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lambert.PhaseAngle = -1.32*RAD;
+		lambert.sv_A = sv_A;
+		lambert.sv_P = sv_P;
+		lambert.T1 = GET_TIG_imp;
+		lambert.T2 = OrbMech::HHMMSSToSS(28, 0, 0);
+		lambert.use_XYZ_Offset = false;
 
-		LambertTargeting(&lambert, dV);
-		PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV, P30TIG, dV_LVLH);
+		LambertTargeting(&lambert, res);
+		PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
 
 		opt.GETbase = GETBase;
 		opt.vessel = calcParams.src;
@@ -290,10 +303,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 8: //MISSION C NCC2 MANEUVER
 	{
 		LambertMan lambert;
+		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
 		SV sv_A, sv_P;
 		double GETBase, GET_TIG_imp, P30TIG;
-		VECTOR3 dV;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -303,10 +316,23 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETBase = getGETBase();
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 
-		lambert = set_lambertoptions(sv_A, sv_P, GETBase, GET_TIG_imp, OrbMech::HHMMSSToSS(28, 0, 0), 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 8 * 1852), -1.32*RAD);
-		LambertTargeting(&lambert, dV);
+		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
+		lambert.DH = 8.0*1852.0;
+		lambert.Elevation = 27.45*RAD;
+		lambert.GETbase = GETBase;
+		lambert.N = 0;
+		lambert.NCC_NSR_Flag = true;
+		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lambert.PhaseAngle = -1.32*RAD;
+		lambert.sv_A = sv_A;
+		lambert.sv_P = sv_P;
+		lambert.T1 = GET_TIG_imp;
+		lambert.T2 = OrbMech::HHMMSSToSS(28, 0, 0);
+		lambert.use_XYZ_Offset = false;
 
-		if (length(dV) < 10.0*0.3048)
+		LambertTargeting(&lambert, res);
+
+		if (length(res.dV) < 10.0*0.3048)
 		{
 			scrubbed = true;
 		}
@@ -320,9 +346,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			char buffer1[1000];
 			VECTOR3 dV_LVLH;
 			int enginetype;
-			enginetype = SPSRCSDecision(SPS_THRUST / sv_A.mass, dV);
+			enginetype = SPSRCSDecision(SPS_THRUST / sv_A.mass, res.dV);
 
-			PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_VESSELTYPE_CSM, enginetype, 0.0, dV, P30TIG, dV_LVLH);
+			PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_VESSELTYPE_CSM, enginetype, 0.0, res.dV, P30TIG, dV_LVLH);
 
 			opt.GETbase = GETBase;
 			opt.vessel = calcParams.src;
@@ -404,10 +430,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 10: //MISSION C TPI MANEUVER
 	{
 		LambertMan lambert;
+		TwoImpulseResuls res;
 		AP7TPIPADOpt opt;
 		SV sv_A, sv_P;
 		double T1, T2, GETbase;
-		VECTOR3 dV, dV_LVLH;
 
 		AP7TPI * form = (AP7TPI *)pad;
 
@@ -419,9 +445,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		lambert = set_lambertoptions(sv_A, sv_P, GETbase, T1, T2, 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 0), 0);
 
-		LambertTargeting(&lambert, dV, dV_LVLH);
+		LambertTargeting(&lambert, res);
 
-		opt.dV_LVLH = dV_LVLH;
+		opt.dV_LVLH = res.dV_LVLH;
 		opt.GETbase = GETbase;
 		opt.target = calcParams.tgt;
 		opt.TIG = T1;
@@ -549,30 +575,30 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
-		VECTOR3 dV_LVLH;
-		double P30TIG, GETbase;
-		OBJHANDLE gravref;
+		VECTOR3 dV_LVLH, dV_imp;
+		double P30TIG, GETbase, TIG_imp;
 		MATRIX3 REFSMMAT;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		GETbase = getGETBase();
-		gravref = AGCGravityRef(calcParams.src);
-
 		sv = StateVectorCalc(calcParams.src);
 
+		orbopt.AltRef = 1;
 		orbopt.GETbase = GETbase;
-		orbopt.h_apo = 160.1*1852.0;
-		orbopt.h_peri = 90.3*1852.0;
-		orbopt.inc = 31.26*RAD;
-		orbopt.TIG_GET = OrbMech::HHMMSSToSS(75, 48, 0);
-		orbopt.useSV = false;
-		orbopt.vessel = calcParams.src;
-		orbopt.impulsive = RTCC_NONIMPULSIVE;
-		orbopt.csmlmdocked = false;
+		orbopt.H_A = 160.1*1852.0;
+		orbopt.H_P = 90.3*1852.0;
+		//Over Carnarvon
+		orbopt.long_D = 113.72595*RAD;
+		orbopt.ManeuverCode = RTCC_GMP_NHL;
+		//Gives DV we had previously, needs fixing eventually
+		orbopt.dLAN = 0.3*RAD;
+		orbopt.RV_MCC = sv;
+		orbopt.TIG_GET= OrbMech::HHMMSSToSS(75, 18, 0);
 
-		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -704,7 +730,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double t_burn, F, m, dv, GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
-		OBJHANDLE gravref;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
@@ -714,7 +739,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
 		dv = F / m * t_burn;
-		gravref = AGCGravityRef(calcParams.src);
 
 		sv = StateVectorCalc(calcParams.src);
 
@@ -832,32 +856,29 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
-		VECTOR3 dV_LVLH, Rlat, Vlat;
-		double P30TIG, GETbase, TIGguess;
-		OBJHANDLE gravref;
+		VECTOR3 dV_LVLH, dV_imp;
+		double P30TIG, GETbase, TIG_imp;
 		MATRIX3 REFSMMAT;
-		SV sv, sv1;
+		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		GETbase = getGETBase();
-		gravref = AGCGravityRef(calcParams.src);
-		TIGguess = OrbMech::HHMMSSToSS(165, 0, 0);
-
 		sv = StateVectorCalc(calcParams.src);
 
-		sv1 = coast(sv, TIGguess - (sv.MJD - GETbase)*24.0*3600.0);
-
+		orbopt.AltRef = 1;
 		orbopt.GETbase = GETbase;
-		orbopt.h_apo = 240.6*1852.0;
-		orbopt.h_peri = 89.8*1852.0;
-		orbopt.inc = 30.09*RAD;
-		orbopt.TIG_GET = TIGguess + OrbMech::findlatitude(sv1.R, sv1.V, GETbase + TIGguess / 24.0 / 3600.0, gravref, 28.7319*RAD, true, Rlat, Vlat);//OrbMech::HHMMSSToSS(165, 0, 0);
-		orbopt.vessel = calcParams.src;
-		orbopt.impulsive = RTCC_IMPULSIVE;
-		orbopt.csmlmdocked = false;
+		orbopt.H_A = 240.6*1852.0;
+		orbopt.H_P = 89.8*1852.0;
+		//Eastern Test Range
+		orbopt.long_D = -88.455*RAD;
+		orbopt.dLAN = -6.7*RAD;
+		orbopt.ManeuverCode = RTCC_GMP_NHL;
+		orbopt.RV_MCC = sv;
+		orbopt.TIG_GET = OrbMech::HHMMSSToSS(164, 30, 0);
 
-		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -992,7 +1013,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double t_burn, F, m, dv, GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
-		OBJHANDLE gravref;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
@@ -1002,10 +1022,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_burn = 0.5;
 		m = calcParams.src->GetMass();
 		dv = F / m * t_burn;
-		gravref = AGCGravityRef(calcParams.src);
 
 		sv = StateVectorCalc(calcParams.src);
-
 		dV_LVLH = _V(0.0, dv, 0.0);
 		GETbase = getGETBase();
 		P30TIG = OrbMech::HHMMSSToSS(210, 8, 0);
@@ -1116,30 +1134,25 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
-		VECTOR3 dV_LVLH;
-		double P30TIG, GETbase;
-		OBJHANDLE gravref;
+		VECTOR3 dV_LVLH, dV_imp;
+		double P30TIG, GETbase, TIG_imp;
 		MATRIX3 REFSMMAT;
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		GETbase = getGETBase();
-		gravref = AGCGravityRef(calcParams.src);
-
 		sv = StateVectorCalc(calcParams.src);
 
+		orbopt.dLOA = -22.5*RAD;
 		orbopt.GETbase = GETbase;
-		orbopt.h_apo = 230.3*1852.0;
-		orbopt.h_peri = 90.0*1852.0;
-		orbopt.inc = 29.88*RAD;
-		orbopt.TIG_GET = OrbMech::HHMMSSToSS(239, 6, 12);
-		orbopt.useSV = false;
-		orbopt.vessel = calcParams.src;
-		orbopt.impulsive = RTCC_NONIMPULSIVE;
-		orbopt.csmlmdocked = false;
+		orbopt.ManeuverCode = RTCC_GMP_SAO;
+		orbopt.RV_MCC = sv;
+		orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 35, 0);
 
-		GeneralManeuverProcessor(&orbopt, dV_LVLH, P30TIG);
+		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
+		dV_LVLH.y = -100.0*0.3048;
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;

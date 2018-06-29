@@ -57,16 +57,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu1, sizeof(mnu1) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("OPT", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleTwoImpulseOption);
 	RegisterFunction("T1", OAPI_KEY_M, &ApolloRTCCMFD::t1dialogue);
 	RegisterFunction("T2", OAPI_KEY_A, &ApolloRTCCMFD::t2dialogue);
 	RegisterFunction("N", OAPI_KEY_N, &ApolloRTCCMFD::revdialogue);
 	RegisterFunction("AXI", OAPI_KEY_U, &ApolloRTCCMFD::set_lambertaxis);
 	RegisterFunction("SPH", OAPI_KEY_G, &ApolloRTCCMFD::set_spherical);
-	//RegisterFunction("ORI", OAPI_KEY_O, &ApolloRTCCMFD::set_orient);
 
 	RegisterFunction("TGT", OAPI_KEY_V, &ApolloRTCCMFD::set_target);
-	//RegisterFunction("OFF", OAPI_KEY_D, &ApolloRTCCMFD::menuSetOffsetPage);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::lambertcalc);
 	RegisterFunction("OFF", OAPI_KEY_O, &ApolloRTCCMFD::offvecdialogue);
 	RegisterFunction("PHA", OAPI_KEY_P, &ApolloRTCCMFD::phasedialogue);
@@ -142,35 +140,35 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu4[] =
 	{
-		{ "Maneuver type", 0, 'M' },
-		{ "GET of the Maneuver", 0, 'G' },
-		{ "Apoapsis altitude", 0, 'A' },
-		{ "Periapsis altitude", 0, 'P' },
-		{ "Desired Inclination", 0, 'I' },
+		{ "Set input", 0, 'S' },
+		{ "Previous Item", 0, 'P' },
+		{ "Next Item", 0, 'N' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 		{ "Altitude reference", 0, 'R' },
 
 		{ "Calculate", 0, 'C' },
-		{ "Number of Revolutions", 0, 'N' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "Upload to AGC", 0, 'L' },
+		{ "", 0, ' ' },
+		{ "Upload to AGC", 0, 'U' },
 		{ "Back to menu", 0, 'B' },
 	};
 
 	RegisterPage(mnu4, sizeof(mnu4) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuCycleOrbAdjOptions);
-	RegisterFunction("GET", OAPI_KEY_T, &ApolloRTCCMFD::OrbAdjGETDialogue);
-	RegisterFunction("APO", OAPI_KEY_A, &ApolloRTCCMFD::OrbAdjApoDialogue);
-	RegisterFunction("PER", OAPI_KEY_P, &ApolloRTCCMFD::OrbAdjPeriDialogue);
-	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::OrbAdjIncDialogue);
-	RegisterFunction("ALT", OAPI_KEY_R, &ApolloRTCCMFD::menuCycleOrbAdjAltRef);
+	RegisterFunction("SET", OAPI_KEY_S, &ApolloRTCCMFD::menuSetGMPInput);
+	RegisterFunction("<<", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleGMPMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleGMPMarkerUp);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ALT", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleOrbAdjAltRef);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::OrbAdjCalc);
-	RegisterFunction("REV", OAPI_KEY_N, &ApolloRTCCMFD::OrbAdjRevDialogue);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("UPL", OAPI_KEY_L, &ApolloRTCCMFD::menuP30Upload);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuP30Upload);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
 
@@ -179,7 +177,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Time of Alignment", 0, 'G' },
 		{ "Uplink option", 0, 'K' },
 		{ "Heads up/down for P30", 0, 'H' },
-		{ "", 0, ' ' },
+		{ "Send REFSMMAT to MFD of target", 0, 'S' },
 		{ "REFSMMAT from AGC", 0, 'D' },
 		{ "Direct/MCC", 0, 'E' },
 
@@ -196,7 +194,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::REFSMMATTimeDialogue);
 	RegisterFunction("TYP", OAPI_KEY_K, &ApolloRTCCMFD::cycleREFSMMATupl);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::cycleREFSMMATHeadsUp);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("SEN", OAPI_KEY_S, &ApolloRTCCMFD::menuSendREFSMMATToOtherVessel);
 	RegisterFunction("DWN", OAPI_KEY_D, &ApolloRTCCMFD::GetREFSMMATfromAGC);
 	RegisterFunction("MCC", OAPI_KEY_E, &ApolloRTCCMFD::menuREFSMMATdirect);
 
@@ -420,9 +418,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Approach azimuth", 0, 'I' },
 
 		{ "Calculate maneuver", 0, 'C' },
-		{ "Selen. latitude", 0, 'A' },
-		{ "Selen. longitude", 0, 'O' },
-		{ "Selen. altitude", 0, 'L' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Dir. of ellipse rotation", 0, 'E' },
 		{ "Upload to AGC", 0, 'U' },
 		{ "Back to menu", 0, 'B' },
 	};
@@ -437,9 +435,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("AZI", OAPI_KEY_I, &ApolloRTCCMFD::menuSetLOIAzi);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLOICalc);
-	RegisterFunction("LAT", OAPI_KEY_A, &ApolloRTCCMFD::menuLSLat);
-	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::menuLSLng);
-	RegisterFunction("ALT", OAPI_KEY_L, &ApolloRTCCMFD::menuLSAlt);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ELI", OAPI_KEY_E, &ApolloRTCCMFD::menuCycleLOIEllipseOption);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuP30Upload);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
@@ -531,9 +529,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu15, sizeof(mnu15) / sizeof(MFDBUTTONMENU));
 
+	RegisterFunction("OPT", OAPI_KEY_G, &ApolloRTCCMFD::cycleVECPOINTOpt);
 	RegisterFunction("BOD", OAPI_KEY_P, &ApolloRTCCMFD::vecbodydialogue);
 	RegisterFunction("DIR", OAPI_KEY_D, &ApolloRTCCMFD::cycleVECDirOpt);
-	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
@@ -575,7 +573,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuDOICalc);
 	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuDOIOption);
 	RegisterFunction("TLA", OAPI_KEY_T, &ApolloRTCCMFD::menuTLANDUpload);
-	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("PEA", OAPI_KEY_I, &ApolloRTCCMFD::menuSetDOIPeriAlt);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuP30Upload);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
@@ -797,7 +795,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Liftoff Time Option", 0, 'O' },
 		{ "Target Vessel", 0, 'V' },
 		{ "Calculate liftoff times", 0, 'C' },
-		{ "", 0, ' ' },
+		{ "Time between Ins and TPI", 0, 'D' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' }
 	};
@@ -807,14 +805,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TPI", OAPI_KEY_T, &ApolloRTCCMFD::menuSetTPIguess);
 	RegisterFunction("", OAPI_KEY_J, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::menuLunarLiftoffTimeOption);
 	RegisterFunction("TGT", OAPI_KEY_V, &ApolloRTCCMFD::set_target);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLunarLiftoffCalc);
-	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("DT", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLiftoffDT);
 	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
@@ -1165,7 +1163,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Fixed radial component", 0, 'R' },
 		{ "TPI mode", 0, 'O' },
 		{ "TPI time before sunrise", 0, 'S' },
-		{ "Revs between CSI and CDH", 0, 'N' },
+		{ "Half-revs between CSI and CDH", 0, 'N' },
 		{ "", 0, ' ' },
 
 		{ "Time between abort and Boost/CSI", 0, 'E' },

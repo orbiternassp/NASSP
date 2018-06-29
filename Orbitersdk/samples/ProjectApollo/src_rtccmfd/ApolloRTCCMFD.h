@@ -26,12 +26,11 @@
 
 class ApolloRTCCMFD: public MFD2 {
 public:
-	ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel);
+	ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im);
 	~ApolloRTCCMFD ();
 	char *ButtonLabel (int bt);
 	int ButtonMenu (const MFDBUTTONMENU **menu) const;
 	bool Update (oapi::Sketchpad *skp);
-	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 	bool ConsumeButton(int bt, int event);
 	bool ConsumeKeyBuffered(DWORD key);
 	void WriteStatus(FILEHANDLE scn) const;
@@ -75,26 +74,33 @@ public:
 	void cycleREFSMMATHeadsUp();
 	void set_REFSMMATTime(double time);
 	void calcREFSMMAT();
-	void OrbAdjApoDialogue();
-	void set_OrbAdjApo(double apo);
-	void OrbAdjPeriDialogue();
-	void set_OrbAdjPeri(double peri);
-	void OrbAdjIncDialogue();
-	void set_OrbAdjInc(double inc);
+	void menuSendREFSMMATToOtherVessel();
+	void GMPInput1Dialogue();
+	void set_GMPInput1(double val);
+	void GMPInput2Dialogue();
+	void set_GMPInput2(double val);
+	void GMPInput3Dialogue();
+	void set_GMPInput3(double val);
+	void GMPInput4Dialogue();
+	void set_GMPInput4(double val);
 	void OrbAdjGETDialogue();
 	void set_OrbAdjGET(double SPSGET);
 	void OrbAdjRevDialogue();
 	void set_OrbAdjRevs(int N);
 	void OrbAdjCalc();
-	void menuCycleOrbAdjOptions();
+	void menuCycleGMPManeuverPoint();
+	void menuCycleGMPManeuverType();
+	void menuCycleGMPMarkerUp();
+	void menuCycleGMPMarkerDown();
+	void menuSetGMPInput();
 	void menuCycleOrbAdjAltRef();
 	void phasedialogue();
 	void set_getbase();
-	void calcphaseoff(double angdeg);
+	void set_TIPhaseAngle(double angdeg);
 	void CDHcalc();
 	void lambertcalc();
-	char* GET_Display(char * Buff, double time);
-	char* AGC_Display(char * Buff, double time);
+	void GET_Display(char * Buff, double time);
+	void AGC_Display(char * Buff, double time);
 	char* REFSMMATName(char* Buff, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	double timetoperi();
@@ -123,6 +129,7 @@ public:
 	void menuEntryUpload();
 	void menuEntryUpdateUpload();
 	void set_spherical();
+	void menuCycleTwoImpulseOption();
 	void menuSwitchHeadsUp();
 	void menuManDirection();
 	void menuSwitchPDIPADDirect();
@@ -179,6 +186,7 @@ public:
 	void menuSetLOIPage();
 	void menuSwitchLOIManeuver();
 	void menuSwitchLOIOption();
+	void menuCycleLOIEllipseOption();
 	void menuSwitchTLCCManeuver();
 	void menuSetTLCCGET();
 	void set_TLCCGET(double time);
@@ -239,6 +247,8 @@ public:
 	void set_DOIRevs(int N);
 	void menuSetDOIPeriAng();
 	void set_DOIPeriAng(double ang);
+	void menuSetDOIPeriAlt();
+	void set_DOIPeriAlt(double alt);
 	void menuDOICalc();
 	void menuSetDOIPage();
 	void menuDOIOption();
@@ -256,7 +266,7 @@ public:
 	void set_SkylabDH2(double dh);
 	void menuSetSkylabEL();
 	void set_SkylabEL(double E_L);
-	void set_SkylabTPI(double time);
+	void set_t_TPI(double time);
 	void menuCyclePlaneChange();
 	void menuCyclePCManeuver();
 	void set_SkylabDTTPM(double dt);
@@ -270,6 +280,8 @@ public:
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLunarLiftoffTimeOption();
+	void menuSetLiftoffDT();
+	void set_LiftoffDT(double dt);
 	void set_TPIguess(double time);
 	void menuSetEMPUplinkP99();
 	void menuEMPUplink();
@@ -323,12 +335,17 @@ public:
 	void menuSetAGCEphemTIMEM0();
 	void set_AGCEphemTIMEM0(double mjd);
 	void menuGenerateAGCEphemeris();
+	void cycleVECPOINTOpt();
+	void GMPManeuverTypeName(char *buffer, int typ);
+	void GMPManeuverPointName(char *buffer, int point);
+	void GMPManeuverCodeName(char *buffer, int code);
 
 protected:
 	oapi::Font *font;
 	Saturn *saturn;
 	LEM *lem;
 	int screen;
+	int marker;
 	static struct ScreenData {
 		int screen;
 	} screenData;

@@ -2350,7 +2350,7 @@ void LEM_LR::Timestep(double simdt){
 		MATRIX3 Rot;
 		VECTOR3 pos, lrvec_glob, U_XAB, U_YAB, U_ZAB, U_RBA, U_RBB, U_RBB_lh;
 		OBJHANDLE gravref;
-		double alt, ang, alpha, beta, dh;
+		double alt, cos_ang, alpha, beta, dh;
 
 		//landing radar under CoG of LM
 		dh = 3.0;
@@ -2370,8 +2370,8 @@ void LEM_LR::Timestep(double simdt){
 		pos = pos*(length(pos) - dh) / length(pos);
 
 		//Radar Beams Orientation Subroutine
-		alpha = 6.0*RAD;
-		beta = antennaAngle*RAD;
+		alpha = -6.0*RAD;
+		beta = -antennaAngle*RAD;
 
 		U_XAB = _V(cos(beta), sin(alpha)*sin(beta), -sin(beta)*cos(alpha));
 		U_YAB = _V(0, cos(alpha), sin(alpha));
@@ -2379,7 +2379,7 @@ void LEM_LR::Timestep(double simdt){
 
 		U_RBA = _V(-cos(20.38*RAD), 0, -sin(20.38*RAD));
 
-		U_RBB = tmul(_M(U_XAB.x, U_YAB.x, U_ZAB.x, U_XAB.y, U_YAB.y, U_ZAB.y, U_XAB.z, U_YAB.z, U_ZAB.z), U_RBA);
+		U_RBB = mul(_M(U_XAB.x, U_YAB.x, U_ZAB.x, U_XAB.y, U_YAB.y, U_ZAB.y, U_XAB.z, U_YAB.z, U_ZAB.z), U_RBA);
 
 		//Now Left handed. But also needs to change coordinate system differences
 		U_RBB_lh = _V(U_RBB.y, U_RBB.x, U_RBB.z);
@@ -2388,10 +2388,10 @@ void LEM_LR::Timestep(double simdt){
 		lrvec_glob = mul(Rot, U_RBB_lh);
 
 		//Angle between local vertical and LR vector
-		ang = acos(dotp(unit(-pos), unit(lrvec_glob)));
+		cos_ang = dotp(unit(-pos), unit(lrvec_glob));
 
 		//Assumption: Moon is flat
-		range = alt / cos(ang)/0.3048;
+		range = alt / cos_ang / 0.3048;
 
 		//Doesn't point at the moon
 		if (range < 0)
@@ -2413,7 +2413,7 @@ void LEM_LR::Timestep(double simdt){
 		vel = _V(vel_lh.y, vel_lh.x, vel_lh.z);
 
 		//Rotate to LR position
-		vel_LR = mul(_M(U_XAB.x, U_YAB.x, U_ZAB.x, U_XAB.y, U_YAB.y, U_ZAB.y, U_XAB.z, U_YAB.z, U_ZAB.z), vel);
+		vel_LR = tmul(_M(U_XAB.x, U_YAB.x, U_ZAB.x, U_XAB.y, U_YAB.y, U_ZAB.y, U_XAB.z, U_YAB.z, U_ZAB.z), vel);
 
 		rate[0] = vel_LR.x / 0.3048;
 		rate[1] = vel_LR.y / 0.3048;

@@ -26,6 +26,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include <vector>
 
+struct COMBELEMENTS;
+
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"
 
@@ -56,6 +58,66 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #define RTCC_DIRECTIONTYPE_PLUSX 0
 #define RTCC_DIRECTIONTYPE_MINUSX 1
+
+#define RTCC_GMP_PCE 1
+#define RTCC_GMP_PCL 2
+#define RTCC_GMP_PCT 3
+#define RTCC_GMP_CRL 4
+//Circularization at a specified height
+#define RTCC_GMP_CRH 5
+#define RTCC_GMP_HOL 6
+#define RTCC_GMP_HOT 7
+#define RTCC_GMP_HAO 8
+#define RTCC_GMP_HPO 9
+#define RTCC_GMP_NST 10
+#define RTCC_GMP_NSO 11
+#define RTCC_GMP_HBT 12
+#define RTCC_GMP_HBH 13
+#define RTCC_GMP_HBO 14
+#define RTCC_GMP_FCT 15
+#define RTCC_GMP_FCL 16
+#define RTCC_GMP_FCH 17
+#define RTCC_GMP_FCA 18
+#define RTCC_GMP_FCP 19
+#define RTCC_GMP_FCE 20
+#define RTCC_GMP_NHT 21
+//Combination maneuver to change both apogee and perigee and shift the node at a specified longitude
+#define RTCC_GMP_NHL 22
+#define RTCC_GMP_SAL 23
+#define RTCC_GMP_SAA 24
+#define RTCC_GMP_PHL 25
+#define RTCC_GMP_PHT 26
+#define RTCC_GMP_PHA 27
+#define RTCC_GMP_PHP 28
+#define RTCC_GMP_CPL 29
+#define RTCC_GMP_CPH 30
+#define RTCC_GMP_SAT 31
+//Maneuver to shift line-of-apsides some angle and keep the same apogee and perigee altitudes
+#define RTCC_GMP_SAO 32
+//Maneuver to change both apogee and perigee at a specified longitude
+#define RTCC_GMP_HBL 33
+#define RTCC_GMP_CNL 34
+#define RTCC_GMP_CNH 35
+//Height maneuver and node shift at a specified longitude
+#define RTCC_GMP_HNL 36
+#define RTCC_GMP_HNT 37
+#define RTCC_GMP_HNA 38
+#define RTCC_GMP_HNP 39
+#define RTCC_GMP_CRT 40
+#define RTCC_GMP_CRA 41
+#define RTCC_GMP_CRP 42
+#define RTCC_GMP_CPT 43
+#define RTCC_GMP_CPA 44
+#define RTCC_GMP_CPP 45
+#define RTCC_GMP_CNT 46
+#define RTCC_GMP_CNA 47
+#define RTCC_GMP_CNP 48
+#define RTCC_GMP_PCH 49
+#define RTCC_GMP_NSH 50
+//Node shift at a longitude
+#define RTCC_GMP_NSL 51
+#define RTCC_GMP_HOH 52
+#define RTCC_GMP_HAS 53
 
 const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	40140.62691,
@@ -89,9 +151,13 @@ struct LambertMan //Data for Lambert targeting
 	int axis;	//Multi-axis or horizontal burn
 	int Perturbation; //Spherical or non-spherical gravity
 	VECTOR3 Offset; //Offset vector
-	double PhaseAngle = 0.0; //Phase angle to target, will overwrite offset
+	double PhaseAngle; //Phase angle to target
+	double DH;					//Delta height at arrival
 	SV sv_A;		//Chaser state vector
 	SV sv_P;		//Target state vector
+	bool NCC_NSR_Flag = false;	//true = NCC/NSR combination, false = TPI/TPF combination
+	bool use_XYZ_Offset = true;	//true = use offset vector, false = use phase angle and DH
+	double Elevation;	//Elevation angle at TPI
 };
 
 struct AP7ManPADOpt
@@ -136,7 +202,7 @@ struct AP11LMManPADOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int enginetype = 1; //0 = RCS, 1 = DPS, 2 = APS
 	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
-	bool HeadsUp; //Orientation during the maneuver
+	bool HeadsUp = false; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
@@ -163,6 +229,25 @@ struct AP7TPIPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+};
+
+struct AP9LMTPIPADOpt
+{
+	SV sv_A; //Chaser state vector
+	SV sv_P; //Target state vector
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	MATRIX3 REFSMMAT;	//REFSMMAT
+};
+
+struct AP9LMCDHPADOpt
+{
+	SV sv_A; //Chaser state vector
+	double GETbase; //usually MJD at launch
+	double TIG; //Time of Ignition
+	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	MATRIX3 REFSMMAT;	//REFSMMAT
 };
 
 struct EarthEntryOpt
@@ -220,6 +305,17 @@ struct TLMCCResults
 	double NodeGET;
 	double EMPLatitude;
 	double FRInclination;
+	double t_Rev2Meridian;
+	VECTOR3 dV_LVLH_LOI;
+	VECTOR3 dV_LVLH_DOI;
+	double h_peri_postDOI, h_apo_postDOI;
+};
+
+struct TwoImpulseResuls
+{
+	VECTOR3 dV;
+	VECTOR3 dV_LVLH;
+	double t_TPI;
 };
 
 struct TEIOpt
@@ -265,7 +361,7 @@ struct REFSMMATOpt
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	double P30TIG2; //Time of Ignition 2nd maneuver
 	VECTOR3 dV_LVLH2; //Delta V in LVLH coordinates 2nd maneuver
-	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2, 8 = LS during TLC
+	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2, 8 = LS during TLC, 9 = Attitude
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landing site REFSMMAT
@@ -274,6 +370,8 @@ struct REFSMMATOpt
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool HeadsUp = true; //Orientation during the maneuver
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
+	MATRIX3 PresentREFSMMAT;	//Present REFSMMAT (for option 9)
+	VECTOR3 IMUAngles;			//Desired Attitude (for option 9)
 };
 
 struct CDHOpt
@@ -416,6 +514,11 @@ struct MCCNFRMan
 	double t_land;		//time of landing
 	double LOIh_apo;		//apolune altitude
 	double LOIh_peri;		//perilune altitude
+	int N;				//Revs between DOI and PDI
+	int DOIType;		//0 = Normal DOI, 1 = DOI as LOI-2
+	double DOIPeriAng;	//Angle between landing site and perilune
+	int LOIEllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
+	double DOIPeriAlt = 50000.0*0.3048; //perilune altitude above landing site
 };
 
 struct MCCFlybyMan
@@ -465,6 +568,7 @@ struct LOIMan
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
 	int impulsive = RTCC_NONIMPULSIVE;	//Calculated with nonimpulsive maneuver compensation or without
+	int EllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 };
 
 struct LOI2Man
@@ -482,18 +586,15 @@ struct LOI2Man
 struct DOIMan
 {
 	int opt;		//0 = DOI from circular orbit, 1 = DOI as LOI-2
-	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double EarliestGET;	//Earliest GET for the DOI maneuver
 	double lat; //landing site latitude
 	double lng; //landing site longitude
 	double alt;	//altitude of the landing site
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
-	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
+	SV sv0;		//State vector as input
 	int N = 0;	// Revolutions between DOI and PDI
 	double PeriAng = 15.0*RAD;	//Angle from landing site to perilune
+	double PeriAlt = 50000.0*0.3048; //perilune altitude above landing site
 };
 
 struct PCMan
@@ -523,26 +624,26 @@ struct GMPOpt
 	//5 = Rotate velocity vector, specify apoapsis altitude
 	//6 = Rotate line of apsides, perigee at specific longitude
 	//7 = Optimal node shift maneuver
-	int type = 0;
+	int ManeuverCode;
 	double GETbase; //usually MJD at launch
-	VESSEL* vessel;
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
-	int impulsive = 1; //Calculated with nonimpulsive maneuver compensation or without
-	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
+	SV RV_MCC;		//State vector as inputn or without
 	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double LSAlt;	//Landing site altitude, if used
-	int vesseltype = 0;			//0 = CSM, 1 = LM
 
 	//maneuver parameters
 
-	double TIG_GET;	//time of ignition, used for options 0 and 1
-	double h_apo;	//apoapsis altitude, used for options 0 and 1
-	double h_peri;	//periapsis altitude, used for option 0
-	double inc;		//orbital inclination, used for option 0
-	double rot_ang;	//rotate velocity vector, used for option 5
-	double lng;		//Longitude, used for option 6
-	int N;			//Number of orbits, used for option 6
+	double TIG_GET;	//Threshold time or time of ignition
+	double dW;		//Desired wedge angle change
+	double long_D;	//Desired maneuver longitude
+	double H_D;		//Desired maneuver height
+	double dH_D;	//Desired change in height
+	double dLAN;	//Desired change in the ascending node
+	double H_A;		//Desired apogee height after the maneuver
+	double H_P;		//Desired perigee height after the maneuver
+	double dV;		//Input incremental velocity magnitude of the maneuver
+	double Pitch;	//Input pitch of the maneuver
+	double Yaw;		//Input yaw of the maneuver
+	double dLOA;	//Line-of-apsides shift
 };
 
 struct TLIPADOpt
@@ -626,6 +727,7 @@ struct LunarLiftoffTimeOpt
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	int opt;		// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	double dt_2;	//Fixed time from insertion to TPI for direct profile
 };
 
 struct LunarLiftoffResults
@@ -678,10 +780,11 @@ struct DKIOpt	//Docking Initiation Processor
 	//0 = Phasing, CSI 0.5 revs later, CDH 0.5 revs later
 	//1 = Phasing with +50 ft/s DVZ, at apolune, CDH 0.5 revs later
 	//2 = Height, CSI (Phasing) 0.5 revs later, CDH 2xN revs later
+	//3 = Just calculate TPI time
 	int plan = 0;
 	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
 	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
-	int N_HC = 1;			//Number of revs between CSI and CDH
+	int N_HC = 1;			//Number of half revs between CSI and CDH
 
 	double dt_TPI_sunrise = 16.0*60.0;
 	double DeltaT_PBH = 55.0*60.0;	//Delta time between phasing and boost/CSI
@@ -715,6 +818,19 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int maneuver;	//0 = CSI, 1 = CDH
 };
 
+struct DockAlignOpt	//Docking Alignment Processor
+{
+	//Option 1: LM REFSMMAT from CSM REFSMMAT, CSM attitude, docking angle and LM gimbal angles
+	//Option 2: LM gimbal angles from CSM REFSMMAT, LM REFSMMAT, CSM gimbal angles and docking angle
+	//Option 3: CSM gimbal angles from CSM REFSMMAT, LM REFSMMAT, LM gimbal angles and docking angle
+	int type;
+	MATRIX3 CSM_REFSMMAT;
+	MATRIX3 LM_REFSMMAT;
+	VECTOR3 CSMAngles;
+	VECTOR3 LMAngles;
+	double DockingAngle = 0.0;
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;	// Our ship
@@ -729,6 +845,7 @@ struct calculationParameters {
 	double Insertion; // Time of Insertion
 	double Phasing;	// Time of Phasing
 	double CSI;		// Time of CSI
+	double CDH;		// Time of CDH
 	double TPI;		// Time of TPI
 	double TEI;		// Time of TEI
 	double EI;		// Time of Entry Interface
@@ -736,6 +853,7 @@ struct calculationParameters {
 	double lng_node;
 	double alt_node;
 	double GET_node;
+	MATRIX3 StoredREFSMMAT;
 };
 
 //For LVDC
@@ -786,12 +904,13 @@ public:
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
 
 	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
+	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
+	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
-	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV);
-	void LambertTargeting(LambertMan *lambert, VECTOR3 &dV, VECTOR3 &dV_LVLH);
+	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
@@ -803,13 +922,13 @@ public:
 	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyMan *opt, TLMCCResults *res, int &step);
-	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_post);
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void DOITargeting(DOIMan *opt, VECTOR3 &dV_LVLH_imp, double &P30TIG_imp, VECTOR3 &dV_LVLH, double &P30TIG, double &t_PDI, double &t_L, double &CR);
+	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
+	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG, double &TOA);
+	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
+	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, COMBELEMENTS &coe_before, COMBELEMENTS &coe_after);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
@@ -852,6 +971,9 @@ public:
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
 	SV coast(SV sv0, double dt);
+	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
+	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
+	void DockingAlignmentProcessor(DockAlignOpt &opt);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -897,7 +1019,11 @@ private:
 	SV FindPericynthion(SV sv0);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
 	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
-	void RendezvousPlanner(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
+	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
+	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
+	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
+	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
+	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 
 	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
