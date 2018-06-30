@@ -1238,6 +1238,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.GetQ();
 		SRC->space.GetMass();
 			
+		//double heat = 138.72 * number * dt;  //heat 1420 btu/hr (416.16092 W) total from CSM data book (Watts * number of crew * seconds = J/crew member/s)
 		double heat = 30.0 * number * dt;  //heat
 		t->thermic(heat);
 	}
