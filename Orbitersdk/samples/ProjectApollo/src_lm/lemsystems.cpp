@@ -1615,7 +1615,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-	///*
+	/*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1953,7 +1953,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunnelpress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:PRESS");
 	double *lmtunneltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:TEMP");
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
-	//*/
+	*/
 
 	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf CabinQ %lf CabinHeat %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTempF(), *CabinEnergy, *CabinHeat);
 	//sprintf(oapiDebugString(), "LM Cabin: %lf LM Tunnel: %lf", *lmcabinpress*PSI, *lmtunnelpress*PSI);
