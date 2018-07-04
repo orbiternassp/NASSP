@@ -427,6 +427,9 @@ double LMOxygenQtyMeter::QueryValue()
 			return 0;
 		case 1: // DES
 			return (lem->ecs.DescentOxyTankQuantityLBS()/(48.0))*100; 
+		//For J-Mission Conversion
+		//case 1: // DES
+		//	return (lem->ecs.DescentOxyTankQuantityLBS() / (96.0)) * 100;
 		case 2: // ASC 1
 			return (lem->ecs.AscentOxyTank1QuantityLBS()/(2.43))*100;	
 		case 3: // ASC 2
