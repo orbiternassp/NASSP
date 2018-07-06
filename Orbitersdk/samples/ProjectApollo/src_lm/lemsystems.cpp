@@ -760,6 +760,8 @@ void LEM::SystemsInit()
 	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50/PSI, 2.90/PSI);
 	CabinRepressValve.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
 		&ECS_CABIN_REPRESS_CB, &CabinRepressValveSwitch, &PressRegAValve, &PressRegBValve);
+	CDRIsolValve.Init(this, &ECS_SUIT_FLOW_CONT_CB, &CDRSuitIsolValve, &CDRActuatorOvrd);
+	LMPIsolValve.Init(this, &ECS_SUIT_FLOW_CONT_CB, &LMPSuitIsolValve, &LMPActuatorOvrd);
 	SuitCircuitPressureRegulatorA.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), &PressRegAValve);
 	SuitCircuitPressureRegulatorB.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGBOUT"),
@@ -1441,6 +1443,8 @@ void LEM::SystemsInternalTimestep(double simdt)
 		CabinRepressValve.SystemTimestep(tFactor);
 		SuitCircuitPressureRegulatorA.SystemTimestep(tFactor);
 		SuitCircuitPressureRegulatorB.SystemTimestep(tFactor);
+		CDRIsolValve.SystemTimestep(tFactor);
+		LMPIsolValve.SystemTimestep(tFactor);
 		OVHDCabinReliefDumpValve.SystemTimestep(tFactor);
 		FWDCabinReliefDumpValve.SystemTimestep(tFactor);
 		SuitCircuitReliefValve.SystemTimestep(tFactor);

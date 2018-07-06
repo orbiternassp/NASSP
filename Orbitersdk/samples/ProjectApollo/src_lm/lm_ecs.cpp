@@ -365,6 +365,46 @@ void LEMPressureSwitch::SystemTimestep(double simdt)
 	}
 }
 
+LEMSuitIsolValve::LEMSuitIsolValve()
+{
+	lem = NULL;
+	suitflowCB = NULL;
+	suitisolvlv = NULL;
+	actuatorovrdswitch = NULL;
+
+}
+
+void LEMSuitIsolValve::Init(LEM *l, CircuitBrakerSwitch *sfcb, RotationalSwitch *scv, ToggleSwitch *ovrd)
+{
+	lem = l;
+	suitflowCB = sfcb;
+	suitisolvlv = scv;
+	actuatorovrdswitch = ovrd;
+}
+
+void LEMSuitIsolValve::SystemTimestep(double simdt)
+{
+	if (!suitisolvlv) return;
+
+	//Prevention of Suit Disconnect
+	if (lem->SuitPressureSwitch.GetPressureSwitch() == 0 && suitflowCB->IsPowered() && suitisolvlv->GetState() == 1 && actuatorovrdswitch->GetState() == 0)
+	{
+		suitisolvlv->SwitchTo(0); //Prevent Suit Disconnect
+	}
+
+	//Pressure Switch Actuation (Suit Disconnect)
+	else if (lem->SuitPressureSwitch.GetPressureSwitch() != 0 && suitflowCB->IsPowered() && suitisolvlv->GetState() == 0 && actuatorovrdswitch->GetState() == 0)
+	{
+		suitisolvlv->SwitchTo(1); //Suit Disconnect
+	}
+
+	else
+	{
+		return;
+	}
+}
+
+
 LEMCabinRepressValve::LEMCabinRepressValve()
 {
 	lem = NULL;
