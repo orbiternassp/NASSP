@@ -2676,8 +2676,10 @@ void LEM::SetSwitches(int panel) {
     SuitIsolSwitchRow.Init(AID_LEM_ISOL_ROTARY, MainPanel);
     CDRSuitIsolValve.Init(22, 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], srf[SRF_BORDER_169x168], SuitIsolSwitchRow);
     CDRActuatorOvrd.Init(204, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], srf[SRF_BORDER_67x64], SuitIsolSwitchRow);
+	CDRActuatorOvrd.SetDelayTime(1);
     LMPSuitIsolValve.Init(22+281 , 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], srf[SRF_BORDER_169x168], SuitIsolSwitchRow);
     LMPActuatorOvrd.Init(485, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], srf[SRF_BORDER_67x64], SuitIsolSwitchRow);
+	LMPActuatorOvrd.SetDelayTime(1);
 
     WaterControlSwitchRow.Init(AID_LEM_ECS_WCM, MainPanel);
     SecEvapFlowValve.Init(74, 30, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
