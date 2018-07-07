@@ -903,13 +903,13 @@ void LEM::InitSwitches() {
 
 	IntlkOvrd.Register(PSH, "InterlockOvrd", 0);
 
-    CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
+    CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 
 	LMPSuitIsolValve.AddPosition(0, 0);
 	LMPSuitIsolValve.AddPosition(1, 90);
 	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 1);
 
-    LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
+    LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 
 	SecEvapFlowValve.AddPosition(0, 0);
 	SecEvapFlowValve.AddPosition(1, 270);
