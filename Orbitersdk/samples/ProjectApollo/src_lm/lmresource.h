@@ -827,6 +827,7 @@
 #define AID_LEM_MA_LEFT                 2001
 #define AID_LEM_MA_RIGHT                2002
 #define IDB_BORDER_47x43                2003
+#define AID_LEM_ISOL_ROTARY				2004
 
 #define IDB_LEM_FDAI_ROLL               10006
 
