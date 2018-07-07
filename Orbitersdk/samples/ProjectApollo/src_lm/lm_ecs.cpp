@@ -368,16 +368,14 @@ void LEMPressureSwitch::SystemTimestep(double simdt)
 LEMSuitIsolValve::LEMSuitIsolValve()
 {
 	lem = NULL;
-	suitflowCB = NULL;
 	suitisolvlv = NULL;
 	actuatorovrdswitch = NULL;
 
 }
 
-void LEMSuitIsolValve::Init(LEM *l, CircuitBrakerSwitch *sfcb, RotationalSwitch *scv, ToggleSwitch *ovrd)
+void LEMSuitIsolValve::Init(LEM *l, RotationalSwitch *scv, ToggleSwitch *ovrd)
 {
 	lem = l;
-	suitflowCB = sfcb;
 	suitisolvlv = scv;
 	actuatorovrdswitch = ovrd;
 }
@@ -387,7 +385,7 @@ void LEMSuitIsolValve::SystemTimestep(double simdt)
 	if (!suitisolvlv) return;
 
 	//Pressure Switch/Override Actuation (Suit Disconnect)
-	if (suitflowCB->IsPowered() && (actuatorovrdswitch->GetState() == 1 || lem->SuitPressureSwitch.GetPressureSwitch() != 0))
+	if (lem->ECS_SUIT_FLOW_CONT_CB.IsPowered() && (actuatorovrdswitch->GetState() == 1 || lem->SuitPressureSwitch.GetPressureSwitch() != 0))
 	{
 		suitisolvlv->SwitchTo(1); //Suit Disconnect
 	}

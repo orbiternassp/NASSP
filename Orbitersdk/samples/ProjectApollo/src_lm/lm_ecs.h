@@ -121,12 +121,11 @@ class LEMSuitIsolValve
 {
 public:
 	LEMSuitIsolValve();
-	void Init(LEM *l, CircuitBrakerSwitch *sfcb, RotationalSwitch *scv, ToggleSwitch *ovrd);
+	void Init(LEM *l, RotationalSwitch *scv, ToggleSwitch *ovrd);
 	void SystemTimestep(double simdt);
 
 protected:
 	LEM *lem;
-	CircuitBrakerSwitch *suitflowCB;
 	RotationalSwitch *suitisolvlv;
 	ToggleSwitch *actuatorovrdswitch;
 
