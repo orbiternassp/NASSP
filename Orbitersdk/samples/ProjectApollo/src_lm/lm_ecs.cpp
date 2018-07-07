@@ -391,11 +391,6 @@ void LEMSuitIsolValve::SystemTimestep(double simdt)
 	{
 		suitisolvlv->SwitchTo(1); //Suit Disconnect
 	}
-
-	else
-	{
-		return;
-	}
 }
 
 
