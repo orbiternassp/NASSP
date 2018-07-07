@@ -1304,7 +1304,7 @@ void LEM::InitPanel (int panel)
 		srf[SRF_LEM_ECS_ROTARY]		= oapiCreateSurface (LOADBMP (IDB_LEM_ECS_ROTARY));
 		srf[SRF_LEM_H20_SEL]		= oapiCreateSurface (LOADBMP (IDB_LEM_H20_SEL));
 		srf[SRF_LEM_H20_SEP]		= oapiCreateSurface (LOADBMP (IDB_LEM_H20_SEP));
-		srf[SRF_LEM_ISOL_ROTARY]	= oapiCreateSurface (LOADBMP (AID_LEM_ISOL_ROTARY));
+		srf[SRF_LEM_ISOL_ROTARY]	= oapiCreateSurface (LOADBMP (IDB_LEM_ISOL_ROTARY));
 		srf[SRF_LEM_PRIM_C02]		= oapiCreateSurface (LOADBMP (IDB_LEM_PRIM_C02));
 		srf[SRF_LEM_SEC_C02]		= oapiCreateSurface (LOADBMP (IDB_LEM_SEC_C02));
 		srf[SRF_LEM_SGD_LEVER]		= oapiCreateSurface (LOADBMP (IDB_LEM_SGD_LEVER));
