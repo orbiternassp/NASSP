@@ -248,20 +248,24 @@ ARCore::ARCore(VESSEL* v)
 	GMPYaw = 0.0;
 	GMPRevs = 0;
 	GMPApseLineRotAngle = 0.0;
-	GMPCoe_before.elem.e = 0.0;
-	GMPCoe_before.elem.i = 0.0;
-	GMPCoe_before.elem.theta = 0.0;
-	GMPCoe_before.param.ApD = 0.0;
-	GMPCoe_before.param.PeD = 0.0;
-	GMPCoe_before.param.T = 0.0;
-	GMPCoe_before.param.TrA = 0.0;
-	GMPCoe_after.elem.e = 0.0;
-	GMPCoe_after.elem.i = 0.0;
-	GMPCoe_after.elem.theta = 0.0;
-	GMPCoe_after.param.ApD = 0.0;
-	GMPCoe_after.param.PeD = 0.0;
-	GMPCoe_after.param.T = 0.0;
-	GMPCoe_after.param.TrA = 0.0;
+	GMPResults.A = 0.0;
+	GMPResults.Del_G = 0.0;
+	GMPResults.E = 0.0;
+	GMPResults.GET_A = 0.0;
+	GMPResults.GET_P = 0.0;
+	GMPResults.HA = 0.0;
+	GMPResults.HP = 0.0;
+	GMPResults.H_Man = 0.0;
+	GMPResults.I = 0.0;
+	GMPResults.lat_A = 0.0;
+	GMPResults.lat_Man = 0.0;
+	GMPResults.lat_P = 0.0;
+	GMPResults.long_A = 0.0;
+	GMPResults.long_Man = 0.0;
+	GMPResults.long_P = 0.0;
+	GMPResults.Node_Ang = 0.0;
+	GMPResults.Pitch_Man = 0.0;
+	GMPResults.Yaw_Man = 0.0;
 
 	g_Data.uplinkBufferSimt = 0;
 	g_Data.connStatus = 0;
@@ -1973,7 +1977,7 @@ int ARCore::subThread()
 			attachedMass = rtcc->GetDockedVesselMass(vessel);
 		}
 
-		rtcc->GeneralManeuverProcessor(&opt, dV_imp, TIG_imp, GMPCoe_before, GMPCoe_after);
+		rtcc->GeneralManeuverProcessor(&opt, dV_imp, TIG_imp, GMPResults);
 		rtcc->PoweredFlightProcessor(sv0, GETbase, TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, dV_imp, P30TIG, OrbAdjDVX);
 
 		dV_LVLH = OrbAdjDVX;

@@ -99,7 +99,7 @@ public:
 	void set_TIPhaseAngle(double angdeg);
 	void CDHcalc();
 	void lambertcalc();
-	void GET_Display(char * Buff, double time);
+	void GET_Display(char * Buff, double time, bool DispGET = true);
 	void AGC_Display(char * Buff, double time);
 	char* REFSMMATName(char* Buff, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);

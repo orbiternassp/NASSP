@@ -96,19 +96,6 @@ struct OELEMENTS
 	double TA = 0.0;
 };
 
-struct ADELEMENTS
-{
-	double a = 0.0;
-	double H_A = 0.0;
-	double H_P = 0.0;
-};
-
-struct COMBELEMENTS
-{
-	ORBITPARAM param;
-	ELEMENTS elem;
-};
-
 struct TLMCConstants
 {
 	double r;
@@ -346,6 +333,7 @@ namespace OrbMech {
 	int decimal_octal(int n);
 	void rv_from_r0v0(VECTOR3 R0, VECTOR3 V0, double t, VECTOR3 &R1, VECTOR3 &V1, double mu, double x = 0.0);
 	double kepler_U(double dt, double ro, double vro, double a, double mu, double x0);
+	double kepler_U_equation(double x, double ro, double vro, double a, double mu);
 	double stumpC(double z);
 	double stumpS(double z);
 	void f_and_g(double x, double t, double ro, double a, double &f, double &g, double mu);
@@ -373,6 +361,7 @@ namespace OrbMech {
 	VECTOR3 finealignLMtoCSM(VECTOR3 lmn20, VECTOR3 csmn20, MATRIX3 LM_REFSMMAT, MATRIX3 CSM_REFSMMAT);
 	//Earth-Moon-Plane Matrix, converts ecliptic coordinates to EMP coordinates.
 	MATRIX3 EMPMatrix(double MJD);
+	//Rotation matrix from inertial to LVLH
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);
 
 	double fraction_an(int n);

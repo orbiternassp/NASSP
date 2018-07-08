@@ -191,8 +191,7 @@ public:
 	//10 = Combination circularization and node shift
 	//11 = Combination height maneuver and node shift
 	int GMPManeuverType;
-	COMBELEMENTS GMPCoe_before;
-	COMBELEMENTS GMPCoe_after;
+	GPMPRESULTS GMPResults;
 
 	//REFSMMAT PAGE
 	double REFSMMATTime;
