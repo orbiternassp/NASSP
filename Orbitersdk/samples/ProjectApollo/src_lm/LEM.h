@@ -1759,6 +1759,8 @@ protected:
 	LEM_ECS ecs;
 	LEMPressureSwitch CabinPressureSwitch;
 	LEMPressureSwitch SuitPressureSwitch;
+	LEMSuitIsolValve CDRIsolValve;
+	LEMSuitIsolValve LMPIsolValve;
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorA;
 	LEMSuitCircuitPressureRegulator SuitCircuitPressureRegulatorB;
 	LEMCabinRepressValve CabinRepressValve;
@@ -1884,6 +1886,7 @@ protected:
 	friend class RCS_TCA;
 	friend class LEM_ECS;
 	friend class LEMCabinRepressValve;
+	friend class LEMSuitIsolValve;
 	friend class LEMDigitalHeliumPressureMeter;
 	friend class EngineStopButton;
 	friend class EngineStartButton;

@@ -117,6 +117,20 @@ protected:
 	bool PressureSwitch;
 };
 
+class LEMSuitIsolValve
+{
+public:
+	LEMSuitIsolValve();
+	void Init(LEM *l, RotationalSwitch *scv, ToggleSwitch *ovrd);
+	void SystemTimestep(double simdt);
+
+protected:
+	LEM *lem;
+	RotationalSwitch *suitisolvlv;
+	ToggleSwitch *actuatorovrdswitch;
+
+};
+
 class LEMCabinRepressValve
 {
 public:

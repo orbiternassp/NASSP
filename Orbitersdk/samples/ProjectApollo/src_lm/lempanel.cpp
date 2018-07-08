@@ -903,13 +903,13 @@ void LEM::InitSwitches() {
 
 	IntlkOvrd.Register(PSH, "InterlockOvrd", 0);
 
-    CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", 0);
+    CDRActuatorOvrd.Register(PSH, "CDRActuatorOvrd", TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 
 	LMPSuitIsolValve.AddPosition(0, 0);
 	LMPSuitIsolValve.AddPosition(1, 90);
 	LMPSuitIsolValve.Register(PSH, "LMPSuitIsolValve", 1);
 
-    LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", 0);
+    LMPActuatorOvrd.Register(PSH, "LMPActuatorOvrd", TOGGLESWITCH_DOWN, SPRINGLOADEDSWITCH_DOWN);
 
 	SecEvapFlowValve.AddPosition(0, 0);
 	SecEvapFlowValve.AddPosition(1, 270);
@@ -1865,7 +1865,7 @@ bool LEM::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea(IDB_LEM_SGD_LEVER,         _R( 204,  129,  204+126,  129+131), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
         oapiRegisterPanelArea(AID_LEM_ECS_OCM,           _R( 640,  160,     1290,      520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
-        oapiRegisterPanelArea(IDB_LEM_ISOL_ROTARY,       _R( 820,  630,     1372,      870), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
+        oapiRegisterPanelArea(AID_LEM_ISOL_ROTARY,       _R( 820,  630,     1372,      870), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,  PANEL_MAP_BACKGROUND);
         oapiRegisterPanelArea(AID_LEM_ECS_WCM,           _R(  40,  410,      440,     1296), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
         oapiRegisterPanelArea(AID_LEM_ASC_H2O,           _R( 597,  634,      712,      750), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
         oapiRegisterPanelArea(AID_LEM_GARMENT_COOL,      _R( 604, 1078,  604+115, 1078+115), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                 PANEL_MAP_BACKGROUND);
@@ -2673,11 +2673,13 @@ void LEM::SetSwitches(int panel) {
     ASCO2Valve2.Init(342, 162, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], OxygenControlSwitchRow, &IntlkOvrd, &DESO2Valve);
     IntlkOvrd.Init(234, 73, 68, 68, srf[SRF_LEM_INTLK_OVRD], srf[SRF_BORDER_68x68], OxygenControlSwitchRow);
 
-    SuitIsolSwitchRow.Init(IDB_LEM_ISOL_ROTARY, MainPanel);
+    SuitIsolSwitchRow.Init(AID_LEM_ISOL_ROTARY, MainPanel);
     CDRSuitIsolValve.Init(22, 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], srf[SRF_BORDER_169x168], SuitIsolSwitchRow);
     CDRActuatorOvrd.Init(204, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], srf[SRF_BORDER_67x64], SuitIsolSwitchRow);
+	CDRActuatorOvrd.SetDelayTime(1);
     LMPSuitIsolValve.Init(22+281 , 59, 169, 168, srf[SRF_LEM_ISOL_ROTARY], srf[SRF_BORDER_169x168], SuitIsolSwitchRow);
     LMPActuatorOvrd.Init(485, 60, 67, 64, srf[SRF_LEM_ACT_OVRD], srf[SRF_BORDER_67x64], SuitIsolSwitchRow);
+	LMPActuatorOvrd.SetDelayTime(1);
 
     WaterControlSwitchRow.Init(AID_LEM_ECS_WCM, MainPanel);
     SecEvapFlowValve.Init(74, 30, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
