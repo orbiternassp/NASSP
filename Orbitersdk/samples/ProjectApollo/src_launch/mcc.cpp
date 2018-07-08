@@ -3351,6 +3351,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
+	if (upDescr[0]) { SAVE_STRING("MCC_upDescr", upDescr); }
 	// Done
 	oapiWriteLine(scn, MCC_END_STRING);
 }
@@ -3734,6 +3735,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
+		LOAD_STRING("MCC_upDescr", upDescr, 1024);
 	}
 
 	if (upString[0] != 0) {

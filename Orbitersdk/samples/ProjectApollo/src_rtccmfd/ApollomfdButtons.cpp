@@ -145,7 +145,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Next Item", 0, 'N' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "Altitude reference", 0, 'R' },
+		{ "", 0, ' ' },
 
 		{ "Calculate", 0, 'C' },
 		{ "", 0, ' ' },
@@ -162,7 +162,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction(">>", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleGMPMarkerUp);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("ALT", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleOrbAdjAltRef);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::OrbAdjCalc);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);

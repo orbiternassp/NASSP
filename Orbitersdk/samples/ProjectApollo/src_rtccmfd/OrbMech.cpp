@@ -365,6 +365,11 @@ double kepler_U(double dt, double ro, double vro, double a, double mu, double x0
 	return x;
 }
 
+double kepler_U_equation(double x, double ro, double vro, double a, double mu)
+{
+	return (ro*vro / sqrt(mu)*x*x*stumpC(a*x*x) + (1.0 - a * ro)*x*x*x*stumpS(a*x*x) + ro * x) / sqrt(mu);
+}
+
 double stumpS(double z)
 {
 	double s;
@@ -2742,7 +2747,7 @@ double timetoperi(VECTOR3 R, VECTOR3 V, double mu)
 
 	r0 = length(R);
 	vr0 = dotp(R, V) / r0;
-	return 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1.0 - alpha*r0)*OrbMech::power(chi, 3.0) * stumpS(alpha*chi*chi) + r0*chi);
+	return kepler_U_equation(chi, r0, vr0, alpha, mu);
 }
 
 double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s)
@@ -2765,7 +2770,7 @@ double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s)
 
 	r0 = length(R);
 	vr0 = dotp(R, V) / r0;
-	dt = 1.0 / sqrt(mu)*(r0*vr0 / sqrt(mu)*chi*chi*stumpC(alpha*chi*chi) + (1.0 - alpha*r0)*OrbMech::power(chi, 3.0) * stumpS(alpha*chi*chi) + r0*chi);
+	dt = kepler_U_equation(chi, r0, vr0, alpha, mu);
 
 	if (s == 0 || dt >= 0)
 	{
@@ -2892,7 +2897,7 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 		x = sqrt(a)*(dE);
 	}
 
-	dt = (r0*vr0 / sqrt(mu)*x*x*stumpC(alpha*x*x) + (1.0 - alpha*r0)*x*x*x*stumpS(alpha*x*x) + r0*x) / sqrt(mu);
+	dt = kepler_U_equation(x, r0, vr0, alpha, mu);
 	return dt;
 }
 

@@ -26,8 +26,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include <vector>
 
-struct COMBELEMENTS;
-
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"
 
@@ -891,6 +889,28 @@ struct LVDCTLIparam
 	double T_ST;
 };
 
+struct GPMPRESULTS
+{
+	double GET_A;
+	double HA;
+	double long_A;	//longitude of apoapsis
+	double lat_A;	//latitude of apoapsis
+	double GET_P;
+	double HP;
+	double long_P;	//longitude of periapsis
+	double lat_P;	//latitude of periapsis
+	double A;
+	double E;
+	double I;
+	double Node_Ang;
+	double Del_G;
+	double Pitch_Man;
+	double Yaw_Man;
+	double H_Man;
+	double long_Man;
+	double lat_Man;
+};
+
 class RTCC {
 
 	friend class MCC;
@@ -928,7 +948,7 @@ public:
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
-	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, COMBELEMENTS &coe_before, COMBELEMENTS &coe_after);
+	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, GPMPRESULTS &res);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
 	void NavCheckPAD(SV sv, AP7NAV &pad, double GETbase, double GET = 0.0);
 	void AGSStateVectorPAD(AGSSVOpt *opt, AP11AGSSVPAD &pad);
@@ -974,6 +994,13 @@ public:
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
+	//option: 0 = propagate to specified MJD, 1 = to mean anomaly, 2 = to argument of latitude
+	SV GeneralTrajectoryPropagation(SV sv0, int opt, double param);
+	void ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p);
+	VECTOR3 HeightManeuverInteg(SV sv0, double dh);
+	VECTOR3 ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD);
+	VECTOR3 CircularizationManeuverInteg(SV sv0);
+	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
