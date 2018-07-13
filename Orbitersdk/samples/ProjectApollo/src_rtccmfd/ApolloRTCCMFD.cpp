@@ -1220,7 +1220,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 
 		skp->Text(1 * W / 8, 8 * H / 14, "Sxt/Star Check:", 15);
-		sprintf(Buffer, "%.0f min", G->sxtstardtime);
+		sprintf(Buffer, "%.0f min", -G->sxtstardtime / 60.0);
 		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(1 * W / 8, 10 * H / 14, "Uplink in LOS:", 14);
@@ -4266,7 +4266,7 @@ bool SextantStarTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_sextantstartime(double time)
 {
-	G->sxtstardtime = time;
+	G->sxtstardtime = -time * 60.0;
 }
 
 void ApolloRTCCMFD::REFSMMATTimeDialogue()
