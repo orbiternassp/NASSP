@@ -2449,6 +2449,7 @@ void Saturn::ClearPanelSDKPointers()
 	pSuitTestFlow = 0;
 	pCabinRepressFlow = 0;
 	pEmergencyCabinRegulatorFlow = 0;
+	pO2FlowXducer = 0;
 	pO2Tank1Press = 0;
 	pO2Tank2Press = 0;
 	pH2Tank1Press = 0;
@@ -2627,6 +2628,15 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 		atm.EmergencyCabinRegulatorFlowLBH = (*pEmergencyCabinRegulatorFlow) * LBH;
 	}
 
+	if (!pO2FlowXducer)
+	{
+		pO2FlowXducer = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MAINREGULATOROUTLET:FLOW");
+	}
+	if (pO2FlowXducer) 
+	{
+		atm.O2FlowXducerLBH = (*pO2FlowXducer) * LBH;
+	}
+
 	if (!pCSMTunnelPressure)
 	{
 		pCSMTunnelPressure = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:PRESS");
@@ -2636,7 +2646,8 @@ void Saturn::GetAtmosStatus(AtmosStatus &atm)
 		atm.TunnelPressurePSI = (*pCSMTunnelPressure)*PSI;
 	}
 
-	//sprintf(oapiDebugString(), "CabinReg %lf O2Demand %lf Direct %lf SuitTest %lf CabRepress %lf Emerg %lf", atm.CabinRegulatorFlowLBH, atm.O2DemandFlowLBH, atm.DirectO2FlowLBH, atm.SuitTestFlowLBH, atm.CabinRepressFlowLBH, atm.EmergencyCabinRegulatorFlowLBH);
+	//double *o2supplypress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2SUPPLYMANIFOLD:PRESS");
+	//sprintf(oapiDebugString(), "CabinReg %lf O2Demand %lf Direct %lf SuitTest %lf CabRepress %lf Emerg %lf FlowXDR %lf SupplyPress %lf", atm.CabinRegulatorFlowLBH, atm.O2DemandFlowLBH, atm.DirectO2FlowLBH, atm.SuitTestFlowLBH, atm.CabinRepressFlowLBH, atm.EmergencyCabinRegulatorFlowLBH, atm.O2FlowXducerLBH, *o2supplypress*PSI);
 }
 
 
