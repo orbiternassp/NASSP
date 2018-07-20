@@ -159,6 +159,7 @@
 #define PT_TORQANG			18
 #define PT_AP9LMTPI			19
 #define PT_AP9LMCDH			20
+#define PT_S065UPDATE		21
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -449,6 +450,15 @@
 #define MST_D_DAY7STATE1	100
 #define MST_D_DAY7STATE2	101
 #define MST_D_DAY7STATE3	102
+#define MST_D_DAY7STATE4	103
+#define MST_D_DAY7STATE5	104
+#define MST_D_DAY7STATE6	105
+#define MST_D_DAY7STATE7	106
+#define MST_D_DAY7STATE8	107
+#define MST_D_DAY7STATE9	108
+#define MST_D_DAY7STATE10	109
+#define MST_D_DAY7STATE11	110
+#define MST_D_DAY8STATE1	120
 
 // MISSION STATES: MISSION F
 #define MST_F_INSERTION		10
@@ -1014,6 +1024,20 @@ struct AP9AOTSTARPAD
 	int Detent;		//AOT detent position to be used
 	int Star;		//Nav star to be used for test
 	VECTOR3 CSMAtt;	//Inertial CSM attitude
+};
+
+//APOLLO 9 CSM S065 PHOTOGRAPHY UPDATE
+
+struct S065UPDATE
+{
+	char Area[4][16];			//Site number or name of area to be photographed
+	VECTOR3 FDAIAngles[4];		//FDAI Angles required to place the S/C at proper attitude for the pass
+	double GETStart[4];			//Time to maneuver S/C to proper attitude to begin pass (5 minutes before the first exposure is made)
+	double TAlign[4];			//Align time for nominal IMU orientation prior to the experiment (if required)
+	double ExposureInterval[4];	//Time interval between exposures
+	int ExposureNum[4];			//Number of exposures to be made over the site or area
+	bool OrbRate[4];			//Whether the pass is to be made in orbit rate (for long passes over large areas) 
+								//or in inertial attitude hold (for short passes over individual sites)
 };
 
 //GYRO TORQUING ANGLES

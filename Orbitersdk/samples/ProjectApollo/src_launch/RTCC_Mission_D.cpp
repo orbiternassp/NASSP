@@ -1280,7 +1280,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double lng[] = { -68.2*RAD, -33.0*RAD, -32.9*RAD, -69.0*RAD, -170.5*RAD, -170.5*RAD, -170.5*RAD, -160.0*RAD };
 		double GETI[] = { OrbMech::HHMMSSToSS(117,39,36),OrbMech::HHMMSSToSS(119,17,43),OrbMech::HHMMSSToSS(120,52,15),OrbMech::HHMMSSToSS(122,17,41), 
 			OrbMech::HHMMSSToSS(125, 3, 53), OrbMech::HHMMSSToSS(126, 36, 9), OrbMech::HHMMSSToSS(128, 9, 44), OrbMech::HHMMSSToSS(129, 46, 43) };
-		std::string area[] = { "075-1A", "076-2B", "77-2B", "78-1A", "79-4A", "80-4B", "81-4A", "82-DC" };
+		std::string area[] = { "075-1A", "076-2B", "077-2B", "078-1A", "079-4A", "080-4B", "081-4A", "082-DC" };
 
 		opt.area.assign(area, area + n);
 		opt.GETI.assign(GETI, GETI + n);
@@ -1335,7 +1335,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.HeadsUp = false;
 		opt.navcheckGET = P30TIG - 30.0*60.0;
 		opt.REFSMMAT = REFSMMAT;
-		opt.sxtstardtime = -30.0*60.0;
+		opt.sxtstardtime = -15.0*60.0;
 		opt.TIG = P30TIG;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 1;
@@ -1352,6 +1352,284 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM state vector, Verb 66, target load");
 		}
+	}
+	break;
+	case 46: //S065 PHOTOGRAPHY UPDATE 1
+	case 47: //S065 PHOTOGRAPHY UPDATE 2
+	{
+		S065UPDATE * form = (S065UPDATE *)pad;
+
+		SV sv0, sv1, sv2;
+		MATRIX3 REFSMMAT, M_R;
+		VECTOR3 Att, UX, UY, UZ;
+		double GETbase, GET_AOS, GET_LOS, dt;
+
+
+		for (int i = 0;i < 4;i++)
+		{
+			strcpy(form->Area[i], "");
+		}
+
+		sv0 = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+
+		if (fcn == 46)
+		{
+			dt = OrbMech::HHMMSSToSS(124, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			sv1 = coast(sv0, dt);
+
+			FindRadarAOSLOS(sv1, GETbase, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
+			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			form->OrbRate[0] = true;
+			form->OrbRate[2] = true;
+
+			sprintf(form->Area[1], "SW US");
+			form->GETStart[1] = GET_AOS;
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 25;
+
+			FindRadarAOSLOS(sv1, GETbase, 29.6667*RAD, -95.1667*RAD, GET_AOS, GET_LOS);
+			sprintf(form->Area[2], "Houston");
+			form->GETStart[2] = GET_AOS;
+			form->ExposureInterval[2] = 6.0;
+			form->ExposureNum[2] = 3;
+		}
+		else
+		{
+			dt = OrbMech::HHMMSSToSS(125, 40, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			sv1 = coast(sv0, dt);
+
+			FindRadarAOSLOS(sv1, GETbase, 19.3*RAD, -99.6667*RAD, GET_AOS, GET_LOS);
+			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			form->OrbRate[0] = true;
+			form->OrbRate[2] = true;
+
+			sprintf(form->Area[1], "Mexico");
+			form->GETStart[1] = GET_AOS;
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 15;
+		}
+
+		sv2 = coast(sv1, form->GETStart[0] - OrbMech::GETfromMJD(sv1.MJD, GETbase));
+
+		UY = unit(crossp(sv2.V, -sv2.R));
+		UZ = unit(sv2.R);
+		UX = crossp(UY, UZ);
+
+		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+		Att = OrbMech::CALCGAR(REFSMMAT, M_R);
+
+		form->FDAIAngles[0] = Att * DEG;
+	}
+	break;
+	case 48: //BLOCK DATA 14
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 8;
+		double lng[] = { 148.0*RAD, 138.0*RAD, -161.0*RAD, -28.0*RAD, -32.0*RAD, -30.0*RAD, -30.0*RAD, -66.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(131,8,49),OrbMech::HHMMSSToSS(132,40,27),OrbMech::HHMMSSToSS(134,32,19),OrbMech::HHMMSSToSS(135,5,33),
+			OrbMech::HHMMSSToSS(136, 40, 9), OrbMech::HHMMSSToSS(138, 15, 36), OrbMech::HHMMSSToSS(139, 49, 30), OrbMech::HHMMSSToSS(141, 14, 42) };
+		std::string area[] = { "083-CC", "084-CC", "085-CC", "086-AC", "087-AC", "088-2A", "089-2B", "090-1B" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 49: //BLOCK DATA 15
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 8;
+		double lng[] = { -68.0*RAD, -62.5*RAD, -68.0*RAD, -164.9*RAD, -164.0*RAD, -165.0*RAD, -161.0*RAD, -171.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(142,44,15),OrbMech::HHMMSSToSS(144,19,36),OrbMech::HHMMSSToSS(145,52,18),OrbMech::HHMMSSToSS(148,36,40),
+			OrbMech::HHMMSSToSS(150, 10, 27), OrbMech::HHMMSSToSS(151, 44, 0), OrbMech::HHMMSSToSS(153, 19, 44), OrbMech::HHMMSSToSS(154, 51, 55) };
+		std::string area[] = { "091-1B", "092-1B", "093-1A", "094-4B", "095-4B", "096-4A", "097-CC", "098-CC" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 50: //LANDMARK TRACKING T ALIGN
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		SV sv0, sv1;
+		OBJHANDLE hSun;
+		double GETbase, dt, t_align;
+		char buff[64], buffer1[1000];
+
+		GETbase = getGETBase();
+		sv0 = StateVectorCalc(calcParams.src);
+		sv1 = coast(sv0, OrbMech::HHMMSSToSS(142, 50, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+		hSun = oapiGetObjectByName("Sun");
+
+		dt = OrbMech::sunrise(sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false);
+		t_align = OrbMech::GETfromMJD(sv1.MJD, GETbase) + dt;
+
+		OrbMech::format_time_HHMMSS(buff, t_align);
+		sprintf(form->paddata, "T Align is %s GET", buff);
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
+
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66");
+		}
+	}
+	break;
+	case 51: //LANDMARK TRACKING UPDATE 1
+	case 52: //LANDMARK TRACKING UPDATE 2
+	case 53: //LANDMARK TRACKING UPDATE 3
+	case 54: //LANDMARK TRACKING UPDATE 4
+	{
+		LMARKTRKPADOpt opt;
+
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
+
+		opt.GETbase = getGETBase();
+		opt.vessel = calcParams.src;
+
+		if (fcn == 51)
+		{
+			sprintf(form->LmkID[0], "021");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(142, 30, 0);
+			opt.alt[0] = 0.0;
+			opt.lat[0] = 27.689*RAD;
+			opt.lng[0] = -97.243*RAD;
+
+			sprintf(form->LmkID[1], "207");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(143, 0, 0);
+			opt.alt[1] = 0.0;
+			opt.lat[1] = 23.617*RAD;
+			opt.lng[1] = -15.985*RAD;
+
+			sprintf(form->LmkID[2], "255");
+			opt.LmkTime[2] = OrbMech::HHMMSSToSS(143, 10, 0);
+			opt.alt[2] = 0.0;
+			opt.lat[2] = -3.362*RAD;
+			opt.lng[2] = 29.281*RAD;
+
+			opt.entries = 3;
+		}
+		else if (fcn == 52)
+		{
+			sprintf(form->LmkID[0], "010");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(144, 10, 0);
+			opt.alt[0] = 0.0;
+			opt.lat[0] = 28.876*RAD;
+			opt.lng[0] = -112.584*RAD;
+
+			sprintf(form->LmkID[1], "042");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(144, 15, 0);
+			opt.alt[1] = 0.0;
+			opt.lat[1] = 33.840*RAD;
+			opt.lng[1] = -77.962*RAD;
+
+			sprintf(form->LmkID[2], "212");
+			opt.LmkTime[2] = OrbMech::HHMMSSToSS(144, 20, 0);
+			opt.alt[2] = 0.0;
+			opt.lat[2] = 9.451*RAD;
+			opt.lng[2] = -13.831*RAD;
+
+			sprintf(form->LmkID[3], "222");
+			opt.LmkTime[3] = OrbMech::HHMMSSToSS(144, 25, 0);
+			opt.alt[3] = 0.0;
+			opt.lat[3] = -8.758*RAD;
+			opt.lng[3] = 13.266*RAD;
+
+			opt.entries = 4;
+		}
+		else if (fcn == 53)
+		{
+			sprintf(form->LmkID[0], "002");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(145, 30, 0);
+			opt.alt[0] = 0.0;
+			opt.lat[0] = 21.161*RAD;
+			opt.lng[0] = -156.713*RAD;
+
+			sprintf(form->LmkID[1], "005");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(145, 45, 0);
+			opt.alt[1] = 0.0;
+			opt.lat[1] = 33.479*RAD;
+			opt.lng[1] = -118.606*RAD;
+
+			sprintf(form->LmkID[2], "044");
+			opt.LmkTime[2] = OrbMech::HHMMSSToSS(145, 50, 0);
+			opt.alt[2] = 0.0;
+			opt.lat[2] = 31.150*RAD;
+			opt.lng[2] = -81.395*RAD;
+
+			/*sprintf(form->LmkID[3], "049");
+			opt.LmkTime[3] = OrbMech::HHMMSSToSS(145, 55, 0);
+			opt.alt[3] = 0.0;
+			opt.lat[3] = 26.694*RAD;
+			opt.lng[3] = -78.978*RAD;*/
+
+			opt.entries = 3;
+		}
+		else if (fcn == 54)
+		{
+			sprintf(form->LmkID[0], "006");
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(147, 0, 0);
+			opt.alt[0] = 0.0;
+			opt.lat[0] = 32.665*RAD;
+			opt.lng[0] = -117.242*RAD;
+
+			sprintf(form->LmkID[1], "020");
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(147, 5, 0);
+			opt.alt[1] = 0.0;
+			opt.lat[1] = 29.263*RAD;
+			opt.lng[1] = -94.859*RAD;
+
+			sprintf(form->LmkID[2], "067");
+			opt.LmkTime[2] = OrbMech::HHMMSSToSS(147, 10, 0);
+			opt.alt[2] = 0.0;
+			opt.lat[2] = 17.812*RAD;
+			opt.lng[2] = -71.654*RAD;
+
+			sprintf(form->LmkID[3], "139");
+			opt.LmkTime[3] = OrbMech::HHMMSSToSS(147, 15, 0);
+			opt.alt[3] = 0.0;
+			opt.lat[3] = -3.699*RAD;
+			opt.lng[3] = -38.482*RAD;
+
+			opt.entries = 4;
+		}
+
+		LandmarkTrackingPAD(&opt, *form);
+	}
+	break;
+	case 55: //BLOCK DATA 16
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 6;
+		double lng[] = { -143.0*RAD, -161.0*RAD, -30.0*RAD, -32.0*RAD, -30.0*RAD, -59.5*RAD};
+		double GETI[] = { OrbMech::HHMMSSToSS(156, 15, 41),OrbMech::HHMMSSToSS(158, 6, 17),OrbMech::HHMMSSToSS(158, 40, 36),OrbMech::HHMMSSToSS(160, 15, 37),
+			OrbMech::HHMMSSToSS(161, 50, 48), OrbMech::HHMMSSToSS(163, 17, 18)};
+		std::string area[] = { "099-CC", "100-CC", "101-AC", "102-AC", "103-2A", "104-1B" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
 	}
 	break;
 	}

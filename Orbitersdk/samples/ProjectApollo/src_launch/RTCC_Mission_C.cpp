@@ -759,7 +759,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.HeadsUp = true;
 		opt.navcheckGET = 120.0*3600.0;
 		opt.REFSMMAT = REFSMMAT;
-		opt.sxtstardtime = -25.0*3600.0;
+		opt.sxtstardtime = -25.0*60.0;
 		opt.TIG = P30TIG;
 		opt.vessel = calcParams.src;
 

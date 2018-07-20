@@ -2115,20 +2115,53 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY6STATE1: //Block Data 13 to SPS-6 Update
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 119.0*3600.0 + 40.0*60.0, 44, MST_D_DAY6STATE2);
 				break;
-			case MST_D_DAY6STATE2: //SPS-6 Update to state vector update
-				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 126.0*3600.0 + 50.0*60.0, 45, MST_D_DAY6STATE5);
+			case MST_D_DAY6STATE2: //SPS-6 Update to S065 Update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 123.0*3600.0 + 30.0*60.0, 45, MST_D_DAY6STATE3);
+				break;
+			case MST_D_DAY6STATE3: //S065 Update to S065 Update
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 125.0*3600.0 + 5.0*60.0, 46, MST_D_DAY6STATE4);
+				break;
+			case MST_D_DAY6STATE4: //S065 Update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 126.0*3600.0 + 50.0*60.0, 47, MST_D_DAY6STATE5);
 				break;
 			case MST_D_DAY6STATE5: //State vector update to Block Data 14
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 128.0*3600.0 + 35.0*60.0, 2, MST_D_DAY6STATE6);
 				break;
 			case MST_D_DAY6STATE6: //Block Data 14 to Block Data 15
-				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 140.0*3600.0 + 5.0*60.0, 46, MST_D_DAY7STATE1);
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 140.0*3600.0 + 5.0*60.0, 48, MST_D_DAY7STATE1);
 				break;
 			case MST_D_DAY7STATE1: //Block Data 15 to Landmark Tracking Align update
-				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 141.0*3600.0 + 35.0*60.0, 47, MST_D_DAY7STATE2);
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 141.0*3600.0 + 35.0*60.0, 49, MST_D_DAY7STATE2);
 				break;
 			case MST_D_DAY7STATE2: //Landmark Tracking Align update to Landmark Tracking Update
-				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 142.0*3600.0 + 35.0*60.0, 48, MST_D_DAY7STATE3);
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 142.0*3600.0 + 32.0*60.0, 50, MST_D_DAY7STATE3);
+				break;
+			case MST_D_DAY7STATE3: //Landmark tracking update to landmark tracking update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, cm->MissionTime > 143.0*3600.0 + 15.0*60.0, 51, MST_D_DAY7STATE4);
+				break;
+			case MST_D_DAY7STATE4: //Landmark tracking update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, cm->MissionTime > 144.0*3600.0 + 5.0*60.0, 52, MST_D_DAY7STATE5);
+				break;
+			case MST_D_DAY7STATE5: //State vector update to landmark tracking update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 144.0*3600.0 + 35.0*60.0, 2, MST_D_DAY7STATE6);
+				break;
+			case MST_D_DAY7STATE6: //Landmark tracking update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, cm->MissionTime > 145.0*3600.0 + 35.0*60.0, 53, MST_D_DAY7STATE7);
+				break;
+			case MST_D_DAY7STATE7: //State vector update to landmark tracking update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 146.0*3600.0 + 5.0*60.0, 2, MST_D_DAY7STATE8);
+				break;
+			case MST_D_DAY7STATE8: //Landmark tracking update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, cm->MissionTime > 147.0*3600.0 + 5.0*60.0, 54, MST_D_DAY7STATE9);
+				break;
+			case MST_D_DAY7STATE9: //State vector update to state vector update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 148.0*3600.0 + 50.0*60.0, 2, MST_D_DAY7STATE10);
+				break;
+			case MST_D_DAY7STATE10: //State vector update to Block Data 16
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 151.0*3600.0 + 30.0*60.0, 2, MST_D_DAY7STATE11);
+				break;
+			case MST_D_DAY7STATE11: //Block Data 16 to Block Data 17
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 162.0*3600.0 + 5.0*60.0, 55, MST_D_DAY8STATE1);
 				break;
 			}
 			break;
@@ -3348,6 +3381,29 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP9LMCDH_Vg", form->Vg);
 			SAVE_V3("MCC_AP9LMCDH_Vg_AGS", form->Vg_AGS);
 		}
+		else if (padNumber == PT_S065UPDATE)
+		{
+			char tmpbuf[64];
+			S065UPDATE *form = (S065UPDATE*)padForm;
+
+			for (int i = 0;i < 4;i++)
+			{
+				sprintf(tmpbuf, "MCC_S065UPDATE_Area[%d]", i);
+				SAVE_STRING(tmpbuf, form->Area[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_ExposureInterval[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->ExposureInterval[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_ExposureNum[%d]", i);
+				SAVE_INT(tmpbuf, form->ExposureNum[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_FDAIAngles[%d]", i);
+				SAVE_V3(tmpbuf, form->FDAIAngles[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_GETStart[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->GETStart[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_OrbRate[%d]", i);
+				SAVE_BOOL(tmpbuf, form->OrbRate[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_TAlign[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->TAlign[i]);
+			}
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -3733,6 +3789,28 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_AP9LMCDH_Vg", form->Vg);
 			LOAD_V3("MCC_AP9LMCDH_Vg_AGS", form->Vg_AGS);
 		}
+		else if (padNumber == PT_S065UPDATE)
+		{
+			S065UPDATE *form = (S065UPDATE*)padForm;
+
+			for (int i = 0;i < 4;i++)
+			{
+				sprintf(tmpbuf, "MCC_S065UPDATE_Area[%d]", i);
+				LOAD_STRING(tmpbuf, form->Area[i], 16);
+				sprintf(tmpbuf, "MCC_S065UPDATE_ExposureInterval[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->ExposureInterval[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_ExposureNum[%d]", i);
+				LOAD_INT(tmpbuf, form->ExposureNum[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_FDAIAngles[%d]", i);
+				LOAD_V3(tmpbuf, form->FDAIAngles[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_GETStart[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->GETStart[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_OrbRate[%d]", i);
+				LOAD_BOOL(tmpbuf, form->OrbRate[i]);
+				sprintf(tmpbuf, "MCC_S065UPDATE_TAlign[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->TAlign[i]);
+			}
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 		LOAD_STRING("MCC_upDescr", upDescr, 1024);
@@ -3803,6 +3881,11 @@ void MCC::drawPad(){
 				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s %s WX    \n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
+
+			//ofstream myfile;
+			//myfile.open("MCCDebugging.txt");
+			//myfile << buffer;
+			//myfile.close();
 		}
 		break;
 	case PT_P27PAD:
@@ -4119,6 +4202,47 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_S065UPDATE:
+	{
+		S065UPDATE * form = (S065UPDATE *)padForm;
+		int hh[4], mm[4], hh2[4], mm2[4];
+		double ss[4], ss2[4];
+
+		sprintf(buffer, "S065 UPDATE");
+
+		for (int i = 0;i < 2;i++)
+		{
+			SStoHHMMSS(form->GETStart[2 * i], hh[2 * i], mm[2 * i], ss[2 * i]);
+			SStoHHMMSS(form->GETStart[2 * i + 1], hh[2 * i + 1], mm[2 * i + 1], ss[2 * i + 1]);
+			SStoHHMMSS(form->TAlign[2 * i], hh2[2 * i], mm2[2 * i], ss2[2 * i]);
+			SStoHHMMSS(form->TAlign[2 * i + 1], hh2[2 * i + 1], mm2[2 * i + 1], ss2[2 * i + 1]);
+
+			sprintf(buffer, "%s\n%s %s SITE (OR AREA)\n%06.2f %06.2f R FDAI\n%06.2f %06.2f P\n%06.2f %06.2f Y\nXX%03d XX%03d GET START\n"
+				"XXX%02d XXX%02d MIN (5 MIN PRIOR TO)\nXXX%02.0f XXX%02.0f SEC (FIRST EXPOSURE)\nXX%03d XX%03d T ALIGN\nXXX%02d XXX%02d MIN (IF REQ)\n"
+				"XXX%02.0f XXX%02.0f SEC\nXXX%02.0f XXX%02.0f EXPOSURE INTER-SEC\nXX%03d XX%03d NUMBER OF EXPOSURES\n",
+				buffer, form->Area[2 * i], form->Area[2 * i + 1], form->FDAIAngles[2 * i].x, form->FDAIAngles[2 * i + 1].x, form->FDAIAngles[2 * i].y, 
+				form->FDAIAngles[2 * i + 1].y, form->FDAIAngles[2 * i].z, form->FDAIAngles[2 * i + 1].z, hh[2 * i], hh[2 * i + 1], mm[2 * i], mm[2 * i + 1], 
+				ss[2 * i], ss[2 * i + 1], hh2[2 * i], hh2[2 * i + 1], mm2[2 * i], mm2[2 * i + 1], ss2[2 * i], ss2[2 * i + 1],
+				form->ExposureInterval[2 * i], form->ExposureInterval[2 * i + 1], form->ExposureNum[2 * i], form->ExposureNum[2 * i + 1]);
+
+			if (form->OrbRate[2 * i])
+			{
+				sprintf(buffer, "%sORB RATE X ATTITUDE CONTROL", buffer);
+			}
+			else
+			{
+				sprintf(buffer, "%sINERTIAL X ATTITUDE CONTROL", buffer);
+			}
+		}
+
+		oapiAnnotationSetText(NHpad, buffer);
+
+		//ofstream myfile;
+		//myfile.open("MCCDebugging.txt");
+		//myfile << buffer;
+		//myfile.close();
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -4207,6 +4331,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP9LMCDH: // AP9LMCDH
 		padForm = calloc(1, sizeof(AP9LMCDH));
+		break;
+	case PT_S065UPDATE: // S065UPDATE
+		padForm = calloc(1, sizeof(S065UPDATE));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));
