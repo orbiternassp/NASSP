@@ -2134,7 +2134,34 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 141.0*3600.0 + 35.0*60.0, 49, MST_D_DAY7STATE2);
 				break;
 			case MST_D_DAY7STATE2: //Landmark Tracking Align update to Landmark Tracking Update
-				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 142.0*3600.0 + 35.0*60.0, 50, MST_D_DAY7STATE3);
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 142.0*3600.0 + 32.0*60.0, 50, MST_D_DAY7STATE3);
+				break;
+			case MST_D_DAY7STATE3: //Landmark tracking update to landmark tracking update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, cm->MissionTime > 143.0*3600.0 + 15.0*60.0, 51, MST_D_DAY7STATE4);
+				break;
+			case MST_D_DAY7STATE4: //Landmark tracking update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, cm->MissionTime > 144.0*3600.0 + 5.0*60.0, 52, MST_D_DAY7STATE5);
+				break;
+			case MST_D_DAY7STATE5: //State vector update to landmark tracking update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 144.0*3600.0 + 35.0*60.0, 2, MST_D_DAY7STATE6);
+				break;
+			case MST_D_DAY7STATE6: //Landmark tracking update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, cm->MissionTime > 145.0*3600.0 + 35.0*60.0, 53, MST_D_DAY7STATE7);
+				break;
+			case MST_D_DAY7STATE7: //State vector update to landmark tracking update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 146.0*3600.0 + 5.0*60.0, 2, MST_D_DAY7STATE8);
+				break;
+			case MST_D_DAY7STATE8: //Landmark tracking update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, cm->MissionTime > 147.0*3600.0 + 5.0*60.0, 54, MST_D_DAY7STATE9);
+				break;
+			case MST_D_DAY7STATE9: //State vector update to state vector update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 148.0*3600.0 + 50.0*60.0, 2, MST_D_DAY7STATE10);
+				break;
+			case MST_D_DAY7STATE10: //State vector update to Block Data 16
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 151.0*3600.0 + 30.0*60.0, 2, MST_D_DAY7STATE11);
+				break;
+			case MST_D_DAY7STATE11: //Block Data 16 to Block Data 17
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 162.0*3600.0 + 5.0*60.0, 55, MST_D_DAY8STATE1);
 				break;
 			}
 			break;
@@ -3854,6 +3881,11 @@ void MCC::drawPad(){
 				sprintf(buffer, "%sXX%s XX%s AREA\nXXX%+05.1f XXX%+05.1f LAT\nXX%+06.1f XX%+06.1f LONG\n%s %s GETI\nXXX%4.1f XXX%4.1f DVC\n%s %s WX    \n", buffer, form->Area[i], form->Area[i + 4], form->Lat[i], form->Lat[i + 4], form->Lng[i], form->Lng[i + 4], tmpbuf, tmpbuf2, form->dVC[i], form->dVC[i + 4], form->Wx[i], form->Wx[i + 4]);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
+
+			//ofstream myfile;
+			//myfile.open("MCCDebugging.txt");
+			//myfile << buffer;
+			//myfile.close();
 		}
 		break;
 	case PT_P27PAD:
@@ -4205,10 +4237,10 @@ void MCC::drawPad(){
 
 		oapiAnnotationSetText(NHpad, buffer);
 
-		ofstream myfile;
-		myfile.open("MCCDebugging.txt");
-		myfile << buffer;
-		myfile.close();
+		//ofstream myfile;
+		//myfile.open("MCCDebugging.txt");
+		//myfile << buffer;
+		//myfile.close();
 	}
 	break;
 	case PT_GENERIC:

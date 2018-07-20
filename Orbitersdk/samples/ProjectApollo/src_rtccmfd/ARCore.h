@@ -30,6 +30,7 @@ struct ApolloRTCCMFDData {  // global data storage
 class ARCore {
 public:
 	ARCore(VESSEL* v);
+	~ARCore();
 	void lambertcalc();
 	void CDHcalc();
 	void OrbitAdjustCalc();

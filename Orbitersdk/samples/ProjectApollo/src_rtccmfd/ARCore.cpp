@@ -785,6 +785,11 @@ ARCore::ARCore(VESSEL* v)
 	DAP_PAD.YawTrim = 0.0;
 }
 
+ARCore::~ARCore()
+{
+	delete rtcc;
+}
+
 void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 {
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
