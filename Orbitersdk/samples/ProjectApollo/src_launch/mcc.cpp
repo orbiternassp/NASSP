@@ -2163,6 +2163,12 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY7STATE11: //Block Data 16 to Block Data 17
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 162.0*3600.0 + 5.0*60.0, 55, MST_D_DAY8STATE1);
 				break;
+			case MST_D_DAY8STATE1: //Block Data 17 to SPS-7 Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 168.0*3600.0 + 10.0*60.0, 56, MST_D_DAY8STATE2);
+				break;
+			case MST_D_DAY8STATE2: //SPS-7 Update to S065 Update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 170.0*3600.0 + 35.0*60.0, 57, MST_D_DAY8STATE3);
+				break;
 			}
 			break;
 		case MTP_F:
