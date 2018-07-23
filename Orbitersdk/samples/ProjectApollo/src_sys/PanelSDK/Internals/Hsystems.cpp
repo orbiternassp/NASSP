@@ -1054,7 +1054,7 @@ h_Evaporator::h_Evaporator(char *i_name, int i_pump, therm_obj *i_target, double
 	tempControl = i_tempControl;
 }
 
-void h_Evaporator::refresh(double dt) {
+void h_Evaporator::refresh(double dt) {  //Need to look at these values (-0.11, 58.0 etc) and figure out why they were chosen
 
 	double steamUnderPressure = 0;
 

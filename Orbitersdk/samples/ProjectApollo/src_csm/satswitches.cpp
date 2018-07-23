@@ -678,9 +678,11 @@ double SaturnLeftO2FlowMeter::QueryValue()
 
 	// O2 main regulator output flow 
 	/// \todo Is this the correct flow for that meter? No documentation found yet...
-	
+	return atm.O2FlowXducerLBH;
+	/*
 	return atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH + 
 		   atm.SuitTestFlowLBH + atm.CabinRepressFlowLBH + atm.EmergencyCabinRegulatorFlowLBH;
+	*/
 }
 
 void SaturnLeftO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -717,8 +719,11 @@ double SaturnRightO2FlowMeter::QueryValue()
 	Sat->GetAtmosStatus(atm);
 
 	// O2 main regulator output flow 	
-	return atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH + 
-		   atm.SuitTestFlowLBH + atm.CabinRepressFlowLBH + atm.EmergencyCabinRegulatorFlowLBH;
+	return atm.O2FlowXducerLBH;
+	/*
+	return atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH +
+	atm.SuitTestFlowLBH + atm.CabinRepressFlowLBH + atm.EmergencyCabinRegulatorFlowLBH;
+	*/
 }
 
 void SaturnRightO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -980,7 +985,7 @@ bool DirectO2RotationalSwitch::SwitchTo(int newValue)
 	}
 	return false;
 }
-
+/*
 void DirectO2RotationalSwitch::CheckValve()
 
 {
@@ -1009,6 +1014,46 @@ void DirectO2RotationalSwitch::CheckValve()
 		Pipe->flowMax = 31.8 / LBH;		//0.53 lb/min
 
 	} else if (GetState() == 0) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 40.2 / LBH;		//0.67 lb/min
+	}
+}
+*/
+
+void DirectO2RotationalSwitch::CheckValve()
+
+{
+	if (GetState() == 6) {
+		Pipe->in->h_open = SP_VALVE_CLOSE;
+		Pipe->flowMax = 0;
+
+	}
+	else if (GetState() == 5) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.42 / LBH;  //0.007 lb/min
+
+	}
+	else if (GetState() == 4) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.78 / LBH;  //0.013 lb/min
+
+	}
+	else if (GetState() == 3) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 1.56 / LBH;  //0.026 lb/min
+
+	}
+	else if (GetState() == 2) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 24.6 / LBH;		//0.41 lb/min
+
+	}
+	else if (GetState() == 1) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 31.8 / LBH;		//0.53 lb/min
+
+	}
+	else if (GetState() == 0) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 40.2 / LBH;		//0.67 lb/min
 	}

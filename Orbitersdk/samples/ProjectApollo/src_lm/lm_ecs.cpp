@@ -385,7 +385,7 @@ void LEMSuitIsolValve::SystemTimestep(double simdt)
 	if (!suitisolvlv) return;
 
 	//Pressure Switch/Override Actuation (Suit Disconnect)
-	if (lem->ECS_SUIT_FLOW_CONT_CB.IsPowered() && (actuatorovrdswitch->GetState() == 1 || lem->SuitPressureSwitch.GetPressureSwitch() != 0))
+	if (suitisolvlv->GetState() == 0 && lem->ECS_SUIT_FLOW_CONT_CB.IsPowered() && (actuatorovrdswitch->GetState() == 1 || lem->SuitPressureSwitch.GetPressureSwitch() != 0))
 	{
 		suitisolvlv->SwitchTo(1); //Suit Disconnect
 	}
