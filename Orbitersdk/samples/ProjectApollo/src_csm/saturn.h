@@ -147,6 +147,7 @@ typedef struct {
 	double SuitTestFlowLBH;
 	double CabinRepressFlowLBH;
 	double EmergencyCabinRegulatorFlowLBH;
+	double O2FlowXducerLBH;
 	double O2RepressPressurePSI;
 	double TunnelPressurePSI;
 } AtmosStatus;
@@ -4287,6 +4288,7 @@ protected:
 	double *pSuitTestFlow;
 	double *pCabinRepressFlow;
 	double *pEmergencyCabinRegulatorFlow;
+	double *pO2FlowXducer;
 	double *pO2Tank1Press;
 	double *pO2Tank2Press;
 	double *pH2Tank1Press;

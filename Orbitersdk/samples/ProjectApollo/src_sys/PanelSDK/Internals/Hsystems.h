@@ -56,7 +56,7 @@ const double CRITICAL_T [MAX_SUB]=  {154.7,		33.2,		647.3,		126.2,		304.4,		256.
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 
-//base class for hydraulical objects
+//base class for hydraulic objects
 class h_substance
 { public:
     h_substance() {subst_type = 0; mass = 0; vapor_mass = 0; Q = 0;};
