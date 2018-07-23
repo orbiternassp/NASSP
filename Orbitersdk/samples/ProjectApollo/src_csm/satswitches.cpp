@@ -2319,52 +2319,42 @@ void CSMLMPowerSwitch::LoadState(char *line)
 
 }
 
-bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my)
-
+bool CSMLMPowerSwitch::SwitchTo(int newState, bool dontspring)
 {
-	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
+	if (SaturnThreePosSwitch::SwitchTo(newState, dontspring)) {
 		// First -- Are we docked?
-		if(sat->dockingprobe.IsHardDocked() == false){ return true; }
+		if (sat->dockingprobe.IsHardDocked() == false) { return true; }
 		// Umbilical connected? (Supposed to be after LM Pressurization and hatch removal)
-		if(sat->CSMToLEMConnector.connectedTo == NULL){ return true; }
+		if (sat->CSMToLEMConnector.connectedTo == NULL) { return true; }
 		ConnectorMessage msg;
 		ConnectorMessageValue mval;
-		msg.destination = LEM_CSM_POWER;		
+		msg.destination = LEM_CSM_POWER;
 		msg.messageType = 42;
-		switch(state){
-			case THREEPOSSWITCH_UP:
-				// Connect the bus
-				sat->CSMToLEMPowerDrain.Enable();
-				sat->CSMToLEMPowerDrain.WireTo(&sat->LMUmbilicalFeeder);				
-				// Turn on LEM				
-				mval.iValue = 1; // Relay State 1 = Deny Descent ECA operation
-				msg.val1 = mval;
-				sat->CSMToLEMConnector.SendMessage(msg);
-				break;
-			case THREEPOSSWITCH_CENTER:
-				// Turn off LEM (but don't disconnect it)
-				sat->CSMToLEMPowerDrain.Disable();
-				sat->CSMToLEMPowerDrain.WireTo(NULL);
-				break;
-			case THREEPOSSWITCH_DOWN:
-				// Reset LEM				
-				mval.iValue = 0; // Relay State 0 = Permit Descent ECA operation
-				msg.val1 = mval;
-				sat->CSMToLEMConnector.SendMessage(msg);
-				// Ensure disconnected
-				sat->CSMToLEMPowerDrain.Disable();
-				sat->CSMToLEMPowerDrain.WireTo(NULL);
-				break;
+		switch (state) {
+		case THREEPOSSWITCH_UP:
+			// Connect the bus
+			sat->CSMToLEMPowerDrain.Enable();
+			sat->CSMToLEMPowerDrain.WireTo(&sat->LMUmbilicalFeeder);
+			// Turn on LEM
+			mval.iValue = 1; // Relay State 1 = Deny Descent ECA operation
+			msg.val1 = mval;
+			sat->CSMToLEMConnector.SendMessage(msg);
+			break;
+		case THREEPOSSWITCH_CENTER:
+			// Turn off LEM (but don't disconnect it)
+			sat->CSMToLEMPowerDrain.Disable();
+			sat->CSMToLEMPowerDrain.WireTo(NULL);
+			break;
+		case THREEPOSSWITCH_DOWN:
+			// Reset LEM
+			mval.iValue = 0; // Relay State 0 = Permit Descent ECA operation
+			msg.val1 = mval;
+			sat->CSMToLEMConnector.SendMessage(msg);
+			// Ensure disconnected
+			sat->CSMToLEMPowerDrain.Disable();
+			sat->CSMToLEMPowerDrain.WireTo(NULL);
+			break;
 		}
-
-		return true;
-	}
-	return false;
-}
-
-bool CSMLMPowerSwitch::SwitchTo(int newState)
-{
-	if (SaturnThreePosSwitch::SwitchTo(newState)) {
 		return true;
 	}
 	return false;
