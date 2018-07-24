@@ -1601,7 +1601,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//ECS Debug Lines//
 
-	///*
+	/*
 	double *O2ManifoldPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:PRESS");
 	double *O2ManifoldMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:MASS");
 	double *O2ManifoldTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:O2MANIFOLD:TEMP");
@@ -1940,10 +1940,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *lmtunneltemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNEL:TEMP");
 	double *lmtunnelflow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LMTUNNELUNDOCKED:FLOW");
 
-	double *TLERadTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-TLE:TEMP");
-	double *PrimTLEHXPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TLEHX:POWER");
-	double *SecTLEHXPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TLEHXSEC:POWER");
-	//*/
+	//double *TLERadTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LM-TLE:TEMP");
+	//double *PrimTLEHXPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TLEHX:POWER");
+	//double *SecTLEHXPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TLEHXSEC:POWER");
+	*/
 
 	//Heat Radiator Debug Tests
 	//sprintf(oapiDebugString(), "TLE Heat %lf Rad Temp %lf Prim Gly Temp %lf Sec Gly Temp %lf Prim HX Power %lf Sec HX Power %lf", *TLEHeat, KelvinToFahrenheit(*TLERadTemp), KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*secloop1temp), *PrimTLEHXPower, *SecTLEHXPower);

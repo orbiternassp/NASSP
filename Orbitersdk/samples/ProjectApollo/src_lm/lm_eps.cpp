@@ -665,9 +665,9 @@ void LEM_TLE::SystemTimestep(double simdt)
 {
 	if (IsPowered()) {
 		TrackCB->DrawPower(120.0);
-		TLEHeat->GenerateHeat(120.0);
-		//TLEHeat->GenerateHeat(60.0);
-		//SecTLEHeat->GenerateHeat(60.0);
+		//TLEHeat->GenerateHeat(120.0);
+		TLEHeat->GenerateHeat(60.0);
+		SecTLEHeat->GenerateHeat(60.0);
 	}
 }
 
