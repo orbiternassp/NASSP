@@ -81,7 +81,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_GMP_NHT 21
 //Combination maneuver to change both apogee and perigee and shift the node at a specified longitude
 #define RTCC_GMP_NHL 22
+//Maneuver to shift line-of-apsides some angle at a specified longitude
 #define RTCC_GMP_SAL 23
+//Maneuver to shift line-of-apsides to a specified longitude
 #define RTCC_GMP_SAA 24
 #define RTCC_GMP_PHL 25
 #define RTCC_GMP_PHT 26

@@ -861,8 +861,7 @@ class CSMLMPowerSwitch : public SaturnThreePosSwitch
 public:
 	CSMLMPowerSwitch() { sat = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
-	bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my);
-	bool CSMLMPowerSwitch::SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 	void LoadState(char *line);
 protected:
 	Saturn *sat;

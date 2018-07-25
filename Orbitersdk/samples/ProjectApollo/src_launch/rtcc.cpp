@@ -3627,7 +3627,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	//Advance state to maneuver time
 	//Apogee
 	if (code == RTCC_GMP_HAO || code == RTCC_GMP_FCA || code == RTCC_GMP_PHA || code == RTCC_GMP_HNA ||
-		code == RTCC_GMP_CRA || code == RTCC_GMP_CPA || code == RTCC_GMP_CNA)
+		code == RTCC_GMP_CRA || code == RTCC_GMP_CPA || code == RTCC_GMP_CNA || code == RTCC_GMP_SAA)
 	{
 		dt2 = OrbMech::timetoapo_integ(sv1.R, sv1.V, sv1.MJD, sv1.gravref);
 		sv2 = coast(sv1, dt2);
@@ -4063,6 +4063,47 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 
 		OrbMech::sv_from_coe(coe_a, mu, R_a, V_a);
 		DV = V_a - sv2.V;
+	}
+	//Shift line-of-apsides to specified longitude
+	else if (code == RTCC_GMP_SAA)
+	{
+		SV sv_a, sv_p, sv2_apo;
+		OELEMENTS coe_b, coe_a;
+		VECTOR3 R_a, V_a;
+		double u, lat_p, lng_p, dLOA, eps, ddLOA;
+		int n, nmax;
+
+		coe_b = OrbMech::coe_from_sv(sv2.R, sv2.V, mu);
+		u = fmod(coe_b.TA + coe_b.w, PI2);
+
+		sv2_apo = sv2;
+
+		n = 0;
+		nmax = 20;
+		eps = 0.01*RAD;
+		dLOA = 0.0;
+		ddLOA = 1.0;
+
+		while (abs(ddLOA) > eps && n < nmax)
+		{
+			ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+			OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_p.gravref, lat_p, lng_p);
+
+			ddLOA = OrbMech::calculateDifferenceBetweenAngles(lng_p, opt->long_D);
+			dLOA += ddLOA;
+
+			coe_a.e = coe_b.e*cos(coe_b.TA) / cos(coe_b.TA - dLOA);
+			coe_a.h = coe_b.h;
+			coe_a.i = coe_b.i;
+			coe_a.RA = coe_b.RA;
+			coe_a.TA = fmod(coe_b.TA - dLOA, PI2);
+			coe_a.w = fmod(u - coe_a.TA, PI2);
+
+			OrbMech::sv_from_coe(coe_a, mu, R_a, V_a);
+			DV = V_a - sv2.V;
+			sv2_apo.V = sv2.V + DV;
+			n++;
+		}
 	}
 	//Circularization + node shift
 	else if (code == RTCC_GMP_CNL || code == RTCC_GMP_CNH || code == RTCC_GMP_CNT || code == RTCC_GMP_CNA || code == RTCC_GMP_CNP)

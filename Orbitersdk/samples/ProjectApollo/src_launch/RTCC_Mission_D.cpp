@@ -1632,6 +1632,89 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BlockData(&opt, *form);
 	}
 	break;
+	case 56: //BLOCK DATA 17
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 6;
+		double lng[] = { -29.0*RAD, -29.0*RAD, -34.0*RAD, -68.0*RAD, -159.0*RAD, -160.9*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(164, 54, 2),OrbMech::HHMMSSToSS(166, 27, 38),OrbMech::HHMMSSToSS(168, 1, 3),OrbMech::HHMMSSToSS(169, 26, 8),
+			OrbMech::HHMMSSToSS(172, 18, 34), OrbMech::HHMMSSToSS(173, 56, 15) };
+		std::string area[] = { "105-2B", "106-2B", "107-AC", "108-1A", "109-4C", "110-4B" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 57: //SPS-7 UPDATE
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		AP7ManPADOpt opt;
+		REFSMMATOpt refsopt;
+		GMPOpt gmpopt;
+		double GETbase, P30TIG, TIG_imp;
+		VECTOR3 dV_LVLH, dV_imp;
+		MATRIX3 REFSMMAT;
+		SV sv0;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = getGETBase();
+
+		gmpopt.AltRef = 1;
+		gmpopt.GETbase = GETbase;
+		gmpopt.H_A = 210.0*1852.0;
+		gmpopt.H_P = 97.0*1852.0;
+		gmpopt.long_D = 110.0*RAD;
+		gmpopt.ManeuverCode = RTCC_GMP_HBL;
+		gmpopt.RV_MCC = sv0;
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 0, 0);
+
+		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
+
+		refsopt.dV_LVLH = dV_LVLH;
+		refsopt.GETbase = GETbase;
+		refsopt.HeadsUp = false;
+		refsopt.P30TIG = P30TIG;
+		refsopt.REFSMMATopt = 0;
+		refsopt.vessel = calcParams.src;
+		refsopt.vesseltype = 0;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		opt.dV_LVLH = dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.navcheckGET = P30TIG - 30.0*60.0;
+		opt.REFSMMAT = REFSMMAT;
+		opt.sxtstardtime = -40.0*60.0;
+		opt.TIG = P30TIG;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 1;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "SPS-7");
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
+		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66, target load");
+		}
+	}
+	break;
 	}
 
 	return scrubbed;

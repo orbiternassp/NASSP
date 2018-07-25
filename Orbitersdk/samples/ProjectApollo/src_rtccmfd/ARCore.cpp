@@ -3334,10 +3334,13 @@ void ARCore::DetermineGMPCode()
 	}
 	else if (GMPManeuverType == 7)
 	{
-		if (GMPManeuverPoint == 3)
+		if (GMPManeuverPoint == 0)
 		{
-			//SAL: Maneuver to shift line-of-apsides some angle at a specified longitude
-			code = 23;
+			code = RTCC_GMP_SAA;
+		}
+		else if (GMPManeuverPoint == 3)
+		{
+			code = RTCC_GMP_SAL;
 		}
 		else if (GMPManeuverPoint == 5)
 		{
