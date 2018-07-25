@@ -444,6 +444,7 @@ void LEM::SystemsInit()
 	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
 	// The source of the isolated section is coming from the LGC supply.
 	dsky.Init(&LGC_DSKY_CB, &LtgAnunNumKnob);
+	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
 	// AGS stuff
 	asa.Init(this, &AGSOperateSwitch, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FastHeater"),
@@ -1945,7 +1946,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//double *SecTLEHXPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:TLEHXSEC:POWER");
 	*/
 
-	//Heat Radiator Debug Tests
+	//Heat Radiator Debug Tests*LGCHeat
 	//sprintf(oapiDebugString(), "TLE Heat %lf Rad Temp %lf Prim Gly Temp %lf Sec Gly Temp %lf Prim HX Power %lf Sec HX Power %lf", *TLEHeat, KelvinToFahrenheit(*TLERadTemp), KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*secloop1temp), *PrimTLEHXPower, *SecTLEHXPower);
 
 	//sprintf(oapiDebugString(), "CabinP %lf CabinT %lf CabinQ %lf CabinHeat %lf", ecs.GetCabinPressurePSI(), ecs.GetCabinTempF(), *CabinEnergy, *CabinHeat);
