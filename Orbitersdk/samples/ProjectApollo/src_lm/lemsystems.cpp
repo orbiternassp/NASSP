@@ -1401,7 +1401,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 
 		Panelsdk.SimpleTimestep(tFactor);
 
-		agc.SystemTimestep(tFactor);								// Draw power
+		agc.SystemTimestep(tFactor);								// Draw power & generate heat
 		dsky.SystemTimestep(tFactor);								// This can draw power now.
 		asa.SystemTimestep(tFactor);
 		aea.SystemTimestep(tFactor);

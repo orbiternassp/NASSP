@@ -223,9 +223,15 @@ void ApolloGuidance::SystemTimestep(double simdt)
 
 	if (OnStandby()) {
 		DCPower.DrawPower(22.9);
+		//Insert heat generation for CM & LM
+		//CMCHEAT->GenerateHeat(22.9);
+		//LGCHEAT->GenerateHeat(22.9);
 	}
 	else {
 		DCPower.DrawPower(106.0);
+		//Insert heat generation for CM & LM
+		//LGCHEAT->GenerateHeat(106.0);
+		//CMCHEAT->GenerateHeat(106.0);
 	}
 }
 
