@@ -89,6 +89,9 @@ public:
 	/// \param simdt Time since last timestep.
 	///
 	virtual void Timestep(double simt, double simdt) = 0;
+
+	void InitHeat(h_HeatLoad *h) { AGCHeat = h; };
+
 	virtual void SystemTimestep(double simdt); 
 
 	///
@@ -418,6 +421,12 @@ protected:
 	//
 
 	PowerMerge DCPower;
+
+	//
+	// Heat Generation 
+	//
+
+	h_HeatLoad *AGCHeat;
 
 	///
 	/// \brief The Vessel we're controlling.
