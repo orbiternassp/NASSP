@@ -2642,6 +2642,10 @@ void LM_DSE::Stop()
 }
 
 void LM_DSE::Record()
+	//Records constantly if powered, tape recorder on, and in ICS/PTT.  
+	//Will also record if in VOX if voice activates or in PTT when PTT switch depressed with recorder power and switch on
+	//PCM/TE power required for PCM timestamp recording
+	//SE Audio power required for TB functionality
 {
 	double tapeSpeed = 0.6;  //inches per second
 	if (state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed)
@@ -2694,22 +2698,19 @@ void LM_DSE::Timestep(double simt, double simdt)
 	switch (state)
 	{
 	case STOPPED:
-		if (!sat->TapeRecorderForwardSwitch.IsCenter()) {
-			if (sat->TapeRecorderRecordSwitch.IsUp()) {
-				Record(true);
-			}
-			else if (sat->TapeRecorderRecordSwitch.IsDown()) {
-				Record();
-			}
+		if (lem->TapeRecorderSwitch.IsDown() || IsACPowered() == false) 
+		{
+			Stop();
 		}
 		break;
 
-	case RECORDING:
-		if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+	case RECORDING: 
+		if (lem->TapeRecorderSwitch.IsDown() || IsACPowered() == false)
+		{
 			Stop();
 		}
 		else if (sat->TapeRecorderRecordSwitch.IsDown()) {
-			Play();
+			Record();
 		}
 		break;
 
