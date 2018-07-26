@@ -2595,3 +2595,166 @@ void LM_OMNI::Timestep()
 		SignalStrength = 0.0;
 	}
 }
+
+LM_DSE::LM_DSE() :
+	tapeSpeedInchesPerSecond(0.0),
+	desiredTapeSpeed(0.0),
+	tapeMotion(0.0),
+	state(STOPPED)
+{
+	lastEventTime = 0;
+}
+
+LM_DSE::~LM_DSE()
+{
+}
+
+void LM_DSE::Init(LEM *l)
+{
+	lem = l;
+}
+
+bool LM_DSE::TapeMotion()
+{
+	switch (state)
+	{
+	case STOPPED:
+	case STARTING_RECORD:
+		return false;
+
+	default:
+		return true;
+	}
+}
+
+const double hbrRecord = 15.0;
+const double lbrRecord = 3.75;
+
+void LM_DSE::Stop()
+{
+	if (state != STOPPED || desiredTapeSpeed > 0.0)
+	{
+		desiredTapeSpeed = 0.0;
+		state = STOPPING;
+	}
+	else
+		state = STOPPED;
+}
+
+void LM_DSE::Record()
+{
+	double tapeSpeed = 0.6;  //inches per second
+	if (state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed)
+	{
+		desiredTapeSpeed = tapeSpeed;
+
+		if (desiredTapeSpeed > tapeSpeedInchesPerSecond)
+		{
+			state = STARTING_RECORD;
+		}
+		else if (desiredTapeSpeed < tapeSpeedInchesPerSecond)
+		{
+			state = SLOWING_RECORD;
+		}
+		else
+		{
+			state = RECORDING;
+		}
+	}
+	else
+		state = RECORDING;
+}
+
+const double tapeAccel = 30.0;
+
+bool LM_DSE::IsTBPowered()
+{
+	if(lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE);
+	return true;
+}
+
+bool LM_DSE::IsPCMPowered()
+{
+	if (lem->INST_PCMTEA_CB.Voltage() > SP_MIN_DCVOLTAGE);
+}
+
+bool LM_DSE::IsACPowered()
+{
+	if (lem->TAPE_RCDR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE);
+}
+
+void LM_DSE::SystemTimestep(double simdt)
+{
+
+}
+
+void LM_DSE::Timestep(double simt, double simdt)
+{
+
+	switch (state)
+	{
+	case STOPPED:
+		if (!sat->TapeRecorderForwardSwitch.IsCenter()) {
+			if (sat->TapeRecorderRecordSwitch.IsUp()) {
+				Record(true);
+			}
+			else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+				Record();
+			}
+		}
+		break;
+
+	case RECORDING:
+		if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+			Stop();
+		}
+		else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+			Play();
+		}
+		break;
+
+	case STARTING_RECORD:
+		tapeSpeedInchesPerSecond += tapeAccel * simdt;
+		if (tapeSpeedInchesPerSecond >= desiredTapeSpeed)
+		{
+			tapeSpeedInchesPerSecond = desiredTapeSpeed;
+			state = RECORDING;
+		}
+		break;
+
+	case SLOWING_RECORD:
+		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+		if (tapeSpeedInchesPerSecond <= desiredTapeSpeed)
+		{
+			tapeSpeedInchesPerSecond = desiredTapeSpeed;
+			state = RECORDING;
+		}
+		break;
+
+	case STOPPING:
+		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+		if (tapeSpeedInchesPerSecond <= 0.0)
+		{
+			tapeSpeedInchesPerSecond = 0.0;
+			state = STOPPED;
+		}
+		break;
+
+	default:
+		break;
+	}
+	lastEventTime = simt;
+	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
+}
+
+void LM_DSE::LoadState(char *line) {
+
+	sscanf(line + 12, "%lf %lf %lf %i %lf", &tapeSpeedInchesPerSecond, &desiredTapeSpeed, &tapeMotion, &state, &lastEventTime);
+}
+
+void LM_DSE::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%lf %lf %lf %i %lf", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, lastEventTime);
+	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
+}

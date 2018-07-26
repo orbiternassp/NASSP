@@ -1421,6 +1421,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
+		DSE.SystemTimestep(tFactor);
 		CabinPressureSwitch.SystemTimestep(tFactor);
 		SuitPressureSwitch.SystemTimestep(tFactor);
 		CabinRepressValve.SystemTimestep(tFactor);
@@ -1521,6 +1522,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	omni_fwd.Timestep();
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
+	DSE.Timestep(simt, simdt);
 	ecs.Timestep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
