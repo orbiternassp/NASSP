@@ -338,8 +338,8 @@ public:
 	bool IsSWPowered();
 	bool IsACPowered();
 	bool IsPCMPowered();
-	bool CDRVoiceXmit();
 	bool LMPVoiceXmit();
+	bool CDRVoiceXmit();
 	bool VoiceXmit();
 	void SystemTimestep(double simdt);
 	void Timestep(double simt, double simdt);

@@ -2750,7 +2750,7 @@ void LM_DSEA::Timestep(double simt, double simdt)
 		break;
 
 	case RECORDING:
-		if (IsACPowered() == false || VoiceXmit() == false || (lem->TapeRecorderSwitch.IsDown() && IsSWPowered() == true))
+		if (IsACPowered() == false || VoiceXmit() == false || (lem->TapeRecorderSwitch.IsDown() || IsSWPowered() == false))
 		{
 			Stop();
 		}
