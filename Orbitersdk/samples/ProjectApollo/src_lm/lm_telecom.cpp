@@ -2673,19 +2673,28 @@ const double tapeAccel = 30.0; //No idea if this is right
 bool LM_DSEA::IsSWPowered()
 {
 	if(lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE)
-	return true;
+	{
+		return true;
+	}
+	return false;
 }
 
 bool LM_DSEA::IsPCMPowered() //Powers the TB
 {
 	if (lem->INST_PCMTEA_CB.Voltage() > SP_MIN_DCVOLTAGE)
-	return true;
+	{
+		return true;
+	}
+	return false;
 }
 
 bool LM_DSEA::IsACPowered()
 {
 	if (lem->TAPE_RCDR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
-	return true;
+	{
+		return true;
+	}
+	return false;
 }
 
 //Voice Transmit
@@ -2694,21 +2703,30 @@ bool LM_DSEA::IsACPowered()
 bool LM_DSEA::CDRVoiceXmit()
 {
 	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
+	{
 		return true;
+	}
+	return false;
 	//PTT & VOX not simulated yet
 }
 
 bool LM_DSEA::LMPVoiceXmit() 
 {
 	if ((lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
+	{
 		return true;
+	}
+	return false;
 	//PTT & VOX not simulated yet
 }
 
 bool LM_DSEA::VoiceXmit()
 {
 	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true)
+	{
 		return true;
+	}
+	return false;
 }
 
 void LM_DSEA::SystemTimestep(double simdt)
@@ -2725,16 +2743,16 @@ void LM_DSEA::Timestep(double simt, double simdt)
 	switch (state)
 	{
 	case STOPPED:
-		if (state != STOPPED && (IsACPowered() == false || VoiceXmit() == false || (lem->TapeRecorderSwitch.IsDown() && IsSWPowered() == true)))
+		if (IsACPowered() == true || VoiceXmit() == true || (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
 		{
-			Stop();
+			Record();
 		}
 		break;
 
-	case RECORDING: 
-		if (state == STOPPED && VoiceXmit() == true || IsACPowered() == true || (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
+	case RECORDING:
+		if (IsACPowered() == false || VoiceXmit() == false || (lem->TapeRecorderSwitch.IsDown() && IsSWPowered() == true))
 		{
-			Record();
+			Stop();
 		}
 		break;
 
