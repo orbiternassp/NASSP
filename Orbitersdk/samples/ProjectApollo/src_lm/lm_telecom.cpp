@@ -2790,14 +2790,14 @@ void LM_DSEA::Timestep(double simt, double simdt)
 	switch (state)
 	{
 	case STOPPED:
-		if (Start())
+		if (RecordLogic())
 		{
 			Record();
 		}
 		break;
 
 	case RECORDING:
-		if (!Start())
+		if (!RecordLogic())
 		{
 			Stop();
 		}
