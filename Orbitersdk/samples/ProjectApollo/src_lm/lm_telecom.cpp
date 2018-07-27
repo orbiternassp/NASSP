@@ -2668,7 +2668,19 @@ void LM_DSEA::Record()
 		state = RECORDING;
 }
 
-const double tapeAccel = 30.0; //No idea if this is right
+bool LM_DSEA::RecordLogic()
+{
+	if (IsACPowered() == true && lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true)
+	{
+		if (ICSPTT() == true || (VOXPTT() == true && VoiceXmit() == true))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+const double tapeAccel = 1.0; //No idea if this is right
 
 bool LM_DSEA::IsSWPowered()
 {
@@ -2729,7 +2741,7 @@ bool LM_DSEA::CDRVoiceXmit()
 
 bool LM_DSEA::VoiceXmit()
 {
-	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true || lem->Panel12UpdataLinkSwitch.IsUp()) //Switch for debugging
+	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true || lem->Panel12UpdataLinkSwitch.IsUp())
 	{
 		return true;
 	}
@@ -2778,24 +2790,17 @@ void LM_DSEA::Timestep(double simt, double simdt)
 	switch (state)
 	{
 	case STOPPED:
-		if (IsACPowered() == true && lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true)
-			{
-				if (ICSPTT() == true || (VOXPTT() == true && VoiceXmit() == true))
-					{
-						Record();
-					}
-			}
+		if (Start())
+		{
+			Record();
+		}
 		break;
 
 	case RECORDING:
-		if (IsACPowered() == false || IsSWPowered() == false || lem->TapeRecorderSwitch.IsDown())
-			{
-				Stop();
-			}
-		else if (!((VoiceXmit() == true && VOXPTT() == true) || ICSPTT() == true))
-			{
-				Stop();
-			}
+		if (!Start())
+		{
+			Stop();
+		}
 		break;
 
 	case STARTING_RECORD:

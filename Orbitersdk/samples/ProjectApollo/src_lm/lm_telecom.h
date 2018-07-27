@@ -332,14 +332,7 @@ public:
 	///
 	void Record();
 
-	///
-	/// \brief Start voice track
-	///
-	void RecordVoice();
-
-	///
-	/// \brief Timestep processing.
-	///
+	bool RecordLogic();
 	bool IsSWPowered();
 	bool IsACPowered();
 	bool IsPCMPowered();
