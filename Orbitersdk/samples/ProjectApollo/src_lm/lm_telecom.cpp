@@ -2595,3 +2595,257 @@ void LM_OMNI::Timestep()
 		SignalStrength = 0.0;
 	}
 }
+
+LM_DSEA::LM_DSEA() :
+	tapeSpeedInchesPerSecond(0.0),
+	desiredTapeSpeed(0.0),
+	tapeMotion(0.0),
+	state(STOPPED)
+{
+	lastEventTime = 0;
+}
+
+LM_DSEA::~LM_DSEA()
+{
+
+}
+
+void LM_DSEA::Init(LEM *l, h_HeatLoad *dseht)
+{
+	lem = l;
+	DSEHeat = dseht;
+}
+
+bool LM_DSEA::TapeMotion()
+{
+	switch (state)
+	{
+	case STOPPED:
+	case STARTING_RECORD:
+		return false;
+
+	default:
+		return true;
+	}
+}
+
+void LM_DSEA::Stop()
+{
+	if (state != STOPPED || desiredTapeSpeed > 0.0)
+	{
+		desiredTapeSpeed = 0.0;
+		state = STOPPING;
+	}
+	else
+		state = STOPPED;
+}
+
+void LM_DSEA::Record()
+	//Records constantly if powered, tape recorder on, and in ICS/PTT.  
+	//Will also record if in VOX if voice activates or in PTT when PTT switch depressed with recorder power and switch on
+	//PCM/TE power required for PCM timestamp recording and for for TB functionality
+	//SE Audio power required for switch to function
+{
+	double tapeSpeed = 0.6;  // 0.6 inches per second from LM AOH
+	if (state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed)
+	{
+		desiredTapeSpeed = tapeSpeed;
+
+		if (desiredTapeSpeed > tapeSpeedInchesPerSecond)
+		{
+			state = STARTING_RECORD;
+		}
+		else if (desiredTapeSpeed < tapeSpeedInchesPerSecond)
+		{
+			state = SLOWING_RECORD;
+		}
+		else
+		{
+			state = RECORDING;
+		}
+	}
+	else
+		state = RECORDING;
+}
+
+bool LM_DSEA::RecordLogic()
+{
+	if (IsACPowered() == true && lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true)
+	{
+		if (ICSPTT() == true || (VOXPTT() == true && VoiceXmit() == true))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+const double tapeAccel = 1.2; //No idea if this is right, CSM used 2x the tape speed so we will here
+
+bool LM_DSEA::IsSWPowered()
+{
+	if(lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool LM_DSEA::IsPCMPowered() //Allows PCM to timestamp tape
+{
+	if (lem->INST_PCMTEA_CB.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool LM_DSEA::IsACPowered()
+{
+	if (lem->TAPE_RCDR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		return true;
+	}
+	return false;
+}
+
+//Voice Transmit
+//VOX and PTT modes will record if transmitting or keying mic while recorder powered/switch on
+//ICS/PTT mode will always record if recorder powered/switch on, but only have voice track if voice present
+bool LM_DSEA::LMPVoiceXmit()
+{
+	/*
+	//This logic will be necessary along with a signal that voice is being transmitted, commented out for now as voice is not simulated.
+	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
+	{
+		return true;
+	}
+	*/
+	return false;
+	//voice not simulated yet
+}
+
+bool LM_DSEA::CDRVoiceXmit() 
+{
+	/*
+	//This logic will be necessary along with a signal that voice is being transmitted, commented out for now as voice is not simulated.
+	if ((lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
+	{
+		return true;
+	}
+	*/
+
+	return false;
+	//voice not simulated yet
+}
+
+bool LM_DSEA::VoiceXmit()
+{
+	//if (lem->Panel12UpdataLinkSwitch.IsUp()) //Switch for debugging voice transmit
+	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool LM_DSEA::ICSPTT()
+{
+	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE) || (lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
+	{
+		return true;
+	}
+	return false;
+}
+
+bool LM_DSEA::VOXPTT()
+{
+	if ((lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->LMPAudVOXSwitch.IsUp() || lem->LMPAudVOXSwitch.IsDown())) || (lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->CDRAudVOXSwitch.IsUp() || lem->CDRAudVOXSwitch.IsDown())))  //VOX or PTT
+	{
+		return true;
+	}
+	return false;
+}
+
+void LM_DSEA::SystemTimestep(double simdt)
+{
+	if (state != STOPPED)
+	{
+		lem->TAPE_RCDR_AC_CB.DrawPower(2.7);
+		DSEHeat->GenerateHeat(2.7);
+	}
+}
+
+void LM_DSEA::Timestep(double simt, double simdt)
+{
+	if (state == RECORDING && VoiceXmit() == true)
+	{ 
+		lem->TapeRecorderTB.SetState(1);
+	}
+
+	else 
+	{ 
+		lem->TapeRecorderTB.SetState(0);
+	}
+
+	switch (state)
+	{
+	case STOPPED:
+		if (RecordLogic())
+		{
+			Record();
+		}
+		break;
+
+	case RECORDING:
+		if (!RecordLogic())
+		{
+			Stop();
+		}
+		break;
+
+	case STARTING_RECORD:
+		tapeSpeedInchesPerSecond += tapeAccel * simdt;
+		if (tapeSpeedInchesPerSecond >= desiredTapeSpeed)
+		{
+			tapeSpeedInchesPerSecond = desiredTapeSpeed;
+			state = RECORDING;
+		}
+		break;
+
+	case SLOWING_RECORD:
+		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+		if (tapeSpeedInchesPerSecond <= desiredTapeSpeed)
+		{
+			tapeSpeedInchesPerSecond = desiredTapeSpeed;
+			state = RECORDING;
+		}
+		break;
+
+	case STOPPING:
+		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+		if (tapeSpeedInchesPerSecond <= 0.0)
+		{
+			tapeSpeedInchesPerSecond = 0.0;
+			state = STOPPED;
+		}
+		break;
+
+	default:
+		break;
+	}
+	lastEventTime = simt;
+	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
+}
+
+void LM_DSEA::LoadState(char *line) {
+
+	sscanf(line + 12, "%lf %lf %lf %i %lf", &tapeSpeedInchesPerSecond, &desiredTapeSpeed, &tapeMotion, &state, &lastEventTime);
+}
+
+void LM_DSEA::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%lf %lf %lf %i %lf", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, lastEventTime);
+	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
+}
