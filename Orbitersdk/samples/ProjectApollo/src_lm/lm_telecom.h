@@ -335,9 +335,12 @@ public:
 	///
 	/// \brief Timestep processing.
 	///
-	bool IsTBPowered();
+	bool IsSWPowered();
 	bool IsACPowered();
 	bool IsPCMPowered();
+	bool CDRVoiceXmit();
+	bool LMPVoiceXmit();
+	bool VoiceXmit();
 	void SystemTimestep(double simdt);
 	void Timestep(double simt, double simdt);
 

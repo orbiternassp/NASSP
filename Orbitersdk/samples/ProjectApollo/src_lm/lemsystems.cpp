@@ -1522,7 +1522,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	omni_fwd.Timestep();
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
-	DSE.Timestep(simt, simdt);
 	ecs.Timestep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
@@ -1553,6 +1552,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	scera1.Timestep();
 	scera2.Timestep();
 	CWEA.Timestep(simdt);
+	DSE.Timestep(simt, simdt);
 
 	//Treat LM O2 as gas every timestep
 	DesO2Tank->BoilAllAndSetTemp(294.261);

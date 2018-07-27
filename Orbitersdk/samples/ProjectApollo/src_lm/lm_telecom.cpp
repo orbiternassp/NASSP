@@ -2607,6 +2607,7 @@ LM_DSE::LM_DSE() :
 
 LM_DSE::~LM_DSE()
 {
+
 }
 
 void LM_DSE::Init(LEM *l)
@@ -2627,9 +2628,6 @@ bool LM_DSE::TapeMotion()
 	}
 }
 
-const double hbrRecord = 15.0;
-const double lbrRecord = 3.75;
-
 void LM_DSE::Stop()
 {
 	if (state != STOPPED || desiredTapeSpeed > 0.0)
@@ -2644,8 +2642,8 @@ void LM_DSE::Stop()
 void LM_DSE::Record()
 	//Records constantly if powered, tape recorder on, and in ICS/PTT.  
 	//Will also record if in VOX if voice activates or in PTT when PTT switch depressed with recorder power and switch on
-	//PCM/TE power required for PCM timestamp recording
-	//SE Audio power required for TB functionality
+	//PCM/TE power required for PCM timestamp recording and for for TB functionality
+	//SE Audio power required for switch to function
 {
 	double tapeSpeed = 0.6;  //inches per second
 	if (state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed)
@@ -2671,20 +2669,51 @@ void LM_DSE::Record()
 
 const double tapeAccel = 30.0;
 
-bool LM_DSE::IsTBPowered()
+bool LM_DSE::IsSWPowered()
 {
 	if(lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE);
 	return true;
 }
 
-bool LM_DSE::IsPCMPowered()
+bool LM_DSE::IsPCMPowered() //Powers the TB
 {
 	if (lem->INST_PCMTEA_CB.Voltage() > SP_MIN_DCVOLTAGE);
+	return true;
 }
 
 bool LM_DSE::IsACPowered()
 {
 	if (lem->TAPE_RCDR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE);
+	return true;
+}
+
+//Voice Transmit
+//VOX and PTT modes will record if transmitting or keying mic while recorder powered/switch on
+//ICS/PTT mode will always record if recorder powered/switch on
+bool LM_DSE::CDRVoiceXmit()
+{
+	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE));  //ICS/PTT
+	{
+		return true;
+	}
+	//PTT & VOX not simulated yet
+}
+
+bool LM_DSE::LMPVoiceXmit() 
+{
+	if ((lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE));  //ICS/PTT
+	{
+		return true;
+	}
+	//PTT & VOX not simulated yet
+}
+
+bool LM_DSE::VoiceXmit()
+{
+	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true);
+	{
+		return true;
+	}
 }
 
 void LM_DSE::SystemTimestep(double simdt)
@@ -2698,7 +2727,7 @@ void LM_DSE::Timestep(double simt, double simdt)
 	switch (state)
 	{
 	case STOPPED:
-		if (lem->TapeRecorderSwitch.IsDown() || IsACPowered() == false) 
+		if (state != STOPPED && (IsACPowered() == false || VoiceXmit == false || (lem->TapeRecorderSwitch.IsDown() && IsSWPowered() == true)))
 		{
 			Stop();
 		}
