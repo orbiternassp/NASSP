@@ -2680,7 +2680,7 @@ bool LM_DSEA::RecordLogic()
 	return false;
 }
 
-const double tapeAccel = 1.0; //No idea if this is right
+const double tapeAccel = 1.2; //No idea if this is right, CSM used 2x the tape speed so we will here
 
 bool LM_DSEA::IsSWPowered()
 {
@@ -2741,7 +2741,8 @@ bool LM_DSEA::CDRVoiceXmit()
 
 bool LM_DSEA::VoiceXmit()
 {
-	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true || lem->Panel12UpdataLinkSwitch.IsUp())
+	//if (lem->Panel12UpdataLinkSwitch.IsUp()) //Switch for debugging voice transmit
+	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true || lem->Panel12UpdataLinkSwitch.IsUp()) //Switch for debugging
 	{
 		return true;
 	}
@@ -2834,7 +2835,7 @@ void LM_DSEA::Timestep(double simt, double simdt)
 		break;
 	}
 	lastEventTime = simt;
-	sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
+	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
 }
 
 void LM_DSEA::LoadState(char *line) {
