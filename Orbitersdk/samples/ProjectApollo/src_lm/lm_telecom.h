@@ -300,9 +300,9 @@ protected:
 ///
 /// LM DSE holds 5,400 inches of tape (4 tracks, 2.5 hours each at 0.6 inches/second, making 21,600 inches of recordable tape)
 ///
-class LM_DSE : public e_object
+class LM_DSEA : public e_object
 {
-	enum LM_DSEState
+	enum LM_DSEAState
 	{
 		STOPPED,			/// Tape is stopped
 		STARTING_RECORD,	/// Tape is accelerating to play speed
@@ -312,10 +312,10 @@ class LM_DSE : public e_object
 	};
 
 public:
-	LM_DSE();
-	virtual ~LM_DSE();
+	LM_DSEA();
+	virtual ~LM_DSEA();
 
-	void Init(LEM *l);	       // Initialization
+	void Init(LEM *l, h_HeatLoad *dseht);	       // Initialization
 
 									   ///
 									   /// \brief Tape motion indicator.
@@ -349,10 +349,11 @@ public:
 
 protected:
 	LEM *lem;						    /// Ship we're installed in
+	h_HeatLoad *DSEHeat;				/// Heatload
 	double tapeSpeedInchesPerSecond;	/// Tape speed in inches per second.
 	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
 	double tapeMotion;					/// Tape motion from 0.0 to 1.0.
-	LM_DSEState state;					/// Tape state.
+	LM_DSEAState state;					/// Tape state.
 
 	double lastEventTime;				/// Last event time.
 };

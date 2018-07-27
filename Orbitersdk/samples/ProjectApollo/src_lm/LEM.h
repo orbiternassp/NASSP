@@ -1746,7 +1746,7 @@ protected:
 	LM_OMNI omni_aft;
 	LM_VHF VHF;
 	LM_SBAND SBand;
-	LM_DSE DSE;
+	LM_DSEA DSEA;
 
 	//Lighting
 	LEM_TLE tle;
@@ -1839,7 +1839,7 @@ protected:
 	friend class LEM_SteerableAnt;
 	friend class LM_VHF;
 	friend class LM_SBAND;
-	friend class LM_DSE;
+	friend class LM_DSEA;
 	friend class LEMMissionTimerSwitch;
 	friend class LEM_CWEA;
 	friend class LMWaterQtyMeter;
