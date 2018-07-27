@@ -2747,7 +2747,7 @@ bool LM_DSEA::ICSPTT()
 
 bool LM_DSEA::VOXPTT()
 {
-	if (ICSPTT() == false && (lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->LMPAudVOXSwitch.IsUp() || lem->LMPAudVOXSwitch.IsDown())) || (lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->CDRAudVOXSwitch.IsUp() || lem->CDRAudVOXSwitch.IsDown())))  //VOX or PTT
+	if ((lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->LMPAudVOXSwitch.IsUp() || lem->LMPAudVOXSwitch.IsDown())) || (lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->CDRAudVOXSwitch.IsUp() || lem->CDRAudVOXSwitch.IsDown())))  //VOX or PTT
 	{
 		return true;
 	}
@@ -2778,13 +2778,12 @@ void LM_DSEA::Timestep(double simt, double simdt)
 	switch (state)
 	{
 	case STOPPED:
-		if (IsACPowered() == true && ICSPTT() == true && (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
+		if (IsACPowered() == true && lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true)
 			{
-				Record();
-			}
-		else if (IsACPowered() == true && (VOXPTT() == true && VoiceXmit() == true) && (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
-			{
-				Record();
+				if (ICSPTT() == true || (VOXPTT() == true && VoiceXmit() == true))
+					{
+						Record();
+					}
 			}
 		break;
 
@@ -2793,7 +2792,7 @@ void LM_DSEA::Timestep(double simt, double simdt)
 			{
 				Stop();
 			}
-		else if (VoiceXmit() == false && VOXPTT() == true)
+		else if (!((VoiceXmit() == true && VOXPTT() == true) || ICSPTT() == true))
 			{
 				Stop();
 			}
