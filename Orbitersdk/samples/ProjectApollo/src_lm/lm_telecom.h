@@ -333,6 +333,11 @@ public:
 	void Record();
 
 	///
+	/// \brief Start voice track
+	///
+	void RecordVoice();
+
+	///
 	/// \brief Timestep processing.
 	///
 	bool IsSWPowered();
@@ -341,6 +346,8 @@ public:
 	bool LMPVoiceXmit();
 	bool CDRVoiceXmit();
 	bool VoiceXmit();
+	bool ICSPTT();
+	bool VOXPTT();
 	void SystemTimestep(double simdt);
 	void Timestep(double simt, double simdt);
 

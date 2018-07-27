@@ -2699,30 +2699,55 @@ bool LM_DSEA::IsACPowered()
 
 //Voice Transmit
 //VOX and PTT modes will record if transmitting or keying mic while recorder powered/switch on
-//ICS/PTT mode will always record if recorder powered/switch on
+//ICS/PTT mode will always record if recorder powered/switch on, but only have voice track if voice present
 bool LM_DSEA::LMPVoiceXmit()
 {
+	/*
+	//This logic will be necessary along with a signal that voice is being transmitted, commented out for now as voice is not simulated.
 	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
 	{
 		return true;
 	}
+	*/
 	return false;
-	//PTT & VOX not simulated yet
+	//voice not simulated yet
 }
 
 bool LM_DSEA::CDRVoiceXmit() 
 {
+	/*
+	//This logic will be necessary along with a signal that voice is being transmitted, commented out for now as voice is not simulated.
 	if ((lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
 	{
 		return true;
 	}
+	*/
+
 	return false;
-	//PTT & VOX not simulated yet
+	//voice not simulated yet
 }
 
 bool LM_DSEA::VoiceXmit()
 {
-	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true)
+	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true || lem->Panel12UpdataLinkSwitch.IsUp()) //Switch for debugging
+	{
+		return true;
+	}
+	return false;
+}
+
+bool LM_DSEA::ICSPTT()
+{
+	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE) || (lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
+	{
+		return true;
+	}
+	return false;
+}
+
+bool LM_DSEA::VOXPTT()
+{
+	if ((lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->LMPAudVOXSwitch.IsUp() || lem->LMPAudVOXSwitch.IsDown())) || (lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->CDRAudVOXSwitch.IsUp() || lem->CDRAudVOXSwitch.IsDown())))  //VOX or PTT
 	{
 		return true;
 	}
@@ -2733,27 +2758,49 @@ void LM_DSEA::SystemTimestep(double simdt)
 {
 	if (state != STOPPED)
 	{
+		lem->TAPE_RCDR_AC_CB.DrawPower(2.7);
 		DSEHeat->GenerateHeat(2.7);
 	}
 }
 
 void LM_DSEA::Timestep(double simt, double simdt)
 {
+	if (IsPCMPowered() == true && state == RECORDING && VoiceXmit() == true)
+	{ 
+		lem->TapeRecorderTB.SetState(1);
+	}
+
+	else 
+	{ 
+		lem->TapeRecorderTB.SetState(0);
+	}
 
 	switch (state)
 	{
 	case STOPPED:
-		if (IsACPowered() == true && VoiceXmit() == true && (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
-		{
-			Record();
-		}
+		if (IsACPowered() == true && ICSPTT() == true && (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
+			{
+				Record();
+			}
+		else if (IsACPowered() == true && (VOXPTT() == true && VoiceXmit() == true) && (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
+			{
+				Record();
+			}
 		break;
 
 	case RECORDING:
-		if (IsACPowered() == false || VoiceXmit() == false || (lem->TapeRecorderSwitch.IsDown() || IsSWPowered() == false))
-		{
-			Stop();
-		}
+		if (IsACPowered() == false || IsSWPowered() == false || lem->TapeRecorderSwitch.IsDown())
+			{
+				Stop();
+			}
+		else if (VoiceXmit() == false && VOXPTT() == true)
+			{
+				Stop();
+			}
+		else if (ICSPTT() == false)
+			{
+				Stop();
+			}
 		break;
 
 	case STARTING_RECORD:
@@ -2787,7 +2834,7 @@ void LM_DSEA::Timestep(double simt, double simdt)
 		break;
 	}
 	lastEventTime = simt;
-	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
+	sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
 }
 
 void LM_DSEA::LoadState(char *line) {
