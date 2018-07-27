@@ -2700,7 +2700,7 @@ bool LM_DSEA::IsACPowered()
 //Voice Transmit
 //VOX and PTT modes will record if transmitting or keying mic while recorder powered/switch on
 //ICS/PTT mode will always record if recorder powered/switch on
-bool LM_DSEA::CDRVoiceXmit()
+bool LM_DSEA::LMPVoiceXmit()
 {
 	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
 	{
@@ -2710,7 +2710,7 @@ bool LM_DSEA::CDRVoiceXmit()
 	//PTT & VOX not simulated yet
 }
 
-bool LM_DSEA::LMPVoiceXmit() 
+bool LM_DSEA::CDRVoiceXmit() 
 {
 	if ((lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
 	{
