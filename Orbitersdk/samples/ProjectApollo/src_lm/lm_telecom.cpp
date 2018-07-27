@@ -2691,7 +2691,7 @@ bool LM_DSEA::IsSWPowered()
 	return false;
 }
 
-bool LM_DSEA::IsPCMPowered() //Powers the TB
+bool LM_DSEA::IsPCMPowered() //Allows PCM to timestamp tape
 {
 	if (lem->INST_PCMTEA_CB.Voltage() > SP_MIN_DCVOLTAGE)
 	{
@@ -2778,7 +2778,7 @@ void LM_DSEA::SystemTimestep(double simdt)
 
 void LM_DSEA::Timestep(double simt, double simdt)
 {
-	if (IsPCMPowered() == true && state == RECORDING && VoiceXmit() == true)
+	if (state == RECORDING && VoiceXmit() == true)
 	{ 
 		lem->TapeRecorderTB.SetState(1);
 	}
