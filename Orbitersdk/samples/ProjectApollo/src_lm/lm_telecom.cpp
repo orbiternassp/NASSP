@@ -2743,7 +2743,7 @@ void LM_DSEA::Timestep(double simt, double simdt)
 	switch (state)
 	{
 	case STOPPED:
-		if (IsACPowered() == true || VoiceXmit() == true || (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
+		if (IsACPowered() == true && VoiceXmit() == true && (lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true))
 		{
 			Record();
 		}
