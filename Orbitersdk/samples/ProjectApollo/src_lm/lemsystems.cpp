@@ -524,6 +524,10 @@ void LEM::SystemsInit()
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBPHEAT"));
 	// VHF System
 	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT"));
+	// DSEA
+	DSEA.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:DSEHEAT"));
+	TapeRecorderTB.WireTo(&INST_PCMTEA_CB); //Tape Recorder TB powered by PCM/TE cb
+
 	// CBs
 	INST_SIG_CONDR_1_CB.MaxAmps = 2.0;
 	INST_SIG_CONDR_1_CB.WireTo(&CDRs28VBus);
@@ -1421,6 +1425,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
+		DSEA.SystemTimestep(tFactor);
 		CabinPressureSwitch.SystemTimestep(tFactor);
 		SuitPressureSwitch.SystemTimestep(tFactor);
 		CabinRepressValve.SystemTimestep(tFactor);
@@ -1551,6 +1556,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	scera1.Timestep();
 	scera2.Timestep();
 	CWEA.Timestep(simdt);
+	DSEA.Timestep(simt, simdt);
 
 	//Treat LM O2 as gas every timestep
 	DesO2Tank->BoilAllAndSetTemp(294.261);
