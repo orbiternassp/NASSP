@@ -2742,7 +2742,7 @@ bool LM_DSEA::CDRVoiceXmit()
 bool LM_DSEA::VoiceXmit()
 {
 	//if (lem->Panel12UpdataLinkSwitch.IsUp()) //Switch for debugging voice transmit
-	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true || lem->Panel12UpdataLinkSwitch.IsUp()) //Switch for debugging
+	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true)
 	{
 		return true;
 	}
