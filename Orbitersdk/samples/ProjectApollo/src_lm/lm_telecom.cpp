@@ -2747,7 +2747,7 @@ bool LM_DSEA::ICSPTT()
 
 bool LM_DSEA::VOXPTT()
 {
-	if ((lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->LMPAudVOXSwitch.IsUp() || lem->LMPAudVOXSwitch.IsDown())) || (lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->CDRAudVOXSwitch.IsUp() || lem->CDRAudVOXSwitch.IsDown())))  //VOX or PTT
+	if (ICSPTT() == false && (lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->LMPAudVOXSwitch.IsUp() || lem->LMPAudVOXSwitch.IsDown())) || (lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->CDRAudVOXSwitch.IsUp() || lem->CDRAudVOXSwitch.IsDown())))  //VOX or PTT
 	{
 		return true;
 	}
@@ -2794,10 +2794,6 @@ void LM_DSEA::Timestep(double simt, double simdt)
 				Stop();
 			}
 		else if (VoiceXmit() == false && VOXPTT() == true)
-			{
-				Stop();
-			}
-		else if (ICSPTT() == false)
 			{
 				Stop();
 			}
