@@ -1672,10 +1672,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.GETbase = GETbase;
 		gmpopt.H_A = 210.0*1852.0;
 		gmpopt.H_P = 97.0*1852.0;
-		gmpopt.long_D = 110.0*RAD;
-		gmpopt.ManeuverCode = RTCC_GMP_HBL;
+		gmpopt.long_D = -45.0*RAD;
+		gmpopt.ManeuverCode = RTCC_GMP_HAS;
 		gmpopt.RV_MCC = sv0;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 0, 0);
+		gmpopt.N = 46;
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
 		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);

@@ -191,6 +191,7 @@ public:
 	//9 = Combination circularization and plane change
 	//10 = Combination circularization and node shift
 	//11 = Combination height maneuver and node shift
+	//12 = Combination apogee/perigee change and line-of-apsides shift
 	int GMPManeuverType;
 	GPMPRESULTS GMPResults;
 
