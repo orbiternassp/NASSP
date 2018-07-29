@@ -444,6 +444,7 @@ void LEM::SystemsInit()
 	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
 	// The source of the isolated section is coming from the LGC supply.
 	dsky.Init(&LGC_DSKY_CB, &LtgAnunNumKnob);
+	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
 	// AGS stuff
 	asa.Init(this, &AGSOperateSwitch, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FastHeater"),
@@ -523,6 +524,10 @@ void LEM::SystemsInit()
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECSBPHEAT"));
 	// VHF System
 	VHF.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:VHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECVHFHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECPCMHEAT"));
+	// DSEA
+	DSEA.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:DSEHEAT"));
+	TapeRecorderTB.WireTo(&INST_PCMTEA_CB); //Tape Recorder TB powered by PCM/TE cb
+
 	// CBs
 	INST_SIG_CONDR_1_CB.MaxAmps = 2.0;
 	INST_SIG_CONDR_1_CB.WireTo(&CDRs28VBus);
@@ -1401,7 +1406,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 
 		Panelsdk.SimpleTimestep(tFactor);
 
-		agc.SystemTimestep(tFactor);								// Draw power
+		agc.SystemTimestep(tFactor);								// Draw power & generate heat
 		dsky.SystemTimestep(tFactor);								// This can draw power now.
 		asa.SystemTimestep(tFactor);
 		aea.SystemTimestep(tFactor);
@@ -1420,6 +1425,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		SBandSteerable.SystemTimestep(tFactor);
 		VHF.SystemTimestep(tFactor);
 		SBand.SystemTimestep(tFactor);
+		DSEA.SystemTimestep(tFactor);
 		CabinPressureSwitch.SystemTimestep(tFactor);
 		SuitPressureSwitch.SystemTimestep(tFactor);
 		CabinRepressValve.SystemTimestep(tFactor);
@@ -1550,6 +1556,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	scera1.Timestep();
 	scera2.Timestep();
 	CWEA.Timestep(simdt);
+	DSEA.Timestep(simt, simdt);
 
 	//Treat LM O2 as gas every timestep
 	DesO2Tank->BoilAllAndSetTemp(294.261);
