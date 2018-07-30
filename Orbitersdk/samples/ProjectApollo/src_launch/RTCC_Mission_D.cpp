@@ -1356,6 +1356,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 46: //S065 PHOTOGRAPHY UPDATE 1
 	case 47: //S065 PHOTOGRAPHY UPDATE 2
+	case 58: //S065 PHOTOGRAPHY UPDATE 3
+	case 59: //S065 PHOTOGRAPHY UPDATE 4
 	{
 		S065UPDATE * form = (S065UPDATE *)pad;
 
@@ -1395,7 +1397,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 3;
 		}
-		else
+		else if (fcn == 47)
 		{
 			dt = OrbMech::HHMMSSToSS(125, 40, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
@@ -1409,6 +1411,42 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->GETStart[1] = GET_AOS;
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 15;
+		}
+		else if (fcn == 58)
+		{
+			dt = OrbMech::HHMMSSToSS(171, 10, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			sv1 = coast(sv0, dt);
+
+			FindRadarAOSLOS(sv1, GETbase, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
+			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			form->OrbRate[0] = true;
+			form->OrbRate[2] = true;
+
+			sprintf(form->Area[1], "SW US");
+			form->GETStart[1] = GET_AOS;
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 25;
+		}
+		else if (fcn == 59)
+		{
+			dt = OrbMech::HHMMSSToSS(172, 45, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			sv1 = coast(sv0, dt);
+
+			FindRadarAOSLOS(sv1, GETbase, 19.3*RAD, -99.666*RAD, GET_AOS, GET_LOS);
+			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			form->OrbRate[0] = true;
+			form->OrbRate[2] = true;
+
+			sprintf(form->Area[1], "Mexico");
+			form->GETStart[1] = GET_AOS;
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 25;
+
+			FindRadarAOSLOS(sv1, GETbase, -22.9*RAD, -47.1*RAD, GET_AOS, GET_LOS);
+			sprintf(form->Area[2], "Brazil");
+			form->GETStart[2] = GET_AOS;
+			form->ExposureInterval[2] = 6.0;
+			form->ExposureNum[2] = 3;
 		}
 
 		sv2 = coast(sv1, form->GETStart[0] - OrbMech::GETfromMJD(sv1.MJD, GETbase));
@@ -1714,6 +1752,25 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM state vector, Verb 66, target load");
 		}
+	}
+	break;
+	case 60: //BLOCK DATA 18
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 8;
+		double lng[] = { -160.0*RAD, -148.5*RAD, -144.0*RAD, -141.0*RAD, -161.0*RAD, -32.0*RAD, -27.0*RAD, -30.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(175, 29, 41),OrbMech::HHMMSSToSS(176, 53, 9),OrbMech::HHMMSSToSS(178, 32, 27),OrbMech::HHMMSSToSS(180, 4, 48),
+			OrbMech::HHMMSSToSS(182, 1, 49), OrbMech::HHMMSSToSS(182, 21, 1), OrbMech::HHMMSSToSS(183, 59, 15), OrbMech::HHMMSSToSS(185, 37, 27) };
+		std::string area[] = { "111-4A", "112-3B", "113-3A", "114-3C", "115-CC", "116-AC", "117-2C", "118-2A" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
 	}
 	break;
 	}

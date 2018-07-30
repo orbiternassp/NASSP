@@ -2164,10 +2164,22 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 162.0*3600.0 + 5.0*60.0, 55, MST_D_DAY8STATE1);
 				break;
 			case MST_D_DAY8STATE1: //Block Data 17 to SPS-7 Update
-				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 168.0*3600.0 + 10.0*60.0, 56, MST_D_DAY8STATE2);
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 168.0*3600.0 + 7.0*60.0, 56, MST_D_DAY8STATE2);
 				break;
 			case MST_D_DAY8STATE2: //SPS-7 Update to S065 Update
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 170.0*3600.0 + 35.0*60.0, 57, MST_D_DAY8STATE3);
+				break;
+			case MST_D_DAY8STATE3: //S065 Update to S065 Update
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 172.0*3600.0 + 25.0*60.0, 58, MST_D_DAY8STATE4);
+				break;
+			case MST_D_DAY8STATE4: //S065 Update to Block Data 18
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, SubStateTime > 3.0*60.0, 59, MST_D_DAY8STATE5);
+				break;
+			case MST_D_DAY8STATE5: //Block Data 18 to state vector update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 174.0*3600.0, 60, MST_D_DAY8STATE6);
+				break;
+			case MST_D_DAY8STATE6: //State vector update to Block Data 19
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 185.0*3600.0 + 10.0*60.0, 2, MST_D_DAY9STATE1);
 				break;
 			}
 			break;
