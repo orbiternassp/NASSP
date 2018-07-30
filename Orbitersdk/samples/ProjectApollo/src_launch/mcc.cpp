@@ -2170,7 +2170,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 170.0*3600.0 + 35.0*60.0, 57, MST_D_DAY8STATE3);
 				break;
 			case MST_D_DAY8STATE3: //S065 Update to S065 Update
-				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 172.0*3600.0 + 25.0*60.0, 58, MST_D_DAY8STATE4);
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 172.0*3600.0 + 20.0*60.0, 58, MST_D_DAY8STATE4);
 				break;
 			case MST_D_DAY8STATE4: //S065 Update to Block Data 18
 				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, SubStateTime > 3.0*60.0, 59, MST_D_DAY8STATE5);
@@ -2180,6 +2180,55 @@ void MCC::TimeStep(double simdt){
 				break;
 			case MST_D_DAY8STATE6: //State vector update to Block Data 19
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 185.0*3600.0 + 10.0*60.0, 2, MST_D_DAY9STATE1);
+				break;
+			case MST_D_DAY9STATE1: //Block Data 18 to T Align Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 187.0*3600.0 + 30.0*60.0, 61, MST_D_DAY9STATE2);
+				break;
+			case MST_D_DAY9STATE2: //T Align Update to S065 Update
+				UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->MissionTime > 189.0*3600.0 + 50.0*60.0, 62, MST_D_DAY9STATE3);
+				break;
+			case MST_D_DAY9STATE3: //S065 Update to S065 Update
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 191.0*3600.0 + 30.0*60.0, 63, MST_D_DAY9STATE4);
+				break;
+			case MST_D_DAY9STATE4: //S065 Update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 193.0*3600.0, 64, MST_D_DAY9STATE5);
+				break;
+			case MST_D_DAY9STATE5: //State vector update to Block Data 20
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 196.0*3600.0 + 45.0*60.0, 2, MST_D_DAY9STATE6);
+				break;
+			case MST_D_DAY9STATE6: //Block Data 20 to Block Data 21
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 209.0*3600.0 + 50.0*60.0, 65, MST_D_DAY10STATE1);
+				break;
+			case MST_D_DAY10STATE1: //Block Data 21 to T Align Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 211.0*3600.0 + 30.0*60.0, 66, MST_D_DAY10STATE2);
+				break;
+			case MST_D_DAY10STATE2: //T Align Update to S065 Update
+				UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->MissionTime > 213.0*3600.0 + 50.0*60.0, 67, MST_D_DAY10STATE3);
+				break;
+			case MST_D_DAY10STATE3: //S065 Update to S065 Update
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 215.0*3600.0 + 25.0*60.0, 68, MST_D_DAY10STATE4);
+				break;
+			case MST_D_DAY10STATE4: //S065 Update to state vector update
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 217.0*3600.0, 69, MST_D_DAY10STATE5);
+				break;
+			case MST_D_DAY10STATE5: //State vector update to Block Data 22
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 220.0*3600.0 + 20.0*60.0, 2, MST_D_DAY10STATE6);
+				break;
+			case MST_D_DAY10STATE6: //Block Data 22 to Block Data 23
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 232.0*3600.0 + 25.0*60.0, 70, MST_D_DAY11STATE1);
+				break;
+			case MST_D_DAY11STATE1: //Block Data 23 to Deorbit Maneuver Update
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 235.0*3600.0 + 15.0*60.0, 71, MST_D_DAY11STATE2);
+				break;
+			case MST_D_DAY11STATE2: //Deorbit Maneuver Update to Entry PAD Update
+				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 5.0*60.0, 72, MST_D_DAY11STATE3);
+				break;
+			case MST_D_DAY11STATE3: //Entry PAD to CM/SM Separation
+				UpdateMacro(UTP_PADONLY, PT_AP7ENT, cm->stage == CM_STAGE, 73, MST_ORBIT_ENTRY);
+				break;
+			case MST_ORBIT_ENTRY:
+				MissionPhase = MMST_ENTRY;
+				UpdateMacro(UTP_PADONLY, PT_AP7ENT, cm->stage == CM_ENTRY_STAGE_SEVEN, 74, MST_LANDING);
 				break;
 			}
 			break;

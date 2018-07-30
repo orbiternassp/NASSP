@@ -1358,6 +1358,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 47: //S065 PHOTOGRAPHY UPDATE 2
 	case 58: //S065 PHOTOGRAPHY UPDATE 3
 	case 59: //S065 PHOTOGRAPHY UPDATE 4
+	case 63: //S065 PHOTOGRAPHY UPDATE 5
+	case 64: //S065 PHOTOGRAPHY UPDATE 6
 	{
 		S065UPDATE * form = (S065UPDATE *)pad;
 
@@ -1771,6 +1773,61 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 61: //BLOCK DATA 19
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 8;
+		double lng[] = { -64.0*RAD, -68.0*RAD, -66.3*RAD, -66.0*RAD, -163.2*RAD, -163.0*RAD, -163.2*RAD, 149.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(187, 3, 40),OrbMech::HHMMSSToSS(188, 42, 36),OrbMech::HHMMSSToSS(190, 25, 20),OrbMech::HHMMSSToSS(192, 7, 2),
+			OrbMech::HHMMSSToSS(194, 43, 50), OrbMech::HHMMSSToSS(196, 25, 35), OrbMech::HHMMSSToSS(198, 7, 6), OrbMech::HHMMSSToSS(199, 25, 49) };
+		std::string area[] = { "119-1B", "120-1B", "121-1B", "122-1A", "123-4A", "124-4B", "125-4A", "126-3B" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 62: //S065 T ALIGN
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		char buff[64];
+		double t_align;
+
+		t_align = OrbMech::HHMMSSToSS(190, 30, 0);
+
+		OrbMech::format_time_HHMMSS(buff, t_align);
+		sprintf(form->paddata, "T Align is %s GET", buff);
+	}
+	break;
+	case 65: //BLOCK DATA 20
+	{
+
+	}
+	break;
+	case 66: //BLOCK DATA 21
+	{
+
+	}
+	break;
+	case 67: //S065 T ALIGN
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		char buff[64];
+		double t_align;
+
+		t_align = OrbMech::HHMMSSToSS(190, 30, 0);
+
+		OrbMech::format_time_HHMMSS(buff, t_align);
+		sprintf(form->paddata, "T Align is %s GET", buff);
 	}
 	break;
 	}
