@@ -636,8 +636,8 @@ void LEM::SystemsInit()
 	AscO2Tank2->BoilAllAndSetTemp(294.261);
 	DesO2Manifold->BoilAllAndSetTemp(294.261);
 	O2Manifold->BoilAllAndSetTemp(294.261);
-	//PressRegA->BoilAllAndSetTemp(285.928);
-	//PressRegB->BoilAllAndSetTemp(285.928);
+	PressRegA->BoilAllAndSetTemp(285.928);
+	PressRegB->BoilAllAndSetTemp(285.928);
 
 	//Tunnel Connection Initialization   
 	SetPipeMaxFlow("HYDRAULIC:LMTUNNELUNDOCKED", 1000.0 / LBH);
@@ -1698,11 +1698,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *hxheatingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:PRESS");
 	double *hxheatingTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:TEMP");
 	double *hxheatingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:MASS");
+	double *hxheatingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEAT:POWER");
 	double *SGDPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:PRESS");
 	double *SGDMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:MASS");
 	double *hxcoolingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:MASS");
 	double *hxcoolingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:PRESS");
 	double *hxcoolingTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:TEMP");
+	double *hxcoolingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOL:POWER");
 	double *WSMMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:MASS");
 	double *WSMPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:PRESS");
 	double *WSMTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:TEMP");
@@ -1960,7 +1962,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "Quad 1 %lf Quad 2 %lf Quad 3 %lf Quad 4 %lf", KelvinToFahrenheit(*QD1Temp), KelvinToFahrenheit(*QD2Temp), KelvinToFahrenheit(*QD3Temp), KelvinToFahrenheit(*QD4Temp));
 	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
 
-	//sprintf(oapiDebugString(), "GlyTmp %lf GlyCoolTmp %lf HXCTmp %lf GlyHeatTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf LP %lf LT %lf", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), KelvinToFahrenheit(*SuitCircuitTemp), (*cdrsuitpress)*PSI, KelvinToFahrenheit(*cdrsuittemp), (*lmpsuitpress)*PSI, KelvinToFahrenheit(*lmpsuittemp));
+	//sprintf(oapiDebugString(), "GlyCTmp %lf HXCTmp %lf HXCPwr %lf GlyHTmp %lf HXHTmp %lf HXHPwr %lf CT %lf LT %lf", KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*cdrsuittemp), KelvinToFahrenheit(*lmpsuittemp));
 	//sprintf(oapiDebugString(), "CO2CP %lf SFMP %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf SC Mass: %lf", *primCO2CanisterPress*PSI, *suitfanmanifoldPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval, (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldMass + *hxcoolingMass));
 	//sprintf(oapiDebugString(), "Total: %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf RV %d RVF %lf", (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldMass + *hxcoolingMass), *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2CanisterMass, *suitfanmanifoldMass, *hxcoolingMass, *suitReliefvlv, *suitReliefflow*LBH);
 	//sprintf(oapiDebugString(), "HXH %lf CS %lf LS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf WSM %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldPress*PSI, *hxcoolingPress*PSI, *WSMPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval);
