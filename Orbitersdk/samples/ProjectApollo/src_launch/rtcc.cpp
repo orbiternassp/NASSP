@@ -3900,6 +3900,55 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 		dt2 = OrbMech::time_theta(sv1.R, sv1.V, dtheta, mu);
 		sv2 = coast(sv1, dt2);
 	}
+	//Apogee and perigee change + apse line rotation to specified longitude
+	else if (code == RTCC_GMP_HAS)
+	{
+		SV sv_a, sv_p, sv2_apo;
+		double r_AD, r_PD, lat_p, lng_p, dlng, dt, ddt, dlng_apo, eps, w_E, T_P;
+		int n, nmax;
+
+		ddt = 5.0*60.0;
+		dt = 0.0;
+		n = 0;
+		nmax = 100;
+		eps = 0.01*RAD;
+		dlng = 1.0;
+		w_E = PI2 / oapiGetPlanetPeriod(sv1.gravref);
+
+		//If desired apogee is equal to perigee, bias perigee to prevent zero eccentricity
+		if (opt->H_P == opt->H_A)
+		{
+			opt->H_P -= 0.1*1852.0;
+		}
+
+		r_AD = R_E + opt->H_A;
+		r_PD = R_E + opt->H_P;
+
+		while (abs(dlng) > eps && n < nmax)
+		{
+			sv2 = coast(sv1, dt);
+
+			DV = ApoapsisPeriapsisChangeInteg(sv2, r_AD, r_PD);
+			sv2_apo = sv2;
+			sv2_apo.V += DV;
+			T_P = OrbMech::period(sv2_apo.R, sv2_apo.V, mu);
+
+			ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+			OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_p.gravref, lat_p, lng_p);
+			lng_p += -T_P * w_E*(double)opt->N;
+			lng_p = fmod(lng_p, PI2);
+			dlng = OrbMech::calculateDifferenceBetweenAngles(lng_p, opt->long_D);
+
+			if (n > 0 && dlng*dlng_apo < 0 && abs(dlng_apo) < PI05)
+			{
+				ddt = -ddt / 2.0;
+			}
+
+			dt += ddt;
+			dlng_apo = dlng;
+			n++;
+		}
+	}
 
 	//Maneuver calculation
 
@@ -4183,7 +4232,11 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	res.E = coe_a.e;
 	res.I = coe_a.i;
 	res.Node_Ang = coe_a.RA;
-	res.Del_G = fmod(coe_a.TA - coe_b.TA, PI2);
+	res.Del_G = coe_a.w - coe_b.w;
+	if (res.Del_G < 0)
+	{
+		res.Del_G += PI2;
+	}
 	res.Pitch_Man = atan2(-dV_LVLH.z, dV_LVLH.x);
 	res.Yaw_Man = atan2(dV_LVLH.y, sqrt(dV_LVLH.x*dV_LVLH.x + dV_LVLH.z*dV_LVLH.z));
 	res.H_Man = length(sv2.R) - R_E;

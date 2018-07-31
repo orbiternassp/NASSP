@@ -659,7 +659,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		else if (G->GMPManeuverCode == RTCC_GMP_PCL || G->GMPManeuverCode == RTCC_GMP_CRL || G->GMPManeuverCode == RTCC_GMP_HOL || G->GMPManeuverCode == RTCC_GMP_NSL ||
 			G->GMPManeuverCode == RTCC_GMP_FCL || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_SAL || G->GMPManeuverCode == RTCC_GMP_PHL ||
 			G->GMPManeuverCode == RTCC_GMP_CPL || G->GMPManeuverCode == RTCC_GMP_HBL || G->GMPManeuverCode == RTCC_GMP_CNL || G->GMPManeuverCode == RTCC_GMP_HNL ||
-			G->GMPManeuverCode == RTCC_GMP_SAA)
+			G->GMPManeuverCode == RTCC_GMP_SAA || G->GMPManeuverCode == RTCC_GMP_HAS)
 		{
 			skp->Text(2 * W / 22, 8 * H / 22, "LNG", 3);
 			sprintf(Buffer, "%.2f°", G->GMPManeuverLongitude*DEG);
@@ -677,7 +677,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		//Apoapsis Height
 		else if (G->GMPManeuverCode == RTCC_GMP_HBT || G->GMPManeuverCode == RTCC_GMP_HBH || G->GMPManeuverCode == RTCC_GMP_HBO || G->GMPManeuverCode == RTCC_GMP_HBL ||
-			G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL)
+			G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_HAS)
 		{
 			skp->Text(2 * W / 22, 9 * H / 22, "ApA", 3);
 			sprintf(Buffer, "%.2f NM", G->GMPApogeeHeight / 1852.0);
@@ -720,7 +720,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		//Periapsis Height
 		else if (G->GMPManeuverCode == RTCC_GMP_HBT || G->GMPManeuverCode == RTCC_GMP_HBH || G->GMPManeuverCode == RTCC_GMP_HBO || G->GMPManeuverCode == RTCC_GMP_HBL ||
-			G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL)
+			G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_HAS)
 		{
 			skp->Text(2 * W / 22, 10 * H / 22, "PeA", 3);
 			sprintf(Buffer, "%.2f NM", G->GMPPerigeeHeight / 1852.0);
@@ -748,6 +748,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(2 * W / 22, 11 * H / 22, "DLN", 3);
 			sprintf(Buffer, "%.2f°", G->GMPNodeShiftAngle*DEG);
+			skp->Text(4 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
+		}
+		//Rev counter
+		else if (G->GMPManeuverCode == RTCC_GMP_HAS)
+		{
+			skp->Text(2 * W / 22, 11 * H / 22, "N", 1);
+			sprintf(Buffer, "%d", G->GMPRevs);
 			skp->Text(4 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
 		}
 
@@ -3876,7 +3883,7 @@ void ApolloRTCCMFD::menuCycleGMPManeuverPoint()
 
 void ApolloRTCCMFD::menuCycleGMPManeuverType()
 {
-	if (G->GMPManeuverType >= 11)
+	if (G->GMPManeuverType >= 12)
 	{
 		G->GMPManeuverType = 0;
 	}
@@ -4466,7 +4473,7 @@ void ApolloRTCCMFD::GMPInput1Dialogue()
 	else if (G->GMPManeuverCode == RTCC_GMP_PCL || G->GMPManeuverCode == RTCC_GMP_CRL || G->GMPManeuverCode == RTCC_GMP_HOL || G->GMPManeuverCode == RTCC_GMP_NSL ||
 		G->GMPManeuverCode == RTCC_GMP_FCL || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_SAL || G->GMPManeuverCode == RTCC_GMP_PHL ||
 		G->GMPManeuverCode == RTCC_GMP_CPL || G->GMPManeuverCode == RTCC_GMP_HBL || G->GMPManeuverCode == RTCC_GMP_CNL || G->GMPManeuverCode == RTCC_GMP_HNL ||
-		G->GMPManeuverCode == RTCC_GMP_SAA)
+		G->GMPManeuverCode == RTCC_GMP_SAA || G->GMPManeuverCode == RTCC_GMP_HAS)
 	{
 		oapiOpenInputBox("Maneuver longitude in degrees:", GMPInput1Input, 0, 20, (void*)this);
 	}
@@ -4494,7 +4501,7 @@ void ApolloRTCCMFD::set_GMPInput1(double val)
 	else if (G->GMPManeuverCode == RTCC_GMP_PCL || G->GMPManeuverCode == RTCC_GMP_CRL || G->GMPManeuverCode == RTCC_GMP_HOL || G->GMPManeuverCode == RTCC_GMP_NSL ||
 		G->GMPManeuverCode == RTCC_GMP_FCL || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_SAL || G->GMPManeuverCode == RTCC_GMP_PHL ||
 		G->GMPManeuverCode == RTCC_GMP_CPL || G->GMPManeuverCode == RTCC_GMP_HBL || G->GMPManeuverCode == RTCC_GMP_CNL || G->GMPManeuverCode == RTCC_GMP_HNL ||
-		G->GMPManeuverCode == RTCC_GMP_SAA)
+		G->GMPManeuverCode == RTCC_GMP_SAA || G->GMPManeuverCode == RTCC_GMP_HAS)
 	{
 		G->GMPManeuverLongitude = val * RAD;
 	}
@@ -4512,7 +4519,7 @@ void ApolloRTCCMFD::GMPInput2Dialogue()
 	}
 	//Apoapsis Height
 	else if (G->GMPManeuverCode == RTCC_GMP_HBT || G->GMPManeuverCode == RTCC_GMP_HBH || G->GMPManeuverCode == RTCC_GMP_HBO || G->GMPManeuverCode == RTCC_GMP_HBL ||
-		G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL)
+		G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_HAS)
 	{
 		oapiOpenInputBox("Apoapsis height in NM:", GMPInput2Input, 0, 20, (void*)this);
 	}
@@ -4550,7 +4557,7 @@ void ApolloRTCCMFD::set_GMPInput2(double val)
 	}
 	//Apoapsis Height
 	else if (G->GMPManeuverCode == RTCC_GMP_HBT || G->GMPManeuverCode == RTCC_GMP_HBH || G->GMPManeuverCode == RTCC_GMP_HBO || G->GMPManeuverCode == RTCC_GMP_HBL ||
-		G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL)
+		G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_HAS)
 	{
 		G->GMPApogeeHeight = val * 1852.0;
 	}
@@ -4588,7 +4595,7 @@ void ApolloRTCCMFD::GMPInput3Dialogue()
 	}
 	//Periapsis Height
 	else if (G->GMPManeuverCode == RTCC_GMP_HBT || G->GMPManeuverCode == RTCC_GMP_HBH || G->GMPManeuverCode == RTCC_GMP_HBO || G->GMPManeuverCode == RTCC_GMP_HBL ||
-		G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL)
+		G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_HAS)
 	{
 		oapiOpenInputBox("Periapsis height in NM:", GMPInput3Input, 0, 20, (void*)this);
 	}
@@ -4629,7 +4636,7 @@ void ApolloRTCCMFD::set_GMPInput3(double val)
 	}
 	//Periapsis Height
 	else if (G->GMPManeuverCode == RTCC_GMP_HBT || G->GMPManeuverCode == RTCC_GMP_HBH || G->GMPManeuverCode == RTCC_GMP_HBO || G->GMPManeuverCode == RTCC_GMP_HBL ||
-		G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL)
+		G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_HAS)
 	{
 		G->GMPPerigeeHeight = val * 1852.0;
 	}
@@ -4655,6 +4662,11 @@ void ApolloRTCCMFD::GMPInput4Dialogue()
 	else if (G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL)
 	{
 		oapiOpenInputBox("Node shift in degrees:", GMPInput4Input, 0, 20, (void*)this);
+	}
+	//Rev counter
+	else if (G->GMPManeuverCode == RTCC_GMP_HAS)
+	{
+		OrbAdjRevDialogue();
 	}
 }
 
@@ -7210,6 +7222,9 @@ void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)
 		break;
 	case 11:
 		sprintf(buffer, "Height + Node Shift");
+		break;
+	case 12:
+		sprintf(buffer, "Apo/Peri Change + Apsides Shift");
 		break;
 	default:
 		sprintf(buffer, "");

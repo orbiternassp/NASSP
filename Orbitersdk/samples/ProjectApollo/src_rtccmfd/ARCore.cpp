@@ -1971,6 +1971,7 @@ int ARCore::subThread()
 		opt.Pitch = GMPPitch;
 		opt.Yaw = GMPYaw;
 		opt.dLOA = GMPApseLineRotAngle;
+		opt.N = GMPRevs;
 		opt.RV_MCC = sv0;
 
 		if (vesseltype == 0 || vesseltype == 2)
@@ -3453,6 +3454,14 @@ void ARCore::DetermineGMPCode()
 		{
 			//HNT: Height maneuver and node shift at a specified time
 			code = 37;
+		}
+	}
+	else if (GMPManeuverType == 12)
+	{
+		if (GMPManeuverPoint == 6)
+		{
+			//HAS
+			code = RTCC_GMP_HAS;
 		}
 	}
 

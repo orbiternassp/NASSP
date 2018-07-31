@@ -117,6 +117,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 //Node shift at a longitude
 #define RTCC_GMP_NSL 51
 #define RTCC_GMP_HOH 52
+//Maneuver to change both apogee and perigee and place perigee at a certain longitude a certain number of revs later
 #define RTCC_GMP_HAS 53
 
 const double LaunchMJD[11] = {//Launch MJD of Apollo missions
@@ -644,6 +645,7 @@ struct GMPOpt
 	double Pitch;	//Input pitch of the maneuver
 	double Yaw;		//Input yaw of the maneuver
 	double dLOA;	//Line-of-apsides shift
+	int N;			//Number of revolutions
 };
 
 struct TLIPADOpt
