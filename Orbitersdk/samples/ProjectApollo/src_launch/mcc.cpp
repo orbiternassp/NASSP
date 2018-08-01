@@ -2223,10 +2223,10 @@ void MCC::TimeStep(double simdt){
 			case MST_D_DAY11STATE2: //Deorbit Maneuver Update to Entry PAD Update
 				UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 5.0*60.0, 72, MST_D_DAY11STATE3);
 				break;
-			case MST_D_DAY11STATE3: //Entry PAD to CM/SM Separation
+			case MST_D_DAY11STATE3: //Entry PAD to Entry PAD Postburn Update
 				UpdateMacro(UTP_PADONLY, PT_AP7ENT, cm->stage == CM_STAGE, 73, MST_ORBIT_ENTRY);
 				break;
-			case MST_ORBIT_ENTRY:
+			case MST_ORBIT_ENTRY: //Entry PAD Postburn Update to EOM
 				MissionPhase = MMST_ENTRY;
 				UpdateMacro(UTP_PADONLY, PT_AP7ENT, cm->stage == CM_ENTRY_STAGE_SEVEN, 74, MST_LANDING);
 				break;
