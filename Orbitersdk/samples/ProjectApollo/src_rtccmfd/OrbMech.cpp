@@ -2784,6 +2784,10 @@ double timetoapo(VECTOR3 R, VECTOR3 V, double mu, int s)
 
 double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 {
+	//Conventions:
+	//Elliptic: dt is always positive
+	//Parabolic and Hyperbolic: dt can be positive or negative
+
 	double r0, v0, vr0, alpha, a, e, x, dt;
 	VECTOR3 Ex;
 
@@ -2885,15 +2889,13 @@ double time_radius(VECTOR3 R, VECTOR3 V, double r, double s, double mu)
 			}
 		}
 		E0 = atan2(sinE0, cosE0);
-		if (E < E0 && s == -1)
+
+		dE = fmod(E - E0, PI2);
+		if (dE < 0)
 		{
-			E = E + PI2;
+			dE += PI2;
 		}
-		dE = E - E0;
-		if (abs(dE) > PI)
-		{
-			dE = dE - PI2*sign(dE);
-		}
+
 		x = sqrt(a)*(dE);
 	}
 
