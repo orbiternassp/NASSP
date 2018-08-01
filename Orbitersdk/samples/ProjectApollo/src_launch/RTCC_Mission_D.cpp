@@ -1474,8 +1474,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			FindRadarAOSLOS(sv1, GETbase, 17.0*RAD, -15.61667*RAD, GET_AOS, GET_LOS);
 			sprintf(form->Area[3], "Africa");
 			form->GETStart[3] = GET_AOS;
-			form->ExposureInterval[3] = 3.0;
-			form->ExposureNum[3] = 25;
+			form->ExposureInterval[3] = 12.0;
+			form->ExposureNum[3] = 48;
 		}
 		else if (fcn == 64)
 		{
