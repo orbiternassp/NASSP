@@ -1990,6 +1990,127 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BlockData(&opt, *form);
 	}
 	break;
+	case 72: //NOMINAL SPS DEORBIT
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		EarthEntryOpt entopt;
+		EntryResults res;
+		AP7ManPADOpt opt;
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
+		double GETbase, GET_sv0, GETI_minus_12;
+		SV sv0, sv_preTIG;
+		char buffer1[1000];
+		char buffer2[1000];
+		char buffer3[1000];
+
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = getGETBase();
+
+		entopt.vessel = calcParams.src;
+		entopt.GETbase = GETbase;
+		entopt.impulsive = RTCC_NONIMPULSIVE;
+		entopt.lng = -59.9*RAD;
+		entopt.nominal = RTCC_ENTRY_NOMINAL;
+		entopt.TIGguess = OrbMech::HHMMSSToSS(238, 11, 47);
+		entopt.entrylongmanual = true;
+		entopt.useSV = false;
+
+		BlockDataProcessor(&entopt, &res);
+
+		TimeofIgnition = res.P30TIG;
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		DeltaV_LVLH = res.dV_LVLH;
+
+		//Uplinked state vector accurate at GETI minus 12 minutes
+		GET_sv0 = OrbMech::GETfromMJD(sv0.MJD, GETbase);
+		GETI_minus_12 = TimeofIgnition - 12.0*60.0;
+		sv_preTIG = coast(sv0, GETI_minus_12 - GET_sv0);
+
+		refsopt.vessel = calcParams.src;
+		refsopt.GETbase = GETbase;
+		refsopt.dV_LVLH = res.dV_LVLH;
+		refsopt.P30TIG = res.P30TIG;
+		refsopt.REFSMMATopt = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
+
+		opt.dV_LVLH = res.dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = true;
+		opt.navcheckGET = res.P30TIG - 40.0*60.0;
+		opt.REFSMMAT = REFSMMAT;
+		opt.sxtstardtime = -30.0*60.0;
+		opt.TIG = res.P30TIG;
+		opt.vessel = calcParams.src;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "151-1A RETROFIRE");
+
+		AGCStateVectorUpdate(buffer1, sv_preTIG, true, AGCEpoch, GETbase, true);
+		CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
+		AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, V66, target load, Retrofire REFSMMAT");
+		}
+	}
+	break;
+	case 73: //NOMINAL DEORBIT ENTRY PAD
+	{
+		AP7ENT * form = (AP7ENT *)pad;
+
+		EarthEntryPADOpt opt;
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
+
+		refsopt.vessel = calcParams.src;
+		refsopt.GETbase = getGETBase();
+		refsopt.dV_LVLH = DeltaV_LVLH;
+		refsopt.P30TIG = TimeofIgnition;
+		refsopt.REFSMMATopt = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		opt.dV_LVLH = DeltaV_LVLH;
+		opt.GETbase = getGETBase();
+		opt.P30TIG = TimeofIgnition;
+		opt.REFSMMAT = REFSMMAT;
+		opt.vessel = calcParams.src;
+		opt.preburn = true;
+		opt.lat = SplashLatitude;
+		opt.lng = SplashLongitude;
+
+		EarthOrbitEntry(&opt, *form);
+		sprintf(form->Area[0], "151-1A");
+		form->Lat[0] = SplashLatitude * DEG;
+		form->Lng[0] = SplashLongitude * DEG;
+	}
+	break;
+	case 74: //POSTBURN ENTRY PAD
+	{
+		AP7ENT * form = (AP7ENT *)pad;
+
+		EarthEntryPADOpt opt;
+
+		opt.dV_LVLH = DeltaV_LVLH;
+		opt.GETbase = getGETBase();
+		opt.lat = SplashLatitude;
+		opt.lng = SplashLongitude;
+		opt.P30TIG = TimeofIgnition;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		opt.preburn = false;
+		opt.vessel = calcParams.src;
+
+		EarthOrbitEntry(&opt, *form);
+	}
+	break;
 	}
 
 	return scrubbed;
