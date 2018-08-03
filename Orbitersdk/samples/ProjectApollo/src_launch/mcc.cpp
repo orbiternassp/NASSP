@@ -2200,13 +2200,13 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 209.0*3600.0 + 50.0*60.0, 65, MST_D_DAY10STATE1);
 				break;
 			case MST_D_DAY10STATE1: //Block Data 21 to T Align Update
-				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 211.0*3600.0 + 30.0*60.0, 66, MST_D_DAY10STATE2);
+				UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 211.0*3600.0 + 28.0*60.0, 66, MST_D_DAY10STATE2);
 				break;
 			case MST_D_DAY10STATE2: //T Align Update to S065 Update
 				UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->MissionTime > 213.0*3600.0 + 50.0*60.0, 67, MST_D_DAY10STATE3);
 				break;
 			case MST_D_DAY10STATE3: //S065 Update to S065 Update
-				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 215.0*3600.0 + 25.0*60.0, 68, MST_D_DAY10STATE4);
+				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 215.0*3600.0 + 28.0*60.0, 68, MST_D_DAY10STATE4);
 				break;
 			case MST_D_DAY10STATE4: //S065 Update to state vector update
 				UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 217.0*3600.0, 69, MST_D_DAY10STATE5);
