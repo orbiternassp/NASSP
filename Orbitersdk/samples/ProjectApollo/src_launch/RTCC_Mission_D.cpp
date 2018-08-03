@@ -1358,6 +1358,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 47: //S065 PHOTOGRAPHY UPDATE 2
 	case 58: //S065 PHOTOGRAPHY UPDATE 3
 	case 59: //S065 PHOTOGRAPHY UPDATE 4
+	case 63: //S065 PHOTOGRAPHY UPDATE 5
+	case 64: //S065 PHOTOGRAPHY UPDATE 6
 	{
 		S065UPDATE * form = (S065UPDATE *)pad;
 
@@ -1442,11 +1444,53 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 25;
 
-			FindRadarAOSLOS(sv1, GETbase, -22.9*RAD, -47.1*RAD, GET_AOS, GET_LOS);
+			FindRadarAOSLOS(sv1, GETbase, -19.81666*RAD, -43.3666*RAD, GET_AOS, GET_LOS);
 			sprintf(form->Area[2], "Brazil");
 			form->GETStart[2] = GET_AOS;
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 3;
+		}
+		else if (fcn == 63)
+		{
+			dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			sv1 = coast(sv0, dt);
+
+			FindRadarAOSLOS(sv1, GETbase, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
+			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			form->OrbRate[0] = true;
+			form->OrbRate[2] = true;
+
+			sprintf(form->Area[1], "North Mexico");
+			form->GETStart[1] = GET_AOS;
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 6;
+
+			FindRadarAOSLOS(sv1, GETbase, 29.1667*RAD, -89.333*RAD, GET_AOS, GET_LOS);
+			sprintf(form->Area[2], "Southeast US");
+			form->GETStart[2] = GET_AOS;
+			form->ExposureInterval[2] = 6.0;
+			form->ExposureNum[2] = 6;
+
+			FindRadarAOSLOS(sv1, GETbase, 17.0*RAD, -15.61667*RAD, GET_AOS, GET_LOS);
+			sprintf(form->Area[3], "Africa");
+			form->GETStart[3] = GET_AOS;
+			form->ExposureInterval[3] = 3.0;
+			form->ExposureNum[3] = 25;
+		}
+		else if (fcn == 64)
+		{
+			dt = OrbMech::HHMMSSToSS(192, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			sv1 = coast(sv0, dt);
+
+			FindRadarAOSLOS(sv1, GETbase, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
+			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			form->OrbRate[0] = true;
+			form->OrbRate[2] = true;
+
+			sprintf(form->Area[1], "Southwest US");
+			form->GETStart[1] = GET_AOS;
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 3;
 		}
 
 		sv2 = coast(sv1, form->GETStart[0] - OrbMech::GETfromMJD(sv1.MJD, GETbase));
@@ -1771,6 +1815,77 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 61: //BLOCK DATA 19
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 8;
+		double lng[] = { -64.0*RAD, -68.0*RAD, -66.3*RAD, -66.0*RAD, -163.2*RAD, -163.0*RAD, -163.2*RAD, 149.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(187, 3, 40),OrbMech::HHMMSSToSS(188, 42, 36),OrbMech::HHMMSSToSS(190, 25, 20),OrbMech::HHMMSSToSS(192, 7, 2),
+			OrbMech::HHMMSSToSS(194, 43, 50), OrbMech::HHMMSSToSS(196, 25, 35), OrbMech::HHMMSSToSS(198, 7, 6), OrbMech::HHMMSSToSS(199, 25, 49) };
+		std::string area[] = { "119-1B", "120-1B", "121-1B", "122-1A", "123-4A", "124-4B", "125-4A", "126-3B" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 62: //S065 T ALIGN
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		SV sv0, sv1;
+		char buff[64];
+		double t_align, dt, GETbase, GET_AOS, GET_LOS;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+		dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+		sv1 = coast(sv0, dt);
+
+		//Northern Mexico
+		FindRadarAOSLOS(sv1, GETbase, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
+		t_align = GET_AOS - 5.0*60.0;
+
+		OrbMech::format_time_HHMMSS(buff, t_align);
+		sprintf(form->paddata, "T Align is %s GET", buff);
+	}
+	break;
+	case 65: //BLOCK DATA 20
+	{
+
+	}
+	break;
+	case 66: //BLOCK DATA 21
+	{
+
+	}
+	break;
+	case 67: //S065 T ALIGN
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		SV sv0, sv1;
+		char buff[64];
+		double t_align, dt, GETbase, GET_AOS, GET_LOS;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		GETbase = getGETBase();
+		dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+		sv1 = coast(sv0, dt);
+
+		//Northern Mexico
+		FindRadarAOSLOS(sv1, GETbase, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
+		t_align = GET_AOS - 5.0*60.0;
+
+		OrbMech::format_time_HHMMSS(buff, t_align);
+		sprintf(form->paddata, "T Align is %s GET", buff);
 	}
 	break;
 	}
