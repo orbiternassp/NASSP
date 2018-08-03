@@ -507,7 +507,7 @@ void LEM::SystemsInit()
 	LR.Init(this, &PGNS_LDG_RDR_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-LR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-LR-Antenna-Heater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LRHEAT"));
 
 	// Rdz Radar
-	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT"));
+	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RRHEAT"));
 	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB);
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
@@ -2605,7 +2605,7 @@ LEM_RR::LEM_RR()
 	radarDataGood = false;
 }
 
-void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat,  h_HeatLoad *rreh, h_HeatLoad *secrreh) {
+void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat,  h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
 	lem = s;
 	// Set up antenna.
 	// RR antenna is designed to operate between 10F and 75F
@@ -2618,6 +2618,7 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	antenna = ant;
 	stbyantheater = stbyanheat;
 	antheater = anheat;
+	rrheat = rrh;
 	RREHeat = rreh;
 	RRESECHeat = secrreh;
 	antenna->isolation = 0.000001; 
@@ -3147,12 +3148,14 @@ void LEM_RR::SystemTimestep(double simdt) {
 
 	if (abs(shaftVel) > 0.01*RAD)
 	{
-			dc_source->DrawPower(16.5);
+		dc_source->DrawPower(16.5);
+		rrheat->GenerateHeat(16.5);
 	}
 
 	if (abs(trunnionVel) > 0.01*RAD)
 	{
 		dc_source->DrawPower(16.5);
+		rrheat->GenerateHeat(16.5);
 	}
 
 }
