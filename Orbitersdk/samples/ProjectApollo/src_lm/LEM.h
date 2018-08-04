@@ -1419,6 +1419,9 @@ protected:
 	LMOverheadHatchHandle UpperHatchHandle;
 	SwitchRow UpperHatchValveSwitchRow;
 	ThreePosSwitch UpperHatchReliefValve;
+	SwitchRow UilityLightSwitchRow;
+	ThreePosSwitch UtilityLightSwitchCDR;
+	ThreePosSwitch UtilityLightSwitchLMP;
 	
 	///////////////////////
 	// LEM Forward Hatch //
@@ -1752,7 +1755,7 @@ protected:
 	LEM_TLE tle;
 	LEM_DockLights DockLights;
 	LEM_LCA lca;
-	//LEM_UtilLights UtilLights;
+	LEM_UtilLights UtilLights;
 	LEM_COASLights COASLights;
 	LEM_FloodLights FloodLights;
 

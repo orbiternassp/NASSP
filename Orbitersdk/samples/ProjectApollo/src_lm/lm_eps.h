@@ -184,7 +184,7 @@ protected:
 	double AC_power_load;
 
 };
-/*
+
 class LEM_UtilLights
 {
 public:
@@ -202,7 +202,7 @@ ThreePosSwitch *LMPSwitch;
 h_HeatLoad *UtlLtgHeat;
 
 };
-*/
+
 class LEM_COASLights
 {
 public:
