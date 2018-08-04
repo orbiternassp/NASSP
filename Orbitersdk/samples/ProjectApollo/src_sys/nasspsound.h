@@ -79,5 +79,8 @@
 #define HATCHOPEN_SOUND				"hatch_open.wav"
 #define HATCHCLOSE_SOUND			"hatch_close.wav"
 #define LM_MASTERALARM_SOUND	    "alarm_lm.wav"
+#define LM_SUITFAN_SOUND			"LMSuitFan.wav"
+#define LM_GLYCOLSTART_SOUND		"GlycolStart.wav"
+#define LM_GLYCOLRUN_SOUND			"GlycolPump.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"
