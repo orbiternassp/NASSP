@@ -873,6 +873,9 @@ void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, P
 	glycolPumpAutoTransferCB = gpatcb;
 	glycolPump1Heat = gp1h;
 	glycolPump2Heat = gp2h;
+
+	soundlib.LoadSound(glycolpumpstartsound, LM_GLYCOLSTART_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(glycolpumprunsound, LM_GLYCOLRUN_SOUND, INTERNAL_ONLY);
 }
 
 void LEMPrimGlycolPumpController::StartGlycolPumpSound()
@@ -929,7 +932,10 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
 	{
 		glycolPump1->SetPumpOn();
-		StartGlycolPumpSound();
+		if (!glycolpumprunsound.isPlaying() && !glycolpumpstartsound.isPlaying())
+		{
+			StartGlycolPumpSound();
+		}
 	}
 	else
 	{
@@ -941,7 +947,10 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if ((glycolRotary->GetState() == 2 || GlycolAutoTransferRelay) && glycolPump2CB->IsPowered())
 	{
 		glycolPump2->SetPumpOn();
-		StartGlycolPumpSound();
+		if (!glycolpumprunsound.isPlaying() && !glycolpumpstartsound.isPlaying())
+		{
+			StartGlycolPumpSound();
+		}
 	}
 	else
 	{
@@ -951,7 +960,7 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 
 	if (glycolPump1->pumping) {
 		glycolPump1Heat->GenerateHeat(30.5);
-		if (!glycolpumprunsound.isPlaying())
+		if (!glycolpumprunsound.isPlaying() && !glycolpumpstartsound.isPlaying())
 		{
 			GlycolPumpSound();
 		}
@@ -959,7 +968,7 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 
 	if (glycolPump2->pumping) {
 		glycolPump2Heat->GenerateHeat(30.5);
-		if (!glycolpumprunsound.isPlaying())
+		if (!glycolpumprunsound.isPlaying() && !glycolpumpstartsound.isPlaying())
 		{
 			GlycolPumpSound();
 		}
