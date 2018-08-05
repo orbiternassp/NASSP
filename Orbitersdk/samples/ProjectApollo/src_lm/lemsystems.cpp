@@ -434,7 +434,7 @@ void LEM::SystemsInit()
 	tle.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECTLEHEAT"));
 	DockLights.Init(this, &ExteriorLTGSwitch);
 	lca.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LCAHEAT"));
-	//UtilLights.Init(this, &CDR_LTG_UTIL_CB, NULL, NULL, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));	//NULL needs to be the util ltg switches when the panel is created
+	UtilLights.Init(this, &CDR_LTG_UTIL_CB, &UtilityLightSwitchCDR, &UtilityLightSwitchLMP, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	COASLights.Init(this, &COAS_DC_CB, &CDRCOASSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	AOTLampFeeder.WireToBuses(&AOT_LAMP_ACA_CB, &AOT_LAMP_ACB_CB);
@@ -1458,7 +1458,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		tle.SystemTimestep(tFactor);
 		DockLights.SystemTimestep(tFactor);
 		lca.SystemTimestep(tFactor);
-		//UtilLights.SystemTimestep(tFactor);
+		UtilLights.SystemTimestep(tFactor);
 		COASLights.SystemTimestep(tFactor);
 		FloodLights.SystemTimestep(tFactor);
 		INV_1.SystemTimestep(tFactor);
@@ -1548,7 +1548,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	gasta.Timestep(simt);
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
-	//UtilLights.Timestep(simdt);
+	UtilLights.Timestep(simdt);
 	COASLights.Timestep(simdt);
 	FloodLights.Timestep(simdt);
 

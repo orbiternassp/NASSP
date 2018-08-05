@@ -982,6 +982,9 @@ void LEM::InitSwitches() {
 	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_DOWN);
 	UpperHatchHandle.SetSideways(true);
 
+	UtilityLightSwitchCDR.Register(PSH, "UtilityLightSwitchCDR", THREEPOSSWITCH_UP);
+	UtilityLightSwitchLMP.Register(PSH, "UtilityLightSwitchLMP", THREEPOSSWITCH_UP);
+
 	// Forward Hatch
 	ForwardHatchHandle.Register(PSH, "ForwardHandle", TOGGLESWITCH_DOWN);
 	ForwardHatchReliefValve.Register(PSH, "ForwardReliefValve", THREEPOSSWITCH_CENTER);
@@ -1909,6 +1912,8 @@ bool LEM::clbkLoadPanel (int id) {
 			oapiRegisterPanelArea(AID_LEM_UPPER_HATCH_VALVE, _R(654, 300, 758, 406), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 		}
 
+		oapiRegisterPanelArea(AID_LEM_UTILITY_LT, _R(151, 112, 335, 141), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
+
 		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 		oapiCameraSetCockpitDir(0, 0);
 		break;
@@ -2711,6 +2716,10 @@ void LEM::SetSwitches(int panel) {
 	
 	UpperHatchValveSwitchRow.Init(AID_LEM_UPPER_HATCH_VALVE, MainPanel);
 	UpperHatchReliefValve.Init(0, 0, 104, 106, srf[SRF_LEM_U_HATCH_REL_VLV], NULL, UpperHatchValveSwitchRow);
+
+	UilityLightSwitchRow.Init(AID_LEM_UTILITY_LT, MainPanel);
+	UtilityLightSwitchCDR.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], UilityLightSwitchRow);
+	UtilityLightSwitchLMP.Init(150, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], UilityLightSwitchRow);
 
     // Forward Hatch
 	ForwardHatchHandleSwitchRow.Init(AID_LEM_FWD_HATCH_HANDLE, MainPanel);

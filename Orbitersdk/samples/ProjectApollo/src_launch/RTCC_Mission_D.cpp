@@ -1360,6 +1360,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 59: //S065 PHOTOGRAPHY UPDATE 4
 	case 63: //S065 PHOTOGRAPHY UPDATE 5
 	case 64: //S065 PHOTOGRAPHY UPDATE 6
+	case 68: //S065 PHOTOGRAPHY UPDATE 7
+	case 69: //S065 PHOTOGRAPHY UPDATE 8
 	{
 		S065UPDATE * form = (S065UPDATE *)pad;
 
@@ -1474,8 +1476,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			FindRadarAOSLOS(sv1, GETbase, 17.0*RAD, -15.61667*RAD, GET_AOS, GET_LOS);
 			sprintf(form->Area[3], "Africa");
 			form->GETStart[3] = GET_AOS;
-			form->ExposureInterval[3] = 3.0;
-			form->ExposureNum[3] = 25;
+			form->ExposureInterval[3] = 12.0;
+			form->ExposureNum[3] = 48;
 		}
 		else if (fcn == 64)
 		{
@@ -1491,6 +1493,43 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->GETStart[1] = GET_AOS;
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 3;
+		}
+		else if (fcn == 68)
+		{
+			dt = OrbMech::HHMMSSToSS(214, 40, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			sv1 = coast(sv0, dt);
+
+			//Wilmington, North Carolina
+			FindRadarAOSLOS(sv1, GETbase, 34.22333*RAD, -77.91222*RAD, GET_AOS, GET_LOS);
+			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			form->OrbRate[0] = true;
+			form->OrbRate[2] = true;
+
+			sprintf(form->Area[1], "Wilmington");
+			form->GETStart[1] = GET_AOS;
+			form->ExposureInterval[1] = 20;
+			form->ExposureNum[1] = 3;
+
+			FindRadarAOSLOS(sv1, GETbase, -17.3667*RAD, 37.95*RAD, GET_AOS, GET_LOS);
+			sprintf(form->Area[2], "Mozambique");
+			form->GETStart[2] = GET_AOS;
+			form->ExposureInterval[2] = 12.0;
+			form->ExposureNum[2] = 6;
+		}
+		else if (fcn == 69)
+		{
+			dt = OrbMech::HHMMSSToSS(215, 55, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			sv1 = coast(sv0, dt);
+
+			FindRadarAOSLOS(sv1, GETbase, 32.333*RAD, -107.667*RAD, GET_AOS, GET_LOS);
+			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			form->OrbRate[0] = true;
+			form->OrbRate[2] = true;
+
+			sprintf(form->Area[1], "New Mexico");
+			form->GETStart[1] = GET_AOS;
+			form->ExposureInterval[1] = 20;
+			form->ExposureNum[1] = 6;
 		}
 
 		sv2 = coast(sv1, form->GETStart[0] - OrbMech::GETfromMJD(sv1.MJD, GETbase));
@@ -1859,12 +1898,40 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 65: //BLOCK DATA 20
 	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
 
+		int n = 8;
+		double lng[] = { 148.5*RAD, 145.0*RAD, -160.0*RAD, -27.0*RAD, -32.5*RAD, -28.0*RAD, -58.9*RAD, -68.0*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(201, 2, 9),OrbMech::HHMMSSToSS(202, 42, 15),OrbMech::HHMMSSToSS(204, 30, 30),OrbMech::HHMMSSToSS(204, 55, 37),
+			OrbMech::HHMMSSToSS(206, 25, 7), OrbMech::HHMMSSToSS(208, 3, 15), OrbMech::HHMMSSToSS(209, 31, 36), OrbMech::HHMMSSToSS(211, 6, 48) };
+		std::string area[] = { "127-3A", "128-3B", "129-DC", "130-AC", "131-AC", "132-2A", "133-AC", "134-1A" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
 	}
 	break;
 	case 66: //BLOCK DATA 21
 	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
 
+		int n = 6;
+		double lng[] = { -27.0*RAD, -33.0*RAD, -68.0*RAD, -162.4*RAD, -162.4*RAD, -164.0*RAD};
+		double GETI[] = { OrbMech::HHMMSSToSS(213, 1, 11),OrbMech::HHMMSSToSS(214, 38, 0),OrbMech::HHMMSSToSS(216, 4, 52),OrbMech::HHMMSSToSS(218, 43, 21),
+			OrbMech::HHMMSSToSS(220, 24, 20), OrbMech::HHMMSSToSS(222, 5, 10)};
+		std::string area[] = { "135-2B", "136-2B", "137-1A", "138-4A", "139-4A", "140-4B"};
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
 	}
 	break;
 	case 67: //S065 T ALIGN
@@ -1873,19 +1940,175 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		SV sv0, sv1;
 		char buff[64];
-		double t_align, dt, GETbase, GET_AOS, GET_LOS;
+		double t_align, t_guess, GETbase;
 
 		sv0 = StateVectorCalc(calcParams.src);
 		GETbase = getGETBase();
-		dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-		sv1 = coast(sv0, dt);
+		t_guess = OrbMech::HHMMSSToSS(214, 21, 0);
 
-		//Northern Mexico
-		FindRadarAOSLOS(sv1, GETbase, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
-		t_align = GET_AOS - 5.0*60.0;
+		t_align = FindOrbitalSunrise(sv0, GETbase, t_guess);
 
 		OrbMech::format_time_HHMMSS(buff, t_align);
 		sprintf(form->paddata, "T Align is %s GET", buff);
+	}
+	break;
+	case 70: //BLOCK DATA 22
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 7;
+		double lng[] = { -162.0*RAD, -169.0*RAD, 145.0*RAD, -162.0*RAD, -32.0*RAD, -30.1*RAD, -30.0*RAD};
+		double GETI[] = { OrbMech::HHMMSSToSS(223, 37, 43),OrbMech::HHMMSSToSS(225, 12, 55),OrbMech::HHMMSSToSS(226, 41, 6),OrbMech::HHMMSSToSS(228, 31, 8),
+			OrbMech::HHMMSSToSS(228, 53, 7), OrbMech::HHMMSSToSS(230, 29, 7), OrbMech::HHMMSSToSS(232, 6, 14)};
+		std::string area[] = { "141-CC", "142-CC", "143-CC", "144-CC", "145-AC", "146-AC", "147-2A"};
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 71: //BLOCK DATA 23
+	{
+		AP7BLK * form = (AP7BLK *)pad;
+		AP7BLKOpt opt;
+
+		int n = 8;
+		double lng[] = { -64.0*RAD, -68.0*RAD, -31.0*RAD, -67.0*RAD, -68.0*RAD, -161.0*RAD, -160.0*RAD, -159.4*RAD };
+		double GETI[] = { OrbMech::HHMMSSToSS(233, 28, 37),OrbMech::HHMMSSToSS(235, 5, 22),OrbMech::HHMMSSToSS(237, 2, 7),OrbMech::HHMMSSToSS(238, 26, 15),
+			OrbMech::HHMMSSToSS(240, 7, 58), OrbMech::HHMMSSToSS(242, 46, 54), OrbMech::HHMMSSToSS(244, 27, 53), OrbMech::HHMMSSToSS(246, 10, 9) };
+		std::string area[] = { "148-1B", "149-1C", "150-2B", "151-1C", "152-1A", "153-4B", "154-4B", "155-4B" };
+
+		opt.area.assign(area, area + n);
+		opt.GETI.assign(GETI, GETI + n);
+		opt.lng.assign(lng, lng + n);
+		opt.n = n;
+
+		AP7BlockData(&opt, *form);
+	}
+	break;
+	case 72: //NOMINAL SPS DEORBIT
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		EarthEntryOpt entopt;
+		EntryResults res;
+		AP7ManPADOpt opt;
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
+		double GETbase, GET_sv0, GETI_minus_12;
+		SV sv0, sv_preTIG;
+		char buffer1[1000];
+		char buffer2[1000];
+		char buffer3[1000];
+
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = getGETBase();
+
+		entopt.vessel = calcParams.src;
+		entopt.GETbase = GETbase;
+		entopt.impulsive = RTCC_NONIMPULSIVE;
+		entopt.lng = -59.9*RAD;
+		entopt.nominal = RTCC_ENTRY_NOMINAL;
+		entopt.TIGguess = OrbMech::HHMMSSToSS(238, 11, 47);
+		entopt.entrylongmanual = true;
+		entopt.useSV = false;
+
+		BlockDataProcessor(&entopt, &res);
+
+		TimeofIgnition = res.P30TIG;
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		DeltaV_LVLH = res.dV_LVLH;
+
+		//Uplinked state vector accurate at GETI minus 12 minutes
+		GET_sv0 = OrbMech::GETfromMJD(sv0.MJD, GETbase);
+		GETI_minus_12 = TimeofIgnition - 12.0*60.0;
+		sv_preTIG = coast(sv0, GETI_minus_12 - GET_sv0);
+
+		refsopt.vessel = calcParams.src;
+		refsopt.GETbase = GETbase;
+		refsopt.dV_LVLH = res.dV_LVLH;
+		refsopt.P30TIG = res.P30TIG;
+		refsopt.REFSMMATopt = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
+
+		opt.dV_LVLH = res.dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = true;
+		opt.navcheckGET = res.P30TIG - 40.0*60.0;
+		opt.REFSMMAT = REFSMMAT;
+		opt.sxtstardtime = -30.0*60.0;
+		opt.TIG = res.P30TIG;
+		opt.vessel = calcParams.src;
+
+		AP7ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "151-1A RETROFIRE");
+
+		AGCStateVectorUpdate(buffer1, sv_preTIG, true, AGCEpoch, GETbase, true);
+		CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
+		AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, V66, target load, Retrofire REFSMMAT");
+		}
+	}
+	break;
+	case 73: //NOMINAL DEORBIT ENTRY PAD
+	{
+		AP7ENT * form = (AP7ENT *)pad;
+
+		EarthEntryPADOpt opt;
+		REFSMMATOpt refsopt;
+		MATRIX3 REFSMMAT;
+
+		refsopt.vessel = calcParams.src;
+		refsopt.GETbase = getGETBase();
+		refsopt.dV_LVLH = DeltaV_LVLH;
+		refsopt.P30TIG = TimeofIgnition;
+		refsopt.REFSMMATopt = 1;
+
+		REFSMMAT = REFSMMATCalc(&refsopt);
+
+		opt.dV_LVLH = DeltaV_LVLH;
+		opt.GETbase = getGETBase();
+		opt.P30TIG = TimeofIgnition;
+		opt.REFSMMAT = REFSMMAT;
+		opt.vessel = calcParams.src;
+		opt.preburn = true;
+		opt.lat = SplashLatitude;
+		opt.lng = SplashLongitude;
+
+		EarthOrbitEntry(&opt, *form);
+		sprintf(form->Area[0], "151-1A");
+		form->Lat[0] = SplashLatitude * DEG;
+		form->Lng[0] = SplashLongitude * DEG;
+	}
+	break;
+	case 74: //POSTBURN ENTRY PAD
+	{
+		AP7ENT * form = (AP7ENT *)pad;
+
+		EarthEntryPADOpt opt;
+
+		opt.dV_LVLH = DeltaV_LVLH;
+		opt.GETbase = getGETBase();
+		opt.lat = SplashLatitude;
+		opt.lng = SplashLongitude;
+		opt.P30TIG = TimeofIgnition;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		opt.preburn = false;
+		opt.vessel = calcParams.src;
+
+		EarthOrbitEntry(&opt, *form);
 	}
 	break;
 	}
