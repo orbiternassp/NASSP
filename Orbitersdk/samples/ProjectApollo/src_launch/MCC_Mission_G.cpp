@@ -36,7 +36,7 @@ void MCC::MissionSequence_G()
 	switch (MissionState)
 	{
 	case MST_G_INSERTION: //Ground liftoff time update to TLI Simulation
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(1.0 * 3600 + 30.0*60.0), 10, MST_G_EPO1);
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(1.0*3600.0 + 30.0*60.0), 10, MST_G_EPO1);
 		break;
 	case MST_G_EPO1: //TLI Simulation to TLI+90 PAD
 		UpdateMacro(UTP_NONE, PT_NONE, true, 11, MST_G_EPO2);

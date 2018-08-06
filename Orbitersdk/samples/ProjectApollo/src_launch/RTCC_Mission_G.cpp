@@ -69,19 +69,17 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		double TEPHEM0, tephem_scal;
 
-		Saturn *cm = (Saturn *)calcParams.tgt;
+		Saturn *cm = (Saturn *)calcParams.src;
 
 		//Get TEPHEM
-		TEPHEM0 = 40038.;
+		TEPHEM0 = 40403.;
 		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc);
 		calcParams.TEPHEM = (tephem_scal / 8640000.) + TEPHEM0;
-
-		sprintf(oapiDebugString(), "%f", calcParams.TEPHEM);
 	}
 	break;
 	case 11: //TLI SIMULATION
 	{
-		SaturnV *SatV = (SaturnV*)calcParams.tgt;
+		SaturnV *SatV = (SaturnV*)calcParams.src;
 		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
 
 		LVDCTLIparam tliparam;
@@ -234,7 +232,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 15: //TLI Evaluation
 	{
-		SaturnV *SatV = (SaturnV*)calcParams.tgt;
+		SaturnV *SatV = (SaturnV*)calcParams.src;
 		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
 
 		if (lvdc->first_op == false)
@@ -364,7 +362,14 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Evaluate MCC-3 DV
 		opt.MCCGET = MCC3GET;
-		TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
+		if (TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res))
+		{
+			calcParams.alt_node = res.NodeAlt;
+			calcParams.lat_node = res.NodeLat;
+			calcParams.lng_node = res.NodeLng;
+			calcParams.GET_node = res.NodeGET;
+			calcParams.LOI = res.PericynthionGET;
+		}
 
 		if (length(res.dV_LVLH) < 25.0*0.3048)
 		{

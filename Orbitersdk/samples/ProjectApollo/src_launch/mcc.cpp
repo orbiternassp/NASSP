@@ -855,6 +855,7 @@ void MCC::TimeStep(double simdt){
 					break;
 				case 11:
 					MissionType = MTP_G;
+					setState(MST_SV_PRELAUNCH);
 					break;
 				case 12:
 				case 13:
@@ -3044,7 +3045,7 @@ int MCC::subThread(){
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = 0;
 	}
-	else if (MissionType == MTP_F)
+	else if (MissionType == MTP_F || MissionType == MTP_G)
 	{
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = 0;

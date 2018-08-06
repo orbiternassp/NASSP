@@ -306,7 +306,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Evaluate MCC-3 DV
 		opt.MCCGET = MCC3GET;
-		TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
+		if (TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res))
+		{
+			calcParams.alt_node = res.NodeAlt;
+			calcParams.lat_node = res.NodeLat;
+			calcParams.lng_node = res.NodeLng;
+			calcParams.GET_node = res.NodeGET;
+			calcParams.LOI = res.PericynthionGET;
+		}
 
 		if (length(res.dV_LVLH) < 25.0*0.3048)
 		{
