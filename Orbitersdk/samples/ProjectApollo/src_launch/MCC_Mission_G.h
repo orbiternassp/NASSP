@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2018
 
-RTCC Mission Calculations
+MCC for Mission G (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,37 +22,26 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
-#include "Orbitersdk.h"
-#include "soundlib.h"
-#include "apolloguidance.h"
-#include "mcc.h"
-#include "rtcc.h"
+#pragma once
 
-bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
-{
-	bool scrubbed = false;
+// MISSION STATES: MISSION G
 
-	switch (mission)
-	{
-	case MTP_B:
-		scrubbed = CalculationMTP_B(fcn, pad, upString, upDesc, upMessage);
-		break;
-	case MTP_C:
-		scrubbed = CalculationMTP_C(fcn, pad, upString, upDesc, upMessage);
-		break;
-	case MTP_C_PRIME:
-		scrubbed = CalculationMTP_C_PRIME(fcn, pad, upString, upDesc, upMessage);
-		break;
-	case MTP_D:
-		scrubbed = CalculationMTP_D(fcn, pad, upString, upDesc, upMessage);
-		break;
-	case MTP_F:
-		scrubbed = CalculationMTP_F(fcn, pad, upString, upDesc, upMessage);
-		break;
-	case MTP_G:
-		scrubbed = CalculationMTP_G(fcn, pad, upString, upDesc, upMessage);
-		break;
-	}
-
-	return scrubbed;
-}
+//Ground liftoff time update to TLI Simulation
+#define MST_G_INSERTION		10
+//TLI Simulation to TLI+90 PAD
+#define MST_G_EPO1			11
+//TLI+90 Maneuver PAD to TLI+5h P37 PAD
+#define MST_G_EPO2			12
+#define MST_G_EPO3			13
+#define MST_G_EPO4			14
+#define MST_G_TRANSLUNAR1	20
+#define MST_G_TRANSLUNAR2	21
+#define MST_G_TRANSLUNAR3	22
+#define MST_G_TRANSLUNAR4	23
+#define MST_G_TRANSLUNAR5	24
+#define MST_G_TRANSLUNAR6	25
+#define MST_G_TRANSLUNAR_NO_MCC1_1	26
+#define MST_G_TRANSLUNAR_NO_MCC1_2	27
+#define MST_G_TRANSLUNAR7	28
+#define MST_G_TRANSLUNAR8	29
+#define MST_G_TRANSLUNAR9	30

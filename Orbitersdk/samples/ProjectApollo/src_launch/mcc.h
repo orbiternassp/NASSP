@@ -1118,6 +1118,10 @@ public:
 	void LoadState(FILEHANDLE scn);							// Load state
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
+
+	// MISSION SPECIFIC FUNCTIONS
+	void MissionSequence_G();
+
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
 	LEM *lm;												// Pointer to LM

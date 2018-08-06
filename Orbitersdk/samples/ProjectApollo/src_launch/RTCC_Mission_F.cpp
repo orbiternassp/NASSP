@@ -301,7 +301,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.LOIh_peri = 60.0*1852.0;
 		opt.LSlat = LSLat;
 		opt.LSlng = LSLng;
-		opt.PeriGET = calcParams.LOI;
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.src;
 

@@ -486,6 +486,7 @@ private:								// Saturn LV
 
 	friend class MCC;
 	friend class ApolloRTCCMFD;
+	friend class RTCC;
 };
 
 /* ********************

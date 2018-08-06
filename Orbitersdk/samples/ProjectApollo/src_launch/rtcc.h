@@ -835,27 +835,33 @@ struct DockAlignOpt	//Docking Alignment Processor
 
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
-	Saturn *src;	// Our ship
-	VESSEL *tgt;	// Target ship
-	double TLI;		// Time of TLI
-	VECTOR3 R_TLI;	//TLI cutoff position vector
-	VECTOR3 V_TLI;	//TLI cutoff velocity vector
-	double LOI;		// Time of LOI/Pericynthion
-	double DOI;		// Time of DOI
-	double PDI;		// Time of PDI
-	double TLAND;	// Time of landing
-	double Insertion; // Time of Insertion
-	double Phasing;	// Time of Phasing
-	double CSI;		// Time of CSI
-	double CDH;		// Time of CDH
-	double TPI;		// Time of TPI
-	double TEI;		// Time of TEI
-	double EI;		// Time of Entry Interface
+	Saturn *src;		// Our ship
+	VESSEL *tgt;		// Target ship
+	double TLI;			// Time of TLI
+	VECTOR3 R_TLI;		//TLI cutoff position vector
+	VECTOR3 V_TLI;		//TLI cutoff velocity vector
+	double LOI;			// Time of LOI/Pericynthion
+	double DOI;			// Time of DOI
+	double PDI;			// Time of PDI
+	double TLAND;		// Time of landing
+	double LSAlt;		// Height of the lunar landing site relative to mean lunar radius
+	double LSAzi;		// Approach azimuth to the lunar landing site
+	double LSLat;		// Latitude of the lunar landing site
+	double LSLng;		// Longitude of the lunar landing site
+	double Insertion;	// Time of Insertion
+	double Phasing;		// Time of Phasing
+	double CSI;			// Time of CSI
+	double CDH;			// Time of CDH
+	double TPI;			// Time of TPI
+	double TEI;			// Time of TEI
+	double EI;			// Time of Entry Interface
 	double lat_node;
 	double lng_node;
 	double alt_node;
 	double GET_node;
 	MATRIX3 StoredREFSMMAT;
+	double TEPHEM;	// MJD of CMC liftoff time
+	double PericynthionLatitude;	//Latitude of pericynthion in Earth-Moon Plane coordinates
 };
 
 //For LVDC
@@ -1005,6 +1011,7 @@ public:
 	VECTOR3 ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD);
 	VECTOR3 CircularizationManeuverInteg(SV sv0);
 	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
+	bool GETEval(double get);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1061,6 +1068,7 @@ private:
 	bool CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_D(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_F(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 protected:
 	double TimeofIgnition;

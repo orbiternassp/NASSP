@@ -73,6 +73,10 @@ RTCC::RTCC()
 	calcParams.DOI = 0.0;
 	calcParams.PDI = 0.0;
 	calcParams.TLAND = 0.0;
+	calcParams.LSAlt = 0.0;
+	calcParams.LSAzi = 0.0;
+	calcParams.LSLat = 0.0;
+	calcParams.LSLng = 0.0;
 	calcParams.Insertion = 0.0;
 	calcParams.Phasing = 0.0;
 	calcParams.CSI = 0.0;
@@ -82,6 +86,8 @@ RTCC::RTCC()
 	calcParams.tgt = NULL;
 	REFSMMATType = 0;
 	calcParams.StoredREFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	calcParams.TEPHEM = 0.0;
+	calcParams.PericynthionLatitude = 0.0;
 }
 
 void RTCC::Init(MCC *ptr)
@@ -5165,6 +5171,10 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_DOI", calcParams.DOI);
 	SAVE_DOUBLE("RTCC_PDI", calcParams.PDI);
 	SAVE_DOUBLE("RTCC_TLAND", calcParams.TLAND);
+	SAVE_DOUBLE("RTCC_LSAlt", calcParams.LSAlt);
+	SAVE_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
+	SAVE_DOUBLE("RTCC_LSLat", calcParams.LSLat);
+	SAVE_DOUBLE("RTCC_LSLng", calcParams.LSLng);
 	SAVE_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 	SAVE_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 	SAVE_DOUBLE("RTCC_CSI", calcParams.CSI);
@@ -5174,6 +5184,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_GET_node", calcParams.GET_node);
 	SAVE_DOUBLE("RTCC_lat_node", calcParams.lat_node);
 	SAVE_DOUBLE("RTCC_lng_node", calcParams.lng_node);
+	SAVE_DOUBLE("RTCC_TEPHEM", calcParams.TEPHEM);
+	SAVE_DOUBLE("RTCC_PericynthionLatitude", calcParams.PericynthionLatitude);
 	// Strings
 	// Vectors
 	SAVE_V3("RTCC_DVLVLH", DeltaV_LVLH);
@@ -5204,6 +5216,10 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_DOI", calcParams.DOI);
 		LOAD_DOUBLE("RTCC_PDI", calcParams.PDI);
 		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);
+		LOAD_DOUBLE("RTCC_LSAlt", calcParams.LSAlt);
+		LOAD_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
+		LOAD_DOUBLE("RTCC_LSLat", calcParams.LSLat);
+		LOAD_DOUBLE("RTCC_LSLng", calcParams.LSLng);
 		LOAD_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 		LOAD_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 		LOAD_DOUBLE("RTCC_CSI", calcParams.CSI);
@@ -5213,6 +5229,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_GET_node", calcParams.GET_node);
 		LOAD_DOUBLE("RTCC_lat_node", calcParams.lat_node);
 		LOAD_DOUBLE("RTCC_lng_node", calcParams.lng_node);
+		LOAD_DOUBLE("RTCC_TEPHEM", calcParams.TEPHEM);
+		LOAD_DOUBLE("RTCC_PericynthionLatitude", calcParams.PericynthionLatitude);
 		LOAD_V3("RTCC_DVLVLH", DeltaV_LVLH);
 		LOAD_V3("RTCC_R_TLI", calcParams.R_TLI);
 		LOAD_V3("RTCC_V_TLI", calcParams.V_TLI);
@@ -8440,4 +8458,14 @@ VECTOR3 RTCC::CircularizationManeuverInteg(SV sv0)
 	DV2 = HeightManeuverInteg(sv0_apo, dh);
 
 	return DV1 + DV2;
+}
+
+bool RTCC::GETEval(double get)
+{
+	if (OrbMech::GETfromMJD(oapiGetSimMJD(), calcParams.TEPHEM) > get)
+	{
+		return true;
+	}
+
+	return false;
 }

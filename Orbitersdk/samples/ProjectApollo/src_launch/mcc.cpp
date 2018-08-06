@@ -36,6 +36,7 @@
 #include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
+#include "MCC_Mission_G.h"
 #include "rtcc.h"
 #include "LVDC.h"
 #include "iu.h"
@@ -1017,6 +1018,9 @@ void MCC::TimeStep(double simdt){
 						break;
 					case MTP_F:
 						setState(MST_F_INSERTION);
+						break;
+					case MTP_G:
+						setState(MST_G_INSERTION);
 						break;
 					}
 				}
@@ -2784,6 +2788,12 @@ void MCC::TimeStep(double simdt){
 				}
 				break;
 			}
+			break;
+			case MTP_G:
+			/* ********************
+			* MISSION G APOLLO 11 *
+			********************* */
+				MissionSequence_G();
 			break;
 		}
 	}
