@@ -891,12 +891,14 @@ struct LVDCTLIparam
 	double omega_E;
 	double phi_L;
 	double R_N;
+	double T_2R;
 	double theta_EO;
 	double TB5;
 	double T_L;
 	double t_D;
 	double T_RG;
 	double T_ST;
+	double Tt_3R;
 };
 
 struct GPMPRESULTS

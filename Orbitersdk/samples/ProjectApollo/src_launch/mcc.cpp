@@ -1463,6 +1463,7 @@ void MCC::TimeStep(double simdt){
 						tliparam.omega_E = lvdc->omega_E;
 						tliparam.phi_L = lvdc->PHI;
 						tliparam.R_N = lvdc->R_N;
+						tliparam.T_2R = lvdc->T_2R;
 						tliparam.TargetVector = lvdc->TargetVector;
 						tliparam.TB5 = lvdc->TB5;
 						tliparam.theta_EO = lvdc->theta_EO;
@@ -1470,6 +1471,7 @@ void MCC::TimeStep(double simdt){
 						tliparam.T_L = lvdc->T_L;
 						tliparam.T_RG = lvdc->T_RG;
 						tliparam.T_ST = lvdc->T_ST;
+						tliparam.Tt_3R = lvdc->Tt_3R;
 
 						rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
 						//IMFD_BURN_DATA burnData = cm->GetIMFDClient()->GetBurnData();
@@ -2265,6 +2267,7 @@ void MCC::TimeStep(double simdt){
 						tliparam.omega_E = lvdc->omega_E;
 						tliparam.phi_L = lvdc->PHI;
 						tliparam.R_N = lvdc->R_N;
+						tliparam.T_2R = lvdc->T_2R;
 						tliparam.TargetVector = lvdc->TargetVector;
 						tliparam.TB5 = lvdc->TB5;
 						tliparam.theta_EO = lvdc->theta_EO;
@@ -2272,6 +2275,7 @@ void MCC::TimeStep(double simdt){
 						tliparam.T_L = lvdc->T_L;
 						tliparam.T_RG = lvdc->T_RG;
 						tliparam.T_ST = lvdc->T_ST;
+						tliparam.Tt_3R = lvdc->Tt_3R;
 
 						rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
 
@@ -3325,7 +3329,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP11ENT_VLMax", form->VLMax[0]);
 			SAVE_DOUBLE("MCC_AP11ENT_VLMin", form->VLMin[0]);
 		}
-		else if (padNumber == 10)
+		else if (padNumber == PT_TLIPAD)
 		{
 			TLIPAD * form = (TLIPAD *)padForm;
 
@@ -3336,6 +3340,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_TLIPAD_SepATT", form->SepATT);
 			SAVE_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			SAVE_DOUBLE("MCC_TLIPAD_VI", form->VI);
+			SAVE_STRING("MCC_TLIPAD_remarks", form->remarks);
 		}
 		else if (padNumber == 11)
 		{
@@ -3745,6 +3750,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_TLIPAD_SepATT", form->SepATT);
 			LOAD_DOUBLE("MCC_TLIPAD_TB6P", form->TB6P);
 			LOAD_DOUBLE("MCC_TLIPAD_VI", form->VI);
+			LOAD_STRING("MCC_TLIPAD_remarks", form->remarks, 128);
 		}
 		else if (padNumber == 11)
 		{
@@ -4054,7 +4060,7 @@ void MCC::drawPad(){
 			{
 				format_time(tmpbuf, form->GETI[i]);
 				format_time(tmpbuf2, form->GET400K[i]);
-				sprintf(buffer, "%s%s GETI\nX%+04.0f DVT\nX%+5.1f LONG\n%s\n", buffer, tmpbuf, form->dVT[i], form->lng[i], tmpbuf2);
+				sprintf(buffer, "%s%s GETI\nX%+04.0f DVT\nX%+5.1f LONG\n%s GET 400K\n", buffer, tmpbuf, form->dVT[i], form->lng[i], tmpbuf2);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
 		}
@@ -4110,7 +4116,7 @@ void MCC::drawPad(){
 			format_time(tmpbuf, form->TB6P);
 			SStoHHMMSS(form->BurnTime, hh, mm, ss);
 
-			sprintf(buffer, "%s\n%s TB6p\nXXX%03.0f R\nXXX%03.0f P TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P SEP\nXXX%03.0f Y\nXXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y", buffer, tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z, form->ExtATT.x, form->ExtATT.y, form->ExtATT.z);
+			sprintf(buffer, "%s\n%s TB6p\nXXX%03.0f R\nXXX%03.0f P TLI\nXXX%03.0f Y\nXXX%d:%02.0f BT\n%07.1f DVC\n%+05.0f VI\nXXX%03.0f R\nXXX%03.0f P SEP\nXXX%03.0f Y\nXXX%03.0f R\nXXX%03.0f P EXTRACTION\nXXX%03.0f Y\nRemarks: %s", buffer, tmpbuf, form->IgnATT.x, form->IgnATT.y, form->IgnATT.z, mm, ss, form->dVC, form->VI, form->SepATT.x, form->SepATT.y, form->SepATT.z, form->ExtATT.x, form->ExtATT.y, form->ExtATT.z, form->remarks);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 	break;
