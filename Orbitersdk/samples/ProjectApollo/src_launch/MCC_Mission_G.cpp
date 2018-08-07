@@ -105,10 +105,10 @@ void MCC::MissionSequence_G()
 		}
 		break;
 	case MST_G_TRANSLUNAR4: //Block Data 1 to MCC-1 Calculation
-		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval(rtcc->calcParams.TLI + 4.0*3600.0 + 30.0*60.0), 17, MST_G_TRANSLUNAR5);
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval(rtcc->calcParams.TLI + 4.0*3600.0), 17, MST_G_TRANSLUNAR5);
 		break;
 	case MST_G_TRANSLUNAR5: //MCC-1 Calculation to MCC-1 update (or PTC REFSMMAT)
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.TLI + 4.0*3600.0 + 10.0*60.0), 20, MST_G_TRANSLUNAR6, scrubbed, true, MST_G_TRANSLUNAR_NO_MCC1_1);
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.TLI + 7.0*3600.0 + 10.0*60.0), 20, MST_G_TRANSLUNAR6, scrubbed, true, MST_G_TRANSLUNAR_NO_MCC1_1);
 		break;
 	case MST_G_TRANSLUNAR6: //MCC-1 update to PTC REFSMMAT update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TLI + 9.0*3600.0 + 10.0*60.0), 22, MST_G_TRANSLUNAR7);

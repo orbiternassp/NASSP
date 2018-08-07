@@ -3102,6 +3102,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	SAVE_BOOL("MCC_padAutoShow", padAutoShow);
 	SAVE_BOOL("MCC_PCOption_Enabled", PCOption_Enabled);
 	SAVE_BOOL("MCC_NCOption_Enabled", NCOption_Enabled);
+	SAVE_BOOL("MCC_scrubbed", scrubbed);
 	// Integers
 	SAVE_INT("MCC_MissionType", MissionType);
 	SAVE_INT("MCC_MissionPhase", MissionPhase);
@@ -3512,6 +3513,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_BOOL("MCC_padAutoShow", padAutoShow);
 		LOAD_BOOL("MCC_PCOption_Enabled", PCOption_Enabled);
 		LOAD_BOOL("MCC_NCOption_Enabled", NCOption_Enabled);
+		LOAD_BOOL("MCC_scrubbed", scrubbed);
 		LOAD_INT("MCC_MissionType", MissionType);
 		LOAD_INT("MCC_MissionPhase", MissionPhase);
 		LOAD_INT("MCC_MissionState", MissionState);
