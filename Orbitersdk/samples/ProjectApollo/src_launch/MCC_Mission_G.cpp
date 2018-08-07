@@ -42,19 +42,19 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_NONE, PT_NONE, true, 11, MST_G_EPO2);
 		break;
 	case MST_G_EPO2: //TLI+90 Maneuver PAD to TLI+5h P37 PAD
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 12, MST_G_EPO3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 12, MST_G_EPO3);
 		break;
 	case MST_G_EPO3: //TLI+5h P37 PAD to TLI PAD
-		UpdateMacro(UTP_NONE, PT_P37PAD, SubStateTime > 3.0*60.0, 13, MST_G_EPO4);
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, SubStateTime > 3.0*60.0, 13, MST_G_EPO4);
 		break;
 	case MST_G_EPO4: //TLI PAD to TLI Evaluation
-		UpdateMacro(UTP_NONE, PT_TLIPAD, rtcc->GETEval(rtcc->calcParams.TLI), 14, MST_G_TRANSLUNAR1);
+		UpdateMacro(UTP_PADONLY, PT_TLIPAD, rtcc->GETEval(rtcc->calcParams.TLI), 14, MST_G_TRANSLUNAR1);
 		break;
 	case MST_G_TRANSLUNAR1: //TLI Evaluation to Evasive Maneuver Update
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.TLI + 55.0*60.0), 15, MST_G_TRANSLUNAR2, scrubbed, cm->MissionTime > 3.0*3600.0, MST_G_EPO1);
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.TLI + 3600.0 + 10.0*60.0), 15, MST_G_TRANSLUNAR2, scrubbed, cm->MissionTime > 3.0*3600.0, MST_G_EPO1);
 		break;
 	case MST_G_TRANSLUNAR2: //Evasive Maneuver Update to TB8 Enable
-		UpdateMacro(UTP_NONE, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TLI + 3600.0 + 30.0*60.0), 16, MST_G_TRANSLUNAR3);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TLI + 3600.0 + 30.0*60.0), 16, MST_G_TRANSLUNAR3);
 		break;
 	case MST_G_TRANSLUNAR3:  //TB8 enable to Block Data 1
 		switch (SubState) {
@@ -123,7 +123,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 19, MST_G_TRANSLUNAR8);
 		break;
 	case MST_G_TRANSLUNAR8: //Block Data 2 to MCC-2 update
-		UpdateMacro(UTP_NONE, PT_P37PAD, rtcc->GETEval(rtcc->calcParams.TLI + 22.0*3600.0 + 50.0*60.0), 18, MST_G_TRANSLUNAR9);
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval(rtcc->calcParams.TLI + 22.0*3600.0 + 50.0*60.0), 18, MST_G_TRANSLUNAR9);
 		break;
 	}
 }

@@ -96,6 +96,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		tliparam.omega_E = lvdc->omega_E;
 		tliparam.phi_L = lvdc->PHI;
 		tliparam.R_N = lvdc->R_N;
+		tliparam.T_2R = lvdc->T_2R;
 		tliparam.TargetVector = lvdc->TargetVector;
 		tliparam.TB5 = lvdc->TB5;
 		tliparam.theta_EO = lvdc->theta_EO;
@@ -103,6 +104,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		tliparam.T_L = lvdc->T_L;
 		tliparam.T_RG = lvdc->T_RG;
 		tliparam.T_ST = lvdc->T_ST;
+		tliparam.Tt_3R = lvdc->Tt_3R;
 
 		LVDCTLIPredict(tliparam, calcParams.src, getGETBase(), DeltaV_LVLH, TimeofIgnition, calcParams.R_TLI, calcParams.V_TLI, calcParams.TLI);
 	}
@@ -120,7 +122,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GETbase = calcParams.TEPHEM;
 
-		TLIBase = floor((TimeofIgnition / 1800.0) + 0.5)*1800.0; //Round to next half hour
+		TLIBase = TimeofIgnition;
 		TIG = TLIBase + 90.0*60.0;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
@@ -169,13 +171,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "TLI+90");
 		sprintf(form->remarks, "No ullage, undocked");
 
-		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, calcParams.TEPHEM, true);
+		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, calcParams.TEPHEM);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector and V66");
+			sprintf(upDesc, "CSM state vector");
 		}
 	}
 	break;
@@ -228,6 +230,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.uselvdc = true;
 
 		TLI_PAD(&opt, *form);
+
+		sprintf(form->remarks, "TLI 10-minute abort pitch, 223°");
 	}
 	break;
 	case 15: //TLI Evaluation
@@ -252,7 +256,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = calcParams.TEPHEM;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
-		opt.TIG = calcParams.TLI + 2.0*3600.0;
+		opt.TIG = calcParams.TLI + 1.0*3600.0 + 50.0*60.0;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 1;
 
