@@ -888,8 +888,8 @@ void LEM_LCA::LoadState(FILEHANDLE scn, char *end_str)
 	}
 }
 
-//Utility Lights (Uncomment when panel is created)
-/*
+//Utility Lights
+
 LEM_UtilLights::LEM_UtilLights()
 {
 lem = NULL;
@@ -923,29 +923,29 @@ void LEM_UtilLights::Timestep(double simdt)
 
 void LEM_UtilLights::SystemTimestep(double simdt)
 {
-//CDR Utility Lights Dim
-if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
-UtlCB->DrawPower(2.2);
-UtlLtgHeat->GenerateHeat(2.178);
-}
-//CDR Utility Lights Bright
-else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
-UtlCB->DrawPower(6.15);
-UtlLtgHeat->GenerateHeat(6.1);
+	//CDR Utility Lights Dim
+	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
+		UtlCB->DrawPower(2.2);
+		UtlLtgHeat->GenerateHeat(2.178);
+	}
+	//CDR Utility Lights Bright
+	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
+		UtlCB->DrawPower(6.15);
+		UtlLtgHeat->GenerateHeat(6.1);
+	}
+
+	//LMP Utility Lights Dim
+	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
+		UtlCB->DrawPower(1.76);
+		UtlLtgHeat->GenerateHeat(1.74);
+	}
+	//LMP Utility Lights Bright
+	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
+		UtlCB->DrawPower(3.3);
+		UtlLtgHeat->GenerateHeat(3.267);
+	}
 }
 
-//LMP Utility Lights Dim
-if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
-UtlCB->DrawPower(1.76);
-UtlLtgHeat->GenerateHeat(1.74);
-}
-//LMP Utility Lights Bright
-else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
-UtlCB->DrawPower(3.3);
-UtlLtgHeat->GenerateHeat(3.267);
-}
-}
-*/
 //COAS Lights
 LEM_COASLights::LEM_COASLights()
 {
