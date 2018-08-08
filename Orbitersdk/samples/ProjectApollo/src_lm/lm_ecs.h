@@ -258,7 +258,7 @@ protected:
 class LEMPrimGlycolPumpController
 {
 public:
-	LEMPrimGlycolPumpController(SoundLib &s);
+	LEMPrimGlycolPumpController();
 	void Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -267,10 +267,6 @@ public:
 	bool GetPressureSwitch() { return PressureSwitch; }
 	bool GetGlycolPumpFailRelay() { return GlycolPumpFailRelay; }
 protected:
-
-	void StartGlycolPumpSound();
-	void GlycolPumpSound();
-	void StopGlycolPumpSound();
 
 	h_Tank *primGlycolAccumulatorTank;
 	h_Tank *primGlycolPumpManifoldTank;
@@ -282,9 +278,6 @@ protected:
 	CircuitBrakerSwitch *glycolPumpAutoTransferCB;
 	h_HeatLoad *glycolPump1Heat;
 	h_HeatLoad *glycolPump2Heat;
-	SoundLib &soundlib;
-	Sound glycolpumpstartsound;
-	Sound glycolpumprunsound;
 
 	//7K8 (Latching)
 	bool GlycolAutoTransferRelay;

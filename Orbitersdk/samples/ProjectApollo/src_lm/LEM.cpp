@@ -225,8 +225,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	CabinFan(CabinFans),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this),
-	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk),
-	PrimGlycolPumpController(soundlib)
+	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
+
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -454,9 +454,6 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
-	soundlib.LoadSound(LMSuitFanSound, LM_SUITFAN_SOUND, INTERNAL_ONLY);
-	soundlib.LoadSound(GlycolPumpStartSound, LM_GLYCOLSTART_SOUND, INTERNAL_ONLY);
-	soundlib.LoadSound(GlycolPumpRunSound, LM_GLYCOLRUN_SOUND, INTERNAL_ONLY);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED

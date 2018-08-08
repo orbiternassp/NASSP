@@ -24,7 +24,6 @@
 
 #include "Orbitersdk.h"
 #include "soundlib.h"
-#include "nasspsound.h"
 #include "toggleswitch.h"
 #include "LEM.h"
 #include "lm_ecs.h"
@@ -840,7 +839,7 @@ void LEMWaterTankSelect::SystemTimestep(double simdt)
 	}
 }
 
-LEMPrimGlycolPumpController::LEMPrimGlycolPumpController(SoundLib &s) : soundlib(s)
+LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
 {
 	primGlycolAccumulatorTank = NULL;
 	primGlycolPumpManifoldTank = NULL;
@@ -856,9 +855,6 @@ LEMPrimGlycolPumpController::LEMPrimGlycolPumpController(SoundLib &s) : soundlib
 	GlycolAutoTransferRelay = false;
 	GlycolPumpFailRelay = false;
 	PressureSwitch = true;
-
-	s.LoadSound(glycolpumpstartsound, LM_GLYCOLSTART_SOUND);
-	s.LoadSound(glycolpumprunsound, LM_GLYCOLRUN_SOUND);
 }
 
 void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h)
@@ -873,27 +869,7 @@ void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, P
 	glycolPumpAutoTransferCB = gpatcb;
 	glycolPump1Heat = gp1h;
 	glycolPump2Heat = gp2h;
-
-	soundlib.LoadSound(glycolpumpstartsound, LM_GLYCOLSTART_SOUND, INTERNAL_ONLY);
-	soundlib.LoadSound(glycolpumprunsound, LM_GLYCOLRUN_SOUND, INTERNAL_ONLY);
 }
-
-void LEMPrimGlycolPumpController::StartGlycolPumpSound()
-{
-	glycolpumpstartsound.play(NOLOOP, 200);
-	GlycolPumpSound();
-}
-
-void LEMPrimGlycolPumpController::GlycolPumpSound()
-{
-	glycolpumprunsound.play(LOOP, 200);
-}
-
-void LEMPrimGlycolPumpController::StopGlycolPumpSound()
-{
-	glycolpumprunsound.stop();
-}
-
 
 void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 {
@@ -932,46 +908,28 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
 	{
 		glycolPump1->SetPumpOn();
-		if (!glycolpumprunsound.isPlaying() && !glycolpumpstartsound.isPlaying())
-		{
-			StartGlycolPumpSound();
-		}
 	}
 	else
 	{
 		glycolPump1->SetPumpOff();
-		StopGlycolPumpSound();
 	}
 
 	//PUMP 2
 	if ((glycolRotary->GetState() == 2 || GlycolAutoTransferRelay) && glycolPump2CB->IsPowered())
 	{
 		glycolPump2->SetPumpOn();
-		if (!glycolpumprunsound.isPlaying() && !glycolpumpstartsound.isPlaying())
-		{
-			StartGlycolPumpSound();
-		}
 	}
 	else
 	{
 		glycolPump2->SetPumpOff();
-		StopGlycolPumpSound();
 	}
 
 	if (glycolPump1->pumping) {
 		glycolPump1Heat->GenerateHeat(30.5);
-		if (!glycolpumprunsound.isPlaying() && !glycolpumpstartsound.isPlaying())
-		{
-			GlycolPumpSound();
-		}
 	}
 
 	if (glycolPump2->pumping) {
 		glycolPump2Heat->GenerateHeat(30.5);
-		if (!glycolpumprunsound.isPlaying() && !glycolpumpstartsound.isPlaying())
-		{
-			GlycolPumpSound();
-		}
 	}
 
 	//sprintf(oapiDebugString(), "DP %f DPSwitch %d ATRelay %d Pump1 %d Pump2 %d", DPSensor*PSI, PressureSwitch, GlycolAutoTransferRelay, glycolPump1->h_pump, glycolPump2->h_pump);

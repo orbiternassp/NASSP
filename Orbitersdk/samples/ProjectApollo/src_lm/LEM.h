@@ -1631,9 +1631,6 @@ protected:
 	Sound RCSSustainSound;
 	Sound HatchOpenSound;
 	Sound HatchCloseSound;
-	Sound LMSuitFanSound;
-	Sound GlycolPumpStartSound;
-	Sound GlycolPumpRunSound;
 
 	//
 	// Connectors.
