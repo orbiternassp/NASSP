@@ -141,7 +141,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 19, MST_G_TRANSLUNAR9);
 		break;
 	case MST_G_TRANSLUNAR9: //Block Data 2 to MCC-2 update
-		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval(rtcc->calcParams.TLI + 22.0*3600.0 + 50.0*60.0), 18, MST_G_TRANSLUNAR10);
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, rtcc->GETEval(rtcc->calcParams.TLI + 22.0*3600.0 + 40.0*60.0), 18, MST_G_TRANSLUNAR10);
 		break;
 	case MST_G_TRANSLUNAR10: //MCC-2 update to Lunar Flyby PAD
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TLI + 32.0*3600.0 + 10.0*60.0), 22, MST_G_TRANSLUNAR11);

@@ -7390,10 +7390,8 @@ void RTCC::TLMCFirstGuessConic(SV sv_mcc, double lat, double h, double gamma, do
 {
 	SV sv_p;
 	VECTOR3 R_EMP, V_EMP, R_MCC, V_MCC_apo, var_guess, step;
-	double r_peri, R_E, lng_peri_conv, azi_peri_conv, v_peri_conv, dt;
+	double r_peri, lng_peri_conv, azi_peri_conv, v_peri_conv, dt;
 	OBJHANDLE hMoon, hEarth;
-
-	R_E = 6378.137e3;
 
 	hMoon = oapiGetObjectByName("Moon");
 	hEarth = oapiGetObjectByName("Earth");

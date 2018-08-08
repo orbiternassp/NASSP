@@ -1328,6 +1328,7 @@ VECTOR3 function_TLMCConicFirstGuessEval(VECTOR3 var, void *constPtr)
 	double V, psi, lng;
 
 	constants = static_cast<TLMCConstants*>(constPtr);
+
 	V = var.x;
 	psi = var.y;
 	lng = var.z;
@@ -2970,6 +2971,118 @@ void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJH
 	rv_from_r0v0(RP_E, VP_E, dt2, R_peri, V_peri, mu_E);
 
 	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
+}
+
+double PATCH(VECTOR3 R, VECTOR3 V, double mjd0, bool earthsoi, VECTOR3 &R3, VECTOR3 &V3, bool Q)
+{
+	//Desired Ratio
+	double RR;
+	//Estimate radius of patch point
+	double rad_guess;
+	//Gravitational constant of primary and secondary body
+	double mu1, mu2;
+	double phi4, dt1, mjd1;
+	VECTOR3 R1, V1, R_EM, V_EM, R_21, V_21, R2, V2, A2;
+	double r1, r2, d1, d2, Ratio, dRatio, dRdB, v1v1, v2v2, r21, ddRddB, dB, v1, alpha, vr1, eps, dir;
+
+	OBJHANDLE hEarth, hMoon;
+
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+
+	if (earthsoi)
+	{
+		RR = 0.275;
+		rad_guess = 40.0*6371.0e3;
+		mu1 = GGRAV * oapiGetMass(hEarth);
+		mu2 = GGRAV * oapiGetMass(hMoon);
+	}
+	else
+	{
+		RR = 1.0 / 0.275;
+		rad_guess = 10.0*6371.0e3;
+		mu1 = GGRAV * oapiGetMass(hMoon);
+		mu2 = GGRAV * oapiGetMass(hEarth);
+	}
+
+	if (Q)
+	{
+		dir = 1.0;
+	}
+	else
+	{
+		dir = -1.0;
+	}
+
+	eps = 1.e-12;
+	dRatio = 1.0;
+
+	//Initial guess
+	if (length(R) > rad_guess)
+	{
+		phi4 = -1.0;
+	}
+	else
+	{
+		phi4 = 1.0;
+	}
+
+	dt1 = time_radius(R, V*phi4, rad_guess, phi4*dir, mu1);
+	dt1 *= phi4;
+	rv_from_r0v0(R, V, dt1, R1, V1, mu1);
+	mjd1 = mjd0 + dt1 / 24.0 / 3600.0;
+
+	while (abs(dRatio) > eps)
+	{
+		r1 = length(R1);
+		v1 = length(V1);
+
+		vr1 = dotp(R1, V1) / r1;
+		alpha = 2.0 / r1 - v1 * v1 / mu1;
+
+		GetLunarEphemeris(mjd1, R_EM, V_EM);
+
+		if (earthsoi)
+		{
+			R_21 = R_EM;
+			V_21 = V_EM;
+		}
+		else
+		{
+			R_21 = -R_EM;
+			V_21 = -V_EM;
+		}
+
+		R2 = R1 - R_21;
+		V2 = V1 - V_21;
+
+		r2 = length(R2);
+		v1v1 = dotp(V1, V1);
+		v2v2 = dotp(V2, V2);
+		r21 = length(R_21);
+
+		Ratio = r2 / r1;
+		dRatio = RR - Ratio;
+
+		d1 = dotp(R1, V1);
+		d2 = dotp(R2, V2);
+
+		A2 = -R1 * mu1 / (r1*r1*r1) + R_21 * (mu1 + mu2) / (r21*r21*r21);
+
+		dRdB = 1.0 / r2 / sqrt(mu1)*(d2 - r2 * r2*d1 / r1 / r1);
+		ddRddB = r1 / mu1 * (v2v2 + dotp(R2, A2)) / r2 - d1 * d2 / (mu1*r1*r2) - d2 * d2*r1 / (mu1*r2*r2*r2) - r2 * v1v1 / (mu1*r1) + r2 / r1 / r1 + 2.0*d1*d1*r2 / (mu1*r1*r1*r1);
+
+		dB = 2.0*dRatio / (dRdB + sign(dRdB)*sqrt(dRdB*dRdB + 2.0*dRatio*ddRddB));
+
+		dt1 = kepler_U_equation(dB, r1, vr1, alpha, mu1);
+		rv_from_r0v0(R1, V1, dt1, R1, V1, mu1);
+		mjd1 += dt1 / 24.0 / 3600.0;
+	}
+
+	R3 = R2;
+	V3 = V2;
+
+	return (mjd1 - mjd0)*24.0*3600.0;
 }
 
 double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, OBJHANDLE gravref, OBJHANDLE gravout)

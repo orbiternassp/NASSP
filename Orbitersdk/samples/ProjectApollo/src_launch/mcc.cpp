@@ -2099,7 +2099,7 @@ void MCC::TimeStep(double simdt){
 				UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, cm->MissionTime > 99.0*3600.0 + 15.0*60.0, 37, MST_D_DAY5STATE12);
 				break;
 			case MST_D_DAY5STATE12: //LM realign attitude update to LM realign attitude update
-				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, SubStateTime > 2.0*60.0, 38, MST_D_DAY5STATE13);
+				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, SubStateTime > 3.0*60.0, 38, MST_D_DAY5STATE13);
 				break;
 			case MST_D_DAY5STATE13: //LM realign attitude update to LM burn to depletion update
 				UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, cm->MissionTime > 99.0*3600.0 + 55.0*60.0, 39, MST_D_DAY5STATE14);
