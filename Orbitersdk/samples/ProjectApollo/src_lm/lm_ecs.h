@@ -267,7 +267,6 @@ public:
 	bool GetPressureSwitch() { return PressureSwitch; }
 	bool GetGlycolPumpFailRelay() { return GlycolPumpFailRelay; }
 protected:
-
 	h_Tank *primGlycolAccumulatorTank;
 	h_Tank *primGlycolPumpManifoldTank;
 	Pump *glycolPump1;
