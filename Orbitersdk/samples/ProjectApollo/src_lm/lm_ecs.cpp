@@ -908,6 +908,7 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	if (glycolRotary->GetState() == 1 && !GlycolAutoTransferRelay && glycolPump1CB->IsPowered())
 	{
 		glycolPump1->SetPumpOn();
+		glycolPump1Heat->GenerateHeat(30.5);
 	}
 	else
 	{
