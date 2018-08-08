@@ -3129,7 +3129,7 @@ void Saturn::AddRCSJets(double TRANZ, double MaxThrust)
 
 	for (i = 0; i < 24; i++) {
 		if (th_att_lin[i])
-			AddExhaust (th_att_lin[i], 1.2, 0.1, SMExhaustTex); 
+			AddExhaust (th_att_lin[i], 3.0, 0.15, SMExhaustTex);
 	}
 
 	//
