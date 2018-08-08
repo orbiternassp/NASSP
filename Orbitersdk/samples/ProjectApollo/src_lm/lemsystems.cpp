@@ -3149,13 +3149,13 @@ void LEM_RR::SystemTimestep(double simdt) {
 	if (abs(shaftVel) > 0.01*RAD)
 	{
 		dc_source->DrawPower(16.5);
-		rrheat->GenerateHeat(16.5);
+		rrheat->GenerateHeat(10.0);
 	}
 
 	if (abs(trunnionVel) > 0.01*RAD)
 	{
 		dc_source->DrawPower(16.5);
-		rrheat->GenerateHeat(16.5);
+		rrheat->GenerateHeat(10.0);
 	}
 
 }
