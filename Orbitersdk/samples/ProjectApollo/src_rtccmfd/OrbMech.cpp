@@ -1736,13 +1736,24 @@ double findpatchpoint(VECTOR3 R1, VECTOR3 V1, double mjd1, double mu_E, double m
 	//V1: Earth-centered velocity vector
 
 	VECTOR3 R_EM, V_EM, RP_E, VP_E;
-	double dt1, dt2, MJD_patch, r_patch, phi4;
+	double dt1, dt2, MJD_patch, r_patch, phi4, r_guess;
 
 	r_patch = 64373760.0;
+	r_guess = 310.0e6;
 	dt2 = 1.0;
 
 	//Initial guess
-	dt1 = time_radius(R1, V1, 310.0e6, 1.0, mu_E);
+	if (length(R1) > r_guess)
+	{
+		phi4 = -1.0;
+	}
+	else
+	{
+		phi4 = 1.0;
+	}
+
+	dt1 = time_radius(R1, V1*phi4, r_guess, phi4, mu_E);
+	dt1 *= phi4;
 
 	while (abs(dt2) > 0.1)
 	{
