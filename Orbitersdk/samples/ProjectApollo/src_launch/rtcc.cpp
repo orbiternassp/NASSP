@@ -73,6 +73,10 @@ RTCC::RTCC()
 	calcParams.DOI = 0.0;
 	calcParams.PDI = 0.0;
 	calcParams.TLAND = 0.0;
+	calcParams.LSAlt = 0.0;
+	calcParams.LSAzi = 0.0;
+	calcParams.LSLat = 0.0;
+	calcParams.LSLng = 0.0;
 	calcParams.Insertion = 0.0;
 	calcParams.Phasing = 0.0;
 	calcParams.CSI = 0.0;
@@ -82,6 +86,8 @@ RTCC::RTCC()
 	calcParams.tgt = NULL;
 	REFSMMATType = 0;
 	calcParams.StoredREFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	calcParams.TEPHEM = 0.0;
+	calcParams.PericynthionLatitude = 0.0;
 }
 
 void RTCC::Init(MCC *ptr)
@@ -5165,6 +5171,10 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_DOI", calcParams.DOI);
 	SAVE_DOUBLE("RTCC_PDI", calcParams.PDI);
 	SAVE_DOUBLE("RTCC_TLAND", calcParams.TLAND);
+	SAVE_DOUBLE("RTCC_LSAlt", calcParams.LSAlt);
+	SAVE_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
+	SAVE_DOUBLE("RTCC_LSLat", calcParams.LSLat);
+	SAVE_DOUBLE("RTCC_LSLng", calcParams.LSLng);
 	SAVE_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 	SAVE_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 	SAVE_DOUBLE("RTCC_CSI", calcParams.CSI);
@@ -5174,6 +5184,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_GET_node", calcParams.GET_node);
 	SAVE_DOUBLE("RTCC_lat_node", calcParams.lat_node);
 	SAVE_DOUBLE("RTCC_lng_node", calcParams.lng_node);
+	SAVE_DOUBLE("RTCC_TEPHEM", calcParams.TEPHEM);
+	SAVE_DOUBLE("RTCC_PericynthionLatitude", calcParams.PericynthionLatitude);
 	// Strings
 	// Vectors
 	SAVE_V3("RTCC_DVLVLH", DeltaV_LVLH);
@@ -5204,6 +5216,10 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_DOI", calcParams.DOI);
 		LOAD_DOUBLE("RTCC_PDI", calcParams.PDI);
 		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);
+		LOAD_DOUBLE("RTCC_LSAlt", calcParams.LSAlt);
+		LOAD_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
+		LOAD_DOUBLE("RTCC_LSLat", calcParams.LSLat);
+		LOAD_DOUBLE("RTCC_LSLng", calcParams.LSLng);
 		LOAD_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 		LOAD_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 		LOAD_DOUBLE("RTCC_CSI", calcParams.CSI);
@@ -5213,6 +5229,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_GET_node", calcParams.GET_node);
 		LOAD_DOUBLE("RTCC_lat_node", calcParams.lat_node);
 		LOAD_DOUBLE("RTCC_lng_node", calcParams.lng_node);
+		LOAD_DOUBLE("RTCC_TEPHEM", calcParams.TEPHEM);
+		LOAD_DOUBLE("RTCC_PericynthionLatitude", calcParams.PericynthionLatitude);
 		LOAD_V3("RTCC_DVLVLH", DeltaV_LVLH);
 		LOAD_V3("RTCC_R_TLI", calcParams.R_TLI);
 		LOAD_V3("RTCC_V_TLI", calcParams.V_TLI);
@@ -5762,7 +5780,7 @@ SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TL
 void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI)
 {
 	double SVMJD, day, theta_E, MJD_GRR, mu_E, MJD_TST, dt, cos_psiT, sin_psiT, Inclination, X_1, X_2, theta_N, p_N, T_M, R, e, p, alpha_D;
-	double MJD_TIG, R_T, V_T, K_5, G_T, gamma_T, boil;
+	double MJD_TIG, R_T, V_T, K_5, G_T, gamma_T, boil, tau3, dL_3, F2, F3, V_ex2, V_ex3, dt_tailoff;
 	VECTOR3 R_A, V_A, PosS, DotS, T_P, N, PosP, Sbar, DotP, Sbardot, R0, V0, R1, V1, Sbar_1, Cbar_1, R2, V2;
 	MATRIX3 mat, MX_EPH, MX_B, MX_G;
 	OBJHANDLE gravref;
@@ -5772,6 +5790,11 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 	gravref = AGCGravityRef(vessel);
 	mu_E = GGRAV*oapiGetMass(gravref);
 	boil = (1.0 - 0.99998193) / 10.0;
+	F2 = 802543.5;
+	V_ex2 = 4226.708571;
+	V_ex3 = 4188.581306;
+	F3 = 906114.066;
+	dt_tailoff = 0.25538125;
 
 	//State Vector
 	modf(oapiGetSimMJD(), &day);
@@ -5845,22 +5868,31 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 	gamma_T = atan((e*sin(lvdc.f)) / (1.0 + cos(lvdc.f)));
 	G_T = -lvdc.mu / pow(R_T, 2);
 
-	double Fs, V_ex, mass, a_T, tau, t_go, V, sin_gam, cos_gam, dot_phi_1, dot_phi_T, phi_T, xi_T, dot_zeta_T, dot_xi_T, ddot_zeta_GT, ddot_xi_GT, m0, m1, dt1;
-	double dot_dxit, dot_detat, dot_dzetat, dV, dT, f, L, dL;
+	int UP;
+	double mass, a_T, tau2, V, sin_gam, cos_gam, dot_phi_1, dot_phi_T, phi_T, xi_T, dot_zeta_T, dot_xi_T, ddot_zeta_GT, ddot_xi_GT, m0, m1, dt1;
+	double dot_dxit, dot_detat, dot_dzetat, dV, f, T_1c, Tt_3, T_2, L_2, L_12, Lt_3, Lt_Y, Tt_T, dT_3, T_3, T_T, dT, Tt_T_old, m2, m3, a_T3, m_cut, a_T_cut;
 	VECTOR3 Pos4, PosXEZ, DotXEZ, ddotG_act, DDotXEZ_G;
 	MATRIX3 MX_phi_T, MX_K;
 
-	Fs = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	V_ex = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
+	dT = 1.0;
+	Tt_T_old = 0.0;
+	UP = 0;
+	T_2 = lvdc.T_2R;
+	T_1c = T_2;
+	Tt_3 = lvdc.Tt_3R;
+	Tt_T = T_2 + Tt_3;
+
 	mass = vessel->GetMass();
 	m0 = vessel->GetEmptyMass();
 	dt1 = dt + (MJD_TST - SVMJD) * 24.0 * 3600.0;
 	m1 = (mass - m0)*exp(-boil*dt1);
+	m2 = m0 + m1;
 
-	a_T = Fs / (m0 + m1);
-	tau = V_ex / a_T;
-	t_go = 305.0;//Initial estimate
-	dT = 1.0;
+	a_T = F2 / m2;
+	tau2 = V_ex2 / a_T;
+	m3 = m2 - F2 / V_ex2*T_2;
+	a_T3 = F3 / m3;
+	tau3 = V_ex3 / a_T3;
 
 	while (abs(dT) > 0.01)
 	{
@@ -5868,16 +5900,19 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 		ddotG_act = -PosS*mu_E / OrbMech::power(length(PosS), 3.0);
 		Pos4 = mul(MX_G, PosS);
 
+		L_2 = V_ex2 * log(tau2 / (tau2 - T_2));
+		L_12 = L_2;
+		Lt_3 = V_ex3 * log(tau3 / (tau3 - Tt_3));
 
-		L = V_ex * log(tau / (tau - t_go));
-
+		Lt_Y = (L_12 + Lt_3);
+gtupdate:
 		V = length(DotS);
 		R = length(PosS);
 		sin_gam = ((PosS.x*DotS.x) + (PosS.y*DotS.y) + (PosS.z*DotS.z)) / (R*V);
 		cos_gam = pow(1.0 - pow(sin_gam, 2), 0.5);
 		dot_phi_1 = (V*cos_gam) / R;
 		dot_phi_T = (V_T*cos(gamma_T)) / R_T;
-		phi_T = atan2(Pos4.z, Pos4.x) + (((dot_phi_1 + dot_phi_T) / 2.0)*t_go);
+		phi_T = atan2(Pos4.z, Pos4.x) + (((dot_phi_1 + dot_phi_T) / 2.0)*Tt_T);
 
 		f = phi_T + alpha_D;
 		R_T = p / (1 + ((e*(cos(f)))));
@@ -5905,25 +5940,35 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 		RTT_T1 = RTT_T1 + RTT_T2;
 		DDotXEZ_G = _V(0.5*RTT_T1.x, 0.5*RTT_T1.y, 0.5*RTT_T1.z);
 
-
-		dot_dxit = dot_xi_T - DotXEZ.x - (DDotXEZ_G.x*t_go);
-		dot_detat = -DotXEZ.y - (DDotXEZ_G.y * t_go);
-		dot_dzetat = dot_zeta_T - DotXEZ.z - (DDotXEZ_G.z * t_go);
+		dot_dxit = dot_xi_T - DotXEZ.x - (DDotXEZ_G.x*Tt_T);
+		dot_detat = -DotXEZ.y - (DDotXEZ_G.y * Tt_T);
+		dot_dzetat = dot_zeta_T - DotXEZ.z - (DDotXEZ_G.z * Tt_T);
 
 		dV = pow((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)), 0.5);
-		dL = (((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)) / L) - L) / 2;
+		dL_3 = (((pow(dot_dxit, 2) + pow(dot_detat, 2) + pow(dot_dzetat, 2)) / Lt_Y) - Lt_Y) / 2;
 
+		dT_3 = (dL_3*(tau3 - Tt_3)) / V_ex3;
+		T_3 = Tt_3 + dT_3;
+		T_T = Tt_T + dT_3;
 
-		dT = (dL*(tau - t_go)) / V_ex;
-		t_go = t_go + dT;
-
-		/*// TARGET PARAMETER UPDATE
+		// TARGET PARAMETER UPDATE
 		if (!(UP > 0)) {
 			UP = 1;
-			L = L + dL;
-			J = J + (dL*t_go);
+			Tt_3 = T_3;
+			Tt_T = T_T;
+			Lt_3 = Lt_3 + dL_3;
+			Lt_Y = Lt_Y + dL_3;
 			goto gtupdate; // Recycle. 
-		}*/
+		}
+
+		UP = -1;
+
+		Tt_3 = T_3;
+		T_1c = T_2;
+		Tt_T = T_1c + Tt_3;
+
+		dT = Tt_T - Tt_T_old;
+		Tt_T_old = Tt_T;
 	}
 
 	coe.e = e;
@@ -5940,8 +5985,12 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VEC
 	R_TLI = _V(R_TLI.x, R_TLI.z, R_TLI.y);
 	V_TLI = _V(V_TLI.x, V_TLI.z, V_TLI.y);
 
-	T_TLI = P30TIG + t_go;
-	dV_LVLH = _V(1.0, 0.0, 0.0)*L;
+	T_TLI = P30TIG + Tt_T;
+
+	m_cut = m3 - F3 / V_ex3 * T_3;
+	a_T_cut = F3 / m_cut;
+
+	dV_LVLH = _V(1.0, 0.0, 0.0)*(dV - a_T_cut * dt_tailoff);
 }
 
 void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out)
@@ -8440,4 +8489,14 @@ VECTOR3 RTCC::CircularizationManeuverInteg(SV sv0)
 	DV2 = HeightManeuverInteg(sv0_apo, dh);
 
 	return DV1 + DV2;
+}
+
+bool RTCC::GETEval(double get)
+{
+	if (OrbMech::GETfromMJD(oapiGetSimMJD(), calcParams.TEPHEM) > get)
+	{
+		return true;
+	}
+
+	return false;
 }

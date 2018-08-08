@@ -885,6 +885,7 @@ struct TLIPAD{
 	double VI;			// Inertial velocity at cutoff
 	VECTOR3 SepATT;		// SC attitude after S4B sep att maneuver
 	VECTOR3 ExtATT;		// SC attitude at LM extraction
+	char remarks[128];	// Remarks
 };
 
 // APOLLO 11 - P37 RETURN-TO-EARTH
@@ -1118,6 +1119,10 @@ public:
 	void LoadState(FILEHANDLE scn);							// Load state
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
+
+	// MISSION SPECIFIC FUNCTIONS
+	void MissionSequence_G();
+
 	class RTCC *rtcc;										// Pointer to RTCC
 	Saturn *cm;												// Pointer to CM
 	LEM *lm;												// Pointer to LM

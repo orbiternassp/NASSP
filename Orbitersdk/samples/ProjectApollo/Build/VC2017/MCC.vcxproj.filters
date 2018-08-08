@@ -48,6 +48,12 @@
     <ClCompile Include="..\..\src_launch\RTCC_Mission_F.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_launch\RTCC_Mission_G.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_launch\MCC_Mission_G.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -63,6 +69,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\MCC_Mission_G.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

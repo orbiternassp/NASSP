@@ -5194,6 +5194,7 @@ void ApolloRTCCMFD::menuCalcManPAD()
 				tliparam.omega_E = lvdc->omega_E;
 				tliparam.phi_L = lvdc->PHI;
 				tliparam.R_N = lvdc->R_N;
+				tliparam.T_2R = lvdc->T_2R;
 				tliparam.TargetVector = lvdc->TargetVector;
 				tliparam.TB5 = lvdc->TB5;
 				tliparam.theta_EO = lvdc->theta_EO;
@@ -5201,6 +5202,7 @@ void ApolloRTCCMFD::menuCalcManPAD()
 				tliparam.T_L = lvdc->T_L;
 				tliparam.T_RG = lvdc->T_RG;
 				tliparam.T_ST = lvdc->T_ST;
+				tliparam.Tt_3R = lvdc->Tt_3R;
 
 				G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
 

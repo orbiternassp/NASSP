@@ -49,6 +49,9 @@ bool RTCC::Calculation(int mission, int fcn, LPVOID &pad, char * upString, char 
 	case MTP_F:
 		scrubbed = CalculationMTP_F(fcn, pad, upString, upDesc, upMessage);
 		break;
+	case MTP_G:
+		scrubbed = CalculationMTP_G(fcn, pad, upString, upDesc, upMessage);
+		break;
 	}
 
 	return scrubbed;
