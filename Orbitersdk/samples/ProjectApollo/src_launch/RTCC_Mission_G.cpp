@@ -445,7 +445,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				AP11MNV * form = (AP11MNV *)pad;
 
 				manopt.dV_LVLH = DeltaV_LVLH;
-				manopt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), DeltaV_LVLH);
+				manopt.enginetype = SPSRCSDecision(SPS_THRUST / (calcParams.src->GetMass() + calcParams.tgt->GetMass()), DeltaV_LVLH);
 				manopt.GETbase = GETbase;
 				manopt.HeadsUp = false;
 				manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -481,13 +481,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
-		entopt.returnspeed = 0;
+		entopt.returnspeed = 1;
 		entopt.FlybyType = 0;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
@@ -499,7 +499,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.alt = calcParams.LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.enginetype = SPSRCSDecision(SPS_THRUST / (calcParams.src->GetMass() + calcParams.tgt->GetMass()), res.dV_LVLH);
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -544,7 +544,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 		r_M = oapiGetSize(oapiGetObjectByName("Moon"));
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -644,7 +644,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 		r_M = oapiGetSize(oapiGetObjectByName("Moon"));
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -759,7 +759,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.returnspeed = 2;
@@ -824,7 +824,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 

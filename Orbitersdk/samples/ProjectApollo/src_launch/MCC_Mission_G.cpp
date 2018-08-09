@@ -147,7 +147,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TLI + 32.0*3600.0 + 10.0*60.0), 22, MST_G_TRANSLUNAR11);
 		break;
 	case MST_G_TRANSLUNAR11: //Lunar Flyby PAD to MCC-3
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 23.0*3600.0 - 30.0*60.0), 23, MST_G_TRANSLUNAR12);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 24.0*3600.0 - 30.0*60.0), 23, MST_G_TRANSLUNAR12);
 		break;
 	case MST_G_TRANSLUNAR12: //MCC-3 update to MCC-4 update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 6.0*3600.0 - 30.0*60.0), 24, MST_G_TRANSLUNAR13);
