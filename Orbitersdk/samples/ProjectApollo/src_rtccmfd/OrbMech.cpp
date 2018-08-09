@@ -4402,7 +4402,7 @@ double atan3(double x, double y)
 	double a;
 
 	a = atan2(x, y);
-	if (a < 0)
+	if (a < 0.0)
 	{
 		a += PI2;
 	}

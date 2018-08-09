@@ -8498,3 +8498,70 @@ bool RTCC::GETEval(double get)
 
 	return false;
 }
+
+void RTCC::AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA)
+{
+	MATRIX3 M, SBNB, CBNB;
+	VECTOR3 U_S, R_ZC, U_Z, u0, u1, u2, R_H, U_SH, t0, t1, R_L, R_CH;
+	double r_Z, x_H, y_H, A, alpha, beta, A0, A1, a;
+	bool H, k;
+
+	U_S = navstars[star - 1];
+	R_ZC = sv.R;
+	//Near Horizon
+	H = false;
+	U_Z = _V(0, 0, 1);
+	r_Z = oapiGetSize(sv.gravref);
+	a = -0.5676353234;
+	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
+
+	u2 = unit(crossp(U_S, R_ZC));
+	u0 = unit(crossp(U_Z, u2));
+	u1 = crossp(u2, u0);
+	M = _M(u0.x, u0.y, u0.z, u1.x, u1.y, u1.z, u2.x, u2.y, u2.z);
+
+	R_H = mul(M, R_ZC);
+	U_SH = mul(M, U_S);
+
+	x_H = R_H.x;
+	y_H = R_H.z;
+
+	A = (x_H*x_H + y_H * y_H) / (r_Z*r_Z);
+	alpha = y_H * sqrt(A - 1.0);
+	beta = x_H * sqrt(A - 1.0);
+
+	t0 = _V(x_H + alpha, y_H - beta, 0)*1.0 / A;
+	t1 = _V(x_H - alpha, y_H + beta, 0)*1.0 / A;
+	A0 = dotp(U_SH, unit(t0 - R_H));
+	A1 = dotp(U_SH, unit(t1 - R_H));
+
+	if (A1 > A0)
+		k = true;
+	else
+		k = false;
+
+	if (H) k = !k;
+
+	if (k == false)
+		R_L = tmul(M, t0);
+	else
+		R_L = tmul(M, t1);
+
+	//Vector pointing from CSM to horizon
+	R_CH = R_L - R_ZC;
+
+	MATRIX3 CBSB;
+	VECTOR3 X_SB, Y_SB, Z_SB;
+
+	Z_SB = unit(R_CH);
+	Y_SB = unit(crossp(Z_SB, U_S));
+	X_SB = crossp(Y_SB, Z_SB);
+
+	CBSB = _M(X_SB.x, X_SB.y, X_SB.z, Y_SB.x, Y_SB.y, Y_SB.z, Z_SB.x, Z_SB.y, Z_SB.z);
+
+	CBNB = mul(SBNB, CBSB);
+	IMUAngles = OrbMech::CALCGAR(REFSMMAT, CBNB);
+
+	//Calculate sextant angles
+	OrbMech::CALCSXA(CBNB, U_S, TA, SA);
+}
