@@ -1029,11 +1029,11 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Asc_Water2 = 0;
 	Des_Water = 0;
 	//Des_Water2 = 0; Using LM-8 Systems Handbook, only 1 DES H2O tank
-	Primary_CL_Glycol_Press = 0; // Zero this, system will fill from accu
-	Secondary_CL_Glycol_Press = 0;  // Zero this, system will fill from accu
-	Primary_CL_Glycol_Temp = 0;  // 40 in the accu, 0 other side of the pump
-	Secondary_CL_Glycol_Temp = 0; // 40 in the accu, 0 other side of the pump
-	Primary_Glycol_Accu = 0;								// Glycol Accumulator mass
+	Primary_CL_Glycol_Press = 0;						// Zero this, system will fill from accu
+	Secondary_CL_Glycol_Press = 0;						// Zero this, system will fill from accu
+	Primary_CL_Glycol_Temp = 0;							// 40 in the accu, 0 other side of the pump
+	Secondary_CL_Glycol_Temp = 0;						// 40 in the accu, 0 other side of the pump
+	Primary_Glycol_Accu = 0;							// Glycol Accumulator mass
 	Primary_Glycol_Pump_Manifold = 0;					// Pump manifold mass
 	Primary_Glycol_HXCooling = 0;						// HXCooling mass
 	Primary_Glycol_Loop1 = 0;							// Loop 1 mass
@@ -1044,7 +1044,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Primary_Glycol_EvapOut = 0;							// Evap outlet mass
 	Primary_Glycol_AscCooling = 0;						// Ascent battery cooling mass
 	Primary_Glycol_DesCooling = 0;						// Descent battery cooling mass
-	Secondary_Glycol_Accu = 0;								// Glycol Accumulator mass
+	Secondary_Glycol_Accu = 0;							// Glycol Accumulator mass
 	Secondary_Glycol_Pump_Manifold = 0;					// Pump manifold mass
 	Secondary_Glycol_Loop1 = 0;							// Loop 1 mass
 	Secondary_Glycol_AscCooling = 0;					// Ascent battery cooling mass
