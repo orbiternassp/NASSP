@@ -507,7 +507,7 @@ void LEM::SystemsInit()
 	LR.Init(this, &PGNS_LDG_RDR_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-LR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-LR-Antenna-Heater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LRHEAT"));
 
 	// Rdz Radar
-	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT"));
+	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RRHEAT"));
 	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB);
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
@@ -636,8 +636,8 @@ void LEM::SystemsInit()
 	AscO2Tank2->BoilAllAndSetTemp(294.261);
 	DesO2Manifold->BoilAllAndSetTemp(294.261);
 	O2Manifold->BoilAllAndSetTemp(294.261);
-	//PressRegA->BoilAllAndSetTemp(285.928);
-	//PressRegB->BoilAllAndSetTemp(285.928);
+	PressRegA->BoilAllAndSetTemp(285.928);
+	PressRegB->BoilAllAndSetTemp(285.928);
 
 	//Tunnel Connection Initialization   
 	SetPipeMaxFlow("HYDRAULIC:LMTUNNELUNDOCKED", 1000.0 / LBH);
@@ -1698,11 +1698,13 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double *hxheatingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:PRESS");
 	double *hxheatingTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:TEMP");
 	double *hxheatingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:MASS");
+	double *hxheatingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEAT:POWER");
 	double *SGDPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:PRESS");
 	double *SGDMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:MASS");
 	double *hxcoolingMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:MASS");
 	double *hxcoolingPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:PRESS");
 	double *hxcoolingTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING:TEMP");
+	double *hxcoolingPower = (double*)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOL:POWER");
 	double *WSMMass = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:MASS");
 	double *WSMPress = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:PRESS");
 	double *WSMTemp = (double*)Panelsdk.GetPointerByString("HYDRAULIC:WATERSEPMANIFOLD:TEMP");
@@ -1960,7 +1962,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "Quad 1 %lf Quad 2 %lf Quad 3 %lf Quad 4 %lf", KelvinToFahrenheit(*QD1Temp), KelvinToFahrenheit(*QD2Temp), KelvinToFahrenheit(*QD3Temp), KelvinToFahrenheit(*QD4Temp));
 	//sprintf(oapiDebugString(), "PrimGlycolQty %lf SecGlycolQty %lf", ecs.GetPrimaryGlycolQuantity(), ecs.GetSecondaryGlycolQuantity());
 
-	//sprintf(oapiDebugString(), "GlyTmp %lf GlyCoolTmp %lf HXCTmp %lf GlyHeatTmp %lf HXHTmp %lf StTmp %lf CP %lf CT %lf LP %lf LT %lf", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), KelvinToFahrenheit(*SuitCircuitTemp), (*cdrsuitpress)*PSI, KelvinToFahrenheit(*cdrsuittemp), (*lmpsuitpress)*PSI, KelvinToFahrenheit(*lmpsuittemp));
+	//sprintf(oapiDebugString(), "GlyCTmp %lf HXCTmp %lf HXCPwr %lf GlyHTmp %lf HXHTmp %lf HXHPwr %lf CT %lf LT %lf", KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*cdrsuittemp), KelvinToFahrenheit(*lmpsuittemp));
 	//sprintf(oapiDebugString(), "CO2CP %lf SFMP %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf SC Mass: %lf", *primCO2CanisterPress*PSI, *suitfanmanifoldPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval, (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldMass + *hxcoolingMass));
 	//sprintf(oapiDebugString(), "Total: %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf RV %d RVF %lf", (*hxheatingMass + *cdrsuitmass + *lmpsuitmass + *SuitCircuitMass + *SGDMass + *CO2ManifoldMass + *primCO2CanisterMass + *secCO2CanisterMass + *suitfanmanifoldMass + *hxcoolingMass), *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2CanisterMass, *suitfanmanifoldMass, *hxcoolingMass, *suitReliefvlv, *suitReliefflow*LBH);
 	//sprintf(oapiDebugString(), "HXH %lf CS %lf LS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf WSM %lf CO2F %lf CO2REM %lf WS1F %lf H2OREM %lf", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldPress*PSI, *hxcoolingPress*PSI, *WSMPress*PSI, *primCO2Flow, *primCO2Removal, *WS1Flow, *WS1H2ORemoval);
@@ -2603,7 +2605,7 @@ LEM_RR::LEM_RR()
 	radarDataGood = false;
 }
 
-void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat,  h_HeatLoad *rreh, h_HeatLoad *secrreh) {
+void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat,  h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
 	lem = s;
 	// Set up antenna.
 	// RR antenna is designed to operate between 10F and 75F
@@ -2616,6 +2618,7 @@ void LEM_RR::Init(LEM *s,e_object *dc_src,e_object *ac_src, h_Radiator *ant, Boi
 	antenna = ant;
 	stbyantheater = stbyanheat;
 	antheater = anheat;
+	rrheat = rrh;
 	RREHeat = rreh;
 	RRESECHeat = secrreh;
 	antenna->isolation = 0.000001; 
@@ -3145,12 +3148,14 @@ void LEM_RR::SystemTimestep(double simdt) {
 
 	if (abs(shaftVel) > 0.01*RAD)
 	{
-			dc_source->DrawPower(16.5);
+		dc_source->DrawPower(16.5);
+		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
 	}
 
 	if (abs(trunnionVel) > 0.01*RAD)
 	{
 		dc_source->DrawPower(16.5);
+		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
 	}
 
 }
