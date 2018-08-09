@@ -307,7 +307,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		MATRIX3 REFSMMAT = _M(0.866025404, -0.45872739, -0.19892002, -0.5, -0.79453916, -0.34453958, 0.0, 0.39784004, -0.91745480);
 
-		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, AGCEpoch, true);
+		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT, AGCEpoch, true, true);
 		sprintf(uplinkdata, "%s", buffer1);
 
 		if (upString != NULL) {
