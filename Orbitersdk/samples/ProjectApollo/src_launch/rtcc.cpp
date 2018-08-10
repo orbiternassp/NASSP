@@ -5607,7 +5607,7 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 	delete teicalc;
 }
 
-void RTCC::LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad)
+void RTCC::LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, double pm)
 {
 	double ttoLOS, ttoAOS, ttoSS, ttoSR, ttoPM;
 	OBJHANDLE hEarth, hSun;
@@ -5629,7 +5629,7 @@ void RTCC::LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad)
 	pad.SSGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoSS;
 	pad.SRGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoSR;
 
-	t_lng = OrbMech::P29TimeOfLongitude(sv0.R, sv0.V, sv0.MJD, sv0.gravref, -150.0*RAD);
+	t_lng = OrbMech::P29TimeOfLongitude(sv0.R, sv0.V, sv0.MJD, sv0.gravref, pm);
 	ttoPM = (t_lng - sv0.MJD)*24.0 * 3600.0;
 	pad.PMGET = (sv0.MJD - GETbase)*24.0*3600.0 + ttoPM;
 }
@@ -8564,4 +8564,30 @@ void RTCC::AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw,
 
 	//Calculate sextant angles
 	OrbMech::CALCSXA(CBNB, U_S, TA, SA);
+}
+
+VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T)
+{
+	SV sv_tig;
+	MATRIX3 M_EMP, M_R, M, M_RTM;
+	VECTOR3 X_B, UX, UY, UZ, IMUangles;
+	double dt, headsswitch;
+
+	headsswitch = -1.0;
+
+	dt = LOI_TIG - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+	sv_tig = coast(sv0, dt);
+	M_EMP = OrbMech::EMPMatrix(sv_tig.MJD);
+	X_B = tmul(M_EMP, _V(-sin(p_EMP), cos(p_EMP), 0));
+
+	UX = X_B;
+	UY = unit(crossp(X_B, sv_tig.R*headsswitch));
+	UZ = unit(crossp(X_B, crossp(X_B, sv_tig.R*headsswitch)));
+
+	M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+	M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
+	M_RTM = mul(OrbMech::tmat(M_R), M);
+	IMUangles = OrbMech::CALCGAR(REFSMMAT, mul(OrbMech::tmat(M), M_R));
+
+	return IMUangles;
 }

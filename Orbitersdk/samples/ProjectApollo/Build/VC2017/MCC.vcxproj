@@ -148,6 +148,11 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_launch\MCC_Mission_B.cpp" />
+    <ClCompile Include="..\..\src_launch\MCC_Mission_C.cpp" />
+    <ClCompile Include="..\..\src_launch\MCC_Mission_C_PRIME.cpp" />
+    <ClCompile Include="..\..\src_launch\MCC_Mission_D.cpp" />
+    <ClCompile Include="..\..\src_launch\MCC_Mission_F.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_G.cpp" />
     <ClCompile Include="..\..\src_launch\rtcc.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_B.cpp" />
@@ -163,6 +168,11 @@
     <ClCompile Include="..\..\src_sys\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_launch\MCC_Mission_B.h" />
+    <ClInclude Include="..\..\src_launch\MCC_Mission_C.h" />
+    <ClInclude Include="..\..\src_launch\MCC_Mission_C_PRIME.h" />
+    <ClInclude Include="..\..\src_launch\MCC_Mission_D.h" />
+    <ClInclude Include="..\..\src_launch\MCC_Mission_F.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_G.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />

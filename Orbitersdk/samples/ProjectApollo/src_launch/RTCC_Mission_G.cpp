@@ -685,6 +685,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.REFSMMATTime = calcParams.TLAND;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
+		calcParams.StoredREFSMMAT = REFSMMAT;
 
 		if (scrubbed)
 		{
@@ -767,19 +768,21 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.FlybyType = 1;
 		entopt.vessel = calcParams.src;
 
-		RTEFlybyTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
+		RTEFlybyTargeting(&entopt, &res);
 
 		opt.alt = calcParams.LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		//LS REFSMMAT
+		opt.REFSMMAT = calcParams.StoredREFSMMAT;
 		opt.TIG = res.P30TIG;
 		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
+		opt.vesseltype = 1;
 
 		AP11ManeuverPAD(&opt, *form);
+		sprintf(form->remarks, "Assumes LS REFSMMAT and docked");
 
 		if (!REFSMMATDecision(form->Att*RAD))
 		{
@@ -798,7 +801,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.REFSMMAT = REFSMMAT;
 			AP11ManeuverPAD(&opt, *form);
 
-			sprintf(form->remarks, "Requires realignment to preferred REFSMMAT");
+			sprintf(form->remarks, "Docked, requires realignment to preferred REFSMMAT");
 		}
 		sprintf(form->purpose, "PC+2");
 		form->lat = res.latitude*DEG;
@@ -875,7 +878,105 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 40: //TEI-1 UPDATE (PRE LOI-1)
 	case 41: //TEI-4 UPDATE (PRE LOI-1)
 	{
+		TEIOpt entopt;
+		EntryResults res;
+		AP11ManPADOpt opt;
+		double GETbase;
+		SV sv0, sv1, sv2;
+		char manname[8];
 
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = calcParams.TEPHEM;
+		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		//Simulate the maneuver preceeding TEI (LOI-1 or LOI-2)
+		if (fcn == 40 || fcn == 41)
+		{
+			sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		}
+		else
+		{
+			sv1 = sv0;
+		}
+
+		if (fcn == 40)
+		{
+			sprintf(manname, "TEI-1");
+			sv2 = coast(sv1, 0.5*2.0*3600.0);
+		}
+		else if (fcn == 31)
+		{
+			sprintf(manname, "TEI-4");
+			sv2 = coast(sv1, 3.5*2.0*3600.0);
+		}
+
+		entopt.EntryLng = -165.0*RAD;
+		entopt.GETbase = GETbase;
+		entopt.returnspeed = 1;
+		entopt.RV_MCC = sv2;
+		entopt.useSV = true;
+		entopt.vessel = calcParams.src;
+
+		TEITargeting(&entopt, &res);
+
+		opt.alt = calcParams.LSAlt;
+		opt.dV_LVLH = res.dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		opt.RV_MCC = sv1;
+		opt.TIG = res.P30TIG;
+		opt.useSV = true;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 0;
+
+		AP11ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, manname);
+		form->lat = res.latitude*DEG;
+		form->lng = res.longitude*DEG;
+		form->RTGO = res.RTGO;
+		form->VI0 = res.VIO / 0.3048;
+		form->GET05G = res.GET05G;
+
+		if (fcn == 40)
+		{
+			sprintf(form->remarks, "Undocked");
+		}
+		else if (fcn == 41)
+		{
+			sprintf(form->remarks, "Undocked, assumes no LOI-2");
+		}
+
+		//Save parameters for further use
+		SplashLatitude = res.latitude;
+		SplashLongitude = res.longitude;
+		calcParams.TEI = res.P30TIG;
+		calcParams.EI = res.GET400K;
+	}
+	break;
+	case 60: //REV 1 MAP UPDATE
+	{
+		SV sv0, sv1, sv2;
+		AP10MAPUPDATE upd_hyper, upd_ellip;
+		double GETbase;
+
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+
+		GETbase = calcParams.TEPHEM;
+		sv0 = StateVectorCalc(calcParams.src);
+		LunarOrbitMapUpdate(sv0, GETbase, upd_hyper);
+
+		sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		sv2 = coast(sv1, -30.0*60.0);
+		LunarOrbitMapUpdate(sv2, GETbase, upd_ellip);
+
+		form->Rev = 1;
+		form->type = 2;
+		form->AOSGET = upd_hyper.AOSGET;
+		form->LOSGET = upd_hyper.LOSGET;
+		form->PMGET = upd_ellip.AOSGET;
 	}
 	break;
 	}
