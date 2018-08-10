@@ -268,6 +268,7 @@ MCC::MCC(OBJHANDLE hVessel, int flightmodel)
 	upString[0] = 0;
 	upDescr[0] = 0;
 	upMessage[0] = 0;
+	upType = 0;
 	subThreadStatus = 0;
 
 	// Ground Systems Init
@@ -1763,6 +1764,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
+	if (upString[0] != 0 && uplink_size > 0) { SAVE_INT("MCC_upType", upType); }
 	if (upDescr[0]) { SAVE_STRING("MCC_upDescr", upDescr); }
 	// Done
 	oapiWriteLine(scn, MCC_END_STRING);
@@ -2172,11 +2174,20 @@ void MCC::LoadState(FILEHANDLE scn) {
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
+		LOAD_INT("MCC_upType", upType);
 		LOAD_STRING("MCC_upDescr", upDescr, 1024);
 	}
 
 	if (upString[0] != 0) {
-		this->pushCMCUplinkString(upString);
+
+		if (upType == 1)
+		{
+			this->pushCMCUplinkString(upString);
+		}
+		else if (upType == 2)
+		{
+			this->pushLGCUplinkString(upString);
+		}
 	}
 
 	return;
@@ -3418,6 +3429,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
+			upType = 1;
 		}
 		// Done filling form, OK to show
 		padState = 0;
@@ -3430,6 +3442,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushCMCUplinkString(upString);
+			upType = 1;
 		}
 	}
 	else if (type == UTP_PADWITHLGCUPLINK)
@@ -3440,6 +3453,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Give resulting uplink string to LGC
 		if (upString[0] != 0) {
 			this->pushLGCUplinkString(upString);
+			upType = 2;
 		}
 		// Done filling form, OK to show
 		padState = 0;
@@ -3452,6 +3466,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushLGCUplinkString(upString);
+			upType = 2;
 		}
 	}
 	else if (type == UTP_LGCUPLINKDIRECT)
@@ -3462,6 +3477,7 @@ void MCC::subThreadMacro(int type, int updatenumber)
 		// Give resulting uplink string to CMC
 		if (upString[0] != 0) {
 			this->pushLGCUplinkString(upString);
+			upType = 2;
 		}
 	}
 	else if (type == UTP_NONE)

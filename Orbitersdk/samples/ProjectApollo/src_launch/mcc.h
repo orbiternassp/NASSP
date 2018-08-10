@@ -668,6 +668,7 @@ public:
 	char upDescr[1024];										// Uplink Description
 	char upMessage[1024];									// Update message
 	bool scrubbed;											// Maneuver scrubbed
+	int upType;												// Uplink type (1 = CSM, 2 = LM)
 
 	// UPLINK DATA
 	int uplink_size;										// Size of uplink buffer
