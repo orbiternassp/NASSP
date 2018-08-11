@@ -147,10 +147,10 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TLI + 32.0*3600.0 + 10.0*60.0), 22, MST_G_TRANSLUNAR11);
 		break;
 	case MST_G_TRANSLUNAR11: //Lunar Flyby PAD to MCC-3
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 23.0*3600.0 - 30.0*60.0), 23, MST_G_TRANSLUNAR12);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 24.0*3600.0 - 40.0*60.0), 23, MST_G_TRANSLUNAR12);
 		break;
 	case MST_G_TRANSLUNAR12: //MCC-3 update to MCC-4 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 6.0*3600.0 - 30.0*60.0), 24, MST_G_TRANSLUNAR13);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 6.0*3600.0 - 25.0*60.0), 24, MST_G_TRANSLUNAR13);
 		break;
 	case MST_G_TRANSLUNAR13: //MCC-4 update to PC+2 update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 25, MST_G_TRANSLUNAR14);
@@ -159,7 +159,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 2.0*3600.0 - 50.0*60.0), 26, MST_G_TRANSLUNAR15);
 		break;
 	case MST_G_TRANSLUNAR15: //LOI-1 update to TEI-1 update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 2.0*3600.0 - 50.0*60.0), 30, MST_G_TRANSLUNAR16);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 2.0*3600.0 - 5.0*60.0), 30, MST_G_TRANSLUNAR16);
 		break;
 	case MST_G_TRANSLUNAR16: //TEI-1 update to TEI-4 update
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 40, MST_G_TRANSLUNAR17);
@@ -168,14 +168,24 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 40.0*60.0), 41, MST_G_TRANSLUNAR18);
 		break;
 	case MST_G_TRANSLUNAR18: //Rev 1 Map Update to lunar orbit phase begin
-		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, rtcc->GETEval(rtcc->calcParams.LOI), 31, MST_G_LUNAR_ORBIT_LOI_DAY_1);
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, rtcc->GETEval(rtcc->calcParams.LOI), 60, MST_G_LUNAR_ORBIT_LOI_DAY_1);
 		break;
 	case MST_G_LUNAR_ORBIT_LOI_DAY_1: //Lunar orbit phase begin
-		MissionPhase = MMST_LUNAR_ORBIT;
-		setState(MST_G_LUNAR_ORBIT_LOI_DAY_2);
+		switch (SubState) {
+		case 0:
+			MissionPhase = MMST_LUNAR_ORBIT;
+			setSubState(1);
+			break;
+		case 1:
+			if (MoonRev >= 2 && MoonRevTime > 30.0*60.0)
+			{
+				setState(MST_G_LUNAR_ORBIT_LOI_DAY_2);
+			}
+			break;
+		}
 		break;
 	case MST_G_LUNAR_ORBIT_LOI_DAY_2: //LOI-2 update to TEI-5 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 32, MST_G_LUNAR_ORBIT_LOI_DAY_3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 31, MST_G_LUNAR_ORBIT_LOI_DAY_3);
 		break;
 	}
 }

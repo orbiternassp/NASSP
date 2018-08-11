@@ -3222,33 +3222,25 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 {
 	OELEMENTS coe;
 	VECTOR3 P, Q;
-	//double beta1, beta2, p, A,B, C, D, tol, f, f_dot, f_ddot,x, R_E, sinv, cosv, v, x_alt,mu,f0,f1;
-	double tol, R_E, f, beta1, beta2, a, b, c, d, e, p, q, D0, D1, S, DD, SS, sinx, pp, alpha, cond, aa, mu;
+	double R_E, beta1, beta2, a, b, c, d, e, p, q, D0, D1, S, DD, SS[2], sinx[2], pp, alpha, cond, aa, mu;
 	double x[4];
 	double cosv[2], sinv[2];
-	int j;
+	int j, l;
 
-	tol = 1e-6;
 	mu = GGRAV*oapiGetMass(planet);
 	R_E = oapiGetSize(planet);
-	f = 1;
 
 	coe = coe_from_sv(R, V, mu);
 
-	//if (coe.i > PI05)
-	//{
-	//	swit = -1.0;
-	//}
-	//else
-	//{
-	//	swit = 1.0;
-	//}
-
 	P = _V(cos(coe.w)*cos(coe.RA) - sin(coe.w)*sin(coe.RA)*cos(coe.i), cos(coe.w)*sin(coe.RA) + sin(coe.w)*cos(coe.RA)*cos(coe.i), sin(coe.w)*sin(coe.i));
+	P = unit(P);
 	Q = _V(-sin(coe.w)*cos(coe.RA) - cos(coe.w)*sin(coe.RA)*cos(coe.i), -sin(coe.w)*sin(coe.RA) + cos(coe.w)*cos(coe.RA)*cos(coe.i), cos(coe.w)*sin(coe.i));
-	beta1 = dotp(sun, P) / length(sun);
+	Q = unit(Q);
 
-	aa = coe.h*coe.h / (mu*(1 - coe.e*coe.e));
+	beta1 = dotp(unit(sun), P);
+
+	aa = coe.h*coe.h / (mu*(1.0 - coe.e*coe.e));
+	p = aa * (1.0 - coe.e*coe.e);
 
 	if (beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
 	{
@@ -3256,7 +3248,7 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 		return;
 	}
 
-	beta2 = dotp(sun, Q) / length(sun);
+	beta2 = dotp(unit(sun), Q);
 	p = coe.h*coe.h / mu;
 	/*A = coe.e*coe.e*R_E*R_E + p*p*beta1*beta1 - p*p*beta2*beta2;
 	B = 2.0 * coe.e*R_E;
@@ -3272,10 +3264,11 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	e = pow(alpha, 4) - 2.0*pow(alpha, 2)*(1.0 - beta2*beta2) + pow(1.0 - beta2*beta2,2);
 
 	pp = (8.0*a*c - 3.0 * b*b) / (8.0*a*a);
-	q = (OrbMech::power(b, 3.0) - 4.0*a*b*c + 8.0*a*a*d) / (8.0 * a*a*a);
+	q = (b*b*b - 4.0*a*b*c + 8.0*a*a*d) / (8.0 * a*a*a);
 	D0 = c*c - 3.0*b*d + 12.0 * a*e;
 	D1 = 2.0*c*c*c - 9.0*b*c*d + 27.0*b*b*e + 27.0*a*d*d - 72.0*a*c*e;
-	DD = -(D1*D1 - 4.0*D0*D0*D0)/27.0;
+	DD = -(D1*D1 - 4.0*D0*D0*D0) / 27.0;
+
 	if (DD > 0)
 	{
 		double phi;
@@ -3300,8 +3293,30 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	//Select the two physicals solutions from the (up to) four real roots of the quartic
 	for (int i = 0; i < 4; i++)
 	{
-		sinx = sqrt(1.0 - x[i] * x[i]);
-		SS = R_E*R_E*pow(1.0 + coe.e*x[i], 2) + p*p*pow(beta1*x[i] + beta2*sinx, 2) - p*p;
+		sinx[0] = sqrt(1.0 - x[i] * x[i]);
+		sinx[1] = -sinx[0];
+
+		for (int k = 0;k < 2;k++)
+		{
+			SS[k] = R_E * R_E*pow(1.0 + coe.e*x[i], 2) + p * p*pow(beta1*x[i] + beta2 * sinx[k], 2) - p * p;
+		}
+		if (abs(SS[0]) < abs(SS[1]))
+		{
+			l = 0;
+		}
+		else
+		{
+			l = 1;
+		}
+		cond = beta1 * x[i] + beta2 * sinx[l];
+		if (cond < 0)
+		{
+			cosv[j] = x[i];
+			sinv[j] = sinx[l];
+			j++;
+		}
+
+		/*SS = R_E*R_E*pow(1.0 + coe.e*x[i], 2) + p*p*pow(beta1*x[i] + beta2*sinx, 2) - p*p;
 		if (abs(SS) < 1.0)
 		{
 			cond = beta1*x[i] + beta2*sinx;
@@ -3323,7 +3338,14 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 				sinv[j] = sinx;
 				j++;
 			}
-		}
+		}*/
+	}
+
+	//If it didn't find 2 physical solutions, abort
+	if (j != 2)
+	{
+		v1 = 0.0;
+		return;
 	}
 
 	//Choose entry vs. exit
@@ -4402,7 +4424,7 @@ double atan3(double x, double y)
 	double a;
 
 	a = atan2(x, y);
-	if (a < 0)
+	if (a < 0.0)
 	{
 		a += PI2;
 	}

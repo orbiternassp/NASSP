@@ -1152,29 +1152,26 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP10DAPDATA dappad;
 		AP11LMManPADOpt opt;
-		SV sv0, sv1, sv_TIG;
-		MATRIX3 Rot;
-		VECTOR3 dV_LVLH, DV, dV_LVLH_imp;
-		double GETbase, TIG, P30TIG, dv;
+		GMPOpt gmpopt;
+		SV sv0;
+		VECTOR3 dV_LVLH, dV_imp;
+		double GETbase, P30TIG, TIG_imp;
 		char buffer1[1000];
 
 		GETbase = getGETBase();
 		sv0 = StateVectorCalc(calcParams.tgt);
-		sv1 = coast(sv0, OrbMech::HHMMSSToSS(101, 30, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase));
 
-		//Mid Pass Texas
-		double lat_TEX, lng_TEX;
-		lat_TEX = groundstations[10][0];
-		lng_TEX = groundstations[10][1];
-		FindRadarMidPass(sv1, GETbase, lat_TEX, lng_TEX, TIG);
+		gmpopt.dV = 7427.5*0.3048;
+		gmpopt.GETbase = GETbase;
+		gmpopt.long_D = -100.0*RAD;
+		gmpopt.ManeuverCode = RTCC_GMP_FCL;
+		gmpopt.Pitch = 0.0;
+		gmpopt.RV_MCC = sv0;
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(101, 30, 0);
+		gmpopt.Yaw = -45.0*RAD;
 
-		dv = 7427.5*0.3048;
-		dV_LVLH_imp = _V(dv*cos(45.0*RAD), -dv*sin(45.0*RAD), 0.0);
-		sv_TIG = coast(sv0, TIG - OrbMech::GETfromMJD(sv0.MJD, GETbase));
-		Rot = OrbMech::LVLH_Matrix(sv_TIG.R, sv_TIG.V);
-		DV = tmul(Rot, dV_LVLH_imp);
-
-		PoweredFlightProcessor(sv0, GETbase, TIG, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, DV, P30TIG, dV_LVLH);
+		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, dV_imp, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
