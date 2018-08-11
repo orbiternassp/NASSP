@@ -1160,7 +1160,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GETbase = getGETBase();
 		sv0 = StateVectorCalc(calcParams.tgt);
-		sv1 = coast(sv0, OrbMech::HHMMSSToSS(102, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+		sv1 = coast(sv0, OrbMech::HHMMSSToSS(101, 30, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase));
 
 		//Mid Pass Texas
 		double lat_TEX, lng_TEX;
