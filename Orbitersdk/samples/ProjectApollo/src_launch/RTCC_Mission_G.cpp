@@ -856,7 +856,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11ManeuverPAD(&manopt, *form);
 		sprintf(form->purpose, "LOI-1");
-		sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
+		sprintf(form->remarks, "LM weight is %.0f", form->LMWeight);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -904,11 +904,15 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(manname, "TEI-1");
 			sv2 = coast(sv1, 0.5*2.0*3600.0);
+			entopt.Inclination = 40.0*RAD;
+			entopt.Ascending = true;
 		}
-		else if (fcn == 31)
+		else if (fcn == 41)
 		{
 			sprintf(manname, "TEI-4");
 			sv2 = coast(sv1, 3.5*2.0*3600.0);
+			entopt.Inclination = 40.0*RAD;
+			entopt.Ascending = true;
 		}
 
 		entopt.EntryLng = -165.0*RAD;

@@ -159,7 +159,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 2.0*3600.0 - 50.0*60.0), 26, MST_G_TRANSLUNAR15);
 		break;
 	case MST_G_TRANSLUNAR15: //LOI-1 update to TEI-1 update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 2.0*3600.0), 30, MST_G_TRANSLUNAR16);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 2.0*3600.0 - 5.0*60.0), 30, MST_G_TRANSLUNAR16);
 		break;
 	case MST_G_TRANSLUNAR16: //TEI-1 update to TEI-4 update
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 40, MST_G_TRANSLUNAR17);
@@ -177,7 +177,7 @@ void MCC::MissionSequence_G()
 			setSubState(1);
 			break;
 		case 1:
-			if (MoonRev >= 1 && MoonRevTime > 30.0*60.0)
+			if (MoonRev >= 2 && MoonRevTime > 30.0*60.0)
 			{
 				setState(MST_G_LUNAR_ORBIT_LOI_DAY_2);
 			}
