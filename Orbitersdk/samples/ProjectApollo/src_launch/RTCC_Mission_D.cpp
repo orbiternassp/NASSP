@@ -154,7 +154,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VECTOR3 dV_LVLH;
 		SV sv0;
 		char buffer1[1000];
-		char buffer2[1000];
 
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 		GETbase = getGETBase();
@@ -177,14 +176,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "SPS-1");
 		sprintf(form->remarks, "Gimbal angles with pad REFSMMAT");
 
-		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase);
-		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+		AGCExternalDeltaVUpdate(buffer1, P30TIG, dV_LVLH);
 
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "Target load");
 		}
 	}
 	break;
@@ -255,7 +253,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
-		refsopt.HeadsUp = false;
 		refsopt.P30TIG = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -266,7 +263,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
 		opt.GETbase = GETbase;
-		opt.HeadsUp = false;
+		opt.HeadsUp = true;
 		opt.navcheckGET = P30TIG - 30.0*60.0;
 		opt.REFSMMAT = REFSMMAT;
 		opt.sxtstardtime = -30.0*60.0;
@@ -322,7 +319,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
-		refsopt.HeadsUp = false;
 		refsopt.P30TIG = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -333,7 +329,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
 		opt.GETbase = GETbase;
-		opt.HeadsUp = false;
+		opt.HeadsUp = true;
 		opt.navcheckGET = P30TIG - 30.0*60.0;
 		opt.REFSMMAT = REFSMMAT;
 		opt.sxtstardtime = -30.0*60.0;
@@ -385,7 +381,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
-		refsopt.HeadsUp = false;
 		refsopt.P30TIG = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -396,7 +391,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
 		opt.GETbase = GETbase;
-		opt.HeadsUp = false;
+		opt.HeadsUp = true;
 		opt.navcheckGET = P30TIG - 30.0*60.0;
 		opt.REFSMMAT = REFSMMAT;
 		opt.sxtstardtime = -30.0*60.0;
@@ -628,7 +623,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
-		refsopt.HeadsUp = false;
 		refsopt.P30TIG = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -639,7 +633,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
 		manopt.GETbase = GETbase;
-		manopt.HeadsUp = false;
+		manopt.HeadsUp = true;
+		manopt.navcheckGET = P30TIG - 30.0*60.0;
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = P30TIG;
 		manopt.vessel = calcParams.src;
@@ -1318,7 +1313,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
-		refsopt.HeadsUp = false;
 		refsopt.P30TIG = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1329,10 +1323,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
 		opt.GETbase = GETbase;
-		opt.HeadsUp = false;
+		opt.HeadsUp = true;
 		opt.navcheckGET = P30TIG - 30.0*60.0;
 		opt.REFSMMAT = REFSMMAT;
-		opt.sxtstardtime = -15.0*60.0;
+		opt.sxtstardtime = -20.0*60.0;
 		opt.TIG = P30TIG;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 1;
@@ -1801,7 +1795,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
-		refsopt.HeadsUp = false;
 		refsopt.P30TIG = P30TIG;
 		refsopt.REFSMMATopt = 0;
 		refsopt.vessel = calcParams.src;
@@ -1812,7 +1805,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
 		opt.GETbase = GETbase;
-		opt.HeadsUp = false;
+		opt.HeadsUp = true;
 		opt.navcheckGET = P30TIG - 30.0*60.0;
 		opt.REFSMMAT = REFSMMAT;
 		opt.sxtstardtime = -40.0*60.0;
