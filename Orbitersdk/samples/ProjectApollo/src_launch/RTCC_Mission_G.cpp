@@ -875,8 +875,63 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 31: //LOI-2 MANEUVER
+	{
+		LOI2Man opt;
+		AP11ManPADOpt manopt;
+		double GETbase, P30TIG;
+		VECTOR3 dV_LVLH;
+		SV sv;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = calcParams.TEPHEM;
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		opt.alt = calcParams.LSAlt;
+		opt.csmlmdocked = true;
+		opt.GETbase = GETbase;
+		opt.h_circ = 60.0*1852.0;
+		opt.vessel = calcParams.src;
+
+		LOI2Targeting(&opt, dV_LVLH, P30TIG);
+
+		manopt.alt = calcParams.LSAlt;
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		manopt.sxtstardtime = -40.0*60.0;
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.src;
+		manopt.vesseltype = 1;
+
+		AP11ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "LOI-2");
+
+		TimeofIgnition = P30TIG;
+		DeltaV_LVLH = dV_LVLH;
+
+		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
+		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
+		}
+	}
+	break;
 	case 40: //TEI-1 UPDATE (PRE LOI-1)
 	case 41: //TEI-4 UPDATE (PRE LOI-1)
+	case 42: //TEI-5 UPDATE (PRE LOI-2)
+	case 43: //TEI-11 UPDATE
+	case 44: //TEI-30 UPDATE
 	{
 		TEIOpt entopt;
 		EntryResults res;
@@ -891,7 +946,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		//Simulate the maneuver preceeding TEI (LOI-1 or LOI-2)
-		if (fcn == 40 || fcn == 41)
+		if (fcn == 40 || fcn == 41 || fcn == 42)
 		{
 			sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
 		}
@@ -904,19 +959,32 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(manname, "TEI-1");
 			sv2 = coast(sv1, 0.5*2.0*3600.0);
-			entopt.Inclination = 40.0*RAD;
-			entopt.Ascending = true;
 		}
 		else if (fcn == 41)
 		{
 			sprintf(manname, "TEI-4");
 			sv2 = coast(sv1, 3.5*2.0*3600.0);
-			entopt.Inclination = 40.0*RAD;
-			entopt.Ascending = true;
+		}
+		else if (fcn == 42)
+		{
+			sprintf(manname, "TEI-5");
+			sv2 = coast(sv1, 2.5*2.0*3600.0);
+		}
+		else if (fcn == 43)
+		{
+			sprintf(manname, "TEI-11");
+			sv2 = coast(sv1, 6.5*2.0*3600.0);
+		}
+		else if (fcn == 44)
+		{
+			sprintf(manname, "TEI-30");
+			sv2 = coast(sv1, 19.5*2.0*3600.0);
 		}
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
+		entopt.Inclination = 40.0*RAD;
+		entopt.Ascending = true;
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.useSV = true;
@@ -952,6 +1020,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(form->remarks, "Undocked, assumes no LOI-2");
 		}
+		else if (fcn == 42)
+		{
+			sprintf(form->remarks, "Undocked, assumes LOI-2");
+		}
 
 		//Save parameters for further use
 		SplashLatitude = res.latitude;
@@ -981,6 +1053,28 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->AOSGET = upd_hyper.AOSGET;
 		form->LOSGET = upd_hyper.LOSGET;
 		form->PMGET = upd_ellip.AOSGET;
+	}
+	break;
+	case 61: //REV 4 LANDMARK TRACKING PAD A-1
+	{
+		LMARKTRKPADOpt opt;
+
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
+
+		opt.GETbase = calcParams.TEPHEM;
+		opt.vessel = calcParams.src;
+
+		if (fcn == 50)
+		{
+			sprintf(form->LmkID[0], "A-1");
+			opt.alt[0] = 0;
+			opt.lat[0] = 2.0*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(82, 40, 0);
+			opt.lng[0] = 65.5*RAD;
+			opt.entries = 1;
+		}
+
+		LandmarkTrackingPAD(&opt, *form);
 	}
 	break;
 	}
