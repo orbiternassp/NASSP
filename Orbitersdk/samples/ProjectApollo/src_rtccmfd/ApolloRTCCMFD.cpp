@@ -1125,7 +1125,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			REFSMMATName(Buffer, G->REFSMMATcur);
 			skp->Text((int)(0.5 * W / 8), 6 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.1f h", G->AGSKFactor / 3600.0);
+			int hh, mm;
+			double secs;
+
+			SStoHHMMSS(G->AGSKFactor, hh, mm, secs);
+			sprintf(Buffer, "%d:%02d:%05.2f GET", hh, mm, secs);
 			skp->Text((int)(0.5 * W / 8), 12 * H / 14, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA240);
@@ -4848,15 +4852,19 @@ void ApolloRTCCMFD::menuSetAGSKFactor()
 	if (G->svmode == 2)
 	{
 		bool AGSKFactorInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the AGS time bias", AGSKFactorInput, 0, 20, (void*)this);
+		oapiOpenInputBox("Choose the AGS time bias (Format: hhh:mm:ss)", AGSKFactorInput, 0, 20, (void*)this);
 	}
 }
 
 bool AGSKFactorInput(void *id, char *str, void *data)
 {
-	if (strlen(str)<20)
+	int hh, mm;
+	double ss, get;
+
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
-		((ApolloRTCCMFD*)data)->set_AGSKFactor(atof(str));
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_AGSKFactor(get);
 		return true;
 	}
 	return false;
@@ -4864,7 +4872,7 @@ bool AGSKFactorInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_AGSKFactor(double time)
 {
-	G->AGSKFactor = time*3600.0;
+	G->AGSKFactor = time;
 }
 
 void ApolloRTCCMFD::t2dialogue()
@@ -4872,8 +4880,6 @@ void ApolloRTCCMFD::t2dialogue()
 	bool T2GETInput(void *id, char *str, void *data);
 	oapiOpenInputBox("Choose the GET for the arrival (Format: hhh:mm:ss)", T2GETInput, 0, 20, (void*)this);
 }
-
-
 
 bool T2GETInput(void *id, char *str, void *data)
 {
