@@ -170,7 +170,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	static const MFDBUTTONMENU mnuLGC[6] = {
 		{ "Back", 0, 'B' },
-		{ 0,0,0 },
+		{ "Press ENTR on DSKY and DEDA",0,'D' },
 		{ "Press ENTR on DSKY in CSM and LM",0,'E' },
 		{ "Calculate V42 Angles", 0, 'F' },
 		{ 0,0,0 },
@@ -180,7 +180,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterPage(mnuLGC, sizeof(mnuLGC) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
-	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("V47", OAPI_KEY_D, &ProjectApolloMFD::menuPressEnterOnDSKYDEDA);
 	RegisterFunction("ENT", OAPI_KEY_E, &ProjectApolloMFD::menuPressEnterOnCMCLGC);
 	RegisterFunction("V42", OAPI_KEY_F, &ProjectApolloMFD::CalculateV42Angles);
 	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
