@@ -297,7 +297,7 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 187.0*3600.0 + 30.0*60.0, 61, MST_D_DAY9STATE2);
 		break;
 	case MST_D_DAY9STATE2: //T Align Update to S065 Update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->MissionTime > 189.0*3600.0 + 50.0*60.0, 62, MST_D_DAY9STATE3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 189.0*3600.0 + 50.0*60.0, 62, MST_D_DAY9STATE3);
 		break;
 	case MST_D_DAY9STATE3: //S065 Update to S065 Update
 		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 191.0*3600.0 + 30.0*60.0, 63, MST_D_DAY9STATE4);
@@ -315,7 +315,7 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 211.0*3600.0 + 28.0*60.0, 66, MST_D_DAY10STATE2);
 		break;
 	case MST_D_DAY10STATE2: //T Align Update to S065 Update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->MissionTime > 213.0*3600.0 + 50.0*60.0, 67, MST_D_DAY10STATE3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, cm->MissionTime > 213.0*3600.0 + 50.0*60.0, 67, MST_D_DAY10STATE3);
 		break;
 	case MST_D_DAY10STATE3: //S065 Update to S065 Update
 		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, cm->MissionTime > 215.0*3600.0 + 28.0*60.0, 68, MST_D_DAY10STATE4);

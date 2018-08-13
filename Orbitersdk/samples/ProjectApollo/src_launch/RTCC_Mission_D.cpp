@@ -1872,6 +1872,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv0, sv1;
 		char buff[64];
 		double t_align, dt, GETbase, GET_AOS, GET_LOS;
+		char buffer1[1000];
 
 		sv0 = StateVectorCalc(calcParams.src);
 		GETbase = getGETBase();
@@ -1884,6 +1885,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		OrbMech::format_time_HHMMSS(buff, t_align);
 		sprintf(form->paddata, "T Align is %s GET", buff);
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66");
+		}
 	}
 	break;
 	case 65: //BLOCK DATA 20
@@ -1931,6 +1940,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv0, sv1;
 		char buff[64];
 		double t_align, t_guess, GETbase;
+		char buffer1[1000];
 
 		sv0 = StateVectorCalc(calcParams.src);
 		GETbase = getGETBase();
@@ -1940,6 +1950,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		OrbMech::format_time_HHMMSS(buff, t_align);
 		sprintf(form->paddata, "T Align is %s GET", buff);
+
+		AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, Verb 66");
+		}
 	}
 	break;
 	case 70: //BLOCK DATA 22
