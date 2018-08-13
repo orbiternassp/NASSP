@@ -927,6 +927,117 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 32: //STATE VECTOR and LS REFSMMAT UPLINK
+	{
+		MATRIX3 REFSMMAT;
+		VECTOR3 DV;
+		double GETbase, t_DOI, t_PDI, t_land, CR;
+		SV sv;
+		REFSMMATOpt opt;
+		DOIMan doiopt;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = calcParams.TEPHEM;
+
+		doiopt.alt = calcParams.LSAlt;
+		doiopt.EarliestGET = OrbMech::HHMMSSToSS(101, 0, 0);
+		doiopt.GETbase = GETbase;
+		doiopt.lat = calcParams.LSLat;
+		doiopt.lng = calcParams.LSLng;
+		doiopt.N = 0;
+		doiopt.opt = 0;
+		doiopt.sv0 = sv;
+
+		DOITargeting(&doiopt, DV, t_DOI, t_PDI, t_land, CR);
+		calcParams.DOI = t_DOI;
+		calcParams.PDI = t_PDI;
+		calcParams.TLAND = t_land;
+
+		opt.GETbase = GETbase;
+		opt.LSLat = calcParams.LSLat;
+		opt.LSLng = calcParams.LSLng;
+		opt.REFSMMATopt = 5;
+		opt.REFSMMATTime = calcParams.TLAND;
+		opt.vessel = calcParams.src;
+
+		REFSMMAT = REFSMMATCalc(&opt);
+		calcParams.StoredREFSMMAT = REFSMMAT;
+
+		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
+		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, LS REFSMMAT");
+		}
+	}
+	break;
+	case 33: //CSM DAP DATA
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		CSMDAPUpdate(calcParams.src, *form);
+	}
+	break;
+	case 34: //LM DAP DATA
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		LMDAPUpdate(calcParams.tgt, *form);
+	}
+	break;
+	case 35: //GYRO TORQUING ANGLES
+	{
+		TORQANG * form = (TORQANG *)pad;
+		LEM *lem = (LEM *)calcParams.tgt;
+
+		VECTOR3 lmn20, csmn20, V42angles;
+
+		csmn20.x = calcParams.src->imu.Gimbal.X;
+		csmn20.y = calcParams.src->imu.Gimbal.Y;
+		csmn20.z = calcParams.src->imu.Gimbal.Z;
+
+		lmn20.x = lem->imu.Gimbal.X;
+		lmn20.y = lem->imu.Gimbal.Y;
+		lmn20.z = lem->imu.Gimbal.Z;
+
+		V42angles = OrbMech::LMDockedFineAlignment(lmn20, csmn20);
+
+		form->V42Angles.x = V42angles.x*DEG;
+		form->V42Angles.y = V42angles.y*DEG;
+		form->V42Angles.z = V42angles.z*DEG;
+	}
+	break;
+	case 36: //LGC ACTIVATION UPDATE
+	{
+		SV sv;
+		MATRIX3 REFSMMAT;
+		double GETbase;
+		char buffer1[1000];
+		char buffer2[1000];
+		char buffer3[1000];
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = calcParams.TEPHEM;
+
+		REFSMMAT = calcParams.StoredREFSMMAT;
+
+		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
+		AGCStateVectorUpdate(buffer2, sv, true, AGCEpoch, GETbase);
+		AGCREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch, LGCREFSAddrOffs);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "State vectors, LS REFSMMAT");
+		}
+	}
+	break;
 	case 40: //TEI-1 UPDATE (PRE LOI-1)
 	case 41: //TEI-4 UPDATE (PRE LOI-1)
 	case 42: //TEI-5 UPDATE (PRE LOI-2)
@@ -1056,6 +1167,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 61: //REV 4 LANDMARK TRACKING PAD A-1
+	case 62: //REV 12 LANDMARK TRACKING PAD LMK 130
 	{
 		LMARKTRKPADOpt opt;
 
@@ -1064,13 +1176,22 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = calcParams.TEPHEM;
 		opt.vessel = calcParams.src;
 
-		if (fcn == 50)
+		if (fcn == 61)
 		{
 			sprintf(form->LmkID[0], "A-1");
 			opt.alt[0] = 0;
 			opt.lat[0] = 2.0*RAD;
 			opt.LmkTime[0] = OrbMech::HHMMSSToSS(82, 40, 0);
 			opt.lng[0] = 65.5*RAD;
+			opt.entries = 1;
+		}
+		else if (fcn == 62)
+		{
+			sprintf(form->LmkID[0], "130");
+			opt.alt[0] = -1.46*1852.0;
+			opt.lat[0] = 1.243*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
+			opt.lng[0] = 23.688*RAD;
 			opt.entries = 1;
 		}
 

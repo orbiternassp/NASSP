@@ -1263,7 +1263,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LandmarkTrackingPAD(&opt, *form);
 	}
 	break;
-	case 60: //STATE VETOR and LLS 2 REFSMMAT UPLINK
+	case 60: //STATE VECTOR and LLS 2 REFSMMAT UPLINK
 	{
 		MATRIX3 REFSMMAT;
 		VECTOR3 DV;
