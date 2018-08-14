@@ -1093,10 +1093,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManPADOpt opt;
 
 		VECTOR3 DV;
-		double GETbase, t_PDI, t_land, CR, t_DOI_imp, t_TPI_guess;
+		double GETbase, t_PDI, t_land, CR, t_DOI_imp;
 		SV sv, sv_uplink;
 		DOIMan doiopt;
-		char GETbuffer[64];
 		char TLANDbuffer[64];
 		char buffer1[1000];
 		char buffer2[1000];
