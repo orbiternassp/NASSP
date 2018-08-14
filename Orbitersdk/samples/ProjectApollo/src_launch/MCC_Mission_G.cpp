@@ -177,7 +177,7 @@ void MCC::MissionSequence_G()
 			setSubState(1);
 			break;
 		case 1:
-			if (MoonRev >= 2 && MoonRevTime > 30.0*60.0)
+			if (MoonRev >= 2 && MoonRevTime > 35.0*60.0)
 			{
 				setState(MST_G_LUNAR_ORBIT_LOI_DAY_2);
 			}
@@ -186,6 +186,42 @@ void MCC::MissionSequence_G()
 		break;
 	case MST_G_LUNAR_ORBIT_LOI_DAY_2: //LOI-2 update to TEI-5 update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 31, MST_G_LUNAR_ORBIT_LOI_DAY_3);
+		break;
+	case MST_G_LUNAR_ORBIT_LOI_DAY_3: //TEI-5 update to A-1 landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 3 && MoonRevTime > 50.0*60.0, 42, MST_G_LUNAR_ORBIT_LOI_DAY_4);
+		break;
+	case MST_G_LUNAR_ORBIT_LOI_DAY_4: //A-1 landmark tracking update to TEI-11 update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, MoonRev >= 4 && MoonRevTime > 1.0*3600.0 + 20.0*60.0, 61, MST_G_LUNAR_ORBIT_LOI_DAY_5);
+		break;
+	case MST_G_LUNAR_ORBIT_LOI_DAY_5: //TEI-11 update to state vector update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, true, 43, MST_G_LUNAR_ORBIT_LOI_DAY_6);
+		break;
+	case MST_G_LUNAR_ORBIT_LOI_DAY_6: //State vector update to TEI-30 update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 10 && MoonRevTime > 1.0*3600.0, 1, MST_G_LUNAR_ORBIT_PDI_DAY_1);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_1: //TEI-30 update to CMC LS Update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 11 && MoonRevTime > 40.0*60.0, 44, MST_G_LUNAR_ORBIT_PDI_DAY_2);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_2: //CMC LS Update to Lmk 130 Landmark Tracking PAD
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 32, MST_G_LUNAR_ORBIT_PDI_DAY_3);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_3: //Lmk 130 Landmark Tracking PAD to CSM DAP Data
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 62, MST_G_LUNAR_ORBIT_PDI_DAY_4);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_4: //CSM DAP Data to LM DAP Data
+		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, MoonRev >= 12 && MoonRevTime > 30.0*60.0, 33, MST_G_LUNAR_ORBIT_PDI_DAY_7);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_7: //LM DAP Data to gyro torquing angles
+		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, SubStateTime > 3.0*60.0, 34, MST_G_LUNAR_ORBIT_PDI_DAY_8);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_8: //Gyro torquing angles to LGC activation update
+		UpdateMacro(UTP_PADONLY, PT_TORQANG, MoonRev >= 12 && MoonRevTime > 65.0*60.0, 35, MST_G_LUNAR_ORBIT_PDI_DAY_9);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to Separation maneuver update
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11AGSACT, SubStateTime > 5.0*60.0, 36, MST_G_LUNAR_ORBIT_PDI_DAY_10);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_10: // Separation maneuver update to DOI update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 13 && MoonRevTime > 30.0*60.0, 37, MST_G_LUNAR_ORBIT_PDI_DAY_12);
 		break;
 	}
 }

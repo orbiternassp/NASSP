@@ -2860,6 +2860,9 @@ int ARCore::subThread()
 	{
 		LunarLiftoffTimeOpt opt;
 
+		LEM *lem = (LEM *)vessel;
+		opt.m0 = lem->GetAscentStageMass();
+
 		opt.GETbase = GETbase;
 		opt.opt = LunarLiftoffTimeOption;
 		opt.target = target;

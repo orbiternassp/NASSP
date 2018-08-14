@@ -875,8 +875,286 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 31: //LOI-2 MANEUVER
+	{
+		LOI2Man opt;
+		AP11ManPADOpt manopt;
+		double GETbase, P30TIG;
+		VECTOR3 dV_LVLH;
+		SV sv;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		GETbase = calcParams.TEPHEM;
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		opt.alt = calcParams.LSAlt;
+		opt.csmlmdocked = true;
+		opt.GETbase = GETbase;
+		opt.h_circ = 60.0*1852.0;
+		opt.vessel = calcParams.src;
+
+		LOI2Targeting(&opt, dV_LVLH, P30TIG);
+
+		manopt.alt = calcParams.LSAlt;
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		manopt.sxtstardtime = -40.0*60.0;
+		manopt.TIG = P30TIG;
+		manopt.vessel = calcParams.src;
+		manopt.vesseltype = 1;
+
+		AP11ManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "LOI-2");
+
+		TimeofIgnition = P30TIG;
+		DeltaV_LVLH = dV_LVLH;
+
+		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
+		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, target load");
+		}
+	}
+	break;
+	case 32: //STATE VECTOR and LS REFSMMAT UPLINK
+	{
+		MATRIX3 REFSMMAT;
+		VECTOR3 DV;
+		double GETbase, t_DOI, t_PDI, t_land, CR;
+		SV sv;
+		REFSMMATOpt opt;
+		DOIMan doiopt;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = calcParams.TEPHEM;
+
+		doiopt.alt = calcParams.LSAlt;
+		doiopt.EarliestGET = OrbMech::HHMMSSToSS(101, 0, 0);
+		doiopt.GETbase = GETbase;
+		doiopt.lat = calcParams.LSLat;
+		doiopt.lng = calcParams.LSLng;
+		doiopt.N = 0;
+		doiopt.opt = 0;
+		doiopt.sv0 = sv;
+
+		DOITargeting(&doiopt, DV, t_DOI, t_PDI, t_land, CR);
+		calcParams.DOI = t_DOI;
+		calcParams.PDI = t_PDI;
+		calcParams.TLAND = t_land;
+
+		opt.GETbase = GETbase;
+		opt.LSLat = calcParams.LSLat;
+		opt.LSLng = calcParams.LSLng;
+		opt.REFSMMATopt = 5;
+		opt.REFSMMATTime = calcParams.TLAND;
+		opt.vessel = calcParams.src;
+
+		REFSMMAT = REFSMMATCalc(&opt);
+		calcParams.StoredREFSMMAT = REFSMMAT;
+
+		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
+		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector, LS REFSMMAT");
+		}
+	}
+	break;
+	case 33: //CSM DAP DATA
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		CSMDAPUpdate(calcParams.src, *form);
+	}
+	break;
+	case 34: //LM DAP DATA
+	{
+		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+
+		LMDAPUpdate(calcParams.tgt, *form);
+	}
+	break;
+	case 35: //GYRO TORQUING ANGLES
+	{
+		TORQANG * form = (TORQANG *)pad;
+		LEM *lem = (LEM *)calcParams.tgt;
+
+		VECTOR3 lmn20, csmn20, V42angles;
+
+		csmn20.x = calcParams.src->imu.Gimbal.X;
+		csmn20.y = calcParams.src->imu.Gimbal.Y;
+		csmn20.z = calcParams.src->imu.Gimbal.Z;
+
+		lmn20.x = lem->imu.Gimbal.X;
+		lmn20.y = lem->imu.Gimbal.Y;
+		lmn20.z = lem->imu.Gimbal.Z;
+
+		V42angles = OrbMech::LMDockedFineAlignment(lmn20, csmn20);
+
+		form->V42Angles.x = V42angles.x*DEG;
+		form->V42Angles.y = V42angles.y*DEG;
+		form->V42Angles.z = V42angles.z*DEG;
+	}
+	break;
+	case 36: //LGC ACTIVATION UPDATE
+	{
+		AP11AGSACT *form = (AP11AGSACT*)pad;
+
+		SV sv;
+		MATRIX3 REFSMMAT;
+		double GETbase;
+		char buffer1[1000];
+		char buffer2[1000];
+		char buffer3[1000];
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = calcParams.TEPHEM;
+
+		REFSMMAT = calcParams.StoredREFSMMAT;
+
+		form->KFactor = 90.0*3600.0;
+		form->DEDA224 = 55766;
+		form->DEDA225 = 54272;
+		form->DEDA226 = 65511;
+		form->DEDA227 = -50181;
+
+		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
+		AGCStateVectorUpdate(buffer2, sv, true, AGCEpoch, GETbase);
+		AGCREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch, LGCREFSAddrOffs);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "State vectors, LS REFSMMAT");
+		}
+	}
+	break;
+	case 37: //SEPARATION MANEUVER
+	{
+		AP11ManPADOpt opt;
+		SV sv;
+		VECTOR3 dV_LVLH;
+		double GETbase, t_P, mu, t_Sep;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		AP11MNV * form = (AP11MNV *)pad;
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		GETbase = calcParams.TEPHEM;
+		mu = GGRAV * oapiGetMass(sv.gravref);
+
+		t_P = OrbMech::period(sv.R, sv.V, mu);
+		t_Sep = floor(calcParams.DOI - t_P / 2.0);
+		dV_LVLH = _V(0, 0, -2.5)*0.3048;
+
+		opt.alt = calcParams.LSAlt;
+		opt.dV_LVLH = dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_RCS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = true;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		opt.TIG = t_Sep;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 0;
+
+		AP11ManeuverPAD(&opt, *form);
+
+		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
+		AGCStateVectorUpdate(buffer2, sv, false, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "State vectors");
+		}
+	}
+	break;
+	case 38: //DESCENT ORBIT INSERTION
+	{
+		AP11LMManPADOpt opt;
+
+		VECTOR3 DV;
+		double GETbase, t_PDI, t_land, CR, t_DOI_imp;
+		SV sv, sv_uplink;
+		DOIMan doiopt;
+		char TLANDbuffer[64];
+		char buffer1[1000];
+		char buffer2[1000];
+
+		AP11LMMNV * form = (AP11LMMNV *)pad;
+
+		sv = StateVectorCalc(calcParams.tgt);
+		GETbase = calcParams.TEPHEM;
+
+		doiopt.alt = calcParams.LSAlt;
+		doiopt.EarliestGET = OrbMech::HHMMSSToSS(101, 0, 0);
+		doiopt.GETbase = GETbase;
+		doiopt.lat = calcParams.LSLat;
+		doiopt.lng = calcParams.LSLng;
+		doiopt.N = 0;
+		doiopt.opt = 0;
+		doiopt.sv0 = sv;
+
+		DOITargeting(&doiopt, DV, t_DOI_imp, t_PDI, t_land, CR);
+
+		calcParams.DOI = t_DOI_imp;
+		calcParams.PDI = t_PDI;
+		calcParams.TLAND = t_land;
+
+		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, TimeofIgnition, DeltaV_LVLH);
+
+		opt.alt = calcParams.LSAlt;
+		opt.csmlmdocked = false;
+		opt.dV_LVLH = DeltaV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = true;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		opt.TIG = TimeofIgnition;
+		opt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "DOI");
+
+		//Time tagged to DOI-10
+		sv_uplink = StateVectorCalc(calcParams.tgt, OrbMech::MJDfromGET(calcParams.DOI - 10.0*60.0, GETbase));
+
+		AGCStateVectorUpdate(buffer1, sv_uplink, false, AGCEpoch, GETbase);
+		AGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH, LGCDeltaVAddr);
+		TLANDUpdate(TLANDbuffer, calcParams.TLAND, 2400);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, TLANDbuffer);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector, DOI target load");
+		}
+	}
+	break;
 	case 40: //TEI-1 UPDATE (PRE LOI-1)
 	case 41: //TEI-4 UPDATE (PRE LOI-1)
+	case 42: //TEI-5 UPDATE (PRE LOI-2)
+	case 43: //TEI-11 UPDATE
+	case 44: //TEI-30 UPDATE
 	{
 		TEIOpt entopt;
 		EntryResults res;
@@ -891,7 +1169,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		//Simulate the maneuver preceeding TEI (LOI-1 or LOI-2)
-		if (fcn == 40 || fcn == 41)
+		if (fcn == 40 || fcn == 41 || fcn == 42)
 		{
 			sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
 		}
@@ -904,19 +1182,32 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(manname, "TEI-1");
 			sv2 = coast(sv1, 0.5*2.0*3600.0);
-			entopt.Inclination = 40.0*RAD;
-			entopt.Ascending = true;
 		}
 		else if (fcn == 41)
 		{
 			sprintf(manname, "TEI-4");
 			sv2 = coast(sv1, 3.5*2.0*3600.0);
-			entopt.Inclination = 40.0*RAD;
-			entopt.Ascending = true;
+		}
+		else if (fcn == 42)
+		{
+			sprintf(manname, "TEI-5");
+			sv2 = coast(sv1, 2.5*2.0*3600.0);
+		}
+		else if (fcn == 43)
+		{
+			sprintf(manname, "TEI-11");
+			sv2 = coast(sv1, 6.5*2.0*3600.0);
+		}
+		else if (fcn == 44)
+		{
+			sprintf(manname, "TEI-30");
+			sv2 = coast(sv1, 19.5*2.0*3600.0);
 		}
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
+		entopt.Inclination = 40.0*RAD;
+		entopt.Ascending = true;
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.useSV = true;
@@ -952,6 +1243,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(form->remarks, "Undocked, assumes no LOI-2");
 		}
+		else if (fcn == 42)
+		{
+			sprintf(form->remarks, "Undocked, assumes LOI-2");
+		}
 
 		//Save parameters for further use
 		SplashLatitude = res.latitude;
@@ -981,6 +1276,61 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->AOSGET = upd_hyper.AOSGET;
 		form->LOSGET = upd_hyper.LOSGET;
 		form->PMGET = upd_ellip.AOSGET;
+	}
+	break;
+	case 61: //REV 4 LANDMARK TRACKING PAD A-1
+	case 62: //REV 12 LANDMARK TRACKING PAD LMK 130
+	{
+		LMARKTRKPADOpt opt;
+
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
+
+		opt.GETbase = calcParams.TEPHEM;
+		opt.vessel = calcParams.src;
+
+		if (fcn == 61)
+		{
+			sprintf(form->LmkID[0], "A-1");
+			opt.alt[0] = 0;
+			opt.lat[0] = 2.0*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(82, 40, 0);
+			opt.lng[0] = 65.5*RAD;
+			opt.entries = 1;
+		}
+		else if (fcn == 62)
+		{
+			sprintf(form->LmkID[0], "130");
+			opt.alt[0] = -1.46*1852.0;
+			opt.lat[0] = 1.243*RAD;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
+			opt.lng[0] = 23.688*RAD;
+			opt.entries = 1;
+		}
+
+		LandmarkTrackingPAD(&opt, *form);
+	}
+	break;
+	case 70: //PDI PAD
+	{
+		AP11PDIPAD * form = (AP11PDIPAD *)pad;
+
+		PDIPADOpt opt;
+		double GETbase, rad;
+
+		GETbase = calcParams.TEPHEM;
+		rad = oapiGetSize(oapiGetObjectByName("Moon"));
+
+		opt.direct = false;
+		opt.dV_LVLH = DeltaV_LVLH;
+		opt.GETbase = GETbase;
+		opt.HeadsUp = false;
+		opt.P30TIG = TimeofIgnition;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		opt.R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt + rad);
+		opt.t_land = calcParams.TLAND;
+		opt.vessel = calcParams.tgt;
+
+		PDI_PAD(&opt, *form);
 	}
 	break;
 	}

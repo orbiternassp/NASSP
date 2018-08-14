@@ -1552,6 +1552,15 @@ void ProjectApolloMFD::CalculateV42Angles()
 	saturn = NULL;
 }
 
+void ProjectApolloMFD::menuPressEnterOnDSKYDEDA()
+{
+	if (lem)
+	{
+		lem->DskySwitchEnter.SetState(true);
+		lem->DedaSwitchEnter.SetState(true);
+	}
+}
+
 void ProjectApolloMFD::menuPressEnterOnCMCLGC()
 {
 	GetCSM();

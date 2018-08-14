@@ -36,6 +36,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
+#include "../src_rtccmfd/LMGuidanceSim.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -7542,7 +7543,8 @@ bool RTCC::TLMCIntegratedFlybyToInclinationSubprocessor(SV sv_mcc, double h_peri
 void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res)
 {
 	VECTOR3 R_LS;
-	double dt_1, h_1, theta_1, theta_Ins, v_LV, v_LH, DH, E, theta_F, t_TPI, t_IG, t_CSI, t_CDH, t_TPF, R_M;
+	double dt_1, h_1, theta_1, theta_Ins, v_LV, v_LH, DH, E, theta_F, t_TPI, t_IG, t_IG_apo, t_CSI, t_CDH, t_TPF, R_M, dt_IG;
+	int n, nmax;
 	SV sv_P, sv_TPI;
 	OBJHANDLE hMoon;
 
@@ -7565,11 +7567,16 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 	theta_Ins = 17.0*RAD;
 	DH = 15.0*1852.0;
 	E = 26.6*RAD;
+	n = 0;
+	nmax = 5;
 
+	t_IG_apo = 0.0;
+	dt_IG = 10.0;
 	t_CSI = 0;
 	t_CDH = 0;
 
 	R_LS = OrbMech::r_from_latlong(opt->lat, opt->lng, R_M + opt->alt);
+
 
 	if (opt->opt == 0)
 	{
@@ -7583,13 +7590,35 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 		ttoMidnight = OrbMech::sunrise(sv_TPI.R, sv_TPI.V, sv_TPI.MJD, hMoon, hSun, 1, 1, false);
 		t_TPI = opt->t_TPIguess + ttoMidnight;
 
-		OrbMech::LunarLiftoffTimePredictionCFP(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_CSI, t_CDH, t_TPF, v_LH, v_LV);
+		while (abs(dt_IG) > 1.0 && nmax >= n)
+		{
+			OrbMech::LunarLiftoffTimePredictionCFP(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, theta_Ins, DH, E, t_TPI, theta_F, t_IG, t_CSI, t_CDH, t_TPF, v_LH, v_LV);
+			dt_IG = t_IG - t_IG_apo;
+
+			if (abs(dt_IG) > 1.0)
+			{
+				t_IG_apo = t_IG;
+				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1);
+				n++;
+			}
+		}
 	}
 	else if (opt->opt == 1)
 	{
 		t_TPI = opt->t_TPIguess;
 
-		OrbMech::LunarLiftoffTimePredictionDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, opt->dt_2, DH, E, t_TPI, theta_F, t_IG, t_TPF, v_LH, v_LV);
+		while (abs(dt_IG) > 1.0 && nmax >= n)
+		{
+			OrbMech::LunarLiftoffTimePredictionDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, opt->dt_2, DH, E, t_TPI, theta_F, t_IG, t_TPF, v_LH, v_LV);
+			dt_IG = t_IG - t_IG_apo;
+
+			if (abs(dt_IG) > 1.0)
+			{
+				t_IG_apo = t_IG;
+				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1);
+				n++;
+			}
+		}
 	}
 	else if (opt->opt == 2)
 	{
@@ -7597,8 +7626,18 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 		t_L_guess = opt->t_TPIguess - 3600.0 - 5.0*60.0;
 
-		OrbMech::LunarLiftoffTimePredictionTCDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, t_L_guess, t_IG, t_TPF, v_LH, v_LV);
+		while (abs(dt_IG) > 1.0 && nmax >= n)
+		{
+			OrbMech::LunarLiftoffTimePredictionTCDT(R_LS, sv_P.R, sv_P.V, sv_P.MJD, opt->GETbase, hMoon, dt_1, h_1, theta_1, t_L_guess, t_IG, t_TPF, v_LH, v_LV);
+			dt_IG = t_IG - t_IG_apo;
 
+			if (abs(dt_IG) > 1.0)
+			{
+				t_IG_apo = t_IG;
+				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1);
+				n++;
+			}
+		}
 	}
 	res->t_L = t_IG;
 	res->t_Ins = t_IG + dt_1;
@@ -8590,4 +8629,41 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 	IMUangles = OrbMech::CALCGAR(REFSMMAT, mul(OrbMech::tmat(M), M_R));
 
 	return IMUangles;
+}
+
+void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc)
+{
+	//Test
+	AscentGuidance asc;
+	AscDescIntegrator integ;
+	SV sv_CSM_TIG;
+	MATRIX3 Rot;
+	VECTOR3 R0, V0, R, V, U_FDP, U_M, u, R0_proj;
+	double t_go, Thrust, w_M, dt, t_total;
+	bool stop = false;
+
+	t_total = 0.0;
+	dt = t_liftoff - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase);
+	sv_CSM_TIG = coast(sv_CSM, dt);
+
+	asc.Init(sv_CSM_TIG.R, sv_CSM_TIG.V, m0, length(R_LS), v_LH, v_LV);
+	Rot = OrbMech::GetRotationMatrix(sv_CSM_TIG.gravref, sv_CSM_TIG.MJD);
+	R0 = rhmul(Rot, R_LS);
+	w_M = PI2 / oapiGetPlanetPeriod(sv_CSM_TIG.gravref);
+	U_M = rhmul(Rot, _V(0, 0, 1));
+	V0 = crossp(U_M, R)*w_M;
+
+	R = R0;
+	V = V0;
+
+	while (stop == false)
+	{
+		asc.Guidance(R, V, m0, U_FDP, t_go, Thrust);
+		stop = integ.Integration(R, V, m0, t_total, U_FDP, t_go, Thrust);
+	}
+
+	u = unit(crossp(R, V));
+	R0_proj = unit(R0 - u * dotp(R0, u))*length(R0);
+	theta = acos(dotp(unit(R0_proj), unit(R)));
+	dt_asc = t_total;
 }

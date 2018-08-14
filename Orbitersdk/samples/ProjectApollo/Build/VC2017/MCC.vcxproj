@@ -163,6 +163,7 @@
     <ClCompile Include="..\..\src_launch\RTCC_Mission_F.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_G.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_launch\mcc.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="..\..\src_launch\MCC_Mission_G.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_launch\mcc.h" />
     <ClInclude Include="..\..\src_sys\thread.h" />

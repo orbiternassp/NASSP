@@ -1761,6 +1761,16 @@ void MCC::SaveState(FILEHANDLE scn) {
 				SAVE_DOUBLE(tmpbuf, form->TAlign[i]);
 			}
 		}
+		else if (padNumber == PT_AP11AGSACT)
+		{
+			AP11AGSACT *form = (AP11AGSACT*)padForm;
+
+			SAVE_DOUBLE("MCC_AP11AGSACT_KFactor", form->KFactor);
+			SAVE_INT("MCC_AP11AGSACT_DEDA224", form->DEDA224);
+			SAVE_INT("MCC_AP11AGSACT_DEDA225", form->DEDA225);
+			SAVE_INT("MCC_AP11AGSACT_DEDA226", form->DEDA226);
+			SAVE_INT("MCC_AP11AGSACT_DEDA227", form->DEDA227);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2171,6 +2181,16 @@ void MCC::LoadState(FILEHANDLE scn) {
 				sprintf(tmpbuf, "MCC_S065UPDATE_TAlign[%d]", i);
 				LOAD_DOUBLE(tmpbuf, form->TAlign[i]);
 			}
+		}
+		else if (padNumber == PT_AP11AGSACT)
+		{
+			AP11AGSACT *form = (AP11AGSACT*)padForm;
+
+			LOAD_DOUBLE("MCC_AP11AGSACT_KFactor", form->KFactor);
+			LOAD_INT("MCC_AP11AGSACT_DEDA224", form->DEDA224);
+			LOAD_INT("MCC_AP11AGSACT_DEDA225", form->DEDA225);
+			LOAD_INT("MCC_AP11AGSACT_DEDA226", form->DEDA226);
+			LOAD_INT("MCC_AP11AGSACT_DEDA227", form->DEDA227);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -2634,6 +2654,20 @@ void MCC::drawPad(){
 		//myfile.close();
 	}
 	break;
+	case PT_AP11AGSACT:
+	{
+		AP11AGSACT *form = (AP11AGSACT*)padForm;
+
+		int hh, mm;
+		double ss;
+
+		SStoHHMMSS(form->KFactor, hh, mm, ss);
+
+		sprintf(buffer, "AGS ACTIVATION\n%d:%02d:%05.2f GET\n224 %+06d\n225 %+06d\n226 %+06d\n227 %+06d", hh, mm, ss, form->DEDA224, form->DEDA225, form->DEDA226, form->DEDA227);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -2725,6 +2759,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_S065UPDATE: // S065UPDATE
 		padForm = calloc(1, sizeof(S065UPDATE));
+		break;
+	case PT_AP11AGSACT: // AP11AGSACT
+		padForm = calloc(1, sizeof(AP11AGSACT));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));
