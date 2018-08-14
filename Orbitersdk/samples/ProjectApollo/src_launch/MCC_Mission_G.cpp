@@ -217,8 +217,11 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PDI_DAY_8: //Gyro torquing angles to LGC activation update
 		UpdateMacro(UTP_PADONLY, PT_TORQANG, MoonRev >= 12 && MoonRevTime > 65.0*60.0, 35, MST_G_LUNAR_ORBIT_PDI_DAY_9);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_TORQANG, MoonRev >= 12 && MoonRevTime > 65.0*60.0, 36, MST_G_LUNAR_ORBIT_PDI_DAY_10);
+	case MST_G_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to Separation maneuver update
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11AGSACT, SubStateTime > 5.0*60.0, 36, MST_G_LUNAR_ORBIT_PDI_DAY_10);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_10: // Separation maneuver update to DOI update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 13 && MoonRevTime > 30.0*60.0, 37, MST_G_LUNAR_ORBIT_PDI_DAY_12);
 		break;
 	}
 }

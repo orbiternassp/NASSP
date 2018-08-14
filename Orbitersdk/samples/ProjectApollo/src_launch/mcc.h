@@ -160,6 +160,7 @@
 #define PT_AP9LMTPI			19
 #define PT_AP9LMCDH			20
 #define PT_S065UPDATE		21
+#define PT_AP11AGSACT		22
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -562,6 +563,17 @@ struct S065UPDATE
 struct TORQANG
 {
 	VECTOR3 V42Angles;
+};
+
+//APOLLO 11 AGS ACTIVATION PAD
+
+struct AP11AGSACT
+{
+	double KFactor;
+	int DEDA224;	//Term in O.I. Semimajor Axis
+	int DEDA225;	//Predicted O.I. LM Semi-Major Axis Lower Limit
+	int DEDA226;	//Predicted O.I. LM Semi-Major Axis Upper Limit
+	int DEDA227;	//Factor in O.I. LM Desired Semi-major Axis
 };
 
 //GENERIC STRING
