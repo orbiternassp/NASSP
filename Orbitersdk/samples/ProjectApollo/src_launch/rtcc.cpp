@@ -4475,45 +4475,8 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 {
 	SV sv0, sv1, sv2, sv_I;
-	OBJHANDLE hMoon;
-	MATRIX3 C_GP, Rot;
-	VECTOR3 U_FDP, dV_TrP, R_LSI, R_LSP, W_I, W_P, R_I, V_I, R_P, V_P, R_G, V_SURFP, V_G, G_P, A_FDP, R_TG, A_G, V_TG, A_TG, C_XGP, C_YGP, C_ZGP;
-	double GUIDDURN, AF_TRIM, DELTTRIM, TTT, t_pip, t_2, t_I, t_pipold, PIPTIME, q, dt_I, mu, TTT_P, eps, LEADTIME, dTTT, J_TZG, A_TZG, V_TZG, R_TZG;
-	double v_IGG, r_IGXG, r_IGZG, K_X, K_Y, K_V, t_IG, C_R, w_M, FRAC, m, TEM;
-	int n1, n2, COUNT_TTT;
-
-	hMoon = oapiGetObjectByName("Moon");
-	mu = GGRAV*oapiGetMass(hMoon);
-
-	GUIDDURN = 664.4;
-	AF_TRIM = 0.350133;
-	DELTTRIM = 26.0;
-	n1 = 40;
-	n2 = 2;
-	COUNT_TTT = 0;
-	U_FDP = dV_TrP = _V(0, 0, 0);
-	C_GP = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
-	TTT = 0.0;
-	t_pip = opt->t_land;
-	dt_I = 1.0;
-	FRAC = 43455.0;
-	m = 16000.0;
-
-	v_IGG = 1690.256208;
-	r_IGXG = -39782.453328;
-	r_IGZG = -436655.657;
-	K_X = -0.617631;
-	K_Y = -2.4770341207e-6;
-	K_V = -410.0;
-	J_TZG = -0.01882677*0.3048;// / 8.0;
-	A_TZG = -54.6264*0.3048 / 6.0;
-	V_TZG = -18.72*0.3048 / 3.0;
-	R_TG = _V(52.375308, 0.0, -3254.836061);
-	R_TZG = R_TG.z;
-	V_TG = _V(-105.876, 0.0, -1.04)*0.3048;
-	A_TG = _V(0.6241, 0.0, -9.1044)*0.3048;
-	LEADTIME = 2.2;
-	w_M = 2.66169948e-6;
+	VECTOR3 U_FDP;
+	double C_R, TTT, t_IG;
 
 	sv0 = StateVectorCalc(opt->vessel);
 
@@ -4526,100 +4489,12 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0.0);
 	}
 
-	t_2 = OrbMech::GETfromMJD(sv2.MJD, opt->GETbase);
-	Rot = OrbMech::GetRotationMatrix(hMoon, opt->GETbase + opt->t_land / 24.0 / 3600.0);
-	R_LSI = rhmul(Rot, opt->R_LS);
-	R_LSP = mul(opt->REFSMMAT, R_LSI);
-	t_I = opt->t_land - GUIDDURN;
-	W_I = rhmul(Rot, _V(0.0, 0.0, 1.0));
-	W_P = mul(opt->REFSMMAT, W_I)*w_M;
-	sv_I = coast(sv2, t_I - t_2);
-	R_I = sv_I.R;
-	V_I = sv_I.V;
-
-	while (abs(dt_I) > 0.08 && n1>0)
-	{
-		PIPTIME = t_I;
-		R_P = mul(opt->REFSMMAT, R_I);
-		G_P = -R_P / pow(length(R_P), 3.0)*mu;
-
-		n2 = 2;
-
-		t_pipold = t_pip;
-		t_pip = PIPTIME;
-		t_2 = PIPTIME;
-		R_LSP = unit(R_LSP + crossp(W_P, R_LSP)*(t_pip - t_pipold))*length(opt->R_LS);
-		TTT = TTT + t_pip - t_pipold;
-
-		while (n2 > 0)
-		{
-			V_P = mul(opt->REFSMMAT, V_I) + dV_TrP;
-
-			R_G = mul(C_GP, R_P - R_LSP);
-			V_SURFP = V_P - crossp(W_P, R_P);
-			V_G = mul(C_GP, V_SURFP);
-
-			COUNT_TTT = 0;
-			eps = abs(TTT / 128.0);
-			do
-			{
-				dTTT = -(J_TZG*pow(TTT, 3.0) + 6.0*A_TZG*TTT*TTT + (18.0*V_TZG + 6.0*V_G.z)*TTT + 24.0*(R_TZG - R_G.z)) / (3.0*J_TZG*TTT*TTT + 12.0*A_TZG*TTT + 18.0*V_TZG + 6.0*V_G.z);
-				TTT += dTTT;
-				COUNT_TTT++;
-			} while (abs(dTTT) > eps && COUNT_TTT < 8);
-
-			if (COUNT_TTT == 8)
-			{
-				return false;
-			}
-
-			TTT_P = TTT + LEADTIME;
-			A_G = (R_TG - R_G)*(-24.0*TTT_P / pow(TTT, 3.0) + 36.0*TTT_P*TTT_P / pow(TTT, 4.0));
-			A_G += V_TG*(-18.0*TTT_P / TTT / TTT + 24.0*TTT_P*TTT_P / pow(TTT, 3.0));
-			A_G += V_G*(-6.0*TTT_P / TTT / TTT + 12.0*TTT_P*TTT_P / pow(TTT, 3.0));
-			A_G += A_TG*(6.0*TTT_P*TTT_P / TTT / TTT - 6.0*TTT_P / TTT + 1.0);
-
-			A_FDP = tmul(C_GP, A_G) - G_P;
-			//s = length(A_FDP);
-			TEM = FRAC*FRAC / m / m - A_FDP.x*A_FDP.x - A_FDP.y*A_FDP.y;
-			if (TEM < 0.0)
-			{
-				TEM = 0.0;
-			}
-			if (sqrt(TEM) + A_FDP.z < 0.0)
-			{
-				A_FDP.z = -sqrt(TEM);
-			}
-			U_FDP = A_FDP;
-
-			C_XGP = unit(R_LSP);
-			C_YGP = unit(crossp(unit(V_SURFP*TTT / 4.0 + R_LSP - R_P), R_LSP));
-			C_ZGP = crossp(C_XGP, C_YGP);
-			C_GP = _M(C_XGP.x, C_YGP.x, C_ZGP.x, C_XGP.y, C_YGP.y, C_ZGP.y, C_XGP.z, C_YGP.z, C_ZGP.z);
-
-			dV_TrP = unit(U_FDP)*DELTTRIM*AF_TRIM;
-
-			n2--;
-		}
-
-		n1--;
-		q = K_X*(R_G.x - r_IGXG) + K_Y*R_G.y*R_G.y + R_G.z - r_IGZG + K_V*(length(V_G) - v_IGG);
-		dt_I = -q / (V_G.z + K_X*V_G.x);
-		t_I += dt_I;
-
-		if (abs(dt_I) > 0.08)
-		{
-			OrbMech::rv_from_r0v0(R_I, V_I, dt_I, R_I, V_I, mu);
-		}
-	}
-
-	if (n1 == 0)
+	if (!PDIIgnitionAlgorithm(sv2, opt->GETbase, opt->R_LS, opt->t_land, opt->REFSMMAT, sv_I, TTT, C_R, U_FDP))
 	{
 		return false;
 	}
 
-	t_IG = t_I - DELTTRIM;
-	C_R = dotp(unit(crossp(V_P, R_P)), R_LSP);
+	t_IG = OrbMech::GETfromMJD(sv_I.MJD, opt->GETbase);
 
 	VECTOR3 X_B, UX, UY, UZ, IMUangles, FDAIangles;
 	MATRIX3 M, M_R;
@@ -4636,13 +4511,13 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 
 	X_B = tmul(opt->REFSMMAT, unit(U_FDP));
 	UX = X_B;
-	if (abs(dotp(UX, unit(R_I))) < cos(0.01*RAD))
+	if (abs(dotp(UX, unit(sv_I.R))) < cos(0.01*RAD))
 	{
-		UY = unit(crossp(UX, R_I*headsswitch));
+		UY = unit(crossp(UX, sv_I.R*headsswitch));
 	}
 	else
 	{
-		UY = unit(crossp(UX, V_I));
+		UY = unit(crossp(UX, sv_I.V));
 	}
 	UZ = unit(crossp(UX, UY));
 
@@ -7545,7 +7420,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 	VECTOR3 R_LS;
 	double dt_1, h_1, theta_1, theta_Ins, v_LV, v_LH, DH, E, theta_F, t_TPI, t_IG, t_IG_apo, t_CSI, t_CDH, t_TPF, R_M, dt_IG;
 	int n, nmax;
-	SV sv_P, sv_TPI;
+	SV sv_P, sv_TPI, sv_Ins;
 	OBJHANDLE hMoon;
 
 	hMoon = oapiGetObjectByName("Moon");
@@ -7598,7 +7473,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 			if (abs(dt_IG) > 1.0)
 			{
 				t_IG_apo = t_IG;
-				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1);
+				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1, sv_Ins);
 				n++;
 			}
 		}
@@ -7615,7 +7490,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 			if (abs(dt_IG) > 1.0)
 			{
 				t_IG_apo = t_IG;
-				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1);
+				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1, sv_Ins);
 				n++;
 			}
 		}
@@ -7634,7 +7509,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 			if (abs(dt_IG) > 1.0)
 			{
 				t_IG_apo = t_IG;
-				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1);
+				LunarAscentProcessor(R_LS, opt->m0, sv_P, opt->GETbase, t_IG, v_LH, v_LV, theta_1, dt_1, sv_Ins);
 				n++;
 			}
 		}
@@ -8631,15 +8506,15 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 	return IMUangles;
 }
 
-void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc)
+void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins)
 {
 	//Test
 	AscentGuidance asc;
 	AscDescIntegrator integ;
-	SV sv_CSM_TIG;
+	SV sv_CSM_TIG, sv_ins;
 	MATRIX3 Rot;
 	VECTOR3 R0, V0, R, V, U_FDP, U_M, u, R0_proj;
-	double t_go, Thrust, w_M, dt, t_total;
+	double t_go, Thrust, w_M, dt, t_total, isp, m1;
 	bool stop = false;
 
 	t_total = 0.0;
@@ -8651,19 +8526,247 @@ void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETba
 	R0 = rhmul(Rot, R_LS);
 	w_M = PI2 / oapiGetPlanetPeriod(sv_CSM_TIG.gravref);
 	U_M = rhmul(Rot, _V(0, 0, 1));
-	V0 = crossp(U_M, R)*w_M;
+	V0 = crossp(U_M, R0)*w_M;
 
 	R = R0;
 	V = V0;
+	m1 = m0;
 
 	while (stop == false)
 	{
-		asc.Guidance(R, V, m0, U_FDP, t_go, Thrust);
-		stop = integ.Integration(R, V, m0, t_total, U_FDP, t_go, Thrust);
+		asc.Guidance(R, V, m1, U_FDP, t_go, Thrust, isp);
+		stop = integ.Integration(R, V, m1, t_total, U_FDP, t_go, Thrust, isp);
 	}
 
 	u = unit(crossp(R, V));
 	R0_proj = unit(R0 - u * dotp(R0, u))*length(R0);
 	theta = acos(dotp(unit(R0_proj), unit(R)));
 	dt_asc = t_total;
+
+	sv_ins.R = R;
+	sv_ins.V = V;
+	sv_ins.mass = m1;
+	sv_ins.gravref = sv_CSM_TIG.gravref;
+	sv_ins.MJD = sv_CSM_TIG.MJD + dt_asc / 24.0 / 3600.0;
+	sv_Ins = sv_ins;
+}
+
+bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, MATRIX3 REFSMMAT, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG)
+{
+	SV sv_I;
+	MATRIX3 C_GP, Rot;
+	VECTOR3 U_FDP, dV_TrP, R_TG, V_TG, A_TG, R_LSI, R_LSP, W_I, W_P, R_P, G_P, V_P, R_G, V_SURFP, V_G, A_G, A_FDP;
+	VECTOR3 C_XGP, C_YGP, C_ZGP;
+	double GUIDDURN, AF_TRIM, DELTTRIM, TTT, t_pip, dt_I, FRAC;
+	double v_IGG, r_IGXG, r_IGZG, K_X, K_Y, K_V;
+	double J_TZG, A_TZG, V_TZG, R_TZG;
+	double LEADTIME, w_M, t_2, t_I, PIPTIME, mu, t_pipold, eps, dTTT, TTT_P, TEM, q;
+	int n1, n2, COUNT_TTT;
+
+	GUIDDURN = 664.4;
+	AF_TRIM = 0.350133;
+	DELTTRIM = 26.0;
+	n1 = 40;
+	n2 = 2;
+	COUNT_TTT = 0;
+	U_FDP = dV_TrP = _V(0, 0, 0);
+	C_GP = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	TTT = 0.0;
+	t_pip = TLAND;
+	dt_I = 1.0;
+	FRAC = 43455.0;
+	mu = GGRAV * oapiGetMass(sv.gravref);
+
+	v_IGG = 1690.256208;
+	r_IGXG = -39782.453328;
+	r_IGZG = -436655.657;
+	K_X = -0.617631;
+	K_Y = -2.4770341207e-6;
+	K_V = -410.0;
+	J_TZG = -0.01882677*0.3048;// / 8.0;
+	A_TZG = -54.6264*0.3048 / 6.0;
+	V_TZG = -18.72*0.3048 / 3.0;
+	R_TG = _V(52.375308, 0.0, -3254.836061);
+	R_TZG = R_TG.z;
+	V_TG = _V(-105.876, 0.0, -1.04)*0.3048;
+	A_TG = _V(0.6241, 0.0, -9.1044)*0.3048;
+	LEADTIME = 2.2;
+	w_M = 2.66169948e-6;
+
+	t_2 = OrbMech::GETfromMJD(sv.MJD, GETbase);
+	Rot = OrbMech::GetRotationMatrix(sv.gravref, GETbase + TLAND / 24.0 / 3600.0);
+	R_LSI = rhmul(Rot, R_LS);
+	R_LSP = mul(REFSMMAT, R_LSI);
+	t_I = TLAND - GUIDDURN;
+	W_I = rhmul(Rot, _V(0.0, 0.0, 1.0));
+	W_P = mul(REFSMMAT, W_I)*w_M;
+	sv_I = coast(sv, t_I - t_2);
+
+	while (abs(dt_I) > 0.08 && n1>0)
+	{
+		PIPTIME = t_I;
+		R_P = mul(REFSMMAT, sv_I.R);
+		G_P = -R_P / pow(length(R_P), 3.0)*mu;
+
+		n2 = 2;
+
+		t_pipold = t_pip;
+		t_pip = PIPTIME;
+		t_2 = PIPTIME;
+		R_LSP = unit(R_LSP + crossp(W_P, R_LSP)*(t_pip - t_pipold))*length(R_LS);
+		TTT = TTT + t_pip - t_pipold;
+
+		while (n2 > 0)
+		{
+			V_P = mul(REFSMMAT, sv_I.V) + dV_TrP;
+
+			R_G = mul(C_GP, R_P - R_LSP);
+			V_SURFP = V_P - crossp(W_P, R_P);
+			V_G = mul(C_GP, V_SURFP);
+
+			COUNT_TTT = 0;
+			eps = abs(TTT / 128.0);
+			do
+			{
+				dTTT = -(J_TZG*pow(TTT, 3.0) + 6.0*A_TZG*TTT*TTT + (18.0*V_TZG + 6.0*V_G.z)*TTT + 24.0*(R_TZG - R_G.z)) / (3.0*J_TZG*TTT*TTT + 12.0*A_TZG*TTT + 18.0*V_TZG + 6.0*V_G.z);
+				TTT += dTTT;
+				COUNT_TTT++;
+			} while (abs(dTTT) > eps && COUNT_TTT < 8);
+
+			if (COUNT_TTT == 8)
+			{
+				return false;
+			}
+
+			TTT_P = TTT + LEADTIME;
+			A_G = (R_TG - R_G)*(-24.0*TTT_P / pow(TTT, 3.0) + 36.0*TTT_P*TTT_P / pow(TTT, 4.0));
+			A_G += V_TG * (-18.0*TTT_P / TTT / TTT + 24.0*TTT_P*TTT_P / pow(TTT, 3.0));
+			A_G += V_G * (-6.0*TTT_P / TTT / TTT + 12.0*TTT_P*TTT_P / pow(TTT, 3.0));
+			A_G += A_TG * (6.0*TTT_P*TTT_P / TTT / TTT - 6.0*TTT_P / TTT + 1.0);
+
+			A_FDP = tmul(C_GP, A_G) - G_P;
+			//s = length(A_FDP);
+			TEM = FRAC * FRAC / sv.mass / sv.mass - A_FDP.x*A_FDP.x - A_FDP.y*A_FDP.y;
+			if (TEM < 0.0)
+			{
+				TEM = 0.0;
+			}
+			if (sqrt(TEM) + A_FDP.z < 0.0)
+			{
+				A_FDP.z = -sqrt(TEM);
+			}
+			U_FDP = A_FDP;
+
+			C_XGP = unit(R_LSP);
+			C_YGP = unit(crossp(unit(V_SURFP*TTT / 4.0 + R_LSP - R_P), R_LSP));
+			C_ZGP = crossp(C_XGP, C_YGP);
+			C_GP = _M(C_XGP.x, C_YGP.x, C_ZGP.x, C_XGP.y, C_YGP.y, C_ZGP.y, C_XGP.z, C_YGP.z, C_ZGP.z);
+
+			dV_TrP = unit(U_FDP)*DELTTRIM*AF_TRIM;
+
+			n2--;
+		}
+
+		n1--;
+		q = K_X * (R_G.x - r_IGXG) + K_Y * R_G.y*R_G.y + R_G.z - r_IGZG + K_V * (length(V_G) - v_IGG);
+		dt_I = -q / (V_G.z + K_X * V_G.x);
+		t_I += dt_I;
+
+		if (abs(dt_I) > 0.08)
+		{
+			sv_I = coast(sv_I, dt_I);
+		}
+	}
+
+	if (n1 == 0)
+	{
+		return false;
+	}
+
+	sv_IG = coast(sv_I, DELTTRIM);
+	t_go = TTT;
+	U_IG = U_FDP;
+	CR = dotp(unit(crossp(V_P, R_P)), R_LSP);
+
+	return true;
+}
+
+void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
+{
+	DescentGuidance descguid;
+	AscentGuidance ascguid;
+	AscDescIntegrator integ;
+	SV sv_I_guess, sv_IG, sv_D;
+	VECTOR3 U_FDP;
+	double t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp;
+	int K_loop;
+	bool K_stage;
+	bool LandFlag = false;
+	bool InsertionFlag = false;
+
+	t_UL = 7.9;
+	Z_D_dot = 5650.0*0.3048;
+	R_D_dot = 19.5*0.3048;
+
+	dt_abort = opt.dt_step;
+	sv_I_guess = coast(opt.sv_A, opt.TLAND - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
+	PDIIgnitionAlgorithm(sv_I_guess, opt.GETbase, opt.R_LS, opt.TLAND, opt.REFSMMAT, sv_IG, t_go, CR, U_FDP);
+	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, opt.GETbase);
+	t_D = t_PDI - t_UL;
+	sv_D = coast(sv_IG, -t_UL);
+	t_stage = t_PDI + opt.dt_stage;
+
+	descguid.Init(sv_IG.R, sv_IG.V, opt.W_INIT, t_PDI);
+	W_TD = opt.W_INIT;
+
+	K_loop = 0;
+
+	do
+	{
+		if (LandFlag)
+		{
+			t_D = t_PDI + dt_abort;
+			t_stage = 0.;
+			break;
+		}
+		else
+		{
+			descguid.Guidance(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
+			LandFlag = integ.Integration(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
+			if (LandFlag)
+			{
+				t_D = t_PDI + dt_abort;
+				t_stage = 0.;
+				break;
+			}
+		}
+	} while (t_D <= t_PDI + dt_abort);
+
+	T = 43192.23;
+	ascguid.Init(sv_D.R, sv_D.V, W_TD, length(opt.R_LS), Z_D_dot, R_D_dot, false);
+	t = t_D;
+	t_go = dt_abort;
+	W_TA = W_TD;
+	if (t >= t_stage || W_TA <= opt.W_TDRY)
+	{
+		t_go *= 2.0;
+	}
+	ascguid.SetTGO(t_go);
+	K_stage = false;
+
+	do
+	{
+		if (K_stage == false)
+		{
+			if (t >= t_stage || W_TA <= opt.W_TDRY)
+			{
+				K_stage = true;
+				W_TA = opt.W_TAPS;
+				ascguid.SetThrustParams(true);
+			}
+		}
+
+		ascguid.Guidance(sv_D.R, sv_D.V, W_TA, U_FDP, t_go, T, isp);
+		InsertionFlag = integ.Integration(sv_D.R, sv_D.V, W_TA, t, U_FDP, t_go, T, isp);
+	} while (InsertionFlag == false);
 }

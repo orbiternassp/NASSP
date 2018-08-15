@@ -821,6 +821,25 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int maneuver;	//0 = CSI, 1 = CDH
 };
 
+struct PDAPOpt //Powered Descent Abort Program
+{
+	SV sv_A;
+	SV sv_P;
+	double GETbase;
+	double TLAND;
+	MATRIX3 REFSMMAT;
+	VECTOR3 R_LS;
+	double dt_stage;
+	//LM vehicle weight immediately after staging
+	double W_TAPS;
+	//LM weight representative of DPS fuel depletion
+	double W_TDRY;
+	//Initial LM weight
+	double W_INIT;
+	//DT between successive abort points
+	double dt_step;
+};
+
 struct DockAlignOpt	//Docking Alignment Processor
 {
 	//Option 1: LM REFSMMAT from CSM REFSMMAT, CSM attitude, docking angle and LM gimbal angles
@@ -1000,7 +1019,7 @@ public:
 	bool TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
-	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc);
+	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
@@ -1018,6 +1037,8 @@ public:
 	VECTOR3 CircularizationManeuverInteg(SV sv0);
 	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval(double get);
+	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, MATRIX3 REFSMMAT, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG);
+	void PoweredDescentAbortProgram(PDAPOpt opt);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
