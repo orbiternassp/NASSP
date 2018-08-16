@@ -1333,6 +1333,171 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PDI_PAD(&opt, *form);
 	}
 	break;
+	case 71: //PDI ABORT PAD
+	{
+		PDIABORTPAD * form = (PDIABORTPAD *)pad;
+
+		SV sv;
+		double GETbase, t_sunrise1, t_sunrise2, t_TPI;
+
+		sv = StateVectorCalc(calcParams.src);
+		GETbase = calcParams.TEPHEM;
+
+		t_sunrise1 = calcParams.PDI + 3.0*3600.0;
+		t_sunrise2 = calcParams.PDI + 5.0*3600.0;
+
+		//Find two TPI opportunities
+		t_TPI = FindOrbitalSunrise(sv, GETbase, t_sunrise1) - 23.0*60.0;
+		form->T_TPI_Pre10Min = round(t_TPI);
+		t_TPI = FindOrbitalSunrise(sv, GETbase, t_sunrise2) - 23.0*60.0;
+		form->T_TPI_Post10Min = round(t_TPI);
+
+		//Phasing 67 minutes after PDI
+		form->T_Phasing = round(calcParams.PDI + 67.0*60.0);
+	}
+	break;
+	case 72: //No PDI+12 PAD
+	{
+		AP11LMMNV * form = (AP11LMMNV*)pad;
+
+		LambertMan opt;
+		AP11LMManPADOpt manopt;
+		TwoImpulseResuls res;
+		SV sv_LM, sv_DOI, sv_CSM, sv_CSM_upl;
+		VECTOR3 dV_LVLH;
+		double GETbase, t_sunrise, t_CSI, t_TPI, dt, P30TIG, t_P, mu;
+		char buffer1[1000];
+
+		GETbase = calcParams.TEPHEM;
+		sv_CSM = StateVectorCalc(calcParams.src);
+		sv_LM = StateVectorCalc(calcParams.tgt);
+
+		sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv_LM, 0.0);
+
+		t_sunrise = calcParams.PDI + 3.0*3600.0;
+		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*3600.0;
+
+		opt.axis = RTCC_LAMBERT_MULTIAXIS;
+		opt.DH = 15.0*1852.0;
+		opt.Elevation = 26.6*RAD;
+		opt.GETbase = GETbase;
+		opt.N = 0;
+		opt.NCC_NSR_Flag = true;
+		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
+		opt.PhaseAngle = -4.0*RAD;
+		opt.sv_A = sv_DOI;
+		opt.sv_P = sv_CSM;
+		opt.T1 = calcParams.PDI + 12.0*60.0;
+		opt.T2 = opt.T1 + 3600.0 + 46.0;
+		opt.use_XYZ_Offset = false;
+
+		for (int i = 0;i < 2;i++)
+		{
+			LambertTargeting(&opt, res);
+			dt = t_TPI - res.t_TPI;
+			opt.T2 += dt;
+		}
+
+		mu = GGRAV * oapiGetMass(sv_DOI.gravref);
+		t_P = OrbMech::period(sv_DOI.R, sv_DOI.V + res.dV, mu);
+		t_CSI = opt.T2 - t_P / 2.0;
+
+		PoweredFlightProcessor(sv_DOI, GETbase, opt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
+
+		manopt.alt = calcParams.LSAlt;
+		manopt.dV_LVLH = dV_LVLH;
+		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.GETbase = GETbase;
+		manopt.HeadsUp = false;
+		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
+		manopt.RV_MCC = sv_DOI;
+		manopt.TIG = P30TIG;
+		manopt.useSV = true;
+		manopt.vessel = calcParams.tgt;
+
+		AP11LMManeuverPAD(&manopt, *form);
+		sprintf(form->purpose, "No PDI +12 ABORT");
+
+		form->type = 1;
+		form->t_CSI = round(t_CSI);
+		form->t_TPI = round(t_TPI);
+
+		//CSM state vector, time tagged PDI+25 minutes
+		sv_CSM_upl = GeneralTrajectoryPropagation(sv_CSM, 0, OrbMech::MJDfromGET(calcParams.PDI + 25.0*60.0, GETbase));
+
+		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
+	}
+	break;
+	case 73: //T2 ABORT PAD
+	{
+		SV sv_CSM, sv_Ins;
+		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
+		double T2, rad, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, mu, dt1, dt2, t_CSI1;
+
+		GETbase = calcParams.TEPHEM;
+		sv_CSM = StateVectorCalc(calcParams.src);
+
+		rad = oapiGetSize(sv_CSM.gravref);
+		mu = GGRAV * oapiGetMass(sv_CSM.gravref);
+		
+		LEM *l = (LEM*)calcParams.tgt;
+		m0 = l->GetAscentStageMass();
+
+		v_LH = 5515.2*0.3048;
+		v_LV = 19.6*0.3048;
+
+		T2 = calcParams.PDI + 21.0*60.0 + 24.0;
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt + rad);
+
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, T2, v_LH, v_LV, theta, dt_asc, sv_Ins);
+		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, mu);
+		OrbMech::rv_from_r0v0(sv_Ins.R, sv_Ins.V, dt1, R_C1, V_C1, mu);
+		t_C1 = T2 + dt_asc + dt1;
+		u = unit(crossp(R_C1, V_C1));
+		V_C1F = V_C1 + unit(crossp(u, V_C1))*10.0*0.3048;
+		OrbMech::REVUP(R_C1, V_C1F, 1.5, mu, R_CSI1, V_CSI1, dt2);
+		t_CSI1 = t_C1 + dt2;
+	}
+	break;
+	case 74: //T3 ABORT PAD
+	{
+		LunarLiftoffTimeOpt opt;
+		LunarLiftoffResults res;
+		SV sv_CSM, sv_CSM2, sv_CSM_over;
+		double GETbase, m0, MJD_over, t_P, mu, t_PPlusDT;
+
+		GETbase = calcParams.TEPHEM;
+		sv_CSM = StateVectorCalc(calcParams.src);
+		mu = GGRAV * oapiGetMass(sv_CSM.gravref);
+
+		LEM *l = (LEM*)calcParams.tgt;
+		m0 = l->GetAscentStageMass();
+
+		opt.alt = calcParams.LSAlt;
+		opt.GETbase = GETbase;
+		opt.lat = calcParams.LSLat;
+		opt.lng = calcParams.LSLng;
+		opt.m0 = m0;
+		opt.sv_CSM = sv_CSM;
+		opt.t_TPIguess = calcParams.PDI + 5.0*3600.0 - 23.0*60.0;
+
+		LaunchTimePredictionProcessor(&opt, &res);
+
+		sv_CSM2 = GeneralTrajectoryPropagation(sv_CSM, 0, OrbMech::MJDfromGET(calcParams.PDI, GETbase));
+		MJD_over = OrbMech::P29TimeOfLongitude(sv_CSM2.R, sv_CSM2.V, sv_CSM2.MJD, sv_CSM2.gravref, calcParams.LSLng);
+		sv_CSM_over = coast(sv_CSM2, (MJD_over - sv_CSM2.MJD)*24.0*3600.0);
+
+		t_P = OrbMech::period(sv_CSM_over.R, sv_CSM_over.V, mu);
+		t_PPlusDT = res.t_L - OrbMech::GETfromMJD(sv_CSM_over.MJD, GETbase);
+	}
+	break;
 	}
 
 	return scrubbed;

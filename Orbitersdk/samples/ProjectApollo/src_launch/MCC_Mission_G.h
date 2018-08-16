@@ -72,3 +72,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_G_LUNAR_ORBIT_PDI_DAY_10 119
 #define MST_G_LUNAR_ORBIT_PDI_DAY_11 120
 #define MST_G_LUNAR_ORBIT_PDI_DAY_12 121
+#define MST_G_LUNAR_ORBIT_PDI_DAY_13 122
+#define MST_G_LUNAR_ORBIT_PDI_DAY_14 123
+#define MST_G_LUNAR_ORBIT_PDI_DAY_15 124
+#define MST_G_LUNAR_ORBIT_PDI_DAY_16 125

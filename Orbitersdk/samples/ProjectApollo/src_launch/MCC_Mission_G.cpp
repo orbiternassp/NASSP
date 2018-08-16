@@ -223,5 +223,17 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PDI_DAY_10: // Separation maneuver update to DOI update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 13 && MoonRevTime > 30.0*60.0, 37, MST_G_LUNAR_ORBIT_PDI_DAY_12);
 		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_12: // DOI update to PDI PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 38, MST_G_LUNAR_ORBIT_PDI_DAY_13);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_13: // PDI PAD to PDI Abort PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11PDIPAD, SubStateTime > 3.0*60.0, 70, MST_G_LUNAR_ORBIT_PDI_DAY_14);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_14: // PDI Abort PAD to No PDI+12 PAD
+		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 71, MST_G_LUNAR_ORBIT_PDI_DAY_15);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_15: // No PDI+12 PAD to Lunar Surface PAD 1
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 72, MST_G_LUNAR_ORBIT_PDI_DAY_16);
+		break;
 	}
 }

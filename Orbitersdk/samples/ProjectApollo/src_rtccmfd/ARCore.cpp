@@ -2859,15 +2859,17 @@ int ARCore::subThread()
 	case 15:	//Lunar Liftoff Time Prediction
 	{
 		LunarLiftoffTimeOpt opt;
+		SV sv_CSM;
 
 		LEM *lem = (LEM *)vessel;
 		opt.m0 = lem->GetAscentStageMass();
+		sv_CSM = rtcc->StateVectorCalc(target);
 
 		opt.GETbase = GETbase;
 		opt.opt = LunarLiftoffTimeOption;
-		opt.target = target;
 		opt.t_TPIguess = t_TPIguess;
 		opt.dt_2 = DT_Ins_TPI;
+		opt.sv_CSM = sv_CSM;
 
 		if (vessel->GroundContact())
 		{

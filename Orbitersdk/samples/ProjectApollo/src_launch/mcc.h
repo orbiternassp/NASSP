@@ -161,6 +161,8 @@
 #define PT_AP9LMCDH			20
 #define PT_S065UPDATE		21
 #define PT_AP11AGSACT		22
+#define PT_AP11PDIPAD		23
+#define PT_PDIABORTPAD		24
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -437,6 +439,8 @@ struct AP11MNV {
 
 // APOLLO 11 LM - MANEUVER
 struct AP11LMMNV {
+	AP11LMMNV() : type(0) {}
+
 	char purpose[64];	// PURPOSE
 	double GETI;		// TIG
 	VECTOR3 dV;			// P30 dV
@@ -454,6 +458,12 @@ struct AP11LMMNV {
 
 	//Not part of the PAD
 	VECTOR3 IMUAtt;		// Inertial Attitude at TIG
+
+	//Optional
+	double t_CSI;
+	double t_TPI;
+
+	int type; //0 = PAD with BSS, 1 = PAD without BSS, but with CSI and TPI
 };
 
 // APOLLO 11 PDI PAD
@@ -575,6 +585,17 @@ struct AP11AGSACT
 	int DEDA226;	//Predicted O.I. LM Semi-Major Axis Upper Limit
 	int DEDA227;	//Factor in O.I. LM Desired Semi-major Axis
 };
+
+//APOLLO 11 PDI ABORT PAD
+
+struct PDIABORTPAD
+{
+	double T_TPI_Pre10Min;	//GET of TPI maneuver for abort prior to PDI+10 minutes
+	double T_Phasing;		//GET of Phasing maneuver for abort subsequent to PDI+10 minutes
+	double T_TPI_Post10Min;	//GET of TPI maneuver for abort subsequent to PDI+10 minutes
+};
+
+//APOLLO 11 NO PDI+12 ABORT PAD
 
 //GENERIC STRING
 
