@@ -695,14 +695,19 @@ ARCore::ARCore(VESSEL* v)
 	LunarLiftoffTimeOption = 0;
 	t_TPIguess = 0.0;
 	DT_Ins_TPI = 40.0*60.0;
-	LunarLiftoffTimes.t_CDH = 0.0;
-	LunarLiftoffTimes.t_CSI = 0.0;
-	LunarLiftoffTimes.t_Ins = 0.0;
-	LunarLiftoffTimes.t_L = 0.0;
-	LunarLiftoffTimes.t_TPI = 0.0;
-	LunarLiftoffTimes.t_TPF = 0.0;
-	LunarLiftoffTimes.v_LH = 0.0;
-	LunarLiftoffTimes.v_LV = 0.0;
+	LunarLiftoffRes.t_CDH = 0.0;
+	LunarLiftoffRes.t_CSI = 0.0;
+	LunarLiftoffRes.t_Ins = 0.0;
+	LunarLiftoffRes.t_L = 0.0;
+	LunarLiftoffRes.t_TPI = 0.0;
+	LunarLiftoffRes.t_TPF = 0.0;
+	LunarLiftoffRes.v_LH = 0.0;
+	LunarLiftoffRes.v_LV = 0.0;
+	LunarLiftoffRes.DV_CDH = 0.0;
+	LunarLiftoffRes.DV_CSI = 0.0;
+	LunarLiftoffRes.DV_T = 0.0;
+	LunarLiftoffRes.DV_TPF = 0.0;
+	LunarLiftoffRes.DV_TPI = 0.0;
 
 	EMPUplinkType = 0;
 	EMPUplinkNumber = 0;
@@ -2888,8 +2893,8 @@ int ARCore::subThread()
 			opt.lng = LSLng;
 		}
 
-		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffTimes);
-		t_TPI = LunarLiftoffTimes.t_TPI;
+		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffRes);
+		t_TPI = LunarLiftoffRes.t_TPI;
 
 		Result = 0;
 	}

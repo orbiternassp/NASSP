@@ -2724,37 +2724,57 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		GET_Display(Buffer, G->t_TPIguess);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 4 * H / 14, "Rendezvous Schedule:", 20);
+		skp->Text((int)(0.5 * W / 8), 8 * H / 21, "Rendezvous Schedule:", 20);
 
-		skp->Text(1 * W / 8, 8 * H / 21, "Launch Time:", 12);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_L);
-		skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 9 * H / 21, "Launch:", 7);
+		GET_Display(Buffer, G->LunarLiftoffRes.t_L);
+		skp->Text(2 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 10 * H / 21, "Insertion:", 10);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_Ins);
-		skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 10 * H / 21, "Insertion:", 10);
+		GET_Display(Buffer, G->LunarLiftoffRes.t_Ins);
+		skp->Text(2 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
 
 		if (G->LunarLiftoffTimeOption == 0)
 		{
-			skp->Text(1 * W / 8, 12 * H / 21, "CSI:", 4);
-			GET_Display(Buffer, G->LunarLiftoffTimes.t_CSI);
-			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+			skp->Text((int)(0.5 * W / 8), 11 * H / 21, "T CSI:", 6);
+			GET_Display(Buffer, G->LunarLiftoffRes.t_CSI);
+			skp->Text(2 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 8, 14 * H / 21, "CDH:", 4);
-			GET_Display(Buffer, G->LunarLiftoffTimes.t_CDH);
-			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			skp->Text((int)(0.5 * W / 8), 12 * H / 21, "DV CSI:", 7);
+			sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_CSI / 0.3048);
+			skp->Text(2 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text((int)(0.5 * W / 8), 13 * H / 21, "T CDH:", 6);
+			GET_Display(Buffer, G->LunarLiftoffRes.t_CDH);
+			skp->Text(2 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text((int)(0.5 * W / 8), 14 * H / 21, "DV CDH:", 7);
+			sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_CDH / 0.3048);
+			skp->Text(2 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 		}
 
 		if (G->LunarLiftoffTimeOption == 0 || G->LunarLiftoffTimeOption == 1)
 		{
-			skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
-			GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
-			skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			skp->Text((int)(0.5 * W / 8), 15 * H / 21, "T TPI:", 6);
+			GET_Display(Buffer, G->LunarLiftoffRes.t_TPI);
+			skp->Text(2 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text((int)(0.5 * W / 8), 16 * H / 21, "DV TPI:", 7);
+			sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_TPI / 0.3048);
+			skp->Text(2 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(1 * W / 8, 18 * H / 21, "TPF:", 4);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
-		skp->Text(1 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 17 * H / 21, "T TPF:", 6);
+		GET_Display(Buffer, G->LunarLiftoffRes.t_TPF);
+		skp->Text(2 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text((int)(0.5 * W / 8), 18 * H / 21, "DV TPF:", 7);
+		sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_TPF / 0.3048);
+		skp->Text(2 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text((int)(0.5 * W / 8), 19 * H / 21, "DVT:", 4);
+		sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_T / 0.3048);
+		skp->Text(2 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 
 		if (G->LunarLiftoffTimeOption == 0)
 		{
@@ -2783,11 +2803,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 
 		skp->Text(5 * W / 8, 9 * H / 14, "Horizontal Velocity:", 20);
-		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LH / 0.3048);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffRes.v_LH / 0.3048);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 11 * H / 14, "Vertical Velocity:", 18);
-		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LV / 0.3048);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffRes.v_LV / 0.3048);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 24)

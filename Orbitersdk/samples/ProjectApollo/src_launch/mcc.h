@@ -163,6 +163,8 @@
 #define PT_AP11AGSACT		22
 #define PT_AP11PDIPAD		23
 #define PT_PDIABORTPAD		24
+#define PT_AP11T2ABORTPAD	25
+#define PT_AP11T3ABORTPAD	26
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -595,7 +597,26 @@ struct PDIABORTPAD
 	double T_TPI_Post10Min;	//GET of TPI maneuver for abort subsequent to PDI+10 minutes
 };
 
-//APOLLO 11 NO PDI+12 ABORT PAD
+//APOLLO 11 T2 ABORT PAD
+
+struct AP11T2ABORTPAD
+{
+	double TIG;
+	double t_Phasing;
+	double t_CSI1;
+	double t_TPI;
+};
+
+//APOLLO 11 T3 ABORT PAD
+
+struct AP11T3ABORTPAD
+{
+	double TIG;
+	double t_Period;
+	double t_PPlusDT;
+	double t_CSI;
+	double t_TPI;
+};
 
 //GENERIC STRING
 

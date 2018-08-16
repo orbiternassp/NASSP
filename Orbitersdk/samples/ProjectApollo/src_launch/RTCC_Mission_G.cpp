@@ -1437,9 +1437,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 73: //T2 ABORT PAD
 	{
+		AP11T2ABORTPAD * form = (AP11T2ABORTPAD*)pad;
+
 		SV sv_CSM, sv_Ins;
 		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
-		double T2, rad, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, mu, dt1, dt2, t_CSI1;
+		double T2, rad, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, mu, dt1, dt2, t_CSI1, t_sunrise, t_TPI;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1464,10 +1466,20 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		V_C1F = V_C1 + unit(crossp(u, V_C1))*10.0*0.3048;
 		OrbMech::REVUP(R_C1, V_C1F, 1.5, mu, R_CSI1, V_CSI1, dt2);
 		t_CSI1 = t_C1 + dt2;
+
+		t_sunrise = calcParams.PDI + 7.0*3600.0;
+		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*3600.0;
+
+		form->TIG = T2;
+		form->t_CSI1 = round(t_CSI1);
+		form->t_Phasing = round(t_C1);
+		form->t_TPI = round(t_TPI);
 	}
 	break;
 	case 74: //T3 ABORT PAD
 	{
+		AP11T3ABORTPAD * form = (AP11T3ABORTPAD*)pad;
+
 		LunarLiftoffTimeOpt opt;
 		LunarLiftoffResults res;
 		SV sv_CSM, sv_CSM2, sv_CSM_over;
@@ -1496,6 +1508,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		t_P = OrbMech::period(sv_CSM_over.R, sv_CSM_over.V, mu);
 		t_PPlusDT = res.t_L - OrbMech::GETfromMJD(sv_CSM_over.MJD, GETbase);
+
+		form->TIG = res.t_L;
+		form->t_CSI = res.t_CSI;
+		form->t_Period = t_P;
+		form->t_PPlusDT = t_PPlusDT;
+		form->t_TPI = res.t_TPI;
 	}
 	break;
 	}
