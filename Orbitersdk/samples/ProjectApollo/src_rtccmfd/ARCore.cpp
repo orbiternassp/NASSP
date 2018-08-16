@@ -695,6 +695,7 @@ ARCore::ARCore(VESSEL* v)
 	LunarLiftoffTimeOption = 0;
 	t_TPIguess = 0.0;
 	DT_Ins_TPI = 40.0*60.0;
+	t_Liftoff_guess = 0.0;
 	LunarLiftoffRes.t_CDH = 0.0;
 	LunarLiftoffRes.t_CSI = 0.0;
 	LunarLiftoffRes.t_Ins = 0.0;
@@ -2866,13 +2867,11 @@ int ARCore::subThread()
 		LunarLiftoffTimeOpt opt;
 		SV sv_CSM;
 
-		LEM *lem = (LEM *)vessel;
-		opt.m0 = lem->GetAscentStageMass();
 		sv_CSM = rtcc->StateVectorCalc(target);
 
 		opt.GETbase = GETbase;
 		opt.opt = LunarLiftoffTimeOption;
-		opt.t_TPIguess = t_TPIguess;
+		opt.t_hole = t_Liftoff_guess;
 		opt.dt_2 = DT_Ins_TPI;
 		opt.sv_CSM = sv_CSM;
 

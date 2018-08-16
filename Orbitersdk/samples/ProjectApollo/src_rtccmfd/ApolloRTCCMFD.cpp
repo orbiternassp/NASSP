@@ -228,6 +228,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "DOI_alt", G->DOI_alt);
 
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
+	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_Liftoff_guess);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
 	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
 	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
@@ -387,6 +388,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "DOI_alt", G->DOI_alt);
 
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
+		papiReadScenario_double(line, "t_Liftoff_guess", G->t_Liftoff_guess);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
 		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
 		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
@@ -2721,7 +2723,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Liftoff", 13);
 
-		GET_Display(Buffer, G->t_TPIguess);
+		GET_Display(Buffer, G->t_Liftoff_guess);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text((int)(0.5 * W / 8), 8 * H / 21, "Rendezvous Schedule:", 20);
@@ -6643,6 +6645,29 @@ bool TPIGuessInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_TPIguess(double time)
 {
 	G->t_TPIguess = time;
+}
+
+void ApolloRTCCMFD::menuSetLiftoffguess()
+{
+	bool LiftoffGuessInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for liftoff (Format: hhh:mm:ss)", LiftoffGuessInput, 0, 20, (void*)this);
+}
+
+bool LiftoffGuessInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_Liftoffguess(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_Liftoffguess(double time)
+{
+	G->t_Liftoff_guess = time;
 }
 
 void ApolloRTCCMFD::menuTMLat()

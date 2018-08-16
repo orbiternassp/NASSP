@@ -145,6 +145,7 @@ public:
 	double DKI_dt_BHAM;	//Delta time between boost and HAM
 	double DKI_dt_HAMH;	//Delta time between HAM and CSI
 	int DKI_N;		//Half revolutions between CSI and CDH
+	double t_TPIguess;
 	DKIResults dkiresult;
 
 	//CDH PAGE
@@ -306,7 +307,6 @@ public:
 	OBJHANDLE VECbody;	//handle for the desired body
 	VECTOR3 VECangles;	//IMU angles
 
-
 	//DOI Page
 	int DOI_N;							//Number of revolutions between DOI and PDI
 	double DOIGET;						//Initial guess for the DOI TIG
@@ -344,9 +344,9 @@ public:
 
 	//Lunar Liftoff Time Prediction
 	LunarLiftoffResults LunarLiftoffRes;
-	double t_TPIguess;
 	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
 	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
+	double t_Liftoff_guess;		//Threshold time for lunar liftoff
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99

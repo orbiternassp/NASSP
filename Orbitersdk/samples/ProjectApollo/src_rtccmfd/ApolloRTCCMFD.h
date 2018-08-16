@@ -277,6 +277,8 @@ public:
 	void menuSetPCAlignGET();
 	void set_PCAlignGET(double time);
 	void menuSetPCLanded();
+	void menuSetLiftoffguess();
+	void set_Liftoffguess(double time);
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLunarLiftoffTimeOption();

@@ -1496,10 +1496,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = GETbase;
 		opt.lat = calcParams.LSLat;
 		opt.lng = calcParams.LSLng;
-		opt.m0 = m0;
 		opt.sv_CSM = sv_CSM;
-		opt.t_TPIguess = calcParams.PDI + 5.0*3600.0 - 23.0*60.0;
+		opt.t_hole = calcParams.PDI + 1.5*3600.0;
 
+		//Initial pass through the processor
 		LaunchTimePredictionProcessor(&opt, &res);
 
 		sv_CSM2 = GeneralTrajectoryPropagation(sv_CSM, 0, OrbMech::MJDfromGET(calcParams.PDI, GETbase));
