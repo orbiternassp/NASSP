@@ -1798,6 +1798,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_PDIABORTPAD_T_Phasing", form->T_Phasing);
 			SAVE_DOUBLE("MCC_PDIABORTPAD_T_TPI_Post10Min", form->T_TPI_Post10Min);
 			SAVE_DOUBLE("MCC_PDIABORTPAD_T_TPI_Pre10Min", form->T_TPI_Pre10Min);
+			SAVE_INT("MCC_PDIABORTPAD_type", form->type);
 		}
 		else if (padNumber == PT_AP11T2ABORTPAD)
 		{
@@ -1817,6 +1818,24 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->t_Period);
 			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->t_PPlusDT);
 			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->t_TPI);
+		}
+		else if (padNumber == PT_AP11P76PAD)
+		{
+			AP11P76PAD *form = (AP11P76PAD*)padForm;
+
+			char tmpbuf[64];
+
+			SAVE_INT("MCC_AP11P76PAD_entries", form->entries);
+
+			for (int i = 0;i < form->entries;i++)
+			{
+				sprintf(tmpbuf, "MCC_AP11P76PAD_DV[%d]", i);
+				SAVE_V3(tmpbuf, form->DV[i]);
+				sprintf(tmpbuf, "MCC_AP11P76PAD_purpose[%d]", i);
+				SAVE_STRING(tmpbuf, form->purpose[i]);
+				sprintf(tmpbuf, "MCC_AP11P76PAD_TIG[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->TIG[i]);
+			}
 		}
 	}
 	// Write uplink buffer here!
@@ -2259,6 +2278,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_PDIABORTPAD_T_Phasing", form->T_Phasing);
 			LOAD_DOUBLE("MCC_PDIABORTPAD_T_TPI_Post10Min", form->T_TPI_Post10Min);
 			LOAD_DOUBLE("MCC_PDIABORTPAD_T_TPI_Pre10Min", form->T_TPI_Pre10Min);
+			LOAD_INT("MCC_PDIABORTPAD_type", form->type);
 		}
 		else if (padNumber == PT_AP11T2ABORTPAD)
 		{
@@ -2278,6 +2298,22 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->t_Period);
 			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->t_PPlusDT);
 			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->t_TPI);
+		}
+		else if (padNumber == PT_AP11P76PAD)
+		{
+			AP11P76PAD *form = (AP11P76PAD*)padForm;
+
+			LOAD_INT("MCC_AP11P76PAD_entries", form->entries);
+
+			for (int i = 0;i < form->entries;i++)
+			{
+				sprintf(tmpbuf, "MCC_AP11P76PAD_DV[%d]", i);
+				LOAD_V3(tmpbuf, form->DV[i]);
+				sprintf(tmpbuf, "MCC_AP11P76PAD_purpose[%d]", i);
+				LOAD_STRING(tmpbuf, form->purpose[i], 16);
+				sprintf(tmpbuf, "MCC_AP11P76PAD_TIG[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->TIG[i]);
+			}
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -2796,8 +2832,16 @@ void MCC::drawPad(){
 		SStoHHMMSS(form->T_Phasing, hh[1], mm[1], ss[1]);
 		SStoHHMMSS(form->T_TPI_Post10Min, hh[2], mm[2], ss[2]);
 
-		sprintf(buffer, "PDI ABORT <10 MIN\nHRS N37 %+06d\nMIN TPI %+06d\nSEC    %+07.2f\nHRS     %+06d\nMIN     %+06d\nSEC PHASING TIG %+07.2f\n"
-			"HRS N37 %+06d\nMIN TPI %+06d\nSEC    %+07.2f", hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
+		if (form->type == 0)
+		{
+			sprintf(buffer, "PDI ABORT <10 MIN\nHRS N37 %+06d\nMIN TPI %+06d\nSEC    %+07.2f\nHRS     %+06d\nMIN     %+06d\nSEC PHASING TIG %+07.2f\n"
+				"HRS N37 %+06d\nMIN TPI %+06d\nSEC    %+07.2f", hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
+		}
+		else
+		{
+			sprintf(buffer, "CSM RESCUE PAD\n PHAS 33 %05d:%05d:%06.2f\nTPI (PDI<10) 37 %05d:%05d:%06.2f\nTPI (PDI>10) 37 %05d:%05d:%06.2f",
+				hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
+		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -2837,6 +2881,26 @@ void MCC::drawPad(){
 		sprintf(buffer, "T3 ABORT\n%+06d HRS T3\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS CSM\n%+06d MIN PERIOD\n%+07.2f SEC\n"
 			"%+06d HRS\n%+06d MIN P+DT\n%+07.2f SEC\n%+06d HRS N11\n%+06d MIN CSI TIG\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC",
 			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2], hh[3], mm[3], ss[3], hh[4], mm[4], ss[4]);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP11P76PAD:
+	{
+		AP11P76PAD *form = (AP11P76PAD*)padForm;
+
+		int hh, mm;
+		double ss;
+
+		sprintf(buffer, "P76 UPDATE PAD\n");
+
+		for (int i = 0;i < form->entries;i++)
+		{
+			SStoHHMMSS(form->TIG[i], hh, mm, ss);
+
+			sprintf(buffer, "%s%s PURPOSE\n%+06d HRS N33\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f DVX N84\n%+07.1f DVY\n%+07.1f DVZ\n", 
+				buffer, form->purpose, hh, mm, ss, form->DV[i].x, form->DV[i].y, form->DV[i].z);
+		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -2947,6 +3011,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP11T3ABORTPAD: // AP11T3ABORTPAD
 		padForm = calloc(1, sizeof(AP11T3ABORTPAD));
+		break;
+	case PT_AP11P76PAD: // AP11P76PAD
+		padForm = calloc(1, sizeof(AP11P76PAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

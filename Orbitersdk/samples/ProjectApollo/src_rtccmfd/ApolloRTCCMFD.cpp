@@ -7056,6 +7056,13 @@ bool DKITIGInput(void *id, char *str, void *data)
 		((ApolloRTCCMFD*)data)->set_DKITIG(pet);
 		return true;
 	}
+	else if (strcmp(str, "ApT") == 0)
+	{
+		double apt;
+		apt = ((ApolloRTCCMFD*)data)->timetoapo();
+		((ApolloRTCCMFD*)data)->set_DKITIG(apt);
+		return true;
+	}
 	else if (sscanf(str, "PDI+%lf", &pdidt) == 1)
 	{
 		((ApolloRTCCMFD*)data)->set_DKITIG_DT_PDI(pdidt * 60.0);

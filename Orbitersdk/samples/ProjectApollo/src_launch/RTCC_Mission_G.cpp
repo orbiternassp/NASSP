@@ -1334,6 +1334,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 71: //PDI ABORT PAD
+	case 75: //CSM RESCUE PAD
 	{
 		PDIABORTPAD * form = (PDIABORTPAD *)pad;
 
@@ -1354,6 +1355,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Phasing 67 minutes after PDI
 		form->T_Phasing = round(calcParams.PDI + 67.0*60.0);
+
+		if (fcn == 75)
+		{
+			form->type = 1;
+		}
 	}
 	break;
 	case 72: //No PDI+12 PAD
@@ -1403,6 +1409,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_CSI = opt.T2 - t_P / 2.0;
 
 		PoweredFlightProcessor(sv_DOI, GETbase, opt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
+		//Store for P76 PAD
+		calcParams.TIGSTORE1 = P30TIG;
+		calcParams.DVSTORE1 = dV_LVLH;
 
 		manopt.alt = calcParams.LSAlt;
 		manopt.dV_LVLH = dV_LVLH;
@@ -1524,6 +1533,40 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->t_Period = t_P;
 		form->t_PPlusDT = t_PPlusDT;
 		form->t_TPI = res.t_TPI;
+	}
+	break;
+	case 76: //P76 PAD for DOI AND NO PDI+12
+	{
+		AP11P76PAD * form = (AP11P76PAD*)pad;
+
+		SV sv_CSM, sv_LM;
+		double GETbase;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		GETbase = calcParams.TEPHEM;
+
+		//State vectors: CSM SV time tagged PDI+25, LM SV time tagged DOI-10
+		sv_CSM = StateVectorCalc(calcParams.src, OrbMech::MJDfromGET(calcParams.PDI + 25.0*60.0, GETbase));
+		sv_LM = StateVectorCalc(calcParams.tgt, OrbMech::MJDfromGET(calcParams.DOI - 10.0*60.0, GETbase));
+
+		form->entries = 2;
+		sprintf(form->purpose[0], "DOI");
+		form->TIG[0] = TimeofIgnition;
+		form->DV[0] = DeltaV_LVLH / 0.3048;
+		sprintf(form->purpose[1], "PDI1 +12");
+		form->TIG[1] = calcParams.TIGSTORE1;
+		form->DV[1] = calcParams.DVSTORE1 / 0.3048;
+
+		AGCStateVectorUpdate(buffer1, sv_CSM, true, AGCEpoch, GETbase);
+		AGCStateVectorUpdate(buffer2, sv_LM, false, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and LM state vectors");
+		}
 	}
 	break;
 	}

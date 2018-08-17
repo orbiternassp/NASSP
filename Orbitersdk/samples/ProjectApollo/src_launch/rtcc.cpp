@@ -89,6 +89,8 @@ RTCC::RTCC()
 	calcParams.StoredREFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	calcParams.TEPHEM = 0.0;
 	calcParams.PericynthionLatitude = 0.0;
+	calcParams.TIGSTORE1 = 0.0;
+	calcParams.DVSTORE1 = _V(0, 0, 0);
 }
 
 void RTCC::Init(MCC *ptr)
@@ -5062,11 +5064,13 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_lng_node", calcParams.lng_node);
 	SAVE_DOUBLE("RTCC_TEPHEM", calcParams.TEPHEM);
 	SAVE_DOUBLE("RTCC_PericynthionLatitude", calcParams.PericynthionLatitude);
+	SAVE_DOUBLE("RTCC_TIGSTORE1", calcParams.TIGSTORE1);
 	// Strings
 	// Vectors
 	SAVE_V3("RTCC_DVLVLH", DeltaV_LVLH);
 	SAVE_V3("RTCC_R_TLI", calcParams.R_TLI);
 	SAVE_V3("RTCC_V_TLI", calcParams.V_TLI);
+	SAVE_V3("RTCC_DVSTORE1", calcParams.DVSTORE1);
 	// Matrizes
 	SAVE_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
 	oapiWriteLine(scn, RTCC_END_STRING);
@@ -5107,9 +5111,11 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_lng_node", calcParams.lng_node);
 		LOAD_DOUBLE("RTCC_TEPHEM", calcParams.TEPHEM);
 		LOAD_DOUBLE("RTCC_PericynthionLatitude", calcParams.PericynthionLatitude);
+		LOAD_DOUBLE("RTCC_TIGSTORE1", calcParams.TIGSTORE1);
 		LOAD_V3("RTCC_DVLVLH", DeltaV_LVLH);
 		LOAD_V3("RTCC_R_TLI", calcParams.R_TLI);
 		LOAD_V3("RTCC_V_TLI", calcParams.V_TLI);
+		LOAD_V3("RTCC_DVSTORE1", calcParams.DVSTORE1);
 		LOAD_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
 	}
 	return;
@@ -5975,6 +5981,26 @@ void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, in
 	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
 	GET_TIG = GET_TIG_imp + t_slip;
 	dV_LVLH = mul(Q_Xx, Llambda);
+}
+
+VECTOR3 RTCC::ConvertDVtoLVLH(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_imp)
+{
+	MATRIX3 Q_Xx;
+	SV sv_tig;
+
+	sv_tig = coast(sv0, TIG_imp - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
+	return mul(Q_Xx, DV_imp);
+}
+
+VECTOR3 RTCC::ConvertDVtoInertial(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_LVLH_imp)
+{
+	MATRIX3 Q_Xx;
+	SV sv_tig;
+
+	sv_tig = coast(sv0, TIG_imp - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
+	return tmul(Q_Xx, DV_LVLH_imp);
 }
 
 double RTCC::GetDockedVesselMass(VESSEL *vessel)

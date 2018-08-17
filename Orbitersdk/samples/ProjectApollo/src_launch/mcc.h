@@ -165,6 +165,7 @@
 #define PT_PDIABORTPAD		24
 #define PT_AP11T2ABORTPAD	25
 #define PT_AP11T3ABORTPAD	26
+#define PT_AP11P76PAD		27
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -592,9 +593,11 @@ struct AP11AGSACT
 
 struct PDIABORTPAD
 {
+	PDIABORTPAD() : type(0) {}
 	double T_TPI_Pre10Min;	//GET of TPI maneuver for abort prior to PDI+10 minutes
 	double T_Phasing;		//GET of Phasing maneuver for abort subsequent to PDI+10 minutes
 	double T_TPI_Post10Min;	//GET of TPI maneuver for abort subsequent to PDI+10 minutes
+	int type;				//0 = PDI Abort PAD for LM, 1 = CSM Rescue PAD
 };
 
 //APOLLO 11 T2 ABORT PAD
@@ -616,6 +619,16 @@ struct AP11T3ABORTPAD
 	double t_PPlusDT;
 	double t_CSI;
 	double t_TPI;
+};
+
+//APOLLO 11 P76 UPDATE PAD
+
+struct AP11P76PAD
+{
+	int entries = 0;
+	char purpose[2][16];
+	double TIG[2];
+	VECTOR3 DV[2];
 };
 
 //GENERIC STRING
