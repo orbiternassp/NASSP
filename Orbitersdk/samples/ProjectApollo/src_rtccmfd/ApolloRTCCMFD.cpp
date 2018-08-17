@@ -2107,6 +2107,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 2 * H / 14, "DOI", 3);
 		skp->Text(5 * W / 8, 4 * H / 14, "Plane Change", 12);
 		skp->Text(5 * W / 8, 6 * H / 14, "Lunar Liftoff", 13);
+		skp->Text(5 * W / 8, 8 * H / 14, "Lunar Ascent", 12);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 15)
@@ -2724,7 +2725,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Liftoff", 13);
 
 		GET_Display(Buffer, G->t_Liftoff_guess);
-		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text((int)(0.5 * W / 8), 8 * H / 21, "Rendezvous Schedule:", 20);
 
@@ -3463,6 +3464,42 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%f", G->AGCEphemTIMEM0);
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 	}
+	else if (screen == 38)
+	{
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Lunar Ascent Processor", 22);
+
+		GET_Display(Buffer, G->LunarLiftoffRes.t_L);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f ft/s", G->LunarLiftoffRes.v_LH / 0.3048);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f ft/s", G->LunarLiftoffRes.v_LV / 0.3048);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3f°", G->LAP_Theta*DEG);
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.1f s", G->LAP_DT);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.R.x);
+		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.R.y);
+		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.R.z);
+		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.V.x);
+		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.V.y);
+		skp->Text(5 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.V.z);
+		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.MJD);
+		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -3841,6 +3878,12 @@ void ApolloRTCCMFD::menuSetLVDCPage()
 void ApolloRTCCMFD::menuSetAGCEphemerisPage()
 {
 	screen = 37;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLunarAscentPage()
+{
+	screen = 38;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6911,6 +6954,89 @@ void ApolloRTCCMFD::menuDKICalc()
 	{
 		G->DKICalc();
 	}
+}
+
+void ApolloRTCCMFD::menuLAPCalc()
+{
+	if (G->target != NULL && G->vesseltype > 1)
+	{
+		G->LAPCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuSetLAPLiftoffTime()
+{
+	bool LAPLiftoffTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the liftoff time (Format: hhh:mm:ss)", LAPLiftoffTimeInput, 0, 20, (void*)this);
+}
+
+bool LAPLiftoffTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "PDI+%d:%d", &mm, &ss) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_LAPLiftoffTime_DT_PDI((double)mm * 60.0 + (double)ss);
+		return true;
+	}
+	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_LAPLiftoffTime(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LAPLiftoffTime(double time)
+{
+	G->LunarLiftoffRes.t_L = time;
+}
+
+void ApolloRTCCMFD::set_LAPLiftoffTime_DT_PDI(double dt)
+{
+	G->LunarLiftoffRes.t_L = G->pdipad.GETI + dt;
+}
+
+void ApolloRTCCMFD::menuSetLAPHorVelocity()
+{
+	bool LAPHorVelocityInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Horizontal velocity in ft/s:", LAPHorVelocityInput, 0, 20, (void*)this);
+}
+
+bool LAPHorVelocityInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_LAPHorVelocity(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LAPHorVelocity(double vel)
+{
+	this->G->LunarLiftoffRes.v_LH = vel * 0.3048;
+}
+
+void ApolloRTCCMFD::menuSetLAPVerVelocity()
+{
+	bool LAPVerVelocityInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Vertical velocity in ft/s:", LAPVerVelocityInput, 0, 20, (void*)this);
+}
+
+bool LAPVerVelocityInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_LAPVerVelocity(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LAPVerVelocity(double vel)
+{
+	this->G->LunarLiftoffRes.v_LV = vel * 0.3048;
 }
 
 void ApolloRTCCMFD::DKITIGDialogue()

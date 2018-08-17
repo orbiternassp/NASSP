@@ -1482,8 +1482,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LunarLiftoffTimeOpt opt;
 		LunarLiftoffResults res;
-		SV sv_CSM, sv_CSM2, sv_CSM_over;
-		double GETbase, m0, MJD_over, t_P, mu, t_PPlusDT;
+		SV sv_CSM, sv_CSM2, sv_CSM_over, sv_Ins;
+		VECTOR3 R_LS;
+		double GETbase, m0, MJD_over, t_P, mu, t_PPlusDT, theta_1, dt_1, R_M;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1499,7 +1500,16 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv_CSM = sv_CSM;
 		opt.t_hole = calcParams.PDI + 1.5*3600.0;
 
+		R_M = oapiGetSize(sv_CSM.gravref);
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
+
 		//Initial pass through the processor
+		LaunchTimePredictionProcessor(&opt, &res);
+		//Refine ascent parameters
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
+		opt.theta_1 = theta_1;
+		opt.dt_1 = dt_1;
+		//Final pass through
 		LaunchTimePredictionProcessor(&opt, &res);
 
 		sv_CSM2 = GeneralTrajectoryPropagation(sv_CSM, 0, OrbMech::MJDfromGET(calcParams.PDI, GETbase));

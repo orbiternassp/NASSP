@@ -54,6 +54,7 @@ public:
 	void VecPointCalc();
 	void TerrainModelCalc();
 	void DKICalc();
+	void LAPCalc();
 	void DAPPADCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
@@ -347,6 +348,11 @@ public:
 	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
 	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 	double t_Liftoff_guess;		//Threshold time for lunar liftoff
+
+	//Lunar Ascent Processor
+	double LAP_Theta;			//Angle travelled between liftoff and insertion
+	double LAP_DT;				//Ascent burntime (liftoff to insertion)
+	SV LAP_SV_Insertion;
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99

@@ -7427,7 +7427,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 	theta_F = 130.0*RAD;
 	h_1 = 60000.0*0.3048;
-	theta_Ins = 10.0*RAD;
+	theta_Ins = 17.0*RAD;
 	DH = 15.0*1852.0;
 	E = 26.6*RAD;
 
