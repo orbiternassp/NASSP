@@ -720,17 +720,17 @@ struct SkylabRendezvousResults
 
 struct LunarLiftoffTimeOpt
 {
+	LunarLiftoffTimeOpt() :theta_1(17.0*RAD), dt_1(7.0*60.0 + 15.0) {};
 	double lat;
 	double lng;
 	double alt;
-	VESSEL* target;		//Target vessel
 	double GETbase;		//usually MJD at launch
-	double t_TPIguess;		//GET of TPI maneuver
-	bool useSV = false;		//true if state vector is to be used
-	SV RV_MCC;		//State vector as input
-	int opt;		// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
-	double dt_2;	//Fixed time from insertion to TPI for direct profile
-	double m0;		//Initial mass of the ascent stage
+	double t_hole;		//Threshold time
+	SV sv_CSM;			//CSM State vector
+	int opt;			// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	double dt_2;		//Fixed time from insertion to TPI for direct profile
+	double theta_1;	//Angle travelled between liftoff and insertion
+	double dt_1;		//Ascent burn time (liftoff to insertion)
 };
 
 struct LunarLiftoffResults
@@ -743,6 +743,11 @@ struct LunarLiftoffResults
 	double t_TPF;
 	double v_LH;
 	double v_LV;
+	double DV_CSI;
+	double DV_CDH;
+	double DV_TPI;
+	double DV_TPF;
+	double DV_T;
 };
 
 struct PDIPADOpt
@@ -821,6 +826,25 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int maneuver;	//0 = CSI, 1 = CDH
 };
 
+struct PDAPOpt //Powered Descent Abort Program
+{
+	SV sv_A;
+	SV sv_P;
+	double GETbase;
+	double TLAND;
+	MATRIX3 REFSMMAT;
+	VECTOR3 R_LS;
+	double dt_stage;
+	//LM vehicle weight immediately after staging
+	double W_TAPS;
+	//LM weight representative of DPS fuel depletion
+	double W_TDRY;
+	//Initial LM weight
+	double W_INIT;
+	//DT between successive abort points
+	double dt_step;
+};
+
 struct DockAlignOpt	//Docking Alignment Processor
 {
 	//Option 1: LM REFSMMAT from CSM REFSMMAT, CSM attitude, docking angle and LM gimbal angles
@@ -863,6 +887,8 @@ struct calculationParameters {
 	MATRIX3 StoredREFSMMAT;
 	double TEPHEM;	// MJD of CMC liftoff time
 	double PericynthionLatitude;	//Latitude of pericynthion in Earth-Moon Plane coordinates
+	double TIGSTORE1;		//Temporary TIG storage
+	VECTOR3 DVSTORE1;		//Temporary DV storage
 };
 
 //For LVDC
@@ -979,6 +1005,8 @@ public:
 	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
 	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip);
 	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out);
+	VECTOR3 ConvertDVtoLVLH(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_imp);
+	VECTOR3 ConvertDVtoInertial(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_LVLH_imp);
 	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, double &GET_TIG, VECTOR3 &dV_LVLH);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
@@ -1000,7 +1028,10 @@ public:
 	bool TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
-	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc);
+	bool LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double t_L_guess, double t_TPI, double theta_F, LunarLiftoffResults &res);
+	bool LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double t_L_guess, LunarLiftoffResults &res);
+	bool LunarLiftoffTimePredictionDT(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double dt_2, double DH, double E, double t_L_guess, double theta_F, LunarLiftoffResults &res);
+	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
@@ -1018,6 +1049,8 @@ public:
 	VECTOR3 CircularizationManeuverInteg(SV sv0);
 	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval(double get);
+	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, MATRIX3 REFSMMAT, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG);
+	void PoweredDescentAbortProgram(PDAPOpt opt);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

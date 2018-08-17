@@ -235,6 +235,7 @@ public:
 	void menuSetRendezvousPage();
 	void menuSetDKIPage();
 	void menuSetDKIOptionsPage();
+	void menuSetLunarAscentPage();
 	void cycleVECDirOpt();
 	void vecbodydialogue();
 	void set_vecbody(OBJHANDLE body);
@@ -277,6 +278,8 @@ public:
 	void menuSetPCAlignGET();
 	void set_PCAlignGET(double time);
 	void menuSetPCLanded();
+	void menuSetLiftoffguess();
+	void set_Liftoffguess(double time);
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLunarLiftoffTimeOption();
@@ -303,6 +306,7 @@ public:
 	void menuNavCheckPADCalc();
 	void menuSetNavCheckGET();
 	void set_NavCheckGET(double time);
+	void menuLAPCalc();
 	void menuDKICalc();
 	void DKITIGDialogue();
 	void set_DKITIG(double time);
@@ -323,6 +327,13 @@ public:
 	void set_DKIDT2(double dt);
 	void menuDKIDeltaT3();
 	void set_DKIDT3(double dt);
+	void menuSetLAPLiftoffTime();
+	void set_LAPLiftoffTime(double time);
+	void set_LAPLiftoffTime_DT_PDI(double dt);
+	void menuSetLAPHorVelocity();
+	void set_LAPHorVelocity(double vel);
+	void menuSetLAPVerVelocity();
+	void set_LAPVerVelocity(double vel);
 	void menuSetDAPPADPage();
 	void menuDAPPADCalc();
 	void menuSetLVDCPage();

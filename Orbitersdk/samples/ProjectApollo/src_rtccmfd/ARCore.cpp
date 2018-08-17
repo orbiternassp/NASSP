@@ -695,14 +695,23 @@ ARCore::ARCore(VESSEL* v)
 	LunarLiftoffTimeOption = 0;
 	t_TPIguess = 0.0;
 	DT_Ins_TPI = 40.0*60.0;
-	LunarLiftoffTimes.t_CDH = 0.0;
-	LunarLiftoffTimes.t_CSI = 0.0;
-	LunarLiftoffTimes.t_Ins = 0.0;
-	LunarLiftoffTimes.t_L = 0.0;
-	LunarLiftoffTimes.t_TPI = 0.0;
-	LunarLiftoffTimes.t_TPF = 0.0;
-	LunarLiftoffTimes.v_LH = 0.0;
-	LunarLiftoffTimes.v_LV = 0.0;
+	t_Liftoff_guess = 0.0;
+	LunarLiftoffRes.t_CDH = 0.0;
+	LunarLiftoffRes.t_CSI = 0.0;
+	LunarLiftoffRes.t_Ins = 0.0;
+	LunarLiftoffRes.t_L = 0.0;
+	LunarLiftoffRes.t_TPI = 0.0;
+	LunarLiftoffRes.t_TPF = 0.0;
+	LunarLiftoffRes.v_LH = 0.0;
+	LunarLiftoffRes.v_LV = 0.0;
+	LunarLiftoffRes.DV_CDH = 0.0;
+	LunarLiftoffRes.DV_CSI = 0.0;
+	LunarLiftoffRes.DV_T = 0.0;
+	LunarLiftoffRes.DV_TPF = 0.0;
+	LunarLiftoffRes.DV_TPI = 0.0;
+
+	LAP_Theta = 10.0*RAD;
+	LAP_DT = 7.0*60.0 + 15.0;
 
 	EMPUplinkType = 0;
 	EMPUplinkNumber = 0;
@@ -954,6 +963,11 @@ void ARCore::PDI_PAD()
 void ARCore::DKICalc()
 {
 	startSubthread(19);
+}
+
+void ARCore::LAPCalc()
+{
+	startSubthread(20);
 }
 
 void ARCore::DAPPADCalc()
@@ -2859,15 +2873,17 @@ int ARCore::subThread()
 	case 15:	//Lunar Liftoff Time Prediction
 	{
 		LunarLiftoffTimeOpt opt;
+		SV sv_CSM;
 
-		LEM *lem = (LEM *)vessel;
-		opt.m0 = lem->GetAscentStageMass();
+		sv_CSM = rtcc->StateVectorCalc(target);
 
 		opt.GETbase = GETbase;
 		opt.opt = LunarLiftoffTimeOption;
-		opt.target = target;
-		opt.t_TPIguess = t_TPIguess;
+		opt.t_hole = t_Liftoff_guess;
 		opt.dt_2 = DT_Ins_TPI;
+		opt.sv_CSM = sv_CSM;
+		opt.dt_1 = LAP_DT;
+		opt.theta_1 = LAP_Theta;
 
 		if (vessel->GroundContact())
 		{
@@ -2886,8 +2902,8 @@ int ARCore::subThread()
 			opt.lng = LSLng;
 		}
 
-		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffTimes);
-		t_TPI = LunarLiftoffTimes.t_TPI;
+		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffRes);
+		t_TPI = LunarLiftoffRes.t_TPI;
 
 		Result = 0;
 	}
@@ -3061,6 +3077,27 @@ int ARCore::subThread()
 			rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
 		}
 		t_TPI = dkiresult.t_TPI;
+
+		Result = 0;
+	}
+	break;
+	case 20: //Lunar Ascent Processor
+	{
+		SV sv_CSM, sv_Ins;
+		VECTOR3 R_LS;
+		double theta, dt, m0;
+		double rad = oapiGetSize(oapiGetObjectByName("Moon"));
+
+		sv_CSM = rtcc->StateVectorCalc(target);
+		LEM *l = (LEM *)vessel;
+		m0 = l->GetAscentStageMass();
+		R_LS = OrbMech::r_from_latlong(LSLat, LSLng, LSAlt + rad);
+
+		rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, LunarLiftoffRes.t_L, LunarLiftoffRes.v_LH, LunarLiftoffRes.v_LV, theta, dt, sv_Ins);
+
+		LAP_Theta = theta;
+		LAP_DT = dt;
+		LAP_SV_Insertion = sv_Ins;
 
 		Result = 0;
 	}

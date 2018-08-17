@@ -26,8 +26,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "OrbMech.h"
 #include "LMGuidanceSim.h"
 
-const double AscentGuidance::F = 15297.43;
-const double AscentGuidance::Isp = (308.8 * G);
+const double AscentGuidance::F_APS = 15297.43;
+const double AscentGuidance::F_DPS = 43192.23;
+const double AscentGuidance::Isp_APS = (308.8 * G);
+const double AscentGuidance::Isp_DPS = 3107.0;
 const double AscentGuidance::mu_M = GGRAV * 7.34763862e+22;
 const double AscentGuidance::t_2 = 2.0;
 const double AscentGuidance::t_3 = 10.0;
@@ -45,9 +47,12 @@ AscentGuidance::AscentGuidance()
 	FLVP = true;
 }
 
-void AscentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, double v_hor, double v_rad)
+void AscentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, double v_hor, double v_rad, bool aps)
 {
 	Q = unit(crossp(R_C, V_C));
+
+	SetThrustParams(aps);
+
 	m_dot = F / Isp;
 	a_T = F / m0;
 	v_e = F / m_dot;
@@ -58,7 +63,26 @@ void AscentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, doubl
 	R_D_dot = v_rad;
 }
 
-void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, VECTOR3 &U_FDP, double &ttgo, double &Thrust)
+void AscentGuidance::SetThrustParams(bool aps)
+{
+	if (aps)
+	{
+		F = F_APS;
+		Isp = Isp_APS;
+	}
+	else
+	{
+		F = F_DPS;
+		Isp = Isp_DPS;
+	}
+}
+
+void AscentGuidance::SetTGO(double tgo)
+{
+	t_go = tgo;
+}
+
+void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp)
 {
 	tau = M / m_dot;
 	a_T = v_e / tau;
@@ -141,10 +165,73 @@ void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, VECTOR3 &U_FDP, do
 		}
 	}
 	Thrust = F;
+	isp = Isp;
+}
+
+const double DescentGuidance::UT = 7.5;
+const double DescentGuidance::TRMT = 26.0;
+const double DescentGuidance::THRUL = 889.644;
+const double DescentGuidance::THRTRM = 4670.633;
+const double DescentGuidance::THRMAX = 43192.23;
+const double DescentGuidance::ULISP = 268.0*G;
+const double DescentGuidance::XKISP = 3107.0;
+
+DescentGuidance::DescentGuidance()
+{
+	PHASE = -2;
+}
+
+void DescentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I)
+{
+	t_IG = t_I;
+}
+
+void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double t_cur, double M, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp)
+{
+	if (PHASE == -2)
+	{
+		if (t_cur - t_IG > -UT)
+		{
+			PHASE++;
+		}
+	}
+	else if (PHASE == -1)
+	{
+		if (t_cur - t_IG > TRMT)
+		{
+			PHASE = 0;
+		}
+	}
+
+	if (PHASE == -2)
+	{
+		Thrust = 0.0;
+		isp = 1.0;
+	}
+	else if (PHASE == -1)
+	{
+		if (t_cur - t_IG < 0.0)
+		{
+			Thrust = THRUL;
+			isp = ULISP;
+		}
+		else
+		{
+			Thrust = THRTRM;
+			isp = XKISP;
+		}
+	}
+	else
+	{
+		Thrust = THRMAX;
+		isp = XKISP;
+	}
+
+	U_FDP = -unit(V);
+	ttgo = 100.0;
 }
 
 const double AscDescIntegrator::mu_M = GGRAV * 7.34763862e+22;
-const double AscDescIntegrator::Isp = (308.8 * G);
 
 AscDescIntegrator::AscDescIntegrator()
 {
@@ -152,7 +239,7 @@ AscDescIntegrator::AscDescIntegrator()
 	dt_max = 2.0;
 }
 
-bool AscDescIntegrator::Integration(VECTOR3 &R, VECTOR3 &V, double &mnow, double &t_total, VECTOR3 U_TD, double t_remain, double Thrust)
+bool AscDescIntegrator::Integration(VECTOR3 &R, VECTOR3 &V, double &mnow, double &t_total, VECTOR3 U_TD, double t_remain, double Thrust, double Isp)
 {
 	dt = min(dt_max, t_remain);
 	DVDT = U_TD * Thrust / mnow * dt;

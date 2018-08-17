@@ -220,8 +220,32 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to Separation maneuver update
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11AGSACT, SubStateTime > 5.0*60.0, 36, MST_G_LUNAR_ORBIT_PDI_DAY_10);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_10: // Separation maneuver update to DOI update
+	case MST_G_LUNAR_ORBIT_PDI_DAY_10: //Separation maneuver update to DOI update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 13 && MoonRevTime > 30.0*60.0, 37, MST_G_LUNAR_ORBIT_PDI_DAY_12);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_12: //DOI update to PDI PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 38, MST_G_LUNAR_ORBIT_PDI_DAY_13);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_13: //PDI PAD to PDI Abort PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11PDIPAD, SubStateTime > 3.0*60.0, 70, MST_G_LUNAR_ORBIT_PDI_DAY_14);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_14: //PDI Abort PAD to No PDI+12 PAD
+		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 71, MST_G_LUNAR_ORBIT_PDI_DAY_15);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_15: //No PDI+12 PAD to Lunar Surface PAD 1
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 72, MST_G_LUNAR_ORBIT_PDI_DAY_16);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_16: //Lunar Surface PAD 1 to Lunar Surface PAD 2
+		UpdateMacro(UTP_PADONLY, PT_AP11T2ABORTPAD, SubStateTime > 3.0*60.0, 73, MST_G_LUNAR_ORBIT_PDI_DAY_17);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_17: //Lunar Surface PAD 2 to CSM Rescue PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11T3ABORTPAD, SubStateTime > 3.0*60.0, 74, MST_G_LUNAR_ORBIT_PDI_DAY_18);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_18: //CSM Rescue PAD to CSM P76 PADs
+		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 75, MST_G_LUNAR_ORBIT_PDI_DAY_19);
+		break;
+	case MST_G_LUNAR_ORBIT_PDI_DAY_19: //CSM P76 PADs to PDI1 Evaluation
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11P76PAD, rtcc->calcParams.PDI + 2.0*60.0, 76, MST_G_LUNAR_ORBIT_PDI_DAY_20);
 		break;
 	}
 }
