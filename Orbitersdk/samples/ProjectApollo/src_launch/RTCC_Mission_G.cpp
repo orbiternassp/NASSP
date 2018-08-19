@@ -1573,6 +1573,31 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 77: //DOI EVALUATION
+	{
+
+	}
+	break;
+	case 78: //PDI EVALUATION
+	{
+
+	}
+	break;
+	case 79: //LANDING EVALUATION
+	{
+		sprintf(upMessage, "We copy you down, Eagle");
+	}
+	break;
+	case 80: //STAY FOR T1
+	{
+		sprintf(upMessage, "Stay for T1");
+	}
+	break;
+	case 81: //STAY FOR T2
+	{
+		sprintf(upMessage, "Stay for T2");
+	}
+	break;
 	}
 
 	return scrubbed;

@@ -48,7 +48,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_P37PAD, SubStateTime > 3.0*60.0, 13, MST_G_EPO4);
 		break;
 	case MST_G_EPO4: //TLI PAD to TLI Evaluation
-		UpdateMacro(UTP_PADONLY, PT_TLIPAD, rtcc->GETEval(rtcc->calcParams.TLI), 14, MST_G_TRANSLUNAR1);
+		UpdateMacro(UTP_PADONLY, PT_TLIPAD, rtcc->GETEval(rtcc->calcParams.TLI + 18.0), 14, MST_G_TRANSLUNAR1);
 		break;
 	case MST_G_TRANSLUNAR1: //TLI Evaluation to Evasive Maneuver Update
 		UpdateMacro(UTP_NONE, PT_NONE, true, 15, MST_G_TRANSLUNAR2, scrubbed, rtcc->GETEval(3.0*3600.0), MST_G_EPO1);
@@ -71,6 +71,7 @@ void MCC::MissionSequence_G()
 		}
 		break;
 		}
+		break;
 	case MST_G_TRANSLUNAR3: //Evasive Maneuver Update to TB8 Enable
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TLI + 3600.0 + 30.0*60.0), 16, MST_G_TRANSLUNAR4);
 		break;
@@ -233,19 +234,34 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 71, MST_G_LUNAR_ORBIT_PDI_DAY_15);
 		break;
 	case MST_G_LUNAR_ORBIT_PDI_DAY_15: //No PDI+12 PAD to Lunar Surface PAD 1
-		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, rtcc->GETEval(rtcc->calcParams.SEP + 3.0*60.0), 72, MST_G_LUNAR_ORBIT_PDI_DAY_16);
+		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, rtcc->GETEval(rtcc->calcParams.SEP + 3.0*60.0), 72, MST_G_LUNAR_ORBIT_PRE_DOI_1);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_16: //Lunar Surface PAD 1 to Lunar Surface PAD 2
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11T2ABORTPAD, SubStateTime > 3.0*60.0, 73, MST_G_LUNAR_ORBIT_PDI_DAY_17);
+	case MST_G_LUNAR_ORBIT_PRE_DOI_1: //Lunar Surface PAD 1 to Lunar Surface PAD 2
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11T2ABORTPAD, SubStateTime > 3.0*60.0, 73, MST_G_LUNAR_ORBIT_PRE_DOI_2);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_17: //Lunar Surface PAD 2 to CSM Rescue PAD
-		UpdateMacro(UTP_PADONLY, PT_AP11T3ABORTPAD, SubStateTime > 3.0*60.0, 74, MST_G_LUNAR_ORBIT_PDI_DAY_18);
+	case MST_G_LUNAR_ORBIT_PRE_DOI_2: //Lunar Surface PAD 2 to CSM Rescue PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11T3ABORTPAD, SubStateTime > 3.0*60.0, 74, MST_G_LUNAR_ORBIT_PRE_DOI_3);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_18: //CSM Rescue PAD to CSM P76 PADs
-		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 75, MST_G_LUNAR_ORBIT_PDI_DAY_19);
+	case MST_G_LUNAR_ORBIT_PRE_DOI_3: //CSM Rescue PAD to CSM P76 PADs
+		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 75, MST_G_LUNAR_ORBIT_PRE_DOI_4);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_19: //CSM P76 PADs to PDI1 Evaluation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11P76PAD, rtcc->calcParams.PDI + 2.0*60.0, 76, MST_G_LUNAR_ORBIT_PDI_DAY_20);
+	case MST_G_LUNAR_ORBIT_PRE_DOI_4: //CSM P76 PADs to DOI Evaluation
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11P76PAD, rtcc->GETEval(rtcc->calcParams.DOI + 45.0*60.0), 76, MST_G_LUNAR_ORBIT_PRE_PDI_1);
+		break;
+	case MST_G_LUNAR_ORBIT_PRE_PDI_1: //DOI Evaluation to PDI Evaluation
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.PDI + 2.0*60.0), 77, MST_G_LUNAR_ORBIT_PRE_LANDING_1);
+		break;
+	case MST_G_LUNAR_ORBIT_PRE_LANDING_1: //PDI Evaluation to landing confirmation
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->calcParams.tgt->GroundContact(), 78, MST_G_LUNAR_ORBIT_POST_LANDING_1);
+		break;
+	case MST_G_LUNAR_ORBIT_POST_LANDING_1: //Landing confirmation to T1
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.PDI + 15.0*60.0), 79, MST_G_LUNAR_ORBIT_POST_LANDING_2);
+		break;
+	case MST_G_LUNAR_ORBIT_POST_LANDING_2: //T1 to T2
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.PDI + 19.0*60.0 + 30.0), 80, MST_G_LUNAR_ORBIT_POST_LANDING_3);
+		break;
+	case MST_G_LUNAR_ORBIT_POST_LANDING_3: //T2 to LM Tracking PAD
+		UpdateMacro(UTP_NONE, PT_NONE, MoonRev >= 14 && MoonRevTime > 90.0*60.0, 81, MST_G_LUNAR_ORBIT_POST_LANDING_4);
 		break;
 	}
 }
