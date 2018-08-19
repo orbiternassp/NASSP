@@ -1227,6 +1227,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "LEM_LR_START", sizeof("LEM_LR_START"))) {
 			LR.LoadState(scn, "LEM_LR_END");
 		}
+		else if (!strnicmp(line, LMOPTICS_START_STRING, sizeof(LMOPTICS_START_STRING))) {
+			optics.LoadState(scn);
+		}
 		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
 			fdaiLeft.LoadState(scn, FDAI_END_STRING);
 		}
@@ -1544,6 +1547,9 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
 	LR.SaveState(scn, "LEM_LR_START", "LEM_LR_END");
+
+	//Save Optics
+	optics.SaveState(scn);
 
 	// Save FDAIs
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
