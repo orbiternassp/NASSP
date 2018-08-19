@@ -1487,7 +1487,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else if (fcn == 68)
 		{
-			dt = OrbMech::HHMMSSToSS(214, 40, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
+			dt = OrbMech::HHMMSSToSS(214, 30, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
 			sv1 = coast(sv0, dt);
 
 			//Wilmington, North Carolina

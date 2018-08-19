@@ -71,6 +71,7 @@ RTCC::RTCC()
 	calcParams.lat_node = 0.0;
 	calcParams.lng_node = 0.0;
 	calcParams.LOI = 0.0;
+	calcParams.SEP = 0.0;
 	calcParams.DOI = 0.0;
 	calcParams.PDI = 0.0;
 	calcParams.TLAND = 0.0;
@@ -4656,7 +4657,7 @@ void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, dou
 	V71Update(str, emem, 17);
 	if (v66)
 	{
-		sprintf(str, "%sV66E", str);
+		sprintf(str, "%sV66EV37E00E", str);
 	}
 }
 
@@ -5046,6 +5047,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_EI", calcParams.EI);
 	SAVE_DOUBLE("RTCC_TLI", calcParams.TLI);
 	SAVE_DOUBLE("RTCC_LOI", calcParams.LOI);
+	SAVE_DOUBLE("RTCC_SEP", calcParams.SEP);
 	SAVE_DOUBLE("RTCC_DOI", calcParams.DOI);
 	SAVE_DOUBLE("RTCC_PDI", calcParams.PDI);
 	SAVE_DOUBLE("RTCC_TLAND", calcParams.TLAND);
@@ -5093,6 +5095,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_EI", calcParams.EI);
 		LOAD_DOUBLE("RTCC_TLI", calcParams.TLI);
 		LOAD_DOUBLE("RTCC_LOI", calcParams.LOI);
+		LOAD_DOUBLE("RTCC_SEP", calcParams.SEP);
 		LOAD_DOUBLE("RTCC_DOI", calcParams.DOI);
 		LOAD_DOUBLE("RTCC_PDI", calcParams.PDI);
 		LOAD_DOUBLE("RTCC_TLAND", calcParams.TLAND);

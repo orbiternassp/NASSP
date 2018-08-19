@@ -866,6 +866,7 @@ struct calculationParameters {
 	VECTOR3 R_TLI;		//TLI cutoff position vector
 	VECTOR3 V_TLI;		//TLI cutoff velocity vector
 	double LOI;			// Time of LOI/Pericynthion
+	double SEP;			// Time of separation
 	double DOI;			// Time of DOI
 	double PDI;			// Time of PDI
 	double TLAND;		// Time of landing

@@ -368,7 +368,7 @@ ARCore::ARCore(VESSEL* v)
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
 	EntryPADdirect = false; //false = Entry PAD with MCC/Deorbit burn, true = Direct Entry
-	enginetype = 0;
+	enginetype = 1;
 	directiontype = 0;
 	TPIPAD_AZ = 0.0;
 	TPIPAD_dH = 0.0;
