@@ -938,7 +938,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer1[1000];
 		char buffer2[1000];
 
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		sv = StateVectorCalc(calcParams.tgt); //State vector for uplink
 		GETbase = calcParams.TEPHEM;
 
 		doiopt.alt = calcParams.LSAlt;
@@ -954,6 +954,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.DOI = t_DOI;
 		calcParams.PDI = t_PDI;
 		calcParams.TLAND = t_land;
+
+		PoweredFlightProcessor(sv, GETbase, t_DOI, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, TimeofIgnition, DeltaV_LVLH);
 
 		opt.GETbase = GETbase;
 		opt.LSLat = calcParams.LSLat;
@@ -1029,10 +1031,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = calcParams.StoredREFSMMAT;
 
 		form->KFactor = 90.0*3600.0;
-		form->DEDA224 = 55766;
-		form->DEDA225 = 54272;
-		form->DEDA226 = 65511;
-		form->DEDA227 = -50181;
+		form->DEDA224 = 60267;
+		form->DEDA225 = 58148;
+		form->DEDA226 = 70312;
+		form->DEDA227 = -50031;
 
 		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
 		AGCStateVectorUpdate(buffer2, sv, true, AGCEpoch, GETbase);
@@ -1063,6 +1065,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		t_P = OrbMech::period(sv.R, sv.V, mu);
 		t_Sep = floor(calcParams.DOI - t_P / 2.0);
+		calcParams.SEP = t_Sep;
 		dV_LVLH = _V(0, 0, -2.5)*0.3048;
 
 		opt.alt = calcParams.LSAlt;
@@ -1369,10 +1372,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LambertMan opt;
 		AP11LMManPADOpt manopt;
 		TwoImpulseResuls res;
-		SV sv_LM, sv_DOI, sv_CSM, sv_CSM_upl;
+		SV sv_LM, sv_DOI, sv_CSM;
 		VECTOR3 dV_LVLH;
 		double GETbase, t_sunrise, t_CSI, t_TPI, dt, P30TIG, t_P, mu;
-		char buffer1[1000];
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1381,7 +1383,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv_LM, 0.0);
 
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
-		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*3600.0;
+		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*60.0;
 
 		opt.axis = RTCC_LAMBERT_MULTIAXIS;
 		opt.DH = 15.0*1852.0;
@@ -1390,11 +1392,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.N = 0;
 		opt.NCC_NSR_Flag = true;
 		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
-		opt.PhaseAngle = -4.0*RAD;
+		opt.PhaseAngle = -4.47*RAD;
 		opt.sv_A = sv_DOI;
 		opt.sv_P = sv_CSM;
+		//PDI+12
 		opt.T1 = calcParams.PDI + 12.0*60.0;
-		opt.T2 = opt.T1 + 3600.0 + 46.0;
+		//Estimate for T2
+		opt.T2 = opt.T1 + 3600.0 + 46.0*60.0;
 		opt.use_XYZ_Offset = false;
 
 		for (int i = 0;i < 2;i++)
@@ -1430,27 +1434,16 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->type = 1;
 		form->t_CSI = round(t_CSI);
 		form->t_TPI = round(t_TPI);
-
-		//CSM state vector, time tagged PDI+25 minutes
-		sv_CSM_upl = GeneralTrajectoryPropagation(sv_CSM, 0, OrbMech::MJDfromGET(calcParams.PDI + 25.0*60.0, GETbase));
-
-		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true, AGCEpoch, GETbase);
-
-		sprintf(uplinkdata, "%s", buffer1);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector");
-		}
 	}
 	break;
 	case 73: //T2 ABORT PAD
 	{
 		AP11T2ABORTPAD * form = (AP11T2ABORTPAD*)pad;
 
-		SV sv_CSM, sv_Ins;
+		SV sv_CSM, sv_Ins, sv_CSM_upl;
 		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
 		double T2, rad, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, mu, dt1, dt2, t_CSI1, t_sunrise, t_TPI;
+		char buffer1[1000];
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1477,12 +1470,23 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_CSI1 = t_C1 + dt2;
 
 		t_sunrise = calcParams.PDI + 7.0*3600.0;
-		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*3600.0;
+		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*60.0;
 
 		form->TIG = T2;
 		form->t_CSI1 = round(t_CSI1);
 		form->t_Phasing = round(t_C1);
 		form->t_TPI = round(t_TPI);
+
+		//CSM state vector, time tagged PDI+25 minutes
+		sv_CSM_upl = StateVectorCalc(calcParams.src, OrbMech::MJDfromGET(calcParams.PDI + 25.0*60.0, GETbase));
+		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
 	}
 	break;
 	case 74: //T3 ABORT PAD
@@ -1528,11 +1532,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_P = OrbMech::period(sv_CSM_over.R, sv_CSM_over.V, mu);
 		t_PPlusDT = res.t_L - OrbMech::GETfromMJD(sv_CSM_over.MJD, GETbase);
 
-		form->TIG = res.t_L;
-		form->t_CSI = res.t_CSI;
+		form->TIG = round(res.t_L);
+		form->t_CSI = round(res.t_CSI);
 		form->t_Period = t_P;
 		form->t_PPlusDT = t_PPlusDT;
-		form->t_TPI = res.t_TPI;
+		form->t_TPI = round(res.t_TPI);
 	}
 	break;
 	case 76: //P76 PAD for DOI AND NO PDI+12

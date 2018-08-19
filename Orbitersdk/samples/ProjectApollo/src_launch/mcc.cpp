@@ -2815,8 +2815,8 @@ void MCC::drawPad(){
 		SStoHHMMSS(form->GETI, hh[0], mm[0], ss[0]);
 		SStoHHMMSS(form->t_go, hh[1], mm[1], ss[1]);
 
-		sprintf(buffer, "PDI PAD\nHRS TIG %+06d\nMIN PDI %+06d\nSEC    %+07.2f\nTGO N61 XX%02d:%02.0f\nCROSSRANGE %+07.1f\nR FDAI XXX%03.0f\nP AT TIG XXX%03.0f\n"
-			"Y     XXX%03.0f\n DEDA 231 IF RQD %+06.0f", hh[0], mm[0], ss[0], mm[1], ss[1], form->CR, form->Att.x, form->Att.y, form->Att.z, form->DEDA231);
+		sprintf(buffer, "PDI PAD\n%+06d HRS TIG\n%+06d MIN PDI\n%+07.2f SEC\nXX%02d:%02.0f TGO N61\n%+07.1f CROSSRANGE\nXXX%03.0f R FDAI\nXXX%03.0f P AT TIG\n"
+			"XXX%03.0f Y\n%+06.0f DEDA 231 IF RQD", hh[0], mm[0], ss[0], mm[1], ss[1], form->CR, form->Att.x, form->Att.y, form->Att.z, form->DEDA231);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -2834,13 +2834,13 @@ void MCC::drawPad(){
 
 		if (form->type == 0)
 		{
-			sprintf(buffer, "PDI ABORT <10 MIN\nHRS N37 %+06d\nMIN TPI %+06d\nSEC    %+07.2f\nHRS     %+06d\nMIN     %+06d\nSEC PHASING TIG %+07.2f\n"
-				"HRS N37 %+06d\nMIN TPI %+06d\nSEC    %+07.2f", hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
+			sprintf(buffer, "PDI ABORT <10 MIN\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\n%+06d HRS\n%+06d MIN\n%+07.2f SEC PHASING TIG\n"
+				"%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC", hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
 		}
 		else
 		{
-			sprintf(buffer, "CSM RESCUE PAD\n PHAS 33 %05d:%05d:%06.2f\nTPI (PDI<10) 37 %05d:%05d:%06.2f\nTPI (PDI>10) 37 %05d:%05d:%06.2f",
-				hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2]);
+			sprintf(buffer, "CSM RESCUE PAD\nPHAS 33 %d:%02d:%05.2f\nTPI (PDI<10) 37 %d:%02d:%05.2f\nTPI (PDI>10) 37 %d:%02d:%05.2f",
+				hh[1], mm[1], ss[1], hh[0], mm[0], ss[0], hh[2], mm[2], ss[2]);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
