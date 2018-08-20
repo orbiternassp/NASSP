@@ -1837,6 +1837,34 @@ void MCC::SaveState(FILEHANDLE scn) {
 				SAVE_DOUBLE(tmpbuf, form->TIG[i]);
 			}
 		}
+		else if (padNumber == PT_AP11LMASCPAD)
+		{
+			AP11LMASCPAD *form = (AP11LMASCPAD*)padForm;
+
+			SAVE_DOUBLE("MCC_AP11LMASCPAD_CR", form->CR);
+			SAVE_DOUBLE("MCC_AP11LMASCPAD_DEDA047", form->DEDA047);
+			SAVE_DOUBLE("MCC_AP11LMASCPAD_DEDA053", form->DEDA053);
+			SAVE_DOUBLE("MCC_AP11LMASCPAD_DEDA225_226", form->DEDA225_226);
+			SAVE_DOUBLE("MCC_AP11LMASCPAD_DEDA231", form->DEDA231);
+			SAVE_DOUBLE("MCC_AP11LMASCPAD_TIG", form->TIG);
+			SAVE_DOUBLE("MCC_AP11LMASCPAD_V_hor", form->V_hor);
+			SAVE_DOUBLE("MCC_AP11LMASCPAD_V_vert", form->V_vert);
+		}
+		else if (padNumber == PT_LIFTOFFTIMES)
+		{
+			LIFTOFFTIMES *form = (LIFTOFFTIMES*)padForm;
+
+			char tmpbuf[64];
+
+			SAVE_INT("MCC_LIFTOFFTIMES_entries", form->entries);
+			SAVE_INT("MCC_LIFTOFFTIMES_startdigit", form->startdigit);
+
+			for (int i = 0;i < form->entries;i++)
+			{
+				sprintf(tmpbuf, "MCC_LIFTOFFTIMES_TIG[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->TIG[i]);
+			}
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2315,6 +2343,34 @@ void MCC::LoadState(FILEHANDLE scn) {
 				LOAD_DOUBLE(tmpbuf, form->TIG[i]);
 			}
 		}
+		else if (padNumber == PT_AP11LMASCPAD)
+		{
+			AP11LMASCPAD *form = (AP11LMASCPAD*)padForm;
+
+			LOAD_DOUBLE("MCC_AP11LMASCPAD_CR", form->CR);
+			LOAD_DOUBLE("MCC_AP11LMASCPAD_DEDA047", form->DEDA047);
+			LOAD_DOUBLE("MCC_AP11LMASCPAD_DEDA053", form->DEDA053);
+			LOAD_DOUBLE("MCC_AP11LMASCPAD_DEDA225_226", form->DEDA225_226);
+			LOAD_DOUBLE("MCC_AP11LMASCPAD_DEDA231", form->DEDA231);
+			LOAD_DOUBLE("MCC_AP11LMASCPAD_TIG", form->TIG);
+			LOAD_DOUBLE("MCC_AP11LMASCPAD_V_hor", form->V_hor);
+			LOAD_DOUBLE("MCC_AP11LMASCPAD_V_vert", form->V_vert);
+		}
+		else if (padNumber == PT_LIFTOFFTIMES)
+		{
+			LIFTOFFTIMES *form = (LIFTOFFTIMES*)padForm;
+
+			char tmpbuf[64];
+
+			LOAD_INT("MCC_LIFTOFFTIMES_entries", form->entries);
+			LOAD_INT("MCC_LIFTOFFTIMES_startdigit", form->startdigit);
+
+			for (int i = 0;i < form->entries;i++)
+			{
+				sprintf(tmpbuf, "MCC_LIFTOFFTIMES_TIG[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->TIG[i]);
+			}
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 		LOAD_INT("MCC_upType", upType);
@@ -2684,14 +2740,25 @@ void MCC::drawPad(){
 
 		int hh, hh2, mm, mm2;
 		double ss, ss2;
+		char buffer1[1000], buffer2[100], buffer3[200];
 
-		sprintf(buffer, "P32 CSI UPDATE");
 		SStoHHMMSS(form->t_CSI, hh, mm, ss);
 		SStoHHMMSS(form->t_TPI, hh2, mm2, ss2);
 
-		sprintf(buffer, "%s\n%+06d HR N11\n%+06d MIN TIG\n%+07.2f SEC CSI\n%+06d HR N37\n%+06d MIN TIG\n%+07.2f SEC TPI\n%+07.1f DVX LOCAL N81\n%+07.1f DVY VERT\n"
-			"XXX%03.0f PLM FDAI\n%+07.1f DVX AGS N86\n%+07.1f DVY AGS\n%+07.1f DVZ AGS\n", buffer, hh, mm, ss, hh2, mm2, ss2, form->dV_LVLH.x, form->dV_LVLH.y,
-			form->PLM_FDAI, form->dV_AGS.x, form->dV_AGS.y, form->dV_AGS.z);
+		sprintf(buffer1, "P32 CSI UPDATE\n%+06d HR N11\n%+06d MIN TIG\n%+07.2f SEC CSI\n%+06d HR N37\n%+06d MIN TIG\n%+07.2f SEC TPI\n%+07.1f DVX LOCAL N81\n%+07.1f DVY VERT\n"
+			"XXX%03.0f PLM FDAI\n", hh, mm, ss, hh2, mm2, ss2, form->dV_LVLH.x, form->dV_LVLH.y, form->PLM_FDAI);
+
+		if (form->type == 1)
+		{
+			sprintf(buffer2, "373 %+07.1f\n275 %+07.1f\n", form->DEDA373, form->DEDA275);
+		}
+		else
+		{
+			sprintf(buffer2, "");
+		}
+
+		sprintf(buffer3, "%+07.1f DVX AGS N86\n%+07.1f DVY AGS\n%+07.1f DVZ AGS", form->dV_AGS.x, form->dV_AGS.y, form->dV_AGS.z);
+		sprintf(buffer, "%s%s%s", buffer1, buffer2, buffer3);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -2905,6 +2972,37 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP11LMASCPAD:
+	{
+		AP11LMASCPAD *form = (AP11LMASCPAD*)padForm;
+
+		int hh, mm;
+		double ss;
+
+		SStoHHMMSS(form->TIG, hh, mm, ss);
+
+		sprintf(buffer, "LM ASCENT PAD\n%+06d HRS\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f V (HOR)\n%07.1f V (VERT) N76\n%07.1f CROSSRANGE\n"
+			"%+06.0f DEDA 047\n%+06.0f DEDA 053\n%+06.0f DEDA 225/226\n%+06.0f DEDA 231", hh, mm, ss, form->V_hor, form->V_vert, form->CR,
+			form->DEDA047, form->DEDA053, form->DEDA225_226, form->DEDA231);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_LIFTOFFTIMES:
+	{
+		LIFTOFFTIMES *form = (LIFTOFFTIMES*)padForm;
+
+		sprintf(buffer, "LIFTOFF TIMES\n");
+
+		for (int i = 0;i < form->entries;i++)
+		{
+			format_time(tmpbuf, form->TIG[i]);
+			sprintf(buffer, "%sT%d %s\n", buffer, form->startdigit + i, tmpbuf);
+		}
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3014,6 +3112,12 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP11P76PAD: // AP11P76PAD
 		padForm = calloc(1, sizeof(AP11P76PAD));
+		break;
+	case PT_AP11LMASCPAD: // AP11LMASCPAD
+		padForm = calloc(1, sizeof(AP11LMASCPAD));
+		break;
+	case PT_LIFTOFFTIMES: // LIFTOFFTIMES
+		padForm = calloc(1, sizeof(LIFTOFFTIMES));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

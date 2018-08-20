@@ -79,6 +79,7 @@ RTCC::RTCC()
 	calcParams.LSAzi = 0.0;
 	calcParams.LSLat = 0.0;
 	calcParams.LSLng = 0.0;
+	calcParams.LunarLiftoff = 0.0;
 	calcParams.Insertion = 0.0;
 	calcParams.Phasing = 0.0;
 	calcParams.CSI = 0.0;
@@ -92,6 +93,11 @@ RTCC::RTCC()
 	calcParams.PericynthionLatitude = 0.0;
 	calcParams.TIGSTORE1 = 0.0;
 	calcParams.DVSTORE1 = _V(0, 0, 0);
+	calcParams.SVSTORE1.gravref = NULL;
+	calcParams.SVSTORE1.mass = 0.0;
+	calcParams.SVSTORE1.MJD = 0.0;
+	calcParams.SVSTORE1.R = _V(0, 0, 0);
+	calcParams.SVSTORE1.V = _V(0, 0, 0);
 }
 
 void RTCC::Init(MCC *ptr)
@@ -4661,6 +4667,29 @@ void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, dou
 	}
 }
 
+void RTCC::LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr)
+{
+	VECTOR3 R_P, R;
+	double r_0;
+	int emem[8];
+
+	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
+	r_0 = oapiGetSize(oapiGetObjectByName("Moon"));
+
+	R = R_P * (r_0 + alt);
+
+	emem[0] = 10;
+	emem[1] = RLSAddr;
+	emem[2] = OrbMech::DoubleToBuffer(R.x, 27, 1);
+	emem[3] = OrbMech::DoubleToBuffer(R.x, 27, 0);
+	emem[4] = OrbMech::DoubleToBuffer(R.y, 27, 1);
+	emem[5] = OrbMech::DoubleToBuffer(R.y, 27, 0);
+	emem[6] = OrbMech::DoubleToBuffer(R.z, 27, 1);
+	emem[7] = OrbMech::DoubleToBuffer(R.z, 27, 0);
+
+	V71Update(str, emem, 8);
+}
+
 void RTCC::IncrementAGCTime(char *list, double dt)
 {
 	int emem[2];
@@ -5055,6 +5084,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
 	SAVE_DOUBLE("RTCC_LSLat", calcParams.LSLat);
 	SAVE_DOUBLE("RTCC_LSLng", calcParams.LSLng);
+	SAVE_DOUBLE("RTCC_LunarLiftoff", calcParams.LunarLiftoff);
 	SAVE_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 	SAVE_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 	SAVE_DOUBLE("RTCC_CSI", calcParams.CSI);
@@ -5075,6 +5105,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_V3("RTCC_DVSTORE1", calcParams.DVSTORE1);
 	// Matrizes
 	SAVE_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
+	// State vectors
+	papiWriteScenario_SV(scn, "RTCC_SVSTORE1", calcParams.SVSTORE1);
 	oapiWriteLine(scn, RTCC_END_STRING);
 }
 
@@ -5103,6 +5135,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_LSAzi", calcParams.LSAzi);
 		LOAD_DOUBLE("RTCC_LSLat", calcParams.LSLat);
 		LOAD_DOUBLE("RTCC_LSLng", calcParams.LSLng);
+		LOAD_DOUBLE("RTCC_LunarLiftoff", calcParams.LunarLiftoff);
 		LOAD_DOUBLE("RTCC_Insertion", calcParams.Insertion);
 		LOAD_DOUBLE("RTCC_Phasing", calcParams.Phasing);
 		LOAD_DOUBLE("RTCC_CSI", calcParams.CSI);
@@ -5120,6 +5153,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_V3("RTCC_V_TLI", calcParams.V_TLI);
 		LOAD_V3("RTCC_DVSTORE1", calcParams.DVSTORE1);
 		LOAD_M3("RTCC_StoredREFSMMAT", calcParams.StoredREFSMMAT);
+		papiReadScenario_SV(line, "RTCC_SVSTORE1", calcParams.SVSTORE1);
 	}
 	return;
 }
@@ -5540,7 +5574,7 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 	{
 		MJDguess = opt->GETbase + opt->LmkTime[i] / 24.0 / 3600.0;
 
-		R_P = unit(_V(cos(opt->lng[i])*cos(opt->lat[i]), sin(opt->lat[i]), sin(opt->lng[i])*cos(opt->lat[i])))*(oapiGetSize(gravref) + opt->alt[i]);
+		R_P = unit(_V(cos(opt->lng[i])*cos(opt->lat[i]), sin(opt->lng[i])*cos(opt->lat[i]), sin(opt->lat[i])))*(oapiGetSize(gravref) + opt->alt[i]);
 
 		OrbMech::oneclickcoast(RA0, VA0, SVMJD, opt->LmkTime[i] - get, RA1, VA1, gravref, gravref);
 
@@ -5878,7 +5912,7 @@ gtupdate:
 	dV_LVLH = _V(1.0, 0.0, 0.0)*(dV - a_T_cut * dt_tailoff);
 }
 
-void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out)
+void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out, bool agc)
 {
 	//For CSM, LM or CSM/LM docked maneuvers
 	//INPUT:
@@ -5956,28 +5990,38 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 		}
 	}
 
-	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, f_T, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
+	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, f_T, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass, agc);
 
 	sv_out.mass -= attachedMass;
 }
 
-void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip)
+void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc)
 {
 	SV sv_out;
 
-	FiniteBurntimeCompensation(vesseltype, sv, attachedMass, DV, engine, DV_imp, t_slip, sv_out);
+	FiniteBurntimeCompensation(vesseltype, sv, attachedMass, DV, engine, DV_imp, t_slip, sv_out, agc);
 }
 
-void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, double &GET_TIG, VECTOR3 &dV_LVLH)
+void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc)
 {
 	SV sv_pre, sv_tig, sv_post;
 	MATRIX3 Q_Xx;
-	VECTOR3 Llambda;
+	VECTOR3 Llambda, DeltaV;
 	double t_slip;
 
 	sv_pre = coast(sv0, GET_TIG_imp - OrbMech::GETfromMJD(sv0.MJD, GETbase));
 
-	FiniteBurntimeCompensation(vesseltype, sv_pre, attachedMass, DV, enginetype, Llambda, t_slip, sv_post);
+	if (DVIsLVLH)
+	{
+		Q_Xx = OrbMech::LVLH_Matrix(sv_pre.R, sv_pre.V);
+		DeltaV = tmul(Q_Xx, DV);
+	}
+	else
+	{
+		DeltaV = DV;
+	}
+
+	FiniteBurntimeCompensation(vesseltype, sv_pre, attachedMass, DeltaV, enginetype, Llambda, t_slip, sv_post, agc);
 
 	sv_tig = coast(sv_pre, t_slip);
 
@@ -6092,7 +6136,7 @@ void RTCC::FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double
 	VECTOR3 R_P;
 	double LmkRange, dt1, dt2;
 
-	R_P = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*oapiGetSize(sv.gravref);
+	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)))*oapiGetSize(sv.gravref);
 
 	dt1 = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 175.0*RAD, sv.gravref, LmkRange);
 	dt2 = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 5.0*RAD, sv.gravref, LmkRange);
@@ -6106,7 +6150,7 @@ void RTCC::FindRadarMidPass(SV sv, double GETbase, double lat, double lng, doubl
 	VECTOR3 R_P;
 	double LmkRange, dt;
 
-	R_P = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*oapiGetSize(sv.gravref);
+	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)))*oapiGetSize(sv.gravref);
 
 	dt = OrbMech::findelev_gs(sv.R, sv.V, R_P, sv.MJD, 90.0*RAD, sv.gravref, LmkRange);
 
@@ -7456,7 +7500,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 	theta_F = 130.0*RAD;
 	h_1 = 60000.0*0.3048;
-	theta_Ins = 17.0*RAD;
+	theta_Ins = 18.0*RAD;
 	DH = 15.0*1852.0;
 	E = 26.6*RAD;
 
@@ -8995,4 +9039,53 @@ bool RTCC::LunarLiftoffTimePredictionDT(VECTOR3 R_LS, SV sv_P, double GETbase, O
 	res.DV_T = res.DV_TPI + res.DV_TPF;
 
 	return true;
+}
+
+double RTCC::GetSemiMajorAxis(SV sv)
+{
+	double mu = GGRAV * oapiGetMass(sv.gravref);
+	double eps = length(sv.V)*length(sv.V) / 2.0 - mu / (length(sv.R));
+	return -mu / (2.0*eps);
+}
+
+void RTCC::papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv)
+{
+
+	char buffer[256], name[16];
+
+	if (sv.gravref)
+	{
+		oapiGetObjectName(sv.gravref, name, 16);
+	}
+	else
+	{
+		sprintf(name, "None");
+	}
+
+	sprintf(buffer, "  %s %s %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, name, sv.mass, sv.MJD, sv.R.x, sv.R.y, sv.R.z, sv.V.x, sv.V.y, sv.V.z);
+	oapiWriteLine(scn, buffer);
+}
+
+bool RTCC::papiReadScenario_SV(char *line, char *item, SV &sv)
+{
+
+	char buffer[256], name[16];
+	SV v;
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			if (sscanf(line, "%s %s %lf %lf %lf %lf %lf %lf %lf %lf", buffer, name, &v.mass, &v.MJD, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 10) {
+				v.gravref = oapiGetObjectByName(name);
+				sv = v;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+VECTOR3 RTCC::RLS_from_latlng(double lat, double lng, double alt)
+{
+	double R_M = oapiGetSize(oapiGetObjectByName("Moon"));
+	return OrbMech::r_from_latlong(lat, lng, R_M + alt);
 }

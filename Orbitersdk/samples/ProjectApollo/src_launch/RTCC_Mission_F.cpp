@@ -1468,7 +1468,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.DOI = t_DOI_imp;
 		calcParams.TLAND = t_land;
 
-		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, TimeofIgnition, DeltaV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.csmlmdocked = false;
@@ -1551,7 +1551,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T2 = calcParams.Insertion;
 
 		LambertTargeting(&lamopt, res);
-		PoweredFlightProcessor(sv_DOI, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_DOI, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;
@@ -1612,7 +1612,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dkiopt.t_TPI_guess = t_TPI_Abort;
 
 		DockingInitiationProcessor(dkiopt, dkires);
-		PoweredFlightProcessor(sv_DOI, GETbase, t_Abort, 1, 1, 0.0, dkires.DV_Phasing, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_DOI, GETbase, t_Abort, 1, 1, 0.0, dkires.DV_Phasing, false, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.csmlmdocked = false;
@@ -1662,7 +1662,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T2 = calcParams.CSI;
 
 		LambertTargeting(&lamopt, res);
-		PoweredFlightProcessor(sv_CSM, GETbase, lamopt.T1, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_CSM, GETbase, lamopt.T1, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;
@@ -1745,7 +1745,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lamopt.T2 = calcParams.CSI;
 
 		LambertTargeting(&lamopt, res);
-		PoweredFlightProcessor(sv_LM, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, res.dV, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_LM, GETbase, lamopt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = dV_LVLH;

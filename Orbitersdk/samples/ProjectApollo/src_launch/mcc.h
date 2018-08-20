@@ -166,6 +166,8 @@
 #define PT_AP11T2ABORTPAD	25
 #define PT_AP11T3ABORTPAD	26
 #define PT_AP11P76PAD		27
+#define PT_AP11LMASCPAD		28
+#define PT_LIFTOFFTIMES		29
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -540,11 +542,24 @@ struct AP10DAPDATA
 
 struct AP10CSI
 {
+	AP10CSI() : type(0) {}
 	double t_CSI;
 	double t_TPI;
 	VECTOR3 dV_LVLH;
 	double PLM_FDAI;
 	VECTOR3 dV_AGS;
+	double DEDA373;
+	double DEDA275;
+	int type;		//0 = Apollo 10, 1 = Apollo 11 CSI Data Card
+};
+
+//LIFTOFF TIME LIST
+struct LIFTOFFTIMES
+{
+	LIFTOFFTIMES() : entries(0) {}
+	double TIG[10];
+	int entries;
+	int startdigit;
 };
 
 //APOLLO 9 LM AOT STAR OBSERVATION PAD
@@ -629,6 +644,20 @@ struct AP11P76PAD
 	char purpose[2][16];
 	double TIG[2];
 	VECTOR3 DV[2];
+};
+
+//APOLLO 11 LM ASCENT PAD
+
+struct AP11LMASCPAD
+{
+	double TIG;			//Time of APS ignition for LM ascent
+	double V_hor;		//horizontal velocity at orbit insertion
+	double V_vert;		//Vertical velocity at orbit insertion
+	double CR;			//Crossrange distance at orbital insertion
+	double DEDA047;		//Sine of landing azimuth angle
+	double DEDA053;		//Cosine of landing azimuth angle
+	double DEDA225_226;	//Lower/Upper limit of semi-major axis at orbit insertion
+	double DEDA231;		//Radial distance of launch site from center of Moon
 };
 
 //GENERIC STRING
