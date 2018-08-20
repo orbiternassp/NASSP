@@ -1701,6 +1701,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 92: //LIFTOFF TIME UPDATE T4 to T7
+	case 97: //LIFTOFF TIME UPDATE T8 to T10
 	{
 		LIFTOFFTIMES * form = (LIFTOFFTIMES*)pad;
 
@@ -1721,7 +1722,18 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.lat = calcParams.LSLat;
 		opt.lng = calcParams.LSLng;
 		opt.sv_CSM = sv_CSM;
-		opt.t_hole = calcParams.PDI + 3.5*3600.0;
+		if (fcn == 92)
+		{
+			opt.t_hole = calcParams.PDI + 3.5*3600.0;
+			form->entries = 4;
+			form->startdigit = 4;
+		}
+		else if (fcn == 97)
+		{
+			opt.t_hole = calcParams.PDI + 11.5*3600.0;
+			form->entries = 3;
+			form->startdigit = 8;
+		}
 
 		R_M = oapiGetSize(sv_CSM.gravref);
 		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
@@ -1734,15 +1746,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dt_1 = dt_1;
 
 
-		for (int i = 0;i < 4;i++)
+		for (int i = 0;i < form->entries;i++)
 		{
 			LaunchTimePredictionProcessor(&opt, &res);
 			form->TIG[i] = res.t_L;
 			opt.t_hole += 2.0*3600.0;
 		}
-
-		form->entries = 4;
-		form->startdigit = 4;
 	}
 	break;
 	case 93: //PLANE CHANGE EVALUATION
@@ -1866,6 +1875,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.vessel = calcParams.src;
 
 		REFSMMAT = REFSMMATCalc(&opt);
+		AGCDesiredREFSMMATUpdate(buffer, REFSMMAT, AGCEpoch);
 
 		sprintf(uplinkdata, "%s", buffer);
 		if (upString != NULL) {
