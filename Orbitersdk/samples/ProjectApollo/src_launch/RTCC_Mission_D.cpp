@@ -248,7 +248,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(21.0, 40.0, 0.0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, false, P30TIG, dV_LVLH);
 
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
@@ -314,7 +314,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(24.0, 50.0, 0.0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, false, P30TIG, dV_LVLH);
 
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
@@ -376,7 +376,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(28, 0, 0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, false, P30TIG, dV_LVLH);
 
 		refsopt.csmlmdocked = true;
 		refsopt.dV_LVLH = dV_LVLH;
@@ -469,7 +469,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 10, 0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.tgt), dV_imp, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.tgt), dV_imp, false, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -614,7 +614,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.TIG_GET = OrbMech::HHMMSSToSS(54, 0, 0);
 
 		GeneralManeuverProcessor(&opt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, GetDockedVesselMass(calcParams.src), dV_imp, false, P30TIG, dV_LVLH);
 
 		//ensure 40+ seconds burntime
 		dv_T = OrbMech::DVFromBurnTime(41.4, SPS_THRUST, SPS_ISP, calcParams.src->GetMass() + calcParams.tgt->GetMass());
@@ -895,7 +895,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		Q_Xx = OrbMech::LVLH_Matrix(sv1.R, sv1.V);
 		DV = tmul(Q_Xx, _V(0, 0, -dv));
 
-		PoweredFlightProcessor(sv, GETbase, calcParams.Phasing, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, calcParams.Phasing, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, false, P30TIG, dV_LVLH);
 
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
@@ -1166,7 +1166,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.Yaw = -45.0*RAD;
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, dV_imp, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_APS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -1309,7 +1309,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(121, 30, 0);
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -1791,7 +1791,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.N = 46;
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv0, GETbase, TIG_imp, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;

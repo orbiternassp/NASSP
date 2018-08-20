@@ -263,5 +263,35 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_POST_LANDING_3: //T2 to LM Tracking PAD
 		UpdateMacro(UTP_NONE, PT_NONE, MoonRev >= 14 && MoonRevTime > 90.0*60.0, 81, MST_G_LUNAR_ORBIT_POST_LANDING_4);
 		break;
+	case MST_G_LUNAR_ORBIT_POST_LANDING_4: //LM Tracking PAD to LM Ascent PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, MoonRev >= 15 && MoonRevTime > 5.0*60.0, 63, MST_G_LUNAR_ORBIT_POST_LANDING_5);
+		break;
+	case MST_G_LUNAR_ORBIT_POST_LANDING_5: //LM Ascent PAD to CSI Data Card
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMASCPAD, SubStateTime > 3.0*60.0, 90, MST_G_LUNAR_ORBIT_POST_LANDING_6);
+		break;
+	case MST_G_LUNAR_ORBIT_POST_LANDING_6: //CSI Data Card to Liftoff Times Update 1
+		UpdateMacro(UTP_PADONLY, PT_AP10CSI, MoonRev >= 15 && MoonRevTime > 40.0*60.0, 91, MST_G_LUNAR_ORBIT_POST_LANDING_7);
+		break;
+	case MST_G_LUNAR_ORBIT_POST_LANDING_7: //Liftoff Times Update 1 to Plane Change Evaluation
+		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, MoonRev >= 15 && MoonRevTime > 70.0*60.0, 92, MST_G_LUNAR_ORBIT_POST_LANDING_8);
+		break;
+	case MST_G_LUNAR_ORBIT_POST_LANDING_8: //Plane Change Evaluation to PC REFSMMAT or SV update (if PC scrubbed)
+		UpdateMacro(UTP_NONE, PT_NONE, true, 93, MST_G_LUNAR_ORBIT_PLANE_CHANGE_1, scrubbed, MoonRev >= 16 && MoonRevTime > 40.0*60.0, MST_G_LUNAR_ORBIT_NO_PLANE_CHANGE_1);
+		break;
+	case MST_G_LUNAR_ORBIT_NO_PLANE_CHANGE_1: //SV update to LM Liftoff Times Update 2
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 18 && MoonRevTime > 35.0*60.0, 1, MST_G_LUNAR_ORBIT_EVA_DAY_1);
+		break;
+	case MST_G_LUNAR_ORBIT_PLANE_CHANGE_1: //PC REFSMMAT to PC Update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 16 && MoonRevTime > 40.0*60.0, 94, MST_G_LUNAR_ORBIT_PLANE_CHANGE_2);
+		break;
+	case MST_G_LUNAR_ORBIT_PLANE_CHANGE_2: //PC Update to Lunar Liftoff REFSMMAT Uplink
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 16 && MoonRevTime > 95.0*60.0, 95, MST_G_LUNAR_ORBIT_PLANE_CHANGE_3);
+		break;
+	case MST_G_LUNAR_ORBIT_PLANE_CHANGE_3: //Lunar Liftoff REFSMMAT Uplink to LM Liftoff Times Update 2
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 18 && MoonRevTime > 35.0*60.0, 96, MST_G_LUNAR_ORBIT_EVA_DAY_1);
+		break;
+	case MST_G_LUNAR_ORBIT_EVA_DAY_1: //LM Liftoff Times Update 2 to LM Acquisition Time update
+		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, MoonRev >= 19 && MoonRevTime > 60.0*60.0, 97, MST_G_LUNAR_ORBIT_EVA_DAY_1);
+		break;
 	}
 }

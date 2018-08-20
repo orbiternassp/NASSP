@@ -870,6 +870,7 @@ struct calculationParameters {
 	double DOI;			// Time of DOI
 	double PDI;			// Time of PDI
 	double TLAND;		// Time of landing
+	double LunarLiftoff;// Time of lunar liftoff
 	double LSAlt;		// Height of the lunar landing site relative to mean lunar radius
 	double LSAzi;		// Approach azimuth to the lunar landing site
 	double LSLat;		// Latitude of the lunar landing site
@@ -890,6 +891,7 @@ struct calculationParameters {
 	double PericynthionLatitude;	//Latitude of pericynthion in Earth-Moon Plane coordinates
 	double TIGSTORE1;		//Temporary TIG storage
 	VECTOR3 DVSTORE1;		//Temporary DV storage
+	SV SVSTORE1;			//Temporary state vector storage
 };
 
 //For LVDC
@@ -1004,11 +1006,11 @@ public:
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double GETbase, double P30TIG, double TB5, double mu, double T_RG);
 	void LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI);
 	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
-	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip);
-	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out);
+	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc = true);
+	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out, bool agc = true);
 	VECTOR3 ConvertDVtoLVLH(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_imp);
 	VECTOR3 ConvertDVtoInertial(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_LVLH_imp);
-	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, double &GET_TIG, VECTOR3 &dV_LVLH);
+	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
@@ -1078,6 +1080,7 @@ private:
 	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
 	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	void AGCExternalDeltaVUpdate(char *str, double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
+	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
 	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
 	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
@@ -1100,6 +1103,10 @@ private:
 	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
 	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
+	double GetSemiMajorAxis(SV sv);
+	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
+	void papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv);
+	bool papiReadScenario_SV(char *line, char *item, SV &sv);
 	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
 	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
 

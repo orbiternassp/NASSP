@@ -1908,7 +1908,7 @@ int ARCore::subThread()
 			attachedMass = rtcc->GetDockedVesselMass(vessel);
 		}
 		rtcc->LambertTargeting(&opt, res);
-		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, P30TIG, dV_LVLH);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, false, P30TIG, dV_LVLH);
 		LambertdeltaV = dV_LVLH;
 
 		if (twoimpulsemode == 1)
@@ -1998,7 +1998,7 @@ int ARCore::subThread()
 		}
 
 		rtcc->GeneralManeuverProcessor(&opt, dV_imp, TIG_imp, GMPResults);
-		rtcc->PoweredFlightProcessor(sv0, GETbase, TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, dV_imp, P30TIG, OrbAdjDVX);
+		rtcc->PoweredFlightProcessor(sv0, GETbase, TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, dV_imp, false, P30TIG, OrbAdjDVX);
 
 		dV_LVLH = OrbAdjDVX;
 
@@ -2343,7 +2343,7 @@ int ARCore::subThread()
 		}
 
 		rtcc->DOITargeting(&opt, DOI_DV_imp, DOI_TIG_imp, DOI_t_PDI, t_Land, DOI_CR);
-		rtcc->PoweredFlightProcessor(sv, GETbase, DOI_TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, DOI_DV_imp, DOI_TIG, DOI_dV_LVLH);
+		rtcc->PoweredFlightProcessor(sv, GETbase, DOI_TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, DOI_DV_imp, false, DOI_TIG, DOI_dV_LVLH);
 
 		P30TIG = DOI_TIG;
 		dV_LVLH = DOI_dV_LVLH;
@@ -3074,7 +3074,7 @@ int ARCore::subThread()
 		rtcc->DockingInitiationProcessor(opt, dkiresult);
 		if (DKI_Profile != 3)
 		{
-			rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, P30TIG, dV_LVLH);
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, false, P30TIG, dV_LVLH);
 		}
 		t_TPI = dkiresult.t_TPI;
 

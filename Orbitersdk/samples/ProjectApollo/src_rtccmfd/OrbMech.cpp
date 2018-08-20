@@ -2422,8 +2422,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	r_P = length(R_gs);
 
 	Rot2 = OrbMech::GetRotationMatrix(gravref, mjd0);
-	R_P = mul(Rot2, R_gs);
-	R_P = _V(R_P.x, R_P.z, R_P.y);
+	R_P = rhmul(Rot2, R_gs);
 
 	U_N = unit(crossp(R_A, V_A));
 	U_LL = unit(crossp(U_N, R_P));
@@ -2482,8 +2481,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 		}
 		oneclickcoast(R_A, V_A, mjd0 + t_S / 24.0 / 3600.0, t - t_S, R_A, V_A, gravref, gravref);
 		Rot2 = OrbMech::GetRotationMatrix(gravref, mjd0 + t / 24.0 / 3600.0);
-		R_P = mul(Rot2, R_gs);
-		R_P = _V(R_P.x, R_P.z, R_P.y);
+		R_P = rhmul(Rot2, R_gs);
 
 		U_N = unit(crossp(R_A, V_A));
 		U_LL = unit(crossp(U_N, R_P));
@@ -5328,7 +5326,7 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0)
 	return g;
 }
 
-void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff, bool agc)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
 	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
@@ -5375,29 +5373,36 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	//double apo, peri;
 	//periapo(R_p, V_p, mu, apo, peri);
 
-	VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
-
-	MATRIX3 Q_Xx;
-	double theta_T;
-
-	X = unit(crossp(crossp(R_ig, V_ig), R_ig));
-	Y = unit(crossp(V_ig, R_ig));
-	Z = -unit(R_ig);
-
-	Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
-	dV_LV = mul(Q_Xx, V_go);
-	DV_P = X*dV_LV.x + Z*dV_LV.z;
-	if (length(DV_P) != 0.0)
+	if (agc)
 	{
-		theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
-		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
-		V_G = DV_C + Y*dV_LV.y;
+		VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
+
+		MATRIX3 Q_Xx;
+		double theta_T;
+
+		X = unit(crossp(crossp(R_ig, V_ig), R_ig));
+		Y = unit(crossp(V_ig, R_ig));
+		Z = -unit(R_ig);
+
+		Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+		dV_LV = mul(Q_Xx, V_go);
+		DV_P = X * dV_LV.x + Z * dV_LV.z;
+		if (length(DV_P) != 0.0)
+		{
+			theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
+			DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
+			V_G = DV_C + Y * dV_LV.y;
+		}
+		else
+		{
+			V_G = X * dV_LV.x + Y * dV_LV.y + Z * dV_LV.z;
+		}
+		Llambda = V_G;
 	}
 	else
 	{
-		V_G = X*dV_LV.x + Y*dV_LV.y + Z*dV_LV.z;
+		Llambda = V_go;
 	}
-	Llambda = V_G;
 
 	R_cutoff = R_p;
 	V_cutoff = V_p;

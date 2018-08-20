@@ -955,7 +955,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.PDI = t_PDI;
 		calcParams.TLAND = t_land;
 
-		PoweredFlightProcessor(sv, GETbase, t_DOI, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, TimeofIgnition, DeltaV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, t_DOI, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
 
 		opt.GETbase = GETbase;
 		opt.LSLat = calcParams.LSLat;
@@ -1123,7 +1123,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.PDI = t_PDI;
 		calcParams.TLAND = t_land;
 
-		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, TimeofIgnition, DeltaV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
 
 		opt.alt = calcParams.LSAlt;
 		opt.csmlmdocked = false;
@@ -1283,6 +1283,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 61: //REV 4 LANDMARK TRACKING PAD A-1
 	case 62: //REV 12 LANDMARK TRACKING PAD LMK 130
+	case 63: //LM TRACKING PAD
 	{
 		LMARKTRKPADOpt opt;
 
@@ -1307,6 +1308,22 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.lat[0] = 1.243*RAD;
 			opt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
 			opt.lng[0] = 23.688*RAD;
+			opt.entries = 1;
+		}
+		else if (fcn == 63)
+		{
+			double LSRad, R_M;
+			R_M = 1.73809e6;
+
+			//Update landing site
+			calcParams.tgt->GetEquPos(calcParams.LSLng, calcParams.LSLat, LSRad);
+			calcParams.LSAlt = LSRad - R_M;
+
+			sprintf(form->LmkID[0], "Lunar Module");
+			opt.alt[0] = calcParams.LSAlt;
+			opt.lat[0] = calcParams.LSLat;
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(104, 30, 0);
+			opt.lng[0] = calcParams.LSLng;
 			opt.entries = 1;
 		}
 
@@ -1412,7 +1429,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_P = OrbMech::period(sv_DOI.R, sv_DOI.V + res.dV, mu);
 		t_CSI = opt.T2 - t_P / 2.0;
 
-		PoweredFlightProcessor(sv_DOI, GETbase, opt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_DOI, GETbase, opt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 		//Store for P76 PAD
 		calcParams.TIGSTORE1 = P30TIG;
 		calcParams.DVSTORE1 = dV_LVLH;
@@ -1575,7 +1592,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 77: //DOI EVALUATION
 	{
-
+		sprintf(upMessage, "Go for PDI");
 	}
 	break;
 	case 78: //PDI EVALUATION
@@ -1596,6 +1613,266 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 81: //STAY FOR T2
 	{
 		sprintf(upMessage, "Stay for T2");
+	}
+	break;
+	case 90: //LM ASCENT PAD FOR T3
+	{
+		AP11LMASCPAD * form = (AP11LMASCPAD*)pad;
+
+		LunarLiftoffTimeOpt opt;
+		LunarLiftoffResults res;
+		SV sv_CSM, sv_CSM_upl, sv_Ins;
+		VECTOR3 R_LS;
+		char buffer1[100], buffer2[1000];
+		double GETbase, m0, theta_1, dt_1, R_M;
+
+		GETbase = calcParams.TEPHEM;
+		sv_CSM = StateVectorCalc(calcParams.src);
+
+		LEM *l = (LEM*)calcParams.tgt;
+		m0 = l->GetAscentStageMass();
+
+		opt.alt = calcParams.LSAlt;
+		opt.GETbase = GETbase;
+		opt.lat = calcParams.LSLat;
+		opt.lng = calcParams.LSLng;
+		opt.sv_CSM = sv_CSM;
+		opt.t_hole = calcParams.PDI + 1.5*3600.0;
+
+		R_M = oapiGetSize(sv_CSM.gravref);
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
+
+		//Initial pass through the processor
+		LaunchTimePredictionProcessor(&opt, &res);
+		//Refine ascent parameters
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
+		opt.theta_1 = theta_1;
+		opt.dt_1 = dt_1;
+		//Final pass through
+		LaunchTimePredictionProcessor(&opt, &res);
+
+		calcParams.LunarLiftoff = res.t_L;
+		calcParams.CSI = res.t_CSI;
+		calcParams.CDH = res.t_CDH;
+		calcParams.TPI = res.t_TPI;
+
+		form->TIG = res.t_L;
+		form->V_hor = res.v_LH / 0.3048;
+		form->V_vert = res.v_LV / 0.3048;
+		form->DEDA225_226 = GetSemiMajorAxis(sv_Ins) / 0.3048 / 100.0;
+		form->DEDA231 = length(R_LS) / 0.3048 / 100.0;
+
+		//Store for CSI PAD
+		calcParams.DVSTORE1 = _V(res.DV_CSI, 0, 0);
+		calcParams.SVSTORE1 = sv_Ins;
+
+		LandingSiteUplink(buffer1, calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt, 2022);
+		sv_CSM_upl = StateVectorCalc(calcParams.src, OrbMech::MJDfromGET(calcParams.TLAND + 100.0*60.0, GETbase));
+		AGCStateVectorUpdate(buffer2, sv_CSM_upl, true, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "RLS, CSM state vector");
+		}
+	}
+	break;
+	case 91: //CSI PAD FOR T3
+	{
+		AP10CSI * form = (AP10CSI*)pad;
+
+		VECTOR3 dV_AGS;
+		double KFactor, GETbase, TIG;
+
+		GETbase = calcParams.TEPHEM;
+		KFactor = 90.0*3600.0;
+
+		PoweredFlightProcessor(calcParams.SVSTORE1, GETbase, calcParams.CSI, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_RCS, 0.0, calcParams.DVSTORE1, true, TIG, dV_AGS, false);
+
+		form->DEDA373 = (calcParams.CSI - KFactor) / 60.0;
+		form->DEDA275 = (calcParams.TPI - KFactor) / 60.0;
+		form->dV_AGS = dV_AGS / 0.3048;
+		form->dV_LVLH = calcParams.DVSTORE1 / 0.3048;
+		form->PLM_FDAI = 0.0;
+		form->t_CSI = round(calcParams.CSI);
+		form->t_TPI = round(calcParams.TPI);
+		form->type = 1;
+	}
+	break;
+	case 92: //LIFTOFF TIME UPDATE T4 to T7
+	{
+		LIFTOFFTIMES * form = (LIFTOFFTIMES*)pad;
+
+		LunarLiftoffTimeOpt opt;
+		LunarLiftoffResults res;
+		SV sv_CSM, sv_CSM_upl, sv_Ins;
+		VECTOR3 R_LS;
+		double GETbase, m0, theta_1, dt_1, R_M;
+
+		GETbase = calcParams.TEPHEM;
+		sv_CSM = StateVectorCalc(calcParams.src);
+
+		LEM *l = (LEM*)calcParams.tgt;
+		m0 = l->GetAscentStageMass();
+
+		opt.alt = calcParams.LSAlt;
+		opt.GETbase = GETbase;
+		opt.lat = calcParams.LSLat;
+		opt.lng = calcParams.LSLng;
+		opt.sv_CSM = sv_CSM;
+		opt.t_hole = calcParams.PDI + 3.5*3600.0;
+
+		R_M = oapiGetSize(sv_CSM.gravref);
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
+
+		//Initial pass through the processor
+		LaunchTimePredictionProcessor(&opt, &res);
+		//Refine ascent parameters
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
+		opt.theta_1 = theta_1;
+		opt.dt_1 = dt_1;
+
+
+		for (int i = 0;i < 4;i++)
+		{
+			LaunchTimePredictionProcessor(&opt, &res);
+			form->TIG[i] = res.t_L;
+			opt.t_hole += 2.0*3600.0;
+		}
+
+		form->entries = 4;
+		form->startdigit = 4;
+	}
+	break;
+	case 93: //PLANE CHANGE EVALUATION
+	{
+		SV sv_CSM, sv_Liftoff;
+		VECTOR3 R_LS;
+		double TIG_nom, GETbase, MJD_TIG_nom, dt1, LmkRange;
+
+		sv_CSM = StateVectorCalc(calcParams.src);
+		GETbase = calcParams.TEPHEM;
+
+		//Initial guess for liftoff time
+		calcParams.LunarLiftoff = OrbMech::HHMMSSToSS(124, 23, 26);
+		TIG_nom = calcParams.LunarLiftoff;
+		MJD_TIG_nom = OrbMech::MJDfromGET(TIG_nom, GETbase);
+		sv_Liftoff = GeneralTrajectoryPropagation(sv_CSM, 0, MJD_TIG_nom);
+
+		R_LS = RLS_from_latlng(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt);
+
+		dt1 = OrbMech::findelev_gs(sv_Liftoff.R, sv_Liftoff.V, R_LS, MJD_TIG_nom, 180.0*RAD, sv_Liftoff.gravref, LmkRange);
+
+		if (abs(LmkRange) < 4.0*1852.0)
+		{
+			sprintf(upMessage, "Plane Change has been scrubbed");
+			scrubbed = true;
+		}
+	}
+	break;
+	case 94: //PLANE CHANGE TARGETING (FOR REFSMMAT)
+	case 95: //PLANE CHANGE TARGETING (FOR BURN)
+	{
+		PCMan opt;
+		double GETbase;
+
+		GETbase = calcParams.TEPHEM;
+
+		opt.alt = calcParams.LSAlt;
+		opt.EarliestGET = OrbMech::HHMMSSToSS(106, 30, 0);
+		opt.GETbase = GETbase;
+		opt.lat = calcParams.LSLat;
+		opt.lng = calcParams.LSLng;
+		opt.t_A = calcParams.LunarLiftoff;
+		opt.vessel = calcParams.src;
+		opt.vesseltype = 0;
+
+		PlaneChangeTargeting(&opt, DeltaV_LVLH, TimeofIgnition);
+
+		if (fcn == 94)
+		{
+			REFSMMATOpt refsopt;
+			MATRIX3 REFSMMAT;
+			char buffer[1000];
+
+			refsopt.dV_LVLH = DeltaV_LVLH;
+			refsopt.GETbase = GETbase;
+			refsopt.HeadsUp = false;
+			refsopt.P30TIG = TimeofIgnition;
+			refsopt.REFSMMATopt = 0;
+			refsopt.vessel = calcParams.src;
+			refsopt.vesseltype = 0;
+
+			REFSMMAT = REFSMMATCalc(&refsopt);
+			AGCDesiredREFSMMATUpdate(buffer, REFSMMAT, AGCEpoch);
+
+			sprintf(uplinkdata, "%s", buffer);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "PC REFSMMAT");
+			}
+		}
+		else
+		{
+			AP11MNV * form = (AP11MNV*)pad;
+
+			AP11ManPADOpt manopt;
+			SV sv_CSM;
+			char buffer1[1000], buffer2[1000];
+
+			sv_CSM = StateVectorCalc(calcParams.src);
+
+			manopt.alt = calcParams.LSAlt;
+			manopt.dV_LVLH = DeltaV_LVLH;
+			manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+			manopt.GETbase = GETbase;
+			manopt.HeadsUp = false;
+			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+			manopt.TIG = TimeofIgnition;
+			manopt.vessel = calcParams.src;
+			manopt.vesseltype = 0;
+
+			AP11ManeuverPAD(&manopt, *form);
+			sprintf(form->purpose, "PLANE CHANGE");
+
+			AGCStateVectorUpdate(buffer1, sv_CSM, true, AGCEpoch, GETbase);
+			AGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
+
+			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector, target load");
+			}
+		}
+	}
+	break;
+	case 96: //CMC LUNAR LIFTOFF REFSMMAT UPLINK
+	{
+		REFSMMATOpt opt;
+		MATRIX3 REFSMMAT;
+		double GETbase;
+		char buffer[1000];
+
+		GETbase = calcParams.TEPHEM;
+
+		opt.GETbase = GETbase;
+		opt.LSLat = calcParams.LSLat;
+		opt.LSLng = calcParams.LSLng;
+		opt.REFSMMATopt = 5;
+		opt.REFSMMATTime = calcParams.LunarLiftoff;
+		opt.vessel = calcParams.src;
+
+		REFSMMAT = REFSMMATCalc(&opt);
+
+		sprintf(uplinkdata, "%s", buffer);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "Liftoff REFSMMAT");
+		}
 	}
 	break;
 	}
