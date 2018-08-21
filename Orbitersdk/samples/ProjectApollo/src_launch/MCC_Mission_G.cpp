@@ -293,5 +293,32 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_EVA_DAY_2: //LM Liftoff Times Update 2 to LM Acquisition Time update
 		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, MoonRev >= 19 && MoonRevTime > 60.0*60.0, 97, MST_G_LUNAR_ORBIT_EVA_DAY_3);
 		break;
+	case MST_G_LUNAR_ORBIT_EVA_DAY_3: //LM Acquisition Time update to LM Liftoff Time update 3
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, MoonRev >= 21 && MoonRevTime > 65.0*60.0, 64, MST_G_LUNAR_ORBIT_EVA_DAY_4);
+		break;
+	case MST_G_LUNAR_ORBIT_EVA_DAY_4: //LM Liftoff Times Update 3 to LGC CSM state vector update
+		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, MoonRev >= 24 && MoonRevTime > 35.0*60.0, 98, MST_G_LUNAR_ORBIT_ASCENT_DAY_1);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_1: //LGC CSM state vector update to Nominal Insertion targeting
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, MoonRev >= 24 && MoonRevTime > 70.0*60.0, 1, MST_G_LUNAR_ORBIT_ASCENT_DAY_2);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_2: //Nominal Insertion targeting to CMC State Vector uplinks
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 100, MST_G_LUNAR_ORBIT_ASCENT_DAY_3);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_3: //CMC State Vector uplinks to LM Ascent PAD
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 101, MST_G_LUNAR_ORBIT_ASCENT_DAY_4);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_4: //LM Ascent PAD to CSI Data Card
+		UpdateMacro(UTP_PADONLY, PT_AP11LMASCPAD, SubStateTime > 5.0*60.0, 102, MST_G_LUNAR_ORBIT_ASCENT_DAY_5);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_5: //CSI Data Card to LM Liftoff Evaluation
+		UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->GETEval(rtcc->calcParams.LunarLiftoff + 90.0), 103, MST_G_LUNAR_ORBIT_ASCENT_DAY_6);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_6: //LM Liftoff Evaluation to CMC LM State Vector update
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.Insertion + 120.0), 104, MST_G_LUNAR_ORBIT_ASCENT_DAY_7, scrubbed, SubStateTime > 15.0*60.0, MST_G_LUNAR_ORBIT_ASCENT_DAY_2);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_7: //CMC LM State Vector update to CSM state vector update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 27 && MoonRevTime > 95.0*60.0, 2, MST_G_LUNAR_ORBIT_ASCENT_DAY_8);
+		break;
 	}
 }

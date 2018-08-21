@@ -533,41 +533,15 @@ void RTCC::AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad)
 {
 	SV sv1, sv2;
 	MATRIX3 Q_Xx, M, M_R;
-	VECTOR3 V_G, UX, UY, UZ, IMUangles, FDAIangles;
-	double dt, v_e, F, F_average, ManPADBurnTime, bt;
-	int step;
+	VECTOR3 V_G, UX, UY, UZ, IMUangles, FDAIangles, dV_AGS;
+	double dt, TIG_AGS;
 
 	dt = opt->t_CSI - (opt->sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 	sv1 = coast(opt->sv0, dt);
 
-	//Engine parameters
-	if (opt->enginetype == RTCC_ENGINETYPE_RCS)
-	{
-		v_e = 2706.64;
-		F = 400 * 4.448222;
-	}
-	else if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
-	{
-		v_e = DPS_ISP;
-		F = DPS_THRUST;
-	}
-	else
-	{
-		v_e = APS_ISP;
-		F = APS_THRUST;
-	}
-
-	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
-	{
-		//Estimates for average thrust (relevant for finite burntime compensation), complete and variable burntime
-		LMThrottleProgram(F, v_e, sv1.mass, length(opt->dV_LVLH), F_average, ManPADBurnTime, bt, step);
-	}
-	else
-	{
-		F_average = F;
-	}
-
-	sv2 = ExecuteManeuver(NULL, opt->GETbase, opt->t_CSI, opt->dV_LVLH, sv1, 0.0, Q_Xx, V_G, F_average, v_e);
+	PoweredFlightProcessor(sv1, opt->GETbase, opt->t_CSI, RTCC_VESSELTYPE_LM, opt->enginetype, 0.0, opt->dV_LVLH, true, TIG_AGS, dV_AGS, false);
+	Q_Xx = OrbMech::LVLH_Matrix(sv1.R, sv1.V);
+	V_G = tmul(Q_Xx, opt->dV_LVLH);
 
 	UX = unit(V_G);
 
@@ -610,11 +584,13 @@ void RTCC::AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad)
 		FDAIangles.z += PI2;
 	}
 
+	pad.DEDA373 = (opt->t_CSI - opt->KFactor) / 60.0;
+	pad.DEDA275 = (opt->t_TPI - opt->KFactor) / 60.0;
 	pad.PLM_FDAI = FDAIangles.y*DEG;
 	pad.t_CSI = opt->t_CSI;
 	pad.t_TPI = opt->t_TPI;
 	pad.dV_LVLH = opt->dV_LVLH / 0.3048;
-	pad.dV_AGS = mul(Q_Xx, V_G) / 0.3048;
+	pad.dV_AGS = dV_AGS / 0.3048;
 }
 
 void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
@@ -4567,6 +4543,35 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 	return true;
 }
 
+void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
+{
+	SV sv_Ins;
+	MATRIX3 Rot;
+	VECTOR3 R_LSP, Q, U_R;
+	double CR, MJD_TIG, SMa, R_D;
+
+	MJD_TIG = OrbMech::MJDfromGET(opt.TIG, opt.GETbase);
+	Rot = OrbMech::GetRotationMatrix(opt.sv_CSM.gravref, MJD_TIG);
+	R_LSP = rhmul(Rot, opt.R_LS);
+	Q = unit(crossp(opt.sv_CSM.V, opt.sv_CSM.R));
+	U_R = unit(R_LSP);
+	R_D = length(R_LSP) + 60000.0*0.3048;
+	CR = -R_D * asin(dotp(U_R, Q));
+	//CR = dotp(unit(crossp(opt.sv_CSM.V, opt.sv_CSM.R)), R_LSP);
+	sv_Ins.R = _V(R_D, 0, 0);
+	sv_Ins.V = _V(opt.v_LV, opt.v_LH, 0);
+	sv_Ins.gravref = opt.sv_CSM.gravref;
+	SMa = GetSemiMajorAxis(sv_Ins);
+
+	pad.CR = CR / 1852.0;
+	pad.TIG = opt.TIG;
+	pad.V_hor = opt.v_LH / 0.3048;
+	pad.V_vert = opt.v_LV / 0.3048;
+	pad.DEDA225_226 = SMa / 0.3048 / 100.0;
+	pad.DEDA231 = length(opt.R_LS) / 0.3048 / 100.0;
+	sprintf(pad.remarks, "");
+}
+
 void RTCC::AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr)
 {
 	double getign = P30TIG;
@@ -7500,7 +7505,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 	theta_F = 130.0*RAD;
 	h_1 = 60000.0*0.3048;
-	theta_Ins = 18.0*RAD;
+	theta_Ins = 18.2*RAD;
 	DH = 15.0*1852.0;
 	E = 26.6*RAD;
 

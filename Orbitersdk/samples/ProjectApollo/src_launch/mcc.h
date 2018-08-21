@@ -658,6 +658,7 @@ struct AP11LMASCPAD
 	double DEDA053;		//Cosine of landing azimuth angle
 	double DEDA225_226;	//Lower/Upper limit of semi-major axis at orbit insertion
 	double DEDA231;		//Radial distance of launch site from center of Moon
+	char remarks[128];
 };
 
 //GENERIC STRING

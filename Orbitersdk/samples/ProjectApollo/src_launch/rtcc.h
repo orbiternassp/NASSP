@@ -221,6 +221,7 @@ struct AP10CSIPADOpt
 	VECTOR3 dV_LVLH;
 	MATRIX3 REFSMMAT;
 	int enginetype;
+	double KFactor = 0.0;
 };
 
 struct AP7TPIPADOpt
@@ -763,6 +764,16 @@ struct PDIPADOpt
 	bool HeadsUp; //Orientation during the maneuver
 };
 
+struct ASCPADOpt
+{
+	double GETbase;
+	VECTOR3 R_LS;
+	double TIG;
+	double v_LH;
+	double v_LV;
+	SV sv_CSM;
+};
+
 struct LMARKTRKPADOpt
 {
 	VESSEL* vessel; //vessel
@@ -970,6 +981,7 @@ public:
 	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
+	void LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad);
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);

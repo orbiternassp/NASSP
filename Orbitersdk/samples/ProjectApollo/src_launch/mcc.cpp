@@ -1849,6 +1849,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_TIG", form->TIG);
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_V_hor", form->V_hor);
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_V_vert", form->V_vert);
+			SAVE_STRING("MCC_AP11LMASCPAD_remarks", form->remarks);
 		}
 		else if (padNumber == PT_LIFTOFFTIMES)
 		{
@@ -2355,6 +2356,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_TIG", form->TIG);
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_V_hor", form->V_hor);
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_V_vert", form->V_vert);
+			LOAD_STRING("MCC_AP11LMASCPAD_remarks", form->remarks, 128);
 		}
 		else if (padNumber == PT_LIFTOFFTIMES)
 		{
@@ -2981,9 +2983,9 @@ void MCC::drawPad(){
 
 		SStoHHMMSS(form->TIG, hh, mm, ss);
 
-		sprintf(buffer, "LM ASCENT PAD\n%+06d HRS\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f V (HOR)\n%07.1f V (VERT) N76\n%07.1f CROSSRANGE\n"
-			"%+06.0f DEDA 047\n%+06.0f DEDA 053\n%+06.0f DEDA 225/226\n%+06.0f DEDA 231", hh, mm, ss, form->V_hor, form->V_vert, form->CR,
-			form->DEDA047, form->DEDA053, form->DEDA225_226, form->DEDA231);
+		sprintf(buffer, "LM ASCENT PAD\n%+06d HRS\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f V (HOR)\n%+07.1f V (VERT) N76\n%+07.1f CROSSRANGE\n"
+			"%+06.0f DEDA 047\n%+06.0f DEDA 053\n%+06.0f DEDA 225/226\n%+06.0f DEDA 231\nRemarks: %s", hh, mm, ss, form->V_hor, form->V_vert, form->CR,
+			form->DEDA047, form->DEDA053, form->DEDA225_226, form->DEDA231, form->remarks);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
