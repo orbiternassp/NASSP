@@ -3650,46 +3650,19 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	else if (code == RTCC_GMP_CRH || code == RTCC_GMP_HBH || code == RTCC_GMP_FCH || code == RTCC_GMP_CPH ||
 		code == RTCC_GMP_PCH || code == RTCC_GMP_NSH || code == RTCC_GMP_HOH || code == RTCC_GMP_CNH)
 	{
-		double dt21, dt22, r_H, T_p;
-		int iter = 0;
+		double dt21, dt22, r_H;
 
-		T_p = OrbMech::period(sv1.R, sv1.V, mu);
 		r_H = R_E + opt->H_D;
 		dt21 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, r_H, 1.0, sv1.gravref, sv1.gravref);
 		dt22 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, r_H, -1.0, sv1.gravref, sv1.gravref);
 
-		if (dt21 < 0.0)
-		{
-			dt21 += T_p;
-		}
-		if (dt22 < 0.0)
-		{
-			dt22 += T_p;
-		}
-
-		if (dt21 > dt22)
+		if (abs(dt21) > abs(dt22))
 		{
 			dt2 = dt22;
-			iter = 2;
 		}
 		else
 		{
 			dt2 = dt21;
-			iter = 1;
-		}
-
-		if (iter)
-		{
-			sv1 = coast(sv1, dt2);
-
-			if (iter == 1)
-			{
-				dt2 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, r_H, 1.0, sv1.gravref, sv1.gravref);
-			}
-			else
-			{
-				dt2 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, r_H, -1.0, sv1.gravref, sv1.gravref);
-			}
 		}
 
 		sv2 = coast(sv1, dt2);

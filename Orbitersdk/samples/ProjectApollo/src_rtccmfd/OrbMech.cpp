@@ -3117,11 +3117,11 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 		beta4 = r / length(RPRE);
 		beta12 = beta4 - 1.0;
 		RF = beta4*length(RPRE);
-		if (beta12 > 0)
+		if (beta12*s < 0)
 		{
 			phi4 = -1.0;
 		}
-		else if (x2PRE > 0)
+		else if (x2PRE*s < 0)
 		{
 			phi4 = -1.0;
 		}
@@ -3129,7 +3129,7 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 		{
 			phi4 = 1.0;
 		}
-		dt21 = time_radius(RPRE, VPRE*phi4, RF, -phi4, mu);
+		dt21 = time_radius(RPRE, VPRE*phi4, RF, phi4*s, mu);
 		dt21 = phi4*dt21;
 		beta13 = dt21 / dt21apo;
 
