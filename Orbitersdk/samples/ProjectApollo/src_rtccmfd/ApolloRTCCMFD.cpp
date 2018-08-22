@@ -234,7 +234,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
 	papiWriteScenario_bool(scn, "DKI_Radial_DV", G->DKI_Radial_DV);
-	oapiWriteScenario_int(scn, "DKI_N", G->DKI_N);
+	oapiWriteScenario_int(scn, "DKI_N_HC", G->DKI_N_HC);
+	oapiWriteScenario_int(scn, "DKI_N_PB", G->DKI_N_PB);
 
 	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
 
@@ -394,7 +395,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
 		papiReadScenario_bool(line, "DKI_Radial_DV", G->DKI_Radial_DV);
-		papiReadScenario_int(line, "DKI_N", G->DKI_N);
+		papiReadScenario_int(line, "DKI_N_HC", G->DKI_N_HC);
+		papiReadScenario_int(line, "DKI_N_PB", G->DKI_N_PB);
 
 		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
@@ -3301,9 +3303,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "Rescue-2 Sequence", 17);
 		}
-		else
+		else if(G->DKI_Profile == 3)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "TPI Time Only", 13);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "High Dwell Sequence", 19);
 		}
 
 		if (G->DKI_Profile != 3)
@@ -3341,7 +3347,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
 			skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 
-			if (G->DKI_Profile == 1)
+			if (G->DKI_Profile == 1 || G->DKI_Profile == 4)
 			{
 				skp->Text(4 * W / 8, 13 * H / 21, "Boost:", 6);
 				GET_Display(Buffer, G->dkiresult.t_Boost);
@@ -3349,9 +3355,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_Boost / 0.3048);
 				skp->Text(5 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 
-				skp->Text(4 * W / 8, 15 * H / 21, "HAM:", 4);
-				GET_Display(Buffer, G->dkiresult.t_HAM);
-				skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+				if (G->DKI_Profile == 1)
+				{
+					skp->Text(4 * W / 8, 15 * H / 21, "HAM:", 4);
+					GET_Display(Buffer, G->dkiresult.t_HAM);
+					skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+				}
 			}
 
 			skp->Text(4 * W / 8, 16 * H / 21, "CSI:", 4);
@@ -3413,8 +3422,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		sprintf(Buffer, "%d", G->DKI_N);
+		sprintf(Buffer, "%d", G->DKI_N_HC);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%d", G->DKI_N_PB);
+		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->DKI_Maneuver_Line == false)
 		{
@@ -7089,7 +7101,7 @@ void ApolloRTCCMFD::set_DKITIG_DT_PDI(double dt)
 
 void ApolloRTCCMFD::menuCycleDKIProfile()
 {
-	if (G->DKI_Profile < 3)
+	if (G->DKI_Profile < 4)
 	{
 		G->DKI_Profile++;
 	}
@@ -7167,26 +7179,48 @@ void ApolloRTCCMFD::set_DKITPIDT(double time)
 	G->DKI_dt_TPI_sunrise = time * 60.0;
 }
 
-void ApolloRTCCMFD::DKINDialogue()
+void ApolloRTCCMFD::DKINHCDialogue()
 {
-	bool DKINInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the number of half-revs between CSI and CDH", DKINInput, 0, 20, (void*)this);
+	bool DKINHCInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the number of half-revs between CSI and CDH", DKINHCInput, 0, 20, (void*)this);
 }
 
-bool DKINInput(void *id, char *str, void *data)
+bool DKINHCInput(void *id, char *str, void *data)
 {
 	int N;
 	if (sscanf(str, "%d", &N) == 1)
 	{
-		((ApolloRTCCMFD*)data)->set_DKIN(N);
+		((ApolloRTCCMFD*)data)->set_DKINHC(N);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_DKIN(int N)
+void ApolloRTCCMFD::set_DKINHC(int N)
 {
-	G->DKI_N = N;
+	G->DKI_N_HC = N;
+}
+
+void ApolloRTCCMFD::DKINPBDialogue()
+{
+	bool DKINPBInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the number of half-revs between Phasing and Boost", DKINPBInput, 0, 20, (void*)this);
+}
+
+bool DKINPBInput(void *id, char *str, void *data)
+{
+	int N;
+	if (sscanf(str, "%d", &N) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_DKINPB(N);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DKINPB(int N)
+{
+	G->DKI_N_PB = N;
 }
 
 void ApolloRTCCMFD::menuDKIDeltaT1()

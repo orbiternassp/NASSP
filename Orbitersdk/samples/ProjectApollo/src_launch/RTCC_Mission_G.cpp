@@ -125,7 +125,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		tliparam.T_ST = lvdc->T_ST;
 		tliparam.Tt_3R = lvdc->Tt_3R;
 
-		LVDCTLIPredict(tliparam, calcParams.src, getGETBase(), DeltaV_LVLH, TimeofIgnition, calcParams.R_TLI, calcParams.V_TLI, calcParams.TLI);
+		LVDCTLIPredict(tliparam, calcParams.src, calcParams.TEPHEM, DeltaV_LVLH, TimeofIgnition, calcParams.R_TLI, calcParams.V_TLI, calcParams.TLI);
 	}
 	break;
 	case 12: //TLI+90 MANEUVER PAD
@@ -2187,8 +2187,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			entopt.type = RTCC_ENTRY_MCC;
 		}
 
-		GETbase = getGETBase();
-
+		GETbase = calcParams.TEPHEM;
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		entopt.entrylongmanual = true;
@@ -2371,7 +2370,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MATRIX3 REFSMMAT;
 		double GETbase;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 		sv = StateVectorCalc(calcParams.src);
 
 		if (length(DeltaV_LVLH) != 0.0 && fcn != 119)

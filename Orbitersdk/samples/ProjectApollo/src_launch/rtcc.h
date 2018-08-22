@@ -800,10 +800,12 @@ struct DKIOpt	//Docking Initiation Processor
 	//1 = Phasing with +50 ft/s DVZ, at apolune, CDH 0.5 revs later
 	//2 = Height, CSI (Phasing) 0.5 revs later, CDH 2xN revs later
 	//3 = Just calculate TPI time
+	//4 = High Dwell Sequence
 	int plan = 0;
 	bool maneuverline = true;	//false = use input delta times, true = use 0.5 revolutions
 	bool radial_dv = false;		//false = horizontal maneuver, true = 50 ft/s radial component
-	int N_HC = 1;			//Number of half revs between CSI and CDH
+	int N_HC = 1;				//Number of half revs between CSI and CDH
+	int N_PB = 1;				//Number of half revs between Phasing and Boost/Height
 
 	double dt_TPI_sunrise = 16.0*60.0;
 	double DeltaT_PBH = 55.0*60.0;	//Delta time between phasing and boost/CSI

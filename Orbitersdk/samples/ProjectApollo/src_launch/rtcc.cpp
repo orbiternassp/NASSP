@@ -7631,10 +7631,17 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	if (opt.plan == 0 || opt.plan == 1)
 	{
 		if (opt.N_HC % 2 == 0) return false;
+		if (opt.N_PB % 2 == 0) return false;
 	}
 	else if (opt.plan == 2)
 	{
 		if (opt.N_HC % 2 != 0) return false;
+		if (opt.N_PB % 2 == 0) return false;
+	}
+	else if (opt.plan == 4)
+	{
+		if (opt.N_HC % 2 == 0) return false;
+		if (opt.N_PB % 2 != 0) return false;
 	}
 
 	SV sv_AP, sv_TPI_guess, sv_TPI, sv_PC;
@@ -7645,7 +7652,14 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	eps_P = 0.000004;	//radians
 	s_P = 0;
 	p_P = c_P = 0.0;
-	dv_P = 100.0*0.3048;
+	if (opt.plan == 4)
+	{
+		dv_P = 300.0*0.3048;
+	}
+	else
+	{
+		dv_P = 100.0*0.3048;
+	}
 	dv_H = 0.0;
 	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
 
@@ -7758,7 +7772,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 
 				if (opt.maneuverline)
 				{
-					OrbMech::REVUP(R_AB, V_ABF, 0.5, mu, R_AHAM, V_AHAM, dt_BHAM);
+					OrbMech::REVUP(R_AB, V_ABF, 0.5*(double)opt.N_PB, mu, R_AHAM, V_AHAM, dt_BHAM);
 				}
 				else
 				{
@@ -7784,11 +7798,46 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 				res.dv_Boost = dv_B;
 				res.t_HAM = t_HAM;
 			}
+			else if (opt.plan == 4)
+			{
+				VECTOR3 R_AB, V_AB, V_ABF;
+				double dt_PB, dv_B, dt_BH, t_B;
+
+				if (opt.maneuverline)
+				{
+					OrbMech::REVUP(R_AP, V_APF, 0.5*(double)opt.N_PB, mu, R_AB, V_AB, dt_PB);
+				}
+				else
+				{
+					dt_PB = opt.DeltaT_PBH;
+					OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PB, R_AB, V_AB, mu);
+				}
+
+				t_B = opt.t_TIG + dt_PB;
+
+				OrbMech::CSIToDH(R_AB, V_AB, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_B);
+				V_ABF = V_AB + unit(crossp(u, R_AB))*dv_B;
+
+				if (opt.maneuverline)
+				{
+					OrbMech::REVUP(R_AB, V_ABF, 0.5, mu, R_AH, V_AH, dt_BH);
+				}
+				else
+				{
+					dt_BH = opt.DeltaT_BHAM;
+					OrbMech::rv_from_r0v0(R_AB, V_ABF, dt_BH, R_AH, V_AH, mu);
+				}
+
+				t_H = t_B + dt_BH;
+
+				res.t_Boost = t_B;
+				res.dv_Boost = dv_B;
+			}
 			else
 			{
 				if (opt.maneuverline)
 				{
-					OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
+					OrbMech::REVUP(R_AP, V_APF, 0.5*(double)opt.N_PB, mu, R_AH, V_AH, dt_PH);
 				}
 				else
 				{

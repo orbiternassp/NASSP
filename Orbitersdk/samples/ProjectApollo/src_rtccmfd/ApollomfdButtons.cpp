@@ -1164,7 +1164,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "TPI mode", 0, 'O' },
 		{ "TPI time before sunrise", 0, 'S' },
 		{ "Half-revs between CSI and CDH", 0, 'N' },
-		{ "", 0, ' ' },
+		{ "Half-revs between Phasing and Boost", 0, 'M' },
 
 		{ "Time between abort and Boost/CSI", 0, 'E' },
 		{ "Time between Boost and HAM", 0, 'V' },
@@ -1180,8 +1180,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("RAD", OAPI_KEY_R, &ApolloRTCCMFD::menuCycleDKIRadialComponent);
 	RegisterFunction("TPI", OAPI_KEY_O, &ApolloRTCCMFD::menuCycleDKITPIMode);
 	RegisterFunction("SUN", OAPI_KEY_S, &ApolloRTCCMFD::DKITPIDTDialogue);
-	RegisterFunction("N", OAPI_KEY_N, &ApolloRTCCMFD::DKINDialogue);
-	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("NHC", OAPI_KEY_N, &ApolloRTCCMFD::DKINHCDialogue);
+	RegisterFunction("NPB", OAPI_KEY_M, &ApolloRTCCMFD::DKINPBDialogue);
 
 	RegisterFunction("DT1", OAPI_KEY_E, &ApolloRTCCMFD::menuDKIDeltaT1);
 	RegisterFunction("DT2", OAPI_KEY_V, &ApolloRTCCMFD::menuDKIDeltaT2);

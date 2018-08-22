@@ -319,8 +319,10 @@ public:
 	void menuCycleDKIRadialComponent();
 	void DKITPIDTDialogue();
 	void set_DKITPIDT(double time);
-	void DKINDialogue();
-	void set_DKIN(int N);
+	void DKINHCDialogue();
+	void set_DKINHC(int N);
+	void DKINPBDialogue();
+	void set_DKINPB(int N);
 	void menuDKIDeltaT1();
 	void set_DKIDT1(double dt);
 	void menuDKIDeltaT2();
