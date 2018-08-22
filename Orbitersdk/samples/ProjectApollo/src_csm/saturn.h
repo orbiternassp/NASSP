@@ -3782,6 +3782,7 @@ protected:
 #define SATPANEL_LOWER_LEFT			14
 #define SATPANEL_LOWER_MAIN			15
 #define SATPANEL_RIGHT_CB			16
+#define SATPANEL_LEFT_317_WINDOW    17
 
 	int  PanelId;
 	int MainPanelSplit;
