@@ -1705,6 +1705,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
 			SAVE_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
 			SAVE_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+			SAVE_INT("MCC_AP10CSI_type", form->type);
 		}
 		else if (padNumber == PT_GENERIC)
 		{
@@ -2215,6 +2216,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
 			LOAD_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
 			LOAD_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+			LOAD_INT("MCC_AP10CSI_type", form->type);
 		}
 		else if (padNumber == PT_GENERIC)
 		{
