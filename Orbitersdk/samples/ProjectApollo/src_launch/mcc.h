@@ -654,10 +654,11 @@ struct AP11LMASCPAD
 	double V_hor;		//horizontal velocity at orbit insertion
 	double V_vert;		//Vertical velocity at orbit insertion
 	double CR;			//Crossrange distance at orbital insertion
-	double DEDA047;		//Sine of landing azimuth angle
-	double DEDA053;		//Cosine of landing azimuth angle
+	int DEDA047;		//Sine of landing azimuth angle
+	int DEDA053;		//Cosine of landing azimuth angle
 	double DEDA225_226;	//Lower/Upper limit of semi-major axis at orbit insertion
 	double DEDA231;		//Radial distance of launch site from center of Moon
+	char remarks[128];
 };
 
 //GENERIC STRING

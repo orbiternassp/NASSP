@@ -1705,6 +1705,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
 			SAVE_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
 			SAVE_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+			SAVE_INT("MCC_AP10CSI_type", form->type);
 		}
 		else if (padNumber == PT_GENERIC)
 		{
@@ -1842,13 +1843,14 @@ void MCC::SaveState(FILEHANDLE scn) {
 			AP11LMASCPAD *form = (AP11LMASCPAD*)padForm;
 
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_CR", form->CR);
-			SAVE_DOUBLE("MCC_AP11LMASCPAD_DEDA047", form->DEDA047);
-			SAVE_DOUBLE("MCC_AP11LMASCPAD_DEDA053", form->DEDA053);
+			SAVE_INT("MCC_AP11LMASCPAD_DEDA047", form->DEDA047);
+			SAVE_INT("MCC_AP11LMASCPAD_DEDA053", form->DEDA053);
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_DEDA225_226", form->DEDA225_226);
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_DEDA231", form->DEDA231);
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_TIG", form->TIG);
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_V_hor", form->V_hor);
 			SAVE_DOUBLE("MCC_AP11LMASCPAD_V_vert", form->V_vert);
+			SAVE_STRING("MCC_AP11LMASCPAD_remarks", form->remarks);
 		}
 		else if (padNumber == PT_LIFTOFFTIMES)
 		{
@@ -2214,6 +2216,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_AP10CSI_dV_LVLH", form->dV_LVLH);
 			LOAD_DOUBLE("MCC_AP10CSI_PLM_FDAI", form->PLM_FDAI);
 			LOAD_V3("MCC_AP10CSI_dV_AGS", form->dV_AGS);
+			LOAD_INT("MCC_AP10CSI_type", form->type);
 		}
 		else if (padNumber == PT_GENERIC)
 		{
@@ -2348,13 +2351,14 @@ void MCC::LoadState(FILEHANDLE scn) {
 			AP11LMASCPAD *form = (AP11LMASCPAD*)padForm;
 
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_CR", form->CR);
-			LOAD_DOUBLE("MCC_AP11LMASCPAD_DEDA047", form->DEDA047);
-			LOAD_DOUBLE("MCC_AP11LMASCPAD_DEDA053", form->DEDA053);
+			LOAD_INT("MCC_AP11LMASCPAD_DEDA047", form->DEDA047);
+			LOAD_INT("MCC_AP11LMASCPAD_DEDA053", form->DEDA053);
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_DEDA225_226", form->DEDA225_226);
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_DEDA231", form->DEDA231);
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_TIG", form->TIG);
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_V_hor", form->V_hor);
 			LOAD_DOUBLE("MCC_AP11LMASCPAD_V_vert", form->V_vert);
+			LOAD_STRING("MCC_AP11LMASCPAD_remarks", form->remarks, 128);
 		}
 		else if (padNumber == PT_LIFTOFFTIMES)
 		{
@@ -2981,9 +2985,9 @@ void MCC::drawPad(){
 
 		SStoHHMMSS(form->TIG, hh, mm, ss);
 
-		sprintf(buffer, "LM ASCENT PAD\n%+06d HRS\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f V (HOR)\n%07.1f V (VERT) N76\n%07.1f CROSSRANGE\n"
-			"%+06.0f DEDA 047\n%+06.0f DEDA 053\n%+06.0f DEDA 225/226\n%+06.0f DEDA 231", hh, mm, ss, form->V_hor, form->V_vert, form->CR,
-			form->DEDA047, form->DEDA053, form->DEDA225_226, form->DEDA231);
+		sprintf(buffer, "LM ASCENT PAD\n%+06d HRS\n%+06d MIN TIG\n%+07.2f SEC\n%+07.1f V (HOR)\n%+07.1f V (VERT) N76\n%+07.1f CROSSRANGE\n"
+			"%+06d DEDA 047\n%+06d DEDA 053\n%+06.0f DEDA 225/226\n%+06.0f DEDA 231\nRemarks: %s", hh, mm, ss, form->V_hor, form->V_vert, form->CR,
+			form->DEDA047, form->DEDA053, form->DEDA225_226, form->DEDA231, form->remarks);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}

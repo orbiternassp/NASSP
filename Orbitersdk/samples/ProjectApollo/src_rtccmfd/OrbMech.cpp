@@ -3117,11 +3117,11 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 		beta4 = r / length(RPRE);
 		beta12 = beta4 - 1.0;
 		RF = beta4*length(RPRE);
-		if (beta12 > 0)
+		if (beta12*s < 0)
 		{
 			phi4 = -1.0;
 		}
-		else if (x2PRE > 0)
+		else if (x2PRE*s < 0)
 		{
 			phi4 = -1.0;
 		}
@@ -3129,7 +3129,7 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 		{
 			phi4 = 1.0;
 		}
-		dt21 = time_radius(RPRE, VPRE*phi4, RF, -phi4, mu);
+		dt21 = time_radius(RPRE, VPRE*phi4, RF, phi4*s, mu);
 		dt21 = phi4*dt21;
 		beta13 = dt21 / dt21apo;
 
@@ -4089,6 +4089,24 @@ int DoubleToBuffer(double x, double q, int m)
 		out += (c & 7) * f;
 		f *= 10;	c = c >> 3;
 	}
+	return out;
+}
+
+int DoubleToDEDA(double x, double q)
+{
+	int c = 0, out = 0, f = 1;
+
+	x = x * (268435456.0 / pow(2.0, fabs(q)));
+
+	c = 0x3FFF & ((int)fabs(x));
+
+	if (x<0.0) c = 0x7FFF & (~c) + 1; // Polarity change
+
+	while (c != 0) {
+		out += (c & 7) * f;
+		f *= 10;	c = c >> 3;
+	}
+	if (x < 0.0) out = -out;
 	return out;
 }
 
@@ -5169,6 +5187,16 @@ MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V)
 	k = unit(-R);
 	i = crossp(j, k);
 	return _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+}
+
+MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG)
+{
+	return mul(tmat(Rot_LG), Rot_VG);
+}
+
+MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG)
+{
+	return mul(Rot_LG, Rot_VL);
 }
 
 void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff)

@@ -293,5 +293,111 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_EVA_DAY_2: //LM Liftoff Times Update 2 to LM Acquisition Time update
 		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, MoonRev >= 19 && MoonRevTime > 60.0*60.0, 97, MST_G_LUNAR_ORBIT_EVA_DAY_3);
 		break;
+	case MST_G_LUNAR_ORBIT_EVA_DAY_3: //LM Acquisition Time update to LM Liftoff Time update 3
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, MoonRev >= 21 && MoonRevTime > 65.0*60.0, 64, MST_G_LUNAR_ORBIT_EVA_DAY_4);
+		break;
+	case MST_G_LUNAR_ORBIT_EVA_DAY_4: //LM Liftoff Times Update 3 to LGC CSM state vector update
+		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, MoonRev >= 24 && MoonRevTime > 35.0*60.0, 98, MST_G_LUNAR_ORBIT_ASCENT_DAY_1);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_1: //LGC CSM state vector update to Nominal Insertion targeting
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, MoonRev >= 24 && MoonRevTime > 70.0*60.0, 1, MST_G_LUNAR_ORBIT_ASCENT_DAY_2);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_2: //Nominal Insertion targeting to CMC State Vector uplinks
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 100, MST_G_LUNAR_ORBIT_ASCENT_DAY_3);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_3: //CMC State Vector uplinks to LM Ascent PAD
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 1.0*60.0, 101, MST_G_LUNAR_ORBIT_ASCENT_DAY_4);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_4: //LM Ascent PAD to CSI Data Card
+		UpdateMacro(UTP_PADONLY, PT_AP11LMASCPAD, SubStateTime > 5.0*60.0, 102, MST_G_LUNAR_ORBIT_ASCENT_DAY_5);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_5: //CSI Data Card to LM Liftoff Evaluation
+		UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->GETEval(rtcc->calcParams.LunarLiftoff + 90.0), 103, MST_G_LUNAR_ORBIT_ASCENT_DAY_6);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_6: //LM Liftoff Evaluation to CMC LM State Vector update
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.Insertion + 120.0), 104, MST_G_LUNAR_ORBIT_ASCENT_DAY_7, scrubbed, SubStateTime > 15.0*60.0, MST_G_LUNAR_ORBIT_ASCENT_DAY_2);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_7: //CMC LM State Vector update to CSM state vector update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 27 && MoonRevTime > 95.0*60.0, 2, MST_G_LUNAR_ORBIT_ASCENT_DAY_8);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_8: //CSM state vector update to Preliminary TEI-30 update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 29 && MoonRevTime > 40.0*60.0, 1, MST_G_LUNAR_ORBIT_ASCENT_DAY_9);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_9: //Preliminary TEI-30 update to Final TEI-30 Update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 30 && MoonRevTime > 55.0*60.0, 45, MST_G_LUNAR_ORBIT_ASCENT_DAY_10);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_10: //Final TEI-30 Update to TEI-31 PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 46, MST_G_LUNAR_ORBIT_ASCENT_DAY_11);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_11: //TEI-31 PAD to TEI Evaluation
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TEI + 300.0), 47, MST_G_LUNAR_ORBIT_ASCENT_DAY_12);
+		break;
+	case MST_G_LUNAR_ORBIT_ASCENT_DAY_12: //TEI Evaluation to TEI
+		UpdateMacro(UTP_NONE, PT_NONE, true, 105, MST_G_TRANSEARTH_1, scrubbed, MoonRevTime > 40.0*60.0, MST_G_LUNAR_ORBIT_ASCENT_DAY_10);
+		break;
+	case MST_G_TRANSEARTH_1: //TEI to PTC REFSMMAT
+		switch (SubState)
+		{
+		case 0:
+			MissionPhase = MMST_TE_COAST;
+			setSubState(1);
+			break;
+		case 1:
+			if (rtcc->GETEval(rtcc->calcParams.TEI + 20.0*60.0))
+			{
+				SlowIfDesired();
+				setState(MST_G_TRANSEARTH_2);
+			}
+			break;
+		}
+		break;
+	case MST_G_TRANSEARTH_2: //PTC REFSMMAT to MCC-5 update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval(rtcc->calcParams.TEI + 13.0*3600.0 + 25.0*60.0), 19, MST_G_TRANSEARTH_3);
+		break;
+	case MST_G_TRANSEARTH_3: //MCC-5 update to preliminary MCC-6 update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TEI + 24.0*3600.0 + 25.0*60.0), 110, MST_G_TRANSEARTH_4);
+		break;
+	case MST_G_TRANSEARTH_4: //Preliminary MCC-6 update to Entry PAD update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 111, MST_G_TRANSEARTH_5);
+		break;
+	case MST_G_TRANSEARTH_5: //Entry PAD update to MCC-6 update
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 24.0*3600.0 - 10.0*60.0), 116, MST_G_TRANSEARTH_6);
+		break;
+	case MST_G_TRANSEARTH_6: //MCC-6 update to Entry PAD update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 112, MST_G_TRANSEARTH_7);
+		break;
+	case MST_G_TRANSEARTH_7: //Entry PAD update to MCC-7 decision update
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 6.0*3600.0), 117, MST_G_TRANSEARTH_8);
+		break;
+	case MST_G_TRANSEARTH_8: //MCC-7 decision update to MCC-7 update
+		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0), 113, MST_G_TRANSEARTH_9);
+		break;
+	case MST_G_TRANSEARTH_9: //MCC-7 update to Entry PAD update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 114, MST_G_TRANSEARTH_10);
+		break;
+	case MST_G_TRANSEARTH_10: //Entry PAD update to final entry update
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 1.0*3600.0), 118, MST_G_TRANSEARTH_11);
+		break;
+	case MST_G_TRANSEARTH_11: //Final entry update to CM/SM separation
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->stage == CM_STAGE, 119, MST_ENTRY);
+		break;
+	case MST_ENTRY:
+		switch (SubState) {
+		case 0:
+		{
+			MissionPhase = MMST_ENTRY;
+			setSubState(1);
+		}
+		break;
+		case 1:
+		{
+			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			{
+				setState(MST_LANDING);
+			}
+		}
+		break;
+		}
+		break;
 	}
 }

@@ -145,7 +145,8 @@ public:
 	double DKI_dt_PBH;	//Delta time between phasing and boost/CSI
 	double DKI_dt_BHAM;	//Delta time between boost and HAM
 	double DKI_dt_HAMH;	//Delta time between HAM and CSI
-	int DKI_N;		//Half revolutions between CSI and CDH
+	int DKI_N_HC;		//Half revolutions between CSI and CDH
+	int DKI_N_PB;		//Number of half revs between Phasing and Boost/Height
 	double t_TPIguess;
 	DKIResults dkiresult;
 

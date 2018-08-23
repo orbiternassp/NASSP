@@ -533,41 +533,15 @@ void RTCC::AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad)
 {
 	SV sv1, sv2;
 	MATRIX3 Q_Xx, M, M_R;
-	VECTOR3 V_G, UX, UY, UZ, IMUangles, FDAIangles;
-	double dt, v_e, F, F_average, ManPADBurnTime, bt;
-	int step;
+	VECTOR3 V_G, UX, UY, UZ, IMUangles, FDAIangles, dV_AGS;
+	double dt, TIG_AGS;
 
 	dt = opt->t_CSI - (opt->sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 	sv1 = coast(opt->sv0, dt);
 
-	//Engine parameters
-	if (opt->enginetype == RTCC_ENGINETYPE_RCS)
-	{
-		v_e = 2706.64;
-		F = 400 * 4.448222;
-	}
-	else if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
-	{
-		v_e = DPS_ISP;
-		F = DPS_THRUST;
-	}
-	else
-	{
-		v_e = APS_ISP;
-		F = APS_THRUST;
-	}
-
-	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
-	{
-		//Estimates for average thrust (relevant for finite burntime compensation), complete and variable burntime
-		LMThrottleProgram(F, v_e, sv1.mass, length(opt->dV_LVLH), F_average, ManPADBurnTime, bt, step);
-	}
-	else
-	{
-		F_average = F;
-	}
-
-	sv2 = ExecuteManeuver(NULL, opt->GETbase, opt->t_CSI, opt->dV_LVLH, sv1, 0.0, Q_Xx, V_G, F_average, v_e);
+	PoweredFlightProcessor(sv1, opt->GETbase, opt->t_CSI, RTCC_VESSELTYPE_LM, opt->enginetype, 0.0, opt->dV_LVLH, true, TIG_AGS, dV_AGS, false);
+	Q_Xx = OrbMech::LVLH_Matrix(sv1.R, sv1.V);
+	V_G = tmul(Q_Xx, opt->dV_LVLH);
 
 	UX = unit(V_G);
 
@@ -610,11 +584,13 @@ void RTCC::AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad)
 		FDAIangles.z += PI2;
 	}
 
+	pad.DEDA373 = (opt->t_CSI - opt->KFactor) / 60.0;
+	pad.DEDA275 = (opt->t_TPI - opt->KFactor) / 60.0;
 	pad.PLM_FDAI = FDAIangles.y*DEG;
 	pad.t_CSI = opt->t_CSI;
 	pad.t_TPI = opt->t_TPI;
 	pad.dV_LVLH = opt->dV_LVLH / 0.3048;
-	pad.dV_AGS = mul(Q_Xx, V_G) / 0.3048;
+	pad.dV_AGS = dV_AGS / 0.3048;
 }
 
 void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
@@ -1706,7 +1682,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	sinIGA = dotp(A_MG, X_SM);
 	IGA = atan2(sinIGA, cosIGA);
 
-	EntryPADHorChkPit = PI2 - (horang + coastang + 0.0*31.7*RAD) + IGA;	//Currently COAS, not 31.7° line
+	EntryPADHorChkPit = PI2 - (horang + coastang + 31.7*RAD) + IGA;
 
 	pad.Att05[0] = _V(OrbMech::imulimit(EIangles.x*DEG), OrbMech::imulimit(EIangles.y*DEG), OrbMech::imulimit(EIangles.z*DEG));
 	pad.BSS[0] = EntryCOASstaroct;
@@ -3674,46 +3650,19 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	else if (code == RTCC_GMP_CRH || code == RTCC_GMP_HBH || code == RTCC_GMP_FCH || code == RTCC_GMP_CPH ||
 		code == RTCC_GMP_PCH || code == RTCC_GMP_NSH || code == RTCC_GMP_HOH || code == RTCC_GMP_CNH)
 	{
-		double dt21, dt22, r_H, T_p;
-		int iter = 0;
+		double dt21, dt22, r_H;
 
-		T_p = OrbMech::period(sv1.R, sv1.V, mu);
 		r_H = R_E + opt->H_D;
 		dt21 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, r_H, 1.0, sv1.gravref, sv1.gravref);
 		dt22 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, r_H, -1.0, sv1.gravref, sv1.gravref);
 
-		if (dt21 < 0.0)
-		{
-			dt21 += T_p;
-		}
-		if (dt22 < 0.0)
-		{
-			dt22 += T_p;
-		}
-
-		if (dt21 > dt22)
+		if (abs(dt21) > abs(dt22))
 		{
 			dt2 = dt22;
-			iter = 2;
 		}
 		else
 		{
 			dt2 = dt21;
-			iter = 1;
-		}
-
-		if (iter)
-		{
-			sv1 = coast(sv1, dt2);
-
-			if (iter == 1)
-			{
-				dt2 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, r_H, 1.0, sv1.gravref, sv1.gravref);
-			}
-			else
-			{
-				dt2 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, r_H, -1.0, sv1.gravref, sv1.gravref);
-			}
 		}
 
 		sv2 = coast(sv1, dt2);
@@ -4565,6 +4514,51 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 	pad.t_go = -TTT;
 
 	return true;
+}
+
+void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
+{
+	SV sv_Ins, sv_CSM_TIG;
+	MATRIX3 Rot_LG, Rot_VG;
+	VECTOR3 R_LSP, Q, U_R, Z_B, X_AGS, Y_AGS, Z_AGS;
+	double CR, MJD_TIG, SMa, R_D, delta_L, sin_DL, cos_DL;
+
+	MJD_TIG = OrbMech::MJDfromGET(opt.TIG, opt.GETbase);
+	sv_CSM_TIG = GeneralTrajectoryPropagation(opt.sv_CSM, 0, MJD_TIG);
+
+	Rot_LG = OrbMech::GetRotationMatrix(sv_CSM_TIG.gravref, MJD_TIG);
+	R_LSP = rhmul(Rot_LG, opt.R_LS);
+
+	Q = unit(crossp(sv_CSM_TIG.V, sv_CSM_TIG.R));
+	U_R = unit(R_LSP);
+	R_D = length(R_LSP) + 60000.0*0.3048;
+	CR = -R_D * asin(dotp(U_R, Q));
+
+	sv_Ins.R = _V(R_D, 0, 0);
+	sv_Ins.V = _V(opt.v_LV, opt.v_LH, 0);
+	sv_Ins.gravref = sv_CSM_TIG.gravref;
+	SMa = GetSemiMajorAxis(sv_Ins);
+
+	Rot_VG = OrbMech::GetVesselToGlobalRotMatrix(opt.Rot_VL, Rot_LG);
+	Z_B = mul(Rot_VG, _V(0, 0, 1));
+	Z_B = unit(_V(Z_B.x, Z_B.z, Z_B.y));
+	X_AGS = U_R;
+	Z_AGS = unit(crossp(-Q, X_AGS));
+	Y_AGS = unit(crossp(Z_AGS, X_AGS));
+
+	delta_L = atan2(dotp(Z_B, Z_AGS), dotp(Z_B, Y_AGS));
+	sin_DL = sin(delta_L);
+	cos_DL = cos(delta_L);
+
+	pad.CR = CR / 1852.0;
+	pad.TIG = opt.TIG;
+	pad.V_hor = opt.v_LH / 0.3048;
+	pad.V_vert = opt.v_LV / 0.3048;
+	pad.DEDA225_226 = SMa / 0.3048 / 100.0;
+	pad.DEDA231 = length(opt.R_LS) / 0.3048 / 100.0;
+	sprintf(pad.remarks, "");
+	pad.DEDA047 = OrbMech::DoubleToDEDA(sin_DL, 14);
+	pad.DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 14);
 }
 
 void RTCC::AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr)
@@ -7500,7 +7494,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 	theta_F = 130.0*RAD;
 	h_1 = 60000.0*0.3048;
-	theta_Ins = 18.0*RAD;
+	theta_Ins = 18.2*RAD;
 	DH = 15.0*1852.0;
 	E = 26.6*RAD;
 
@@ -7653,10 +7647,17 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	if (opt.plan == 0 || opt.plan == 1)
 	{
 		if (opt.N_HC % 2 == 0) return false;
+		if (opt.N_PB % 2 == 0) return false;
 	}
 	else if (opt.plan == 2)
 	{
 		if (opt.N_HC % 2 != 0) return false;
+		if (opt.N_PB % 2 == 0) return false;
+	}
+	else if (opt.plan == 4)
+	{
+		if (opt.N_HC % 2 == 0) return false;
+		if (opt.N_PB % 2 != 0) return false;
 	}
 
 	SV sv_AP, sv_TPI_guess, sv_TPI, sv_PC;
@@ -7667,7 +7668,14 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	eps_P = 0.000004;	//radians
 	s_P = 0;
 	p_P = c_P = 0.0;
-	dv_P = 100.0*0.3048;
+	if (opt.plan == 4)
+	{
+		dv_P = 300.0*0.3048;
+	}
+	else
+	{
+		dv_P = 100.0*0.3048;
+	}
 	dv_H = 0.0;
 	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
 
@@ -7780,7 +7788,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 
 				if (opt.maneuverline)
 				{
-					OrbMech::REVUP(R_AB, V_ABF, 0.5, mu, R_AHAM, V_AHAM, dt_BHAM);
+					OrbMech::REVUP(R_AB, V_ABF, 0.5*(double)opt.N_PB, mu, R_AHAM, V_AHAM, dt_BHAM);
 				}
 				else
 				{
@@ -7806,11 +7814,46 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 				res.dv_Boost = dv_B;
 				res.t_HAM = t_HAM;
 			}
+			else if (opt.plan == 4)
+			{
+				VECTOR3 R_AB, V_AB, V_ABF;
+				double dt_PB, dv_B, dt_BH, t_B;
+
+				if (opt.maneuverline)
+				{
+					OrbMech::REVUP(R_AP, V_APF, 0.5*(double)opt.N_PB, mu, R_AB, V_AB, dt_PB);
+				}
+				else
+				{
+					dt_PB = opt.DeltaT_PBH;
+					OrbMech::rv_from_r0v0(R_AP, V_APF, dt_PB, R_AB, V_AB, mu);
+				}
+
+				t_B = opt.t_TIG + dt_PB;
+
+				OrbMech::CSIToDH(R_AB, V_AB, sv_TPI.R, sv_TPI.V, opt.DH, mu, dv_B);
+				V_ABF = V_AB + unit(crossp(u, R_AB))*dv_B;
+
+				if (opt.maneuverline)
+				{
+					OrbMech::REVUP(R_AB, V_ABF, 0.5, mu, R_AH, V_AH, dt_BH);
+				}
+				else
+				{
+					dt_BH = opt.DeltaT_BHAM;
+					OrbMech::rv_from_r0v0(R_AB, V_ABF, dt_BH, R_AH, V_AH, mu);
+				}
+
+				t_H = t_B + dt_BH;
+
+				res.t_Boost = t_B;
+				res.dv_Boost = dv_B;
+			}
 			else
 			{
 				if (opt.maneuverline)
 				{
-					OrbMech::REVUP(R_AP, V_APF, 0.5, mu, R_AH, V_AH, dt_PH);
+					OrbMech::REVUP(R_AP, V_APF, 0.5*(double)opt.N_PB, mu, R_AH, V_AH, dt_PH);
 				}
 				else
 				{
@@ -7933,8 +7976,8 @@ VECTOR3 RTCC::HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT)
 	hSun = oapiGetObjectByName("Sun");
 	v->GetRelativePos(hSun, R_SC);
 	R_SC = _V(R_SC.x, R_SC.z, R_SC.y);
-	UZ = -unit(R_SC);
-	UY = unit(crossp(UZ, _V(0.0, 0.0, 1.0)));
+	UZ = unit(R_SC);
+	UY = unit(crossp(UZ, _V(0.0, 0.0, -1.0)));
 	UX = crossp(UY, UZ);
 
 	SMNB = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
