@@ -1698,6 +1698,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarLiftoffTimeOpt opt;
 		LunarLiftoffResults res;
 		SV sv_CSM, sv_CSM_upl, sv_Ins;
+		MATRIX3 Rot, Rot2;
 		VECTOR3 R_LS;
 		char buffer1[100], buffer2[1000];
 		double GETbase, m0, theta_1, dt_1, R_M;
@@ -1707,6 +1708,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
+		calcParams.tgt->GetRotationMatrix(Rot);
+		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
 
 		opt.alt = calcParams.LSAlt;
 		opt.GETbase = GETbase;
@@ -1739,6 +1742,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		ascopt.TIG = res.t_L;
 		ascopt.v_LH = res.v_LH;
 		ascopt.v_LV = res.v_LV;
+		ascopt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
 
 		LunarAscentPAD(ascopt, *form);
 
@@ -2074,6 +2078,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		ASCPADOpt ascopt;
 		SV sv_CSM;
+		MATRIX3 Rot, Rot2;
 		VECTOR3 R_LS;
 		double GETbase, m0;
 		char buffer1[128];
@@ -2084,6 +2089,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
+		calcParams.tgt->GetRotationMatrix(Rot);
+		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
 
 		ascopt.GETbase = GETbase;
 		ascopt.R_LS = R_LS;
@@ -2091,11 +2098,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		ascopt.TIG = calcParams.LunarLiftoff;
 		ascopt.v_LH = DeltaV_LVLH.x;
 		ascopt.v_LV = DeltaV_LVLH.y;
+		ascopt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
 
 		LunarAscentPAD(ascopt, *form);
 
 		OrbMech::format_time_HHMMSS(buffer1, TimeofIgnition);
-		sprintf(form->remarks, "LM weight is %.0f, T14 is %s", m0 / 0.45359237, buffer1);
+		sprintf(form->remarks, "LM weight is %.0f, T%d is %s", m0 / 0.45359237, mcc->MoonRev - 10, buffer1);
 	}
 	break;
 	case 103: //NOMINAL CSI PAD
@@ -2163,17 +2171,17 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (fcn == 110)
 		{
-			MCCtime = calcParams.TEI + 15.0*3600.0;
+			MCCtime = calcParams.TEI + 17.0*3600.0;
 			sprintf(manname, "MCC-5");
 		}
 		else if (fcn == 111 || fcn == 112)
 		{
-			MCCtime = calcParams.EI - 15.0*3600.0;
+			MCCtime = calcParams.EI - 22.0*3600.0;
 			sprintf(manname, "MCC-6");
 		}
 		else if (fcn == 113 || fcn == 114)
 		{
-			MCCtime = calcParams.EI - 2.0*3600.0;
+			MCCtime = calcParams.EI - 3.0*3600.0;
 			sprintf(manname, "MCC-7");
 		}
 
@@ -2193,12 +2201,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.entrylongmanual = true;
 		entopt.GETbase = GETbase;
 		entopt.impulsive = RTCC_NONIMPULSIVE;
-		entopt.lng = -165.0*RAD;
+		entopt.lng = -172.37*RAD;
 		entopt.ReA = 0;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
 
-		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
+		EntryTargeting(&entopt, &res);
 
 		//Apollo 11 Mission Rules
 		if (MCCtime > calcParams.EI - 50.0*3600.0)

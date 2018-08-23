@@ -772,6 +772,7 @@ struct ASCPADOpt
 	double v_LH;
 	double v_LV;
 	SV sv_CSM;
+	MATRIX3 Rot_VL;	//Rotation Matrix, vessel to local, left-handed
 };
 
 struct LMARKTRKPADOpt

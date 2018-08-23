@@ -315,6 +315,7 @@ namespace OrbMech {
 	MATRIX3 tmat(MATRIX3 a);
 	template <typename T> int sign(T val);
 	int DoubleToBuffer(double x, double q, int m);
+	int DoubleToDEDA(double x, double q);
 	double cot(double a);
 	void fabs_vektor(double* vektor, int n);
 	double vektor_max(double* vektor, int n);
@@ -361,6 +362,8 @@ namespace OrbMech {
 	MATRIX3 EMPMatrix(double MJD);
 	//Rotation matrix from inertial to LVLH
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);
+	MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG);
+	MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);

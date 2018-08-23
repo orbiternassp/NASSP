@@ -1682,7 +1682,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	sinIGA = dotp(A_MG, X_SM);
 	IGA = atan2(sinIGA, cosIGA);
 
-	EntryPADHorChkPit = PI2 - (horang + coastang + 0.0*31.7*RAD) + IGA;	//Currently COAS, not 31.7° line
+	EntryPADHorChkPit = PI2 - (horang + coastang + 31.7*RAD) + IGA;
 
 	pad.Att05[0] = _V(OrbMech::imulimit(EIangles.x*DEG), OrbMech::imulimit(EIangles.y*DEG), OrbMech::imulimit(EIangles.z*DEG));
 	pad.BSS[0] = EntryCOASstaroct;
@@ -4518,23 +4518,37 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 
 void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 {
-	SV sv_Ins;
-	MATRIX3 Rot;
-	VECTOR3 R_LSP, Q, U_R;
-	double CR, MJD_TIG, SMa, R_D;
+	SV sv_Ins, sv_CSM_TIG;
+	MATRIX3 Rot_LG, Rot_VG;
+	VECTOR3 R_LSP, Q, U_R, Z_B, X_AGS, Y_AGS, Z_AGS;
+	double CR, MJD_TIG, SMa, R_D, delta_L, sin_DL, cos_DL;
 
 	MJD_TIG = OrbMech::MJDfromGET(opt.TIG, opt.GETbase);
-	Rot = OrbMech::GetRotationMatrix(opt.sv_CSM.gravref, MJD_TIG);
-	R_LSP = rhmul(Rot, opt.R_LS);
-	Q = unit(crossp(opt.sv_CSM.V, opt.sv_CSM.R));
+	sv_CSM_TIG = GeneralTrajectoryPropagation(opt.sv_CSM, 0, MJD_TIG);
+
+	Rot_LG = OrbMech::GetRotationMatrix(sv_CSM_TIG.gravref, MJD_TIG);
+	R_LSP = rhmul(Rot_LG, opt.R_LS);
+
+	Q = unit(crossp(sv_CSM_TIG.V, sv_CSM_TIG.R));
 	U_R = unit(R_LSP);
 	R_D = length(R_LSP) + 60000.0*0.3048;
 	CR = -R_D * asin(dotp(U_R, Q));
-	//CR = dotp(unit(crossp(opt.sv_CSM.V, opt.sv_CSM.R)), R_LSP);
+
 	sv_Ins.R = _V(R_D, 0, 0);
 	sv_Ins.V = _V(opt.v_LV, opt.v_LH, 0);
-	sv_Ins.gravref = opt.sv_CSM.gravref;
+	sv_Ins.gravref = sv_CSM_TIG.gravref;
 	SMa = GetSemiMajorAxis(sv_Ins);
+
+	Rot_VG = OrbMech::GetVesselToGlobalRotMatrix(opt.Rot_VL, Rot_LG);
+	Z_B = mul(Rot_VG, _V(0, 0, 1));
+	Z_B = unit(_V(Z_B.x, Z_B.z, Z_B.y));
+	X_AGS = U_R;
+	Z_AGS = unit(crossp(-Q, X_AGS));
+	Y_AGS = unit(crossp(Z_AGS, X_AGS));
+
+	delta_L = atan2(dotp(Z_B, Z_AGS), dotp(Z_B, Y_AGS));
+	sin_DL = sin(delta_L);
+	cos_DL = cos(delta_L);
 
 	pad.CR = CR / 1852.0;
 	pad.TIG = opt.TIG;
@@ -4543,6 +4557,8 @@ void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 	pad.DEDA225_226 = SMa / 0.3048 / 100.0;
 	pad.DEDA231 = length(opt.R_LS) / 0.3048 / 100.0;
 	sprintf(pad.remarks, "");
+	pad.DEDA047 = OrbMech::DoubleToDEDA(sin_DL, 14);
+	pad.DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 14);
 }
 
 void RTCC::AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr)
@@ -7960,8 +7976,8 @@ VECTOR3 RTCC::HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT)
 	hSun = oapiGetObjectByName("Sun");
 	v->GetRelativePos(hSun, R_SC);
 	R_SC = _V(R_SC.x, R_SC.z, R_SC.y);
-	UZ = -unit(R_SC);
-	UY = unit(crossp(UZ, _V(0.0, 0.0, 1.0)));
+	UZ = unit(R_SC);
+	UY = unit(crossp(UZ, _V(0.0, 0.0, -1.0)));
 	UX = crossp(UY, UZ);
 
 	SMNB = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
