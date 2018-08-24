@@ -1710,6 +1710,8 @@ void ARCore::VecPointCalc()
 {
 	if (VECoption == 0)
 	{
+		if (VECbody == NULL) return;
+
 		VECTOR3 vPos, pPos, relvec, UX, UY, UZ, loc;
 		MATRIX3 M, M_R;
 		double p_T, y_T;

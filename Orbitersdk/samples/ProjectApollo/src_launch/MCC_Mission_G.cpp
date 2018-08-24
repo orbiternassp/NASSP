@@ -312,7 +312,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_AP11LMASCPAD, SubStateTime > 5.0*60.0, 102, MST_G_LUNAR_ORBIT_ASCENT_DAY_5);
 		break;
 	case MST_G_LUNAR_ORBIT_ASCENT_DAY_5: //CSI Data Card to LM Liftoff Evaluation
-		UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->GETEval(rtcc->calcParams.LunarLiftoff + 90.0), 103, MST_G_LUNAR_ORBIT_ASCENT_DAY_6);
+		UpdateMacro(UTP_PADONLY, PT_AP10CSI, rtcc->GETEval(rtcc->calcParams.LunarLiftoff + 20.0), 103, MST_G_LUNAR_ORBIT_ASCENT_DAY_6);
 		break;
 	case MST_G_LUNAR_ORBIT_ASCENT_DAY_6: //LM Liftoff Evaluation to CMC LM State Vector update
 		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.Insertion + 120.0), 104, MST_G_LUNAR_ORBIT_ASCENT_DAY_7, scrubbed, SubStateTime > 15.0*60.0, MST_G_LUNAR_ORBIT_ASCENT_DAY_2);
@@ -367,7 +367,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 112, MST_G_TRANSEARTH_7);
 		break;
 	case MST_G_TRANSEARTH_7: //Entry PAD update to MCC-7 decision update
-		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 6.0*3600.0), 117, MST_G_TRANSEARTH_8);
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 6.0*3600.0), 116, MST_G_TRANSEARTH_8);
 		break;
 	case MST_G_TRANSEARTH_8: //MCC-7 decision update to MCC-7 update
 		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0), 113, MST_G_TRANSEARTH_9);
@@ -376,10 +376,10 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 114, MST_G_TRANSEARTH_10);
 		break;
 	case MST_G_TRANSEARTH_10: //Entry PAD update to final entry update
-		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 1.0*3600.0), 118, MST_G_TRANSEARTH_11);
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 1.0*3600.0), 117, MST_G_TRANSEARTH_11);
 		break;
 	case MST_G_TRANSEARTH_11: //Final entry update to CM/SM separation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->stage == CM_STAGE, 119, MST_ENTRY);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->stage == CM_STAGE, 118, MST_ENTRY);
 		break;
 	case MST_ENTRY:
 		switch (SubState) {

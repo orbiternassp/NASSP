@@ -2171,12 +2171,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (fcn == 110)
 		{
-			MCCtime = calcParams.TEI + 17.0*3600.0;
+			MCCtime = calcParams.TEI + 15.0*3600.0;
 			sprintf(manname, "MCC-5");
 		}
 		else if (fcn == 111 || fcn == 112)
 		{
-			MCCtime = calcParams.EI - 22.0*3600.0;
+			MCCtime = calcParams.EI - 23.0*3600.0;
 			sprintf(manname, "MCC-6");
 		}
 		else if (fcn == 113 || fcn == 114)
@@ -2366,10 +2366,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SplashLongitude = res.longitude;
 	}
 	break;
-	case 116: //ENTRY PAD (ASSUMES NO MCC-6, but MCC-7)
-	case 117: //ENTRY PAD (ASSUMES MCC-6)
-	case 118: //ENTRY PAD (ASSUMES MCC-7)
-	case 119: //FINAL LUNAR ENTRY PAD
+	case 116: //ENTRY PAD (ASSUMES MCC-6)
+	case 117: //ENTRY PAD (ASSUMES MCC-7)
+	case 118: //FINAL LUNAR ENTRY PAD
 	{
 		AP11ENT * form = (AP11ENT *)pad;
 
@@ -2381,7 +2380,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = calcParams.TEPHEM;
 		sv = StateVectorCalc(calcParams.src);
 
-		if (length(DeltaV_LVLH) != 0.0 && fcn != 119)
+		//Burn scrubbed or not
+		if (length(DeltaV_LVLH) != 0.0 && fcn != 118)
 		{
 			entopt.direct = false;
 		}
@@ -2390,7 +2390,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			entopt.direct = true;
 		}
 
-		if (fcn == 119)
+		if (fcn == 118)
 		{
 			REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 		}
@@ -2419,17 +2419,17 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{
-			if (fcn == 117)
+			if (fcn == 116 && length(DeltaV_LVLH) != 0.0)
 			{
 				sprintf(form->remarks[0], "Assumes MCC6");
 			}
-			else if (fcn == 118)
+			else if (fcn == 117 && length(DeltaV_LVLH) != 0.0)
 			{
 				sprintf(form->remarks[0], "Assumes MCC7");
 			}
 		}
 
-		if (fcn == 119)
+		if (fcn == 118)
 		{
 			char buffer1[1000];
 			char buffer2[1000];
