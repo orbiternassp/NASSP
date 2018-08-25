@@ -1239,7 +1239,7 @@ void RTCC::AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad)
 
 	pad.Att = _V(OrbMech::imulimit(FDAIangles.x*DEG), OrbMech::imulimit(FDAIangles.y*DEG), OrbMech::imulimit(FDAIangles.z*DEG));
 	pad.Backup_dV = dV_LOS / 0.3048;
-	pad.dVR = length(opt->dV_LVLH);
+	pad.dVR = length(opt->dV_LVLH) / 0.3048;
 	pad.GETI = opt->TIG;
 	pad.R = R / 1852.0;
 	pad.Rdot = Rdot / 0.3048;
