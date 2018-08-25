@@ -2499,6 +2499,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 12 * H / 14, "P37 PAD", 7);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "DAP PAD", 7);
+		skp->Text(5 * W / 8, 4 * H / 14, "LM Ascent PAD", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 21)
@@ -3512,6 +3513,43 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%f", G->LAP_SV_Insertion.MJD);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
+	else if (screen == 39)
+	{
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "LM Ascent PAD", 13);
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		int hh, mm;
+		double secs;
+
+		SStoHHMMSS(G->LunarLiftoffRes.t_L, hh, mm, secs);
+		sprintf(Buffer, "%+06d HRS", hh);
+		skp->Text(2 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06d MIN TIG", mm);
+		skp->Text(2 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.0f SEC", secs * 100.0);
+		skp->Text(2 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f V (HOR)", G->LunarLiftoffRes.v_LH / 0.3048);
+		skp->Text(2 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f V (VERT) N76", G->LunarLiftoffRes.v_LV / 0.3048);
+		skp->Text(2 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f CROSSRANGE", G->lmascentpad.CR);
+		skp->Text(2 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06d DEDA 047", G->lmascentpad.DEDA047);
+		skp->Text(2 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06d DEDA 053", G->lmascentpad.DEDA053);
+		skp->Text(2 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.0f DEDA 225/226", G->lmascentpad.DEDA225_226);
+		skp->Text(2 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.0f DEDA 231", G->lmascentpad.DEDA231);
+		skp->Text(2 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+
+	}
 	return true;
 }
 
@@ -3896,6 +3934,12 @@ void ApolloRTCCMFD::menuSetAGCEphemerisPage()
 void ApolloRTCCMFD::menuSetLunarAscentPage()
 {
 	screen = 38;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLMAscentPADPage()
+{
+	screen = 39;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -7404,6 +7448,14 @@ void ApolloRTCCMFD::set_AGCEphemTIMEM0(double mjd)
 void ApolloRTCCMFD::menuGenerateAGCEphemeris()
 {
 	G->GenerateAGCEphemeris();
+}
+
+void ApolloRTCCMFD::menuAscentPADCalc()
+{
+	if (G->vesseltype > 1 && G->vessel->GroundContact() && G->target != NULL)
+	{
+		G->AscentPADCalc();
+	}
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)

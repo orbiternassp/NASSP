@@ -1069,6 +1069,7 @@ public:
 	bool GETEval(double get);
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, MATRIX3 REFSMMAT, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG);
 	void PoweredDescentAbortProgram(PDAPOpt opt);
+	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1119,7 +1120,6 @@ private:
 	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
 	double GetSemiMajorAxis(SV sv);
-	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
 	void papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv);
 	bool papiReadScenario_SV(char *line, char *item, SV &sv);
 	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);

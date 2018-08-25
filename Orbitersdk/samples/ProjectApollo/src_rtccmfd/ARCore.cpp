@@ -793,6 +793,16 @@ ARCore::ARCore(VESSEL* v)
 	DAP_PAD.PitchTrim = 0.0;
 	DAP_PAD.ThisVehicleWeight = 0.0;
 	DAP_PAD.YawTrim = 0.0;
+
+	lmascentpad.CR = 0.0;
+	lmascentpad.DEDA047 = 0;
+	lmascentpad.DEDA053 = 0;
+	lmascentpad.DEDA225_226 = 0.0;
+	lmascentpad.DEDA231 = 0.0;
+	sprintf(lmascentpad.remarks, "");
+	lmascentpad.TIG = 0.0;
+	lmascentpad.V_hor = 0.0;
+	lmascentpad.V_vert = 0.0;
 }
 
 ARCore::~ARCore()
@@ -969,6 +979,11 @@ void ARCore::DKICalc()
 void ARCore::LAPCalc()
 {
 	startSubthread(20);
+}
+
+void ARCore::AscentPADCalc()
+{
+	startSubthread(21);
 }
 
 void ARCore::DAPPADCalc()
@@ -1710,6 +1725,8 @@ void ARCore::VecPointCalc()
 {
 	if (VECoption == 0)
 	{
+		if (VECbody == NULL) return;
+
 		VECTOR3 vPos, pPos, relvec, UX, UY, UZ, loc;
 		MATRIX3 M, M_R;
 		double p_T, y_T;
@@ -3100,6 +3117,29 @@ int ARCore::subThread()
 		LAP_Theta = theta;
 		LAP_DT = dt;
 		LAP_SV_Insertion = sv_Ins;
+
+		Result = 0;
+	}
+	break;
+	case 21: //LM Ascent PAD
+	{
+		ASCPADOpt opt;
+		SV sv_CSM;
+		MATRIX3 Rot, Rot2;
+
+		sv_CSM = rtcc->StateVectorCalc(target);
+		vessel->GetRotationMatrix(Rot);
+		oapiGetRotationMatrix(sv_CSM.gravref, &Rot2);
+
+		opt.GETbase = GETbase;
+		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
+		opt.R_LS = rtcc->RLS_from_latlng(LSLat, LSLng, LSAlt);
+		opt.sv_CSM = sv_CSM;
+		opt.TIG = LunarLiftoffRes.t_L;
+		opt.v_LH = LunarLiftoffRes.v_LH;
+		opt.v_LV = LunarLiftoffRes.v_LV;
+
+		rtcc->LunarAscentPAD(opt, lmascentpad);
 
 		Result = 0;
 	}
