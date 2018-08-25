@@ -2549,7 +2549,7 @@ void MCC::drawPad(){
 			{
 				format_time(tmpbuf, form->GETI[i]);
 				format_time(tmpbuf2, form->GET400K[i]);
-				sprintf(buffer, "%s%s GETI\nX%+04.0f DVT\nX%+5.1f LONG\n%s GET 400K\n", buffer, tmpbuf, form->dVT[i], form->lng[i], tmpbuf2);
+				sprintf(buffer, "%s-------------------------\n%s GETI\nX%+04.0f DVT\nX%+5.1f LONG\n%s GET 400K\n", buffer, tmpbuf, form->dVT[i], form->lng[i], tmpbuf2);
 			}
 			oapiAnnotationSetText(NHpad, buffer);
 		}
