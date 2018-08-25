@@ -349,6 +349,8 @@ public:
 	void set_AGCEphemTIMEM0(double mjd);
 	void menuGenerateAGCEphemeris();
 	void cycleVECPOINTOpt();
+	void menuSetLMAscentPADPage();
+	void menuAscentPADCalc();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

@@ -56,6 +56,7 @@ public:
 	void DKICalc();
 	void LAPCalc();
 	void DAPPADCalc();
+	void AscentPADCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -354,6 +355,9 @@ public:
 	double LAP_Theta;			//Angle travelled between liftoff and insertion
 	double LAP_DT;				//Ascent burntime (liftoff to insertion)
 	SV LAP_SV_Insertion;
+
+	//LM Ascent PAD
+	AP11LMASCPAD lmascentpad;
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99
