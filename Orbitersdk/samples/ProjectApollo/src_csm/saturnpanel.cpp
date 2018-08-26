@@ -5709,7 +5709,8 @@ void Saturn::InitSwitches() {
 	BatteryChargeRotary.AddPosition(3,  30);
 	BatteryChargeRotary.Register(PSH, "BatteryChargeRotary", 0);
 	
-	DockingProbeExtdRelSwitch.Register(PSH, "DockingProbeExtdRelSwitch", THREEPOSSWITCH_CENTER, false);
+	DockingProbeExtdRelSwitch.Register(PSH, "DockingProbeExtdRelSwitch", THREEPOSSWITCH_CENTER, false, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	DockingProbeExtdRelSwitch.SetDelayTime(5);
 	DockingProbeExtdRelSwitch.SetGuardResetsState(false);
 	DockingProbeRetractPrimSwitch.Register(PSH, "DockingProbeRetractPrimSwitch", THREEPOSSWITCH_CENTER);
 	DockingProbeRetractSecSwitch.Register(PSH, "DockingProbeRetractSecSwitch", THREEPOSSWITCH_CENTER);
