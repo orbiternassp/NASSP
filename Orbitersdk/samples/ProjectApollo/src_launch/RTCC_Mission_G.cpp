@@ -2224,49 +2224,52 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			}
 		}
 
-		if (fcn == 114)
+		if (fcn != 113)
 		{
-			REFSMMATOpt refsopt;
-			refsopt.GETbase = GETbase;
-			refsopt.dV_LVLH = res.dV_LVLH;
-			refsopt.P30TIG = res.P30TIG;
-			refsopt.REFSMMATdirect = false;
-			refsopt.REFSMMATopt = 3;
-			refsopt.vessel = calcParams.src;
+			if (fcn == 114)
+			{
+				REFSMMATOpt refsopt;
+				refsopt.GETbase = GETbase;
+				refsopt.dV_LVLH = res.dV_LVLH;
+				refsopt.P30TIG = res.P30TIG;
+				refsopt.REFSMMATdirect = false;
+				refsopt.REFSMMATopt = 3;
+				refsopt.vessel = calcParams.src;
 
-			REFSMMAT = REFSMMATCalc(&refsopt);
-		}
-		else
-		{
-			REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
-		}
+				REFSMMAT = REFSMMATCalc(&refsopt);
+			}
+			else
+			{
+				REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+			}
 
-		if (scrubbed)
-		{
-			//Entry prediction without maneuver
-			EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
+			if (scrubbed)
+			{
+				//Entry prediction without maneuver
+				EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
 
-			res.dV_LVLH = _V(0, 0, 0);
-			res.P30TIG = entopt.TIGguess;
-		}
-		else
-		{
-			opt.dV_LVLH = res.dV_LVLH;
-			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
-			opt.GETbase = GETbase;
-			opt.HeadsUp = false;
-			opt.REFSMMAT = REFSMMAT;
-			opt.TIG = res.P30TIG;
-			opt.vessel = calcParams.src;
-			opt.vesseltype = 0;
+				res.dV_LVLH = _V(0, 0, 0);
+				res.P30TIG = entopt.TIGguess;
+			}
+			else
+			{
+				opt.dV_LVLH = res.dV_LVLH;
+				opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
+				opt.GETbase = GETbase;
+				opt.HeadsUp = false;
+				opt.REFSMMAT = REFSMMAT;
+				opt.TIG = res.P30TIG;
+				opt.vessel = calcParams.src;
+				opt.vesseltype = 0;
 
-			AP11ManeuverPAD(&opt, *form);
-			sprintf(form->purpose, manname);
-			form->lat = res.latitude*DEG;
-			form->lng = res.longitude*DEG;
-			form->RTGO = res.RTGO;
-			form->VI0 = res.VIO / 0.3048;
-			form->GET05G = res.GET05G;
+				AP11ManeuverPAD(&opt, *form);
+				sprintf(form->purpose, manname);
+				form->lat = res.latitude*DEG;
+				form->lng = res.longitude*DEG;
+				form->RTGO = res.RTGO;
+				form->VI0 = res.VIO / 0.3048;
+				form->GET05G = res.GET05G;
+			}
 		}
 
 		if (scrubbed)

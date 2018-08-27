@@ -379,7 +379,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 114, MST_G_TRANSEARTH_10);
 		break;
 	case MST_G_TRANSEARTH_10: //Entry PAD update to final entry update
-		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 1.0*3600.0), 117, MST_G_TRANSEARTH_11);
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, rtcc->GETEval(rtcc->calcParams.EI - 45.0*60.0), 117, MST_G_TRANSEARTH_11);
 		break;
 	case MST_G_TRANSEARTH_11: //Final entry update to CM/SM separation
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->stage == CM_STAGE, 118, MST_ENTRY);
