@@ -766,6 +766,7 @@
 #define AID_PRESS_EQUAL_VALVE_HANDLE                       1051
 #define IDB_CSM_LOWER_MAIN_PANEL_OPEN					   1052
 #define AID_FORWARD_HATCH								   1053
+#define IDB_CSM_LEFT_317_WINDOW                            1054
 
 // Next default values for new objects
 //

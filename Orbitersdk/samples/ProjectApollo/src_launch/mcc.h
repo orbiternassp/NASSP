@@ -160,6 +160,14 @@
 #define PT_AP9LMTPI			19
 #define PT_AP9LMCDH			20
 #define PT_S065UPDATE		21
+#define PT_AP11AGSACT		22
+#define PT_AP11PDIPAD		23
+#define PT_PDIABORTPAD		24
+#define PT_AP11T2ABORTPAD	25
+#define PT_AP11T3ABORTPAD	26
+#define PT_AP11P76PAD		27
+#define PT_AP11LMASCPAD		28
+#define PT_LIFTOFFTIMES		29
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -436,6 +444,8 @@ struct AP11MNV {
 
 // APOLLO 11 LM - MANEUVER
 struct AP11LMMNV {
+	AP11LMMNV() : type(0) {}
+
 	char purpose[64];	// PURPOSE
 	double GETI;		// TIG
 	VECTOR3 dV;			// P30 dV
@@ -453,6 +463,12 @@ struct AP11LMMNV {
 
 	//Not part of the PAD
 	VECTOR3 IMUAtt;		// Inertial Attitude at TIG
+
+	//Optional
+	double t_CSI;
+	double t_TPI;
+
+	int type; //0 = PAD with BSS, 1 = PAD without BSS, but with CSI and TPI
 };
 
 // APOLLO 11 PDI PAD
@@ -526,11 +542,24 @@ struct AP10DAPDATA
 
 struct AP10CSI
 {
+	AP10CSI() : type(0) {}
 	double t_CSI;
 	double t_TPI;
 	VECTOR3 dV_LVLH;
 	double PLM_FDAI;
 	VECTOR3 dV_AGS;
+	double DEDA373;
+	double DEDA275;
+	int type;		//0 = Apollo 10, 1 = Apollo 11 CSI Data Card
+};
+
+//LIFTOFF TIME LIST
+struct LIFTOFFTIMES
+{
+	LIFTOFFTIMES() : entries(0) {}
+	double TIG[10];
+	int entries;
+	int startdigit;
 };
 
 //APOLLO 9 LM AOT STAR OBSERVATION PAD
@@ -562,6 +591,74 @@ struct S065UPDATE
 struct TORQANG
 {
 	VECTOR3 V42Angles;
+};
+
+//APOLLO 11 AGS ACTIVATION PAD
+
+struct AP11AGSACT
+{
+	double KFactor;
+	int DEDA224;	//Term in O.I. Semimajor Axis
+	int DEDA225;	//Predicted O.I. LM Semi-Major Axis Lower Limit
+	int DEDA226;	//Predicted O.I. LM Semi-Major Axis Upper Limit
+	int DEDA227;	//Factor in O.I. LM Desired Semi-major Axis
+};
+
+//APOLLO 11 PDI ABORT PAD
+
+struct PDIABORTPAD
+{
+	PDIABORTPAD() : type(0) {}
+	double T_TPI_Pre10Min;	//GET of TPI maneuver for abort prior to PDI+10 minutes
+	double T_Phasing;		//GET of Phasing maneuver for abort subsequent to PDI+10 minutes
+	double T_TPI_Post10Min;	//GET of TPI maneuver for abort subsequent to PDI+10 minutes
+	int type;				//0 = PDI Abort PAD for LM, 1 = CSM Rescue PAD
+};
+
+//APOLLO 11 T2 ABORT PAD
+
+struct AP11T2ABORTPAD
+{
+	double TIG;
+	double t_Phasing;
+	double t_CSI1;
+	double t_TPI;
+};
+
+//APOLLO 11 T3 ABORT PAD
+
+struct AP11T3ABORTPAD
+{
+	double TIG;
+	double t_Period;
+	double t_PPlusDT;
+	double t_CSI;
+	double t_TPI;
+};
+
+//APOLLO 11 P76 UPDATE PAD
+
+struct AP11P76PAD
+{
+	int entries = 0;
+	char purpose[2][16];
+	double TIG[2];
+	VECTOR3 DV[2];
+};
+
+//APOLLO 11 LM ASCENT PAD
+
+struct AP11LMASCPAD
+{
+	double TIG;			//Time of APS ignition for LM ascent
+	double V_hor;		//horizontal velocity at orbit insertion
+	double V_vert;		//Vertical velocity at orbit insertion
+	double CR;			//Crossrange distance at orbital insertion
+	int DEDA047;		//Sine of landing azimuth angle
+	int DEDA053;		//Cosine of landing azimuth angle
+	double DEDA225_226;	//Lower/Upper limit of semi-major axis at orbit insertion
+	double DEDA231;		//Radial distance of launch site from center of Moon
+	char remarks[128];
 };
 
 //GENERIC STRING

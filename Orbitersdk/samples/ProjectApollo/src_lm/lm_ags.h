@@ -22,6 +22,8 @@
 
   **************************************************************************/
 
+#pragma once
+
 #include "yaAGS/aea_engine.h"
 #include <queue>
 

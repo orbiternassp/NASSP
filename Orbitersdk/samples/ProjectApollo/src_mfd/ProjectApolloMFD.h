@@ -54,6 +54,7 @@ public:
 	bool SetTimebaseUpdate(char *rstr);
 	void CalculateV42Angles(void);
 	void menuPressEnterOnCMCLGC(void);
+	void menuPressEnterOnDSKYDEDA(void);
 	void menuCycleLMAlignType();
 
 	void menuVoid();

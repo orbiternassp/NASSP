@@ -228,12 +228,14 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "DOI_alt", G->DOI_alt);
 
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
+	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_Liftoff_guess);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
 	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
 	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
 	papiWriteScenario_bool(scn, "DKI_Radial_DV", G->DKI_Radial_DV);
-	oapiWriteScenario_int(scn, "DKI_N", G->DKI_N);
+	oapiWriteScenario_int(scn, "DKI_N_HC", G->DKI_N_HC);
+	oapiWriteScenario_int(scn, "DKI_N_PB", G->DKI_N_PB);
 
 	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
 
@@ -387,12 +389,14 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "DOI_alt", G->DOI_alt);
 
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
+		papiReadScenario_double(line, "t_Liftoff_guess", G->t_Liftoff_guess);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
 		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
 		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
 		papiReadScenario_bool(line, "DKI_Radial_DV", G->DKI_Radial_DV);
-		papiReadScenario_int(line, "DKI_N", G->DKI_N);
+		papiReadScenario_int(line, "DKI_N_HC", G->DKI_N_HC);
+		papiReadScenario_int(line, "DKI_N_PB", G->DKI_N_PB);
 
 		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
@@ -1125,7 +1129,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			REFSMMATName(Buffer, G->REFSMMATcur);
 			skp->Text((int)(0.5 * W / 8), 6 * H / 14, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%.1f h", G->AGSKFactor / 3600.0);
+			int hh, mm;
+			double secs;
+
+			SStoHHMMSS(G->AGSKFactor, hh, mm, secs);
+			sprintf(Buffer, "%d:%02d:%05.2f GET", hh, mm, secs);
 			skp->Text((int)(0.5 * W / 8), 12 * H / 14, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%+06.0f", G->agssvpad.DEDA240);
@@ -2101,6 +2109,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 2 * H / 14, "DOI", 3);
 		skp->Text(5 * W / 8, 4 * H / 14, "Plane Change", 12);
 		skp->Text(5 * W / 8, 6 * H / 14, "Lunar Liftoff", 13);
+		skp->Text(5 * W / 8, 8 * H / 14, "Lunar Ascent", 12);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 15)
@@ -2490,6 +2499,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 12 * H / 14, "P37 PAD", 7);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "DAP PAD", 7);
+		skp->Text(5 * W / 8, 4 * H / 14, "LM Ascent PAD", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 21)
@@ -2717,40 +2727,60 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Liftoff", 13);
 
-		GET_Display(Buffer, G->t_TPIguess);
-		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->t_Liftoff_guess);
+		skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 4 * H / 14, "Rendezvous Schedule:", 20);
+		skp->Text((int)(0.5 * W / 8), 8 * H / 21, "Rendezvous Schedule:", 20);
 
-		skp->Text(1 * W / 8, 8 * H / 21, "Launch Time:", 12);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_L);
-		skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 9 * H / 21, "Launch:", 7);
+		GET_Display(Buffer, G->LunarLiftoffRes.t_L);
+		skp->Text(2 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 10 * H / 21, "Insertion:", 10);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_Ins);
-		skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 10 * H / 21, "Insertion:", 10);
+		GET_Display(Buffer, G->LunarLiftoffRes.t_Ins);
+		skp->Text(2 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
 
 		if (G->LunarLiftoffTimeOption == 0)
 		{
-			skp->Text(1 * W / 8, 12 * H / 21, "CSI:", 4);
-			GET_Display(Buffer, G->LunarLiftoffTimes.t_CSI);
-			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+			skp->Text((int)(0.5 * W / 8), 11 * H / 21, "T CSI:", 6);
+			GET_Display(Buffer, G->LunarLiftoffRes.t_CSI);
+			skp->Text(2 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
 
-			skp->Text(1 * W / 8, 14 * H / 21, "CDH:", 4);
-			GET_Display(Buffer, G->LunarLiftoffTimes.t_CDH);
-			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+			skp->Text((int)(0.5 * W / 8), 12 * H / 21, "DV CSI:", 7);
+			sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_CSI / 0.3048);
+			skp->Text(2 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text((int)(0.5 * W / 8), 13 * H / 21, "T CDH:", 6);
+			GET_Display(Buffer, G->LunarLiftoffRes.t_CDH);
+			skp->Text(2 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text((int)(0.5 * W / 8), 14 * H / 21, "DV CDH:", 7);
+			sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_CDH / 0.3048);
+			skp->Text(2 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 		}
 
 		if (G->LunarLiftoffTimeOption == 0 || G->LunarLiftoffTimeOption == 1)
 		{
-			skp->Text(1 * W / 8, 16 * H / 21, "TPI:", 4);
-			GET_Display(Buffer, G->LunarLiftoffTimes.t_TPI);
-			skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+			skp->Text((int)(0.5 * W / 8), 15 * H / 21, "T TPI:", 6);
+			GET_Display(Buffer, G->LunarLiftoffRes.t_TPI);
+			skp->Text(2 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text((int)(0.5 * W / 8), 16 * H / 21, "DV TPI:", 7);
+			sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_TPI / 0.3048);
+			skp->Text(2 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(1 * W / 8, 18 * H / 21, "TPF:", 4);
-		GET_Display(Buffer, G->LunarLiftoffTimes.t_TPF);
-		skp->Text(1 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+		skp->Text((int)(0.5 * W / 8), 17 * H / 21, "T TPF:", 6);
+		GET_Display(Buffer, G->LunarLiftoffRes.t_TPF);
+		skp->Text(2 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text((int)(0.5 * W / 8), 18 * H / 21, "DV TPF:", 7);
+		sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_TPF / 0.3048);
+		skp->Text(2 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text((int)(0.5 * W / 8), 19 * H / 21, "DVT:", 4);
+		sprintf(Buffer, "%.1f ft/s", G->LunarLiftoffRes.DV_T / 0.3048);
+		skp->Text(2 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 
 		if (G->LunarLiftoffTimeOption == 0)
 		{
@@ -2779,11 +2809,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 
 		skp->Text(5 * W / 8, 9 * H / 14, "Horizontal Velocity:", 20);
-		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LH / 0.3048);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffRes.v_LH / 0.3048);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 11 * H / 14, "Vertical Velocity:", 18);
-		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffTimes.v_LV / 0.3048);
+		sprintf(Buffer, "%+.1f ft/s", G->LunarLiftoffRes.v_LV / 0.3048);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 24)
@@ -3274,9 +3304,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "Rescue-2 Sequence", 17);
 		}
-		else
+		else if(G->DKI_Profile == 3)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "TPI Time Only", 13);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "High Dwell Sequence", 19);
 		}
 
 		if (G->DKI_Profile != 3)
@@ -3314,7 +3348,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
 			skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 
-			if (G->DKI_Profile == 1)
+			if (G->DKI_Profile == 1 || G->DKI_Profile == 4)
 			{
 				skp->Text(4 * W / 8, 13 * H / 21, "Boost:", 6);
 				GET_Display(Buffer, G->dkiresult.t_Boost);
@@ -3322,9 +3356,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "%+07.1f ft/s", G->dkiresult.dv_Boost / 0.3048);
 				skp->Text(5 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
 
-				skp->Text(4 * W / 8, 15 * H / 21, "HAM:", 4);
-				GET_Display(Buffer, G->dkiresult.t_HAM);
-				skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+				if (G->DKI_Profile == 1)
+				{
+					skp->Text(4 * W / 8, 15 * H / 21, "HAM:", 4);
+					GET_Display(Buffer, G->dkiresult.t_HAM);
+					skp->Text(5 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+				}
 			}
 
 			skp->Text(4 * W / 8, 16 * H / 21, "CSI:", 4);
@@ -3386,8 +3423,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		sprintf(Buffer, "%d", G->DKI_N);
+		sprintf(Buffer, "%d", G->DKI_N_HC);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%d", G->DKI_N_PB);
+		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->DKI_Maneuver_Line == false)
 		{
@@ -3436,6 +3476,79 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f", G->AGCEphemTIMEM0);
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 38)
+	{
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Lunar Ascent Processor", 22);
+
+		GET_Display(Buffer, G->LunarLiftoffRes.t_L);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f ft/s", G->LunarLiftoffRes.v_LH / 0.3048);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f ft/s", G->LunarLiftoffRes.v_LV / 0.3048);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.3f°", G->LAP_Theta*DEG);
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%.1f s", G->LAP_DT);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.R.x);
+		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.R.y);
+		skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.R.z);
+		skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.V.x);
+		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.V.y);
+		skp->Text(5 * W / 8, 9 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.V.z);
+		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%f", G->LAP_SV_Insertion.MJD);
+		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 39)
+	{
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "LM Ascent PAD", 13);
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		int hh, mm;
+		double secs;
+
+		SStoHHMMSS(G->LunarLiftoffRes.t_L, hh, mm, secs);
+		sprintf(Buffer, "%+06d HRS", hh);
+		skp->Text(2 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06d MIN TIG", mm);
+		skp->Text(2 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.0f SEC", secs * 100.0);
+		skp->Text(2 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+07.1f V (HOR)", G->LunarLiftoffRes.v_LH / 0.3048);
+		skp->Text(2 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f V (VERT) N76", G->LunarLiftoffRes.v_LV / 0.3048);
+		skp->Text(2 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f CROSSRANGE", G->lmascentpad.CR);
+		skp->Text(2 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06d DEDA 047", G->lmascentpad.DEDA047);
+		skp->Text(2 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06d DEDA 053", G->lmascentpad.DEDA053);
+		skp->Text(2 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.0f DEDA 225/226", G->lmascentpad.DEDA225_226);
+		skp->Text(2 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.0f DEDA 231", G->lmascentpad.DEDA231);
+		skp->Text(2 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+
 	}
 	return true;
 }
@@ -3815,6 +3928,18 @@ void ApolloRTCCMFD::menuSetLVDCPage()
 void ApolloRTCCMFD::menuSetAGCEphemerisPage()
 {
 	screen = 37;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLunarAscentPage()
+{
+	screen = 38;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLMAscentPADPage()
+{
+	screen = 39;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -4848,15 +4973,19 @@ void ApolloRTCCMFD::menuSetAGSKFactor()
 	if (G->svmode == 2)
 	{
 		bool AGSKFactorInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the AGS time bias", AGSKFactorInput, 0, 20, (void*)this);
+		oapiOpenInputBox("Choose the AGS time bias (Format: hhh:mm:ss)", AGSKFactorInput, 0, 20, (void*)this);
 	}
 }
 
 bool AGSKFactorInput(void *id, char *str, void *data)
 {
-	if (strlen(str)<20)
+	int hh, mm;
+	double ss, get;
+
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
-		((ApolloRTCCMFD*)data)->set_AGSKFactor(atof(str));
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_AGSKFactor(get);
 		return true;
 	}
 	return false;
@@ -4864,7 +4993,7 @@ bool AGSKFactorInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_AGSKFactor(double time)
 {
-	G->AGSKFactor = time*3600.0;
+	G->AGSKFactor = time;
 }
 
 void ApolloRTCCMFD::t2dialogue()
@@ -4872,8 +5001,6 @@ void ApolloRTCCMFD::t2dialogue()
 	bool T2GETInput(void *id, char *str, void *data);
 	oapiOpenInputBox("Choose the GET for the arrival (Format: hhh:mm:ss)", T2GETInput, 0, 20, (void*)this);
 }
-
-
 
 bool T2GETInput(void *id, char *str, void *data)
 {
@@ -6619,6 +6746,29 @@ void ApolloRTCCMFD::set_TPIguess(double time)
 	G->t_TPIguess = time;
 }
 
+void ApolloRTCCMFD::menuSetLiftoffguess()
+{
+	bool LiftoffGuessInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for liftoff (Format: hhh:mm:ss)", LiftoffGuessInput, 0, 20, (void*)this);
+}
+
+bool LiftoffGuessInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_Liftoffguess(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_Liftoffguess(double time)
+{
+	G->t_Liftoff_guess = time;
+}
+
 void ApolloRTCCMFD::menuTMLat()
 {
 	bool TMLatInput(void* id, char *str, void *data);
@@ -6737,7 +6887,7 @@ void ApolloRTCCMFD::menuTLCCCalc()
 
 void ApolloRTCCMFD::menuLunarLiftoffCalc()
 {
-	if (G->target != NULL)
+	if (G->target != NULL && G->vesseltype > 1)
 	{
 		G->LunarLiftoffCalc();
 	}
@@ -6862,6 +7012,89 @@ void ApolloRTCCMFD::menuDKICalc()
 	}
 }
 
+void ApolloRTCCMFD::menuLAPCalc()
+{
+	if (G->target != NULL && G->vesseltype > 1)
+	{
+		G->LAPCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuSetLAPLiftoffTime()
+{
+	bool LAPLiftoffTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the liftoff time (Format: hhh:mm:ss)", LAPLiftoffTimeInput, 0, 20, (void*)this);
+}
+
+bool LAPLiftoffTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "PDI+%d:%d", &mm, &ss) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_LAPLiftoffTime_DT_PDI((double)mm * 60.0 + (double)ss);
+		return true;
+	}
+	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_LAPLiftoffTime(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LAPLiftoffTime(double time)
+{
+	G->LunarLiftoffRes.t_L = time;
+}
+
+void ApolloRTCCMFD::set_LAPLiftoffTime_DT_PDI(double dt)
+{
+	G->LunarLiftoffRes.t_L = G->pdipad.GETI + dt;
+}
+
+void ApolloRTCCMFD::menuSetLAPHorVelocity()
+{
+	bool LAPHorVelocityInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Horizontal velocity in ft/s:", LAPHorVelocityInput, 0, 20, (void*)this);
+}
+
+bool LAPHorVelocityInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_LAPHorVelocity(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LAPHorVelocity(double vel)
+{
+	this->G->LunarLiftoffRes.v_LH = vel * 0.3048;
+}
+
+void ApolloRTCCMFD::menuSetLAPVerVelocity()
+{
+	bool LAPVerVelocityInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Vertical velocity in ft/s:", LAPVerVelocityInput, 0, 20, (void*)this);
+}
+
+bool LAPVerVelocityInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_LAPVerVelocity(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LAPVerVelocity(double vel)
+{
+	this->G->LunarLiftoffRes.v_LV = vel * 0.3048;
+}
+
 void ApolloRTCCMFD::DKITIGDialogue()
 {
 	bool DKITIGInput(void *id, char *str, void *data);
@@ -6877,6 +7110,13 @@ bool DKITIGInput(void *id, char *str, void *data)
 		double pet;
 		pet = ((ApolloRTCCMFD*)data)->timetoperi();
 		((ApolloRTCCMFD*)data)->set_DKITIG(pet);
+		return true;
+	}
+	else if (strcmp(str, "ApT") == 0)
+	{
+		double apt;
+		apt = ((ApolloRTCCMFD*)data)->timetoapo();
+		((ApolloRTCCMFD*)data)->set_DKITIG(apt);
 		return true;
 	}
 	else if (sscanf(str, "PDI+%lf", &pdidt) == 1)
@@ -6905,7 +7145,7 @@ void ApolloRTCCMFD::set_DKITIG_DT_PDI(double dt)
 
 void ApolloRTCCMFD::menuCycleDKIProfile()
 {
-	if (G->DKI_Profile < 3)
+	if (G->DKI_Profile < 4)
 	{
 		G->DKI_Profile++;
 	}
@@ -6983,26 +7223,48 @@ void ApolloRTCCMFD::set_DKITPIDT(double time)
 	G->DKI_dt_TPI_sunrise = time * 60.0;
 }
 
-void ApolloRTCCMFD::DKINDialogue()
+void ApolloRTCCMFD::DKINHCDialogue()
 {
-	bool DKINInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the number of half-revs between CSI and CDH", DKINInput, 0, 20, (void*)this);
+	bool DKINHCInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the number of half-revs between CSI and CDH", DKINHCInput, 0, 20, (void*)this);
 }
 
-bool DKINInput(void *id, char *str, void *data)
+bool DKINHCInput(void *id, char *str, void *data)
 {
 	int N;
 	if (sscanf(str, "%d", &N) == 1)
 	{
-		((ApolloRTCCMFD*)data)->set_DKIN(N);
+		((ApolloRTCCMFD*)data)->set_DKINHC(N);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_DKIN(int N)
+void ApolloRTCCMFD::set_DKINHC(int N)
 {
-	G->DKI_N = N;
+	G->DKI_N_HC = N;
+}
+
+void ApolloRTCCMFD::DKINPBDialogue()
+{
+	bool DKINPBInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the number of half-revs between Phasing and Boost", DKINPBInput, 0, 20, (void*)this);
+}
+
+bool DKINPBInput(void *id, char *str, void *data)
+{
+	int N;
+	if (sscanf(str, "%d", &N) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_DKINPB(N);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DKINPB(int N)
+{
+	G->DKI_N_PB = N;
 }
 
 void ApolloRTCCMFD::menuDKIDeltaT1()
@@ -7186,6 +7448,14 @@ void ApolloRTCCMFD::set_AGCEphemTIMEM0(double mjd)
 void ApolloRTCCMFD::menuGenerateAGCEphemeris()
 {
 	G->GenerateAGCEphemeris();
+}
+
+void ApolloRTCCMFD::menuAscentPADCalc()
+{
+	if (G->vesseltype > 1 && G->vessel->GroundContact() && G->target != NULL)
+	{
+		G->AscentPADCalc();
+	}
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)

@@ -54,7 +54,9 @@ public:
 	void VecPointCalc();
 	void TerrainModelCalc();
 	void DKICalc();
+	void LAPCalc();
 	void DAPPADCalc();
+	void AscentPADCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -144,7 +146,9 @@ public:
 	double DKI_dt_PBH;	//Delta time between phasing and boost/CSI
 	double DKI_dt_BHAM;	//Delta time between boost and HAM
 	double DKI_dt_HAMH;	//Delta time between HAM and CSI
-	int DKI_N;		//Half revolutions between CSI and CDH
+	int DKI_N_HC;		//Half revolutions between CSI and CDH
+	int DKI_N_PB;		//Number of half revs between Phasing and Boost/Height
+	double t_TPIguess;
 	DKIResults dkiresult;
 
 	//CDH PAGE
@@ -306,7 +310,6 @@ public:
 	OBJHANDLE VECbody;	//handle for the desired body
 	VECTOR3 VECangles;	//IMU angles
 
-
 	//DOI Page
 	int DOI_N;							//Number of revolutions between DOI and PDI
 	double DOIGET;						//Initial guess for the DOI TIG
@@ -343,10 +346,18 @@ public:
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
 
 	//Lunar Liftoff Time Prediction
-	LunarLiftoffResults LunarLiftoffTimes;
-	double t_TPIguess;
+	LunarLiftoffResults LunarLiftoffRes;
 	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
 	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
+	double t_Liftoff_guess;		//Threshold time for lunar liftoff
+
+	//Lunar Ascent Processor
+	double LAP_Theta;			//Angle travelled between liftoff and insertion
+	double LAP_DT;				//Ascent burntime (liftoff to insertion)
+	SV LAP_SV_Insertion;
+
+	//LM Ascent PAD
+	AP11LMASCPAD lmascentpad;
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99

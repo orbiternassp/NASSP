@@ -2422,8 +2422,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	r_P = length(R_gs);
 
 	Rot2 = OrbMech::GetRotationMatrix(gravref, mjd0);
-	R_P = mul(Rot2, R_gs);
-	R_P = _V(R_P.x, R_P.z, R_P.y);
+	R_P = rhmul(Rot2, R_gs);
 
 	U_N = unit(crossp(R_A, V_A));
 	U_LL = unit(crossp(U_N, R_P));
@@ -2482,8 +2481,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 		}
 		oneclickcoast(R_A, V_A, mjd0 + t_S / 24.0 / 3600.0, t - t_S, R_A, V_A, gravref, gravref);
 		Rot2 = OrbMech::GetRotationMatrix(gravref, mjd0 + t / 24.0 / 3600.0);
-		R_P = mul(Rot2, R_gs);
-		R_P = _V(R_P.x, R_P.z, R_P.y);
+		R_P = rhmul(Rot2, R_gs);
 
 		U_N = unit(crossp(R_A, V_A));
 		U_LL = unit(crossp(U_N, R_P));
@@ -3119,11 +3117,11 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 		beta4 = r / length(RPRE);
 		beta12 = beta4 - 1.0;
 		RF = beta4*length(RPRE);
-		if (beta12 > 0)
+		if (beta12*s < 0)
 		{
 			phi4 = -1.0;
 		}
-		else if (x2PRE > 0)
+		else if (x2PRE*s < 0)
 		{
 			phi4 = -1.0;
 		}
@@ -3131,7 +3129,7 @@ double time_radius_integ(VECTOR3 R, VECTOR3 V, double mjd0, double r, double s, 
 		{
 			phi4 = 1.0;
 		}
-		dt21 = time_radius(RPRE, VPRE*phi4, RF, -phi4, mu);
+		dt21 = time_radius(RPRE, VPRE*phi4, RF, phi4*s, mu);
 		dt21 = phi4*dt21;
 		beta13 = dt21 / dt21apo;
 
@@ -4094,6 +4092,24 @@ int DoubleToBuffer(double x, double q, int m)
 	return out;
 }
 
+int DoubleToDEDA(double x, double q)
+{
+	int c = 0, out = 0, f = 1;
+
+	x = x * (268435456.0 / pow(2.0, fabs(q)));
+
+	c = 0x3FFF & ((int)fabs(x));
+
+	if (x<0.0) c = 0x7FFF & (~c) + 1; // Polarity change
+
+	while (c != 0) {
+		out += (c & 7) * f;
+		f *= 10;	c = c >> 3;
+	}
+	if (x < 0.0) out = -out;
+	return out;
+}
+
 double DecToDouble(int dec1, int dec2)
 {
 	double val = OrbMech::power(2.0, -14.0)*dec1 + OrbMech::power(2.0, -28.0)*dec2;
@@ -5000,237 +5016,6 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 	CR = -length(R_LS)*sign(dotp(U_N, R_LS))*acos(dotp(unit(R_LS), U_LS));
 }
 
-void LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double t_L_guess, double &t_IG, double &t_TPF, double &v_LH, double &v_LV)
-{
-	MATRIX3 Rot;
-	VECTOR3 R_1, V_1, R_2, V_2, R_PF, V_PF, U_N, U_L, R_L, R_AF, R_PC, V_PC;
-	double t_L, r_M, mu, r_Ins, r_A, dt, e_Ins, h_Ins, theta_2, MJD_L, MJD_TPF, dt_S, theta_S, dt_2, sw, theta_u;
-	int n;
-
-	r_M = length(R_LS);
-	mu = GGRAV * oapiGetMass(hMoon);
-	t_L = t_L_guess;
-
-	v_LV = 0.0;
-	r_Ins = r_M + h_1;
-	R_1 = _V(r_Ins, 0, 0);
-	r_A = r_M + 60.0*1852.0;
-	dt = 100.0;
-	n = 0;
-
-	while (n < 10 && abs(dt) > 0.1)
-	{
-		e_Ins = (r_A - r_Ins) / (r_A + r_Ins);
-		h_Ins = sqrt(r_A*mu*(1.0 - e_Ins));
-		v_LH = mu / h_Ins * (1.0 + e_Ins);
-		V_1 = _V(0.0, v_LH, 0);
-		REVUP(R_1, V_1, 0.5, mu, R_2, V_2, dt_2);
-		theta_2 = PI;
-
-		MJD_L = GETbase + t_L / 24.0 / 3600.0;
-		MJD_TPF = MJD_L + (dt_1 + dt_2) / 24.0 / 3600.0;
-		oneclickcoast(R_P, V_P, MJD_P, (MJD_TPF - MJD_P)*24.0*3600.0, R_PF, V_PF, hMoon, hMoon);
-
-		Rot = GetRotationMatrix(hMoon, MJD_L);
-		R_L = rhmul(Rot, R_LS);
-		U_N = unit(crossp(R_PF, V_PF));
-		U_L = unit(R_L - U_N * dotp(U_N, R_L));
-
-		dt_S = dt_1 + dt_2;
-		theta_S = theta_1 + theta_2;
-		R_AF = (U_L*cos(theta_S) + crossp(U_N, U_L)*sin(theta_S))*r_A;
-
-		RADUP(R_PF, V_PF, R_AF, mu, R_PC, V_PC);
-		r_A = length(R_PC);
-
-		sw = sign(dotp(U_N, crossp(R_AF, R_PF)));
-		theta_u = sw * acos(dotp(unit(R_AF), unit(R_PF))) + PI * (1.0 - sw);
-		dt = time_theta(R_PF, V_PF, theta_u, mu);
-		t_L -= dt;
-		n++;
-	}
-
-	t_IG = t_L;
-	t_TPF = t_L + dt_S;
-}
-
-void LunarLiftoffTimePredictionDT(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double dt_2, double DH, double E, double &t_TPI, double theta_F, double &t_IG, double &t_TPF, double &v_LH, double &v_LV)
-{
-	MATRIX3 Rot;
-	VECTOR3 U_N, R_1, V_1, R_2, V_2, R_6, V_6, R_5, R_L, U_L;
-	int n;
-	double r_M, mu, theta_2, r_A, MJD_TPI, theta_S, dt, MJD_L, dt_S, t_2, sw, theta_u, r_Ins, dt_F;
-	double t_L, x, theta_6, v_LHo, eps1, e_T, p_I, c_I, e_To;
-	int s_F;
-
-	r_M = length(R_LS);
-	mu = GGRAV*oapiGetMass(hMoon);
-
-	U_N = unit(crossp(R_P, V_P));
-	n = 0;
-	dt = 100.0;
-	r_Ins = r_M + h_1;
-	R_1 = _V(r_Ins, 0, 0);
-
-	t_L = t_TPI - 40.0*60.0;
-	v_LV = 32.0*0.3048;
-	v_LH = 5525.0*0.3048;
-
-	eps1 = 0.01;
-
-	while (n < 10 && abs(dt)>0.5)
-	{
-		t_TPI = t_L + dt_1 + dt_2;
-		MJD_TPI = GETbase + t_TPI / 24.0 / 3600.0;
-		oneclickcoast(R_P, V_P, MJD_P, (MJD_TPI - MJD_P)*24.0*3600.0, R_6, V_6, hMoon, hMoon);
-		r_A = length(R_6) - DH;
-		dt_F = time_theta(R_6, V_6, theta_F, mu);
-		x = asin((1.0 - DH / length(R_6))*cos(E));
-		theta_6 = sign(DH)*(PI05 - x) - E;
-		R_5 = (unit(R_6)*cos(theta_6) - unit(crossp(crossp(R_6, V_6), R_6))*sin(theta_6))*(length(R_6) - DH);
-
-		p_I = c_I = 0.0;
-		s_F = 0;
-
-		do
-		{
-			V_1 = _V(v_LV, v_LH, 0);
-			rv_from_r0v0(R_1, V_1, dt_2, R_2, V_2, mu);
-			theta_2 = acos(dotp(unit(R_1), unit(R_2)));
-
-			e_T = r_A - length(R_2);
-
-			if (abs(e_T) >= eps1)
-			{
-				ITER(c_I, s_F, e_T, p_I, v_LH, e_To, v_LHo);
-				if (s_F == 1)
-				{
-					//return false;
-				}
-			}
-
-		} while (abs(e_T) >= eps1);
-
-		dt_S = dt_1 + dt_2;
-		theta_S = theta_1 + theta_2;
-		MJD_L = GETbase + t_L / 24.0 / 3600.0;
-		Rot = GetRotationMatrix(hMoon, MJD_L);
-		R_L = rhmul(Rot, R_LS);
-		U_N = unit(crossp(R_6, V_6));
-		U_L = unit(R_L - U_N*dotp(U_N, R_L));
-		R_2 = (U_L*cos(theta_S) + crossp(U_N, U_L)*sin(theta_S))*length(R_2);
-		t_2 = t_L + dt_S;
-
-		sw = sign(dotp(U_N, crossp(R_2, R_5)));
-		theta_u = sw*acos(dotp(unit(R_2), unit(R_5))) + PI*(1.0 - sw);
-		dt = time_theta(R_6, V_6, theta_u, mu);
-		t_L -= dt;
-		t_TPI -= dt;
-		n++;
-	}
-
-	t_IG = t_L;
-	t_TPF = t_TPI + dt_F;
-}
-
-void LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, VECTOR3 R_P, VECTOR3 V_P, double MJD_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double t_TPI, double theta_F, double &t_IG, double &t_CSI, double &t_CDH, double &t_TPF, double &v_LH, double &v_LV)
-{
-	MATRIX3 Rot;
-	VECTOR3 U_N, R_1, V_1, R_2, V_2, R_6, V_6, R_5, V_2F, R_3, V_3, R_S, R_L, U_L, R_3P, V_3P, V_5, R_3F, V_3F;
-	int n;
-	double r_M, mu, theta_2, r_A, x, theta_6, dt_3, MJD_TPI, theta_S, dt, MJD_L, dt_S, t_3, sw, theta_5, theta_u, dt_3P, dt_5, a_1, p, t_AT, theta_3, r_Ins;
-	double dt_2, e_Ins, h_Ins, t_L;
-
-	r_M = length(R_LS);
-	mu = GGRAV*oapiGetMass(hMoon);
-	MJD_TPI = GETbase + t_TPI / 24.0 / 3600.0;
-
-	U_N = unit(crossp(R_P, V_P));
-	n = 0;
-	dt = 100.0;
-	t_L = t_TPI - 2.5*3600.0;
-	r_Ins = r_M + h_1;
-	R_1 = _V(r_Ins, 0, 0);
-
-	oneclickcoast(R_P, V_P, MJD_P, (MJD_TPI - MJD_P)*24.0*3600.0, R_6, V_6, hMoon, hMoon);
-	r_A = length(R_6) - DH;
-
-	e_Ins = (r_A - r_Ins) / (r_A + cos(theta_Ins)*r_Ins);
-	h_Ins = sqrt(r_A*mu*(1.0 - e_Ins));
-	v_LV = mu / h_Ins*e_Ins*sin(theta_Ins);
-	v_LH = mu / h_Ins*(1.0 + e_Ins*cos(theta_Ins));
-	V_1 = _V(v_LV, v_LH, 0);
-	dt_2 = timetoapo(R_1, V_1, mu);
-
-	rv_from_r0v0(R_1, V_1, dt_2, R_2, V_2, mu);
-	theta_2 = acos(dotp(unit(R_1), unit(R_2)));
-
-	//v_V2 = dotp(V_2, R_2) / sqrt(length(R_2)*mu);
-	x = asin((1.0 - DH / length(R_6))*cos(E));
-	theta_6 = sign(DH)*(PI05 - x) - E;
-	R_5 = (unit(R_6)*cos(theta_6) - unit(crossp(crossp(R_6, V_6), R_6))*sin(theta_6))*(length(R_6) - DH);
-	
-	while (n < 10 && abs(dt)>1.0)
-	{
-		//v_H2 = 1.0;//sqrt((2.0*(1.0 - length(R_2) / r_A) - v_V2*v_V2) / (1.0 - length(R_2)*length(R_2) / r_A / r_A));
-		theta_3 = PI;// -acos(1.0 / sqrt(pow(v_V2*v_H2 / (v_H2*v_H2 - 1.0), 2.0) + 1.0));
-		V_2F = unit(crossp(crossp(R_2, V_2), R_2))*sqrt(mu / length(R_2));
-		//V_2F = (unit(R_2)*v_V2 + unit(crossp(crossp(R_2, V_2), R_2))*v_H2)*sqrt(mu / length(R_2));
-		dt_3 = time_theta(R_2, V_2F, theta_3, mu);
-		rv_from_r0v0(R_2, V_2F, dt_3, R_3, V_3, mu);
-		dt_S = dt_1 + dt_2 + dt_3;
-		R_S = R_3;
-		theta_S = theta_1 + theta_2 + theta_3;
-
-		MJD_L = GETbase + t_L / 24.0 / 3600.0;
-		Rot = GetRotationMatrix(hMoon, MJD_L);
-		R_L = rhmul(Rot, R_LS);
-		U_N = unit(crossp(R_6, V_6));
-		U_L = unit(R_L - U_N*dotp(U_N, R_L));
-		R_3 = (U_L*cos(theta_S) + crossp(U_N, U_L)*sin(theta_S))*length(R_3);
-		t_3 = t_L + dt_S;
-
-		sw = sign(dotp(U_N, crossp(R_3, R_5)));
-		theta_5 = sw*acos(dotp(unit(R_3), unit(R_5))) + PI*(1.0 - sw);
-		theta_u = sw*acos(dotp(unit(R_3), unit(R_6))) + PI*(1.0 - sw);
-		dt_3P = time_theta(R_6, V_6, -theta_u, mu);
-		rv_from_r0v0(R_6, V_6, dt_3P, R_3P, V_3P, mu);
-		COE(R_3P, V_3P, DH, mu, R_3F, V_3F);
-
-		dt_5 = time_theta(R_3, V_3F, theta_5, mu);
-		if (dt_5 < 0.0)
-		{
-			dt_5 += period(R_3, V_3F, mu);
-		}
-		rv_from_r0v0(R_3, V_3F, dt_5, R_5, V_5, mu);
-		a_1 = length(R_3) / (2.0 - length(V_3F)*length(V_3F)*length(R_3) / mu);
-		r_A = length(R_3P) - DH;
-		p = PI2*sqrt(pow(a_1, 3) / mu);
-		t_AT = t_3 + dt_5 + p*floor((t_TPI - t_3) / p);
-		dt = t_TPI - t_AT;
-
-		if (abs(dt) > 1.0)
-		{
-			n++;
-			t_L = t_L + dt;
-		}
-	}
-
-	double v_V3, dV_CSI, dV_CDH, dt_F;
-
-	t_IG = t_L;
-	t_CSI = t_L + dt_1 + dt_2;
-	t_CDH = t_3;
-
-	dt_F = time_theta(R_6, V_6, theta_F, mu);
-
-	t_TPF = t_TPI + dt_F;
-	dV_CSI = length(V_2F - V_2);
-	v_V3 = dotp(V_3, unit(R_S));
-	V_3 = unit(R_3)*v_V3 + unit(crossp(U_N, R_3))*sqrt(length(V_3)*length(V_3) - v_V3*v_V3);
-	dV_CDH = length(V_3F - V_3);
-}
-
 void REVUP(VECTOR3 R, VECTOR3 V, double n, double mu, VECTOR3 &R1, VECTOR3 &V1, double &t)
 {
 	double a;
@@ -5404,6 +5189,16 @@ MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V)
 	return _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
 }
 
+MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG)
+{
+	return mul(tmat(Rot_LG), Rot_VG);
+}
+
+MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG)
+{
+	return mul(Rot_LG, Rot_VL);
+}
+
 void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff)
 {
 	VECTOR3 RPP1, RPP2, VAP1, dVLV1, dVLV2;
@@ -5559,7 +5354,7 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0)
 	return g;
 }
 
-void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff, bool agc)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
 	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
@@ -5606,29 +5401,36 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	//double apo, peri;
 	//periapo(R_p, V_p, mu, apo, peri);
 
-	VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
-
-	MATRIX3 Q_Xx;
-	double theta_T;
-
-	X = unit(crossp(crossp(R_ig, V_ig), R_ig));
-	Y = unit(crossp(V_ig, R_ig));
-	Z = -unit(R_ig);
-
-	Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
-	dV_LV = mul(Q_Xx, V_go);
-	DV_P = X*dV_LV.x + Z*dV_LV.z;
-	if (length(DV_P) != 0.0)
+	if (agc)
 	{
-		theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
-		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
-		V_G = DV_C + Y*dV_LV.y;
+		VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
+
+		MATRIX3 Q_Xx;
+		double theta_T;
+
+		X = unit(crossp(crossp(R_ig, V_ig), R_ig));
+		Y = unit(crossp(V_ig, R_ig));
+		Z = -unit(R_ig);
+
+		Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
+		dV_LV = mul(Q_Xx, V_go);
+		DV_P = X * dV_LV.x + Z * dV_LV.z;
+		if (length(DV_P) != 0.0)
+		{
+			theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
+			DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
+			V_G = DV_C + Y * dV_LV.y;
+		}
+		else
+		{
+			V_G = X * dV_LV.x + Y * dV_LV.y + Z * dV_LV.z;
+		}
+		Llambda = V_G;
 	}
 	else
 	{
-		V_G = X*dV_LV.x + Y*dV_LV.y + Z*dV_LV.z;
+		Llambda = V_go;
 	}
-	Llambda = V_G;
 
 	R_cutoff = R_p;
 	V_cutoff = V_p;
