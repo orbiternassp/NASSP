@@ -351,6 +351,8 @@ public:
 	void cycleVECPOINTOpt();
 	void menuSetLMAscentPADPage();
 	void menuAscentPADCalc();
+	void menuSetPDAPPage();
+	void menuPDAPCalc();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

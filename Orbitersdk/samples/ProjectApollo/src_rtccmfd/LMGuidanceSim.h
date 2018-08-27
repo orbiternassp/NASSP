@@ -80,8 +80,8 @@ class DescentGuidance
 {
 public:
 	DescentGuidance();
-	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I);
-	void Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp);
+	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W);
+	void Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDI, double &ttgo, double &Thrust, double &isp);
 protected:
 	//Descent phase
 	// -2: preignition
@@ -106,22 +106,53 @@ protected:
 	static const double ULISP;
 	//DPS specific impulse
 	static const double XKISP;
+	//Lunar gravitational constant
+	static const double mu_M;
+	//Maximum force in throttable region
+	static const double MAXFORCE;
+	///Minimum force in throttable region
+	static const double MINFORCE;
+	//Braking and approach phase position targets 
+	double XRD[6];
+	//Braking and approach phase velocity targets 
+	double XVD[6];
+	//Braking and approach phase acceleration targets 
+	double XAD[6];
+	//Braking and approach phase jerk targets 
+	double XJD[6];
+	//time to go in current phase
+	double t_go;
+	VECTOR3 RDG, VDG, ADG, JDG;
+	double eps;
+	double DELTGO;
+	MATRIX3 REFSMMAT;
+	double t_pip, t_pipold;
+	VECTOR3 R_LSP;
+	VECTOR3 RP, VP, WP, GP;
+	double r_LS;
+	VECTOR3 ULP, UXGP, UYGP, UZGP, WXR, RG, VG, ACG, A_FDP;
+	MATRIX3 C_GP;
+	double FC;
 };
 
 class AscDescIntegrator
 {
 public:
 	AscDescIntegrator();
+	void Init(VECTOR3 U_TD_init);
 	bool Integration(VECTOR3 &R, VECTOR3 &V, double &mnow, double &t_total, VECTOR3 U_TD, double t_remain, double Thrust, double Isp);
+	VECTOR3 GetCurrentTD() { return U_TD_cur; }
 private:
 	VECTOR3 gravity(VECTOR3 R);
 protected:
 	//Lunar gravitational constant
 	static const double mu_M;
 	//Timestep
-	double dt, dt_max;
+	double dt, dt_max, max_rate;
 	//Accumulated DV over the timestep
 	VECTOR3 DVDT;
 	//Gravity at begin and end of timestep
 	VECTOR3 G_P, G_PDT;
+	//Current thrust direction
+	VECTOR3 U_TD_cur;
 };

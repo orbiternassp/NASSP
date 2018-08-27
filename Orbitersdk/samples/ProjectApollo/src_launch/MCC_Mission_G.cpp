@@ -66,6 +66,7 @@ void MCC::MissionSequence_G()
 		{
 			if (rtcc->GETEval(rtcc->calcParams.TLI + 3600.0 + 10.0*60.0))
 			{
+				SlowIfDesired();
 				setState(MST_G_TRANSLUNAR3);
 			}
 		}
@@ -118,6 +119,7 @@ void MCC::MissionSequence_G()
 		case 3:
 			if (rtcc->GETEval(rtcc->calcParams.TLI + 3.0*3600.0))
 			{
+				SlowIfDesired();
 				setState(MST_G_TRANSLUNAR5);
 			}
 			break;
@@ -180,6 +182,7 @@ void MCC::MissionSequence_G()
 		case 1:
 			if (MoonRev >= 2 && MoonRevTime > 35.0*60.0)
 			{
+				SlowIfDesired();
 				setState(MST_G_LUNAR_ORBIT_LOI_DAY_2);
 			}
 			break;

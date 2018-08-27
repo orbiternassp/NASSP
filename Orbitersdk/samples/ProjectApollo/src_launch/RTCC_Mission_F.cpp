@@ -1680,8 +1680,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_Ins = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv_CSM, 0.0);
 
 		SPQOpt coeopt;
-		VECTOR3 dV_CSI;
-		double t_TPI;
+		SPQResults coeres;
 		char GETbuffer[64], GETbuffer2[64];
 
 		coeopt.DH = -15.0*1852.0;
@@ -1693,10 +1692,10 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		coeopt.type = 1;
 		coeopt.t_TIG = calcParams.CSI;
 
-		ConcentricRendezvousProcessor(&coeopt, dV_CSI, t_TPI);
+		ConcentricRendezvousProcessor(&coeopt, coeres);
 
 		OrbMech::format_time_HHMMSS(GETbuffer, calcParams.CSI);
-		OrbMech::format_time_HHMMSS(GETbuffer2, t_TPI);
+		OrbMech::format_time_HHMMSS(GETbuffer2, coeres.t_TPI);
 		sprintf(form->remarks, "CSI: %s, TPI: %s, N equals 1", GETbuffer, GETbuffer2);
 
 		if (preliminary == false)
@@ -1781,10 +1780,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP10CSIPADOpt manopt;
 		SPQOpt opt;
+		SPQResults res;
 		SV sv_CSM, sv_LM, sv_CSI;
 		MATRIX3 Q_Xx;
-		VECTOR3 dV, dV_LVLH;
-		double GETbase, t_TPI, dt_apo, mu;
+		VECTOR3 dV_LVLH;
+		double GETbase, dt_apo, mu;
 
 		AP10CSI * form = (AP10CSI *)pad;
 
@@ -1807,11 +1807,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_TIG = calcParams.CSI;
 		opt.t_TPI = calcParams.TPI;
 
-		ConcentricRendezvousProcessor(&opt, dV, t_TPI);
+		ConcentricRendezvousProcessor(&opt, res);
 
 		sv_CSI = coast(sv_LM, opt.t_TIG - OrbMech::GETfromMJD(sv_LM.MJD, GETbase));
 		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
-		dV_LVLH = mul(Q_Xx, dV);
+		dV_LVLH = _V(res.dV_CSI, 0, 0);
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_APS;

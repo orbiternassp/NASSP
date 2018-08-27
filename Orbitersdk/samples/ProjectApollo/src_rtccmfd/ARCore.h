@@ -57,6 +57,7 @@ public:
 	void LAPCalc();
 	void DAPPADCalc();
 	void AscentPADCalc();
+	void PDAPCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 

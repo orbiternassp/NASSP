@@ -986,6 +986,11 @@ void ARCore::AscentPADCalc()
 	startSubthread(21);
 }
 
+void ARCore::PDAPCalc()
+{
+	startSubthread(22);
+}
+
 void ARCore::DAPPADCalc()
 {
 	if (vesseltype < 2)
@@ -3142,6 +3147,29 @@ int ARCore::subThread()
 		rtcc->LunarAscentPAD(opt, lmascentpad);
 
 		Result = 0;
+	}
+	break;
+	case 22: //Powered Descent Abort Program
+	{
+		PDAPOpt opt;
+		double m0;
+
+		LEM *l = (LEM *)vessel;
+		m0 = l->GetAscentStageMass();
+
+		opt.dt_stage = 999999.9;
+		opt.dt_step = 120.0;
+		opt.GETbase = GETbase;
+		opt.REFSMMAT = REFSMMAT;
+		opt.R_LS = rtcc->RLS_from_latlng(LSLat, LSLng, LSAlt);
+		opt.sv_A = rtcc->StateVectorCalc(vessel);
+		opt.sv_P = rtcc->StateVectorCalc(target);
+		opt.TLAND = t_Land;
+		opt.t_TPI = t_TPI;
+		opt.W_TAPS = m0;
+		opt.W_TDRY = opt.sv_A.mass - vessel->GetPropellantMass(vessel->GetPropellantHandleByIndex(0));
+
+		rtcc->PoweredDescentAbortProgram(opt);
 	}
 	break;
 	}

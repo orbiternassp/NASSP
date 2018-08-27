@@ -2110,6 +2110,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 4 * H / 14, "Plane Change", 12);
 		skp->Text(5 * W / 8, 6 * H / 14, "Lunar Liftoff", 13);
 		skp->Text(5 * W / 8, 8 * H / 14, "Lunar Ascent", 12);
+		skp->Text(5 * W / 8, 10 * H / 14, "Descent Abort", 13);
 		skp->Text(5 * W / 8, 12 * H / 14, "Previous Page", 13);
 	}
 	else if (screen == 15)
@@ -3550,6 +3551,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(2 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
 
 	}
+	else if (screen == 40)
+	{
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Descent Abort", 13);
+
+		if (G->target != NULL)
+		{
+			sprintf(Buffer, G->target->GetName());
+			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
+		}
+	}
 	return true;
 }
 
@@ -3940,6 +3951,12 @@ void ApolloRTCCMFD::menuSetLunarAscentPage()
 void ApolloRTCCMFD::menuSetLMAscentPADPage()
 {
 	screen = 39;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetPDAPPage()
+{
+	screen = 40;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -7455,6 +7472,14 @@ void ApolloRTCCMFD::menuAscentPADCalc()
 	if (G->vesseltype > 1 && G->vessel->GroundContact() && G->target != NULL)
 	{
 		G->AscentPADCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuPDAPCalc()
+{
+	if (G->vesseltype > 1 && G->target != NULL)
+	{
+		G->PDAPCalc();
 	}
 }
 

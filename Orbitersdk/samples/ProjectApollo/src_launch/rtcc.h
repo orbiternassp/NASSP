@@ -320,6 +320,15 @@ struct TwoImpulseResuls
 	double t_TPI;
 };
 
+struct SPQResults
+{
+	double t_CDH;
+	double t_TPI;
+	double DH;
+	double dV_CSI;
+	VECTOR3 dV_CDH;
+};
+
 struct TEIOpt
 {
 	VESSEL* vessel;			//Reentry vessel
@@ -853,10 +862,12 @@ struct PDAPOpt //Powered Descent Abort Program
 	double W_TAPS;
 	//LM weight representative of DPS fuel depletion
 	double W_TDRY;
-	//Initial LM weight
-	double W_INIT;
 	//DT between successive abort points
 	double dt_step;
+	//Time from Insertion to CSI
+	double dt_CSI = 50.0*60.0;
+	//Time of TPI
+	double t_TPI;
 };
 
 struct DockAlignOpt	//Docking Alignment Processor
@@ -1052,7 +1063,7 @@ public:
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
-	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
+	void ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);

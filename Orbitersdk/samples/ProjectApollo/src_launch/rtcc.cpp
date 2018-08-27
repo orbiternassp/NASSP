@@ -2556,8 +2556,6 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 	apo = R_M + opt->h_apo;
 	peri = R_M + opt->h_peri;
-	a = (apo + peri) / 2.0;
-	e = (apo - peri) / (apo + peri);
 	r = length(sv_node.R);
 
 	if (r > apo)													//If the maneuver radius is higher than the desired apoapsis, then we would get no solution
@@ -2569,6 +2567,8 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		peri = r;													//sets the desired periapsis to the current radius, so that we can calculate a maneuver
 	}
 
+	a = (apo + peri) / 2.0;
+	e = (apo - peri) / (apo + peri);
 	h = sqrt(mu*a*(1.0 - e*e));
 
 	double ta[2];
@@ -5578,7 +5578,7 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 		pad.T1[i] = dt1 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
 		pad.T2[i] = dt2 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
 
-		u = unit(_V(R_P.x, R_P.z, R_P.y));
+		u = unit(R_P);
 		sinl = u.z;
 
 		if (gravref == hEarth)
@@ -7890,7 +7890,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	return true;
 }
 
-void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI)
+void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 {
 	SV sv_A1, sv_P1;
 	VECTOR3 u, R_A1, V_A1, V_A1F, R_A2, V_A2, R_P2, V_P2, R_PC, V_PC, V_A2F;
@@ -7911,15 +7911,17 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t
 	if (opt->maneuver == 1)
 	{
 		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A1, mu, R_PC, V_PC);
-		DV_coe = OrbMech::CoellipticDV(R_A1, R_PC, V_PC, mu) - V_A1;
-		t_TPI = opt->t_TPI;
+		res.DH = length(R_PC) - length(R_A1);
+		res.dV_CDH = OrbMech::CoellipticDV(R_A1, R_PC, V_PC, mu) - V_A1;
+		res.t_CDH = opt->t_TIG;
+		res.t_TPI = opt->t_TPI;
 		return;
 	}
 
 	if (opt->type == 0)
 	{
 		VECTOR3 R_P3, V_P3, R_PJ, V_PJ, R_AF, V_AF, R_AFD;
-		double p_C, c_C, eps_C, e_C, e_Co, dv_CSIo;
+		double p_C, c_C, eps_C, e_C, e_Co, dv_CSIo, DH;
 		int s_C;
 
 		eps_C = 0.000004;	//radians
@@ -7928,8 +7930,6 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t
 		dv_CSI = 10.0*0.3048;
 
 		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, opt->t_TPI - opt->t_TIG, R_P3, V_P3, mu);
-		OrbMech::QDRTPI(R_P3, V_P3, opt->GETbase + opt->t_TPI / 24.0 / 3600.0, sv_P1.gravref, mu, opt->DH, opt->E, 0, R_PJ, V_PJ);
-		R_AFD = R_PJ - unit(R_PJ)*opt->DH;
 
 		do
 		{
@@ -7937,8 +7937,12 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t
 			OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
 			t_CDH = opt->t_TIG + dt_1;
 			OrbMech::RADUP(R_P3, V_P3, R_A2, mu, R_PC, V_PC);
+			DH = length(R_PC) - length(R_A2);
 			V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
 			OrbMech::rv_from_r0v0(R_A2, V_A2F, opt->t_TPI - t_CDH, R_AF, V_AF, mu);
+
+			OrbMech::QDRTPI(R_P3, V_P3, opt->GETbase + opt->t_TPI / 24.0 / 3600.0, sv_P1.gravref, mu, DH, opt->E, 0, R_PJ, V_PJ);
+			R_AFD = R_PJ - unit(R_PJ)*DH;
 
 			e_C = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
 
@@ -7948,8 +7952,11 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t
 			}
 		} while (abs(e_C) >= eps_C);
 
-		DV_coe = V_A1F - V_A1;
-		t_TPI = opt->t_TPI;
+		res.dV_CSI = dv_CSI;
+		res.t_CDH = t_CDH;
+		res.dV_CDH = V_A1F - V_A1;
+		res.t_TPI = opt->t_TPI;
+		res.DH = DH;
 	}
 	else
 	{
@@ -7962,8 +7969,11 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t
 		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt->t_TIG, R_P2, V_P2, mu);
 		dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt->E, mu);
 
-		DV_coe = V_A1F - V_A1;
-		t_TPI = t_CDH + dt_TPI;
+		res.dV_CSI = dv_CSI;
+		res.t_CDH = t_CDH;
+		res.dV_CDH = V_A1F - V_A1;
+		res.DH = opt->DH;
+		res.t_TPI = t_CDH + dt_TPI;
 	}
 }
 
@@ -8588,6 +8598,7 @@ void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETba
 	R = R0;
 	V = V0;
 	m1 = m0;
+	integ.Init(unit(R));
 
 	while (stop == false)
 	{
@@ -8640,9 +8651,9 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	K_X = -0.617631;
 	K_Y = -2.4770341207e-6;
 	K_V = -410.0;
-	J_TZG = -0.01882677*0.3048;// / 8.0;
+	J_TZG = 0.01882677*0.3048 / 8.0;
 	A_TZG = -54.6264*0.3048 / 6.0;
-	V_TZG = -18.72*0.3048 / 3.0;
+	V_TZG = -18.72*0.3048 / 18.0;
 	R_TG = _V(52.375308, 0.0, -3254.836061);
 	R_TZG = R_TG.z;
 	V_TG = _V(-105.876, 0.0, -1.04)*0.3048;
@@ -8740,7 +8751,7 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 		return false;
 	}
 
-	sv_IG = coast(sv_I, DELTTRIM);
+	sv_IG = coast(sv_I, -DELTTRIM);
 	t_go = TTT;
 	U_IG = U_FDP;
 	CR = dotp(unit(crossp(V_P, R_P)), R_LSP);
@@ -8748,84 +8759,160 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	return true;
 }
 
+//Based on NTRS 19740072723
 void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
 {
+	SPQOpt conopt;
+	SPQResults conres;
 	DescentGuidance descguid;
 	AscentGuidance ascguid;
 	AscDescIntegrator integ;
-	SV sv_I_guess, sv_IG, sv_D;
-	VECTOR3 U_FDP;
-	double t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp;
+	SV sv_I_guess, sv_IG, sv_D, sv_CSM_Ins, sv_LM_Ins, sv_Abort;
+	MATRIX3 Rot;
+	VECTOR3 U_FDP, WM, WI, W, R_LSP, U_FDP_abort;
+	double t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, t_Ins, TS, theta, mu, r_Ins, A_Ins, H_a, t_CSI, DH_D;
+	double SLOPE, dV_Inc, dh_apo, w_M;
 	int K_loop;
 	bool K_stage;
 	bool LandFlag = false;
 	bool InsertionFlag = false;
+	double t_Abort_Table[4], dV_Abort_Table[4];
+	int i = 0;
 
+	w_M = 2.66169948e-6;
 	t_UL = 7.9;
 	Z_D_dot = 5650.0*0.3048;
 	R_D_dot = 19.5*0.3048;
+	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
+	DH_D = 15.0*1852.0;
+	conopt.E = 26.6*RAD;
+	conopt.GETbase = opt.GETbase;
+	conopt.maneuver = 0;
+	conopt.type = 0;
+	conopt.t_TPI = opt.t_TPI;
 
 	dt_abort = opt.dt_step;
 	sv_I_guess = coast(opt.sv_A, opt.TLAND - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
 	PDIIgnitionAlgorithm(sv_I_guess, opt.GETbase, opt.R_LS, opt.TLAND, opt.REFSMMAT, sv_IG, t_go, CR, U_FDP);
 	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, opt.GETbase);
 	t_D = t_PDI - t_UL;
-	sv_D = coast(sv_IG, -t_UL);
+	sv_Abort = coast(sv_IG, -t_UL);
 	t_stage = t_PDI + opt.dt_stage;
 
-	descguid.Init(sv_IG.R, sv_IG.V, opt.W_INIT, t_PDI);
-	W_TD = opt.W_INIT;
-
-	K_loop = 0;
+	Rot = OrbMech::GetRotationMatrix(sv_IG.gravref, sv_IG.MJD);
+	WI = rhmul(Rot, _V(0, 0, 1));
+	W = mul(opt.REFSMMAT, WI)*w_M;
+	R_LSP = mul(opt.REFSMMAT, rhmul(Rot, opt.R_LS));
+	descguid.Init(sv_IG.R, sv_IG.V, opt.sv_A.mass, t_PDI, opt.REFSMMAT, R_LSP, t_PDI, W);
+	W_TD = opt.sv_A.mass;
+	U_FDP_abort = tmul(opt.REFSMMAT, unit(U_FDP));
 
 	do
 	{
-		if (LandFlag)
+		integ.Init(U_FDP_abort);
+		sv_D = sv_Abort;
+		K_loop = 0;
+		SLOPE = 2.0 / 1852.0*0.3048;
+
+		do
 		{
-			t_D = t_PDI + dt_abort;
-			t_stage = 0.;
-			break;
-		}
-		else
-		{
-			descguid.Guidance(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
-			LandFlag = integ.Integration(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
 			if (LandFlag)
 			{
 				t_D = t_PDI + dt_abort;
 				t_stage = 0.;
 				break;
 			}
-		}
-	} while (t_D <= t_PDI + dt_abort);
+			else
+			{
+				descguid.Guidance(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
+				LandFlag = integ.Integration(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
+				if (LandFlag)
+				{
+					t_D = t_PDI + dt_abort;
+					t_stage = 0.;
+					break;
+				}
+			}
+		} while (t_D <= t_PDI + dt_abort);
 
-	T = 43192.23;
-	ascguid.Init(sv_D.R, sv_D.V, W_TD, length(opt.R_LS), Z_D_dot, R_D_dot, false);
-	t = t_D;
-	t_go = dt_abort;
-	W_TA = W_TD;
-	if (t >= t_stage || W_TA <= opt.W_TDRY)
-	{
-		t_go *= 2.0;
-	}
-	ascguid.SetTGO(t_go);
-	K_stage = false;
+		T = 43192.23;
+		sv_Abort = sv_D;
+		U_FDP_abort = U_FDP;
 
-	do
-	{
-		if (K_stage == false)
+		do
 		{
+			sv_D = sv_Abort;
+			ascguid.Init(opt.sv_P.R, opt.sv_P.V, W_TD, length(opt.R_LS), Z_D_dot, R_D_dot, false);
+			t = t_D;
+			t_go = dt_abort;
+			W_TA = W_TD;
 			if (t >= t_stage || W_TA <= opt.W_TDRY)
 			{
-				K_stage = true;
-				W_TA = opt.W_TAPS;
-				ascguid.SetThrustParams(true);
+				t_go *= 2.0;
 			}
-		}
+			ascguid.SetTGO(t_go);
+			K_stage = false;
 
-		ascguid.Guidance(sv_D.R, sv_D.V, W_TA, U_FDP, t_go, T, isp);
-		InsertionFlag = integ.Integration(sv_D.R, sv_D.V, W_TA, t, U_FDP, t_go, T, isp);
-	} while (InsertionFlag == false);
+			do
+			{
+				if (K_stage == false)
+				{
+					if (t >= t_stage || W_TA <= opt.W_TDRY)
+					{
+						K_stage = true;
+						W_TA = opt.W_TAPS;
+						ascguid.SetThrustParams(true);
+					}
+				}
+
+				ascguid.Guidance(sv_D.R, sv_D.V, W_TA, U_FDP, t_go, T, isp);
+				if (dotp(U_FDP, integ.GetCurrentTD()) < 0)
+				{
+					if (acos(dotp(U_FDP, unit(rhmul(Rot, opt.R_LS)))) > 30.0*RAD)
+					{
+						U_FDP = rhmul(Rot, opt.R_LS);
+					}
+				}
+				InsertionFlag = integ.Integration(sv_D.R, sv_D.V, W_TA, t, U_FDP, t_go, T, isp);
+			} while (InsertionFlag == false);
+			t_Ins = t;
+			sv_LM_Ins = sv_D;
+			sv_LM_Ins.mass = W_TA;
+			sv_LM_Ins.MJD = OrbMech::MJDfromGET(t_Ins, opt.GETbase);
+
+			sv_CSM_Ins = coast(opt.sv_P, t_Ins - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
+			WM = unit(crossp(sv_CSM_Ins.V, sv_CSM_Ins.R));
+			TS = dotp(crossp(unit(sv_CSM_Ins.R), unit(sv_D.R)), WM);
+			theta = OrbMech::sign(TS)*acos(dotp(unit(sv_CSM_Ins.R), unit(sv_D.R)));
+			r_Ins = length(sv_D.R);
+			A_Ins = mu * r_Ins / (2.0*mu - r_Ins * Z_D_dot*Z_D_dot);
+			H_a = 2.0*A_Ins - r_Ins - length(opt.R_LS);
+			t_CSI = t_Ins + opt.dt_CSI;
+
+			conopt.sv_A = sv_LM_Ins;
+			conopt.sv_P = sv_CSM_Ins;
+			conopt.t_TIG = t_CSI;
+
+			ConcentricRendezvousProcessor(&conopt, conres);
+			K_loop++;
+			if (K_loop > 1)
+			{
+				SLOPE = dV_Inc / (DH_D - dh_apo);
+			}
+
+			dV_Inc = SLOPE * (DH_D - conres.DH);
+			Z_D_dot += dV_Inc;
+			dh_apo = conres.DH;
+
+		} while (abs(dV_Inc) > 0.1*0.3048);
+
+		t_Abort_Table[i] = dt_abort;
+		dV_Abort_Table[i] = Z_D_dot;
+		dt_abort += opt.dt_step;
+
+		i++;
+	//} while (Z_D_dot > 5509.0*0.3048);
+	} while (i<4);
 }
 
 bool RTCC::LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double t_L_guess, double t_TPI, double theta_F, LunarLiftoffResults &res)
