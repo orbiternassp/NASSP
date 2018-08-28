@@ -353,6 +353,8 @@ public:
 	void menuAscentPADCalc();
 	void menuSetPDAPPage();
 	void menuPDAPCalc();
+	void menuCyclePDAPEngine();
+	void menuAP11AbortCoefUplink();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

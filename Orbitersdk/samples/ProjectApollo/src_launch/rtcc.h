@@ -870,6 +870,19 @@ struct PDAPOpt //Powered Descent Abort Program
 	double t_TPI;
 };
 
+struct PDAPResults
+{
+	//Apollo 11 abort coefficients
+	double ABTCOF1;
+	double ABTCOF2;
+	double ABTCOF3;
+	double ABTCOF4;
+	//Term in LM desired semi-major axis
+	double DEDA224;
+	//Factor in LM desired semi-major axis
+	double DEDA227;
+};
+
 struct DockAlignOpt	//Docking Alignment Processor
 {
 	//Option 1: LM REFSMMAT from CSM REFSMMAT, CSM attitude, docking angle and LM gimbal angles
@@ -1079,7 +1092,7 @@ public:
 	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval(double get);
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, MATRIX3 REFSMMAT, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG);
-	void PoweredDescentAbortProgram(PDAPOpt opt);
+	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
 
 	//Skylark

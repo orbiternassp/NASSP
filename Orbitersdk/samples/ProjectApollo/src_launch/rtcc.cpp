@@ -8760,7 +8760,7 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 }
 
 //Based on NTRS 19740072723
-void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
+bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 {
 	SPQOpt conopt;
 	SPQResults conres;
@@ -8771,12 +8771,15 @@ void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
 	MATRIX3 Rot;
 	VECTOR3 U_FDP, WM, WI, W, R_LSP, U_FDP_abort;
 	double t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, t_Ins, TS, theta, mu, r_Ins, A_Ins, H_a, t_CSI, DH_D;
-	double SLOPE, dV_Inc, dh_apo, w_M;
+	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min;
 	int K_loop;
 	bool K_stage;
 	bool LandFlag = false;
 	bool InsertionFlag = false;
-	double t_Abort_Table[4], dV_Abort_Table[4];
+	std::vector<double> t_Abort_Table;
+	std::vector<double> dV_Abort_Table;
+	std::vector<double> Phase_Table;
+	std::vector<double> A_ins_Table;
 	int i = 0;
 
 	w_M = 2.66169948e-6;
@@ -8785,6 +8788,7 @@ void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
 	R_D_dot = 19.5*0.3048;
 	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
 	DH_D = 15.0*1852.0;
+	V_H_min = 5515.0*0.3048;
 	conopt.E = 26.6*RAD;
 	conopt.GETbase = opt.GETbase;
 	conopt.maneuver = 0;
@@ -8793,7 +8797,10 @@ void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
 
 	dt_abort = opt.dt_step;
 	sv_I_guess = coast(opt.sv_A, opt.TLAND - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
-	PDIIgnitionAlgorithm(sv_I_guess, opt.GETbase, opt.R_LS, opt.TLAND, opt.REFSMMAT, sv_IG, t_go, CR, U_FDP);
+	if (!PDIIgnitionAlgorithm(sv_I_guess, opt.GETbase, opt.R_LS, opt.TLAND, opt.REFSMMAT, sv_IG, t_go, CR, U_FDP))
+	{
+		return false;
+	}
 	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, opt.GETbase);
 	t_D = t_PDI - t_UL;
 	sv_Abort = coast(sv_IG, -t_UL);
@@ -8868,9 +8875,9 @@ void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
 				ascguid.Guidance(sv_D.R, sv_D.V, W_TA, U_FDP, t_go, T, isp);
 				if (dotp(U_FDP, integ.GetCurrentTD()) < 0)
 				{
-					if (acos(dotp(U_FDP, unit(rhmul(Rot, opt.R_LS)))) > 30.0*RAD)
+					if (acos(dotp(integ.GetCurrentTD(), unit(sv_D.R))) > 30.0*RAD)
 					{
-						U_FDP = rhmul(Rot, opt.R_LS);
+						U_FDP = unit(sv_D.R);
 					}
 				}
 				InsertionFlag = integ.Integration(sv_D.R, sv_D.V, W_TA, t, U_FDP, t_go, T, isp);
@@ -8879,7 +8886,6 @@ void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
 			sv_LM_Ins = sv_D;
 			sv_LM_Ins.mass = W_TA;
 			sv_LM_Ins.MJD = OrbMech::MJDfromGET(t_Ins, opt.GETbase);
-
 			sv_CSM_Ins = coast(opt.sv_P, t_Ins - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 			WM = unit(crossp(sv_CSM_Ins.V, sv_CSM_Ins.R));
 			TS = dotp(crossp(unit(sv_CSM_Ins.R), unit(sv_D.R)), WM);
@@ -8906,13 +8912,33 @@ void RTCC::PoweredDescentAbortProgram(PDAPOpt opt)
 
 		} while (abs(dV_Inc) > 0.1*0.3048);
 
-		t_Abort_Table[i] = dt_abort;
-		dV_Abort_Table[i] = Z_D_dot;
+		t_Abort_Table.push_back(dt_abort);
+		dV_Abort_Table.push_back(Z_D_dot);
+		Phase_Table.push_back(theta);
+		A_ins_Table.push_back(A_Ins);
 		dt_abort += opt.dt_step;
 
-		i++;
-	//} while (Z_D_dot > 5509.0*0.3048);
-	} while (i<4);
+	} while (Z_D_dot > V_H_min);
+
+	//Apollo 11: First 4 solutions from T vs. V_H table for cubic function
+	if (dV_Abort_Table.size() < 4)
+	{
+		return false;
+	}
+
+	double t_Abort[4] = { t_Abort_Table[0], t_Abort_Table[1] , t_Abort_Table[2] , t_Abort_Table[3] };
+	double dV_Abort[4] = { dV_Abort_Table[0], dV_Abort_Table[1] , dV_Abort_Table[2] , dV_Abort_Table[3] };
+	double coeff[4];
+	OrbMech::CubicInterpolation(t_Abort, dV_Abort, coeff);
+
+	res.ABTCOF1 = coeff[0];
+	res.ABTCOF2 = coeff[1];
+	res.ABTCOF3 = coeff[2];
+	res.ABTCOF4 = coeff[3];
+
+	OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.DEDA227, res.DEDA224);
+
+	return true;
 }
 
 bool RTCC::LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double t_L_guess, double t_TPI, double theta_F, LunarLiftoffResults &res)

@@ -3555,11 +3555,76 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Descent Abort", 13);
 
+		if (G->PDAPEngine == 0)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "DPS/APS", 7);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "APS", 7);
+		}
+
+		skp->Text(4 * W / 8, 3 * H / 21, "TPI:", 4);
+		GET_Display(Buffer, G->t_TPI);
+		skp->Text(5 * W / 8, 3 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 6 * H / 21, "PGNS Coefficients:", 18);
+		sprintf(Buffer, "%e", G->PDAPABTCOF[0] / 0.3048);
+		skp->Text(1 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%e", G->PDAPABTCOF[1] / 0.3048);
+		skp->Text(1 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%e", G->PDAPABTCOF[2] / 0.3048);
+		skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->PDAPABTCOF[3] / 0.3048);
+		skp->Text(1 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%e", G->PDAPABTCOF[4] / 0.3048);
+		skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%e", G->PDAPABTCOF[5] / 0.3048);
+		skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%e", G->PDAPABTCOF[6] / 0.3048);
+		skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%f", G->PDAPABTCOF[7] / 0.3048);
+		skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 8, 17 * H / 21, "AGS Coefficients:", 18);
+		skp->Text(1 * W / 8, 18 * H / 21, "224", 3);
+		sprintf(Buffer, "%+06.0f", G->DEDA224 / 0.3048 / 100.0);
+		skp->Text(2 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 19 * H / 21, "227", 3);
+		sprintf(Buffer, "%+06d", G->DEDA227);
+		skp->Text(2 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+
 		if (G->target != NULL)
 		{
 			sprintf(Buffer, G->target->GetName());
 			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 		}
+
+		if (!G->PDIPADdirect)
+		{
+			skp->Text(5 * W / 8, 9 * H / 21, "DOI:", 4);
+
+			GET_Display(Buffer, G->P30TIG);
+			skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+
+			AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
+			skp->Text(5 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
+			skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
+			skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(5 * W / 8, 15 * H / 21, "Landing Site:", 13);
+		sprintf(Buffer, "%.3f°", G->LSLat*DEG);
+		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3f°", G->LSLng*DEG);
+		skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2f NM", G->LSAlt / 1852.0);
+		skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 8, 19 * H / 21, "TLAND:", 6);
+		GET_Display(Buffer, G->t_Land);
+		skp->Text(5 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 	}
 	return true;
 }
@@ -5289,7 +5354,7 @@ void ApolloRTCCMFD::menuManDirection()
 
 void ApolloRTCCMFD::menuSwitchPDIPADDirect()
 {
-	if (G->manpadopt == 2 && G->vesseltype > 1)
+	if (G->vesseltype > 1)
 	{
 		G->PDIPADdirect = !G->PDIPADdirect;
 	}
@@ -7480,6 +7545,26 @@ void ApolloRTCCMFD::menuPDAPCalc()
 	if (G->vesseltype > 1 && G->target != NULL)
 	{
 		G->PDAPCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuCyclePDAPEngine()
+{
+	if (G->PDAPEngine < 1)
+	{
+		G->PDAPEngine++;
+	}
+	else
+	{
+		G->PDAPEngine = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuAP11AbortCoefUplink()
+{
+	if (G->vesseltype > 1 && G->mission == 11)
+	{
+		G->AP11AbortCoefUplink();
 	}
 }
 

@@ -79,6 +79,7 @@ public:
 	void PDI_PAD();
 	void MapUpdate();
 	void NavCheckPAD();
+	void AP11AbortCoefUplink();
 	int REFSMMATOctalAddress();
 	int REFSMMATUplinkAddress();
 	void DetermineGMPCode();
@@ -359,6 +360,13 @@ public:
 
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
+
+	//Powered Descent Abort Program
+	int PDAPEngine;	//0 = DPS/APS, 1 = APS
+	bool PDAPTwoSegment;	//false = One Segment (Luminary099, FP6), true = Two Segment (Luminary116 and later, FP7 and later)
+	double PDAPABTCOF[8];	//Luminary099 abort coefficients
+	double DEDA224;
+	int DEDA227;
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99

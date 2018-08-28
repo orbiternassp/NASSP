@@ -27,13 +27,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LMGuidanceSim.h"
 
 const double AscentGuidance::F_APS = 15297.43;
-const double AscentGuidance::F_DPS = 43192.23;
+const double AscentGuidance::F_DPS = 41541.75;
 const double AscentGuidance::Isp_APS = (308.8 * G);
 const double AscentGuidance::Isp_DPS = 3107.0;
 const double AscentGuidance::mu_M = GGRAV * 7.34763862e+22;
 const double AscentGuidance::t_2 = 2.0;
 const double AscentGuidance::t_3 = 10.0;
-const double AscentGuidance::PRLIMIT = -0.1*0.3048*0.3048*0.3048;
+const double AscentGuidance::PRLIMIT = -0.1*0.3048;
 
 AscentGuidance::AscentGuidance()
 {
@@ -147,18 +147,23 @@ void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, VECTOR3 &U_FDP, do
 	if (a_H < a_T)
 	{
 		a_TP = sqrt(a_T*a_T - a_H * a_H)*OrbMech::sign(Z_D_dot - Z_dot);
+		A_T = A_H + U_Z * a_TP;
 	}
 	else
 	{
+		double K_H;
+		K_H = a_T / a_H;
+		A_T = A_H * K_H;
+		a_TR = K_H * a_TR;
+		a_TY = K_H * a_TY;
 		a_TP = 0.0;
 	}
-	A_T = A_H + U_Z * a_TP;
 	U_FDP = unit(A_T);
 	ttgo = t_go;
 
 	if (FLVP)
 	{
-		if (h > 25000.0 || R_dot > 40.0*0.3048)
+		if (h > 25000.0*0.3048 || R_dot > 40.0*0.3048)
 		{
 			FLVP = false;
 		}
@@ -175,7 +180,7 @@ const double DescentGuidance::UT = 7.5;
 const double DescentGuidance::TRMT = 26.0;
 const double DescentGuidance::THRUL = 889.644;
 const double DescentGuidance::THRTRM = 4670.633;
-const double DescentGuidance::THRMAX = 43192.23;
+const double DescentGuidance::THRMAX = 41541.75;
 const double DescentGuidance::ULISP = 268.0*G;
 const double DescentGuidance::XKISP = 3107.0;
 const double DescentGuidance::mu_M = GGRAV * 7.34763862e+22;
@@ -374,7 +379,7 @@ bool AscDescIntegrator::Integration(VECTOR3 &R, VECTOR3 &V, double &mnow, double
 {
 	dt = min(dt_max, t_remain);
 
-	if (acos(dotp(U_TD, U_TD_cur)) < max_rate*dt)
+	if (acos2(dotp(U_TD, U_TD_cur)) < max_rate*dt)
 	{
 		U_TD_cur = U_TD;
 	}

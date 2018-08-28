@@ -1,5 +1,6 @@
 #include "OrbMech.h"
 #include <limits>
+#include <vector>
 
 inline double acosh(double z) { return log(z + sqrt(z + 1.0)*sqrt(z - 1.0)); }
 inline double atanh(double z){ return 0.5*log(1.0 + z) - 0.5*log(1.0 - z); }
@@ -4068,6 +4069,192 @@ MATRIX3 tmat(MATRIX3 a)
 
 	b = _M(a.m11, a.m21, a.m31, a.m12, a.m22, a.m32, a.m13, a.m23, a.m33);
 	return b;
+}
+
+void CubicInterpolation(double *x, double *y, double *a)
+{
+	double **V = NULL;
+	double **A = NULL;
+	int *P = NULL;
+	double *sol = NULL;
+	double Tol;
+	V = new double*[4];
+	A = new double*[4];
+	P = new int[5];
+	sol = new double[4];
+	for (int i = 0;i < 4;i++)
+	{
+		V[i] = new double[4];
+		A[i] = new double[4];
+		for (int j = 0;j < 4;j++)
+		{
+			V[i][j] = 0.0;
+			A[i][j] = 0.0;
+		}
+	}
+
+	Tol = 0.0000000001;
+	VandermondeMatrix(x, 3, V);
+
+	for (int i = 0;i < 4;i++)
+	{
+		for (int j = 0;j < 4;j++)
+		{
+			A[i][j] = V[i][j];
+		}
+	}
+
+	LUPDecompose(A, 4, Tol, P);
+	LUPSolve(A, P, y, 4, sol);
+
+	for (int i = 0;i < 4;i++)
+	{
+		a[i] = sol[i];
+	}
+
+	delete[] A;
+	delete[] V;
+	delete[] P;
+	delete[]sol;
+}
+
+//x = N+1 data points
+//N = order of polynomial
+//V = (N+1)*(N+1) Vandermonde matrix
+void VandermondeMatrix(double *x, int N, double **V)
+{
+	for (int i = 0;i < N + 1;i++)
+	{
+		for (int j = 0;j < N + 1;j++)
+		{
+			V[i][j] = pow(x[i], N - j);
+		}
+	}
+}
+
+int LUPDecompose(double **A, int N, double Tol, int *P)
+{
+
+	int i, j, k, imax;
+	double maxA, *ptr, absA;
+
+	for (i = 0; i <= N; i++)
+		P[i] = i; //Unit permutation matrix, P[N] initialized with N
+
+	for (i = 0; i < N; i++) {
+		maxA = 0.0;
+		imax = i;
+
+		for (k = i; k < N; k++)
+			if ((absA = fabs(A[k][i])) > maxA) {
+				maxA = absA;
+				imax = k;
+			}
+
+		if (maxA < Tol) return 0; //failure, matrix is degenerate
+
+		if (imax != i) {
+			//pivoting P
+			j = P[i];
+			P[i] = P[imax];
+			P[imax] = j;
+
+			//pivoting rows of A
+			ptr = A[i];
+			A[i] = A[imax];
+			A[imax] = ptr;
+
+			//counting pivots starting from N (for determinant)
+			P[N]++;
+		}
+
+		for (j = i + 1; j < N; j++) {
+			A[j][i] /= A[i][i];
+
+			for (k = i + 1; k < N; k++)
+				A[j][k] -= A[j][i] * A[i][k];
+		}
+	}
+
+	return 1;  //decomposition done 
+}
+
+void LUPSolve(double **A, int *P, double *b, int N, double *x) {
+
+	for (int i = 0; i < N; i++) {
+		x[i] = b[P[i]];
+
+		for (int k = 0; k < i; k++)
+			x[i] -= A[i][k] * x[k];
+	}
+
+	for (int i = N - 1; i >= 0; i--) {
+		for (int k = i + 1; k < N; k++)
+			x[i] -= A[i][k] * x[k];
+
+		x[i] = x[i] / A[i][i];
+	}
+}
+
+void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &b1, double &b2)
+{
+	int N = x.size();
+
+	double *xx = NULL;
+	double *yy = NULL;
+	xx = new double[N];
+	yy = new double[N];
+
+	for (int i = 0;i < N;i++)
+	{
+		xx[i] = x[i];
+		yy[i] = y[i];
+	}
+
+	b1 = (double(N)*SumProd(xx, yy, N) - Sum(xx, N)*Sum(yy, N)) / ((double)N*SumQuad(xx, N) - QuadSum(xx, N));
+	b2 = 1.0 / ((double)N)*(Sum(yy, N) - b1 * Sum(xx, N));
+
+	delete[] xx;
+	delete[] yy;
+}
+
+double Sum(double *x, int N)
+{
+	double a = 0.0;
+
+	for (int i = 0;i < N;i++)
+	{
+		a += x[i];
+	}
+	return a;
+}
+
+double SumProd(double *x, double *y, int N)
+{
+	double a = 0.0;
+
+	for (int i = 0;i < N;i++)
+	{
+		a += x[i]*y[i];
+	}
+	return a;
+}
+
+double SumQuad(double *x, int N)
+{
+	double a = 0.0;
+
+	for (int i = 0;i < N;i++)
+	{
+		a += x[i] * x[i];
+	}
+	return a;
+}
+
+double QuadSum(double *x, int N)
+{
+	double a = Sum(x, N);
+	return a * a;
 }
 
 template <typename T> int sign(T val) {
