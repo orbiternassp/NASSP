@@ -237,7 +237,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_PDIABORTPAD, SubStateTime > 3.0*60.0, 71, MST_G_LUNAR_ORBIT_PDI_DAY_15);
 		break;
 	case MST_G_LUNAR_ORBIT_PDI_DAY_15: //No PDI+12 PAD to Lunar Surface PAD 1
-		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, rtcc->GETEval(rtcc->calcParams.SEP + 3.0*60.0), 72, MST_G_LUNAR_ORBIT_PRE_DOI_1);
+		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, rtcc->GETEval(rtcc->calcParams.SEP + 3.0*60.0) && SubStateTime > 3.0*60.0, 72, MST_G_LUNAR_ORBIT_PRE_DOI_1);
 		break;
 	case MST_G_LUNAR_ORBIT_PRE_DOI_1: //Lunar Surface PAD 1 to Lunar Surface PAD 2
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11T2ABORTPAD, SubStateTime > 3.0*60.0, 73, MST_G_LUNAR_ORBIT_PRE_DOI_2);
@@ -401,6 +401,10 @@ void MCC::MissionSequence_G()
 		}
 		break;
 		}
+		break;
+		//Alternative sequences
+	case MST_G_LUNAR_ORBIT_PRE_PDI2_1: //PDI2 PAD to
+		UpdateMacro(UTP_PADONLY, PT_AP11PDIPAD, SubStateTime > 3.0*60.0, 170, MST_G_LUNAR_ORBIT_PDI_DAY_14);
 		break;
 	}
 }

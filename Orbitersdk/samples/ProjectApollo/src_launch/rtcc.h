@@ -879,6 +879,10 @@ struct PDAPResults
 	double ABTCOF4;
 	//Term in LM desired semi-major axis
 	double DEDA224;
+	//Lower limit on semi-major axis
+	double DEDA225;
+	//Upper limit on semi-major axis
+	double DEDA226;
 	//Factor in LM desired semi-major axis
 	double DEDA227;
 };

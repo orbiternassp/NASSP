@@ -365,7 +365,7 @@ public:
 	int PDAPEngine;	//0 = DPS/APS, 1 = APS
 	bool PDAPTwoSegment;	//false = One Segment (Luminary099, FP6), true = Two Segment (Luminary116 and later, FP7 and later)
 	double PDAPABTCOF[8];	//Luminary099 abort coefficients
-	double DEDA224;
+	double DEDA224, DEDA225, DEDA226;
 	int DEDA227;
 
 	//Erasable Memory Programs

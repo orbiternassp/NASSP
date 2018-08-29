@@ -1405,15 +1405,40 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LandmarkTrackingPAD(&opt, *form);
 	}
 	break;
+	case 170: //PDI2 PAD
+	{
+		//Recalculate PDI and landing times
+		DOIMan doiopt;
+		SV sv;
+		VECTOR3 DV;
+		double GETbase, t_DOI_imp, t_PDI, t_land, CR;
+
+		sv = StateVectorCalc(calcParams.tgt);
+		GETbase = calcParams.TEPHEM;
+
+		doiopt.alt = calcParams.LSAlt;
+		doiopt.EarliestGET = OrbMech::HHMMSSToSS(101, 0, 0);
+		doiopt.GETbase = GETbase;
+		doiopt.lat = calcParams.LSLat;
+		doiopt.lng = calcParams.LSLng;
+		doiopt.N = 0;
+		doiopt.opt = 0;
+		doiopt.sv0 = sv;
+
+		DOITargeting(&doiopt, DV, t_DOI_imp, t_PDI, t_land, CR);
+
+		calcParams.PDI = t_PDI;
+		calcParams.TLAND = t_land;
+		//Fall into PDI PAD calculation
+	}
 	case 70: //PDI PAD
 	{
 		AP11PDIPAD * form = (AP11PDIPAD *)pad;
 
 		PDIPADOpt opt;
-		double GETbase, rad;
+		double GETbase;
 
 		GETbase = calcParams.TEPHEM;
-		rad = oapiGetSize(oapiGetObjectByName("Moon"));
 
 		opt.direct = false;
 		opt.dV_LVLH = DeltaV_LVLH;
@@ -1421,7 +1446,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.HeadsUp = false;
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
-		opt.R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt + rad);
+		opt.R_LS = RLS_from_latlng(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt);
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.tgt;
 
@@ -1672,7 +1697,20 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 78: //PDI EVALUATION
 	{
+		SV sv;
+		double R_M, mu, apo, peri;
 
+		sv = StateVectorCalc(calcParams.tgt);
+		R_M = oapiGetSize(sv.gravref);
+		mu = GGRAV * oapiGetMass(sv.gravref);
+
+		OrbMech::periapo(sv.R, sv.V, mu, apo, peri);
+
+		if (peri - R_M > 0.)
+		{
+			sprintf(upMessage, "Recycle to next PDI attempt");
+			scrubbed = true;
+		}
 	}
 	break;
 	case 79: //LANDING EVALUATION

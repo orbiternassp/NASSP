@@ -8602,7 +8602,7 @@ void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETba
 
 	while (stop == false)
 	{
-		asc.Guidance(R, V, m1, U_FDP, t_go, Thrust, isp);
+		asc.Guidance(R, V, m1, t_total, U_FDP, t_go, Thrust, isp);
 		stop = integ.Integration(R, V, m1, t_total, U_FDP, t_go, Thrust, isp);
 	}
 
@@ -8872,7 +8872,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 					}
 				}
 
-				ascguid.Guidance(sv_D.R, sv_D.V, W_TA, U_FDP, t_go, T, isp);
+				ascguid.Guidance(sv_D.R, sv_D.V, W_TA, t, U_FDP, t_go, T, isp);
 				if (dotp(U_FDP, integ.GetCurrentTD()) < 0)
 				{
 					if (acos(dotp(integ.GetCurrentTD(), unit(sv_D.R))) > 30.0*RAD)
@@ -8910,7 +8910,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			Z_D_dot += dV_Inc;
 			dh_apo = conres.DH;
 
-		} while (abs(dV_Inc) > 0.1*0.3048);
+		} while (abs(dV_Inc) > 0.1*0.3048 && K_loop < 10);
 
 		t_Abort_Table.push_back(dt_abort);
 		dV_Abort_Table.push_back(Z_D_dot);
@@ -8937,6 +8937,9 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	res.ABTCOF4 = coeff[3];
 
 	OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.DEDA227, res.DEDA224);
+
+	res.DEDA225 = (length(R_LSP) + 60000.0*0.3048 + length(R_LSP) + 30.0*1852.0) / 2.0;
+	res.DEDA226 = 7031200.0*0.3048;
 
 	return true;
 }

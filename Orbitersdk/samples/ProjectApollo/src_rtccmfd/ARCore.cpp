@@ -815,6 +815,8 @@ ARCore::ARCore(VESSEL* v)
 	PDAPABTCOF[6] = 0.0;
 	PDAPABTCOF[7] = 0.0;
 	DEDA224 = 0.0;
+	DEDA225 = 0.0;
+	DEDA226 = 0.0;
 	DEDA227 = 0;
 }
 
@@ -3244,6 +3246,8 @@ int ARCore::subThread()
 			PDAPABTCOF[7] = res.ABTCOF4;
 		}
 		DEDA224 = res.DEDA224;
+		DEDA225 = res.DEDA225;
+		DEDA226 = res.DEDA226;
 		DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
 	}
 	break;

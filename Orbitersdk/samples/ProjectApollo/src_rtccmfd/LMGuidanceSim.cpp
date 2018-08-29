@@ -44,7 +44,9 @@ AscentGuidance::AscentGuidance()
 	R_D_dot = 0.0;
 	Y_D_dot = 0.0;
 	Z_D_dot = 0.0;
+	t_cut = 0.0;
 	FLVP = false;
+	FLENG2 = false;
 }
 
 void AscentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, double v_hor, double v_rad, bool aps)
@@ -62,7 +64,9 @@ void AscentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, doubl
 	Z_D_dot = v_hor;
 	R_D_dot = v_rad;
 	t_go = 450.0;
+	t_cut = 0.0;
 	FLVP = true;
+	FLENG2 = false;
 }
 
 void AscentGuidance::SetThrustParams(bool aps)
@@ -86,7 +90,7 @@ void AscentGuidance::SetTGO(double tgo)
 	t_go = tgo;
 }
 
-void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp)
+void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp)
 {
 	tau = M / m_dot;
 	a_T = v_e / tau;
@@ -106,6 +110,15 @@ void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, VECTOR3 &U_FDP, do
 	t_go -= 2.0;
 	V_G = V_G - U_R * 0.5*t_go*g_eff;
 	t_go = tau * length(V_G) / v_e * (1.0 - 0.5*length(V_G) / v_e);
+
+	if (FLENG2 == false)
+	{
+		if (t_go < 4.0)
+		{
+			t_cut = t_cur + t_go;
+			FLENG2 = true;
+		}
+	}
 
 	if (t_go >= t_2)
 	{
@@ -159,7 +172,15 @@ void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, VECTOR3 &U_FDP, do
 		a_TP = 0.0;
 	}
 	U_FDP = unit(A_T);
-	ttgo = t_go;
+
+	if (FLENG2)
+	{
+		ttgo = t_cut - t_cur;
+	}
+	else
+	{
+		ttgo = t_go;
+	}
 
 	if (FLVP)
 	{

@@ -29,7 +29,7 @@ class AscentGuidance
 public:
 	AscentGuidance();
 	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, double v_hor, double v_rad, bool aps = true);
-	void Guidance(VECTOR3 R, VECTOR3 V, double M, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp);
+	void Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp);
 	void SetThrustParams(bool aps);
 	void SetTGO(double tgo);
 protected:
@@ -52,12 +52,16 @@ protected:
 	double t_go;
 	//Initial rise phase
 	bool FLVP;
+	//Cutoff command issued
+	bool FLENG2;
 	//Landing site radius
 	double r_LS;
 	//Current thrust setting
 	double F;
 	//Current specific impulse
 	double Isp;
+	//Cutoff time
+	double t_cut;
 
 	double m_dot;
 	double a_T;
