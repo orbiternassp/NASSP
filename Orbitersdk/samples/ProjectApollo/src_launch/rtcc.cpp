@@ -2303,6 +2303,37 @@ double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculat
 	return dh_CDH;
 }
 
+double RTCC::FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH)
+{
+	SV sv_A1, sv_P1;
+	double dt, dt2, t_A, t_P, SVMJD, c1, c2, dt2_apo, CDHtime_cor;
+	int n = 0;
+
+	t_A = OrbMech::GETfromMJD(sv_A.MJD, GETbase);
+	t_P = OrbMech::GETfromMJD(sv_P.MJD, GETbase);
+	sv_A1 = coast(sv_A, TIGguess - t_A);
+	sv_P1 = coast(sv_P, TIGguess - t_P);
+	SVMJD = GETbase + TIGguess / 24.0 / 3600.0;
+
+	dt = 0.0;
+	dt2 = dt + 10.0;
+	
+	//A secant search method is used to find the time, when the desired delta height is reached. Other values might work better.
+	while (abs(dt2 - dt) > 0.1 && n <= 20)					//0.1 seconds accuracy should be enough
+	{
+		c1 = OrbMech::NSRsecant(sv_A1.R, sv_A1.V, sv_P1.R, sv_P1.V, SVMJD, dt, DH, sv_A1.gravref);		//c is the difference between desired and actual DH
+		c2 = OrbMech::NSRsecant(sv_A1.R, sv_A1.V, sv_P1.R, sv_P1.V, SVMJD, dt2, DH, sv_A1.gravref);
+
+		dt2_apo = dt2 - (dt2 - dt) / (c2 - c1)*c2;						//secant method
+		dt = dt2;
+		dt2 = dt2_apo;
+		n++;
+	}
+
+	CDHtime_cor = dt2 + (SVMJD - GETbase) * 24 * 60 * 60;		//the new, calculated CDH time
+	return CDHtime_cor;
+}
+
 LambertMan RTCC::set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle)
 {
 	LambertMan opt;
@@ -4231,91 +4262,6 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	coe_after.param.TrA = coe_a.TA;*/
 
 	return true;
-}
-
-void RTCC::OrbitAdjustCalc(SV sv_tig, double r_apo, double r_peri, double inc, VECTOR3 &DV)
-{
-	double mu, r, phi, lambda, apo, peri, a, e, theta1, theta2, beta1, beta2, ll1, ll2, h, w11, w12, w21, w22, dlambda1, dlambda2, lambda11, lambda12;
-	VECTOR3 u, R3, V3, DVX;
-	MATRIX3 obli;
-	VECTOR3 VXvec[4], DVXvec[4];
-
-	mu = GGRAV*oapiGetMass(sv_tig.gravref);									//Standard gravitational parameter GM
-
-	obli = OrbMech::GetObliquityMatrix(sv_tig.gravref, sv_tig.MJD);
-
-	R3 = rhtmul(obli, sv_tig.R);
-	V3 = rhtmul(obli, sv_tig.V);
-
-	//OrbMech::local_to_equ(R2, r, phi, lambda);							//Calculates the radius, latitude and longitude of the maneuver position
-	u = unit(R3);
-	r = length(R3);
-	phi = atan(u.z / sqrt(u.x*u.x + u.y*u.y));
-	lambda = atan2(u.y, u.x);
-
-	apo = r_apo;													//calculates the apoapsis radius in the metric system
-	peri = r_peri;													//calculates the periapsis radius in the metric system
-
-	if (r > apo)													//If the maneuver radius is higher than the desired apoapsis, then we would get no solution
-	{
-		apo = r;													//sets the desired apoapsis to the current radius, so that we can calculate a maneuver
-	}
-	else if (r < peri)												//If the maneuver radius is lower than the desired periapsis, then we would also get no solution
-	{
-		peri = r;													//sets the desired periapsis to the current radius, so that we can calculate a maneuver
-	}
-
-	a = (apo + peri) / 2.0;											//The semi-major axis of the desired orbit
-	e = (apo - peri) / (apo + peri);								//The eccentricity of the desired orbit
-
-	theta1 = acos(min(1.0, max(-1.0, (a / r*(1.0 - e*e) - 1.0) / e)));	//The true anomaly of the desired orbit, min and max just to make sure this value isn't out of bounds for acos
-	theta2 = PI2 - theta1;											//Calculates the second possible true anomaly of the desired orbit
-
-	beta1 = asin(min(1.0, max(-1.0,cos(inc) / cos(phi))));				//Calculates the azimuth heading of the desired orbit at the current position. TODO: if phi > inc we get no solution
-	beta2 = PI - beta1;													//The second possible azimuth heading
-
-	ll1 = atan2(tan(phi), cos(beta1));    //angular distance between the ascending node and the current position (beta1)
-	ll2 = atan2(tan(phi), cos(beta2));    //angular distance between the ascending node and the current position (beta2)	
-
-	h = sqrt(r*mu*(1.0 + e*cos(theta1)));    //Specific relative angular momentum (theta1)
-
-	w11 = ll1 - theta1;                     //argument of periapsis (beta1, theta1)
-	w12 = ll1 - theta2;                     //argument of periapsis (beta1, theta2)
-	w21 = ll2 - theta1;                     //argument of periapsis (beta2, theta1)
-	w22 = ll2 - theta2;                     //argument of periapsis (beta2, theta2)
-
-	dlambda1 = atan(tan(beta1)*sin(phi));			//angular distance between the ascending node and the current position measured in the equatorial plane (beta1)
-	dlambda2 = atan(tan(beta2)*sin(phi)) + PI;		//angular distance between the ascending node and the current position measured in the equatorial plane (beta2)
-
-	lambda11 = lambda - dlambda1;               //longitude at the ascending node (beta1)
-	lambda12 = lambda - dlambda2;               //longitude at the ascending node (beta2)
-
-	VECTOR3 RX1, RX2, RX3, RX4;
-
-	OrbMech::perifocal(h, mu, e, theta1, inc, lambda11, w11, RX1, VXvec[0]); //The required velocity vector for the desired orbit (beta1, theta1)
-	OrbMech::perifocal(h, mu, e, theta2, inc, lambda11, w12, RX2, VXvec[1]); //The required velocity vector for the desired orbit (beta1, theta2)
-	OrbMech::perifocal(h, mu, e, theta1, inc, lambda12, w21, RX3, VXvec[2]); //The required velocity vector for the desired orbit (beta2, theta1)
-	OrbMech::perifocal(h, mu, e, theta2, inc, lambda12, w22, RX4, VXvec[3]); //The required velocity vector for the desired orbit (beta2, theta2)
-
-	DVXvec[0] = VXvec[0] - V3;									//Calculates the DV vectors to achieve the desired orbit
-	DVXvec[1] = VXvec[1] - V3;
-	DVXvec[2] = VXvec[2] - V3;
-	DVXvec[3] = VXvec[3] - V3;
-
-	DVX = DVXvec[0];
-	for (int ii = 1;ii < 4;ii++)				//The lowest DV vector is selected. TODO: Let the user choose it.
-	{
-		if (length(DVXvec[ii]) < length(DVX))
-		{
-			DVX = DVXvec[ii];
-		}
-	}
-
-	DVX = _V(DVX.x, DVX.z, DVX.y);	//DVX is in local coordinates, convert back to ecliptic
-	DVX = mul(obli, DVX);
-	DVX = _V(DVX.x, DVX.z, DVX.y);
-
-	DV = DVX;
 }
 
 void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
@@ -7893,6 +7839,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 {
 	SV sv_A1, sv_P1;
+	MATRIX3 Q_Xx;
 	VECTOR3 u, R_A1, V_A1, V_A1F, R_A2, V_A2, R_P2, V_P2, R_PC, V_PC, V_A2F;
 	double dv_CSI, mu, dt_1, t_CDH, dt_TPI;
 
@@ -7911,10 +7858,14 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 	if (opt->maneuver == 1)
 	{
 		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A1, mu, R_PC, V_PC);
+		V_A1F = OrbMech::CoellipticDV(R_A1, R_PC, V_PC, mu);
+		Q_Xx = OrbMech::LVLH_Matrix(R_A1, V_A1);
+		dt_TPI = OrbMech::findelev_conic(R_A1, V_A1F, sv_P1.R, sv_P1.V, opt->E, mu);
+
 		res.DH = length(R_PC) - length(R_A1);
-		res.dV_CDH = OrbMech::CoellipticDV(R_A1, R_PC, V_PC, mu) - V_A1;
+		res.dV_CDH = mul(Q_Xx, V_A1F - V_A1);
 		res.t_CDH = opt->t_TIG;
-		res.t_TPI = opt->t_TPI;
+		res.t_TPI = opt->t_TIG + dt_TPI;
 		return;
 	}
 
@@ -7952,9 +7903,10 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 			}
 		} while (abs(e_C) >= eps_C);
 
-		res.dV_CSI = dv_CSI;
+		res.dV_CSI = _V(dv_CSI, 0, 0);
 		res.t_CDH = t_CDH;
-		res.dV_CDH = V_A1F - V_A1;
+		Q_Xx = OrbMech::LVLH_Matrix(R_A2, V_A2);
+		res.dV_CDH = mul(Q_Xx, V_A2F - V_A2);
 		res.t_TPI = opt->t_TPI;
 		res.DH = DH;
 	}
@@ -7969,9 +7921,10 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt->t_TIG, R_P2, V_P2, mu);
 		dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt->E, mu);
 
-		res.dV_CSI = dv_CSI;
+		res.dV_CSI = _V(dv_CSI, 0, 0);
 		res.t_CDH = t_CDH;
-		res.dV_CDH = V_A1F - V_A1;
+		Q_Xx = OrbMech::LVLH_Matrix(R_A2, V_A2);
+		res.dV_CDH = mul(Q_Xx, V_A2F - V_A2);
 		res.DH = opt->DH;
 		res.t_TPI = t_CDH + dt_TPI;
 	}

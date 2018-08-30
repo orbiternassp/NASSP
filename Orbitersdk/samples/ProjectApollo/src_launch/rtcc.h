@@ -325,7 +325,7 @@ struct SPQResults
 	double t_CDH;
 	double t_TPI;
 	double DH;
-	double dV_CSI;
+	VECTOR3 dV_CSI;
 	VECTOR3 dV_CDH;
 };
 
@@ -842,9 +842,9 @@ struct SPQOpt //Coelliptic Sequence Processor
 	SV sv_P;
 	double GETbase;
 	double t_TIG;
-	double t_TPI;	// Only for calculation type = 0
-	double DH;		// Only for calculation type = 1
-	double E;
+	double t_TPI;				// Only for calculation type = 0
+	double DH = 15.0*1852.0;	// Only for calculation type = 1
+	double E = 26.6*RAD;
 	int type;		//0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int maneuver;	//0 = CSI, 1 = CDH
 };
@@ -1017,6 +1017,7 @@ public:
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	double FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
@@ -1112,7 +1113,6 @@ public:
 	MCC *mcc;
 	struct calculationParameters calcParams;
 private:
-	void OrbitAdjustCalc(SV sv_tig, double r_apo, double r_peri, double inc, VECTOR3 &DV);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
 	double GetClockTimeFromAGC(agc_t *agc);

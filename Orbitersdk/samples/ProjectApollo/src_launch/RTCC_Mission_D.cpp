@@ -1021,7 +1021,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		ConcentricRendezvousProcessor(&opt, res);
 		sv_CSI = coast(sv_A, opt.t_TIG - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
 		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
-		dV_LVLH = _V(res.dV_CSI, 0, 0);
+		dV_LVLH = res.dV_CSI;
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_APS;
@@ -1042,7 +1042,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SPQOpt opt;
 		SPQResults res;
 		SV sv_A, sv_P, sv_CDH;
-		MATRIX3 Q_Xx;
 		VECTOR3 dV_LVLH;
 		double GETbase, mu;
 
@@ -1062,8 +1061,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		ConcentricRendezvousProcessor(&opt, res);
 		sv_CDH = coast(sv_A, opt.t_TIG - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
-		Q_Xx = OrbMech::LVLH_Matrix(sv_CDH.R, sv_CDH.V);
-		dV_LVLH = mul(Q_Xx, res.dV_CDH);
+		dV_LVLH = res.dV_CDH;
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.GETbase = GETbase;

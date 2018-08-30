@@ -26,13 +26,21 @@ ARCore::ARCore(VESSEL* v)
 {
 	T1 = 0;
 	T2 = 0;
-	CDHtime = 0;
-	CDHtime_cor = 0;
-	CDHtimemode = 1;
+	SPQMode = 0;
+	CSItime = 0.0;
+	CDHtime = 0.0;
+	SPQTIG = 0.0;
+	CDHtimemode = 0;
 	DH = 0;
 	N = 0;
 	this->vessel = v;
 	t_TPI = 0.0;
+
+	spqresults.DH = 0.0;
+	spqresults.dV_CDH = _V(0.0, 0.0, 0.0);
+	spqresults.dV_CSI = _V(0.0, 0.0, 0.0);
+	spqresults.t_CDH = 0.0;
+	spqresults.t_TPI = 0.0;
 
 	lambertelev = 26.6*RAD;
 	LambertdeltaV = _V(0, 0, 0);
@@ -41,7 +49,7 @@ ARCore::ARCore(VESSEL* v)
 	TwoImpulse_TPI = 0.0;
 	TwoImpulse_PhaseAngle = 0.0;
 
-	CDHdeltaV = _V(0, 0, 0);
+	SPQDeltaV = _V(0, 0, 0);
 	target = NULL;
 	offvec = _V(0, 0, 0);
 	//screen = 0;
@@ -961,7 +969,7 @@ void ARCore::lambertcalc()
 	startSubthread(1);
 }
 
-void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach an orbit specified by apoapsis, periapsis and inclination
+void ARCore::GPMPCalc()
 {
 	startSubthread(3);
 }
@@ -1981,43 +1989,54 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 2:	//CDH Targeting
+	case 2:	//Concentric Rendezvous Processor
 	{
-		double dH_CDH;
-		CDHOpt opt;
+		SPQOpt opt;
+		SPQResults res;
+		SV sv_A, sv_P;
 
-		if (vesseltype < 2)
-		{
-			opt.vesseltype = 0;
-		}
-		else
-		{
-			opt.vesseltype = 1;
-		}
+		sv_A = rtcc->StateVectorCalc(vessel);
+		sv_P = rtcc->StateVectorCalc(target);
 
-		if (vesseltype == 0 || vesseltype == 2)
-		{
-			opt.csmlmdocked = false;
-		}
-		else
-		{
-			opt.csmlmdocked = true;
-		}
-
-		opt.CDHtimemode = CDHtimemode;
 		opt.DH = DH;
+		opt.E = lambertelev;
 		opt.GETbase = GETbase;
-		opt.impulsive = RTCC_NONIMPULSIVE;
-		opt.target = target;
-		opt.vessel = vessel;
-		opt.TIG = CDHtime;
+		opt.maneuver = SPQMode;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		if (SPQMode == 0)
+		{
+			opt.t_TIG = CSItime;
+			opt.type = CDHtimemode;
+		}
+		else
+		{
+			if (CDHtimemode == 0)
+			{
+				opt.t_TIG = CDHtime;
+			}
+			else
+			{
+				opt.t_TIG = rtcc->FindDH(sv_A, sv_P, GETbase, CDHtime, DH);
+			}
+		}
+		opt.t_TPI = t_TPI;
 
-		dH_CDH = rtcc->CDHcalc(&opt, CDHdeltaV, CDHtime_cor);
+		rtcc->ConcentricRendezvousProcessor(&opt, res);
+		spqresults = res;
 
-		DH = dH_CDH;
+		if (SPQMode == 0)
+		{
+			CDHtime = res.t_CDH;
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CSI, true, SPQTIG, SPQDeltaV);
+		}
+		else
+		{
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CDH, true, SPQTIG, SPQDeltaV);
+		}
 
-		P30TIG = CDHtime_cor;
-		dV_LVLH = CDHdeltaV;
+		P30TIG = SPQTIG;
+		dV_LVLH = SPQDeltaV;		
 
 		Result = 0;
 	}
