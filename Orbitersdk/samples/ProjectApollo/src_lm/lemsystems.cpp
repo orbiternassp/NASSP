@@ -2694,6 +2694,15 @@ double LEM_RR::GetTrunnionErrorSignal()
 	return 2.5 + TrunnionErrorSignal*40.0;
 }
 
+double LEM_RR::GetTransmitterPower()
+{
+	if (!IsPowered())
+	{
+		return 0;
+	}
+
+	return 3.7;
+}
 
 void LEM_RR::Timestep(double simdt){
 
