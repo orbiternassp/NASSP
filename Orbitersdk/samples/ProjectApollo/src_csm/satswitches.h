@@ -31,6 +31,7 @@ class RCSPropellantValve;
 class SMRCSPropellantSource;
 class CMRCSPropellantSource;
 class DSE;
+class SECS;
 
 class SaturnToggleSwitch : public ToggleSwitch {
 public:
@@ -871,4 +872,15 @@ class DockingTargetSwitch : public SaturnThreePosSwitch
 {
 public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
+};
+
+class SaturnLiftoffNoAutoAbortSwitch :public GuardedPushSwitch
+{
+public:
+	SaturnLiftoffNoAutoAbortSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, SECS *s,
+		int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
+	void DoDrawSwitch(SURFHANDLE drawSurface);
+protected:
+	SECS * secs;
 };

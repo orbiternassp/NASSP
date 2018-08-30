@@ -2329,28 +2329,6 @@ void Saturn::ClearEngineIndicators()
 	}
 }
 
-void Saturn::SetLiftoffLight()
-
-{
-	LiftoffLight = true;
-}
-
-void Saturn::ClearLiftoffLight()
-
-{
-	LiftoffLight = false;
-}
-
-void Saturn::SetNoAutoAbortLight()
-{
-	NoAutoAbortLight = true;
-}
-
-void Saturn::ClearNoAutoAbortLight()
-{
-	NoAutoAbortLight = false;
-}
-
 void Saturn::SetLVGuidLight()
 
 {

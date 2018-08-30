@@ -1689,7 +1689,7 @@ void Saturn::SetSwitches(int panel) {
 	THCRotary.Init(0, 0, 72, 109, srf[SRF_THC], srf[SRF_BORDER_72x109], THCRotaryRow, this);
 
 	SequencerSwitchesRow.Init(AID_SEQUENCERSWITCHES, MainPanel);
-	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 81);
+	LiftoffNoAutoAbortSwitch.Init     ( 20,   3, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, &secs, 0, 81);
 	LiftoffNoAutoAbortSwitch.InitGuard(  0,   1, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
 	LesMotorFireSwitch.Init			  ( 20,  49, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], SequencerSwitchesRow, 0, 119, 117, 231);
 	LesMotorFireSwitch.InitGuard      (  0,  47, 92, 40, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_92x40]);
@@ -4198,23 +4198,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	// Note: if you crash in this function with a NULL surf handle, odds are you screwed up
 	// the region definition so maxX < minX or maxY < minY.
 	//
-
-	//
-	// Special handling illuminated "sequencer switches".
-	// \todo This should really be moved into the switch code.
-	//
-
-	LiftoffLight = secs.LiftoffLightPower();
-	NoAutoAbortLight = secs.NoAutoAbortLightPower();
-
-	if (LiftoffLight) {
-		if (!NoAutoAbortLight)
-			LiftoffNoAutoAbortSwitch.SetOffset(78, 81);
-		else
-			LiftoffNoAutoAbortSwitch.SetOffset(234, 81);
-	} else {
-		LiftoffNoAutoAbortSwitch.SetOffset(0, 81);
-	}
 
 	//
 	// Special handling for docking panel

@@ -2445,3 +2445,30 @@ bool DockingTargetSwitch::SwitchTo(int newState, bool dontspring)
 	return false;
 }
 
+SaturnLiftoffNoAutoAbortSwitch::SaturnLiftoffNoAutoAbortSwitch()
+{
+	secs = NULL;
+}
+
+void SaturnLiftoffNoAutoAbortSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, SECS *s,
+	int xoffset, int yoffset, int lxoffset, int lyoffset)
+{
+	GuardedPushSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset, lxoffset, lyoffset);
+
+	secs = s;
+}
+
+void SaturnLiftoffNoAutoAbortSwitch::DoDrawSwitch(SURFHANDLE drawSurface)
+{
+	if (secs->LiftoffLightPower()) {
+		if (!secs->NoAutoAbortLightPower())
+			SetOffset(78, 81);
+		else
+			SetOffset(234, 81);
+	}
+	else {
+		SetOffset(0, 81);
+	}
+
+	GuardedPushSwitch::DoDrawSwitch(drawSurface);
+}
