@@ -79,6 +79,11 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	ShaftErrorSignal = 0.0;
 	TrunnionErrorSignal = 0.0;
 	GyroRates = _V(0.0, 0.0, 0.0);
+	FrequencyLock = false;
+	TrackingModeSwitch = false;
+	RangeLock = true;
+	RangeLockTimer = 0.0;
+	tstime = 0.0;
 
 	for (int i = 0;i < 4;i++)
 	{
@@ -187,6 +192,9 @@ void LEM_RR::Timestep(double simdt) {
 		lem->agc.SetInputChannel(033, val33);
 		SignalStrength = 0.0;
 		radarDataGood = false;
+		FrequencyLock = false;
+		range = 0.0;
+		rate = 0.0;
 		return;
 	}
 
@@ -207,83 +215,51 @@ void LEM_RR::Timestep(double simdt) {
 
 	// If we are in test mode...
 	if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP) {
-		double trunnionTarget = 0, shaftTarget = 0;
+		//double trunnionTarget = 0, shaftTarget = 0;
 		// TEST MODE:
 		// NO TRACK light on
 		// Range Rate to -500 FPS,
 		// Shaft/Trunnion varies between +/- 5 degrees (at 0.015 d/s)
 		// After 12 seconds, Range to 195.5nm and NO TRACK light out
-		rate = -152.4;
-		// CONTROL MOVEMENT
-		// If we will run into a stop, bias the "start" angle.
-		if (tstate[0] == 0) {
-			tsangle[0] = trunnionAngle;
-			if (tsangle[0] > (RAD * 85)) { tsangle[0] -= (RAD * 5); }
-			if (tsangle[0] < (RAD*-85)) { tsangle[0] += (RAD * 5); }
-			tstate[0] = 2;
+		internalrangerate = -152.4;
+		internalrange = 362066; // 195.5 nautical miles in meters
+
+		//Square wave
+		tstime += simdt;
+		if (tstime > 2.0)
+		{
+			tstime -= 2.0;
 		}
-		if (tstate[1] == 0) {
-			tsangle[1] = shaftAngle;
-			if (tsangle[1] < -(RAD * 175)) { tsangle[1] += (RAD * 5); }
-			if (tsangle[1] > (RAD * 85)) { tsangle[1] -= (RAD * 5); }
-			tstate[1] = 2;
+		else if (tstime > 1.0)
+		{
+			SignalStrengthQuadrant[0] = 0.41;
+			SignalStrengthQuadrant[1] = 0.45;
+			SignalStrengthQuadrant[2] = 0.41;
+			SignalStrengthQuadrant[3] = 0.45;
 		}
-		if (tstate[0] == 1) {
-			trunnionTarget = tsangle[0] + (RAD * 5);
+		else
+		{
+			SignalStrengthQuadrant[0] = 0.45;
+			SignalStrengthQuadrant[1] = 0.41;
+			SignalStrengthQuadrant[2] = 0.45;
+			SignalStrengthQuadrant[3] = 0.41;
 		}
-		if (tstate[1] == 1) {
-			shaftTarget += tsangle[1] + (RAD * 5);
-		}
-		if (tstate[0] == 2) {
-			trunnionTarget = tsangle[0] - (RAD * 5);;
-		}
-		if (tstate[1] == 2) {
-			shaftTarget = tsangle[1] - (RAD * 5);;
-		}
-		if (trunnionAngle > trunnionTarget) {
-			trunnionAngle -= ((RAD*0.015)*simdt);
-			if (trunnionAngle < trunnionTarget) { trunnionAngle = trunnionTarget; } // Don't overshoot
-		}
-		else {
-			if (trunnionAngle < trunnionTarget) {
-				trunnionAngle += ((RAD*0.015)*simdt);
-				if (trunnionAngle > trunnionTarget) { trunnionAngle = trunnionTarget; } // Don't overshoot
-			}
-		}
-		if (shaftAngle > shaftTarget) {
-			shaftAngle -= ((RAD*0.015)*simdt);
-			if (shaftAngle < shaftTarget) { shaftAngle = shaftTarget; } // Don't overshoot
-		}
-		else {
-			if (shaftAngle < shaftTarget) {
-				shaftAngle += ((RAD*0.015)*simdt);
-				if (shaftAngle > shaftTarget) { shaftAngle = shaftTarget; } // Don't overshoot
-			}
-		}
-		// Position state advancement
-		if (trunnionAngle == trunnionTarget && shaftAngle == shaftTarget) {
-			tstate[0]++; tstate[1]++;
-			if (tstate[0] > 2) { tstate[0] = 1; }
-			if (tstate[1] > 2) { tstate[1] = 1; }
-		}
-		// Range state advancement
-		if (tstime < 12) {
-			tstime += simdt;
-			radarDataGood = 0;
-		}
-		else {
-			radarDataGood = 1;
-			range = 362066; // 195.5 nautical miles in meters
-		}
+
+		SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
+
 		//sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
 	}
 	else {
 		// Clobber test data if not already zero
-		if (tstime > 0) { tstime = 0; tstate[0] = 0; tstate[1] = 0; }
+		if (tstime > 0) { tstime = 0; }
 		// We must be in normal operation.
-		radarDataGood = 0;
-		range = 0;
-		rate = 0;
+		internalrange = 0;
+		internalrangerate = 0;
+		SignalStrengthQuadrant[0] = 0.0;
+		SignalStrengthQuadrant[1] = 0.0;
+		SignalStrengthQuadrant[2] = 0.0;
+		SignalStrengthQuadrant[3] = 0.0;
+		SignalStrength = 0.0;
 
 		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, R;
 		MATRIX3 Rot;
@@ -331,18 +307,14 @@ void LEM_RR::Timestep(double simdt) {
 
 			SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
 
-			if (relang < 1.75*RAD && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
+			if (SignalStrength > 0.375 && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
 			{
-				if (AutoTrackEnabled)
-				{
-					radarDataGood = 1;
-					range = length(R);
+				internalrange = length(R);
 
-					lem->GetGlobalVel(LMVel);
-					csm->GetGlobalVel(CSMVel);
+				lem->GetGlobalVel(LMVel);
+				csm->GetGlobalVel(CSMVel);
 
-					rate = dotp(CSMVel - LMVel, U_R);
-				}
+				internalrangerate = dotp(CSMVel - LMVel, U_R);
 			}
 
 			//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°, SignalStrength %f %f %f %f", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG, SignalStrengthQuadrant[0], SignalStrengthQuadrant[1], SignalStrengthQuadrant[2], SignalStrengthQuadrant[3]);
@@ -367,53 +339,6 @@ void LEM_RR::Timestep(double simdt) {
 		}
 	}
 
-	// Handle mode switch
-	switch (lem->RendezvousRadarRotary.GetState()) {
-	case 0:	// AUTO TRACK
-		break;
-
-	case 1: // SLEW
-			// Watch the SLEW switch. 
-		if (lem->RadarSlewSwitch.GetState() == 4) {	// Can we move up?
-			trunnionAngle -= TrunRate * simdt;						// Move the trunnion
-			trunnionVel = -TrunRate;
-		}
-		if (lem->RadarSlewSwitch.GetState() == 3) {	// Can we move down?
-			trunnionAngle += TrunRate * simdt;						// Move the trunnion
-			trunnionVel = TrunRate;
-		}
-		if (lem->RadarSlewSwitch.GetState() == 2) {
-			shaftAngle += ShaftRate * simdt;
-			shaftVel = ShaftRate;
-		}
-		if (lem->RadarSlewSwitch.GetState() == 0) {
-			shaftAngle -= ShaftRate * simdt;
-			shaftVel = -ShaftRate;
-		}
-
-		//sprintf(oapiDebugString(), "Ang %f Vel %f", shaftAngle*DEG, shaftVel);
-
-		//if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
-		break;
-	case 2: // AGC
-
-		if (val12[RRAutoTrackOrEnable] == 0)
-		{
-			int pulses;
-
-			pulses = lem->scdu.GetErrorCounter();
-
-			shaftVel = (RR_SHAFT_STEP*pulses);
-			shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
-
-			pulses = lem->tcdu.GetErrorCounter();
-
-			trunnionVel = (RR_SHAFT_STEP*pulses);
-			trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
-		}
-		break;
-	}
-
 	//Auto Tracking Logic
 	if (lem->RendezvousRadarRotary.GetState() == 0)
 	{
@@ -428,8 +353,27 @@ void LEM_RR::Timestep(double simdt) {
 		AutoTrackEnabled = false;
 	}
 
+	//Frequency Lock
+	if (AutoTrackEnabled && SignalStrength > 0.375 && internalrange > 80.0*0.3048 && internalrange < 400.0*1852.0)
+	{
+		FrequencyLock = true;
+	}
+	else
+	{
+		FrequencyLock = false;
+	}
+
+	if (AutoTrackEnabled && FrequencyLock)
+	{
+		TrackingModeSwitch = true;
+	}
+	else
+	{
+		TrackingModeSwitch = false;
+	}
+
 	//AUTO TRACKING
-	if (AutoTrackEnabled && lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP)
+	if (TrackingModeSwitch)
 	{
 		ShaftErrorSignal = (SignalStrengthQuadrant[0] - SignalStrengthQuadrant[1])*0.25;
 		TrunnionErrorSignal = (SignalStrengthQuadrant[2] - SignalStrengthQuadrant[3])*0.25;
@@ -442,6 +386,143 @@ void LEM_RR::Timestep(double simdt) {
 
 		//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, ShaftErrorSignal %f TrunnionErrorSignal %f", shaftAngle*DEG, trunnionAngle*DEG, ShaftErrorSignal, TrunnionErrorSignal);
 	}
+	else
+	{
+		ShaftErrorSignal = 0.0;
+		TrunnionErrorSignal = 0.0;
+
+		// Handle mode switch
+		switch (lem->RendezvousRadarRotary.GetState()) {
+		case 0:	// AUTO TRACK
+			break;
+
+		case 1: // SLEW
+				// Watch the SLEW switch. 
+			if (lem->RadarSlewSwitch.GetState() == 4) {	// Can we move up?
+				trunnionAngle -= TrunRate * simdt;						// Move the trunnion
+				trunnionVel = -TrunRate;
+			}
+			if (lem->RadarSlewSwitch.GetState() == 3) {	// Can we move down?
+				trunnionAngle += TrunRate * simdt;						// Move the trunnion
+				trunnionVel = TrunRate;
+			}
+			if (lem->RadarSlewSwitch.GetState() == 2) {
+				shaftAngle += ShaftRate * simdt;
+				shaftVel = ShaftRate;
+			}
+			if (lem->RadarSlewSwitch.GetState() == 0) {
+				shaftAngle -= ShaftRate * simdt;
+				shaftVel = -ShaftRate;
+			}
+
+			//sprintf(oapiDebugString(), "Ang %f Vel %f", shaftAngle*DEG, shaftVel);
+
+			//if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
+			break;
+		case 2: // AGC
+			{
+				int pulses;
+
+				pulses = lem->scdu.GetErrorCounter();
+
+				shaftVel = (RR_SHAFT_STEP*pulses);
+				shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
+
+				pulses = lem->tcdu.GetErrorCounter();
+
+				trunnionVel = (RR_SHAFT_STEP*pulses);
+				trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
+			}
+			break;
+		}
+	}
+
+	if (AutoTrackEnabled && FrequencyLock)
+	{
+		if (RangeLockTimer < 12.0)
+		{
+			RangeLockTimer += simdt;
+		}
+	}
+	else
+	{
+		RangeLockTimer = 0.0;
+	}
+
+	if (RangeLockTimer >= 12.0)
+	{
+		RangeLock = true;
+	}
+	else
+	{
+		RangeLock = false;
+	}
+
+	if (FrequencyLock && RangeLock)
+	{
+		radarDataGood = true;
+	}
+	else
+	{
+		radarDataGood = false;
+	}
+
+	if (FrequencyLock)
+	{
+		rate = internalrangerate;
+	}
+	else
+	{
+		rate = 0.0;
+	}
+
+	if (RangeLock)
+	{
+		range = internalrange;
+	}
+	else
+	{
+		range = 0;
+	}
+
+	//sprintf(oapiDebugString(), "Auto %d FreqLock %d Timer %f RLock %d DataGood %d", AutoTrackEnabled, FrequencyLock, RangeLockTimer, RangeLock, radarDataGood);
+
+	//Limits
+
+	if (trunnionAngle > 70.0*RAD)
+	{
+		trunnionVel = 0.0;
+		trunnionAngle = 70.0*RAD;
+	}
+	else if (trunnionAngle < -250.0*RAD)
+	{
+		trunnionVel = 0.0;
+		trunnionAngle = -250.0*RAD;
+	}
+
+	if (shaftAngle > 68.0*RAD)
+	{
+		shaftAngle = 68.0*RAD;
+		shaftVel = 0.0;
+	}
+	else if (shaftAngle < -148.0*RAD)
+	{
+		shaftAngle = -148.0*RAD;
+		shaftVel = 0.0;
+	}
+
+	//Mode I or II determination
+	if (cos(trunnionAngle) > 0.0 && mode == 2)
+	{
+		mode = 1;
+	}
+	else if (cos(trunnionAngle) < 0.0 && mode == 1)
+	{
+		mode = 2;
+	}
+
+	lem->tcdu.SetReadCounter(trunnionAngle);
+	lem->scdu.SetReadCounter(shaftAngle);
 
 	if (lem->RendezvousRadarRotary.GetState() == 2)
 	{
@@ -543,43 +624,6 @@ void LEM_RR::Timestep(double simdt) {
 		}
 	}
 
-	//Limits
-
-	if (trunnionAngle > 70.0*RAD)
-	{
-		trunnionVel = 0.0;
-		trunnionAngle = 70.0*RAD;
-	}
-	else if (trunnionAngle < -250.0*RAD)
-	{
-		trunnionVel = 0.0;
-		trunnionAngle = -250.0*RAD;
-	}
-
-	if (shaftAngle > 68.0*RAD)
-	{
-		shaftAngle = 68.0*RAD;
-		shaftVel = 0.0;
-	}
-	else if (shaftAngle < -148.0*RAD)
-	{
-		shaftAngle = -148.0*RAD;
-		shaftVel = 0.0;
-	}
-
-	//Mode I or II determination
-	if (cos(trunnionAngle) > 0.0 && mode == 2)
-	{
-		mode = 1;
-	}
-	else if (cos(trunnionAngle) < 0.0 && mode == 1)
-	{
-		mode = 2;
-	}
-
-	lem->tcdu.SetReadCounter(trunnionAngle);
-	lem->scdu.SetReadCounter(shaftAngle);
-
 	//sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 }
@@ -619,6 +663,7 @@ void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_double(scn, "RR_SHAFT", shaftAngle);
 	papiWriteScenario_double(scn, "RR_ANTTEMP", GetAntennaTempF());
 	oapiWriteScenario_int(scn, "RR_MODE", mode);
+	papiWriteScenario_double(scn, "RR_RANGELOCKTIMER", RangeLockTimer);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -634,5 +679,6 @@ void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_double(line, "RR_TRUN", trunnionAngle);
 		papiReadScenario_double(line, "RR_SHAFT", shaftAngle);
 		papiReadScenario_int(line, "RR_MODE", mode);
+		papiReadScenario_double(line, "RR_RANGELOCKTIMER", RangeLockTimer);
 	}
 }
