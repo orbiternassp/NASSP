@@ -206,11 +206,8 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PDI_DAY_1: //TEI-30 update to CMC LS Update
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 11 && MoonRevTime > 40.0*60.0, 44, MST_G_LUNAR_ORBIT_PDI_DAY_2);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_2: //CMC LS Update to Lmk 130 Landmark Tracking PAD
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 32, MST_G_LUNAR_ORBIT_PDI_DAY_3);
-		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_3: //Lmk 130 Landmark Tracking PAD to CSM DAP Data
-		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 62, MST_G_LUNAR_ORBIT_PDI_DAY_4);
+	case MST_G_LUNAR_ORBIT_PDI_DAY_2: //CMC LS Update and Lmk 130 Landmark Tracking PAD to CSM DAP Data
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 32, MST_G_LUNAR_ORBIT_PDI_DAY_4);
 		break;
 	case MST_G_LUNAR_ORBIT_PDI_DAY_4: //CSM DAP Data to LM DAP Data
 		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, MoonRev >= 12 && MoonRevTime > 30.0*60.0, 33, MST_G_LUNAR_ORBIT_PDI_DAY_7);

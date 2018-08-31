@@ -948,6 +948,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 32: //STATE VECTOR and LS REFSMMAT UPLINK
 	{
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
+
+		LMARKTRKPADOpt landmarkopt;
 		MATRIX3 REFSMMAT;
 		VECTOR3 DV;
 		double GETbase, t_DOI, t_PDI, t_land, CR;
@@ -985,6 +988,15 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		REFSMMAT = REFSMMATCalc(&opt);
 		calcParams.StoredREFSMMAT = REFSMMAT;
+
+		sprintf(form->LmkID[0], "130");
+		landmarkopt.alt[0] = -1.46*1852.0;
+		landmarkopt.lat[0] = 1.243*RAD;
+		landmarkopt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
+		landmarkopt.lng[0] = 23.688*RAD;
+		landmarkopt.entries = 1;
+
+		LandmarkTrackingPAD(&landmarkopt, *form);
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
@@ -1349,7 +1361,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 61: //REV 4 LANDMARK TRACKING PAD A-1
-	case 62: //REV 12 LANDMARK TRACKING PAD LMK 130
 	case 63: //LM TRACKING PAD
 	case 64: //LM ACQUISITION TIME
 	{
@@ -1367,15 +1378,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.lat[0] = 2.0*RAD;
 			opt.LmkTime[0] = OrbMech::HHMMSSToSS(82, 40, 0);
 			opt.lng[0] = 65.5*RAD;
-			opt.entries = 1;
-		}
-		else if (fcn == 62)
-		{
-			sprintf(form->LmkID[0], "130");
-			opt.alt[0] = -1.46*1852.0;
-			opt.lat[0] = 1.243*RAD;
-			opt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
-			opt.lng[0] = 23.688*RAD;
 			opt.entries = 1;
 		}
 		else if (fcn == 63 || fcn == 64)
