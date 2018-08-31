@@ -151,6 +151,7 @@ public:
 	double GetSignalStrength() { return SignalStrength*4.0; }
 	double GetShaftErrorSignal();
 	double GetTrunnionErrorSignal();
+	double GetTransmitterPower();
 	
 	bool IsPowered(); 
 	bool IsDCPowered(); 

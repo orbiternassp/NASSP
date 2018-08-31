@@ -1089,30 +1089,6 @@ public:
 	virtual void SeparateStage(int stage) = 0;
 
 	///
-	/// Turn on the liftoff light on the control panel.
-	/// \brief Set the liftoff light.
-	///
-	void SetLiftoffLight();
-
-	///
-	/// Turn off the liftoff light on the control panel.
-	/// \brief Clear the liftoff light.
-	///
-	void ClearLiftoffLight();
-
-	///
-	/// Turn on the no auto abort light on the control panel.
-	/// \brief Set the no auto abort light.
-	///
-	void SetNoAutoAbortLight();
-
-	///
-	/// Turn off the no auto abort light on the control panel.
-	/// \brief Clear the no auto abort light.
-	///
-	void ClearNoAutoAbortLight();
-
-	///
 	/// Turn on the LV Guidance warning light on the control panel to indicate an autopilot
 	/// failure.
 	/// \brief Set the LV Guidance light.
@@ -1601,7 +1577,7 @@ protected:
 	SwitchRow THCRotaryRow;
 	THCRotarySwitch THCRotary;
 
-	GuardedPushSwitch LiftoffNoAutoAbortSwitch;
+	SaturnLiftoffNoAutoAbortSwitch LiftoffNoAutoAbortSwitch;
 	GuardedPushSwitch LesMotorFireSwitch;
 	GuardedPushSwitch CanardDeploySwitch;
 	GuardedPushSwitch CsmLvSepSwitch;
@@ -3400,8 +3376,6 @@ protected:
 	/// \brief Engine indicator lights.
 	///
 	bool ENGIND[9];
-	bool LiftoffLight;
-	bool NoAutoAbortLight;
 	bool LVGuidLight;
 	bool LVRateLight;
 

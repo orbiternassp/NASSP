@@ -33,7 +33,7 @@ public:
 	~ARCore();
 	void lambertcalc();
 	void CDHcalc();
-	void OrbitAdjustCalc();
+	void GPMPCalc();
 	void REFSMMATCalc();
 	void SkylabCalc();
 	void DOICalc();
@@ -57,6 +57,7 @@ public:
 	void LAPCalc();
 	void DAPPADCalc();
 	void AscentPADCalc();
+	void PDAPCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -78,6 +79,7 @@ public:
 	void PDI_PAD();
 	void MapUpdate();
 	void NavCheckPAD();
+	void AP11AbortCoefUplink();
 	int REFSMMATOctalAddress();
 	int REFSMMATUplinkAddress();
 	void DetermineGMPCode();
@@ -151,12 +153,15 @@ public:
 	double t_TPIguess;
 	DKIResults dkiresult;
 
-	//CDH PAGE
+	//CONCENTRIC RENDEZVOUS PAGE
+	int SPQMode;	//0 = CSI, 1 = CDH
+	double CSItime;	//Time of the CSI maneuver
 	double CDHtime;	//Time of the CDH maneuver
-	double CDHtime_cor;	//Corrected time of the CDH maneuver
-	int CDHtimemode; //0=Fixed, 1 = Find GETI
+	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
+	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
 	double DH;			//Delta Height for the CDH maneuver
-	VECTOR3 CDHdeltaV;
+	VECTOR3 SPQDeltaV;
+	SPQResults spqresults;
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
@@ -358,6 +363,13 @@ public:
 
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
+
+	//Powered Descent Abort Program
+	int PDAPEngine;	//0 = DPS/APS, 1 = APS
+	bool PDAPTwoSegment;	//false = One Segment (Luminary099, FP6), true = Two Segment (Luminary116 and later, FP7 and later)
+	double PDAPABTCOF[8];	//Luminary099 abort coefficients
+	double DEDA224, DEDA225, DEDA226;
+	int DEDA227;
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99

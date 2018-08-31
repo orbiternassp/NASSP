@@ -2,6 +2,7 @@
 #define _ORBMECH_H
 
 #include "Orbitersdk.h"
+#include <vector>
 
 const VECTOR3 navstars[37] = { _V(0.87325707, 0.222717753, 0.433380771),
 _V(0.933983515, 0.0421048982, -0.354826677),
@@ -374,6 +375,15 @@ namespace OrbMech {
 	double fraction_pq(double x);
 	double fraction_xi(double x);
 	void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2);
+	void CubicInterpolation(double *x, double *y, double *a);
+	void VandermondeMatrix(double *x, int N, double **V);
+	int LUPDecompose(double **A, int N, double Tol, int *P);
+	void LUPSolve(double **A, int *P, double *b, int N, double *x);
+	void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &b1, double &b2);
+	double Sum(double *x, int N);
+	double SumProd(double *x, double *y, int N);
+	double SumQuad(double *x, int N);
+	double QuadSum(double *x, int N);
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);

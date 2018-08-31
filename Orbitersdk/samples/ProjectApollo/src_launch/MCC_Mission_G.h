@@ -119,3 +119,4 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_G_TRANSEARTH_9 208
 #define MST_G_TRANSEARTH_10 209
 #define MST_G_TRANSEARTH_11 210
+#define MST_G_LUNAR_ORBIT_PRE_PDI2_1 300
