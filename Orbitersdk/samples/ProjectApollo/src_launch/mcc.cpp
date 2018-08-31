@@ -3460,6 +3460,11 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			}
 			break;
 		case 2: // Awaiting user response
+			if (SubStateTime > 60.0)
+			{
+				addMessage("CSM: Ready for uplink?");
+				setSubState(2);
+			}
 		case 3: // Negative response / not ready for uplink
 			break;
 		case 4: // Ready for uplink
@@ -3523,6 +3528,11 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			}
 			break;
 		case 2: // Awaiting user response
+			if (SubStateTime > 60.0)
+			{
+				addMessage("CSM: Ready for uplink?");
+				setSubState(2);
+			}
 		case 3: // Negative response / not ready for uplink
 			break;
 		case 4: // Ready for uplink
@@ -3620,6 +3630,11 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			}
 			break;
 		case 2: // Awaiting user response
+			if (SubStateTime > 60.0)
+			{
+				addMessage("LM: Ready for uplink?");
+				setSubState(2);
+			}
 		case 3: // Negative response / not ready for uplink
 			break;
 		case 4: // Ready for uplink
@@ -3683,6 +3698,11 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 			}
 			break;
 		case 2: // Awaiting user response
+			if (SubStateTime > 60.0)
+			{
+				addMessage("LM: Ready for uplink?");
+				setSubState(2);
+			}
 		case 3: // Negative response / not ready for uplink
 			break;
 		case 4: // Ready for uplink
