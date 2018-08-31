@@ -991,9 +991,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sprintf(form->LmkID[0], "130");
 		landmarkopt.alt[0] = -1.46*1852.0;
+		landmarkopt.GETbase = calcParams.TEPHEM;
 		landmarkopt.lat[0] = 1.243*RAD;
 		landmarkopt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
 		landmarkopt.lng[0] = 23.688*RAD;
+		landmarkopt.vessel = calcParams.src;
 		landmarkopt.entries = 1;
 
 		LandmarkTrackingPAD(&landmarkopt, *form);
