@@ -1177,7 +1177,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	char str[256];
 
 	oapiWriteScenario_int (scn, "NASSPVER", NASSP_VERSION);
-	if (stage < LAUNCH_STAGE_SIVB)
+	if (stage < CSM_LEM_STAGE)
 	{
 		papiWriteScenario_double(scn, "FAILUREMULTIPLIER", FailureMultiplier);
 		if (PlatFail > 0) {
