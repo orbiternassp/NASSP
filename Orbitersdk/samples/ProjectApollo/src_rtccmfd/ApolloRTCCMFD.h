@@ -356,12 +356,19 @@ public:
 	void menuPDAPCalc();
 	void menuCyclePDAPEngine();
 	void menuAP11AbortCoefUplink();
+	void menuSetFIDOOrbitDigitalsPage();
+	void menuUpdateFIDOOrbitDigitals();
+	void menuSetFIDOOrbitDigitalsGETL();
+	void set_FIDOOrbitDigitalsGETL(double getl);
+	void menuSetFIDOOrbitDigitalsL();
+	void set_FIDOOrbitDigitalsL(double lng);
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);
 
 protected:
 	oapi::Font *font;
+	oapi::Font *font2;
 	Saturn *saturn;
 	LEM *lem;
 	int screen;

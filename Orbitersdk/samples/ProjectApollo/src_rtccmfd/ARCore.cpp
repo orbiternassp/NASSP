@@ -826,6 +826,35 @@ ARCore::ARCore(VESSEL* v)
 	DEDA225 = 0.0;
 	DEDA226 = 0.0;
 	DEDA227 = 0;
+
+	fidoorbit.A = 0.0;
+	fidoorbit.E = 0.0;
+	fidoorbit.GAM = 0.0;
+	fidoorbit.GET = 0.0;
+	fidoorbit.GETA = 0.0;
+	fidoorbit.GETCC = 0.0;
+	fidoorbit.GETID = 0.0;
+	fidoorbit.GETL = 0.0;
+	fidoorbit.GETP = 0.0;
+	fidoorbit.H = 0.0;
+	fidoorbit.HA = 0.0;
+	fidoorbit.HP = 0.0;
+	fidoorbit.I = 0.0;
+	fidoorbit.K = 0.0;
+	fidoorbit.L = 0.0;
+	fidoorbit.LA = 0.0;
+	fidoorbit.LNPP = 0.0;
+	fidoorbit.LP = 0.0;
+	fidoorbit.LPP = 0.0;
+	fidoorbit.ORBWT = 0.0;
+	fidoorbit.PA = 0.0;
+	fidoorbit.PP = 0.0;
+	fidoorbit.PPP = 0.0;
+	sprintf(fidoorbit.REF, "");
+	fidoorbit.TAPP = 0.0;
+	fidoorbit.TO = 0.0;
+	fidoorbit.V = 0.0;
+	sprintf(fidoorbit.VEHID, "");
 }
 
 ARCore::~ARCore()
@@ -1012,6 +1041,43 @@ void ARCore::AscentPADCalc()
 void ARCore::PDAPCalc()
 {
 	startSubthread(22);
+}
+
+void ARCore::UpdateFIDOOrbitDigitals()
+{
+	startSubthread(23);
+}
+
+void ARCore::CycleFIDOOrbitDigitals()
+{
+	if (subThreadStatus == 0 && fidoorbitsv.gravref != NULL)
+	{
+		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GETbase);
+		if (GET > fidoorbit.GET + 12.0)
+		{
+			startSubthread(24);
+		}
+		else if ((GET > fidoorbit.GETA && fidoorbit.E < 1.0) || GET > fidoorbit.GETP)
+		{
+			startSubthread(25);
+		}
+	}
+}
+
+void ARCore::FIDOOrbitDigitalsCalculateLongitude()
+{
+	if (subThreadStatus == 0 && fidoorbitsv.gravref != NULL)
+	{
+		startSubthread(26);
+	}
+}
+
+void ARCore::FIDOOrbitDigitalsCalculateGETL()
+{
+	if (subThreadStatus == 0 && fidoorbitsv.gravref != NULL)
+	{
+		startSubthread(27);
+	}
 }
 
 void ARCore::DAPPADCalc()
@@ -3268,6 +3334,79 @@ int ARCore::subThread()
 		DEDA225 = res.DEDA225;
 		DEDA226 = res.DEDA226;
 		DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
+
+		Result = 0;
+	}
+	break;
+	case 23: //FIDO Orbit Digitals Update
+	{
+		fidoorbitsv = rtcc->StateVectorCalc(vessel);
+
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsUpdate(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 24: //FIDO Orbit Digitals Cycle
+	{
+		double MJD = oapiGetSimMJD();
+
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.MJD = MJD;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsCycle(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 25: //FIDO Orbit Digitals Apsides Update
+	{
+		double MJD = oapiGetSimMJD();
+
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.MJD = MJD;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsApsidesCycle(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 26: //FIDO Orbit Digitals Longitude Calculation
+	{
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsCalculateLongitude(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 27: //FIDO Orbit Digitals GETL Calculation
+	{
+		double MJD = oapiGetSimMJD();
+
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.MJD = MJD;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsCalculateGETL(opt, fidoorbit);
+
+		Result = 0;
 	}
 	break;
 	}

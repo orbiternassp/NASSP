@@ -900,6 +900,45 @@ struct DockAlignOpt	//Docking Alignment Processor
 	double DockingAngle = 0.0;
 };
 
+struct FIDOOrbitDigitals
+{
+	double GET;		//Ground elapsed time associated with present position data
+	char VEHID[64];	//Vehicle name
+	char REF[64];	//Reference planet
+	double GETID;	//GET of the state vector
+	double H;		//Current height
+	double V;		//Current inertial velocity
+	double GAM;		//Current inertial flight path angle
+	double A;		//Semimajor axis of orbital ellipse
+	double E;		//Eccentricity of orbital ellipse
+	double I;		//Orbital inclination to Earth or linar equator
+	double HA;		//Height of next apogee at GETA
+	double PA;		//Latitude of next apogee at GETA
+	double LA;		//Longitude of next apogee at GETA
+	double GETA;	//Time of arrival at next apogee
+	double HP;		//Height of next apogee at GETP
+	double PP;		//Latitude of next apogee at GETP
+	double LP;		//Longitude of next apogee at GETP
+	double GETP;	//Time of arrival at next apogee
+	double LPP;		//Present position, longitude
+	double PPP;		//Present position, latitude
+	double GETCC;	//GET of arrival at next rev crossing
+	double TAPP;	//Present position, true anomaly
+	double LNPP;	//Longitude of ascending node (Earth-fixed or moon-fixed)
+	double GETL;	//Time spacecraft will pass over L
+	double L;		//The longitude associated with GETL
+	double TO;		//Orbital period
+	double K;		//K-Factor
+	double ORBWT;	//Total current weight
+};
+
+struct FIDOOrbitDigitalsOpt
+{
+	SV sv_A;
+	double GETbase;
+	double MJD;		//MJD to update the state vector to (only used in continuous update)
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;		// Our ship
@@ -1099,6 +1138,11 @@ public:
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, MATRIX3 REFSMMAT, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
+	void FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsApsidesCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsCalculateLongitude(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsCalculateGETL(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

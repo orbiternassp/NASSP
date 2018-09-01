@@ -9201,3 +9201,213 @@ VECTOR3 RTCC::RLS_from_latlng(double lat, double lng, double alt)
 	double R_M = oapiGetSize(oapiGetObjectByName("Moon"));
 	return OrbMech::r_from_latlong(lat, lng, R_M + alt);
 }
+
+void RTCC::FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res)
+{
+	SV sv_p, sv_cc;
+	OELEMENTS coe;
+	MATRIX3 Rot;
+	VECTOR3 R_equ, V_equ;
+	double lat, lng, mu, a, R_B, lng_cc, MJD_cc;
+
+	//sprintf(res.VEHID, opt.v->GetName());
+	res.K = 0.0;
+	res.GETID = OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase);
+	oapiGetObjectName(opt.sv_A.gravref, res.REF, 64);
+
+	R_B = oapiGetSize(opt.sv_A.gravref);
+	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
+	Rot = OrbMech::GetRotationMatrix(opt.sv_A.gravref, opt.sv_A.MJD);
+	R_equ = rhtmul(Rot, opt.sv_A.R);
+	V_equ = rhtmul(Rot, opt.sv_A.V);
+
+	coe = OrbMech::coe_from_sv(R_equ, V_equ, mu);
+	OrbMech::latlong_from_r(R_equ, lat, lng);
+	res.PPP = lat * DEG;
+	res.LPP = lng * DEG;
+	res.TAPP = coe.TA*DEG;
+	res.H = (length(opt.sv_A.R) - R_B) / 1852.0;
+	res.V = length(opt.sv_A.V) / 0.3048;
+	res.GAM = atan2(coe.e*sin(coe.TA), 1.0 + coe.e*cos(coe.TA))*DEG;
+	a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e);
+	res.A = a / 1852.0;
+	res.E = coe.e;
+	res.I = coe.i*DEG;
+
+	if (coe.e > 1.0)
+	{
+		double dt;
+
+		dt = OrbMech::timetoperi_integ(opt.sv_A.R, opt.sv_A.V, opt.sv_A.MJD, opt.sv_A.gravref, opt.sv_A.gravref, sv_p.R, sv_p.V);
+		sv_p.gravref = opt.sv_A.gravref;
+		sv_p.mass = opt.sv_A.mass;
+		sv_p.MJD = opt.sv_A.MJD + dt / 24.0 / 3600.0;
+	}
+	else
+	{
+		SV sv_a;
+		VECTOR3 Rlat, Vlat;
+		double dt;
+
+		ApsidesDeterminationSubroutine(opt.sv_A, sv_a, sv_p);
+		OrbMech::latlong_from_J2000(sv_a.R, sv_a.MJD, opt.sv_A.gravref, lat, lng);
+		res.HA = (length(sv_a.R) - R_B) / 1852.0;
+		res.PA = lat * DEG;
+		res.LA = lng * DEG;
+		res.GETA = OrbMech::GETfromMJD(sv_a.MJD, opt.GETbase);
+
+		res.TO = OrbMech::period(opt.sv_A.R, opt.sv_A.V, mu);
+		dt = OrbMech::findlatitude(opt.sv_A.R, opt.sv_A.V, opt.sv_A.MJD, opt.sv_A.gravref, 0.0, true, Rlat, Vlat);
+		OrbMech::latlong_from_J2000(Rlat, opt.sv_A.MJD + dt / 24.0 / 3600.0, opt.sv_A.gravref, lat, lng);
+		res.LNPP = lng * DEG;
+	}
+
+	OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, opt.sv_A.gravref, lat, lng);
+	res.HP = (length(sv_p.R) - R_B) / 1852.0;
+	res.PP = lat * DEG;
+	res.LP = lng * DEG;
+	res.GETP = OrbMech::GETfromMJD(sv_p.MJD, opt.GETbase);
+
+	res.ORBWT = opt.sv_A.mass / 0.45359237;
+
+	if (opt.sv_A.gravref == oapiGetObjectByName("Earth"))
+	{
+		lng_cc = -80.0*RAD;
+	}
+	else
+	{
+		lng_cc = -180.0*RAD;
+	}
+
+	MJD_cc = OrbMech::P29TimeOfLongitude(opt.sv_A.R, opt.sv_A.V, opt.sv_A.MJD, opt.sv_A.gravref, lng_cc);
+	sv_cc = GeneralTrajectoryPropagation(opt.sv_A, 0, MJD_cc);
+	res.GETCC = OrbMech::GETfromMJD(sv_cc.MJD, opt.GETbase);
+}
+
+void RTCC::FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res)
+{
+	SV sv_cur, sv_p, sv_cc;
+	OELEMENTS coe;
+	MATRIX3 Rot;
+	VECTOR3 R_equ, V_equ;
+	double lat, lng, mu, a, R_B, lng_cc, MJD_cc;
+
+	sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, opt.MJD);
+
+	res.K = 0.0;
+	res.GET = OrbMech::GETfromMJD(sv_cur.MJD, opt.GETbase);
+	oapiGetObjectName(sv_cur.gravref, res.REF, 64);
+
+	R_B = oapiGetSize(sv_cur.gravref);
+	mu = GGRAV * oapiGetMass(sv_cur.gravref);
+	Rot = OrbMech::GetRotationMatrix(sv_cur.gravref, sv_cur.MJD);
+	R_equ = rhtmul(Rot, sv_cur.R);
+	V_equ = rhtmul(Rot, sv_cur.V);
+
+	coe = OrbMech::coe_from_sv(R_equ, V_equ, mu);
+	OrbMech::latlong_from_r(R_equ, lat, lng);
+
+	if (lat > 0 && res.PPP < 0)
+	{
+		VECTOR3 Rlat, Vlat;
+		double dt;
+
+		dt = OrbMech::findlatitude(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, 0.0, true, Rlat, Vlat);
+		OrbMech::latlong_from_J2000(Rlat, sv_cur.MJD + dt / 24.0 / 3600.0, sv_cur.gravref, lat, lng);
+		res.LNPP = lng * DEG;
+	}
+
+	res.PPP = lat * DEG;
+	res.LPP = lng * DEG;
+	res.TAPP = coe.TA*DEG;
+	res.H = (length(sv_cur.R) - R_B) / 1852.0;
+	res.V = length(sv_cur.V) / 0.3048;
+	res.GAM = atan2(coe.e*sin(coe.TA), 1.0 + coe.e*cos(coe.TA))*DEG;
+	a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e);
+	res.A = a / 1852.0;
+	res.E = coe.e;
+	res.I = coe.i*DEG;
+
+	if (sv_cur.gravref == oapiGetObjectByName("Earth"))
+	{
+		lng_cc = -80.0*RAD;
+	}
+	else
+	{
+		lng_cc = -180.0*RAD;
+	}
+
+	MJD_cc = OrbMech::P29TimeOfLongitude(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, lng_cc);
+	sv_cc = GeneralTrajectoryPropagation(sv_cur, 0, MJD_cc);
+	res.GETCC = OrbMech::GETfromMJD(sv_cc.MJD, opt.GETbase);
+
+	if (coe.e < 1.0)
+	{
+		res.TO = OrbMech::period(sv_cur.R, sv_cur.V, mu);
+	}
+}
+
+void RTCC::FIDOOrbitDigitalsApsidesCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res)
+{
+	OELEMENTS coe;
+	SV sv_cur, sv_p;
+	MATRIX3 Rot;
+	VECTOR3 R_equ, V_equ;
+	double R_B, mu, lat, lng;
+
+	sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, opt.MJD);
+	R_B = oapiGetSize(sv_cur.gravref);
+	mu = GGRAV * oapiGetMass(sv_cur.gravref);
+	Rot = OrbMech::GetRotationMatrix(sv_cur.gravref, sv_cur.MJD);
+	R_equ = rhtmul(Rot, sv_cur.R);
+	V_equ = rhtmul(Rot, sv_cur.V);
+
+	coe = OrbMech::coe_from_sv(R_equ, V_equ, mu);
+
+	if (coe.e > 1.0)
+	{
+		double dt;
+
+		dt = OrbMech::timetoperi_integ(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, sv_cur.gravref, sv_p.R, sv_p.V);
+		sv_p.gravref = sv_cur.gravref;
+		sv_p.mass = sv_cur.mass;
+		sv_p.MJD = sv_cur.MJD + dt / 24.0 / 3600.0;
+	}
+	else
+	{
+		SV sv_a;
+
+		ApsidesDeterminationSubroutine(sv_cur, sv_a, sv_p);
+		OrbMech::latlong_from_J2000(sv_a.R, sv_a.MJD, sv_cur.gravref, lat, lng);
+		res.HA = (length(sv_a.R) - R_B) / 1852.0;
+		res.PA = lat * DEG;
+		res.LA = lng * DEG;
+		res.GETA = OrbMech::GETfromMJD(sv_a.MJD, opt.GETbase);
+	}
+
+	OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_cur.gravref, lat, lng);
+	res.HP = (length(sv_p.R) - R_B) / 1852.0;
+	res.PP = lat * DEG;
+	res.LP = lng * DEG;
+	res.GETP = OrbMech::GETfromMJD(sv_p.MJD, opt.GETbase);
+}
+
+void RTCC::FIDOOrbitDigitalsCalculateLongitude(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res)
+{
+	SV sv_L;
+	double lat, lng;
+
+	sv_L = coast(opt.sv_A, res.GETL - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
+	OrbMech::latlong_from_J2000(sv_L.R, sv_L.MJD, sv_L.gravref, lat, lng);
+	res.L = lng * DEG;
+}
+
+void RTCC::FIDOOrbitDigitalsCalculateGETL(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res)
+{
+	SV sv_cur;
+	double MJD_L;
+
+	sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, opt.MJD);
+	MJD_L = OrbMech::P29TimeOfLongitude(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, res.L*RAD);
+	res.GETL = OrbMech::GETfromMJD(MJD_L, opt.GETbase);
+}
