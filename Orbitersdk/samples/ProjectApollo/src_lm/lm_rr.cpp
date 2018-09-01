@@ -193,6 +193,7 @@ void LEM_RR::Timestep(double simdt) {
 		SignalStrength = 0.0;
 		radarDataGood = false;
 		FrequencyLock = false;
+		RangeLock = false;
 		range = 0.0;
 		rate = 0.0;
 		return;
@@ -667,6 +668,9 @@ void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_double(scn, "RR_ANTTEMP", GetAntennaTempF());
 	oapiWriteScenario_int(scn, "RR_MODE", mode);
 	papiWriteScenario_double(scn, "RR_RANGELOCKTIMER", RangeLockTimer);
+	papiWriteScenario_bool(scn, "RR_RADARDATAGOOD", radarDataGood);
+	papiWriteScenario_double(scn, "RR_RANGE", range);
+	papiWriteScenario_double(scn, "RR_RATE", rate);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -683,5 +687,8 @@ void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_double(line, "RR_SHAFT", shaftAngle);
 		papiReadScenario_int(line, "RR_MODE", mode);
 		papiReadScenario_double(line, "RR_RANGELOCKTIMER", RangeLockTimer);
+		papiReadScenario_bool(line, "RR_RADARDATAGOOD", radarDataGood);
+		papiReadScenario_double(line, "RR_RANGE", range);
+		papiReadScenario_double(line, "RR_RATE", rate);
 	}
 }
