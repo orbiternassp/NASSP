@@ -209,19 +209,19 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PDI_DAY_2: //CMC LS Update and Lmk 130 Landmark Tracking PAD to CSM DAP Data
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11LMARKTRKPAD, SubStateTime > 3.0*60.0, 32, MST_G_LUNAR_ORBIT_PDI_DAY_4);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_4: //CSM DAP Data to LM DAP Data
+	case MST_G_LUNAR_ORBIT_PDI_DAY_4: //CSM DAP Data to LM Activation Data
 		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, MoonRev >= 12 && MoonRevTime > 30.0*60.0, 33, MST_G_LUNAR_ORBIT_PDI_DAY_7);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_7: //LM DAP Data to gyro torquing angles
-		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, SubStateTime > 3.0*60.0, 34, MST_G_LUNAR_ORBIT_PDI_DAY_8);
+	case MST_G_LUNAR_ORBIT_PDI_DAY_7: //LM Activation Data to LGC activation update
+		UpdateMacro(UTP_PADONLY, PT_LMACTDATA, MoonRev >= 12 && MoonRevTime > 65.0*60.0, 34, MST_G_LUNAR_ORBIT_PDI_DAY_9);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_8: //Gyro torquing angles to LGC activation update
-		UpdateMacro(UTP_PADONLY, PT_TORQANG, MoonRev >= 12 && MoonRevTime > 65.0*60.0, 35, MST_G_LUNAR_ORBIT_PDI_DAY_9);
+	case MST_G_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to AGC activation update
+		UpdateMacro(UTP_LGCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 35, MST_G_LUNAR_ORBIT_PDI_DAY_10);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_9: //LGC activation update to Separation maneuver update
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11AGSACT, SubStateTime > 5.0*60.0, 36, MST_G_LUNAR_ORBIT_PDI_DAY_10);
+	case MST_G_LUNAR_ORBIT_PDI_DAY_10: //AGC activation update to Separation maneuver update
+		UpdateMacro(UTP_PADONLY, PT_AP11AGSACT, SubStateTime > 3.0*60.0, 36, MST_G_LUNAR_ORBIT_PDI_DAY_11);
 		break;
-	case MST_G_LUNAR_ORBIT_PDI_DAY_10: //Separation maneuver update to DOI update
+	case MST_G_LUNAR_ORBIT_PDI_DAY_11: //Separation maneuver update to DOI update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 13 && MoonRevTime > 30.0*60.0, 37, MST_G_LUNAR_ORBIT_PDI_DAY_12);
 		break;
 	case MST_G_LUNAR_ORBIT_PDI_DAY_12: //DOI update to PDI PAD

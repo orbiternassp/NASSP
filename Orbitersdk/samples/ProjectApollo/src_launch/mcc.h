@@ -168,6 +168,7 @@
 #define PT_AP11P76PAD		27
 #define PT_AP11LMASCPAD		28
 #define PT_LIFTOFFTIMES		29
+#define PT_LMACTDATA		30
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -591,6 +592,17 @@ struct S065UPDATE
 struct TORQANG
 {
 	VECTOR3 V42Angles;
+};
+
+//LM ACTIVATION DATA CARD
+
+struct LMACTDATA
+{
+	double LMWeight;	// LM weight
+	double CSMWeight;	// CSM weight
+	double PitchTrim;	// Pitch gimbal trim
+	double RollTrim;	// Roll gimbal trim
+	VECTOR3 V42Angles;	// Torquing angles
 };
 
 //APOLLO 11 AGS ACTIVATION PAD

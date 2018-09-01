@@ -1867,6 +1867,16 @@ void MCC::SaveState(FILEHANDLE scn) {
 				SAVE_DOUBLE(tmpbuf, form->TIG[i]);
 			}
 		}
+		else if (padNumber == PT_LMACTDATA)
+		{
+			LMACTDATA *form = (LMACTDATA*)padForm;
+
+			SAVE_DOUBLE("MCC_LMACTDATA_CSMWeight", form->CSMWeight);
+			SAVE_DOUBLE("MCC_LMACTDATA_LMWeight", form->LMWeight);
+			SAVE_DOUBLE("MCC_LMACTDATA_PitchTrim", form->PitchTrim);
+			SAVE_DOUBLE("MCC_LMACTDATA_RollTrim", form->RollTrim);
+			SAVE_V3("MCC_LMACTDATA_V42Angles", form->V42Angles);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2374,6 +2384,16 @@ void MCC::LoadState(FILEHANDLE scn) {
 				sprintf(tmpbuf, "MCC_LIFTOFFTIMES_TIG[%d]", i);
 				LOAD_DOUBLE(tmpbuf, form->TIG[i]);
 			}
+		}
+		else if (padNumber == PT_LMACTDATA)
+		{
+			LMACTDATA *form = (LMACTDATA*)padForm;
+
+			LOAD_DOUBLE("MCC_LMACTDATA_CSMWeight", form->CSMWeight);
+			LOAD_DOUBLE("MCC_LMACTDATA_LMWeight", form->LMWeight);
+			LOAD_DOUBLE("MCC_LMACTDATA_PitchTrim", form->PitchTrim);
+			LOAD_DOUBLE("MCC_LMACTDATA_RollTrim", form->RollTrim);
+			LOAD_V3("MCC_LMACTDATA_V42Angles", form->V42Angles);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -3007,6 +3027,16 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_LMACTDATA:
+	{
+		LMACTDATA *form = (LMACTDATA*)padForm;
+
+		sprintf(buffer, "DAP PAD\n%+06.0f\n%+06.0f\n%+07.2f\n%+07.2f\nGYRO TORQUING ANGLES\nX %+07.3f\nY %+07.3f\n Z %+07.3f", 
+			form->LMWeight, form->CSMWeight, form->PitchTrim, form->RollTrim, form->V42Angles.x, form->V42Angles.y, form->V42Angles.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3122,6 +3152,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_LIFTOFFTIMES: // LIFTOFFTIMES
 		padForm = calloc(1, sizeof(LIFTOFFTIMES));
+		break;
+	case PT_LMACTDATA: // LMACTDATA
+		padForm = calloc(1, sizeof(LMACTDATA));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

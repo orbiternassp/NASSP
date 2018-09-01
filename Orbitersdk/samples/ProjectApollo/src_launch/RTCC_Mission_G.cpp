@@ -1020,14 +1020,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 34: //LM DAP DATA
 	{
-		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+		LMACTDATA * form = (LMACTDATA *)pad;
 
-		LMDAPUpdate(calcParams.tgt, *form);
-	}
-	break;
-	case 35: //GYRO TORQUING ANGLES
-	{
-		TORQANG * form = (TORQANG *)pad;
+		AP10DAPDATA dap;
+
+		LMDAPUpdate(calcParams.tgt, dap);
+		
 		LEM *lem = (LEM *)calcParams.tgt;
 
 		VECTOR3 lmn20, csmn20, V42angles;
@@ -1045,12 +1043,15 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->V42Angles.x = V42angles.x*DEG;
 		form->V42Angles.y = V42angles.y*DEG;
 		form->V42Angles.z = V42angles.z*DEG;
+
+		form->CSMWeight = dap.OtherVehicleWeight;
+		form->LMWeight = dap.ThisVehicleWeight;
+		form->PitchTrim = dap.PitchTrim;
+		form->RollTrim = dap.YawTrim;
 	}
 	break;
-	case 36: //LGC ACTIVATION UPDATE
+	case 35: //LGC ACTIVATION UPDATE
 	{
-		AP11AGSACT *form = (AP11AGSACT*)pad;
-
 		SV sv;
 		MATRIX3 REFSMMAT;
 		double GETbase;
@@ -1063,12 +1064,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		REFSMMAT = calcParams.StoredREFSMMAT;
 
-		form->KFactor = 90.0*3600.0;
-		form->DEDA224 = 60267;
-		form->DEDA225 = 58148;
-		form->DEDA226 = 70312;
-		form->DEDA227 = -50031;
-
 		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
 		AGCStateVectorUpdate(buffer2, sv, true, AGCEpoch, GETbase);
 		AGCREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch, LGCREFSAddrOffs);
@@ -1079,6 +1074,17 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "State vectors, LS REFSMMAT");
 		}
+	}
+	break;
+	case 36: //AGS ACTIVATION UPDATE
+	{
+		AP11AGSACT *form = (AP11AGSACT*)pad;
+
+		form->KFactor = 90.0*3600.0;
+		form->DEDA224 = 60267;
+		form->DEDA225 = 58148;
+		form->DEDA226 = 70312;
+		form->DEDA227 = -50031;		
 	}
 	break;
 	case 37: //SEPARATION MANEUVER
