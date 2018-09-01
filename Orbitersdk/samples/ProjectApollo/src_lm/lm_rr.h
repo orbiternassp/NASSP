@@ -62,9 +62,8 @@ private:
 	h_HeatLoad *RRESECHeat;		// RRE Heat Load Sec Loop
 	e_object *dc_source;
 	e_object *ac_source;
+	double RangeLockTimer;
 	double tstime;
-	int	   tstate[2];
-	double tsangle[2];
 	int    isTracking;
 	bool   radarDataGood;
 	bool NoTrackSignal;
@@ -74,6 +73,8 @@ private:
 	double shaftVel;
 	double range;
 	double rate;
+	double internalrange;
+	double internalrangerate;
 	int ruptSent;				// Rupt sent
 	int scratch[2];             // Scratch data
 	int mode;					//Mode I = false, Mode II = true
@@ -82,6 +83,9 @@ private:
 	double SignalStrengthQuadrant[4];
 	VECTOR3 U_RRL[4];
 	bool AutoTrackEnabled;
+	bool FrequencyLock;
+	bool TrackingModeSwitch;
+	bool RangeLock;
 	double ShaftErrorSignal;
 	double TrunnionErrorSignal;
 	VECTOR3 GyroRates;

@@ -40,6 +40,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 {
 	//font = oapiCreateFont(w / 20, true, "Arial", FONT_NORMAL, 0);
 	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
+	font2 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
 	bool found = false;
 	for (int i = 0; i < nGutsUsed; i++) {
 		if (i == 32){
@@ -2547,6 +2548,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 4 * H / 14, "REFSMMAT", 8);
 		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
 		skp->Text(1 * W / 8, 8 * H / 14, "Erasable Memory Programs", 24);
+		skp->Text(1 * W / 8, 10 * H / 14, "FIDO Orbit Digitals", 19);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "LVDC", 4);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
@@ -3661,6 +3663,179 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		GET_Display(Buffer, G->t_Land);
 		skp->Text(5 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 	}
+	else if (screen == 41)
+	{
+		G->CycleFIDOOrbitDigitals();
+
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "FIDO ORBIT DIGITALS", 19);
+
+		skp->SetFont(font2);
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		skp->Text(5 * W / 32, 5 * H / 28, "GET", 3);
+		skp->Text(5 * W / 32, 6 * H / 28, "VEHICLE", 7);
+		skp->Text(5 * W / 32, 7 * H / 28, "REF", 3);
+		skp->Text(5 * W / 32, 8 * H / 28, "GET ID", 6);
+		skp->Text(5 * W / 32, 10 * H / 28, "H", 1);
+		skp->Text(5 * W / 32, 11 * H / 28, "V", 1);
+		skp->Text(5 * W / 32, 12 * H / 28, "GAM", 3);
+		skp->Text(5 * W / 32, 14 * H / 28, "A", 1);
+		skp->Text(5 * W / 32, 15 * H / 28, "E", 1);
+		skp->Text(5 * W / 32, 16 * H / 28, "I", 1);
+		skp->Text(5 * W / 32, 18 * H / 28, "HA", 2);
+		skp->Text(5 * W / 32, 19 * H / 28, "PA", 2);
+		skp->Text(5 * W / 32, 20 * H / 28, "LA", 2);
+		skp->Text(5 * W / 32, 21 * H / 28, "GETA", 4);
+		skp->Text(5 * W / 32, 23 * H / 28, "HP", 2);
+		skp->Text(5 * W / 32, 24 * H / 28, "PP", 2);
+		skp->Text(5 * W / 32, 25 * H / 28, "LP", 2);
+		skp->Text(5 * W / 32, 26 * H / 28, "GETP", 4);
+
+		skp->Text(15 * W / 32, 5 * H / 28, "LPP", 3);
+		skp->Text(15 * W / 32, 6 * H / 28, "PPP", 3);
+		skp->Text(15 * W / 32, 7 * H / 28, "GETCC", 5);
+		skp->Text(15 * W / 32, 8 * H / 28, "TAPP", 4);
+		skp->Text(15 * W / 32, 9 * H / 28, "LNPP", 3);
+
+		skp->Text(25 * W / 32, 6 * H / 28, "GETL", 4);
+		skp->Text(25 * W / 32, 7 * H / 28, "L", 1);
+		skp->Text(25 * W / 32, 8 * H / 28, "TO", 2);
+		skp->Text(25 * W / 32, 9 * H / 28, "K", 1);
+		skp->Text(25 * W / 32, 11 * H / 28, "ORBWT", 5);
+		//skp->Text(25 * W / 32, 13 * H / 28, "REQUESTED", 9);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		GET_Display(Buffer, G->fidoorbit.GET, false);
+		skp->Text(3 * W / 16, 5 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, G->vessel->GetName());
+		skp->Text(3 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, G->fidoorbit.REF);
+		skp->Text(3 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->fidoorbit.GETID, false);
+		skp->Text(3 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->fidoorbit.H);
+		skp->Text(3 * W / 16, 10 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.0f", G->fidoorbit.V);
+		skp->Text(3 * W / 16, 11 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.2f", G->fidoorbit.GAM);
+		skp->Text(3 * W / 16, 12 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->fidoorbit.A);
+		skp->Text(3 * W / 16, 14 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%06.4f", G->fidoorbit.E);
+		skp->Text(3 * W / 16, 15 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.2f", G->fidoorbit.I);
+		skp->Text(3 * W / 16, 16 * H / 28, Buffer, strlen(Buffer));
+
+		if (G->fidoorbit.E < 1.0)
+		{
+			sprintf(Buffer, "%08.1f", G->fidoorbit.HA);
+			skp->Text(3 * W / 16, 18 * H / 28, Buffer, strlen(Buffer));
+			if (G->fidoorbit.E > 0.0001)
+			{
+				if (G->fidoorbit.PA > 0)
+				{
+					sprintf(Buffer, "%06.2f N", G->fidoorbit.PA);
+				}
+				else
+				{
+					sprintf(Buffer, "%06.2f S", abs(G->fidoorbit.PA));
+				}
+				skp->Text(3 * W / 16, 19 * H / 28, Buffer, strlen(Buffer));
+				if (G->fidoorbit.LA > 0)
+				{
+					sprintf(Buffer, "%06.2f E", G->fidoorbit.LA);
+				}
+				else
+				{
+					sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.LA));
+				}
+				skp->Text(3 * W / 16, 20 * H / 28, Buffer, strlen(Buffer));
+				GET_Display(Buffer, G->fidoorbit.GETA, false);
+				skp->Text(3 * W / 16, 21 * H / 28, Buffer, strlen(Buffer));
+			}
+		}
+
+		sprintf(Buffer, "%08.1f", G->fidoorbit.HP);
+		skp->Text(3 * W / 16, 23 * H / 28, Buffer, strlen(Buffer));
+		if (G->fidoorbit.E > 0.0001)
+		{
+			if (G->fidoorbit.PP > 0)
+			{
+				sprintf(Buffer, "%06.2f N", G->fidoorbit.PP);
+			}
+			else
+			{
+				sprintf(Buffer, "%06.2f S", abs(G->fidoorbit.PP));
+			}
+			skp->Text(3 * W / 16, 24 * H / 28, Buffer, strlen(Buffer));
+			if (G->fidoorbit.LP > 0)
+			{
+				sprintf(Buffer, "%06.2f E", G->fidoorbit.LP);
+			}
+			else
+			{
+				sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.LP));
+			}
+			skp->Text(3 * W / 16, 25 * H / 28, Buffer, strlen(Buffer));
+			GET_Display(Buffer, G->fidoorbit.GETP, false);
+			skp->Text(3 * W / 16, 26 * H / 28, Buffer, strlen(Buffer));
+		}
+
+		if (G->fidoorbit.LPP > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->fidoorbit.LPP);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.LPP));
+		}
+		skp->Text(8 * W / 16, 5 * H / 28, Buffer, strlen(Buffer));
+		if (G->fidoorbit.PPP > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->fidoorbit.PPP);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->fidoorbit.PPP));
+		}
+		skp->Text(8 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->fidoorbit.GETCC, false);
+		skp->Text(8 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
+		if (G->fidoorbit.E > 0.0001)
+		{
+			sprintf(Buffer, "%05.1f", G->fidoorbit.TAPP);
+			skp->Text(8 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
+		}
+		if (G->fidoorbit.LNPP > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->fidoorbit.LNPP);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.LNPP));
+		}
+		skp->Text(8 * W / 16, 9 * H / 28, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer, G->fidoorbit.GETL, false);
+		skp->Text(13 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		if (G->fidoorbit.L > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->fidoorbit.L);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.L));
+		}
+		skp->Text(13 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->fidoorbit.TO, false);
+		skp->Text(13 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.1f", G->fidoorbit.K);
+		skp->Text(13 * W / 16, 9 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%07.1f", G->fidoorbit.ORBWT);
+		skp->Text(13 * W / 16, 11 * H / 28, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -4057,6 +4232,12 @@ void ApolloRTCCMFD::menuSetLMAscentPADPage()
 void ApolloRTCCMFD::menuSetPDAPPage()
 {
 	screen = 40;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsPage()
+{
+	screen = 41;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -7623,6 +7804,57 @@ void ApolloRTCCMFD::menuAP11AbortCoefUplink()
 	{
 		G->AP11AbortCoefUplink();
 	}
+}
+
+void ApolloRTCCMFD::menuUpdateFIDOOrbitDigitals()
+{
+	G->UpdateFIDOOrbitDigitals();
+}
+
+void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsGETL()
+{
+	bool FIDOOrbitDigitalsGETLInput(void* id, char *str, void *data);
+	oapiOpenInputBox("GET of longitude (Format: hhh:mm:ss)", FIDOOrbitDigitalsGETLInput, 0, 20, (void*)this);
+}
+
+bool FIDOOrbitDigitalsGETLInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, getl;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		getl = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_FIDOOrbitDigitalsGETL(getl);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_FIDOOrbitDigitalsGETL(double getl)
+{
+	G->fidoorbit.GETL = getl;
+	G->FIDOOrbitDigitalsCalculateLongitude();
+}
+
+void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsL()
+{
+	bool FIDOOrbitDigitalsLInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Desired longitude:", FIDOOrbitDigitalsLInput, 0, 20, (void*)this);
+}
+
+bool FIDOOrbitDigitalsLInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_FIDOOrbitDigitalsL(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_FIDOOrbitDigitalsL(double lng)
+{
+	this->G->fidoorbit.L = lng;
+	G->FIDOOrbitDigitalsCalculateGETL();
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)

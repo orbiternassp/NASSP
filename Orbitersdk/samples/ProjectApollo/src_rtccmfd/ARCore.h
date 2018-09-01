@@ -58,6 +58,10 @@ public:
 	void DAPPADCalc();
 	void AscentPADCalc();
 	void PDAPCalc();
+	void UpdateFIDOOrbitDigitals();
+	void CycleFIDOOrbitDigitals();
+	void FIDOOrbitDigitalsCalculateLongitude();
+	void FIDOOrbitDigitalsCalculateGETL();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -388,6 +392,10 @@ public:
 	double AGCEphemBRCSEpoch;
 	double AGCEphemTEphemZero;
 	double AGCEphemTIMEM0;
+
+	//FIDO ORBIT DIGITALS
+	FIDOOrbitDigitals fidoorbit;
+	SV fidoorbitsv;
 
 	protected:
 		int GetPowEngType();

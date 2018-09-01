@@ -721,7 +721,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "REFSMMAT", 0, 'R' },
 		{ "Vector Pointing", 0, 'P' },
 		{ "Erasable Memory Programs", 0, 'E' },
-		{ "", 0, ' ' },
+		{ "FIDO Orbit Digitals", 0, 'F' },
 		{ "", 0, ' ' },
 
 		{ "LVDC options", 0, 'L' },
@@ -738,7 +738,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("REF", OAPI_KEY_R, &ApolloRTCCMFD::menuSetREFSMMATPage);
 	RegisterFunction("VEC", OAPI_KEY_P, &ApolloRTCCMFD::menuSetVECPOINTPage);
 	RegisterFunction("EMP", OAPI_KEY_E, &ApolloRTCCMFD::menuSetEMPPage);
-	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("FDO", OAPI_KEY_F, &ApolloRTCCMFD::menuSetFIDOOrbitDigitalsPage);
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("IU", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLVDCPage);
@@ -1393,6 +1393,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("DOI", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchPDIPADDirect);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuAP11AbortCoefUplink);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
+
+
+	static const MFDBUTTONMENU mnu41[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "Update state vector", 0, 'U' },
+		{ "Calculate longitude from GET", 0, 'G' },
+		{ "Calculate GET from longitude", 0, 'L' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu41, sizeof(mnu41) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("UPD", OAPI_KEY_U, &ApolloRTCCMFD::menuUpdateFIDOOrbitDigitals);
+	RegisterFunction("GETL", OAPI_KEY_G, &ApolloRTCCMFD::menuSetFIDOOrbitDigitalsGETL);
+	RegisterFunction("L", OAPI_KEY_L, &ApolloRTCCMFD::menuSetFIDOOrbitDigitalsL);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
