@@ -631,8 +631,8 @@ void LEM::SystemsInit()
 	AscO2Tank2->BoilAllAndSetTemp(294.261);
 	DesO2Manifold->BoilAllAndSetTemp(294.261);
 	O2Manifold->BoilAllAndSetTemp(294.261);
-	PressRegA->BoilAllAndSetTemp(277.594);
-	PressRegB->BoilAllAndSetTemp(277.594);
+	PressRegA->BoilAllAndSetTemp(283.15);
+	PressRegB->BoilAllAndSetTemp(283.15);
 
 	//Tunnel Connection Initialization   
 	SetPipeMaxFlow("HYDRAULIC:LMTUNNELUNDOCKED", 1000.0 / LBH);
