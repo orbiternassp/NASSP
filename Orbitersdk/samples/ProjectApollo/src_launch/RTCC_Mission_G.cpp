@@ -1020,14 +1020,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 34: //LM DAP DATA
 	{
-		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+		LMACTDATA * form = (LMACTDATA *)pad;
 
-		LMDAPUpdate(calcParams.tgt, *form);
-	}
-	break;
-	case 35: //GYRO TORQUING ANGLES
-	{
-		TORQANG * form = (TORQANG *)pad;
+		AP10DAPDATA dap;
+
+		LMDAPUpdate(calcParams.tgt, dap);
+		
 		LEM *lem = (LEM *)calcParams.tgt;
 
 		VECTOR3 lmn20, csmn20, V42angles;
@@ -1045,6 +1043,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->V42Angles.x = V42angles.x*DEG;
 		form->V42Angles.y = V42angles.y*DEG;
 		form->V42Angles.z = V42angles.z*DEG;
+
+		form->CSMWeight = dap.OtherVehicleWeight;
+		form->LMWeight = dap.ThisVehicleWeight;
+		form->PitchTrim = dap.PitchTrim;
+		form->RollTrim = dap.YawTrim;
 	}
 	break;
 	case 36: //LGC ACTIVATION UPDATE
