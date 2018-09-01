@@ -394,6 +394,9 @@ void LEM_RR::Timestep(double simdt) {
 		// Handle mode switch
 		switch (lem->RendezvousRadarRotary.GetState()) {
 		case 0:	// AUTO TRACK
+			//Only here when there is no frequency lock
+			trunnionVel = 0.0;
+			shaftVel = 0.0;
 			break;
 
 		case 1: // SLEW
@@ -482,7 +485,7 @@ void LEM_RR::Timestep(double simdt) {
 	}
 	else
 	{
-		range = 0;
+		range = 0.0;
 	}
 
 	//sprintf(oapiDebugString(), "Auto %d FreqLock %d Timer %f RLock %d DataGood %d", AutoTrackEnabled, FrequencyLock, RangeLockTimer, RangeLock, radarDataGood);
