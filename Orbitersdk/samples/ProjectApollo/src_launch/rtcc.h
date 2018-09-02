@@ -320,6 +320,15 @@ struct TwoImpulseResuls
 	double t_TPI;
 };
 
+struct SPQResults
+{
+	double t_CDH;
+	double t_TPI;
+	double DH;
+	VECTOR3 dV_CSI;
+	VECTOR3 dV_CDH;
+};
+
 struct TEIOpt
 {
 	VESSEL* vessel;			//Reentry vessel
@@ -833,9 +842,9 @@ struct SPQOpt //Coelliptic Sequence Processor
 	SV sv_P;
 	double GETbase;
 	double t_TIG;
-	double t_TPI;	// Only for calculation type = 0
-	double DH;		// Only for calculation type = 1
-	double E;
+	double t_TPI;				// Only for calculation type = 0
+	double DH = 15.0*1852.0;	// Only for calculation type = 1
+	double E = 26.6*RAD;
 	int type;		//0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int maneuver;	//0 = CSI, 1 = CDH
 };
@@ -853,10 +862,29 @@ struct PDAPOpt //Powered Descent Abort Program
 	double W_TAPS;
 	//LM weight representative of DPS fuel depletion
 	double W_TDRY;
-	//Initial LM weight
-	double W_INIT;
 	//DT between successive abort points
 	double dt_step;
+	//Time from Insertion to CSI
+	double dt_CSI = 50.0*60.0;
+	//Time of TPI
+	double t_TPI;
+};
+
+struct PDAPResults
+{
+	//Apollo 11 abort coefficients
+	double ABTCOF1;
+	double ABTCOF2;
+	double ABTCOF3;
+	double ABTCOF4;
+	//Term in LM desired semi-major axis
+	double DEDA224;
+	//Lower limit on semi-major axis
+	double DEDA225;
+	//Upper limit on semi-major axis
+	double DEDA226;
+	//Factor in LM desired semi-major axis
+	double DEDA227;
 };
 
 struct DockAlignOpt	//Docking Alignment Processor
@@ -870,6 +898,45 @@ struct DockAlignOpt	//Docking Alignment Processor
 	VECTOR3 CSMAngles;
 	VECTOR3 LMAngles;
 	double DockingAngle = 0.0;
+};
+
+struct FIDOOrbitDigitals
+{
+	double GET;		//Ground elapsed time associated with present position data
+	char VEHID[64];	//Vehicle name
+	char REF[64];	//Reference planet
+	double GETID;	//GET of the state vector
+	double H;		//Current height
+	double V;		//Current inertial velocity
+	double GAM;		//Current inertial flight path angle
+	double A;		//Semimajor axis of orbital ellipse
+	double E;		//Eccentricity of orbital ellipse
+	double I;		//Orbital inclination to Earth or linar equator
+	double HA;		//Height of next apogee at GETA
+	double PA;		//Latitude of next apogee at GETA
+	double LA;		//Longitude of next apogee at GETA
+	double GETA;	//Time of arrival at next apogee
+	double HP;		//Height of next apogee at GETP
+	double PP;		//Latitude of next apogee at GETP
+	double LP;		//Longitude of next apogee at GETP
+	double GETP;	//Time of arrival at next apogee
+	double LPP;		//Present position, longitude
+	double PPP;		//Present position, latitude
+	double GETCC;	//GET of arrival at next rev crossing
+	double TAPP;	//Present position, true anomaly
+	double LNPP;	//Longitude of ascending node (Earth-fixed or moon-fixed)
+	double GETL;	//Time spacecraft will pass over L
+	double L;		//The longitude associated with GETL
+	double TO;		//Orbital period
+	double K;		//K-Factor
+	double ORBWT;	//Total current weight
+};
+
+struct FIDOOrbitDigitalsOpt
+{
+	SV sv_A;
+	double GETbase;
+	double MJD;		//MJD to update the state vector to (only used in continuous update)
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -989,6 +1056,7 @@ public:
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
 	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	double FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
@@ -1052,7 +1120,7 @@ public:
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
-	void ConcentricRendezvousProcessor(SPQOpt *opt, VECTOR3 &DV_coe, double &t_TPI);
+	void ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
@@ -1068,8 +1136,13 @@ public:
 	void ApsidesArgumentofLatitudeDetermination(SV sv0, double &u_x, double &u_y);
 	bool GETEval(double get);
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, MATRIX3 REFSMMAT, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG);
-	void PoweredDescentAbortProgram(PDAPOpt opt);
+	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
+	void FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsApsidesCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsCalculateLongitude(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsCalculateGETL(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1084,7 +1157,6 @@ public:
 	MCC *mcc;
 	struct calculationParameters calcParams;
 private:
-	void OrbitAdjustCalc(SV sv_tig, double r_apo, double r_peri, double inc, VECTOR3 &DV);
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
 	double GetClockTimeFromAGC(agc_t *agc);

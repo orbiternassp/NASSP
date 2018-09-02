@@ -1586,7 +1586,7 @@ double RadarSignalStrengthAttenuator::GetValue()
 		val = lem->RR.GetSignalStrength();
 		break;
 	case 3:	//XMTR PWR
-		val = 0.0;
+		val = lem->RR.GetTransmitterPower();
 		break;
 	case 4:	//SHAFT ERR
 		val = lem->RR.GetShaftErrorSignal();

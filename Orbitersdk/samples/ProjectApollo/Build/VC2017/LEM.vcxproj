@@ -164,6 +164,7 @@
     <ClCompile Include="..\..\src_lm\lm_eps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_programer.cpp" />
     <ClCompile Include="..\..\src_lm\lm_rcs.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_rr.cpp" />
     <ClCompile Include="..\..\src_lm\lm_scea.cpp" />
     <ClCompile Include="..\..\src_lm\lm_ttca.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
@@ -385,6 +386,7 @@
     <ClInclude Include="..\..\src_lm\lm_eds.h" />
     <ClInclude Include="..\..\src_lm\lm_programer.h" />
     <ClInclude Include="..\..\src_lm\lm_rcs.h" />
+    <ClInclude Include="..\..\src_lm\lm_rr.h" />
     <ClInclude Include="..\..\src_lm\lm_scea.h" />
     <ClInclude Include="..\..\src_lm\lm_ttca.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />

@@ -51,6 +51,7 @@
 #include "lm_cwea.h"
 #include "lm_eps.h"
 #include "LEMcomputer.h"
+#include "lm_rr.h"
 
 // Cosmic background temperature in degrees F
 #define CMBG_TEMP -459.584392
@@ -131,69 +132,6 @@ public:
 	int rangeGood;				// RDG flag
 	int velocityGood;			// VDG flag
 };
-
-// Rendezvous Radar
-class LEM_RR : public e_object {
-public:
-	LEM_RR();
-	void Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-	void Timestep(double simdt);
-	void SystemTimestep(double simdt);
-	double GetAntennaTempF();
-	double GetRadarTrunnionVel() { return -trunnionVel ; } ;
-	double GetRadarShaftVel() { return shaftVel ; } ;
-	double GetRadarTrunnionPos() { return -asin(sin(trunnionAngle)); }
-	double GetRadarShaftPos() { return -asin(sin(shaftAngle)) ; }
-	double GetRadarRange() { return range; } ;
-	double GetRadarRate() { return rate ; };
-	double GetSignalStrength() { return SignalStrength*4.0; }
-	double GetShaftErrorSignal();
-	double GetTrunnionErrorSignal();
-	
-	bool IsPowered(); 
-	bool IsDCPowered(); 
-	bool IsACPowered();
-	bool IsRadarDataGood() { return radarDataGood;};
-	bool GetNoTrackSignal() { return NoTrackSignal; }
-
-private:
-
-	LEM *lem;					// Pointer at LEM
-	h_Radiator *antenna;		// Antenna (loses heat into space)
-	Boiler *antheater;			// Antenna Heater (puts heat back into antenna)
-	Boiler *stbyantheater;		// Antenna Standby Heater (puts heat back into antenna)
-	h_HeatLoad *rrheat;		// RR Heat Load
-	h_HeatLoad *RREHeat;		// RRE Heat Load
-	h_HeatLoad *RRESECHeat;		// RRE Heat Load Sec Loop
-    e_object *dc_source;
-	e_object *ac_source;
-	double tstime;
-	int	   tstate[2];
-	double tsangle[2];
-	int    isTracking;
-	bool   radarDataGood;
-	bool NoTrackSignal;
-	double trunnionAngle;
-	double shaftAngle;
-	double trunnionVel;
-	double shaftVel;
-	double range;
-	double rate;
-	int ruptSent;				// Rupt sent
-	int scratch[2];             // Scratch data
-	int mode;					//Mode I = false, Mode II = true
-	double hpbw_factor;			//Beamwidth factor
-	double SignalStrength;
-	double SignalStrengthQuadrant[4];
-	VECTOR3 U_RRL[4];
-	bool AutoTrackEnabled;
-	double ShaftErrorSignal;
-	double TrunnionErrorSignal;
-	VECTOR3 GyroRates;
-};
-
 
 class LEM_RadarTape : public e_object {
 public:

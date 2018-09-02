@@ -26,13 +26,21 @@ ARCore::ARCore(VESSEL* v)
 {
 	T1 = 0;
 	T2 = 0;
-	CDHtime = 0;
-	CDHtime_cor = 0;
-	CDHtimemode = 1;
+	SPQMode = 0;
+	CSItime = 0.0;
+	CDHtime = 0.0;
+	SPQTIG = 0.0;
+	CDHtimemode = 0;
 	DH = 0;
 	N = 0;
 	this->vessel = v;
 	t_TPI = 0.0;
+
+	spqresults.DH = 0.0;
+	spqresults.dV_CDH = _V(0.0, 0.0, 0.0);
+	spqresults.dV_CSI = _V(0.0, 0.0, 0.0);
+	spqresults.t_CDH = 0.0;
+	spqresults.t_TPI = 0.0;
 
 	lambertelev = 26.6*RAD;
 	LambertdeltaV = _V(0, 0, 0);
@@ -41,7 +49,7 @@ ARCore::ARCore(VESSEL* v)
 	TwoImpulse_TPI = 0.0;
 	TwoImpulse_PhaseAngle = 0.0;
 
-	CDHdeltaV = _V(0, 0, 0);
+	SPQDeltaV = _V(0, 0, 0);
 	target = NULL;
 	offvec = _V(0, 0, 0);
 	//screen = 0;
@@ -803,6 +811,50 @@ ARCore::ARCore(VESSEL* v)
 	lmascentpad.TIG = 0.0;
 	lmascentpad.V_hor = 0.0;
 	lmascentpad.V_vert = 0.0;
+
+	PDAPEngine = 0;
+	PDAPTwoSegment = false;
+	PDAPABTCOF[0] = 0.0;
+	PDAPABTCOF[1] = 0.0;
+	PDAPABTCOF[2] = 0.0;
+	PDAPABTCOF[3] = 0.0;
+	PDAPABTCOF[4] = 0.0;
+	PDAPABTCOF[5] = 0.0;
+	PDAPABTCOF[6] = 0.0;
+	PDAPABTCOF[7] = 0.0;
+	DEDA224 = 0.0;
+	DEDA225 = 0.0;
+	DEDA226 = 0.0;
+	DEDA227 = 0;
+
+	fidoorbit.A = 0.0;
+	fidoorbit.E = 0.0;
+	fidoorbit.GAM = 0.0;
+	fidoorbit.GET = 0.0;
+	fidoorbit.GETA = 0.0;
+	fidoorbit.GETCC = 0.0;
+	fidoorbit.GETID = 0.0;
+	fidoorbit.GETL = 0.0;
+	fidoorbit.GETP = 0.0;
+	fidoorbit.H = 0.0;
+	fidoorbit.HA = 0.0;
+	fidoorbit.HP = 0.0;
+	fidoorbit.I = 0.0;
+	fidoorbit.K = 0.0;
+	fidoorbit.L = 0.0;
+	fidoorbit.LA = 0.0;
+	fidoorbit.LNPP = 0.0;
+	fidoorbit.LP = 0.0;
+	fidoorbit.LPP = 0.0;
+	fidoorbit.ORBWT = 0.0;
+	fidoorbit.PA = 0.0;
+	fidoorbit.PP = 0.0;
+	fidoorbit.PPP = 0.0;
+	sprintf(fidoorbit.REF, "");
+	fidoorbit.TAPP = 0.0;
+	fidoorbit.TO = 0.0;
+	fidoorbit.V = 0.0;
+	sprintf(fidoorbit.VEHID, "");
 }
 
 ARCore::~ARCore()
@@ -946,7 +998,7 @@ void ARCore::lambertcalc()
 	startSubthread(1);
 }
 
-void ARCore::OrbitAdjustCalc()	//Calculates the optimal velocity change to reach an orbit specified by apoapsis, periapsis and inclination
+void ARCore::GPMPCalc()
 {
 	startSubthread(3);
 }
@@ -984,6 +1036,48 @@ void ARCore::LAPCalc()
 void ARCore::AscentPADCalc()
 {
 	startSubthread(21);
+}
+
+void ARCore::PDAPCalc()
+{
+	startSubthread(22);
+}
+
+void ARCore::UpdateFIDOOrbitDigitals()
+{
+	startSubthread(23);
+}
+
+void ARCore::CycleFIDOOrbitDigitals()
+{
+	if (subThreadStatus == 0 && fidoorbitsv.gravref != NULL)
+	{
+		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GETbase);
+		if (GET > fidoorbit.GET + 12.0)
+		{
+			startSubthread(24);
+		}
+		else if ((GET > fidoorbit.GETA && fidoorbit.E < 1.0) || GET > fidoorbit.GETP)
+		{
+			startSubthread(25);
+		}
+	}
+}
+
+void ARCore::FIDOOrbitDigitalsCalculateLongitude()
+{
+	if (subThreadStatus == 0 && fidoorbitsv.gravref != NULL)
+	{
+		startSubthread(26);
+	}
+}
+
+void ARCore::FIDOOrbitDigitalsCalculateGETL()
+{
+	if (subThreadStatus == 0 && fidoorbitsv.gravref != NULL)
+	{
+		startSubthread(27);
+	}
 }
 
 void ARCore::DAPPADCalc()
@@ -1599,6 +1693,30 @@ void ARCore::EMPP99Uplink(int i)
 	}
 }
 
+void ARCore::AP11AbortCoefUplink()
+{
+	g_Data.emem[0] = 22;
+	g_Data.emem[1] = 2550;
+	g_Data.emem[2] = OrbMech::DoubleToBuffer(PDAPABTCOF[0] * pow(100.0, -4)*pow(2, 44), 0, 1);
+	g_Data.emem[3] = OrbMech::DoubleToBuffer(PDAPABTCOF[0] * pow(100.0, -4)*pow(2, 44), 0, 0);
+	g_Data.emem[4] = OrbMech::DoubleToBuffer(PDAPABTCOF[1] * pow(100.0, -3)*pow(2, 27), 0, 1);
+	g_Data.emem[5] = OrbMech::DoubleToBuffer(PDAPABTCOF[1] * pow(100.0, -3)*pow(2, 27), 0, 0);
+	g_Data.emem[6] = OrbMech::DoubleToBuffer(PDAPABTCOF[2] * pow(100.0, -2)*pow(2, 10), 0, 1);
+	g_Data.emem[7] = OrbMech::DoubleToBuffer(PDAPABTCOF[2] * pow(100.0, -2)*pow(2, 10), 0, 0);
+	g_Data.emem[8] = OrbMech::DoubleToBuffer(PDAPABTCOF[3] * pow(100.0, -1), 7, 1);
+	g_Data.emem[9] = OrbMech::DoubleToBuffer(PDAPABTCOF[3] * pow(100.0, -1), 7, 0);
+	g_Data.emem[10] = OrbMech::DoubleToBuffer(PDAPABTCOF[4] * pow(100.0, -4)*pow(2, 44), 0, 1);
+	g_Data.emem[11] = OrbMech::DoubleToBuffer(PDAPABTCOF[4] * pow(100.0, -4)*pow(2, 44), 0, 0);
+	g_Data.emem[12] = OrbMech::DoubleToBuffer(PDAPABTCOF[5] * pow(100.0, -3)*pow(2, 27), 0, 1);
+	g_Data.emem[13] = OrbMech::DoubleToBuffer(PDAPABTCOF[5] * pow(100.0, -3)*pow(2, 27), 0, 0);
+	g_Data.emem[14] = OrbMech::DoubleToBuffer(PDAPABTCOF[6] * pow(100.0, -2)*pow(2, 10), 0, 1);
+	g_Data.emem[15] = OrbMech::DoubleToBuffer(PDAPABTCOF[6] * pow(100.0, -2)*pow(2, 10), 0, 0);
+	g_Data.emem[16] = OrbMech::DoubleToBuffer(PDAPABTCOF[7] * pow(100.0, -1), 7, 1);
+	g_Data.emem[17] = OrbMech::DoubleToBuffer(PDAPABTCOF[7] * pow(100.0, -1), 7, 0);
+
+	UplinkData(); // Go for uplink
+}
+
 void ARCore::UplinkData()
 {
 	if (g_Data.connStatus == 0) {
@@ -1937,43 +2055,54 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 2:	//CDH Targeting
+	case 2:	//Concentric Rendezvous Processor
 	{
-		double dH_CDH;
-		CDHOpt opt;
+		SPQOpt opt;
+		SPQResults res;
+		SV sv_A, sv_P;
 
-		if (vesseltype < 2)
-		{
-			opt.vesseltype = 0;
-		}
-		else
-		{
-			opt.vesseltype = 1;
-		}
+		sv_A = rtcc->StateVectorCalc(vessel);
+		sv_P = rtcc->StateVectorCalc(target);
 
-		if (vesseltype == 0 || vesseltype == 2)
-		{
-			opt.csmlmdocked = false;
-		}
-		else
-		{
-			opt.csmlmdocked = true;
-		}
-
-		opt.CDHtimemode = CDHtimemode;
 		opt.DH = DH;
+		opt.E = lambertelev;
 		opt.GETbase = GETbase;
-		opt.impulsive = RTCC_NONIMPULSIVE;
-		opt.target = target;
-		opt.vessel = vessel;
-		opt.TIG = CDHtime;
+		opt.maneuver = SPQMode;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		if (SPQMode == 0)
+		{
+			opt.t_TIG = CSItime;
+			opt.type = CDHtimemode;
+		}
+		else
+		{
+			if (CDHtimemode == 0)
+			{
+				opt.t_TIG = CDHtime;
+			}
+			else
+			{
+				opt.t_TIG = rtcc->FindDH(sv_A, sv_P, GETbase, CDHtime, DH);
+			}
+		}
+		opt.t_TPI = t_TPI;
 
-		dH_CDH = rtcc->CDHcalc(&opt, CDHdeltaV, CDHtime_cor);
+		rtcc->ConcentricRendezvousProcessor(&opt, res);
+		spqresults = res;
 
-		DH = dH_CDH;
+		if (SPQMode == 0)
+		{
+			CDHtime = res.t_CDH;
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CSI, true, SPQTIG, SPQDeltaV);
+		}
+		else
+		{
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CDH, true, SPQTIG, SPQDeltaV);
+		}
 
-		P30TIG = CDHtime_cor;
-		dV_LVLH = CDHdeltaV;
+		P30TIG = SPQTIG;
+		dV_LVLH = SPQDeltaV;		
 
 		Result = 0;
 	}
@@ -3140,6 +3269,142 @@ int ARCore::subThread()
 		opt.v_LV = LunarLiftoffRes.v_LV;
 
 		rtcc->LunarAscentPAD(opt, lmascentpad);
+
+		Result = 0;
+	}
+	break;
+	case 22: //Powered Descent Abort Program
+	{
+		PDAPOpt opt;
+		PDAPResults res;
+		SV sv_LM;
+		double m0;
+
+		LEM *l = (LEM *)vessel;
+		m0 = l->GetAscentStageMass();
+
+		sv_LM = rtcc->StateVectorCalc(vessel);
+
+		if (PDAPEngine == 0)
+		{
+			opt.dt_stage = 999999.9;
+		}
+		else
+		{
+			opt.dt_stage = 0.0;
+
+		}
+
+		if (PDIPADdirect)
+		{
+			opt.sv_A = sv_LM;
+		}
+		else
+		{
+			opt.sv_A = rtcc->ExecuteManeuver(vessel, GETbase, P30TIG, dV_LVLH, sv_LM, 0.0);
+		}
+
+		opt.dt_step = 120.0;
+		opt.GETbase = GETbase;
+		opt.REFSMMAT = REFSMMAT;
+		opt.R_LS = rtcc->RLS_from_latlng(LSLat, LSLng, LSAlt);
+		opt.sv_P = rtcc->StateVectorCalc(target);
+		opt.TLAND = t_Land;
+		opt.t_TPI = t_TPI;
+		opt.W_TAPS = m0;
+		opt.W_TDRY = opt.sv_A.mass - vessel->GetPropellantMass(vessel->GetPropellantHandleByIndex(0));
+
+		rtcc->PoweredDescentAbortProgram(opt, res);
+
+		if (PDAPEngine == 0)
+		{
+			PDAPABTCOF[0] = res.ABTCOF1;
+			PDAPABTCOF[1] = res.ABTCOF2;
+			PDAPABTCOF[2] = res.ABTCOF3;
+			PDAPABTCOF[3] = res.ABTCOF4;
+		}
+		else
+		{
+			PDAPABTCOF[4] = res.ABTCOF1;
+			PDAPABTCOF[5] = res.ABTCOF2;
+			PDAPABTCOF[6] = res.ABTCOF3;
+			PDAPABTCOF[7] = res.ABTCOF4;
+		}
+		DEDA224 = res.DEDA224;
+		DEDA225 = res.DEDA225;
+		DEDA226 = res.DEDA226;
+		DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
+
+		Result = 0;
+	}
+	break;
+	case 23: //FIDO Orbit Digitals Update
+	{
+		fidoorbitsv = rtcc->StateVectorCalc(vessel);
+
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsUpdate(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 24: //FIDO Orbit Digitals Cycle
+	{
+		double MJD = oapiGetSimMJD();
+
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.MJD = MJD;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsCycle(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 25: //FIDO Orbit Digitals Apsides Update
+	{
+		double MJD = oapiGetSimMJD();
+
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.MJD = MJD;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsApsidesCycle(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 26: //FIDO Orbit Digitals Longitude Calculation
+	{
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsCalculateLongitude(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 27: //FIDO Orbit Digitals GETL Calculation
+	{
+		double MJD = oapiGetSimMJD();
+
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.MJD = MJD;
+		opt.sv_A = fidoorbitsv;
+
+		rtcc->FIDOOrbitDigitalsCalculateGETL(opt, fidoorbit);
 
 		Result = 0;
 	}

@@ -43,8 +43,8 @@ public:
 	void set_t1_PDI(double t1);
 	void t2dialogue();
 	void set_t2(double t2, bool t1dep);
-	void CDHtimedialogue();
-	void set_CDHtime(double CDHtime);
+	void SPQtimedialogue();
+	void set_SPQtime(double tig);
 	void DHdialogue();
 	void set_DH(double DH);
 	void revdialogue();
@@ -87,7 +87,7 @@ public:
 	void set_OrbAdjGET(double SPSGET);
 	void OrbAdjRevDialogue();
 	void set_OrbAdjRevs(int N);
-	void OrbAdjCalc();
+	void GPMPCalc();
 	void menuCycleGMPManeuverPoint();
 	void menuCycleGMPManeuverType();
 	void menuCycleGMPMarkerUp();
@@ -162,6 +162,7 @@ public:
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
 	void menuSwitchUplinkInhibit();
+	void menuCycleSPQMode();
 	void set_CDHtimemode();
 	void menuSetLaunchMJD();
 	void set_launchmjd(double mjd);
@@ -351,12 +352,23 @@ public:
 	void cycleVECPOINTOpt();
 	void menuSetLMAscentPADPage();
 	void menuAscentPADCalc();
+	void menuSetPDAPPage();
+	void menuPDAPCalc();
+	void menuCyclePDAPEngine();
+	void menuAP11AbortCoefUplink();
+	void menuSetFIDOOrbitDigitalsPage();
+	void menuUpdateFIDOOrbitDigitals();
+	void menuSetFIDOOrbitDigitalsGETL();
+	void set_FIDOOrbitDigitalsGETL(double getl);
+	void menuSetFIDOOrbitDigitalsL();
+	void set_FIDOOrbitDigitalsL(double lng);
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);
 
 protected:
 	oapi::Font *font;
+	oapi::Font *font2;
 	Saturn *saturn;
 	LEM *lem;
 	int screen;

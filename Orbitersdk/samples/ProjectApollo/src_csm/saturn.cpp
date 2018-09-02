@@ -685,8 +685,6 @@ void Saturn::initSaturn()
 
 	ClearLVGuidLight();
 	ClearLVRateLight();
-	ClearLiftoffLight();
-	ClearNoAutoAbortLight();
 
 	for (i = 0; i < nsurf; i++)
 	{
@@ -1179,7 +1177,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	char str[256];
 
 	oapiWriteScenario_int (scn, "NASSPVER", NASSP_VERSION);
-	if (stage < LAUNCH_STAGE_SIVB)
+	if (stage < CSM_LEM_STAGE)
 	{
 		papiWriteScenario_double(scn, "FAILUREMULTIPLIER", FailureMultiplier);
 		if (PlatFail > 0) {
@@ -1587,8 +1585,6 @@ int Saturn::GetLightState()
 	state.Engind7 = ENGIND[7];
 	state.Engind8 = ENGIND[8];
 	state.LVGuidLight = LVGuidLight;
-	state.LiftoffLight = LiftoffLight;
-	state.NoAutoAbortLight = NoAutoAbortLight;
 	state.LVRateLight = LVRateLight;
 
 	return state.word;
@@ -1610,8 +1606,6 @@ void Saturn::SetLightState(int s)
 	ENGIND[7] = (state.Engind7 != 0);
 	ENGIND[8] = (state.Engind8 != 0);
 	LVGuidLight = (state.LVGuidLight != 0);
-	LiftoffLight = (state.LiftoffLight != 0);
-	NoAutoAbortLight = (state.NoAutoAbortLight != 0);
 	LVRateLight = (state.LVRateLight != 0);
 }
 

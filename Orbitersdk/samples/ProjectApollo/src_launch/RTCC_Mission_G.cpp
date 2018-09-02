@@ -948,6 +948,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 32: //STATE VECTOR and LS REFSMMAT UPLINK
 	{
+		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
+
+		LMARKTRKPADOpt landmarkopt;
 		MATRIX3 REFSMMAT;
 		VECTOR3 DV;
 		double GETbase, t_DOI, t_PDI, t_land, CR;
@@ -986,6 +989,17 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&opt);
 		calcParams.StoredREFSMMAT = REFSMMAT;
 
+		sprintf(form->LmkID[0], "130");
+		landmarkopt.alt[0] = -1.46*1852.0;
+		landmarkopt.GETbase = calcParams.TEPHEM;
+		landmarkopt.lat[0] = 1.243*RAD;
+		landmarkopt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
+		landmarkopt.lng[0] = 23.688*RAD;
+		landmarkopt.vessel = calcParams.src;
+		landmarkopt.entries = 1;
+
+		LandmarkTrackingPAD(&landmarkopt, *form);
+
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT, AGCEpoch);
 
@@ -1006,14 +1020,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 34: //LM DAP DATA
 	{
-		AP10DAPDATA * form = (AP10DAPDATA *)pad;
+		LMACTDATA * form = (LMACTDATA *)pad;
 
-		LMDAPUpdate(calcParams.tgt, *form);
-	}
-	break;
-	case 35: //GYRO TORQUING ANGLES
-	{
-		TORQANG * form = (TORQANG *)pad;
+		AP10DAPDATA dap;
+
+		LMDAPUpdate(calcParams.tgt, dap);
+		
 		LEM *lem = (LEM *)calcParams.tgt;
 
 		VECTOR3 lmn20, csmn20, V42angles;
@@ -1031,12 +1043,15 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->V42Angles.x = V42angles.x*DEG;
 		form->V42Angles.y = V42angles.y*DEG;
 		form->V42Angles.z = V42angles.z*DEG;
+
+		form->CSMWeight = dap.OtherVehicleWeight;
+		form->LMWeight = dap.ThisVehicleWeight;
+		form->PitchTrim = dap.PitchTrim;
+		form->RollTrim = dap.YawTrim;
 	}
 	break;
-	case 36: //LGC ACTIVATION UPDATE
+	case 35: //LGC ACTIVATION UPDATE
 	{
-		AP11AGSACT *form = (AP11AGSACT*)pad;
-
 		SV sv;
 		MATRIX3 REFSMMAT;
 		double GETbase;
@@ -1049,12 +1064,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		REFSMMAT = calcParams.StoredREFSMMAT;
 
-		form->KFactor = 90.0*3600.0;
-		form->DEDA224 = 60267;
-		form->DEDA225 = 58148;
-		form->DEDA226 = 70312;
-		form->DEDA227 = -50031;
-
 		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
 		AGCStateVectorUpdate(buffer2, sv, true, AGCEpoch, GETbase);
 		AGCREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch, LGCREFSAddrOffs);
@@ -1065,6 +1074,17 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "State vectors, LS REFSMMAT");
 		}
+	}
+	break;
+	case 36: //AGS ACTIVATION UPDATE
+	{
+		AP11AGSACT *form = (AP11AGSACT*)pad;
+
+		form->KFactor = 90.0*3600.0;
+		form->DEDA224 = 60267;
+		form->DEDA225 = 58148;
+		form->DEDA226 = 70312;
+		form->DEDA227 = -50031;		
 	}
 	break;
 	case 37: //SEPARATION MANEUVER
@@ -1349,7 +1369,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 61: //REV 4 LANDMARK TRACKING PAD A-1
-	case 62: //REV 12 LANDMARK TRACKING PAD LMK 130
 	case 63: //LM TRACKING PAD
 	case 64: //LM ACQUISITION TIME
 	{
@@ -1367,15 +1386,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.lat[0] = 2.0*RAD;
 			opt.LmkTime[0] = OrbMech::HHMMSSToSS(82, 40, 0);
 			opt.lng[0] = 65.5*RAD;
-			opt.entries = 1;
-		}
-		else if (fcn == 62)
-		{
-			sprintf(form->LmkID[0], "130");
-			opt.alt[0] = -1.46*1852.0;
-			opt.lat[0] = 1.243*RAD;
-			opt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
-			opt.lng[0] = 23.688*RAD;
 			opt.entries = 1;
 		}
 		else if (fcn == 63 || fcn == 64)
@@ -1405,15 +1415,40 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LandmarkTrackingPAD(&opt, *form);
 	}
 	break;
+	case 170: //PDI2 PAD
+	{
+		//Recalculate PDI and landing times
+		DOIMan doiopt;
+		SV sv;
+		VECTOR3 DV;
+		double GETbase, t_DOI_imp, t_PDI, t_land, CR;
+
+		sv = StateVectorCalc(calcParams.tgt);
+		GETbase = calcParams.TEPHEM;
+
+		doiopt.alt = calcParams.LSAlt;
+		doiopt.EarliestGET = OrbMech::HHMMSSToSS(101, 0, 0);
+		doiopt.GETbase = GETbase;
+		doiopt.lat = calcParams.LSLat;
+		doiopt.lng = calcParams.LSLng;
+		doiopt.N = 0;
+		doiopt.opt = 0;
+		doiopt.sv0 = sv;
+
+		DOITargeting(&doiopt, DV, t_DOI_imp, t_PDI, t_land, CR);
+
+		calcParams.PDI = t_PDI;
+		calcParams.TLAND = t_land;
+		//Fall into PDI PAD calculation
+	}
 	case 70: //PDI PAD
 	{
 		AP11PDIPAD * form = (AP11PDIPAD *)pad;
 
 		PDIPADOpt opt;
-		double GETbase, rad;
+		double GETbase;
 
 		GETbase = calcParams.TEPHEM;
-		rad = oapiGetSize(oapiGetObjectByName("Moon"));
 
 		opt.direct = false;
 		opt.dV_LVLH = DeltaV_LVLH;
@@ -1421,7 +1456,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.HeadsUp = false;
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
-		opt.R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt + rad);
+		opt.R_LS = RLS_from_latlng(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt);
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.tgt;
 
@@ -1672,7 +1707,20 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 78: //PDI EVALUATION
 	{
+		SV sv;
+		double R_M, mu, apo, peri;
 
+		sv = StateVectorCalc(calcParams.tgt);
+		R_M = oapiGetSize(sv.gravref);
+		mu = GGRAV * oapiGetMass(sv.gravref);
+
+		OrbMech::periapo(sv.R, sv.V, mu, apo, peri);
+
+		if (peri - R_M > 0.)
+		{
+			sprintf(upMessage, "Recycle to next PDI attempt");
+			scrubbed = true;
+		}
 	}
 	break;
 	case 79: //LANDING EVALUATION
@@ -2224,49 +2272,52 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			}
 		}
 
-		if (fcn == 114)
+		if (fcn != 113)
 		{
-			REFSMMATOpt refsopt;
-			refsopt.GETbase = GETbase;
-			refsopt.dV_LVLH = res.dV_LVLH;
-			refsopt.P30TIG = res.P30TIG;
-			refsopt.REFSMMATdirect = false;
-			refsopt.REFSMMATopt = 3;
-			refsopt.vessel = calcParams.src;
+			if (fcn == 114)
+			{
+				REFSMMATOpt refsopt;
+				refsopt.GETbase = GETbase;
+				refsopt.dV_LVLH = res.dV_LVLH;
+				refsopt.P30TIG = res.P30TIG;
+				refsopt.REFSMMATdirect = false;
+				refsopt.REFSMMATopt = 3;
+				refsopt.vessel = calcParams.src;
 
-			REFSMMAT = REFSMMATCalc(&refsopt);
-		}
-		else
-		{
-			REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
-		}
+				REFSMMAT = REFSMMATCalc(&refsopt);
+			}
+			else
+			{
+				REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+			}
 
-		if (scrubbed)
-		{
-			//Entry prediction without maneuver
-			EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
+			if (scrubbed)
+			{
+				//Entry prediction without maneuver
+				EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
 
-			res.dV_LVLH = _V(0, 0, 0);
-			res.P30TIG = entopt.TIGguess;
-		}
-		else
-		{
-			opt.dV_LVLH = res.dV_LVLH;
-			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
-			opt.GETbase = GETbase;
-			opt.HeadsUp = false;
-			opt.REFSMMAT = REFSMMAT;
-			opt.TIG = res.P30TIG;
-			opt.vessel = calcParams.src;
-			opt.vesseltype = 0;
+				res.dV_LVLH = _V(0, 0, 0);
+				res.P30TIG = entopt.TIGguess;
+			}
+			else
+			{
+				opt.dV_LVLH = res.dV_LVLH;
+				opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
+				opt.GETbase = GETbase;
+				opt.HeadsUp = false;
+				opt.REFSMMAT = REFSMMAT;
+				opt.TIG = res.P30TIG;
+				opt.vessel = calcParams.src;
+				opt.vesseltype = 0;
 
-			AP11ManeuverPAD(&opt, *form);
-			sprintf(form->purpose, manname);
-			form->lat = res.latitude*DEG;
-			form->lng = res.longitude*DEG;
-			form->RTGO = res.RTGO;
-			form->VI0 = res.VIO / 0.3048;
-			form->GET05G = res.GET05G;
+				AP11ManeuverPAD(&opt, *form);
+				sprintf(form->purpose, manname);
+				form->lat = res.latitude*DEG;
+				form->lng = res.longitude*DEG;
+				form->RTGO = res.RTGO;
+				form->VI0 = res.VIO / 0.3048;
+				form->GET05G = res.GET05G;
+			}
 		}
 
 		if (scrubbed)
