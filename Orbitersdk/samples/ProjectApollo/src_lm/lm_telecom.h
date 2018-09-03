@@ -180,6 +180,8 @@ public:
 	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
 	void Timestep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
 	void RangingSignal(Saturn *sat, bool isAcquiring);
 
 	LEM *lem;					   // Ship we're installed in

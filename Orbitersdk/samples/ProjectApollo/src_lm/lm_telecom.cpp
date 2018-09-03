@@ -491,6 +491,27 @@ void LM_VHF::perform_io(double simt){
 	}
 }
 
+void LM_VHF::LoadState(char *line)
+{
+	int one, two, three, four, five;
+
+	sscanf(line + 14, "%d %d %d %d %d", &one, &two, &three, &four, &five);
+	transmitA = (one != 0);
+	transmitB = (two != 0);
+	receiveA = (three != 0);
+	receiveB = (four != 0);
+	isRanging = (five != 0);
+}
+
+void LM_VHF::SaveState(FILEHANDLE scn)
+{
+	char buffer[256];
+
+	sprintf(buffer, "%d %d %d %d %d", transmitA, transmitB, receiveA, receiveB, isRanging);
+
+	oapiWriteScenario_string(scn, "VHFTRANSCEIVER", buffer);
+}
+
 // Handle data moved to buffer from either the socket or mcc buffer
 void LM_VHF::handle_uplink()
 {
