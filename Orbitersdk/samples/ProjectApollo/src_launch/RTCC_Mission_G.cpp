@@ -74,7 +74,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv = StateVectorCalc(calcParams.tgt); //State vector for uplink
 		GETbase = calcParams.TEPHEM;
 
-		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
+		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {

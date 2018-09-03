@@ -720,6 +720,17 @@ void CSMcomputer::ProcessChannel14(ChannelValue val){
 	} */
 }
 
+VESSEL *CSMcomputer::GetLM()
+{
+	OBJHANDLE hcsm = oapiGetVesselByName(OtherVesselName);
+	if (hcsm)
+	{
+		VESSEL *LMVessel = oapiGetVesselInterface(hcsm);
+		return LMVessel;
+	}
+
+	return NULL;
+}
 
 
 //

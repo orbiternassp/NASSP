@@ -1929,7 +1929,10 @@ void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 			Curdigit = buffer[i] - '0';
 			oapiBlt(drawSurface, Digits, (i == 6 ? 0 : 10) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
 		} else if (buffer[i] == '.') {
-			oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
+			if (!Sat->ems.IsDecimalPointBlanked())
+			{
+				oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
+			}
 		}
 	}
 }

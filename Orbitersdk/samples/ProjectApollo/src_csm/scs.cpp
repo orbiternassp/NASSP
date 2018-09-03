@@ -2850,6 +2850,9 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 			dVRangeCounter = 0;
 			if ((TenSecTimer -= simdt) < 0.0) LiftVectLightOn = 1;
 			break;
+		case EMS_STATUS_VHFRNG:
+			dVRangeCounter = sat->vhfranging.GetRange();
+			break;
 	}
 
 	// If powered, drive Glevel
@@ -3242,6 +3245,13 @@ bool EMS::IsdVMode() {
 
 	if (status == EMS_STATUS_DV) return true;
 	if (status == EMS_STATUS_DV_BACKUP) return true;
+	return false;
+}
+
+bool EMS::IsDecimalPointBlanked()
+{
+	if (status == EMS_STATUS_VHFRNG) return true;
+
 	return false;
 }
 

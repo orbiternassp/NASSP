@@ -430,3 +430,59 @@ class VHFAntenna
 public:
 	VHFAntenna(VECTOR3 dir);
 };
+
+class VHFAMTransceiver
+{
+public:
+	VHFAMTransceiver();
+	void Timestep();
+	void Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb);
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
+protected:
+	bool K1;
+	bool K2;
+
+	bool receiveA;
+	bool receiveB;
+	bool transmitA;
+	bool transmitB;
+
+	ThreePosSwitch *vhfASwitch;
+	ThreePosSwitch *vhfBSwitch;
+	ThreePosSwitch *rcvSwitch;
+	CircuitBrakerSwitch *ctrPowerCB;
+};
+
+class LEM;
+
+class VHFRangingSystem
+{
+public:
+	VHFRangingSystem();
+	void Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc);
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
+	bool IsPowered();
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
+	double GetRange() { return range / 185.20; }
+	void RangingReturnSignal();
+protected:
+
+	bool dataGood;
+	double internalrange;
+	double range;
+	bool isRanging;
+	double phaseLockTimer;
+	int hasLock;
+
+	Saturn *sat;
+	LEM *lem;
+	VHFAMTransceiver *transceiver;
+	CircuitBrakerSwitch *powercb;
+	ToggleSwitch *powerswitch;
+	ToggleSwitch *resetswitch;
+};
