@@ -42,6 +42,8 @@
 #include "papi.h"
 #include "CollisionSDK/CollisionSDK.h"
 
+#include "saturn.h"
+
 #include "connector.h"
 #include "lm_channels.h"
 
@@ -59,6 +61,10 @@ LM_VHF::LM_VHF(){
 	last_update = 0;
 	last_rx = 0;
 	pcm_rate_override = 0;
+	receiveA = false;
+	receiveB = false;
+	transmitA = false;
+	transmitB = false;
 }
 
 bool LM_VHF::registerSocket(SOCKET sock)
@@ -144,23 +150,73 @@ void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad
 void LM_VHF::SystemTimestep(double simdt) {
 	if(lem == NULL){ return; } // Do nothing if not initialized
 	// VHF XMTR A
+	if (lem->COMM_VHF_XMTR_A_CB.Voltage() > 24 && lem->VHFAVoiceSwitch.GetState() != THREEPOSSWITCH_CENTER)
+	{
+		transmitA = true;
+	}
+	else
+	{
+		transmitA = false;
+	}
+
+	// VHF RCVR A
+	if (lem->COMM_VHF_RCVR_A_CB.Voltage() > 24 && lem->VHFARcvrSwtich.GetState() == TOGGLESWITCH_UP)
+	{
+		receiveA = true;
+	}
+	else
+	{
+		receiveA = false;
+	}
+
+	// VHF XMTR B
+	if (lem->COMM_VHF_XMTR_B_CB.Voltage() > 24 && lem->VHFBVoiceSwitch.GetState() != THREEPOSSWITCH_CENTER)
+	{
+		transmitB = true;
+	}
+	else
+	{
+		transmitB = false;
+	}
+
+	// VHF RCVR B
+	if (lem->COMM_VHF_RCVR_B_CB.Voltage() > 24 && lem->VHFBRcvrSwtich.GetState() == TOGGLESWITCH_UP)
+	{
+		receiveB = true;
+	}
+	else
+	{
+		receiveB = false;
+	}
+
+	// RANGING TONE TRANSFER ASSEMBLY
+	if (lem->COMM_VHF_XMTR_A_CB.Voltage() > 24 && lem->VHFAVoiceSwitch.GetState() == THREEPOSSWITCH_UP)
+	{
+		isRanging = true;
+	}
+	else
+	{
+		isRanging = false;
+	}
+
+	// VHF XMTR A
 	// Draws 30 watts of DC when transmitting and 3.5 watts when not.
-	if(lem->COMM_VHF_XMTR_A_CB.Voltage() > 24){
+	if(transmitA){
 		// For now, we'll just draw idle.
 		if(lem->VHFAVoiceSwitch.GetState() != THREEPOSSWITCH_CENTER){
 			lem->COMM_VHF_XMTR_A_CB.DrawPower(3.5);
 			VHFHeat->GenerateHeat(1.75);  //Idle heat load is 3.5W
 			VHFSECHeat->GenerateHeat(1.75);
 		}
-		if (lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_DOWN) {
-			lem->COMM_VHF_XMTR_B_CB.DrawPower(35.0); // Range Mode
+		if (lem->VHFAVoiceSwitch.GetState() == THREEPOSSWITCH_UP) {
+			lem->COMM_VHF_XMTR_A_CB.DrawPower(35.0); // Range Mode
 			VHFHeat->GenerateHeat(14.8);  //Range heat load is 29.6W
 			VHFSECHeat->GenerateHeat(14.8);
 		}
 	}
 	// VHF RCVR A
 	// Draws 1.2 watts of DC when on
-	if(lem->COMM_VHF_RCVR_A_CB.Voltage() > 24 && lem->VHFARcvrSwtich.GetState() == TOGGLESWITCH_UP){
+	if(receiveA){
 		lem->COMM_VHF_RCVR_A_CB.DrawPower(1.2);
 		//Not sure if RCVR goes to cold rails
 		VHFHeat->GenerateHeat(0.6);  //Heat load is 1.2W
@@ -169,7 +225,7 @@ void LM_VHF::SystemTimestep(double simdt) {
 	// VHF XMTR B
 	// Draws 28.9 watts of DC when transmitting voice and 31.6 watts when transmitting data.
 	// Draws 3.5 watts when not transmitting.
-	if(lem->COMM_VHF_XMTR_B_CB.Voltage() > 24){
+	if(transmitB){
 		// For now, we'll just draw idle or data.
 		if(lem->VHFBVoiceSwitch.GetState() == THREEPOSSWITCH_UP){
 			lem->COMM_VHF_XMTR_B_CB.DrawPower(3.5); // Voice Mode
@@ -184,7 +240,7 @@ void LM_VHF::SystemTimestep(double simdt) {
 	}
 	// VHF RCVR B
 	// Draws 1.2 watts of DC when on
-	if(lem->COMM_VHF_RCVR_B_CB.Voltage() > 24 && lem->VHFBRcvrSwtich.GetState() == TOGGLESWITCH_UP){
+	if(receiveB){
 		lem->COMM_VHF_RCVR_B_CB.DrawPower(1.2);	
 		//Not sure if RCVR goes to cold rails
 		VHFHeat->GenerateHeat(0.6);  //Heat load is 1.2W
@@ -211,6 +267,14 @@ void LM_VHF::SystemTimestep(double simdt) {
 		lem->INST_PCMTEA_CB.DrawPower(11); 
 		PCMHeat->GenerateHeat(5.15);  
 		PCMSECHeat->GenerateHeat(5.15);
+	}
+}
+
+void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
+{
+	if (isRanging && transmitA && receiveB)
+	{
+		sat->VHFRangingReturnSignal();
 	}
 }
 

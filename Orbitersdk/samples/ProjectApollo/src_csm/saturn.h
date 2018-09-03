@@ -686,7 +686,7 @@ public:
 			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
 			unsigned CMdocktgt:1;                   ///< CM docking target on
-			unsigned unused4:1;						///< Spare
+			unsigned NoVHFRanging:1;				///< Do we have a VHF Ranging System?
 			unsigned unused5:1;						///< Spare
 			unsigned unused6:2;						///< Spare
 			unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
@@ -959,6 +959,7 @@ public:
 	virtual void ActivateStagingVent() {}
 
 	virtual void SetIUUmbilicalState(bool connect);
+	virtual void VHFRangingReturnSignal();
 
 	//CSM to IU interface functions
 	bool GetCMCSIVBTakeover();
@@ -3479,6 +3480,8 @@ protected:
 	OMNI omnid;
 	VHFAntenna vhfa;
 	VHFAntenna vhfb;
+	VHFRangingSystem vhfranging;
+	VHFAMTransceiver vhftransceiver;
 	EMS  ems;
 
 	// CM Optics
@@ -3680,6 +3683,7 @@ protected:
 	bool TLISoundsLoaded;
 	bool SkylabSM;
 	bool NoHGA;
+	bool NoVHFRanging;
 	bool CMdocktgt;
 	bool SkylabCM;
 	bool S1bPanel;
@@ -4366,6 +4370,7 @@ protected:
 	friend class SaturnSystemTestAttenuator;
 	friend class SaturnLVSPSPcMeter;
 	friend class SaturnLMDPGauge;
+	friend class VHFRangingSystem;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ApolloRTCCMFD;

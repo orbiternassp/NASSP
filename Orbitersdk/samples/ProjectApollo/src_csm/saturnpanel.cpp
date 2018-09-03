@@ -898,7 +898,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_LEFTVHFAMSWITCH,								_R(1463,  523, 1497,  557), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTAUDIOCONTROLSWITCH,						_R(1255,  632, 1289,  666), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_LEFTSUITPOWERSWITCH,							_R(1320,  658, 1354,  692), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_VHFRNGSWITCH,								_R(1385,  684, 1419,  718), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_VHFRNGSWITCH,								_R(1385,  684, 1419,  718), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_STABCONTCIRCUITBREAKERS,						_R( 433,  898,  597,  927), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_AUTORCSSELECTSWITCHES,						_R( 659,  893, 1368,  922), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_STABILIZATIONCONTROLSYSTEMCIRCUITBREAKERS,	_R( 454, 1001, 1015, 1030), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
@@ -2700,9 +2700,9 @@ void Saturn::SetSwitches(int panel) {
 	FLTBusMNBCB.Init			( 77, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, MainBusB);
 	PMPPowerPrimCB.Init			( 77,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
 	PMPPowerAuxCB.Init			( 77,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
-	VHFStationAudioLCB.Init		(170, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	VHFStationAudioCTRCB.Init	(170, 354, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	VHFStationAudioRCB.Init		(170, 313, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	VHFStationAudioLCB.Init		(170, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightPostLandingBus, 5.0);
+	VHFStationAudioCTRCB.Init	(170, 354, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightPostLandingBus, 5.0);
+	VHFStationAudioRCB.Init		(170, 313, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightPostLandingBus, 5.0);
 	UDLCB.Init					(170, 272, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
 	HGAFLTBus1CB.Init			(170, 231, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
 	HGAGroup2CB.Init			(171, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup2Switch, 2.0);
@@ -5161,7 +5161,7 @@ void Saturn::InitSwitches() {
 
 	LeftSuitPowerSwitch.Register(PSH, "LeftSuitPowerSwitch", false);
 
-	VHFRNGSwitch.Register(PSH, "VHFRNGSwitch", false);
+	VHFRNGSwitch.Register(PSH, "VHFRNGSwitch", false, SPRINGLOADEDSWITCH_DOWN);
 
 	AcRollA1Switch.Register(PSH, "AcRollA1Switch", THREEPOSSWITCH_CENTER);
 	AcRollC1Switch.Register(PSH, "AcRollC1Switch", THREEPOSSWITCH_CENTER);
