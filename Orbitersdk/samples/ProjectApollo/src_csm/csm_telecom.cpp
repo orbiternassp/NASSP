@@ -1066,6 +1066,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 
 	val33 = sat->agc.GetInputChannel(033);
 	dataGood = false;
+	range = 0.0;
 
 	if (!IsPowered())
 	{
@@ -1073,7 +1074,6 @@ void VHFRangingSystem::TimeStep(double simdt)
 		sat->agc.SetInputChannel(033, val33);
 		hasLock = 0;
 		isRanging = false;
-		range = 0.0;
 		return;
 	}
 
@@ -1085,8 +1085,6 @@ void VHFRangingSystem::TimeStep(double simdt)
 
 	if (resetswitch->IsUp())
 	{
-		dataGood = false;
-		range = 0.0;
 		isRanging = true;
 	}
 
