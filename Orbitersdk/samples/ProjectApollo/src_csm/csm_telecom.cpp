@@ -1062,10 +1062,15 @@ void VHFRangingSystem::RangingReturnSignal()
 
 void VHFRangingSystem::TimeStep(double simdt)
 {
+	ChannelValue val33;
+
+	val33 = sat->agc.GetInputChannel(033);
 	dataGood = false;
 
 	if (!IsPowered())
 	{
+		val33[RangeUnitDataGood] = 0;
+		sat->agc.SetInputChannel(033, val33);
 		hasLock = 0;
 		isRanging = false;
 		range = 0.0;
@@ -1127,9 +1132,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 	}
 
 	ChannelValue val13;
-	ChannelValue val33;
 	val13 = sat->agc.GetInputChannel(013);
-	val33 = sat->agc.GetInputChannel(033);
 
 	if (dataGood == 1 && val33[RangeUnitDataGood] == 0) { val33[RangeUnitDataGood] = 1; sat->agc.SetInputChannel(033, val33); }
 	if (dataGood == 0 && val33[RangeUnitDataGood] == 1) { val33[RangeUnitDataGood] = 0; sat->agc.SetInputChannel(033, val33); }
