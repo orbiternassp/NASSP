@@ -353,6 +353,7 @@ void Saturn::initSaturn()
 	// to having no HGA when the state was read from those files.
 	//
 	NoHGA = false;
+	NoVHFRanging = false;
 
 	CMdocktgt = false;
 
@@ -1429,7 +1430,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	ForwardHatch.SaveState(scn);
 	SideHatch.SaveState(scn);
 	usb.SaveState(scn);
-	hga.SaveState(scn);
+	if (!NoHGA) hga.SaveState(scn);
+	vhftransceiver.SaveState(scn);
+	if (!NoVHFRanging) vhfranging.SaveState(scn);
 	dataRecorder.SaveState(scn);
 
 	Panelsdk.Save(scn);	
@@ -1477,6 +1480,7 @@ int Saturn::GetMainState()
 	state.NoHGA = NoHGA;
 	state.TLISoundsLoaded = TLISoundsLoaded;
 	state.CMdocktgt = CMdocktgt;
+	state.NoVHFRanging = NoVHFRanging;
 
 	return state.word;
 }
@@ -1505,6 +1509,7 @@ void Saturn::SetMainState(int s)
 	NoHGA = (state.NoHGA != 0);
 	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
 	CMdocktgt = (state.CMdocktgt != 0);
+	NoVHFRanging = (state.NoVHFRanging != 0);
 }
 
 int Saturn::GetSLAState()
@@ -2055,6 +2060,14 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			sscanf(line + 5, "%d", &i);
 			NoHGA = (i != 0);
 		}
+		else if (!strnicmp(line, "NOVHFRANGING", 12)) {
+			//
+			// NOVHFRANGING isn't saved in the scenario, this is solely to allow you
+			// to override the default NOVHFRANGING state in startup scenarios.
+			//
+			sscanf(line + 12, "%d", &i);
+			NoVHFRanging = (i != 0);
+		}
 		else if (!strnicmp(line, "NOMANUALTLI", 11)) {
 			//
 			// NOMANUALTLI isn't saved in the scenario, this is solely to allow you
@@ -2117,9 +2130,15 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "UNIFIEDSBAND", 12)) {
 		    usb.LoadState(line);
 	    }
-	    else if (!strnicmp (line, "HIGHGAINANTENNA", 12)) {
+	    else if (!strnicmp (line, "HIGHGAINANTENNA", 15)) {
 		    hga.LoadState(line);
 	    }
+		else if (!strnicmp(line, "VHFTRANSCEIVER", 14)) {
+			vhftransceiver.LoadState(line);
+		}
+		else if (!strnicmp(line, "VHFRANGING", 10)) {
+			vhfranging.LoadState(line);
+		}
 	    else if (!strnicmp (line, "DATARECORDER", 12)) {
 		    dataRecorder.LoadState(line);
 	    }
@@ -4770,6 +4789,10 @@ void Saturn::TLI_Ended()
 	eventControl.TLI_DONE = MissionTime;
 }
 
+void Saturn::VHFRangingReturnSignal()
+{
+	if (!NoVHFRanging) vhfranging.RangingReturnSignal();
+}
 
 //
 // LUA Interface

@@ -316,6 +316,7 @@ public:
 	bool IsOff();
 	bool IsdVMode();
 	bool WriteScrollToFile();
+	bool IsDecimalPointBlanked();
 	
 protected:
 	bool IsPowered();

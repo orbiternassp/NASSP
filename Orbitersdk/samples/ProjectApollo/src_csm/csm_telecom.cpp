@@ -34,6 +34,7 @@
 #include "apolloguidance.h"
 #include "csmcomputer.h"
 #include "saturn.h"
+#include "LEM.h"
 #include "ioChannels.h"
 #include "tracer.h"
 
@@ -844,8 +845,8 @@ VECTOR3 HGA::ABCAndVectorToBody(double alpha, double beta, double gamma, VECTOR3
 	M2 = _M(cos(beta), 0.0, sin(beta), 0.0, 1.0, 0.0, -sin(beta), 0.0, cos(beta));
 	M1 = _M(1.0, 0.0, 0.0, 0.0, cos(alpha), -sin(alpha), 0.0, sin(alpha), cos(alpha));
 	MB = _M(cos(theta), 0.0, sin(theta), 0.0, 1.0, 0.0, -sin(theta), 0.0, cos(theta));
-	MC = _M(0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-	return mul(MC, mul(MB, mul(M1, mul(M2, mul(M3, U_R)))));
+MC = _M(0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+return mul(MC, mul(MB, mul(M1, mul(M2, mul(M3, U_R)))));
 }
 
 bool HGA::ScanLimitWarning()
@@ -926,6 +927,275 @@ void OMNI::TimeStep()
 VHFAntenna::VHFAntenna(VECTOR3 dir)
 {
 
+}
+
+VHFAMTransceiver::VHFAMTransceiver()
+{
+	vhfASwitch = NULL;
+	vhfBSwitch = NULL;
+	rcvSwitch = NULL;
+	ctrPowerCB = NULL;
+	K1 = false;
+	K2 = false;
+	receiveA = false;
+	receiveB = false;
+	transmitA = false;
+	transmitB = false;
+}
+
+void VHFAMTransceiver::Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb)
+{
+	vhfASwitch = vhfASw;
+	vhfBSwitch = vhfBSw;
+	rcvSwitch = rcvSw;
+	ctrPowerCB = ctrpowcb;
+}
+
+void VHFAMTransceiver::Timestep()
+{
+	if (vhfASwitch->GetState() != THREEPOSSWITCH_CENTER && ctrPowerCB->IsPowered())
+	{
+		K1 = true;
+	}
+	else
+	{
+		K1 = false;
+	}
+
+	if (vhfBSwitch->GetState() != THREEPOSSWITCH_CENTER && ctrPowerCB->IsPowered())
+	{
+		K2 = true;
+	}
+	else
+	{
+		K2 = false;
+	}
+
+	if (K1 && vhfASwitch->GetState() != THREEPOSSWITCH_CENTER && ctrPowerCB->IsPowered())
+	{
+		transmitA = true;
+	}
+	else
+	{
+		transmitA = false;
+	}
+
+	if (K2 && vhfBSwitch->GetState() != THREEPOSSWITCH_CENTER && ctrPowerCB->IsPowered())
+	{
+		transmitB = true;
+	}
+	else
+	{
+		transmitB = false;
+	}
+
+	if ((vhfASwitch->IsDown() || vhfBSwitch->IsUp() || rcvSwitch->IsDown()) && ctrPowerCB->IsPowered())
+	{
+		receiveA = true;
+	}
+	else
+	{
+		receiveA = false;
+	}
+
+	if ((vhfBSwitch->IsDown() || vhfASwitch->IsUp() || rcvSwitch->IsUp()) && ctrPowerCB->IsPowered())
+	{
+		receiveB = true;
+	}
+	else
+	{
+		receiveB = false;
+	}
+
+	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", K1, K2, transmitA, transmitB, receiveA, receiveB);
+}
+
+// Load
+void VHFAMTransceiver::LoadState(char *line) {
+	int one, two, three, four, five, six;
+	
+	sscanf(line + 14, "%d %d %d %d %d %d", &one, &two, &three, &four, &five, &six);
+	K1 = (one != 0);
+	K2 = (two != 0);
+	transmitA = (three != 0);
+	transmitB = (four != 0);
+	receiveA = (five != 0);
+	receiveB = (six != 0);
+}
+
+// Save
+void VHFAMTransceiver::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%d %d %d %d %d %d", K1, K2, transmitA, transmitB, receiveA, receiveB);
+
+	oapiWriteScenario_string(scn, "VHFTRANSCEIVER", buffer);
+}
+
+VHFRangingSystem::VHFRangingSystem()
+{
+	sat = NULL;
+	powercb = NULL;
+	powerswitch = NULL;
+	resetswitch = NULL;
+	dataGood = false;
+	range = 0.0;
+	isRanging = false;
+	lem = NULL;
+	phaseLockTimer = 0.0;
+	hasLock = 0;
+}
+
+void VHFRangingSystem::Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc)
+{
+	sat = vessel;
+	powercb = cb;
+	powerswitch = powersw;
+	resetswitch = resetsw;
+	transceiver =  transc;
+}
+
+void VHFRangingSystem::RangingReturnSignal()
+{
+	hasLock = 3;
+}
+
+void VHFRangingSystem::TimeStep(double simdt)
+{
+	ChannelValue val33;
+
+	val33 = sat->agc.GetInputChannel(033);
+	dataGood = false;
+	range = 0.0;
+
+	if (!IsPowered())
+	{
+		val33[RangeUnitDataGood] = 0;
+		sat->agc.SetInputChannel(033, val33);
+		hasLock = 0;
+		isRanging = false;
+		return;
+	}
+
+	if (!lem)
+	{
+		VESSEL *lm = sat->agc.GetLM();
+		if (lm) lem = (static_cast<LEM*>(lm));
+	}
+
+	if (resetswitch->IsUp())
+	{
+		isRanging = true;
+	}
+
+	if (isRanging && transceiver->IsVHFRangingConfig())
+	{
+		if (lem)
+		{
+			VECTOR3 R;
+			double newrange;
+
+			oapiGetRelativePos(sat->GetHandle(), lem->GetHandle(), &R);
+			newrange = length(R);
+
+			if (abs(internalrange - newrange) < 1800.0*0.3048*simdt)
+			{
+				//Specification is 200NM range, but during the flights up to 320NM was achieved
+				if (newrange > 500.0*0.3048 && newrange < 320.0*1852.0)
+				{
+					lem->SendVHFRangingSignal(sat, false);
+				}
+			}
+
+			internalrange = newrange;
+
+			if (hasLock)
+			{
+				if (phaseLockTimer < 13.0)
+				{
+					phaseLockTimer += simdt;
+				}
+			}
+			else
+			{
+				phaseLockTimer = 0.0;
+			}
+
+			if (phaseLockTimer > 13.0)
+			{
+				range = internalrange;
+				dataGood = true;
+			}
+		}
+	}
+
+	ChannelValue val13;
+	val13 = sat->agc.GetInputChannel(013);
+
+	if (dataGood == 1 && val33[RangeUnitDataGood] == 0) { val33[RangeUnitDataGood] = 1; sat->agc.SetInputChannel(033, val33); }
+	if (dataGood == 0 && val33[RangeUnitDataGood] == 1) { val33[RangeUnitDataGood] = 0; sat->agc.SetInputChannel(033, val33); }
+
+	if (val13[RangeUnitActivity] == 1) {
+		int radarBits = 0;
+		if (val13[RangeUnitSelectA] == 1) { radarBits |= 1; }
+		if (val13[RangeUnitSelectB] == 1) { radarBits |= 2; }
+		if (val13[RangeUnitSelectC] == 1) { radarBits |= 4; }
+
+		switch (radarBits) {
+		case 4:
+			// Docs says this should be 0.01 NM/bit, or 18.52 meters/bit
+			sat->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 18.52);
+			sat->agc.SetInputChannelBit(013, RangeUnitActivity, 0);
+			sat->agc.GenerateRadarupt();
+			break;
+		default:
+			break;
+		}
+	}
+
+	//sprintf(oapiDebugString(), "%d %d %d %f %f %o", isRanging, hasLock, dataGood, range, phaseLockTimer, sat->agc.vagc.Erasable[0][RegRNRAD]);
+
+	//Reset after the timestep
+	if (hasLock) hasLock--;
+}
+
+void VHFRangingSystem::SystemTimestep(double simdt)
+{
+	if (IsPowered())
+	{
+		powercb->DrawPower(10.0);
+	}
+}
+
+bool VHFRangingSystem::IsPowered()
+{
+	// Do we have a VHF Ranging System?
+	if (sat->NoVHFRanging) return false;
+
+	if (powerswitch->IsUp() && powercb && powercb->IsPowered())
+	{
+		return true;
+	}
+
+	return false;
+}
+
+// Load
+void VHFRangingSystem::LoadState(char *line) {
+	int one, two;
+
+	sscanf(line + 10, "%d %d %d %lf %lf %lf", &one, &two, &hasLock, &internalrange, &range, &phaseLockTimer);
+	dataGood = (one != 0);
+	isRanging = (two != 0);
+}
+
+// Save
+void VHFRangingSystem::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%d %d %d %lf %lf %lf", dataGood, isRanging, hasLock, internalrange, range, phaseLockTimer);
+
+	oapiWriteScenario_string(scn, "VHFRANGING", buffer);
 }
 
 // Socket registration method (registers sockets to be deinitialized

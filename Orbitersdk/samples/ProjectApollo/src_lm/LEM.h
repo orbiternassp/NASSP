@@ -385,6 +385,7 @@ public:
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	UINT GetStage() { return stage; }
 	virtual double GetAscentStageMass();
+	virtual void SendVHFRangingSignal(Saturn *sat, bool isAcquiring);
 
 	virtual void PlayCountSound(bool StartStop) {};
 	virtual void PlaySepsSound(bool StartStop) {};

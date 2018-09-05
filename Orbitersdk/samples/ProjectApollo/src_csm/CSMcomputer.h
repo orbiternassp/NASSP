@@ -129,6 +129,7 @@ public:
 
 	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
 
+	VESSEL *GetLM();
 protected:
 
 	void ProcessChannel5(ChannelValue val);
