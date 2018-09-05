@@ -839,6 +839,9 @@ public:
 	bool rhc_thctoggle_pressed;			  ///< Button pressed flag				  
 	int js_current;
 
+	// Variables for checklists
+	char Checklist_Variable[16][32];
+
 	//
 	// General functions that handle calls from Orbiter.
 	//
@@ -1252,7 +1255,6 @@ public:
 	int Lua_GetAGCChannel(int ch);
 	void Lua_SetAGCErasable(int page, int addr, int value);
 	int Lua_GetAGCUplinkStatus();
-
 
 protected:
 
@@ -4244,6 +4246,9 @@ protected:
 	PowerDrainConnectorObject CSMToLEMPowerDrain;
 	PowerDrainConnector CSMToLEMPowerConnector;
 	CSMToLEMECSConnector lemECSConnector;
+
+	// Checklist Controller to CSM connector
+	ChecklistDataInterface cdi;
 
 	//
 	// PanelSDK pointers.

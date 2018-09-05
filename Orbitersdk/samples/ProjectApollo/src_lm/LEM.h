@@ -537,6 +537,8 @@ public:
 	int ttca_throttle_vel;
 	int js_current;
 
+	// Variables for checklists
+	char Checklist_Variable[16][32];
 
 protected:
 
@@ -1586,6 +1588,9 @@ protected:
 	LEMPowerConnector CSMToLEMPowerConnector;		// This sends data *FROM* CSMToLEMPowerSource *TO* LEMToCSMConnector
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
 	LEMECSConnector CSMToLEMECSConnector;
+
+	// Checklist Controller to LEM connector
+	ChecklistDataInterface cdi;
 
 	char AudioLanguage[64];
 

@@ -41,6 +41,7 @@ enum ConnectorType
 	LEM_CSM_POWER,				///< Power connection from CSM to LEM.
 	MFD_PANEL_INTERFACE,		///< Connector from an MFD to a panel.
 	LEM_CSM_ECS,				///< Tunnel connection from CSM to LEM.
+	CHECKLIST_DATA_INTERFACE	///< Data connector from checklist controller to vessel
 };
 
 #define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.

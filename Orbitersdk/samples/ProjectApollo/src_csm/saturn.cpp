@@ -204,6 +204,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	sivbControlConnector(agc, dockingprobe, this),
 	sivbCommandConnector(this),
 	lemECSConnector(this),
+	cdi(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	ascp(ThumbClick),
@@ -259,10 +260,16 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 		debugString = &oapiDebugString;
 	}
 
+	// Clobber checklist variables
+	for (int i = 0; i < 16; i++) {
+		Checklist_Variable[i][0] = 0;
+	}
+
 	//
 	// Register visible connectors.
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &cdi);
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &CSMToSIVBConnector);
 	RegisterConnector(0, &lemECSConnector);
@@ -1319,6 +1326,14 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "FOVSAVE", FovSave);
 	papiWriteScenario_double(scn, "FOVSAVEEXTERNAL", FovSaveExternal);
 
+	for (int i = 0; i < 16; i++) {
+		if (Checklist_Variable[i][0] != 0) {
+			char name[16];
+			sprintf(name, "CHKVAR_%d", i);
+			oapiWriteScenario_string(scn, name, Checklist_Variable[i]);
+		}
+	}
+
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
 	agc.SaveState(scn);
@@ -1984,6 +1999,16 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "COASENABLED", 11)) {
 		sscanf (line + 11, "%i", &coasEnabled);
+	}
+	else if (!strnicmp(line, "CHKVAR_", 7)) {
+		for (int i = 0; i < 16; i++) {
+			char name[16];
+			sprintf(name, "CHKVAR_%d", i);
+			if(!strnicmp(line,name,strlen(name))){
+				strncpy(Checklist_Variable[i], line + (strlen(name) + 1), 32);
+				break;
+			}
+		}
 	}
 	else
 		found = false;

@@ -30,12 +30,164 @@
 #include <math.h>
 #include "nasspdefs.h"
 #include "checklistController.h"
+#include "saturn.h"
+#include "LEM.h"
 
 //Code to make the compiler shut up.
 #pragma warning ( push )
 #pragma warning ( disable:4018 )
 
 using namespace std;
+
+// Stuff for the connector
+// Cons
+ChecklistDataInterface::ChecklistDataInterface() {
+	type = CHECKLIST_DATA_INTERFACE;
+	vessel = NULL;
+}
+
+// Other end
+ChecklistDataInterface::ChecklistDataInterface(VESSEL *v) {
+	type = CHECKLIST_DATA_INTERFACE;
+	vessel = v;
+}
+
+// Destructor
+ChecklistDataInterface::~ChecklistDataInterface() {
+
+}
+
+// Connect to vessel
+bool ChecklistDataInterface::ConnectToVessel(VESSEL *v) {
+	//
+	// Disconnect in case we're already connected.
+	//
+	Disconnect();
+
+	//
+	// See if we can find the appropriate connector on the vessel.
+	//	
+	Connector *vsl = GetVesselConnector(v, VIRTUAL_CONNECTOR_PORT, type);
+	
+	//
+	// Try to connect if we did.
+	//
+	if (vsl) {
+		vessel = v;
+		return ConnectTo(vsl);
+	}
+	return false;
+}
+
+bool ChecklistDataInterface::setVariable(int index, char * value) {
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = ChecklistDataInterface::CDI_SET_VARIABLE;
+	cm.val1.iValue = index;
+	cm.val2.pValue = value;
+
+	if (SendMessage(cm)) 		{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool ChecklistDataInterface::getVariable(int index, char * value) {
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = ChecklistDataInterface::CDI_GET_VARIABLE;
+	cm.val1.iValue = index;
+	cm.val2.pValue = value;
+
+	if (SendMessage(cm)) {
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool ChecklistDataInterface::ReceiveMessage(Connector *from, ConnectorMessage &m) {
+	int index = 0;
+	char * value = NULL;
+	int vessel_type = 0;
+
+	//
+	// Sanity checks
+	//
+	if (vessel == NULL) { 
+		sprintf(oapiDebugString(), "vessel is null");
+		return false;
+	}
+	if (m.destination != type) { return false; }	
+	// It's ours then
+	CDIMessageType messageType;
+	messageType = (CDIMessageType)m.messageType;
+	char * classname = vessel->GetClassName();
+	if (classname == NULL) {
+		return false; // Go away
+	}
+
+	if (!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn5") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn5") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/Saturn1b")) {
+		vessel_type = 1;
+	}
+	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
+		vessel_type = 2;
+	}
+
+	switch (messageType) {
+	case CDI_GET_VARIABLE:
+		sprintf(oapiDebugString(), "REQUEST TO GET VARIABLE, VTYPE %d", vessel_type);
+		// Index in val1
+		index = m.val1.iValue;
+		// Pointer in val2
+		value = (char *)m.val2.pValue;
+		// Make it happen
+		value[0] = 0; // Default
+		return true;
+		if (vessel_type == 1) {
+			// CSM
+			Saturn * csm = (Saturn *)vessel;
+			strncpy(value, csm->Checklist_Variable[index], 32);
+		}
+		if (vessel_type == 2) {
+			// LEM
+			LEM * lem = (LEM *)vessel;
+			strncpy(value, lem->Checklist_Variable[index], 32);
+		}
+		// All others disregarded
+		return true;
+		break;
+
+	case CDI_SET_VARIABLE:
+		// Index in val1
+		index = m.val1.iValue;
+		// Pointer in val2
+		value = (char *)m.val2.pValue;
+		// Make it happen
+		if (vessel_type == 1) {
+			// CSM
+			Saturn * csm = (Saturn *)vessel;
+			strncpy(csm->Checklist_Variable[index], value, 32);			
+		}
+		if (vessel_type == 2) {
+			// LEM
+			LEM * lem = (LEM *)vessel;
+			strncpy(lem->Checklist_Variable[index], value, 32);			
+		}
+		// All others disregarded
+		return true;
+		break;
+	}
+
+	return false;
+}
+
+// Original stuff
 // Todo: Verify
 ChecklistController::ChecklistController(SoundLib sound)
 {
@@ -298,6 +450,7 @@ bool ChecklistController::autoExecute()
 // Todo: Verify
 bool ChecklistController::linktoVessel(VESSEL *vessel)
 {
+	cdi.ConnectToVessel(vessel);
 	return conn.ConnectToVessel(vessel);
 }
 
@@ -468,6 +621,34 @@ void ChecklistController::iterate()
 		else {
 			active.sequence ++;
 			autoexecuteSlowDelay = active.sequence->getAutoexecuteSlowDelay(&conn);
+		}
+		// Check for vars here?
+		if (active.sequence->varlist[0] != 0 && active.sequence->varlist[0] == '$') {
+			char * token = NULL;
+			// sprintf(oapiDebugString(), "CHECKLIST-ITEM-VARS %s", active.sequence->varlist);
+			// Find the first token. It should be delimited by a space or an =
+			token = strtok(active.sequence->varlist, "=");
+			while (token != NULL) {
+				int index = 0;
+				char value[32];
+				value[0] = 0;
+				// Obtain index
+				index = atoi(token + 1);
+				// sprintf(oapiDebugString(), "INDEX: %d", index);					
+				// Obtain string
+				token = strtok(NULL, "\""); // Find value
+				// sprintf(oapiDebugString(), "TOKEN: %s", token);
+				if (strlen(token) > 0) {
+					strncpy(value, token, 32);
+				} else {
+					value[0] = 0;
+				}
+				// sprintf(oapiDebugString(), "VALUE: %s", value);
+				// Set it
+				cdi.setVariable(index, value);
+				// Obtain next index or EOL
+				token = strtok(NULL, ", \n=");
+			}
 		}
 		waitForCompletion = (active.program.group != -1 && !active.sequence->checkIterate(&conn));
 	}

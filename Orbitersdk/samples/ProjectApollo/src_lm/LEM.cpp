@@ -225,6 +225,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	CabinFan(CabinFans),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this),
+	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
@@ -312,6 +313,12 @@ void LEM::Init()
 		th_hover[i] = 0;
 	}
 
+	// Clobber checklist variables
+	for (int i = 0; i < 16; i++)
+	{
+		Checklist_Variable[i][0] = 0;
+	}
+
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
 	RCSA.SetVessel(this);
@@ -381,6 +388,7 @@ void LEM::Init()
 	// Register visible connectors.
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &cdi);
 	RegisterConnector(0, &LEMToCSMConnector);
 	RegisterConnector(0, &CSMToLEMECSConnector);
 
@@ -1442,6 +1450,16 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf(line + 24, "%d", &i);
 		VAGCChecklistAutoEnabled = (i != 0);
 	}
+	else if (!strnicmp(line, "CHKVAR_", 7)) {
+		for (int i = 0; i < 16; i++) {
+			char name[16];
+			sprintf(name, "CHKVAR_%d", i);
+			if (!strnicmp(line, name, strlen(name))) {
+				strncpy(Checklist_Variable[i], line + (strlen(name) + 1), 32);
+				break;
+			}
+		}
+	}
 	return true;
 }
 
@@ -1493,6 +1511,14 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
+	}
+
+	for (int i = 0; i < 16; i++) {
+		if (Checklist_Variable[i][0] != 0) {
+			char name[16];
+			sprintf(name, "CHKVAR_%d", i);
+			oapiWriteScenario_string(scn, name, Checklist_Variable[i]);
+		}
 	}
 
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);

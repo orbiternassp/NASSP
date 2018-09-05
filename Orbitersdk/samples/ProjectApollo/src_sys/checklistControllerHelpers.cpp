@@ -90,6 +90,7 @@ ChecklistItem::ChecklistItem()
 	heading1[0] = 0;
 	heading2[0] = 0;
 	info[0] = 0;
+	varlist[0] = 0;
 	automatic = false;
 	item[0] = 0;
 	position = 0;
@@ -118,7 +119,7 @@ bool ChecklistItem::operator==(ChecklistItem input)
 }
 // Todo: Verify
 void ChecklistItem::init(vector<BasicExcelCell> &cells, const vector<ChecklistGroup> &groups)
-{
+{	
 	if (cells[0].GetString())
 		strncpy(text,cells[0].GetString(),100);
 	else
@@ -175,6 +176,12 @@ void ChecklistItem::init(vector<BasicExcelCell> &cells, const vector<ChecklistGr
 			if (!stricmp(cells[12].GetString(), groups[i].name))
 				failGroup = groups[i].group;
 		}
+	}
+
+	if (cells[13].GetString()) {
+		strncpy(varlist, cells[13].GetString(), 256);
+	} else {
+		varlist[0] = 0;
 	}
 
 	if (strnicmp(item, "DSKY", 4) == 0) {
@@ -886,7 +893,7 @@ void ChecklistContainer::initSet(const ChecklistGroup &program,vector<ChecklistI
 	{
 		// Ignore empty texts
 		if (sheet->Cell(i,0)->GetString() != 0) {
-			for (int ii = 0; ii < 13; ii++)
+			for (int ii = 0; ii < 14; ii++)
 			{
 				vec_temp.push_back(*(sheet->Cell(i,ii)));
 			}

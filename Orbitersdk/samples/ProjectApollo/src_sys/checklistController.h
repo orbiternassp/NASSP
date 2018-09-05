@@ -230,6 +230,42 @@ struct DEDAChecklistItem
 	char item[100];
 };
 
+///
+/// \ingroup Connectors
+/// \brief Connector class for checklist data interface.
+///
+class ChecklistDataInterface : public Connector {
+public:
+
+	///
+	/// \ingroup Connectors
+	/// \brief Message type to send from the checklist controller to the vessel.
+	///
+	enum CDIMessageType {
+		CDI_GET_VARIABLE,						///< Fetch variable from vessel
+		CDI_SET_VARIABLE,						///< Set variable on vessel
+	};
+
+	ChecklistDataInterface();					//< Cons for sending end (connect it!)
+	ChecklistDataInterface(VESSEL *v);			//< Cons for receiving end (don't connect it!)
+	~ChecklistDataInterface();
+
+	bool ConnectToVessel(VESSEL *v);			//< ONLY DO THIS ON THE SENDING END!
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+	///
+	/// Set a checklist variable.
+	///
+	/// \param index index of variable to set
+	/// \param value string value to set it to
+	/// \return True of call succeeded.
+	///
+	bool setVariable(int index, char * value);
+	bool getVariable(int index, char * value);
+
+private:
+	VESSEL * vessel;
+};
 
 /// -------------------------------------------------------------
 /// An individual element in a checklist program.  These elements
@@ -258,7 +294,6 @@ struct ChecklistItem
 	bool iterate(MFDConnector *conn, bool autoexec);
 
 	void setFlashing(MFDConnector *conn, bool flashing);
-	
 	double getAutoexecuteSlowDelay(MFDConnector *conn);
 
 	double checkIterate(MFDConnector *conn);
@@ -316,6 +351,10 @@ struct ChecklistItem
 /// extra text to display when the info button is pressed.
 /// -------------------------------------------------------------
 	char info[300];
+/// -------------------------------------------------------------
+/// Variable set list, evaluated when item activated
+/// -------------------------------------------------------------
+	char varlist[256];
 /// -------------------------------------------------------------
 /// define whether this checklist will happen automatically in
 /// quickstart mode
@@ -596,6 +635,8 @@ private:
 	bool doSpawnCheck(int, bool, bool automagic = false);
 	///Connector to the panel
 	MFDConnector conn;
+	/// Connector to the vessel
+	ChecklistDataInterface cdi;
 	/// Used to move forward through the elements.
 	void iterate();
 	///The file reference.
