@@ -679,10 +679,10 @@ ARCore::ARCore(VESSEL* v)
 
 	Skylabmaneuver = 0;
 	SkylabTPIGuess = 0.0;
-	Skylab_n_C = 0;
-	SkylabDH1 = 0.0;
-	SkylabDH2 = 0.0;
-	Skylab_E_L = 0.0;
+	Skylab_n_C = 1.5;
+	SkylabDH1 = 20.0*1852.0;
+	SkylabDH2 = 10.0*1852.0;
+	Skylab_E_L = 27.0*RAD;
 	SkylabSolGood = true;
 	Skylab_dV_NSR = Skylab_dV_NCC = _V(0, 0, 0);
 	Skylab_dH_NC2 = Skylab_dv_NC2 = Skylab_t_NC1 = Skylab_t_NC2 = Skylab_dv_NCC = Skylab_t_NCC = Skylab_t_NSR = Skylab_dt_TPM = 0.0;
