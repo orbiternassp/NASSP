@@ -501,6 +501,27 @@ protected:
 };
 
 ///
+/// A two-position switch which can switch multiple connections between sources and output buses.
+/// \brief N-sources to outputs switch.
+/// \ingroup PanelItems
+///
+class NSourceDestSwitch : public ToggleSwitch {
+public:
+	NSourceDestSwitch(int nSources);
+	~NSourceDestSwitch();
+	void LoadState(char *line);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+	void WireSourcesToBuses(int bus, e_object* i, DCbus* o);
+
+protected:
+	virtual void UpdateSourceState();
+
+	int nSources;
+	e_object **sources;
+	DCbus **buses;
+};
+
+///
 /// A three-position switch which can switch its power between three different electrical outputs.
 /// \brief Three power output switch.
 /// \ingroup PanelItems
