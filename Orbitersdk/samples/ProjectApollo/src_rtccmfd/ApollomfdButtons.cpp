@@ -1263,14 +1263,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "Epoch of BRCS", 0, 'E' },
 		{ "MJD of July 1st", 0, 'Z' },
+		{ "MJD of launch", 0, 'L' },
 		{ "MJD of mid-mission", 0, 'M' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Time of landing", 0, 'T' },
+		{ "Apollo mission", 0, 'N' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Cycle options", 0, 'O' },
+		{ "Generate file", 0, 'C' },
+		{ "CMC or LGC", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
@@ -1280,16 +1280,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("EPO", OAPI_KEY_A, &ApolloRTCCMFD::menuSetAGCEphemBRCSEpoch);
 	RegisterFunction("ZER", OAPI_KEY_L, &ApolloRTCCMFD::menuSetAGCEphemTEphemZero);
-	RegisterFunction("MID", OAPI_KEY_O, &ApolloRTCCMFD::menuSetAGCEphemTIMEM0);
-	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("LAU", OAPI_KEY_L, &ApolloRTCCMFD::menuSetAGCEphemTEPHEM);
+	RegisterFunction("MID", OAPI_KEY_M, &ApolloRTCCMFD::menuSetAGCEphemTIMEM0);
+	RegisterFunction("LAN", OAPI_KEY_T, &ApolloRTCCMFD::menuSetAGCEphemTLAND);
+	RegisterFunction("MIS", OAPI_KEY_N, &ApolloRTCCMFD::menuSetAGCEphemMission);
 
+	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::menuCycleAGCEphemOpt);
 	RegisterFunction("GEN", OAPI_KEY_C, &ApolloRTCCMFD::menuGenerateAGCEphemeris);
-	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("AGC", OAPI_KEY_U, &ApolloRTCCMFD::menuCycleAGCEphemAGCType);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
 
 
