@@ -171,6 +171,8 @@
 #define LTLM_DS		3
 #define LTLM_E		4
 
+class Saturn;
+
 // VHF system (and shared stuff)
 class LM_VHF {
 public:
@@ -178,11 +180,22 @@ public:
 	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
 	void Timestep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+	void RangingSignal(Saturn *sat, bool isAcquiring);
+
 	LEM *lem;					   // Ship we're installed in
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
 	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
 	h_HeatLoad *PCMHeat;			//PCM Heat Load
 	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
+
+	bool receiveA;
+	bool receiveB;
+	bool transmitA;
+	bool transmitB;
+	bool isRanging;
+
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
 	SOCKET m_socket;				// TCP socket
