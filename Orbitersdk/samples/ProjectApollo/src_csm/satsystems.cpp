@@ -264,6 +264,21 @@ void Saturn::SystemsInit() {
 	EntryBatteryC->WireTo(&BatCCHRGCircuitBraker); 
 
 	//
+	// SCS Logic Buses
+	//
+
+	SCSLogicBus1Feeder.WireToBuses(&LogicBus12MnACircuitBraker, &LogicBus14MnBCircuitBraker);
+	SCSLogicBus2Feeder.WireToBuses(&LogicBus23MnBCircuitBraker, &LogicBus12MnACircuitBraker);
+	SCSLogicBus3Feeder.WireToBuses(&LogicBus23MnBCircuitBraker, &LogicBus34MnACircuitBraker);
+	SCSLogicBus4Feeder.WireToBuses(&LogicBus14MnBCircuitBraker, &LogicBus34MnACircuitBraker);
+	SCSLogicBus1.WireTo(&SCSLogicBus1Feeder);
+	SCSLogicBus4.WireTo(&SCSLogicBus4Feeder);
+	Panelsdk.AddElectrical(&SCSLogicBus1, false);
+	Panelsdk.AddElectrical(&SCSLogicBus2, false);
+	Panelsdk.AddElectrical(&SCSLogicBus3, false);
+	Panelsdk.AddElectrical(&SCSLogicBus4, false);
+
+	//
 	// Generic power source for switches, tied to both Bus A and
 	// Bus B.
 	//

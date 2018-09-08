@@ -1144,7 +1144,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 		switch (radarBits) {
 		case 4:
 			// Docs says this should be 0.01 NM/bit, or 18.52 meters/bit
-			sat->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 18.52);
+			sat->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)fmod(range / 18.52, 32768.0);
 			sat->agc.SetInputChannelBit(013, RangeUnitActivity, 0);
 			sat->agc.GenerateRadarupt();
 			break;

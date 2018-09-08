@@ -3028,6 +3028,76 @@ void TwoOutputSwitch::LoadState(char *line)
 }
 
 
+NSourceDestSwitch::NSourceDestSwitch(int n)
+{
+	nSources = n;
+	sources = new e_object *[nSources];
+	buses = new DCbus *[nSources];
+
+	int i;
+
+	for (i = 0; i < nSources; i++)
+	{
+		sources[i] = 0;
+		buses[i] = 0;
+	}
+}
+
+NSourceDestSwitch::~NSourceDestSwitch()
+{
+	if (sources)
+	{
+		delete[] sources;
+		sources = 0;
+	}
+	if (buses)
+	{
+		delete[] buses;
+		buses = 0;
+	}
+}
+
+bool NSourceDestSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggleSwitch::SwitchTo(newState, dontspring))
+	{
+		UpdateSourceState();
+		return true;
+	}
+	return false;
+}
+
+void NSourceDestSwitch::UpdateSourceState()
+{
+	if (IsUp()) {
+		for (int i = 0;i < nSources;i++)
+		{
+			buses[i]->WireTo(sources[i]);
+		}
+	}
+	else if (IsDown()) {
+		for (int i = 0;i < nSources;i++)
+		{
+			buses[i]->Disconnect();
+		}
+	}
+}
+
+void NSourceDestSwitch::WireSourcesToBuses(int bus, e_object* i, DCbus* o)
+{
+	if (bus > 0 && bus <= nSources)
+	{
+		sources[bus - 1] = i;
+		buses[bus - 1] = o;
+	}
+}
+
+void NSourceDestSwitch::LoadState(char *line)
+{
+	ToggleSwitch::LoadState(line);
+	UpdateSourceState();
+}
+
 //
 // ThreeOutputSwitch allows you to connect one of the three outputs to the input based on the position
 // of the switch.

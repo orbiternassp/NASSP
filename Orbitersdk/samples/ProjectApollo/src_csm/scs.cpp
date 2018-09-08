@@ -724,7 +724,7 @@ bool GDC::AlignGDC() {
 								  sat->ascp.output.z * RAD));
 
 		// The RSI isn't set to the yaw ASCP setting, but changing when the ASCP yaw setting changes (and the Align GDC button is held down etc.)
-		if (sat->EMSRollSwitch.IsUp() && !sat->ems.IsOff()) {
+		if (sat->EMSRollSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE) {
 			if (rsiRotationOn) {
 				sat->ems.SetRSIRotation((sat->ascp.output.z * RAD) - rsiRotationStart);
 			} else {
@@ -2656,6 +2656,13 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 	double position;
 	double dV;
 
+	//RSI Timestep
+	if (sat->EMSRollSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE) {
+		SetRSIRotation(RSITarget + sat->gdc.rollstabilityrate * simdt);
+		//sprintf(oapiDebugString(), "entry lift angle? %f", RSITarget);
+	}
+
+	//Accelerometer Timestep
 	AccelerometerTimeStep(simdt);
 
 	xaccG = xacc/constG;
@@ -2887,18 +2894,6 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 		//sprintf(oapiDebugString(), "ScribePt %d %d %d", ScribePntCnt, ScribePntArray[ScribePntCnt-1].x, ScribePntArray[ScribePntCnt-1].y);
 		//sprintf(oapiDebugString(), "ScrollPosition %f", ScrollPosition);
 	}
-
-	if (status != EMS_STATUS_OFF && sat->EMSRollSwitch.IsUp()) {
-		SetRSIRotation(RSITarget + sat->gdc.rollstabilityrate * simdt);
-		//sprintf(oapiDebugString(), "entry lift angle? %f", RSITarget);
-	}
-
-	/// \todo I didn't find any reference that the RSI is rotating when the GTA Switch is active, so I removed that for now	     
-	/*
-	if (sat->GTASwitch.IsUp()) {
-		SetRSIRotation(RSITarget + PI/360);
-	}
-	*/
 
 	RotateRSI(simdt);
 }

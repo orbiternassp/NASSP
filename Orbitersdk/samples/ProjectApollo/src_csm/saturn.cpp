@@ -171,6 +171,14 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	FlightPostLandingBus("FlightPostLanding-Bus",&FlightPostLandingBusFeeder),
 	FlightPostLandingBusFeeder("FlightPostLanding-Bus-Feeder",Panelsdk, 5),
 	LMUmbilicalFeeder("LM-Umbilical-Feeder", Panelsdk),
+	SCSLogicBus1("SCS-Logic-Bus-1", &SCSLogicBus1Feeder),
+	SCSLogicBus1Feeder("SCS-Logic-Bus-1-Feeder", Panelsdk),
+	SCSLogicBus2("SCS-Logic-Bus-2", NULL),
+	SCSLogicBus2Feeder("SCS-Logic-Bus-2-Feeder", Panelsdk),
+	SCSLogicBus3("SCS-Logic-Bus-3", NULL),
+	SCSLogicBus3Feeder("SCS-Logic-Bus-3-Feeder", Panelsdk),
+	SCSLogicBus4("SCS-Logic-Bus-4", &SCSLogicBus4Feeder),
+	SCSLogicBus4Feeder("SCS-Logic-Bus-4-Feeder", Panelsdk),
 	SwitchPower("Switch-Power", Panelsdk),
 	GaugePower("Gauge-Power", Panelsdk),
 	SMQuadARCS(ph_rcs0, Panelsdk),
@@ -228,7 +236,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnic(_V(0.0, -0.707108, -0.707108)),
 	omnid(_V(0.0, 0.707108, -0.707108)),
 	vhfa(_V(0.0, 0.7716246, 0.63607822)),
-	vhfb(_V(0.0, -0.7716246, -0.63607822))
+	vhfb(_V(0.0, -0.7716246, -0.63607822)),
+	LogicPowerSwitch(2)
 
 #pragma warning ( pop ) // disable:4355
 

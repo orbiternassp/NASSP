@@ -2799,7 +2799,7 @@ protected:
 	ThreePosSwitch TVCServoPower2Switch;
 
 	SwitchRow LogicPowerSwitchRow;
-	ToggleSwitch LogicPowerSwitch;
+	NSourceDestSwitch LogicPowerSwitch;
 
 	SwitchRow SIGCondDriverBiasPowerSwitchesRow;
 	ThreeSourceSwitch SIGCondDriverBiasPower1Switch;
@@ -3532,6 +3532,16 @@ protected:
 
 	// Fake feeder for twin LM power umbilicals
 	PowerMerge LMUmbilicalFeeder;
+
+	//SCS Logic Buses
+	DCbus SCSLogicBus1;
+	DCbus SCSLogicBus2;
+	DCbus SCSLogicBus3;
+	DCbus SCSLogicBus4;
+	PowerMerge SCSLogicBus1Feeder;
+	PowerMerge SCSLogicBus2Feeder;
+	PowerMerge SCSLogicBus3Feeder;
+	PowerMerge SCSLogicBus4Feeder;
 
 	// Inverters.
 	ACInverter *Inverter1;
