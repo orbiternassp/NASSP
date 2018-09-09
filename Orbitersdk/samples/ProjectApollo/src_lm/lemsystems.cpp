@@ -2232,6 +2232,25 @@ bool LEM_LR::IsPowered()
 	return true;
 }
 
+double LEM_LR::GetAltTransmitterPower()
+{
+	if (!IsPowered())
+	{
+		return 0;
+	}
+
+	return 3.0;
+}
+
+double LEM_LR::GetVelTransmitterPower()
+{
+	if (!IsPowered())
+	{
+		return 0;
+	}
+
+	return 3.0;
+}
 
 void LEM_LR::Timestep(double simdt){
 	if(lem == NULL){ return; }
