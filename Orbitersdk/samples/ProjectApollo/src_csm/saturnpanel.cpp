@@ -2965,10 +2965,10 @@ void Saturn::SetSwitches(int panel) {
 	OrdealMnBCircuitBraker.Init(38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup3CircuitBraker);
 	ContrAutoMnACircuitBraker.Init( 76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup1CircuitBraker);
 	ContrAutoMnBCircuitBraker.Init(114,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup1CircuitBraker);
-	LogicBus12MnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup3CircuitBraker);
-	LogicBus34MnACircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup1CircuitBraker);
-	LogicBus14MnBCircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup3CircuitBraker);
-	LogicBus23MnBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup1CircuitBraker);
+	LogicBus12MnACircuitBraker.Init(152,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup3CircuitBraker, 3.0);
+	LogicBus34MnACircuitBraker.Init(190,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup1CircuitBraker, 3.0);
+	LogicBus14MnBCircuitBraker.Init(228,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup3CircuitBraker, 3.0);
+	LogicBus23MnBCircuitBraker.Init(266,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup1CircuitBraker, 3.0);
 	SystemMnACircuitBraker.Init(304,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnAGroup2CircuitBraker, 15.0);
 	SystemMnBCircuitBraker.Init(342,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], StabilizationControlSystem2CircuitBrakerRow, &EPSMnBGroup2CircuitBraker, 15.0);
 
@@ -3014,6 +3014,8 @@ void Saturn::SetSwitches(int panel) {
 
 	LogicPowerSwitchRow.Init(AID_LOGICPOWERSWITCH, MainPanel);
 	LogicPowerSwitch.Init(0, 0, 34, 33, srf[SRF_SWITCH305LEFT], srf[SRF_BORDER_34x33], LogicPowerSwitchRow);
+	LogicPowerSwitch.WireSourcesToBuses(1, &SCSLogicBus2Feeder, &SCSLogicBus2);
+	LogicPowerSwitch.WireSourcesToBuses(2, &SCSLogicBus3Feeder, &SCSLogicBus3);
 
 	SIGCondDriverBiasPowerSwitchesRow.Init(AID_SIGCONDDRIVERBIASPOWERSWITCHES, MainPanel);
 	SIGCondDriverBiasPower1Switch.Init( 0,  0, 34, 33, srf[SRF_THREEPOSSWITCH305LEFT], srf[SRF_BORDER_34x33], SIGCondDriverBiasPowerSwitchesRow, 

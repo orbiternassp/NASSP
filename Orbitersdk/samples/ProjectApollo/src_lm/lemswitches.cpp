@@ -1577,10 +1577,10 @@ double RadarSignalStrengthAttenuator::GetValue()
 	switch (TestMonitorRotarySwitch->GetState())
 	{
 	case 0:	//ALT XMTR
-		val = 0.0;
+		val = lem->LR.GetAltTransmitterPower();
 		break;
 	case 1:	//VEL XMTR
-		val = 0.0;
+		val = lem->LR.GetVelTransmitterPower();
 		break;
 	case 2:	//AGC
 		val = lem->RR.GetSignalStrength();

@@ -3496,18 +3496,48 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 37)
 	{
-		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "AGC Ephemeris Generator", 23);
+		if (G->AGCEphemOption == 0)
+		{
+			skp->Text(4 * W / 8, (int)(0.5 * H / 14), "AGC Ephemeris Generator", 23);
 
-		skp->Text(1 * W / 8, 2 * H / 14, "Epoch of BRCS:", 14);
-		skp->Text(1 * W / 8, 4 * H / 14, "TEphemZero:", 11);
-		skp->Text(1 * W / 8, 6 * H / 14, "TIMEM0:", 7);
+			skp->Text(1 * W / 8, 2 * H / 14, "Epoch of BRCS:", 14);
+			skp->Text(1 * W / 8, 4 * H / 14, "TEphemZero:", 11);
 
-		sprintf(Buffer, "%f", G->AGCEphemBRCSEpoch);
-		skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->AGCEphemTEphemZero);
-		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->AGCEphemBRCSEpoch);
+			skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->AGCEphemTEphemZero);
+			skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(4 * W / 8, (int)(0.5 * H / 14), "AGC Correction Vectors", 23);
+
+			skp->Text(1 * W / 8, 6 * H / 14, "TEPHEM:", 7);
+			sprintf(Buffer, "%f", G->AGCEphemTEPHEM);
+			skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 10 * H / 14, "TLAND:", 6);
+			GET_Display(Buffer, G->AGCEphemTLAND);
+			skp->Text(4 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 12 * H / 14, "Mission:", 8);
+			sprintf(Buffer, "%d", G->AGCEphemMission);
+			skp->Text(4 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+
+			if (G->AGCEphemIsCMC)
+			{
+				skp->Text(7 * W / 8, 6 * H / 14, "CMC", 3);
+			}
+			else
+			{
+				skp->Text(7 * W / 8, 6 * H / 14, "LGC", 3);
+			}
+		}
+
+		
+		skp->Text(1 * W / 8, 8 * H / 14, "TIMEM0:", 7);
 		sprintf(Buffer, "%f", G->AGCEphemTIMEM0);
-		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 38)
 	{
@@ -7702,6 +7732,45 @@ void ApolloRTCCMFD::menuLaunchAzimuthCalc()
 	}
 }
 
+void ApolloRTCCMFD::menuCycleAGCEphemOpt()
+{
+	if (G->AGCEphemOption < 1)
+	{
+		G->AGCEphemOption++;
+	}
+	else
+	{
+		G->AGCEphemOption = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuCycleAGCEphemAGCType()
+{
+	G->AGCEphemIsCMC = !G->AGCEphemIsCMC;
+}
+
+void ApolloRTCCMFD::menuSetAGCEphemMission()
+{
+	bool AGCEphemMissionInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the mission number:", AGCEphemMissionInput, 0, 20, (void*)this);
+}
+
+bool AGCEphemMissionInput(void *id, char *str, void *data)
+{
+	int N;
+	if (sscanf(str, "%d", &N) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_AGCEphemMission(N);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCEphemMission(int ApolloNo)
+{
+	G->AGCEphemMission = ApolloNo;
+}
+
 void ApolloRTCCMFD::menuSetAGCEphemBRCSEpoch()
 {
 	bool AGCEphemBRCSEpochInput(void* id, char *str, void *data);
@@ -7744,6 +7813,27 @@ void ApolloRTCCMFD::set_AGCEphemTEphemZero(double mjd)
 	this->G->AGCEphemTEphemZero = mjd;
 }
 
+void ApolloRTCCMFD::menuSetAGCEphemTEPHEM()
+{
+	bool AGCEphemTEPHEMInput(void* id, char *str, void *data);
+	oapiOpenInputBox("MJD of launch:", AGCEphemTEPHEMInput, 0, 20, (void*)this);
+}
+
+bool AGCEphemTEPHEMInput(void *id, char *str, void *data)
+{
+	if (strlen(str)<20)
+	{
+		((ApolloRTCCMFD*)data)->set_AGCEphemTEPHEM(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCEphemTEPHEM(double mjd)
+{
+	this->G->AGCEphemTEPHEM = mjd;
+}
+
 void ApolloRTCCMFD::menuSetAGCEphemTIMEM0()
 {
 	bool AGCEphemTIMEM0Input(void* id, char *str, void *data);
@@ -7765,9 +7855,40 @@ void ApolloRTCCMFD::set_AGCEphemTIMEM0(double mjd)
 	this->G->AGCEphemTIMEM0 = mjd;
 }
 
+
+void ApolloRTCCMFD::menuSetAGCEphemTLAND()
+{
+	bool AGCEphemTLANDInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET of lunar landing (Format: hhh:mm:ss)", AGCEphemTLANDInput, 0, 20, (void*)this);
+}
+
+bool AGCEphemTLANDInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_AGCEphemTLAND(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_AGCEphemTLAND(double get)
+{
+	G->AGCEphemTLAND = get;
+}
+
 void ApolloRTCCMFD::menuGenerateAGCEphemeris()
 {
-	G->GenerateAGCEphemeris();
+	if (G->AGCEphemOption == 0)
+	{
+		G->GenerateAGCEphemeris();
+	}
+	else
+	{
+		G->GenerateAGCCorrectionVectors();
+	}
 }
 
 void ApolloRTCCMFD::menuAscentPADCalc()
