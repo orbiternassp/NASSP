@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LMGuidanceSim.h"
 
 const double AscentGuidance::F_APS = 15297.43;
-const double AscentGuidance::F_DPS = 41541.75;
+const double AscentGuidance::F_DPS = 43203.3275;
 const double AscentGuidance::Isp_APS = (308.8 * G);
 const double AscentGuidance::Isp_DPS = 3107.0;
 const double AscentGuidance::mu_M = GGRAV * 7.34763862e+22;
@@ -201,17 +201,20 @@ const double DescentGuidance::UT = 7.5;
 const double DescentGuidance::TRMT = 26.0;
 const double DescentGuidance::THRUL = 889.644;
 const double DescentGuidance::THRTRM = 4670.633;
-const double DescentGuidance::THRMAX = 41541.75;
+const double DescentGuidance::THRMAX = 43203.3275;
 const double DescentGuidance::ULISP = 268.0*G;
 const double DescentGuidance::XKISP = 3107.0;
 const double DescentGuidance::mu_M = GGRAV * 7.34763862e+22;
 const double DescentGuidance::MAXFORCE = 28023.8;
 const double DescentGuidance::MINFORCE = 4359.26;
+const double DescentGuidance::LOWCRIT = 5985.0*4.4482216152605;
+const double DescentGuidance::HIGHCRIT = 6615.0*4.4482216152605;
 
 DescentGuidance::DescentGuidance()
 {
 	PHASE = 0;
 	t_go = 0.0;
+	Thrust_old = 0.0;
 }
 
 void DescentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W)
@@ -361,22 +364,53 @@ void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VEC
 	}
 	A_FDP = tmul(C_GP, ACG) - GP;
 
-	if (PHASE >= 0)
+	//P63 and P64
+	if (PHASE == 0 || PHASE == 1)
+	{
+		FC = length(A_FDP)*M;
+
+		if (Thrust_old > HIGHCRIT)
+		{
+			if (FC > LOWCRIT)
+			{
+				//Hold throttle up
+				Thrust = Thrust_old;
+			}
+			else
+			{
+				//Throttle down
+				Thrust = FC;
+			}
+		}
+		else
+		{
+			if (FC > HIGHCRIT)
+			{
+				//Throttle up
+				Thrust = THRMAX;
+			}
+			else
+			{
+				//Continuous Throttling
+				Thrust = FC;
+			}
+		}
+	}
+	//P66
+	else if (PHASE == 2)
 	{
 		FC = length(A_FDP)*M;
 		if (FC > MAXFORCE)
 		{
-			Thrust = THRMAX;
+			Thrust = MAXFORCE;
 		}
 		else if (FC < MINFORCE)
 		{
 			Thrust = MINFORCE;
 		}
-		else
-		{
-			Thrust = FC;
-		}
 	}
+
+	Thrust_old = Thrust;
 
 	U_FDI = tmul(REFSMMAT, unit(A_FDP));
 	ttgo = t_go;
