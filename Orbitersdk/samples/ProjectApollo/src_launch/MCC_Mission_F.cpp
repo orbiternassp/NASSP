@@ -584,5 +584,16 @@ void MCC::MissionSequence_F()
 		break;
 		}
 		break;
+	case MST_F_ABORT_ORBIT:
+	{
+		if (AbortMode == 5) //Earth Orbit Abort
+		{
+			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			{
+				setState(MST_LANDING);
+			}
+		}
+	}
+	break;
 	}
 }

@@ -403,5 +403,16 @@ void MCC::MissionSequence_G()
 	case MST_G_LUNAR_ORBIT_PRE_PDI2_1: //PDI2 PAD to
 		UpdateMacro(UTP_PADONLY, PT_AP11PDIPAD, SubStateTime > 3.0*60.0, 170, MST_G_LUNAR_ORBIT_PDI_DAY_14);
 		break;
+	case MST_G_ABORT_ORBIT:
+	{
+		if (AbortMode == 5) //Earth Orbit Abort
+		{
+			if (cm->stage == CM_ENTRY_STAGE_SEVEN)
+			{
+				setState(MST_LANDING);
+			}
+		}
+	}
+	break;
 	}
 }

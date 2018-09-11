@@ -3949,21 +3949,38 @@ void MCC::initiateAbort()
 		{
 			setState(MST_CP_ABORT_ORBIT);
 		}
+		else if (MissionType == MTP_F)
+		{
+			setState(MST_F_ABORT_ORBIT);
+		}
+		else if (MissionType == MTP_G)
+		{
+			setState(MST_G_ABORT_ORBIT);
+		}
 	}
 	else if (MissionPhase == MMST_TL_COAST)
 	{
 		AbortMode = 6;
-		setState(MST_CP_ABORT);
+		if (MissionType == MTP_C_PRIME)
+		{
+			setState(MST_CP_ABORT);
+		}
 	}
 	else if (MissionPhase == MMST_LUNAR_ORBIT)
 	{
 		AbortMode = 7;
-		setState(MST_CP_ABORT);
+		if (MissionType == MTP_C_PRIME)
+		{
+			setState(MST_CP_ABORT);
+		}
 	}
 	else if (MissionPhase == MMST_TE_COAST)
 	{
 		AbortMode = 8;
-		setState(MST_CP_ABORT);
+		if (MissionType == MTP_C_PRIME)
+		{
+			setState(MST_CP_ABORT);
+		}
 	}
 }
 
