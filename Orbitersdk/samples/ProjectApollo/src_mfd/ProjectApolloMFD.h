@@ -56,6 +56,10 @@ public:
 	void menuPressEnterOnCMCLGC(void);
 	void menuPressEnterOnDSKYDEDA(void);
 	void menuCycleLMAlignType();
+	bool SetImpactTIG(char *rstr);
+	bool SetImpactBT(char *rstr);
+	bool SetImpactPitch(char *rstr);
+	bool SetImpactYaw(char *rstr);
 
 	void menuVoid();
 	void menuSetMainPage();
@@ -91,6 +95,10 @@ public:
 	void menuSetSwitSelChannel();
 	void menuIUUplink();
 	void menuSetTBUpdateTime();
+	void menuSetImpactTIG();
+	void menuSetImpactBT();
+	void menuSetImpactPitch();
+	void menuSetImpactYaw();
 
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
