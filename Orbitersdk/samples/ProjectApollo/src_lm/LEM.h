@@ -117,6 +117,8 @@ public:
 	bool IsVelocityDataGood() { return velocityGood == 1; };
 	double GetAltitude() { return range*0.3048; };
 	double GetAltitudeRate() { return rate[0]*0.3048; };
+	double GetAltTransmitterPower();
+	double GetVelTransmitterPower();
 
 	bool IsPowered(); 
 
