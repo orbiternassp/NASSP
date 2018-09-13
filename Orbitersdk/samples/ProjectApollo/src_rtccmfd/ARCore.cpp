@@ -653,6 +653,8 @@ ARCore::ARCore(VESSEL* v)
 		DOI_PeriAng = 16.0*RAD;
 		DOI_option = 1;
 		DOI_N = 10;
+		//For PTC REFSMMAT
+		REFSMMATTime = OrbMech::HHMMSSToSS(166, 2, 50);
 	}
 	else if (mission == 17)
 	{
