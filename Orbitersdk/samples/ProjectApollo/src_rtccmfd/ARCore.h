@@ -376,6 +376,7 @@ public:
 	double PDAPABTCOF[8];	//Luminary099 abort coefficients
 	double DEDA224, DEDA225, DEDA226;
 	int DEDA227;
+	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin;
 
 	//Erasable Memory Programs
 	int EMPUplinkType;	// 0 = P99

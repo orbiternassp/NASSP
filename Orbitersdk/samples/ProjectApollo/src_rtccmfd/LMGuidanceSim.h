@@ -112,10 +112,14 @@ protected:
 	static const double XKISP;
 	//Lunar gravitational constant
 	static const double mu_M;
-	//Maximum force in throttable region
+	//Maximum force in throttable region (P66)
 	static const double MAXFORCE;
-	///Minimum force in throttable region
+	//Minimum force in throttable region (P66)
 	static const double MINFORCE;
+	//Lower end of throttlable upper limit
+	static const double LOWCRIT;
+	//Upper end of throttlable upper limit
+	static const double HIGHCRIT;
 	//Braking and approach phase position targets 
 	double XRD[6];
 	//Braking and approach phase velocity targets 
@@ -137,6 +141,8 @@ protected:
 	VECTOR3 ULP, UXGP, UYGP, UZGP, WXR, RG, VG, ACG, A_FDP;
 	MATRIX3 C_GP;
 	double FC;
+	//Thrust of previous cycle
+	double Thrust_old;
 };
 
 class AscDescIntegrator

@@ -8601,10 +8601,10 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	v_IGG = 1690.256208;
 	r_IGXG = -39782.453328;
 	r_IGZG = -436655.657;
-	K_X = -0.617631;
-	K_Y = -2.4770341207e-6;
-	K_V = -410.0;
-	J_TZG = 0.01882677*0.3048 / 8.0;
+	K_X = 0.617631;
+	K_Y = 2.4770341207e-6;
+	K_V = 410.0;
+	J_TZG = -0.01882677*0.3048;
 	A_TZG = -54.6264*0.3048 / 6.0;
 	V_TZG = -18.72*0.3048 / 18.0;
 	R_TG = _V(52.375308, 0.0, -3254.836061);
@@ -8720,21 +8720,25 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	DescentGuidance descguid;
 	AscentGuidance ascguid;
 	AscDescIntegrator integ;
-	SV sv_I_guess, sv_IG, sv_D, sv_CSM_Ins, sv_LM_Ins, sv_Abort;
-	MATRIX3 Rot;
+	SV sv_I_guess, sv_IG, sv_D, sv_CSM_Ins, sv_LM_Ins, sv_Abort, sv_CAN, sv_CAN_apo, sv_CSM_Abort;
+	MATRIX3 Rot, Q_Xx;
 	VECTOR3 U_FDP, WM, WI, W, R_LSP, U_FDP_abort;
 	double t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, t_Ins, TS, theta, mu, r_Ins, A_Ins, H_a, t_CSI, DH_D;
-	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min;
+	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, t_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo;
 	int K_loop;
 	bool K_stage;
+	//false = CSI/CDH, true = Boost + CSI/CDH
+	bool K3;
 	bool LandFlag = false;
 	bool InsertionFlag = false;
+	bool stop = false;
 	std::vector<double> t_Abort_Table;
 	std::vector<double> dV_Abort_Table;
 	std::vector<double> Phase_Table;
 	std::vector<double> A_ins_Table;
 	int i = 0;
 
+	K3 = false;
 	w_M = 2.66169948e-6;
 	t_UL = 7.9;
 	Z_D_dot = 5650.0*0.3048;
@@ -8742,11 +8746,15 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
 	DH_D = 15.0*1852.0;
 	V_H_min = 5515.0*0.3048;
+	dt_CSI = opt.dt_CSI;
+	dt_CAN = opt.dt_CAN;
 	conopt.E = 26.6*RAD;
 	conopt.GETbase = opt.GETbase;
 	conopt.maneuver = 0;
 	conopt.type = 0;
 	conopt.t_TPI = opt.t_TPI;
+
+	res.R_amin = length(opt.R_LS) + opt.h_amin;
 
 	dt_abort = opt.dt_step;
 	sv_I_guess = coast(opt.sv_A, opt.TLAND - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
@@ -8767,8 +8775,13 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	W_TD = opt.sv_A.mass;
 	U_FDP_abort = tmul(opt.REFSMMAT, unit(U_FDP));
 
+	res.DEDA225 = (length(R_LSP) + 60000.0*0.3048 + length(R_LSP) + opt.h_amin) / 2.0;
+	res.DEDA226 = 7031200.0*0.3048;
+
 	do
 	{
+		stop = false;
+
 		integ.Init(U_FDP_abort);
 		sv_D = sv_Abort;
 		K_loop = 0;
@@ -8798,6 +8811,11 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 		T = 43192.23;
 		sv_Abort = sv_D;
 		U_FDP_abort = U_FDP;
+
+		sv_CSM_Abort = coast(opt.sv_P, t_D - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
+		WM = unit(crossp(sv_CSM_Abort.V, sv_CSM_Abort.R));
+		TS = dotp(crossp(unit(sv_CSM_Abort.R), unit(sv_Abort.R)), WM);
+		theta_D = OrbMech::sign(TS)*acos(dotp(unit(sv_CSM_Abort.R), unit(sv_Abort.R)));
 
 		do
 		{
@@ -8839,16 +8857,35 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			sv_LM_Ins = sv_D;
 			sv_LM_Ins.mass = W_TA;
 			sv_LM_Ins.MJD = OrbMech::MJDfromGET(t_Ins, opt.GETbase);
+
+			//Overwrite actual insertion velocity with desired one; gives more consistent results
+			Q_Xx = OrbMech::LVLH_Matrix(sv_LM_Ins.R, sv_LM_Ins.V);
+			sv_LM_Ins.V = tmul(Q_Xx, _V(Z_D_dot, 0, -R_D_dot));
+
 			sv_CSM_Ins = coast(opt.sv_P, t_Ins - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 			WM = unit(crossp(sv_CSM_Ins.V, sv_CSM_Ins.R));
-			TS = dotp(crossp(unit(sv_CSM_Ins.R), unit(sv_D.R)), WM);
-			theta = OrbMech::sign(TS)*acos(dotp(unit(sv_CSM_Ins.R), unit(sv_D.R)));
+			TS = dotp(crossp(unit(sv_CSM_Ins.R), unit(sv_LM_Ins.R)), WM);
+			theta = OrbMech::sign(TS)*acos(dotp(unit(sv_CSM_Ins.R), unit(sv_LM_Ins.R)));
+			
 			r_Ins = length(sv_D.R);
 			A_Ins = mu * r_Ins / (2.0*mu - r_Ins * Z_D_dot*Z_D_dot);
 			H_a = 2.0*A_Ins - r_Ins - length(opt.R_LS);
-			t_CSI = t_Ins + opt.dt_CSI;
+			R_a = 2.0*A_Ins - r_Ins;
+			t_CSI = t_Ins + dt_CSI;
 
-			conopt.sv_A = sv_LM_Ins;
+			if (K3 == false || dt_CAN <= 0.0 || opt.dv_CAN <= 0.0)
+			{
+				conopt.sv_A = sv_LM_Ins;
+			}
+			else
+			{
+				t_CAN = t_Ins + dt_CAN;
+				sv_CAN = coast(sv_LM_Ins, t_CAN - t_Ins);
+				sv_CAN_apo = sv_CAN;
+				sv_CAN_apo.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.R, sv_CAN.V), _V(opt.dv_CAN, 0.0, 0.0));
+				conopt.sv_A = sv_CAN_apo;
+			}
+
 			conopt.sv_P = sv_CSM_Ins;
 			conopt.t_TIG = t_CSI;
 
@@ -8856,7 +8893,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			K_loop++;
 			if (K_loop > 1)
 			{
-				SLOPE = dV_Inc / (DH_D - dh_apo);
+				SLOPE = dV_Inc / (conres.DH - dh_apo);
 			}
 
 			dV_Inc = SLOPE * (DH_D - conres.DH);
@@ -8865,13 +8902,52 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 
 		} while (abs(dV_Inc) > 0.1*0.3048 && K_loop < 10);
 
-		t_Abort_Table.push_back(dt_abort);
-		dV_Abort_Table.push_back(Z_D_dot);
-		Phase_Table.push_back(theta);
-		A_ins_Table.push_back(A_Ins);
-		dt_abort += opt.dt_step;
+		if (opt.IsTwoSegment && R_a < res.R_amin)
+		{
+			if (K3 == false)
+			{
+				K_loop = 0;
+				dt_CSI += opt.dt_2CSI;
+				conopt.t_TPI += opt.dt_2TPI;
+				res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo)*(res.R_amin - R_a_apo);
+				if (dt_CAN >= dt_CSI)
+				{
+					dt_CAN = 0.0;
+				}
 
-	} while (Z_D_dot > V_H_min);
+				OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K1, res.J1);
+				res.DEDA227 = res.K1;
+				res.DEDA224 = res.J1;
+				Phase_Table.clear();
+				A_ins_Table.clear();
+				K3 = true;
+			}
+			else
+			{
+				OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K2, res.J2);
+				stop = true;
+			}
+		}
+		else
+		{
+			t_Abort_Table.push_back(dt_abort);
+			dV_Abort_Table.push_back(Z_D_dot);
+			Phase_Table.push_back(theta);
+			A_ins_Table.push_back(A_Ins);
+			theta_apo = theta_D;
+			dt_abort += opt.dt_step;
+			R_a_apo = R_a;
+		}
+
+		if (!opt.IsTwoSegment && Z_D_dot <= V_H_min)
+		{
+			stop = true;
+		}
+
+	} while (stop == false);
+
+	//If we use the two segment logic, then everything has already been calculated
+	if (opt.IsTwoSegment) return true;
 
 	//Apollo 11: First 4 solutions from T vs. V_H table for cubic function
 	if (dV_Abort_Table.size() < 4)
@@ -8890,9 +8966,6 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	res.ABTCOF4 = coeff[3];
 
 	OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.DEDA227, res.DEDA224);
-
-	res.DEDA225 = (length(R_LSP) + 60000.0*0.3048 + length(R_LSP) + 30.0*1852.0) / 2.0;
-	res.DEDA226 = 7031200.0*0.3048;
 
 	return true;
 }

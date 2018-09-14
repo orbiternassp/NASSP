@@ -653,6 +653,8 @@ ARCore::ARCore(VESSEL* v)
 		DOI_PeriAng = 16.0*RAD;
 		DOI_option = 1;
 		DOI_N = 10;
+		//For PTC REFSMMAT
+		REFSMMATTime = OrbMech::HHMMSSToSS(166, 2, 50);
 	}
 	else if (mission == 17)
 	{
@@ -831,6 +833,12 @@ ARCore::ARCore(VESSEL* v)
 	DEDA225 = 0.0;
 	DEDA226 = 0.0;
 	DEDA227 = 0;
+	PDAP_J1 = 0.0;
+	PDAP_J2 = 0.0;
+	PDAP_K1 = 0.0;
+	PDAP_K2 = 0.0;
+	PDAP_Theta_LIM = 0.0;
+	PDAP_R_amin = 0.0;
 
 	fidoorbit.A = 0.0;
 	fidoorbit.E = 0.0;
@@ -3314,8 +3322,8 @@ int ARCore::subThread()
 			opt.sv_A = rtcc->ExecuteManeuver(vessel, GETbase, P30TIG, dV_LVLH, sv_LM, 0.0);
 		}
 
-		opt.dt_step = 120.0;
 		opt.GETbase = GETbase;
+		opt.IsTwoSegment = mission > 11;
 		opt.REFSMMAT = REFSMMAT;
 		opt.R_LS = rtcc->RLS_from_latlng(LSLat, LSLng, LSAlt);
 		opt.sv_P = rtcc->StateVectorCalc(target);
@@ -3323,27 +3331,49 @@ int ARCore::subThread()
 		opt.t_TPI = t_TPI;
 		opt.W_TAPS = m0;
 		opt.W_TDRY = opt.sv_A.mass - vessel->GetPropellantMass(vessel->GetPropellantHandleByIndex(0));
-
-		rtcc->PoweredDescentAbortProgram(opt, res);
-
-		if (PDAPEngine == 0)
+		if (opt.IsTwoSegment)
 		{
-			PDAPABTCOF[0] = res.ABTCOF1;
-			PDAPABTCOF[1] = res.ABTCOF2;
-			PDAPABTCOF[2] = res.ABTCOF3;
-			PDAPABTCOF[3] = res.ABTCOF4;
+			opt.dt_step = 20.0;
 		}
 		else
 		{
-			PDAPABTCOF[4] = res.ABTCOF1;
-			PDAPABTCOF[5] = res.ABTCOF2;
-			PDAPABTCOF[6] = res.ABTCOF3;
-			PDAPABTCOF[7] = res.ABTCOF4;
+			opt.dt_step = 120.0;
 		}
-		DEDA224 = res.DEDA224;
-		DEDA225 = res.DEDA225;
-		DEDA226 = res.DEDA226;
-		DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
+
+		if (PADSolGood = rtcc->PoweredDescentAbortProgram(opt, res))
+		{
+			if (opt.IsTwoSegment == false)
+			{
+				if (PDAPEngine == 0)
+				{
+					PDAPABTCOF[0] = res.ABTCOF1;
+					PDAPABTCOF[1] = res.ABTCOF2;
+					PDAPABTCOF[2] = res.ABTCOF3;
+					PDAPABTCOF[3] = res.ABTCOF4;
+				}
+				else
+				{
+					PDAPABTCOF[4] = res.ABTCOF1;
+					PDAPABTCOF[5] = res.ABTCOF2;
+					PDAPABTCOF[6] = res.ABTCOF3;
+					PDAPABTCOF[7] = res.ABTCOF4;
+				}
+			}
+			else
+			{
+				PDAP_J1 = res.J1;
+				PDAP_J2 = res.J2;
+				PDAP_K1 = res.K1;
+				PDAP_K2 = res.K2;
+				PDAP_Theta_LIM = res.Theta_LIM;
+				PDAP_R_amin = res.R_amin;
+			}
+
+			DEDA224 = res.DEDA224;
+			DEDA225 = res.DEDA225;
+			DEDA226 = res.DEDA226;
+			DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
+		}
 
 		Result = 0;
 	}

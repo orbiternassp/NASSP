@@ -868,6 +868,18 @@ struct PDAPOpt //Powered Descent Abort Program
 	double dt_CSI = 50.0*60.0;
 	//Time of TPI
 	double t_TPI;
+	//dt added to dt_CSI for generation of the second set of targeting coefficients
+	double dt_2CSI = 110.0*60.0;
+	//dt added to t_TPI for generation of the second set of targeting coefficients
+	double dt_2TPI = 7117.0;
+	//One or two segments (Apollo 11 style vs. all later missions)
+	bool IsTwoSegment = false;
+	//time between orbit insertion and the canned maneuver
+	double dt_CAN = 50.0*60.0;
+	//DV of the canned maneuver
+	double dv_CAN = 10.0*0.3048;
+	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
+	double h_amin = 30.0*1852.0;
 };
 
 struct PDAPResults
@@ -885,6 +897,11 @@ struct PDAPResults
 	double DEDA226;
 	//Factor in LM desired semi-major axis
 	double DEDA227;
+	//Limiting phase angle
+	double Theta_LIM;
+	//Minimum apolune radius permitted in the insertion orbit
+	double R_amin;
+	double K1, K2, J1, J2;
 };
 
 struct DockAlignOpt	//Docking Alignment Processor

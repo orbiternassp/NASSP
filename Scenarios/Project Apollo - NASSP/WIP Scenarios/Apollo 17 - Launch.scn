@@ -310,6 +310,7 @@ America:ProjectApollo\Saturn5
   AUTOSLOW 1
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\LM Default Checklists.xls
 LVDC_BEGIN
+  LVDC_FSPFileName Config\ProjectApollo\J-Mission Flight Sequence Program.txt
   LVDC_SIICenterEngineCutoff 1
   LVDC_ALFTSA 14.267
   LVDC_ALFTSB 14.263
@@ -560,6 +561,8 @@ LVDC_BEGIN
   CMPAD1712 70267
   CMPAD1713 0
   CMPAD1714 1
+  CMPAD1715 37777
+  CMPAD1716 37777
   CMPAD1733 12703
   CMPAD1734 14105
   CMPAD1735 1733

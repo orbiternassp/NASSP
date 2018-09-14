@@ -246,11 +246,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[2][0272] = 0;
 				vagc.Erasable[2][0273] = (int16_t)(0.5 * OurVessel->GetAltitude());
 
-				// z-component of the normalized earth's rotational vector in basic reference coord.
-				// x and y are 0313 and 0315 and are defined in the scenario
-				vagc.Erasable[3][0317] = 037777;
-				vagc.Erasable[3][0320] = 037777;
-
 				TEPHEM0 = 40038.;
 			}
 			else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
@@ -264,11 +259,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				//vagc.Erasable[2][0272] = 01;	// 17.7 nmi
 				vagc.Erasable[2][0272] = 0;
 				vagc.Erasable[2][0273] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				// z-component of the normalized earth's rotational vector in basic reference coord.
-				// x and y are 0313 and 0315 and are defined in the scenario
-				vagc.Erasable[3][0317] = 037777;
-				vagc.Erasable[3][0320] = 037777;
 
 				TEPHEM0 = 40403.;
 			}
@@ -284,11 +274,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				vagc.Erasable[2][0133] = 0;
 				vagc.Erasable[2][0134] = (int16_t)(0.5 * OurVessel->GetAltitude());
 
-				// z-component of the normalized earth's rotational vector in basic reference coord.
-				// x and y are 0313 and 0315 and are zero
-				vagc.Erasable[3][0315] = 037777;
-				vagc.Erasable[3][0316] = 037777;
-
 				TEPHEM0 = 40768.;
 			}
 			else	//Artemis 072
@@ -302,11 +287,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 				//vagc.Erasable[2][0133] = 01;	// 17.7 nmi
 				vagc.Erasable[2][0133] = 0;
 				vagc.Erasable[2][0134] = (int16_t)(0.5 * OurVessel->GetAltitude());
-
-				// z-component of the normalized earth's rotational vector in basic reference coord.
-				// x and y are 0313 and 0315 and are zero
-				vagc.Erasable[3][0315] = 037777;
-				vagc.Erasable[3][0316] = 037777;
 
 				TEPHEM0 = 41133.;
 			}

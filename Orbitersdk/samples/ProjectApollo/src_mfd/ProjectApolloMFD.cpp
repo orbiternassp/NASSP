@@ -102,6 +102,10 @@ static struct ProjectApolloMFDData {  // global data storage
 	int iuUplinkSwitSelChannel;
 	int iuUplinkResult;
 	double iuUplinkTimebaseUpdateTime;
+	double iuUplinkTIG;
+	double iuUplinkDT;
+	double iuUplinkPitch;
+	double iuUplinkYaw;
 	bool lmAlignType;	//true = same REFSMMAT; false = nominal alignments
 
 	VECTOR3 V42angles;
@@ -160,6 +164,11 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.iuUplinkSwitSelChannel = 1;
 	g_Data.iuUplinkResult = 0;
 	g_Data.lmAlignType = true;
+	g_Data.iuUplinkTimebaseUpdateTime = 0.0;
+	g_Data.iuUplinkTIG = 0.0;
+	g_Data.iuUplinkDT = 0.0;
+	g_Data.iuUplinkPitch = 0.0;
+	g_Data.iuUplinkYaw = 0.0;
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -954,6 +963,26 @@ void ProjectApolloMFD::Update (HDC hDC)
 		{
 			SetTextAlign(hDC, TA_CENTER);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "Execute Comm Maneuver", 21);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+		{
+			SetTextAlign(hDC, TA_CENTER);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.35), "S-IVB/IU Lunar Impact", 21);
+
+			SetTextAlign(hDC, TA_LEFT);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.45), "TIG:", 6);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.5), "BT:", 8);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.55), "Pitch:", 8);
+			TextOut(hDC, (int)(width * 0.1), (int)(height * 0.6), "Yaw:", 8);
+
+			sprintf(buffer, "TB8+%.0f s", g_Data.iuUplinkTIG);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
+			sprintf(buffer, "%.1f s", g_Data.iuUplinkDT);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
+			sprintf(buffer, "%.01f°", g_Data.iuUplinkPitch*DEG);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), buffer, strlen(buffer));
+			sprintf(buffer, "%.01f°", g_Data.iuUplinkYaw*DEG);
+			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.6), buffer, strlen(buffer));
 		}
 
 		SetTextAlign (hDC, TA_CENTER);
@@ -1803,7 +1832,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 7)
+	if (g_Data.iuUplinkType < 8)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -1852,6 +1881,98 @@ void ProjectApolloMFD::menuSetTBUpdateTime()
 		bool TimebaseUpdateInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Increment the current LVDC timebase time [4-124 seconds]:", TimebaseUpdateInput, 0, 20, (void*)this);
 	}
+}
+
+void ProjectApolloMFD::menuSetImpactTIG()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		g_Data.iuUplinkResult = 0;
+
+		bool ImpactTIGInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Time of ignition of S-IVB/IU impact burn:", ImpactTIGInput, 0, 20, (void*)this);
+	}
+}
+
+bool ProjectApolloMFD::SetImpactTIG(char *rstr)
+{
+	double f;
+
+	if (sscanf(rstr, "%lf", &f) == 1) {
+		g_Data.iuUplinkTIG = f;
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
+}
+
+void ProjectApolloMFD::menuSetImpactBT()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		g_Data.iuUplinkResult = 0;
+
+		bool ImpactBTInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Burntime of S-IVB/IU impact burn:", ImpactBTInput, 0, 20, (void*)this);
+	}
+}
+
+bool ProjectApolloMFD::SetImpactBT(char *rstr)
+{
+	double f;
+
+	if (sscanf(rstr, "%lf", &f) == 1) {
+		g_Data.iuUplinkDT = f;
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
+}
+
+void ProjectApolloMFD::menuSetImpactPitch()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		g_Data.iuUplinkResult = 0;
+
+		bool ImpactPitchInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Pitch of S-IVB/IU impact burn:", ImpactPitchInput, 0, 20, (void*)this);
+	}
+}
+
+bool ProjectApolloMFD::SetImpactPitch(char *rstr)
+{
+	double f;
+
+	if (sscanf(rstr, "%lf", &f) == 1) {
+		g_Data.iuUplinkPitch = f*RAD;
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
+}
+
+void ProjectApolloMFD::menuSetImpactYaw()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		g_Data.iuUplinkResult = 0;
+
+		bool ImpactYawInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Yaw of S-IVB/IU impact burn:", ImpactYawInput, 0, 20, (void*)this);
+	}
+}
+
+bool ProjectApolloMFD::SetImpactYaw(char *rstr)
+{
+	double f;
+
+	if (sscanf(rstr, "%lf", &f) == 1) {
+		g_Data.iuUplinkYaw = f*RAD;
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
 }
 
 void ProjectApolloMFD::menuIUUplink()
@@ -1930,6 +2051,19 @@ void ProjectApolloMFD::menuIUUplink()
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}
 	break;
+	case DCSUPLINK_SIVBIU_LUNAR_IMPACT:
+	{
+		DCSLUNARIMPACT upl;
+
+		upl.tig = g_Data.iuUplinkTIG;
+		upl.dt = g_Data.iuUplinkDT;
+		upl.pitch = g_Data.iuUplinkPitch;
+		upl.yaw = g_Data.iuUplinkYaw;
+
+		uplink = &upl;
+		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
+	}
+	break;
 	}
 
 	if (uplinkaccepted)
@@ -2003,6 +2137,26 @@ bool SwitchSelectorChannelInput(void *id, char *str, void *data)
 bool TimebaseUpdateInput(void *id, char *str, void *data)
 {
 	return ((ProjectApolloMFD*)data)->SetTimebaseUpdate(str);
+}
+
+bool ImpactTIGInput(void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetImpactTIG(str);
+}
+
+bool ImpactBTInput(void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetImpactBT(str);
+}
+
+bool ImpactPitchInput(void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetImpactPitch(str);
+}
+
+bool ImpactYawInput(void *id, char *str, void *data)
+{
+	return ((ProjectApolloMFD*)data)->SetImpactYaw(str);
 }
 
 ProjectApolloMFD::ScreenData ProjectApolloMFD::screenData = {PROG_NONE};

@@ -240,3 +240,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_F_TRANSEARTH_12	411
 // Ends at CM/SM separation
 #define MST_F_TRANSEARTH_13	412
+
+//ABORTS
+// Ends at entry interface, goes to entry.
+#define MST_F_ABORT_ORBIT	500

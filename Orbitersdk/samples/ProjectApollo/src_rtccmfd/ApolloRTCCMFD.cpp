@@ -3616,6 +3616,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Descent Abort", 13);
 
+		if (G->subThreadStatus > 0)
+		{
+			skp->Text(5 * W / 8, 3 * H / 14, "Calculating...", 14);
+		}
+		else if (!G->PADSolGood)
+		{
+			skp->Text(5 * W / 8, 3 * H / 14, "Calculation failed!", 19);
+		}
+
 		if (G->PDAPEngine == 0)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "DPS/APS", 7);
@@ -3630,22 +3639,46 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 3 * H / 21, Buffer, strlen(Buffer));
 
 		skp->Text(1 * W / 8, 5 * H / 21, "PGNS Coefficients:", 18);
-		sprintf(Buffer, "%e", G->PDAPABTCOF[0] / 0.3048);
-		skp->Text(1 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%e", G->PDAPABTCOF[1] / 0.3048);
-		skp->Text(1 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%e", G->PDAPABTCOF[2] / 0.3048);
-		skp->Text(1 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->PDAPABTCOF[3] / 0.3048);
-		skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%e", G->PDAPABTCOF[4] / 0.3048);
-		skp->Text(1 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%e", G->PDAPABTCOF[5] / 0.3048);
-		skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%e", G->PDAPABTCOF[6] / 0.3048);
-		skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%f", G->PDAPABTCOF[7] / 0.3048);
-		skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		if (G->mission <= 11)
+		{
+			sprintf(Buffer, "%e", G->PDAPABTCOF[0] / 0.3048);
+			skp->Text(1 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%e", G->PDAPABTCOF[1] / 0.3048);
+			skp->Text(1 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%e", G->PDAPABTCOF[2] / 0.3048);
+			skp->Text(1 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->PDAPABTCOF[3] / 0.3048);
+			skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%e", G->PDAPABTCOF[4] / 0.3048);
+			skp->Text(1 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%e", G->PDAPABTCOF[5] / 0.3048);
+			skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%e", G->PDAPABTCOF[6] / 0.3048);
+			skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->PDAPABTCOF[7] / 0.3048);
+			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 6 * H / 21, "J1", 2);
+			sprintf(Buffer, "%.4f NM", G->PDAP_J1 / 1852.0);
+			skp->Text(2 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 7 * H / 21, "K1", 2);
+			sprintf(Buffer, "%.4f NM/DEG", G->PDAP_K1 / 1852.0 / DEG);
+			skp->Text(2 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 8 * H / 21, "J2", 2);
+			sprintf(Buffer, "%.4f NM", G->PDAP_J2 / 1852.0);
+			skp->Text(2 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 9 * H / 21, "K2", 2);
+			sprintf(Buffer, "%.4f NM/DEG", G->PDAP_K2 / 1852.0 / DEG);
+			skp->Text(2 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 10 * H / 21, "THET", 4);
+			sprintf(Buffer, "%.4f°", G->PDAP_Theta_LIM*DEG);
+			skp->Text(2 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 11 * H / 21, "RMIN", 4);
+			sprintf(Buffer, "%.4f NM", G->PDAP_R_amin / 1852.0);
+			skp->Text(2 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+		}
 
 		skp->Text(1 * W / 8, 15 * H / 21, "AGS Coefficients:", 18);
 		skp->Text(1 * W / 8, 16 * H / 21, "224", 3);

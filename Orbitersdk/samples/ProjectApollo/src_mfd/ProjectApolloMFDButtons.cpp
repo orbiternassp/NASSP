@@ -74,15 +74,20 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("SEC", OAPI_KEY_S, &ProjectApolloMFD::menuSetSecECSTestHeaterPower);
 
 
-	static const MFDBUTTONMENU mnuIU[8] = {
+	static const MFDBUTTONMENU mnuIU[12] = {
 		{ "Back", 0, 'B' },
 		{ "Request Burn Data", 0, 'R' },
 		{ "Switch selector stage", 0, 'A' },
 		{ "Switch selector channel",0,'C' },
-		{ "Timebase update",0,0 },
+		{ "Timebase update",0,'D' },
 		{ "Change Source",0,'S' },
+
 		{ "IU uplink type",0,'T' },
-		{ 0,0,0 }
+		{ "Uplink to IU",0,'U' },
+		{ "Impact TIG",0,'I' },
+		{ "Impact burntime",0,'E' },
+		{ "Pitch angle",0,'P' },
+		{ "Yaw angle", 0, 'Y'}
 	};
 
 	RegisterPage(mnuIU, sizeof(mnuIU) / sizeof(MFDBUTTONMENU));
@@ -96,6 +101,10 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	RegisterFunction("TYP", OAPI_KEY_T, &ProjectApolloMFD::menuCycleIUUplinkType);
 	RegisterFunction("UPL", OAPI_KEY_U, &ProjectApolloMFD::menuIUUplink);
+	RegisterFunction("TIG", OAPI_KEY_I, &ProjectApolloMFD::menuSetImpactTIG);
+	RegisterFunction("BT", OAPI_KEY_E, &ProjectApolloMFD::menuSetImpactBT);
+	RegisterFunction("PIT", OAPI_KEY_P, &ProjectApolloMFD::menuSetImpactPitch);
+	RegisterFunction("YAW", OAPI_KEY_Y, &ProjectApolloMFD::menuSetImpactYaw);
 
 	static const MFDBUTTONMENU mnuTELE[11] = {
 		{ "Back", 0, 'B' },
