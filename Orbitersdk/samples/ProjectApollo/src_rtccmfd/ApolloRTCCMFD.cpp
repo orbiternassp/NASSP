@@ -447,7 +447,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "Maneuver Targeting", 18);
 		skp->Text(1 * W / 8, 4 * H / 14, "Pre-Advisory Data", 17);
 		skp->Text(1 * W / 8, 6 * H / 14, "Utility", 7);
-		skp->Text(1 * W / 8, 8 * H / 14, "Configuration", 13);
+		skp->Text(1 * W / 8, 8 * H / 14, "MCC Displays", 12);
+		skp->Text(1 * W / 8, 10 * H / 14, "Configuration", 13);
 	}
 	else if (screen == 1)
 	{
@@ -2548,7 +2549,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 4 * H / 14, "REFSMMAT", 8);
 		skp->Text(1 * W / 8, 6 * H / 14, "VECPOINT", 8);
 		skp->Text(1 * W / 8, 8 * H / 14, "Erasable Memory Programs", 24);
-		skp->Text(1 * W / 8, 10 * H / 14, "FIDO Orbit Digitals", 19);
 
 		skp->Text(5 * W / 8, 2 * H / 14, "LVDC", 4);
 		skp->Text(5 * W / 8, 4 * H / 14, "Terrain Model", 13);
@@ -3899,6 +3899,321 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%07.1f", G->fidoorbit.ORBWT);
 		skp->Text(13 * W / 16, 11 * H / 28, Buffer, strlen(Buffer));
 	}
+	else if (screen == 42)
+	{
+		skp->Text(1 * W / 8, 2 * H / 14, "FIDO Orbit Digitals", 19);
+		skp->Text(1 * W / 8, 4 * H / 14, "Space Digitals", 14);
+	}
+	else if (screen == 43)
+	{
+		G->CycleSpaceDigitals();
+
+		skp->Text(5 * W / 8, 1 * H / 64, "SPACE DIGITALS", 14);
+
+		skp->SetFont(font2);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(1 * W / 32, 2 * H / 28, "STA ID", 6);
+		skp->Text(1 * W / 32, 3 * H / 28, "GMTV", 4);
+		skp->Text(1 * W / 32, 5 * H / 28, "GET", 3);
+		skp->Text(1 * W / 32, 6 * H / 28, "REF", 3);
+		skp->Text(1 * W / 32, 8 * H / 28, "GET VECTOR", 10);
+		skp->Text(1 * W / 32, 10 * H / 28, "REF", 3);
+		skp->Text(1 * W / 32, 11 * H / 28, "AREA", 4);
+		skp->Text(1 * W / 32, 12 * H / 28, "GETA", 4);
+		skp->Text(1 * W / 32, 13 * H / 28, "HA", 2);
+		skp->Text(1 * W / 32, 14 * H / 28, "HP", 2);
+		skp->Text(1 * W / 32, 15 * H / 28, "H", 1);
+		skp->Text(1 * W / 32, 16 * H / 28, "V", 1);
+		skp->Text(1 * W / 32, 17 * H / 28, "GAM", 3);
+		skp->Text(1 * W / 32, 18 * H / 28, "PSI", 3);
+		skp->Text(1 * W / 32, 19 * H / 28, "PHI", 3);
+		skp->Text(1 * W / 32, 20 * H / 28, "LAM", 3);
+		skp->Text(1 * W / 32, 21 * H / 28, "HS", 2);
+		skp->Text(1 * W / 32, 22 * H / 28, "HO", 2);
+		skp->Text(1 * W / 32, 23 * H / 28, "PHIO", 4);
+		skp->Text(1 * W / 32, 24 * H / 28, "IEMP", 4);
+		skp->Text(1 * W / 32, 25 * H / 28, "W", 1);
+		skp->Text(1 * W / 32, 26 * H / 28, "OMG", 3);
+		skp->Text(1 * W / 32, 27 * H / 28, "PRA", 3);
+		skp->Text(8 * W / 32, 24 * H / 28, "A", 1);
+		skp->Text(8 * W / 32, 25 * H / 28, "L", 1);
+		skp->Text(8 * W / 32, 26 * H / 28, "E", 1);
+		skp->Text(8 * W / 32, 27 * H / 28, "I", 1);
+
+		skp->Text(11 * W / 32, 2 * H / 28, "WEIGHT", 6);
+		skp->Text(11 * W / 32, 3 * H / 28, "GETV", 4);
+		skp->Text(11 * W / 32, 8 * H / 28, "GET VECTOR 2", 12);
+		skp->Text(11 * W / 32, 10 * H / 28, "GETSI", 5);
+		skp->Text(11 * W / 32, 11 * H / 28, "GETCA", 5);
+		skp->Text(11 * W / 32, 12 * H / 28, "VCA", 3);
+		skp->Text(11 * W / 32, 13 * H / 28, "HCA", 3);
+		skp->Text(11 * W / 32, 14 * H / 28, "PCA", 3);
+		skp->Text(11 * W / 32, 15 * H / 28, "LCA", 3);
+		skp->Text(11 * W / 32, 16 * H / 28, "PSICA", 5);
+		skp->Text(11 * W / 32, 17 * H / 28, "GETMN", 5);
+		skp->Text(11 * W / 32, 18 * H / 28, "HMN", 3);
+		skp->Text(11 * W / 32, 19 * H / 28, "PMN", 3);
+		skp->Text(11 * W / 32, 20 * H / 28, "LMN", 3);
+		skp->Text(11 * W / 32, 21 * H / 28, "DMN", 3);
+
+		skp->Text(21 * W / 32, 3 * H / 28, "GET AXIS", 8);
+		skp->Text(21 * W / 32, 8 * H / 28, "GET VECTOR 3", 12);
+		skp->Text(21 * W / 32, 10 * H / 28, "GETSE", 5);
+		skp->Text(21 * W / 32, 11 * H / 28, "GETEI", 5);
+		skp->Text(21 * W / 32, 12 * H / 28, "VEI", 3);
+		skp->Text(21 * W / 32, 13 * H / 28, "GEI", 3);
+		skp->Text(21 * W / 32, 14 * H / 28, "PEI", 3);
+		skp->Text(21 * W / 32, 15 * H / 28, "LEI", 3);
+		skp->Text(21 * W / 32, 16 * H / 28, "PSIEI", 5);
+		skp->Text(21 * W / 32, 17 * H / 28, "GETVP", 5);
+		skp->Text(21 * W / 32, 18 * H / 28, "VVP", 3);
+		skp->Text(21 * W / 32, 19 * H / 28, "HVP", 3);
+		skp->Text(21 * W / 32, 20 * H / 28, "PVP", 3);
+		skp->Text(21 * W / 32, 21 * H / 28, "LVP", 3);
+		skp->Text(21 * W / 32, 22 * H / 28, "PSI VP", 6);
+		skp->Text(21 * W / 32, 26 * H / 28, "IE", 2);
+		skp->Text(21 * W / 32, 27 * H / 28, "LN", 2);
+
+		skp->Text(9 * W / 32, 5 * H / 28, "V", 1);
+		skp->Text(13 * W / 32, 5 * H / 28, "PHI", 3);
+		skp->Text(20 * W / 32, 5 * H / 28, "H", 1);
+		skp->Text(25 * W / 32, 5 * H / 28, "ADA", 3);
+
+		skp->Text(8 * W / 32, 6 * H / 28, "GAM", 3);
+		skp->Text(15 * W / 32, 6 * H / 28, "LAM", 3);
+		skp->Text(23 * W / 32, 6 * H / 28, "PSI", 3);
+
+		GET_Display(Buffer, G->spacedigit.GMTV, false);
+		skp->Text(4 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->spacedigit.GET, false);
+		skp->Text(4 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, G->spacedigit.REF);
+		skp->Text(4 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%07.1f", G->spacedigit.WEIGHT);
+		skp->Text(16 * W / 32, 2 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->spacedigit.GETV, false);
+		skp->Text(14 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%05.0f", G->spacedigit.V);
+		skp->Text(10 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.PHI > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->spacedigit.PHI);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->spacedigit.PHI));
+		}
+		skp->Text(15 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%06.0f", G->spacedigit.H);
+		skp->Text(21 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.2f°", G->spacedigit.ADA);
+		skp->Text(28 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%+06.1f°", G->spacedigit.GAM);
+		skp->Text(11 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.LAM > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->spacedigit.LAM);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->spacedigit.LAM));
+		}
+		skp->Text(18 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.1f°", G->spacedigit.PSI);
+		skp->Text(25 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer, G->spacedigit.GETVector1, false);
+		skp->Text(1 * W / 32, 9 * H / 28, Buffer, strlen(Buffer));
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		skp->Text(25 * W / 32, 2 * H / 28, "GETR", 4);
+
+		sprintf(Buffer, G->spacedigit.REF1);
+		skp->Text(7 * W / 32, 10 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->spacedigit.HA);
+		skp->Text(10 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->spacedigit.HP);
+		skp->Text(10 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->spacedigit.H1);
+		skp->Text(10 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.0f", G->spacedigit.V1);
+		skp->Text(10 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.1f°", G->spacedigit.GAM1);
+		skp->Text(10 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.1f°", G->spacedigit.PSI1);
+		skp->Text(10 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.PHI1 > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->spacedigit.PHI1);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->spacedigit.PHI1));
+		}
+		skp->Text(10 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.LAM1 > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->spacedigit.LAM1);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->spacedigit.LAM1));
+		}
+		skp->Text(10 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->spacedigit.HS);
+		skp->Text(10 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->spacedigit.HO);
+		skp->Text(10 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.PHIO > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->spacedigit.PHIO);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->spacedigit.PHIO));
+		}
+		skp->Text(10 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.2f°", G->spacedigit.IEMP);
+		skp->Text(7 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.2f°", G->spacedigit.W1);
+		skp->Text(7 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.2f°", G->spacedigit.OMG);
+		skp->Text(7 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.2f°", G->spacedigit.PRA);
+		skp->Text(7 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+
+		if (G->spacedigit.A1 > 0)
+		{
+			sprintf(Buffer, "%06.0f", G->spacedigit.A1);
+			skp->Text(13 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
+		}
+		sprintf(Buffer, "%05.2f°", G->spacedigit.L1);
+		skp->Text(13 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.5f", G->spacedigit.E1);
+		skp->Text(13 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.2f°", G->spacedigit.I1);
+		skp->Text(13 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer, G->spacedigit.GETSI, false);
+		skp->Text(20 * W / 32, 10 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->spacedigit.GETCA, false);
+		skp->Text(20 * W / 32, 11 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.0f", G->spacedigit.VCA);
+		skp->Text(20 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->spacedigit.HCA);
+		skp->Text(20 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.PCA > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->spacedigit.PCA);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->spacedigit.PCA));
+		}
+		skp->Text(20 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.LCA > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->spacedigit.LCA);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->spacedigit.LCA));
+		}
+		skp->Text(20 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.1f°", G->spacedigit.PSICA);
+		skp->Text(20 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->spacedigit.GETMN, false);
+		skp->Text(20 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->spacedigit.HMN);
+		skp->Text(20 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.PMN > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->spacedigit.PMN);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->spacedigit.PMN));
+		}
+		skp->Text(20 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.LMN > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->spacedigit.LMN);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->spacedigit.LMN));
+		}
+		skp->Text(20 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.2f", G->spacedigit.DMN);
+		skp->Text(20 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
+
+
+		GET_Display(Buffer, G->spacedigit.GETSE, false);
+		skp->Text(30 * W / 32, 10 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->spacedigit.GETEI, false);
+		skp->Text(30 * W / 32, 11 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.0f", G->spacedigit.VEI);
+		skp->Text(30 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.1f°", G->spacedigit.GEI);
+		skp->Text(30 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.PEI > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->spacedigit.PEI);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->spacedigit.PEI));
+		}
+		skp->Text(30 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.LEI > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->spacedigit.LEI);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->spacedigit.LEI));
+		}
+		skp->Text(30 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.1f°", G->spacedigit.PSIEI);
+		skp->Text(30 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->spacedigit.GETVP, false);
+		skp->Text(30 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%05.0f", G->spacedigit.VVP);
+		skp->Text(30 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->spacedigit.HVP);
+		skp->Text(30 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.PVP > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->spacedigit.PVP);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->spacedigit.PVP));
+		}
+		skp->Text(30 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+		if (G->spacedigit.LVP > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->spacedigit.LVP);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->spacedigit.LVP));
+		}
+		skp->Text(30 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.1f°", G->spacedigit.PSIVP);
+		skp->Text(30 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%05.2f°", G->spacedigit.IE);
+		skp->Text(30 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%06.2f°", G->spacedigit.LN);
+		skp->Text(30 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -4301,6 +4616,18 @@ void ApolloRTCCMFD::menuSetPDAPPage()
 void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsPage()
 {
 	screen = 41;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetMCCDisplaysPage()
+{
+	screen = 42;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetSpaceDigitalsPage()
+{
+	screen = 43;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -8009,6 +8336,35 @@ void ApolloRTCCMFD::set_FIDOOrbitDigitalsL(double lng)
 {
 	this->G->fidoorbit.L = lng;
 	G->FIDOOrbitDigitalsCalculateGETL();
+}
+
+void ApolloRTCCMFD::menuUpdateSpaceDigitals()
+{
+	G->UpdateSpaceDigitals();
+}
+
+void ApolloRTCCMFD::menuSetSpaceDigitalsGET()
+{
+	bool SpaceDigitalsGETInput(void* id, char *str, void *data);
+	oapiOpenInputBox("GET of Vector 1 (Format: hhh:mm:ss)", SpaceDigitalsGETInput, 0, 20, (void*)this);
+}
+
+bool SpaceDigitalsGETInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, get;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_SpaceDigitalsGET(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SpaceDigitalsGET(double get)
+{
+	G->spacedigit.GETVector1 = get;
+	G->SpaceDigitalsGET();
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)

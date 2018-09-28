@@ -370,6 +370,11 @@ public:
 	void set_FIDOOrbitDigitalsGETL(double getl);
 	void menuSetFIDOOrbitDigitalsL();
 	void set_FIDOOrbitDigitalsL(double lng);
+	void menuSetMCCDisplaysPage();
+	void menuSetSpaceDigitalsPage();
+	void menuUpdateSpaceDigitals();
+	void menuSetSpaceDigitalsGET();
+	void set_SpaceDigitalsGET(double get);
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

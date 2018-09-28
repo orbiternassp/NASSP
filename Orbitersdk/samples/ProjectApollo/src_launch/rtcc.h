@@ -47,8 +47,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_ENTRY_MINDV 0
 #define RTCC_ENTRY_NOMINAL 1
 
-#define RTCC_VESSELTYPE_CSM 0
-#define RTCC_VESSELTYPE_LM 1
+#define RTCC_VESSELTYPE_CSM		0
+#define RTCC_VESSELTYPE_LM		1
+#define RTCC_VESSELTYPE_SIVB	2
 
 #define RTCC_ENGINETYPE_RCS 0
 #define RTCC_ENGINETYPE_SPSDPS 1
@@ -956,6 +957,88 @@ struct FIDOOrbitDigitalsOpt
 	double MJD;		//MJD to update the state vector to (only used in continuous update)
 };
 
+struct SpaceDigitals
+{
+	SpaceDigitals();
+	double WEIGHT;		//Total vehicle weight
+	double GMTV;		//Greenwich time-tag of the vector
+	double GETV;		//Ground elapsed time-tag of the vector
+	double GETAxis;		//Ground elapsed time used to define the earth-moon line
+	double GETR;		//Ground elapsed time reference (elapsed time of an event)
+	double GET;			//Current ground elapsed time for which orb params were computed
+	char REF[64];		//Inertial reference body used to compute orb params
+	double V;			//Current velocity
+	double PHI;			//Current latitude
+	double H;			//Current altitude above spherical Earth or above moon assuming landing site radius
+	double ADA;			//Current true anomaly
+	double GAM;			//Current inertial flightpath angle
+	double LAM;			//Current longitude
+	double PSI;			//Current heading angle
+	double GETVector1;	//Ground elapsed time of the vector used to compute quantities below
+	char REF1[64];		//Inertial reference body used to compute quantities for GET Vector 1
+	double GETA;		//Ground elapsed time of next apogee (referenced from GET Vector 1)
+	double HA;			//Height of apogee (referenced from GET Vector 1)
+	double HP;			//Height of perigee (referenced from GET Vector 1)
+	double H1;			//Altitude above reference radius (referenced from GET Vector 1)
+	double V1;			//Inertial velocity (referenced from GET Vector 1)
+	double GAM1;		//Flightpath angle (referenced from GET Vector 1)
+	double PSI1;		//Heading angle (referenced from GET Vector 1)
+	double PHI1;		//Geodetic latitude (referenced from GET Vector 1)
+	double LAM1;		//Longitude (referenced from GET Vector 1)
+	double HS;			//Altitude above a spherical earth or moon (referenced from GET Vector 1)
+	double HO;			//Altitude above a oblate earth or spherical moon (referenced from GET Vector 1)
+	double PHIO;		//Geocentric latitude (referenced from GET Vector 1)
+	double IEMP;		//Inclination of the trajectory with respect to the earth-moon plane
+	double W1;			//Argument of periapsis (referenced from GET Vector 1)
+	double OMG;			//Right ascension of the ascending node (inertial)
+	double PRA;			//Inertial right ascension of perigee
+	double A1;			//Semi-major axis
+	double L1;			//Argument of latitude
+	double E1;			//Eccentricity
+	double I1;			//Inclination
+	double GETVector2;
+	double GETSI;		//GET of vehicle passing through the lunar SOI with negative lunar altitude rate
+	double GETCA;		//GET of closest approach to the moon
+	double VCA;			//Inertial velocity at the point of closest approach
+	double HCA;			//Altitude at the point of closest approach above landing site radius
+	double PCA;			//Latitude of closest approach
+	double LCA;			//Longitude of closest approach
+	double PSICA;		//Heading angle of closest approach
+	double GETMN;		//GET of arrival at the node
+	double HMN;			//Height of arrival at the node
+	double PMN;			//Latitude of arrival at the node
+	double LMN;			//Longitude of arrival at the node
+	double DMN;			//Wedge angle between planes of approach hyperbola and lunar parking orbit
+	double GETVector3;
+	double GETSE;		//GET of vehicle passing through the lunar SOI with positive lunar altitude rate
+	double GETEI;		//GET of entry interface
+	double VEI;			//Earth centered inertial velocity at entry interface
+	double GEI;			//Inertial flightpath angle at entry interface
+	double PEI;			//Latitude at entry interface
+	double LEI;			//Longitude at entry interface
+	double PSIEI;		//Heading angle at entry interface
+	double GETVP;		//GET of arrival at vacuum perigee
+	double VVP;			//Earth centered velocity at vacuum perigee
+	double HVP;			//Altitude at vacuum perigee
+	double PVP;			//Latitude at vacuum perigee
+	double LVP;			//Longitude at vacuum perigee
+	double PSIVP;		//Heading angle at vacuum perigee
+	double IE;			//Inclination angle at vacuum perigee
+	double LN;			//Geographic longitude of the earth return ascending node
+};
+
+struct SpaceDigitalsOpt
+{
+	SV sv_A;
+	double GETbase;
+	double LSLat;
+	double LSLng;
+	double LSAlt;
+	double LSAzi;
+	double t_land;
+	double MJD;		//MJD to update the state vector to (only used in continuous and GET update)
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;		// Our ship
@@ -1160,6 +1243,9 @@ public:
 	void FIDOOrbitDigitalsApsidesCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 	void FIDOOrbitDigitalsCalculateLongitude(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 	void FIDOOrbitDigitalsCalculateGETL(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOSpaceDigitalsUpdate(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
+	void FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
+	void FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

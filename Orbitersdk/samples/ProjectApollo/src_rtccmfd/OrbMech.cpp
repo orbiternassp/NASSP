@@ -959,9 +959,9 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 	}
 }
 
-void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout)
+bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout)
 {
-	bool stop;
+	bool stop, soichange;
 	CoastIntegrator* coast;
 	coast = new CoastIntegrator(R0, V0, mjd0, dt, gravref, gravout);
 	stop = false;
@@ -972,8 +972,10 @@ void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	R1 = coast->R2;
 	V1 = coast->V2;
 	gravout = coast->outplanet;
+	soichange = coast->soichange;
 	delete coast;
 	stop = false;
+	return soichange;
 }
 
 VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot, double tol)
@@ -6506,6 +6508,7 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	r_SPH = 64373760.0;
 
 	B = 1;
+	soichange = false;
 
 	double EarthPos[12];
 	VECTOR3 EarthVec, EarthVecVel;
@@ -6591,6 +6594,7 @@ bool CoastIntegrator::iteration()
 				nu = _V(0, 0, 0);// [0 0 0]';
 				x = 0;
 				tau = 0;
+				soichange = true;
 			}
 		}
 		else
@@ -6638,6 +6642,7 @@ bool CoastIntegrator::iteration()
 				nu = _V(0, 0, 0);// [0 0 0]';
 				x = 0;
 				tau = 0;
+				soichange = true;
 			}
 		}
 	}

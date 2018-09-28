@@ -699,8 +699,8 @@ ARCore::ARCore(VESSEL* v)
 	TMLat = 0.0;
 	TMLng = 0.0;
 	TMAzi = 0.0;
-	TMDistance = 0.0;
-	TMStepSize = 0.0;
+	TMDistance = 600000.0*0.3048;
+	TMStepSize = 100.0*0.3048;
 	TMAlt = 0.0;
 
 	LunarLiftoffTimeOption = 0;
@@ -1090,6 +1090,31 @@ void ARCore::FIDOOrbitDigitalsCalculateGETL()
 	if (subThreadStatus == 0 && fidoorbitsv.gravref != NULL)
 	{
 		startSubthread(27);
+	}
+}
+
+void ARCore::UpdateSpaceDigitals()
+{
+	startSubthread(28);
+}
+
+void ARCore::CycleSpaceDigitals()
+{
+	if (subThreadStatus == 0 && spacedigitalssv.gravref != NULL)
+	{
+		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GETbase);
+		if (GET > spacedigit.GET + 12.0)
+		{
+			startSubthread(29);
+		}
+	}
+}
+
+void ARCore::SpaceDigitalsGET()
+{
+	if (subThreadStatus == 0 && spacedigitalssv.gravref != NULL)
+	{
+		startSubthread(30);
 	}
 }
 
@@ -3445,6 +3470,57 @@ int ARCore::subThread()
 		opt.sv_A = fidoorbitsv;
 
 		rtcc->FIDOOrbitDigitalsCalculateGETL(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 28: //FIDO Space Digitals Update
+	{
+		spacedigitalssv = rtcc->StateVectorCalc(vessel);
+
+		SpaceDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.sv_A = spacedigitalssv;
+		opt.LSAlt = LSAlt;
+		opt.LSAzi = LOIazi;
+		opt.LSLat = LSLat;
+		opt.LSLng = LSLng;
+		opt.t_land = t_Land;
+
+		rtcc->FIDOSpaceDigitalsUpdate(opt, spacedigit);
+
+		Result = 0;
+	}
+	break;
+	case 29: //FIDO Space Digitals Cycle
+	{
+		double MJD = oapiGetSimMJD();
+
+		SpaceDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.LSAlt = LSAlt;
+		opt.MJD = MJD;
+		opt.sv_A = spacedigitalssv;
+
+		rtcc->FIDOSpaceDigitalsCycle(opt, spacedigit);
+
+		Result = 0;
+	}
+	break;
+	case 30: //FIDO Space Digitals GET
+	{
+		double MJD = OrbMech::MJDfromGET(spacedigit.GETVector1, GETbase);
+
+		SpaceDigitalsOpt opt;
+
+		opt.GETbase = GETbase;
+		opt.LSAlt = LSAlt;
+		opt.MJD = MJD;
+		opt.sv_A = spacedigitalssv;
+
+		rtcc->FIDOSpaceDigitalsGET(opt, spacedigit);
 
 		Result = 0;
 	}

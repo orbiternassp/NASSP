@@ -62,6 +62,9 @@ public:
 	void CycleFIDOOrbitDigitals();
 	void FIDOOrbitDigitalsCalculateLongitude();
 	void FIDOOrbitDigitalsCalculateGETL();
+	void UpdateSpaceDigitals();
+	void CycleSpaceDigitals();
+	void SpaceDigitalsGET();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -404,6 +407,10 @@ public:
 	//FIDO ORBIT DIGITALS
 	FIDOOrbitDigitals fidoorbit;
 	SV fidoorbitsv;
+
+	//SPACE DIGITALS
+	SpaceDigitals spacedigit;
+	SV spacedigitalssv;
 
 	protected:
 		int GetPowEngType();

@@ -134,6 +134,7 @@ public:
 
 	VECTOR3 R2, V2;
 	OBJHANDLE outplanet;
+	bool soichange;
 private:
 	VECTOR3 f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d);
 	double fq(double q);
@@ -242,7 +243,7 @@ namespace OrbMech {
 	//void rungeinteg(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu);
 	//void adfunc(double* dfdt, double t, double* f);
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
-	void oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
+	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future = false);

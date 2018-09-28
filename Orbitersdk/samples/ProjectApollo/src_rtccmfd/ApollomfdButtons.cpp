@@ -9,8 +9,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Maneuver Targeting", 0, 'T' },
 		{ "Pre-Advisory Data", 0, 'P' },
 		{ "Utility", 0, 'U' },
+		{ "MCC Displays", 0, 'M' },
 		{ "Configuration", 0, 'S' },
-		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
 		{ "", 0, ' ' },
@@ -26,8 +26,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TAR", OAPI_KEY_T, &ApolloRTCCMFD::menuSetTargetingMenu);
 	RegisterFunction("PAD", OAPI_KEY_P, &ApolloRTCCMFD::menuSetPADMenu);
 	RegisterFunction("UTI", OAPI_KEY_U, &ApolloRTCCMFD::menuSetUtilityMenu);
+	RegisterFunction("MCC", OAPI_KEY_M, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
 	RegisterFunction("CFG", OAPI_KEY_C, &ApolloRTCCMFD::menuSetConfigPage);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_B, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
@@ -721,7 +721,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "REFSMMAT", 0, 'R' },
 		{ "Vector Pointing", 0, 'P' },
 		{ "Erasable Memory Programs", 0, 'E' },
-		{ "FIDO Orbit Digitals", 0, 'F' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
 		{ "LVDC options", 0, 'L' },
@@ -738,7 +738,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("REF", OAPI_KEY_R, &ApolloRTCCMFD::menuSetREFSMMATPage);
 	RegisterFunction("VEC", OAPI_KEY_P, &ApolloRTCCMFD::menuSetVECPOINTPage);
 	RegisterFunction("EMP", OAPI_KEY_E, &ApolloRTCCMFD::menuSetEMPPage);
-	RegisterFunction("FDO", OAPI_KEY_F, &ApolloRTCCMFD::menuSetFIDOOrbitDigitalsPage);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("IU", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLVDCPage);
@@ -1426,7 +1426,75 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("L", OAPI_KEY_L, &ApolloRTCCMFD::menuSetFIDOOrbitDigitalsL);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
+
+
+	static const MFDBUTTONMENU mnu42[] =
+	{
+		{ "FIDO Orbit Digitals", 0, 'O' },
+		{ "Space Digitals", 0, 'S' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu42, sizeof(mnu42) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("ORB", OAPI_KEY_O, &ApolloRTCCMFD::menuSetFIDOOrbitDigitalsPage);
+	RegisterFunction("SPA", OAPI_KEY_S, &ApolloRTCCMFD::menuSetSpaceDigitalsPage);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
+
+
+	static const MFDBUTTONMENU mnu43[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "Update state vector", 0, 'U' },
+		{ "GET for Vector 1", 0, 'G' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu43, sizeof(mnu43) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("UPD", OAPI_KEY_U, &ApolloRTCCMFD::menuUpdateSpaceDigitals);
+	RegisterFunction("GET", OAPI_KEY_G, &ApolloRTCCMFD::menuSetSpaceDigitalsGET);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
