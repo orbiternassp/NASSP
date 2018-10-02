@@ -639,7 +639,7 @@ ARCore::ARCore(VESSEL* v)
 		LSLat = -9.00028*RAD;
 		LSLng = 15.51639*RAD;
 		LSAlt = -0.1405*1852.0;
-		LOIazi = -91.0*RAD;
+		LOIazi = -90.0*RAD;
 		LOIapo = 170.6*1852.0;
 		LOIperi = 58.5*1852.0;
 		LOIEllipseRotation = 1;

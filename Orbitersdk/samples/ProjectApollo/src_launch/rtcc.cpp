@@ -2721,7 +2721,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 	if (opt->impulsive == RTCC_NONIMPULSIVE)
 	{
 		VECTOR3 Llambda, R_cut, V_cut, R_cor, V_cor;
-		double f_T, isp, t_slip, MJD_cut, m_cut;;
+		double f_T, isp, t_slip, MJD_cut, m_cut;
 
 		if (opt->vesseltype == 0)
 		{
