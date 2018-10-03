@@ -640,19 +640,20 @@ ARCore::ARCore(VESSEL* v)
 		LSLng = 15.51639*RAD;
 		LSAlt = -0.1405*1852.0;
 		LOIazi = -90.0*RAD;
-		LOIapo = 170.6*1852.0;
-		LOIperi = 58.5*1852.0;
+		LOIapo = 170.0*1852.0;
+		LOIperi = 60.0*1852.0;
 		LOIEllipseRotation = 1;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 5.28257*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 32.0);
+		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 4.89998*RAD;
+		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 27.0);
 		TLCCFlybyPeriAlt = TLCCNodeAlt = 71.26*1852.0;
-		TLCCNodeLat = 7.95*RAD;
-		TLCCNodeLng = 173.04*RAD;
+		TLCCNodeLat = 7.46*RAD;
+		TLCCNodeLng = 173.97*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 		DOI_PeriAng = 16.0*RAD;
 		DOI_option = 1;
 		DOI_N = 10;
+		DOI_alt = 52500.0*0.3048;
 		//For PTC REFSMMAT
 		REFSMMATTime = OrbMech::HHMMSSToSS(166, 2, 50);
 	}
