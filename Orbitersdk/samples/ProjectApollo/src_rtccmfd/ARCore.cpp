@@ -5,6 +5,9 @@
 #include "csmcomputer.h"
 #include "IMU.h"
 #include "saturn.h"
+#include "saturnv.h"
+#include "iu.h"
+#include "LVDC.h"
 #include "LEM.h"
 #include "mcc.h"
 #include "rtcc.h"
@@ -840,34 +843,7 @@ ARCore::ARCore(VESSEL* v)
 	PDAP_Theta_LIM = 0.0;
 	PDAP_R_amin = 0.0;
 
-	fidoorbit.A = 0.0;
-	fidoorbit.E = 0.0;
-	fidoorbit.GAM = 0.0;
-	fidoorbit.GET = 0.0;
-	fidoorbit.GETA = 0.0;
-	fidoorbit.GETCC = 0.0;
-	fidoorbit.GETID = 0.0;
-	fidoorbit.GETL = 0.0;
-	fidoorbit.GETP = 0.0;
-	fidoorbit.H = 0.0;
-	fidoorbit.HA = 0.0;
-	fidoorbit.HP = 0.0;
-	fidoorbit.I = 0.0;
-	fidoorbit.K = 0.0;
-	fidoorbit.L = 0.0;
-	fidoorbit.LA = 0.0;
-	fidoorbit.LNPP = 0.0;
-	fidoorbit.LP = 0.0;
-	fidoorbit.LPP = 0.0;
-	fidoorbit.ORBWT = 0.0;
-	fidoorbit.PA = 0.0;
-	fidoorbit.PP = 0.0;
-	fidoorbit.PPP = 0.0;
-	sprintf(fidoorbit.REF, "");
-	fidoorbit.TAPP = 0.0;
-	fidoorbit.TO = 0.0;
-	fidoorbit.V = 0.0;
-	sprintf(fidoorbit.VEHID, "");
+	MissionPlanningActive = false;
 }
 
 ARCore::~ARCore()
@@ -2442,6 +2418,10 @@ int ARCore::subThread()
 	break;
 	case 8: //TLI PAD
 	{
+		SaturnV *SatV = (SaturnV*)g_Data.progVessel;
+		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+
+
 		TLIPADOpt opt;
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = GETbase;

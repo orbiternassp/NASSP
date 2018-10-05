@@ -54,6 +54,38 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define LOAD_M3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&VALUE.m11,&VALUE.m12,&VALUE.m13,&VALUE.m21,&VALUE.m22,&VALUE.m23,&VALUE.m31,&VALUE.m32,&VALUE.m33); }
 #define LOAD_STRING(KEY,VALUE,LEN) if(strnicmp(line,KEY,strlen(KEY))==0){ strncpy(VALUE, line + (strlen(KEY)+1), LEN); }
 
+FIDOOrbitDigitals::FIDOOrbitDigitals()
+{
+	A = 0.0;
+	E = 0.0;
+	GAM = 0.0;
+	GET = 0.0;
+	GETA = 0.0;
+	GETCC = 0.0;
+	GETID = 0.0;
+	GETL = 0.0;
+	GETP = 0.0;
+	H = 0.0;
+	HA = 0.0;
+	HP = 0.0;
+	I = 0.0;
+	K = 0.0;
+	L = 0.0;
+	LA = 0.0;
+	LNPP = 0.0;
+	LP = 0.0;
+	LPP = 0.0;
+	ORBWT = 0.0;
+	PA = 0.0;
+	PP = 0.0;
+	PPP = 0.0;
+	sprintf(REF, "");
+	TAPP = 0.0;
+	TO = 0.0;
+	V = 0.0;
+	sprintf(VEHID, "");
+}
+
 SpaceDigitals::SpaceDigitals()
 {
 	WEIGHT = 0.0;

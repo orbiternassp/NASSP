@@ -412,6 +412,10 @@ public:
 	SpaceDigitals spacedigit;
 	SV spacedigitalssv;
 
+	//MISSION PLANNING TABLE
+	std::vector<MPTManeuver> mptable;
+	bool MissionPlanningActive;
+
 	protected:
 		int GetPowEngType();
 

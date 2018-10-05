@@ -920,6 +920,7 @@ struct DockAlignOpt	//Docking Alignment Processor
 
 struct FIDOOrbitDigitals
 {
+	FIDOOrbitDigitals();
 	double GET;		//Ground elapsed time associated with present position data
 	char VEHID[64];	//Vehicle name
 	char REF[64];	//Reference planet
@@ -1037,6 +1038,13 @@ struct SpaceDigitalsOpt
 	double LSAzi;
 	double t_land;
 	double MJD;		//MJD to update the state vector to (only used in continuous and GET update)
+};
+
+struct MPTManeuver
+{
+	SV sv_before;
+	SV sv_after;
+	std::string code;
 };
 
 // Parameter block for Calculation(). Expand as needed.
