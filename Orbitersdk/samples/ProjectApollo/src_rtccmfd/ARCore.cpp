@@ -640,7 +640,7 @@ ARCore::ARCore(VESSEL* v)
 		LSLng = 15.51639*RAD;
 		LSAlt = -0.1405*1852.0;
 		LOIazi = -90.0*RAD;
-		LOIapo = 170.6*1852.0;
+		LOIapo = 170.0*1852.0;
 		LOIperi = 60.0*1852.0;
 		LOIEllipseRotation = 1;
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 4.88464*RAD;
@@ -663,7 +663,7 @@ ARCore::ARCore(VESSEL* v)
 		LSLng = 30.750*RAD;
 		LSAlt = -1.95*1852.0;
 		LOIazi = -90.0*RAD;
-		LOIapo = 170.8*1852.0;
+		LOIapo = 170.0*1852.0;
 		LOIperi = 52.6*1852.0;
 		LOIEllipseRotation = 1;
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -11.11101*RAD;
