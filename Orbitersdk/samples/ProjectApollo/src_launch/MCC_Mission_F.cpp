@@ -45,6 +45,9 @@ void MCC::MissionSequence_F()
 				SaturnV *SatV = (SaturnV*)cm;
 				LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
 
+				SV sv, sv_IG, sv_TLI;
+				sv = rtcc->StateVectorCalc(cm);
+
 				LVDCTLIparam tliparam;
 
 				tliparam.alpha_TS = lvdc->alpha_TS;
@@ -69,7 +72,11 @@ void MCC::MissionSequence_F()
 				tliparam.T_ST = lvdc->T_ST;
 				tliparam.Tt_3R = lvdc->Tt_3R;
 
-				rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, rtcc->calcParams.R_TLI, rtcc->calcParams.V_TLI, rtcc->calcParams.TLI);
+				rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, sv, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, sv_IG, sv_TLI);
+
+				rtcc->calcParams.R_TLI = sv_TLI.R;
+				rtcc->calcParams.V_TLI = sv_TLI.V;
+				rtcc->calcParams.TLI = (sv_TLI.MJD - rtcc->getGETBase())*24.0*3600.0;
 
 				setSubState(1);
 			}

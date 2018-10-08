@@ -375,6 +375,9 @@ public:
 	void menuUpdateSpaceDigitals();
 	void menuSetSpaceDigitalsGET();
 	void set_SpaceDigitalsGET(double get);
+	void menuSetMPTPage();
+	void menuMPTCycleActive();
+	void menuMPTDeleteManeuver();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

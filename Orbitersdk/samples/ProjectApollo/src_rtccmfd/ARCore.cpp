@@ -2251,7 +2251,19 @@ int ARCore::subThread()
 		if (LOImaneuver == 0 || LOImaneuver == 1)
 		{
 			LOIMan loiopt;
-			SV sv_n, sv_postLOI;
+			SV sv_n, sv_preLOI, sv_postLOI;
+
+			if (MissionPlanningActive)
+			{
+				if (!rtcc->MPTTrajectory(mptable, GETbase, loiopt.RV_MCC))
+				{
+					loiopt.RV_MCC = rtcc->StateVectorCalc(vessel);
+				}
+			}
+			else
+			{
+				loiopt.RV_MCC = rtcc->StateVectorCalc(vessel);
+			}
 
 			loiopt.GETbase = GETbase;
 			loiopt.h_apo = LOIapo;
@@ -2290,14 +2302,21 @@ int ARCore::subThread()
 				RV1 = rtcc->StateVectorCalc(vessel);
 				RV2 = rtcc->ExecuteManeuver(vessel, GETbase, TLCC_TIG, TLCC_dV_LVLH, RV1, 0);
 
-				loiopt.useSV = true;
 				loiopt.RV_MCC = RV2;
 			}
 
-			rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG, sv_n, sv_postLOI);
+			rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG, sv_n, sv_preLOI, sv_postLOI);
 			P30TIG = LOI_TIG;
 			dV_LVLH = LOI_dV_LVLH;
 
+			if (MissionPlanningActive)
+			{
+				char code[64];
+
+				sprintf(code, "LOI");
+
+				rtcc->MPTAddManeuver(mptable, sv_preLOI, sv_postLOI, code, LSAlt, length(dV_LVLH));
+			}
 		}
 		else if (LOImaneuver == 2)
 		{
@@ -2366,6 +2385,18 @@ int ARCore::subThread()
 		EntryResults res;
 		EntryOpt opt;
 
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, EntryTIG, GETbase, opt.RV_MCC))
+			{
+				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+		}
+
 		if (vesseltype < 2)
 		{
 			opt.vesseltype = 0;
@@ -2414,6 +2445,22 @@ int ARCore::subThread()
 		dV_LVLH = Entry_DV;
 		entryprecision = res.precision;
 
+		if (MissionPlanningActive)
+		{
+			char code[64];
+
+			if (entrycritical == 2)
+			{
+				sprintf(code, "DAM");
+			}
+			else
+			{
+				sprintf(code, "TEMCC");
+			}
+
+			rtcc->MPTAddManeuver(mptable, res.sv_preburn, res.sv_postburn, code, LSAlt, length(dV_LVLH));
+		}
+
 		Result = 0;
 	}
 	break;
@@ -2422,16 +2469,73 @@ int ARCore::subThread()
 		SaturnV *SatV = (SaturnV*)g_Data.progVessel;
 		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
 
-
 		TLIPADOpt opt;
-		opt.dV_LVLH = dV_LVLH;
-		opt.GETbase = GETbase;
-		opt.REFSMMAT = REFSMMAT;
-		opt.TIG = P30TIG;
-		opt.vessel = vessel;
-		opt.uselvdc = false;
-		opt.SeparationAttitude = _V(PI, 120.0*RAD, 0.0);
+
+		SV sv_A, sv_IG, sv_TLI;
+		sv_A = rtcc->StateVectorCalc(vessel);
+
+		if (lvdc->TU)
+		{
+			opt.dV_LVLH = dV_LVLH;
+			opt.GETbase = GETbase;
+			opt.REFSMMAT = REFSMMAT;
+			opt.TIG = P30TIG;
+			opt.vessel = vessel;
+			opt.uselvdc = false;
+			opt.SeparationAttitude = _V(PI, 120.0*RAD, 0.0);
+		}
+		else
+		{
+			LVDCTLIparam tliparam;
+
+			tliparam.alpha_TS = lvdc->alpha_TS;
+			tliparam.Azimuth = lvdc->Azimuth;
+			tliparam.beta = lvdc->beta;
+			tliparam.cos_sigma = lvdc->cos_sigma;
+			tliparam.C_3 = lvdc->C_3;
+			tliparam.e_N = lvdc->e_N;
+			tliparam.f = lvdc->f;
+			tliparam.mu = lvdc->mu;
+			tliparam.MX_A = lvdc->MX_A;
+			tliparam.omega_E = lvdc->omega_E;
+			tliparam.phi_L = lvdc->PHI;
+			tliparam.R_N = lvdc->R_N;
+			tliparam.T_2R = lvdc->T_2R;
+			tliparam.TargetVector = lvdc->TargetVector;
+			tliparam.TB5 = lvdc->TB5;
+			tliparam.theta_EO = lvdc->theta_EO;
+			tliparam.t_D = lvdc->t_D;
+			tliparam.T_L = lvdc->T_L;
+			tliparam.T_RG = lvdc->T_RG;
+			tliparam.T_ST = lvdc->T_ST;
+			tliparam.Tt_3R = lvdc->Tt_3R;
+
+			rtcc->LVDCTLIPredict(tliparam, vessel, sv_A, GETbase, dV_LVLH, P30TIG, sv_IG, sv_TLI);
+
+			R_TLI = sv_TLI.R;
+			V_TLI = sv_TLI.V;
+
+			if (MissionPlanningActive)
+			{
+				rtcc->MPTAddTLI(mptable, sv_IG, sv_TLI, length(dV_LVLH));
+			}
+
+			opt.dV_LVLH = dV_LVLH;
+			opt.GETbase = GETbase;
+			opt.REFSMMAT = REFSMMAT;
+			opt.TIG = P30TIG;
+			opt.vessel = vessel;
+			opt.SeparationAttitude = lvdc->XLunarAttitude;
+			opt.TLI = OrbMech::GETfromMJD(sv_TLI.MJD, GETbase);
+			opt.R_TLI = R_TLI;
+			opt.V_TLI = V_TLI;
+			opt.uselvdc = true;
+		}
+
+		opt.sv0 = sv_A;
+
 		rtcc->TLI_PAD(&opt, tlipad);
+
 		Result = 0;
 	}
 	break;
@@ -2720,322 +2824,383 @@ int ARCore::subThread()
 	break;
 	case 14: //TLI/MCC Targeting
 	{
-		if (TLCCmaneuver == 0)
+		if (TLCCmaneuver == 0 || TLCCmaneuver == 1)
 		{
-			TLIManNode opt;
-			double MJDcut;
+			SV sv0 = rtcc->StateVectorCalc(vessel);
 
-			opt.GETbase = GETbase;
-			opt.h_peri = TLCCNodeAlt;
-			opt.lat = TLCCNodeLat;
-			opt.lng = TLCCNodeLng;
-			opt.TLI_TIG = TLCC_GET;
-			opt.PeriGET = TLCCNodeGET;
-			opt.vessel = vessel;
-			opt.useSV = false;
-
-			rtcc->TranslunarInjectionProcessorNodal(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
-			P30TIG = TLCC_TIG;
-			dV_LVLH = TLCC_dV_LVLH;
-		}
-		else if (TLCCmaneuver == 1)
-		{
-			TLIManFR opt;
-			TLMCCResults res;
-			double MJDcut;
-
-			opt.GETbase = GETbase;
-			opt.h_peri = TLCCFlybyPeriAlt;
-			opt.lat = TLCCFreeReturnEMPLat;
-			opt.TLI_TIG = TLCC_GET;
-			opt.PeriGET = TLCCPeriGET;
-			opt.vessel = vessel;
-			opt.useSV = false;
-
-			rtcc->TranslunarInjectionProcessorFreeReturn(&opt, &res, R_TLI, V_TLI, MJDcut);
-
-			TLCC_dV_LVLH = res.dV_LVLH;
-			TLCC_TIG = res.P30TIG;
-			TLCCPeriGETcor = res.PericynthionGET;
-			TLCCReentryGET = res.EntryInterfaceGET;
-			TLCCFRIncl = res.FRInclination;
-			P30TIG = TLCC_TIG;
-			dV_LVLH = TLCC_dV_LVLH;
-			TLCCFRLat = EntryLatcor = res.SplashdownLat;
-			TLCCFRLng = EntryLngcor = res.SplashdownLng;
-		}
-		else if (TLCCmaneuver == 2)
-		{
-			MCCNodeMan opt;
-
-			if (vesseltype < 2)
+			if (TLCCmaneuver == 0)
 			{
-				opt.vesseltype = 0;
+				TLIManNode opt;
+				double MJDcut;
+
+				opt.GETbase = GETbase;
+				opt.h_peri = TLCCNodeAlt;
+				opt.lat = TLCCNodeLat;
+				opt.lng = TLCCNodeLng;
+				opt.TLI_TIG = TLCC_GET;
+				opt.PeriGET = TLCCNodeGET;
+				opt.RV_MCC = sv0;
+				opt.vessel = vessel;
+
+				rtcc->TranslunarInjectionProcessorNodal(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
+				P30TIG = TLCC_TIG;
+				dV_LVLH = TLCC_dV_LVLH;
 			}
-			else
+			else if (TLCCmaneuver == 1)
 			{
-				opt.vesseltype = 1;
-			}
+				TLIManFR opt;
+				TLMCCResults res;
+				double MJDcut;
 
-			if (vesseltype == 0 || vesseltype == 2)
-			{
-				opt.csmlmdocked = false;
-			}
-			else
-			{
-				opt.csmlmdocked = true;
-			}
+				opt.GETbase = GETbase;
+				opt.h_peri = TLCCFlybyPeriAlt;
+				opt.lat = TLCCFreeReturnEMPLat;
+				opt.TLI_TIG = TLCC_GET;
+				opt.PeriGET = TLCCPeriGET;
+				opt.RV_MCC = sv0;
+				opt.vessel = vessel;
 
-			opt.GETbase = GETbase;
-			opt.h_node = TLCCNodeAlt;
-			opt.lat = TLCCNodeLat;
-			opt.lng = TLCCNodeLng;
-			opt.MCCGET = TLCC_GET;
-			opt.NodeGET = TLCCNodeGET;
-			opt.vessel = vessel;
+				rtcc->TranslunarInjectionProcessorFreeReturn(&opt, &res, R_TLI, V_TLI, MJDcut);
 
-			rtcc->TranslunarMidcourseCorrectionTargetingNodal(&opt, TLCC_dV_LVLH, TLCC_TIG);
-			P30TIG = TLCC_TIG;
-			dV_LVLH = TLCC_dV_LVLH;
-		}
-		else if (TLCCmaneuver == 3 || TLCCmaneuver == 4)
-		{
-			MCCFRMan opt;
-			TLMCCResults res;
-
-			if (TLCCmaneuver == 3)
-			{
-				opt.type = 0;
-			}
-			else
-			{
-				opt.type = 1;
-			}
-
-			opt.GETbase = GETbase;
-			opt.lat = TLCCFreeReturnEMPLat;
-			opt.PeriGET = TLCCPeriGET;
-			opt.MCCGET = TLCC_GET;
-			opt.vessel = vessel;
-
-			if (vesseltype < 2)
-			{
-				opt.vesseltype = 0;
-			}
-			else
-			{
-				opt.vesseltype = 1;
-			}
-
-			if (vesseltype == 0 || vesseltype == 2)
-			{
-				opt.csmlmdocked = false;
-			}
-			else
-			{
-				opt.csmlmdocked = true;
-			}
-
-			opt.LOIh_apo = LOIapo;
-			opt.LOIh_peri = LOIperi;
-			opt.LSlat = LSLat;
-			opt.LSlng = LSLng;
-			opt.alt = LSAlt;
-			opt.t_land = t_Land;
-			opt.azi = LOIazi;
-			opt.h_peri = TLCCLAHPeriAlt;
-
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
-
-			if (TLCCSolGood)
-			{
 				TLCC_dV_LVLH = res.dV_LVLH;
 				TLCC_TIG = res.P30TIG;
 				TLCCPeriGETcor = res.PericynthionGET;
 				TLCCReentryGET = res.EntryInterfaceGET;
-				TLCCNodeLat = res.NodeLat;
-				TLCCNodeLng = res.NodeLng;
-				TLCCNodeAlt = res.NodeAlt;
-				TLCCNodeGET = res.NodeGET;
 				TLCCFRIncl = res.FRInclination;
-				TLCCEMPLatcor = res.EMPLatitude;
-				TLCCFRLat = EntryLatcor = res.SplashdownLat;
-				TLCCFRLng = EntryLngcor = res.SplashdownLng;
-
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;
+				TLCCFRLat = EntryLatcor = res.SplashdownLat;
+				TLCCFRLng = EntryLngcor = res.SplashdownLng;
 			}
 		}
-		else if (TLCCmaneuver == 5 || TLCCmaneuver == 6)
+		else
 		{
-			MCCNFRMan opt;
 			TLMCCResults res;
+			SV sv0;
 
-			if (TLCCmaneuver == 5)
+			if (MissionPlanningActive)
 			{
-				opt.type = 0;
-			}
-			else
-			{
-				opt.type = 1;
-			}
-
-			opt.GETbase = GETbase;
-			opt.lat = TLCCNonFreeReturnEMPLat;
-			opt.PeriGET = TLCCPeriGET;
-			opt.MCCGET = TLCC_GET;
-			opt.vessel = vessel;
-
-			if (vesseltype < 2)
-			{
-				opt.vesseltype = 0;
-			}
-			else
-			{
-				opt.vesseltype = 1;
-			}
-
-			if (vesseltype == 0 || vesseltype == 2)
-			{
-				opt.csmlmdocked = false;
-			}
-			else
-			{
-				opt.csmlmdocked = true;
-			}
-
-			opt.LOIh_apo = LOIapo;
-			opt.LOIh_peri = LOIperi;
-			opt.LSlat = LSLat;
-			opt.LSlng = LSLng;
-			opt.alt = LSAlt;
-			opt.t_land = t_Land;
-			opt.azi = LOIazi;
-			opt.h_peri = TLCCLAHPeriAlt;
-			opt.N = DOI_N;
-			opt.DOIType = DOI_option;
-			opt.DOIPeriAng = DOI_PeriAng;
-			opt.LOIEllipseRotation = LOIEllipseRotation;
-			opt.DOIPeriAlt = DOI_alt;
-
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingNonFreeReturn(&opt, &res);
-
-			if (TLCCSolGood)
-			{
-				TLCC_dV_LVLH = res.dV_LVLH;
-				TLCC_TIG = res.P30TIG;
-				TLCCNodeLat = res.NodeLat;
-				TLCCNodeLng = res.NodeLng;
-				TLCCNodeAlt = res.NodeAlt;
-				TLCCNodeGET = res.NodeGET;
-				TLCCEMPLatcor = res.EMPLatitude;
-				TLCCRev2MeridianGET = res.t_Rev2Meridian;
-				LOI_dV_LVLH = res.dV_LVLH_LOI;
-
-				if (DOI_option == 1)
+				if (!rtcc->MPTTrajectory(mptable, TLCC_GET, GETbase, sv0))
 				{
-					DOI_dV_LVLH = res.dV_LVLH_DOI;
-					TLCCPostDOIApoAlt = res.h_apo_postDOI;
-					TLCCPostDOIPeriAlt = res.h_peri_postDOI;
+					sv0 = rtcc->StateVectorCalc(vessel);
+				}
+			}
+			else
+			{
+				sv0 = rtcc->StateVectorCalc(vessel);
+			}
+
+			if (TLCCmaneuver == 2)
+			{
+				MCCNodeMan opt;
+
+				if (vesseltype < 2)
+				{
+					opt.vesseltype = 0;
+				}
+				else
+				{
+					opt.vesseltype = 1;
 				}
 
-				P30TIG = TLCC_TIG;
-				dV_LVLH = TLCC_dV_LVLH;
-			}
-		}
-		else if (TLCCmaneuver == 7)
-		{
-			MCCFlybyMan opt;
-			TLMCCResults res;
+				if (vesseltype == 0 || vesseltype == 2)
+				{
+					opt.csmlmdocked = false;
+				}
+				else
+				{
+					opt.csmlmdocked = true;
+				}
 
-			opt.GETbase = GETbase;
-			opt.lat = TLCCFreeReturnEMPLat;
-			opt.PeriGET = TLCCPeriGET;
-			opt.MCCGET = TLCC_GET;
-			opt.vessel = vessel;
-			opt.h_peri = TLCCFlybyPeriAlt;
+				opt.GETbase = GETbase;
+				opt.h_node = TLCCNodeAlt;
+				opt.lat = TLCCNodeLat;
+				opt.lng = TLCCNodeLng;
+				opt.MCCGET = TLCC_GET;
+				opt.NodeGET = TLCCNodeGET;
+				opt.RV_MCC = sv0;
+				opt.vessel = vessel;
 
-			if (vesseltype < 2)
-			{
-				opt.vesseltype = 0;
-			}
-			else
-			{
-				opt.vesseltype = 1;
-			}
-
-			if (vesseltype == 0 || vesseltype == 2)
-			{
-				opt.csmlmdocked = false;
-			}
-			else
-			{
-				opt.csmlmdocked = true;
-			}
-
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFlyby(&opt, &res);
-
-			if (TLCCSolGood)
-			{
-				TLCC_dV_LVLH = res.dV_LVLH;
+				rtcc->TranslunarMidcourseCorrectionTargetingNodal(opt, res);
 				TLCC_TIG = res.P30TIG;
-				TLCCPeriGETcor = res.PericynthionGET;
-				TLCCReentryGET = res.EntryInterfaceGET;
-				TLCCFRIncl = res.FRInclination;
-				TLCCFRLat = EntryLatcor = res.SplashdownLat;
-				TLCCFRLng = EntryLngcor = res.SplashdownLng;
-
-				P30TIG = TLCC_TIG;
-				dV_LVLH = TLCC_dV_LVLH;
-			}
-		}
-		else if (TLCCmaneuver == 8)
-		{
-			MCCSPSLunarFlybyMan opt;
-			TLMCCResults res;
-
-			opt.GETbase = GETbase;
-			opt.lat = TLCCFreeReturnEMPLat;
-			opt.PeriGET = TLCCPeriGET;
-			opt.MCCGET = TLCC_GET;
-			opt.vessel = vessel;
-			opt.h_peri = TLCCFlybyPeriAlt;
-			opt.AscendingNode = TLCCAscendingNode;
-			opt.FRInclination = TLCCFRDesiredInclination;
-
-			if (vesseltype < 2)
-			{
-				opt.vesseltype = 0;
-			}
-			else
-			{
-				opt.vesseltype = 1;
-			}
-
-			if (vesseltype == 0 || vesseltype == 2)
-			{
-				opt.csmlmdocked = false;
-			}
-			else
-			{
-				opt.csmlmdocked = true;
-			}
-
-			TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(&opt, &res, TLCCIterationStep);
-
-			if (TLCCSolGood)
-			{
 				TLCC_dV_LVLH = res.dV_LVLH;
-				TLCC_TIG = res.P30TIG;
-				TLCCPeriGETcor = res.PericynthionGET;
-				TLCCReentryGET = res.EntryInterfaceGET;
-				TLCCFRIncl = res.FRInclination;
-				TLCCFRLat = EntryLatcor = res.SplashdownLat;
-				TLCCFRLng = EntryLngcor = res.SplashdownLng;
-				TLCCEMPLatcor = res.EMPLatitude;
-
 				P30TIG = TLCC_TIG;
 				dV_LVLH = TLCC_dV_LVLH;
+
+				if (MissionPlanningActive)
+				{
+					char code[64];
+					sprintf(code, "TLMCC");
+					rtcc->MPTAddManeuver(mptable, res.sv_pre, res.sv_post, code, LSAlt, length(dV_LVLH));
+				}
+			}
+			else if (TLCCmaneuver == 3 || TLCCmaneuver == 4)
+			{
+				MCCFRMan opt;
+
+				if (TLCCmaneuver == 3)
+				{
+					opt.type = 0;
+				}
+				else
+				{
+					opt.type = 1;
+				}
+
+				opt.GETbase = GETbase;
+				opt.lat = TLCCFreeReturnEMPLat;
+				opt.PeriGET = TLCCPeriGET;
+				opt.MCCGET = TLCC_GET;
+				opt.vessel = vessel;
+
+				if (vesseltype < 2)
+				{
+					opt.vesseltype = 0;
+				}
+				else
+				{
+					opt.vesseltype = 1;
+				}
+
+				if (vesseltype == 0 || vesseltype == 2)
+				{
+					opt.csmlmdocked = false;
+				}
+				else
+				{
+					opt.csmlmdocked = true;
+				}
+
+				opt.LOIh_apo = LOIapo;
+				opt.LOIh_peri = LOIperi;
+				opt.LSlat = LSLat;
+				opt.LSlng = LSLng;
+				opt.alt = LSAlt;
+				opt.t_land = t_Land;
+				opt.azi = LOIazi;
+				opt.h_peri = TLCCLAHPeriAlt;
+				opt.RV_MCC = sv0;
+
+				TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
+
+				if (TLCCSolGood)
+				{
+					TLCC_dV_LVLH = res.dV_LVLH;
+					TLCC_TIG = res.P30TIG;
+					TLCCPeriGETcor = res.PericynthionGET;
+					TLCCReentryGET = res.EntryInterfaceGET;
+					TLCCNodeLat = res.NodeLat;
+					TLCCNodeLng = res.NodeLng;
+					TLCCNodeAlt = res.NodeAlt;
+					TLCCNodeGET = res.NodeGET;
+					TLCCFRIncl = res.FRInclination;
+					TLCCEMPLatcor = res.EMPLatitude;
+					TLCCFRLat = EntryLatcor = res.SplashdownLat;
+					TLCCFRLng = EntryLngcor = res.SplashdownLng;
+
+					P30TIG = TLCC_TIG;
+					dV_LVLH = TLCC_dV_LVLH;
+
+					if (MissionPlanningActive)
+					{
+						char code[64];
+						sprintf(code, "TLMCC");
+						rtcc->MPTAddManeuver(mptable, res.sv_pre, res.sv_post, code, LSAlt, length(dV_LVLH));
+					}
+				}
+			}
+			else if (TLCCmaneuver == 5 || TLCCmaneuver == 6)
+			{
+				MCCNFRMan opt;
+
+				if (TLCCmaneuver == 5)
+				{
+					opt.type = 0;
+				}
+				else
+				{
+					opt.type = 1;
+				}
+
+				opt.GETbase = GETbase;
+				opt.lat = TLCCNonFreeReturnEMPLat;
+				opt.PeriGET = TLCCPeriGET;
+				opt.MCCGET = TLCC_GET;
+				opt.vessel = vessel;
+
+				if (vesseltype < 2)
+				{
+					opt.vesseltype = 0;
+				}
+				else
+				{
+					opt.vesseltype = 1;
+				}
+
+				if (vesseltype == 0 || vesseltype == 2)
+				{
+					opt.csmlmdocked = false;
+				}
+				else
+				{
+					opt.csmlmdocked = true;
+				}
+
+				opt.LOIh_apo = LOIapo;
+				opt.LOIh_peri = LOIperi;
+				opt.LSlat = LSLat;
+				opt.LSlng = LSLng;
+				opt.alt = LSAlt;
+				opt.t_land = t_Land;
+				opt.azi = LOIazi;
+				opt.h_peri = TLCCLAHPeriAlt;
+				opt.N = DOI_N;
+				opt.DOIType = DOI_option;
+				opt.DOIPeriAng = DOI_PeriAng;
+				opt.LOIEllipseRotation = LOIEllipseRotation;
+				opt.DOIPeriAlt = DOI_alt;
+				opt.RV_MCC = sv0;
+
+				TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingNonFreeReturn(&opt, &res);
+
+				if (TLCCSolGood)
+				{
+					TLCC_dV_LVLH = res.dV_LVLH;
+					TLCC_TIG = res.P30TIG;
+					TLCCNodeLat = res.NodeLat;
+					TLCCNodeLng = res.NodeLng;
+					TLCCNodeAlt = res.NodeAlt;
+					TLCCNodeGET = res.NodeGET;
+					TLCCEMPLatcor = res.EMPLatitude;
+					TLCCRev2MeridianGET = res.t_Rev2Meridian;
+					LOI_dV_LVLH = res.dV_LVLH_LOI;
+
+					if (DOI_option == 1)
+					{
+						DOI_dV_LVLH = res.dV_LVLH_DOI;
+						TLCCPostDOIApoAlt = res.h_apo_postDOI;
+						TLCCPostDOIPeriAlt = res.h_peri_postDOI;
+					}
+
+					P30TIG = TLCC_TIG;
+					dV_LVLH = TLCC_dV_LVLH;
+
+					if (MissionPlanningActive)
+					{
+						char code[64];
+						sprintf(code, "TLMCC");
+						rtcc->MPTAddManeuver(mptable, res.sv_pre, res.sv_post, code, LSAlt, length(dV_LVLH));
+					}
+				}
+			}
+			else if (TLCCmaneuver == 7)
+			{
+				MCCFlybyMan opt;
+
+				opt.GETbase = GETbase;
+				opt.lat = TLCCFreeReturnEMPLat;
+				opt.PeriGET = TLCCPeriGET;
+				opt.MCCGET = TLCC_GET;
+				opt.vessel = vessel;
+				opt.h_peri = TLCCFlybyPeriAlt;
+				opt.RV_MCC = sv0;
+
+				if (vesseltype < 2)
+				{
+					opt.vesseltype = 0;
+				}
+				else
+				{
+					opt.vesseltype = 1;
+				}
+
+				if (vesseltype == 0 || vesseltype == 2)
+				{
+					opt.csmlmdocked = false;
+				}
+				else
+				{
+					opt.csmlmdocked = true;
+				}
+
+				TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingFlyby(&opt, &res);
+
+				if (TLCCSolGood)
+				{
+					TLCC_dV_LVLH = res.dV_LVLH;
+					TLCC_TIG = res.P30TIG;
+					TLCCPeriGETcor = res.PericynthionGET;
+					TLCCReentryGET = res.EntryInterfaceGET;
+					TLCCFRIncl = res.FRInclination;
+					TLCCFRLat = EntryLatcor = res.SplashdownLat;
+					TLCCFRLng = EntryLngcor = res.SplashdownLng;
+
+					P30TIG = TLCC_TIG;
+					dV_LVLH = TLCC_dV_LVLH;
+
+					if (MissionPlanningActive)
+					{
+						char code[64];
+						sprintf(code, "TLMCC");
+						rtcc->MPTAddManeuver(mptable, res.sv_pre, res.sv_post, code, LSAlt, length(dV_LVLH));
+					}
+				}
+			}
+			else if (TLCCmaneuver == 8)
+			{
+				MCCSPSLunarFlybyMan opt;
+
+				opt.GETbase = GETbase;
+				opt.lat = TLCCFreeReturnEMPLat;
+				opt.PeriGET = TLCCPeriGET;
+				opt.MCCGET = TLCC_GET;
+				opt.vessel = vessel;
+				opt.h_peri = TLCCFlybyPeriAlt;
+				opt.AscendingNode = TLCCAscendingNode;
+				opt.FRInclination = TLCCFRDesiredInclination;
+				opt.RV_MCC = sv0;
+
+				if (vesseltype < 2)
+				{
+					opt.vesseltype = 0;
+				}
+				else
+				{
+					opt.vesseltype = 1;
+				}
+
+				if (vesseltype == 0 || vesseltype == 2)
+				{
+					opt.csmlmdocked = false;
+				}
+				else
+				{
+					opt.csmlmdocked = true;
+				}
+
+				TLCCSolGood = rtcc->TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(&opt, &res, TLCCIterationStep);
+
+				if (TLCCSolGood)
+				{
+					TLCC_dV_LVLH = res.dV_LVLH;
+					TLCC_TIG = res.P30TIG;
+					TLCCPeriGETcor = res.PericynthionGET;
+					TLCCReentryGET = res.EntryInterfaceGET;
+					TLCCFRIncl = res.FRInclination;
+					TLCCFRLat = EntryLatcor = res.SplashdownLat;
+					TLCCFRLng = EntryLngcor = res.SplashdownLng;
+					TLCCEMPLatcor = res.EMPLatitude;
+
+					P30TIG = TLCC_TIG;
+					dV_LVLH = TLCC_dV_LVLH;
+
+					if (MissionPlanningActive)
+					{
+						char code[64];
+						sprintf(code, "TLMCC");
+						rtcc->MPTAddManeuver(mptable, res.sv_pre, res.sv_post, code, LSAlt, length(dV_LVLH));
+					}
+				}
 			}
 		}
 		Result = 0;

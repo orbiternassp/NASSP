@@ -278,7 +278,6 @@ struct EntryOpt
 	double lng; //Longitude of the desired splashdown coordinates
 	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
 	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -291,6 +290,7 @@ struct EntryResults
 	double latitude, longitude;
 	double GET05G, GET400K, RTGO, VIO, ReA, Incl, FlybyAlt;
 	int precision;
+	SV sv_preburn;
 	SV sv_postburn;
 };
 
@@ -312,6 +312,8 @@ struct TLMCCResults
 	VECTOR3 dV_LVLH_LOI;
 	VECTOR3 dV_LVLH_DOI;
 	double h_peri_postDOI, h_apo_postDOI;
+	SV sv_pre;
+	SV sv_post;
 };
 
 struct TwoImpulseResuls
@@ -449,7 +451,6 @@ struct TLIManNode
 	double lng; //selenographic longitude
 	double PeriGET; //time of pericynthion, initial guess
 	double h_peri;	//flyby altitude
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 };
 
@@ -461,7 +462,6 @@ struct TLIManFR
 	double lat; //Earth-Moon-Plane
 	double PeriGET; //time of pericynthion, initial guess
 	double h_peri;	//flyby altitude
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 };
 
@@ -474,7 +474,6 @@ struct MCCNodeMan
 	double lng; //selenographic longitude
 	double NodeGET; //GET at node
 	double h_node;	//node altitude
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -489,7 +488,6 @@ struct MCCFRMan
 	double lat; //Earth-Moon-Plane latitude
 	double PeriGET; //initial guess for the GET at pericynthion
 	double h_peri;	//pericynthion altitude
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -513,7 +511,6 @@ struct MCCNFRMan
 	double lat; //Earth-Moon-Plane latitude
 	double PeriGET; //initial guess for the GET at pericynthion
 	double h_peri;	//pericynthion altitude
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -541,7 +538,6 @@ struct MCCFlybyMan
 	double lat; //Earth-Moon-Plane latitude
 	double PeriGET; //initial guess for the GET at pericynthion
 	double h_peri;	//pericynthion altitude
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -557,7 +553,6 @@ struct MCCSPSLunarFlybyMan
 	double h_peri;	//pericynthion altitude
 	double FRInclination;
 	bool AscendingNode;
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -575,7 +570,6 @@ struct LOIMan
 	double t_land;		//time of landing
 	double h_apo;		//apolune altitude
 	double h_peri;		//perilune altitude
-	bool useSV = false;	//true if state vector is to be used
 	SV RV_MCC;			//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -662,6 +656,7 @@ struct GMPOpt
 struct TLIPADOpt
 {
 	VESSEL* vessel; //vessel
+	SV sv0; //vessel state vector
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	double TLI;	//Time of Injection
@@ -1042,9 +1037,14 @@ struct SpaceDigitalsOpt
 
 struct MPTManeuver
 {
+	MPTManeuver();
 	SV sv_before;
 	SV sv_after;
 	std::string code;
+	double HA;
+	double HP;
+	double dt;
+	double DV;
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -1170,12 +1170,14 @@ public:
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
 	void TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
 	void TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *res, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
-	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res);
 	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyMan *opt, TLMCCResults *res, int &step);
-	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_post);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node);
+	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_pre, SV &sv_post);
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
@@ -1195,7 +1197,7 @@ public:
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double GETbase, double P30TIG, double TB5, double mu, double T_RG);
-	void LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &R_TLI, VECTOR3 &V_TLI, double &T_TLI);
+	void LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI);
 	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
 	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc = true);
 	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out, bool agc = true);
@@ -1261,6 +1263,12 @@ public:
 	void NCCProgram(SV sv_C, SV sv_W, double GETbase, double E_L, double t_C, double dt, double t_F, double dh, VECTOR3 &dV_NCC_LVLH, double &t_NSR, VECTOR3 &dV_NSR_LVLH);
 	void NSRProgram(SV sv_C, SV sv_W, double GETbase, double E_L, double t2, double t3, VECTOR3 &dV_NSR_LVLH);
 	void NPCProgram(SV sv_C, SV sv_W, double GETbase, double t, double &t_NPC, VECTOR3 &dV_NPC_LVLH);
+
+	//Mission Planning
+	int MPTAddTLI(std::vector<MPTManeuver> &mptable, SV sv_IG, SV sv_TLI, double DV);
+	int MPTAddManeuver(std::vector<MPTManeuver> &mptable, SV sv_ig, SV sv_cut, char *code, double LSAlt, double DV);
+	bool MPTTrajectory(std::vector<MPTManeuver> &mptable, double GETbase, SV &sv_out);
+	bool MPTTrajectory(std::vector<MPTManeuver> &mptable, double GET, double GETbase, SV &sv_out);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state

@@ -448,7 +448,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 4 * H / 14, "Pre-Advisory Data", 17);
 		skp->Text(1 * W / 8, 6 * H / 14, "Utility", 7);
 		skp->Text(1 * W / 8, 8 * H / 14, "MCC Displays", 12);
-		skp->Text(1 * W / 8, 10 * H / 14, "Configuration", 13);
+		skp->Text(1 * W / 8, 10 * H / 14, "Mission Plan Table", 18);
+		skp->Text(1 * W / 8, 12 * H / 14, "Configuration", 13);
 	}
 	else if (screen == 1)
 	{
@@ -4214,6 +4215,58 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%06.2f°", G->spacedigit.LN);
 		skp->Text(30 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
 	}
+	else if (screen == 44)
+	{
+		skp->Text(3 * W / 8, 1 * H / 14, "FIDO MISSION PLAN TABLE", 23);
+
+		if (G->MissionPlanningActive)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Active", 6);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Inactive", 8);
+		}
+
+		skp->SetFont(font2);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(3 * W / 32, 6 * H / 28, "GETBI", 5);
+		skp->Text(8 * W / 32, 6 * H / 28, "DT", 2);
+		skp->Text(13 * W / 32, 6 * H / 28, "DELTAV", 6);
+		skp->Text(17 * W / 32, 6 * H / 28, "DVREM", 5);
+		skp->Text(21 * W / 32, 6 * H / 28, "HA", 2);
+		skp->Text(25 * W / 32, 6 * H / 28, "HP", 2);
+		skp->Text(29 * W / 32, 6 * H / 28, "CODE", 4);
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		for (unsigned i = 0;i < G->mptable.size();i++)
+		{
+			GET_Display(Buffer, OrbMech::GETfromMJD(G->mptable[i].sv_before.MJD, G->GETbase), false);
+			skp->Text(5 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%07.1f", G->mptable[i].DV);
+			skp->Text(14 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%05.0f", G->mptable[i].HA);
+			skp->Text(22 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%05.0f", G->mptable[i].HP);
+			skp->Text(26 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, G->mptable[i].code.c_str());
+			skp->Text(31 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		for (unsigned i = 1;i < G->mptable.size();i++)
+		{
+			GET_Display(Buffer, G->mptable[i].dt, false);
+			skp->Text(10 * W / 32, (i * 2 + 6) * H / 28, Buffer, strlen(Buffer));
+		}
+
+	}
 	return true;
 }
 
@@ -4280,13 +4333,14 @@ void ApolloRTCCMFD::menuTLANDUpload()
 
 void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display a time in the format hhh:mm:ss
 {
+	double time2 = round(time);
 	if (DispGET)
 	{
-		sprintf(Buff, "%03.0f:%02.0f:%02.0f GET", floor(time / 3600.0), floor(fmod(time, 3600.0) / 60.0), fmod(time, 60.0));
+		sprintf(Buff, "%03.0f:%02.0f:%02.0f GET", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
 	}
 	else
 	{
-		sprintf(Buff, "%03.0f:%02.0f:%02.0f", floor(time / 3600.0), floor(fmod(time, 3600.0) / 60.0), fmod(time, 60.0));
+		sprintf(Buff, "%03.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
 	}
 	//sprintf(Buff, "%03d:%02d:%02d", hh, mm, ss);
 }
@@ -4628,6 +4682,12 @@ void ApolloRTCCMFD::menuSetMCCDisplaysPage()
 void ApolloRTCCMFD::menuSetSpaceDigitalsPage()
 {
 	screen = 43;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetMPTPage()
+{
+	screen = 44;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -5994,57 +6054,7 @@ void ApolloRTCCMFD::menuCalcManPAD()
 	{
 		if (G->vesseltype < 2)
 		{
-			TLIPADOpt opt;
-			double T_TLI;
-
-			SaturnV *SatV = (SaturnV*)G->g_Data.progVessel;
-			LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
-
-			if (lvdc->TU)
-			{
-				G->TLI_PAD();
-			}
-			else
-			{
-				LVDCTLIparam tliparam;
-
-				tliparam.alpha_TS = lvdc->alpha_TS;
-				tliparam.Azimuth = lvdc->Azimuth;
-				tliparam.beta = lvdc->beta;
-				tliparam.cos_sigma = lvdc->cos_sigma;
-				tliparam.C_3 = lvdc->C_3;
-				tliparam.e_N = lvdc->e_N;
-				tliparam.f = lvdc->f;
-				tliparam.mu = lvdc->mu;
-				tliparam.MX_A = lvdc->MX_A;
-				tliparam.omega_E = lvdc->omega_E;
-				tliparam.phi_L = lvdc->PHI;
-				tliparam.R_N = lvdc->R_N;
-				tliparam.T_2R = lvdc->T_2R;
-				tliparam.TargetVector = lvdc->TargetVector;
-				tliparam.TB5 = lvdc->TB5;
-				tliparam.theta_EO = lvdc->theta_EO;
-				tliparam.t_D = lvdc->t_D;
-				tliparam.T_L = lvdc->T_L;
-				tliparam.T_RG = lvdc->T_RG;
-				tliparam.T_ST = lvdc->T_ST;
-				tliparam.Tt_3R = lvdc->Tt_3R;
-
-				G->rtcc->LVDCTLIPredict(tliparam, G->vessel, G->GETbase, G->dV_LVLH, G->P30TIG, G->R_TLI, G->V_TLI, T_TLI);
-
-				opt.dV_LVLH = G->dV_LVLH;
-				opt.GETbase = G->GETbase;
-				opt.REFSMMAT = G->REFSMMAT;
-				opt.TIG = G->P30TIG;
-				opt.vessel = G->vessel;
-				opt.SeparationAttitude = lvdc->XLunarAttitude;
-				opt.TLI = T_TLI;
-				opt.R_TLI = G->R_TLI;
-				opt.V_TLI = G->V_TLI;
-				opt.uselvdc = true;
-
-				G->rtcc->TLI_PAD(&opt, G->tlipad);
-			}
+			G->TLI_PAD();
 		}
 		else
 		{
@@ -8365,6 +8375,19 @@ void ApolloRTCCMFD::set_SpaceDigitalsGET(double get)
 {
 	G->spacedigit.GETVector1 = get;
 	G->SpaceDigitalsGET();
+}
+
+void ApolloRTCCMFD::menuMPTCycleActive()
+{
+	G->MissionPlanningActive = !G->MissionPlanningActive;
+}
+
+void ApolloRTCCMFD::menuMPTDeleteManeuver()
+{
+	if (G->mptable.size() > 0)
+	{
+		G->mptable.pop_back();
+	}
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)
