@@ -312,6 +312,7 @@ public:
 	VECTOR3 LOI_dV_LVLH;
 	double LOI_TIG;
 	int LOIEllipseRotation;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
+	double LOI2_EarliestGET;
 
 	//LANDMARK TRACKING PAGE
 	AP11LMARKTRKPAD landmarkpad;

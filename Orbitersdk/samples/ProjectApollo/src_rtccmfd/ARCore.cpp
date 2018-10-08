@@ -423,6 +423,7 @@ ARCore::ARCore(VESSEL* v)
 	LOI_TIG = 0.0;
 	LOI2Alt = 60.0*1852.0;
 	LOIEllipseRotation = 0;
+	LOI2_EarliestGET = 0.0;
 
 	TLCCmaneuver = 2;
 	TLCC_GET = 0.0;
@@ -2322,11 +2323,25 @@ int ARCore::subThread()
 		{
 			LOI2Man opt;
 
+			SV sv_pre, sv_post;
+
+			if (MissionPlanningActive)
+			{
+				if (!rtcc->MPTTrajectory(mptable, GETbase, opt.RV_MCC))
+				{
+					opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+				}
+			}
+			else
+			{
+				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+			}
+
 			opt.alt = LSAlt;
+			opt.EarliestGET = LOI2_EarliestGET;
 			opt.GETbase = GETbase;
 			opt.h_circ = LOI2Alt;
 			opt.vessel = vessel;
-			opt.useSV = false;
 
 			if (vesseltype < 2)
 			{
@@ -2346,9 +2361,18 @@ int ARCore::subThread()
 				opt.csmlmdocked = true;
 			}
 
-			rtcc->LOI2Targeting(&opt, LOI_dV_LVLH, LOI_TIG);
+			rtcc->LOI2Targeting(&opt, LOI_dV_LVLH, LOI_TIG, sv_pre, sv_post);
 			P30TIG = LOI_TIG;
 			dV_LVLH = LOI_dV_LVLH;
+
+			if (MissionPlanningActive)
+			{
+				char code[64];
+
+				sprintf(code, "LOI2");
+
+				rtcc->MPTAddManeuver(mptable, sv_pre, sv_post, code, LSAlt, length(dV_LVLH));
+			}
 		}
 
 
@@ -2590,12 +2614,22 @@ int ARCore::subThread()
 	break;
 	case 10:	//DOI Targeting
 	{
-		SV sv;
+		SV sv, sv_pre, sv_post;
 		DOIMan opt;
 		VECTOR3 DOI_DV_imp;
 		double DOI_TIG_imp, attachedMass;
 
-		sv = rtcc->StateVectorCalc(vessel);
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, sv))
+			{
+				sv = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			sv = rtcc->StateVectorCalc(vessel);
+		}
 
 		opt.EarliestGET = DOIGET;
 		opt.GETbase = GETbase;
@@ -2618,10 +2652,19 @@ int ARCore::subThread()
 		}
 
 		rtcc->DOITargeting(&opt, DOI_DV_imp, DOI_TIG_imp, DOI_t_PDI, t_Land, DOI_CR);
-		rtcc->PoweredFlightProcessor(sv, GETbase, DOI_TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, DOI_DV_imp, false, DOI_TIG, DOI_dV_LVLH);
+		rtcc->PoweredFlightProcessor(sv, GETbase, DOI_TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, DOI_DV_imp, false, DOI_TIG, DOI_dV_LVLH, sv_pre, sv_post);
 
 		P30TIG = DOI_TIG;
 		dV_LVLH = DOI_dV_LVLH;
+
+		if (MissionPlanningActive)
+		{
+			char code[64];
+
+			sprintf(code, "DOI");
+
+			rtcc->MPTAddManeuver(mptable, sv_pre, sv_post, code, LSAlt, length(dV_LVLH));
+		}
 
 		Result = 0;
 	}

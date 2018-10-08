@@ -429,7 +429,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("MAN", OAPI_KEY_T, &ApolloRTCCMFD::menuSwitchLOIManeuver);
 	RegisterFunction("OPT", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchLOIOption);
-	RegisterFunction("GET", OAPI_KEY_P, &ApolloRTCCMFD::menuSetTLAND);
+	RegisterFunction("GET", OAPI_KEY_P, &ApolloRTCCMFD::menuSetLOIGET);
 	RegisterFunction("APA", OAPI_KEY_H, &ApolloRTCCMFD::menuSetLOIApo);
 	RegisterFunction("PEA", OAPI_KEY_N, &ApolloRTCCMFD::menuSetLOIPeri);
 	RegisterFunction("AZI", OAPI_KEY_I, &ApolloRTCCMFD::menuSetLOIAzi);

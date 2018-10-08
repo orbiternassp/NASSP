@@ -581,8 +581,8 @@ struct LOI2Man
 {
 	VESSEL* vessel;			//vessel
 	double GETbase;			//usually MJD at launch
+	double EarliestGET = 0.0;	//Earliest GET for the LOI-2 maneuver
 	double h_circ;			//altitude of circular orbit
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;				//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -1179,6 +1179,7 @@ public:
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_pre, SV &sv_post);
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post);
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
@@ -1203,6 +1204,7 @@ public:
 	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out, bool agc = true);
 	VECTOR3 ConvertDVtoLVLH(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_imp);
 	VECTOR3 ConvertDVtoInertial(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_LVLH_imp);
+	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, SV &sv_pre, SV &sv_post, bool agc = true);
 	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);

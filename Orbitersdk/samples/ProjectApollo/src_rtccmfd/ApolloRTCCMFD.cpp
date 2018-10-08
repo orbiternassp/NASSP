@@ -2070,6 +2070,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 			}
 
+			GET_Display(Buffer, G->LOI2_EarliestGET);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
 			sprintf(Buffer, "%.2f NM", G->LOI2Alt / 1852.0);
 			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
@@ -4250,11 +4253,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%07.1f", G->mptable[i].DV);
 			skp->Text(14 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%05.0f", G->mptable[i].HA);
-			skp->Text(22 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%07.1f", G->mptable[i].HA);
+			skp->Text(23 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%05.0f", G->mptable[i].HP);
-			skp->Text(26 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%07.1f", G->mptable[i].HP);
+			skp->Text(27 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, G->mptable[i].code.c_str());
 			skp->Text(31 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
@@ -6688,12 +6691,6 @@ void ApolloRTCCMFD::menuSetTLCCPeriGET()
 	oapiOpenInputBox("Choose the Pericyntheon GET (Format: hhh:mm:ss)", TLCCPeriGETInput, 0, 20, (void*)this);
 }
 
-void ApolloRTCCMFD::menuSetTLAND()
-{
-	bool TLandGETnput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the Time of Landing (Format: hhh:mm:ss)", TLandGETnput, 0, 20, (void*)this);
-}
-
 bool TLCCPeriGETInput(void *id, char *str, void *data)
 {
 	int hh, mm, ss, t1time;
@@ -6716,6 +6713,12 @@ void ApolloRTCCMFD::set_TLCCPeriGET(double time)
 	{
 		G->TLCCPeriGET = time;
 	}
+}
+
+void ApolloRTCCMFD::menuSetTLAND()
+{
+	bool TLandGETnput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the Time of Landing (Format: hhh:mm:ss)", TLandGETnput, 0, 20, (void*)this);
 }
 
 bool TLandGETnput(void *id, char *str, void *data)
@@ -6932,6 +6935,36 @@ bool LOIAziInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_LOIAzi(double azi)
 {
 	this->G->LOIazi = azi*RAD;
+}
+
+void ApolloRTCCMFD::menuSetLOIGET()
+{
+	if (G->LOImaneuver == 2)
+	{
+		bool LOI2EarliestGETnput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the earliest time for LOI-2 (Format: hhh:mm:ss)", LOI2EarliestGETnput, 0, 20, (void*)this);
+	}
+	else
+	{
+		menuSetTLAND();
+	}
+}
+
+bool LOI2EarliestGETnput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_LOI2EarliestGET(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LOI2EarliestGET(double time)
+{
+	G->LOI2_EarliestGET = time;
 }
 
 void ApolloRTCCMFD::menuLOICalc()

@@ -2813,19 +2813,18 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 {
-	SV sv0, sv1;
-	double GET, LMmass, mass, mu;
+	SV sv_pre, sv_post;
+
+	LOI2Targeting(opt, dV_LVLH, P30TIG, sv_pre, sv_post);
+}
+
+void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post)
+{
+	SV sv0, sv1, sv2;
+	double GET, LMmass, mass, mu, EarliestMJD;
 	OBJHANDLE hMoon;
 
-	if (opt->useSV)
-	{
-		sv0 = opt->RV_MCC;
-	}
-	else
-	{
-		sv0 = StateVectorCalc(opt->vessel);
-	}
-
+	sv0 = opt->RV_MCC;
 	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
 
 	if (opt->csmlmdocked)
@@ -2837,7 +2836,18 @@ void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 		LMmass = 0.0;
 	}
 
-	mass = LMmass + sv0.mass;
+	if (opt->EarliestGET == 0.0)
+	{
+		EarliestMJD = sv0.MJD;
+	}
+	else
+	{
+		EarliestMJD = OrbMech::MJDfromGET(opt->EarliestGET, opt->GETbase);
+	}
+
+	sv1 = GeneralTrajectoryPropagation(sv0, 0, EarliestMJD);
+
+	mass = LMmass + sv1.mass;
 
 	hMoon = oapiGetObjectByName("Moon");
 	mu = GGRAV*oapiGetMass(hMoon);
@@ -2849,23 +2859,24 @@ void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 	mu = GGRAV*oapiGetMass(hMoon);
 	a = oapiGetSize(hMoon) + opt->h_circ + opt->alt;
 
-	dt2 = OrbMech::time_radius_integ(sv0.R, sv0.V, sv0.MJD, a, -1, hMoon, hMoon, sv1.R, sv1.V);
-	sv1 = coast(sv0, dt2);
-	LOIGET = dt2 + (sv0.MJD - opt->GETbase) * 24 * 60 * 60;
+	dt2 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, a, -1, hMoon, hMoon);
+	sv2 = coast(sv1, dt2);
+	LOIGET = OrbMech::GETfromMJD(sv2.MJD, opt->GETbase);
 
-	U_H = unit(crossp(sv1.R, sv1.V));
-	U_hor = unit(crossp(U_H, unit(sv1.R)));
-	v_circ = sqrt(mu*(2.0 / length(sv1.R) - 1.0 / a));
+	U_H = unit(crossp(sv2.R, sv2.V));
+	U_hor = unit(crossp(U_H, unit(sv2.R)));
+	v_circ = sqrt(mu*(2.0 / length(sv2.R) - 1.0 / a));
 	VA2_apo = U_hor*v_circ;
 
-	DVX = VA2_apo - sv1.V;
+	DVX = VA2_apo - sv2.V;
 
 	VECTOR3 Llambda;
 	double t_slip;
 	SV sv_tig;
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv1, LMmass, DVX, true, Llambda, t_slip); //Calculate the impulsive equivalent of the maneuver
-	sv_tig = coast(sv1, t_slip);
+	FiniteBurntimeCompensation(opt->vesseltype, sv2, LMmass, DVX, true, Llambda, t_slip, sv_post); //Calculate the impulsive equivalent of the maneuver
+	sv_tig = coast(sv2, t_slip);
+	sv_pre = sv_tig;
 
 	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
 
@@ -5993,16 +6004,23 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 
 void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc)
 {
-	SV sv_pre, sv_tig, sv_post;
+	SV sv_pre, sv_post;
+
+	PoweredFlightProcessor(sv0, GETbase, GET_TIG_imp, vesseltype, enginetype, attachedMass, DV, DVIsLVLH, GET_TIG, dV_LVLH, sv_pre, sv_post, agc);
+}
+
+void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, SV &sv_pre, SV &sv_post, bool agc)
+{
+	SV sv_imp, sv_tig;
 	MATRIX3 Q_Xx;
 	VECTOR3 Llambda, DeltaV;
 	double t_slip;
 
-	sv_pre = coast(sv0, GET_TIG_imp - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+	sv_imp = coast(sv0, GET_TIG_imp - OrbMech::GETfromMJD(sv0.MJD, GETbase));
 
 	if (DVIsLVLH)
 	{
-		Q_Xx = OrbMech::LVLH_Matrix(sv_pre.R, sv_pre.V);
+		Q_Xx = OrbMech::LVLH_Matrix(sv_imp.R, sv_imp.V);
 		DeltaV = tmul(Q_Xx, DV);
 	}
 	else
@@ -6010,9 +6028,10 @@ void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, in
 		DeltaV = DV;
 	}
 
-	FiniteBurntimeCompensation(vesseltype, sv_pre, attachedMass, DeltaV, enginetype, Llambda, t_slip, sv_post, agc);
+	FiniteBurntimeCompensation(vesseltype, sv_imp, attachedMass, DeltaV, enginetype, Llambda, t_slip, sv_post, agc);
 
-	sv_tig = coast(sv_pre, t_slip);
+	sv_tig = coast(sv_imp, t_slip);
+	sv_pre = sv_tig;
 
 	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
 	GET_TIG = GET_TIG_imp + t_slip;

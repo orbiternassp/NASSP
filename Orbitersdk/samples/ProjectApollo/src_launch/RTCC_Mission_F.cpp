@@ -833,6 +833,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.csmlmdocked = true;
 		opt.GETbase = GETbase;
 		opt.h_circ = 60.0*1852.0;
+		opt.RV_MCC = sv;
 		opt.vessel = calcParams.src;
 
 		LOI2Targeting(&opt, dV_LVLH, P30TIG);

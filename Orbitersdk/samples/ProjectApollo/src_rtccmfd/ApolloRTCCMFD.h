@@ -210,6 +210,8 @@ public:
 	void set_LOIAzi(double inc);
 	void menuSetTLAND();
 	void menuLOICalc();
+	void menuSetLOIGET();
+	void set_LOI2EarliestGET(double time);
 	void menuRequestLTMFD();
 	void menuSetLandmarkTrkPage();
 	void menuSetLmkTime();
