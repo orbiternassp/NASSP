@@ -2674,6 +2674,18 @@ int ARCore::subThread()
 		TEIOpt opt;
 		EntryResults res;
 
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, opt.RV_MCC))
+			{
+				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+		}
+
 		entryprecision = 1;
 
 		if (vesseltype < 2)
@@ -2724,6 +2736,15 @@ int ARCore::subThread()
 		dV_LVLH = Entry_DV;
 		entryprecision = res.precision;
 		TLCCFRIncl = res.Incl;
+
+		if (MissionPlanningActive)
+		{
+			char code[64];
+
+			sprintf(code, "TEI");
+
+			rtcc->MPTAddManeuver(mptable, res.sv_preburn, res.sv_postburn, code, LSAlt, length(dV_LVLH));
+		}
 		
 		Result = 0;
 	}
@@ -3365,9 +3386,18 @@ int ARCore::subThread()
 	{
 		RTEFlybyOpt opt;
 		EntryResults res;
-		double SVMJD;
 
-		SVMJD = oapiGetSimMJD();
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, opt.RV_MCC))
+			{
+				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+		}
 
 		entryprecision = 1;
 
@@ -3420,6 +3450,22 @@ int ARCore::subThread()
 		entryprecision = res.precision;
 		TLCCFRIncl = res.Incl;
 		FlybyPeriAlt = res.FlybyAlt;
+
+		if (MissionPlanningActive)
+		{
+			char code[64];
+
+			if (FlybyType == 0)
+			{
+				sprintf(code, "FLYBY");
+			}
+			else
+			{
+				sprintf(code, "PC+2");
+			}
+
+			rtcc->MPTAddManeuver(mptable, res.sv_preburn, res.sv_postburn, code, LSAlt, length(dV_LVLH));
+		}
 
 		Result = 0;
 	}

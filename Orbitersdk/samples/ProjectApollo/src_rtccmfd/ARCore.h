@@ -240,7 +240,7 @@ public:
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
-	int FlybyType;	//1 = Flyby, 2 = PC+2
+	int FlybyType;	//0 = Flyby, 1 = PC+2
 	double FlybyPeriAlt;
 
 	//STATE VECTOR PAGE

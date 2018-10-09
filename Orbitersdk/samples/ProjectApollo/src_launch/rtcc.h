@@ -339,7 +339,6 @@ struct TEIOpt
 	double TIGguess = 0.0;	//Initial estimate for the TIG
 	double EntryLng;		//Entry longitude
 	int returnspeed;		//0 = slow return, 1 = normal return, 2 = fast return
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;				//State vector as input
 	int RevsTillTEI = 0;	//Revolutions until TEI
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
@@ -357,7 +356,6 @@ struct RTEFlybyOpt
 	int FlybyType;			//0 = Flyby, 1 = PC+2
 	double EntryLng;		//Entry longitude
 	int returnspeed;		//0 = slow return, 1 = normal return, 2 = fast return
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;				//State vector as input
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool entrylongmanual = true; //Targeting a landing zone or a manual landing longitude

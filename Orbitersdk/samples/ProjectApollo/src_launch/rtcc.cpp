@@ -1492,7 +1492,7 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 		UX = crossp(UY, UZ);
 
 		DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
-		theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / 92100.0;
+		theta_T = length(crossp(R1B, V1B))*length(opt->dV_LVLH)*opt->vessel->GetMass() / OrbMech::power(length(R1B), 2.0) / SPS_THRUST;
 		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 		V_G = DV_C + UY*opt->dV_LVLH.y;
 		OrbMech::poweredflight(R1B, V1B, SVMJD + dt / 24.0 / 3600.0, gravref, F, v_e, opt->vessel->GetMass(), V_G, R2B, V2B, m_cut, t_go);
@@ -2185,7 +2185,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 			DV_P = UX*opt->dV_LVLH.x + UZ*opt->dV_LVLH.z;
 			if (length(DV_P) != 0.0)
 			{
-				theta_T = length(crossp(sv4.R, sv4.V))*length(opt->dV_LVLH)*(sv4.mass + LMmass) / OrbMech::power(length(sv4.R), 2.0) / 92100.0;
+				theta_T = length(crossp(sv4.R, sv4.V))*length(opt->dV_LVLH)*(sv4.mass + LMmass) / OrbMech::power(length(sv4.R), 2.0) / SPS_THRUST;
 				DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
 				V_G = DV_C + UY*opt->dV_LVLH.y;
 			}
@@ -5339,8 +5339,8 @@ void RTCC::RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res)
 	Flyby* flybycalc;
 	bool endi = false;
 	double EMSAlt, dt22, mu_E, MJDguess, CSMmass, LMmass;
-	VECTOR3 R05G, V05G, R_A, V_A, R0M, V0M;
-	VECTOR3 Llambda, R_cor, V_cor;
+	VECTOR3 R05G, V05G, R0M, V0M;
+	VECTOR3 Llambda;
 	double t_slip, SVMJD;
 	MATRIX3 Q_Xx;
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
@@ -5350,26 +5350,11 @@ void RTCC::RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res)
 	EMSAlt = 297431.0*0.3048;
 	mu_E = GGRAV*oapiGetMass(hEarth);
 
-	if (opt->useSV)
-	{
-		R0M = opt->RV_MCC.R;
-		V0M = opt->RV_MCC.V;
-		SVMJD = opt->RV_MCC.MJD;
-		gravref = opt->RV_MCC.gravref;
-		CSMmass = opt->RV_MCC.mass;
-	}
-	else
-	{
-		gravref = AGCGravityRef(opt->vessel);
-		opt->vessel->GetRelativePos(gravref, R_A);
-		opt->vessel->GetRelativeVel(gravref, V_A);
-		SVMJD = oapiGetSimMJD();
-		R0M = _V(R_A.x, R_A.z, R_A.y);
-		V0M = _V(V_A.x, V_A.z, V_A.y);
-
-		CSMmass = opt->vessel->GetMass();
-	}
-
+	R0M = opt->RV_MCC.R;
+	V0M = opt->RV_MCC.V;
+	SVMJD = opt->RV_MCC.MJD;
+	gravref = opt->RV_MCC.gravref;
+	CSMmass = opt->RV_MCC.mass;
 
 	if (opt->TIGguess == 0.0)
 	{
@@ -5421,17 +5406,11 @@ void RTCC::RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res)
 	sv_tig.R = flybycalc->Rig;
 	sv_tig.V = flybycalc->Vig;
 
-	res->sv_postburn = sv_tig;
-	res->sv_postburn.V = flybycalc->Vig_apo;
+	FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, flybycalc->Vig_apo - flybycalc->Vig, true, Llambda, t_slip, res->sv_postburn);
+	res->sv_preburn = coast(sv_tig, t_slip);
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, flybycalc->Vig_apo - flybycalc->Vig, true, Llambda, t_slip);
-
-	OrbMech::oneclickcoast(flybycalc->Rig, flybycalc->Vig, flybycalc->TIG, t_slip, R_cor, V_cor, hMoon, hMoon);
-
-	Q_Xx = OrbMech::LVLH_Matrix(R_cor, V_cor);
-
-	//EntryTIGcor = teicalc->TIG_imp + t_slip;
-	res->P30TIG = (flybycalc->TIG - opt->GETbase)*24.0*3600.0 + t_slip;
+	Q_Xx = OrbMech::LVLH_Matrix(res->sv_preburn.R, res->sv_preburn.V);
+	res->P30TIG = OrbMech::GETfromMJD(res->sv_preburn.MJD, opt->GETbase);
 	res->dV_LVLH = mul(Q_Xx, Llambda);
 
 	delete flybycalc;
@@ -5444,7 +5423,7 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 	bool endi = false;
 	double EMSAlt, dt22, mu_E, MJDguess, LMmass;
 	VECTOR3 R05G, V05G;
-	VECTOR3 Llambda, R_cor, V_cor;
+	VECTOR3 Llambda;
 	double t_slip;
 	MATRIX3 Q_Xx;
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
@@ -5452,16 +5431,8 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 
 	EMSAlt = 297431.0*0.3048;
 	mu_E = GGRAV*oapiGetMass(hEarth);
-
-	if (opt->useSV)
-	{
-		sv0 = opt->RV_MCC;
-	}
-	else
-	{
-		sv0 = StateVectorCalc(opt->vessel);
-	}
-
+	
+	sv0 = opt->RV_MCC;
 
 	if (opt->TIGguess == 0.0)
 	{
@@ -5512,14 +5483,11 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 	sv_tig.R = teicalc->Rig;
 	sv_tig.V = teicalc->Vig;
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, teicalc->Vig_apo - teicalc->Vig, 1, Llambda, t_slip);
+	FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, teicalc->Vig_apo - teicalc->Vig, 1, Llambda, t_slip, res->sv_postburn);
+	res->sv_preburn = coast(sv_tig, t_slip);
 
-	OrbMech::oneclickcoast(teicalc->Rig, teicalc->Vig, teicalc->TIG, t_slip, R_cor, V_cor, hMoon, hMoon);
-
-	Q_Xx = OrbMech::LVLH_Matrix(R_cor, V_cor);
-
-	//EntryTIGcor = teicalc->TIG_imp + t_slip;
-	res->P30TIG = (teicalc->TIG - opt->GETbase)*24.0*3600.0 + t_slip;
+	Q_Xx = OrbMech::LVLH_Matrix(res->sv_preburn.R, res->sv_preburn.V);
+	res->P30TIG = OrbMech::GETfromMJD(res->sv_preburn.MJD, opt->GETbase);
 	res->dV_LVLH = mul(Q_Xx, Llambda);
 
 	delete teicalc;

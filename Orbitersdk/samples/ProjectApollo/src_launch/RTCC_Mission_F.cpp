@@ -415,6 +415,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.GETbase = GETbase;
 		entopt.returnspeed = 0;
 		entopt.FlybyType = 0;
+		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
 
@@ -691,16 +692,19 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		RTEFlybyOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
+		SV sv;
 		double GETbase;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
+		sv = StateVectorCalc(calcParams.src);
 		GETbase = getGETBase();
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.returnspeed = 2;
 		entopt.GETbase = GETbase;
 		entopt.FlybyType = 1;
+		entopt.RV_MCC = sv;
 		entopt.vessel = calcParams.src;
 
 		RTEFlybyTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
@@ -982,7 +986,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.GETbase = GETbase;
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
-		entopt.useSV = true;
 		entopt.vessel = calcParams.src;
 
 		TEITargeting(&entopt, &res);
