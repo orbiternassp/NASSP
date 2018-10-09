@@ -2569,6 +2569,18 @@ int ARCore::subThread()
 		{
 			AP11ManPADOpt opt;
 
+			if (MissionPlanningActive)
+			{
+				if (!rtcc->MPTTrajectory(mptable, P30TIG, GETbase, opt.RV_MCC))
+				{
+					opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+				}
+			}
+			else
+			{
+				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+			}
+
 			opt.dV_LVLH = dV_LVLH;
 			opt.directiontype = directiontype;
 			opt.enginetype = enginetype;
@@ -2580,6 +2592,7 @@ int ARCore::subThread()
 			opt.vessel = vessel;
 			opt.vesseltype = vesseltype;
 			opt.alt = LSAlt;
+			opt.useSV = true;
 
 			rtcc->AP11ManeuverPAD(&opt, manpad);
 		}

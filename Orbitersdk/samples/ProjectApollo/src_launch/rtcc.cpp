@@ -2795,7 +2795,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		sv_post.R = R_cut;
 		sv_post.V = V_cut;
 		sv_post.MJD = MJD_cut;
-		sv_post.mass = m_cut;
+		sv_post.mass = m_cut - LMmass;
 	}
 	else
 	{
@@ -9950,9 +9950,9 @@ bool RTCC::MPTTrajectory(std::vector<MPTManeuver> &mptable, double GETbase, SV &
 {
 	if (mptable.size() == 0) return false;
 
-	double GET = OrbMech::GETfromMJD(mptable.back().sv_after.MJD, GETbase);
+	sv_out = mptable.back().sv_after;
 
-	return MPTTrajectory(mptable, GET, GETbase, sv_out);
+	return true;
 }
 
 bool RTCC::MPTTrajectory(std::vector<MPTManeuver> &mptable, double GET, double GETbase, SV &sv_out)
@@ -9961,7 +9961,7 @@ bool RTCC::MPTTrajectory(std::vector<MPTManeuver> &mptable, double GET, double G
 
 	double MJD = OrbMech::MJDfromGET(GET, GETbase);
 
-	if (mptable[0].sv_before.MJD > MJD)
+	if (mptable[0].sv_before.MJD >= MJD)
 	{
 		sv_out = GeneralTrajectoryPropagation(mptable[0].sv_before, 0, MJD);
 		return true;
@@ -9969,7 +9969,7 @@ bool RTCC::MPTTrajectory(std::vector<MPTManeuver> &mptable, double GET, double G
 
 	unsigned i = 0;
 
-	while (mptable.size() - 1 > i && mptable[i].sv_after.MJD <= OrbMech::MJDfromGET(GET, GETbase)) i++;
+	while (mptable.size() - 1 > i && mptable[i + 1].sv_after.MJD <= MJD) i++;
 
 	sv_out = GeneralTrajectoryPropagation(mptable[i].sv_after, 0, MJD);
 
