@@ -1117,6 +1117,7 @@ struct LVDCTLIparam
 	double T_RG;
 	double T_ST;
 	double Tt_3R;
+	double t_clock;
 };
 
 struct GPMPRESULTS

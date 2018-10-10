@@ -71,6 +71,7 @@ void MCC::MissionSequence_C_Prime()
 				tliparam.T_RG = lvdc->T_RG;
 				tliparam.T_ST = lvdc->T_ST;
 				tliparam.Tt_3R = lvdc->Tt_3R;
+				tliparam.t_clock = lvdc->t_clock;
 
 				rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, sv, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, sv_IG, sv_TLI);
 

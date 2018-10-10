@@ -2460,6 +2460,7 @@ int ARCore::subThread()
 			tliparam.T_RG = lvdc->T_RG;
 			tliparam.T_ST = lvdc->T_ST;
 			tliparam.Tt_3R = lvdc->Tt_3R;
+			tliparam.t_clock = lvdc->t_clock;
 
 			rtcc->LVDCTLIPredict(tliparam, vessel, sv_A, GETbase, dV_LVLH, P30TIG, sv_IG, sv_TLI);
 

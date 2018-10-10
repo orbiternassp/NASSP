@@ -5524,6 +5524,10 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, SV sv_A, double GET
 
 	//State Vector
 	modf(oapiGetSimMJD(), &day);
+	if (lvdc.t_clock + lvdc.T_L > 24.0*3600.0)
+	{
+		day -= 1.0;
+	}
 	MJD_GRR = day + lvdc.T_L / 24.0 / 3600.0;
 	mat = OrbMech::Orbiter2PACSS13(MJD_GRR, lvdc.phi_L, -80.6041140*RAD, lvdc.Azimuth);
 

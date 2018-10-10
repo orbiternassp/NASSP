@@ -54,7 +54,7 @@ static char *name = "Apollo RTCC MFD";
 //
 
 DLLCLBK void InitModule(HINSTANCE hDLL) {          // Called by Orbiter when module selected in the Launchpad
-	g_coreMod = new ARoapiModule(hDLL);           // Declare a single root class instance for Glideslope for this simulation run
+	g_coreMod = new ARoapiModule(hDLL);           // Declare a single root class instance for ApolloRTCCMFD for this simulation run
 
 
 	MFDMODESPECEX spec;
