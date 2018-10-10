@@ -140,7 +140,6 @@ public:
 	void menuSwitchCritical();
 	void menuSwitchFlybyType();
 	void menuSwitchEntryPADOpt();
-	void menuSwitchEntryPADDirect();
 	void menuManPADTIG();
 	void set_ManPADTIG(double ManPADTIG);
 	void menusextantstartime();

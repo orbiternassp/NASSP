@@ -2168,6 +2168,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.lng = SplashLongitude;
 		entopt.P30TIG = TimeofIgnition;
 		entopt.REFSMMAT = REFSMMAT;
+		entopt.sv0 = sv;
 		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);

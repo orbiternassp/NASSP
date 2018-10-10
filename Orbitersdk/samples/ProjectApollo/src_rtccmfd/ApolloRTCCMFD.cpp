@@ -1842,15 +1842,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Entry PAD", 15);
 
-			if (G->EntryPADdirect)
-			{
-				skp->Text((int)(0.5 * W / 8), 4 * H / 14, "Direct", 6);
-			}
-			else
-			{
-				skp->Text((int)(0.5 * W / 8), 4 * H / 14, "MCC", 3);
-			}
-
 			if (G->entryrange != 0)
 			{
 				skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Desired Range:", 14);
@@ -6068,10 +6059,7 @@ void ApolloRTCCMFD::menuCalcManPAD()
 
 void ApolloRTCCMFD::menuCalcEntryPAD()
 {
-	if (length(G->dV_LVLH) != 0.0 || G->EntryPADdirect)
-	{
-		G->EntryPAD();
-	}
+	G->EntryPAD();
 }
 
 void ApolloRTCCMFD::menuCalcMapUpdate()
@@ -6112,15 +6100,6 @@ void ApolloRTCCMFD::menuSwitchEntryPADOpt()
 	else
 	{
 		G->entrypadopt = 0;
-		G->EntryPADdirect = false;
-	}
-}
-
-void ApolloRTCCMFD::menuSwitchEntryPADDirect()
-{
-	if (G->entrypadopt == 1)
-	{
-		G->EntryPADdirect = !G->EntryPADdirect;
 	}
 }
 

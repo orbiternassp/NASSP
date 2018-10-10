@@ -1947,8 +1947,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 95: //PLANE CHANGE TARGETING (FOR BURN)
 	{
 		PCMan opt;
+		SV sv;
 		double GETbase;
 
+		sv = StateVectorCalc(calcParams.src);
 		GETbase = calcParams.TEPHEM;
 
 		opt.alt = calcParams.LSAlt;
@@ -1956,6 +1958,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = GETbase;
 		opt.lat = calcParams.LSLat;
 		opt.lng = calcParams.LSLng;
+		opt.RV_MCC = sv;
 		opt.t_A = calcParams.LunarLiftoff;
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
@@ -2489,6 +2492,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.lng = SplashLongitude;
 		entopt.P30TIG = TimeofIgnition;
 		entopt.REFSMMAT = REFSMMAT;
+		entopt.sv0 = sv;
 		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);

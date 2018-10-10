@@ -274,7 +274,6 @@ public:
 	AP7ENT earthentrypad;
 	int entrypadopt; //0 = Earth Entry Update, 1 = Lunar Entry
 	double EntryRTGO;
-	bool EntryPADdirect;
 
 	//MAP UPDATE PAGE
 	AP10MAPUPDATE mapupdate;

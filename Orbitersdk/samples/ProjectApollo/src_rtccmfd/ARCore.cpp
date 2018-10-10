@@ -378,7 +378,6 @@ ARCore::ARCore(VESSEL* v)
 	lmmanpad.SXP = 0.0;
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
-	EntryPADdirect = false; //false = Entry PAD with MCC/Deorbit burn, true = Direct Entry
 	enginetype = 1;
 	directiontype = 0;
 	TPIPAD_AZ = 0.0;
@@ -1120,79 +1119,7 @@ void ARCore::GenerateAGCCorrectionVectors()
 
 void ARCore::EntryPAD()
 {
-	OBJHANDLE hEarth;
-	double mu;
-
-	hEarth = oapiGetObjectByName("Earth");
-	mu = GGRAV*oapiGetMass(hEarth);
-
-	if (entrypadopt == 0)
-	{
-		EarthEntryPADOpt opt;
-
-		opt.dV_LVLH = Entry_DV;
-		opt.GETbase = GETbase;
-		opt.P30TIG = EntryTIGcor;
-		opt.REFSMMAT = REFSMMAT;
-		opt.vessel = vessel;
-
-		if (EntryLatcor == 0)
-		{
-			opt.lat = 0;
-			opt.lng = 0;
-		}
-		else
-		{
-			opt.lat = EntryLatcor;
-			opt.lng = EntryLngcor;
-		}
-
-		VECTOR3 R, V;
-		double apo, peri;
-		OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
-		vessel->GetRelativePos(gravref, R);
-		vessel->GetRelativeVel(gravref, V);
-		OrbMech::periapo(R, V, mu, apo, peri);
-		if (peri < oapiGetSize(gravref) + 50 * 1852.0)
-		{
-			opt.preburn = false;
-			rtcc->EarthOrbitEntry(&opt, earthentrypad);
-		}
-		else
-		{
-			opt.preburn = true;
-			rtcc->EarthOrbitEntry(&opt, earthentrypad);
-		}
-
-
-		return;
-	}
-	else
-	{
-		LunarEntryPADOpt opt;
-
-		opt.direct = EntryPADdirect;
-		opt.dV_LVLH = dV_LVLH;
-		opt.GETbase = GETbase;
-		
-		if (EntryLatcor == 0)
-		{
-			//EntryPADLat = entry->EntryLatPred;
-			//EntryPADLng = entry->EntryLngPred;
-		}
-		else
-		{
-			//EntryPADLat = EntryLatcor;
-			//EntryPADLng = EntryLngcor;
-			opt.lat = EntryLatcor;
-			opt.lng = EntryLngcor;
-			opt.P30TIG = P30TIG;
-			opt.REFSMMAT = REFSMMAT;
-			opt.vessel = vessel;
-
-			rtcc->LunarEntryPAD(&opt, lunarentrypad);
-		}
-	}
+	startSubthread(31);
 }
 
 void ARCore::ManeuverPAD()
@@ -2863,6 +2790,19 @@ int ARCore::subThread()
 	case 13:	//PC Targeting
 	{
 		PCMan opt;
+		SV sv_pre, sv_post;
+
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, TLCC_GET, GETbase, opt.RV_MCC))
+			{
+				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+		}
 
 		if (vesseltype < 2)
 		{
@@ -2891,10 +2831,17 @@ int ARCore::subThread()
 		opt.landed = PClanded;
 		opt.t_A = PCAlignGET;
 
-		rtcc->PlaneChangeTargeting(&opt, PC_dV_LVLH, PC_TIG);
+		rtcc->PlaneChangeTargeting(&opt, PC_dV_LVLH, PC_TIG, sv_pre, sv_post);
 
 		P30TIG = PC_TIG;
 		dV_LVLH = PC_dV_LVLH;
+
+		if (MissionPlanningActive)
+		{
+			char code[64];
+			sprintf(code, "PC");
+			rtcc->MPTAddManeuver(mptable, sv_pre, sv_post, code, LSAlt, length(dV_LVLH));
+		}
 
 		Result = 0;
 	}
@@ -3769,6 +3716,93 @@ int ARCore::subThread()
 		opt.sv_A = spacedigitalssv;
 
 		rtcc->FIDOSpaceDigitalsGET(opt, spacedigit);
+
+		Result = 0;
+	}
+	break;
+	case 31: //Entry PAD
+	{
+		OBJHANDLE hEarth;
+		double mu;
+
+		hEarth = oapiGetObjectByName("Earth");
+		mu = GGRAV * oapiGetMass(hEarth);
+
+		if (entrypadopt == 0)
+		{
+			EarthEntryPADOpt opt;
+
+			opt.dV_LVLH = Entry_DV;
+			opt.GETbase = GETbase;
+			opt.P30TIG = EntryTIGcor;
+			opt.REFSMMAT = REFSMMAT;
+			opt.vessel = vessel;
+
+			if (EntryLatcor == 0)
+			{
+				opt.lat = 0;
+				opt.lng = 0;
+			}
+			else
+			{
+				opt.lat = EntryLatcor;
+				opt.lng = EntryLngcor;
+			}
+
+			VECTOR3 R, V;
+			double apo, peri;
+			OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
+			vessel->GetRelativePos(gravref, R);
+			vessel->GetRelativeVel(gravref, V);
+			OrbMech::periapo(R, V, mu, apo, peri);
+			if (peri < oapiGetSize(gravref) + 50 * 1852.0)
+			{
+				opt.preburn = false;
+				rtcc->EarthOrbitEntry(&opt, earthentrypad);
+			}
+			else
+			{
+				opt.preburn = true;
+				rtcc->EarthOrbitEntry(&opt, earthentrypad);
+			}
+		}
+		else
+		{
+			LunarEntryPADOpt opt;
+
+			opt.dV_LVLH = dV_LVLH;
+			opt.GETbase = GETbase;
+
+			if (EntryLatcor == 0)
+			{
+				//EntryPADLat = entry->EntryLatPred;
+				//EntryPADLng = entry->EntryLngPred;
+			}
+			else
+			{
+				if (MissionPlanningActive)
+				{
+					if (!rtcc->MPTTrajectory(mptable, GETbase, opt.sv0))
+					{
+						opt.sv0 = rtcc->StateVectorCalc(vessel);
+					}
+				}
+				else
+				{
+					opt.sv0 = rtcc->StateVectorCalc(vessel);
+				}
+
+				//EntryPADLat = EntryLatcor;
+				//EntryPADLng = EntryLngcor;
+				opt.lat = EntryLatcor;
+				opt.lng = EntryLngcor;
+				opt.P30TIG = P30TIG;
+				opt.REFSMMAT = REFSMMAT;
+				opt.vessel = vessel;
+
+				rtcc->LunarEntryPAD(&opt, lunarentrypad);
+			}
+		}
 
 		Result = 0;
 	}

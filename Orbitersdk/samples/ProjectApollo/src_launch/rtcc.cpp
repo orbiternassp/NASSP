@@ -1630,12 +1630,11 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 
 void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 {
-	VECTOR3 R_A, V_A, R0B, V0B, R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT, UX, UY, UZ, EIangles, UREI;
+	VECTOR3 R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT, UX, UY, UZ, EIangles, UREI;
 	MATRIX3 M_R, Rot2;
-	double SVMJD, dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO, mu_M;
+	double dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO, mu_M;
 	double WIE, WT, LSMJD, theta_rad, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit, KTETA;
 	OBJHANDLE gravref, hEarth, hMoon;
-	SV sv0;		// "Now"
 	SV sv1;		// "Now" or just after the maneuver
 	SV svEI;	// EI/400K
 	SV sv300K;  // 300K
@@ -1650,26 +1649,13 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	Alt300K = 300000.0*0.3048;
 	EMSAlt = 297431.0*0.3048;
 
-	opt->vessel->GetRelativePos(gravref, R_A);
-	opt->vessel->GetRelativeVel(gravref, V_A);
-	SVMJD = oapiGetSimMJD();
-
-	R0B = _V(R_A.x, R_A.z, R_A.y);
-	V0B = _V(V_A.x, V_A.z, V_A.y);
-
-	sv0.gravref = gravref;
-	sv0.MJD = SVMJD;
-	sv0.R = R0B;
-	sv0.V = V0B;
-	sv0.mass = opt->vessel->GetMass();
-
 	if (opt->direct || length(opt->dV_LVLH) == 0.0)	//Check against a DV of 0
 	{
-		sv1 = sv0;
+		sv1 = opt->sv0;
 	}
 	else
 	{
-		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0);
+		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, opt->sv0, 0);
 	}
 
 	if (sv1.gravref == hMoon)
@@ -2524,25 +2510,19 @@ void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG, double &t_PDI,
 
 void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 {
+	SV sv_pre, sv_post;
+
+	PlaneChangeTargeting(opt, dV_LVLH, P30TIG, sv_pre, sv_post);
+}
+
+void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post)
+{
 	double SVMJD, cosA, sinA, A, dt, MJD_A, lng, lat, rad, GET, mu, LMmass, mass, t_slip;
 	MATRIX3 Rot, Q_Xx;
 	VECTOR3 R_A, V_A, RLS, n1, u, n2, V_PC2, DV, loc, Llambda;
-	SV sv0, sv1, sv_PC, sv_cor;
+	SV sv0, sv1, sv_PC;
 
-	if (opt->useSV)
-	{
-		sv0 = opt->RV_MCC;
-	}
-	else
-	{
-		sv0.gravref = AGCGravityRef(opt->vessel);
-		opt->vessel->GetRelativePos(sv0.gravref, R_A);
-		opt->vessel->GetRelativeVel(sv0.gravref, V_A);
-		SVMJD = oapiGetSimMJD();
-		sv0.R = _V(R_A.x, R_A.z, R_A.y);
-		sv0.V = _V(V_A.x, V_A.z, V_A.y);
-		sv0.mass = opt->vessel->GetMass();
-	}
+	sv0 = opt->RV_MCC;
 
 	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
 	MJD_A = opt->GETbase + opt->t_A / 24.0 / 3600.0;
@@ -2586,11 +2566,11 @@ void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 	DV = V_PC2 - sv_PC.V;
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv_PC, LMmass, DV, true, Llambda, t_slip);
+	FiniteBurntimeCompensation(opt->vesseltype, sv_PC, LMmass, DV, true, Llambda, t_slip, sv_post);
 
-	sv_cor = coast(sv_PC, t_slip);
+	sv_pre = coast(sv_PC, t_slip);
 
-	Q_Xx = OrbMech::LVLH_Matrix(sv_cor.R, sv_cor.V);
+	Q_Xx = OrbMech::LVLH_Matrix(sv_pre.R, sv_pre.V);
 
 	dV_LVLH = mul(Q_Xx, Llambda);
 

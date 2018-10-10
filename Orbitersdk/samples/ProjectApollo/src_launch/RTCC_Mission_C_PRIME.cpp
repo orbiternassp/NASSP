@@ -1173,9 +1173,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11ENT * form = (AP11ENT *)pad;
 
 		LunarEntryPADOpt entopt;
+		SV sv;
 		double GETbase;
 
 		GETbase = getGETBase();
+		sv = StateVectorCalc(calcParams.src);
 
 		if (length(DeltaV_LVLH) != 0.0)
 		{
@@ -1191,6 +1193,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.lng = SplashLongitude;
 		entopt.P30TIG = TimeofIgnition;
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		entopt.sv0 = sv;
 		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);
@@ -1216,11 +1219,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		entopt.direct = true;
 		entopt.GETbase = GETbase;
 		entopt.lat = SplashLatitude;
 		entopt.lng = SplashLongitude;
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+		entopt.sv0 = sv;
 		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);

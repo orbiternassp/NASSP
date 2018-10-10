@@ -343,7 +343,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu10[] =
 	{
 		{ "", 0, ' ' },
-		{ "With/Without Midcourse", 0, 'D' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Downlink Entry Target", 0, 'W' },
@@ -360,7 +360,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu10, sizeof(mnu10) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("MAN", OAPI_KEY_D, &ApolloRTCCMFD::menuSwitchEntryPADDirect);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("DWN", OAPI_KEY_W, &ApolloRTCCMFD::GetEntryTargetfromAGC);

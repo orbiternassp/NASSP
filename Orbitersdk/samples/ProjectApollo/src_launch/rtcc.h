@@ -435,9 +435,10 @@ struct LunarEntryPADOpt
 	double P30TIG; //Time of Ignition (MCC)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
 	MATRIX3 REFSMMAT;
-	bool direct; //0 = with MCC, 1 = without
+	bool direct = true; //0 = with MCC, 1 = without
 	double lat; //splashdown latitude
 	double lng; //splashdown longitude
+	SV sv0;
 };
 
 struct TLIManNode
@@ -608,7 +609,6 @@ struct PCMan
 	double GETbase; //usually MJD at launch
 	double EarliestGET;	//Earliest GET for the PC maneuver
 	double t_A; //time when the orbit is aligned with the landing site
-	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
@@ -1181,6 +1181,7 @@ public:
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
+	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, GPMPRESULTS &res);
 	OBJHANDLE AGCGravityRef(VESSEL* vessel); // A sun referenced state vector wouldn't be much of a help for the AGC...
