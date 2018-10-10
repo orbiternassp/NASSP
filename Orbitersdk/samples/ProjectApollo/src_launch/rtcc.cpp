@@ -2259,147 +2259,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	}
 }
 
-double RTCC::CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG)			//Calculates the required DV vector of a coelliptic burn
-{
-	double mu;
-	double SVMJD, SVtime, dt, dt2, c1, c2, theta, SW, dh_CDH, VPV, dt2_apo, CDHtime_cor, mass;
-	VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb;
-	VECTOR3 RA0, VA0, RP0, VP0, RA2_alt, VA2_alt, V_A2_apo, CDHdeltaV;
-	VECTOR3 u, RPC, VPC;
-	double epsilon, a_P, a_A, V_AH, V_AV;
-	MATRIX3 Q_Xx;
-	//MATRIX3 obli;
-	VECTOR3 RA2, VA2, RP2, VP2;
-	OBJHANDLE gravref;
-
-	gravref = AGCGravityRef(opt->vessel);
-
-	mu = GGRAV*oapiGetMass(gravref);
-
-	//DH_met = DH*1852.0;							//Calculates the desired delta height of the coellitpic orbit in metric units
-
-	opt->vessel->GetRelativePos(gravref, RA0_orb);	//vessel position vector
-	opt->vessel->GetRelativeVel(gravref, VA0_orb);	//vessel velocity vector
-	opt->target->GetRelativePos(gravref, RP0_orb);	//target position vector
-	opt->target->GetRelativeVel(gravref, VP0_orb);	//target velocity vector
-	SVtime = oapiGetSimTime();					//The time mark of the state vectors
-
-	//oapiGetPlanetObliquityMatrix(gravref, &obli);
-
-	//RA0_orb = mul(OrbMech::inverse(obli), RA0_orb);
-	//VA0_orb = mul(OrbMech::inverse(obli), VA0_orb);
-	//RP0_orb = mul(OrbMech::inverse(obli), RP0_orb);
-	//VP0_orb = mul(OrbMech::inverse(obli), VP0_orb);
-
-	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//Coordinate system nightmare. My calculation methods use another system
-	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
-	RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
-	VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
-
-	SVMJD = oapiTime2MJD(SVtime);				//Calculates the MJD of the state vector
-
-	mass = opt->vessel->GetMass();
-
-	if (opt->CDHtimemode == 0)
-	{
-		CDHtime_cor = opt->TIG;
-		dt2 = opt->TIG - (SVMJD - opt->GETbase) * 24 * 60 * 60;
-	}
-	else
-	{
-		int n = 0;
-
-		dt = opt->TIG - (SVMJD - opt->GETbase) * 24 * 60 * 60;
-
-		dt2 = dt + 10.0;							//A secant search method is used to find the time, when the desired delta height is reached. Other values might work better.
-
-		while (abs(dt2 - dt) > 0.1 && n <= 20)					//0.1 seconds accuracy should be enough
-		{
-			c1 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt, opt->DH, gravref);		//c is the difference between desired and actual DH
-			c2 = OrbMech::NSRsecant(RA0, VA0, RP0, VP0, SVMJD, dt2, opt->DH, gravref);
-
-			dt2_apo = dt2 - (dt2 - dt) / (c2 - c1)*c2;						//secant method
-			dt = dt2;
-			dt2 = dt2_apo;
-			n++;
-		}
-
-		CDHtime_cor = dt2 + (SVMJD - opt->GETbase) * 24 * 60 * 60;		//the new, calculated CDH time
-
-	}
-
-	//OrbMech::rv_from_r0v0(RA0, VA0, dt2, RA2, VA2, mu);
-	//OrbMech::rv_from_r0v0(RP0, VP0, dt2, RP2, VP2, mu);
-	OrbMech::oneclickcoast(RA0, VA0, SVMJD, dt2, RA2, VA2, gravref, gravref);//Coasting Integration, active vessel state to CDH time
-	OrbMech::oneclickcoast(RP0, VP0, SVMJD, dt2, RP2, VP2, gravref, gravref);//Coasting Integration, passive vessel state to CDH time
-
-	//This block of equations is taken from the GSOP for Luminary document: 
-	//http://www.ibiblio.org/apollo/NARA-SW/R-567-sec5-rev8-5.4-5.5.pdf
-	//Pre-CDH Program, page 5.4-18
-	u = unit(crossp(RP2, VP2));
-	RA2_alt = RA2;
-	VA2_alt = VA2;
-	RA2 = unit(RA2 - u*dotp(RA2, u))*length(RA2);
-	VA2 = unit(VA2 - u*dotp(VA2, u))*length(VA2);
-
-	theta = acos(dotp(RA2, RP2) / length(RA2) / length(RP2));
-	SW = OrbMech::sign(dotp(u, crossp(RP2, RA2)));
-	theta = SW*theta;
-	OrbMech::rv_from_r0v0_ta(RP2, VP2, theta, RPC, VPC, mu);
-	dh_CDH = length(RPC) - length(RA2);
-
-	if (opt->CDHtimemode == 0)
-	{
-		//DH = dh_CDH / 1852.0;
-	}
-
-	VPV = dotp(VPC, RA2 / length(RA2));
-
-	epsilon = (length(VPC)*length(VPC)) / 2 - mu / length(RPC);
-	a_P = -mu / (2.0 * epsilon);
-	a_A = a_P - dh_CDH;
-	V_AV = VPV*OrbMech::power((a_P / a_A), 1.5);
-	V_AH = sqrt(mu*(2.0 / length(RA2) - 1.0 / a_A) - (V_AV*V_AV));
-	V_A2_apo = unit(crossp(u, RA2))*V_AH + unit(RA2)*V_AV;	//The desired velocity vector at CDH time													
-	
-	if (opt->impulsive == RTCC_IMPULSIVE)
-	{
-		Q_Xx = OrbMech::LVLH_Matrix(RA2, VA2);
-
-		CDHdeltaV = mul(Q_Xx, V_A2_apo - VA2_alt); //Calculates the desired P30 LVLH DV Vector
-
-		P30TIG = CDHtime_cor;
-		dV_LVLH = CDHdeltaV;
-	}
-	else
-	{
-		VECTOR3 Llambda, RA2_cor, VA2_cor;double t_slip;
-
-		SV sv_tig;
-
-		sv_tig.gravref = gravref;
-		sv_tig.mass = mass;
-		sv_tig.MJD = opt->GETbase + CDHtime_cor / 24.0 / 3600.0;
-		sv_tig.R = RA2;
-		sv_tig.V = VA2_alt;
-
-		FiniteBurntimeCompensation(opt->vesseltype, sv_tig, 0.0, V_A2_apo - VA2_alt, true, Llambda, t_slip);
-
-		OrbMech::rv_from_r0v0(RA2, VA2_alt, t_slip, RA2_cor, VA2_cor, mu);
-
-		Q_Xx = OrbMech::LVLH_Matrix(RA2_cor, VA2_cor);
-
-		CDHdeltaV = mul(Q_Xx, Llambda); //Calculates the desired P30 LVLH DV Vector
-		P30TIG = CDHtime_cor + t_slip;
-		dV_LVLH = CDHdeltaV;
-
-		/*dV_LVLH = CDHdeltaV;
-		P30TIG = CDHtime_cor;*/
-	}
-
-	return dh_CDH;
-}
-
 double RTCC::FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH)
 {
 	SV sv_A1, sv_P1;
@@ -2517,14 +2376,14 @@ void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post)
 {
-	double SVMJD, cosA, sinA, A, dt, MJD_A, lng, lat, rad, GET, mu, LMmass, mass, t_slip;
+	double cosA, sinA, A, dt, MJD_A, lng, lat, rad, GET, mu, LMmass, mass, t_slip;
 	MATRIX3 Rot, Q_Xx;
-	VECTOR3 R_A, V_A, RLS, n1, u, n2, V_PC2, DV, loc, Llambda;
+	VECTOR3 RLS, n1, u, n2, V_PC2, DV, loc, Llambda;
 	SV sv0, sv1, sv_PC;
 
 	sv0 = opt->RV_MCC;
 
-	GET = (SVMJD - opt->GETbase)*24.0*3600.0;
+	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
 	MJD_A = opt->GETbase + opt->t_A / 24.0 / 3600.0;
 	Rot = OrbMech::GetRotationMatrix(sv0.gravref, MJD_A);
 	mu = GGRAV*oapiGetMass(sv0.gravref);
@@ -7869,15 +7728,24 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 	//CDH calculation
 	if (opt->maneuver == 1)
 	{
+		VECTOR3 u2;
+		double Y_c_dot;
+
+		u2 = unit(crossp(sv_P1.V, sv_P1.R));
+		Y_c_dot = dotp(sv_A1.V, u2);
 		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A1, mu, R_PC, V_PC);
 		V_A1F = OrbMech::CoellipticDV(R_A1, R_PC, V_PC, mu);
 		Q_Xx = OrbMech::LVLH_Matrix(R_A1, V_A1);
-		dt_TPI = OrbMech::findelev_conic(R_A1, V_A1F, sv_P1.R, sv_P1.V, opt->E, mu);
 
 		res.DH = length(R_PC) - length(R_A1);
-		res.dV_CDH = mul(Q_Xx, V_A1F - V_A1);
+		res.dV_CDH = mul(Q_Xx, V_A1F - V_A1) + _V(0.0, -Y_c_dot, 0.0);
 		res.t_CDH = opt->t_TIG;
-		res.t_TPI = opt->t_TIG + dt_TPI;
+
+		if (opt->CalculateTPIParams)
+		{
+			dt_TPI = OrbMech::findelev_conic(R_A1, V_A1F, sv_P1.R, sv_P1.V, opt->E, mu);
+			res.t_TPI = opt->t_TIG + dt_TPI;
+		}
 		return;
 	}
 
@@ -7931,14 +7799,18 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A2, mu, R_PC, V_PC);
 		V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
 		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt->t_TIG, R_P2, V_P2, mu);
-		dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt->E, mu);
 
 		res.dV_CSI = _V(dv_CSI, 0, 0);
 		res.t_CDH = t_CDH;
 		Q_Xx = OrbMech::LVLH_Matrix(R_A2, V_A2);
 		res.dV_CDH = mul(Q_Xx, V_A2F - V_A2);
 		res.DH = opt->DH;
-		res.t_TPI = t_CDH + dt_TPI;
+
+		if (opt->CalculateTPIParams)
+		{
+			dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt->E, mu);
+			res.t_TPI = t_CDH + dt_TPI;
+		}
 	}
 }
 

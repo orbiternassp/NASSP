@@ -959,26 +959,28 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 
-		CDHOpt opt;
+		SPQOpt opt;
+		SPQResults res;
 		AP11LMManPADOpt manopt;
-		SV sv0;
+		SV sv_A, sv_P;
 		VECTOR3 dV_LVLH;
 		double TIG, GETbase, P30TIG;
 
-		sv0 = StateVectorCalc(calcParams.tgt);
+		sv_A = StateVectorCalc(calcParams.tgt);
+		sv_P = StateVectorCalc(calcParams.src);
 		GETbase = getGETBase();
 
 		TIG = calcParams.Insertion;
 
-		opt.CDHtimemode = 0;
+		opt.CalculateTPIParams = false;
 		opt.GETbase = GETbase;
-		opt.impulsive = RTCC_NONIMPULSIVE;
-		opt.target = calcParams.src;
-		opt.TIG = TIG;
-		opt.vessel = calcParams.tgt;
-		opt.vesseltype = 1;
+		opt.maneuver = 1;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
+		opt.t_TIG = TIG;
 
-		CDHcalc(&opt, dV_LVLH, P30TIG);
+		ConcentricRendezvousProcessor(&opt, res);
+		PoweredFlightProcessor(sv_A, GETbase, TIG, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;

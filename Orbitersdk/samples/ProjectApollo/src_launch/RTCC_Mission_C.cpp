@@ -376,8 +376,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 9: //MISSION C NSR MANEUVER
 	{
-		CDHOpt cdhopt;
+		SPQOpt spqopt;
 		AP7ManPADOpt opt;
+		SPQResults res;
 		double P30TIG, GETbase;
 		VECTOR3 dV_LVLH;
 		SV sv_A, sv_P;
@@ -391,15 +392,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		cdhopt.GETbase = GETbase;
-		cdhopt.impulsive = RTCC_NONIMPULSIVE;
-		cdhopt.CDHtimemode = 1;
-		cdhopt.DH = 8 * 1852;
-		cdhopt.TIG = 28 * 60 * 60;
-		cdhopt.target = calcParams.tgt;
-		cdhopt.vessel = calcParams.src;
-
-		CDHcalc(&cdhopt, dV_LVLH, P30TIG);
+		spqopt.E = 27.45*RAD;
+		spqopt.GETbase = GETbase;
+		spqopt.maneuver = 1;
+		spqopt.sv_A = sv_A;
+		spqopt.sv_P = sv_P;
+		spqopt.t_TIG = FindDH(sv_A, sv_P, GETbase, 28.0*3600.0, 8.0*1852.0);
+		
+		ConcentricRendezvousProcessor(&spqopt, res);
+		PoweredFlightProcessor(sv_A, GETbase, res.t_CDH, RTCC_VESSELTYPE_CSM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
 
 		opt.GETbase = GETbase;
 		opt.vessel = calcParams.src;

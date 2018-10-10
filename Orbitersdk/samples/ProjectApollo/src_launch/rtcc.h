@@ -841,6 +841,7 @@ struct SPQOpt //Coelliptic Sequence Processor
 	double E = 26.6*RAD;
 	int type;		//0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int maneuver;	//0 = CSI, 1 = CDH
+	bool CalculateTPIParams = true;
 };
 
 struct PDAPOpt //Powered Descent Abort Program
@@ -1161,7 +1162,6 @@ public:
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
-	double CDHcalc(CDHOpt *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	double FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
