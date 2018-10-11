@@ -389,7 +389,6 @@ ARCore::ARCore(VESSEL* v)
 	TPIPAD_ddH = 0.0;
 	TPIPAD_BT = _V(0.0, 0.0, 0.0);
 	sxtstardtime = 0.0;
-	PDIPADdirect = true;
 	P37GET400K = 0.0;
 	mapupdate.LOSGET = 0.0;
 	mapupdate.AOSGET = 0.0;
@@ -1962,10 +1961,20 @@ int ARCore::subThread()
 	{
 		LambertMan opt;
 		TwoImpulseResuls res;
-		SV sv_A, sv_P;
+		SV sv_A, sv_P, sv_pre, sv_post;
 		double attachedMass;
 
-		sv_A = rtcc->StateVectorCalc(vessel);
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, sv_A))
+			{
+				sv_A = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			sv_A = rtcc->StateVectorCalc(vessel);
+		}
 		sv_P = rtcc->StateVectorCalc(target);
 
 		opt.axis = !lambertmultiaxis;
@@ -1992,12 +2001,32 @@ int ARCore::subThread()
 			attachedMass = rtcc->GetDockedVesselMass(vessel);
 		}
 		rtcc->LambertTargeting(&opt, res);
-		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, false, P30TIG, dV_LVLH);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, false, P30TIG, dV_LVLH, sv_pre, sv_post);
 		LambertdeltaV = dV_LVLH;
 
 		if (twoimpulsemode == 1)
 		{
 			TwoImpulse_TPI = res.t_TPI;
+		}
+
+		if (MissionPlanningActive)
+		{
+			char code[64];
+
+			if (twoimpulsemode == 0)
+			{
+				sprintf(code, "LAM");
+			}
+			else if (twoimpulsemode == 1)
+			{
+				sprintf(code, "NCC");
+			}
+			else
+			{
+				sprintf(code, "TPI");
+			}
+
+			rtcc->MPTAddManeuver(mptable, sv_pre, sv_post, code, LSAlt, length(dV_LVLH));
 		}
 
 		Result = 0;
@@ -2007,9 +2036,19 @@ int ARCore::subThread()
 	{
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_A, sv_P;
+		SV sv_A, sv_P, sv_pre, sv_post;
 
-		sv_A = rtcc->StateVectorCalc(vessel);
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, sv_A))
+			{
+				sv_A = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			sv_A = rtcc->StateVectorCalc(vessel);
+		}
 		sv_P = rtcc->StateVectorCalc(target);
 
 		opt.DH = DH;
@@ -2042,15 +2081,31 @@ int ARCore::subThread()
 		if (SPQMode == 0)
 		{
 			CDHtime = res.t_CDH;
-			rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CSI, true, SPQTIG, SPQDeltaV);
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CSI, true, SPQTIG, SPQDeltaV, sv_pre, sv_post);
 		}
 		else
 		{
-			rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CDH, true, SPQTIG, SPQDeltaV);
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CDH, true, SPQTIG, SPQDeltaV, sv_pre, sv_post);
 		}
 
 		P30TIG = SPQTIG;
-		dV_LVLH = SPQDeltaV;		
+		dV_LVLH = SPQDeltaV;
+
+		if (MissionPlanningActive)
+		{
+			char code[64];
+
+			if (SPQMode == 0)
+			{
+				sprintf(code, "CSI");
+			}
+			else
+			{
+				sprintf(code, "CDH");
+			}
+
+			rtcc->MPTAddManeuver(mptable, sv_pre, sv_post, code, LSAlt, length(dV_LVLH));
+		}
 
 		Result = 0;
 	}
@@ -2493,21 +2548,23 @@ int ARCore::subThread()
 	break;
 	case 9: //Maneuver PAD
 	{
+		SV sv_A;
+
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, P30TIG, GETbase, sv_A))
+			{
+				sv_A = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			sv_A = rtcc->StateVectorCalc(vessel);
+		}
+
 		if (vesseltype < 2)
 		{
 			AP11ManPADOpt opt;
-
-			if (MissionPlanningActive)
-			{
-				if (!rtcc->MPTTrajectory(mptable, P30TIG, GETbase, opt.RV_MCC))
-				{
-					opt.RV_MCC = rtcc->StateVectorCalc(vessel);
-				}
-			}
-			else
-			{
-				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
-			}
 
 			opt.dV_LVLH = dV_LVLH;
 			opt.directiontype = directiontype;
@@ -2521,6 +2578,7 @@ int ARCore::subThread()
 			opt.vesseltype = vesseltype;
 			opt.alt = LSAlt;
 			opt.useSV = true;
+			opt.RV_MCC = sv_A;
 
 			rtcc->AP11ManeuverPAD(&opt, manpad);
 		}
@@ -2546,6 +2604,8 @@ int ARCore::subThread()
 				opt.csmlmdocked = true;
 			}
 			opt.alt = LSAlt;
+			opt.useSV = true;
+			opt.RV_MCC = sv_A;
 
 			rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		}
@@ -3274,17 +3334,27 @@ int ARCore::subThread()
 		PDIPADOpt opt;
 		AP11PDIPAD temppdipad;
 
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, opt.sv0))
+			{
+				opt.sv0 = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			opt.sv0 = rtcc->StateVectorCalc(vessel);
+		}
+
 		double rad = oapiGetSize(oapiGetObjectByName("Moon"));
 
-		opt.direct = PDIPADdirect;
+		opt.direct = true;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = HeadsUp;
 		opt.REFSMMAT = REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(LSLat, LSLng, LSAlt + rad);
 		opt.t_land = t_Land;
 		opt.vessel = vessel;
-		opt.P30TIG = P30TIG;
-		opt.dV_LVLH = dV_LVLH;
 
 		PADSolGood = rtcc->PDI_PAD(&opt, temppdipad);
 
@@ -3522,6 +3592,18 @@ int ARCore::subThread()
 		LEM *l = (LEM *)vessel;
 		m0 = l->GetAscentStageMass();
 
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, sv_LM))
+			{
+				sv_LM = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			sv_LM = rtcc->StateVectorCalc(vessel);
+		}
+
 		sv_LM = rtcc->StateVectorCalc(vessel);
 
 		if (PDAPEngine == 0)
@@ -3534,19 +3616,11 @@ int ARCore::subThread()
 
 		}
 
-		if (PDIPADdirect)
-		{
-			opt.sv_A = sv_LM;
-		}
-		else
-		{
-			opt.sv_A = rtcc->ExecuteManeuver(vessel, GETbase, P30TIG, dV_LVLH, sv_LM, 0.0);
-		}
-
 		opt.GETbase = GETbase;
 		opt.IsTwoSegment = mission > 11;
 		opt.REFSMMAT = REFSMMAT;
 		opt.R_LS = rtcc->RLS_from_latlng(LSLat, LSLng, LSAlt);
+		opt.sv_A = sv_LM;
 		opt.sv_P = rtcc->StateVectorCalc(target);
 		opt.TLAND = t_Land;
 		opt.t_TPI = t_TPI;

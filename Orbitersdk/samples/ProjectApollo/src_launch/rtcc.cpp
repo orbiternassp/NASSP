@@ -4276,19 +4276,17 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 
 bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 {
-	SV sv0, sv1, sv2, sv_I;
+	SV sv1, sv2, sv_I;
 	VECTOR3 U_FDP;
 	double C_R, TTT, t_IG;
 
-	sv0 = StateVectorCalc(opt->vessel);
-
 	if (opt->direct)
 	{
-		sv2 = sv0;
+		sv2 = opt->sv0;
 	}
 	else
 	{
-		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, 0.0);
+		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, opt->sv0, 0.0);
 	}
 
 	if (!PDIIgnitionAlgorithm(sv2, opt->GETbase, opt->R_LS, opt->t_land, opt->REFSMMAT, sv_I, TTT, C_R, U_FDP))

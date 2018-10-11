@@ -765,6 +765,7 @@ struct PDIPADOpt
 	VECTOR3 R_LS;	//Landing Site Vector
 	double t_land;
 	bool HeadsUp; //Orientation during the maneuver
+	SV sv0;
 };
 
 struct ASCPADOpt

@@ -1703,21 +1703,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "No LS REFSMMAT!", 15);
 				}
 
-				if (!G->PDIPADdirect)
-				{
-					skp->Text((int)(0.5 * W / 8), 14 * H / 20, "DOI:", 4);
-
-					GET_Display(Buffer, G->P30TIG);
-					skp->Text((int)(0.5 * W / 8), 15 * H / 20, Buffer, strlen(Buffer));
-
-					AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
-					skp->Text((int)(0.5 * W / 8), 16 * H / 20, Buffer, strlen(Buffer));
-					AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
-					skp->Text((int)(0.5 * W / 8), 17 * H / 20, Buffer, strlen(Buffer));
-					AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
-					skp->Text((int)(0.5 * W / 8), 18 * H / 20, Buffer, strlen(Buffer));
-				}
-
 				skp->Text(4 * W / 8, 15 * H / 20, "T_L:", 4);
 				GET_Display(Buffer, G->t_Land);
 				skp->Text(5 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
@@ -3693,21 +3678,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, G->target->GetName());
 			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
-		}
-
-		if (!G->PDIPADdirect)
-		{
-			skp->Text(5 * W / 8, 9 * H / 21, "DOI:", 4);
-
-			GET_Display(Buffer, G->P30TIG);
-			skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
-
-			AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
-			skp->Text(5 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
-			AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
-			skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
-			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
-			skp->Text(5 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
 		}
 
 		skp->Text(5 * W / 8, 15 * H / 21, "Landing Site:", 13);
@@ -6020,14 +5990,6 @@ void ApolloRTCCMFD::menuManDirection()
 	else
 	{
 		G->directiontype = 0;
-	}
-}
-
-void ApolloRTCCMFD::menuSwitchPDIPADDirect()
-{
-	if (G->vesseltype > 1)
-	{
-		G->PDIPADdirect = !G->PDIPADdirect;
 	}
 }
 

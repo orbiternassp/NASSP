@@ -267,7 +267,6 @@ public:
 	double sxtstardtime;
 	TLIPAD tlipad;
 	AP11PDIPAD pdipad;
-	bool PDIPADdirect;
 
 	///ENTRY PAD PAGE
 	AP11ENT lunarentrypad;
