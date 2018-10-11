@@ -4913,7 +4913,10 @@ void LVDCSV::TimeStep(double simdt) {
 						CommandSequence = CommandSequenceStored;
 
 						poweredflight = false;
+						//S-IVB Restart Alert Off
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
+						//S/C Control of Saturn Enable
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
 
 						TB6 = 100000;
 					}
