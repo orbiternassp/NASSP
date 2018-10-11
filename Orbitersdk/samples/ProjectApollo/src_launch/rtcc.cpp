@@ -442,8 +442,8 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 
 void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 {
-	SV sv_A1, sv_A1_apo, sv_A2, sv_P2;
-	double dt1, dt1_apo, dt2, mu;
+	SV sv_A1, sv_A1_apo, sv_A2, sv_P1, sv_P2;
+	double dt1, dt1_apo, dt2, mu, T1, T2;
 	OBJHANDLE gravref;
 	bool prograde;
 
@@ -460,18 +460,50 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 
 	mu = GGRAV*oapiGetMass(gravref);
 
-	dt1 = lambert->T1 - (lambert->sv_A.MJD - lambert->GETbase) * 24.0 * 60.0 * 60.0;
-	dt1_apo = lambert->T1 - (lambert->sv_P.MJD - lambert->GETbase) * 24.0 * 60.0 * 60.0;
-	dt2 = lambert->T2 - lambert->T1;
+	if (lambert->elevOpt == 0)
+	{
+		T1 = lambert->T1;
+	}
+	else
+	{
+		T1 = TPISearch(lambert->sv_A, lambert->sv_P, lambert->GETbase, lambert->Elevation);
+	}
+
+	dt1 = T1 - (lambert->sv_A.MJD - lambert->GETbase) * 24.0 * 60.0 * 60.0;
+	dt1_apo = T1 - (lambert->sv_P.MJD - lambert->GETbase) * 24.0 * 60.0 * 60.0;
 
 	if (lambert->Perturbation == 1)
 	{
 		sv_A1 = coast(lambert->sv_A, dt1);
-		sv_P2 = coast(lambert->sv_P, dt1_apo + dt2);
+		sv_P1 = coast(lambert->sv_P, dt1_apo);
 	}
 	else
 	{
 		OrbMech::rv_from_r0v0(lambert->sv_A.R, lambert->sv_A.V, dt1, sv_A1.R, sv_A1.V, mu);
+		OrbMech::rv_from_r0v0(lambert->sv_P.R, lambert->sv_P.V, dt1_apo, sv_P1.R, sv_P1.V, mu);
+	}
+
+	if (lambert->TPFOpt == 0)
+	{
+		T2 = lambert->T2;
+	}
+	else if (lambert->TPFOpt == 1)
+	{
+		T2 = T1 + lambert->DT;
+	}
+	else
+	{
+		T2 = T1 + OrbMech::time_theta(sv_P1.R, sv_P1.V, lambert->WT, mu);
+	}
+
+	dt2 = T2 - T1;
+
+	if (lambert->Perturbation == 1)
+	{
+		sv_P2 = coast(lambert->sv_P, dt1_apo + dt2);
+	}
+	else
+	{
 		OrbMech::rv_from_r0v0(lambert->sv_P.R, lambert->sv_P.V, dt1_apo + dt2, sv_P2.R, sv_P2.V, mu);
 	}
 
@@ -534,6 +566,8 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	Q_Xx = OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V);
 	res.dV = VA1_apo - sv_A1.V;
 	res.dV_LVLH = mul(Q_Xx, res.dV);
+	res.T1 = T1;
+	res.T2 = T2;
 
 	if (lambert->axis == RTCC_LAMBERT_XAXIS)
 	{
@@ -2308,28 +2342,15 @@ LambertMan RTCC::set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1,
 	return opt;
 }
 
-double RTCC::lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev)
+double RTCC::TPISearch(SV sv_A, SV sv_P, double GETbase, double elev)
 {
-	double SVMJD, dt1;
-	VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb, RA0, VA0, RP0, VP0;
-	OBJHANDLE gravref;
+	SV sv_P1;
+	double dt;
 
-	gravref = AGCGravityRef(vessel);
+	sv_P1 = GeneralTrajectoryPropagation(sv_P, 0, sv_A.MJD);
+	dt = OrbMech::findelev(sv_A.R, sv_A.V, sv_P1.R, sv_P1.V, sv_A.MJD, elev, sv_A.gravref);
 
-	vessel->GetRelativePos(gravref, RA0_orb);
-	vessel->GetRelativeVel(gravref, VA0_orb);
-	target->GetRelativePos(gravref, RP0_orb);
-	target->GetRelativeVel(gravref, VP0_orb);
-	SVMJD = oapiGetSimMJD();
-
-	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);
-	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
-	RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
-	VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
-
-	dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, SVMJD, elev, gravref);
-
-	return dt1 + (SVMJD - GETbase) * 24.0 * 60.0 * 60.0;
+	return OrbMech::GETfromMJD(sv_A.MJD + dt / 24.0 / 3600.0, GETbase);
 }
 
 void RTCC::DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG)

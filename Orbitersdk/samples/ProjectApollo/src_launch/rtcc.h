@@ -152,7 +152,7 @@ struct LambertMan //Data for Lambert targeting
 	int N;		//number of revolutions
 	int axis;	//Multi-axis or horizontal burn
 	int Perturbation; //Spherical or non-spherical gravity
-	VECTOR3 Offset; //Offset vector
+	VECTOR3 Offset = _V(0, 0, 0); //Offset vector
 	double PhaseAngle; //Phase angle to target
 	double DH;					//Delta height at arrival
 	SV sv_A;		//Chaser state vector
@@ -160,6 +160,10 @@ struct LambertMan //Data for Lambert targeting
 	bool NCC_NSR_Flag = false;	//true = NCC/NSR combination, false = TPI/TPF combination
 	bool use_XYZ_Offset = true;	//true = use offset vector, false = use phase angle and DH
 	double Elevation;	//Elevation angle at TPI
+	int elevOpt = 0;		//0 = T1 on time, 1 = search for elevation angle
+	int TPFOpt = 0;			//0 = T2 on time, 1 = use DT from T1, 2 = use travel angle
+	double DT;				//Time between T1 and T2
+	double WT;				//Central angle travelled between T1 and T2
 };
 
 struct AP7ManPADOpt
@@ -321,6 +325,8 @@ struct TwoImpulseResuls
 	VECTOR3 dV;
 	VECTOR3 dV_LVLH;
 	double t_TPI;
+	double T1;
+	double T2;
 };
 
 struct SPQResults
@@ -1164,6 +1170,7 @@ public:
 	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
+	double TPISearch(SV sv_A, SV sv_P, double GETbase, double elev);
 	double FindDH(SV sv_A, SV sv_P, double GETbase, double TIGguess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
@@ -1288,7 +1295,6 @@ private:
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
-	double lambertelev(VESSEL* vessel, VESSEL* target, double GETbase, double elev);
 	void AGCExternalDeltaVUpdate(char *str, double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
 	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);

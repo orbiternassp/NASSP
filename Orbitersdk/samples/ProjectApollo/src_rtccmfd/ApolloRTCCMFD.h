@@ -43,6 +43,7 @@ public:
 	void set_t1_PDI(double t1);
 	void t2dialogue();
 	void set_t2(double t2, bool t1dep);
+	void set_lambertWT(double wt);
 	void SPQtimedialogue();
 	void set_SPQtime(double tig);
 	void DHdialogue();

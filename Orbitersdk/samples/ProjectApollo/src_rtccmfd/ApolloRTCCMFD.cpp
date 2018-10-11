@@ -468,9 +468,28 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 2 * H / 14, "TPI/TPF", 7);
 		}
 
-		GET_Display(Buffer, G->T1);
+		if (G->lambertElevOpt == 0)
+		{
+			GET_Display(Buffer, G->T1);
+		}
+		else
+		{
+			sprintf(Buffer, "E = %.2f°", G->lambertelev*DEG);
+		}
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->T2);
+		
+		if (G->lambertTPFOpt == 0)
+		{
+			GET_Display(Buffer, G->T2);
+		}
+		else if (G->lambertTPFOpt == 1)
+		{
+			sprintf(Buffer, "DT = %.0f min", G->lambertDT / 60.0);
+		}
+		else
+		{
+			sprintf(Buffer, "WT = %.2f°", G->lambertWT*DEG);
+		}
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%d", G->N);
@@ -4905,11 +4924,13 @@ bool T1GETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_t1(double t1)
 {
+	G->lambertElevOpt = 0;
 	this->G->T1 = t1;
 }
 
 void ApolloRTCCMFD::set_t1_PDI(double dt)
 {
+	G->lambertElevOpt = 0;
 	G->T1 = G->pdipad.GETI + dt;
 }
 
@@ -5201,32 +5222,8 @@ bool REFSMMATGETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_lambertelev(double elev)
 {
-	OBJHANDLE gravref = G->rtcc->AGCGravityRef(G->vessel);
-
 	G->lambertelev = elev*RAD;
-
-	if (G->target == NULL)
-	{
-		return;
-	}
-	double mu, SVMJD, dt1;
-	VECTOR3 RA0_orb, VA0_orb, RP0_orb, VP0_orb,RA0,VA0,RP0,VP0;
-
-	mu = GGRAV*oapiGetMass(gravref);
-
-	G->vessel->GetRelativePos(gravref, RA0_orb);
-	G->vessel->GetRelativeVel(gravref, VA0_orb);
-	G->target->GetRelativePos(gravref, RP0_orb);
-	G->target->GetRelativeVel(gravref, VP0_orb);
-	SVMJD = oapiGetSimMJD();
-
-	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);	//The following equations use another coordinate system than Orbiter
-	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
-	RP0 = _V(RP0_orb.x, RP0_orb.z, RP0_orb.y);
-	VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
-
-	dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, SVMJD, G->lambertelev, gravref);
-	G->T1 = dt1 + (SVMJD - G->GETbase) * 24.0 * 60.0 * 60.0;
+	G->lambertElevOpt = 1;
 }
 
 void ApolloRTCCMFD::calcREFSMMAT()
@@ -5730,7 +5727,7 @@ bool T2GETInput(void *id, char *str, void *data)
 	int hh, mm, ss;
 	double t2time,unival;
 	char uni[10];
-	if (sscanf(str, "T1+%lf%s", &t2time, &uni) == 2)
+	if (sscanf(str, "DT=%lf%s", &t2time, &uni) == 2)
 	{
 		if (strcmp(uni, "min") == 0)
 		{
@@ -5751,6 +5748,11 @@ bool T2GETInput(void *id, char *str, void *data)
 		((ApolloRTCCMFD*)data)->set_t2(t2time*unival, false);
 		return true;
 	}
+	else if (sscanf(str, "WT=%lf", &t2time) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_lambertWT(t2time);
+		return true;
+	}
 	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		t2time = ss + 60 * (mm + 60 * hh);
@@ -5766,11 +5768,19 @@ void ApolloRTCCMFD::set_t2(double t2, bool t1dep)
 	if (t1dep)
 	{
 		this->G->T2 = t2;
+		G->lambertTPFOpt = 0;
 	}
 	else
 	{
-		this->G->T2 = G->T1+t2;
+		this->G->lambertDT = t2;
+		G->lambertTPFOpt = 1;
 	}
+}
+
+void ApolloRTCCMFD::set_lambertWT(double wt)
+{
+	G->lambertWT = wt * RAD;
+	G->lambertTPFOpt = 2;
 }
 
 void ApolloRTCCMFD::revdialogue()

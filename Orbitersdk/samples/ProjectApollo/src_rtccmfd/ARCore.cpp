@@ -51,6 +51,9 @@ ARCore::ARCore(VESSEL* v)
 	twoimpulsemode = 0;
 	TwoImpulse_TPI = 0.0;
 	TwoImpulse_PhaseAngle = 0.0;
+	lambertElevOpt = 0;
+	lambertTPFOpt = 0;
+	lambertDT = 0.0;
 
 	SPQDeltaV = _V(0, 0, 0);
 	target = NULL;
@@ -1990,7 +1993,11 @@ int ARCore::subThread()
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.T1 = T1;
-		opt.T2 = T2;		
+		opt.T2 = T2;	
+		opt.elevOpt = lambertElevOpt;
+		opt.TPFOpt = lambertTPFOpt;
+		opt.DT = lambertDT;
+		opt.WT = lambertWT;
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -2001,13 +2008,26 @@ int ARCore::subThread()
 			attachedMass = rtcc->GetDockedVesselMass(vessel);
 		}
 		rtcc->LambertTargeting(&opt, res);
-		rtcc->PoweredFlightProcessor(sv_A, GETbase, opt.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, false, P30TIG, dV_LVLH, sv_pre, sv_post);
+		rtcc->PoweredFlightProcessor(sv_A, GETbase, res.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, false, P30TIG, dV_LVLH, sv_pre, sv_post);
 		LambertdeltaV = dV_LVLH;
 
 		if (twoimpulsemode == 1)
 		{
 			TwoImpulse_TPI = res.t_TPI;
 		}
+
+		if (lambertElevOpt > 0)
+		{
+			T1 = res.T1;
+		}
+		if (lambertTPFOpt > 0)
+		{
+			T2 = res.T2;
+		}
+
+		//Reset these to display times
+		lambertElevOpt = 0;
+		lambertTPFOpt = 0;
 
 		if (MissionPlanningActive)
 		{
