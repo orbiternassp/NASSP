@@ -2250,23 +2250,24 @@ int ARCore::subThread()
 	break;
 	case 5: //LOI Targeting
 	{
-		
+		SV sv0;
+
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, sv0))
+			{
+				sv0 = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			sv0 = rtcc->StateVectorCalc(vessel);
+		}
+
 		if (LOImaneuver == 0 || LOImaneuver == 1)
 		{
 			LOIMan loiopt;
 			SV sv_n, sv_preLOI, sv_postLOI;
-
-			if (MissionPlanningActive)
-			{
-				if (!rtcc->MPTTrajectory(mptable, GETbase, loiopt.RV_MCC))
-				{
-					loiopt.RV_MCC = rtcc->StateVectorCalc(vessel);
-				}
-			}
-			else
-			{
-				loiopt.RV_MCC = rtcc->StateVectorCalc(vessel);
-			}
 
 			loiopt.GETbase = GETbase;
 			loiopt.h_apo = LOIapo;
@@ -2279,6 +2280,7 @@ int ARCore::subThread()
 			loiopt.vessel = vessel;
 			loiopt.type = LOIOption;
 			loiopt.EllipseRotation = LOIEllipseRotation;
+			loiopt.RV_MCC = sv0;
 
 			if (vesseltype < 2)
 			{
@@ -2327,23 +2329,12 @@ int ARCore::subThread()
 
 			SV sv_pre, sv_post;
 
-			if (MissionPlanningActive)
-			{
-				if (!rtcc->MPTTrajectory(mptable, GETbase, opt.RV_MCC))
-				{
-					opt.RV_MCC = rtcc->StateVectorCalc(vessel);
-				}
-			}
-			else
-			{
-				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
-			}
-
 			opt.alt = LSAlt;
 			opt.EarliestGET = LOI2_EarliestGET;
 			opt.GETbase = GETbase;
 			opt.h_circ = LOI2Alt;
 			opt.vessel = vessel;
+			opt.RV_MCC = sv0;
 
 			if (vesseltype < 2)
 			{
@@ -2376,7 +2367,6 @@ int ARCore::subThread()
 				rtcc->MPTAddManeuver(mptable, sv_pre, sv_post, code, LSAlt, length(dV_LVLH));
 			}
 		}
-
 
 		Result = 0;
 	}
@@ -3391,6 +3381,18 @@ int ARCore::subThread()
 		EntryResults res;
 		EarthEntryOpt opt;
 
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, opt.RV_MCC))
+			{
+				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+		}
+
 		if (entrylongmanual)
 		{
 			opt.lng = EntryLng;
@@ -3416,6 +3418,7 @@ int ARCore::subThread()
 		opt.TIGguess = EntryTIG;
 		opt.vessel = vessel;
 		opt.nominal = entrynominal;
+		opt.useSV = true;
 
 		rtcc->BlockDataProcessor(&opt, &res);
 
@@ -3524,10 +3527,20 @@ int ARCore::subThread()
 	case 19: //Docking Initiation Processor
 	{
 		DKIOpt opt;
-		SV sv_A, sv_P;
+		SV sv_A, sv_P, sv_pre, sv_post;
 		OBJHANDLE hSun = oapiGetObjectByName("Sun");
 
-		sv_A = rtcc->StateVectorCalc(vessel);
+		if (MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(mptable, GETbase, sv_A))
+			{
+				sv_A = rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			sv_A = rtcc->StateVectorCalc(vessel);
+		}
 		sv_P = rtcc->StateVectorCalc(target);
 
 		opt.DH = DH;
@@ -3551,7 +3564,23 @@ int ARCore::subThread()
 		rtcc->DockingInitiationProcessor(opt, dkiresult);
 		if (DKI_Profile != 3)
 		{
-			rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, false, P30TIG, dV_LVLH);
+			rtcc->PoweredFlightProcessor(sv_A, GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, false, P30TIG, dV_LVLH, sv_pre, sv_post);
+
+			if (MissionPlanningActive)
+			{
+				char code[64];
+
+				if (DKI_Profile == 0 || DKI_Profile == 1)
+				{
+					sprintf(code, "NC");
+				}
+				else
+				{
+					sprintf(code, "NH");
+				}
+
+				rtcc->MPTAddManeuver(mptable, sv_pre,sv_post, code, LSAlt, length(dV_LVLH));
+			}
 		}
 		t_TPI = dkiresult.t_TPI;
 
