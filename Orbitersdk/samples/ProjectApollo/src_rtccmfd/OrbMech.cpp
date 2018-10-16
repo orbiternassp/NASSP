@@ -3843,7 +3843,7 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 	CELBODY *cPlan = oapiGetCelbodyInterface(planet);
 
 	OELEMENTS coe;
-	double h, e, theta0, a, E_0, t_0, E_1, dt, t_f, dt_alt;
+	double h, e, theta0, a, dt, dt_alt;
 
 	dt = 0;
 	dt_alt = 1;
@@ -3919,17 +3919,13 @@ double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE pla
 		}
 		else
 		{
-			double T, n;
+			double T;
 
 			a = h * h / mu * 1.0 / (1.0 - e * e);
 			T = PI2 / sqrt(mu)*OrbMech::power(a, 3.0 / 2.0);
-			n = PI2 / T;
-			E_0 = 2.0 * atan(sqrt((1.0 - e) / (1.0 + e))*tan(theta0 / 2.0));
-			t_0 = (E_0 - e * sin(E_0)) / n;
-			E_1 = 2.0 * atan(sqrt((1.0 - e) / (1.0 + e))*tan(v1 / 2.0));
-			t_f = (E_1 - e * sin(E_1)) / n;
+
 			dt_alt = dt;
-			dt = t_f - t_0;
+			dt = time_theta(R, V, calculateDifferenceBetweenAngles(theta0, v1), mu);
 
 			if (dt < 0 && future)
 			{
