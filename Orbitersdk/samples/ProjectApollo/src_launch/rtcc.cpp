@@ -9950,6 +9950,12 @@ bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_ou
 
 	double MJD = OrbMech::MJDfromGET(GET, GETbase);
 
+	if ((*table)[0].sv_after.MJD >= MJD)
+	{
+		sv_out = GeneralTrajectoryPropagation((*table)[0].sv_before, 0, MJD);
+		return true;
+	}
+
 	unsigned i = 0;
 
 	while (table->size() - 1 > i && (*table)[i + 1].sv_after.MJD <= MJD) i++;
