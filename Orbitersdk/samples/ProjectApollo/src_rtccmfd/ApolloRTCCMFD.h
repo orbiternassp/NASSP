@@ -395,6 +395,7 @@ protected:
 	} screenData;
 private:
 	ARCore* G;
+	AR_GCore* GC;
 	ApolloRTCCMFDButtons coreButtons;	
 };
 

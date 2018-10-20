@@ -1046,11 +1046,28 @@ struct MPTManeuver
 	MPTManeuver();
 	SV sv_before;
 	SV sv_after;
+	int LI;	//Maneuvering vehicle: 1 = LM, 2 = CSM
+	int ID;
+};
+
+struct MPTManDisplay
+{
+	MPTManDisplay();
+	double AftMJD;
 	std::string code;
 	double HA;
 	double HP;
 	double dt;
 	double DV;
+};
+
+struct MPTable
+{
+	std::vector<MPTManDisplay> fulltable;
+	std::vector<MPTManeuver> cmtable;
+	std::vector<MPTManeuver> lmtable;
+	double CSMInitMass;
+	double LMInitMass;
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -1275,10 +1292,12 @@ public:
 	void NPCProgram(SV sv_C, SV sv_W, double GETbase, double t, double &t_NPC, VECTOR3 &dV_NPC_LVLH);
 
 	//Mission Planning
-	int MPTAddTLI(std::vector<MPTManeuver> &mptable, SV sv_IG, SV sv_TLI, double DV);
-	int MPTAddManeuver(std::vector<MPTManeuver> &mptable, SV sv_ig, SV sv_cut, char *code, double LSAlt, double DV);
-	bool MPTTrajectory(std::vector<MPTManeuver> &mptable, double GETbase, SV &sv_out);
-	bool MPTTrajectory(std::vector<MPTManeuver> &mptable, double GET, double GETbase, SV &sv_out);
+	int MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV);
+	int MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, char *code, double LSAlt, double DV, int L, bool docked);
+	int MPTDeleteManeuver(MPTable &mptable);
+	bool MPTTrajectory(MPTable &mptable, double GETbase, SV &sv_out, int L);
+	bool MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
+	int MPTMassInit(MPTable &mptable, double cmass, double lmass);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state

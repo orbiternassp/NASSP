@@ -27,9 +27,18 @@ struct ApolloRTCCMFDData {  // global data storage
 	Saturn *progVessel;
 };
 
+class AR_GCore
+{
+public:
+	AR_GCore();
+
+	MPTable mptable;
+	bool MissionPlanningActive;
+};
+
 class ARCore {
 public:
-	ARCore(VESSEL* v);
+	ARCore(VESSEL* v, AR_GCore* gcin);
 	~ARCore();
 	void lambertcalc();
 	void CDHcalc();
@@ -415,15 +424,11 @@ public:
 	SpaceDigitals spacedigit;
 	SV spacedigitalssv;
 
-	//MISSION PLANNING TABLE
-	std::vector<MPTManeuver> mptable;
-	bool MissionPlanningActive;
-
 	protected:
 		int GetPowEngType();
 
 private:
-	//VECTOR3 RA2, VA2, RP2, VP2;
+	AR_GCore* GC;
 };
 
 

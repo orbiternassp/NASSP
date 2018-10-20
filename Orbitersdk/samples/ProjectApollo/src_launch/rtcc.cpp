@@ -157,6 +157,12 @@ SpaceDigitals::SpaceDigitals()
 
 MPTManeuver::MPTManeuver()
 {
+	LI = 0;
+	ID = 0;
+}
+
+MPTManDisplay::MPTManDisplay()
+{
 	HA = 0.0;
 	HP = 0.0;
 	dt = 0.0;
@@ -9743,31 +9749,41 @@ void RTCC::FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res)
 	res.IEMP = acos(H_EMP.z / length(H_EMP))*DEG;
 }
 
-int RTCC::MPTAddTLI(std::vector<MPTManeuver> &mptable, SV sv_IG, SV sv_TLI, double DV)
+int RTCC::MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV)
 {
-	if (mptable.size() == 0)
+	if (mptable.fulltable.size() == 0)
 	{
 		MPTManeuver man;
+		MPTManDisplay dispman;
 		double mu, apo, peri, r;
+		char buff[100];
 
 		mu = GGRAV * oapiGetMass(sv_TLI.gravref);
 		r = oapiGetSize(sv_TLI.gravref);
 
-		man.code.assign("TLI");
+		man.ID = mptable.fulltable.size() + 1;
+		sprintf(buff, "TLI%03d", man.ID);
+		dispman.code.assign(buff);
+
+		man.LI = 2;
 		man.sv_before = sv_IG;
 		man.sv_after = sv_TLI;
 		man.sv_after.mass = 28862.0;
 
 		OrbMech::periapo(sv_TLI.R, sv_TLI.V, mu, apo, peri);
-		man.HA = (apo - r) / 1852.0;
-		if (man.HA > 99999.0)
+		dispman.HA = (apo - r) / 1852.0;
+		if (dispman.HA > 99999.0)
 		{
-			man.HA = 99999.0;
+			dispman.HA = 99999.0;
 		}
-		man.HP = (peri - r) / 1852.0;
-		man.DV = DV / 0.3048;
+		dispman.HP = (peri - r) / 1852.0;
+		dispman.DV = DV / 0.3048;
+		dispman.AftMJD = man.sv_after.MJD;
 
-		mptable.push_back(man);
+		mptable.fulltable.push_back(dispman);
+		mptable.cmtable.push_back(man);
+		man.sv_after.mass = 15200.0;
+		mptable.lmtable.push_back(man);
 
 		return 0;
 	}
@@ -9775,18 +9791,20 @@ int RTCC::MPTAddTLI(std::vector<MPTManeuver> &mptable, SV sv_IG, SV sv_TLI, doub
 	return 1;
 }
 
-int RTCC::MPTAddManeuver(std::vector<MPTManeuver> &mptable, SV sv_ig, SV sv_cut, char *code, double LSAlt, double DV)
+int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, char *code, double LSAlt, double DV, int L, bool docked)
 {
-	if (mptable.size() > 0)
+	if (mptable.fulltable.size() > 0)
 	{
-		if (sv_ig.MJD < mptable.back().sv_after.MJD)
+		if (sv_ig.MJD < mptable.fulltable.back().AftMJD)
 		{
 			return 2;
 		}
 	}
 
 	MPTManeuver man;
+	MPTManDisplay dispman;
 	double mu, apo, peri, r;
+	char buff[100], buff2;
 
 	mu = GGRAV * oapiGetMass(sv_cut.gravref);
 	if (sv_cut.gravref == oapiGetObjectByName("Earth"))
@@ -9798,55 +9816,171 @@ int RTCC::MPTAddManeuver(std::vector<MPTManeuver> &mptable, SV sv_ig, SV sv_cut,
 		r = oapiGetSize(sv_cut.gravref) + LSAlt;
 	}
 
-	man.code.assign(code);
+	if (L == 1)
+	{
+		buff2 = 'L';
+	}
+	else
+	{
+		buff2 = 'C';
+	}
+
+	man.ID = mptable.fulltable.size() + 1;
+	sprintf(buff, "%c%02d%s", buff2, man.ID, code);
+	dispman.code.assign(buff);
+
+	man.LI = L;
 	man.sv_before = sv_ig;
 	man.sv_after = sv_cut;
 
 	OrbMech::periapo(sv_cut.R, sv_cut.V, mu, apo, peri);
-	man.HA = (apo - r) / 1852.0;
-	if (man.HA > 99999.0)
+	dispman.HA = (apo - r) / 1852.0;
+	if (dispman.HA > 99999.0)
 	{
-		man.HA = 99999.0;
+		dispman.HA = 99999.0;
 	}
-	man.HP = (peri - r) / 1852.0;
-	man.DV = DV / 0.3048;
+	dispman.HP = (peri - r) / 1852.0;
+	dispman.DV = DV / 0.3048;
+	dispman.AftMJD = man.sv_after.MJD;
 
-	if (mptable.size() > 0)
+	if (mptable.fulltable.size() > 0)
 	{
-		man.dt = (man.sv_before.MJD - mptable.back().sv_after.MJD)*24.0*3600.0;
+		dispman.dt = (man.sv_before.MJD - mptable.fulltable.back().AftMJD)*24.0*3600.0;
 	}
 
-	mptable.push_back(man);
+	mptable.fulltable.push_back(dispman);
+	if (man.LI == 1)
+	{
+		mptable.lmtable.push_back(man);
+		if (docked)
+		{
+			if (mptable.cmtable.size() > 0)
+			{
+				man.sv_before.mass = man.sv_after.mass = mptable.cmtable.back().sv_after.mass;
+			}
+			else
+			{
+				man.sv_before.mass = man.sv_after.mass = mptable.CSMInitMass;
+			}
+			mptable.cmtable.push_back(man);
+		}
+	}
+	else
+	{
+		mptable.cmtable.push_back(man);
+		if (docked)
+		{
+			if (mptable.lmtable.size() > 0)
+			{
+				man.sv_before.mass = man.sv_after.mass = mptable.lmtable.back().sv_after.mass;
+			}
+			else
+			{
+				man.sv_before.mass = man.sv_after.mass = mptable.LMInitMass;
+			}
+			mptable.lmtable.push_back(man);
+		}
+	}
 
 	return 0;
 }
 
-bool RTCC::MPTTrajectory(std::vector<MPTManeuver> &mptable, double GETbase, SV &sv_out)
+int RTCC::MPTDeleteManeuver(MPTable &mptable)
 {
-	if (mptable.size() == 0) return false;
+	unsigned i = mptable.fulltable.size();
 
-	sv_out = mptable.back().sv_after;
+	if (i == 0) return 1;
+
+	mptable.fulltable.pop_back();
+
+	if (mptable.cmtable.size() > 0 && mptable.cmtable.back().ID == i)
+	{
+		mptable.cmtable.pop_back();
+	}
+	if (mptable.lmtable.size() > 0 && mptable.lmtable.back().ID == i)
+	{
+		mptable.lmtable.pop_back();
+	}
+
+	return 0;
+}
+
+bool RTCC::MPTTrajectory(MPTable &mptable, double GETbase, SV &sv_out, int L)
+{
+	//Returns:
+	//True if a state vector is returned, false if none is available
+
+	std::vector<MPTManeuver> *table;
+
+	if (L == 1)
+	{
+		table = &mptable.lmtable;
+	}
+	else
+	{
+		table = &mptable.cmtable;
+	}
+
+	//If table is completely empty
+	if (table->size() == 0) return false;
+
+	sv_out = table->back().sv_after;
 
 	return true;
 }
 
-bool RTCC::MPTTrajectory(std::vector<MPTManeuver> &mptable, double GET, double GETbase, SV &sv_out)
+bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_out, int L)
 {
-	if (mptable.size() == 0) return false;	
+	//Returns:
+	//True if a state vector is returned, false if none is available
+
+	std::vector<MPTManeuver> *table;
+
+	if (L == 1)
+	{
+		table = &mptable.lmtable;
+	}
+	else
+	{
+		table = &mptable.cmtable;
+	}
+
+	//If table is completely empty
+	if (table->size() == 0) return false;	
 
 	double MJD = OrbMech::MJDfromGET(GET, GETbase);
 
-	if (mptable[0].sv_before.MJD >= MJD)
-	{
-		sv_out = GeneralTrajectoryPropagation(mptable[0].sv_before, 0, MJD);
-		return true;
-	}
-
 	unsigned i = 0;
 
-	while (mptable.size() - 1 > i && mptable[i + 1].sv_after.MJD <= MJD) i++;
+	while (table->size() - 1 > i && (*table)[i + 1].sv_after.MJD <= MJD) i++;
 
-	sv_out = GeneralTrajectoryPropagation(mptable[i].sv_after, 0, MJD);
+	sv_out = GeneralTrajectoryPropagation((*table)[i].sv_after, 0, MJD);
 
 	return true;
+}
+
+int RTCC::MPTMassInit(MPTable &mptable, double cmass, double lmass)
+{
+	int code = 0;
+
+	if (cmass == 0)
+	{
+		mptable.CSMInitMass = 28862.0;
+		code = 1;
+	}
+	else
+	{
+		mptable.CSMInitMass = cmass;
+	}
+	if (lmass == 0)
+	{
+		mptable.LMInitMass = 15200.0;
+		code = 2;
+	}
+	else
+	{
+		mptable.LMInitMass = lmass;
+	}
+
+	return code;
 }

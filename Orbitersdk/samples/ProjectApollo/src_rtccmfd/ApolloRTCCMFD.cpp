@@ -27,6 +27,7 @@ ARoapiModule *g_coreMod;
 int g_MFDmode; // identifier for new MFD mode
 ARCore *GCoreData[32];
 VESSEL *GCoreVessel[32];
+AR_GCore *g_SC = NULL;      // points to the static core, root of all persistence
 int nGutsUsed;
 char Buffer[100];
 bool initialised = false;
@@ -38,6 +39,11 @@ bool initialised = false;
 ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 : MFD2 (w, h, vessel)
 {
+	if (!g_SC) {
+		g_SC = new AR_GCore;                     // First time only in this Orbiter session. Init the static core.
+	}
+	GC = g_SC;                                  // Make the ApolloRTCCMFD instance Global Core point to the static core. 
+
 	//font = oapiCreateFont(w / 20, true, "Arial", FONT_NORMAL, 0);
 	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
 	font2 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
@@ -55,13 +61,14 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	}
 	if (!found)
 	{
-		GCoreData[nGutsUsed] = new ARCore(vessel);
+		GCoreData[nGutsUsed] = new ARCore(vessel, GC);
 		screen = 0;
-		marker = 0;
 		G = GCoreData[nGutsUsed];
 		GCoreVessel[nGutsUsed] = vessel;
 		nGutsUsed++;
 	}
+
+	marker = 0;
 }
 
 // Destructor
@@ -4202,7 +4209,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(3 * W / 8, 1 * H / 14, "FIDO MISSION PLAN TABLE", 23);
 
-		if (G->MissionPlanningActive)
+		if (GC->MissionPlanningActive)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "Active", 6);
 		}
@@ -4225,27 +4232,27 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
-		for (unsigned i = 0;i < G->mptable.size();i++)
+		for (unsigned i = 0;i < GC->mptable.fulltable.size();i++)
 		{
-			GET_Display(Buffer, OrbMech::GETfromMJD(G->mptable[i].sv_before.MJD, G->GETbase), false);
+			GET_Display(Buffer, OrbMech::GETfromMJD(GC->mptable.fulltable[i].AftMJD, G->GETbase), false);
 			skp->Text(5 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f", G->mptable[i].DV);
+			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].DV);
 			skp->Text(14 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f", G->mptable[i].HA);
+			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].HA);
 			skp->Text(23 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f", G->mptable[i].HP);
+			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].HP);
 			skp->Text(27 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, G->mptable[i].code.c_str());
+			sprintf(Buffer, GC->mptable.fulltable[i].code.c_str());
 			skp->Text(31 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 		}
 
-		for (unsigned i = 1;i < G->mptable.size();i++)
+		for (unsigned i = 1;i < GC->mptable.fulltable.size();i++)
 		{
-			GET_Display(Buffer, G->mptable[i].dt, false);
+			GET_Display(Buffer, GC->mptable.fulltable[i].dt, false);
 			skp->Text(10 * W / 32, (i * 2 + 6) * H / 28, Buffer, strlen(Buffer));
 		}
 
@@ -8363,15 +8370,12 @@ void ApolloRTCCMFD::set_SpaceDigitalsGET(double get)
 
 void ApolloRTCCMFD::menuMPTCycleActive()
 {
-	G->MissionPlanningActive = !G->MissionPlanningActive;
+	GC->MissionPlanningActive = !GC->MissionPlanningActive;
 }
 
 void ApolloRTCCMFD::menuMPTDeleteManeuver()
 {
-	if (G->mptable.size() > 0)
-	{
-		G->mptable.pop_back();
-	}
+	G->rtcc->MPTDeleteManeuver(GC->mptable);
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)
