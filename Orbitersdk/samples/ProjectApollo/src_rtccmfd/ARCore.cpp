@@ -2292,14 +2292,12 @@ int ARCore::subThread()
 		REFSMMATOpt opt;
 
 		opt.dV_LVLH = dV_LVLH;
-		opt.dV_LVLH2 = LOI_dV_LVLH;
 		opt.GETbase = GC->GETbase;
 		opt.LSAzi = GC->LOIazi;
 		opt.LSLat = GC->LSLat;
 		opt.LSLng = GC->LSLng;
 		opt.mission = GC->mission;
 		opt.P30TIG = P30TIG;
-		opt.P30TIG2 = LOI_TIG;
 		opt.REFSMMATdirect = REFSMMATdirect;
 		opt.REFSMMATopt = REFSMMATopt;
 
@@ -2325,6 +2323,26 @@ int ARCore::subThread()
 		else
 		{
 			opt.csmlmdocked = true;
+		}
+
+		if (GC->MissionPlanningActive)
+		{
+			if (REFSMMATopt <= 3 || REFSMMATopt == 5)
+			{
+				if (!rtcc->MPTTrajectory(GC->mptable, opt.REFSMMATTime, GC->GETbase, opt.RV_MCC, mptveh))
+				{
+					opt.RV_MCC = rtcc->StateVectorCalc(vessel);
+				}
+				opt.useSV = true;
+			}
+			else
+			{
+				opt.useSV = false;
+			}
+		}
+		else
+		{
+			opt.useSV = false;
 		}
 
 		REFSMMAT = rtcc->REFSMMATCalc(&opt);

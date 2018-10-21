@@ -711,7 +711,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.IMUAngles = GA;
 		opt.PresentREFSMMAT = E;
-		opt.REFSMMATopt = 9;
+		opt.REFSMMATopt = 7;
 		REFSMMAT = REFSMMATCalc(&opt);
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase, true);

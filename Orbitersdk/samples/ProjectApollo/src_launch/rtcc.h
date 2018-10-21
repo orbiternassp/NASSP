@@ -377,9 +377,7 @@ struct REFSMMATOpt
 	bool REFSMMATdirect = true; //if false, there is a maneuver between "now" and the relevant time of the REFSMMAT calculation
 	double P30TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	double P30TIG2; //Time of Ignition 2nd maneuver
-	VECTOR3 dV_LVLH2; //Delta V in LVLH coordinates 2nd maneuver
-	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2, 8 = LS during TLC, 9 = Attitude
+	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	double REFSMMATTime; //Time for the REFSMMAT calculation
 	double LSLng; //longitude for the landing site REFSMMAT
 	double LSLat; //latitude for the landing site REFSMMAT
@@ -390,6 +388,8 @@ struct REFSMMATOpt
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	MATRIX3 PresentREFSMMAT;	//Present REFSMMAT (for option 9)
 	VECTOR3 IMUAngles;			//Desired Attitude (for option 9)
+	bool useSV = false;		//true if state vector is to be used
+	SV RV_MCC;				//State vector as input
 };
 
 struct CDHOpt
@@ -1054,6 +1054,7 @@ struct MPTManDisplay
 {
 	MPTManDisplay();
 	double AftMJD;
+	double BefMJD;
 	std::string code;
 	double HA;
 	double HP;

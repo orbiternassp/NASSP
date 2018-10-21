@@ -167,6 +167,8 @@ MPTManDisplay::MPTManDisplay()
 	HP = 0.0;
 	dt = 0.0;
 	DV = 0.0;
+	BefMJD = 0.0;
+	AftMJD = 0.0;
 }
 
 RTCC::RTCC()
@@ -2007,7 +2009,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	hEarth = oapiGetObjectByName("Earth");
 
 	//Here the options that don't require a state vector or thrust parameters
-	if (opt->REFSMMATopt == 9)
+	if (opt->REFSMMATopt == 7)
 	{
 		MATRIX3 M;
 		VECTOR3 X_NB, Y_NB, Z_NB, X_NB_apo, Y_NB_apo, Z_NB_apo;
@@ -2074,11 +2076,10 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		return _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 	}
 
-	double SVMJD, dt, LMmass;
-	VECTOR3 R_A, V_A, X_B;
+	double dt, LMmass;
+	VECTOR3 X_B;
 	VECTOR3 DV_P, DV_C, V_G, X_SM, Y_SM, Z_SM;
 	double theta_T;
-	OBJHANDLE gravref;
 	SV sv0, sv2;
 	THGROUP_TYPE th_main;
 
@@ -2091,14 +2092,14 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		th_main = THGROUP_MAIN;
 	}
 
-	gravref = AGCGravityRef(opt->vessel);
-
-	opt->vessel->GetRelativePos(gravref, R_A);
-	opt->vessel->GetRelativeVel(gravref, V_A);
-	SVMJD = oapiGetSimMJD();
-
-	R_A = _V(R_A.x, R_A.z, R_A.y);
-	V_A = _V(V_A.x, V_A.z, V_A.y);
+	if (opt->useSV)
+	{
+		sv0 = opt->RV_MCC;
+	}
+	else
+	{
+		sv0 = StateVectorCalc(opt->vessel);
+	}
 
 	if (opt->csmlmdocked)
 	{
@@ -2109,20 +2110,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		LMmass = 0.0;
 	}
 
-	sv0.gravref = gravref;
-	sv0.mass = opt->vessel->GetMass();
-	sv0.MJD = SVMJD;
-	sv0.R = R_A;
-	sv0.V = V_A;
-
-	if (opt->REFSMMATopt == 7)
-	{
-		SV sv1;
-
-		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, LMmass);
-		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG2, opt->dV_LVLH2, sv1, LMmass);
-	}
-	else if (opt->REFSMMATdirect == false && length(opt->dV_LVLH) != 0.0 )	//Check against DV = 0, some calculations could break down
+	if (opt->REFSMMATdirect == false && length(opt->dV_LVLH) != 0.0 )	//Check against DV = 0, some calculations could break down
 	{
 		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, LMmass);
 	}
@@ -2166,20 +2154,6 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		{
 			dt = opt->REFSMMATTime - (sv2.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 			sv4 = coast(sv2, dt);
-		}
-		else if (opt->REFSMMATopt == 7)
-		{
-			double t_p, mu;
-			SV sv3;
-
-			mu = GGRAV*oapiGetMass(hMoon);
-			t_p = OrbMech::period(sv2.R, sv2.V, mu);
-			OrbMech::oneclickcoast(sv2.R, sv2.V, sv2.MJD, 1.5*t_p, sv3.R, sv3.V, sv2.gravref, hMoon);
-			sv3.gravref = hMoon;
-			sv3.mass = sv2.mass;
-			sv3.MJD = sv2.MJD + 1.5*t_p / 24.0 / 3600.0;
-
-			OrbMech::time_radius_integ(sv3.R, sv3.V, sv3.MJD, oapiGetSize(hMoon) + 60.0*1852.0, -1, hMoon, hMoon, sv4.R, sv4.V);
 		}
 		else if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1)
 		{
@@ -9778,6 +9752,7 @@ int RTCC::MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV)
 		}
 		dispman.HP = (peri - r) / 1852.0;
 		dispman.DV = DV / 0.3048;
+		dispman.BefMJD = man.sv_before.MJD;
 		dispman.AftMJD = man.sv_after.MJD;
 
 		mptable.fulltable.push_back(dispman);
@@ -9841,6 +9816,7 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, char *code, doub
 	}
 	dispman.HP = (peri - r) / 1852.0;
 	dispman.DV = DV / 0.3048;
+	dispman.BefMJD = man.sv_before.MJD;
 	dispman.AftMJD = man.sv_after.MJD;
 
 	if (mptable.fulltable.size() > 0)
@@ -9950,7 +9926,8 @@ bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_ou
 
 	double MJD = OrbMech::MJDfromGET(GET, GETbase);
 
-	if ((*table)[0].sv_after.MJD >= MJD)
+	//Use first "before" SV if the desired MJD is up to, but not including the MJD of the first "after" SV
+	if ((*table)[0].sv_after.MJD > MJD)
 	{
 		sv_out = GeneralTrajectoryPropagation((*table)[0].sv_before, 0, MJD);
 		return true;
@@ -9958,6 +9935,7 @@ bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_ou
 
 	unsigned i = 0;
 
+	//Use the "after" SV of the currently iterated SV while the MJD of the next "after" SV is smaller or including the desired MJD
 	while (table->size() - 1 > i && (*table)[i + 1].sv_after.MJD <= MJD) i++;
 
 	sv_out = GeneralTrajectoryPropagation((*table)[i].sv_after, 0, MJD);

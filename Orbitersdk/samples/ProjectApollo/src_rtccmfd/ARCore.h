@@ -241,7 +241,7 @@ public:
 	//REFSMMAT PAGE
 	double REFSMMATTime;
 	MATRIX3 REFSMMAT;
-	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = LOI-2, 8 = LS during TLC
+	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	int REFSMMAToct[20];
 	int REFSMMATcur; //Currently saved REFSMMAT
 	int REFSMMATupl; //0 = Desired REFSMMAT, 1 = REFSMMAT

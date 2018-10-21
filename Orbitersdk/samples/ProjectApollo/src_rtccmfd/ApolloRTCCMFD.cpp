@@ -1049,30 +1049,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else if (G->REFSMMATopt == 7)
 		{
-			skp->Text(5 * W / 8, 2 * H / 14, "LOI-2", 5);
-
-			skp->Text(1 * W / 8, 8 * H / 21, "MCC", 3);
-			GET_Display(Buffer, G->TLCC_TIG);
-			skp->Text(1 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVX", G->TLCC_dV_LVLH.x / 0.3048);
-			skp->Text(1 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVY", G->TLCC_dV_LVLH.y / 0.3048);
-			skp->Text(1 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVZ", G->TLCC_dV_LVLH.z / 0.3048);
-			skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 14 * H / 21, "LOI-1", 5);
-			GET_Display(Buffer, G->LOI_TIG);
-			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVX", G->LOI_dV_LVLH.x / 0.3048);
-			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVY", G->LOI_dV_LVLH.y / 0.3048);
-			skp->Text(1 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVZ", G->LOI_dV_LVLH.z / 0.3048);
-			skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
-		}
-		else if (G->REFSMMATopt == 9)
-		{
 			skp->Text(5 * W / 8, 2 * H / 14, "REFS from Attitude", 18);
 
 			skp->Text((int)(0.5 * W / 8), 9 * H / 21, "Current REFSMMAT:", 17);
@@ -4234,7 +4210,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		for (unsigned i = 0;i < GC->mptable.fulltable.size();i++)
 		{
-			GET_Display(Buffer, OrbMech::GETfromMJD(GC->mptable.fulltable[i].AftMJD, GC->GETbase), false);
+			GET_Display(Buffer, OrbMech::GETfromMJD(GC->mptable.fulltable[i].BefMJD, GC->GETbase), false);
 			skp->Text(5 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].DV);
