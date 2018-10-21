@@ -2393,7 +2393,7 @@ int ARCore::subThread()
 			sv0 = rtcc->StateVectorCalc(vessel);
 		}
 
-		if (LOImaneuver == 0 || LOImaneuver == 1)
+		if (LOImaneuver == 0)
 		{
 			LOIMan loiopt;
 			SV sv_n, sv_preLOI, sv_postLOI;
@@ -2429,16 +2429,6 @@ int ARCore::subThread()
 				loiopt.csmlmdocked = true;
 			}
 
-			if (LOImaneuver == 0)
-			{
-				SV RV1, RV2;
-
-				RV1 = rtcc->StateVectorCalc(vessel);
-				RV2 = rtcc->ExecuteManeuver(vessel, GC->GETbase, TLCC_TIG, TLCC_dV_LVLH, RV1, 0);
-
-				loiopt.RV_MCC = RV2;
-			}
-
 			rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG, sv_n, sv_preLOI, sv_postLOI);
 			P30TIG = LOI_TIG;
 			dV_LVLH = LOI_dV_LVLH;
@@ -2452,7 +2442,7 @@ int ARCore::subThread()
 				rtcc->MPTAddManeuver(GC->mptable, sv_preLOI, sv_postLOI, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
 			}
 		}
-		else if (LOImaneuver == 2)
+		else if (LOImaneuver == 1)
 		{
 			LOI2Man opt;
 

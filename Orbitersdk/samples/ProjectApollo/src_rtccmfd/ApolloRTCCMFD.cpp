@@ -914,7 +914,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text((int)(0.5 * W / 8), 4 * H / 14, "REFSMMAT", 8);
 		}
 
-		if (G->REFSMMATopt != 7 && G->REFSMMATopt != 8 && G->REFSMMATdirect == false)
+		if (G->REFSMMATopt != 8 && G->REFSMMATdirect == false)
 		{
 			GET_Display(Buffer, G->P30TIG);
 			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
@@ -1954,34 +1954,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Insertion", 15);
 
-		if (G->LOImaneuver == 0 || G->LOImaneuver == 1)
+		if (G->LOImaneuver == 0)
 		{
-			if (G->LOImaneuver == 0)
+			skp->Text(1 * W / 8, 2 * H / 14, "LOI-1", 5);
+
+			if (G->subThreadStatus > 0)
 			{
-				skp->Text(1 * W / 8, 2 * H / 14, "LOI-1 (w/ MCC)", 14);
-
-				if (G->subThreadStatus > 0)
-				{
-					skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
-				}
-				else
-				{
-					skp->Text(5 * W / 8, 2 * H / 21, "MCC", 3);
-					GET_Display(Buffer, G->TLCC_TIG);
-					skp->Text(5 * W / 8, 3 * H / 21, Buffer, strlen(Buffer));
-
-					sprintf(Buffer, "%+07.1f DVT", length(G->TLCC_dV_LVLH) / 0.3048);
-					skp->Text(5 * W / 8, 4 * H / 21, Buffer, strlen(Buffer));
-				}
-			}
-			else
-			{
-				skp->Text(1 * W / 8, 2 * H / 14, "LOI-1 (w/o MCC)", 15);
-
-				if (G->subThreadStatus > 0)
-				{
-					skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
-				}
+				skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 			}
 
 			if (G->LOIOption == 0)
@@ -2039,7 +2018,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+07.1f DVZ", G->LOI_dV_LVLH.z / 0.3048);
 			skp->Text(5 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
 		}
-		else if (G->LOImaneuver == 2)
+		else if (G->LOImaneuver == 1)
 		{
 			skp->Text(1 * W / 8, 2 * H / 14, "LOI-2", 5);
 
@@ -6547,7 +6526,7 @@ void ApolloRTCCMFD::EntryLongitudeModeDialogue()
 
 void ApolloRTCCMFD::menuSwitchLOIManeuver()
 {
-	if (G->LOImaneuver < 2)
+	if (G->LOImaneuver < 1)
 	{
 		G->LOImaneuver++;
 	}
@@ -6571,7 +6550,7 @@ void ApolloRTCCMFD::menuSwitchLOIOption()
 
 void ApolloRTCCMFD::menuCycleLOIEllipseOption()
 {
-	if (G->LOImaneuver < 2)
+	if (G->LOImaneuver == 0)
 	{
 		if (GC->LOIEllipseRotation < 2)
 		{
@@ -6762,7 +6741,7 @@ void ApolloRTCCMFD::set_TLCCLng(double lng)
 
 void ApolloRTCCMFD::menuSetLOIApo()
 {
-	if (G->LOImaneuver == 0 || G->LOImaneuver == 1)
+	if (G->LOImaneuver == 0)
 	{
 		bool LOIApoInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the apocynthion altitude:", LOIApoInput, 0, 20, (void*)this);
@@ -6802,7 +6781,7 @@ bool LOIPeriInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIPeri(double alt)
 {
-	if (G->LOImaneuver == 2)
+	if (G->LOImaneuver == 1)
 	{
 		G->LOI2Alt = alt*1852.0;
 	}
@@ -6846,7 +6825,7 @@ void ApolloRTCCMFD::set_TLCCAlt(double alt)
 
 void ApolloRTCCMFD::menuSetLOIAzi()
 {
-	if (G->LOImaneuver == 0 || G->LOImaneuver == 1)
+	if (G->LOImaneuver == 0)
 	{
 		if (G->LOIOption == 0)
 		{
@@ -6873,7 +6852,7 @@ void ApolloRTCCMFD::set_LOIAzi(double azi)
 
 void ApolloRTCCMFD::menuSetLOIGET()
 {
-	if (G->LOImaneuver == 2)
+	if (G->LOImaneuver == 1)
 	{
 		bool LOI2EarliestGETnput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the earliest time for LOI-2 (Format: hhh:mm:ss)", LOI2EarliestGETnput, 0, 20, (void*)this);

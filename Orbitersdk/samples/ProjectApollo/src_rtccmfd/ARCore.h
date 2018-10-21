@@ -325,7 +325,7 @@ public:
 	double TLCCPostDOIPeriAlt, TLCCPostDOIApoAlt;
 
 	//LOI PAGE
-	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2
+	int LOImaneuver; //0 = LOI-1, 1 = LOI-2
 	int LOIOption;	//0 = Fixed LPO, 1 = LOI at Peri
 	double LOI2Alt;
 	VECTOR3 LOI_dV_LVLH;
