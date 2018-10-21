@@ -30,10 +30,26 @@ struct ApolloRTCCMFDData {  // global data storage
 class AR_GCore
 {
 public:
-	AR_GCore();
+	AR_GCore(VESSEL* v);
 
 	MPTable mptable;
 	bool MissionPlanningActive;
+	double GETbase;			//Launch MJD
+	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
+	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
+	double t_Land;				//Time of landing
+	double LOIazi;
+	double TLCCFreeReturnEMPLat, TLCCNonFreeReturnEMPLat;
+	//Initial guess of pericynthion GET
+	double TLCCPeriGET;
+	double LOIapo, LOIperi;
+	int LOIEllipseRotation;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
+	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
+	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
+	int DOI_N;							//Number of revolutions between DOI and PDI
+	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
+	double DOI_PeriAng;					//Angle from landing site to PDI position
+	double DOI_alt;						//perilune altitude above landing site
 };
 
 class ARCore {
@@ -127,15 +143,11 @@ public:
 	int targetnumber;		//Vessel index for target
 
 	//GENERAL PARAMETERS
-	double GETbase;			//Launch MJD
 	double AGCEpoch;
-	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9
 	double P30TIG;				//Maneuver GET
 	VECTOR3 dV_LVLH;			//LVLH maneuver vector
 	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
-	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
-	double t_Land;				//Time of landing
 	bool inhibUplLOS;
 	bool PADSolGood;
 	int enginetype;				// 0 = RCS, 1 = SPS or DPS or APS
@@ -298,15 +310,11 @@ public:
 	//5 = Non Free BAP Fixed LPO, 6 = Non Free BAP Free LPO, 7 = Circumlunar free-return flyby, specified H_PC and phi_PC
 	int TLCCmaneuver;
 	VECTOR3 TLCC_dV_LVLH;
-	//Initial guess of pericynthion GET
-	double TLCCPeriGET;
 	//Corrected time of pericynthion
 	double TLCCPeriGETcor;
 	//Initial guess and corrected TIG
 	double TLCC_GET, TLCC_TIG;
-	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
-	double TLCCFreeReturnEMPLat, TLCCNonFreeReturnEMPLat, TLCCReentryGET, TLCCFRIncl, TLCCEMPLatcor;
-	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
+	double TLCCReentryGET, TLCCFRIncl, TLCCEMPLatcor;
 	double TLCCFRLat, TLCCFRLng;
 	VECTOR3 R_TLI, V_TLI;
 	bool TLCCSolGood;
@@ -319,10 +327,9 @@ public:
 	//LOI PAGE
 	int LOImaneuver; //0 = LOI-1 (w/ MCC), 1 = LOI-1 (w/o MCC), 2 = LOI-2
 	int LOIOption;	//0 = Fixed LPO, 1 = LOI at Peri
-	double LOIapo, LOIperi, LOIazi, LOI2Alt;
+	double LOI2Alt;
 	VECTOR3 LOI_dV_LVLH;
 	double LOI_TIG;
-	int LOIEllipseRotation;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 	double LOI2_EarliestGET;
 
 	//LANDMARK TRACKING PAGE
@@ -337,14 +344,10 @@ public:
 	VECTOR3 VECangles;	//IMU angles
 
 	//DOI Page
-	int DOI_N;							//Number of revolutions between DOI and PDI
 	double DOIGET;						//Initial guess for the DOI TIG
 	double DOI_TIG;						//Integrated DOI TIG
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
 	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
-	double DOI_PeriAng;					//Angle from landing site to 
-	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
-	double DOI_alt;						//perilune altitude above landing site
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC

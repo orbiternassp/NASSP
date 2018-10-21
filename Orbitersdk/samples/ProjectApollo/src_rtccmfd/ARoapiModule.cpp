@@ -38,6 +38,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 extern ARoapiModule *g_coreMod;
 extern ARCore *GCoreData[32];
 extern VESSEL *GCoreVessel[32];
+extern AR_GCore *g_SC;
 extern int nGutsUsed;
 extern int g_MFDmode;
 
@@ -92,6 +93,11 @@ void ARoapiModule::clbkSimulationEnd() {                                      //
 		GCoreVessel[i] = NULL;
 	}
 	nGutsUsed = 0;
+	if (g_SC)
+	{
+		delete g_SC;
+		g_SC = 0;
+	}
 	return;
 }
 void ARoapiModule::clbkPreStep(double simt, double simdt, double mjd) {      // Called on each iteration of the calc engine (more often than the MFD Update
