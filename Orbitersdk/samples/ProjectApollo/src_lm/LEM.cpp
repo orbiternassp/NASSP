@@ -536,7 +536,10 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				case OAPI_KEY_NUMPAD0:
 					dsky.NumberPressed(0);
 					break;
-				
+				case OAPI_KEY_K:
+					//kill rotation
+					SetAngularVel(_V(0, 0, 0));
+					break;
 			}
 		}else{
 			// KEY UP

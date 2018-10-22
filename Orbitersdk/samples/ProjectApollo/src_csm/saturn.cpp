@@ -2903,6 +2903,10 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 				case OAPI_KEY_E: // Minimum impulse controller, roll right
 					agc.SetInputChannelBit(032, PlusRollMinimumImpulse,1);
 					break;
+				case OAPI_KEY_K:
+					//kill rotation
+					SetAngularVel(_V(0, 0, 0));
+					break;
 			}
 		}else{
 			// KEY UP
