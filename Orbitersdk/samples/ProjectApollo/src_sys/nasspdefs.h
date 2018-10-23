@@ -308,7 +308,7 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 // Engine information.
 //
 
-#define SPS_THRUST					92100.0		// Apollo 7 Mission Report
+#define SPS_THRUST					91188.544		// CMC fixed constant
 #define SPS_ISP						 3080.0
 #define SPS_DEFAULT_PROPELLANT		18500.0		// Apollo 11 Mission Report
 #define SPS_NORM_OXIDIZER_FLOW		(1.6 / (1.0 + 1.6))
