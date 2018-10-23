@@ -4296,15 +4296,11 @@ char* ApolloRTCCMFD::REFSMMATName(char* Buff, int n)
 	}
 	else if (n == 7)
 	{
-		sprintf(Buff, "LOI-2");
+		sprintf(Buff, "REFS from Att");
 	}
 	else if (n == 8)
 	{
 		sprintf(Buff, "Landing Site");
-	}
-	else if (n == 9)
-	{
-		sprintf(Buff, "REFS from Att");
 	}
 	else
 	{
