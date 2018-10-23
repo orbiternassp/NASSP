@@ -2307,11 +2307,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			{
 				REFSMMATOpt refsopt;
 				refsopt.GETbase = GETbase;
-				refsopt.dV_LVLH = res.dV_LVLH;
-				refsopt.P30TIG = res.P30TIG;
-				refsopt.REFSMMATdirect = false;
 				refsopt.REFSMMATopt = 3;
 				refsopt.vessel = calcParams.src;
+				refsopt.useSV = true;
+				refsopt.RV_MCC = res.sv_postburn;
 
 				REFSMMAT = REFSMMATCalc(&refsopt);
 			}
@@ -2444,6 +2443,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		TimeofIgnition = res.P30TIG;
 		SplashLatitude = res.latitude;
 		SplashLongitude = res.longitude;
+		calcParams.SVSTORE1 = res.sv_postburn;
 	}
 	break;
 	case 116: //ENTRY PAD (ASSUMES MCC-6)
@@ -2478,11 +2478,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			REFSMMATOpt refsopt;
 			refsopt.GETbase = GETbase;
-			refsopt.dV_LVLH = DeltaV_LVLH;
-			refsopt.P30TIG = TimeofIgnition;
-			refsopt.REFSMMATdirect = false;
 			refsopt.REFSMMATopt = 3;
 			refsopt.vessel = calcParams.src;
+			refsopt.useSV = true;
+			refsopt.RV_MCC = calcParams.SVSTORE1;
 
 			REFSMMAT = REFSMMATCalc(&refsopt);
 		}

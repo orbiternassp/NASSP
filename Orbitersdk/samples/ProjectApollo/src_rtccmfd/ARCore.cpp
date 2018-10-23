@@ -452,7 +452,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
 	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
-	REFSMMATdirect = true;
 	REFSMMATHeadsUp = true;
 
 	GMPManeuverCode = 0;
@@ -2298,7 +2297,6 @@ int ARCore::subThread()
 		opt.LSLng = GC->LSLng;
 		opt.mission = GC->mission;
 		opt.P30TIG = P30TIG;
-		opt.REFSMMATdirect = REFSMMATdirect;
 		opt.REFSMMATopt = REFSMMATopt;
 
 		if (REFSMMATopt == 5 || REFSMMATopt == 8)

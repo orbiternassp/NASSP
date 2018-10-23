@@ -2110,14 +2110,7 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 		LMmass = 0.0;
 	}
 
-	if (opt->REFSMMATdirect == false && length(opt->dV_LVLH) != 0.0 )	//Check against DV = 0, some calculations could break down
-	{
-		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, sv0, LMmass);
-	}
-	else
-	{
-		sv2 = sv0;
-	}
+	sv2 = sv0;
 
 	if (opt->REFSMMATopt == 5)
 	{

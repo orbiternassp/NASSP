@@ -245,7 +245,6 @@ public:
 	int REFSMMAToct[20];
 	int REFSMMATcur; //Currently saved REFSMMAT
 	int REFSMMATupl; //0 = Desired REFSMMAT, 1 = REFSMMAT
-	bool REFSMMATdirect;
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	

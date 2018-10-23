@@ -153,7 +153,6 @@ public:
 	void set_LSLat(double lat);
 	void menuLSLng();
 	void set_LSLng(double lng);
-	void menuREFSMMATdirect();
 	void menuSetSVTime();
 	void set_SVtime(double SVtime);
 	void menuSetAGSKFactor();

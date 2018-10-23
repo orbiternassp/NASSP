@@ -115,7 +115,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
 	oapiWriteScenario_int(scn, "REFSMMATupl", G->REFSMMATupl);
-	papiWriteScenario_bool(scn, "REFSMMATdirect", G->REFSMMATdirect);
 	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 	papiWriteScenario_double(scn, "T1", G->T1);
 	papiWriteScenario_double(scn, "T2", G->T2);
@@ -268,7 +267,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
 		papiReadScenario_int(line, "REFSMMATupl", G->REFSMMATupl);
-		papiReadScenario_bool(line, "REFSMMATdirect", G->REFSMMATdirect);
 		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 		papiReadScenario_double(line, "T1", G->T1);
 		papiReadScenario_double(line, "T2", G->T2);
@@ -914,18 +912,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text((int)(0.5 * W / 8), 4 * H / 14, "REFSMMAT", 8);
 		}
 
-		if (G->REFSMMATopt != 8 && G->REFSMMATdirect == false)
-		{
-			GET_Display(Buffer, G->P30TIG);
-			skp->Text(1 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVX", G->dV_LVLH.x / 0.3048);
-			skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVY", G->dV_LVLH.y / 0.3048);
-			skp->Text(1 * W / 8, 15 * H / 21, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.1f DVZ", G->dV_LVLH.z / 0.3048);
-			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-		}
-
 		if (G->REFSMMATopt == 0) //P30 Maneuver
 		{
 			if (G->REFSMMATHeadsUp)
@@ -970,28 +956,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			GET_Display(Buffer, G->REFSMMATTime);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
-
-			if (G->REFSMMATdirect == true)
-			{
-				skp->Text((int)(0.5 * W / 8), 12 * H / 14, "Direct", 6);
-			}
-			else
-			{
-				skp->Text((int)(0.5 * W / 8), 12 * H / 14, "MCC", 3);
-			}
 		}
 		else if (G->REFSMMATopt == 3)
 		{
 			skp->Text(5 * W / 8, 2 * H / 14, "Lunar Entry", 11);
-
-			if (G->REFSMMATdirect == true)
-			{
-				skp->Text((int)(0.5 * W / 8), 12 * H / 14, "Direct", 6);
-			}
-			else
-			{
-				skp->Text((int)(0.5 * W / 8), 12 * H / 14, "MCC", 3);
-			}
 		}
 		else if (G->REFSMMATopt == 4)
 		{
@@ -1028,15 +996,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			else
 			{
 				skp->Text(5 * W / 8, 2 * H / 14, "Landing Site", 12);
-
-				if (G->REFSMMATdirect == true)
-				{
-					skp->Text((int)(0.5 * W / 8), 12 * H / 14, "Direct", 6);
-				}
-				else
-				{
-					skp->Text((int)(0.5 * W / 8), 12 * H / 14, "MCC", 3);
-				}
 			}
 
 		}
@@ -6062,14 +6021,6 @@ void ApolloRTCCMFD::menuSwitchManPADopt()
 	else
 	{
 		G->manpadopt = 0;
-	}
-}
-
-void ApolloRTCCMFD::menuREFSMMATdirect()
-{
-	if (G->REFSMMATopt == 2 || G->REFSMMATopt == 3 || G->REFSMMATopt == 5)
-	{
-		G->REFSMMATdirect = !G->REFSMMATdirect;
 	}
 }
 

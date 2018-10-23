@@ -1071,11 +1071,10 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			{
 				REFSMMATOpt refsopt;
 				refsopt.GETbase = GETbase;
-				refsopt.dV_LVLH = res.dV_LVLH;
-				refsopt.P30TIG = res.P30TIG;
-				refsopt.REFSMMATdirect = false;
 				refsopt.REFSMMATopt = 3;
 				refsopt.vessel = calcParams.src;
+				refsopt.useSV = true;
+				refsopt.RV_MCC = res.sv_postburn;
 
 				REFSMMAT = REFSMMATCalc(&refsopt);
 			}
