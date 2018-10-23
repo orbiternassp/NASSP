@@ -4315,7 +4315,7 @@ char* ApolloRTCCMFD::REFSMMATName(char* Buff, int n)
 
 void ApolloRTCCMFD::CycleREFSMMATopt()
 {
-	if (G->REFSMMATopt < 9)
+	if (G->REFSMMATopt < 8)
 	{
 		G->REFSMMATopt++;
 	}
