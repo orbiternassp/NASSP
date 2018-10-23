@@ -835,7 +835,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			refsopt.dV_LVLH = res.dV_LVLH;
 			refsopt.GETbase = GETbase;
-			refsopt.P30TIG = res.P30TIG;
+			refsopt.REFSMMATTime = res.P30TIG;
 			refsopt.REFSMMATopt = 0;
 			refsopt.vessel = calcParams.src;
 
@@ -1975,7 +1975,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			refsopt.dV_LVLH = DeltaV_LVLH;
 			refsopt.GETbase = GETbase;
 			refsopt.HeadsUp = false;
-			refsopt.P30TIG = TimeofIgnition;
+			refsopt.REFSMMATTime = TimeofIgnition;
 			refsopt.REFSMMATopt = 0;
 			refsopt.vessel = calcParams.src;
 			refsopt.vesseltype = 0;

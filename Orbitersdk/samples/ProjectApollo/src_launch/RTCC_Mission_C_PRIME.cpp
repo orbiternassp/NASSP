@@ -569,7 +569,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			refsopt.dV_LVLH = res.dV_LVLH;
 			refsopt.GETbase = GETbase;
-			refsopt.P30TIG = res.P30TIG;
+			refsopt.REFSMMATTime = res.P30TIG;
 			refsopt.REFSMMATopt = 0;
 			refsopt.vessel = calcParams.src;
 
@@ -649,7 +649,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			refsopt.dV_LVLH = res.dV_LVLH;
 			refsopt.GETbase = GETbase;
-			refsopt.P30TIG = res.P30TIG;
+			refsopt.REFSMMATTime = res.P30TIG;
 			refsopt.REFSMMATopt = 0;
 			refsopt.vessel = calcParams.src;
 

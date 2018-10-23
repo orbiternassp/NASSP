@@ -2143,14 +2143,9 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 	{
 		SV sv4;
 
-		if (opt->REFSMMATopt == 2)
+		if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1 || opt->REFSMMATopt == 2)
 		{
 			dt = opt->REFSMMATTime - (sv2.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-			sv4 = coast(sv2, dt);
-		}
-		else if (opt->REFSMMATopt == 0 || opt->REFSMMATopt == 1)
-		{
-			dt = opt->P30TIG - (sv2.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 			sv4 = coast(sv2, dt);
 		}
 		else
@@ -9960,4 +9955,24 @@ int RTCC::MPTMassInit(MPTable &mptable, double cmass, double lmass)
 	}
 
 	return code;
+}
+
+bool RTCC::MPTHasManeuvers(MPTable &mptable, int L)
+{
+	if (L == 1)
+	{
+		if (mptable.lmtable.size() > 0)
+		{
+			return true;
+		}
+	}
+	else
+	{
+		if (mptable.cmtable.size() > 0)
+		{
+			return true;
+		}
+	}
+
+	return false;
 }

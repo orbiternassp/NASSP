@@ -2296,9 +2296,12 @@ int ARCore::subThread()
 		opt.LSLat = GC->LSLat;
 		opt.LSLng = GC->LSLng;
 		opt.mission = GC->mission;
-		opt.P30TIG = P30TIG;
 		opt.REFSMMATopt = REFSMMATopt;
 
+		if (REFSMMATopt == 0 || REFSMMATopt == 1)
+		{
+			opt.REFSMMATTime = P30TIG;
+		}
 		if (REFSMMATopt == 5 || REFSMMATopt == 8)
 		{
 			opt.REFSMMATTime = GC->t_Land;
@@ -2323,15 +2326,19 @@ int ARCore::subThread()
 			opt.csmlmdocked = true;
 		}
 
-		if (GC->MissionPlanningActive)
+		if (GC->MissionPlanningActive && rtcc->MPTHasManeuvers(GC->mptable, mptveh))
 		{
-			if (REFSMMATopt <= 3 || REFSMMATopt == 5)
+			opt.useSV = true;
+
+			if (REFSMMATopt == 0 || REFSMMATopt == 1 || REFSMMATopt == 2 || REFSMMATopt == 5)
 			{
-				if (!rtcc->MPTTrajectory(GC->mptable, opt.REFSMMATTime, GC->GETbase, opt.RV_MCC, mptveh))
-				{
-					opt.RV_MCC = rtcc->StateVectorCalc(vessel);
-				}
-				opt.useSV = true;
+				//SV at specified time
+				rtcc->MPTTrajectory(GC->mptable, opt.REFSMMATTime, GC->GETbase, opt.RV_MCC, mptveh);
+			}
+			else if (REFSMMATopt == 3)
+			{
+				//Last SV in the table
+				rtcc->MPTTrajectory(GC->mptable, GC->GETbase, opt.RV_MCC, mptveh);
 			}
 			else
 			{

@@ -374,7 +374,6 @@ struct REFSMMATOpt
 {
 	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
-	double P30TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
 	int REFSMMATopt; //REFSMMAT options: 0 = P30 Maneuver, 1 = P30 Retro, 2= LVLH, 3= Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	double REFSMMATTime; //Time for the REFSMMAT calculation
@@ -1298,6 +1297,7 @@ public:
 	bool MPTTrajectory(MPTable &mptable, double GETbase, SV &sv_out, int L);
 	bool MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
 	int MPTMassInit(MPTable &mptable, double cmass, double lmass);
+	bool MPTHasManeuvers(MPTable &mptable, int L);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
