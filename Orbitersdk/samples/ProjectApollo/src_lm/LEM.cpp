@@ -549,6 +549,62 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		}
 		return 0;
 	}
+	else if (KEYMOD_CONTROL(keystate)) {
+		// Do DEDA stuff
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_DECIMAL:
+				deda.ClearPressed();
+				break;
+			case OAPI_KEY_NUMPADENTER:
+				deda.EnterPressed();
+				break;
+			case OAPI_KEY_DIVIDE:
+				deda.HoldPressed();
+				break;
+			case OAPI_KEY_MULTIPLY:
+				deda.ReadOutPressed();
+				break;
+			case OAPI_KEY_ADD:
+				deda.PlusPressed();
+				break;
+			case OAPI_KEY_SUBTRACT:
+				deda.MinusPressed();
+				break;
+			case OAPI_KEY_NUMPAD1:
+				deda.NumberPressed(1);
+				break;
+			case OAPI_KEY_NUMPAD2:
+				deda.NumberPressed(2);
+				break;
+			case OAPI_KEY_NUMPAD3:
+				deda.NumberPressed(3);
+				break;
+			case OAPI_KEY_NUMPAD4:
+				deda.NumberPressed(4);
+				break;
+			case OAPI_KEY_NUMPAD5:
+				deda.NumberPressed(5);
+				break;
+			case OAPI_KEY_NUMPAD6:
+				deda.NumberPressed(6);
+				break;
+			case OAPI_KEY_NUMPAD7:
+				deda.NumberPressed(7);
+				break;
+			case OAPI_KEY_NUMPAD8:
+				deda.NumberPressed(8);
+				break;
+			case OAPI_KEY_NUMPAD9:
+				deda.NumberPressed(9);
+				break;
+			case OAPI_KEY_NUMPAD0:
+				deda.NumberPressed(0);
+				break;
+			}
+		}
+		return 1;
+	}
 
 	if (down){
 		switch(key){
