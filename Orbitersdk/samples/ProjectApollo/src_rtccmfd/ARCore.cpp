@@ -2302,7 +2302,7 @@ int ARCore::subThread()
 		{
 			opt.REFSMMATTime = P30TIG;
 		}
-		if (REFSMMATopt == 5 || REFSMMATopt == 8)
+		else if (REFSMMATopt == 5 || REFSMMATopt == 8)
 		{
 			opt.REFSMMATTime = GC->t_Land;
 		}

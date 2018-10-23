@@ -926,13 +926,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->P30TIG);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 			
-			skp->Text(5 * W / 8, 4 * H / 14, "DV Vector", 9);
+			skp->Text(6 * W / 8, 4 * H / 14, "DV Vector", 9);
 			AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
-			skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 			AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
-			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
-			skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (G->REFSMMATopt == 1)//Retrofire
 		{
@@ -941,13 +941,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			GET_Display(Buffer, G->P30TIG);
 			skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 			
-			skp->Text(5 * W / 8, 4 * H / 14, "DV Vector", 9);
+			skp->Text(6 * W / 8, 4 * H / 14, "DV Vector", 9);
 			AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
-			skp->Text(5 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 			AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
-			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
-			skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(6 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 
 		}
 		else if (G->REFSMMATopt == 2)
