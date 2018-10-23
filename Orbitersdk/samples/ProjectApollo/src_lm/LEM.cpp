@@ -606,6 +606,15 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				break;
 			}
 		}
+		else {
+			// KEY UP
+			switch (key) {
+			case OAPI_KEY_DECIMAL:
+				deda.ResetKeyDown();
+				break;
+
+			}
+		}
 		return 1;
 	}
 
