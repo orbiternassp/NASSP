@@ -159,6 +159,8 @@ public:
 	void set_AGSKFactor(double time);
 	void menuCalcMapUpdate();
 	void menuSwitchMapUpdate();
+	void menuSetMapUpdateGET();
+	void set_MapUpdateGET(double time);
 	void menuSwitchUplinkInhibit();
 	void menuCycleSPQMode();
 	void set_CDHtimemode();

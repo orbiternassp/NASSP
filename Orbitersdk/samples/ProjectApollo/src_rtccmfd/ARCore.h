@@ -302,6 +302,7 @@ public:
 	AP10MAPUPDATE mapupdate;
 	double GSAOSGET, GSLOSGET;
 	int mappage, mapgs;
+	double mapUpdateGET;
 
 	//TLCC PAGE
 

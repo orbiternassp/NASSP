@@ -610,6 +610,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	mapupdate.PMGET = 0.0;
 	mappage = 1;
 	mapgs = 0;
+	mapUpdateGET = 0.0;
 	GSAOSGET = 0.0;
 	GSLOSGET = 0.0;
 	inhibUplLOS = false;
@@ -1186,25 +1187,7 @@ void ARCore::TPIPAD()
 
 void ARCore::MapUpdate()
 {
-	SV sv0 = rtcc->StateVectorCalc(vessel);
-
-	if (mappage == 0)
-	{
-		int gstat;
-		double ttoGSAOS, ttoGSLOS;
-
-		gstat = OrbMech::findNextAOS(sv0.R, sv0.V, sv0.MJD, sv0.gravref);
-
-		OrbMech::groundstation(sv0.R, sv0.V, sv0.MJD, sv0.gravref, groundstations[gstat][0], groundstations[gstat][1], 1, ttoGSAOS);
-		OrbMech::groundstation(sv0.R, sv0.V, sv0.MJD, sv0.gravref, groundstations[gstat][0], groundstations[gstat][1], 0, ttoGSLOS);
-		GSAOSGET = (sv0.MJD - GC->GETbase)*24.0*3600.0 + ttoGSAOS;
-		GSLOSGET = (sv0.MJD - GC->GETbase)*24.0*3600.0 + ttoGSLOS;
-		mapgs = gstat;
-	}
-	else
-	{
-		rtcc->LunarOrbitMapUpdate(sv0, GC->GETbase, mapupdate);
-	}
+	startSubthread(32);
 }
 
 void ARCore::NavCheckPAD()
@@ -2052,11 +2035,11 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv_A, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv_A, mptveh))
 			{
 				sv_A = rtcc->StateVectorCalc(vessel);
 			}
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv_P, mptotherveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv_P, mptotherveh))
 			{
 				sv_P = rtcc->StateVectorCalc(target);
 			}
@@ -2147,11 +2130,11 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv_A, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv_A, mptveh))
 			{
 				sv_A = rtcc->StateVectorCalc(vessel);
 			}
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv_P, mptotherveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv_P, mptotherveh))
 			{
 				sv_P = rtcc->StateVectorCalc(target);
 			}
@@ -2230,7 +2213,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv0, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv0, mptveh))
 			{
 				sv0 = rtcc->StateVectorCalc(vessel);
 			}
@@ -2338,7 +2321,7 @@ int ARCore::subThread()
 			else if (REFSMMATopt == 3)
 			{
 				//Last SV in the table
-				rtcc->MPTTrajectory(GC->mptable, GC->GETbase, opt.RV_MCC, mptveh);
+				rtcc->MPTTrajectory(GC->mptable, opt.RV_MCC, mptveh);
 			}
 			else
 			{
@@ -2388,7 +2371,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv0, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv0, mptveh))
 			{
 				sv0 = rtcc->StateVectorCalc(vessel);
 			}
@@ -2756,7 +2739,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv, mptveh))
 			{
 				sv = rtcc->StateVectorCalc(vessel);
 			}
@@ -2811,7 +2794,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, opt.RV_MCC, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, opt.RV_MCC, mptveh))
 			{
 				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
 			}
@@ -3470,7 +3453,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, opt.sv0, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, opt.sv0, mptveh))
 			{
 				opt.sv0 = rtcc->StateVectorCalc(vessel);
 			}
@@ -3507,7 +3490,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, opt.RV_MCC, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, opt.RV_MCC, mptveh))
 			{
 				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
 			}
@@ -3567,7 +3550,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, opt.RV_MCC, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, opt.RV_MCC, mptveh))
 			{
 				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
 			}
@@ -3655,11 +3638,11 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv_A, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv_A, mptveh))
 			{
 				sv_A = rtcc->StateVectorCalc(vessel);
 			}
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv_P, mptotherveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv_P, mptotherveh))
 			{
 				sv_P = rtcc->StateVectorCalc(target);
 			}
@@ -3770,7 +3753,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, sv_LM, mptveh))
+			if (!rtcc->MPTTrajectory(GC->mptable, sv_LM, mptveh))
 			{
 				sv_LM = rtcc->StateVectorCalc(vessel);
 			}
@@ -4031,7 +4014,7 @@ int ARCore::subThread()
 			{
 				if (GC->MissionPlanningActive)
 				{
-					if (!rtcc->MPTTrajectory(GC->mptable, GC->GETbase, opt.sv0, mptveh))
+					if (!rtcc->MPTTrajectory(GC->mptable, opt.sv0, mptveh))
 					{
 						opt.sv0 = rtcc->StateVectorCalc(vessel);
 					}
@@ -4051,6 +4034,47 @@ int ARCore::subThread()
 
 				rtcc->LunarEntryPAD(&opt, lunarentrypad);
 			}
+		}
+
+		Result = 0;
+	}
+	break;
+	case 32: //Map Update
+	{
+		SV sv0;
+
+		if (GC->MissionPlanningActive && rtcc->MPTHasManeuvers(GC->mptable, mptveh))
+		{
+			if (mapUpdateGET <= 0.0)
+			{
+				rtcc->MPTTrajectory(GC->mptable, sv0, mptveh);
+			}
+			else
+			{
+				rtcc->MPTTrajectory(GC->mptable, mapUpdateGET, GC->GETbase, sv0, mptveh);
+			}
+		}
+		else
+		{
+			sv0 = rtcc->StateVectorCalc(vessel);
+		}
+
+		if (mappage == 0)
+		{
+			int gstat;
+			double ttoGSAOS, ttoGSLOS;
+
+			gstat = OrbMech::findNextAOS(sv0.R, sv0.V, sv0.MJD, sv0.gravref);
+
+			OrbMech::groundstation(sv0.R, sv0.V, sv0.MJD, sv0.gravref, groundstations[gstat][0], groundstations[gstat][1], 1, ttoGSAOS);
+			OrbMech::groundstation(sv0.R, sv0.V, sv0.MJD, sv0.gravref, groundstations[gstat][0], groundstations[gstat][1], 0, ttoGSLOS);
+			GSAOSGET = (sv0.MJD - GC->GETbase)*24.0*3600.0 + ttoGSAOS;
+			GSLOSGET = (sv0.MJD - GC->GETbase)*24.0*3600.0 + ttoGSLOS;
+			mapgs = gstat;
+		}
+		else
+		{
+			rtcc->LunarOrbitMapUpdate(sv0, GC->GETbase, mapupdate);
 		}
 
 		Result = 0;

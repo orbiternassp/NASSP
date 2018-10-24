@@ -1294,7 +1294,7 @@ public:
 	int MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV);
 	int MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, char *code, double LSAlt, double DV, int L, bool docked);
 	int MPTDeleteManeuver(MPTable &mptable);
-	bool MPTTrajectory(MPTable &mptable, double GETbase, SV &sv_out, int L);
+	bool MPTTrajectory(MPTable &mptable, SV &sv_out, int L);
 	bool MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
 	int MPTMassInit(MPTable &mptable, double cmass, double lmass);
 	bool MPTHasManeuvers(MPTable &mptable, int L);

@@ -9869,7 +9869,7 @@ int RTCC::MPTDeleteManeuver(MPTable &mptable)
 	return 0;
 }
 
-bool RTCC::MPTTrajectory(MPTable &mptable, double GETbase, SV &sv_out, int L)
+bool RTCC::MPTTrajectory(MPTable &mptable, SV &sv_out, int L)
 {
 	//Returns:
 	//True if a state vector is returned, false if none is available

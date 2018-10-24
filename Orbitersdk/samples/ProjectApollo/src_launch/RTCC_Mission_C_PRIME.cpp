@@ -389,7 +389,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt2.lng = LSLng;
 				opt2.vessel = calcParams.src;
 				opt2.t_land = t_land;
-				MPTTrajectory(mpt, GETbase, opt2.RV_MCC, 2);
+				MPTTrajectory(mpt, opt2.RV_MCC, 2);
 				//opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv, 0);
 
 				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, sv_node, sv_ig2, sv_cut2);
@@ -401,7 +401,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt3.EarliestGET = P30TIG_LOI + 3.5*3600.0;
 				opt3.GETbase = GETbase;
 				opt3.h_circ = 60.0*1852.0;
-				MPTTrajectory(mpt, GETbase, opt3.RV_MCC, 2);
+				MPTTrajectory(mpt, opt3.RV_MCC, 2);
 				opt3.vessel = calcParams.src;
 				opt3.vesseltype = 0;
 

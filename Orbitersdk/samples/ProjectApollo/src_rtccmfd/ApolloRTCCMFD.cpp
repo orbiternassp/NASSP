@@ -1869,6 +1869,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(6 * W / 8, (int)(0.5 * H / 14), "Map Update", 10);
 
+		GET_Display(Buffer, G->mapUpdateGET);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
 		if (G->mappage == 0)
 		{
 			skp->Text(6 * W / 8, 4 * H / 14, "Earth", 5);
@@ -6030,6 +6033,29 @@ void ApolloRTCCMFD::menuSwitchMapUpdate()
 	{
 		G->mappage = 0;
 	}
+}
+
+void ApolloRTCCMFD::menuSetMapUpdateGET()
+{
+	bool MapUpdateGETInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the GET for the anchor vector (Format: hhh:mm:ss)", MapUpdateGETInput, 0, 20, (void*)this);
+}
+
+bool MapUpdateGETInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_MapUpdateGET(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MapUpdateGET(double time)
+{
+	G->mapUpdateGET = time;
 }
 
 void ApolloRTCCMFD::menuSwitchUplinkInhibit()
