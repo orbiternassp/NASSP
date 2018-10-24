@@ -5348,31 +5348,23 @@ void RTCC::LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, doubl
 
 void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 {
-	VECTOR3 RA0_orb, VA0_orb, RA0, VA0, R_P, RA1, VA1, u;
-	double SVMJD, dt1, dt2, get, MJDguess, sinl, gamma, r_0, LmkRange;
-	OBJHANDLE hEarth, hMoon, gravref;
+	SV sv1;
+	VECTOR3 R_P, u;
+	double dt1, dt2, MJDguess, sinl, gamma, r_0, LmkRange;
+	OBJHANDLE hEarth, hMoon;
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
-	gravref = AGCGravityRef(opt->vessel);
-
-	opt->vessel->GetRelativePos(gravref, RA0_orb);
-	opt->vessel->GetRelativeVel(gravref, VA0_orb);
-	SVMJD = oapiGetSimMJD();
-	get = (SVMJD - opt->GETbase)*24.0*3600.0;
-	RA0 = _V(RA0_orb.x, RA0_orb.z, RA0_orb.y);
-	VA0 = _V(VA0_orb.x, VA0_orb.z, VA0_orb.y);
 
 	for (int i = 0;i < opt->entries;i++)
 	{
 		MJDguess = opt->GETbase + opt->LmkTime[i] / 24.0 / 3600.0;
+		sv1 = GeneralTrajectoryPropagation(opt->sv0, 0, MJDguess);
 
-		R_P = unit(_V(cos(opt->lng[i])*cos(opt->lat[i]), sin(opt->lng[i])*cos(opt->lat[i]), sin(opt->lat[i])))*(oapiGetSize(gravref) + opt->alt[i]);
+		R_P = unit(_V(cos(opt->lng[i])*cos(opt->lat[i]), sin(opt->lng[i])*cos(opt->lat[i]), sin(opt->lat[i])))*(oapiGetSize(sv1.gravref) + opt->alt[i]);
 
-		OrbMech::oneclickcoast(RA0, VA0, SVMJD, opt->LmkTime[i] - get, RA1, VA1, gravref, gravref);
-
-		dt1 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 180.0*RAD, gravref, LmkRange);
-		dt2 = OrbMech::findelev_gs(RA1, VA1, R_P, MJDguess, 145.0*RAD, gravref, LmkRange);
+		dt1 = OrbMech::findelev_gs(sv1.R, sv1.V, R_P, MJDguess, 180.0*RAD, sv1.gravref, LmkRange);
+		dt2 = OrbMech::findelev_gs(sv1.R, sv1.V, R_P, MJDguess, 145.0*RAD, sv1.gravref, LmkRange);
 
 		pad.T1[i] = dt1 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
 		pad.T2[i] = dt2 + (MJDguess - opt->GETbase) * 24.0 * 60.0 * 60.0;
@@ -5380,7 +5372,7 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 		u = unit(R_P);
 		sinl = u.z;
 
-		if (gravref == hEarth)
+		if (sv1.gravref == hEarth)
 		{
 			double a, b, r_F;
 			a = 6378166;
@@ -5392,7 +5384,7 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 		else
 		{
 			gamma = 1.0;
-			r_0 = oapiGetSize(gravref);
+			r_0 = oapiGetSize(sv1.gravref);
 		}
 
 		pad.Alt[i] = (length(R_P) - r_0) / 1852.0;

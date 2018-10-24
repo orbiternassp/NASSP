@@ -1611,11 +1611,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 54: //LANDMARK TRACKING UPDATE 4
 	{
 		LMARKTRKPADOpt opt;
+		SV sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
+		sv0 = StateVectorCalc(calcParams.src);
+
 		opt.GETbase = getGETBase();
-		opt.vessel = calcParams.src;
+		opt.sv0 = sv0;
 
 		if (fcn == 51)
 		{

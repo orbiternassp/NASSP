@@ -2027,11 +2027,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->landmarkpad.CRDist[0] > 0)
 		{
-			sprintf(Buffer, "%.1f NM North", G->landmarkpad.CRDist[0] / 1852.0);
+			sprintf(Buffer, "%.1f NM North", G->landmarkpad.CRDist[0]);
 		}
 		else
 		{
-			sprintf(Buffer, "%.1f NM South", abs(G->landmarkpad.CRDist[0]) / 1852.0);
+			sprintf(Buffer, "%.1f NM South", abs(G->landmarkpad.CRDist[0]));
 		}
 		
 		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));

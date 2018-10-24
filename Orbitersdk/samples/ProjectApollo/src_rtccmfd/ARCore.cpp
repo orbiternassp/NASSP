@@ -961,16 +961,7 @@ void ARCore::MinorCycle(double SimT, double SimDT, double mjd)
 
 void ARCore::LmkCalc()
 {
-	LMARKTRKPADOpt opt;
-
-	opt.GETbase = GC->GETbase;
-	opt.lat[0] = LmkLat;
-	opt.LmkTime[0] = LmkTime;
-	opt.lng[0] = LmkLng;
-	opt.vessel = vessel;
-	opt.entries = 1;
-
-	rtcc->LandmarkTrackingPAD(&opt, landmarkpad);
+	startSubthread(33);
 }
 
 void ARCore::LOICalc()
@@ -4076,6 +4067,32 @@ int ARCore::subThread()
 		{
 			rtcc->LunarOrbitMapUpdate(sv0, GC->GETbase, mapupdate);
 		}
+
+		Result = 0;
+	}
+	break;
+	case 33: //Landmark Tracking PAD
+	{
+		LMARKTRKPADOpt opt;
+		SV sv0;
+
+		if (GC->MissionPlanningActive && rtcc->MPTHasManeuvers(GC->mptable, mptveh))
+		{
+			rtcc->MPTTrajectory(GC->mptable, LmkTime, GC->GETbase, sv0, mptveh);
+		}
+		else
+		{
+			sv0 = rtcc->StateVectorCalc(vessel);
+		}
+
+		opt.GETbase = GC->GETbase;
+		opt.lat[0] = LmkLat;
+		opt.LmkTime[0] = LmkTime;
+		opt.lng[0] = LmkLng;
+		opt.sv0 = sv0;
+		opt.entries = 1;
+
+		rtcc->LandmarkTrackingPAD(&opt, landmarkpad);
 
 		Result = 0;
 	}

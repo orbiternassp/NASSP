@@ -785,7 +785,7 @@ struct ASCPADOpt
 
 struct LMARKTRKPADOpt
 {
-	VESSEL* vessel; //vessel
+	SV sv0; //Input state vector
 	double GETbase; //usually MJD at launch
 	double LmkTime[4]; //initial guess for time over landmark
 	double lat[4];		//landmark latitude

@@ -1021,7 +1021,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		landmarkopt.lat[0] = 1.243*RAD;
 		landmarkopt.LmkTime[0] = OrbMech::HHMMSSToSS(98, 30, 0);
 		landmarkopt.lng[0] = 23.688*RAD;
-		landmarkopt.vessel = calcParams.src;
+		landmarkopt.sv0 = sv;
 		landmarkopt.entries = 1;
 
 		LandmarkTrackingPAD(&landmarkopt, *form);
@@ -1398,11 +1398,14 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 64: //LM ACQUISITION TIME
 	{
 		LMARKTRKPADOpt opt;
+		SV sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
+		sv0 = StateVectorCalc(calcParams.src);
+
 		opt.GETbase = calcParams.TEPHEM;
-		opt.vessel = calcParams.src;
+		opt.sv0 = sv0;
 
 		if (fcn == 61)
 		{
