@@ -4297,12 +4297,13 @@ int DoubleToDEDA(double x, double q)
 
 double DecToDouble(int dec1, int dec2)
 {
+	if (dec1 > 037777)
+		dec1 = -(077777 - dec1);
+	if (dec2 > 037777)
+		dec2 = -(077777 - dec2);
+
 	double val = OrbMech::power(2.0, -14.0)*dec1 + OrbMech::power(2.0, -28.0)*dec2;
-	if (val > 0.5)
-	{
-		val = 2.0 - val;
-		val = -val;
-	}
+
 	return val;
 }
 
