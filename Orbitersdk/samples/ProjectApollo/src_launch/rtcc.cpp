@@ -65,6 +65,7 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	GETID = 0.0;
 	GETL = 0.0;
 	GETP = 0.0;
+	GMTID = 0.0;
 	H = 0.0;
 	HA = 0.0;
 	HP = 0.0;
@@ -80,10 +81,21 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	PP = 0.0;
 	PPP = 0.0;
 	sprintf(REF, "");
+	REV = 0;
 	TAPP = 0.0;
 	TO = 0.0;
 	V = 0.0;
 	sprintf(VEHID, "");
+	sprintf(REFR, "");
+	GETBV = 0.0;
+	HAR = 0.0;
+	PAR = 0.0;
+	LAR = 0.0;
+	GETAR = 0.0;
+	HPR = 0.0;
+	PPR = 0.0;
+	LPR = 0.0;
+	GETPR = 0.0;
 }
 
 SpaceDigitals::SpaceDigitals()
@@ -7996,7 +8008,7 @@ void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
 	mu = GGRAV * oapiGetMass(sv0.gravref);
 	coe = OrbMech::coe_from_sv(sv0.R, sv0.V, mu);
 
-	if (coe.e > 0.005 || sv0.gravref == oapiGetObjectByName("Moon"))
+	if (coe.e > 0.005)
 	{
 		lowecclogic = false;
 	}
@@ -9148,12 +9160,14 @@ void RTCC::FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDig
 	OELEMENTS coe;
 	MATRIX3 Rot;
 	VECTOR3 R_equ, V_equ;
-	double lat, lng, mu, a, R_B, lng_cc, MJD_cc;
+	double lat, lng, mu, a, R_B, lng_cc, MJD_cc, intpart;
 
 	//sprintf(res.VEHID, opt.v->GetName());
 	res.K = 0.0;
+	res.GMTID = modf(opt.sv_A.MJD, &intpart)*24.0*3600.0;
 	res.GETID = OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase);
 	oapiGetObjectName(opt.sv_A.gravref, res.REF, 64);
+	res.REV = 0;
 
 	R_B = oapiGetSize(opt.sv_A.gravref);
 	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
@@ -9230,7 +9244,7 @@ void RTCC::FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigi
 	OELEMENTS coe;
 	MATRIX3 Rot;
 	VECTOR3 R_equ, V_equ;
-	double lat, lng, mu, a, R_B, lng_cc, MJD_cc;
+	double lat, lng, mu, a, R_B, lng_cc, MJD_cc, GETCC;
 
 	sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, opt.MJD);
 
@@ -9279,7 +9293,12 @@ void RTCC::FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigi
 
 	MJD_cc = OrbMech::P29TimeOfLongitude(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, lng_cc);
 	sv_cc = GeneralTrajectoryPropagation(sv_cur, 0, MJD_cc);
-	res.GETCC = OrbMech::GETfromMJD(sv_cc.MJD, opt.GETbase);
+	GETCC = OrbMech::GETfromMJD(sv_cc.MJD, opt.GETbase);
+	if (GETCC > res.GETCC + 10.0)
+	{
+		res.REV++;
+	}
+	res.GETCC = GETCC;
 
 	if (coe.e < 1.0)
 	{
@@ -9350,6 +9369,54 @@ void RTCC::FIDOOrbitDigitalsCalculateGETL(const FIDOOrbitDigitalsOpt &opt, FIDOO
 	sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, opt.MJD);
 	MJD_L = OrbMech::P29TimeOfLongitude(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, res.L*RAD);
 	res.GETL = OrbMech::GETfromMJD(MJD_L, opt.GETbase);
+}
+
+void RTCC::FIDOOrbitDigitalsCalculateGETBV(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res)
+{
+	OELEMENTS coe;
+	SV sv_cur, sv_p;
+	MATRIX3 Rot;
+	VECTOR3 R_equ, V_equ;
+	double MJD_cur, R_B, mu, lat, lng;
+
+	MJD_cur = OrbMech::MJDfromGET(res.GETBV, opt.GETbase);
+
+	sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, MJD_cur);
+	oapiGetObjectName(sv_cur.gravref, res.REFR, 64);
+	R_B = oapiGetSize(sv_cur.gravref);
+	mu = GGRAV * oapiGetMass(sv_cur.gravref);
+	Rot = OrbMech::GetRotationMatrix(sv_cur.gravref, sv_cur.MJD);
+	R_equ = rhtmul(Rot, sv_cur.R);
+	V_equ = rhtmul(Rot, sv_cur.V);
+
+	coe = OrbMech::coe_from_sv(R_equ, V_equ, mu);
+
+	if (coe.e > 1.0)
+	{
+		double dt;
+
+		dt = OrbMech::timetoperi_integ(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, sv_cur.gravref, sv_p.R, sv_p.V);
+		sv_p.gravref = sv_cur.gravref;
+		sv_p.mass = sv_cur.mass;
+		sv_p.MJD = sv_cur.MJD + dt / 24.0 / 3600.0;
+	}
+	else
+	{
+		SV sv_a;
+
+		ApsidesDeterminationSubroutine(sv_cur, sv_a, sv_p);
+		OrbMech::latlong_from_J2000(sv_a.R, sv_a.MJD, sv_cur.gravref, lat, lng);
+		res.HAR = (length(sv_a.R) - R_B) / 1852.0;
+		res.PAR = lat * DEG;
+		res.LAR = lng * DEG;
+		res.GETAR = OrbMech::GETfromMJD(sv_a.MJD, opt.GETbase);
+	}
+
+	OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_cur.gravref, lat, lng);
+	res.HPR = (length(sv_p.R) - R_B) / 1852.0;
+	res.PPR = lat * DEG;
+	res.LPR = lng * DEG;
+	res.GETPR = OrbMech::GETfromMJD(sv_p.MJD, opt.GETbase);
 }
 
 void RTCC::FIDOSpaceDigitalsUpdate(const SpaceDigitalsOpt &opt, SpaceDigitals &res)
@@ -9889,6 +9956,7 @@ bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_ou
 {
 	//Returns:
 	//True if a state vector is returned, false if none is available
+	//If GET falls within a maneuver then return the burnout vector
 
 	std::vector<MPTManeuver> *table;
 
@@ -9906,8 +9974,8 @@ bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_ou
 
 	double MJD = OrbMech::MJDfromGET(GET, GETbase);
 
-	//Use first "before" SV if the desired MJD is up to, but not including the MJD of the first "after" SV
-	if ((*table)[0].sv_after.MJD > MJD)
+	//Use first "before" SV if the desired MJD is up to and including the MJD of the first "before" SV
+	if ((*table)[0].sv_before.MJD >= MJD)
 	{
 		sv_out = GeneralTrajectoryPropagation((*table)[0].sv_before, 0, MJD);
 		return true;
@@ -9915,8 +9983,8 @@ bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_ou
 
 	unsigned i = 0;
 
-	//Use the "after" SV of the currently iterated SV while the MJD of the next "after" SV is smaller or including the desired MJD
-	while (table->size() - 1 > i && (*table)[i + 1].sv_after.MJD <= MJD) i++;
+	//Use the "after" SV of the currently iterated SV while the MJD of the next "before" SV is smaller, but not including the desired MJD
+	while (table->size() - 1 > i && (*table)[i + 1].sv_before.MJD < MJD) i++;
 
 	sv_out = GeneralTrajectoryPropagation((*table)[i].sv_after, 0, MJD);
 

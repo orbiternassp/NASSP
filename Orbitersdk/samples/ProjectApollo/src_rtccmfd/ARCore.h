@@ -87,6 +87,7 @@ public:
 	void CycleFIDOOrbitDigitals();
 	void FIDOOrbitDigitalsCalculateLongitude();
 	void FIDOOrbitDigitalsCalculateGETL();
+	void FIDOOrbitDigitalsApoPeriRequest();
 	void UpdateSpaceDigitals();
 	void CycleSpaceDigitals();
 	void SpaceDigitalsGET();

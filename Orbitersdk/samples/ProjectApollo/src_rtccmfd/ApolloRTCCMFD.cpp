@@ -3644,9 +3644,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
-		skp->Text(5 * W / 32, 5 * H / 28, "GET", 3);
-		skp->Text(5 * W / 32, 6 * H / 28, "VEHICLE", 7);
-		skp->Text(5 * W / 32, 7 * H / 28, "REF", 3);
+		skp->Text(5 * W / 32, 3 * H / 28, "GET", 3);
+		skp->Text(5 * W / 32, 4 * H / 28, "VEHICLE", 7);
+		skp->Text(5 * W / 32, 5 * H / 28, "REV", 3);
+		skp->Text(5 * W / 32, 6 * H / 28, "REF", 3);
+		skp->Text(5 * W / 32, 7 * H / 28, "GMT ID", 6);
 		skp->Text(5 * W / 32, 8 * H / 28, "GET ID", 6);
 		skp->Text(5 * W / 32, 10 * H / 28, "H", 1);
 		skp->Text(5 * W / 32, 11 * H / 28, "V", 1);
@@ -3663,26 +3665,42 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 32, 25 * H / 28, "LP", 2);
 		skp->Text(5 * W / 32, 26 * H / 28, "GETP", 4);
 
-		skp->Text(15 * W / 32, 5 * H / 28, "LPP", 3);
-		skp->Text(15 * W / 32, 6 * H / 28, "PPP", 3);
-		skp->Text(15 * W / 32, 7 * H / 28, "GETCC", 5);
-		skp->Text(15 * W / 32, 8 * H / 28, "TAPP", 4);
-		skp->Text(15 * W / 32, 9 * H / 28, "LNPP", 3);
+		skp->Text(15 * W / 32, 3 * H / 28, "LPP", 3);
+		skp->Text(15 * W / 32, 4 * H / 28, "PPP", 3);
+		skp->Text(15 * W / 32, 5 * H / 28, "GETCC", 5);
+		skp->Text(15 * W / 32, 6 * H / 28, "TAPP", 4);
+		skp->Text(15 * W / 32, 7 * H / 28, "LNPP", 3);
 
-		skp->Text(25 * W / 32, 6 * H / 28, "GETL", 4);
-		skp->Text(25 * W / 32, 7 * H / 28, "L", 1);
-		skp->Text(25 * W / 32, 8 * H / 28, "TO", 2);
-		skp->Text(25 * W / 32, 9 * H / 28, "K", 1);
-		skp->Text(25 * W / 32, 11 * H / 28, "ORBWT", 5);
-		//skp->Text(25 * W / 32, 13 * H / 28, "REQUESTED", 9);
+		skp->Text(25 * W / 32, 3 * H / 28, "REVL", 4);
+		skp->Text(25 * W / 32, 4 * H / 28, "GETL", 4);
+		skp->Text(25 * W / 32, 5 * H / 28, "L", 1);
+		skp->Text(25 * W / 32, 6 * H / 28, "TO", 2);
+		skp->Text(25 * W / 32, 7 * H / 28, "K", 1);
+		skp->Text(25 * W / 32, 8 * H / 28, "ORBWT", 5);
+
+		skp->Text(25 * W / 32, 10 * H / 28, "REQUESTED", 9);
+		skp->Text(23 * W / 32, 11 * H / 28, "REF", 3);
+		skp->Text(23 * W / 32, 12 * H / 28, "GETBV", 5);
+		skp->Text(23 * W / 32, 13 * H / 28, "HA", 2);
+		skp->Text(23 * W / 32, 14 * H / 28, "PA", 2);
+		skp->Text(23 * W / 32, 15 * H / 28, "LA", 2);
+		skp->Text(23 * W / 32, 16 * H / 28, "GETA", 4);
+		skp->Text(23 * W / 32, 18 * H / 28, "HP", 2);
+		skp->Text(23 * W / 32, 19 * H / 28, "PP", 2);
+		skp->Text(23 * W / 32, 20 * H / 28, "LP", 2);
+		skp->Text(23 * W / 32, 21 * H / 28, "GETP", 4);
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		GET_Display(Buffer, G->fidoorbit.GET, false);
-		skp->Text(3 * W / 16, 5 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(3 * W / 16, 3 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, G->vessel->GetName());
-		skp->Text(3 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(3 * W / 16, 4 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%03d", G->fidoorbit.REV);
+		skp->Text(3 * W / 16, 5 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, G->fidoorbit.REF);
+		skp->Text(3 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->fidoorbit.GMTID, false);
 		skp->Text(3 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, G->fidoorbit.GETID, false);
 		skp->Text(3 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
@@ -3762,7 +3780,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.LPP));
 		}
-		skp->Text(8 * W / 16, 5 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 16, 3 * H / 28, Buffer, strlen(Buffer));
 		if (G->fidoorbit.PPP > 0)
 		{
 			sprintf(Buffer, "%06.2f N", G->fidoorbit.PPP);
@@ -3771,13 +3789,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, "%06.2f S", abs(G->fidoorbit.PPP));
 		}
-		skp->Text(8 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 16, 4 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, G->fidoorbit.GETCC, false);
-		skp->Text(8 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 16, 5 * H / 28, Buffer, strlen(Buffer));
 		if (G->fidoorbit.E > 0.0001)
 		{
 			sprintf(Buffer, "%05.1f", G->fidoorbit.TAPP);
-			skp->Text(8 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(8 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
 		}
 		if (G->fidoorbit.LNPP > 0)
 		{
@@ -3787,10 +3805,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.LNPP));
 		}
-		skp->Text(8 * W / 16, 9 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
 
 		GET_Display(Buffer, G->fidoorbit.GETL, false);
-		skp->Text(13 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(13 * W / 16, 4 * H / 28, Buffer, strlen(Buffer));
 		if (G->fidoorbit.L > 0)
 		{
 			sprintf(Buffer, "%06.2f E", G->fidoorbit.L);
@@ -3799,13 +3817,63 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.L));
 		}
-		skp->Text(13 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(13 * W / 16, 5 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, G->fidoorbit.TO, false);
-		skp->Text(13 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(13 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%05.1f", G->fidoorbit.K);
-		skp->Text(13 * W / 16, 9 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(13 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%07.1f", G->fidoorbit.ORBWT);
-		skp->Text(13 * W / 16, 11 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(13 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, G->fidoorbit.REFR);
+		skp->Text(12 * W / 16, 11 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->fidoorbit.GETBV, false);
+		skp->Text(12 * W / 16, 12 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%08.1f", G->fidoorbit.HAR);
+		skp->Text(12 * W / 16, 13 * H / 28, Buffer, strlen(Buffer));
+		if (G->fidoorbit.PAR > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->fidoorbit.PAR);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->fidoorbit.PAR));
+		}
+		skp->Text(12 * W / 16, 14 * H / 28, Buffer, strlen(Buffer));
+		if (G->fidoorbit.LAR > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->fidoorbit.LAR);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.LAR));
+		}
+		skp->Text(12 * W / 16, 15 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->fidoorbit.GETAR, false);
+		skp->Text(12 * W / 16, 16 * H / 28, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "%08.1f", G->fidoorbit.HPR);
+		skp->Text(12 * W / 16, 18 * H / 28, Buffer, strlen(Buffer));
+		if (G->fidoorbit.PPR > 0)
+		{
+			sprintf(Buffer, "%06.2f N", G->fidoorbit.PPR);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f S", abs(G->fidoorbit.PPR));
+		}
+		skp->Text(12 * W / 16, 19 * H / 28, Buffer, strlen(Buffer));
+		if (G->fidoorbit.LPR > 0)
+		{
+			sprintf(Buffer, "%06.2f E", G->fidoorbit.LPR);
+		}
+		else
+		{
+			sprintf(Buffer, "%06.2f W", abs(G->fidoorbit.LPR));
+		}
+		skp->Text(12 * W / 16, 20 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->fidoorbit.GETPR, false);
+		skp->Text(12 * W / 16, 21 * H / 28, Buffer, strlen(Buffer));
 	}
 	else if (screen == 42)
 	{
@@ -8265,6 +8333,30 @@ void ApolloRTCCMFD::set_FIDOOrbitDigitalsL(double lng)
 {
 	this->G->fidoorbit.L = lng;
 	G->FIDOOrbitDigitalsCalculateGETL();
+}
+
+void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsGETBV()
+{
+	bool FIDOOrbitDigitalsGETBVInput(void* id, char *str, void *data);
+	oapiOpenInputBox("GET of requested vector (Format: hhh:mm:ss)", FIDOOrbitDigitalsGETBVInput, 0, 20, (void*)this);
+}
+
+bool FIDOOrbitDigitalsGETBVInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, getl;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		getl = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_FIDOOrbitDigitalsGETBV(getl);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_FIDOOrbitDigitalsGETBV(double getbv)
+{
+	G->fidoorbit.GETBV = getbv;
+	G->FIDOOrbitDigitalsApoPeriRequest();
 }
 
 void ApolloRTCCMFD::menuUpdateSpaceDigitals()

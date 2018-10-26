@@ -372,6 +372,8 @@ public:
 	void set_FIDOOrbitDigitalsGETL(double getl);
 	void menuSetFIDOOrbitDigitalsL();
 	void set_FIDOOrbitDigitalsL(double lng);
+	void menuSetFIDOOrbitDigitalsGETBV();
+	void set_FIDOOrbitDigitalsGETBV(double getbv);
 	void menuSetMCCDisplaysPage();
 	void menuSetSpaceDigitalsPage();
 	void menuUpdateSpaceDigitals();

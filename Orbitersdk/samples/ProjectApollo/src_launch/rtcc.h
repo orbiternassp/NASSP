@@ -922,7 +922,9 @@ struct FIDOOrbitDigitals
 	FIDOOrbitDigitals();
 	double GET;		//Ground elapsed time associated with present position data
 	char VEHID[64];	//Vehicle name
+	int REV;		//Current revolution number associated with subject vehicle and central body
 	char REF[64];	//Reference planet
+	double GMTID;	//GMT of the state vector
 	double GETID;	//GET of the state vector
 	double H;		//Current height
 	double V;		//Current inertial velocity
@@ -948,6 +950,16 @@ struct FIDOOrbitDigitals
 	double TO;		//Orbital period
 	double K;		//K-Factor
 	double ORBWT;	//Total current weight
+	char REFR[64];	//Reference planet of requested vector
+	double GETBV;	//Time tag of vector from which apogee/perigee values were computed
+	double HAR;		//Height of next apogee at GETA, as requested
+	double PAR;		//Latitude of next apogee at GETA, as requested
+	double LAR;		//Longitude of next apogee at GETA, as requested
+	double GETAR;	//Time of arrival at next apogee, as requested
+	double HPR;		//Height of next apogee at GETP, as requested
+	double PPR;		//Latitude of next apogee at GETP, as requested
+	double LPR;		//Longitude of next apogee at GETP, as requested
+	double GETPR;	//Time of arrival at next apogee, as requested
 };
 
 struct FIDOOrbitDigitalsOpt
@@ -1279,6 +1291,7 @@ public:
 	void FIDOOrbitDigitalsApsidesCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 	void FIDOOrbitDigitalsCalculateLongitude(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 	void FIDOOrbitDigitalsCalculateGETL(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
+	void FIDOOrbitDigitalsCalculateGETBV(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 	void FIDOSpaceDigitalsUpdate(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	void FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	void FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res);

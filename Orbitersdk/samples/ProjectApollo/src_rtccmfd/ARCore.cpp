@@ -1114,6 +1114,14 @@ void ARCore::FIDOOrbitDigitalsCalculateGETL()
 	}
 }
 
+void ARCore::FIDOOrbitDigitalsApoPeriRequest()
+{
+	if (subThreadStatus == 0 && fidoorbitsv.gravref != NULL)
+	{
+		startSubthread(34);
+	}
+}
+
 void ARCore::UpdateSpaceDigitals()
 {
 	startSubthread(28);
@@ -4093,6 +4101,26 @@ int ARCore::subThread()
 		opt.entries = 1;
 
 		rtcc->LandmarkTrackingPAD(&opt, landmarkpad);
+
+		Result = 0;
+	}
+	break;
+	case 34:	//FIDO Orbit Digitals Apogee/Perigee Request
+	{
+		FIDOOrbitDigitalsOpt opt;
+
+		opt.GETbase = GC->GETbase;
+
+		if (GC->MissionPlanningActive && rtcc->MPTHasManeuvers(GC->mptable, mptveh))
+		{
+			rtcc->MPTTrajectory(GC->mptable, fidoorbit.GETBV, GC->GETbase, opt.sv_A, mptveh);
+		}
+		else
+		{
+			opt.sv_A = fidoorbitsv;
+		}		
+
+		rtcc->FIDOOrbitDigitalsCalculateGETBV(opt, fidoorbit);
 
 		Result = 0;
 	}
