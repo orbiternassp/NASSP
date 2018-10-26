@@ -615,7 +615,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 			}
 		}
-		return 1;
+		return 0;
 	}
 
 	if (down){
