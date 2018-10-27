@@ -127,7 +127,7 @@ void LEM::StopEVA()
 	CDREVA_IP = false;
 }
 
-void LEM::SetLmVesselDockStage()
+void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 
 {
 	ClearThrusterDefinitions();
@@ -204,7 +204,7 @@ void LEM::SetLmVesselDockStage()
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
 	SetOvhdHatchMesh();
-	
+
 	if (!ph_Dsc)
 	{
 		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -212,6 +212,10 @@ void LEM::SetLmVesselDockStage()
 	else
 	{
 		SetPropellantMaxMass(ph_Dsc, DescentFuelMassKg);
+		if (ovrdDPSProp)
+		{
+			SetPropellantMass(ph_Dsc, DescentFuelMassKg);
+		}
 	}
 	SetDefaultPropellantResource(ph_Dsc); // display 2nd stage propellant level in generic HUD
 

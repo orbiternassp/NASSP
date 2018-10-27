@@ -1735,7 +1735,7 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	// Sounds are initialized during the first timestep
 	// or here
-	SetLmVesselDockStage();
+	SetLmVesselDockStage(true);
 	PostLoadSetup();
 
 	return true;

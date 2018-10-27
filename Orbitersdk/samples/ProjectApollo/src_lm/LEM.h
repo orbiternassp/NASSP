@@ -373,7 +373,7 @@ public:
 
 	void Init();
 	void SetStateEx(const void *status);
-	void SetLmVesselDockStage();
+	void SetLmVesselDockStage(bool ovrdDPSProp = false);
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
