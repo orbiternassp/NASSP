@@ -93,6 +93,9 @@ protected:
 	double FuelTankUllagePressurePSI;
 	double OxidTankUllagePressurePSI;
 	double FuelEngineInletPressurePSI;
+	double supercriticalHeliumMass;
+	double supercriticalHeliumTemp;
+	double ambientHeliumMass;
 
 	bool fuel1LevelLow;
 	bool fuel2LevelLow;

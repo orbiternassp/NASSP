@@ -79,6 +79,9 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	FuelTankUllagePressurePSI = 0.0;
 	OxidTankUllagePressurePSI = 0.0;
 	FuelEngineInletPressurePSI = 0.0;
+	supercriticalHeliumMass = 22.0;	//48.5 pounds
+	supercriticalHeliumTemp = 12.35186667;	//Kelvin, based on loading temp of -453°F, should give 400PSI at liftoff
+	ambientHeliumMass = 0.4808079;	//1.06 lbm
 
 	fuel1LevelLow = false;
 	fuel2LevelLow = false;
@@ -121,8 +124,10 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 		pmax = DPS_DEFAULT_PROPELLANT;
 		double pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
 
-		ambientHeliumPressurePSI = 1600.0;
-		supercriticalHeliumPressurePSI = 400.0;
+		ambientHeliumPressurePSI = 3327.732344*ambientHeliumMass;
+
+		supercriticalHeliumTemp += 7.5352301587e-5*simdt;
+		supercriticalHeliumPressurePSI = 1.471989512*supercriticalHeliumMass*supercriticalHeliumTemp;
 
 		double InletPressure1, InletPressure2;
 		InletPressure1 = InletPressure2 = 0.0;
@@ -191,11 +196,27 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 		//Propellant Venting
 		if (OxidVentValve1.IsOpen() && OxidVentValve2.IsOpen())
 		{
-			//TBD: Vent Helium and Oxidizer
+			double dMass = 0.02*p*simdt;
+			p -= dMass;
+			our_vessel->SetPropellantMass(source_prop, p);
+
+			if (AmbientHeIsolValve.IsOpen() && OxidCompatibilityValve.IsOpen())
+			{
+				dMass = 0.05*ambientHeliumMass*simdt;
+				ambientHeliumMass -= dMass;
+			}
 		}
 		if (FuelVentValve1.IsOpen() && FuelVentValve2.IsOpen())
 		{
-			// TBD: Vent Helium and Fuel
+			double dMass = 0.02*p*simdt;
+			p -= dMass;
+			our_vessel->SetPropellantMass(source_prop, p);
+
+			if (AmbientHeIsolValve.IsOpen() && FuelCompatibilityValve.IsOpen())
+			{
+				dMass = 0.05*ambientHeliumMass*simdt;
+				ambientHeliumMass -= dMass;
+			}
 		}
 
 		//Ambient Helium Isolation Valve
@@ -384,6 +405,9 @@ void DPSPropellantSource::SaveState(FILEHANDLE scn)
 	papiWriteScenario_double(scn, "AMBIENTHELIUMPRESSUREPSI", ambientHeliumPressurePSI);
 	papiWriteScenario_double(scn, "SUPERCRITICALHELIUMPRESSUREPSI", supercriticalHeliumPressurePSI);
 	papiWriteScenario_double(scn, "HELIUMREGULATORMANIFOLDPRESSUREPSI", heliumRegulatorManifoldPressurePSI);
+	papiWriteScenario_double(scn, "SUPERCRITICALHELIUMMASS", supercriticalHeliumMass);
+	papiWriteScenario_double(scn, "SUPERCRITICALHELIUMTEMP", supercriticalHeliumTemp);
+	papiWriteScenario_double(scn, "AMBIENTHELIUMMASS", ambientHeliumMass);
 
 	papiWriteScenario_bool(scn, "PRIMREGHELIUMVALVE_ISOPEN", PrimaryHeRegulatorShutoffValve.IsOpen());
 	papiWriteScenario_bool(scn, "SECREGHELIUMVALVE_ISOPEN", SecondaryHeRegulatorShutoffValve.IsOpen());
@@ -418,6 +442,9 @@ void DPSPropellantSource::LoadState(FILEHANDLE scn)
 		papiReadScenario_double(line, "AMBIENTHELIUMPRESSUREPSI", ambientHeliumPressurePSI);
 		papiReadScenario_double(line, "SUPERCRITICALHELIUMPRESSUREPSI", supercriticalHeliumPressurePSI);
 		papiReadScenario_double(line, "HELIUMREGULATORMANIFOLDPRESSUREPSI", heliumRegulatorManifoldPressurePSI);
+		papiReadScenario_double(line, "SUPERCRITICALHELIUMMASS", supercriticalHeliumMass);
+		papiReadScenario_double(line, "SUPERCRITICALHELIUMTEMP", supercriticalHeliumTemp);
+		papiReadScenario_double(line, "AMBIENTHELIUMMASS", ambientHeliumMass);
 
 		if (papiReadScenario_bool(line, "PRIMREGHELIUMVALVE_ISOPEN", isOpen))			PrimaryHeRegulatorShutoffValve.SetState(isOpen);
 		if (papiReadScenario_bool(line, "SECREGHELIUMVALVE_ISOPEN", isOpen))			SecondaryHeRegulatorShutoffValve.SetState(isOpen);
