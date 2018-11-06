@@ -24,6 +24,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "CWEA_FlipFlop.h"
+
 class LEM;
 
 class LEM_CWEA : public e_object {
@@ -63,8 +65,8 @@ protected:
 	bool Operate;
 	bool DesRegWarnFF;   // Flip Flop
 	bool AGSWarnFF;   // Flip Flop
-	bool CESDCWarnFF;   // Flip Flop
-	bool CESACWarnFF;   // Flip Flop
+	CWEA_FlipFlop CESDCWarnFF;   // Flip Flop
+	CWEA_FlipFlop CESACWarnFF;   // Flip Flop
 	bool RCSCautFF1;   // Flip Flop
 	bool RCSCautFF2;   // Flip Flop
 	bool RRHeaterCautFF;   // Flip Flop

@@ -944,7 +944,7 @@ void LEMPrimGlycolPumpController::LoadState(char *line)
 
 	PressureSwitch = (i != 0);
 	GlycolAutoTransferRelay = (j != 0);
-	GlycolPumpFailRelay = (j != 0);
+	GlycolPumpFailRelay = (k != 0);
 }
 
 void LEMPrimGlycolPumpController::SaveState(FILEHANDLE scn)

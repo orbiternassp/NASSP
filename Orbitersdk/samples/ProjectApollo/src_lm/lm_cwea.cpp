@@ -57,8 +57,6 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	//Initialize all FF's as "reset"
 	DesRegWarnFF = 0;
 	AGSWarnFF = 0;
-	CESDCWarnFF = 0;
-	CESACWarnFF = 0;
 	RCSCautFF1 = 0; RCSCautFF2 = 0;
 	RRHeaterCautFF = 0; SBDHeaterCautFF = 0; QD1HeaterCautFF = 0; QD2HeaterCautFF = 0; QD3HeaterCautFF = 0; QD4HeaterCautFF = 0;
 	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
@@ -199,10 +197,10 @@ void LEM_CWEA::Timestep(double simdt) {
 		// This power is provided by the ATCA main power supply and spins the RGAs and operate the AEA reference.
 		// Disabled by Gyro Test Control in POS RT or NEG RT position.
 		// Needs RGA data
-		if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESACWarnFF = 0; }
-		else if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESACWarnFF = 1; }
+		CESACWarnFF.Set(lem->SCS_ATCA_CB.Voltage() < 24.0);
+		CESACWarnFF.Reset(lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER);
 
-		if (CESACWarnFF == 1)
+		if (CESACWarnFF.IsSet() == 1)
 			SetLight(0, 1, 1);
 		else
 			SetLight(0, 1, 0);
@@ -212,10 +210,10 @@ void LEM_CWEA::Timestep(double simdt) {
 		// All of these are provided by the ATCA main power supply.
 		// Disabled by Gyro Test Control in POS RT or NEG RT position.
 		// Needs RGA data
-		if (lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER) { CESDCWarnFF = 0; }
-		else if (lem->SCS_ATCA_CB.Voltage() < 24.0) { CESDCWarnFF = 1; }
+		CESDCWarnFF.Set(lem->SCS_ATCA_CB.Voltage() < 24.0);
+		CESDCWarnFF.Reset(lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER);
 
-		if (CESDCWarnFF == 1)
+		if (CESDCWarnFF.IsSet() == 1)
 			SetLight(1, 1, 1);
 		else
 			SetLight(1, 1, 0);
@@ -665,8 +663,8 @@ void LEM_CWEA::TurnOn()
 	{
 		DesRegWarnFF = 0;
 		AGSWarnFF = 0;
-		CESDCWarnFF = 0;
-		CESACWarnFF = 0;
+		CESDCWarnFF.HardReset();
+		CESACWarnFF.HardReset();
 		RCSCautFF1 = 0; RCSCautFF2 = 0;
 		RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
 		OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
@@ -705,8 +703,6 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "MASTERALARM", MasterAlarm);
 	papiWriteScenario_bool(scn, "DESREGWARNFF", DesRegWarnFF);
 	papiWriteScenario_bool(scn, "AGSWARNFF", AGSWarnFF);
-	papiWriteScenario_bool(scn, "CESDCWARNFF", CESDCWarnFF);
-	papiWriteScenario_bool(scn, "CESACWARNFF", CESACWarnFF);
 	papiWriteScenario_bool(scn, "RCSCAUTFF1", RCSCautFF1);
 	papiWriteScenario_bool(scn, "RCSCAUTFF2", RCSCautFF2);
 	papiWriteScenario_bool(scn, "RRHEATERCAUTFF", RRHeaterCautFF);
@@ -735,6 +731,8 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS4", &LightStatus[4][0], 8);
+	CESDCWarnFF.SaveState(scn, "CESDCWarnFF");
+	CESACWarnFF.SaveState(scn, "CESACWarnFF");
 
 	oapiWriteLine(scn, end_str);
 }
@@ -752,8 +750,6 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "MASTERALARM", MasterAlarm);
 		papiReadScenario_bool(line, "DESREGWARNFF", DesRegWarnFF);
 		papiReadScenario_bool(line, "AGSWARNFF", AGSWarnFF);
-		papiReadScenario_bool(line, "CESDCWARNFF", CESDCWarnFF);
-		papiReadScenario_bool(line, "CESACWARNFF", CESACWarnFF);
 		papiReadScenario_bool(line, "RCSCAUTFF1", RCSCautFF1);
 		papiReadScenario_bool(line, "RCSCAUTFF2", RCSCautFF2);
 		papiReadScenario_bool(line, "RRHEATERCAUTFF", RRHeaterCautFF);
@@ -782,6 +778,8 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS4", &LightStatus[4][0], 8);
+		CESDCWarnFF.LoadState("CESDCWarnFF", 11);
+		CESACWarnFF.LoadState("CESACWarnFF", 11);
 	}
 }
 
