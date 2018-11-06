@@ -81,11 +81,10 @@ protected:
 	bool WaterCautFF1;   // Flip Flop
 	bool WaterCautFF2;   // Flip Flop
 	bool WaterCautFF3;   // Flip Flop
-	bool RRCautFF;   // Flip Flop
+	CWEA_FlipFlop RRCautFF;   // Flip Flop
 	bool SBDCautFF;   // Flip Flop
 
 	bool MasterAlarm;
-	bool AutoTrackChanged;
 	bool RRHeaterPrev;
 	bool SBDHeaterPrev;
 	bool QD1HeaterPrev;

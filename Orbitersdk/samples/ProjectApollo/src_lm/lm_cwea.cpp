@@ -46,7 +46,6 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	Operate = false;
 
 	//Logic states
-	AutoTrackChanged = true;
 	RRHeaterPrev = false;
 	SBDHeaterPrev = false;
 	QD1HeaterPrev = false;
@@ -61,7 +60,6 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	RRHeaterCautFF = 0; SBDHeaterCautFF = 0; QD1HeaterCautFF = 0; QD2HeaterCautFF = 0; QD3HeaterCautFF = 0; QD4HeaterCautFF = 0;
 	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
 	WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
-	RRCautFF = 0;
 	SBDCautFF = 0;
 }
 
@@ -200,7 +198,7 @@ void LEM_CWEA::Timestep(double simdt) {
 		CESACWarnFF.Set(lem->SCS_ATCA_CB.Voltage() < 24.0);
 		CESACWarnFF.Reset(lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER);
 
-		if (CESACWarnFF.IsSet() == 1)
+		if (CESACWarnFF.IsSet())
 			SetLight(0, 1, 1);
 		else
 			SetLight(0, 1, 0);
@@ -213,7 +211,7 @@ void LEM_CWEA::Timestep(double simdt) {
 		CESDCWarnFF.Set(lem->SCS_ATCA_CB.Voltage() < 24.0);
 		CESDCWarnFF.Reset(lem->GyroTestRightSwitch.GetState() != THREEPOSSWITCH_CENTER);
 
-		if (CESDCWarnFF.IsSet() == 1)
+		if (CESDCWarnFF.IsSet())
 			SetLight(1, 1, 1);
 		else
 			SetLight(1, 1, 0);
@@ -355,18 +353,16 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 		// On when RR indicates Data-Not-Good.
 		// Disabled when RR mode switch is not set to AUTO TRACK.
-		if (lem->RendezvousRadarRotary.GetState() != 0) { AutoTrackChanged = 1;}
+		RRCautFF.Set(lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0);
+		RRCautFF.Reset(lem->RendezvousRadarRotary.GetState() == 0);
 
-		if (lem->RendezvousRadarRotary.GetState() == 0 && AutoTrackChanged == 1) { RRCautFF = 0; AutoTrackChanged = 0; }
-		else if (RRCautFF == 0 && lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0) { RRCautFF = 1; }
-
-		if (RRCautFF == 1 && lem->scera2.GetVoltage(2, 1) > 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
+		if (RRCautFF.IsSet() == 1 && lem->scera2.GetVoltage(2, 1) >= 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
 			SetLight(2, 5, 1);
 		}
 		else
 			SetLight(2, 5, 0);
 
-		//sprintf(oapiDebugString(), "RRC %i ATC %i SCV %lf", RRCautFF, AutoTrackChanged, lem->scera2.GetVoltage(2, 1));
+		sprintf(oapiDebugString(), "RRC %i FFS %i FFR %i SCV %lf", RRCautFF.IsSet(), RRCautFF.GetRInput(), RRCautFF.GetSInput(), lem->scera2.GetVoltage(2, 1));
 
 		// 6DS29 LANDING RADAR 
 		// Was not present on LM-7 thru LM-9!  **What about LM 3-5?  Unlikely but need to research**
@@ -669,7 +665,7 @@ void LEM_CWEA::TurnOn()
 		RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
 		OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
 		WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
-		RRCautFF = 0;
+		RRCautFF.HardReset();
 		SBDCautFF = 0;
 
 		//Reset TCA FF's
@@ -717,22 +713,22 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "WATERCAUTFF1", WaterCautFF1);
 	papiWriteScenario_bool(scn, "WATERCAUTFF2", WaterCautFF2);
 	papiWriteScenario_bool(scn, "WATERCAUTFF3", WaterCautFF3);
-	papiWriteScenario_bool(scn, "RRCAUTFF", RRCautFF);
+	
 	papiWriteScenario_bool(scn, "SBDCAUTFF", SBDCautFF);
-	papiWriteScenario_bool(scn, "AUTOTRACKCHANGED", AutoTrackChanged);
 	papiWriteScenario_bool(scn, "RRHEATERPREV", RRHeaterPrev);
 	papiWriteScenario_bool(scn, "SBDHEATERPREV", SBDHeaterPrev);
 	papiWriteScenario_bool(scn, "QD1HEATERPREV", QD1HeaterPrev);
 	papiWriteScenario_bool(scn, "QD2HEATERPREV", QD2HeaterPrev);
 	papiWriteScenario_bool(scn, "QD3HEATERPREV", QD3HeaterPrev);
 	papiWriteScenario_bool(scn, "QD4HEATERPREV", QD4HeaterPrev);
+	CESDCWarnFF.SaveState(scn, "CESDCWARNFF");
+	CESACWarnFF.SaveState(scn, "CESACWARNFF");
+	RRCautFF.SaveState(scn, "RRCAUTFF");
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS4", &LightStatus[4][0], 8);
-	CESDCWarnFF.SaveState(scn, "CESDCWarnFF");
-	CESACWarnFF.SaveState(scn, "CESACWarnFF");
 
 	oapiWriteLine(scn, end_str);
 }
@@ -744,6 +740,16 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, end_str, sizeof(end_str))) {
 			return;
+		}
+
+		if (!strnicmp(line, "CESDCWARNFF", 11)) {
+			CESDCWarnFF.LoadState(line, 11);
+		}
+		else if (!strnicmp(line, "CESACWARNFF", 11)) {
+			CESACWarnFF.LoadState(line, 11);
+		}
+		else if (!strnicmp(line, "RRCAUTFF", 8)) {
+			RRCautFF.LoadState(line, 8);
 		}
 
 		papiReadScenario_bool(line, "OPERATE", Operate);
@@ -764,9 +770,7 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "WATERCAUTFF1", WaterCautFF1);
 		papiReadScenario_bool(line, "WATERCAUTFF2", WaterCautFF2);
 		papiReadScenario_bool(line, "WATERCAUTFF3", WaterCautFF3);
-		papiReadScenario_bool(line, "RRCAUTFF", RRCautFF);
 		papiReadScenario_bool(line, "SBDCAUTFF", SBDCautFF);
-		papiReadScenario_bool(line, "AUTOTRACKCHANGED", AutoTrackChanged);
 		papiReadScenario_bool(line, "RRHEATERPREV", RRHeaterPrev);
 		papiReadScenario_bool(line, "SBDHEATERPREV", SBDHeaterPrev);
 		papiReadScenario_bool(line, "QD1HEATERPREV", QD1HeaterPrev);
@@ -778,8 +782,6 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS4", &LightStatus[4][0], 8);
-		CESDCWarnFF.LoadState("CESDCWarnFF", 11);
-		CESACWarnFF.LoadState("CESACWarnFF", 11);
 	}
 }
 
