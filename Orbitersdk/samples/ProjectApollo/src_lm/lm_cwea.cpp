@@ -54,9 +54,6 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	QD4HeaterPrev = false;
 
 	//Initialize all FF's as "reset"
-	DesRegWarnFF = 0;
-	AGSWarnFF = 0;
-	RCSCautFF1 = 0; RCSCautFF2 = 0;
 	RRHeaterCautFF = 0; SBDHeaterCautFF = 0; QD1HeaterCautFF = 0; QD2HeaterCautFF = 0; QD3HeaterCautFF = 0; QD4HeaterCautFF = 0;
 	OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
 	WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
@@ -166,13 +163,15 @@ void LEM_CWEA::Timestep(double simdt) {
 		// Enabled by DES ENG "ON" command. Disabled by stage deadface open.
 		// Pressure in descent helium lines downstream of the regulators is above 259.1 psia or below 219.2 psia.
 		lightlogic = false;
-		if (lem->scera1.GetVoltage(3, 9) > 2.5 || lem->eds.GetHeliumPressDelayContactClosed()) { DesRegWarnFF = 1; }
+
+		DesRegWarnFF.Set(lem->scera1.GetVoltage(3, 9) > 2.5 || lem->eds.GetHeliumPressDelayContactClosed());
+		DesRegWarnFF.Reset(false);
 
 		if (lem->stage < 2 && (lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() > 259.1 || lem->DPSPropellant.GetHeliumRegulatorManifoldPressurePSI() < 219.2)) { 
 				lightlogic = true; //Pressure is default at 245 so this will not be true until He MP is simulated
 		}
 
-		if (lightlogic && DesRegWarnFF == 1) {
+		if (lightlogic && DesRegWarnFF.IsSet()) {
 			SetLight(2, 0, 1);
 		}
 		else
@@ -220,8 +219,8 @@ void LEM_CWEA::Timestep(double simdt) {
 		// On when any ASA power supply signals a failure, when AGS raises failure signal, or ASA overtemp.
 		// Disabled when AGS status switch is OFF.
 		lightlogic = false;
-		if (lem->QtyMonRotary.GetState() == 0) { AGSWarnFF = 0; }
-		else if (lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) { AGSWarnFF = 1; } // AEA Test Mode Fail
+		AGSWarnFF.Set(lem->scera1.GetVoltage(4, 1) > 2.5 && lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN);
+		AGSWarnFF.Reset(lem->QtyMonRotary.GetState() == 0);
 
 		if (lem->AGSOperateSwitch.GetState() != THREEPOSSWITCH_DOWN) {
 			if (lem->scera1.GetVoltage(15, 4) > (13.2 / 2.8) || lem->scera1.GetVoltage(15, 4) < (10.8 / 2.8)) { lightlogic = true; } // ASA +12VDC **Open circuit by overtemp condition**
@@ -229,7 +228,7 @@ void LEM_CWEA::Timestep(double simdt) {
 			if (lem->scera1.GetVoltage(16, 2) > ((415.0 - 380.0) / 8.0) || lem->scera1.GetVoltage(16, 2) < ((385.0 - 380.0) / 8.0)) { lightlogic = true; } // ASA Freq
 		}
 
-		if (lightlogic || AGSWarnFF == 1)
+		if (lightlogic || AGSWarnFF.IsSet())
 			SetLight(2, 1, 1);
 		else
 			SetLight(2, 1, 0);
@@ -394,13 +393,12 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS32 RCS FAILURE CAUTION
 		// On when helium pressure in either RCS system below 1700 psia.
 		// Disabled when RCS TEMP/PRESS MONITOR switch in HELIUM position.
-		if (lem->TempPressMonRotary.GetState() == 0) { RCSCautFF1 = 0; }
-		else if (lem->scera1.GetVoltage(6, 1) < (1696.1 / 700.0)) { RCSCautFF1 = 1; }
+		RCSCautFF1.Set(lem->scera1.GetVoltage(6, 1) < 2.423);
+		RCSCautFF1.Reset(lem->TempPressMonRotary.GetState() == 0);
+		RCSCautFF2.Set(lem->scera1.GetVoltage(6, 2) < 2.423);
+		RCSCautFF2.Reset(lem->TempPressMonRotary.GetState() == 0);
 
-		if (lem->TempPressMonRotary.GetState() == 0) { RCSCautFF2 = 0; }
-		else if (lem->scera1.GetVoltage(6, 2) < (1696.1 / 700.0)) { RCSCautFF2 = 1; }
-
-		if (RCSCautFF1 == 1 || RCSCautFF2 == 1)
+		if (RCSCautFF1.IsSet() || RCSCautFF2.IsSet())
 			SetLight(1, 6, 1);
 		else
 			SetLight(1, 6, 0);
@@ -657,11 +655,12 @@ void LEM_CWEA::TurnOn()
 
 	if (!Operate)
 	{
-		DesRegWarnFF = 0;
-		AGSWarnFF = 0;
+		DesRegWarnFF.HardReset();
+		AGSWarnFF.HardReset();
 		CESDCWarnFF.HardReset();
 		CESACWarnFF.HardReset();
-		RCSCautFF1 = 0; RCSCautFF2 = 0;
+		RCSCautFF1.HardReset();
+		RCSCautFF2.HardReset();
 		RRHeaterCautFF = 0; SBDHeaterCautFF = 0;
 		OxygenCautFF1 = 0; OxygenCautFF2 = 0; OxygenCautFF3 = 0;
 		WaterCautFF1 = 0; WaterCautFF2 = 0; WaterCautFF3 = 0;
@@ -697,10 +696,6 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 
 	papiWriteScenario_bool(scn, "OPERATE", Operate);
 	papiWriteScenario_bool(scn, "MASTERALARM", MasterAlarm);
-	papiWriteScenario_bool(scn, "DESREGWARNFF", DesRegWarnFF);
-	papiWriteScenario_bool(scn, "AGSWARNFF", AGSWarnFF);
-	papiWriteScenario_bool(scn, "RCSCAUTFF1", RCSCautFF1);
-	papiWriteScenario_bool(scn, "RCSCAUTFF2", RCSCautFF2);
 	papiWriteScenario_bool(scn, "RRHEATERCAUTFF", RRHeaterCautFF);
 	papiWriteScenario_bool(scn, "SBDHEATERCAUTFF", SBDHeaterCautFF);
 	papiWriteScenario_bool(scn, "QD1HEATERCAUTFF", QD1HeaterCautFF);
@@ -724,6 +719,10 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	CESDCWarnFF.SaveState(scn, "CESDCWARNFF");
 	CESACWarnFF.SaveState(scn, "CESACWARNFF");
 	RRCautFF.SaveState(scn, "RRCAUTFF");
+	DesRegWarnFF.SaveState(scn, "DESREGWARNFF");
+	AGSWarnFF.SaveState(scn, "AGSWARNFF");
+	RCSCautFF1.SaveState(scn, "RCSCAUTFF1");
+	RCSCautFF2.SaveState(scn, "RCSCAUTFF2");
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS0", &LightStatus[0][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS1", &LightStatus[1][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
@@ -751,13 +750,21 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		else if (!strnicmp(line, "RRCAUTFF", 8)) {
 			RRCautFF.LoadState(line, 8);
 		}
+		else if (!strnicmp(line, "DESREGWARNFF", 12)) {
+			DesRegWarnFF.LoadState(line, 12);
+		}
+		else if (!strnicmp(line, "AGSWARNFF", 9)) {
+			AGSWarnFF.LoadState(line, 9);
+		}
+		else if (!strnicmp(line, "RCSCAUTFF1", 10)) {
+			RCSCautFF1.LoadState(line, 10);
+		}
+		else if (!strnicmp(line, "RCSCAUTFF2", 10)) {
+			RCSCautFF2.LoadState(line, 10);
+		}
 
 		papiReadScenario_bool(line, "OPERATE", Operate);
 		papiReadScenario_bool(line, "MASTERALARM", MasterAlarm);
-		papiReadScenario_bool(line, "DESREGWARNFF", DesRegWarnFF);
-		papiReadScenario_bool(line, "AGSWARNFF", AGSWarnFF);
-		papiReadScenario_bool(line, "RCSCAUTFF1", RCSCautFF1);
-		papiReadScenario_bool(line, "RCSCAUTFF2", RCSCautFF2);
 		papiReadScenario_bool(line, "RRHEATERCAUTFF", RRHeaterCautFF);
 		papiReadScenario_bool(line, "SBDHEATERCAUTFF", SBDHeaterCautFF);
 		papiReadScenario_bool(line, "QD1HEATERCAUTFF", QD1HeaterCautFF);

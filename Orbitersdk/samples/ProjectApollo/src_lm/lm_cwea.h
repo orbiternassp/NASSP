@@ -63,12 +63,12 @@ protected:
 
 	int LightStatus[5][8];		// 0 = not lit, 1 = lit, 2 = light doesn't exist
 	bool Operate;
-	bool DesRegWarnFF;   // Flip Flop
-	bool AGSWarnFF;   // Flip Flop
-	CWEA_FlipFlop CESDCWarnFF;   // Flip Flop
-	CWEA_FlipFlop CESACWarnFF;   // Flip Flop
-	bool RCSCautFF1;   // Flip Flop
-	bool RCSCautFF2;   // Flip Flop
+	CWEA_FlipFlop DesRegWarnFF;
+	CWEA_FlipFlop AGSWarnFF;
+	CWEA_FlipFlop CESDCWarnFF;
+	CWEA_FlipFlop CESACWarnFF;
+	CWEA_FlipFlop RCSCautFF1;
+	CWEA_FlipFlop RCSCautFF2;
 	bool RRHeaterCautFF;   // Flip Flop
 	bool SBDHeaterCautFF;   // Flip Flop
 	bool QD1HeaterCautFF;	// Flip Flop
@@ -81,7 +81,7 @@ protected:
 	bool WaterCautFF1;   // Flip Flop
 	bool WaterCautFF2;   // Flip Flop
 	bool WaterCautFF3;   // Flip Flop
-	CWEA_FlipFlop RRCautFF;   // Flip Flop
+	CWEA_FlipFlop RRCautFF;
 	bool SBDCautFF;   // Flip Flop
 
 	bool MasterAlarm;
