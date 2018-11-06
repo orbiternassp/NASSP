@@ -1225,7 +1225,7 @@ double LEMDCVoltMeter::QueryValue()
 			return(lem->scera1.GetVoltage(18, 3) * 8.0);
 			break;
 		case 8: // LMP DC BUS
-			return(lem->scera2.GetVoltage(8, 3) * 8.0);
+			return(lem->scera2.GetVoltage(8, 4) * 8.0);
 			break;
 		case 9: // AC BUS
 			return((lem->scera1.GetVoltage(18, 2) * 25.0)/3.125);	//3.125 factor from AOH

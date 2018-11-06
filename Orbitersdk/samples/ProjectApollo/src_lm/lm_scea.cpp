@@ -490,7 +490,7 @@ void SCERA1::Timestep()
 	//Manual thrust command voltage (GH1311)
 	SA15.SetOutput(2, scale_data(lem->deca.GetManualThrustVoltage(), 0.0, 14.6));
 	//Commander's bus voltage (GC0301)
-	SA15.SetOutput(3, scale_data(lem->CDRs28VBus.Voltage(), 0.0, 40.0));
+	SA15.SetOutput(3, scale_data(lem->CDRDCBusVoltCB.Voltage(), 0.0, 40.0));
 	//Abort sensor assembly +12VDC (GI3215V)
 	SA15.SetOutput(4, scale_data(lem->asa.GetASA12V(), 0.0, 14.0));
 
@@ -501,13 +501,15 @@ void SCERA1::Timestep()
 
 	//Inverter bus voltage (GC0071V)
 	SA17.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
+	//Rate gyro assembly pickoff excitation (0.8kc) voltage (GH1405V)
+	SA17.SetOutput(3, scale_data(lem->atca.GetRGAPickoffExcitationVoltage(), 0.0, 31.0));
 
 	//Frequency inverter bus (GC0155F)
 	SA18.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Frequency(), 380.0, 420.0));
 	//Inverter bus voltage (GC0071V)
 	SA18.SetOutput(2, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
 	//Commander's bus voltage (GC0301)
-	SA18.SetOutput(3, scale_data(lem->CDRs28VBus.Voltage(), 0.0, 40.0));
+	SA18.SetOutput(3, SA15.GetVoltage(3));
 
 	//APS helium tank no. 2 pressure (GP0002)
 	SA19.SetOutput(1, scale_data(lem->APSPropellant.GetAscentHelium2PressPSI(), 0.0, 4000.0));
@@ -769,11 +771,20 @@ void SCERA2::Timestep()
 	//Suit inlet valve position indicator no. 2 closed (GF1202)
 	SA5.SetOutput(12, lem->LMPSuitIsolValve.GetState() == 1);
 
+	//Rate gyro assembly spin motor line A-B voltage (GH1401V)
+	SA7.SetOutput(1, scale_data(lem->atca.GetRGASpinMotorVoltage(), 0.0, 30.0));
+	//Rate gyro assembly spin motor line B-C voltage (GH1402V)
+	SA7.SetOutput(2, scale_data(lem->atca.GetRGASpinMotorVoltage(), 0.0, 30.0));
+	//Rate gyro assembly spin motor line C-A voltage (GH1403V)
+	SA7.SetOutput(3, scale_data(lem->atca.GetRGASpinMotorVoltage(), 0.0, 30.0));
+
 	//Descent oxygen tank pressure (GF3584)
 	SA8.SetOutput(1, scale_data(lem->ecs.DescentOxyTankPressurePSI(), 0.0, 304.0));
 	SA8.SetOutput(2, scale_data(lem->ecs.DescentOxyTankPressurePSI(), 0.0, 3000.0));
+	//4.3 vdc supply (GH1408V)
+	SA8.SetOutput(3, scale_data(lem->atca.GetPlus6VDCSupplyVoltage(), 0.0, 5.0));
 	//LMP bus voltage (GC0302V)
-	SA8.SetOutput(3, scale_data(lem->LMPs28VBus.Voltage(), 0.0, 40.0));
+	SA8.SetOutput(4, SA15.GetVoltage(4));
 
 	//Cooling pump no. 1 failure (GF2936)
 	SA12.SetOutput(2, lem->PrimGlycolPumpController.GetGlycolPumpFailRelay());
@@ -792,7 +803,7 @@ void SCERA2::Timestep()
 	//Abort sensor assembly +28VDC (GI3214V)
 	SA15.SetOutput(3, scale_data(lem->asa.GetASA28V(), 0.0, 40.0));
 	//LMP bus voltage (GC0302V)
-	SA15.SetOutput(4, scale_data(lem->LMPs28VBus.Voltage(), 0.0, 40.0));
+	SA15.SetOutput(4, scale_data(lem->LMPDCBusVoltCB.Voltage(), 0.0, 40.0));
 
 	//Battery 1 voltage (GC0101V)
 	SA16.SetOutput(1, scale_data(lem->Battery1->Voltage(), 0.0, 40.0));
@@ -808,6 +819,15 @@ void SCERA2::Timestep()
 
 	//Battery 6 voltage (GC0106V)
 	SA18.SetOutput(1, scale_data(lem->Battery6->Voltage(), 0.0, 40.0));
+
+	//+15-vdc supply (GH1406V)
+	SA19.SetOutput(1, scale_data(lem->atca.GetPlus15VDCSupplyVoltage(), 0.0, 17.0));
+	//-15-vdc supply (GH1407V)
+	SA19.SetOutput(2, scale_data(-lem->atca.GetMinus15VDCSupplyVoltage(), 0.0, 17.0));
+	//+6-vdc supply (GH1493V)
+	SA19.SetOutput(3, scale_data(lem->atca.GetPlus6VDCSupplyVoltage(), 0.0, 7.0));
+	//-6-vdc supply (GH1494V)
+	SA19.SetOutput(4, scale_data(-lem->atca.GetMinus6VDCSupplyVoltage(), 0.0, 7.0));
 
 	//RCS Fuel tank A temperature (GR2121)
 	SA20.SetOutput(2, scale_data(lem->RCSA.GetFuelTankTempF(), 20.0, 120.0));

@@ -55,6 +55,13 @@ public:
 	void Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl);				// Init
 	double GetPrimPowerVoltage();
 	double GetBackupPowerVoltage();
+	double GetRGAPickoffExcitationVoltage();
+	double GetRGASpinMotorVoltage();
+	double GetPlus15VDCSupplyVoltage();
+	double GetMinus15VDCSupplyVoltage();
+	double GetPlus43VDCSupplyVoltage();
+	double GetPlus6VDCSupplyVoltage();
+	double GetMinus6VDCSupplyVoltage();
 	void Timestep(double simt, double simdt);			// Timestep
 	void SystemTimestep(double simdt);
 	void ProcessLGC(int ch, int val);   // To process LGC commands

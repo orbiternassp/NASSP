@@ -172,21 +172,72 @@ void ATCA::Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl){
 
 double ATCA::GetPrimPowerVoltage() {
 	if (lem->CDR_SCS_ATCA_CB.IsPowered())
-	{
 		return -4.7;
-	}
 	else
 		return 0.0;
 }
 double ATCA::GetBackupPowerVoltage() {
 	if (lem->SCS_ATCA_AGS_CB.IsPowered())
-	{
 		return -4.7;
-	}
 	else
 		return 0.0;
 }
-// GuidContSwitch is the Guidance Control switch
+
+double ATCA::GetRGAPickoffExcitationVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 28.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetRGASpinMotorVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 26.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus15VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 15.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetMinus15VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return -15.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus6VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 6.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetMinus6VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return -6.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus43VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 4.3;
+	else
+		return 0.0;
+}
 
 void ATCA::Timestep(double simt, double simdt){
 	hasPrimPower = false, hasAbortPower = false;
