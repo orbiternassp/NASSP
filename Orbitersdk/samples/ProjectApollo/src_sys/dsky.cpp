@@ -808,21 +808,21 @@ typedef union
 
 {
 	struct {
-		unsigned R1Blanked:1;
+		unsigned NoDAPLight:1;
 		unsigned VelLight:1;
-		unsigned R1Decimal:1;
-		unsigned R2Blanked:1;
+		unsigned spare2:1;
+		unsigned spare3:1;
 		unsigned AltLight:1;
-		unsigned R2Decimal:1;
-		unsigned R3Blanked:1;
-		unsigned R3Flashing:1;
-		unsigned R3Decimal:1;
-		unsigned VerbBlanked:1;
+		unsigned spare4:1;
+		unsigned spare5:1;
+		unsigned spare6:1;
+		unsigned spare7:1;
+		unsigned spare8:1;
 		unsigned VerbFlashing:1;
-		unsigned NounBlanked:1;
+		unsigned spare9:1;
 		unsigned NounFlashing:1;
-		unsigned ProgBlanked:1;
-		unsigned ProgFlashing:1;
+		unsigned spare10:1;
+		unsigned spare11:1;
 		unsigned UplinkLight:1;
 		unsigned NoAttLight:1;
 		unsigned StbyLight:1;
@@ -833,14 +833,13 @@ typedef union
 		unsigned ProgLight:1;
 		unsigned RestartLight:1;
 		unsigned TrackerLight:1;
-		unsigned KbInUse:1;
-		unsigned EnteringVerb:1;
-		unsigned EnteringNoun:1;
-		unsigned EnteringOctal:1;
+		unsigned spare12:1;
+		unsigned spare13:1;
+		unsigned spare14:1;
+		unsigned spare15:1;
 		unsigned CompActy:1;
 		unsigned ELOff:1;
 		unsigned PrioDispLight:1;
-		unsigned NoDAPLight:1;
 	} u;
 	unsigned long word;
 } DSKYState;
