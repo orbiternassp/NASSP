@@ -196,25 +196,25 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 		//Propellant Venting
 		if (OxidVentValve1.IsOpen() && OxidVentValve2.IsOpen())
 		{
-			double dMass = 0.02*p*simdt;
+			double dMass = 0.01*p*simdt;
 			p -= dMass;
 			our_vessel->SetPropellantMass(source_prop, p);
 
 			if (AmbientHeIsolValve.IsOpen() && OxidCompatibilityValve.IsOpen())
 			{
-				dMass = 0.05*ambientHeliumMass*simdt;
+				dMass = 0.01*ambientHeliumMass*simdt;
 				ambientHeliumMass -= dMass;
 			}
 		}
 		if (FuelVentValve1.IsOpen() && FuelVentValve2.IsOpen())
 		{
-			double dMass = 0.02*p*simdt;
+			double dMass = 0.01*p*simdt;
 			p -= dMass;
 			our_vessel->SetPropellantMass(source_prop, p);
 
 			if (AmbientHeIsolValve.IsOpen() && FuelCompatibilityValve.IsOpen())
 			{
-				dMass = 0.05*ambientHeliumMass*simdt;
+				dMass = 0.01*ambientHeliumMass*simdt;
 				ambientHeliumMass -= dMass;
 			}
 		}
