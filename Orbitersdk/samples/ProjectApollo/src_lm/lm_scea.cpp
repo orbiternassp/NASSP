@@ -309,7 +309,7 @@ void SCERA1::Timestep()
 	SA2.SetOutput(8, lem->atca.jet_request[LMRCS_A1F] == 1);
 	//Abort Command (GY0050X)
 	SA2.SetOutput(9, lem->AbortSwitch.GetState() == 0 && lem->SCS_ENG_CONT_CB.IsPowered());
-	//Open
+	//Spare
 
 	//Deadband select (wide) (GH1603)
 	SA3.SetOutput(1, lem->DeadBandSwitch.IsUp() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204());
@@ -334,7 +334,7 @@ void SCERA1::Timestep()
 
 	//AEA Test mode fail (GI3232X)
 	SA4.SetOutput(1, lem->aea.GetTestModeFailure());
-	//Open
+	//Spare
 	//Jet Driver B4U Output (GH1418V)
 	SA4.SetOutput(3, lem->atca.jet_request[LMRCS_B4U] == 1);
 	//Jet Driver B4F Output (GH1420V)
@@ -437,14 +437,14 @@ void SCERA1::Timestep()
 	//System B oxidizer interconnect valves open (GR9642)
 	bval = lem->RCSB.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSB.GetSecOxidInterconnectValve()->IsOpen();
 	SA12.SetOutput(4, bval);
-	//Open
+	//Spare
 	//APS helium primary line solenoid valve closed (GP0318)
 	SA12.SetOutput(6, !lem->APSPropellant.GetHeliumValve1()->IsOpen());
 	//APS helium secondary line solenoid valve closed (GP0320)
 	SA12.SetOutput(7, !lem->APSPropellant.GetHeliumValve2()->IsOpen());
 	//RCS main propulsion valve A closed (GR9609)
 	SA12.SetOutput(8, !lem->RCSA.GetMainShutoffValve()->IsOpen());
-	//Open
+	//Spare
 	//RCS main propulsion valve B closed (GR9610)
 	SA12.SetOutput(10, !lem->RCSB.GetMainShutoffValve()->IsOpen());
 	//ED Relay A K1-K6 (GY0201X)
@@ -496,6 +496,10 @@ void SCERA1::Timestep()
 	SA14.SetOutput(7, !lem->RCSA.GetQuad1IsolationValve()->IsOpen());
 	//Thrust chamber assembly solenoid valve B1 closed (GR9668)
 	SA14.SetOutput(8, !lem->RCSB.GetQuad1IsolationValve()->IsOpen());
+	//ED System A relays K7 through K15 closed (GY0231)
+	SA14.SetOutput(9, lem->stage < 2 && lem->eds.RelayBoxA.GetEDRelayMonitor());
+	//ED System B relays K7 through K15 closed (GY0232)
+	SA14.SetOutput(10, lem->eds.RelayBoxB.GetEDRelayMonitor());
 	//ED Relay A K1-K6 (GY0201X)
 	SA14.SetOutput(11, lem->stage < 2 && lem->eds.RelayBoxA.GetStageRelayMonitor());
 	//ED Relay B K1-K6 (GY0202X)
@@ -514,9 +518,11 @@ void SCERA1::Timestep()
 	SA16.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Frequency(), 380.0, 420.0));
 	//Abort sensor assembly frequency (GI3233F)
 	SA16.SetOutput(2, scale_data(lem->asa.GetASAFreq(), 380.0, 420.0));
+	//Spare
 
 	//Inverter bus voltage (GC0071V)
 	SA17.SetOutput(1, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
+	//Spare
 	//Rate gyro assembly pickoff excitation (0.8kc) voltage (GH1405V)
 	SA17.SetOutput(3, scale_data(lem->atca.GetRGAPickoffExcitationVoltage(), 0.0, 31.0));
 
@@ -526,6 +532,8 @@ void SCERA1::Timestep()
 	SA18.SetOutput(2, scale_data(lem->AC_A_BUS_VOLT_CB.Voltage(), 0.0, 125.0));
 	//Commander's bus voltage (GC0301)
 	SA18.SetOutput(3, SA15.GetVoltage(3));
+	//Main water regulator DP (GF4101)
+	//TBD
 
 	//APS helium tank no. 2 pressure (GP0002)
 	SA19.SetOutput(1, scale_data(lem->APSPropellant.GetAscentHelium2PressPSI(), 0.0, 4000.0));
@@ -553,7 +561,6 @@ void SCERA1::Timestep()
 	SA21.SetOutput(3, scale_data(lem->LR.GetAntennaTempF(), -200.0, 200.0));
 	//Rendezvous radar antenna temperature (GN7723T)
 	SA21.SetOutput(4, scale_data(lem->RR.GetAntennaTempF(), -200.0, 200.0));
-
 }
 
 double SCERA1::GetVoltage(int sa, int chan)

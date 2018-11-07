@@ -51,6 +51,7 @@ public:
 	void SetStagingRelay() { StagingRelay = true; }
 
 	bool GetStageRelayMonitor();
+	bool GetEDRelayMonitor();
 protected:
 
 	bool HasDCPower();

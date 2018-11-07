@@ -251,6 +251,12 @@ bool LEM_EDRelayBox::GetStageRelayMonitor()
 	return false;
 }
 
+bool LEM_EDRelayBox::GetEDRelayMonitor()
+{
+	return !RCSPropPressRelay && !LandingGearDeployRelay && !DescentEngineOnRelay && !AscentPropPressTank1Relay && !AscentPropPressTank2Relay && 
+		!AscentPropCompValvesRelay && !DescentPropVentRelay && !DescentPropPressRelay && !DescentTankIsolValvesRelay;
+}
+
 void LEM_EDRelayBox::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
