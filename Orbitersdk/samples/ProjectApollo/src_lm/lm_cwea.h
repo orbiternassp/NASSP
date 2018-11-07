@@ -69,28 +69,22 @@ protected:
 	CWEA_FlipFlop CESACWarnFF;
 	CWEA_FlipFlop RCSCautFF1;
 	CWEA_FlipFlop RCSCautFF2;
-	bool RRHeaterCautFF;   // Flip Flop
-	bool SBDHeaterCautFF;   // Flip Flop
-	bool QD1HeaterCautFF;	// Flip Flop
-	bool QD2HeaterCautFF;	// Flip Flop
-	bool QD3HeaterCautFF;	// Flip Flop
-	bool QD4HeaterCautFF;	// Flip Flop
-	bool OxygenCautFF1;   // Flip Flop
-	bool OxygenCautFF2;   // Flip Flop
-	bool OxygenCautFF3;   // Flip Flop
-	bool WaterCautFF1;   // Flip Flop
-	bool WaterCautFF2;   // Flip Flop
-	bool WaterCautFF3;   // Flip Flop
+	CWEA_FlipFlop RRHeaterCautFF;
+	CWEA_FlipFlop SBDHeaterCautFF;
+	CWEA_FlipFlop QD1HeaterCautFF;
+	CWEA_FlipFlop QD2HeaterCautFF;
+	CWEA_FlipFlop QD3HeaterCautFF;
+	CWEA_FlipFlop QD4HeaterCautFF;
+	CWEA_FlipFlop OxygenCautFF1;
+	CWEA_FlipFlop OxygenCautFF2;
+	CWEA_FlipFlop OxygenCautFF3;
+	CWEA_FlipFlop WaterCautFF1;
+	CWEA_FlipFlop WaterCautFF2;
+	CWEA_FlipFlop WaterCautFF3;
 	CWEA_FlipFlop RRCautFF;
-	bool SBDCautFF;   // Flip Flop
+	CWEA_FlipFlop SBDCautFF;
 
 	bool MasterAlarm;
-	bool RRHeaterPrev;
-	bool SBDHeaterPrev;
-	bool QD1HeaterPrev;
-	bool QD2HeaterPrev;
-	bool QD3HeaterPrev;
-	bool QD4HeaterPrev;
 
 	e_object *cwea_pwr;
 	e_object *ma_pwr;
