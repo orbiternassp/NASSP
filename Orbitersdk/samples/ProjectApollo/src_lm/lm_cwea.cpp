@@ -463,7 +463,7 @@ void LEM_CWEA::Timestep(double simdt) {
 		OxygenCautFF2.Reset(lem->QtyMonRotary.GetState() == 0);
 
 		// Low ASC tank 1
-		OxygenCautFF3.Set(lem->scera2.GetVoltage(7, 1) < 0.498);
+		OxygenCautFF3.Set(lem->scera1.GetVoltage(7, 1) < 0.498);
 		OxygenCautFF3.Reset(lem->QtyMonRotary.GetState() == 0);
 
 		if ((lem->stage < 2 && (OxygenCautFF2.IsSet() || OxygenCautFF1.IsSet())) || OxygenCautFF3.IsSet())
