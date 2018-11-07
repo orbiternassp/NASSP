@@ -598,11 +598,6 @@ void LEM_EDS::Timestep(double simdt) {
 		(pyroB ? &lem->ED28VBusB : NULL));
 	lem->RCSHeliumSupplyBPyrosFeeder.WireToBuses((pyroA ? &lem->ED28VBusA : NULL),
 		(pyroB ? &lem->ED28VBusB : NULL));
-	
-	// Set TBs
-	// BP when descent stage detached
-	if (LG_Deployed == TRUE && lem->status < 2) { lem->EDLGTB.SetState(1); }
-	else { lem->EDLGTB.SetState(0); }
 
 	// PROCESS THESE IN THIS ORDER:
 	// Landing Gear Deployment

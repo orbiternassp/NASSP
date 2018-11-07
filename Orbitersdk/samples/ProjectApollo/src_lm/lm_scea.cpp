@@ -308,8 +308,13 @@ void SCERA1::Timestep()
 	//Jet Driver A1F Output (GH1432V)
 	SA2.SetOutput(8, lem->atca.jet_request[LMRCS_A1F] == 1);
 	//Abort Command (GY0050X)
-	SA2.SetOutput(9, lem->SCS_ENG_CONT_CB.IsPowered() && lem->AbortSwitch.GetState() == 0);
+	SA2.SetOutput(9, lem->AbortSwitch.GetState() == 0 && lem->SCS_ENG_CONT_CB.IsPowered());
+	//Open
 
+	//Deadband select (wide) (GH1603)
+	SA3.SetOutput(1, lem->DeadBandSwitch.IsUp() && !lem->scca1.GetK15() && !lem->scca1.GetK203() && !lem->scca1.GetK204());
+	//Ascent engine arm (GH1230)
+	SA3.SetOutput(2, lem->EngineArmSwitch.IsUp() && lem->SCS_ENG_ARM_CB.IsPowered());
 	//RCS thrust chamber pressure A2A (GR5041)
 	SA3.SetOutput(3, lem->GetRCSThrusterLevel(LMRCS_A2A) > 0.5);
 	//RCS thrust chamber pressure B2L (GR5042)
@@ -324,9 +329,12 @@ void SCERA1::Timestep()
 	SA3.SetOutput(8, lem->GetRCSThrusterLevel(LMRCS_B1L) > 0.5);
 	//DPS Arm (GH1348X)
 	SA3.SetOutput(9, lem->deca.GetEngArm());
+	//X-translation override (GH1893)
+	SA3.SetOutput(10, lem->PlusXTranslationButton.GetState() == 0 && lem->SCS_ATT_DIR_CONT_CB.IsPowered());
 
 	//AEA Test mode fail (GI3232X)
 	SA4.SetOutput(1, lem->aea.GetTestModeFailure());
+	//Open
 	//Jet Driver B4U Output (GH1418V)
 	SA4.SetOutput(3, lem->atca.jet_request[LMRCS_B4U] == 1);
 	//Jet Driver B4F Output (GH1420V)
@@ -421,7 +429,7 @@ void SCERA1::Timestep()
 
 	//Main shutoff valves closed, system A (GR9609)
 	SA12.SetOutput(1, !lem->RCSA.GetMainShutoffValve()->IsOpen());
-	//Main shutoff valves closed, system B (GR96010)
+	//Main shutoff valves closed, system B (GR9610)
 	SA12.SetOutput(2, !lem->RCSB.GetMainShutoffValve()->IsOpen());
 	//System A oxidizer interconnect valves open (GR9641)
 	bval = lem->RCSA.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSA.GetSecOxidInterconnectValve()->IsOpen();
@@ -429,10 +437,16 @@ void SCERA1::Timestep()
 	//System B oxidizer interconnect valves open (GR9642)
 	bval = lem->RCSB.GetPrimOxidInterconnectValve()->IsOpen() && lem->RCSB.GetSecOxidInterconnectValve()->IsOpen();
 	SA12.SetOutput(4, bval);
+	//Open
 	//APS helium primary line solenoid valve closed (GP0318)
 	SA12.SetOutput(6, !lem->APSPropellant.GetHeliumValve1()->IsOpen());
 	//APS helium secondary line solenoid valve closed (GP0320)
 	SA12.SetOutput(7, !lem->APSPropellant.GetHeliumValve2()->IsOpen());
+	//RCS main propulsion valve A closed (GR9609)
+	SA12.SetOutput(8, !lem->RCSA.GetMainShutoffValve()->IsOpen());
+	//Open
+	//RCS main propulsion valve B closed (GR9610)
+	SA12.SetOutput(10, !lem->RCSB.GetMainShutoffValve()->IsOpen());
 	//ED Relay A K1-K6 (GY0201X)
 	SA12.SetOutput(11, lem->stage < 2 && lem->eds.RelayBoxA.GetStageRelayMonitor());
 	//ED Relay B K1-K6 (GY0202X)
@@ -454,6 +468,8 @@ void SCERA1::Timestep()
 	SA13.SetOutput(7, !lem->RCSA.GetQuad1IsolationValve()->IsOpen());
 	//Thrust chamber assembly solenoid valve B1 closed (GR9668)
 	SA13.SetOutput(8, !lem->RCSB.GetQuad1IsolationValve()->IsOpen());
+	//Landing gear legs deployed (GM5000)
+	SA13.SetOutput(9, lem->stage < 2 && lem->eds.GetLGDeployed());
 	//RCS/ASC interconnect A not closed (GR9631)
 	bval = lem->RCSA.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSA.GetSecFuelInterconnectValve()->IsOpen();
 	SA13.SetOutput(10, bval);

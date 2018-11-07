@@ -767,7 +767,6 @@ protected:
 	SwitchRow RCSXfeedSwitchRow;
 	ThreePosSwitch RCSXFeedSwitch;
 
-	// DS20060406 RCS MAIN SHUTOFF VALVES
 	SwitchRow RCSMainSOVTBRow;
 	LEMSCEATalkback RCSMainSovATB;
 	LEMSCEATalkback RCSMainSovBTB;
@@ -1076,7 +1075,7 @@ protected:
 	ToggleSwitch EDStageRelay;
 	ThreePosSwitch EDDesFuelVent;
 	ThreePosSwitch EDDesOxidVent;
-	IndicatorSwitch EDLGTB;
+	LEMSCEATalkback EDLGTB;
 	LEMDPSValveTalkback EDDesFuelVentTB;
 	LEMDPSValveTalkback EDDesOxidVentTB;
 	// Audio section

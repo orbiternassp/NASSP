@@ -522,7 +522,7 @@ protected:
 class LEMSCEATalkback : public IndicatorSwitch {
 public:
 	LEMSCEATalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, bool failopen);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, bool failopen = false);
 	int GetState();
 
 protected:

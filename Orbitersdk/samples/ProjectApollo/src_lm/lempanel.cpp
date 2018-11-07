@@ -2129,10 +2129,9 @@ void LEM::SetSwitches(int panel) {
 	RCSXFeedSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSXfeedSwitchRow);
 	RCSXFeedSwitch.SetDelayTime(1);
 
-	// DS20060406 HERE WE GO!
 	RCSMainSOVTBRow.Init(AID_MAIN_SOV_TALKBACKS, MainPanel);
-	RCSMainSovATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 1), true);
-	RCSMainSovBTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 2), true);
+	RCSMainSovATB.Init(0, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 8), true);
+	RCSMainSovBTB.Init(70, 0, 23, 23, srf[SRF_INDICATOR], RCSMainSOVTBRow, scera1.GetSwitch(12, 10), true);
 
 	RCSMainSOVSwitchRow.Init(AID_MAIN_SOV_SWITCHES, MainPanel);
 	RCSMainSovASwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], RCSMainSOVSwitchRow);
@@ -2630,7 +2629,7 @@ void LEM::SetSwitches(int panel) {
 	EDStageRelay.Init(1002 - 431, 1182 - 916, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], Panel8SwitchRow);
 	EDDesFuelVent.Init(36, 100, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
 	EDDesOxidVent.Init(109, 100, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel8SwitchRow);
-	EDLGTB.Init(790 - 431, 1033 - 916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow);
+	EDLGTB.Init(790 - 431, 1033 - 916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow, scera1.GetSwitch(13, 9));
 	EDDesFuelVentTB.Init(472 - 431, 960 - 916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow, DPSPropellant.GetFuelVentValve2(), false);
 	EDDesOxidVentTB.Init(545 - 431, 960 - 916, 23, 23, srf[SRF_INDICATOR], Panel8SwitchRow, DPSPropellant.GetOxidVentValve2(), false);
 	// Audio stuff
