@@ -701,7 +701,7 @@ double TempMonitorInd::QueryValue()
 	case 5: // Quad 4
 		return lem->scera1.GetVoltage(20, 1) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
 	case 6: // S-Band
-		return lem->scera2.GetVoltage(21, 1) * 80.0 - 200.0;
+		return lem->scera2.GetVoltage(21, 2) * 80.0 - 200.0;
 	default:
 		return 0.0;
 	}

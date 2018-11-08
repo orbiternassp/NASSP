@@ -720,24 +720,44 @@ void SCERA2::Timestep()
 	val11 = lem->agc.GetOutputChannel(011);
 	val163 = lem->agc.GetOutputChannel(0163);
 
+	//CES AC power supply failure (GL4026X)
+	SA2.SetOutput(1, !lem->CWEA.GetCESACPwrFail());
+	//AGS power supply failure (GL4028X)
+	SA2.SetOutput(2, !lem->CWEA.GetAGSPwrFail());
+	//Landing radar range data not good (GN7521X)
+	SA2.SetOutput(3, lem->stage < 2 && !lem->LR.IsRangeDataGood());
+	//Landing radar velocity data not good (GN7521X)
+	SA2.SetOutput(4, lem->stage < 2 && !lem->LR.IsVelocityDataGood());
 	//Rendezvous Radar No Track (GN7621X)
-	SA2.SetOutput(1, lem->RR.GetNoTrackSignal());
+	SA2.SetOutput(5, lem->RR.GetNoTrackSignal());
 	//APS fuel tank low level (GP0908X)
 	SA2.SetOutput(6, lem->APSPropellant.GetFuelLowLevel());
 	//APS oxidizer tank low level (GP1408X)
 	SA2.SetOutput(7, lem->APSPropellant.GetOxidLowLevel());
+	//Master alarm identification (GL4069X)
+	SA2.SetOutput(8, lem->CWEA.GetMasterAlarm());
+	//Spare
+	//Ascent engine on/off to propulsion (GH1260X)
+	SA2.SetOutput(10, lem->scca1.GetThrustOn());
 	//AGS Warmup (GI3305X)
 	SA2.SetOutput(11, lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER);
+	//CES DC power supply failure (GL4027X)
+	SA2.SetOutput(12, !lem->CWEA.GetCESDCPwrFail());
 
+	//Spare
 	//Suit fan 1 fail (GF1083X)
 	SA3.SetOutput(2, lem->ecs.GetSuitFan1Failure());
 	//Primary Glycol LLS (GF2041X) & Secondary Glycol LLS (GF2042X)
 	SA3.SetOutput(3, lem->ecs.GetPrimGlycolLowLevel() || lem->ecs.GetSecGlycolLowLevel());
+	//Descent engine on (GH1301X)
+	SA3.SetOutput(4, lem->scca2.GetK16());
 	//AGS Selected (GH1621X)
 	SA3.SetOutput(5, lem->scca2.GetK7());
 	//Suit fan 2 fail (GF1084X)
 	SA3.SetOutput(6, lem->ecs.GetSuitFan2Failure());
-	//Emergency oxygen valve electrically open (GF3572)
+	//EPS battery caution (GL4046X)
+	SA3.SetOutput(7, lem->CWEA.GetBatteryCaution());
+	//Emergency oxygen valve electrically open (GF3572X)
 	SA3.SetOutput(8, lem->CabinRepressValve.GetEmergencyCabinRepressRelay());
 	//Pitch Trim Fail (GH1323X)
 	SA3.SetOutput(9, lem->deca.GetK21());
@@ -783,8 +803,10 @@ void SCERA2::Timestep()
 	SA5.SetOutput(4, lem->ecs.IsSuitCircuitReliefValveOpen());
 	//Oxygen regulator valve A locked closed (GF3071)
 	SA5.SetOutput(5, lem->PressRegAValve.GetState() == 3);
+	//Spare
 	//Oxygen regulator valve B locked closed (GF3073)
 	SA5.SetOutput(7, lem->PressRegBValve.GetState() == 3);
+	//Spare
 	//Cabin gas return valve position indicator closed (GF1231)
 	SA5.SetOutput(9, !lem->ecs.IsCabinGasReturnValveOpen());
 	//Cabin gas return valve position indicator open (GF1232)
@@ -793,6 +815,12 @@ void SCERA2::Timestep()
 	SA5.SetOutput(11, lem->CDRSuitIsolValve.GetState() == 1);
 	//Suit inlet valve position indicator no. 2 closed (GF1202)
 	SA5.SetOutput(12, lem->LMPSuitIsolValve.GetState() == 1);
+
+	//Spare
+	//Spare
+	//TBD: RTG Temp
+	//Main sublimator inlet water temperature (GF4511)
+	SA6.SetOutput(4, scale_data(lem->ecs.GetPrimWBWaterInletTempF(), 20.0, 160.0));
 
 	//Rate gyro assembly spin motor line A-B voltage (GH1401V)
 	SA7.SetOutput(1, scale_data(lem->atca.GetRGASpinMotorVoltage(), 0.0, 30.0));
@@ -809,15 +837,96 @@ void SCERA2::Timestep()
 	//LMP bus voltage (GC0302V)
 	SA8.SetOutput(4, SA15.GetVoltage(4));
 
+	//Pitch gimbal drive actuator position (GH1313)
+	SA9.SetOutput(1, scale_data(lem->DPS.GetPitchGimbalPosition(), -6.0, 6.0));
+	//Roll gimbal drive actuator position (GH1314)
+	SA9.SetOutput(2, scale_data(lem->DPS.GetRollGimbalPosition(), -6.0, 6.0));
+	//Yaw attenuator error (GH1455)
+	SA9.SetOutput(3, scale_data(lem->atca.GetYawAttenuatorErrorVRMS(), -3.5, 3.5));
+	//Pitch attenuator error (GH1456)
+	SA9.SetOutput(4, scale_data(lem->atca.GetPitchAttenuatorErrorVRMS(), -3.5, 3.5));
+
+	//Roll attenuator error (GH1457)
+	SA10.SetOutput(1, scale_data(lem->atca.GetRollAttenuatorErrorVRMS(), -3.5, 3.5));
+	//Yaw rate gyro signal (GH1461)
+	SA10.SetOutput(2, scale_data(lem->rga.GetYawRateVRMS(), -3.5, 3.5));
+	//Pitch rate gyro signal (GH1462)
+	SA10.SetOutput(3, scale_data(lem->rga.GetPitchRateVRMS(), -3.5, 3.5));
+	//Roll rate gyro signal (GH1463)
+	SA10.SetOutput(4, scale_data(lem->rga.GetRollRateVRMS(), -3.5, 3.5));
+
+	//CWEA power supply failure (GL4054)
+	SA12.SetOutput(1, !lem->CWEA.GetCWPowerFail());
 	//Cooling pump no. 1 failure (GF2936)
 	SA12.SetOutput(2, lem->PrimGlycolPumpController.GetGlycolPumpFailRelay());
 	//Descent propellant tanks (liquid level low) (GQ4455X)
 	SA12.SetOutput(3, lem->DPSPropellant.PropellantLevelLow());
+	//Spare
+	//AGS mode control (attitude hold) (GH1642)
+	SA12.SetOutput(5, lem->ModeControlAGSSwitch.IsCenter());
+	//AGS mode control (automatic) (GH1641)
+	SA12.SetOutput(6, lem->ModeControlAGSSwitch.IsUp());
+	//Battery 1 malfunction (GC9961)
+	SA12.SetOutput(7, false);	//TBD
+	//Battery 2 malfunction (GC9962)
+	SA12.SetOutput(8, false);	//TBD
+	//Battery 3 malfunction (GC9963)
+	SA12.SetOutput(9, false);	//TBD
+	//Battery 4 malfunction (GC9964)
+	SA12.SetOutput(10, false);	//TBD
+	//Battery 5 malfunction (GC9965)
+	SA12.SetOutput(11, false);	//TBD
+	//Battery 6 malfunction (GC9966)
+	SA12.SetOutput(12, false);	//TBD
 
+	//Roll attitude control selector (GH1628)
+	SA13.SetOutput(1, lem->scca1.GetK5());
+	//Pitch attitude control selector (GH1629)
+	SA13.SetOutput(2, lem->scca1.GetK3());
 	//Coolant pump no. 2 failure (GF2935)
 	SA13.SetOutput(3, lem->ecs.GetGlycolPump2Failure());
+	//Spare
 	//AGS Standby (GI3306X)
 	SA13.SetOutput(5, lem->AGSOperateSwitch.GetState() == THREEPOSSWITCH_CENTER);
+	//Yaw attitude control selector (GH1630)
+	SA13.SetOutput(6, lem->scca1.GetK1());
+	//Battery 1 malfunction (GC9961)
+	SA13.SetOutput(7, false);	//TBD
+	//Battery 2 malfunction (GC9962)
+	SA13.SetOutput(8, false);	//TBD
+	//Battery 3 malfunction (GC9963)
+	SA13.SetOutput(9, false);	//TBD
+	//Battery 4 malfunction (GC9964)
+	SA13.SetOutput(10, false);	//TBD
+	//Battery 5 malfunction (GC9965)
+	SA13.SetOutput(11, false);	//TBD
+	//Battery 6 malfunction (GC9966)
+	SA13.SetOutput(12, false);	//TBD
+
+	//Abort stage command (GH1283)
+	SA14.SetOutput(1, lem->scca1.GetK19());
+	//Engine fire override (GH1286)
+	SA14.SetOutput(2, lem->scca2.GetK15());
+	//PGNS mode select (automatic) (GH1643)
+	SA14.SetOutput(3, lem->ModeControlPGNSSwitch.IsUp());
+	//PGNS mode select (attitude hold) (GH1644)
+	SA14.SetOutput(4, lem->ModeControlPGNSSwitch.IsCenter());
+	//Attitude controller assembly out of detent (GH1204)
+	SA14.SetOutput(5, lem->scca1.GetK7() || lem->scca1.GetK8());
+	//Automatic engine-on command (GH1214)
+	SA14.SetOutput(6, lem->scca1.GetK18());
+	//Automatic engine-off command (GH1217)
+	SA14.SetOutput(7, lem->scca1.GetK17());
+	//Unbalanced couples (GH1896)
+	SA14.SetOutput(8, lem->BALCPLSwitch.IsDown());
+	//APS Shutoff valves A/B in midposition (GQ7498)
+	SA14.SetOutput(9, false);	//TBD
+	//APS Shutoff valves C/D in midposition (GQ7499)
+	SA14.SetOutput(10, false);	//TBD
+	//APS Solenoid/bipropellant valves A mismatch (GQ2997)
+	SA14.SetOutput(11, false);	//TBD
+	//APS Solenoid/bipropellant valves B mismatch (GQ2998)
+	SA14.SetOutput(12, false);	//TBD
 
 	//Prim -4.7VDC (GH1488V)
 	SA15.SetOutput(1, scale_data(lem->atca.GetPrimPowerVoltage(), -9.4169, -3.3929));
@@ -839,9 +948,21 @@ void SCERA2::Timestep()
 
 	//Battery 5 voltage (GC0105V)
 	SA17.SetOutput(1, scale_data(lem->Battery5->Voltage(), 0.0, 40.0));
+	//X-translation command voltage (GH1240)
+	SA17.SetOutput(2, scale_data(lem->atca.GetXTransCommandVoltage(), -10.0, 10.0));
+	//Y-translation command voltage (GH1241)
+	SA17.SetOutput(3, scale_data(lem->atca.GetYTransCommandVoltage(), -10.0, 10.0));
+	//Z-translation command voltage (GH1242)
+	SA17.SetOutput(4, scale_data(lem->atca.GetZTransCommandVoltage(), -10.0, 10.0));
 
 	//Battery 6 voltage (GC0106V)
 	SA18.SetOutput(1, scale_data(lem->Battery6->Voltage(), 0.0, 40.0));
+	//Roll logic input error voltage (GH1249V)
+	SA18.SetOutput(2, scale_data(lem->atca.GetRollLogicInputErrorVoltage(), -13.0, 13.0));
+	//Yaw logic input error voltage (GH1247V)
+	SA18.SetOutput(3, scale_data(lem->atca.GetYawLogicInputErrorVoltage(), -13.0, 13.0));
+	//Pitch logic input error voltage (GH1248V)
+	SA18.SetOutput(4, scale_data(lem->atca.GetPitchLogicInputErrorVoltage(), -13.0, 13.0));
 
 	//+15-vdc supply (GH1406V)
 	SA19.SetOutput(1, scale_data(lem->atca.GetPlus15VDCSupplyVoltage(), 0.0, 17.0));
@@ -852,13 +973,19 @@ void SCERA2::Timestep()
 	//-6-vdc supply (GH1494V)
 	SA19.SetOutput(4, scale_data(-lem->atca.GetMinus6VDCSupplyVoltage(), 0.0, 7.0));
 
+	//Main sublimator coolant inlet temperature (GF2531)
+	SA20.SetOutput(1, scale_data(lem->ecs.GetPrimWBGlycolInletTempF(), 20.0, 120.0));
 	//RCS Fuel tank A temperature (GR2121)
 	SA20.SetOutput(2, scale_data(lem->RCSA.GetFuelTankTempF(), 20.0, 120.0));
 	//RCS Fuel tank B temperature (GR2122)
 	SA20.SetOutput(3, scale_data(lem->RCSB.GetFuelTankTempF(), 20.0, 120.0));
+	//Main sublimator coolant outlet temperature (GF2581)
+	SA20.SetOutput(4, scale_data(lem->ecs.GetPrimWBGlycolOutletTempF(), 20.0, 120.0));
 
+	//DPS Ball Valve Temp (GQ4220T)
+	SA21.SetOutput(1, scale_data(0.0, -200.0, 500.0));	//TBD
 	//S-Band antenna temperature (GT0454T)
-	SA21.SetOutput(1, scale_data(lem->SBandSteerable.GetAntennaTempF(), -200.0, 200.0));
+	SA21.SetOutput(2, scale_data(lem->SBandSteerable.GetAntennaTempF(), -200.0, 200.0));
 	//Ascent water line no. 1 temperature (GF4585T)
 	SA21.SetOutput(3, scale_data(lem->ecs.GetAscWaterTank1TempF(), -200.0, 200.0));
 	//Ascent water line no. 2 temperature (GF4586T)

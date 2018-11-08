@@ -50,6 +50,15 @@ public:
 	double GetNonDimmableLoad();
 	double GetDimmableLoad();
 
+	//For SCEA
+	//TBD: Should use relays, light status is also set during light test
+	bool GetCESACPwrFail() { return LightStatus[0][1] == 1; }
+	bool GetCESDCPwrFail() { return LightStatus[1][1] == 1; }
+	bool GetAGSPwrFail() { return LightStatus[2][1] == 1; }
+	bool GetMasterAlarm() { return MasterAlarm; }
+	bool GetBatteryCaution() { return LightStatus[1][5] == 1; }
+	bool GetCWPowerFail() { return LightStatus[3][6] == 1; }
+
 	bool CheckMasterAlarmMouseClick(int event);
 	void RenderMasterAlarm(SURFHANDLE surf, SURFHANDLE alarmLit, SURFHANDLE border);
 	void RedrawLeft(SURFHANDLE sf, SURFHANDLE ssf);

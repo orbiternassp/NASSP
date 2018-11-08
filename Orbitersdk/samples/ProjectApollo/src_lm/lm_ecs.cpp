@@ -1063,7 +1063,8 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Water_Sep1_RPM = 0; Water_Sep2_RPM = 0;
 	Suit_Circuit_Relief = 0;
 	Cabin_Gas_Return = 0;
-	Asc_Water1Temp = 0; Asc_Water2Temp = 0;
+	Asc_Water1Temp = 0; Asc_Water2Temp = 0; WB_Prim_Water_Temp = 0;
+	WB_Prim_Gly_In_Temp = 0; WB_Prim_Gly_Out_Temp = 0;
 }
 
 void LEM_ECS::Init(LEM *s) {
@@ -1441,4 +1442,28 @@ bool LEM_ECS::GetGlycolPump2Failure()
 	}
 
 	return false;
+}
+
+double LEM_ECS::GetPrimWBWaterInletTempF()
+{
+	if (!WB_Prim_Water_Temp) {
+		WB_Prim_Water_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMWATERBOILER:TEMP");
+	}
+	return KelvinToFahrenheit(*WB_Prim_Water_Temp);
+}
+
+double LEM_ECS::GetPrimWBGlycolInletTempF()
+{
+	if (!WB_Prim_Gly_In_Temp) {
+		WB_Prim_Gly_In_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPINLET:TEMP");
+	}
+	return KelvinToFahrenheit(*WB_Prim_Gly_In_Temp);
+}
+
+double LEM_ECS::GetPrimWBGlycolOutletTempF()
+{
+	if (!WB_Prim_Gly_Out_Temp) {
+		WB_Prim_Gly_Out_Temp = (double*)sdk.GetPointerByString("HYDRAULIC:PRIMEVAPOUTLET:TEMP");
+	}
+	return KelvinToFahrenheit(*WB_Prim_Gly_Out_Temp);
 }

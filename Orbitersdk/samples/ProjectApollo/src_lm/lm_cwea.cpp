@@ -298,8 +298,8 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS22 ASCENT PROPELLANT LOW QUANTITY CAUTION
 		// On when less than 10 seconds of ascent propellant/oxidizer remains, <= 2.2%
 		// Disabled when ascent engine is not firing.
-		if (lem->APS.thrustOn && (lem->scera2.GetVoltage(2, 6) > 2.5 || lem->scera2.GetVoltage(2, 7) > 2.5)) {
-				SetLight(1, 4, 1);
+		if (lem->scera2.GetVoltage(2, 10) > 2.5 && (lem->scera2.GetVoltage(2, 6) > 2.5 || lem->scera2.GetVoltage(2, 7) > 2.5)) {
+			SetLight(1, 4, 1);
 		}
 		else
 			SetLight(1, 4, 0);
@@ -338,16 +338,16 @@ void LEM_CWEA::Timestep(double simdt) {
 		// 6DS28 RENDEZVOUS RADAR DATA FAILURE CAUTION
 		// On when RR indicates Data-Not-Good.
 		// Disabled when RR mode switch is not set to AUTO TRACK.
-		RRCautFF.Set(lem->scera2.GetVoltage(2, 1) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0);
+		RRCautFF.Set(lem->scera2.GetVoltage(2, 5) < 2.5 && lem->RendezvousRadarRotary.GetState() == 0);
 		RRCautFF.Reset(lem->RendezvousRadarRotary.GetState() == 0);
 
-		if (RRCautFF.IsSet() && lem->scera2.GetVoltage(2, 1) >= 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
+		if (RRCautFF.IsSet() && lem->scera2.GetVoltage(2, 5) >= 2.5 && lem->RendezvousRadarRotary.GetState() == 0) {
 			SetLight(2, 5, 1);
 		}
 		else
 			SetLight(2, 5, 0);
 
-		//sprintf(oapiDebugString(), "RRC %i FFS %i FFR %i SCV %lf", RRCautFF.IsSet(), RRCautFF.GetSInput(), RRCautFF.GetRInput(), lem->scera2.GetVoltage(2, 1));
+		//sprintf(oapiDebugString(), "RRC %i FFS %i FFR %i SCV %lf", RRCautFF.IsSet(), RRCautFF.GetSInput(), RRCautFF.GetRInput(), lem->scera2.GetVoltage(2, 5));
 
 		// 6DS29 LANDING RADAR 
 		// Was not present on LM-7 thru LM-9!  **What about LM 3-5?  Unlikely but need to research**
@@ -415,7 +415,7 @@ void LEM_CWEA::Timestep(double simdt) {
 		QD4HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 5);
 
 		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
-		SBDHeaterCautFF.Set(lem->scera2.GetVoltage(21, 1) < 1.743 || lem->scera2.GetVoltage(21, 1) > 4.421);
+		SBDHeaterCautFF.Set(lem->scera2.GetVoltage(21, 2) < 1.743 || lem->scera2.GetVoltage(21, 2) > 4.421);
 		SBDHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 6);
 
 		//Set CW Light

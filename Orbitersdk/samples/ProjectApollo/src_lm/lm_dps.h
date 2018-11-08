@@ -163,6 +163,9 @@ public:
 
 	void ThrottleActuator(double manthrust, double autothrust);
 
+	double GetPitchGimbalPosition();
+	double GetRollGimbalPosition();
+
 	LEM *lem;					// Pointer at LEM
 	bool thrustOn;				// Engine "On" Command
 	bool engArm;				// Engine Arm Command

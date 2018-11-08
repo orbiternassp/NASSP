@@ -600,6 +600,22 @@ void LEM_DPS::SystemTimestep(double simdt) {
 	rollGimbalActuator.SystemTimestep(simdt);
 }
 
+double LEM_DPS::GetPitchGimbalPosition()
+{
+	if (lem->DECA_GMBL_AC_CB.IsPowered() && lem->deca.GetK25())
+		return pitchGimbalActuator.GetPosition();
+
+	return 0.0;
+}
+
+double LEM_DPS::GetRollGimbalPosition()
+{
+	if (lem->DECA_GMBL_AC_CB.IsPowered() && lem->deca.GetK25())
+		return rollGimbalActuator.GetPosition();
+
+	return 0.0;
+}
+
 void LEM_DPS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
