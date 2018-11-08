@@ -203,6 +203,7 @@ IDB_RED_INDICATOR		BITMAP					"..\\Bitmaps\\IndicatorRed.bmp"
 IDB_LEM_FWD_HATCH_OPEN  BITMAP                  "..\\Bitmaps\\lem_forward_hatch_open.bmp"
 IDB_LEM_UPPER_HATCH_OPEN BITMAP                 "..\\Bitmaps\\lem_upper_hatch_open.bmp"
 IDB_LEM_MASTERALARM	    BITMAP                  "..\\Bitmaps\\lem_master_alarm.bmp"
+IDB_LEM_PWRFAIL_LIGHT	BITMAP                  "..\\Bitmaps\\lem_pwrfail_light.bmp"
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -829,6 +829,16 @@
 #define IDB_BORDER_47x43                2003
 #define AID_LEM_ISOL_ROTARY				2004
 #define AID_LEM_UTILITY_LT              2005
+#define IDB_LEM_PWRFAIL_LIGHT           2006
+#define AID_LEM_PWRFAIL_THRUST          2007
+#define AID_LEM_PWRFAIL_DPSPRESS        2008
+#define AID_LEM_PWRFAIL_RCSPRESS        2009
+#define AID_LEM_PWRFAIL_ECSPRESS        2010
+#define AID_LEM_PWRFAIL_RCSQUAN         2011
+#define AID_LEM_PWRFAIL_ECSQUAN         2012
+#define AID_LEM_PWRFAIL_GLYCOL          2013
+#define AID_LEM_PWRFAIL_XPTRCDR         2014
+#define AID_LEM_PWRFAIL_XPTRLMP         2015
 
 #define IDB_LEM_FDAI_ROLL               10006
 
