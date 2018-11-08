@@ -433,6 +433,7 @@ void LEM::SystemsInit()
 	COASLights.Init(this, &COAS_DC_CB, &CDRCOASSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	AOTLampFeeder.WireToBuses(&AOT_LAMP_ACA_CB, &AOT_LAMP_ACB_CB);
+	pfira.Init(this);
 
 	// LGC and DSKY
 	agc.WirePower(&LGC_DSKY_CB, NULL);
@@ -1546,6 +1547,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	UtilLights.Timestep(simdt);
 	COASLights.Timestep(simdt);
 	FloodLights.Timestep(simdt);
+	pfira.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();

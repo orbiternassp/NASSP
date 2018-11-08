@@ -1704,6 +1704,7 @@ protected:
 	LEM_UtilLights UtilLights;
 	LEM_COASLights COASLights;
 	LEM_FloodLights FloodLights;
+	LEM_PFIRA pfira;
 
 	// ECS
 	LEM_ECS ecs;
@@ -1842,6 +1843,7 @@ protected:
 	friend class EngineStopButton;
 	friend class EngineStartButton;
 	friend class LEM_LCA;
+	friend class LEM_PFIRA;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

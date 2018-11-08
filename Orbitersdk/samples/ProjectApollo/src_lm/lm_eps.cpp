@@ -1068,3 +1068,88 @@ void LEM_FloodLights::SystemTimestep(double simdt)
 	FloodCB->DrawPower(GetPowerDraw());
 	FloodHeat->GenerateHeat((GetPowerDraw()*0.356)*0.65);	//Assumes linear relationship between heat and power draw based on maximum at 28V, 65% of power load to heat (just a guess to keep cabin temps stable)
 }
+
+LEM_PFIRA::LEM_PFIRA()
+{
+	lem = NULL;
+	K1 = false;
+	K2 = false;
+	K3 = false;
+	K4 = false;
+	K5 = false;
+	K6 = false;
+	K7 = false;
+	K8 = false;
+	K9 = false;
+}
+
+void LEM_PFIRA::Init(LEM *l)
+{
+	lem = l;
+}
+
+void LEM_PFIRA::Timestep(double simdt)
+{
+	if (lem == NULL) return;
+
+	if (lem->PROP_DISP_ENG_OVRD_LOGIC_CB.IsPowered())
+	{
+		K1 = true;
+	}
+	else
+	{
+		K1 = false;
+	}
+	if (lem->CDR_XPTR_CB.IsPowered())
+	{
+		K2 = true;
+	}
+	else
+	{
+		K2 = false;
+	}
+	if (lem->THRUST_DISP_CB.IsPowered())
+	{
+		K3 = true;
+	}
+	else
+	{
+		K3 = false;
+	}
+	if (lem->ECS_DISP_CB.IsPowered())
+	{
+		K4 = true;
+		K5 = true;
+		K6 = true;
+	}
+	else
+	{
+		K4 = false;
+		K5 = false;
+		K6 = false;
+	}
+	if (lem->RCS_B_TEMP_PRESS_DISP_FLAGS_CB.IsPowered())
+	{
+		K7 = true;
+	}
+	else
+	{
+		K7 = false;
+	}
+	if (lem->RCS_B_PQGS_DISP_CB.IsPowered())
+	{
+		K8 = true;
+	}
+	else
+	{
+		K8 = false;
+	}
+	if (lem->SE_XPTR_DC_CB.IsPowered())
+	{
+		K9 = true;
+	}
+	else
+	{
+		K9 = false;
+	}
+}
