@@ -438,10 +438,10 @@ void LEM_CWEA::Timestep(double simdt) {
 		// Restoration of normal water separator speed
 		// Selection of #2 suit fan
 		lightlogic = false;
-		if (lem->ECS_CO2_SENSOR_CB.IsPowered() && lem->scera1.GetVoltage(5, 2) >= (7.6 / 6.0)) { lightlogic = true; }	// CO2 Partial Pressure > 7.6mm
+		if (lem->ecs.GetSensorCO2MMHg() >= 7.6) { lightlogic = true;}	// CO2 Partial Pressure > 7.6mm
 		if (lem->scera2.GetVoltage(13, 3) > 2.5) { lightlogic = true; } // Glycol pump failure
 		if (lem->scera2.GetVoltage(3, 2) > 2.5) { lightlogic = true; } // Suit fan 1 failure
-		if (lem->scera1.GetVoltage(5, 3) < (792.5 / 720.0)) { lightlogic = true; } // Water separator failure
+		if (lem->ecs.GetWaterSeparatorRPM() < 792.5) { lightlogic = true; } // Water separator failure
 
 		if (lightlogic)
 			SetLight(0, 7, 1);
