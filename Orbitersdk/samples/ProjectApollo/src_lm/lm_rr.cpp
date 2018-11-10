@@ -187,15 +187,29 @@ void LEM_RR::Timestep(double simdt) {
 	}
 
 	if (!IsPowered()) {
-		val33[RRPowerOnAuto] = 0;
-		val33[RRDataGood] = 0;
-		lem->agc.SetInputChannel(033, val33);
+		bool clobber = FALSE;
+		if (val33[RRPowerOnAuto]) { clobber = TRUE; val33[RRPowerOnAuto] = 0; }
+		if (val33[RRDataGood]) { clobber = TRUE; val33[RRDataGood] = 0; }
+		if (clobber == TRUE) { lem->agc.SetInputChannel(033, val33); }
 		SignalStrength = 0.0;
 		radarDataGood = false;
 		FrequencyLock = false;
 		RangeLock = false;
 		range = 0.0;
 		rate = 0.0;
+		if (val13[RadarActivity] == 1) {
+			int radarBits = 0;
+			if (val13[RadarA] == 1) { radarBits |= 1; }
+			if (val13[RadarB] == 1) { radarBits |= 2; }
+			if (val13[RadarC] == 1) { radarBits |= 4; }
+			switch (radarBits) {
+			case 2:
+			case 4:
+				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+				lem->agc.GenerateRadarupt();
+				break;
+			}
+		}
 		return;
 	}
 
