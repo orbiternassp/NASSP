@@ -304,6 +304,15 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 	return (fahrenheit + 459.67) / 1.8;
 }
 
+///
+/// \brief sign function
+///
+static inline double sign(double x)
+{
+	if (x >= 0.0) return 1.0;
+	else return -1.0;
+}
+
 //
 // Engine information.
 //

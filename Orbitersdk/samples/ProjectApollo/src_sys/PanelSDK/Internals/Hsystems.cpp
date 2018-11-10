@@ -30,6 +30,7 @@
 #include "orbitersdk.h"
 #include <stdio.h>
 #include <math.h>
+#include "nasspdefs.h"
 //const float CONST_R=8.31904f/1000.0f;
 //const float TEMP_PRESS_RATIO=0.07;
 
@@ -1336,25 +1337,6 @@ void h_WaterSeparator::refresh(double dt) {
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
 		flow = fanned.GetMass() / dt;
 
-		// RPM Calculation
-		double delay, drpmcmd, rpmcmdsign, drpm;
-
-		delay = 7.0;	// Gives delay for WS spool up/spin down RPM/sec
-
-		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
-
-		drpmcmd = rpmcmd - RPM;
-		rpmcmdsign = abs(rpmcmd - RPM) / (rpmcmd - RPM);
-		if (abs(drpmcmd)>delay*dt)
-		{
-			drpm = rpmcmdsign * delay*dt;
-		}
-		else
-		{
-			drpm = drpmcmd;
-		}
-		RPM += drpm;
-
 		if (flow != 0) {
 			h2oremovalratio = (RPM / rpmcmd);
 			if ((h2oremovalratio) > 1)
@@ -1382,6 +1364,24 @@ void h_WaterSeparator::refresh(double dt) {
 		fanned.GetQ();
 		out->Flow(fanned);
 	}
+
+	// RPM Calculation
+	double delay, drpmcmd, drpm;
+
+	delay = 7.0;	// Gives delay for WS spool up/spin down RPM/sec
+
+	rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
+
+	drpmcmd = rpmcmd - RPM;
+	if (abs(drpmcmd) > delay*dt)
+	{
+		drpm = sign(drpmcmd)*delay*dt;
+	}
+	else
+	{
+		drpm = drpmcmd;
+	}
+	RPM += drpm;
 }
 
 void h_WaterSeparator::Save(FILEHANDLE scn) {
