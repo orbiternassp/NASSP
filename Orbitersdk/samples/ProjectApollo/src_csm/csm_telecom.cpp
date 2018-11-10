@@ -775,15 +775,13 @@ void HGA::TimeStep(double simt, double simdt)
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
 {
-	double dposcmd, poscmdsign, dpos;
+	double dposcmd, dpos;
 
 	dposcmd = AngleCmd - Angle;
 
-	poscmdsign = abs(AngleCmd - Angle) / (AngleCmd - Angle);
-
 	if (abs(dposcmd)>RateLimit*simdt)
 	{
-		dpos = poscmdsign*RateLimit*simdt;
+		dpos = sign(AngleCmd - Angle)*RateLimit*simdt;
 	}
 	else
 	{

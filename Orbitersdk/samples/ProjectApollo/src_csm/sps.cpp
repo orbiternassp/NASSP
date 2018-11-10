@@ -889,15 +889,14 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 
 void SPSGimbalActuator::GimbalTimestep(double simdt)
 {
-	double LMR, dposcmd, poscmdsign, dpos;
+	double LMR, dposcmd, dpos;
 
 	LMR = 0.15*DEG;
 
 	dposcmd = commandedPosition - position;
-	poscmdsign = abs(commandedPosition - position) / (commandedPosition - position);
 	if (abs(dposcmd)>LMR*simdt)
 	{
-		dpos = poscmdsign*LMR*simdt;
+		dpos = sign(commandedPosition - position)*LMR*simdt;
 	}
 	else
 	{
