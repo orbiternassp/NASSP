@@ -634,7 +634,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//SERVO DRIVE
 
-	//5°/s rate limit, not based on documentation; arbitrary for the moment
+	// 5°/s rate limit as per CSM Data Book (3.7.4.1)
 	ServoDrive(Alpha, AAxisCmd, 5.0*RAD, simdt);
 	ServoDrive(Beta, BAxisCmd, 5.0*RAD, simdt);
 	ServoDrive(Gamma, CAxisCmd, 5.0*RAD, simdt);
