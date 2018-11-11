@@ -1325,6 +1325,7 @@ void h_WaterSeparator::refresh(double dt) {
 
 	h2oremovalrate = 0;
 	flow = 0;
+	rpmcmd = 0;
 
 	if ((!in) || (!out)) return;
 
@@ -1336,6 +1337,8 @@ void h_WaterSeparator::refresh(double dt) {
 
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
 		flow = fanned.GetMass() / dt;
+
+		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
 
 		if (flow != 0) {
 			h2oremovalratio = (RPM / rpmcmd);
@@ -1369,8 +1372,6 @@ void h_WaterSeparator::refresh(double dt) {
 	double delay, drpmcmd, drpm;
 
 	delay = 7.0;	// Gives delay for WS spool up/spin down RPM/sec
-
-	rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
 
 	drpmcmd = rpmcmd - RPM;
 	if (abs(drpmcmd) > delay*dt)
