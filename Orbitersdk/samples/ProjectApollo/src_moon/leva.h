@@ -80,13 +80,13 @@ public:
 	/// \param scn Scenario file to load from.
 	/// \param vs Pointer to current vessel status.
 	///
-	void LoadState(FILEHANDLE scn, VESSELSTATUS *vs);
+	void clbkLoadStateEx(FILEHANDLE scn, void *vs);
 
 	///
 	/// \brief State saving function.
 	/// \param scn Scenario file to save to.
 	///
-	void SaveState(FILEHANDLE scn);
+	void clbkSaveState(FILEHANDLE scn);
 
 	///
 	/// Set up the astronaut state. Virtual so it can be called from the LEM without needing to link in all the code

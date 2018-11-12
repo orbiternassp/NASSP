@@ -645,16 +645,7 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
 }
 
-DLLCLBK void ovcLoadState (VESSEL *vessel, FILEHANDLE scn, VESSELSTATUS *vs)
-
-{
-	LEVA *sv = (LEVA *)vessel;
-
-	sv->LoadState(scn, vs);
-}
-
-void LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
-
+void LEVA::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 {
     char *line;
 	
@@ -673,7 +664,7 @@ void LEVA::LoadState(FILEHANDLE scn, VESSELSTATUS *vs)
 			sscanf(line + 9, "%d", &ApolloNo);
 		}
 		else {
-            ParseScenarioLine (line, vs);
+			ParseScenarioLineEx(line, vs);
         }
     }
 }
@@ -687,13 +678,6 @@ void LEVA::clbkVisualCreated (VISHANDLE vis, int refcount)
 
 void LEVA::clbkVisualDestroyed (VISHANDLE vis, int refcount)
 {
-}
-
-
-DLLCLBK void ovcSaveState (VESSEL *vessel, FILEHANDLE scn)
-{
-	LEVA *sv = (LEVA *)vessel;
-	sv->SaveState(scn);
 }
 
 typedef union {
@@ -732,10 +716,9 @@ void LEVA::SetMainState(int n)
 	Astro = (s.u.Astro != 0);
 }
 
-void LEVA::SaveState(FILEHANDLE scn)
-
+void LEVA::clbkSaveState(FILEHANDLE scn)
 {
-	SaveDefaultState (scn);
+	VESSEL2::clbkSaveState(scn);
 
 	int s = GetMainState();
 	if (s) {
