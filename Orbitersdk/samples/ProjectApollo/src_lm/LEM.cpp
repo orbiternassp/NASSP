@@ -266,8 +266,6 @@ void LEM::Init()
 {
 	DebugLineClearTimer = 0;
 
-	ABORT_IND=false;
-
 	bModeDocked=false;
 	bModeHover=false;
 	ToggleEva=false;

@@ -863,22 +863,31 @@ void ProjectApolloMFD::Update (HDC hDC)
 			sprintf(buffer, "%d", ecs.crewNumber);
 			TextOut(hDC, (int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
 
-			if (ecs.cdrInSuit)
+			if (ecs.cdrStatus == 0)
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Cabin", 8);
+			}
+			else if (ecs.cdrStatus == 1)
 			{
 				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Suit", 7);
 			}
 			else
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Cabin", 8);
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "EVA", 3);
 			}
 
-			if (ecs.lmpInSuit)
+
+			if (ecs.lmpStatus == 0)
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Cabin", 8);
+			}
+			else if (ecs.lmpStatus == 1)
 			{
 				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Suit", 7);
 			}
 			else
 			{
-				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Cabin", 8);
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "EVA", 3);
 			}
 		}
 		else

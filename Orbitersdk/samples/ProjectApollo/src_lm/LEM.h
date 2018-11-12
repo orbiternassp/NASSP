@@ -97,8 +97,8 @@ enum LMRCSThrusters
 typedef struct {
 	int crewNumber;
 	int crewStatus;
-	bool cdrInSuit;
-	bool lmpInSuit;
+	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA
+	int lmpStatus;
 } LEMECSStatus;
 
 // Systems things
@@ -1399,10 +1399,6 @@ protected:
 	int ordealEnabled;
 
 	bool FirstTimestep;
-
-	bool LAUNCHIND[8];
-	bool ABORT_IND;
-	bool ENGIND[7];
 
 	bool bModeDocked;
 	bool bModeHover;

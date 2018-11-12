@@ -36,8 +36,6 @@
 #include "OrbiterMath.h"
 
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "LEMcomputer.h"
 #include "LEM.h"
 
 #include "leva.h"

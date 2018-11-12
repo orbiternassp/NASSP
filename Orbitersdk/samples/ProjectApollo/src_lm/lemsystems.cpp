@@ -2084,20 +2084,27 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 
 	if (CDRSuited->number == 1)
 	{
-		ecs.cdrInSuit = true;
+		ecs.cdrStatus = 1;
 	}
 	else
 	{
-		ecs.cdrInSuit = false;
+		if (CDREVA_IP)
+		{
+			ecs.cdrStatus = 2;
+		}
+		else
+		{
+			ecs.cdrStatus = 0;
+		}
 	}
 
 	if (LMPSuited->number == 1)
 	{
-		ecs.lmpInSuit = true;
+		ecs.lmpStatus = 1;
 	}
 	else
 	{
-		ecs.lmpInSuit = false;
+		ecs.lmpStatus = 0;
 	}
 
 	ecs.crewNumber = CrewInCabin->number + CDRSuited->number + LMPSuited->number;
@@ -2110,7 +2117,7 @@ void LEM::SetCrewNumber(int number)
 {
 	int crewsuited = CDRSuited->number + LMPSuited->number;
 
-	if (number + crewsuited <= 3)
+	if (number + crewsuited + (CDREVA_IP ? 1 : 0) <= 3)
 	{
 		CrewInCabin->number = number;
 	}
@@ -2118,15 +2125,18 @@ void LEM::SetCrewNumber(int number)
 
 void LEM::SetCDRInSuit()
 {
-	if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
+	if (!CDREVA_IP)
 	{
-		CrewInCabin->number--;
-		CDRSuited->number = 1;
-	}
-	else if (CDRSuited->number == 1)
-	{
-		CrewInCabin->number++;
-		CDRSuited->number = 0;
+		if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
+		{
+			CrewInCabin->number--;
+			CDRSuited->number = 1;
+		}
+		else if (CDRSuited->number == 1)
+		{
+			CrewInCabin->number++;
+			CDRSuited->number = 0;
+		}
 	}
 }
 
@@ -2146,7 +2156,7 @@ void LEM::SetLMPInSuit()
 
 void LEM::StartEVA()
 {
-	if (ForwardHatch.IsOpen() && GroundContact()) {
+	if (ForwardHatch.IsOpen() && GroundContact() && CDRSuited->number == 1) {
 		ToggleEva = true;
 	}
 }

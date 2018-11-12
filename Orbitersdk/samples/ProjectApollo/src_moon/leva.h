@@ -68,7 +68,7 @@ public:
 	void clbkVisualCreated (VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed (VISHANDLE vis, int refcount);
 
-	void SetAstroStage ();
+	void SetAstroStage();
 
 	///
 	/// \brief Initialise state.
