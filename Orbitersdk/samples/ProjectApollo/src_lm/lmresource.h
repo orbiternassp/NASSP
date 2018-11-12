@@ -251,12 +251,9 @@
 #define AID_XPOINTER2_SWITCH            464
 #define AID_AUDIO_CONT_SWITCH           465
 #define AID_RELAY_AUDIO_SWITCH          470
-#define AID_CABIN_PRESS_SWITCH          471
 #define AID_HATCH_SWITCH                472
-#define AID_EVA_SWITCH                  473
 #define AID_RCS_PRESS                   474
 #define AID_RCS_QTY                     475
-#define AID_ECS_GAUGES                  476
 #define AID_COAS                        477
 #define AID_PANEL4_SWITCH1              478
 #define AID_PANEL4_SWITCH2              479

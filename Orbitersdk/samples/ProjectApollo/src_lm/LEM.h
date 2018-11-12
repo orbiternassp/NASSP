@@ -430,6 +430,7 @@ public:
 	virtual void SetCrewNumber(int number);
 	virtual void SetCDRInSuit();
 	virtual void SetLMPInSuit();
+	virtual void StartEVA();
 
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
@@ -1094,10 +1095,6 @@ protected:
 	ThumbwheelSwitch CDRAudMasterVol;
 	ThumbwheelSwitch CDRAudVOXSens;
 	ThreePosSwitch CDRCOASSwitch;
-
-	bool CPswitch;
-
-	bool EVAswitch;
 
 	bool COASswitch;
 

@@ -77,6 +77,7 @@ public:
 	void menuSetCrewNumber();
 	void menuSetCDRInSuit();
 	void menuSetLMPInSuit();
+	void menuStartEVA();
 	void menuSetPrimECSTestHeaterPower();
 	void menuSetSecECSTestHeaterPower();
 	void menuAbortUplink();

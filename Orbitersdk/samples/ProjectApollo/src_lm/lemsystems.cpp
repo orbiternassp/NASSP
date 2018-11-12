@@ -2144,6 +2144,13 @@ void LEM::SetLMPInSuit()
 	}
 }
 
+void LEM::StartEVA()
+{
+	if (ForwardHatch.IsOpen() && GroundContact()) {
+		ToggleEva = true;
+	}
+}
+
 void LEM::CheckDescentStageSystems()
 {
 	if (stage < 2) {

@@ -994,10 +994,6 @@ void LEM::InitSwitches() {
 	// Old stuff.
 	//
 
-	CPswitch=false;
-
-	EVAswitch=false;
-
 	COASswitch=true;
 
 	for (int i = 0; i < nsurf; i++)
@@ -3126,21 +3122,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 		SwitchClick();
 		return true;
 
-	case AID_CABIN_PRESS_SWITCH:
-		if (my >=0 && my <=11 ){
-			if (mx > 0 && mx < 23 && !CPswitch){
-				SwitchClick();
-				CPswitch=true;
-			}
-		}else if (my >=10 && my <=21 ){
-			if (mx > 0 && mx < 23 && CPswitch){
-				SwitchClick();
-				CPswitch=false;
-			}
-
-		}
-		return true;
-
 	case AID_LEM_FWD_HATCH:
 		ForwardHatch.Toggle();
 
@@ -3149,21 +3130,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	case AID_LEM_UPPER_HATCH:
 		OverheadHatch.Toggle();
 
-		return true;
-
-	case AID_EVA_SWITCH:
-		if (my >=0 && my <=11 ){
-			if (mx > 0 && mx < 23 && !EVAswitch){
-				SwitchClick();
-				EVAswitch=true;
-			}
-		}else if (my >=10 && my <=21 ){
-			if (mx > 0 && mx < 23 && EVAswitch){
-				SwitchClick();
-				EVAswitch=false;
-			}
-
-		}
 		return true;
 
 	case AID_COAS:
@@ -3648,12 +3614,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		oapiBlt(surf,srf[SRF_NEEDLE],29,(int)(62-(DispValue)*62),8,0,7,7, SURF_PREDEF_CK);//
 		return true;
 
-	case AID_ECS_GAUGES:
-		if(CPswitch){
-			oapiBlt(surf,srf[0],0,0,0,0,145,72);
-		}
-		return true;
-
 	case AID_AOT_RETICLE:
 		RedrawPanel_AOTReticle(surf);
 		return true;
@@ -3850,8 +3810,6 @@ int LEM::GetCSwitchState()
 	CSwitchState state;
 
 	state.word = 0;
-	state.u.CPswitch = CPswitch;
-	state.u.EVAswitch = EVAswitch;
 	state.u.COASswitch = COASswitch;
 
 	return state.word;
@@ -3863,7 +3821,5 @@ void LEM::SetCSwitchState(int s)
 	CSwitchState state;
 
 	state.word = s;
-	CPswitch = state.u.CPswitch;
-	EVAswitch = state.u.EVAswitch;
 	COASswitch = state.u.COASswitch;
 }

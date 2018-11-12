@@ -1705,6 +1705,14 @@ void ProjectApolloMFD::menuSetLMPInSuit()
 	}
 }
 
+void ProjectApolloMFD::menuStartEVA()
+{
+	if (lem)
+	{
+		lem->StartEVA();
+	}
+}
+
 void ProjectApolloMFD::menuSetPrimECSTestHeaterPower()
 {
 	if (saturn != NULL)

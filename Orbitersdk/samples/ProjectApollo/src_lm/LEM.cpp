@@ -965,11 +965,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			SetLmLandedMesh();
 		}
 
-		if (CPswitch && EVAswitch && GroundContact()){
-			ToggleEva = true;
-			EVAswitch = false;
-		}
-
 		//sprintf (oapiDebugString(),"FUEL %d",GetPropellantMass(ph_Dsc));
 	}
 
