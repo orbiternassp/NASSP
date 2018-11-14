@@ -619,7 +619,7 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 		dist = sqrt(posr.x * posr.x + posr.y * posr.y + posr.z * posr.z);
 		Vel = sqrt(rvel.x * rvel.x + rvel.y * rvel.y + rvel.z * rvel.z);
 		if (GoDock1) {						
-			if (dist <= 6.00550) {
+			if (lmvessel->IsForwardHatchOpen() && dist <= 6.00550) {
 				GoDock1 = false;
 				lmvessel->StopEVA();
 				oapiSetFocusObject(hMaster);
