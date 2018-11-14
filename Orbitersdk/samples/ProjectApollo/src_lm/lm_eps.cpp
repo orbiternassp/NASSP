@@ -837,11 +837,11 @@ double LEM_LCA::GetNumericVoltage()
 	{
 		if (lem->LtgORideNumSwitch.IsUp())
 		{
-			return 75.0;
+			return 115.0;
 		}
 		else
 		{
-			return 60.0 / 8.0*(double)lem->LtgAnunNumKnob.GetState() + 15.0;
+			return 90.0 / 8.0*(double)lem->LtgAnunNumKnob.GetState() + 20.0;
 		}
 	}
 
@@ -854,11 +854,11 @@ double LEM_LCA::GetIntegralVoltage()
 	{
 		if (lem->LtgORideIntegralSwitch.IsUp())
 		{
-			return 115.0;
+			return 75.0;
 		}
 		else
 		{
-			return 90.0 / 8.0*(double)lem->LtgIntegralKnob.GetState() + 20.0;
+			return 60.0 / 8.0*(double)lem->LtgIntegralKnob.GetState() + 15.0;
 		}
 	}
 
