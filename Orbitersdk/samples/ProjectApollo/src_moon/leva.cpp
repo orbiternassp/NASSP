@@ -164,7 +164,7 @@ void LEVA::SetAstroStage ()
     ClearAttExhaustRefs();
 	VECTOR3 mesh_dir=_V(0,0,0);
     AddMesh (hCDREVA, &mesh_dir);
-	SetCameraOffset(_V(0,1.6,0));
+	SetCameraOffset(_V(0,0.8,0));
 	
 	double tdph = -0.8;
 	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
