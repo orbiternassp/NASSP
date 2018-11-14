@@ -1771,7 +1771,7 @@ void LEMDPSDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
 void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (lem->stage > 1) return;
-	if (Voltage() < SP_MIN_DCVOLTAGE || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown()) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE ||  lem->lca.GetNumericVoltage() < 25.0) return;
 
 	double percent = v * 100.0;
 
@@ -1840,7 +1840,7 @@ double LEMDigitalHeliumPressureMeter::QueryValue()
 
 void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.GetNumericVoltage() < 25.0) return;
 
 	int Curdigit4 = (int)v;
 	int Curdigit3 = (int)v / 10;

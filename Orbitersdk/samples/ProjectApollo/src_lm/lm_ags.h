@@ -276,7 +276,10 @@ public:
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 
 	void KeyClick();
-	bool IsPowered() { return Voltage() > 25.0; };
+	bool IsPowered();
+	bool HasAnnunPower();
+	bool HasNumPower();
+	bool HasIntglPower();
 
 	//
 	// Helper functions.

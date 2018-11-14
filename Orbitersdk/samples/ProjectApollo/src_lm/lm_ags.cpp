@@ -1235,6 +1235,36 @@ void LEM_DEDA::LoadState(FILEHANDLE scn,char *end_str){
 	}
 }
 
+bool LEM_DEDA::IsPowered()
+{ 
+	if (Voltage() > 25.0)
+		return true;
+
+	return false;
+}
+
+bool LEM_DEDA::HasAnnunPower()
+{
+	if (lem->lca.GetAnnunVoltage() > 2.25)
+		return true;
+
+	return false;
+}
+bool LEM_DEDA::HasNumPower()
+{
+	if (lem->lca.GetNumericVoltage() > 25.0)
+		return true;
+
+	return false;
+}
+bool LEM_DEDA::HasIntglPower()
+{
+	if (lem->lca.GetIntegralVoltage() > 20.0)
+		return true;
+
+	return false;
+}
+
 void LEM_DEDA::KeyClick()
 
 {
@@ -1410,7 +1440,7 @@ void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dst
 void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
 
 {
-	if (!IsPowered())
+	if (!IsPowered() || !HasNumPower())
 		return;
 
 	RenderThreeDigitDisplay(surf, digits, xOffset, yOffset, Adr);
@@ -1419,7 +1449,7 @@ void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yO
 void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
 
 {
-	if (!IsPowered())
+	if (!IsPowered() || !HasNumPower())
 		return;
 
 	//
@@ -1470,7 +1500,7 @@ void LEM_DEDA::DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, 
 void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
 
 {
-	if (!IsPowered())
+	if (!HasAnnunPower())
 		return;
 
 	//
