@@ -722,16 +722,8 @@ void EngineThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 }
 
 double EngineThrustInd::QueryValue()
-
 {
-	if (lem->stage < 2 && lem->th_hover[0])
-	{
-		return lem->GetThrusterLevel(lem->th_hover[0])*100.0;
-	}
-	else
-	{
-		return 0;
-	}
+	return lem->DPS.GetThrustChamberPressurePSI()*100.0 / 113.5135135;
 }
 
 void EngineThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)

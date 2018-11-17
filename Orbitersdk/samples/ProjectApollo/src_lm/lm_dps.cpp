@@ -486,6 +486,7 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	engPreValvesArm = 0;
 	engArm = 0;
 	thrustcommand = 0;
+	ThrustChamberPressurePSI = 0.0;
 }
 
 void LEM_DPS::Init(LEM *s) {
@@ -593,6 +594,13 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 			lem->SetThrusterLevel(dpsThruster[0], 0.0);
 			lem->SetThrusterLevel(dpsThruster[1], 0.0);
 		}
+
+		//105PSI at FTP
+		ThrustChamberPressurePSI = lem->GetThrusterLevel(dpsThruster[0])*113.5135135;
+	}
+	else
+	{
+		ThrustChamberPressurePSI = 0.0;
 	}
 
 	// Do GDA time steps
@@ -633,6 +641,13 @@ double LEM_DPS::GetRollGimbalPosition()
 		return rollGimbalActuator.GetPosition();
 
 	return 0.0;
+}
+
+double LEM_DPS::GetThrustChamberPressurePSI()
+{
+	if (lem->stage > 1 || !lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+
+	return ThrustChamberPressurePSI;
 }
 
 void LEM_DPS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {

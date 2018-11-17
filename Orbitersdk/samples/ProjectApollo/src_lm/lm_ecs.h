@@ -342,6 +342,8 @@ public:
 	double GetPrimWBWaterInletTempF();
 	double GetPrimWBGlycolInletTempF();
 	double GetPrimWBGlycolOutletTempF();
+	double GetPrimaryGlycolPumpDP();
+	double GetPLSSFillPressurePSI();
 	bool GetSuitFan1Failure();
 	bool GetSuitFan2Failure();
 	bool GetPrimGlycolLowLevel();
@@ -381,6 +383,8 @@ public:
 	double *Secondary_Glycol_EvapOut;							// Evap outlet mass
 	double *Water_Sep1_RPM, *Water_Sep2_RPM;					// Water separators RPM
 	double *WB_Prim_Gly_In_Temp, *WB_Prim_Gly_Out_Temp;			// Primary WB glycol temperatures
+	double *Primary_Glycol_Accu_Press;							// Primary glycol accumulator pressure
+	double *PLSS_O2_Fill_Press;									// PLSS O2 fill pressure
 	int *Asc_H2O_To_PLSS, *Des_H2O_To_PLSS;						// PLSS Water Fill valves
 	int *Water_Tank_Selector;									// WT selection valve
 	int *Pri_Evap_Flow_1, *Pri_Evap_Flow_2;						// Primary evaporator flow valves
