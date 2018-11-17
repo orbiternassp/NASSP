@@ -332,6 +332,7 @@ public:
 	double GetSecondaryGlycolQuantity();
 	double GetPrimaryGlycolPressure();
 	double GetSecondaryGlycolPressure();
+	double GetSelectedGlycolPressure();
 	double GetPrimaryGlycolTempF();
 	double GetSecondaryGlycolTempF();
 	double GetSelectedGlycolTempF();

@@ -208,6 +208,7 @@ public:
 	void generate_stream_lbr();     // Generate LBR datastream
 	void generate_stream_hbr();     // Same for HBR datastream
 	unsigned char scale_data(double data, double low, double high); // Scale data for PCM transmission
+	unsigned char scale_scea(double data); // Scale preconditioned data from the SCEA for PCM transmission
 	unsigned char measure(int channel, int type, int ccode);
 	// Error control
 	int wsk_error;                  // Winsock error

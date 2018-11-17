@@ -384,16 +384,9 @@ void LMGlycolPressMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 }
 
 double LMGlycolPressMeter::QueryValue()
-
 {
 	if(!lem){ return 0; }
-	if(lem->GlycolRotary.GetState() == 0){
-		// Secondary
-		return(lem->ecs.GetSecondaryGlycolPressure());
-	}else{
-		// Primary
-		return(lem->ecs.GetPrimaryGlycolPressure());
-	}
+	return (lem->ecs.GetSelectedGlycolPressure());
 }
 
 void LMGlycolPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)

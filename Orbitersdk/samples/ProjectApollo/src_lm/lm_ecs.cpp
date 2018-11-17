@@ -1328,6 +1328,16 @@ double LEM_ECS::GetSelectedGlycolTempF()
 	return GetPrimaryGlycolTempF();
 }
 
+double LEM_ECS::GetSelectedGlycolPressure()
+{
+	if (lem->GlycolRotary.GetState() == 0)
+	{
+		return GetSecondaryGlycolPressure();
+	}
+
+	return GetPrimaryGlycolPressure();
+}
+
 double LEM_ECS::GetWaterSeparatorRPM()
 {
 	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;

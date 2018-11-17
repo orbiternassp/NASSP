@@ -79,6 +79,7 @@ DPSPropellantSource::DPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	FuelTankUllagePressurePSI = 0.0;
 	OxidTankUllagePressurePSI = 0.0;
 	FuelEngineInletPressurePSI = 0.0;
+	OxidEngineInletPressurePSI = 0.0;
 	supercriticalHeliumMass = 22.0;	//48.5 pounds
 	supercriticalHeliumTemp = 12.35186667;	//Kelvin, based on loading temp of -453°F, should give 400PSI at liftoff
 	ambientHeliumMass = 0.4808079;	//1.06 lbm
@@ -118,6 +119,7 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 		FuelTankUllagePressurePSI = 0.0;
 		OxidTankUllagePressurePSI = 0.0;
 		FuelEngineInletPressurePSI = 0.0;
+		OxidEngineInletPressurePSI = 0.0;
 	}
 	else {
 		p = our_vessel->GetPropellantMass(source_prop);
@@ -192,6 +194,7 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 		}
 
 		FuelEngineInletPressurePSI = FuelTankUllagePressurePSI - 15.0;
+		OxidEngineInletPressurePSI = OxidTankUllagePressurePSI - 15.0;
 
 		//Propellant Venting
 		if (OxidVentValve1.IsOpen() && OxidVentValve2.IsOpen())
@@ -351,6 +354,22 @@ double DPSPropellantSource::GetOxidizerTankUllagePressurePSI()
 {
 	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return OxidTankUllagePressurePSI;
+
+	return 0.0;
+}
+
+double DPSPropellantSource::GetFuelEngineInletPressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return FuelEngineInletPressurePSI;
+
+	return 0.0;
+}
+
+double DPSPropellantSource::GetOxidizerEngineInletPressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return OxidEngineInletPressurePSI;
 
 	return 0.0;
 }
@@ -530,7 +549,7 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 
 	if (thrustOn)
 	{
-		double ActuatorPressure = lem->GetDPSPropellant()->GetFuelEngineInletPressurePSI();
+		double ActuatorPressure = lem->GetDPSPropellant()->GetActuatorValvesPressurePSI();
 		if (ActuatorPressure > 110.0)
 		{
 			ActuatorValves = 1.0;

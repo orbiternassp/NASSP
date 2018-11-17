@@ -348,6 +348,12 @@ unsigned char LM_VHF::scale_data(double data, double low, double high){
 	return static_cast<unsigned char>( ( ( data - low ) / step ) + 0.5 );
 }
 
+unsigned char LM_VHF::scale_scea(double data)
+{
+	//data is already 0 to 5V
+	return static_cast<unsigned char>(data*256.0 / 5.0 + 0.5);
+}
+
 void LM_VHF::perform_io(double simt){
 	// Do TCP IO
 	switch(conn_state){
@@ -1376,61 +1382,62 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					if(channel == 200){return(0); } // DPS FUEL PRESS
 					return(0); // P NO2 HE SUP 1
 				case 5: 
-					if(channel == 1){ return(0); } // IRIG SUSP 3.2 KC (???)
+					if (channel == 1) { return (scale_data(28.0, 0.0, 31.1)); } // IRIG SUSP 3.2 KC
 					if(channel == 10){ return(0); } // ROLL ERR CMD
 					if(channel == 50){return(0); } // X PIPA OUT IN O
 					if(channel == 200){return(0); } // DPS OX PRESS
 				case 6: 
-					if(channel == 1){ return(0); } // DPS HE PRESS
+					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetSupercriticalHeliumPressPSI(), 0.0, 2000.0)); } // DPS HE PRESS
 					if(channel == 200){return(0); } // DPS TCP
 					return(0); // Y PIPA OUT IN O
 				case 7:  
 					if(channel == 200){ return(0); } // APS TCP
-					if(channel == 10){ return(0); } // PITCH ATT ERR
-					if(channel == 1){ return(0); } // DPS OX 2 QTY
-					return(0); // MG RSVR OUT COS
+					if(channel == 100){ return(0); } // PITCH ATT ERR (Fix!)
+					if(channel == 10){ return(0); } // DPS OX 2 QTY (Fix!)
+					return (scale_data(0.0, -20.25, 20.25)); // MG RSVR OUT COS
 				case 8: 
-					if(channel == 1){ return(0); } // QUAD 4 TEMP
+					if (channel == 1) { return (scale_scea(lem->scera1.GetVoltage(20, 1))); } // QUAD 4 TEMP
 					if(channel == 50){return(0); } // VAR INJ ACT POS
 					if(channel == 100){ return(0); } // DPS FUEL 1 QTY
 					return(0); // Y TRANS CMD
 				case 9:
 					if(channel == 100){ return(0); } // IG SVO ERR IN O
 					if(channel == 10){ return(0); } // MG RSVR OUT SIN
-					return(scale_data(lem->Battery5->Voltage(),0,40)); // BAT 5 VOLT 
-				case 10: // RR SHFT COS
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(17, 1))); // BAT 5 VOLT 
+				case 10:
+					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
+					return(0); // RR SHFT COS
 				case 11: 
 					if(channel == 100){ return(0); } // DPS OX 1 QTY
-					if(channel == 1){ return(0); } // ROLL GDA POS
+					if(channel == 1){ return (scale_scea(lem->scera2.GetVoltage(9, 2))); } // ROLL GDA POS
 					return(0); // RR TRUN SIN
 				case 12: 
 					if(channel == 10){ return(0); } // MG RSVR OUT COS
-					return(scale_data(0,0,1000)); // ASC 1 O2 PRESS
+					return (scale_scea(lem->scera1.GetVoltage(7, 1))); // ASC 1 O2 PRESS
 				case 13: 
 					if(channel == 10){  return(0); } // ROLL ATT ERR
 					if(channel == 100){ return(0); } // OG SVO ERR IN O
-					return(0); // ASC 2 H20 TEMP (???)
+					return(scale_scea(lem->scera2.GetVoltage(21, 4))); // ASC 2 H20 TEMP
 				case 14: 
-					if(channel == 1){ return(0); } // A FUEL MFLD PRESS
+					if (channel == 1) { return(scale_data(lem->RCSA.GetRCSFuelManifoldPressPSI(), 0.0, 350.0)); } // A FUEL MFLD PRESS
 					return(0); // IG RSVR OUT SIN
 				case 15: 
-					if(channel == 1){ return(0); } // B FUEL MFLD PRESS
+					if (channel == 1) { return(scale_data(lem->RCSB.GetRCSFuelManifoldPressPSI(), 0.0, 350.0)); } // B FUEL MFLD PRESS
 					return(0); // YAW ATT ERR
 				case 16: 
 					if(channel == 10){ return(0); } // IG RSVR OUT SIN
 					if(channel == 100){ return(0); } // MG SVO ERR IN O
-					return(scale_data(0,0,80)); // SEC GLY LOOP PRESS
+					return(scale_data(lem->ecs.GetSecondaryGlycolPressure(), 0.0, 60.0)); // SEC GLY LOOP PRESS
 				case 17: 
 					if(channel == 10){ return(0); } // YAW ATT ERR
-					return(scale_data(0,0,30)); // CO2 PARTIAL PRESS
+					return(scale_scea(lem->scera1.GetVoltage(5, 2))); // CO2 PARTIAL PRESS
 				case 18: 
-					if(channel == 1){ return(0); } // DPS FUEL PRESS
+					if(channel == 1){ return(scale_data(lem->DPSPropellant.GetFuelEngineInletPressurePSI(), 0.0, 300.0)); } // DPS FUEL PRESS
 					return(0); // Z TRANS CMD
 				case 19: 
 					if(channel == 10){ return(0); } // RGA YAW RATE
 					if(channel == 100){ return(0); } // OG SVO ERR IN O
-					return(scale_data(0,0,80)); // GLY PUMP PRESS
+					return(scale_data(lem->ecs.GetSelectedGlycolPressure(), 0.0, 60.0)); // GLY PUMP PRESS
 				case 20: 
 					if(channel == 10){ return(0); } // RR TRUN COS
 					return(scale_data(0,0,100)); // ASC 1 H20 QTY
