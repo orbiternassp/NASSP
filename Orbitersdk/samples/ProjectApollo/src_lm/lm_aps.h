@@ -93,6 +93,8 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void Timestep(double simdt);
 
+	double GetThrustChamberPressurePSI();
+
 	LEM *lem;					// Pointer at LEM
 	bool thrustOn;
 	bool armedOn;

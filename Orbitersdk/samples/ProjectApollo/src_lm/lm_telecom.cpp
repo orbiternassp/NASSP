@@ -1383,7 +1383,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					return(0); // P NO2 HE SUP 1
 				case 5: 
 					if (channel == 1) { return (scale_data(28.0, 0.0, 31.1)); } // IRIG SUSP 3.2 KC
-					if(channel == 10){ return(0); } // ROLL ERR CMD
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 2))); } // ROLL ERR CMD
 					if(channel == 50){return(0); } // X PIPA OUT IN O
 					if(channel == 200){return(0); } // DPS OX PRESS
 				case 6: 
@@ -1392,8 +1392,8 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					return(0); // Y PIPA OUT IN O
 				case 7:  
 					if(channel == 200){ return(0); } // APS TCP
-					if(channel == 100){ return(0); } // PITCH ATT ERR (Fix!)
-					if(channel == 10){ return(0); } // DPS OX 2 QTY (Fix!)
+					if(channel == 10){ return(0); } // PITCH ATT ERR (Fix!)
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0)); } // DPS OX 2 QTY
 					return (scale_data(0.0, -20.25, 20.25)); // MG RSVR OUT COS
 				case 8: 
 					if (channel == 1) { return (scale_scea(lem->scera1.GetVoltage(20, 1))); } // QUAD 4 TEMP
@@ -1408,7 +1408,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					if (channel == 1) { return (scale_data(lem->DPSPropellant.GetOxidizerEngineInletPressurePSI(), 0.0, 300.0)); } // DPS OX PRESS
 					return(0); // RR SHFT COS
 				case 11: 
-					if(channel == 100){ return(0); } // DPS OX 1 QTY
+					if(channel == 100){ return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0)); } // DPS OX 1 QTY
 					if(channel == 1){ return (scale_scea(lem->scera2.GetVoltage(9, 2))); } // ROLL GDA POS
 					return(0); // RR TRUN SIN
 				case 12: 
@@ -1444,7 +1444,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 21: 
 					if (channel == 1) { return(scale_data(lem->RCSA.GetRCSOxidManifoldPressPSI(), 0.0, 350.0)); } // A OX MFLD PRESS
 					if(channel == 100){ return(0); } // DPS FUEL 2 QTY
-					return(0); // AUTO THRUST CMD
+					return(scale_scea(lem->scera1.GetVoltage(15, 1))); // AUTO THRUST CMD
 				case 22: 
 					if(channel == 10){ return(0); } // P NO2 HE SUP 2
 					return(scale_scea(lem->scera2.GetVoltage(9, 1))); // PITCH GDA POS
@@ -1478,7 +1478,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 32: // RR SHFT SIN
 					return(0);
 				case 33: 
-					if(channel == 10){ return(0); } // PITCH ERR CMD
+					if(channel == 10){ return(scale_scea(lem->scera2.GetVoltage(18, 4))); } // PITCH ERR CMD
 					if(lem->status < 2){ return(0); }else{ return(0); } // DES H20 PRESS (???)
 				case 34: 
 					if(channel == 1){ return(0); } // DPS OX 2 TEMP
@@ -1577,7 +1577,7 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 76: // DPS TCP
 					return(scale_data(lem->DPS.GetThrustChamberPressurePSI(), 0.0, 200.0));
 				case 77: // DPS FUEL 1 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
 				case 78: // UNKNOWN, HBR
 					return(0);
 				case 79: // BAT 3 VOLT
@@ -1617,185 +1617,185 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 96: // VHF B RX AGC
 					return(0);
 				case 97: // ASC 2 O2 PRESS
-					return(scale_data(0,0,1000));
+					return(scale_scea(lem->scera1.GetVoltage(7, 2)));
 				case 98: // CABIN PRESS
-					return(scale_data(0,0,10));
+					return(scale_data(lem->ecs.GetCabinPressurePSI(), 0.0, 10.0));
 				case 99: // PRI GLY PUMP P
-					return(scale_data(0,0,80));
+					return(scale_data(lem->ecs.GetPrimaryGlycolPumpDP(), 0.0, 50.0));
 				case 100: // APS HE 2 PRESS
 					return(scale_scea(lem->scera1.GetVoltage(19, 1)));
 				case 101: // DPS FUEL 2 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
 				case 102: // BAT 5 CUR
 					return(scale_data(lem->Battery5->Current(),0,120));
-				case 103: // O2 MANIFOLD PRESS (???)
-					return(scale_data(0,0,1000));
+				case 103: // O2 MANIFOLD PRESS
+					return(scale_data(lem->ecs.GetPLSSFillPressurePSI(), 0.0, 1400.0));
 				case 104: // DPS FUEL 1 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetFuelPercent(), 0.0, 95.0));
 				case 105: // APS OX PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(19, 4)));
 				case 106: // BAT 1 CUR
 					if(lem->status < 2){ return(scale_data(lem->Battery1->Current(),0,120)); }else{ return(0); }
 				case 107: // S-BAND ANT TEMP
-					return(0);
-				case 108: // DPS He Reg press
-					return(0); 
+					return(scale_scea(lem->scera2.GetVoltage(21, 2)));
+				case 108: // DPS HE REG PRESS
+					return(scale_scea(lem->scera1.GetVoltage(19, 2)));
 				case 109: // UNKNOWN, HBR
 					return(0);
 				case 110: // RCS A REG PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 3)));
 				case 111: // UNKNOWN, HBR
 					return(0);
 				case 112: // RCS A REG PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 3)));
 				case 113: // DPS BALL VLV TEMP
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(21, 1)));
 				case 114: // APS FUEL TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 3)));
 				case 115: // ROLL ATT ERR
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(10, 1)));
 				case 116: // DPS OX 1 QTY
-					return(0);
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
 				case 117: // DPS FUEL 2 TEMP
 					return(0);
 				case 118: // UNKNOWN, HBR
 					return(0);
 				case 119: // RCS PROP B QTY
-					return(0);
+					return(scale_data(lem->RCSB.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 120: // GLY TEMP
-					return(scale_data(0,20,120));
-				case 121: // IMU 28 VAC 800 (???)
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(10, 1)));
+				case 121: // IMU 28 VAC 800
+					return(scale_data(28.0, 0.0, 31.1));
 				case 122: // BAT 2 CUR
-					if(lem->status < 2){ return(scale_data(lem->Battery2->Current(),0,120)); }else{ return(0); }
+					if(lem->status < 2){ return(scale_data(lem->Battery2->Current(),0,60)); }else{ return(0); }
 				case 123: // PIPA TEMP
-					return(0); 
+					return(scale_data(lem->imu.GetPIPATempF(), 120.0, 140.0));
 				case 124: // RCS B HE PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 2)));
 				case 125: // RCS A HE PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 1)));
 				case 126: // CDR BUS VOLT
-					return(scale_data(lem->CDRs28VBus.Voltage(),0,40));
+					return(scale_scea(lem->scera1.GetVoltage(18, 3)));
 				case 127: // "W/B GLY OUT TEMP" = Main Sublimator Outlet Temp
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera2.GetVoltage(20, 4)));
 				case 128: // CABIN TEMP
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera1.GetVoltage(21, 2)));
 				case 129: // APS OX TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 4)));
 				case 130: // ECS SUIT PRESS
-					return(scale_data(0,0,10));
+					return(scale_scea(lem->scera1.GetVoltage(5, 1)));
 				case 131: // DES O2 PRESS
-					if(lem->status < 2){ return(scale_data(0,0,3000)); }else{ return(0); }
+					return(scale_scea(lem->scera2.GetVoltage(8, 2)));
 				case 132: // MAN THRUST CMD
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(15, 2)));
 				case 133: // DPS OX 2 QTY
-					return(0); 
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
 				case 134: // SE BUS VOLT
-					return(scale_data(lem->LMPs28VBus.Voltage(),0,40));
-				case 135: // ASC 1 H20 TEMP (???)
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(8, 4)));
+				case 135: // ASC 1 H20 TEMP
+					return(scale_scea(lem->scera2.GetVoltage(21, 3)));
 				case 136: // UNKNOWN, HBR
 					return(0);
 				case 137: // "W/B GLY IN TEMP" = Main Sublimator Inlet Temp
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera2.GetVoltage(20, 1)));
 				case 138: // RR ANT TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(21, 4)));
 				case 139: // YAW ERR CMD
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(18, 3)));
 				case 140: // RCS B REG PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 4)));
 				case 141: // PRI H2O REG DP
-					return(scale_data(0,0,2));
+					return(scale_scea(lem->scera1.GetVoltage(18, 4)));
 				case 142: // DES O2 PRESS
-					if(lem->status < 2){ return(scale_data(0,0,3000)); }else{ return(0); }
+					return(scale_scea(lem->scera2.GetVoltage(8, 2)));
 				case 143: // SE BUS VOLT
-					return(scale_data(lem->LMPs28VBus.Voltage(),0,40));
+					return(scale_scea(lem->scera2.GetVoltage(8, 4)));
 				case 144: // APS OX TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(9, 4)));
 				case 145: // RCS B HE PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 2)));
 				case 146: // RCS PROP B QTY
-					return(0);
+					return(scale_data(lem->RCSB.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 147: // ECS SUIT PRESS
-					return(scale_data(0,0,10));
+					return(scale_scea(lem->scera1.GetVoltage(5, 1)));
 				case 148: // DPS FUEL 2 TEMP
 					return(0);
 				case 149: // LR ANT TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(21, 3)));
 				case 150: // UNKNOWN, HBR
 					return(0);
 				case 151: // RCS PROP A QTY
-					return(0);
-				case 152: // SBand RX SIG
-					return(0);
+					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
+				case 152: // S-BND RCVR SIG
+					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
 				case 153: // APS HE 1 PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(8, 4)));
 				case 154: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
-					return(scale_data(0,20,160));
+					return(scale_scea(lem->scera2.GetVoltage(6, 4)));
 				case 155: // PITCH ERR CMD
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(18, 4)));
 				case 156: // UNKNOWN, HBR
 					return(0);
 				case 157: // UNKNOWN, HBR
 					return(0);
 			    case 158: // AC BUS FREQ
-					return(scale_data(400,380,420));
+					return(scale_scea(lem->scera1.GetVoltage(18, 1)));
 				case 159: // UNKNOWN, HBR
 					return(0);
 				case 160: // RCS A HE PRESS
-					return(0);
-				case 161: // SBand RX SIG
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(6, 1)));
+				case 161: //S-BND RCVR SIG
+					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
 				case 162: // RCS PROP A QTY
-					return(0);
-				case 167: // BAT 2 CUR
-					if(lem->status < 2){ return(scale_data(lem->Battery2->Current(),0,120)); }else{ return(0); }
+					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 163: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
-					return(scale_data(0,20,160));
+					return(scale_scea(lem->scera2.GetVoltage(6, 4)));
 				case 164: // LR ANT TEMP
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(21, 3)));
 				case 165: // DPS OX 1 QTY
-					return(0); 
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
 				case 166: // PIPA TEMP
-					return(0); 
+					return(scale_data(lem->imu.GetPIPATempF(), 120.0, 140.0));
+				case 167: // BAT 2 CUR
+					if (lem->status < 2) { return(scale_data(lem->Battery2->Current(), 0, 60)); } else { return(0); }
 				case 168: // PRI H2O REG DP
-					return(scale_data(0,0,2));
+					return(scale_scea(lem->scera1.GetVoltage(18, 4)));
 				case 169: // GLY TEMP
-					return(scale_data(0,20,120));
-				case 170: // ASC 1 H20 TEMP (???)
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(10, 1)));
+				case 170: // ASC 1 H20 TEMP
+					return(scale_scea(lem->scera2.GetVoltage(21, 3)));
 				case 171: // PCM OSC FAIL 2
-					return(0);
+					return(scale_data(0.0, 0.0, 5.0));
 				case 172: // ECS SUIT TEMP
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera1.GetVoltage(21, 1)));
 				case 173: // APS TCP
-					return(0);
+					return(scale_data(lem->APS.GetThrustChamberPressurePSI(), 0.0, 150.0));
 			    case 174: // AC BUS FREQ
-					if(lem->ACBusB.Voltage() > 0){ return(scale_data(400,380,420)); } else{ return(0); }
+					return(scale_scea(lem->scera1.GetVoltage(18, 1)));
 				case 175: // ROLL ERR CMD
-					return(0); 
-				case 176: // DPS OX 1 QTY
-					return(0); 
+					return(scale_scea(lem->scera2.GetVoltage(18, 2)));
+				case 176: // DPS OX 2 QTY
+					return(scale_data(lem->DPSPropellant.GetOxidPercent(), 0.0, 95.0));
 				case 177: // ECS SUIT TEMP
-					return(scale_data(0,20,120));
+					return(scale_scea(lem->scera1.GetVoltage(21, 1)));
 				case 178: // APS TCP
-					return(0);
+					return(scale_data(lem->APS.GetThrustChamberPressurePSI(), 0.0, 150.0));
 				case 179: // APS HE 1 PRESS
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(8, 4)));
 				case 180: // RTG CASK SHIELD TEMP
-					return(0);
+					return(scale_scea(lem->scera2.GetVoltage(6, 3)));
 				case 181: // UNKNOWN, LBR
 					return(0);
 				case 182: // UNKNOWN, LBR
 					return(0);
-				case 183: // F/H RLF PRESS (???)
-					return(0);
+				case 183: // F/H RLF PRESS
+					return(scale_data(0.0, 0.0, 25.0));
 				case 184: // UNKNOWN, LBR
 					return(0);
 				case 185: // SBand ST PH ERR
-					return(0);
+					return(scale_data(0.0, -90.0, 90.0));
 				case 186: // AUTO THRUST CMD
-					return(0);
+					return(scale_scea(lem->scera1.GetVoltage(15, 1)));
 				case 187: // UNKNOWN, HBR
 					return(0);
 				case 188: // UNKNOWN, HBR
@@ -1809,11 +1809,11 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				case 192: // UNKNOWN, HBR
 					return(0);
 				case 193: // VAR INJ ACT POS
-					return(0);
-				case 194: // U/H RLF PRESS (???)
-					return(0);
+					return(scale_data(lem->DPS.GetInjectorActuatorPosition(), 0.0, 1.0));
+				case 194: // U/H RLF PRESS
+					return(scale_data(0.0, 0.0, 25.0));
 				case 195: // SBand XMTR PO
-					return(0);
+					return(scale_data(0.0, 0.3, 1.75));
 				default:
 					sprintf(oapiDebugString(),"MEASURE: UNKNOWN A-%d",ccode);
 					break;
@@ -1924,8 +1924,9 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 			if(channel == 50){
 				// Channel 50
 				switch(ccode){
-					case 0x01: // ???
+					case 0x01:
 					case 0x02:
+						rdata = 0;
 						// Bit 8 = APS On
 						// Bit 7 = Abort Stage
 						return 0;

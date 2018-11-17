@@ -170,12 +170,14 @@ public:
 	double GetPitchGimbalPosition();
 	double GetRollGimbalPosition();
 	double GetThrustChamberPressurePSI();
+	double GetInjectorActuatorPosition();
 
 	LEM *lem;					// Pointer at LEM
 	bool thrustOn;				// Engine "On" Command
 	bool engArm;				// Engine Arm Command
 	bool engPreValvesArm;		// Engine Prevalves Arm Command
 	double thrustcommand;		// DPS Thrust Command
+	double ActuatorValves;
 
 	double ThrustChamberPressurePSI;
 

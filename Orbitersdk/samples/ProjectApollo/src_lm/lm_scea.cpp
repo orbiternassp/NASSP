@@ -533,7 +533,7 @@ void SCERA1::Timestep()
 	//Commander's bus voltage (GC0301)
 	SA18.SetOutput(3, SA15.GetVoltage(3));
 	//Main water regulator DP (GF4101)
-	//TBD
+	SA18.SetOutput(4, scale_data(0.0, 0.0, 2.0)); //TBD
 
 	//APS helium tank no. 2 pressure (GP0002)
 	SA19.SetOutput(1, scale_data(lem->APSPropellant.GetAscentHelium2PressPSI(), 0.0, 4000.0));
@@ -819,6 +819,7 @@ void SCERA2::Timestep()
 	//Spare
 	//Spare
 	//TBD: RTG Temp
+	SA6.SetOutput(3, scale_data(0.0, -200.0, 500.0));
 	//Main sublimator inlet water temperature (GF4511)
 	SA6.SetOutput(4, scale_data(lem->ecs.GetPrimWBWaterInletTempF(), 20.0, 160.0));
 

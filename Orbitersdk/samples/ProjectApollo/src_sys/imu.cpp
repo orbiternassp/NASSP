@@ -657,6 +657,13 @@ VECTOR3 IMU::GetTotalAttitude()
 	return v;
 }
 
+double IMU::GetPIPATempF()
+{
+	if (IMUCase) return KelvinToFahrenheit(IMUCase->GetTemp());
+	
+	return 130.0;
+}
+
 VECTOR3 IMU::GetGravityVector()
 {
 	OBJHANDLE gravref = OurVessel->GetGravityRef();

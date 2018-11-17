@@ -287,6 +287,8 @@ void DPSPropellantSource::Timestep(double simt, double simdt)
 	}
 	else
 	{
+		propellantMassToDisplay = 0.0;
+
 		fuel1LevelLow = false;
 		fuel2LevelLow = false;
 		oxid1LevelLow = false;
@@ -487,6 +489,7 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	engArm = 0;
 	thrustcommand = 0;
 	ThrustChamberPressurePSI = 0.0;
+	ActuatorValves = 0.0;
 }
 
 void LEM_DPS::Init(LEM *s) {
@@ -518,8 +521,6 @@ void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 void LEM_DPS::Timestep(double simt, double simdt) {
 	if (lem == NULL) { return; }
 	if (lem->stage > 1) { return; }
-
-	double ActuatorValves;
 
 	if ((lem->SCS_DECA_PWR_CB.IsPowered() && lem->deca.GetK10()) || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
 	{
@@ -648,6 +649,13 @@ double LEM_DPS::GetThrustChamberPressurePSI()
 	if (lem->stage > 1 || !lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
 
 	return ThrustChamberPressurePSI;
+}
+
+double LEM_DPS::GetInjectorActuatorPosition()
+{
+	if (lem->stage > 1) return 0.0;
+
+	return ActuatorValves;
 }
 
 void LEM_DPS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {

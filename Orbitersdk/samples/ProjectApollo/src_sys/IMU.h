@@ -56,6 +56,7 @@ public:
 	bool IsPowered();
 	void SetCaged(bool val);
 	Boiler *GetHeater() { return IMUHeater; };
+	double GetPIPATempF();
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);

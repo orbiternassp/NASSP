@@ -360,6 +360,13 @@ void LEM_APS::Timestep(double simdt) {
 	}
 }
 
+double LEM_APS::GetThrustChamberPressurePSI()
+{
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+
+	return ChamberPressure;
+}
+
 void LEM_APS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
