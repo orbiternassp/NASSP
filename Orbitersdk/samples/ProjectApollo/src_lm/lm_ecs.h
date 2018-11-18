@@ -333,6 +333,7 @@ public:
 	double GetPrimaryGlycolPressure();
 	double GetSecondaryGlycolPressure();
 	double GetSelectedGlycolPressure();
+	double DescentWaterTankPressure();
 	double GetPrimaryGlycolTempF();
 	double GetSecondaryGlycolTempF();
 	double GetSelectedGlycolTempF();
@@ -355,7 +356,7 @@ public:
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
 	double *Suit_Press, *Suit_Temp, *SuitCircuit_CO2, *HX_CO2;					// Suit Circuit Atmosphere
-	double *Asc_Water1, *Asc_Water2, *Des_Water;					// Water tanks
+	double *Asc_Water1, *Asc_Water2, *Des_Water, *Des_Water_Press;	// Water tanks
 	double *Asc_Water1Temp, *Asc_Water2Temp, *WB_Prim_Water_Temp;	// Water tank temperatures
 	double *Asc_Oxygen1, *Asc_Oxygen2, *Des_Oxygen;				// Oxygen tanks
 	double *Asc_Oxygen1Press, *Asc_Oxygen2Press, *Des_OxygenPress;  // Oxygen Tank Pressures

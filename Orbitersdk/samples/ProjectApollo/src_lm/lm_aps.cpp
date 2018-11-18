@@ -234,6 +234,14 @@ double APSPropellantSource::GetHeliumRegulator1OutletPressurePSI()
 	return 0.0;
 }
 
+double APSPropellantSource::GetHeliumRegulator2OutletPressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return heliumRegulator2OutletPressurePSI;
+
+	return 0.0;
+}
+
 double APSPropellantSource::GetFuelTankBulkTempF()
 {
 	return 70.0;

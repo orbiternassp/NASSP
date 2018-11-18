@@ -1028,6 +1028,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Asc_Water1 = 0;
 	Asc_Water2 = 0;
 	Des_Water = 0;
+	Des_Water_Press = 0;
 	//Des_Water2 = 0; Using LM-8 Systems Handbook, only 1 DES H2O tank
 	Primary_CL_Glycol_Press = 0;						// Zero this, system will fill from accu
 	Secondary_CL_Glycol_Press = 0;						// Zero this, system will fill from accu
@@ -1504,4 +1505,14 @@ double LEM_ECS::GetPLSSFillPressurePSI()
 		PLSS_O2_Fill_Press = (double*)sdk.GetPointerByString("HYDRAULIC:PLSSO2FILLVALVE:PRESS");
 	}
 	return (*PLSS_O2_Fill_Press)*PSI;
+}
+
+double LEM_ECS::DescentWaterTankPressure() {
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+	if (lem->stage > 1) return 0.0;
+
+	if (!Des_Water_Press) {
+		Des_Water_Press = (double*)sdk.GetPointerByString("HYDRAULIC:DESH2OTANK:PRESS");
+	}
+	return (*Des_Water_Press)*PSI;
 }

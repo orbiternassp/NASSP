@@ -52,6 +52,7 @@ public:
 	double GetFuelTankUllagePressurePSI();
 	double GetOxidizerTankUllagePressurePSI();
 	double GetHeliumRegulator1OutletPressurePSI();
+	double GetHeliumRegulator2OutletPressurePSI();
 	double GetFuelTrimOrificeOutletPressurePSI() { return FuelTrimOrificeOutletPressurePSI; }
 	double GetOxidTrimOrificeOutletPressurePSI() { return OxidTrimOrificeOutletPressurePSI; }
 	bool GetFuelLowLevel() { return fuelLevelLow; }
