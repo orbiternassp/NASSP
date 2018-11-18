@@ -138,15 +138,15 @@ public:
 class LEM_RadarTape : public e_object {
 public:
 	LEM_RadarTape();
-	void Init(LEM *s, e_object * dc_src, e_object *ac_src);
+	void Init(LEM *s, e_object * dc_src, e_object *ac_src, SURFHANDLE surf1, SURFHANDLE surf2);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void setRange(double range) { reqRange = range; };
 	void setRate(double rate) { reqRate = rate ; }; 
-	void RenderRange(SURFHANDLE surf, SURFHANDLE tape);
-	void RenderRate(SURFHANDLE surf, SURFHANDLE tape);
+	void RenderRange(SURFHANDLE surf);
+	void RenderRate(SURFHANDLE surf);
 	void SetLGCAltitude(int val);
 	void SetLGCAltitudeRate(int val);
 
@@ -160,6 +160,8 @@ private:
 	int  dispRange;
 	int  dispRate;
 	double lgc_alt, lgc_altrate;
+	SURFHANDLE tape1, tape2;
+	bool TapeSwitch;
 };
 
 class CrossPointer
@@ -338,6 +340,7 @@ public:
 		SRF_DIGITALDISP2,
 		SRF_RR_NOTRACK,
 		SRF_RADAR_TAPE,
+		SRF_RADAR_TAPE2,
 		SRF_ORDEAL_PANEL,
 		SRF_ORDEAL_ROTARY,
 		SRF_TW_NEEDLE,
