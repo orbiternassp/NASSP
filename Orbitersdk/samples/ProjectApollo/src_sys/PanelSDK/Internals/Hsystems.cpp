@@ -1347,19 +1347,31 @@ void h_WaterSeparator::refresh(double dt) {
 
 			h2oremovalrate = (fanned.composition[SUBSTANCE_H2O].mass / dt)*(h2oremovalratio);
 
-			// separate water
-			h_volume h2o_volume;
-			h2o_volume.Void();
-			h2o_volume.composition[SUBSTANCE_H2O].mass = fanned.composition[SUBSTANCE_H2O].mass * h2oremovalratio;
-			h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
-			h2o_volume.GetQ();
+			if (h2oremovalratio > 0)
+			{
+				double removedmass = fanned.composition[SUBSTANCE_H2O].mass*h2oremovalratio;
+				double factor = 1 - h2oremovalratio;
 
-			// ... and pump it to waste valve	
-			H20waste->Flow(h2o_volume);
+				// separate water
+				h_volume h2o_volume;
+				h2o_volume.Void();
+				h2o_volume.composition[SUBSTANCE_H2O].mass = removedmass;
+				h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
+				h2o_volume.GetQ();
 
-			fanned.composition[SUBSTANCE_H2O].mass =
-				fanned.composition[SUBSTANCE_H2O].vapor_mass =
-				fanned.composition[SUBSTANCE_H2O].Q = 0;
+				// ... and pump it to waste valve
+				H20waste->Flow(h2o_volume);
+
+				fanned.composition[SUBSTANCE_H2O].mass -= removedmass;
+				fanned.composition[SUBSTANCE_H2O].vapor_mass -= removedmass;
+				//Can liquid water cause this to be below 0?
+				if (fanned.composition[SUBSTANCE_H2O].vapor_mass < 0)
+					fanned.composition[SUBSTANCE_H2O].vapor_mass = 0;
+				fanned.composition[SUBSTANCE_H2O].Q = fanned.composition[SUBSTANCE_H2O].Q*factor;
+
+				//if (!strcmp(name, "WATERSEP1"))
+				//	sprintf(oapiDebugString(), "Rate %f Removed %f Remaining %f", h2oremovalratio, removedmass / dt, fanned.composition[SUBSTANCE_H2O].mass / dt);
+			}
 		}
 
 		// flow to output
