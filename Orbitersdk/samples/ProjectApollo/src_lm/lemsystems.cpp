@@ -2712,7 +2712,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 	if (reqRange < (1000.0 * 0.3048))
 	{
 		TapeSwitch = true;
-		dispRange = 6443 - 82 - (int)((reqRange * 3.2808399) * 40.0 * 50.0 / 1000.0);
+		dispRange = 2086 - 82 - (int)((reqRange * 3.2808399) * 40.0 * 50.0 / 1000.0);
 	}
 	else if (reqRange < (120000.0 * 0.3048) )
 	{
