@@ -504,7 +504,6 @@ void LEM::SystemsInit()
 
 	// Rdz Radar
 	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SECRREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RRHEAT"));
-	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB);
 	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
 	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
@@ -2657,10 +2656,12 @@ LEM_RadarTape::LEM_RadarTape()
 	lgc_altrate = 0;
 }
 
-void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src){
+void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src, SURFHANDLE surf1, SURFHANDLE surf2){
 	lem = s;
 	dc_source = dc_src;
 	ac_source = ac_src;
+	tape1 = surf1;
+	tape2 = surf2;
 }
 
 void LEM_RadarTape::Timestep(double simdt) {
@@ -2707,9 +2708,18 @@ void LEM_RadarTape::Timestep(double simdt) {
 	}
 	//
 	//  Missing code to smooth out tape scrolling
-	if( reqRange < (120000.0 * 0.3048) ) {
+	TapeSwitch = false;
+	if (reqRange < (1000.0 * 0.3048))
+	{
+		TapeSwitch = true;
+		dispRange = 6443 - 82 - (int)((reqRange * 3.2808399) * 40.0 * 50.0 / 1000.0);
+	}
+	else if (reqRange < (120000.0 * 0.3048) )
+	{
 		dispRange = 6443 - 82 - (int)((reqRange * 3.2808399) * 40.0 / 1000.0);
-	} else {
+	}
+	else
+	{
 		dispRange = 81 + 1642 - 82 - (int)((reqRange * 0.000539956803*100.0)  * 40.0 / 1000.0);
 	}
 	dispRate  = 2881 - 82 -  (int)(reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
@@ -2771,6 +2781,7 @@ void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "RDRTAPE_RANGE", dispRange);
 	oapiWriteScenario_float(scn, "RDRTAPE_RATE", dispRate);
+	papiWriteScenario_bool(scn, "TAPE_SWITCH", TapeSwitch);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -2790,17 +2801,27 @@ void LEM_RadarTape::LoadState(FILEHANDLE scn,char *end_str){
 			sscanf(line + 12, "%d", &value);
 			dispRate = value;
 		}
+		if (!strnicmp(line, "TAPE_SWITCH", 11)) {
+			sscanf(line + 11, "%d", &value);
+			TapeSwitch = value;
+		}
 	}
 }
 
-void LEM_RadarTape::RenderRange(SURFHANDLE surf, SURFHANDLE tape)
-{
-    oapiBlt(surf,tape,0,0,0, dispRange ,43,163, SURF_PREDEF_CK); 
+void LEM_RadarTape::RenderRange(SURFHANDLE surf) {
+	if (TapeSwitch)
+	{
+		oapiBlt(surf, tape2, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
+	}
+	else
+	{
+		oapiBlt(surf, tape1, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
+	}
 }
 
-void LEM_RadarTape::RenderRate(SURFHANDLE surf, SURFHANDLE tape)
+void LEM_RadarTape::RenderRate(SURFHANDLE surf)
 {
-    oapiBlt(surf,tape,0,0,42, dispRate ,35,163, SURF_PREDEF_CK); 
+    oapiBlt(surf,tape1,0,0,42, dispRate ,35,163, SURF_PREDEF_CK);
 }
 
 double LEM_RR::GetAntennaTempF(){

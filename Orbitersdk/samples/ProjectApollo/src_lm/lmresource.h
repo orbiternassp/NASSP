@@ -836,6 +836,7 @@
 #define AID_LEM_PWRFAIL_GLYCOL          2013
 #define AID_LEM_PWRFAIL_XPTRCDR         2014
 #define AID_LEM_PWRFAIL_XPTRLMP         2015
+#define IDB_RADAR_TAPE2                 2016
 
 #define IDB_LEM_FDAI_ROLL               10006
 
