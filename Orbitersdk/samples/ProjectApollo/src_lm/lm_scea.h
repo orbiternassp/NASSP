@@ -183,6 +183,7 @@ public:
 	virtual SCEA_SolidStateSwitch* GetSwitch(int sa, int chan) = 0;
 	virtual void Reset() = 0;
 	double scale_data(double data, double low, double high);
+	bool IsSet(int sa, int chan);
 	bool IsPowered();
 protected:
 	LEM *lem;

@@ -246,6 +246,11 @@ double SCERA::scale_data(double data, double low, double high)
 	return (data - low) / step;
 }
 
+bool SCERA::IsSet(int sa, int chan)
+{
+	return GetVoltage(sa, chan) > 2.5;
+}
+
 SCERA1::SCERA1()
 {
 
@@ -476,7 +481,7 @@ void SCERA1::Timestep()
 	//RCS/ASC interconnect B not closed (GR9632)
 	bval = lem->RCSB.GetPrimFuelInterconnectValve()->IsOpen() && lem->RCSB.GetSecFuelInterconnectValve()->IsOpen();
 	SA13.SetOutput(11, bval);
-	//RCS A/B crossfeed open
+	//RCS A/B crossfeed open (GR9613)
 	bval = lem->RCSB.GetFuelCrossfeedValve()->IsOpen() && lem->RCSB.GetOxidCrossfeedValve()->IsOpen();
 	SA13.SetOutput(12, bval);
 
@@ -747,7 +752,7 @@ void SCERA2::Timestep()
 	//Spare
 	//Suit fan 1 fail (GF1083X)
 	SA3.SetOutput(2, lem->ecs.GetSuitFan1Failure());
-	//Primary Glycol LLS (GF2041X) & Secondary Glycol LLS (GF2042X)
+	//Primary Glycol LLS (GF2041X) & Secondary Glycol LLS (GF2042X) (GF9986U)
 	SA3.SetOutput(3, lem->ecs.GetPrimGlycolLowLevel() || lem->ecs.GetSecGlycolLowLevel());
 	//Descent engine on (GH1301X)
 	SA3.SetOutput(4, lem->scca2.GetK16());
@@ -755,7 +760,7 @@ void SCERA2::Timestep()
 	SA3.SetOutput(5, lem->scca2.GetK7());
 	//Suit fan 2 fail (GF1084X)
 	SA3.SetOutput(6, lem->ecs.GetSuitFan2Failure());
-	//EPS battery caution (GL4046X)
+	//EPS battery caution (GL4047X)
 	SA3.SetOutput(7, lem->CWEA.GetBatteryCaution());
 	//Emergency oxygen valve electrically open (GF3572X)
 	SA3.SetOutput(8, lem->CabinRepressValve.GetEmergencyCabinRepressRelay());
@@ -924,9 +929,9 @@ void SCERA2::Timestep()
 	SA14.SetOutput(9, false);	//TBD
 	//APS Shutoff valves C/D in midposition (GQ7499)
 	SA14.SetOutput(10, false);	//TBD
-	//APS Solenoid/bipropellant valves A mismatch (GQ2997)
+	//APS Solenoid/bipropellant valves A mismatch (GP2997)
 	SA14.SetOutput(11, false);	//TBD
-	//APS Solenoid/bipropellant valves B mismatch (GQ2998)
+	//APS Solenoid/bipropellant valves B mismatch (GP2998)
 	SA14.SetOutput(12, false);	//TBD
 
 	//Prim -4.7VDC (GH1488V)

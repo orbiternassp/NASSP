@@ -1821,8 +1821,9 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 		break;
 		case LTLM_D:  // DIGITAL
 			switch(ccode){
-				case 0x001: // FORMAT ID (???)
-					return(0);
+				case 0x001: // FORMAT ID
+					if (lem->TLMBitrateSwitch.IsUp()) { return (033); }
+					return(0344);
 				case 0x002: // DUA STATUS (DIGITAL UPLINK ASSEMBLY)
 					return(0);
 				case 0x003: // UNKNOWN, LBR
@@ -1866,25 +1867,27 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				// Channel 100
 				switch(ccode){
 					case 0x01A: // RCS TCP nn
-						// Bit 8 = 3S
-						// Bit 7 = 3F
-						// Bit 6 = 3D
-						// Bit 5 = 3U
-						// Bit 4 = 4S
-						// Bit 3 = 4F
-						// Bit 2 = 4D
-						// Bit 1 = 4U
-						return 0;
+						rdata = 0;
+						if (lem->scera1.IsSet(11, 8)) { rdata |= 0x01; } // Bit 8 = 3S
+						if (lem->scera1.IsSet(11, 7)) { rdata |= 0x02; } // Bit 7 = 3F
+						if (lem->scera1.IsSet(11, 6)) { rdata |= 0x04; } // Bit 6 = 3D
+						if (lem->scera1.IsSet(11, 5)) { rdata |= 0x08; } // Bit 5 = 3U
+						if (lem->scera1.IsSet(11, 4)) { rdata |= 0x10; } // Bit 4 = 4S
+						if (lem->scera1.IsSet(11, 3)) { rdata |= 0x20; } // Bit 3 = 4F
+						if (lem->scera1.IsSet(11, 2)) { rdata |= 0x40; } // Bit 2 = 4D
+						if (lem->scera1.IsSet(11, 1)) { rdata |= 0x80; } // Bit 1 = 4U
+						return rdata;
 					case 0x01B: // RCS TCP nn
-						// Bit 8 = 1S
-						// Bit 7 = 1F
-						// Bit 6 = 1D
-						// Bit 5 = 1U
-						// Bit 4 = 2S
-						// Bit 3 = 2F
-						// Bit 2 = 2D
-						// Bit 1 = 2U
-						return 0;
+						rdata = 0;
+						if (lem->scera1.IsSet(3, 8)) { rdata |= 0x01; }// Bit 8 = 1S
+						if (lem->scera1.IsSet(3, 7)) { rdata |= 0x02; }// Bit 7 = 1F
+						if (lem->scera1.IsSet(3, 6)) { rdata |= 0x04; }// Bit 6 = 1D
+						if (lem->scera1.IsSet(3, 5)) { rdata |= 0x08; }// Bit 5 = 1U
+						if (lem->scera1.IsSet(3, 4)) { rdata |= 0x10; }// Bit 4 = 2S
+						if (lem->scera1.IsSet(3, 3)) { rdata |= 0x20; }// Bit 3 = 2F
+						if (lem->scera1.IsSet(11, 10)) { rdata |= 0x40; }// Bit 2 = 2D
+						if (lem->scera1.IsSet(11, 9)) { rdata |= 0x80; }// Bit 1 = 2U
+						return rdata;
 					default:
 						sprintf(oapiDebugString(),"MEASURE: UNKNOWN 200-E-0x%x",ccode);
 						break;
@@ -1895,27 +1898,29 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 				switch(ccode){
 					case 0x01: // RCS JET DRIVERS
 					case 0x02:
-						// Bit 8 = JD 1D OUTPUT
-						// Bit 7 = JD 1U OUTPUT
-						// Bit 6 = JD 2D OUTPUT
-						// Bit 5 = JD 2U OUTPUT
-						// Bit 4 = JD 3D OUTPUT
-						// Bit 3 = JD 3U OUTPUT
-						// Bit 2 = JD 4D OUTPUT
-						// Bit 1 = JD 4U OUTPUT
-						return 0;
+						rdata = 0;
+						if (lem->scera1.IsSet(2, 6)) { rdata |= 0x01; } // Bit 8 = JD 1D OUTPUT
+						if (lem->scera1.IsSet(2, 5)) { rdata |= 0x02; } // Bit 7 = JD 1U OUTPUT
+						if (lem->scera1.IsSet(2, 2)) { rdata |= 0x04; } // Bit 6 = JD 2D OUTPUT
+						if (lem->scera1.IsSet(2, 1)) { rdata |= 0x08; } // Bit 5 = JD 2U OUTPUT
+						if (lem->scera1.IsSet(4, 8)) { rdata |= 0x10; } // Bit 4 = JD 3D OUTPUT
+						if (lem->scera1.IsSet(4, 7)) { rdata |= 0x20; } // Bit 3 = JD 3U OUTPUT
+						if (lem->scera1.IsSet(4, 5)) { rdata |= 0x40; } // Bit 2 = JD 4D OUTPUT
+						if (lem->scera1.IsSet(4, 3)) { rdata |= 0x80; } // Bit 1 = JD 4U OUTPUT
+						return rdata;
 					case 0x03: // UNKNOWN, HBR
 						return 0;
 					case 0x04: // MORE RCS JET DRIVERS
-						// Bit 8 = JD 1S OUTPUT
-						// Bit 7 = JD 1F OUTPUT
-						// Bit 6 = JD 2S OUTPUT
-						// Bit 5 = JD 2F OUTPUT
-						// Bit 4 = JD 3S OUTPUT
-						// Bit 3 = JD 3F OUTPUT
-						// Bit 2 = JD 4S OUTPUT
-						// Bit 1 = JD 4F OUTPUT
-						return 0;
+						rdata = 0;
+						if (lem->scera1.IsSet(2, 7)) { rdata |= 0x01; } // Bit 8 = JD 1S OUTPUT
+						if (lem->scera1.IsSet(2, 8)) { rdata |= 0x02; } // Bit 7 = JD 1F OUTPUT
+						if (lem->scera1.IsSet(2, 4)) { rdata |= 0x04; } // Bit 6 = JD 2S OUTPUT
+						if (lem->scera1.IsSet(2, 3)) { rdata |= 0x08; } // Bit 5 = JD 2F OUTPUT
+						if (lem->scera1.IsSet(4, 10)) { rdata |= 0x10; } // Bit 4 = JD 3S OUTPUT
+						if (lem->scera1.IsSet(4, 9)) { rdata |= 0x20; } // Bit 3 = JD 3F OUTPUT
+						if (lem->scera1.IsSet(4, 6)) { rdata |= 0x40; } // Bit 2 = JD 4S OUTPUT
+						if (lem->scera1.IsSet(4, 4)) { rdata |= 0x80; } // Bit 1 = JD 4F OUTPUT
+						return rdata;
 					default:
 						sprintf(oapiDebugString(),"MEASURE: UNKNOWN 100-E-0x%x",ccode);
 						break;
@@ -1927,9 +1932,9 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					case 0x01:
 					case 0x02:
 						rdata = 0;
-						// Bit 8 = APS On
-						// Bit 7 = Abort Stage
-						return 0;
+						if (lem->scera2.IsSet(2, 10)) { rdata |= 0x01; } // Bit 8 = APS On
+						if (lem->scera2.IsSet(14, 1)) { rdata |= 0x02; } // Bit 7 = Abort Stage
+						return rdata;
 					case 0x03: // UNKNOWN, HBR
 					case 0x04:
 						return 0;
@@ -1942,54 +1947,61 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 			switch(ccode){
 				case 0x01: // PNGS Statuses
 				case 0x12: // PNGS Statuses
-					// Bit 8 = LR Range Bad
-					// Bit 7 = LR Vel Bad
-					// Bit 6 = RR No Track
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(2, 3)) { rdata |= 0x01; } // Bit 8 = LR Range Bad
+					if (lem->scera2.IsSet(2, 4)) { rdata |= 0x02; } // Bit 7 = LR Vel Bad
+					if (lem->scera2.IsSet(2, 5)) { rdata |= 0x04; } // Bit 6 = RR No Track
+					return rdata;
 				case 0x02: // PNGS Statuses
 				case 0x13: // PNGS Statuses
-					// Bit 8 = LGC Warning
-					// Bit 7 = ISS Warning
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(3, 11)) { rdata |= 0x01; } // Bit 8 = LGC Warning
+					if (lem->scera2.IsSet(3, 12)) { rdata |= 0x02; } // Bit 7 = ISS Warning
+					return rdata;
 				case 0x03: // ECS Statuses
 				case 0x14: // ECS Statuses
-					// Bit 8 = CDR Suit Disc
-					// Bit 7 = SE Suit Disc
-					// Bit 6 = Selected Gly Level Low
-					// Bit 5 = Repr Elec Open
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(5, 11)) { rdata |= 0x01; } // Bit 8 = CDR Suit Disc
+					if (lem->scera2.IsSet(5, 12)) { rdata |= 0x02; } // Bit 7 = SE Suit Disc
+					if (lem->scera2.IsSet(3, 3)) { rdata |= 0x04; } // Bit 6 = Selected Gly Level Low
+					if (lem->scera2.IsSet(3, 8)) { rdata |= 0x08; } // Bit 5 = Repr Elec Open
+					return rdata;
 				case 0x04: // ECS Statuses
 				case 0x15: // ECS Statuses
-					// Bit 8 = Cabin Ret Closed
-					// Bit 7 = Cabin Ret Open
-					// Bit 6 = Demand Reg A Closed
-					// Bit 4 = Demand Reg B Closed
-					// Bit 2 = Sec Gly Pump Fail
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(5, 9)) { rdata |= 0x01; } // Bit 8 = Cabin Ret Closed
+					if (lem->scera2.IsSet(5, 10)) { rdata |= 0x02; } // Bit 7 = Cabin Ret Open
+					if (lem->scera2.IsSet(5, 5)) { rdata |= 0x04; } // Bit 6 = Demand Reg A Closed
+					if (lem->scera2.IsSet(5, 7)) { rdata |= 0x10; } // Bit 4 = Demand Reg B Closed
+					if (lem->scera2.IsSet(12, 2)) { rdata |= 0x40; } // Bit 2 = Sec Gly Pump Fail
+					return rdata;
 				case 0x05: // ECS Statuses
 				case 0x16: // ECS Statuses
-					// Bit 8 = Suit Fan 1 Malf
-					// Bit 7 = Suit Fan 2 Malf
-					// Bit 6 = Suit Rlf Closed
-					// Bit 5 = Suit Rlf Open
-					// Bit 4 = Suit Div Egress
-					// Bit 3 = Sec CO2 Sel
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(3, 2)) { rdata |= 0x01; } // Bit 8 = Suit Fan 1 Malf
+					if (lem->scera2.IsSet(3, 6)) { rdata |= 0x02; } // Bit 7 = Suit Fan 2 Malf
+					if (lem->scera2.IsSet(5, 3)) { rdata |= 0x04; } // Bit 6 = Suit Rlf Closed
+					if (lem->scera2.IsSet(5, 4)) { rdata |= 0x08; }// Bit 5 = Suit Rlf Open
+					if (lem->scera2.IsSet(5, 2)) { rdata |= 0x10; }// Bit 4 = Suit Div Egress
+					if (lem->scera2.IsSet(5, 1)) { rdata |= 0x20; }// Bit 3 = Sec CO2 Sel
+					return rdata;
 				case 0x06: // PNGS Statuses
 				case 0x17: // PNGS Statuses
-					// Bit 8 = IMU STBY
-					// Bit 7 = IMU OPR
-					return 0;
+					rdata = 0;
+					if (lem->IMU_SBY_CB.IsPowered()) { rdata |= 0x01; } // Bit 8 = IMU STBY
+					if (lem->LGC_DSKY_CB.IsPowered()) { rdata |= 0x02; }// Bit 7 = IMU OPR
+					return rdata;
 				case 0x07: // IS Statuses
 				case 0x18: // IS Statuses
-					// Bit 8 = CES AC Power Fail
-					// Bit 7 = CES DC Power Fail
-					// Bit 6 = AGS Power Fail
-					// Bit 5 = C&W Power Fail
-					// Bit 4 = Master Alarm On
-					// Bit 3 = EPS Battery Caution
+					rdata = 0;
+					if (lem->scera2.IsSet(2, 1)) { rdata |= 0x01; } // Bit 8 = CES AC Power Fail
+					if (lem->scera2.IsSet(2, 12)) { rdata |= 0x02; }// Bit 7 = CES DC Power Fail
+					if (lem->scera2.IsSet(2, 2)) { rdata |= 0x04; }// Bit 6 = AGS Power Fail
+					if (lem->scera2.IsSet(12, 1)) { rdata |= 0x08; }// Bit 5 = C&W Power Fail
+					if (lem->scera2.IsSet(2, 8)) { rdata |= 0x10; }// Bit 4 = Master Alarm On
+					if (lem->scera2.IsSet(3, 7)) { rdata |= 0x20; }// Bit 3 = EPS Battery Caution
 					// Bit 1 = PCM Osc Fail 1
-					return 0;
+					return rdata;
 				case 0x08: // ???
 				case 0x19: // ???
 					// UNKNOWN - LBR
@@ -2000,87 +2012,93 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					return 0;
 				case 0x10: // RCS Statuses
 				case 0x21: // RCS Statuses
-					// Bit 8 = SIG ASC Feed A OX Open
-					// Bit 7 = SIG ASC Feed B OX Open
-					// Bit 6 = RCS MAIN A CLOSED
-					// Bit 5 = RCS MAIN B CLOSED
-					// Bit 4 = ASC Feed A Open
-					// Bit 3 = ASC Feed B Open
-					// Bit 2 = A/B Crossfeed Open
-					return 0;
+					rdata = 0;
+					if (lem->scera1.IsSet(12, 3)) { rdata |= 0x01; } // Bit 8 = SIG ASC Feed A OX Open
+					if (lem->scera1.IsSet(12, 4)) { rdata |= 0x02; } // Bit 7 = SIG ASC Feed B OX Open
+					if (lem->scera1.IsSet(12, 1)) { rdata |= 0x04; } // Bit 6 = RCS MAIN A CLOSED
+					if (lem->scera1.IsSet(12, 2)) { rdata |= 0x08; } // Bit 5 = RCS MAIN B CLOSED
+					if (lem->scera1.IsSet(13, 10)) { rdata |= 0x10; } // Bit 4 = ASC Feed A Open
+					if (lem->scera1.IsSet(13, 11)) { rdata |= 0x20; } // Bit 3 = ASC Feed B Open
+					if (lem->scera1.IsSet(13, 12)) { rdata |= 0x40; } // Bit 2 = A/B Crossfeed Open
+					return rdata;
 				case 0x11: // EDS Statuses
 				case 0x22: // EDS Statuses
-					// Bit 8 = Abort Command
-					// Bit 5 = ED Relay A K7-K15
-					// Bit 4 = ED Relay B K7-K15
-					// Bit 3 = ED Relay A K3-K6
-					// Bit 2 = ED Relay B K3-K6
+					rdata = 0;
+					if (lem->scera1.IsSet(2, 9)) { rdata |= 0x01; } // Bit 8 = Abort Command
+					if (lem->scera1.IsSet(14, 9)) { rdata |= 0x08; }// Bit 5 = ED Relay A K7-K15
+					if (lem->scera1.IsSet(14, 10)) { rdata |= 0x10; }// Bit 4 = ED Relay B K7-K15
+					if (lem->scera1.IsSet(14, 11)) { rdata |= 0x20; }// Bit 3 = ED Relay A K3-K6
+					if (lem->scera1.IsSet(14, 12)) { rdata |= 0x40; }// Bit 2 = ED Relay B K3-K6
+					return rdata;
+				case 0x23:
+					rdata = 0;
+					if (lem->scera2.IsSet(14, 6)) { rdata |= 0x01; } // Bit 8 = Auto On
+					if (lem->scera2.IsSet(3, 4)) { rdata |= 0x02; } // Bit 7 = DPS On
+					if (lem->scera2.IsSet(3, 9)) { rdata |= 0x04; } // Bit 6 = Pitch Trim Fail
+					if (lem->scera2.IsSet(3, 10)) { rdata |= 0x08; } // Bit 5 = Roll Trim Fail
+					if (lem->scera2.IsSet(3, 5)) { rdata |= 0x10; } // Bit 4 = AGS Selected
 					return 0;
-				case 0x23: // ???
-					// Bit 8 = Auto On
-					// Bit 7 = DPS On
-					// Bit 6 = Pitch Trim Fail
-					// Bit 5 = Roll Trim Fail
-					// Bit 4 = AGS Selected
-					return 0;
-				case 0x24: // ???
-					// Bit 8 = APS Fuel Low
-					// Bit 7 = APS Ox Low
-					return 0;
+				case 0x24:
+					rdata = 0;
+					if (lem->scera2.IsSet(2, 6)) { rdata |= 0x01; } // Bit 8 = APS Fuel Low
+					if (lem->scera2.IsSet(2, 7)) { rdata |= 0x02; } // Bit 7 = APS Ox Low
+					return rdata;
 				case 0x25: // UNKNOWN, LBR
 				case 0x26: // UNKNOWN, LBR
 					return(0);
-				case 0x27: // ???
-					// Bit 8 = Roll Pulsed/Direct
-					// Bit 7 = Pitch Pulsed/Direct
-					// Bit 6 = Yaw Pulsed/Direct
-					// Bit 5 = AGS Warmup
-					// Bit 4 = AGS Standby
-					return 0;
+				case 0x27:
+					rdata = 0;
+					if (lem->scera2.IsSet(13, 1)) { rdata |= 0x01; } // Bit 8 = Roll Pulsed/Direct
+					if (lem->scera2.IsSet(13, 2)) { rdata |= 0x02; } // Bit 7 = Pitch Pulsed/Direct
+					if (lem->scera2.IsSet(13, 6)) { rdata |= 0x04; } // Bit 6 = Yaw Pulsed/Direct
+					if (lem->scera2.IsSet(2, 11)) { rdata |= 0x08; } // Bit 5 = AGS Warmup
+					if (lem->scera2.IsSet(13, 5)) { rdata |= 0x10; } // Bit 4 = AGS Standby
+					return rdata;
 				case 0x28: // UNKNOWN, HBR
 					return 0;
 				case 0x29: // Battery Malfunction Flags
 					rdata = 0;
-					if(lem->status < 2){
-						// Bits 8-5 = Bat 1-4 malf
-					}
-					// Bits 4,3 = bat 5,6 malf
+					if (lem->scera2.IsSet(12, 7)) { rdata |= 0x01; } // B1 Malfunction
+					if (lem->scera2.IsSet(12, 8)) { rdata |= 0x02; } // B2 Malfunction
+					if (lem->scera2.IsSet(12, 9)) { rdata |= 0x04; } // B3 Malfunction
+					if (lem->scera2.IsSet(12, 10)) { rdata |= 0x08; } // B4 Malfunction
+					if (lem->scera2.IsSet(12, 11)) { rdata |= 0x10; } // B5 Malfunction
+					if (lem->scera2.IsSet(12, 12)) { rdata |= 0x20; } // B6 Malfunction
 					return rdata;
 				case 0x30: // Descent Battery Status Flags
-					if(lem->status < 2){
-						rdata = 0;
-						if(lem->ECA_1a.input == 1){ rdata |= 0x01; } // B1 HI tap
-						if(lem->ECA_1a.input == 2){ rdata |= 0x02; } // B1 LO tap
-						if(lem->ECA_1b.input == 1){ rdata |= 0x04; } // B2 HI tap
-						if(lem->ECA_1b.input == 2){ rdata |= 0x08; } // B2 LO tap
-						if(lem->ECA_2a.input == 1){ rdata |= 0x10; } // B3 HI tap
-						if(lem->ECA_2a.input == 2){ rdata |= 0x20; } // B3 LO tap
-						if(lem->ECA_2b.input == 1){ rdata |= 0x40; } // B4 HI tap
-						if(lem->ECA_2b.input == 2){ rdata |= 0x80; } // B4 LO tap
-						return rdata;
-					}
-					return 0;
+					rdata = 0;
+					if(lem->scera2.IsSet(4, 1)){ rdata |= 0x01; } // B1 HI tap
+					if(lem->scera2.IsSet(4, 2)){ rdata |= 0x02; } // B1 LO tap
+					if(lem->scera2.IsSet(4, 3)){ rdata |= 0x04; } // B2 HI tap
+					if(lem->scera2.IsSet(4, 4)){ rdata |= 0x08; } // B2 LO tap
+					if(lem->scera2.IsSet(4, 5)){ rdata |= 0x10; } // B3 HI tap
+					if(lem->scera2.IsSet(4, 6)){ rdata |= 0x20; } // B3 LO tap
+					if(lem->scera2.IsSet(4, 7)){ rdata |= 0x40; } // B4 HI tap
+					if(lem->scera2.IsSet(4, 8)){ rdata |= 0x80; } // B4 LO tap
+					return rdata;
 				case 0x31: // ???
-					// Bit 8 = Out Det
-					// Bit 7 = Auto Off
-					// Bit 6 = Engine Fire Override
-					// Bit 5 = PNGS Mode Auto
-					// Bit 4 = PNGS Mode Att Hold
-					// Bit 3 = Unbalanced Couples
-					// Bit 2 = AGS Mode Att Hold
-					// Bit 1 = AGS Mode Auto
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(14, 5)) { rdata |= 0x01; } // Bit 8 = Out Det
+					if (lem->scera2.IsSet(14, 7)) { rdata |= 0x02; } // Bit 7 = Auto Off
+					if (lem->scera2.IsSet(14, 2)) { rdata |= 0x04; } // Bit 6 = Engine Fire Override
+					if (lem->scera2.IsSet(14, 3)) { rdata |= 0x08; } // Bit 5 = PNGS Mode Auto
+					if (lem->scera2.IsSet(14, 4)) { rdata |= 0x10; } // Bit 4 = PNGS Mode Att Hold
+					if (lem->scera2.IsSet(14, 8)) { rdata |= 0x20; } // Bit 3 = Unbalanced Couples
+					if (lem->scera2.IsSet(12, 5)) { rdata |= 0x40; } // Bit 2 = AGS Mode Att Hold
+					if (lem->scera2.IsSet(12, 6)) { rdata |= 0x80; } // Bit 1 = AGS Mode Auto
+					return rdata;
 				case 0x32: // DPS Statuses
-					// Bit 7 = DES Prop Lo
-					// Bit 6 = PROP VLVS DEL P
-					// Bit 5 = PROP VLVS DEL P
-					return 0;
+					rdata = 0;
+					if (lem->scera2.IsSet(12, 3)) { rdata |= 0x02; } // Bit 7 = DES Prop Lo
+					if (lem->scera2.IsSet(14, 11)) { rdata |= 0x04; } // Bit 6 = PROP VLVS DEL P
+					if (lem->scera2.IsSet(14, 12)) { rdata |= 0x08; } // Bit 5 = PROP VLVS DEL P
+					return rdata;
 				case 0x33: // Ascent Battery Status Flags
 					rdata = 0;
-					if(lem->ECA_3b.input == 1){ rdata |= 0x01; } // B5 Backup
-					if(lem->ECA_4a.input == 1){ rdata |= 0x02; } // B6 Normal
-					if(lem->ECA_3a.input == 1){ rdata |= 0x04; } // B5 Normal
-					if(lem->ECA_4b.input == 1){ rdata |= 0x08; } // B6 Backup
+					if (lem->scera2.IsSet(4, 9)) { rdata |= 0x01; } // B5 Backup
+					if(lem->scera2.IsSet(4, 10)){ rdata |= 0x02; } // B6 Normal
+					if(lem->scera2.IsSet(4, 11)){ rdata |= 0x04; } // B5 Normal
+					if(lem->scera2.IsSet(4, 12)){ rdata |= 0x08; } // B6 Backup
 					return rdata;
 				case 0x34: // UNKNOWN, HBR
 					return 0;
@@ -2094,29 +2112,33 @@ unsigned char LM_VHF::measure(int channel, int type, int ccode){
 					return 0;
 				case 0x39: // UNKNOWN, HBR
 					return 0;
-				case 0x40: // ???
-					// Bit 8 = Landing Gear Deploy
-					return 0;
-				case 0x41: // ???
-					// Bit 8 = APS Arm
-					// Bit 7 = DPS Arm
-					// Bit 6 = Min Deadband
-					// Bit 5 = X Trans Override
-					return 0;
+				case 0x40:
+					rdata = 0;
+					if (lem->scera1.IsSet(13, 9)) { rdata |= 0x01; } // Bit 8 = Landing Gear Deploy
+					return rdata;
+				case 0x41:
+					rdata = 0;
+					if (lem->scera1.IsSet(3, 2)) { rdata |= 0x01; } // Bit 8 = APS Arm
+					if (lem->scera1.IsSet(3, 9)) { rdata |= 0x02; } // Bit 7 = DPS Arm
+					if (lem->scera1.IsSet(3, 1)) { rdata |= 0x04; } // Bit 6 = Min Deadband
+					if (lem->scera1.IsSet(3, 10)) { rdata |= 0x08; } // Bit 5 = X Trans Override
+					return rdata;
 				case 0x42: // RCS Isolation valve xx closed
-					// Bit 8 = 4A 
-					// Bit 7 = 4B
-					// Bit 6 = 3A
-					// Bit 5 = 3B
-					// Bit 4 = 2A
-					// Bit 3 = 2B
-					// Bit 2 = 1A
-					// Bit 1 = 1B
-					return 0;
-				case 0x43: // ???
-					// Bit 8 = APS He 1 Closed
-					// Bit 7 = APS He 2 Closed
-					return 0;
+					rdata = 0;
+					if (lem->scera1.IsSet(14, 1)) { rdata |= 0x01; } // Bit 8 = 4A 
+					if (lem->scera1.IsSet(14, 2)) { rdata |= 0x02; } // Bit 7 = 4B
+					if (lem->scera1.IsSet(14, 3)) { rdata |= 0x04; } // Bit 6 = 3A
+					if (lem->scera1.IsSet(14, 4)) { rdata |= 0x08; } // Bit 5 = 3B
+					if (lem->scera1.IsSet(14, 5)) { rdata |= 0x10; } // Bit 4 = 2A
+					if (lem->scera1.IsSet(14, 6)) { rdata |= 0x20; } // Bit 3 = 2B
+					if (lem->scera1.IsSet(14, 7)) { rdata |= 0x40; } // Bit 2 = 1A
+					if (lem->scera1.IsSet(14, 8)) { rdata |= 0x80; } // Bit 1 = 1B
+					return rdata;
+				case 0x43:
+					rdata = 0;
+					if (lem->scera1.IsSet(12, 6)) { rdata |= 0x01; } // Bit 8 = APS He 1 Closed
+					if (lem->scera1.IsSet(12, 7)) { rdata |= 0x02; } // Bit 7 = APS He 2 Closed
+					return rdata;
 				case 0x44: // UNKNOWN, HBR
 					return 0;
 				case 0x45: // UNKNOWN, HBR
