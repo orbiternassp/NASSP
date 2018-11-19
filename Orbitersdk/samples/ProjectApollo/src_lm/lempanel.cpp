@@ -1185,11 +1185,13 @@ void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
 	if(iy < -60) iy = -60;
 	if(iy > 60 ) iy = 60;
 	hDC = oapiGetDC(surf);
-	SelectObject(hDC, GetStockObject(BLACK_PEN));
+	HPEN pen = CreatePen(PS_SOLID, 3.5, RGB(0, 0, 0));
+	SelectObject(hDC, pen);
 	MoveToEx(hDC, 0, 65 + ix, NULL);
-	LineTo(hDC, 135, 65 + ix);
+	LineTo(hDC, 134, 65 + ix);
 	MoveToEx(hDC, 67 + iy, 0, NULL);
 	LineTo(hDC, 67 + iy, 131);
+	DeleteObject(pen);
 	oapiReleaseDC(surf, hDC);
 }
 
