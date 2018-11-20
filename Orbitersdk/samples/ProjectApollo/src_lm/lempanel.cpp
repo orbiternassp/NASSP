@@ -1185,11 +1185,13 @@ void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
 	if(iy < -60) iy = -60;
 	if(iy > 60 ) iy = 60;
 	hDC = oapiGetDC(surf);
-	SelectObject(hDC, GetStockObject(BLACK_PEN));
+	HPEN pen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+	SelectObject(hDC, pen);
 	MoveToEx(hDC, 0, 65 + ix, NULL);
-	LineTo(hDC, 135, 65 + ix);
+	LineTo(hDC, 134, 65 + ix);
 	MoveToEx(hDC, 67 + iy, 0, NULL);
 	LineTo(hDC, 67 + iy, 131);
+	DeleteObject(pen);
 	oapiReleaseDC(surf, hDC);
 }
 
@@ -1719,6 +1721,8 @@ bool LEM::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea(AID_GLYCOL_LIGHT,						 _R( 146, 773, 180, 807), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_DC_BUS_LIGHT,						_R( 1560, 867, 1594, 901), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_BAT_FAULT_LIGHT,					_R( 1832, 778, 1866, 812), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_ECSIND_UPPER,				    _R(  35,   65,  311, 190), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,               PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_LM_ECSIND_LOWER,				    _R(  32,  259,  190, 384), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,               PANEL_MAP_BACKGROUND);
 
 		// Power Failure Lights
 		oapiRegisterPanelArea(AID_LEM_PWRFAIL_ECSPRESS,             _R(155, 41, 168, 53), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
@@ -1912,7 +1916,7 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_AOTZOOM: // LEM Alignment Optical Telescope Zoom
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0, 1456,  1049), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLE,						_R( 408,  0, 1458,  1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI / 3.0)), optics.OpticsShaft*PI / 3.0);
 		oapiCameraSetCockpitDir(0, 0);
