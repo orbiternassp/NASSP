@@ -2364,14 +2364,25 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							   6 = CREW ABORT B
 							   7 = EDS ABORT A
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.CrewAbortA << 2);
+							data |= (secsStatus.EDSAbortLogicOutputB << 3);
+							data |= (secsStatus.CrewAbortB << 5);
+							data |= (secsStatus.EDSAbortLogicOutputA << 6);
+							return data;
 						case 14:
 							/* 1 = EDS ABORT VOTE 1
 							   2 = EDS ABORT VOTE 2
 							   4 = EDS ABORT VOTE 3
 							   5 = DSE TAPE MOTION
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.EDSAbortLogicInput1 << 0);
+							data |= (secsStatus.EDSAbortLogicInput2 << 1);
+							data |= (secsStatus.EDSAbortLogicInput3 << 3);
+							return data;
 						case 15:
 							/*	2 = IMU HTR +28 VDC
 							    3 = CMC OPERATE +28 VDC
@@ -2379,7 +2390,11 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							    6 = CSM-LM LOCK RING SEP RELAY A
 								7 = CSM-LM LOCK RING SEP RELAY B
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.CSMLEMLockRingSepRelaySignalA << 5);
+							data |= (secsStatus.CSMLEMLockRingSepRelaySignalB << 6);
+							return data;
 						case 16:		// SCI EXP #16
 							return(0);
 						case 17:		// SCI EXP #24
@@ -2404,7 +2419,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 								*/
 							sat->GetSECSStatus(secsStatus);
 
-							data |= (secsStatus.CMRCSPressureSignalA << 0);
+							data |= (secsStatus.CMSMSepRelayCloseA << 0);
+							data |= (secsStatus.RCSActivateSignalA << 2);
 							data |= (secsStatus.SLASepRelayA << 4);
 							data |= (secsStatus.CMRCSPressureSignalA << 6);
 							return data;
@@ -2418,9 +2434,10 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 								*/;
 							sat->GetSECSStatus(secsStatus);
 
-							data |= (secsStatus.CMRCSPressureSignalB << 0);
-							data |= (secsStatus.SLASepRelayB << 4);
-							data |= (secsStatus.CMRCSPressureSignalB << 6);
+							data |= (secsStatus.CMSMSepRelayCloseB << 0);
+							data |= (secsStatus.RCSActivateSignalB << 2);
+							data |= (secsStatus.CMRCSPressureSignalB << 4);
+							data |= (secsStatus.SLASepRelayB << 6);
 							return data;
 						case 24:
 							/* 1 = FWD HS JET A
@@ -2462,13 +2479,23 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							   5 = MAIN CHUTE DISC RELAY A
 							   8 = MAIN DEPLOY RELAY A
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.DrogueSepRelayA << 0);
+							data |= (secsStatus.MainChuteDiscRelayA << 4);
+							data |= (secsStatus.MainDeployRelayA << 7);
+							return data;
 						case 30:
 							/* 3 = MAIN DEPLOY RELAY B
 							   6 = DROGUE SEP RELAY B
 							   8 = MAIN CHUTE DISC RELAY B
 								*/
-							return(0);
+							sat->GetSECSStatus(secsStatus);
+
+							data |= (secsStatus.MainDeployRelayB << 2);
+							data |= (secsStatus.DrogueSepRelayB << 5);
+							data |= (secsStatus.MainChuteDiscRelayB << 7);
+							return data;
 						case 31: // ZEROES
 							return(0);
 						case 32:

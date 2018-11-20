@@ -167,6 +167,8 @@ public:
 	bool EDSAbortLogicOutput;
 	//Forward Heatshield Jettison Event
 	bool FwdHeatshieldJett;
+	//Hand Controller Input Event
+	bool CrewAbortSignal;
 protected:
 
 	void TimerTimestep(double simdt);
@@ -296,6 +298,10 @@ public:
 	bool GetDockingProbeRetract1() { return DockingProbeRetract1; }
 	bool GetDockingProbeRetract2() { return DockingProbeRetract2; }
 	void ResetLMSLASeparationInitiate() { LMSLASeparationInitiate = false; }
+
+	//Telemetry
+
+	bool CSM_LEM_LockRingSepRelaySignal;
 protected:
 	//Relays
 

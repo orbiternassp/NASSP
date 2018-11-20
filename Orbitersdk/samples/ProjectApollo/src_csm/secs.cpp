@@ -443,6 +443,8 @@ MESC::MESC():
 	EDSAbort3Relay = false;
 	ELSActivateSolidStateSwitch = false;
 
+	CrewAbortSignal = false;
+
 	AbortStarted = false;
 	AutoTowerJettison = false;
 	SSSInput1 = false;
@@ -954,6 +956,15 @@ void MESC::Timestep(double simdt)
 		FwdHeatshieldJett = false;
 	}
 
+	if (Sat->THCRotary.IsCounterClockwise() && SequentialLogicBus())
+	{
+		CrewAbortSignal = true;
+	}
+	else
+	{
+		CrewAbortSignal = false;
+	}
+
 	//Mode 1A Display
 	/*char buffer[1024];
 	sprintf(buffer, "MASTER EVENTS SEQUENCE CONTROLLER - MODE 1A\n\n");
@@ -1257,6 +1268,7 @@ LDEC::LDEC():
 	DockingProbeRetract2 = false;
 	DockingProbeRetract1 = false;
 	DockingRingFinalSeparation = false;
+	CSM_LEM_LockRingSepRelaySignal = false;
 }
 
 void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe,ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed)
@@ -1327,6 +1339,16 @@ void LDEC::Timestep(double simdt)
 	else
 	{
 		DockingRingFinalSeparation = false;
+	}
+
+	//Telemetry
+	if (mesc->MESCLogicBus() && DockingRingFinalSeparation)
+	{
+		CSM_LEM_LockRingSepRelaySignal = true;
+	}
+	else
+	{
+		CSM_LEM_LockRingSepRelaySignal = false;
 	}
 
 	//sprintf(oapiDebugString(), "MotorSwitch %d LM/SLA Sep %d Probe Retract1 %d Probe Retract2 %d Ring Final Sep %d", SECSPyroBusMotor, LMSLASeparationInitiate, DockingProbeRetract1, DockingProbeRetract2, DockingRingFinalSeparation);

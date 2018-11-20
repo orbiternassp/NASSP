@@ -288,6 +288,19 @@ typedef struct {
 	bool RCSActivateSignalB;
 	bool EDSAbortLogicOutputB;
 	bool FwdHeatshieldJettB;
+	bool DrogueSepRelayA;
+	bool DrogueSepRelayB;
+	bool MainChuteDiscRelayA;
+	bool MainChuteDiscRelayB;
+	bool MainDeployRelayA;
+	bool MainDeployRelayB;
+	bool EDSAbortLogicInput1;
+	bool EDSAbortLogicInput2;
+	bool EDSAbortLogicInput3;
+	bool CrewAbortA;
+	bool CrewAbortB;
+	bool CSMLEMLockRingSepRelaySignalA;
+	bool CSMLEMLockRingSepRelaySignalB;
 } SECSStatus;
 
 ///
