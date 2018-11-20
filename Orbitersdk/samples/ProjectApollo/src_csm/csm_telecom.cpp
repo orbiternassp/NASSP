@@ -1708,7 +1708,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 122:		// SCI EXP #15
 							return(scale_data(0,0,100));
 						case 123:		// FC 2 COND EXH TEMP
-							return(scale_data(0,145,250));
+							sat->GetFuelCellStatus(2, fcStatus);
+							return(scale_data(fcStatus.CondenserTempF, 145, 250));
 						case 124:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 125:		// UNKNOWN - HBR ONLY
@@ -1727,8 +1728,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 130:		// FC 1 RAD IN TEMP
 							sat->GetFuelCellStatus( 1, fcStatus );
 							return(scale_data(fcStatus.RadiatorTempInF, -50, 300));
-						case 131:		// FC 1 RAD IN TEMP
-							sat->GetFuelCellStatus( 1, fcStatus );
+						case 131:		// FC 2 RAD IN TEMP
+							sat->GetFuelCellStatus( 2, fcStatus );
 							return(scale_data(fcStatus.RadiatorTempInF, -50, 300));
 						case 132:		// FC 3 RAD OUT TEMP
 							sat->GetFuelCellStatus( 3, fcStatus );
