@@ -508,16 +508,11 @@ void SaturnFuelCellO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 
 double SaturnFuelCellTempMeter::QueryValue()
-
 {
-	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState(), fc);
-
-	return fc.TempF; 
+	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 5)*94.0 + 80.0);
 }
 
 void SaturnFuelCellTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
-
 {
 	if (v < 400.0)
 		oapiBlt(drawSurface, NeedleSurface, 86, (109 - (int)((v - 100.0) / 300.0 * 53.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
@@ -529,16 +524,11 @@ void SaturnFuelCellTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 
 double SaturnFuelCellCondenserTempMeter::QueryValue()
-
 {
-	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState(), fc);
-
-	return fc.CondenserTempF; 
+	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 2)*21.0 + 145.0);
 }
 
 void SaturnFuelCellCondenserTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
-
 {
 	oapiBlt(drawSurface, NeedleSurface, 139, (109 - (int)((v - 150.0) / 100.0 * 103.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
@@ -1464,11 +1454,9 @@ double SaturnSystemTestAttenuator::GetValue()
 		switch (right)
 		{
 		case 1:	//BAT RLY BUS VOLT
-			val = Sat->pcm.measure(11, TLM_A, 75);
-			break;
+			return Sat->sce.GetVoltage(0, 4)*256.0 / 5.0;	//Temporary scaling
 		case 3:	//CSM TO LM CURRENT
-			val = Sat->pcm.measure(11, TLM_A, 47);
-			break;
+			return Sat->sce.GetVoltage(1, 7)*256.0 / 5.0;	//Temporary scaling
 		}
 		break;
 	case 5:

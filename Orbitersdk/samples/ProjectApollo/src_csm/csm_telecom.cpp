@@ -1398,10 +1398,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 	SecECSCoolingStatus scs;
 	TankPressures smTankPress;
 	TankQuantities tankQuantities;
-	ACBusStatus acStat;
-	MainBusStatus mainBusStatus;
-	BatteryBusStatus batBusStat;
-	BatteryStatus batteryStatus;
 	SPSStatus spsStatus;
 	FuelCellStatus fcStatus;
 	PyroStatus pyroStatus;
@@ -1537,17 +1533,15 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 46:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 47:		// SPS INJECTOR FLANGE TEMP 1
-							return(scale_data(0,0,600));
+							return(scale_data(sat->sce.GetVoltage(2, 9), 0.0, 5.0));
 						case 48:		// PRI RAD IN TEMP
 							return(scale_data(0,55,120));
 						case 49:		// SPS INJECTOR FLANGE TEMP 2
-							return(scale_data(0,0,600));
-
+							return(scale_data(sat->sce.GetVoltage(2, 10), 0.0, 5.0));
 						case 50:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 51:		// FC 1 COND EXH TEMP
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data( fcStatus.CondenserTempF, 145, 250));
+							return(scale_data(sat->sce.GetVoltage(2, 3), 0.0, 5.0));
 						case 52:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 53:		// UNKNOWN - HBR ONLY
@@ -1585,30 +1579,25 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 68:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 69:		// FC 3 COND EXH TEMP
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.CondenserTempF, 145, 250));
-
+							return(scale_data(sat->sce.GetVoltage(2, 5), 0.0, 5.0));
 						case 70:		// SIDE HS BOND LOC 2 TEMP
 							return(scale_data(0,-260,600));
 						case 71:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 72:		// FC 1 SKIN TEMP
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.TempF, 80, 550));
+							return(scale_data(sat->sce.GetVoltage(2, 6), 0.0, 5.0));
 						case 73:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 74:		// SIDE HS BOND LOC 3 TEMP
 							return(scale_data(0,-260,600));
 						case 75:		// FC 2 SKIN TEMP
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.TempF, 80, 550));
+							return(scale_data(sat->sce.GetVoltage(2, 7), 0.0, 5.0));
 						case 76:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 77:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 78:		// FC 3 SKIN TEMP
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.TempF, 80, 550));
+							return(scale_data(sat->sce.GetVoltage(2, 8), 0.0, 5.0));
 						case 79:		// SIDE HS BOND LOC 4 TEMP
 							return(scale_data(0,-260,600));
 
@@ -1626,15 +1615,14 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 85:		// 3.2 KHz 28V SUPPLY
 							return(scale_data(0,0,31.1));
 						case 86:		// INVERTER 1 TEMP
-							return(scale_data(0,32,248));
+							return(scale_data(sat->sce.GetVoltage(2, 3), 0.0, 5.0));
 						case 87:		// SEC RAD IN TEMP
 							sat->GetSecECSCoolingStatus(scs);
 							return(scale_data(scs.RadiatorInletTempF, 55, 120));
 						case 88:		// INVERTER 2 TEMP
-							return(scale_data(0,32,248));
+							return(scale_data(sat->sce.GetVoltage(2, 4), 0.0, 5.0));
 						case 89:		// INVERTER 3 TEMP
-							return(scale_data(0,32,248));
-
+							return(scale_data(sat->sce.GetVoltage(2, 5), 0.0, 5.0));
 						case 90:		// SEC RAD OUT TEMP
 							sat->GetSecECSCoolingStatus(scs);
 							return(scale_data(scs.RadiatorOutletTempF, 30, 70));
@@ -1708,8 +1696,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 122:		// SCI EXP #15
 							return(scale_data(0,0,100));
 						case 123:		// FC 2 COND EXH TEMP
-							sat->GetFuelCellStatus(2, fcStatus);
-							return(scale_data(fcStatus.CondenserTempF, 145, 250));
+							return(scale_data(sat->sce.GetVoltage(2, 4), 0.0, 5.0));
 						case 124:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 125:		// UNKNOWN - HBR ONLY
@@ -1896,7 +1883,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 46:		// SM HE MANF C PRESS
 							return(scale_data(0,0,400));
 						case 47:		// LM HEATER CURRENT
-							return(scale_data(sat->LMUmbilicalFeeder.Current(),0,10));
+							return(scale_data(sat->sce.GetVoltage(1, 7), 0.0, 5.0));
 						case 48:		// PCM HI LEVEL 85 PCT REF
 							return(scale_data(0,0,5));
 						case 49:		// PCM LO LEVEL 15 PCT REF
@@ -1915,14 +1902,11 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 55:		// O2 SUPPLY MANF PRESS
 							return(scale_data(0,0,150));
 						case 56:		// AC BUS 2 PH A VOLTS
-							sat->GetACBusStatus( acStat, 2 );
-							return(scale_data(acStat.Phase1Voltage, 0, 150));
+							return(scale_data(sat->sce.GetVoltage(3, 1), 0.0, 5.0));
 						case 57:		// MAIN BUS A VOLTS
-							sat->GetMainBusStatus( mainBusStatus );
-							return(scale_data(mainBusStatus.MainBusAVoltage, 0, 45));
+							return scale_data(sat->sce.GetVoltage(0, 0), 0.0, 5.0);
 						case 58:		// MAIN BUS B VOLTS
-							sat->GetMainBusStatus( mainBusStatus );
-							return(scale_data(mainBusStatus.MainBusBVoltage, 0, 45));
+							return scale_data(sat->sce.GetVoltage(0, 1), 0.0, 5.0);
 						case 59:		// IG 1X RSVR OUT COS
 							return(scale_data(0,130,50));
 
@@ -1960,17 +1944,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetFuelCellStatus( 3, fcStatus );
 							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
 						case 73:		// BAT CHARGER AMPS
-							sat->GetBatteryStatus( batteryStatus );
-							return(scale_data(batteryStatus.BatteryChargerCurrent, 0, 5));
+							return scale_data(sat->sce.GetVoltage(1, 0), 0.0, 5.0);
 						case 74:		// BAT A CUR
-							sat->GetBatteryStatus( batteryStatus );
-							return(scale_data( batteryStatus.BatteryACurrent, 0, 100));
+							return scale_data(sat->sce.GetVoltage(1, 1), 0.0, 5.0);
 						case 75:		// BAT RELAY BUS VOLTS
-							sat->GetBatteryBusStatus(batBusStat);
-							return(scale_data(batBusStat.BatteryRelayBusVoltage,0,45));
+							return scale_data(sat->sce.GetVoltage(0, 4), 0.0, 5.0);
 						case 76:		// FC 1 CUR
-							sat->GetFuelCellStatus( 1, fcStatus );
-							return(scale_data(fcStatus.Current, 0, 100));
+							return scale_data(sat->sce.GetVoltage(1, 5), 0.0, 5.0);
 						case 77:		// FC 1 H2 FLOW
 							sat->GetFuelCellStatus( 1, fcStatus );
 							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
@@ -1993,11 +1973,9 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 83:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 84:		// FC 2 CUR
-							sat->GetFuelCellStatus( 2, fcStatus );
-							return(scale_data(fcStatus.Current, 0, 100));
+							return scale_data(sat->sce.GetVoltage(1, 6), 0.0, 5.0);
 						case 85:		// FC 3 CUR
-							sat->GetFuelCellStatus( 3, fcStatus );
-							return(scale_data(fcStatus.Current, 0, 100));
+							return scale_data(sat->sce.GetVoltage(1, 7), 0.0, 5.0);
 						case 86:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 87:		// PRI GLY FLOW RATE
@@ -2010,13 +1988,11 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 90:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 91:		// BAT BUS A VOLTS
-							sat->GetBatteryBusStatus( batBusStat );
-							return(scale_data(batBusStat.BatBusAVoltage, 0, 45));
+							return scale_data(sat->sce.GetVoltage(0, 2), 0.0, 5.0);
 						case 92:		// SM FU MANF A PRESS
 							return(scale_data(0,0,400));
 						case 93:		// BAT BUS B VOLTS
-							sat->GetBatteryBusStatus( batBusStat );
-							return(scale_data(batBusStat.BatBusBVoltage, 0, 45));
+							return scale_data(sat->sce.GetVoltage(0, 3), 0.0, 5.0);
 						case 94:		// SM FU MANF B PRESS
 							return(scale_data(0,0,400));
 						case 95:		// UNKNOWN - HBR ONLY
@@ -2049,12 +2025,9 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 108:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 109:		// BAT B CUR
-							sat->GetBatteryStatus( batteryStatus );
-							return(scale_data(batteryStatus.BatteryBCurrent, 0, 100));
-
+							return scale_data(sat->sce.GetVoltage(1, 2), 0.0, 5.0);
 						case 110:		// BAT C CUR
-							sat->GetBatteryStatus( batteryStatus );
-							return(scale_data(batteryStatus.BatteryCCurrent, 0, 100));
+							return scale_data(sat->sce.GetVoltage(1, 3), 0.0, 5.0);
 						case 111:		// SM FU MANF C PRESS
 							return(scale_data(0,0,400));
 						case 112:		// SM FU MANF D PRESS
@@ -2133,8 +2106,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 146:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 147:		// AC BUS 1 PH A VOLTS
-							sat->GetACBusStatus( acStat, 1 );
-							return(scale_data(acStat.Phase1Voltage, 0, 150));
+							return(scale_data(sat->sce.GetVoltage(3, 0), 0.0, 5.0));
 						case 148:		// SCE POS SUPPLY VOLTS
 							return(scale_data(0,0,30));
 						case 149:		// UNKNOWN - HBR ONLY
@@ -2331,7 +2303,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							   6 = MASTER CAUTION WARNING ON
 							   8 = RAD FLOW CONT SYS 1 OR 2
 								*/
-							return(0);
+							data |= ((sat->sce.GetVoltage(0, 13) > 2.5) << 2);
+							data |= ((sat->sce.GetVoltage(0, 12) > 2.5) << 4);
+							data |= ((sat->sce.GetVoltage(0, 14) > 2.5) << 5);
+							data |= ((sat->sce.GetVoltage(0, 5) > 2.5) << 7);
+
+							return data;
 						case 5:			// SCI EXP #18
 							return(0);
 						case 6:			// SCI EXP #19
@@ -2511,7 +2488,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							   5 = BMAG MODE SW-YAW ATT 1 RT 2
 							   6 = BMAG MODE SW-YAW RATE 2
 								*/
-							return(0);
+							data |= ((sat->sce.GetVoltage(0, 6) > 2.5) << 0);
+							data |= ((sat->sce.GetVoltage(0, 7) > 2.5) << 1);
+							data |= ((sat->sce.GetVoltage(0, 8) > 2.5) << 2);
+							data |= ((sat->sce.GetVoltage(0, 9) > 2.5) << 3);
+							data |= ((sat->sce.GetVoltage(0, 10) > 2.5) << 4);
+							data |= ((sat->sce.GetVoltage(0, 11) > 2.5) << 5);
+							return data;
 						default:
 							sprintf(sat->debugString(),"MEASURE: UNKNOWN 11-E-%d",ccode);
 							break;

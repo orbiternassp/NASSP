@@ -62,6 +62,7 @@
 #include "canard.h"
 #include "siisystems.h"
 #include "sivbsystems.h"
+#include "sce.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -1014,6 +1015,7 @@ public:
 
 	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
+	SCE *GetSCE() { return &sce; }
 
 	///
 	/// \brief Accessor to get checklistController
@@ -3483,6 +3485,8 @@ protected:
 	RJEC rjec;
 	ECA  eca;
 	ORDEAL ordeal;
+	EMS ems;
+
 	// Telecom equipment
 	DSE  dataRecorder;
 	PCM  pcm;
@@ -3497,7 +3501,7 @@ protected:
 	VHFAntenna vhfb;
 	VHFRangingSystem vhfranging;
 	VHFAMTransceiver vhftransceiver;
-	EMS  ems;
+	SCE sce;
 
 	// CM Optics
 	CMOptics optics;
@@ -4399,12 +4403,13 @@ protected:
 	friend class SaturnLVSPSPcMeter;
 	friend class SaturnLMDPGauge;
 	friend class VHFRangingSystem;
+	friend class DockingTargetSwitch;
+	friend class SCE;
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ARCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
-	friend class DockingTargetSwitch;
 };
 
 extern void BaseInit();

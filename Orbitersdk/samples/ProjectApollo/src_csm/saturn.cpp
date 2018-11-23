@@ -1442,6 +1442,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (!NoHGA) hga.SaveState(scn);
 	vhftransceiver.SaveState(scn);
 	if (!NoVHFRanging) vhfranging.SaveState(scn);
+	sce.SaveState(scn);
 	dataRecorder.SaveState(scn);
 
 	Panelsdk.Save(scn);	
@@ -2147,6 +2148,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		}
 		else if (!strnicmp(line, "VHFRANGING", 10)) {
 			vhfranging.LoadState(line);
+		}
+		else if (!strnicmp(line, SCE_START_STRING, sizeof(SCE_START_STRING))) {
+			sce.LoadState(line);
 		}
 	    else if (!strnicmp (line, "DATARECORDER", 12)) {
 		    dataRecorder.LoadState(line);

@@ -73,8 +73,9 @@ CSMCautionWarningSystem::CSMCautionWarningSystem(Sound &mastersound, Sound &butt
 //
 
 bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus &fc, int index)
-
 {
+	Saturn *sat = (Saturn *)OurVessel;
+
 	bool bad = false;
 	
 	//
@@ -86,11 +87,14 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus &fc, int index)
 
 	// pH > 9 not simulated at the moment
 
-	if (fc.TempF < 360.0) bad = true;
-	if (fc.TempF > 475.0) bad = true;
+	double TempV = sat->GetSCE()->GetVoltage(2, index + 5);
+	double CondenserTempV = sat->GetSCE()->GetVoltage(2, index + 2);
 
-	if (fc.CondenserTempF < 150.0) bad = true;
-	if (fc.CondenserTempF > 175.0) bad = true;
+	if (TempV < 2.979) bad = true;
+	if (TempV > 4.202) bad = true;
+
+	if (CondenserTempV < 0.25) bad = true;
+	if (CondenserTempV > 1.56) bad = true;
 
 	if (fc.CoolingTempF < -30.0) bad = true;
 
@@ -425,6 +429,9 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// in each inverter and will illuminate a light in the caution and warning system at an 
 		// inverter overtemperature of 190 degrees F"
 		//
+		SetLight(CSM_CWS_INV1_TEMP_HI, sat->sce.GetVoltage(2, 0) > 3.657);
+		SetLight(CSM_CWS_INV2_TEMP_HI, sat->sce.GetVoltage(2, 1) > 3.657);
+		SetLight(CSM_CWS_INV3_TEMP_HI, sat->sce.GetVoltage(2, 2) > 3.657);
 
 		//
 		// Power Bus: "If voltage drops below 26.25 volts dc, the applicable dc undervoltage light 
