@@ -1950,7 +1950,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 75:		// BAT RELAY BUS VOLTS
 							return scale_data(sat->sce.GetVoltage(0, 4), 0.0, 5.0);
 						case 76:		// FC 1 CUR
-							return scale_data(sat->sce.GetVoltage(1, 5), 0.0, 5.0);
+							return scale_data(sat->sce.GetVoltage(1, 4), 0.0, 5.0);
 						case 77:		// FC 1 H2 FLOW
 							sat->GetFuelCellStatus( 1, fcStatus );
 							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
@@ -1973,9 +1973,9 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 83:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 84:		// FC 2 CUR
-							return scale_data(sat->sce.GetVoltage(1, 6), 0.0, 5.0);
+							return scale_data(sat->sce.GetVoltage(1, 5), 0.0, 5.0);
 						case 85:		// FC 3 CUR
-							return scale_data(sat->sce.GetVoltage(1, 7), 0.0, 5.0);
+							return scale_data(sat->sce.GetVoltage(1, 6), 0.0, 5.0);
 						case 86:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 87:		// PRI GLY FLOW RATE
