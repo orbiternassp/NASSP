@@ -32,7 +32,7 @@ class Saturn;
 class CSMTankTransducer : public Transducer
 {
 public:
-	CSMTankTransducer(char *i_name, double minIn, double maxIn, double minOut, double maxOut);
+	CSMTankTransducer(char *i_name, double minIn, double maxIn);
 	void Init(e_object *e, h_Tank *t);
 protected:
 	h_Tank *tank;
@@ -41,6 +41,45 @@ protected:
 class CSMTankTempTransducer : public CSMTankTransducer
 {
 public:
-	CSMTankTempTransducer(char *i_name, double minIn, double maxIn, double minOut, double maxOut);
+	CSMTankTempTransducer(char *i_name, double minIn, double maxIn);
+	double GetValue();
+};
+
+class CSMTankPressTransducer : public CSMTankTransducer
+{
+public:
+	CSMTankPressTransducer(char *i_name, double minIn, double maxIn);
+	double GetValue();
+};
+
+class CSMCO2PressTransducer : public CSMTankTransducer
+{
+public:
+	CSMCO2PressTransducer(char *i_name, double minIn, double maxIn);
+	double Voltage();
+	double GetValue();
+};
+
+class CSMDeltaPressTransducer : public Transducer
+{
+public:
+	CSMDeltaPressTransducer(char *i_name, double minIn, double maxIn);
+	void Init(e_object *e, h_Tank *t1, h_Tank *t2);
+protected:
+	h_Tank *tank1;
+	h_Tank *tank2;
+};
+
+class CSMDeltaPressINH2OTransducer : public CSMDeltaPressTransducer
+{
+public:
+	CSMDeltaPressINH2OTransducer(char *i_name, double minIn, double maxIn);
+	double GetValue();
+};
+
+class CSMDeltaPressPSITransducer : public CSMDeltaPressTransducer
+{
+public:
+	CSMDeltaPressPSITransducer(char *i_name, double minIn, double maxIn);
 	double GetValue();
 };

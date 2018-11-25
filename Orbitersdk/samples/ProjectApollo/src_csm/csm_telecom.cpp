@@ -1416,15 +1416,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 2:			// UNKNOWN - HBR ONLY
 							return(0);
 						case 3:			// CO2 PARTIAL PRESS
-							sat->GetAtmosStatus(atm);
-							return(scale_data(atm.CabinCO2MMHG,0,30));
+							return(scale_data(sat->CabinCO2PartPressSensor.Voltage(), 0.0, 5.0));
 						case 4:			// GLY EVAP BACK PRESS
 							return(scale_data(0,0.05,0.25));
 						case 5:			// UNKNOWN - HBR ONLY
 							return(0);
 						case 6:			// CABIN PRESS
-							sat->GetAtmosStatus(atm);
-							return(scale_data(atm.CabinPressurePSI,0,17));
+							return(scale_data(sat->CabinPressSensor.Voltage(), 0.0, 5.0));
 						case 7:			// UNKNOWN - HBR ONLY
 							return(0);
 						case 8:			// SEC EVAP OUT STEAM PRESS
@@ -1611,8 +1609,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 83:		// PIPA +120 VDC
 							return(scale_data(0,85,135));
 						case 84:		// CABIN TEMP
-							sat->GetAtmosStatus(atm);
-							return(scale_data(atm.CabinTempF, 40, 125));
+							return(scale_data(sat->CabinTempSensor.Voltage(), 0.0, 5.0));
 						case 85:		// 3.2 KHz 28V SUPPLY
 							return(scale_data(0,0,31.1));
 						case 86:		// INVERTER 1 TEMP
@@ -1860,8 +1857,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 36:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 37:		// SUIT-CABIN DELTA PRESS
-							sat->GetAtmosStatus( atm );
-							return(scale_data((atm.SuitPressureMMHG - atm.CabinPressureMMHG) / 25.4, -5, 5));
+							return(scale_data(sat->SuitCabinDeltaPressSensor.Voltage(), 0.0, 5.0));
 						case 38:		// ALPHA CT RATE CHAN 1
 							return(scale_data(0,0.1,10000));
 						case 39:		// SM HE MANF A PRESS

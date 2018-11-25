@@ -560,16 +560,11 @@ void SaturnSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 
 double SaturnCabinTempMeter::QueryValue()
-
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	return KelvinToFahrenheit(atm.CabinTempK);
+	return Sat->CabinTempSensor.Voltage()*17.0 + 40.0;
 }
 
 void SaturnCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
-
 {
 	oapiBlt(drawSurface, NeedleSurface,  53, (110 - (int)((v - 40.0) / 80.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
@@ -595,12 +590,8 @@ void SaturnSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 
 double SaturnCabinPressMeter::QueryValue()
-
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	return atm.CabinPressurePSI;
+	return Sat->CabinPressSensor.Voltage()*3.4;
 }
 
 void SaturnCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -614,25 +605,13 @@ void SaturnCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 
 double SaturnPartPressCO2Meter::QueryValue()
-
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	return atm.SuitCO2MMHG;
+	return Sat->CabinCO2PartPressSensor.Voltage();
 }
 
 void SaturnPartPressCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
-
 {
-	if (v < 10.0)
-		oapiBlt(drawSurface, NeedleSurface,  215, (109 - (int)(v / 10.0 * 55.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else if (v < 15.0)
-		oapiBlt(drawSurface, NeedleSurface,  215, (54 - (int)((v - 10.0) / 5.0 * 19.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else if (v < 20.0)
-		oapiBlt(drawSurface, NeedleSurface,  215, (35 - (int)((v - 15.0) / 5.0 * 15.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(drawSurface, NeedleSurface,  215, (20 - (int)((v - 20.0) / 10.0 * 14.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 215, (109 - (int)(v / 5.0 * 103.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 void SaturnRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s)
@@ -684,13 +663,8 @@ void SaturnLeftO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 
 double SaturnSuitCabinDeltaPMeter::QueryValue()
-
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	// Suit cabin pressure difference
-	return (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
+	return Sat->SuitCabinDeltaPressSensor.Voltage()*2.0 - 5.0;
 }
 
 void SaturnSuitCabinDeltaPMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)

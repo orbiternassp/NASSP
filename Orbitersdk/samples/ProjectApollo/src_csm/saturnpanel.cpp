@@ -2243,9 +2243,12 @@ void Saturn::SetSwitches(int panel) {
 	CabinMetersRow.Init(AID_CABININDICATORS, MainPanel, &GaugePower);
 	SuitTempMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
 	CabinTempMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
+	CabinTempMeter.WireTo(&CabinTempSensorFeeder);
 	SuitPressMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
 	CabinPressMeter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
+	CabinPressMeter.WireTo(&ECSPressGroups2Feeder);
 	PartPressCO2Meter.Init(srf[SRF_NEEDLE], CabinMetersRow, this);
+	PartPressCO2Meter.WireTo(&ECSPressGroups2Feeder);
 
 	SuitComprDeltaPMeterRow.Init(AID_SUITCOMPRDELTAPMETER, MainPanel, &GaugePower);
 	SuitComprDeltaPMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitComprDeltaPMeterRow, this);
@@ -2254,6 +2257,7 @@ void Saturn::SetSwitches(int panel) {
 	SuitCabinDeltaPMeterRow.Init(AID_SUITCABINDELTAPMETER, MainPanel, &GaugePower);
 	SuitCabinDeltaPMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitCabinDeltaPMeterRow, this);
 	SuitCabinDeltaPMeter.FrameSurface = srf[SRF_SUITCABINDELTAPMETER];
+	SuitCabinDeltaPMeter.WireTo(&Panel276CB2);
 	RightO2FlowMeter.Init(g_Param.pen[4], g_Param.pen[4], SuitCabinDeltaPMeterRow, this);
 	RightO2FlowMeter.FrameSurface = srf[SRF_SUITCABINDELTAPMETER];
 
@@ -2493,8 +2497,8 @@ void Saturn::SetSwitches(int panel) {
 	BatteryChargerAcPwrCircuitBraker.Init(192,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], BatteryChargerCircuitBrakersRow, &BatCHGRSwitch);
 
 	InstrumentLightingCircuitBrakersRow.Init(AID_INSTRUMENTLIGHTINGCIRCUITBRAKERS, MainPanel);
-	InstrumentLightingESSMnACircuitBraker.Init(  0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InstrumentLightingCircuitBrakersRow);
-	InstrumentLightingESSMnBCircuitBraker.Init( 38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InstrumentLightingCircuitBrakersRow);
+	InstrumentLightingESSMnACircuitBraker.Init(  0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InstrumentLightingCircuitBrakersRow, MainBusA, 15.0);
+	InstrumentLightingESSMnBCircuitBraker.Init( 38,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InstrumentLightingCircuitBrakersRow, MainBusB, 15.0);
 	InstrumentLightingNonESSCircuitBraker.Init(133,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InstrumentLightingCircuitBrakersRow);
 	InstrumentLightingSCIEquipSEP1CircuitBraker.Init(171,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InstrumentLightingCircuitBrakersRow);
 	InstrumentLightingSCIEquipSEP2CircuitBraker.Init(209,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], InstrumentLightingCircuitBrakersRow);
@@ -2509,10 +2513,10 @@ void Saturn::SetSwitches(int panel) {
 	ECSTransducerWastePOTH2OMnBCircuitBraker.Init(300,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusB, 5.0);
 	ECSTransducerPressGroup1MnACircuitBraker.Init(338,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
 	ECSTransducerPressGroup1MnBCircuitBraker.Init(376,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
-	ECSTransducerPressGroup2MnACircuitBraker.Init(432,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
-	ECSTransducerPressGroup2MnBCircuitBraker.Init(470,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
-	ECSTransducerTempMnACircuitBraker.Init(508,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
-	ECSTransducerTempMnBCircuitBraker.Init(546,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow);
+	ECSTransducerPressGroup2MnACircuitBraker.Init(432,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusA, 5.0);
+	ECSTransducerPressGroup2MnBCircuitBraker.Init(470,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusB, 5.0);
+	ECSTransducerTempMnACircuitBraker.Init(508,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusB, 5.0);
+	ECSTransducerTempMnBCircuitBraker.Init(546,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSCircuitBrakersRow, MainBusB, 5.0);
 
 	ECSLowerRowCircuitBrakersRow.Init(AID_ECSLOWERROWCIRCUITBRAKERS, MainPanel);
 	ECSSecCoolLoopAc1CircuitBraker.Init(  0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ECSLowerRowCircuitBrakersRow, &ACBus1);
@@ -2837,10 +2841,10 @@ void Saturn::SetSwitches(int panel) {
 	//
 	
 	Panel276CBRow.Init(AID_PANEL276, MainPanel);
-	Panel276CB1.Init( 0, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
-	Panel276CB2.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
-	Panel276CB3.Init(62, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
-	Panel276CB4.Init(62, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow);
+	Panel276CB1.Init( 0, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
+	Panel276CB2.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
+	Panel276CB3.Init(62, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
+	Panel276CB4.Init(62,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
 
 	//
 	// Panel 278
@@ -5502,7 +5506,7 @@ void Saturn::InitSwitches() {
 	CabinTempMeter.Register(PSH, "CabinTempMeter", 40, 120, 2);
 	SuitPressMeter.Register(PSH, "SuitPressMeter", 0, 16, 2);
 	CabinPressMeter.Register(PSH, "CabinPressMeter", 0, 16, 2);
-	PartPressCO2Meter.Register(PSH, "PartPressCO2Meter", 0, 30, 2);
+	PartPressCO2Meter.Register(PSH, "PartPressCO2Meter", 0, 5, 2);
 
 	SuitComprDeltaPMeter.Register(PSH, "SuitComprDeltaPMeter", -0.1, 1.1, 5);
 	LeftO2FlowMeter.Register(PSH, "LeftO2FlowMeter", 0.1, 1.1, 5);

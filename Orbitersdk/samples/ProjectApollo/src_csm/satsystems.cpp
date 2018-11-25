@@ -409,10 +409,20 @@ void Saturn::SystemsInit() {
 
 	//Instrumentation
 	sce.Init(this);
+
+	InstrumentationPowerFeeder.WireToBuses(&InstrumentLightingESSMnACircuitBraker, &InstrumentLightingESSMnBCircuitBraker);
+	ECSPressGroups1Feeder.WireToBuses(&ECSTransducerPressGroup1MnACircuitBraker, &ECSTransducerPressGroup1MnBCircuitBraker);
+	ECSPressGroups2Feeder.WireToBuses(&ECSTransducerPressGroup2MnACircuitBraker, &ECSTransducerPressGroup2MnBCircuitBraker);
+	CabinTempSensorFeeder.WireToBuses(&ECSTransducerTempMnACircuitBraker, &ECSTransducerTempMnBCircuitBraker);
+
 	H2Tank1TempSensor.Init(&CryogenicQTYAmpl1CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1"));
 	H2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
 	O2Tank1TempSensor.Init(&CryogenicQTYAmpl1CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"));
 	O2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"));
+	CabinPressSensor.Init(&ECSPressGroups2Feeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
+	CabinTempSensor.Init(&CabinTempSensorFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
+	SuitCabinDeltaPressSensor.Init(&Panel276CB2, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNVALVE"), (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
+	CabinCO2PartPressSensor.Init(&ECSPressGroups2Feeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
 
 	// Optics initialization
 	optics.Init(this);

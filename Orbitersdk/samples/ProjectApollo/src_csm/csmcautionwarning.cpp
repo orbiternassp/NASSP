@@ -593,8 +593,10 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// and warning system and will activate a warning if the carbon dioxide partial pressure 
 		// reaches 7.6 millimeters of mercury."
 		//
+		// 2.5V is technically 7.5 and not 7.6MMHG, but close enough.
+		//
 
-		SetLight(CSM_CWS_CO2_LIGHT, (atm.SuitCO2MMHG >= 7.6));
+		SetLight(CSM_CWS_CO2_LIGHT, sat->CabinCO2PartPressSensor.Voltage() > 2.5);
 
 		//
 		// Suit compressor delta pressure below 0.22 psi

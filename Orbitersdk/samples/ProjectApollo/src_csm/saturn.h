@@ -3505,10 +3505,20 @@ protected:
 
 	//Instrumentation
 	SCE sce;
+	PowerMerge ECSPressGroups1Feeder;
+	PowerMerge ECSPressGroups2Feeder;
+	PowerMerge CabinTempSensorFeeder;
+	PowerMerge InstrumentationPowerFeeder;
+public:
 	CSMTankTempTransducer H2Tank1TempSensor;
 	CSMTankTempTransducer H2Tank2TempSensor;
 	CSMTankTempTransducer O2Tank1TempSensor;
 	CSMTankTempTransducer O2Tank2TempSensor;
+	CSMTankPressTransducer CabinPressSensor;
+	CSMTankTempTransducer CabinTempSensor;
+	CSMDeltaPressINH2OTransducer SuitCabinDeltaPressSensor;
+	CSMCO2PressTransducer CabinCO2PartPressSensor;
+protected:
 
 	// CM Optics
 	CMOptics optics;

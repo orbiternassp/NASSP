@@ -238,10 +238,18 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	vhfa(_V(0.0, 0.7716246, 0.63607822)),
 	vhfb(_V(0.0, -0.7716246, -0.63607822)),
 	LogicPowerSwitch(2),
-	H2Tank1TempSensor("H2Tank1-Temp-Sensor", -425.0, -200.0, 0.0, 5.0),
-	H2Tank2TempSensor("H2Tank2-Temp-Sensor", -425.0, -200.0, 0.0, 5.0),
-	O2Tank1TempSensor("O2Tank1-Temp-Sensor", -325.0, 80.0, 0.0, 5.0),
-	O2Tank2TempSensor("O2Tank2-Temp-Sensor", -325.0, 80.0, 0.0, 5.0)
+	H2Tank1TempSensor("H2Tank1-Temp-Sensor", -425.0, -200.0),
+	H2Tank2TempSensor("H2Tank2-Temp-Sensor", -425.0, -200.0),
+	O2Tank1TempSensor("O2Tank1-Temp-Sensor", -325.0, 80.0),
+	O2Tank2TempSensor("O2Tank2-Temp-Sensor", -325.0, 80.0),
+	CabinPressSensor("Cabin-Press-Sensor", 0.0, 17.0),
+	ECSPressGroups1Feeder("ECS-Press-Groups1-Feeder", Panelsdk),
+	ECSPressGroups2Feeder("ECS-Press-Groups2-Feeder", Panelsdk),
+	CabinTempSensor("Cabin-Temp-Sensor", 40.0, 125.0),
+	CabinTempSensorFeeder("Cabin-Temp-Sensor-Feeder", Panelsdk),
+	InstrumentationPowerFeeder("Instrumentation-Power-Feeder", Panelsdk),
+	SuitCabinDeltaPressSensor("Suit-Cabin-Delta-Press-Sensor", -5.0, 5.0),
+	CabinCO2PartPressSensor("Cabin-CO2-Part-Press-Sensor", 0.0, 30.0)
 
 #pragma warning ( pop ) // disable:4355
 
