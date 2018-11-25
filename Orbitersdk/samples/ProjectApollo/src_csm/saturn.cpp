@@ -237,7 +237,11 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnid(_V(0.0, 0.707108, -0.707108)),
 	vhfa(_V(0.0, 0.7716246, 0.63607822)),
 	vhfb(_V(0.0, -0.7716246, -0.63607822)),
-	LogicPowerSwitch(2)
+	LogicPowerSwitch(2),
+	H2Tank1TempSensor("H2Tank1-Temp-Sensor", -425.0, -200.0, 0.0, 5.0),
+	H2Tank2TempSensor("H2Tank2-Temp-Sensor", -425.0, -200.0, 0.0, 5.0),
+	O2Tank1TempSensor("O2Tank1-Temp-Sensor", -325.0, 80.0, 0.0, 5.0),
+	O2Tank2TempSensor("O2Tank2-Temp-Sensor", -325.0, 80.0, 0.0, 5.0)
 
 #pragma warning ( pop ) // disable:4355
 

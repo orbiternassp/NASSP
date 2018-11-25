@@ -63,6 +63,7 @@
 #include "siisystems.h"
 #include "sivbsystems.h"
 #include "sce.h"
+#include "csmsensors.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -3501,7 +3502,13 @@ protected:
 	VHFAntenna vhfb;
 	VHFRangingSystem vhfranging;
 	VHFAMTransceiver vhftransceiver;
+
+	//Instrumentation
 	SCE sce;
+	CSMTankTempTransducer H2Tank1TempSensor;
+	CSMTankTempTransducer H2Tank2TempSensor;
+	CSMTankTempTransducer O2Tank1TempSensor;
+	CSMTankTempTransducer O2Tank2TempSensor;
 
 	// CM Optics
 	CMOptics optics;

@@ -406,7 +406,13 @@ void Saturn::SystemsInit() {
 	pcm.Init(this);
 	vhfranging.Init(this, &VHFStationAudioRCB, &VHFRangingSwitch, &VHFRNGSwitch, &vhftransceiver);
 	vhftransceiver.Init(&VHFAMASwitch, &VHFAMBSwitch, &RCVOnlySwitch, &VHFStationAudioCTRCB);
+
+	//Instrumentation
 	sce.Init(this);
+	H2Tank1TempSensor.Init(&CryogenicQTYAmpl1CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1"));
+	H2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
+	O2Tank1TempSensor.Init(&CryogenicQTYAmpl1CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1"));
+	O2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2"));
 
 	// Optics initialization
 	optics.Init(this);
@@ -2249,6 +2255,12 @@ void Saturn::CheckSMSystemsState()
 
 		// Close O2 SM supply
 		O2SMSupply.Close();
+
+		//SM sensors
+		H2Tank1TempSensor.WireTo(NULL);
+		H2Tank2TempSensor.WireTo(NULL);
+		O2Tank1TempSensor.WireTo(NULL);
+		O2Tank2TempSensor.WireTo(NULL);
 	}
 }
 

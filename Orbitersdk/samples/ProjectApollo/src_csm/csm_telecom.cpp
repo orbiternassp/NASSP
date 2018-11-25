@@ -1547,26 +1547,26 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 53:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 54:		// O2 TK 1 TEMP
-							return(scale_data(0,-325,80));
+							return(scale_data(sat->O2Tank1TempSensor.Voltage(), 0.0, 5.0));
 						case 55:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 56:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 57:		// O2 TK 2 TEMP
-							return(scale_data(0,-325,80));
+							return(scale_data(sat->O2Tank2TempSensor.Voltage(), 0.0, 5.0));
 						case 58:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 59:		// FU LINE 1 TEMP
 							return(scale_data(0,0,200));
 
 						case 60:		// H2 TK 1 TEMP
-							return(scale_data(0,-425,-200));
+							return(scale_data(sat->H2Tank1TempSensor.Voltage(), 0.0, 5.0));
 						case 61:		// NUCLEAR PARTICLE DETECTOR TEMP
 							return(scale_data(0,-109,140));
 						case 62:		// NUCLEAR PARTICLE ANALYZER TEMP
 							return(scale_data(0,-109,140));
 						case 63:		// H2 TK 2 TEMP
-							return(scale_data(0,-425,-200));
+							return(scale_data(sat->H2Tank2TempSensor.Voltage(), 0.0, 5.0));
 						case 64:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 65:		// SIDE HS BOND LOC 1 TEMP
@@ -1575,7 +1575,8 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							sat->GetTankPressures( smTankPress );
 							return(scale_data(smTankPress.O2Tank2PressurePSI, 50, 1050));
 						case 67:		// FC 3 RAD IN TEMP
-							return(scale_data(0,-50,300));
+							sat->GetFuelCellStatus(3, fcStatus);
+							return(scale_data(fcStatus.RadiatorTempInF, -50, 300));
 						case 68:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 69:		// FC 3 COND EXH TEMP
@@ -1615,14 +1616,14 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 85:		// 3.2 KHz 28V SUPPLY
 							return(scale_data(0,0,31.1));
 						case 86:		// INVERTER 1 TEMP
-							return(scale_data(sat->sce.GetVoltage(2, 3), 0.0, 5.0));
+							return(scale_data(sat->sce.GetVoltage(2, 0), 0.0, 5.0));
 						case 87:		// SEC RAD IN TEMP
 							sat->GetSecECSCoolingStatus(scs);
 							return(scale_data(scs.RadiatorInletTempF, 55, 120));
 						case 88:		// INVERTER 2 TEMP
-							return(scale_data(sat->sce.GetVoltage(2, 4), 0.0, 5.0));
+							return(scale_data(sat->sce.GetVoltage(2, 1), 0.0, 5.0));
 						case 89:		// INVERTER 3 TEMP
-							return(scale_data(sat->sce.GetVoltage(2, 5), 0.0, 5.0));
+							return(scale_data(sat->sce.GetVoltage(2, 2), 0.0, 5.0));
 						case 90:		// SEC RAD OUT TEMP
 							sat->GetSecECSCoolingStatus(scs);
 							return(scale_data(scs.RadiatorOutletTempF, 30, 70));
@@ -1738,11 +1739,11 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,0,5));
 						case 139:		// BAY 5 FU TK SURFACE TEMP
 							return(scale_data(0,-100,200));
-
 						case 140:		// BAY 6 FU TK SURFACE TEMP
 							return(scale_data(0,-100,200));
 						case 141:		// H2 TK 1 QTY
-							return(scale_data(0,0,100));
+							sat->GetTankQuantities(tankQuantities);
+							return(scale_data(tankQuantities.H2Tank1Quantity * 100.0, 0, 100));
 						case 142:		// BAY 2 OX TK SURFACE TEMP
 							return(scale_data(0,-100,200));
 						case 143:		// OX LINE ENTRY SUMP TK TEMP
@@ -1761,7 +1762,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 						case 149:		// DOSIMETER RATE
 							return(scale_data(0,0,5));
-
 						case 150:		// O2 TK 1 PRESS
 							sat->GetTankPressures( smTankPress );
 							return(scale_data(smTankPress.O2Tank1PressurePSI, 50, 1050));
@@ -1845,7 +1845,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(rcsStatus.PropellantPressurePSI, 0, 300));
 						case 29:		// FC 1 N2 PRESS
 							return(scale_data(0,0,75));
-
 						case 30:		// FC 2 N2 PRESS
 							return(scale_data(0,0,75));
 						case 31:		// FU/OX VLV 1 POS
