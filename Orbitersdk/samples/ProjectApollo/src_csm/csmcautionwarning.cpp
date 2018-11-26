@@ -573,7 +573,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		double cf = datm.DisplayedO2FlowLBH;
 		bool LightO2Warning = false;
 
-		if (cf > 1.0) {
+		if (cf >= 1.0) {
 			if (LastO2FlowCheckHigh) {
 				if (simt > NextO2FlowCheckTime) {
 					LightO2Warning = true;
@@ -596,7 +596,7 @@ void CSMCautionWarningSystem::TimeStep(double simt)
 		// 2.5V is technically 7.5 and not 7.6MMHG, but close enough.
 		//
 
-		SetLight(CSM_CWS_CO2_LIGHT, sat->CabinCO2PartPressSensor.Voltage() > 2.5);
+		SetLight(CSM_CWS_CO2_LIGHT, sat->CO2PartPressSensor.Voltage() > 2.5);
 
 		//
 		// Suit compressor delta pressure below 0.22 psi

@@ -357,14 +357,12 @@ protected:
 
 class SaturnH2oQuantityMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, CircuitBrakerSwitch *cba, CircuitBrakerSwitch *cbb);
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	ToggleSwitch *H2oQtyIndSwitch;
-	CircuitBrakerSwitch *CbA;
-	CircuitBrakerSwitch *CbB;
 };
 
 class SaturnAccelGMeter : public SaturnRoundMeter {

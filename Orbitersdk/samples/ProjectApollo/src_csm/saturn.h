@@ -2157,7 +2157,7 @@ protected:
 	ThreePosSwitch EcsRadiatorsFlowContAutoSwitch;
 	ThreePosSwitch EcsRadiatorsFlowContPwrSwitch;
 	ThreePosSwitch EcsRadiatorsManSelSwitch;
-	ThreePosSwitch EcsRadiatorsHeaterPrimSwitch;
+	ThreeSourceSwitch EcsRadiatorsHeaterPrimSwitch;
 	ToggleSwitch EcsRadiatorsHeaterSecSwitch;
 
 	//
@@ -3507,8 +3507,10 @@ protected:
 	SCE sce;
 	PowerMerge ECSPressGroups1Feeder;
 	PowerMerge ECSPressGroups2Feeder;
-	PowerMerge CabinTempSensorFeeder;
+	PowerMerge ECSTempTransducerFeeder;
+	PowerMerge ECSWastePotTransducerFeeder;
 	PowerMerge InstrumentationPowerFeeder;
+	PowerMerge ECSSecTransducersFeeder;
 public:
 	CSMTankTempTransducer H2Tank1TempSensor;
 	CSMTankTempTransducer H2Tank2TempSensor;
@@ -3517,7 +3519,32 @@ public:
 	CSMTankPressTransducer CabinPressSensor;
 	CSMTankTempTransducer CabinTempSensor;
 	CSMDeltaPressINH2OTransducer SuitCabinDeltaPressSensor;
-	CSMCO2PressTransducer CabinCO2PartPressSensor;
+	CSMCO2PressTransducer CO2PartPressSensor;
+	CSMTankPressTransducer O2SurgeTankPressSensor;
+	CSMTankTempTransducer SuitTempSensor;
+	CSMTankQuantityTransducer WasteH2OQtySensor;
+	CSMTankQuantityTransducer PotH2OQtySensor;
+	CSMTankPressTransducer SuitPressSensor;
+	CSMDeltaPressPSITransducer SuitCompressorDeltaPSensor;
+	CSMTankPressTransducer GlycolPumpOutPressSensor;
+	CSMTankTempTransducer GlyEvapOutSteamTempSensor;
+	CSMTankTempTransducer GlyEvapOutTempSensor;
+	CSMTankQuantityTransducer GlycolAccumQtySensor;
+	CSMTankTempTransducer ECSRadOutTempSensor;
+	CSMEvaporatorPressTransducer GlyEvapBackPressSensor;
+	CSMPipeFlowTransducer ECSO2FlowO2SupplyManifoldSensor;
+	CSMTankPressTransducer O2SupplyManifPressSensor;
+	CSMTankPressTransducer SecGlyPumpOutPressSensor;
+	CSMTankTempTransducer SecEvapOutLiqTempSensor;
+	CSMTankQuantityTransducer SecGlycolAccumQtySensor;
+	CSMEvaporatorPressTransducer SecEvapOutSteamPressSensor;
+	//CSMTankPressTransducer H2OGlyResPressSensor;
+	//Primary glycol flow rate needs a pipe implemented with name
+	//CSMPipeFlowTransducer PriGlycolFlowRateSensor;
+	CSMTankTempTransducer PriEvapInletTempSensor;
+	CSMTankTempTransducer PriRadInTempSensor;
+	CSMTankTempTransducer SecRadInTempSensor;
+	CSMTankTempTransducer SecRadOutTempSensor;
 protected:
 
 	// CM Optics

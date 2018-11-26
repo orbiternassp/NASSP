@@ -60,6 +60,15 @@ public:
 	double GetValue();
 };
 
+class CSMTankQuantityTransducer : public CSMTankTransducer
+{
+public:
+	CSMTankQuantityTransducer(char *i_name, double minIn, double maxIn, double tm);
+	double GetValue();
+protected:
+	double totalMass;
+};
+
 class CSMDeltaPressTransducer : public Transducer
 {
 public:
@@ -82,4 +91,30 @@ class CSMDeltaPressPSITransducer : public CSMDeltaPressTransducer
 public:
 	CSMDeltaPressPSITransducer(char *i_name, double minIn, double maxIn);
 	double GetValue();
+};
+
+class CSMEvaporatorTransducer : public Transducer
+{
+public:
+	CSMEvaporatorTransducer(char *i_name, double minIn, double maxIn);
+	void Init(e_object *e, h_Evaporator *ev);
+protected:
+	h_Evaporator *evap;
+};
+
+class CSMEvaporatorPressTransducer : public CSMEvaporatorTransducer
+{
+public:
+	CSMEvaporatorPressTransducer(char *i_name, double minIn, double maxIn);
+	double GetValue();
+};
+
+class CSMPipeFlowTransducer : public Transducer
+{
+public:
+	CSMPipeFlowTransducer(char *i_name, double minIn, double maxIn);
+	void Init(e_object *e, h_Pipe *p);
+	double GetValue();
+protected:
+	h_Pipe *pipe;
 };

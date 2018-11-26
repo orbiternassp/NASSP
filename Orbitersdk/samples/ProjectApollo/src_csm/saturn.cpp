@@ -246,11 +246,35 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	ECSPressGroups1Feeder("ECS-Press-Groups1-Feeder", Panelsdk),
 	ECSPressGroups2Feeder("ECS-Press-Groups2-Feeder", Panelsdk),
 	CabinTempSensor("Cabin-Temp-Sensor", 40.0, 125.0),
-	CabinTempSensorFeeder("Cabin-Temp-Sensor-Feeder", Panelsdk),
+	ECSTempTransducerFeeder("ECS-Temp-Transducer-Feeder", Panelsdk),
 	InstrumentationPowerFeeder("Instrumentation-Power-Feeder", Panelsdk),
 	SuitCabinDeltaPressSensor("Suit-Cabin-Delta-Press-Sensor", -5.0, 5.0),
-	CabinCO2PartPressSensor("Cabin-CO2-Part-Press-Sensor", 0.0, 30.0)
-
+	CO2PartPressSensor("CO2-Part-Press-Sensor", 0.0, 30.0),
+	O2SurgeTankPressSensor("O2-Surge-Tank-Press-Sensor", 50.0, 1050.0),
+	SuitTempSensor("Suit-Temp-Sensor", 20.0, 95.0),
+	ECSWastePotTransducerFeeder("ECS-Waste-Pot-Transducer-Feeder", Panelsdk),
+	WasteH2OQtySensor("Waste-H2O-Qty-Sensor", 0.0, 1.0, 25400.0),
+	PotH2OQtySensor("Pot-H2O-Qty-Sensor", 0.0, 1.0, 16300.0),
+	SuitPressSensor("SuitPressSensor", 0.0, 17.0),
+	SuitCompressorDeltaPSensor("Suit-Compressor-DeltaP-Sensor", 0.0, 1.0),
+	GlycolPumpOutPressSensor("Glycol-Pump-Out-Press-Sensor", 0.0, 60.0),
+	GlyEvapOutSteamTempSensor("Gly-Evap-Out-Steam-Temp-Sensor", 20.0, 95.0),
+	GlyEvapOutTempSensor("Gly-Evap-Out-Temp-Sensor", 25.0, 75.0),
+	GlycolAccumQtySensor("Glycol-Accum-Qty-Sensor", 0.0, 1.0, 10000.0),
+	ECSRadOutTempSensor("ECSRadOutTempSensor", -50.0, 100.0),
+	GlyEvapBackPressSensor("Gly-Evap-Back-Press-Sensor", 0.05, 0.25),
+	ECSO2FlowO2SupplyManifoldSensor("ECS-O2-Flow-O2-Supply-Manifold-Sensor", 0.2, 1.0),
+	O2SupplyManifPressSensor("O2-Supply-Manif-Press-Sensor", 0.0, 150.0),
+	ECSSecTransducersFeeder("ECS-Sec-Transducers-Feeder", Panelsdk),
+	SecGlyPumpOutPressSensor("Sec-Gly-Pump-Out-Press-Sensor", 0.0, 60.0),
+	SecEvapOutLiqTempSensor("Sec-Eva-pOut-Liq-Temp-Sensor", 25.0, 75.0),
+	SecGlycolAccumQtySensor("Sec-Glycol-Accum-Qty-Sensor", 0.0, 1.0, 10000.0),
+	SecEvapOutSteamPressSensor("Sec-Evap-Out-Steam-Press-Sensor", 0.05, 0.25),
+	//PriGlycolFlowRateSensor("Pri-Glycol-Flow-Rate-Sensor", 150.0, 300.0)
+	PriEvapInletTempSensor("Pri-Evap-Inlet-Temp-Sensor", 35.0, 100.0),
+	PriRadInTempSensor("Pri-Rad-In-Temp-Sensor", 55.0, 120.0),
+	SecRadInTempSensor("Sec-Rad-In-Temp-Sensor", 55.0, 120.0),
+	SecRadOutTempSensor("Sec-Rad-Out-Temp-Sensor", 30.0, 70.0)
 #pragma warning ( pop ) // disable:4355
 
 {	

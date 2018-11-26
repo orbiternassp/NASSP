@@ -97,6 +97,19 @@ double CSMCO2PressTransducer::GetValue()
 	return 0.0;
 }
 
+CSMTankQuantityTransducer::CSMTankQuantityTransducer(char *i_name, double minIn, double maxIn, double tm) :
+	CSMTankTransducer(i_name, minIn, maxIn)
+{
+	totalMass = tm;
+}
+
+double CSMTankQuantityTransducer::GetValue()
+{
+	if (tank) return tank->mass / totalMass;
+
+	return 0.0;
+}
+
 CSMDeltaPressTransducer::CSMDeltaPressTransducer(char *i_name, double minIn, double maxIn) :
 	Transducer(i_name, minIn, maxIn, 0.0, 5.0)
 {
@@ -132,6 +145,51 @@ CSMDeltaPressPSITransducer::CSMDeltaPressPSITransducer(char *i_name, double minI
 double CSMDeltaPressPSITransducer::GetValue()
 {
 	if (tank1 && tank2) return (tank1->space.Press - tank2->space.Press)*PSI;
+
+	return 0.0;
+}
+
+CSMEvaporatorTransducer::CSMEvaporatorTransducer(char *i_name, double minIn, double maxIn) :
+	Transducer(i_name, minIn, maxIn, 0.0, 5.0)
+{
+
+}
+
+void CSMEvaporatorTransducer::Init(e_object *e, h_Evaporator *ev)
+{
+	evap = ev;
+	WireTo(e);
+}
+
+CSMEvaporatorPressTransducer::CSMEvaporatorPressTransducer(char *i_name, double minIn, double maxIn) :
+	CSMEvaporatorTransducer(i_name, minIn, maxIn)
+{
+
+}
+
+double CSMEvaporatorPressTransducer::GetValue()
+{
+	if (evap) return evap->steamPressure*PSI;
+
+	return 0.0;
+}
+
+
+CSMPipeFlowTransducer::CSMPipeFlowTransducer(char *i_name, double minIn, double maxIn) :
+	Transducer(i_name, minIn, maxIn, 0.0, 5.0)
+{
+
+}
+
+void CSMPipeFlowTransducer::Init(e_object *e, h_Pipe *p)
+{
+	pipe = p;
+	WireTo(e);
+}
+
+double CSMPipeFlowTransducer::GetValue()
+{
+	if (pipe) return pipe->flow*LBH;
 
 	return 0.0;
 }
