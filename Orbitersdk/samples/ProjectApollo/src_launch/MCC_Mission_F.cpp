@@ -381,7 +381,7 @@ void MCC::MissionSequence_F()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 11 && MoonRevTime > 70.0*60.0, 70, MST_F_LUNAR_ORBIT_DOI_DAY_11);
 		break;
 	case MST_F_LUNAR_ORBIT_DOI_DAY_11: //AGS K Factor update to DOI update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, MoonRev >= 12 && MoonRevTime > 30.0*60.0, 65, MST_F_LUNAR_ORBIT_DOI_DAY_12);
+		UpdateMacro(UTP_PADONLY, PT_AP11AGSACT, MoonRev >= 12 && MoonRevTime > 30.0*60.0, 65, MST_F_LUNAR_ORBIT_DOI_DAY_12);
 		break;
 	case MST_F_LUNAR_ORBIT_DOI_DAY_12: //DOI update to Phasing update
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 71, MST_F_LUNAR_ORBIT_DOI_DAY_13);

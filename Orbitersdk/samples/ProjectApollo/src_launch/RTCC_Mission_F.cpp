@@ -1414,6 +1414,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 65: //AGS ACTIVATION UPDATE
+	{
+		AP11AGSACT *form = (AP11AGSACT*)pad;
+
+		form->KFactor = 90.0*3600.0;
+		form->DEDA224 = 0;
+		form->DEDA225 = 0;
+		form->DEDA226 = 0;
+		form->DEDA227 = 0;
+	}
+	break;
 	case 70: //CSM SEPARATION BURN
 	{
 		AP11ManPADOpt opt;
@@ -1444,6 +1455,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.vesseltype = 0;
 
 		AP11ManeuverPAD(&opt, *form);
+		sprintf(form->purpose, "Separation");
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 		AGCStateVectorUpdate(buffer2, sv, false, AGCEpoch, GETbase);
