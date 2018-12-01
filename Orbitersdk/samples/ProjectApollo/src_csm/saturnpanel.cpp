@@ -3038,7 +3038,7 @@ void Saturn::SetSwitches(int panel) {
 	FDAIPowerRotaryRow.Init(AID_FDAIPOWERROTARY, MainPanel);
 	FDAIPowerRotarySwitch.Init(0,  0, 90, 90, srf[SRF_FDAIPOWERROTARY], srf[SRF_BORDER_90x90], FDAIPowerRotaryRow, &fdaiLeft, &fdaiRight,
 		                       &SystemMnACircuitBraker, &SystemMnBCircuitBraker, &StabContSystemAc1CircuitBraker, &StabContSystemAc2CircuitBraker,
-							   &GPFPIPitch1Meter, &GPFPIPitch2Meter, &GPFPIYaw1Meter, &GPFPIYaw2Meter);
+							   &GPFPIPitch1Meter, &GPFPIPitch2Meter, &GPFPIYaw1Meter, &GPFPIYaw2Meter, &eda);
 
 	SCSElectronicsPowerRotaryRow.Init(AID_SCSELECTRONICSPOWERROTARY, MainPanel);
 	SCSElectronicsPowerRotarySwitch.Init(0,  0, 90, 90, srf[SRF_ECSGLYCOLPUMPROTARY], srf[SRF_BORDER_90x90], SCSElectronicsPowerRotaryRow);
@@ -4469,7 +4469,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 							break;
 						case THREEPOSSWITCH_DOWN: // GDC
 							attitude = gdc.GetAttitude();
-							errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnBMAG1Error());
+							errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
 							break;
 					}
 					break;				
@@ -4506,7 +4506,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 				case THREEPOSSWITCH_UP:     // 1+2 - FDAI2 shows GDC ATT / BMAG1 ERR
 					attitude = gdc.GetAttitude();
 					euler_rates = gdc.rates;
-					errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnBMAG1Error());
+					errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
 					break;
 				case THREEPOSSWITCH_CENTER: // 2
 					euler_rates = gdc.rates;
@@ -4526,7 +4526,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 							break;
 						case THREEPOSSWITCH_DOWN: // GDC
 							attitude = gdc.GetAttitude();							
-							errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnBMAG1Error());
+							errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
 							break;
 					}
 					break;

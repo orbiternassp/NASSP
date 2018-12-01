@@ -1322,10 +1322,79 @@ void ASCP::LoadState(FILEHANDLE scn){
 // EDA
 EDA::EDA(){
 	sat = NULL; // Initialize
+	AttitudeError = _V(0, 0, 0);
+	ac_source1 = NULL;
+	ac_source2 = NULL;
 }
 
 void EDA::Init(Saturn *vessel){
 	sat = vessel;
+}
+
+void EDA::WireTo(e_object *ac1, e_object *ac2)
+{
+	ac_source1 = ac1;
+	ac_source2 = ac2;
+}
+
+void EDA::Timestep(double simdt)
+{
+	if (!IsPowered())
+	{
+		AttitudeError = _V(0, 0, 0);
+		return;
+	}
+
+	AttitudeError = ReturnBMAG1Error();
+}
+
+bool EDA::IsPowered()
+{
+	if (ac_source1->Voltage() > SP_MIN_DCVOLTAGE) return true;
+	if (ac_source2->Voltage() > SP_MIN_DCVOLTAGE) return true;
+
+	return false;
+}
+
+bool EDA::HasSigCondPower()
+{
+	if (sat->SIGCondDriverBiasPower1Switch.IsPowered()) return true;
+
+	return false;
+}
+
+double EDA::GetConditionedPitchAttErr()
+{
+	if (!HasSigCondPower()) { return 0.0; }
+
+	//Attitude error already scaled -41 to 41 pixels
+	return scale_data(AttitudeError.z);
+}
+
+double EDA::GetConditionedYawAttErr()
+{
+	if (!HasSigCondPower()) { return 0.0; }
+
+	//Attitude error already scaled -41 to 41 pixels
+	return scale_data(AttitudeError.y);
+}
+
+double EDA::GetConditionedRollAttErr()
+{
+	if (!HasSigCondPower()) { return 0.0; }
+
+	//Attitude error already scaled -41 to 41 pixels
+	return scale_data(AttitudeError.x);
+}
+
+double EDA::scale_data(double data)
+{
+	// First eliminate cases outside of the scales
+	if (data >= 41.0) { return 5.0; }
+	if (data <= -41.0) { return 0.0; }
+
+	// then return result
+	return (data + 41.0) / 16.4;
 }
 
 VECTOR3 EDA::ReturnCMCErrorNeedles(){

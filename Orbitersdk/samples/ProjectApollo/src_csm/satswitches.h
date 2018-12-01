@@ -32,6 +32,7 @@ class SMRCSPropellantSource;
 class CMRCSPropellantSource;
 class DSE;
 class SECS;
+class EDA;
 
 class SaturnToggleSwitch : public ToggleSwitch {
 public:
@@ -621,10 +622,10 @@ public:
 
 class FDAIPowerRotationalSwitch: public RotationalSwitch {
 public:
-	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = NULL; ACSource1 = ACSource2 = DCSource1 = DCSource2 = NULL; GPFPIPitch1 = GPFPIPitch2 = GPFPIYaw1 = GPFPIYaw2 = NULL; };
+	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = NULL; ACSource1 = ACSource2 = DCSource1 = DCSource2 = NULL; GPFPIPitch1 = GPFPIPitch2 = GPFPIYaw1 = GPFPIYaw2 = NULL; eda = NULL; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2, 
 		      e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2, 
-			  SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2);
+			  SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2, EDA *ed);
 
 	virtual bool SwitchTo(int newValue);
 	void LoadState(char *line);
@@ -634,6 +635,7 @@ protected:
 
 	FDAI *FDAI1, *FDAI2;
 	SaturnGPFPIMeter *GPFPIPitch1, *GPFPIPitch2, *GPFPIYaw1, *GPFPIYaw2;
+	EDA *eda;
 	e_object *DCSource1, *DCSource2, *ACSource1, *ACSource2;
 };
 

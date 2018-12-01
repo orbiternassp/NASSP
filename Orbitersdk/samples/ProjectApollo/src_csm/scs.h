@@ -205,11 +205,28 @@ class EDA {
 public: // Same stuff about speed and I'm lazy too.
 	EDA();															// Cons
 	void Init(Saturn *vessel);										// Initialization
+	void WireTo(e_object *ac1, e_object *ac2);						// Wire to power sources
+	void Timestep(double simdt);
+
 	VECTOR3 ReturnCMCErrorNeedles();								// Return said data.
 	VECTOR3 ReturnASCPError(VECTOR3 attitude);						// Return said data.
-	VECTOR3 ReturnBMAG1Error();										// See the general theme here?
 	VECTOR3 AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors);  // Adjust errors for roll so as to be FLY-TO
 	VECTOR3 CalcErrors(VECTOR3 target);
+	VECTOR3 GetFDAIAttitudeError() { return AttitudeError; }
+	double GetConditionedPitchAttErr();
+	double GetConditionedYawAttErr();
+	double GetConditionedRollAttErr();
+
+protected:
+	bool HasSigCondPower();
+	bool IsPowered();
+	VECTOR3 ReturnBMAG1Error();
+	double scale_data(double data);
+
+	VECTOR3 AttitudeError;
+
+	e_object *ac_source1;					  	          			// Power supply for FDAI 1 circuits
+	e_object *ac_source2;											// Power supply for FDAI 2 circuits
 
 	Saturn *sat;
 };

@@ -1471,7 +1471,7 @@ double SaturnGPFPIYawMeter::QueryValue()
 
 void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2,
     					 		     e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2,
-									 SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2)
+									 SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2, EDA *ed)
 {
 	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	FDAI1 = F1;
@@ -1486,6 +1486,8 @@ void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE su
 	GPFPIPitch2 =gpfpiPitch2;
 	GPFPIYaw1 =gpfpiYaw1;
 	GPFPIYaw2 =gpfpiYaw2;
+
+	eda = ed;
 
 	CheckFDAIPowerState();
 }
@@ -1507,6 +1509,9 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIPitch2->WireTo(NULL, NULL);
 		GPFPIYaw1->WireTo(NULL, NULL);
 		GPFPIYaw2->WireTo(NULL, NULL);
+
+		eda->WireTo(NULL, NULL);
+
 		break;
 
 	case 1:
@@ -1517,6 +1522,8 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIPitch2->WireTo(NULL, NULL);
 		GPFPIYaw1->WireTo(DCSource1, ACSource1);
 		GPFPIYaw2->WireTo(NULL, NULL);
+
+		eda->WireTo(ACSource1, NULL);
 		break;
 
 	case 2:
@@ -1527,6 +1534,8 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIPitch2->WireTo(DCSource2, ACSource2);
 		GPFPIYaw1->WireTo(NULL, NULL);
 		GPFPIYaw2->WireTo(DCSource2, ACSource2);
+
+		eda->WireTo(NULL, ACSource2);
 		break;
 
 	case 3:
@@ -1537,6 +1546,8 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIPitch2->WireTo(DCSource2, ACSource2);
 		GPFPIYaw1->WireTo(DCSource1, ACSource1);
 		GPFPIYaw2->WireTo(DCSource2, ACSource2);
+
+		eda->WireTo(ACSource1, ACSource2);
 		break;
 	}
 }

@@ -1449,14 +1449,12 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 19:		// SM ENG PKG C TEMP
 							sat->GetRCSStatus( RCS_SM_QUAD_C, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));
-
 						case 20:		// SM ENG PKG D TEMP
 							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));
 						case 21:		// CM HE TK B PRESS
 							sat->GetRCSStatus( RCS_CM_RING_2, rcsStatus );
 							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
-
 						case 22:		// DOCKING PROBE TEMP
 							return(scale_data(0,-100,300));
 						case 23:		// UNKNOWN - HBR ONLY
@@ -1464,7 +1462,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 24:		// SM HE TK A PRESS
 							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
 							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
-
 						case 25:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 26:		// OX TK 1 QTY -TOTAL AUX
@@ -1472,16 +1469,13 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 27:		// SM HE TK B PRESS
 							sat->GetRCSStatus( RCS_SM_QUAD_B, rcsStatus );
 							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
-
 						case 28:		// OX TK 2 QTY
 							return(scale_data(0,0,60));
 						case 29:		// FU TK 1 QTY -TOTAL AUX
 							return(scale_data(0,0,50));
-
 						case 30:		// SM HE TK C PRESS
 							sat->GetRCSStatus( RCS_SM_QUAD_C, rcsStatus );
 							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
-
 						case 31:		// FU TK 2 QTY
 							return(scale_data(0,0,60));
 						case 32:		// UNKNOWN - HBR ONLY
@@ -1489,7 +1483,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 33:		// SM HE TK D PRESS
 							sat->GetRCSStatus( RCS_SM_QUAD_D, rcsStatus );
 							return(scale_data(rcsStatus.HeliumPressurePSI, 0, 5000));
-
 						case 34:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 35:		// UNKNOWN - HBR ONLY
@@ -1504,7 +1497,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 39:		// H2 TK 2 PRESS
 							sat->GetTankPressures( smTankPress );
 							return(scale_data(smTankPress.H2Tank2PressurePSI, 0, 350));
-
 						case 40:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 41:		// UNKNOWN - HBR ONLY
@@ -1546,7 +1538,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 						case 59:		// FU LINE 1 TEMP
 							return(scale_data(0,0,200));
-
 						case 60:		// H2 TK 1 TEMP
 							return(scale_data(sat->H2Tank1TempSensor.Voltage(), 0.0, 5.0));
 						case 61:		// NUCLEAR PARTICLE DETECTOR TEMP
@@ -1589,7 +1580,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(sat->sce.GetVoltage(2, 8), 0.0, 5.0));
 						case 79:		// SIDE HS BOND LOC 4 TEMP
 							return(scale_data(0,-260,600));
-
 						case 80:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 81:		// POTABLE H20 QTY
@@ -1630,7 +1620,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 						case 99:		// SM HE PRESS/TEMP RATIO B
 							return(scale_data(0,0,100));
-
 						case 100:		// PRI EVAP INLET TEMP
 							return(scale_data(sat->PriEvapInletTempSensor.Voltage(), 0.0, 5.0));
 						case 101:		// H2O TANK - GLY RES PRESS
@@ -1651,7 +1640,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,0,100));
 						case 109:		// SCI EXP #6
 							return(scale_data(0,0,100));
-
 						case 110:		// SCI EXP #7
 							return(scale_data(0,0,100));
 						case 111:		// SCI EXP #2
@@ -1673,7 +1661,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,0,100));
 						case 119:		// SCI EXP #13
 							return(scale_data(0,0,100));
-
 						case 120:		// SPS OX FEED LINE TEMP
 							sat->GetSPSStatus(spsStatus);
 							return(scale_data(spsStatus.OxidizerLineTempF,0,200));
@@ -1697,7 +1684,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 129:		// FC 2 RAD OUT TEMP
 							sat->GetFuelCellStatus( 2, fcStatus );
 							return(scale_data(fcStatus.RadiatorTempOutF, -50, 300));
-
 						case 130:		// FC 1 RAD IN TEMP
 							sat->GetFuelCellStatus( 1, fcStatus );
 							return(scale_data(fcStatus.RadiatorTempInF, -50, 300));
@@ -1716,7 +1702,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 136:		// SM ENG PKG A TEMP
 							sat->GetRCSStatus( RCS_SM_QUAD_A, rcsStatus );
 							return(scale_data(rcsStatus.PackageTempF, 0, 300));
-
 						case 137:		// BAY 3 OX TK SURFACE TEMP
 							return(scale_data(0,-100,200));
 						case 138:		// TM BIAS 2.5 VDC
@@ -1749,7 +1734,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 150:		// O2 TK 1 PRESS
 							sat->GetTankPressures( smTankPress );
 							return(scale_data(smTankPress.O2Tank1PressurePSI, 50, 1050));
-
 						default:
 							sprintf(sat->debugString(),"MEASURE: UNKNOWN 10-A-%d",ccode);
 							break;
@@ -1779,7 +1763,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 9:			// PYRO BUS A VOLTS
 							sat->GetSECSStatus( secsStatus );
 							return(scale_data( secsStatus.BusAVoltage, 0, 40 ));
-
 						case 10:		// SPS HE TK PRESS
 							return(scale_data(sat->GetSPSPropellant()->GetHeliumPressurePSI(), 0, 5000));
 						case 11:		// SPS OX TK PRESS
@@ -1800,7 +1783,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,0.1,10000));
 						case 19:		// PROTON CT RATE CHAN 3
 							return(scale_data(0,0.1,10000));
-
 						case 20:		// PROTON CT RATE CHAN 4
 							return(scale_data(0,0.1,10000));
 						case 21:		// CM HE MANIF 1 PRESS
@@ -1845,7 +1827,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,0.1,10000));
 						case 39:		// SM HE MANF A PRESS
 							return(scale_data(0,0,400));
-
 						case 40:		// SM HE MANF B PRESS
 							return(scale_data(0,0,400));
 						case 41:		// ALPHA CT RATE CHAN 2
@@ -1866,7 +1847,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,0,5));
 						case 49:		// PCM LO LEVEL 15 PCT REF
 							return(scale_data(0,0,1));
-
 						case 50:		// USB RCVR PHASE ERR
 							return(scale_data(0,-90000,90000));
 						case 51:		// ANGLE OF ATTACK
@@ -1887,7 +1867,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return scale_data(sat->sce.GetVoltage(0, 1), 0.0, 5.0);
 						case 59:		// IG 1X RSVR OUT COS
 							return(scale_data(0,130,50));
-
 						case 60:		// MG 1X RSVR OUT SIN
 							return(scale_data(0,-50,50));
 						case 61:		// MG 1X RSVR OUT COS
@@ -1911,7 +1890,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 69:		// FC 3 O2 PRESS
 							sat->GetFuelCellStatus( 3, fcStatus );
 							return(scale_data(fcStatus.O2PressurePSI, 0, 75));
-
 						case 70:		// FC 1 H2 PRESS
 							sat->GetFuelCellStatus( 1, fcStatus );
 							return(scale_data(fcStatus.H2PressurePSI, 0, 75));
@@ -1938,7 +1916,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 79:		// FC 3 H2 FLOW
 							sat->GetFuelCellStatus( 3, fcStatus );
 							return(scale_data(fcStatus.H2FlowLBH, 0, 0.2));
-
 						case 80:		// FC 1 O2 FLOW
 							sat->GetFuelCellStatus( 1, fcStatus );
 							return(scale_data(fcStatus.O2FlowLBH, 0, 1.6));
@@ -1962,7 +1939,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 						case 89:		// UNKNOWN - HBR ONLY
 							return(0);
-
 						case 90:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 91:		// BAT BUS A VOLTS
@@ -1983,7 +1959,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 						case 99:		// UNKNOWN - HBR ONLY
 							return(0);
-
 						case 100:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 101:		// UNKNOWN - HBR ONLY
@@ -2064,7 +2039,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 						case 139:		// UNKNOWN - HBR ONLY
 							return(0);
-
 						case 140:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 141:		// UNKNOWN - HBR ONLY
@@ -2085,7 +2059,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(scale_data(0,0,30));
 						case 149:		// UNKNOWN - HBR ONLY
 							return(0);
-
 						case 150:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 151:		// UNKNOWN - HBR ONLY
@@ -2099,18 +2072,15 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 155:		// CM HE TK A TEMP
 							sat->GetRCSStatus( RCS_CM_RING_1, rcsStatus );
 							return(scale_data(rcsStatus.HeliumTempF, 0, 300));
-
 						case 156:		// CM HE TK B TEMP
 							sat->GetRCSStatus( RCS_CM_RING_2, rcsStatus );
 							return(scale_data(rcsStatus.HeliumTempF, 0, 300));
-
 						case 157:		// SEC GLY PUMP OUT PRESS
 							return(scale_data(sat->SecGlyPumpOutPressSensor.Voltage(), 0.0, 5.0));
 						case 158:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 159:		// UNKNOWN - HBR ONLY
 							return(0);
-
 						case 160:		// UNKNOWN - HBR ONLY
 							return(0);
 						case 161:		// OX SM/ENG INTERFACE P
@@ -2135,7 +2105,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							return(0);
 						case 169:		// DOSIMETER 1 RADIATION
 							return(scale_data(0,0,1000));
-
 						case 170:		// UNKNOWN - HBR ONLY
 						case 171:		// UNKNOWN - HBR ONLY
 						case 172:		// UNKNOWN - HBR ONLY
@@ -2146,7 +2115,6 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 177:		// UNKNOWN - HBR ONLY
 						case 178:		// UNKNOWN - HBR ONLY
 						case 179:		// UNKNOWN - HBR ONLY
-
 						case 180:		// UNKNOWN - HBR ONLY
 							return(0);
 
@@ -2164,7 +2132,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 3:			// OGA SERVO ERR IN PHASE
 							return(scale_data(0,-2.5,2.5));
 						case 4:			// ROLL ATT ERR
-							return(scale_data(0,-50,50));
+							return(scale_data(sat->eda.GetConditionedRollAttErr(), 0.0, 5.0));
 						case 5:			// SCS PITCH BODY RATE
 							return(scale_data(0,-10,10));
 						case 6:			// SCS YAW BODY RATE
@@ -2218,9 +2186,9 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 4:			// UNKNOWN - HBR ONLY
 							return(0);
 						case 5:			// PITCH ATT ERR
-							return(scale_data(0,-15,15));
+							return(scale_data(sat->eda.GetConditionedPitchAttErr(), 0.0, 5.0));
 						case 6:			// YAW ATT ERR
-							return(scale_data(0,-15,15));
+							return(scale_data(sat->eda.GetConditionedYawAttErr(), 0.0, 5.0));
 						case 7:			// ASTRO 1 RESPIR
 							return(scale_data(0,-5,5));
 						case 8:			// ASTRO 2 RESPIR
