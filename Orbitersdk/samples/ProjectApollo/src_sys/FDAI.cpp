@@ -370,18 +370,10 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 	}
 	else
 	{
-		switch (ratescale) {
-		case 1: // TOGGLESWITCH_UP (25 deg/s scale)
-			targetX = (int)(119 + (114.593480*rates.z));
-			targetY = (int)(120 - (114.593480*rates.x));
-			targetZ = (int)(119 - (114.593480*rates.y));
-			break;
-		case 0: // TOGGLESWITCH_DOWN (5 deg/s scale)
-			targetX = (int)(119 + (572.967398 * rates.z));
-			targetY = (int)(120 - (572.967398 * rates.x));
-			targetZ = (int)(119 - (572.967398 * rates.y));
-			break;
-		}
+		//Input is scaled -1.0 to 1.0, this scales to 100 pixels
+		targetX = (int)(119 + (50.0*rates.z));
+		targetY = (int)(120 - (50.0*rates.x));
+		targetZ = (int)(119 - (50.0*rates.y));
 	}
 
 	// Enforce Limits
