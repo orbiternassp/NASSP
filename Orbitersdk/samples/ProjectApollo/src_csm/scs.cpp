@@ -1339,6 +1339,723 @@ void EDA::WireTo(e_object *ac1, e_object *ac2)
 
 void EDA::Timestep(double simdt)
 {
+	//CMC ATT - IMU Enable
+	bool S2_1;
+	//FDAI Scale 50/15 Enable
+	bool S3_1;
+	//FDAI Scale 5/5 Enable
+	bool S3_2;
+	//FDAI Select 1
+	bool S4_1;
+	//FDAI Select 2
+	bool S4_2;
+	//FDAI Select 1/2
+	bool S4_3;
+	//FDAI Source - CMC
+	bool S5_1;
+	//FDAI Source - GDC
+	bool S5_2;
+	//FDAI Source - Att Set
+	bool S5_3;
+	//Att Set - GDC
+	bool S6_1;
+	//Att Set - IMU
+	bool S6_2;
+	//BMAG Roll - Rate 1
+	bool S20_3;
+	//BMAG Pitch - Rate 1
+	bool S21_3;
+	//BMAG Yaw - Rate 1
+	bool S22_3;
+	//GDC Align - Depressed
+	bool S37_D;
+	//EMS Roll - On
+	bool S50_2;
+	//Entry 0.05G - Off
+	bool S51_1;
+	//Entry 0.05G - On
+	bool S51_2;
+	//BMAG uncaged
+	bool GP;
+
+	if (sat->bmag1.IsUncaged().x != 0.0 || sat->bmag1.IsUncaged().x != 0.0 || sat->bmag1.IsUncaged().x != 0.0)
+		GP = true;
+	else
+		GP = false;
+
+	//SWITCH LOGIC
+	//2-1
+	if (sat->CMCAttSwitch.IsUp() && (sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE || sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE))
+		S2_1 = true;
+	else
+		S2_1 = false;
+
+	//3-1
+	if (sat->FDAIScaleSwitch.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S3_1 = true;
+	}
+	else
+	{
+		S3_1 = false;
+	}
+
+	//3-2
+	if (sat->FDAIScaleSwitch.IsCenter() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S3_2 = true;
+	}
+	else
+	{
+		S3_2 = false;
+	}
+
+	//4-1
+	if (sat->FDAISelectSwitch.IsDown() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S4_1 = true;
+	}
+	else
+	{
+		S4_1 = false;
+	}
+
+	//4-2
+	if (sat->FDAISelectSwitch.IsCenter() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S4_2 = true;
+	}
+	else
+	{
+		S4_2 = false;
+	}
+
+	//4-3
+	if (sat->FDAISelectSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S4_3 = true;
+	}
+	else
+	{
+		S4_3 = false;
+	}
+
+	//5-1
+	if (sat->FDAISourceSwitch.IsUp() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S5_1 = true;
+	}
+	else
+	{
+		S5_1 = false;
+	}
+
+	//5-2
+	if (sat->FDAISourceSwitch.IsDown() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S5_2 = true;
+	}
+	else
+	{
+		S5_2 = false;
+	}
+
+	//5-3
+	if (sat->FDAISourceSwitch.IsCenter() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S5_3 = true;
+	}
+	else
+	{
+		S5_3 = false;
+	}
+
+	//6-1
+	if (sat->FDAIAttSetSwitch.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S6_1 = true;
+	}
+	else
+	{
+		S6_1 = false;
+	}
+
+	//6-2
+	if (sat->FDAIAttSetSwitch.IsUp() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S6_2 = true;
+	}
+	else
+	{
+		S6_2 = false;
+	}
+
+	//20-3
+	if (sat->BMAGPitchSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S20_3 = true;
+	}
+	else
+	{
+		S20_3 = false;
+	}
+
+	//21-3
+	if (sat->BMAGPitchSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S21_3 = true;
+	}
+	else
+	{
+		S21_3 = false;
+	}
+
+	//22-3
+	if (sat->BMAGPitchSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S22_3 = true;
+	}
+	else
+	{
+		S22_3 = false;
+	}
+
+	//37-D
+	if (sat->GDCAlignButton.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S37_D = true;
+	}
+	else
+	{
+		S37_D = false;
+	}
+
+	//50-2
+	if (sat->EMSRollSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S50_2 = true;
+	}
+	else
+	{
+		S50_2 = false;
+	}
+
+	//51-1
+	if (sat->GSwitch.IsDown() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S51_1 = true;
+	}
+	else
+	{
+		S51_1 = false;
+	}
+
+	//51-2
+	if (sat->GSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		S51_2 = true;
+	}
+	else
+	{
+		S51_2 = false;
+	}
+
+	//POWER
+	bool E1_307, E1_309, E1_363, E2_307, E2_309, E2_363;
+
+	if (ac_source1->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		E1_307 = true;
+		E1_309 = true;
+		E1_363 = true;
+	}
+	else
+	{
+		E1_307 = false;
+		E1_309 = false;
+		E1_363 = false;
+	}
+
+	if (ac_source2->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		E2_307 = true;
+		E2_309 = true;
+	}
+	else
+	{
+		E2_307 = false;
+		E2_309 = false;
+		E2_363 = false;
+	}
+
+	//RELAYS AND TRANSISTORS
+	if (S2_1 && (S51_2 || !S37_D))
+	{
+		A2K1 = true;
+		A3K1 = true;
+		A4K1 = true;
+	}
+	else
+	{
+		A2K1 = false;
+		A3K1 = false;
+		A4K1 = false;
+	}
+
+	if (S51_2 && !S37_D)
+	{
+		A2K2 = true;
+		A3K2 = true;
+		A4K2 = true;
+		A6K1 = true;
+	}
+	else
+	{
+		A2K2 = false;
+		A3K2 = false;
+		A4K2 = false;
+		A6K1 = false;
+
+	}
+
+	if (S37_D)
+	{
+		A3K3 = true;
+		A4K3 = true;
+		A2K3 = true;
+	}
+	else
+	{
+		A3K3 = false;
+		A4K3 = false;
+		A2K3 = false;
+	}
+
+	if (S21_3)
+	{
+		A2K4 = true;
+		A5K3 = true;
+	}
+	else
+	{
+		A2K4 = false;
+		A5K3 = false;
+	}
+
+	if (S20_3)
+	{
+		A3K4 = true;
+		A5K1 = true;
+	}
+	else
+	{
+		A3K4 = false;
+		A5K1 = false;
+	}
+
+	if (S22_3)
+	{
+		A4K4 = true;
+	}
+	else
+	{
+		A4K4 = false;
+	}
+
+	if (S22_3 || (S20_3 && !S51_1))
+	{
+		A5K2 = true;
+	}
+	else
+	{
+		A5K2 = false;
+	}
+
+	if (S4_2)
+	{
+		A9K5 = true;
+		A5K5 = true;
+		A5K4 = true;
+	}
+	else
+	{
+		A9K5 = false;
+		A5K5 = false;
+		A5K4 = false;
+	}
+
+	if (S50_2)
+	{
+		A6K2 = true;
+		A8K2 = true;
+	}
+	else
+	{
+		A6K2 = false;
+		A8K2 = false;
+	}
+
+	if (S4_1 && (S5_2 || (S5_3 && S6_1)))
+	{
+		A9K1 = true;
+	}
+	else
+	{
+		A9K1 = false;
+	}
+
+	if (S5_2 || S4_3)
+	{
+		A9K2 = true;
+	}
+	else
+	{
+		A9K2 = false;
+	}
+
+	if (S2_1)
+	{
+		A9K3 = true;
+	}
+	else
+	{
+		A9K3 = false;
+	}
+
+	if (S5_3 && S4_2 && S6_1)
+	{
+		A9K4 = true;
+	}
+	else
+	{
+		A9K4 = false;
+	}
+
+	if (S5_1 || S5_3 || S4_2 || S4_3 || GP)
+	{
+		T1QS57 = true;
+		T2QS57 = true;
+		T3QS57 = true;
+	}
+	else
+	{
+		T1QS57 = false;
+		T2QS57 = false;
+		T3QS57 = false;
+	}
+
+	if (!((S4_3 && S51_1 && !GP) || (S4_2 && S5_2 && !GP)))
+	{
+		T1QS58 = true;
+		T2QS58 = true;
+		T3QS58 = true;
+	}
+	else
+	{
+		T1QS58 = false;
+		T2QS58 = false;
+		T3QS58 = false;
+	}
+
+	if (S5_2 || S5_3 || S4_1 || S4_3)
+	{
+		T1QS60 = true;
+		T2QS60 = true;
+		T3QS60 = true;
+	}
+	else
+	{
+		T1QS60 = false;
+		T2QS60 = false;
+		T3QS60 = false;
+	}
+
+	if (S20_3 && S4_1)
+	{
+		T1QS63 = true;
+	}
+	else
+	{
+		T1QS63 = false;
+	}
+
+	if (!S20_3 && S4_2)
+	{
+		T1QS64 = true;
+	}
+	else
+	{
+		T1QS64 = false;
+	}
+
+	if (!S20_3 && S4_1)
+	{
+		T1QS65 = true;
+	}
+	else
+	{
+		T1QS65 = false;
+	}
+
+	if (S20_3 && S4_2)
+		T1QS68 = true;
+	else
+		T1QS68 = false;
+
+	if (!(S3_1 && (S5_1 || !(S4_1 || S4_2))))
+	{
+		T1QS75 = true;
+	}
+	else
+	{
+		T1QS75 = false;
+	}
+
+	if (!(S3_1 && S5_1 && S4_2))
+	{
+		T1QS76 = true;
+	}
+	else
+	{
+		T1QS76 = false;
+	}
+
+	if (S20_3 || S51_1 || S4_2 || S22_3)
+		T2QS63 = true;
+	else
+		T2QS63 = false;
+
+	if (S22_3 || S4_2 || (S20_3 && !S51_1))
+	{
+		T2QS64 = true;
+	}
+	else
+	{
+		T2QS64 = false;
+	}
+
+	if (S22_3 || S4_1 || (S20_3 && !S51_1))
+	{
+		T2QS65 = true;
+	}
+	else
+	{
+		T2QS65 = false;
+	}
+
+	if (S20_3 || S22_3 || S51_1 || S4_1)
+		T2QS66 = true;
+	else
+		T2QS66 = false;
+
+	if (S51_1 || S4_2 || (!S20_3 && !S22_3))
+	{
+		T2QS68 = true;
+	}
+	else
+	{
+		T2QS68 = false;
+	}
+
+	if (S51_1 || S4_1 || (!S20_3 && !S22_3))
+	{
+		T2QS69 = true;
+	}
+	else
+	{
+		T2QS69 = false;
+	}
+
+	if (S3_1 || S3_2)
+	{
+		T1QS71 = true;
+		T2QS71 = true;
+		T3QS71 = true;
+	}
+	else
+	{
+		T1QS71 = false;
+		T2QS71 = false;
+		T3QS71 = false;
+	}
+
+	if (S3_1)
+	{
+		T1QS72 = true;
+		T2QS72 = true;
+		T3QS72 = true;
+	}
+	else
+	{
+		T1QS72 = false;
+		T2QS72 = false;
+		T3QS72 = false;
+	}
+
+	if (S5_1 || S5_2 || S4_3 || S6_2)
+		T1QS73 = true;
+	else
+		T1QS73 = false;
+
+	if (S5_1 || S5_2 || S4_2 || S4_3 || S6_2)
+	{
+		T2QS73 = true;
+		T3QS73 = true;
+	}
+	else
+	{
+		T2QS73 = false;
+		T3QS73 = false;
+	}
+
+	if (S5_1 || S5_2 || S4_1 || S4_3 || S6_2)
+	{
+		T2QS74 = true;
+		T3QS74 = true;
+	}
+	else
+	{
+		T2QS74 = false;
+		T3QS74 = false;
+	}
+
+	if (S4_2 || !S22_3 || (!S20_3 && S51_1))
+	{
+		T2QS76 = true;
+	}
+	else
+	{
+		T2QS76 = false;
+	}
+
+	if (S4_1 || !S22_3 || (!S20_3 && S51_1))
+	{
+		T2QS77 = true;
+	}
+	else
+	{
+		T2QS77 = false;
+	}
+
+	if (S21_3 && S4_2)
+	{
+		T3QS64 = true;
+	}
+	else
+	{
+		T3QS64 = false;
+	}
+
+	if (S21_3 && S4_1)
+	{
+		T3QS65 = true;
+	}
+	else
+	{
+		T3QS65 = false;
+	}
+
+	if (!S21_3 && S4_2)
+	{
+		T3QS76 = true;
+	}
+	else
+	{
+		T3QS76 = false;
+	}
+
+	if (!S21_3 && S4_1)
+	{
+		T3QS77 = true;
+	}
+	else
+	{
+		T3QS77 = false;
+	}
+
+	if (S5_1 || S5_2 || S6_1)
+		T1QS78 = true;
+	else
+		T1QS78 = false;
+
+	VECTOR3 bmag1rates = sat->bmag1.GetRates();
+	VECTOR3 bmag2rates = sat->bmag2.GetRates();
+
+	double rate;
+
+	//PITCH DISPLAY PROCESSING
+	//FDAI 1 attitude rate
+	if (E1_307)
+	{
+		//Disable logic
+		rate = (T3QS76 ? 0.0 : bmag1rates.y) + (T3QS64 ? 0.0 : bmag2rates.y);
+		//Scale factor for 1°/s
+		rate /= (1.0*RAD);
+		//Scale to 5°/s
+		rate /= (T3QS71 ? 5.0 : 1.0);
+		//Scale to 10°/s
+		rate /= (T3QS72 ? 2.0 : 1.0);
+		FDAI1AttitudeRate.y = rate;
+	}
+	else
+	{
+		FDAI1AttitudeRate.y = 0.0;
+	}
+
+	//FDAI2 attitude rate
+	if (E2_307)
+	{
+		//Disable logic
+		rate = (T3QS77 ? 0.0 : bmag1rates.y) + (T3QS65 ? 0.0 : bmag2rates.y);
+		//Scale factor for 1°/s
+		rate /= (1.0*RAD);
+		//Scale to 5°/s
+		rate /= (T3QS71 ? 5.0 : 1.0);
+		//Scale to 10°/s
+		rate /= (T3QS72 ? 2.0 : 1.0);
+		FDAI2AttitudeRate.y = rate;
+	}
+	else
+	{
+		FDAI2AttitudeRate.y = 0.0;
+	}
+
+	//Instrumentation
+	if (HasSigCondPower())
+	{
+		if (A5K5)
+		{
+			InstrAttitudeRate.y = FDAI2AttitudeRate.y;
+		}
+		else
+		{
+			InstrAttitudeRate.y = FDAI1AttitudeRate.y;
+		}
+	}
+	else
+	{
+		InstrAttitudeRate.y = 0.0;
+	}
+
+	//YAW DISPLAY PROCESSING
+	//FDAI 1
+	if (E1_307)
+	{
+		//Disable logic
+		rate = (T3QS76 ? 0.0 : bmag1rates.y) + (T3QS64 ? 0.0 : bmag2rates.y);
+		//Scale factor for 1°/s
+		rate /= (1.0*RAD);
+		//Scale to 5°/s
+		rate /= (T3QS71 ? 5.0 : 1.0);
+		//Scale to 10°/s
+		rate /= (T3QS72 ? 2.0 : 1.0);
+		FDAI1AttitudeRate.y = rate;
+	}
+	else
+	{
+		FDAI1AttitudeRate.y = 0.0;
+	}
+
 	if (!IsPowered())
 	{
 		AttitudeError = _V(0, 0, 0);

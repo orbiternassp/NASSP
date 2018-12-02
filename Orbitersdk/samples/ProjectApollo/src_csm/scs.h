@@ -224,11 +224,157 @@ protected:
 	double scale_data(double data);
 
 	VECTOR3 AttitudeError;
+	//Scaled -1 to 1
+	VECTOR3 FDAI1AttitudeRate;
+	VECTOR3 FDAI2AttitudeRate;
+	VECTOR3 InstrAttitudeRate;
 
 	e_object *ac_source1;					  	          			// Power supply for FDAI 1 circuits
 	e_object *ac_source2;											// Power supply for FDAI 2 circuits
 
 	Saturn *sat;
+
+	//RELAYS
+
+	//Pitch Euler mode enable
+	bool A2K1;
+	//Pitch 0.05 config
+	bool A2K2;
+	//Pitch align enable
+	bool A2K3;
+	//Pitch rate 1 enable
+	bool A2K4;
+
+	//Roll Euler mode enable
+	bool A3K1;
+	//Roll 0.05G config
+	bool A3K2;
+	//Roll align enable
+	bool A3K3;
+	//GDC roll rate 1 enable
+	bool A3K4;
+
+	//Yaw Euler mode enable
+	bool A4K1;
+	//Yaw 0.05G configuration
+	bool A4K2;
+	//Yaw align enable
+	bool A4K3;
+	//GDC yaw rate 1 enable
+	bool A4K4;
+
+	//FDAI No. 1 & No. 2 roll rate enable
+	bool A5K1;
+	//FDAI No. 1 and No. 2 yaw rate enable
+	bool A5K2;
+	//Pitch rate 1 enable
+	bool A5K3;
+	//FDAI rate and error source select
+	bool A5K4;
+	//FDAI rate and error source select
+	bool A5K5;
+
+	//Yaw 0.05G Configuration
+	bool A6K1;
+	//EMS roll display on
+	bool A6K2;
+
+	//EMS roll display on 
+	bool A8K2;
+
+	//FDAI No. 1 error enable
+	bool A9K1;
+	//FDAI No. 2 error enable
+	bool A9K2;
+	//Secant function enable
+	bool A9K3;
+	//FDAI No. 2 error enable
+	bool A9K4;
+	//FDAI rate and error source select
+	bool A9K5;
+
+	//TRANSISTORS
+
+	//Roll error no. 1 to FDAI No. 1 disable
+	bool T1QS57;
+	//Roll error no. 1 to FDAI No. 2 disable
+	bool T1QS58;
+	//Roll error to FDAI No. 2 disable, CDU
+	bool T1QS60;
+	//Roll rate 2 to FDAI No. 2 disable
+	bool T1QS63;
+	//Roll rate 1 to FDAI No. 1 disable
+	bool T1QS64;
+	//Roll rate 1 to FDAI No. 2 disable
+	bool T1QS65;
+	//Roll rate 2 to FDAI No. 1 disable
+	bool T1QS68;
+	//Roll rate scale factor enable 5° or 50°
+	bool T1QS71;
+	//Roll rate scale factor enable 50°
+	bool T1QS72;
+	//GDC roll error to FDAI No. 1 disable
+	bool T1QS73;
+	//FDAI No. 1 50° scale factor disable
+	bool T1QS75;
+	//FDAI No. 2 50° scale factor disable
+	bool T1QS76;
+	//Attitude set/IMU gain disable
+	bool T1QS78;
+
+	//Yaw error no. 1 to FDAI No. 1 disable
+	bool T2QS57;
+	//Yaw error no. 1 to FDAI No. 2 disable
+	bool T2QS58;
+	//Yaw error to FDAI No. 2 disable, CDU
+	bool T2QS60;
+	//Roll rate 2 to FDAI No. 1 yaw rate cross coupling disable
+	bool T2QS63;
+	//Yaw rate 2 to FDAI No. 1 disable
+	bool T2QS64;
+	//Yaw rate 2 to FDAI No. 2 disable
+	bool T2QS65;
+	//Roll rate 2 to FDAI No. 2 yaw rate cross coupling disable
+	bool T2QS66;
+	//Roll rate 1 to FDAI No. 1 yaw rate cross coupling disable
+	bool T2QS68;
+	//Roll rate 1 to FDAI No. 2 yaw rate cross coupling disable
+	bool T2QS69;
+	//Yaw rate scale factor enable 5° or 10°
+	bool T2QS71;
+	//Yaw rate scale factor enable 10°
+	bool T2QS72;
+	//GDC yaw body attitude error to FDAI No. 1 disable
+	bool T2QS73;
+	//Yaw error to FDAI No. 2 disable
+	bool T2QS74;
+	//Yaw rate 1 to FDAI No. 1 disable
+	bool T2QS76;
+	//Yaw rate 1 to FDAI No. 2 disable
+	bool T2QS77;
+
+	//Pitch error no. 1 to FDAI No. 1 disable
+	bool T3QS57;
+	//Pitch error no. 1 to FDAI No. 2 disable
+	bool T3QS58;
+	//Pitch error to FDAI No. 2 disable, CDU
+	bool T3QS60;
+	//Pitch Rate 2 to FDAI No. 1 disable
+	bool T3QS64;
+	//Pitch Rate 2 to FDAI No. 2 disable
+	bool T3QS65;
+	//Pitch rate scale factor enable 5° or 10°
+	bool T3QS71;
+	//Pitch rate scale factor enable 10°
+	bool T3QS72;
+	//GDC pitch body attitude error to FDAI No. 1 disable
+	bool T3QS73;
+	//Pitch error to FDAI No. 2 disable
+	bool T3QS74;
+	//Pitch Rate 1 to FDAI No. 1 disable
+	bool T3QS76;
+	//Pitch Rate 1 to FDAI No. 2 disable
+	bool T3QS77;
 };
 
 
