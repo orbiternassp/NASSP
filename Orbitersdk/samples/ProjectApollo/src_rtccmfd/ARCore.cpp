@@ -159,11 +159,11 @@ AR_GCore::AR_GCore(VESSEL* v)
 		LSLat = -3.6686*RAD;
 		LSLng = -17.4842*RAD;
 		LSAlt = -0.76*1852.0;
-		LOIazi = -93.9*RAD;
+		LOIazi = -93.88*RAD;
 		LOIapo = 170.0*1852.0;
 		LOIperi = 60.0*1852.0;
 		LOIEllipseRotation = 1;
-		TLCCFreeReturnEMPLat = 0.108105*RAD;
+		TLCCFreeReturnEMPLat = 0.0*RAD;
 		TLCCNonFreeReturnEMPLat = -0.20553*RAD;
 		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 28.0, 16.0);
 		TLCCFlybyPeriAlt = 210 * 1852.0;
