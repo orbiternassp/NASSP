@@ -245,6 +245,7 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	SetCameraOffset(_V(-0.68, 1.65, 1.35));
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-1.85);
+	//AddRCS_LMH3(-5.4516);
 	status = 0;
 	stage = 0;
 	bModeDocked=true;
@@ -428,6 +429,7 @@ void LEM::SetLmVesselHoverStage()
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-1.85);
+	//AddRCS_LMH3(-5.4516);
 	bModeHover=true;
 
 	VECTOR3 dockpos = {0.0 ,2.6, 0.0};	
@@ -567,6 +569,7 @@ void LEM::SetLmAscentHoverStage()
 	stage = 2;
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH2(-1.86);
+	//AddRCS_LMH3(-7.2966);
 	bModeHover=true;
 
 	if(ph_Dsc){
