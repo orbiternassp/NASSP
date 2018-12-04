@@ -215,6 +215,87 @@ void LEM::AddRCS_LMH2(double TRANZ)
 	AddExhaust(th_rcs[15],ATTHEIGHT,ATTWIDTH, exhaustTex);
 }
 
+void LEM::AddRCS_LMH3(double TRANY)
+{
+	const double ATTCOOR = 66.1*0.0254;
+	const double ATTCOORY = 254.0*0.0254;
+	const double RCSOFFSET = 4.6*0.0254;
+	const double QUADTOTHRUSTER1 = 5.3*0.0254;
+	const double QUADTOTHRUSTER2 = 4.8*0.0254;
+	const double QUADTOTHRUSTER3 = 0.25*0.0254;
+	const double ATTWIDTH = .15;
+	const double ATTHEIGHT = 3;
+
+	double MaxThrust = 444.82;
+	double RCSISP = 2840.0;
+
+	// A1U
+	th_rcs[0] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[0], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// A1F
+	th_rcs[1] = CreateThruster(_V(-ATTCOOR + RCSOFFSET, ATTCOORY + TRANY, ATTCOOR + QUADTOTHRUSTER3), _V(0, 0, -1), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[1], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// B1L
+	th_rcs[2] = CreateThruster(_V(-ATTCOOR - QUADTOTHRUSTER3, ATTCOORY + TRANY, ATTCOOR - RCSOFFSET), _V(1, 0, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[2], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// B1D
+	th_rcs[3] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY - QUADTOTHRUSTER1, ATTCOOR), _V(0, 1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[3], ATTHEIGHT, ATTWIDTH, exhaustTex);
+
+	// B2U
+	th_rcs[4] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, -ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[4], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// B2L
+	th_rcs[5] = CreateThruster(_V(-ATTCOOR - QUADTOTHRUSTER3, ATTCOORY + TRANY, -ATTCOOR + RCSOFFSET), _V(1, 0, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[5], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// A2A
+	th_rcs[6] = CreateThruster(_V(-ATTCOOR + RCSOFFSET, ATTCOORY + TRANY, -ATTCOOR - QUADTOTHRUSTER3), _V(0, 0, 1), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[6], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// A2D
+	th_rcs[7] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY - QUADTOTHRUSTER1, -ATTCOOR), _V(0, 1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[7], ATTHEIGHT, ATTWIDTH, exhaustTex);
+
+	// A3U
+	th_rcs[8] = CreateThruster(_V(ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, -ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[8], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// A3R
+	th_rcs[9] = CreateThruster(_V(ATTCOOR + QUADTOTHRUSTER3, ATTCOORY + TRANY, -ATTCOOR + RCSOFFSET), _V(-1, 0, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[9], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// B3A
+	th_rcs[10] = CreateThruster(_V(ATTCOOR - RCSOFFSET, ATTCOORY + TRANY, -ATTCOOR - QUADTOTHRUSTER3), _V(0, 0, 1), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[10], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// B3D
+	th_rcs[11] = CreateThruster(_V(ATTCOOR, ATTCOORY + TRANY - QUADTOTHRUSTER1, -ATTCOOR), _V(0, 1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[11], ATTHEIGHT, ATTWIDTH, exhaustTex);
+
+	// B4U
+	th_rcs[12] = CreateThruster(_V(ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[12], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// B4F
+	th_rcs[13] = CreateThruster(_V(ATTCOOR - RCSOFFSET, ATTCOORY + TRANY, ATTCOOR + QUADTOTHRUSTER3), _V(0, 0, -1), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[13], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// A4R
+	th_rcs[14] = CreateThruster(_V(ATTCOOR + QUADTOTHRUSTER3, ATTCOORY + TRANY, ATTCOOR - RCSOFFSET), _V(-1, 0, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[14], ATTHEIGHT, ATTWIDTH, exhaustTex);
+	// A4D
+	th_rcs[15] = CreateThruster(_V(ATTCOOR, ATTCOORY + TRANY - QUADTOTHRUSTER1, ATTCOOR), _V(0, 1, 0), MaxThrust, NULL, RCSISP, RCSISP);
+	AddExhaust(th_rcs[15], ATTHEIGHT, ATTWIDTH, exhaustTex);
+
+	/* THRUSTER TABLE:
+		0	A1U		8	A3U
+		1	A1F		9	A3R
+		2	B1L		10	B3A
+		3	B1D		11	B3D
+
+		4	B2U		12	B4U
+		5	B2L		13	B4F
+		6	A2A		14	A4R
+		7	A2D		15	A4D
+	*/
+
+	//	CreateThrusterGroup (th_rcs,   1, THGROUP_ATT_YAWLEFT);
+}
+
 void LEM::SystemsInit()
 
 {

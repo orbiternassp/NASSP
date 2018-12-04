@@ -574,6 +574,7 @@ protected:
 	void SetSwitches(int panel);
 	void AddRCS_LMH(double TRANZ);
 	void AddRCS_LMH2(double TRANZ);
+	void AddRCS_LMH3(double TRANY);
 	void ToggleEVA();
 	void SetupEVA();
 	void SetView();
