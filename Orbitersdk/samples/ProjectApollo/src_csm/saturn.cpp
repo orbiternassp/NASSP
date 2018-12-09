@@ -1415,6 +1415,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	gdc.SaveState(scn);
 	rjec.SaveState(scn);
 	ascp.SaveState(scn);
+	eda.SaveState(scn);
 	ems.SaveState(scn);
 	ordeal.SaveState(scn);
 	mechanicalAccelerometer.SaveState(scn);
@@ -2002,6 +2003,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, ASCP_START_STRING, sizeof(ASCP_START_STRING))) {
 		ascp.LoadState(scn);
+	}
+	else if (!strnicmp(line, EDA_START_STRING, sizeof(EDA_START_STRING))) {
+		eda.LoadState(scn);
 	}
 	else if (!strnicmp(line, QBALL_START_STRING, sizeof(QBALL_START_STRING))) {
 		qball.LoadState(scn, QBALL_END_STRING);

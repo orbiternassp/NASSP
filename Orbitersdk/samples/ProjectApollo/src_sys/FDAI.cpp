@@ -278,7 +278,7 @@ void FDAI::MoveBall() {
 	glRotated(now.z / PI * 180.0, 0.0, 0.0, 1.0);	//attitude.y
 }
 
-void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI,
+void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
 	SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth) {
 
 	if (!init) InitGL();
@@ -350,23 +350,10 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 
 	if (!LM_FDAI)
 	{
-		switch (ratescale) {
-		case 2: // THREEPOSSWITCH_UP:
-			targetX = (int)(117 + (3609.694608 * rates.z));
-			targetY = (int)(117 - (3609.694608 * rates.x));
-			targetZ = (int)(117 - (3609.694608 * rates.y));
-			break;
-		case 1: // THREEPOSSWITCH_CENTER:
-			targetX = (int)(117 + (721.938921 * rates.z));
-			targetY = (int)(117 - (721.938921 * rates.x));
-			targetZ = (int)(117 - (721.938921 * rates.y));
-			break;
-		case 0: // THREEPOSSWITCH_DOWN:
-			targetX = (int)(117 + (72.193892 * rates.z));
-			targetY = (int)(117 - (360.969460 * rates.x));
-			targetZ = (int)(117 - (360.969460 * rates.y));
-			break;
-		}
+		//Input is scaled -1.0 to 1.0, this scales to 126 pixels
+		targetX = (int)(117 + (63.0 * rates.z));
+		targetY = (int)(117 - (63.0 * rates.x));
+		targetZ = (int)(117 - (63.0 * rates.y));
 	}
 	else
 	{

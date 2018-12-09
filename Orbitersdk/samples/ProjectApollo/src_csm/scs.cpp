@@ -896,6 +896,8 @@ void ASCP::TimeStep(double simdt)
 			}
 		}
 	}
+
+	//Resolver
 	
 	// Debug messages
 	if(msgcounter > 0){
@@ -1322,23 +1324,152 @@ void ASCP::LoadState(FILEHANDLE scn){
 // EDA
 EDA::EDA(){
 	sat = NULL; // Initialize
-	AttitudeError = _V(0, 0, 0);
 	ac_source1 = NULL;
 	ac_source2 = NULL;
+	mna_source = NULL;
+	mnb_source = NULL;
+
+	AttitudeError = _V(0, 0, 0);
+	FDAI1AttitudeRate = _V(0, 0, 0);
+	FDAI2AttitudeRate = _V(0, 0, 0);
+	InstrAttitudeRate = _V(0, 0, 0);
+	FDAI1Attitude = _V(0, 0, 0);
+	FDAI2Attitude = _V(0, 0, 0);
+	FDAI1AttitudeError = _V(0, 0, 0);
+	FDAI2AttitudeError = _V(0, 0, 0);
+	InstrAttitudeError = _V(0, 0, 0);
+
+	ResetRelays();
+	ResetTransistors();
 }
 
 void EDA::Init(Saturn *vessel){
 	sat = vessel;
 }
 
-void EDA::WireTo(e_object *ac1, e_object *ac2)
+void EDA::WireTo(e_object *ac1, e_object *ac2, e_object *dca, e_object *dcb)
 {
 	ac_source1 = ac1;
 	ac_source2 = ac2;
+	mna_source = dca;
+	mnb_source = dcb;
+}
+
+void EDA::ResetRelays()
+{
+	A4K1 = false;
+	A4K2 = false;
+	A4K3 = false;
+	A4K4 = false;
+	A5K1 = false;
+	A5K2 = false;
+	A5K3 = false;
+	A5K4 = false;
+	A5K5 = false;
+	A8K1 = false;
+	A8K3 = false;
+	A8K5 = false;
+	A8K7 = false;
+	A8K9 = false;
+	A8K11 = false;
+	A9K1 = false;
+	A9K2 = false;
+	A9K4 = false;
+	A9K5 = false;
+}
+
+void EDA::ResetTransistors()
+{
+	T1QS53 = false;
+	T1QS54 = false;
+	T1QS55 = false;
+	T1QS56 = false;
+	T1QS57 = false;
+	T1QS58 = false;
+	T1QS59 = false;
+	T1QS60 = false;
+	T1QS63 = false;
+	T1QS64 = false;
+	T1QS65 = false;
+	T1QS68 = false;
+	T1QS71 = false;
+	T1QS72 = false;
+	T1QS73 = false;
+	T1QS75 = false;
+	T1QS76 = false;
+	T1QS78 = false;
+	T2QS53 = false;
+	T2QS54 = false;
+	T2QS55 = false;
+	T2QS56 = false;
+	T2QS57 = false;
+	T2QS58 = false;
+	T2QS59 = false;
+	T2QS60 = false;
+	T2QS63 = false;
+	T2QS64 = false;
+	T2QS65 = false;
+	T2QS68 = false;
+	T2QS71 = false;
+	T2QS72 = false;
+	T2QS73 = false;
+	T2QS76 = false;
+	T3QS53 = false;
+	T3QS54 = false;
+	T3QS55 = false;
+	T3QS56 = false;
+	T3QS57 = false;
+	T3QS58 = false;
+	T3QS59 = false;
+	T3QS60 = false;
+	T3QS64 = false;
+	T3QS65 = false;
+	T3QS71 = false;
+	T3QS72 = false;
+	T3QS73 = false;
+	T3QS76 = false;
 }
 
 void EDA::Timestep(double simdt)
 {
+	//POWER
+	bool E1_307, E1_309, E1_363, E2_307, E2_309, E2_363, EA_315, EB_315;
+
+	if (ac_source1->Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		E1_307 = true;
+		E1_309 = true;
+		E1_363 = true;
+	}
+	else
+	{
+		E1_307 = false;
+		E1_309 = false;
+		E1_363 = false;
+	}
+
+	if (ac_source2->Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		E2_307 = true;
+		E2_309 = true;
+	}
+	else
+	{
+		E2_307 = false;
+		E2_309 = false;
+		E2_363 = false;
+	}
+
+	if (mna_source->Voltage() > SP_MIN_DCVOLTAGE)
+		EA_315 = true;
+	else
+		EA_315 = false;
+
+	if (mnb_source->Voltage() > SP_MIN_DCVOLTAGE)
+		EB_315 = true;
+	else
+		EB_315 = false;
+
 	//CMC ATT - IMU Enable
 	bool S2_1;
 	//FDAI Scale 50/15 Enable
@@ -1392,13 +1523,9 @@ void EDA::Timestep(double simdt)
 
 	//3-1
 	if (sat->FDAIScaleSwitch.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S3_1 = true;
-	}
 	else
-	{
 		S3_1 = false;
-	}
 
 	//3-2
 	if (sat->FDAIScaleSwitch.IsCenter() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
@@ -1491,7 +1618,7 @@ void EDA::Timestep(double simdt)
 	}
 
 	//20-3
-	if (sat->BMAGPitchSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+	if (sat->BMAGRollSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
 	{
 		S20_3 = true;
 	}
@@ -1511,7 +1638,7 @@ void EDA::Timestep(double simdt)
 	}
 
 	//22-3
-	if (sat->BMAGPitchSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+	if (sat->BMAGYawSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
 	{
 		S22_3 = true;
 	}
@@ -1560,117 +1687,43 @@ void EDA::Timestep(double simdt)
 		S51_2 = false;
 	}
 
-	//POWER
-	bool E1_307, E1_309, E1_363, E2_307, E2_309, E2_363;
-
-	if (ac_source1->Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		E1_307 = true;
-		E1_309 = true;
-		E1_363 = true;
-	}
-	else
-	{
-		E1_307 = false;
-		E1_309 = false;
-		E1_363 = false;
-	}
-
-	if (ac_source2->Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		E2_307 = true;
-		E2_309 = true;
-	}
-	else
-	{
-		E2_307 = false;
-		E2_309 = false;
-		E2_363 = false;
-	}
-
 	//RELAYS AND TRANSISTORS
-	if (S2_1 && (S51_2 || !S37_D))
-	{
-		A2K1 = true;
-		A3K1 = true;
+
+	if (EB_315 && S4_1 && (S5_2 || (S5_3 && S6_1)))
 		A4K1 = true;
-	}
 	else
-	{
-		A2K1 = false;
-		A3K1 = false;
 		A4K1 = false;
-	}
 
-	if (S51_2 && !S37_D)
-	{
-		A2K2 = true;
-		A3K2 = true;
+	if (EA_315 && S2_1 && (S4_1 || S4_3))
 		A4K2 = true;
-		A6K1 = true;
-	}
 	else
-	{
-		A2K2 = false;
-		A3K2 = false;
 		A4K2 = false;
-		A6K1 = false;
 
-	}
-
-	if (S37_D)
-	{
-		A3K3 = true;
+	if (EA_315 && S4_1 && (S5_2 || (S5_3 && S6_1)))
 		A4K3 = true;
-		A2K3 = true;
-	}
 	else
-	{
-		A3K3 = false;
 		A4K3 = false;
-		A2K3 = false;
-	}
 
-	if (S21_3)
-	{
-		A2K4 = true;
-		A5K3 = true;
-	}
+	if (EB_315 && S2_1 && (S4_2 || S4_3))
+		A4K4 = true;
 	else
-	{
-		A2K4 = false;
-		A5K3 = false;
-	}
+		A4K4 = false;
 
 	if (S20_3)
-	{
-		A3K4 = true;
 		A5K1 = true;
-	}
 	else
-	{
-		A3K4 = false;
 		A5K1 = false;
-	}
-
-	if (S22_3)
-	{
-		A4K4 = true;
-	}
-	else
-	{
-		A4K4 = false;
-	}
 
 	if (S22_3 || (S20_3 && !S51_1))
-	{
 		A5K2 = true;
-	}
 	else
-	{
 		A5K2 = false;
-	}
 
+	if (S21_3)
+		A5K3 = true;
+	else
+		A5K3 = false;	
+	
 	if (S4_2)
 	{
 		A9K5 = true;
@@ -1684,15 +1737,23 @@ void EDA::Timestep(double simdt)
 		A5K4 = false;
 	}
 
-	if (S50_2)
+	if ((S4_2 && (S5_1 || (S5_3 && S6_2))) || (S4_1 && (S5_2 || (S5_3 && S6_1))))
 	{
-		A6K2 = true;
-		A8K2 = true;
+		A8K1 = true;
+		A8K3 = true;
+		A8K5 = true;
+		A8K7 = true;
+		A8K9 = true;
+		A8K11 = true;
 	}
 	else
 	{
-		A6K2 = false;
-		A8K2 = false;
+		A8K1 = false;
+		A8K3 = false;
+		A8K5 = false;
+		A8K7 = false;
+		A8K9 = false;
+		A8K11 = false;
 	}
 
 	if (S4_1 && (S5_2 || (S5_3 && S6_1)))
@@ -1713,15 +1774,6 @@ void EDA::Timestep(double simdt)
 		A9K2 = false;
 	}
 
-	if (S2_1)
-	{
-		A9K3 = true;
-	}
-	else
-	{
-		A9K3 = false;
-	}
-
 	if (S5_3 && S4_2 && S6_1)
 	{
 		A9K4 = true;
@@ -1729,6 +1781,72 @@ void EDA::Timestep(double simdt)
 	else
 	{
 		A9K4 = false;
+	}
+
+	if (!((S4_1 && S5_2) || (S5_3 && S6_1)))
+	{
+		T1QS53 = true;
+		T2QS53 = true;
+		T3QS53 = true;
+	}
+	else
+	{
+		T1QS53 = false;
+		T2QS53 = false;
+		T3QS53 = false;
+	}
+
+	if (!((S4_2 && S5_2) || (S5_3 && S6_1) || S4_3))
+	{
+		T1QS54 = true;
+		T2QS54 = true;
+		T3QS54 = true;
+	}
+	else
+	{
+		T1QS54 = false;
+		T2QS54 = false;
+		T3QS54 = false;
+	}
+
+	if (S4_2 || S4_3 || !S2_1 || S5_2 || S5_1)
+	{
+		T1QS55 = true;
+	}
+	else
+	{
+		T1QS55 = false;
+	}
+
+	if (S4_1|| S4_3 || !S2_1 || S5_2 || S5_1)
+	{
+		T1QS56 = true;
+	}
+	else
+	{
+		T1QS56 = false;
+	}
+
+	if (!(S6_2 && S2_1 && S5_3 && S4_1))
+	{
+		T2QS55 = true;
+		T3QS55 = true;
+	}
+	else
+	{
+		T2QS55 = false;
+		T3QS55 = false;
+	}
+
+	if (!(S5_3 && S6_2 && S4_2 && S2_1))
+	{
+		T2QS56 = true;
+		T3QS56 = true;
+	}
+	else
+	{
+		T2QS56 = false;
+		T3QS56 = false;
 	}
 
 	if (S5_1 || S5_3 || S4_2 || S4_3 || GP)
@@ -1757,6 +1875,19 @@ void EDA::Timestep(double simdt)
 		T3QS58 = false;
 	}
 
+	if (!((S5_1 && S4_1) || S4_3))
+	{
+		T1QS59 = true;
+		T2QS59 = true;
+		T3QS59 = true;
+	}
+	else
+	{
+		T1QS59 = false;
+		T2QS59 = false;
+		T3QS59 = false;
+	}
+
 	if (S5_2 || S5_3 || S4_1 || S4_3)
 	{
 		T1QS60 = true;
@@ -1770,7 +1901,7 @@ void EDA::Timestep(double simdt)
 		T3QS60 = false;
 	}
 
-	if (S20_3 && S4_1)
+	if (S20_3 || S4_1)
 	{
 		T1QS63 = true;
 	}
@@ -1779,46 +1910,30 @@ void EDA::Timestep(double simdt)
 		T1QS63 = false;
 	}
 
-	if (!S20_3 && S4_2)
-	{
+	if (!S20_3 || S4_2)
 		T1QS64 = true;
-	}
 	else
-	{
 		T1QS64 = false;
-	}
 
-	if (!S20_3 && S4_1)
-	{
+	if (!S20_3 || S4_1)
 		T1QS65 = true;
-	}
 	else
-	{
 		T1QS65 = false;
-	}
 
-	if (S20_3 && S4_2)
+	if (S20_3 || S4_2)
 		T1QS68 = true;
 	else
 		T1QS68 = false;
 
 	if (!(S3_1 && (S5_1 || !(S4_1 || S4_2))))
-	{
 		T1QS75 = true;
-	}
 	else
-	{
 		T1QS75 = false;
-	}
 
 	if (!(S3_1 && S5_1 && S4_2))
-	{
 		T1QS76 = true;
-	}
 	else
-	{
 		T1QS76 = false;
-	}
 
 	if (S20_3 || S51_1 || S4_2 || S22_3)
 		T2QS63 = true;
@@ -1826,27 +1941,32 @@ void EDA::Timestep(double simdt)
 		T2QS63 = false;
 
 	if (S22_3 || S4_2 || (S20_3 && !S51_1))
-	{
 		T2QS64 = true;
-	}
 	else
-	{
 		T2QS64 = false;
-	}
 
 	if (S22_3 || S4_1 || (S20_3 && !S51_1))
-	{
 		T2QS65 = true;
-	}
 	else
-	{
 		T2QS65 = false;
-	}
 
 	if (S20_3 || S22_3 || S51_1 || S4_1)
 		T2QS66 = true;
 	else
 		T2QS66 = false;
+
+	if (!S3_1)
+	{
+		T1QS67 = true;
+		T2QS67 = true;
+		T3QS67 = true;
+	}
+	else
+	{
+		T1QS67 = false;
+		T2QS67 = false;
+		T3QS67 = false;
+	}
 
 	if (S51_1 || S4_2 || (!S20_3 && !S22_3))
 	{
@@ -1919,7 +2039,7 @@ void EDA::Timestep(double simdt)
 		T3QS74 = false;
 	}
 
-	if (S4_2 || !S22_3 || (!S20_3 && S51_1))
+	if (S4_2 || !S22_3 && (!S20_3 || S51_1))
 	{
 		T2QS76 = true;
 	}
@@ -1928,7 +2048,7 @@ void EDA::Timestep(double simdt)
 		T2QS76 = false;
 	}
 
-	if (S4_1 || !S22_3 || (!S20_3 && S51_1))
+	if (S4_1 || !S22_3 && (!S20_3 || S51_1))
 	{
 		T2QS77 = true;
 	}
@@ -1937,7 +2057,7 @@ void EDA::Timestep(double simdt)
 		T2QS77 = false;
 	}
 
-	if (S21_3 && S4_2)
+	if (S21_3 || S4_2)
 	{
 		T3QS64 = true;
 	}
@@ -1946,7 +2066,7 @@ void EDA::Timestep(double simdt)
 		T3QS64 = false;
 	}
 
-	if (S21_3 && S4_1)
+	if (S21_3 || S4_1)
 	{
 		T3QS65 = true;
 	}
@@ -1955,7 +2075,7 @@ void EDA::Timestep(double simdt)
 		T3QS65 = false;
 	}
 
-	if (!S21_3 && S4_2)
+	if (!S21_3 || S4_2)
 	{
 		T3QS76 = true;
 	}
@@ -1964,14 +2084,10 @@ void EDA::Timestep(double simdt)
 		T3QS76 = false;
 	}
 
-	if (!S21_3 && S4_1)
-	{
+	if (!S21_3 || S4_1)
 		T3QS77 = true;
-	}
 	else
-	{
 		T3QS77 = false;
-	}
 
 	if (S5_1 || S5_2 || S6_1)
 		T1QS78 = true;
@@ -1980,21 +2096,181 @@ void EDA::Timestep(double simdt)
 
 	VECTOR3 bmag1rates = sat->bmag1.GetRates();
 	VECTOR3 bmag2rates = sat->bmag2.GetRates();
+	VECTOR3 imuatt = sat->imu.GetTotalAttitude();
+	VECTOR3 gdcatt = sat->gdc.GetAttitude();
+	VECTOR3 cmcerr = _V(sat->gdc.fdai_err_x, sat->gdc.fdai_err_y, sat->gdc.fdai_err_z) * 5.0 / 0.3 / 384.0*RAD;	//Converted from -384/384 to radians (-16.66°/16.66°)
 
-	double rate;
+	//Debug
+	//bmag1rates = _V(1.0*RAD, 2.0*RAD, 3.0*RAD);
+	//bmag2rates = _V(4.0*RAD, 5.0*RAD, 6.0*RAD);
+
+	double rate, err;
 
 	//PITCH DISPLAY PROCESSING
+	//FDAI 1 attitude
+	if (A4K2)
+	{
+		if (A8K5)
+			FDAI1Attitude.y = gdcatt.y;
+		else
+			FDAI1Attitude.y = imuatt.y;
+
+		//ORDEAL should be interfacing between the EDA and the DEA(?), but this is a convenient place
+		FDAI1Attitude.y += sat->ordeal.GetFDAI1PitchAngle();
+		if (FDAI1Attitude.y >= PI2) FDAI1Attitude.y -= PI2;
+	}
+	else
+		FDAI1Attitude.y = 0.0;
+
+	//FDAI 2 attitude
+	if (A4K4)
+	{
+		if (A8K7)
+			FDAI2Attitude.y = imuatt.y;
+		else
+			FDAI2Attitude.y = gdcatt.y;
+
+		//ORDEAL should be interfacing between the EDA and the DEA(?), but this is a convenient place
+		FDAI2Attitude.y += sat->ordeal.GetFDAI2PitchAngle();
+		if (FDAI2Attitude.y >= PI2) FDAI2Attitude.y -= PI2;
+	}
+	else
+		FDAI2Attitude.y = 0.0;
+
 	//FDAI 1 attitude rate
 	if (E1_307)
 	{
 		//Disable logic
-		rate = (T3QS76 ? 0.0 : bmag1rates.y) + (T3QS64 ? 0.0 : bmag2rates.y);
+		rate = (T3QS76 ? 0.0 : bmag1rates.x) + (T3QS64 ? 0.0 : bmag2rates.x);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
-		rate /= (T3QS71 ? 5.0 : 1.0);
+		if (T3QS71) rate /= 5.0;
 		//Scale to 10°/s
-		rate /= (T3QS72 ? 2.0 : 1.0);
+		if (T3QS72) rate /= 2.0;
+		FDAI1AttitudeRate.x = rate;
+	}
+	else
+	{
+		FDAI1AttitudeRate.x = 0.0;
+	}
+
+	//FDAI2 attitude rate
+	if (E2_307)
+	{
+		//Disable logic
+		rate = (T3QS77 ? 0.0 : bmag1rates.x) + (T3QS65 ? 0.0 : bmag2rates.x);
+		//Scale factor for 1°/s
+		rate /= (1.0*RAD);
+		//Scale to 5°/s
+		if (T3QS71) rate /= 5.0;
+		//Scale to 10°/s
+		if (T3QS72) rate /= 2.0;
+		FDAI2AttitudeRate.x = rate;
+	}
+	else
+	{
+		FDAI2AttitudeRate.x = 0.0;
+	}
+
+	//Instrumentation
+	if (HasSigCondPower())
+	{
+		if (A5K5)
+		{
+			InstrAttitudeRate.x = FDAI2AttitudeRate.x;
+		}
+		else
+		{
+			InstrAttitudeRate.x = FDAI1AttitudeRate.x;
+		}
+	}
+	else
+	{
+		InstrAttitudeRate.x = 0.0;
+	}
+
+	//FDAI 1 attitude error
+	if (E1_307)
+	{
+		err = (T3QS73 ? 0.0 : 1.0) + (T3QS55 ? 0.0 : 1.0) + (T3QS59 ? 0.0 : cmcerr.y) + (T3QS57 ? 0.0 : 1.0);
+		//Scale factor for 15°/s
+		err /= (15.0*RAD);
+		//Scale to 5°/s
+		if (T3QS67) err *= 3.0;
+		FDAI1AttitudeError.y = 41.0*err;
+	}
+	else
+	{
+		FDAI1AttitudeError.y = 0.0;
+	}
+
+	//FDAI 2 attitude error
+	if (E2_307)
+	{
+		err = (T3QS74 ? 0.0 : 1.0) + (T3QS56 ? 0.0 : 1.0) + (T3QS60 ? 0.0 : cmcerr.y) + (T3QS58 ? 0.0 : 1.0);
+		//Scale factor for 15°/s
+		err /= (15.0*RAD);
+		//Scale to 5°/s
+		if (T3QS67) err *= 3.0;
+		FDAI2AttitudeError.y = 41.0*err;
+	}
+	else
+	{
+		FDAI2AttitudeError.y = 0.0;
+	}
+
+	//Instrumentation attitude error
+	if (HasSigCondPower())
+	{
+		if (A9K5)
+		{
+			InstrAttitudeError.y = FDAI2AttitudeError.y;
+		}
+		else
+		{
+			InstrAttitudeError.y = FDAI1AttitudeError.y;
+		}
+	}
+	else
+	{
+		InstrAttitudeError.y = 0.0;
+	}
+
+	//YAW DISPLAY PROCESSING
+	//FDAI 1 attitude
+	if (A4K2)
+	{
+		if (A8K9)
+			FDAI1Attitude.z = gdcatt.z;
+		else
+			FDAI1Attitude.z = imuatt.z;
+	}
+	else
+		FDAI1Attitude.z = 0.0;
+
+	//FDAI 2 attitude
+	if (A4K4)
+	{
+		if (A8K11)
+			FDAI2Attitude.z = imuatt.z;
+		else
+			FDAI2Attitude.z = gdcatt.z;
+	}
+	else
+		FDAI2Attitude.z = 0.0;
+
+	//FDAI 1 attitude rate
+	if (E1_307)
+	{
+		//Disable logic
+		rate = (T2QS76 ? 0.0 : bmag1rates.y) + (T2QS64 ? 0.0 : bmag2rates.y) + (T2QS68 ? 0.0 : -bmag1rates.z*tan(21.0*RAD)) + (T2QS63 ? 0.0 : -bmag2rates.z*tan(21.0*RAD));
+		//Scale factor for 1°/s
+		rate /= (1.0*RAD);
+		//Scale to 5°/s
+		if (T2QS71) rate /= 5.0;
+		//Scale to 10°/s
+		if (T2QS72) rate /= 2.0;
 		FDAI1AttitudeRate.y = rate;
 	}
 	else
@@ -2002,17 +2278,17 @@ void EDA::Timestep(double simdt)
 		FDAI1AttitudeRate.y = 0.0;
 	}
 
-	//FDAI2 attitude rate
+	//FDAI 2 attitude rate
 	if (E2_307)
 	{
 		//Disable logic
-		rate = (T3QS77 ? 0.0 : bmag1rates.y) + (T3QS65 ? 0.0 : bmag2rates.y);
+		rate = (T2QS77 ? 0.0 : bmag1rates.y) + (T2QS65 ? 0.0 : bmag2rates.y) + (T2QS69 ? 0.0 : -bmag1rates.z*tan(21.0*RAD)) + (T2QS66 ? 0.0 : -bmag2rates.z*tan(21.0*RAD));
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
-		rate /= (T3QS71 ? 5.0 : 1.0);
+		if (T2QS71) rate /= 5.0;
 		//Scale to 10°/s
-		rate /= (T3QS72 ? 2.0 : 1.0);
+		if (T2QS72) rate /= 2.0;
 		FDAI2AttitudeRate.y = rate;
 	}
 	else
@@ -2023,7 +2299,7 @@ void EDA::Timestep(double simdt)
 	//Instrumentation
 	if (HasSigCondPower())
 	{
-		if (A5K5)
+		if (A5K4)
 		{
 			InstrAttitudeRate.y = FDAI2AttitudeRate.y;
 		}
@@ -2037,24 +2313,186 @@ void EDA::Timestep(double simdt)
 		InstrAttitudeRate.y = 0.0;
 	}
 
-	//YAW DISPLAY PROCESSING
-	//FDAI 1
+	//FDAI 1 attitude error
+	if (E1_307)
+	{
+		err = (T2QS73 ? 0.0 : 1.0) + (T2QS55 ? 0.0 : 1.0) + (T2QS59 ? 0.0 : cmcerr.z) + (T2QS57 ? 0.0 : 1.0);
+		//Scale factor for 15°/s
+		err /= (15.0*RAD);
+		//Scale to 5°/s
+		if (T2QS67) err *= 3.0;
+		//FDAI error is -scaled -41 to 41
+		FDAI1AttitudeError.z = 41.0*err;
+	}
+	else
+	{
+		FDAI1AttitudeError.z = 0.0;
+	}
+
+	//FDAI 2 attitude error
+	if (E2_307)
+	{
+		err = (T2QS74 ? 0.0 : 1.0) + (T2QS56 ? 0.0 : 1.0) + (T2QS60 ? 0.0 : cmcerr.z) + (T2QS58 ? 0.0 : 1.0);
+		//Scale factor for 15°/s
+		err /= (15.0*RAD);
+		//Scale to 5°/s
+		if (T2QS67) err *= 3.0;
+		//FDAI error is -scaled -41 to 41
+		FDAI2AttitudeError.z = 41.0*err;
+	}
+	else
+	{
+		FDAI2AttitudeError.z = 0.0;
+	}
+
+	//Instrumentation attitude error
+	if (HasSigCondPower())
+	{
+		if (A9K5)
+		{
+			InstrAttitudeError.z = FDAI2AttitudeError.z;
+		}
+		else
+		{
+			InstrAttitudeError.z = FDAI1AttitudeError.z;
+		}
+	}
+	else
+	{
+		InstrAttitudeError.z = 0.0;
+	}
+
+	//ROLL DISPLAY PROCESSING
+	//FDAI 1 attitude
+	if (A4K2)
+	{
+		if (A8K1)
+			FDAI1Attitude.x = gdcatt.x;
+		else
+			FDAI1Attitude.x = imuatt.x;
+	}
+	else
+		FDAI1Attitude.x = 0.0;
+
+	//FDAI 2 attitude
+	if (A4K4)
+	{
+		if (A8K3)
+			FDAI2Attitude.x = imuatt.x;
+		else
+			FDAI2Attitude.x = gdcatt.x;
+	}
+	else
+		FDAI2Attitude.x = 0.0;
+
+	//FDAI 1 attitude rate
 	if (E1_307)
 	{
 		//Disable logic
-		rate = (T3QS76 ? 0.0 : bmag1rates.y) + (T3QS64 ? 0.0 : bmag2rates.y);
+		rate = (T1QS64 ? 0.0 : bmag1rates.z) + (T1QS68 ? 0.0 : bmag2rates.z);
 		//Scale factor for 1°/s
 		rate /= (1.0*RAD);
 		//Scale to 5°/s
-		rate /= (T3QS71 ? 5.0 : 1.0);
-		//Scale to 10°/s
-		rate /= (T3QS72 ? 2.0 : 1.0);
-		FDAI1AttitudeRate.y = rate;
+		if (T1QS71) rate /= 5.0;
+		//Scale to 50°/s
+		if (T1QS72) rate /= 10.0;
+		FDAI1AttitudeRate.z = rate;
 	}
 	else
 	{
 		FDAI1AttitudeRate.y = 0.0;
 	}
+	//FDAI 2 attitude rate
+	if (E2_307)
+	{
+		//Disable logic
+		rate = (T1QS65 ? 0.0 : bmag1rates.z) + (T1QS63 ? 0.0 : bmag2rates.z);
+		//Scale factor for 1°/s
+		rate /= (1.0*RAD);
+		//Scale to 5°/s
+		if (T1QS71) rate /= 5.0;
+		//Scale to 50°/s
+		if (T1QS72) rate /= 10.0;
+		FDAI2AttitudeRate.z = rate;
+	}
+	else
+	{
+		FDAI2AttitudeRate.z = 0.0;
+	}
+	//Instrumentation
+	if (HasSigCondPower())
+	{
+		if (A5K5)
+		{
+			InstrAttitudeRate.z = FDAI2AttitudeRate.z;
+		}
+		else
+		{
+			InstrAttitudeRate.z = FDAI1AttitudeRate.z;
+		}
+	}
+	else
+	{
+		InstrAttitudeRate.z = 0.0;
+	}
+
+	//FDAI 1 attitude error
+	if (E1_307)
+	{
+		err = (T1QS73 ? 0.0 : 1.0) + (T1QS55 ? 0.0 : 1.0) + (T1QS59 ? 0.0 : cmcerr.x) + (T1QS57 ? 0.0 : 1.0);
+		//Scale factor for 50°/s
+		err /= (50.0*RAD);
+		//Scale to 5.0°/s
+		if (T1QS67) err *= 10.0;
+		//Scale to 12.5°/s (for CDU)
+		if (!T1QS75) err *= 4.0;
+		//error is -scaled -41 to 41
+		FDAI1AttitudeError.x = 41.0*err;
+	}
+	else
+	{
+		FDAI1AttitudeError.x = 0.0;
+	}
+
+	//FDAI 2 attitude error
+	if (E2_307)
+	{
+		err = (T1QS73 ? 0.0 : 1.0) + (T1QS56 ? 0.0 : 1.0) + (T1QS60 ? 0.0 : cmcerr.x) + (T1QS58 ? 0.0 : 1.0);
+		//Scale factor for 50°/s
+		err /= (50.0*RAD);
+		//Scale to 5.0°/s
+		if (T1QS67) err *= 10.0;
+		//Scale to 12.5°/s (for CDU)
+		if (!T1QS76) err *= 4.0;
+		//FDAI error is -scaled -41 to 41
+		FDAI2AttitudeError.x = 41.0*err;
+	}
+	else
+	{
+		FDAI2AttitudeError.x = 0.0;
+	}
+
+	//Instrumentation attitude error
+	if (HasSigCondPower())
+	{
+		if (A5K4)
+		{
+			InstrAttitudeError.x = FDAI2AttitudeError.x;
+		}
+		else
+		{
+			InstrAttitudeError.x = FDAI1AttitudeError.x;
+		}
+	}
+	else
+	{
+		InstrAttitudeError.x = 0.0;
+	}
+
+	//sprintf(oapiDebugString(), "FDAI1: %.01f %.01f %.01f FDAI2: %.01f %.01f %.01f", FDAI1AttitudeRate.x, FDAI1AttitudeRate.y, FDAI1AttitudeRate.z,
+	//	FDAI2AttitudeRate.x, FDAI2AttitudeRate.y, FDAI2AttitudeRate.z);
+	//sprintf(oapiDebugString(), "CDU: %d %d %d FDAI1: %.1f %.1f %.1f", sat->gdc.fdai_err_x, sat->gdc.fdai_err_y, sat->gdc.fdai_err_z, 
+	//	FDAI1AttitudeError.x, FDAI1AttitudeError.y, FDAI1AttitudeError.z);
 
 	if (!IsPowered())
 	{
@@ -2085,7 +2523,7 @@ double EDA::GetConditionedPitchAttErr()
 	if (!HasSigCondPower()) { return 0.0; }
 
 	//Attitude error already scaled -41 to 41 pixels
-	return scale_data(AttitudeError.z);
+	return scale_data(AttitudeError.y);
 }
 
 double EDA::GetConditionedYawAttErr()
@@ -2093,7 +2531,7 @@ double EDA::GetConditionedYawAttErr()
 	if (!HasSigCondPower()) { return 0.0; }
 
 	//Attitude error already scaled -41 to 41 pixels
-	return scale_data(AttitudeError.y);
+	return scale_data(AttitudeError.z);
 }
 
 double EDA::GetConditionedRollAttErr()
@@ -2104,6 +2542,27 @@ double EDA::GetConditionedRollAttErr()
 	return scale_data(AttitudeError.x);
 }
 
+double EDA::GetInstPitchAttRate()
+{
+	if (!HasSigCondPower()) { return 0.0; }
+	
+	return inst_scale_rates(InstrAttitudeRate.x);
+}
+
+double EDA::GetInstYawAttRate()
+{
+	if (!HasSigCondPower()) { return 0.0; }
+
+	return inst_scale_rates(InstrAttitudeRate.y);
+}
+
+double EDA::GetInstRollAttRate()
+{
+	if (!HasSigCondPower()) { return 0.0; }
+
+	return inst_scale_rates(InstrAttitudeRate.z);
+}
+
 double EDA::scale_data(double data)
 {
 	// First eliminate cases outside of the scales
@@ -2112,6 +2571,16 @@ double EDA::scale_data(double data)
 
 	// then return result
 	return (data + 41.0) / 16.4;
+}
+
+double EDA::inst_scale_rates(double data)
+{
+	// First eliminate cases outside of the scales
+	if (data >= 1.0) { return 5.0; }
+	if (data <= -1.0) { return 0.0; }
+
+	// then return result
+	return (data + 1.0) / 0.4;
 }
 
 VECTOR3 EDA::ReturnCMCErrorNeedles(){
@@ -2361,6 +2830,32 @@ VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
 	output_errors.z = output_yaw;
 	return(output_errors);
 }
+
+void EDA::SaveState(FILEHANDLE scn)
+{
+	oapiWriteLine(scn, EDA_START_STRING);
+	papiWriteScenario_vec(scn, "FDAI1TOTALATTITUDE", FDAI1Attitude);
+	papiWriteScenario_vec(scn, "FDAI2TOTALATTITUDE", FDAI2Attitude);
+	papiWriteScenario_vec(scn, "FDAI1ATTITUDERATE", FDAI1AttitudeRate);
+	papiWriteScenario_vec(scn, "FDAI2ATTITUDERATE", FDAI2AttitudeRate);
+	oapiWriteLine(scn, EDA_END_STRING);
+}
+
+void EDA::LoadState(FILEHANDLE scn)
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, EDA_END_STRING, sizeof(EDA_END_STRING))) {
+			return;
+		}
+		papiReadScenario_vec(line, "FDAI1TOTALATTITUDE", FDAI1Attitude);
+		papiReadScenario_vec(line, "FDAI2TOTALATTITUDE", FDAI2Attitude);
+		papiReadScenario_vec(line, "FDAI1ATTITUDERATE", FDAI1AttitudeRate);
+		papiReadScenario_vec(line, "FDAI2ATTITUDERATE", FDAI2AttitudeRate);
+	}
+}
+
 
 // Reaction Jet / Engine Control
 RJEC::RJEC() {

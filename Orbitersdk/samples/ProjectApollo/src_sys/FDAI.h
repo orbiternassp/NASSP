@@ -36,7 +36,7 @@ public:
 	void RegisterMe(int index, int x, int y);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
-	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, int ratescale, SURFHANDLE surf, SURFHANDLE hFDAI,
+	void PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, SURFHANDLE surf, SURFHANDLE hFDAI,
 		SURFHANDLE hFDAIRoll, SURFHANDLE hFDAIOff, SURFHANDLE hFDAINeedles, HBITMAP hBmpRoll, int smooth);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);

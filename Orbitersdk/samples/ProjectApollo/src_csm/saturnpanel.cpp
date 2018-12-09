@@ -4444,112 +4444,77 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			VECTOR3 euler_rates;
 			VECTOR3 attitude;
 			VECTOR3 errors;
-			int no_att = 0;
+
+			euler_rates = eda.GetFDAI1AttitudeRate();
+			attitude = eda.GetFDAI1Attitude();
+
 			switch(FDAISelectSwitch.GetState()){
-				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR
-					euler_rates = gdc.rates;					
-					attitude = imu.GetTotalAttitude();
+				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR				
 					errors = eda.ReturnCMCErrorNeedles();
 					break;
-				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE
-					euler_rates = gdc.rates;					
+				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE				
 					switch(FDAISourceSwitch.GetState()){
 						case THREEPOSSWITCH_UP:   // IMU
-							attitude = imu.GetTotalAttitude();
 							errors = eda.ReturnCMCErrorNeedles();
 							break;
 						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
-							// Get attitude
-							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
-								attitude = imu.GetTotalAttitude();
-							}else{
-								attitude = gdc.GetAttitude();
-							}
 							errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnASCPError(attitude));
 							break;
 						case THREEPOSSWITCH_DOWN: // GDC
-							attitude = gdc.GetAttitude();
 							errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
 							break;
 					}
 					break;				
 				case THREEPOSSWITCH_CENTER: // 2
-					attitude = _V(0,0,0);   // No
 					errors = _V(0,0,0);
-					euler_rates = gdc.rates;
-					// euler_rates = _V(0,0,0); // Does not disconnect rate inputs?
-					no_att = 1;
 					break;
-			}
-
-			// ORDEAL
-			if (!no_att) {
-				attitude.y += ordeal.GetFDAI1PitchAngle();
-				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
 			}
 
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(attitude, no_att, euler_rates, errors, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
+			fdaiLeft.PaintMe(attitude, 0, euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);			
 		}
 		return true;
 
 	case AID_FDAI_RIGHT:
 		if (!fdaiDisabled){  // Is this FDAI enabled?
-			int no_att = 0;
 			VECTOR3 euler_rates;
 			VECTOR3 attitude;
 			VECTOR3 errors;
+
+			euler_rates = eda.GetFDAI2AttitudeRate();
+			attitude = eda.GetFDAI2Attitude();
+
 			switch(FDAISelectSwitch.GetState()){
 				case THREEPOSSWITCH_UP:     // 1+2 - FDAI2 shows GDC ATT / BMAG1 ERR
-					attitude = gdc.GetAttitude();
-					euler_rates = gdc.rates;
 					errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
 					break;
 				case THREEPOSSWITCH_CENTER: // 2
-					euler_rates = gdc.rates;
 					// Get attitude to display
 					switch(FDAISourceSwitch.GetState()){
 						case THREEPOSSWITCH_UP:   // IMU
-							attitude = imu.GetTotalAttitude();
 							errors = eda.ReturnCMCErrorNeedles();
 							break;
 						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
-							if(FDAIAttSetSwitch.GetState() == TOGGLESWITCH_UP){
-								attitude = imu.GetTotalAttitude();
-							}else{
-								attitude = gdc.GetAttitude();
-							}
 							errors = eda.AdjustErrorsForRoll(attitude,eda.ReturnASCPError(attitude));
 							break;
-						case THREEPOSSWITCH_DOWN: // GDC
-							attitude = gdc.GetAttitude();							
+						case THREEPOSSWITCH_DOWN: // GDC						
 							errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
 							break;
 					}
 					break;
 				case THREEPOSSWITCH_DOWN:   // 1
-					attitude = _V(0,0,0);   // No
 					errors = _V(0,0,0);
-					euler_rates = gdc.rates;
-					// Does not null rates?
-					no_att = 1;
 					break;
-			}
-
-			// ORDEAL
-			if (!no_att) {
-				attitude.y += ordeal.GetFDAI2PitchAngle();
-				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
 			}
 
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiRight.PaintMe(attitude, no_att, euler_rates, errors, FDAIScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(attitude, 0, euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 

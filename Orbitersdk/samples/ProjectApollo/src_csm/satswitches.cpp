@@ -1510,7 +1510,7 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIYaw1->WireTo(NULL, NULL);
 		GPFPIYaw2->WireTo(NULL, NULL);
 
-		eda->WireTo(NULL, NULL);
+		eda->WireTo(NULL, NULL, NULL, NULL);
 
 		break;
 
@@ -1523,7 +1523,7 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIYaw1->WireTo(DCSource1, ACSource1);
 		GPFPIYaw2->WireTo(NULL, NULL);
 
-		eda->WireTo(ACSource1, NULL);
+		eda->WireTo(ACSource1, NULL, DCSource1, NULL);
 		break;
 
 	case 2:
@@ -1535,7 +1535,7 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIYaw1->WireTo(NULL, NULL);
 		GPFPIYaw2->WireTo(DCSource2, ACSource2);
 
-		eda->WireTo(NULL, ACSource2);
+		eda->WireTo(NULL, ACSource2, NULL, DCSource2);
 		break;
 
 	case 3:
@@ -1547,7 +1547,7 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIYaw1->WireTo(DCSource1, ACSource1);
 		GPFPIYaw2->WireTo(DCSource2, ACSource2);
 
-		eda->WireTo(ACSource1, ACSource2);
+		eda->WireTo(ACSource1, ACSource2, DCSource1, DCSource2);
 		break;
 	}
 }

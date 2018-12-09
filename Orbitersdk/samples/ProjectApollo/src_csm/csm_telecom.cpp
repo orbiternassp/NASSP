@@ -2134,11 +2134,11 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 						case 4:			// ROLL ATT ERR
 							return(scale_data(sat->eda.GetConditionedRollAttErr(), 0.0, 5.0));
 						case 5:			// SCS PITCH BODY RATE
-							return(scale_data(0,-10,10));
+							return(scale_data(sat->eda.GetInstPitchAttRate(), 0.0, 5.0));
 						case 6:			// SCS YAW BODY RATE
-							return(scale_data(0,-10,10));
+							return(scale_data(sat->eda.GetInstYawAttRate(), 0.0, 5.0));
 						case 7:			// SCS ROLL BODY RATE
-							return(scale_data(0,-50,50));
+							return(scale_data(sat->eda.GetInstRollAttRate(), 0.0, 5.0));
 						case 8:			// PITCH GIMBL POS 1 OR 2
 							return(scale_data(0,-5,5));
 						case 9:			// CM X-AXIS ACCEL

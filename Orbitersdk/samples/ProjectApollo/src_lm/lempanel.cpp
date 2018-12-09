@@ -3508,7 +3508,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiLeft.PaintMe(attitude, no_att, rates, errors, RateScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiLeft.PaintMe(attitude, no_att, rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
@@ -3593,7 +3593,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 			else { if (errors.y < -41) { errors.y = -41; } }
 			if (errors.z > 41) { errors.z = 41; }
 			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiRight.PaintMe(attitude, no_att, rates, errors, RateScaleSwitch.GetState(), surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
+			fdaiRight.PaintMe(attitude, no_att, rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);
 		}
 		return true;
 
