@@ -154,8 +154,7 @@ void Sat5LMDSC::Setup()
 
 		SetTouchdownPoints(td, 7);
 
-		VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
-		AddMesh(LM_Descent2, &mesh_dir);
+		AddMesh(LM_Descent2);
 	}
 	
 	if (state == 1 || state == 11) {
@@ -198,9 +197,8 @@ void Sat5LMDSC::Setup()
 
 		SetTouchdownPoints(td, 7);
 
-		VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
-		VECTOR3 probe_dir = _V(-0.003, 1.125, 0.004);
-		AddMesh(LM_Descent, &mesh_dir);
+		VECTOR3 probe_dir = _V(0.00, 0.40, 0.00);
+		AddMesh(LM_Descent);
 		
 		if (state == 11) {
 			AddMesh(hLemProbes, &probe_dir);
@@ -208,8 +206,7 @@ void Sat5LMDSC::Setup()
 	}
 
 	if (state == 10) {
-		VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
-		AddMesh(LM_DescentNoLeg, &mesh_dir);
+		AddMesh(LM_DescentNoLeg);
 	}
 }
 
@@ -254,9 +251,9 @@ void Sat5LMDSC::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		LM_Descent = oapiLoadMeshGlobal("ProjectApollo/LM_Descent");
-		LM_Descent2 = oapiLoadMeshGlobal("ProjectApollo/LM_Descent2");
-		LM_DescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentNoLeg");
+		LM_Descent = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStage");
+		LM_Descent2 = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageRet");
+		LM_DescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 		hLemProbes = oapiLoadMeshGlobal("ProjectApollo/LM_ContactProbes");
 		seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 	}
