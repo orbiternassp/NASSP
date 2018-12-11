@@ -1506,6 +1506,7 @@ protected:
 	int lpdgext;
 	int fwdhatch;
 	int ovhdhatch;
+	int lmdrogue;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

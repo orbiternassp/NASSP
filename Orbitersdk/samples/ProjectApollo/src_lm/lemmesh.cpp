@@ -44,18 +44,17 @@
 
 #include "CollisionSDK/CollisionSDK.h"
 
-static MESHHANDLE hLMPKD ;
-static MESHHANDLE hLMLanded ;
 static MESHHANDLE hLMDescent;
+static MESHHANDLE hLMDescentRet;
+static MESHHANDLE hLMDescentNoLeg;
 static MESHHANDLE hLMAscent ;
-static MESHHANDLE hLMAscent2 ;
 static MESHHANDLE hAstro1 ;
 static MESHHANDLE hLemProbes;
 static MESHHANDLE hLPDgret;
 static MESHHANDLE hLPDgext;
 static MESHHANDLE hFwdHatch;
 static MESHHANDLE hOvhdHatch;
-static MESHHANDLE hLM1;
+static MESHHANDLE hDrogue;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -185,28 +184,35 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 
 	SetTouchdownPoints(td, 7);
 
-	VECTOR3 mesh_dir = _V(-0.003, -0.03, 0.004);
+	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
+	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
 
-	UINT meshidx;
-	if (NoLegs)
-	{
-		meshidx = AddMesh(hLM1, &mesh_dir);
-	}
-	else
-	{
-		meshidx = AddMesh(hLMPKD, &mesh_dir);
-	}
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
-	
 	// Forward Hatch
-	VECTOR3 hatch_dir = _V(-0.003, -0.03, 0.004);
-	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
+	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
 	SetFwdHatchMesh();
 
 	// Drogue & Overhead hatch
-	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
+	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
+	lmdrogue = AddMesh(hDrogue, &mesh_asc);
 	SetOvhdHatchMesh();
 
+	// Vessel Meshes
+	UINT ascidx;
+	UINT dscidx;
+
+	ascidx = AddMesh(hLMAscent, &mesh_asc);
+
+	if (NoLegs)
+	{
+		dscidx = AddMesh(hLMDescentNoLeg, &mesh_dsc);
+	}
+	else
+	{
+		dscidx = AddMesh(hLMDescentRet, &mesh_dsc);
+	}
+	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	
 	if (!ph_Dsc)
 	{
 		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -244,8 +250,8 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 
 	SetCameraOffset(_V(-0.68, 1.65, 1.35));
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH(-1.85);
-	//AddRCS_LMH3(-5.4516);
+	//AddRCS_LMH(-1.85);
+	AddRCS_LMH3(-5.4516);
 	status = 0;
 	stage = 0;
 	bModeDocked=true;
@@ -346,34 +352,41 @@ void LEM::SetLmVesselHoverStage()
 
 	//VSSetTouchdownPoints(GetHandle(), _V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
 
-	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
-	UINT meshidx;
-	if (NoLegs)
-	{
-		meshidx = AddMesh(hLM1, &mesh_dir);
-	}
-	else
-	{
-		if (Landed) {
-			meshidx = AddMesh(hLMLanded, &mesh_dir);
-		}
-		else {
-			UINT probeidx;
-			meshidx = AddMesh(hLMLanded, &mesh_dir);
-			probeidx = AddMesh(hLemProbes, &mesh_dir);
-			SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
-		}
-	}
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
+	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
 
 	// Forward Hatch
-	VECTOR3 hatch_dir= _V(-0.003, -0.03, 0.004);
-	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
+	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
 	SetFwdHatchMesh();
 
 	// Drogue & Overhead hatch
-	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
+	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
+	lmdrogue = AddMesh(hDrogue, &mesh_asc);
 	SetOvhdHatchMesh();
+
+	// Vessel Meshes
+	UINT ascidx;
+	UINT dscidx;
+
+	ascidx = AddMesh(hLMAscent, &mesh_asc);
+
+	if (NoLegs)
+	{
+		dscidx = AddMesh(hLMDescentNoLeg, &mesh_dsc);
+	}
+	else
+	{
+
+		dscidx = AddMesh(hLMDescent, &mesh_dsc);
+		if (!Landed) {
+			UINT probeidx;
+			VECTOR3 mesh_prb = _V(0.00, 0.40, 0.00);
+			probeidx = AddMesh(hLemProbes, &mesh_prb);
+			SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
+		}
+	}
+	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
 
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -428,8 +441,8 @@ void LEM::SetLmVesselHoverStage()
 	status = 1;
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH(-1.85);
-	//AddRCS_LMH3(-5.4516);
+	//AddRCS_LMH(-1.85);
+	AddRCS_LMH3(-5.4516);
 	bModeHover=true;
 
 	VECTOR3 dockpos = {0.0 ,2.6, 0.0};	
@@ -520,18 +533,20 @@ void LEM::SetLmAscentHoverStage()
 
 	//VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 
-	VECTOR3 mesh_dir=_V(-0.191,-0.02,0.383);	
-	UINT meshidx = AddMesh (hLMAscent, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+	VECTOR3 mesh_asc=_V(0.00, -0.76, 0.00);
 
 	// Forward Hatch
-	VECTOR3 hatch_dir= _V(0, -1.88, 0);
-	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
+	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
 	SetFwdHatchMesh();
 
 	// Drogue & Overhead hatch
-	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
+	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
+	lmdrogue = AddMesh(hDrogue, &mesh_asc);
 	SetOvhdHatchMesh();
+
+	// Vessel Meshes
+	UINT ascidx = AddMesh (hLMAscent, &mesh_asc);
+	SetMeshVisibilityMode (ascidx, MESHVIS_VCEXTERNAL);
 	
 	if (!ph_Asc)
 	{
@@ -568,8 +583,8 @@ void LEM::SetLmAscentHoverStage()
 	status = 2;
 	stage = 2;
 	SetEngineLevel(ENGINE_HOVER,0);
-	AddRCS_LMH2(-1.86);
-	//AddRCS_LMH3(-7.2966);
+	//AddRCS_LMH2(-1.86);
+	AddRCS_LMH3(-7.2016);
 	bModeHover=true;
 
 	if(ph_Dsc){
@@ -577,7 +592,7 @@ void LEM::SetLmAscentHoverStage()
 		ph_Dsc = 0;
 	}
 	
-	VECTOR3 dockpos = {0.0 ,0.75, 0.0};
+	VECTOR3 dockpos = {0.0 ,0.85, 0.0};
 	VECTOR3 dockdir = {0,1,0};
 
 	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
@@ -616,7 +631,7 @@ void LEM::SeparateStage (UINT stage)
 	vs2.version = 2;
 
 	if (stage == 0) {
-		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
+		ShiftCentreOfMass(_V(0.0, -1.25, 0.0));
 		GetStatusEx(&vs2);
 		char VName[256];
 		strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
@@ -636,7 +651,7 @@ void LEM::SeparateStage (UINT stage)
 	}
 	
 	if (stage == 1)	{
-		ShiftCentreOfMass(_V(0.0, -1.155, 0.0));
+		ShiftCentreOfMass(_V(0.0, -1.25, 0.0));
 		GetStatusEx(&vs2);
 		
 		if (vs2.status == 1) {
@@ -693,23 +708,30 @@ void LEM::SeparateStage (UINT stage)
 void LEM::SetLmLandedMesh() {
 
 	ClearMeshes();
-	VECTOR3 mesh_dir=_V(-0.003,-0.03,0.004);	
-	UINT meshidx = AddMesh (hLMLanded, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
-	//Set fwd footpad mesh to be visible from LPD window
-	lpdgext = AddMesh(hLPDgext, &mesh_dir);
-	lpdgret = -1;
-	SetLPDMeshExt();
+	VECTOR3 mesh_asc = _V(0.00, 1.00, 0.00);
+	VECTOR3 mesh_dsc = _V(0.00, -1.24, 0.00);
 
 	// Forward Hatch
-	VECTOR3 hatch_dir = _V(-0.003, -0.03, 0.004);
-	fwdhatch = AddMesh(hFwdHatch, &hatch_dir);
+	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
 	SetFwdHatchMesh();
 
 	// Drogue & Overhead hatch
-	ovhdhatch = AddMesh(hOvhdHatch, &hatch_dir);
+	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
+	lmdrogue = AddMesh(hDrogue, &mesh_asc);
 	SetOvhdHatchMesh();
+
+	// Vessel Meshes
+	UINT ascidx = AddMesh(hLMAscent, &mesh_asc);
+	UINT dscidx = AddMesh(hLMDescent, &mesh_dsc);
+	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+
+	//Set fwd footpad mesh to be visible from LPD window
+	VECTOR3 lpd_dir = _V(-0.003, -0.03, 0.004);
+	lpdgext = AddMesh(hLPDgext, &lpd_dir);
+	lpdgret = -1;
+	SetLPDMeshExt();
 
 	Landed = true;
 }
@@ -776,14 +798,16 @@ void LEM::SetFwdHatchMesh() {
 
 void LEM::SetOvhdHatchMesh() {
 
-	if (ovhdhatch == -1)
+	if (ovhdhatch == -1 || lmdrogue == -1)
 		return;
 
 	if (OverheadHatch.IsOpen()) {
 		SetMeshVisibilityMode(ovhdhatch, MESHVIS_NEVER);
+		SetMeshVisibilityMode(lmdrogue, MESHVIS_NEVER);
 	}
 	else {
 		SetMeshVisibilityMode(ovhdhatch, MESHVIS_VCEXTERNAL);
+		SetMeshVisibilityMode(lmdrogue, MESHVIS_VCEXTERNAL);
 	}
 }
 
@@ -838,19 +862,18 @@ void LEM::SetDockingLights() {
 void LEMLoadMeshes()
 
 {
-	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_NoWheel");
-	hLMLanded = oapiLoadMeshGlobal ("ProjectApollo/LM_Landed");
-	hLMDescent = oapiLoadMeshGlobal ("ProjectApollo/LM_descent");
-	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_ascent");
-	hLMAscent2= oapiLoadMeshGlobal ("ProjectApollo/LM_ascent2");
+	hLMDescent = oapiLoadMeshGlobal ("ProjectApollo/LM_DescentStage");
+	hLMDescentRet = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageRet");
+	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
+	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
 	hAstro1= oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
 	hLemProbes = oapiLoadMeshGlobal ("ProjectApollo/LM_ContactProbes");
 	hLPDgret = oapiLoadMeshGlobal("ProjectApollo/LPD_gret");
 	hLPDgext = oapiLoadMeshGlobal("ProjectApollo/LPD_gext");
-	hFwdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_FwdHatch");
-	hOvhdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_Drogue");
+	hFwdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_ForwardHatch");
+	hOvhdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_UpperHatch");
+	hDrogue = oapiLoadMeshGlobal("ProjectApollo/LM_TunnelDrogue");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
-	hLM1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
 }
 
 //
