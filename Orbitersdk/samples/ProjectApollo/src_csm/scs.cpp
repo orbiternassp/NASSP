@@ -1732,23 +1732,23 @@ void EDA::ResetTransistors()
 
 void EDA::Timestep(double simdt)
 {
-	//POWER
-	bool E1_307, E1_309, E1_363, E2_307, E2_309, E2_363, EA_315, EB_315;
+	if (!IsPowered()) return;
 
-	if (ac_source1->Voltage() > SP_MIN_ACVOLTAGE)
+	//POWER
+	bool E1_307, E1_309, E2_307, E2_309, EA_315, EB_315;
+
+	if (ac_source1 && ac_source1->Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		E1_307 = true;
 		E1_309 = true;
-		E1_363 = true;
 	}
 	else
 	{
 		E1_307 = false;
 		E1_309 = false;
-		E1_363 = false;
 	}
 
-	if (ac_source2->Voltage() > SP_MIN_ACVOLTAGE)
+	if (ac_source2 && ac_source2->Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		E2_307 = true;
 		E2_309 = true;
@@ -1757,15 +1757,14 @@ void EDA::Timestep(double simdt)
 	{
 		E2_307 = false;
 		E2_309 = false;
-		E2_363 = false;
 	}
 
-	if (mna_source->Voltage() > SP_MIN_DCVOLTAGE)
+	if (mna_source && mna_source->Voltage() > SP_MIN_DCVOLTAGE)
 		EA_315 = true;
 	else
 		EA_315 = false;
 
-	if (mnb_source->Voltage() > SP_MIN_DCVOLTAGE)
+	if (mnb_source && mnb_source->Voltage() > SP_MIN_DCVOLTAGE)
 		EB_315 = true;
 	else
 		EB_315 = false;
@@ -1824,133 +1823,81 @@ void EDA::Timestep(double simdt)
 
 	//3-2
 	if (sat->FDAIScaleSwitch.IsCenter() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S3_2 = true;
-	}
 	else
-	{
 		S3_2 = false;
-	}
 
 	//4-1
 	if (sat->FDAISelectSwitch.IsDown() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S4_1 = true;
-	}
 	else
-	{
 		S4_1 = false;
-	}
 
 	//4-2
 	if (sat->FDAISelectSwitch.IsCenter() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S4_2 = true;
-	}
 	else
-	{
 		S4_2 = false;
-	}
 
 	//4-3
 	if (sat->FDAISelectSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S4_3 = true;
-	}
 	else
-	{
 		S4_3 = false;
-	}
 
 	//5-1
 	if (sat->FDAISourceSwitch.IsUp() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S5_1 = true;
-	}
 	else
-	{
 		S5_1 = false;
-	}
 
 	//5-2
 	if (sat->FDAISourceSwitch.IsDown() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S5_2 = true;
-	}
 	else
-	{
 		S5_2 = false;
-	}
 
 	//5-3
 	if (sat->FDAISourceSwitch.IsCenter() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S5_3 = true;
-	}
 	else
-	{
 		S5_3 = false;
-	}
 
 	//6-1
 	if (sat->FDAIAttSetSwitch.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S6_1 = true;
-	}
 	else
-	{
 		S6_1 = false;
-	}
 
 	//6-2
 	if (sat->FDAIAttSetSwitch.IsUp() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S6_2 = true;
-	}
 	else
-	{
 		S6_2 = false;
-	}
 
 	//20-3
 	if (sat->BMAGRollSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S20_3 = true;
-	}
 	else
-	{
 		S20_3 = false;
-	}
 
 	//21-3
 	if (sat->BMAGPitchSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S21_3 = true;
-	}
 	else
-	{
 		S21_3 = false;
-	}
 
 	//22-3
 	if (sat->BMAGYawSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S22_3 = true;
-	}
 	else
-	{
 		S22_3 = false;
-	}
 
 	//51-1
 	if (sat->GSwitch.IsDown() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
-	{
 		S51_1 = true;
-	}
 	else
-	{
 		S51_1 = false;
-	}
 
 	//RELAYS AND TRANSISTORS
 
@@ -2040,22 +1987,14 @@ void EDA::Timestep(double simdt)
 		A9K1 = false;
 
 	if (S5_2 || S4_3)
-	{
 		A9K2 = true;
-	}
 	else
-	{
 		A9K2 = false;
-	}
 
 	if (S5_3 && S4_2 && S6_1)
-	{
 		A9K4 = true;
-	}
 	else
-	{
 		A9K4 = false;
-	}
 
 	if (!((S4_1 && S5_2) || (S5_3 && S6_1)))
 	{
@@ -2084,22 +2023,14 @@ void EDA::Timestep(double simdt)
 	}
 
 	if (S4_2 || S4_3 || !S2_1 || S5_2 || S5_1)
-	{
 		T1QS55 = true;
-	}
 	else
-	{
 		T1QS55 = false;
-	}
 
 	if (S4_1|| S4_3 || !S2_1 || S5_2 || S5_1)
-	{
 		T1QS56 = true;
-	}
 	else
-	{
 		T1QS56 = false;
-	}
 
 	if (!(S6_2 && S2_1 && S5_3 && S4_1))
 	{
@@ -2176,13 +2107,9 @@ void EDA::Timestep(double simdt)
 	}
 
 	if (S20_3 || S4_1)
-	{
 		T1QS63 = true;
-	}
 	else
-	{
 		T1QS63 = false;
-	}
 
 	if (!S20_3 || S4_2)
 		T1QS64 = true;
@@ -2243,22 +2170,14 @@ void EDA::Timestep(double simdt)
 	}
 
 	if (S51_1 || S4_2 || (!S20_3 && !S22_3))
-	{
 		T2QS68 = true;
-	}
 	else
-	{
 		T2QS68 = false;
-	}
 
 	if (S51_1 || S4_1 || (!S20_3 && !S22_3))
-	{
 		T2QS69 = true;
-	}
 	else
-	{
 		T2QS69 = false;
-	}
 
 	if (S3_1 || S3_2)
 	{
@@ -2314,49 +2233,29 @@ void EDA::Timestep(double simdt)
 	}
 
 	if (S4_2 || !S22_3 && (!S20_3 || S51_1))
-	{
 		T2QS76 = true;
-	}
 	else
-	{
 		T2QS76 = false;
-	}
 
 	if (S4_1 || !S22_3 && (!S20_3 || S51_1))
-	{
 		T2QS77 = true;
-	}
 	else
-	{
 		T2QS77 = false;
-	}
 
 	if (S21_3 || S4_2)
-	{
 		T3QS64 = true;
-	}
 	else
-	{
 		T3QS64 = false;
-	}
 
 	if (S21_3 || S4_1)
-	{
 		T3QS65 = true;
-	}
 	else
-	{
 		T3QS65 = false;
-	}
 
 	if (!S21_3 || S4_2)
-	{
 		T3QS76 = true;
-	}
 	else
-	{
 		T3QS76 = false;
-	}
 
 	if (!S21_3 || S4_1)
 		T3QS77 = true;
@@ -2368,15 +2267,12 @@ void EDA::Timestep(double simdt)
 	else
 		T1QS78 = false;
 
+	//Input signal collection
 	VECTOR3 bmag1rates = sat->bmag1.GetRates();
 	VECTOR3 bmag2rates = sat->bmag2.GetRates();
 	VECTOR3 imuatt = sat->imu.GetTotalAttitude();
 	VECTOR3 gdcatt = sat->gdc.GetAttitude();
 	VECTOR3 cmcerr = _V(sat->gdc.fdai_err_x, sat->gdc.fdai_err_y, sat->gdc.fdai_err_z) * 5.0 / 0.3 / 384.0*RAD;	//Converted from -384/384 to radians (-16.66°/16.66°)
-
-	//Debug
-	//bmag1rates = _V(1.0*RAD, 2.0*RAD, 3.0*RAD);
-	//bmag2rates = _V(4.0*RAD, 5.0*RAD, 6.0*RAD);
 
 	double rate, err;
 
@@ -2776,8 +2672,8 @@ void EDA::Timestep(double simdt)
 
 bool EDA::IsPowered()
 {
-	if (ac_source1->Voltage() > SP_MIN_DCVOLTAGE) return true;
-	if (ac_source2->Voltage() > SP_MIN_DCVOLTAGE) return true;
+	if (ac_source1 && ac_source1->Voltage() > SP_MIN_DCVOLTAGE) return true;
+	if (ac_source2 && ac_source2->Voltage() > SP_MIN_DCVOLTAGE) return true;
 
 	return false;
 }

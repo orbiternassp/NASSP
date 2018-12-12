@@ -438,8 +438,8 @@ void FDAI::PaintMe(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, 
 
 
 	// sprintf(oapiDebugString(),"FDAI: Rates %f %f %f, TGX %d",rates.x,rates.y,rates.z,targetX);
-	// Off-flag
-	if (!IsPowered() || no_att != 0)
+	// Off-flag (CSM FDAI doesn't have one... I think)
+	if (LM_FDAI && (!IsPowered() || no_att != 0))
 		oapiBlt(surf, hFDAIOff, 31, 100, 0, 0, 13, 30, SURF_PREDEF_CK);
 }
 
