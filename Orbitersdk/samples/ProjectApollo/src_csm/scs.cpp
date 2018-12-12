@@ -662,7 +662,7 @@ void GDC::Timestep(double simdt) {
 		S22_3 = false;
 
 	//37-D
-	if (sat->GDCAlignButton.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+	if (sat->GDCAlignButton.GetState() == 1 && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
 		S37_D = true;
 	else
 		S37_D = false;
@@ -776,19 +776,166 @@ void GDC::Timestep(double simdt) {
 
 	// Get rates from the appropriate BMAG
 	// GDC attitude is based on RATE data, not ATT data.
-	BMAG *rollBmag = NULL;
 	BMAG *pitchBmag = NULL;
+	BMAG *primRollBmag = NULL;
+	BMAG *redunRollBmag = NULL;
 	BMAG *yawBmag = NULL;
+
+	if (A2K4)
+		pitchBmag = &sat->bmag1;
+	else
+		pitchBmag = &sat->bmag2;
+
+	if (A3K4)
+		redunRollBmag = &sat->bmag1;
+	else
+		redunRollBmag = &sat->bmag2;
+
+	if (A3K2)
+		primRollBmag = &sat->bmag1;
+	else
+		primRollBmag = redunRollBmag;
+
+	if (A4K4)
+		yawBmag = &sat->bmag1;
+	else
+		yawBmag = &sat->bmag2;
+
+	//Pitch Voltage to Frequency Converter (Module A2)
+	double pitchrate;
+
+	if (A2K1)
+	{
+		//Euler mode
+		pitchrate = pitchBmag->GetRates().x*cos(Attitude.x) - yawBmag->GetRates().y*sin(Attitude.x);
+		if (A9K3)
+		{
+			pitchrate *= 1.0 / cos(max(-60.0*RAD, min(60.0*RAD, Attitude.z)));
+		}
+	}
+	else
+	{
+		if (A2K3)
+		{
+			//GDC align
+			pitchrate = sat->ascp.GetPitchEulerAttitudeSetInput();
+		}
+		else
+		{
+			if (A2K2)
+			{
+				//Entry (0.05G)
+				pitchrate = 0.0;
+			}
+			else
+			{
+				//Non-Euler
+				pitchrate = pitchBmag->GetRates().x;
+			}
+		}
+	}
+
+	//Roll Voltage to Frequency Converter (Module A3)
+	double rollrate;
+	if (A3K1)
+	{
+		//Euler mode
+		rollrate = primRollBmag->GetRates().z - pitchrate * sin(Attitude.z);
+	}
+	else
+	{
+		if (A3K3)
+		{
+			//GDC align
+			rollrate = sat->ascp.GetRollEulerAttitudeSetInput();
+		}
+		else
+		{
+			if (A3K2)
+			{
+				//Entry (0.05G)
+				rollrate = primRollBmag->GetRates().z*cos(21.0*RAD) -  sat->bmag1.GetRates().y*sin(21.0*RAD);
+			}
+			else
+			{
+				//Non-Euler
+				rollrate = primRollBmag->GetRates().z;
+			}
+		}
+	}
+	
+	//Yaw Voltage to Frequency Converter (Module A4)
+	double yawrate;
+	if (A4K1)
+	{
+		//Euler mode
+		yawrate = -yawBmag->GetRates().y*cos(Attitude.x) + pitchBmag->GetRates().x*sin(Attitude.x);
+	}
+	else
+	{
+		if (A4K3)
+		{
+			//GDC align
+			yawrate = sat->ascp.GetYawEulerAttitudeSetInput();
+		}
+		else
+		{
+			if (A4K2)
+			{
+				//Entry (0.05G)
+				yawrate = redunRollBmag->GetRates().z*cos(21.0*RAD) - yawBmag->GetRates().y*sin(21.0*RAD);
+			}
+			else
+			{
+				//Non-Euler
+				yawrate = -yawBmag->GetRates().y;
+			}
+		}
+	}
+	
+	//Yaw and EMS Digital Output (Module A6)
+	//Yaw
+	if (!A6K1)
+	{
+		Attitude.z += yawrate * simdt;
+
+		if (Attitude.z >= PI2) {
+			Attitude.z -= PI2;
+		}
+		if (Attitude.z < 0) {
+			Attitude.z += PI2;
+		}
+	}
+	//EMS
+	if (A6K2)
+	{
+		//TBD: Drive RSI
+	}
+
+	//Roll and Pitch Digital Output (Module A7)
+	Attitude.x += rollrate * simdt;
+	if (Attitude.x >= PI2) {
+		Attitude.x -= PI2;
+	}
+	if (Attitude.x < 0) {
+		Attitude.x += PI2;
+	}
+	Attitude.y += pitchrate * simdt;
+	if (Attitude.y >= PI2) {
+		Attitude.y -= PI2;
+	}
+	if (Attitude.y < 0) {
+		Attitude.y += PI2;
+	}
+
+	sprintf(oapiDebugString(), "Body: %f %f %f Euler: %f %f %f", sat->bmag1.GetRates().z*DEG, sat->bmag1.GetRates().x*DEG, sat->bmag1.GetRates().y*DEG, rollrate*DEG, pitchrate*DEG, yawrate*DEG);
 
 	switch(sat->BMAGRollSwitch.GetState()){
 		case THREEPOSSWITCH_UP:     // RATE2
-			rollBmag = &sat->bmag2;
 			sat->bmag1.Cage(0);
 			break;
 
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
-			rollBmag = &sat->bmag2;
-	
 			// Uncage Roll BMAG 1, see AOH SCS figure 2.3-11
 			if (((sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_x > 28673 && 
 				  sat->eca.rhc_x < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
@@ -799,20 +946,16 @@ void GDC::Timestep(double simdt) {
 			break;
 
 		case THREEPOSSWITCH_DOWN:   // RATE1
-			rollBmag = &sat->bmag1;
 			sat->bmag1.Cage(0);
 			break;			
 	}
 
 	switch(sat->BMAGPitchSwitch.GetState()){
 		case THREEPOSSWITCH_UP:     // RATE2
-			pitchBmag = &sat->bmag2;
 			sat->bmag1.Cage(1);
 			break;
 
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
-			pitchBmag = &sat->bmag2;
-
 			// Uncage Pitch BMAG 1, see AOH SCS figure 2.3-11
 			if (((sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_y > 28673 && 
 				  sat->eca.rhc_y < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
@@ -823,20 +966,16 @@ void GDC::Timestep(double simdt) {
 			break;
 
 		case THREEPOSSWITCH_DOWN:   // RATE1
-			pitchBmag = &sat->bmag1;
 			sat->bmag1.Cage(1);
 			break;			
 	}
 
 	switch(sat->BMAGYawSwitch.GetState()){
 		case THREEPOSSWITCH_UP:     // RATE2
-			yawBmag = &sat->bmag2;
 			sat->bmag1.Cage(2);
 			break;
 
 		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
-			yawBmag = &sat->bmag2;
-
 			// Uncage Yaw BMAG 1, see AOH SCS figure 2.3-11
 			if (((sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_z > 28673 && 
 				  sat->eca.rhc_z < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
@@ -847,37 +986,29 @@ void GDC::Timestep(double simdt) {
 			break;
 
 		case THREEPOSSWITCH_DOWN:   // RATE1
-			yawBmag = &sat->bmag1;
 			sat->bmag1.Cage(2);
 			break;
 	}		
-	
-	// Handling for .05G Switch:  According to AOH SCS Section 2.3.3.3.1...
-	// "...selecting backup rate (BMAG1) in yaw will automatically select the backup rate gyro (BMAG 1) in roll and vice versa..."
-	if (sat->GSwitch.IsUp() && (sat->BMAGPitchSwitch.IsDown() || sat->BMAGRollSwitch.IsDown())) {
-		rollBmag = &sat->bmag1;
-		yawBmag = &sat->bmag1;
-	}
 
-	AttitudeReference::Timestep(simdt);
+	//AttitudeReference::Timestep(simdt);
 
 	rates.x = pitchBmag->GetRates().x;
 	// Special Logic for Entry .05 Switch
 	if (sat->GSwitch.IsUp()) {
 		// Entry Stability Roll Transformation
-		rates.y = -rollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
-		rollstabilityrate = rollBmag->GetRates().z*cos(21.0*RAD) + yawBmag->GetRates().y*sin(21.0*RAD);
+		rates.y = -primRollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
+		rollstabilityrate = primRollBmag->GetRates().z*cos(21.0*RAD) + yawBmag->GetRates().y*sin(21.0*RAD);
 		// sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
 	} else {
 		// Normal Operation
 		rates.y = yawBmag->GetRates().y;
-		rollstabilityrate = rollBmag->GetRates().z;
+		rollstabilityrate = primRollBmag->GetRates().z;
 	}
-	rates.z = rollBmag->GetRates().z;
+	rates.z = primRollBmag->GetRates().z;
 
 	// If the current BMAG has no power it doesn't provide rates so we don't change 
 	// the attitude of the failed axis
-	if (!rollBmag->IsPowered())  SetAttitude(_V(LastAttitude.x, Attitude.y, Attitude.z));
+	if (!primRollBmag->IsPowered())  SetAttitude(_V(LastAttitude.x, Attitude.y, Attitude.z));
 	if (!pitchBmag->IsPowered()) SetAttitude(_V(Attitude.x, LastAttitude.y, Attitude.z));
 	if (!yawBmag->IsPowered())   SetAttitude(_V(Attitude.x, Attitude.y, LastAttitude.z));
 
