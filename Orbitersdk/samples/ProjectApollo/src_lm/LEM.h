@@ -572,9 +572,7 @@ protected:
 	void CheckDescentStageSystems();
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
-	void AddRCS_LMH(double TRANZ);
-	void AddRCS_LMH2(double TRANZ);
-	void AddRCS_LMH3(double TRANY);
+	void AddRCS_LMH(double TRANY);
 	void ToggleEVA();
 	void SetupEVA();
 	void SetView();
