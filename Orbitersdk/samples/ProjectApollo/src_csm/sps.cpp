@@ -627,8 +627,8 @@ void SPSEngine::Timestep(double simt, double simdt) {
 		}
 	}
 	// Now adjust for rotation
-	if (SCS_INERTIAL_BMAGS)
-		error = saturn->eda.AdjustErrorsForRoll(saturn->bmag1.GetAttitude(), error);
+	//if (SCS_INERTIAL_BMAGS)
+		//error = saturn->eda.AdjustErrorsForRoll(saturn->bmag1.GetAttitude(), error);
 
 	// TVC SCS automatic mode only when BMAG 1 uncaged and powered
 	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().x == 0) error.x = 0;

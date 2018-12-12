@@ -131,6 +131,13 @@ public: // We use these inside a timestep, so everything is public to make data 
 	void SaveState(FILEHANDLE scn); // SaveState callback
 	void LoadState(FILEHANDLE scn); // LoadState callback
 
+	bool GetYawAttitudeSetInputEnable() { return A9K1; }
+	bool GetPitchRollAttitudeSetInputEnable() { return A9K2; }
+
+	double GetRollBodyMinusEulerError();
+	double GetPitchBodyError();
+	double GetYawBodyError();
+
 	VECTOR3 rates;					// Integrated Euler rotation rates
 	double rollstabilityrate;
 	Saturn *sat;
@@ -181,6 +188,10 @@ protected:
 	//EMS roll display on 
 	bool A8K2;
 
+	//Yaw attitude set input enable
+	bool A9K1;
+	//Pitch, roll attitude set input enable
+	bool A9K2;
 	//Secant function enable
 	bool A9K3;
 };
@@ -218,6 +229,13 @@ public: // We use these inside a timestep, so everything is public to make data 
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
+	double GetRollEulerAttitudeSetError();
+	double GetPitchEulerAttitudeSetError();
+	double GetYawEulerAttitudeSetError();
+	double GetRollEulerAttitudeSetInput();
+	double GetPitchEulerAttitudeSetInput();
+	double GetYawEulerAttitudeSetInput();
+
 	int mousedowncounter;                                          // Mouse Down Counter
 	int mousedownposition;
 	double mousedownangle;
@@ -232,6 +250,9 @@ public: // We use these inside a timestep, so everything is public to make data 
 
 protected:
 	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, double value);
+	double CalcRollEulerAttitudeSetError();
+	double CalcPitchEulerAttitudeSetError();
+	double CalcYawEulerAttitudeSetError();
 };
 
 
@@ -250,17 +271,14 @@ public: // Same stuff about speed and I'm lazy too.
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
-	VECTOR3 ReturnCMCErrorNeedles();								// Return said data.
-	VECTOR3 ReturnASCPError(VECTOR3 attitude);						// Return said data.
-	VECTOR3 AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors);  // Adjust errors for roll so as to be FLY-TO
-	VECTOR3 CalcErrors(VECTOR3 target);
-	VECTOR3 GetFDAIAttitudeError() { return AttitudeError; }
-
 	VECTOR3 GetFDAI1Attitude() { return FDAI1Attitude; }
 	VECTOR3 GetFDAI2Attitude() { return FDAI2Attitude; }
 
 	VECTOR3 GetFDAI1AttitudeRate() { return FDAI1AttitudeRate; }
 	VECTOR3 GetFDAI2AttitudeRate() { return FDAI2AttitudeRate; }
+
+	VECTOR3 GetFDAI1AttitudeError() { return FDAI1AttitudeError; }
+	VECTOR3 GetFDAI2AttitudeError() { return FDAI2AttitudeError; }
 
 	double GetConditionedPitchAttErr();
 	double GetConditionedYawAttErr();
@@ -270,17 +288,19 @@ public: // Same stuff about speed and I'm lazy too.
 	double GetInstYawAttRate();
 	double GetInstRollAttRate();
 
+	bool GetIMUtoAttSetRoll() { return A8K13; }
+	bool GetIMUtoAttSetYaw() { return A8K15; }
+	bool GetIMUtoAttSetPitch() { return A8K17; }
+
 protected:
 	bool HasSigCondPower();
 	bool IsPowered();
-	VECTOR3 ReturnBMAG1Error();
 	double scale_data(double data);
 	double inst_scale_rates(double data);
 	void ResetRelays();
 	void ResetTransistors();
+	double NormalizeAngle(double ang);
 
-	//Scaled -41 to 41 pixels
-	VECTOR3 AttitudeError;
 	//Scaled -1 to 1
 	VECTOR3 FDAI1AttitudeRate;
 	VECTOR3 FDAI2AttitudeRate;
@@ -334,6 +354,12 @@ protected:
 	bool A8K9;
 	//IMU to FDAI No. 2 and GDC to FDAI No. 1 Enable
 	bool A8K11;
+	//IMU to Attitude Set Enable (Roll)
+	bool A8K13;
+	//IMU to Attitude Set Enable (Yaw)
+	bool A8K15;
+	//IMU to Attitude Set Enable (Pitch)
+	bool A8K17;
 
 	//FDAI No. 1 error enable
 	bool A9K1;
@@ -456,7 +482,7 @@ protected:
 	bool T3QS72;
 	//GDC pitch body attitude error to FDAI No. 1 disable
 	bool T3QS73;
-	//Pitch error to FDAI No. 2 disable
+	//GDC pitch body attitude error to FDAI No. 2 disable
 	bool T3QS74;
 	//Pitch Rate 1 to FDAI No. 1 disable
 	bool T3QS76;

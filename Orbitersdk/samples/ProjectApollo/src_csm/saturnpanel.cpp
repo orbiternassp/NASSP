@@ -4447,28 +4447,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 			euler_rates = eda.GetFDAI1AttitudeRate();
 			attitude = eda.GetFDAI1Attitude();
-
-			switch(FDAISelectSwitch.GetState()){
-				case THREEPOSSWITCH_UP:     // 1+2 - FDAI1 shows IMU ATT / CMC ERR				
-					errors = eda.ReturnCMCErrorNeedles();
-					break;
-				case THREEPOSSWITCH_DOWN:   // 1 -- ALTERNATE DIRECT MODE				
-					switch(FDAISourceSwitch.GetState()){
-						case THREEPOSSWITCH_UP:   // IMU
-							errors = eda.ReturnCMCErrorNeedles();
-							break;
-						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
-							errors = eda.AdjustErrorsForRoll(attitude, eda.ReturnASCPError(attitude));
-							break;
-						case THREEPOSSWITCH_DOWN: // GDC
-							errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
-							break;
-					}
-					break;				
-				case THREEPOSSWITCH_CENTER: // 2
-					errors = _V(0,0,0);
-					break;
-			}
+			errors = eda.GetFDAI1AttitudeError();
 
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
@@ -4486,29 +4465,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 			euler_rates = eda.GetFDAI2AttitudeRate();
 			attitude = eda.GetFDAI2Attitude();
-
-			switch(FDAISelectSwitch.GetState()){
-				case THREEPOSSWITCH_UP:     // 1+2 - FDAI2 shows GDC ATT / BMAG1 ERR
-					errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
-					break;
-				case THREEPOSSWITCH_CENTER: // 2
-					// Get attitude to display
-					switch(FDAISourceSwitch.GetState()){
-						case THREEPOSSWITCH_UP:   // IMU
-							errors = eda.ReturnCMCErrorNeedles();
-							break;
-						case THREEPOSSWITCH_CENTER: // ATT SET (ALTERNATE ATT-SET MODE)
-							errors = eda.AdjustErrorsForRoll(attitude,eda.ReturnASCPError(attitude));
-							break;
-						case THREEPOSSWITCH_DOWN: // GDC						
-							errors = eda.AdjustErrorsForRoll(attitude, eda.GetFDAIAttitudeError());
-							break;
-					}
-					break;
-				case THREEPOSSWITCH_DOWN:   // 1
-					errors = _V(0,0,0);
-					break;
-			}
+			errors = eda.GetFDAI2AttitudeError();
 
 			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}

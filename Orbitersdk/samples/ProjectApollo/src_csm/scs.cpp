@@ -557,6 +557,25 @@ GDC::GDC()
 	rsiRotationOn = false;
 	rsiRotationStart = 0;
 	rollstabilityrate = 0;
+
+	A2K1 = false;
+	A2K2 = false;
+	A2K3 = false;
+	A2K4 = false;
+	A3K1 = false;
+	A3K2 = false;
+	A3K3 = false;
+	A3K4 = false;
+	A4K1 = false;
+	A4K2 = false;
+	A4K3 = false;
+	A4K4 = false;
+	A6K1 = false;
+	A6K2 = false;
+	A8K2 = false;
+	A9K1 = false;
+	A9K2 = false;
+	A9K3 = false;
 }
 
 void GDC::Init(Saturn *v)
@@ -579,6 +598,181 @@ void GDC::SystemTimestep(double simdt) {
 }
 		
 void GDC::Timestep(double simdt) {
+
+	//POWER
+	bool EA_501, EB_501;
+
+	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 2 && sat->SystemMnACircuitBraker.IsPowered())
+		EA_501 = true;
+	else
+		EA_501 = false;
+
+	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 2 && sat->SystemMnBCircuitBraker.IsPowered())
+		EB_501 = true;
+	else
+		EB_501 = false;
+
+	//SWITCH LOGIC
+
+	//CMC ATT - IMU Enable
+	bool S2_1;
+	//Att Set - GDC
+	bool S6_1;
+	//BMAG Roll - Rate 1
+	bool S20_3;
+	//BMAG Pitch - Rate 1
+	bool S21_3;
+	//BMAG Yaw - Rate 1
+	bool S22_3;
+	//GDC Align - Depressed
+	bool S37_D;
+	//EMS Roll - On
+	bool S50_2;
+	//Entry 0.05G - On
+	bool S51_2;
+
+	//2-1
+	if (sat->CMCAttSwitch.IsUp() && (sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE || sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE))
+		S2_1 = true;
+	else
+		S2_1 = false;
+
+	//6-1
+	if (sat->FDAIAttSetSwitch.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+		S6_1 = true;
+	else
+		S6_1 = false;
+
+	//20-3
+	if (sat->BMAGRollSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+		S20_3 = true;
+	else
+		S20_3 = false;
+
+	//21-3
+	if (sat->BMAGPitchSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+		S21_3 = true;
+	else
+		S21_3 = false;
+
+	//22-3
+	if (sat->BMAGYawSwitch.IsDown() && sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+		S22_3 = true;
+	else
+		S22_3 = false;
+
+	//37-D
+	if (sat->GDCAlignButton.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+		S37_D = true;
+	else
+		S37_D = false;
+
+	//50-2
+	if (sat->EMSRollSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+		S50_2 = true;
+	else
+		S50_2 = false;
+
+	//51-2
+	if (sat->GSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
+		S51_2 = true;
+	else
+		S51_2 = false;
+
+	//Relay logic
+
+	if (EA_501 && S2_1 && !(S37_D || S51_2))
+	{
+		A2K1 = true;
+		A3K1 = true;
+	}
+	else
+	{
+		A2K1 = false;
+		A3K1 = false;
+	}
+
+	if (EB_501 && S2_1 && !(S37_D || S51_2))
+		A4K1 = true;
+	else
+		A4K1 = false;
+
+	if (EA_501 && S51_2 && !S37_D)
+	{
+		A2K2 = true;
+		A3K2 = true;
+	}
+	else
+	{
+		A2K2 = false;
+		A3K2 = false;
+	}
+
+	if (EB_501 && S51_2 && !S37_D)
+	{
+		A4K2 = true;
+		A6K1 = true;
+	}
+	else
+	{
+		A4K2 = false;
+		A6K1 = false;
+	}
+
+	if (S37_D)
+	{
+		A2K3 = true;
+		A3K3 = true;
+		A4K3 = true;
+	}
+	else
+	{
+		A2K3 = false;
+		A3K3 = false;
+		A4K3 = false;
+	}
+
+	if (S21_3)
+		A2K4 = true;
+	else
+		A2K4 = false;
+
+	if (S20_3)
+		A3K4 = true;
+	else
+		A3K4 = false;
+
+	if (S22_3)
+		A4K4 = true;
+	else
+		A4K4 = false;
+
+	if (S50_2)
+	{
+		A6K2 = true;
+		A8K2 = true;
+	}
+	else
+	{
+		A6K2 = false;
+		A8K2 = false;
+	}
+
+	if (S6_1)
+	{
+		A9K1 = true;
+		A9K2 = true;
+	}
+	else
+	{
+		A9K1 = false;
+		A9K2 = false;
+	}
+
+	if (S2_1)
+		A9K3 = true;
+	else
+		A9K3 = false;
 
 	// Get rates from the appropriate BMAG
 	// GDC attitude is based on RATE data, not ATT data.
@@ -741,6 +935,21 @@ bool GDC::AlignGDC() {
 	return false;	
 }
 
+double GDC::GetRollBodyMinusEulerError()
+{
+	return sat->ascp.GetPitchEulerAttitudeSetInput()*sin(Attitude.z);
+}
+
+double GDC::GetPitchBodyError()
+{
+	return sat->ascp.GetYawEulerAttitudeSetInput()*sin(Attitude.x) + sat->ascp.GetPitchEulerAttitudeSetInput()*cos(Attitude.z)*cos(Attitude.x);
+}
+
+double GDC::GetYawBodyError()
+{
+	return sat->ascp.GetYawEulerAttitudeSetInput()*cos(Attitude.x) - sat->ascp.GetPitchEulerAttitudeSetInput()*cos(Attitude.z)*sin(Attitude.x);
+}
+
 void GDC::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, GDC_START_STRING);
@@ -896,8 +1105,6 @@ void ASCP::TimeStep(double simdt)
 			}
 		}
 	}
-
-	//Resolver
 	
 	// Debug messages
 	if(msgcounter > 0){
@@ -908,6 +1115,97 @@ void ASCP::TimeStep(double simdt)
 #endif
 		}
 	}
+}
+
+double ASCP::CalcRollEulerAttitudeSetError()
+{
+	if (sat->eda.GetIMUtoAttSetRoll())
+	{
+		return sin(output.x*RAD - sat->imu.GetTotalAttitude().x);
+	}
+	else
+	{
+		return sin(output.x*RAD - sat->gdc.GetAttitude().x);
+	}
+}
+
+double ASCP::CalcPitchEulerAttitudeSetError()
+{
+	if (sat->eda.GetIMUtoAttSetPitch())
+	{
+		return sin(output.y*RAD - sat->imu.GetTotalAttitude().y);
+	}
+	else
+	{
+		return sin(output.y*RAD - sat->gdc.GetAttitude().y);
+	}
+}
+
+double ASCP::CalcYawEulerAttitudeSetError()
+{
+	if (sat->eda.GetIMUtoAttSetYaw())
+	{
+		return sin(output.z*RAD - sat->imu.GetTotalAttitude().z);
+	}
+	else
+	{
+		return sin(output.z*RAD - sat->gdc.GetAttitude().z);
+	}
+}
+
+double ASCP::GetRollEulerAttitudeSetError()
+{
+	return CalcRollEulerAttitudeSetError();
+}
+
+double ASCP::GetPitchEulerAttitudeSetError()
+{
+	if (!sat->gdc.GetPitchRollAttitudeSetInputEnable())
+	{
+		return CalcPitchEulerAttitudeSetError();
+	}
+
+	return 0.0;
+}
+
+double ASCP::GetYawEulerAttitudeSetError()
+{
+	if (!sat->gdc.GetYawAttitudeSetInputEnable())
+	{
+		return CalcYawEulerAttitudeSetError();
+	}
+
+	return 0.0;
+}
+
+double ASCP::GetRollEulerAttitudeSetInput()
+{
+	if (sat->gdc.GetPitchRollAttitudeSetInputEnable())
+	{
+		return CalcRollEulerAttitudeSetError();
+	}
+
+	return 0.0;
+}
+
+double ASCP::GetPitchEulerAttitudeSetInput()
+{
+	if (sat->gdc.GetPitchRollAttitudeSetInputEnable())
+	{
+		return CalcPitchEulerAttitudeSetError();
+	}
+
+	return 0.0;
+}
+
+double ASCP::GetYawEulerAttitudeSetInput()
+{
+	if (sat->gdc.GetYawAttitudeSetInputEnable())
+	{
+		return CalcYawEulerAttitudeSetError();
+	}
+
+	return 0.0;
 }
 
 bool ASCP::RollDisplayClicked(){
@@ -1329,7 +1627,6 @@ EDA::EDA(){
 	mna_source = NULL;
 	mnb_source = NULL;
 
-	AttitudeError = _V(0, 0, 0);
 	FDAI1AttitudeRate = _V(0, 0, 0);
 	FDAI2AttitudeRate = _V(0, 0, 0);
 	InstrAttitudeRate = _V(0, 0, 0);
@@ -1372,6 +1669,9 @@ void EDA::ResetRelays()
 	A8K7 = false;
 	A8K9 = false;
 	A8K11 = false;
+	A8K13 = false;
+	A8K15 = false;
+	A8K17 = false;
 	A9K1 = false;
 	A9K2 = false;
 	A9K4 = false;
@@ -1498,21 +1798,16 @@ void EDA::Timestep(double simdt)
 	bool S21_3;
 	//BMAG Yaw - Rate 1
 	bool S22_3;
-	//GDC Align - Depressed
-	bool S37_D;
-	//EMS Roll - On
-	bool S50_2;
 	//Entry 0.05G - Off
 	bool S51_1;
-	//Entry 0.05G - On
-	bool S51_2;
 	//BMAG uncaged
 	bool GP;
 
-	if (sat->bmag1.IsUncaged().x != 0.0 || sat->bmag1.IsUncaged().x != 0.0 || sat->bmag1.IsUncaged().x != 0.0)
-		GP = true;
-	else
+	//Inversed logic used in circuits
+	if (sat->bmag1.IsUncaged().x != 0.0 || sat->bmag1.IsUncaged().y != 0.0 || sat->bmag1.IsUncaged().z != 0.0)
 		GP = false;
+	else
+		GP = true;
 
 	//SWITCH LOGIC
 	//2-1
@@ -1647,26 +1942,6 @@ void EDA::Timestep(double simdt)
 		S22_3 = false;
 	}
 
-	//37-D
-	if (sat->GDCAlignButton.IsDown() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		S37_D = true;
-	}
-	else
-	{
-		S37_D = false;
-	}
-
-	//50-2
-	if (sat->EMSRollSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		S50_2 = true;
-	}
-	else
-	{
-		S50_2 = false;
-	}
-
 	//51-1
 	if (sat->GSwitch.IsDown() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)
 	{
@@ -1675,16 +1950,6 @@ void EDA::Timestep(double simdt)
 	else
 	{
 		S51_1 = false;
-	}
-
-	//51-2
-	if (sat->GSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		S51_2 = true;
-	}
-	else
-	{
-		S51_2 = false;
 	}
 
 	//RELAYS AND TRANSISTORS
@@ -1756,14 +2021,23 @@ void EDA::Timestep(double simdt)
 		A8K11 = false;
 	}
 
-	if (S4_1 && (S5_2 || (S5_3 && S6_1)))
+	if (S6_2)
 	{
-		A9K1 = true;
+		A8K13 = true;
+		A8K15 = true;
+		A8K17 = true;
 	}
 	else
 	{
-		A9K1 = false;
+		A8K13 = false;
+		A8K15 = false;
+		A8K17 = false;
 	}
+
+	if (S4_1 && (S5_2 || (S5_3 && S6_1)))
+		A9K1 = true;
+	else
+		A9K1 = false;
 
 	if (S5_2 || S4_3)
 	{
@@ -2193,7 +2467,7 @@ void EDA::Timestep(double simdt)
 	//FDAI 1 attitude error
 	if (E1_307)
 	{
-		err = (T3QS73 ? 0.0 : 1.0) + (T3QS55 ? 0.0 : 1.0) + (T3QS59 ? 0.0 : cmcerr.y) + (T3QS57 ? 0.0 : 1.0);
+		err = (T3QS73 ? 0.0 : -sat->gdc.GetPitchBodyError()) + (T3QS55 ? 0.0 : -sat->ascp.GetPitchEulerAttitudeSetError()) + (T3QS59 ? 0.0 : cmcerr.y) + (T3QS57 ? 0.0 : NormalizeAngle(-sat->bmag1.GetAttitudeError().y));
 		//Scale factor for 15°/s
 		err /= (15.0*RAD);
 		//Scale to 5°/s
@@ -2208,7 +2482,7 @@ void EDA::Timestep(double simdt)
 	//FDAI 2 attitude error
 	if (E2_307)
 	{
-		err = (T3QS74 ? 0.0 : 1.0) + (T3QS56 ? 0.0 : 1.0) + (T3QS60 ? 0.0 : cmcerr.y) + (T3QS58 ? 0.0 : 1.0);
+		err = (T3QS74 ? 0.0 : -sat->gdc.GetPitchBodyError()) + (T3QS56 ? 0.0 : -sat->ascp.GetPitchEulerAttitudeSetError()) + (T3QS60 ? 0.0 : cmcerr.y) + (T3QS58 ? 0.0 : NormalizeAngle(-sat->bmag1.GetAttitudeError().y));
 		//Scale factor for 15°/s
 		err /= (15.0*RAD);
 		//Scale to 5°/s
@@ -2316,7 +2590,7 @@ void EDA::Timestep(double simdt)
 	//FDAI 1 attitude error
 	if (E1_307)
 	{
-		err = (T2QS73 ? 0.0 : 1.0) + (T2QS55 ? 0.0 : 1.0) + (T2QS59 ? 0.0 : cmcerr.z) + (T2QS57 ? 0.0 : 1.0);
+		err = (T2QS73 ? 0.0 : sat->gdc.GetYawBodyError()) + (T2QS55 ? 0.0 : sat->ascp.GetYawEulerAttitudeSetError()) + (T2QS59 ? 0.0 : cmcerr.z) + (T2QS57 ? 0.0 : NormalizeAngle(sat->bmag1.GetAttitudeError().z));
 		//Scale factor for 15°/s
 		err /= (15.0*RAD);
 		//Scale to 5°/s
@@ -2332,7 +2606,7 @@ void EDA::Timestep(double simdt)
 	//FDAI 2 attitude error
 	if (E2_307)
 	{
-		err = (T2QS74 ? 0.0 : 1.0) + (T2QS56 ? 0.0 : 1.0) + (T2QS60 ? 0.0 : cmcerr.z) + (T2QS58 ? 0.0 : 1.0);
+		err = (T2QS74 ? 0.0 : sat->gdc.GetYawBodyError()) + (T2QS56 ? 0.0 : sat->ascp.GetYawEulerAttitudeSetError()) + (T2QS60 ? 0.0 : cmcerr.z) + (T2QS58 ? 0.0 : NormalizeAngle(sat->bmag1.GetAttitudeError().z));
 		//Scale factor for 15°/s
 		err /= (15.0*RAD);
 		//Scale to 5°/s
@@ -2400,7 +2674,7 @@ void EDA::Timestep(double simdt)
 	}
 	else
 	{
-		FDAI1AttitudeRate.y = 0.0;
+		FDAI1AttitudeRate.z = 0.0;
 	}
 	//FDAI 2 attitude rate
 	if (E2_307)
@@ -2439,7 +2713,7 @@ void EDA::Timestep(double simdt)
 	//FDAI 1 attitude error
 	if (E1_307)
 	{
-		err = (T1QS73 ? 0.0 : 1.0) + (T1QS55 ? 0.0 : 1.0) + (T1QS59 ? 0.0 : cmcerr.x) + (T1QS57 ? 0.0 : 1.0);
+		err = (T1QS55 ? 0.0 : ((T1QS73 ? 0.0 : sat->gdc.GetRollBodyMinusEulerError()) + sat->ascp.GetRollEulerAttitudeSetError())) + (T1QS59 ? 0.0 : cmcerr.x) + (T1QS57 ? 0.0 : NormalizeAngle(sat->bmag1.GetAttitudeError().x));
 		//Scale factor for 50°/s
 		err /= (50.0*RAD);
 		//Scale to 5.0°/s
@@ -2457,7 +2731,7 @@ void EDA::Timestep(double simdt)
 	//FDAI 2 attitude error
 	if (E2_307)
 	{
-		err = (T1QS73 ? 0.0 : 1.0) + (T1QS56 ? 0.0 : 1.0) + (T1QS60 ? 0.0 : cmcerr.x) + (T1QS58 ? 0.0 : 1.0);
+		err = (T1QS56 ? 0.0 : ((T1QS73 ? 0.0 : sat->gdc.GetRollBodyMinusEulerError()) + sat->ascp.GetRollEulerAttitudeSetError())) + (T1QS60 ? 0.0 : cmcerr.x) + (T1QS58 ? 0.0 : NormalizeAngle(sat->bmag1.GetAttitudeError().x));
 		//Scale factor for 50°/s
 		err /= (50.0*RAD);
 		//Scale to 5.0°/s
@@ -2491,16 +2765,13 @@ void EDA::Timestep(double simdt)
 
 	//sprintf(oapiDebugString(), "FDAI1: %.01f %.01f %.01f FDAI2: %.01f %.01f %.01f", FDAI1AttitudeRate.x, FDAI1AttitudeRate.y, FDAI1AttitudeRate.z,
 	//	FDAI2AttitudeRate.x, FDAI2AttitudeRate.y, FDAI2AttitudeRate.z);
-	//sprintf(oapiDebugString(), "CDU: %d %d %d FDAI1: %.1f %.1f %.1f", sat->gdc.fdai_err_x, sat->gdc.fdai_err_y, sat->gdc.fdai_err_z, 
-	//	FDAI1AttitudeError.x, FDAI1AttitudeError.y, FDAI1AttitudeError.z);
-
-	if (!IsPowered())
-	{
-		AttitudeError = _V(0, 0, 0);
-		return;
-	}
-
-	AttitudeError = ReturnBMAG1Error();
+	//sprintf(oapiDebugString(), "FDAI1: %.1f %.1f %.1f FDAI2: %.1f %.1f %.1f", FDAI1AttitudeError.x, FDAI1AttitudeError.y, FDAI1AttitudeError.z,
+	//	FDAI2AttitudeError.x, FDAI2AttitudeError.y, FDAI2AttitudeError.z);
+	//sprintf(oapiDebugString(), "%d %d %d %d %f %f %f", T3QS74, T3QS56, T3QS60, T3QS58,
+	//	sat->bmag1.GetAttitudeError().x, sat->bmag1.GetAttitudeError().y, sat->bmag1.GetAttitudeError().z);
+	//sprintf(oapiDebugString(), "%d %d %d %d", T1QS73, T1QS56, T1QS60, T1QS58);
+	//sprintf(oapiDebugString(), "%d %d %d %d %f %f", T1QS55, T1QS73, T1QS59, T1QS57, sat->gdc.GetRollBodyMinusEulerError()*DEG, sat->ascp.GetRollEulerAttitudeSetError()*DEG);
+	//sprintf(oapiDebugString(), "%f %f %f", gdcatt.x*DEG, gdcatt.y*DEG, gdcatt.z*DEG);
 }
 
 bool EDA::IsPowered()
@@ -2523,7 +2794,7 @@ double EDA::GetConditionedPitchAttErr()
 	if (!HasSigCondPower()) { return 0.0; }
 
 	//Attitude error already scaled -41 to 41 pixels
-	return scale_data(AttitudeError.y);
+	return scale_data(InstrAttitudeError.y);
 }
 
 double EDA::GetConditionedYawAttErr()
@@ -2531,7 +2802,7 @@ double EDA::GetConditionedYawAttErr()
 	if (!HasSigCondPower()) { return 0.0; }
 
 	//Attitude error already scaled -41 to 41 pixels
-	return scale_data(AttitudeError.z);
+	return scale_data(InstrAttitudeError.z);
 }
 
 double EDA::GetConditionedRollAttErr()
@@ -2539,7 +2810,7 @@ double EDA::GetConditionedRollAttErr()
 	if (!HasSigCondPower()) { return 0.0; }
 
 	//Attitude error already scaled -41 to 41 pixels
-	return scale_data(AttitudeError.x);
+	return scale_data(InstrAttitudeError.x);
 }
 
 double EDA::GetInstPitchAttRate()
@@ -2583,252 +2854,13 @@ double EDA::inst_scale_rates(double data)
 	return (data + 1.0) / 0.4;
 }
 
-VECTOR3 EDA::ReturnCMCErrorNeedles(){
-	VECTOR3 errors;
-
-	if (sat->FDAIScaleSwitch.IsDown()) {
-		// 15 degree max
-		///\todo should be 50/15/15 degree max, i.e. fdai_err_x * 0.032031, but for unknown reasons the AGC stops at 15 deg (Colossus version dependent?)
-		errors.x = sat->gdc.fdai_err_x * 0.106770; // CMC error value, CMC-scaled
-		errors.y = sat->gdc.fdai_err_y * 0.106770; // CMC error value, CMC-scaled
-		errors.z = sat->gdc.fdai_err_z * 0.106770; // CMC error value, CMC-scaled
-	} else {
-		// 5 degree max
-		errors.x = sat->gdc.fdai_err_x * 0.32031; // CMC error value, CMC-scaled
-		errors.y = sat->gdc.fdai_err_y * 0.32031; // CMC error value, CMC-scaled
-		errors.z = sat->gdc.fdai_err_z * 0.32031; // CMC error value, CMC-scaled
-	}	
-	return(errors);
-}
-
-VECTOR3 EDA::ReturnASCPError(VECTOR3 attitude) {
-
-	VECTOR3 setting,target,errors;
-	// Get ASCP setting in radians
-	setting.x = sat->ascp.output.x * 0.017453;
-	setting.y = sat->ascp.output.y * 0.017453;
-	setting.z = sat->ascp.output.z * 0.017453;
-	// And difference
-	target.x = setting.x - attitude.x;
-	target.y = setting.y - attitude.y;
-	target.z = setting.z - attitude.z;							
-	// Now process
-	switch(sat->FDAIScaleSwitch.GetState()){
-		case THREEPOSSWITCH_UP:
-		case THREEPOSSWITCH_CENTER:
-			// 5 degree rate
-			if(target.x > 0){ // Positive Error
-				if(target.x > PI){ 
-					errors.x = -((TWO_PI-target.x) * 469.827882); }else{
-						errors.x = (target.x * 469.827882);	}
-			}else{
-				if(target.x < -PI){
-					errors.x = ((TWO_PI+target.x) * 469.827882); }else{
-						errors.x = (target.x * 469.827882);	}
-			}
-			if(target.y > 0){ 
-				if(target.y > PI){ 
-					errors.y = ((TWO_PI-target.y) * 469.827882); }else{
-						errors.y = -(target.y * 469.827882);	}
-			}else{
-				if(target.y < -PI){
-					errors.y = -((TWO_PI+target.y) * 469.827882); }else{
-						errors.y = -(target.y * 469.827882);	}
-			}
-			if(target.z > 0){ 
-				if(target.z > PI){ 
-					errors.z = -((TWO_PI-target.z) * 469.827882); }else{
-						errors.z = (target.z * 469.827882);	}
-			}else{
-				if(target.z < -PI){
-					errors.z = ((TWO_PI+target.z) * 469.827882); }else{
-						errors.z = (target.z * 469.827882);	}
-			}											
-			break;
-		case THREEPOSSWITCH_DOWN:
-			// 50/15/15 degree rate
-			if(target.x > 0){ // Positive Error
-				if(target.x > PI){ 
-					errors.x = -((TWO_PI-target.x) * 46.982572); }else{
-						errors.x = (target.x * 46.982572);	}
-			}else{
-				if(target.x < -PI){
-					errors.x = ((TWO_PI+target.x) * 46.982572); }else{
-						errors.x = (target.x * 46.982572);	}
-			}
-			if(target.y > 0){ 
-				if(target.y > PI){ 
-					errors.y = ((TWO_PI-target.y) * 156.608695); }else{
-						errors.y = -(target.y * 156.608695);	}
-			}else{
-				if(target.y < -PI){
-					errors.y = -((TWO_PI+target.y) * 156.608695); }else{
-						errors.y = -(target.y * 156.608695);	}
-			}
-			if(target.z > 0){ 
-				if(target.z > PI){ 
-					errors.z = -((TWO_PI-target.z) * 156.608695); }else{
-						errors.z = (target.z * 156.608695);	}
-			}else{
-				if(target.z < -PI){
-					errors.z = ((TWO_PI+target.z) * 156.608695); }else{
-						errors.z = (target.z * 156.608695);	}
-			}											
-			break;
-	}
-	return(errors);
-}
-
-VECTOR3 EDA::ReturnBMAG1Error() {
-
-	VECTOR3 target = sat->bmag1.GetAttitudeError();
-	return CalcErrors(target); 
-}
-
-VECTOR3 EDA::CalcErrors(VECTOR3 target)
-
+double EDA::NormalizeAngle(double ang)
 {
-	VECTOR3 errors = _V(0, 0, 0);
-
-	switch(sat->FDAIScaleSwitch.GetState()){
-		case THREEPOSSWITCH_UP:
-		case THREEPOSSWITCH_CENTER:
-			// 5 degree rate
-			if (target.x > 0) { // Positive Error
-				if (target.x > PI) { 
-					errors.x = -((TWO_PI-target.x) * 469.827882); 
-				} else {
-					errors.x = (target.x * 469.827882);	
-				}
-			} else {
-				if (target.x < -PI) {
-					errors.x = ((TWO_PI+target.x) * 469.827882); 
-				} else {
-					errors.x = (target.x * 469.827882);	
-				}
-			}
-			if (target.y > 0) { 
-				if (target.y > PI) { 
-					errors.y = ((TWO_PI-target.y) * 469.827882); 
-				} else {
-					errors.y = -(target.y * 469.827882);
-				}
-			} else {
-				if (target.y < -PI) {
-					errors.y = -((TWO_PI+target.y) * 469.827882); 
-				} else {
-					errors.y = -(target.y * 469.827882);	
-				}
-			}
-			if (target.z > 0) { 
-				if (target.z > PI) { 
-					errors.z = -((TWO_PI-target.z) * 469.827882); 
-				} else {
-					errors.z = (target.z * 469.827882);	
-				}
-			} else {
-				if (target.z < -PI) {
-					errors.z = ((TWO_PI+target.z) * 469.827882); 
-				} else {
-					errors.z = (target.z * 469.827882);	
-				}
-			}											
-			break;
-		case THREEPOSSWITCH_DOWN:
-			// 50/15/15 degree rate
-			if (target.x > 0){ // Positive Error
-				if (target.x > PI) { 
-					errors.x = -((TWO_PI-target.x) * 46.982572); 
-				} else {
-					errors.x = (target.x * 46.982572);	
-				}
-			} else {
-				if (target.x < -PI){
-					errors.x = ((TWO_PI+target.x) * 46.982572); 
-				} else {
-					errors.x = (target.x * 46.982572);	
-				}
-			}
-			if (target.y > 0) { 
-				if (target.y > PI) { 
-					errors.y = ((TWO_PI-target.y) * 156.608695); 
-				} else {
-					errors.y = -(target.y * 156.608695);	
-				}
-			} else {
-				if (target.y < -PI) {
-					errors.y = -((TWO_PI+target.y) * 156.608695); 
-				} else {
-					errors.y = -(target.y * 156.608695);	
-				}
-			}
-			if (target.z > 0) { 
-				if (target.z > PI) { 
-					errors.z = -((TWO_PI-target.z) * 156.608695); 
-				} else {
-					errors.z = (target.z * 156.608695);	
-				}
-			} else {
-				if (target.z < -PI) {
-					errors.z = ((TWO_PI+target.z) * 156.608695); 
-				} else {
-					errors.z = (target.z * 156.608695);	
-				}
-			}											
-			break;
-	}
-	return(errors);
-}
-
-VECTOR3 EDA::AdjustErrorsForRoll(VECTOR3 attitude, VECTOR3 errors)
-
-{
-	VECTOR3 output_errors;
-	double input_pitch = errors.y;
-	double input_yaw = errors.z;
-	double roll_percent,output_pitch,output_yaw,pitch_factor = 1;
-	// In reality, PITCH and YAW are swapped around as needed to make the error needles  FLY-TO.
-	// This does that.
-	// ROLL IS LEFT-HANDED
-	if(attitude.x == 0){ // If zero or inop, return unmodified to avoid SPECIAL CASE
-		return(errors);
-	}
-	if(attitude.x > 4.712388){                    // 0 thru 90 degrees
-		roll_percent = fabs((attitude.x-TWO_PI) / 1.570796);				
-		output_pitch = input_pitch * (1-roll_percent); 
-		output_pitch += input_yaw * roll_percent;
-		output_yaw = input_yaw * (1-roll_percent);
-		output_yaw -=input_pitch * roll_percent;       
-	}
-	if(attitude.x > PI && attitude.x < 4.712388){ // 90 thru 180 degrees
-		roll_percent = (attitude.x-PI) / 1.570796;					
-		output_pitch = -(input_pitch * (1-roll_percent)); 
-		output_pitch += input_yaw * roll_percent;
-		output_yaw = -input_yaw * (1-roll_percent);
-		output_yaw -=input_pitch * roll_percent;       
-	}
-	if(attitude.x > 1.570796 && attitude.x < PI){ // 180 thru 270 degrees
-		roll_percent = fabs((attitude.x-PI) / 1.570796);
-		output_pitch = -(input_pitch * (1-roll_percent)); 
-		output_pitch -= input_yaw * roll_percent;
-		output_yaw = -input_yaw * (1-roll_percent);
-		output_yaw +=input_pitch * roll_percent;       
-	}
-	if(attitude.x > 0 && attitude.x < 1.570796){ // 270 thru 360 degrees
-		roll_percent = attitude.x / 1.570796;					
-		output_pitch = input_pitch * (1-roll_percent); 
-		output_pitch -= input_yaw * roll_percent;
-		output_yaw = input_yaw * (1-roll_percent);
-		output_yaw +=input_pitch * roll_percent;       
-	}
-
-	//sprintf(oapiDebugString(),"Roll Att %f Percent = %f | P-I %f P-O %f | Y-I %f Y-O %f",
-	//	attitude.x,roll_percent,input_pitch,output_pitch,input_yaw,output_yaw);
-
-	output_errors.x = errors.x;
-	output_errors.y = output_pitch;
-	output_errors.z = output_yaw;
-	return(output_errors);
+	if (ang > PI)
+		return ang - PI2;
+	else if (ang < -PI)
+		return ang + PI2;
+	return ang;
 }
 
 void EDA::SaveState(FILEHANDLE scn)
@@ -3335,8 +3367,8 @@ void ECA::TimeStep(double simdt) {
 				errors.z = TWO_PI+target.z; }else{ errors.z = target.z;	}
 		}
 		// Now adjust for rotation
-		if (SCS_INERTIAL_BMAGS)
-			errors = sat->eda.AdjustErrorsForRoll(sat->bmag1.GetAttitude(), errors);
+		//if (SCS_INERTIAL_BMAGS)
+			//errors = sat->eda.AdjustErrorsForRoll(sat->bmag1.GetAttitude(), errors);
 
 		// Create demand for rate
 		switch(sat->AttRateSwitch.GetState()){
@@ -3397,7 +3429,7 @@ void ECA::TimeStep(double simdt) {
 				}
 				break;
 		}
-		
+
 		// Attitude hold automatic mode only when BMAG 1 uncaged and powered
 		if (!sat->bmag1.IsPowered() || sat->bmag1.IsUncaged().x == 0) cmd_rate.x = 0;
 		if (!sat->bmag1.IsPowered() || sat->bmag1.IsUncaged().y == 0) cmd_rate.y = 0;
@@ -3578,7 +3610,7 @@ void ECA::TimeStep(double simdt) {
 		//	cmd_rate.x * DEG, cmd_rate.y * DEG, cmd_rate.z * DEG, 
 		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);	
 		// sprintf(oapiDebugString(),"SCS PITCH rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.x * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
-		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f setting %.3f", sat->gdc.rates.z * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG, errors.x * DEG, setting.x * DEG);
+		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f", sat->gdc.rates.z * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG, errors.x * DEG);
 
 		//
 		// ROTATION
