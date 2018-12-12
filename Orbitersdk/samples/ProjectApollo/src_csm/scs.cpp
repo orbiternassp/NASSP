@@ -2668,6 +2668,7 @@ void EDA::Timestep(double simdt)
 	//sprintf(oapiDebugString(), "%d %d %d %d", T1QS73, T1QS56, T1QS60, T1QS58);
 	//sprintf(oapiDebugString(), "%d %d %d %d %f %f", T1QS55, T1QS73, T1QS59, T1QS57, sat->gdc.GetRollBodyMinusEulerError()*DEG, sat->ascp.GetRollEulerAttitudeSetError()*DEG);
 	//sprintf(oapiDebugString(), "%f %f %f", gdcatt.x*DEG, gdcatt.y*DEG, gdcatt.z*DEG);
+	//sprintf(oapiDebugString(), "%f %f %f", bmag1rates.x*DEG, bmag1rates.y*DEG, bmag1rates.z*DEG);
 }
 
 bool EDA::IsPowered()
@@ -2766,6 +2767,8 @@ void EDA::SaveState(FILEHANDLE scn)
 	papiWriteScenario_vec(scn, "FDAI2TOTALATTITUDE", FDAI2Attitude);
 	papiWriteScenario_vec(scn, "FDAI1ATTITUDERATE", FDAI1AttitudeRate);
 	papiWriteScenario_vec(scn, "FDAI2ATTITUDERATE", FDAI2AttitudeRate);
+	papiWriteScenario_vec(scn, "FDAI1ATTITUDEERROR", FDAI1AttitudeError);
+	papiWriteScenario_vec(scn, "FDAI2ATTITUDEERROR", FDAI2AttitudeError);
 	oapiWriteLine(scn, EDA_END_STRING);
 }
 
@@ -2781,6 +2784,8 @@ void EDA::LoadState(FILEHANDLE scn)
 		papiReadScenario_vec(line, "FDAI2TOTALATTITUDE", FDAI2Attitude);
 		papiReadScenario_vec(line, "FDAI1ATTITUDERATE", FDAI1AttitudeRate);
 		papiReadScenario_vec(line, "FDAI2ATTITUDERATE", FDAI2AttitudeRate);
+		papiReadScenario_vec(line, "FDAI1ATTITUDEERROR", FDAI1AttitudeError);
+		papiReadScenario_vec(line, "FDAI2ATTITUDEERROR", FDAI2AttitudeError);
 	}
 }
 
