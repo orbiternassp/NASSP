@@ -337,6 +337,7 @@ void LEM::Init()
 	lpdgext = -1;
 	fwdhatch = -1;
 	ovhdhatch = -1;
+	lmdrogue = -1;
 
 	pMCC = NULL;
 
