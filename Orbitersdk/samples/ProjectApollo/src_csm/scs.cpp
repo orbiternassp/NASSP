@@ -807,10 +807,10 @@ void GDC::Timestep(double simdt) {
 	if (A2K1)
 	{
 		//Euler mode
-		pitchrate = pitchBmag->GetRates().x*cos(Attitude.x) - yawBmag->GetRates().y*sin(Attitude.x);
+		pitchrate = pitchBmag->GetRates().x*cos(Attitude.x) + yawBmag->GetRates().y*sin(Attitude.x);
 		if (A9K3)
 		{
-			pitchrate *= 1.0 / cos(max(-60.0*RAD, min(60.0*RAD, Attitude.z)));
+			pitchrate *= min(2.0, max(-2.0, 1.0 / cos(Attitude.z)));
 		}
 	}
 	else
@@ -854,7 +854,7 @@ void GDC::Timestep(double simdt) {
 			if (A3K2)
 			{
 				//Entry (0.05G)
-				rollrate = primRollBmag->GetRates().z*cos(21.0*RAD) -  sat->bmag1.GetRates().y*sin(21.0*RAD);
+				rollrate = primRollBmag->GetRates().z*cos(21.0*RAD) +  sat->bmag1.GetRates().y*sin(21.0*RAD);
 			}
 			else
 			{
@@ -883,7 +883,7 @@ void GDC::Timestep(double simdt) {
 			if (A4K2)
 			{
 				//Entry (0.05G)
-				yawrate = redunRollBmag->GetRates().z*cos(21.0*RAD) - yawBmag->GetRates().y*sin(21.0*RAD);
+				yawrate = redunRollBmag->GetRates().z*cos(21.0*RAD) + yawBmag->GetRates().y*sin(21.0*RAD);
 			}
 			else
 			{
@@ -1008,9 +1008,9 @@ void GDC::Timestep(double simdt) {
 
 	// If the current BMAG has no power it doesn't provide rates so we don't change 
 	// the attitude of the failed axis
-	if (!primRollBmag->IsPowered())  SetAttitude(_V(LastAttitude.x, Attitude.y, Attitude.z));
-	if (!pitchBmag->IsPowered()) SetAttitude(_V(Attitude.x, LastAttitude.y, Attitude.z));
-	if (!yawBmag->IsPowered())   SetAttitude(_V(Attitude.x, Attitude.y, LastAttitude.z));
+	//if (!primRollBmag->IsPowered())  SetAttitude(_V(LastAttitude.x, Attitude.y, Attitude.z));
+	//if (!pitchBmag->IsPowered()) SetAttitude(_V(Attitude.x, LastAttitude.y, Attitude.z));
+	//if (!yawBmag->IsPowered())   SetAttitude(_V(Attitude.x, Attitude.y, LastAttitude.z));
 
 	// Do we have power?
 	/// \todo DC power is needed, too
@@ -1023,11 +1023,11 @@ void GDC::Timestep(double simdt) {
 	}
 
 	// GDCAlign button
-	if (sat->GDCAlignButton.GetState() == 1) {
+	/*if (sat->GDCAlignButton.GetState() == 1) {
 		AlignGDC();
 	} else {
 		rsiRotationOn = false;
-	}
+	}*/
 }
 
 bool GDC::AlignGDC() {
