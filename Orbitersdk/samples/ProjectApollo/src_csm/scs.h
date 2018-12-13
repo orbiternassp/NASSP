@@ -120,14 +120,13 @@ protected:
 #define GDC_START_STRING	"GDC_BEGIN"
 #define GDC_END_STRING		"GDC_END"
 
-class GDC: public AttitudeReference {
+class GDC {
 	
 public: // We use these inside a timestep, so everything is public to make data access as fast as possible.
 	GDC();                          // Cons
 	void Init(Saturn *v);		    // Initialization
 	void Timestep(double simt);     // TimeStep
 	void SystemTimestep(double simdt);
-	bool AlignGDC();                // Alignment Switch Pressed
 	void SaveState(FILEHANDLE scn); // SaveState callback
 	void LoadState(FILEHANDLE scn); // LoadState callback
 
@@ -138,21 +137,26 @@ public: // We use these inside a timestep, so everything is public to make data 
 	double GetPitchBodyError();
 	double GetYawBodyError();
 
+	double GetRollEulerResolver();
+	double GetPitchEulerResolver();
+	double GetYawEulerResolver();
+
 	VECTOR3 rates;					// Integrated Euler rotation rates
-	double rollstabilityrate;
 	Saturn *sat;
 	// FDAI error needle data from CMC
 	int fdai_err_ena;
 	int fdai_err_x;
 	int fdai_err_y;
 	int fdai_err_z;
-	// RSI
-	bool rsiRotationOn;
-	double rsiRotationStart;
 
 	friend class CSMcomputer; // Needs to write FDAI error indications, which are really not on the GDC, but meh.
 
 protected:
+
+	VECTOR3 Attitude;
+
+	//RELAYS
+
 	//Pitch Euler mode enable
 	bool A2K1;
 	//Pitch 0.05 config
@@ -185,6 +189,8 @@ protected:
 	//EMS roll display on
 	bool A6K2;
 
+	//Resolver excitation
+	bool A8K1;
 	//EMS roll display on 
 	bool A8K2;
 
@@ -194,6 +200,13 @@ protected:
 	bool A9K2;
 	//Secant function enable
 	bool A9K3;
+
+	//POWER FLAGS
+
+	//Euler resolver power (Pitch, Roll)
+	bool E0_505PR;
+	//Euler resolver power (Yaw)
+	bool E0_505Y;
 };
 
 
@@ -292,6 +305,8 @@ public: // Same stuff about speed and I'm lazy too.
 	bool GetIMUtoAttSetYaw() { return A8K15; }
 	bool GetIMUtoAttSetPitch() { return A8K17; }
 
+	bool GetGDCResolverExcitation() { return GDC118A8K1; }
+
 protected:
 	bool HasSigCondPower();
 	bool IsPowered();
@@ -319,6 +334,11 @@ protected:
 	e_object *mnb_source;											// Power supply for FDAI 2 circuits
 
 	Saturn *sat;
+
+	//LOGIC SIGNAL
+
+	//GDC Resolver Excitation
+	bool GDC118A8K1;
 
 	//RELAYS
 
@@ -580,8 +600,7 @@ public:
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	POINT ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
 	POINT RSITriangle[3];
-	void SetRSIRotation(double angle);
-	double GetRSIRotation();
+	void SetRSIDeltaRotation(double dangle);
 	int ScribePntCnt;
 	int GetScrollOffset() { return ScribePntArray[ScribePntCnt-1].x-40; };
 	int GetGScribe() { return GScribe; };

@@ -548,15 +548,13 @@ void BMAG::LoadState(FILEHANDLE scn){
 
 GDC::GDC()
 {
-	rates = _V(0,0,0);	
+	rates = _V(0,0,0);
+	Attitude = _V(0, 0, 0);
 	sat = NULL;
 	fdai_err_ena = 0;
 	fdai_err_x = 0;
 	fdai_err_y = 0;
 	fdai_err_z = 0;
-	rsiRotationOn = false;
-	rsiRotationStart = 0;
-	rollstabilityrate = 0;
 
 	A2K1 = false;
 	A2K2 = false;
@@ -572,6 +570,7 @@ GDC::GDC()
 	A4K4 = false;
 	A6K1 = false;
 	A6K2 = false;
+	A8K1 = false;
 	A8K2 = false;
 	A9K1 = false;
 	A9K2 = false;
@@ -581,7 +580,6 @@ GDC::GDC()
 void GDC::Init(Saturn *v)
 {
 	sat = v;
-	AttitudeReference::Init(v);
 }
 
 void GDC::SystemTimestep(double simdt) {
@@ -599,15 +597,93 @@ void GDC::SystemTimestep(double simdt) {
 		
 void GDC::Timestep(double simdt) {
 
-	//POWER
-	bool EA_501, EB_501;
+	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2)
+	{
+		E0_505PR = false;
+		E0_505Y = false;
+		return;
+	}
 
-	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 2 && sat->SystemMnACircuitBraker.IsPowered())
+	//POWER
+	bool power, ac1power, ac2power, E1_504, E1_503, E1_502, E0_503PR, E0_503Y, E2_503, E2_502, EA_501, EB_501;
+
+	ac1power = sat->StabContSystemAc1CircuitBraker.IsPowered();
+	ac2power = sat->StabContSystemAc2CircuitBraker.IsPowered();
+
+	//SCS electronics power switch state is assured above
+	if (ac1power)
+	{
+		E1_502 = true;
+		E1_503 = true;
+		E1_504 = true;
+	}
+	else
+	{
+		E1_502 = false;
+		E1_503 = false;
+		E1_504 = false;
+	}
+
+	if (A8K2)
+	{
+		power = ac2power;
+	}
+	else
+	{
+		if (A8K1)
+		{
+			power = ac1power;
+		}
+		else
+		{
+			power = ac2power;
+		}
+	}
+
+	if (power)
+	{
+		E0_503Y = true;
+		E0_505Y = true;
+	}
+	else
+	{
+		E0_503Y = false;
+		E0_505Y = false;
+	}
+
+	if (A8K1)
+		power = ac1power;
+	else
+		power = ac2power;
+
+	if (power)
+	{
+		E0_503PR = true;
+		E0_505PR = true;
+	}
+	else
+	{
+		E0_503PR = false;
+		E0_505PR = false;
+	}
+
+	if (ac2power)
+	{
+		E2_502 = true;
+		E2_503 = true;
+	}
+	else
+	{
+		E2_502 = false;
+		E2_503 = false;
+	}
+
+	if (sat->SystemMnACircuitBraker.IsPowered())
 		EA_501 = true;
 	else
 		EA_501 = false;
 
-	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 2 && sat->SystemMnBCircuitBraker.IsPowered())
+	if (sat->SystemMnBCircuitBraker.IsPowered())
 		EB_501 = true;
 	else
 		EB_501 = false;
@@ -758,6 +834,11 @@ void GDC::Timestep(double simdt) {
 		A8K2 = false;
 	}
 
+	if (sat->eda.GetGDCResolverExcitation())
+		A8K1 = true;
+	else
+		A8K1 = false;
+
 	if (S6_1)
 	{
 		A9K1 = true;
@@ -807,18 +888,27 @@ void GDC::Timestep(double simdt) {
 	if (A2K1)
 	{
 		//Euler mode
-		pitchrate = pitchBmag->GetRates().x*cos(Attitude.x) + yawBmag->GetRates().y*sin(Attitude.x);
-		if (A9K3)
+		if (E1_504 && E2_502)
 		{
-			pitchrate *= min(2.0, max(-2.0, 1.0 / cos(Attitude.z)));
+			pitchrate = pitchBmag->GetRates().x*cos(Attitude.x) + yawBmag->GetRates().y*sin(Attitude.x);
+			if (A9K3)
+			{
+				//Assumption: secant amplifier gets saturated at +/-80° yaw
+				pitchrate *= min(5.75877, max(-5.75877, 1.0 / cos(Attitude.z)));
+			}
 		}
+		else
+			pitchrate = 0.0;
 	}
 	else
 	{
 		if (A2K3)
 		{
 			//GDC align
-			pitchrate = sat->ascp.GetPitchEulerAttitudeSetInput();
+			if (E0_503PR)
+				pitchrate = sat->ascp.GetPitchEulerAttitudeSetInput();
+			else
+				pitchrate = 0.0;
 		}
 		else
 		{
@@ -847,7 +937,10 @@ void GDC::Timestep(double simdt) {
 		if (A3K3)
 		{
 			//GDC align
-			rollrate = sat->ascp.GetRollEulerAttitudeSetInput();
+			if (E0_503PR)
+				rollrate = sat->ascp.GetRollEulerAttitudeSetInput();
+			else
+				rollrate = 0.0;
 		}
 		else
 		{
@@ -868,15 +961,23 @@ void GDC::Timestep(double simdt) {
 	double yawrate;
 	if (A4K1)
 	{
-		//Euler mode
-		yawrate = -yawBmag->GetRates().y*cos(Attitude.x) + pitchBmag->GetRates().x*sin(Attitude.x);
+		if (E1_504 && E2_502)
+		{
+			//Euler mode
+			yawrate = -yawBmag->GetRates().y*cos(Attitude.x) + pitchBmag->GetRates().x*sin(Attitude.x);
+		}
+		else
+			yawrate = 0.0;
 	}
 	else
 	{
 		if (A4K3)
 		{
 			//GDC align
-			yawrate = sat->ascp.GetYawEulerAttitudeSetInput();
+			if (E0_503Y)
+				yawrate = sat->ascp.GetYawEulerAttitudeSetInput();
+			else
+				yawrate = 0.0;
 		}
 		else
 		{
@@ -897,39 +998,48 @@ void GDC::Timestep(double simdt) {
 	//Yaw
 	if (!A6K1)
 	{
-		Attitude.z += yawrate * simdt;
+		if (E2_502 && E2_503)
+		{
+			Attitude.z += yawrate * simdt;
 
-		if (Attitude.z >= PI2) {
-			Attitude.z -= PI2;
-		}
-		if (Attitude.z < 0) {
-			Attitude.z += PI2;
+			if (Attitude.z >= PI2) {
+				Attitude.z -= PI2;
+			}
+			if (Attitude.z < 0) {
+				Attitude.z += PI2;
+			}
 		}
 	}
 	//EMS
-	if (A6K2)
+	if (A6K2 && E2_502)
 	{
-		//TBD: Drive RSI
+		sat->ems.SetRSIDeltaRotation(yawrate*simdt);
 	}
 
 	//Roll and Pitch Digital Output (Module A7)
-	Attitude.x += rollrate * simdt;
-	if (Attitude.x >= PI2) {
-		Attitude.x -= PI2;
-	}
-	if (Attitude.x < 0) {
-		Attitude.x += PI2;
-	}
-	Attitude.y += pitchrate * simdt;
-	if (Attitude.y >= PI2) {
-		Attitude.y -= PI2;
-	}
-	if (Attitude.y < 0) {
-		Attitude.y += PI2;
+	if (E1_502 && E1_503)
+	{
+		Attitude.x += rollrate * simdt;
+		if (Attitude.x >= PI2) {
+			Attitude.x -= PI2;
+		}
+		if (Attitude.x < 0) {
+			Attitude.x += PI2;
+		}
 	}
 
-	sprintf(oapiDebugString(), "Body: %f %f %f Euler: %f %f %f", sat->bmag1.GetRates().z*DEG, sat->bmag1.GetRates().x*DEG, sat->bmag1.GetRates().y*DEG, rollrate*DEG, pitchrate*DEG, yawrate*DEG);
+	if (E2_502 && E2_503)
+	{
+		Attitude.y += pitchrate * simdt;
+		if (Attitude.y >= PI2) {
+			Attitude.y -= PI2;
+		}
+		if (Attitude.y < 0) {
+			Attitude.y += PI2;
+		}
+	}
 
+	//TBD: This all belongs in the ECA
 	switch(sat->BMAGRollSwitch.GetState()){
 		case THREEPOSSWITCH_UP:     // RATE2
 			sat->bmag1.Cage(0);
@@ -990,80 +1100,20 @@ void GDC::Timestep(double simdt) {
 			break;
 	}		
 
-	//AttitudeReference::Timestep(simdt);
-
+	//TBD: Remove this part when it doesn't get used anymore by other SCS subsystems
 	rates.x = pitchBmag->GetRates().x;
 	// Special Logic for Entry .05 Switch
 	if (sat->GSwitch.IsUp()) {
 		// Entry Stability Roll Transformation
 		rates.y = -primRollBmag->GetRates().z * tan(21.0 * RAD) + yawBmag->GetRates().y;
-		rollstabilityrate = primRollBmag->GetRates().z*cos(21.0*RAD) + yawBmag->GetRates().y*sin(21.0*RAD);
 		// sprintf(oapiDebugString(), "entry roll rate? %f", rates.y);
 	} else {
 		// Normal Operation
 		rates.y = yawBmag->GetRates().y;
-		rollstabilityrate = primRollBmag->GetRates().z;
 	}
 	rates.z = primRollBmag->GetRates().z;
 
-	// If the current BMAG has no power it doesn't provide rates so we don't change 
-	// the attitude of the failed axis
-	//if (!primRollBmag->IsPowered())  SetAttitude(_V(LastAttitude.x, Attitude.y, Attitude.z));
-	//if (!pitchBmag->IsPowered()) SetAttitude(_V(Attitude.x, LastAttitude.y, Attitude.z));
-	//if (!yawBmag->IsPowered())   SetAttitude(_V(Attitude.x, Attitude.y, LastAttitude.z));
-
-	// Do we have power?
-	/// \todo DC power is needed, too
-	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2 ||
-	    sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
-		sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) {
-
-		// Reset Attitude
-		SetAttitude(_V(0, 0, 0));		
-	}
-
-	// GDCAlign button
-	/*if (sat->GDCAlignButton.GetState() == 1) {
-		AlignGDC();
-	} else {
-		rsiRotationOn = false;
-	}*/
-}
-
-bool GDC::AlignGDC() {
-	// User pushed the Align GDC button.
-	// Set the GDC attitude to match what's on the ASCP.
-	if (sat->FDAIAttSetSwitch.IsDown()) {
-		SetAttitude(_V(sat->ascp.output.x * RAD,
-					   sat->ascp.output.y * RAD,
-					   sat->ascp.output.z * RAD)); // Degrees to radians
-
-
-		// Align both BMAGs to the GDC as the GDC gets its attitude data from them
-		sat->bmag1.SetAttitude(_V(sat->ascp.output.x * RAD,
-								  sat->ascp.output.y * RAD,
-								  sat->ascp.output.z * RAD));
-
-		sat->bmag2.SetAttitude(_V(sat->ascp.output.x * RAD,
-								  sat->ascp.output.y * RAD,
-								  sat->ascp.output.z * RAD));
-
-		// The RSI isn't set to the yaw ASCP setting, but changing when the ASCP yaw setting changes (and the Align GDC button is held down etc.)
-		if (sat->EMSRollSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE) {
-			if (rsiRotationOn) {
-				sat->ems.SetRSIRotation((sat->ascp.output.z * RAD) - rsiRotationStart);
-			} else {
-				rsiRotationOn = true;
-				rsiRotationStart = (sat->ascp.output.z * RAD) - sat->ems.GetRSIRotation(); 
-			}
-		} else {
-			rsiRotationOn = false;
-		}
-		return true;
-	} else {
-		rsiRotationOn = false;
-	}
-	return false;	
+	//sprintf(oapiDebugString(), "Body: %f %f %f Euler: %f %f %f", sat->bmag1.GetRates().z*DEG, sat->bmag1.GetRates().x*DEG, sat->bmag1.GetRates().y*DEG, rollrate*DEG, pitchrate*DEG, yawrate*DEG);
 }
 
 double GDC::GetRollBodyMinusEulerError()
@@ -1081,6 +1131,27 @@ double GDC::GetYawBodyError()
 	return sat->ascp.GetYawEulerAttitudeSetInput()*cos(Attitude.x) - sat->ascp.GetPitchEulerAttitudeSetInput()*cos(Attitude.z)*sin(Attitude.x);
 }
 
+double GDC::GetRollEulerResolver()
+{
+	if (E0_505PR) return Attitude.x;
+
+	return 0.0;
+}
+
+double GDC::GetPitchEulerResolver()
+{
+	if (E0_505PR) return Attitude.y;
+
+	return 0.0;
+}
+
+double GDC::GetYawEulerResolver()
+{
+	if (E0_505Y) return Attitude.z;
+
+	return 0.0;
+}
+
 void GDC::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, GDC_START_STRING);
@@ -1088,10 +1159,13 @@ void GDC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "FDAIERRX", fdai_err_x);
 	oapiWriteScenario_int(scn, "FDAIERRY", fdai_err_y);
 	oapiWriteScenario_int(scn, "FDAIERRZ", fdai_err_z);
-	papiWriteScenario_bool(scn, "RSIROTATIONON", rsiRotationOn);	
-	papiWriteScenario_double(scn, "RSIROTATIONSTART", rsiRotationStart);
-
-	AttitudeReference::SaveState(scn);
+	papiWriteScenario_double(scn, "ATTITUDEX", Attitude.x);
+	papiWriteScenario_double(scn, "ATTITUDEY", Attitude.y);
+	papiWriteScenario_double(scn, "ATTITUDEZ", Attitude.z);
+	papiWriteScenario_bool(scn, "A8K1", A8K1);
+	papiWriteScenario_bool(scn, "A8K2", A8K2);
+	papiWriteScenario_bool(scn, "E0_505PR", E0_505PR);
+	papiWriteScenario_bool(scn, "E0_505Y", E0_505Y);
 
 	oapiWriteLine(scn, GDC_END_STRING);
 }
@@ -1117,11 +1191,19 @@ void GDC::LoadState(FILEHANDLE scn){
 		else if (!strnicmp (line, "FDAIERRZ", 8)) {
 			sscanf(line + 8, "%i", &fdai_err_z);
 		} 
-		else if (papiReadScenario_bool(line, "RSIROTATIONON", rsiRotationOn));
-		else if (papiReadScenario_double(line, "RSIROTATIONSTART", rsiRotationStart));
-		else {
-			AttitudeReference::LoadState(line);
+		else if (!strnicmp(line, "ATTITUDEX", 9)) {
+			sscanf(line + 9, "%lf", &Attitude.x);
 		}
+		else if (!strnicmp(line, "ATTITUDEY", 9)) {
+			sscanf(line + 9, "%lf", &Attitude.y);
+		}
+		else if (!strnicmp(line, "ATTITUDEZ", 9)) {
+			sscanf(line + 9, "%lf", &Attitude.z);
+		}
+		papiReadScenario_bool(line, "A8K1", A8K1);
+		papiReadScenario_bool(line, "A8K2", A8K2);
+		papiReadScenario_bool(line, "E0_505PR", E0_505PR);
+		papiReadScenario_bool(line, "E0_505Y", E0_505Y);
 	}
 }
 
@@ -1256,7 +1338,7 @@ double ASCP::CalcRollEulerAttitudeSetError()
 	}
 	else
 	{
-		return sin(output.x*RAD - sat->gdc.GetAttitude().x);
+		return sin(output.x*RAD - sat->gdc.GetRollEulerResolver());
 	}
 }
 
@@ -1268,7 +1350,7 @@ double ASCP::CalcPitchEulerAttitudeSetError()
 	}
 	else
 	{
-		return sin(output.y*RAD - sat->gdc.GetAttitude().y);
+		return sin(output.y*RAD - sat->gdc.GetPitchEulerResolver());
 	}
 }
 
@@ -1280,7 +1362,7 @@ double ASCP::CalcYawEulerAttitudeSetError()
 	}
 	else
 	{
-		return sin(output.z*RAD - sat->gdc.GetAttitude().z);
+		return sin(output.z*RAD - sat->gdc.GetYawEulerResolver());
 	}
 }
 
@@ -1807,6 +1889,7 @@ void EDA::ResetRelays()
 	A9K2 = false;
 	A9K4 = false;
 	A9K5 = false;
+	GDC118A8K1 = false;
 }
 
 void EDA::ResetTransistors()
@@ -1863,7 +1946,11 @@ void EDA::ResetTransistors()
 
 void EDA::Timestep(double simdt)
 {
-	if (!IsPowered()) return;
+	if (!IsPowered())
+	{
+		GDC118A8K1 = false;
+		return;
+	}
 
 	//POWER
 	bool E1_307, E1_309, E2_307, E2_309, EA_315, EB_315;
@@ -2046,6 +2133,11 @@ void EDA::Timestep(double simdt)
 		A4K3 = true;
 	else
 		A4K3 = false;
+
+	if (EB_315 && S4_1 && (S5_2 || (S5_3 && S6_1)))
+		GDC118A8K1 = true;
+	else
+		GDC118A8K1 = false;
 
 	if (EB_315 && S2_1 && (S4_2 || S4_3))
 		A4K4 = true;
@@ -2402,7 +2494,6 @@ void EDA::Timestep(double simdt)
 	VECTOR3 bmag1rates = sat->bmag1.GetRates();
 	VECTOR3 bmag2rates = sat->bmag2.GetRates();
 	VECTOR3 imuatt = sat->imu.GetTotalAttitude();
-	VECTOR3 gdcatt = sat->gdc.GetAttitude();
 	VECTOR3 cmcerr = _V(sat->gdc.fdai_err_x, sat->gdc.fdai_err_y, sat->gdc.fdai_err_z) * 5.0 / 0.3 / 384.0*RAD;	//Converted from -384/384 to radians (-16.66°/16.66°)
 
 	double rate, err;
@@ -2412,7 +2503,7 @@ void EDA::Timestep(double simdt)
 	if (A4K2)
 	{
 		if (A8K5)
-			FDAI1Attitude.y = gdcatt.y;
+			FDAI1Attitude.y = sat->gdc.GetPitchEulerResolver();
 		else
 			FDAI1Attitude.y = imuatt.y;
 
@@ -2429,7 +2520,7 @@ void EDA::Timestep(double simdt)
 		if (A8K7)
 			FDAI2Attitude.y = imuatt.y;
 		else
-			FDAI2Attitude.y = gdcatt.y;
+			FDAI2Attitude.y = sat->gdc.GetPitchEulerResolver();
 
 		//ORDEAL should be interfacing between the EDA and the DEA(?), but this is a convenient place
 		FDAI2Attitude.y += sat->ordeal.GetFDAI2PitchAngle();
@@ -2543,7 +2634,7 @@ void EDA::Timestep(double simdt)
 	if (A4K2)
 	{
 		if (A8K9)
-			FDAI1Attitude.z = gdcatt.z;
+			FDAI1Attitude.z = sat->gdc.GetYawEulerResolver();
 		else
 			FDAI1Attitude.z = imuatt.z;
 	}
@@ -2556,7 +2647,7 @@ void EDA::Timestep(double simdt)
 		if (A8K11)
 			FDAI2Attitude.z = imuatt.z;
 		else
-			FDAI2Attitude.z = gdcatt.z;
+			FDAI2Attitude.z = sat->gdc.GetYawEulerResolver();
 	}
 	else
 		FDAI2Attitude.z = 0.0;
@@ -2668,7 +2759,7 @@ void EDA::Timestep(double simdt)
 	if (A4K2)
 	{
 		if (A8K1)
-			FDAI1Attitude.x = gdcatt.x;
+			FDAI1Attitude.x = sat->gdc.GetRollEulerResolver();
 		else
 			FDAI1Attitude.x = imuatt.x;
 	}
@@ -2681,7 +2772,7 @@ void EDA::Timestep(double simdt)
 		if (A8K3)
 			FDAI2Attitude.x = imuatt.x;
 		else
-			FDAI2Attitude.x = gdcatt.x;
+			FDAI2Attitude.x = sat->gdc.GetRollEulerResolver();
 	}
 	else
 		FDAI2Attitude.x = 0.0;
@@ -2900,6 +2991,7 @@ void EDA::SaveState(FILEHANDLE scn)
 	papiWriteScenario_vec(scn, "FDAI2ATTITUDERATE", FDAI2AttitudeRate);
 	papiWriteScenario_vec(scn, "FDAI1ATTITUDEERROR", FDAI1AttitudeError);
 	papiWriteScenario_vec(scn, "FDAI2ATTITUDEERROR", FDAI2AttitudeError);
+	papiWriteScenario_bool(scn, "GDC118A8K1", GDC118A8K1);
 	oapiWriteLine(scn, EDA_END_STRING);
 }
 
@@ -2917,6 +3009,7 @@ void EDA::LoadState(FILEHANDLE scn)
 		papiReadScenario_vec(line, "FDAI2ATTITUDERATE", FDAI2AttitudeRate);
 		papiReadScenario_vec(line, "FDAI1ATTITUDEERROR", FDAI1AttitudeError);
 		papiReadScenario_vec(line, "FDAI2ATTITUDEERROR", FDAI2AttitudeError);
+		papiReadScenario_bool(line, "GDC118A8K1", GDC118A8K1);
 	}
 }
 
@@ -4001,12 +4094,6 @@ void EMS::TimeStep(double MissionTime, double simdt) {
 	double position;
 	double dV;
 
-	//RSI Timestep
-	if (sat->EMSRollSwitch.IsUp() && sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE) {
-		SetRSIRotation(RSITarget + sat->gdc.rollstabilityrate * simdt);
-		//sprintf(oapiDebugString(), "entry lift angle? %f", RSITarget);
-	}
-
 	//Accelerometer Timestep
 	AccelerometerTimeStep(simdt);
 
@@ -4462,17 +4549,12 @@ void EMS::SwitchChanged() {
 	switchchangereset=true;
 	// sprintf(oapiDebugString(),"EMSFunctionSwitch %d", sat->EMSFunctionSwitch.GetState());
 }
-void EMS::SetRSIRotation(double angle) { 
 
-	angle = fmod(angle + TWO_PI, TWO_PI); //remove unwanted multiples of 2PI and avoid negative numbers
+void EMS::SetRSIDeltaRotation(double dangle)
+{
+	RSITarget += dangle;
 
-	//sprintf(oapiDebugString(),"RSITarget:%f  RSIRotation:%f ", angle,RSIRotation);
-
-	RSITarget = angle;
-}
-
-double EMS::GetRSIRotation() {
-	return RSITarget;
+	RSITarget = fmod(RSITarget + TWO_PI, TWO_PI); //remove unwanted multiples of 2PI and avoid negative numbers
 }
 
 void EMS::RotateRSI(double simdt) {
@@ -4620,6 +4702,7 @@ void EMS::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
 	papiWriteScenario_double(scn, "VINERTIAL", vinert);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
+	papiWriteScenario_double(scn, "RSIROTATION", RSIRotation);
 	papiWriteScenario_double(scn, "RSITARGET", RSITarget);
 	papiWriteScenario_double(scn, "SCROLLPOSITION", ScrollPosition);
 	oapiWriteScenario_int(scn, "THRESHOLDBREECHED", (ThresholdBreeched ? 1 : 0));
@@ -4660,8 +4743,10 @@ void EMS::LoadState(FILEHANDLE scn) {
 			sscanf(line + 14, "%lf", &dVRangeCounter);
 		} else if (!strnicmp (line, "VINERTIAL", 9)) {
 			sscanf(line + 9, "%lf", &vinert);
-		} else if (!strnicmp (line, "DVTESTTIME", 10)) {
+		} else if (!strnicmp(line, "DVTESTTIME", 10)) {
 			sscanf(line + 10, "%lf", &dVTestTime);
+		} else if (!strnicmp(line, "RSIROTATION", 11)) {
+			sscanf(line + 11, "%lf", &RSIRotation);
 		} else if (!strnicmp (line, "RSITARGET", 9)) {
 			sscanf(line + 9, "%lf", &RSITarget);
 		} else if (!strnicmp (line, "SCROLLPOSITION", 14)) {
