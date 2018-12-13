@@ -333,8 +333,9 @@ void LEM::Init()
 
 	// Mesh Indexes
 	
-	lpdgret = -1;
-	lpdgext = -1;
+	lpdasc = -1;
+	lpddscret = -1;
+	lpddscext = -1;
 	fwdhatch = -1;
 	ovhdhatch = -1;
 	lmdrogue = -1;
