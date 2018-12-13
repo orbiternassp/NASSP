@@ -375,12 +375,10 @@ void LEM::SetLmVesselHoverStage()
 	}
 	else
 	{
-
 		dscidx = AddMesh(hLMDescent, &mesh_dsc);
 		if (!Landed) {
 			UINT probeidx;
-			VECTOR3 mesh_prb = _V(0.00, 0.40, 0.00);
-			probeidx = AddMesh(hLemProbes, &mesh_prb);
+			probeidx = AddMesh(hLemProbes, &mesh_dsc);
 			SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
 		}
 	}
@@ -810,8 +808,8 @@ void LEM::SetOvhdHatchMesh() {
 
 void LEM::SetTrackLight() {
 	
-	static VECTOR3 beaconPos = _V(0.05, 1.44, 2.58);
-	static VECTOR3 beaconPosAsc = _V(0.053, -0.41, 2.576);
+	static VECTOR3 beaconPos = _V(0.00, 1.38, 2.28);
+	static VECTOR3 beaconPosAsc = _V(0.00, -0.38, 2.28);
 	static VECTOR3 beaconCol = _V(1, 1, 1);
 	trackLight.shape = BEACONSHAPE_STAR;
 	if (stage == 2) {
@@ -833,12 +831,12 @@ void LEM::SetTrackLight() {
 void LEM::SetDockingLights() {
 
 	int i;
-	double xoffset = 0.003, yoffset = -1.85, zoffset = -0.004;
-	static VECTOR3 beaconPos[5] = { { 0.32, 1.52, 2.55 },{ 0.05, 1.95, -1.75 },{ -0.22, 1.52, 2.55 },{ -2.805, -0.1, -0.3 },{ 2.1, 0.28, -0.3 } };
-	static VECTOR3 beaconPosAsc[5] = { { 0.32 + xoffset, 1.52 + yoffset, 2.55 + zoffset },{ 0.05 + xoffset, 1.95 + yoffset, -1.75 + zoffset },{ -0.22 + xoffset, 1.52 + yoffset, 2.55 + zoffset },{ -2.805 + xoffset, -0.1 + yoffset, -0.3 + zoffset },{ 2.1 + xoffset, 0.28 + yoffset, -0.3 + zoffset } };
+	double yoffset = -1.76;
+	static VECTOR3 beaconPos[5] = { { 0.28, 1.47, 2.27 },{ 0.00, 1.85,-1.81 },{ -0.28, 1.47, 2.27 },{ -2.52, 0.59, 0.20 },{ 1.91, 0.29, 0.22 } };
+	static VECTOR3 beaconPosAsc[5] = { { 0.28, 1.47 + yoffset, 2.27 },{ 0.00, 1.85 + yoffset,-1.81 },{ -0.28, 1.47 + yoffset, 2.27 },{ -2.52, 0.59 + yoffset, 0.20 },{ 1.91, 0.29 + yoffset, 0.22 } };
 	static VECTOR3 beaconCol[4] = { { 1, 1, 1 },{ 1, 1, 0 },{ 1, 0, 0 },{ 0, 1, 0 } };
 	for (i = 0; i < 5; i++) {
-		dockingLights[i].shape = BEACONSHAPE_STAR;
+		dockingLights[i].shape = BEACONSHAPE_DIFFUSE;
 		if (stage == 2) {
 			dockingLights[i].pos = beaconPosAsc+i;
 		}

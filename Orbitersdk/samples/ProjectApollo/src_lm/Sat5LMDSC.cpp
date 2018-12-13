@@ -197,11 +197,10 @@ void Sat5LMDSC::Setup()
 
 		SetTouchdownPoints(td, 7);
 
-		VECTOR3 probe_dir = _V(0.00, 0.40, 0.00);
 		AddMesh(LM_Descent);
 		
 		if (state == 11) {
-			AddMesh(hLemProbes, &probe_dir);
+			AddMesh(hLemProbes);
 		}
 	}
 
