@@ -1020,14 +1020,14 @@ bool Saturn::clbkLoadPanel (int id) {
 		int xoffset = 0, xoffset1 = 0, yoffset = 0, yoffset1 = 0, yoffset2 = 0;
 		if (renderViewportIsWideScreen == 1) {			
 			xoffset = 200;
-			yoffset = 13;
+			yoffset = 5;
 			xoffset1 = 400;
 			yoffset1 = 26;
 			yoffset2 = 19;
 			hBmp = LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (IDB_CSM_LEFT_RNDZ_WINDOW_WIDE));
 		} else if (renderViewportIsWideScreen == 2) {
 			xoffset = 293;
-			yoffset = 13;
+			yoffset = 5;
 			xoffset1 = 586;
 			yoffset1 = 26;
 			yoffset2 = 19;
