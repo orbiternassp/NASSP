@@ -340,10 +340,6 @@ void LEM::Init()
 	ovhdhatch = -1;
 	lmdrogue = -1;
 
-	//Animations
-	rr_proc[0] = 0.0;
-	rr_proc[1] = 0.5;
-
 	pMCC = NULL;
 
 	//
@@ -1446,7 +1442,6 @@ void LEM::clbkPostCreation()
 		}
 		else pMCC = NULL;
 	}
-	DefineAnimations();
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

@@ -89,4 +89,7 @@ private:
 	double ShaftErrorSignal;
 	double TrunnionErrorSignal;
 	VECTOR3 GyroRates;
+	// Animations
+	UINT anim_RRPitch, anim_RRYaw;
+	double	rr_proc[2];
 };

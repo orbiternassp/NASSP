@@ -389,7 +389,6 @@ public:
 	void SetOvhdHatchMesh();
 	void SetTrackLight();
 	void SetDockingLights();
-	void DefineAnimations();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	UINT GetStage() { return stage; }
 	virtual double GetAscentStageMass();
@@ -1509,10 +1508,6 @@ protected:
 	int fwdhatch;
 	int ovhdhatch;
 	int lmdrogue;
-
-	// Animations
-	UINT anim_RRPitch, anim_RRYaw;
-	double	rr_proc[2];
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
