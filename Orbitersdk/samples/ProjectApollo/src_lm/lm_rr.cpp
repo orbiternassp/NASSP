@@ -57,8 +57,6 @@ LEM_RR::LEM_RR()
 	anim_RRYaw = lem->CreateAnimation(0.0);
 	ach_RadarPitch = lem->AddAnimationComponent(anim_RRPitch, 0.0f, 1.0f, &mgt_Radar_pivot);
 	ach_RadarYaw = lem->AddAnimationComponent(anim_RRYaw, 0.0f, 1.0f, &mgt_Radar_Antenna, ach_RadarPitch);
-
-	lem->SetAnimation(anim_RRPitch, rr_proc[0]); lem->SetAnimation(anim_RRYaw, rr_proc[1]);
 }
 
 void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
@@ -700,6 +698,11 @@ void LEM_RR::SystemTimestep(double simdt) {
 		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
 	}
 
+}
+
+void LEM_RR::clbkPostCreation() {
+
+	lem->SetAnimation(anim_RRPitch, rr_proc[0]); lem->SetAnimation(anim_RRYaw, rr_proc[1]);
 }
 
 void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
