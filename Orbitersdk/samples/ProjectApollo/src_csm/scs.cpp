@@ -905,8 +905,13 @@ void GDC::Timestep(double simdt) {
 		if (A2K3)
 		{
 			//GDC align
+			//Factor 3.33 because:
+			//ASCP output: 19.1V * sin(error)
+			//BMAG output: 0.1V per °/s (so 5.729 V per rad/s)
+			//ASCP output basically needs to be convered to an attitude rate in rad/s, so the factor should be 19.1 divided by 5.729
+			//Source: Apollo SCS Detailed Training Program
 			if (E0_503PR)
-				pitchrate = sat->ascp.GetPitchEulerAttitudeSetInput();
+				pitchrate = 3.33*sat->ascp.GetPitchEulerAttitudeSetInput();
 			else
 				pitchrate = 0.0;
 		}
@@ -938,7 +943,7 @@ void GDC::Timestep(double simdt) {
 		{
 			//GDC align
 			if (E0_503PR)
-				rollrate = sat->ascp.GetRollEulerAttitudeSetInput();
+				rollrate = 3.33*sat->ascp.GetRollEulerAttitudeSetInput();
 			else
 				rollrate = 0.0;
 		}
@@ -975,7 +980,7 @@ void GDC::Timestep(double simdt) {
 		{
 			//GDC align
 			if (E0_503Y)
-				yawrate = sat->ascp.GetYawEulerAttitudeSetInput();
+				yawrate = 3.33*sat->ascp.GetYawEulerAttitudeSetInput();
 			else
 				yawrate = 0.0;
 		}
