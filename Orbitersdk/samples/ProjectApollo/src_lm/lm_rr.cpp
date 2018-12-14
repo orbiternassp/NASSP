@@ -151,6 +151,13 @@ double LEM_RR::GetTransmitterPower()
 
 void LEM_RR::Timestep(double simdt) {
 
+	lem->rr_proc[0] = shaftAngle / PI2;
+	if (lem->rr_proc[0] < 0) lem->rr_proc[0] += 1.0;
+	lem->rr_proc[1] = trunnionAngle / PI2;
+	if (lem->rr_proc[0] < 0) lem->rr_proc[0] += 1.0;
+	lem->SetAnimation(lem->anim_RRPitch, lem->rr_proc[0]);
+	lem->SetAnimation(lem->anim_RRYaw, lem->rr_proc[1]);
+
 	ChannelValue val12;
 	ChannelValue val13;
 	ChannelValue val14;

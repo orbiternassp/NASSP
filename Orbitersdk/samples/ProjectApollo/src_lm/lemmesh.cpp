@@ -41,6 +41,7 @@
 #include "LEM.h"
 #include "leva.h"
 #include "Sat5LMDSC.h"
+#include "LM_AscentStageResource.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -198,8 +199,6 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	SetOvhdHatchMesh();
 
 	// Vessel Meshes
-	UINT dscidx;
-	UINT ascidx;
 	if (NoLegs)
 	{
 		dscidx = AddMesh(hLMDescentNoLeg, &mesh_dsc);
@@ -371,8 +370,6 @@ void LEM::SetLmVesselHoverStage()
 	SetOvhdHatchMesh();
 
 	// Vessel Meshes
-	UINT dscidx;
-	UINT ascidx;
 	if (NoLegs)
 	{
 		dscidx = AddMesh(hLMDescentNoLeg, &mesh_dsc);
@@ -544,7 +541,7 @@ void LEM::SetLmAscentHoverStage()
 	SetOvhdHatchMesh();
 
 	// Vessel Meshes
-	UINT ascidx = AddMesh (hLMAscent, &mesh_asc);
+	ascidx = AddMesh (hLMAscent, &mesh_asc);
 	SetMeshVisibilityMode (ascidx, MESHVIS_VCEXTERNAL);
 
 	//Add LPD view meshes
@@ -720,8 +717,8 @@ void LEM::SetLmLandedMesh() {
 	SetOvhdHatchMesh();
 
 	// Vessel Meshes
-	UINT dscidx = AddMesh(hLMDescent, &mesh_dsc);
-	UINT ascidx = AddMesh(hLMAscent, &mesh_asc);
+	dscidx = AddMesh(hLMDescent, &mesh_dsc);
+	ascidx = AddMesh(hLMAscent, &mesh_asc);
 	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
 	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
 
@@ -858,6 +855,29 @@ void LEM::SetDockingLights() {
 		dockingLights[i].active = false;
 		AddBeacon(dockingLights+i);
 	}
+}
+
+void LEM::DefineAnimations() {
+
+	// Component Handles
+	ANIMATIONCOMPONENT_HANDLE	ach_RadarPitch, ach_RadarYaw;
+
+	// Pivot Point
+	VECTOR3	LM_RADAR_PIVOT = { 0.00000, 1.70795, 2.20317 };
+
+	//Rendezvous Radar Antenna
+	static UINT meshgroup_RRPivot = GRP_RRpivot;
+	static UINT meshgroup_RRAntenna[3] = { GRP_RR, GRP_RRdish, GRP_RRdish2 };
+
+	static MGROUP_ROTATE mgt_Radar_pivot(ascidx, &meshgroup_RRPivot, 1, LM_RADAR_PIVOT, _V(-1, 0, 0), (float)RAD * 360);
+	static MGROUP_ROTATE mgt_Radar_Antenna(ascidx, meshgroup_RRAntenna, 3, LM_RADAR_PIVOT, _V(0, 1, 0), (float)RAD * 360);
+
+	anim_RRPitch = CreateAnimation(0.0);
+	anim_RRYaw = CreateAnimation(0.5);
+	ach_RadarPitch = AddAnimationComponent(anim_RRPitch, 0.0f, 1.0f, &mgt_Radar_pivot);
+	ach_RadarYaw = AddAnimationComponent(anim_RRYaw, 0.0f, 1.0f, &mgt_Radar_Antenna, ach_RadarPitch);
+
+	SetAnimation(anim_RRPitch, rr_proc[0]); SetAnimation(anim_RRYaw, rr_proc[1]);
 }
 
 void LEMLoadMeshes()
