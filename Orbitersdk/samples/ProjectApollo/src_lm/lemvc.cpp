@@ -48,20 +48,22 @@ void LEM::SetView() {
 		switch (viewpos) {
 		case LMVIEW_CDR:
 			if (stage == 2) {
-				SetCameraOffset(_V(-0.61, -0.125, 1.39));
+				SetCameraOffset(_V(-0.55, -0.07, 1.35));
 			}
 			else {
-				SetCameraOffset(_V(-0.61, 1.625, 1.39));
+				SetCameraOffset(_V(-0.55, 1.68, 1.35));
 			}
+			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			break;
 
 		case LMVIEW_LMP:
 			if (stage == 2) {
-				SetCameraOffset(_V(0.61, -0.125, 1.39));
+				SetCameraOffset(_V(0.55, -0.07, 1.35));
 			}
 			else {
-				SetCameraOffset(_V(0.61, 1.625, 1.39));
+				SetCameraOffset(_V(0.55, 1.68, 1.35));
 			}
+			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			break;
 		}
 

@@ -271,7 +271,7 @@ void LEM::Init()
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
-	viewpos = LMVIEW_LMP;
+	viewpos = LMVIEW_CDR;
 	stage = 0;
 	status = 0;
 	HasProgramer = false;

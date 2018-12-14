@@ -185,8 +185,8 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 
 	SetTouchdownPoints(td, 7);
 
-	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
 	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
+	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
 
 	// Forward Hatch
 	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
@@ -198,11 +198,8 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	SetOvhdHatchMesh();
 
 	// Vessel Meshes
-	UINT ascidx;
 	UINT dscidx;
-
-	ascidx = AddMesh(hLMAscent, &mesh_asc);
-
+	UINT ascidx;
 	if (NoLegs)
 	{
 		dscidx = AddMesh(hLMDescentNoLeg, &mesh_dsc);
@@ -211,8 +208,9 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	{
 		dscidx = AddMesh(hLMDescentRet, &mesh_dsc);
 	}
-	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
+	ascidx = AddMesh(hLMAscent, &mesh_asc);
 	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
 
 	//Add LPD view meshes
 	if (NoLegs)
@@ -360,10 +358,8 @@ void LEM::SetLmVesselHoverStage()
 
 	SetTouchdownPoints(td, 8);
 
-	//VSSetTouchdownPoints(GetHandle(), _V(0, -3.86, 5), _V(-5, -3.86, -5), _V(5, -3.86, -5));
-
-	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
 	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
+	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
 
 	// Forward Hatch
 	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
@@ -375,11 +371,8 @@ void LEM::SetLmVesselHoverStage()
 	SetOvhdHatchMesh();
 
 	// Vessel Meshes
-	UINT ascidx;
 	UINT dscidx;
-
-	ascidx = AddMesh(hLMAscent, &mesh_asc);
-
+	UINT ascidx;
 	if (NoLegs)
 	{
 		dscidx = AddMesh(hLMDescentNoLeg, &mesh_dsc);
@@ -393,8 +386,9 @@ void LEM::SetLmVesselHoverStage()
 			SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
 		}
 	}
-	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
+	ascidx = AddMesh(hLMAscent, &mesh_asc);
 	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
 
 	//Add LPD view meshes
 	if (NoLegs)
@@ -537,8 +531,6 @@ void LEM::SetLmAscentHoverStage()
 	td[3].pos.z = 0;
 
 	SetTouchdownPoints(td, 4);
-
-	//VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 5), _V(-5, tdph, -5), _V(5, tdph, -5));
 
 	VECTOR3 mesh_asc=_V(0.00, -0.76, 0.00);
 
@@ -715,8 +707,8 @@ void LEM::SetLmLandedMesh() {
 
 	ClearMeshes();
 
-	VECTOR3 mesh_asc = _V(0.00, 1.00, 0.00);
 	VECTOR3 mesh_dsc = _V(0.00, -1.24, 0.00);
+	VECTOR3 mesh_asc = _V(0.00, 1.00, 0.00);
 
 	// Forward Hatch
 	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
@@ -728,10 +720,10 @@ void LEM::SetLmLandedMesh() {
 	SetOvhdHatchMesh();
 
 	// Vessel Meshes
-	UINT ascidx = AddMesh(hLMAscent, &mesh_asc);
 	UINT dscidx = AddMesh(hLMDescent, &mesh_dsc);
-	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
+	UINT ascidx = AddMesh(hLMAscent, &mesh_asc);
 	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
 
 	//Add LPD view meshes
 	lpdasc = AddMesh(hLPDAsc, &mesh_asc);
@@ -771,7 +763,8 @@ void LEM::SetLPDMeshRet() {
 	if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
 		SetMeshVisibilityMode(lpddscret, MESHVIS_COCKPIT);
 	}
-	else {
+	else
+	{
 		SetMeshVisibilityMode(lpddscret, MESHVIS_NEVER);
 	}
 
@@ -847,7 +840,7 @@ void LEM::SetDockingLights() {
 	double yoffset = -1.76;
 	static VECTOR3 beaconPos[5] = { { 0.28, 1.47, 2.27 },{ 0.00, 1.85,-1.81 },{ -0.28, 1.47, 2.27 },{ -2.52, 0.59, 0.20 },{ 1.91, 0.29, 0.22 } };
 	static VECTOR3 beaconPosAsc[5] = { { 0.28, 1.47 + yoffset, 2.27 },{ 0.00, 1.85 + yoffset,-1.81 },{ -0.28, 1.47 + yoffset, 2.27 },{ -2.52, 0.59 + yoffset, 0.20 },{ 1.91, 0.29 + yoffset, 0.22 } };
-	static VECTOR3 beaconCol[4] = { { 1, 1, 1 },{ 1, 1, 0 },{ 1, 0, 0 },{ 0, 1, 0 } };
+	static VECTOR3 beaconCol[4] = { { 1.0, 1.0, 1.0 },{ 1.0, 1.0, 0.5 },{ 1.0, 0.5, 0.5 },{ 0.5, 1.0, 0.5 } };
 	for (i = 0; i < 5; i++) {
 		dockingLights[i].shape = BEACONSHAPE_DIFFUSE;
 		if (stage == 2) {
