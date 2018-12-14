@@ -399,7 +399,7 @@ void SIVB::SetS4b()
 
 	// LM Docking Lights
 	static VECTOR3 beaconPos[5] = { { 0.28, -2.27, 11.50 },{ 0.00, 1.81, 11.88 },{ -0.28, -2.27, 11.50 },{ -2.52, -0.2, 10.59 },{ 1.91, -0.22, 10.31 } };
-	static VECTOR3 beaconCol[4] = { { 1, 1, 1 },{ 1, 1, 0 },{ 1, 0, 0 },{ 0, 1, 0 } };
+	static VECTOR3 beaconCol[4] = { { 1.0, 1.0, 1.0 },{ 1.0, 1.0, 0.5 },{ 1.0, 0.5, 0.5 },{ 0.5, 1.0, 0.5 } };
 	for (int i = 0; i < 5; i++) {
 		dockingLights[i].shape = BEACONSHAPE_DIFFUSE;
 		dockingLights[i].pos = beaconPos + i;
