@@ -44,19 +44,6 @@ LEM_RR::LEM_RR()
 	RRESECHeat = 0;
 	NoTrackSignal = false;
 	radarDataGood = false;
-
-	//RR animation definition
-	ANIMATIONCOMPONENT_HANDLE	ach_RadarPitch, ach_RadarYaw;
-	VECTOR3	LM_RADAR_PIVOT = { 0.00000, 1.70795, 2.20317 }; // Pivot Point
-	static UINT meshgroup_RRPivot = GRP_RRpivot;
-	static UINT meshgroup_RRAntenna[3] = { GRP_RR, GRP_RRdish, GRP_RRdish2 };
-	static MGROUP_ROTATE mgt_Radar_pivot(lem->ascidx, &meshgroup_RRPivot, 1, LM_RADAR_PIVOT, _V(-1, 0, 0), (float)RAD * 360);
-	static MGROUP_ROTATE mgt_Radar_Antenna(lem->ascidx, meshgroup_RRAntenna, 3, LM_RADAR_PIVOT, _V(0, 1, 0), (float)RAD * 360);
-
-	anim_RRPitch = lem->CreateAnimation(0.0);
-	anim_RRYaw = lem->CreateAnimation(0.0);
-	ach_RadarPitch = lem->AddAnimationComponent(anim_RRPitch, 0.0f, 1.0f, &mgt_Radar_pivot);
-	ach_RadarYaw = lem->AddAnimationComponent(anim_RRYaw, 0.0f, 1.0f, &mgt_Radar_Antenna, ach_RadarPitch);
 }
 
 void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
@@ -100,7 +87,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	tstime = 0.0;
 	//Animations
 	rr_proc[0] = 0.0;
-	rr_proc[1] = 0.5;
+	rr_proc[1] = 0.0;
 
 	for (int i = 0;i < 4;i++)
 	{
@@ -702,6 +689,23 @@ void LEM_RR::SystemTimestep(double simdt) {
 
 void LEM_RR::clbkPostCreation() {
 
+	//RR animation definition
+	ANIMATIONCOMPONENT_HANDLE	ach_RadarPitch, ach_RadarYaw;
+	VECTOR3	LM_RADAR_PIVOT = { 0.00000, 1.70795, 2.20317 }; // Pivot Point
+	static UINT meshgroup_RRPivot = GRP_RRpivot;
+	static UINT meshgroup_RRAntenna[3] = { GRP_RR, GRP_RRdish, GRP_RRdish2 };
+	static MGROUP_ROTATE mgt_Radar_pivot(lem->ascidx, &meshgroup_RRPivot, 1, LM_RADAR_PIVOT, _V(-1, 0, 0), (float)RAD * 360);
+	static MGROUP_ROTATE mgt_Radar_Antenna(lem->ascidx, meshgroup_RRAntenna, 3, LM_RADAR_PIVOT, _V(0, 1, 0), (float)RAD * 360);
+	anim_RRPitch = lem->CreateAnimation(0.0);
+	anim_RRYaw = lem->CreateAnimation(0.0);
+	ach_RadarPitch = lem->AddAnimationComponent(anim_RRPitch, 0.0f, 1.0f, &mgt_Radar_pivot);
+	ach_RadarYaw = lem->AddAnimationComponent(anim_RRYaw, 0.0f, 1.0f, &mgt_Radar_Antenna, ach_RadarPitch);
+
+	//Get current RR state
+	rr_proc[0] = shaftAngle / PI2;
+	if (rr_proc[0] < 0) rr_proc[0] += 1.0;
+	rr_proc[1] = -trunnionAngle / PI2;
+	if (rr_proc[1] < 0) rr_proc[1] += 1.0;
 	lem->SetAnimation(anim_RRPitch, rr_proc[0]); lem->SetAnimation(anim_RRYaw, rr_proc[1]);
 }
 
