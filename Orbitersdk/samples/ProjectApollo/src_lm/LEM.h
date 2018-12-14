@@ -382,6 +382,7 @@ public:
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
 	void SetLPDMesh();
+	void SetLPDMeshAsc();
 	void SetLPDMeshRet();
 	void SetLPDMeshExt();
 	void SetFwdHatchMesh();
@@ -1500,8 +1501,9 @@ protected:
 	double AscentEmptyMassKg;
 
 	// Mesh indexes
-	int lpdgret;
-	int lpdgext;
+	int lpdasc;
+	int lpddscret;
+	int lpddscext;
 	int fwdhatch;
 	int ovhdhatch;
 	int lmdrogue;

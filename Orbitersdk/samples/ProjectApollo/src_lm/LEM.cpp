@@ -271,7 +271,7 @@ void LEM::Init()
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
-	viewpos = LMVIEW_LMP;
+	viewpos = LMVIEW_CDR;
 	stage = 0;
 	status = 0;
 	HasProgramer = false;
@@ -333,8 +333,9 @@ void LEM::Init()
 
 	// Mesh Indexes
 	
-	lpdgret = -1;
-	lpdgext = -1;
+	lpdasc = -1;
+	lpddscret = -1;
+	lpddscext = -1;
 	fwdhatch = -1;
 	ovhdhatch = -1;
 	lmdrogue = -1;

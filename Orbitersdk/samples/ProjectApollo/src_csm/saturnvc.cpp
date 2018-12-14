@@ -425,7 +425,7 @@ void Saturn::SetView(double offset, bool update_direction)
 	//
 	else if (InPanel) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
-			v = _V(-0.710051624, 1.305366408, offset - 3.0);
+			v = _V(-0.605, 1.045, offset - 3.0); // Adjusted to line up with docking target
 
 		} else if (PanelId == SATPANEL_LEFT_317_WINDOW) {
 			v = _V(-0.710051624, 1.305366408, offset - 3.0);
