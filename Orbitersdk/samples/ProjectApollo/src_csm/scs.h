@@ -36,7 +36,7 @@
 
 #define SCS_INERTIAL_BMAGS	false
 
-
+#include "DelayTimer.h"
 
 class Saturn;
 
@@ -541,6 +541,10 @@ public: // Same stuff about speed and I'm lazy too.
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
 protected:
+	DelayTimer engineOnDelayA;
+	DelayTimer engineOnDelayB;
+	DelayTimer engineOffDelay;
+
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
 	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
@@ -575,6 +579,59 @@ public:
 	int mnimp_yaw_trigger;                                          // Joystick triggered yaw thrust in MIN IMP mode
 	Saturn *sat;
 	VECTOR3 pseudorate;
+protected:
+
+	bool rollGyroUncage;
+	bool pitchGyroUncage;
+	bool yawGyroUncage;
+	//RELAYS
+
+	//Yaw TVC Integrator Enable
+	bool R2K11;
+	//MTVC Yaw Rate 2 Enable
+	bool R2K30;
+	//MTVC Yaw Rate 1 Enable
+	bool R2K31;
+
+	//Pitch TVC Integrator Enable
+	bool R3K11;
+	//MTVC Pitch Rate 2 Enable
+	bool R3K30;
+	//MTVC Pitch Rate 1 Enable
+	bool R3K31;
+
+	//TRANSISTORS
+
+	//Roll Attitude Signal No. 1 Enable
+	bool T1QS21;
+	//Roll Rate 1 Enable
+	bool T1QS28;
+	//Roll Rate 2 Enable
+	bool T1QS29;
+
+	//Yaw Attitude Signal No. 1 Enable
+	bool T2QS21;
+	//Yaw Rate 1 Enable
+	bool T2QS28;
+	//Yaw Rate 2 Enable
+	bool T2QS29;
+
+	//Pitch TVC Manual Cmd Enable
+	bool T3QS1;
+	//Pitch SCS Gimbal Cmd Enable
+	bool T3QS2;
+	//Pitch TVC Gimbal Trim Enable
+	bool T3QS3;
+	//Pitch Attitude Signal No. 1 Enable
+	bool T3QS21;
+	//Pitch Rate 1 Enable
+	bool T3QS28;
+	//Pitch Rate 2 Enable
+	bool T3QS29;
+	//Pitch MTVC Integrator Enable
+	bool T3QS30;
+	//Pitch RJC Prop Feedback Disable
+	bool T3QS31;
 };
 
 

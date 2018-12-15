@@ -3020,7 +3020,11 @@ void EDA::LoadState(FILEHANDLE scn)
 
 
 // Reaction Jet / Engine Control
-RJEC::RJEC() {
+RJEC::RJEC() : 
+engineOnDelayA(1.0),
+engineOnDelayB(1.0),
+engineOffDelay(1.0)
+{
 	
 	sat = NULL;
 	SPSActive = false;
@@ -3421,6 +3425,108 @@ void ECA::SystemTimestep(double simdt) {
 
 void ECA::TimeStep(double simdt) {
 
+	bool logic1, logic2, logic3;
+	bool scslogic1, scslogic2, scslogic3, scslogic4;
+	bool S7_1, S7_3, S8_1, S8_3, S9_1, S9_3, S18_1, S18_2, S20_1, S20_2, S20_3, S21_1, S21_2, S21_3, S22_1, S22_2, S22_3, S38_1, S38_2, S38_3, S39_1, S39_2, S39_3, S51_1;
+	bool IGN2, thc_cw;
+
+	scslogic1 = sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE;
+	scslogic2 = sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE;
+	scslogic3 = sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE;
+	scslogic4 = sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE;
+
+	S7_1 = sat->ManualAttRollSwitch.IsUp() && scslogic1;
+	S7_3 = sat->ManualAttRollSwitch.IsDown() && scslogic1;
+	S8_1 = sat->ManualAttPitchSwitch.IsUp() && scslogic1;
+	S8_3 = sat->ManualAttPitchSwitch.IsDown() && scslogic1;
+	S9_1 = sat->ManualAttYawSwitch.IsUp() && scslogic1;
+	S9_3 = sat->ManualAttYawSwitch.IsDown() && scslogic1;
+	S18_1 = sat->SCContSwitch.IsUp() && scslogic2;
+	S18_2 = sat->SCContSwitch.IsDown() && scslogic3;
+	S20_1 = sat->BMAGRollSwitch.IsUp() && scslogic2;
+	S20_2 = sat->BMAGRollSwitch.IsCenter() && scslogic2;
+	S20_3 = sat->BMAGRollSwitch.IsDown() && scslogic1;
+	S21_1 = sat->BMAGPitchSwitch.IsUp() && scslogic3;
+	S21_2 = sat->BMAGPitchSwitch.IsCenter() && scslogic3;
+	S21_3 = sat->BMAGPitchSwitch.IsDown() && scslogic1;
+	S22_1 = sat->BMAGYawSwitch.IsUp() && scslogic3;
+	S22_2 = sat->BMAGYawSwitch.IsCenter() && scslogic3;
+	S22_3 = sat->BMAGYawSwitch.IsDown() && scslogic1;
+	S51_1 = sat->GSwitch.IsUp() && scslogic4;
+	S38_1 = sat->SCSTvcPitchSwitch.IsUp() && scslogic3;
+	S38_2 = sat->SCSTvcPitchSwitch.IsCenter() && scslogic3;
+	S38_3 = sat->SCSTvcPitchSwitch.IsDown() && scslogic3;
+	S39_1 = sat->SCSTvcYawSwitch.IsUp() && scslogic3;
+	S39_2 = sat->SCSTvcYawSwitch.IsCenter() && scslogic3;
+	S39_3 = sat->SCSTvcYawSwitch.IsDown() && scslogic3;
+	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
+	IGN2 = sat->rjec.GetSPSActive();
+
+	//GYRO UNCAGE LOGIC (Module A8)
+	logic1 = S20_1 || S20_3 || S51_1 || !IGN2;
+	logic2 = S20_1 || S20_3 || S51_1 || (sat->eca.rhc_x < 28673 || sat->eca.rhc_x > 36863) || (S7_1 || S7_3);
+
+	if (!logic1 || !logic2)
+	{
+		T1QS21 = true;
+		rollGyroUncage = true;
+	}
+	else
+	{
+		T1QS21 = false;
+		rollGyroUncage = false;
+	}
+
+	logic1 = S22_1 || S22_3 || S51_1 || !IGN2;
+	logic2 = S22_1 || S22_3 || S51_1 || (sat->eca.rhc_z < 28673 || sat->eca.rhc_z > 36863) || (S9_1 || S9_3);
+
+	if (!logic1 || !logic2)
+	{
+		T2QS21 = true;
+		yawGyroUncage = true;
+	}
+	else
+	{
+		T2QS21 = false;
+		yawGyroUncage = false;
+	}
+
+	logic1 = S21_1 || S21_3 || S51_1 || !IGN2;
+	logic2 = S21_1 || S21_3 || S51_1 || (sat->eca.rhc_y < 28673 || sat->eca.rhc_y > 36863) || (S8_1 || S8_3);
+
+	if (!logic1 || !logic2)
+	{
+		T3QS21 = true;
+		pitchGyroUncage = true;
+	}
+	else
+	{
+		T3QS21 = false;
+		pitchGyroUncage = false;
+	}
+
+	//ROTATION CONTROL (Module A3)
+	T1QS28 = S20_3;
+	T1QS29 = S20_1 || S20_2;
+	T2QS28 = S22_3;
+	T2QS29 = S22_1 || S22_2;
+	T3QS28 = S21_3;
+	T3QS29 = S21_1 || S21_2;
+
+	logic1 = S38_2 || S38_3 || !thc_cw || S18_1 || !IGN2;
+	logic2 = S38_3 || S38_1 || !IGN2 || !thc_cw || S18_2;
+	logic3 = S38_3 || !IGN2 || S38_1 || S18_1;
+
+	R3K31 = (!logic1 || !logic2 || !logic3) && (S21_3);
+	R3K30 = (!logic1 || !logic2 || !logic3) && (S21_1 || S21_2);
+
+	logic1 = S39_2 || S39_3 || !thc_cw || S18_1 || !IGN2;
+	logic2 = S39_3 || S39_1 || !IGN2 || !thc_cw || S18_2;
+	logic3 = S39_3 || !IGN2 || S39_1 || S18_1;
+
+	R2K31 = (!logic1 || !logic2 || !logic3) && (S22_3);
+	R2K30 = (!logic1 || !logic2 || !logic3) && (S22_1 || S22_2);
+
 	// SCS is in control if the THC is CLOCKWISE 
 	// or if the SC CONT switch is set to SCS.
 
@@ -3624,20 +3730,27 @@ void ECA::TimeStep(double simdt) {
 		}
 
 		// RATE DAMPING
+
+		double rollrate, pitchrate, yawrate;
+
+		rollrate = (T1QS28 ? sat->bmag1.GetRates().z : 0.0) + (T1QS29 ? sat->bmag2.GetRates().z : 0.0);
+		yawrate = (T2QS28 ? sat->bmag1.GetRates().y : 0.0) + (T2QS29 ? sat->bmag2.GetRates().y : 0.0);
+		pitchrate = (T3QS28 ? sat->bmag1.GetRates().x : 0.0) + (T3QS29 ? sat->bmag2.GetRates().x : 0.0);
+
 		// Rate damping automatic mode only when no cmd and manual attitude is RATE CMD
 		if(cmd_rate.x == 0 && sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER) { 
 			switch(sat->AttRateSwitch.GetState()){
 				case TOGGLESWITCH_UP:    // HIGH RATE
 					// MAX RATE 2 dps roll
-					if(sat->gdc.rates.z >  0.034906585){ cmd_rate.x = 0.034906585 - sat->gdc.rates.z; break; }
-					if(sat->gdc.rates.z < -0.034906585){ cmd_rate.x = -0.034906585- sat->gdc.rates.z; break; }
-					cmd_rate.x = sat->gdc.rates.z; 
+					if(rollrate >  0.034906585){ cmd_rate.x = 0.034906585 - rollrate; break; }
+					if(rollrate < -0.034906585){ cmd_rate.x = -0.034906585- rollrate; break; }
+					cmd_rate.x = rollrate; 
 					break;
 				case TOGGLESWITCH_DOWN:  // LOW RATE
 					// MAX RATE .2 dps roll
-					if(sat->gdc.rates.z >  0.0034906585){ cmd_rate.x = 0.0034906585 - sat->gdc.rates.z; break; }
-					if(sat->gdc.rates.z < -0.0034906585){ cmd_rate.x = -0.0034906585- sat->gdc.rates.z; break; }
-					cmd_rate.x = sat->gdc.rates.z; 
+					if(rollrate >  0.0034906585){ cmd_rate.x = 0.0034906585 - rollrate; break; }
+					if(rollrate < -0.0034906585){ cmd_rate.x = -0.0034906585- rollrate; break; }
+					cmd_rate.x = rollrate; 
 					break;
 			}
 		}
@@ -3646,15 +3759,15 @@ void ECA::TimeStep(double simdt) {
 			switch(sat->AttRateSwitch.GetState()){
 				case TOGGLESWITCH_UP:    // HIGH RATE
 					// MAX RATE 2 dps
-					if(sat->gdc.rates.x >  0.034906585){ cmd_rate.y = 0.034906585 - sat->gdc.rates.x; break; }
-					if(sat->gdc.rates.x < -0.034906585){ cmd_rate.y = -0.034906585- sat->gdc.rates.x; break; }
-					cmd_rate.y = sat->gdc.rates.x; 
+					if(pitchrate >  0.034906585){ cmd_rate.y = 0.034906585 - pitchrate; break; }
+					if(pitchrate < -0.034906585){ cmd_rate.y = -0.034906585- pitchrate; break; }
+					cmd_rate.y = pitchrate; 
 					break;
 				case TOGGLESWITCH_DOWN:  // LOW RATE
 					// MAX RATE .2 dps
-					if(sat->gdc.rates.x >  0.0034906585){ cmd_rate.y = 0.0034906585 - sat->gdc.rates.x; break; }
-					if(sat->gdc.rates.x < -0.0034906585){ cmd_rate.y = -0.0034906585- sat->gdc.rates.x; break; }
-					cmd_rate.y = sat->gdc.rates.x; 
+					if(pitchrate >  0.0034906585){ cmd_rate.y = 0.0034906585 - pitchrate; break; }
+					if(pitchrate < -0.0034906585){ cmd_rate.y = -0.0034906585- pitchrate; break; }
+					cmd_rate.y = pitchrate; 
 					break;
 			}
 		}
@@ -3663,15 +3776,15 @@ void ECA::TimeStep(double simdt) {
 			switch(sat->AttRateSwitch.GetState()){
 				case TOGGLESWITCH_UP:    // HIGH RATE
 					// MAX RATE 2 dps
-					if(sat->gdc.rates.y >  0.034906585){ cmd_rate.z = 0.034906585 - sat->gdc.rates.y; break; }
-					if(sat->gdc.rates.y < -0.034906585){ cmd_rate.z = -0.034906585- sat->gdc.rates.y; break; }
-					cmd_rate.z = sat->gdc.rates.y; 
+					if(yawrate >  0.034906585){ cmd_rate.z = 0.034906585 - yawrate; break; }
+					if(yawrate < -0.034906585){ cmd_rate.z = -0.034906585- yawrate; break; }
+					cmd_rate.z = yawrate; 
 					break;
 				case TOGGLESWITCH_DOWN:  // LOW RATE
 					// MAX RATE .2 dps
-					if(sat->gdc.rates.y >  0.0034906585){ cmd_rate.z = 0.0034906585 - sat->gdc.rates.y; break; }
-					if(sat->gdc.rates.y < -0.0034906585){ cmd_rate.z = -0.0034906585- sat->gdc.rates.y; break; }
-					cmd_rate.z = sat->gdc.rates.y; 
+					if(yawrate >  0.0034906585){ cmd_rate.z = 0.0034906585 - yawrate; break; }
+					if(yawrate < -0.0034906585){ cmd_rate.z = -0.0034906585- yawrate; break; }
+					cmd_rate.z = yawrate; 
 					break;
 			}
 		}
@@ -3732,15 +3845,15 @@ void ECA::TimeStep(double simdt) {
 
 		// Command rates done, generate rate error values
 		// GDC RATES are Z = ROLL, X = PITCH, Y = YAW
-		rate_err.x = cmd_rate.x - (sat->gdc.rates.z + pseudorate.x);
-		rate_err.y = cmd_rate.y - (sat->gdc.rates.x + pseudorate.y);
-		rate_err.z = cmd_rate.z - (sat->gdc.rates.y + pseudorate.z);
+		rate_err.x = cmd_rate.x - (rollrate + pseudorate.x);
+		rate_err.y = cmd_rate.y - (pitchrate + pseudorate.y);
+		rate_err.z = cmd_rate.z - (yawrate + pseudorate.z);
 		
 		// sprintf(oapiDebugString(),"SCS: RATE CMD r%.3f p%.3f y%.3f ERR r%.3f p%.3f y%.3f",
 		//	cmd_rate.x * DEG, cmd_rate.y * DEG, cmd_rate.z * DEG, 
 		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);	
-		// sprintf(oapiDebugString(),"SCS PITCH rate %.3f cmd %.3f pseudo %.3f error %.3f", sat->gdc.rates.x * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
-		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f", sat->gdc.rates.z * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG, errors.x * DEG);
+		// sprintf(oapiDebugString(),"SCS PITCH rate %.3f cmd %.3f pseudo %.3f error %.3f", pitchrate * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
+		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f", rollrate * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG, errors.x * DEG);
 
 		//
 		// ROTATION
