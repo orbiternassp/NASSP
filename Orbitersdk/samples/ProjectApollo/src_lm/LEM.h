@@ -385,10 +385,12 @@ public:
 	void SetLPDMeshAsc();
 	void SetLPDMeshRet();
 	void SetLPDMeshExt();
-	void SetFwdHatchMesh();
+	enum doorstate { CLOSED, OPEN, CLOSING, OPENING } hatch_status;
+	void ActivateHatch(doorstate action);
 	void SetOvhdHatchMesh();
 	void SetTrackLight();
 	void SetDockingLights();
+	void DefineAnimations();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	UINT GetStage() { return stage; }
 	virtual double GetAscentStageMass();
@@ -1505,10 +1507,13 @@ protected:
 	UINT lpdasc;
 	UINT lpddscret;
 	UINT lpddscext;
-	UINT fwdhatch;
 	UINT ovhdhatch;
 	UINT lmdrogue;
 	UINT probeidx;
+
+	// Animations
+	UINT anim_Hatch;
+	double hatch_proc;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

@@ -338,10 +338,13 @@ void LEM::Init()
 	lpdasc = -1;
 	lpddscret = -1;
 	lpddscext = -1;
-	fwdhatch = -1;
 	ovhdhatch = -1;
 	lmdrogue = -1;
 	probeidx = -1;
+
+	// Animations
+	hatch_proc = 0.0;
+	hatch_status = CLOSED;
 
 	pMCC = NULL;
 
@@ -1446,6 +1449,7 @@ void LEM::clbkPostCreation()
 		else pMCC = NULL;
 	}
 
+	DefineAnimations();
 	RR.clbkPostCreation();
 	SBandSteerable.clbkPostCreation();
 }

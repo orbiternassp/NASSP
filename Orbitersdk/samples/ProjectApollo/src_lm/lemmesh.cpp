@@ -41,6 +41,7 @@
 #include "LEM.h"
 #include "leva.h"
 #include "Sat5LMDSC.h"
+#include "LM_AscentStageResource.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -53,7 +54,6 @@ static MESHHANDLE hLemProbes;
 static MESHHANDLE hLPDAsc;
 static MESHHANDLE hLPDDscRet;
 static MESHHANDLE hLPDDscExt;
-static MESHHANDLE hFwdHatch;
 static MESHHANDLE hOvhdHatch;
 static MESHHANDLE hDrogue;
 
@@ -187,10 +187,6 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 
 	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
 	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
-
-	// Forward Hatch
-	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
-	SetFwdHatchMesh();
 
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
@@ -359,10 +355,6 @@ void LEM::SetLmVesselHoverStage()
 	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
 	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
 
-	// Forward Hatch
-	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
-	SetFwdHatchMesh();
-
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
 	lmdrogue = AddMesh(hDrogue, &mesh_asc);
@@ -529,10 +521,6 @@ void LEM::SetLmAscentHoverStage()
 	SetTouchdownPoints(td, 4);
 
 	VECTOR3 mesh_asc=_V(0.00, -0.76, 0.00);
-
-	// Forward Hatch
-	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
-	SetFwdHatchMesh();
 
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
@@ -706,10 +694,6 @@ void LEM::SetLmLandedMesh() {
 	VECTOR3 mesh_asc = _V(0.00, 1.00, 0.00);
 	VECTOR3 mesh_dsc = _V(0.00, -1.24, 0.00);
 
-	// Forward Hatch
-	fwdhatch = AddMesh(hFwdHatch, &mesh_asc);
-	SetFwdHatchMesh();
-
 	// Drogue & Overhead hatch
 	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
 	lmdrogue = AddMesh(hDrogue, &mesh_asc);
@@ -780,16 +764,12 @@ void LEM::SetLPDMeshExt() {
 	}
 }
 
-void LEM::SetFwdHatchMesh() {
-	
-	if (fwdhatch == -1)
-		return;
+void LEM::ActivateHatch(doorstate action) {
 
-	if (ForwardHatch.IsOpen()) {
-		SetMeshVisibilityMode(fwdhatch, MESHVIS_NEVER);
-	}
-	else {
-		SetMeshVisibilityMode(fwdhatch, MESHVIS_VCEXTERNAL);
+	hatch_status = action;
+	if (action <= OPEN) {
+		hatch_proc = (action == CLOSED ? 0.0 : 1.0);
+		SetAnimation(anim_Hatch, hatch_proc);
 	}
 }
 
@@ -856,6 +836,17 @@ void LEM::SetDockingLights() {
 	}
 }
 
+void LEM::DefineAnimations() {
+
+    // Hatch
+	ANIMATIONCOMPONENT_HANDLE	ach_Hatch;
+	static UINT	meshgroup_Hatch = GRP_FwdHatch;
+    static MGROUP_ROTATE	mgt_Hatch(ascidx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.68476), _V(0.0, 1.0, 0.0), (float)-85 * RAD);
+	anim_Hatch = CreateAnimation(0.0);
+	ach_Hatch = AddAnimationComponent(anim_Hatch, 0.3f, 1.0f, &mgt_Hatch);
+	SetAnimation(anim_Hatch, hatch_proc);
+}
+
 void LEMLoadMeshes()
 
 {
@@ -868,7 +859,6 @@ void LEMLoadMeshes()
 	hLPDAsc = oapiLoadMeshGlobal("ProjectApollo/LPD_Asc");
 	hLPDDscRet = oapiLoadMeshGlobal("ProjectApollo/LPD_DscRet");
 	hLPDDscExt = oapiLoadMeshGlobal("ProjectApollo/LPD_DscExt");
-	hFwdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_ForwardHatch");
 	hOvhdHatch = oapiLoadMeshGlobal("ProjectApollo/LM_UpperHatch");
 	hDrogue = oapiLoadMeshGlobal("ProjectApollo/LM_TunnelDrogue");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");

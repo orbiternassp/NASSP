@@ -175,7 +175,7 @@ void LEMForwardHatch::Toggle()
 			open = true;
 			OpenSound.play();
 			lem->PanelRefreshForwardHatch();
-			lem->SetFwdHatchMesh();
+			lem->ActivateHatch(lem->OPENING);
 		}
 	}
 	else
@@ -183,7 +183,7 @@ void LEMForwardHatch::Toggle()
 		open = false;
 		CloseSound.play();
 		lem->PanelRefreshForwardHatch();
-		lem->SetFwdHatchMesh();
+		lem->ActivateHatch(lem->CLOSING);
 	}
 }
 
