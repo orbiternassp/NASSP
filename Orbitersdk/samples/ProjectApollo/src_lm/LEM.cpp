@@ -1442,6 +1442,8 @@ void LEM::clbkPostCreation()
 		}
 		else pMCC = NULL;
 	}
+
+	RR.clbkPostCreation();
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

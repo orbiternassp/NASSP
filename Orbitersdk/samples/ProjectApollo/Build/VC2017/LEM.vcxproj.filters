@@ -455,6 +455,9 @@
     <ClInclude Include="..\..\src_lm\CWEA_FlipFlop.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_lm\LM_AscentStageResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Abort.bmp">

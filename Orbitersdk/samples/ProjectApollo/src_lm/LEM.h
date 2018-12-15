@@ -1501,6 +1501,7 @@ protected:
 	double AscentEmptyMassKg;
 
 	// Mesh indexes
+	UINT dscidx, ascidx;
 	int lpdasc;
 	int lpddscret;
 	int lpddscext;

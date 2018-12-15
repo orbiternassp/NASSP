@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "papi.h"
 #include "LEM.h"
 #include "lm_rr.h"
+#include "LM_AscentStageResource.h"
 
 #define RR_SHAFT_STEP 0.000191747598876953125 
 #define RR_TRUNNION_STEP 0.00004793689959716796875
@@ -84,6 +85,9 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	RangeLock = true;
 	RangeLockTimer = 0.0;
 	tstime = 0.0;
+	//Animations
+	rr_proc[0] = 0.0;
+	rr_proc[1] = 0.0;
 
 	for (int i = 0;i < 4;i++)
 	{
@@ -150,6 +154,14 @@ double LEM_RR::GetTransmitterPower()
 }
 
 void LEM_RR::Timestep(double simdt) {
+
+	// RR mesh animation
+	rr_proc[0] = shaftAngle / PI2;
+	if (rr_proc[0] < 0) rr_proc[0] += 1.0;
+	rr_proc[1] = -trunnionAngle / PI2;
+	if (rr_proc[1] < 0) rr_proc[1] += 1.0;
+	lem->SetAnimation(anim_RRPitch, rr_proc[0]);
+	lem->SetAnimation(anim_RRYaw, rr_proc[1]);
 
 	ChannelValue val12;
 	ChannelValue val13;
@@ -673,6 +685,28 @@ void LEM_RR::SystemTimestep(double simdt) {
 		rrheat->GenerateHeat(10.0); //Guessed as a lower number to control RR heat since all the power will not be converted to heat 
 	}
 
+}
+
+void LEM_RR::clbkPostCreation() {
+
+	// RR animation definition
+	ANIMATIONCOMPONENT_HANDLE	ach_RadarPitch, ach_RadarYaw;
+	VECTOR3	LM_RADAR_PIVOT = { 0.00018, 1.70801, 2.20222 }; // Pivot Point
+	static UINT meshgroup_RRPivot = GRP_RRpivot;
+	static UINT meshgroup_RRAntenna[3] = { GRP_RR, GRP_RRdish, GRP_RRdish2 };
+	static MGROUP_ROTATE mgt_Radar_pivot(lem->ascidx, &meshgroup_RRPivot, 1, LM_RADAR_PIVOT, _V(-1, 0, 0), (float)RAD * 360);
+	static MGROUP_ROTATE mgt_Radar_Antenna(lem->ascidx, meshgroup_RRAntenna, 3, LM_RADAR_PIVOT, _V(0, 1, 0), (float)RAD * 360);
+	anim_RRPitch = lem->CreateAnimation(0.0);
+	anim_RRYaw = lem->CreateAnimation(0.0);
+	ach_RadarPitch = lem->AddAnimationComponent(anim_RRPitch, 0.0f, 1.0f, &mgt_Radar_pivot);
+	ach_RadarYaw = lem->AddAnimationComponent(anim_RRYaw, 0.0f, 1.0f, &mgt_Radar_Antenna, ach_RadarPitch);
+
+	// Get current RR state for animation
+	rr_proc[0] = shaftAngle / PI2;
+	if (rr_proc[0] < 0) rr_proc[0] += 1.0;
+	rr_proc[1] = -trunnionAngle / PI2;
+	if (rr_proc[1] < 0) rr_proc[1] += 1.0;
+	lem->SetAnimation(anim_RRPitch, rr_proc[0]); lem->SetAnimation(anim_RRYaw, rr_proc[1]);
 }
 
 void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
