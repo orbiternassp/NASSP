@@ -1502,12 +1502,13 @@ protected:
 
 	// Mesh indexes
 	UINT dscidx, ascidx;
-	int lpdasc;
-	int lpddscret;
-	int lpddscext;
-	int fwdhatch;
-	int ovhdhatch;
-	int lmdrogue;
+	UINT lpdasc;
+	UINT lpddscret;
+	UINT lpddscext;
+	UINT fwdhatch;
+	UINT ovhdhatch;
+	UINT lmdrogue;
+	UINT probeidx;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

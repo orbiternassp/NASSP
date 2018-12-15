@@ -46,6 +46,7 @@
 
 #include "connector.h"
 #include "lm_channels.h"
+#include "LM_AscentStageResource.h"
 
 // VHF System (and shared stuff)
 LM_VHF::LM_VHF(){
@@ -2469,6 +2470,10 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	moving = false;
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
+	sband_proc[0] = 0.0;
+	sband_proc[1] = 0.0;
+	sband_proc_last[0] = 0.0;
+	sband_proc_last[1] = 0.0;
 }
 
 void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
@@ -2496,6 +2501,16 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	// Use 7.6 watts to move the antenna and 0.7 watts to maintain auto track.
 	// Draw AC power from SBD_ANT_AC_CB
 	// Use 27.9 watts to move the antenna and 4.0 watts to maintain auto track.
+
+	// S-Band mesh animation
+	sband_proc[0] = pitch / PI2;
+	if (sband_proc[0] < 0) sband_proc[0] += 1.0;
+	sband_proc[1] = -yaw / PI2;
+	if (sband_proc[1] < 0) sband_proc[1] += 1.0;
+	if (sband_proc[0] - sband_proc_last[0] != 0.0) lem->SetAnimation(anim_SBandPitch, sband_proc[0]);
+	if (sband_proc[1] - sband_proc_last[1] != 0.0) lem->SetAnimation(anim_SBandYaw, sband_proc[1]);
+	sband_proc_last[0] = sband_proc[0];
+	sband_proc_last[1] = sband_proc[1];
 
 	moving = false;
 
@@ -2633,6 +2648,30 @@ bool LEM_SteerableAnt::IsPowered()
 	if (!(lem->SBD_ANT_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) || !lem->COMM_SBAND_ANT_CB.IsPowered()) return false;
 
 	return true;
+}
+
+void LEM_SteerableAnt::clbkPostCreation() {
+
+	// S-Band animation definition
+	ANIMATIONCOMPONENT_HANDLE	ach_SBandPitch, ach_SBandYaw;
+	const VECTOR3	LM_SBAND_PIVOT1 = { 1.81114, 1.39771, -0.00002 }; // Pivot Point 1
+	const VECTOR3	LM_SBAND_PIVOT2 = { 2.02154, 1.18404, -0.00595 }; // Pivot Point 2
+	const VECTOR3	LM_SBAND_AXIS = { cos(RAD * 45),-sin(RAD * 45), 0.00 }; //Pivot Axis
+	static UINT meshgroup_SBandPivot = GRP_SbandPivot;
+	static UINT meshgroup_SBandAntenna[3] = { GRP_Sband, GRP_SbandDish, GRP_SbandDish2 };
+	static MGROUP_ROTATE mgt_SBand_pivot(lem->ascidx, &meshgroup_SBandPivot, 1, LM_SBAND_PIVOT1, LM_SBAND_AXIS, (float)RAD * 360);
+	static MGROUP_ROTATE mgt_SBand_Antenna(lem->ascidx, meshgroup_SBandAntenna, 3, LM_SBAND_PIVOT2, _V(0, 0, 1), (float)RAD * 360);
+	anim_SBandPitch = lem->CreateAnimation(0.0);
+	anim_SBandYaw = lem->CreateAnimation(0.0);
+	ach_SBandPitch = lem->AddAnimationComponent(anim_SBandPitch, 0.0f, 1.0f, &mgt_SBand_pivot);
+	ach_SBandYaw = lem->AddAnimationComponent(anim_SBandYaw, 0.0f, 1.0f, &mgt_SBand_Antenna, ach_SBandPitch);
+
+	// Get current S-Band state for animation
+	sband_proc[0] = pitch / PI2;
+	if (sband_proc[0] < 0) sband_proc[0] += 1.0;
+	sband_proc[1] = -yaw / PI2;
+	if (sband_proc[1] < 0) sband_proc[1] += 1.0;
+	lem->SetAnimation(anim_SBandPitch, sband_proc[0]); lem->SetAnimation(anim_SBandYaw, sband_proc[1]);
 }
 
 // Load

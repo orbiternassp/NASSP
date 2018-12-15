@@ -276,6 +276,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);			// System Timestep
+	void clbkPostCreation();
 	bool IsPowered();
 	double GetAntennaTempF();
 	double GetPitch() { return pitch*DEG; }
@@ -287,6 +288,11 @@ public:
 protected:
 	double pitch;
 	double yaw;
+
+	// Animations
+	UINT anim_SBandPitch, anim_SBandYaw;
+	double	sband_proc[2];
+	double	sband_proc_last[2];
 
 	bool moving;
 	double hpbw_factor;
