@@ -694,7 +694,7 @@ void LEM_RR::clbkPostCreation() {
 
 	// RR animation definition
 	ANIMATIONCOMPONENT_HANDLE	ach_RadarPitch, ach_RadarYaw;
-	VECTOR3	LM_RADAR_PIVOT = { 0.00018, 1.70801, 2.20222 }; // Pivot Point
+	const VECTOR3	LM_RADAR_PIVOT = { 0.00018, 1.70801, 2.20222 }; // Pivot Point
 	static UINT meshgroup_RRPivot = GRP_RRpivot;
 	static UINT meshgroup_RRAntenna[3] = { GRP_RR, GRP_RRdish, GRP_RRdish2 };
 	static MGROUP_ROTATE mgt_Radar_pivot(lem->ascidx, &meshgroup_RRPivot, 1, LM_RADAR_PIVOT, _V(-1, 0, 0), (float)RAD * 360);

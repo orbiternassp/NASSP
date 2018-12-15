@@ -341,6 +341,7 @@ void LEM::Init()
 	fwdhatch = -1;
 	ovhdhatch = -1;
 	lmdrogue = -1;
+	probeidx = -1;
 
 	pMCC = NULL;
 
@@ -905,7 +906,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			}
 		}
 	}
-	
+
 	//
 	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't
 	// play any sounds, or plays LEM sounds rather than astronauts sounds. We need to delay
@@ -1446,6 +1447,7 @@ void LEM::clbkPostCreation()
 	}
 
 	RR.clbkPostCreation();
+	SBandSteerable.clbkPostCreation();
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

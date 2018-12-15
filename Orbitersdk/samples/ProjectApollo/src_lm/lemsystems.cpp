@@ -1531,6 +1531,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	// Debug tests //
 
+	// Mesh Index Order
+	//sprintf(oapiDebugString(), "ascidx %i dscidx %i fwdhatch %i ovhdhatch %i lmdrogue %i lpdasc %i lpddscret %i lpddscext %i probeidx %i", ascidx, dscidx, fwdhatch, ovhdhatch, lmdrogue, lpdasc, lpddscret, lpddscext, probeidx);
+
 	//ECS Debug Lines//
 
 	/*
