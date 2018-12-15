@@ -23,6 +23,7 @@
   **************************************************************************/
 
 #include "Orbitersdk.h"
+#include "LM_AscentStageResource.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
 #include "LEM.h"
@@ -158,12 +159,33 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	open = false;
 	ForwardHatchHandle = NULL;
 	lem = NULL;
+
+	hatch_state.SetOperatingSpeed(0.1);
+	anim_Hatch = -1;
 }
 
 void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh)
 {
 	lem = l;
 	ForwardHatchHandle = fhh;
+}
+
+void LEMForwardHatch::DefineAnimations(UINT idx)
+{
+	// Hatch
+	ANIMATIONCOMPONENT_HANDLE	ach_Hatch;
+	static UINT	meshgroup_Hatch = GRP_FwdHatch;
+	static MGROUP_ROTATE	mgt_Hatch(idx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.68476), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
+	anim_Hatch = lem->CreateAnimation(0.0);
+	ach_Hatch = lem->AddAnimationComponent(anim_Hatch, 0.3f, 1.0f, &mgt_Hatch);
+	lem->SetAnimation(anim_Hatch, hatch_state.State());
+}
+
+void LEMForwardHatch::Timestep(double simdt)
+{
+	if (hatch_state.Process(simdt)) {
+		lem->SetAnimation(anim_Hatch, hatch_state.State());
+	}
 }
 
 void LEMForwardHatch::Toggle()
@@ -175,7 +197,7 @@ void LEMForwardHatch::Toggle()
 			open = true;
 			OpenSound.play();
 			lem->PanelRefreshForwardHatch();
-			lem->ActivateHatch(lem->OPENING);
+			hatch_state.Open();
 		}
 	}
 	else
@@ -183,7 +205,7 @@ void LEMForwardHatch::Toggle()
 		open = false;
 		CloseSound.play();
 		lem->PanelRefreshForwardHatch();
-		lem->ActivateHatch(lem->CLOSING);
+		hatch_state.Close();
 	}
 }
 

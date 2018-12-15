@@ -1396,25 +1396,6 @@ void LEM::SystemsInternalTimestep(double simdt)
 void LEM::SystemsTimestep(double simt, double simdt)
 
 {
-	// Animate Hatch
-	if (hatch_status >= CLOSING) {
-		double da = simdt * 0.15;
-		if (hatch_status == CLOSING) {
-			if (hatch_proc > 0.0)
-				hatch_proc = max(0.0, hatch_proc - da);
-			else {
-				hatch_status = CLOSED;
-			}
-		}
-		else {
-			if (hatch_proc < 1.0)
-				hatch_proc = min(1.0, hatch_proc + da);
-			else {
-				hatch_status = OPEN;
-			}
-		}
-		SetAnimation(anim_Hatch, hatch_proc);
-	}
 
 	// Clear debug line when timer runs out
 	if(DebugLineClearTimer > 0){
@@ -1471,6 +1452,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
 	ecs.Timestep(simdt);
+	ForwardHatch.Timestep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);

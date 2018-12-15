@@ -342,10 +342,6 @@ void LEM::Init()
 	lmdrogue = -1;
 	probeidx = -1;
 
-	// Animations
-	hatch_proc = 0.0;
-	hatch_status = CLOSED;
-
 	pMCC = NULL;
 
 	//
@@ -1449,9 +1445,9 @@ void LEM::clbkPostCreation()
 		else pMCC = NULL;
 	}
 
-	DefineAnimations();
 	RR.clbkPostCreation();
 	SBandSteerable.clbkPostCreation();
+	ForwardHatch.DefineAnimations(ascidx);
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

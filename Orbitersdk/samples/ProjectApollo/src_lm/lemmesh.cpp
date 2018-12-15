@@ -764,15 +764,6 @@ void LEM::SetLPDMeshExt() {
 	}
 }
 
-void LEM::ActivateHatch(doorstate action) {
-
-	hatch_status = action;
-	if (action <= OPEN) {
-		hatch_proc = (action == CLOSED ? 0.0 : 1.0);
-		SetAnimation(anim_Hatch, hatch_proc);
-	}
-}
-
 void LEM::SetOvhdHatchMesh() {
 
 	if (ovhdhatch == -1 || lmdrogue == -1)
@@ -834,17 +825,6 @@ void LEM::SetDockingLights() {
 		dockingLights[i].active = false;
 		AddBeacon(dockingLights+i);
 	}
-}
-
-void LEM::DefineAnimations() {
-
-    // Hatch
-	ANIMATIONCOMPONENT_HANDLE	ach_Hatch;
-	static UINT	meshgroup_Hatch = GRP_FwdHatch;
-    static MGROUP_ROTATE	mgt_Hatch(ascidx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.68476), _V(0.0, 1.0, 0.0), (float)-85 * RAD);
-	anim_Hatch = CreateAnimation(0.0);
-	ach_Hatch = AddAnimationComponent(anim_Hatch, 0.3f, 1.0f, &mgt_Hatch);
-	SetAnimation(anim_Hatch, hatch_proc);
 }
 
 void LEMLoadMeshes()

@@ -212,7 +212,7 @@ public:
 		// First value in the enum must be set to one. Entry zero is not
 		// used.
 		//
-		SRF_INDICATOR							=	 1,
+		SRF_INDICATOR = 1,
 		SRF_NEEDLE,
 		SRF_DIGITAL,
 		SRF_SWITCHUP,
@@ -361,7 +361,7 @@ public:
 		SRF_LEM_U_HATCH_HNDL,
 		SRF_LEM_F_HATCH_HNDL,
 		SRF_LEM_F_HATCH_REL_VLV,
-	    SRF_LEM_INTLK_OVRD,
+		SRF_LEM_INTLK_OVRD,
 		SRF_RED_INDICATOR,
 		SRF_LEM_MASTERALARM,
 		SRF_PWRFAIL_LIGHT,
@@ -385,12 +385,9 @@ public:
 	void SetLPDMeshAsc();
 	void SetLPDMeshRet();
 	void SetLPDMeshExt();
-	enum doorstate { CLOSED, OPEN, CLOSING, OPENING } hatch_status;
-	void ActivateHatch(doorstate action);
 	void SetOvhdHatchMesh();
 	void SetTrackLight();
 	void SetDockingLights();
-	void DefineAnimations();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	UINT GetStage() { return stage; }
 	virtual double GetAscentStageMass();
@@ -1510,10 +1507,6 @@ protected:
 	UINT ovhdhatch;
 	UINT lmdrogue;
 	UINT probeidx;
-
-	// Animations
-	UINT anim_Hatch;
-	double hatch_proc;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
