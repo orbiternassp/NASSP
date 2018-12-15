@@ -92,5 +92,6 @@ private:
 	VECTOR3 GyroRates;
 	// Animations
 	UINT anim_RRPitch, anim_RRYaw;
-	double	rr_proc[2];
+	double rr_proc[2];
+	double rr_proc_last[2];
 };

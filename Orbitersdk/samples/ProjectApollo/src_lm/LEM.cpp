@@ -333,6 +333,8 @@ void LEM::Init()
 
 	// Mesh Indexes
 	
+	ascidx = -1;
+	dscidx = -1;
 	lpdasc = -1;
 	lpddscret = -1;
 	lpddscext = -1;

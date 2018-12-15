@@ -44,6 +44,10 @@ LEM_RR::LEM_RR()
 	RRESECHeat = 0;
 	NoTrackSignal = false;
 	radarDataGood = false;
+	rr_proc[0] = 0.0;
+	rr_proc[1] = 0.0;
+	rr_proc_last[0] = 0.0;
+	rr_proc_last[1] = 0.0;
 }
 
 void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
@@ -85,9 +89,6 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	RangeLock = true;
 	RangeLockTimer = 0.0;
 	tstime = 0.0;
-	//Animations
-	rr_proc[0] = 0.0;
-	rr_proc[1] = 0.0;
 
 	for (int i = 0;i < 4;i++)
 	{
@@ -160,8 +161,10 @@ void LEM_RR::Timestep(double simdt) {
 	if (rr_proc[0] < 0) rr_proc[0] += 1.0;
 	rr_proc[1] = -trunnionAngle / PI2;
 	if (rr_proc[1] < 0) rr_proc[1] += 1.0;
-	lem->SetAnimation(anim_RRPitch, rr_proc[0]);
-	lem->SetAnimation(anim_RRYaw, rr_proc[1]);
+	if (rr_proc[0] - rr_proc_last[0] != 0.0) lem->SetAnimation(anim_RRPitch, rr_proc[0]);
+	if (rr_proc[1] - rr_proc_last[1] != 0.0) lem->SetAnimation(anim_RRYaw, rr_proc[1]);
+	rr_proc_last[0] = rr_proc[0];
+	rr_proc_last[1] = rr_proc[1];
 
 	ChannelValue val12;
 	ChannelValue val13;
