@@ -382,7 +382,7 @@ void LEM::SetLmVesselHoverStage()
 			SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
 		}
 	}
-	ascidx = AddMesh(hLMAscent, &mesh_asc);
+	InsertMesh(hLMAscent, ascidx, &mesh_asc);
 	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
 	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
 
@@ -540,7 +540,7 @@ void LEM::SetLmAscentHoverStage()
 	SetOvhdHatchMesh();
 
 	// Vessel Meshes
-	ascidx = AddMesh (hLMAscent, &mesh_asc);
+	InsertMesh(hLMAscent, ascidx, &mesh_asc);
 	SetMeshVisibilityMode (ascidx, MESHVIS_VCEXTERNAL);
 
 	//Add LPD view meshes
@@ -717,7 +717,7 @@ void LEM::SetLmLandedMesh() {
 
 	// Vessel Meshes
 	dscidx = AddMesh(hLMDescent, &mesh_dsc);
-	ascidx = AddMesh(hLMAscent, &mesh_asc);
+	InsertMesh(hLMAscent, ascidx, &mesh_asc);
 	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
 	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
 

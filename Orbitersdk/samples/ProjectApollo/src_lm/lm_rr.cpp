@@ -689,9 +689,9 @@ void LEM_RR::SystemTimestep(double simdt) {
 
 void LEM_RR::clbkPostCreation() {
 
-	//RR animation definition
+	// RR animation definition
 	ANIMATIONCOMPONENT_HANDLE	ach_RadarPitch, ach_RadarYaw;
-	VECTOR3	LM_RADAR_PIVOT = { 0.00000, 1.70795, 2.20317 }; // Pivot Point
+	VECTOR3	LM_RADAR_PIVOT = { 0.00018, 1.70801, 2.20222 }; // Pivot Point
 	static UINT meshgroup_RRPivot = GRP_RRpivot;
 	static UINT meshgroup_RRAntenna[3] = { GRP_RR, GRP_RRdish, GRP_RRdish2 };
 	static MGROUP_ROTATE mgt_Radar_pivot(lem->ascidx, &meshgroup_RRPivot, 1, LM_RADAR_PIVOT, _V(-1, 0, 0), (float)RAD * 360);
@@ -701,7 +701,7 @@ void LEM_RR::clbkPostCreation() {
 	ach_RadarPitch = lem->AddAnimationComponent(anim_RRPitch, 0.0f, 1.0f, &mgt_Radar_pivot);
 	ach_RadarYaw = lem->AddAnimationComponent(anim_RRYaw, 0.0f, 1.0f, &mgt_Radar_Antenna, ach_RadarPitch);
 
-	//Get current RR state
+	// Get current RR state for animation
 	rr_proc[0] = shaftAngle / PI2;
 	if (rr_proc[0] < 0) rr_proc[0] += 1.0;
 	rr_proc[1] = -trunnionAngle / PI2;
