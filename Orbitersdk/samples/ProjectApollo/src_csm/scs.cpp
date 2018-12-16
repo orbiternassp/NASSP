@@ -1044,67 +1044,6 @@ void GDC::Timestep(double simdt) {
 		}
 	}
 
-	//TBD: This all belongs in the ECA
-	switch(sat->BMAGRollSwitch.GetState()){
-		case THREEPOSSWITCH_UP:     // RATE2
-			sat->bmag1.Cage(0);
-			break;
-
-		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
-			// Uncage Roll BMAG 1, see AOH SCS figure 2.3-11
-			if (((sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_x > 28673 && 
-				  sat->eca.rhc_x < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
-				sat->bmag1.Uncage(0);
-			} else {
-				sat->bmag1.Cage(0);
-			}
-			break;
-
-		case THREEPOSSWITCH_DOWN:   // RATE1
-			sat->bmag1.Cage(0);
-			break;			
-	}
-
-	switch(sat->BMAGPitchSwitch.GetState()){
-		case THREEPOSSWITCH_UP:     // RATE2
-			sat->bmag1.Cage(1);
-			break;
-
-		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
-			// Uncage Pitch BMAG 1, see AOH SCS figure 2.3-11
-			if (((sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_y > 28673 && 
-				  sat->eca.rhc_y < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
-				sat->bmag1.Uncage(1);
-			} else {
-				sat->bmag1.Cage(1);
-			}
-			break;
-
-		case THREEPOSSWITCH_DOWN:   // RATE1
-			sat->bmag1.Cage(1);
-			break;			
-	}
-
-	switch(sat->BMAGYawSwitch.GetState()){
-		case THREEPOSSWITCH_UP:     // RATE2
-			sat->bmag1.Cage(2);
-			break;
-
-		case THREEPOSSWITCH_CENTER: // RATE2/ATT1
-			// Uncage Yaw BMAG 1, see AOH SCS figure 2.3-11
-			if (((sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER && sat->eca.rhc_z > 28673 && 
-				  sat->eca.rhc_z < 36863) || sat->rjec.GetSPSActive()) && sat->GSwitch.IsDown()) {
-				sat->bmag1.Uncage(2);
-			} else {
-				sat->bmag1.Cage(2);
-			}
-			break;
-
-		case THREEPOSSWITCH_DOWN:   // RATE1
-			sat->bmag1.Cage(2);
-			break;
-	}		
-
 	//TBD: Remove this part when it doesn't get used anymore by other SCS subsystems
 	rates.x = pitchBmag->GetRates().x;
 	// Special Logic for Entry .05 Switch
@@ -3427,7 +3366,8 @@ void ECA::TimeStep(double simdt) {
 
 	bool logic1, logic2, logic3;
 	bool scslogic1, scslogic2, scslogic3, scslogic4;
-	bool S7_1, S7_3, S8_1, S8_3, S9_1, S9_3, S18_1, S18_2, S20_1, S20_2, S20_3, S21_1, S21_2, S21_3, S22_1, S22_2, S22_3, S38_1, S38_2, S38_3, S39_1, S39_2, S39_3, S51_1;
+	bool S7_1, S7_3, S8_1, S8_3, S9_1, S9_3, S10_2, S11_2, S12_1, S18_1, S18_2, S20_1, S20_2, S20_3, S21_1, S21_2, S21_3, S22_1, S22_2, S22_3;
+	bool S38_1, S38_2, S38_3, S39_1, S39_2, S39_3, S51_1, S54_1;
 	bool IGN2, thc_cw;
 
 	scslogic1 = sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE;
@@ -3441,6 +3381,9 @@ void ECA::TimeStep(double simdt) {
 	S8_3 = sat->ManualAttPitchSwitch.IsDown() && scslogic1;
 	S9_1 = sat->ManualAttYawSwitch.IsUp() && scslogic1;
 	S9_3 = sat->ManualAttYawSwitch.IsDown() && scslogic1;
+	S10_2 = sat->LimitCycleSwitch.IsDown() && scslogic1;
+	S11_2 = sat->AttDeadbandSwitch.IsDown() && scslogic1;
+	S12_1 = sat->AttRateSwitch.IsUp() && scslogic1;
 	S18_1 = sat->SCContSwitch.IsUp() && scslogic2;
 	S18_2 = sat->SCContSwitch.IsDown() && scslogic3;
 	S20_1 = sat->BMAGRollSwitch.IsUp() && scslogic2;
@@ -3459,6 +3402,7 @@ void ECA::TimeStep(double simdt) {
 	S39_1 = sat->SCSTvcYawSwitch.IsUp() && scslogic3;
 	S39_2 = sat->SCSTvcYawSwitch.IsCenter() && scslogic3;
 	S39_3 = sat->SCSTvcYawSwitch.IsDown() && scslogic3;
+	S54_1 = sat->CGSwitch.IsUp() && scslogic3;
 	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
 	IGN2 = sat->rjec.GetSPSActive();
 
@@ -3469,12 +3413,12 @@ void ECA::TimeStep(double simdt) {
 	if (!logic1 || !logic2)
 	{
 		T1QS21 = true;
-		rollGyroUncage = true;
+		sat->bmag1.Uncage(0);
 	}
 	else
 	{
 		T1QS21 = false;
-		rollGyroUncage = false;
+		sat->bmag1.Cage(0);
 	}
 
 	logic1 = S22_1 || S22_3 || S51_1 || !IGN2;
@@ -3483,12 +3427,12 @@ void ECA::TimeStep(double simdt) {
 	if (!logic1 || !logic2)
 	{
 		T2QS21 = true;
-		yawGyroUncage = true;
+		sat->bmag1.Uncage(2);
 	}
 	else
 	{
 		T2QS21 = false;
-		yawGyroUncage = false;
+		sat->bmag1.Cage(2);
 	}
 
 	logic1 = S21_1 || S21_3 || S51_1 || !IGN2;
@@ -3497,12 +3441,12 @@ void ECA::TimeStep(double simdt) {
 	if (!logic1 || !logic2)
 	{
 		T3QS21 = true;
-		pitchGyroUncage = true;
+		sat->bmag1.Uncage(1);
 	}
 	else
 	{
 		T3QS21 = false;
-		pitchGyroUncage = false;
+		sat->bmag1.Cage(1);
 	}
 
 	//ROTATION CONTROL (Module A3)
@@ -3526,6 +3470,114 @@ void ECA::TimeStep(double simdt) {
 
 	R2K31 = (!logic1 || !logic2 || !logic3) && (S22_3);
 	R2K30 = (!logic1 || !logic2 || !logic3) && (S22_1 || S22_2);
+
+	//REACTION JET CONTROL (Modules A2, A4 and A6)
+	if (S10_2)
+	{
+		T1QS44 = true;
+		T2QS44 = true;
+		T3QS44 = true;
+	}
+	else
+	{
+		T1QS44 = false;
+		T2QS44 = false;
+		T3QS44 = false;
+	}
+
+	if (S11_2)
+	{
+		R1K22 = true;
+		R2K22 = true;
+		R3K22 = true;
+	}
+	else
+	{
+		R1K22 = false;
+		R2K22 = false;
+		R3K22 = false;
+	}
+
+	if (S12_1)
+	{
+		R1K25 = true;
+		R2K25 = true;
+		R3K25 = true;
+	}
+	else
+	{
+		R1K25 = false;
+		R2K25 = false;
+		R3K25 = false;
+	}
+
+	T1QS25 = T2QS25 = T3QS25 = S12_1 || IGN2;
+
+	T1QS43 = S7_3 || S7_1;
+	T2QS43 = S9_3 || S9_1;
+	T3QS43 = S8_3 || S8_1;
+
+	T1QS26 = S51_1;
+
+	//THRUST VECTOR CONTROL (Modules A1 and A5)
+	T2QS1 = !((S18_1 || !(S39_1 && thc_cw)) && (S39_1 || (S18_1 && !thc_cw)));
+
+	logic1 = !(S18_1 && !thc_cw);
+	T2QS2 = logic1 && (!((thc_cw && !S18_1) || !(S39_1 && !IGN2)));
+	T2QS3 = logic1;
+
+	logic1 = S18_1 || S39_1 || !IGN2;
+	logic2 = !thc_cw || S39_1 || !IGN2;
+	logic3 = S39_2 || S39_3 || !thc_cw || S18_1 || !IGN2;
+
+	if (!logic2 || !logic2 || !logic3)
+	{
+		T2QS30 = true;
+		T2QS31 = false;
+	}
+	else
+	{
+		T2QS30 = false;
+		T2QS31 = true;
+	}
+	
+	T3QS1 = !((S18_1 || !(S38_1 && thc_cw)) && (S38_1 || (S18_1 && !thc_cw)));
+
+	logic1 = !(S18_1 && !thc_cw);
+	T3QS2 = logic1 && (!((thc_cw && !S18_1) || !(S38_1 && !IGN2)));
+	T3QS3 = logic1;
+
+	logic1 = S18_1 || S38_1 || !IGN2;
+	logic2 = !thc_cw || S38_1 || !IGN2;
+	logic3 = S38_2 || S38_3 || !thc_cw || S18_1 || !IGN2;
+
+	if (!logic2 || !logic2 || !logic3)
+	{
+		T3QS30 = true;
+		T3QS31 = false;
+	}
+	else
+	{
+		T3QS30 = false;
+		T3QS31 = true;
+	}
+
+	R2K11 = R3K11 = IGN2 && (S18_2 || thc_cw);
+
+	if (S54_1)
+	{
+		T2QS11 = false;
+		T3QS11 = false;
+		T2QS12 = true;
+		T3QS12 = true;
+	}
+	else
+	{
+		T2QS11 = true;
+		T3QS11 = true;
+		T2QS12 = false;
+		T3QS12 = false;
+	}
 
 	// SCS is in control if the THC is CLOCKWISE 
 	// or if the SC CONT switch is set to SCS.
@@ -3602,9 +3654,6 @@ void ECA::TimeStep(double simdt) {
 			if(target.z < -PI){
 				errors.z = TWO_PI+target.z; }else{ errors.z = target.z;	}
 		}
-		// Now adjust for rotation
-		//if (SCS_INERTIAL_BMAGS)
-			//errors = sat->eda.AdjustErrorsForRoll(sat->bmag1.GetAttitude(), errors);
 
 		// Create demand for rate
 		switch(sat->AttRateSwitch.GetState()){

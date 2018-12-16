@@ -581,13 +581,19 @@ public:
 	VECTOR3 pseudorate;
 protected:
 
-	bool rollGyroUncage;
-	bool pitchGyroUncage;
-	bool yawGyroUncage;
 	//RELAYS
+
+	//Roll Min Deadband Enable
+	bool R1K22;
+	//Roll High Rate Enable
+	bool R1K25;
 
 	//Yaw TVC Integrator Enable
 	bool R2K11;
+	//Yaw Min Deadband Enable
+	bool R2K22;
+	//Yaw High Rate Enable
+	bool R2K25;
 	//MTVC Yaw Rate 2 Enable
 	bool R2K30;
 	//MTVC Yaw Rate 1 Enable
@@ -595,6 +601,10 @@ protected:
 
 	//Pitch TVC Integrator Enable
 	bool R3K11;
+	//Pitch Min Deadband Enable
+	bool R3K22;
+	//Pitch High Rate Enable
+	bool R3K25;
 	//MTVC Pitch Rate 2 Enable
 	bool R3K30;
 	//MTVC Pitch Rate 1 Enable
@@ -604,17 +614,45 @@ protected:
 
 	//Roll Attitude Signal No. 1 Enable
 	bool T1QS21;
+	//Roll High Rate Enable
+	bool T1QS25;
+	//Cross Coupling Enable
+	bool T1QS26;
 	//Roll Rate 1 Enable
 	bool T1QS28;
 	//Roll Rate 2 Enable
 	bool T1QS29;
+	//Roll Minimum Impulse or Accel Cmd Enable
+	bool T1QS43;
+	//Roll Pseudo Rate Disable
+	bool T1QS44;
 
+	//Yaw TVC Manual Cmd Enable
+	bool T2QS1;
+	//Yaw SCS Gimbal Cmd Enable
+	bool T2QS2;
+	//Yaw TVC Gimbal Trim Enable
+	bool T2QS3;
+	//Yaw LM Off Gain Enable
+	bool T2QS11;
+	//Yaw LM On Gain Enable
+	bool T2QS12;
 	//Yaw Attitude Signal No. 1 Enable
 	bool T2QS21;
+	//Yaw High Rate Enable
+	bool T2QS25;
 	//Yaw Rate 1 Enable
 	bool T2QS28;
 	//Yaw Rate 2 Enable
 	bool T2QS29;
+	//Yaw MTVC Integrator Enable
+	bool T2QS30;
+	//Yaw RJC Prop Feedback Disable
+	bool T2QS31;
+	//Yaw Minimum Impulse or Accel Cmd Enable
+	bool T2QS43;
+	//Yaw Pseudo Rate Disable
+	bool T2QS44;
 
 	//Pitch TVC Manual Cmd Enable
 	bool T3QS1;
@@ -622,8 +660,14 @@ protected:
 	bool T3QS2;
 	//Pitch TVC Gimbal Trim Enable
 	bool T3QS3;
+	//Pitch LM Off Gain Enable
+	bool T3QS11;
+	//Pitch LM On Gain Enable
+	bool T3QS12;
 	//Pitch Attitude Signal No. 1 Enable
 	bool T3QS21;
+	//Pitch High Rate Enable
+	bool T3QS25;
 	//Pitch Rate 1 Enable
 	bool T3QS28;
 	//Pitch Rate 2 Enable
@@ -632,6 +676,10 @@ protected:
 	bool T3QS30;
 	//Pitch RJC Prop Feedback Disable
 	bool T3QS31;
+	//Pitch Minimum Impulse or Accel Cmd Enable
+	bool T3QS43;
+	//Pitch Pseudo Rate Disable
+	bool T3QS44;
 };
 
 
