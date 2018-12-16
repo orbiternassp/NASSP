@@ -1445,10 +1445,11 @@ void LEM::clbkPostCreation()
 		else pMCC = NULL;
 	}
 
-	RR.clbkPostCreation();
-	SBandSteerable.clbkPostCreation();
+	// Call Animation Definitions where required
+	RR.DefineAnimations(ascidx);
+	SBandSteerable.DefineAnimations(ascidx);
 	ForwardHatch.DefineAnimations(ascidx);
-	eds.DefineAnimations(dscidx);
+	if (stage < 1 && !NoLegs) eds.DefineAnimations(dscidx);
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

@@ -331,6 +331,21 @@ LEM_EDS::LEM_EDS() :
 	Deadface = false;
 	gear_state.SetOperatingSpeed(0.3);
 	anim_Gear = -1;
+
+	for (int i = 0; i < 4; i++) {
+		mgt_Leg[i] = NULL;
+		mgt_Strut[i] = NULL;
+		mgt_Downlock[i] = NULL;
+	}
+}
+
+LEM_EDS::~LEM_EDS() {
+
+	for (int i = 0; i < 4; i++) {
+		if (mgt_Leg[i]) delete mgt_Leg[i];
+		if (mgt_Strut[i]) delete mgt_Strut[i];
+		if (mgt_Downlock[i]) delete mgt_Downlock[i];
+	}
 }
 
 void LEM_EDS::Init(LEM *s) {
@@ -344,7 +359,7 @@ void LEM_EDS::Init(LEM *s) {
 
 void LEM_EDS::DefineAnimations(UINT idx) {
 
-	// Lanfing Gear animations
+	// Landing Gear animations
 	ANIMATIONCOMPONENT_HANDLE	ach_GearLeg[4], ach_GearStrut[4], ach_GearLock[4];
 
 	const VECTOR3	DES_LEG_AXIS[4] = { { -1, 0, 0 },{ 1, 0, 0 },{ 0, 0,-1 },{ 0, 0, 1 } };
@@ -381,8 +396,11 @@ void LEM_EDS::DefineAnimations(UINT idx) {
 void LEM_EDS::Timestep(double simdt) {
 
 	// Animate Gear
-	if (gear_state.Process(simdt)) {
-		lem->SetAnimation(anim_Gear, gear_state.State());
+	if (lem->stage < 2) {
+		if (gear_state.Process(simdt)) {
+			lem->SetAnimation(anim_Gear, gear_state.State());
+		}
+		if (LG_Deployed) gear_state.Open();
 	}
 	
 	if (lem->stage < 2)
@@ -656,7 +674,6 @@ void LEM_EDS::Timestep(double simdt) {
 		if (lem->LandingGearPyros.Blown()) {
 			// Deploy landing gear
 			lem->SetLmVesselHoverStage();
-			//gear_state.Open();
 			LG_Deployed = TRUE;
 		}
 	}

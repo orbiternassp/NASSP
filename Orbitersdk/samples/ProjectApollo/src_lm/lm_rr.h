@@ -33,7 +33,7 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
-	void clbkPostCreation();
+	void DefineAnimations(UINT idx);
 	double GetAntennaTempF();
 	double GetRadarTrunnionVel() { return -trunnionVel; };
 	double GetRadarShaftVel() { return shaftVel; };

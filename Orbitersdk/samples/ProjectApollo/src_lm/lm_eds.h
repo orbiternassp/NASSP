@@ -111,6 +111,7 @@ protected:
 class LEM_EDS {
 public:
 	LEM_EDS();							// Cons
+	virtual ~LEM_EDS();                         // Des
 	void Init(LEM *s); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);

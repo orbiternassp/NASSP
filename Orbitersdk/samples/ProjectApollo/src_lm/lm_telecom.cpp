@@ -2650,7 +2650,7 @@ bool LEM_SteerableAnt::IsPowered()
 	return true;
 }
 
-void LEM_SteerableAnt::clbkPostCreation() {
+void LEM_SteerableAnt::DefineAnimations(UINT idx) {
 
 	// S-Band animation definition
 	ANIMATIONCOMPONENT_HANDLE	ach_SBandPitch, ach_SBandYaw;
@@ -2659,8 +2659,8 @@ void LEM_SteerableAnt::clbkPostCreation() {
 	const VECTOR3	LM_SBAND_AXIS = { cos(RAD * 45),-sin(RAD * 45), 0.00 }; //Pivot Axis
 	static UINT meshgroup_SBandPivot = GRP_SbandPivot;
 	static UINT meshgroup_SBandAntenna[3] = { GRP_Sband, GRP_SbandDish, GRP_SbandDish2 };
-	static MGROUP_ROTATE mgt_SBand_pivot(lem->ascidx, &meshgroup_SBandPivot, 1, LM_SBAND_PIVOT1, LM_SBAND_AXIS, (float)RAD * 360);
-	static MGROUP_ROTATE mgt_SBand_Antenna(lem->ascidx, meshgroup_SBandAntenna, 3, LM_SBAND_PIVOT2, _V(0, 0, 1), (float)RAD * 360);
+	static MGROUP_ROTATE mgt_SBand_pivot(idx, &meshgroup_SBandPivot, 1, LM_SBAND_PIVOT1, LM_SBAND_AXIS, (float)RAD * 360);
+	static MGROUP_ROTATE mgt_SBand_Antenna(idx, meshgroup_SBandAntenna, 3, LM_SBAND_PIVOT2, _V(0, 0, 1), (float)RAD * 360);
 	anim_SBandPitch = lem->CreateAnimation(0.0);
 	anim_SBandYaw = lem->CreateAnimation(0.0);
 	ach_SBandPitch = lem->AddAnimationComponent(anim_SBandPitch, 0.0f, 1.0f, &mgt_SBand_pivot);

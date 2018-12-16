@@ -46,7 +46,6 @@
 #include "CollisionSDK/CollisionSDK.h"
 
 static MESHHANDLE hLMDescent;
-static MESHHANDLE hLMDescentRet;
 static MESHHANDLE hLMDescentNoLeg;
 static MESHHANDLE hLMAscent ;
 static MESHHANDLE hAstro1 ;
@@ -201,7 +200,7 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	}
 	else
 	{
-		dscidx = AddMesh(hLMDescentRet, &mesh_dsc);
+		dscidx = AddMesh(hLMDescent, &mesh_dsc);
 	}
 	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
 	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
@@ -831,7 +830,6 @@ void LEMLoadMeshes()
 
 {
 	hLMDescent = oapiLoadMeshGlobal ("ProjectApollo/LM_DescentStage");
-	hLMDescentRet = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageRet");
 	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
 	hAstro1= oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
