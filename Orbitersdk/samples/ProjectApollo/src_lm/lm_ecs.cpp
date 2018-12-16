@@ -160,7 +160,7 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	ForwardHatchHandle = NULL;
 	lem = NULL;
 
-	hatch_state.SetOperatingSpeed(0.1);
+	hatch_state.SetOperatingSpeed(0.2);
 	anim_Hatch = -1;
 }
 
@@ -177,7 +177,7 @@ void LEMForwardHatch::DefineAnimations(UINT idx)
 	static UINT	meshgroup_Hatch = GRP_FwdHatch;
 	static MGROUP_ROTATE	mgt_Hatch(idx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.68476), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
 	anim_Hatch = lem->CreateAnimation(0.0);
-	ach_Hatch = lem->AddAnimationComponent(anim_Hatch, 0.3f, 1.0f, &mgt_Hatch);
+	ach_Hatch = lem->AddAnimationComponent(anim_Hatch, 0.0f, 1.0f, &mgt_Hatch);
 	lem->SetAnimation(anim_Hatch, hatch_state.State());
 }
 

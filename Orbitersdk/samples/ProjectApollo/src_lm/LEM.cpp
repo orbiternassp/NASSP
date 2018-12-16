@@ -1448,6 +1448,7 @@ void LEM::clbkPostCreation()
 	RR.clbkPostCreation();
 	SBandSteerable.clbkPostCreation();
 	ForwardHatch.DefineAnimations(ascidx);
+	eds.DefineAnimations(dscidx);
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

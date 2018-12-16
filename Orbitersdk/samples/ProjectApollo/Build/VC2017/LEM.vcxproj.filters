@@ -464,6 +464,9 @@
     <ClInclude Include="..\..\src_aux\animations.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_lm\LM_DescentStageResource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\Abort.bmp">
