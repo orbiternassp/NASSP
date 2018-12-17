@@ -300,7 +300,7 @@ void LEM::SetLmVesselHoverStage()
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
-	ClearMeshes(true);
+	//ClearMeshes(true);
 	ClearBeacons();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
@@ -355,7 +355,7 @@ void LEM::SetLmVesselHoverStage()
 	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
 
 	// Drogue & Overhead hatch
-	ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
+	/*ovhdhatch = AddMesh(hOvhdHatch, &mesh_asc);
 	lmdrogue = AddMesh(hDrogue, &mesh_asc);
 	SetOvhdHatchMesh();
 
@@ -375,7 +375,13 @@ void LEM::SetLmVesselHoverStage()
 		}
 	}
 	SetMeshVisibilityMode(ascidx, MESHVIS_VCEXTERNAL);
-	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);*/
+
+	if (!Landed) {
+		UINT probeidx;
+		probeidx = AddMesh(hLemProbes, &mesh_dsc);
+		SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
+	}
 
 	//Add LPD view meshes
 	if (NoLegs)
