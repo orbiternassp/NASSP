@@ -97,3 +97,6 @@ core
 /readme.txt
 *.log
 *.launchpad.cfg
+XRSound/
+/ikpFlac.dll
+/ikpMP3.dll
