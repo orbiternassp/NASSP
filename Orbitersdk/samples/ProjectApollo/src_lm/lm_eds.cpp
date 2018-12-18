@@ -28,6 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEM.h"
 #include "papi.h"
 #include "lm_eds.h"
+#include "LM_DescentStageResource.h"
 
 LEM_EDRelayBox::LEM_EDRelayBox():
 	StagingBoltsNutsDelay(0.05),
@@ -328,6 +329,23 @@ LEM_EDS::LEM_EDS() :
 	lem = NULL;
 	LG_Deployed = FALSE;
 	Deadface = false;
+	gear_state.SetOperatingSpeed(1.0);
+	anim_Gear = -1;
+
+	for (int i = 0; i < 4; i++) {
+		mgt_Leg[i] = NULL;
+		mgt_Strut[i] = NULL;
+		mgt_Downlock[i] = NULL;
+	}
+}
+
+LEM_EDS::~LEM_EDS() {
+
+	for (int i = 0; i < 4; i++) {
+		if (mgt_Leg[i]) delete mgt_Leg[i];
+		if (mgt_Strut[i]) delete mgt_Strut[i];
+		if (mgt_Downlock[i]) delete mgt_Downlock[i];
+	}
 }
 
 void LEM_EDS::Init(LEM *s) {
@@ -339,7 +357,51 @@ void LEM_EDS::Init(LEM *s) {
 	RelayBoxB.Init(lem, &lem->EDS_CB_LOGIC_B, &lem->ED28VBusB, lem->EDBatteryB);
 }
 
+void LEM_EDS::DefineAnimations(UINT idx) {
+
+	// Landing Gear animations
+	ANIMATIONCOMPONENT_HANDLE	ach_GearLeg[4], ach_GearStrut[4], ach_GearLock[4];
+
+	const VECTOR3	DES_LEG_AXIS[4] = { { -1, 0, 0 },{ 1, 0, 0 },{ 0, 0,-1 },{ 0, 0, 1 } };
+	const VECTOR3	DES_LEG_PIVOT[4] = { { 0.00, 0.55965, 2.95095 },{ 0.00, 0.55965, -2.95095 },{ -2.95095, 0.55965, 0.00 },{ 2.95095, 0.55965, 0.00 } };
+	const VECTOR3	DES_STRUT_PIVOT[4] = { { 0.00,-1.27178, 3.83061 },{ 0.00,-1.27178,-3.83061 },{ -3.83061,-1.27178, 0.00 },{ 3.83061,-1.27178, 0.00 } };
+	const VECTOR3	DES_LOCK_PIVOT[4] = { { 0.00,-1.02, 2.91 },{ 0.00,-1.02,-2.91 },{ -2.91,-1.02, 0.00 },{ 2.91,-1.02, 0.00 } };
+
+	static UINT meshgroup_Legs[4][3] = {
+		{ GRP_Footpad,	GRP_LowerStrut,	GRP_MainStrut },
+		{ GRP_FootpadAft,	GRP_LowerStrutAft, GRP_MainStrutAft },
+		{ GRP_FootpadLeft,	GRP_LowerStrutLeft,	GRP_MainStrutLeft },
+		{ GRP_FootpadRight,	GRP_LowerStrutRight,	GRP_MainStrutRight } };
+	static UINT meshgroup_Struts[4] = { GRP_SupportStruts2, GRP_SupportStruts2Aft, GRP_SupportStruts2Left, GRP_SupportStruts2Right };
+	static UINT meshgroup_Locks[4] = { GRP_Downlock, GRP_DownlockAft, GRP_DownlockLeft, GRP_DownlockRight };
+	static UINT meshgroup_Ladder = GRP_Ladder;
+
+	anim_Gear = lem->CreateAnimation(1.0);
+
+	for (int i = 0; i < 4; i++)
+	{
+		mgt_Leg[i] = new MGROUP_ROTATE(idx, &meshgroup_Legs[i][0], 3, DES_LEG_PIVOT[i], DES_LEG_AXIS[i], (float)(45 * RAD));
+		mgt_Strut[i] = new MGROUP_ROTATE(idx, &meshgroup_Struts[i], 1, DES_STRUT_PIVOT[i], DES_LEG_AXIS[i], (float)(-63 * RAD));
+		mgt_Downlock[i] = new MGROUP_ROTATE(idx, &meshgroup_Locks[i], 1, DES_LOCK_PIVOT[i], DES_LEG_AXIS[i], (float)(155 * RAD));
+
+		ach_GearLeg[i] = lem->AddAnimationComponent(anim_Gear, 0.0, 1.0, mgt_Leg[i]);
+		ach_GearStrut[i] = lem->AddAnimationComponent(anim_Gear, 0.0, 1.0, mgt_Strut[i], ach_GearLeg[i]);
+		ach_GearLock[i] = lem->AddAnimationComponent(anim_Gear, 0.0, 1.0, mgt_Downlock[i], ach_GearStrut[i]);
+	}
+	static MGROUP_ROTATE mgt_Ladder(idx, &meshgroup_Ladder, 1, DES_LEG_PIVOT[0], DES_LEG_AXIS[0], (float)(45 * RAD));
+	lem->AddAnimationComponent(anim_Gear, 0.0, 1, &mgt_Ladder);
+	lem->SetAnimation(anim_Gear, gear_state.State());
+}
+
 void LEM_EDS::Timestep(double simdt) {
+
+	// Animate Gear
+	if (lem->stage < 2) {
+		if (gear_state.Process(simdt)) {
+			lem->SetAnimation(anim_Gear, gear_state.State());
+		}
+		if (LG_Deployed) gear_state.Open();
+	}
 	
 	if (lem->stage < 2)
 	{

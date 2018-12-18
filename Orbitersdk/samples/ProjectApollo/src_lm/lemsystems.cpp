@@ -1393,9 +1393,10 @@ void LEM::SystemsInternalTimestep(double simdt)
 	}
 }
 
-void LEM::SystemsTimestep(double simt, double simdt) 
+void LEM::SystemsTimestep(double simt, double simdt)
 
 {
+
 	// Clear debug line when timer runs out
 	if(DebugLineClearTimer > 0){
 		DebugLineClearTimer -= simdt;
@@ -1451,6 +1452,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
 	ecs.Timestep(simdt);
+	OverheadHatch.Timestep(simdt);
+	ForwardHatch.Timestep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
