@@ -1487,13 +1487,15 @@ void Saturn::JoystickTimestep()
 		}
 
 		// AC Power		
-		if (eca.IsPowered()) {	// ECA needs to be powered (AOH Display & Controls)
-			switch(RotPowerNormal1Switch.GetState()){
-				case THREEPOSSWITCH_UP:       
-				case THREEPOSSWITCH_DOWN:     
+		if (eca.IsAC1Powered()) {	// ECA needs to be powered (AOH Display & Controls)
+			switch (RotPowerNormal1Switch.GetState()) {
+				case THREEPOSSWITCH_UP:
+				case THREEPOSSWITCH_DOWN:
 					rhc_acvoltage1 = StabContSystemAc1CircuitBraker.Voltage();
 					break;
 			}
+		}
+		if (eca.IsAC2Powered()) {
 			switch(RotPowerNormal2Switch.GetState()){
 				case THREEPOSSWITCH_UP:       
 				case THREEPOSSWITCH_DOWN:     

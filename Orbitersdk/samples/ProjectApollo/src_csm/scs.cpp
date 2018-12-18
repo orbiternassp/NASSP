@@ -3335,20 +3335,95 @@ ECA::ECA() {
 	pseudorate = _V(0,0,0);
 
 	sat = NULL;
+
+	ResetRelays();
+	ResetTransistors();
 }
 
 void ECA::Init(Saturn *vessel) {
 	sat = vessel;
 }
 
-bool ECA::IsPowered() {
+void ECA::ResetRelays()
+{
+	R1K22 = false;
+	R1K25 = false;
+	R2K11 = false;
+	R2K22 = false;
+	R2K25 = false;
+	R2K30 = false;
+	R2K31 = false;
+	R3K11 = false;
+	R3K22 = false;
+	R3K25 = false;
+	R3K30 = false;
+	R3K31 = false;
+}
+
+void ECA::ResetTransistors()
+{
+	T1QS21 = false;
+	T1QS25 = false;
+	T1QS26 = false;
+	T1QS28 = false;
+	T1QS29 = false;
+	T1QS43 = false;
+	T1QS44 = false;
+	T2QS1 = false;
+	T2QS2 = false;
+	T2QS11 = false;
+	T2QS12 = false;
+	T2QS21 = false;
+	T2QS25 = false;
+	T2QS28 = false;
+	T2QS29 = false;
+	T2QS30 = false;
+	T2QS31 = false;
+	T2QS43 = false;
+	T2QS44 = false;
+	T3QS1 = false;
+	T3QS2 = false;
+	T3QS11 = false;
+	T3QS12 = false;
+	T3QS21 = false;
+	T3QS25 = false;
+	T3QS28 = false;
+	T3QS29 = false;
+	T3QS30 = false;
+	T3QS31 = false;
+	T3QS43 = false;
+	T3QS44 = false;
+}
+
+bool ECA::IsDCPowered() {
 
 	// Do we have power?
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return false;  // Switched off
 
 	// Ensure DC power
-	if (sat->SystemMnACircuitBraker.Voltage() < SP_MIN_DCVOLTAGE || 
-	    sat->SystemMnBCircuitBraker.Voltage() < SP_MIN_DCVOLTAGE) return false;
+	if (sat->SystemMnBCircuitBraker.Voltage() < SP_MIN_DCVOLTAGE) return false;
+
+	return true;
+}
+
+bool ECA::IsAC1Powered()
+{
+	// Do we have power?
+	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return false;  // Switched off
+
+	// Ensure AC power
+	if (sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) return false;
+
+	return true;
+}
+
+bool ECA::IsAC2Powered()
+{
+	// Do we have power?
+	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return false;  // Switched off
+
+	// Ensure AC power
+	if (sat->ECATVCAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) return false;
 
 	return true;
 }
@@ -3356,13 +3431,37 @@ bool ECA::IsPowered() {
 void ECA::SystemTimestep(double simdt) {
 
 	// Do we have power?
-	if (!IsPowered()) return;
-
-	sat->SystemMnACircuitBraker.DrawPower(10);	/// \todo Real power is unknown
-	sat->SystemMnBCircuitBraker.DrawPower(10);	/// \todo Real power is unknown
+	if (IsDCPowered()) sat->SystemMnBCircuitBraker.DrawPower(14.4);
+	//SCS training document just says 13.7W AC power
+	if (IsAC1Powered()) sat->StabContSystemAc1CircuitBraker.DrawPower(6.85);
+	if (IsAC2Powered()) sat->ECATVCAc2CircuitBraker.DrawPower(6.85);
 }
 
 void ECA::TimeStep(double simdt) {
+
+	// SCS is in control if the THC is CLOCKWISE 
+	// or if the SC CONT switch is set to SCS.
+
+	// Do we have power?
+	if (!IsDCPowered() && !IsAC1Powered() && !IsAC2Powered()) {
+		// Turn off thrusters when in SCS control and unpowered
+		if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) {
+			for (int i = 0; i < 17; i++) {
+				sat->rjec.SetThruster(i, false);
+			}
+		}
+		return;
+	}
+
+	//POWER
+
+	bool E1_506, E1_509, E2_507, E2_509, EB_515;
+
+	EB_515 = IsDCPowered();
+	E1_506 = E1_509 = IsAC1Powered();
+	E2_507 = E2_509 = IsAC2Powered();
+
+	//LOGIC
 
 	bool logic1, logic2, logic3;
 	bool scslogic1, scslogic2, scslogic3, scslogic4;
@@ -3540,7 +3639,7 @@ void ECA::TimeStep(double simdt) {
 		T2QS30 = false;
 		T2QS31 = true;
 	}
-	
+
 	T3QS1 = !((S18_1 || !(S38_1 && thc_cw)) && (S38_1 || (S18_1 && !thc_cw)));
 
 	logic1 = !(S18_1 && !thc_cw);
@@ -3579,22 +3678,6 @@ void ECA::TimeStep(double simdt) {
 		T3QS12 = false;
 	}
 
-	// SCS is in control if the THC is CLOCKWISE 
-	// or if the SC CONT switch is set to SCS.
-
-	/// \todo TVC CW is supplied by SCS LOGIC BUS 2
-	/// \todo SC CONT switch is supplied by ???
-
-	// Do we have power?
-	if (!IsPowered()) {
-		// Turn off thrusters when in SCS control and unpowered
-		if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) {
-			for (int i = 0; i < 17; i++) {
-				sat->rjec.SetThruster(i, false);
-			}
-		}
-		return;
-	}
 
 	int accel_roll_flag = 0;
 	int mnimp_roll_flag = 0;
@@ -3604,6 +3687,7 @@ void ECA::TimeStep(double simdt) {
 	int mnimp_yaw_flag = 0;
 	VECTOR3 cmd_rate = _V(0,0,0);
 	VECTOR3 rate_err = _V(0,0,0);
+	VECTOR3 rhc_rate = _V(0, 0, 0);
 	if (mnimp_roll_trigger) {
 		sat->rjec.SetThruster(9,0);
 		sat->rjec.SetThruster(10,0);
@@ -3630,7 +3714,10 @@ void ECA::TimeStep(double simdt) {
 	VECTOR3 target, errors;
 	if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) {
 		// Get BMAG1 attitude errors
-		target = sat->bmag1.GetAttitudeError();
+		// Attitude hold automatic mode only when BMAG 1 uncaged and powered
+		target.x = (E1_506 && T1QS21) ? sat->bmag1.GetAttitudeError().x : 0.0;
+		target.y = (E1_506 && T3QS21) ? sat->bmag1.GetAttitudeError().y : 0.0;
+		target.z = (E1_506 && T2QS21) ? sat->bmag1.GetAttitudeError().z : 0.0;
 				
 		// Now process
 		if(target.x > 0){ // Positive Error
@@ -3654,71 +3741,58 @@ void ECA::TimeStep(double simdt) {
 			if(target.z < -PI){
 				errors.z = TWO_PI+target.z; }else{ errors.z = target.z;	}
 		}
+		//Limit
+		if (errors.x > 15.0*RAD) errors.x = 15.0*RAD;
+		if (errors.x < -14.0*RAD) errors.x = -14.0*RAD;
+		if (errors.y > 15.0*RAD) errors.y = 15.0*RAD;
+		if (errors.y < -14.0*RAD) errors.y = -14.0*RAD;
+		if (errors.z > 15.0*RAD) errors.z = 15.0*RAD;
+		if (errors.z < -14.0*RAD) errors.z = -14.0*RAD;
 
-		// Create demand for rate
-		switch(sat->AttRateSwitch.GetState()){
-			case TOGGLESWITCH_UP:   // HIGH RATE
-				// Are we in or out of deadband?
-				switch(sat->AttDeadbandSwitch.GetState()){
-					case TOGGLESWITCH_UP:   // MAX
-						// 8 degrees attitude deadband
-						// 4 degree "real" deadband, 2 degree is accomplished by the rate deadband, so we need factor 2 here					
-						if (errors.x < -4.0 * RAD)
-							cmd_rate.x = (errors.x + 4.0 * RAD) / 2.0;
-						if (errors.x > 4.0 * RAD)
-							cmd_rate.x = (errors.x - 4.0 * RAD) / 2.0;
-						if (errors.y < -4.0 * RAD)
-							cmd_rate.y = (-errors.y - 4.0 * RAD) / 2.0;
-						if (errors.y > 4.0 * RAD)
-							cmd_rate.y = (-errors.y + 4.0 * RAD) / 2.0;
-						if (errors.z < -4.0 * RAD)
-							cmd_rate.z = (-errors.z - 4.0 * RAD) / 2.0;
-						if (errors.z > 4.0 * RAD)
-							cmd_rate.z = (-errors.z + 4.0 * RAD) / 2.0;
-						break;
-					case TOGGLESWITCH_DOWN: // MIN
-						// 4 degrees attitude deadband
-						// 2 degree is accomplished by the rate deadband, so we need factor 2 here
-						cmd_rate.x = errors.x / 2.0;
-						cmd_rate.y = -errors.y / 2.0;
-						cmd_rate.z = -errors.z / 2.0;
-						break;
-				}
-				break;
-			case TOGGLESWITCH_DOWN: // LOW RATE
-				// Are we in or out of deadband?
-				switch(sat->AttDeadbandSwitch.GetState()){
-					case TOGGLESWITCH_UP:   // MAX
-						// 4.2 degrees attitude deadband
-						// 4 degree "real" deadband, 0.2 degree is accomplished by the rate deadband					
-						if (errors.x < -4.0 * RAD)
-							cmd_rate.x = (errors.x + 4.0 * RAD) * 0.5; // Otherwise roll control is not stable
-						if (errors.x > 4.0 * RAD)
-							cmd_rate.x = (errors.x - 4.0 * RAD) * 0.5;
-						if (errors.y < -4.0 * RAD)
-							cmd_rate.y = -errors.y - 4.0 * RAD;
-						if (errors.y > 4.0 * RAD)
-							cmd_rate.y = -errors.y + 4.0 * RAD;
-						if (errors.z < -4.0 * RAD)
-							cmd_rate.z = -errors.z - 4.0 * RAD;
-						if (errors.z > 4.0 * RAD)
-							cmd_rate.z = -errors.z + 4.0 * RAD;
-						break;
-					case TOGGLESWITCH_DOWN: // MIN
-						// 0.2 degrees attitude deadband
-						// This is accomplished by the rate deadband
-						cmd_rate.x = errors.x * 0.5;	// Otherwise roll control is not stable
-						cmd_rate.y = -errors.y;
-						cmd_rate.z = -errors.z;
-						break;
-				}
-				break;
+		//Attitude error deadband
+		if (!R1K22)
+		{
+			if (errors.x < -4.0 * RAD)
+				cmd_rate.x = (errors.x + 4.0 * RAD);
+			if (errors.x > 4.0 * RAD)
+				cmd_rate.x = (errors.x - 4.0 * RAD);
 		}
+		else
+			cmd_rate.x = errors.x;
 
-		// Attitude hold automatic mode only when BMAG 1 uncaged and powered
-		if (!sat->bmag1.IsPowered() || sat->bmag1.IsUncaged().x == 0) cmd_rate.x = 0;
-		if (!sat->bmag1.IsPowered() || sat->bmag1.IsUncaged().y == 0) cmd_rate.y = 0;
-		if (!sat->bmag1.IsPowered() || sat->bmag1.IsUncaged().z == 0) cmd_rate.z = 0;
+		if (!R3K22)
+		{
+			if (errors.y < -4.0 * RAD)
+				cmd_rate.y = (-errors.y - 4.0 * RAD);
+			if (errors.y > 4.0 * RAD)
+				cmd_rate.y = (-errors.y + 4.0 * RAD);
+		}
+		else
+			cmd_rate.y = -errors.y;
+
+		if (!R2K22)
+		{
+			if (errors.z < -4.0 * RAD)
+				cmd_rate.z = (-errors.z - 4.0 * RAD);
+			if (errors.z > 4.0 * RAD)
+				cmd_rate.z = (-errors.z + 4.0 * RAD);
+		}
+		else
+			cmd_rate.z = -errors.z;
+		
+		//Attitude error gain
+		if (R1K25)
+			cmd_rate.x *= 0.5;
+		else
+			cmd_rate.x *= 10.0;
+		if (R3K25)
+			cmd_rate.y *= 0.5;
+		else
+			cmd_rate.y *= 10.0;
+		if (R2K25)
+			cmd_rate.z *= 0.5;
+		else
+			cmd_rate.z *= 10.0;
 
 		// Proportional Rate Demand 
 		// The proportional rate commands are powered by AC, the signals are routed through the breakout switches, 
@@ -3744,101 +3818,89 @@ void ECA::TimeStep(double simdt) {
 			z_def = (36863 - rhc_ac_z);
 		}
 
+		// HIGH RATE: MAX RATE 7 dps pitch/yaw, 20 dps roll
+		// LOW RATE: MAX RATE .7 dps roll/pitch/yaw 
 		double axis_percent=0;
-		switch(sat->AttRateSwitch.GetState()){
-			case TOGGLESWITCH_UP:    // HIGH RATE
-				// MAX RATE 7 dps pitch/yaw, 20 dps roll
-				if(x_def != 0){ 
+
+		//Todo: Differentiate between the two RHCs
+		if ((E1_509 || E2_509) && E2_507)
+		{
+			if (R1K25)
+			{
+				if (x_def != 0) {
 					axis_percent = (double)x_def / (double)28673;
-					cmd_rate.x = -(0.34906585 * axis_percent);	// OVERRIDE
+					rhc_rate.x = -(22.0*RAD*axis_percent);
 				}
-				if(y_def != 0){ 
-					axis_percent = (double)y_def / (double)28673;
-					cmd_rate.y = -(0.122173048 * axis_percent);	// OVERRIDE
-				}
-				if(z_def != 0){ 
-					axis_percent = (double)z_def / (double)28673;
-					cmd_rate.z = (0.122173048 * axis_percent);	// OVERRIDE
-				}
-				break;
-			case TOGGLESWITCH_DOWN:  // LOW RATE
-				// MAX RATE .7 dps roll/pitch/yaw 
-				if(x_def != 0){ 
+			}
+			else
+			{
+				if (x_def != 0) {
 					axis_percent = (double)x_def / (double)28673;
-					cmd_rate.x = -(0.0122173048 * axis_percent);	// OVERRIDE
+					rhc_rate.x = -(9.0*RAD*axis_percent);
 				}
-				if(y_def != 0){ 
-					axis_percent = (double)y_def / (double)28673;
-					cmd_rate.y = -(0.0122173048 * axis_percent);	// OVERRIDE
-				}
-				if(z_def != 0){ 
-					axis_percent = (double)z_def / (double)28673;
-					cmd_rate.z = (0.0122173048 * axis_percent);	// OVERRIDE
-				}
-				break;
+			}
+
+			if (y_def != 0) {
+				axis_percent = (double)y_def / (double)28673;
+				rhc_rate.y = -(9.0*RAD*axis_percent);
+			}
+
+			if (z_def != 0) {
+				axis_percent = (double)z_def / (double)28673;
+				rhc_rate.z = (9.0*RAD*axis_percent);
+			}
 		}
 
-		// RATE DAMPING
+		//MTVC Rate
+		if (E1_509 && R3K31) rhc_rate.y += sat->bmag1.GetRates().x;
+		if (E2_509 && R3K30) rhc_rate.y += sat->bmag2.GetRates().x;
+		if (E1_509 && R2K31) rhc_rate.z += sat->bmag1.GetRates().y;
+		if (E2_509 && R2K30) rhc_rate.z += sat->bmag2.GetRates().y;
 
+		cmd_rate += rhc_rate;
+
+		// RATE DAMPING
+		VECTOR3 rate_damp;
 		double rollrate, pitchrate, yawrate;
 
+		// BMAG RATES are Z = ROLL, X = PITCH, Y = YAW
 		rollrate = (T1QS28 ? sat->bmag1.GetRates().z : 0.0) + (T1QS29 ? sat->bmag2.GetRates().z : 0.0);
 		yawrate = (T2QS28 ? sat->bmag1.GetRates().y : 0.0) + (T2QS29 ? sat->bmag2.GetRates().y : 0.0);
 		pitchrate = (T3QS28 ? sat->bmag1.GetRates().x : 0.0) + (T3QS29 ? sat->bmag2.GetRates().x : 0.0);
 
-		// Rate damping automatic mode only when no cmd and manual attitude is RATE CMD
-		if(cmd_rate.x == 0 && sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER) { 
-			switch(sat->AttRateSwitch.GetState()){
-				case TOGGLESWITCH_UP:    // HIGH RATE
-					// MAX RATE 2 dps roll
-					if(rollrate >  0.034906585){ cmd_rate.x = 0.034906585 - rollrate; break; }
-					if(rollrate < -0.034906585){ cmd_rate.x = -0.034906585- rollrate; break; }
-					cmd_rate.x = rollrate; 
-					break;
-				case TOGGLESWITCH_DOWN:  // LOW RATE
-					// MAX RATE .2 dps roll
-					if(rollrate >  0.0034906585){ cmd_rate.x = 0.0034906585 - rollrate; break; }
-					if(rollrate < -0.0034906585){ cmd_rate.x = -0.0034906585- rollrate; break; }
-					cmd_rate.x = rollrate; 
-					break;
-			}
+		//Amplifier
+		if (!E1_506)
+		{
+			rollrate = yawrate = pitchrate = 0.0;
 		}
 
-		if(cmd_rate.y == 0 && sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER) { 
-			switch(sat->AttRateSwitch.GetState()){
-				case TOGGLESWITCH_UP:    // HIGH RATE
-					// MAX RATE 2 dps
-					if(pitchrate >  0.034906585){ cmd_rate.y = 0.034906585 - pitchrate; break; }
-					if(pitchrate < -0.034906585){ cmd_rate.y = -0.034906585- pitchrate; break; }
-					cmd_rate.y = pitchrate; 
-					break;
-				case TOGGLESWITCH_DOWN:  // LOW RATE
-					// MAX RATE .2 dps
-					if(pitchrate >  0.0034906585){ cmd_rate.y = 0.0034906585 - pitchrate; break; }
-					if(pitchrate < -0.0034906585){ cmd_rate.y = -0.0034906585- pitchrate; break; }
-					cmd_rate.y = pitchrate; 
-					break;
-			}
-		}
+		//Low Rate
+		if (!T1QS25)
+			rate_damp.x = rollrate * 10.0;
+		else
+			rate_damp.x = rollrate;
+		if (!T3QS25)
+			rate_damp.y = pitchrate * 10.0;
+		else
+			rate_damp.y = pitchrate;
+		if (!T2QS25)
+			rate_damp.z = yawrate * 10.0;
+		else
+			rate_damp.z = yawrate;
 
-		if(cmd_rate.z == 0 && sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER) { 
-			switch(sat->AttRateSwitch.GetState()){
-				case TOGGLESWITCH_UP:    // HIGH RATE
-					// MAX RATE 2 dps
-					if(yawrate >  0.034906585){ cmd_rate.z = 0.034906585 - yawrate; break; }
-					if(yawrate < -0.034906585){ cmd_rate.z = -0.034906585- yawrate; break; }
-					cmd_rate.z = yawrate; 
-					break;
-				case TOGGLESWITCH_DOWN:  // LOW RATE
-					// MAX RATE .2 dps
-					if(yawrate >  0.0034906585){ cmd_rate.z = 0.0034906585 - yawrate; break; }
-					if(yawrate < -0.0034906585){ cmd_rate.z = -0.0034906585- yawrate; break; }
-					cmd_rate.z = yawrate; 
-					break;
-			}
-		}
+		if (rate_damp.x > 39.0*RAD) rate_damp.x = 39.0*RAD;
+		if (rate_damp.x < -33.0*RAD) rate_damp.x = -33.0*RAD;
+		if (rate_damp.y > 29.0*RAD) rate_damp.y = 29.0*RAD;
+		if (rate_damp.y < -25.0*RAD) rate_damp.y = -25.0*RAD;
+		if (rate_damp.z > 29.0*RAD) rate_damp.z = 29.0*RAD;
+		if (rate_damp.z < -25.0*RAD) rate_damp.z = -25.0*RAD;
+
+		//Roll to yaw cross coupling
+		if (T1QS26)
+			rate_damp.z += -rate_damp.x * 0.38386; //tan(21.0°)
+
 		// PSEUDORATE FEEDBACK
-		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER){
+		if (E1_506 && !T1QS44 && sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER){
 			if (sat->rjec.GetThruster(9) || sat->rjec.GetThruster(11) ||
 			    sat->rjec.GetThruster(13) || sat->rjec.GetThruster(15)) {
 				pseudorate.x += 0.1 * simdt; 
@@ -3857,7 +3919,7 @@ void ECA::TimeStep(double simdt) {
 		} else {
 			pseudorate.x = 0;
 		}
-		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER){
+		if (E1_506 && !T3QS44 && sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_CENTER){
 			if (sat->rjec.GetThruster(1) || sat->rjec.GetThruster(3)) {
 				pseudorate.y += 0.1 * simdt; 
 			} else if (sat->rjec.GetThruster(2) || sat->rjec.GetThruster(4)) {
@@ -3874,7 +3936,7 @@ void ECA::TimeStep(double simdt) {
 		} else {
 			pseudorate.y = 0;
 		}
-		if (sat->LimitCycleSwitch.GetState() == TOGGLESWITCH_UP && sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER){
+		if (E1_506 && !T2QS44 && sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_CENTER){
 			if (sat->rjec.GetThruster(6) || sat->rjec.GetThruster(8)) {
 				pseudorate.z += 0.1 * simdt; 
 			} else if (sat->rjec.GetThruster(5) || sat->rjec.GetThruster(7)) {
@@ -3893,16 +3955,16 @@ void ECA::TimeStep(double simdt) {
 		}
 
 		// Command rates done, generate rate error values
-		// GDC RATES are Z = ROLL, X = PITCH, Y = YAW
-		rate_err.x = cmd_rate.x - (rollrate + pseudorate.x);
-		rate_err.y = cmd_rate.y - (pitchrate + pseudorate.y);
-		rate_err.z = cmd_rate.z - (yawrate + pseudorate.z);
+		rate_err.x = cmd_rate.x - (rate_damp.x + pseudorate.x);
+		rate_err.y = cmd_rate.y - (rate_damp.y + pseudorate.y);
+		rate_err.z = cmd_rate.z - (rate_damp.z + pseudorate.z);
 		
 		// sprintf(oapiDebugString(),"SCS: RATE CMD r%.3f p%.3f y%.3f ERR r%.3f p%.3f y%.3f",
 		//	cmd_rate.x * DEG, cmd_rate.y * DEG, cmd_rate.z * DEG, 
 		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);	
-		// sprintf(oapiDebugString(),"SCS PITCH rate %.3f cmd %.3f pseudo %.3f error %.3f", pitchrate * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
+		// sprintf(oapiDebugString(),"SCS PITCH err %.4f rate %.3f cmd %.3f pseudo %.3f rate error %.3f", errors.y*DEG, pitchrate * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
 		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f", rollrate * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG, errors.x * DEG);
+		// sprintf(oapiDebugString(),"SCS YAW rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f", yawrate * DEG, cmd_rate.z * DEG, pseudorate.z * DEG, rate_err.z * DEG, errors.z * DEG);
 
 		//
 		// ROTATION
@@ -3915,60 +3977,30 @@ void ECA::TimeStep(double simdt) {
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
-				switch(sat->AttRateSwitch.GetState()){
-					case TOGGLESWITCH_UP:    // HIGH RATE
-						if (rate_err.x > 0.034906585) {
-							// ACCEL PLUS
-							sat->rjec.SetThruster(9,1);
-							sat->rjec.SetThruster(11,1);
-							sat->rjec.SetThruster(13,1);
-							sat->rjec.SetThruster(15,1);
-							sat->rjec.SetThruster(10,0);
-							sat->rjec.SetThruster(12,0);
-							sat->rjec.SetThruster(14,0);
-							sat->rjec.SetThruster(16,0);
-							accel_roll_trigger=1; accel_roll_flag=1;
-						}
-						if (rate_err.x < -0.034906585) {
-							// ACCEL MINUS
-							sat->rjec.SetThruster(10,1);
-							sat->rjec.SetThruster(12,1);
-							sat->rjec.SetThruster(14,1);
-							sat->rjec.SetThruster(16,1);
-							sat->rjec.SetThruster(9,0);
-							sat->rjec.SetThruster(11,0);
-							sat->rjec.SetThruster(13,0);
-							sat->rjec.SetThruster(15,0);
-							accel_roll_trigger=1; accel_roll_flag=-1;						
-						}							
-						break;
-					case TOGGLESWITCH_DOWN:  // LOW RATE
-						if(rate_err.x > 0.0034906585){
-							// ACCEL PLUS
-							sat->rjec.SetThruster(9,1);
-							sat->rjec.SetThruster(11,1);
-							sat->rjec.SetThruster(13,1);
-							sat->rjec.SetThruster(15,1);
-							sat->rjec.SetThruster(10,0);
-							sat->rjec.SetThruster(12,0);
-							sat->rjec.SetThruster(14,0);
-							sat->rjec.SetThruster(16,0);
-							accel_roll_trigger=1; accel_roll_flag=1;
-						}
-						if(rate_err.x < -0.0034906585){
-							// ACCEL MINUS
-							sat->rjec.SetThruster(10,1);
-							sat->rjec.SetThruster(12,1);
-							sat->rjec.SetThruster(14,1);
-							sat->rjec.SetThruster(16,1);
-							sat->rjec.SetThruster(9,0);
-							sat->rjec.SetThruster(11,0);
-							sat->rjec.SetThruster(13,0);
-							sat->rjec.SetThruster(15,0);
-							accel_roll_trigger=1; accel_roll_flag=-1;						
-						}
-						break;
+				if (rate_err.x > 0.034906585) {
+					// ACCEL PLUS
+					sat->rjec.SetThruster(9,1);
+					sat->rjec.SetThruster(11,1);
+					sat->rjec.SetThruster(13,1);
+					sat->rjec.SetThruster(15,1);
+					sat->rjec.SetThruster(10,0);
+					sat->rjec.SetThruster(12,0);
+					sat->rjec.SetThruster(14,0);
+					sat->rjec.SetThruster(16,0);
+					accel_roll_trigger=1; accel_roll_flag=1;
 				}
+				if (rate_err.x < -0.034906585) {
+					// ACCEL MINUS
+					sat->rjec.SetThruster(10,1);
+					sat->rjec.SetThruster(12,1);
+					sat->rjec.SetThruster(14,1);
+					sat->rjec.SetThruster(16,1);
+					sat->rjec.SetThruster(9,0);
+					sat->rjec.SetThruster(11,0);
+					sat->rjec.SetThruster(13,0);
+					sat->rjec.SetThruster(15,0);
+					accel_roll_trigger=1; accel_roll_flag=-1;						
+				}							
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
 				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
@@ -4000,44 +4032,22 @@ void ECA::TimeStep(double simdt) {
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
-				switch(sat->AttRateSwitch.GetState()){
-					case TOGGLESWITCH_UP:    // HIGH RATE
-						if(rate_err.y > 0.034906585){
-							// ACCEL PLUS
-							sat->rjec.SetThruster(1,1);
-							sat->rjec.SetThruster(3,1);
-							sat->rjec.SetThruster(2,0);
-							sat->rjec.SetThruster(4,0);
-							accel_pitch_trigger=1; accel_pitch_flag=1;
-						}
-						if(rate_err.y < -0.034906585){
-							// ACCEL MINUS
-							sat->rjec.SetThruster(2,1);
-							sat->rjec.SetThruster(4,1);
-							sat->rjec.SetThruster(1,0);
-							sat->rjec.SetThruster(3,0);
-							accel_pitch_trigger=1; accel_pitch_flag=-1;
-						}							
-						break;
-					case TOGGLESWITCH_DOWN:  // LOW RATE
-						if(rate_err.y > 0.0034906585){
-							// ACCEL PLUS
-							sat->rjec.SetThruster(1,1);
-							sat->rjec.SetThruster(3,1);
-							sat->rjec.SetThruster(2,0);
-							sat->rjec.SetThruster(4,0);
-							accel_pitch_trigger=1; accel_pitch_flag=1;
-						}
-						if(rate_err.y < -0.0034906585){
-							// ACCEL MINUS
-							sat->rjec.SetThruster(2,1);
-							sat->rjec.SetThruster(4,1);
-							sat->rjec.SetThruster(1,0);
-							sat->rjec.SetThruster(3,0);
-							accel_pitch_trigger=1; accel_pitch_flag=-1;
-						}							
-						break;
+				if(rate_err.y > 0.034906585){
+					// ACCEL PLUS
+					sat->rjec.SetThruster(1,1);
+					sat->rjec.SetThruster(3,1);
+					sat->rjec.SetThruster(2,0);
+					sat->rjec.SetThruster(4,0);
+					accel_pitch_trigger=1; accel_pitch_flag=1;
 				}
+				if(rate_err.y < -0.034906585){
+					// ACCEL MINUS
+					sat->rjec.SetThruster(2,1);
+					sat->rjec.SetThruster(4,1);
+					sat->rjec.SetThruster(1,0);
+					sat->rjec.SetThruster(3,0);
+					accel_pitch_trigger=1; accel_pitch_flag=-1;
+				}							
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
 				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
@@ -4065,44 +4075,22 @@ void ECA::TimeStep(double simdt) {
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
-				switch(sat->AttRateSwitch.GetState()){
-					case TOGGLESWITCH_UP:    // HIGH RATE
-						if(rate_err.z > 0.034906585){
-							// ACCEL PLUS
-							sat->rjec.SetThruster(6,1);
-							sat->rjec.SetThruster(8,1);
-							sat->rjec.SetThruster(5,0);
-							sat->rjec.SetThruster(7,0);
-							accel_yaw_trigger=1; accel_yaw_flag=-1;
-						}
-						if(rate_err.z < -0.034906585){
-							// ACCEL MINUS
-							sat->rjec.SetThruster(5,1);
-							sat->rjec.SetThruster(7,1);
-							sat->rjec.SetThruster(6,0);
-							sat->rjec.SetThruster(8,0);
-							accel_yaw_trigger=1; accel_yaw_flag=1;
-						}							
-						break;
-					case TOGGLESWITCH_DOWN:  // LOW RATE
-						if(rate_err.z > 0.0034906585){
-							// ACCEL PLUS
-							sat->rjec.SetThruster(6,1);
-							sat->rjec.SetThruster(8,1);
-							sat->rjec.SetThruster(5,0);
-							sat->rjec.SetThruster(7,0);
-							accel_yaw_trigger=1; accel_yaw_flag=-1;
-						}
-						if(rate_err.z < -0.0034906585){
-							// ACCEL MINUS
-							sat->rjec.SetThruster(5,1);
-							sat->rjec.SetThruster(7,1);
-							sat->rjec.SetThruster(6,0);
-							sat->rjec.SetThruster(8,0);
-							accel_yaw_trigger=1; accel_yaw_flag=1;
-						}							
-						break;
+				if(rate_err.z > 0.034906585){
+					// ACCEL PLUS
+					sat->rjec.SetThruster(6,1);
+					sat->rjec.SetThruster(8,1);
+					sat->rjec.SetThruster(5,0);
+					sat->rjec.SetThruster(7,0);
+					accel_yaw_trigger=1; accel_yaw_flag=-1;
 				}
+				if(rate_err.z < -0.034906585){
+					// ACCEL MINUS
+					sat->rjec.SetThruster(5,1);
+					sat->rjec.SetThruster(7,1);
+					sat->rjec.SetThruster(6,0);
+					sat->rjec.SetThruster(8,0);
+					accel_yaw_trigger=1; accel_yaw_flag=1;
+				}							
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
 				if (rhc_z < 28673) {  // MINUS
@@ -4122,6 +4110,20 @@ void ECA::TimeStep(double simdt) {
 				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
 				break;
 		}
+
+		//THRUST VECTOR CONTROL
+
+		//MTVC
+		if (T2QS1)
+		{
+			//TBD: Output MTVC Cmd to yaw servos 1 and 2
+		}
+		if (T3QS1)
+		{
+			//TBD: Output MTVC Cmd to pitch servos 1 and 2
+		}
+
+		//Auto TVC
 	}
 	// If accel thrust fired and is no longer needed, kill it.
 	if(accel_roll_flag == 0 && accel_roll_trigger){

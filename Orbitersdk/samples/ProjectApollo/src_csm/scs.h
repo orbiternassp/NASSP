@@ -566,7 +566,9 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
-	bool IsPowered();
+	bool IsDCPowered();
+	bool IsAC1Powered();
+	bool IsAC2Powered();
 
 	long rhc_x,rhc_y,rhc_z;											// RHC position
 	long rhc_ac_x,rhc_ac_y,rhc_ac_z;								// RHC AC powered position
@@ -580,6 +582,9 @@ public:
 	Saturn *sat;
 	VECTOR3 pseudorate;
 protected:
+
+	void ResetRelays();
+	void ResetTransistors();
 
 	//RELAYS
 
