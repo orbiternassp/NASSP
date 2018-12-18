@@ -35,12 +35,47 @@ LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
 	open = false;
 	ovhdHatchHandle = NULL;
 	lem = NULL;
+
+	ovhdhatch_state.SetOperatingSpeed(0.2);
+	drogue_state.SetOperatingSpeed(0.2);
+	anim_OvhdHatch = -1;
+	anim_Drogue = -1;
 }
 
 void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh)
 {
 	lem = l;
 	ovhdHatchHandle = fhh;
+}
+
+void LEMOverheadHatch::DefineAnimations(UINT idx)
+{
+	// Overhead Hatch and Drogue Animations
+	ANIMATIONCOMPONENT_HANDLE	ach_OvhdHatch, ach_Drogue;
+
+	static UINT	meshgroup_OvhdHatch = GRP_UpperHatch;
+	static MGROUP_ROTATE	mgt_OvhdHatch(idx, &meshgroup_OvhdHatch, 1, _V(0.00, 1.06214, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+	anim_OvhdHatch = lem->CreateAnimation(0.0);
+	ach_OvhdHatch = lem->AddAnimationComponent(anim_OvhdHatch, 0.0f, 1.0f, &mgt_OvhdHatch);
+
+	static UINT	meshgroup_Drogue = GRP_Drogue;
+	static MGROUP_ROTATE	mgt_Drogue(idx, &meshgroup_Drogue, 1, _V(0.00, 1.46562, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+	anim_Drogue = lem->CreateAnimation(0.0);
+	ach_Drogue = lem->AddAnimationComponent(anim_Drogue, 0.0f, 1.0f, &mgt_Drogue);
+
+	lem->SetAnimation(anim_OvhdHatch, ovhdhatch_state.State());
+	lem->SetAnimation(anim_Drogue, drogue_state.State());
+}
+
+void LEMOverheadHatch::Timestep(double simdt)
+{
+	if (ovhdhatch_state.Process(simdt)) {
+		lem->SetAnimation(anim_OvhdHatch, ovhdhatch_state.State());
+	}
+
+	if (drogue_state.Process(simdt)) {
+		lem->SetAnimation(anim_Drogue, drogue_state.State());
+	}
 }
 
 void LEMOverheadHatch::Toggle()
@@ -52,7 +87,8 @@ void LEMOverheadHatch::Toggle()
 			open = true;
 			OpenSound.play();
 			lem->PanelRefreshOverheadHatch();
-			lem->SetOvhdHatchMesh();
+			ovhdhatch_state.Open();
+			drogue_state.Open();
 		}
 	}
 	else
@@ -60,7 +96,8 @@ void LEMOverheadHatch::Toggle()
 		open = false;
 		CloseSound.play();
 		lem->PanelRefreshOverheadHatch();
-		lem->SetOvhdHatchMesh();
+		ovhdhatch_state.Close();
+		drogue_state.Close();
 	}
 }
 
@@ -172,7 +209,7 @@ void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh)
 
 void LEMForwardHatch::DefineAnimations(UINT idx)
 {
-	// Hatch
+	// Forward Hatch Animation
 	ANIMATIONCOMPONENT_HANDLE	ach_Hatch;
 	static UINT	meshgroup_Hatch = GRP_FwdHatch;
 	static MGROUP_ROTATE	mgt_Hatch(idx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.68476), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));

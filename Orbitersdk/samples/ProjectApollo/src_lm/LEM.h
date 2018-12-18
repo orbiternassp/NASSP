@@ -381,11 +381,9 @@ public:
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
-	void SetLPDMesh();
-	void SetLPDMeshAsc();
-	void SetLPDMeshRet();
-	void SetLPDMeshExt();
-	void SetOvhdHatchMesh();
+	void SetLMMeshVis();
+	void SetLMMeshVisVC();
+	void SetLMMeshVisDsc();
 	void SetTrackLight();
 	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
@@ -1500,12 +1498,9 @@ protected:
 	double AscentEmptyMassKg;
 
 	// Mesh indexes
-	UINT dscidx, ascidx;
-	UINT lpdasc;
-	UINT lpddscret;
-	UINT lpddscext;
-	UINT ovhdhatch;
-	UINT lmdrogue;
+	UINT ascidx;
+	UINT dscidx;
+	UINT vcidx;
 	UINT probeidx;
 
 	// Dust particles

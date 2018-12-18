@@ -332,14 +332,9 @@ void LEM::Init()
 	NoLegs = false;
 
 	// Mesh Indexes
-	
 	ascidx = -1;
 	dscidx = -1;
-	lpdasc = -1;
-	lpddscret = -1;
-	lpddscext = -1;
-	ovhdhatch = -1;
-	lmdrogue = -1;
+	vcidx = -1;
 	probeidx = -1;
 
 	pMCC = NULL;
@@ -1448,6 +1443,7 @@ void LEM::clbkPostCreation()
 	// Call Animation Definitions where required
 	RR.DefineAnimations(ascidx);
 	SBandSteerable.DefineAnimations(ascidx);
+	OverheadHatch.DefineAnimations(ascidx);
 	ForwardHatch.DefineAnimations(ascidx);
 	if (stage < 1 && !NoLegs) eds.DefineAnimations(dscidx);
 }
