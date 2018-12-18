@@ -133,5 +133,5 @@ protected:
 
 	AnimState2 gear_state;
 	UINT anim_Gear;
-	MGROUP_TRANSFORM	*mgt_Leg[4], *mgt_Strut[4], *mgt_Downlock[4];
+	MGROUP_TRANSFORM	*mgt_Leg[4], *mgt_Strut[4], *mgt_Downlock[4], *mgt_Probes1[3], *mgt_Probes2[3];
 };

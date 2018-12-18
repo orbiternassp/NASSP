@@ -384,6 +384,7 @@ public:
 	void SetLMMeshVis();
 	void SetLMMeshVisVC();
 	void SetLMMeshVisDsc();
+	void HideProbes();
 	void SetTrackLight();
 	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
@@ -408,6 +409,7 @@ public:
 	bool clbkLoadGenericCockpit ();
 	void clbkMFDMode (int mfd, int mode);
 	void clbkPostCreation();
+	void clbkVisualCreated(VISHANDLE vis, int refcount);
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);
@@ -1501,7 +1503,8 @@ protected:
 	UINT ascidx;
 	UINT dscidx;
 	UINT vcidx;
-	UINT probeidx;
+
+	DEVMESHHANDLE probes;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

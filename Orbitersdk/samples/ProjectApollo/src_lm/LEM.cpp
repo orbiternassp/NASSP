@@ -259,6 +259,8 @@ LEM::~LEM()
 		dx8ppv = NULL;
 	}
 
+	probes = NULL;
+
 }
 
 void LEM::Init()
@@ -335,7 +337,8 @@ void LEM::Init()
 	ascidx = -1;
 	dscidx = -1;
 	vcidx = -1;
-	probeidx = -1;
+
+	probes = NULL;
 
 	pMCC = NULL;
 
@@ -1446,6 +1449,14 @@ void LEM::clbkPostCreation()
 	OverheadHatch.DefineAnimations(ascidx);
 	ForwardHatch.DefineAnimations(ascidx);
 	if (stage < 1 && !NoLegs) eds.DefineAnimations(dscidx);
+}
+
+void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
+{
+	probes = GetDevMesh(vis, dscidx);
+	if (Landed && !NoLegs) {
+		HideProbes();
+	}
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

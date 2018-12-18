@@ -29,8 +29,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Sat5LMDSC.h"
 
 static int refcount = 0;
-static MESHHANDLE LM_Descent;
-static MESHHANDLE LM_Descent2;
+static MESHHANDLE LM_DescentNoProbes;
+static MESHHANDLE LM_DescentGearRet;
 static MESHHANDLE LM_DescentNoLeg;
 static MESHHANDLE hLemProbes;
 
@@ -154,7 +154,7 @@ void Sat5LMDSC::Setup()
 
 		SetTouchdownPoints(td, 7);
 
-		AddMesh(LM_Descent2);
+		AddMesh(LM_DescentGearRet);
 	}
 	
 	if (state == 1 || state == 11) {
@@ -197,7 +197,7 @@ void Sat5LMDSC::Setup()
 
 		SetTouchdownPoints(td, 7);
 
-		AddMesh(LM_Descent);
+		AddMesh(LM_DescentNoProbes);
 		
 		if (state == 11) {
 			AddMesh(hLemProbes);
@@ -250,8 +250,8 @@ void Sat5LMDSC::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		LM_Descent = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStage");
-		LM_Descent2 = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageRet");
+		LM_DescentNoProbes = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoProbes");
+		LM_DescentGearRet = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageGearRet");
 		LM_DescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 		hLemProbes = oapiLoadMeshGlobal("ProjectApollo/LM_ContactProbes");
 		seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
