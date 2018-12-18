@@ -24,11 +24,15 @@
 
 #pragma once
 
+#include "animations.h"
+
 class LEMOverheadHatch
 {
 public:
 	LEMOverheadHatch(Sound &opensound, Sound &closesound);
 	void Init(LEM *l, ToggleSwitch *ohh);
+	void DefineAnimations(UINT idx);
+	void Timestep(double simdt);
 	void Toggle();
 
 	bool IsOpen() { return open; };
@@ -36,6 +40,8 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 protected:
+	AnimState2 ovhdhatch_state;
+	AnimState2 drogue_state;
 	bool open;
 
 	LEM *lem;
@@ -43,6 +49,9 @@ protected:
 
 	Sound &OpenSound;
 	Sound &CloseSound;
+
+	UINT anim_OvhdHatch;
+	UINT anim_Drogue;
 };
 
 class LEMOVHDCabinReliefDumpValve
@@ -62,6 +71,8 @@ class LEMForwardHatch
 public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
 	void Init(LEM *l, ToggleSwitch *fhh);
+	void DefineAnimations(UINT idx);
+	void Timestep(double simdt);
 	void Toggle();
 
 	bool IsOpen() { return open; };
@@ -69,6 +80,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 protected:
+	AnimState2 hatch_state;
 	bool open;
 
 	LEM *lem;
@@ -76,6 +88,8 @@ protected:
 
 	Sound &OpenSound;
 	Sound &CloseSound;
+
+	UINT anim_Hatch;
 };
 
 class LEMFWDCabinReliefDumpValve

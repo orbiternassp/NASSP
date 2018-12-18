@@ -148,6 +148,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_aux\animations.cpp" />
     <ClCompile Include="..\..\src_aux\CDK.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -375,10 +376,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_aux\animations.h" />
     <ClInclude Include="..\..\src_lm\CWEA_FlipFlop.h" />
     <ClInclude Include="..\..\src_lm\lemconnector.h" />
     <ClInclude Include="..\..\src_lm\LEMSaturn.h" />
     <ClInclude Include="..\..\src_lm\LM_AscentStageResource.h" />
+    <ClInclude Include="..\..\src_lm\LM_DescentStageResource.h" />
     <ClInclude Include="..\..\src_lm\lm_eps.h" />
     <ClInclude Include="..\..\src_lm\lmresource.h" />
     <ClInclude Include="..\..\src_lm\lm_aca.h" />

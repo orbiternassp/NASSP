@@ -212,7 +212,7 @@ public:
 		// First value in the enum must be set to one. Entry zero is not
 		// used.
 		//
-		SRF_INDICATOR							=	 1,
+		SRF_INDICATOR = 1,
 		SRF_NEEDLE,
 		SRF_DIGITAL,
 		SRF_SWITCHUP,
@@ -361,7 +361,7 @@ public:
 		SRF_LEM_U_HATCH_HNDL,
 		SRF_LEM_F_HATCH_HNDL,
 		SRF_LEM_F_HATCH_REL_VLV,
-	    SRF_LEM_INTLK_OVRD,
+		SRF_LEM_INTLK_OVRD,
 		SRF_RED_INDICATOR,
 		SRF_LEM_MASTERALARM,
 		SRF_PWRFAIL_LIGHT,
@@ -381,12 +381,9 @@ public:
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
 	void SetLmLandedMesh();
-	void SetLPDMesh();
-	void SetLPDMeshAsc();
-	void SetLPDMeshRet();
-	void SetLPDMeshExt();
-	void SetFwdHatchMesh();
-	void SetOvhdHatchMesh();
+	void SetLMMeshVis();
+	void SetLMMeshVisVC();
+	void SetLMMeshVisDsc();
 	void SetTrackLight();
 	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
@@ -1501,13 +1498,9 @@ protected:
 	double AscentEmptyMassKg;
 
 	// Mesh indexes
-	UINT dscidx, ascidx;
-	UINT lpdasc;
-	UINT lpddscret;
-	UINT lpddscext;
-	UINT fwdhatch;
-	UINT ovhdhatch;
-	UINT lmdrogue;
+	UINT ascidx;
+	UINT dscidx;
+	UINT vcidx;
 	UINT probeidx;
 
 	// Dust particles

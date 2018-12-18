@@ -276,7 +276,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);			// System Timestep
-	void clbkPostCreation();
+	void DefineAnimations(UINT idx);
 	bool IsPowered();
 	double GetAntennaTempF();
 	double GetPitch() { return pitch*DEG; }
