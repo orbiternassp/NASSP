@@ -329,6 +329,7 @@ LEM_EDS::LEM_EDS() :
 	lem = NULL;
 	LG_Deployed = FALSE;
 	Deadface = false;
+
 	gear_state.SetOperatingSpeed(1.0);
 	anim_Gear = -1;
 
@@ -336,6 +337,11 @@ LEM_EDS::LEM_EDS() :
 		mgt_Leg[i] = NULL;
 		mgt_Strut[i] = NULL;
 		mgt_Downlock[i] = NULL;
+	}
+
+	for (int i = 0; i < 3; i++) {
+		mgt_Probes1[i] = NULL;
+		mgt_Probes2[i] = NULL;
 	}
 }
 
@@ -345,6 +351,11 @@ LEM_EDS::~LEM_EDS() {
 		if (mgt_Leg[i]) delete mgt_Leg[i];
 		if (mgt_Strut[i]) delete mgt_Strut[i];
 		if (mgt_Downlock[i]) delete mgt_Downlock[i];
+	}
+
+	for (int i = 0; i < 3; i++) {
+		if (mgt_Probes1[i]) delete mgt_Probes1[i];
+		if (mgt_Probes2[i]) delete mgt_Probes2[i];
 	}
 }
 
@@ -360,21 +371,26 @@ void LEM_EDS::Init(LEM *s) {
 void LEM_EDS::DefineAnimations(UINT idx) {
 
 	// Landing Gear animations
-	ANIMATIONCOMPONENT_HANDLE	ach_GearLeg[4], ach_GearStrut[4], ach_GearLock[4];
+	ANIMATIONCOMPONENT_HANDLE	ach_GearLeg[4], ach_GearStrut[4], ach_GearLock[4], achGearProbes1[3], achGearProbes2[3];
 
 	const VECTOR3	DES_LEG_AXIS[4] = { { -1, 0, 0 },{ 1, 0, 0 },{ 0, 0,-1 },{ 0, 0, 1 } };
+	const VECTOR3	DES_PROBE_AXIS[3] = { { 1, 0, 0 },{ 0, 0,-1 },{ 0, 0, 1 } };
 	const VECTOR3	DES_LEG_PIVOT[4] = { { 0.00, 0.55965, 2.95095 },{ 0.00, 0.55965, -2.95095 },{ -2.95095, 0.55965, 0.00 },{ 2.95095, 0.55965, 0.00 } };
 	const VECTOR3	DES_STRUT_PIVOT[4] = { { 0.00,-1.27178, 3.83061 },{ 0.00,-1.27178,-3.83061 },{ -3.83061,-1.27178, 0.00 },{ 3.83061,-1.27178, 0.00 } };
 	const VECTOR3	DES_LOCK_PIVOT[4] = { { 0.00,-1.02, 2.91 },{ 0.00,-1.02,-2.91 },{ -2.91,-1.02, 0.00 },{ 2.91,-1.02, 0.00 } };
+	const VECTOR3	DES_PROBE_PIVOT[3] = { { 0.00, 0.55965, -2.95095 },{ -2.95095, 0.55965, 0.00 },{ 2.95095, 0.55965, 0.00 } };
+	const VECTOR3	DES_PROBE2_PIVOT[3] = { { -0.00696, -2.56621, -4.10490 },{ -4.10426, -2.56621, 0.007022 },{ 4.10458,-2.56621, -0.007012 } };
 
 	static UINT meshgroup_Legs[4][3] = {
-		{ GRP_Footpad,	GRP_LowerStrut,	GRP_MainStrut },
-		{ GRP_FootpadAft,	GRP_LowerStrutAft, GRP_MainStrutAft },
-		{ GRP_FootpadLeft,	GRP_LowerStrutLeft,	GRP_MainStrutLeft },
-		{ GRP_FootpadRight,	GRP_LowerStrutRight,	GRP_MainStrutRight } };
-	static UINT meshgroup_Struts[4] = { GRP_SupportStruts2, GRP_SupportStruts2Aft, GRP_SupportStruts2Left, GRP_SupportStruts2Right };
-	static UINT meshgroup_Locks[4] = { GRP_Downlock, GRP_DownlockAft, GRP_DownlockLeft, GRP_DownlockRight };
-	static UINT meshgroup_Ladder = GRP_Ladder;
+		{ DS_GRP_Footpad,	DS_GRP_LowerStrut,	DS_GRP_MainStrut },
+		{ DS_GRP_FootpadAft,	DS_GRP_LowerStrutAft, DS_GRP_MainStrutAft },
+		{ DS_GRP_FootpadLeft,	DS_GRP_LowerStrutLeft,	DS_GRP_MainStrutLeft },
+		{ DS_GRP_FootpadRight,	DS_GRP_LowerStrutRight,	DS_GRP_MainStrutRight } };
+	static UINT meshgroup_Struts[4] = { DS_GRP_SupportStruts2, DS_GRP_SupportStruts2Aft, DS_GRP_SupportStruts2Left, DS_GRP_SupportStruts2Right };
+	static UINT meshgroup_Locks[4] = { DS_GRP_Downlock, DS_GRP_DownlockAft, DS_GRP_DownlockLeft, DS_GRP_DownlockRight };
+	static UINT meshgroup_Ladder = DS_GRP_Ladder;
+	static UINT meshgroup_Probes1[3] = { DS_GRP_Probes1Aft, DS_GRP_Probes1Left, DS_GRP_Probes1Right };
+	static UINT meshgroup_Probes2[3] = { DS_GRP_Probes2Aft, DS_GRP_Probes2Left, DS_GRP_Probes2Right };
 
 	anim_Gear = lem->CreateAnimation(1.0);
 
@@ -388,8 +404,19 @@ void LEM_EDS::DefineAnimations(UINT idx) {
 		ach_GearStrut[i] = lem->AddAnimationComponent(anim_Gear, 0.0, 1.0, mgt_Strut[i], ach_GearLeg[i]);
 		ach_GearLock[i] = lem->AddAnimationComponent(anim_Gear, 0.0, 1.0, mgt_Downlock[i], ach_GearStrut[i]);
 	}
+
+	for (int i = 0; i < 3; i++)
+	{
+		mgt_Probes1[i] = new MGROUP_ROTATE(idx, &meshgroup_Probes1[i], 1, DES_PROBE_PIVOT[i], DES_PROBE_AXIS[i], (float)(45 * RAD));
+		mgt_Probes2[i] = new MGROUP_ROTATE(idx, &meshgroup_Probes2[i], 1, DES_PROBE2_PIVOT[i], DES_PROBE_AXIS[i], (float)(171 * RAD));
+
+		achGearProbes1[i] = lem->AddAnimationComponent(anim_Gear, 0.0, 1.0, mgt_Probes1[i]);
+		achGearProbes2[i] = lem->AddAnimationComponent(anim_Gear, 0.0, 1.0, mgt_Probes2[i], achGearProbes1[i]);
+	}
+
 	static MGROUP_ROTATE mgt_Ladder(idx, &meshgroup_Ladder, 1, DES_LEG_PIVOT[0], DES_LEG_AXIS[0], (float)(45 * RAD));
 	lem->AddAnimationComponent(anim_Gear, 0.0, 1, &mgt_Ladder);
+
 	lem->SetAnimation(anim_Gear, gear_state.State());
 }
 

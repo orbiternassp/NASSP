@@ -377,13 +377,15 @@ public:
 
 	void Init();
 	void SetStateEx(const void *status);
-	void SetLmVesselDockStage(bool ovrdDPSProp = false);
+	void SetLmVesselDockStage();
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
+	void SetLmDockingPort(double offs);
 	void SetLmLandedMesh();
 	void SetLMMeshVis();
 	void SetLMMeshVisVC();
 	void SetLMMeshVisDsc();
+	void HideProbes();
 	void SetTrackLight();
 	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
@@ -408,10 +410,13 @@ public:
 	bool clbkLoadGenericCockpit ();
 	void clbkMFDMode (int mfd, int mode);
 	void clbkPostCreation();
+	void clbkVisualCreated(VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);
 	void PostLoadSetup();
+	void DefineAnimations();
 
 	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void PanelSwitchToggled(ToggleSwitch *s);
@@ -1401,8 +1406,6 @@ protected:
 
 	bool FirstTimestep;
 
-	bool bModeDocked;
-	bool bModeHover;
 	bool ToggleEva;
 	bool CDREVA_IP;
 	bool HasProgramer;
@@ -1501,7 +1504,8 @@ protected:
 	UINT ascidx;
 	UINT dscidx;
 	UINT vcidx;
-	UINT probeidx;
+
+	DEVMESHHANDLE probes;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

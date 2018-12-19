@@ -41,7 +41,7 @@
 #include "LEM.h"
 #include "leva.h"
 #include "Sat5LMDSC.h"
-#include "LM_AscentStageResource.h"
+#include "LM_DescentStageResource.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -49,7 +49,6 @@ static MESHHANDLE hLMDescent;
 static MESHHANDLE hLMDescentNoLeg;
 static MESHHANDLE hLMAscent ;
 static MESHHANDLE hAstro1 ;
-static MESHHANDLE hLemProbes;
 static MESHHANDLE hLMVC;
 
 static PARTICLESTREAMSPEC lunar_dust = {
@@ -124,7 +123,7 @@ void LEM::StopEVA()
 	CDRSuited->number = 1;
 }
 
-void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
+void LEM::SetLmVesselDockStage()
 
 {
 	ClearThrusterDefinitions();
@@ -206,14 +205,7 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	{
 		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
-	else
-	{
-		SetPropellantMaxMass(ph_Dsc, DescentFuelMassKg);
-		if (ovrdDPSProp)
-		{
-			SetPropellantMass(ph_Dsc, DescentFuelMassKg);
-		}
-	}
+
 	SetDefaultPropellantResource(ph_Dsc); // display 2nd stage propellant level in generic HUD
 
 	// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
@@ -242,13 +234,7 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	AddRCS_LMH(-5.4516);
 	status = 0;
 	stage = 0;
-	bModeDocked=true;
 
-	VECTOR3 dockpos = {0.0 ,2.6, 0.0};
-    VECTOR3 dockdir = {0,1,0};
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	SetDockParams(dockpos, dockdir, dockrot);
-	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
 
 	// Descent stage attached.
@@ -331,14 +317,6 @@ void LEM::SetLmVesselHoverStage()
 
 	SetTouchdownPoints(td, 8);
 
-	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
-
-	// Probe Mesh
-	if (!Landed && !NoLegs) {
-		probeidx = AddMesh(hLemProbes, &mesh_dsc);
-		SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
-	}
-
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
@@ -393,13 +371,7 @@ void LEM::SetLmVesselHoverStage()
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-5.4516);
-	bModeHover=true;
 
-	VECTOR3 dockpos = {0.0 ,2.6, 0.0};	
-	VECTOR3 dockdir = {0,1,0};
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	SetDockParams(dockpos, dockdir, dockrot);
-	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
 
 	// Descent stage attached.
@@ -469,10 +441,6 @@ void LEM::SetLmAscentHoverStage()
 	// Vessel Meshes
 	DelMesh(dscidx);
 	dscidx = -1;
-	if (!Landed && !NoLegs) {
-		DelMesh(probeidx);
-		probeidx = -1;
-	}
 	ShiftMesh(ascidx, mesh_asc);
 	ShiftMesh(vcidx, mesh_asc);
 
@@ -512,19 +480,13 @@ void LEM::SetLmAscentHoverStage()
 	stage = 2;
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-7.2016);
-	bModeHover=true;
 
 	if(ph_Dsc){
 		DelPropellantResource(ph_Dsc);
 		ph_Dsc = 0;
 	}
 	
-	VECTOR3 dockpos = {0.0 ,0.85, 0.0};
-	VECTOR3 dockdir = {0,1,0};
-
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	SetDockParams(dockpos, dockdir, dockrot);
-	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
+	SetLmDockingPort(0.85);
 	InitNavRadios (4);
 
 	// Descent stage attached.
@@ -628,9 +590,8 @@ void LEM::SeparateStage (UINT stage)
 
 void LEM::SetLmLandedMesh() {
 
-	DelMesh(probeidx);
-	probeidx = -1;
 	Landed = true;
+	HideProbes();
 }
 
 void LEM::SetLMMeshVis() {
@@ -664,6 +625,25 @@ void LEM::SetLMMeshVisDsc() {
 	else
 	{
 		SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	}
+}
+
+void LEM::HideProbes() {
+
+	if (!probes)
+		return;
+
+	if (Landed && !NoLegs) {
+		static UINT meshgroup_Probes1[3] = { DS_GRP_Probes1Aft, DS_GRP_Probes1Left, DS_GRP_Probes1Right };
+		static UINT meshgroup_Probes2[3] = { DS_GRP_Probes2Aft, DS_GRP_Probes2Left, DS_GRP_Probes2Right };
+		GROUPEDITSPEC ges;
+
+		for (int i = 0; i < 3; i++) {
+			ges.flags = (GRPEDIT_ADDUSERFLAG);
+			ges.UsrFlag = 3;
+			oapiEditMeshGroup(probes, meshgroup_Probes1[i], &ges);
+			oapiEditMeshGroup(probes, meshgroup_Probes2[i], &ges);
+		}
 	}
 }
 
@@ -722,7 +702,6 @@ void LEMLoadMeshes()
 	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
 	hAstro1= oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
-	hLemProbes = oapiLoadMeshGlobal ("ProjectApollo/LM_ContactProbes");
 	hLMVC = oapiLoadMeshGlobal("ProjectApollo/LM_VC");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }

@@ -258,7 +258,6 @@ LEM::~LEM()
 		dx8ppv->Release();
 		dx8ppv = NULL;
 	}
-
 }
 
 void LEM::Init()
@@ -266,8 +265,6 @@ void LEM::Init()
 {
 	DebugLineClearTimer = 0;
 
-	bModeDocked=false;
-	bModeHover=false;
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
@@ -335,7 +332,8 @@ void LEM::Init()
 	ascidx = -1;
 	dscidx = -1;
 	vcidx = -1;
-	probeidx = -1;
+
+	probes = NULL;
 
 	pMCC = NULL;
 
@@ -1026,6 +1024,7 @@ void LEM::SetGenericStageState(int stat)
 
 	case 1:
 		stage = 1;
+		SetLmVesselDockStage();
 		SetLmVesselHoverStage();
 
 		if (CDREVA_IP) {
@@ -1035,6 +1034,7 @@ void LEM::SetGenericStageState(int stat)
 
 	case 2:
 		stage = 2;
+		SetLmVesselDockStage();
 		SetLmAscentHoverStage();
 		break;
 	}
@@ -1043,6 +1043,7 @@ void LEM::SetGenericStageState(int stat)
 void LEM::PostLoadSetup()
 {
 	CheckDescentStageSystems();
+	DefineAnimations();
 
 	//
 	// Pass on the mission number and realism setting to the AGC.
@@ -1408,10 +1409,10 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
 	VSEnableCollisions(GetHandle(),"ProjectApollo");
+
 	// Switch to compatible dock mode 
 	SetDockMode(0);
-
-	SetLmVesselDockStage();
+	SetLmDockingPort(2.6);
 
 	//
 	// Scan the launchpad config file.
@@ -1439,7 +1440,23 @@ void LEM::clbkPostCreation()
 		}
 		else pMCC = NULL;
 	}
+}
 
+void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
+{
+	probes = GetDevMesh(vis, dscidx);
+	if (Landed && !NoLegs) {
+		HideProbes();
+	}
+}
+
+void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
+{
+	probes = NULL;
+}
+
+void LEM::DefineAnimations()
+{
 	// Call Animation Definitions where required
 	RR.DefineAnimations(ascidx);
 	SBandSteerable.DefineAnimations(ascidx);
@@ -1738,7 +1755,7 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	// Sounds are initialized during the first timestep
 	// or here
-	SetLmVesselDockStage(true);
+	SetLmVesselDockStage();
 	PostLoadSetup();
 
 	return true;

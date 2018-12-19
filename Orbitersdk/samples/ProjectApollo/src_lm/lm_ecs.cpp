@@ -53,12 +53,12 @@ void LEMOverheadHatch::DefineAnimations(UINT idx)
 	// Overhead Hatch and Drogue Animations
 	ANIMATIONCOMPONENT_HANDLE	ach_OvhdHatch, ach_Drogue;
 
-	static UINT	meshgroup_OvhdHatch = GRP_UpperHatch;
+	static UINT	meshgroup_OvhdHatch = AS_GRP_UpperHatch;
 	static MGROUP_ROTATE	mgt_OvhdHatch(idx, &meshgroup_OvhdHatch, 1, _V(0.00, 1.06214, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
 	anim_OvhdHatch = lem->CreateAnimation(0.0);
 	ach_OvhdHatch = lem->AddAnimationComponent(anim_OvhdHatch, 0.0f, 1.0f, &mgt_OvhdHatch);
 
-	static UINT	meshgroup_Drogue = GRP_Drogue;
+	static UINT	meshgroup_Drogue = AS_GRP_Drogue;
 	static MGROUP_ROTATE	mgt_Drogue(idx, &meshgroup_Drogue, 1, _V(0.00, 1.46562, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
 	anim_Drogue = lem->CreateAnimation(0.0);
 	ach_Drogue = lem->AddAnimationComponent(anim_Drogue, 0.0f, 1.0f, &mgt_Drogue);
@@ -211,7 +211,7 @@ void LEMForwardHatch::DefineAnimations(UINT idx)
 {
 	// Forward Hatch Animation
 	ANIMATIONCOMPONENT_HANDLE	ach_Hatch;
-	static UINT	meshgroup_Hatch = GRP_FwdHatch;
+	static UINT	meshgroup_Hatch = AS_GRP_FwdHatch;
 	static MGROUP_ROTATE	mgt_Hatch(idx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.68476), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
 	anim_Hatch = lem->CreateAnimation(0.0);
 	ach_Hatch = lem->AddAnimationComponent(anim_Hatch, 0.0f, 1.0f, &mgt_Hatch);
