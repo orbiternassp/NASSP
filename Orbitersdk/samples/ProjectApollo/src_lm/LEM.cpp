@@ -1462,6 +1462,7 @@ void LEM::DefineAnimations()
 	SBandSteerable.DefineAnimations(ascidx);
 	OverheadHatch.DefineAnimations(ascidx);
 	ForwardHatch.DefineAnimations(ascidx);
+	DPS.DefineAnimations(dscidx);
 	if (stage < 1 && !NoLegs) eds.DefineAnimations(dscidx);
 }
 
