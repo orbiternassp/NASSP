@@ -64,6 +64,7 @@
 #include "sivbsystems.h"
 #include "sce.h"
 #include "csmsensors.h"
+#include "rhc.h"
 
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
@@ -3487,6 +3488,8 @@ protected:
 	ECA  eca;
 	ORDEAL ordeal;
 	EMS ems;
+	RHC rhc1;
+	RHC rhc2;
 
 	// Telecom equipment
 	DSE  dataRecorder;

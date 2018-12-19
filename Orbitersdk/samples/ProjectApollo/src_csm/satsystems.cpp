@@ -1596,6 +1596,11 @@ void Saturn::JoystickTimestep()
 			}
 		}
 
+		int rhc_pos[3] = { rhc_x_pos, rhc_y_pos, rhc_rot_pos };
+
+		rhc1.Timestep(rhc_pos, rhc_voltage1 > SP_MIN_DCVOLTAGE, eca.IsAC1Powered(), rhc_directv1 > SP_MIN_DCVOLTAGE, rhc_directv1 > SP_MIN_DCVOLTAGE);
+
+
 		// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
 		// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
 		// The real RHC had a 12 degree travel. Our joystick travels 32768 points to full deflection.
