@@ -693,8 +693,8 @@ void LEM_RR::SystemTimestep(double simdt) {
 void LEM_RR::DefineAnimations(UINT idx) {
 
 	// RR animation definition
-	ANIMATIONCOMPONENT_HANDLE	ach_RadarPitch, ach_RadarYaw;
-	const VECTOR3	LM_RADAR_PIVOT = { 0.00018, 1.70801, 2.20222 }; // Pivot Point
+	ANIMATIONCOMPONENT_HANDLE ach_RadarPitch, ach_RadarYaw;
+	const VECTOR3 LM_RADAR_PIVOT = { 0.00018, 1.70801, 2.20222 }; // Pivot Point
 	static UINT meshgroup_RRPivot = AS_GRP_RRpivot;
 	static UINT meshgroup_RRAntenna[3] = { AS_GRP_RR, AS_GRP_RRdish, AS_GRP_RRdish2 };
 	static MGROUP_ROTATE mgt_Radar_pivot(idx, &meshgroup_RRPivot, 1, LM_RADAR_PIVOT, _V(-1, 0, 0), (float)(RAD * 360));

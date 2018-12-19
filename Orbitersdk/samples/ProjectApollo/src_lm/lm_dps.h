@@ -162,6 +162,7 @@ public:
 	void Init(LEM *s);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
+	void DefineAnimations(UINT idx);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 
@@ -187,6 +188,11 @@ public:
 protected:
 
 	THRUSTER_HANDLE *dpsThruster;
+
+	// Animations
+	UINT anim_DPSGimballPitch, anim_DPSGimballRoll;
+	double dpsgimball_proc[2];
+	double dpsgimball_proc_last[2];
 
 };
 
