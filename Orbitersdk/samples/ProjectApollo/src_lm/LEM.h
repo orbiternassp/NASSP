@@ -377,9 +377,10 @@ public:
 
 	void Init();
 	void SetStateEx(const void *status);
-	void SetLmVesselDockStage(bool ovrdDPSProp = false);
+	void SetLmVesselDockStage();
 	void SetLmVesselHoverStage();
 	void SetLmAscentHoverStage();
+	void SetLmDockingPort(double offs);
 	void SetLmLandedMesh();
 	void SetLMMeshVis();
 	void SetLMMeshVisVC();
@@ -415,6 +416,7 @@ public:
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);
 	void PostLoadSetup();
+	void DefineAnimations();
 
 	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void PanelSwitchToggled(ToggleSwitch *s);
@@ -1404,8 +1406,6 @@ protected:
 
 	bool FirstTimestep;
 
-	bool bModeDocked;
-	bool bModeHover;
 	bool ToggleEva;
 	bool CDREVA_IP;
 	bool HasProgramer;

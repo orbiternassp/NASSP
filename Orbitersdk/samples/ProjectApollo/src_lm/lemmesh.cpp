@@ -123,7 +123,7 @@ void LEM::StopEVA()
 	CDRSuited->number = 1;
 }
 
-void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
+void LEM::SetLmVesselDockStage()
 
 {
 	ClearThrusterDefinitions();
@@ -205,14 +205,7 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	{
 		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
-	else
-	{
-		SetPropellantMaxMass(ph_Dsc, DescentFuelMassKg);
-		if (ovrdDPSProp)
-		{
-			SetPropellantMass(ph_Dsc, DescentFuelMassKg);
-		}
-	}
+
 	SetDefaultPropellantResource(ph_Dsc); // display 2nd stage propellant level in generic HUD
 
 	// 133.084001 kg is 293.4 pounds, which is the fuel + oxidizer capacity of one RCS tank.
@@ -241,13 +234,7 @@ void LEM::SetLmVesselDockStage(bool ovrdDPSProp)
 	AddRCS_LMH(-5.4516);
 	status = 0;
 	stage = 0;
-	bModeDocked=true;
 
-	VECTOR3 dockpos = {0.0 ,2.6, 0.0};
-    VECTOR3 dockdir = {0,1,0};
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	SetDockParams(dockpos, dockdir, dockrot);
-	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
 
 	// Descent stage attached.
@@ -384,13 +371,7 @@ void LEM::SetLmVesselHoverStage()
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-5.4516);
-	bModeHover=true;
 
-	VECTOR3 dockpos = {0.0 ,2.6, 0.0};	
-	VECTOR3 dockdir = {0,1,0};
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	SetDockParams(dockpos, dockdir, dockrot);
-	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 	InitNavRadios (4);
 
 	// Descent stage attached.
@@ -499,19 +480,13 @@ void LEM::SetLmAscentHoverStage()
 	stage = 2;
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-7.2016);
-	bModeHover=true;
 
 	if(ph_Dsc){
 		DelPropellantResource(ph_Dsc);
 		ph_Dsc = 0;
 	}
 	
-	VECTOR3 dockpos = {0.0 ,0.85, 0.0};
-	VECTOR3 dockdir = {0,1,0};
-
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	SetDockParams(dockpos, dockdir, dockrot);
-	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
+	SetLmDockingPort(0.85);
 	InitNavRadios (4);
 
 	// Descent stage attached.

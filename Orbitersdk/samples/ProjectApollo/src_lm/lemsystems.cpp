@@ -144,6 +144,16 @@ void LEM::AddRCS_LMH(double TRANY)
 	//	CreateThrusterGroup (th_rcs,   1, THGROUP_ATT_YAWLEFT);
 }
 
+void LEM::SetLmDockingPort(double offs)
+{
+	VECTOR3 dockpos = { 0.0 ,offs, 0.0 };
+	VECTOR3 dockdir = { 0,1,0 };
+
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
+	SetDockParams(dockpos, dockdir, dockrot);
+	hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
+}
+
 void LEM::SystemsInit()
 
 {
