@@ -41,6 +41,7 @@
 #include "LEM.h"
 #include "leva.h"
 #include "Sat5LMDSC.h"
+#include "LM_AscentStageResource.h"
 #include "LM_DescentStageResource.h"
 
 #include "CollisionSDK/CollisionSDK.h"
@@ -625,6 +626,27 @@ void LEM::SetLMMeshVisDsc() {
 	else
 	{
 		SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	}
+}
+
+void LEM::DrogueVis() {
+
+	if (!drogue)
+		return;
+
+	static UINT meshgroup_Drogue = AS_GRP_Drogue;
+	GROUPEDITSPEC ges;
+
+	if (OverheadHatch.IsOpen()) {
+		ges.flags = (GRPEDIT_ADDUSERFLAG);
+		ges.UsrFlag = 3;
+		oapiEditMeshGroup(drogue, meshgroup_Drogue, &ges);
+	}
+	else
+	{
+		ges.flags = (GRPEDIT_SETUSERFLAG);
+		ges.UsrFlag = 0;
+		oapiEditMeshGroup(drogue, meshgroup_Drogue, &ges);
 	}
 }
 
