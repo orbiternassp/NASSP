@@ -4403,6 +4403,7 @@ protected:
 	friend class EDA;
 	friend class RJEC;
 	friend class ECA;
+	friend class TVSA;
 	friend class CSMcomputer; // I want this to be able to see the GDC	
 	friend class LEMcomputer; 
 	friend class PCM;         // Otherwise reading telemetry is a pain

@@ -586,6 +586,9 @@ protected:
 	void ResetRelays();
 	void ResetTransistors();
 
+	double pitchMTVCRate;
+	double yawMTVCRate;
+
 	//RELAYS
 
 	//Roll Min Deadband Enable
@@ -634,10 +637,6 @@ protected:
 
 	//Yaw TVC Manual Cmd Enable
 	bool T2QS1;
-	//Yaw SCS Gimbal Cmd Enable
-	bool T2QS2;
-	//Yaw TVC Gimbal Trim Enable
-	bool T2QS3;
 	//Yaw LM Off Gain Enable
 	bool T2QS11;
 	//Yaw LM On Gain Enable
@@ -661,10 +660,6 @@ protected:
 
 	//Pitch TVC Manual Cmd Enable
 	bool T3QS1;
-	//Pitch SCS Gimbal Cmd Enable
-	bool T3QS2;
-	//Pitch TVC Gimbal Trim Enable
-	bool T3QS3;
 	//Pitch LM Off Gain Enable
 	bool T3QS11;
 	//Pitch LM On Gain Enable
@@ -685,6 +680,49 @@ protected:
 	bool T3QS43;
 	//Pitch Pseudo Rate Disable
 	bool T3QS44;
+};
+
+//Thrust Vector Servo Amplifier Assembly
+class TVSA
+{
+public:
+	TVSA();
+	void Init(Saturn *vessel);										// Initialization
+	void TimeStep(double simdt);                                    // Timestep
+	void SystemTimestep(double simdt);
+protected:
+	//RELAYS
+
+	//Pitch Servo No. 2 Engage
+	bool A4K1;
+	//Pitch Servo No. 2 Engage
+	bool A4K2;
+	//Pitch Servo No. 2 Engage
+	bool A4K3;
+	//Yaw Servo No. 2 Engage
+	bool A4K4;
+	//Yaw Servo No. 2 Engage
+	bool A4K5;
+	//Yaw Servo No. 2 Engage
+	bool A4K6;
+	//Pitch Servo No. 2 Engage
+	bool A4K7;
+	//Yaw Servo No. 2 Engage
+	bool A4K8;
+
+	//TRANSISTORS
+
+	//Yaw SCS Gimbal Cmd Enable
+	bool T2QS2;
+	//Yaw TVC Gimbal Trim Enable
+	bool T2QS3;
+
+	//Pitch SCS Gimbal Cmd Enable
+	bool T3QS2;
+	//Pitch TVC Gimbal Trim Enable
+	bool T3QS3;
+
+	Saturn *sat;
 };
 
 

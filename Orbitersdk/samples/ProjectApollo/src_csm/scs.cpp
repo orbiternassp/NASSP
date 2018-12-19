@@ -3333,6 +3333,8 @@ ECA::ECA() {
 	accel_yaw_trigger = 0;
 	mnimp_yaw_trigger = 0;
 	pseudorate = _V(0,0,0);
+	yawMTVCRate = 0.0;
+	pitchMTVCRate = 0.0;
 
 	sat = NULL;
 
@@ -3370,7 +3372,6 @@ void ECA::ResetTransistors()
 	T1QS43 = false;
 	T1QS44 = false;
 	T2QS1 = false;
-	T2QS2 = false;
 	T2QS11 = false;
 	T2QS12 = false;
 	T2QS21 = false;
@@ -3382,7 +3383,6 @@ void ECA::ResetTransistors()
 	T2QS43 = false;
 	T2QS44 = false;
 	T3QS1 = false;
-	T3QS2 = false;
 	T3QS11 = false;
 	T3QS12 = false;
 	T3QS21 = false;
@@ -3621,10 +3621,6 @@ void ECA::TimeStep(double simdt) {
 	//THRUST VECTOR CONTROL (Modules A1 and A5)
 	T2QS1 = !((S18_1 || !(S39_1 && thc_cw)) && (S39_1 || (S18_1 && !thc_cw)));
 
-	logic1 = !(S18_1 && !thc_cw);
-	T2QS2 = logic1 && (!((thc_cw && !S18_1) || !(S39_1 && !IGN2)));
-	T2QS3 = logic1;
-
 	logic1 = S18_1 || S39_1 || !IGN2;
 	logic2 = !thc_cw || S39_1 || !IGN2;
 	logic3 = S39_2 || S39_3 || !thc_cw || S18_1 || !IGN2;
@@ -3641,10 +3637,6 @@ void ECA::TimeStep(double simdt) {
 	}
 
 	T3QS1 = !((S18_1 || !(S38_1 && thc_cw)) && (S38_1 || (S18_1 && !thc_cw)));
-
-	logic1 = !(S18_1 && !thc_cw);
-	T3QS2 = logic1 && (!((thc_cw && !S18_1) || !(S38_1 && !IGN2)));
-	T3QS3 = logic1;
 
 	logic1 = S18_1 || S38_1 || !IGN2;
 	logic2 = !thc_cw || S38_1 || !IGN2;
@@ -3712,7 +3704,7 @@ void ECA::TimeStep(double simdt) {
 	}
 	// ERROR DETERMINATION
 	VECTOR3 target, errors;
-	if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) {
+	if (S18_2 || thc_cw) {
 		// Get BMAG1 attitude errors
 		// Attitude hold automatic mode only when BMAG 1 uncaged and powered
 		target.x = (E1_506 && T1QS21) ? sat->bmag1.GetAttitudeError().x : 0.0;
@@ -4115,13 +4107,14 @@ void ECA::TimeStep(double simdt) {
 
 		//MTVC
 		if (T2QS1)
-		{
-			//TBD: Output MTVC Cmd to yaw servos 1 and 2
-		}
+			yawMTVCRate = rhc_rate.z;
+		else
+			yawMTVCRate = 0.0;
+
 		if (T3QS1)
-		{
-			//TBD: Output MTVC Cmd to pitch servos 1 and 2
-		}
+			pitchMTVCRate = rhc_rate.y;
+		else
+			pitchMTVCRate = 0.0;
 
 		//Auto TVC
 	}
@@ -4163,6 +4156,93 @@ void ECA::TimeStep(double simdt) {
 		mnimp_yaw_trigger=0;
 	}
 	// sprintf(oapiDebugString(),"SCS: mnimp_roll_trigger %d mnimp_roll_flag %d", mnimp_roll_trigger, mnimp_roll_flag);
+}
+
+//Thrust Vector Servo Amplifier Assembly
+TVSA::TVSA()
+{
+	A4K1 = false;
+	A4K2 = false;
+	A4K3 = false;
+	A4K4 = false;
+	A4K5 = false;
+	A4K6 = false;
+	A4K7 = false;
+	A4K8 = false;
+	T2QS2 = false;
+	T2QS3 = false;
+	T3QS2 = false;
+	T3QS3 = false;
+}
+
+void TVSA::Init(Saturn *vessel) {
+	sat = vessel;
+}
+
+void TVSA::TimeStep(double simdt)
+{
+	bool logic1, logic2, scslogic1, scslogic2, scslogic3, S18_1, S27_2, S27_3, S28_2, S28_3, S38_1, S39_1, thc_cw, IGN2, yawovercur, pitchovercur;
+
+	scslogic1 = sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE;
+	scslogic2 = sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE;
+	scslogic3 = sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE;
+
+	S18_1 = sat->SCContSwitch.IsUp() && scslogic2;
+	S27_2 = sat->TVCGimbalDrivePitchSwitch.IsCenter() && scslogic1;
+	S27_3 = sat->TVCGimbalDrivePitchSwitch.IsDown() && scslogic3;
+	S28_2 = sat->TVCGimbalDriveYawSwitch.IsCenter() && scslogic1;
+	S28_3 = sat->TVCGimbalDriveYawSwitch.IsDown() && scslogic3;
+	S38_1 = sat->SCSTvcPitchSwitch.IsUp() && scslogic3;
+	S39_1 = sat->SCSTvcYawSwitch.IsUp() && scslogic3;
+	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
+	IGN2 = sat->rjec.GetSPSActive();
+	//TBD: Get from gimbal motors
+	pitchovercur = false;
+	yawovercur = false;
+
+	logic1 = !(S18_1 && !thc_cw);
+	T2QS2 = logic1 && (!((thc_cw && !S18_1) || !(S39_1 && !IGN2)));
+	T2QS3 = logic1;
+
+	logic1 = !(S18_1 && !thc_cw);
+	T3QS2 = logic1 && (!((thc_cw && !S18_1) || !(S38_1 && !IGN2)));
+	T3QS3 = logic1;
+
+	logic1 = S27_2 || S27_3;
+	logic2 = S27_2 || pitchovercur || thc_cw;
+
+	if (!(logic1 && logic2))
+	{
+		A4K1 = true;
+		A4K2 = true;
+		A4K3 = true;
+		A4K7 = true;
+	}
+	else
+	{
+		A4K1 = false;
+		A4K2 = false;
+		A4K3 = false;
+		A4K7 = false;
+	}
+
+	logic1 = S28_2 || S28_3;
+	logic2 = S28_2 || yawovercur || thc_cw;
+
+	if (!(logic1 && logic2))
+	{
+		A4K4 = true;
+		A4K5 = true;
+		A4K6 = true;
+		A4K8 = true;
+	}
+	else
+	{
+		A4K4 = false;
+		A4K5 = false;
+		A4K6 = false;
+		A4K8 = false;
+	}
 }
 
 
