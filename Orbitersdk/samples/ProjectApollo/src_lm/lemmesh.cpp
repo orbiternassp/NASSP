@@ -41,7 +41,7 @@
 #include "LEM.h"
 #include "leva.h"
 #include "Sat5LMDSC.h"
-#include "LM_AscentStageResource.h"
+#include "LM_DescentStageResource.h"
 
 #include "CollisionSDK/CollisionSDK.h"
 
@@ -49,7 +49,6 @@ static MESHHANDLE hLMDescent;
 static MESHHANDLE hLMDescentNoLeg;
 static MESHHANDLE hLMAscent ;
 static MESHHANDLE hAstro1 ;
-static MESHHANDLE hLemProbes;
 static MESHHANDLE hLMVC;
 
 static PARTICLESTREAMSPEC lunar_dust = {
@@ -331,14 +330,6 @@ void LEM::SetLmVesselHoverStage()
 
 	SetTouchdownPoints(td, 8);
 
-	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
-
-	// Probe Mesh
-	if (!Landed && !NoLegs) {
-		probeidx = AddMesh(hLemProbes, &mesh_dsc);
-		SetMeshVisibilityMode(probeidx, MESHVIS_VCEXTERNAL);
-	}
-
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
 	}
@@ -469,10 +460,6 @@ void LEM::SetLmAscentHoverStage()
 	// Vessel Meshes
 	DelMesh(dscidx);
 	dscidx = -1;
-	if (!Landed && !NoLegs) {
-		DelMesh(probeidx);
-		probeidx = -1;
-	}
 	ShiftMesh(ascidx, mesh_asc);
 	ShiftMesh(vcidx, mesh_asc);
 
@@ -628,9 +615,8 @@ void LEM::SeparateStage (UINT stage)
 
 void LEM::SetLmLandedMesh() {
 
-	DelMesh(probeidx);
-	probeidx = -1;
 	Landed = true;
+	HideProbes();
 }
 
 void LEM::SetLMMeshVis() {
@@ -664,6 +650,25 @@ void LEM::SetLMMeshVisDsc() {
 	else
 	{
 		SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	}
+}
+
+void LEM::HideProbes() {
+
+	if (!probes)
+		return;
+
+	if (Landed && !NoLegs) {
+		static UINT meshgroup_Probes1[3] = { DS_GRP_Probes1Aft, DS_GRP_Probes1Left, DS_GRP_Probes1Right };
+		static UINT meshgroup_Probes2[3] = { DS_GRP_Probes2Aft, DS_GRP_Probes2Left, DS_GRP_Probes2Right };
+		GROUPEDITSPEC ges;
+
+		for (int i = 0; i < 3; i++) {
+			ges.flags = (GRPEDIT_ADDUSERFLAG);
+			ges.UsrFlag = 3;
+			oapiEditMeshGroup(probes, meshgroup_Probes1[i], &ges);
+			oapiEditMeshGroup(probes, meshgroup_Probes2[i], &ges);
+		}
 	}
 }
 
@@ -722,7 +727,6 @@ void LEMLoadMeshes()
 	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
 	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
 	hAstro1= oapiLoadMeshGlobal ("ProjectApollo/Sat5AstroS");
-	hLemProbes = oapiLoadMeshGlobal ("ProjectApollo/LM_ContactProbes");
 	hLMVC = oapiLoadMeshGlobal("ProjectApollo/LM_VC");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 }
