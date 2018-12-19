@@ -410,6 +410,7 @@ public:
 	void clbkMFDMode (int mfd, int mode);
 	void clbkPostCreation();
 	void clbkVisualCreated(VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);

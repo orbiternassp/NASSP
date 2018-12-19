@@ -258,9 +258,6 @@ LEM::~LEM()
 		dx8ppv->Release();
 		dx8ppv = NULL;
 	}
-
-	probes = NULL;
-
 }
 
 void LEM::Init()
@@ -1457,6 +1454,11 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 	if (Landed && !NoLegs) {
 		HideProbes();
 	}
+}
+
+void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
+{
+	probes = NULL;
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
