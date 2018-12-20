@@ -109,16 +109,18 @@ void LEMOverheadHatch::Toggle()
 void LEMOverheadHatch::LoadState(char *line) {
 
 	int i1;
+	double a, b;
 
-	sscanf(line + 13, "%d", &i1);
+	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
 	open = (i1 != 0);
+	ovhdhatch_state.SetState(a, b);
 }
 
 void LEMOverheadHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i", (open ? 1 : 0));
+	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), ovhdhatch_state.State(), ovhdhatch_state.Speed());
 	oapiWriteScenario_string(scn, "OVERHEADHATCH", buffer);
 }
 
@@ -266,16 +268,18 @@ void LEMForwardHatch::Toggle()
 void LEMForwardHatch::LoadState(char *line) {
 
 	int i1;
+	double a, b;
 
-	sscanf(line + 12, "%d", &i1);
+	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
 	open = (i1 != 0);
+	hatch_state.SetState(a, b);
 }
 
 void LEMForwardHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i", (open ? 1 : 0));
+	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed());
 	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
 }
 
