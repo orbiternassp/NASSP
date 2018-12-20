@@ -385,6 +385,7 @@ public:
 	void SetLMMeshVis();
 	void SetLMMeshVisVC();
 	void SetLMMeshVisDsc();
+	void DrogueVis();
 	void HideProbes();
 	void SetTrackLight();
 	void SetDockingLights();
@@ -1506,6 +1507,7 @@ protected:
 	UINT vcidx;
 
 	DEVMESHHANDLE probes;
+	DEVMESHHANDLE drogue;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

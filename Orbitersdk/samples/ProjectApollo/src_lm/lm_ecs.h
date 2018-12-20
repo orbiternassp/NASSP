@@ -32,6 +32,7 @@ public:
 	LEMOverheadHatch(Sound &opensound, Sound &closesound);
 	void Init(LEM *l, ToggleSwitch *ohh);
 	void DefineAnimations(UINT idx);
+	void DefineAnimationsVC(UINT idx);
 	void Timestep(double simdt);
 	void Toggle();
 
@@ -41,7 +42,6 @@ public:
 	void LoadState(char *line);
 protected:
 	AnimState2 ovhdhatch_state;
-	AnimState2 drogue_state;
 	bool open;
 
 	LEM *lem;
@@ -51,7 +51,7 @@ protected:
 	Sound &CloseSound;
 
 	UINT anim_OvhdHatch;
-	UINT anim_Drogue;
+	UINT anim_OvhdHatchVC;
 };
 
 class LEMOVHDCabinReliefDumpValve
@@ -72,6 +72,7 @@ public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
 	void Init(LEM *l, ToggleSwitch *fhh);
 	void DefineAnimations(UINT idx);
+	void DefineAnimationsVC(UINT idx);
 	void Timestep(double simdt);
 	void Toggle();
 
@@ -90,6 +91,7 @@ protected:
 	Sound &CloseSound;
 
 	UINT anim_Hatch;
+	UINT anim_HatchVC;
 };
 
 class LEMFWDCabinReliefDumpValve
