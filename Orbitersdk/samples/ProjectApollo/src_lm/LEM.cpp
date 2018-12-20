@@ -1041,10 +1041,10 @@ void LEM::SetGenericStageState(int stat)
 	}
 }
 
-void LEM::PostLoadSetup()
+void LEM::PostLoadSetup(bool define_anims)
 {
 	CheckDescentStageSystems();
-	DefineAnimations();
+	if (define_anims) DefineAnimations();
 
 	//
 	// Pass on the mission number and realism setting to the AGC.

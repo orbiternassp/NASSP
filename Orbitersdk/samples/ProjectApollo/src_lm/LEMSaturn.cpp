@@ -488,6 +488,7 @@ void LEMSaturn::TransformToLM()
 	}
 
 	SetLmVesselDockStage();
+	DefineAnimations();
 
 	imu.SetVesselFlag(true);
 }
@@ -541,7 +542,7 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 		break;
 	}
 
-	PostLoadSetup();
+	PostLoadSetup(false);
 
 	if (lemsat_stage < CSM_LEM_STAGE)
 	{

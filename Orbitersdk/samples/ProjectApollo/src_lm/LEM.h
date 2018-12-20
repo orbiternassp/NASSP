@@ -416,7 +416,7 @@ public:
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);
-	void PostLoadSetup();
+	void PostLoadSetup(bool define_anims = true);
 	void DefineAnimations();
 
 	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
