@@ -2503,7 +2503,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	// Use 27.9 watts to move the antenna and 4.0 watts to maintain auto track.
 
 	// S-Band mesh animation
-	sband_proc[0] = pitch / PI2;
+	sband_proc[0] = (-pitch + PI05) / PI2;
 	if (sband_proc[0] < 0) sband_proc[0] += 1.0;
 	sband_proc[1] = -yaw / PI2;
 	if (sband_proc[1] < 0) sband_proc[1] += 1.0;
@@ -2667,7 +2667,7 @@ void LEM_SteerableAnt::DefineAnimations(UINT idx) {
 	ach_SBandYaw = lem->AddAnimationComponent(anim_SBandYaw, 0.0f, 1.0f, &mgt_SBand_Antenna, ach_SBandPitch);
 
 	// Get current S-Band state for animation
-	sband_proc[0] = pitch / PI2;
+	sband_proc[0] = (-pitch + PI05) / PI2;
 	if (sband_proc[0] < 0) sband_proc[0] += 1.0;
 	sband_proc[1] = -yaw / PI2;
 	if (sband_proc[1] < 0) sband_proc[1] += 1.0;

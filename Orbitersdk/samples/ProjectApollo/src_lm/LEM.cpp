@@ -333,6 +333,7 @@ void LEM::Init()
 	dscidx = -1;
 	vcidx = -1;
 
+	drogue = NULL;
 	probes = NULL;
 
 	pMCC = NULL;
@@ -1040,10 +1041,10 @@ void LEM::SetGenericStageState(int stat)
 	}
 }
 
-void LEM::PostLoadSetup()
+void LEM::PostLoadSetup(bool define_anims)
 {
 	CheckDescentStageSystems();
-	DefineAnimations();
+	if (define_anims) DefineAnimations();
 
 	//
 	// Pass on the mission number and realism setting to the AGC.
@@ -1444,6 +1445,10 @@ void LEM::clbkPostCreation()
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 {
+
+	drogue = GetDevMesh(vis, ascidx);
+	DrogueVis();
+
 	probes = GetDevMesh(vis, dscidx);
 	if (Landed && !NoLegs) {
 		HideProbes();
@@ -1452,6 +1457,7 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 {
+	drogue = NULL;
 	probes = NULL;
 }
 
@@ -1462,6 +1468,9 @@ void LEM::DefineAnimations()
 	SBandSteerable.DefineAnimations(ascidx);
 	OverheadHatch.DefineAnimations(ascidx);
 	ForwardHatch.DefineAnimations(ascidx);
+	OverheadHatch.DefineAnimationsVC(vcidx);
+	ForwardHatch.DefineAnimationsVC(vcidx);
+	if (stage < 2) DPS.DefineAnimations(dscidx);
 	if (stage < 1 && !NoLegs) eds.DefineAnimations(dscidx);
 }
 

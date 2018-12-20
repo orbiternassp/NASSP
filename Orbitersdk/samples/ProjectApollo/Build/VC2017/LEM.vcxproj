@@ -396,6 +396,7 @@
     <ClInclude Include="..\..\src_lm\lm_rr.h" />
     <ClInclude Include="..\..\src_lm\lm_scea.h" />
     <ClInclude Include="..\..\src_lm\lm_ttca.h" />
+    <ClInclude Include="..\..\src_lm\LM_VC_Resource.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_saturn\dcs.h" />
     <ClInclude Include="..\..\src_saturn\eds.h" />

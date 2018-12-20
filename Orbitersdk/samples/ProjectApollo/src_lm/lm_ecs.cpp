@@ -24,6 +24,7 @@
 
 #include "Orbitersdk.h"
 #include "LM_AscentStageResource.h"
+#include "LM_VC_Resource.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
 #include "LEM.h"
@@ -37,9 +38,7 @@ LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
 	lem = NULL;
 
 	ovhdhatch_state.SetOperatingSpeed(0.2);
-	drogue_state.SetOperatingSpeed(0.2);
 	anim_OvhdHatch = -1;
-	anim_Drogue = -1;
 }
 
 void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh)
@@ -50,31 +49,37 @@ void LEMOverheadHatch::Init(LEM *l, ToggleSwitch *fhh)
 
 void LEMOverheadHatch::DefineAnimations(UINT idx)
 {
-	// Overhead Hatch and Drogue Animations
-	ANIMATIONCOMPONENT_HANDLE	ach_OvhdHatch, ach_Drogue;
+	// Overhead Hatch Animations
+	ANIMATIONCOMPONENT_HANDLE ach_OvhdHatch;
 
 	static UINT	meshgroup_OvhdHatch = AS_GRP_UpperHatch;
-	static MGROUP_ROTATE	mgt_OvhdHatch(idx, &meshgroup_OvhdHatch, 1, _V(0.00, 1.06214, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+	static MGROUP_ROTATE mgt_OvhdHatch(idx, &meshgroup_OvhdHatch, 1, _V(0.00, 1.02873, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+
 	anim_OvhdHatch = lem->CreateAnimation(0.0);
 	ach_OvhdHatch = lem->AddAnimationComponent(anim_OvhdHatch, 0.0f, 1.0f, &mgt_OvhdHatch);
 
-	static UINT	meshgroup_Drogue = AS_GRP_Drogue;
-	static MGROUP_ROTATE	mgt_Drogue(idx, &meshgroup_Drogue, 1, _V(0.00, 1.46562, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
-	anim_Drogue = lem->CreateAnimation(0.0);
-	ach_Drogue = lem->AddAnimationComponent(anim_Drogue, 0.0f, 1.0f, &mgt_Drogue);
-
 	lem->SetAnimation(anim_OvhdHatch, ovhdhatch_state.State());
-	lem->SetAnimation(anim_Drogue, drogue_state.State());
+}
+
+void LEMOverheadHatch::DefineAnimationsVC(UINT idx)
+{
+	// Overhead Hatch Animations
+	ANIMATIONCOMPONENT_HANDLE ach_OvhdHatchVC;
+
+	static UINT	meshgroup_OvhdHatchVC = VC_GRP_UpperHatch;
+	static MGROUP_ROTATE mgt_OvhdHatchVC(idx, &meshgroup_OvhdHatchVC, 1, _V(0.00, 1.02873, -0.40544), _V(-1.0, 0.0, 0.0), (float)(-90.0*RAD));
+
+	anim_OvhdHatchVC = lem->CreateAnimation(0.0);
+	ach_OvhdHatchVC = lem->AddAnimationComponent(anim_OvhdHatchVC, 0.0f, 1.0f, &mgt_OvhdHatchVC);
+
+	lem->SetAnimation(anim_OvhdHatchVC, ovhdhatch_state.State());
 }
 
 void LEMOverheadHatch::Timestep(double simdt)
 {
 	if (ovhdhatch_state.Process(simdt)) {
 		lem->SetAnimation(anim_OvhdHatch, ovhdhatch_state.State());
-	}
-
-	if (drogue_state.Process(simdt)) {
-		lem->SetAnimation(anim_Drogue, drogue_state.State());
+		lem->SetAnimation(anim_OvhdHatchVC, ovhdhatch_state.State());
 	}
 }
 
@@ -88,7 +93,7 @@ void LEMOverheadHatch::Toggle()
 			OpenSound.play();
 			lem->PanelRefreshOverheadHatch();
 			ovhdhatch_state.Open();
-			drogue_state.Open();
+			lem->DrogueVis();
 		}
 	}
 	else
@@ -97,23 +102,25 @@ void LEMOverheadHatch::Toggle()
 		CloseSound.play();
 		lem->PanelRefreshOverheadHatch();
 		ovhdhatch_state.Close();
-		drogue_state.Close();
+		lem->DrogueVis();
 	}
 }
 
 void LEMOverheadHatch::LoadState(char *line) {
 
 	int i1;
+	double a, b;
 
-	sscanf(line + 13, "%d", &i1);
+	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
 	open = (i1 != 0);
+	ovhdhatch_state.SetState(a, b);
 }
 
 void LEMOverheadHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i", (open ? 1 : 0));
+	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), ovhdhatch_state.State(), ovhdhatch_state.Speed());
 	oapiWriteScenario_string(scn, "OVERHEADHATCH", buffer);
 }
 
@@ -212,16 +219,28 @@ void LEMForwardHatch::DefineAnimations(UINT idx)
 	// Forward Hatch Animation
 	ANIMATIONCOMPONENT_HANDLE	ach_Hatch;
 	static UINT	meshgroup_Hatch = AS_GRP_FwdHatch;
-	static MGROUP_ROTATE	mgt_Hatch(idx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.68476), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
+	static MGROUP_ROTATE	mgt_Hatch(idx, &meshgroup_Hatch, 1, _V(0.39366, -0.57839, 1.63386), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
 	anim_Hatch = lem->CreateAnimation(0.0);
 	ach_Hatch = lem->AddAnimationComponent(anim_Hatch, 0.0f, 1.0f, &mgt_Hatch);
 	lem->SetAnimation(anim_Hatch, hatch_state.State());
+}
+
+void LEMForwardHatch::DefineAnimationsVC(UINT idx)
+{
+	// Forward Hatch Animation
+	ANIMATIONCOMPONENT_HANDLE	ach_HatchVC;
+	static UINT	meshgroup_HatchVC = VC_GRP_FwdHatch;
+	static MGROUP_ROTATE	mgt_HatchVC(idx, &meshgroup_HatchVC, 1, _V(0.39366, -0.57839, 1.63386), _V(0.0, 1.0, 0.0), (float)(-85.0*RAD));
+	anim_HatchVC = lem->CreateAnimation(0.0);
+	ach_HatchVC = lem->AddAnimationComponent(anim_HatchVC, 0.0f, 1.0f, &mgt_HatchVC);
+	lem->SetAnimation(anim_HatchVC, hatch_state.State());
 }
 
 void LEMForwardHatch::Timestep(double simdt)
 {
 	if (hatch_state.Process(simdt)) {
 		lem->SetAnimation(anim_Hatch, hatch_state.State());
+		lem->SetAnimation(anim_HatchVC, hatch_state.State());
 	}
 }
 
@@ -249,16 +268,18 @@ void LEMForwardHatch::Toggle()
 void LEMForwardHatch::LoadState(char *line) {
 
 	int i1;
+	double a, b;
 
-	sscanf(line + 12, "%d", &i1);
+	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
 	open = (i1 != 0);
+	hatch_state.SetState(a, b);
 }
 
 void LEMForwardHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i", (open ? 1 : 0));
+	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed());
 	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
 }
 

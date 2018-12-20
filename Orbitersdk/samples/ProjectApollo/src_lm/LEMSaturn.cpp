@@ -488,6 +488,7 @@ void LEMSaturn::TransformToLM()
 	}
 
 	SetLmVesselDockStage();
+	DefineAnimations();
 
 	imu.SetVesselFlag(true);
 }
@@ -522,6 +523,7 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 		CreateSIBSystems();
 		CreateSIVBSystems();
 		CreateIUSystems();
+		PostLoadSetup(false);
 		break;
 
 	case LAUNCH_STAGE_SIVB:
@@ -534,14 +536,14 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 
 		CreateSIVBSystems();
 		CreateIUSystems();
+		PostLoadSetup(false);
 		
 		break;
 	default:
 		SetGenericStageState(status);
+		PostLoadSetup();
 		break;
 	}
-
-	PostLoadSetup();
 
 	if (lemsat_stage < CSM_LEM_STAGE)
 	{
