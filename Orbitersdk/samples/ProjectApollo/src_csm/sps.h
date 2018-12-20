@@ -92,7 +92,7 @@ public:
 	void Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
 	          e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource,
 			  ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch, AGCIOSwitch* csmlmcogSwitch);
-	void Timestep(double simt, double simdt, double attitudeError, double attitudeRate, int rhcAxis);
+	void Timestep(double simt, double simdt, double attitudeError, double attitudeRate, double rhcAxis);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);

@@ -3074,13 +3074,13 @@ void RJEC::TimeStep(double simdt){
 	// Roll
 
 	if (sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_UP) {		
-		if (sat->eca.rhc_x < 28673) {  // MINUS
+		if (sat->rhc1.GetMinusRollBreakoutSwitch() || sat->rhc2.GetMinusRollBreakoutSwitch()) {  // MINUS
 			td[10] = true;
 			td[12] = true;
 			td[14] = true;
 			td[16] = true;
 		}
-		if (sat->eca.rhc_x > 36863) { // PLUS
+		if (sat->rhc1.GetPlusRollBreakoutSwitch() || sat->rhc2.GetPlusRollBreakoutSwitch()) { // PLUS
 			td[9] = true;
 			td[11] = true;
 			td[13] = true;
@@ -3102,11 +3102,11 @@ void RJEC::TimeStep(double simdt){
 	// Pitch
 
 	if (sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_UP) {		
-		if (sat->eca.rhc_y < 28673) {  // MINUS
+		if (sat->rhc1.GetMinusPitchBreakoutSwitch() || sat->rhc2.GetMinusPitchBreakoutSwitch()) {  // MINUS
 			td[2] = true;
 			td[4] = true;
 		}
-		if (sat->eca.rhc_y > 36863) { // PLUS
+		if (sat->rhc1.GetPlusPitchBreakoutSwitch() || sat->rhc2.GetPlusPitchBreakoutSwitch()) { // PLUS
 			td[1] = true;
 			td[3] = true;
 		}
@@ -3122,11 +3122,11 @@ void RJEC::TimeStep(double simdt){
 	// Yaw
 	
 	if (sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_UP) {		
-		if (sat->eca.rhc_z < 28673) {  // MINUS
+		if (sat->rhc1.GetMinusYawBreakoutSwitch() || sat->rhc2.GetMinusYawBreakoutSwitch()) {  // MINUS
 			td[6] = true;
 			td[8] = true;
 		}
-		if (sat->eca.rhc_z > 36863) { // PLUS
+		if (sat->rhc1.GetPlusYawBreakoutSwitch() || sat->rhc2.GetPlusYawBreakoutSwitch()) { // PLUS
 			td[5] = true;
 			td[7] = true;
 		}
@@ -3316,12 +3316,6 @@ void RJEC::LoadState(FILEHANDLE scn){
 
 ECA::ECA() {
 
-	rhc_x = 32768;
-	rhc_y = 32768;
-	rhc_z = 32768;
-	rhc_ac_x = 32768;
-	rhc_ac_y = 32768;
-	rhc_ac_z = 32768;
 	thc_x = 32768;
 	thc_y = 32768;
 	thc_z = 32768;
@@ -3467,7 +3461,7 @@ void ECA::TimeStep(double simdt) {
 	bool scslogic1, scslogic2, scslogic3, scslogic4;
 	bool S7_1, S7_3, S8_1, S8_3, S9_1, S9_3, S10_2, S11_2, S12_1, S18_1, S18_2, S20_1, S20_2, S20_3, S21_1, S21_2, S21_3, S22_1, S22_2, S22_3;
 	bool S38_1, S38_2, S38_3, S39_1, S39_2, S39_3, S51_1, S54_1;
-	bool IGN2, thc_cw;
+	bool IGN2, thc_cw, RHCRollBO, RHCPitchBO, RHCYawBO;
 
 	scslogic1 = sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE;
 	scslogic2 = sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE;
@@ -3504,10 +3498,13 @@ void ECA::TimeStep(double simdt) {
 	S54_1 = sat->CGSwitch.IsUp() && scslogic3;
 	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
 	IGN2 = sat->rjec.GetSPSActive();
+	RHCRollBO = sat->rhc1.GetPlusRollBreakoutSwitch() || sat->rhc1.GetMinusRollBreakoutSwitch() || sat->rhc2.GetPlusRollBreakoutSwitch() || sat->rhc2.GetMinusRollBreakoutSwitch();
+	RHCPitchBO = sat->rhc1.GetPlusPitchBreakoutSwitch() || sat->rhc1.GetMinusPitchBreakoutSwitch() || sat->rhc2.GetPlusPitchBreakoutSwitch() || sat->rhc2.GetMinusPitchBreakoutSwitch();
+	RHCYawBO = sat->rhc1.GetPlusYawBreakoutSwitch() || sat->rhc1.GetMinusYawBreakoutSwitch() || sat->rhc2.GetPlusYawBreakoutSwitch() || sat->rhc2.GetMinusYawBreakoutSwitch();
 
 	//GYRO UNCAGE LOGIC (Module A8)
 	logic1 = S20_1 || S20_3 || S51_1 || !IGN2;
-	logic2 = S20_1 || S20_3 || S51_1 || (sat->eca.rhc_x < 28673 || sat->eca.rhc_x > 36863) || (S7_1 || S7_3);
+	logic2 = S20_1 || S20_3 || S51_1 || RHCRollBO || (S7_1 || S7_3);
 
 	if (!logic1 || !logic2)
 	{
@@ -3521,7 +3518,7 @@ void ECA::TimeStep(double simdt) {
 	}
 
 	logic1 = S22_1 || S22_3 || S51_1 || !IGN2;
-	logic2 = S22_1 || S22_3 || S51_1 || (sat->eca.rhc_z < 28673 || sat->eca.rhc_z > 36863) || (S9_1 || S9_3);
+	logic2 = S22_1 || S22_3 || S51_1 || RHCYawBO || (S9_1 || S9_3);
 
 	if (!logic1 || !logic2)
 	{
@@ -3535,7 +3532,7 @@ void ECA::TimeStep(double simdt) {
 	}
 
 	logic1 = S21_1 || S21_3 || S51_1 || !IGN2;
-	logic2 = S21_1 || S21_3 || S51_1 || (sat->eca.rhc_y < 28673 || sat->eca.rhc_y > 36863) || (S8_1 || S8_3);
+	logic2 = S21_1 || S21_3 || S51_1 || RHCPitchBO || (S8_1 || S8_3);
 
 	if (!logic1 || !logic2)
 	{
@@ -3571,6 +3568,22 @@ void ECA::TimeStep(double simdt) {
 	R2K30 = (!logic1 || !logic2 || !logic3) && (S22_1 || S22_2);
 
 	//REACTION JET CONTROL (Modules A2, A4 and A6)
+
+	if (RHCRollBO)
+		T1QS32 = true;
+	else
+		T1QS32 = false;
+
+	if (RHCPitchBO)
+		T3QS32 = true;
+	else
+		T3QS32 = false;
+
+	if (RHCYawBO)
+		T2QS32 = true;
+	else
+		T2QS32 = false;
+
 	if (S10_2)
 	{
 		T1QS44 = true;
@@ -3680,6 +3693,8 @@ void ECA::TimeStep(double simdt) {
 	VECTOR3 cmd_rate = _V(0,0,0);
 	VECTOR3 rate_err = _V(0,0,0);
 	VECTOR3 rhc_rate = _V(0, 0, 0);
+	yawMTVCRate = 0.0;
+	pitchMTVCRate = 0.0;
 	if (mnimp_roll_trigger) {
 		sat->rjec.SetThruster(9,0);
 		sat->rjec.SetThruster(10,0);
@@ -3789,58 +3804,25 @@ void ECA::TimeStep(double simdt) {
 		// Proportional Rate Demand 
 		// The proportional rate commands are powered by AC, the signals are routed through the breakout switches, 
 		// so the breakout switches must be set, too (see AOH fig. 2.3-19)
-		int x_def = 0, y_def = 0, z_def = 0;
-
-		if (rhc_ac_x < 28673 && rhc_x < 28673) { // MINUS 
-			x_def = 28673 - rhc_ac_x; 
-		}
-		if (rhc_ac_x > 36863 && rhc_x > 36863) { // PLUS 
-			x_def = (36863 - rhc_ac_x);
-		}
-		if (rhc_ac_y < 28673 && rhc_y < 28673) { // MINUS 
-			y_def = 28673 - rhc_ac_y; 
-		}
-		if (rhc_ac_y > 36863 && rhc_y > 36863) { // PLUS 
-			y_def = (36863 - rhc_ac_y);
-		}
-		if (rhc_ac_z < 28673 && rhc_z < 28673) { // MINUS 
-			z_def = 28673 - rhc_ac_z; 
-		}
-		if (rhc_ac_z > 36863 && rhc_z > 36863) { // PLUS 
-			z_def = (36863 - rhc_ac_z);
-		}
 
 		// HIGH RATE: MAX RATE 7 dps pitch/yaw, 20 dps roll
 		// LOW RATE: MAX RATE .7 dps roll/pitch/yaw 
-		double axis_percent=0;
 
-		//Todo: Differentiate between the two RHCs
-		if ((E1_509 || E2_509) && E2_507)
+		if (E2_507)
 		{
-			if (R1K25)
-			{
-				if (x_def != 0) {
-					axis_percent = (double)x_def / (double)28673;
-					rhc_rate.x = -(22.0*RAD*axis_percent);
-				}
-			}
-			else
-			{
-				if (x_def != 0) {
-					axis_percent = (double)x_def / (double)28673;
-					rhc_rate.x = -(9.0*RAD*axis_percent);
-				}
-			}
+			if (E1_509) rhc_rate.x += sat->rhc1.GetRollPropRate();
+			if (E2_509) rhc_rate.x += sat->rhc2.GetRollPropRate();
+			rhc_rate.x *= 9.0*RAD;
+			//High Roll Rate
+			if (R1K25) rhc_rate.x *= 22.0 / 9.0;
 
-			if (y_def != 0) {
-				axis_percent = (double)y_def / (double)28673;
-				rhc_rate.y = -(9.0*RAD*axis_percent);
-			}
+			if (E1_509) rhc_rate.y += sat->rhc1.GetPitchPropRate();
+			if (E2_509) rhc_rate.y += sat->rhc2.GetPitchPropRate();
+			rhc_rate.y *= 9.0*RAD;
 
-			if (z_def != 0) {
-				axis_percent = (double)z_def / (double)28673;
-				rhc_rate.z = (9.0*RAD*axis_percent);
-			}
+			if (E1_509) rhc_rate.z += sat->rhc1.GetYawPropRate();
+			if (E2_509) rhc_rate.z += sat->rhc2.GetYawPropRate();
+			rhc_rate.z *= -9.0*RAD;
 		}
 
 		//MTVC Rate
@@ -3849,7 +3831,12 @@ void ECA::TimeStep(double simdt) {
 		if (E1_509 && R2K31) rhc_rate.z += sat->bmag1.GetRates().y;
 		if (E2_509 && R2K30) rhc_rate.z += sat->bmag2.GetRates().y;
 
-		cmd_rate += rhc_rate;
+		if (T1QS32)
+			cmd_rate.x += rhc_rate.x;
+		if (T3QS32)
+			cmd_rate.y += rhc_rate.y;
+		if (T2QS32)
+			cmd_rate.z += rhc_rate.z;
 
 		// RATE DAMPING
 		VECTOR3 rate_damp;
@@ -3996,7 +3983,7 @@ void ECA::TimeStep(double simdt) {
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
 				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
-				if (rhc_x < 28673) {  // MINUS
+				if (sat->rhc1.GetMinusRollBreakoutSwitch() || sat->rhc2.GetMinusRollBreakoutSwitch()) {  // MINUS
 					if(!mnimp_roll_trigger){
 						sat->rjec.SetThruster(10,1);
 						sat->rjec.SetThruster(12,1);
@@ -4005,7 +3992,7 @@ void ECA::TimeStep(double simdt) {
 					}
 					mnimp_roll_trigger=1; mnimp_roll_flag=1;
 				}
-				if (rhc_x > 36863) { // PLUS
+				if (sat->rhc1.GetPlusRollBreakoutSwitch() || sat->rhc2.GetPlusRollBreakoutSwitch()) { // PLUS
 					if(!mnimp_roll_trigger){
 						sat->rjec.SetThruster(9,1);
 						sat->rjec.SetThruster(11,1);
@@ -4043,14 +4030,14 @@ void ECA::TimeStep(double simdt) {
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
 				// ECA auto-control is inhibited. Auto fire one-shot commands are generated from the breakout switches.
-				if (rhc_y < 28673) {  // MINUS
+				if (sat->rhc1.GetMinusPitchBreakoutSwitch() || sat->rhc2.GetMinusPitchBreakoutSwitch()) {  // MINUS
 					if(!mnimp_pitch_trigger){
 						sat->rjec.SetThruster(2,1);
 						sat->rjec.SetThruster(4,1);
 					}
 					mnimp_pitch_trigger=1; mnimp_pitch_flag=1;
 				}
-				if (rhc_y > 36863) { // PLUS
+				if (sat->rhc1.GetPlusPitchBreakoutSwitch() || sat->rhc2.GetPlusPitchBreakoutSwitch()) { // PLUS
 					if(!mnimp_pitch_trigger){
 						sat->rjec.SetThruster(1,1);
 						sat->rjec.SetThruster(3,1);
@@ -4085,14 +4072,14 @@ void ECA::TimeStep(double simdt) {
 				}							
 				break;
 			case THREEPOSSWITCH_DOWN:    // MIN IMP
-				if (rhc_z < 28673) {  // MINUS
+				if (sat->rhc1.GetMinusYawBreakoutSwitch() || sat->rhc2.GetMinusYawBreakoutSwitch()) {  // MINUS
 					if(!mnimp_yaw_trigger){
 						sat->rjec.SetThruster(6,1);
 						sat->rjec.SetThruster(8,1);
 					}
 					mnimp_yaw_trigger=1; mnimp_yaw_flag=1;
 				}
-				if (rhc_z > 36863) { // PLUS
+				if (sat->rhc1.GetPlusYawBreakoutSwitch() || sat->rhc2.GetPlusYawBreakoutSwitch()) { // PLUS
 					if(!mnimp_yaw_trigger){
 						sat->rjec.SetThruster(5,1);
 						sat->rjec.SetThruster(7,1);
@@ -4117,6 +4104,7 @@ void ECA::TimeStep(double simdt) {
 			pitchMTVCRate = 0.0;
 
 		//Auto TVC
+
 	}
 	// If accel thrust fired and is no longer needed, kill it.
 	if(accel_roll_flag == 0 && accel_roll_trigger){
@@ -4243,6 +4231,9 @@ void TVSA::TimeStep(double simdt)
 		A4K6 = false;
 		A4K8 = false;
 	}
+
+	//Pitch Servo No. 1
+	double a = sat->eca.GetPitchMTVCRate() + (T3QS2 ? sat->eca.GetPitchAutoTVCRate() : 0.0);
 }
 
 

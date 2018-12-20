@@ -29,6 +29,51 @@ class RHC
 public:
 	RHC();
 	void Timestep(int* rhc_pos, bool normdc, bool normac, bool dirdcab, bool dirdcredun);
+	void Reset();
+	//Signal 1/2 22
+	double GetPitchPropRate() { return PropRate.y; }
+
+	//Signal 1/2 23
+	double GetYawPropRate() { return PropRate.z; }
+
+	//Signal 1/2 24
+	double GetRollPropRate() { return PropRate.x; }
+
+	//Signal AB 25
+	bool GetPlusPitchBreakoutSwitch() { return PlusBO[1]; }
+	bool GetMinusPitchBreakoutSwitch() { return MinusBO[1]; }
+
+	//Signal AB 26
+	bool GetPlusYawBreakoutSwitch() { return PlusBO[2]; }
+	bool GetMinusYawBreakoutSwitch() { return MinusBO[2]; }
+
+	//Signal AB 27
+	bool GetPlusRollBreakoutSwitch() { return PlusBO[0]; }
+	bool GetMinusRollBreakoutSwitch() { return MinusBO[0]; }
+
+	//Signal AB 28
+	bool GetPlusPitchHardStopSwitch() { return PlusHO[1]; }
+	bool GetMinusPitchHardStopSwitch() { return MinusHO[1]; }
+
+	//Signal AB 29
+	bool GetPlusYawHardStopSwitch() { return PlusHO[2]; }
+	bool GetMinusYawHardStopSwitch() { return MinusHO[2]; }
+
+	//Signal AB 30
+	bool GetPlusRollHardStopSwitch() { return PlusHO[0]; }
+	bool GetMinusRollHardStopSwitch() { return MinusHO[0]; }
+
+	//Signal AB 72
+	bool GetRedunPlusPitchHardStopSwitch() { return PlusHO2[1]; }
+	bool GetRedunMinusPitchHardStopSwitch() { return MinusHO2[1]; }
+
+	//Signal AB 73
+	bool GetRedunPlusYawHardStopSwitch() { return PlusHO2[2]; }
+	bool GetRedunMinusYawHardStopSwitch() { return MinusHO2[2]; }
+
+	//Signal AB 74
+	bool GetRedunPlusRollHardStopSwitch() { return PlusHO2[0]; }
+	bool GetRedunMinusRollHardStopSwitch() { return MinusHO2[0]; }
 protected:
 
 	VECTOR3 deflection;

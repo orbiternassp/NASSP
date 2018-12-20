@@ -1600,7 +1600,6 @@ void Saturn::JoystickTimestep()
 
 		rhc1.Timestep(rhc_pos, rhc_voltage1 > SP_MIN_DCVOLTAGE, eca.IsAC1Powered(), rhc_directv1 > SP_MIN_DCVOLTAGE, rhc_directv1 > SP_MIN_DCVOLTAGE);
 
-
 		// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
 		// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
 		// The real RHC had a 12 degree travel. Our joystick travels 32768 points to full deflection.
@@ -1609,45 +1608,24 @@ void Saturn::JoystickTimestep()
 		// The last degree of travel is reserved for the DIRECT control switches.
 		if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
 			// CMC
-			if (rhc_x_pos < 28673) {
+			if (rhc1.GetMinusRollBreakoutSwitch()) {
 				val31[MinusRollManualRotation] = 1;
 			}					
-			if (rhc_y_pos < 28673) {
+			if (rhc1.GetMinusPitchBreakoutSwitch()) {
 				val31[MinusPitchManualRotation] = 1;
 			}
-			if (rhc_x_pos > 36863) {
+			if (rhc1.GetPlusRollBreakoutSwitch()) {
 				val31[PlusRollManualRotation] = 1;
 			}
-			if (rhc_y_pos > 36863) {
+			if (rhc1.GetPlusPitchBreakoutSwitch()) {
 				val31[PlusPitchManualRotation] = 1;
 			}
-			if (rhc_rot_pos < 28673) {
+			if (rhc1.GetMinusYawBreakoutSwitch()) {
 				val31[MinusYawManualRotation] = 1;
 			}
-			if (rhc_rot_pos > 36863) {
+			if (rhc1.GetPlusYawBreakoutSwitch()) {
 				val31[PlusYawManualRotation] = 1;
 			}
-		}
-
-		// Copy data to the ECA
-		if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) {
-			eca.rhc_x = rhc_x_pos;
-			eca.rhc_y = rhc_y_pos;
-			eca.rhc_z = rhc_rot_pos;
-		} else {
-			eca.rhc_x = 32768;
-			eca.rhc_y = 32768;
-			eca.rhc_z = 32768;
-		}
-
-		if (rhc_acvoltage1 > SP_MIN_ACVOLTAGE || rhc_acvoltage2 > SP_MIN_ACVOLTAGE) {
-			eca.rhc_ac_x = rhc_x_pos;
-			eca.rhc_ac_y = rhc_y_pos;
-			eca.rhc_ac_z = rhc_rot_pos;
-		} else {
-			eca.rhc_ac_x = 32768;
-			eca.rhc_ac_y = 32768;
-			eca.rhc_ac_z = 32768;
 		}
 
 		//
@@ -2125,6 +2103,11 @@ void Saturn::JoystickTimestep()
 			SetRCSState(RCS_SM_QUAD_A, 4, true); 
 			SetRCSState(RCS_SM_QUAD_C, 3, true);
 		}
+		if (SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE)
+		{
+			rjec.SetDirectPitchActive(true);
+			rjec.SetDirectYawActive(true);
+		}
 	}
 
 	//SPS Abort Ullage
@@ -2134,7 +2117,9 @@ void Saturn::JoystickTimestep()
 		SetRCSState(RCS_SM_QUAD_D, 3, true);
 		SetRCSState(RCS_SM_QUAD_A, 4, true);
 		SetRCSState(RCS_SM_QUAD_C, 3, true);
-		//TBD: Inhibit Pitch and Yaw
+
+		rjec.SetDirectPitchActive(true);
+		rjec.SetDirectYawActive(true);
 	}
 
 	//

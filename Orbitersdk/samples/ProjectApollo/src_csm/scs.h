@@ -570,8 +570,11 @@ public:
 	bool IsAC1Powered();
 	bool IsAC2Powered();
 
-	long rhc_x,rhc_y,rhc_z;											// RHC position
-	long rhc_ac_x,rhc_ac_y,rhc_ac_z;								// RHC AC powered position
+	double GetPitchMTVCRate() { return pitchMTVCRate; }
+	double GetYawMTVCRate() { return yawMTVCRate; }
+	double GetPitchAutoTVCRate() { return 0.0; }
+	double GetYawAutoTVCRate() { return 0.0; }
+
 	long thc_x,thc_y,thc_z;											// THC position
 	int accel_roll_trigger;                                         // Joystick triggered roll thrust in RATE CMD mode
 	int mnimp_roll_trigger;                                         // Joystick triggered roll thrust in MIN IMP mode
@@ -630,6 +633,8 @@ protected:
 	bool T1QS28;
 	//Roll Rate 2 Enable
 	bool T1QS29;
+	//Roll RJC Rotational Control Proportional Enable
+	bool T1QS32;
 	//Roll Minimum Impulse or Accel Cmd Enable
 	bool T1QS43;
 	//Roll Pseudo Rate Disable
@@ -653,6 +658,8 @@ protected:
 	bool T2QS30;
 	//Yaw RJC Prop Feedback Disable
 	bool T2QS31;
+	//Yaw RJC Rotational Control Proportional Enable
+	bool T2QS32;
 	//Yaw Minimum Impulse or Accel Cmd Enable
 	bool T2QS43;
 	//Yaw Pseudo Rate Disable
@@ -676,6 +683,8 @@ protected:
 	bool T3QS30;
 	//Pitch RJC Prop Feedback Disable
 	bool T3QS31;
+	//Pitch RJC Rotational Control Proportional Enable
+	bool T3QS32;
 	//Pitch Minimum Impulse or Accel Cmd Enable
 	bool T3QS43;
 	//Pitch Pseudo Rate Disable

@@ -636,8 +636,8 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().z == 0) error.z = 0;
 
 	// Do time step
-	pitchGimbalActuator.Timestep(simt, simdt, error.y, saturn->gdc.rates.x, saturn->eca.rhc_ac_y);
-	yawGimbalActuator.Timestep(simt, simdt, -error.z, -saturn->gdc.rates.y, saturn->eca.rhc_ac_z);
+	pitchGimbalActuator.Timestep(simt, simdt, error.y, saturn->gdc.rates.x, saturn->rhc1.GetPitchPropRate());
+	yawGimbalActuator.Timestep(simt, simdt, -error.z, -saturn->gdc.rates.y, saturn->rhc1.GetYawPropRate());
 
 	if (saturn->GetStage() == CSM_LEM_STAGE && spsThruster) {
 		// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
@@ -771,7 +771,7 @@ void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwi
 	CGSwitch = csmlmcogSwitch;
 }
 
-void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError, double attitudeRate, int rhcAxis) {
+void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError, double attitudeRate, double rhcAxis) {
 
 	if (!saturn) return;
 
@@ -819,13 +819,7 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 
 	} else {		
 		// SCS modes
-		double rhcPercent = 0;
-		if (rhcAxis < 28673) { 
-			rhcPercent = (28673. - (double)rhcAxis) / 28673.; 
-		}
-		if (rhcAxis > 36863) {  
-			rhcPercent = (36863. - (double)rhcAxis) / 36863.;
-		}
+		double rhcPercent = -rhcAxis;
 
 		// AUTO
 		if (scsTvcModeSwitch->IsUp() && !(saturn->SCContSwitch.IsDown() && saturn->THCRotary.IsClockwise())) {

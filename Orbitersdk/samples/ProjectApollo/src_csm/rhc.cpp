@@ -31,6 +31,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 RHC::RHC()
 {
 	deflection = _V(0, 0, 0);
+	Reset();
+}
+
+void RHC::Reset()
+{
 	PropRate = _V(0, 0, 0);
 
 	for (int i = 0;i < 3;i++)
