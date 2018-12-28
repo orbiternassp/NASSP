@@ -557,6 +557,22 @@ protected:
 };
 
 
+//ECA Integrator
+class ECAIntegrator
+{
+public:
+	ECAIntegrator(double g, double ulim, double llim);
+	void Timestep(double input, double simdt);
+	double GetState() { return state; }
+	void Reset() { state = 0.0; }
+protected:
+	double state;
+	double gain;
+	double upperLimit;
+	double lowerLimit;
+};
+
+
 // Electronic Control Assembly
 
 class ECA {
@@ -570,10 +586,10 @@ public:
 	bool IsAC1Powered();
 	bool IsAC2Powered();
 
-	double GetPitchMTVCRate() { return pitchMTVCRate; }
-	double GetYawMTVCRate() { return yawMTVCRate; }
-	double GetPitchAutoTVCRate() { return 0.0; }
-	double GetYawAutoTVCRate() { return 0.0; }
+	double GetPitchMTVCPosition() { return pitchMTVCPosition; }
+	double GetYawMTVCPosition() { return yawMTVCPosition; }
+	double GetPitchAutoTVCPosition() { return 0.0; }
+	double GetYawAutoTVCPosition() { return 0.0; }
 
 	long thc_x,thc_y,thc_z;											// THC position
 	int accel_roll_trigger;                                         // Joystick triggered roll thrust in RATE CMD mode
@@ -586,11 +602,18 @@ public:
 	VECTOR3 pseudorate;
 protected:
 
+	ECAIntegrator PitchMTVCIntegrator;
+	ECAIntegrator YawMTVCIntegrator;
+	ECAIntegrator PitchAutoTVCIntegrator;
+	ECAIntegrator YawAutoTVCIntegrator;
+
 	void ResetRelays();
 	void ResetTransistors();
 
-	double pitchMTVCRate;
-	double yawMTVCRate;
+	double pitchMTVCPosition;
+	double yawMTVCPosition;
+	double pitchAutoTVCPosition;
+	double yawAutoTVCPosition;
 
 	//RELAYS
 
@@ -699,7 +722,36 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
+
+	void ChangeCMCPitchPosition(double delta);
+	void ChangeCMCYawPosition(double delta);
+	void ZeroCMCPosition() { cmcPitchPosition = 0; cmcYawPosition = 0; }
+	bool IsPitchClutch1Powered();
+	bool IsPitchClutch2Powered();
+	bool IsYawClutch1Powered();
+	bool IsYawClutch2Powered();
+	void EnableCMCTVCErrorCounter() { cmcErrorCountersEnabled = true; }
+	void DisableCMCTVCErrorCounter() { cmcErrorCountersEnabled = false; }
+	bool IsCMCErrorCountersEnabled() { return cmcErrorCountersEnabled; }
+	double GetPitchGimbalTrim();
+	double GetYawGimbalTrim();
+	double GetPitchGimbalPosition();
+	double GetYawGimbalPosition();
 protected:
+
+	bool cmcErrorCountersEnabled;
+	double cmcPitchPosition;
+	double cmcYawPosition;
+	double pitchGimbalTrim1;
+	double pitchGimbalTrim2;
+	double yawGimbalTrim1;
+	double yawGimbalTrim2;
+	double pitchGimbalPosition1;
+	double pitchGimbalPosition2;
+	double yawGimbalPosition1;
+	double yawGimbalPosition2;
+	Saturn *sat;
+
 	//RELAYS
 
 	//Pitch Servo No. 2 Engage
@@ -730,8 +782,6 @@ protected:
 	bool T3QS2;
 	//Pitch TVC Gimbal Trim Enable
 	bool T3QS3;
-
-	Saturn *sat;
 };
 
 

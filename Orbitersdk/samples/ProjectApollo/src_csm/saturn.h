@@ -3486,6 +3486,7 @@ protected:
 	EDA  eda;
 	RJEC rjec;
 	ECA  eca;
+	TVSA tvsa;
 	ORDEAL ordeal;
 	EMS ems;
 	RHC rhc1;

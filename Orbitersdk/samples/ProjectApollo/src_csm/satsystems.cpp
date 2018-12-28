@@ -388,6 +388,7 @@ void Saturn::SystemsInit() {
 	eda.Init(this);
 	rjec.Init(this);
 	eca.Init(this);
+	tvsa.Init(this);
 	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
 	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch);
 	mechanicalAccelerometer.Init(this);
@@ -457,11 +458,9 @@ void Saturn::SystemsInit() {
 		               (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
 	SPSEngine.Init(this);
 	SPSEngine.pitchGimbalActuator.Init(this, &TVCGimbalDrivePitchSwitch, &Pitch1Switch, &Pitch2Switch,
-		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker,
-									   &SPSGimbalPitchThumbwheel, &SCSTvcPitchSwitch, &CGSwitch);
+		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker);
 	SPSEngine.yawGimbalActuator.Init(this, &TVCGimbalDriveYawSwitch, &Yaw1Switch, &Yaw2Switch,
-		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker,
-									 &SPSGimbalYawThumbwheel, &SCSTvcYawSwitch, &CGSwitch);
+		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker);
 
 	SPSPropellantLineHeaterA = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA");
 	SPSPropellantLineHeaterB = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERB");
@@ -624,6 +623,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		gdc.Timestep(simdt);
 		eca.TimeStep(simdt);
 		rjec.TimeStep(simdt);
+		tvsa.TimeStep(simdt);
 		eda.Timestep(simdt);
 		cws.TimeStep(MissionTime);
 		dockingprobe.TimeStep(MissionTime, simdt);

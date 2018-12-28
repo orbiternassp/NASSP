@@ -540,13 +540,12 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 		// Reset TVC
 		if (val12[TVCEnable]) {
 			if (val12[EnableOpticsCDUErrorCounters]) {
-				if (!sat->SPSEngine.cmcErrorCountersEnabled) {
-					sat->SPSEngine.pitchGimbalActuator.ZeroCMCPosition();
-					sat->SPSEngine.yawGimbalActuator.ZeroCMCPosition();
-					sat->SPSEngine.cmcErrorCountersEnabled = true;
+				if (!sat->tvsa.IsCMCErrorCountersEnabled()) {
+					sat->tvsa.ZeroCMCPosition();
+					sat->tvsa.EnableCMCTVCErrorCounter();
 				}
 			} else {
-				sat->SPSEngine.cmcErrorCountersEnabled = false;
+				sat->tvsa.DisableCMCTVCErrorCounter();
 			}
 		}
 
@@ -651,7 +650,7 @@ void CSMcomputer::ProcessChannel140(ChannelValue val) {
 			tvc_pitch_pulses = valx&0777;
 			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
 		}		
-		sat->SPSEngine.pitchGimbalActuator.ChangeCMCPosition(tvc_pitch_cmd);
+		sat->tvsa.ChangeCMCPitchPosition(tvc_pitch_cmd);
 
 	} else {
 		sat->optics.CMCShaftDrive(valx,val12.to_ulong());
@@ -679,7 +678,7 @@ void CSMcomputer::ProcessChannel141(ChannelValue val) {
 			tvc_yaw_pulses = valx&0777;
 			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
 		}				
-		sat->SPSEngine.yawGimbalActuator.ChangeCMCPosition(tvc_yaw_cmd);
+		sat->tvsa.ChangeCMCYawPosition(tvc_yaw_cmd);
 
 	} else {
 		sat->optics.CMCTrunionDrive(valx,val12.to_ulong());

@@ -456,7 +456,6 @@ SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	engineOnCommanded = false;
 	nitrogenPressureAPSI = 2500.0;
 	nitrogenPressureBPSI = 2500.0;
-	cmcErrorCountersEnabled = false;
 }
 
 SPSEngine::~SPSEngine() {
@@ -592,52 +591,9 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	// TVC gimbal actuators
 	//
 
-	// Get BMAG1 attitude errors
-	VECTOR3 error = saturn->bmag1.GetAttitudeError();
-
-	if (error.x > 0) { // Positive Error
-		if (error.x > PI) { 
-			error.x = -(TWO_PI - error.x); 
-		}
-	} else {		  // Negative Error
-		if (error.x < -PI) {
-			error.x = TWO_PI + error.x;
-		}
-	}
-	if (error.y > 0) { 
-		if (error.y > PI) { 
-			error.y = TWO_PI - error.y; 
-		} else {
-			error.y = -error.y; 
-		}
-	} else {
-		if (error.y < -PI) {
-			error.y = -(TWO_PI + error.y); 
-		} else { 
-			error.y = -error.y;
-		}
-	}
-	if (error.z > 0) { 
-		if (error.z > PI){ 
-			error.z = -(TWO_PI - error.z); 
-		}
-	} else {
-		if (error.z < -PI) {
-			error.z = TWO_PI + error.z; 
-		}
-	}
-	// Now adjust for rotation
-	//if (SCS_INERTIAL_BMAGS)
-		//error = saturn->eda.AdjustErrorsForRoll(saturn->bmag1.GetAttitude(), error);
-
-	// TVC SCS automatic mode only when BMAG 1 uncaged and powered
-	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().x == 0) error.x = 0;
-	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().y == 0) error.y = 0;
-	if (!saturn->bmag1.IsPowered() || saturn->bmag1.IsUncaged().z == 0) error.z = 0;
-
 	// Do time step
-	pitchGimbalActuator.Timestep(simt, simdt, error.y, saturn->gdc.rates.x, saturn->rhc1.GetPitchPropRate());
-	yawGimbalActuator.Timestep(simt, simdt, -error.z, -saturn->gdc.rates.y, saturn->rhc1.GetYawPropRate());
+	pitchGimbalActuator.Timestep(simt, simdt);
+	yawGimbalActuator.Timestep(simt, simdt);
 
 	if (saturn->GetStage() == CSM_LEM_STAGE && spsThruster) {
 		// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
@@ -686,7 +642,6 @@ void SPSEngine::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "ENGINEONCOMMANDED", (engineOnCommanded ? 1 : 0));
 	papiWriteScenario_double(scn, "NITROGENPRESSUREAPSI", nitrogenPressureAPSI);
 	papiWriteScenario_double(scn, "NITROGENPRESSUREBPSI", nitrogenPressureBPSI);
-	papiWriteScenario_bool(scn, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
 	oapiWriteLine(scn, SPSENGINE_END_STRING);
 }
 
@@ -721,7 +676,6 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "NITROGENPRESSUREBPSI", 20)) {
 			sscanf (line+20, "%lf", &nitrogenPressureBPSI);
 		}
-		papiReadScenario_bool(line, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
 	}
 }
 
@@ -729,10 +683,8 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 SPSGimbalActuator::SPSGimbalActuator() {
 
 	position = 0;
-	commandedPosition = 0;
-	cmcPosition = 0;
-	scsPosition = 0;
-	lastAttitudeError = 0;
+	commandedPosition1 = 0;
+	commandedPosition2 = 0;
 	activeSystem = 1;
 	motor1Running = false;
 	motor2Running = false;
@@ -745,9 +697,6 @@ SPSGimbalActuator::SPSGimbalActuator() {
 	motor1StartSource = 0;
 	motor2Source = 0;
 	motor2StartSource = 0;
-	trimThumbwheel = 0;
-	scsTvcModeSwitch = 0;
-	CGSwitch = 0;
 }
 
 SPSGimbalActuator::~SPSGimbalActuator() {
@@ -755,8 +704,7 @@ SPSGimbalActuator::~SPSGimbalActuator() {
 }
 
 void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
-	                         e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource,
-							 ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch, AGCIOSwitch* csmlmcogSwitch) {
+	                         e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource) {
 
 	saturn = s;
 	tvcGimbalDriveSwitch = driveSwitch;
@@ -766,12 +714,9 @@ void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwi
 	motor1StartSource = m1StartSource;
 	motor2Source = m2Source;
 	motor2StartSource = m2StartSource;
-	trimThumbwheel = tThumbwheel;
-	scsTvcModeSwitch = modeSwitch;
-	CGSwitch = csmlmcogSwitch;
 }
 
-void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError, double attitudeRate, double rhcAxis) {
+void SPSGimbalActuator::Timestep(double simt, double simdt) {
 
 	if (!saturn) return;
 
@@ -810,36 +755,6 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 	// sprintf(oapiDebugString(), "Motor1 %d Motor2 %d", motor1Running, motor2Running);
 
 	//
-	// Process commanded position
-	//
-
-	if (saturn->SCContSwitch.IsUp() && !saturn->THCRotary.IsClockwise()) {
-		// CMC mode
-		commandedPosition = cmcPosition;
-
-	} else {		
-		// SCS modes
-		double rhcPercent = -rhcAxis;
-
-		// AUTO
-		if (scsTvcModeSwitch->IsUp() && !(saturn->SCContSwitch.IsDown() && saturn->THCRotary.IsClockwise())) {
-			scsPosition = attitudeError * DEG + (attitudeError - lastAttitudeError) / simdt * DEG;
-			lastAttitudeError = attitudeError;
-
-		// ACCEL CMD
-		} else if (scsTvcModeSwitch->IsDown()) {
-			scsPosition += rhcPercent * simdt;
-			
-		// RATE CMD
-		} else {
-			scsPosition = attitudeRate * DEG + rhcPercent * 5.0;	// +/- 5° per second maximum for now
-		}
-		
-		// Allow max. 4° for now
-		commandedPosition = max(min(scsPosition, 4.0), -4.0) + ((trimThumbwheel->GetState() - 8.0) / 2.0); 
-	}
-
-	//
 	// Which system is active?
 	//
 
@@ -865,32 +780,32 @@ void SPSGimbalActuator::Timestep(double simt, double simdt, double attitudeError
 	if (activeSystem == 1) {
 		if (IsSystem1Powered() && motor1Running) {
 			//position = commandedPosition; // Instant positioning
-			GimbalTimestep(simdt);
+			GimbalTimestep(simdt, commandedPosition1*DEG);
 		}
 	} else {
 		if (IsSystem2Powered() && motor2Running) {
 			//position = commandedPosition; // Instant positioning
-			GimbalTimestep(simdt);
+			GimbalTimestep(simdt, commandedPosition2*DEG);
 		}
 	}
 
-	// Only 5.5 degrees of travel allowed.
-	if (position > 5.5) { position = 5.5; }
-	if (position < -5.5) { position = -5.5; }
+	// Only 4.5 degrees of travel allowed.
+	if (position > 4.5) { position = 4.5; }
+	if (position < -4.5) { position = -4.5; }
 
 	// sprintf(oapiDebugString(), "position %.3f commandedPosition %.3f cmcPosition %.3f", position, commandedPosition, cmcPosition);
 }
 
-void SPSGimbalActuator::GimbalTimestep(double simdt)
+void SPSGimbalActuator::GimbalTimestep(double simdt, double desPos)
 {
 	double LMR, dposcmd, dpos;
 
 	LMR = 0.15*DEG;
 
-	dposcmd = commandedPosition - position;
+	dposcmd = desPos - position;
 	if (abs(dposcmd)>LMR*simdt)
 	{
-		dpos = sign(commandedPosition - position)*LMR*simdt;
+		dpos = sign(desPos - position)*LMR*simdt;
 	}
 	else
 	{
@@ -974,19 +889,12 @@ void SPSGimbalActuator::DrawSystem2Power() {
 	}
 }
 
-void SPSGimbalActuator::ChangeCMCPosition(double delta) {
-
-	cmcPosition += delta;
-}
-
 void SPSGimbalActuator::SaveState(FILEHANDLE scn) {
 
 	// START_STRING is written in Saturn
 	papiWriteScenario_double(scn, "POSITION", position);
-	papiWriteScenario_double(scn, "COMMANDEDPOSITION", commandedPosition);
-	papiWriteScenario_double(scn, "CMCPOSITION", cmcPosition);
-	papiWriteScenario_double(scn, "SCSPOSITION", scsPosition);
-	papiWriteScenario_double(scn, "LASTATTITUDEERROR", lastAttitudeError);
+	papiWriteScenario_double(scn, "COMMANDEDPOSITION1", commandedPosition1);
+	papiWriteScenario_double(scn, "COMMANDEDPOSITION2", commandedPosition2);
 	oapiWriteScenario_int(scn, "ACTIVESYSTEM", activeSystem);
 	oapiWriteScenario_int(scn, "MOTOR1RUNNING", (motor1Running ? 1 : 0));
 	oapiWriteScenario_int(scn, "MOTOR2RUNNING", (motor2Running ? 1 : 0));
@@ -1007,17 +915,11 @@ void SPSGimbalActuator::LoadState(FILEHANDLE scn) {
 		if (!strnicmp (line, "POSITION", 8)) {
 			sscanf(line + 8, "%lf", &position);
 		}
-		else if (!strnicmp (line, "COMMANDEDPOSITION", 17)) {
-			sscanf(line + 17, "%lf", &commandedPosition);
+		else if (!strnicmp (line, "COMMANDEDPOSITION1", 18)) {
+			sscanf(line + 18, "%lf", &commandedPosition1);
 		}
-		else if (!strnicmp (line, "CMCPOSITION", 11)) {
-			sscanf(line + 11, "%lf", &cmcPosition);
-		}
-		else if (!strnicmp (line, "SCSPOSITION", 11)) {
-			sscanf(line + 11, "%lf", &scsPosition);
-		}
-		else if (!strnicmp (line, "LASTATTITUDEERROR", 17)) {
-			sscanf(line + 17, "%lf", &lastAttitudeError);
+		else if (!strnicmp(line, "COMMANDEDPOSITION2", 18)) {
+			sscanf(line + 18, "%lf", &commandedPosition2);
 		}
 		else if (!strnicmp (line, "ACTIVESYSTEM", 12)) {
 			sscanf(line + 12, "%d", &activeSystem);
