@@ -1474,8 +1474,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11PDIPAD * form = (AP11PDIPAD *)pad;
 
 		PDIPADOpt opt;
+		SV sv;
 		double GETbase;
 
+		sv = StateVectorCalc(calcParams.tgt);
 		GETbase = calcParams.TEPHEM;
 
 		opt.direct = false;
@@ -1485,6 +1487,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
 		opt.R_LS = RLS_from_latlng(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt);
+		opt.sv0 = sv;
 		opt.t_land = calcParams.TLAND;
 		opt.vessel = calcParams.tgt;
 
