@@ -484,7 +484,7 @@ void SPSEngine::DefineAnimations(UINT idx) {
 	ach_SPSGimbalPitch = saturn->AddAnimationComponent(anim_SPSGimbalPitch, 0.0f, 1.0f, &mgt_Gimbal_Pitch);
 	ach_SPSGimbalYaw = saturn->AddAnimationComponent(anim_SPSGimbalYaw, 0.0f, 1.0f, &mgt_Gimbal_Yaw);
 
-	// Get current DPS gimbal state for animation
+	// Get current SPS gimbal state for animation
 	spsgimbal_proc[0] = -pitchGimbalActuator.GetPosition() / 360;
 	if (spsgimbal_proc[0] < 0) spsgimbal_proc[0] += 1.0;
 	spsgimbal_proc[1] = yawGimbalActuator.GetPosition() / 360;
@@ -494,17 +494,19 @@ void SPSEngine::DefineAnimations(UINT idx) {
 
 void SPSEngine::Timestep(double simt, double simdt) {
 
-	// Animate SPS Gimbals
-	spsgimbal_proc[0] = -pitchGimbalActuator.GetPosition() / 360;
-	if (spsgimbal_proc[0] < 0) spsgimbal_proc[0] += 1.0;
-	spsgimbal_proc[1] = yawGimbalActuator.GetPosition() / 360;
-	if (spsgimbal_proc[1] < 0) spsgimbal_proc[1] += 1.0;
-	if (spsgimbal_proc[0] - spsgimbal_proc_last[0] != 0.0) saturn->SetAnimation(anim_SPSGimbalPitch, spsgimbal_proc[0]);
-	if (spsgimbal_proc[1] - spsgimbal_proc_last[1] != 0.0) saturn->SetAnimation(anim_SPSGimbalYaw, spsgimbal_proc[1]);
-	spsgimbal_proc_last[0] = spsgimbal_proc[0];
-	spsgimbal_proc_last[1] = spsgimbal_proc[1];
-
 	if (!saturn) return;
+
+	// Animate SPS Gimbals
+	if (saturn->GetStage() <= CSM_LEM_STAGE) {
+		spsgimbal_proc[0] = -pitchGimbalActuator.GetPosition() / 360;
+		if (spsgimbal_proc[0] < 0) spsgimbal_proc[0] += 1.0;
+		spsgimbal_proc[1] = yawGimbalActuator.GetPosition() / 360;
+		if (spsgimbal_proc[1] < 0) spsgimbal_proc[1] += 1.0;
+		if (spsgimbal_proc[0] - spsgimbal_proc_last[0] != 0.0) saturn->SetAnimation(anim_SPSGimbalPitch, spsgimbal_proc[0]);
+		if (spsgimbal_proc[1] - spsgimbal_proc_last[1] != 0.0) saturn->SetAnimation(anim_SPSGimbalYaw, spsgimbal_proc[1]);
+		spsgimbal_proc_last[0] = spsgimbal_proc[0];
+		spsgimbal_proc_last[1] = spsgimbal_proc[1];
+	}
 
 	// Prevalves
 	bool injectorPreValveAOpen = false;
