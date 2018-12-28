@@ -190,9 +190,9 @@ protected:
 	THRUSTER_HANDLE *dpsThruster;
 
 	// Animations
-	UINT anim_DPSGimballPitch, anim_DPSGimballRoll;
-	double dpsgimball_proc[2];
-	double dpsgimball_proc_last[2];
+	UINT anim_DPSGimbalPitch, anim_DPSGimbalRoll;
+	double dpsgimbal_proc[2];
+	double dpsgimbal_proc_last[2];
 
 };
 

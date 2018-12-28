@@ -1152,7 +1152,7 @@ void LEMSaturn::Saturn1bLoadMeshes()
 	hSat1stg24 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg24");
 	hCOAStarget = oapiLoadMeshGlobal("ProjectApollo/sat_target");
 	hNosecap = oapiLoadMeshGlobal("ProjectApollo/nsat1aerocap");
-	hlm_1 = oapiLoadMeshGlobal("ProjectApollo/LM_ParkedNoLeg");
+	hlm_1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
 
 	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 	solid_exhaust.tex = oapiRegisterParticleTexture("Contrail3");

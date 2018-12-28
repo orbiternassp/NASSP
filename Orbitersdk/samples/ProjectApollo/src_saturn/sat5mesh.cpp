@@ -242,7 +242,7 @@ void LoadSat5Meshes()
 	LOAD_MESH(hsat5stg33, "ProjectApollo/sat5stg33");
 	LOAD_MESH(hsat5stg34, "ProjectApollo/sat5stg34");
 
-	LOAD_MESH(hLMPKD, "ProjectApollo/LM_Parked");
+	LOAD_MESH(hLMPKD, "ProjectApollo/LM_SLA");
 	LOAD_MESH(hapollo8lta, "ProjectApollo/apollo8_lta");
 	LOAD_MESH(hlta_2r, "ProjectApollo/LTA_2R");
 

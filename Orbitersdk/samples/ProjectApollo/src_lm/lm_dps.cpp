@@ -491,10 +491,10 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	thrustcommand = 0;
 	ThrustChamberPressurePSI = 0.0;
 	ActuatorValves = 0.0;
-	dpsgimball_proc[0] = 0.0;
-	dpsgimball_proc[1] = 0.0;
-	dpsgimball_proc_last[0] = 0.0;
-	dpsgimball_proc_last[1] = 0.0;
+	dpsgimbal_proc[0] = 0.0;
+	dpsgimbal_proc[1] = 0.0;
+	dpsgimbal_proc_last[0] = 0.0;
+	dpsgimbal_proc_last[1] = 0.0;
 }
 
 void LEM_DPS::Init(LEM *s) {
@@ -525,39 +525,39 @@ void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 
 void LEM_DPS::DefineAnimations(UINT idx) {
 
-	// DPS Gimball Animation Definition
-	ANIMATIONCOMPONENT_HANDLE ach_DPSGimballPitch, ach_DPSGimballRoll;
+	// DPS Gimbal Animation Definition
+	ANIMATIONCOMPONENT_HANDLE ach_DPSGimbalPitch, ach_DPSGimbalRoll;
 	const VECTOR3 LM_DPS_PIVOT = { -0.000818, -0.383743, 0.001107 }; // Pivot Point
 	static UINT meshgroup_DPSBell = DS_GRP_DPSbell;
-	static MGROUP_ROTATE mgt_Gimball_Pitch(idx, &meshgroup_DPSBell, 1, LM_DPS_PIVOT, _V(1, 0, 0), (float)PI2);
-	static MGROUP_ROTATE mgt_Gimball_Roll(idx, &meshgroup_DPSBell, 1, LM_DPS_PIVOT, _V(0, 0, 1), (float)PI2);
-	anim_DPSGimballPitch = lem->CreateAnimation(0.0);
-	anim_DPSGimballRoll = lem->CreateAnimation(0.0);
-	ach_DPSGimballPitch = lem->AddAnimationComponent(anim_DPSGimballPitch, 0.0f, 1.0f, &mgt_Gimball_Pitch);
-	ach_DPSGimballRoll = lem->AddAnimationComponent(anim_DPSGimballRoll, 0.0f, 1.0f, &mgt_Gimball_Roll);
+	static MGROUP_ROTATE mgt_Gimbal_Pitch(idx, &meshgroup_DPSBell, 1, LM_DPS_PIVOT, _V(1, 0, 0), (float)PI2);
+	static MGROUP_ROTATE mgt_Gimbal_Roll(idx, &meshgroup_DPSBell, 1, LM_DPS_PIVOT, _V(0, 0, 1), (float)PI2);
+	anim_DPSGimbalPitch = lem->CreateAnimation(0.0);
+	anim_DPSGimbalRoll = lem->CreateAnimation(0.0);
+	ach_DPSGimbalPitch = lem->AddAnimationComponent(anim_DPSGimbalPitch, 0.0f, 1.0f, &mgt_Gimbal_Pitch);
+	ach_DPSGimbalRoll = lem->AddAnimationComponent(anim_DPSGimbalRoll, 0.0f, 1.0f, &mgt_Gimbal_Roll);
 
-	// Get current DPS gimball state for animation
-	dpsgimball_proc[0] = pitchGimbalActuator.GetPosition() / 360;
-	if (dpsgimball_proc[0] < 0) dpsgimball_proc[0] += 1.0;
-	dpsgimball_proc[1] = rollGimbalActuator.GetPosition() / 360;
-	if (dpsgimball_proc[1] < 0) dpsgimball_proc[1] += 1.0;
-	lem->SetAnimation(anim_DPSGimballPitch, dpsgimball_proc[0]); lem->SetAnimation(anim_DPSGimballRoll, dpsgimball_proc[1]);
+	// Get current DPS gimbal state for animation
+	dpsgimbal_proc[0] = pitchGimbalActuator.GetPosition() / 360;
+	if (dpsgimbal_proc[0] < 0) dpsgimbal_proc[0] += 1.0;
+	dpsgimbal_proc[1] = rollGimbalActuator.GetPosition() / 360;
+	if (dpsgimbal_proc[1] < 0) dpsgimbal_proc[1] += 1.0;
+	lem->SetAnimation(anim_DPSGimbalPitch, dpsgimbal_proc[0]); lem->SetAnimation(anim_DPSGimbalRoll, dpsgimbal_proc[1]);
 }
 
 void LEM_DPS::Timestep(double simt, double simdt) {
 
-	// Animate DPS Gimballs
-	dpsgimball_proc[0] = pitchGimbalActuator.GetPosition() / 360;
-	if (dpsgimball_proc[0] < 0) dpsgimball_proc[0] += 1.0;
-	dpsgimball_proc[1] = rollGimbalActuator.GetPosition() / 360;
-	if (dpsgimball_proc[1] < 0) dpsgimball_proc[1] += 1.0;
-	if (dpsgimball_proc[0] - dpsgimball_proc_last[0] != 0.0) lem->SetAnimation(anim_DPSGimballPitch, dpsgimball_proc[0]);
-	if (dpsgimball_proc[1] - dpsgimball_proc_last[1] != 0.0) lem->SetAnimation(anim_DPSGimballRoll, dpsgimball_proc[1]);
-	dpsgimball_proc_last[0] = dpsgimball_proc[0];
-	dpsgimball_proc_last[1] = dpsgimball_proc[1];
-
 	if (lem == NULL) { return; }
 	if (lem->stage > 1) { return; }
+
+	// Animate DPS Gimbals
+	dpsgimbal_proc[0] = pitchGimbalActuator.GetPosition() / 360;
+	if (dpsgimbal_proc[0] < 0) dpsgimbal_proc[0] += 1.0;
+	dpsgimbal_proc[1] = rollGimbalActuator.GetPosition() / 360;
+	if (dpsgimbal_proc[1] < 0) dpsgimbal_proc[1] += 1.0;
+	if (dpsgimbal_proc[0] - dpsgimbal_proc_last[0] != 0.0) lem->SetAnimation(anim_DPSGimbalPitch, dpsgimbal_proc[0]);
+	if (dpsgimbal_proc[1] - dpsgimbal_proc_last[1] != 0.0) lem->SetAnimation(anim_DPSGimbalRoll, dpsgimbal_proc[1]);
+	dpsgimbal_proc_last[0] = dpsgimbal_proc[0];
+	dpsgimbal_proc_last[1] = dpsgimbal_proc[1];
 
 	if ((lem->SCS_DECA_PWR_CB.IsPowered() && lem->deca.GetK10()) || (lem->SCS_DES_ENG_OVRD_CB.IsPowered() && lem->scca3.GetK5()))
 	{

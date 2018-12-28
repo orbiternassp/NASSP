@@ -147,7 +147,7 @@ void SIVbLoadMeshes()
 	hsat5stg33low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg33");
 	hsat5stg34low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg34");
 
-	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_Parked");
+	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_SLA");
 	hapollo8lta = oapiLoadMeshGlobal ("ProjectApollo/apollo8_lta");
 	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
 
