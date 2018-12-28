@@ -134,6 +134,7 @@ public:
 	virtual ~SPSEngine();
 
 	void Init(Saturn *s);
+	void DefineAnimations(UINT idx);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetChamberPressurePSI();
@@ -159,6 +160,11 @@ protected:
 
 	Saturn *saturn;
 	THRUSTER_HANDLE &spsThruster;
+
+	// Animations
+	UINT anim_SPSGimbalPitch, anim_SPSGimbalYaw;
+	double spsgimbal_proc[2];
+	double spsgimbal_proc_last[2];
 };
 
 
