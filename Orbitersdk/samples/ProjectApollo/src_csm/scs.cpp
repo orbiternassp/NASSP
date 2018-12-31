@@ -1833,6 +1833,12 @@ void EDA::ResetRelays()
 	A9K2 = false;
 	A9K4 = false;
 	A9K5 = false;
+	A11K1 = false;
+	A11K2 = false;
+	A11K3 = false;
+	A11K4 = false;
+	A11K5 = false;
+	A11K6 = false;
 	GDC118A8K1 = false;
 }
 
@@ -2162,6 +2168,16 @@ void EDA::Timestep(double simdt)
 		A9K4 = true;
 	else
 		A9K4 = false;
+
+	if (sat->LVFuelTankPressIndicatorSwitch.IsUp() && sat->EDS1BatACircuitBraker.IsPowered())
+		A11K1 = A11K3 = A11K6 = true;
+	else
+		A11K1 = A11K3 = A11K6 = false;
+
+	if (sat->LVFuelTankPressIndicatorSwitch.IsUp() && sat->EDS3BatBCircuitBraker.IsPowered())
+		A11K2 = A11K4 = A11K5 = true;
+	else
+		A11K2 = A11K4 = A11K5 = false;
 
 	if (!((S4_1 && S5_2) || (S5_3 && S6_1)))
 	{
@@ -3860,12 +3876,12 @@ void ECA::TimeStep(double simdt) {
 		if (E2_509 && R2K30) rhc_rate.z -= 0.495 / 0.4*sat->bmag2.GetRates().y;
 
 		//MTVC Integrator
-		if (T3QS30)
+		if (E2_507 && T3QS30)
 			PitchMTVCIntegrator.Timestep(rhc_rate.y, simdt);
 		else
 			PitchMTVCIntegrator.Reset();
 
-		if (T2QS30)
+		if (E2_507 && T2QS30)
 			YawMTVCIntegrator.Timestep(rhc_rate.z, simdt);
 		else
 			YawMTVCIntegrator.Reset();
@@ -4146,14 +4162,49 @@ void ECA::TimeStep(double simdt) {
 			pitchMTVCPosition = 0.0;
 
 		//Auto TVC
-		double p = sat->tvsa.GetPitchGimbalPosition() + sat->tvsa.GetPitchGimbalTrim();
-		double y = sat->tvsa.GetYawGimbalPosition() + sat->tvsa.GetYawGimbalTrim();
+		double p = sat->tvsa.GetPitchGimbalPosition() - sat->tvsa.GetPitchGimbalTrim();
+		double y = sat->tvsa.GetYawGimbalPosition() - sat->tvsa.GetYawGimbalTrim();
 
-		if (R3K11) PitchAutoTVCIntegrator.Timestep(p + errors.y, simdt);
-		if (R2K11) YawAutoTVCIntegrator.Timestep(y + errors.z, simdt);
+		if (E1_506 && R3K11)
+			PitchAutoTVCIntegrator.Timestep(p + errors.y, simdt);
+		else
+			PitchAutoTVCIntegrator.Reset();
 
-		pitchAutoTVCPosition = PitchAutoTVCIntegrator.GetState() + errors.y + rate_damp.y;
-		yawAutoTVCPosition = YawAutoTVCIntegrator.GetState() + errors.z + rate_damp.z;
+		if (E1_506 && R2K11)
+			YawAutoTVCIntegrator.Timestep(y + errors.z, simdt);
+		else
+			YawAutoTVCIntegrator.Reset();
+
+		if (E1_506 && E1_509)
+		{
+			//TBD: LM-on/off filters
+
+			pitchAutoTVCPosition = PitchAutoTVCIntegrator.GetState() + errors.y + rate_damp.y;
+			if (T3QS11)
+				pitchAutoTVCPosition *= 1.0;
+			else if (T3QS12)
+				pitchAutoTVCPosition *= 1.0;
+			else
+				pitchAutoTVCPosition = 0.0;
+
+			yawAutoTVCPosition = -(YawAutoTVCIntegrator.GetState() + errors.z + rate_damp.z);
+			if (T2QS11)
+				yawAutoTVCPosition *= 1.0;
+			else if (T2QS12)
+				yawAutoTVCPosition *= 1.0;
+			else
+				yawAutoTVCPosition = 0.0;
+		}
+		else
+			pitchAutoTVCPosition = yawAutoTVCPosition = 0.0;
+
+		//Limit
+		if (pitchAutoTVCPosition > 14.0*RAD) pitchAutoTVCPosition = 14.0*RAD;
+		else if (pitchAutoTVCPosition < -10.0*RAD) pitchAutoTVCPosition = -10.0*RAD;
+		if (yawAutoTVCPosition > 14.0*RAD) yawAutoTVCPosition = 14.0*RAD;
+		else if (yawAutoTVCPosition < -10.0*RAD) yawAutoTVCPosition = -10.0*RAD;
+
+		//sprintf(oapiDebugString(), "Pos %.2f Cmd %.2f Trim %.1f Int %.2f Err %.2f Rate %.2f", sat->tvsa.GetPitchGimbalPosition()*DEG, pitchAutoTVCPosition*DEG, sat->tvsa.GetPitchGimbalTrim()*DEG, PitchAutoTVCIntegrator.GetState()*DEG, errors.y*DEG, rate_damp.y*DEG);
 	}
 	else
 	{
@@ -4203,8 +4254,82 @@ void ECA::TimeStep(double simdt) {
 	// sprintf(oapiDebugString(),"SCS: mnimp_roll_trigger %d mnimp_roll_flag %d", mnimp_roll_trigger, mnimp_roll_flag);
 }
 
+ServoAmplifierModule::ServoAmplifierModule(bool *r1, bool *r2, bool *r3, bool *r4)
+{
+	relays[0] = r1;
+	relays[1] = r2;
+	relays[2] = r3;
+	relays[3] = r4;
+	sat = NULL;
+}
+
+void ServoAmplifierModule::Init(Saturn *vessel)
+{
+	sat = vessel;
+}
+
+bool ServoAmplifierModule::IsClutch1Powered()
+{
+	if (relays[0] || relays[3]) return false;
+	if (sat->TVCServoPower1Switch.IsUp())
+	{
+		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+	}
+	else
+	{
+		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+	}
+
+	return false;
+}
+
+bool ServoAmplifierModule::IsClutch2Powered()
+{
+	if (!relays[1] && !relays[3]) return false;
+	if (sat->TVCServoPower2Switch.IsUp())
+	{
+		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+	}
+	else
+	{
+		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+	}
+
+	return false;
+}
+
+void ServoAmplifierModule::DrawSystem1Power() {
+
+	if (sat->TVCServoPower1Switch.IsUp()) {
+		sat->SystemMnACircuitBraker.DrawPower(6.7);				/// CSM Data Book
+
+	}
+	else if (sat->TVCServoPower1Switch.IsDown()) {
+		sat->SystemMnBCircuitBraker.DrawPower(6.7);				/// CSM Data Book
+	}
+}
+
+void ServoAmplifierModule::DrawSystem2Power() {
+
+	if (sat->TVCServoPower2Switch.IsUp()) {
+		sat->SystemMnACircuitBraker.DrawPower(6.7);				/// CSM Data Book 
+
+	}
+	else if (sat->TVCServoPower2Switch.IsDown()) {
+		sat->SystemMnBCircuitBraker.DrawPower(6.7);				/// CSM Data Book
+	}
+}
+
+void ServoAmplifierModule::SystemTimestep(double simdt)
+{
+	if (IsClutch1Powered()) DrawSystem1Power();
+	if (IsClutch2Powered()) DrawSystem2Power();
+}
+
 //Thrust Vector Servo Amplifier Assembly
-TVSA::TVSA()
+TVSA::TVSA() :
+	pitchServoAmp(&A4K1, &A4K2, &A4K3, &A4K7),
+	yawServoAmp(&A4K4, &A4K5, &A4K6, &A4K8)
 {
 	cmcErrorCountersEnabled = false;
 	cmcPitchPosition = 0.0;
@@ -4232,6 +4357,8 @@ TVSA::TVSA()
 }
 
 void TVSA::Init(Saturn *vessel) {
+	pitchServoAmp.Init(vessel);
+	yawServoAmp.Init(vessel);
 	sat = vessel;
 }
 
@@ -4253,41 +4380,12 @@ void TVSA::TimeStep(double simdt)
 	}
 	//POWER
 
-	bool acpower1, acpower2, dcpower1, dcpower2;
+	bool acpower1, acpower2;
 
-	//System 1
-	if (sat->TVCServoPower1Switch.IsUp())
-	{
-		acpower1 = sat->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE;
-		dcpower1 = sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE;
-	}
-	else if (sat->TVCServoPower1Switch.IsDown())
-	{
-		acpower1 = sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE;
-		dcpower1 = sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE;
-	}
-	else
-	{
-		acpower1 = false;
-		dcpower1 = false;
-	}
+	acpower1 = IsSystem1ACPowered();
+	acpower2 = IsSystem2ACPowered();
 
-	//System 2
-	if (sat->TVCServoPower2Switch.IsUp())
-	{
-		acpower2 = sat->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE;
-		dcpower2 = sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE;
-	}
-	else if (sat->TVCServoPower2Switch.IsDown())
-	{
-		acpower2 = sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE;
-		dcpower2 = sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE;
-	}
-	else
-	{
-		acpower2 = false;
-		dcpower2 = false;
-	}
+	//LOGIC
 
 	bool logic1, logic2, scslogic1, scslogic2, scslogic3, S18_1, S27_2, S27_3, S28_2, S28_3, S38_1, S39_1, thc_cw, IGN2, yawovercur, pitchovercur;
 
@@ -4304,16 +4402,15 @@ void TVSA::TimeStep(double simdt)
 	S39_1 = sat->SCSTvcYawSwitch.IsUp() && scslogic3;
 	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
 	IGN2 = sat->rjec.GetSPSActive();
-	//TBD: Get from gimbal motors
-	pitchovercur = false;
-	yawovercur = false;
+	pitchovercur = sat->SPSEngine.pitchGimbalActuator.HasGimbalMotorOverCurrent();
+	yawovercur = sat->SPSEngine.yawGimbalActuator.HasGimbalMotorOverCurrent();
 
 	logic1 = !(S18_1 && !thc_cw);
-	T2QS2 = logic1 && (!((thc_cw && !S18_1) || !(S39_1 && !IGN2)));
+	T2QS2 = logic1 && (!((thc_cw && !S18_1) || !(S39_1 && IGN2)));
 	T2QS3 = logic1;
 
 	logic1 = !(S18_1 && !thc_cw);
-	T3QS2 = logic1 && (!((thc_cw && !S18_1) || !(S38_1 && !IGN2)));
+	T3QS2 = logic1 && (!((thc_cw && !S18_1) || !(S38_1 && IGN2)));
 	T3QS3 = logic1;
 
 	logic1 = S27_2 || S27_3;
@@ -4374,8 +4471,8 @@ void TVSA::TimeStep(double simdt)
 		double curPitchPosition1, curYawPosition1, PitchServo1Position, YawServo1Position;
 
 		//Position transducers
-		curPitchPosition1 = sat->SPSEngine.pitchGimbalActuator.GetCommandedPosition1();
-		curYawPosition1 = sat->SPSEngine.yawGimbalActuator.GetCommandedPosition1();
+		curPitchPosition1 = sat->SPSEngine.pitchGimbalActuator.GetCommandedPosition();
+		curYawPosition1 = sat->SPSEngine.yawGimbalActuator.GetCommandedPosition();
 
 		//Pitch Servo No. 1
 		if (T3QS3)
@@ -4389,13 +4486,13 @@ void TVSA::TimeStep(double simdt)
 			YawServo1Position = sat->eca.GetYawMTVCPosition() + (T2QS2 ? sat->eca.GetYawAutoTVCPosition() : 0.0) + (T2QS3 ? yawGimbalTrim1 : 0.0) + cmcYawPosition;
 		}
 
-		if (IsPitchClutch1Powered())
+		if (pitchServoAmp.IsClutch1Powered())
 		{
-			sat->SPSEngine.pitchGimbalActuator.CommandedPosition1Inc(PitchServo1Position - curPitchPosition1);
+			sat->SPSEngine.pitchGimbalActuator.CommandedPositionInc(PitchServo1Position - curPitchPosition1);
 		}
-		if (IsYawClutch1Powered())
+		if (yawServoAmp.IsClutch1Powered())
 		{
-			sat->SPSEngine.yawGimbalActuator.CommandedPosition1Inc(YawServo1Position - curYawPosition1);
+			sat->SPSEngine.yawGimbalActuator.CommandedPositionInc(YawServo1Position - curYawPosition1);
 		}
 	}
 
@@ -4403,8 +4500,8 @@ void TVSA::TimeStep(double simdt)
 	{
 		double curPitchPosition2, curYawPosition2, PitchServo2Position, YawServo2Position;
 
-		curPitchPosition2 = sat->SPSEngine.pitchGimbalActuator.GetCommandedPosition2();
-		curYawPosition2 = sat->SPSEngine.yawGimbalActuator.GetCommandedPosition2();
+		curPitchPosition2 = sat->SPSEngine.pitchGimbalActuator.GetCommandedPosition();
+		curYawPosition2 = sat->SPSEngine.yawGimbalActuator.GetCommandedPosition();
 
 		//Pitch Servo No. 2
 		if (acpower2 && T3QS3)
@@ -4418,33 +4515,43 @@ void TVSA::TimeStep(double simdt)
 			YawServo2Position = sat->eca.GetYawMTVCPosition() + (T2QS2 ? sat->eca.GetYawAutoTVCPosition() : 0.0) + (T2QS3 ? yawGimbalTrim2 : 0.0) + cmcYawPosition;
 		}
 
-		if (IsPitchClutch2Powered())
+		if (pitchServoAmp.IsClutch2Powered())
 		{
-			sat->SPSEngine.pitchGimbalActuator.CommandedPosition2Inc(PitchServo2Position - curPitchPosition2);
+			sat->SPSEngine.pitchGimbalActuator.CommandedPositionInc(PitchServo2Position - curPitchPosition2);
 		}
 
-		if (IsYawClutch2Powered())
+		if (yawServoAmp.IsClutch2Powered())
 		{
-			sat->SPSEngine.yawGimbalActuator.CommandedPosition2Inc(YawServo2Position - curYawPosition2);
+			sat->SPSEngine.yawGimbalActuator.CommandedPositionInc(YawServo2Position - curYawPosition2);
 		}
 	}
 
 	//Transducers
 	if (acpower1)
 	{
-		pitchGimbalPosition1 = sat->SPSEngine.pitchGimbalActuator.GetPosition();
-		yawGimbalPosition1 = sat->SPSEngine.yawGimbalActuator.GetPosition();
+		pitchGimbalPosition1 = sat->SPSEngine.pitchGimbalActuator.GetPosition()*RAD;
+		yawGimbalPosition1 = sat->SPSEngine.yawGimbalActuator.GetPosition()*RAD;
 	}
 	else
 		pitchGimbalPosition1 = yawGimbalPosition1 = 0.0;
 
 	if (acpower2)
 	{
-		pitchGimbalPosition2 = sat->SPSEngine.pitchGimbalActuator.GetPosition();
-		yawGimbalPosition2 = sat->SPSEngine.yawGimbalActuator.GetPosition();
+		pitchGimbalPosition2 = sat->SPSEngine.pitchGimbalActuator.GetPosition()*RAD;
+		yawGimbalPosition2 = sat->SPSEngine.yawGimbalActuator.GetPosition()*RAD;
 	}
 	else
 		pitchGimbalPosition2 = yawGimbalPosition2 = 0.0;
+}
+
+void TVSA::SystemTimestep(double simdt)
+{
+	//DC
+	pitchServoAmp.SystemTimestep(simdt);
+	yawServoAmp.SystemTimestep(simdt);
+	//AC
+	if (IsSystem1ACPowered()) DrawSystem1ACPower();
+	if (IsSystem2ACPowered()) DrawSystem2ACPower();
 }
 
 double TVSA::GetPitchGimbalTrim()
@@ -4479,64 +4586,86 @@ double TVSA::GetYawGimbalPosition()
 	return yawGimbalPosition1;
 }
 
-bool TVSA::IsPitchClutch1Powered()
+bool TVSA::IsSystem1ACPowered()
 {
-	if (A4K1 || A4K7) return false;
 	if (sat->TVCServoPower1Switch.IsUp())
 	{
-		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+		if (sat->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
-	else
+	else if (sat->TVCServoPower1Switch.IsDown())
 	{
-		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+		if (sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 
 	return false;
 }
 
-bool TVSA::IsPitchClutch2Powered()
+bool TVSA::IsSystem2ACPowered()
 {
-	if (!A4K2 && !A4K7) return false;
 	if (sat->TVCServoPower2Switch.IsUp())
 	{
-		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+		if (sat->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
-	else
+	else if (sat->TVCServoPower2Switch.IsDown())
 	{
-		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+		if (sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 
 	return false;
 }
 
-bool TVSA::IsYawClutch1Powered()
-{
-	if (A4K4 || A4K8) return false;
-	if (sat->TVCServoPower1Switch.IsUp())
-	{
-		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
-	}
-	else
-	{
-		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
-	}
+void TVSA::DrawSystem1ACPower() {
 
-	return false;
+	if (sat->TVCServoPower1Switch.IsUp()) {
+		sat->StabContSystemTVCAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
+	}
+	else if (sat->TVCServoPower1Switch.IsDown()) {
+		sat->StabContSystemAc2CircuitBraker.DrawPower(1.36);	// Systems handbook
+	}
 }
 
-bool TVSA::IsYawClutch2Powered()
-{
-	if (!A4K5 && !A4K8) return false;
-	if (sat->TVCServoPower2Switch.IsUp())
-	{
-		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+void TVSA::DrawSystem2ACPower() {
+
+	if (sat->TVCServoPower2Switch.IsUp()) {
+		sat->StabContSystemAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
 	}
-	else
-	{
-		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+	else if (sat->TVCServoPower2Switch.IsDown()) {
+		sat->ECATVCAc2CircuitBraker.DrawPower(1.36);			// Systems handbook
+	}
+}
+
+void TVSA::SaveState(FILEHANDLE scn) {
+
+	bool arr[8] = { A4K1, A4K2, A4K3, A4K4, A4K5, A4K6, A4K7, A4K8 };
+
+	oapiWriteLine(scn, TVSA_START_STRING);
+
+	papiWriteScenario_boolarr(scn, "RELAYS", arr, 8);
+
+	oapiWriteLine(scn, TVSA_END_STRING);
+}
+
+void TVSA::LoadState(FILEHANDLE scn) {
+
+	char *line;
+	bool r[8];
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, TVSA_END_STRING, sizeof(TVSA_END_STRING))) {
+			break;
+		}
+
+		papiReadScenario_boolarr(line, "RELAYS", r, 8);
 	}
 
-	return false;
+	A4K1 = r[0];
+	A4K2 = r[1];
+	A4K3 = r[2];
+	A4K4 = r[3];
+	A4K5 = r[4];
+	A4K6 = r[5];
+	A4K7 = r[6];
+	A4K8 = r[7];
 }
 
 

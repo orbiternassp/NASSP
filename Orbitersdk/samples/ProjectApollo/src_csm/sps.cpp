@@ -683,14 +683,12 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 SPSGimbalActuator::SPSGimbalActuator() {
 
 	position = 0;
-	commandedPosition1 = 0;
-	commandedPosition2 = 0;
-	activeSystem = 1;
+	commandedPosition = 0;
 	motor1Running = false;
 	motor2Running = false;
 
 	saturn = 0;
-	tvcGimbalDriveSwitch = 0;
+	servoAmplifier = 0;
 	gimbalMotor1Switch = 0;
 	gimbalMotor2Switch = 0;
 	motor1Source = 0;
@@ -703,11 +701,11 @@ SPSGimbalActuator::~SPSGimbalActuator() {
 	// Nothing for now.
 }
 
-void SPSGimbalActuator::Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
+void SPSGimbalActuator::Init(Saturn *s, ServoAmplifierModule *servoAmp, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
 	                         e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource) {
 
 	saturn = s;
-	tvcGimbalDriveSwitch = driveSwitch;
+	servoAmplifier = servoAmp;
 	gimbalMotor1Switch = m1Switch;
 	gimbalMotor2Switch = m2Switch;
 	motor1Source = m1Source;
@@ -755,37 +753,17 @@ void SPSGimbalActuator::Timestep(double simt, double simdt) {
 	// sprintf(oapiDebugString(), "Motor1 %d Motor2 %d", motor1Running, motor2Running);
 
 	//
-	// Which system is active?
-	//
-
-	// "Default" system is 1
-	activeSystem = 1;
-
-	// Switched to AUTO and THC CLOCKWISE
-	if (tvcGimbalDriveSwitch->IsCenter() && saturn->THCRotary.IsClockwise()) {
-		activeSystem = 2;
-	}
-
-	/// \todo Auto switch-over because of overcurrent 
-
-	// Switched to system 2
-	if (tvcGimbalDriveSwitch->IsDown()) {
-		activeSystem = 2;
-	}
-
-	//
 	// Drive gimbals when powered
 	//
 
-	if (activeSystem == 1) {
-		if (IsSystem1Powered() && motor1Running) {
-			//position = commandedPosition; // Instant positioning
-			GimbalTimestep(simdt, commandedPosition1*DEG);
+	if (IsSystem1Powered()) {
+		if (motor1Running) {
+			GimbalTimestep(simdt, commandedPosition*DEG);
 		}
-	} else {
-		if (IsSystem2Powered() && motor2Running) {
-			//position = commandedPosition; // Instant positioning
-			GimbalTimestep(simdt, commandedPosition2*DEG);
+	}
+	else if (IsSystem2Powered()) {
+		if (motor2Running) {
+			GimbalTimestep(simdt, commandedPosition*DEG);
 		}
 	}
 
@@ -818,13 +796,6 @@ void SPSGimbalActuator::SystemTimestep(double simdt) {
 
 	if (saturn->GetStage() > CSM_LEM_STAGE) return;
 
-	if (activeSystem == 1 && IsSystem1Powered()) {
-		DrawSystem1Power();
-	
-	} else if (IsSystem2Powered()) {
-		DrawSystem2Power();
-	}
-
 	if (motor1Running) {
 		motor1Source->DrawPower(100);	/// \todo real power consumption is unknown 
 	}
@@ -833,69 +804,21 @@ void SPSGimbalActuator::SystemTimestep(double simdt) {
 	}
 }
 
-bool SPSGimbalActuator::IsSystem1Powered() {
-
-	if (saturn->TVCServoPower1Switch.IsUp()) {
-		if (saturn->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE  && 
-			saturn->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
-			return true;
-		}
-	} else if (saturn->TVCServoPower1Switch.IsDown()) {
-		if (saturn->StabContSystemAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE  && 
-			saturn->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
-			return true;
-		}
-	}
-	return false;
+bool SPSGimbalActuator::IsSystem1Powered()
+{
+	return servoAmplifier->IsClutch1Powered();
 }
 
-bool SPSGimbalActuator::IsSystem2Powered() {
-
-	if (saturn->TVCServoPower2Switch.IsUp()) {
-		if (saturn->StabContSystemAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE  && 
-			saturn->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
-			return true;
-		}
-	} else if (saturn->TVCServoPower2Switch.IsDown()) {
-		if (saturn->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE  && 
-			saturn->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
-			return true;
-		}
-	}
-	return false;
-}
-
-void SPSGimbalActuator::DrawSystem1Power() {
-
-	if (saturn->TVCServoPower1Switch.IsUp()) {
-		saturn->StabContSystemTVCAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
-		saturn->SystemMnACircuitBraker.DrawPower(10);				/// \todo Real power consumption is unknown 
-
-	} else if (saturn->TVCServoPower1Switch.IsDown()) {
-		saturn->StabContSystemAc2CircuitBraker.DrawPower(1.36);		// Systems handbook
-		saturn->SystemMnBCircuitBraker.DrawPower(10);				/// \todo Real power consumption is unknown 
-	}
-}
-
-void SPSGimbalActuator::DrawSystem2Power() {
-
-	if (saturn->TVCServoPower2Switch.IsUp()) {
-		saturn->StabContSystemAc1CircuitBraker.DrawPower(1.36);		// Systems handbook
-		saturn->SystemMnACircuitBraker.DrawPower(10);				/// \todo Real power consumption is unknown 
-
-	} else if (saturn->TVCServoPower2Switch.IsDown()) {
-		saturn->ECATVCAc2CircuitBraker.DrawPower(1.36);				// Systems handbook
-		saturn->SystemMnBCircuitBraker.DrawPower(10);				/// \todo Real power consumption is unknown 
-	}
+bool SPSGimbalActuator::IsSystem2Powered()
+{
+	return servoAmplifier->IsClutch2Powered();
 }
 
 void SPSGimbalActuator::SaveState(FILEHANDLE scn) {
 
 	// START_STRING is written in Saturn
 	papiWriteScenario_double(scn, "POSITION", position);
-	papiWriteScenario_double(scn, "COMMANDEDPOSITION1", commandedPosition1);
-	papiWriteScenario_double(scn, "COMMANDEDPOSITION2", commandedPosition2);
-	oapiWriteScenario_int(scn, "ACTIVESYSTEM", activeSystem);
+	papiWriteScenario_double(scn, "COMMANDEDPOSITION", commandedPosition);
 	oapiWriteScenario_int(scn, "MOTOR1RUNNING", (motor1Running ? 1 : 0));
 	oapiWriteScenario_int(scn, "MOTOR2RUNNING", (motor2Running ? 1 : 0));
 
@@ -915,14 +838,8 @@ void SPSGimbalActuator::LoadState(FILEHANDLE scn) {
 		if (!strnicmp (line, "POSITION", 8)) {
 			sscanf(line + 8, "%lf", &position);
 		}
-		else if (!strnicmp (line, "COMMANDEDPOSITION1", 18)) {
-			sscanf(line + 18, "%lf", &commandedPosition1);
-		}
-		else if (!strnicmp(line, "COMMANDEDPOSITION2", 18)) {
-			sscanf(line + 18, "%lf", &commandedPosition2);
-		}
-		else if (!strnicmp (line, "ACTIVESYSTEM", 12)) {
-			sscanf(line + 12, "%d", &activeSystem);
+		else if (!strnicmp (line, "COMMANDEDPOSITION", 17)) {
+			sscanf(line + 17, "%lf", &commandedPosition);
 		}
 		else if (!strnicmp (line, "MOTOR1RUNNING", 13)) {
 			sscanf(line + 13, "%d", &i);

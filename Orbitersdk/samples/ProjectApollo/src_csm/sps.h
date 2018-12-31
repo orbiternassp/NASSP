@@ -89,36 +89,32 @@ public:
 	SPSGimbalActuator();
 	virtual ~SPSGimbalActuator();
 
-	void Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
+	void Init(Saturn *s, ServoAmplifierModule *servoAmp, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
 	          e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource);
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	double GetPosition() { return position; }
-	double GetCommandedPosition1() { return commandedPosition1; }
-	double GetCommandedPosition2() { return commandedPosition2; }
-	void CommandedPosition1Inc(double dangle) { commandedPosition1 += dangle; }
-	void CommandedPosition2Inc(double dangle) { commandedPosition2 += dangle; }
+	double GetCommandedPosition() { return commandedPosition; }
+	void CommandedPositionInc(double dangle) { commandedPosition += dangle; }
+	bool HasGimbalMotorOverCurrent() { return false; }
 
 protected:
 	void GimbalTimestep(double simdt, double desPos);
 
 	bool IsSystem1Powered();
 	bool IsSystem2Powered();
-	void DrawSystem1Power();
-	void DrawSystem2Power();
 
 	double position;
-	double commandedPosition1;
-	double commandedPosition2;
-	int activeSystem;
+	double commandedPosition;
 	bool motor1Running;
 	bool motor2Running;
 
 	Saturn *saturn;
-	ThreePosSwitch *tvcGimbalDriveSwitch, *gimbalMotor1Switch, *gimbalMotor2Switch;
+	ThreePosSwitch *gimbalMotor1Switch, *gimbalMotor2Switch;
 	e_object *motor1Source, *motor1StartSource, *motor2Source, *motor2StartSource;
+	ServoAmplifierModule *servoAmplifier;
 };
 
 ///

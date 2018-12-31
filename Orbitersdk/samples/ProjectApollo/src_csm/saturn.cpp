@@ -1414,6 +1414,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	gdc.SaveState(scn);
 	rjec.SaveState(scn);
+	tvsa.SaveState(scn);
 	ascp.SaveState(scn);
 	eda.SaveState(scn);
 	ems.SaveState(scn);
@@ -2295,6 +2296,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			eventControl.load(scn);
 		} else if (!strnicmp(line, RJEC_START_STRING, sizeof(RJEC_START_STRING))) {
 			rjec.LoadState(scn);
+		} else if (!strnicmp(line, TVSA_START_STRING, sizeof(TVSA_START_STRING))) {
+			tvsa.LoadState(scn);
 		} else if (!strnicmp(line, ORDEAL_START_STRING, sizeof(ORDEAL_START_STRING))) {
 			ordeal.LoadState(scn);
 		} else if (!strnicmp(line, MECHACCEL_START_STRING, sizeof(MECHACCEL_START_STRING))) {

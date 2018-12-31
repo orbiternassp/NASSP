@@ -390,6 +390,9 @@ protected:
 	//FDAI rate and error source select
 	bool A9K5;
 
+	//LV Pressure Display Enable
+	bool A11K1, A11K2, A11K3, A11K4, A11K5, A11K6;
+
 	//TRANSISTORS
 
 	//FDAI No. 1 Roll Gain Disable
@@ -588,8 +591,8 @@ public:
 
 	double GetPitchMTVCPosition() { return pitchMTVCPosition; }
 	double GetYawMTVCPosition() { return yawMTVCPosition; }
-	double GetPitchAutoTVCPosition() { return 0.0; }
-	double GetYawAutoTVCPosition() { return 0.0; }
+	double GetPitchAutoTVCPosition() { return pitchAutoTVCPosition; }
+	double GetYawAutoTVCPosition() { return yawAutoTVCPosition; }
 
 	long thc_x,thc_y,thc_z;											// THC position
 	int accel_roll_trigger;                                         // Joystick triggered roll thrust in RATE CMD mode
@@ -714,7 +717,31 @@ protected:
 	bool T3QS44;
 };
 
+class TVSA;
+
+class ServoAmplifierModule
+{
+public:
+	ServoAmplifierModule(bool *r1, bool *r2, bool *r3, bool *r4);
+	void Init(Saturn *vessel);
+	void SystemTimestep(double simdt);
+
+	bool IsClutch1Powered();
+	bool IsClutch2Powered();
+protected:
+
+	void DrawSystem1Power();
+	void DrawSystem2Power();
+
+	Saturn *sat;
+	bool *relays[4];
+};
+
 //Thrust Vector Servo Amplifier Assembly
+
+#define TVSA_START_STRING	"TVSA_BEGIN"
+#define TVSA_END_STRING		"TVSA_END"
+
 class TVSA
 {
 public:
@@ -722,14 +749,12 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 
 	void ChangeCMCPitchPosition(double delta);
 	void ChangeCMCYawPosition(double delta);
 	void ZeroCMCPosition() { cmcPitchPosition = 0; cmcYawPosition = 0; }
-	bool IsPitchClutch1Powered();
-	bool IsPitchClutch2Powered();
-	bool IsYawClutch1Powered();
-	bool IsYawClutch2Powered();
 	void EnableCMCTVCErrorCounter() { cmcErrorCountersEnabled = true; }
 	void DisableCMCTVCErrorCounter() { cmcErrorCountersEnabled = false; }
 	bool IsCMCErrorCountersEnabled() { return cmcErrorCountersEnabled; }
@@ -737,7 +762,18 @@ public:
 	double GetYawGimbalTrim();
 	double GetPitchGimbalPosition();
 	double GetYawGimbalPosition();
+
+	ServoAmplifierModule *GetPitchServoAmp() { return &pitchServoAmp; }
+	ServoAmplifierModule *GetYawServoAmp() { return &yawServoAmp; }
 protected:
+
+	bool IsSystem1ACPowered();
+	bool IsSystem2ACPowered();
+	void DrawSystem1ACPower();
+	void DrawSystem2ACPower();
+
+	ServoAmplifierModule pitchServoAmp;
+	ServoAmplifierModule yawServoAmp;
 
 	bool cmcErrorCountersEnabled;
 	double cmcPitchPosition;

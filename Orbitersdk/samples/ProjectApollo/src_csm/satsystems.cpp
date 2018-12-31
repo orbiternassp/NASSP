@@ -457,9 +457,9 @@ void Saturn::SystemsInit() {
 	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch, 
 		               (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SPSPROPELLANTLINE"));
 	SPSEngine.Init(this);
-	SPSEngine.pitchGimbalActuator.Init(this, &TVCGimbalDrivePitchSwitch, &Pitch1Switch, &Pitch2Switch,
+	SPSEngine.pitchGimbalActuator.Init(this, tvsa.GetPitchServoAmp(), &Pitch1Switch, &Pitch2Switch,
 		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker);
-	SPSEngine.yawGimbalActuator.Init(this, &TVCGimbalDriveYawSwitch, &Yaw1Switch, &Yaw2Switch,
+	SPSEngine.yawGimbalActuator.Init(this, tvsa.GetYawServoAmp(), &Yaw1Switch, &Yaw2Switch,
 		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker);
 
 	SPSPropellantLineHeaterA = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSPROPELLANTLINEHEATERA");
@@ -1374,6 +1374,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		gdc.SystemTimestep(tFactor);
 		eca.SystemTimestep(tFactor);
 		rjec.SystemTimestep(tFactor);
+		tvsa.SystemTimestep(tFactor);
 		optics.SystemTimestep(tFactor);
 		pcm.SystemTimestep(tFactor);
 		pmp.SystemTimestep(tFactor);
