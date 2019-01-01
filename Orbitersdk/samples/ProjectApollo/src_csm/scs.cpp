@@ -2784,7 +2784,8 @@ void EDA::Timestep(double simdt)
 		InstrAttitudeError.x = 0.0;
 	}
 
-	// GPI/S-IVB Pressure DECA
+	// GPI/S-IVB PRESSURE DECA
+	// Module A11
 	if (E1_307)
 	{
 		if (A11K3)
@@ -2821,6 +2822,7 @@ void EDA::Timestep(double simdt)
 	else
 		GPFPIPitch[0] = GPFPIYaw[0] = 0.0;
 
+	// Module A12
 	if (E2_307)
 	{
 		if (A11K4)
@@ -3107,7 +3109,7 @@ void RJEC::TimeStep(double simdt){
 	S8_1 = sat->ManualAttPitchSwitch.IsUp() && scslogic1;
 	S9_1 = sat->ManualAttYawSwitch.IsUp() && scslogic1;
 	S10_1 = sat->ManualAttRollSwitch.IsUp() && scslogic1;
-	S18_1 = sat->SCContSwitch.IsDown() && scslogic2;
+	S18_1 = sat->SCContSwitch.IsUp() && scslogic2;
 	S18_2 = sat->SCContSwitch.IsDown() && scslogic3;
 	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
 
@@ -3481,8 +3483,8 @@ void ECAIntegrator::Timestep(double input, double simdt)
 //
 
 ECA::ECA() :
-	PitchMTVCIntegrator(0.125/0.4, 14.0*RAD, -10.0*RAD),
-	YawMTVCIntegrator(0.125/0.4, 14.0*RAD, -10.0*RAD),
+	PitchMTVCIntegrator(0.125, 14.0*RAD, -10.0*RAD),
+	YawMTVCIntegrator(0.125, 14.0*RAD, -10.0*RAD),
 	PitchAutoTVCIntegrator(0.0565, 5.6*RAD, -4.7*RAD),
 	YawAutoTVCIntegrator(0.0565, 5.6*RAD, -4.7*RAD)
 {

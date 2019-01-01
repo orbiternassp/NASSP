@@ -396,7 +396,7 @@ void CSMcomputer::ProcessChannel5(ChannelValue val){
 	val30 = GetInputChannel(030);
 
 	Saturn *sat = (Saturn *) OurVessel;
-	if (sat->SCContSwitch.IsDown() || sat->THCRotary.IsClockwise()) {
+	if ((sat->SCContSwitch.IsDown() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE) || (sat->THCRotary.IsClockwise() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)) {
 		return;
 	}
 
@@ -450,7 +450,7 @@ void CSMcomputer::ProcessChannel6(ChannelValue val){
 	val30 = GetInputChannel(030);
 
 	Saturn *sat = (Saturn *) OurVessel;	
-	if (sat->SCContSwitch.IsDown() || sat->THCRotary.IsClockwise()) {
+	if ((sat->SCContSwitch.IsDown() && sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE) || (sat->THCRotary.IsClockwise() && sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE)) {
 		return;
 	}
 
