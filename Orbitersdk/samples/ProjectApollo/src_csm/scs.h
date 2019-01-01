@@ -287,6 +287,9 @@ public: // Same stuff about speed and I'm lazy too.
 	double GetInstYawAttRate();
 	double GetInstRollAttRate();
 
+	double GetGPFPIPitch(int sys);
+	double GetGPFPIYaw(int sys);
+
 	bool GetIMUtoAttSetRoll() { return A8K13; }
 	bool GetIMUtoAttSetYaw() { return A8K15; }
 	bool GetIMUtoAttSetPitch() { return A8K17; }
@@ -313,6 +316,8 @@ protected:
 	VECTOR3 FDAI1AttitudeError;
 	VECTOR3 FDAI2AttitudeError;
 	VECTOR3 InstrAttitudeError;
+
+	double GPFPIPitch[2], GPFPIYaw[2];
 
 	e_object *ac_source1;					  	          			// Power supply for FDAI 1 circuits
 	e_object *ac_source2;											// Power supply for FDAI 2 circuits

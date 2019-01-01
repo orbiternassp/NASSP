@@ -2380,10 +2380,10 @@ void Saturn::SetSwitches(int panel) {
 	LVSPSPcMeter.Init(g_Param.pen[4], g_Param.pen[4], LVSPSPcMeterRow, this, &LVSPSPcIndicatorSwitch, srf[SRF_THRUSTMETER]);
 
 	GPFPIMeterRow.Init(AID_GPFPI_METERS, MainPanel);
-	GPFPIPitch1Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, &LVFuelTankPressIndicatorSwitch, 15);
-	GPFPIPitch2Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, &LVFuelTankPressIndicatorSwitch, 53);	
-	GPFPIYaw1Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, &LVFuelTankPressIndicatorSwitch, 91);
-	GPFPIYaw2Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, &LVFuelTankPressIndicatorSwitch, 129);
+	GPFPIPitch1Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, 1, 15);
+	GPFPIPitch2Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, 2, 53);
+	GPFPIYaw1Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, 1, 91);
+	GPFPIYaw2Meter.Init(srf[SRF_NEEDLE], GPFPIMeterRow, this, 2, 129);
 
 	DirectUllageThrustOnRow.Init(AID_DIRECT_ULLAGE_THRUST_ON, MainPanel);
 	DirectUllageButton.Init( 0, 0, 39, 38, srf[SRF_SEQUENCERSWITCHES], srf[SRF_BORDER_39x38], DirectUllageThrustOnRow, 79, 119);

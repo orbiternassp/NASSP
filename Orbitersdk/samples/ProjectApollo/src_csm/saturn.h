@@ -1018,6 +1018,7 @@ public:
 	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 	SCE *GetSCE() { return &sce; }
+	EDA *GetEDA() { return &eda; }
 
 	///
 	/// \brief Accessor to get checklistController

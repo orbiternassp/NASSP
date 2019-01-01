@@ -1404,13 +1404,13 @@ double SaturnSystemTestAttenuator::GetValue()
 	return (double)val;
 }
 
-void SaturnGPFPIMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *gpfpiindswitch, int xoffset)
+void SaturnGPFPIMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, int sys, int xoffset)
 
 {
 	MeterSwitch::Init(row);
 	NeedleSurface = surf;
 	Sat = s;
-	GPFPIIndicatorSwitch = gpfpiindswitch;
+	system = sys;
 	xOffset = xoffset;
 }
 
@@ -1433,39 +1433,14 @@ void SaturnGPFPIMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 
 double SaturnGPFPIPitchMeter::QueryValue()
-
 {
-	if (GPFPIIndicatorSwitch->IsUp()) {
-		
-		LVTankQuantities LVq;
-		Sat->GetLVTankQuantities(LVq);
-		
-		if (Sat->GetStage() > LAUNCH_STAGE_TWO_ISTG_JET) {  
-			return 89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass;
-		} 
-		else {
-			return 89.0 * LVq.SIIQuantity / LVq.SIIFuelMass;
-		}
-	}
-	else {
-		return (10.0 * Sat->GetSPSEngine()->pitchGimbalActuator.GetPosition()) + 44.0;
-	}
+	return Sat->GetEDA()->GetGPFPIPitch(system);
 }
 
 
 double SaturnGPFPIYawMeter::QueryValue()
-
 {
-	if (GPFPIIndicatorSwitch->IsUp()) {
-		
-		LVTankQuantities LVq;
-		Sat->GetLVTankQuantities(LVq);
-		
-		return 89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass;
-	}
-	else {
-		return (10.0 * Sat->GetSPSEngine()->yawGimbalActuator.GetPosition()) + 44.0;
-	}
+	return Sat->GetEDA()->GetGPFPIYaw(system);
 }
 
 

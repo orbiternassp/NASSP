@@ -596,8 +596,8 @@ protected:
 
 class SaturnGPFPIMeter : public MeterSwitch {
 public:
-	SaturnGPFPIMeter() { DCSource = 0; ACSource = 0; }
-	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *gpfpiindswitch, int xoffset);
+	SaturnGPFPIMeter() { DCSource = 0; ACSource = 0; system = 0; }
+	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, int sys, int xoffset);
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void WireTo(e_object *dc, e_object *ac) { DCSource = dc; ACSource = ac; };
 	virtual double AdjustForPower(double val);
@@ -605,9 +605,9 @@ public:
 protected:
 	SURFHANDLE NeedleSurface;
 	Saturn *Sat;
-	ToggleSwitch *GPFPIIndicatorSwitch;
 	e_object *DCSource, *ACSource;
 	int xOffset;
+	int system;
 };
 
 class SaturnGPFPIPitchMeter : public SaturnGPFPIMeter {

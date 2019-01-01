@@ -1733,6 +1733,8 @@ EDA::EDA(){
 	FDAI1AttitudeError = _V(0, 0, 0);
 	FDAI2AttitudeError = _V(0, 0, 0);
 	InstrAttitudeError = _V(0, 0, 0);
+	GPFPIPitch[0] = GPFPIPitch[1] = 0.0;
+	GPFPIYaw[0] = GPFPIYaw[1] = 0.0;
 
 	ResetRelays();
 	ResetTransistors();
@@ -2782,6 +2784,75 @@ void EDA::Timestep(double simdt)
 		InstrAttitudeError.x = 0.0;
 	}
 
+	// GPI/S-IVB Pressure DECA
+	if (E1_307)
+	{
+		if (A11K3)
+		{
+			LVTankQuantities LVq;
+			sat->GetLVTankQuantities(LVq);
+
+			if (sat->GetStage() > LAUNCH_STAGE_TWO_ISTG_JET) {
+				GPFPIPitch[0] = 89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass;
+			}
+			else {
+				GPFPIPitch[0] = 89.0 * LVq.SIIQuantity / LVq.SIIFuelMass;
+			}
+		}
+		else
+		{
+			GPFPIPitch[0] = (10.0 * sat->tvsa.GetPitchGimbalPosition()*DEG) + (A11K1 ? 44.0 : 0.0);
+		}
+
+		if (A11K6)
+		{
+			LVTankQuantities LVq;
+			sat->GetLVTankQuantities(LVq);
+
+			GPFPIYaw[0] = 89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass;
+		}
+		else
+		{
+			GPFPIYaw[0] = (10.0 * sat->tvsa.GetYawGimbalPosition()*DEG) + (A11K1 ? 44.0 : 0.0);
+		}
+	}
+	else
+		GPFPIPitch[0] = GPFPIYaw[0] = 0.0;
+
+	if (E2_307)
+	{
+		if (A11K4)
+		{
+			LVTankQuantities LVq;
+			sat->GetLVTankQuantities(LVq);
+
+			if (sat->GetStage() > LAUNCH_STAGE_TWO_ISTG_JET) {
+				GPFPIPitch[1] = 89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass;
+			}
+			else {
+				GPFPIPitch[1] = 89.0 * LVq.SIIQuantity / LVq.SIIFuelMass;
+			}
+		}
+		else
+		{
+			GPFPIPitch[1] = (10.0 * sat->tvsa.GetPitchGimbalPosition()*DEG) + (A11K2 ? 44.0 : 0.0);
+		}
+
+		if (A11K5)
+		{
+			LVTankQuantities LVq;
+			sat->GetLVTankQuantities(LVq);
+
+			GPFPIYaw[1] = 89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass;
+		}
+		else
+		{
+			GPFPIYaw[1] = (10.0 * sat->tvsa.GetYawGimbalPosition()*DEG) + (A11K2 ? 44.0 : 0.0);
+		}
+	}
+	else
+		GPFPIPitch[1] = GPFPIYaw[1] = 0.0;
+
 	//sprintf(oapiDebugString(), "FDAI1: %.01f %.01f %.01f FDAI2: %.01f %.01f %.01f", FDAI1AttitudeRate.x, FDAI1AttitudeRate.y, FDAI1AttitudeRate.z,
 	//	FDAI2AttitudeRate.x, FDAI2AttitudeRate.y, FDAI2AttitudeRate.z);
 	//sprintf(oapiDebugString(), "FDAI1: %.1f %.1f %.1f FDAI2: %.1f %.1f %.1f", FDAI1AttitudeError.x, FDAI1AttitudeError.y, FDAI1AttitudeError.z,
@@ -2854,6 +2925,20 @@ double EDA::GetInstRollAttRate()
 	return inst_scale_rates(InstrAttitudeRate.z);
 }
 
+double EDA::GetGPFPIPitch(int sys)
+{
+	if (sys == 1 || sys == 2) return GPFPIPitch[sys - 1];
+
+	return 0.0;
+}
+
+double EDA::GetGPFPIYaw(int sys)
+{
+	if (sys == 1 || sys == 2) return GPFPIYaw[sys - 1];
+
+	return 0.0;
+}
+
 double EDA::scale_data(double data)
 {
 	// First eliminate cases outside of the scales
@@ -2892,6 +2977,8 @@ void EDA::SaveState(FILEHANDLE scn)
 	papiWriteScenario_vec(scn, "FDAI2ATTITUDERATE", FDAI2AttitudeRate);
 	papiWriteScenario_vec(scn, "FDAI1ATTITUDEERROR", FDAI1AttitudeError);
 	papiWriteScenario_vec(scn, "FDAI2ATTITUDEERROR", FDAI2AttitudeError);
+	papiWriteScenario_doublearr(scn, "GPFPIPITCH", GPFPIPitch, 2);
+	papiWriteScenario_doublearr(scn, "GPFPIYAW", GPFPIYaw, 2);
 	papiWriteScenario_bool(scn, "GDC118A8K1", GDC118A8K1);
 	oapiWriteLine(scn, EDA_END_STRING);
 }
@@ -2910,6 +2997,8 @@ void EDA::LoadState(FILEHANDLE scn)
 		papiReadScenario_vec(line, "FDAI2ATTITUDERATE", FDAI2AttitudeRate);
 		papiReadScenario_vec(line, "FDAI1ATTITUDEERROR", FDAI1AttitudeError);
 		papiReadScenario_vec(line, "FDAI2ATTITUDEERROR", FDAI2AttitudeError);
+		papiReadScenario_doublearr(line, "GPFPIPITCH", GPFPIPitch, 2);
+		papiReadScenario_doublearr(line, "GPFPIYAW", GPFPIYaw, 2);
 		papiReadScenario_bool(line, "GDC118A8K1", GDC118A8K1);
 	}
 }
@@ -3784,6 +3873,8 @@ void ECA::TimeStep(double simdt) {
 	VECTOR3 rhc_rate = _V(0, 0, 0);
 	yawMTVCPosition = 0.0;
 	pitchMTVCPosition = 0.0;
+	yawAutoTVCPosition = 0.0;
+	pitchAutoTVCPosition = 0.0;
 	if (mnimp_roll_trigger) {
 		sat->rjec.SetThruster(9,0);
 		sat->rjec.SetThruster(10,0);
