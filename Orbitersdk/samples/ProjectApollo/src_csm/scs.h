@@ -23,19 +23,6 @@
 
   **************************************************************************/
 
-
-
-/* ATTENTION: The original implementation used an inertial attitude reference 
-   for the uncaged BMAGs. In my understanding of the AOH this is wrong, each 
-   gyro assemblies is body-mounted along a spacecraft axis. Set the define to
-   true to switch back to the original implementation.
-
-   To see the difference align the GDC to (0,0,0), uncage the pitch BMAG (ATT1/RATE2),
-   Roll 90° and look what happens when you pitch manually
-*/
-
-#define SCS_INERTIAL_BMAGS	false
-
 #include "DelayTimer.h"
 
 class Saturn;
@@ -79,7 +66,7 @@ protected:
 #define BMAG2_START_STRING	"BMAG2_BEGIN"
 #define BMAG_END_STRING	    "BMAG_END"
 
-class BMAG: public AttitudeReference {
+class BMAG {
 	
 public: 
 	BMAG();                                                                  // Cons
@@ -107,7 +94,6 @@ protected:
 	double temperature;                                                         // Temperature
 	VECTOR3 rates;                                                           // Detected rotation acceleration
 	VECTOR3 uncaged;														 // 0 = caged, 1 = not caged (each axis)
-	VECTOR3 targetAttitude;													 // Attitude when uncaged
 	VECTOR3 errorAttitude;												     // Body attitude error when uncaged
 	Saturn *sat;                                                             // Pointer to ship we're attached to
 	bool powered;                                                            // Data valid flag.

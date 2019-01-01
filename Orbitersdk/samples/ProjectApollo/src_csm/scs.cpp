@@ -347,7 +347,6 @@ BMAG::BMAG() {
 	temperature=0;
 	rates = _V(0,0,0);
 	uncaged = _V(0,0,0);
-	targetAttitude = _V(0,0,0);
 	errorAttitude = _V(0,0,0);
 	number = 0;
 }
@@ -360,7 +359,6 @@ void BMAG::Init(int n, Saturn *v, e_object *dcbus, e_object *acbus, Boiler *h) {
 	ac_bus = acbus;
 	heater = h;
 	temperature = 349.817;
-	AttitudeReference::Init(v);
 }
 
 void BMAG::Timestep(double simdt) {
@@ -385,7 +383,6 @@ void BMAG::Timestep(double simdt) {
 	}
 
 	heater->WireTo(dc_source);	// Take DC power to heat the gyro
-	AttitudeReference::Timestep(simdt);
 
 	if (uncaged.x == 1) {
 		errorAttitude.x -= rates.z * simdt;
@@ -402,17 +399,6 @@ void BMAG::Timestep(double simdt) {
 		while (errorAttitude.z <= TWO_PI) errorAttitude.z += TWO_PI;
 		while (errorAttitude.z >= TWO_PI) errorAttitude.z -= TWO_PI;
 	}
-
-/*	if (number == 1) {
-		sprintf(oapiDebugString(),"BMAG Att x %.3f y %.3f z %.3f Tar x %.3f y %.3f z %.3f Err x %.3f y %.3f z %.3f",  
-			Attitude.x * DEG, Attitude.y * DEG, Attitude.z * DEG,
-			targetAttitude.x * DEG, targetAttitude.y * DEG, targetAttitude.z * DEG,
-			(targetAttitude.x - Attitude.x) * DEG, (targetAttitude.y - Attitude.y) * DEG, (targetAttitude.z - Attitude.z) * DEG);
-
-		sprintf(oapiDebugString(),"BMAG Err x %.3f y %.3f z %.3f", 
-			errorAttitude.x * DEG, errorAttitude.y * DEG, errorAttitude.z * DEG);
-	}
-*/
 }
 
 void BMAG::SystemTimestep(double simdt) {
@@ -434,31 +420,15 @@ void BMAG::Uncage(int axis) {
 
 	// If caged store current attitude as reference for errors
 	if (uncaged.data[axis] == 0) {
-		targetAttitude.data[axis] = Attitude.data[axis];
 		uncaged.data[axis] = 1;
 
 		errorAttitude.data[axis] = 0;
 	}
 }
 
-VECTOR3 BMAG::GetAttitudeError() {
-
-	if (!SCS_INERTIAL_BMAGS)
-		return errorAttitude;
-
-	VECTOR3 err = _V(0, 0, 0);
-	if (powered) 
-	{
-		if (uncaged.x == 1) 
-			err.x = targetAttitude.x - Attitude.x ;
-
-		if (uncaged.y == 1) 
-			err.y = targetAttitude.y - Attitude.y ;
-
-		if (uncaged.z == 1) 
-			err.z = targetAttitude.z - Attitude.z;
-	}
-	return err; 
+VECTOR3 BMAG::GetAttitudeError()
+{
+	return errorAttitude;
 }
 
 void BMAG::SetPower(bool dc, bool ac) {
@@ -487,15 +457,10 @@ void BMAG::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "UNCAGEDX", uncaged.x);
 	papiWriteScenario_double(scn, "UNCAGEDY", uncaged.y);
 	papiWriteScenario_double(scn, "UNCAGEDZ", uncaged.z);
-	papiWriteScenario_double(scn, "TARGETATTITUDEX", targetAttitude.x);
-	papiWriteScenario_double(scn, "TARGETATTITUDEY", targetAttitude.y);
-	papiWriteScenario_double(scn, "TARGETATTITUDEZ", targetAttitude.z);
 	papiWriteScenario_double(scn, "RATESX", rates.x);
 	papiWriteScenario_double(scn, "RATESY", rates.y);
 	papiWriteScenario_double(scn, "RATESZ", rates.z);
 	papiWriteScenario_vec(scn, "ERRORATTITUDE", errorAttitude);
-	
-	AttitudeReference::SaveState(scn);
 
 	oapiWriteLine(scn, BMAG_END_STRING);
 }
@@ -509,37 +474,13 @@ void BMAG::LoadState(FILEHANDLE scn){
 			return;
 		}
 
-		if (!strnicmp (line, "UNCAGEDX", 8)) {
-			sscanf(line + 8, "%lf", &uncaged.x);
-		}
-		else if (!strnicmp (line, "UNCAGEDY", 8)) {
-			sscanf(line + 8, "%lf", &uncaged.y);
-		}
-		else if (!strnicmp (line, "UNCAGEDZ", 8)) {
-			sscanf(line + 8, "%lf", &uncaged.z);
-		}
-		else if (!strnicmp (line, "TARGETATTITUDEX", 15)) {
-			sscanf(line + 15, "%lf", &targetAttitude.x);
-		}
-		else if (!strnicmp (line, "TARGETATTITUDEY", 15)) {
-			sscanf(line + 15, "%lf", &targetAttitude.y);
-		}
-		else if (!strnicmp (line, "TARGETATTITUDEZ", 15)) {
-			sscanf(line + 15, "%lf", &targetAttitude.z);
-		}
-		else if (!strnicmp (line, "RATESX", 6)) {
-			sscanf(line + 6, "%lf", &rates.x);
-		}
-		else if (!strnicmp (line, "RATESY", 6)) {
-			sscanf(line + 6, "%lf", &rates.y);
-		}
-		else if (!strnicmp (line, "RATESZ", 6)) {
-			sscanf(line + 6, "%lf", &rates.z);
-		}
-		else if (papiReadScenario_vec(line, "ERRORATTITUDE", errorAttitude));
-		else {
-			AttitudeReference::LoadState(line);
-		}
+		papiReadScenario_double(line, "UNCAGEDX", uncaged.x);
+		papiReadScenario_double(line, "UNCAGEDY", uncaged.y);
+		papiReadScenario_double(line, "UNCAGEDZ", uncaged.z);
+		papiReadScenario_double(line, "RATESX", rates.x);
+		papiReadScenario_double(line, "RATESY", rates.y);
+		papiReadScenario_double(line, "RATESZ", rates.z);
+		papiReadScenario_vec(line, "ERRORATTITUDE", errorAttitude);
 	}
 }
 
