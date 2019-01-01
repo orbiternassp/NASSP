@@ -2801,8 +2801,9 @@ void EDA::Timestep(double simdt)
 		}
 		else
 		{
-			GPFPIPitch[0] = (10.0 * sat->tvsa.GetPitchGimbalPosition()*DEG) + (A11K1 ? 44.0 : 0.0);
+			GPFPIPitch[0] = (10.0 * sat->tvsa.GetPitchGimbalPosition()*DEG);
 		}
+		GPFPIPitch[0] += (A11K1 ? 0.0 : 44.0);
 
 		if (A11K6)
 		{
@@ -2813,8 +2814,9 @@ void EDA::Timestep(double simdt)
 		}
 		else
 		{
-			GPFPIYaw[0] = (10.0 * sat->tvsa.GetYawGimbalPosition()*DEG) + (A11K1 ? 44.0 : 0.0);
+			GPFPIYaw[0] = (10.0 * sat->tvsa.GetYawGimbalPosition()*DEG);
 		}
+		GPFPIYaw[0] += (A11K1 ? 0.0 : 44.0);
 	}
 	else
 		GPFPIPitch[0] = GPFPIYaw[0] = 0.0;
@@ -2835,8 +2837,9 @@ void EDA::Timestep(double simdt)
 		}
 		else
 		{
-			GPFPIPitch[1] = (10.0 * sat->tvsa.GetPitchGimbalPosition()*DEG) + (A11K2 ? 44.0 : 0.0);
+			GPFPIPitch[1] = (10.0 * sat->tvsa.GetPitchGimbalPosition()*DEG);
 		}
+		GPFPIPitch[1] += (A11K2 ? 0.0 : 44.0);
 
 		if (A11K5)
 		{
@@ -2847,8 +2850,9 @@ void EDA::Timestep(double simdt)
 		}
 		else
 		{
-			GPFPIYaw[1] = (10.0 * sat->tvsa.GetYawGimbalPosition()*DEG) + (A11K2 ? 44.0 : 0.0);
+			GPFPIYaw[1] = (10.0 * sat->tvsa.GetYawGimbalPosition()*DEG);
 		}
+		GPFPIYaw[1] += (A11K2 ? 0.0 : 44.0);
 	}
 	else
 		GPFPIPitch[1] = GPFPIYaw[1] = 0.0;
