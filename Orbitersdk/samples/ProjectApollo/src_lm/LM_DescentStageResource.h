@@ -1,5 +1,5 @@
 // ========================================================
-// Mesh resource file for LM_DescentSTage.msh
+// Mesh resource file for LM_DescentStage.msh
 // Generated with meshc on Tue Dec 18 10:35:01 2018
 // ========================================================
 

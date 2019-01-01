@@ -335,6 +335,7 @@ void Saturn::AddSM(double offset, bool showSPS)
 	if (showSPS) {
 		mesh_dir = _V(0, SMVO, offset - 1.654);
 		SPSidx = AddMesh(hSMSPS, &mesh_dir);
+		SPSEngine.DefineAnimations(SPSidx);
 	}
 }
 
