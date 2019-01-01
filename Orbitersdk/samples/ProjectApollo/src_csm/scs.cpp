@@ -4412,12 +4412,12 @@ void ServoAmplifierModule::Init(Saturn *vessel)
 
 bool ServoAmplifierModule::IsClutch1Powered()
 {
-	if (relays[0] || relays[3]) return false;
+	if ((*relays[0]) || *(relays[3])) return false;
 	if (sat->TVCServoPower1Switch.IsUp())
 	{
 		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
 	}
-	else
+	else if (sat->TVCServoPower1Switch.IsDown())
 	{
 		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
 	}
@@ -4427,12 +4427,12 @@ bool ServoAmplifierModule::IsClutch1Powered()
 
 bool ServoAmplifierModule::IsClutch2Powered()
 {
-	if (!relays[1] && !relays[3]) return false;
+	if (!(*relays[1]) && !(*relays[3])) return false;
 	if (sat->TVCServoPower2Switch.IsUp())
 	{
 		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
 	}
-	else
+	else if (sat->TVCServoPower2Switch.IsDown())
 	{
 		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
 	}
