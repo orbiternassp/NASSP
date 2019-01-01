@@ -32,7 +32,7 @@ public:
 	virtual void Timestep(double simdt);
 	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	virtual void LoadState(FILEHANDLE scn, char *end_str);
-	void SetTime(double t);
+	virtual void SetTime(double t);
 	double GetTime();
 
 	void Reset();
@@ -64,4 +64,12 @@ public:
 
 protected:
 	bool Start;
+};
+
+class DelayOffTimer : public DelayTimer
+{
+public:
+	DelayOffTimer(double delay);
+	void Timestep(double simdt);
+	void SetTime(double t);
 };

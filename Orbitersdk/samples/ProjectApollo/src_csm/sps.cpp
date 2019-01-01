@@ -449,7 +449,8 @@ void SPSPropellantSource::CheckPropellantMass() {
 SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	spsThruster(sps) {
 
-	thrustOn = false;
+	thrustOnA = false;
+	thrustOnB = false;
 	injectorValves12Open = false;
 	injectorValves34Open = false;
 	saturn = 0;
@@ -495,50 +496,22 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	//
 	// Thrust on/off logic
 	//
+	if (saturn->GetStage() <= CSM_LEM_STAGE && saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE)
+		thrustOnA = saturn->rjec.GetSPSEnableA() || saturn->SPSswitch.IsUp();
+	else
+		thrustOnA = false;
 
-	if (saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE || saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE) {
-		// SCS dV mode
-		/// \todo SC CONT switch is supplied by SCS LOGIC BUS 3
-		/// \todo TVC CW is supplied by SCS LOGIC BUS 2
-		if (saturn->SCContSwitch.IsDown() || saturn->THCRotary.IsClockwise()) {
-			if (!saturn->ems.IsdVMode()) {
-				thrustOn = false;
-			
-			} else if (saturn->ems.GetdVRangeCounter() < 0) {
-				thrustOn = false;
-
-			} else if (saturn->ThrustOnButton.GetState() == 1) {
-				thrustOn = true;
-			}
-		}
-
-		// CMC mode
-		/// \todo SC CONT switch is supplied by G/N IMU PWR
-		if (saturn->SCContSwitch.IsUp() && !saturn->THCRotary.IsClockwise()) {
-			// Check i/o channel
-			ChannelValue val11;
-			val11 = saturn->agc.GetOutputChannel(011);
-			if (val11[EngineOn]) {
-				thrustOn = true;
-			} else {
-				thrustOn = false;
-			}
-		}
-
-		// SPS thrust direct on mode
-		if (saturn->SPSswitch.IsUp()) {
-			thrustOn = true;
-		}
-	} else {
-		thrustOn = false;
-	}
+	if (saturn->GetStage() <= CSM_LEM_STAGE && saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE)
+		thrustOnB = saturn->rjec.GetSPSEnableB() || saturn->SPSswitch.IsUp();
+	else
+		thrustOnB = false;
 
 	//
 	// Injector valves
 	//
 
 	if (saturn->GetStage() <= CSM_LEM_STAGE) {
-		if (thrustOn && saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE) {
+		if (thrustOnA && saturn->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE) {
 			if (injectorPreValveAOpen && !injectorValves12Open && nitrogenPressureAPSI > 400.0) {	// N2 pressure condition see http://www.history.nasa.gov/alsj/a11/a11transcript_pao.htm
 				injectorValves12Open = true;
 				nitrogenPressureAPSI -= 50.0;	// Average pressure decay, see Apollo 11 Mission report, 16.1.1
@@ -547,7 +520,7 @@ void SPSEngine::Timestep(double simt, double simdt) {
 			injectorValves12Open = false;
 		}
 
-		if (thrustOn && saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE) {
+		if (thrustOnB && saturn->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE) {
 			if (injectorPreValveBOpen && !injectorValves34Open && nitrogenPressureBPSI > 400.0) {
 				injectorValves34Open = true;
 				nitrogenPressureBPSI -= 50.0;
@@ -573,18 +546,14 @@ void SPSEngine::Timestep(double simt, double simdt) {
 			// Thrust decay if propellant pressure below 170 psi 
 			double thrust = min(1, saturn->GetSPSPropellant()->GetPropellantPressurePSI() / 170.0);
 			saturn->SetThrusterLevel(spsThruster, thrust);
-			saturn->rjec.SetSPSActive(true);
 			engineOnCommanded = true;
 
 		} else {
 			// Stop engine
 			saturn->SetThrusterResource(spsThruster, NULL);
 			saturn->SetThrusterLevel(spsThruster, 0);
-			saturn->rjec.SetSPSActive(false);
 			engineOnCommanded = false;
 		}
-	} else {
-		saturn->rjec.SetSPSActive(false);
 	}
 
 	//
@@ -636,7 +605,8 @@ double SPSEngine::GetChamberPressurePSI() {
 void SPSEngine::SaveState(FILEHANDLE scn) {
 
 	oapiWriteLine(scn, SPSENGINE_START_STRING);
-	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
+	oapiWriteScenario_int(scn, "THRUSTONA", (thrustOnA ? 1 : 0));
+	oapiWriteScenario_int(scn, "THRUSTONB", (thrustOnB ? 1 : 0));
 	oapiWriteScenario_int(scn, "INJECTORVALVES12OPEN", (injectorValves12Open ? 1 : 0));
 	oapiWriteScenario_int(scn, "INJECTORVALVES34OPEN", (injectorValves34Open ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGINEONCOMMANDED", (engineOnCommanded ? 1 : 0));
@@ -654,9 +624,13 @@ void SPSEngine::LoadState(FILEHANDLE scn) {
 		if (!strnicmp(line, SPSENGINE_END_STRING, sizeof(SPSENGINE_END_STRING))) {
 			return;
 		}
-		else if (!strnicmp (line, "THRUSTON", 8)) {
-			sscanf (line+8, "%d", &i);
-			thrustOn = (i != 0);
+		else if (!strnicmp (line, "THRUSTONA", 9)) {
+			sscanf (line+9, "%d", &i);
+			thrustOnA = (i != 0);
+		}
+		else if (!strnicmp(line, "THRUSTONB", 9)) {
+			sscanf(line + 9, "%d", &i);
+			thrustOnB = (i != 0);
 		}
 		else if (!strnicmp (line, "INJECTORVALVES12OPEN", 20)) {
 			sscanf (line+20, "%d", &i);

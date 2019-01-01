@@ -530,8 +530,9 @@ public: // Same stuff about speed and I'm lazy too.
 	bool GetThruster(int thruster);
 	void SetThruster(int thruster,bool Active);                     // Set Thruster Level for CMC
 
-	bool GetSPSActive() { return SPSActive; }
-	void SetSPSActive(bool active) { SPSActive = active; }
+	bool GetSPSEnableA() { return SPSEnableA; }
+	bool GetSPSEnableB() { return SPSEnableB; }
+	bool GetIGN2() { return IGN2; }
 	
 	bool GetDirectPitchActive() { return DirectPitchActive; }
 	bool GetDirectYawActive()   { return DirectYawActive; }
@@ -546,11 +547,13 @@ public: // Same stuff about speed and I'm lazy too.
 protected:
 	DelayTimer engineOnDelayA;
 	DelayTimer engineOnDelayB;
-	DelayTimer engineOffDelay;
+	DelayOffTimer engineOffDelay;
 
 	bool ThrusterDemand[20];                                        // Set when this thruster is requested to fire
-	bool SPSActive;                                                 // SPS Active notification
 	bool DirectPitchActive, DirectYawActive, DirectRollActive;      // Direct axis fire notification
+	bool SCSLatchUpA, SCSLatchUpB;
+	bool SPSEnableA, SPSEnableB;
+	bool IGN1, IGN2;												// SPS Active notification
 
 	Saturn *sat;
 	ThreePosSwitch *PoweredSwitch[20];                              // Set when power is drawn from this switch
@@ -716,8 +719,6 @@ protected:
 	//Pitch Pseudo Rate Disable
 	bool T3QS44;
 };
-
-class TVSA;
 
 class ServoAmplifierModule
 {

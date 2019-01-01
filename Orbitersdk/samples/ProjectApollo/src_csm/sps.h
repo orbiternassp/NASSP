@@ -130,7 +130,8 @@ public:
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetChamberPressurePSI();
-	bool IsThrustOn() { return thrustOn; };
+	bool IsThrustOnA() { return thrustOnA; };
+	bool IsThrustOnB() { return thrustOnB; };
 	bool GetInjectorValves12Open() { return injectorValves12Open; };
 	bool GetInjectorValves34Open() { return injectorValves34Open; };
 	double GetNitrogenPressureAPSI() { return nitrogenPressureAPSI; };
@@ -142,7 +143,7 @@ public:
 	SPSGimbalActuator yawGimbalActuator;
 
 protected:
-	bool thrustOn;
+	bool thrustOnA, thrustOnB;
 	bool injectorValves12Open;
 	bool injectorValves34Open;
 	bool engineOnCommanded;

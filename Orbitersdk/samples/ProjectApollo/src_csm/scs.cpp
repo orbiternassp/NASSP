@@ -2982,10 +2982,15 @@ engineOffDelay(1.0)
 {
 	
 	sat = NULL;
-	SPSActive = false;
 	DirectPitchActive = false;
 	DirectYawActive = false;
 	DirectRollActive = false;
+	SCSLatchUpA = false;
+	SCSLatchUpB = false;
+	SPSEnableA = false;
+	SPSEnableB = false;
+	IGN1 = false;
+	IGN2 = false;
 
 	int i = 0;
 	while (i < 20) {
@@ -3053,6 +3058,25 @@ void RJEC::SetRCSState(int thruster, bool td, bool cm, int smquad, int smthruste
 }
 
 void RJEC::TimeStep(double simdt){
+	//Delay timers
+	engineOnDelayA.Timestep(simdt);
+	engineOnDelayB.Timestep(simdt);
+	engineOffDelay.Timestep(simdt);
+
+	//Logic
+	bool scslogic1, scslogic2, scslogic3, S8_1, S9_1, S10_1, S18_1, S18_2, thc_cw;
+
+	scslogic1 = sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE;
+	scslogic2 = sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE;
+	scslogic3 = sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE;
+
+	S8_1 = sat->ManualAttPitchSwitch.IsUp() && scslogic1;
+	S9_1 = sat->ManualAttYawSwitch.IsUp() && scslogic1;
+	S10_1 = sat->ManualAttRollSwitch.IsUp() && scslogic1;
+	S18_1 = sat->SCContSwitch.IsDown() && scslogic2;
+	S18_2 = sat->SCContSwitch.IsDown() && scslogic3;
+	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
+
 	/* Thruster List:
 	CM#		SM#		INDEX#		SWITCH GROUP		ROT AXIS
 
@@ -3089,7 +3113,7 @@ void RJEC::TimeStep(double simdt){
 
 	// Roll
 
-	if (sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_UP) {		
+	if ((S18_1 || S18_2) && S10_1) {
 		if (sat->rhc1.GetMinusRollBreakoutSwitch() || sat->rhc2.GetMinusRollBreakoutSwitch()) {  // MINUS
 			td[10] = true;
 			td[12] = true;
@@ -3117,7 +3141,7 @@ void RJEC::TimeStep(double simdt){
 
 	// Pitch
 
-	if (sat->ManualAttPitchSwitch.GetState() == THREEPOSSWITCH_UP) {		
+	if ((S18_1 || S18_2) && S8_1) {
 		if (sat->rhc1.GetMinusPitchBreakoutSwitch() || sat->rhc2.GetMinusPitchBreakoutSwitch()) {  // MINUS
 			td[2] = true;
 			td[4] = true;
@@ -3137,7 +3161,7 @@ void RJEC::TimeStep(double simdt){
 
 	// Yaw
 	
-	if (sat->ManualAttYawSwitch.GetState() == THREEPOSSWITCH_UP) {		
+	if ((S18_1 || S18_2) && S9_1) {
 		if (sat->rhc1.GetMinusYawBreakoutSwitch() || sat->rhc2.GetMinusYawBreakoutSwitch()) {  // MINUS
 			td[6] = true;
 			td[8] = true;
@@ -3187,7 +3211,7 @@ void RJEC::TimeStep(double simdt){
 	bool CMTransferMotor2 = sat->secs.rcsc.GetCMTransferMotor2();
 	if (CMTransferMotor1 || CMTransferMotor2) sm_sep = true;
 
-	if ((sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) && !sm_sep) {
+	if ((S18_2 || thc_cw) && !sm_sep) {
 		if (sat->eca.thc_x < 16384) { // PLUS X
 			td[14] = true;
 			td[15] = true;
@@ -3224,7 +3248,7 @@ void RJEC::TimeStep(double simdt){
 		// THRUSTER LOCKOUT CHECKING
 		thruster_lockout = 0;
 		// If it's a pitch or yaw jet, lockout on SPS thrusting
-		if (thruster < 9 && SPSActive) {
+		if (thruster < 9 && IGN1) {
 			thruster_lockout = 1; 
 		} 
 		// Lockout on direct axes.
@@ -3260,7 +3284,55 @@ void RJEC::TimeStep(double simdt){
 			case 16: SetRCSState(thruster, td[thruster], false,            RCS_SM_QUAD_C, 2, -1, &sat->AcRollC2Switch, thruster_lockout);	break;
 		}
 		thruster++;
-	}		
+	}
+
+	//SPS ENGINE ON/OFF LOGIC
+	bool S24, S25, S26, S59, AB_X16, AB_X70, AB_X71, scsmode, scsengineon;
+	bool scsengineonA1, scsengineonB1, scsengineonA2, scsengineonB2, DV_EMS_Set, cmcsignal, cmcengineon, logicA, logicB;
+	ChannelValue val11;
+
+	//Switches
+	S24 = sat->DirectUllageButton.GetState() == 1 && scslogic1;
+	S25 = sat->ThrustOnButton.GetState() == 1 && scslogic1;
+	S26 = sat->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE;
+	S59 = sat->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE;
+	AB_X16 = td[1] && td[2] && td[5] && td[6];	//TBD: This can be done better with a THC class
+	AB_X70 = sat->secs.MESCA.FireUllage() && sat->RCSLogicMnACircuitBraker.IsPowered();
+	AB_X71 = sat->secs.MESCB.FireUllage() && sat->RCSLogicMnBCircuitBraker.IsPowered();
+	DV_EMS_Set = sat->ems.IsdVMode() && sat->ems.GetdVRangeCounter() >= 0;
+	val11 = sat->agc.GetOutputChannel(011);
+	cmcsignal = val11[12];
+
+	//Engine Signals
+	//Put this first to not introduce a one timestep delay
+	bool SCSLatchUpLogic, engineofflogic1, engineofflogic2;
+
+	scsmode = S18_2 || thc_cw;
+	SCSLatchUpA = S26 && sat->SPSEngine.IsThrustOnA();
+	SCSLatchUpB = S59 && sat->SPSEngine.IsThrustOnB();
+
+	SCSLatchUpLogic = SCSLatchUpA || SCSLatchUpB;
+	engineOnDelayA.SetRunning(SCSLatchUpLogic);
+	engineOnDelayB.SetRunning(SCSLatchUpLogic);
+	engineofflogic1 = engineOnDelayA.ContactClosed() && scsmode;
+	engineOffDelay.SetRunning(engineofflogic1);
+	engineofflogic2 = (engineOnDelayB.ContactClosed() || engineOffDelay.ContactClosed()) && scsmode;
+	IGN1 = engineofflogic1 || engineofflogic2;
+	IGN2 = SCSLatchUpLogic || IGN1;
+
+	//Engine on logic
+	scsengineon = S25 && (S24 || AB_X16 || AB_X70 || AB_X71);
+	scsengineonA1 = scsengineon || SCSLatchUpA;
+	scsengineonB1 = scsengineon || SCSLatchUpB;
+	scsengineonA2 = scsmode && scsengineonA1 && DV_EMS_Set;
+	scsengineonB2 = scsmode && scsengineonB1 && DV_EMS_Set;
+	cmcengineon = !scsmode && cmcsignal;
+	logicA = scsengineonA2 || cmcengineon;
+	logicB = scsengineonB2 || cmcengineon;
+	SPSEnableA = logicA && S26 && sat->SIGCondDriverBiasPower1Switch.IsPowered();
+	SPSEnableB = logicB && S59 && sat->SIGCondDriverBiasPower2Switch.IsPowered();
+	
+	//sprintf(oapiDebugString(), "%d %d %f %d %d", IGN1, IGN2, engineOffDelay.GetTime(), engineOffDelay.IsRunning(), engineOffDelay.ContactClosed());
 }
 
 void RJEC::SetThruster(int thruster, bool Active) {
@@ -3292,10 +3364,18 @@ void RJEC::SaveState(FILEHANDLE scn) {
 		papiWriteScenario_bool(scn, buffer, ThrusterDemand[i]);
 	} 
 	*/
-	papiWriteScenario_bool(scn, "SPSACTIVE", SPSActive); 
+	papiWriteScenario_bool(scn, "IGN1", IGN1); 
+	papiWriteScenario_bool(scn, "IGN2", IGN2);
+	papiWriteScenario_bool(scn, "SCSLATCHUPA", SCSLatchUpA);
+	papiWriteScenario_bool(scn, "SCSLATCHUPB", SCSLatchUpB);
+	papiWriteScenario_bool(scn, "SPSENABLEA", SPSEnableA);
+	papiWriteScenario_bool(scn, "SPSENABLEB", SPSEnableB);
 	papiWriteScenario_bool(scn, "DIRECTPITCHACTIVE", DirectPitchActive); 
 	papiWriteScenario_bool(scn, "DIRECTYAWACTIVE", DirectYawActive); 
-	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive); 
+	papiWriteScenario_bool(scn, "DIRECTROLLACTIVE", DirectRollActive);
+	engineOnDelayA.SaveState(scn, "DELAYONA_BEGIN", "DELAYONA_END");
+	engineOnDelayB.SaveState(scn, "DELAYONB_BEGIN", "DELAYONB_END");
+	engineOffDelay.SaveState(scn, "DELAYOFF_BEGIN", "DELAYOFF_END");
 
 	oapiWriteLine(scn, RJEC_END_STRING);
 }
@@ -3318,10 +3398,25 @@ void RJEC::LoadState(FILEHANDLE scn){
 			ThrusterDemand[i] = (val != 0 ? true : false);
 		*/
 		}
-		papiReadScenario_bool(line, "SPSACTIVE", SPSActive); 
+		papiReadScenario_bool(line, "IGN1", IGN1);
+		papiReadScenario_bool(line, "IGN2", IGN2);
+		papiReadScenario_bool(line, "SCSLATCHUPA", SCSLatchUpA);
+		papiReadScenario_bool(line, "SCSLATCHUPB", SCSLatchUpB);
+		papiReadScenario_bool(line, "SPSENABLEA", SPSEnableA);
+		papiReadScenario_bool(line, "SPSENABLEB", SPSEnableB);
 		papiReadScenario_bool(line, "DIRECTPITCHACTIVE", DirectPitchActive); 
 		papiReadScenario_bool(line, "DIRECTYAWACTIVE", DirectYawActive); 
-		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive); 
+		papiReadScenario_bool(line, "DIRECTROLLACTIVE", DirectRollActive);
+
+		if (!strnicmp(line, "DELAYONA_BEGIN", sizeof("DELAYONA_BEGIN"))) {
+			engineOnDelayA.LoadState(scn, "DELAYONA_END");
+		}
+		else if (!strnicmp(line, "DELAYONB_BEGIN", sizeof("DELAYONB_BEGIN"))) {
+			engineOnDelayB.LoadState(scn, "DELAYONB_END");
+		}
+		else if (!strnicmp(line, "DELAYOFF_BEGIN", sizeof("DELAYOFF_BEGIN"))) {
+			engineOffDelay.LoadState(scn, "DELAYOFF_END");
+		}
 	}
 }
 
@@ -3478,16 +3573,27 @@ void ECA::TimeStep(double simdt) {
 	// SCS is in control if the THC is CLOCKWISE 
 	// or if the SC CONT switch is set to SCS.
 
+	//Logic needed for unpowered SCS state
+	bool scslogic2, scslogic3, S18_2, thc_cw;
+
+	scslogic2 = sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE;
+	scslogic3 = sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE;
+
+	S18_2 = sat->SCContSwitch.IsDown() && scslogic3;
+	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
+
 	// Do we have power?
 	if (!IsDCPowered() && !IsAC1Powered() && !IsAC2Powered()) {
 		// Turn off thrusters when in SCS control and unpowered
-		if (sat->SCContSwitch.GetState() == TOGGLESWITCH_DOWN || sat->THCRotary.IsClockwise()) {
+		if (S18_2 || thc_cw) {
 			for (int i = 0; i < 17; i++) {
 				sat->rjec.SetThruster(i, false);
 			}
 		}
 		PitchMTVCIntegrator.Reset();
 		YawMTVCIntegrator.Reset();
+		PitchAutoTVCIntegrator.Reset();
+		YawAutoTVCIntegrator.Reset();
 		return;
 	}
 
@@ -3502,14 +3608,12 @@ void ECA::TimeStep(double simdt) {
 	//LOGIC
 
 	bool logic1, logic2, logic3;
-	bool scslogic1, scslogic2, scslogic3, scslogic4;
-	bool S7_1, S7_3, S8_1, S8_3, S9_1, S9_3, S10_2, S11_2, S12_1, S18_1, S18_2, S20_1, S20_2, S20_3, S21_1, S21_2, S21_3, S22_1, S22_2, S22_3;
+	bool scslogic1, scslogic4;
+	bool S7_1, S7_3, S8_1, S8_3, S9_1, S9_3, S10_2, S11_2, S12_1, S18_1, S20_1, S20_2, S20_3, S21_1, S21_2, S21_3, S22_1, S22_2, S22_3;
 	bool S38_1, S38_2, S38_3, S39_1, S39_2, S39_3, S51_1, S54_1;
-	bool IGN2, thc_cw, RHCRollBO, RHCPitchBO, RHCYawBO;
+	bool IGN2, RHCRollBO, RHCPitchBO, RHCYawBO;
 
 	scslogic1 = sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE;
-	scslogic2 = sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE;
-	scslogic3 = sat->SCSLogicBus3.Voltage() > SP_MIN_DCVOLTAGE;
 	scslogic4 = sat->SCSLogicBus4.Voltage() > SP_MIN_DCVOLTAGE;
 
 	S7_1 = sat->ManualAttRollSwitch.IsUp() && scslogic1;
@@ -3522,7 +3626,7 @@ void ECA::TimeStep(double simdt) {
 	S11_2 = sat->AttDeadbandSwitch.IsDown() && scslogic1;
 	S12_1 = sat->AttRateSwitch.IsUp() && scslogic1;
 	S18_1 = sat->SCContSwitch.IsUp() && scslogic2;
-	S18_2 = sat->SCContSwitch.IsDown() && scslogic3;
+	
 	S20_1 = sat->BMAGRollSwitch.IsUp() && scslogic2;
 	S20_2 = sat->BMAGRollSwitch.IsCenter() && scslogic2;
 	S20_3 = sat->BMAGRollSwitch.IsDown() && scslogic1;
@@ -3540,8 +3644,8 @@ void ECA::TimeStep(double simdt) {
 	S39_2 = sat->SCSTvcYawSwitch.IsCenter() && scslogic3;
 	S39_3 = sat->SCSTvcYawSwitch.IsDown() && scslogic3;
 	S54_1 = sat->CGSwitch.IsUp() && scslogic3;
-	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
-	IGN2 = sat->rjec.GetSPSActive();
+	
+	IGN2 = sat->rjec.GetIGN2();
 	RHCRollBO = sat->rhc1.GetPlusRollBreakoutSwitch() || sat->rhc1.GetMinusRollBreakoutSwitch() || sat->rhc2.GetPlusRollBreakoutSwitch() || sat->rhc2.GetMinusRollBreakoutSwitch();
 	RHCPitchBO = sat->rhc1.GetPlusPitchBreakoutSwitch() || sat->rhc1.GetMinusPitchBreakoutSwitch() || sat->rhc2.GetPlusPitchBreakoutSwitch() || sat->rhc2.GetMinusPitchBreakoutSwitch();
 	RHCYawBO = sat->rhc1.GetPlusYawBreakoutSwitch() || sat->rhc1.GetMinusYawBreakoutSwitch() || sat->rhc2.GetPlusYawBreakoutSwitch() || sat->rhc2.GetMinusYawBreakoutSwitch();
@@ -4401,7 +4505,7 @@ void TVSA::TimeStep(double simdt)
 	S38_1 = sat->SCSTvcPitchSwitch.IsUp() && scslogic3;
 	S39_1 = sat->SCSTvcYawSwitch.IsUp() && scslogic3;
 	thc_cw = sat->THCRotary.IsClockwise() && scslogic2;
-	IGN2 = sat->rjec.GetSPSActive();
+	IGN2 = sat->rjec.GetIGN2();
 	pitchovercur = sat->SPSEngine.pitchGimbalActuator.HasGimbalMotorOverCurrent();
 	yawovercur = sat->SPSEngine.yawGimbalActuator.HasGimbalMotorOverCurrent();
 
@@ -5311,7 +5415,7 @@ bool EMS::SPSThrustLight() {
 	if (!IsPowered()) return false;	
 	
 	if (status == EMS_STATUS_DVTEST) return true;
-	if (sat->SPSEngine.IsThrustOn()) return true;
+	if (sat->SPSEngine.IsThrustOnA() || sat->SPSEngine.IsThrustOnB()) return true;
 	return false;
 }
 
