@@ -3502,6 +3502,8 @@ ECA::ECA() :
 	pseudorate = _V(0,0,0);
 	yawMTVCPosition = 0.0;
 	pitchMTVCPosition = 0.0;
+	yawAutoTVCPosition = 0.0;
+	pitchAutoTVCPosition = 0.0;
 
 	sat = NULL;
 
@@ -3630,6 +3632,10 @@ void ECA::TimeStep(double simdt) {
 		YawMTVCIntegrator.Reset();
 		PitchAutoTVCIntegrator.Reset();
 		YawAutoTVCIntegrator.Reset();
+		pitchMTVCPosition = 0.0;
+		yawMTVCPosition = 0.0;
+		pitchAutoTVCPosition = 0.0;
+		yawAutoTVCPosition = 0.0;
 		return;
 	}
 
@@ -4506,12 +4512,12 @@ void TVSA::Init(Saturn *vessel) {
 
 void TVSA::ChangeCMCPitchPosition(double delta) {
 
-	cmcPitchPosition += delta;
+	cmcPitchPosition += delta*RAD;
 }
 
 void TVSA::ChangeCMCYawPosition(double delta) {
 
-	cmcYawPosition += delta;
+	cmcYawPosition += delta*RAD;
 }
 
 void TVSA::TimeStep(double simdt)
@@ -4529,7 +4535,7 @@ void TVSA::TimeStep(double simdt)
 
 	//LOGIC
 
-	bool logic1, logic2, scslogic1, scslogic2, scslogic3, S18_1, S27_2, S27_3, S28_2, S28_3, S38_1, S39_1, thc_cw, IGN2, yawovercur, pitchovercur;
+	bool logic1, logic2, scslogic1, scslogic2, scslogic3, S18_1, S27_2, S27_3, S28_2, S28_3, S38_1, S39_1, thc_cw, IGN2, yawovercur, pitchovercur, tvcenable;
 
 	scslogic1 = sat->SCSLogicBus1.Voltage() > SP_MIN_DCVOLTAGE;
 	scslogic2 = sat->SCSLogicBus2.Voltage() > SP_MIN_DCVOLTAGE;
@@ -4591,6 +4597,9 @@ void TVSA::TimeStep(double simdt)
 		A4K8 = false;
 	}
 
+	//TBD: This should be a relay in the CDUs
+	tvcenable = !sat->THCRotary.IsClockwise() && sat->SCContSwitch.IsUp() && cmcErrorCountersEnabled;
+
 	//Trim
 	if (acpower1)
 	{
@@ -4610,23 +4619,31 @@ void TVSA::TimeStep(double simdt)
 
 	if (acpower1)
 	{
-		double curPitchPosition1, curYawPosition1, PitchServo1Position, YawServo1Position;
+		double curPitchPosition1, curYawPosition1;
+		double PitchServo1Position = 0.0;
+		double YawServo1Position = 0.0;
 
 		//Position transducers
 		curPitchPosition1 = sat->SPSEngine.pitchGimbalActuator.GetCommandedPosition();
 		curYawPosition1 = sat->SPSEngine.yawGimbalActuator.GetCommandedPosition();
 
 		//Pitch Servo No. 1
+		//SCS only if the logic is true
 		if (T3QS3)
 		{
-			PitchServo1Position = sat->eca.GetPitchMTVCPosition() + (T3QS2 ? sat->eca.GetPitchAutoTVCPosition() : 0.0) + (T3QS3 ? pitchGimbalTrim1 : 0.0) + cmcPitchPosition;
+			PitchServo1Position = sat->eca.GetPitchMTVCPosition() + (T3QS2 ? sat->eca.GetPitchAutoTVCPosition() : 0.0) + (T3QS3 ? pitchGimbalTrim1 : 0.0);
 		}
+		//CMC in any case
+		if (tvcenable) PitchServo1Position += cmcPitchPosition;
 
 		//Yaw Servo No. 1
+		//SCS only if the logic is true
 		if (T2QS3)
 		{
-			YawServo1Position = sat->eca.GetYawMTVCPosition() + (T2QS2 ? sat->eca.GetYawAutoTVCPosition() : 0.0) + (T2QS3 ? yawGimbalTrim1 : 0.0) + cmcYawPosition;
+			YawServo1Position = sat->eca.GetYawMTVCPosition() + (T2QS2 ? sat->eca.GetYawAutoTVCPosition() : 0.0) + (T2QS3 ? yawGimbalTrim1 : 0.0);
 		}
+		//CMC in any case
+		if (tvcenable) YawServo1Position += cmcYawPosition;
 
 		if (pitchServoAmp.IsClutch1Powered())
 		{
@@ -4640,22 +4657,30 @@ void TVSA::TimeStep(double simdt)
 
 	if (acpower2)
 	{
-		double curPitchPosition2, curYawPosition2, PitchServo2Position, YawServo2Position;
+		double curPitchPosition2, curYawPosition2;
+		double PitchServo2Position = 0.0;
+		double YawServo2Position = 0.0;
 
 		curPitchPosition2 = sat->SPSEngine.pitchGimbalActuator.GetCommandedPosition();
 		curYawPosition2 = sat->SPSEngine.yawGimbalActuator.GetCommandedPosition();
 
 		//Pitch Servo No. 2
-		if (acpower2 && T3QS3)
+		//SCS only if the logic is true
+		if (T3QS3)
 		{
-			PitchServo2Position = sat->eca.GetPitchMTVCPosition() + (T3QS2 ? sat->eca.GetPitchAutoTVCPosition() : 0.0) + (T3QS3 ? pitchGimbalTrim2 : 0.0) + cmcPitchPosition;
+			PitchServo2Position = sat->eca.GetPitchMTVCPosition() + (T3QS2 ? sat->eca.GetPitchAutoTVCPosition() : 0.0) + (T3QS3 ? pitchGimbalTrim2 : 0.0);
 		}
+		//CMC in any case
+		if (tvcenable) PitchServo2Position += cmcPitchPosition;
 
 		//Yaw Servo No. 2
-		if (acpower2 && T2QS3)
+		//SCS only if the logic is true
+		if (T2QS3)
 		{
-			YawServo2Position = sat->eca.GetYawMTVCPosition() + (T2QS2 ? sat->eca.GetYawAutoTVCPosition() : 0.0) + (T2QS3 ? yawGimbalTrim2 : 0.0) + cmcYawPosition;
+			YawServo2Position = sat->eca.GetYawMTVCPosition() + (T2QS2 ? sat->eca.GetYawAutoTVCPosition() : 0.0) + (T2QS3 ? yawGimbalTrim2 : 0.0);
 		}
+		//CMC in any case
+		if (tvcenable) YawServo2Position += cmcYawPosition;
 
 		if (pitchServoAmp.IsClutch2Powered())
 		{
@@ -4667,6 +4692,8 @@ void TVSA::TimeStep(double simdt)
 			sat->SPSEngine.yawGimbalActuator.CommandedPositionInc(YawServo2Position - curYawPosition2);
 		}
 	}
+
+	//sprintf(oapiDebugString(), "%d %d %d %d %d %f %f", T2QS2, T2QS3, T3QS2, T3QS3, cmcErrorCountersEnabled, cmcPitchPosition*DEG, cmcYawPosition*DEG);
 
 	//Transducers
 	if (acpower1)
@@ -4783,6 +4810,9 @@ void TVSA::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, TVSA_START_STRING);
 
 	papiWriteScenario_boolarr(scn, "RELAYS", arr, 8);
+	papiWriteScenario_bool(scn, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
+	papiWriteScenario_double(scn, "CMCPITCHPOSITION", cmcPitchPosition);
+	papiWriteScenario_double(scn, "CMCYAWPOSITION", cmcYawPosition);
 
 	oapiWriteLine(scn, TVSA_END_STRING);
 }
@@ -4798,6 +4828,9 @@ void TVSA::LoadState(FILEHANDLE scn) {
 		}
 
 		papiReadScenario_boolarr(line, "RELAYS", r, 8);
+		papiReadScenario_bool(line, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
+		papiReadScenario_double(line, "CMCPITCHPOSITION", cmcPitchPosition);
+		papiReadScenario_double(line, "CMCYAWPOSITION", cmcYawPosition);
 	}
 
 	A4K1 = r[0];
