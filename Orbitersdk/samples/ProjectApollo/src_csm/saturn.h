@@ -2049,9 +2049,9 @@ protected:
 	ToggleSwitch SPSswitch;
 
 	SwitchRow SPSGimbalPitchThumbwheelRow;
-	ThumbwheelSwitch SPSGimbalPitchThumbwheel;
+	ContinuousThumbwheelSwitch SPSGimbalPitchThumbwheel;
 	SwitchRow SPSGimbalYawThumbwheelRow;
-	ThumbwheelSwitch SPSGimbalYawThumbwheel;
+	ContinuousThumbwheelSwitch SPSGimbalYawThumbwheel;
 
 	SwitchRow DirectUllageThrustOnRow;
 	PushSwitch DirectUllageButton;

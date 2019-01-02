@@ -2322,6 +2322,154 @@ void ThumbwheelSwitch::SetState(int value)
 	SwitchTo(value);
 }
 
+ContinuousThumbwheelSwitch::ContinuousThumbwheelSwitch()
+{
+	numPositions = 0;
+	multiplicator = 0;
+	position = 0;
+}
+
+void ContinuousThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal, int multPos)
+{
+	if (horizontal)
+		ThumbwheelSwitch::Register(scnh, n, defaultState, maximumState, horizontal);
+	else
+		ThumbwheelSwitch::Register(scnh, n, defaultState, maximumState);
+
+	multiplicator = multPos;
+	numPositions = maximumState * multPos;
+	position = StateToPosition(defaultState);
+}
+
+bool ContinuousThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	//
+	// Check whether it's actually in our switch region.
+	//
+
+	if (mx < x || my < y)
+		return false;
+
+	if (mx > (x + width) || my > (y + height))
+		return false;
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (isHorizontal) {
+			if (mx < (x + (width / 2.0))) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
+					sclick.play();
+				}
+			}
+			else {
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
+					sclick.play();
+				}
+			}
+		}
+		else {
+			if (my < (y + (height / 2.0))) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
+					sclick.play();
+				}
+			}
+			else {
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
+					sclick.play();
+				}
+			}
+		}
+	}
+	else if (event == PANEL_MOUSE_RBDOWN)
+	{
+		if (isHorizontal) {
+			if (mx < (x + (width / 2.0))) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
+					sclick.play();
+				}
+			}
+			else {
+				if (position > 0) {
+					SwitchTo(position - 1);
+					sclick.play();
+				}
+			}
+		}
+		else {
+			if (my < (y + (height / 2.0))) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
+					sclick.play();
+				}
+			}
+			else {
+				if (position > 0) {
+					SwitchTo(position - 1);
+					sclick.play();
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+bool ContinuousThumbwheelSwitch::SwitchTo(int newPosition) {
+
+	if (newPosition >= 0 && newPosition <= numPositions && position != newPosition) {
+		position = newPosition;
+		state = PositionToState(position);
+		sclick.play();
+		if (callback)
+			callback->call(this);
+		return true;
+	}
+	return false;
+}
+
+int ContinuousThumbwheelSwitch::StateToPosition(int st)
+{
+	return st * multiplicator;
+}
+
+int ContinuousThumbwheelSwitch::PositionToState(int pos)
+{
+	double temp = ((double)pos) / ((double)multiplicator);
+	return (int)round(temp);
+}
+
+void ContinuousThumbwheelSwitch::LoadState(char *line) {
+
+	char buffer[100];
+	int st;
+
+	sscanf(line, "%s %i", buffer, &st);
+	if (!strnicmp(buffer, name, strlen(name))) {
+		state = st;
+	}
+
+	position = StateToPosition(state);
+}
+
+int ContinuousThumbwheelSwitch::GetPosition() {
+
+	return position;
+}
+
+void ContinuousThumbwheelSwitch::SetState(int value)
+{
+	SwitchTo(StateToPosition(value));
+}
+
 //
 // Thumbwheel which adjusts volume levels.
 //

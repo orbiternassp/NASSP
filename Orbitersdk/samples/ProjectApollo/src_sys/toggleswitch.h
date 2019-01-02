@@ -1233,6 +1233,24 @@ protected:
 	SwitchRow *switchRow;
 };
 
+class ContinuousThumbwheelSwitch : public ThumbwheelSwitch {
+public:
+	ContinuousThumbwheelSwitch();
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal, int multPos);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newPosition);
+	void LoadState(char *line);
+	void SetState(int value);
+	int GetPosition();
+protected:
+	int StateToPosition(int st);
+	int PositionToState(int pos);
+
+	int multiplicator;
+	int numPositions;
+	int position;
+};
+
 
 class HandcontrollerSwitch: public PanelSwitchItem {
 

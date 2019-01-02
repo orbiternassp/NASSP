@@ -4603,16 +4603,16 @@ void TVSA::TimeStep(double simdt)
 	//Trim
 	if (acpower1)
 	{
-		pitchGimbalTrim1 = (sat->SPSGimbalPitchThumbwheel.GetState() - 8.0) / 2.0*RAD;
-		yawGimbalTrim1 = (sat->SPSGimbalYawThumbwheel.GetState() - 8.0) / 2.0*RAD;
+		pitchGimbalTrim1 = (sat->SPSGimbalPitchThumbwheel.GetPosition() - 40.0) / 10.0*RAD;
+		yawGimbalTrim1 = (sat->SPSGimbalYawThumbwheel.GetPosition() - 40.0) / 10.0*RAD;
 	}
 	else
 		pitchGimbalTrim1 = yawGimbalTrim1 = 0.0;
 
 	if (acpower2)
 	{
-		pitchGimbalTrim2 = (sat->SPSGimbalPitchThumbwheel.GetState() - 8.0) / 2.0*RAD;
-		yawGimbalTrim2 = (sat->SPSGimbalYawThumbwheel.GetState() - 8.0) / 2.0*RAD;
+		pitchGimbalTrim2 = (sat->SPSGimbalPitchThumbwheel.GetPosition() - 40.0) / 10.0*RAD;
+		yawGimbalTrim2 = (sat->SPSGimbalYawThumbwheel.GetPosition() - 40.0) / 10.0*RAD;
 	}
 	else
 		pitchGimbalTrim2 = yawGimbalTrim2 = 0.0;
