@@ -185,11 +185,9 @@ void LEM::SetLmVesselDockStage()
 
 	// Ascent Stage Mesh
 	ascidx = AddMesh(hLMAscent, &mesh_asc);
-	SetMeshVisibilityMode(ascidx, MESHVIS_EXTERNAL);
 
 	// VC Mesh
 	vcidx = AddMesh(hLMVC, &mesh_asc);
-	SetLMMeshVisVC();
 
 	// Descent Stage Mesh
 	if (NoLegs)
@@ -200,7 +198,8 @@ void LEM::SetLmVesselDockStage()
 	{
 		dscidx = AddMesh(hLMDescent, &mesh_dsc);
 	}
-	SetLMMeshVisDsc();
+
+	SetLMMeshVis();
 	
 	if (!ph_Dsc)
 	{
@@ -442,8 +441,7 @@ void LEM::SetLmAscentHoverStage()
 	// Vessel Meshes
 	DelMesh(dscidx);
 	dscidx = -1;
-	ShiftMesh(ascidx, mesh_asc);
-	ShiftMesh(vcidx, mesh_asc);
+	ShiftMeshes(mesh_asc);
 
 	if (!ph_Asc)
 	{
@@ -597,8 +595,23 @@ void LEM::SetLmLandedMesh() {
 
 void LEM::SetLMMeshVis() {
 
+	SetLMMeshVisAsc();
 	SetLMMeshVisVC();
 	SetLMMeshVisDsc();
+}
+
+void LEM::SetLMMeshVisAsc() {
+
+	if (ascidx == -1)
+		return;
+
+	if (InPanel && PanelId == LMPANEL_AOTZOOM) {
+		SetMeshVisibilityMode(ascidx, MESHVIS_ALWAYS);
+	}
+	else
+	{
+		SetMeshVisibilityMode(ascidx, MESHVIS_EXTERNAL);
+	}
 }
 
 void LEM::SetLMMeshVisVC() {
