@@ -3274,6 +3274,8 @@ void MCC::keyDown(DWORD key){
 				// Report State
 				sprintf(buf, "MissionState %d SubState %d StateTime %f SubStateTime %f", MissionState, SubState, StateTime, SubStateTime);
 				addMessage(buf);
+				sprintf(buf, "MissionPhase %d EarthRev %d MoonRev %d MoonRevTime %f", MissionPhase, EarthRev, MoonRev, MoonRevTime);
+				addMessage(buf);
 				oapiAnnotationSetText(NHmenu, ""); // Clear menu
 				menuState = 0;
 			}
