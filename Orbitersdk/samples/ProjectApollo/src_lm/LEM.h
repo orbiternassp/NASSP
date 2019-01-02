@@ -383,6 +383,7 @@ public:
 	void SetLmDockingPort(double offs);
 	void SetLmLandedMesh();
 	void SetLMMeshVis();
+	void SetLMMeshVisAsc();
 	void SetLMMeshVisVC();
 	void SetLMMeshVisDsc();
 	void DrogueVis();
