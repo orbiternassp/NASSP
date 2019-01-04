@@ -387,6 +387,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	bool ScanLimitWarning();
 	bool IsPowered();
+	void clbkPostCreation();
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }
