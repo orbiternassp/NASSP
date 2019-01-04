@@ -949,6 +949,7 @@ void Saturn::clbkPostCreation() {
 
 	//Set Animation States
 	hga.clbkPostCreation();
+	SPSEngine.clbkPostCreation();
 
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);
