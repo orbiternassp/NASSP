@@ -1,5 +1,28 @@
-#ifndef _ENTRYCALCULATIONS_H
-#define _ENTRYCALCULATIONS_H
+/***************************************************************************
+This file is part of Project Apollo - NASSP
+Copyright 2014-2018
+
+RTCC Entry Calculations (Header)
+
+Project Apollo is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Project Apollo is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Project Apollo; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+See http://nassp.sourceforge.net/license/ for more details.
+
+**************************************************************************/
+
+#pragma once
 
 #include "Orbitersdk.h"
 #include "OrbMech.h"
@@ -19,6 +42,14 @@ namespace EntryCalculations
 	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	void time_reentry_plane(VECTOR3 R0, VECTOR3 eta, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	double landingzonelong(int zone, double lat);
+
+	//Actual RTE processor routines
+	void REENTRYNew(double LD, int ICRNGG, double v_i, double i_r, double A_Z, double mu, double r_rbias, double &eta_rz1, double &theta_cr, double &T);
+	VECTOR3 TVECT(VECTOR3 a, VECTOR3 b, double alpha, double gamma);
+	void EGTR(VECTOR3 R_geoc, VECTOR3 V_geoc, double MJD, VECTOR3 &R_geogr, VECTOR3 &V_geogr);
+	double INTER(double *X, double *Y, int IMAX, double x);
+	double URF(double T, double x);
+	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P);
 
 	double MPL(double lat);
 	double EPL(double lat);
@@ -224,5 +255,3 @@ private:
 	double IncDes;
 	bool Asc;
 };
-
-#endif

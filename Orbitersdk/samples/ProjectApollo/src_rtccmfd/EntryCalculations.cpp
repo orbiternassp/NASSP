@@ -1,3 +1,29 @@
+/***************************************************************************
+This file is part of Project Apollo - NASSP
+Copyright 2014-2018
+
+RTCC Entry Calculations
+
+Project Apollo is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Project Apollo is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Project Apollo; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+See http://nassp.sourceforge.net/license/ for more details.
+
+**************************************************************************/
+
+#include "Orbitersdk.h"
+#include "nasspdefs.h"
 #include "EntryCalculations.h"
 
 namespace EntryCalculations
@@ -190,6 +216,251 @@ namespace EntryCalculations
 		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
 		EntryVIO = length(V05G);
 		EntryRET = t32 + dt22;
+	}
+
+	void REENTRYNew(double LD, int ICRNGG, double v_i, double i_r, double A_Z, double mu, double r_rbias, double &eta_rz1, double &theta_cr, double &T)
+	{
+		// INPUT:
+		// LD = lift to drag ratio
+		// ICRNGG = 0: indicates a guided reentry, 1: indicates a manual reentry to the MSFN target line, 2 = indicates a manual reentry to the contingency target line
+		// v_i = inertial speed
+		// i_r = inertial reentry inclination
+		// A_Z = inertial reentry azimuth
+		// mu = reentry latitude
+		// r_rbias = relative range override
+		// OUTPUT:
+		// eta_rz1 = downrange angle from reentry to landing
+		// theta_cr = crossrange angle from reentry to landing
+		// T = time from reentry to landing
+
+		static const double b[6] = { 0.61974454e4, -0.26277752, -0.38675677e-5, 0.15781674e-9, 0.67856872e-4, -0.14887772e-18 };
+		static const double cc = 0.105;
+		static const double ee[3] = { 0.18957317e3, 0.17640466, 0.19321074e-2 };
+		static const double ff[3] = { 0.64623407e2, 0.57834928e-1,-0.48255307e-3 };
+		static const double jj[2][6] = { {0.10718858e7, -0.1627124e3, 0.98775571e-2, -0.29943037e-6, 0.45325217e-11, -0.27404876e-16},
+										 {0.18262030e6, -0.27810612e2, 0.16998821e-2, -0.51884802e-7, 0.79087925e-12, -0.48128071e-17} };
+		static const double pp[2][2] = { {0.59e2, 0.3006}, {0.193e3, 0.1795} };
+		static const double q[2][6] = { {0.0, 0.555e-4, -0.1025e1, 0.4e3, 0.335e3, -0.4215e2},{0.0, 0.555e-4, -0.1025e1, 0.7e3, 0.31e3, -0.45e2} };
+
+		double u_r, r_r, r, CR;
+		r_r = 0.0;
+
+		//u_r in feet per second
+		u_r = v_i / 0.3048;
+
+		if (i_r > PI05)
+		{
+			A_Z = PI;
+			if (i_r > 3.0*PI05)
+			{
+				A_Z = 0.0;
+			}
+			i_r = PI05;
+		}
+		if (r_rbias == 0)
+		{
+			if (ICRNGG == 0)
+			{
+				for (int k = 0;k < 6;k++)
+				{
+					r_r += b[k] * pow(u_r, k);
+				}
+			}
+			else
+			{
+				//B/2
+				int i = ICRNGG - 1;
+				r = (q[i][1] * u_r + q[i][2])*q[i][3] * (LD - 0.3);
+				for (int k = 0;k < 6;k++)
+				{
+					r += jj[i][k] * pow(u_r, k);
+				}
+				T = pp[i][0] + pp[i][1] * r;
+				CR = cc * T*cos(mu)*cos(A_Z + 0.3*mu) + q[i][4] * LD + q[i][5];
+				//NM to meters
+				eta_rz1 = abs(r) * 1852.0;
+				theta_cr = CR * 1852.0;
+				return;
+			}
+		}
+		else
+		{
+			r_r = r_rbias;
+		}
+
+		//A/2
+		r = r_r + (ff[0] + ff[1] * r_r + ff[2] * u_r)*cos(i_r);
+		T = ee[0] + ee[1] * r + ee[2] * u_r;
+		CR = cc * T*cos(mu)*cos(A_Z + 0.3*mu);
+		eta_rz1 = abs(r) * 1852.0;
+		theta_cr = CR * 1852.0;
+	}
+
+	VECTOR3 TVECT(VECTOR3 a, VECTOR3 b, double alpha, double gamma)
+	{
+		VECTOR3 Y_dot = b - a * cos(alpha);
+		double y_dot = length(Y_dot);
+		alpha = fmod(alpha, PI2);
+		if (alpha < 0)
+		{
+			alpha += PI2;
+		}
+		VECTOR3 y_unit = (b - a * cos(alpha)) / (length(b - a * cos(alpha)))*sign(PI - alpha);
+		return a * cos(gamma) + y_unit * sin(gamma);
+	}
+
+	void EGTR(VECTOR3 R_geoc, VECTOR3 V_geoc, double MJD, VECTOR3 &R_geogr, VECTOR3 &V_geogr)
+	{
+		MATRIX3 Rot = OrbMech::GetRotationMatrix(oapiGetObjectByName("Earth"), MJD);
+		R_geogr = rhtmul(Rot, R_geoc);
+		V_geogr = rhtmul(Rot, V_geoc);
+	}
+
+	double INTER(double *X, double *Y, int IMAX, double x)
+	{
+		double y[2] = { 0.0, 0.0 };
+		double a[3], b[3], yy;
+		int i = 0;
+		while (x > X[i])
+		{
+			i++;
+			if (i >= IMAX)
+			{
+				//error
+				return 0.0;
+			}
+		}
+		if (x == X[i])
+		{
+			yy = Y[i];
+			return yy;
+		}
+		if (i == 0)
+		{
+			//error
+			return 0.0;
+		}
+		if (i != 1)
+		{
+			a[0] = X[i - 2];
+			a[1] = X[i - 1];
+			a[2] = X[i];
+			b[0] = Y[i - 2];
+			b[1] = Y[i - 1];
+			b[2] = Y[i];
+			y[1] = (x - a[1])*(x - a[2]) / ((a[0] - a[1])*(a[0] - a[2]))*b[0] + (x - a[0])*(x - a[2]) / ((a[1] - a[0])*(a[1] - a[2]))*b[1] + 
+				(x - a[0])*(x - a[1]) / ((a[2] - a[0])*(a[2] - a[1]))*b[2];
+		}
+		if (i != IMAX - 1)
+		{
+			a[0] = X[i - 1];
+			a[1] = X[i];
+			a[2] = X[i + 1];
+			b[0] = Y[i - 1];
+			b[1] = Y[i];
+			b[2] = Y[i + 1];
+			y[0] = (x - a[1])*(x - a[2]) / ((a[0] - a[1])*(a[0] - a[2]))*b[0] + (x - a[0])*(x - a[2]) / ((a[1] - a[0])*(a[1] - a[2]))*b[1] +
+				(x - a[0])*(x - a[1]) / ((a[2] - a[0])*(a[2] - a[1]))*b[2];
+		}
+		yy = (y[0] + y[1]) / 2.0;
+		if (y[0] == 0.0 || y[1] == 0.0)
+		{
+			yy = y[0] + y[1];
+		}
+
+		return yy;
+	}
+
+	double URF(double T, double x)
+	{
+		// INPUT:
+		// T = flight time (hr)
+		// x = radial distance (er)
+		// OUTPUT:
+		// u_r = reentry velocity (er/hr)
+
+		double t, r, CV, u_r_apo, u_r;
+		double B[21];
+
+		t = 1.0 / T;
+		r = log10(x);
+		CV = 20925738.2 / 3600.0;
+
+		if (t >= 0.005)
+		{
+			B[0] = 468.472477; 
+			B[1] = 7888927872.0;
+			B[2] = -61855.51562;
+			B[3] = 110537.274;
+			B[4] = 171799868.0;
+			B[5] = 4620848192.0;
+			B[6] = -906.54586;
+			B[7] = -7956138368.0;
+			B[8] = 245869.516;
+			B[9] = 9781565.88;
+			B[10] = 233791598.0;
+			B[11] = -3296.07199;
+			B[12] = 68248515.0;
+			B[13] = 17869.88452;
+			B[14] = -20069842.5;
+			B[15] = 8065.55524;
+			B[16] = 8235085.44;
+			B[17] = -1037248.34;
+			B[18] = -419.062894; 
+			B[19] = 966684.227; 
+			B[20] = 30762.3813;
+		}
+		else
+		{
+			B[0] = 714.692459;
+			B[1] = -0.39039204e15;
+			B[2] = -59994.8452;
+			B[3] = 67463803.0;
+			B[4] = -0.7353992e11;
+			B[5] = -0.82126629e12;
+			B[6] = -4242.845153;
+			B[7] = 0.69973117e13;
+			B[8] = 349795.461;
+			B[9] = 225454802.0;
+			B[10] = 0.26584838e12;
+			B[11] = 8898.09949;
+			B[12] = -0.26926284e12;
+			B[13] = -1822582.34;
+			B[14] = -1428488260.0;
+			B[15] = -6715.65247;
+			B[16] = 1523663950.0;
+			B[17] = 4487404.25;
+			B[18] = -828.241081;
+			B[19] = -3735268.44;
+			B[20] = 38712.8818;
+		}
+
+		u_r_apo = B[0] * pow(r, 5) + B[1] * pow(t, 5) + B[2] * pow(r, 4)*t + B[3] * pow(r, 3)*pow(t, 2) + B[4] * pow(r, 2)*pow(t, 3) + B[5] * r*pow(t, 4) +
+			B[6] * pow(r, 4) + B[7] * pow(t, 4) + B[8] * pow(r, 3)*t + B[9] * pow(r, 2)*pow(t, 2) + B[10] * r*pow(t, 3) + B[11] * pow(r, 3) + B[12] * pow(t, 3) + 
+			B[13] * pow(r, 2)*t + B[14] * r*pow(t, 2) + B[15] * pow(r, 2) + B[16] * pow(t, 2) + B[17] * r*t + B[18] * r + B[19] * t + B[20];
+		u_r = u_r_apo / CV;
+	}
+
+	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P)
+	{
+		double a, c_3, eta_apo;
+
+		a = a_apo;
+		//Parabolic case
+		if (abs(e - 1.0) < 0.00001)
+		{
+			c_3 = mu * (e*e - 1) / a;
+			if (abs(c_3) < pow(10.0, -5.0))
+			{
+				eta_apo = acos(abs(a) / r - 1.0);
+				T = abs(a) / 2.0*sqrt(abs(a) / mu)*(tan(eta_apo / 2.0 + 1.0 / 3.0*pow(tan(eta_apo / 2.0), 3.0)));
+			}
+		}
+
+		if (k == false)
+		{
+			T = -T;
+		}
 	}
 	
 	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl, bool asc)

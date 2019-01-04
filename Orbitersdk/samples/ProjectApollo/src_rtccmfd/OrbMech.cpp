@@ -1208,6 +1208,26 @@ void SolveQuartic(double *A, double *R, int &N)
 	}
 }
 
+void OverlappedConics(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_E, double mu_I, double mu_E, VECTOR3 &R_E, VECTOR3 &V_E)
+{
+	// t_I and i_E are MJDs
+
+	VECTOR3 R_S, V_S, R_I_star, V_I_star, R_I_sstar, V_I_sstar, R_m, V_m;
+	double r_S, dt_S, t_S;
+
+	GetLunarEphemeris(t_I, R_m, V_m);
+
+	r_S = 24.0*6.371e6;
+	dt_S = time_radius(R_I, V_I, r_S, 1.0, mu_I);
+	t_S = t_I + dt_S / 24.0 / 3600.0;
+	rv_from_r0v0(R_I, V_I, dt_S, R_S, V_S, mu_I);
+	V_I_star = V_S;
+	R_I_star = R_S + V_S * (t_I - t_S)*24.0*3600.0;
+	R_I_sstar = R_m + R_I_star;
+	V_I_sstar = V_m + V_I_star;
+	rv_from_r0v0(R_I_sstar, V_I_sstar, (t_E - t_I)*24.0*3600.0, R_E, V_E, mu_E);
+}
+
 VECTOR3 GeneralizedIterator(VECTOR3(*state_evaluation)(VECTOR3, void*), bool(*endcondition)(VECTOR3), VECTOR3 Target, VECTOR3 var_guess, VECTOR3 stepsizes, void *constants)
 {
 	VECTOR3 var_star;
