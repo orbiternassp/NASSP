@@ -669,8 +669,10 @@ void Saturn::SetCSMStage ()
 	// Skylab SM and Apollo 7 have no HGA.
 	//
 	if (!NoHGA) {
+		UINT HGAidx;
 		mesh_dir=_V(-1.308,-1.18,29.042-CGOffset);
-		AddMesh (hSMhga, &mesh_dir);
+		HGAidx = AddMesh (hSMhga, &mesh_dir);
+		hga.DefineAnimations(HGAidx);
 	}
 
 	mesh_dir=_V(0, 0, 34.4 - CGOffset);
