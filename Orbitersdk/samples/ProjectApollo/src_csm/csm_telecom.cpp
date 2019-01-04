@@ -538,6 +538,10 @@ HGA::HGA(){
 	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));
 	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);
 	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);
+
+	hga_proc[0] = hga_proc_last[0] = 0.0;
+	hga_proc[1] = hga_proc_last[1] = 0.0;
+	hga_proc[2] = hga_proc_last[2] = 0.0;
 }
 
 void HGA::Init(Saturn *vessel){
@@ -611,28 +615,24 @@ void HGA::DefineAnimations(UINT idx) {
 	ach_HGAalpha = sat->AddAnimationComponent(anim_HGAalpha, 0.0f, 1.0f, &mgt_HGA_Alpha);
 	ach_HGAbeta = sat->AddAnimationComponent(anim_HGAbeta, 0.0f, 1.0f, &mgt_HGA_Beta, ach_HGAalpha);
 	ach_HGAgamma = sat->AddAnimationComponent(anim_HGAgamma, 0.0f, 1.0f, &mgt_HGA_Gamma, ach_HGAbeta);
-
-	// Get current HGA state for animation
-	hga_proc[0] = Alpha / PI2;
-	if (hga_proc[0] < 0) hga_proc[0] += 1.0;
-	hga_proc[1] = Beta / PI2;
-	if (hga_proc[1] < 0) hga_proc[1] += 1.0;
-	hga_proc[2] = -Gamma / PI2;
-	if (hga_proc[2] < 0) hga_proc[2] += 1.0;
-	sat->SetAnimation(anim_HGAalpha, hga_proc[0]);
-	sat->SetAnimation(anim_HGAbeta, hga_proc[1]);
-	sat->SetAnimation(anim_HGAgamma, hga_proc[2]);
+	//Anything but 0.0-1.0 will do
+	hga_proc_last[0] = 2.0;
+	hga_proc_last[1] = 2.0;
+	hga_proc_last[2] = 2.0;
 }
 
 // Do work
 void HGA::TimeStep(double simt, double simdt)
 {
+	if (sat->NoHGA) return;
+	if (sat->GetStage() != CSM_LEM_STAGE) return;
+
 	// HGA mesh animation
 	hga_proc[0] = Alpha / PI2;
 	if (hga_proc[0] < 0) hga_proc[0] += 1.0;
 	hga_proc[1] = Beta / PI2;
 	if (hga_proc[1] < 0) hga_proc[1] += 1.0;
-	hga_proc[2] = -Gamma / PI2;
+	hga_proc[2] = (Gamma - PI05) / PI2;
 	if (hga_proc[2] < 0) hga_proc[2] += 1.0;
 	if (hga_proc[0] - hga_proc_last[0] != 0.0) sat->SetAnimation(anim_HGAalpha, hga_proc[0]);
 	if (hga_proc[1] - hga_proc_last[1] != 0.0) sat->SetAnimation(anim_HGAbeta, hga_proc[1]);
@@ -900,6 +900,26 @@ return mul(MC, mul(MB, mul(M1, mul(M2, mul(M3, U_R)))));
 bool HGA::ScanLimitWarning()
 {
 	return scanlimitwarn;
+}
+
+void HGA::clbkPostCreation()
+{
+	if (sat->NoHGA) return;
+	if (sat->GetStage() != CSM_LEM_STAGE) return;
+
+	// Get current HGA state for animation
+	hga_proc[0] = Alpha / PI2;
+	if (hga_proc[0] < 0) hga_proc[0] += 1.0;
+	hga_proc[1] = Beta / PI2;
+	if (hga_proc[1] < 0) hga_proc[1] += 1.0;
+	hga_proc[2] = (Gamma - PI05) / PI2;
+	if (hga_proc[2] < 0) hga_proc[2] += 1.0;
+	sat->SetAnimation(anim_HGAalpha, hga_proc[0]);
+	sat->SetAnimation(anim_HGAbeta, hga_proc[1]);
+	sat->SetAnimation(anim_HGAgamma, hga_proc[2]);
+	hga_proc_last[0] = hga_proc[0];
+	hga_proc_last[1] = hga_proc[1];
+	hga_proc_last[2] = hga_proc[2];
 }
 
 // Load
