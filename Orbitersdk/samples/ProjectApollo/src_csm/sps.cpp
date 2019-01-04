@@ -491,17 +491,18 @@ void SPSEngine::DefineAnimations(UINT idx) {
 void SPSEngine::Timestep(double simt, double simdt) {
 
 	if (!saturn) return;
-	if (saturn->GetStage() != CSM_LEM_STAGE) return;
 
 	// Animate SPS Gimbals
-	spsgimbal_proc[0] = -pitchGimbalActuator.GetPosition() / 360;
-	if (spsgimbal_proc[0] < 0) spsgimbal_proc[0] += 1.0;
-	spsgimbal_proc[1] = yawGimbalActuator.GetPosition() / 360;
-	if (spsgimbal_proc[1] < 0) spsgimbal_proc[1] += 1.0;
-	if (spsgimbal_proc[0] - spsgimbal_proc_last[0] != 0.0) saturn->SetAnimation(anim_SPSGimbalPitch, spsgimbal_proc[0]);
-	if (spsgimbal_proc[1] - spsgimbal_proc_last[1] != 0.0) saturn->SetAnimation(anim_SPSGimbalYaw, spsgimbal_proc[1]);
-	spsgimbal_proc_last[0] = spsgimbal_proc[0];
-	spsgimbal_proc_last[1] = spsgimbal_proc[1];
+	if (saturn->GetStage() == CSM_LEM_STAGE) {
+		spsgimbal_proc[0] = -pitchGimbalActuator.GetPosition() / 360;
+		if (spsgimbal_proc[0] < 0) spsgimbal_proc[0] += 1.0;
+		spsgimbal_proc[1] = yawGimbalActuator.GetPosition() / 360;
+		if (spsgimbal_proc[1] < 0) spsgimbal_proc[1] += 1.0;
+		if (spsgimbal_proc[0] - spsgimbal_proc_last[0] != 0.0) saturn->SetAnimation(anim_SPSGimbalPitch, spsgimbal_proc[0]);
+		if (spsgimbal_proc[1] - spsgimbal_proc_last[1] != 0.0) saturn->SetAnimation(anim_SPSGimbalYaw, spsgimbal_proc[1]);
+		spsgimbal_proc_last[0] = spsgimbal_proc[0];
+		spsgimbal_proc_last[1] = spsgimbal_proc[1];
+	}
 
 
 	// Prevalves
