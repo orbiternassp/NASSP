@@ -960,11 +960,11 @@ void SM::AddEngines()
 void SM::DefineAnimations()
 {
 
-	static UINT umbilical_group[1] = {1}; // participating groups
+	static UINT umbilical_group = {2}; // participating groups
 	static MGROUP_ROTATE umbilical
 	(
 		0,				// mesh index
-		umbilical_group, 1,		// group list and # groups
+		&umbilical_group, 1,		// group list and # groups
 		_V(0,-1.9540,3.168), // rotation reference point
 		_V(1,0,0),		// rotation axis
 		(float)(50.0 * PI / 180.0) // angular rotation range
