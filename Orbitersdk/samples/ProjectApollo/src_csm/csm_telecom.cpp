@@ -539,6 +539,10 @@ HGA::HGA(){
 	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);
 	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);
 
+	anim_HGAalpha = -1;
+	anim_HGAbeta = -1;
+	anim_HGAgamma = -1;
+
 	hga_proc[0] = hga_proc_last[0] = 0.0;
 	hga_proc[1] = hga_proc_last[1] = 0.0;
 	hga_proc[2] = hga_proc_last[2] = 0.0;
@@ -619,6 +623,16 @@ void HGA::DefineAnimations(UINT idx) {
 	hga_proc_last[0] = 2.0;
 	hga_proc_last[1] = 2.0;
 	hga_proc_last[2] = 2.0;
+}
+
+void HGA::DeleteAnimations() {
+
+	if (anim_HGAalpha != -1) sat->DelAnimation(anim_HGAalpha);
+	anim_HGAalpha = -1;
+	if (anim_HGAbeta != -1) sat->DelAnimation(anim_HGAbeta);
+	anim_HGAbeta = -1;
+	if (anim_HGAgamma != -1) sat->DelAnimation(anim_HGAgamma);
+	anim_HGAgamma = -1;
 }
 
 // Do work

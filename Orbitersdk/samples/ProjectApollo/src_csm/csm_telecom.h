@@ -381,6 +381,7 @@ public:
 	HGA();
 	void Init(Saturn *vessel);					// Initialization
 	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
 	void TimeStep(double simt, double simdt);   // TimeStep
 	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char *line);
