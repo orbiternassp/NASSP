@@ -2470,6 +2470,10 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	moving = false;
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
+
+	anim_SBandPitch = -1;
+	anim_SBandYaw = -1;
+
 	sband_proc[0] = 0.0;
 	sband_proc[1] = 0.0;
 	sband_proc_last[0] = 0.0;

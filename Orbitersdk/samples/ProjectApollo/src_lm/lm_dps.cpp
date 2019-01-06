@@ -491,6 +491,10 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	thrustcommand = 0;
 	ThrustChamberPressurePSI = 0.0;
 	ActuatorValves = 0.0;
+
+	anim_DPSGimbalPitch = -1;
+	anim_DPSGimbalRoll = -1;
+
 	dpsgimbal_proc[0] = 0.0;
 	dpsgimbal_proc[1] = 0.0;
 	dpsgimbal_proc_last[0] = 0.0;
@@ -542,6 +546,14 @@ void LEM_DPS::DefineAnimations(UINT idx) {
 	dpsgimbal_proc[1] = rollGimbalActuator.GetPosition() / 360;
 	if (dpsgimbal_proc[1] < 0) dpsgimbal_proc[1] += 1.0;
 	lem->SetAnimation(anim_DPSGimbalPitch, dpsgimbal_proc[0]); lem->SetAnimation(anim_DPSGimbalRoll, dpsgimbal_proc[1]);
+}
+
+void LEM_DPS::DeleteAnimations() {
+
+	if (anim_DPSGimbalPitch != -1) lem->DelAnimation(anim_DPSGimbalPitch);
+	anim_DPSGimbalPitch = -1;
+	if (anim_DPSGimbalRoll != -1) lem->DelAnimation(anim_DPSGimbalRoll);
+	anim_DPSGimbalRoll = -1;
 }
 
 void LEM_DPS::Timestep(double simt, double simdt) {

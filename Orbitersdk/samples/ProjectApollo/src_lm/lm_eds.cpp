@@ -420,6 +420,12 @@ void LEM_EDS::DefineAnimations(UINT idx) {
 	lem->SetAnimation(anim_Gear, gear_state.State());
 }
 
+void LEM_EDS::DeleteAnimations(){
+
+	if (anim_Gear != -1) lem->DelAnimation(anim_Gear);
+	anim_Gear = -1;
+}
+
 void LEM_EDS::Timestep(double simdt) {
 
 	// Animate Gear

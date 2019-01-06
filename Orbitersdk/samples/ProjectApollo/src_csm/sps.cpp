@@ -457,6 +457,10 @@ SPSEngine::SPSEngine(THRUSTER_HANDLE &sps) :
 	engineOnCommanded = false;
 	nitrogenPressureAPSI = 2500.0;
 	nitrogenPressureBPSI = 2500.0;
+
+	anim_SPSGimbalPitch = -1;
+	anim_SPSGimbalYaw = -1;
+
 	spsgimbal_proc[0] = 0.0;
 	spsgimbal_proc[1] = 0.0;
 	spsgimbal_proc_last[0] = 0.0;
@@ -486,6 +490,14 @@ void SPSEngine::DefineAnimations(UINT idx) {
 	//Anything but 0.0-1.0 will do
 	spsgimbal_proc_last[0] = 2.0;
 	spsgimbal_proc_last[1] = 2.0;
+}
+
+void SPSEngine::DeleteAnimations() {
+
+	if (anim_SPSGimbalPitch != -1) saturn->DelAnimation(anim_SPSGimbalPitch);
+	anim_SPSGimbalPitch = -1;
+	if (anim_SPSGimbalYaw != -1) saturn->DelAnimation(anim_SPSGimbalYaw);
+	anim_SPSGimbalYaw = -1;
 }
 
 void SPSEngine::Timestep(double simt, double simdt) {

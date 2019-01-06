@@ -407,6 +407,8 @@ void LEM::SetLmAscentHoverStage()
 	ClearBeacons();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
+	eds.DeleteAnimations();
+	DPS.DeleteAnimations();
 
 	double tdph = -5.8;
     double Mass = 4495.0;

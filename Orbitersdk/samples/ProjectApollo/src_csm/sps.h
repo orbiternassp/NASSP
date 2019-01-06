@@ -128,6 +128,7 @@ public:
 
 	void Init(Saturn *s);
 	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	double GetChamberPressurePSI();

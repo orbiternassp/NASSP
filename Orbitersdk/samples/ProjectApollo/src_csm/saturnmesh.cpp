@@ -972,6 +972,8 @@ void Saturn::SetReentryStage ()
 	ClearLVGuidLight();
 	ClearLVRateLight();
 	ClearSIISep();
+	hga.DeleteAnimations();
+	SPSEngine.DeleteAnimations();
 	double EmptyMass = CM_EmptyMass + (LESAttached ? 2000.0 : 0.0);
 	SetSize(6.0);
 	SetEmptyMass(EmptyMass);
