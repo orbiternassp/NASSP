@@ -476,7 +476,7 @@ void SPSEngine::DefineAnimations(UINT idx) {
 
 	// SPS Gimbal Animation Definition
 	ANIMATIONCOMPONENT_HANDLE ach_SPSGimbalPitch, ach_SPSGimbalYaw;
-	const VECTOR3 SPS_PIVOT = { 0.000043, -0.001129, 0.150801 }; // Pivot Point
+	const VECTOR3 SPS_PIVOT = { 0.000043, -0.001129, 0.0408 }; // Pivot Point
 	static MGROUP_ROTATE mgt_Gimbal_Pitch(idx, NULL, 1, SPS_PIVOT, _V(1, 0, 0), (float)PI2);
 	static MGROUP_ROTATE mgt_Gimbal_Yaw(idx, NULL, 1, SPS_PIVOT, _V(0, 1, 0), (float)PI2);
 	anim_SPSGimbalPitch = saturn->CreateAnimation(0.0);
