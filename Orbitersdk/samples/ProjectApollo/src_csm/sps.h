@@ -139,6 +139,7 @@ public:
 	double GetNitrogenPressureBPSI() { return nitrogenPressureBPSI; };
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+	void clbkPostCreation();
 
 	SPSGimbalActuator pitchGimbalActuator;
 	SPSGimbalActuator yawGimbalActuator;

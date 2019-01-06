@@ -476,20 +476,16 @@ void SPSEngine::DefineAnimations(UINT idx) {
 
 	// SPS Gimbal Animation Definition
 	ANIMATIONCOMPONENT_HANDLE ach_SPSGimbalPitch, ach_SPSGimbalYaw;
-	const VECTOR3 SPS_PIVOT = { 0.000043, -0.001129, 0.150801 }; // Pivot Point
+	const VECTOR3 SPS_PIVOT = { 0.000043, -0.001129, 0.0408 }; // Pivot Point
 	static MGROUP_ROTATE mgt_Gimbal_Pitch(idx, NULL, 1, SPS_PIVOT, _V(1, 0, 0), (float)PI2);
 	static MGROUP_ROTATE mgt_Gimbal_Yaw(idx, NULL, 1, SPS_PIVOT, _V(0, 1, 0), (float)PI2);
 	anim_SPSGimbalPitch = saturn->CreateAnimation(0.0);
 	anim_SPSGimbalYaw = saturn->CreateAnimation(0.0);
 	ach_SPSGimbalPitch = saturn->AddAnimationComponent(anim_SPSGimbalPitch, 0.0f, 1.0f, &mgt_Gimbal_Pitch);
 	ach_SPSGimbalYaw = saturn->AddAnimationComponent(anim_SPSGimbalYaw, 0.0f, 1.0f, &mgt_Gimbal_Yaw);
-
-	// Get current SPS gimbal state for animation
-	spsgimbal_proc[0] = -pitchGimbalActuator.GetPosition() / 360;
-	if (spsgimbal_proc[0] < 0) spsgimbal_proc[0] += 1.0;
-	spsgimbal_proc[1] = yawGimbalActuator.GetPosition() / 360;
-	if (spsgimbal_proc[1] < 0) spsgimbal_proc[1] += 1.0;
-	saturn->SetAnimation(anim_SPSGimbalPitch, spsgimbal_proc[0]); saturn->SetAnimation(anim_SPSGimbalYaw, spsgimbal_proc[1]);
+	//Anything but 0.0-1.0 will do
+	spsgimbal_proc_last[0] = 2.0;
+	spsgimbal_proc_last[1] = 2.0;
 }
 
 void SPSEngine::Timestep(double simt, double simdt) {
@@ -497,7 +493,7 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	if (!saturn) return;
 
 	// Animate SPS Gimbals
-	if (saturn->GetStage() <= CSM_LEM_STAGE) {
+	if (saturn->GetStage() == CSM_LEM_STAGE) {
 		spsgimbal_proc[0] = -pitchGimbalActuator.GetPosition() / 360;
 		if (spsgimbal_proc[0] < 0) spsgimbal_proc[0] += 1.0;
 		spsgimbal_proc[1] = yawGimbalActuator.GetPosition() / 360;
@@ -507,6 +503,7 @@ void SPSEngine::Timestep(double simt, double simdt) {
 		spsgimbal_proc_last[0] = spsgimbal_proc[0];
 		spsgimbal_proc_last[1] = spsgimbal_proc[1];
 	}
+
 
 	// Prevalves
 	bool injectorPreValveAOpen = false;
@@ -636,6 +633,22 @@ double SPSEngine::GetChamberPressurePSI() {
 	//
 
 	return saturn->GetThrusterLevel(spsThruster) * 100.0;
+}
+
+void SPSEngine::clbkPostCreation() {
+
+	if (!saturn) return;
+	if (saturn->GetStage() != CSM_LEM_STAGE) return;
+
+	// Get current SPS gimbal state for animation
+	spsgimbal_proc[0] = -pitchGimbalActuator.GetPosition() / 360;
+	if (spsgimbal_proc[0] < 0) spsgimbal_proc[0] += 1.0;
+	spsgimbal_proc[1] = yawGimbalActuator.GetPosition() / 360;
+	if (spsgimbal_proc[1] < 0) spsgimbal_proc[1] += 1.0;
+	if (spsgimbal_proc[0] - spsgimbal_proc_last[0] != 0.0) saturn->SetAnimation(anim_SPSGimbalPitch, spsgimbal_proc[0]);
+	if (spsgimbal_proc[1] - spsgimbal_proc_last[1] != 0.0) saturn->SetAnimation(anim_SPSGimbalYaw, spsgimbal_proc[1]);
+	spsgimbal_proc_last[0] = spsgimbal_proc[0];
+	spsgimbal_proc_last[1] = spsgimbal_proc[1];
 }
 
 void SPSEngine::SaveState(FILEHANDLE scn) {

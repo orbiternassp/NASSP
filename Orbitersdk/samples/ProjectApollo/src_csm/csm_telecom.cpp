@@ -538,6 +538,10 @@ HGA::HGA(){
 	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));
 	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);
 	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);
+
+	hga_proc[0] = hga_proc_last[0] = 0.0;
+	hga_proc[1] = hga_proc_last[1] = 0.0;
+	hga_proc[2] = hga_proc_last[2] = 0.0;
 }
 
 void HGA::Init(Saturn *vessel){
@@ -588,9 +592,55 @@ void HGA::SystemTimestep(double simdt) {
 	sat->HGAGroup2CB.DrawPower(34.5);
 }
 
+void HGA::DefineAnimations(UINT idx) {
+
+	// HGA animation definition
+	ANIMATIONCOMPONENT_HANDLE	ach_HGAalpha, ach_HGAbeta, ach_HGAgamma;
+	const VECTOR3	HGA_PIVOT1 = { -0.460263, -0.596586, -0.062961 }; // Pivot Point
+	const VECTOR3	HGA_PIVOT2 = { -0.530745, -0.687882, -0.062966 }; // Pivot Point
+	const VECTOR3	HGA_PIVOT3 = { -0.589306, -0.764893, -0.06296 }; // Pivot Point
+	const VECTOR3	HGA_AXIS_YAW = { sin(RAD * 37.75),cos(RAD * 37.75), 0.00 }; //Pivot Axis
+	const VECTOR3	HGA_AXIS_PITCH = { -sin(RAD * 52.25),cos(RAD * 52.25), 0.00 }; //Pivot Axis
+
+	static UINT meshgroup_Pivot1 = { 2 };
+	static UINT meshgroup_Pivot2 = { 3 };
+	static UINT meshgroup_Main[2] = { 1, 4 };
+
+	static MGROUP_ROTATE mgt_HGA_Alpha(idx, &meshgroup_Pivot1, 1, HGA_PIVOT1, HGA_AXIS_YAW, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_HGA_Beta(idx, &meshgroup_Pivot2, 1, HGA_PIVOT2, _V(0, 0, 1), (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_HGA_Gamma(idx, meshgroup_Main, 2, HGA_PIVOT3, HGA_AXIS_PITCH, (float)(RAD * 360));
+	anim_HGAalpha = sat->CreateAnimation(0.0);
+	anim_HGAbeta = sat->CreateAnimation(0.0);
+	anim_HGAgamma = sat->CreateAnimation(0.0);
+	ach_HGAalpha = sat->AddAnimationComponent(anim_HGAalpha, 0.0f, 1.0f, &mgt_HGA_Alpha);
+	ach_HGAbeta = sat->AddAnimationComponent(anim_HGAbeta, 0.0f, 1.0f, &mgt_HGA_Beta, ach_HGAalpha);
+	ach_HGAgamma = sat->AddAnimationComponent(anim_HGAgamma, 0.0f, 1.0f, &mgt_HGA_Gamma, ach_HGAbeta);
+	//Anything but 0.0-1.0 will do
+	hga_proc_last[0] = 2.0;
+	hga_proc_last[1] = 2.0;
+	hga_proc_last[2] = 2.0;
+}
+
 // Do work
 void HGA::TimeStep(double simt, double simdt)
 {
+	if (sat->NoHGA) return;
+	if (sat->GetStage() != CSM_LEM_STAGE) return;
+
+	// HGA mesh animation
+	hga_proc[0] = Alpha / PI2;
+	if (hga_proc[0] < 0) hga_proc[0] += 1.0;
+	hga_proc[1] = Beta / PI2;
+	if (hga_proc[1] < 0) hga_proc[1] += 1.0;
+	hga_proc[2] = (Gamma - PI05) / PI2;
+	if (hga_proc[2] < 0) hga_proc[2] += 1.0;
+	if (hga_proc[0] - hga_proc_last[0] != 0.0) sat->SetAnimation(anim_HGAalpha, hga_proc[0]);
+	if (hga_proc[1] - hga_proc_last[1] != 0.0) sat->SetAnimation(anim_HGAbeta, hga_proc[1]);
+	if (hga_proc[2] - hga_proc_last[2] != 0.0) sat->SetAnimation(anim_HGAgamma, hga_proc[2]);
+	hga_proc_last[0] = hga_proc[0];
+	hga_proc_last[1] = hga_proc[1];
+	hga_proc_last[2] = hga_proc[2];
+
 	// Do we have power and a SM?
 	if (!IsPowered())
 	{
@@ -850,6 +900,26 @@ return mul(MC, mul(MB, mul(M1, mul(M2, mul(M3, U_R)))));
 bool HGA::ScanLimitWarning()
 {
 	return scanlimitwarn;
+}
+
+void HGA::clbkPostCreation()
+{
+	if (sat->NoHGA) return;
+	if (sat->GetStage() != CSM_LEM_STAGE) return;
+
+	// Get current HGA state for animation
+	hga_proc[0] = Alpha / PI2;
+	if (hga_proc[0] < 0) hga_proc[0] += 1.0;
+	hga_proc[1] = Beta / PI2;
+	if (hga_proc[1] < 0) hga_proc[1] += 1.0;
+	hga_proc[2] = (Gamma - PI05) / PI2;
+	if (hga_proc[2] < 0) hga_proc[2] += 1.0;
+	sat->SetAnimation(anim_HGAalpha, hga_proc[0]);
+	sat->SetAnimation(anim_HGAbeta, hga_proc[1]);
+	sat->SetAnimation(anim_HGAgamma, hga_proc[2]);
+	hga_proc_last[0] = hga_proc[0];
+	hga_proc_last[1] = hga_proc[1];
+	hga_proc_last[2] = hga_proc[2];
 }
 
 // Load

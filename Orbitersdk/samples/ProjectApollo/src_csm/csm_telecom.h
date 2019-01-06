@@ -380,12 +380,14 @@ class HGA:public SBandAntenna {
 public:
 	HGA();
 	void Init(Saturn *vessel);					// Initialization
+	void DefineAnimations(UINT idx);
 	void TimeStep(double simt, double simdt);   // TimeStep
 	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool ScanLimitWarning();
 	bool IsPowered();
+	void clbkPostCreation();
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }
@@ -408,6 +410,11 @@ private:
 	double HornSignalStrength[4];
 
 	VECTOR3 U_Horn[4];
+
+	// Animations
+	UINT anim_HGAalpha, anim_HGAbeta, anim_HGAgamma;
+	double	hga_proc[3];
+	double	hga_proc_last[3];
 };
 
 //S-Band Omnidirectional Antenna system

@@ -947,6 +947,10 @@ void Saturn::clbkPostCreation() {
 	CMRCS2.CheckPropellantMass();
 	SPSPropellant.CheckPropellantMass();
 
+	//Set Animation States
+	hga.clbkPostCreation();
+	SPSEngine.clbkPostCreation();
+
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);
 
