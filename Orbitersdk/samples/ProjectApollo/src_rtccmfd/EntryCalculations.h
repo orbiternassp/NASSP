@@ -50,6 +50,7 @@ namespace EntryCalculations
 	double INTER(double *X, double *Y, int IMAX, double x);
 	double URF(double T, double x);
 	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P);
+	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
 
 	double MPL(double lat);
 	double EPL(double lat);

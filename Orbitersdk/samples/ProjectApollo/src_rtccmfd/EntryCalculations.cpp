@@ -324,7 +324,7 @@ namespace EntryCalculations
 		while (x > X[i])
 		{
 			i++;
-			if (i >= IMAX)
+			if (i > IMAX)
 			{
 				//error
 				return 0.0;
@@ -392,7 +392,7 @@ namespace EntryCalculations
 			B[1] = 7888927872.0;
 			B[2] = -61855.51562;
 			B[3] = 110537.274;
-			B[4] = 171799868.0;
+			B[4] = -171799868.0;
 			B[5] = 4620848192.0;
 			B[6] = -906.54586;
 			B[7] = -7956138368.0;
@@ -439,11 +439,12 @@ namespace EntryCalculations
 			B[6] * pow(r, 4) + B[7] * pow(t, 4) + B[8] * pow(r, 3)*t + B[9] * pow(r, 2)*pow(t, 2) + B[10] * r*pow(t, 3) + B[11] * pow(r, 3) + B[12] * pow(t, 3) + 
 			B[13] * pow(r, 2)*t + B[14] * r*pow(t, 2) + B[15] * pow(r, 2) + B[16] * pow(t, 2) + B[17] * r*t + B[18] * r + B[19] * t + B[20];
 		u_r = u_r_apo / CV;
+		return u_r;
 	}
 
 	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P)
 	{
-		double a, c_3, eta_apo;
+		double a, c_3, eta_apo, E;
 
 		a = a_apo;
 		//Parabolic case
@@ -454,13 +455,163 @@ namespace EntryCalculations
 			{
 				eta_apo = acos(abs(a) / r - 1.0);
 				T = abs(a) / 2.0*sqrt(abs(a) / mu)*(tan(eta_apo / 2.0 + 1.0 / 3.0*pow(tan(eta_apo / 2.0), 3.0)));
+
+				if (k == false)
+				{
+					T = -T;
+				}
+
+				return;
 			}
+			else
+			{
+				a = a / (1.0 - e * e);
+			}
+		}
+
+		//Ellitpical case
+		if (e < 1.0)
+		{
+			E = acos(1.0 / e * (1.0 - r / a));
+			P = PI2 * a*sqrt(a / mu);
+			T = a * sqrt(a / mu)*(E - e * sin(E));
+		}
+		//Hyperbolic case
+		else
+		{
+			double coshE;
+			coshE = 1.0 / e * (1.0 - r / a);
+			E = log(coshE + sqrt(coshE*coshE - 1.0));
+			T = a * sqrt(abs(a) / mu)*(E - e * (exp(E) - exp(-E)) / 2.0);
 		}
 
 		if (k == false)
 		{
 			T = -T;
 		}
+	}
+
+	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1)
+	{
+		double tan_eta1_2, M_1, q, p, tan_eta2_2, M_2, T_P, DT, T_m, a_m, T_1, DDT, esinE_1, ecosE_1, E_1, DT_m, Q, k_1_apo, DT_1, DDT_m;
+		double esinhE_1, ecoshE_1, esinE_2, ecosE_2, E_2, esinhE_2, T_12, k_apo, k, B;
+		int iter, IH, C_2;
+
+		tan_eta1_2 = OrbMech::cot(beta1);
+		M_1 = tan_eta1_2 + 1.0 / 3.0*pow(tan_eta1_2, 3);
+		q = r1 / pow(tan_eta1_2, 2); //TBD: this should be secant of eta1_2?!
+		p = 2.0*q;
+		tan_eta2_2 = sqrt(r2 / q - 1.0);
+		M_2 = sqrt(tan_eta2_2 + 1.0 / 3.0*pow(tan_eta2_2, 3));
+		T_P = q * sqrt(p / mu)*(M_2 - M_1);
+		DT = T_P - T;
+		info = 0;
+		if (abs(DT) <= eps)
+		{
+			a = 0.0;
+			e = 1.0;
+			V1 = 2.0*mu / r1;
+			return;
+		}
+		if (T_P > T)
+		{
+			iter = 2;
+			k_1_apo = 0.0;
+			T_m = 0.0;
+			a_m = 0.0;
+			IH = 2;
+			a = -2.0*R;
+			T_1 = T_P;
+			DDT = T * T;
+		}
+		else
+		{
+			IH = 1;
+			a_m = 0.5*(r2*r2 - r1 * r1*sin(beta1)*sin(beta1));
+			V1 = sqrt(mu*(2.0 / r1 - 1.0 / a_m));
+			esinE_1 = r1 * V1*cos(beta1) / sqrt(a_m*mu);
+			ecosE_1 = 1.0 - r1 / a_m;
+			E_1 = atan2(esinE_1, ecosE_1);
+			M_1 = E_1 - esinE_1;
+			T_m = a_m * sqrt(a_m / mu)*(PI - M_1);
+			DT_m = T_m - T;
+			if (abs(T_m) < eps)
+			{
+				e = esinE_1 / sin(E_1);
+				a = a_m;
+				return;
+			}
+			if (T_m < T)
+			{
+				Q = -1.0;
+				k2 = 1;
+				iter = 2;
+				k_1_apo = 0.0;
+				T_1 = T_P;
+			}
+			else
+			{
+				Q = 1.0;
+				k2 = 0;
+				if (T <= 1.2*T_P)
+				{
+					iter = 1;
+					DT_1 = T - T_P;
+				}
+				else
+				{
+					iter = 2;
+					k_1_apo = 0.0;
+					T_1 = T_P;
+				}
+			}
+			a = a_m + 2.0*R;
+			DDT_m = pow(DT_m - T, 2);
+			C_2 = 1;
+		}
+
+		do
+		{
+			V1 = sqrt(mu*(2.0 / r1 - 1.0 / a));
+			esinE_1 = esinhE_1 = r1 * V1*cos(beta1) / sqrt(abs(a)*mu);
+			ecosE_1 = ecoshE_1 = 1.0 - r1 / a;
+			e = sqrt(esinE_1*esinE_1 + ecosE_1 * ecosE_1);
+			if (a > 0.0)
+			{
+				E_1 = atan2(esinE_1, ecosE_1);
+				ecosE_2 = 1.0 - r2 / a;
+				esinE_2 = Q * sqrt(e*e - ecosE_2 * ecosE_2);
+				E_2 = atan2(esinE_2, ecosE_2);
+				M_1 = a / abs(a)*(E_1 - esinE_1);
+				M_2 = a / abs(a)*(E_2 - esinE_2);
+			}
+			else
+			{
+				E_1 = tanh(esinhE_1 / ecoshE_1);
+				E_2 = cosh(1.0 / e * (1.0 - r2 / a));
+				esinhE_2 = e * sinh(E_2);
+				M_1 = a / abs(a)*(E_1 - esinhE_1);
+				M_2 = a / abs(a)*(E_2 - esinhE_2);
+			}
+			T_12 = sqrt(pow(abs(a), 3) / mu)*(M_2 - M_1);
+			DT = T_12 - T;
+			if (abs(DT) < eps) return;
+			if (C_2 > 20) return;
+			C_2++;
+			k_apo = pow(T_12 - T_m, 2) / (a - a_m);
+			if (iter == 1)
+			{
+				B = k_apo / (T_12 - T_P);
+				k = B * DT_1;
+			}
+			else
+			{
+				B = (k_apo - k_1_apo) / (T_12 - T_1);
+				k = k_apo + B * (T - T_1);
+				k_1_apo = k_apo;
+			}
+			a = DT_m * DT_m / k + a_m;
+		} while (abs(DT) >= eps);
 	}
 	
 	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl, bool asc)
@@ -476,7 +627,7 @@ namespace EntryCalculations
 		hMoon = oapiGetObjectByName("Moon");
 		cMoon = oapiGetCelbodyInterface(hMoon);
 		
-		r_s = 24.0*oapiGetSize(hEarth);//64373760.0;//14.0*oapiGetSize(hEarth);
+		r_s = 24.0*oapiGetSize(hEarth);
 		EntryInterface = 400000.0 * 0.3048;
 		RCON = oapiGetSize(hEarth) + EntryInterface;
 		tol = 20.0;

@@ -4381,7 +4381,10 @@ double cot(double a)
 	return cos(a) / sin(a);
 }
 
-
+double sec(double a)
+{
+	return 1.0 / cos(a);
+}
 
 /*void rungeinteg(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu)
 {

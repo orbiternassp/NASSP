@@ -319,6 +319,7 @@ namespace OrbMech {
 	int DoubleToBuffer(double x, double q, int m);
 	int DoubleToDEDA(double x, double q);
 	double cot(double a);
+	double sec(double a);
 	void fabs_vektor(double* vektor, int n);
 	double vektor_max(double* vektor, int n);
 	double power(double b, double e);
