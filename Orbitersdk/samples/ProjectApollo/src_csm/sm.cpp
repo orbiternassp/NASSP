@@ -815,6 +815,9 @@ void SM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
 	oapiWriteScenario_float (scn, "UPRC", umbilical_proc);
+	oapiWriteScenario_float(scn, "ALPHA", Alpha);
+	oapiWriteScenario_float(scn, "BETA", Beta);
+	oapiWriteScenario_float(scn, "GAMMA", Gamma);
 }
 
 typedef union {
@@ -1101,6 +1104,21 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf (line + 4, "%g", &flt);
 			umbilical_proc = flt;
 		}
+		else if (!strnicmp(line, "ALPHA", 5))
+		{
+			sscanf(line + 5, "%g", &flt);
+			Alpha = flt;
+		}
+		else if (!strnicmp(line, "BETA", 4))
+		{
+			sscanf(line + 4, "%g", &flt);
+			Beta = flt;
+		}
+		else if (!strnicmp(line, "GAMMA", 5))
+		{
+			sscanf(line + 5, "%g", &flt);
+			Gamma = flt;
+		}
 		else
 		{
 			ParseScenarioLineEx (line, vstatus);
@@ -1142,7 +1160,7 @@ void SM::SetState(SMSettings &state)
 		}
 
 		//
-		// If HGA is present, set position.
+		// If HGA is present, get position.
 		//
 
 		if (showHGA)
