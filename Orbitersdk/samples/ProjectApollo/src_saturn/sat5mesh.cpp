@@ -1367,6 +1367,9 @@ void SaturnV::SeparateStage (int new_stage)
 		SMConfig.LowRes = LowRes;
 		SMConfig.showHGA = !NoHGA;
 		SMConfig.A13Exploded = ApolloExploded;
+		SMConfig.HGAalpha = hga.GetAlpha();
+		SMConfig.HGAbeta = hga.GetBeta();
+		SMConfig.HGAgamma = hga.GetGamma();
 
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);

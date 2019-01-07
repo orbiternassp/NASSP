@@ -392,6 +392,9 @@ public:
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }
+	double GetAlpha() { return Alpha; }
+	double GetBeta() { return Beta; }
+	double GetGamma() { return Gamma; }
 
 private:
 	VECTOR3 PitchYawToBodyVector(double pit, double ya);

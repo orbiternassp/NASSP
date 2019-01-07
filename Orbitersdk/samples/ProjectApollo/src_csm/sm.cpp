@@ -153,6 +153,18 @@ void SM::InitSM()
 	hPanel5 = 0;
 	hPanel6 = 0;
 
+	Alpha = 0;
+	Beta = 0;
+	Gamma = 0;
+
+	anim_HGAalpha = -1;
+	anim_HGAbeta = -1;
+	anim_HGAgamma = -1;
+
+	hga_proc[0] = 0.0;
+	hga_proc[1] = 0.0;
+	hga_proc[2] = 0.0;
+
 	FirstTimestep = true;
 
 	int i;
@@ -231,10 +243,21 @@ void SM::SetSM()
 		AddMesh(hSMSPS, &mesh_dir);
 	}
 
-	if (showHGA) 
+	if (showHGA)
 	{
+		UINT HGAidx;
 		mesh_dir=_V(-1.308,-1.18,-1.258);
-		AddMesh (hSMhga, &mesh_dir);
+		HGAidx = AddMesh (hSMhga, &mesh_dir);
+		DefineAnimationsHGA(HGAidx);
+		hga_proc[0] = Alpha / PI2;
+		if (hga_proc[0] < 0) hga_proc[0] += 1.0;
+		hga_proc[1] = Beta / PI2;
+		if (hga_proc[1] < 0) hga_proc[1] += 1.0;
+		hga_proc[2] = (Gamma - PI05) / PI2;
+		if (hga_proc[2] < 0) hga_proc[2] += 1.0;
+		SetAnimation(anim_HGAalpha, hga_proc[0]);
+		SetAnimation(anim_HGAbeta, hga_proc[1]);
+		SetAnimation(anim_HGAgamma, hga_proc[2]);
 	}
 
 	SetEmptyMass (mass);
@@ -971,7 +994,31 @@ void SM::DefineAnimations()
 	);
 	anim_umbilical = CreateAnimation (0.0);
 	AddAnimationComponent (anim_umbilical, 0, 1, &umbilical);
+}
 
+void SM::DefineAnimationsHGA(UINT idx) {
+
+	// HGA animation definition
+	ANIMATIONCOMPONENT_HANDLE	ach_HGAalpha, ach_HGAbeta, ach_HGAgamma;
+	const VECTOR3	HGA_PIVOT1 = { -0.460263, -0.596586, -0.062961 }; // Pivot Point
+	const VECTOR3	HGA_PIVOT2 = { -0.530745, -0.687882, -0.062966 }; // Pivot Point
+	const VECTOR3	HGA_PIVOT3 = { -0.589306, -0.764893, -0.06296 }; // Pivot Point
+	const VECTOR3	HGA_AXIS_YAW = { sin(RAD * 37.75),cos(RAD * 37.75), 0.00 }; //Pivot Axis
+	const VECTOR3	HGA_AXIS_PITCH = { -sin(RAD * 52.25),cos(RAD * 52.25), 0.00 }; //Pivot Axis
+
+	static UINT meshgroup_Pivot1 = { 2 };
+	static UINT meshgroup_Pivot2 = { 3 };
+	static UINT meshgroup_Main[2] = { 1, 4 };
+
+	static MGROUP_ROTATE mgt_HGA_Alpha(idx, &meshgroup_Pivot1, 1, HGA_PIVOT1, HGA_AXIS_YAW, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_HGA_Beta(idx, &meshgroup_Pivot2, 1, HGA_PIVOT2, _V(0, 0, 1), (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_HGA_Gamma(idx, meshgroup_Main, 2, HGA_PIVOT3, HGA_AXIS_PITCH, (float)(RAD * 360));
+	anim_HGAalpha = CreateAnimation(0.0);
+	anim_HGAbeta = CreateAnimation(0.0);
+	anim_HGAgamma = CreateAnimation(0.0);
+	ach_HGAalpha = AddAnimationComponent(anim_HGAalpha, 0.0f, 1.0f, &mgt_HGA_Alpha);
+	ach_HGAbeta = AddAnimationComponent(anim_HGAbeta, 0.0f, 1.0f, &mgt_HGA_Beta, ach_HGAalpha);
+	ach_HGAgamma = AddAnimationComponent(anim_HGAgamma, 0.0f, 1.0f, &mgt_HGA_Gamma, ach_HGAbeta);
 }
 
 void SM::SetMainState(int s)
@@ -1092,6 +1139,17 @@ void SM::SetState(SMSettings &state)
 		if (A13Exploded)
 		{
 			showPanel4 = false;
+		}
+
+		//
+		// If HGA is present, set position.
+		//
+
+		if (showHGA)
+		{
+			Alpha = state.HGAalpha;
+			Beta = state.HGAbeta;
+			Gamma = state.HGAgamma;
 		}
 	}
 

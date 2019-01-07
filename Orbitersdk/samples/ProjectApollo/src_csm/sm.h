@@ -63,6 +63,9 @@ typedef struct {
 	double RCSBFuelKg;					///< RCS Quad B fuel in kg.
 	double RCSCFuelKg;					///< RCS Quad C fuel in kg.
 	double RCSDFuelKg;					///< RCS Quad B fuel in kg.
+	double HGAalpha;                    ///< HGA Alpha
+	double HGAbeta;                     ///< HGA Beta
+	double HGAgamma;                    ///< HGA Gamma
 
 	bool LowRes;						///< Using low-res meshes?
 	bool showHGA;						///< Do we have an HGA?
@@ -171,6 +174,7 @@ protected:
 	void InitSM();
 	void AddEngines();
 	void DefineAnimations();
+	void DefineAnimationsHGA(UINT idx);
 
 	///
 	/// \brief Setup variables on first timestep.
@@ -355,6 +359,21 @@ protected:
 	/// \brief Temperature buildup during re-entry.
 	///
 	double Temperature;
+
+	///
+	/// \brief HGA Position.
+	///
+
+	double Alpha;
+	double Beta;
+	double Gamma;
+
+	///
+	/// \brief HGA Animations.
+	///
+
+	UINT anim_HGAalpha, anim_HGAbeta, anim_HGAgamma;
+	double	hga_proc[3];
 
 	///
 	/// \brief Re-entry texture.
