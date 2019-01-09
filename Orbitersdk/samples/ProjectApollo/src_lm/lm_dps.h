@@ -163,6 +163,7 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
 	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 

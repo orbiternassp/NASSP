@@ -381,6 +381,7 @@ public:
 	HGA();
 	void Init(Saturn *vessel);					// Initialization
 	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
 	void TimeStep(double simt, double simdt);   // TimeStep
 	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char *line);
@@ -391,6 +392,9 @@ public:
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }
+	double GetAlpha() { return Alpha; }
+	double GetBeta() { return Beta; }
+	double GetGamma() { return Gamma; }
 
 private:
 	VECTOR3 PitchYawToBodyVector(double pit, double ya);

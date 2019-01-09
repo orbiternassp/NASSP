@@ -282,8 +282,8 @@ void H_system::Create_h_Tank(char *line) {
 	else
 		new_one->isolation=1.0;
 
-	new_one->Area=pow(3.0/4.0*PI*volume/1000,0.3333); //radius of tank
-	new_one->Area=2*PI*new_one->Area*new_one->Area;//projection circle ois 2*PI*R
+	new_one->Area=pow(3.0/(4.0*PI)*volume/1000,0.3333); //radius of tank
+	new_one->Area=PI*new_one->Area*new_one->Area;//projection circle is PI*R^2
 	new_one->parent=this;
 }
 
@@ -420,8 +420,9 @@ void H_system::Build() {
 			Create_h_WaterSeparator(line);
 		else if (Compare(line, "<HEATLOAD>"))
 			Create_h_HeatLoad(line);
-
-		line = ReadConfigLine();
+		do {
+			line = ReadConfigLine();
+		} while (line == NULL);
 	}
 }
 

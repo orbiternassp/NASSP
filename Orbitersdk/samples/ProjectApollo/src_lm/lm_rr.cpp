@@ -44,6 +44,10 @@ LEM_RR::LEM_RR()
 	RRESECHeat = 0;
 	NoTrackSignal = false;
 	radarDataGood = false;
+
+	anim_RRPitch = -1;
+	anim_RRYaw = -1;
+
 	rr_proc[0] = 0.0;
 	rr_proc[1] = 0.0;
 	rr_proc_last[0] = 0.0;
