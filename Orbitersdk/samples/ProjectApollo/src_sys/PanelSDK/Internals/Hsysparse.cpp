@@ -420,8 +420,9 @@ void H_system::Build() {
 			Create_h_WaterSeparator(line);
 		else if (Compare(line, "<HEATLOAD>"))
 			Create_h_HeatLoad(line);
-
-		line = ReadConfigLine();
+		do {
+			line = ReadConfigLine();
+		} while (line == NULL);
 	}
 }
 
