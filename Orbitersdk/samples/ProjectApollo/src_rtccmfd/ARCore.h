@@ -50,6 +50,7 @@ public:
 	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
 	double DOI_PeriAng;					//Angle from landing site to PDI position
 	double DOI_alt;						//perilune altitude above landing site
+	double RTEMaxReturnInclination;
 };
 
 class ARCore {
@@ -66,8 +67,7 @@ public:
 	void LunarLiftoffCalc();
 	void LOICalc();
 	void LmkCalc();
-	void TEICalc();
-	void RTEFlybyCalc();
+	void MoonRTECalc();
 	void EntryCalc();
 	void DeorbitCalc();
 	void TLCCCalc();
@@ -265,8 +265,10 @@ public:
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
-	int FlybyType;	//0 = Flyby, 1 = PC+2
 	double FlybyPeriAlt;
+	double EntryDesiredInclination;
+	int RTECalcMode; // 0 = Tradeoff, 1 = Search, 2 = Discrete
+	double RTEReturnInclination;
 
 	//STATE VECTOR PAGE
 	bool SVSlot;

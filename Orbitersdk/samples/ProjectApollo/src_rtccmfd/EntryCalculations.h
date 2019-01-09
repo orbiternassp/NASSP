@@ -24,9 +24,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-#include "Orbitersdk.h"
-#include "OrbMech.h"
-
 namespace EntryCalculations
 {
 	double MSFNTargetLine(double vel);
@@ -38,7 +35,7 @@ namespace EntryCalculations
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET);
 	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl = 0, bool asc = true);
 	void Abort(VECTOR3 R0, VECTOR3 V0, double RCON, double dt, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI);
-	void Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, bool asc, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	bool Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, double INTER, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &Incl_apo);
 	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	void time_reentry_plane(VECTOR3 R0, VECTOR3 eta, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	double landingzonelong(int zone, double lat);
@@ -51,6 +48,8 @@ namespace EntryCalculations
 	double URF(double T, double x);
 	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P);
 	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
+	VECTOR3 MCDRIV(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, double Incl, double INTER, VECTOR3 &R_EI, VECTOR3 &V_EI, bool &NIR, double &Incl_apo, double &r_p);
+	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN);
 
 	double MPL(double lat);
 	double EPL(double lat);
@@ -223,11 +222,13 @@ private:
 	bool Asc;
 };
 
-class TEI
+class RTEMoon
 {
 public:
-	TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int RevsTillTEI, double Inclination = 0.0, bool Ascending = true);
-	bool TEIiter();
+	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double EntryLng, bool entrylongmanual, int returnspeed);
+	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double IRKI, double MDMAXI);
+	bool CLL(double &i_r, double &INTER);
+	bool MASTER();
 
 	int precision;
 	double EntryLatcor, EntryLngcor;
@@ -238,12 +239,13 @@ public:
 	VECTOR3 Rig, Vig, Vig_apo;
 	double TIG;
 	double ReturnInclination;
+	double FlybyPeriAlt;
 private:
 	OBJHANDLE hMoon, hEarth;
 	VECTOR3 DV;
 	double DT_TEI_EI;	//Time between TEI and EI
 	double EntryLng;
-	double mu_E, mu_M;
+	double mu_E, mu_M, w_E, R_E, R_M;
 	//double r_s; //Pseudostate sphere
 	CELBODY *cMoon;
 	double dlngapo, dtapo;
@@ -252,7 +254,38 @@ private:
 	int landingzone;
 	bool INRFVsign;
 	double dTIG, mjd0;
-	double dv[3], TIGvar[3];
-	double IncDes;
-	bool Asc;
+	double i_rmax, u_rmax;
+	int SMODE;
+	// 2: primary target point mode
+	// 4: alternate target point mode
+	// 6: fuel critical unspecified area mode
+	int CRIT;
+	// 1: abort at a discrete time
+	// 2: produce tradeoff display
+	// 3: optimize DV as a function of maneuver time
+	int LETSGO;
+	// 1: print flag for tradeoff display
+	// 2: print flag for discrete and search cases
+	int LFLAG;
+	int CENT;
+	// Minimum altitude allowed at closest approach to the moon
+	double h_min;
+	// the maximum allowable miss distance from the target site
+	double MD_max;
+	// 0: postmaneuver direction of motion is selected internal to the program
+	// 1: only noncircumlunar motion is allowed
+	// 2: only circumlunar motion is allowed
+	int CIRCUM;
+	// lift-to-drag ratio
+	double LD;
+	// maximum allowable DV
+	double DV_max;
+	// relative range override
+	double r_rbias;
+	// 0: guide reentry to the steep target line
+	// 1: manual reentry to the shallow target line
+	// 2: manual reentry to the steep target line
+	int ICRNGG;
+	// desired inclination. Signed for the two azimuth options
+	double i_rk;
 };

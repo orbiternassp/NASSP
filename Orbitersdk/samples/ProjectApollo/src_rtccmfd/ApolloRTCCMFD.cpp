@@ -1036,8 +1036,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "Deorbit Maneuver", 16);
 		skp->Text(1 * W / 8, 4 * H / 14, "Return to Earth (Earth-centered)", 32);
 		skp->Text(1 * W / 8, 6 * H / 14, "Return to Earth (Moon-centered)", 31);
-		skp->Text(1 * W / 8, 8 * H / 14, "Transearth Injection", 20);
-		skp->Text(1 * W / 8, 10 * H / 14, "Splashdown Update", 17);
+		skp->Text(1 * W / 8, 8 * H / 14, "Splashdown Update", 17);
+		skp->Text(1 * W / 8, 10 * H / 14, "RTE Constraints", 15);
 	}
 	else if (screen == 7)
 	{
@@ -2992,78 +2992,79 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 28)
 	{
-		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Return to Earth Flyby", 21);
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Return to Earth (Moon)", 22);
 
-		if (G->FlybyType != 1)
+		if (G->RTECalcMode == 1)
 		{
-			GET_Display(Buffer, G->EntryTIG);
-			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 2 * H / 14, "Search Option", 13);
 		}
+		else if (G->RTECalcMode == 2)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Discrete Option", 15);
+		}
+
+		GET_Display(Buffer, G->EntryTIG);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->entrylongmanual)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "Manual", 6);
+			skp->Text(1 * W / 8, 6 * H / 14, "Manual", 6);
 			sprintf(Buffer, "%f °", G->EntryLng*DEG);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
+			skp->Text(1 * W / 8, 6 * H / 14, "Landing Zone", 12);
 			if (G->landingzone == 0)
 			{
-				skp->Text(1 * W / 8, 6 * H / 14, "Mid Pacific", 11);
+				skp->Text(1 * W / 8, 8 * H / 14, "Mid Pacific", 11);
 			}
 			else if (G->landingzone == 1)
 			{
-				skp->Text(1 * W / 8, 6 * H / 14, "East Pacific", 12);
+				skp->Text(1 * W / 8, 8 * H / 14, "East Pacific", 12);
 			}
 			else if (G->landingzone == 2)
 			{
-				skp->Text(1 * W / 8, 6 * H / 14, "Atlantic Ocean", 14);
+				skp->Text(1 * W / 8, 8 * H / 14, "Atlantic Ocean", 14);
 			}
 			else if (G->landingzone == 3)
 			{
-				skp->Text(1 * W / 8, 6 * H / 14, "Indian Ocean", 12);
+				skp->Text(1 * W / 8, 8 * H / 14, "Indian Ocean", 12);
 			}
 			else if (G->landingzone == 4)
 			{
-				skp->Text(1 * W / 8, 6 * H / 14, "West Pacific", 12);
+				skp->Text(1 * W / 8, 8 * H / 14, "West Pacific", 12);
 			}
 		}
 
 		if (G->returnspeed == 0)
 		{
-			skp->Text(1 * W / 8, 8 * H / 14, "Slow Return", 11);
+			skp->Text(1 * W / 8, 10 * H / 14, "Slow Return", 11);
 		}
 		else if (G->returnspeed == 1)
 		{
-			skp->Text(1 * W / 8, 8 * H / 14, "Normal Return", 13);
+			skp->Text(1 * W / 8, 10 * H / 14, "Normal Return", 13);
 		}
 		else if (G->returnspeed == 2)
 		{
-			skp->Text(1 * W / 8, 8 * H / 14, "Fast Return", 11);
+			skp->Text(1 * W / 8, 10 * H / 14, "Fast Return", 11);
 		}
 
-		sprintf(Buffer, "%.3f°", G->TLCCFRDesiredInclination*DEG);
-		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-
-		if (G->TLCCAscendingNode)
+		if (G->EntryDesiredInclination < 0)
 		{
-			skp->Text(1 * W / 8, 12 * H / 14, "Ascending Node", 14);
+			sprintf(Buffer, "%.3f° A", abs(G->EntryDesiredInclination*DEG));
+		}
+		else if (G->EntryDesiredInclination > 0)
+		{
+			sprintf(Buffer, "%.3f° D", G->EntryDesiredInclination*DEG);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 12 * H / 14, "Descending Node", 15);
+			sprintf(Buffer, "Optimize DV");
 		}
 
-		if (G->FlybyType == 0)
-		{
-			skp->Text(5 * W / 8, 2 * H / 14, "Flyby", 5);
-		}
-		else if (G->FlybyType == 1)
-		{
-			skp->Text(5 * W / 8, 2 * H / 14, "PC+2", 4);
-		}
+		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+
 
 		if (G->subThreadStatus > 0)
 		{
@@ -3081,8 +3082,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%s RRT", Buffer);
 		skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 8, 11 * H / 21, "FR Inclination:", 15);
-		sprintf(Buffer, "%.3f°", G->TLCCFRIncl*DEG);
+		skp->Text(5 * W / 8, 11 * H / 21, "Return Inclination:", 19);
+		if (G->RTEReturnInclination < 0)
+		{
+			sprintf(Buffer, "%.3f° A", abs(G->RTEReturnInclination*DEG));
+		}
+		else
+		{
+			sprintf(Buffer, "%.3f° D", G->RTEReturnInclination*DEG);
+		}
 		skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 13 * H / 21, "Flyby Altitude:", 15);
@@ -3109,104 +3117,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 29)
 	{
-		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Transearth Injection", 20);
+		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "RTE Constraints", 15);
 
-		GET_Display(Buffer, G->EntryTIG);
+		sprintf(Buffer, "Max Return Inclination: %.3f°", GC->RTEMaxReturnInclination*DEG);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-
-		if (G->entrylongmanual)
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "Manual", 6);
-			sprintf(Buffer, "%f °", G->EntryLng*DEG);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 4 * H / 14, "Landing Zone", 12);
-			if (G->landingzone == 0)
-			{
-				skp->Text(1 * W / 8, 6 * H / 14, "Mid Pacific", 11);
-			}
-			else if (G->landingzone == 1)
-			{
-				skp->Text(1 * W / 8, 6 * H / 14, "East Pacific", 12);
-			}
-			else if (G->landingzone == 2)
-			{
-				skp->Text(1 * W / 8, 6 * H / 14, "Atlantic Ocean", 14);
-			}
-			else if (G->landingzone == 3)
-			{
-				skp->Text(1 * W / 8, 6 * H / 14, "Indian Ocean", 12);
-			}
-			else if (G->landingzone == 4)
-			{
-				skp->Text(1 * W / 8, 6 * H / 14, "West Pacific", 12);
-			}
-		}
-
-		if (G->returnspeed == 0)
-		{
-			skp->Text(1 * W / 8, 8 * H / 14, "Slow Return", 11);
-		}
-		else if (G->returnspeed == 1)
-		{
-			skp->Text(1 * W / 8, 8 * H / 14, "Normal Return", 13);
-		}
-		else if (G->returnspeed == 2)
-		{
-			skp->Text(1 * W / 8, 8 * H / 14, "Fast Return", 11);
-		}
-
-		sprintf(Buffer, "%.3f°", G->TLCCFRDesiredInclination*DEG);
-		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-
-		if (G->TLCCAscendingNode)
-		{
-			skp->Text(1 * W / 8, 12 * H / 14, "Ascending Node", 14);
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 12 * H / 14, "Descending Node", 15);
-		}
-
-		if (G->subThreadStatus > 0)
-		{
-			skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
-		}
-
-		sprintf(Buffer, "%.3f° Lat", G->EntryLatcor*DEG);
-		skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.3f° Lng", G->EntryLngcor*DEG);
-		skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
-
-		sprintf(Buffer, "%.3f° ReA", G->EntryAngcor*DEG);
-		skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->P37GET400K);
-		sprintf(Buffer, "%s RRT", Buffer);
-		skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
-
-		skp->Text(5 * W / 8, 11 * H / 21, "FR Inclination:", 15);
-		sprintf(Buffer, "%.3f°", G->TLCCFRIncl*DEG);
-		skp->Text(5 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
-
-		GET_Display(Buffer, G->EntryTIGcor);
-		sprintf(Buffer, "%s TIG", Buffer);
-		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-
-		skp->Text(5 * W / 8, 17 * H / 21, "DVX", 3);
-		skp->Text(5 * W / 8, 18 * H / 21, "DVY", 3);
-		skp->Text(5 * W / 8, 19 * H / 21, "DVZ", 3);
-		skp->Text(5 * W / 8, 20 * H / 21, "DVT", 3);
-
-		AGC_Display(Buffer, G->Entry_DV.x / 0.3048);
-		skp->Text(6 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, G->Entry_DV.y / 0.3048);
-		skp->Text(6 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, G->Entry_DV.z / 0.3048);
-		skp->Text(6 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
-		AGC_Display(Buffer, length(G->Entry_DV) / 0.3048);
-		skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
 	}
 	else if (screen == 30)
 	{
@@ -4566,7 +4480,7 @@ void ApolloRTCCMFD::menuSetMoonEntryPage()
 	coreButtons.SelectPage(this, screen);
 }
 
-void ApolloRTCCMFD::menuSetTEIPage()
+void ApolloRTCCMFD::menuSetRTEConstraintsPage()
 {
 	screen = 29;
 	coreButtons.SelectPage(this, screen);
@@ -5111,6 +5025,78 @@ bool EntryLngInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_entrylng(double lng)
 {
 	G->EntryLng = lng*RAD;
+}
+
+void ApolloRTCCMFD::menuSetEntryDesiredInclination()
+{
+	bool EntryDesiredInclinationInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the desired inclination (X°A for asc, X°D for desc):", EntryDesiredInclinationInput, 0, 20, (void*)this);
+}
+
+bool EntryDesiredInclinationInput(void *id, char *str, void *data)
+{
+	double inc;
+	char dir[32];
+	if (strlen(str) < 20)
+	{
+		if (sscanf(str, "%lf%s", &inc, dir) == 2)
+		{
+			if (strcmp(dir, "°A") == 0)
+			{
+				((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(-inc);
+				return true;
+			}
+			else if (strcmp(dir, "°D") == 0)
+			{
+				((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(inc);
+				return true;
+			}
+		}
+		else if (sscanf(str, "%lf", &inc) == 1)
+		{
+			((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(inc);
+			return true;
+		}
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_EntryDesiredInclination(double inc)
+{
+	G->EntryDesiredInclination = inc * RAD;
+}
+
+void ApolloRTCCMFD::menuSetEntryMaxInclination()
+{
+	bool EntryMaxInclinationInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the maximum inclination:", EntryMaxInclinationInput, 0, 20, (void*)this);
+}
+
+bool EntryMaxInclinationInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_EntryMaxInclination(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_EntryMaxInclination(double inc)
+{
+	GC->RTEMaxReturnInclination = inc * RAD;
+}
+
+void ApolloRTCCMFD::CycleRTECalcMode()
+{
+	if (G->RTECalcMode < 2)
+	{
+		G->RTECalcMode++;
+	}
+	else
+	{
+		G->RTECalcMode = 1;
+	}
 }
 
 void ApolloRTCCMFD::menusextantstartime()
@@ -5847,14 +5833,9 @@ void ApolloRTCCMFD::lambertcalc()
 	}
 }
 
-void ApolloRTCCMFD::menuTEICalc()
+void ApolloRTCCMFD::menuMoonRTECalc()
 {
-	G->TEICalc();
-}
-
-void ApolloRTCCMFD::menuRTEFlybyCalc()
-{
-	G->RTEFlybyCalc();
+	G->MoonRTECalc();
 }
 
 void ApolloRTCCMFD::menuDeorbitCalc()
@@ -6036,18 +6017,6 @@ void ApolloRTCCMFD::menuSwitchCritical()
 	else
 	{
 		G->entrycritical = 1;
-	}
-}
-
-void ApolloRTCCMFD::menuSwitchFlybyType()
-{
-	if (G->FlybyType < 1)
-	{
-		G->FlybyType++;
-	}
-	else
-	{
-		G->FlybyType = 0;
 	}
 }
 

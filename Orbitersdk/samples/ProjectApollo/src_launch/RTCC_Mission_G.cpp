@@ -1227,7 +1227,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 46: //TEI-30 UPDATE (FINAL)
 	case 47: //TEI-31 UPDATE
 	{
-		TEIOpt entopt;
+		RTEMoonOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
 		double GETbase;
@@ -1298,13 +1298,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		entopt.GETbase = GETbase;
-		entopt.Inclination = 40.0*RAD;
-		entopt.Ascending = true;
+		entopt.Inclination = -40.0*RAD;
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.vessel = calcParams.src;
 
-		TEITargeting(&entopt, &res);
+		RTEMoonTargeting(&entopt, &res);
 
 		opt.alt = calcParams.LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;

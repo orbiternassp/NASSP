@@ -5254,12 +5254,12 @@ void RTCC::RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res)
 	delete flybycalc;
 }
 
-void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
+void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 {
-	TEI* teicalc;
-	SV sv0;
+	RTEMoon* teicalc;
+	SV sv0, sv1, sv2;
 	bool endi = false;
-	double EMSAlt, dt22, mu_E, MJDguess, LMmass;
+	double EMSAlt, dt22, mu_E, mu_M, MJDguess, LMmass;
 	VECTOR3 R05G, V05G;
 	VECTOR3 Llambda;
 	double t_slip;
@@ -5269,6 +5269,7 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 
 	EMSAlt = 297431.0*0.3048;
 	mu_E = GGRAV*oapiGetMass(hEarth);
+	mu_M = GGRAV * oapiGetMass(hMoon);
 	
 	sv0 = opt->RV_MCC;
 
@@ -5276,17 +5277,38 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 	{
 		//TEI targeting uses "now" as the initial guess
 		MJDguess = sv0.MJD;
+
+		if (opt->RevsTillTEI != 0)
+		{
+			double t_period, dt;
+			t_period = OrbMech::period(sv0.R, sv0.V, mu_M);
+			dt = t_period * (double)opt->RevsTillTEI;
+			MJDguess += dt / 24.0 / 3600.0;
+		}
 	}
 	else
 	{
 		MJDguess = opt->GETbase + opt->TIGguess / 24.0 / 3600.0;
 	}
+
+	sv1 = GeneralTrajectoryPropagation(sv0, 0, MJDguess);
+
+	if (opt->SMODE == 12 || opt->SMODE == 14 || opt->SMODE == 16)
+	{
+		sv2 = sv1;
+	}
+	else
+	{
+		double TIG = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, hMoon, 180.0*RAD);
+		sv2 = GeneralTrajectoryPropagation(sv1, 0, TIG);
+	}
 	
-	teicalc = new TEI(sv0.R, sv0.V, sv0.MJD, sv0.gravref, MJDguess, opt->EntryLng, opt->entrylongmanual, opt->returnspeed, opt->RevsTillTEI, opt->Inclination, opt->Ascending);
+	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->EntryLng, opt->entrylongmanual, opt->returnspeed);
+	teicalc->READ(opt->SMODE, opt->IRMAX, 36323.0*0.3048, 0.0, opt->CIRCUM, 50.0*1852.0, 2, 0.3, 10000.0*0.3048, opt->Inclination, 1.0*1852.0);
 
 	while (!endi)
 	{
-		endi = teicalc->TEIiter();
+		endi = teicalc->MASTER();
 	}
 
 	dt22 = OrbMech::time_radius(teicalc->R_EI, teicalc->V_EI, oapiGetSize(hEarth) + EMSAlt, -1, mu_E);
@@ -5303,6 +5325,7 @@ void RTCC::TEITargeting(TEIOpt *opt, EntryResults *res)
 	res->VIO = length(V05G);
 	res->precision = teicalc->precision;
 	res->Incl = teicalc->ReturnInclination;
+	res->FlybyAlt = teicalc->FlybyPeriAlt;
 
 	if (opt->csmlmdocked)
 	{

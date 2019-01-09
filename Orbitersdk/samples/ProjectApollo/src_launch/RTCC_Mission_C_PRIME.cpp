@@ -677,7 +677,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 50:	// MISSION CP TEI-1 (Pre LOI)
 	{
-		TEIOpt entopt;
+		RTEMoonOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
 		double GETbase;
@@ -701,7 +701,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.RV_MCC = sv1;
 		entopt.vessel = calcParams.src;
 
-		TEITargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
+		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -811,7 +811,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	case 200: //TEI-10
 	case 201: //TEI-11
 	{
-		TEIOpt entopt;
+		RTEMoonOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
 		double GETbase;
@@ -885,7 +885,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv;
 
-		TEITargeting(&entopt, &res);
+		RTEMoonTargeting(&entopt, &res);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;

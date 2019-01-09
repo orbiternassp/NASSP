@@ -117,11 +117,15 @@ public:
 	void EntryLatDialogue();
 	void set_entrylng(double lng);
 	void EntryLngDialogue();
+	void menuSetEntryDesiredInclination();
+	void set_EntryDesiredInclination(double inc);
+	void menuSetEntryMaxInclination();
+	void set_EntryMaxInclination(double inc);
+	void CycleRTECalcMode();
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();
 	void menuDeorbitCalc();
-	void menuTEICalc();
-	void menuRTEFlybyCalc();
+	void menuMoonRTECalc();
 	void set_entryrange(double range);
 	void EntryRangeDialogue();
 	void menuSVCalc();
@@ -138,7 +142,6 @@ public:
 	void menuCalcEntryPAD();
 	void menuSetEntryPADPage();
 	void menuSwitchCritical();
-	void menuSwitchFlybyType();
 	void menuSwitchEntryPADOpt();
 	void menuManPADTIG();
 	void set_ManPADTIG(double ManPADTIG);
@@ -232,7 +235,7 @@ public:
 	void menuSetDeorbitPage();
 	void menuSetEarthEntryPage();
 	void menuSetMoonEntryPage();
-	void menuSetTEIPage();
+	void menuSetRTEConstraintsPage();
 	void menuSetEntryUpdatePage();
 	void menuSetP37PADPage();
 	void menuSetRendezvousPage();

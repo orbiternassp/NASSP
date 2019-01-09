@@ -52,6 +52,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	DOI_option = 0;
 	DOI_PeriAng = 15.0*RAD;
 	DOI_alt = 50000.0*0.3048;
+	RTEMaxReturnInclination = 40.0*RAD;
 
 	if (strcmp(v->GetName(), "AS-205") == 0)
 	{
@@ -215,6 +216,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_PeriAng = 16.0*RAD;
 		DOI_option = 1;
 		DOI_N = 11;
+		RTEMaxReturnInclination = 80.0*RAD;
 	}
 	else if (mission == 16)
 	{
@@ -236,6 +238,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_option = 1;
 		DOI_N = 10;
 		DOI_alt = 52500.0*0.3048;
+		RTEMaxReturnInclination = 80.0*RAD;
 	}
 	else if (mission == 17)
 	{
@@ -257,6 +260,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_option = 1;
 		DOI_N = 10;
 		DOI_alt = 84000.0*0.3048;
+		RTEMaxReturnInclination = 80.0*RAD;
 	}
 }
 
@@ -545,11 +549,13 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	entrycritical = 1;
 	returnspeed = 1;
-	FlybyType = 0;
 	entrynominal = 1;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
 	FlybyPeriAlt = 0.0;
+	EntryDesiredInclination = 0.0;
+	RTECalcMode = 1;
+	RTEReturnInclination = 0.0;
 
 	SVSlot = true; //true = CSM; false = Other
 	J2000Pos = _V(0.0, 0.0, 0.0);
@@ -1012,14 +1018,9 @@ void ARCore::DeorbitCalc()
 	startSubthread(17);
 }
 
-void ARCore::TEICalc()
+void ARCore::MoonRTECalc()
 {
 	startSubthread(11);
-}
-
-void ARCore::RTEFlybyCalc()
-{
-	startSubthread(18);
 }
 
 void ARCore::CDHcalc()			//Calculates the required DV vector of a coelliptic burn
@@ -2788,7 +2789,7 @@ int ARCore::subThread()
 	break;
 	case 11: //TEI Targeting
 	{
-		TEIOpt opt;
+		RTEMoonOpt opt;
 		EntryResults res;
 
 		if (GC->MissionPlanningActive)
@@ -2831,16 +2832,25 @@ int ARCore::subThread()
 		{
 			opt.EntryLng = (double)landingzone;
 		}
+		if (RTECalcMode == 1)
+		{
+			opt.SMODE = 34;
+		}
+		else
+		{
+			opt.SMODE = 14;
+		}
+
 		opt.GETbase = GC->GETbase;
 		opt.returnspeed = returnspeed;
 		opt.RevsTillTEI = 0;
 		opt.vessel = vessel;
 		opt.entrylongmanual = entrylongmanual;
 		opt.TIGguess = EntryTIG;
-		opt.Inclination = TLCCFRDesiredInclination;
-		opt.Ascending = TLCCAscendingNode;
+		opt.Inclination = EntryDesiredInclination;
+		opt.IRMAX = GC->RTEMaxReturnInclination;
 
-		rtcc->TEITargeting(&opt, &res);//Entry_DV, EntryTIGcor, EntryLatcor, EntryLngcor, P37GET400K, EntryRTGO, EntryVIO, EntryAngcor);
+		rtcc->RTEMoonTargeting(&opt, &res);
 
 		Entry_DV = res.dV_LVLH;
 		EntryTIGcor = res.P30TIG;
@@ -2852,13 +2862,14 @@ int ARCore::subThread()
 		P30TIG = EntryTIGcor;
 		dV_LVLH = Entry_DV;
 		entryprecision = res.precision;
-		TLCCFRIncl = res.Incl;
+		RTEReturnInclination = res.Incl;
+		FlybyPeriAlt = res.FlybyAlt;
 
 		if (GC->MissionPlanningActive)
 		{
 			char code[64];
 
-			sprintf(code, "TEI");
+			sprintf(code, "RTE");
 
 			rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
 		}
@@ -3538,94 +3549,6 @@ int ARCore::subThread()
 		P30TIG = EntryTIGcor;
 		dV_LVLH = Entry_DV;
 		entryprecision = res.precision;
-
-		Result = 0;
-	}
-	break;
-	case 18: //RTE Flyby Targeting
-	{
-		RTEFlybyOpt opt;
-		EntryResults res;
-
-		if (GC->MissionPlanningActive)
-		{
-			if (!rtcc->MPTTrajectory(GC->mptable, opt.RV_MCC, mptveh))
-			{
-				opt.RV_MCC = rtcc->StateVectorCalc(vessel);
-			}
-		}
-		else
-		{
-			opt.RV_MCC = rtcc->StateVectorCalc(vessel);
-		}
-
-		entryprecision = 1;
-
-		if (vesseltype < 2)
-		{
-			opt.vesseltype = 0;
-		}
-		else
-		{
-			opt.vesseltype = 1;
-		}
-
-		if (vesseltype == 0 || vesseltype == 2)
-		{
-			opt.csmlmdocked = false;
-		}
-		else
-		{
-			opt.csmlmdocked = true;
-		}
-
-		if (entrylongmanual)
-		{
-			opt.EntryLng = EntryLng;
-		}
-		else
-		{
-			opt.EntryLng = (double)landingzone;
-		}
-		opt.GETbase = GC->GETbase;
-		opt.returnspeed = returnspeed;
-		opt.FlybyType = FlybyType;
-		opt.vessel = vessel;
-		opt.entrylongmanual = entrylongmanual;
-		opt.TIGguess = EntryTIG;
-		opt.Inclination = TLCCFRDesiredInclination;
-		opt.Ascending = TLCCAscendingNode;
-
-		rtcc->RTEFlybyTargeting(&opt, &res);//Entry_DV, EntryTIGcor, EntryLatcor, EntryLngcor, P37GET400K, EntryRTGO, EntryVIO, EntryAngcor);
-
-		Entry_DV = res.dV_LVLH;
-		EntryTIGcor = res.P30TIG;
-		EntryLatcor = res.latitude;
-		EntryLngcor = res.longitude;
-		P37GET400K = res.GET05G;
-		EntryRTGO = res.RTGO;
-		EntryAngcor = res.ReA;
-		P30TIG = EntryTIGcor;
-		dV_LVLH = Entry_DV;
-		entryprecision = res.precision;
-		TLCCFRIncl = res.Incl;
-		FlybyPeriAlt = res.FlybyAlt;
-
-		if (GC->MissionPlanningActive)
-		{
-			char code[64];
-
-			if (FlybyType == 0)
-			{
-				sprintf(code, "FLYBY");
-			}
-			else
-			{
-				sprintf(code, "PC+2");
-			}
-
-			rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
-		}
 
 		Result = 0;
 	}

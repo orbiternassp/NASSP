@@ -338,7 +338,7 @@ struct SPQResults
 	VECTOR3 dV_CDH;
 };
 
-struct TEIOpt
+struct RTEMoonOpt
 {
 	VESSEL* vessel;			//Reentry vessel
 	double GETbase;			//usually MJD at launch
@@ -350,8 +350,22 @@ struct TEIOpt
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool entrylongmanual = true; //Targeting a landing zone or a manual landing longitude
 	int vesseltype = 0;			//0 = CSM, 1 = LM
-	double Inclination = 0.0;	//Specified return inclination
-	bool Ascending = true;		//Ascending or descending node
+	double Inclination = 0.0;	//Specified return inclination (sign is azimuth option)
+	// 12: PTP discrete option (not implemented yet)
+	// 14: ATP discrete option
+	// 16: UA discrete option (not implemented yet)
+	// 22: PTP tradeoff display (not implemented yet)
+	// 24: ATP tradeoff display (not implemented yet)
+	// 32: PTP search option (not implemented yet)
+	// 34: ATP search option
+	// 36: UA search option (not implemented yet)
+	int SMODE = 34;
+	//Maximum allowable return inclination
+	double IRMAX = 40.0*RAD;
+	// 0: postmaneuver direction of motion is selected internal to the program
+	// 1: only noncircumlunar motion is allowed
+	// 2: only circumlunar motion is allowed
+	int CIRCUM = 2;
 };
 
 struct RTEFlybyOpt
@@ -1229,7 +1243,7 @@ public:
 	void AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad);
 	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
 	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc = false);
-	void TEITargeting(TEIOpt *opt, EntryResults *res);
+	void RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res);
 	void RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);

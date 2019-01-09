@@ -24,6 +24,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "nasspdefs.h"
+#include "OrbMech.h"
 #include "EntryCalculations.h"
 
 namespace EntryCalculations
@@ -613,12 +614,132 @@ namespace EntryCalculations
 			a = DT_m * DT_m / k + a_m;
 		} while (abs(DT) >= eps);
 	}
+
+	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN)
+	{
+		int ISUB = 0;
+
+		if (opt == false)
+		{
+			int J;
+
+			if (CUR.x - X.y != 0)
+			{
+				if (CUR.x - X.y < 0)
+				{
+					if (CUR.y < Y.y)
+					{
+						X.z = X.y;
+						Y.z = Y.y;
+						Z.z = Z.y;
+						J = 2;
+					}
+					else
+					{
+						J = 1;
+					}
+				}
+				else
+				{
+					if (CUR.y < Y.y)
+					{
+						X.x = X.y;
+						Y.x = Y.y;
+						Z.x = Z.y;
+						J = 2;
+					}
+					else
+					{
+						J = 3;
+					}
+				}
+				X.data[J - 1] = CUR.x;
+				Y.data[J - 1] = CUR.y;
+				Z.data[J - 1] = CUR.z;
+			}
+		}
+
+		if ((Y.x <= Y.y) || (Y.z <= Y.y))
+		{
+			if (Y.x < Y.z)
+			{
+				ISUB = 1;
+				XMIN = X.x + TOL;
+			}
+			else
+			{
+				ISUB = 3;
+				XMIN = X.z - TOL;
+			}
+			YMIN = pow(10, 10);
+			return ISUB;
+		}
+
+		double X1, X2, Y1, Y2;
+		Y1 = (Y.x - Y.y) / (X.x - X.y);
+		Y2 = (Y.y - Y.z) / (X.y - X.z);
+		X1 = (X.x + X.y) / 2.0;
+		X2 = (X.y + X.z) / 2.0;
+		XMIN = X1 - Y1 * (X2 - X1) / (Y2 - Y1);
+		YMIN = Y.y - (pow(X.y - XMIN, 2)*(Y.x - Y.z)) / (pow(X.x - XMIN, 2) - pow(X.z - XMIN, 2));
+
+		return 0;
+	}
+
+	VECTOR3 MCDRIV(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, double Incl, double INTER, VECTOR3 &R_EI, VECTOR3 &V_EI, bool &NIR, double &Incl_apo, double &r_p)
+	{
+		OELEMENTS coe;
+		VECTOR3 R_I_star, R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, V_I_apo;
+		VECTOR3 dV_I_sstar, R_m, V_m;
+		double t_S, tol, dt_S, r_s, EntryInterface, RCON, p_h;
+		OBJHANDLE hEarth, hMoon;
+		CELBODY *cMoon;
+		double MoonPos[12];
+
+		hEarth = oapiGetObjectByName("Earth");
+		hMoon = oapiGetObjectByName("Moon");
+		cMoon = oapiGetCelbodyInterface(hMoon);
+
+		r_s = 24.0*oapiGetSize(hEarth);
+		EntryInterface = 400000.0 * 0.3048;
+		RCON = oapiGetSize(hEarth) + EntryInterface;
+		tol = 20.0;
+
+		cMoon->clbkEphemeris(t_I, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
+
+		R_m = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
+		V_m = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
+
+		R_I_star = _V(0.0, 0.0, 0.0);
+		V_I_star = V_I;
+
+		do
+		{
+			R_I_sstar = R_m + R_I_star;
+			V_I_sstar = V_m + V_I_star;
+			NIR = Abort_plane(R_I_sstar, V_I_sstar, t_I, RCON, (t_EI - t_I)*24.0*3600.0, mu_E, Incl, INTER, dV_I_sstar, R_EI, V_EI, Incl_apo);
+			V_I_sstar = V_I_sstar + dV_I_sstar;
+			V_I_star = V_I_sstar - V_m;
+			OrbMech::INRFV(R_I, V_I_star, r_s, INRFVsign, mu_M, V_I_apo, R_S, dt_S);
+			t_S = t_I + dt_S / 24.0 / 3600.0;
+			R_I_star_apo = R_I_star;
+			R_I_star = R_S + V_I_star * (t_I - t_S) * 24.0 * 3600.0;
+
+		} while (length(R_I_star - R_I_star_apo) > tol);
+
+		coe = OrbMech::coe_from_sv(R_I, V_I_apo, mu_M);
+		p_h = coe.h*coe.h / mu_M;
+		r_p = p_h / (1.0 + coe.e);
+
+		return V_I_apo;
+	}
+
 	
 	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl, bool asc)
 	{
 		VECTOR3 R_I_star, delta_I_star, delta_I_star_dot, R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I_apo;
 		VECTOR3 dV_I_sstar, R_m, V_m;
-		double t_S, tol, dt_S, r_s, EntryInterface, RCON;
+		double t_S, tol, dt_S, r_s, EntryInterface, RCON, Incl_apo;
 		OBJHANDLE hEarth, hMoon;
 		CELBODY *cMoon;
 		double MoonPos[12];
@@ -648,7 +769,7 @@ namespace EntryCalculations
 				V_I_sstar = V_m + V_I_star + delta_I_star_dot;
 				if (Incl != 0)
 				{
-					Abort_plane(R_I_sstar, V_I_sstar, t_I, RCON, (t_EI - t_I)*24.0*3600.0, mu_E, Incl, asc, dV_I_sstar, R_EI, V_EI);
+					Abort_plane(R_I_sstar, V_I_sstar, t_I, RCON, (t_EI - t_I)*24.0*3600.0, mu_E, Incl, asc ? 1.0 : -1.0, dV_I_sstar, R_EI, V_EI, Incl_apo);
 				}
 				else
 				{
@@ -695,8 +816,9 @@ namespace EntryCalculations
 		DV = V2 - V0;
 	}
 
-	void Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, bool asc, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI)
+	bool Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, double INTER, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &Incl_apo)
 	{
+		bool NIR;
 		double k4, x2, v2, x2_apo, x2_err, ra, dec, Omega, MJD_EI;
 		VECTOR3 V2, R0_equ, U_H;
 		MATRIX3 Rot;
@@ -705,6 +827,7 @@ namespace EntryCalculations
 		hEarth = oapiGetObjectByName("Earth");
 
 		k4 = -0.10453;
+		NIR = false;
 
 		x2 = k4;
 		x2_err = 1.0;
@@ -713,15 +836,26 @@ namespace EntryCalculations
 		Rot = OrbMech::GetRotationMatrix(hEarth, MJD_EI);
 		R0_equ = rhtmul(Rot, R0);
 		OrbMech::ra_and_dec_from_r(R0_equ, ra, dec);
-		if (asc)
+		//Make sure the inclination is larger than the declination
+		if (Incl <= abs(dec))
 		{
-			Omega = ra + asin(tan(dec) / tan(Incl)) + PI;
+			Incl_apo = abs(dec) + 0.0001;
+			NIR = true;
 		}
 		else
 		{
-			Omega = ra - asin(tan(dec) / tan(Incl));
+			Incl_apo = Incl;
 		}
-		U_H = unit(_V(sin(Omega)*sin(Incl), -cos(Omega)*sin(Incl), cos(Incl)));
+
+		if (INTER > 0)
+		{
+			Omega = ra + asin(tan(dec) / tan(Incl_apo)) + PI;
+		}
+		else
+		{
+			Omega = ra - asin(tan(dec) / tan(Incl_apo));
+		}
+		U_H = unit(_V(sin(Omega)*sin(Incl_apo), -cos(Omega)*sin(Incl_apo), cos(Incl_apo)));
 		U_H = rhmul(Rot, U_H);
 
 		while (abs(x2_err) > 0.00001)
@@ -734,6 +868,8 @@ namespace EntryCalculations
 			x2_err = x2 - x2_apo;
 		}
 		DV = V2 - V0;
+
+		return NIR;
 	}
 
 	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI)
@@ -2717,10 +2853,8 @@ bool Flyby::Flybyiter()
 	}
 }
 
-TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int RevsTillTEI, double Inclination, bool Ascending)
+RTEMoon::RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double EntryLng, bool entrylongmanual, int returnspeed)
 {
-	VECTOR3 R1B, V1B;
-
 	this->EntryLng = EntryLng;
 
 	hMoon = oapiGetObjectByName("Moon");
@@ -2740,28 +2874,16 @@ TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDgue
 
 	mu_E = GGRAV*oapiGetMass(hEarth);
 	mu_M = GGRAV*oapiGetMass(hMoon);
+	w_E = PI2 / oapiGetPlanetPeriod(hEarth);
+	R_E = oapiGetSize(hEarth);
+	R_M = oapiGetSize(hMoon);
 
-	double dt;
 	INRFVsign = true;
 
-	if (MJDguess != mjd0)
-	{
-		dt = (MJDguess - mjd0)*24.0*3600.0;
-	}
-	else
-	{
-		double t_period;
-		t_period = OrbMech::period(R0M, V0M, mu_M);
-		dt = t_period*(double)RevsTillTEI;
-	}
-
-	OrbMech::oneclickcoast(R0M, V0M, mjd0, dt, R1B, V1B, gravref, hMoon);
-	TIG = OrbMech::P29TimeOfLongitude(R1B, V1B, mjd0 + dt / 24.0 / 3600.0, hMoon, 180.0*RAD);
-	OrbMech::oneclickcoast(R0M, V0M, mjd0, (TIG - mjd0)*24.0*3600.0, R1B, V1B, hMoon, hMoon);
-
-	Rig = R1B;
-	Vig = V1B;
+	Rig = R0M;
+	Vig = V0M;
 	Vig_apo = Vig;
+	TIG = mjd0;
 	
 	DT_TEI_EI = 62.0*3600.0;
 
@@ -2780,136 +2902,293 @@ TEI::TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDgue
 	dTIG = 30.0;
 	precision = 1;
 	ReturnInclination = 0.0;
-
-	IncDes = Inclination;
-	Asc = Ascending;
 }
 
-bool TEI::TEIiter()
+void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double IRKI, double MDMAXI)
 {
-	double theta_long, theta_lat, dlng, dt;
-	double ratest, dectest, radtest, InclFRGuess;
+	double LETSGOF, CRITF;
 
-	EIMJD = TIG + DT_TEI_EI / 24.0 / 3600.0;
+	u_rmax = URMAXI;
+	i_rmax = IRMAXI;
+	CENT = 1;
+	h_min = HMINI;
+	MD_max = MDMAXI;
+	SMODE = SMODEI;
+	CIRCUM = CIRI;
+	LD = L2DI;
+	DV_max = DVMAXI;
+	r_rbias = RRBI;
+	ICRNGG = EPI;
 
-	OrbMech::GetLunarEquatorialCoordinates(TIG, ratest, dectest, radtest);
+	CRITF = modf(((double)SMODEI) / 10.0, &LETSGOF);
+	LETSGO = (int)LETSGOF;
+	CRIT = SMODE - LETSGO * 10;
+	i_rk = IRKI;
 
-	if (IncDes != 0)
+	if (LETSGO == 2)
 	{
-		if (IncDes < abs(dectest) + 2.0*RAD)
-		{
-			InclFRGuess = abs(dectest) + 2.0*RAD;
-		}
-		else
-		{
-			InclFRGuess = IncDes;
-		}
-
-		Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI, InclFRGuess, Asc);
+		LFLAG = 1;
 	}
 	else
 	{
-		Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI);
-	}	
-
-	EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
-
-	dlng = EntryLng - theta_long;
-	if (abs(dlng) > PI)
-	{
-		dlng = dlng - OrbMech::sign(dlng)*PI2;
+		LFLAG = 2;
 	}
+}
 
-	if (!entrylongmanual)
+bool RTEMoon::MASTER()
+{
+	OELEMENTS coe;
+	double dv[3], TIGvar[3];
+	double i_r, theta_long, theta_lat, dlng, dt, INTER, R_S;
+	int IPART;
+
+	IPART = 0;
+
+	while (IPART < 5 || abs(dTIG) > 1.0)
 	{
-		EntryLng = EntryCalculations::landingzonelong(landingzone, theta_lat);
-	}
-
-	if (ii == 0)
-	{
-		dt = 1.0;
-		dtapo = DT_TEI_EI;
-		dlngapo = theta_long;
-		DT_TEI_EI += dt;
-
-	}
-	else
-	{
-		dt = (DT_TEI_EI - dtapo) / (theta_long - dlngapo)*dlng;
-
-		if (abs(dt) > 3600.0)
+		coe = OrbMech::coe_from_sv(Rig, Vig, mu_M);
+		if (coe.e > 0.5)
 		{
-			dt = OrbMech::sign(dt)*3600.0;
-		}
-		dtapo = DT_TEI_EI;
-		dlngapo = theta_long;
-		DT_TEI_EI += dt;
-
-	}
-	ii++;
-
-	if (abs(dt) > 0.1)
-	{
-		return false;
-	}
-	else
-	{
-		if (abs(dTIG) > 1.0)
-		{
-
-			ii = 0;
-
-			if (jj < 2)
+			if (coe.TA > PI)
 			{
-				TIGvar[jj + 1] = (TIG - mjd0)*24.0*3600.0;
-				dv[jj + 1] = length(Vig_apo - Vig);
+				//Flyby case (pre pericynthion)
+				INRFVsign = false;
 			}
 			else
 			{
-				dv[0] = dv[1];
-				dv[1] = dv[2];
-				dv[2] = length(Vig_apo - Vig);
-				TIGvar[0] = TIGvar[1];
-				TIGvar[1] = TIGvar[2];
-				TIGvar[2] = (TIG - mjd0)*24.0*3600.0;
-
-				dTIG = OrbMech::quadratic(TIGvar, dv) + (mjd0 - TIG)*24.0*3600.0;
-
-				if (abs(dTIG) > 10.0*60.0)
-				{
-					dTIG = OrbMech::sign(dTIG)*10.0*60.0;
-				}
+				//PC+2 case (post pericynthion)
+				INRFVsign = true;
 			}
-
-			OrbMech::oneclickcoast(Rig, Vig, TIG, dTIG, Rig, Vig, hMoon, hMoon);
-			TIG += dTIG / 24.0 / 3600.0;
-			jj++;
-
-			return false;
 		}
 		else
 		{
-			double sing, cosg, x2;
-			VECTOR3 i, j, k, N, H_EI_equ;
-			MATRIX3 Q_Xx;
-			j = unit(crossp(Vig, Rig));
-			k = unit(-Rig);
-			i = crossp(j, k);
-			Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+			//TEI case
+			INRFVsign = true;
+		}
 
-			Entry_DV = mul(Q_Xx, Vig_apo - Vig);
-			EntryLatcor = theta_lat;
-			EntryLngcor = theta_long;
-			N = crossp(unit(R_EI), unit(V_EI));
-			sing = length(N);
-			cosg = dotp(unit(R_EI), unit(V_EI));
-			x2 = cosg / sing;
-			EntryAng = atan(x2);
+		//Normal the pseudostate sphere is 24 Earth radii. Probably doesn't iterate very well if the spacecraft is close to that, so use a slightly larger radius then
+		if (length(Rig) >= 23.0*R_E)
+		{
+			R_S = length(Rig) + R_E;
+		}
+		else
+		{
+			R_S = 24.0*R_E;
+		}
 
-			H_EI_equ = rhtmul(OrbMech::GetRotationMatrix(hEarth, EIMJD), unit(N));
-			ReturnInclination = acos(H_EI_equ.z);
+		//Conic Search
+		CLL(i_r, INTER);
 
-			return true;
+		if (LETSGO == 1) break;
+
+		if (IPART < 2)
+		{
+			TIGvar[IPART + 1] = (TIG - mjd0)*24.0*3600.0;
+			dv[IPART + 1] = length(Vig_apo - Vig);
+		}
+		else
+		{
+			dv[0] = dv[1];
+			dv[1] = dv[2];
+			dv[2] = length(Vig_apo - Vig);
+			TIGvar[0] = TIGvar[1];
+			TIGvar[1] = TIGvar[2];
+			TIGvar[2] = (TIG - mjd0)*24.0*3600.0;
+
+			dTIG = OrbMech::quadratic(TIGvar, dv) + (mjd0 - TIG)*24.0*3600.0;
+
+			if (abs(dTIG) > 10.0*60.0)
+			{
+				dTIG = OrbMech::sign(dTIG)*10.0*60.0;
+			}
+		}
+
+		OrbMech::oneclickcoast(Rig, Vig, TIG, dTIG, Rig, Vig, hMoon, hMoon);
+		TIG += dTIG / 24.0 / 3600.0;
+		IPART++;
+	}
+
+	//Precision Solution
+	do
+	{
+		EIMJD = TIG + DT_TEI_EI / 24.0 / 3600.0;
+
+		Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI, i_r, INTER > 0);
+		EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
+
+		if (!entrylongmanual)
+		{
+			EntryLng = EntryCalculations::landingzonelong(landingzone, theta_lat);
+		}
+
+		dlng = theta_long - EntryLng;
+		if (abs(dlng) > PI)
+		{
+			dlng = dlng - OrbMech::sign(dlng)*PI2;
+		}
+
+		dt = dlng / w_E;
+		DT_TEI_EI += dt;
+
+		ii++;
+	} while (abs(dt) > 0.1);
+
+	double sing, cosg, x2;
+	VECTOR3 i, j, k, N, H_EI_equ, R_peri, V_peri;
+	MATRIX3 Q_Xx;
+	j = unit(crossp(Vig, Rig));
+	k = unit(-Rig);
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+
+	Entry_DV = mul(Q_Xx, Vig_apo - Vig);
+	EntryLatcor = theta_lat;
+	EntryLngcor = theta_long;
+	N = crossp(unit(R_EI), unit(V_EI));
+	sing = length(N);
+	cosg = dotp(unit(R_EI), unit(V_EI));
+	x2 = cosg / sing;
+	EntryAng = atan(x2);
+
+	H_EI_equ = rhtmul(OrbMech::GetRotationMatrix(hEarth, EIMJD), unit(N));
+	ReturnInclination = -acos(H_EI_equ.z)*INTER;
+
+	OrbMech::timetoperi_integ(Rig, Vig_apo, TIG, hMoon, hMoon, R_peri, V_peri);
+	FlybyPeriAlt = length(R_peri) - oapiGetSize(hMoon);
+
+	return true;
+}
+
+bool RTEMoon::CLL(double &i_r, double &INTER)
+{
+	VECTOR3 IRTAB, DVTAB, ZTAB;
+	double theta_long, theta_lat, dlng, dt, Incl_apo, TOL, i_rmin, DV_min, dv_new, delta_S, i_rc, h_p, r_p;
+	int ISUB, KCOUNT, ICNT;
+	bool NIR, IOPT;
+
+	jj = 0;
+	DV_min = pow(10, 10);
+	dv_new = 0.0;
+	ZTAB = _V(0, 0, 0);
+
+	TOL = 1.0*RAD;
+
+	if (i_rk != 0)
+	{
+		i_r = abs(i_rk);
+		i_rmax = i_r;
+		INTER = -i_rk / i_r;
+	}
+	else
+	{
+		i_r = i_rmax;
+		INTER = -1.0;
+	}
+
+	IOPT = true;
+	ICNT = 0;
+	KCOUNT = 0;
+
+	//In the RTCC document KCOUNT only goes to 10, but 15 gives more consistent end results for cases that run into the inclination constraint
+	while (((abs(DV_min - dv_new) > 0.1*0.3048) && (KCOUNT < 15)) || jj < 3)
+	{
+		do
+		{
+			EIMJD = TIG + DT_TEI_EI / 24.0 / 3600.0;
+
+			Vig_apo = EntryCalculations::MCDRIV(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, R_EI, V_EI, NIR, Incl_apo, r_p);
+			EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
+
+			if (!entrylongmanual)
+			{
+				EntryLng = EntryCalculations::landingzonelong(landingzone, theta_lat);
+			}
+
+			dlng = theta_long - EntryLng;
+			if (abs(dlng) > PI)
+			{
+				dlng = dlng - OrbMech::sign(dlng)*PI2;
+			}
+
+			dt = dlng / w_E;
+			DT_TEI_EI += dt;
+
+			ii++;
+		} while (abs(dt) > 0.1);
+
+		if (i_rk != 0) break;
+
+		h_p = r_p - R_M;
+		dv_new = length(Vig_apo - Vig);
+		if (INRFVsign == false && h_p < h_min)
+		{
+			//TBD
+			//dv_new = pow(10, 10);
+		}
+
+		if (NIR && IOPT)
+		{
+			delta_S = Incl_apo;
+		}
+
+		if (IOPT)
+		{
+			IRTAB.data[jj] = Incl_apo * INTER;
+			DVTAB.data[jj] = dv_new;
+
+			if (jj == 0)
+			{
+				INTER = 1.0;
+				i_r = 0.0;
+			}
+			else if (jj == 1)
+			{
+				i_r = i_rmax;
+			}
+			else
+			{
+				IRTAB.data[0] = (abs(IRTAB.data[0]) - delta_S)*IRTAB.data[0] / abs(IRTAB.data[0]);
+				IRTAB.data[1] = (abs(IRTAB.data[1]) - delta_S)*IRTAB.data[1] / abs(IRTAB.data[1]);
+				IRTAB.data[2] = (abs(IRTAB.data[2]) - delta_S)*IRTAB.data[2] / abs(IRTAB.data[2]);
+			}
+			jj++;
+		}
+		else
+		{
+			i_rc = (Incl_apo - delta_S)*INTER;
+		}
+		if (jj < 3) continue;
+
+		if (i_rk == 0)
+		{
+			ISUB = EntryCalculations::MINMIZ(IRTAB, DVTAB, ZTAB, IOPT, _V(i_rc, dv_new, 0.0), TOL, i_rmin, DV_min);
+			IOPT = false;
+			KCOUNT++;
+
+			if (ISUB == 1)
+			{
+				i_rmin = (IRTAB.x + IRTAB.y) / 2.0;
+			}
+			else if (ISUB == 3)
+			{
+				i_rmin = (IRTAB.y + IRTAB.z) / 2.0;
+			}
+			else
+			{
+				if ((IRTAB.x <= i_rmin) && (i_rmin <= IRTAB.y) && (DVTAB.z > pow(10, 8)))
+				{
+					i_rmin = (IRTAB.y + IRTAB.z) / 2.0;
+				}
+				else if ((IRTAB.y <= i_rmin) && (i_rmin <= IRTAB.z) && (DVTAB.x > pow(10, 8)))
+				{
+					i_rmin = (IRTAB.x + IRTAB.y) / 2.0;
+				}
+			}
+
+			INTER = i_rmin / abs(i_rmin);
+			i_r = abs(i_rmin + INTER * delta_S);
 		}
 	}
+
+	return true;
 }
