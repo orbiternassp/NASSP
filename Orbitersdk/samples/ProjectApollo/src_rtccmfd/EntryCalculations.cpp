@@ -2944,7 +2944,8 @@ bool RTEMoon::MASTER()
 
 	IPART = 0;
 
-	while (IPART < 5 || abs(dTIG) > 1.0)
+	//Needs at least 4 iterations for the logic to work. Upper limit 50. If solution found within a second, iteration done.
+	while (IPART < 5 || (abs(dTIG) > 1.0 && IPART < 50))
 	{
 		coe = OrbMech::coe_from_sv(Rig, Vig, mu_M);
 		if (coe.e > 0.5)
@@ -2966,7 +2967,7 @@ bool RTEMoon::MASTER()
 			INRFVsign = true;
 		}
 
-		//Normal the pseudostate sphere is 24 Earth radii. Probably doesn't iterate very well if the spacecraft is close to that, so use a slightly larger radius then
+		//Normally the pseudostate sphere is 24 Earth radii. Probably doesn't iterate very well if the spacecraft is close to that, so use a slightly larger radius then
 		if (length(Rig) >= 23.0*R_E)
 		{
 			R_S = length(Rig) + R_E;
@@ -3033,6 +3034,7 @@ bool RTEMoon::MASTER()
 		ii++;
 	} while (abs(dt) > 0.1);
 
+	// Final Calculations
 	double sing, cosg, x2;
 	VECTOR3 i, j, k, N, H_EI_equ, R_peri, V_peri;
 	MATRIX3 Q_Xx;
