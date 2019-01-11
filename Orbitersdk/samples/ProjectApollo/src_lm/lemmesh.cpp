@@ -224,7 +224,7 @@ void LEM::SetLmVesselDockStage()
 	
 	VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[0], NULL, &dpspos0, NULL, 10.0, 1.2, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
+		{ th_hover[0], NULL, &dpspos0, NULL, 10.0, 1.5, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);
@@ -342,7 +342,7 @@ void LEM::SetLmVesselHoverStage()
 
 	VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[0], NULL, &dpspos0, NULL, 10.0, 1.2, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
+		{ th_hover[0], NULL, &dpspos0, NULL, 10.0, 1.5, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);
