@@ -332,12 +332,10 @@ void LEM_APS::Timestep(double simdt) {
 		if (armedOn)
 		{
 			lem->SetThrusterResource(lem->th_hover[0], lem->ph_Asc);
-			lem->SetThrusterResource(lem->th_hover[1], lem->ph_Asc);
 		}
 		else
 		{
 			lem->SetThrusterResource(lem->th_hover[0], NULL);
-			lem->SetThrusterResource(lem->th_hover[1], NULL);
 		}
 
 
@@ -358,12 +356,10 @@ void LEM_APS::Timestep(double simdt) {
 			double ThrustDecay = min(1.0, ChamberPressure / 120.0);
 
 			lem->SetThrusterLevel(lem->th_hover[0], ThrustDecay);
-			lem->SetThrusterLevel(lem->th_hover[1], ThrustDecay);
 		}
 		else
 		{
 			lem->SetThrusterLevel(lem->th_hover[0], 0.0);
-			lem->SetThrusterLevel(lem->th_hover[1], 0.0);
 		}
 	}
 }

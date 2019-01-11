@@ -218,13 +218,13 @@ void LEM::SetLmVesselDockStage()
 
 	// orbiter main thrusters
 	th_hover[0] = CreateThruster (_V(0.0  , -2.0,  0.0),  _V(0,1,0), 46706.3, ph_Dsc, 3107);
-	th_hover[1] = CreateThruster (_V(0.013, -2.8, -0.03), _V(0,1,0),     0, ph_Dsc, 0);		//this is a "virtual engine",no thrust and no fuel
-																							//needed for visual gimbaling for corrected engine flames
+
 	DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup(th_hover, 2, THGROUP_HOVER);
+	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
 	
+	VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[1], NULL, NULL, NULL, 10.0, 1.2, 0, 0.1, exhaustTex }
+		{ th_hover[0], NULL, &dpspos0, NULL, 10.0, 1.5, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);
@@ -335,14 +335,14 @@ void LEM::SetLmVesselHoverStage()
 	}
 	
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V(0.0  , -2.0,  0.0),   _V(0,1,0), 46706.3, ph_Dsc, 3107);
-	th_hover[1] = CreateThruster (_V(0.013, -2.8, -0.034), _V(0,1,0),     0, ph_Dsc, 0);	//this is a "virtual engine",no thrust and no fuel
-																							//needed for visual gimbaling for corrected engine flames
-    DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup(th_hover, 2, THGROUP_HOVER);
-	
+	th_hover[0] = CreateThruster(_V(0.0, -2.0, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
+
+	DelThrusterGroup(THGROUP_HOVER, true);
+	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
+
+	VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[1], NULL, NULL, NULL, 10.0, 1.5, 0, 0.1, exhaustTex }
+		{ th_hover[0], NULL, &dpspos0, NULL, 10.0, 1.5, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);
@@ -465,13 +465,13 @@ void LEM::SetLmAscentHoverStage()
 
 	// orbiter main thrusters
     th_hover[0] = CreateThruster (_V( 0.0,  -2.5, 0.0), _V( 0,1,0), APS_THRUST, ph_Asc, APS_ISP);
-	th_hover[1] = CreateThruster (_V( 0.01, -2.0, 0.0), _V( 0,1,0), 0,          ph_Asc, 0);		// this is a "virtual engine",no thrust and no fuel
-																								// needed for visual gimbaling for corrected engine flames
+
     DelThrusterGroup(THGROUP_HOVER,true);
-	thg_hover = CreateThrusterGroup (th_hover, 2, THGROUP_HOVER);
+	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 	
+	VECTOR3 apspos0 = _V(-0.000409, -2.0, -0.002488);
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[1], NULL, NULL, NULL, 6.0, 0.8, 0, 0.1, exhaustTex }
+		{ th_hover[0], NULL, &apspos0, NULL, 6.0, 0.8, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);
