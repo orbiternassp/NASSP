@@ -990,8 +990,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu29[] =
 	{
 		{ "Max inclination", 0, 'V' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Override entry range", 0, 'T' },
+		{ "Max reentry speed", 0, 'L' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
@@ -1006,8 +1006,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu29, sizeof(mnu29) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("INM", OAPI_KEY_V, &ApolloRTCCMFD::menuSetEntryMaxInclination);
-	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("RAN", OAPI_KEY_T, &ApolloRTCCMFD::menuSetEntryRangeOverride);
+	RegisterFunction("SPE", OAPI_KEY_L, &ApolloRTCCMFD::menuSetMaxReentrySpeed);
 	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);

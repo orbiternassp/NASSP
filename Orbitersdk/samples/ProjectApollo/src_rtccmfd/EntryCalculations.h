@@ -48,8 +48,10 @@ namespace EntryCalculations
 	double URF(double T, double x);
 	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P);
 	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
-	VECTOR3 MCDRIV(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, double Incl, double INTER, VECTOR3 &R_EI, VECTOR3 &V_EI, bool &NIR, double &Incl_apo, double &r_p);
+	VECTOR3 MCDRIV(double t_I, double var, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, double Incl, double INTER, bool KIP, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, bool &NIR, double &Incl_apo, double &r_p);
+	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo);
 	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN);
+	double LNDING(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &MJD_L);
 
 	double MPL(double lat);
 	double EPL(double lat);
@@ -225,9 +227,10 @@ private:
 class RTEMoon
 {
 public:
-	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double EntryLng, bool entrylongmanual, int returnspeed);
-	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double IRKI, double MDMAXI);
+	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double EntryLng, bool entrylongmanual, int returnspeed);
+	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
 	bool CLL(double &i_r, double &INTER);
+	bool MCUA(double &i_r, double &INTER);
 	bool MASTER();
 
 	int precision;
@@ -249,11 +252,11 @@ private:
 	//double r_s; //Pseudostate sphere
 	CELBODY *cMoon;
 	double dlngapo, dtapo;
-	int ii, jj;
+	int ii;
 	bool entrylongmanual;
 	int landingzone;
 	bool INRFVsign;
-	double dTIG, mjd0;
+	double dTIG, mjd0, GETbase;
 	double i_rmax, u_rmax;
 	int SMODE;
 	// 2: primary target point mode
@@ -280,7 +283,7 @@ private:
 	double LD;
 	// maximum allowable DV
 	double DV_max;
-	// relative range override
+	// relative range override (unit is nautical miles!)
 	double r_rbias;
 	// 0: guide reentry to the steep target line
 	// 1: manual reentry to the shallow target line
@@ -288,4 +291,5 @@ private:
 	int ICRNGG;
 	// desired inclination. Signed for the two azimuth options
 	double i_rk;
+	double t_zmin, t_zmax;
 };

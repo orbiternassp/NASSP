@@ -121,6 +121,10 @@ public:
 	void set_EntryDesiredInclination(double inc);
 	void menuSetEntryMaxInclination();
 	void set_EntryMaxInclination(double inc);
+	void menuSetEntryRangeOverride();
+	void set_EntryRangeOverride(double range);
+	void menuSetMaxReentrySpeed();
+	void set_MaxReentrySpeed(double vel);
 	void CycleRTECalcMode();
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();

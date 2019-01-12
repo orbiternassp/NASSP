@@ -556,6 +556,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	EntryDesiredInclination = 0.0;
 	RTECalcMode = 1;
 	RTEReturnInclination = 0.0;
+	RTERangeOverrideNM = 0.0;
+	RTEMaxReentrySpeed = 36323.0*0.3048;
 
 	SVSlot = true; //true = CSM; false = Other
 	J2000Pos = _V(0.0, 0.0, 0.0);
@@ -2836,9 +2838,17 @@ int ARCore::subThread()
 		{
 			opt.SMODE = 34;
 		}
-		else
+		else if (RTECalcMode == 2)
 		{
 			opt.SMODE = 14;
+		}
+		else if (RTECalcMode == 3)
+		{
+			opt.SMODE = 36;
+		}
+		else
+		{
+			opt.SMODE = 16;
 		}
 
 		opt.GETbase = GC->GETbase;
@@ -2849,6 +2859,7 @@ int ARCore::subThread()
 		opt.TIGguess = EntryTIG;
 		opt.Inclination = EntryDesiredInclination;
 		opt.IRMAX = GC->RTEMaxReturnInclination;
+		opt.r_rbias = RTERangeOverrideNM;
 
 		rtcc->RTEMoonTargeting(&opt, &res);
 

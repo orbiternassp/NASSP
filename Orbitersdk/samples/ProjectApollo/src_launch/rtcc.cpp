@@ -5303,8 +5303,8 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 		sv2 = GeneralTrajectoryPropagation(sv1, 0, TIG);
 	}
 	
-	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->EntryLng, opt->entrylongmanual, opt->returnspeed);
-	teicalc->READ(opt->SMODE, opt->IRMAX, 36323.0*0.3048, 0.0, opt->CIRCUM, 50.0*1852.0, 2, 0.3, 10000.0*0.3048, opt->Inclination, 1.0*1852.0);
+	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->GETbase, opt->EntryLng, opt->entrylongmanual, opt->returnspeed);
+	teicalc->READ(opt->SMODE, opt->IRMAX, 36323.0*0.3048, opt->r_rbias, opt->CIRCUM, 50.0*1852.0, 2, 0.3, 10000.0*0.3048, opt->Inclination, 1.0*1852.0, 0.0, 0.0);
 
 	while (!endi)
 	{
@@ -7369,6 +7369,46 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res)
 {
+	/*OBJHANDLE hEarth;
+	VECTOR3 REI, VEI, UREI, R3, V3, R05G, V05G;
+	double EntryInterface, RCON, dt2, MJD_EI, lambda, phi, MJD_l, vEI, t32, mu, dt22, EMSAlt, t2;
+
+	hEarth = oapiGetObjectByName("Earth");
+
+	EntryInterface = 400000.0 * 0.3048;
+	RCON = oapiGetSize(hEarth) + EntryInterface;
+	mu = GGRAV * oapiGetMass(hEarth);
+	if (highspeed)
+	{
+		EMSAlt = 297431.0*0.3048;
+	}
+	else
+	{
+		EMSAlt = 284643.0*0.3048;
+	}
+
+	dt2 = OrbMech::time_radius_integ(sv0.R, sv0.V, sv0.MJD, RCON, -1, sv0.gravref, hEarth, REI, VEI);
+	MJD_EI = sv0.MJD + dt2 / 24.0 / 3600.0;
+	t2 = (sv0.MJD - GETbase) * 24.0 * 3600.0 + dt2;	//EI time in seconds from launch
+
+	UREI = unit(REI);
+	vEI = length(VEI);
+	res->ReA = asin(dotp(UREI, VEI) / vEI);
+
+	t32 = OrbMech::time_radius(REI, VEI, RCON - 30480.0, -1, mu);
+	OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, mu);
+	dt22 = OrbMech::time_radius(R3, V3, length(R3) - (300000.0 * 0.3048 - EMSAlt), -1, mu);
+	OrbMech::rv_from_r0v0(R3, V3, dt22, R05G, V05G, mu);
+
+	res->RTGO = EntryCalculations::LNDING(REI, VEI, MJD_EI, 0.3, 2, entryrange, lambda, phi, MJD_l);
+
+	res->latitude = phi;
+	res->longitude = lambda;
+
+	res->VIO = length(V05G);
+	res->GET400K = t2;
+	res->GET05G = t2 + t32 + dt22;*/
+
 	VECTOR3 REI, VEI, R3, V3, UR3, U_H3, U_LS, LSEF;
 	double RCON, mu, dt2, t32, v3, S_FPA, gammaE, phie, te, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface;
 	MATRIX3 R;
@@ -7459,7 +7499,7 @@ void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highs
 	}
 	res->VIO = length(V05G);
 	res->GET400K = t2;
-	res->GET05G = t2 + t32 + dt22;	
+	res->GET05G = t2 + t32 + dt22;
 }
 
 void RTCC::CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &p_T, double &y_T)

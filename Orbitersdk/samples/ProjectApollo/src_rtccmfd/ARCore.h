@@ -267,8 +267,10 @@ public:
 	int returnspeed; //0 = slow return, 1 = normal return, 2 = fast return
 	double FlybyPeriAlt;
 	double EntryDesiredInclination;
-	int RTECalcMode; // 0 = Tradeoff, 1 = Search, 2 = Discrete
+	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	double RTEReturnInclination;
+	double RTERangeOverrideNM;
+	double RTEMaxReentrySpeed;
 
 	//STATE VECTOR PAGE
 	bool SVSlot;

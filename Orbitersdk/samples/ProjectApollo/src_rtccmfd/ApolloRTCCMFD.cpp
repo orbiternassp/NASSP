@@ -2996,44 +2996,55 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (G->RTECalcMode == 1)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Search Option", 13);
+			skp->Text(1 * W / 8, 2 * H / 14, "ATP Search Option", 17);
 		}
 		else if (G->RTECalcMode == 2)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Discrete Option", 15);
+			skp->Text(1 * W / 8, 2 * H / 14, "ATP Discrete Option", 19);
+		}
+		else if (G->RTECalcMode == 3)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "UA Search Option", 16);
+		}
+		else if (G->RTECalcMode == 4)
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "UA Discrete Option", 18);
 		}
 
 		GET_Display(Buffer, G->EntryTIG);
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->entrylongmanual)
+		if (G->RTECalcMode == 0 || G->RTECalcMode == 1 || G->RTECalcMode == 2)
 		{
-			skp->Text(1 * W / 8, 6 * H / 14, "Manual", 6);
-			sprintf(Buffer, "%f °", G->EntryLng*DEG);
-			skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 6 * H / 14, "Landing Zone", 12);
-			if (G->landingzone == 0)
+			if (G->entrylongmanual)
 			{
-				skp->Text(1 * W / 8, 8 * H / 14, "Mid Pacific", 11);
+				skp->Text(1 * W / 8, 6 * H / 14, "Manual", 6);
+				sprintf(Buffer, "%f °", G->EntryLng*DEG);
+				skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 			}
-			else if (G->landingzone == 1)
+			else
 			{
-				skp->Text(1 * W / 8, 8 * H / 14, "East Pacific", 12);
-			}
-			else if (G->landingzone == 2)
-			{
-				skp->Text(1 * W / 8, 8 * H / 14, "Atlantic Ocean", 14);
-			}
-			else if (G->landingzone == 3)
-			{
-				skp->Text(1 * W / 8, 8 * H / 14, "Indian Ocean", 12);
-			}
-			else if (G->landingzone == 4)
-			{
-				skp->Text(1 * W / 8, 8 * H / 14, "West Pacific", 12);
+				skp->Text(1 * W / 8, 6 * H / 14, "Landing Zone", 12);
+				if (G->landingzone == 0)
+				{
+					skp->Text(1 * W / 8, 8 * H / 14, "Mid Pacific", 11);
+				}
+				else if (G->landingzone == 1)
+				{
+					skp->Text(1 * W / 8, 8 * H / 14, "East Pacific", 12);
+				}
+				else if (G->landingzone == 2)
+				{
+					skp->Text(1 * W / 8, 8 * H / 14, "Atlantic Ocean", 14);
+				}
+				else if (G->landingzone == 3)
+				{
+					skp->Text(1 * W / 8, 8 * H / 14, "Indian Ocean", 12);
+				}
+				else if (G->landingzone == 4)
+				{
+					skp->Text(1 * W / 8, 8 * H / 14, "West Pacific", 12);
+				}
 			}
 		}
 
@@ -3050,21 +3061,22 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 10 * H / 14, "Fast Return", 11);
 		}
 
-		if (G->EntryDesiredInclination < 0)
+		if (G->RTECalcMode == 0 || G->RTECalcMode == 1 || G->RTECalcMode == 2)
 		{
-			sprintf(Buffer, "%.3f° A", abs(G->EntryDesiredInclination*DEG));
+			if (G->EntryDesiredInclination < 0)
+			{
+				sprintf(Buffer, "%.3f° A", abs(G->EntryDesiredInclination*DEG));
+			}
+			else if (G->EntryDesiredInclination > 0)
+			{
+				sprintf(Buffer, "%.3f° D", G->EntryDesiredInclination*DEG);
+			}
+			else
+			{
+				sprintf(Buffer, "Optimize DV");
+			}
+			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 		}
-		else if (G->EntryDesiredInclination > 0)
-		{
-			sprintf(Buffer, "%.3f° D", G->EntryDesiredInclination*DEG);
-		}
-		else
-		{
-			sprintf(Buffer, "Optimize DV");
-		}
-
-		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
-
 
 		if (G->subThreadStatus > 0)
 		{
@@ -3121,6 +3133,12 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "Max Return Inclination: %.3f°", GC->RTEMaxReturnInclination*DEG);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "Range Override: %.1f NM", G->RTERangeOverrideNM);
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf(Buffer, "Max Reentry Speed: %.0f ft/s", G->RTEMaxReentrySpeed / 0.3048);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 30)
 	{
@@ -5087,9 +5105,51 @@ void ApolloRTCCMFD::set_EntryMaxInclination(double inc)
 	GC->RTEMaxReturnInclination = inc * RAD;
 }
 
+void ApolloRTCCMFD::menuSetEntryRangeOverride()
+{
+	bool EntryRangeOverrideInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the entry range in NM:", EntryRangeOverrideInput, 0, 20, (void*)this);
+}
+
+bool EntryRangeOverrideInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_EntryRangeOverride(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_EntryRangeOverride(double range)
+{
+	G->RTERangeOverrideNM = range;
+}
+
+void ApolloRTCCMFD::menuSetMaxReentrySpeed()
+{
+	bool MaxReentrySpeedInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the entry range in ft/s:", MaxReentrySpeedInput, 0, 20, (void*)this);
+}
+
+bool MaxReentrySpeedInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_MaxReentrySpeed(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MaxReentrySpeed(double vel)
+{
+	G->RTEMaxReentrySpeed = vel * 0.3048;
+}
+
 void ApolloRTCCMFD::CycleRTECalcMode()
 {
-	if (G->RTECalcMode < 2)
+	if (G->RTECalcMode < 4)
 	{
 		G->RTECalcMode++;
 	}
@@ -5863,7 +5923,7 @@ bool EntryRangeInput(void *id, char *str, void *data)
 {
 	if (strlen(str)<20)
 	{
-		((ApolloRTCCMFD*)data)->set_entryrange(atoi(str));
+		((ApolloRTCCMFD*)data)->set_entryrange(atof(str));
 		return true;
 	}
 	return false;

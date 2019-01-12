@@ -366,6 +366,8 @@ struct RTEMoonOpt
 	// 1: only noncircumlunar motion is allowed
 	// 2: only circumlunar motion is allowed
 	int CIRCUM = 2;
+	// relative range override
+	double r_rbias = 0.0;
 };
 
 struct RTEFlybyOpt
