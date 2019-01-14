@@ -1210,6 +1210,22 @@ namespace EntryCalculations
 		return -165.0*RAD;
 	}
 
+	double MPL2(double lat) //Calculate the splashdown longitude from the latitude for the Mid-Pacific landing area (Apollo 11 and later)
+	{
+		if (lat > 15.0*RAD)
+		{
+			return -175.0*RAD;
+		}
+		else if (lat > 0.0)
+		{
+			return -10.0 / 15.0*lat - 165.0*RAD;
+		}
+		else
+		{
+			return -165.0*RAD;
+		}
+	}
+
 	double EPL(double lat) //Calculate the splashdown longitude from the latitude for the East-Pacific landing area
 	{
 		if (lat > 21.0*RAD)
@@ -2987,7 +3003,7 @@ bool Flyby::Flybyiter()
 	}
 }
 
-RTEMoon::RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double EntryLng, bool entrylongmanual, int returnspeed)
+RTEMoon::RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double EntryLng, bool entrylongmanual)
 {
 	this->EntryLng = EntryLng;
 
@@ -3019,26 +3035,14 @@ RTEMoon::RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, doubl
 	Vig = V0M;
 	Vig_apo = Vig;
 	TIG = mjd0;
-	
-	DT_TEI_EI = 62.0*3600.0;
-
-	if (returnspeed == 0)
-	{
-		DT_TEI_EI += 24.0*3600.0;
-	}
-	else if (returnspeed == 2)
-	{
-		DT_TEI_EI -= 24.0*3600.0;
-	}
 
 	cMoon = oapiGetCelbodyInterface(hMoon);
-	ii = 0;
 	dTIG = 30.0;
 	precision = 1;
 	ReturnInclination = 0.0;
 }
 
-void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI)
+void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI)
 {
 	double LETSGOF, CRITF;
 
@@ -3053,6 +3057,10 @@ void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CI
 	CIRCUM = CIRI;
 	LD = L2DI;
 	DV_max = DVMAXI;
+	lambda_z = EntryLng;
+	mu_z = MUZI;
+	lambda_z1 = lambda_z;
+	mu_z1 = mu_z;
 	r_rbias = RRBI;
 	ICRNGG = EPI;
 
@@ -3070,10 +3078,10 @@ void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CI
 		LFLAG = 2;
 	}
 
-	//TBD: For now
-	double t0 = OrbMech::GETfromMJD(mjd0, GETbase);
-	t_zmin = t0 + DT_TEI_EI - 12.0*3600.0;
-	t_zmax = t0 + DT_TEI_EI + 12.0*3600.0;
+	//TBD: Actually only for discrete cases, for now do this every time
+	EIMJD = OrbMech::MJDfromGET(t_zmin, GETbase);
+	t_zmax = t_zmin + 12.0*3600.0;
+	t_zmin = t_zmin - 12.0*3600.0;
 }
 
 bool RTEMoon::MASTER()
@@ -3081,9 +3089,11 @@ bool RTEMoon::MASTER()
 	OELEMENTS coe;
 	double dv[3], TIGvar[3];
 	double i_r, theta_long, theta_lat, dlng, dt, INTER, R_S;
-	int IPART;
+	int IPART, ii;
+	bool ISOL;
 
 	IPART = 0;
+	ii = 0;
 
 	//Needs at least 4 iterations for the logic to work. Upper limit 50. If solution found within a second, iteration done.
 	while (IPART < 4 || (abs(dTIG) > 1.0 && IPART < 50))
@@ -3120,13 +3130,14 @@ bool RTEMoon::MASTER()
 
 		if (CRIT == 4)
 		{
-			CLL(i_r, INTER);
+			ISOL = CLL(i_r, INTER);
 		}
 		else
 		{
-			MCUA(i_r, INTER);
-			DT_TEI_EI = (EIMJD - TIG)*24.0*3600.0;
+			ISOL = MCUA(i_r, INTER);
 		}
+
+		if (ISOL == false) return false;
 
 		if (LETSGO == 1) break;
 
@@ -3160,8 +3171,6 @@ bool RTEMoon::MASTER()
 	//Precision Solution
 	do
 	{
-		EIMJD = TIG + DT_TEI_EI / 24.0 / 3600.0;
-
 		Vig_apo = EntryCalculations::ThreeBodyAbort(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, R_EI, V_EI, i_r, INTER > 0);
 		EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
 		//EntryCalculations::LNDING(R_EI, V_EI, EIMJD, LD, ICRNGG, r_rbias, theta_long2, theta_lat2, MJD_L);
@@ -3179,7 +3188,7 @@ bool RTEMoon::MASTER()
 		}
 
 		dt = dlng / w_E;
-		DT_TEI_EI += dt;
+		EIMJD += dt / 24.0 / 3600.0;
 
 		ii++;
 	} while (abs(dt) > 0.1);
@@ -3211,18 +3220,150 @@ bool RTEMoon::MASTER()
 	return true;
 }
 
+void RTEMoon::MCSS()
+{
+	double lambda_z0, mu_z0, eps_SS, t_t, Dmu_z, u_r, T_xr, MD_maxs;
+	int k_xx;
+	bool PNT, REP, FRZ, KIP;
+
+	lambda_z0 = lambda_z;
+	mu_z0 = mu_z;
+	PNT = 0;
+	REP = 0;
+	eps_SS = 0.002;
+	t_t = pow(10, 10);
+	Dmu_z = pow(10, 9);
+	k_xx = 0;
+	FRZ = 0;
+
+	//B
+	u_r = u_rmax;
+	T_xr = 0.0;
+	MD_maxs = MD_max;
+	MD_max = 0.0;
+	KIP = 0;
+}
+
+void RTEMoon::MCSSLM(bool &REP, double t_z_apo)
+{
+	VECTOR3 UZTAB1, LAMZTAB1;
+	double DV_maxs, h_mins, t_zmin_apo, Di_r, T_ar, i_r, INTER, i_r_apo, u_r, indvar, r_p, t_z, t_z1_apo, t_z1_aapo, mu_min, mu_max;
+	int KK, XNRMSS, XX, n2, n1;
+	bool MCSOL, SRFLG, STAYFL, REPP, NIR, IREP, KIP;
+
+	if (MD_max == 0.0)
+	{
+		if (lambda_z < 0)
+		{
+			lambda_z += PI2;
+		}
+		MCSOL = 0;
+		DV_maxs = DV_max;
+		h_mins = h_min;
+		SRFLG = 0;
+		h_min = -0.3*oapiGetSize(hEarth);
+		DV_max = 100.0*20925738.2 / 3600.0;
+		STAYFL = 0;
+		t_zmin_apo = t_zmin;
+		KK = 1;
+		Di_r = 0.1745329;
+		XNRMSS = -1;
+		REPP = REP;
+		T_ar = 0.0;
+		XX = 0;
+
+		//B
+		NIR = 0;
+		IREP = REP;
+		n2 = 0;
+		i_r = i_rmax;
+		INTER = 1.0;
+		i_r_apo = i_rmax;
+		n1 = 0;
+
+		//C
+		if (t_z_apo < t_zmin)
+		{
+			KIP = 0;
+			u_r = u_rmax;
+		}
+
+		if (KIP)
+		{
+			EIMJD = OrbMech::MJDfromGET(t_z_apo, GETbase);
+			indvar = EIMJD;
+		}
+		else
+		{
+			indvar = u_r;
+		}
+		Vig_apo = EntryCalculations::MCDRIV(TIG, indvar, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, KIP, R_EI, V_EI, EIMJD, NIR, i_r_apo, r_p);
+		REP = 1;
+		t_z = OrbMech::GETfromMJD(EIMJD, GETbase);
+		EntryCalculations::landingsite(R_EI, V_EI, EIMJD, lambda_z1, mu_z1);
+
+		//A
+		UZTAB1.x = mu_z1;
+		LAMZTAB1.x = lambda_z1;
+		t_z1_apo = t_z;
+
+		if (MD_max == 0.0)
+		{
+			INTER = 1.0;
+			t_z_apo = t_z;
+			if (KIP == 0)
+			{
+				t_zmin = t_z;
+			}
+			KIP = 1;
+
+			//E
+			mu_min = 1000.0;
+			mu_max = 1000.0;
+			KIP = 0;
+
+			//F
+			IREP = REP;
+			if (KIP)
+			{
+				EIMJD = OrbMech::MJDfromGET(t_z_apo, GETbase);
+				indvar = EIMJD;
+			}
+			else
+			{
+				indvar = u_r;
+			}
+			Vig_apo = EntryCalculations::MCDRIV(TIG, indvar, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, KIP, R_EI, V_EI, EIMJD, NIR, i_r_apo, r_p);
+			REP = 1;
+			t_z = OrbMech::GETfromMJD(EIMJD, GETbase);
+			EntryCalculations::landingsite(R_EI, V_EI, EIMJD, lambda_z1, mu_z1);
+
+			UZTAB1.y = mu_z1;
+			LAMZTAB1.y = lambda_z1;
+			t_z1_aapo = t_z;
+			INTER = 1.0;
+		}
+	}
+}
+
 bool RTEMoon::CLL(double &i_r, double &INTER)
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB;
-	double theta_long, theta_lat, dlng, dt, i_r_apo, TOL, i_rmin, DV_min, dv_new, delta_S, i_rc, h_p, r_p, t_temp, D1, D2, DVS, DVSS, i_rs, INS;
-	int ISUB, KOUNT, ICNT, jj, ICONVG;
+	double theta_long, theta_lat, dlng, dt, i_r_apo, TOL, i_rmin, DV_min, dv_new, delta_S, i_rc, h_p, r_p, t_temp, D1, D2, DVS, DVSS, i_rs, INS, u_r;
+	double EIMJD_apo, t_z, t_z1;
+	int ISUB, KOUNT, ICNT, jj, ICONVG, ii;
 	bool NIR, IOPT, NIRS;
 
+	ii = 0;
 	jj = 0;
 	DV_min = pow(10, 10);
 	dv_new = 0.0;
 	ZTAB = _V(0, 0, 0);
 	DVS = pow(10, 10);
+
+	u_r = u_rmax;
+	INTER = 1.0;
+	i_r = 0.5235988;
 
 	if (i_rk != 0)
 	{
@@ -3230,7 +3371,24 @@ bool RTEMoon::CLL(double &i_r, double &INTER)
 		i_rmax = i_r;
 		INTER = -i_rk / i_r;
 	}
-	else
+
+	Vig_apo = EntryCalculations::MCDRIV(TIG, u_r, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, false, R_EI, V_EI, EIMJD_apo, NIR, i_r_apo, r_p);
+	t_z = OrbMech::GETfromMJD(EIMJD_apo, GETbase);
+
+	t_z1 = t_z;
+
+	if (t_z > t_zmin)
+	{
+		t_zmin = t_z;
+		if (t_zmin > t_zmax)
+		{
+			return false;
+		}
+		//New estimate: 12 hours from new t_zmin
+		EIMJD = OrbMech::MJDfromGET(t_zmin, GETbase) + 0.5;
+	}
+
+	if (i_rk == 0)
 	{
 		i_r = i_rmax;
 		INTER = -1.0;
@@ -3249,8 +3407,6 @@ bool RTEMoon::CLL(double &i_r, double &INTER)
 	{
 		do
 		{
-			EIMJD = TIG + DT_TEI_EI / 24.0 / 3600.0;
-
 			Vig_apo = EntryCalculations::MCDRIV(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, true, R_EI, V_EI, t_temp, NIR, i_r_apo, r_p);
 			EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
 			//EntryCalculations::LNDING(R_EI, V_EI, EIMJD, LD, ICRNGG, r_rbias, theta_long2, theta_lat2, MJD_L);
@@ -3267,7 +3423,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER)
 			}
 
 			dt = dlng / w_E;
-			DT_TEI_EI += dt;
+			EIMJD += dt / 24.0 / 3600.0;
 
 			ii++;
 		} while (abs(dt) > 0.1);
@@ -3387,12 +3543,13 @@ bool RTEMoon::MCUA(double &i_r, double &INTER)
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB, DVTAB1, IRTAB1, TZTAB1;
 	double u_r, r_p, t_z, di_r, i_rmin, Di_r, Dt_z, dv_new, TOL, zc, DV_est1, DV_est2, D1, D2, indvar, i_rmax_apo, SDV, Si_r, SSDV, SSi_r, t_z_apo, eps_ir;
-	double SSt_z, DVSSS, i_rest, i_rmins, i_rmaxs, Xi_r;
+	double SSt_z, DVSSS, i_rest, i_rmins, i_rmaxs, Xi_r, t_zmin_apo;
 	int LOOP, LOCATE, ISUB, LOOPTZ, ISUBP, MM;
-	bool NIR, KIP, IOPT, IEND, IOPT1, IRFLAG, IRSCAN;
+	bool NIR, KIP, IOPT, IEND, IOPT1, IRFLAG, IRSCAN, ISOL;
 
 	SDV = SSDV = pow(10, 10);
 	i_rmax_apo = i_rmax;
+	t_zmin_apo = t_zmin;
 
 	zc = 0.0;
 	i_r = 0.0;
@@ -3470,8 +3627,7 @@ bool RTEMoon::MCUA(double &i_r, double &INTER)
 				Dt_z = (t_zmax - t_zmin) / 2.0;
 				if (t_zmin > t_zmax)
 				{
-					//TBD: Implement actual logic
-					t_zmax = t_zmin + 3600.0;
+					break;
 				}
 				continue;
 			}
@@ -3520,6 +3676,12 @@ bool RTEMoon::MCUA(double &i_r, double &INTER)
 			}
 
 		}
+
+		if (t_zmin > t_zmax)
+		{
+			break;
+		}
+
 		LOOPTZ++;
 		if (LOOPTZ <= 3)
 		{
@@ -3553,6 +3715,7 @@ bool RTEMoon::MCUA(double &i_r, double &INTER)
 			t_z_apo = SSt_z;
 			LOOP = 0;
 			DVSSS = pow(10, 10);
+			LOOPTZ = 0;
 			break;
 		}
 
@@ -3606,10 +3769,16 @@ bool RTEMoon::MCUA(double &i_r, double &INTER)
 		}
 	}
 
-	EIMJD = OrbMech::MJDfromGET(t_z_apo, GETbase);
 	i_rmax = i_rmax_apo;
+	EIMJD = OrbMech::MJDfromGET(t_z_apo, GETbase);
+	t_zmin = t_zmin_apo;
+	ISOL = false;
 	INTER = abs(i_r) / i_r;
 	i_r = abs(i_r) + di_r;
+	if (SDV <= pow(10, 9))
+	{
+		ISOL = true;
+	}
 
-	return true;
+	return ISOL;
 }

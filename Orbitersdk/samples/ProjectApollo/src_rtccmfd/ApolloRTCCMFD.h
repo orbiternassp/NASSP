@@ -189,7 +189,8 @@ public:
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
 	void menuSwitchDeorbitEngineOption();
-	void menuSwitchReturnSpeed();
+	void menuSetRTEReentryTime();
+	void set_RTEReentryTime(double t);
 	void EntryLongitudeModeDialogue();
 	void menuSetLOIPage();
 	void menuSwitchLOIManeuver();

@@ -5259,7 +5259,7 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	RTEMoon* teicalc;
 	SV sv0, sv1, sv2;
 	bool endi = false;
-	double EMSAlt, dt22, mu_E, mu_M, MJDguess, LMmass;
+	double EMSAlt, dt22, mu_E, mu_M, MJDguess, LMmass, TZMINI;
 	VECTOR3 R05G, V05G;
 	VECTOR3 Llambda;
 	double t_slip;
@@ -5302,13 +5302,39 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 		double TIG = OrbMech::P29TimeOfLongitude(sv1.R, sv1.V, sv1.MJD, hMoon, 180.0*RAD);
 		sv2 = GeneralTrajectoryPropagation(sv1, 0, TIG);
 	}
-	
-	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->GETbase, opt->EntryLng, opt->entrylongmanual, opt->returnspeed);
-	teicalc->READ(opt->SMODE, opt->IRMAX, 36323.0*0.3048, opt->r_rbias, opt->CIRCUM, 50.0*1852.0, 2, 0.3, 10000.0*0.3048, opt->Inclination, 1.0*1852.0, 0.0, 0.0);
 
-	while (!endi)
+	if (opt->returnspeed != -1)
 	{
-		endi = teicalc->MASTER();
+		double DT_TEI_EI;
+
+		DT_TEI_EI = 62.0*3600.0;
+
+		if (opt->returnspeed == 0)
+		{
+			DT_TEI_EI += 24.0*3600.0;
+		}
+		else if (opt->returnspeed == 2)
+		{
+			DT_TEI_EI -= 24.0*3600.0;
+		}
+
+		double t0 = OrbMech::GETfromMJD(sv2.MJD, opt->GETbase);
+		TZMINI = t0 + DT_TEI_EI;
+	}
+	else
+	{
+		TZMINI = opt->t_zmin;
+	}
+	
+	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->GETbase, opt->EntryLng, opt->entrylongmanual);
+	teicalc->READ(opt->SMODE, opt->IRMAX, opt->u_rmax, opt->r_rbias, opt->CIRCUM, 50.0*1852.0, 2, 0.3, 10000.0*0.3048, 0.0, opt->Inclination, 1.0*1852.0, TZMINI, 0.0);
+
+	endi = teicalc->MASTER();
+
+	if (endi == false)
+	{
+		delete teicalc;
+		return;
 	}
 
 	dt22 = OrbMech::time_radius(teicalc->R_EI, teicalc->V_EI, oapiGetSize(hEarth) + EMSAlt, -1, mu_E);
@@ -5326,6 +5352,7 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	res->precision = teicalc->precision;
 	res->Incl = teicalc->ReturnInclination;
 	res->FlybyAlt = teicalc->FlybyPeriAlt;
+	res->solutionfound = true;
 
 	if (opt->csmlmdocked)
 	{

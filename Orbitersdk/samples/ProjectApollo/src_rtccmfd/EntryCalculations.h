@@ -54,6 +54,7 @@ namespace EntryCalculations
 	double LNDING(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &MJD_L);
 
 	double MPL(double lat);
+	double MPL2(double lat);
 	double EPL(double lat);
 	double AOL(double lat);
 	double IOL(double lat);
@@ -227,11 +228,14 @@ private:
 class RTEMoon
 {
 public:
-	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double EntryLng, bool entrylongmanual, int returnspeed);
-	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
+	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double EntryLng, bool entrylongmanual);
+	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
+	bool MASTER();
+	void MCSS();
 	bool CLL(double &i_r, double &INTER);
 	bool MCUA(double &i_r, double &INTER);
-	bool MASTER();
+	
+	void MCSSLM(bool &REP, double t_z_apo);
 
 	int precision;
 	double EntryLatcor, EntryLngcor;
@@ -246,13 +250,11 @@ public:
 private:
 	OBJHANDLE hMoon, hEarth;
 	VECTOR3 DV;
-	double DT_TEI_EI;	//Time between TEI and EI
 	double EntryLng;
 	double mu_E, mu_M, w_E, R_E, R_M;
 	//double r_s; //Pseudostate sphere
 	CELBODY *cMoon;
 	double dlngapo, dtapo;
-	int ii;
 	bool entrylongmanual;
 	int landingzone;
 	bool INRFVsign;
@@ -292,4 +294,6 @@ private:
 	// desired inclination. Signed for the two azimuth options
 	double i_rk;
 	double t_zmin, t_zmax;
+	double mu_z, mu_z1;
+	double lambda_z, lambda_z1;
 };

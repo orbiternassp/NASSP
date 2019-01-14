@@ -548,7 +548,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	EntryAngcor = 0.0;
 	Entry_DV = _V(0.0, 0.0, 0.0);
 	entrycritical = 1;
-	returnspeed = 1;
+	RTEReentryTime = 0.0;
 	entrynominal = 1;
 	entryrange = 0.0;
 	EntryRTGO = 0.0;
@@ -2852,7 +2852,6 @@ int ARCore::subThread()
 		}
 
 		opt.GETbase = GC->GETbase;
-		opt.returnspeed = returnspeed;
 		opt.RevsTillTEI = 0;
 		opt.vessel = vessel;
 		opt.entrylongmanual = entrylongmanual;
@@ -2860,29 +2859,40 @@ int ARCore::subThread()
 		opt.Inclination = EntryDesiredInclination;
 		opt.IRMAX = GC->RTEMaxReturnInclination;
 		opt.r_rbias = RTERangeOverrideNM;
+		opt.u_rmax = RTEMaxReentrySpeed;
+		opt.t_zmin = RTEReentryTime;
 
 		rtcc->RTEMoonTargeting(&opt, &res);
+		TLCCSolGood = res.solutionfound;
 
-		Entry_DV = res.dV_LVLH;
-		EntryTIGcor = res.P30TIG;
-		EntryLatcor = res.latitude;
-		EntryLngcor = res.longitude;
-		P37GET400K = res.GET05G;
-		EntryRTGO = res.RTGO;
-		EntryAngcor = res.ReA;
-		P30TIG = EntryTIGcor;
-		dV_LVLH = Entry_DV;
-		entryprecision = res.precision;
-		RTEReturnInclination = res.Incl;
-		FlybyPeriAlt = res.FlybyAlt;
-
-		if (GC->MissionPlanningActive)
+		if (TLCCSolGood == false)
 		{
-			char code[64];
 
-			sprintf(code, "RTE");
+		}
+		else
+		{
 
-			rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+			Entry_DV = res.dV_LVLH;
+			EntryTIGcor = res.P30TIG;
+			EntryLatcor = res.latitude;
+			EntryLngcor = res.longitude;
+			P37GET400K = res.GET05G;
+			EntryRTGO = res.RTGO;
+			EntryAngcor = res.ReA;
+			P30TIG = EntryTIGcor;
+			dV_LVLH = Entry_DV;
+			entryprecision = res.precision;
+			RTEReturnInclination = res.Incl;
+			FlybyPeriAlt = res.FlybyAlt;
+
+			if (GC->MissionPlanningActive)
+			{
+				char code[64];
+
+				sprintf(code, "RTE");
+
+				rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+			}
 		}
 		
 		Result = 0;

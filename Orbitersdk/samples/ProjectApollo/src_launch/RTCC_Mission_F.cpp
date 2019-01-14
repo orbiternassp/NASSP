@@ -987,6 +987,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.vessel = calcParams.src;
+		//It gets close to the nominal 36232 ft/s constraint, so relax it a little bit
+		entopt.u_rmax = 36500.0*0.3048;
 
 		RTEMoonTargeting(&entopt, &res);
 

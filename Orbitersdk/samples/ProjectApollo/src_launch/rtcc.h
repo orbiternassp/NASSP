@@ -296,6 +296,7 @@ struct EntryResults
 	int precision;
 	SV sv_preburn;
 	SV sv_postburn;
+	bool solutionfound = false;
 };
 
 
@@ -344,7 +345,7 @@ struct RTEMoonOpt
 	double GETbase;			//usually MJD at launch
 	double TIGguess = 0.0;	//Initial estimate for the TIG
 	double EntryLng;		//Entry longitude
-	int returnspeed;		//0 = slow return, 1 = normal return, 2 = fast return
+	int returnspeed = -1;	//0 = slow return, 1 = normal return, 2 = fast return
 	SV RV_MCC;				//State vector as input
 	int RevsTillTEI = 0;	//Revolutions until TEI
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
@@ -353,12 +354,12 @@ struct RTEMoonOpt
 	double Inclination = 0.0;	//Specified return inclination (sign is azimuth option)
 	// 12: PTP discrete option (not implemented yet)
 	// 14: ATP discrete option
-	// 16: UA discrete option (not implemented yet)
+	// 16: UA discrete option
 	// 22: PTP tradeoff display (not implemented yet)
 	// 24: ATP tradeoff display (not implemented yet)
 	// 32: PTP search option (not implemented yet)
 	// 34: ATP search option
-	// 36: UA search option (not implemented yet)
+	// 36: UA search option
 	int SMODE = 34;
 	//Maximum allowable return inclination
 	double IRMAX = 40.0*RAD;
@@ -368,6 +369,10 @@ struct RTEMoonOpt
 	int CIRCUM = 2;
 	// relative range override
 	double r_rbias = 0.0;
+	// maximum allowable reentry speed
+	double u_rmax = 36323.0*0.3048;
+	//Approximate landing time
+	double t_zmin = 0;
 };
 
 struct RTEFlybyOpt

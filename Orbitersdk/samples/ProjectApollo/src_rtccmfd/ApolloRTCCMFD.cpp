@@ -3048,18 +3048,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			}
 		}
 
-		if (G->returnspeed == 0)
-		{
-			skp->Text(1 * W / 8, 10 * H / 14, "Slow Return", 11);
-		}
-		else if (G->returnspeed == 1)
-		{
-			skp->Text(1 * W / 8, 10 * H / 14, "Normal Return", 13);
-		}
-		else if (G->returnspeed == 2)
-		{
-			skp->Text(1 * W / 8, 10 * H / 14, "Fast Return", 11);
-		}
+		GET_Display(Buffer, G->RTEReentryTime);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->RTECalcMode == 0 || G->RTECalcMode == 1 || G->RTECalcMode == 2)
 		{
@@ -3081,6 +3071,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		if (G->subThreadStatus > 0)
 		{
 			skp->Text(5 * W / 8, 3 * H / 14, "Calculating...", 14);
+		}
+		else if (!G->TLCCSolGood)
+		{
+			skp->Text(5 * W / 8, 3 * H / 14, "Calculation Failed!", 19);
 		}
 
 		sprintf(Buffer, "%.3f° Lat", G->EntryLatcor*DEG);
@@ -5895,6 +5889,7 @@ void ApolloRTCCMFD::lambertcalc()
 
 void ApolloRTCCMFD::menuMoonRTECalc()
 {
+	G->TLCCSolGood = true;
 	G->MoonRTECalc();
 }
 
@@ -6577,16 +6572,27 @@ void ApolloRTCCMFD::menuSwitchDeorbitEngineOption()
 	}
 }
 
-void ApolloRTCCMFD::menuSwitchReturnSpeed()
+void ApolloRTCCMFD::menuSetRTEReentryTime()
 {
-	if (G->returnspeed < 2)
+	bool RTEReentryTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the estimated reentry GET (Format: hhh:mm:ss)", RTEReentryTimeInput, 0, 20, (void*)this);
+}
+
+bool RTEReentryTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
-		G->returnspeed++;
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_RTEReentryTime(t1time);
+		return true;
 	}
-	else
-	{
-		G->returnspeed = 0;
-	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTEReentryTime(double t)
+{
+	G->RTEReentryTime = t;
 }
 
 void ApolloRTCCMFD::EntryLongitudeModeDialogue()

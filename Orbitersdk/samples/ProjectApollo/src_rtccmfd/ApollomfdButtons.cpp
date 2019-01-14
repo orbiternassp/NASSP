@@ -955,12 +955,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu28[] =
 	{
+		{ "Return-to-earth mode", 0, 'N' },
 		{ "Est. Time of Ignition", 0, 'T' },
 		{ "Manual longitude or zone", 0, 'L' },
 		{ "Des. Landing Long", 0, 'O' },
-		{ "Return Speed", 0, 'S' },
+		{ "Est. time of reentry", 0, 'S' },
 		{ "FR Inclination", 0, 'I' },
-		{ "Ascending or Descending Node", 0, 'N' },
 
 		{ "Calculate Entry", 0, 'C' },
 		{ "", 0, ' ' },
@@ -976,7 +976,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::EntryTimeDialogue);
 	RegisterFunction("LMO", OAPI_KEY_L, &ApolloRTCCMFD::EntryLongitudeModeDialogue);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::EntryLngDialogue);
-	RegisterFunction("SPE", OAPI_KEY_S, &ApolloRTCCMFD::menuSwitchReturnSpeed);
+	RegisterFunction("EIT", OAPI_KEY_S, &ApolloRTCCMFD::menuSetRTEReentryTime);
 	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::menuSetEntryDesiredInclination);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuMoonRTECalc);
