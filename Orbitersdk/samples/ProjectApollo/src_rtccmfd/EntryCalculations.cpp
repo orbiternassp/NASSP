@@ -3559,7 +3559,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER)
 					break;
 				}
 			}
-			if ((KOUNT >= 10 || i_rmin < 0.25*RAD) || (ISUB != 0 && (dv_new - DVTAB.data[ISUB - 1]) >= 0.0))
+			if ((KOUNT >= 10 || abs(i_rmin) < 0.25*RAD) || (ISUB != 0 && (dv_new - DVTAB.data[ISUB - 1]) >= 0.0))
 			{
 				break;
 			}
@@ -3625,9 +3625,9 @@ bool RTEMoon::MCUA(double &i_r, double &INTER)
 	LOCATE = 5;
 	IRSCAN = 0;
 
-	while (LOOPTZ < 20)
+	do
 	{
-		while (LOOP < 20)
+		do
 		{
 			if (i_r != 0)
 			{
@@ -3738,7 +3738,7 @@ bool RTEMoon::MCUA(double &i_r, double &INTER)
 				}
 			}
 
-		}
+		} while (LOOP <= 20);
 
 		if (t_zmin > t_zmax)
 		{
@@ -3830,7 +3830,7 @@ bool RTEMoon::MCUA(double &i_r, double &INTER)
 		{
 			i_r = i_rest;
 		}
-	}
+	} while (LOOPTZ <= 20);
 
 	i_rmax = i_rmax_apo;
 	EIMJD = OrbMech::MJDfromGET(t_z_apo, GETbase);
