@@ -625,24 +625,20 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 		if (engPreValvesArm)
 		{
 			lem->SetThrusterResource(dpsThruster[0], lem->ph_Dsc);
-			lem->SetThrusterResource(dpsThruster[1], lem->ph_Dsc);
 		}
 		else
 		{
 			lem->SetThrusterResource(dpsThruster[0], NULL);
-			lem->SetThrusterResource(dpsThruster[1], NULL);
 		}
 
 		//Engine Fire Command
 		if (engPreValvesArm && thrustOn)
 		{
 			lem->SetThrusterLevel(dpsThruster[0], thrustcommand*ActuatorValves);
-			lem->SetThrusterLevel(dpsThruster[1], thrustcommand*ActuatorValves);
 		}
 		else
 		{
 			lem->SetThrusterLevel(dpsThruster[0], 0.0);
-			lem->SetThrusterLevel(dpsThruster[1], 0.0);
 		}
 
 		//105PSI at FTP
@@ -665,7 +661,6 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 		dpsvector.z = pitchGimbalActuator.GetPosition() * RAD;
 		dpsvector.y = 1;
 		lem->SetThrusterDir(dpsThruster[0], dpsvector);
-		lem->SetThrusterDir(dpsThruster[1], dpsvector);
 
 		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f engPreValvesArm %d engArm %d thrustOn: %d", lem->ManualEngineStart.GetState(), lem->CDRManualEngineStop.GetState(), lem->ttca_throttle_pos_dig, thrustcommand, engPreValvesArm, engArm, thrustOn);
 		//sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());

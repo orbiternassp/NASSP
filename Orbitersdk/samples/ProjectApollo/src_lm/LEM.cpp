@@ -303,10 +303,7 @@ void LEM::Init()
 		th_rcs[i] = 0;
 	}
 
-	for (int i = 0;i < 2;i++)
-	{
-		th_hover[i] = 0;
-	}
+	th_hover[0] = 0;
 
 	// Clobber checklist variables
 	for (int i = 0; i < 16; i++)

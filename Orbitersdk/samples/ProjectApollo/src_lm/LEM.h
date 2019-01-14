@@ -508,7 +508,7 @@ public:
 
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
-	THRUSTER_HANDLE th_hover[2];               // handles for orbiter main engines,added 2 for "virtual engine"
+	THRUSTER_HANDLE th_hover[1];               // handles for orbiter main engines
 	// There are 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
