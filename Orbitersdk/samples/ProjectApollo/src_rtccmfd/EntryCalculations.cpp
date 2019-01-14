@@ -3350,9 +3350,9 @@ bool RTEMoon::CLL(double &i_r, double &INTER)
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB;
 	double theta_long, theta_lat, dlng, dt, i_r_apo, TOL, i_rmin, DV_min, dv_new, delta_S, i_rc, h_p, r_p, t_temp, D1, D2, DVS, DVSS, i_rs, INS, u_r;
-	double EIMJD_apo, t_z, t_z1;
-	int ISUB, KOUNT, ICNT, jj, ICONVG, ii;
-	bool NIR, IOPT, NIRS;
+	double EIMJD_apo, t_z, t_z1, t_z_apo, indvar, eps;
+	int ISUB, KOUNT, ICNT, jj, ICONVG, ii, ITCNT, LOPCNT;
+	bool NIR, IOPT, NIRS, KIP;
 
 	ii = 0;
 	jj = 0;
@@ -3361,55 +3361,126 @@ bool RTEMoon::CLL(double &i_r, double &INTER)
 	ZTAB = _V(0, 0, 0);
 	DVS = pow(10, 10);
 
+	KIP = 0;
 	u_r = u_rmax;
 	INTER = 1.0;
 	i_r = 0.5235988;
+	eps = 0.05;
+	KOUNT = 0;
+	ITCNT = 0;
 
 	if (i_rk != 0)
 	{
 		i_r = abs(i_rk);
 		i_rmax = i_r;
+		eps = 0.005;
 		INTER = -i_rk / i_r;
 	}
 
-	Vig_apo = EntryCalculations::MCDRIV(TIG, u_r, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, false, R_EI, V_EI, EIMJD_apo, NIR, i_r_apo, r_p);
-	t_z = OrbMech::GETfromMJD(EIMJD_apo, GETbase);
+	//Minimum return time without further constraints
+	do
+	{
+		if (KIP)
+		{
+			EIMJD = OrbMech::MJDfromGET(t_z_apo, GETbase);
+			indvar = EIMJD;
+		}
+		else
+		{
+			indvar = u_r;
+		}
+		Vig_apo = EntryCalculations::MCDRIV(TIG, indvar, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, KIP, R_EI, V_EI, EIMJD_apo, NIR, i_r_apo, r_p);
+		t_z = OrbMech::GETfromMJD(EIMJD_apo, GETbase);
+		if (t_z < t_zmin - 1.0)
+		{
+			t_z_apo = t_zmin;
+			KIP = 1;
+		}
+	} while (t_z < t_zmin - 1.0);
+	EntryCalculations::landingsite(R_EI, V_EI, EIMJD_apo, theta_long, theta_lat);
 
 	t_z1 = t_z;
+	KOUNT = 0;
+	LOPCNT = 0;
 
-	if (t_z > t_zmin)
+	//This loop roughly converges on the desired landing site
+	do
 	{
-		t_zmin = t_z;
-		if (t_zmin > t_zmax)
+		if (!entrylongmanual)
+		{
+			EntryLng = EntryCalculations::landingzonelong(landingzone, theta_lat);
+		}
+		dlng = theta_long - EntryLng;
+		if (ITCNT > 0 && abs(dlng) < eps)
+		{
+			break;
+		}
+		ITCNT++;
+		if (ITCNT > 10)
+		{
+			t_z_apo += 24.0*3600.0;
+			ITCNT = 0;
+		}
+		if (dlng > PI) dlng = dlng - PI2;
+		else if (dlng < -PI) dlng = PI2 + dlng;
+		if (KIP == 0)
+		{
+			t_z_apo = t_z;
+		}
+		t_z_apo += dlng / w_E;
+		if (t_z_apo < t_z1)
+		{
+			t_z_apo += 24.0*3600.0;
+			ITCNT = 0;
+		}
+		if (t_z_apo > t_zmax)
 		{
 			return false;
 		}
-		//New estimate: 12 hours from new t_zmin
-		EIMJD = OrbMech::MJDfromGET(t_zmin, GETbase) + 0.5;
-	}
+		LOPCNT = 0;
+		KIP = 1;
 
-	if (i_rk == 0)
-	{
-		i_r = i_rmax;
-		INTER = -1.0;
-	}
+		if (KIP)
+		{
+			EIMJD = OrbMech::MJDfromGET(t_z_apo, GETbase);
+			indvar = EIMJD;
+		}
+		else
+		{
+			indvar = u_r;
+		}
+		Vig_apo = EntryCalculations::MCDRIV(TIG, indvar, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, KIP, R_EI, V_EI, EIMJD, NIR, i_r_apo, r_p);
+		t_z = OrbMech::GETfromMJD(EIMJD, GETbase);
+		EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
+		LOPCNT = 0;
+	} while (ITCNT <= 0 || abs(dlng) >= eps);
 
 	i_rmin = 10.0;
+
+	//This checks if the inclination was specified
+	if (eps != 0.05)
+	{
+		return true;
+	}
 
 	TOL = 0.01745;
 	ISUB = 0;
 	DVSS = pow(10, 10);
+	INTER = -1.0;
+	i_r = i_rmax;
 	ICNT = 0;
 	KOUNT = 0;
 	IOPT = true;
 
+	//Main iteration loop for the DV optimization
 	while (KOUNT <= 10)
 	{
 		do
 		{
+			EIMJD = OrbMech::MJDfromGET(t_z_apo, GETbase);
 			Vig_apo = EntryCalculations::MCDRIV(TIG, EIMJD, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, true, R_EI, V_EI, t_temp, NIR, i_r_apo, r_p);
+			t_z = OrbMech::GETfromMJD(EIMJD, GETbase);
 			EntryCalculations::landingsite(R_EI, V_EI, EIMJD, theta_long, theta_lat);
-			//EntryCalculations::LNDING(R_EI, V_EI, EIMJD, LD, ICRNGG, r_rbias, theta_long2, theta_lat2, MJD_L);
 
 			if (!entrylongmanual)
 			{
@@ -3423,17 +3494,9 @@ bool RTEMoon::CLL(double &i_r, double &INTER)
 			}
 
 			dt = dlng / w_E;
-			EIMJD += dt / 24.0 / 3600.0;
-
+			t_z_apo += dt;
 			ii++;
 		} while (abs(dt) > 0.1);
-
-		if (i_rk != 0)
-		{
-			i_rs = i_r_apo;
-			INS = INTER;
-			break;
-		}
 
 		h_p = r_p - R_M;
 		dv_new = length(Vig_apo - Vig);
