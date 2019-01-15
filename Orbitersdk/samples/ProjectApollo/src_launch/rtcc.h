@@ -375,22 +375,6 @@ struct RTEMoonOpt
 	double t_zmin = 0;
 };
 
-struct RTEFlybyOpt
-{
-	VESSEL* vessel;			//Reentry vessel
-	double GETbase;			//usually MJD at launch
-	double TIGguess;		//Initial estimate for the TIG
-	int FlybyType;			//0 = Flyby, 1 = PC+2
-	double EntryLng;		//Entry longitude
-	int returnspeed;		//0 = slow return, 1 = normal return, 2 = fast return
-	SV RV_MCC;				//State vector as input
-	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
-	bool entrylongmanual = true; //Targeting a landing zone or a manual landing longitude
-	int vesseltype = 0;			//0 = CSM, 1 = LM
-	double Inclination = 0.0;	//Specified return inclination
-	bool Ascending = true;		//Ascending or descending node
-};
-
 struct REFSMMATOpt
 {
 	VESSEL* vessel; //vessel
@@ -1251,7 +1235,6 @@ public:
 	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad);
 	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc = false);
 	void RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res);
-	void RTEFlybyTargeting(RTEFlybyOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(SV sv0, double GETbase, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
 	void LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad);
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double GETbase, double P30TIG, double TB5, double mu, double T_RG);

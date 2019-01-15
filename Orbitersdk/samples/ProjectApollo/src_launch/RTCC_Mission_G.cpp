@@ -502,7 +502,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 23: //Lunar Flyby PAD
 	{
-		RTEFlybyOpt entopt;
+		RTEMoonOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
 		SV sv;
@@ -518,12 +518,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
 		entopt.returnspeed = 1;
-		entopt.FlybyType = 0;
+		entopt.SMODE = 14;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
 
-		RTEFlybyTargeting(&entopt, &res);
+		RTEMoonTargeting(&entopt, &res);
 
 		SV sv_peri = FindPericynthion(res.sv_postburn);
 		double h_peri = length(sv_peri.R) - oapiGetSize(oapiGetObjectByName("Moon"));
@@ -794,7 +794,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 26: //PC+2 UPDATE
 	{
-		RTEFlybyOpt entopt;
+		RTEMoonOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
 		SV sv;
@@ -808,11 +808,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.EntryLng = -165.0*RAD;
 		entopt.returnspeed = 2;
 		entopt.GETbase = GETbase;
-		entopt.FlybyType = 1;
+		entopt.SMODE = 14;
 		entopt.RV_MCC = sv;
 		entopt.vessel = calcParams.src;
+		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
 
-		RTEFlybyTargeting(&entopt, &res);
+		RTEMoonTargeting(&entopt, &res);
 
 		opt.alt = calcParams.LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;

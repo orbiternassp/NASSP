@@ -529,7 +529,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 40:	// MISSION CP FLYBY MANEUVER
 	{
-		RTEFlybyOpt entopt;
+		RTEMoonOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
 		SV sv;
@@ -543,12 +543,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
 		entopt.returnspeed = 0;
-		entopt.FlybyType = 0;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 8.0*3600.0;
 		entopt.vessel = calcParams.src;
+		entopt.SMODE = 14;
 
-		RTEFlybyTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
+		RTEMoonTargeting(&entopt, &res);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -599,7 +599,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	case 41:	// MISSION CP PC+2 MANEUVER
 	case 42:	// MISSION CP FAST PC+2 MANEUVER
 	{
-		RTEFlybyOpt entopt;
+		RTEMoonOpt entopt;
 		EntryResults res;
 		AP11ManPADOpt opt;
 		SV sv;
@@ -624,11 +624,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "PC+2 fast return");
 		}
 		entopt.GETbase = GETbase;
-		entopt.FlybyType = 1;
+		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
 		entopt.RV_MCC = sv;
 		entopt.vessel = calcParams.src;
+		entopt.SMODE = 14;
 
-		RTEFlybyTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
+		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;

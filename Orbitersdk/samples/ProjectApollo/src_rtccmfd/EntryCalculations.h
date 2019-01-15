@@ -190,42 +190,6 @@ private:
 	double EntryInterface;
 };
 
-class Flyby
-{
-public:
-	Flyby(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int FlybyType, double Inclination = 0.0, bool Ascending = true);
-	bool Flybyiter();
-
-	int precision;
-	double EntryLatcor, EntryLngcor;
-	VECTOR3 Entry_DV;
-	VECTOR3 R_EI, V_EI;
-	double EIMJD;
-	double EntryAng;
-	VECTOR3 Rig, Vig, Vig_apo;
-	double TIG;
-	double ReturnInclination;
-	double FlybyPeriAlt;
-private:
-	OBJHANDLE hMoon, hEarth;
-	VECTOR3 DV;
-	double DT_TEI_EI;	//Tiem between TEI and EI
-	double EntryLng;
-	double mu_E, mu_M;
-	//double r_s; //Pseudostate sphere
-	CELBODY *cMoon;
-	double dlngapo, dtapo;
-	int ii;
-	bool entrylongmanual;
-	int landingzone;
-	int FlybyType;	//0 = Flyby, 1 = PC+2
-	bool INRFVsign;
-	double mjd0;
-	double dv[3], TIGvar[3];
-	double IncDes;
-	bool Asc;
-};
-
 class RTEMoon
 {
 public:
