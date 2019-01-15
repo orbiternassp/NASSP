@@ -52,6 +52,7 @@ namespace EntryCalculations
 	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo);
 	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN);
 	double LNDING(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &MJD_L);
+	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
 
 	double MPL(double lat);
 	double MPL2(double lat);
@@ -232,8 +233,8 @@ public:
 	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
 	bool MASTER();
 	void MCSS();
-	bool CLL(double &i_r, double &INTER);
-	bool MCUA(double &i_r, double &INTER);
+	bool CLL(double &i_r, double &INTER, double &dv);
+	bool MCUA(double &i_r, double &INTER, double &dv);
 	
 	void MCSSLM(bool &REP, double t_z_apo);
 
