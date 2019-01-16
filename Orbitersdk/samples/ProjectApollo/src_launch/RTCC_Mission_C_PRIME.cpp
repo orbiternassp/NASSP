@@ -88,6 +88,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.type = RTCC_ENTRY_ABORT;
 		entopt.vessel = calcParams.src;
 		entopt.RV_MCC = sv2;
+		entopt.r_rbias = 1350.0;
 
 		EntryTargeting(&entopt, &res); //Target Load for uplink
 
@@ -213,6 +214,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.TIGguess = TLIplus;
 		entopt.type = RTCC_ENTRY_ABORT;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1350.0;
 
 		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
 
@@ -547,6 +549,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.TIGguess = calcParams.LOI - 8.0*3600.0;
 		entopt.vessel = calcParams.src;
 		entopt.SMODE = 14;
+		entopt.r_rbias = 1350.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -628,6 +631,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.RV_MCC = sv;
 		entopt.vessel = calcParams.src;
 		entopt.SMODE = 14;
+		entopt.r_rbias = 1350.0;
 
 		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
@@ -701,6 +705,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv1;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1350.0;
 
 		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
@@ -885,6 +890,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.vessel = calcParams.src;
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv;
+		entopt.r_rbias = 1350.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -1037,6 +1043,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1350.0;
 
 		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
 

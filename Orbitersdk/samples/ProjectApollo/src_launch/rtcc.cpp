@@ -399,7 +399,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	sv = opt->RV_MCC;
 	GET = (sv.MJD - opt->GETbase)*24.0*3600.0;
 
-	entry = new Entry(sv.R, sv.V, sv.MJD, sv.gravref, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->entrylongmanual);
+	entry = new Entry(sv.R, sv.V, sv.MJD, sv.gravref, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->entrylongmanual, opt->r_rbias);
 
 	while (!stop)
 	{
@@ -7314,7 +7314,7 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res)
 {
-	/*OBJHANDLE hEarth;
+	OBJHANDLE hEarth;
 	VECTOR3 REI, VEI, UREI, R3, V3, R05G, V05G;
 	double EntryInterface, RCON, dt2, MJD_EI, lambda, phi, MJD_l, vEI, t32, mu, dt22, EMSAlt, t2;
 
@@ -7350,98 +7350,6 @@ void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highs
 	res->latitude = phi;
 	res->longitude = lambda;
 
-	res->VIO = length(V05G);
-	res->GET400K = t2;
-	res->GET05G = t2 + t32 + dt22;*/
-
-	VECTOR3 REI, VEI, R3, V3, UR3, U_H3, U_LS, LSEF;
-	double RCON, mu, dt2, t32, v3, S_FPA, gammaE, phie, te, t_LS, Sphie, Cphie, tLSMJD, l, m, n, phi, lambda2, EntryInterface;
-	MATRIX3 R;
-	OBJHANDLE hEarth;
-	VECTOR3 R05G, V05G, UREI;
-	double dt22, t2, EMSAlt, vEI;
-	int rangeiter;
-
-	if (entryrange == 0)
-	{
-		rangeiter = 1;
-	}
-	else
-	{
-		rangeiter = 2;
-	}
-
-	if (highspeed)
-	{
-		EMSAlt = 297431.0*0.3048;
-	}
-	else
-	{
-		EMSAlt = 284643.0*0.3048;
-	}
-
-	hEarth = oapiGetObjectByName("Earth");
-
-	EntryInterface = 400000.0 * 0.3048;
-	RCON = oapiGetSize(hEarth) + EntryInterface;
-	mu = GGRAV*oapiGetMass(hEarth);
-
-	dt2 = OrbMech::time_radius_integ(sv0.R, sv0.V, sv0.MJD, RCON, -1, sv0.gravref, hEarth, REI, VEI);
-
-	UREI = unit(REI);
-	vEI = length(VEI);
-	res->ReA = asin(dotp(UREI, VEI) / vEI);
-
-	t32 = OrbMech::time_radius(REI, VEI, RCON - 30480.0, -1, mu);
-	OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, mu);
-	UR3 = unit(R3);
-	v3 = length(V3);
-	S_FPA = dotp(UR3, V3) / v3;
-	gammaE = asin(S_FPA);
-	EntryCalculations::augekugel(v3, gammaE, phie, te);
-
-	for (int iii = 0;iii < rangeiter;iii++)
-	{
-		t2 = (sv0.MJD - GETbase) * 24.0 * 3600.0 + dt2;	//EI time in seconds from launch
-		t_LS = t2 + t32 + te;
-		Sphie = sin(0.00029088821*phie);
-		Cphie = cos(0.00029088821*phie);
-		U_H3 = unit(crossp(crossp(R3, V3), R3));
-		U_LS = UR3*Cphie + U_H3*Sphie;
-
-		tLSMJD = GETbase + t_LS / 24.0 / 3600.0;
-		//U_LS = tmul(Rot, U_LS);
-		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-		R = OrbMech::GetRotationMatrix(hEarth, tLSMJD);
-		LSEF = tmul(R, U_LS);
-		l = LSEF.x;
-		m = LSEF.z;
-		n = LSEF.y;
-		phi = asin(n);
-		if (m > 0)
-		{
-			lambda2 = acos(l / cos(phi));
-		}
-		else
-		{
-			lambda2 = PI2 - acos(l / cos(phi));
-		}
-		if (lambda2 > PI) { lambda2 -= PI2; }
-
-		res->latitude = phi;
-		res->longitude = lambda2;
-
-
-		dt22 = OrbMech::time_radius(R3, V3, length(R3) - (300000.0 * 0.3048 - EMSAlt), -1, mu);
-		OrbMech::rv_from_r0v0(R3, V3, dt22, R05G, V05G, mu);
-
-		res->RTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
-		if (entryrange != 0)
-		{
-			te *= entryrange / res->RTGO;
-			phie = entryrange + 3437.7468*acos(dotp(unit(R3), unit(R05G)));
-		}
-	}
 	res->VIO = length(V05G);
 	res->GET400K = t2;
 	res->GET05G = t2 + t32 + dt22;

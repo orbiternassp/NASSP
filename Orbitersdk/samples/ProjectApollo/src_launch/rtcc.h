@@ -285,6 +285,8 @@ struct EntryOpt
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
+	// relative range override
+	double r_rbias = 1285.0;
 };
 
 struct EntryResults

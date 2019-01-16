@@ -53,6 +53,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	DOI_PeriAng = 15.0*RAD;
 	DOI_alt = 50000.0*0.3048;
 	RTEMaxReturnInclination = 40.0*RAD;
+	RTERangeOverrideNM = 0.0;
 
 	if (strcmp(v->GetName(), "AS-205") == 0)
 	{
@@ -113,6 +114,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -5.67822*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(69.0, 9.0, 29.4);
 		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
+		RTERangeOverrideNM = 1350.0;
 	}
 	else if (mission == 10)
 	{
@@ -123,6 +125,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -4.933294*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
 		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
+		RTERangeOverrideNM = 1285.0;
 	}
 	else if (mission == 11)
 	{
@@ -135,6 +138,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 0.279074*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 53.0, 35.0);
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
+		RTERangeOverrideNM = 1285.0;
 	}
 	else if (mission == 12)
 	{
@@ -154,6 +158,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCNodeAlt = 59.9*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
+		RTERangeOverrideNM = 1250.0;
 	}
 	else if (mission == 13)
 	{
@@ -175,6 +180,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 		DOI_option = 1;
 		DOI_N = 11;
+		RTERangeOverrideNM = 1250.0;
 	}
 	else if (mission == 14)
 	{
@@ -196,6 +202,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 		DOI_option = 1;
 		DOI_N = 11;
+		RTERangeOverrideNM = 1250.0;
 	}
 	else if (mission == 15)
 	{
@@ -217,6 +224,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_option = 1;
 		DOI_N = 11;
 		RTEMaxReturnInclination = 80.0*RAD;
+		RTERangeOverrideNM = 1190.0;
 	}
 	else if (mission == 16)
 	{
@@ -239,6 +247,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_N = 10;
 		DOI_alt = 52500.0*0.3048;
 		RTEMaxReturnInclination = 80.0*RAD;
+		RTERangeOverrideNM = 1190.0;
 	}
 	else if (mission == 17)
 	{
@@ -261,6 +270,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_N = 10;
 		DOI_alt = 84000.0*0.3048;
 		RTEMaxReturnInclination = 80.0*RAD;
+		RTERangeOverrideNM = 1190.0;
 	}
 }
 
@@ -556,7 +566,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	EntryDesiredInclination = 0.0;
 	RTECalcMode = 1;
 	RTEReturnInclination = 0.0;
-	RTERangeOverrideNM = 0.0;
 	RTEMaxReentrySpeed = 36323.0*0.3048;
 
 	SVSlot = true; //true = CSM; false = Other
@@ -2556,6 +2565,7 @@ int ARCore::subThread()
 		opt.TIGguess = EntryTIG;
 		opt.vessel = vessel;
 		opt.type = entrycritical;
+		opt.r_rbias = GC->RTERangeOverrideNM;
 
 		rtcc->EntryTargeting(&opt, &res);
 
@@ -2858,7 +2868,7 @@ int ARCore::subThread()
 		opt.TIGguess = EntryTIG;
 		opt.Inclination = EntryDesiredInclination;
 		opt.IRMAX = GC->RTEMaxReturnInclination;
-		opt.r_rbias = RTERangeOverrideNM;
+		opt.r_rbias = GC->RTERangeOverrideNM;
 		opt.u_rmax = RTEMaxReentrySpeed;
 		opt.t_zmin = RTEReentryTime;
 

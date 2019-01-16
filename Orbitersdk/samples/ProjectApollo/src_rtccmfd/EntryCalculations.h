@@ -26,10 +26,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 namespace EntryCalculations
 {
-	double MSFNTargetLine(double vel);
-	double ContingencyTargetLine(double vel);
-	double ReentryTargetLine(double vel);
-	double ReentryTargetLineTan(double vel);
+	const double RTE_VEL_LINE[26] = { 25.5, 26.0, 26.5, 27.0, 27.5, 28.0, 28.5, 29.0, 29.5, 30.0, 30.5, 31.0, 31.5, 32.0, 32.5, 33.0, 33.5, 34.0, 34.5, 35.0, 35.5, 36.0, 36.5, 37.0, 37.5, 38.0 };
+	const double RTE_MSFN_LINE[26] = { 91.35, 91.91, 92.47, 92.91, 93.29, 93.62, 93.91, 94.17, 94.39, 94.59, 94.78, 94.96, 95.12, 95.27, 95.41, 95.54, 95.67, 95.8, 95.92, 96.03, 96.14, 96.24, 96.35, 96.44, 96.54, 96.58 };
+	const double RTE_CONT_LINE[26] = { 93.3, 93.74, 94.04, 94.31, 94.55, 94.78, 94.96, 95.13, 95.28, 95.41, 95.55, 95.66, 95.77, 95.86, 95.96, 96.05, 96.14, 96.21, 96.29, 96.36, 96.43, 96.48, 96.55, 96.61, 96.66, 96.74 };
+
+	double ReentryTargetLine(double vel, bool msfn);
+	double ReentryTargetLineTan(double vel, bool msfn);
 	void augekugel(double ve, double gammae, double &phie, double &Te);
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double &lambda, double &phi);
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET);
@@ -44,7 +46,7 @@ namespace EntryCalculations
 	void REENTRYNew(double LD, int ICRNGG, double v_i, double i_r, double A_Z, double mu, double r_rbias, double &eta_rz1, double &theta_cr, double &T);
 	VECTOR3 TVECT(VECTOR3 a, VECTOR3 b, double alpha, double gamma);
 	void EGTR(VECTOR3 R_geoc, VECTOR3 V_geoc, double MJD, VECTOR3 &R_geogr, VECTOR3 &V_geogr);
-	double INTER(double *X, double *Y, int IMAX, double x);
+	double INTER(const double *X, const double *Y, int IMAX, double x);
 	double URF(double T, double x);
 	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P);
 	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
@@ -128,7 +130,7 @@ private:
 
 class Entry {
 public:
-	Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual);
+	Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI);
 	bool EntryIter();
 
 	double EntryTIGcor; //Corrected Time of Ignition for the Reentry Maneuver
@@ -188,6 +190,8 @@ private:
 	double xlim;
 	double t21;
 	double EntryInterface;
+	// relative range override (unit is nautical miles!)
+	double r_rbias;
 };
 
 class RTEMoon

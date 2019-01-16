@@ -3128,7 +3128,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "Max Return Inclination: %.3f°", GC->RTEMaxReturnInclination*DEG);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "Range Override: %.1f NM", G->RTERangeOverrideNM);
+		sprintf(Buffer, "Range Override: %.1f NM", GC->RTERangeOverrideNM);
 		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "Max Reentry Speed: %.0f ft/s", G->RTEMaxReentrySpeed / 0.3048);
@@ -5117,7 +5117,7 @@ bool EntryRangeOverrideInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_EntryRangeOverride(double range)
 {
-	G->RTERangeOverrideNM = range;
+	GC->RTERangeOverrideNM = range;
 }
 
 void ApolloRTCCMFD::menuSetMaxReentrySpeed()

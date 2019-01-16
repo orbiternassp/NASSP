@@ -51,6 +51,7 @@ public:
 	double DOI_PeriAng;					//Angle from landing site to PDI position
 	double DOI_alt;						//perilune altitude above landing site
 	double RTEMaxReturnInclination;
+	double RTERangeOverrideNM;
 };
 
 class ARCore {
@@ -269,7 +270,6 @@ public:
 	double EntryDesiredInclination;
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	double RTEReturnInclination;
-	double RTERangeOverrideNM;
 	double RTEMaxReentrySpeed;
 
 	//STATE VECTOR PAGE
