@@ -248,6 +248,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 9:	 //MCC-1 EVALUATION
 	case 10: //MCC-1
 	case 11: //MCC-2
 	{
@@ -257,7 +258,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv;
 		char manname[8];
 
-		if (fcn == 10)
+		if (fcn == 9 || fcn == 10)
 		{
 			sprintf(manname, "MCC1");
 		}
@@ -324,7 +325,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else
 		{
-			if (fcn == 10)
+			if (fcn == 9 || fcn == 10)
 			{
 				opt.MCCGET = MCC1GET;
 			}
@@ -336,7 +337,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
 
 			//Scrub MCC-1 if DV is less than 50 ft/s
-			if (fcn == 10 && length(res.dV_LVLH) < 50.0*0.3048)
+			if (fcn == 9 && length(res.dV_LVLH) < 50.0*0.3048)
 			{
 				scrubbed = true;
 			}
@@ -352,46 +353,58 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			}
 		}
 
-		if (scrubbed)
+		//MCC-1 Evaluation
+		if (fcn == 9)
 		{
-			char buffer1[1000];
-
-			sprintf(upMessage, "%s has been scrubbed.", manname);
-			sprintf(upDesc, "CSM state vector");
-
-			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-
-			sprintf(uplinkdata, "%s", buffer1);
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
+			if (scrubbed)
+			{
+				sprintf(upMessage, "%s has been scrubbed.", manname);
 			}
 		}
+		//MCC-1 and MCC-2 Update
 		else
 		{
-			char buffer1[1000];
-			char buffer2[1000];
+			if (scrubbed)
+			{
+				char buffer1[1000];
 
-			manopt.dV_LVLH = dV_LVLH;
-			manopt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
-			manopt.GETbase = GETbase;
-			manopt.HeadsUp = true;
-			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
-			manopt.TIG = P30TIG;
-			manopt.vessel = calcParams.src;
-			manopt.vesseltype = 1;
+				sprintf(upMessage, "%s has been scrubbed.", manname);
+				sprintf(upDesc, "CSM state vector");
 
-			AP11ManeuverPAD(&manopt, *form);
-			sprintf(form->purpose, manname);
+				AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
 
-			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+				sprintf(uplinkdata, "%s", buffer1);
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+				}
+			}
+			else
+			{
+				char buffer1[1000];
+				char buffer2[1000];
 
-			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				manopt.dV_LVLH = dV_LVLH;
+				manopt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
+				manopt.GETbase = GETbase;
+				manopt.HeadsUp = true;
+				manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
+				manopt.TIG = P30TIG;
+				manopt.vessel = calcParams.src;
+				manopt.vesseltype = 1;
+
+				AP11ManeuverPAD(&manopt, *form);
+				sprintf(form->purpose, manname);
+
+				AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
+				AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+
+				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+				if (upString != NULL) {
+					// give to mcc
+					strncpy(upString, uplinkdata, 1024 * 3);
+					sprintf(upDesc, "CSM state vector, target load");
+				}
 			}
 		}
 	}

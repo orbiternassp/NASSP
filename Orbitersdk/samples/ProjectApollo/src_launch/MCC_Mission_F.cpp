@@ -277,49 +277,58 @@ void MCC::MissionSequence_F()
 			break;
 		}
 		break;
-	case MST_F_TRANSLUNAR5: //Block Data 1 to PTC REFSMMAT
-		UpdateMacro(UTP_PADONLY, PT_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 4.0*3600.0 + 30.0*60.0, 5, MST_F_TRANSLUNAR6);
+	case MST_F_TRANSLUNAR5: //Block Data 1 to MCC-1 Calculation
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 3.0*3600.0 + 20.0*60.0, 5, MST_F_TRANSLUNAR6);
 		break;
-	case MST_F_TRANSLUNAR6: //PTC REFSMMAT to MCC-1
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.TLI + 7.0*3600.0 + 30.0*60.0, 7, MST_F_TRANSLUNAR7);
+	case MST_F_TRANSLUNAR6: //MCC-1 Calculation to MCC-1 Update (or PTC REFSMMAT)
+		UpdateMacro(UTP_NONE, PT_NONE, cm->MissionTime > rtcc->calcParams.TLI + 7.0*3600.0 + 30.0*60.0, 9, MST_F_TRANSLUNAR7, scrubbed, rtcc->GETEval(rtcc->calcParams.TLI + 4.0*3600.0 + 30.0*60.0), MST_F_TRANSLUNAR_NO_MCC1_1);
 		break;
-	case MST_F_TRANSLUNAR7: //MCC-1 to Block Data 2
+	case MST_F_TRANSLUNAR7: //MCC-1 Update to PTC REFSMMAT update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 9.0*3600.0 + 30.0*60.0, 10, MST_F_TRANSLUNAR8);
 		break;
-	case MST_F_TRANSLUNAR8: //Block Data 2 to MCC-2
-		UpdateMacro(UTP_PADONLY, PT_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 23.0*3600.0, 6, MST_F_TRANSLUNAR9);
+	case MST_F_TRANSLUNAR_NO_MCC1_1: //PTC REFSMMAT update to SV update (MCC-1 was scrubbed)
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.TLI + 7.0*3600.0 + 10.0*60.0, 7, MST_F_TRANSLUNAR_NO_MCC1_2);
 		break;
-	case MST_F_TRANSLUNAR9: //MCC-2 to Lunar Flyby PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 30.0*3600.0 + 30.0*60.0, 11, MST_F_TRANSLUNAR10);
+	case MST_F_TRANSLUNAR_NO_MCC1_2: //SV update to Block Data 2 (MCC-1 was scrubbed)
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.TLI + 9.0*3600.0 + 30.0*60.0, 100, MST_F_TRANSLUNAR9);
 		break;
-	case MST_F_TRANSLUNAR10: //Lunar Flyby PAD to State Vector update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 42.0*3600.0, 12, MST_F_TRANSLUNAR11);
+	case MST_F_TRANSLUNAR8: //PTC REFSMMAT to Block Data 2
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.TLI + 9.0*3600.0 + 35.0*60.0, 7, MST_F_TRANSLUNAR9);
 		break;
-	case MST_F_TRANSLUNAR11: //State Vector update to MCC-3 update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.LOI - 23.0*3600.0 - 30.0*60.0, 100, MST_F_TRANSLUNAR12);
+	case MST_F_TRANSLUNAR9: //Block Data 2 to MCC-2
+		UpdateMacro(UTP_PADONLY, PT_P37PAD, cm->MissionTime > rtcc->calcParams.TLI + 23.0*3600.0, 6, MST_F_TRANSLUNAR10);
 		break;
-	case MST_F_TRANSLUNAR12: //MCC-3 update to MCC-4 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 6.0*3600.0 - 30.0*60.0, 13, MST_F_TRANSLUNAR13);
+	case MST_F_TRANSLUNAR10: //MCC-2 to Lunar Flyby PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 30.0*3600.0 + 30.0*60.0, 11, MST_F_TRANSLUNAR11);
 		break;
-	case MST_F_TRANSLUNAR13: //MCC-4 update to PC+2 update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 14, MST_F_TRANSLUNAR14);
+	case MST_F_TRANSLUNAR11: //Lunar Flyby PAD to State Vector update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.TLI + 42.0*3600.0, 12, MST_F_TRANSLUNAR12);
 		break;
-	case MST_F_TRANSLUNAR14: //PC+2 update to Preliminary LOI-1 update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 4.0*3600.0 - 30.0*60.0, 15, MST_F_TRANSLUNAR15);
+	case MST_F_TRANSLUNAR12: //State Vector update to MCC-3 update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->MissionTime > rtcc->calcParams.LOI - 23.0*3600.0 - 30.0*60.0, 100, MST_F_TRANSLUNAR13);
 		break;
-	case MST_F_TRANSLUNAR15: //Preliminary LOI-1 update to TEI-1 update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 20, MST_F_TRANSLUNAR16);
+	case MST_F_TRANSLUNAR13: //MCC-3 update to MCC-4 update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 6.0*3600.0 - 30.0*60.0, 13, MST_F_TRANSLUNAR14);
 		break;
-	case MST_F_TRANSLUNAR16: //TEI-1 update to TEI-4 update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 30, MST_F_TRANSLUNAR17);
+	case MST_F_TRANSLUNAR14: //MCC-4 update to PC+2 update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 14, MST_F_TRANSLUNAR15);
 		break;
-	case MST_F_TRANSLUNAR17: //TEI-4 update to Rev 1 Map Update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 2.0*3600.0 - 15.0*60.0, 31, MST_F_TRANSLUNAR18);
+	case MST_F_TRANSLUNAR15: //PC+2 update to Preliminary LOI-1 update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 4.0*3600.0 - 30.0*60.0, 15, MST_F_TRANSLUNAR16);
 		break;
-	case MST_F_TRANSLUNAR18: //Rev 1 Map Update to LOI-1 update
-		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 30.0*60.0, 40, MST_F_TRANSLUNAR19);
+	case MST_F_TRANSLUNAR16: //Preliminary LOI-1 update to TEI-1 update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 20, MST_F_TRANSLUNAR17);
 		break;
-	case MST_F_TRANSLUNAR19: //LOI-1 update to Rev 2 Map Update
+	case MST_F_TRANSLUNAR17: //TEI-1 update to TEI-4 update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 30, MST_F_TRANSLUNAR18);
+		break;
+	case MST_F_TRANSLUNAR18: //TEI-4 update to Rev 1 Map Update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, cm->MissionTime > rtcc->calcParams.LOI - 2.0*3600.0 - 15.0*60.0, 31, MST_F_TRANSLUNAR19);
+		break;
+	case MST_F_TRANSLUNAR19: //Rev 1 Map Update to LOI-1 update
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, cm->MissionTime > rtcc->calcParams.LOI - 1.0*3600.0 - 30.0*60.0, 40, MST_F_TRANSLUNAR20);
+		break;
+	case MST_F_TRANSLUNAR20: //LOI-1 update to Rev 2 Map Update
 		if (MissionPhase == MMST_TL_COAST && cm->MissionTime > rtcc->calcParams.LOI)
 		{
 			MissionPhase = MMST_LUNAR_ORBIT;
