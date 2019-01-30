@@ -1492,8 +1492,8 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 
 limittest:
 		//command rate test; part of major loop;
-		//if(CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD){CommandedAttitude.z = -45 * RAD;}
-		//if(CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD){CommandedAttitude.z = 45 * RAD;}
+		if(CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD){CommandedAttitude.z = -45 * RAD;}
+		if(CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD){CommandedAttitude.z = 45 * RAD;}
 		double diff; //aux variable for limit test
 		diff = fmod((CommandedAttitude.x - PCommandedAttitude.x + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
@@ -1512,6 +1512,8 @@ limittest:
 			}else{
 				CommandedAttitude.y = fmod(PCommandedAttitude.y - CommandRateLimits.y * dt_c,TWO_PI);
 			}
+			if (CommandedAttitude.y > PI) CommandedAttitude.y -= PI2;
+			if (CommandedAttitude.y < -PI) CommandedAttitude.y += PI2;
 		}
 		diff = fmod((CommandedAttitude.z - PCommandedAttitude.z + TWO_PI),TWO_PI);
 		if(diff > PI) {diff -= TWO_PI;} ;
@@ -1521,6 +1523,8 @@ limittest:
 			}else{
 				CommandedAttitude.z = fmod(PCommandedAttitude.z - CommandRateLimits.z * dt_c,TWO_PI);
 			}
+			if (CommandedAttitude.z > PI) CommandedAttitude.z -= PI2;
+			if (CommandedAttitude.z < -PI) CommandedAttitude.z += PI2;
 		}
 		PCommandedAttitude = CommandedAttitude;
 
@@ -1553,7 +1557,12 @@ minorloop: //minor loop;
 
 		if (SCControlOfSaturn || PermanentSCControl)
 		{
-			CommandedAttitude = ACommandedAttitude = PCommandedAttitude = CurrentAttitude;
+			PCommandedAttitude = CurrentAttitude;
+			if (PCommandedAttitude.y > PI) PCommandedAttitude.y -= PI2;
+			if (PCommandedAttitude.y < -PI) PCommandedAttitude.y += PI2;
+			if (PCommandedAttitude.z > PI) PCommandedAttitude.z -= PI2;
+			if (PCommandedAttitude.z < -PI) PCommandedAttitude.z += PI2;
+			CommandedAttitude = ACommandedAttitude = PCommandedAttitude;
 			AttitudeError = _V(0.0, 0.0, 0.0);
 		}
 		else if (!GuidanceReferenceFailure)
@@ -6754,17 +6763,17 @@ minorloop:
 			lvda.TLIEnded();
 		}
 
-		if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD; } //yaw limits
-		if(CommandedAttitude.z > 45 * RAD){CommandedAttitude.z = 45 * RAD; }
+		if (CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD) { CommandedAttitude.z = -45 * RAD; } //yaw limits
+		if (CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD) { CommandedAttitude.z = 45 * RAD; }
 		double diff; //aux variable for limit test
 		diff = fmod((CommandedAttitude.x - PCommandedAttitude.x + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
 		if(abs(diff/dt_g) > CommandRateLimits.x){
 			fprintf(lvlog, "Rate limit x-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.x*DEG, PCommandedAttitude.x*DEG, diff*DEG, dt_g);
 			if(diff > 0){
-				CommandedAttitude.x = PCommandedAttitude.x + CommandRateLimits.x * dt_g;
+				CommandedAttitude.x = fmod(PCommandedAttitude.x + CommandRateLimits.x * dt_g, PI2);
 			}else{
-				CommandedAttitude.x = PCommandedAttitude.x - CommandRateLimits.x * dt_g;
+				CommandedAttitude.x = fmod(PCommandedAttitude.x - CommandRateLimits.x * dt_g, PI2);
 			}
 		}
 		diff = fmod((CommandedAttitude.y - PCommandedAttitude.y + TWO_PI),TWO_PI);
@@ -6772,20 +6781,24 @@ minorloop:
 		if(abs(diff/dt_g) > CommandRateLimits.y){
 			fprintf(lvlog, "Rate limit y-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.y*DEG, PCommandedAttitude.y*DEG, diff*DEG, dt_g);
 			if(diff > 0){
-				CommandedAttitude.y = PCommandedAttitude.y + CommandRateLimits.y * dt_g;
+				CommandedAttitude.y = fmod(PCommandedAttitude.y + CommandRateLimits.y * dt_g, PI2);
 			}else{
-				CommandedAttitude.y = PCommandedAttitude.y - CommandRateLimits.y * dt_g;
+				CommandedAttitude.y = fmod(PCommandedAttitude.y - CommandRateLimits.y * dt_g, PI2);
 			}
+			if (CommandedAttitude.y > PI) CommandedAttitude.y -= PI2;
+			if (CommandedAttitude.y < -PI) CommandedAttitude.y += PI2;
 		}
 		diff = fmod((CommandedAttitude.z - PCommandedAttitude.z + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
 		if(abs(diff/dt_g) > CommandRateLimits.z){
 			fprintf(lvlog, "Rate limit z-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.z*DEG, PCommandedAttitude.z*DEG, diff*DEG, dt_g);
 			if(diff > 0){
-				CommandedAttitude.z = PCommandedAttitude.z + CommandRateLimits.z * dt_g;
+				CommandedAttitude.z = fmod(PCommandedAttitude.z + CommandRateLimits.z * dt_g, PI2);
 			}else{
-				CommandedAttitude.z = PCommandedAttitude.z - CommandRateLimits.z * dt_g;
+				CommandedAttitude.z = fmod(PCommandedAttitude.z - CommandRateLimits.z * dt_g, PI2);
 			}
+			if (CommandedAttitude.z > PI) CommandedAttitude.z -= PI2;
+			if (CommandedAttitude.z < -PI) CommandedAttitude.z += PI2;
 		}
 		PCommandedAttitude = CommandedAttitude;
 
@@ -6810,7 +6823,12 @@ minorloop:
 
 		if (SCControlOfSaturn || PermanentSCControl)
 		{
-			CommandedAttitude = ACommandedAttitude = PCommandedAttitude = CurrentAttitude;
+			PCommandedAttitude = CurrentAttitude;
+			if (PCommandedAttitude.y > PI) PCommandedAttitude.y -= PI2;
+			if (PCommandedAttitude.y < -PI) PCommandedAttitude.y += PI2;
+			if (PCommandedAttitude.z > PI) PCommandedAttitude.z -= PI2;
+			if (PCommandedAttitude.z < -PI) PCommandedAttitude.z += PI2;
+			CommandedAttitude = ACommandedAttitude = PCommandedAttitude;
 			AttitudeError = _V(0.0, 0.0, 0.0);
 		}
 		else if (!GuidanceReferenceFailure)
