@@ -53,6 +53,8 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	PointLevelSensorArmed = false;
 	LH2ContinuousVentValveOpen = false;
 	ThrustOKCutoffInhibit = false;
+	//Gets switched on at about T-8 minutes
+	AuxHydPumpFlightMode = true;
 
 	for (int i = 0;i < 2;i++)
 	{
@@ -316,6 +318,8 @@ void SIVBSystems::SIVBBoiloff()
 void SIVBSystems::SetThrusterDir(double beta_y, double beta_p)
 {
 	if (j2engine == NULL) return;
+	//Check if aux or main hydraulic pumps are on
+	if (!AuxHydPumpFlightMode && vessel->GetThrusterLevel(j2engine) < 0.1) return;
 
 	VECTOR3 j2vector;
 
@@ -522,6 +526,12 @@ void SIVB200Systems::SwitchSelector(int channel)
 	case 19: //Engine Ready Bypass On
 		EngineReadyBypass();
 		break;
+	case 28: //Aux Hydraulic Pump Flight Mode On
+		AuxHydPumpFlightModeOn();
+		break;
+	case 29: //Aux Hydraulic Pump Flight Mode Off
+		AuxHydPumpFlightModeOff();
+		break;
 	case 32: //P.U. Mixture Ratio 4.5 On
 		SetPUValve(PUVALVE_OPEN);
 		//SPUShiftS.play(NOLOOP, 255);
@@ -673,8 +683,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 		EngineStartOff();
 		break;
 	case 28: //Aux Hydraulic Pump Flight Mode On
+		AuxHydPumpFlightModeOn();
 		break;
 	case 29: //Aux Hydraulic Pump Flight Mode Off
+		AuxHydPumpFlightModeOff();
 		break;
 	case 30: //Start Bottle Vent Control Valve Open On
 		break;

@@ -61,6 +61,8 @@ public:
 	void SetThrusterDir(double beta_y, double beta_p);
 	void PointLevelSensorArming() { PointLevelSensorArmed = true; }
 	void PointLevelSensorDisarming() { PointLevelSensorArmed = false; }
+	void AuxHydPumpFlightModeOn() { AuxHydPumpFlightMode = true; }
+	void AuxHydPumpFlightModeOff() { AuxHydPumpFlightMode = false; }
 	void APSUllageEngineOn(int n);
 	void APSUllageEngineOff(int n);
 	void SetAPSAttitudeEngine(int n, bool on);
@@ -104,6 +106,7 @@ protected:
 	bool PointLevelSensorArmed;
 	bool LH2ContinuousVentValveOpen;
 	bool APSUllageOnRelay[2];
+	bool AuxHydPumpFlightMode;
 
 	double J2DefaultThrust;
 	int PUValveState;
