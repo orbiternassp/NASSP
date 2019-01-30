@@ -55,6 +55,10 @@ dcs(this)
 
 	Crewed = true;
 	SCControlPoweredFlight = false;
+	SIVBBurnModeA = false;
+	SIVBBurnModeB = false;
+	SIVBThrustNotOKA = false;
+	SIVBThrustNotOKB = false;
 
 	commandConnector.SetIU(this);
 	lvdc = NULL;
@@ -86,6 +90,9 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 		lvCommandConnector.SetStage(LAUNCH_STAGE_ONE);
 	}
 
+	//Relay Logic
+	SIVBThrustNotOKA = SIVBThrustNotOKB = GetSIVBEngineOut();
+
 	if (lvdc == NULL) return;
 
 	lvimu.Timestep(mjd);
@@ -108,6 +115,10 @@ void IU::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int(scn, "STATE", State);
 	papiWriteScenario_bool(scn, "UMBILICALCONNECTED", UmbilicalConnected);
+	papiWriteScenario_bool(scn, "SIVBBURNMODEA", SIVBBurnModeA);
+	papiWriteScenario_bool(scn, "SIVBBURNMODEB", SIVBBurnModeB);
+	papiWriteScenario_bool(scn, "SIVBTHRUSTNOTOKA", SIVBThrustNotOKA);
+	papiWriteScenario_bool(scn, "SIVBTHRUSTNOTOKB", SIVBThrustNotOKB);
 	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 
@@ -127,11 +138,15 @@ void IU::LoadState(FILEHANDLE scn)
 		if (!strnicmp(line, IU_END_STRING, sizeof(IU_END_STRING)))
 			return;
 
-		if (papiReadScenario_int(line, "STATE", State)); 
-		else if (papiReadScenario_bool(line, "UMBILICALCONNECTED", UmbilicalConnected));
-		else if (papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime));
-		else if (papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime));
-		else if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
+		papiReadScenario_int(line, "STATE", State);
+		papiReadScenario_bool(line, "UMBILICALCONNECTED", UmbilicalConnected);
+		papiReadScenario_bool(line, "SIVBBURNMODEA", SIVBBurnModeA);
+		papiReadScenario_bool(line, "SIVBBURNMODEB", SIVBBurnModeB);
+		papiReadScenario_bool(line, "SIVBTHRUSTNOTOKA", SIVBThrustNotOKA);
+		papiReadScenario_bool(line, "SIVBTHRUSTNOTOKB", SIVBThrustNotOKB);
+		papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
+		papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime);
+		if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
 			LoadFCC(scn);
 		}
 		else if (!strnicmp(line, "EDS_BEGIN", sizeof("EDS1_BEGIN"))) {
@@ -1437,6 +1452,24 @@ void IU::ControlDistributor(int stage, int channel)
 	}
 }
 
+bool IU::SIVBBurnMode()
+{
+	if (SIVBBurnModeA && !SIVBThrustNotOKA)
+	{
+		return true;
+	}
+	else if (SIVBBurnModeB && !SIVBThrustNotOKB)
+	{
+		return true;
+	}
+	else if (SIVBBurnModeA && SIVBThrustNotOKB && SIVBBurnModeB)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 IU1B::IU1B() : fcc(lvrg), eds(lvrg)
 {
 	lvda.Init(this);
@@ -1544,17 +1577,17 @@ void IU1B::SwitchSelector(int item)
 		eds.SetSIVBEngineCutoffDisabled();
 		break;
 	case 5: //Flight Control Computer S-IVB Burn Mode Off "B"
-		fcc.SetSIVBBurnMode(false);
+		SIVBBurnModeB = false;
 		break;
 	case 6: //Flight Control Computer S-IVB Burn Mode On "B"
+		SIVBBurnModeB = true;
 		fcc.SetStageSwitch(2);
-		fcc.SetSIVBBurnMode(true);
 		break;
 	case 9: //S-IVB Engine Out Indication "A" Enable
 		eds.SetSIVBEngineOutIndicationA(true);
 		break;
 	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
-		fcc.SetSIVBBurnMode(false);
+		SIVBBurnModeA = false;
 		break;
 	case 15: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
 		break;
@@ -1591,8 +1624,8 @@ void IU1B::SwitchSelector(int item)
 	case 51: //S-IB Two Engines Out Auto-Abort Inhibit Enable
 		break;
 	case 53: //Flight Control Computer S-IVB Burn Mode On "A"
+		SIVBBurnModeA = true;
 		fcc.SetStageSwitch(2);
-		fcc.SetSIVBBurnMode(true);
 		break;
 	case 110: //Nose Cone Jettison (Apollo 5, not a real switch selector event!)
 		lvCommandConnector.JettisonNosecap();
@@ -1734,7 +1767,7 @@ void IUSV::SwitchSelector(int item)
 		eds.SetSIVBEngineOutIndicationB(true);
 		break;
 	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
-		fcc.SetSIVBBurnMode(false);
+		SIVBBurnModeA = false;
 		break;
 	case 13: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable Off
 		break;
@@ -1779,7 +1812,7 @@ void IUSV::SwitchSelector(int item)
 		break;
 	case 31: //Flight Control Computer Burn Mode On "A"
 		fcc.SetStageSwitch(2);
-		fcc.SetSIVBBurnMode(true);
+		SIVBBurnModeA = true;
 		break;
 	case 32: //Spare
 		break;
@@ -1859,10 +1892,10 @@ void IUSV::SwitchSelector(int item)
 		break;
 	case 74: //Flight Control Computer Burn Mode On "B"
 		fcc.SetStageSwitch(2);
-		fcc.SetSIVBBurnMode(true);
+		SIVBBurnModeB = true;
 		break;
 	case 75: //Flight Control Computer S-IVB Burn Mode Off "B"
-		fcc.SetSIVBBurnMode(false);
+		SIVBBurnModeB = false;
 		break;
 	case 80: //S-IVB Restart Alert On
 		commandConnector.SetSIISep();

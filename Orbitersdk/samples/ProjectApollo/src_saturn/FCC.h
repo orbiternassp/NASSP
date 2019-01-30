@@ -40,13 +40,13 @@ public:
 	void SetAttitudeError(VECTOR3 atterr) { LVDCAttitudeError = atterr; }
 	void SetGainSwitch(int n) { GainSwitch = n; }
 	void SetStageSwitch(int n) { StageSwitch = n; }
-	void SetSIVBBurnMode(bool n) { SIVBBurnMode = n; }
 	void EnableSCControl() { SCControlEnableRelay = true; }
 	void DisableSCControl() { if (PermanentSCControlEnabled == false) SCControlEnableRelay = false; }
 	void SetPermanentSCControlEnabled() { PermanentSCControlEnabled = true; }
 protected:
 	int GainSwitch;
 	int StageSwitch;
+	//K2
 	bool SIVBBurnMode;
 	bool SCControlEnableRelay;
 	bool PermanentSCControlEnabled;

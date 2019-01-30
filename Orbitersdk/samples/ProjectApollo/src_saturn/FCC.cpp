@@ -61,7 +61,6 @@ void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 
 	oapiWriteScenario_int(scn, "GAINSWITCH", GainSwitch);
 	oapiWriteScenario_int(scn, "STAGESWITCH", StageSwitch);
-	papiWriteScenario_bool(scn, "SIVBBURNMODE", SIVBBurnMode);
 	papiWriteScenario_bool(scn, "SCCONTROLENABLERELAY", SCControlEnableRelay);
 	papiWriteScenario_bool(scn, "PERMANENTSCCONTROLENABLED", PermanentSCControlEnabled);
 	papiWriteScenario_vec(scn, "LVDCATTITUDEERROR", LVDCAttitudeError);
@@ -80,7 +79,6 @@ void FCC::LoadState(FILEHANDLE scn, char *end_str) {
 		}
 		papiReadScenario_int(line, "GAINSWITCH", GainSwitch);
 		papiReadScenario_int(line, "STAGESWITCH", StageSwitch);
-		papiReadScenario_bool(line, "SIVBBURNMODE", SIVBBurnMode);
 		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
 		papiReadScenario_bool(line, "PERMANENTSCCONTROLENABLED", PermanentSCControlEnabled);
 		papiReadScenario_vec(line, "LVDCATTITUDEERROR", LVDCAttitudeError);
@@ -100,7 +98,9 @@ void FCC1B::Timestep(double simdt)
 
 	VECTOR3 AttRate, AttitudeError;
 
+	//Input signals
 	AttRate = lvrg.GetRates();
+	SIVBBurnMode = iu->SIVBBurnMode();
 
 	// S/C takeover function
 	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
@@ -259,7 +259,9 @@ void FCCSV::Timestep(double simdt)
 
 	VECTOR3 AttRate, AttitudeError;
 
+	//Input Signals
 	AttRate = lvrg.GetRates();
+	SIVBBurnMode = iu->SIVBBurnMode();
 
 	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates

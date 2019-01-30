@@ -342,6 +342,8 @@ public:
 
 	void ControlDistributor(int stage, int channel);
 
+	bool SIVBBurnMode();
+
 	LVDC* lvdc;
 	LVIMU lvimu;
 	LVRG lvrg;
@@ -377,6 +379,17 @@ protected:
 	/// \brief Connector to launch vehicle.
 	///
 	IUToLVCommandConnector lvCommandConnector;
+
+	//Relays
+
+	//K23
+	bool SIVBBurnModeA;
+	//K36
+	bool SIVBBurnModeB;
+	//K93
+	bool SIVBThrustNotOKA;
+	//K92
+	bool SIVBThrustNotOKB;
 };
 
 class IU1B :public IU
