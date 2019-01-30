@@ -2737,7 +2737,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	// Only the SM has linear thrusters.
 	//
 
-	if (stage != CSM_LEM_STAGE) {
+	if (stage > CSM_LEM_STAGE || stage < PRELAUNCH_STAGE) {
 		if (GetAttitudeMode() == ATTMODE_LIN){
 			SetAttitudeMode(ATTMODE_ROT);
 		}
@@ -3767,7 +3767,7 @@ void Saturn::GenericLoadStateSetup()
 	// telling us that they're being switched in other stages.
 	//
 
-	if (stage != CSM_LEM_STAGE)
+	if (stage > CSM_LEM_STAGE || stage < PRELAUNCH_STAGE)
 	{
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
 	}

@@ -519,6 +519,13 @@ void SaturnV::SetFirstStageEngines ()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
+	//Add CSM RCS
+	if (SaturnHasCSM())
+	{
+		AddRCSJets(41.37, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 43.65, false);
+	}
+
 	//
 	// ************************* propellant specs **********************************
 	//
@@ -663,6 +670,13 @@ void SaturnV::SetSecondStageEngines(double offset)
 	if(ph_1st) {
 		DelPropellantResource(ph_1st);
 		ph_1st = 0;
+	}
+
+	//Add CSM RCS
+	if (SaturnHasCSM())
+	{
+		AddRCSJets(26.22, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 28.5, false);
 	}
 
 	//
@@ -924,6 +938,13 @@ void SaturnV::SetThirdStageEngines (double offset)
 	ClearThrusterDefinitions();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
+
+	//Add CSM RCS
+	if (SaturnHasCSM())
+	{
+		AddRCSJets(12.97, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 15.25, false);
+	}
 
 	// ************************* propellant specs **********************************
 

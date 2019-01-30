@@ -679,8 +679,8 @@ void Saturn1b::CalculateStageMass()
 {
 	SI_Mass = SI_EmptyMass + SI_FuelMass;
 	SII_Mass = SII_EmptyMass + SII_FuelMass;
-	SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
-	CM_Mass = CM_EmptyMass + CM_FuelMass;
+	SM_Mass = SM_EmptyMass + SM_FuelMass;
+	CM_Mass = CM_EmptyMass;
 
 	//
 	// This needs fixing.

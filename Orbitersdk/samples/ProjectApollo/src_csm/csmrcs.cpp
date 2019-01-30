@@ -111,7 +111,7 @@ void SMRCSPropellantSource::Timestep(double simt, double simdt) {
 	if (!our_vessel) return;
 
 	double p;
-	if (our_vessel->GetStage() < CSM_LEM_STAGE) {
+	if (our_vessel->GetStage() < PRELAUNCH_STAGE) {
 		p = RCS_FUEL_PER_QUAD;
 
 		propellantPressurePSI = 200.0;

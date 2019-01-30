@@ -258,6 +258,13 @@ void Saturn1b::SetFirstStageEngines()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 
+	//Add CSM RCS
+	if (SaturnHasCSM())
+	{
+		AddRCSJets(32.87, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 35.15, false);
+	}
+
 	// ************************* propellant specs **********************************
 	if (!ph_1st)
 		ph_1st  = CreatePropellantResource(SI_FuelMass); //1st stage Propellant
@@ -497,6 +504,13 @@ void Saturn1b::SetSecondStageEngines ()
 	ClearThrusters();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
+
+	//Add CSM RCS
+	if (SaturnHasCSM())
+	{
+		AddRCSJets(20.62, SM_RCS_THRUST);
+		AddRCS_CM(CM_RCS_THRUST, 22.9, false);
+	}
 
 	//
 	// ************************* propellant specs **********************************

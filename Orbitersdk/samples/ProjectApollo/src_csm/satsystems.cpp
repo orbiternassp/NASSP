@@ -3523,7 +3523,7 @@ void Saturn::SetRCSState(int Quad, int Thruster, bool Active)
 	// Sanity check.
 	//
 
-	if (stage != CSM_LEM_STAGE)
+	if (stage > CSM_LEM_STAGE || stage < PRELAUNCH_STAGE)
 		return;
 
 	THRUSTER_HANDLE th = 0;
@@ -3580,7 +3580,7 @@ void Saturn::RCSSoundTimestep() {
 	int i;
 	bool on = false;
 	// CSM RCS
-	if (stage == CSM_LEM_STAGE) {
+	if (stage >= PRELAUNCH_STAGE && stage <= CSM_LEM_STAGE) {
 		for (i = 1; i < 5; i++) {
 			if (th_rcs_a[i]) {
 				if (GetThrusterLevel(th_rcs_a[i])) on = true;
@@ -3597,7 +3597,7 @@ void Saturn::RCSSoundTimestep() {
 		}
 	}
 	// CM RCS
-	if (stage >= CSM_LEM_STAGE) {
+	if (stage >= PRELAUNCH_STAGE) {
 		for (i = 0; i < 12; i++) {
 			if (th_att_cm[i]) {
 				if (GetThrusterLevel(th_att_cm[i])) on = true;
