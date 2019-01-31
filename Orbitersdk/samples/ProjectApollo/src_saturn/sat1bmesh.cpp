@@ -742,7 +742,26 @@ void Saturn1b::SeparateStage (int new_stage)
 		CreateSIVBStage("ProjectApollo/nsat1stg2", vs1, false);
 
 		SeparationS.play();
+
+		// Store RCS Propellant 
+		double proptemp[6] = { -1,-1,-1,-1,-1,-1 };
+
+		if (ph_rcs_cm_1) proptemp[0] = GetPropellantMass(ph_rcs_cm_1);
+		if (ph_rcs_cm_2) proptemp[1] = GetPropellantMass(ph_rcs_cm_2);
+		if (ph_rcs0) proptemp[2] = GetPropellantMass(ph_rcs0);
+		if (ph_rcs1) proptemp[3] = GetPropellantMass(ph_rcs1);
+		if (ph_rcs2) proptemp[4] = GetPropellantMass(ph_rcs2);
+		if (ph_rcs3) proptemp[5] = GetPropellantMass(ph_rcs3);
+
 		SetCSMStage();
+
+		// Restore RCS Propellant
+		if (proptemp[0] != -1) SetPropellantMass(ph_rcs_cm_1, proptemp[0]);
+		if (proptemp[1] != -1) SetPropellantMass(ph_rcs_cm_2, proptemp[1]);
+		if (proptemp[2] != -1) SetPropellantMass(ph_rcs0, proptemp[2]);
+		if (proptemp[3] != -1) SetPropellantMass(ph_rcs1, proptemp[3]);
+		if (proptemp[4] != -1) SetPropellantMass(ph_rcs2, proptemp[4]);
+		if (proptemp[5] != -1) SetPropellantMass(ph_rcs3, proptemp[5]);
 
 		ShiftCentreOfMass(_V(0, 0, 20.8));
 	}

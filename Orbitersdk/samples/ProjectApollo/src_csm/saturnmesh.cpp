@@ -534,71 +534,14 @@ void Saturn::SetupEVA()
 
 
 void Saturn::SetCSMStage ()
-
 {
 	ClearMeshes();
     ClearThrusterDefinitions();
+	ClearPropellants();
 	ClearEngineIndicators();
 	ClearLVGuidLight();
 	ClearLVRateLight();
 	ClearSIISep();
-
-	//
-	// Delete any dangling propellant resources.
-	//
-
-	if (ph_ullage1)
-	{
-		DelPropellantResource(ph_ullage1);
-		ph_ullage1 = 0;
-	}
-
-	if (ph_ullage2)
-	{
-		DelPropellantResource(ph_ullage2);
-		ph_ullage2 = 0;
-	}
-
-	if (ph_ullage3)
-	{
-		DelPropellantResource(ph_ullage3);
-		ph_ullage3 = 0;
-	}
-
-	if (ph_1st) {
-		DelPropellantResource(ph_1st);
-		ph_1st = 0;
-	}
-
-	if (ph_2nd) {
-		DelPropellantResource(ph_2nd);
-		ph_2nd = 0;
-	}
-
-	if(ph_3rd) {
-		DelPropellantResource(ph_3rd);
-		ph_3rd = 0;
-	}
-
-	if (ph_sep) {
-		DelPropellantResource(ph_sep);
-		ph_sep = 0;
-	}
-
-	if (ph_sep2) {
-		DelPropellantResource(ph_sep2);
-		ph_sep2 = 0;
-	}
-
-	if (ph_aps1) {
-		DelPropellantResource(ph_aps1);
-		ph_aps1 = 0;
-	}
-
-	if (ph_aps2) {
-		DelPropellantResource(ph_aps2);
-		ph_aps2 = 0;
-	}
 
 	SetSize(10);
 	SetCOG_elev(3.5);
