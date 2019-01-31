@@ -5347,14 +5347,19 @@ void LVDCSV::TimeStep(double simdt) {
 				//Orbital navigation
 				sinceLastCycle += simdt;
 				sinceLastGuidanceCycle += simdt;
-				if (sinceLastGuidanceCycle>1.0)
+				if (sinceLastCycle < 8.0)
 				{
-					dt_g = sinceLastGuidanceCycle;
-					sinceLastGuidanceCycle = 0.0;
-					goto GuidanceLoop;
+					if (sinceLastGuidanceCycle < 1.0)
+					{
+						goto minorloop;
+					}
+					else
+					{
+						dt_g = sinceLastGuidanceCycle;
+						sinceLastGuidanceCycle = 0.0;
+						goto GuidanceLoop;
+					}
 				}
-				if(sinceLastCycle<8.0)
-				{goto minorloop;}
 				dt_c = sinceLastCycle;
 				sinceLastCycle = 0.0;
 				OrbNavCycle++;		//For debugging
