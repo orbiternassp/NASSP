@@ -752,6 +752,7 @@ void Saturn1b::SeparateStage (int new_stage)
 		if (ph_rcs1) proptemp[3] = GetPropellantMass(ph_rcs1);
 		if (ph_rcs2) proptemp[4] = GetPropellantMass(ph_rcs2);
 		if (ph_rcs3) proptemp[5] = GetPropellantMass(ph_rcs3);
+		ClearPropellants();
 
 		SetCSMStage();
 
