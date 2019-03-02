@@ -34,7 +34,6 @@ _$*
 *.elc
 *.ln
 *.hgtags
-core
 
 # Project ignores (converted from .cvsignore files)
 !/Config
@@ -50,7 +49,9 @@ core
 !/Sound
 /Sound/*
 !/Sound/ProjectApollo
-/Orbitersdk/
+/Orbitersdk/*
+!/Orbitersdk/samples
+/Orbitersdk/samples/*
 !/Orbitersdk/samples/ProjectApollo/
 !/Meshes/
 /Meshes/*
@@ -63,8 +64,8 @@ core
 !/Textures/ProjectApollo/
 /Scenarios
 !/Scenarios/ProjectApollo - NASSP
-# Stuff that wasn't previously ignored
 
+# Stuff that wasn't previously ignored
 /Constell.bin
 /Constell2.bin
 /D3D9Client.cfg
@@ -101,3 +102,4 @@ XRSound/
 /ikpFlac.dll
 /ikpMP3.dll
 /TrackIR.cfg
+.vs
