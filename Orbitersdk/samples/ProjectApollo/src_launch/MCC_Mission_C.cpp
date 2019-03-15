@@ -203,7 +203,7 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, cm->MissionTime > 121 * 60 * 60 + 36 * 60, 23, MST_C_COAST30);
 		break;
 	case MST_C_COAST30: // SV Update to SV Update
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, cm->MissionTime > 123 * 60 * 60 + 40 * 60, -1, MST_C_COAST31);
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, cm->MissionTime > 123 * 60 * 60 + 40 * 60, 54, MST_C_COAST31);
 		break;
 	case MST_C_COAST31: // SV Update to Block Data 14
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 125 * 60 * 60 + 12 * 60, 52, MST_C_COAST32);
@@ -215,7 +215,7 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, cm->MissionTime > 139 * 60 * 60 + 40 * 60, 25, MST_C_COAST34);
 		break;
 	case MST_C_COAST34: // SV Update to SV Update
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, cm->MissionTime > 143 * 60 * 60 + 20 * 60, -1, MST_C_COAST35);
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, cm->MissionTime > 143 * 60 * 60 + 20 * 60, 54, MST_C_COAST35);
 		break;
 	case MST_C_COAST35: // SV Update to Block Data 16
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, cm->MissionTime > 144 * 60 * 60 + 11 * 60, 52, MST_C_COAST36);

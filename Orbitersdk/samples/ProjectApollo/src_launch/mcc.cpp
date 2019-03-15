@@ -2488,7 +2488,7 @@ void MCC::drawPad(){
 			sprintf(buffer, "P27 UPDATE\nPURP V%d\nGET %s\n304 01 INDEX %d\n", form->Verb[0], tmpbuf, form->Index[0]);
 			for (int i = 0;i < 16;i++)
 			{
-				sprintf(buffer, "%s       %02o %05d\n", buffer,i+2, form->Data[0][i]);
+				sprintf(buffer, "%s %02o %05d\n", buffer,i+2, form->Data[0][i]);
 			}
 			format_time_prec(tmpbuf, form->NavChk);
 			sprintf(buffer, "%sNAV CHECK (N34)\n%s\nLAT %+07.2f\nLONG %+07.2f\nALT %+07.1f\n", buffer, tmpbuf, form->lat, form->lng, form->alt);
