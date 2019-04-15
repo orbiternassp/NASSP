@@ -716,6 +716,11 @@ void LEM_RR::DefineAnimations(UINT idx) {
 	lem->SetAnimation(anim_RRPitch, rr_proc[0]); lem->SetAnimation(anim_RRYaw, rr_proc[1]);
 }
 
+double LEM_RR::GetAntennaTempF() {
+
+	return KelvinToFahrenheit(antenna->GetTemp());
+}
+
 void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	papiWriteScenario_double(scn, "RR_TRUN", trunnionAngle);

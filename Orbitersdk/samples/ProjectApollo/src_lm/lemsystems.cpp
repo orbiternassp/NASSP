@@ -949,9 +949,12 @@ void LEM::JoystickTimestep(double simdt)
 			rhc_pos[1] = dx8_jstate[rhc_id].lY;
 			rhc_pos[2] = 65536 - rhc_rot_pos;
 
-			//Let's cheat and give the ACA a throttle lever
-			ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[0];
-			ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+			//Let's cheat and give the ACA a throttle lever, if the joystick has one
+			if (rhc_sld_id != -1)
+			{
+				ttca_throttle_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
+				ttca_throttle_pos_dig = (65536.0 - (double)ttca_throttle_pos) / 65536.0;
+			}
 
 			// RCS mode toggle
 			if (rhc_thctoggle && thc_id == -1 && rhc_thctoggle_id != -1) {
@@ -1159,6 +1162,12 @@ void LEM::JoystickTimestep(double simdt)
 			}
 		}
 
+		//Debug
+		if (rhc_debug != -1)
+		{
+			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d sld_id %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id, rhc_sld_id);
+		}
+
 		//
 		// +X TRANSLATION
 		//
@@ -1170,10 +1179,6 @@ void LEM::JoystickTimestep(double simdt)
 			SetRCSJet(3, true);
 		}
 
-		if (rhc_debug != -1)
-		{
-			sprintf(oapiDebugString(), "RHC: X/Y/Z = %d / %d / %d | rzx_id %d rot_id %d", rhc_pos[0], rhc_pos[1], rhc_pos[2], rhc_rzx_id, rhc_rot_id);
-		}
 		// And now the THC...
 		if (thc_id != -1 && thc_id < js_enabled) {
 			hr = dx8_joystick[thc_id]->Poll();
@@ -2767,11 +2772,6 @@ void LEM_RadarTape::RenderRange(SURFHANDLE surf) {
 void LEM_RadarTape::RenderRate(SURFHANDLE surf)
 {
     oapiBlt(surf,tape1,0,0,42, dispRate ,35,163, SURF_PREDEF_CK);
-}
-
-double LEM_RR::GetAntennaTempF(){
-
-	return KelvinToFahrenheit(antenna->GetTemp());
 }
 
 //Cross Pointer
