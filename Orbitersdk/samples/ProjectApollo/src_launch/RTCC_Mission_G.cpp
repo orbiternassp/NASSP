@@ -447,6 +447,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			{
 				sprintf(upMessage, "%s has been scrubbed.", manname);
 			}
+			else
+			{
+				sprintf(upMessage, "%s will have to be executed.", manname);
+			}
 		}
 		//MCC-1 and MCC-2 Update
 		else
