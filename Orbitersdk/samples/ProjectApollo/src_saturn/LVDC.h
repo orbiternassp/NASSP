@@ -555,6 +555,8 @@ private:
 	double IGMInterval;								// IGM Interval
 	double T_1;										// Time left in first-stage IGM
 	double T_2;										// Time left in second and fourth stage IGM
+	double T_GRR;									// Time of GRR in seconds since midnight
+	double t_D;										// Time of launch after reference launch time (time of launch after window opens)
 
 	// These are boolean flags that are real flags in the LVDC SOFTWARE.
 	bool GRR_init;									// GRR initialization done
@@ -611,17 +613,18 @@ private:
 	double K_Y1;
 	double K_Y2;
 	double TI5F2;									// Time in Timebase 5 to maneuver to local reference attitude
+	double T_L_apo;									// Predicted time of liftoff (in GMT) in seconds
+	double Lambda_0;								// Value of DescNodeAngle valid for a liftoff at launch window opening
+	double lambda_dot;								// Time rate of change of Lambda_0
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
-	double fx[7];									// Inclination from azimuth polynomial
-	double gx[7];									// Descending Node Angle from azimuth polynomial
+	double Ax[4];									// Variable azimuth polynomial
 
 	// LVDC software variables, NOT PAD-LOADED
 	double Azimuth;									// Azimuth
 	double Inclination;								// Inclination
 	double DescNodeAngle;							// Descending Node Angle -- THETA_N
-	double Azo,Azs;									// Variables for scaling the -from-azimuth polynomials
 	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
 	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS)
 	VECTOR3 ACommandedAttitude;						// Actual Commanded Attitude (RADIANS)
@@ -676,8 +679,6 @@ private:
 	double CG;
 	double alpha_D;									// Angle from perigee to DN vector
 	bool alpha_D_op;								// Option to determine alpha_D or load it
-	bool i_op;										// Option to determine inclination or load it
-	bool theta_N_op;								// Option to determine descemdind node angle or load it
 	double G_T;										// Magnitude of desired terminal gravitational acceleration
 	double xi_T,eta_T,zeta_T;						// Desired position components in the terminal reference system
 	VECTOR3 PosXEZ;									// Position components in the terminal reference system
