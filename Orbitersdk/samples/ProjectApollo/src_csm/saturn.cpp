@@ -1205,11 +1205,11 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 		// to inhibit Orbiter's thrust control
 		//
 		
-		SPSEngine.Timestep(MissionTime, simdt);
+		SPSEngine.Timestep(simdt);
 
 		// Better acceleration measurement stability
 		imu.Timestep(simdt);
-		ems.TimeStep(MissionTime, simdt);
+		ems.TimeStep(simdt);
 		CrewStatus.Timestep(simdt);
 
 		if (stage < CSM_LEM_STAGE)

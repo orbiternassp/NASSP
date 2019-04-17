@@ -829,7 +829,7 @@ class EMS : public e_object {
 public:
 	EMS(PanelSDK &p);
 	void Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c);
-	void TimeStep(double MissionTime, double simdt);
+	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback

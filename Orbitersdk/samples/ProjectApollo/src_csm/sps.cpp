@@ -500,7 +500,7 @@ void SPSEngine::DeleteAnimations() {
 	anim_SPSGimbalYaw = -1;
 }
 
-void SPSEngine::Timestep(double simt, double simdt) {
+void SPSEngine::Timestep(double simdt) {
 
 	if (!saturn) return;
 
@@ -606,8 +606,8 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	//
 
 	// Do time step
-	pitchGimbalActuator.Timestep(simt, simdt);
-	yawGimbalActuator.Timestep(simt, simdt);
+	pitchGimbalActuator.Timestep(simdt);
+	yawGimbalActuator.Timestep(simdt);
 
 	if (saturn->GetStage() == CSM_LEM_STAGE && spsThruster) {
 		// Directions X,Y,Z = YAW (+ = left),PITCH (+ = DOWN),FORE/AFT
@@ -749,7 +749,7 @@ void SPSGimbalActuator::Init(Saturn *s, ServoAmplifierModule *servoAmp, ThreePos
 	motor2StartSource = m2StartSource;
 }
 
-void SPSGimbalActuator::Timestep(double simt, double simdt) {
+void SPSGimbalActuator::Timestep(double simdt) {
 
 	if (!saturn) return;
 

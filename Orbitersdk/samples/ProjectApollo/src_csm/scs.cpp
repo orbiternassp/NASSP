@@ -4936,7 +4936,7 @@ void EMS::Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimme
 	DimmerRotationalSwitch = dimmer;
 }
 
-void EMS::TimeStep(double MissionTime, double simdt) {
+void EMS::TimeStep(double simdt) {
 
 	double position;
 	double dV;

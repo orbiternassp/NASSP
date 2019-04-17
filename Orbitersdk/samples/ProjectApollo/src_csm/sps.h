@@ -91,7 +91,7 @@ public:
 
 	void Init(Saturn *s, ServoAmplifierModule *servoAmp, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
 	          e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource);
-	void Timestep(double simt, double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -129,7 +129,7 @@ public:
 	void Init(Saturn *s);
 	void DefineAnimations(UINT idx);
 	void DeleteAnimations();
-	void Timestep(double simt, double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	double GetChamberPressurePSI();
 	bool IsThrustOnA() { return thrustOnA; };
