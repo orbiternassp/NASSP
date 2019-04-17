@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define _PA_RTCC_H
 
 #include <vector>
+#include "../src_rtccmfd/OrbMech.h"
 
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"
@@ -133,15 +134,6 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	41158.5652869,
 	41423.74583,
 	41658.120139
-};
-
-struct SV
-{
-	VECTOR3 R = _V(0, 0, 0);
-	VECTOR3 V = _V(0, 0, 0);
-	double MJD = 0.0;
-	OBJHANDLE gravref = NULL;
-	double mass = 0.0;
 };
 
 struct LambertMan //Data for Lambert targeting

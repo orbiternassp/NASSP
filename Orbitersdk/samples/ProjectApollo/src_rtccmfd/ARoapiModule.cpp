@@ -77,7 +77,7 @@ DLLCLBK void ExitModule(HINSTANCE hDLL) {          // Called by Orbiter when mod
 int ARoapiModule::MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam) {  // Message parser, handling MFD open requests
 	switch (msg) {
 	case OAPI_MSG_MFD_OPENED:
-		return (int)(new ApolloRTCCMFD(LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam, mfd));    // Open an ephemeral Glideslope instance each time we make a new Glideslope MFD, plus F8, etc/ 
+		return (int)(new ApolloRTCCMFD(LOWORD(wparam), HIWORD(wparam), (VESSEL*)lparam, mfd));    // Open an ephemeral RTCC instance each time we make a new RTCC MFD, plus F8, etc/ 
 	}
 	return 0;
 }

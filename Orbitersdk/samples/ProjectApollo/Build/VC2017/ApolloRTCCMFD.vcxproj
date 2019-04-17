@@ -18,6 +18,7 @@
     <ClInclude Include="..\..\src_rtccmfd\ARoapiModule.h" />
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
   </ItemGroup>
   <ItemGroup>
@@ -29,6 +30,7 @@
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EphemProg.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LWP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

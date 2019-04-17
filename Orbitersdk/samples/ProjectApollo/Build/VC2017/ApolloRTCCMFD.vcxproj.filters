@@ -36,6 +36,9 @@
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\LWP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp">
@@ -63,6 +66,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\LWP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

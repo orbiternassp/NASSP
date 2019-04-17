@@ -6457,6 +6457,77 @@ VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu)
 	return V_HF - V;
 }
 
+VECTOR3 EclipticToECI(VECTOR3 v, double MJD)
+{
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	MATRIX3 Rot = GetObliquityMatrix(hEarth, MJD);
+	return rhtmul(Rot, v);
+}
+
+void EclipticToECI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECI, VECTOR3 &V_ECI)
+{
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	MATRIX3 Rot = GetObliquityMatrix(hEarth, MJD);
+	R_ECI = rhtmul(Rot, R);
+	V_ECI = rhtmul(Rot, V);
+}
+
+VECTOR3 ECIToEcliptic(VECTOR3 v, double MJD)
+{
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	MATRIX3 Rot = GetObliquityMatrix(hEarth, MJD);
+	return rhmul(Rot, v);
+}
+
+void ECIToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl)
+{
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	MATRIX3 Rot = GetObliquityMatrix(hEarth, MJD);
+	R_ecl = rhmul(Rot, R);
+	V_ecl = rhmul(Rot, V);
+}
+
+VECTOR3 EclipticToECEF(VECTOR3 v, double MJD)
+{
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	MATRIX3 Rot = GetRotationMatrix(hEarth, MJD);
+	return rhtmul(Rot, v);
+}
+
+void EclipticToECEF(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECEF, VECTOR3 &V_ECEF)
+{
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	MATRIX3 Rot = GetRotationMatrix(hEarth, MJD);
+	R_ECEF = rhtmul(Rot, R);
+	V_ECEF = rhtmul(Rot, V);
+}
+
+VECTOR3 ECEFToEcliptic(VECTOR3 v, double MJD)
+{
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	MATRIX3 Rot = GetRotationMatrix(hEarth, MJD);
+	return rhmul(Rot, v);
+}
+
+void ECEFToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl)
+{
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	MATRIX3 Rot = GetRotationMatrix(hEarth, MJD);
+	R_ecl = rhmul(Rot, R);
+	V_ecl = rhmul(Rot, V);
+}
+
+double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu)
+{
+	double eps = length(V)*length(V) / 2.0 - mu / length(R);
+	return -mu / (2.0*eps);
+}
+
+double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu)
+{
+	return sqrt(mu / pow(GetSemiMajorAxis(R, V, mu), 3));
+}
+
 }
 
 CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)
@@ -6866,4 +6937,9 @@ VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b)
 double acos2(double _X)
 {
 	return acos(min(1.0, max(-1.0, _X)));
+}
+
+double asin2(double _X)
+{
+	return asin(min(1.0, max(-1.0, _X)));
 }

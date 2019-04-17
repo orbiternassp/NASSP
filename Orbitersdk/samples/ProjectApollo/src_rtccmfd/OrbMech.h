@@ -87,6 +87,27 @@ const double groundstations[NUMBEROFGROUNDSTATIONS][2] = {
 	{ 35.33820*RAD, -116.87421*RAD }
 };
 
+struct SV
+{
+	VECTOR3 R = _V(0, 0, 0);
+	VECTOR3 V = _V(0, 0, 0);
+	double MJD = 0.0;
+	OBJHANDLE gravref = NULL;
+	double mass = 0.0;
+};
+
+struct ITERSTATE
+{
+	int s_F = 0;
+	double p_H = 0.0;
+	double c_I = 0.0;
+	double dv = 0.0;
+	double dvo = 0.0;
+	double err = 0.0;
+	double erro = 0.0;
+	bool converged = false;
+};
+
 struct OELEMENTS
 {
 	double h = 0.0;
@@ -367,6 +388,16 @@ namespace OrbMech {
 	MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V);
 	MATRIX3 GetVesselToLocalRotMatrix(MATRIX3 Rot_VG, MATRIX3 Rot_LG);
 	MATRIX3 GetVesselToGlobalRotMatrix(MATRIX3 Rot_VL, MATRIX3 Rot_LG);
+	VECTOR3 EclipticToECI(VECTOR3 v, double MJD);
+	void EclipticToECI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECI, VECTOR3 &V_ECI);
+	VECTOR3 ECIToEcliptic(VECTOR3 v, double MJD);
+	void ECIToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl);
+	VECTOR3 EclipticToECEF(VECTOR3 v, double MJD);
+	void EclipticToECEF(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECEF, VECTOR3 &V_ECEF);
+	VECTOR3 ECEFToEcliptic(VECTOR3 v, double MJD);
+	void ECEFToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl);
+	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
+	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);
@@ -392,6 +423,7 @@ MATRIX3 operator+(MATRIX3 a, MATRIX3 b);
 VECTOR3 rhmul(const MATRIX3 &A, const VECTOR3 &b);
 VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b);
 double acos2(double _X);
+double asin2(double _X);
 
 //void(*)(double*, double, double*)
 #endif
