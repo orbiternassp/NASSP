@@ -137,58 +137,6 @@ class Rotational:public instrument	//<CLASS
 	virtual void* GetComponent(char *component_name);
 };
 
-class ADI:public instrument
-{public:
-
-   void *void_hpbuffer;
-   int init;
-   int sphere_resolution;		//more is better, but uses more memory..
-   float sphere_vert[625][3];
-   float sphere_norm[625][3];
-   float sphere_tex[625][2];
-   unsigned int sphere_index[1300];
-   void *p_tex;
-   int tri; //number of triangle strip
-   int list_name; //we store the rendering into a display list
-   double radius;
-
-   float light_pos[3];
-   float ambient[3];
-   float color[3];
-   float zoom;
-   double *PITCH;
-   double *YAW;
-   double *ROLL;
-   vector3 reference;
-   matrix ref_rot;
-   vector3 now;
-   vector3 rates;
-
-   float over_rate;
-   //some stuff for OpenGL
-   HDC		   hDC2;
-   HGLRC       hRC;
-   HBITMAP	   hBMP;
-   HBITMAP hBMP_old;
-   ADI(int x,int y,Panel *i_parent);
-   virtual ~ADI();
-
-   void SetZoom(double y);
-   void SetAmbient(int red,int green,int blue);
-   void SetLight(int red,int green,int blue);
-   void InitGL(char *bitmapname);
-   void MoveBall();
-   void RegisterMe(int index);
-   void PaintMe();
-   void RefreshMe();
-   void SetLight();
-   virtual void* GetComponent(char *component_name);
-   SURFHANDLE local_blt;	//tiny surface for pointer blt; (attitude rates uses: max/med/min..)
-   POINT TR[3];
-};
-
-
-
 class inst_MFD:public instrument
 {public:
      int mfd_type;

@@ -781,7 +781,7 @@ void SIBSystems::SwitchSelector(int channel)
 		break;
 	case 39: //Telemeter Calibration Off
 		break;
-	case 79: //FUel Depletion Cutoff Enable
+	case 79: //Fuel Depletion Cutoff Enable
 		SetFuelDepletionCutoffEnable();
 		break;
 	case 97: //LOX Depletion Cutoff Enable
