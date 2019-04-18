@@ -59,7 +59,7 @@ static struct {
 	int Saturn_RHC;
 	int Saturn_THC;
 	int Saturn_RSL;
-	int Saturn_TJT;
+	int Saturn_TSL;
 	int Saturn_RHCTHCToggle;
 	int Saturn_RHCTHCToggleId;
 	int Saturn_MaxTimeAcceleration;
@@ -124,8 +124,8 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 12, "%i", &gParams.Saturn_THC);
 		} else if (!strnicmp(line, "JOYSTICK_RSL", 12)) {
 			sscanf(line + 12, "%i", &gParams.Saturn_RSL);
-		} else if (!strnicmp(line, "JOYSTICK_TJT", 12)) {
-			sscanf(line + 12, "%i", &gParams.Saturn_TJT);
+		} else if (!strnicmp(line, "JOYSTICK_TSL", 12)) {
+			sscanf(line + 12, "%i", &gParams.Saturn_TSL);
 		} else if (!strnicmp (line, "JOYSTICK_RTTID", 14)) {
 			sscanf (line + 14, "%i", &gParams.Saturn_RHCTHCToggleId);
 		} else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
@@ -200,7 +200,7 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	sprintf(cbuf, "JOYSTICK_RSL %d", gParams.Saturn_RSL);
 	oapiWriteLine(hFile, cbuf);
 
-	sprintf(cbuf, "JOYSTICK_TJT %d", gParams.Saturn_TJT);
+	sprintf(cbuf, "JOYSTICK_TSL %d", gParams.Saturn_TSL);
 	oapiWriteLine(hFile, cbuf);
 
 	oapiWriteLine(hFile, "JOYSTICK_TAUTO");	// Not configurable currently
@@ -344,15 +344,15 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 				}
 
 				if (SendDlgItemMessage(gParams.hDlgTabs[1], IDC_CHECK_TJT, BM_GETCHECK, 0, 0) == BST_UNCHECKED) {
-					gParams.Saturn_TJT = -1;
+					gParams.Saturn_TSL = -1;
 				}
 				else {
 					SendDlgItemMessage(gParams.hDlgTabs[1], IDC_EDIT_TJT, WM_GETTEXT, 3, (LPARAM)(LPCTSTR)buffer);
 					if (sscanf(buffer, "%i", &i) == 1) {
-						gParams.Saturn_TJT = i;
+						gParams.Saturn_TSL = i;
 					}
 					else {
-						gParams.Saturn_TJT = -1;
+						gParams.Saturn_TSL = -1;
 					}
 				}
 
@@ -456,13 +456,13 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 			SendDlgItemMessage(hWnd, IDC_EDIT_RSL, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
 		}
 
-		if (gParams.Saturn_TJT == -1) {
+		if (gParams.Saturn_TSL == -1) {
 			SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_UNCHECKED, 0);
 			SendDlgItemMessage(hWnd, IDC_EDIT_TJT, WM_SETTEXT, 0, (LPARAM)(LPCTSTR) "1");
 		}
 		else {
 			SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_CHECKED, 0);
-			sprintf(buffer, "%i", gParams.Saturn_TJT);
+			sprintf(buffer, "%i", gParams.Saturn_TSL);
 			SendDlgItemMessage(hWnd, IDC_EDIT_TJT, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
 		}
 
@@ -512,11 +512,10 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 
-	long rhcChecked, thcChecked, tjtChecked;
+	long rhcChecked, thcChecked;
 
 	rhcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_RHC, BM_GETCHECK, 0, 0);
 	thcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_THC, BM_GETCHECK, 0, 0);
-	tjtChecked = SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_GETCHECK, 0, 0);
 
 	if (rhcChecked == BST_CHECKED) {
 		SendDlgItemMessage(hWnd, IDC_EDIT_RHC, EM_SETREADONLY, (WPARAM) (BOOL) false, 0);
@@ -549,7 +548,7 @@ void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_RHCTHCTOGGLE), FALSE);
 	}
 
-	if (rhcChecked == BST_CHECKED && tjtChecked == BST_UNCHECKED) {
+	if (rhcChecked == BST_CHECKED) {
 		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RSL), TRUE);
 	}
 	else {
@@ -574,7 +573,7 @@ void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 		SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_UNCHECKED, 0);
 	}
 
-	if (tjtChecked == BST_CHECKED) {
+	if (SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_GETCHECK, 0, 0) == BST_CHECKED) {
 		SendDlgItemMessage(hWnd, IDC_EDIT_TJT, EM_SETREADONLY, (WPARAM)(BOOL)false, 0);
 		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_TJT), TRUE);
 	}
@@ -603,7 +602,7 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 	gParams.Saturn_RHC = -1;
 	gParams.Saturn_THC = -1;
 	gParams.Saturn_RSL = -1;
-	gParams.Saturn_TJT = -1;
+	gParams.Saturn_TSL = -1;
 	gParams.Saturn_RHCTHCToggle = 0;
 	gParams.Saturn_RHCTHCToggleId = -1;
 	gParams.Saturn_MaxTimeAcceleration = 0;

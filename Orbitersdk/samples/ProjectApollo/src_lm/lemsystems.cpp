@@ -883,7 +883,7 @@ void LEM::JoystickTimestep(double simdt)
 		int thc_x_pos = 0;
 		int thc_y_pos = 0;
 		int thc_z_pos = 0;
-		int thc_rot_pos = 0;
+		int thc_rot_pos = 32768; // Initialize to centered
 		int thc_tjt_pos = 32768; // Initialize to centered
 		bool ttca_realistic_throttle = false;
 

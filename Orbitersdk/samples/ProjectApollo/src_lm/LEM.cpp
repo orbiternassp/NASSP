@@ -1514,7 +1514,7 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line + 12, "%i", &thc_rot_id);
 		if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
 	}
-	else if (!strnicmp(line, "JOYSTICK_TJT", 12)) {
+	else if (!strnicmp(line, "JOYSTICK_TSL", 12)) {
 		sscanf(line + 12, "%i", &thc_tjt_id);
 		if (thc_tjt_id > 2) { thc_tjt_id = 2; } // Be paranoid
 	}
