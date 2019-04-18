@@ -821,7 +821,7 @@ void LEM::SystemsInit()
 	thc_rot_id = -1; // Disabled
 	thc_sld_id = -1; // Disabled
 	thc_rzx_id = -1; // Disabled
-	thc_tjt_id = 0; // Disabled
+	thc_tjt_id = -1; // Disabled
 	thc_debug = -1;
 	rhc_debug = -1;
 	rhc_thctoggle = false;
