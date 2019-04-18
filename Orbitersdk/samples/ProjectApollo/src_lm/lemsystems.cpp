@@ -819,7 +819,6 @@ void LEM::SystemsInit()
 	rhc_rzx_id = -1; // Disabled
 	thc_id = -1;     // Disabled
 	thc_rot_id = -1; // Disabled
-	thc_sld_id = -1; // Disabled
 	thc_rzx_id = -1; // Disabled
 	thc_tjt_id = -1; // Disabled
 	thc_debug = -1;
@@ -855,14 +854,14 @@ void LEM::JoystickTimestep(double simdt)
 
 			rhc_id = thc_id;
 			rhc_rot_id = thc_rot_id;
-			rhc_sld_id = thc_sld_id;
+			rhc_sld_id = thc_tjt_id;
 			rhc_rzx_id = thc_rzx_id;
 			rhc_pov_id = thc_pov_id;
 			rhc_debug = thc_debug;
 
 			thc_id = tmp_id;
 			thc_rot_id = tmp_rot_id;
-			thc_sld_id = tmp_sld_id;
+			thc_tjt_id = tmp_sld_id;
 			thc_rzx_id = tmp_rzx_id;
 			thc_pov_id = tmp_pov_id;
 			thc_debug = tmp_debug;
@@ -937,9 +936,6 @@ void LEM::JoystickTimestep(double simdt)
 				case 2:
 					rhc_rot_pos = dx8_jstate[rhc_id].lRz; break;
 				}
-			}
-			if (rhc_sld_id != -1) { // If this is a slider
-				rhc_rot_pos = dx8_jstate[rhc_id].rglSlider[rhc_sld_id];
 			}
 			if (rhc_rzx_id != -1 && rhc_rot_id == -1) { // If we use the native Z-axis
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
@@ -1193,7 +1189,9 @@ void LEM::JoystickTimestep(double simdt)
 				}
 			}
 
-			ttca_realistic_throttle = true;
+			if (thc_tjt_id != -1) {
+				ttca_realistic_throttle = true;
+			}
 
 			// Read data
 			dx8_joystick[thc_id]->GetDeviceState(sizeof(dx8_jstate[thc_id]), &dx8_jstate[thc_id]);
@@ -1217,9 +1215,6 @@ void LEM::JoystickTimestep(double simdt)
 					case 2:
 						thc_rot_pos = dx8_jstate[thc_id].lRz; break;
 					}
-				}
-				if (thc_sld_id != -1) { // If this is a slider
-					thc_rot_pos = dx8_jstate[thc_id].rglSlider[thc_sld_id];
 				}
 				if (thc_rzx_id != -1 && thc_rot_id == -1) { // If we use the native Z-axis
 					thc_rot_pos = dx8_jstate[thc_id].lZ;

@@ -530,12 +530,11 @@ public:
 	HRESULT				 dx8_failure;     // DX failure reason
 	int rhc_id;							  // Joystick # for the RHC
 	int rhc_rot_id;						  // ID of ROTATOR axis to use for RHC Z-axis
-	int rhc_sld_id;                       // ID of SLIDER axis to use for RHC Z-axis
+	int rhc_sld_id;                       // ID of SLIDER axis to use for throttle control from joystick configured as ACA
 	int rhc_rzx_id;                       // Flag to use native Z-axis as RHC Z-axis
 	int rhc_pov_id;						  ///< ID of the cooliehat a.k.a. POV
 	int thc_id;                           // Joystick # for the THC
 	int thc_rot_id;						  // ID of ROTATOR axis to use for THC Z-axis
-	int thc_sld_id;                       // ID of SLIDER axis to use for THC Z-axis
 	int thc_rzx_id;                       // Flag to use native Z-axis as THC Z-axis	
 	int thc_pov_id;						  ///< ID of the cooliehat a.k.a. POV
 	int thc_tjt_id;                       // Flag to use axis as TTCA THROTTLE/JETS select lever

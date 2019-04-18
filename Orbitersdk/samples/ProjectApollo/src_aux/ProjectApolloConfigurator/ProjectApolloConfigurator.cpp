@@ -512,10 +512,11 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 
-	long rhcChecked, thcChecked;
+	long rhcChecked, thcChecked, tjtChecked;
 
 	rhcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_RHC, BM_GETCHECK, 0, 0);
 	thcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_THC, BM_GETCHECK, 0, 0);
+	tjtChecked = SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_GETCHECK, 0, 0);
 
 	if (rhcChecked == BST_CHECKED) {
 		SendDlgItemMessage(hWnd, IDC_EDIT_RHC, EM_SETREADONLY, (WPARAM) (BOOL) false, 0);
@@ -548,7 +549,7 @@ void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_RHCTHCTOGGLE), FALSE);
 	}
 
-	if (rhcChecked == BST_CHECKED) {
+	if (rhcChecked == BST_CHECKED && tjtChecked == BST_UNCHECKED) {
 		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RSL), TRUE);
 	}
 	else {
@@ -573,7 +574,7 @@ void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 		SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_UNCHECKED, 0);
 	}
 
-	if (SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+	if (tjtChecked == BST_CHECKED) {
 		SendDlgItemMessage(hWnd, IDC_EDIT_TJT, EM_SETREADONLY, (WPARAM)(BOOL)false, 0);
 		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_TJT), TRUE);
 	}
