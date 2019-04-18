@@ -58,6 +58,8 @@ static struct {
 	int Saturn_FDAISmooth;
 	int Saturn_RHC;
 	int Saturn_THC;
+	int Saturn_RSL;
+	int Saturn_TJT;
 	int Saturn_RHCTHCToggle;
 	int Saturn_RHCTHCToggleId;
 	int Saturn_MaxTimeAcceleration;
@@ -120,6 +122,10 @@ ProjectApolloConfigurator::ProjectApolloConfigurator (): LaunchpadItem ()
 			sscanf (line + 12, "%i", &gParams.Saturn_RHC);
 		} else if (!strnicmp (line, "JOYSTICK_THC", 12)) {
 			sscanf (line + 12, "%i", &gParams.Saturn_THC);
+		} else if (!strnicmp(line, "JOYSTICK_RSL", 12)) {
+			sscanf(line + 12, "%i", &gParams.Saturn_RSL);
+		} else if (!strnicmp(line, "JOYSTICK_TJT", 12)) {
+			sscanf(line + 12, "%i", &gParams.Saturn_TJT);
 		} else if (!strnicmp (line, "JOYSTICK_RTTID", 14)) {
 			sscanf (line + 14, "%i", &gParams.Saturn_RHCTHCToggleId);
 		} else if (!strnicmp (line, "JOYSTICK_RTT", 12)) {
@@ -190,9 +196,14 @@ void ProjectApolloConfigurator::WriteConfig(FILEHANDLE hFile)
 	
 	sprintf(cbuf, "JOYSTICK_THC %d", gParams.Saturn_THC);
 	oapiWriteLine(hFile, cbuf);
-	
+
+	sprintf(cbuf, "JOYSTICK_RSL %d", gParams.Saturn_RSL);
+	oapiWriteLine(hFile, cbuf);
+
+	sprintf(cbuf, "JOYSTICK_TJT %d", gParams.Saturn_TJT);
+	oapiWriteLine(hFile, cbuf);
+
 	oapiWriteLine(hFile, "JOYSTICK_TAUTO");	// Not configurable currently
-	oapiWriteLine(hFile, "JOYSTICK_TJT");	// Not configurable currently
 
 	oapiCloseFile (hFile, FILE_OUT);
 }
@@ -319,6 +330,32 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcFrame (HWND hWnd, UINT uMsg, WPA
 					gParams.Saturn_RHCTHCToggleId = -1;
 				}
 
+				if (SendDlgItemMessage(gParams.hDlgTabs[1], IDC_CHECK_RSL, BM_GETCHECK, 0, 0) == BST_UNCHECKED) {
+					gParams.Saturn_RSL = -1;
+				}
+				else {
+					SendDlgItemMessage(gParams.hDlgTabs[1], IDC_EDIT_RSL, WM_GETTEXT, 3, (LPARAM)(LPCTSTR)buffer);
+					if (sscanf(buffer, "%i", &i) == 1) {
+						gParams.Saturn_RSL = i;
+					}
+					else {
+						gParams.Saturn_RSL = -1;
+					}
+				}
+
+				if (SendDlgItemMessage(gParams.hDlgTabs[1], IDC_CHECK_TJT, BM_GETCHECK, 0, 0) == BST_UNCHECKED) {
+					gParams.Saturn_TJT = -1;
+				}
+				else {
+					SendDlgItemMessage(gParams.hDlgTabs[1], IDC_EDIT_TJT, WM_GETTEXT, 3, (LPARAM)(LPCTSTR)buffer);
+					if (sscanf(buffer, "%i", &i) == 1) {
+						gParams.Saturn_TJT = i;
+					}
+					else {
+						gParams.Saturn_TJT = -1;
+					}
+				}
+
 				// Miscellaneous Tab
 				SendDlgItemMessage(gParams.hDlgTabs[2], IDC_EDIT_TIMEACC, WM_GETTEXT, 4, (LPARAM) (LPCTSTR) buffer);
 				if (sscanf(buffer, "%i", &i) == 1) {
@@ -400,7 +437,6 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 			SendDlgItemMessage(hWnd, IDC_EDIT_THC, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
 		}
 
-
 		SendDlgItemMessage(hWnd, IDC_CHECK_RHCTHCTOGGLE, BM_SETCHECK, gParams.Saturn_RHCTHCToggle?BST_CHECKED:BST_UNCHECKED, 0);
 
 		if (gParams.Saturn_RHCTHCToggleId == -1) {
@@ -408,6 +444,26 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 		} else {
 			sprintf(buffer, "%i", gParams.Saturn_RHCTHCToggleId);
 			SendDlgItemMessage(hWnd, IDC_EDIT_RHCTHCTOGGLE, WM_SETTEXT, 0, (LPARAM) (LPCTSTR) buffer);
+		}
+
+		if (gParams.Saturn_RSL == -1) {
+			SendDlgItemMessage(hWnd, IDC_CHECK_RSL, BM_SETCHECK, BST_UNCHECKED, 0);
+			SendDlgItemMessage(hWnd, IDC_EDIT_RSL, WM_SETTEXT, 0, (LPARAM)(LPCTSTR) "0");
+		}
+		else {
+			SendDlgItemMessage(hWnd, IDC_CHECK_RSL, BM_SETCHECK, BST_CHECKED, 0);
+			sprintf(buffer, "%i", gParams.Saturn_RSL);
+			SendDlgItemMessage(hWnd, IDC_EDIT_RSL, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
+		}
+
+		if (gParams.Saturn_TJT == -1) {
+			SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_UNCHECKED, 0);
+			SendDlgItemMessage(hWnd, IDC_EDIT_TJT, WM_SETTEXT, 0, (LPARAM)(LPCTSTR) "1");
+		}
+		else {
+			SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_CHECKED, 0);
+			sprintf(buffer, "%i", gParams.Saturn_TJT);
+			SendDlgItemMessage(hWnd, IDC_EDIT_TJT, WM_SETTEXT, 0, (LPARAM)(LPCTSTR)buffer);
 		}
 
 		sprintf(buffer,"%i",gParams.Saturn_MaxTimeAcceleration);
@@ -431,7 +487,13 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_RHCTHCTOGGLE)) {
 			UpdateControlState(hWnd);
-		} 
+
+		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_RSL)) {
+			UpdateControlState(hWnd);
+
+		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_CHECK_TJT)) {
+			UpdateControlState(hWnd);
+		}
 		break;
 
 	case WM_CTLCOLORSTATIC:
@@ -450,10 +512,11 @@ BOOL CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg, W
 
 void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 
-	long rhcChecked, thcChecked;
+	long rhcChecked, thcChecked, tjtChecked;
 
 	rhcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_RHC, BM_GETCHECK, 0, 0);
 	thcChecked = SendDlgItemMessage (hWnd, IDC_CHECK_THC, BM_GETCHECK, 0, 0);
+	tjtChecked = SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_GETCHECK, 0, 0);
 
 	if (rhcChecked == BST_CHECKED) {
 		SendDlgItemMessage(hWnd, IDC_EDIT_RHC, EM_SETREADONLY, (WPARAM) (BOOL) false, 0);
@@ -486,6 +549,39 @@ void ProjectApolloConfigurator::UpdateControlState(HWND hWnd) {
 		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_RHCTHCTOGGLE), FALSE);
 	}
 
+	if (rhcChecked == BST_CHECKED && tjtChecked == BST_UNCHECKED) {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RSL), TRUE);
+	}
+	else {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_RSL), FALSE);
+		SendDlgItemMessage(hWnd, IDC_CHECK_RSL, BM_SETCHECK, BST_UNCHECKED, 0);
+	}
+
+	if (SendDlgItemMessage(hWnd, IDC_CHECK_RSL, BM_GETCHECK, 0, 0) == BST_CHECKED) {
+		SendDlgItemMessage(hWnd, IDC_EDIT_RSL, EM_SETREADONLY, (WPARAM)(BOOL)false, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_RSL), TRUE);
+	}
+	else {
+		SendDlgItemMessage(hWnd, IDC_EDIT_RSL, EM_SETREADONLY, (WPARAM)(BOOL)true, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_RSL), FALSE);
+	}
+
+	if (thcChecked == BST_CHECKED) {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_TJT), TRUE);
+	}
+	else {
+		EnableWindow(GetDlgItem(hWnd, IDC_CHECK_TJT), FALSE);
+		SendDlgItemMessage(hWnd, IDC_CHECK_TJT, BM_SETCHECK, BST_UNCHECKED, 0);
+	}
+
+	if (tjtChecked == BST_CHECKED) {
+		SendDlgItemMessage(hWnd, IDC_EDIT_TJT, EM_SETREADONLY, (WPARAM)(BOOL)false, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_TJT), TRUE);
+	}
+	else {
+		SendDlgItemMessage(hWnd, IDC_EDIT_TJT, EM_SETREADONLY, (WPARAM)(BOOL)true, 0);
+		EnableWindow(GetDlgItem(hWnd, IDC_STATIC_TJT), FALSE);
+	}
 }
 
 // ==============================================================
@@ -506,6 +602,8 @@ DLLCLBK void opcDLLInit (HINSTANCE hDLL)
 	gParams.Saturn_FDAISmooth = 0;
 	gParams.Saturn_RHC = -1;
 	gParams.Saturn_THC = -1;
+	gParams.Saturn_RSL = -1;
+	gParams.Saturn_TJT = -1;
 	gParams.Saturn_RHCTHCToggle = 0;
 	gParams.Saturn_RHCTHCToggleId = -1;
 	gParams.Saturn_MaxTimeAcceleration = 0;

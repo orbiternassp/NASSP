@@ -161,6 +161,9 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">\Dokumente und Einstellungen\mjoachim\Eigene Dateien\Games\ProjectApollo\Orbiter\Orbitersdk\samples\ProjectApollo\ProjectApolloConfigurator;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src_aux\ProjectApolloConfigurator\resource.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
