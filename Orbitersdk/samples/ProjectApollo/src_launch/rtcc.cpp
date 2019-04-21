@@ -5265,7 +5265,7 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	res->ReA = teicalc->EntryAng;
 	res->GET400K = (teicalc->EIMJD - opt->GETbase)*24.0*3600.0;
 	res->GET05G = res->GET400K + dt22;
-	res->RTGO = 1285.0 - 3437.7468*acos(dotp(unit(teicalc->R_EI), unit(R05G)));
+	res->RTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(res->GET05G, opt->GETbase), res->latitude, res->longitude);
 	res->VIO = length(V05G);
 	res->precision = teicalc->precision;
 	res->Incl = teicalc->ReturnInclination;

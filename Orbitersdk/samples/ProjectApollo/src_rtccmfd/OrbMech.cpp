@@ -6528,6 +6528,40 @@ double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu)
 	return sqrt(mu / pow(GetSemiMajorAxis(R, V, mu), 3));
 }
 
+double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
+{
+	//INPUT:
+	// R05G: position vector at 0.05G in ecliptic coordinates
+	// MJD05G: MJD at 0.05G
+	// lat: splashdown latitude
+	// lng: splashdown longitude
+
+	OBJHANDLE hEarth;
+	MATRIX3 Rot2;
+	VECTOR3 R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT;
+	double WIE, KTETA, theta_rad, WT;
+
+	hEarth = oapiGetObjectByName("Earth");
+	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
+	Rot2 = GetRotationMatrix(hEarth, MJD05G);
+	R_LS = rhmul(Rot2, R_P);
+	URT0 = R_LS;
+	WIE = 72.9211505e-6;
+	KTETA = 1000.0;
+	UUZ = rhmul(GetObliquityMatrix(hEarth, MJD05G), _V(0, 0, 1));
+	RTE = crossp(UUZ, URT0);
+	UTR = crossp(RTE, UUZ);
+	urh = unit(R05G);//unit(r)*cos(theta) + crossp(unit(r), -unit(h_apo))*sin(theta);
+	theta_rad = acos(dotp(URT0, urh));
+	for (int i = 0;i < 10;i++)
+	{
+		WT = WIE * (KTETA*theta_rad);
+		URT = URT0 + UTR * (cos(WT) - 1.0) + RTE * sin(WT);
+		theta_rad = acos(dotp(URT, urh));
+	}
+	return theta_rad * 3437.7468;
+}
+
 }
 
 CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)

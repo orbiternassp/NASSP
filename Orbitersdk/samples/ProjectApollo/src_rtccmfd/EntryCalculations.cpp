@@ -2068,10 +2068,8 @@ bool EarthEntry::EntryIter()
 				return false;
 			}
 		}
-		VECTOR3 R05G, V05G, REI, VEI, R3, V3, UR3, U_R1, U_H, DV;
-		double t32, dt22, v3, S_FPA, gammaE, phie, te, MA2, C_FPA;
-
-		precomputations(0, R1B, V1B, U_R1, U_H, MA2, C_FPA);
+		VECTOR3 R05G, V05G, REI, VEI, R3, V3, UR3, DV;
+		double t32, dt22, v3, S_FPA;
 
 		t2 = EntryTIGcor + t21;
 		OrbMech::time_radius_integ(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, REI, VEI);//Maneuver to Entry Interface (400k ft)
@@ -2085,8 +2083,6 @@ bool EarthEntry::EntryIter()
 		UR3 = unit(R3);
 		v3 = length(V3);
 		S_FPA = dotp(UR3, V3) / v3;
-		gammaE = asin(S_FPA);
-		EntryCalculations::augekugel(v3, gammaE, phie, te);
 
 		VECTOR3 Rsph, Vsph;
 
@@ -2101,7 +2097,7 @@ bool EarthEntry::EntryIter()
 
 		Entry_DV = mul(Q_Xx, DV);
 
-		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
+		EntryRTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(t2 + t32 + dt22, GETbase), theta_lat, theta_long);
 		EntryVIO = length(V05G);
 		EntryRET = t2 + t32 + dt22;
 		EntryAng = atan(x2);//asin(dotp(unit(REI), VEI) / length(VEI));
@@ -2806,10 +2802,8 @@ bool Entry::EntryIter()
 	}
 	else
 	{
-		VECTOR3 R05G, V05G, REI, VEI, R3, V3, UR3, U_R1, U_H, DV;
-		double t32, dt22, v3, S_FPA, gammaE, phie, te, MA2, C_FPA;
-
-		precomputations(0, R1B, V1B, U_R1, U_H, MA2, C_FPA);
+		VECTOR3 R05G, V05G, REI, VEI, R3, V3, UR3, DV;
+		double t32, dt22, v3, S_FPA;
 
 		t2 = EntryTIGcor + t21;
 		OrbMech::time_radius_integ(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, RD, -1, hEarth, hEarth, REI, VEI);//Maneuver to Entry Interface (400k ft)
@@ -2823,15 +2817,11 @@ bool Entry::EntryIter()
 		UR3 = unit(R3);
 		v3 = length(V3);
 		S_FPA = dotp(UR3, V3) / v3;
-		gammaE = asin(S_FPA);
-		EntryCalculations::augekugel(v3, gammaE, phie, te);
 
 		VECTOR3 Rsph, Vsph;
 
 		OrbMech::oneclickcoast(R1B, V1B, mjd + (dt0 + dt1) / 24.0 / 3600.0, 0.0, Rsph, Vsph, hEarth, SOIplan);
-		//OrbMech::oneclickcoast(R1B, V2, mjd + (dt0 + dt1) / 24.0 / 3600.0, 0.0, Rsph, Vsph2, hEarth, SOIplan);
 		DV = V2 - V1B;
-		//DV = Vsph2 - Vsph;
 		VECTOR3 i, j, k;
 		MATRIX3 Q_Xx;
 		j = unit(crossp(Vsph, Rsph));
@@ -2840,12 +2830,8 @@ bool Entry::EntryIter()
 		Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
 		Entry_DV = mul(Q_Xx, DV);
-		//U_R1 = unit(Rsph);
-		//eta = crossp(Rsph, Vsph);
-		//U_H = unit(crossp(eta, Rsph));
 
-		//Entry_DV = _V(dotp(DV, U_H), 0.0, -dotp(DV, U_R1));
-		EntryRTGO = phie - 3437.7468*acos(dotp(unit(R3), unit(R05G)));
+		EntryRTGO = OrbMech::CMCEMSRangeToGo(R05G, OrbMech::MJDfromGET(t2 + t32 + dt22, GETbase), theta_lat, theta_long);
 		EntryVIO = length(V05G);
 		EntryRET = t2 + t32 + dt22;
 		EntryAng = atan(x2);//asin(dotp(unit(REI), VEI) / length(VEI));

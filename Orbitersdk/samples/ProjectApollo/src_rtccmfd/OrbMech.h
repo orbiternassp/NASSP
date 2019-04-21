@@ -398,6 +398,7 @@ namespace OrbMech {
 	void ECEFToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl);
 	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
+	double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);

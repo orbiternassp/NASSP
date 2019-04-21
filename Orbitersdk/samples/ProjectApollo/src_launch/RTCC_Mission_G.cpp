@@ -526,6 +526,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1285.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -816,6 +817,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.vessel = calcParams.src;
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
+		entopt.r_rbias = 1285.0;
+		entopt.u_rmax = 37500.0*0.3048;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -1307,6 +1310,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1285.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
