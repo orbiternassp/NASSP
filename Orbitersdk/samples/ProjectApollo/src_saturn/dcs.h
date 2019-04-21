@@ -33,6 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define DCSUPLINK_EVASIVE_MANEUVER_ENABLE	6
 #define DCSUPLINK_EXECUTE_COMM_MANEUVER		7
 #define DCSUPLINK_SIVBIU_LUNAR_IMPACT		8
+#define DCSUPLINK_SATURNIB_LAUNCH_TARGETING	9
 
 #define DCS_START_STRING	"DCS_BEGIN"
 #define DCS_END_STRING		"DCS_END"
@@ -57,6 +58,18 @@ struct DCSLUNARIMPACT
 	double dt;
 	double pitch;
 	double yaw;
+};
+
+//Saturn IB Launch Targeting Update
+struct DCSLAUNCHTARGET
+{
+	double V_T;
+	double R_T;
+	double theta_T;
+	double i;
+	double lambda_0;
+	double lambda_dot;
+	double T_GRR0;
 };
 
 class IU;

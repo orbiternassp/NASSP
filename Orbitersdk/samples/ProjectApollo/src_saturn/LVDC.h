@@ -64,6 +64,7 @@ public:
 	virtual bool EvasiveManeuverEnable() { return false; }
 	virtual bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw) { return false; }
 	virtual bool ExecuteCommManeuver() { return false; }
+	virtual bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0) { return false; }
 protected:
 
 	LVDA &lvda;
@@ -516,6 +517,7 @@ public:
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool LMAbort();
 	bool InhibitAttitudeManeuver();
+	bool LaunchTargetingUpdate(double v_t, double r_t, double theta_t, double inc, double dsc, double dsc_dot, double t_grr0);
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file
@@ -616,6 +618,7 @@ private:
 	double T_L_apo;									// Predicted time of liftoff (in GMT) in seconds
 	double Lambda_0;								// Value of DescNodeAngle valid for a liftoff at launch window opening
 	double lambda_dot;								// Time rate of change of Lambda_0
+	double T_GRR0;									// Nominal value of T_GRR
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial

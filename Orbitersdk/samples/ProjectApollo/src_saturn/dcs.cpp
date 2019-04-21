@@ -103,6 +103,12 @@ bool DCS::Uplink(int type, void *upl)
 
 			return iu->lvda.SIVBIULunarImpact(lunarimpact->tig, lunarimpact->dt, lunarimpact->pitch, lunarimpact->yaw);
 		}
+		else if (type == DCSUPLINK_SATURNIB_LAUNCH_TARGETING)
+		{
+			DCSLAUNCHTARGET *targeting = static_cast<DCSLAUNCHTARGET*>(upl);
+
+			return iu->lvda.LaunchTargetingUpdate(targeting->V_T, targeting->R_T, targeting->theta_T, targeting->i, targeting->lambda_0, targeting->lambda_dot, targeting->T_GRR0);
+		}
 	}
 
 	return false;

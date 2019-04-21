@@ -254,6 +254,14 @@ bool LVDA::SIVBIULunarImpact(double tig, double dt, double pitch, double yaw)
 	return false;
 }
 
+bool LVDA::LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->LaunchTargetingUpdate(V_T, R_T, theta_T, inc, dsc, dsc_dot, t_grr0);
+
+	return false;
+}
+
 void LVDA::SwitchSelectorOld(int chan)
 {
 	iu->GetLVCommandConnector()->SwitchSelector(chan);

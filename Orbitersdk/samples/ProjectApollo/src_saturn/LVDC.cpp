@@ -244,6 +244,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	t_fail = 0;
 	T_GO = 0;
 	T_GRR = 0;
+	T_GRR0 = 0;
 	TI5F2 = 0;
 	T_L_apo = 0;
 	T_LET = 0;
@@ -599,11 +600,7 @@ void LVDC1B::TimeStep(double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvda.GetMissionTime() >= -17){
-					lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
-					lvda.DriveLVIMUGimbals((Azimuth - A_zL)*RAD, 0, 0);	// Now bring to alignment
-					lvda.ReleaseLVIMU();							// Release IMU
-					CountPIPA = true;								// Enable PIPA storage			
+				if (lvda.GetMissionTime() >= -17){		
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
@@ -816,7 +813,8 @@ void LVDC1B::TimeStep(double simdt) {
 
 			double day = 0.0;
 			T_GRR = modf(oapiGetSimMJD(), &day)*24.0*3600.0;
-			t_D = T_GRR + 17.0 - T_L_apo;
+			t_D = T_GRR - T_GRR0;
+			fprintf(lvlog, "Time into launch window (if applicable) = %f\r\n", t_D);
 
 			DescNodeAngle = Lambda_0 - lambda_dot * t_D;
 			fprintf(lvlog, "DescNodeAngle = %f\r\n", DescNodeAngle);
@@ -854,7 +852,7 @@ void LVDC1B::TimeStep(double simdt) {
 				gamma_T = atan((e*(sin(f))) / (1 + (e*(cos(f)))));
 				G_T = -mu / pow(R_T, 2);
 			}
-			fprintf(lvlog,"R_T = %f (Expecting 6,563,366), V_T = %f (Expecting 7793.0429), gamma_T = %f\r\n",R_T,V_T,gamma_T);
+			fprintf(lvlog,"R_T = %f, V_T = %f, gamma_T = %f\r\n",R_T,V_T,gamma_T);
 
 			// G MATRIX CALCULATION
 			MX_A.m11 = cos(PHI);  MX_A.m12 = sin(PHI)*sin(Azimuth); MX_A.m13 = -(sin(PHI)*cos(Azimuth));
@@ -868,6 +866,7 @@ void LVDC1B::TimeStep(double simdt) {
 			MX_B.m33 = cos(DescNodeAngle)*cos(Inclination);
 
 			MX_G = mul(MX_B,MX_A); // Matrix Multiply
+
 			Y_u= -(PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
 			R = pow(pow(PosS.x,2)+pow(PosS.y,2)+pow(PosS.z,2),0.5);  //instantaneous distance from earth's center
 			S = (-mu/pow(R,3))*(1+J*pow(a/R,2)*(1-5*pow(Y_u/R,2)));
@@ -875,11 +874,17 @@ void LVDC1B::TimeStep(double simdt) {
 			ddotG_last.x = PosS.x*S+MX_A.m21*P; //gravity acceleration vector
 			ddotG_last.y = PosS.y*S+MX_A.m22*P;
 			ddotG_last.z = PosS.z*S+MX_A.m23*P;
-			PCommandedAttitude.x = (1.5* PI) + Azimuth;
+			PCommandedAttitude.x = (360.0 - A_zL)*RAD + Azimuth;
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
 			lvda.ZeroLVIMUPIPACounters();
 			sinceLastIGM = 0;
+
+			lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
+			lvda.DriveLVIMUGimbals(Azimuth - A_zL*RAD, 0, 0);	// Now bring to alignment
+			lvda.ReleaseLVIMU();							// Release IMU
+			CountPIPA = true;								// Enable PIPA storage
+
 			GRR_init = true;
 			fprintf(lvlog,"Initialization completed.\r\n\r\n");
 			goto minorloop;
@@ -900,9 +905,9 @@ void LVDC1B::TimeStep(double simdt) {
 				DotM_act += lvda.GetLVIMUPIPARegisters(); //read the PIPA CDUs
 			}
 			Fm = pow((pow(((DotM_act.x - DotM_last.x)/dt_c),2)+ pow(((DotM_act.y - DotM_last.y)/dt_c),2)+ pow(((DotM_act.z - DotM_last.z)/dt_c),2)),0.5);
-			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2 + (DotG_last.x + ddotG_last.x * dt_c / 2)*dt_c + Dot0.x * dt_c; //position vector
-			PosS.y += (DotM_act.y + DotM_last.y) * dt_c / 2 + (DotG_last.y + ddotG_last.y * dt_c / 2)*dt_c + Dot0.y * dt_c;
-			PosS.z += (DotM_act.z + DotM_last.z) * dt_c / 2 + (DotG_last.z + ddotG_last.z * dt_c / 2)*dt_c + Dot0.z * dt_c;
+			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2.0 + (DotG_last.x + ddotG_last.x * dt_c / 2.0)*dt_c + Dot0.x * dt_c; //position vector
+			PosS.y += (DotM_act.y + DotM_last.y) * dt_c / 2.0 + (DotG_last.y + ddotG_last.y * dt_c / 2.0)*dt_c + Dot0.y * dt_c;
+			PosS.z += (DotM_act.z + DotM_last.z) * dt_c / 2.0 + (DotG_last.z + ddotG_last.z * dt_c / 2.0)*dt_c + Dot0.z * dt_c;
 			Y_u= -(PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
 			R = pow(pow(PosS.x,2)+pow(PosS.y,2)+pow(PosS.z,2),0.5); //instantaneous distance from earth's center
 			S = (-mu/pow(R,3))*(1+J*pow(a/R,2)*(1-5*pow(Y_u/R,2)));
@@ -965,7 +970,7 @@ void LVDC1B::TimeStep(double simdt) {
 		}
 
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
-			CommandedAttitude.x =  (360-100)*RAD + Azimuth;
+			CommandedAttitude.x =  (360- A_zL)*RAD + Azimuth;
 			CommandedAttitude.y =  0;
 			CommandedAttitude.z =  0;
 			fprintf(lvlog,"[%d+%f] Initial roll command: %f\r\n",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.x*DEG);
@@ -1798,6 +1803,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_t_fail", t_fail);
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
 	papiWriteScenario_double(scn, "LVDC_T_GRR", T_GRR);
+	papiWriteScenario_double(scn, "LVDC_T_GRR0", T_GRR0);
 	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
 	papiWriteScenario_double(scn, "LVDC_T_L_apo", T_L_apo);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
@@ -2135,6 +2141,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_t_fail", t_fail);
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
 		papiReadScenario_double(line, "LVDC_T_GRR", T_GRR);
+		papiReadScenario_double(line, "LVDC_T_GRR0", T_GRR0);
 		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
 		papiReadScenario_double(line, "LVDC_T_L_apo", T_L_apo);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
@@ -2315,6 +2322,24 @@ bool LVDC1B::InhibitAttitudeManeuver()
 	{
 		INH1 = true;
 		INH2 = true;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDC1B::LaunchTargetingUpdate(double v_t, double r_t, double theta_t, double inc, double dsc, double dsc_dot, double t_grr0)
+{
+	if (LVDC_Timebase < 0)
+	{
+		V_T = v_t;
+		R_T = r_t;
+		gamma_T = theta_t;
+		T_GRR0 = t_grr0;
+		Inclination = inc;
+		Lambda_0 = dsc;
+		lambda_dot = dsc_dot;
 
 		return true;
 	}
