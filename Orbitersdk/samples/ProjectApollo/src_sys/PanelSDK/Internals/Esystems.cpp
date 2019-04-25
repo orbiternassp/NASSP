@@ -465,12 +465,17 @@ void FCell::UpdateFlow(double dt)
 		}
 		Reaction(dt, thrust);
 		running = 0;
-		Volts = Volts * reaction; //case of reaction problems :-)
-		if (reaction && Volts > 0.0) 	
+		Volts = Volts * min(1.0, reaction); //case of reaction problems :-)
+		if (reaction && Volts > 0.0)
+		{
 			Amperes = (power_load / Volts);
-		else 
+		}
+		else
+		{
 			status = 2;
 			Amperes = 0;
+		}
+
 		break;
 	}
 
