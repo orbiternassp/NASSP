@@ -2296,6 +2296,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1285.0;
 
 		EntryTargeting(&entopt, &res);
 
@@ -2336,7 +2337,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (scrubbed)
 			{
 				//Entry prediction without maneuver
-				EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
+				EntryUpdateCalc(sv, entopt.GETbase, 1285.0, true, &res);
 
 				res.dV_LVLH = _V(0, 0, 0);
 				res.P30TIG = entopt.TIGguess;
