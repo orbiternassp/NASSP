@@ -1684,10 +1684,10 @@ void RTCC::EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad)
 
 void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 {
-	VECTOR3 R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT, UX, UY, UZ, EIangles, UREI;
-	MATRIX3 M_R, Rot2;
+	VECTOR3 UX, UY, UZ, EIangles, UREI;
+	MATRIX3 M_R;
 	double dt, dt2, dt3, EIAlt, Alt300K, EMSAlt, S_FPA, g_T, V_T, v_BAR, RET05, liftline, EntryPADV400k, EntryPADVIO, mu_M;
-	double WIE, WT, LSMJD, theta_rad, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit, KTETA;
+	double LSMJD, theta_nm, EntryPADDO, EntryPADGMax, EntryPADgamma400k, EntryPADHorChkGET, EIGET, EntryPADHorChkPit;
 	OBJHANDLE gravref, hEarth, hMoon;
 	SV sv1;		// "Now" or just after the maneuver
 	SV svEI;	// EI/400K
@@ -1740,27 +1740,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	sv05G.MJD = sv300K.MJD + dt3 / 24.0 / 3600.0;
 
 	EntryPADVIO = length(sv05G.V);
-
-	R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
-	Rot2 = OrbMech::GetRotationMatrix(hEarth, LSMJD);
-	R_LS = mul(Rot2, R_P);
-	//R_LS = mul(Rot, _V(R_LS.x, R_LS.z, R_LS.y));
-	R_LS = _V(R_LS.x, R_LS.z, R_LS.y);
-	URT0 = R_LS;
-	WIE = 72.9211505e-6;
-	KTETA = 1000.0;
-	UUZ = _V(0, 0, 1);
-	RTE = crossp(UUZ, URT0);
-	UTR = crossp(RTE, UUZ);
-	urh = unit(sv05G.R);//unit(r)*cos(theta) + crossp(unit(r), -unit(h_apo))*sin(theta);
-	theta_rad = acos(dotp(URT0, urh));
-	for (int i = 0;i < 10;i++)
-	{
-		WT = WIE*(KTETA*theta_rad);
-		URT = URT0 + UTR*(cos(WT) - 1.0) + RTE*sin(WT);
-		theta_rad = acos(dotp(URT, urh));
-	}
-	theta_nm = theta_rad*3437.7468;
+	theta_nm = OrbMech::CMCEMSRangeToGo(sv05G.R, sv05G.MJD, opt->lat, opt->lng);
 
 	UX = unit(-sv05G.V);
 	UY = unit(crossp(UX, -sv05G.R));
