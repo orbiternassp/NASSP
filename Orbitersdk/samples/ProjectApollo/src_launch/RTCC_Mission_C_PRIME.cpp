@@ -26,6 +26,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 #include "apolloguidance.h"
 #include "saturn.h"
+#include "saturnv.h"
+#include "LVDC.h"
+#include "iu.h"
+#include "LEM.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
@@ -44,9 +48,67 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	double LSAzi = -78.0*RAD;
 	double t_land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 
+	//For old scenarios
+	if (calcParams.TEPHEM == 0.0)
+	{
+		calcParams.TEPHEM = 40211.535417;
+	}
+
 	switch (fcn) {
-	case 2: //TLI+90 PAD + State Vector
-	case 3: //TLI+4 PAD
+	case 1: //GROUND LIFTOFF TIME UPDATE
+	{
+		double TEPHEM0, tephem_scal;
+
+		Saturn *cm = (Saturn *)calcParams.src;
+
+		//Get TEPHEM
+		TEPHEM0 = 40038.;
+		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc);
+		calcParams.TEPHEM = (tephem_scal / 8640000.) + TEPHEM0;
+	}
+	break;
+	case 2: //TLI SIMULATION
+	{
+		SaturnV *SatV = (SaturnV*)calcParams.src;
+		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+
+		SV sv, sv_IG, sv_TLI;
+		sv = StateVectorCalc(calcParams.src);
+
+		LVDCTLIparam tliparam;
+
+		tliparam.alpha_TS = lvdc->alpha_TS;
+		tliparam.Azimuth = lvdc->Azimuth;
+		tliparam.beta = lvdc->beta;
+		tliparam.cos_sigma = lvdc->cos_sigma;
+		tliparam.C_3 = lvdc->C_3;
+		tliparam.e_N = lvdc->e_N;
+		tliparam.f = lvdc->f;
+		tliparam.mu = lvdc->mu;
+		tliparam.MX_A = lvdc->MX_A;
+		tliparam.omega_E = lvdc->omega_E;
+		tliparam.phi_L = lvdc->PHI;
+		tliparam.R_N = lvdc->R_N;
+		tliparam.T_2R = lvdc->T_2R;
+		tliparam.TargetVector = lvdc->TargetVector;
+		tliparam.TB5 = lvdc->TB5;
+		tliparam.theta_EO = lvdc->theta_EO;
+		tliparam.t_D = lvdc->t_D;
+		tliparam.T_L = lvdc->T_L;
+		tliparam.T_RG = lvdc->T_RG;
+		tliparam.T_ST = lvdc->T_ST;
+		tliparam.Tt_3R = lvdc->Tt_3R;
+		tliparam.t_clock = lvdc->t_clock;
+
+		LVDCTLIPredict(tliparam, calcParams.src, sv, calcParams.TEPHEM, DeltaV_LVLH, TimeofIgnition, sv_IG, sv_TLI);
+
+		calcParams.R_TLI = sv_TLI.R;
+		calcParams.V_TLI = sv_TLI.V;
+		calcParams.TLI = OrbMech::GETfromMJD(sv_TLI.MJD, calcParams.TEPHEM);
+	}
+	break;
+	case 3: //TLI+90 PAD + State Vector
+	case 4: //TLI+4 PAD
 	{
 		EntryOpt entopt;
 		EntryResults res;
@@ -56,7 +118,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		if (fcn == 2)
 		{
@@ -139,7 +201,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 	}
 	break;
-	case 4: //TLI PAD
+	case 5: //TLI PAD
 	{
 		TLIPADOpt opt;
 		SV sv;
@@ -148,7 +210,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		TLIPAD * form = (TLIPAD *)pad;
 
 		sv = StateVectorCalc(calcParams.src);
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.GETbase = GETbase;
@@ -165,6 +227,17 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		TLI_PAD(&opt, *form);
 
 		//calcParams.TLI = TimeofIgnition + form->BurnTime;// ceil(TimeofIgnition / 3600.0)*3600.0;	//Round up to nominally 3 hours, timebase for MCCs and TLC Aborts
+	}
+	break;
+	case 6: //TLI Evaluation
+	{
+		SaturnV *SatV = (SaturnV*)calcParams.src;
+		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+
+		if (lvdc->first_op == false)
+		{
+			scrubbed = true;
+		}
 	}
 	break;
 	case 10: //MISSION CP BLOCK DATA 1
@@ -202,7 +275,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "TLI+44");
 		}
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 		sv0 = StateVectorCalc(calcParams.src);
 
 		entopt.entrylongmanual = true;
@@ -290,7 +363,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -478,7 +551,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -540,7 +613,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		sv = StateVectorCalc(calcParams.src);
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
@@ -612,7 +685,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		sv = StateVectorCalc(calcParams.src);
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		if (fcn == 41)
 		{
@@ -694,7 +767,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		//entopt.TIGguess = OrbMech::HHMMSSToSS(71, 25, 4);
 		sprintf(manname, "TEI-1");
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -748,7 +821,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -792,7 +865,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		char buffer1[1000];
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
 
@@ -880,7 +953,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "TEI-11");
 		}
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -959,7 +1032,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		MATRIX3 REFSMMAT;
 		char buffer1[1000];
 
-		refsopt.GETbase = getGETBase();
+		refsopt.GETbase = calcParams.TEPHEM;
 		refsopt.REFSMMATopt = 3;
 		refsopt.vessel = calcParams.src;
 
@@ -1031,7 +1104,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.type = RTCC_ENTRY_MCC;
 		}
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
@@ -1205,7 +1278,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SV sv;
 		double GETbase;
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 		sv = StateVectorCalc(calcParams.src);
 
 		if (length(DeltaV_LVLH) != 0.0)
@@ -1244,7 +1317,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		char buffer2[1000];
 		char buffer3[1000];
 
-		GETbase = getGETBase();
+		GETbase = calcParams.TEPHEM;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 

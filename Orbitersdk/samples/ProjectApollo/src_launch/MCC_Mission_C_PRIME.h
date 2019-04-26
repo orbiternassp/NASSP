@@ -26,8 +26,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 // MISSION STATES: MISSION C PRIME
 #define MST_CP_INSERTION	10
-// Ends at TLI Update
+// Ends at TLI prediction
 #define MST_CP_EPO1			11
+// Ends at TLI update
+#define MST_CP_EPO2			12
+#define MST_CP_EPO3			13
+#define MST_CP_EPO4			14
 // Ends at TLI BURN
 #define MST_CP_TRANSLUNAR1	21
 // Ends at separation
