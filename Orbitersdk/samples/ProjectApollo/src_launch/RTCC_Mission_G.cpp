@@ -2296,7 +2296,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
-		entopt.r_rbias = 1285.0;
 
 		EntryTargeting(&entopt, &res);
 

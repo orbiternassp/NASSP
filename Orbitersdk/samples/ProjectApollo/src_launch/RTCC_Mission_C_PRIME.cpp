@@ -1068,7 +1068,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(upMessage, "%s has been scrubbed.", manname);
 
 			//Entry prediction without maneuver
-			EntryUpdateCalc(sv, entopt.GETbase, 0, true, &res);
+			EntryUpdateCalc(sv, entopt.GETbase, 1350.0, true, &res);
 
 			res.dV_LVLH = _V(0, 0, 0);
 			res.P30TIG = entopt.TIGguess;
