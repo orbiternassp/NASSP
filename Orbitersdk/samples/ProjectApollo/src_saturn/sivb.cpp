@@ -208,6 +208,7 @@ void SIVB::InitS4b()
 	State = SIVB_STATE_SETUP;
 	LowRes = false;
 	IUSCContPermanentEnabled = true;
+	PayloadCreated = false;
 
 	hDock = 0;
 	ph_aps1 = 0;
@@ -397,22 +398,6 @@ void SIVB::SetS4b()
 	VECTOR3 dockdir = {0,0,1};
 	VECTOR3 dockrot = {-0.8660254, -0.5, 0 };
 
-	// LM Docking Lights
-	static VECTOR3 beaconPos[5] = { { 0.28, -2.27, 11.50 },{ 0.00, 1.81, 11.88 },{ -0.28, -2.27, 11.50 },{ -2.52, -0.2, 10.59 },{ 1.91, -0.22, 10.31 } };
-	static VECTOR3 beaconCol[4] = { { 1.0, 1.0, 1.0 },{ 1.0, 1.0, 0.5 },{ 1.0, 0.5, 0.5 },{ 0.5, 1.0, 0.5 } };
-	for (int i = 0; i < 5; i++) {
-		dockingLights[i].shape = BEACONSHAPE_DIFFUSE;
-		dockingLights[i].pos = beaconPos + i;
-		dockingLights[i].col = (i < 2 ? beaconCol : i < 3 ? beaconCol + 1 : i < 4 ? beaconCol + 2 : beaconCol + 3);
-		dockingLights[i].size = 0.12;
-		dockingLights[i].falloff = 0.8;
-		dockingLights[i].period = 0.0;
-		dockingLights[i].duration = 1.0;
-		dockingLights[i].tofs = 0;
-		dockingLights[i].active = false;
-		AddBeacon(dockingLights + i);
-	}
-
 	if (SaturnVStage)
 	{
 		if (LowRes) {
@@ -457,9 +442,11 @@ void SIVB::SetS4b()
 
 	switch (PayloadType) {
 	case PAYLOAD_LEM:
-		SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
+		//SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
+		dockpos = { 0,0.03, 9.6 };
 		SetDockParams(dockpos, dockdir, dockrot);
-		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
+		//hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
+		CreatePayload();
 		mass += PayloadMass;
 		break;
 
@@ -799,15 +786,6 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// thrust it out of the way of the CSM.
 	//
 
-	// LM Docking lights handling
-
-	if (panelProc >= 0.1 && PayloadType == PAYLOAD_LEM) {
-		for (int i = 0; i < 5; i++) dockingLights[i].active = true;
-	}
-	else {
-		for (int i = 0; i < 5; i++) dockingLights[i].active = false;
-	}
-
 	sivbsys->Timestep(simdt);
 	iu->Timestep(MissionTime, simt, simdt, mjd);
 	Panelsdk.Timestep(MissionTime);
@@ -898,6 +876,7 @@ int SIVB::GetMainState()
 	state.LowRes = LowRes;
 	state.Payloaddatatransfer = Payloaddatatransfer;
 	state.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
+	state.PayloadCreated = PayloadCreated;
 
 	return state.word;
 }
@@ -1107,6 +1086,7 @@ void SIVB::SetMainState(int s)
 	LowRes = (state.LowRes != 0);
 	Payloaddatatransfer = (state.Payloaddatatransfer != 0);
 	IUSCContPermanentEnabled = (state.IUSCContPermanentEnabled != 0);
+	PayloadCreated = (state.PayloadCreated != 0);
 }
 
 void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -1619,9 +1599,130 @@ bool SIVB::PayloadIsDetachable()
 	}
 }
 
+void SIVB::CreatePayload() {
+
+	if (PayloadCreated) return;
+
+	PayloadSettings ps;
+
+	/*if (!csmCommandConnector.GetPayloadSettings(ps))
+	{
+		return;
+	}*/
+
+	char *plName = 0;
+
+	//
+	// Get the payload config file name.
+	//
+
+	switch (PayloadType)
+	{
+	case PAYLOAD_LEM:
+	case PAYLOAD_LM1:
+		plName = "ProjectApollo/LEM";
+		break;
+
+	case PAYLOAD_ASTP:
+		plName = "ProjectApollo/ASTP";
+		break;
+
+	default:
+		return;
+	}
+
+	Payload *payloadvessel;
+	VESSELSTATUS2 vslm2;
+	VESSELSTATUS2::DOCKINFOSPEC dckinfo;
+
+	//
+	// Now Lets create a real LEM and dock it
+	//
+
+	OBJHANDLE hSIVBdock = oapiGetVesselByName("AS-506-S4BSTG");
+
+	vslm2.version = 2;
+	vslm2.flag = 0;
+	vslm2.fuel = 0;
+	vslm2.thruster = 0;
+	vslm2.ndockinfo = 1;
+	vslm2.dockinfo = &dckinfo;
+
+	GetStatusEx(&vslm2);
+
+	vslm2.dockinfo[0].idx = 1;
+	vslm2.dockinfo[0].ridx = 0;
+	vslm2.dockinfo[0].rvessel = hSIVBdock;
+	vslm2.ndockinfo = 1;
+	vslm2.flag = VS_DOCKINFOLIST;
+	vslm2.version = 2;
+
+	OBJHANDLE hPayload = oapiCreateVesselEx(PayloadName, plName, &vslm2);
+
+	//
+	// We have already gotten these information from the CSM
+	//
+
+	ps.DescentFuelKg = LMDescentFuelMassKg;
+	ps.AscentFuelKg = LMAscentFuelMassKg;
+	ps.DescentEmptyKg = LMDescentEmptyMassKg;
+	ps.AscentEmptyKg = LMAscentEmptyMassKg;
+	sprintf(ps.checklistFile, LEMCheck);
+
+	//
+	// Initialise the state of the LEM AGC information.
+	//
+
+	payloadvessel = static_cast<Payload *> (oapiGetVesselInterface(hPayload));
+	payloadvessel->SetupPayload(ps);
+	Payloaddatatransfer = true;
+
+	GetStatusEx(&vslm2);
+
+	vslm2.dockinfo = &dckinfo;
+	vslm2.dockinfo[0].idx = 0;
+	vslm2.dockinfo[0].ridx = 1;
+	vslm2.dockinfo[0].rvessel = hPayload;
+	vslm2.ndockinfo = 1;
+	vslm2.flag = VS_DOCKINFOLIST;
+	vslm2.version = 2;
+
+	DefSetStateEx(&vslm2);
+
+	//
+    // PAD load.
+	//
+
+	LEM *lmvessel = static_cast<LEM *> (payloadvessel);
+
+	if (LMPad && LMPadCount > 0)
+	{
+		int i;
+		for (i = 0; i < LMPadCount; i++) {
+			lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
+		}
+	}
+
+	if (AEAPad && AEAPadCount > 0)
+	{
+		int i;
+		for (i = 0; i < AEAPadCount; i++) {
+			lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
+		}
+	}
+
+	PayloadCreated = true;
+}
+
 void SIVB::StartSeparationPyros()
 
 {
+	if (PayloadCreated) {
+		PayloadType = PAYLOAD_EMPTY;
+		SetS4b();
+		return;
+	}
+
 	//
 	// Start separation. For now this function will probably do all the work.
 	//

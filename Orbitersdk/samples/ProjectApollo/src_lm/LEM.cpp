@@ -1412,6 +1412,13 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 	SetDockMode(0);
 	SetLmDockingPort(2.6);
 
+	// Docking port used for LM/SIVB connection
+	DOCKHANDLE docksivb;
+	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
+	VECTOR3 dockdir = { 0,-1,0 };
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
+	docksivb = CreateDock(dockpos, dockdir, dockrot);
+
 	//
 	// Scan the launchpad config file.
 	//
