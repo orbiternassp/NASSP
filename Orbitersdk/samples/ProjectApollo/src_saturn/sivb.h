@@ -215,7 +215,7 @@ public:
 			unsigned SaturnVStage:1;
 			unsigned LowRes:1;
 			unsigned IUSCContPermanentEnabled:1;
-			unsigned spare2:1;
+			unsigned PayloadCreated:1;
 			unsigned Payloaddatatransfer:1;
 		};
 		unsigned long word;
@@ -329,6 +329,11 @@ public:
 	double GetMainBatteryCurrent();
 
 	///
+	/// \Create payload vessel
+	///
+	void CreatePayload();
+
+	///
 	/// \brief Start payload separation.
 	///
 	void StartSeparationPyros();
@@ -407,6 +412,7 @@ protected:
 	bool SaturnVStage;				///< Stage from Saturn V.
 	bool LowRes;					///< Using low-res meshes.
 	bool IUSCContPermanentEnabled;
+	bool PayloadCreated;
 
 	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
 	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).
