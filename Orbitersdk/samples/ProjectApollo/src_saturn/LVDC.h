@@ -441,7 +441,7 @@ private:								// Saturn LV
 	double h;										// Altitude of the vehicle above the oblate spheroid of the earth
 
 	//Switch Selector Tables
-	std::vector<SwitchSelectorSet> SSTTB[9];
+	std::vector<SwitchSelectorSet> SSTTB[9];	// [1...8] 0 never used!
 	std::vector<SwitchSelectorSet> SSTTB4A;
 	std::vector<SwitchSelectorSet> SSTTB5A;
 	std::vector<SwitchSelectorSet> SSTTB6A;
@@ -718,7 +718,7 @@ private:
 	double cos_chi_Zit;
 
 	//Switch Selector Tables
-	std::vector<SwitchSelectorSet> SSTTB[4];
+	std::vector<SwitchSelectorSet> SSTTB[5];	// [1...4] 0 never used!
 	std::vector<SwitchSelectorSet> SSTALT1;
 
 	// TABLE25 is apparently only used on direct-ascent
