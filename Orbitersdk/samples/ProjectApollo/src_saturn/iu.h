@@ -292,7 +292,6 @@ public:
 	void SetMissionInfo(bool crewed, bool sccontpowered);
 
 	virtual void ConnectToCSM(Connector *csmConnector);
-	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
 	virtual void ConnectToLV(Connector *CommandConnector);
 
 	void DisconnectIU();

@@ -409,7 +409,7 @@ void NWayPowerMerge::WireToBus(int bus, e_object* e)
 }
 
 DCBusController::DCBusController(char *i_name, PanelSDK &p) : 
-	sdk(p), fcPower(0, p), batPower(0, p), busPower(0, p, 4)
+	sdk(p), fcPower(0, p), batPower(0, p), busPower(0, p, 3)
 
 {
 	if (i_name)
@@ -431,7 +431,7 @@ DCBusController::DCBusController(char *i_name, PanelSDK &p) :
 	sdk.AddElectrical(this, false);
 }
 
-void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp, e_object *bc1, e_object *bc2, e_object *bc3)
+void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *bc1, e_object *bc2, e_object *bc3)
 
 {
 	fuelcell1 = fc1;
@@ -449,7 +449,6 @@ void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object
 	busPower.WireToBus(1, &fcPower);
 	busPower.WireToBus(2, &batPower);
 	busPower.WireToBus(3, NULL);		// Source 3 is for ground power.
-	busPower.WireToBus(4, vp);			// Source 4 is for docked vessel power.
 }
 
 void DCBusController::ConnectFuelCell(int fc, bool connect)

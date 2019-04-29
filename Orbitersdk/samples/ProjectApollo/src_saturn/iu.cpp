@@ -164,12 +164,6 @@ void IU::ConnectToCSM(Connector *csmConnector)
 	commandConnector.ConnectTo(csmConnector);
 }
 
-void IU::ConnectToMultiConnector(MultiConnector *csmConnector)
-
-{
-	csmConnector->AddTo(&commandConnector);
-}
-
 void IU::ConnectToLV(Connector *CommandConnector)
 
 {
