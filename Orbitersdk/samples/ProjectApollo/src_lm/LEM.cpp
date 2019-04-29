@@ -225,6 +225,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	CabinFan(CabinFans),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this),
+	CSMToLEMPowerConnector(this),
+	LEMToSLAConnector(this),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
 {
@@ -349,6 +351,7 @@ void LEM::Init()
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
 	CSMToLEMECSConnector.SetType(LEM_CSM_ECS);
+	LEMToSLAConnector.SetType(LM_SLA_CONNECT);
 
 	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
 	CSMToLEMPowerSource.SetConnector(&CSMToLEMPowerConnector);
@@ -384,6 +387,7 @@ void LEM::Init()
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &cdi);
 	RegisterConnector(0, &LEMToCSMConnector);
 	RegisterConnector(0, &CSMToLEMECSConnector);
+	RegisterConnector(1, &LEMToSLAConnector);
 
 	// Do this stuff only once
 	if(!InitLEMCalled){
@@ -1465,6 +1469,22 @@ void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 	probes = NULL;
 }
 
+void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
+{
+	//For now restrict this to docking port 1 (aka LM/SLA connection)
+	if (dock == 1)
+	{
+		if (connected)
+		{
+			DockConnectors(dock);
+		}
+		else
+		{
+			UndockConnectors(dock);
+		}
+	}
+}
+
 void LEM::DefineAnimations()
 {
 	// Call Animation Definitions where required
@@ -1749,7 +1769,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	MissionTime = ls.MissionTime;
 
-	strncpy (AudioLanguage, ls.language, 64);
 	strncpy (CSMName, ls.CSMName, 64);
 
 	Crewed = ls.Crewed;
@@ -1896,4 +1915,14 @@ double LEM::GetAscentStageMass()
 void LEM::SendVHFRangingSignal(Saturn *sat, bool isAcquiring)
 {
 	VHF.RangingSignal(sat, isAcquiring);
+}
+
+void LEM::StartSeparationPyros()
+{
+	LEMToSLAConnector.StartSeparationPyros();
+}
+
+void LEM::StopSeparationPyros()
+{
+	LEMToSLAConnector.StopSeparationPyros();
 }

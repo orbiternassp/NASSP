@@ -33,7 +33,6 @@ struct PayloadSettings {
 	double DescentEmptyKg;
 	int MissionNo;
 	double MissionTime;
-	char language[64];
 	char CSMName[64];
 	bool Crewed;
 	bool AutoSlow;

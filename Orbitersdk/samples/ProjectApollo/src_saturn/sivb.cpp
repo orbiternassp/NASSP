@@ -155,9 +155,7 @@ void SIVbLoadMeshes()
 	seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 }
 
-SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
-		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk)
-
+SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel)
 {
 	PanelSDKInitalised = false;
 
@@ -276,17 +274,18 @@ void SIVB::InitS4b()
 	//
 	sprintf(PayloadName, "%s-PAYLOAD", GetName());
 
-	LMDescentFuelMassKg = 8375.0;
-	LMAscentFuelMassKg = 2345.0;
-	LMAscentEmptyMassKg = 2150.0;
-	LMDescentEmptyMassKg = 2224.0;
+	payloadSettings.DescentFuelKg = 8375.0;
+	payloadSettings.AscentFuelKg = 2345.0;
+	payloadSettings.AscentEmptyKg = 2150.0;
+	payloadSettings.DescentEmptyKg = 2224.0;
+	payloadSettings.MissionNo = 0;
 	Payloaddatatransfer = false;
 
 	//
 	// Checklist
 	//
 
-	LEMCheck[0] = 0;
+	payloadSettings.checklistFile[0] = 0;
 
 	//
 	// LM PAD data.
@@ -305,13 +304,9 @@ void SIVB::InitS4b()
 	//
 	// Set up the connections.
 	//
-	SIVBToCSMConnector.SetType(CSM_SIVB_DOCKING);
 
 	IUCommandConnector.SetSIVb(this);
-	csmCommandConnector.SetSIVb(this);
-
-	SIVBToCSMPowerConnector.SetType(CSM_SIVB_POWER);
-	SIVBToCSMPowerConnector.SetPowerDrain(&SIVBToCSMPowerDrain);
+	lmCommandConnector.SetSIVb(this);
 
 	if (!PanelSDKInitalised)
 	{
@@ -322,12 +317,10 @@ void SIVB::InitS4b()
 
 	MainBattery = static_cast<Battery *> (Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY"));
 
-	SIVBToCSMPowerDrain.WireTo(MainBattery);
-
 	//
-	// Register docking connector so the CSM can find it.
+	// Register docking connector so the LM can find it.
 	//
-	RegisterConnector(0, &SIVBToCSMConnector);
+	RegisterConnector(0, &lmCommandConnector);
 }
 
 void SIVB::Boiloff()
@@ -517,11 +510,8 @@ void SIVB::SetS4b()
 		// Set up the IU connections.
 		//
 
-		iu->ConnectToMultiConnector(&SIVBToCSMConnector);
-		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
 	iu->ConnectToLV(&IUCommandConnector);
-	SIVBToCSMConnector.AddTo(&csmCommandConnector);
 }
 
 void SIVB::clbkPreStep(double simt, double simdt, double mjd)
@@ -819,6 +809,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "APSFMASS2", ApsFuel2Kg);
 	oapiWriteScenario_float (scn, "T3V", THRUST_THIRD_VAC);
 	oapiWriteScenario_float (scn, "I3V", ISP_THIRD_VAC);
+	oapiWriteScenario_int(scn, "MISSIONNO", payloadSettings.MissionNo);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
@@ -833,13 +824,13 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	}
 	if (!Payloaddatatransfer)
 	{
-		if (LEMCheck[0]) {
-			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
+		if (payloadSettings.checklistFile[0]) {
+			oapiWriteScenario_string(scn, "LEMCHECK", payloadSettings.checklistFile);
 		}
-		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
-		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
-		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
-		oapiWriteScenario_float(scn, "LMASCEMPTY", LMAscentEmptyMassKg);
+		oapiWriteScenario_float (scn, "LMDSCFUEL", payloadSettings.DescentFuelKg);
+		oapiWriteScenario_float (scn, "LMASCFUEL", payloadSettings.AscentFuelKg);
+		oapiWriteScenario_float(scn, "LMDSCEMPTY", payloadSettings.DescentEmptyKg);
+		oapiWriteScenario_float(scn, "LMASCEMPTY", payloadSettings.AscentEmptyKg);
 		if (LMPadCount > 0 && LMPad) {
 			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
 			char str[64];
@@ -1146,6 +1137,10 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
             sscanf (line + 3, "%f", &flt);
 			ISP_THIRD_VAC = flt;
 		}
+		else if (!strnicmp(line, "MISSIONNO", 9))
+		{
+			sscanf(line + 9, "%d", &payloadSettings.MissionNo);
+		}
 		else if (!strnicmp(line, "MISSNTIME", 9))
 		{
             sscanf (line+9, "%f", &flt);
@@ -1188,26 +1183,26 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			State = (SIVbState) i;
 		}
 		else if (!strnicmp(line, "LEMCHECK", 8)) {
-			strcpy(LEMCheck, line + 9);
+			strcpy(payloadSettings.checklistFile, line + 9);
 		}
 		else if (!strnicmp(line, "PAYN", 4)) {
 			strncpy (PayloadName, line + 5, 64);
 		}
 		else if (!strnicmp(line, "LMDSCFUEL", 9)) {
 			sscanf(line + 9, "%f", &flt);
-			LMDescentFuelMassKg = flt;
+			payloadSettings.DescentFuelKg = flt;
 		}
 		else if (!strnicmp(line, "LMASCFUEL", 9)) {
 			sscanf(line + 9, "%f", &flt);
-			LMAscentFuelMassKg = flt;
+			payloadSettings.AscentFuelKg = flt;
 		}
 		else if (!strnicmp(line, "LMDSCEMPTY", 10)) {
 			sscanf(line + 10, "%f", &flt);
-			LMDescentEmptyMassKg = flt;
+			payloadSettings.DescentEmptyKg = flt;
 		}
 		else if (!strnicmp(line, "LMASCEMPTY", 10)) {
 			sscanf(line + 10, "%f", &flt);
-			LMAscentEmptyMassKg = flt;
+			payloadSettings.AscentEmptyKg = flt;
 		}
 		else if (!strnicmp (line, "LMPADCNT", 8)) {
 			if (!LMPad) {
@@ -1422,13 +1417,13 @@ void SIVB::SetState(SIVBSettings &state)
 		}
 
 		if (state.LEMCheck[0]) {
-			strcpy(LEMCheck, state.LEMCheck);
+			strcpy(payloadSettings.checklistFile, state.LEMCheck);
 		}
 
-		LMDescentFuelMassKg = state.LMDescentFuelMassKg;
-		LMAscentFuelMassKg = state.LMAscentFuelMassKg;
-		LMDescentEmptyMassKg = state.LMDescentEmptyMassKg;
-		LMAscentEmptyMassKg = state.LMAscentEmptyMassKg;
+		payloadSettings.DescentFuelKg = state.LMDescentFuelMassKg;
+		payloadSettings.AscentFuelKg = state.LMAscentFuelMassKg;
+		payloadSettings.DescentEmptyKg = state.LMDescentEmptyMassKg;
+		payloadSettings.AscentEmptyKg = state.LMAscentEmptyMassKg;
 
 		//
 		// Copy LM PAD data across.
@@ -1464,6 +1459,9 @@ void SIVB::SetState(SIVBSettings &state)
 		VehicleNo = state.VehicleNo;
 		LowRes = state.LowRes;
 		IUSCContPermanentEnabled = state.IUSCContPermanentEnabled;
+		payloadSettings.MissionNo = state.MissionNo;
+		strncpy(payloadSettings.CSMName, state.CSMName, 63);
+		payloadSettings.Crewed = state.Crewed;
 
 		//
 		// Limit rotation angle to 0-150 degrees.
@@ -1603,13 +1601,6 @@ void SIVB::CreatePayload() {
 
 	if (PayloadCreated) return;
 
-	PayloadSettings ps;
-
-	/*if (!csmCommandConnector.GetPayloadSettings(ps))
-	{
-		return;
-	}*/
-
 	char *plName = 0;
 
 	//
@@ -1639,7 +1630,7 @@ void SIVB::CreatePayload() {
 	// Now Lets create a real LEM and dock it
 	//
 
-	OBJHANDLE hSIVBdock = oapiGetVesselByName("AS-506-S4BSTG");
+	OBJHANDLE hSIVBdock = GetHandle();
 
 	vslm2.version = 2;
 	vslm2.flag = 0;
@@ -1663,18 +1654,14 @@ void SIVB::CreatePayload() {
 	// We have already gotten these information from the CSM
 	//
 
-	ps.DescentFuelKg = LMDescentFuelMassKg;
-	ps.AscentFuelKg = LMAscentFuelMassKg;
-	ps.DescentEmptyKg = LMDescentEmptyMassKg;
-	ps.AscentEmptyKg = LMAscentEmptyMassKg;
-	sprintf(ps.checklistFile, LEMCheck);
+	payloadSettings.MissionTime = MissionTime;
 
 	//
 	// Initialise the state of the LEM AGC information.
 	//
 
 	payloadvessel = static_cast<Payload *> (oapiGetVesselInterface(hPayload));
-	payloadvessel->SetupPayload(ps);
+	payloadvessel->SetupPayload(payloadSettings);
 	Payloaddatatransfer = true;
 
 	GetStatusEx(&vslm2);
@@ -1715,7 +1702,6 @@ void SIVB::CreatePayload() {
 }
 
 void SIVB::StartSeparationPyros()
-
 {
 	if (PayloadCreated) {
 		PayloadType = PAYLOAD_EMPTY;
@@ -1735,16 +1721,6 @@ void SIVB::StartSeparationPyros()
 	//
 	// Do stuff to create a new payload vessel and dock it with the CSM.
 	//
-
-	//
-	// Try to get payload settings, or return if we fail.
-	//
-	PayloadSettings ps;
-
-	if (!csmCommandConnector.GetPayloadSettings(ps))
-	{
-		return;
-	}
 
 	//
 	// Now separate the payload.
@@ -1798,13 +1774,6 @@ void SIVB::StartSeparationPyros()
 	// Now Lets create a real LEM and dock it
 	//
 
-	//
-	// The CSM docking probe has to ignore both the undock and dock
-	// events. Otherwise it will prevent us from 'docking' to the
-	// newly created LEM.
-	//
-	csmCommandConnector.SetIgnoreNextDockEvents(2);
-
 	CSMvessel->Undock(0);
 
 	vslm2.version = 2;
@@ -1829,18 +1798,14 @@ void SIVB::StartSeparationPyros()
 	// We have already gotten these information from the CSM
 	//
 
-	ps.DescentFuelKg = LMDescentFuelMassKg;
-	ps.AscentFuelKg = LMAscentFuelMassKg;
-	ps.DescentEmptyKg = LMDescentEmptyMassKg;
-	ps.AscentEmptyKg = LMAscentEmptyMassKg;
-	sprintf(ps.checklistFile, LEMCheck);
+	payloadSettings.MissionTime = MissionTime;
 
 	//
 	// Initialise the state of the LEM AGC information.
 	//
 
 	payloadvessel = static_cast<Payload *> (oapiGetVesselInterface(hPayload));
-	payloadvessel->SetupPayload(ps);
+	payloadvessel->SetupPayload(payloadSettings);
 	Payloaddatatransfer = true;
 
 	CSMvessel->GetStatusEx(&vslm2);
@@ -2227,84 +2192,35 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	return false;
 }
 
-CSMToSIVBCommandConnector::CSMToSIVBCommandConnector()
-
+LMToSIVBCommandConnector::LMToSIVBCommandConnector()
 {
-	type = CSM_SIVB_COMMAND;
+	type = LM_SLA_CONNECT;
 }
 
-CSMToSIVBCommandConnector::~CSMToSIVBCommandConnector()
-
+LMToSIVBCommandConnector::~LMToSIVBCommandConnector()
 {
 }
 
-void CSMToSIVBCommandConnector::SetIgnoreNextDockEvent()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = SIVBCSM_IGNORE_DOCK_EVENT;
-
-	SendMessage(cm);
-}
-
-void CSMToSIVBCommandConnector::SetIgnoreNextDockEvents(int n)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = SIVBCSM_IGNORE_DOCK_EVENTS;
-	cm.val1.iValue = n;
-
-	SendMessage(cm);
-}
-
-bool CSMToSIVBCommandConnector::GetPayloadSettings(PayloadSettings &p)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = SIVBCSM_GET_PAYLOAD_SETTINGS;
-	cm.val1.pValue = &p;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
+bool LMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 {
 	//
 	// Sanity check.
 	//
+
+	sprintf(oapiDebugString(), "5");
 
 	if (m.destination != type)
 	{
 		return false;
 	}
 
-	CSMSIVBMessageType messageType;
+	LMSIVBMessageType messageType;
 
-	messageType = (CSMSIVBMessageType) m.messageType;
+	messageType = (LMSIVBMessageType)m.messageType;
 
 	switch (messageType)
 	{
-	case CSMSIVB_IS_VENTABLE:
-		if (OurVessel)
-		{
-			m.val1.bValue = true;
-			return true;
-		}
-		break;
-
-	case CSMSIVB_START_SEPARATION:
+	case LMSIVB_START_SEPARATION:
 		if (OurVessel)
 		{
 			OurVessel->StartSeparationPyros();
@@ -2312,36 +2228,10 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 		}
 		break;
 
-	case CSMSIVB_STOP_SEPARATION:
+	case LMSIVB_STOP_SEPARATION:
 		if (OurVessel)
 		{
 			OurVessel->StopSeparationPyros();
-			return true;
-		}
-		break;
-
-	case CSMSIVB_GET_VESSEL_FUEL:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
-			return true;
-		}
-		break;
-
-	case CSMSIVB_GET_MAIN_BATTERY_POWER:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMainBatteryPower();
-			m.val2.dValue = OurVessel->GetMainBatteryPowerDrain();
-			return true;
-		}
-		break;
-
-	case CSMSIVB_GET_MAIN_BATTERY_ELECTRICS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMainBatteryVoltage();
-			m.val2.dValue = OurVessel->GetMainBatteryCurrent();
 			return true;
 		}
 		break;
@@ -2349,4 +2239,3 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 
 	return false;
 }
-
