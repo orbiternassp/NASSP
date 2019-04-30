@@ -225,6 +225,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	CabinFan(CabinFans),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this),
+	CSMToLEMPowerConnector(this),
+	LEMToSLAConnector(this),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
 {
@@ -349,6 +351,7 @@ void LEM::Init()
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
 	CSMToLEMECSConnector.SetType(LEM_CSM_ECS);
+	LEMToSLAConnector.SetType(LM_SLA_CONNECT);
 
 	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
 	CSMToLEMPowerSource.SetConnector(&CSMToLEMPowerConnector);
@@ -384,6 +387,7 @@ void LEM::Init()
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &cdi);
 	RegisterConnector(0, &LEMToCSMConnector);
 	RegisterConnector(0, &CSMToLEMECSConnector);
+	RegisterConnector(1, &LEMToSLAConnector);
 
 	// Do this stuff only once
 	if(!InitLEMCalled){
@@ -1412,6 +1416,13 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 	SetDockMode(0);
 	SetLmDockingPort(2.6);
 
+	// Docking port used for LM/SLA connection
+	DOCKHANDLE docksla;
+	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
+	VECTOR3 dockdir = { 0,-1,0 };
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
+	docksla = CreateDock(dockpos, dockdir, dockrot);
+
 	//
 	// Scan the launchpad config file.
 	//
@@ -1456,6 +1467,22 @@ void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 {
 	drogue = NULL;
 	probes = NULL;
+}
+
+void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
+{
+	//For now restrict this to docking port 1 (aka LM/SLA connection)
+	if (dock == 1)
+	{
+		if (connected)
+		{
+			DockConnectors(dock);
+		}
+		else
+		{
+			UndockConnectors(dock);
+		}
+	}
 }
 
 void LEM::DefineAnimations()
@@ -1742,12 +1769,12 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	MissionTime = ls.MissionTime;
 
-	strncpy (AudioLanguage, ls.language, 64);
 	strncpy (CSMName, ls.CSMName, 64);
 
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
 	ApolloNo = ls.MissionNo;
+	NoLegs = ls.NoLegs;
 
 	DescentFuelMassKg = ls.DescentFuelKg;
 	AscentFuelMassKg = ls.AscentFuelKg;
@@ -1889,4 +1916,14 @@ double LEM::GetAscentStageMass()
 void LEM::SendVHFRangingSignal(Saturn *sat, bool isAcquiring)
 {
 	VHF.RangingSignal(sat, isAcquiring);
+}
+
+void LEM::StartSeparationPyros()
+{
+	LEMToSLAConnector.StartSeparationPyros();
+}
+
+void LEM::StopSeparationPyros()
+{
+	LEMToSLAConnector.StopSeparationPyros();
 }

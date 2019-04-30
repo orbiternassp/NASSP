@@ -896,153 +896,6 @@ void CSMToIUConnector::ChannelOutput(int channel, int value)
 	SendMessage(cm);
 }
 
-CSMToSIVBControlConnector::CSMToSIVBControlConnector(CSMcomputer &c,  DockingProbe &probe, Saturn *s) : agc(c), dockingprobe(probe), SaturnConnector(s)
-
-{
-	type = CSM_SIVB_COMMAND;
-}
-
-CSMToSIVBControlConnector::~CSMToSIVBControlConnector()
-
-{
-}
-
-//
-// For now we have to process the ignore docking event message from the SIVB.
-//
-bool CSMToSIVBControlConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
-{
-	//
-	// Sanity check.
-	//
-
-	if (m.destination != type)
-	{
-		return false;
-	}
-
-	CSMSIVBMessageType messageType;
-
-	messageType = static_cast<CSMSIVBMessageType> (m.messageType);
-
-	switch (messageType)
-	{
-	case SIVBCSM_IGNORE_DOCK_EVENT:
-		dockingprobe.SetIgnoreNextDockEvent();
-		return true;
-
-	case SIVBCSM_IGNORE_DOCK_EVENTS:
-		dockingprobe.SetIgnoreNextDockEvents(m.val1.iValue);
-		return true;
-
-	case SIVBCSM_GET_PAYLOAD_SETTINGS:
-		{
-			PayloadSettings *p = static_cast<PayloadSettings *> (m.val1.pValue);
-			OurVessel->GetPayloadSettings(*p);
-			m.val1.bValue = true;
-		}
-		return true;
-
-	default:
-		return false;
-	}
-}
-
-bool CSMToSIVBControlConnector::IsVentable()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_IS_VENTABLE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-double CSMToSIVBControlConnector::GetFuelMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_GET_VESSEL_FUEL;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	//
-	// Non-zero return just in case the calling code tries to divide
-	// by it.
-	//
-	return 0.01;
-}
-
-void CSMToSIVBControlConnector::GetMainBatteryPower(double &capacity, double &drain)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_GET_MAIN_BATTERY_POWER;
-
-	if (SendMessage(cm))
-	{
-		capacity = cm.val1.dValue;
-		drain = cm.val2.dValue;
-		return;
-	}
-
-	capacity = drain = 0.0;
-}
-
-void CSMToSIVBControlConnector::GetMainBatteryElectrics(double &volts, double &current)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_GET_MAIN_BATTERY_ELECTRICS;
-
-	if (SendMessage(cm))
-	{
-		volts = cm.val1.dValue;
-		current = cm.val2.dValue;
-		return;
-	}
-
-	volts = current = 0.0;
-}
-
-void CSMToSIVBControlConnector::StartSeparationPyros()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_START_SEPARATION;
-
-	SendMessage(cm);
-}
-
-void CSMToSIVBControlConnector::StopSeparationPyros()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = CSMSIVB_STOP_SEPARATION;
-
-	SendMessage(cm);
-}
-
 CSMToLEMECSConnector::CSMToLEMECSConnector(Saturn *s) : SaturnConnector(s)
 {
 
@@ -1055,6 +908,9 @@ CSMToLEMECSConnector::~CSMToLEMECSConnector()
 
 bool CSMToLEMECSConnector::ConnectTo(Connector *other)
 {
+	// Disconnect in case we're already connected.
+	Disconnect();
+
 	if (SaturnConnector::ConnectTo(other))
 	{
 		h_Pipe *cmpipe = OurVessel->GetCMTunnelPipe();

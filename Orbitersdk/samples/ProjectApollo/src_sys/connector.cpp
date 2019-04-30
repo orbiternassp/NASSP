@@ -338,10 +338,17 @@ void ProjectApolloConnectorVessel::DockConnectors(int port)
 			/// always docked to port zero.
 			///
 			Connector *ours = ConnectorList[i].c;
-			Connector *theirs = GetVesselConnector(dockedWith, 0, ours->GetType());
 
-			if (theirs)
-				ours->ConnectTo(theirs);
+			for (int j = 0;j < 2;j++)
+			{
+				Connector *theirs = GetVesselConnector(dockedWith, j, ours->GetType());
+
+				if (theirs)
+				{
+					ours->ConnectTo(theirs);
+					break;
+				}
+			}
 		}
 	}
 }

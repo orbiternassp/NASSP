@@ -68,8 +68,6 @@ public:
 	bool IsRetracted() { return (Status == DOCKINGPROBE_STATUS_RETRACTED); };
 	void SetEnabled(bool e) { Enabled = e; }
 	bool IsEnabled() { return Enabled; };
-	void SetIgnoreNextDockEvent() { IgnoreNextDockEvent = 1; };
-	void SetIgnoreNextDockEvents(int n) { IgnoreNextDockEvent = n; };
 	void DockEvent(int dock, OBJHANDLE connected);
 	void TimeStep(double simt, double simdt);
 	void SystemTimestep(double simdt);
