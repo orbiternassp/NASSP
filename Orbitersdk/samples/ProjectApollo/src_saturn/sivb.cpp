@@ -73,10 +73,8 @@ static MESHHANDLE hsat5stg33low;
 static MESHHANDLE hsat5stg34low;
 static MESHHANDLE hastp;
 static MESHHANDLE hCOAStarget;
-static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
 static MESHHANDLE hlta_2r;
-static MESHHANDLE hlm_1;
 
 static SURFHANDLE SMMETex;
 
@@ -129,7 +127,6 @@ void SIVbLoadMeshes()
 	hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
 	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
-	hlm_1 = oapiLoadMeshGlobal ("ProjectApollo/LM_1");
 
 	//
 	// Saturn V
@@ -147,7 +144,6 @@ void SIVbLoadMeshes()
 	hsat5stg33low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg33");
 	hsat5stg34low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg34");
 
-	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_SLA");
 	hapollo8lta = oapiLoadMeshGlobal ("ProjectApollo/apollo8_lta");
 	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
 
@@ -265,7 +261,6 @@ void SIVB::InitS4b()
 	meshCOASTarget_A = -1;
 	meshCOASTarget_B = -1;
 	meshCOASTarget_C = -1;
-	meshLMPKD = -1;
 	meshApollo8LTA = -1;
 	meshLTA_2r = -1;
 
@@ -279,6 +274,7 @@ void SIVB::InitS4b()
 	payloadSettings.AscentEmptyKg = 2150.0;
 	payloadSettings.DescentEmptyKg = 2224.0;
 	payloadSettings.MissionNo = 0;
+	payloadSettings.NoLegs = false;
 	Payloaddatatransfer = false;
 
 	//
@@ -435,12 +431,10 @@ void SIVB::SetS4b()
 
 	switch (PayloadType) {
 	case PAYLOAD_LEM:
-		//SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
-		dockpos = { 0,0.03, 9.6 };
+	case PAYLOAD_LM1:
+		dockpos = { 0, 0, 9.0 };
 		SetDockParams(dockpos, dockdir, dockrot);
-		//hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
 		CreatePayload();
-		mass += PayloadMass;
 		break;
 
 	case PAYLOAD_LTA:
@@ -481,17 +475,12 @@ void SIVB::SetS4b()
 		mass += PayloadMass;
 		break;
 
-	case PAYLOAD_ASTP:
+	case PAYLOAD_ASTP: // Needs work. Eventually should be handled like the LM using CreatePayload()
 		SetMeshVisibilityMode(meshASTP_B, MESHVIS_EXTERNAL);
 		dockpos = _V(0.0, 0.15, 9.9);
 		dockrot = _V(-1.0, 0.0, 0);
 		SetDockParams(dockpos, dockdir, dockrot);
 		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
-		mass += PayloadMass;
-		break;
-
-	case PAYLOAD_LM1:
-		SetMeshVisibilityMode(meshLM_1, MESHVIS_EXTERNAL);
 		mass += PayloadMass;
 		break;
 	}
@@ -1366,12 +1355,6 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	meshSivbSaturn1bLow = AddMesh(hSat1stg2low, &mesh_dir);
 	meshSivbSaturn1b = AddMesh(hSat1stg2, &mesh_dir);
 
-	mesh_dir = _V(0, 0, 9.8);
-	meshLMPKD = AddMesh(hLMPKD, &mesh_dir);
-
-	mesh_dir = _V(0, 0, 9.8);
-	meshLM_1 = AddMesh(hlm_1, &mesh_dir);
-
 	mesh_dir = _V(0, 0, 9.6);	
 	meshLTA_2r = AddMesh(hlta_2r, &mesh_dir);
 
@@ -1614,10 +1597,6 @@ void SIVB::CreatePayload() {
 		plName = "ProjectApollo/LEM";
 		break;
 
-	case PAYLOAD_ASTP:
-		plName = "ProjectApollo/ASTP";
-		break;
-
 	default:
 		return;
 	}
@@ -1627,7 +1606,7 @@ void SIVB::CreatePayload() {
 	VESSELSTATUS2::DOCKINFOSPEC dckinfo;
 
 	//
-	// Now Lets create a real LEM and dock it
+	// Now Lets create a payload and dock it to the SIVB
 	//
 
 	OBJHANDLE hSIVBdock = GetHandle();
@@ -1655,6 +1634,7 @@ void SIVB::CreatePayload() {
 	//
 
 	payloadSettings.MissionTime = MissionTime;
+	if (PayloadType == PAYLOAD_LM1) payloadSettings.NoLegs = true;
 
 	//
 	// Initialise the state of the LEM AGC information.
@@ -1677,150 +1657,6 @@ void SIVB::CreatePayload() {
 	DefSetStateEx(&vslm2);
 
 	//
-    // PAD load.
-	//
-
-	LEM *lmvessel = static_cast<LEM *> (payloadvessel);
-
-	if (LMPad && LMPadCount > 0)
-	{
-		int i;
-		for (i = 0; i < LMPadCount; i++) {
-			lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
-		}
-	}
-
-	if (AEAPad && AEAPadCount > 0)
-	{
-		int i;
-		for (i = 0; i < AEAPadCount; i++) {
-			lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
-		}
-	}
-
-	PayloadCreated = true;
-}
-
-void SIVB::StartSeparationPyros()
-{
-	if (PayloadCreated) {
-		PayloadType = PAYLOAD_EMPTY;
-		SetS4b();
-		return;
-	}
-
-	//
-	// Start separation. For now this function will probably do all the work.
-	//
-
-	if (!PayloadIsDetachable())
-	{
-		return;
-	}
-
-	//
-	// Do stuff to create a new payload vessel and dock it with the CSM.
-	//
-
-	//
-	// Now separate the payload.
-	//
-
-	OBJHANDLE hCSM = GetDockStatus(GetDockHandle(0));
-
-	if (!hCSM)
-	{
-		return;
-	}
-
-	VESSEL *CSMvessel = static_cast<VESSEL *> (oapiGetVesselInterface(hCSM));
-
-	if (!CSMvessel)
-	{
-		return;
-	}
-
-	char *plName = 0;
-
-	//
-	// Get the payload config file name.
-	//
-
-	switch (PayloadType)
-	{
-	case PAYLOAD_LEM:
-	case PAYLOAD_LM1:
-		plName = "ProjectApollo/LEM";
-		break;
-
-	case PAYLOAD_ASTP:
-		plName = "ProjectApollo/ASTP";
-		break;
-
-	default:
-		return;
-	}
-
-	//
-	// Now we know we have a valid payload. Create it and
-	// dock it.
-	//
-
-	Payload *payloadvessel;
-	VESSELSTATUS2 vslm2;
-	VESSELSTATUS2::DOCKINFOSPEC dckinfo;
-
-	//
-	// Now Lets create a real LEM and dock it
-	//
-
-	CSMvessel->Undock(0);
-
-	vslm2.version = 2;
-	vslm2.flag = 0;
-	vslm2.fuel = 0;
-	vslm2.thruster = 0;
-	vslm2.ndockinfo = 1;
-	vslm2.dockinfo = &dckinfo;
-
-	CSMvessel->GetStatusEx(&vslm2);
-
-	vslm2.dockinfo[0].idx = 0;
-	vslm2.dockinfo[0].ridx = 0;
-	vslm2.dockinfo[0].rvessel = hCSM;
-	vslm2.ndockinfo = 1;
-	vslm2.flag = VS_DOCKINFOLIST;
-	vslm2.version = 2;
-
-	OBJHANDLE hPayload = oapiCreateVesselEx(PayloadName, plName, &vslm2);
-
-	//
-	// We have already gotten these information from the CSM
-	//
-
-	payloadSettings.MissionTime = MissionTime;
-
-	//
-	// Initialise the state of the LEM AGC information.
-	//
-
-	payloadvessel = static_cast<Payload *> (oapiGetVesselInterface(hPayload));
-	payloadvessel->SetupPayload(payloadSettings);
-	Payloaddatatransfer = true;
-
-	CSMvessel->GetStatusEx(&vslm2);
-
-	vslm2.dockinfo = &dckinfo;
-	vslm2.dockinfo[0].idx = 0;
-	vslm2.dockinfo[0].ridx = 0;
-	vslm2.dockinfo[0].rvessel = hPayload;
-	vslm2.ndockinfo = 1;
-	vslm2.flag = VS_DOCKINFOLIST;
-	vslm2.version = 2;
-
-	CSMvessel->DefSetStateEx(&vslm2);
-
-	//
 	// Finally, do any special case configuration.
 	//
 
@@ -1828,43 +1664,50 @@ void SIVB::StartSeparationPyros()
 	{
 	case PAYLOAD_LEM:
 	case PAYLOAD_LM1:
+	{
+		//
+		// PAD load.
+		//
+
+		LEM *lmvessel = static_cast<LEM *> (payloadvessel);
+
+		if (LMPad && LMPadCount > 0)
 		{
-			//
-			// PAD load.
-			//
-
-			LEM *lmvessel = static_cast<LEM *> (payloadvessel);
-
-			if (LMPad && LMPadCount > 0)
-			{
-				int i;
-				for (i = 0; i < LMPadCount; i++) {
-					lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
-				}
+			int i;
+			for (i = 0; i < LMPadCount; i++) {
+				lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
 			}
-
-			if (AEAPad && AEAPadCount > 0)
-			{
-				int i;
-				for (i = 0; i < AEAPadCount; i++) {
-					lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
-				}
-			}
-
 		}
-		break;
+
+		if (AEAPad && AEAPadCount > 0)
+		{
+			int i;
+			for (i = 0; i < AEAPadCount; i++) {
+				lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
+			}
+		}
+	}
+	break;
 
 	default:
 		break;
 	}
 
-	//
-	// Set the payload to none.
-	//
+	PayloadCreated = true;
+}
 
-	PayloadType = PAYLOAD_EMPTY;
+void SIVB::StartSeparationPyros()
+{
+	if (!PayloadIsDetachable())
+	{
+		return;
+	}
 
-	SetS4b();
+	if (PayloadCreated) {
+		Undock(0);
+		PayloadType = PAYLOAD_EMPTY;
+		SetS4b();
+	}
 }
 
 void SIVB::StopSeparationPyros()
@@ -1899,7 +1742,6 @@ void SIVB::HideAllMeshes()
 	SetMeshVisibilityMode(meshSivbSaturnVLow, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshSivbSaturn1b, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshSivbSaturn1bLow, MESHVIS_NEVER);
-	SetMeshVisibilityMode(meshLMPKD, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshLTA_2r, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshASTP_A, MESHVIS_NEVER);
@@ -1907,7 +1749,6 @@ void SIVB::HideAllMeshes()
 	SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_C, MESHVIS_NEVER);
-	SetMeshVisibilityMode(meshLM_1, MESHVIS_NEVER);
 }
 
 

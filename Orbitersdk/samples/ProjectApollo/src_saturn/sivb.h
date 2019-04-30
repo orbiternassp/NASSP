@@ -472,7 +472,7 @@ protected:
 	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
 	int meshSivbSaturnV, meshSivbSaturnVLow, meshSivbSaturn1b, meshSivbSaturn1bLow;
 	int meshASTP_A, meshASTP_B, meshCOASTarget_A, meshCOASTarget_B, meshCOASTarget_C;
-	int meshLMPKD, meshApollo8LTA, meshLTA_2r, meshLM_1;
+	int meshApollo8LTA, meshLTA_2r;
 
 	void HideAllMeshes();
 };
