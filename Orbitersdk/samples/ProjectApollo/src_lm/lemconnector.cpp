@@ -113,10 +113,6 @@ bool LEMPowerConnector::ReceiveMessage(Connector *from, ConnectorMessage &m) {
 				return false;
 			}
 			break;
-		case 43:
-			// Command SLA separation
-			OurVessel->StartSeparationPyros();
-			break;
 		default:
 			return false;
 		
@@ -198,7 +194,7 @@ void LMToSIVBConnector::StartSeparationPyros()
 	ConnectorMessage cm;
 
 	cm.destination = type;
-	cm.messageType = LMSIVB_START_SEPARATION;
+	cm.messageType = SLA_START_SEPARATION;
 
 	SendMessage(cm);
 }
@@ -208,7 +204,56 @@ void LMToSIVBConnector::StopSeparationPyros()
 	ConnectorMessage cm;
 
 	cm.destination = type;
-	cm.messageType = LMSIVB_STOP_SEPARATION;
+	cm.messageType = SLA_STOP_SEPARATION;
 
 	SendMessage(cm);
+}
+
+LEMCommandConnector::LEMCommandConnector(LEM *l) : LEMConnector(l)
+{
+	type = CSM_PAYLOAD_COMMAND;
+}
+
+LEMCommandConnector::~LEMCommandConnector()
+{
+
+}
+
+bool LEMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	PayloadSIVBMessageType messageType;
+
+	messageType = (PayloadSIVBMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case SLA_START_SEPARATION:
+		if (OurVessel)
+		{
+			OurVessel->StartSeparationPyros();
+			return true;
+		}
+		break;
+
+	case SLA_STOP_SEPARATION:
+		if (OurVessel)
+		{
+			OurVessel->StopSeparationPyros();
+			return true;
+		}
+		break;
+
+	}
+
+	return false;
 }

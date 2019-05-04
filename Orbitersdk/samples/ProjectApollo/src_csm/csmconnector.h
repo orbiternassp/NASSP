@@ -98,4 +98,14 @@ public:
 	void ConnectLMTunnelToCabinVent();
 };
 
+class CSMToPayloadConnector : public SaturnConnector
+{
+public:
+	CSMToPayloadConnector(Saturn *s);
+	~CSMToPayloadConnector();
+
+	void StartSeparationPyros();
+	void StopSeparationPyros();
+};
+
 #endif // _PA_CSMCONNECTOR_H

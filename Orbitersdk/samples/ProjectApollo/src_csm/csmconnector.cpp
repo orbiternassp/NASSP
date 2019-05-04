@@ -957,3 +957,33 @@ void CSMToLEMECSConnector::ConnectLMTunnelToCabinVent()
 
 	SendMessage(cm);
 }
+
+CSMToPayloadConnector::CSMToPayloadConnector(Saturn *s) : SaturnConnector(s)
+{
+	type = CSM_PAYLOAD_COMMAND;
+}
+
+CSMToPayloadConnector::~CSMToPayloadConnector()
+{
+
+}
+
+void CSMToPayloadConnector::StartSeparationPyros()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SLA_START_SEPARATION;
+
+	SendMessage(cm);
+}
+
+void CSMToPayloadConnector::StopSeparationPyros()
+{
+	ConnectorMessage cm;
+
+	cm.destination = type;
+	cm.messageType = SLA_STOP_SEPARATION;
+
+	SendMessage(cm);
+}

@@ -210,6 +210,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	iuCommandConnector(agc, this),
 	sivbCommandConnector(this),
 	lemECSConnector(this),
+	payloadCommandConnector(this),
 	cdi(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
@@ -562,6 +563,7 @@ void Saturn::initSaturn()
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
 	lemECSConnector.SetType(LEM_CSM_ECS);
+	payloadCommandConnector.SetType(CSM_PAYLOAD_COMMAND);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
 
 	//
@@ -3692,6 +3694,7 @@ void Saturn::GenericLoadStateSetup()
 	}
 
 	CSMToLEMConnector.AddTo(&CSMToLEMPowerConnector);
+	CSMToLEMConnector.AddTo(&payloadCommandConnector);
 
 	//
 	// Disable cabin fans.
@@ -4842,10 +4845,7 @@ void Saturn::VHFRangingReturnSignal()
 
 void Saturn::StartSeparationPyros()
 {
-	ConnectorMessage msg;
-	msg.destination = LEM_CSM_POWER;
-	msg.messageType = 43;
-	CSMToLEMConnector.SendMessage(msg);
+	payloadCommandConnector.StartSeparationPyros();
 }
 
 //

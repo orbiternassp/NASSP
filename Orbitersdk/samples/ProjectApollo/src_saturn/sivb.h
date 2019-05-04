@@ -152,11 +152,11 @@ public:
 /// \ingroup Connectors
 /// \brief LM to SIVb command connector type.
 ///
-class LMToSIVBCommandConnector : public SIVbConnector
+class PayloadToSLACommandConnector : public SIVbConnector
 {
 public:
-	LMToSIVBCommandConnector();
-	~LMToSIVBCommandConnector();
+	PayloadToSLACommandConnector();
+	~PayloadToSLACommandConnector();
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };
@@ -448,7 +448,7 @@ protected:
 	/// \brief Command connector from LM to SIVb.
 	///
 
-	LMToSIVBCommandConnector lmCommandConnector;
+	PayloadToSLACommandConnector payloadSeparationConnector;
 
 	///
 	/// \brief Handle of docked vessel.
@@ -479,12 +479,12 @@ protected:
 
 ///
 /// \ingroup Connectors
-/// \brief Message type to send from the LM to the SIVb.
+/// \brief Message type to send from the payload to the SIVb.
 ///
-enum LMSIVBMessageType
+enum PayloadSIVBMessageType
 {
-	LMSIVB_START_SEPARATION,			///< Start charging separation pyros.
-	LMSIVB_STOP_SEPARATION,				///< Stop charging separation pyros.
+	SLA_START_SEPARATION,			///< Start charging separation pyros.
+	SLA_STOP_SEPARATION,			///< Stop charging separation pyros.
 };
 
 #endif // _PA_SIVB_H

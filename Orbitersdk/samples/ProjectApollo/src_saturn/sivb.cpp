@@ -302,7 +302,7 @@ void SIVB::InitS4b()
 	//
 
 	IUCommandConnector.SetSIVb(this);
-	lmCommandConnector.SetSIVb(this);
+	payloadSeparationConnector.SetSIVb(this);
 
 	if (!PanelSDKInitalised)
 	{
@@ -314,9 +314,9 @@ void SIVB::InitS4b()
 	MainBattery = static_cast<Battery *> (Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY"));
 
 	//
-	// Register docking connector so the LM can find it.
+	// Register docking connector so the payload can find it.
 	//
-	RegisterConnector(0, &lmCommandConnector);
+	RegisterConnector(0, &payloadSeparationConnector);
 }
 
 void SIVB::Boiloff()
@@ -475,13 +475,11 @@ void SIVB::SetS4b()
 		mass += PayloadMass;
 		break;
 
-	case PAYLOAD_ASTP: // Needs work. Eventually should be handled like the LM using CreatePayload()
-		SetMeshVisibilityMode(meshASTP_B, MESHVIS_EXTERNAL);
-		dockpos = _V(0.0, 0.15, 9.9);
+	case PAYLOAD_ASTP:
+		dockpos = _V(0.0, 0.16, 8.5);
 		dockrot = _V(-1.0, 0.0, 0);
 		SetDockParams(dockpos, dockdir, dockrot);
-		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
-		mass += PayloadMass;
+		CreatePayload();
 		break;
 	}
 
@@ -1596,6 +1594,9 @@ void SIVB::CreatePayload() {
 	case PAYLOAD_LM1:
 		plName = "ProjectApollo/LEM";
 		break;
+	case PAYLOAD_ASTP:
+		plName = "ProjectApollo/ASTP";
+		break;
 
 	default:
 		return;
@@ -2033,35 +2034,33 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	return false;
 }
 
-LMToSIVBCommandConnector::LMToSIVBCommandConnector()
+PayloadToSLACommandConnector::PayloadToSLACommandConnector()
 {
-	type = LM_SLA_CONNECT;
+	type = PAYLOAD_SLA_CONNECT;
 }
 
-LMToSIVBCommandConnector::~LMToSIVBCommandConnector()
+PayloadToSLACommandConnector::~PayloadToSLACommandConnector()
 {
 }
 
-bool LMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+bool PayloadToSLACommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 {
 	//
 	// Sanity check.
 	//
-
-	sprintf(oapiDebugString(), "5");
 
 	if (m.destination != type)
 	{
 		return false;
 	}
 
-	LMSIVBMessageType messageType;
+	PayloadSIVBMessageType messageType;
 
-	messageType = (LMSIVBMessageType)m.messageType;
+	messageType = (PayloadSIVBMessageType)m.messageType;
 
 	switch (messageType)
 	{
-	case LMSIVB_START_SEPARATION:
+	case SLA_START_SEPARATION:
 		if (OurVessel)
 		{
 			OurVessel->StartSeparationPyros();
@@ -2069,7 +2068,7 @@ bool LMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case LMSIVB_STOP_SEPARATION:
+	case SLA_STOP_SEPARATION:
 		if (OurVessel)
 		{
 			OurVessel->StopSeparationPyros();

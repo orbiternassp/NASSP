@@ -4318,6 +4318,7 @@ protected:
 	PowerDrainConnectorObject CSMToLEMPowerDrain;
 	PowerDrainConnector CSMToLEMPowerConnector;
 	CSMToLEMECSConnector lemECSConnector;
+	CSMToPayloadConnector payloadCommandConnector;
 
 	// Checklist Controller to CSM connector
 	ChecklistDataInterface cdi;

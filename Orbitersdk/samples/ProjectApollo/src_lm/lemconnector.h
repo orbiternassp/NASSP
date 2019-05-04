@@ -94,3 +94,14 @@ public:
 	void StartSeparationPyros();
 	void StopSeparationPyros();
 };
+
+//CSM to LM command connector
+
+class LEMCommandConnector : public LEMConnector
+{
+public:
+	LEMCommandConnector(LEM *l);
+	~LEMCommandConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};

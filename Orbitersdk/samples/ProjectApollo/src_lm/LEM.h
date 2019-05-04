@@ -1595,6 +1595,7 @@ protected:
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
 	LEMECSConnector CSMToLEMECSConnector;
 	LMToSIVBConnector LEMToSLAConnector;
+	LEMCommandConnector CSMToLEMCommandConnector;
 
 	// Checklist Controller to LEM connector
 	ChecklistDataInterface cdi;
