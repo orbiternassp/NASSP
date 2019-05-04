@@ -414,6 +414,7 @@ public:
 	void clbkPostCreation();
 	void clbkVisualCreated(VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
+	void clbkDockEvent(int dock, OBJHANDLE connected);
 
 	void GetScenarioState(FILEHANDLE scn, void *vs);
 	void SetGenericStageState(int stat);
@@ -439,6 +440,8 @@ public:
 	virtual void SetCDRInSuit();
 	virtual void SetLMPInSuit();
 	virtual void StartEVA();
+	void StartSeparationPyros();
+	void StopSeparationPyros();
 
 	h_Tank *DesO2Tank;
 	h_Tank *AscO2Tank1;
@@ -1591,6 +1594,8 @@ protected:
 	LEMPowerConnector CSMToLEMPowerConnector;		// This sends data *FROM* CSMToLEMPowerSource *TO* LEMToCSMConnector
 	PowerSourceConnectorObject CSMToLEMPowerSource; // This looks like an e-object
 	LEMECSConnector CSMToLEMECSConnector;
+	LMToSIVBConnector LEMToSLAConnector;
+	LEMCommandConnector CSMToLEMCommandConnector;
 
 	// Checklist Controller to LEM connector
 	ChecklistDataInterface cdi;

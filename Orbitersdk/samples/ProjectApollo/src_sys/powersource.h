@@ -124,7 +124,7 @@ class DCBusController : public e_object {
 
 public:
 	DCBusController(char *i_name, PanelSDK &p);
-	void Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp, e_object *bc1, e_object *bc2, e_object *bc3);
+	void Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *bc1, e_object *bc2, e_object *bc3);
 	void refresh(double dt);
 	void ConnectFuelCell(int fc, bool connect);
 	bool IsFuelCellConnected(int fc);

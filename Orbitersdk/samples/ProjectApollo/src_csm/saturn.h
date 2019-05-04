@@ -979,6 +979,7 @@ public:
 
 	virtual void SetIUUmbilicalState(bool connect);
 	virtual void VHFRangingReturnSignal();
+	void StartSeparationPyros();
 
 	//CSM to IU interface functions
 	bool GetCMCSIVBTakeover();
@@ -4312,20 +4313,12 @@ protected:
 	CSMToIUConnector iuCommandConnector;
 	SaturnToIUCommandConnector sivbCommandConnector;
 
-	MultiConnector CSMToSIVBConnector;
 	MultiConnector CSMToLEMConnector;
-
-	///
-	/// \brief SIVb control connector for venting.
-	///
-	CSMToSIVBControlConnector sivbControlConnector;
-
-	PowerSourceConnectorObject SIVBToCSMPowerSource;
-	Connector SIVBToCSMPowerConnector;
 
 	PowerDrainConnectorObject CSMToLEMPowerDrain;
 	PowerDrainConnector CSMToLEMPowerConnector;
 	CSMToLEMECSConnector lemECSConnector;
+	CSMToPayloadConnector payloadCommandConnector;
 
 	// Checklist Controller to CSM connector
 	ChecklistDataInterface cdi;

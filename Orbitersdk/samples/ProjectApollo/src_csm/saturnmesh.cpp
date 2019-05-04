@@ -823,6 +823,7 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.PayloadMass = S4PL_Mass;
 	S4Config.SaturnVStage = SaturnVStage;
 	S4Config.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
+	S4Config.MissionNo = ApolloNo;
 	S4Config.MissionTime = MissionTime;
 	S4Config.LowRes = LowRes;
 	S4Config.ISP_VAC = ISP_THIRD_VAC;
@@ -832,6 +833,8 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.PanelProcess = 0.0;
 
 	GetPayloadName(S4Config.PayloadName);
+	strncpy(S4Config.CSMName, GetName(), 63);
+	S4Config.Crewed = Crewed;
 
 	S4Config.LMAscentFuelMassKg = LMAscentFuelMassKg;
 	S4Config.LMDescentFuelMassKg = LMDescentFuelMassKg;

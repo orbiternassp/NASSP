@@ -219,11 +219,11 @@ void Saturn::SystemsInit() {
 	MainBusB->WireTo(MainBusBController.GetBusSource());
 
 	MainBusAController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &MainABatBusACircuitBraker, &MainABatCCircuitBraker, eo, &SIVBToCSMPowerSource,
+		                    &MainABatBusACircuitBraker, &MainABatCCircuitBraker, eo,
 							&FuelCell1BusContCB, &FuelCell2BusContCB, &FuelCell3BusContCB);	
 
 	MainBusBController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &MainBBatBusBCircuitBraker, &MainBBatCCircuitBraker, eo, &SIVBToCSMPowerSource,
+		                    &MainBBatBusBCircuitBraker, &MainBBatCCircuitBraker, eo,
 							&FuelCell1BusContCB, &FuelCell2BusContCB, &FuelCell3BusContCB);
 	
 	MainBusAController.ConnectFuelCell(2, true);	// Default state of MainBusASwitch2

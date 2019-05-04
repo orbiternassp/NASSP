@@ -153,7 +153,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	ACBus2PhaseC("AC-Bus2-PhaseC", 115, NULL),
 	ACBus1("ACBus1", Panelsdk),
 	ACBus2("ACBus2", Panelsdk),
-	SIVBToCSMPowerSource("SIVBToCSMPower", Panelsdk),
 	CSMToLEMPowerDrain("CSMToLEMPower", Panelsdk),
 	MainBusAController("MainBusAController", Panelsdk),
 	MainBusBController("MainBusBController", Panelsdk),
@@ -209,9 +208,9 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	BatteryCharger("BatteryCharger", Panelsdk),
 	timedSounds(soundlib),
 	iuCommandConnector(agc, this),
-	sivbControlConnector(agc, dockingprobe, this),
 	sivbCommandConnector(this),
 	lemECSConnector(this),
+	payloadCommandConnector(this),
 	cdi(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
@@ -316,7 +315,6 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &cdi);
 	RegisterConnector(0, &CSMToLEMConnector);
-	RegisterConnector(0, &CSMToSIVBConnector);
 	RegisterConnector(0, &lemECSConnector);
 }
 
@@ -562,15 +560,11 @@ void Saturn::initSaturn()
 	iuCommandConnector.SetSaturn(this);
 	sivbCommandConnector.SetSaturn(this);
 
-	CSMToSIVBConnector.SetType(CSM_SIVB_DOCKING);
-	SIVBToCSMPowerConnector.SetType(CSM_SIVB_POWER);
-
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
 	lemECSConnector.SetType(LEM_CSM_ECS);
+	payloadCommandConnector.SetType(CSM_PAYLOAD_COMMAND);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
-
-	SIVBToCSMPowerSource.SetConnector(&SIVBToCSMPowerConnector);
 
 	//
 	// Propellant sources.
@@ -2330,7 +2324,6 @@ void Saturn::GetPayloadSettings(PayloadSettings &ls)
 	ls.DescentFuelKg = LMDescentFuelMassKg;
 	ls.AscentEmptyKg = LMAscentEmptyMassKg;
 	ls.DescentEmptyKg = LMDescentEmptyMassKg;
-	strncpy (ls.language, AudioLanguage, 63);
 	strncpy (ls.CSMName, GetName(), 63);
 	ls.MissionNo = ApolloNo;
 	ls.MissionTime = MissionTime;
@@ -2623,10 +2616,6 @@ void Saturn::SetStage(int s)
 
 		iuCommandConnector.Disconnect();
 		sivbCommandConnector.Disconnect();
-		sivbControlConnector.Disconnect();
-
-		CSMToSIVBConnector.AddTo(&iuCommandConnector);
-		CSMToSIVBConnector.AddTo(&sivbControlConnector);
 	}
 }
 
@@ -3698,19 +3687,14 @@ void Saturn::GenericLoadStateSetup()
 	// Set up connectors.
 	//
 
-	if (stage >= CSM_LEM_STAGE)
-	{
-		CSMToSIVBConnector.AddTo(&iuCommandConnector);
-		CSMToSIVBConnector.AddTo(&sivbControlConnector);
-	}
-	else
+	if (stage < CSM_LEM_STAGE)
 	{
 		iu->ConnectToCSM(&iuCommandConnector);
 		iu->ConnectToLV(&sivbCommandConnector);
 	}
 
-	CSMToSIVBConnector.AddTo(&SIVBToCSMPowerConnector);
 	CSMToLEMConnector.AddTo(&CSMToLEMPowerConnector);
+	CSMToLEMConnector.AddTo(&payloadCommandConnector);
 
 	//
 	// Disable cabin fans.
@@ -4857,6 +4841,11 @@ void Saturn::TLI_Ended()
 void Saturn::VHFRangingReturnSignal()
 {
 	if (!NoVHFRanging) vhfranging.RangingReturnSignal();
+}
+
+void Saturn::StartSeparationPyros()
+{
+	payloadCommandConnector.StartSeparationPyros();
 }
 
 //
