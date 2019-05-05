@@ -61,6 +61,7 @@ static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
+static MESHHANDLE hSat1stg2cross;
 static MESHHANDLE hsat5stg3;
 static MESHHANDLE hsat5stg31;
 static MESHHANDLE hsat5stg32;
@@ -125,6 +126,7 @@ void SIVbLoadMeshes()
 	hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
 	hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
 	hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
+	hSat1stg2cross = oapiLoadMeshGlobal("ProjectApollo/nsat1stg2cross");
 	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
 
@@ -471,6 +473,7 @@ void SIVB::SetS4b()
 
 	case PAYLOAD_TARGET:
 		SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_EXTERNAL);
+		if(SaturnVStage == false) SetMeshVisibilityMode(meshSivbSaturn1bcross, MESHVIS_EXTERNAL);
 		ClearDockDefinitions();
 		mass += PayloadMass;
 		break;
@@ -1352,6 +1355,7 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	meshSivbSaturnV = AddMesh(hsat5stg3, &mesh_dir);
 	meshSivbSaturn1bLow = AddMesh(hSat1stg2low, &mesh_dir);
 	meshSivbSaturn1b = AddMesh(hSat1stg2, &mesh_dir);
+	meshSivbSaturn1bcross = AddMesh(hSat1stg2cross, &mesh_dir);
 
 	mesh_dir = _V(0, 0, 9.6);	
 	meshLTA_2r = AddMesh(hlta_2r, &mesh_dir);
@@ -1743,6 +1747,7 @@ void SIVB::HideAllMeshes()
 	SetMeshVisibilityMode(meshSivbSaturnVLow, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshSivbSaturn1b, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshSivbSaturn1bLow, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshSivbSaturn1bcross, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshLTA_2r, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshASTP_A, MESHVIS_NEVER);

@@ -920,7 +920,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	{
 		if ((GetThrusterLevel(th_hover[0]) > 0) && (InVC || (InPanel && PanelId == LMPANEL_LPDWINDOW)))
 		{
-			double amt = min(0.05, max(0.02, GetThrusterLevel(th_hover[0]) / 20));
+			double amt = max(0.02, GetThrusterLevel(th_hover[0]) / 20);
 			JostleViewpoint(amt);
 		}
 	}
