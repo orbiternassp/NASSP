@@ -314,6 +314,11 @@ void LEM::Init()
 		Checklist_Variable[i][0] = 0;
 	}
 
+	// Camera jostle.
+	ViewOffsetx = 0;
+	ViewOffsety = 0;
+	ViewOffsetz = 0;
+
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
 	RCSA.SetVessel(this);
@@ -900,6 +905,23 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			else {
 				SetThrusterGroupLevel(thg_dust, 0);
 			}
+		}
+	}
+
+	//
+	// Camera jostle.
+	//
+
+	ViewOffsetx *= 0.95;
+	ViewOffsety *= 0.95;
+	ViewOffsetz *= 0.95;
+
+	if (th_hover[0])
+	{
+		if ((GetThrusterLevel(th_hover[0]) > 0) && (InVC || (InPanel && PanelId == LMPANEL_LPDWINDOW)))
+		{
+			double amt = min(0.05, max(0.02, GetThrusterLevel(th_hover[0]) / 20));
+			JostleViewpoint(amt);
 		}
 	}
 
