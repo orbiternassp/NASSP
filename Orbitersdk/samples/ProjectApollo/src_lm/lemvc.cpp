@@ -39,8 +39,39 @@
 
 #include "LEM.h"
 
+void LEM::JostleViewpoint(double amount)
+
+{
+	double j = ((double)((rand() & 65535) - 32768) * amount) / 3276800.0;
+	ViewOffsetx += j;
+
+	j = ((double)((rand() & 65535) - 32768) * amount) / 3276800.0;
+	ViewOffsety += j;
+
+	j = ((double)((rand() & 65535) - 32768) * amount) / 3276800.0;
+	ViewOffsetz += j;
+
+	if (ViewOffsetx > 0.10)
+		ViewOffsetx = 0.10;
+	if (ViewOffsetx < -0.10)
+		ViewOffsetx = -0.10;
+
+	if (ViewOffsety > 0.10)
+		ViewOffsety = 0.10;
+	if (ViewOffsety < -0.10)
+		ViewOffsety = -0.10;
+
+	if (ViewOffsetz > 0.05)
+		ViewOffsetz = 0.05;
+	if (ViewOffsetz < -0.05)
+		ViewOffsetz = -0.05;
+
+	SetView();
+}
+
 void LEM::SetView() {
 
+	VECTOR3 v;
 	//
 	// Set camera offset
 	//
@@ -48,24 +79,30 @@ void LEM::SetView() {
 		switch (viewpos) {
 		case LMVIEW_CDR:
 			if (stage == 2) {
-				SetCameraOffset(_V(-0.55, -0.07, 1.35));
+				v = _V(-0.55, -0.07, 1.35);
 			}
 			else {
-				SetCameraOffset(_V(-0.55, 1.68, 1.35));
+				v = _V(-0.55, 1.68, 1.35);
 			}
 			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			break;
 
 		case LMVIEW_LMP:
 			if (stage == 2) {
-				SetCameraOffset(_V(0.55, -0.07, 1.35));
+				v = _V(0.55, -0.07, 1.35);
 			}
 			else {
-				SetCameraOffset(_V(0.55, 1.68, 1.35));
+				v = _V(0.55, 1.68, 1.35);
 			}
 			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			break;
 		}
+
+		v.x += ViewOffsetx;
+		v.y += ViewOffsety;
+		v.z += ViewOffsetz;
+
+		SetCameraOffset(v);
 
 	} else {
 
@@ -99,13 +136,16 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_LPDWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.61, -0.125, 1.39));
-						//SetCameraOffset(_V(-1, 0.055, 1.26));
+						v = _V(-0.61, -0.125, 1.39);
 					}
 					else {
-						SetCameraOffset(_V(-0.61, 1.625, 1.39));
-						//SetCameraOffset(_V(-1, 1.90, 1.26));
+						v = _V(-0.61, 1.625, 1.39);
 					}
+					v.x += ViewOffsetx;
+					v.y += ViewOffsety;
+					v.z += ViewOffsetz;
+
+					SetCameraOffset(v);
 					break;
 				case LMPANEL_RNDZWINDOW:
 					if (stage == 2) {

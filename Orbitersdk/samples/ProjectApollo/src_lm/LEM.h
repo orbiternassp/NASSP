@@ -595,6 +595,7 @@ protected:
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	// void GetDockStatus();
+	void JostleViewpoint(double amount);
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -1542,6 +1543,14 @@ protected:
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
 	bool RefreshPanelIdInTimestep;
+
+	//
+	// Random motion.
+	//
+
+	double ViewOffsetx;
+	double ViewOffsety;
+	double ViewOffsetz;
 
 	//
 	// Ground Systems
