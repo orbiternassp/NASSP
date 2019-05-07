@@ -103,12 +103,17 @@ public:
 
 	void setRiseTime(int seconds) { riseSlope = 255 / seconds; }
 	void setFadeTime(int seconds) { fadeSlope = 255 / seconds; }
+
+	void setFrequencyShift(int minFreq, int maxFreq) { fMin = minFreq; fMax = maxFreq; }
+	void clearFrequencyShift() { fMin = fMax = NULL; }
+	bool hasFrequencyShift() const { return fMin != NULL && fMax != NULL; }
+
 private:
 	int riseSlope     = 255 / 4; // [vol/sec]
 	int fadeSlope     = 255 / 6; // [vol/sec]
 	int fMin          =  3000;   // [Hz]
 	int fMax          = 22050;   // [Hz]
-	int currentVolume = 0;       // "lagging" volume level
+	int currentVolume = -1;      // "lagging" volume level
 };
 
 
