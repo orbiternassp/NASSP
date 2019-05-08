@@ -1542,6 +1542,31 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		SE_WND_HTR_AC_CB.DrawPower(61.8);
 	}
 
+	//Misc Sounds
+
+	//Suit Fan Sound
+	if (SuitFan1->pumping || SuitFan2->pumping) {
+		SuitFanSound.setFadeTime(5);
+		SuitFanSound.setFrequencyShift(3000, 11025);
+		SuitFanSound.play(220);
+	}
+	else
+	{
+		SuitFanSound.stop();
+	}
+
+	//Glycol Pump Sound
+	if (SecGlyPump->pumping || PrimGlycolPumpController.GetGlycolPumpState(1) || PrimGlycolPumpController.GetGlycolPumpState(2)) {
+		GlycolPumpSound.setRiseTime(3);
+		GlycolPumpSound.setFadeTime(3);
+		GlycolPumpSound.setFrequencyShift(3000, 11025);
+		GlycolPumpSound.play();
+	}
+	else
+	{
+		GlycolPumpSound.stop();
+	}
+
 	// Debug tests //
 
 	// Mesh Index Order

@@ -807,7 +807,7 @@ void LEMWaterSeparationSelector::SystemTimestep(double simdt)
 	}
 }
 
-LEMCabinFan::LEMCabinFan(Sound &cabinfanS) : cabinfansound(cabinfanS)
+LEMCabinFan::LEMCabinFan(FadeInOutSound &cabinfanS) : cabinfansound(cabinfanS)
 {
 	cabinFan1CB = NULL;
 	cabinFanContCB = NULL;
@@ -859,7 +859,7 @@ void LEMCabinFan::SystemTimestep(double simdt)
 
 void LEMCabinFan::CabinFanSound()
 {
-	cabinfansound.play(LOOP, 200);
+	cabinfansound.play(200);
 }
 
 void LEMCabinFan::StopCabinFanSound()
@@ -1014,6 +1014,18 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "DP %f DPSwitch %d ATRelay %d Pump1 %d Pump2 %d", DPSensor*PSI, PressureSwitch, GlycolAutoTransferRelay, glycolPump1->h_pump, glycolPump2->h_pump);
+}
+
+bool LEMPrimGlycolPumpController::GetGlycolPumpState(int i) {
+
+	if (i == 1 && glycolPump1->pumping) {
+		return true;
+	}
+
+	if (i == 2 && glycolPump2->pumping) {
+		return true;
+	}
+	return false;
 }
 
 void LEMPrimGlycolPumpController::LoadState(char *line)
