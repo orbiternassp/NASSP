@@ -67,6 +67,7 @@ MESHHANDLE hCMVC;
 MESHHANDLE hCREW;
 MESHHANDLE hFHO;
 MESHHANDLE hFHC;
+MESHHANDLE hFHF;
 MESHHANDLE hCM2B;
 MESHHANDLE hprobe;
 MESHHANDLE hprobeext;
@@ -287,6 +288,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hCREW, "ProjectApollo/CM-CREW");
 	LOAD_MESH(hFHC, "ProjectApollo/CM-HatchC");
 	LOAD_MESH(hFHO, "ProjectApollo/CM-HatchO");
+	LOAD_MESH(hFHF, "ProjectApollo/CM-HatchF");
 	LOAD_MESH(hCM2B, "ProjectApollo/CMB-Recov");
 	LOAD_MESH(hprobe, "ProjectApollo/CM-Probe");
 	LOAD_MESH(hprobeext, "ProjectApollo/CM-ProbeExtended");
@@ -704,18 +706,22 @@ void Saturn::SetCSMStage ()
 	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
 	SetCMdocktgtMesh();
 
-	//Interior
-    meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
-
 	//Don't Forget the Hatch
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
 	SetSideHatchMesh();
 
+	//Forward Hatch
+	fwdhatchidx = AddMesh(hFHF, &mesh_dir);
+	SetFwdHatchMesh();
+
 	meshidx = AddMesh (hCMVC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
 	VCMeshOffset = mesh_dir;
+
+	//Interior
+	meshidx = AddMesh(hCMInt, &mesh_dir);
+	SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
 
 	// Docking probe
 	if (HasProbe) {
@@ -907,6 +913,18 @@ void Saturn::SetSideHatchMesh() {
 	}
 }
 
+void Saturn::SetFwdHatchMesh() {
+
+	if (fwdhatchidx == -1)
+		return;
+
+	if (ForwardHatch.IsOpen()) {
+		SetMeshVisibilityMode(fwdhatchidx, MESHVIS_NEVER);
+	}
+	else {
+		SetMeshVisibilityMode(fwdhatchidx, MESHVIS_EXTERNAL);
+	}
+}
 
 void Saturn::SetCrewMesh() {
 
@@ -961,6 +979,26 @@ void Saturn::SetNosecapMesh() {
 	}
 	else {
 		SetMeshVisibilityMode(nosecapidx, MESHVIS_NEVER);
+	}
+}
+
+void Saturn::ProbeVis() {
+
+	if (!probe)
+		return;
+
+	GROUPEDITSPEC ges;
+
+	if (ForwardHatch.IsOpen()) {
+		ges.flags = (GRPEDIT_ADDUSERFLAG);
+		ges.UsrFlag = 3;
+		oapiEditMeshGroup(probe, 2, &ges);
+	}
+	else
+	{
+		ges.flags = (GRPEDIT_SETUSERFLAG);
+		ges.UsrFlag = 0;
+		oapiEditMeshGroup(probe, 2, &ges);
 	}
 }
 
@@ -1184,10 +1222,6 @@ void Saturn::SetReentryMeshes() {
 	VECTOR3 dt_dir = _V(0.66, 1.07, 0);
 	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
 	SetCMdocktgtMesh();
-	
-	//Interior
-	meshidx = AddMesh (hCMInt, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 	// Hatch
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
@@ -1195,6 +1229,10 @@ void Saturn::SetReentryMeshes() {
 	sidehatchburnedidx = AddMesh (hFHC2, &mesh_dir);
 	sidehatchburnedopenidx = AddMesh (hFHO2, &mesh_dir);
 	SetSideHatchMesh();
+
+	//Interior
+	meshidx = AddMesh (hCMInt, &mesh_dir);
+	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
 	meshidx = AddMesh (hCMVC, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VC);

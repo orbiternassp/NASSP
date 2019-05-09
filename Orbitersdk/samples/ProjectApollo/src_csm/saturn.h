@@ -899,6 +899,8 @@ public:
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
+	void clbkVisualCreated(VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -1218,6 +1220,11 @@ public:
 	/// \brief Set side hatch mesh
 	///
 	void SetSideHatchMesh();
+
+	///
+	/// \brief Set fwd hatch mesh
+	///
+	void SetFwdHatchMesh();
 	
 	///
 	/// \brief Set crew mesh
@@ -1239,6 +1246,11 @@ public:
 	/// \brief Set nosecap mesh
 	///
 	void SetNosecapMesh();
+
+	///
+	/// \brief Set probe visibility flag
+	///
+	void ProbeVis();
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -3792,10 +3804,13 @@ protected:
 	int sidehatchopenidx;
 	int sidehatchburnedidx;
 	int sidehatchburnedopenidx;
+	int fwdhatchidx;
 	int opticscoveridx;
 	int cmdocktgtidx;
 	int nosecapidx;
 	int meshLM_1;
+
+	DEVMESHHANDLE probe;
 
 	bool ASTPMission;
 

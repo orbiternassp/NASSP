@@ -1301,7 +1301,8 @@ void SaturnForwardHatch::Toggle()
 				open = true;
 				toggle = 2;
 				OpenSound.play();
-				//TBD: Mesh?
+				saturn->SetFwdHatchMesh();
+				saturn->ProbeVis(); // Hide docking probe mesh when CM forward hatch is open
 			}
 		}
 		else
@@ -1309,7 +1310,8 @@ void SaturnForwardHatch::Toggle()
 			open = false;
 			toggle = 2;
 			CloseSound.play();
-			//TBD: Mesh?
+			saturn->SetFwdHatchMesh();
+			saturn->ProbeVis(); // Show docking probe mesh when CM forward hatch is closed
 		}
 	}
 }
