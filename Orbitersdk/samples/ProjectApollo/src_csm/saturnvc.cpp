@@ -436,9 +436,9 @@ void Saturn::SetView(double offset, bool update_direction)
 		} else if (PanelId == SATPANEL_HATCH_WINDOW) {
 			v = _V(0, 0, offset + 1.0);
 
-		} else if (PanelId == SATPANEL_LOWER_MAIN) {
+		} else if (PanelId == SATPANEL_TUNNEL) {
 			// Calibrated for best view with forward hatch open
-			v = _V(0, 0, offset + 0.8);
+			v = _V(0, 0, offset + 0.4);
 
 		} else {
 			// "Calibrated" for optics cover jettison as seen through the scanning telescope 
