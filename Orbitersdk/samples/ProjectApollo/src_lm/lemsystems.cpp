@@ -78,8 +78,6 @@ void LEM::AddRCS_LMH(double TRANY)
 	th_rcs[0] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
 	AddExhaust(th_rcs[0], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 
-	AddExhaust(th_rcs[0], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
-
 	// A1F
 	th_rcs[1] = CreateThruster(_V(-ATTCOOR + RCSOFFSET, ATTCOORY + TRANY, ATTCOOR + QUADTOTHRUSTER3), _V(0, 0, -1), MaxThrust, NULL, RCSISP, RCSISP);
 	AddExhaust(th_rcs[1], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
