@@ -60,6 +60,7 @@ MESHHANDLE hSMhga;
 MESHHANDLE hSMCRYO;
 MESHHANDLE hSMSIMBAY;
 MESHHANDLE hCM;
+MESHHANDLE hCMnh;
 MESHHANDLE hCM2;
 MESHHANDLE hCMP;
 MESHHANDLE hCMInt;
@@ -281,6 +282,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hSMCRYO, "ProjectApollo/SM-CRYO");
 	LOAD_MESH(hSMSIMBAY, "ProjectApollo/SM-SIMBAY");
 	LOAD_MESH(hCM, "ProjectApollo/CM");
+	LOAD_MESH(hCMnh, "ProjectApollo/CM-Nohatch");
 	LOAD_MESH(hCM2, "ProjectApollo/CM-Recov");
 	LOAD_MESH(hCMP, "ProjectApollo/CM-CMP");
 	LOAD_MESH(hCMInt, "ProjectApollo/CM-Interior");
@@ -680,7 +682,7 @@ void Saturn::SetCSMStage ()
 	mesh_dir=_V(0, 0, 34.4 - CGOffset);
 
 	UINT meshidx;
-	meshidx = AddMesh (hCM, &mesh_dir);
+	meshidx = AddMesh (hCMnh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	if (LESAttached) {
@@ -1192,7 +1194,7 @@ void Saturn::SetReentryMeshes() {
 		}
 	} else {
 		if (ApexCoverAttached) {
-			meshidx = AddMesh (hCM, &mesh_dir);
+			meshidx = AddMesh (hCMnh, &mesh_dir);
 		} else {
 			mesh_dir=_V(0, 0, -1.2);
 			meshidx = AddMesh (hCM2, &mesh_dir);
@@ -1229,6 +1231,12 @@ void Saturn::SetReentryMeshes() {
 	sidehatchburnedidx = AddMesh (hFHC2, &mesh_dir);
 	sidehatchburnedopenidx = AddMesh (hFHO2, &mesh_dir);
 	SetSideHatchMesh();
+
+	//Forward Hatch
+	if (ApexCoverAttached) {
+		fwdhatchidx = AddMesh(hFHF, &mesh_dir);
+		SetFwdHatchMesh();
+	}
 
 	//Interior
 	meshidx = AddMesh (hCMInt, &mesh_dir);

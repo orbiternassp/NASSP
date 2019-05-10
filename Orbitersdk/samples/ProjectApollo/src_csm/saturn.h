@@ -4483,10 +4483,12 @@ const double CREWO = 0.0;
 
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;
+extern MESHHANDLE hCMnh;
 extern MESHHANDLE hCMInt;
 extern MESHHANDLE hCMVC;
 extern MESHHANDLE hFHC;
 extern MESHHANDLE hFHO;
+extern MESHHANDLE hFHF;
 extern MESHHANDLE hCMP;
 extern MESHHANDLE hCREW;
 extern MESHHANDLE hSMhga;
