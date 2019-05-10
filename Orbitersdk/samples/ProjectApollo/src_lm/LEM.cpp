@@ -463,6 +463,15 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
+	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
+
+	// Configure sound options where needed
+	SuitFanSound.setFadeTime(5);
+	SuitFanSound.setFrequencyShift(3000, 11025);
+	GlycolPumpSound.setRiseTime(3);
+	GlycolPumpSound.setFadeTime(3);
+	GlycolPumpSound.setFrequencyShift(3000, 11025);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED

@@ -242,7 +242,7 @@ protected:
 class LEMCabinFan
 {
 public:
-	LEMCabinFan(Sound &cabinfanS);
+	LEMCabinFan(FadeInOutSound &cabinfanS);
 	void Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf, h_HeatLoad *cfh);
 	void SystemTimestep(double simdt);
 protected:
@@ -255,7 +255,7 @@ protected:
 	RotationalSwitch *pressRegulatorASwitch;
 	RotationalSwitch *pressRegulatorBSwitch;
 	Pump *cabinFan;
-	Sound &cabinfansound;
+	FadeInOutSound &cabinfansound;
 	h_HeatLoad *cabinFanHeat;
 };
 
@@ -282,6 +282,7 @@ public:
 
 	bool GetPressureSwitch() { return PressureSwitch; }
 	bool GetGlycolPumpFailRelay() { return GlycolPumpFailRelay; }
+	bool GetGlycolPumpState(int i);
 protected:
 	h_Tank *primGlycolAccumulatorTank;
 	h_Tank *primGlycolPumpManifoldTank;
