@@ -24,8 +24,6 @@
 
 #pragma warning(disable : 4996 ) 
 
-#include "CollisionSDK/CollisionSDK.h"
-
 
 // All inline functions and const variables should be static, see
 // http://www.orbitersim.com/Forum/Default.aspx?g=posts&m=172439#172439

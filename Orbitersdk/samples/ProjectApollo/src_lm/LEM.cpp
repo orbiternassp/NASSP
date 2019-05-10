@@ -41,7 +41,6 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "CollisionSDK/CollisionSDK.h"
 
 #include "connector.h"
 
@@ -90,7 +89,6 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	case DLL_PROCESS_ATTACH:
 		InitGParam(hModule);
 		g_Param.hDLL = hModule; // DS20060413 Save for later
-		InitCollisionSDK();
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -314,6 +312,11 @@ void LEM::Init()
 		Checklist_Variable[i][0] = 0;
 	}
 
+	// Camera jostle.
+	ViewOffsetx = 0;
+	ViewOffsety = 0;
+	ViewOffsetz = 0;
+
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
 	RCSA.SetVessel(this);
@@ -460,6 +463,15 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
+	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
+
+	// Configure sound options where needed
+	SuitFanSound.setFadeTime(5);
+	SuitFanSound.setFrequencyShift(3000, 11025);
+	GlycolPumpSound.setRiseTime(3);
+	GlycolPumpSound.setFadeTime(3);
+	GlycolPumpSound.setFrequencyShift(3000, 11025);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
@@ -900,6 +912,23 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			else {
 				SetThrusterGroupLevel(thg_dust, 0);
 			}
+		}
+	}
+
+	//
+	// Camera jostle.
+	//
+
+	ViewOffsetx *= 0.95;
+	ViewOffsety *= 0.95;
+	ViewOffsetz *= 0.95;
+
+	if (th_hover[0])
+	{
+		if ((GetThrusterLevel(th_hover[0]) > 0) && (InVC || (InPanel && PanelId == LMPANEL_LPDWINDOW)))
+		{
+			double amt = max(0.02, GetThrusterLevel(th_hover[0]) / 20);
+			JostleViewpoint(amt);
 		}
 	}
 
@@ -1411,8 +1440,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 }
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
-
-	VSEnableCollisions(GetHandle(),"ProjectApollo");
 
 	// Switch to compatible dock mode 
 	SetDockMode(0);

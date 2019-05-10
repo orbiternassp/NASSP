@@ -2184,7 +2184,7 @@ void Saturn::CabinFansSystemTimestep()
 	if (SuitCompressor2->IsOn()) vol += 32;
 
 	if (vol > 0)
-		SuitCompressorSound.play(LOOP, vol + 191);
+		SuitCompressorSound.play(vol + 191);
 	else
 		SuitCompressorSound.stop();
 }

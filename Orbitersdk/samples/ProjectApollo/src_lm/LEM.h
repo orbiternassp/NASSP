@@ -595,6 +595,7 @@ protected:
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	// void GetDockStatus();
+	void JostleViewpoint(double amount);
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -1544,6 +1545,14 @@ protected:
 	bool RefreshPanelIdInTimestep;
 
 	//
+	// Random motion.
+	//
+
+	double ViewOffsetx;
+	double ViewOffsety;
+	double ViewOffsetz;
+
+	//
 	// Ground Systems
 	//
 	MCC *pMCC;
@@ -1569,7 +1578,7 @@ protected:
 	Sound SHMode;
 	Sound SLEVA;
 	Sound SAbort;
-	Sound CabinFans;
+	FadeInOutSound CabinFans;
 	Sound Vox;
 	Sound Afire;
 	Sound Slanding;
@@ -1577,6 +1586,8 @@ protected:
 	Sound RCSSustainSound;
 	Sound HatchOpenSound;
 	Sound HatchCloseSound;
+	FadeInOutSound GlycolPumpSound;
+	FadeInOutSound SuitFanSound;
 
 	//
 	// Connectors.

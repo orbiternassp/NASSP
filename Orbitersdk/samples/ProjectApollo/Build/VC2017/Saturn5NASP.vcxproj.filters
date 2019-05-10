@@ -16,9 +16,6 @@
     <Filter Include="yaAGC">
       <UniqueIdentifier>{0af792c1-c158-41a0-ab32-d7efe000754c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{e5b6bedd-c44d-4132-bf09-a5dc0f88c6f3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="IMFD">
       <UniqueIdentifier>{100899c2-ed1a-489d-bf47-d93b4712d124}</UniqueIdentifier>
     </Filter>
@@ -164,9 +161,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src_sys\yaAGC\rfopen.c">
       <Filter>yaAGC</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <Filter>CollisionSDK</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp">
       <Filter>IMFD</Filter>
@@ -364,9 +358,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h">
       <Filter>yaAGC</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h">
-      <Filter>CollisionSDK</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h">
       <Filter>IMFD</Filter>

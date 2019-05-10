@@ -4144,7 +4144,7 @@ void Saturn::CabinFanSound()
 	// Scale volume appropriately based on the expected max voltage (115V per phase)
 	//
 
-	CabinFans.play(LOOP, (int) ((64.0 * volume / 400.0) + 127.0));
+	CabinFans.play((int) ((64.0 * volume / 400.0) + 127.0));
 }
 
 void Saturn::StopCabinFanSound()

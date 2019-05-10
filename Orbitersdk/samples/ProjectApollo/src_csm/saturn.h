@@ -4122,8 +4122,8 @@ protected:
 	Sound SepS;
 	Sound CrashBumpS;
 	Sound Psound;
-	Sound CabinFans;
-	Sound SuitCompressorSound;
+	FadeInOutSound CabinFans;
+	FadeInOutSound SuitCompressorSound;
 	Sound SwindowS;
 	Sound SKranz;
 	Sound SExploded;

@@ -73,11 +73,11 @@ bool SoundData::isValid()
 	return valid;
 }
 
-bool SoundData::play(int flags, int libflags, int volume, int playvolume)
+bool SoundData::play(int flags, int libflags, int volume, int playvolume, int frequency /*= NULL*/)
 
 {
 	if (valid) {
-		if (!PlayVesselWave(SoundlibId, id, flags, playvolume))
+		if (!PlayVesselWave(SoundlibId, id, flags, playvolume, frequency))
 		{
 			return false;
 		}
@@ -597,7 +597,7 @@ bool Sound::isPlaying()
 	return sd->isPlaying();
 }
 
-bool Sound::play(int flags, int volume)
+bool Sound::play(int flags, int volume, int frequency /*= NULL*/)
 
 {
 	if (valid && sd && sd->isValid()) {
@@ -617,7 +617,7 @@ bool Sound::play(int flags, int volume)
 			vol = sl->GetSoundVolume(soundflags, volume);
 		}
 
-		return sd->play(flags, soundflags, volume, vol);
+		return sd->play(flags, soundflags, volume, vol, frequency);
 	}
 
 	return false;
@@ -653,6 +653,52 @@ void Sound::SetSoundData(SoundData *s)
 	}
 	else {
 		valid = false;
+	}
+}
+
+bool FadeInOutSound::play(int volume /*= 255*/)
+{
+	double dt; // [s]
+	int freq;  // [Hz] placed here for debug sprintf() to work
+
+	if (currentVolume == -1) { // initial call (first after scenario load) ?
+		currentVolume = volume;
+	}
+
+	if (currentVolume < volume)
+	{
+		dt = oapiGetSimStep();
+		currentVolume += int(round(double(riseSlope) * dt));
+		if (currentVolume > volume) { currentVolume = volume; } // limit (upper)
+	}
+	else if (currentVolume > volume)
+	{
+		dt = oapiGetSimStep();
+		currentVolume -= int(round(double(fadeSlope) * dt));
+		if (currentVolume < 0) { currentVolume = 0; } // limit (lower)
+	}
+
+	if (currentVolume)
+	{
+		freq = hasFrequencyShift()
+			? fMin + (currentVolume * (fMax - fMin) / 255)
+			: NULL;
+		Sound::play(LOOP, currentVolume, freq);
+	}
+	else
+	{
+		Sound::stop();
+	}
+
+	// sprintf(oapiDebugString(), "vol: %d/%d [%d Hz]", currentVolume, volume, freq);
+	return currentVolume == volume;
+}
+
+void FadeInOutSound::stop()
+{
+	// We stop the sound only once (will do no harm and it will save a bit of processor time)
+	if (currentVolume) {
+		play(0);
 	}
 }
 

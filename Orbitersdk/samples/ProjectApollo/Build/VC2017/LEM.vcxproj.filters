@@ -16,9 +16,6 @@
     <Filter Include="yaAGC">
       <UniqueIdentifier>{415d3395-e435-43fc-ac24-2d8af6501bb5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{77ee6e82-07f2-4368-9f75-0d4532ca3c7e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="yaAGS">
       <UniqueIdentifier>{980b600a-ff7d-422f-9b94-d6b839a598e2}</UniqueIdentifier>
     </Filter>
@@ -134,9 +131,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src_sys\yaAGC\rfopen.c">
       <Filter>yaAGC</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <Filter>CollisionSDK</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_lm\yaAGS\aea_engine.c">
       <Filter>yaAGS</Filter>
@@ -358,9 +352,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h">
       <Filter>yaAGC</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h">
-      <Filter>CollisionSDK</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_lm\yaAGS\aea_engine.h">
       <Filter>yaAGS</Filter>
