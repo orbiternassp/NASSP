@@ -693,7 +693,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_RIGHT_CB, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
+		oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_RIGHT_CB, SATPANEL_TUNNEL, SATPANEL_TELESCOPE);
 
 		AddLeftLowerPanelAreas();
 		AddLeftCenterLowerPanelAreas(0);
@@ -735,7 +735,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiSetPanelNeighbours(SATPANEL_GN_LEFT, SATPANEL_GN_RIGHT, SATPANEL_LOWER_MAIN, SATPANEL_TELESCOPE);
+		oapiSetPanelNeighbours(SATPANEL_GN_LEFT, SATPANEL_GN_RIGHT, SATPANEL_TUNNEL, SATPANEL_TELESCOPE);
 
 		AddLeftCenterLowerPanelAreas(-1019);
 		AddCenterLowerPanelAreas(-1019);
@@ -805,7 +805,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiSetPanelNeighbours(SATPANEL_MAIN_LEFT, SATPANEL_MAIN_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_TUNNEL);
+		oapiSetPanelNeighbours(SATPANEL_MAIN_LEFT, SATPANEL_MAIN_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER_MAIN);
 
 		AddLeftMiddleMainPanelAreas(-1022);
 		AddRightMiddleMainPanelAreas(-1022);
@@ -846,7 +846,7 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelBackground (hBmp, PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_TUNNEL);
+		oapiSetPanelNeighbours(SATPANEL_LEFT, SATPANEL_RIGHT, SATPANEL_HATCH_WINDOW, SATPANEL_LOWER_MAIN);
 		
 		AddLeftMainPanelAreas();
 		AddLeftMiddleMainPanelAreas(0);
@@ -1204,9 +1204,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (GNSplit) 
-			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_LOWER_MAIN, SATPANEL_LEFT, SATPANEL_GN_LEFT);
+			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_TUNNEL, SATPANEL_LEFT, SATPANEL_GN_LEFT);
 		else
-			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_LOWER_MAIN, SATPANEL_LEFT, SATPANEL_GN);
+			oapiSetPanelNeighbours(SATPANEL_CABIN_PRESS_PANEL, SATPANEL_TUNNEL, SATPANEL_LEFT, SATPANEL_GN);
 
 		///////////////////////////
 		// Panel 300/301/302/303 //
@@ -1228,6 +1228,42 @@ bool Saturn::clbkLoadPanel (int id) {
 		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
 	}
 
+	if (id == SATPANEL_LOWER_MAIN) {
+		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_CSM_LOWER_MAIN_PANEL));
+
+		if (!hBmp)
+		{
+			return false;
+		}
+
+		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
+
+		int top;
+
+		if (MainPanelSplit)
+			top = SATPANEL_MAIN_MIDDLE;
+		else
+			top = SATPANEL_MAIN;
+
+		oapiSetPanelNeighbours(SATPANEL_LOWER_LEFT, SATPANEL_RIGHT_CB, top, SATPANEL_TUNNEL);
+
+		/////////////////
+		// Panel 10/12 //
+		/////////////////
+
+		oapiRegisterPanelArea(AID_PANEL10_LEFT_SWITCHES,               _R(774,  476,  808, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_PANEL10_LEFT_THUMWBWHEELS,           _R(836,  472,  853, 734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_PANEL10_CENTER_SWITCHES,             _R(943,  588,  977, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_PANEL10_RIGHT_THUMBWHEELS,           _R(1067, 472, 1084, 734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_PANEL10_RIGHT_SWITCHES,              _R(1112, 476, 1146, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LM_TUNNEL_VENT_VALVE,                _R(1709, 297, 1747, 335), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_LM_DP_GAUGE,                         _R(1681, 448, 1767, 530), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                PANEL_MAP_BACKGROUND);
+
+		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+		oapiCameraSetCockpitDir(0, 0);
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+	}
+
 	if (id == SATPANEL_TUNNEL) {
 		if (ForwardHatch.IsOpen())
 		{
@@ -1245,56 +1281,20 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		int top;
-
-		if (MainPanelSplit)
-			top = SATPANEL_MAIN_MIDDLE;
-		else
-			top = SATPANEL_MAIN;
-
-		oapiSetPanelNeighbours(-1, -1, top, SATPANEL_LOWER_MAIN);
-
-		if (!ForwardHatch.IsOpen())
-		{
-			oapiRegisterPanelArea(AID_PRESS_EQUAL_VALVE_HANDLE, _R(900, 480, 1021, 601), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		}
-
-		oapiRegisterPanelArea(AID_FORWARD_HATCH, _R(735, 367, 874, 702), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-
-		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
-		oapiCameraSetCockpitDir(0, 0);
-		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
-	}
-
-	if (id == SATPANEL_LOWER_MAIN) {
-		hBmp = LoadBitmap(g_Param.hDLL, MAKEINTRESOURCE(IDB_CSM_LOWER_MAIN_PANEL));
-
-		if (!hBmp)
-		{
-			return false;
-		}
-
-		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
-
 		int bottom;
 		if (GNSplit)
 			bottom = SATPANEL_GN_CENTER;
 		else
 			bottom = SATPANEL_GN;
 
-		oapiSetPanelNeighbours(SATPANEL_LOWER_LEFT, SATPANEL_RIGHT_CB, SATPANEL_TUNNEL, bottom);
+		oapiSetPanelNeighbours(SATPANEL_LOWER_LEFT, SATPANEL_RIGHT_CB, SATPANEL_LOWER_MAIN, bottom);
 
-		/////////////////
-		// Panel 10/12 //
-		/////////////////
+		if (!ForwardHatch.IsOpen())
+		{
+			oapiRegisterPanelArea(AID_PRESS_EQUAL_VALVE_HANDLE,      _R(900, 480, 1021, 601), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                    PANEL_MAP_BACKGROUND);
+		}
 
-		oapiRegisterPanelArea(AID_PANEL10_LEFT_SWITCHES, _R(774, 476, 808, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_PANEL10_LEFT_THUMWBWHEELS, _R(836, 472, 853, 734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_PANEL10_CENTER_SWITCHES, _R(943, 588, 977, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_PANEL10_RIGHT_THUMBWHEELS, _R(1067, 472, 1084, 734), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_PANEL10_RIGHT_SWITCHES, _R(1112, 476, 1146, 731), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LM_TUNNEL_VENT_VALVE, _R(1709, 297, 1747, 335), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea(AID_LM_DP_GAUGE, _R(1681, 448, 1767, 530), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_FORWARD_HATCH,                     _R(735, 367,  874, 702), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                    PANEL_MAP_BACKGROUND);
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0, 0);
@@ -1312,9 +1312,9 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelBackground (hBmp,PANEL_ATTACH_TOP|PANEL_ATTACH_BOTTOM|PANEL_ATTACH_LEFT|PANEL_MOVEOUT_RIGHT,  g_Param.col[4]);
 
 		if (GNSplit) 
-			oapiSetPanelNeighbours(SATPANEL_LOWER_MAIN, -1, SATPANEL_RIGHT, SATPANEL_GN_RIGHT);
+			oapiSetPanelNeighbours(SATPANEL_TUNNEL, -1, SATPANEL_RIGHT, SATPANEL_GN_RIGHT);
 		else
-			oapiSetPanelNeighbours(SATPANEL_LOWER_MAIN, -1, SATPANEL_RIGHT, SATPANEL_GN);
+			oapiSetPanelNeighbours(SATPANEL_TUNNEL, -1, SATPANEL_RIGHT, SATPANEL_GN);
 
 		oapiRegisterPanelArea (AID_PANEL225CIRCUITBRAKERS,			_R(  77,  404,  370,  833), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL226CIRCUITBRAKERS,			_R( 572, 1097,  994, 1437), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
