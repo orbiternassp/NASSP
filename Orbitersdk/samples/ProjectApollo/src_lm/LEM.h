@@ -1578,7 +1578,7 @@ protected:
 	Sound SHMode;
 	Sound SLEVA;
 	Sound SAbort;
-	Sound CabinFans;
+	FadeInOutSound CabinFans;
 	Sound Vox;
 	Sound Afire;
 	Sound Slanding;
@@ -1586,6 +1586,8 @@ protected:
 	Sound RCSSustainSound;
 	Sound HatchOpenSound;
 	Sound HatchCloseSound;
+	FadeInOutSound GlycolPumpSound;
+	FadeInOutSound SuitFanSound;
 
 	//
 	// Connectors.
