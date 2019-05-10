@@ -44,7 +44,6 @@
 
 #include "LEM.h"
 
-#include "CollisionSDK/CollisionSDK.h"
 #include "papi.h"
 
 void LEM::ResetThrusters()
@@ -76,8 +75,6 @@ void LEM::AddRCS_LMH(double TRANY)
 
 	// A1U
 	th_rcs[0] = CreateThruster(_V(-ATTCOOR, ATTCOORY + TRANY + QUADTOTHRUSTER2, ATTCOOR), _V(0, -1, 0), MaxThrust, NULL, RCSISP, RCSISP);
-	AddExhaust(th_rcs[0], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
-
 	AddExhaust(th_rcs[0], ATTHEIGHT, ATTWIDTH, LOFS, exhaustTex);
 
 	// A1F
@@ -1546,8 +1543,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//Suit Fan Sound
 	if (SuitFan1->pumping || SuitFan2->pumping) {
-		SuitFanSound.setFadeTime(5);
-		SuitFanSound.setFrequencyShift(3000, 11025);
 		SuitFanSound.play(220);
 	}
 	else
@@ -1557,9 +1552,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//Glycol Pump Sound
 	if (SecGlyPump->pumping || PrimGlycolPumpController.GetGlycolPumpState(1) || PrimGlycolPumpController.GetGlycolPumpState(2)) {
-		GlycolPumpSound.setRiseTime(3);
-		GlycolPumpSound.setFadeTime(3);
-		GlycolPumpSound.setFrequencyShift(3000, 11025);
 		GlycolPumpSound.play();
 	}
 	else

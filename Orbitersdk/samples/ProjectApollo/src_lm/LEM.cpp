@@ -41,7 +41,6 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "CollisionSDK/CollisionSDK.h"
 
 #include "connector.h"
 
@@ -90,7 +89,6 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	case DLL_PROCESS_ATTACH:
 		InitGParam(hModule);
 		g_Param.hDLL = hModule; // DS20060413 Save for later
-		InitCollisionSDK();
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -467,6 +465,13 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
+
+	// Configure sound options where needed
+	SuitFanSound.setFadeTime(5);
+	SuitFanSound.setFrequencyShift(3000, 11025);
+	GlycolPumpSound.setRiseTime(3);
+	GlycolPumpSound.setFadeTime(3);
+	GlycolPumpSound.setFrequencyShift(3000, 11025);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
@@ -1435,8 +1440,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 }
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
-
-	VSEnableCollisions(GetHandle(),"ProjectApollo");
 
 	// Switch to compatible dock mode 
 	SetDockMode(0);

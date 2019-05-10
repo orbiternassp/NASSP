@@ -48,7 +48,6 @@
 #include "LVDC.h"
 #include "iu.h"
 
-#include "CollisionSDK/CollisionSDK.h"
 #include <crtdbg.h>
 
 extern "C" {
@@ -3479,7 +3478,6 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
 		SetupgParam(hModule);
-		InitCollisionSDK();
 		break;
 
 	case DLL_PROCESS_DETACH:

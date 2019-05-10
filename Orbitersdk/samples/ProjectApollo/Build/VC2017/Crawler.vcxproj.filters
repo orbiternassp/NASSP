@@ -9,9 +9,6 @@
       <UniqueIdentifier>{c1b968dd-4e5c-4f52-ae62-5b32e0912202}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
-    <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{43e8eb4f-c0a7-4399-a107-1fead07e7ced}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{1608fe82-ea44-4a53-8b06-a938499c7269}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
@@ -26,9 +23,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src_aux\tracer.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <Filter>CollisionSDK</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -91,9 +85,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src_launch\VAB.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h">
-      <Filter>CollisionSDK</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
