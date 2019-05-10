@@ -44,7 +44,6 @@
 
 #include "LEM.h"
 
-#include "CollisionSDK/CollisionSDK.h"
 #include "papi.h"
 
 void LEM::ResetThrusters()

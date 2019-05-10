@@ -9,9 +9,6 @@
       <UniqueIdentifier>{df6ab7b5-a89d-4ea3-8c61-1546e19ecdac}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
-    <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{2a406c86-84a6-4de5-a761-ac847ae35067}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{c864c80a-fa8c-4ab3-8b16-c040e58d83fb}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
@@ -26,9 +23,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src_aux\tracer.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <Filter>CollisionSDK</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

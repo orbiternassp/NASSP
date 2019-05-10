@@ -9,9 +9,6 @@
       <UniqueIdentifier>{d020eb89-0f71-44c3-8359-714a4e7782e4}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl</Extensions>
     </Filter>
-    <Filter Include="CollisionSDK">
-      <UniqueIdentifier>{2fbaa9c3-2526-43a9-8dc3-43668abed159}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{de2909e7-dc10-44c3-a59c-3f44852fc714}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
@@ -29,9 +26,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src_launch\VABAnimations.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <Filter>CollisionSDK</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -88,9 +82,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src_launch\VAB.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h">
-      <Filter>CollisionSDK</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

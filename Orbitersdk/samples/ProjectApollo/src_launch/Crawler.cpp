@@ -42,8 +42,6 @@
 #include "MSS.h"
 #include "papi.h"
 
-#include "CollisionSDK/CollisionSDK.h"
-
 // View positions
 #define VIEWPOS_FRONTCABIN				0
 #define VIEWPOS_REARCABIN				1
@@ -59,7 +57,6 @@ char trace_file[] = "ProjectApollo Crawler.log";
 DLLCLBK void InitModule(HINSTANCE hModule) {
 
 	g_hDLL = hModule;
-	InitCollisionSDK();
 }
 
 DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel) {
@@ -214,10 +211,8 @@ void Crawler::clbkSetClassCaps(FILEHANDLE cfg) {
 
 	CreateAttachment(false, _V(0.0, 6.3, 0.0), _V(0, 1, 0), _V(1, 0, 0), "ML", false);
 
-	VSEnableCollisions(GetHandle(),"ProjectApollo");
 	double tph = -0.01;
 	SetTouchdownPoints(_V(  0, tph,  10), _V(-10, tph, -10), _V( 10, tph, -10));
-	VSSetTouchdownPoints(GetHandle(), _V(  0, tph,  10), _V(-10, tph, -10), _V( 10, tph, -10));
 }
 
 void Crawler::clbkPreStep(double simt, double simdt, double mjd) {

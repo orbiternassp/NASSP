@@ -41,7 +41,6 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "CollisionSDK/CollisionSDK.h"
 
 #include "connector.h"
 
@@ -90,7 +89,6 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	case DLL_PROCESS_ATTACH:
 		InitGParam(hModule);
 		g_Param.hDLL = hModule; // DS20060413 Save for later
-		InitCollisionSDK();
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -1433,8 +1431,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 }
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
-
-	VSEnableCollisions(GetHandle(),"ProjectApollo");
 
 	// Switch to compatible dock mode 
 	SetDockMode(0);

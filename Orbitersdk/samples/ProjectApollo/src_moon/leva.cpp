@@ -43,8 +43,6 @@
 #include "lrv_console.h"
 #include "tracer.h"
 
-#include "CollisionSDK/CollisionSDK.h"
-
 //
 // Set the file name for the tracer code.
 //
@@ -141,8 +139,6 @@ void LEVA::init()
 void LEVA::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	init();
-	VSEnableCollisions(GetHandle(),"ProjectApollo");
-	VSSetCollisionFlags(GetHandle(),VSC_ONEPOINT);
 	SetAstroStage();
 }
 		 
@@ -168,7 +164,6 @@ void LEVA::SetAstroStage ()
 	
 	double tdph = -0.8;
 	SetTouchdownPoints (_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
 	Astro = true;
 }
 
@@ -749,5 +744,5 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 
 DLLCLBK void InitModule (HINSTANCE hModule)
 {
-	InitCollisionSDK();
+
 }

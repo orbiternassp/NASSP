@@ -44,8 +44,6 @@
 #include "LM_AscentStageResource.h"
 #include "LM_DescentStageResource.h"
 
-#include "CollisionSDK/CollisionSDK.h"
-
 static MESHHANDLE hLMDescent;
 static MESHHANDLE hLMDescentNoLeg;
 static MESHHANDLE hLMAscent ;

@@ -40,7 +40,6 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "CollisionSDK/CollisionSDK.h"
 
 #include "saturn.h"
 
