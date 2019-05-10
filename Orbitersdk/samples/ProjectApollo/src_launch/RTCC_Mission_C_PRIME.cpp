@@ -120,7 +120,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		GETbase = calcParams.TEPHEM;
 
-		if (fcn == 2)
+		if (fcn == 3)
 		{
 			TLIplus = 90.0*60.0;
 			entopt.lng = -30.0*RAD;
@@ -173,7 +173,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->Weight = CSMmass / 0.45359237;
 		form->GET05G = res.GET05G;
 
-		if (fcn == 2)
+		if (fcn == 3)
 		{
 			char buffer1[1000];
 			char buffer2[1000];
@@ -689,16 +689,21 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		if (fcn == 41)
 		{
-			entopt.EntryLng = -25.0*RAD;
+			//AOL
+			entopt.EntryLng = 2.0;
 			entopt.returnspeed = 1;
 			sprintf(manname, "PC+2");
 		}
 		else
 		{
-			entopt.EntryLng = 65.0*RAD;
+			//IOL
+			entopt.EntryLng = 3.0;
 			entopt.returnspeed = 2;
 			sprintf(manname, "PC+2 fast return");
+			entopt.u_rmax = 37500.0*0.3048;
 		}
+
+		entopt.entrylongmanual = false;
 		entopt.GETbase = GETbase;
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
 		entopt.RV_MCC = sv;
@@ -754,6 +759,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	}
 	break;
 	case 50:	// MISSION CP TEI-1 (Pre LOI)
+	case 51:	// MISSION CP TEI-2 (Pre LOI)
 	{
 		RTEMoonOpt entopt;
 		EntryResults res;
@@ -764,14 +770,20 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		//entopt.TIGguess = OrbMech::HHMMSSToSS(71, 25, 4);
-		sprintf(manname, "TEI-1");
-
 		GETbase = calcParams.TEPHEM;
-
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, 0);
+
+		if (fcn == 50)
+		{
+			sprintf(manname, "TEI-1");
+		}
+		else
+		{
+			sprintf(manname, "TEI-2");
+			sv1 = coast(sv1, 2.0*3600.0);
+		}	
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
@@ -807,6 +819,29 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SplashLongitude = res.longitude;
 		calcParams.TEI = res.P30TIG;
 		calcParams.EI = res.GET400K;
+	}
+	break;
+	case 60:
+	{
+		SV sv0, sv1, sv2;
+		AP10MAPUPDATE upd_hyper, upd_ellip;
+
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_hyper);
+
+		sv1 = ExecuteManeuver(calcParams.src, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, sv0, 0.0);
+		sv2 = coast(sv1, -30.0*60.0);
+		LunarOrbitMapUpdate(sv2, calcParams.TEPHEM, upd_ellip);
+
+		form->type = 1;
+		form->Rev = 1;
+		form->LOSGET = upd_hyper.LOSGET;
+		form->PMGET = upd_hyper.PMGET;
+		form->AOSGET = upd_ellip.AOSGET;		
+		form->SSGET = upd_ellip.SSGET;
+		form->SRGET = upd_ellip.SRGET;
 	}
 	break;
 	case 102:	// MISSION CP LOI-2 MANEUVER

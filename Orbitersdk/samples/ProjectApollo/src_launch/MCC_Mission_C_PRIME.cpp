@@ -73,7 +73,7 @@ void MCC::MissionSequence_C_Prime()
 		break;
 		case 2:
 		{
-			if (rtcc->GETEval(rtcc->calcParams.TLI + 5.0*3600.0))
+			if (rtcc->GETEval(rtcc->calcParams.TLI + 2.0*3600.0 + 5.0*60.0))
 			{
 				SlowIfDesired();
 				setState(MST_CP_TRANSLUNAR3);
@@ -118,10 +118,16 @@ void MCC::MissionSequence_C_Prime()
 	case MST_CP_TRANSLUNAR14: //Prel. LOI-1 to Prel. TEI-1
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 30, MST_CP_TRANSLUNAR15);
 		break;
-	case MST_CP_TRANSLUNAR15: //Prel. TEI-1 to LOI-1
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 1.0*3600.0 - 5.0*60.0), 50, MST_CP_TRANSLUNAR16);
+	case MST_CP_TRANSLUNAR15: //Prel. TEI-1 to Prel. TEI-2
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 50, MST_CP_TRANSLUNAR16);
 		break;
-	case MST_CP_TRANSLUNAR16: //LOI-1 to TEI-2
+	case MST_CP_TRANSLUNAR16: //Prel. TEI-2 to Map Update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 51, MST_CP_TRANSLUNAR17);
+		break;
+	case MST_CP_TRANSLUNAR17: //Map Update to LOI-1
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, rtcc->GETEval(rtcc->calcParams.LOI - 1.0*3600.0 - 5.0*60.0), 60, MST_CP_TRANSLUNAR18);
+		break;
+	case MST_CP_TRANSLUNAR18: //LOI-1 to TEI-2
 		if (MissionPhase == MMST_TL_COAST && rtcc->GETEval(rtcc->calcParams.LOI))
 		{
 			MissionPhase = MMST_LUNAR_ORBIT;

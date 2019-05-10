@@ -60,10 +60,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_TRANSLUNAR13	33
 //Ends at Block Data 7 Update
 #define MST_CP_TRANSLUNAR14	34
-//Ends at Map Update
+//Ends at Preliminary TEI-1 Update
 #define MST_CP_TRANSLUNAR15	35
-//Ends at LOI-1 Update
+//Ends at Preliminary TEI-2 Update
 #define MST_CP_TRANSLUNAR16	36
+//Ends at Map Update
+#define MST_CP_TRANSLUNAR17	37
+//Ends at LOI-1 Update
+#define MST_CP_TRANSLUNAR18	38
 //Ends at LOI-2 Update
 
 #define MST_CP_LUNAR_ORBIT1	101
