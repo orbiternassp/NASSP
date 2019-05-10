@@ -468,6 +468,13 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
 
+	// Configure sound options where needed
+	SuitFanSound.setFadeTime(5);
+	SuitFanSound.setFrequencyShift(3000, 11025);
+	GlycolPumpSound.setRiseTime(3);
+	GlycolPumpSound.setFadeTime(3);
+	GlycolPumpSound.setFrequencyShift(3000, 11025);
+
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
     sevent.LoadMissionLandingSoundArray(soundlib,"sound.csv");
