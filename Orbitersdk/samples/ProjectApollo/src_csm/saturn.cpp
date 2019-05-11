@@ -859,8 +859,11 @@ void Saturn::initSaturn()
 	sidehatchopenidx = -1;
 	sidehatchburnedidx = -1;
 	sidehatchburnedopenidx = -1;
+	fwdhatchidx = -1;
 	opticscoveridx = -1;
 	cmdocktgtidx = -1;
+
+	probe = NULL;
 
 	Scorrec = false;
 
@@ -957,6 +960,19 @@ void Saturn::clbkPostCreation() {
 		}
 		else pMCC = NULL;
 	}
+}
+
+void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount)
+{
+	if (HasProbe) {
+		probe = GetDevMesh(vis, probeidx);
+		ProbeVis();
+	}
+}
+
+void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount)
+{
+	probe = NULL;
 }
 
 void Saturn::GetPayloadName(char *s)

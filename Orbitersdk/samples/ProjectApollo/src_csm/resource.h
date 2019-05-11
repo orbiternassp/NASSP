@@ -764,9 +764,11 @@
 #define AID_EVENT_TIMER306                                 1049
 #define AID_MISSION_CLOCK306							   1050
 #define AID_PRESS_EQUAL_VALVE_HANDLE                       1051
-#define IDB_CSM_LOWER_MAIN_PANEL_OPEN					   1052
-#define AID_FORWARD_HATCH								   1053
-#define IDB_CSM_LEFT_317_WINDOW                            1054
+#define IDB_CSM_TUNNEL					                   1052
+#define IDB_CSM_TUNNEL_OPEN					               1053
+#define AID_FORWARD_HATCH								   1054
+#define IDB_CSM_LEFT_317_WINDOW                            1055
+#define IDB_CSM_PRESS_EQUAL_HANDLE                         1056
 
 // Next default values for new objects
 //

@@ -605,7 +605,7 @@ void LEM::SetLMMeshVisAsc() {
 	if (ascidx == -1)
 		return;
 
-	if (InPanel && PanelId == LMPANEL_AOTZOOM) {
+	if (InPanel && (PanelId == LMPANEL_AOTZOOM || PanelId == LMPANEL_UPPERHATCH)) {
 		SetMeshVisibilityMode(ascidx, MESHVIS_ALWAYS);
 	}
 	else
