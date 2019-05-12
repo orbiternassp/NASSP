@@ -448,7 +448,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		// otherwise the BPC is floating above the SM.
 		//
 		mesh_dir=_V(0,0,21.2 + offset);
-		meshidx = AddMesh (hCM, &mesh_dir);
+		meshidx = AddMesh (hCMnh, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 		//
@@ -469,6 +469,10 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		sidehatchidx = AddMesh (hFHC, &mesh_dir);
 		sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
 		SetSideHatchMesh();
+
+		//Forward Hatch
+		fwdhatchidx = AddMesh(hFHF, &mesh_dir);
+		SetFwdHatchMesh();
 
 		// Optics Cover
 		opticscoveridx = AddMesh (hopticscover, &mesh_dir);

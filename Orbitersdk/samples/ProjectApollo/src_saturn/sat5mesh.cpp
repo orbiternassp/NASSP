@@ -877,7 +877,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 	mesh_dir=_V(0, 0, 23.25 + offset);
 
 	UINT meshidx;
-	meshidx = AddMesh (hCM, &mesh_dir);
+	meshidx = AddMesh (hCMnh, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 
 	// And the Crew
@@ -900,6 +900,10 @@ void SaturnV::SetThirdStageMesh (double offset)
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
 	SetSideHatchMesh();
+
+	//Forward Hatch
+	fwdhatchidx = AddMesh(hFHF, &mesh_dir);
+	SetFwdHatchMesh();
 
 	// Optics Cover
 	opticscoveridx = AddMesh (hopticscover, &mesh_dir);

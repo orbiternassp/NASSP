@@ -198,10 +198,10 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_UPPERHATCH:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 0.15, 0));
+						SetCameraOffset(_V(0, -0.35, 0));
 					}
 					else {
-						SetCameraOffset(_V(0, 1.90, 0));
+						SetCameraOffset(_V(0, 1.40, 0));
 					}
 					break;
 				case LMPANEL_FWDHATCH:
@@ -250,15 +250,7 @@ void LEM::SetView() {
 		//set FOV to 40 degrees
 		oapiCameraSetAperture(RAD * 20.0);
 	}
-	else if (PanelId == LMPANEL_UPPERHATCH) {
-		// if this is the first time we've been here, save the current FOV
-		if (InFOV) {
-			SaveFOV = oapiCameraAperture();
-			InFOV = false;
-		}
-		//set FOV to 30 degrees so that only the tunnel is visible when docked with CSM
-		oapiCameraSetAperture(RAD * 15.0);
-	} else {
+    else {
 		if(InFOV == false) {
 			oapiCameraSetAperture(SaveFOV);
 			InFOV = true;

@@ -537,6 +537,7 @@ public:
 		SRF_BORDER_28x32,
 		SRF_EVENT_TIMER_DIGITS90,
 		SRF_DIGITAL90,
+		SRF_CSM_PRESS_EQUAL_HANDLE,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -899,6 +900,8 @@ public:
 	bool clbkVCMouseEvent (int id, int event, VECTOR3 &p);
 	bool clbkVCRedrawEvent (int id, int event, SURFHANDLE surf);
 	void clbkPostCreation();
+	void clbkVisualCreated(VISHANDLE vis, int refcount);
+	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 
 	///
 	/// This function performs all actions required to update the spacecraft state as time
@@ -1218,6 +1221,11 @@ public:
 	/// \brief Set side hatch mesh
 	///
 	void SetSideHatchMesh();
+
+	///
+	/// \brief Set fwd hatch mesh
+	///
+	void SetFwdHatchMesh();
 	
 	///
 	/// \brief Set crew mesh
@@ -1239,6 +1247,11 @@ public:
 	/// \brief Set nosecap mesh
 	///
 	void SetNosecapMesh();
+
+	///
+	/// \brief Set probe visibility flag
+	///
+	void ProbeVis();
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -3792,10 +3805,13 @@ protected:
 	int sidehatchopenidx;
 	int sidehatchburnedidx;
 	int sidehatchburnedopenidx;
+	int fwdhatchidx;
 	int opticscoveridx;
 	int cmdocktgtidx;
 	int nosecapidx;
 	int meshLM_1;
+
+	DEVMESHHANDLE probe;
 
 	bool ASTPMission;
 
@@ -3840,6 +3856,7 @@ protected:
 #define SATPANEL_LOWER_MAIN			15
 #define SATPANEL_RIGHT_CB			16
 #define SATPANEL_LEFT_317_WINDOW    17
+#define SATPANEL_TUNNEL             18
 
 	int  PanelId;
 	int MainPanelSplit;
@@ -4466,10 +4483,12 @@ const double CREWO = 0.0;
 
 extern MESHHANDLE hSM;
 extern MESHHANDLE hCM;
+extern MESHHANDLE hCMnh;
 extern MESHHANDLE hCMInt;
 extern MESHHANDLE hCMVC;
 extern MESHHANDLE hFHC;
 extern MESHHANDLE hFHO;
+extern MESHHANDLE hFHF;
 extern MESHHANDLE hCMP;
 extern MESHHANDLE hCREW;
 extern MESHHANDLE hSMhga;
