@@ -6217,7 +6217,7 @@ void Saturn::InitSwitches() {
 	O2DemandRegulatorRotary.AddPosition(1, 120);
 	O2DemandRegulatorRotary.AddPosition(2, 180);
 	O2DemandRegulatorRotary.AddPosition(3, 240);
-	O2DemandRegulatorRotary.Register(PSH, "O2DemandRegulatorRotary", 3);
+	O2DemandRegulatorRotary.Register(PSH, "O2DemandRegulatorRotary", 2);
 
 	SuitTestRotary.AddPosition(0, 0);
 	SuitTestRotary.AddPosition(1, 60);
