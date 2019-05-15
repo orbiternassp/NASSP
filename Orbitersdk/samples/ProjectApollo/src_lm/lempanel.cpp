@@ -964,13 +964,13 @@ void LEM::InitSwitches() {
 	CO2CanisterSelectSwitch.Register(PSH, "CO2CanisterSelectSwitch", TOGGLESWITCH_UP);
 	CO2CanisterSelectSwitch.SetSideways(true);
 
-	CO2CanisterPrimValve.AddPosition(0, 0);
-	CO2CanisterPrimValve.AddPosition(1, 300);
-	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 0);
+	CO2CanisterPrimValve.AddPosition(0, 300);
+	CO2CanisterPrimValve.AddPosition(1, 0);
+	CO2CanisterPrimValve.Register(PSH, "CO2CanisterPrimValve", 1);
 
-	CO2CanisterSecValve.AddPosition(0, 0);
-	CO2CanisterSecValve.AddPosition(1, 300);
-	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 0);
+	CO2CanisterSecValve.AddPosition(0, 300);
+	CO2CanisterSecValve.AddPosition(1, 0);
+	CO2CanisterSecValve.Register(PSH, "CO2CanisterSecValve", 1);
 
 	CO2CanisterPrimVent.Register(PSH, "CO2CanisterPrimVent", 0);
 	CO2CanisterSecVent.Register(PSH, "CO2CanisterSecVent", 0);

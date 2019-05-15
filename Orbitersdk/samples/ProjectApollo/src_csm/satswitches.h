@@ -672,7 +672,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
 	virtual bool SwitchTo(int newValue);
 	bool IsClockwise() { return GetState() == 2; }
-	bool IsCounterClockwise() { return GetState() == 3; }
+	bool IsCounterClockwise() { return GetState() == 0; }
 
 protected:
 	Saturn *sat;

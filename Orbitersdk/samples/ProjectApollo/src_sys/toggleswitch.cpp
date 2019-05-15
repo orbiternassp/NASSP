@@ -1670,6 +1670,8 @@ RotationalSwitch::RotationalSwitch() {
 	positionList = 0;
 	next = 0;
 	soundEnabled = true;
+	maxState = -1;
+	Wraparound = false;
 
 	switchSurface = 0;
 	switchBorder = 0;
@@ -1809,6 +1811,7 @@ void RotationalSwitch::AddPosition(int value, double angle) {
 	RotationalSwitchPosition *p = new RotationalSwitchPosition(value, angle);
 	p->SetNext(positionList);
 	positionList = p;
+	maxState++;
 
 	if (position == 0) {
 		position = p;
@@ -1863,24 +1866,23 @@ bool RotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 	if (mx > (x + width) || my > (y + height))
 		return false;
 
-	// Calculate angle of click
-	double angle = atan((mx - x - width / 2.0) / (height / 2.0 - my + y)) * DEG;
-	if ((height / 2.0 - my + y) < 0.0) angle += 180.0;
-	if (angle < 0.0) angle += 360.0;
+	int state = GetState();
 
-	// Find closest position
-	RotationalSwitchPosition *bestPosition = 0, *p = positionList; 
-	while (p) {
-		if (bestPosition == 0) {
-			bestPosition = p;
-		} else if (AngleDiff(p->GetAngle(), angle) < AngleDiff(bestPosition->GetAngle(), angle)) {
-			bestPosition = p;
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (state > 0) {
+			SwitchTo(state - 1);
 		}
-		p = p->GetNext();
+		else if (state == 0 && Wraparound) {
+			SwitchTo(maxState);
+		}
 	}
-
-	if (position != bestPosition) {
-		SwitchTo(bestPosition->GetValue());
+	else if (event == PANEL_MOUSE_RBDOWN) {
+		if (state < maxState) {
+			SwitchTo(state + 1);
+		}
+		else if (state == maxState && Wraparound) {
+			SwitchTo(0);
+		}
 	}
 	return true;
 }

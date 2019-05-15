@@ -469,7 +469,7 @@ double SaturnFuelCellH2FlowMeter::QueryValue()
 
 {
 	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState(), fc);
+	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState() + 1, fc);
 
 	return fc.H2FlowLBH; 
 }
@@ -490,7 +490,7 @@ double SaturnFuelCellO2FlowMeter::QueryValue()
 
 {
 	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState(), fc);
+	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState() + 1, fc);
 
 	return fc.O2FlowLBH; 
 }
@@ -509,7 +509,7 @@ void SaturnFuelCellO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnFuelCellTempMeter::QueryValue()
 {
-	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 5)*94.0 + 80.0);
+	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 6)*94.0 + 80.0);
 }
 
 void SaturnFuelCellTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -525,7 +525,7 @@ void SaturnFuelCellTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnFuelCellCondenserTempMeter::QueryValue()
 {
-	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 2)*21.0 + 145.0);
+	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 3)*21.0 + 145.0);
 }
 
 void SaturnFuelCellCondenserTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -681,7 +681,7 @@ void SaturnEcsRadTempInletMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *
 
 double SaturnEcsRadTempInletMeter::QueryValue()
 {
-	if (ECSIndicatorsSwitch->GetState() == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 0) {
 		return Sat->PriRadInTempSensor.Voltage()*13.0 + 55.0;
 	} else {
 		return Sat->SecRadInTempSensor.Voltage()*13.0 + 55.0;
