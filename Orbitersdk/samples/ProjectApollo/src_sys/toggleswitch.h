@@ -1082,12 +1082,15 @@ public:
 	operator int();
 	virtual void SetState(int value);
 	void SoundEnabled(bool on) { soundEnabled = on; };
+	void SetWraparound(bool w) { Wraparound = w; };
 
 protected:
 	int	x;
 	int y;
 	int width;
 	int height;
+	int maxState;
+	bool Wraparound;
 	RotationalSwitchPosition *position;
 	RotationalSwitchPosition *positionList;
 

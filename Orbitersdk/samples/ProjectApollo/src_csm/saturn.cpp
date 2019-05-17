@@ -4092,7 +4092,7 @@ void Saturn::MoveTHC(bool dir)
 		}
 		else
 		{
-			THCRotary.SwitchTo(3);
+			THCRotary.SwitchTo(0);
 		}
 	}
 	else
