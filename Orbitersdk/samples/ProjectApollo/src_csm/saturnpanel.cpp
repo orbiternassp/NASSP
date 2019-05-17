@@ -1987,12 +1987,12 @@ void Saturn::SetSwitches(int panel) {
 
 	RCSIndicatorsSwitchRow.Init(AID_RCS_INDICATORS, MainPanel);
 	RCSIndicatorsSwitch.Init(0, 0, 90, 90, srf[SRF_ROTATIONALSWITCH], srf[SRF_BORDER_90x90], RCSIndicatorsSwitchRow);
-	RCSIndicatorsSwitch.SetCMSource(1, &CMRCS1);
-	RCSIndicatorsSwitch.SetCMSource(2, &CMRCS2);
-	RCSIndicatorsSwitch.SetSMSource(3, &SMQuadARCS);
-	RCSIndicatorsSwitch.SetSMSource(4, &SMQuadBRCS);
-	RCSIndicatorsSwitch.SetSMSource(5, &SMQuadCRCS);
-	RCSIndicatorsSwitch.SetSMSource(6, &SMQuadDRCS);
+	RCSIndicatorsSwitch.SetCMSource(0, &CMRCS1);
+	RCSIndicatorsSwitch.SetCMSource(1, &CMRCS2);
+	RCSIndicatorsSwitch.SetSMSource(2, &SMQuadARCS);
+	RCSIndicatorsSwitch.SetSMSource(3, &SMQuadBRCS);
+	RCSIndicatorsSwitch.SetSMSource(4, &SMQuadCRCS);
+	RCSIndicatorsSwitch.SetSMSource(5, &SMQuadDRCS);
 
 	//
 	// ECS Indicators rotary switch.
@@ -3908,7 +3908,7 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 	} else if (s == &FuelCellRadTempIndicator) {
 		FuelCellStatus fc;
-		GetFuelCellStatus(FuelCellIndicatorsSwitch.GetState(), fc);
+		GetFuelCellStatus(FuelCellIndicatorsSwitch.GetState() + 1, fc);
 		if (fc.CoolingTempF < -30.0 || stage > CSM_LEM_STAGE)	// indication if temperature below -30°F
 			FuelCellRadTempIndicator.SetState(0);
 		else
@@ -4886,9 +4886,9 @@ void Saturn::InitSwitches() {
 
 	AccelGMeter.Register(PSH, "AccelGMeter", -1, 15, 1);
 
+	THCRotary.AddPosition(0, 330);
 	THCRotary.AddPosition(1, 0);
 	THCRotary.AddPosition(2, 30);
-	THCRotary.AddPosition(3, 330);
 	THCRotary.Register(PSH, "THCRotary", 1);
 
 	LiftoffNoAutoAbortSwitch.Register(PSH, "LiftoffNoAutoAbortSwitch", false, false);
@@ -4975,10 +4975,10 @@ void Saturn::InitSwitches() {
 	FuelCellRadiators2Switch.Register(PSH, "FuelCellRadiators2Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 	FuelCellRadiators3Switch.Register(PSH, "FuelCellRadiators3Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
 
-	FuelCellIndicatorsSwitch.AddPosition(1, 330);
-	FuelCellIndicatorsSwitch.AddPosition(2,   0);
-	FuelCellIndicatorsSwitch.AddPosition(3,  30);
-	FuelCellIndicatorsSwitch.Register(PSH, "FuelCellIndicatorsSwitch", 1);
+	FuelCellIndicatorsSwitch.AddPosition(0, 330);
+	FuelCellIndicatorsSwitch.AddPosition(1,   0);
+	FuelCellIndicatorsSwitch.AddPosition(2,  30);
+	FuelCellIndicatorsSwitch.Register(PSH, "FuelCellIndicatorsSwitch", 0);
 
 	FuelCellHeater1Switch.Register(PSH, "FuelCellHeater1Switch", true);
 	FuelCellHeater2Switch.Register(PSH, "FuelCellHeater2Switch", true);
@@ -5339,13 +5339,13 @@ void Saturn::InitSwitches() {
 
 	IMUGuardedCageSwitch.Register(PSH, "IMUGuardedCageSwitch", 0, 0);
 
-	RCSIndicatorsSwitch.AddPosition(1, 280);
-	RCSIndicatorsSwitch.AddPosition(2, 320);
-	RCSIndicatorsSwitch.AddPosition(3, 340);
-	RCSIndicatorsSwitch.AddPosition(4, 20);
-	RCSIndicatorsSwitch.AddPosition(5, 40);
-	RCSIndicatorsSwitch.AddPosition(6, 70);
-	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 2);
+	RCSIndicatorsSwitch.AddPosition(0, 280);
+	RCSIndicatorsSwitch.AddPosition(1, 320);
+	RCSIndicatorsSwitch.AddPosition(2, 340);
+	RCSIndicatorsSwitch.AddPosition(3, 20);
+	RCSIndicatorsSwitch.AddPosition(4, 40);
+	RCSIndicatorsSwitch.AddPosition(5, 70);
+	RCSIndicatorsSwitch.Register(PSH, "RCSIndicatorsSwitch", 1);
 
 	LVGuidanceSwitch.Register(PSH, "LVGuidanceSwitch", TOGGLESWITCH_UP, false);
 	LVGuidanceSwitch.SetGuardResetsState(false);
@@ -5355,9 +5355,9 @@ void Saturn::InitSwitches() {
 		TLIEnableSwitch.Register(PSH, "TLIEnableSwitch", true);
 	}
 
-	ECSIndicatorsSwitch.AddPosition(1, 340);
-	ECSIndicatorsSwitch.AddPosition(2, 20);
-	ECSIndicatorsSwitch.Register(PSH, "ECSIndicatorsSwitch", 1);
+	ECSIndicatorsSwitch.AddPosition(0, 340);
+	ECSIndicatorsSwitch.AddPosition(1, 20);
+	ECSIndicatorsSwitch.Register(PSH, "ECSIndicatorsSwitch", 0);
 
 	CGSwitch.Register(PSH, "CGSwitch", 1);
 	ELSLogicSwitch.Register(PSH, "ELSLogicSwitch", 0, 0);
@@ -5569,6 +5569,7 @@ void Saturn::InitSwitches() {
 	HighGainAntennaYawPositionSwitch.AddPosition(10, 300);
 	HighGainAntennaYawPositionSwitch.AddPosition(11, 330);
 	HighGainAntennaYawPositionSwitch.Register(PSH, "HighGainAntennaYawPositionSwitch", 6);
+	HighGainAntennaYawPositionSwitch.SetWraparound(true);
 
 	HighGainAntennaPitchMeter.Register(PSH, "HighGainAntennaPitchMeter", -90, 90, 5, 90);
 	HighGainAntennaStrengthMeter.Register(PSH, "HighGainAntennaStrengthMeter", 0, 100, 5);
@@ -5587,6 +5588,7 @@ void Saturn::InitSwitches() {
 	EMSFunctionSwitch.AddPosition(10, 120);
 	EMSFunctionSwitch.AddPosition(11, 150);
 	EMSFunctionSwitch.Register(PSH, "EMSFunctionSwitch", 0);
+	EMSFunctionSwitch.SetWraparound(true);
 
 	EMSDvDisplay.Register(PSH, "EMSDvDisplay", -1000, 14000, 1, 0);
 	EMSScrollDisplay.Register(PSH, "EMSScrollDisplay",0, 0, 0, 0);	// dummy switch/display for checklist controller
@@ -5840,6 +5842,7 @@ void Saturn::InitSwitches() {
 	PressureReliefRotary.AddPosition(2, 180);
 	PressureReliefRotary.AddPosition(3, 270);
 	PressureReliefRotary.Register(PSH, "PressureReliefRotary", 1);
+	PressureReliefRotary.SetWraparound(true);
 
 	WasteTankInletRotary.AddPosition(0,  0);
 	WasteTankInletRotary.AddPosition(1, 90);
@@ -5867,18 +5870,21 @@ void Saturn::InitSwitches() {
 	SelectorInletValveRotary.AddPosition(2, 180);
 	SelectorInletValveRotary.AddPosition(3, 270);
 	SelectorInletValveRotary.Register(PSH, "SelectorInletValveRotary", 3);
+	SelectorInletValveRotary.SetWraparound(true);
 
 	SelectorOutletValveRotary.AddPosition(0,   0);
 	SelectorOutletValveRotary.AddPosition(1,  90);
 	SelectorOutletValveRotary.AddPosition(2, 180);
 	SelectorOutletValveRotary.AddPosition(3, 270);
 	SelectorOutletValveRotary.Register(PSH, "SelectorOutletValveRotary", 3);
+	SelectorOutletValveRotary.SetWraparound(true);
 
 	EmergencyCabinPressureRotary.AddPosition(0,   0);
 	EmergencyCabinPressureRotary.AddPosition(1,  90);
 	EmergencyCabinPressureRotary.AddPosition(2, 180);
 	EmergencyCabinPressureRotary.AddPosition(3, 270);
 	EmergencyCabinPressureRotary.Register(PSH, "EmergencyCabinPressureRotary", 3);
+	EmergencyCabinPressureRotary.SetWraparound(true);
 
 	O2MainRegulatorASwitch.Register(PSH, "O2MainRegulatorASwitch", 0);
 	O2MainRegulatorBSwitch.Register(PSH, "O2MainRegulatorBSwitch", 0);
@@ -5989,11 +5995,13 @@ void Saturn::InitSwitches() {
 	WasteMGMTBatteryVentRotary.AddPosition(1, 180);
 	WasteMGMTBatteryVentRotary.AddPosition(2, 270);
 	WasteMGMTBatteryVentRotary.Register(PSH, "WasteMGMTBatteryVentRotary", 1);
+	WasteMGMTBatteryVentRotary.SetWraparound(true);
 
 	WasteMGMTStoageVentRotary.AddPosition(0,   0);
 	WasteMGMTStoageVentRotary.AddPosition(1, 180);
 	WasteMGMTStoageVentRotary.AddPosition(2, 270);
 	WasteMGMTStoageVentRotary.Register(PSH, "WasteMGMTStoageVentRotary", 1);
+	WasteMGMTStoageVentRotary.SetWraparound(true);
 
 	WasteDisposalSwitch.Register(PSH, "WasteDisposalSwitch", THREEPOSSWITCH_UP);
 		
@@ -6207,9 +6215,9 @@ void Saturn::InitSwitches() {
 
 	O2DemandRegulatorRotary.AddPosition(0, 0);
 	O2DemandRegulatorRotary.AddPosition(1, 120);
-	O2DemandRegulatorRotary.AddPosition(2, 240);
-	O2DemandRegulatorRotary.AddPosition(3, 180);
-	O2DemandRegulatorRotary.Register(PSH, "O2DemandRegulatorRotary", 3);
+	O2DemandRegulatorRotary.AddPosition(2, 180);
+	O2DemandRegulatorRotary.AddPosition(3, 240);
+	O2DemandRegulatorRotary.Register(PSH, "O2DemandRegulatorRotary", 2);
 
 	SuitTestRotary.AddPosition(0, 0);
 	SuitTestRotary.AddPosition(1, 60);

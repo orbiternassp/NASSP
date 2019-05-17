@@ -205,7 +205,7 @@ void O2DemandRegulator::SystemTimestep(double simdt) {
 		} else {
 			// one/both regulators
 			double count = 1.;
-			if (o2DemandSwitch->GetState() == 3) {
+			if (o2DemandSwitch->GetState() == 2) {
 				count = 2.;
 			}
 			pipe->in->Open();
