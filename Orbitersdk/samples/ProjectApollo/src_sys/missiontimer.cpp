@@ -45,6 +45,7 @@ MissionTimer::MissionTimer(PanelSDK &p) : DCPower(0, p)
 	CountUp = TIMER_COUNT_UP;
 	TimerTrash = false;
 	DimmerRotationalSwitch = NULL;
+	DimmerOverride = NULL;
 	srand((unsigned int) time(NULL));
 
 	Reset();
@@ -55,11 +56,12 @@ MissionTimer::~MissionTimer()
 	// Nothing for now.
 }
 
-void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c)
+void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c, ToggleSwitch *override)
 {
 	DCPower.WireToBuses(a, b);
 	WireTo(c);
 	DimmerRotationalSwitch = dimmer;
+	DimmerOverride = override;
 }
 
 void MissionTimer::Reset()
@@ -148,9 +150,17 @@ bool MissionTimer::IsPowered()
 
 bool MissionTimer::IsDisplayPowered()
 {
-	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
+	if (Voltage() < SP_MIN_ACVOLTAGE) return false;
+
+	if (DimmerOverride && DimmerOverride->GetState() == 1)
+	{
+		//Do nothing
+	}
+	else if (DimmerRotationalSwitch->GetState() == 0)
+	{
 		return false;
-	
+	}
+
 	return true;
 }
 
