@@ -881,7 +881,7 @@ void SM::AddEngines()
 
 	int i;
 	const double ATTCOOR = 0;
-	const double ATTCOOR2 = 2.05;
+	const double ATTCOOR3 = 2.10; // Was 2.05
 	const double ATTZ = 2.85;
 	const double TRANCOOR = 0;
 	const double TRANCOOR2 = 0.1;
@@ -892,7 +892,7 @@ void SM::AddEngines()
 	const double RCSOFFSET = 0.25;
 	const double RCSOFFSET2 = -0.25;
 	const double RCSOFFSETM = -0.05;
-	const double RCSOFFSETM2 = 0.05;
+	const double RCSOFFSETM2 = 0.02; // Was 0.05
 
 	//
 	// Clear any old thrusters.
@@ -944,7 +944,7 @@ void SM::AddEngines()
 	for (i = 0; i < 24; i++)
 	{
 		if (th_att_lin[i])
-			AddExhaust(th_att_lin[i], 1.2, 0.1, SMExhaustTex);
+			AddExhaust(th_att_lin[i], 3.0, 0.15, SMExhaustTex);
 	}
 
 	//
