@@ -881,7 +881,7 @@ void SM::AddEngines()
 
 	int i;
 	const double ATTCOOR = 0;
-	const double ATTCOOR3 = 2.10; // Was 2.05
+	const double ATTCOOR2 = 2.05;
 	const double ATTZ = 2.85;
 	const double TRANCOOR = 0;
 	const double TRANCOOR2 = 0.1;
