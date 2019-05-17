@@ -22,6 +22,10 @@
 
   **************************************************************************/
 
+#pragma once
+
+#include "smjc.h"
+
 ///
 /// Flags structure indicating which of the SM  settings are valid.
 ///
@@ -70,6 +74,11 @@ typedef struct {
 	bool LowRes;						///< Using low-res meshes?
 	bool showHGA;						///< Do we have an HGA?
 	bool A13Exploded;					///< Did the SM explode on Apollo 13 mission?
+
+	bool SMBusAPowered;
+	bool SMBusBPowered;
+	SMJCState SMJCAState;
+	SMJCState SMJCBState;
 
 } SMSettings;
 
@@ -368,6 +377,12 @@ protected:
 	double Beta;
 	double Gamma;
 
+	//
+	/// \brief SM buses status
+
+	bool SMBusAPowered;
+	bool SMBusBPowered;
+
 	///
 	/// \brief HGA Animations.
 	///
@@ -439,4 +454,7 @@ protected:
 	/// \brief Breakup sound.
 	///
 	Sound BreakS;
+
+	SMJC SMJCA;
+	SMJC SMJCB;
 };

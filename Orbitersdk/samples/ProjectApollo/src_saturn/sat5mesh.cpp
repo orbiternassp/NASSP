@@ -1415,6 +1415,10 @@ void SaturnV::SeparateStage (int new_stage)
 		SMConfig.HGAalpha = hga.GetAlpha();
 		SMConfig.HGAbeta = hga.GetBeta();
 		SMConfig.HGAgamma = hga.GetGamma();
+		SMConfig.SMBusAPowered = MainBusAController.IsSMBusPowered();
+		SMConfig.SMBusBPowered = MainBusBController.IsSMBusPowered();
+		secs.SMJCA.GetState(SMConfig.SMJCAState);
+		secs.SMJCB.GetState(SMConfig.SMJCBState);
 
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);

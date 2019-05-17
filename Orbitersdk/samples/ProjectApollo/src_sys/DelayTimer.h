@@ -24,6 +24,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "Orbitersdk.h"
+
+struct DelayTimerState
+{
+	double Running;
+	double seconds;
+};
+
 class DelayTimer {
 
 public:
@@ -42,6 +50,9 @@ public:
 	bool ContactClosed() { return Contact; };
 
 	void SetDelay(double del) { delay = del; }
+
+	void SetState(const DelayTimerState &state);
+	void GetState(DelayTimerState &state);
 
 protected:
 	double seconds;

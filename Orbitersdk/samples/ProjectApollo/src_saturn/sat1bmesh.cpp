@@ -800,6 +800,10 @@ void Saturn1b::SeparateStage (int new_stage)
 		SMConfig.LowRes = LowRes;
 		SMConfig.showHGA = !NoHGA;
 		SMConfig.A13Exploded = ApolloExploded;
+		SMConfig.SMBusAPowered = MainBusAController.IsSMBusPowered();
+		SMConfig.SMBusBPowered = MainBusBController.IsSMBusPowered();
+		secs.SMJCA.GetState(SMConfig.SMJCAState);
+		secs.SMJCB.GetState(SMConfig.SMJCBState);
 
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);
