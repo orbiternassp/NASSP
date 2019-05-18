@@ -198,7 +198,7 @@ void SM::SetSM()
 	
 	SetSize (5);
 
-	SetPMI (_V(12,12,7));
+	SetPMI(_V(3.3258, 3.529, 1.914));
 	SetCrossSections (_V(40,40,14));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.3));
