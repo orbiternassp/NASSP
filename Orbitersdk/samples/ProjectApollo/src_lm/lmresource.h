@@ -837,6 +837,12 @@
 #define AID_LEM_PWRFAIL_XPTRCDR         2014
 #define AID_LEM_PWRFAIL_XPTRLMP         2015
 #define IDB_RADAR_TAPE2                 2016
+#define IDB_BORDER_55x55                2017
+#define IDB_BORDER_109x119              2018
+#define IDB_BORDER_68x69                2019
+#define IDB_BORDER_210x200              2020
+#define IDB_BORDER_104x106              2021
+#define IDB_BORDER_286x197              2022
 
 #define IDB_LEM_FDAI_ROLL               10006
 

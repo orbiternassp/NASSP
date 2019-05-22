@@ -1367,6 +1367,12 @@ void LEM::InitPanel (int panel)
 		srf[SRF_BORDER_1001x240]    = oapiCreateSurface (LOADBMP (IDB_BORDER_1001x240));
 		srf[SRF_BORDER_360x316]     = oapiCreateSurface (LOADBMP (IDB_BORDER_360x316));
 		srf[SRF_BORDER_178x187]     = oapiCreateSurface (LOADBMP (IDB_BORDER_178x187));
+		srf[SRF_BORDER_55x55]       = oapiCreateSurface (LOADBMP (IDB_BORDER_55x55));
+		srf[SRF_BORDER_109x119]     = oapiCreateSurface (LOADBMP (IDB_BORDER_109x119));
+		srf[SRF_BORDER_68x69]       = oapiCreateSurface (LOADBMP (IDB_BORDER_68x69));
+		srf[SRF_BORDER_210x200]     = oapiCreateSurface (LOADBMP (IDB_BORDER_210x200));
+		srf[SRF_BORDER_104x106]     = oapiCreateSurface (LOADBMP (IDB_BORDER_104x106));
+		srf[SRF_BORDER_286x197]     = oapiCreateSurface (LOADBMP (IDB_BORDER_286x197));
 
 		//
 		// Set color keys where appropriate.
@@ -1426,7 +1432,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey(srf[SRF_LEM_F_HATCH_REL_VLV],   g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_INTLK_OVRD],        g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_MASTERALARM],		g_Param.col[4]);
-        
+
 		//
 		// Borders need to set the center color to transparent so only the outline
 		// is visible.
@@ -1471,6 +1477,12 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_1001x240], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_360x316], g_Param.col[4]);
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_178x187], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_55x55], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_109x119], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_68x69], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_210x200], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_104x106], g_Param.col[4]);
+		oapiSetSurfaceColourKey (srf[SRF_BORDER_286x197], g_Param.col[4]);
 
     SetSwitches(panel);
 }
@@ -2038,9 +2050,9 @@ void LEM::SetSwitches(int panel) {
 	LMWaterQtyMeter.Init(srf[SRF_NEEDLE], ECSLowerIndicatorRow, this);
 
 	AbortSwitchesRow.Init(AID_ABORT, MainPanel);
-	AbortSwitch.Init(0, 26, 55, 55, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_72x72], AbortSwitchesRow, 0, 119, this);
-	AbortStageSwitch.Init(59, 0, 109, 119, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_75x64], AbortSwitchesRow, 109, 0, this);
-	AbortStageSwitch.InitGuard(59, 0, 109, 119, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_75x64]);
+	AbortSwitch.Init(0, 26, 55, 55, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_55x55], AbortSwitchesRow, 0, 119, this);
+	AbortStageSwitch.Init(59, 0, 109, 119, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_109x119], AbortSwitchesRow, 109, 0, this);
+	AbortStageSwitch.InitGuard(59, 0, 109, 119, srf[SRF_LMABORTBUTTON], srf[SRF_BORDER_109x119]);
 
 	EngineArmSwitchesRow.Init(AID_ENG_ARM, MainPanel);
 	EngineArmSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], EngineArmSwitchesRow);
@@ -2513,7 +2525,7 @@ void LEM::SetSwitches(int panel) {
 	Panel12AntYawKnob.Init(0, 0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel12AntYawSwitchRow);
 
 	LMPManualEngineStopSwitchRow.Init(AID_LMP_MANUAL_ENGINE_STOP_SWITCH, MainPanel);
-	LMPManualEngineStop.Init(0, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_72x72], LMPManualEngineStopSwitchRow, 0, 0, NULL, this);
+	LMPManualEngineStop.Init(0, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], LMPManualEngineStopSwitchRow, 0, 0, NULL, this);
 
 	AGSOperateSwitchRow.Init(AID_LM_AGS_OPERATE_SWITCH, MainPanel);
 	AGSOperateSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], AGSOperateSwitchRow);
@@ -2635,8 +2647,8 @@ void LEM::SetSwitches(int panel) {
 	LtgAnunNumKnob.Init(333, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 	LtgIntegralKnob.Init(457, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 	PlusXTranslationButton.Init(46, 256, 79, 68, srf[SRF_LMTRANSLBUTTON], srf[SRF_BORDER_84x84], Panel5SwitchRow);
-	ManualEngineStart.Init(32, 114, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_72x72], Panel5SwitchRow, 0, 138, &CDRManualEngineStop, this);
-	CDRManualEngineStop.Init(32, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_72x72], Panel5SwitchRow, 0, 0, &ManualEngineStart, this);
+	ManualEngineStart.Init(32, 114, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], Panel5SwitchRow, 0, 138, &CDRManualEngineStop, this);
+	CDRManualEngineStop.Init(32, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], Panel5SwitchRow, 0, 0, &ManualEngineStart, this);
 
 	// Panel 8 is  431,916 to 1574,1258
 	Panel8SwitchRow.Init(AID_LEM_PANEL_8, MainPanel);
@@ -2720,7 +2732,7 @@ void LEM::SetSwitches(int panel) {
     PrimEvap2FlowValve.Init(240, 43, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
     DESH2OValve.Init(279, 185, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
     PrimEvap1FlowValve.Init(256, 346, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow);
-    WaterTankSelectValve.Init(33, 402, 201, 205, srf[SRF_LEM_H20_SEL], srf[SRF_BORDER_201x205], WaterControlSwitchRow);
+    WaterTankSelectValve.Init(33, 398, 210, 200, srf[SRF_LEM_H20_SEL], srf[SRF_BORDER_210x200], WaterControlSwitchRow);
     SuitTempValve.Init(258, 721, 115, 115, srf[SRF_LEM_ECS_ROTARY], srf[SRF_BORDER_115x115], WaterControlSwitchRow, (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:HXFLOWCONTROL"), (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:HXFLOWCONTROLBYPASS"));
 
     ASCH2OSwitchRow.Init(AID_LEM_ASC_H2O, MainPanel);
@@ -2741,10 +2753,10 @@ void LEM::SetSwitches(int panel) {
 
     // Upper Hatch
     UpperHatchHandleSwitchRow.Init(AID_LEM_UPPER_HATCH_HANDLE, MainPanel);
-    UpperHatchHandle.Init(0, 0, 286, 197, srf[SRF_LEM_U_HATCH_HNDL], NULL, UpperHatchHandleSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"), &OverheadHatch);
-	
+    UpperHatchHandle.Init(0, 0, 286, 197, srf[SRF_LEM_U_HATCH_HNDL], srf[SRF_BORDER_286x197], UpperHatchHandleSwitchRow, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"), &OverheadHatch);
+
 	UpperHatchValveSwitchRow.Init(AID_LEM_UPPER_HATCH_VALVE, MainPanel);
-	UpperHatchReliefValve.Init(0, 0, 104, 106, srf[SRF_LEM_U_HATCH_REL_VLV], NULL, UpperHatchValveSwitchRow);
+	UpperHatchReliefValve.Init(0, 0, 104, 106, srf[SRF_LEM_U_HATCH_REL_VLV], srf[SRF_BORDER_104x106], UpperHatchValveSwitchRow);
 
 	UilityLightSwitchRow.Init(AID_LEM_UTILITY_LT, MainPanel);
 	UtilityLightSwitchCDR.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], UilityLightSwitchRow);
