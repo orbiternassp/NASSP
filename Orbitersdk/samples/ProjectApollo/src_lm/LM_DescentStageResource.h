@@ -7,7 +7,7 @@
 #define DS_NGRP 45
 
 // Number of materials:
-#define DS_NMAT 8
+#define DS_NMAT 9
 
 // Number of textures:
 #define DS_NTEX 5
