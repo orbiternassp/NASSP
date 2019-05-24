@@ -392,6 +392,7 @@ public:
 	void SetLMMeshVisAsc();
 	void SetLMMeshVisVC();
 	void SetLMMeshVisDsc();
+	void SetCrewMesh();
 	void DrogueVis();
 	void HideProbes();
 	void SetTrackLight();
@@ -1518,6 +1519,8 @@ protected:
 
 	DEVMESHHANDLE probes;
 	DEVMESHHANDLE drogue;
+	DEVMESHHANDLE cdrmesh;
+	DEVMESHHANDLE lmpmesh;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

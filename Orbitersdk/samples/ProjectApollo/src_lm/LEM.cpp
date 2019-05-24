@@ -338,6 +338,8 @@ void LEM::Init()
 
 	drogue = NULL;
 	probes = NULL;
+	cdrmesh = NULL;
+	lmpmesh = NULL;
 
 	pMCC = NULL;
 
@@ -1486,6 +1488,12 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 	drogue = GetDevMesh(vis, ascidx);
 	DrogueVis();
 
+	if (Crewed) {
+		cdrmesh = GetDevMesh(vis, ascidx);
+		lmpmesh = GetDevMesh(vis, ascidx);
+		SetCrewMesh();
+	}
+
 	probes = GetDevMesh(vis, dscidx);
 	if (Landed && !NoLegs) {
 		HideProbes();
@@ -1496,6 +1504,8 @@ void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 {
 	drogue = NULL;
 	probes = NULL;
+	cdrmesh = NULL;
+	lmpmesh = NULL;
 }
 
 void LEM::clbkDockEvent(int dock, OBJHANDLE connected)

@@ -2098,6 +2098,7 @@ void LEM::SetCDRInSuit()
 			CrewInCabin->number++;
 			CDRSuited->number = 0;
 		}
+		SetCrewMesh();
 	}
 }
 
@@ -2113,6 +2114,7 @@ void LEM::SetLMPInSuit()
 		CrewInCabin->number++;
 		LMPSuited->number = 0;
 	}
+	SetCrewMesh();
 }
 
 void LEM::StartEVA()
