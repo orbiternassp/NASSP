@@ -1243,7 +1243,7 @@ void SaturnV::SeparateStage (int new_stage)
 		vs2.vrot.y = 0.0;
 		vs2.vrot.z = 0.0;
 
-		CrashBumpS.play(NOLOOP, 150);
+		//CrashBumpS.play(NOLOOP, 150);
 
 		char VName[256], *CName;
 

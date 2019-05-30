@@ -149,10 +149,10 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_RNDZWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.598, 0.65, 1.106));
+						SetCameraOffset(_V(-0.598, 0.15, 1.106));
 					}
 					else {
-						SetCameraOffset(_V(-0.598, 2.40, 1.106));
+						SetCameraOffset(_V(-0.598, 1.90, 1.106));
 					}
 					break;
 				case LMPANEL_LEFTPANEL:
@@ -181,10 +181,10 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_DOCKVIEW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.598, 0.65, 1.106));
+						SetCameraOffset(_V(-0.598, 0.15, 1.106));
 					}
 					else {
-						SetCameraOffset(_V(-0.598, 2.40, 1.106));
+						SetCameraOffset(_V(-0.598, 1.90, 1.106));
 					}
 					break;
 				
@@ -198,10 +198,10 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_UPPERHATCH:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, -0.35, 0));
+						SetCameraOffset(_V(0, -0.55, 0));
 					}
 					else {
-						SetCameraOffset(_V(0, 1.40, 0));
+						SetCameraOffset(_V(0, 1.20, 0));
 					}
 					break;
 				case LMPANEL_FWDHATCH:
@@ -219,7 +219,7 @@ void LEM::SetView() {
 	}
 
 	//
-	// Change FOV for the LPD window, AOT zoom and docking view
+	// Change FOV for the LPD window and AOT zoom
 	//
 	if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
 	   // if this is the first time we've been here, save the current FOV
@@ -227,8 +227,10 @@ void LEM::SetView() {
 			SaveFOV = oapiCameraAperture();
 			InFOV = false;
 		}
-		//set FOV to 60 degrees
-		oapiCameraSetAperture(RAD * 30.0);
+		//set FOV to 60 degrees (except for lower resolutions)
+		DWORD w, h;
+		oapiGetViewportSize(&w, &h);
+		oapiCameraSetAperture(atan(tan(RAD*30.0)*min(h / 1080.0, 1.0)));
 	}
 	else if (PanelId == LMPANEL_AOTZOOM) {
 		// if this is the first time we've been here, save the current FOV
@@ -240,15 +242,6 @@ void LEM::SetView() {
 		DWORD w, h;
 		oapiGetViewportSize(&w, &h);
 		oapiCameraSetAperture(atan(tan(RAD*30.0)*min(h / 1050.0, 1.0)));
-	}
-	else if (PanelId == LMPANEL_DOCKVIEW) {
-		// if this is the first time we've been here, save the current FOV
-		if (InFOV) {
-			SaveFOV = oapiCameraAperture();
-			InFOV = false;
-		}
-		//set FOV to 40 degrees
-		oapiCameraSetAperture(RAD * 20.0);
 	}
     else {
 		if(InFOV == false) {

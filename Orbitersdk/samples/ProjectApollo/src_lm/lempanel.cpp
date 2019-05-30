@@ -1956,8 +1956,8 @@ bool LEM::clbkLoadPanel (int id) {
 
 		oapiRegisterPanelArea(AID_LEM_UTILITY_LT, _R(151, 112, 335, 141), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 
-		SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
-		oapiCameraSetCockpitDir(0, 0);
+		SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+		oapiCameraSetCockpitDir(180 * RAD, 0);
 		break;
 
 	case LMPANEL_FWDHATCH: // LEM Forward Hatch

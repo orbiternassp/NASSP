@@ -381,6 +381,9 @@ void LEM::Init()
 	///		  Enable before CSM docking
 	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 
+	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
+	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
+
 	strncpy(AudioLanguage, "English", 64);
 	soundlib.SetLanguage(AudioLanguage);
 	SoundsLoaded = false;
