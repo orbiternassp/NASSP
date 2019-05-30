@@ -24,7 +24,6 @@
 
 // To force orbitersdk.h to use <fstream> in any compiler version
 
-#pragma once
 #pragma include_alias( <fstream.h>, <fstream> )
 
 #define ORBITER_MODULE

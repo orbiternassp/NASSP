@@ -320,6 +320,12 @@ public:
 		SRF_BORDER_1001x240,
 		SRF_BORDER_360x316,
 		SRF_BORDER_178x187,
+		SRF_BORDER_55x55,
+		SRF_BORDER_109x119,
+		SRF_BORDER_68x69,
+		SRF_BORDER_210x200,
+		SRF_BORDER_104x106,
+		SRF_BORDER_286x197,
 		SRF_THUMBWHEEL_SMALL,
 		SRF_THUMBWHEEL_LARGEFONTSINV,
 		SRF_SWLEVERTHREEPOS,
@@ -386,6 +392,7 @@ public:
 	void SetLMMeshVisAsc();
 	void SetLMMeshVisVC();
 	void SetLMMeshVisDsc();
+	void SetCrewMesh();
 	void DrogueVis();
 	void HideProbes();
 	void SetTrackLight();
@@ -1512,6 +1519,8 @@ protected:
 
 	DEVMESHHANDLE probes;
 	DEVMESHHANDLE drogue;
+	DEVMESHHANDLE cdrmesh;
+	DEVMESHHANDLE lmpmesh;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

@@ -165,6 +165,9 @@ void SM::InitSM()
 	hga_proc[1] = 0.0;
 	hga_proc[2] = 0.0;
 
+	SMBusAPowered = false;
+	SMBusBPowered = false;
+
 	FirstTimestep = true;
 
 	int i;
@@ -195,7 +198,7 @@ void SM::SetSM()
 	
 	SetSize (5);
 
-	SetPMI (_V(12,12,7));
+	SetPMI(_V(3.3258, 3.529, 1.914));
 	SetCrossSections (_V(40,40,14));
 	SetCW (0.1, 0.3, 1.4, 1.4);
 	SetRotDrag (_V(0.7,0.7,0.3));
@@ -404,55 +407,45 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	// or the fuel cells stop providing power.
 	//
 
+	SMJCA.Timestep(simdt, SMBusAPowered);
+	SMJCB.Timestep(simdt, SMBusBPowered);
+
+	if (SMJCA.GetFireMinusXTranslation() || SMJCB.GetFireMinusXTranslation())
+	{
+		SetThrusterLevel(th_rcs_a[3], 1.0);
+		SetThrusterLevel(th_rcs_b[3], 1.0);
+		SetThrusterLevel(th_rcs_c[4], 1.0);
+		SetThrusterLevel(th_rcs_d[4], 1.0);
+	}
+	else
+	{
+		SetThrusterLevel(th_rcs_a[3], 0.0);
+		SetThrusterLevel(th_rcs_b[3], 0.0);
+		SetThrusterLevel(th_rcs_c[4], 0.0);
+		SetThrusterLevel(th_rcs_d[4], 0.0);
+	}
+
+	if (SMJCA.GetFirePositiveRoll() || SMJCB.GetFirePositiveRoll())
+	{
+		SetThrusterLevel(th_rcs_a[1], 1.0);
+		SetThrusterLevel(th_rcs_b[1], 1.0);
+		SetThrusterLevel(th_rcs_c[1], 1.0);
+		SetThrusterLevel(th_rcs_d[1], 1.0);
+	}
+	else
+	{
+		SetThrusterLevel(th_rcs_a[1], 0.0);
+		SetThrusterLevel(th_rcs_b[1], 0.0);
+		SetThrusterLevel(th_rcs_c[1], 0.0);
+		SetThrusterLevel(th_rcs_d[1], 0.0);
+	}
+
 	switch (State) 
 	{
 	case SM_UMBILICALDETACH_PAUSE:
 		//Someone who knows how, please add a small Particle stream going from detach Point.
 		NextMissionEventTime = MissionTime + 1.0;
-		State = SM_STATE_RCS_START;
-		break;
-
-	case SM_STATE_RCS_START:
-		if (MissionTime >= NextMissionEventTime) 
-		{
-			SetThrusterLevel(th_rcs_a[3], 1.0);
-			SetThrusterLevel(th_rcs_b[3], 1.0);
-			SetThrusterLevel(th_rcs_c[4], 1.0);
-			SetThrusterLevel(th_rcs_d[4], 1.0);
-			NextMissionEventTime = MissionTime + 2.0;
-			State = SM_STATE_RCS_ROLL_START;
-		}
-		break;
-
-	//
-	// Start rolling after two seconds.
-	//
-
-	case SM_STATE_RCS_ROLL_START:
-		if (MissionTime >= NextMissionEventTime) 
-		{
-			SetThrusterLevel(th_rcs_a[1], 1.0);
-			SetThrusterLevel(th_rcs_b[1], 1.0);
-			SetThrusterLevel(th_rcs_c[1], 1.0);
-			SetThrusterLevel(th_rcs_d[1], 1.0);
-			NextMissionEventTime = MissionTime + 5.5;
-			State = SM_STATE_RCS_ROLL_STOP;
-		}
-		break;
-
-	//
-	// Stop the roll.
-	//
-
-	case SM_STATE_RCS_ROLL_STOP:
-		if (MissionTime >= NextMissionEventTime)
-		{
-			SetThrusterLevel(th_rcs_a[1], 0.0);
-			SetThrusterLevel(th_rcs_b[1], 0.0);
-			SetThrusterLevel(th_rcs_c[1], 0.0);
-			SetThrusterLevel(th_rcs_d[1], 0.0);
-			State = SM_STATE_WAITING;
-		}
+		State = SM_STATE_WAITING;
 		break;
 
 	//
@@ -818,6 +811,8 @@ void SM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "ALPHA", Alpha);
 	oapiWriteScenario_float(scn, "BETA", Beta);
 	oapiWriteScenario_float(scn, "GAMMA", Gamma);
+	SMJCA.SaveState(scn, SMJCA_START_STRING);
+	SMJCB.SaveState(scn, SMJCB_START_STRING);
 }
 
 typedef union {
@@ -834,6 +829,8 @@ typedef union {
 		unsigned int showPanel6:1;
 		unsigned int LowRes:1;
 		unsigned int A13Exploded:1;
+		unsigned int SMBusAPowered : 1;
+		unsigned int SMBusBPowered : 1;
 	} u;
 	unsigned long word;
 } MainState;
@@ -856,6 +853,8 @@ int SM::GetMainState()
 	state.u.showPanel6 = showPanel6;
 	state.u.LowRes = LowRes;
 	state.u.A13Exploded = A13Exploded;
+	state.u.SMBusAPowered = SMBusAPowered;
+	state.u.SMBusBPowered = SMBusBPowered;
 
 	return state.word;
 }
@@ -869,22 +868,14 @@ void SM::AddEngines()
 	// Add the RCS. SPS won't fire with SM seperated.
 	//
 
-	///
-	/// \todo For now, we just don't create propellant tanks for the Apollo 13 SM. We should do something
-	/// more sensible eventually.
-	///
-
-	if (!A13Exploded)
-	{
-		if (!ph_rcsa)
-			ph_rcsa = CreatePropellantResource(RCS_FUEL_PER_QUAD);
-		if (!ph_rcsb)
-			ph_rcsb = CreatePropellantResource(RCS_FUEL_PER_QUAD);
-		if (!ph_rcsc)
-			ph_rcsc = CreatePropellantResource(RCS_FUEL_PER_QUAD);
-		if (!ph_rcsd)
-			ph_rcsd = CreatePropellantResource(RCS_FUEL_PER_QUAD);
-	}
+	if (!ph_rcsa)
+		ph_rcsa = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcsb)
+		ph_rcsb = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcsc)
+		ph_rcsc = CreatePropellantResource(RCS_FUEL_PER_QUAD);
+	if (!ph_rcsd)
+		ph_rcsd = CreatePropellantResource(RCS_FUEL_PER_QUAD);
 
 	double TRANZ = 1.9;
 
@@ -894,14 +885,14 @@ void SM::AddEngines()
 	const double ATTZ = 2.85;
 	const double TRANCOOR = 0;
 	const double TRANCOOR2 = 0.1;
-	const double ATTWIDTH=.2;
-	const double ATTHEIGHT=.5;
-	const double TRANWIDTH=.2;
-	const double TRANHEIGHT=1;
-	const double RCSOFFSET=0.25;
-	const double RCSOFFSET2=-0.25;
-	const double RCSOFFSETM=-0.05;
-	const double RCSOFFSETM2=0.05;
+	const double ATTWIDTH = .2;
+	const double ATTHEIGHT = .5;
+	const double TRANWIDTH = .2;
+	const double TRANHEIGHT = 1;
+	const double RCSOFFSET = 0.25;
+	const double RCSOFFSET2 = -0.25;
+	const double RCSOFFSETM = -0.05;
+	const double RCSOFFSETM2 = 0.02; // Was 0.05
 
 	//
 	// Clear any old thrusters.
@@ -922,38 +913,38 @@ void SM::AddEngines()
 
 	const double CENTEROFFS = 0.25;
 
-	th_att_lin[0]=th_att_rot[0]=CreateThruster (_V(-CENTEROFFS,ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,-0.1,1), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[1]=th_att_rot[3]=CreateThruster (_V(CENTEROFFS,-ATTCOOR2,TRANZ+RCSOFFSET2), _V(0,0.1,1), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[2]=th_att_rot[4]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS,TRANZ+RCSOFFSET2), _V(0.1,0,1), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[3]=th_att_rot[7]=CreateThruster (_V(ATTCOOR2,CENTEROFFS,TRANZ+RCSOFFSET2), _V(-0.1,0,1), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[4]=th_att_rot[2]=CreateThruster (_V(-CENTEROFFS,ATTCOOR2,TRANZ+RCSOFFSET), _V(0,-0.1,-1), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[5]=th_att_rot[1]=CreateThruster (_V(CENTEROFFS,-ATTCOOR2,TRANZ+RCSOFFSET), _V(0,0.1,-1), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[6]=th_att_rot[6]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS,TRANZ+RCSOFFSET), _V(0.1,0,-1), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[7]=th_att_rot[5]=CreateThruster (_V(ATTCOOR2,CENTEROFFS,TRANZ+RCSOFFSET), _V(-0.1,0,-1), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[0] = th_att_rot[0] = CreateThruster(_V(-CENTEROFFS, ATTCOOR2, TRANZ + RCSOFFSET2), _V(0, -0.1, 1), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[1] = th_att_rot[3] = CreateThruster(_V(CENTEROFFS, -ATTCOOR2, TRANZ + RCSOFFSET2), _V(0, 0.1, 1), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[2] = th_att_rot[4] = CreateThruster(_V(-ATTCOOR2, -CENTEROFFS, TRANZ + RCSOFFSET2), _V(0.1, 0, 1), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[3] = th_att_rot[7] = CreateThruster(_V(ATTCOOR2, CENTEROFFS, TRANZ + RCSOFFSET2), _V(-0.1, 0, 1), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[4] = th_att_rot[2] = CreateThruster(_V(-CENTEROFFS, ATTCOOR2, TRANZ + RCSOFFSET), _V(0, -0.1, -1), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[5] = th_att_rot[1] = CreateThruster(_V(CENTEROFFS, -ATTCOOR2, TRANZ + RCSOFFSET), _V(0, 0.1, -1), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[6] = th_att_rot[6] = CreateThruster(_V(-ATTCOOR2, -CENTEROFFS, TRANZ + RCSOFFSET), _V(0.1, 0, -1), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[7] = th_att_rot[5] = CreateThruster(_V(ATTCOOR2, CENTEROFFS, TRANZ + RCSOFFSET), _V(-0.1, 0, -1), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[8]=th_att_rot[16]=th_att_rot[17]=CreateThruster (_V(-CENTEROFFS - 0.2,ATTCOOR2,TRANZ+RCSOFFSETM), _V(1,-0.1,0), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[9]=th_att_rot[8]=th_att_rot[9]=CreateThruster (_V(CENTEROFFS -0.2,-ATTCOOR2,TRANZ+RCSOFFSETM2), _V(1,0.1,0), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[8] = th_att_rot[16] = th_att_rot[17] = CreateThruster(_V(-CENTEROFFS - 0.2, ATTCOOR2, TRANZ + RCSOFFSETM), _V(1, -0.1, 0), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[9] = th_att_rot[8] = th_att_rot[9] = CreateThruster(_V(CENTEROFFS - 0.2, -ATTCOOR2, TRANZ + RCSOFFSETM2), _V(1, 0.1, 0), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[12]=th_att_rot[10]=th_att_rot[11]=CreateThruster (_V(-CENTEROFFS + 0.2,ATTCOOR2,TRANZ+RCSOFFSETM2), _V(-1,-0.1,0), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[13]=th_att_rot[18]=th_att_rot[19]=CreateThruster (_V(CENTEROFFS + 0.2,-ATTCOOR2,TRANZ+RCSOFFSETM), _V(-1,0.1,0), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[12] = th_att_rot[10] = th_att_rot[11] = CreateThruster(_V(-CENTEROFFS + 0.2, ATTCOOR2, TRANZ + RCSOFFSETM2), _V(-1, -0.1, 0), RCS_Thrust, ph_rcsa, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[13] = th_att_rot[18] = th_att_rot[19] = CreateThruster(_V(CENTEROFFS + 0.2, -ATTCOOR2, TRANZ + RCSOFFSETM), _V(-1, 0.1, 0), RCS_Thrust, ph_rcsc, RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[16]=th_att_rot[14]=th_att_rot[15]=CreateThruster (_V(ATTCOOR2,CENTEROFFS -0.2,TRANZ+RCSOFFSETM2), _V(-0.1,1,0), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[17]=th_att_rot[22]=th_att_rot[23]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS -0.2,TRANZ+RCSOFFSETM), _V(-0.1,1,0), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[16] = th_att_rot[14] = th_att_rot[15] = CreateThruster(_V(ATTCOOR2, CENTEROFFS - 0.2, TRANZ + RCSOFFSETM2), _V(-0.1, 1, 0), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[17] = th_att_rot[22] = th_att_rot[23] = CreateThruster(_V(-ATTCOOR2, -CENTEROFFS - 0.2, TRANZ + RCSOFFSETM), _V(-0.1, 1, 0), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
 
-	th_att_lin[20]=th_att_rot[20]=th_att_rot[21]=CreateThruster (_V(ATTCOOR2,CENTEROFFS + 0.2,TRANZ+RCSOFFSETM), _V(-0.1,-1,0), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
-	th_att_lin[21]=th_att_rot[12]=th_att_rot[13]=CreateThruster (_V(-ATTCOOR2,-CENTEROFFS + 0.2,TRANZ+RCSOFFSETM2), _V(0.1,-1,0), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[20] = th_att_rot[20] = th_att_rot[21] = CreateThruster(_V(ATTCOOR2, CENTEROFFS + 0.2, TRANZ + RCSOFFSETM), _V(-0.1, -1, 0), RCS_Thrust, ph_rcsb, RCS_ISP, SM_RCS_ISP_SL);
+	th_att_lin[21] = th_att_rot[12] = th_att_rot[13] = CreateThruster(_V(-ATTCOOR2, -CENTEROFFS + 0.2, TRANZ + RCSOFFSETM2), _V(0.1, -1, 0), RCS_Thrust, ph_rcsd, RCS_ISP, SM_RCS_ISP_SL);
 
 	//
 	// We don't create thruster groups here as the user shouldn't be able to control the SM after
 	// it seperates.
 	//
 
-	SURFHANDLE SMExhaustTex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust_atrcs");
+	SURFHANDLE SMExhaustTex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust_atrcs");
 
 	for (i = 0; i < 24; i++)
 	{
 		if (th_att_lin[i])
-			AddExhaust (th_att_lin[i], 1.2, 0.1, SMExhaustTex);
+			AddExhaust(th_att_lin[i], 3.0, 0.15, SMExhaustTex);
 	}
 
 	//
@@ -1043,6 +1034,8 @@ void SM::SetMainState(int s)
 	showPanel6 = (state.u.showPanel6 != 0);
 	LowRes = (state.u.LowRes != 0);
 	A13Exploded = (state.u.A13Exploded != 0);
+	SMBusAPowered = (state.u.SMBusAPowered != 0);
+	SMBusBPowered = (state.u.SMBusBPowered != 0);
 }
 
 void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -1119,6 +1112,12 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			sscanf(line + 5, "%g", &flt);
 			Gamma = flt;
 		}
+		else if (!strnicmp(line, SMJCA_START_STRING, sizeof(SMJCA_START_STRING))) {
+			SMJCA.LoadState(scn);
+		}
+		else if (!strnicmp(line, SMJCB_START_STRING, sizeof(SMJCB_START_STRING))) {
+			SMJCB.LoadState(scn);
+		}
 		else
 		{
 			ParseScenarioLineEx (line, vstatus);
@@ -1169,6 +1168,11 @@ void SM::SetState(SMSettings &state)
 			Beta = state.HGAbeta;
 			Gamma = state.HGAgamma;
 		}
+
+		SMBusAPowered = state.SMBusAPowered;
+		SMBusBPowered = state.SMBusBPowered;
+		SMJCA.SetState(state.SMJCAState);
+		SMJCB.SetState(state.SMJCBState);
 	}
 
 	if (state.SettingsType.SM_SETTINGS_MASS)
@@ -1195,11 +1199,8 @@ void SM::SetState(SMSettings &state)
 	// Now the RCS propellant resource has been created, set the
 	// fuel levels.
 	///
-	/// \todo For now we don't create RCS propellant for Apollo 13.
-	/// We should do something more sensible later.
-	///
 
-	if (state.SettingsType.SM_SETTINGS_FUEL && !A13Exploded)
+	if (state.SettingsType.SM_SETTINGS_FUEL)
 	{
 		SetPropellantMass(ph_rcsa, state.RCSAFuelKg);
 		SetPropellantMass(ph_rcsb, state.RCSBFuelKg);

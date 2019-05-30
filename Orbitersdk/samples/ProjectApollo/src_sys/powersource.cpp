@@ -551,6 +551,11 @@ bool DCBusController::IsBusContPowered(int fc)
 		return (busCont3->Voltage() > SP_MIN_DCVOLTAGE);
 }
 
+//Temporary until the SM buses are properly simulated
+bool DCBusController::IsSMBusPowered()
+{
+	return (fcPower.Voltage() > SP_MIN_DCVOLTAGE);
+}
 
 bool DCBusController::IsFuelCellDisconnectAlarm()
 

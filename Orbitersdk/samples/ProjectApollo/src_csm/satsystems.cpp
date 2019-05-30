@@ -2123,6 +2123,23 @@ void Saturn::JoystickTimestep()
 		rjec.SetDirectYawActive(true);
 	}
 
+	//SM Jettison Controller
+	if (secs.SMJCA.GetFireMinusXTranslation() || secs.SMJCB.GetFireMinusXTranslation())
+	{
+		SetRCSState(RCS_SM_QUAD_A, 3, true);
+		SetRCSState(RCS_SM_QUAD_B, 3, true);
+		SetRCSState(RCS_SM_QUAD_C, 4, true);
+		SetRCSState(RCS_SM_QUAD_D, 4, true);
+	}
+
+	if (secs.SMJCA.GetFirePositiveRoll() || secs.SMJCB.GetFirePositiveRoll())
+	{
+		SetRCSState(RCS_SM_QUAD_A, 1, true);
+		SetRCSState(RCS_SM_QUAD_B, 1, true);
+		SetRCSState(RCS_SM_QUAD_C, 1, true);
+		SetRCSState(RCS_SM_QUAD_D, 1, true);
+	}
+
 	//
 	// CM RCS propellant dump 
 	//

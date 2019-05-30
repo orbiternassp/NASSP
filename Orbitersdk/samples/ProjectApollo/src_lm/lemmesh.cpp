@@ -82,6 +82,7 @@ void LEM::ToggleEVA()
 
 		CDREVA_IP = true;
 		CDRSuited->number = 0;
+		SetCrewMesh();
 
 		OBJHANDLE hbody = GetGravityRef();
 		double radius = oapiGetSize(hbody);
@@ -120,6 +121,7 @@ void LEM::StopEVA()
 	// Called by LEVA vessel during destruction
 	CDREVA_IP = false;
 	CDRSuited->number = 1;
+	SetCrewMesh();
 }
 
 void LEM::SetLmVesselDockStage()
@@ -639,6 +641,36 @@ void LEM::SetLMMeshVisDsc() {
 	else
 	{
 		SetMeshVisibilityMode(dscidx, MESHVIS_VCEXTERNAL);
+	}
+}
+
+void LEM::SetCrewMesh() {
+
+	static UINT meshgroup_LMP[11] = { AS_GRP_LMP1, AS_GRP_LMP2, AS_GRP_LMP3, AS_GRP_LMP4, AS_GRP_LMP5, AS_GRP_LMP6, AS_GRP_LMP7, AS_GRP_LMP8, AS_GRP_LMP9, AS_GRP_LMP91, AS_GRP_zLMP11 };
+	static UINT meshgroup_CDR[11] = { AS_GRP_CDR1, AS_GRP_CDR2, AS_GRP_CDR3, AS_GRP_CDR4, AS_GRP_CDR5, AS_GRP_CDR6, AS_GRP_CDR7, AS_GRP_CDR8, AS_GRP_CDR9, AS_GRP_CDR91, AS_GRP_zCDR11 };
+	GROUPEDITSPEC ges;
+
+	if (cdrmesh) {
+		if (Crewed && (CDRSuited->number == 1)) {
+			ges.flags = (GRPEDIT_SETUSERFLAG);
+			ges.UsrFlag = 0;
+			for (int i = 0; i < 11; i++) oapiEditMeshGroup(cdrmesh, meshgroup_CDR[i], &ges);
+		} else {
+			ges.flags = (GRPEDIT_ADDUSERFLAG);
+			ges.UsrFlag = 3;
+			for (int i = 0; i < 11; i++) oapiEditMeshGroup(cdrmesh, meshgroup_CDR[i], &ges);
+		}
+	}
+	if (lmpmesh) {
+		if (Crewed && (LMPSuited->number == 1)) {
+			ges.flags = (GRPEDIT_SETUSERFLAG);
+			ges.UsrFlag = 0;
+			for (int i = 0; i < 11; i++) oapiEditMeshGroup(cdrmesh, meshgroup_LMP[i], &ges);
+		} else {
+			ges.flags = (GRPEDIT_ADDUSERFLAG);
+			ges.UsrFlag = 3;
+			for (int i = 0; i < 11; i++) oapiEditMeshGroup(cdrmesh, meshgroup_LMP[i], &ges);
+		}
 	}
 }
 

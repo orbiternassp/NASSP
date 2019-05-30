@@ -152,9 +152,13 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_csm\smjc.cpp" />
+    <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_csm\smjc.h" />
+    <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
     <ClInclude Include="..\..\src_sys\nasspsound.h" />
     <ClInclude Include="..\..\src_csm\sm.h" />

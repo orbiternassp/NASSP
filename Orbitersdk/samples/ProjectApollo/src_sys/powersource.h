@@ -129,6 +129,7 @@ public:
 	void ConnectFuelCell(int fc, bool connect);
 	bool IsFuelCellConnected(int fc);
 	bool IsBusContPowered(int fc);
+	bool IsSMBusPowered();
 	bool IsFuelCellDisconnectAlarm();
 	e_object *GetBusSource() { return &busPower; };
 	void SetTieState(int s) { tieState = s; };

@@ -430,7 +430,7 @@ void LEM::SystemsInit()
 	LMP_FDAI_AC_CB.MaxAmps = 2.0;
 	LMP_FDAI_AC_CB.WireTo(&ACBusB);
 	fdaiRight.WireTo(&LMP_EVT_TMR_FDAI_DC_CB,&LMP_FDAI_AC_CB);
-	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
+	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB, &LtgORideNumSwitch);
 
 	// HEATERS
 	TempMonitorInd.WireTo(&HTR_DISP_CB);
@@ -603,7 +603,7 @@ void LEM::SystemsInit()
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
-	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB);
+	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgAnunNumKnob, &NUM_LTG_AC_CB, &LtgORideNumSwitch);
 
 	// Pyro Buses
 	Panelsdk.AddElectrical(&ED28VBusA, false);
@@ -2098,6 +2098,7 @@ void LEM::SetCDRInSuit()
 			CrewInCabin->number++;
 			CDRSuited->number = 0;
 		}
+		SetCrewMesh();
 	}
 }
 
@@ -2113,6 +2114,7 @@ void LEM::SetLMPInSuit()
 		CrewInCabin->number++;
 		LMPSuited->number = 0;
 	}
+	SetCrewMesh();
 }
 
 void LEM::StartEVA()

@@ -79,6 +79,18 @@ void DelayTimer::Reset()
 	Contact = false;
 }
 
+void DelayTimer::SetState(const DelayTimerState &state)
+{
+	Running = state.Running;
+	SetTime(state.seconds);
+}
+
+void DelayTimer::GetState(DelayTimerState &state)
+{
+	state.Running = Running;
+	state.seconds = GetTime();
+}
+
 void DelayTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	papiWriteScenario_bool(scn, "CONTACT", Contact);

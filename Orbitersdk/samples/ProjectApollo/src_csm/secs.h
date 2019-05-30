@@ -26,6 +26,7 @@
 #define _PA_SECS_H
 
 #include "DelayTimer.h"
+#include "smjc.h"
 
 class Saturn;
 class FloatBag;
@@ -43,6 +44,7 @@ public:
 	bool GetMode1ASignal() { return Mode1ASignal; };
 	bool GetCMTransferMotor1() { return CMTransferMotor1; };
 	bool GetCMTransferMotor2() { return CMTransferMotor2; };
+	bool GetCMTransferMotor(bool IsSystemA);
 	bool GetInterconnectAndPropellantBurnRelayA() { return InterconnectAndPropellantBurnA; }
 	bool GetInterconnectAndPropellantBurnRelayB() { return InterconnectAndPropellantBurnB; }
 	bool GetOxidFuelPurgeRelay() { return FuelAndOxidBypassPurgeA || FuelAndOxidBypassPurgeB; }
@@ -123,7 +125,7 @@ class MESC
 {
 public:
 	MESC();
-	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem, int IsSysA);
+	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, SMJC *smjc, MESC* OtherMESCSystem, int IsSysA);
 	void Timestep(double simdt);
 
 	bool GetApexCoverJettisonRelay() { return ApexCoverJettison; }
@@ -276,6 +278,7 @@ protected:
 	CircuitBrakerSwitch *EDSBatteryBreaker;
 	MissionTimer *MissionTimerDisplay;
 	EventTimer *EventTimerDisplay;
+	SMJC *SMJettCont;
 
 	CircuitBrakerSwitch *EDSLogicBreaker;
 
@@ -383,6 +386,9 @@ public:
 	LDEC LDECA;
 	//Lunar Docking Events Controller B
 	LDEC LDECB;
+	//
+	SMJC SMJCA;
+	SMJC SMJCB;
 
 protected:
 	bool IsLogicPoweredAndArmedA();

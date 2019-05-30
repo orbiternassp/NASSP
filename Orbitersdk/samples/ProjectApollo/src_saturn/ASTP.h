@@ -22,8 +22,7 @@
 
   **************************************************************************/
 
-#if !defined(_PA_ASTP_H)
-#define _PA_ATSP_H
+#pragma once
 
 #include "connector.h"
 #include "payload.h"
@@ -98,5 +97,3 @@ protected:
 	DMToSIVBConnector SLAConnector;
 
 };
-
-#endif // _PA_ASTP_H
