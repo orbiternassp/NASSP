@@ -174,10 +174,10 @@ void LEM::SystemsInit()
 
 	// ECA #1 (DESCENT stage, LMP 28V DC bus)
 	ECA_1a.Init(this, Battery1, 2); // Battery 1 starts on LV
-	ECA_1b.Init(this, Battery2, 0);
+	ECA_1b.Init(this, Battery2, 2);
 
 	// ECA #2 (DESCENT stage, CDR 28V DC bus)
-	ECA_2a.Init(this, Battery3, 0);
+	ECA_2a.Init(this, Battery3, 2);
 	ECA_2b.Init(this, Battery4, 2); 
 
 	// ECA #1 and #2 are JETTISONED with the descent stage.

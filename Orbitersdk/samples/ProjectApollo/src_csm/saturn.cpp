@@ -3716,6 +3716,9 @@ void Saturn::GenericLoadStateSetup()
 
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
 
+	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
+	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
+
 	//
 	// We do our own countdown, so ignore the standard one.
 	//

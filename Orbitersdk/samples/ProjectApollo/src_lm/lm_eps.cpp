@@ -269,8 +269,8 @@ void LEM_XLBControl::UpdateFlow(double dt) {
 	case -1:
 		// If the CSM latch is reset, turn on the LV taps on batteries 1 and 4.
 		// And reset the latch to zero
-		lem->ECA_1a.input = 2; lem->ECA_1b.input = 0;
-		lem->ECA_2a.input = 0; lem->ECA_2b.input = 2;
+		lem->ECA_1a.input = 2; lem->ECA_1b.input = 2;
+		lem->ECA_2a.input = 2; lem->ECA_2b.input = 2;
 		lem->CSMToLEMPowerConnector.csm_power_latch = 0;
 		break;
 	}
