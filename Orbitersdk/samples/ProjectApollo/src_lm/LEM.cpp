@@ -912,7 +912,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Delete LM/SLA docking port at LM extraction from SIVB or staging
-	if (docksla && ((!DockingStatus(1)) || (stage > 1))) {
+	if (docksla && (!DockingStatus(1) || stage > 1)) {
 		DelDock(docksla);
 		docksla = NULL;
 	}
