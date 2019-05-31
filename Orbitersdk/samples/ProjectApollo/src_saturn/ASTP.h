@@ -77,6 +77,7 @@ public:
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkDockEvent(int dock, OBJHANDLE connected);
+	void clbkPostCreation();
 
 	void init();
 	void Setup();
@@ -91,6 +92,7 @@ protected:
 	//
 
 	ATTACHMENTHANDLE hattDROGUE;
+	DOCKHANDLE docksla;
 
 	MultiConnector DMToCSMConnector;
 	DMCommandConnector CSMToDMCommandConnector;

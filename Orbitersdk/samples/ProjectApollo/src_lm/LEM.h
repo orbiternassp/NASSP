@@ -1439,6 +1439,8 @@ protected:
 
 	ATTACHMENTHANDLE hattDROGUE;
 
+	DOCKHANDLE docksla;
+
 	UINT stage;
 	int status;
 

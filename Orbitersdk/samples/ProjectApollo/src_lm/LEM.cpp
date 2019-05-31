@@ -235,6 +235,18 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
+	// Switch to compatible dock mode
+	SetDockMode(0);
+
+	// Docking port (0)
+	SetLmDockingPort(2.6);
+
+	// Docking port used for LM/SLA connection (1)
+	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
+	VECTOR3 dockdir = { 0,-1,0 };
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
+	docksla = CreateDock(dockpos, dockdir, dockrot);
+
 	// Init further down
 	Init();
 }
@@ -898,6 +910,12 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 			SeparateStage(stage);
 		}
 	}
+
+	// Delete LM/SLA docking port at LM extraction from SIVB or staging
+	if (docksla && (!DockingStatus(1) || stage > 1)) {
+		DelDock(docksla);
+		docksla = NULL;
+	}
 }
 
 
@@ -1446,17 +1464,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
-	// Switch to compatible dock mode 
-	SetDockMode(0);
-	SetLmDockingPort(2.6);
-
-	// Docking port used for LM/SLA connection
-	DOCKHANDLE docksla;
-	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
-	VECTOR3 dockdir = { 0,-1,0 };
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	docksla = CreateDock(dockpos, dockdir, dockrot);
-
 	//
 	// Scan the launchpad config file.
 	//
@@ -1482,6 +1489,12 @@ void LEM::clbkPostCreation()
 				|| !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17)) pMCC = static_cast<MCC*>(pVessel);
 		}
 		else pMCC = NULL;
+	}
+
+	// Delete LM/SLA docking port if LM extracted from SIVB
+	if (docksla && !DockingStatus(1)) {
+		DelDock(docksla);
+		docksla = NULL;
 	}
 }
 
