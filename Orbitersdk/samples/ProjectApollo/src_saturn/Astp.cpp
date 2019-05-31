@@ -71,6 +71,16 @@ ASTP::ASTP (OBJHANDLE hObj, int fmodel)
 CSMToDMCommandConnector(this)
 
 {
+	// Switch to compatible dock mode
+	SetDockMode(0);
+
+	// Docking port (0)
+	CreateDock(_V(0.0, -0.16, 1.8), DM_CSM_DOCKING_PORT_DIR, _V(0.0, -1.0, 0));
+	hattDROGUE = CreateAttachment(true, _V(0.0, -0.16, 1.8), DM_CSM_DOCKING_PORT_DIR, _V(1.0, 0.0, 0), "PADROGUE");
+
+	// Docking port used for DM/SLA connection (1)
+	docksla = CreateDock(_V(0.0, -0.16, -1.421), DM_SLA_DOCKING_PORT_DIR, _V(-1.0, 0.0, 0.0));
+
 	init();
 }
 
@@ -123,21 +133,15 @@ void ASTP::Setup()
 
     VECTOR3 mesh_dir=_V(0,0,0);
 	AddMesh (hastp, &mesh_dir);
-
-	// Switch to compatible dock mode 
-	SetDockMode(0);
-
-	CreateDock(_V(0.0, -0.16, 1.8), DM_CSM_DOCKING_PORT_DIR, _V(0.0, -1.0, 0));
-	hattDROGUE = CreateAttachment(true, _V(0.0, -0.16, 1.8), DM_CSM_DOCKING_PORT_DIR, _V(1.0, 0.0, 0), "PADROGUE");
-
-	// Docking port used for DM/SLA connection
-	DOCKHANDLE docksla;
-	docksla = CreateDock(_V(0.0, -0.16, -1.421), DM_SLA_DOCKING_PORT_DIR, _V(-1.0, 0.0, 0.0));
 }
 
 void ASTP::clbkPreStep(double simt, double simdt, double mjd)
 {
-
+	// Delete DM/SLA docking port at DM extraction from SIVB
+	if (docksla && !DockingStatus(1)) {
+		DelDock(docksla);
+		docksla = NULL;
+	}
 }
 
 void ASTP::clbkDockEvent(int dock, OBJHANDLE connected)
@@ -153,6 +157,14 @@ void ASTP::clbkDockEvent(int dock, OBJHANDLE connected)
 		{
 			UndockConnectors(dock);
 		}
+	}
+}
+void ASTP::clbkPostCreation() {
+
+	// Delete DM/SLA docking port if DM extracted from SIVB
+	if (docksla && !DockingStatus(1)) {
+		DelDock(docksla);
+		docksla = NULL;
 	}
 }
 
