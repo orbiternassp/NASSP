@@ -339,8 +339,6 @@ void LEM::Init()
 	AscentEmptyMassKg = 2150.0;
 	DescentEmptyMassKg = 2224.0;
 
-	SepFromSLA = false;
-
 	ApolloNo = 0;
 	Landed = false;
 	NoLegs = false;
@@ -913,15 +911,10 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		}
 	}
 
-	// Delete LM/SLA docking port when separating from SIVB
-	if (!SepFromSLA) {
-		if (docksla) {
-			if ((!DockingStatus(1)) || (stage > 1)) {
-				DelDock(docksla);
-				docksla = NULL;
-				SepFromSLA = true;
-			}
-		}
+	// Delete LM/SLA docking port at LM extraction from SIVB or staging
+	if (docksla && ((!DockingStatus(1)) || (stage > 1))) {
+		DelDock(docksla);
+		docksla = NULL;
 	}
 }
 
@@ -1241,11 +1234,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 			sscanf(line + 6, "%d", &i);
 			NoLegs = (i == 1);
 		}
-		else if (!strnicmp(line, "SEPFROMSLA", 10)) {
-			int i;
-			sscanf(line + 10, "%d", &i);
-			SepFromSLA = (i == 1);
-		}
 		else if (!strnicmp(line, "DSCFUEL", 7)) {
 			sscanf(line + 7, "%f", &ftcp);
 			DescentFuelMassKg = ftcp;
@@ -1503,11 +1491,10 @@ void LEM::clbkPostCreation()
 		else pMCC = NULL;
 	}
 
-	if (SepFromSLA) {
-		if (docksla) {
-			DelDock(docksla);
-			docksla = NULL;
-		}
+	// Delete LM/SLA docking port if LM extracted from SIVB
+	if (docksla && !DockingStatus(1)) {
+		DelDock(docksla);
+		docksla = NULL;
 	}
 }
 
@@ -1690,7 +1677,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	{
 		papiWriteScenario_bool(scn, "NOLEGS", NoLegs);
 	}
-	papiWriteScenario_bool(scn, "SEPFROMSLA", SepFromSLA);
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
 	papiWriteScenario_bool(scn, "INFOV", InFOV);

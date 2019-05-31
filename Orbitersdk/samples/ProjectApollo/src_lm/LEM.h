@@ -1440,7 +1440,6 @@ protected:
 	ATTACHMENTHANDLE hattDROGUE;
 
 	DOCKHANDLE docksla;
-	bool SepFromSLA;
 
 	UINT stage;
 	int status;
