@@ -235,6 +235,18 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
+	// Switch to compatible dock mode
+	SetDockMode(0);
+
+	// Docking port (0)
+	SetLmDockingPort(2.6);
+
+	// Docking port used for LM/SLA connection (1)
+	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
+	VECTOR3 dockdir = { 0,-1,0 };
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
+	docksla = CreateDock(dockpos, dockdir, dockrot);
+
 	// Init further down
 	Init();
 }
@@ -326,6 +338,8 @@ void LEM::Init()
 	AscentFuelMassKg = 2345.0;
 	AscentEmptyMassKg = 2150.0;
 	DescentEmptyMassKg = 2224.0;
+
+	SepFromSLA = false;
 
 	ApolloNo = 0;
 	Landed = false;
@@ -898,6 +912,17 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 			SeparateStage(stage);
 		}
 	}
+
+	// Delete LM/SLA docking port when separating from SIVB
+	if (!SepFromSLA) {
+		if (docksla) {
+			if ((!DockingStatus(1)) || (stage > 1)) {
+				DelDock(docksla);
+				docksla = NULL;
+				SepFromSLA = true;
+			}
+		}
+	}
 }
 
 
@@ -1216,6 +1241,11 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 			sscanf(line + 6, "%d", &i);
 			NoLegs = (i == 1);
 		}
+		else if (!strnicmp(line, "SEPFROMSLA", 10)) {
+			int i;
+			sscanf(line + 10, "%d", &i);
+			SepFromSLA = (i == 1);
+		}
 		else if (!strnicmp(line, "DSCFUEL", 7)) {
 			sscanf(line + 7, "%f", &ftcp);
 			DescentFuelMassKg = ftcp;
@@ -1446,17 +1476,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
-	// Switch to compatible dock mode 
-	SetDockMode(0);
-	SetLmDockingPort(2.6);
-
-	// Docking port used for LM/SLA connection
-	DOCKHANDLE docksla;
-	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
-	VECTOR3 dockdir = { 0,-1,0 };
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	docksla = CreateDock(dockpos, dockdir, dockrot);
-
 	//
 	// Scan the launchpad config file.
 	//
@@ -1482,6 +1501,13 @@ void LEM::clbkPostCreation()
 				|| !_strnicmp(pVessel->GetClassName(), "ProjectApollo/MCC", 17)) pMCC = static_cast<MCC*>(pVessel);
 		}
 		else pMCC = NULL;
+	}
+
+	if (SepFromSLA) {
+		if (docksla) {
+			DelDock(docksla);
+			docksla = NULL;
+		}
 	}
 }
 
@@ -1664,6 +1690,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	{
 		papiWriteScenario_bool(scn, "NOLEGS", NoLegs);
 	}
+	papiWriteScenario_bool(scn, "SEPFROMSLA", SepFromSLA);
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
 	papiWriteScenario_bool(scn, "INFOV", InFOV);
