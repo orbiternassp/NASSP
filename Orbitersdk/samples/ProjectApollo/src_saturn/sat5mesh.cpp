@@ -1475,7 +1475,7 @@ void SaturnV::SeparateStage (int new_stage)
 			habort = oapiCreateVesselEx(VName, "ProjectApollo/Saturn5Abort1", &vs3);
 
 			Sat5Abort1 *stage1 = static_cast<Sat5Abort1 *> (oapiGetVesselInterface(habort));
-			stage1->SetState(new_stage == CM_STAGE);
+			stage1->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
@@ -1501,7 +1501,7 @@ void SaturnV::SeparateStage (int new_stage)
 			habort = oapiCreateVessel(VName, "ProjectApollo/Saturn5Abort1", vs1);
 
 			Sat5Abort1 *stage1 = static_cast<Sat5Abort1 *> (oapiGetVesselInterface(habort));
-			stage1->SetState(new_stage == CM_STAGE);
+			stage1->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
@@ -1529,7 +1529,7 @@ void SaturnV::SeparateStage (int new_stage)
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort2", vs1);
 
 		Sat5Abort2 *stage2 = static_cast<Sat5Abort2 *> (oapiGetVesselInterface(habort));
-		stage2->SetState(new_stage == CM_STAGE);
+		stage2->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 		if (new_stage == CSM_LEM_STAGE)
 		{

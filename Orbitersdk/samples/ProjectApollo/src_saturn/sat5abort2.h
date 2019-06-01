@@ -22,18 +22,46 @@
 
   **************************************************************************/
 
-class Sat5Abort2: public VESSEL {
+class Sat5Abort2: public VESSEL3 {
 
 public:
 
 	Sat5Abort2 (OBJHANDLE hObj, int fmodel);
 	virtual ~Sat5Abort2();
-	void Setup(bool sm);
-	virtual void SetState(bool sm);
+	void init();
+	void Setup();
+	void clbkPreStep(double simt, double simdt, double mjd);
+	void clbkPostStep(double simt, double simdt, double mjd);
+	virtual void SetState(bool sm, bool lr, int pl);
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
+	void DefineAnimations();
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
 
 protected:
+
+	bool PanelsOpened;
+	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
+
+	bool smpresent;                 ///< SM flag
+	bool LowRes;                    ///< Mesh resolution flag
+	int PayloadType;				///< Payload type.
+
+	OBJHANDLE hs4b1;
+	OBJHANDLE hs4b2;
+	OBJHANDLE hs4b3;
+	OBJHANDLE hs4b4;
+
+	THGROUP_HANDLE thg_sep, thg_sepPanel;
+	UINT panelAnim;
+	double panelProc;
+	int panelTimestepCount;
+	int panelMesh1SaturnV, panelMesh2SaturnV, panelMesh3SaturnV, panelMesh4SaturnV;
+	int panelMesh1SaturnVLow, panelMesh2SaturnVLow, panelMesh3SaturnVLow, panelMesh4SaturnVLow;
+
+	void AddSepJunk();
+	void HidePanelMeshes();
 
 	//
 	// We don't actually seem to use any of these variables, even though they're
