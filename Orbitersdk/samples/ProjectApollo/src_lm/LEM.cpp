@@ -1500,18 +1500,16 @@ void LEM::clbkPostCreation()
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 {
-
-	drogue = GetDevMesh(vis, ascidx);
-	DrogueVis();
-
-	if (Crewed) {
+	if (ascidx != -1) {
+		drogue = GetDevMesh(vis, ascidx);
+		DrogueVis();
 		cdrmesh = GetDevMesh(vis, ascidx);
 		lmpmesh = GetDevMesh(vis, ascidx);
 		SetCrewMesh();
 	}
 
-	probes = GetDevMesh(vis, dscidx);
-	if (Landed && !NoLegs) {
+	if (dscidx != -1 && !NoLegs) {
+		probes = GetDevMesh(vis, dscidx);
 		HideProbes();
 	}
 }

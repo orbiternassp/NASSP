@@ -964,7 +964,7 @@ void Saturn::clbkPostCreation() {
 
 void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount)
 {
-	if (HasProbe) {
+	if (probeidx != -1 && HasProbe) {
 		probe = GetDevMesh(vis, probeidx);
 		ProbeVis();
 	}

@@ -200,7 +200,7 @@ void LEM::SetLmVesselDockStage()
 	}
 
 	SetLMMeshVis();
-	
+
 	if (!ph_Dsc)
 	{
 		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -651,7 +651,7 @@ void LEM::SetCrewMesh() {
 	GROUPEDITSPEC ges;
 
 	if (cdrmesh) {
-		if (Crewed && (CDRSuited->number == 1)) {
+		if (Crewed && CDRSuited->number == 1) {
 			ges.flags = (GRPEDIT_SETUSERFLAG);
 			ges.UsrFlag = 0;
 			for (int i = 0; i < 11; i++) oapiEditMeshGroup(cdrmesh, meshgroup_CDR[i], &ges);
@@ -662,7 +662,7 @@ void LEM::SetCrewMesh() {
 		}
 	}
 	if (lmpmesh) {
-		if (Crewed && (LMPSuited->number == 1)) {
+		if (Crewed && LMPSuited->number == 1) {
 			ges.flags = (GRPEDIT_SETUSERFLAG);
 			ges.UsrFlag = 0;
 			for (int i = 0; i < 11; i++) oapiEditMeshGroup(cdrmesh, meshgroup_LMP[i], &ges);
