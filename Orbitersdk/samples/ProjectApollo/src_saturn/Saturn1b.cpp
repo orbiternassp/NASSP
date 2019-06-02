@@ -424,6 +424,8 @@ void Saturn1b::SetSIThrusterDir(int n, double yaw, double pitch)
 
 double Saturn1b::GetSIThrustLevel()
 {
+	if (stage > LAUNCH_STAGE_ONE) return 0.0;
+
 	double lvl = 0.0;
 	for (int i = 0;i < 8;i++)
 	{

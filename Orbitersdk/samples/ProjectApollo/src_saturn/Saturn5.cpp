@@ -1073,6 +1073,8 @@ void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime)
 
 double SaturnV::GetSIThrustLevel()
 {
+	if (stage > LAUNCH_STAGE_ONE) return 0.0;
+
 	double lvl = 0.0;
 	for (int i = 0;i < 5;i++)
 	{
