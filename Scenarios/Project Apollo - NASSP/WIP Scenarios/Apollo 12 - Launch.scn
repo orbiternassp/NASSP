@@ -8,11 +8,11 @@ BEGIN_ENVIRONMENT
 END_ENVIRONMENT
 
 BEGIN_FOCUS
-  Ship Yankee Clipper
+  Ship Yankee-Clipper
 END_FOCUS
 
 BEGIN_CAMERA
-  TARGET Yankee Clipper
+  TARGET Yankee-Clipper
   MODE Extern
   POS 2.44 0.0 -90.0
   TRACKMODE TargetRelative
@@ -23,7 +23,7 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-Yankee Clipper:ProjectApollo\Saturn5
+Yankee-Clipper:ProjectApollo\Saturn5
   STATUS Landed Earth
   BASE Cape Canaveral:2
   POS -80.6041140 28.6082888
@@ -780,19 +780,19 @@ Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
   POS -80.6208716 28.5950241
   HEADING 65.81
-  LVNAME Yankee Clipper
+  LVNAME Yankee-Clipper
 END
 ML:ProjectApollo\ML
   STATUS Landed Earth
   POS -80.6041122 28.6083723
   HEADING 0.58
-  LVNAME Yankee Clipper
+  LVNAME Yankee-Clipper
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
   POS -80.6509353 28.5860469
   HEADING 75.67
-  LVNAME Yankee Clipper
+  LVNAME Yankee-Clipper
 END
 MSS:ProjectApollo\MSS
   STATUS Landed Earth
