@@ -26,6 +26,8 @@
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
+#include "nasspdefs.h"
+#include "papi.h"
 
 #include "sat5abort3.h"
 
@@ -38,6 +40,11 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 
 
 static int refcount = 0;
+static MESHHANDLE hsat5stg3low;
+static MESHHANDLE hsat5stg31low;
+static MESHHANDLE hsat5stg32low;
+static MESHHANDLE hsat5stg33low;
+static MESHHANDLE hsat5stg34low;
 static MESHHANDLE hsat5stg3;
 static MESHHANDLE hsat5stg31;
 static MESHHANDLE hsat5stg32;
@@ -68,6 +75,7 @@ Sat5Abort3::~Sat5Abort3 ()
 void Sat5Abort3::init()
 
 {
+	LowRes = false;
 }
 
 void Sat5Abort3::Setup()
@@ -100,17 +108,67 @@ void Sat5Abort3::Setup()
     ClearAttExhaustRefs();
 	//vessel->ShiftCentreOfMass (_V(0,0,12.25));
 	VECTOR3 mesh_dir=_V(0,0,2.-STG1O);
-	AddMesh (hsat5stg3, &mesh_dir);
-	mesh_dir=_V(-1.48,-1.48,14.55-STG1O);
-	AddMesh (hsat5stg31, &mesh_dir);
-	mesh_dir=_V(1.48,-1.48,14.55-STG1O);
-	AddMesh (hsat5stg32, &mesh_dir);
-	mesh_dir=_V(1.48,1.48,14.55-STG1O);
-    AddMesh (hsat5stg33, &mesh_dir);
-	mesh_dir=_V(-1.48,1.48,14.55-STG1O);
-    AddMesh (hsat5stg34, &mesh_dir);
+	if (LowRes) {
+		AddMesh(hsat5stg3low, &mesh_dir);
+		mesh_dir = _V(-1.48, -1.48, 14.55 - STG1O);
+		AddMesh(hsat5stg31low, &mesh_dir);
+		mesh_dir = _V(1.48, -1.48, 14.55 - STG1O);
+		AddMesh(hsat5stg32low, &mesh_dir);
+		mesh_dir = _V(1.48, 1.48, 14.55 - STG1O);
+		AddMesh(hsat5stg33low, &mesh_dir);
+		mesh_dir = _V(-1.48, 1.48, 14.55 - STG1O);
+		AddMesh(hsat5stg34low, &mesh_dir);
+	}
+	else
+	{
+		AddMesh(hsat5stg3, &mesh_dir);
+		mesh_dir = _V(-1.48, -1.48, 14.55 - STG1O);
+		AddMesh(hsat5stg31, &mesh_dir);
+		mesh_dir = _V(1.48, -1.48, 14.55 - STG1O);
+		AddMesh(hsat5stg32, &mesh_dir);
+		mesh_dir = _V(1.48, 1.48, 14.55 - STG1O);
+		AddMesh(hsat5stg33, &mesh_dir);
+		mesh_dir = _V(-1.48, 1.48, 14.55 - STG1O);
+		AddMesh(hsat5stg34, &mesh_dir);
+	}
 	mesh_dir = _V(0, SMVO, 19.1 - STG1O);
 	AddMesh(hSM, &mesh_dir);
+}
+
+void Sat5Abort3::SetState(bool lowres)
+{
+	LowRes = lowres;
+	Setup();
+}
+
+void Sat5Abort3::clbkSaveState(FILEHANDLE scn)
+
+{
+	VESSEL2::clbkSaveState(scn);
+
+	papiWriteScenario_bool(scn, "LOWRES", LowRes);
+}
+
+void Sat5Abort3::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
+
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line))
+	{
+		if (!_strnicmp(line, "LOWRES", 6))
+		{
+			int i;
+			sscanf(line + 6, "%d", &i);
+			LowRes = (i != 0);
+		}
+		else
+		{
+			ParseScenarioLineEx(line, vstatus);
+		}
+	}
+
+	Setup();
 }
 
 // ==============================================================
@@ -120,12 +178,17 @@ void Sat5Abort3::Setup()
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hsat5stg3 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg3");
-		hsat5stg31 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg31");
-		hsat5stg32 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg32");
-		hsat5stg33 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg33");
-		hsat5stg34 = oapiLoadMeshGlobal ("ProjectApollo/sat5stg34");
-		hSM = oapiLoadMeshGlobal ("ProjectApollo/SM");
+		hsat5stg3low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg3");
+		hsat5stg31low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg31");
+		hsat5stg32low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg32");
+		hsat5stg33low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg33");
+		hsat5stg34low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg34");
+		hsat5stg3 = oapiLoadMeshGlobal("ProjectApollo/sat5stg3");
+		hsat5stg31 = oapiLoadMeshGlobal("ProjectApollo/sat5stg31");
+		hsat5stg32 = oapiLoadMeshGlobal("ProjectApollo/sat5stg32");
+		hsat5stg33 = oapiLoadMeshGlobal("ProjectApollo/sat5stg33");
+		hsat5stg34 = oapiLoadMeshGlobal("ProjectApollo/sat5stg34");
+		hSM = oapiLoadMeshGlobal("ProjectApollo/SM");
 
 	}
 	return new Sat5Abort3 (hvessel, flightmodel);
@@ -138,6 +201,7 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 
 void Sat5Abort3::clbkSetClassCaps(FILEHANDLE cfg)
 {
-	Setup();
+	VESSEL2::clbkSetClassCaps(cfg);
+	init();
 }
 

@@ -71,6 +71,7 @@ const double SMVO = -0.14;
 const double STG0O= 0;
 const double STG1O= 10.25;
 const double STG2O= 20;
+const double PLOFS = 2.0;
 
 Sat5Abort1::Sat5Abort1 (OBJHANDLE hObj, int fmodel)
 : VESSEL3 (hObj, fmodel)
@@ -88,6 +89,8 @@ Sat5Abort1::~Sat5Abort1 ()
 void Sat5Abort1::init()
 
 {
+	SmPresent = false;
+	LowRes = false;
 	PayloadType = PAYLOAD_EMPTY;
 
 	PanelsOpened = false;
@@ -182,34 +185,39 @@ void Sat5Abort1::Setup()
 		AddMesh(hsat5stg3, &mesh_dir);
 	}
 
-	if (smpresent)
+	if (SmPresent)
 	{
 		mesh_dir = _V(0, SMVO, 19.1 + STG0O);
 		AddMesh(hSM, &mesh_dir);
 	}
 	else
 	{
-		mesh_dir = _V(0, 0, 9.8 + STG0O);
 		switch (PayloadType) {
 		case PAYLOAD_LEM:
+			mesh_dir = _V(0, 0, 9.8 + PLOFS);
 			AddMesh(hLM, &mesh_dir);
 			break;
 
 		case PAYLOAD_LM1:
+			mesh_dir = _V(0, 0, 9.8 + PLOFS);
 			AddMesh(hLM1, &mesh_dir);
 			break;
 
 		case PAYLOAD_LTA:
 		case PAYLOAD_LTA6:
+			mesh_dir = _V(0, 0, 9.6 + PLOFS);
 			AddMesh(hlta_2r, &mesh_dir);
 			break;
 
 		case PAYLOAD_LTA8:
+			mesh_dir = _V(0.0, 0, 8.8 + PLOFS);
 			AddMesh(hapollo8lta, &mesh_dir);
 			break;
 
 		case PAYLOAD_DOCKING_ADAPTER:
+			mesh_dir = _V(0, -0.15, 7.8 + PLOFS);
 			AddMesh(hastp, &mesh_dir);
+			mesh_dir = _V(-1.04, 1.04, 9.1 + PLOFS);
 			AddMesh(hCOAStarget, &mesh_dir);
 			break;
 
@@ -217,10 +225,12 @@ void Sat5Abort1::Setup()
 			break;
 
 		case PAYLOAD_TARGET:
+			mesh_dir = _V(-1.3, 0, 9.6 + PLOFS);
 			AddMesh(hCOAStarget, &mesh_dir);
 			break;
 
 		case PAYLOAD_ASTP:
+			mesh_dir = _V(0, 0, 8.6 + PLOFS);
 			AddMesh(hastp, &mesh_dir);
 			break;
 		}
@@ -282,7 +292,7 @@ void Sat5Abort1::clbkPreStep(double simt, double simdt, double mjd) {
 	// Seperate or open the SLA panels.
 	//
 
-	if (!smpresent) {
+	if (!SmPresent) {
 		if (panelTimestepCount < 2) {
 			panelTimestepCount++;
 		}
@@ -322,13 +332,13 @@ void Sat5Abort1::clbkPreStep(double simt, double simdt, double mjd) {
 				vs5.eng_main = vs5.eng_hovr = 0.0;
 
 
-				ofs2 = _V(-3.25, -3.3, 12.2); //set z to proper value
+				ofs2 = _V(-3.25, -3.3, 12.2 + PLOFS);
 				vel2 = _V(-0.5, -0.5, -0.55);
-				ofs3 = _V(3.25, -3.3, 12.2);
+				ofs3 = _V(3.25, -3.3, 12.2 + PLOFS);
 				vel3 = _V(0.5, -0.5, -0.55);
-				ofs4 = _V(3.25, 3.3, 12.2);
+				ofs4 = _V(3.25, 3.3, 12.2 + PLOFS);
 				vel4 = _V(0.5, 0.5, -0.55);
-				ofs5 = _V(-3.25, 3.3, 12.2);
+				ofs5 = _V(-3.25, 3.3, 12.2 + PLOFS);
 				vel5 = _V(-0.5, 0.5, -0.55);
 
 				VECTOR3 rofs2, rvel2 = { vs2.rvel.x, vs2.rvel.y, vs2.rvel.z };
@@ -419,11 +429,11 @@ void Sat5Abort1::clbkPostStep(double simt, double simdt, double mjd) {
 	// Nothing for now
 }
 
-void Sat5Abort1::SetState(bool sm, bool lr, int pl)
+void Sat5Abort1::SetState(bool sm, bool lowres, int payload)
 {
-	smpresent = sm;
-	LowRes = lr;
-	PayloadType = pl;
+	SmPresent = sm;
+	LowRes = lowres;
+	PayloadType = payload;
 	Setup();
 }
 
@@ -432,7 +442,7 @@ void Sat5Abort1::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL2::clbkSaveState(scn);
 
-	papiWriteScenario_bool(scn, "SM", smpresent);
+	papiWriteScenario_bool(scn, "SM", SmPresent);
 	papiWriteScenario_bool(scn, "LOWRES", LowRes);
 	oapiWriteScenario_int(scn, "PAYLOAD", PayloadType);
 	oapiWriteScenario_float(scn, "PANELPROC", panelProc);
@@ -451,7 +461,7 @@ void Sat5Abort1::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 		{
 			int i;
 			sscanf(line + 2, "%d", &i);
-			smpresent = (i != 0);
+			SmPresent = (i != 0);
 		}
 		else if (!_strnicmp(line, "LOWRES", 6))
 		{

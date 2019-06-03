@@ -32,7 +32,7 @@ public:
 	void Setup();
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
-	virtual void SetState(bool sm, bool lr, int pl);
+	virtual void SetState(bool sm, bool lowres, int payload);
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void DefineAnimations();
@@ -44,7 +44,7 @@ protected:
 	bool PanelsOpened;
 	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
 
-	bool smpresent;                 ///< SM flag
+	bool SmPresent;                 ///< SM flag
 	bool LowRes;                    ///< Mesh resolution flag
 	int PayloadType;				///< Payload type.
 
