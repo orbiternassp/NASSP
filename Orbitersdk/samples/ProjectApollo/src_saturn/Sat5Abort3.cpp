@@ -26,7 +26,6 @@
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
-#include "nasspdefs.h"
 #include "papi.h"
 
 #include "sat5abort3.h"
