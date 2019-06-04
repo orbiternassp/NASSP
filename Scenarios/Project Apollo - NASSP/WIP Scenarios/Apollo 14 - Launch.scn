@@ -23,7 +23,7 @@ BEGIN_PANEL
 END_PANEL
 
 BEGIN_SHIPS
-Kitty Hawk:ProjectApollo/Saturn5
+Kitty-Hawk:ProjectApollo/Saturn5
   STATUS Landed Earth
   BASE Cape Canaveral:2
   POS -80.6041140 28.6082888
@@ -800,19 +800,19 @@ Crawler-Transporter:ProjectApollo\Crawler
   STATUS Landed Earth
   POS -80.6208716 28.5950241
   HEADING 65.81
-  LVNAME Kitty Hawk
+  LVNAME Kitty-Hawk
 END
 ML:ProjectApollo\ML
   STATUS Landed Earth
   POS -80.6041122 28.6083723
   HEADING 0.58
-  LVNAME Kitty Hawk
+  LVNAME Kitty-Hawk
 END
 VAB:ProjectApollo\VAB
   STATUS Landed Earth
   POS -80.6509353 28.5860469
   HEADING 75.67
-  LVNAME Kitty Hawk
+  LVNAME Kitty-Hawk
 END
 MSS:ProjectApollo\MSS
   STATUS Landed Earth

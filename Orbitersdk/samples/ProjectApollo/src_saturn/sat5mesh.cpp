@@ -49,6 +49,7 @@
 #include "sm.h"
 #include "Sat5Abort1.h"
 #include "Sat5Abort2.h"
+#include "Sat5Abort3.h"
 
 static PARTICLESTREAMSPEC srb_contrail = {
 	0, 
@@ -1250,18 +1251,25 @@ void SaturnV::SeparateStage (int new_stage)
 		GetApolloName(VName);
 		strcat (VName, "-INTSTG");
 
-		switch (SII_UllageNum) {
-		case 4:
-			CName = "ProjectApollo/sat5intstg4";
-			break;
+		if (LowRes)
+		{
+			CName = "ProjectApollo/sat5intstglowres";
+		}
+		else
+		{
+			switch (SII_UllageNum) {
+			case 4:
+				CName = "ProjectApollo/sat5intstg4";
+				break;
 
-		case 8:
-			CName = "ProjectApollo/sat5intstg8";
-			break;
+			case 8:
+				CName = "ProjectApollo/sat5intstg8";
+				break;
 
-		default:
-			CName = "ProjectApollo/sat5intstg";
-			break;
+			default:
+				CName = "ProjectApollo/sat5intstg";
+				break;
+			}
 		}
 
 		hintstg = oapiCreateVessel(VName, CName, vs1);
@@ -1475,7 +1483,7 @@ void SaturnV::SeparateStage (int new_stage)
 			habort = oapiCreateVesselEx(VName, "ProjectApollo/Saturn5Abort1", &vs3);
 
 			Sat5Abort1 *stage1 = static_cast<Sat5Abort1 *> (oapiGetVesselInterface(habort));
-			stage1->SetState(new_stage == CM_STAGE);
+			stage1->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
@@ -1501,7 +1509,7 @@ void SaturnV::SeparateStage (int new_stage)
 			habort = oapiCreateVessel(VName, "ProjectApollo/Saturn5Abort1", vs1);
 
 			Sat5Abort1 *stage1 = static_cast<Sat5Abort1 *> (oapiGetVesselInterface(habort));
-			stage1->SetState(new_stage == CM_STAGE);
+			stage1->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
@@ -1529,7 +1537,7 @@ void SaturnV::SeparateStage (int new_stage)
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort2", vs1);
 
 		Sat5Abort2 *stage2 = static_cast<Sat5Abort2 *> (oapiGetVesselInterface(habort));
-		stage2->SetState(new_stage == CM_STAGE);
+		stage2->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 		if (new_stage == CSM_LEM_STAGE)
 		{
@@ -1554,6 +1562,9 @@ void SaturnV::SeparateStage (int new_stage)
 		char VName[256];
 		GetApolloName(VName); strcat(VName, "-ABORT");
 		habort = oapiCreateVessel(VName, "ProjectApollo/Saturn5Abort3", vs1);
+
+		Sat5Abort3 *stage3 = static_cast<Sat5Abort3 *> (oapiGetVesselInterface(habort));
+		stage3->SetState(LowRes);
 		
 		SetReentryStage();
 		ShiftCentreOfMass(_V(0, 0, 13.15 + 2.0499));
