@@ -187,7 +187,7 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hsat5stg32 = oapiLoadMeshGlobal("ProjectApollo/sat5stg32");
 		hsat5stg33 = oapiLoadMeshGlobal("ProjectApollo/sat5stg33");
 		hsat5stg34 = oapiLoadMeshGlobal("ProjectApollo/sat5stg34");
-		hSM = oapiLoadMeshGlobal("ProjectApollo/SM");
+		hSM = oapiLoadMeshGlobal("ProjectApollo/SM_uext");
 
 	}
 	return new Sat5Abort3 (hvessel, flightmodel);
