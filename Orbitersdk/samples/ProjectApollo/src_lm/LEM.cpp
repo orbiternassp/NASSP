@@ -928,7 +928,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	{
 		double dustlvl = min(1.0, max(0.0, GetThrusterLevel(th_hover[0]))*(-(vsAlt - 2.0) / 15.0 + 1.0));
 
-		if (stage == 1 && thg_dust) {
+		if (stage < 2 && thg_dust) {
 			if (vsAlt < 15.0) {
 				SetThrusterGroupLevel(thg_dust, dustlvl);
 			}
@@ -1082,6 +1082,9 @@ void LEM::SetGenericStageState(int stat)
 		stage = 1;
 		SetLmVesselDockStage();
 		SetLmVesselHoverStage();
+
+		// Update touchdown points with current mass
+		if (Landed) HoverStageTouchdownPoints(GetMass());
 
 		if (CDREVA_IP) {
 			SetupEVA();

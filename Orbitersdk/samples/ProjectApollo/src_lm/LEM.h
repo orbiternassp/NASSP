@@ -603,6 +603,8 @@ protected:
 	void RCSSoundTimestep();
 	// void GetDockStatus();
 	void JostleViewpoint(double amount);
+	void HoverStageTouchdownPoints(double mass);
+	void AddDust();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();

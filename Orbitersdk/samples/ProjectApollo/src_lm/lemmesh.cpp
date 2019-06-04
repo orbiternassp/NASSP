@@ -143,7 +143,8 @@ void LEM::SetLmVesselDockStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	double Mass = 15876;
+	double tdph = -3.86;
+	double Mass = 7137.75;
 	double ro = 1;
 	double ro1 = 4;
 	TOUCHDOWNVTX td[7];
@@ -157,13 +158,13 @@ void LEM::SetLmVesselDockStage()
 		td[i].stiffness = stiffness;
 	}
 	td[0].pos.x = 0;
-	td[0].pos.y = -3.86;
+	td[0].pos.y = tdph;
 	td[0].pos.z = 1 * ro;
 	td[1].pos.x = -cos(30 * RAD)*ro;
-	td[1].pos.y = -3.86;
+	td[1].pos.y = tdph;
 	td[1].pos.z = -sin(30 * RAD)*ro;
 	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = -3.86;
+	td[2].pos.y = tdph;
 	td[2].pos.z = -sin(30 * RAD)*ro;
 	td[3].pos.x = cos(30 * RAD)*ro1;
 	td[3].pos.y = 0;
@@ -229,6 +230,8 @@ void LEM::SetLmVesselDockStage()
 
 	AddExhaust(es_hover);
 
+	AddDust();
+
 	SetCameraOffset(_V(-0.61, 1.625, 1.39)); // Has to be the same as LPD view
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-5.4516);
@@ -272,50 +275,8 @@ void LEM::SetLmVesselHoverStage()
 	ClearAttExhaustRefs();
 
 	double Mass = 7137.75;
-	double ro = 4.25;
-	TOUCHDOWNVTX td[8];
-	double x_target = -0.25;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<8; i++) {
-		if (i < 5) {
-			td[i].damping = damping;
-			td[i].stiffness = stiffness;
-		}
-		else {
-			td[i].damping = damping / 100;
-			td[i].stiffness = stiffness / 100;
-		}
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-	}
 
-	td[0].pos.x = 0;
-	td[0].pos.y = -3.86;
-	td[0].pos.z = ro;
-	td[1].pos.x = -ro;
-	td[1].pos.y = -3.86;
-	td[1].pos.z = 0;
-	td[2].pos.x = 0;
-	td[2].pos.y = -3.86;
-	td[2].pos.z = -ro;
-	td[3].pos.x = ro;
-	td[3].pos.y = -3.86;
-	td[3].pos.z = 0;
-	td[4].pos.x = 0;
-	td[4].pos.y = 3.86;
-	td[4].pos.z = 0;
-	td[5].pos.x = -ro;
-	td[5].pos.y = -5.57;
-	td[5].pos.z = 0;
-	td[6].pos.x = 0;
-	td[6].pos.y = -5.57;
-	td[6].pos.z = -ro;
-	td[7].pos.x = ro;
-	td[7].pos.y = -5.57;
-	td[7].pos.z = 0;
-
-	SetTouchdownPoints(td, 8);
+	if (!NoLegs) HoverStageTouchdownPoints(Mass);
 
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -347,25 +308,8 @@ void LEM::SetLmVesselHoverStage()
 
 	AddExhaust(es_hover);
 
-	// Simulate the dust kicked up near
-	// the lunar surface
-	int i;
+	AddDust();
 
-	VECTOR3	s_exhaust_pos1 = _V(0, -15, 0);
-	VECTOR3 s_exhaust_pos2 = _V(0, -15, 0);
-	VECTOR3	s_exhaust_pos3 = _V(0, -15, 0);
-	VECTOR3 s_exhaust_pos4 = _V(0, -15, 0);
-
-	th_dust[0] = CreateThruster(s_exhaust_pos1, _V(-1, 0, 1), 0, ph_Dsc);
-	th_dust[1] = CreateThruster(s_exhaust_pos2, _V(1, 0, 1), 0, ph_Dsc);
-	th_dust[2] = CreateThruster(s_exhaust_pos3, _V(1, 0, -1), 0, ph_Dsc);
-	th_dust[3] = CreateThruster(s_exhaust_pos4, _V(-1, 0, -1), 0, ph_Dsc);
-
-	for (i = 0; i < 4; i++) {
-		AddExhaustStream(th_dust[i], &lunar_dust);
-	}
-	thg_dust = CreateThrusterGroup(th_dust, 4, THGROUP_USER);
-		
 	SetCameraOffset(_V(-0.61, 1.625, 1.39)); // Has to be the same as LPD view
 	status = 1;
 	stage = 1;
@@ -592,6 +536,10 @@ void LEM::SeparateStage (UINT stage)
 void LEM::SetLmLandedMesh() {
 
 	Landed = true;
+
+	// Update touchdown points with current mass
+	HoverStageTouchdownPoints(GetMass());
+
 	HideProbes();
 }
 
@@ -760,6 +708,79 @@ void LEM::SetDockingLights() {
 		dockingLights[i].active = false;
 		AddBeacon(dockingLights+i);
 	}
+}
+
+void LEM::HoverStageTouchdownPoints(double mass) {
+
+	double tdph = -3.86;
+	double probeh = -5.57;
+	double Mass = mass;
+	double ro = 4.25;
+	TOUCHDOWNVTX td[8];
+	double x_target = -0.25;
+	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(Mass*stiffness));
+	for (int i = 0; i < 8; i++) {
+		if (i < 5) {
+			td[i].damping = damping;
+			td[i].stiffness = stiffness;
+		}
+		else {
+			td[i].damping = damping / 100;
+			td[i].stiffness = stiffness / 100;
+		}
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+	}
+
+	td[0].pos.x = 0;
+	td[0].pos.y = tdph;
+	td[0].pos.z = ro;
+	td[1].pos.x = -ro;
+	td[1].pos.y = tdph;
+	td[1].pos.z = 0;
+	td[2].pos.x = 0;
+	td[2].pos.y = tdph;
+	td[2].pos.z = -ro;
+	td[3].pos.x = ro;
+	td[3].pos.y = tdph;
+	td[3].pos.z = 0;
+	td[4].pos.x = 0;
+	td[4].pos.y = 3.86;
+	td[4].pos.z = 0;
+	td[5].pos.x = -ro;
+	td[5].pos.y = probeh;
+	td[5].pos.z = 0;
+	td[6].pos.x = 0;
+	td[6].pos.y = probeh;
+	td[6].pos.z = -ro;
+	td[7].pos.x = ro;
+	td[7].pos.y = probeh;
+	td[7].pos.z = 0;
+
+	SetTouchdownPoints(td, 8);
+}
+
+void LEM::AddDust() {
+
+	// Simulate the dust kicked up near
+	// the lunar surface
+	int i;
+
+	VECTOR3	s_exhaust_pos1 = _V(0, -15, 0);
+	VECTOR3 s_exhaust_pos2 = _V(0, -15, 0);
+	VECTOR3	s_exhaust_pos3 = _V(0, -15, 0);
+	VECTOR3 s_exhaust_pos4 = _V(0, -15, 0);
+
+	th_dust[0] = CreateThruster(s_exhaust_pos1, _V(-1, 0, 1), 0, ph_Dsc);
+	th_dust[1] = CreateThruster(s_exhaust_pos2, _V(1, 0, 1), 0, ph_Dsc);
+	th_dust[2] = CreateThruster(s_exhaust_pos3, _V(1, 0, -1), 0, ph_Dsc);
+	th_dust[3] = CreateThruster(s_exhaust_pos4, _V(-1, 0, -1), 0, ph_Dsc);
+
+	for (i = 0; i < 4; i++) {
+		AddExhaustStream(th_dust[i], &lunar_dust);
+	}
+	thg_dust = CreateThrusterGroup(th_dust, 4, THGROUP_USER);
 }
 
 void LEMLoadMeshes()

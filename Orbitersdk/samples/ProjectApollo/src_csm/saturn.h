@@ -1274,6 +1274,13 @@ public:
 	void TLI_Ended();
 
 	//
+	// Function for configuring 4 touchdown points in Orbiter 2016.
+	// \ mass in kg, ro (distance from center of the bottom points), tdph (height of bottom points),
+	// \ height (of the top point), x_target (stiffness/damping factor, stable default is -0.5)
+	//
+	void ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target = -0.5);
+
+	//
 	// LUA Interface
 	//
 	int clbkGeneric(int msgid, int prm, void *context);

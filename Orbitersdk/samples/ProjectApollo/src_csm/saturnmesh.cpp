@@ -640,32 +640,12 @@ void Saturn::SetCSMStage ()
 	const double CGOffset = 12.25+21.5-1.8+0.35;
 	AddSM(30.25 - CGOffset, true);
 
-	double Mass = (CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2));
-	double ro = 4;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.1;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = -cos(30 * RAD)*ro;
-	td[0].pos.y = -sin(30 * RAD)*ro;
-	td[0].pos.z = -6;
-	td[1].pos.x = 0;
-	td[1].pos.y = 1 * ro;
-	td[1].pos.z = -6;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = -sin(30 * RAD)*ro;
-	td[2].pos.z = -6;
-	td[3].pos.x = 0;
-	td[3].pos.y = 0;
-	td[3].pos.z = 5.5;
+	double td_mass = CM_EmptyMass + SM_EmptyMass + (SM_FuelMass / 2);
+	double td_width = 4.0;
+	double td_tdph = -6.0;
+	double td_height = 5.5;
 
-	SetTouchdownPoints(td, 4);
+	ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height, -0.1);
 
 	VECTOR3 mesh_dir;
 
@@ -1021,39 +1001,15 @@ void Saturn::SetReentryStage ()
 	SetSize(6.0);
 	SetEmptyMass(EmptyMass);
 
-	double Mass = 5430;
-	double ra;
+	double td_mass = 5430.0;
+	double td_width = 2.0;
+	double td_tdph = -2.5;
 	if (ApexCoverAttached) {
-		ra = -1.0;
+		td_tdph = -1.3;
 	}
-	else {
-		ra = -2.2;
-	}
-	double ro = 2;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = -cos(30 * RAD)*ro;
-	td[0].pos.y = -sin(30 * RAD)*ro;
-	td[0].pos.z = ra;
-	td[1].pos.x = 0;
-	td[1].pos.y = 1 * ro;
-	td[1].pos.z = ra;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = -sin(30 * RAD)*ro;
-	td[2].pos.z = ra;
-	td[3].pos.x = 0;
-	td[3].pos.y = 0;
-	td[3].pos.z = ra + 5.0;
+	double td_height = 5.0;
 
-	SetTouchdownPoints(td, 4);
+	ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height);
 
 	if (LESAttached)
 	{
@@ -1296,7 +1252,7 @@ void Saturn::StageSeven(double simt)
 void Saturn::StageEight(double simt)
 
 {
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 
 	// Mark apex as detached
 	ApexCoverAttached = false;
@@ -1351,8 +1307,8 @@ void Saturn::SetChuteStage1()
 {
 	SetSize(15);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass(CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	ClearAirfoilDefinitions();
 	SetPMI(_V(20,20,12));
 	SetCrossSections(_V(2.8,2.8,80.0));
@@ -1381,8 +1337,8 @@ void Saturn::SetChuteStage2()
 {
 	SetSize(22);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass (CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetPMI (_V(20,20,12));
 	SetCrossSections (_V(2.8,2.8,140.0));
 	SetCW (1.0, 1.5, 1.4, 1.4);
@@ -1408,8 +1364,8 @@ void Saturn::SetChuteStage3()
 {
 	SetSize(22);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass (CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetPMI(_V(20,20,12));
 	SetCrossSections(_V(2.8,2.8,480.0));
 	SetCW(0.7, 1.5, 1.4, 1.4);
@@ -1435,8 +1391,8 @@ void Saturn::SetChuteStage4()
 {
 	SetSize(22);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass(CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetPMI(_V(20,20,12));
 	SetCrossSections (_V(2.8,2.8,3280.0));
 	SetCW (0.7, 1.5, 1.4, 1.4);
@@ -1462,8 +1418,8 @@ void Saturn::SetSplashStage()
 {
 	SetSize(6.0);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
 	SetEmptyMass(CM_EmptyMass);
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetPMI(_V(20,20,12));
 	SetCrossSections(_V(2.8,2.8,7.0));
 	SetCW(0.5, 1.5, 1.4, 1.4);
@@ -1495,7 +1451,7 @@ void Saturn::SetRecovery()
 {
 	SetSize(10.0);
 	SetCOG_elev(2.2);
-	SetTouchdownPoints(_V(0, -10, -2.2), _V(-10, 10, -2.2), _V(10, 10, -2.2));
+	ConfigTouchdownPoints(CM_EmptyMass, 2.0, -2.5, 5.0);
 	SetEmptyMass(CM_EmptyMass);
 	SetPMI(_V(20,20,12));
 	SetCrossSections(_V(2.8,2.8,7.0));
@@ -1773,4 +1729,31 @@ void Saturn::CMLETCanardAirfoilConfig()
 
 	CreateAirfoil(LIFT_VERTICAL, _V(0.0, 0.0, 1.12), CMLETCanardVertCoeffFunc, 3.5, 11.95 / 2.0, 1.0);
 	CreateAirfoil(LIFT_HORIZONTAL, _V(0.0, 0.0, 1.12), CMLETHoriCoeffFunc, 3.5, 11.95 / 2.0, 1.0);
+}
+void Saturn::ConfigTouchdownPoints(double mass, double ro, double tdph, double height, double x_target)
+{
+
+	TOUCHDOWNVTX td[4];
+	double stiffness = (-1)*(mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(mass*stiffness));
+	for (int i = 0; i < 4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD)*ro;
+	td[0].pos.y = -sin(30 * RAD)*ro;
+	td[0].pos.z = tdph;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * ro;
+	td[1].pos.z = tdph;
+	td[2].pos.x = cos(30 * RAD)*ro;
+	td[2].pos.y = -sin(30 * RAD)*ro;
+	td[2].pos.z = tdph;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = tdph + height;
+
+	SetTouchdownPoints(td, 4);
 }

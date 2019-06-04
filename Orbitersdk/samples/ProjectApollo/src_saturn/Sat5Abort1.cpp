@@ -386,9 +386,9 @@ void Sat5Abort1::clbkPreStep(double simt, double simdt, double mjd) {
 
 
 				hs4b1 = oapiCreateVessel("ABORT-S4B1", "ProjectApollo/sat5stg31", vs2);
-				hs4b2 = oapiCreateVessel("ABORT-S4B1", "ProjectApollo/sat5stg32", vs3);
-				hs4b3 = oapiCreateVessel("ABORT-S4B1", "ProjectApollo/sat5stg33", vs4);
-				hs4b4 = oapiCreateVessel("ABORT-S4B1", "ProjectApollo/sat5stg34", vs5);
+				hs4b2 = oapiCreateVessel("ABORT-S4B2", "ProjectApollo/sat5stg32", vs3);
+				hs4b3 = oapiCreateVessel("ABORT-S4B3", "ProjectApollo/sat5stg33", vs4);
+				hs4b4 = oapiCreateVessel("ABORT-S4B4", "ProjectApollo/sat5stg34", vs5);
 
 				MATRIX3 rv, rx, ry, rz, rnx, rny, rnz;
 				GetRotationMatrix(rv);

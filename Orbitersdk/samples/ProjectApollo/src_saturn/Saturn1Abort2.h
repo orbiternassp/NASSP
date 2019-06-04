@@ -32,13 +32,14 @@ public:
 	virtual ~Sat1Abort2();
 	void init();
 	void Setup();
+	virtual void SetState(bool lowres);
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
 
 protected:
 
-	//
-	// No variables needed for now.
-	//
+	bool LowRes;                    ///< Mesh resolution flag
 
 };
