@@ -1149,7 +1149,12 @@ bool MESC::EDSMainPower()
 
 bool MESC::EDSVote()
 {
-	return (EDSAbort1Relay && EDSAbort2Relay) || (EDSAbort1Relay && EDSAbort3Relay) || (EDSAbort2Relay && EDSAbort3Relay);
+	return (!EDSAbort1Relay && !EDSAbort2Relay) || (!EDSAbort1Relay && !EDSAbort3Relay) || (!EDSAbort2Relay && !EDSAbort3Relay);
+}
+
+bool MESC::EDSUnsafeIndicateSignal()
+{
+	return (!EDSAbort1Relay || !EDSAbort2Relay || !EDSAbort3Relay);
 }
 
 bool MESC::ELSActivateLogic()

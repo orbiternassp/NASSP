@@ -162,7 +162,8 @@ public:
 	BatteryCharger(char *i_name, PanelSDK &p);
 	void Init(e_object *bat1, e_object *bat2, e_object *bat3, 
 		      e_object *batSup1, e_object *batSup2, e_object *batSup3,
-			  e_object *dc1, e_object *dc2, e_object* ac);
+			  e_object *dc1, e_object *dc2, e_object* ac,
+			  e_object *bat3pwr);
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
 	void Charge(int bat);
@@ -179,6 +180,8 @@ protected:
 	e_object *acPower;
 
 	e_object *currentBattery;
+
+	e_object *bat3Power;
 };
 
 class Connector;

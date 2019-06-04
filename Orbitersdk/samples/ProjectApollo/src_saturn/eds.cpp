@@ -380,7 +380,7 @@ void EDS1B::Timestep(double simdt)
 		AutoAbortInitiate = false;
 	}
 
-	if (EDSBus1Powered && AutoAbortInitiate)
+	if (EDSBus1Powered && !AutoAbortInitiate)
 	{
 		EDSAbortSignal1 = true;
 	}
@@ -388,7 +388,7 @@ void EDS1B::Timestep(double simdt)
 	{
 		EDSAbortSignal1 = false;
 	}
-	if (EDSBus2Powered && AutoAbortInitiate)
+	if (EDSBus2Powered && !AutoAbortInitiate)
 	{
 		EDSAbortSignal2 = true;
 	}
@@ -396,7 +396,7 @@ void EDS1B::Timestep(double simdt)
 	{
 		EDSAbortSignal2 = false;
 	}
-	if (EDSBus3Powered && AutoAbortInitiate)
+	if (EDSBus3Powered && !AutoAbortInitiate)
 	{
 		EDSAbortSignal3 = true;
 	}
@@ -719,7 +719,7 @@ void EDSSV::Timestep(double simdt)
 		AutoAbortInitiate = false;
 	}
 
-	if (EDSBus1Powered && AutoAbortInitiate)
+	if (EDSBus1Powered && !AutoAbortInitiate)
 	{
 		EDSAbortSignal1 = true;
 	}
@@ -727,7 +727,7 @@ void EDSSV::Timestep(double simdt)
 	{
 		EDSAbortSignal1 = false;
 	}
-	if (EDSBus2Powered && AutoAbortInitiate)
+	if (EDSBus2Powered && !AutoAbortInitiate)
 	{
 		EDSAbortSignal2 = true;
 	}
@@ -735,7 +735,7 @@ void EDSSV::Timestep(double simdt)
 	{
 		EDSAbortSignal2 = false;
 	}
-	if (EDSBus3Powered && AutoAbortInitiate)
+	if (EDSBus3Powered && !AutoAbortInitiate)
 	{
 		EDSAbortSignal3 = true;
 	}

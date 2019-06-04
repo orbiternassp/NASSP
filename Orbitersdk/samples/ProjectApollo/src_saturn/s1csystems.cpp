@@ -272,10 +272,13 @@ void SICSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
-	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 5);
-	papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 5);
-	papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
+	if (FailInit)
+	{
+		papiWriteScenario_bool(scn, "FAILINIT", FailInit);
+		papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 5);
+		papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
+	}
 
 	f1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	f1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");

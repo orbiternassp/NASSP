@@ -80,11 +80,14 @@ void SIISystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "ORDNANCEARMED", OrdnanceArmed);
 	papiWriteScenario_bool(scn, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
-	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
-	papiWriteScenario_boolarr(scn, "EARLYSIICUTOFF", EarlySIICutoff, 5);
-	papiWriteScenario_doublearr(scn, "SECONDSTAGEFAILURETIME", SecondStageFailureTime, 5);
+	if (FailInit)
+	{
+		papiWriteScenario_bool(scn, "FAILINIT", FailInit);
+		papiWriteScenario_boolarr(scn, "EARLYSIICUTOFF", EarlySIICutoff, 5);
+		papiWriteScenario_doublearr(scn, "SECONDSTAGEFAILURETIME", SecondStageFailureTime, 5);
+	}
 
 	j2engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	j2engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
