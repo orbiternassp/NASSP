@@ -2038,7 +2038,7 @@ void ELS::ControlVessel(Saturn *v)
 	BaroSwitch10k.ControlVessel(Sat);
 	BaroSwitch24k.ControlVessel(Sat);
 	ELSCA.Init(Sat, &Sat->ELSBatACircuitBraker, &Sat->secs.MESCA, &ELSCB);
-	ELSCB.Init(Sat, &Sat->ELSBatBCircuitBraker, &Sat->secs.MESCA, &ELSCA);
+	ELSCB.Init(Sat, &Sat->ELSBatBCircuitBraker, &Sat->secs.MESCB, &ELSCA);
 	pcvb.Init(Sat);
 }
 
