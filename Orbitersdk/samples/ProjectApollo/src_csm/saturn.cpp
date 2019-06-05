@@ -3500,7 +3500,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_STAGE:
-		if (ApexCoverPyros.Blown()) {
+		if (ApexCoverPyros.Blown() && !HasProbe) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
 
@@ -3513,7 +3513,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE:
-		if (ApexCoverPyros.Blown()) {
+		if (ApexCoverPyros.Blown() && !HasProbe) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
 		}
