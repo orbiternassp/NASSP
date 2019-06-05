@@ -990,8 +990,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	RCSSoundTimestep();
 
-	if (stage == 0)	{
-		
+	if (stage == 0 || NoLegs)	{
+
 
 	}else if (stage == 1 || stage == 5)	{
 

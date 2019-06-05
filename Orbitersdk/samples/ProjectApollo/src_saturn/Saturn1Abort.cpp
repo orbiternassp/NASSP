@@ -77,7 +77,7 @@ Sat1Abort1::Sat1Abort1(OBJHANDLE hObj, int fmodel)
 Sat1Abort1::~Sat1Abort1()
 
 {
-	LowRes = false;
+	// Nothing for now.
 }
 
 void Sat1Abort1::init()
@@ -247,6 +247,8 @@ void Sat1Abort1::Setup()
 	AddExhaustRef (EXHAUST_MAIN, m_exhaust_pos4, 30.0, 1.25, &m_exhaust_ref);
 	SetCameraOffset (_V(-1,1.0,34.15));
 	SetEngineLevel(ENGINE_MAIN,0);
+
+	AddSepJunk();
 }
 
 void Sat1Abort1::clbkPreStep(double simt, double simdt, double mjd)
