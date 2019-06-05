@@ -26,16 +26,17 @@
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
 #include "stdio.h"
+#include "papi.h"
+
 #include "Saturn1Abort2.h"
 
 static int refcount = 0;
-static MESHHANDLE hSat1stg1;
+static MESHHANDLE hSat1stg2low;
 static MESHHANDLE hSat1stg2;
 static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
-static MESHHANDLE hSat1tower;
 static MESHHANDLE hSM;
 
 Sat1Abort2::Sat1Abort2(OBJHANDLE hObj, int fmodel)
@@ -84,8 +85,15 @@ void Sat1Abort2::Setup()
     ClearMeshes();
     ClearExhaustRefs();
     ClearAttExhaustRefs();
+
 	VECTOR3 mesh_dir=_V(0,0,9.25-12.25);
-    AddMesh (hSat1stg2, &mesh_dir);
+	if (LowRes) {
+		AddMesh(hSat1stg2low, &mesh_dir);
+	}
+	else
+	{
+		AddMesh(hSat1stg2, &mesh_dir);
+	}
 	mesh_dir=_V(2.45, 0, 19.8-12.25);
     AddMesh (hSat1stg21, &mesh_dir);
 	mesh_dir=_V(0, 2.45, 19.8-12.25);
@@ -98,6 +106,42 @@ void Sat1Abort2::Setup()
 	AddMesh (hSM, &mesh_dir);
 }
 
+void Sat1Abort2::SetState(bool lowres)
+{
+	LowRes = lowres;
+	Setup();
+}
+
+void Sat1Abort2::clbkSaveState(FILEHANDLE scn)
+
+{
+	VESSEL2::clbkSaveState(scn);
+
+	papiWriteScenario_bool(scn, "LOWRES", LowRes);
+}
+
+void Sat1Abort2::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
+
+{
+	char *line;
+
+	while (oapiReadScenario_nextline(scn, line))
+	{
+		if (!_strnicmp(line, "LOWRES", 6))
+		{
+			int i;
+			sscanf(line + 6, "%d", &i);
+			LowRes = (i != 0);
+		}
+		else
+		{
+			ParseScenarioLineEx(line, vstatus);
+		}
+	}
+
+	Setup();
+}
+
 
 
 // ==============================================================
@@ -108,13 +152,13 @@ void Sat1Abort2::Setup()
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hSat1stg1 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg1");
-		hSat1stg2 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg2");
+		hSat1stg2low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/nsat1stg2");
+		hSat1stg2 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg2");
 		hSat1stg21 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg21");
 		hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
 		hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
 		hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
-		hSM = oapiLoadMeshGlobal ("ProjectApollo/SM");
+		hSM = oapiLoadMeshGlobal ("ProjectApollo/SM_uext");
 	}
 	return new Sat1Abort2(hvessel, flightmodel);
 }
@@ -126,6 +170,7 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 
 void Sat1Abort2::clbkSetClassCaps(FILEHANDLE cfg)
 {
-	Setup();
+	VESSEL2::clbkSetClassCaps(cfg);
+	init();
 }
 

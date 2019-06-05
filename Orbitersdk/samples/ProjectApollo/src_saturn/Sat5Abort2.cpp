@@ -369,9 +369,9 @@ void Sat5Abort2::clbkPreStep(double simt, double simdt, double mjd) {
 
 
 				hs4b1 = oapiCreateVessel("ABORT-S4B1", "ProjectApollo/sat5stg31", vs2);
-				hs4b2 = oapiCreateVessel("ABORT-S4B1", "ProjectApollo/sat5stg32", vs3);
-				hs4b3 = oapiCreateVessel("ABORT-S4B1", "ProjectApollo/sat5stg33", vs4);
-				hs4b4 = oapiCreateVessel("ABORT-S4B1", "ProjectApollo/sat5stg34", vs5);
+				hs4b2 = oapiCreateVessel("ABORT-S4B2", "ProjectApollo/sat5stg32", vs3);
+				hs4b3 = oapiCreateVessel("ABORT-S4B3", "ProjectApollo/sat5stg33", vs4);
+				hs4b4 = oapiCreateVessel("ABORT-S4B4", "ProjectApollo/sat5stg34", vs5);
 
 				MATRIX3 rv, rx, ry, rz, rnx, rny, rnz;
 				GetRotationMatrix(rv);
@@ -599,9 +599,9 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hsat5stg32 = oapiLoadMeshGlobal("ProjectApollo/sat5stg32");
 		hsat5stg33 = oapiLoadMeshGlobal("ProjectApollo/sat5stg33");
 		hsat5stg34 = oapiLoadMeshGlobal("ProjectApollo/sat5stg34");
-		hSM = oapiLoadMeshGlobal("ProjectApollo/SM");
+		hSM = oapiLoadMeshGlobal("ProjectApollo/SM_uext");
 		hLM = oapiLoadMeshGlobal("ProjectApollo/LM_SLA");
-		hLM1 = oapiLoadMeshGlobal("ProjectApollo/LM1");
+		hLM1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
 		hapollo8lta = oapiLoadMeshGlobal("ProjectApollo/apollo8_lta");
 		hlta_2r = oapiLoadMeshGlobal("ProjectApollo/LTA_2R");
 		hastp = oapiLoadMeshGlobal("ProjectApollo/nASTP3");

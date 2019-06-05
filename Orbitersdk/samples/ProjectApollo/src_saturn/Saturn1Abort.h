@@ -31,15 +31,28 @@ public:
 	Sat1Abort1(OBJHANDLE hObj, int fmodel);
 	virtual ~Sat1Abort1();
 	void init();
-	void Setup(bool sm);
-	virtual void SetState(bool sm);
+	void Setup();
+	void clbkPreStep(double simt, double simdt, double mjd);
+	void clbkPostStep(double simt, double simdt, double mjd);
+	virtual void SetState(bool sm, bool lowres, int payload);
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
+	void DefineAnimations();
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
 
 protected:
 
-	//
-	// No variables needed for now.
-	//
+	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
 
+	bool SmPresent;                 ///< SM flag
+	bool LowRes;                    ///< Mesh resolution flag
+	int PayloadType;				///< Payload type.
+
+	THGROUP_HANDLE thg_sep;
+	UINT panelAnim;
+	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
+	double panelProc;
+	int panelTimestepCount;
+	void AddSepJunk();
 };

@@ -47,6 +47,7 @@
 #include "s1b.h"
 #include "sm.h"
 #include "Saturn1Abort.h"
+#include "Saturn1Abort2.h"
 
 //
 // Meshes are loaded globally, once, so we use these global
@@ -215,35 +216,13 @@ void Saturn1b::SetFirstStageMeshes(double offset)
 {
 	double TCP=-54.485-TCPO;//STG0O;
 
-	double Mass = Stage1Mass + SI_FuelMass;;
-	double ro = 30;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.05;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = -cos(30 * RAD)*ro;
-	td[0].pos.y = -sin(30 * RAD)*ro;
-	td[0].pos.z = TCP;
-	td[1].pos.x = 0;
-	td[1].pos.y = 1 * ro;
-	td[1].pos.z = TCP;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = -sin(30 * RAD)*ro;
-	td[2].pos.z = TCP;
-	td[3].pos.x = 0;
-	td[3].pos.y = 0;
-	td[3].pos.z = TCP+60;
-	
-	SetTouchdownPoints(td, 4);
+	double td_mass = Stage1Mass + SI_FuelMass;
+	double td_width = 30.0;
+	double td_tdph = TCP;
+	double td_height = 60.0;
 
-	//SetTouchdownPoints (_V(0,-1.0,TCP), _V(-.5,.5,TCP), _V(.5,.5,TCP));
-	
+	ConfigTouchdownPoints(td_mass, td_width, td_tdph, td_height, -0.05);
+
 	VECTOR3 mesh_dir=_V(0,0,offset);
 
 	AddMesh (hStage1Mesh, &mesh_dir);
@@ -858,7 +837,7 @@ void Saturn1b::SeparateStage (int new_stage)
 			habort = oapiCreateVesselEx("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", &vs3);
 
 			Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
-			stage1->SetState(new_stage == CM_STAGE);
+			stage1->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
@@ -878,11 +857,11 @@ void Saturn1b::SeparateStage (int new_stage)
 			vs1.vrot.x = 0.0;
 			vs1.vrot.y = 0.0;
 			vs1.vrot.z = 0.0;
-		
+
 			habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
 
 			Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
-			stage1->SetState(new_stage == CM_STAGE);
+			stage1->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
 
 			if (new_stage == CSM_LEM_STAGE)
 			{
@@ -903,7 +882,12 @@ void Saturn1b::SeparateStage (int new_stage)
 		vs1.vrot.y = 0.0;
 		vs1.vrot.z = 0.0;
 		StageS.play();
+
 		habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort2", vs1);
+
+		Sat1Abort2 *stage1 = static_cast<Sat1Abort2 *> (oapiGetVesselInterface(habort));
+		stage1->SetState(LowRes);
+
 		SetReentryStage();
 		ShiftCentreOfMass(_V(0, 0, 22.9));
 	}
