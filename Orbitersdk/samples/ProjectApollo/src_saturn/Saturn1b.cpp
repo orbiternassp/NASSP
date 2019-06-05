@@ -380,6 +380,11 @@ void Saturn1b::SIEDSCutoff(bool cut)
 	sib.EDSEnginesCutoff(cut);
 }
 
+void Saturn1b::SIGSECutoff(bool cut)
+{
+	if (stage > LAUNCH_STAGE_ONE) return;
+}
+
 bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
@@ -433,6 +438,16 @@ double Saturn1b::GetSIThrustLevel()
 	}
 
 	return lvl / 8.0;
+}
+
+bool Saturn1b::AllSIEnginesRunning()
+{
+	return false;
+}
+
+bool Saturn1b::SIStageLogicCutoff()
+{
+	return false;
 }
 
 //

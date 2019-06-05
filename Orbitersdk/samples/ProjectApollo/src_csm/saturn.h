@@ -972,11 +972,14 @@ public:
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetAPSAttitudeEngine(int n, bool on);
 	virtual void SIEDSCutoff(bool cut) = 0;
+	virtual void SIGSECutoff(bool cut) = 0;
 	virtual void SIIEDSCutoff(bool cut) {};
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
 	virtual void SetSIEngineStart(int n) = 0;
 	virtual double GetSIThrustLevel() = 0;
+	virtual bool AllSIEnginesRunning() = 0;
+	virtual bool SIStageLogicCutoff() = 0;
 
 	virtual void ActivateStagingVent() {}
 
@@ -1018,11 +1021,6 @@ public:
 	/// \brief Get settings for the Saturn payload.
 	///
 	void GetPayloadSettings(PayloadSettings &p);
-
-	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
-	SPSEngine *GetSPSEngine() { return &SPSEngine; };
-	SCE *GetSCE() { return &sce; }
-	EDA *GetEDA() { return &eda; }
 
 	///
 	/// \brief Accessor to get checklistController
@@ -1158,6 +1156,7 @@ public:
 
 	bool GetBECOSignal(bool IsSysA);
 	bool IsEDSBusPowered(int eds);
+	virtual bool IsEDSUnsafe();
 	int GetAGCAttitudeError(int axis);
 
 	void AddRCS_S4B();
@@ -1295,6 +1294,12 @@ public:
 	int Lua_GetAGCChannel(int ch);
 	void Lua_SetAGCErasable(int page, int addr, int value);
 	int Lua_GetAGCUplinkStatus();
+
+	//System Access
+	SPSPropellantSource *GetSPSPropellant() { return &SPSPropellant; };
+	SPSEngine *GetSPSEngine() { return &SPSEngine; };
+	SCE *GetSCE() { return &sce; }
+	EDA *GetEDA() { return &eda; }
 
 protected:
 

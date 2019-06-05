@@ -442,6 +442,18 @@ void SICSystems::EDSEnginesCutoff(bool cut)
 	}
 }
 
+void SICSystems::GSEEnginesCutoff(bool cut)
+{
+	if (cut)
+	{
+		f1engine1.SetGSECutoff();
+		f1engine2.SetGSECutoff();
+		f1engine3.SetGSECutoff();
+		f1engine4.SetGSECutoff();
+		f1engine5.SetGSECutoff();
+	}
+}
+
 void SICSystems::GetThrustOK(bool *ok)
 {
 	for (int i = 0;i < 5;i++)
@@ -559,6 +571,20 @@ bool SICSystems::GetInboardEngineOut()
 bool SICSystems::GetOutboardEngineOut()
 {
 	for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
+
+	return false;
+}
+
+bool SICSystems::AllEnginesRunning()
+{
+	for (int i = 0;i < 5;i++) if (!ThrustOK[i]) return false;
+
+	return true;
+}
+
+bool SICSystems::GetEngineStop()
+{
+	for (int i = 0;i < 5;i++) if (f1engines[i]->GetEngineStop()) return true;
 
 	return false;
 }

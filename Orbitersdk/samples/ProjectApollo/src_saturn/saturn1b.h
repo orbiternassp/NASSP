@@ -70,6 +70,7 @@ public:
 	void SISwitchSelector(int channel);
 
 	void SIEDSCutoff(bool cut);
+	void SIGSECutoff(bool cut);
 	void GetSIThrustOK(bool *ok);
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
@@ -78,6 +79,8 @@ public:
 	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	double GetSIThrustLevel();
+	bool AllSIEnginesRunning();
+	bool SIStageLogicCutoff();
 
 protected:
 
