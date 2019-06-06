@@ -41,6 +41,10 @@ const VECTOR3 OFS_STAGE24 =  { -1.85,-1.85,24.5-12.25};
 
 
 static int refcount = 0;
+static MESHHANDLE hsat5intstglow;
+static MESHHANDLE hsat5intstg4;
+static MESHHANDLE hsat5intstg8;
+static MESHHANDLE hsat5intstg;
 static MESHHANDLE hsat5stg2low;
 static MESHHANDLE hsat5stg2;
 static MESHHANDLE hsat5stg3low;
@@ -101,6 +105,8 @@ void Sat5Abort2::init() {
 	SmPresent = false;
 	LowRes = false;
 	PayloadType = PAYLOAD_EMPTY;
+	InterStage = true;
+	UllageNum = 0;
 
 	thg_sep = 0;
 	thg_sepPanel = 0;
@@ -162,6 +168,31 @@ void Sat5Abort2::Setup()
 		AddMesh(hsat5stg2, &mesh_dir);
 		mesh_dir = _V(0, 0, 2. - STG1O);
 		AddMesh(hsat5stg3, &mesh_dir);
+	}
+
+	// Interstage mesh
+	if (InterStage) {
+		mesh_dir = _V(0, 0, -30.5 - STG1O);
+		if (LowRes) {
+			AddMesh(hsat5intstglow, &mesh_dir);
+		}
+		else
+		{
+			switch (UllageNum)
+			{
+			case 4:
+				AddMesh(hsat5intstg4, &mesh_dir);
+				break;
+
+			case 8:
+				AddMesh(hsat5intstg8, &mesh_dir);
+				break;
+
+			default:
+				AddMesh(hsat5intstg, &mesh_dir);
+				break;
+			}
+		}
 	}
 
 	if (SmPresent)
@@ -416,11 +447,14 @@ void Sat5Abort2::clbkPostStep(double simt, double simdt, double mjd) {
 	// Nothing for now
 }
 
-void Sat5Abort2::SetState(bool sm, bool lowres, int payload)
+void Sat5Abort2::SetState(bool sm, bool lowres, int payload, bool interstage, int ullagenum)
 {
 	SmPresent = sm;
 	LowRes = lowres;
 	PayloadType = payload;
+	InterStage = interstage;
+	UllageNum = ullagenum;
+
 	Setup();
 }
 
@@ -432,6 +466,8 @@ void Sat5Abort2::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_bool(scn, "SM", SmPresent);
 	papiWriteScenario_bool(scn, "LOWRES", LowRes);
 	oapiWriteScenario_int(scn, "PAYLOAD", PayloadType);
+	papiWriteScenario_bool(scn, "INTERSTAGE", InterStage);
+	oapiWriteScenario_int(scn, "ULLAGENUM", UllageNum);
 	oapiWriteScenario_float(scn, "PANELPROC", panelProc);
 	papiWriteScenario_bool(scn, "PANELSOPENED", PanelsOpened);
 }
@@ -459,6 +495,16 @@ void Sat5Abort2::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 		else if (!_strnicmp(line, "PAYLOAD", 7))
 		{
 			sscanf(line + 7, "%d", &PayloadType);
+		}
+		else if (!_strnicmp(line, "INTERSTAGE", 10))
+		{
+			int i;
+			sscanf(line + 10, "%d", &i);
+			InterStage = (i != 0);
+		}
+		else if (!_strnicmp(line, "ULLAGENUM", 9))
+		{
+			sscanf(line + 9, "%d", &UllageNum);
 		}
 		else if (!strnicmp(line, "PANELPROC", 9))
 		{
@@ -587,6 +633,10 @@ void Sat5Abort2::HidePanelMeshes()
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
+		hsat5intstglow = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5intstg");
+		hsat5intstg4 = oapiLoadMeshGlobal("ProjectApollo/sat5intstg4");
+		hsat5intstg8 = oapiLoadMeshGlobal("ProjectApollo/sat5intstg8");
+		hsat5intstg = oapiLoadMeshGlobal("ProjectApollo/sat5intstg");
 		hsat5stg2low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg2");
 		hsat5stg2 = oapiLoadMeshGlobal("ProjectApollo/sat5stg2");
 		hsat5stg3low = oapiLoadMeshGlobal("ProjectApollo/LowRes/sat5stg3");
