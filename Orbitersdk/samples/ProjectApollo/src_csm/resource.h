@@ -382,10 +382,10 @@
 #define AID_TELCOMSWITCHES                                  614
 #define IDB_CSMRIGHTWINDOWCOVER                             615
 #define AID_RIGHTWINDOWCOVER                                616
-#define AID_GNMODESWITCH                                    617
-#define AID_CONTROLLERSPEEDSWITCH                           618
+#define AID_GNZEROSWITCH                                    617
+#define AID_TELESCOPETRUNNIONSWITCH                         618
 #define AID_CONTROLLERCOUPLINGSWITCH                        619
-#define AID_CONTORLLERSWITCHES                              620
+#define AID_OPTICSMODESPEEDSWITCHES                         620
 #define AID_CONDITIONLAMPSSWITCH                            621
 #define AID_UPLINKTELEMETRYSWITCH                           622
 #define AID_LOWEREQUIPMENTBAYCWLIGHTS                       623

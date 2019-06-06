@@ -1357,8 +1357,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 879 + offset1,  637,  924 + offset1,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MARKBUTTON,					_R( 928 + offset1,  639,  956 + offset1,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MARKREJECT,					_R( 961 + offset1,  655,  984 + offset1,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,		_R( 502 + offset1,  719,  525 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_GNMODESWITCH,				_R( 401 + offset1,  719,  424 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICSMODESPEEDSWITCHES,		_R( 401 + offset1,  719,  525 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,	_R( 585 + offset1,  719,  608 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 721 + offset2,    0, 1024 + offset2,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 103 + offset1,  637,  148 + offset1,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
@@ -1395,8 +1394,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_OPTICS_HANDCONTROLLER,		_R( 879 + offset1,  637,  924 + offset1,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MARKBUTTON,					_R( 928 + offset1,  639,  956 + offset1,  671), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MARKREJECT,					_R( 961 + offset1,  655,  984 + offset1,  681), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,		_R( 502 + offset1,  719,  525 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_GNMODESWITCH,				_R( 401 + offset1,  719,  424 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_OPTICSMODESPEEDSWITCHES,		_R( 401 + offset1,  719,  525 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,	_R( 585 + offset1,  719,  608 + offset1,  739), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_OPTICS_DSKY,					_R( 721 + offset2,    0, 1024 + offset2,  349), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_MINIMPULSE_HANDCONTROLLER,	_R( 103 + offset1,  637,  148 + offset1,  686), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,   PANEL_MAP_BACKGROUND);
@@ -1622,10 +1620,10 @@ void Saturn::AddLeftCenterLowerPanelAreas(int offset)
 	oapiRegisterPanelArea (AID_RNDZXPDRSWITCH,      						_R(1218 + offset,  350, 1252 + offset,  379), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_PANEL101LOWERSWITCHES,      				    _R(1093 + offset,  486, 1251 + offset,  515), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 
-	oapiRegisterPanelArea (AID_GNMODESWITCH,								_R(1365 + offset,  951, 1399 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_CONTROLLERSPEEDSWITCH,						_R(1496 + offset,  951, 1530 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_GNZEROSWITCH,								_R(1365 + offset,  951, 1399 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_TELESCOPETRUNNIONSWITCH,						_R(1496 + offset,  951, 1530 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CONTROLLERCOUPLINGSWITCH,					_R(1605 + offset,  951, 1639 + offset,  980), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_CONTORLLERSWITCHES,							_R(1496 + offset, 1090, 1639 + offset, 1119), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_OPTICSMODESPEEDSWITCHES,						_R(1496 + offset, 1090, 1639 + offset, 1119), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,		PANEL_MAP_BACKGROUND);
 
 	MFDSPEC mfds_gnleft  =     {{ 1048 + 58 + offset,  1726 + 13, 1048 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
 	MFDSPEC mfds_gnuser1 =     {{ 1484 + 58 + offset,  1726 + 13, 1484 + 368 + offset, 1726 + 322}, 6, 6, 55, 44 };
@@ -3122,23 +3120,24 @@ void Saturn::SetSwitches(int panel) {
 	// G&N lower equipment bay //
 	/////////////////////////////
 
-	ModeSwitchRow.Init(AID_GNMODESWITCH, MainPanel);
-	ControllerSpeedSwitchRow.Init(AID_CONTROLLERSPEEDSWITCH, MainPanel);
+	ZeroSwitchRow.Init(AID_GNZEROSWITCH, MainPanel);
+	OpticsZeroSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ZeroSwitchRow, &agc);
+
+	TelescopeTrunnionSwitchRow.Init(AID_TELESCOPETRUNNIONSWITCH, MainPanel);
+	ControllerTelescopeTrunnionSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], TelescopeTrunnionSwitchRow);
+
 	ControllerCouplingSwitchRow.Init(AID_CONTROLLERCOUPLINGSWITCH, MainPanel);
+	OpticsModeSpeedSwitchesRow.Init(AID_OPTICSMODESPEEDSWITCHES, MainPanel);
 
 	if (panel == SATPANEL_SEXTANT || panel == SATPANEL_TELESCOPE) {
-		ModeSwitch.Init(0, 0, 23, 20, srf[SRF_THREEPOSSWITCHSMALL], srf[SRF_BORDER_23x20], ModeSwitchRow, &agc);
-		ControllerSpeedSwitch.Init(0, 0, 23, 20, srf[SRF_THREEPOSSWITCHSMALL], srf[SRF_BORDER_23x20], ControllerSpeedSwitchRow);
+		OpticsModeSwitch.Init(0, 0, 23, 20, srf[SRF_SWITCHUPSMALL], srf[SRF_BORDER_23x20], OpticsModeSpeedSwitchesRow, &agc, &OpticsZeroSwitch);
+		ControllerSpeedSwitch.Init(101, 0, 23, 20, srf[SRF_THREEPOSSWITCHSMALL], srf[SRF_BORDER_23x20], OpticsModeSpeedSwitchesRow);
 		ControllerCouplingSwitch.Init(0, 0, 23, 20, srf[SRF_SWITCHUPSMALL], srf[SRF_BORDER_23x20], ControllerCouplingSwitchRow);
 	} else {
-		ModeSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ModeSwitchRow, &agc);
-		ControllerSpeedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ControllerSpeedSwitchRow);
+		OpticsModeSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], OpticsModeSpeedSwitchesRow, &agc, &OpticsZeroSwitch);
+		ControllerSpeedSwitch.Init(109, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], OpticsModeSpeedSwitchesRow);
 		ControllerCouplingSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ControllerCouplingSwitchRow);
 	}
-
-	ControllerSwitchesRow.Init(AID_CONTORLLERSWITCHES, MainPanel);
-	ControllerTrackerSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ControllerSwitchesRow);
-	ControllerTelescopeTrunnionSwitch.Init(109, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ControllerSwitchesRow);
 
 	ConditionLampsSwitchRow.Init(AID_CONDITIONLAMPSSWITCH, MainPanel);
 	ConditionLampsSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ConditionLampsSwitchRow);
@@ -6192,10 +6191,10 @@ void Saturn::InitSwitches() {
 
 	VHFAMVolumeThumbwheelSwitch.Register(PSH, "VHFAMVolumeThumbwheelSwitch", 5, 9);
 
-	ModeSwitch.Register(PSH, "ModeSwitch", THREEPOSSWITCH_CENTER);
+	OpticsZeroSwitch.Register(PSH, "OpticsZeroSwitch", TOGGLESWITCH_UP);
 	ControllerSpeedSwitch.Register(PSH, "ControllerSpeedSwitch", THREEPOSSWITCH_DOWN);
 	ControllerCouplingSwitch.Register(PSH, "ControllerCouplingSwitch", TOGGLESWITCH_UP);
-	ControllerTrackerSwitch.Register(PSH, "ControllerTrackerSwitch", THREEPOSSWITCH_DOWN);
+	OpticsModeSwitch.Register(PSH, "OpticsModeSwitch", TOGGLESWITCH_DOWN);
 	ControllerTelescopeTrunnionSwitch.Register(PSH, "ControllerTelescopeTrunnionSwitch", THREEPOSSWITCH_UP);	
 	ConditionLampsSwitch.Register(PSH, "ConditionLampsSwitch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN);
 	ConditionLampsSwitch.SetCallback(new PanelSwitchCallback<CSMCautionWarningSystem>(&cws, &CSMCautionWarningSystem::GNLampSwitchToggled));

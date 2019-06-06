@@ -2556,18 +2556,18 @@ protected:
 	// G&N lower equipment bay //
 	/////////////////////////////
 
-	SwitchRow ModeSwitchRow;
-	CMCOpticsModeSwitch ModeSwitch;
+	SwitchRow ZeroSwitchRow;
+	CMCOpticsZeroSwitch OpticsZeroSwitch;
 
-	SwitchRow ControllerSpeedSwitchRow;
-	ThreePosSwitch ControllerSpeedSwitch;
+	SwitchRow TelescopeTrunnionSwitchRow;
+	ThreePosSwitch ControllerTelescopeTrunnionSwitch;
 
 	SwitchRow ControllerCouplingSwitchRow;
 	ToggleSwitch ControllerCouplingSwitch;
 
-	SwitchRow ControllerSwitchesRow;
-	ThreePosSwitch ControllerTrackerSwitch;
-	ThreePosSwitch ControllerTelescopeTrunnionSwitch;
+	SwitchRow OpticsModeSpeedSwitchesRow;
+	CMCOpticsModeSwitch OpticsModeSwitch;
+	ThreePosSwitch ControllerSpeedSwitch;
 
 	SwitchRow ConditionLampsSwitchRow;
 	ThreePosSwitch ConditionLampsSwitch;
