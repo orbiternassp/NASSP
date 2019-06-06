@@ -3121,7 +3121,7 @@ void Saturn::SetSwitches(int panel) {
 	/////////////////////////////
 
 	ZeroSwitchRow.Init(AID_GNZEROSWITCH, MainPanel);
-	OpticsZeroSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ZeroSwitchRow, &agc);
+	OpticsZeroSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ZeroSwitchRow, &agc, 68);
 
 	TelescopeTrunnionSwitchRow.Init(AID_TELESCOPETRUNNIONSWITCH, MainPanel);
 	ControllerTelescopeTrunnionSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], TelescopeTrunnionSwitchRow);

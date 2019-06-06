@@ -777,7 +777,7 @@ class AGCSwitch: public ToggleSwitch {
 
 public:
 	AGCSwitch() { agc = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, int xoffset = 0, int yoffset = 0);
 
 protected:
 	ApolloGuidance *agc;
@@ -828,6 +828,7 @@ protected:
 
 class CMCOpticsZeroSwitch : public AGCSwitch {
 public:
+	void DoDrawSwitch(SURFHANDLE DrawSurface);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 

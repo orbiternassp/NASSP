@@ -3959,6 +3959,18 @@ bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
 // CMC Optics Mode Switch
 //
 
+void CMCOpticsZeroSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
+{
+	if (IsUp())
+	{
+		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+	}
+	else
+	{
+		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset - width, yOffset, width, height, SURF_PREDEF_CK);
+	}
+}
+
 bool CMCOpticsZeroSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (AGCSwitch::SwitchTo(newState, dontspring)) {
@@ -4040,10 +4052,10 @@ void CWSSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHA
 }
 
 
-void AGCSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c)
+void AGCSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, int xoffset, int yoffset)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	agc = c;
 }
 
