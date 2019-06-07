@@ -105,8 +105,7 @@ void Sat5Abort2::init() {
 	SmPresent = false;
 	LowRes = false;
 	PayloadType = PAYLOAD_EMPTY;
-	InterStage = true;
-	UllageNum = 0;
+	InterStage = -1;
 
 	thg_sep = 0;
 	thg_sepPanel = 0;
@@ -171,25 +170,24 @@ void Sat5Abort2::Setup()
 	}
 
 	// Interstage mesh
-	if (InterStage) {
+	if (InterStage != -1) {
 		mesh_dir = _V(0, 0, -30.5 - STG1O);
 		if (LowRes) {
 			AddMesh(hsat5intstglow, &mesh_dir);
 		}
 		else
 		{
-			switch (UllageNum)
-			{
+			switch (InterStage) {
+			case 1:
+				AddMesh(hsat5intstg, &mesh_dir);
+				break;
+
 			case 4:
 				AddMesh(hsat5intstg4, &mesh_dir);
 				break;
 
 			case 8:
 				AddMesh(hsat5intstg8, &mesh_dir);
-				break;
-
-			default:
-				AddMesh(hsat5intstg, &mesh_dir);
 				break;
 			}
 		}
@@ -447,13 +445,12 @@ void Sat5Abort2::clbkPostStep(double simt, double simdt, double mjd) {
 	// Nothing for now
 }
 
-void Sat5Abort2::SetState(bool sm, bool lowres, int payload, bool interstage, int ullagenum)
+void Sat5Abort2::SetState(bool sm, bool lowres, int payload, int interstage)
 {
 	SmPresent = sm;
 	LowRes = lowres;
 	PayloadType = payload;
 	InterStage = interstage;
-	UllageNum = ullagenum;
 
 	Setup();
 }
@@ -466,8 +463,7 @@ void Sat5Abort2::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_bool(scn, "SM", SmPresent);
 	papiWriteScenario_bool(scn, "LOWRES", LowRes);
 	oapiWriteScenario_int(scn, "PAYLOAD", PayloadType);
-	papiWriteScenario_bool(scn, "INTERSTAGE", InterStage);
-	oapiWriteScenario_int(scn, "ULLAGENUM", UllageNum);
+	oapiWriteScenario_int(scn, "INTERSTAGE", InterStage);
 	oapiWriteScenario_float(scn, "PANELPROC", panelProc);
 	papiWriteScenario_bool(scn, "PANELSOPENED", PanelsOpened);
 }
@@ -498,13 +494,7 @@ void Sat5Abort2::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 		}
 		else if (!_strnicmp(line, "INTERSTAGE", 10))
 		{
-			int i;
-			sscanf(line + 10, "%d", &i);
-			InterStage = (i != 0);
-		}
-		else if (!_strnicmp(line, "ULLAGENUM", 9))
-		{
-			sscanf(line + 9, "%d", &UllageNum);
+			sscanf(line + 10, "%d", &InterStage);
 		}
 		else if (!strnicmp(line, "PANELPROC", 9))
 		{

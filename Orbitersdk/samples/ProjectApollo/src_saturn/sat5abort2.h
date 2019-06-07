@@ -32,7 +32,7 @@ public:
 	void Setup();
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
-	virtual void SetState(bool sm, bool lowres, int payload, bool interstage, int ullagenum);
+	virtual void SetState(bool sm, bool lowres, int payload, int interstage);
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 	void DefineAnimations();
@@ -47,8 +47,7 @@ protected:
 	bool SmPresent;                 ///< SM flag
 	bool LowRes;                    ///< Mesh resolution flag
 	int PayloadType;				///< Payload type.
-	bool InterStage;                ///< Interstage attached flag
-	int UllageNum;                  ///< Number of ullage rockets on interstage
+	int InterStage;                 ///< Interstage configuration
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;
