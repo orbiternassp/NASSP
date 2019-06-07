@@ -554,8 +554,7 @@ bool SICSystems::GetPropellantDepletionEngineCutoff()
 	if (PointLevelSensorArmed)
 	{
 		if (PropellantDepletionSensors) return true;
-
-		for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
+		if (!ThrustOK[0] && !ThrustOK[1] && !ThrustOK[2] && !ThrustOK[3]) return true;
 	}
 
 	return false;
