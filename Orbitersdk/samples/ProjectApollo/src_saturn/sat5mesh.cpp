@@ -1476,8 +1476,22 @@ void SaturnV::SeparateStage (int new_stage)
 		GetApolloName(VName); strcat (VName, "-ABORT");
 		habort = oapiCreateVessel (VName, "ProjectApollo/Saturn5Abort2", vs1);
 
+		int InterstageConfig = -1;
+
+		if (InterstageAttached) {
+			if (SII_UllageNum == 4) {
+				InterstageConfig = 4;
+			}
+			else if (SII_UllageNum == 8) {
+				InterstageConfig = 8;
+			}
+			else {
+				InterstageConfig = 1;
+			}
+		}
+
 		Sat5Abort2 *stage2 = static_cast<Sat5Abort2 *> (oapiGetVesselInterface(habort));
-		stage2->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload);
+		stage2->SetState(new_stage == CM_STAGE, LowRes, SIVBPayload, InterstageConfig);
 
 		if (new_stage == CSM_LEM_STAGE)
 		{
