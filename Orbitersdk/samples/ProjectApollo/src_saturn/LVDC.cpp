@@ -630,7 +630,6 @@ void LVDC1B::TimeStep(double simdt) {
 					liftoff = true;
 					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
-					sinceLastIGM = 1.7 - simdt; // Rig to pass on fall-in
 				}
 				break;
 
@@ -4650,7 +4649,6 @@ void LVDCSV::TimeStep(double simdt) {
 
 					liftoff = true;
 					// Fall into TB1
-					sinceLastCycle = 1.7 - simdt; // Rig to pass on fall-in
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
 					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
 					break;
