@@ -431,6 +431,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1285.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -720,6 +721,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1285.0;
 
 		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
@@ -1001,6 +1003,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv2;
 		entopt.vessel = calcParams.src;
+		entopt.r_rbias = 1285.0;
 		//It gets close to the nominal 36232 ft/s constraint, so relax it a little bit
 		entopt.u_rmax = 36500.0*0.3048;
 
