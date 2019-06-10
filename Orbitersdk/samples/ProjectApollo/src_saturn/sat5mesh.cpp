@@ -458,7 +458,7 @@ void SaturnV::SetFirstStage ()
 	double TCP = -101.5 + STG0O - TCPO;
 
 	double td_mass = Stage1Mass + SI_FuelMass;
-	double td_width = 30.0;
+	double td_width = 10.0;
 	double td_tdph = TCP;
 	double td_height = 110.0;
 
