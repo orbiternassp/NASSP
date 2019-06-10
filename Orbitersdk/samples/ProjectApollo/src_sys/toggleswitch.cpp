@@ -3207,6 +3207,13 @@ NSourceDestSwitch::~NSourceDestSwitch()
 	}
 }
 
+void NSourceDestSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row)
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+
+	UpdateSourceState();
+}
+
 bool NSourceDestSwitch::SwitchTo(int newState, bool dontspring)
 {
 	if (ToggleSwitch::SwitchTo(newState, dontspring))

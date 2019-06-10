@@ -509,6 +509,7 @@ class NSourceDestSwitch : public ToggleSwitch {
 public:
 	NSourceDestSwitch(int nSources);
 	~NSourceDestSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 	void WireSourcesToBuses(int bus, e_object* i, DCbus* o);

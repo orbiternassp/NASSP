@@ -3038,8 +3038,6 @@ void Saturn::SetSwitches(int panel) {
 
 	LogicPowerSwitchRow.Init(AID_LOGICPOWERSWITCH, MainPanel);
 	LogicPowerSwitch.Init(0, 0, 34, 33, srf[SRF_SWITCH305LEFT], srf[SRF_BORDER_34x33], LogicPowerSwitchRow);
-	LogicPowerSwitch.WireSourcesToBuses(1, &SCSLogicBus2Feeder, &SCSLogicBus2);
-	LogicPowerSwitch.WireSourcesToBuses(2, &SCSLogicBus3Feeder, &SCSLogicBus3);
 
 	SIGCondDriverBiasPowerSwitchesRow.Init(AID_SIGCONDDRIVERBIASPOWERSWITCHES, MainPanel);
 	SIGCondDriverBiasPower1Switch.Init( 0,  0, 34, 33, srf[SRF_THREEPOSSWITCH305LEFT], srf[SRF_BORDER_34x33], SIGCondDriverBiasPowerSwitchesRow, 
