@@ -319,7 +319,6 @@ public:
 
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
-	LVDC* GetLVDC() { return lvdc; }
 
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
@@ -342,6 +341,10 @@ public:
 	void ControlDistributor(int stage, int channel);
 
 	bool SIVBBurnMode();
+
+	//Subsystem Access
+	LVDC* GetLVDC() { return lvdc; }
+	LVRG* GetLVRG() { return &lvrg; }
 
 	LVDC* lvdc;
 	LVIMU lvimu;

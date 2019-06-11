@@ -164,7 +164,7 @@ bool LVDA::SIBLowLevelSensorsDry()
 
 bool LVDA::GetLiftoff()
 {
-	return iu->IsUmbilicalConnected() == false;
+	return iu->GetEDS()->GetIULiftoff() == false;
 }
 
 bool LVDA::GetSICInboardEngineCutoff()
