@@ -722,6 +722,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
 		entopt.vessel = calcParams.src;
 		entopt.r_rbias = 1285.0;
+		entopt.u_rmax = 37500.0*0.3048;
 
 		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
