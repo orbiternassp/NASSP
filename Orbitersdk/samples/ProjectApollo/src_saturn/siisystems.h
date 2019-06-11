@@ -53,6 +53,8 @@ public:
 	void SetSIISIVBOrdnanceArm() { SIISIVBOrdnanceArmed = true; }
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 	void SetPUValve(int state);
+	void StartPhaseLimiterCutoffArmReset() { StartPhaseLimiterCutoffArm = false; }
+	void LH2StepPressurizationReset() { LH2StepPressurization = false; }
 
 	void RecalculateEngineParameters();
 	void RecalculateEngineParameters(double BaseThrust);
@@ -75,7 +77,12 @@ protected:
 
 	int PUValveState;
 
+	//K20
+	bool StartPhaseLimiterCutoffArm;
+	//K18 (LOX), K23 (LH2)
 	bool PointLevelSensorArmed;
+	//K50
+	bool LH2StepPressurization;
 	bool PropellantDepletionSensors;
 	bool UllageTrigger;
 	bool OrdnanceArmed;

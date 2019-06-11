@@ -62,6 +62,8 @@ SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	OrdnanceArmed = false;
 	SIISIVBOrdnanceArmed = false;
 	FailInit = false;
+	StartPhaseLimiterCutoffArm = false;
+	LH2StepPressurization = false;
 
 	FailureTimer = 0.0;
 	J2DefaultThrust = 0.0;
@@ -80,6 +82,8 @@ void SIISystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "ORDNANCEARMED", OrdnanceArmed);
 	papiWriteScenario_bool(scn, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
+	papiWriteScenario_bool(scn, "STARTPHASELIMITERCUTOFFARM", StartPhaseLimiterCutoffArm);
+	papiWriteScenario_bool(scn, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
 	if (FailInit)
@@ -109,6 +113,8 @@ void SIISystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "ORDNANCEARMED", OrdnanceArmed);
 		papiReadScenario_bool(line, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
+		papiReadScenario_bool(line, "STARTPHASELIMITERCUTOFFARM", StartPhaseLimiterCutoffArm);
+		papiReadScenario_bool(line, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 		papiReadScenario_bool(line, "FAILINIT", FailInit);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
@@ -359,8 +365,10 @@ void SIISystems::SwitchSelector(int channel)
 		}
 		break;
 	case 6: //Start Phase Limiter Cutoff Reset
+		StartPhaseLimiterCutoffArmReset();
 		break;
 	case 7: //LH2 Step Pressurization
+		LH2StepPressurization = true;
 		break;
 	case 8: //S-II/S-IVB Ordnance Arm
 		SetSIISIVBOrdnanceArm();
@@ -395,6 +403,7 @@ void SIISystems::SwitchSelector(int channel)
 		FireUllageTrigger();
 		break;
 	case 25: //Start Phase Limiter Cutoff Arm
+		StartPhaseLimiterCutoffArm = true;
 		break;
 	case 30: //Start First PAM - FM/FM Relays Reset
 		break;
