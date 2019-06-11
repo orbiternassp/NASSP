@@ -249,9 +249,9 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		if (abort) break; // Don't do anything if we have aborted.
 
 		if (sat->GetMissionTime() < -2.0)
-			liftoffStreamLevel = (sat->GetMissionTime() + 4.9) / 2.9;
+			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() + 4.9) / 2.9;
 		else
-			liftoffStreamLevel = 1;
+			liftoffStreamLevel = sat->GetSIThrustLevel();
 		break;
 	
 	case STATE_LIFTOFF:
@@ -276,7 +276,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 			SetAnimation(swingarmAnim, swingarmProc);
 		}
 
-		liftoffStreamLevel = 1;
+		liftoffStreamLevel = sat->GetSIThrustLevel();
 	break;
 
 	case STATE_POSTLIFTOFF:
@@ -284,7 +284,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
 		if (sat->GetMissionTime() < 10.0 && !abort)
-			liftoffStreamLevel = (sat->GetMissionTime() - 10.0) / -6.0;
+			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() - 10.0) / -6.0;
 		else {
 			liftoffStreamLevel = 0;
 

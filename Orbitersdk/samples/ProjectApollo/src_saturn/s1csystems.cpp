@@ -90,7 +90,7 @@ void F1Engine::Timestep(double simdt)
 	//Thrust OK switch
 	ThrustOK = vessel->GetThrusterLevel(th_f1) > 0.9 && !EngineFailed;
 
-	if (ProgrammedCutoff || EDSCutoff || GSECutoff || RSSCutoff || (!ThrustOK && EngineRunning))
+	if (ProgrammedCutoff || EDSCutoff || GSECutoff || RSSCutoff)
 	{
 		EngineStop = true;
 	}
@@ -272,10 +272,13 @@ void SICSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
-	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 5);
-	papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 5);
-	papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
+	if (FailInit)
+	{
+		papiWriteScenario_bool(scn, "FAILINIT", FailInit);
+		papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 5);
+		papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
+	}
 
 	f1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	f1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -360,6 +363,14 @@ void SICSystems::Timestep(double simdt, bool liftoff)
 		}
 	}
 
+	if (MultipleEngineCutoffEnabled)
+	{
+		for (int i = 0;i < 5;i++)
+		{
+			if (f1engines[i]->GetThrustOK() == false) f1engines[i]->SetProgrammedEngineCutoff();
+		}
+	}
+
 	//Failure code
 
 	if (liftoff)
@@ -436,6 +447,18 @@ void SICSystems::EDSEnginesCutoff(bool cut)
 		f1engine3.SetEDSCutoff();
 		f1engine4.SetEDSCutoff();
 		f1engine5.SetEDSCutoff();
+	}
+}
+
+void SICSystems::GSEEnginesCutoff(bool cut)
+{
+	if (cut)
+	{
+		f1engine1.SetGSECutoff();
+		f1engine2.SetGSECutoff();
+		f1engine3.SetGSECutoff();
+		f1engine4.SetGSECutoff();
+		f1engine5.SetGSECutoff();
 	}
 }
 
@@ -539,8 +562,7 @@ bool SICSystems::GetPropellantDepletionEngineCutoff()
 	if (PointLevelSensorArmed)
 	{
 		if (PropellantDepletionSensors) return true;
-
-		for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
+		if (!ThrustOK[0] && !ThrustOK[1] && !ThrustOK[2] && !ThrustOK[3]) return true;
 	}
 
 	return false;
@@ -556,6 +578,20 @@ bool SICSystems::GetInboardEngineOut()
 bool SICSystems::GetOutboardEngineOut()
 {
 	for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
+
+	return false;
+}
+
+bool SICSystems::AllEnginesRunning()
+{
+	for (int i = 0;i < 5;i++) if (!ThrustOK[i]) return false;
+
+	return true;
+}
+
+bool SICSystems::GetEngineStop()
+{
+	for (int i = 0;i < 5;i++) if (f1engines[i]->GetEngineStop()) return true;
 
 	return false;
 }

@@ -964,7 +964,7 @@ void Saturn::clbkPostCreation() {
 
 void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount)
 {
-	if (HasProbe) {
+	if (probeidx != -1 && HasProbe) {
 		probe = GetDevMesh(vis, probeidx);
 		ProbeVis();
 	}
@@ -3500,7 +3500,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_STAGE:
-		if (ApexCoverPyros.Blown()) {
+		if (ApexCoverPyros.Blown() && !HasProbe) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
 
@@ -3513,7 +3513,7 @@ void Saturn::GenericTimestepStage(double simt, double simdt)
 		break;
 
 	case CM_ENTRY_STAGE:
-		if (ApexCoverPyros.Blown()) {
+		if (ApexCoverPyros.Blown() && !HasProbe) {
 			StageEight(simt);
 			ShiftCentreOfMass(_V(0, 0, 1.2));
 		}
@@ -3715,6 +3715,9 @@ void Saturn::GenericLoadStateSetup()
 	//
 
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
+
+	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
+	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
 
 	//
 	// We do our own countdown, so ignore the standard one.
@@ -4656,6 +4659,13 @@ bool Saturn::IsEDSBusPowered(int eds)
 			return EDS3BatBCircuitBraker.IsPowered();
 		}
 	}
+
+	return false;
+}
+
+bool Saturn::IsEDSUnsafe()
+{
+	if (secs.MESCA.EDSUnsafeIndicateSignal() || secs.MESCB.EDSUnsafeIndicateSignal()) return true;
 
 	return false;
 }

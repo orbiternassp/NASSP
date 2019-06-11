@@ -22,6 +22,10 @@
 
   **************************************************************************/
 
+#pragma once
+
+class Saturn;
+
 ///
 /// \ingroup Ground
 ///
@@ -77,8 +81,13 @@ protected:
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;
 
+	Saturn *sat;
+
 	void DoFirstTimestep();
 	double GetDistanceTo(double lon, double lat);
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
+
+	bool CutoffInterlock();
+	bool Commit();
 };

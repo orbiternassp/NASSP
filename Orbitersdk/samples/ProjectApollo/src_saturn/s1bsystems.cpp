@@ -340,10 +340,14 @@ void SIBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFENABLEDRELAY", FuelDepletionCutoffEnabledRelay);
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY1", FuelDepletionCutoffInhibitRelay1);
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY2", FuelDepletionCutoffInhibitRelay2);
-	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
 	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
-	papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 8);
-	papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
+
+	if (FailInit)
+	{
+		papiWriteScenario_bool(scn, "FAILINIT", FailInit);
+		papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 8);
+		papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
+	}
 
 	h1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	h1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");

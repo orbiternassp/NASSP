@@ -625,13 +625,15 @@ BatteryCharger::BatteryCharger(char *i_name, PanelSDK &p) :
 	batSupply3 = NULL;
 	currentBattery = NULL;
 	acPower = NULL;
+	bat3Power = NULL;
 
 	sdk.AddElectrical(this, false);
 }
 
 void BatteryCharger::Init(e_object *bat1, e_object *bat2, e_object *bat3, 
 					      e_object *batSup1, e_object *batSup2, e_object *batSup3,
-			              e_object *dc1, e_object *dc2, e_object *ac)
+			              e_object *dc1, e_object *dc2, e_object *ac,
+						  e_object *bat3pwr)
 {
 	battery1 = bat1;
 	battery2 = bat2;
@@ -641,35 +643,56 @@ void BatteryCharger::Init(e_object *bat1, e_object *bat2, e_object *bat3,
 	batSupply2 = batSup2;
 	batSupply3 = batSup3;
 
+	bat3Power = bat3pwr;
+
 	dcPower.WireToBuses(dc1, dc2);
 	acPower = ac;
 }
 
 void BatteryCharger::Charge(int bat)
-
 {
 	if (bat == 0) {
 		batSupply1->WireTo(NULL);
 		batSupply2->WireTo(NULL);
-		batSupply3->WireTo(NULL);
+
+		//Battery 3 online
+		battery3->WireTo(NULL);
+		bat3Power->WireTo(battery3);
+		batSupply3->WireTo(bat3Power);
+
 		currentBattery = NULL;
 
 	} else if (bat == 1) {
 		batSupply1->WireTo(this);
 		batSupply2->WireTo(NULL);
-		batSupply3->WireTo(NULL);
+
+		//Battery 3 online
+		battery3->WireTo(NULL);
+		bat3Power->WireTo(battery3);
+		batSupply3->WireTo(bat3Power);
+
 		currentBattery = battery1;
 
 	} else if (bat == 2) {
 		batSupply1->WireTo(NULL);
 		batSupply2->WireTo(this);
-		batSupply3->WireTo(NULL);
+
+		//Battery 3 online
+		battery3->WireTo(NULL);
+		bat3Power->WireTo(battery3);
+		batSupply3->WireTo(bat3Power);
+
 		currentBattery = battery2;
 
 	} else if (bat == 3) {
 		batSupply1->WireTo(NULL);
 		batSupply2->WireTo(NULL);
+
+		//Battery 3 offline
 		batSupply3->WireTo(this);
+		bat3Power->WireTo(batSupply3);
+		battery3->WireTo(bat3Power);
+
 		currentBattery = battery3;
 	}
 }

@@ -24,82 +24,129 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class LVRG;
 class IU;
 
 class EDS
 {
 public:
-	EDS(LVRG &rg);
+	EDS(IU *iu);
 	virtual ~EDS() {}
 	virtual void Timestep(double simdt) = 0;
-	void Init(IU *i);
 	void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
-	void SetTwoEngOutAutoAbortInhibit(bool set) { TwoEngOutAutoAbortInhibit = set; }
-	void SetExcessiveRatesAutoAbortInhibit(bool set) { ExcessiveRatesAutoAbortInhibit = set; }
+	//Switch Selector Functions
+	void SetTwoEngOutAutoAbortInhibit() { TwoEngOutAutoAbortInhibit = true; }
+	void SetExcessiveRatePYRAutoAbortInhibitEnable(bool set) { ExcessiveRatePYRAutoAbortInhibitEnable = set; }
+	void SetExcessiveRateRollAutoAbortInhibitEnable(bool set) { ExcessiveRateRollAutoAbortInhibitEnable = set; }
+	void SetExcessiveRatePYRAutoAbortInhibit(bool set) { ExcessiveRatePYRAutoAbortInhibit = set; }
+	void SetExcessiveRateRollAutoAbortInhibit(bool set) { ExcessiveRateRollAutoAbortInhibit = set; }
+	void SetTwoEngOutAutoAbortInhibitEnable() { TwoEngOutAutoAbortInhibitEnable = true; }
 	void SetSIEngineOutIndicationA(bool set) { SIEngineOutIndicationA = set; }
 	void SetSIEngineOutIndicationB(bool set) { SIEngineOutIndicationB = set; }
 	void SetSIVBEngineOutIndicationA(bool set) { SIVBEngineOutIndicationA = set; }
 	void SetSIVBEngineOutIndicationB(bool set) { SIVBEngineOutIndicationB = set; }
-	void SetRateGyroSCIndicationSwitchA(bool set) { RateGyroSCIndicationSwitchA = set; }
-	void SetRateGyroSCIndicationSwitchB(bool set) { RateGyroSCIndicationSwitchB = set; }
-	void SetLVEnginesCutoffEnable(bool set) { LVEnginesCutoffEnable = set; }
+	void SetLVEnginesCutoffEnable() { LVEnginesCutoffEnable = true; }
 	void ResetAutoAbortRelays() { AutoAbortEnableRelayA = false; AutoAbortEnableRelayB = false; }
 	void SetSIVBEngineCutoffDisabled() { SIVBEngineCutoffDisabled = true; }
+	void SetSIVBRestartAlert(bool set) { SIVBRestartAlert = set; }
 
+	//GSE Reset Buses
+	void ResetBus1();
+	void ResetBus2();
+
+	//To spacecraft
 	bool GetLiftoffCircuitA() { return LiftoffA; }
 	bool GetLiftoffCircuitB() { return LiftoffB; }
 	bool GetEDSAbort(int n);
-protected:
-	LVRG &lvrg;
 
+	//To IU
+	bool GetIULiftoff() { return IULiftoffRelay; }
+
+	//GSE
+	bool GetLiftoffEnableA() { return AutoAbortEnableRelayA; }
+	bool GetLiftoffEnableB() { return AutoAbortEnableRelayB; }
+	bool GetAutoAbort() { return AutoAbortBus; }
+protected:
 	IU* iu;
 
-	//Common Relays:
-	
-	//K29
-	bool AutoAbortInitiate;
-	//K43
-	bool TwoEngOutAutoAbortDeactivate;
-	//K46
-	bool ExcessRatesAutoAbortDeactivatePY;
-	//K47
-	bool ExcessRatesAutoAbortDeactivateR;
+	bool LVEnginesCutoffVote();
 
-	bool TwoEngOutAutoAbortInhibit;
-	bool ExcessiveRatesAutoAbortInhibit;
+	//Buses:
+
+	//+6D91-93
+	bool IUEDSBusPowered;
+	//+6D95
+	bool AutoAbortBus;
+
+	//EDS Distributor Relays:
+	
+	//A6K1, A7K1, A8K3 (K43-1 - K43-3)
+	bool TwoEngOutAutoAbortDeactivate;
+	//K46-K48 (K46-1 - K46-3)
+	bool ExcessRatesAutoAbortDeactivatePY;
+	//K52-K54 (K47-1 - K71-3)
+	bool ExcessRatesAutoAbortDeactivateR;
+	//K19 (K19-1)
 	bool LVEnginesCutoffEnable;
-	bool RateGyroSCIndicationSwitchA;
-	bool RateGyroSCIndicationSwitchB;
 	bool SIEngineOutIndicationA;
 	bool SIEngineOutIndicationB;
+	//K78-1 (K173)
 	bool SIIEngineOutIndicationA;
+	//K88-2 (K174)
 	bool SIIEngineOutIndicationB;
+	//K6 (K66)
 	bool SIVBEngineOutIndicationA;
+	//K91 (K167)
 	bool SIVBEngineOutIndicationB;
-	//K235
+	//K2 (K90)
 	bool AutoAbortInhibitRelayA;
-	//K236
+	//K3 (K91)
 	bool AutoAbortInhibitRelayB;
+	//K4 (K4)
+	bool IULiftoffRelay;
+	//K65 (K92)
 	bool AutoAbortEnableRelayA;
+	//K66 (K93)
 	bool AutoAbortEnableRelayB;
+	//K40 (K20-1)
+	bool LVEnginesCutoff1;
+	//K41-1/2 (K20-2/4)
+	bool LVEnginesCutoff2;
+	//K42 (K20-3)
+	bool LVEnginesCutoff3;
+	//K76 (K232)
+	bool SIVBRestartAlert;
+	bool SIVBEngineCutoffDisabled;
+
+	//Control Distributor Relays (move to own class later):
+	//K15 (K113)
+	bool ExcessiveRatePYRAutoAbortInhibitEnable;
+	//K16 (K40)
+	bool ExcessiveRatePYRAutoAbortInhibit;
+	//K17 (K114)
+	bool ExcessiveRateRollAutoAbortInhibitEnable;
+	//K18 (K41)
+	bool ExcessiveRateRollAutoAbortInhibit;
+	//K19 (K115)
+	bool TwoEngOutAutoAbortInhibitEnable;
+	//K20 (K42)
+	bool TwoEngOutAutoAbortInhibit;
+
+	//Signals
 	bool LiftoffA;
 	bool LiftoffB;
-	bool LVEnginesCutoff1;
-	bool LVEnginesCutoff2;
-	bool LVEnginesCutoff3;
-	bool SecondPlaneSeparationMonitorRelay;
-	bool SIVBEngineCutoffDisabled;
-	bool SIEDSCutoff;
-	bool SIIEDSCutoff;
-	bool SIVBEDSCutoff;
 	bool EDSAbortSignal1;
 	bool EDSAbortSignal2;
 	bool EDSAbortSignal3;
+
+	//Other
+	bool SecondPlaneSeparationMonitor;
+	bool SIEDSCutoff;
+	bool SIIEDSCutoff;
+	bool SIVBEDSCutoff;
 
 	//Common Saturn Failures
 	bool PlatformFailure;
@@ -109,7 +156,7 @@ protected:
 class EDS1B : public EDS
 {
 public:
-	EDS1B(LVRG &rg);
+	EDS1B(IU *iu);
 	void Timestep(double simdt);
 	void LVIndicatorsOff();
 	bool ThrustCommitEval();
@@ -121,12 +168,12 @@ protected:
 class EDSSV : public EDS
 {
 public:
-	EDSSV(LVRG &rg);
+	EDSSV(IU *iu);
 	void Timestep(double simdt);
 	void LVIndicatorsOff();
 	bool ThrustCommitEval();
-	void SetSIIEngineOutIndicationA(bool set) { SIIEngineOutIndicationA = set; }
-	void SetSIIEngineOutIndicationB(bool set) { SIIEngineOutIndicationB = set; }
+	void SetSIIEngineOutIndicationA() { SIIEngineOutIndicationA = true; }
+	void SetSIIEngineOutIndicationB() { SIIEngineOutIndicationB = true; }
 protected:
 	bool SIThrustOK[5];
 	bool SIIThrustOK[5];

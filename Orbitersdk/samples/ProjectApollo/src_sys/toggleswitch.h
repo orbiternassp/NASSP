@@ -509,6 +509,7 @@ class NSourceDestSwitch : public ToggleSwitch {
 public:
 	NSourceDestSwitch(int nSources);
 	~NSourceDestSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void LoadState(char *line);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 	void WireSourcesToBuses(int bus, e_object* i, DCbus* o);
@@ -777,7 +778,7 @@ class AGCSwitch: public ToggleSwitch {
 
 public:
 	AGCSwitch() { agc = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, int xoffset = 0, int yoffset = 0);
 
 protected:
 	ApolloGuidance *agc;
@@ -818,8 +819,17 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
-class CMCOpticsModeSwitch : public AGCThreePoswitch {
+class CMCOpticsModeSwitch : public AGCSwitch {
 public:
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, ToggleSwitch * zeroSwitch);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+protected:
+	ToggleSwitch *opticsZeroSwitch;
+};
+
+class CMCOpticsZeroSwitch : public AGCSwitch {
+public:
+	void DoDrawSwitch(SURFHANDLE DrawSurface);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 

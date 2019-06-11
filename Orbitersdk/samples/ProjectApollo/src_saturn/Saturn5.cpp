@@ -1023,6 +1023,13 @@ void SaturnV::SIEDSCutoff(bool cut)
 	sic.EDSEnginesCutoff(cut);
 }
 
+void SaturnV::SIGSECutoff(bool cut)
+{
+	if (stage >= LAUNCH_STAGE_ONE) return;
+
+	sic.GSEEnginesCutoff(cut);
+}
+
 void SaturnV::GetSIIThrustOK(bool *ok)
 {
 	for (int i = 0;i < 5;i++)
@@ -1073,6 +1080,8 @@ void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime)
 
 double SaturnV::GetSIThrustLevel()
 {
+	if (stage > LAUNCH_STAGE_ONE) return 0.0;
+
 	double lvl = 0.0;
 	for (int i = 0;i < 5;i++)
 	{
@@ -1080,6 +1089,18 @@ double SaturnV::GetSIThrustLevel()
 	}
 
 	return lvl / 5.0;
+}
+
+bool SaturnV::AllSIEnginesRunning()
+{
+	if (stage > PRELAUNCH_STAGE) return false;
+
+	return sic.AllEnginesRunning();
+}
+
+bool SaturnV::SIStageLogicCutoff()
+{
+	return sic.GetEngineStop();
 }
 
 void SaturnV::SetRandomFailures()

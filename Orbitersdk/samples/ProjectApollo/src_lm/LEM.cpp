@@ -235,6 +235,18 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
+	// Switch to compatible dock mode
+	SetDockMode(0);
+
+	// Docking port (0)
+	SetLmDockingPort(2.6);
+
+	// Docking port used for LM/SLA connection (1)
+	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
+	VECTOR3 dockdir = { 0,-1,0 };
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
+	docksla = CreateDock(dockpos, dockdir, dockrot);
+
 	// Init further down
 	Init();
 }
@@ -380,6 +392,9 @@ void LEM::Init()
 	/// \todo Disabled for now because of the LEVA and the descent stage vessel
 	///		  Enable before CSM docking
 	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
+
+	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
+	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
 
 	strncpy(AudioLanguage, "English", 64);
 	soundlib.SetLanguage(AudioLanguage);
@@ -895,6 +910,12 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 			SeparateStage(stage);
 		}
 	}
+
+	// Delete LM/SLA docking port at LM extraction from SIVB or staging
+	if (docksla && (!DockingStatus(1) || stage > 1)) {
+		DelDock(docksla);
+		docksla = NULL;
+	}
 }
 
 
@@ -907,7 +928,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	{
 		double dustlvl = min(1.0, max(0.0, GetThrusterLevel(th_hover[0]))*(-(vsAlt - 2.0) / 15.0 + 1.0));
 
-		if (stage == 1 && thg_dust) {
+		if (stage < 2 && thg_dust) {
 			if (vsAlt < 15.0) {
 				SetThrusterGroupLevel(thg_dust, dustlvl);
 			}
@@ -969,8 +990,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	RCSSoundTimestep();
 
-	if (stage == 0)	{
-		
+	if (stage == 0 || NoLegs)	{
+
 
 	}else if (stage == 1 || stage == 5)	{
 
@@ -1061,6 +1082,9 @@ void LEM::SetGenericStageState(int stat)
 		stage = 1;
 		SetLmVesselDockStage();
 		SetLmVesselHoverStage();
+
+		// Update touchdown points with current mass
+		if (Landed) HoverStageTouchdownPoints(GetMass());
 
 		if (CDREVA_IP) {
 			SetupEVA();
@@ -1443,17 +1467,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
-	// Switch to compatible dock mode 
-	SetDockMode(0);
-	SetLmDockingPort(2.6);
-
-	// Docking port used for LM/SLA connection
-	DOCKHANDLE docksla;
-	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
-	VECTOR3 dockdir = { 0,-1,0 };
-	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
-	docksla = CreateDock(dockpos, dockdir, dockrot);
-
 	//
 	// Scan the launchpad config file.
 	//
@@ -1480,22 +1493,26 @@ void LEM::clbkPostCreation()
 		}
 		else pMCC = NULL;
 	}
+
+	// Delete LM/SLA docking port if LM extracted from SIVB
+	if (docksla && !DockingStatus(1)) {
+		DelDock(docksla);
+		docksla = NULL;
+	}
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 {
-
-	drogue = GetDevMesh(vis, ascidx);
-	DrogueVis();
-
-	if (Crewed) {
+	if (ascidx != -1) {
+		drogue = GetDevMesh(vis, ascidx);
+		DrogueVis();
 		cdrmesh = GetDevMesh(vis, ascidx);
 		lmpmesh = GetDevMesh(vis, ascidx);
 		SetCrewMesh();
 	}
 
-	probes = GetDevMesh(vis, dscidx);
-	if (Landed && !NoLegs) {
+	if (dscidx != -1 && !NoLegs) {
+		probes = GetDevMesh(vis, dscidx);
 		HideProbes();
 	}
 }

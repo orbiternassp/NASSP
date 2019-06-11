@@ -88,19 +88,21 @@ public:
 
 	void GetSIThrustOK(bool *ok);
 	void SIEDSCutoff(bool cut);
+	void SIGSECutoff(bool cut);
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
 	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
+	double GetSIThrustLevel();
+	bool AllSIEnginesRunning();
+	bool SIStageLogicCutoff();
 
 	void GetSIIThrustOK(bool *ok);
 	void SIIEDSCutoff(bool cut);
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
-
-	double GetSIThrustLevel();
 
 	//
 	// Functions that external code shouldn't need to access.

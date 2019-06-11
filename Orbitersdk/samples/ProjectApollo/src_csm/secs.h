@@ -138,12 +138,10 @@ public:
 	bool GetLESAbortRelay() { return LESAbortRelay;	}
 	bool GetLETJettisonAndFrangibleNutsRelay() { return LETJettisonAndFrangibleNutsRelay; }
 	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
-	void SetEDSAbortRelay1(bool relay) { EDSAbort1Relay = relay; }
-	void SetEDSAbortRelay2(bool relay) { EDSAbort2Relay = relay; }
-	void SetEDSAbortRelay3(bool relay) { EDSAbort3Relay = relay; }
 	bool FireUllage() { return MESCLogicArm && UllageRelay; };
 	bool BECO() { return BoosterCutoffAbortStartRelay; };
 	bool ELSActivateLogic();
+	bool EDSUnsafeIndicateSignal();
 
 	//Source 12
 	bool MESCLogicBus();
@@ -366,10 +364,6 @@ public:
 	bool GetDockingProbeRetractPrim2() { return LDECA.GetDockingProbeRetract2(); }
 	bool GetDockingProbeRetractSec1() { return LDECB.GetDockingProbeRetract1(); }
 	bool GetDockingProbeRetractSec2() { return LDECB.GetDockingProbeRetract2(); }
-
-	void SetEDSAbort1(bool set) { MESCA.SetEDSAbortRelay1(set); MESCB.SetEDSAbortRelay1(set); };
-	void SetEDSAbort2(bool set) { MESCA.SetEDSAbortRelay2(set); MESCB.SetEDSAbortRelay2(set); };
-	void SetEDSAbort3(bool set) { MESCA.SetEDSAbortRelay3(set); MESCB.SetEDSAbortRelay3(set); };
 
 	void SetSaturnType(int sattype);
 

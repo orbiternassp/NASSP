@@ -257,11 +257,11 @@ void Saturn::SystemsInit() {
 
 	BatteryCharger.Init(EntryBatteryA, EntryBatteryB, EntryBatteryC,
 		                &BatteryChargerBatACircuitBraker, &BatteryChargerBatBCircuitBraker, &BatCCHRGCircuitBraker,
-						&BatteryChargerMnACircuitBraker, &BatteryChargerMnBCircuitBraker, &BatteryChargerAcPwrCircuitBraker);
+						&BatteryChargerMnACircuitBraker, &BatteryChargerMnBCircuitBraker, &BatteryChargerAcPwrCircuitBraker,
+						&BatCPWRCircuitBraker);
 
 	EntryBatteryA->WireTo(&BatteryChargerBatACircuitBraker);
 	EntryBatteryB->WireTo(&BatteryChargerBatBCircuitBraker);
-	EntryBatteryC->WireTo(&BatCCHRGCircuitBraker); 
 
 	//
 	// SCS Logic Buses
@@ -277,6 +277,9 @@ void Saturn::SystemsInit() {
 	Panelsdk.AddElectrical(&SCSLogicBus2, false);
 	Panelsdk.AddElectrical(&SCSLogicBus3, false);
 	Panelsdk.AddElectrical(&SCSLogicBus4, false);
+
+	LogicPowerSwitch.WireSourcesToBuses(1, &SCSLogicBus2Feeder, &SCSLogicBus2);
+	LogicPowerSwitch.WireSourcesToBuses(2, &SCSLogicBus3Feeder, &SCSLogicBus3);
 
 	//
 	// Generic power source for switches, tied to both Bus A and
@@ -919,7 +922,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //h_Pipe* csmtunnelpipe = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
 //double *pressequalFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE:FLOW");
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
-	
+
 
 #ifdef _DEBUG
 

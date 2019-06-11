@@ -30,10 +30,15 @@ public:
 	virtual ~Sat5Abort3();
 	void init();
 	void Setup();
+	virtual void SetState(bool lowres);
+	void clbkSaveState(FILEHANDLE scn);
+	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 
 	void clbkSetClassCaps(FILEHANDLE cfg);
 
 protected:
+
+	bool LowRes;                    ///< Mesh resolution flag
 
 	//
 	// We don't actually seem to use any of these variables, even though they're

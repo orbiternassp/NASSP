@@ -67,7 +67,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	{
 		mission = 9;
 	}
-	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie Brown") == 0 || strcmp(v->GetName(), "Snoopy") == 0)
+	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie-Brown") == 0 || strcmp(v->GetName(), "Snoopy") == 0)
 	{
 		mission = 10;
 	}
@@ -75,7 +75,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	{
 		mission = 11;
 	}
-	else if (strcmp(v->GetName(), "Yankee Clipper") == 0 || strcmp(v->GetName(), "Intrepid") == 0)
+	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0 || strcmp(v->GetName(), "Intrepid") == 0)
 	{
 		mission = 12;
 	}
@@ -83,7 +83,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	{
 		mission = 13;
 	}
-	else if (strcmp(v->GetName(), "Kitty Hawk") == 0 || strcmp(v->GetName(), "Antares") == 0)
+	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0 || strcmp(v->GetName(), "Antares") == 0)
 	{
 		mission = 14;
 	}
@@ -344,7 +344,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		vesseltype = 2;
 	}
-	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie Brown") == 0)
+	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie-Brown") == 0)
 	{
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
 	}
@@ -364,7 +364,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		AGCEpoch = 40586.767239;
 		AGCEphemTEphemZero = 40403.0;
 	}
-	else if (strcmp(v->GetName(), "Yankee Clipper") == 0)
+	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0)
 	{
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
 		AGCEpoch = 40586.767239;
@@ -388,7 +388,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		AGCEpoch = 40586.767239;
 		AGCEphemTEphemZero = 40403.0;
 	}
-	else if (strcmp(v->GetName(), "Kitty Hawk") == 0)
+	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0)
 	{
 		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.067*RAD);
 		AGCEpoch = 40952.009432;

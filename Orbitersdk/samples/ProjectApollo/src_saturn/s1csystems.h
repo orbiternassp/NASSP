@@ -35,12 +35,14 @@ public:
 	void SetEngineStart() { EngineStart = true; }
 	void SetProgrammedEngineCutoff() { ProgrammedCutoff = true; }
 	void SetEDSCutoff() { EDSCutoff = true; }
+	void SetGSECutoff() { GSECutoff = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
 	void SetFailed() { EngineFailed = true; }
 
 	bool GetThrustOK() { return ThrustOK; }
 	double GetThrustLevel() { return ThrustLevel; }
 	bool GetFailed() { return EngineFailed; }
+	bool GetEngineStop() { return EngineStop; }
 protected:
 	THRUSTER_HANDLE &th_f1;
 	VESSEL *vessel;
@@ -77,6 +79,7 @@ public:
 	void TwoAdjacentOutboardEnginesOutCutoffEnable() { TwoAdjacentOutboardEnginesOutCutoff = true; }
 	void MultipleEngineCutoffEnable() { MultipleEngineCutoffEnabled = true; }
 	void EDSEnginesCutoff(bool cut);
+	void GSEEnginesCutoff(bool cut);
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 	void SwitchSelector(int channel);
 
@@ -89,6 +92,9 @@ public:
 	bool GetPropellantDepletionEngineCutoff();
 	bool GetInboardEngineOut();
 	bool GetOutboardEngineOut();
+
+	bool AllEnginesRunning();
+	bool GetEngineStop();
 protected:
 
 	double GetSumThrust();
@@ -110,9 +116,12 @@ protected:
 	F1Engine *f1engines[5];
 
 	bool PropellantDepletionSensors;
-	bool PointLevelSensorArmed;
+	//K1
 	bool TwoAdjacentOutboardEnginesOutCutoff;
+	//K2
 	bool MultipleEngineCutoffEnabled;
+	//K3
+	bool PointLevelSensorArmed;
 
 	bool ThrustOK[5];
 

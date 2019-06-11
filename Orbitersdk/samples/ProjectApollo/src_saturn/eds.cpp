@@ -34,17 +34,19 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "EDS.h"
 
-EDS::EDS(LVRG &rg) : lvrg(rg)
+EDS::EDS(IU *iu)
 {
-	AutoAbortInitiate = false;
+	this->iu = iu;
+
 	TwoEngOutAutoAbortDeactivate = false;
+	ExcessiveRatePYRAutoAbortInhibitEnable = false;
 	ExcessRatesAutoAbortDeactivatePY = false;
 	ExcessRatesAutoAbortDeactivateR = false;
 	TwoEngOutAutoAbortInhibit = false;
-	ExcessiveRatesAutoAbortInhibit = false;
+	ExcessiveRatePYRAutoAbortInhibit = false;
+	ExcessiveRateRollAutoAbortInhibit = false;
+	ExcessiveRateRollAutoAbortInhibitEnable = false;
 	LVEnginesCutoffEnable = false;
-	RateGyroSCIndicationSwitchA = false;
-	RateGyroSCIndicationSwitchB = false;
 	SIEngineOutIndicationA = false;
 	SIEngineOutIndicationB = false;
 	SIIEngineOutIndicationA = false;
@@ -60,7 +62,7 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	LVEnginesCutoff1 = false;
 	LVEnginesCutoff2 = false;
 	LVEnginesCutoff3 = false;
-	SecondPlaneSeparationMonitorRelay = false;
+	SecondPlaneSeparationMonitor = false;
 	SIVBEngineCutoffDisabled = false;
 	SIEDSCutoff = false;
 	SIIEDSCutoff = false;
@@ -68,16 +70,15 @@ EDS::EDS(LVRG &rg) : lvrg(rg)
 	EDSAbortSignal1 = false;
 	EDSAbortSignal2 = false;
 	EDSAbortSignal3 = false;
+	SIVBRestartAlert = false;
+	IULiftoffRelay = false;
+	TwoEngOutAutoAbortInhibitEnable = false;
+
+	AutoAbortBus = false;
+	IUEDSBusPowered = false;
 
 	PlatformFailure = false;
 	PlatformFailureTime = 0.0;
-
-	iu = NULL;
-}
-
-void EDS::Init(IU *i)
-{
-	iu = i;
 }
 
 void EDS::SetPlatformFailureParameters(bool PlatFail, double PlatFailTime)
@@ -104,22 +105,47 @@ bool EDS::GetEDSAbort(int n)
 	return false;
 }
 
+void EDS::ResetBus1()
+{
+	ExcessiveRatePYRAutoAbortInhibitEnable = false;
+	ExcessiveRateRollAutoAbortInhibitEnable = false;
+	TwoEngOutAutoAbortInhibit = false;
+	LVEnginesCutoffEnable = false;
+	SIIEngineOutIndicationA = false;
+	SIVBRestartAlert = false;
+	SIVBEngineOutIndicationB = false;
+
+}
+void EDS::ResetBus2()
+{
+	ExcessiveRatePYRAutoAbortInhibit = false;
+	ExcessiveRateRollAutoAbortInhibit = false;
+	TwoEngOutAutoAbortInhibitEnable = false;
+	SIIEngineOutIndicationB = false;
+	SIVBEngineOutIndicationA = false;
+}
+
+bool EDS::LVEnginesCutoffVote()
+{
+	if (!LVEnginesCutoff1 && !LVEnginesCutoff2) return true;
+	if (!LVEnginesCutoff1 && !LVEnginesCutoff3) return true;
+	if (!LVEnginesCutoff2 && !LVEnginesCutoff3) return true;
+
+	return false;
+}
+
 void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
-	papiWriteScenario_bool(scn, "AUTOABORTINITIATE", AutoAbortInitiate);
+	papiWriteScenario_bool(scn, "AUTOABORTBUS", AutoAbortBus);
 	papiWriteScenario_bool(scn, "AUTOABORTENABLERELAYA", AutoAbortEnableRelayA);
 	papiWriteScenario_bool(scn, "AUTOABORTENABLERELAYB", AutoAbortEnableRelayB);
 	papiWriteScenario_bool(scn, "AUTOABORTINHIBITRELAYA", AutoAbortInhibitRelayA);
 	papiWriteScenario_bool(scn, "AUTOABORTINHIBITRELAYB", AutoAbortInhibitRelayB);
 	papiWriteScenario_bool(scn, "LIFTOFFA", LiftoffA);
 	papiWriteScenario_bool(scn, "LIFTOFFB", LiftoffB);
-	papiWriteScenario_bool(scn, "TWOENGOUTAUTOABORTDEACTIVATE", TwoEngOutAutoAbortDeactivate);
-	papiWriteScenario_bool(scn, "EXCESSRATESAUTOABORTDEACTIVATEPY", ExcessRatesAutoAbortDeactivatePY);
-	papiWriteScenario_bool(scn, "EXCESSRATESAUTOABORTDEACTIVATER", ExcessRatesAutoAbortDeactivateR);
+	papiWriteScenario_bool(scn, "TWOENGOUTAUTOABORTINHIBITENABLE", TwoEngOutAutoAbortInhibitEnable);
 	papiWriteScenario_bool(scn, "TWOENGOUTAUTOABORTINHIBIT", TwoEngOutAutoAbortInhibit);
-	papiWriteScenario_bool(scn, "RATEGYROSCINDICATIONSWITCHA", RateGyroSCIndicationSwitchA);
-	papiWriteScenario_bool(scn, "RATEGYROSCINDICATIONSWITCHB", RateGyroSCIndicationSwitchB);
 	papiWriteScenario_bool(scn, "SIENGINEOUTINDICATIONA", SIEngineOutIndicationA);
 	papiWriteScenario_bool(scn, "SIENGINEOUTINDICATIONB", SIEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
@@ -127,10 +153,7 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
-	papiWriteScenario_bool(scn, "LVENGINESCUTOFF1", LVEnginesCutoff1);
-	papiWriteScenario_bool(scn, "LVENGINESCUTOFF2", LVEnginesCutoff2);
-	papiWriteScenario_bool(scn, "LVENGINESCUTOFF3", LVEnginesCutoff3);
-	papiWriteScenario_bool(scn, "SECONDPLANESEPARATIONMONITORRELAY", SecondPlaneSeparationMonitorRelay);
+	papiWriteScenario_bool(scn, "SECONDPLANESEPARATIONMONITOR", SecondPlaneSeparationMonitor);
 	papiWriteScenario_bool(scn, "SIEDSCUTOFF", SIEDSCutoff);
 	papiWriteScenario_bool(scn, "SIIEDSCUTOFF", SIIEDSCutoff);
 	papiWriteScenario_bool(scn, "SIVBEDSCUTOFF", SIVBEDSCutoff);
@@ -138,6 +161,12 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "EDSABORTSIGNAL1", EDSAbortSignal1);
 	papiWriteScenario_bool(scn, "EDSABORTSIGNAL2", EDSAbortSignal2);
 	papiWriteScenario_bool(scn, "EDSABORTSIGNAL3", EDSAbortSignal3);
+	papiWriteScenario_bool(scn, "SIVBRESTARTALERT", SIVBRestartAlert);
+	papiWriteScenario_bool(scn, "IULIFTOFFRELAY", IULiftoffRelay);
+	papiWriteScenario_bool(scn, "EXCESSIVERATEPYRAUTOABORTINHIBITENABLE", ExcessiveRatePYRAutoAbortInhibitEnable);
+	papiWriteScenario_bool(scn, "EXCESSIVERATEPYRAUTOABORTINHIBIT", ExcessiveRatePYRAutoAbortInhibit);
+	papiWriteScenario_bool(scn, "EXCESSIVERATEROLLAUTOABORTINHIBITENABLE", ExcessiveRateRollAutoAbortInhibitEnable);
+	papiWriteScenario_bool(scn, "EXCESSIVERATEROLLAUTOABORTINHIBIT", ExcessiveRateRollAutoAbortInhibit);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -151,18 +180,14 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, end_str, end_len)) {
 			break;
 		}
-		papiReadScenario_bool(line, "AUTOABORTINITIATE", AutoAbortInitiate);
+		papiReadScenario_bool(line, "AUTOABORTBUS", AutoAbortBus);
 		papiReadScenario_bool(line, "AUTOABORTENABLERELAYA", AutoAbortEnableRelayA);
 		papiReadScenario_bool(line, "AUTOABORTENABLERELAYB", AutoAbortEnableRelayB);
 		papiReadScenario_bool(line, "LIFTOFFA", LiftoffA);
 		papiReadScenario_bool(line, "LIFTOFFB", LiftoffB);
-		papiReadScenario_bool(line, "TWOENGOUTAUTOABORTDEACTIVATE", TwoEngOutAutoAbortDeactivate);
-		papiReadScenario_bool(line, "EXCESSRATESAUTOABORTDEACTIVATEPY", ExcessRatesAutoAbortDeactivatePY);
-		papiReadScenario_bool(line, "EXCESSRATESAUTOABORTDEACTIVATER", ExcessRatesAutoAbortDeactivateR);
+		papiReadScenario_bool(line, "TWOENGOUTAUTOABORTINHIBITENABLE", TwoEngOutAutoAbortInhibitEnable);
 		papiReadScenario_bool(line, "TWOENGOUTAUTOABORTINHIBIT", TwoEngOutAutoAbortInhibit);
-		papiReadScenario_bool(line, "EXCESSIVERATESAUTOABORTINHIBIT", ExcessiveRatesAutoAbortInhibit);
-		papiReadScenario_bool(line, "RATEGYROSCINDICATIONSWITCHA", RateGyroSCIndicationSwitchA);
-		papiReadScenario_bool(line, "RATEGYROSCINDICATIONSWITCHB", RateGyroSCIndicationSwitchB);
+		papiReadScenario_bool(line, "EXCESSIVERATESAUTOABORTINHIBIT", ExcessiveRatePYRAutoAbortInhibit);
 		papiReadScenario_bool(line, "SIENGINEOUTINDICATIONA", SIEngineOutIndicationA);
 		papiReadScenario_bool(line, "SIENGINEOUTINDICATIONB", SIEngineOutIndicationB);
 		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
@@ -170,10 +195,7 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIEngineOutIndicationB);
 		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
-		papiReadScenario_bool(line, "LVENGINESCUTOFF1", LVEnginesCutoff1);
-		papiReadScenario_bool(line, "LVENGINESCUTOFF2", LVEnginesCutoff2);
-		papiReadScenario_bool(line, "LVENGINESCUTOFF3", LVEnginesCutoff3);
-		papiReadScenario_bool(line, "SECONDPLANESEPARATIONMONITORRELAY", SecondPlaneSeparationMonitorRelay);
+		papiReadScenario_bool(line, "SECONDPLANESEPARATIONMONITOR", SecondPlaneSeparationMonitor);
 		papiReadScenario_bool(line, "SIEDSCUTOFF", SIEDSCutoff);
 		papiReadScenario_bool(line, "SIIEDSCUTOFF", SIIEDSCutoff);
 		papiReadScenario_bool(line, "SIVBEDSCUTOFF", SIVBEDSCutoff);
@@ -181,11 +203,17 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "EDSABORTSIGNAL1", EDSAbortSignal1);
 		papiReadScenario_bool(line, "EDSABORTSIGNAL2", EDSAbortSignal2);
 		papiReadScenario_bool(line, "EDSABORTSIGNAL3", EDSAbortSignal3);
+		papiReadScenario_bool(line, "SIVBRESTARTALERT", SIVBRestartAlert);
+		papiReadScenario_bool(line, "IULIFTOFFRELAY", IULiftoffRelay);
+		papiReadScenario_bool(line, "EXCESSIVERATEPYRAUTOABORTINHIBITENABLE", ExcessiveRatePYRAutoAbortInhibitEnable);
+		papiReadScenario_bool(line, "EXCESSIVERATEPYRAUTOABORTINHIBIT", ExcessiveRatePYRAutoAbortInhibit);
+		papiReadScenario_bool(line, "EXCESSIVERATEROLLAUTOABORTINHIBITENABLE", ExcessiveRateRollAutoAbortInhibitEnable);
+		papiReadScenario_bool(line, "EXCESSIVERATEROLLAUTOABORTINHIBIT", ExcessiveRateRollAutoAbortInhibit);
 
 	}
 }
 
-EDS1B::EDS1B(LVRG &rg) : EDS(rg)
+EDS1B::EDS1B(IU *iu) : EDS(iu)
 {
 	for (int i = 0;i < 8;i++)
 	{
@@ -219,7 +247,7 @@ void EDS1B::Timestep(double simdt)
 
 	VECTOR3 AttRate;
 
-	AttRate = lvrg.GetRates();
+	AttRate = iu->GetLVRG()->GetRates();
 
 	int EDSSwitch = iu->GetCommandConnector()->EDSSwitchState();
 	int LVRateAutoSwitch = iu->GetCommandConnector()->LVRateAutoSwitchState();
@@ -233,69 +261,60 @@ void EDS1B::Timestep(double simdt)
 	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
 	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
 
+	if (iu->IsUmbilicalConnected())
+	{
+		IULiftoffRelay = true;
+		IUEDSBusPowered = false;
+		AutoAbortInhibitRelayA = true;
+		AutoAbortInhibitRelayB = true;
+	}
+	else
+	{
+		IULiftoffRelay = false;
+		IUEDSBusPowered = true;
+		AutoAbortInhibitRelayA = false;
+		AutoAbortInhibitRelayB = false;
+	}
+
+	AutoAbortBus = false;
+
 	if (Stage <= LAUNCH_STAGE_ONE)
 	{
 		iu->GetLVCommandConnector()->GetSIThrustOK(SIThrustOK);
 	}
 
-	if (TwoEngOutAutoAbortInhibit || TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN)
-	{
+	if ((TwoEngOutAutoAbortInhibitEnable && TwoEngOutAutoAbortInhibit) || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
 		TwoEngOutAutoAbortDeactivate = true;
-	}
 	else
-	{
 		TwoEngOutAutoAbortDeactivate = false;
-	}
 
-	if (ExcessiveRatesAutoAbortInhibit || LVRateAutoSwitch == TOGGLESWITCH_DOWN)
-	{
+	if ((ExcessiveRatePYRAutoAbortInhibitEnable && ExcessiveRatePYRAutoAbortInhibit) || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
 		ExcessRatesAutoAbortDeactivatePY = true;
-		ExcessRatesAutoAbortDeactivateR = true;
-	}
 	else
-	{
 		ExcessRatesAutoAbortDeactivatePY = false;
-		ExcessRatesAutoAbortDeactivateR = false;
-	}
 
-	if (LVEnginesCutoffEnable)
-	{
-		if (BECOA)
-		{
-			LVEnginesCutoff1 = true;
-		}
-		else
-		{
-			LVEnginesCutoff1 = false;
-		}
-
-		if (BECOA && BECOB)
-		{
-			LVEnginesCutoff2 = true;
-		}
-		else
-		{
-			LVEnginesCutoff2 = false;
-		}
-
-		if (BECOB)
-		{
-			LVEnginesCutoff3 = true;
-		}
-		else
-		{
-			LVEnginesCutoff3 = false;
-		}
-	}
+	if ((ExcessiveRatePYRAutoAbortInhibitEnable && ExcessiveRatePYRAutoAbortInhibit) || (ExcessiveRateRollAutoAbortInhibitEnable && ExcessiveRateRollAutoAbortInhibit) || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
+		ExcessRatesAutoAbortDeactivateR = true;
 	else
-	{
+		ExcessRatesAutoAbortDeactivateR = false;
+
+	if (IUEDSBusPowered && !BECOA)
+		LVEnginesCutoff1 = true;
+	else
 		LVEnginesCutoff1 = false;
+
+	if (IUEDSBusPowered && !BECOA && !BECOB)
+		LVEnginesCutoff2 = true;
+	else
 		LVEnginesCutoff2 = false;
+
+	if (IUEDSBusPowered && !BECOB)
+		LVEnginesCutoff3 = true;
+	else
 		LVEnginesCutoff3 = false;
-	}
 
 	//EDS Engine Cutoff
-	if ((EDSBus1Powered && LVEnginesCutoff1) || (EDSBus2Powered && LVEnginesCutoff2) || (EDSBus3Powered && LVEnginesCutoff3))
+	if (IUEDSBusPowered && LVEnginesCutoffEnable && LVEnginesCutoffVote())
 	{
 		if (Stage == LAUNCH_STAGE_ONE)
 		{
@@ -328,8 +347,6 @@ void EDS1B::Timestep(double simdt)
 		}
 	}
 
-	bool S1_TwoEngines_Out, RollRateExceeded, PYRateExceeded;
-
 	if (Stage == LAUNCH_STAGE_ONE)
 	{
 		int enginesout = 0;
@@ -339,48 +356,13 @@ void EDS1B::Timestep(double simdt)
 			if (!SIThrustOK[i]) enginesout++;
 		}
 
-		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate)
-		{
-			S1_TwoEngines_Out = true;
-		}
-		else
-		{
-			S1_TwoEngines_Out = false;
-		}
-	}
-	else
-	{
-		S1_TwoEngines_Out = false;
+		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate) AutoAbortBus = true;
 	}
 
-	if ((abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD) && !ExcessRatesAutoAbortDeactivatePY)
-	{
-		PYRateExceeded = true;
-	}
-	else
-	{
-		PYRateExceeded = false;
-	}
+	if ((abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD) && !ExcessRatesAutoAbortDeactivatePY) AutoAbortBus = true;
+	if (abs(AttRate.x) > 20.5*RAD && !ExcessRatesAutoAbortDeactivateR) AutoAbortBus = true;
 
-	if (abs(AttRate.x) > 20.5*RAD && !ExcessRatesAutoAbortDeactivateR)
-	{
-		RollRateExceeded = true;
-	}
-	else
-	{
-		RollRateExceeded = false;
-	}
-
-	if (RollRateExceeded || PYRateExceeded || S1_TwoEngines_Out)
-	{
-		AutoAbortInitiate = true;
-	}
-	else
-	{
-		AutoAbortInitiate = false;
-	}
-
-	if (EDSBus1Powered && AutoAbortInitiate)
+	if (EDSBus1Powered && !AutoAbortBus)
 	{
 		EDSAbortSignal1 = true;
 	}
@@ -388,7 +370,7 @@ void EDS1B::Timestep(double simdt)
 	{
 		EDSAbortSignal1 = false;
 	}
-	if (EDSBus2Powered && AutoAbortInitiate)
+	if (EDSBus2Powered && !AutoAbortBus)
 	{
 		EDSAbortSignal2 = true;
 	}
@@ -396,7 +378,7 @@ void EDS1B::Timestep(double simdt)
 	{
 		EDSAbortSignal2 = false;
 	}
-	if (EDSBus3Powered && AutoAbortInitiate)
+	if (EDSBus3Powered && !AutoAbortBus)
 	{
 		EDSAbortSignal3 = true;
 	}
@@ -407,7 +389,7 @@ void EDS1B::Timestep(double simdt)
 
 	double PYLimit;
 
-	if (RateGyroSCIndicationSwitchA && RateGyroSCIndicationSwitchB)
+	if (ExcessiveRatePYRAutoAbortInhibit && ExcessiveRateRollAutoAbortInhibit)
 	{
 		PYLimit = 9.2*RAD;
 	}
@@ -458,17 +440,6 @@ void EDS1B::Timestep(double simdt)
 		break;
 	}
 
-	if (iu->IsUmbilicalConnected())
-	{
-		AutoAbortInhibitRelayA = true;
-		AutoAbortInhibitRelayB = true;
-	}
-	else
-	{
-		AutoAbortInhibitRelayA = false;
-		AutoAbortInhibitRelayB = false;
-	}
-
 	if (Stage == PRELAUNCH_STAGE)
 	{
 		if (!AutoAbortEnableRelayA && !AutoAbortEnableRelayB)
@@ -507,7 +478,7 @@ void EDS1B::Timestep(double simdt)
 	}
 }
 
-EDSSV::EDSSV(LVRG &rg) : EDS(rg)
+EDSSV::EDSSV(IU *iu) : EDS(iu)
 {
 	for (int i = 0;i < 5;i++)
 	{
@@ -540,7 +511,7 @@ void EDSSV::Timestep(double simdt)
 
 	VECTOR3 AttRate;
 
-	AttRate = lvrg.GetRates();
+	AttRate = iu->GetLVRG()->GetRates();
 
 	int EDSSwitch = iu->GetCommandConnector()->EDSSwitchState();
 	int LVRateAutoSwitch = iu->GetCommandConnector()->LVRateAutoSwitchState();
@@ -555,6 +526,21 @@ void EDSSV::Timestep(double simdt)
 	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
 	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
 
+	if (iu->IsUmbilicalConnected())
+	{
+		IUEDSBusPowered = false;
+		AutoAbortInhibitRelayA = true;
+		AutoAbortInhibitRelayB = true;
+	}
+	else
+	{
+		IUEDSBusPowered = true;
+		AutoAbortInhibitRelayA = false;
+		AutoAbortInhibitRelayB = false;
+	}
+
+	AutoAbortBus = false;
+
 	if (Stage <= LAUNCH_STAGE_ONE)
 	{
 		iu->GetLVCommandConnector()->GetSIThrustOK(SIThrustOK);
@@ -564,64 +550,38 @@ void EDSSV::Timestep(double simdt)
 		iu->GetLVCommandConnector()->GetSIIThrustOK(SIIThrustOK);
 	}
 
-	if (TwoEngOutAutoAbortInhibit || TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN)
-	{
+	if ((TwoEngOutAutoAbortInhibitEnable && TwoEngOutAutoAbortInhibit) || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
 		TwoEngOutAutoAbortDeactivate = true;
-	}
 	else
-	{
 		TwoEngOutAutoAbortDeactivate = false;
-	}
 
-	if (ExcessiveRatesAutoAbortInhibit || LVRateAutoSwitch == TOGGLESWITCH_DOWN)
-	{
+	if ((ExcessiveRatePYRAutoAbortInhibitEnable && ExcessiveRatePYRAutoAbortInhibit) || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
 		ExcessRatesAutoAbortDeactivatePY = true;
-		ExcessRatesAutoAbortDeactivateR = true;
-	}
 	else
-	{
 		ExcessRatesAutoAbortDeactivatePY = false;
-		ExcessRatesAutoAbortDeactivateR = false;
-	}
 
-	if (LVEnginesCutoffEnable)
-	{
-		if (BECOA)
-		{
-			LVEnginesCutoff1 = true;
-		}
-		else
-		{
-			LVEnginesCutoff1 = false;
-		}
-
-		if (BECOA && BECOB)
-		{
-			LVEnginesCutoff2 = true;
-		}
-		else
-		{
-			LVEnginesCutoff2 = false;
-		}
-
-		if (BECOB)
-		{
-			LVEnginesCutoff3 = true;
-		}
-		else
-		{
-			LVEnginesCutoff3 = false;
-		}
-	}
+	if ((ExcessiveRatePYRAutoAbortInhibitEnable && ExcessiveRatePYRAutoAbortInhibit) || (ExcessiveRateRollAutoAbortInhibitEnable && ExcessiveRateRollAutoAbortInhibit) || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
+		ExcessRatesAutoAbortDeactivateR = true;
 	else
-	{
+		ExcessRatesAutoAbortDeactivateR = false;
+
+	if (IUEDSBusPowered && !BECOA)
+		LVEnginesCutoff1 = true;
+	else
 		LVEnginesCutoff1 = false;
+
+	if (IUEDSBusPowered && !BECOA && !BECOB)
+		LVEnginesCutoff2 = true;
+	else
 		LVEnginesCutoff2 = false;
+
+	if (IUEDSBusPowered && !BECOB)
+		LVEnginesCutoff3 = true;
+	else
 		LVEnginesCutoff3 = false;
-	}
 
 	//EDS Engine Cutoff
-	if ((EDSBus1Powered && LVEnginesCutoff1) || (EDSBus2Powered && LVEnginesCutoff2) || (EDSBus3Powered && LVEnginesCutoff3))
+	if (IUEDSBusPowered && LVEnginesCutoffEnable && LVEnginesCutoffVote())
 	{
 		if (Stage == LAUNCH_STAGE_ONE)
 		{
@@ -667,8 +627,6 @@ void EDSSV::Timestep(double simdt)
 		}
 	}
 
-	bool S1_TwoEngines_Out, RollRateExceeded, PYRateExceeded;
-
 	if (Stage == LAUNCH_STAGE_ONE)
 	{
 		int enginesout = 0;
@@ -678,48 +636,14 @@ void EDSSV::Timestep(double simdt)
 			if (!SIThrustOK[i]) enginesout++;
 		}
 
-		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate)
-		{
-			S1_TwoEngines_Out = true;
-		}
-		else
-		{
-			S1_TwoEngines_Out = false;
-		}
-	}
-	else
-	{
-		S1_TwoEngines_Out = false;
+		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate) AutoAbortBus = true;
 	}
 
-	if ((abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD) && !ExcessRatesAutoAbortDeactivatePY)
-	{
-		PYRateExceeded = true;
-	}
-	else
-	{
-		PYRateExceeded = false;
-	}
+	if ((abs(AttRate.y) > 4.5*RAD || abs(AttRate.z) > 10.0*RAD) && !ExcessRatesAutoAbortDeactivatePY) AutoAbortBus = true;
 
-	if (abs(AttRate.x) > 20.5*RAD && !ExcessRatesAutoAbortDeactivateR)
-	{
-		RollRateExceeded = true;
-	}
-	else
-	{
-		RollRateExceeded = false;
-	}
+	if (abs(AttRate.x) > 20.5*RAD && !ExcessRatesAutoAbortDeactivateR) AutoAbortBus = true;
 
-	if (RollRateExceeded || PYRateExceeded || S1_TwoEngines_Out)
-	{
-		AutoAbortInitiate = true;
-	}
-	else
-	{
-		AutoAbortInitiate = false;
-	}
-
-	if (EDSBus1Powered && AutoAbortInitiate)
+	if (EDSBus1Powered && !AutoAbortBus)
 	{
 		EDSAbortSignal1 = true;
 	}
@@ -727,7 +651,7 @@ void EDSSV::Timestep(double simdt)
 	{
 		EDSAbortSignal1 = false;
 	}
-	if (EDSBus2Powered && AutoAbortInitiate)
+	if (EDSBus2Powered && !AutoAbortBus)
 	{
 		EDSAbortSignal2 = true;
 	}
@@ -735,7 +659,7 @@ void EDSSV::Timestep(double simdt)
 	{
 		EDSAbortSignal2 = false;
 	}
-	if (EDSBus3Powered && AutoAbortInitiate)
+	if (EDSBus3Powered && !AutoAbortBus)
 	{
 		EDSAbortSignal3 = true;
 	}
@@ -746,7 +670,7 @@ void EDSSV::Timestep(double simdt)
 
 	double PYLimit;
 
-	if (RateGyroSCIndicationSwitchA && RateGyroSCIndicationSwitchB)
+	if ((ExcessiveRatePYRAutoAbortInhibitEnable && ExcessiveRatePYRAutoAbortInhibit) || (ExcessiveRateRollAutoAbortInhibitEnable && ExcessiveRateRollAutoAbortInhibit))
 	{
 		PYLimit = 9.2*RAD;
 	}
@@ -814,26 +738,18 @@ void EDSSV::Timestep(double simdt)
 	}
 
 	//Second Plane Separation Monitor
-	if (Stage == LAUNCH_STAGE_TWO && !SecondPlaneSeparationMonitorRelay && EDSPowered)
+	bool SIISecPlaneSepA = EDSBus1Powered && SIIEngineOutIndicationA && (SIVBRestartAlert || Stage < LAUNCH_STAGE_TWO_ISTG_JET);
+	bool SIISecPlaneSepB = EDSBus3Powered && SIIEngineOutIndicationB && (SIVBRestartAlert || Stage < LAUNCH_STAGE_TWO_ISTG_JET);
+
+	if (!SecondPlaneSeparationMonitor && (SIISecPlaneSepA || SIISecPlaneSepB))
 	{
-		SecondPlaneSeparationMonitorRelay = true;
+		SecondPlaneSeparationMonitor = true;
 		iu->GetCommandConnector()->SetSIISep();
 	}
-	else if ((Stage != LAUNCH_STAGE_TWO || !EDSPowered) && SecondPlaneSeparationMonitorRelay)
+	else if (SecondPlaneSeparationMonitor && !(SIISecPlaneSepA || SIISecPlaneSepB))
 	{
-		SecondPlaneSeparationMonitorRelay = false;
+		SecondPlaneSeparationMonitor = false;
 		iu->GetCommandConnector()->ClearSIISep();
-	}
-
-	if (iu->IsUmbilicalConnected())
-	{
-		AutoAbortInhibitRelayA = true;
-		AutoAbortInhibitRelayB = true;
-	}
-	else
-	{
-		AutoAbortInhibitRelayA = false;
-		AutoAbortInhibitRelayB = false;
 	}
 
 	if (Stage == PRELAUNCH_STAGE)

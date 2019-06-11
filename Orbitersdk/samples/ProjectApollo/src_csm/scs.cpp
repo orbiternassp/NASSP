@@ -4362,6 +4362,8 @@ void ECA::TimeStep(double simdt) {
 		YawAutoTVCIntegrator.Reset();
 	}
 
+	//sprintf(oapiDebugString(), "MTVC Pitch: S18_2 %d thc_cw %d T3QS1 %d E2_507 %d E1_509 %d E2_509 %d RHC1 %f Rate: %f Pos: %f°", S18_2, thc_cw, T3QS1, E2_507, E1_509, E2_509, sat->rhc1.GetPitchPropRate(), rhc_rate.y, pitchMTVCPosition*DEG);
+
 	// If accel thrust fired and is no longer needed, kill it.
 	if(accel_roll_flag == 0 && accel_roll_trigger){
 		sat->rjec.SetThruster(9,0);

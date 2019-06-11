@@ -1167,7 +1167,7 @@ void ProjectApolloMFD::Update (HDC hDC)
 				object = oapiGetVesselByName("AS-504"); // A9
 			}
 			if(object == NULL){
-				object = oapiGetVesselByName("Charlie Brown"); // A10
+				object = oapiGetVesselByName("Charlie-Brown"); // A10
 			}
 			if (object == NULL) {
 				object = oapiGetVesselByName("AS-505"); // A10
@@ -1179,13 +1179,13 @@ void ProjectApolloMFD::Update (HDC hDC)
 				object = oapiGetVesselByName("AS-506"); // A11
 			}
 			if(object == NULL){
-				object = oapiGetVesselByName("Yankee Clipper"); // A12
+				object = oapiGetVesselByName("Yankee-Clipper"); // A12
 			}
 			if(object == NULL){
 				object = oapiGetVesselByName("Odyssey"); // A13
 			}
 			if(object == NULL){
-				object = oapiGetVesselByName("Kitty Hawk"); // A14
+				object = oapiGetVesselByName("Kitty-Hawk"); // A14
 			}
 			if(object == NULL){
 				object = oapiGetVesselByName("Endeavour"); // A15
@@ -1526,7 +1526,7 @@ void ProjectApolloMFD::GetCSM()
 		object = oapiGetVesselByName("AS-504"); // A9
 	}
 	if (object == NULL) {
-		object = oapiGetVesselByName("Charlie Brown"); // A10
+		object = oapiGetVesselByName("Charlie-Brown"); // A10
 	}
 	if (object == NULL) {
 		object = oapiGetVesselByName("AS-505"); // A10
@@ -1538,13 +1538,13 @@ void ProjectApolloMFD::GetCSM()
 		object = oapiGetVesselByName("AS-506"); // A11
 	}
 	if (object == NULL) {
-		object = oapiGetVesselByName("Yankee Clipper"); // A12
+		object = oapiGetVesselByName("Yankee-Clipper"); // A12
 	}
 	if (object == NULL) {
 		object = oapiGetVesselByName("Odyssey"); // A13
 	}
 	if (object == NULL) {
-		object = oapiGetVesselByName("Kitty Hawk"); // A14
+		object = oapiGetVesselByName("Kitty-Hawk"); // A14
 	}
 	if (object == NULL) {
 		object = oapiGetVesselByName("Endeavour"); // A15

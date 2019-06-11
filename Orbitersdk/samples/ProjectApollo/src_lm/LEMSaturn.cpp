@@ -450,7 +450,7 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 		habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
 
 		Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
-		stage1->SetState(new_stage == CM_STAGE);
+		stage1->SetState(new_stage == CM_STAGE, false, 7);
 
 		TransformToLM();
 

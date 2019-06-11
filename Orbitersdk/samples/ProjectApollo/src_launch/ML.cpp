@@ -134,6 +134,8 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	liftoffStreamLevel = 0;
 
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
+
+	sat = NULL;
 }
 
 ML::~ML() {
@@ -173,7 +175,6 @@ void ML::clbkPostCreation() {
 
 void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
-	Saturn *sat;
 	ATTACHMENTHANDLE ah;
 
 	if (!firstTimestepDone) DoFirstTimestep();
@@ -318,7 +319,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-30s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() > -30) {
+		if (sat->GetMissionTime() > -30 && !CutoffInterlock()) {
 			cmarmProc = 1;
 			SetAnimation(cmarmAnim, cmarmProc);
 			state = STATE_SICINTERTANKARM;
@@ -335,7 +336,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-16.2s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
-		if (sat->GetMissionTime() > -16.2) {
+		if (sat->GetMissionTime() > -16.2 && !CutoffInterlock()) {
 			s1cintertankarmProc = 1;
 			SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
 			state = STATE_SICFORWARDARM;
@@ -353,25 +354,32 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
 
-		if (sat->GetMissionTime() > -8.9)
+		if (CutoffInterlock())
 		{
-			sat->SetSIEngineStart(5);
+			sat->SIGSECutoff(true);
 		}
-		if (sat->GetMissionTime() > -8.62)
+		else
 		{
-			sat->SetSIEngineStart(1);
-			sat->SetSIEngineStart(3);
-		}
-		if (sat->GetMissionTime() > -8.2)
-		{
-			sat->SetSIEngineStart(2);
-			sat->SetSIEngineStart(4);
-		}
+			if (sat->GetMissionTime() > -8.9)
+			{
+				sat->SetSIEngineStart(5);
+			}
+			if (sat->GetMissionTime() > -8.62)
+			{
+				sat->SetSIEngineStart(1);
+				sat->SetSIEngineStart(3);
+			}
+			if (sat->GetMissionTime() > -8.2)
+			{
+				sat->SetSIEngineStart(2);
+				sat->SetSIEngineStart(4);
+			}
 
-		if (sat->GetMissionTime() > -4.9) {
-			s1cforwardarmProc = 1;
-			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
-			state = STATE_LIFTOFFSTREAM;
+			if (sat->GetMissionTime() > -4.9) {
+				s1cforwardarmProc = 1;
+				SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
+				state = STATE_LIFTOFFSTREAM;
+			}
 		}
 		break;
 
@@ -385,7 +393,11 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			liftoffStreamLevel = sat->GetSIThrustLevel();
 
 		// T-1s or later?
-		if (sat->GetMissionTime() > -1) {
+		if (CutoffInterlock())
+		{
+			sat->SIGSECutoff(true);
+		}
+		else if (sat->GetMissionTime() > -1) {
 			state = STATE_LIFTOFF;
 		}
 		break;
@@ -409,14 +421,21 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		liftoffStreamLevel = sat->GetSIThrustLevel();
 
 		// Disconnect IU Umbilical
-		if (sat->GetMissionTime() >= -0.05) {
-			sat->SetIUUmbilicalState(false);
+		if (CutoffInterlock())
+		{
+			sat->SIGSECutoff(true);
 		}
+		else
+		{
+			if (Commit()) {
+				sat->SetIUUmbilicalState(false);
+			}
 
-		// T+8s or later?
-		if (sat->GetMissionTime() > 8) {
-			state = STATE_POSTLIFTOFF;
-		}		
+			// T+8s or later?
+			if (sat->GetMissionTime() > 8) {
+				state = STATE_POSTLIFTOFF;
+			}
+		}
 		break;
 
 	case STATE_POSTLIFTOFF:
@@ -821,4 +840,16 @@ int ML::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 	return 0;
+}
+
+bool ML::CutoffInterlock()
+{
+	if (!sat) return false;
+	return sat->IsEDSUnsafe() || sat->SIStageLogicCutoff();
+}
+
+bool ML::Commit()
+{
+	if (!sat) return false;
+	return sat->AllSIEnginesRunning() && sat->GetMissionTime() >= -0.05 && !CutoffInterlock();
 }
