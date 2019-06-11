@@ -90,7 +90,7 @@ void F1Engine::Timestep(double simdt)
 	//Thrust OK switch
 	ThrustOK = vessel->GetThrusterLevel(th_f1) > 0.9 && !EngineFailed;
 
-	if (ProgrammedCutoff || EDSCutoff || GSECutoff || RSSCutoff || (!ThrustOK && EngineRunning))
+	if (ProgrammedCutoff || EDSCutoff || GSECutoff || RSSCutoff)
 	{
 		EngineStop = true;
 	}
@@ -360,6 +360,14 @@ void SICSystems::Timestep(double simdt, bool liftoff)
 			(!f1engine4.GetThrustOK() && !f1engine1.GetThrustOK()))
 		{
 			OutboardEnginesCutoff();
+		}
+	}
+
+	if (MultipleEngineCutoffEnabled)
+	{
+		for (int i = 0;i < 5;i++)
+		{
+			if (f1engines[i]->GetThrustOK() == false) f1engines[i]->SetProgrammedEngineCutoff();
 		}
 	}
 

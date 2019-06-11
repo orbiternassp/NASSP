@@ -116,9 +116,12 @@ protected:
 	F1Engine *f1engines[5];
 
 	bool PropellantDepletionSensors;
-	bool PointLevelSensorArmed;
+	//K1
 	bool TwoAdjacentOutboardEnginesOutCutoff;
+	//K2
 	bool MultipleEngineCutoffEnabled;
+	//K3
+	bool PointLevelSensorArmed;
 
 	bool ThrustOK[5];
 
