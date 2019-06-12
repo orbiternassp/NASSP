@@ -290,6 +290,7 @@ void LEM::Init()
 
 	InVC = false;
 	InPanel = false;
+	ExtView = false;
 	CheckPanelIdInTimestep = false;
 	RefreshPanelIdInTimestep = false;
 	InFOV = true;
@@ -881,6 +882,18 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		return;
 	}
 
+	if (!ExtView && !oapiCameraInternal()) {
+		ExtView = true;
+		SetLMMeshVis();
+		if (!InFOV) oapiCameraSetAperture(SaveFOV);
+	}
+
+	if (ExtView && oapiCameraInternal()) {
+		ExtView = false;
+		SetLMMeshVis();
+		SetView();
+	}
+
 	//
 	// Update mission time.
 	//
@@ -946,7 +959,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	ViewOffsety *= 0.95;
 	ViewOffsetz *= 0.95;
 
-	if (th_hover[0])
+	if (th_hover[0] && !ExtView)
 	{
 		if ((GetThrusterLevel(th_hover[0]) > 0) && (InVC || (InPanel && PanelId == LMPANEL_LPDWINDOW)))
 		{
@@ -1479,6 +1492,9 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 		ProcessConfigFileLine(hFile, line);
 	}
 	oapiCloseFile(hFile, FILE_IN);
+
+	// Load LM meshes here
+	SetMeshes();
 }
 
 void LEM::clbkPostCreation()
