@@ -203,6 +203,8 @@ void LEM::SetView() {
 					else {
 						SetCameraOffset(_V(0, 1.20, 0));
 					}
+					SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+					oapiCameraSetCockpitDir(180 * RAD, 0);
 					break;
 				case LMPANEL_FWDHATCH:
 					if (stage == 2) {
@@ -232,7 +234,7 @@ void LEM::SetView() {
 		oapiGetViewportSize(&w, &h);
 		oapiCameraSetAperture(atan(tan(RAD*30.0)*min(h / 1080.0, 1.0)));
 	}
-	else if (PanelId == LMPANEL_AOTZOOM) {
+	else if (InPanel && PanelId == LMPANEL_AOTZOOM) {
 		// if this is the first time we've been here, save the current FOV
 		if (InFOV) {
 			SaveFOV = oapiCameraAperture();
