@@ -44,6 +44,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s, Sound &buttonsound) : soundlib(s), ButtonSound(b
 	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 	Operate = false;
+	ECSFailureCount = 0;
 }
 
 void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah, h_HeatLoad *seccweah) {
@@ -443,7 +444,14 @@ void LEM_CWEA::Timestep(double simdt) {
 		if (lem->scera2.GetVoltage(3, 2) > 2.5) { lightlogic = true; } // Suit fan 1 failure
 		if (lem->ecs.GetWaterSeparatorRPM() < 792.5) { lightlogic = true; } // Water separator failure
 
+		// To avoid spurious alarms because of fluctuation at high time accelerations
+		// the "bad" condition has to last for a few check counts.
 		if (lightlogic)
+			if (ECSFailureCount < 20) ECSFailureCount++;
+		else
+			ECSFailureCount = 0;
+
+		if (lightlogic && ECSFailureCount >= 20)
 			SetLight(0, 7, 1);
 		else
 			SetLight(0, 7, 0);
@@ -874,6 +882,9 @@ void LEM_CWEA::SetLight(int row, int column, int state, bool TriggerMA)
 	//
 	// Turn on Master Alarm if a new light is lit.
 	//
+
+	//For debugging
+	//if (state == 0) return;
 
 	if (state && !LightStatus[row][column]) {
 		if (TriggerMA) {

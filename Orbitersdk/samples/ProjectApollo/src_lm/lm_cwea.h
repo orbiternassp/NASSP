@@ -95,6 +95,9 @@ protected:
 
 	bool MasterAlarm;
 
+	//For time accelerations etc.
+	int ECSFailureCount;
+
 	e_object *cwea_pwr;
 	e_object *ma_pwr;
 	h_HeatLoad *CWEAHeat;
