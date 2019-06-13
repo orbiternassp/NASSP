@@ -427,6 +427,7 @@ public:
 	void SetGenericStageState(int stat);
 	void PostLoadSetup(bool define_anims = true);
 	void DefineAnimations();
+	void SetMeshes();
 
 	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void PanelSwitchToggled(ToggleSwitch *s);
@@ -1551,6 +1552,7 @@ protected:
 
 	bool InVC;
 	bool InPanel;
+	bool ExtView;
 	bool InFOV;  
 	int  PanelId; 
 	double SaveFOV;

@@ -64,6 +64,9 @@ static PARTICLESTREAMSPEC lunar_dust = {
 	PARTICLESTREAMSPEC::ATM_PLOG, -0.1, 0.1
 };
 
+VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
+VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
+
 void LEM::ToggleEVA()
 
 {
@@ -138,7 +141,6 @@ void LEM::SetLmVesselDockStage()
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0); 
-	ClearMeshes(true);
 	ClearBeacons();
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
@@ -181,25 +183,8 @@ void LEM::SetLmVesselDockStage()
 
 	SetTouchdownPoints(td, 7);
 
-	VECTOR3 mesh_asc = _V(0.00, 0.99, 0.00);
-	VECTOR3 mesh_dsc = _V(0.00, -1.25, 0.00);
-
-	// Ascent Stage Mesh
-	ascidx = AddMesh(hLMAscent, &mesh_asc);
-
-	// VC Mesh
-	vcidx = AddMesh(hLMVC, &mesh_asc);
-
-	// Descent Stage Mesh
-	if (NoLegs)
-	{
-		dscidx = AddMesh(hLMDescentNoLeg, &mesh_dsc);
-	}
-	else
-	{
-		dscidx = AddMesh(hLMDescent, &mesh_dsc);
-	}
-
+	// Configure meshes if needed
+	if (NoLegs) InsertMesh(hLMDescentNoLeg, dscidx, &mesh_dsc);
 	SetLMMeshVis();
 
 	if (!ph_Dsc)
@@ -382,12 +367,11 @@ void LEM::SetLmAscentHoverStage()
 
 	SetTouchdownPoints(td, 4);
 
-	VECTOR3 mesh_asc=_V(0.00, -1.75, 0.00);
-
-	// Vessel Meshes
+	// Configure meshes if needed
+	VECTOR3 mesh_shift = _V(0.00, -1.75, 0.00);
 	DelMesh(dscidx);
 	dscidx = -1;
-	ShiftMeshes(mesh_asc);
+	ShiftMeshes(mesh_shift);
 
 	if (!ph_Asc)
 	{
@@ -555,7 +539,7 @@ void LEM::SetLMMeshVisAsc() {
 	if (ascidx == -1)
 		return;
 
-	if (InPanel && (PanelId == LMPANEL_AOTZOOM || PanelId == LMPANEL_UPPERHATCH)) {
+	if (!ExtView && InPanel && (PanelId == LMPANEL_AOTZOOM || PanelId == LMPANEL_UPPERHATCH)) {
 		SetMeshVisibilityMode(ascidx, MESHVIS_ALWAYS);
 	}
 	else
@@ -569,7 +553,7 @@ void LEM::SetLMMeshVisVC() {
 	if (vcidx == -1)
 		return;
 
-	if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
+	if (!ExtView && InPanel && PanelId == LMPANEL_LPDWINDOW) {
 		SetMeshVisibilityMode(vcidx, MESHVIS_ALWAYS);
 	}
 	else
@@ -583,7 +567,7 @@ void LEM::SetLMMeshVisDsc() {
 	if (dscidx == -1)
 		return;
 
-	if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
+	if (!ExtView && InPanel && PanelId == LMPANEL_LPDWINDOW) {
 		SetMeshVisibilityMode(dscidx, MESHVIS_ALWAYS);
 	}
 	else
@@ -781,6 +765,18 @@ void LEM::AddDust() {
 		AddExhaustStream(th_dust[i], &lunar_dust);
 	}
 	thg_dust = CreateThrusterGroup(th_dust, 4, THGROUP_USER);
+}
+
+void LEM::SetMeshes() {
+
+	// Ascent Stage Mesh
+	ascidx = AddMesh(hLMAscent, &mesh_asc);
+
+	// VC Mesh
+	vcidx = AddMesh(hLMVC, &mesh_asc);
+
+	// Descent Stage Mesh
+	dscidx = AddMesh(hLMDescent, &mesh_dsc);
 }
 
 void LEMLoadMeshes()
