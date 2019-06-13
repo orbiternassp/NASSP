@@ -501,13 +501,21 @@ void RCS_TCA::Timestep(double simdt)
 		}
 		else if (jetDriverSignal[i] && !pulseFlag[i])
 		{
-			pulseCounter[i]++;
-			pulseFlag[i] = true;
+			//Below 1.0x time acceleration this accumulates pulses too quickly
+			if (oapiGetTimeAcceleration() >= 1.0)
+			{
+				pulseCounter[i]++;
+				pulseFlag[i] = true;
+			}
 		}
 
 		if ((jetDriverSignal[i] && !resetSignal) && !thrusterTCP[i])
 		{
-			failTimer[i] += simdt;
+			//Above 1.0x time acceleration the timesteps are too long for this to properly work
+			if (oapiGetTimeAcceleration() <= 1.0)
+			{
+				failTimer[i] += simdt;
+			}
 		}
 		else
 		{
