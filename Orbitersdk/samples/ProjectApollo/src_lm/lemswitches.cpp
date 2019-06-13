@@ -723,7 +723,7 @@ void EngineThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 
 double EngineThrustInd::QueryValue()
 {
-	return lem->DPS.GetThrustChamberPressurePSI()*100.0 / 113.5135135;
+	return lem->DPS.GetThrustChamberPressurePSI() / 103.4*92.5;
 }
 
 void EngineThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)

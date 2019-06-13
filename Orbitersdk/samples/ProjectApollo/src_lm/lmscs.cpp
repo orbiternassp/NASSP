@@ -40,8 +40,6 @@
 #include "papi.h"
 #include "LEM.h"
 
-#define DECA_AUTOTHRUST_STEP 0.00026828571
-
 // RATE GYRO ASSEMBLY
 
 LEM_RGA::LEM_RGA()
@@ -1070,7 +1068,8 @@ DECA::DECA() {
 	engOn = false;
 	lgcAutoThrust = 0.0;
 	ManualThrust = 0.0;
-	LMR = 0.859;
+	//85.9% for 12V
+	LMR = 0.859*12.0;
 
 	ResetRelays();
 }
@@ -1450,11 +1449,11 @@ void DECA::Timestep(double simdt) {
 
 		if (ttca_throttle_pos > 0.51 / 0.66)
 		{
-			ManualThrust = 1.8436*ttca_throttle_pos - 0.9186;
+			ManualThrust = 1.993081081*ttca_throttle_pos - 0.9930810811;
 		}
 		else
 		{
-			ManualThrust = 0.5254117647*ttca_throttle_pos + 0.1;
+			ManualThrust = 0.5785055644*ttca_throttle_pos + 0.1;
 		}
 	}
 	else
@@ -1467,7 +1466,8 @@ void DECA::Timestep(double simdt) {
 		ManualThrust = 0.0;
 	}
 
-	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust);
+	//TBD: Manual thrust also as a voltage. Throttle actuator input should be voltages eventually, too.
+	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust*0.9 / 12.0);
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 	//sprintf(oapiDebugString(), "Manual: K1 %d K3 %d K7 %d K10 %d K16 %d K23 %d K28 %d", K1, K3, K7, K10, K16, K23, K28);
@@ -1476,13 +1476,13 @@ void DECA::Timestep(double simdt) {
 
 double DECA::GetCommandedThrust()
 {
-	if (lem->THRContSwitch.IsUp())
+	if (lem->THRContSwitch.IsDown() && lem->THRUST_DISP_CB.IsPowered())
 	{
-		return AutoThrust + 0.1;
+		return ManualThrust * 0.925;
 	}
 	else
 	{
-		return ManualThrust;
+		return AutoThrust * 0.825 / 12.0 + 0.1;
 	}
 }
 
@@ -1500,13 +1500,13 @@ void DECA::ProcessLGCThrustCommands(int val) {
 		pulses = val & 077777;
 	}
 
-	thrust_cmd = (DECA_AUTOTHRUST_STEP*pulses);
+	thrust_cmd = (0.0035*pulses);
 
 	lgcAutoThrust += thrust_cmd;
 
-	if (lgcAutoThrust > 0.825)
+	if (lgcAutoThrust > 12.0)
 	{
-		lgcAutoThrust = 0.825;
+		lgcAutoThrust = 12.0;
 	}
 	else if (lgcAutoThrust < 0)
 	{

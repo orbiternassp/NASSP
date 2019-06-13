@@ -499,6 +499,8 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	dpsgimbal_proc[1] = 0.0;
 	dpsgimbal_proc_last[0] = 0.0;
 	dpsgimbal_proc_last[1] = 0.0;
+
+	Erosion = 0.0;
 }
 
 void LEM_DPS::Init(LEM *s) {
@@ -511,9 +513,9 @@ void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 	{
 		thrustcommand = manthrust + autothrust;
 
-		if (thrustcommand > 0.925)
+		if (thrustcommand > 1.0)
 		{
-			thrustcommand = 0.925;
+			thrustcommand = 1.0;
 		}
 		else if (thrustcommand < 0.1)
 		{
@@ -523,7 +525,7 @@ void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 	else
 	{
 		//Without power, the throttle will be fully open
-		thrustcommand = 0.925;
+		thrustcommand = 1.0;
 	}
 }
 
@@ -641,8 +643,8 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 			lem->SetThrusterLevel(dpsThruster[0], 0.0);
 		}
 
-		//105PSI at FTP
-		ThrustChamberPressurePSI = lem->GetThrusterLevel(dpsThruster[0])*113.5135135;
+		//103.4PSI at FTP (uneroded)
+		ThrustChamberPressurePSI = lem->GetThrusterMax(dpsThruster[0])*lem->GetThrusterLevel(dpsThruster[0])*103.4 / DPS_FCMAX;
 	}
 	else
 	{
@@ -662,8 +664,21 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 		dpsvector.y = 1;
 		lem->SetThrusterDir(dpsThruster[0], dpsvector);
 
+		//Erosion effects and thruster parameter calculation
+		if (lem->GetThrusterLevel(dpsThruster[0]) > 0.0)
+		{
+			//2.525 is rate of change of thrust (in Newtons per second) at full thrust command to simulation erosion effects
+			//TBD: Effects at lower throttle settings, scaled linearly with thrust command for now
+			Erosion += lem->GetThrusterLevel(dpsThruster[0])*2.525*simdt;
+			//Set base thrust (FCMAX) plus erosion effect
+			lem->SetThrusterMax0(dpsThruster[0], DPS_FCMAX + Erosion);
+			//Recalculate and set ISP
+			lem->SetThrusterIsp(dpsThruster[0], RecalculateISP((DPS_FCMAX + Erosion) / DPS_FMAX)*9.80665);
+		}
+
 		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f engPreValvesArm %d engArm %d thrustOn: %d", lem->ManualEngineStart.GetState(), lem->CDRManualEngineStop.GetState(), lem->ttca_throttle_pos_dig, thrustcommand, engPreValvesArm, engArm, thrustOn);
 		//sprintf(oapiDebugString(), "DPS %d rollc: %d, roll: %f° pitchc: %d, pitch: %f°", thrustOn, rollGimbalActuator.GetLGCPosition(), rollGimbalActuator.GetPosition(), pitchGimbalActuator.GetLGCPosition(), pitchGimbalActuator.GetPosition());
+		//sprintf(oapiDebugString(), "lvl: %f Max Thr: %f Isp: %f Erosion %f", lem->GetThrusterLevel(dpsThruster[0]), lem->GetThrusterMax0(dpsThruster[0]), lem->GetThrusterIsp(dpsThruster[0]), Erosion);
 	}
 }
 
@@ -702,35 +717,38 @@ double LEM_DPS::GetInjectorActuatorPosition()
 	return ActuatorValves;
 }
 
+double LEM_DPS::RecalculateISP(double THRUST_FMAX)
+{
+	//Numbers from GSOP R-567 Section 6, except below 11.4% thrust, which just needed to not go below zero ISP
+	if (THRUST_FMAX >= 0.925) return (488.0 - 200.0*THRUST_FMAX);
+	else if (THRUST_FMAX >= 0.401) return (288.8778626 + 15.26717557*THRUST_FMAX);
+	else if (THRUST_FMAX >= 0.252) return (291.2322148 + 9.395973154*THRUST_FMAX);
+	else if (THRUST_FMAX >= 0.115) return (291.9445255 + 6.569343066*THRUST_FMAX);
+	else if (THRUST_FMAX >= 0.05) return (-52.3 + 3000.0*THRUST_FMAX);
+	else return (97.7);
+}
+
 void LEM_DPS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGPREVALVESARM", (engPreValvesArm ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGARM", (engArm ? 1 : 0));
+	papiWriteScenario_double(scn, "EROSION", Erosion);
 	oapiWriteLine(scn, end_str);
 }
 
 void LEM_DPS::LoadState(FILEHANDLE scn, char *end_str) {
 	char *line;
-	int i;
 	int end_len = strlen(end_str);
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, end_str, end_len))
 			return;
 
-		if (!strnicmp(line, "THRUSTON", 8)) {
-			sscanf(line + 8, "%d", &i);
-			thrustOn = (i != 0);
-		}
-		else if (!strnicmp(line, "ENGPREVALVESARM", 15)) {
-			sscanf(line + 15, "%d", &i);
-			engPreValvesArm = (i != 0);
-		}
-		else if (!strnicmp(line, "ENGARM", 6)) {
-			sscanf(line + 6, "%d", &i);
-			engArm = (i != 0);
-		}
+		papiReadScenario_bool(line, "THRUSTON", thrustOn);
+		papiReadScenario_bool(line, "ENGPREVALVESARM", engPreValvesArm);
+		papiReadScenario_bool(line, "ENGARM", engArm);
+		papiReadScenario_double(line, "EROSION", Erosion);
 	}
 }
 

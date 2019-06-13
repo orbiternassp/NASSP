@@ -171,7 +171,7 @@ public:
 	bool GetK25() { return K25; }
 	bool GetThrustOn() { return engOn; }
 	bool GetEngArm();
-	double GetAutoThrustVoltage() { return AutoThrust * 12.0; }
+	double GetAutoThrustVoltage() { return AutoThrust; }
 	double GetManualThrustVoltage() { return ManualThrust * 14.6; }
 
 	void SaveState(FILEHANDLE scn);
@@ -184,6 +184,7 @@ protected:
 	int pitchactuatorcommand, rollactuatorcommand;
 	bool engOn, DEArm;
 	double AutoThrust, ManualThrust;
+	//Voltage, 0-12V
 	double lgcAutoThrust;
 
 	//Relays

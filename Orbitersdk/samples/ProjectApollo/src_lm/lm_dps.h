@@ -155,6 +155,9 @@ protected:
 	e_object *motorSource;
 };
 
+const double DPS_FCMAX = 43203.3;	//The uneroded maximum DPS thrust
+const double DPS_FMAX = 46703.3;	//The maximum DPS thrust
+
 // Descent Engine
 class LEM_DPS {
 public:
@@ -188,6 +191,8 @@ public:
 
 protected:
 
+	double RecalculateISP(double THRUST_FMAX);
+
 	THRUSTER_HANDLE *dpsThruster;
 
 	// Animations
@@ -195,6 +200,7 @@ protected:
 	double dpsgimbal_proc[2];
 	double dpsgimbal_proc_last[2];
 
+	double Erosion; //In Newtons
 };
 
 #define DPSPROPELLANT_START_STRING     "DPSPROPELLANT_BEGIN"
