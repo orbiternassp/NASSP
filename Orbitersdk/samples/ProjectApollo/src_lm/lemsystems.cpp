@@ -721,6 +721,7 @@ void LEM::SystemsInit()
 	SuitFanDPSensor.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLD"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&ECS_SUIT_FAN_DP_CB);
+	CrewStatus.Init(this);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1461,6 +1462,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	ecs.Timestep(simdt);
 	OverheadHatch.Timestep(simdt);
 	ForwardHatch.Timestep(simdt);
+	CrewStatus.Timestep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
@@ -2071,7 +2073,7 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 	}
 
 	ecs.crewNumber = CrewInCabin->number + CDRSuited->number + LMPSuited->number;
-	ecs.crewStatus = 0;
+	ecs.crewStatus = CrewStatus.GetStatus();;
 
 
 }
