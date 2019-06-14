@@ -882,6 +882,10 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		return;
 	}
 
+	//
+	// Internal/External view check
+	//
+
 	if (!ExtView && !oapiCameraInternal()) {
 		ExtView = true;
 		SetLMMeshVis();

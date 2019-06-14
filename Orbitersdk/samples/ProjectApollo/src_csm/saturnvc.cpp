@@ -315,7 +315,6 @@ void Saturn::SetView(double offset, bool update_direction)
 	VECTOR3 v;
 	TRACESETUP("Saturn::SetView");
 	CurrentViewOffset = offset;
-	double fov = -1;
 
 	//
 	// Engineering cameras
@@ -444,13 +443,6 @@ void Saturn::SetView(double offset, bool update_direction)
 			// "Calibrated" for optics cover jettison as seen through the scanning telescope 
 			v = _V(0, 0, offset + 0.2);
 		}
-
-		if (PanelId == SATPANEL_SEXTANT) { // Sextant
-			fov = 1. * RAD; 
-		
-		} else if (PanelId == SATPANEL_TELESCOPE) { // Telescope
-			fov = 30. * RAD;
-		}
 	} 
 
 	//
@@ -519,21 +511,27 @@ void Saturn::SetView(double offset, bool update_direction)
 	// FOV handling
 	//
 
-	if (FovExternal == 0) {
-		if (fov == -1) {
-			if (FovFixed) {
-				papiCameraSetAperture(FovSave);
-				if (!GenericFirstTimestep) {
-					FovFixed = false;
-					FovExternal = 0;
-				}
-			}
-		} else {
-			if (!FovFixed && !GenericFirstTimestep) {
-				FovSave = papiCameraAperture();
+	if (!FovExternal && !GenericFirstTimestep) {
+		if (InPanel && PanelId == SATPANEL_SEXTANT) { // Sextant
+			if (!FovFixed) {
+				FovSave = oapiCameraAperture();
 				FovFixed = true;
 			}
-			papiCameraSetAperture(fov);
+			oapiCameraSetAperture(1 * RAD);
+
+		}
+		else if (InPanel && PanelId == SATPANEL_TELESCOPE) { // Telescope
+			if (!FovFixed) {
+				FovSave = oapiCameraAperture();
+				FovFixed = true;
+			}
+			oapiCameraSetAperture(30 * RAD);
+		}
+		else {
+			if (FovFixed) {
+				oapiCameraSetAperture(FovSave);
+				FovFixed = false;
+			}
 		}
 	}
 }
