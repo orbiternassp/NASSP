@@ -447,9 +447,13 @@ void LEM_CWEA::Timestep(double simdt) {
 		// To avoid spurious alarms because of fluctuation at high time accelerations
 		// the "bad" condition has to last for a few check counts.
 		if (lightlogic)
+		{
 			if (ECSFailureCount < 20) ECSFailureCount++;
+		}
 		else
+		{
 			ECSFailureCount = 0;
+		}
 
 		if (lightlogic && ECSFailureCount >= 20)
 			SetLight(0, 7, 1);
