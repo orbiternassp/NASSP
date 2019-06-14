@@ -2772,6 +2772,15 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 	// Actualize timed sounds
 	//
 
+	//Countdown
+	if (stage == PRELAUNCH_STAGE && MissionTime > -10.9)
+	{
+		if (!UseATC && Scount.isValid()) {
+			Scount.play();
+			Scount.done();
+		}
+	}
+
 	if (stage >= ONPAD_STAGE) {
 		timedSounds.Timestep(MissionTime, simdt, AutoSlow);
 	}

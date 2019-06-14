@@ -89,8 +89,8 @@ public:
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void AddRCS_S4B();
-	void ActivatePrelaunchVenting();
-	void DeactivatePrelaunchVenting();
+	virtual void ActivatePrelaunchVenting();
+	virtual void DeactivatePrelaunchVenting();
 	void JettisonNosecap();
 	void SetSLADeployCommand() { DeploySLACommand = true; }
 	void LMSLASeparationFire();

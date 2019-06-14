@@ -903,23 +903,8 @@ void SaturnV::SwitchSelector(int item){
 	int i=0;
 
 	switch(item){
-	case 10:
-		DeactivatePrelaunchVenting();
-		break;
-	case 11:
-		ActivatePrelaunchVenting();
-		break;
 	case 12:
 		CreateStageOne();								// Create hidden stage one, for later use in staging
-		break;
-	case 13:
-		if (!UseATC && Scount.isValid()) {
-			Scount.play();
-			Scount.done();
-		}
-		break;
-	case 14:
-		DeactivatePrelaunchVenting();
 		break;
 	case 17:
 		// Move hidden S1C

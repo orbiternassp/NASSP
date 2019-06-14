@@ -320,27 +320,12 @@ void Saturn1b::SwitchSelector(int item){
 	int i=0;
 
 	switch(item){
-	case 10:
-		DeactivatePrelaunchVenting();
-		break;
-	case 11:
-		ActivatePrelaunchVenting();
-		break;
 	case 12:
 		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
 		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
 			SetThrusterResource(th_1st[i], ph_1st);
 		}
 		CreateStageOne();								// Create hidden stage one, for later use in staging
-		break;
-	case 13:
-		if (!UseATC && Scount.isValid()) {
-			Scount.play();
-			Scount.done();
-		}
-		break;
-	case 14:
-		DeactivatePrelaunchVenting();
 		break;
 	case 17:
 		// Move hidden S1B

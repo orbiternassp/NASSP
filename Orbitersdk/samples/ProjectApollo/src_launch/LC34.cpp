@@ -170,6 +170,12 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-33min or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() > -3 * 3600)
+		{
+			sat->ActivatePrelaunchVenting();
+		}
+
 		if (sat->GetMissionTime() > -33 * 60) {
 			mssProc = 1;
 			SetAnimation(mssAnim, mssProc);
@@ -189,6 +195,9 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-5min or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		sat->ActivatePrelaunchVenting();
+
 		if (sat->GetMissionTime() > -5 * 60) {
 			cmarmProc = 12.0 / 180.0 * 0.7;
 			SetAnimation(cmarmAnim, cmarmProc);
@@ -208,6 +217,16 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-4.9s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() < -9)
+		{
+			sat->ActivatePrelaunchVenting();
+		}
+		else
+		{
+			sat->DeactivatePrelaunchVenting();
+		}
+
 		if (sat->GetMissionTime() > -4.9) {
 			cmarmProc = 1;
 			SetAnimation(cmarmAnim, cmarmProc);

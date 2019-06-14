@@ -570,14 +570,6 @@ void LVDC1B::TimeStep(double simdt) {
 				// Lock time accel to 100x
 				if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
 
-				// Prelaunch tank venting between -3:00h and engine ignition
-				// No clue if the venting start time is correct
-				if (lvda.GetMissionTime() < -10800){
-					lvda.SwitchSelectorOld(10);
-				}else{
-					lvda.SwitchSelectorOld(11);
-				}
-
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 				{
 					double Source  = fabs(lvda.GetMissionTime());
@@ -611,13 +603,6 @@ void LVDC1B::TimeStep(double simdt) {
 				}
 				break;
 			case 0: // MORE TB0
-				// At 10 seconds, play the countdown sound.
-				if (lvda.GetMissionTime() >= -10.3) { // Was -10.9
-					lvda.SwitchSelectorOld(13);
-				}
-
-				// Shut down venting at T - 9
-				if (lvda.GetMissionTime() > -9) { lvda.SwitchSelectorOld(14); }
 
 				if (lvda.GetMissionTime() > -4.0) {
 					lvda.AddForce(_V(0, 0, -8. * lvda.GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
@@ -4584,14 +4569,6 @@ void LVDCSV::TimeStep(double simdt) {
 				// Limit time accel to 100x
 				if (oapiGetTimeAcceleration() > 100) { oapiSetTimeAcceleration(100); }
 
-				// Prelaunch tank venting between -3:00h and engine ignition
-				// No clue if the venting start time is correct
-				if(lvda.GetMissionTime() < -10800){
-					lvda.SwitchSelectorOld(10);
-				}else{
-					lvda.SwitchSelectorOld(11);
-				}
-
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 				if(lvda.GetMissionTime() < -1200){
 					double Source  = fabs(lvda.GetMissionTime());
@@ -4627,13 +4604,6 @@ void LVDCSV::TimeStep(double simdt) {
 					poweredflight = true;
 					lvda.SwitchSelectorOld(12);
 				}
-
-				// At 10 seconds, play the countdown sound.
-				if (lvda.GetMissionTime() >= -10.3) { // Was -10.9
-					lvda.SwitchSelectorOld(13);
-				}
-				// Shut down venting at T - 9
-				if(lvda.GetMissionTime() > -9) { lvda.SwitchSelectorOld(14); }
 
 				//Hold-down force
 				if(lvda.GetMissionTime() > -4.0){

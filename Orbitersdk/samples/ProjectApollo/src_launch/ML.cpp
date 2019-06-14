@@ -285,6 +285,9 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-43min or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		sat->ActivatePrelaunchVenting();
+
 		if (sat->GetMissionTime() > -43 * 60) {
 			craneProc = 1;
 			SetAnimation(craneAnim, craneProc);
@@ -302,6 +305,9 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-5min or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		sat->ActivatePrelaunchVenting();
+
 		if (sat->GetMissionTime() > -5 * 60) {
 			cmarmProc = 12.0 / 180.0;
 			SetAnimation(cmarmAnim, cmarmProc);
@@ -319,6 +325,9 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-30s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		sat->ActivatePrelaunchVenting();
+
 		if (sat->GetMissionTime() > -30 && !CutoffInterlock()) {
 			cmarmProc = 1;
 			SetAnimation(cmarmAnim, cmarmProc);
@@ -336,6 +345,9 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-16.2s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		sat->ActivatePrelaunchVenting();
+
 		if (sat->GetMissionTime() > -16.2 && !CutoffInterlock()) {
 			s1cintertankarmProc = 1;
 			SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
@@ -353,6 +365,15 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-4.9s or later?
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() < -9)
+		{
+			sat->ActivatePrelaunchVenting();
+		}
+		else
+		{
+			sat->DeactivatePrelaunchVenting();
+		}
 
 		if (CutoffInterlock())
 		{

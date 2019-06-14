@@ -150,6 +150,12 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-33min or later?
 		if (!hLV) break;
 		sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() > -3 * 3600)
+		{
+			sat->ActivatePrelaunchVenting();
+		}
+
 		if (sat->GetMissionTime() > -33 * 60) {
 			state = STATE_CMARM1;
 		}
@@ -161,6 +167,9 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-5min or later?
 		if (!hLV) break;
 		sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
+
+		sat->ActivatePrelaunchVenting();
+
 		if (sat->GetMissionTime() > -5 * 60) {
 			state = STATE_CMARM2;
 		}  
@@ -172,6 +181,16 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-4.9s or later?
 		if (!hLV) break;
 		sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
+
+		if (sat->GetMissionTime() < -9)
+		{
+			sat->ActivatePrelaunchVenting();
+		}
+		else
+		{
+			sat->DeactivatePrelaunchVenting();
+		}
+
 		if (sat->GetMissionTime() > -4.9) {
 			state = STATE_LIFTOFFSTREAM;
 		}
