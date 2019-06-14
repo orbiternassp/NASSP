@@ -755,6 +755,7 @@ void CrewStatus::Timestep(double simdt) {
 		if (suitPressureLowTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
@@ -769,6 +770,7 @@ void CrewStatus::Timestep(double simdt) {
 		if (suitPressureHighTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
@@ -783,6 +785,7 @@ void CrewStatus::Timestep(double simdt) {
 		if (suitTemperatureTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
@@ -797,6 +800,7 @@ void CrewStatus::Timestep(double simdt) {
 		if (suitCO2Time <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
@@ -814,6 +818,7 @@ void CrewStatus::Timestep(double simdt) {
 		if (accelerationTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
@@ -828,6 +833,7 @@ void CrewStatus::Timestep(double simdt) {
 		if (fabs(lastVerticalVelocity) > 15) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 		}
 	} else {
 		VECTOR3 v;

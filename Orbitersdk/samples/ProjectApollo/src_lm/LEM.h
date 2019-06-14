@@ -1603,6 +1603,7 @@ protected:
 	Sound HatchCloseSound;
 	FadeInOutSound GlycolPumpSound;
 	FadeInOutSound SuitFanSound;
+	Sound CrewDeadSound;
 
 	//
 	// Connectors.
@@ -1762,6 +1763,7 @@ protected:
 	LEMWaterTankSelect WaterTankSelect;
 	LEMPrimGlycolPumpController PrimGlycolPumpController;
 	LEMSuitFanDPSensor SuitFanDPSensor;
+	LEMCrewStatus CrewStatus;
 
 	// EDS
 	LEM_EDS eds;
@@ -1876,6 +1878,7 @@ protected:
 	friend class EngineStartButton;
 	friend class LEM_LCA;
 	friend class LEM_PFIRA;
+	friend class LEMCrewStatus;
 
 	friend class ApolloRTCCMFD;
 	friend class ProjectApolloMFD;

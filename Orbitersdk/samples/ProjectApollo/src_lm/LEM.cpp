@@ -221,6 +221,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	ForwardHatch(HatchOpenSound, HatchCloseSound),
 	OverheadHatch(HatchOpenSound, HatchCloseSound),
 	CabinFan(CabinFans),
+	CrewStatus(CrewDeadSound),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this),
 	CSMToLEMPowerConnector(this),
@@ -483,6 +484,7 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
+	soundlib.LoadSound(CrewDeadSound, CREWDEAD_SOUND);
 
 	// Configure sound options where needed
 	SuitFanSound.setFadeTime(5);
@@ -1363,6 +1365,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "SUITFANDPSENSOR", 15)) {
 			SuitFanDPSensor.LoadState(line);
 		}
+		else if (!strnicmp(line, "CREWSTATUS", 10)) {
+		CrewStatus.LoadState(line);
+		}
 		else if (!strnicmp(line, "PANEL_ID", 8)) {
 			sscanf(line + 8, "%d", &PanelId);
 		}
@@ -1771,6 +1776,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	OverheadHatch.SaveState(scn);
 	PrimGlycolPumpController.SaveState(scn);
 	SuitFanDPSensor.SaveState(scn);
+	CrewStatus.SaveState(scn);
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");

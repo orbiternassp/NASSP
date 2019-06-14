@@ -30,6 +30,210 @@
 #include "LEM.h"
 #include "lm_ecs.h"
 
+LEMCrewStatus::LEMCrewStatus(Sound &crewdeadsound) : crewDeadSound(crewdeadsound) {
+
+	status = ECS_CREWSTATUS_OK;
+	PressureLowTime = 600;
+	PressureHighTime = 3600;
+	TemperatureTime = 12 * 3600;
+	CO2Time = 1800;
+	accelerationTime = 10;
+	lastVerticalVelocity = 0;
+
+	lem = NULL;
+	firstTimestepDone = false;
+}
+
+LEMCrewStatus::~LEMCrewStatus() {
+}
+
+void LEMCrewStatus::Init(LEM *s) {
+
+	lem = s;
+}
+
+void LEMCrewStatus::Timestep(double simdt) {
+
+	if (!firstTimestepDone) {
+		// Dead at startup?
+		if (status == ECS_CREWSTATUS_DEAD) {
+			crewDeadSound.play();
+		}
+		firstTimestepDone = true;
+	}
+
+	if (!lem) return;
+
+	LEMECSStatus ecs;
+	lem->GetECSStatus(ecs);
+
+	// Already dead?
+	if (status == ECS_CREWSTATUS_DEAD) return;
+	// No crew?
+	if (!lem->Crewed || ecs.crewNumber == 0) return;
+
+	status = ECS_CREWSTATUS_OK;
+
+	// Suit/Cabin Pressure lower than 2.8 psi for 10 minutes
+	if (lem->CDRSuited->number + lem->LMPSuited->number > 0) {
+		if (lem->ecs.GetECSSuitPSI() < 2.8) {
+			if (PressureLowTime <= 0) {
+				status = ECS_CREWSTATUS_DEAD;
+				crewDeadSound.play();
+				return;
+			}
+			else {
+				status = ECS_CREWSTATUS_CRITICAL;
+					PressureLowTime -= simdt;
+			}
+		}
+		else {
+			PressureLowTime = 600;
+		}
+	} else if (lem->ecs.GetECSCabinPSI() < 2.8 && lem->CrewInCabin->number > 0) {
+		if (PressureLowTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+		else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			PressureLowTime -= simdt;
+		}
+	}
+	else {
+		PressureLowTime = 600;
+	}
+
+	// Suit/Cabin Pressure higher than 22 psi for 1 hour
+	if (lem->CDRSuited->number + lem->LMPSuited->number > 0) {
+		if (lem->ecs.GetECSSuitPSI() > 22) {
+			if (PressureHighTime <= 0) {
+				status = ECS_CREWSTATUS_DEAD;
+				crewDeadSound.play();
+				return;
+			}
+			else {
+				status = ECS_CREWSTATUS_CRITICAL;
+				PressureHighTime -= simdt;
+			}
+		}
+		else {
+			PressureHighTime = 3600;
+		}
+	}
+	else if (lem->ecs.GetECSCabinPSI() > 22 && lem->CrewInCabin->number > 0) {
+		if (PressureHighTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+		else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			PressureHighTime -= simdt;
+		}
+	}
+	else {
+		PressureHighTime = 3600;
+	}
+
+	// **Disabled for now until temperature simulation is made more stable
+	// Suit/Cabin temperature above about 45°C or below about 0°C for 12 hours
+	/*if (lem->CDRSuited->number + lem->LMPSuited->number > 0) {
+		if (lem->ecs.GetSuitTempF() > 113 || lem->ecs.GetSuitTempF() < 32) {
+			if (TemperatureTime <= 0) {
+				status = ECS_CREWSTATUS_DEAD;
+				crewDeadSound.play();
+				return;
+			}
+			else {
+				status = ECS_CREWSTATUS_CRITICAL;
+				TemperatureTime -= simdt;
+			}
+		}
+		else {
+			TemperatureTime = 12 * 3600;
+		}
+	} else if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
+		if (TemperatureTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+		else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			TemperatureTime -= simdt;
+		}
+	}
+	else {
+		TemperatureTime = 12 * 3600;
+	}*/
+
+	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
+	if (lem->ecs.GetECSSensorCO2MMHg() > 10) {
+		if (CO2Time <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+		else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			CO2Time -= simdt;
+		}
+	}
+	else {
+		PressureHighTime = 1800;
+	}
+
+	// Acceleration exceeds 12 g for 10 seconds
+	VECTOR3 f, w;
+	lem->GetForceVector(f);
+	lem->GetWeightVector(w);
+	if (length(f - w) / lem->GetMass() > 12. * G) {
+		if (accelerationTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+		else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			accelerationTime -= simdt;
+		}
+	}
+	else {
+		accelerationTime = 10;
+	}
+
+	// Touchdown speed exceeds 15 m/s (= about 50 ft/s)
+	if (lem->GroundContact()) {
+		if (fabs(lastVerticalVelocity) > 15) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+	}
+	else {
+		VECTOR3 v;
+		lem->GetAirspeedVector(FRAME_HORIZON, v);
+		lastVerticalVelocity = v.y;
+	}
+}
+
+void LEMCrewStatus::LoadState(char *line) {
+
+	sscanf(line + 10, "%d %lf %lf %lf %lf %lf %lf", &status, &PressureLowTime, &PressureHighTime, &TemperatureTime,
+		&CO2Time, &accelerationTime, &lastVerticalVelocity);
+}
+
+void LEMCrewStatus::SaveState(FILEHANDLE scn) {
+
+	char buffer[1000];
+
+	sprintf(buffer, "%d %lf %lf %lf %lf %lf %lf", status, PressureLowTime, PressureHighTime, TemperatureTime,
+		CO2Time, accelerationTime, lastVerticalVelocity);
+	oapiWriteScenario_string(scn, "CREWSTATUS", buffer);
+}
+
 LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
 	OpenSound(opensound), CloseSound(closesound)
 {
@@ -1607,4 +1811,30 @@ double LEM_ECS::DescentWaterTankPressure() {
 		Des_Water_Press = (double*)sdk.GetPointerByString("HYDRAULIC:DESH2OTANK:PRESS");
 	}
 	return (*Des_Water_Press)*PSI;
+}
+double LEM_ECS::GetECSSuitPSI() {
+
+	if (!Suit_Press) {
+		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
+	}
+	return *Suit_Press * PSI;
+}
+
+double LEM_ECS::GetECSCabinPSI() {
+
+	if (!Cabin_Press) {
+		Cabin_Press = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:PRESS");
+	}
+	return *Cabin_Press * PSI;
+}
+
+double LEM_ECS::GetECSSensorCO2MMHg() {
+
+	if (!SuitCircuit_CO2) {
+		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
+	}
+	if (!HX_CO2) {
+		HX_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:CO2_PPRESS");
+	}
+	return ((*SuitCircuit_CO2 + *HX_CO2) / 2.0) * MMHG;
 }
