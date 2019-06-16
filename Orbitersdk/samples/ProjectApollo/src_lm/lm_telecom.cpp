@@ -422,7 +422,7 @@ void LM_VHF::perform_io(double simt){
 				}
 			}
 			// Should we receive?
-			if (((simt - last_rx) / 0.1) < 1 || lem->agc.IsUpruptActive()) {			
+			if (((simt - last_rx) / 0.005) < 1 || lem->agc.IsUpruptActive()) {			
 				return; // No
 			}
 			last_rx = simt;

@@ -515,7 +515,7 @@ void UplinkSunburstCOI()
 void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
-		if (simt > g_Data.uplinkBufferSimt + 0.05) {
+		if (simt > g_Data.uplinkBufferSimt + 0.1) {
 			unsigned char data = g_Data.uplinkBuffer.front();
 			send(m_socket, (char *) &data, 1, 0);
 			g_Data.uplinkBuffer.pop();

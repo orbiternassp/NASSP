@@ -4322,7 +4322,7 @@ void PCM::perform_io(double simt){
 				}
 			}
 			// Should we recieve?
-			if ((fabs(simt - last_rx) / 0.1) < 1 || sat->agc.IsUpruptActive()) {			
+			if ((fabs(simt - last_rx) / 0.005) < 1 || sat->agc.IsUpruptActive()) {			
 				return; // No
 			}
 			last_rx = simt;
