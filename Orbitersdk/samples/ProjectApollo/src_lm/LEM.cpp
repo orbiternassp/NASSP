@@ -221,6 +221,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	ForwardHatch(HatchOpenSound, HatchCloseSound),
 	OverheadHatch(HatchOpenSound, HatchCloseSound),
 	CabinFan(CabinFans),
+	CrewStatus(CrewDeadSound),
 	ecs(Panelsdk),
 	CSMToLEMECSConnector(this),
 	CSMToLEMPowerConnector(this),
@@ -287,6 +288,8 @@ void LEM::Init()
 	HasProgramer = false;
 	NoAEA = false;
 	InvertStageBit = false;
+	CDRinPLSS = 0;
+	LMPinPLSS = 0;
 
 	InVC = false;
 	InPanel = false;
@@ -483,6 +486,7 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
 	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
+	soundlib.LoadSound(CrewDeadSound, CREWDEAD_SOUND);
 
 	// Configure sound options where needed
 	SuitFanSound.setFadeTime(5);
@@ -881,6 +885,10 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		FirstTimestep = false;
 		return;
 	}
+
+	//
+	// Internal/External view check
+	//
 
 	if (!ExtView && !oapiCameraInternal()) {
 		ExtView = true;
@@ -1281,6 +1289,12 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
 			sscanf(line + 13, "%i", &ordealEnabled);
 		}
+		else if (!strnicmp(line, "CDRINPLSS", 9)) {
+			sscanf(line + 9, "%i", &CDRinPLSS);
+		}
+		else if (!strnicmp(line, "LMPINPLSS", 9)) {
+			sscanf(line + 9, "%i", &LMPinPLSS);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1358,6 +1372,9 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "SUITFANDPSENSOR", 15)) {
 			SuitFanDPSensor.LoadState(line);
+		}
+		else if (!strnicmp(line, "CREWSTATUS", 10)) {
+		CrewStatus.LoadState(line);
 		}
 		else if (!strnicmp(line, "PANEL_ID", 8)) {
 			sscanf(line + 8, "%d", &PanelId);
@@ -1493,7 +1510,7 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 	}
 	oapiCloseFile(hFile, FILE_IN);
 
-	// Load LM meshes here
+	// Load all meshes here so that DEVMESHHANDLE'S properly initialize at initial LM creation.
 	SetMeshes();
 }
 
@@ -1698,6 +1715,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
 	papiWriteScenario_bool(scn, "INFOV", InFOV);
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
+	oapiWriteScenario_int(scn, "CDRINPLSS", CDRinPLSS);
+	oapiWriteScenario_int(scn, "LMPINPLSS", LMPinPLSS);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);
@@ -1767,6 +1786,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	OverheadHatch.SaveState(scn);
 	PrimGlycolPumpController.SaveState(scn);
 	SuitFanDPSensor.SaveState(scn);
+	CrewStatus.SaveState(scn);
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");

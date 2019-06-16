@@ -743,18 +743,58 @@ void CrewStatus::Timestep(double simdt) {
 
 	// Already dead?
 	if (status == ECS_CREWSTATUS_DEAD) return;
+
 	// No crew?
 	if (!saturn->Crewed || saturn->Crew->number == 0) return;
 
+	status = ECS_CREWSTATUS_OK;
+
+	// Acceleration exceeds 12 g for 10 seconds
+	VECTOR3 f, w;
+	saturn->GetForceVector(f);
+	saturn->GetWeightVector(w);
+	if (length(f - w) / saturn->GetMass() > 12. * G) {
+		if (accelerationTime <= 0) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+
+		}
+		else {
+			status = ECS_CREWSTATUS_CRITICAL;
+			accelerationTime -= simdt;
+		}
+	}
+	else {
+		accelerationTime = 10;
+	}
+
+	// Touchdown speed exceeds 15 m/s (= about 50 ft/s)
+	if (saturn->GroundContact()) {
+		if (fabs(lastVerticalVelocity) > 15) {
+			status = ECS_CREWSTATUS_DEAD;
+			crewDeadSound.play();
+			return;
+		}
+	}
+	else {
+		VECTOR3 v;
+		saturn->GetAirspeedVector(FRAME_HORIZON, v);
+		lastVerticalVelocity = v.y;
+	}
+
+	// In atmosphere with hatch open?
+	if ((saturn->GetAtmPressure() > 572 * 100) && (saturn->SideHatch.IsOpen() || saturn->ForwardHatch.IsOpen())) return;
+
 	AtmosStatus atm;
 	saturn->GetAtmosStatus(atm);
-	status = ECS_CREWSTATUS_OK;
 
 	// Pressure in suit lower than 2.8 psi for 10 minutes
 	if (atm.SuitPressurePSI < 2.8) {
 		if (suitPressureLowTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
@@ -769,6 +809,7 @@ void CrewStatus::Timestep(double simdt) {
 		if (suitPressureHighTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
@@ -783,6 +824,7 @@ void CrewStatus::Timestep(double simdt) {
 		if (suitTemperatureTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
@@ -797,42 +839,14 @@ void CrewStatus::Timestep(double simdt) {
 		if (suitCO2Time <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play(); 
+			return;
 
 		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
 			suitCO2Time -= simdt;
 		}
 	} else {
-		suitPressureHighTime = 1800;
-	}
-
-	// Acceleration exceeds 12 g for 10 seconds
-	VECTOR3 f, w;
-	saturn->GetForceVector(f);
-	saturn->GetWeightVector(w);
-	if (length(f - w) / saturn->GetMass() > 12. * G) {
-		if (accelerationTime <= 0) {
-			status = ECS_CREWSTATUS_DEAD;
-			crewDeadSound.play(); 
-
-		} else {
-			status = ECS_CREWSTATUS_CRITICAL;
-			accelerationTime -= simdt;
-		}
-	} else {
-		accelerationTime = 10;
-	}
-
-	// Touchdown speed exceeds 15 m/s (= about 50 ft/s)
-	if (saturn->GroundContact()) {
-		if (fabs(lastVerticalVelocity) > 15) {
-			status = ECS_CREWSTATUS_DEAD;
-			crewDeadSound.play(); 
-		}
-	} else {
-		VECTOR3 v;
-		saturn->GetAirspeedVector(FRAME_HORIZON, v);
-		lastVerticalVelocity = v.y;
+		suitCO2Time = 1800;
 	}
 }
 

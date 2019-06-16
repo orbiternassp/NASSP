@@ -3878,9 +3878,8 @@ protected:
 	bool CheckPanelIdInTimestep;
 	bool RefreshPanelIdInTimestep;
 	bool FovFixed;
-	int FovExternal;
+	bool FovExternal;
 	double FovSave;
-	double FovSaveExternal;
 	int maxTimeAcceleration;
 	bool IsMultiThread;
 

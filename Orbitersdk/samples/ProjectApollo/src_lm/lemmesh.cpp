@@ -84,8 +84,6 @@ void LEM::ToggleEVA()
 		if (vs1.status != 1) return;
 
 		CDREVA_IP = true;
-		CDRSuited->number = 0;
-		SetCrewMesh();
 
 		OBJHANDLE hbody = GetGravityRef();
 		double radius = oapiGetSize(hbody);
@@ -123,8 +121,6 @@ void LEM::StopEVA()
 {
 	// Called by LEVA vessel during destruction
 	CDREVA_IP = false;
-	CDRSuited->number = 1;
-	SetCrewMesh();
 }
 
 void LEM::SetLmVesselDockStage()

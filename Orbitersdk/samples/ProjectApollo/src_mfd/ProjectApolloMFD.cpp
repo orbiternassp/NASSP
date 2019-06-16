@@ -515,7 +515,7 @@ void UplinkSunburstCOI()
 void ProjectApolloMFDopcTimestep (double simt, double simdt, double mjd)
 {
 	if (g_Data.connStatus > 0 && g_Data.uplinkBuffer.size() > 0) {
-		if (simt > g_Data.uplinkBufferSimt + 0.05) {
+		if (simt > g_Data.uplinkBufferSimt + 0.1) {
 			unsigned char data = g_Data.uplinkBuffer.front();
 			send(m_socket, (char *) &data, 1, 0);
 			g_Data.uplinkBuffer.pop();
@@ -871,9 +871,13 @@ void ProjectApolloMFD::Update (HDC hDC)
 			{
 				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "In Suit", 7);
 			}
-			else
+			else if (ecs.cdrStatus == 2)
 			{
 				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "EVA", 3);
+			}
+			else
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.5), "PLSS", 4);
 			}
 
 
@@ -885,9 +889,13 @@ void ProjectApolloMFD::Update (HDC hDC)
 			{
 				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "In Suit", 7);
 			}
-			else
+			else if (ecs.lmpStatus == 2)
 			{
 				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "EVA", 3);
+			}
+			else
+			{
+				TextOut(hDC, (int)(width * 0.7), (int)(height * 0.55), "PLSS", 4);
 			}
 		}
 		else
