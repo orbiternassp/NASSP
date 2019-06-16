@@ -33,8 +33,11 @@
 LEMCrewStatus::LEMCrewStatus(Sound &crewdeadsound) : crewDeadSound(crewdeadsound) {
 
 	status = ECS_CREWSTATUS_OK;
+	SuitPressureLowTime = 600;
 	PressureLowTime = 600;
+	SuitPressureHighTime = 3600;
 	PressureHighTime = 3600;
+	SuitTemperatureTime = 12 * 3600;
 	TemperatureTime = 12 * 3600;
 	CO2Time = 1800;
 	accelerationTime = 10;
@@ -75,102 +78,89 @@ void LEMCrewStatus::Timestep(double simdt) {
 	status = ECS_CREWSTATUS_OK;
 
 	// Suit/Cabin Pressure lower than 2.8 psi for 10 minutes
-	if (lem->CDRSuited->number + lem->LMPSuited->number > 0) {
-		if (lem->ecs.GetECSSuitPSI() < 2.8) {
-			if (PressureLowTime <= 0) {
+	if ((lem->ecs.GetECSSuitPSI() < 2.8) && (lem->CDRSuited->number + lem->LMPSuited->number > 0)) {
+			if (SuitPressureLowTime <= 0) {
 				status = ECS_CREWSTATUS_DEAD;
 				crewDeadSound.play();
 				return;
-			}
-			else {
+			} else {
 				status = ECS_CREWSTATUS_CRITICAL;
-					PressureLowTime -= simdt;
+				SuitPressureLowTime -= simdt;
 			}
-		}
-		else {
-			PressureLowTime = 600;
-		}
-	} else if (lem->ecs.GetECSCabinPSI() < 2.8 && lem->CrewInCabin->number > 0) {
+		} else {
+		SuitPressureLowTime = 600;
+	}
+
+    if (lem->ecs.GetECSCabinPSI() < 2.8 && lem->CrewInCabin->number > 0) {
 		if (PressureLowTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
 			return;
-		}
-		else {
+		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
 			PressureLowTime -= simdt;
 		}
-	}
-	else {
+	} else {
 		PressureLowTime = 600;
 	}
 
 	// Suit/Cabin Pressure higher than 22 psi for 1 hour
-	if (lem->CDRSuited->number + lem->LMPSuited->number > 0) {
-		if (lem->ecs.GetECSSuitPSI() > 22) {
-			if (PressureHighTime <= 0) {
+	if ((lem->ecs.GetECSSuitPSI() > 22) && (lem->CDRSuited->number + lem->LMPSuited->number > 0)) {
+			if (SuitPressureHighTime <= 0) {
 				status = ECS_CREWSTATUS_DEAD;
 				crewDeadSound.play();
 				return;
-			}
-			else {
+			} else {
 				status = ECS_CREWSTATUS_CRITICAL;
-				PressureHighTime -= simdt;
+				SuitPressureHighTime -= simdt;
 			}
-		}
-		else {
-			PressureHighTime = 3600;
-		}
+		} else {
+		SuitPressureHighTime = 3600;
 	}
-	else if (lem->ecs.GetECSCabinPSI() > 22 && lem->CrewInCabin->number > 0) {
+
+	if (lem->ecs.GetECSCabinPSI() > 22 && lem->CrewInCabin->number > 0) {
 		if (PressureHighTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
 			return;
-		}
-		else {
+		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
 			PressureHighTime -= simdt;
 		}
-	}
-	else {
+	} else {
 		PressureHighTime = 3600;
 	}
 
 	// **Disabled for now until temperature simulation is made more stable
 	// Suit/Cabin temperature above about 45°C or below about 0°C for 12 hours
-	/*if (lem->CDRSuited->number + lem->LMPSuited->number > 0) {
-		if (lem->ecs.GetSuitTempF() > 113 || lem->ecs.GetSuitTempF() < 32) {
-			if (TemperatureTime <= 0) {
+	/*if ((lem->ecs.GetSuitTempF() > 113 || lem->ecs.GetSuitTempF() < 32) && (lem->CDRSuited->number + lem->LMPSuited->number > 0)) {
+			if (SuitTemperatureTime <= 0) {
 				status = ECS_CREWSTATUS_DEAD;
 				crewDeadSound.play();
 				return;
-			}
-			else {
+			} else {
 				status = ECS_CREWSTATUS_CRITICAL;
-				TemperatureTime -= simdt;
+				SuitTemperatureTime -= simdt;
 			}
-		}
-		else {
-			TemperatureTime = 12 * 3600;
-		}
-	} else if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
+		} else {
+		SuitTemperatureTime = 12 * 3600;
+	}
+
+	if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
 		if (TemperatureTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
 			return;
-		}
-		else {
+		} else {
 			status = ECS_CREWSTATUS_CRITICAL;
 			TemperatureTime -= simdt;
 		}
-	}
-	else {
+	} else {
 		TemperatureTime = 12 * 3600;
 	}*/
 
 	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
-	if (lem->ecs.GetECSSensorCO2MMHg() > 10) {
+	if (lem->ecs.GetECSSensorCO2MMHg() > 10 && (lem->CrewInCabin->number > 0 || (lem->CDRSuited->number + lem->LMPSuited->number > 0))) {
 		if (CO2Time <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
@@ -182,7 +172,7 @@ void LEMCrewStatus::Timestep(double simdt) {
 		}
 	}
 	else {
-		PressureHighTime = 1800;
+		CO2Time = 1800;
 	}
 
 	// Acceleration exceeds 12 g for 10 seconds
@@ -221,16 +211,16 @@ void LEMCrewStatus::Timestep(double simdt) {
 
 void LEMCrewStatus::LoadState(char *line) {
 
-	sscanf(line + 10, "%d %lf %lf %lf %lf %lf %lf", &status, &PressureLowTime, &PressureHighTime, &TemperatureTime,
-		&CO2Time, &accelerationTime, &lastVerticalVelocity);
+	sscanf(line + 10, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf", &status, &SuitPressureLowTime, &PressureLowTime, &SuitPressureHighTime,
+		&PressureHighTime, &SuitTemperatureTime, &TemperatureTime, &CO2Time, &accelerationTime, &lastVerticalVelocity);
 }
 
 void LEMCrewStatus::SaveState(FILEHANDLE scn) {
 
 	char buffer[1000];
 
-	sprintf(buffer, "%d %lf %lf %lf %lf %lf %lf", status, PressureLowTime, PressureHighTime, TemperatureTime,
-		CO2Time, accelerationTime, lastVerticalVelocity);
+	sprintf(buffer, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf", status, SuitPressureLowTime, PressureLowTime, SuitPressureHighTime,
+		PressureHighTime, SuitTemperatureTime, TemperatureTime, CO2Time, accelerationTime, lastVerticalVelocity);
 	oapiWriteScenario_string(scn, "CREWSTATUS", buffer);
 }
 

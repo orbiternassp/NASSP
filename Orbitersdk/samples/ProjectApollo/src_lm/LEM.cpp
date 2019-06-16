@@ -288,6 +288,8 @@ void LEM::Init()
 	HasProgramer = false;
 	NoAEA = false;
 	InvertStageBit = false;
+	CDRinPLSS = 0;
+	LMPinPLSS = 0;
 
 	InVC = false;
 	InPanel = false;
@@ -1287,6 +1289,12 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
 			sscanf(line + 13, "%i", &ordealEnabled);
 		}
+		else if (!strnicmp(line, "CDRINPLSS", 9)) {
+			sscanf(line + 9, "%i", &CDRinPLSS);
+		}
+		else if (!strnicmp(line, "LMPINPLSS", 9)) {
+			sscanf(line + 9, "%i", &LMPinPLSS);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1707,6 +1715,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
 	papiWriteScenario_bool(scn, "INFOV", InFOV);
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
+	oapiWriteScenario_int(scn, "CDRINPLSS", CDRinPLSS);
+	oapiWriteScenario_int(scn, "LMPINPLSS", LMPinPLSS);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);

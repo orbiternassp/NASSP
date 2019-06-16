@@ -846,7 +846,7 @@ void CrewStatus::Timestep(double simdt) {
 			suitCO2Time -= simdt;
 		}
 	} else {
-		suitPressureHighTime = 1800;
+		suitCO2Time = 1800;
 	}
 }
 
