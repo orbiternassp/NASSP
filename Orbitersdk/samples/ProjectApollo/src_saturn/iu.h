@@ -31,6 +31,7 @@
 #include "eds.h"
 #include "LVDA.h"
 #include "dcs.h"
+#include "IUControlDistributor.h"
 
 class SoundLib;
 class IU;
@@ -338,19 +339,19 @@ public:
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
 
-	void ControlDistributor(int stage, int channel);
-
-	bool SIVBBurnMode();
+	void ControlDistribution(int stage, int channel);
 
 	//Subsystem Access
 	LVDC* GetLVDC() { return lvdc; }
 	LVRG* GetLVRG() { return &lvrg; }
+	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
 
 	LVDC* lvdc;
 	LVIMU lvimu;
 	LVRG lvrg;
 	LVDA lvda;
 	DCS dcs;
+	IUControlDistributor ControlDistributor;
 
 protected:
 	int State;
@@ -381,17 +382,6 @@ protected:
 	/// \brief Connector to launch vehicle.
 	///
 	IUToLVCommandConnector lvCommandConnector;
-
-	//Relays
-
-	//K23
-	bool SIVBBurnModeA;
-	//K36
-	bool SIVBBurnModeB;
-	//K93
-	bool SIVBThrustNotOKA;
-	//K92
-	bool SIVBThrustNotOKB;
 };
 
 class IU1B :public IU

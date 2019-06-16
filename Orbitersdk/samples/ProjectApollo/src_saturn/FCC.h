@@ -1,6 +1,6 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2017
+Copyright 2017-2019
 
 Flight Control Computer (Header)
 
@@ -24,13 +24,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class LVRG;
 class IU;
 
 class FCC
 {
 public:
-	FCC(LVRG &rg);
+	FCC(IU *iu);
 	virtual ~FCC() {}
 	virtual void Timestep(double simdt) = 0;
 	void Init(IU *i);
@@ -46,6 +45,8 @@ public:
 protected:
 	int GainSwitch;
 	int StageSwitch;
+	//K1
+	bool SIBurnMode;
 	//K2
 	bool SIVBBurnMode;
 	bool SCControlEnableRelay;
@@ -60,20 +61,19 @@ protected:
 
 	VECTOR3 LVDCAttitudeError;
 
-	LVRG &lvrg;
 	IU *iu;
 };
 
 class FCC1B : public FCC
 {
 public:
-	FCC1B(LVRG &rg);
+	FCC1B(IU *iu);
 	void Timestep(double simdt);
 };
 
 class FCCSV : public FCC
 {
 public:
-	FCCSV(LVRG &rg);
+	FCCSV(IU *iu);
 	void Timestep(double simdt);
 };

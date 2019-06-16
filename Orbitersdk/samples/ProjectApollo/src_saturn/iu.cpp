@@ -45,7 +45,8 @@
 
 
 IU::IU() :
-dcs(this)
+dcs(this),
+ControlDistributor(this)
 {
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -55,10 +56,6 @@ dcs(this)
 
 	Crewed = true;
 	SCControlPoweredFlight = false;
-	SIVBBurnModeA = false;
-	SIVBBurnModeB = false;
-	SIVBThrustNotOKA = false;
-	SIVBThrustNotOKB = false;
 
 	commandConnector.SetIU(this);
 	lvdc = NULL;
@@ -90,9 +87,6 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 		lvCommandConnector.SetStage(LAUNCH_STAGE_ONE);
 	}
 
-	//Relay Logic
-	SIVBThrustNotOKA = SIVBThrustNotOKB = GetSIVBEngineOut();
-
 	if (lvdc == NULL) return;
 
 	lvimu.Timestep(mjd);
@@ -115,10 +109,6 @@ void IU::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int(scn, "STATE", State);
 	papiWriteScenario_bool(scn, "UMBILICALCONNECTED", UmbilicalConnected);
-	papiWriteScenario_bool(scn, "SIVBBURNMODEA", SIVBBurnModeA);
-	papiWriteScenario_bool(scn, "SIVBBURNMODEB", SIVBBurnModeB);
-	papiWriteScenario_bool(scn, "SIVBTHRUSTNOTOKA", SIVBThrustNotOKA);
-	papiWriteScenario_bool(scn, "SIVBTHRUSTNOTOKB", SIVBThrustNotOKB);
 	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 
@@ -140,10 +130,6 @@ void IU::LoadState(FILEHANDLE scn)
 
 		papiReadScenario_int(line, "STATE", State);
 		papiReadScenario_bool(line, "UMBILICALCONNECTED", UmbilicalConnected);
-		papiReadScenario_bool(line, "SIVBBURNMODEA", SIVBBurnModeA);
-		papiReadScenario_bool(line, "SIVBBURNMODEB", SIVBBurnModeB);
-		papiReadScenario_bool(line, "SIVBTHRUSTNOTOKA", SIVBThrustNotOKA);
-		papiReadScenario_bool(line, "SIVBTHRUSTNOTOKB", SIVBThrustNotOKB);
 		papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
 		papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 		if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
@@ -1426,7 +1412,7 @@ void IU::SaveLVDC(FILEHANDLE scn) {
 	}
 }
 
-void IU::ControlDistributor(int stage, int channel)
+void IU::ControlDistribution(int stage, int channel)
 {
 	if (stage == SWITCH_SELECTOR_IU)
 	{
@@ -1446,25 +1432,7 @@ void IU::ControlDistributor(int stage, int channel)
 	}
 }
 
-bool IU::SIVBBurnMode()
-{
-	if (SIVBBurnModeA && !SIVBThrustNotOKA)
-	{
-		return true;
-	}
-	else if (SIVBBurnModeB && !SIVBThrustNotOKB)
-	{
-		return true;
-	}
-	else if (SIVBBurnModeA && SIVBThrustNotOKB && SIVBBurnModeB)
-	{
-		return true;
-	}
-
-	return false;
-}
-
-IU1B::IU1B() : fcc(lvrg), eds(this)
+IU1B::IU1B() : fcc(this), eds(this)
 {
 	lvda.Init(this);
 }
@@ -1568,7 +1536,7 @@ void IU1B::SwitchSelector(int item)
 		eds.SetSIVBEngineCutoffDisabled();
 		break;
 	case 5: //Flight Control Computer S-IVB Burn Mode Off "B"
-		SIVBBurnModeB = false;
+		ControlDistributor.SetSIVBBurnModeB(false);
 		break;
 	case 6: //Flight Control Computer S-IVB Burn Mode On "B"
 		SIVBBurnModeB = true;
@@ -1578,7 +1546,7 @@ void IU1B::SwitchSelector(int item)
 		eds.SetSIVBEngineOutIndicationA(true);
 		break;
 	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
-		SIVBBurnModeA = false;
+		ControlDistributor.SetSIVBBurnModeA(false);
 		break;
 	case 13: //Excess Rate (P,Y,R) Auto-Abort Inhibit Off
 		eds.SetExcessiveRatePYRAutoAbortInhibitEnable(false);
@@ -1643,7 +1611,7 @@ void IU1B::SwitchSelector(int item)
 	}
 }
 
-IUSV::IUSV() : fcc(lvrg), eds(this)
+IUSV::IUSV() : fcc(this), eds(this)
 {
 	lvda.Init(this);
 }
@@ -1749,14 +1717,15 @@ void IUSV::SwitchSelector(int item)
 	case 3: //Tape Recorder Playback Reverse Off
 		break;
 	case 4: //Flight Control Computer Switch Point No. 4
-		fcc.SetGainSwitch(4);
+		ControlDistributor.SetFCCSwitchPoint4On();
 		break;
 	case 5: //Flight Control Computer Switch Point No. 6
-		fcc.SetGainSwitch(6);
+		ControlDistributor.SetFCCSwitchPoint6On();
 		break;
 	case 6: //Spare
 		break;
 	case 7: //Flight Control Computer Switch Point No. 7
+		ControlDistributor.SetFCCSwitchPoint7On();
 		break;
 	case 8: //Spare
 		break;
@@ -1793,19 +1762,20 @@ void IUSV::SwitchSelector(int item)
 		eds.SetExcessiveRateRollAutoAbortInhibit(false);
 		break;
 	case 21: //Flight Control Computer Switch Pointer No. 2
-		fcc.SetGainSwitch(2);
+		ControlDistributor.SetFCCSwitchPoint2On();
 		break;
 	case 22: //Flight Control Computer Switch Pointer No. 3
-		fcc.SetGainSwitch(3);
+		ControlDistributor.SetFCCSwitchPoint3On();
 		break;
 	case 23: //Telemetry Calibrator Inflight Calibrate On
 		break;
 	case 24: //Telemetry Calibrator Inflight Calibrate Off
 		break;
 	case 26: //Flight Control Computer Switch Pointer No. 1
-		fcc.SetGainSwitch(1);
+		ControlDistributor.SetFCCSwitchPoint1On();
 		break;
 	case 27: //Flight Control Computer Switch Pointer No. 9
+		ControlDistributor.SetFCCSwitchPoint9On();
 		break;
 	case 28: //S-II Engine Out Indication "A" Enable; S-II Aft Interstage Separation Indication "A" Enable
 		eds.SetSIIEngineOutIndicationA();
@@ -1851,7 +1821,7 @@ void IUSV::SwitchSelector(int item)
 		commandConnector.SetAGCInputChannelBit(030, UllageThrust, true);
 		break;
 	case 44: //Flight Control Computer Switch Point No. 5
-		fcc.SetGainSwitch(5);
+		ControlDistributor.SetFCCSwitchPoint5On();
 		break;
 	case 45: //Spare
 		break;
@@ -1859,6 +1829,7 @@ void IUSV::SwitchSelector(int item)
 		commandConnector.SetAGCInputChannelBit(030, UllageThrust, false);
 		break;
 	case 47: //Flight Control Computer Switch Point No. 8
+		ControlDistributor.SetFCCSwitchPoint8On();
 		break;
 	case 48: //S-II Engine Out Indication "B" Enable; S-II Aft Interstage Separation Indication "B" Enable
 		eds.SetSIIEngineOutIndicationB();
@@ -1919,6 +1890,8 @@ void IUSV::SwitchSelector(int item)
 	case 85: //S-IC Outboard Engines Cant On "C"
 		break;
 	case 86: //S-IC Outboard Engines Cant Off "B"
+		break;
+	case 87: //S-IC Outboard Engines Cant Off "C"
 		break;
 	case 98: //AZUSA X-Ponder Power Off
 		break;

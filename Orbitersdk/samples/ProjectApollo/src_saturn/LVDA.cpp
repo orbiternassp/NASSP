@@ -50,7 +50,7 @@ void LVDA::SwitchSelector(int stage, int channel)
 {
 	if (stage < 0 || stage > 3) return;
 
-	iu->ControlDistributor(stage, channel);
+	iu->ControlDistribution(stage, channel);
 }
 
 void LVDA::SetFCCAttitudeError(VECTOR3 atterr)

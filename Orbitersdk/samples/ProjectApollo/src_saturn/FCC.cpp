@@ -1,6 +1,6 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2017
+Copyright 2017-2019
 
 Flight Control Computer
 
@@ -25,16 +25,17 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Orbitersdk.h"
 
 #include "LVIMU.h"
-
+#include "IUControlDistributor.h"
 #include "papi.h"
 #include "iu.h"
 
 #include "FCC.h"
 
-FCC::FCC(LVRG &rg) : lvrg(rg)
+FCC::FCC(IU *iu)
 {
 	GainSwitch = -1;
 	StageSwitch = 0;
+	SIBurnMode = false;
 	SIVBBurnMode = false;
 	SCControlEnableRelay = false;
 	PermanentSCControlEnabled = false;
@@ -48,7 +49,7 @@ FCC::FCC(LVRG &rg) : lvrg(rg)
 
 	LVDCAttitudeError = _V(0.0, 0.0, 0.0);
 
-	iu = NULL;
+	this->iu = iu;
 }
 
 void FCC::Init(IU *i)
@@ -86,7 +87,7 @@ void FCC::LoadState(FILEHANDLE scn, char *end_str) {
 	}
 }
 
-FCC1B::FCC1B(LVRG &rg) : FCC(rg)
+FCC1B::FCC1B(IU *iu) : FCC(iu)
 {
 
 }
@@ -99,8 +100,9 @@ void FCC1B::Timestep(double simdt)
 	VECTOR3 AttRate, AttitudeError;
 
 	//Input signals
-	AttRate = lvrg.GetRates();
-	SIVBBurnMode = iu->SIVBBurnMode();
+	AttRate = iu->GetLVRG()->GetRates();
+	SIBurnMode = iu->GetControlDistributor()->GetSIBurnMode();
+	SIVBBurnMode = iu->GetControlDistributor()->GetSIVBBurnMode();
 
 	// S/C takeover function
 	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
@@ -247,7 +249,7 @@ void FCC1B::Timestep(double simdt)
 	}
 }
 
-FCCSV::FCCSV(LVRG &rg) : FCC(rg)
+FCCSV::FCCSV(IU *iu) : FCC(iu)
 {
 
 }
@@ -260,8 +262,8 @@ void FCCSV::Timestep(double simdt)
 	VECTOR3 AttRate, AttitudeError;
 
 	//Input Signals
-	AttRate = lvrg.GetRates();
-	SIVBBurnMode = iu->SIVBBurnMode();
+	AttRate = iu->GetLVRG()->GetRates();
+	SIVBBurnMode = iu->GetControlDistributor()->GetSIVBBurnMode();
 
 	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
@@ -273,6 +275,89 @@ void FCCSV::Timestep(double simdt)
 	else
 	{
 		AttitudeError = LVDCAttitudeError;
+	}
+
+	if (iu->GetControlDistributor()->GetSIBurnMode())
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint2())
+		{
+			a_0p = a_0y = 0.32;
+			a_0r = 0.32;
+			a_1p = a_1y = 0.30;
+			a_1r = 0.30;
+		}
+		else if (iu->GetControlDistributor()->GetFCCSwitchPoint1())
+		{
+			a_0p = a_0y = 0.45;
+			a_0r = 0.45;
+			a_1p = a_1y = 0.44;
+			a_1r = 0.44;
+		}
+		else
+		{
+			a_0p = a_0y = 0.9;
+			a_0r = 0.9;
+			a_1p = a_1y = 0.69;
+			a_1r = 0.69;
+		}
+	}
+	else if (iu->GetControlDistributor()->GetSIIBurnMode())
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint4())
+		{
+			a_0p = a_0y = 0.44;
+			a_0r = 0.44;
+			a_1p = a_1y = 0.74;
+			a_1r = 0.74;
+		}
+		else if (iu->GetControlDistributor()->GetFCCSwitchPoint3())
+		{
+			a_0p = a_0y = 0.65;
+			a_0r = 0.65;
+			a_1p = a_1y = 1.1;
+			a_1r = 1.1;
+		}
+		else
+		{
+			a_0p = a_0y = 1.12;
+			a_0r = 1.12;
+			a_1p = a_1y = 1.9;
+			a_1r = 1.9;
+		}
+	}
+	else if (iu->GetControlDistributor()->GetSIVBBurnMode())
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint6())
+		{
+			a_0p = a_0y = 0.81;
+			a_0r = 1;
+			a_1p = a_1y = 0.7;
+			a_1r = 5;
+		}
+		else
+		{
+			a_0p = a_0y = 0.81;
+			a_0r = 1;
+			a_1p = a_1y = 0.97;
+			a_1r = 5;
+		}
+	}
+	else
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint5())
+		{
+			a_0p = a_0y = 1;
+			a_0r = 1;
+			a_1p = a_1y = 5;
+			a_1r = 5;
+		}
+		else
+		{
+			a_0p = a_0y = 1;
+			a_0r = 1;
+			a_1p = a_1y = 5;
+			a_1r = 5;
+		}
 	}
 
 	/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
