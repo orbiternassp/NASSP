@@ -149,6 +149,7 @@
     <ClCompile Include="..\..\src_saturn\dcs.cpp" />
     <ClCompile Include="..\..\src_saturn\eds.cpp" />
     <ClCompile Include="..\..\src_saturn\FCC.cpp" />
+    <ClCompile Include="..\..\src_saturn\IUControlDistributor.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDC.cpp" />
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="..\..\src_saturn\dcs.h" />
     <ClInclude Include="..\..\src_saturn\eds.h" />
     <ClInclude Include="..\..\src_saturn\FCC.h" />
+    <ClInclude Include="..\..\src_saturn\IUControlDistributor.h" />
     <ClInclude Include="..\..\src_saturn\LVDA.h" />
     <ClInclude Include="..\..\src_saturn\LVDC.h" />
     <ClInclude Include="..\..\src_saturn\LVIMU.h" />
