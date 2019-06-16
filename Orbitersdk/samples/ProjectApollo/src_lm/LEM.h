@@ -97,7 +97,7 @@ enum LMRCSThrusters
 typedef struct {
 	int crewNumber;
 	int crewStatus;
-	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA
+	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA, 3 = PLSS
 	int lmpStatus;
 } LEMECSStatus;
 
@@ -1426,6 +1426,9 @@ protected:
 	bool HasProgramer;
 	bool NoAEA;
 	bool InvertStageBit;
+
+	int CDRinPLSS;
+	int LMPinPLSS;
 
 #define LMVIEW_CDR		0
 #define LMVIEW_LMP		1

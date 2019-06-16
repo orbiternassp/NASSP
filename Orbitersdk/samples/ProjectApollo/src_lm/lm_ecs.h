@@ -50,8 +50,11 @@ public:
 
 protected:
 	int status;
+	double SuitPressureLowTime;
 	double PressureLowTime;
+	double SuitPressureHighTime;
 	double PressureHighTime;
+	double SuitTemperatureTime;
 	double TemperatureTime;
 	double CO2Time;
 	double accelerationTime;
