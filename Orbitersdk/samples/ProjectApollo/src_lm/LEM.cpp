@@ -1502,7 +1502,7 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 	}
 	oapiCloseFile(hFile, FILE_IN);
 
-	// Load LM meshes here
+	// Load all meshes here so that DEVMESHHANDLE'S properly initialize at initial LM creation.
 	SetMeshes();
 }
 
