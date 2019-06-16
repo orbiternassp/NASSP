@@ -2657,8 +2657,8 @@ void LEM_SteerableAnt::DefineAnimations(UINT idx) {
 
 	// S-Band animation definition
 	ANIMATIONCOMPONENT_HANDLE	ach_SBandPitch, ach_SBandYaw;
-	const VECTOR3	LM_SBAND_PIVOT1 = { 1.85114, 1.39771, -0.00002 }; // Pivot Point 1
-	const VECTOR3	LM_SBAND_PIVOT2 = { 2.06154, 1.18404, -0.00595 }; // Pivot Point 2
+	const VECTOR3	LM_SBAND_PIVOT1 = { 1.85114, 1.42171, -0.00002 }; // Pivot Point 1
+	const VECTOR3	LM_SBAND_PIVOT2 = { 2.06154, 1.20804, -0.00595 }; // Pivot Point 2
 	const VECTOR3	LM_SBAND_AXIS = { cos(RAD * 45),-sin(RAD * 45), 0.00 }; //Pivot Axis
 	static UINT meshgroup_SBandPivot = AS_GRP_SbandPivot;
 	static UINT meshgroup_SBandAntenna[3] = { AS_GRP_Sband, AS_GRP_SbandDish, AS_GRP_SbandDish2 };

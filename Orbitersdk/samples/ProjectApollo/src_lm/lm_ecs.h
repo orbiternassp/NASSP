@@ -26,6 +26,45 @@
 
 #include "animations.h"
 
+  ///
+  /// This class simulates the crew status (dead or alive) in the LM.
+  /// \ingroup InternalSystems
+  /// \brief crew status.
+  ///
+
+#define ECS_CREWSTATUS_OK			0
+#define ECS_CREWSTATUS_CRITICAL		1
+#define ECS_CREWSTATUS_DEAD			2
+
+
+class LEMCrewStatus {
+
+public:
+	LEMCrewStatus(Sound &crewdeadsound);
+	virtual ~LEMCrewStatus();
+	void Init(LEM *s);
+	void Timestep(double simdt);
+	int GetStatus() { return status; };
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
+protected:
+	int status;
+	double SuitPressureLowTime;
+	double PressureLowTime;
+	double SuitPressureHighTime;
+	double PressureHighTime;
+	double SuitTemperatureTime;
+	double TemperatureTime;
+	double CO2Time;
+	double accelerationTime;
+	double lastVerticalVelocity;
+
+	LEM *lem;
+	Sound &crewDeadSound;
+	bool firstTimestepDone;
+};
+
 class LEMOverheadHatch
 {
 public:
@@ -362,6 +401,9 @@ public:
 	double GetPrimWBGlycolOutletTempF();
 	double GetPrimaryGlycolPumpDP();
 	double GetPLSSFillPressurePSI();
+	double GetECSSuitPSI();
+	double GetECSCabinPSI();
+	double GetECSSensorCO2MMHg();
 	bool GetSuitFan1Failure();
 	bool GetSuitFan2Failure();
 	bool GetPrimGlycolLowLevel();

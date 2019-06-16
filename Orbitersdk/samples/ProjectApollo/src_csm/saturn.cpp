@@ -711,9 +711,8 @@ void Saturn::initSaturn()
 	CheckPanelIdInTimestep = false;
 	RefreshPanelIdInTimestep = false;
 	FovFixed = false;
-	FovExternal = 0;
+	FovExternal = false;
 	FovSave = 0;
-	FovSaveExternal = 0;
 
 	//
 	// Save the last view offset set.
@@ -1154,33 +1153,17 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	}
 
 	//
-	// Check FOV for external view
+	// Internal/External view check
 	//
 
-	// The current FOV hack doesn't work in external view, 
-	// so we need to switch back to internal view for one
-	// time step and switch then back outside again.
-	if (FovExternal == 3) {
-		oapiCameraAttach(oapiCameraTarget(), 1);
-		FovExternal = 4;
-	}
-	if (FovExternal == 2) {
-		papiCameraSetAperture(FovSave);
-		FovExternal = 3;
-	}
-	if (FovExternal == 1) {
-		oapiCameraAttach(oapiCameraTarget(), 0);
-		FovExternal = 2;
-	}
-	if ((!oapiCameraInternal() || (oapiGetFocusInterface() != this)) && FovFixed && FovExternal == 0) {
-		FovSaveExternal = papiCameraAperture();
-		FovExternal = 1;
+	if (!FovExternal && !oapiCameraInternal()) {
+		FovExternal = true;
+		if (FovFixed) oapiCameraSetAperture(FovSave);
 	}
 
-	if ((oapiGetFocusInterface() == this) && oapiCameraInternal() && FovFixed && FovExternal == 4) {
-		FovSave = papiCameraAperture();
-		papiCameraSetAperture(FovSaveExternal);
-		FovExternal = 0;	
+	if (FovExternal && oapiCameraInternal()) {
+		FovExternal = false;
+		SetView();
 	}
 
 	//
@@ -1380,10 +1363,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "OPTICSDSKYENABLED", opticsDskyEnabled);
 	oapiWriteScenario_int (scn, "HATCHPANEL600ENABLED", hatchPanel600EnabledLeft);
 	oapiWriteScenario_int (scn, "PANEL382ENABLED", panel382Enabled);
-	oapiWriteScenario_int (scn, "FOVFIXED", (FovFixed ? 1 : 0));
-	oapiWriteScenario_int (scn, "FOVEXTERNAL", FovExternal);
+	papiWriteScenario_bool(scn, "FOVFIXED", FovFixed);
 	papiWriteScenario_double(scn, "FOVSAVE", FovSave);
-	papiWriteScenario_double(scn, "FOVSAVEEXTERNAL", FovSaveExternal);
 
 	for (int i = 0; i < 16; i++) {
 		if (Checklist_Variable[i][0] != 0) {
@@ -2234,15 +2215,10 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		else if (!strnicmp (line, "PANEL382ENABLED", 15)) {
 			sscanf (line + 15, "%i", &panel382Enabled);
 		}
-		else if (!strnicmp (line, "FOVFIXED", 8)) {
-			sscanf (line + 8, "%i", &i);
-			FovFixed = (i != 0);
-		}
-		else if (!strnicmp (line, "FOVEXTERNAL", 11)) {
-			sscanf (line + 11, "%i", &FovExternal);
-		}
-		else if (!strnicmp (line, "FOVSAVEEXTERNAL", 15)) {
-			sscanf (line + 15, "%lf", &FovSaveExternal);
+		else if (!strnicmp(line, "FOVFIXED", 8)) {
+		int i;
+		sscanf(line + 8, "%d", &i);
+		FovFixed = (i == 1);
 		}
 		else if (!strnicmp (line, "FOVSAVE", 7)) {
 			sscanf (line + 7, "%lf", &FovSave);

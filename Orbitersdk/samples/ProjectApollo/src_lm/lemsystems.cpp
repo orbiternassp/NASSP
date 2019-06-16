@@ -721,6 +721,7 @@ void LEM::SystemsInit()
 	SuitFanDPSensor.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITFANMANIFOLD"),
 		(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERCOOLING"),
 		&ECS_SUIT_FAN_DP_CB);
+	CrewStatus.Init(this);
 	ecs.Init(this);
 
 	// EDS initialization
@@ -1461,6 +1462,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	ecs.Timestep(simdt);
 	OverheadHatch.Timestep(simdt);
 	ForwardHatch.Timestep(simdt);
+	CrewStatus.Timestep(simdt);
 	scca1.Timestep(simdt);
 	scca2.Timestep(simdt);
 	scca3.Timestep(simdt);
@@ -1564,6 +1566,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	// Mesh Index Order
 	//sprintf(oapiDebugString(), "ascidx %i vcidx %i dscidx %i", ascidx, vcidx, dscidx);
 
+	//sprintf(oapiDebugString(), "CDRinPLSS %i CDRsuited %i LMPinPLSS %i LMPsuited %i CrewInCabin %i", CDRinPLSS, CDRSuited->number, LMPinPLSS, LMPSuited->number, CrewInCabin->number);
 	//sprintf(oapiDebugString(), "InPanel %d InVC %d ExtView %d InFOV %d", InPanel, InVC, ExtView, InFOV);
 
 	//ECS Debug Lines//
@@ -2045,23 +2048,28 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 {
 	// Crew
 
-	if (CDRSuited->number == 1)
+	if (CDREVA_IP)
+	{
+		ecs.cdrStatus = 2;
+	}
+	else if (CDRinPLSS > 1)
+	{
+		ecs.cdrStatus = 3;
+	}
+	else if (CDRSuited->number == 1)
 	{
 		ecs.cdrStatus = 1;
 	}
 	else
 	{
-		if (CDREVA_IP)
-		{
-			ecs.cdrStatus = 2;
-		}
-		else
-		{
-			ecs.cdrStatus = 0;
-		}
+		ecs.cdrStatus = 0;
 	}
 
-	if (LMPSuited->number == 1)
+	if (LMPinPLSS > 1)
+	{
+		ecs.lmpStatus = 3;
+	}
+	else if (LMPSuited->number == 1)
 	{
 		ecs.lmpStatus = 1;
 	}
@@ -2071,7 +2079,7 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 	}
 
 	ecs.crewNumber = CrewInCabin->number + CDRSuited->number + LMPSuited->number;
-	ecs.crewStatus = 0;
+	ecs.crewStatus = CrewStatus.GetStatus();;
 
 
 }
@@ -2090,10 +2098,21 @@ void LEM::SetCDRInSuit()
 {
 	if (!CDREVA_IP)
 	{
-		if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
+
+		if (CDRinPLSS == 2) {
+			CDRSuited->number = 1;
+			CDRinPLSS = 0;
+		}
+		else if (CDRinPLSS == 1)
+		{
+			CDRSuited->number = 0;
+			CDRinPLSS = 2;
+		}
+		else if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
 		{
 			CrewInCabin->number--;
 			CDRSuited->number = 1;
+			if (GroundContact() && CDRinPLSS == 0) CDRinPLSS = 1;
 		}
 		else if (CDRSuited->number == 1)
 		{
@@ -2106,10 +2125,20 @@ void LEM::SetCDRInSuit()
 
 void LEM::SetLMPInSuit()
 {
-	if (CrewInCabin->number >= 1 && LMPSuited->number == 0)
+	if (LMPinPLSS == 2) {
+		LMPSuited->number = 1;
+		LMPinPLSS = 0;
+	}
+	else if (LMPinPLSS == 1)
+	{
+		LMPSuited->number = 0;
+		LMPinPLSS = 2;
+	}
+	else if (CrewInCabin->number >= 1 && LMPSuited->number == 0)
 	{
 		CrewInCabin->number--;
 		LMPSuited->number = 1;
+		if (GroundContact() && LMPinPLSS == 0) LMPinPLSS = 1;
 	}
 	else if (LMPSuited->number == 1)
 	{
@@ -2121,7 +2150,7 @@ void LEM::SetLMPInSuit()
 
 void LEM::StartEVA()
 {
-	if (ForwardHatch.IsOpen() && GroundContact() && CDRSuited->number == 1) {
+	if (ForwardHatch.IsOpen() && GroundContact() && CDRinPLSS > 1) {
 		ToggleEva = true;
 	}
 }
