@@ -96,9 +96,10 @@ void FCC1B::Timestep(double simdt)
 	AttRate = iu->GetLVRG()->GetRates();
 	SIBurnMode = iu->GetControlDistributor()->GetSIBurnMode();
 	SIVBBurnMode = iu->GetControlDistributor()->GetSIVBBurnMode();
+	SCControlEnableRelay = iu->GetEDS()->GetSCControl();
 
 	// S/C takeover function
-	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
+	if (SCControlEnableRelay) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 31.6;
@@ -275,8 +276,9 @@ void FCCSV::Timestep(double simdt)
 	SIIBurnMode = iu->GetControlDistributor()->GetSIIBurnMode();
 	SICOrSIIBurnMode = SIBurnMode || SIIBurnMode;
 	SIVBBurnMode = iu->GetControlDistributor()->GetSIVBBurnMode();
+	SCControlEnableRelay = iu->GetEDS()->GetSCControl();
 
-	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
+	if (SCControlEnableRelay) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 31.6;

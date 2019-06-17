@@ -127,6 +127,14 @@ bool LVDA::GetLVIMUFailure()
 	return iu->lvimu.IsFailed();
 }
 
+bool LVDA::GetGuidanceReferenceFailure()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->GetGuidanceReferenceFailure();
+
+	return false;
+}
+
 bool LVDA::SIVBInjectionDelay()
 {
 	return iu->GetCommandConnector()->GetTLIInhibitSignal();

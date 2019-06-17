@@ -46,6 +46,8 @@ public:
 	void ResetAutoAbortRelays() { AutoAbortEnableRelayA = false; AutoAbortEnableRelayB = false; }
 	void SetSIVBEngineCutoffDisabled() { SIVBEngineCutoffDisabled = true; }
 	void SetSIVBRestartAlert(bool set) { SIVBRestartAlert = set; }
+	void EnableSCControl() { SCControlEnableRelay = true; }
+	void DisableSCControl() { SCControlEnableRelay = false; }
 
 	//GSE Reset Buses
 	void ResetBus1();
@@ -58,6 +60,9 @@ public:
 
 	//To IU
 	bool GetIULiftoff() { return IULiftoffRelay; }
+
+	//To FCC
+	bool GetSCControl();
 
 	//GSE
 	bool GetLiftoffEnableA() { return AutoAbortEnableRelayA; }
@@ -75,8 +80,12 @@ protected:
 	//+6D95
 	bool AutoAbortBus;
 
-	//EDS Distributor Relays:
+	//Relays:
 	
+	//A4K1
+	bool SCControlEnableRelay;
+	//A4K6, A10K3, K55-1, K55-2
+	bool LVAttRefFail;
 	//A6K1, A7K1, A8K3 (K43-1 - K43-3)
 	bool TwoEngOutAutoAbortDeactivate;
 	//K46-K48 (K46-1 - K46-3)
@@ -127,6 +136,7 @@ protected:
 	bool SIEDSCutoff;
 	bool SIIEDSCutoff;
 	bool SIVBEDSCutoff;
+	bool AttRefFailMonitor;
 
 	//Common Saturn Failures
 	bool PlatformFailure;

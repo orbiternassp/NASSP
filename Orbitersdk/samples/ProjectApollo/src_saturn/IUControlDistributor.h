@@ -71,6 +71,11 @@ public:
 
 	//For LVDA
 	void SwitchSelector(int stage, int channel);
+
+	//For GSE
+	void SetFCCPower(bool set) { FCCPowerOn = set; }
+	virtual void ResetBus1();
+	virtual void ResetBus2();
 protected:
 	IU *iu;
 
@@ -134,10 +139,9 @@ public:
 	void SetFCCSwitchPoint8On() { SwitchPoint6to9[2] = true; }
 	void SetFCCSwitchPoint9On() { SwitchPoint6to9[3] = true; }
 
-	//GSE
+	//For GSE
 	void ResetBus1();
 	void ResetBus2();
-	void SetFCCPower(bool set) { FCCPowerOn = set; }
 
 	//For FCC
 	//Signal C

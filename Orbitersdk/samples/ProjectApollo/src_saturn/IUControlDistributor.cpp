@@ -120,6 +120,27 @@ void IUControlDistributor::SwitchSelector(int stage, int channel)
 	}
 }
 
+void IUControlDistributor::ResetBus1()
+{
+	IsSIVBBurnModeB = false;
+	ExcessiveRatePYRAutoAbortInhibitEnable = false;
+	ExcessiveRateRollAutoAbortInhibitEnable = false;
+	TwoEngOutAutoAbortInhibit = false;
+}
+
+void IUControlDistributor::ResetBus2()
+{
+	IsSIVBBurnModeA = false;
+	ExcessiveRatePYRAutoAbortInhibit = false;
+	ExcessiveRateRollAutoAbortInhibit = false;
+	TwoEngOutAutoAbortInhibitEnable = false;
+	SwitchPoint1to5[0] = false;
+	SwitchPoint1to5[1] = false;
+	SwitchPoint1to5[2] = false;
+	SwitchPoint1to5[3] = false;
+	SwitchPoint1to5[4] = false;
+}
+
 IUControlDistributor1B::IUControlDistributor1B(IU *iu) : IUControlDistributor(iu)
 {
 
@@ -272,26 +293,26 @@ void IUControlDistributorSV::SetSIIBurnModeEngineCantOff()
 
 void IUControlDistributorSV::ResetBus1()
 {
+	IUControlDistributor::ResetBus1();
+
 	IsSIIBurnMode = false;
-	IsSIVBBurnModeB = false;
 	if (!GSECommandVehicleLiftoffIndicationInhibit)
 	{
 		SICEngineCantB = false;
 	}
-	ExcessiveRatePYRAutoAbortInhibitEnable = false;
-	ExcessiveRateRollAutoAbortInhibitEnable = false;
-	TwoEngOutAutoAbortInhibit = false;
+	SwitchPoint6to9[3] = false;
 }
 
 void IUControlDistributorSV::ResetBus2()
 {
+	IUControlDistributor::ResetBus2();
+
 	SICEngineCantC = false;
-	IsSIVBBurnModeA = false;
 	if (!GSECommandVehicleLiftoffIndicationInhibit)
 	{
 		SICEngineCantA = false;
 	}
-	ExcessiveRatePYRAutoAbortInhibit = false;
-	ExcessiveRateRollAutoAbortInhibit = false;
-	TwoEngOutAutoAbortInhibitEnable = false;
+	SwitchPoint6to9[0] = false;
+	SwitchPoint6to9[1] = false;
+	SwitchPoint6to9[2] = false;
 }

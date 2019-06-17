@@ -67,6 +67,9 @@ EDS::EDS(IU *iu)
 	EDSAbortSignal3 = false;
 	SIVBRestartAlert = false;
 	IULiftoffRelay = false;
+	SCControlEnableRelay = false;
+	LVAttRefFail = false;
+	AttRefFailMonitor = false;
 
 	AutoAbortBus = false;
 	IUEDSBusPowered = false;
@@ -99,6 +102,11 @@ bool EDS::GetEDSAbort(int n)
 	return false;
 }
 
+bool EDS::GetSCControl()
+{
+	return (SCControlEnableRelay && iu->GetCommandConnector()->GetCMCSIVBTakeover());
+}
+
 void EDS::ResetBus1()
 {
 	LVEnginesCutoffEnable = false;
@@ -111,6 +119,7 @@ void EDS::ResetBus2()
 {
 	SIIEngineOutIndicationB = false;
 	SIVBEngineOutIndicationA = false;
+	SCControlEnableRelay = false;
 }
 
 bool EDS::LVEnginesCutoffVote()
@@ -149,6 +158,8 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "EDSABORTSIGNAL3", EDSAbortSignal3);
 	papiWriteScenario_bool(scn, "SIVBRESTARTALERT", SIVBRestartAlert);
 	papiWriteScenario_bool(scn, "IULIFTOFFRELAY", IULiftoffRelay);
+	papiWriteScenario_bool(scn, "SCCONTROLENABLERELAY", SCControlEnableRelay);
+	papiWriteScenario_bool(scn, "ATTREFFAILMONITOR", AttRefFailMonitor);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -172,7 +183,7 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
 		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
-		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIEngineOutIndicationB);
+		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
 		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
 		papiReadScenario_bool(line, "SECONDPLANESEPARATIONMONITOR", SecondPlaneSeparationMonitor);
 		papiReadScenario_bool(line, "SIEDSCUTOFF", SIEDSCutoff);
@@ -184,6 +195,8 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "EDSABORTSIGNAL3", EDSAbortSignal3);
 		papiReadScenario_bool(line, "SIVBRESTARTALERT", SIVBRestartAlert);
 		papiReadScenario_bool(line, "IULIFTOFFRELAY", IULiftoffRelay);
+		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
+		papiReadScenario_bool(line, "ATTREFFAILMONITOR", AttRefFailMonitor);
 
 	}
 }
@@ -221,6 +234,7 @@ void EDS1B::Timestep(double simdt)
 	if (iu->GetCommandConnector() == NULL) return;
 
 	VECTOR3 AttRate;
+	bool logic;
 
 	AttRate = iu->GetLVRG()->GetRates();
 
@@ -373,14 +387,40 @@ void EDS1B::Timestep(double simdt)
 		PYLimit = 4.0*RAD;
 	}
 
-	//LV Rates light
-	if (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit || abs(AttRate.x) > 20.0*RAD)
+	//LV Rates Light
+	logic = (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit || abs(AttRate.x) > 20.0*RAD) && (EDSBus1Powered || EDSBus3Powered);
+
+	if (logic)
 	{
 		iu->GetCommandConnector()->SetLVRateLight();
 	}
 	else
 	{
 		iu->GetCommandConnector()->ClearLVRateLight();
+	}
+
+	//LV Guidance Light
+	if (iu->lvda.GetGuidanceReferenceFailure())
+		LVAttRefFail = true;
+	else
+		LVAttRefFail = false;
+
+	if (LVAttRefFail && iu->GetSCControlPoweredFlight())
+	{
+		SCControlEnableRelay = true;
+	}
+
+	logic = LVAttRefFail && (EDSBus1Powered || EDSBus3Powered);
+
+	if (logic && !AttRefFailMonitor)
+	{
+		iu->GetCommandConnector()->SetLVGuidLight();
+		AttRefFailMonitor = true;
+	}
+	else if (!logic && AttRefFailMonitor)
+	{
+		iu->GetCommandConnector()->ClearLVGuidLight();
+		AttRefFailMonitor = false;
 	}
 
 	// Update engine indicators and failure flags
@@ -485,6 +525,7 @@ void EDSSV::Timestep(double simdt)
 	if (iu->GetCommandConnector() == NULL) return;
 
 	VECTOR3 AttRate;
+	bool logic;
 
 	AttRate = iu->GetLVRG()->GetRates();
 
@@ -654,14 +695,40 @@ void EDSSV::Timestep(double simdt)
 		PYLimit = 4.0*RAD;
 	}
 
-	//LV Rates light
-	if (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit || abs(AttRate.x) > 20.0*RAD)
+	//LV Rates Light
+	logic = (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit || abs(AttRate.x) > 20.0*RAD) && (EDSBus1Powered || EDSBus3Powered);
+
+	if (logic)
 	{
 		iu->GetCommandConnector()->SetLVRateLight();
 	}
 	else
 	{
 		iu->GetCommandConnector()->ClearLVRateLight();
+	}
+
+	//LV Guidance Light
+	if (iu->lvda.GetGuidanceReferenceFailure())
+		LVAttRefFail = true;
+	else
+		LVAttRefFail = false;
+
+	if (LVAttRefFail && iu->GetSCControlPoweredFlight())
+	{
+		SCControlEnableRelay = true;
+	}
+
+	logic = LVAttRefFail && (EDSBus1Powered || EDSBus3Powered);
+
+	if (logic && !AttRefFailMonitor)
+	{
+		iu->GetCommandConnector()->SetLVGuidLight();
+		AttRefFailMonitor = true;
+	}
+	else if (!logic && AttRefFailMonitor)
+	{
+		iu->GetCommandConnector()->ClearLVGuidLight();
+		AttRefFailMonitor = false;
 	}
 
 	// Update engine indicators and failure flags

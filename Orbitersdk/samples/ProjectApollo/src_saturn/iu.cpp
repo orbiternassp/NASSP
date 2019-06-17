@@ -50,7 +50,6 @@ dcs(this)
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
-	FirstTimeStepDone = false;
 	UmbilicalConnected = false;
 
 	Crewed = true;
@@ -73,13 +72,6 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 	//
 	MissionTime = misst;
 
-	// Initialization
-	if (!FirstTimeStepDone) {
-
-		FirstTimeStepDone = true;
-		return;
-	}
-
 	//Set the launch stage here
 	if (!UmbilicalConnected && lvCommandConnector.GetStage() == PRELAUNCH_STAGE)
 	{
@@ -90,11 +82,6 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 
 	lvimu.Timestep(mjd);
 	lvrg.Timestep(simdt);
-
-	if (lvdc->GetGuidanceReferenceFailure())
-	{
-		commandConnector.SetLVGuidLight();
-	}
 }
 
 void IU::PostStep(double simt, double simdt, double mjd) {
@@ -1438,11 +1425,6 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
 		lvdc->TimeStep(simdt);
-
-		if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
-		{
-			fcc.SetPermanentSCControlEnabled();
-		}
 	}
 	fcc.Timestep(simdt);
 
@@ -1543,7 +1525,7 @@ void IU1B::SwitchSelector(int item)
 		eds.ResetAutoAbortRelays();
 		break;
 	case 18: //S/C Control of Saturn Enable
-		fcc.EnableSCControl();
+		eds.EnableSCControl();
 		break;
 	case 20: //Excess Rate (Roll) Auto Abort Off
 		ControlDistributor.SetExcessiveRateRollAutoAbortInhibit(false);
@@ -1620,11 +1602,6 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
 		lvdc->TimeStep(simdt);
-
-		if (lvdc->GetGuidanceReferenceFailure() && SCControlPoweredFlight)
-		{
-			fcc.SetPermanentSCControlEnabled();
-		}
 	}
 	fcc.Timestep(simdt);
 
@@ -1848,10 +1825,10 @@ void IUSV::SwitchSelector(int item)
 	case 65: //CCS Coax Switch Low Gain Antenna
 		break;
 	case 68: //S/C Control of Saturn Enable
-		fcc.EnableSCControl();
+		eds.EnableSCControl();
 		break;
 	case 69: //S/C Control of Saturn Disable
-		fcc.DisableSCControl();
+		eds.DisableSCControl();
 		break;
 	case 74: //Flight Control Computer S-IVB Burn Mode On "B"
 		ControlDistributor.SetSIVBBurnModeB(true);

@@ -46,6 +46,7 @@ public:
 	void DriveLVIMUGimbals(double x, double y, double z);
 	VECTOR3 GetLVIMUPIPARegisters();
 	bool GetLVIMUFailure();
+	bool GetGuidanceReferenceFailure();
 
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool TimebaseUpdate(double dt);

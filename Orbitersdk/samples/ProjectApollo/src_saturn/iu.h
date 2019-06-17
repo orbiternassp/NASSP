@@ -354,7 +354,6 @@ protected:
 	int State;
 	double NextMissionEventTime;
 	double LastMissionEventTime;
-	bool FirstTimeStepDone;
 
 	//
 	// Saturn stuff

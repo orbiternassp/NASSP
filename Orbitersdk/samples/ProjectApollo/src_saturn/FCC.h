@@ -37,9 +37,6 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void SetAttitudeError(VECTOR3 atterr) { LVDCAttitudeError = atterr; }
-	void EnableSCControl() { SCControlEnableRelay = true; }
-	void DisableSCControl() { if (PermanentSCControlEnabled == false) SCControlEnableRelay = false; }
-	void SetPermanentSCControlEnabled() { PermanentSCControlEnabled = true; }
 protected:
 	//K1-1/2
 	bool SIBurnMode;
