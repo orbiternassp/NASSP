@@ -1328,7 +1328,7 @@ void LEM::JoystickTimestep(double simdt)
 
 void LEM::SystemsInternalTimestep(double simdt)
 {
-	double mintFactor = __max(simdt / 100.0, 0.5);
+	double mintFactor = __max(simdt / 20.0, 0.02);
 	double tFactor = __min(mintFactor, simdt);
 	while (simdt > 0) {
 
@@ -2112,7 +2112,7 @@ void LEM::SetCDRInSuit()
 		{
 			CrewInCabin->number--;
 			CDRSuited->number = 1;
-			if (GroundContact() && CDRinPLSS == 0) CDRinPLSS = 1;
+			CDRinPLSS = 1;
 		}
 		else if (CDRSuited->number == 1)
 		{
@@ -2138,7 +2138,7 @@ void LEM::SetLMPInSuit()
 	{
 		CrewInCabin->number--;
 		LMPSuited->number = 1;
-		if (GroundContact() && LMPinPLSS == 0) LMPinPLSS = 1;
+		LMPinPLSS = 1;
 	}
 	else if (LMPSuited->number == 1)
 	{
