@@ -30,47 +30,47 @@ class IUControlDistributor
 {
 public:
 	IUControlDistributor(IU *iu);
-	void Timestep(double simdt);
+	virtual ~IUControlDistributor() {}
+
+	virtual void Timestep(double simdt) = 0;
+	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	virtual void LoadState(FILEHANDLE scn, char *end_str) = 0;
+	void LoadState(char *line);
+
+	virtual bool GetSIBurnMode() = 0;
+	virtual bool GetSIIBurnMode() { return false; }
 
 	//Switch selector functions
-	void SetSICEngineCantAOn() { SICEngineCantA = true; }
-	void SetSICEngineCantB(bool set) { SICEngineCantB = set; }
-	void SetSICEngineCantC(bool set) { SICEngineCantC = set; }
-	void SetSIIBurnModeEngineCantOff();
+	void SetFCCSwitchPoint1On() { SwitchPoint1to5[0] = true; }
+	void SetFCCSwitchPoint2On() { SwitchPoint1to5[1] = true; }
+	void SetFCCSwitchPoint3On() { SwitchPoint1to5[2] = true; }
+	void SetFCCSwitchPoint4On() { SwitchPoint1to5[3] = true; }
+	void SetFCCSwitchPoint5On() { SwitchPoint1to5[4] = true; }
 	void SetSIVBBurnModeA(bool set) { IsSIVBBurnModeA = set; }
 	void SetSIVBBurnModeB(bool set) { IsSIVBBurnModeB = set; }
-	void SetFCCSwitchPoint1On() { SwitchPoint1 = true; }
-	void SetFCCSwitchPoint2On() { SwitchPoint2 = true; }
-	void SetFCCSwitchPoint3On() { SwitchPoint3 = true; }
-	void SetFCCSwitchPoint4On() { SwitchPoint4 = true; }
-	void SetFCCSwitchPoint5On() { SwitchPoint5 = true; }
-	void SetFCCSwitchPoint6On() { SwitchPoint6 = true; }
-	void SetFCCSwitchPoint7On() { SwitchPoint7 = true; }
-	void SetFCCSwitchPoint8On() { SwitchPoint8 = true; }
-	void SetFCCSwitchPoint9On() { SwitchPoint9 = true; }
-
-	//GSE
-	void ResetBus1();
-	void ResetBus2();
+	void SetTwoEngOutAutoAbortInhibit() { TwoEngOutAutoAbortInhibit = true; }
+	void SetExcessiveRatePYRAutoAbortInhibitEnable(bool set) { ExcessiveRatePYRAutoAbortInhibitEnable = set; }
+	void SetExcessiveRateRollAutoAbortInhibitEnable(bool set) { ExcessiveRateRollAutoAbortInhibitEnable = set; }
+	void SetExcessiveRatePYRAutoAbortInhibit(bool set) { ExcessiveRatePYRAutoAbortInhibit = set; }
+	void SetExcessiveRateRollAutoAbortInhibit(bool set) { ExcessiveRateRollAutoAbortInhibit = set; }
+	void SetTwoEngOutAutoAbortInhibitEnable() { TwoEngOutAutoAbortInhibitEnable = true; }
 
 	//For FCC
-	//Signal C
-	bool GetSIBurnMode();
-	//Signal B
-	bool GetSIIBurnMode();
-	//Signal A
 	bool GetSIVBBurnMode();
-	//Signal E
-	bool UseSICEngineCant();
-	bool GetFCCSwitchPoint1() { return SwitchPoint1; }
-	bool GetFCCSwitchPoint2() { return SwitchPoint2; }
-	bool GetFCCSwitchPoint3() { return SwitchPoint3; }
-	bool GetFCCSwitchPoint4() { return SwitchPoint4; }
-	bool GetFCCSwitchPoint5() { return SwitchPoint5; }
-	bool GetFCCSwitchPoint6() { return SwitchPoint6; }
-	bool GetFCCSwitchPoint7() { return SwitchPoint7; }
-	bool GetFCCSwitchPoint8() { return SwitchPoint8; }
-	bool GetFCCSwitchPoint9() { return SwitchPoint9; }
+	bool GetFCCSwitchPoint1() { return SwitchPoint1to5[0]; }
+	bool GetFCCSwitchPoint2() { return SwitchPoint1to5[1]; }
+	bool GetFCCSwitchPoint3() { return SwitchPoint1to5[2]; }
+	bool GetFCCSwitchPoint4() { return SwitchPoint1to5[3]; }
+	bool GetFCCSwitchPoint5() { return SwitchPoint1to5[4]; }
+	virtual bool GetFCCSwitchPoint6() { return false; }
+
+	//For EDS
+	bool GetTwoEnginesOutAutoAbortInhibit();
+	bool GetExcessiveRatePYRAutoAbortInhibit();
+	bool GetExcessiveRateRollAutoAbortInhibit();
+
+	//For LVDA
+	void SwitchSelector(int stage, int channel);
 protected:
 	IU *iu;
 
@@ -78,38 +78,91 @@ protected:
 
 	//K4-1/2
 	bool GSECommandVehicleLiftoffIndicationInhibit;
+	//K6
+	bool FCCPowerOn;
+	//K15 (K113)
+	bool ExcessiveRatePYRAutoAbortInhibitEnable;
+	//K16 (K40)
+	bool ExcessiveRatePYRAutoAbortInhibit;
+	//K17 (K114)
+	bool ExcessiveRateRollAutoAbortInhibitEnable;
+	//K18 (K41)
+	bool ExcessiveRateRollAutoAbortInhibit;
+	//K19 (K115)
+	bool TwoEngOutAutoAbortInhibitEnable;
+	//K20 (K42)
+	bool TwoEngOutAutoAbortInhibit;
 	//K23
 	bool IsSIVBBurnModeA;
-	//K24
-	bool SwitchPoint1;
-	//K25
-	bool SwitchPoint2;
-	//K26
-	bool SwitchPoint3;
-	//K27
-	bool SwitchPoint4;
-	//K28
-	bool SwitchPoint5;
-	//K34
-	bool IsSIIBurnMode;
+	//K24 to K28
+	bool SwitchPoint1to5[5];
 	//K36
 	bool IsSIVBBurnModeB;
+	//A7K2/3
+	bool SIVBThrustNotOK;
+	bool ControlSignalProcessorPowerOn;
+};
+
+class IUControlDistributor1B : public IUControlDistributor
+{
+public:
+	IUControlDistributor1B(IU *iu);
+	void Timestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	//For FCC
+	//Signal C
+	bool GetSIBurnMode();
+};
+
+class IUControlDistributorSV : public IUControlDistributor
+{
+public:
+	IUControlDistributorSV(IU *iu);
+	void Timestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	//Switch selector functions
+	void SetSICEngineCantAOn() { SICEngineCantA = true; }
+	void SetSICEngineCantB(bool set) { SICEngineCantB = set; }
+	void SetSICEngineCantC(bool set) { SICEngineCantC = set; }
+	void SetSIIBurnModeEngineCantOff();
+	void SetFCCSwitchPoint6On() { SwitchPoint6to9[0] = true; }
+	void SetFCCSwitchPoint7On() { SwitchPoint6to9[1] = true; }
+	void SetFCCSwitchPoint8On() { SwitchPoint6to9[2] = true; }
+	void SetFCCSwitchPoint9On() { SwitchPoint6to9[3] = true; }
+
+	//GSE
+	void ResetBus1();
+	void ResetBus2();
+	void SetFCCPower(bool set) { FCCPowerOn = set; }
+
+	//For FCC
+	//Signal C
+	bool GetSIBurnMode();
+	//Signal B
+	bool GetSIIBurnMode();
+	//Signal E
+	bool UseSICEngineCant();
+	bool GetFCCSwitchPoint6() { return SwitchPoint6to9[0]; }
+	bool GetFCCSwitchPoint7() { return SwitchPoint6to9[1]; }
+	bool GetFCCSwitchPoint8() { return SwitchPoint6to9[2]; }
+	bool GetFCCSwitchPoint9() { return SwitchPoint6to9[3]; }
+protected:
+	//Relays:
+
+	//K34
+	bool IsSIIBurnMode;
 	//K53
 	bool SICEngineCantA;
 	//K54
 	bool SICEngineCantB;
 	//K56
 	bool SICOutboardEnginesCantInhibit;
-	//A7K2/3
-	bool SIVBThrustNotOK;
-	//A8K1
-	bool SwitchPoint6;
-	//A8K2
-	bool SwitchPoint7;
-	//A8K4
-	bool SwitchPoint9;
-	//A8K5
-	bool SwitchPoint8;
+	//A8K1 - A8K2, A8K4 - A8K5
+	bool SwitchPoint6to9[4];
 	//A8K6
 	bool SICEngineCantC;
 };

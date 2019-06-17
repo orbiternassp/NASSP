@@ -37,18 +37,15 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void SetAttitudeError(VECTOR3 atterr) { LVDCAttitudeError = atterr; }
-	void SetGainSwitch(int n) { GainSwitch = n; }
-	void SetStageSwitch(int n) { StageSwitch = n; }
 	void EnableSCControl() { SCControlEnableRelay = true; }
 	void DisableSCControl() { if (PermanentSCControlEnabled == false) SCControlEnableRelay = false; }
 	void SetPermanentSCControlEnabled() { PermanentSCControlEnabled = true; }
 protected:
-	int GainSwitch;
-	int StageSwitch;
-	//K1
+	//K1-1/2
 	bool SIBurnMode;
 	//K2
 	bool SIVBBurnMode;
+	//K35/K37
 	bool SCControlEnableRelay;
 	bool PermanentSCControlEnabled;
 
@@ -76,4 +73,9 @@ class FCCSV : public FCC
 public:
 	FCCSV(IU *iu);
 	void Timestep(double simdt);
+protected:
+	//K2-1/2
+	bool SIIBurnMode;
+	//K4
+	bool SICOrSIIBurnMode;
 };

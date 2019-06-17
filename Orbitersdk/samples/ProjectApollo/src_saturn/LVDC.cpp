@@ -559,11 +559,19 @@ bool LVDC1B::SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> table
 void LVDC1B::TimeStep(double simdt) {
 	// Bail if uninitialized
 	if (Initialized == false) { return; }
-	// Update timebase ET
-	LVDC_TB_ETime += simdt;
 	
 	// Note that GenericTimestep will update MissionTime.
 	if(LVDC_Stop == false){
+
+		// Update timebase ET
+		LVDC_TB_ETime += simdt;
+
+		//Engine failure code
+		if (!S1B_Engine_Out && ((LVDC_Timebase == 1 && LVDC_TB_ETime > 5.8) || LVDC_Timebase == 2))
+		{
+			S1B_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
+		}
+
 		/* **** LVDC GUIDANCE PROGRAM **** */
 		switch(LVDC_Timebase){
 			case -1: // LOOP WAITING FOR PTL
@@ -1531,7 +1539,14 @@ minorloop: //minor loop;
 			AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
 		}
 
-		lvda.SetFCCAttitudeError(AttitudeError);
+		if (LVDC_Timebase > 0)
+		{
+			lvda.SetFCCAttitudeError(AttitudeError);
+		}
+		else
+		{
+			lvda.SetFCCAttitudeError(_V(0, 0, 0));
+		}
 
 		// Debug if we're launched
 		/*if(LVDC_Timebase > -1){
@@ -1552,12 +1567,6 @@ minorloop: //minor loop;
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
 		}*/
-
-		//Engine failure code
-		if (!S1B_Engine_Out && ((LVDC_Timebase == 1 && LVDC_TB_ETime > 5.8) || LVDC_Timebase == 2))
-		{
-			S1B_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
-		}
 	}
 
 	/*
@@ -4563,6 +4572,16 @@ void LVDCSV::TimeStep(double simdt) {
 			directstagereset = true;
 		}
 
+		//Engine failure code
+		if (LVDC_Timebase == 1 && LVDC_TB_ETime > t_2)
+		{
+			S1_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
+		}
+		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
+		{
+			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
+		}
+
 		/* **** LVDC GUIDANCE PROGRAM **** */		
 		switch(LVDC_Timebase){//this is the sequential event control logic
 			case -1: // LOOP WAITING FOR PTL
@@ -6788,7 +6807,14 @@ minorloop:
 			AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
 		}
 
-		lvda.SetFCCAttitudeError(AttitudeError);
+		if (LVDC_Timebase > 0)
+		{
+			lvda.SetFCCAttitudeError(AttitudeError);
+		}
+		else
+		{
+			lvda.SetFCCAttitudeError(_V(0, 0, 0));
+		}
 
 		// Debug if we're launched
 		/*if(LVDC_Timebase > -1){
@@ -6819,16 +6845,6 @@ minorloop:
 			DotS.x,DotS.y,DotS.z);
 			*/
 		//	CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,V);								
-
-		//Engine failure code
-		if (LVDC_Timebase == 1 && LVDC_TB_ETime > t_2)
-		{
-			S1_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
-		}
-		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
-		{
-			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
-		}
 
 		// End of test for LVDC_Stop
 	}

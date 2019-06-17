@@ -38,12 +38,6 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	//Switch Selector Functions
-	void SetTwoEngOutAutoAbortInhibit() { TwoEngOutAutoAbortInhibit = true; }
-	void SetExcessiveRatePYRAutoAbortInhibitEnable(bool set) { ExcessiveRatePYRAutoAbortInhibitEnable = set; }
-	void SetExcessiveRateRollAutoAbortInhibitEnable(bool set) { ExcessiveRateRollAutoAbortInhibitEnable = set; }
-	void SetExcessiveRatePYRAutoAbortInhibit(bool set) { ExcessiveRatePYRAutoAbortInhibit = set; }
-	void SetExcessiveRateRollAutoAbortInhibit(bool set) { ExcessiveRateRollAutoAbortInhibit = set; }
-	void SetTwoEngOutAutoAbortInhibitEnable() { TwoEngOutAutoAbortInhibitEnable = true; }
 	void SetSIEngineOutIndicationA(bool set) { SIEngineOutIndicationA = set; }
 	void SetSIEngineOutIndicationB(bool set) { SIEngineOutIndicationB = set; }
 	void SetSIVBEngineOutIndicationA(bool set) { SIVBEngineOutIndicationA = set; }
@@ -120,20 +114,6 @@ protected:
 	//K76 (K232)
 	bool SIVBRestartAlert;
 	bool SIVBEngineCutoffDisabled;
-
-	//Control Distributor Relays (move to own class later):
-	//K15 (K113)
-	bool ExcessiveRatePYRAutoAbortInhibitEnable;
-	//K16 (K40)
-	bool ExcessiveRatePYRAutoAbortInhibit;
-	//K17 (K114)
-	bool ExcessiveRateRollAutoAbortInhibitEnable;
-	//K18 (K41)
-	bool ExcessiveRateRollAutoAbortInhibit;
-	//K19 (K115)
-	bool TwoEngOutAutoAbortInhibitEnable;
-	//K20 (K42)
-	bool TwoEngOutAutoAbortInhibit;
 
 	//Signals
 	bool LiftoffA;

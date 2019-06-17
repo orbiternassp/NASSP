@@ -45,8 +45,7 @@
 
 
 IU::IU() :
-dcs(this),
-ControlDistributor(this)
+dcs(this)
 {
 	State = 0;
 	NextMissionEventTime = MINUS_INFINITY;
@@ -114,6 +113,7 @@ void IU::SaveState(FILEHANDLE scn)
 
 	SaveFCC(scn);
 	SaveEDS(scn);
+	GetControlDistributor()->SaveState(scn, "CONTROLDISTRIBUTOR_BEGIN", "CONTROLDISTRIBUTOR_END");
 	dcs.SaveState(scn);
 	
 	oapiWriteLine(scn, IU_END_STRING);
@@ -135,8 +135,11 @@ void IU::LoadState(FILEHANDLE scn)
 		if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
 			LoadFCC(scn);
 		}
-		else if (!strnicmp(line, "EDS_BEGIN", sizeof("EDS1_BEGIN"))) {
+		else if (!strnicmp(line, "EDS_BEGIN", sizeof("EDS_BEGIN"))) {
 			LoadEDS(scn);
+		}
+		else if (!strnicmp(line, "CONTROLDISTRIBUTOR_BEGIN", sizeof("CONTROLDISTRIBUTOR_BEGIN"))) {
+			GetControlDistributor()->LoadState(scn, "CONTROLDISTRIBUTOR_END");
 		}
 		else if (!strnicmp(line, DCS_START_STRING, sizeof(DCS_START_STRING))) {
 			dcs.LoadState(scn);
@@ -1412,27 +1415,7 @@ void IU::SaveLVDC(FILEHANDLE scn) {
 	}
 }
 
-void IU::ControlDistribution(int stage, int channel)
-{
-	if (stage == SWITCH_SELECTOR_IU)
-	{
-		SwitchSelector(channel);
-	}
-	else if (stage == SWITCH_SELECTOR_SI)
-	{
-		lvCommandConnector.SISwitchSelector(channel);
-	}
-	else if (stage == SWITCH_SELECTOR_SII)
-	{
-		lvCommandConnector.SIISwitchSelector(channel);
-	}
-	else if (stage == SWITCH_SELECTOR_SIVB)
-	{
-		lvCommandConnector.SIVBSwitchSelector(channel);
-	}
-}
-
-IU1B::IU1B() : fcc(this), eds(this)
+IU1B::IU1B() : fcc(this), eds(this), ControlDistributor(this)
 {
 	lvda.Init(this);
 }
@@ -1449,6 +1432,8 @@ IU1B::~IU1B()
 void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 {
 	IU::Timestep(misst, simt, simdt, mjd);
+
+	ControlDistributor.Timestep(simdt);
 
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
@@ -1521,26 +1506,26 @@ void IU1B::SwitchSelector(int item)
 	switch (item)
 	{
 	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
-		fcc.SetGainSwitch(0);
 		commandConnector.SetAGCInputChannelBit(030, LiftOff, true);
 		break;
 	case 1: //Q-Ball Power Off
 		lvCommandConnector.SetQBallPowerOff();
 		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
-		eds.SetExcessiveRatePYRAutoAbortInhibit(true);
+		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(true);
 		break;
 	case 3: //S-IVB Engine EDS Cutoffs Disable
 		eds.SetSIVBEngineOutIndicationA(false);
 		eds.SetSIVBEngineOutIndicationB(false);
 		eds.SetSIVBEngineCutoffDisabled();
 		break;
+	case 4: //Flight Control Computer Switch Point No. 4
+		break;
 	case 5: //Flight Control Computer S-IVB Burn Mode Off "B"
 		ControlDistributor.SetSIVBBurnModeB(false);
 		break;
 	case 6: //Flight Control Computer S-IVB Burn Mode On "B"
-		SIVBBurnModeB = true;
-		fcc.SetStageSwitch(2);
+		ControlDistributor.SetSIVBBurnModeB(true);
 		break;
 	case 9: //S-IVB Engine Out Indication "A" Enable
 		eds.SetSIVBEngineOutIndicationA(true);
@@ -1549,10 +1534,10 @@ void IU1B::SwitchSelector(int item)
 		ControlDistributor.SetSIVBBurnModeA(false);
 		break;
 	case 13: //Excess Rate (P,Y,R) Auto-Abort Inhibit Off
-		eds.SetExcessiveRatePYRAutoAbortInhibitEnable(false);
+		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibitEnable(false);
 		break;
 	case 15: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
-		eds.SetExcessiveRatePYRAutoAbortInhibitEnable(true);
+		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibitEnable(true);
 		break;
 	case 16: //Auto-Abort Enable Relays Reset
 		eds.ResetAutoAbortRelays();
@@ -1561,44 +1546,45 @@ void IU1B::SwitchSelector(int item)
 		fcc.EnableSCControl();
 		break;
 	case 20: //Excess Rate (Roll) Auto Abort Off
-		eds.SetExcessiveRateRollAutoAbortInhibit(false);
+		ControlDistributor.SetExcessiveRateRollAutoAbortInhibit(false);
 		break;
 	case 21: //Flight Control Computer Switch Point No. 2
-		fcc.SetGainSwitch(2);
+		ControlDistributor.SetFCCSwitchPoint2On();
 		break;
 	case 22: //Flight Control Computer Switch Point No. 3
-		fcc.SetGainSwitch(3);
+		ControlDistributor.SetFCCSwitchPoint3On();
 		break;
 	case 29: //S-IVB Engine Out Indication "B" Enable
 		eds.SetSIVBEngineOutIndicationB(true);
 		break;
 	case 34: //Excess Rate (Roll) Auto-Abort Inhibit Enable
-		eds.SetExcessiveRateRollAutoAbortInhibitEnable(true);
+		ControlDistributor.SetExcessiveRateRollAutoAbortInhibitEnable(true);
 		break;
 	case 35: //S-IB Two Engines Out Auto-Abort Inhibit
-		eds.SetTwoEngOutAutoAbortInhibit();
+		ControlDistributor.SetTwoEngOutAutoAbortInhibit();
 		break;
 	case 38: //Launch Vehicle Engines EDS Cutoff Enable
 		eds.SetLVEnginesCutoffEnable();
 		break;
 	case 41: //Excess Rate(P, Y, R) Auto Abort Inhibit Off
-		eds.SetExcessiveRatePYRAutoAbortInhibit(false);
+		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(false);
 		break;
 	case 42: //Excess Rate (Roll) Auto-Abort Inhibit Off
-		eds.SetExcessiveRateRollAutoAbortInhibitEnable(false);
+		ControlDistributor.SetExcessiveRateRollAutoAbortInhibitEnable(false);
 		break;
 	case 43: //Flight Control Computer Switch Point No. 1
-		fcc.SetGainSwitch(1);
+		ControlDistributor.SetFCCSwitchPoint1On();
+		break;
+	case 44: //Flight Control Computer Switch Point No. 5
 		break;
 	case 50: //Excess Rate (Roll) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "B"
-		eds.SetExcessiveRateRollAutoAbortInhibit(true);
+		ControlDistributor.SetExcessiveRateRollAutoAbortInhibit(true);
 		break;
 	case 51: //S-IB Two Engines Out Auto-Abort Inhibit Enable
-		eds.SetTwoEngOutAutoAbortInhibitEnable();
+		ControlDistributor.SetTwoEngOutAutoAbortInhibitEnable();
 		break;
 	case 53: //Flight Control Computer S-IVB Burn Mode On "A"
-		SIVBBurnModeA = true;
-		fcc.SetStageSwitch(2);
+		ControlDistributor.SetSIVBBurnModeA(true);
 		break;
 	case 110: //Nose Cone Jettison (Apollo 5, not a real switch selector event!)
 		lvCommandConnector.JettisonNosecap();
@@ -1611,7 +1597,7 @@ void IU1B::SwitchSelector(int item)
 	}
 }
 
-IUSV::IUSV() : fcc(this), eds(this)
+IUSV::IUSV() : fcc(this), eds(this), ControlDistributor(this)
 {
 	lvda.Init(this);
 }
@@ -1628,6 +1614,8 @@ IUSV::~IUSV()
 void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 {
 	IU::Timestep(misst, simt, simdt, mjd);
+
+	ControlDistributor.Timestep(simdt);
 
 	if (lvdc != NULL) {
 		eds.Timestep(simdt);
@@ -1705,14 +1693,13 @@ void IUSV::SwitchSelector(int item)
 	switch (item)
 	{
 	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
-		fcc.SetGainSwitch(0);
 		commandConnector.SetAGCInputChannelBit(030, LiftOff, true);
 		break;
 	case 1: //Q-Ball Power Off
 		lvCommandConnector.SetQBallPowerOff();
 		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
-		eds.SetExcessiveRatePYRAutoAbortInhibit(true);
+		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(true);
 		break;
 	case 3: //Tape Recorder Playback Reverse Off
 		break;
@@ -1738,15 +1725,15 @@ void IUSV::SwitchSelector(int item)
 		eds.SetSIVBEngineOutIndicationB(true);
 		break;
 	case 12: //Flight Control Computer S-IVB Burn Mode Off "A"
-		SIVBBurnModeA = false;
+		ControlDistributor.SetSIVBBurnModeA(false);
 		break;
 	case 13: //Excess Rate (P,Y,R) Auto-Abort Inhibit Off
-		eds.SetExcessiveRatePYRAutoAbortInhibitEnable(false);
+		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibitEnable(false);
 		break;
 	case 14: //IU Tape Recorder Playback Off
 		break;
 	case 15: //Excess Rate (P,Y,R) Auto-Abort Inhibit Enable
-		eds.SetExcessiveRatePYRAutoAbortInhibitEnable(true);
+		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibitEnable(true);
 		break;
 	case 16: //Auto-Abort Enable Relays Reset
 		eds.ResetAutoAbortRelays();
@@ -1759,7 +1746,7 @@ void IUSV::SwitchSelector(int item)
 	case 19: //Tape Recorder Playback Reverse On
 		break;
 	case 20: //Excess Rate (Roll) Auto-Abort Inhibit Enable Off
-		eds.SetExcessiveRateRollAutoAbortInhibit(false);
+		ControlDistributor.SetExcessiveRateRollAutoAbortInhibit(false);
 		break;
 	case 21: //Flight Control Computer Switch Pointer No. 2
 		ControlDistributor.SetFCCSwitchPoint2On();
@@ -1785,20 +1772,19 @@ void IUSV::SwitchSelector(int item)
 		break;
 	case 30: //Spare
 		break;
-	case 31: //Flight Control Computer Burn Mode On "A"
-		fcc.SetStageSwitch(2);
-		SIVBBurnModeA = true;
+	case 31: //Flight Control Computer S-IVB Burn Mode On "A"
+		ControlDistributor.SetSIVBBurnModeA(true);
 		break;
 	case 32: //Spare
 		break;
 	case 33: //Switch Engine Control to S-II and S-IC Outboard Engine Cant Off "A"
-		fcc.SetStageSwitch(1);
+		ControlDistributor.SetSIIBurnModeEngineCantOff();
 		break;
 	case 34: //Excess Rate (Roll) Auto-Abort Inhibit Enable
-		eds.SetExcessiveRateRollAutoAbortInhibitEnable(true);
+		ControlDistributor.SetExcessiveRateRollAutoAbortInhibitEnable(true);
 		break;
 	case 35: //S-IC Two Engines Out Auto-Abort Inhibit
-		eds.SetTwoEngOutAutoAbortInhibit();
+		ControlDistributor.SetTwoEngOutAutoAbortInhibit();
 		break;
 	case 36: //Switch S-IVB LOX to S-II Fuel Tank Pressure Indicator On
 		break;
@@ -1812,10 +1798,10 @@ void IUSV::SwitchSelector(int item)
 	case 40: //Tape Recorder Playback On
 		break;
 	case 41: //Excess Rate (P,Y,R) Auto-Abort Inhibit Off
-		eds.SetExcessiveRatePYRAutoAbortInhibit(false);
+		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(false);
 		break;
 	case 42: //Excess Rate (Roll) Auto-Abort Inhibit Off
-		eds.SetExcessiveRateRollAutoAbortInhibitEnable(false);
+		ControlDistributor.SetExcessiveRateRollAutoAbortInhibitEnable(false);
 		break;
 	case 43: // S-IVB Ullage Thrust Present Indication On
 		commandConnector.SetAGCInputChannelBit(030, UllageThrust, true);
@@ -1837,10 +1823,10 @@ void IUSV::SwitchSelector(int item)
 	case 49: //Spare
 		break;
 	case 50: //Excess Rate (Roll) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "B"
-		eds.SetExcessiveRateRollAutoAbortInhibit(true);
+		ControlDistributor.SetExcessiveRateRollAutoAbortInhibit(true);
 		break;
 	case 51: //S-IC Two Engines Out Auto-Abort Inhibit Enable
-		eds.SetTwoEngOutAutoAbortInhibitEnable();
+		ControlDistributor.SetTwoEngOutAutoAbortInhibitEnable();
 		break;
 	case 52: //LET Jettison "A"
 		break;
@@ -1867,12 +1853,11 @@ void IUSV::SwitchSelector(int item)
 	case 69: //S/C Control of Saturn Disable
 		fcc.DisableSCControl();
 		break;
-	case 74: //Flight Control Computer Burn Mode On "B"
-		fcc.SetStageSwitch(2);
-		SIVBBurnModeB = true;
+	case 74: //Flight Control Computer S-IVB Burn Mode On "B"
+		ControlDistributor.SetSIVBBurnModeB(true);
 		break;
 	case 75: //Flight Control Computer S-IVB Burn Mode Off "B"
-		SIVBBurnModeB = false;
+		ControlDistributor.SetSIVBBurnModeB(false);
 		break;
 	case 80: //S-IVB Restart Alert On
 		eds.SetSIVBRestartAlert(true);
@@ -1884,14 +1869,19 @@ void IUSV::SwitchSelector(int item)
 		dcs.EnableCommandSystem();
 		break;
 	case 83: //S-IC Outboard Engines Cant On "A"
+		ControlDistributor.SetSICEngineCantAOn();
 		break;
 	case 84: //S-IC Outboard Engines Cant On "B"
+		ControlDistributor.SetSICEngineCantB(true);
 		break;
 	case 85: //S-IC Outboard Engines Cant On "C"
+		ControlDistributor.SetSICEngineCantC(true);
 		break;
 	case 86: //S-IC Outboard Engines Cant Off "B"
+		ControlDistributor.SetSICEngineCantB(false);
 		break;
 	case 87: //S-IC Outboard Engines Cant Off "C"
+		ControlDistributor.SetSICEngineCantC(false);
 		break;
 	case 98: //AZUSA X-Ponder Power Off
 		break;

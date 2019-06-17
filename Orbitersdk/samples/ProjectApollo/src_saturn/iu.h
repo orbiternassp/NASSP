@@ -320,6 +320,7 @@ public:
 
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
+	virtual IUControlDistributor *GetControlDistributor() = 0;
 
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
@@ -339,19 +340,15 @@ public:
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
 
-	void ControlDistribution(int stage, int channel);
-
 	//Subsystem Access
 	LVDC* GetLVDC() { return lvdc; }
 	LVRG* GetLVRG() { return &lvrg; }
-	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
 
 	LVDC* lvdc;
 	LVIMU lvimu;
 	LVRG lvrg;
 	LVDA lvda;
 	DCS dcs;
-	IUControlDistributor ControlDistributor;
 
 protected:
 	int State;
@@ -399,9 +396,11 @@ public:
 	void LoadEDS(FILEHANDLE scn);
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
+	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
 protected:
 	FCC1B fcc;
 	EDS1B eds;
+	IUControlDistributor1B ControlDistributor;
 };
 
 class IUSV :public IU
@@ -420,10 +419,12 @@ public:
 	void LoadEDS(FILEHANDLE scn);
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
+	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
 
 protected:
 	FCCSV fcc;
 	EDSSV eds;
+	IUControlDistributorSV ControlDistributor;
 };
 
 //
