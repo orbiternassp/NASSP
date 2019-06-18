@@ -58,8 +58,8 @@ void IUControlDistributor::SaveState(FILEHANDLE scn, char *start_str, char *end_
 	papiWriteScenario_bool(scn, "EXCESSIVERATEPYRAUTOABORTINHIBIT", ExcessiveRatePYRAutoAbortInhibit);
 	papiWriteScenario_bool(scn, "EXCESSIVERATEROLLAUTOABORTINHIBITENABLE", ExcessiveRateRollAutoAbortInhibitEnable);
 	papiWriteScenario_bool(scn, "EXCESSIVERATEROLLAUTOABORTINHIBIT", ExcessiveRateRollAutoAbortInhibit);
-	papiWriteScenario_bool(scn, "ISSIVBBURNMODEA", IsSIVBBurnModeA);
-	papiWriteScenario_bool(scn, "ISSIVBBURNMODEB", IsSIVBBurnModeB);
+	papiWriteScenario_bool(scn, "SIVBBURNMODEA", IsSIVBBurnModeA);
+	papiWriteScenario_bool(scn, "SIVBBURNMODEB", IsSIVBBurnModeB);
 	papiWriteScenario_boolarr(scn, "SWITCHPOINT1TO5", SwitchPoint1to5, 5);
 }
 
@@ -72,8 +72,9 @@ void IUControlDistributor::LoadState(char *line)
 	papiReadScenario_bool(line, "EXCESSIVERATEPYRAUTOABORTINHIBIT", ExcessiveRatePYRAutoAbortInhibit);
 	papiReadScenario_bool(line, "EXCESSIVERATEROLLAUTOABORTINHIBITENABLE", ExcessiveRateRollAutoAbortInhibitEnable);
 	papiReadScenario_bool(line, "EXCESSIVERATEROLLAUTOABORTINHIBIT", ExcessiveRateRollAutoAbortInhibit);
-	papiReadScenario_bool(line, "ISSIVBBURNMODEA", IsSIVBBurnModeA);
-	papiReadScenario_bool(line, "ISSIVBBURNMODEB", IsSIVBBurnModeB);
+	papiReadScenario_bool(line, "SIVBBURNMODEA", IsSIVBBurnModeA);
+	papiReadScenario_bool(line, "SIVBBURNMODEB", IsSIVBBurnModeB);
+	papiReadScenario_boolarr(line, "SWITCHPOINT1TO5", SwitchPoint1to5, 5);
 }
 
 bool IUControlDistributor::GetSIVBBurnMode()
@@ -229,7 +230,7 @@ void IUControlDistributorSV::SaveState(FILEHANDLE scn, char *start_str, char *en
 	IUControlDistributor::SaveState(scn, start_str, end_str);
 
 	papiWriteScenario_boolarr(scn, "SWITCHPOINT6TO9", SwitchPoint6to9, 4);
-	papiWriteScenario_bool(scn, "ISSIIBURNMODE", IsSIIBurnMode);
+	papiWriteScenario_bool(scn, "SIIBURNMODE", IsSIIBurnMode);
 	papiWriteScenario_bool(scn, "SICENGINECANTA", SICEngineCantA);
 	papiWriteScenario_bool(scn, "SICENGINECANTB", SICEngineCantB);
 	papiWriteScenario_bool(scn, "SICENGINECANTC", SICEngineCantC);
@@ -249,7 +250,7 @@ void IUControlDistributorSV::LoadState(FILEHANDLE scn, char *end_str) {
 
 		IUControlDistributor::LoadState(line);
 		papiReadScenario_boolarr(line, "SWITCHPOINT6TO9", SwitchPoint6to9, 4);
-		papiReadScenario_bool(line, "ISSIIBURNMODE", IsSIIBurnMode);
+		papiReadScenario_bool(line, "SIIBURNMODE", IsSIIBurnMode);
 		papiReadScenario_bool(line, "SICENGINECANTA", SICEngineCantA);
 		papiReadScenario_bool(line, "SICENGINECANTB", SICEngineCantB);
 		papiReadScenario_bool(line, "SICENGINECANTC", SICEngineCantC);
