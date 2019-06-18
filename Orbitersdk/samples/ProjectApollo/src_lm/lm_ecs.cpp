@@ -1129,6 +1129,7 @@ LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
 	GlycolAutoTransferRelay = false;
 	GlycolPumpFailRelay = false;
 	PressureSwitch = true;
+	AutoTransferCounter = 0;
 }
 
 void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h)
@@ -1162,11 +1163,24 @@ void LEMPrimGlycolPumpController::SystemTimestep(double simdt)
 
 	if (PressureSwitch && glycolRotary->GetState() == 1 && glycolPumpAutoTransferCB->IsPowered())
 	{
-		GlycolAutoTransferRelay = true;
+		//To make this more stable with time acceleration and panel changes
+		if (AutoTransferCounter > 20)
+		{
+			GlycolAutoTransferRelay = true;
+		}
+		else
+		{
+			AutoTransferCounter++;
+		}
 	}
 	else if (glycolRotary->GetState() == 2 && glycolPumpAutoTransferCB->IsPowered())
 	{
 		GlycolAutoTransferRelay = false;
+		AutoTransferCounter = 0;
+	}
+	else
+	{
+		AutoTransferCounter = 0;
 	}
 
 	if (GlycolAutoTransferRelay && glycolRotary->GetState() == 1 && glycolPump1CB->IsPowered())

@@ -340,6 +340,7 @@ protected:
 	bool GlycolPumpFailRelay;
 
 	bool PressureSwitch;
+	int AutoTransferCounter;
 };
 
 class LEMSuitFanDPSensor
