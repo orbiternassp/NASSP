@@ -393,18 +393,6 @@ void EDS1B::Timestep(double simdt)
 		PYLimit = 4.0*RAD;
 	}
 
-	//LV Rates Light
-	logic = (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit || abs(AttRate.x) > 20.0*RAD) && (EDSBus1Powered || EDSBus3Powered);
-
-	if (logic)
-	{
-		iu->GetCommandConnector()->SetLVRateLight();
-	}
-	else
-	{
-		iu->GetCommandConnector()->ClearLVRateLight();
-	}
-
 	//LV Guidance Light
 	if (iu->lvda.GetGuidanceReferenceFailure())
 		LVAttRefFail = true;
@@ -427,6 +415,18 @@ void EDS1B::Timestep(double simdt)
 	{
 		iu->GetCommandConnector()->ClearLVGuidLight();
 		AttRefFailMonitor = false;
+	}
+
+	//LV Rates Light
+	logic = ((!ExcessRatesAutoAbortDeactivatePY && LVAttRefFail) || abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit || abs(AttRate.x) > 20.0*RAD) && (EDSBus1Powered || EDSBus3Powered);
+
+	if (logic)
+	{
+		iu->GetCommandConnector()->SetLVRateLight();
+	}
+	else
+	{
+		iu->GetCommandConnector()->ClearLVRateLight();
 	}
 
 	// Update engine indicators and failure flags
@@ -723,18 +723,6 @@ void EDSSV::Timestep(double simdt)
 		PYLimit = 4.0*RAD;
 	}
 
-	//LV Rates Light
-	logic = (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit || abs(AttRate.x) > 20.0*RAD) && (EDSBus1Powered || EDSBus3Powered);
-
-	if (logic)
-	{
-		iu->GetCommandConnector()->SetLVRateLight();
-	}
-	else
-	{
-		iu->GetCommandConnector()->ClearLVRateLight();
-	}
-
 	//LV Guidance Light
 	if (iu->lvda.GetGuidanceReferenceFailure())
 		LVAttRefFail = true;
@@ -757,6 +745,18 @@ void EDSSV::Timestep(double simdt)
 	{
 		iu->GetCommandConnector()->ClearLVGuidLight();
 		AttRefFailMonitor = false;
+	}
+
+	//LV Rates Light
+	logic = ((!ExcessRatesAutoAbortDeactivatePY && LVAttRefFail) || abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit || abs(AttRate.x) > 20.0*RAD) && (EDSBus1Powered || EDSBus3Powered);
+
+	if (logic)
+	{
+		iu->GetCommandConnector()->SetLVRateLight();
+	}
+	else
+	{
+		iu->GetCommandConnector()->ClearLVRateLight();
 	}
 
 	// Update engine indicators and failure flags
