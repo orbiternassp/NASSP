@@ -691,6 +691,7 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS2", &LightStatus[2][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS4", &LightStatus[4][0], 8);
+	oapiWriteScenario_int(scn, "ECSFAILURECOUNT", ECSFailureCount);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -772,6 +773,7 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_intarr(line, "LIGHTSTATUS2", &LightStatus[2][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 		papiReadScenario_intarr(line, "LIGHTSTATUS4", &LightStatus[4][0], 8);
+		papiReadScenario_int(line, "ECSFAILURECOUNT", ECSFailureCount);
 	}
 }
 
