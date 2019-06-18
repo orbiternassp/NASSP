@@ -4602,12 +4602,6 @@ bool Saturn::GetSIISIVbDirectStagingSignal()
 	return SIISIVBSepSwitch.GetState() == TOGGLESWITCH_UP;
 }
 
-int Saturn::GetEDSSwitchState()
-
-{
-	return EDSSwitch.GetState();
-}
-
 int Saturn::GetLVRateAutoSwitchState()
 
 {

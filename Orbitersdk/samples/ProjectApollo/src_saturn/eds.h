@@ -38,8 +38,6 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	//Switch Selector Functions
-	void SetSIEngineOutIndicationA(bool set) { SIEngineOutIndicationA = set; }
-	void SetSIEngineOutIndicationB(bool set) { SIEngineOutIndicationB = set; }
 	void SetSIVBEngineOutIndicationA(bool set) { SIVBEngineOutIndicationA = set; }
 	void SetSIVBEngineOutIndicationB(bool set) { SIVBEngineOutIndicationB = set; }
 	void SetLVEnginesCutoffEnable() { LVEnginesCutoffEnable = true; }
@@ -68,6 +66,7 @@ public:
 	bool GetLiftoffEnableA() { return AutoAbortEnableRelayA; }
 	bool GetLiftoffEnableB() { return AutoAbortEnableRelayB; }
 	bool GetAutoAbort() { return AutoAbortBus; }
+	void SetIUEDSBusPowered(bool set) { IUEDSBusPowered = set; }
 protected:
 	IU* iu;
 
@@ -94,8 +93,6 @@ protected:
 	bool ExcessRatesAutoAbortDeactivateR;
 	//K19 (K19-1)
 	bool LVEnginesCutoffEnable;
-	bool SIEngineOutIndicationA;
-	bool SIEngineOutIndicationB;
 	//K78-1 (K173)
 	bool SIIEngineOutIndicationA;
 	//K88-2 (K174)
@@ -152,7 +149,9 @@ public:
 	bool ThrustCommitEval();
 protected:
 
-	bool SIThrustOK[8];
+	bool SIThrustNotOK[8];
+	//Temporary variables, not relays
+	bool ThrustOKSignal[8];
 };
 
 class EDSSV : public EDS
@@ -165,8 +164,12 @@ public:
 	void SetSIIEngineOutIndicationA() { SIIEngineOutIndicationA = true; }
 	void SetSIIEngineOutIndicationB() { SIIEngineOutIndicationB = true; }
 protected:
-	bool SIThrustOK[5];
-	bool SIIThrustOK[5];
+	//K21-1-5, K22-1-5
+	bool SIThrustNotOK[5];
+	// A11K1-5, A12K1-5
+	bool SIIThrustNotOK[5];
+	//Temporary variables, not relays
+	bool ThrustOKSignal[5];
 
 private:
 	const int SIIEngInd[5] = { 2,4,1,3,5 };

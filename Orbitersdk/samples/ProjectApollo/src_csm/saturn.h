@@ -1150,7 +1150,6 @@ public:
 	///
 	void SetSIVbPropellantMass(double mass);
 
-	int GetEDSSwitchState();
 	int GetLVRateAutoSwitchState();
 	int GetTwoEngineOutAutoSwitchState();
 

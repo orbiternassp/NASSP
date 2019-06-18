@@ -42,8 +42,6 @@ EDS::EDS(IU *iu)
 	ExcessRatesAutoAbortDeactivatePY = false;
 	ExcessRatesAutoAbortDeactivateR = false;
 	LVEnginesCutoffEnable = false;
-	SIEngineOutIndicationA = false;
-	SIEngineOutIndicationB = false;
 	SIIEngineOutIndicationA = false;
 	SIIEngineOutIndicationB = false;
 	SIVBEngineOutIndicationA = false;
@@ -141,8 +139,6 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "AUTOABORTINHIBITRELAYB", AutoAbortInhibitRelayB);
 	papiWriteScenario_bool(scn, "LIFTOFFA", LiftoffA);
 	papiWriteScenario_bool(scn, "LIFTOFFB", LiftoffB);
-	papiWriteScenario_bool(scn, "SIENGINEOUTINDICATIONA", SIEngineOutIndicationA);
-	papiWriteScenario_bool(scn, "SIENGINEOUTINDICATIONB", SIEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
 	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
@@ -160,6 +156,7 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "IULIFTOFFRELAY", IULiftoffRelay);
 	papiWriteScenario_bool(scn, "SCCONTROLENABLERELAY", SCControlEnableRelay);
 	papiWriteScenario_bool(scn, "ATTREFFAILMONITOR", AttRefFailMonitor);
+	papiWriteScenario_bool(scn, "IUEDSBUSPOWERED", IUEDSBusPowered);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -178,8 +175,6 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "AUTOABORTENABLERELAYB", AutoAbortEnableRelayB);
 		papiReadScenario_bool(line, "LIFTOFFA", LiftoffA);
 		papiReadScenario_bool(line, "LIFTOFFB", LiftoffB);
-		papiReadScenario_bool(line, "SIENGINEOUTINDICATIONA", SIEngineOutIndicationA);
-		papiReadScenario_bool(line, "SIENGINEOUTINDICATIONB", SIEngineOutIndicationB);
 		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
 		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
@@ -197,6 +192,7 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "IULIFTOFFRELAY", IULiftoffRelay);
 		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
 		papiReadScenario_bool(line, "ATTREFFAILMONITOR", AttRefFailMonitor);
+		papiReadScenario_bool(line, "IUEDSBUSPOWERED", IUEDSBusPowered);
 
 	}
 }
@@ -205,13 +201,14 @@ EDS1B::EDS1B(IU *iu) : EDS(iu)
 {
 	for (int i = 0;i < 8;i++)
 	{
-		SIThrustOK[i] = false;
+		SIThrustNotOK[i] = false;
+		ThrustOKSignal[i] = false;
 	}
 }
 
 bool EDS1B::ThrustCommitEval()
 {
-	for (int i = 0;i < 8;i++) if (!SIThrustOK[i]) return false;
+	for (int i = 0;i < 8;i++) if (SIThrustNotOK[i]) return false;
 
 	return true;
 }
@@ -238,7 +235,6 @@ void EDS1B::Timestep(double simdt)
 
 	AttRate = iu->GetLVRG()->GetRates();
 
-	int EDSSwitch = iu->GetCommandConnector()->EDSSwitchState();
 	int LVRateAutoSwitch = iu->GetCommandConnector()->LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitch = iu->GetCommandConnector()->TwoEngineOutAutoSwitchState();
 	int Stage = iu->GetLVCommandConnector()->GetStage();
@@ -253,7 +249,6 @@ void EDS1B::Timestep(double simdt)
 	if (iu->IsUmbilicalConnected())
 	{
 		IULiftoffRelay = true;
-		IUEDSBusPowered = false;
 		AutoAbortInhibitRelayA = true;
 		AutoAbortInhibitRelayB = true;
 	}
@@ -267,9 +262,20 @@ void EDS1B::Timestep(double simdt)
 
 	AutoAbortBus = false;
 
-	if (Stage <= LAUNCH_STAGE_ONE)
+	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
 	{
-		iu->GetLVCommandConnector()->GetSIThrustOK(SIThrustOK);
+		iu->GetLVCommandConnector()->GetSIThrustOK(ThrustOKSignal);
+		for (int i = 0;i < 8;i++)
+		{
+			SIThrustNotOK[i] = !ThrustOKSignal[i];
+		}
+	}
+	else
+	{
+		for (int i = 0;i < 8;i++)
+		{
+			SIThrustNotOK[i] = false;
+		}
 	}
 
 	if (iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
@@ -342,7 +348,7 @@ void EDS1B::Timestep(double simdt)
 
 		for (int i = 0;i < 8;i++)
 		{
-			if (!SIThrustOK[i]) enginesout++;
+			if (SIThrustNotOK[i]) enginesout++;
 		}
 
 		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate) AutoAbortBus = true;
@@ -427,11 +433,11 @@ void EDS1B::Timestep(double simdt)
 	switch (Stage) {
 	case PRELAUNCH_STAGE:
 	case LAUNCH_STAGE_ONE:
-		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
+		if (EDSBus1Powered || EDSBus3Powered) {
 			int i = 0;
 			while (i < 8) {
-				if (SIThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(i + 1); }
-				if (!SIThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == false) { iu->GetCommandConnector()->SetEngineIndicator(i + 1); }
+				if (!SIThrustNotOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(i + 1); }
+				if (SIThrustNotOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i + 1) == false) { iu->GetCommandConnector()->SetEngineIndicator(i + 1); }
 				i++;
 			}
 		}
@@ -497,14 +503,15 @@ EDSSV::EDSSV(IU *iu) : EDS(iu)
 {
 	for (int i = 0;i < 5;i++)
 	{
-		SIThrustOK[i] = false;
-		SIIThrustOK[i] = false;
+		SIThrustNotOK[i] = false;
+		SIIThrustNotOK[i] = false;
+		ThrustOKSignal[i] = false;
 	}
 }
 
 bool EDSSV::ThrustCommitEval()
 {
-	for (int i = 0;i < 5;i++) if (!SIThrustOK[i]) return false;
+	for (int i = 0;i < 5;i++) if (SIThrustNotOK[i]) return false;
 
 	return true;
 }
@@ -529,7 +536,6 @@ void EDSSV::Timestep(double simdt)
 
 	AttRate = iu->GetLVRG()->GetRates();
 
-	int EDSSwitch = iu->GetCommandConnector()->EDSSwitchState();
 	int LVRateAutoSwitch = iu->GetCommandConnector()->LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitch = iu->GetCommandConnector()->TwoEngineOutAutoSwitchState();
 	int Stage = iu->GetLVCommandConnector()->GetStage();
@@ -544,7 +550,6 @@ void EDSSV::Timestep(double simdt)
 
 	if (iu->IsUmbilicalConnected())
 	{
-		IUEDSBusPowered = false;
 		AutoAbortInhibitRelayA = true;
 		AutoAbortInhibitRelayB = true;
 	}
@@ -557,13 +562,36 @@ void EDSSV::Timestep(double simdt)
 
 	AutoAbortBus = false;
 
-	if (Stage <= LAUNCH_STAGE_ONE)
+	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
 	{
-		iu->GetLVCommandConnector()->GetSIThrustOK(SIThrustOK);
+		iu->GetLVCommandConnector()->GetSIThrustOK(ThrustOKSignal);
+		for (int i = 0;i < 5;i++)
+		{
+			SIThrustNotOK[i] = !ThrustOKSignal[i];
+		}
 	}
-	else if (Stage == LAUNCH_STAGE_TWO || Stage == LAUNCH_STAGE_TWO_ISTG_JET)
+	else
 	{
-		iu->GetLVCommandConnector()->GetSIIThrustOK(SIIThrustOK);
+		for (int i = 0;i < 5;i++)
+		{
+			SIThrustNotOK[i] = false;
+		}
+	}
+
+	if (IUEDSBusPowered && (Stage == LAUNCH_STAGE_TWO || Stage == LAUNCH_STAGE_TWO_ISTG_JET))
+	{
+		iu->GetLVCommandConnector()->GetSIIThrustOK(ThrustOKSignal);
+		for (int i = 0;i < 5;i++)
+		{
+			SIIThrustNotOK[i] = !ThrustOKSignal[i];
+		}
+	}
+	else
+	{
+		for (int i = 0;i < 5;i++)
+		{
+			SIIThrustNotOK[i] = false;
+		}
 	}
 
 	if (iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
@@ -643,13 +671,13 @@ void EDSSV::Timestep(double simdt)
 		}
 	}
 
-	if (Stage == LAUNCH_STAGE_ONE)
+	if (IUEDSBusPowered && Stage == LAUNCH_STAGE_ONE)
 	{
 		int enginesout = 0;
 
 		for (int i = 0;i < 5;i++)
 		{
-			if (!SIThrustOK[i]) enginesout++;
+			if (SIThrustNotOK[i]) enginesout++;
 		}
 
 		if (enginesout >= 2 && !TwoEngOutAutoAbortDeactivate) AutoAbortBus = true;
@@ -735,11 +763,11 @@ void EDSSV::Timestep(double simdt)
 	switch (Stage) {
 	case PRELAUNCH_STAGE:
 	case LAUNCH_STAGE_ONE:
-		if ((SIEngineOutIndicationA && EDSBus1Powered) || (SIEngineOutIndicationB && EDSBus3Powered)) {
+		if (EDSBus1Powered && EDSBus3Powered) {
 			int i = 0;
 			while (i < 5) {
-				if (SIThrustOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(i+1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(i+1); }
-				if (!SIThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i+1) == false) { iu->GetCommandConnector()->SetEngineIndicator(i+1); }
+				if (!SIThrustNotOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(i+1) == true) { iu->GetCommandConnector()->ClearEngineIndicator(i+1); }
+				if (SIThrustNotOK[i] && iu->GetCommandConnector()->GetEngineIndicator(i+1) == false) { iu->GetCommandConnector()->SetEngineIndicator(i+1); }
 				i++;
 			}
 		}
@@ -753,8 +781,8 @@ void EDSSV::Timestep(double simdt)
 		if ((SIIEngineOutIndicationA && EDSBus1Powered) || (SIIEngineOutIndicationB && EDSBus3Powered)) {
 			int i = 0;
 			while (i < 5) {
-				if (SIIThrustOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIIEngInd[i]); }
-				if (!SIIThrustOK[i] && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIIEngInd[i]); }
+				if (!SIIThrustNotOK[i]  && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == true) { iu->GetCommandConnector()->ClearEngineIndicator(SIIEngInd[i]); }
+				if (SIIThrustNotOK[i] && iu->GetCommandConnector()->GetEngineIndicator(SIIEngInd[i]) == false) { iu->GetCommandConnector()->SetEngineIndicator(SIIEngInd[i]); }
 				i++;
 			}
 		}

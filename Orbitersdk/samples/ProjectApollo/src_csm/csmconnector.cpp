@@ -567,14 +567,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_GET_EDS_SWITCH_STATE:
-		if (OurVessel)
-		{
-			m.val1.iValue = OurVessel->GetEDSSwitchState();
-			return true;
-		}
-		break;
-
 	case IUCSM_GET_LV_RATE_AUTO_SWITCH_STATE:
 		if (OurVessel)
 		{

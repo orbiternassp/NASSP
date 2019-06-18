@@ -126,6 +126,8 @@ void IUControlDistributor::ResetBus1()
 	ExcessiveRatePYRAutoAbortInhibitEnable = false;
 	ExcessiveRateRollAutoAbortInhibitEnable = false;
 	TwoEngOutAutoAbortInhibit = false;
+
+	iu->GetEDS()->ResetBus1();
 }
 
 void IUControlDistributor::ResetBus2()
@@ -139,6 +141,8 @@ void IUControlDistributor::ResetBus2()
 	SwitchPoint1to5[2] = false;
 	SwitchPoint1to5[3] = false;
 	SwitchPoint1to5[4] = false;
+
+	iu->GetEDS()->ResetBus2();
 }
 
 IUControlDistributor1B::IUControlDistributor1B(IU *iu) : IUControlDistributor(iu)

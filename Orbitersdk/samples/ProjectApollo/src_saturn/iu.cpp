@@ -465,22 +465,6 @@ bool IUToCSMCommandConnector::GetSIISIVbDirectStagingSignal()
 	return false;
 }
 
-int IUToCSMCommandConnector::EDSSwitchState()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_GET_EDS_SWITCH_STATE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.iValue;
-	}
-
-	return -1;
-}
-
 int IUToCSMCommandConnector::LVRateAutoSwitchState()
 
 {
@@ -1431,8 +1415,7 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 	//For now, enable the LV lights here
 	if (MissionTime > -250.0 && MissionTime < -10.0)
 	{
-		eds.SetSIEngineOutIndicationA(true);
-		eds.SetSIEngineOutIndicationB(true);
+		eds.SetIUEDSBusPowered(true);
 	}
 }
 
@@ -1608,8 +1591,7 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 	//For now, enable the LV lights here
 	if (MissionTime > -250.0 && MissionTime < -10.0)
 	{
-		eds.SetSIEngineOutIndicationA(true);
-		eds.SetSIEngineOutIndicationB(true);
+		eds.SetIUEDSBusPowered(true);
 	}
 }
 

@@ -57,7 +57,6 @@ enum IUCSMMessageType
 	IUCSM_GET_CMC_SIVB_TAKEOVER,			///< Get CMC S-IVB takeover signal.
 	IUCSM_GET_CMC_SIVB_IGNITION,			///< Get CMC S-IVB ignition sequence start signal.
 	IUCSM_GET_CMC_SIVB_CUTOFF,				///< Get CMC S-IVB cutoff signal.
-	IUCSM_GET_EDS_SWITCH_STATE,
 	IUCSM_GET_LV_RATE_AUTO_SWITCH_STATE,
 	IUCSM_GET_TWO_ENGINE_OUT_AUTO_SWITCH_STATE,
 	IUCSM_GET_BECO_COMMAND,					///< Get Boost Engine Cutoff command from SECS.
@@ -174,7 +173,6 @@ public:
 	bool GetIUUPTLMAccept();
 
 	bool GetEngineIndicator(int eng);
-	int EDSSwitchState();
 	int LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitchState();
 	bool GetBECOCommand(bool IsSysA);
