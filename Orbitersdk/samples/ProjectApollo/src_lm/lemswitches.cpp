@@ -492,7 +492,10 @@ void LMRCSATempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSATempInd::QueryValue()
 
 {
-	return 70.0;
+	if (!lem) { return 0; }
+	if (lem->TempPressMonRotary == 1) return ((20 * lem->scera2.GetVoltage(20, 2)) + 20);
+
+	return 0.0;
 }
 
 void LMRCSATempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -519,7 +522,10 @@ void LMRCSBTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 double LMRCSBTempInd::QueryValue()
 
 {
-	return 70.0;
+	if (!lem) { return 0; }
+	if (lem->TempPressMonRotary == 1) return ((20 * lem->scera2.GetVoltage(20, 3)) + 20);
+
+	return 0.0;
 }
 
 void LMRCSBTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -798,18 +804,33 @@ MainFuelTempInd::MainFuelTempInd()
 	NeedleSurface = 0;
 }
 
-void MainFuelTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void MainFuelTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
 
 {
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	monswitch = temppressmonswitch;
 }
 
 double MainFuelTempInd::QueryValue()
 
 {
-	return 70.0;
+	if (!lem) { return 0; }
+	if (monswitch->IsUp())
+	{
+		return ((20 * lem->scera1.GetVoltage(9, 3)) + 20);
+	}
+	else if (monswitch->IsCenter())
+	{
+		return ((20 * lem->scera1.GetVoltage(9, 1)) + 20);
+	}
+	else if (monswitch->IsDown())
+	{
+		return ((20 * lem->scera1.GetVoltage(9, 2)) + 20);
+	}
+
+	return 0.0;
 }
 
 void MainFuelTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -862,18 +883,33 @@ MainOxidizerTempInd::MainOxidizerTempInd()
 	NeedleSurface = 0;
 }
 
-void MainOxidizerTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
+void MainOxidizerTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
 
 {
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	monswitch = temppressmonswitch;
 }
 
 double MainOxidizerTempInd::QueryValue()
 
 {
-	return 70.0;
+	if (!lem) { return 0; }
+	if (monswitch->IsUp())
+	{
+		return ((20 * lem->scera1.GetVoltage(9, 4)) + 20);
+	}
+	else if (monswitch->IsCenter())
+	{
+		return ((20 * lem->scera1.GetVoltage(10, 3)) + 20);
+	}
+	else if (monswitch->IsDown())
+	{
+		return ((20 * lem->scera1.GetVoltage(10, 4)) + 20);
+	}
+
+	return 0.0;
 }
 
 void MainOxidizerTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
