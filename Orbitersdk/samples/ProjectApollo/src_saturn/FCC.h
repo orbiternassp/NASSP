@@ -44,7 +44,6 @@ protected:
 	bool SIVBBurnMode;
 	//K35/K37
 	bool SCControlEnableRelay;
-	bool PermanentSCControlEnabled;
 
 	double a_0p, a_0y, a_0r;
 	double a_1p, a_1y, a_1r;
@@ -75,4 +74,6 @@ protected:
 	bool SIIBurnMode;
 	//K4
 	bool SICOrSIIBurnMode;
+	bool UseSICEngineCant;
+	double SICCant;
 };

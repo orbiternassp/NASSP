@@ -36,7 +36,6 @@ FCC::FCC(IU *iu)
 	SIBurnMode = false;
 	SIVBBurnMode = false;
 	SCControlEnableRelay = false;
-	PermanentSCControlEnabled = false;
 
 	a_0p = a_0y = a_0r = 0.0;
 	a_1p = a_1y = a_1r = 0.0;
@@ -58,8 +57,6 @@ void FCC::Init(IU *i)
 void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
-	papiWriteScenario_bool(scn, "SCCONTROLENABLERELAY", SCControlEnableRelay);
-	papiWriteScenario_bool(scn, "PERMANENTSCCONTROLENABLED", PermanentSCControlEnabled);
 	papiWriteScenario_vec(scn, "LVDCATTITUDEERROR", LVDCAttitudeError);
 
 	oapiWriteLine(scn, end_str);
@@ -74,8 +71,6 @@ void FCC::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, end_str, end_len)) {
 			break;
 		}
-		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
-		papiReadScenario_bool(line, "PERMANENTSCCONTROLENABLED", PermanentSCControlEnabled);
 		papiReadScenario_vec(line, "LVDCATTITUDEERROR", LVDCAttitudeError);
 
 	}
@@ -262,6 +257,9 @@ FCCSV::FCCSV(IU *iu) : FCC(iu)
 {
 	SIIBurnMode = false;
 	SICOrSIIBurnMode = false;
+	UseSICEngineCant = false;
+	//2° split among pitch and yaw (divided by sqrt(2))
+	SICCant = 0.0247;
 }
 
 void FCCSV::Timestep(double simdt)
@@ -277,6 +275,7 @@ void FCCSV::Timestep(double simdt)
 	SICOrSIIBurnMode = SIBurnMode || SIIBurnMode;
 	SIVBBurnMode = iu->GetControlDistributor()->GetSIVBBurnMode();
 	SCControlEnableRelay = iu->GetEDS()->GetSCControl();
+	UseSICEngineCant = iu->GetControlDistributor()->UseSICEngineCant();
 
 	if (SCControlEnableRelay) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
@@ -399,10 +398,10 @@ void FCCSV::Timestep(double simdt)
 		beta_y4c = beta_yc + beta_rc / pow(2, 0.5);
 		if (SIBurnMode) {
 			//SIC
-			iu->GetLVCommandConnector()->SetSIThrusterDir(0, beta_y1c, beta_p1c);
-			iu->GetLVCommandConnector()->SetSIThrusterDir(1, beta_y2c, beta_p2c);
-			iu->GetLVCommandConnector()->SetSIThrusterDir(2, beta_y3c, beta_p3c);
-			iu->GetLVCommandConnector()->SetSIThrusterDir(3, beta_y4c, beta_p4c);
+			iu->GetLVCommandConnector()->SetSIThrusterDir(0, beta_y1c + (UseSICEngineCant ? SICCant : 0.0), beta_p1c - (UseSICEngineCant ? SICCant : 0.0));
+			iu->GetLVCommandConnector()->SetSIThrusterDir(1, beta_y2c + (UseSICEngineCant ? SICCant : 0.0), beta_p2c + (UseSICEngineCant ? SICCant : 0.0));
+			iu->GetLVCommandConnector()->SetSIThrusterDir(2, beta_y3c - (UseSICEngineCant ? SICCant : 0.0), beta_p3c + (UseSICEngineCant ? SICCant : 0.0));
+			iu->GetLVCommandConnector()->SetSIThrusterDir(3, beta_y4c - (UseSICEngineCant ? SICCant : 0.0), beta_p4c - (UseSICEngineCant ? SICCant : 0.0));
 		}
 		else {
 			//SII: engines 2 & 4 are flipped!
@@ -487,6 +486,6 @@ void FCCSV::Timestep(double simdt)
 		}
 	}
 
-	//sprintf(oapiDebugString(), "%d %d %d %f %f %f", GainSwitch, StageSwitch, SIVBBurnMode, AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
+	//sprintf(oapiDebugString(), "%d %d %d %d %f %f %f", SIBurnMode, SIIBurnMode, SIVBBurnMode, UseSICEngineCant, AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
 	//sprintf(oapiDebugString(), "%f %f %f", eps_p, eps_ymr, eps_ypr);
 }

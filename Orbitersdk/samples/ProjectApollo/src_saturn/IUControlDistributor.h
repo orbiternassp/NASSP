@@ -39,6 +39,7 @@ public:
 
 	virtual bool GetSIBurnMode() = 0;
 	virtual bool GetSIIBurnMode() { return false; }
+	virtual bool UseSICEngineCant() { return false; }
 
 	//Switch selector functions
 	void SetFCCSwitchPoint1On() { SwitchPoint1to5[0] = true; }
