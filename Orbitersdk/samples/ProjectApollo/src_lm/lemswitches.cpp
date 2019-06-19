@@ -523,7 +523,7 @@ double LMRCSBTempInd::QueryValue()
 
 {
 	if (!lem) { return 0; }
-	if (lem->TempPressMonRotary == 1) return ((20 * lem->scera2.GetVoltage(20, 3)) + 20);
+	if (lem->TempPressMonRotary.GetState() == 1) return ((20 * lem->scera2.GetVoltage(20, 3)) + 20);
 
 	return 0.0;
 }
