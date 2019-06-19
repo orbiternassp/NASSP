@@ -159,7 +159,6 @@ public:
 	void ResetRelays();
 	void Timestep(double simdt);				// Timestep
 	void SystemTimestep(double simdt);			// System Timestep
-	double GetCommandedThrust();
 	void ProcessLGCThrustCommands(int val);
 
 	bool GetK1() { return K1; }

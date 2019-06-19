@@ -734,13 +734,11 @@ void EngineThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 // Commanded Thrust Indicator
 CommandedThrustInd::CommandedThrustInd()
-
 {
 	NeedleSurface = 0;
 }
 
 void CommandedThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
-
 {
 	MeterSwitch::Init(row);
 	lem = s;
@@ -748,13 +746,18 @@ void CommandedThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 }
 
 double CommandedThrustInd::QueryValue()
-
 {
-	return lem->deca.GetCommandedThrust()*100.0;
+	if (lem->THRContSwitch.IsDown() && lem->THRUST_DISP_CB.IsPowered())
+	{
+		return lem->scera1.GetVoltage(15, 2)*92.5 / 5.0;
+	}
+	else
+	{
+		return lem->scera1.GetVoltage(15, 1)*82.5 / 5.0 + 10.0;
+	}
 }
 
 void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
-
 {	
 	oapiBlt(drawSurface, NeedleSurface,  58, 114-((int)v), 7, 0, 7, 7, SURF_PREDEF_CK);
 }

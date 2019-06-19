@@ -1474,18 +1474,6 @@ void DECA::Timestep(double simdt) {
 	//sprintf(oapiDebugString(), "Auto: X %d Y %d Q %d K6 %d K10 %d K15 %d K16 %d K23 %d K28 %d", X, Y, Q, K6, K10, K15, K16, K23, K28);
 }
 
-double DECA::GetCommandedThrust()
-{
-	if (lem->THRContSwitch.IsDown() && lem->THRUST_DISP_CB.IsPowered())
-	{
-		return ManualThrust * 0.925;
-	}
-	else
-	{
-		return AutoThrust * 0.825 / 12.0 + 0.1;
-	}
-}
-
 void DECA::ProcessLGCThrustCommands(int val) {
 
 	int pulses;
