@@ -266,9 +266,9 @@ void LEM::InitSwitches() {
 	EngineThrustInd.Register(PSH,"EngineThrustInd",0,100,2);
 	CommandedThrustInd.Register(PSH,"CommandedThrustInd",0,100,2);
 	ThrustWeightInd.Register(PSH, "ThrustWeightInd", 0, 6, 2);
-	MainFuelTempInd.Register(PSH,"MainFuelTempInd",40,200,2);
+	MainFuelTempInd.Register(PSH,"MainFuelTempInd",40,100,2);
 	MainFuelPressInd.Register(PSH,"MainFuelPressInd",0,300,2);
-	MainOxidizerTempInd.Register(PSH,"MainOxidizerTempInd",40,200,2);
+	MainOxidizerTempInd.Register(PSH,"MainOxidizerTempInd",40,100,2);
 	MainOxidizerPressInd.Register(PSH,"MainOxidizerPressInd",0,300,2);
 	DPSOxidPercentMeter.Register(PSH, "DPSOxidPercentMeter", 0, 0.99, 0, 0);
 	DPSFuelPercentMeter.Register(PSH, "DPSFuelPercentMeter", 0, 0.99, 0, 0);
@@ -2020,9 +2020,9 @@ void LEM::SetSwitches(int panel) {
 	MainPropAndEngineIndRow.Init(AID_MAIN_PROP_AND_ENGINE_IND, MainPanel);
 	EngineThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
 	CommandedThrustInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
-	MainFuelTempInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+	MainFuelTempInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this, &TempPressMonSwitch);
 	MainFuelPressInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this, &TempPressMonSwitch);
-	MainOxidizerTempInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this);
+	MainOxidizerTempInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this, &TempPressMonSwitch);
 	MainOxidizerPressInd.Init(srf[SRF_NEEDLE], MainPropAndEngineIndRow, this, &TempPressMonSwitch);
 
 	ThrustWeightIndRow.Init(AID_THRUST_WEIGHT_INDICATOR, MainPanel);

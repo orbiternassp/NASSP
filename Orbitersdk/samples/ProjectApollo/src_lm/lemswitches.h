@@ -366,13 +366,14 @@ protected:
 class MainFuelTempInd : public MeterSwitch {
 public:
 	MainFuelTempInd();
-	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
+	ThreePosSwitch *monswitch;
 };
 
 class MainFuelPressInd : public MeterSwitch {
@@ -391,13 +392,14 @@ protected:
 class MainOxidizerTempInd : public MeterSwitch {
 public:
 	MainOxidizerTempInd();
-	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
+	ThreePosSwitch *monswitch;
 };
 
 class MainOxidizerPressInd : public MeterSwitch {
