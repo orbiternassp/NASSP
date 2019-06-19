@@ -270,6 +270,7 @@ AS-504:ProjectApollo\Saturn5
   AUTOSLOW 1  
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 9 LM Checklists.xls
 LVDC_BEGIN
+  LVDC_FSPFileName Config\ProjectApollo\AS-504 Flight Sequence Program.txt
   LVDC_ALFTSA 2.126
   LVDC_BETAA 36.05354
   LVDC_C3A0 -49979032.1
