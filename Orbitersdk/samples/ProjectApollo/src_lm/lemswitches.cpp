@@ -493,7 +493,7 @@ double LMRCSATempInd::QueryValue()
 
 {
 	if (!lem) { return 0; }
-	if (lem->TempPressMonRotary == 1) return ((20 * lem->scera2.GetVoltage(20, 2)) + 20);
+	if (lem->TempPressMonRotary.GetState() == 1) return ((20 * lem->scera2.GetVoltage(20, 2)) + 20);
 
 	return 0.0;
 }
@@ -802,6 +802,7 @@ MainFuelTempInd::MainFuelTempInd()
 
 {
 	NeedleSurface = 0;
+	monswitch = NULL;
 }
 
 void MainFuelTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
@@ -844,6 +845,7 @@ MainFuelPressInd::MainFuelPressInd()
 
 {
 	NeedleSurface = 0;
+	monswitch = NULL;
 }
 
 void MainFuelPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
@@ -881,6 +883,7 @@ MainOxidizerTempInd::MainOxidizerTempInd()
 
 {
 	NeedleSurface = 0;
+	monswitch = NULL;
 }
 
 void MainOxidizerTempInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
@@ -923,6 +926,7 @@ MainOxidizerPressInd::MainOxidizerPressInd()
 
 {
 	NeedleSurface = 0;
+	monswitch = NULL;
 }
 
 void MainOxidizerPressInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch)
