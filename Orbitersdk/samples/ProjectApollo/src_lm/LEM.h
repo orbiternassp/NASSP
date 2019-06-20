@@ -1871,7 +1871,11 @@ protected:
 	friend class LMRCSBPressInd;
 	friend class LMRCSAQtyInd;
 	friend class LMRCSBQtyInd;
+	friend class LMRCSATempInd;
+	friend class LMRCSBTempInd;
 	friend class TempMonitorInd;
+	friend class MainFuelTempInd;
+	friend class MainOxidizerTempInd;
 	friend class RCS_TCA;
 	friend class LEM_ECS;
 	friend class LEMCabinRepressValve;
