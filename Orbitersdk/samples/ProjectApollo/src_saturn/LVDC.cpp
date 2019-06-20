@@ -2807,10 +2807,10 @@ void LVDCSV::Init(){
 	CommandSequence = 0;
 
 	//PRE_IGM GUIDANCE
-	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
-	B_12 = 40.9;							// dto.
-	B_21 = -0.3611;							// dto.
-	B_22 = 29.25;							// dto.
+	B_11 = -1.2;							// Coefficients for determining freeze time after S1C engine failure
+	B_12 = 67.2;							// dto.
+	B_21 = -0.77;							// dto.
+	B_22 = 50.9;							// dto.
 
 	Drag_Area[0] = 0.0;
 	Drag_Area[1] = 0.0;
@@ -2839,11 +2839,11 @@ void LVDCSV::Init(){
 	Fx[4][3] = 0.163508094e-4;
 	Fx[4][4] = -0.587090259e-7;
 	t_1 = 13;								// Backup timer for Pre-IGM pitch maneuver
-	t_2 = 25;								// Time to initiate pitch freeze for S1C engine failure
-	t_3 = 36;								// Constant pitch freeze for S1C engine failure prior to t_2
+	t_2 = 6;								// Time to initiate pitch freeze for S1C engine failure
+	t_3 = 60;								// Constant pitch freeze for S1C engine failure prior to t_2
 	t_3i = 0;								// Clock time at S4B ignition
-	t_4 = 45;								// Upper bound of validity for first segment of pitch freeze
-	t_5 = 81;								// Upper bound of validity for second segment of pitch freeze
+	t_4 = 38;								// Upper bound of validity for first segment of pitch freeze
+	t_5 = 66;								// Upper bound of validity for second segment of pitch freeze
 	t_6 = 0;								// Time to terminate pitch freeze after S1C engine failure
 	T_ar = 160.0;							// S1C Tilt Arrest Time
 	T_S1 = 33.6;							// Pitch Polynomial Segment Times
@@ -5562,15 +5562,16 @@ GuidanceLoop:
 			}				
 			if((PosS.x - a) > 137 || t_clock > t_1){
 				//roll/pitch program
-				if (t_clock >= t_2 && T_EO1 > 0){
+				if (t_clock >= t_4 && T_EO1 > 0){
 					//time to re-calculate freeze time?
 					T_EO1 = -1; //allow only one pass thru re-calculation
 					if (t_fail <= t_2){dT_F = t_3;}
-					if (t_2 < t_clock && t_clock <= t_4){ dT_F = (B_11 * t_fail) + B_12; }
-					if (t_4 < t_clock && t_clock <= t_5){ dT_F = (B_21 * t_fail) + B_22; }
-					if (t_5 < t_clock){ dT_F = 0; }
+					if (t_2 < t_fail && t_fail <= t_4){ dT_F = (B_11 * t_fail) + B_12; }
+					if (t_4 < t_fail && t_fail <= t_5){ dT_F = (B_21 * t_fail) + B_22; }
+					if (t_5 < t_fail){ dT_F = 0; }
+
 					t_6 = t_clock + dT_F;
-					T_ar = T_ar + (0.25*(T_ar - t_fail));
+					T_ar = T_ar + dT_F;
 					fprintf(lvlog,"[%d+%f] Freeze time recalculated! t_6 = %f T_ar = %f\r\n",LVDC_Timebase,LVDC_TB_ETime,t_6,T_ar);
 				}
 				if (t_clock >= t_6){
