@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2017
 
-Saturn Emergency Detection System
+Saturn Emergency Detection System 602A5
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -68,6 +68,7 @@ EDS::EDS(IU *iu)
 	SCControlEnableRelay = false;
 	LVAttRefFail = false;
 	AttRefFailMonitor = false;
+	IUCommandSystemEnable = false;
 
 	AutoAbortBus = false;
 	IUEDSBusPowered = false;
@@ -111,7 +112,7 @@ void EDS::ResetBus1()
 	SIIEngineOutIndicationA = false;
 	SIVBRestartAlert = false;
 	SIVBEngineOutIndicationB = false;
-
+	IUCommandSystemEnable = false;
 }
 void EDS::ResetBus2()
 {
@@ -157,6 +158,7 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "SCCONTROLENABLERELAY", SCControlEnableRelay);
 	papiWriteScenario_bool(scn, "ATTREFFAILMONITOR", AttRefFailMonitor);
 	papiWriteScenario_bool(scn, "IUEDSBUSPOWERED", IUEDSBusPowered);
+	papiWriteScenario_bool(scn, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -193,7 +195,7 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
 		papiReadScenario_bool(line, "ATTREFFAILMONITOR", AttRefFailMonitor);
 		papiReadScenario_bool(line, "IUEDSBUSPOWERED", IUEDSBusPowered);
-
+		papiReadScenario_bool(line, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	}
 }
 
@@ -507,6 +509,7 @@ EDSSV::EDSSV(IU *iu) : EDS(iu)
 		SIIThrustNotOK[i] = false;
 		ThrustOKSignal[i] = false;
 	}
+	SIISIVBNotSeparated = false;
 }
 
 bool EDSSV::ThrustCommitEval()
@@ -559,6 +562,11 @@ void EDSSV::Timestep(double simdt)
 		AutoAbortInhibitRelayA = false;
 		AutoAbortInhibitRelayB = false;
 	}
+
+	if (Stage < LAUNCH_STAGE_SIVB)
+		SIISIVBNotSeparated = true;
+	else
+		SIISIVBNotSeparated = false;
 
 	AutoAbortBus = false;
 

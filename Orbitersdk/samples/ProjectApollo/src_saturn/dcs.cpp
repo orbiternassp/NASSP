@@ -30,31 +30,16 @@ See http://nassp.sourceforge.net/license/ for more details.
 DCS::DCS(IU *i)
 {
 	iu = i;
-
-	CommandSystemEnabled = false;
 }
 
 void DCS::LoadState(FILEHANDLE scn)
-
 {
-	char *line;
 
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, DCS_END_STRING, sizeof(DCS_END_STRING)))
-			return;
-
-		papiReadScenario_bool(line, "COMMANDSYSTEMENABLED", CommandSystemEnabled);
-	}
 }
 
 void DCS::SaveState(FILEHANDLE scn)
-
 {
-	oapiWriteLine(scn, DCS_START_STRING);
 
-	papiWriteScenario_bool(scn, "COMMANDSYSTEMENABLED", CommandSystemEnabled);
-
-	oapiWriteLine(scn, DCS_END_STRING);
 }
 
 bool DCS::Uplink(int type, void *upl)
@@ -116,7 +101,7 @@ bool DCS::Uplink(int type, void *upl)
 
 bool DCS::IsCommandSystemEnabled()
 { 
-	bool IsEnabled = CommandSystemEnabled || iu->GetCommandConnector()->GetIUUPTLMAccept();
+	bool IsEnabled = iu->GetControlDistributor()->GetIUCommandSystemEnable() || iu->GetCommandConnector()->GetIUUPTLMAccept();
 
 	return IsEnabled;
 }

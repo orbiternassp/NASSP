@@ -101,7 +101,6 @@ void IU::SaveState(FILEHANDLE scn)
 	SaveFCC(scn);
 	SaveEDS(scn);
 	GetControlDistributor()->SaveState(scn, "CONTROLDISTRIBUTOR_BEGIN", "CONTROLDISTRIBUTOR_END");
-	dcs.SaveState(scn);
 	
 	oapiWriteLine(scn, IU_END_STRING);
 }
@@ -127,9 +126,6 @@ void IU::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp(line, "CONTROLDISTRIBUTOR_BEGIN", sizeof("CONTROLDISTRIBUTOR_BEGIN"))) {
 			GetControlDistributor()->LoadState(scn, "CONTROLDISTRIBUTOR_END");
-		}
-		else if (!strnicmp(line, DCS_START_STRING, sizeof(DCS_START_STRING))) {
-			dcs.LoadState(scn);
 		}
 	}
 }
@@ -1825,7 +1821,7 @@ void IUSV::SwitchSelector(int item)
 		eds.SetSIVBRestartAlert(false);
 		break;
 	case 82: //IU Command System Enable
-		dcs.EnableCommandSystem();
+		eds.EnableCommandSystem();
 		break;
 	case 83: //S-IC Outboard Engines Cant On "A"
 		ControlDistributor.SetSICEngineCantAOn();

@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2019
 
-IU Control Distributor
+IU Control Distributor 603A2
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,6 +48,26 @@ IUControlDistributor::IUControlDistributor(IU *iu)
 	ExcessiveRateRollAutoAbortInhibit = false;
 	ExcessiveRateRollAutoAbortInhibitEnable = false;
 	TwoEngOutAutoAbortInhibitEnable = false;
+	IUCommandSystemEnable = false;
+	QBallPowerOn = false;
+}
+
+void IUControlDistributor::Timestep(double simdt)
+{
+	if (iu->IsUmbilicalConnected())
+		GSECommandVehicleLiftoffIndicationInhibit = true;
+	else
+		GSECommandVehicleLiftoffIndicationInhibit = false;
+
+	if (iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
+		SIVBThrustNotOK = true;
+	else
+		SIVBThrustNotOK = false;
+
+	if (iu->GetEDS()->GetIUCommandSystemEnable() || iu->GetCommandConnector()->GetIUUPTLMAccept())
+		IUCommandSystemEnable = true;
+	else
+		IUCommandSystemEnable = false;
 }
 
 void IUControlDistributor::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
@@ -61,6 +81,7 @@ void IUControlDistributor::SaveState(FILEHANDLE scn, char *start_str, char *end_
 	papiWriteScenario_bool(scn, "SIVBBURNMODEA", IsSIVBBurnModeA);
 	papiWriteScenario_bool(scn, "SIVBBURNMODEB", IsSIVBBurnModeB);
 	papiWriteScenario_boolarr(scn, "SWITCHPOINT1TO5", SwitchPoint1to5, 5);
+	papiWriteScenario_bool(scn, "QBALLPOWERON", QBallPowerOn);
 }
 
 void IUControlDistributor::LoadState(char *line)
@@ -75,6 +96,7 @@ void IUControlDistributor::LoadState(char *line)
 	papiReadScenario_bool(line, "SIVBBURNMODEA", IsSIVBBurnModeA);
 	papiReadScenario_bool(line, "SIVBBURNMODEB", IsSIVBBurnModeB);
 	papiReadScenario_boolarr(line, "SWITCHPOINT1TO5", SwitchPoint1to5, 5);
+	papiReadScenario_bool(line, "QBALLPOWERON", QBallPowerOn);
 }
 
 bool IUControlDistributor::GetSIVBBurnMode()
@@ -153,15 +175,7 @@ IUControlDistributor1B::IUControlDistributor1B(IU *iu) : IUControlDistributor(iu
 
 void IUControlDistributor1B::Timestep(double simdt)
 {
-	if (iu->IsUmbilicalConnected())
-		GSECommandVehicleLiftoffIndicationInhibit = true;
-	else
-		GSECommandVehicleLiftoffIndicationInhibit = false;
-
-	if (iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
-		SIVBThrustNotOK = true;
-	else
-		SIVBThrustNotOK = false;
+	IUControlDistributor::Timestep(simdt);
 }
 
 void IUControlDistributor1B::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -211,15 +225,7 @@ IUControlDistributorSV::IUControlDistributorSV(IU *iu) : IUControlDistributor(iu
 
 void IUControlDistributorSV::Timestep(double simdt)
 {
-	if (iu->IsUmbilicalConnected())
-		GSECommandVehicleLiftoffIndicationInhibit = true;
-	else
-		GSECommandVehicleLiftoffIndicationInhibit = false;
-
-	if (iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
-		SIVBThrustNotOK = true;
-	else
-		SIVBThrustNotOK = false;
+	IUControlDistributor::Timestep(simdt);
 
 	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", SwitchPoint1, SwitchPoint2, SwitchPoint3, SwitchPoint4, SwitchPoint5, SwitchPoint6);
 }

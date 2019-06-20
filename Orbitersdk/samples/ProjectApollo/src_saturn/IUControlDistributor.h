@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2019
 
-IU Control Distributor (Header)
+IU Control Distributor 603A2 (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ public:
 	IUControlDistributor(IU *iu);
 	virtual ~IUControlDistributor() {}
 
-	virtual void Timestep(double simdt) = 0;
+	virtual void Timestep(double simdt);
 	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	virtual void LoadState(FILEHANDLE scn, char *end_str) = 0;
 	void LoadState(char *line);
@@ -55,6 +55,7 @@ public:
 	void SetExcessiveRatePYRAutoAbortInhibit(bool set) { ExcessiveRatePYRAutoAbortInhibit = set; }
 	void SetExcessiveRateRollAutoAbortInhibit(bool set) { ExcessiveRateRollAutoAbortInhibit = set; }
 	void SetTwoEngOutAutoAbortInhibitEnable() { TwoEngOutAutoAbortInhibitEnable = true; }
+	void SetQBallPower(bool set) { QBallPowerOn = set; }
 
 	//For FCC
 	bool GetSIVBBurnMode();
@@ -73,6 +74,9 @@ public:
 	//For LVDA
 	void SwitchSelector(int stage, int channel);
 
+	//Fod DCS
+	bool GetIUCommandSystemEnable() { return IUCommandSystemEnable; }
+
 	//For GSE
 	void SetFCCPower(bool set) { FCCPowerOn = set; }
 	virtual void ResetBus1();
@@ -86,6 +90,8 @@ protected:
 	bool GSECommandVehicleLiftoffIndicationInhibit;
 	//K6
 	bool FCCPowerOn;
+	//K14
+	bool QBallPowerOn;
 	//K15 (K113)
 	bool ExcessiveRatePYRAutoAbortInhibitEnable;
 	//K16 (K40)
@@ -104,6 +110,8 @@ protected:
 	bool SwitchPoint1to5[5];
 	//K36
 	bool IsSIVBBurnModeB;
+	//K51, K52
+	bool IUCommandSystemEnable;
 	//A7K2/3
 	bool SIVBThrustNotOK;
 	bool ControlSignalProcessorPowerOn;

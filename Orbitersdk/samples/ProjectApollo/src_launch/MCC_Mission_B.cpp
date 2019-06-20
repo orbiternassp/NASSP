@@ -41,7 +41,7 @@ void MCC::MissionSequence_B()
 			if (lm->GetMissionTime() > -5.0)
 			{
 				LEMSaturn *lmsat = (LEMSaturn *)lm;
-				lmsat->GetIU()->dcs.EnableCommandSystem();
+				lmsat->GetIU()->GetEDS()->EnableCommandSystem();
 				setSubState(1);
 			}
 			break;

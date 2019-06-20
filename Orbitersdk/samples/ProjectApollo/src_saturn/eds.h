@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2017
 
-Saturn Emergency Detection System (Header)
+Saturn Emergency Detection System 602A5 (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -46,6 +46,7 @@ public:
 	void SetSIVBRestartAlert(bool set) { SIVBRestartAlert = set; }
 	void EnableSCControl() { SCControlEnableRelay = true; }
 	void DisableSCControl() { SCControlEnableRelay = false; }
+	void EnableCommandSystem() { IUCommandSystemEnable = true; }
 
 	//GSE Reset Buses
 	void ResetBus1();
@@ -61,6 +62,9 @@ public:
 
 	//To FCC
 	bool GetSCControl();
+
+	//To Control Distributor
+	bool GetIUCommandSystemEnable() { return IUCommandSystemEnable; }
 
 	//GSE
 	bool GetLiftoffEnableA() { return AutoAbortEnableRelayA; }
@@ -119,6 +123,8 @@ protected:
 	bool LVEnginesCutoff3;
 	//K76 (K232)
 	bool SIVBRestartAlert;
+	//K77-1/2
+	bool IUCommandSystemEnable;
 	bool SIVBEngineCutoffDisabled;
 
 	//Signals
@@ -170,6 +176,8 @@ protected:
 	bool SIIThrustNotOK[5];
 	//Temporary variables, not relays
 	bool ThrustOKSignal[5];
+	//K69 (K223), K70 (K224)
+	bool SIISIVBNotSeparated;
 
 private:
 	const int SIIEngInd[5] = { 2,4,1,3,5 };
