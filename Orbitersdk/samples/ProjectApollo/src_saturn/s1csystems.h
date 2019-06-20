@@ -44,6 +44,9 @@ public:
 	bool GetFailed() { return EngineFailed; }
 	bool GetEngineStop() { return EngineStop; }
 protected:
+
+	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
+
 	THRUSTER_HANDLE &th_f1;
 	VESSEL *vessel;
 
@@ -61,6 +64,11 @@ protected:
 
 	double ThrustTimer;
 	double ThrustLevel;
+
+	double pitchCmd;
+	double pitchPos;
+	double yawCmd;
+	double yawPos;
 };
 
 class SICSystems

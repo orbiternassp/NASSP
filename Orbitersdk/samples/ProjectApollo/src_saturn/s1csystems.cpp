@@ -48,6 +48,11 @@ F1Engine::F1Engine(VESSEL *v, THRUSTER_HANDLE &f1)
 
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
+
+	pitchCmd = 0.0;
+	pitchPos = 0.0;
+	yawCmd = 0.0;
+	yawPos = 0.0;
 }
 
 void F1Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -60,6 +65,10 @@ void F1Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "RSSCUTOFF", RSSCutoff);
 	papiWriteScenario_bool(scn, "ENGINERUNNING", EngineRunning);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
+	papiWriteScenario_double(scn, "PITCHCMD", pitchCmd);
+	papiWriteScenario_double(scn, "PITCHPOS", pitchPos);
+	papiWriteScenario_double(scn, "YAWCMD", yawCmd);
+	papiWriteScenario_double(scn, "YAWPOS", yawPos);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -80,6 +89,10 @@ void F1Engine::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "RSSCUTOFF", RSSCutoff);
 		papiReadScenario_bool(line, "ENGINERUNNING", EngineRunning);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
+		papiReadScenario_double(line, "PITCHCMD", pitchCmd);
+		papiReadScenario_double(line, "PITCHPOS", pitchPos);
+		papiReadScenario_double(line, "YAWCMD", yawCmd);
+		papiReadScenario_double(line, "YAWPOS", yawPos);
 	}
 }
 
@@ -190,43 +203,55 @@ void F1Engine::Timestep(double simdt)
 	{
 		ThrustTimer = 0.0;
 	}
+
+	//Gimbal timesteps
+	ServoDrive(pitchPos, pitchCmd, 5.0*RAD, simdt);
+	ServoDrive(yawPos, yawCmd, 5.0*RAD, simdt);
+
+	vessel->SetThrusterDir(th_f1, _V(yawPos, pitchPos, 1));
 }
 
 void F1Engine::SetThrusterDir(double beta_y, double beta_p)
 {
 	if (th_f1 == NULL) return;
 
-	VECTOR3 f1vector;
-
 	if (beta_y > 5.16*RAD)
 	{
-		f1vector.x = 5.16*RAD;
+		beta_y = 5.16*RAD;
 	}
 	else if (beta_y < -5.16*RAD)
 	{
-		f1vector.x = -5.16*RAD;
-	}
-	else
-	{
-		f1vector.x = beta_y;
+		beta_y = -5.16*RAD;
 	}
 
 	if (beta_p > 5.16*RAD)
 	{
-		f1vector.y = 5.16*RAD;
+		beta_p = 5.16*RAD;
 	}
 	else if (beta_p < -5.16*RAD)
 	{
-		f1vector.y = -5.16*RAD;
+		beta_p = -5.16*RAD;
+	}
+
+	pitchCmd = beta_p;
+	yawCmd = beta_y;
+}
+
+void F1Engine::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
+{
+	double dposcmd, dpos;
+
+	dposcmd = AngleCmd - Angle;
+
+	if (abs(dposcmd) > RateLimit*simdt)
+	{
+		dpos = sign(AngleCmd - Angle)*RateLimit*simdt;
 	}
 	else
 	{
-		f1vector.y = beta_p;
+		dpos = dposcmd;
 	}
-
-	f1vector.z = 1.0;
-
-	vessel->SetThrusterDir(th_f1, f1vector);
+	Angle += dpos;
 }
 
 SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Pyro &SIC_SII_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl) :
