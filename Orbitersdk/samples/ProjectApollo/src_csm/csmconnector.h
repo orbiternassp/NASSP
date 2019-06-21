@@ -56,15 +56,9 @@ public:
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
-	bool IsTLICapable();
-	void GetVesselStats(double &isp, double &thrust);
-	void ChannelOutput(int channel, int value);
-
-	double GetMass();
-	double GetFuelMass();
-
 	bool GetLiftOffCircuit(bool sysA);
 	bool GetEDSAbort(int n);
+	double GetLVTankPressure(int n);
 
 protected:
 	CSMcomputer &agc;

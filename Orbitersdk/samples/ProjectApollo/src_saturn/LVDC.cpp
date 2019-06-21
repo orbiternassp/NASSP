@@ -4727,7 +4727,7 @@ void LVDCSV::TimeStep(double simdt) {
 				if (SIICenterEngineCutoff && S2_ENGINE_OUT == false && LVDC_TB_ETime >= 299.0)
 				{
 					S2_ENGINE_OUT = true;
-					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 17);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 15);
 				}
 			
 				// MR Shift

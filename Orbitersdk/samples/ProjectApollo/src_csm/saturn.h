@@ -113,21 +113,6 @@ typedef struct {
 } TankQuantities;
 
 ///
-/// \brief Launch Vehicle tank quantities.
-/// \ingroup InternalInterface
-///
-typedef struct {
-	double SICQuantity;
-	double SIIQuantity;
-	double SIVBOxQuantity;
-	double SIVBFuelQuantity;
-	double SICFuelMass;
-	double SIIFuelMass;
-	double S4BFuelMass;
-	double S4BOxMass;
-} LVTankQuantities;
-
-///
 /// \brief Cabin atmosphere status.
 /// \ingroup InternalInterface
 ///
@@ -957,6 +942,9 @@ public:
 	double GetMissionTime() { return MissionTime; };
 
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
+	virtual double GetSIIFuelTankPressurePSI() { return 0.0; }
+	double GetSIVBFuelTankPressurePSI();
+	double GetSIVBLOXTankPressurePSI();
 
 	virtual void GetSIThrustOK(bool *ok) = 0;
 	virtual void GetSIIThrustOK(bool *ok);
@@ -1080,13 +1068,6 @@ public:
 	virtual void SetCrewNumber(int number);
 	virtual void SetPrimECSTestHeaterPowerW(double power);
 	virtual void SetSecECSTestHeaterPowerW(double power);
-
-	///
-	/// Get information on launch vehicle propellant tank quantities.
-	/// \brief Get LV fuel tank status.
-	/// \param LVq LV fuel tank information structure, updated by the call.
-	///
-	void GetLVTankQuantities(LVTankQuantities &LVq);
 
 	///
 	/// Enable or disable generic Service Module systems based on current state.

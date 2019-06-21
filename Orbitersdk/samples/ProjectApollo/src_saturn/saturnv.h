@@ -103,6 +103,7 @@ public:
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
+	double GetSIIFuelTankPressurePSI();
 
 	//
 	// Functions that external code shouldn't need to access.

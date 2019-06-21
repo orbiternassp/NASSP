@@ -69,6 +69,9 @@ public:
 	bool GetPropellantDepletionEngineCutoff();
 	bool GetEngineOut();
 
+	//To IU
+	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }
+
 protected:
 	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
 	bool PropellantLowLevel();
@@ -81,6 +84,10 @@ protected:
 	bool StartPhaseLimiterCutoffArm;
 	//K18 (LOX), K23 (LH2)
 	bool PointLevelSensorArmed;
+	//K16 (K37)
+	bool SICSIIEngineStartLockout;
+	//K17 (K43)
+	bool CommandEngineStart;
 	//K50
 	bool LH2StepPressurization;
 	bool PropellantDepletionSensors;
@@ -94,6 +101,8 @@ protected:
 	double SecondStageFailureTime[5];
 	double FailureTimer;
 	bool FailInit;
+
+	double LH2TankUllagePressurePSI;
 
 	VESSEL *vessel;
 	J2Engine j2engine1;

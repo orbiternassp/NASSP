@@ -67,6 +67,8 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	ThrustTimer = 0.0;
 	ThrustLevel = 0.0;
 	BoiloffTime = 0.0;
+	LH2TankUllagePressurePSI = 50.0;
+	LOXTankUllagePressurePSI = 50.0;
 }
 
 SIVBSystems::~SIVBSystems()
@@ -134,6 +136,13 @@ void SIVBSystems::Timestep(double simdt)
 
 	//Thrust OK switch
 	bool ThrustOK = vessel->GetThrusterLevel(j2engine) > 0.65;
+
+	//Propellant Systems
+	if (main_propellant)
+	{
+		LOXTankUllagePressurePSI = vessel->GetPropellantMass(main_propellant) / vessel->GetPropellantMaxMass(main_propellant)*50.0;
+		LH2TankUllagePressurePSI = LOXTankUllagePressurePSI * 0.9362 + 3.19;
+	}
 
 	//Propellant Depletion
 	if (PropellantLowLevel())

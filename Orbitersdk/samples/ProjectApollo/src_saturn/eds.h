@@ -56,6 +56,7 @@ public:
 	bool GetLiftoffCircuitA() { return LiftoffA; }
 	bool GetLiftoffCircuitB() { return LiftoffB; }
 	bool GetEDSAbort(int n);
+	virtual double GetLVTankPressure(int n);
 
 	//To IU
 	bool GetIULiftoff() { return IULiftoffRelay; }
@@ -169,6 +170,7 @@ public:
 	bool ThrustCommitEval();
 	void SetSIIEngineOutIndicationA() { SIIEngineOutIndicationA = true; }
 	void SetSIIEngineOutIndicationB() { SIIEngineOutIndicationB = true; }
+	double GetLVTankPressure(int n);
 protected:
 	//K21-1-5, K22-1-5
 	bool SIThrustNotOK[5];

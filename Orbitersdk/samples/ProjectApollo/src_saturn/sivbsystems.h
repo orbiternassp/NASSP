@@ -71,6 +71,10 @@ public:
 
 	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
 
+	//To IU
+	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }
+	double GetLOXTankUllagePressurePSI() { return LOXTankUllagePressurePSI; }
+
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 protected:
@@ -110,6 +114,9 @@ protected:
 
 	double J2DefaultThrust;
 	int PUValveState;
+
+	double LH2TankUllagePressurePSI;
+	double LOXTankUllagePressurePSI;
 
 	VESSEL *vessel;
 	THRUSTER_HANDLE &j2engine;

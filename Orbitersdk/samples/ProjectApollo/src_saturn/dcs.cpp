@@ -101,7 +101,5 @@ bool DCS::Uplink(int type, void *upl)
 
 bool DCS::IsCommandSystemEnabled()
 { 
-	bool IsEnabled = iu->GetControlDistributor()->GetIUCommandSystemEnable() || iu->GetCommandConnector()->GetIUUPTLMAccept();
-
-	return IsEnabled;
+	return iu->GetControlDistributor()->GetIUCommandSystemEnable();
 }

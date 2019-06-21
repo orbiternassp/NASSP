@@ -44,7 +44,6 @@ class LVDC;
 enum IUCSMMessageType
 {
 	IUCSM_SET_INPUT_CHANNEL_BIT,			///< Set an AGC input channel bit value.
-	IUCSM_SET_OUTPUT_CHANNEL,				///< Set an AGC output channel value.
 	IUCSM_SET_SII_SEP_LIGHT,				///< Light or clear SII Sep light.
 	IUCSM_SET_LV_RATE_LIGHT,
 	IUCSM_SET_LV_GUID_LIGHT,
@@ -74,13 +73,9 @@ enum IUCSMMessageType
 
 	CSMIU_SET_VESSEL_STATS,					///< Set the vessel stats in the IU.
 	CSMIU_START_TLI_BURN,					///< Start the TLI burn.
-	CSMIU_IS_TLI_CAPABLE,					///< Is the IU TLI capable?
-	CSMIU_CHANNEL_OUTPUT,					///< Process AGC channel output.
-	CSMIU_GET_VESSEL_STATS,					///< Get vessel ISP and thrust.
-	CSMIU_GET_VESSEL_MASS,					///< Get vessel mass.
-	CSMIU_GET_VESSEL_FUEL,					///< Get vessel fuel.
 	CSMIU_GET_LIFTOFF_CIRCUIT,
 	CSMIU_GET_EDS_ABORT,					///< Set EDS abort signal.
+	CSMIU_GET_LV_TANK_PRESSURE,
 };
 
 ///
@@ -139,6 +134,9 @@ enum IULVMessageType
 	IULV_GET_SII_ENGINE_OUT,
 	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
+	IULV_GET_SII_FUEL_TANK_PRESSURE,
+	IULV_GET_SIVB_FUEL_TANK_PRESSURE,
+	IULV_GET_SIVB_LOX_TANK_PRESSURE,
 };
 
 ///
@@ -152,7 +150,6 @@ public:
 	~IUToCSMCommandConnector();
 
 	void SetAGCInputChannelBit(int channel, int bit, bool val);
-	void SetAGCOutputChannel(int channel, int val);
 	void SetSIISep();
 	void ClearSIISep();
 	void SetEngineIndicator(int eng);
@@ -265,6 +262,9 @@ public:
 	bool GetSIIEngineOut();
 	bool GetSIVBThrustOK();
 	double GetFirstStageThrust();
+	double GetSIIFuelTankPressurePSI();
+	double GetSIVBLOXTankPressurePSI();
+	double GetSIVBFuelTankPressurePSI();
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);
 	void GetRelativeVel(OBJHANDLE ref, VECTOR3 &v);

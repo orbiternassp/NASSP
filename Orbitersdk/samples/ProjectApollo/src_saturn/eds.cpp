@@ -101,6 +101,32 @@ bool EDS::GetEDSAbort(int n)
 	return false;
 }
 
+double EDS::GetLVTankPressure(int n)
+{
+	//S-IVB LOX No. 1 Tank Pressure
+	if (n == 1)
+	{
+		return iu->GetLVCommandConnector()->GetSIVBLOXTankPressurePSI();
+	}
+	//S-IVB LOX No. 2 Tank Pressure
+	else if (n == 2)
+	{
+		return iu->GetLVCommandConnector()->GetSIVBLOXTankPressurePSI();
+	}
+	//S-IVB Fuel No. 1 Tank Pressure
+	else if (n == 3)
+	{
+		return iu->GetLVCommandConnector()->GetSIVBFuelTankPressurePSI();
+	}
+	//S-IVB Fuel No. 2 Tank Pressure
+	else if (n == 4)
+	{
+		return iu->GetLVCommandConnector()->GetSIVBFuelTankPressurePSI();
+	}
+
+	return 0.0;
+}
+
 bool EDS::GetSCControl()
 {
 	return (SCControlEnableRelay && iu->GetCommandConnector()->GetCMCSIVBTakeover());
@@ -526,6 +552,48 @@ void EDSSV::LVIndicatorsOff()
 	iu->GetCommandConnector()->ClearEngineIndicator(3);
 	iu->GetCommandConnector()->ClearEngineIndicator(4);
 	iu->GetCommandConnector()->ClearEngineIndicator(5);
+}
+
+double EDSSV::GetLVTankPressure(int n)
+{
+	if (n == 1)
+	{
+		if (SIISIVBNotSeparated)
+		{
+			//S-II LH2 Tank Ullage Pressure No. 1
+			return iu->GetLVCommandConnector()->GetSIIFuelTankPressurePSI();
+		}
+		else
+		{
+			//S-IVB LOX No. 1 Tank Pressure
+			return iu->GetLVCommandConnector()->GetSIVBLOXTankPressurePSI();
+		}
+	}
+	else if (n == 2)
+	{
+		if (SIISIVBNotSeparated)
+		{
+			//S-II LH2 Tank Ullage Pressure No. 2
+			return iu->GetLVCommandConnector()->GetSIIFuelTankPressurePSI();
+		}
+		else
+		{
+			//S-IVB LOX No. 2 Tank Pressure
+			return iu->GetLVCommandConnector()->GetSIVBLOXTankPressurePSI();
+		}
+	}
+	//S-IVB Fuel No. 1 Tank Pressure
+	else if (n == 3)
+	{
+		return iu->GetLVCommandConnector()->GetSIVBFuelTankPressurePSI();
+	}
+	//S-IVB Fuel No. 2 Tank Pressure
+	else if (n == 4)
+	{
+		return iu->GetLVCommandConnector()->GetSIVBFuelTankPressurePSI();
+	}
+
+	return 0.0;
 }
 
 void EDSSV::Timestep(double simdt)

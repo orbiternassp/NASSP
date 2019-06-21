@@ -68,6 +68,8 @@ SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	FailureTimer = 0.0;
 	J2DefaultThrust = 0.0;
 
+	LH2TankUllagePressurePSI = 50.0;
+
 	j2engines[0] = &j2engine1;
 	j2engines[1] = &j2engine2;
 	j2engines[2] = &j2engine3;
@@ -148,6 +150,12 @@ void SIISystems::Timestep(double simdt)
 	j2engine3.Timestep(simdt);
 	j2engine4.Timestep(simdt);
 	j2engine5.Timestep(simdt);
+
+	//Propellant systems
+	if (main_propellant)
+	{
+		LH2TankUllagePressurePSI = vessel->GetPropellantMass(main_propellant) / vessel->GetPropellantMaxMass(main_propellant)*50.0;
+	}
 
 	//Thrust OK switch
 	for (int i = 0;i < 5;i++)
@@ -382,7 +390,7 @@ void SIISystems::SwitchSelector(int channel)
 		break;
 	case 14: //LOX Step Pressurization
 		break;
-	case 17: //S-II Center Engine Cutoff (Actual channel has to be researched!)
+	case 15: //S-II Center Engine Cutoff
 		LVDCCenterEngineCutoff();
 		break;
 	case 18: //S-II Engines Cutoff

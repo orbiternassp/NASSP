@@ -2790,15 +2790,7 @@ void EDA::Timestep(double simdt)
 	{
 		if (A11K3)
 		{
-			LVTankQuantities LVq;
-			sat->GetLVTankQuantities(LVq);
-
-			if (sat->GetStage() > LAUNCH_STAGE_TWO_ISTG_JET) {
-				GPFPIPitch[0] = 89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass;
-			}
-			else {
-				GPFPIPitch[0] = 89.0 * LVq.SIIQuantity / LVq.SIIFuelMass;
-			}
+			GPFPIPitch[0] = 89.0 / 50.0 * sat->iuCommandConnector.GetLVTankPressure(1);
 		}
 		else
 		{
@@ -2808,10 +2800,7 @@ void EDA::Timestep(double simdt)
 
 		if (A11K6)
 		{
-			LVTankQuantities LVq;
-			sat->GetLVTankQuantities(LVq);
-
-			GPFPIYaw[0] = 89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass;
+			GPFPIYaw[0] = 89.0 / 50.0 * sat->iuCommandConnector.GetLVTankPressure(3);
 		}
 		else
 		{
@@ -2827,15 +2816,7 @@ void EDA::Timestep(double simdt)
 	{
 		if (A11K4)
 		{
-			LVTankQuantities LVq;
-			sat->GetLVTankQuantities(LVq);
-
-			if (sat->GetStage() > LAUNCH_STAGE_TWO_ISTG_JET) {
-				GPFPIPitch[1] = 89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass;
-			}
-			else {
-				GPFPIPitch[1] = 89.0 * LVq.SIIQuantity / LVq.SIIFuelMass;
-			}
+			GPFPIPitch[1] = 89.0 / 50.0 * sat->iuCommandConnector.GetLVTankPressure(2);
 		}
 		else
 		{
@@ -2845,10 +2826,7 @@ void EDA::Timestep(double simdt)
 
 		if (A11K5)
 		{
-			LVTankQuantities LVq;
-			sat->GetLVTankQuantities(LVq);
-
-			GPFPIYaw[1] = 89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass;
+			GPFPIYaw[1] = 89.0 / 50.0 * sat->iuCommandConnector.GetLVTankPressure(4);
 		}
 		else
 		{

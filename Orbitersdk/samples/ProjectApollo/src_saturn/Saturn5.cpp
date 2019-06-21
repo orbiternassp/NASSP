@@ -1041,6 +1041,14 @@ void SaturnV::SIIEDSCutoff(bool cut)
 	sii.EDSEnginesCutoff(cut);
 }
 
+double SaturnV::GetSIIFuelTankPressurePSI()
+{
+	if (stage <= LAUNCH_STAGE_TWO_ISTG_JET)
+		return sii.GetLH2TankUllagePressurePSI();
+
+	return 0.0;
+}
+
 void SaturnV::SaveSII(FILEHANDLE scn)
 {
 	sii.SaveState(scn);

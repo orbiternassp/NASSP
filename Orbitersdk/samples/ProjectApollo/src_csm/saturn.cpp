@@ -4335,131 +4335,6 @@ void Saturn::SlowIfDesired()
 }
 
 //
-// Allows Launch Vehicle Quantities to be accessed outside of class
-//
-void Saturn::GetLVTankQuantities(LVTankQuantities &LVq)
-{
-	if (SaturnType == SAT_SATURN1B) {
-
-		//
-		// Clear to defaults, for the Saturn 1B SIC and SII quantities are the same,
-		// SIVB fuel mass is SII_FuelMass!
-		//
-
-		LVq.SICQuantity = 0.0;  //current quantities
-		LVq.SIIQuantity = 0.0;
-		LVq.SIVBOxQuantity = 0.0;
-		LVq.SIVBFuelQuantity = 0.0;
-		LVq.SICFuelMass = SI_FuelMass;  //Initial amounts
-		LVq.SIIFuelMass = SI_FuelMass;
-		LVq.S4BOxMass = SII_FuelMass;
-		LVq.S4BFuelMass = SII_FuelMass;
-		
-		//
-		// No tanks if we've seperated from the different stages of LV
-		//
-
-		if (stage >= CSM_LEM_STAGE) {
-			return;
-		}
-		else if (stage >= LAUNCH_STAGE_TWO) {
-			if (!ph_3rd) {
-				return;
-			}
-			else if (ph_3rd) {
-				//Someday we'll need to simulate SIVB Ox and Fuel Tanks seperately for true Guage support for now it's just done with an correction value that roughly equates to 94% fuel burned for 100% ox burned
-				LVq.SIVBOxQuantity = GetPropellantMass(ph_3rd);  
-				LVq.SIVBFuelQuantity = (GetPropellantMass(ph_3rd) + ((.0638 * SII_FuelMass) * (1 - (GetPropellantMass(ph_3rd) / SII_FuelMass))));
-				return;
-			}
-		}
-		else if (stage >= LAUNCH_STAGE_ONE) {
-			LVq.SIVBOxQuantity = SII_FuelMass;
-			LVq.SIVBFuelQuantity = SII_FuelMass;
-			if (!ph_1st) {
-				return;
-			}
-			else if (ph_1st) {
-				LVq.SICQuantity = GetPropellantMass(ph_1st);
-				LVq.SIIQuantity = GetPropellantMass(ph_1st);
-				return;
-			}
-		}
-		else {
-			LVq.SICQuantity = SI_FuelMass;
-			LVq.SIIQuantity = SI_FuelMass;
-			LVq.SIVBOxQuantity = SII_FuelMass;
-			LVq.SIVBFuelQuantity = SII_FuelMass;
-			return;
-		}
-
-	} else {
-
-		//
-		// Clear to defaults.
-		//
-		LVq.SICQuantity = 0.0;  //current quantities
-		LVq.SIIQuantity = 0.0;
-		LVq.SIVBOxQuantity = 0.0;
-		LVq.SIVBFuelQuantity = 0.0;
-		LVq.SICFuelMass = SI_FuelMass;  //Initial amounts
-		LVq.SIIFuelMass = SII_FuelMass;
-		LVq.S4BOxMass = S4B_FuelMass;
-		LVq.S4BFuelMass = S4B_FuelMass;
-
-		
-		//
-		// No tanks if we've seperated from the different stages of LV
-		//
-
-		if (stage >= CSM_LEM_STAGE) {
-			return;
-		}
-		else if (stage >= LAUNCH_STAGE_SIVB) {
-			if (!ph_3rd){
-				return;
-			}
-			else if (ph_3rd) {
-				//Someday we'll need to simulate SIVB Ox and Fuel Tanks seperately for true Guage support for now it's just done with an correction value that roughly equates to 94% fuel burned for 100% ox burned
-				LVq.SIVBOxQuantity = GetPropellantMass(ph_3rd);  
-				LVq.SIVBFuelQuantity = (GetPropellantMass(ph_3rd) + ((.0638 * S4B_FuelMass) * (1 - (GetPropellantMass(ph_3rd) / S4B_FuelMass))));
-				return;
-			}
-		}
-		else if (stage >= LAUNCH_STAGE_TWO) {
-			LVq.SIVBOxQuantity = S4B_FuelMass;
-			LVq.SIVBFuelQuantity = S4B_FuelMass;
-			if (!ph_2nd) {
-				return;
-			}
-			else if (ph_2nd) {
-				LVq.SIIQuantity = GetPropellantMass(ph_2nd);
-				return;
-			}
-		}
-		else if (stage >= LAUNCH_STAGE_ONE) {
-			LVq.SIVBOxQuantity = S4B_FuelMass;
-			LVq.SIVBFuelQuantity = S4B_FuelMass;
-			LVq.SIIQuantity = SII_FuelMass;
-			if (!ph_1st) {
-				return;
-			}
-			else if (ph_1st) {
-				LVq.SICQuantity = GetPropellantMass(ph_1st);
-				return;
-			}
-		}
-		else {
-			LVq.SICQuantity = SI_FuelMass;
-			LVq.SIIQuantity = SII_FuelMass;
-			LVq.SIVBOxQuantity = S4B_FuelMass;
-			LVq.SIVBFuelQuantity = S4B_FuelMass;
-			return;
-		}
-	}
-}
-
-//
 // Set up random failures if required.
 //
 
@@ -4680,6 +4555,22 @@ bool Saturn::GetSIVBThrustOK()
 	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
 
 	return sivb->GetThrustOK();
+}
+
+double Saturn::GetSIVBFuelTankPressurePSI()
+{
+	if (sivb && stage < CSM_LEM_STAGE)
+		return sivb->GetLH2TankUllagePressurePSI();
+
+	return 0.0;
+}
+
+double Saturn::GetSIVBLOXTankPressurePSI()
+{
+	if (sivb && stage < CSM_LEM_STAGE)
+		return sivb->GetLOXTankUllagePressurePSI();
+
+	return 0.0;
 }
 
 bool Saturn::GetSIIPropellantDepletionEngineCutoff()

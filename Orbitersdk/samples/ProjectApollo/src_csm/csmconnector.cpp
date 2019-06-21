@@ -317,6 +317,29 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
+	case IULV_GET_SII_FUEL_TANK_PRESSURE:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetSIIFuelTankPressurePSI();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SIVB_FUEL_TANK_PRESSURE:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetSIVBFuelTankPressurePSI();
+			return true;
+		}
+		break;
+
+	case IULV_GET_SIVB_LOX_TANK_PRESSURE:
+		if (OurVessel)
+		{
+			m.val1.dValue = OurVessel->GetSIVBLOXTankPressurePSI();
+			return true;
+		}
+		break;
 
 	case IULV_ACTIVATE_NAVMODE:
 		if (OurVessel)
@@ -523,14 +546,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		if (OurVessel)
 		{
 			agc.SetInputChannelBit(m.val1.iValue, m.val2.iValue, m.val3.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_SET_OUTPUT_CHANNEL:
-		if (OurVessel)
-		{
-			agc.SetOutputChannel(m.val1.iValue, m.val2.iValue);
 			return true;
 		}
 		break;
@@ -780,69 +795,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	return false;
 }
 
-bool CSMToIUConnector::IsTLICapable()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_IS_TLI_CAPABLE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-void CSMToIUConnector::GetVesselStats(double &isp, double &thrust)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_GET_VESSEL_STATS;
-
-	if (SendMessage(cm))
-	{
-		isp = cm.val1.dValue;
-		thrust = cm.val2.dValue;
-	}
-}
-
-double CSMToIUConnector::GetMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_GET_VESSEL_MASS;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 1.0;
-}
-
-double CSMToIUConnector::GetFuelMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_GET_VESSEL_FUEL;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 1.0;
-}
-
 bool CSMToIUConnector::GetLiftOffCircuit(bool sysA)
 {
 	ConnectorMessage cm;
@@ -875,17 +827,20 @@ bool CSMToIUConnector::GetEDSAbort(int n)
 	return false;
 }
 
-void CSMToIUConnector::ChannelOutput(int channel, int value)
-
+double CSMToIUConnector::GetLVTankPressure(int n)
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = CSMIU_CHANNEL_OUTPUT;
-	cm.val1.iValue = channel;
-	cm.val2.iValue = value;
+	cm.messageType = CSMIU_GET_LV_TANK_PRESSURE;
+	cm.val1.iValue = n;
 
-	SendMessage(cm);
+	if (SendMessage(cm))
+	{
+		return cm.val2.dValue;
+	}
+
+	return 0.0;
 }
 
 CSMToLEMECSConnector::CSMToLEMECSConnector(Saturn *s) : SaturnConnector(s)

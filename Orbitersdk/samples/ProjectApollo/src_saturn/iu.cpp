@@ -222,19 +222,6 @@ void IUToCSMCommandConnector::SetAGCInputChannelBit(int channel, int bit, bool v
 	SendMessage(cm);
 }
 
-void IUToCSMCommandConnector::SetAGCOutputChannel(int channel, int value)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_SET_OUTPUT_CHANNEL;
-	cm.val1.iValue = channel;
-	cm.val2.iValue = value;
-
-	SendMessage(cm);
-}
-
 void IUToCSMCommandConnector::SetSIISep()
 
 {
@@ -658,46 +645,6 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 		}
 		return true;
 
-	case CSMIU_IS_TLI_CAPABLE:
-		if (ourIU)
-		{
-			//m.val1.bValue = ourIU->IsTLICapable();
-			return true;
-		}
-		break;
-
-	case CSMIU_CHANNEL_OUTPUT:
-		if (ourIU)
-		{
-			//ourIU->ChannelOutput(m.val1.iValue, m.val2.iValue);
-			return true;
-		}
-		break;
-
-	case CSMIU_GET_VESSEL_STATS:
-		if (ourIU)
-		{
-			//ourIU->GetVesselStats(m.val1.dValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case CSMIU_GET_VESSEL_MASS:
-		if (ourIU)
-		{
-			//m.val1.dValue = ourIU->GetMass();
-			return true;
-		}
-		break;
-
-	case CSMIU_GET_VESSEL_FUEL:
-		if (ourIU)
-		{
-			//m.val1.dValue = ourIU->GetFuelMass();
-			return true;
-		}
-		break;
-
 	case CSMIU_GET_LIFTOFF_CIRCUIT:
 		if (ourIU)
 		{
@@ -717,6 +664,14 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 		if (ourIU)
 		{
 			m.val2.bValue = ourIU->GetEDS()->GetEDSAbort(m.val1.iValue);
+			return true;
+		}
+		break;
+
+	case CSMIU_GET_LV_TANK_PRESSURE:
+		if (ourIU)
+		{
+			m.val2.dValue = ourIU->GetEDS()->GetLVTankPressure(m.val1.iValue);
 			return true;
 		}
 		break;
@@ -1351,6 +1306,51 @@ double IUToLVCommandConnector::GetFirstStageThrust()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_FIRST_STAGE_THRUST;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetSIIFuelTankPressurePSI()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SII_FUEL_TANK_PRESSURE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetSIVBLOXTankPressurePSI()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SIVB_LOX_TANK_PRESSURE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToLVCommandConnector::GetSIVBFuelTankPressurePSI()
+{
+	ConnectorMessage cm;
+
+	cm.destination = LV_IU_COMMAND;
+	cm.messageType = IULV_GET_SIVB_FUEL_TANK_PRESSURE;
 
 	if (SendMessage(cm))
 	{
