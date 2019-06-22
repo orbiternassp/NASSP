@@ -64,7 +64,7 @@ void IUControlDistributor::Timestep(double simdt)
 	else
 		SIVBThrustNotOK = false;
 
-	if (iu->GetEDS()->GetIUCommandSystemEnable() || iu->GetCommandConnector()->GetIUUPTLMAccept())
+	if (iu->GetEDS()->GetIUCommandSystemEnable())
 		IUCommandSystemEnable = true;
 	else
 		IUCommandSystemEnable = false;

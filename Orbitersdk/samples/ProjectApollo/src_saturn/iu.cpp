@@ -101,6 +101,7 @@ void IU::SaveState(FILEHANDLE scn)
 	SaveFCC(scn);
 	SaveEDS(scn);
 	GetControlDistributor()->SaveState(scn, "CONTROLDISTRIBUTOR_BEGIN", "CONTROLDISTRIBUTOR_END");
+	GetEngineCutoffEnableTimer()->SaveState(scn, "ENGINECUTOFFENABLETIMER_BEGIN", "ENGINECUTOFFENABLETIMER_END");
 	
 	oapiWriteLine(scn, IU_END_STRING);
 }
@@ -126,6 +127,9 @@ void IU::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp(line, "CONTROLDISTRIBUTOR_BEGIN", sizeof("CONTROLDISTRIBUTOR_BEGIN"))) {
 			GetControlDistributor()->LoadState(scn, "CONTROLDISTRIBUTOR_END");
+		}
+		else if (!strnicmp(line, "ENGINECUTOFFENABLETIMER_BEGIN", sizeof("ENGINECUTOFFENABLETIMER_BEGIN"))) {
+			GetEngineCutoffEnableTimer()->LoadState(scn, "ENGINECUTOFFENABLETIMER_END");
 		}
 	}
 }
@@ -1382,7 +1386,7 @@ void IU::SaveLVDC(FILEHANDLE scn) {
 	}
 }
 
-IU1B::IU1B() : fcc(this), eds(this), ControlDistributor(this)
+IU1B::IU1B() : fcc(this), eds(this), ControlDistributor(this), EngineCutoffEnableTimer(40.0)
 {
 	lvda.Init(this);
 }
@@ -1400,6 +1404,7 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 {
 	IU::Timestep(misst, simt, simdt, mjd);
 
+	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
 
 	if (lvdc != NULL) {
@@ -1412,6 +1417,10 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 	if (MissionTime > -250.0 && MissionTime < -10.0)
 	{
 		eds.SetIUEDSBusPowered(true);
+	}
+	if (ControlDistributor.GetGSECommandVehicleLiftoffIndicationInhibit() == false)
+	{
+		EngineCutoffEnableTimer.SetRunning(true);
 	}
 }
 
@@ -1525,7 +1534,7 @@ void IU1B::SwitchSelector(int item)
 		ControlDistributor.SetTwoEngOutAutoAbortInhibit();
 		break;
 	case 38: //Launch Vehicle Engines EDS Cutoff Enable
-		eds.SetLVEnginesCutoffEnable();
+		eds.SetLVEnginesCutoffEnable1();
 		break;
 	case 41: //Excess Rate(P, Y, R) Auto Abort Inhibit Off
 		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(false);
@@ -1558,7 +1567,7 @@ void IU1B::SwitchSelector(int item)
 	}
 }
 
-IUSV::IUSV() : fcc(this), eds(this), ControlDistributor(this)
+IUSV::IUSV() : fcc(this), eds(this), ControlDistributor(this), EngineCutoffEnableTimer(30.0)
 {
 	lvda.Init(this);
 }
@@ -1576,6 +1585,7 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 {
 	IU::Timestep(misst, simt, simdt, mjd);
 
+	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
 
 	if (lvdc != NULL) {
@@ -1588,6 +1598,10 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 	if (MissionTime > -250.0 && MissionTime < -10.0)
 	{
 		eds.SetIUEDSBusPowered(true);
+	}
+	if (ControlDistributor.GetGSECommandVehicleLiftoffIndicationInhibit() == false)
+	{
+		EngineCutoffEnableTimer.SetRunning(true);
 	}
 }
 
@@ -1746,7 +1760,7 @@ void IUSV::SwitchSelector(int item)
 	case 37: //Switch S-IVB LOX to S-II Fuel Tank Pressure Indicator Reset
 		break;
 	case 38: //Launch Vehicle Engines EDS Cutoff Enable
-		eds.SetLVEnginesCutoffEnable();
+		eds.SetLVEnginesCutoffEnable1();
 		break;
 	case 39: //Tape Recorder Record On
 		break;

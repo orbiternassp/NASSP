@@ -70,11 +70,12 @@ public:
 	bool GetTwoEnginesOutAutoAbortInhibit();
 	bool GetExcessiveRatePYRAutoAbortInhibit();
 	bool GetExcessiveRateRollAutoAbortInhibit();
+	bool GetGSECommandVehicleLiftoffIndicationInhibit() { return GSECommandVehicleLiftoffIndicationInhibit; }
 
 	//For LVDA
 	void SwitchSelector(int stage, int channel);
 
-	//Fod DCS
+	//For DCS
 	bool GetIUCommandSystemEnable() { return IUCommandSystemEnable; }
 
 	//For GSE

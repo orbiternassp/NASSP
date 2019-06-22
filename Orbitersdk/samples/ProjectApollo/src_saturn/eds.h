@@ -40,7 +40,7 @@ public:
 	//Switch Selector Functions
 	void SetSIVBEngineOutIndicationA(bool set) { SIVBEngineOutIndicationA = set; }
 	void SetSIVBEngineOutIndicationB(bool set) { SIVBEngineOutIndicationB = set; }
-	void SetLVEnginesCutoffEnable() { LVEnginesCutoffEnable = true; }
+	void SetLVEnginesCutoffEnable1() { if (LVEnginesCutoffCommand2 == false) { LVEnginesCutoffEnable1 = true; } }
 	void ResetAutoAbortRelays() { AutoAbortEnableRelayA = false; AutoAbortEnableRelayB = false; }
 	void SetSIVBEngineCutoffDisabled() { SIVBEngineCutoffDisabled = true; }
 	void SetSIVBRestartAlert(bool set) { SIVBRestartAlert = set; }
@@ -65,7 +65,7 @@ public:
 	bool GetSCControl();
 
 	//To Control Distributor
-	bool GetIUCommandSystemEnable() { return IUCommandSystemEnable; }
+	bool GetIUCommandSystemEnable();
 
 	//GSE
 	bool GetLiftoffEnableA() { return AutoAbortEnableRelayA; }
@@ -97,7 +97,9 @@ protected:
 	//K52-K54 (K47-1 - K71-3)
 	bool ExcessRatesAutoAbortDeactivateR;
 	//K19 (K19-1)
-	bool LVEnginesCutoffEnable;
+	bool LVEnginesCutoffEnable1;
+	//K29 (K19-2)
+	bool LVEnginesCutoffEnable2;
 	//K78-1 (K173)
 	bool SIIEngineOutIndicationA;
 	//K88-2 (K174)
@@ -117,15 +119,21 @@ protected:
 	//K66 (K93)
 	bool AutoAbortEnableRelayB;
 	//K40 (K20-1)
-	bool LVEnginesCutoff1;
+	bool LVEnginesCutoffFromSC1;
 	//K41-1/2 (K20-2/4)
-	bool LVEnginesCutoff2;
+	bool LVEnginesCutoffFromSC2;
 	//K42 (K20-3)
-	bool LVEnginesCutoff3;
+	bool LVEnginesCutoffFromSC3;
 	//K76 (K232)
 	bool SIVBRestartAlert;
 	//K77-1/2
 	bool IUCommandSystemEnable;
+	//K9-1/2, (K9-1/2)
+	bool LVEnginesCutoffCommand1;
+	//K98, K99 (K230, K231)
+	bool LVEnginesCutoffCommand2;
+	//K86-1/2 (K10-1/2)
+	bool LVEnginesCutoffCommand3;
 	bool SIVBEngineCutoffDisabled;
 
 	//Signals

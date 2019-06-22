@@ -31,6 +31,7 @@
 #include "eds.h"
 #include "LVDA.h"
 #include "dcs.h"
+#include "DelayTimer.h"
 #include "IUControlDistributor.h"
 
 class SoundLib;
@@ -319,6 +320,7 @@ public:
 	virtual EDS* GetEDS() = 0;
 	virtual FCC* GetFCC() = 0;
 	virtual IUControlDistributor *GetControlDistributor() = 0;
+	virtual DelayTimer *GetEngineCutoffEnableTimer() = 0;
 
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
@@ -394,10 +396,14 @@ public:
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
 	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
+	DelayTimer *GetEngineCutoffEnableTimer() { return &EngineCutoffEnableTimer; }
+
 protected:
 	FCC1B fcc;
 	EDS1B eds;
 	IUControlDistributor1B ControlDistributor;
+	//603A36
+	DelayTimer EngineCutoffEnableTimer;
 };
 
 class IUSV :public IU
@@ -417,11 +423,14 @@ public:
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
 	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
+	DelayTimer *GetEngineCutoffEnableTimer() { return &EngineCutoffEnableTimer; }
 
 protected:
 	FCCSV fcc;
 	EDSSV eds;
 	IUControlDistributorSV ControlDistributor;
+	//603A36
+	DelayTimer EngineCutoffEnableTimer;
 };
 
 //

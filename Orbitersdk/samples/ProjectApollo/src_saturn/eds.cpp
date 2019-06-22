@@ -41,7 +41,8 @@ EDS::EDS(IU *iu)
 	TwoEngOutAutoAbortDeactivate = false;
 	ExcessRatesAutoAbortDeactivatePY = false;
 	ExcessRatesAutoAbortDeactivateR = false;
-	LVEnginesCutoffEnable = false;
+	LVEnginesCutoffEnable1 = false;
+	LVEnginesCutoffEnable2 = false;
 	SIIEngineOutIndicationA = false;
 	SIIEngineOutIndicationB = false;
 	SIVBEngineOutIndicationA = false;
@@ -52,9 +53,9 @@ EDS::EDS(IU *iu)
 	AutoAbortInhibitRelayB = false;
 	LiftoffA = false;
 	LiftoffB = false;
-	LVEnginesCutoff1 = false;
-	LVEnginesCutoff2 = false;
-	LVEnginesCutoff3 = false;
+	LVEnginesCutoffFromSC1 = false;
+	LVEnginesCutoffFromSC2 = false;
+	LVEnginesCutoffFromSC3 = false;
 	SecondPlaneSeparationMonitor = false;
 	SIVBEngineCutoffDisabled = false;
 	SIEDSCutoff = false;
@@ -69,6 +70,9 @@ EDS::EDS(IU *iu)
 	LVAttRefFail = false;
 	AttRefFailMonitor = false;
 	IUCommandSystemEnable = false;
+	LVEnginesCutoffCommand1 = false;
+	LVEnginesCutoffCommand2 = false;
+	LVEnginesCutoffCommand3 = false;
 
 	AutoAbortBus = false;
 	IUEDSBusPowered = false;
@@ -134,7 +138,7 @@ bool EDS::GetSCControl()
 
 void EDS::ResetBus1()
 {
-	LVEnginesCutoffEnable = false;
+	LVEnginesCutoffEnable1 = false;
 	SIIEngineOutIndicationA = false;
 	SIVBRestartAlert = false;
 	SIVBEngineOutIndicationB = false;
@@ -142,6 +146,7 @@ void EDS::ResetBus1()
 }
 void EDS::ResetBus2()
 {
+	LVEnginesCutoffEnable2 = false;
 	SIIEngineOutIndicationB = false;
 	SIVBEngineOutIndicationA = false;
 	SCControlEnableRelay = false;
@@ -149,11 +154,16 @@ void EDS::ResetBus2()
 
 bool EDS::LVEnginesCutoffVote()
 {
-	if (!LVEnginesCutoff1 && !LVEnginesCutoff2) return true;
-	if (!LVEnginesCutoff1 && !LVEnginesCutoff3) return true;
-	if (!LVEnginesCutoff2 && !LVEnginesCutoff3) return true;
+	if (!LVEnginesCutoffFromSC1 && !LVEnginesCutoffFromSC2) return true;
+	if (!LVEnginesCutoffFromSC1 && !LVEnginesCutoffFromSC3) return true;
+	if (!LVEnginesCutoffFromSC2 && !LVEnginesCutoffFromSC3) return true;
 
 	return false;
+}
+
+bool EDS::GetIUCommandSystemEnable()
+{
+	return IUEDSBusPowered && (IUCommandSystemEnable || iu->GetCommandConnector()->GetIUUPTLMAccept() || LVEnginesCutoffCommand2);
 }
 
 void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
@@ -170,7 +180,8 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
-	papiWriteScenario_bool(scn, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
+	papiWriteScenario_bool(scn, "LVENGINESCUTOFFENABLE1", LVEnginesCutoffEnable1);
+	papiWriteScenario_bool(scn, "LVENGINESCUTOFFENABLE2", LVEnginesCutoffEnable2);
 	papiWriteScenario_bool(scn, "SECONDPLANESEPARATIONMONITOR", SecondPlaneSeparationMonitor);
 	papiWriteScenario_bool(scn, "SIEDSCUTOFF", SIEDSCutoff);
 	papiWriteScenario_bool(scn, "SIIEDSCUTOFF", SIIEDSCutoff);
@@ -207,7 +218,8 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
 		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
-		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE", LVEnginesCutoffEnable);
+		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE1", LVEnginesCutoffEnable1);
+		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE2", LVEnginesCutoffEnable2);
 		papiReadScenario_bool(line, "SECONDPLANESEPARATIONMONITOR", SecondPlaneSeparationMonitor);
 		papiReadScenario_bool(line, "SIEDSCUTOFF", SIEDSCutoff);
 		papiReadScenario_bool(line, "SIIEDSCUTOFF", SIIEDSCutoff);
@@ -321,23 +333,43 @@ void EDS1B::Timestep(double simdt)
 	else
 		ExcessRatesAutoAbortDeactivateR = false;
 
+	if (LVEnginesCutoffCommand2 == false && iu->GetEngineCutoffEnableTimer()->ContactClosed())
+	{
+		LVEnginesCutoffEnable2 = true;
+	}
+
 	if (IUEDSBusPowered && !BECOA)
-		LVEnginesCutoff1 = true;
+		LVEnginesCutoffFromSC1 = true;
 	else
-		LVEnginesCutoff1 = false;
+		LVEnginesCutoffFromSC1 = false;
 
 	if (IUEDSBusPowered && !BECOA && !BECOB)
-		LVEnginesCutoff2 = true;
+		LVEnginesCutoffFromSC2 = true;
 	else
-		LVEnginesCutoff2 = false;
+		LVEnginesCutoffFromSC2 = false;
 
 	if (IUEDSBusPowered && !BECOB)
-		LVEnginesCutoff3 = true;
+		LVEnginesCutoffFromSC3 = true;
 	else
-		LVEnginesCutoff3 = false;
+		LVEnginesCutoffFromSC3 = false;
+
+	if (IUEDSBusPowered && LVEnginesCutoffEnable1 && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand1 = true;
+	else
+		LVEnginesCutoffCommand1 = false;
+
+	if (IUEDSBusPowered && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand2 = true;
+	else
+		LVEnginesCutoffCommand2 = false;
+
+	if (IUEDSBusPowered && LVEnginesCutoffEnable2 && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand3 = true;
+	else
+		LVEnginesCutoffCommand3 = false;
 
 	//EDS Engine Cutoff
-	if (IUEDSBusPowered && LVEnginesCutoffEnable && LVEnginesCutoffVote())
+	if (LVEnginesCutoffCommand1 || LVEnginesCutoffCommand3)
 	{
 		if (Stage == LAUNCH_STAGE_ONE)
 		{
@@ -685,23 +717,43 @@ void EDSSV::Timestep(double simdt)
 	else
 		ExcessRatesAutoAbortDeactivateR = false;
 
+	if (LVEnginesCutoffCommand2 == false && iu->GetEngineCutoffEnableTimer()->ContactClosed())
+	{
+		LVEnginesCutoffEnable2 = true;
+	}
+
 	if (IUEDSBusPowered && !BECOA)
-		LVEnginesCutoff1 = true;
+		LVEnginesCutoffFromSC1 = true;
 	else
-		LVEnginesCutoff1 = false;
+		LVEnginesCutoffFromSC1 = false;
 
 	if (IUEDSBusPowered && !BECOA && !BECOB)
-		LVEnginesCutoff2 = true;
+		LVEnginesCutoffFromSC2 = true;
 	else
-		LVEnginesCutoff2 = false;
+		LVEnginesCutoffFromSC2 = false;
 
 	if (IUEDSBusPowered && !BECOB)
-		LVEnginesCutoff3 = true;
+		LVEnginesCutoffFromSC3 = true;
 	else
-		LVEnginesCutoff3 = false;
+		LVEnginesCutoffFromSC3 = false;
+
+	if (IUEDSBusPowered && LVEnginesCutoffEnable1 && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand1 = true;
+	else
+		LVEnginesCutoffCommand1 = false;
+
+	if (IUEDSBusPowered && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand2 = true;
+	else
+		LVEnginesCutoffCommand2 = false;
+
+	if (IUEDSBusPowered && LVEnginesCutoffEnable2 && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand3 = true;
+	else
+		LVEnginesCutoffCommand3 = false;
 
 	//EDS Engine Cutoff
-	if (IUEDSBusPowered && LVEnginesCutoffEnable && LVEnginesCutoffVote())
+	if (LVEnginesCutoffCommand1 || LVEnginesCutoffCommand3)
 	{
 		if (Stage == LAUNCH_STAGE_ONE)
 		{

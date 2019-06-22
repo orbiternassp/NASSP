@@ -156,6 +156,7 @@
     <ClCompile Include="..\..\src_saturn\sivbsystems.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
     <ClCompile Include="..\..\src_saturn\iu.cpp" />
+    <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp" />
     <ClCompile Include="..\..\src_aux\Prediction.cpp" />
     <ClCompile Include="..\..\src_saturn\sivb.cpp">
@@ -177,6 +178,7 @@
     <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_saturn\iu.h" />
+    <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\powersource.h" />
     <ClInclude Include="..\..\src_saturn\sivb.h" />
   </ItemGroup>
