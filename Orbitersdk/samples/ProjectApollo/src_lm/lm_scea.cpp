@@ -550,13 +550,13 @@ void SCERA1::Timestep()
 	SA19.SetOutput(4, scale_data(lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI(), 0.0, 250.0));
 
 	//Quad 4 temperature (GR6001T)
-	SA20.SetOutput(1, scale_data(lem->GetRCSQuadTempF(3), 20.0, 200.0));
+	SA20.SetOutput(1, scale_data(lem->GetRCSQuadTempF(3), -60.0, 260.0));
 	//Quad 3 temperature (GR6002T)
-	SA20.SetOutput(2, scale_data(lem->GetRCSQuadTempF(2), 20.0, 200.0));
+	SA20.SetOutput(2, scale_data(lem->GetRCSQuadTempF(2), -60.0, 260.0));
 	//Quad 2 temperature (GR6003T)
-	SA20.SetOutput(3, scale_data(lem->GetRCSQuadTempF(1), 20.0, 200.0));
+	SA20.SetOutput(3, scale_data(lem->GetRCSQuadTempF(1), -60.0, 260.0));
 	//Quad 1 temperature (GR6004T)
-	SA20.SetOutput(4, scale_data(lem->GetRCSQuadTempF(0), 20.0, 200.0));
+	SA20.SetOutput(4, scale_data(lem->GetRCSQuadTempF(0), -60.0, 260.0));
 
 	//Suit inlet temperature (GF1281)
 	SA21.SetOutput(1, scale_data(lem->ecs.GetSuitTempF(), 20.0, 120.0));

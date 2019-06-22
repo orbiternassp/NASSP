@@ -692,13 +692,13 @@ double TempMonitorInd::QueryValue()
 		return lem->scera1.GetVoltage(21, 3) * 80.0 - 200.0;
 		//Quad temperatures are scaled to the proper display increments
 	case 2: // Quad 1
-		return lem->scera1.GetVoltage(20, 4) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
+		return lem->scera1.GetVoltage(20, 4) * 40.0;  //Scaled for the right hand scale of the display
 	case 3: // Quad 2
-		return lem->scera1.GetVoltage(20, 3) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
+		return lem->scera1.GetVoltage(20, 3) * 40.0;  //Scaled for the right hand scale of the display
 	case 4: // Quad 3
-		return lem->scera1.GetVoltage(20, 2) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
+		return lem->scera1.GetVoltage(20, 2) * 40.0;  //Scaled for the right hand scale of the display
 	case 5: // Quad 4
-		return lem->scera1.GetVoltage(20, 1) * 23.0 + 50.0;  //Scaled for the right hand scale of the display
+		return lem->scera1.GetVoltage(20, 1) * 40.0;  //Scaled for the right hand scale of the display
 	case 6: // S-Band
 		return lem->scera2.GetVoltage(21, 2) * 80.0 - 200.0;
 	default:
