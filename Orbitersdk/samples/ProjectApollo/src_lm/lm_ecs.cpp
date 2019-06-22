@@ -712,7 +712,15 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 	{
 		cabinRepressValve->flowMax = 396.0 / LBH;
 
-		if (cabinRepressCB->IsPowered() && (pressRegulatorASwitch->GetState() != 0 || pressRegulatorBSwitch->GetState() != 0))
+		bool repressinhibit = false;
+
+		//Both in EGRESS
+		if (pressRegulatorASwitch->GetState() == 0 && pressRegulatorBSwitch->GetState() == 0) repressinhibit = true;
+		//One in EGRESS, other in CLOSE
+		else if (pressRegulatorASwitch->GetState() == 0 && pressRegulatorBSwitch->GetState() == 3) repressinhibit = true;
+		else if (pressRegulatorASwitch->GetState() == 3 && pressRegulatorBSwitch->GetState() == 0) repressinhibit = true;
+
+		if (cabinRepressCB->IsPowered() && repressinhibit == false)
 		{
 			if (lem->CabinPressureSwitch.GetPressureSwitch() != 0 && cabinRepressValve->in->open == 0)
 			{
@@ -723,9 +731,9 @@ void LEMCabinRepressValve::SystemTimestep(double simdt)
 				cabinRepressValve->in->Close();
 			}
 			if (cabinRepressValve->in->open)
-				{
+			{
 				EmergencyCabinRepressRelay = true;
-				}
+			}
 		}
 		else
 		{
