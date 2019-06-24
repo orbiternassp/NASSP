@@ -131,9 +131,8 @@ void LEMCrewStatus::Timestep(double simdt) {
 		PressureHighTime = 3600;
 	}
 
-	// **Disabled for now until temperature simulation is made more stable
 	// Suit/Cabin temperature above about 45°C or below about 0°C for 12 hours
-	/*if ((lem->ecs.GetSuitTempF() > 113 || lem->ecs.GetSuitTempF() < 32) && (lem->CDRSuited->number + lem->LMPSuited->number > 0)) {
+	if ((lem->ecs.GetSuitTempF() > 113 || lem->ecs.GetSuitTempF() < 32) && (lem->CDRSuited->number + lem->LMPSuited->number > 0)) {
 			if (SuitTemperatureTime <= 0) {
 				status = ECS_CREWSTATUS_DEAD;
 				crewDeadSound.play();
@@ -145,8 +144,8 @@ void LEMCrewStatus::Timestep(double simdt) {
 		} else {
 		SuitTemperatureTime = 12 * 3600;
 	}
-
-	if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
+	// **Disabled for now until cabin temperatures are more stable
+	/*if ((lem->ecs.GetCabinTempF() > 113 || lem->ecs.GetCabinTempF() < 32) && lem->CrewInCabin->number > 0) {
 		if (TemperatureTime <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();

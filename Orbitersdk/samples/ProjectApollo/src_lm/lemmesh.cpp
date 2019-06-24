@@ -434,6 +434,11 @@ void LEM::SeparateStage (UINT stage)
 {
 	ResetThrusters();
 
+	if (docksla) {
+		DelDock(docksla);
+		docksla = NULL;
+	}
+
 	VESSELSTATUS2 vs2;
 	memset(&vs2, 0, sizeof(vs2));
 	vs2.version = 2;
