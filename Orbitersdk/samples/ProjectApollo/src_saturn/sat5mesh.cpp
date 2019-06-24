@@ -441,10 +441,11 @@ void SaturnV::SetFirstStage ()
 
     SetSize (59.5);
 	SetEmptyMass (EmptyMass);
-	SetPMI (_V(1147,1147,116.60));
+	//440 is average value for pitch/yaw axis, 5.875 is highest value for roll axis (at cutoff). Could use some refining later.
+	SetPMI(_V(440.0, 440.0, 5.875));
 	SetCrossSections (_V(1129,1133,52.4));
 	SetCW (0.1, 0.3, 1.4, 1.4);
-	SetRotDrag (_V(0.7,0.7,1.2));
+	SetRotDrag(_V(0.7, 0.7, 0.1));
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
 	SetLiftCoeffFunc (0);
