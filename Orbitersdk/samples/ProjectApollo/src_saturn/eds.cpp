@@ -100,18 +100,6 @@ void EDS::SetPlatformFailureParameters(bool PlatFail, double PlatFailTime)
 	PlatformFailureTime = PlatFailTime;
 }
 
-void EDS::SetLiftoffCircuitFailure(bool isSysA)
-{
-	if (isSysA)
-	{
-		LiftoffCircuitAFailure = true;
-	}
-	else
-	{
-		LiftoffCircuitBFailure = true;
-	}
-}
-
 bool EDS::GetEDSAbort(int n)
 {
 	if (n == 1)

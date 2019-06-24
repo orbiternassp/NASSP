@@ -33,7 +33,8 @@ public:
 	virtual ~EDS() {}
 	virtual void Timestep(double simdt) = 0;
 	void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
-	void SetLiftoffCircuitFailure(bool isSysA);
+	void SetLiftoffCircuitAFailure() { LiftoffCircuitAFailure = true; }
+	void SetLiftoffCircuitBFailure() { LiftoffCircuitBFailure = true; }
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);

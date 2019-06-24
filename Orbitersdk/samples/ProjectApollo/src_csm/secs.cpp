@@ -594,7 +594,7 @@ void MESC::Timestep(double simdt)
 	}
 
 	//Auto Abort Logic
-	if ((EDSLiftoffCircuitPower() || ((AutoAbortEnableRelay || Sat->LiftoffNoAutoAbortSwitch.GetState()) && LETPhysicalSeparationMonitor && SequentialLogicBus())) && Sat->EDSSwitch.GetState())
+	if (((!Sat->LaunchFail.AutoAbortEnableFail && EDSLiftoffCircuitPower()) || ((AutoAbortEnableRelay || Sat->LiftoffNoAutoAbortSwitch.GetState()) && LETPhysicalSeparationMonitor && SequentialLogicBus())) && Sat->EDSSwitch.GetState())
 	{
 		AutoAbortEnableRelay = true;
 	}

@@ -769,5 +769,29 @@ void Saturn1b::SetRandomFailures()
 		{
 			LaunchFail.LESJetMotorFail = 1;
 		}
+		if (!(random() & 255))
+		{
+			LaunchFail.LiftoffSignalAFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.LiftoffSignalBFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.AutoAbortEnableFail = 1;
+		}
+
+		if (stage < CSM_LEM_STAGE)
+		{
+			if (LaunchFail.LiftoffSignalAFail)
+			{
+				iu->GetEDS()->SetLiftoffCircuitAFailure();
+			}
+			if (LaunchFail.LiftoffSignalBFail)
+			{
+				iu->GetEDS()->SetLiftoffCircuitBFailure();
+			}
+		}
 	}
 }

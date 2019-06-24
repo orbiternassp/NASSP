@@ -1953,6 +1953,18 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "LAUNCHFAIL", 10)) {
 		sscanf(line + 10, "%d", &LaunchFail.word);
+
+		if (stage < CSM_LEM_STAGE)
+		{
+			if (LaunchFail.LiftoffSignalAFail)
+			{
+				iu->GetEDS()->SetLiftoffCircuitAFailure();
+			}
+			if (LaunchFail.LiftoffSignalBFail)
+			{
+				iu->GetEDS()->SetLiftoffCircuitBFailure();
+			}
+		}
 	}
 	else if (!strnicmp(line, "SWITCHCHFAIL", 10)) {
 		sscanf(line + 10, "%d", &SwitchFail.word);

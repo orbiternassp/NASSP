@@ -560,6 +560,9 @@ public:
 			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
 			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
 			unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
+			unsigned LiftoffSignalAFail:1;		///< Liftoff signal A will not come through from the IU.
+			unsigned LiftoffSignalBFail:1;		///< Liftoff signal B will not come through from the IU.
+			unsigned AutoAbortEnableFail:1;		///< IU fails to enable the auto abort relays.
 		};
 		int word;								///< Word holds the flags from the bitfield in one 32-bit value for scenarios.
 
