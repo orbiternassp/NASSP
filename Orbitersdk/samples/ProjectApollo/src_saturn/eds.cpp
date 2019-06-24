@@ -491,7 +491,7 @@ void EDS1B::Timestep(double simdt)
 	}
 
 	//LV Guidance Light
-	if (iu->lvda.GetGuidanceReferenceFailure())
+	if (iu->GetLVDA()->GetGuidanceReferenceFailure())
 		LVAttRefFail = true;
 	else
 		LVAttRefFail = false;
@@ -556,9 +556,9 @@ void EDS1B::Timestep(double simdt)
 
 	//Failure code
 
-	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->lvimu.IsFailed())
+	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->GetLVIMU()->IsFailed())
 	{
-		iu->lvimu.SetFailed();
+		iu->GetLVIMU()->SetFailed();
 	}
 }
 
@@ -855,7 +855,7 @@ void EDSSV::Timestep(double simdt)
 	}
 
 	//LV Guidance Light
-	if (iu->lvda.GetGuidanceReferenceFailure())
+	if (iu->GetLVDA()->GetGuidanceReferenceFailure())
 		LVAttRefFail = true;
 	else
 		LVAttRefFail = false;
@@ -935,9 +935,9 @@ void EDSSV::Timestep(double simdt)
 
 	//Failure code
 
-	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->lvimu.IsFailed())
+	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->GetLVIMU()->IsFailed())
 	{
-		iu->lvimu.SetFailed();
+		iu->GetLVIMU()->SetFailed();
 	}
 
 	//sprintf(oapiDebugString(), "%f", PlatformFailureTime);

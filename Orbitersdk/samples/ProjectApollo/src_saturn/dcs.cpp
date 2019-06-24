@@ -50,49 +50,49 @@ bool DCS::Uplink(int type, void *upl)
 		{
 			DCSSWITSEL *switsel = static_cast<DCSSWITSEL*>(upl);
 
-			return iu->lvda.GeneralizedSwitchSelector(switsel->stage, switsel->channel);
+			return iu->GetLVDA()->GeneralizedSwitchSelector(switsel->stage, switsel->channel);
 		}
 		else if (type == DCSUPLINK_TIMEBASE_UPDATE)
 		{
 			DCSTBUPDATE *tbupdate = static_cast<DCSTBUPDATE*>(upl);
 
-			return iu->lvda.TimebaseUpdate(tbupdate->dt);
+			return iu->GetLVDA()->TimebaseUpdate(tbupdate->dt);
 		}
 		else if (type == DCSUPLINK_LM_ABORT)
 		{
-			return iu->lvda.LMAbort();
+			return iu->GetLVDA()->LMAbort();
 		}
 		else if (type == DCSUPLINK_RESTART_MANEUVER_ENABLE)
 		{
-			return iu->lvda.RestartManeuverEnable();
+			return iu->GetLVDA()->RestartManeuverEnable();
 		}
 		else if (type == DCSUPLINK_INHIBIT_MANEUVER)
 		{
-			return iu->lvda.InhibitAttitudeManeuver();
+			return iu->GetLVDA()->InhibitAttitudeManeuver();
 		}
 		else if (type == DCSUPLINK_TIMEBASE_8_ENABLE)
 		{
-			return iu->lvda.Timebase8Enable();
+			return iu->GetLVDA()->Timebase8Enable();
 		}
 		else if (type == DCSUPLINK_EVASIVE_MANEUVER_ENABLE)
 		{
-			return iu->lvda.EvasiveManeuverEnable();
+			return iu->GetLVDA()->EvasiveManeuverEnable();
 		}
 		else if (type == DCSUPLINK_EXECUTE_COMM_MANEUVER)
 		{
-			return iu->lvda.ExecuteCommManeuver();
+			return iu->GetLVDA()->ExecuteCommManeuver();
 		}
 		else if (type == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
 		{
 			DCSLUNARIMPACT *lunarimpact = static_cast<DCSLUNARIMPACT*>(upl);
 
-			return iu->lvda.SIVBIULunarImpact(lunarimpact->tig, lunarimpact->dt, lunarimpact->pitch, lunarimpact->yaw);
+			return iu->GetLVDA()->SIVBIULunarImpact(lunarimpact->tig, lunarimpact->dt, lunarimpact->pitch, lunarimpact->yaw);
 		}
 		else if (type == DCSUPLINK_SATURNIB_LAUNCH_TARGETING)
 		{
 			DCSLAUNCHTARGET *targeting = static_cast<DCSLAUNCHTARGET*>(upl);
 
-			return iu->lvda.LaunchTargetingUpdate(targeting->V_T, targeting->R_T, targeting->theta_T, targeting->i, targeting->lambda_0, targeting->lambda_dot, targeting->T_GRR0);
+			return iu->GetLVDA()->LaunchTargetingUpdate(targeting->V_T, targeting->R_T, targeting->theta_T, targeting->i, targeting->lambda_0, targeting->lambda_dot, targeting->T_GRR0);
 		}
 	}
 

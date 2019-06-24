@@ -49,11 +49,6 @@ FCC::FCC(IU *iu)
 	this->iu = iu;
 }
 
-void FCC::Init(IU *i)
-{
-	iu = i;
-}
-
 void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 

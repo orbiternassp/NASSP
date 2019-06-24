@@ -112,7 +112,7 @@ void MCC::MissionSequence_G()
 				}
 			}
 
-			sivb->GetIU()->dcs.Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
+			sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
 			setSubState(3);
 		}
 		break;

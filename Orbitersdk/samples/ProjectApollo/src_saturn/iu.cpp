@@ -39,7 +39,6 @@
 
 #include "saturn.h"
 #include "papi.h"
-#include "LVDC.h"
 
 #include "iu.h"
 
@@ -57,7 +56,6 @@ dcs(this)
 	SCControlPoweredFlight = false;
 
 	commandConnector.SetIU(this);
-	lvdc = NULL;
 }
 
 void IU::SetMissionInfo(bool crewed, bool sccontpowered)
@@ -87,8 +85,6 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 	{
 		lvCommandConnector.SetStage(LAUNCH_STAGE_ONE);
 	}
-
-	if (lvdc == NULL) return;
 
 	lvimu.Timestep(mjd);
 	lvrg.Timestep(simdt);
@@ -191,8 +187,8 @@ void IU::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "STATE", State);
 	papiWriteScenario_bool(scn, "UMBILICALCONNECTED", UmbilicalConnected);
 
-	SaveFCC(scn);
-	SaveEDS(scn);
+	GetFCC()->SaveState(scn, "FCC_BEGIN", "FCC_END");
+	GetEDS()->SaveState(scn, "EDS_BEGIN", "EDS_END");
 	GetControlDistributor()->SaveState(scn, "CONTROLDISTRIBUTOR_BEGIN", "CONTROLDISTRIBUTOR_END");
 	GetEngineCutoffEnableTimer()->SaveState(scn, "ENGINECUTOFFENABLETIMER_BEGIN", "ENGINECUTOFFENABLETIMER_END");
 	
@@ -211,10 +207,10 @@ void IU::LoadState(FILEHANDLE scn)
 		papiReadScenario_int(line, "STATE", State);
 		papiReadScenario_bool(line, "UMBILICALCONNECTED", UmbilicalConnected);
 		if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
-			LoadFCC(scn);
+			GetFCC()->LoadState(scn, "FCC_END");
 		}
 		else if (!strnicmp(line, "EDS_BEGIN", sizeof("EDS_BEGIN"))) {
-			LoadEDS(scn);
+			GetEDS()->LoadState(scn, "EDS_END");
 		}
 		else if (!strnicmp(line, "CONTROLDISTRIBUTOR_BEGIN", sizeof("CONTROLDISTRIBUTOR_BEGIN"))) {
 			GetControlDistributor()->LoadState(scn, "CONTROLDISTRIBUTOR_END");
@@ -1494,24 +1490,18 @@ bool IUToLVCommandConnector::CSMSeparationSensed()
 }
 
 void IU::SaveLVDC(FILEHANDLE scn) {
-	if (lvdc != NULL) {
-		lvdc->SaveState(scn);
-		lvimu.SaveState(scn);
-	}
+	GetLVDC()->SaveState(scn);
+	lvimu.SaveState(scn);
 }
 
-IU1B::IU1B() : fcc(this), eds(this), ControlDistributor(this), EngineCutoffEnableTimer(40.0)
+IU1B::IU1B() : fcc(this), eds(this), ControlDistributor(this), EngineCutoffEnableTimer(40.0), lvdc(lvda)
 {
 	lvda.Init(this);
 }
 
 IU1B::~IU1B()
 {
-	if (lvdc)
-	{
-		delete lvdc;
-		lvdc = 0;
-	}
+
 }
 
 void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
@@ -1520,11 +1510,8 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 
 	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
-
-	if (lvdc != NULL) {
-		eds.Timestep(simdt);
-		lvdc->TimeStep(simdt);
-	}
+	eds.Timestep(simdt);
+	lvdc.TimeStep(simdt);
 	fcc.Timestep(simdt);
 }
 
@@ -1537,42 +1524,18 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 
 	char *line;
 
-	// If the LVDC does not yet exist, create it.
-	if (lvdc == NULL) {
-		lvdc = new LVDC1B(lvda);
-		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
-		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
-		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-		lvdc->Init();
-		fcc.Init(this);
-	}
-	lvdc->LoadState(scn);
+	lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
+	lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
+	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
+	lvdc.Init();
+
+	lvdc.LoadState(scn);
 
 	if (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
 			lvimu.LoadState(scn);
 		}
 	}
-}
-
-void IU1B::SaveFCC(FILEHANDLE scn)
-{
-	fcc.SaveState(scn, "FCC_BEGIN", "FCC_END");
-}
-
-void IU1B::LoadFCC(FILEHANDLE scn)
-{
-	fcc.LoadState(scn, "FCC_END");
-}
-
-void IU1B::SaveEDS(FILEHANDLE scn)
-{
-	eds.SaveState(scn, "EDS_BEGIN", "EDS_END");
-}
-
-void IU1B::LoadEDS(FILEHANDLE scn)
-{
-	eds.LoadState(scn, "EDS_END");
 }
 
 void IU1B::SwitchSelector(int item)
@@ -1671,18 +1634,14 @@ void IU1B::SwitchSelector(int item)
 	}
 }
 
-IUSV::IUSV() : fcc(this), eds(this), ControlDistributor(this), EngineCutoffEnableTimer(30.0)
+IUSV::IUSV() : fcc(this), eds(this), ControlDistributor(this), EngineCutoffEnableTimer(30.0), lvdc(lvda)
 {
 	lvda.Init(this);
 }
 
 IUSV::~IUSV()
 {
-	if (lvdc)
-	{
-		delete lvdc;
-		lvdc = 0;
-	}
+
 }
 
 void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
@@ -1691,11 +1650,8 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 
 	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
-
-	if (lvdc != NULL) {
-		eds.Timestep(simdt);
-		lvdc->TimeStep(simdt);
-	}
+	eds.Timestep(simdt);
+	lvdc.TimeStep(simdt);
 	fcc.Timestep(simdt);
 }
 
@@ -1703,16 +1659,12 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 
 	char *line;
 
-	// If the LVDC does not yet exist, create it.
-	if (lvdc == NULL) {
-		lvdc = new LVDCSV(lvda);
-		lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
-		lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
-		lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-		lvdc->Init();
-		fcc.Init(this);
-	}
-	lvdc->LoadState(scn);
+	lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
+	lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
+	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
+	lvdc.Init();
+
+	lvdc.LoadState(scn);
 
 	if (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, LVIMU_START_STRING, sizeof(LVIMU_START_STRING))) {
@@ -1729,26 +1681,6 @@ bool IUSV::GetSIIPropellantDepletionEngineCutoff()
 bool IUSV::GetSIIEngineOut()
 {
 	return lvCommandConnector.GetSIIEngineOut();
-}
-
-void IUSV::SaveFCC(FILEHANDLE scn)
-{
-	fcc.SaveState(scn, "FCC_BEGIN", "FCC_END");
-}
-
-void IUSV::LoadFCC(FILEHANDLE scn)
-{
-	fcc.LoadState(scn, "FCC_END");
-}
-
-void IUSV::SaveEDS(FILEHANDLE scn)
-{
-	eds.SaveState(scn, "EDS_BEGIN", "EDS_END");
-}
-
-void IUSV::LoadEDS(FILEHANDLE scn)
-{
-	eds.LoadState(scn, "EDS_END");
 }
 
 void IUSV::SwitchSelector(int item)

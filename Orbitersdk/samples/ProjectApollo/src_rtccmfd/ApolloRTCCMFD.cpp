@@ -4205,7 +4205,7 @@ void ApolloRTCCMFD::menuP30Upload()
 		SaturnV* testves;
 
 		testves = (SaturnV*)G->g_Data.progVessel;
-		LVDCSV *lvdc = (LVDCSV*)testves->iu->lvdc;
+		LVDCSV *lvdc = (LVDCSV*)testves->iu->GetLVDC();
 
 		coe = G->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, GC->GETbase, G->P30TIG, lvdc->TB5, lvdc->mu, lvdc->T_RG);
 
@@ -8097,7 +8097,7 @@ void ApolloRTCCMFD::menuLaunchAzimuthCalc()
 		SaturnV *SatV = (SaturnV*)G->vessel;
 		if (SatV->iu)
 		{
-			LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+			LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
 			double day = 0.0;
 			double MJD_GRR = oapiGetSimMJD() - (SatV->GetMissionTime() + 17.0) / 24.0 / 3600.0;

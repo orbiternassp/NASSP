@@ -72,7 +72,7 @@ void MCC::MissionSequence_D()
 					}
 				}
 
-				sivb->GetIU()->dcs.Uplink(DCSUPLINK_INHIBIT_MANEUVER, NULL);
+				sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_INHIBIT_MANEUVER, NULL);
 
 				setSubState(2);
 			}
@@ -81,7 +81,7 @@ void MCC::MissionSequence_D()
 		case 2:
 			if (SubStateTime > 5.0*60.0)
 			{
-				sivb->GetIU()->dcs.Uplink(DCSUPLINK_RESTART_MANEUVER_ENABLE, NULL);
+				sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_RESTART_MANEUVER_ENABLE, NULL);
 
 				setSubState(3);
 			}

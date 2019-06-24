@@ -43,7 +43,7 @@ void MCC::MissionSequence_F()
 			{
 				SlowIfDesired();
 				SaturnV *SatV = (SaturnV*)cm;
-				LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+				LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
 				SV sv, sv_IG, sv_TLI;
 				sv = rtcc->StateVectorCalc(cm);
@@ -265,7 +265,7 @@ void MCC::MissionSequence_F()
 				}
 			}
 
-			sivb->GetIU()->dcs.Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
+			sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_TIMEBASE_8_ENABLE, NULL);
 			setSubState(3);
 		}
 		break;

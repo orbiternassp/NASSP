@@ -60,37 +60,37 @@ void LVDA::SetFCCAttitudeError(VECTOR3 atterr)
 
 VECTOR3 LVDA::GetLVIMUAttitude()
 {
-	return iu->lvimu.GetTotalAttitude();
+	return iu->GetLVIMU()->GetTotalAttitude();
 }
 
 void LVDA::ZeroLVIMUPIPACounters()
 {
-	iu->lvimu.ZeroPIPACounters();
+	iu->GetLVIMU()->ZeroPIPACounters();
 }
 
 void LVDA::ZeroLVIMUCDUs()
 {
-	iu->lvimu.ZeroIMUCDUFlag = true;
+	iu->GetLVIMU()->ZeroIMUCDUFlag = true;
 }
 
 void LVDA::ReleaseLVIMUCDUs()
 {
-	iu->lvimu.ZeroIMUCDUFlag = false;
+	iu->GetLVIMU()->ZeroIMUCDUFlag = false;
 }
 
 void LVDA::ReleaseLVIMU()
 {
-	iu->lvimu.SetCaged(false);
+	iu->GetLVIMU()->SetCaged(false);
 }
 
 void LVDA::DriveLVIMUGimbals(double x, double y, double z)
 {
-	iu->lvimu.DriveGimbals(x, y, z);
+	iu->GetLVIMU()->DriveGimbals(x, y, z);
 }
 
 VECTOR3 LVDA::GetLVIMUPIPARegisters()
 {
-	return _V(iu->lvimu.CDURegisters[LVRegPIPAX], iu->lvimu.CDURegisters[LVRegPIPAY], iu->lvimu.CDURegisters[LVRegPIPAZ]);
+	return _V(iu->GetLVIMU()->CDURegisters[LVRegPIPAX], iu->GetLVIMU()->CDURegisters[LVRegPIPAY], iu->GetLVIMU()->CDURegisters[LVRegPIPAZ]);
 }
 
 bool LVDA::GetSIInboardEngineOut()
@@ -124,7 +124,7 @@ bool LVDA::GetCMCSIVBTakeover()
 }
 bool LVDA::GetLVIMUFailure()
 {
-	return iu->lvimu.IsFailed();
+	return iu->GetLVIMU()->IsFailed();
 }
 
 bool LVDA::GetGuidanceReferenceFailure()

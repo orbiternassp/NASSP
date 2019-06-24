@@ -2602,7 +2602,7 @@ int ARCore::subThread()
 	case 8: //TLI PAD
 	{
 		SaturnV *SatV = (SaturnV*)g_Data.progVessel;
-		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
 		TLIPADOpt opt;
 

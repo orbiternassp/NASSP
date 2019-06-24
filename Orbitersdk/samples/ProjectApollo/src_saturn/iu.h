@@ -27,6 +27,7 @@
 
 #include "connector.h"
 #include "LVIMU.h"
+#include "LVDC.h"
 #include "FCC.h"
 #include "eds.h"
 #include "LVDA.h"
@@ -312,17 +313,6 @@ public:
 	void SaveLVDC(FILEHANDLE scn);
 	virtual void LoadLVDC(FILEHANDLE scn) = 0;
 
-	virtual void SaveFCC(FILEHANDLE scn) = 0;
-	virtual void LoadFCC(FILEHANDLE scn) = 0;
-
-	virtual void SaveEDS(FILEHANDLE scn) = 0;
-	virtual void LoadEDS(FILEHANDLE scn) = 0;
-
-	virtual EDS* GetEDS() = 0;
-	virtual FCC* GetFCC() = 0;
-	virtual IUControlDistributor *GetControlDistributor() = 0;
-	virtual DelayTimer *GetEngineCutoffEnableTimer() = 0;
-
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
@@ -342,14 +332,15 @@ public:
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
 
 	//Subsystem Access
-	LVDC* GetLVDC() { return lvdc; }
+	virtual EDS* GetEDS() = 0;
+	virtual FCC* GetFCC() = 0;
+	virtual IUControlDistributor *GetControlDistributor() = 0;
+	virtual DelayTimer *GetEngineCutoffEnableTimer() = 0;
+	virtual LVDC* GetLVDC() = 0;
 	LVRG* GetLVRG() { return &lvrg; }
-
-	LVDC* lvdc;
-	LVIMU lvimu;
-	LVRG lvrg;
-	LVDA lvda;
-	DCS dcs;
+	LVDA* GetLVDA() { return &lvda; }
+	LVIMU* GetLVIMU() { return &lvimu; }
+	DCS* GetDCS() { return &dcs; }
 
 protected:
 
@@ -380,6 +371,13 @@ protected:
 	/// \brief Connector to launch vehicle.
 	///
 	IUToLVCommandConnector lvCommandConnector;
+
+	//Subsystems:
+
+	LVDA lvda;
+	LVIMU lvimu;
+	LVRG lvrg;
+	DCS dcs;
 };
 
 class IU1B :public IU
@@ -391,16 +389,16 @@ public:
 	bool SIBLowLevelSensorsDry();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
-	void SaveFCC(FILEHANDLE scn);
-	void LoadFCC(FILEHANDLE scn);
-	void SaveEDS(FILEHANDLE scn);
-	void LoadEDS(FILEHANDLE scn);
+
+	//Subsystem access
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
 	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
 	DelayTimer *GetEngineCutoffEnableTimer() { return &EngineCutoffEnableTimer; }
+	LVDC* GetLVDC() { return &lvdc; }
 
 protected:
+	LVDC1B lvdc;
 	FCC1B fcc;
 	EDS1B eds;
 	IUControlDistributor1B ControlDistributor;
@@ -418,16 +416,16 @@ public:
 	bool GetSIIEngineOut();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
-	void SaveFCC(FILEHANDLE scn);
-	void LoadFCC(FILEHANDLE scn);
-	void SaveEDS(FILEHANDLE scn);
-	void LoadEDS(FILEHANDLE scn);
+
+	//Subsystem access
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
 	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
 	DelayTimer *GetEngineCutoffEnableTimer() { return &EngineCutoffEnableTimer; }
+	LVDC* GetLVDC() { return &lvdc; }
 
 protected:
+	LVDCSV lvdc;
 	FCCSV fcc;
 	EDSSV eds;
 	IUControlDistributorSV ControlDistributor;

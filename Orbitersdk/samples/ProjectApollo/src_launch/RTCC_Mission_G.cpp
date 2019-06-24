@@ -99,7 +99,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 11: //TLI SIMULATION
 	{
 		SaturnV *SatV = (SaturnV*)calcParams.src;
-		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
 		SV sv, sv_IG, sv_TLI;
 		sv = StateVectorCalc(calcParams.src);
@@ -266,7 +266,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 15: //TLI Evaluation
 	{
 		SaturnV *SatV = (SaturnV*)calcParams.src;
-		LVDCSV *lvdc = (LVDCSV*)SatV->iu->lvdc;
+		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
 		if (lvdc->first_op == false)
 		{
