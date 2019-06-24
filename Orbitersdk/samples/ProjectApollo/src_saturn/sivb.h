@@ -276,12 +276,6 @@ public:
 	///
 	double GetSIVbPropellantMass();
 
-	///
-	/// \brief Get total mass, including docked vessels.
-	/// \return Mass in kg.
-	///
-	double GetTotalMass();
-
 	virtual double GetPayloadMass();
 
 	///
@@ -422,6 +416,8 @@ protected:
 	char PayloadName[64];			///< Name of payload, if appropriate.
 
 	bool Payloaddatatransfer;		///< Have we transferred data to the payload?
+
+	bool FirstTimestep;
 
 	OBJHANDLE hs4b1;
 	OBJHANDLE hs4b2;

@@ -225,6 +225,7 @@ void SIVB::InitS4b()
 	CurrentThrust = 0;
 	RotationLimit = 0.25;
 
+	FirstTimestep = false;
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
@@ -505,8 +506,13 @@ void SIVB::SetS4b()
 }
 
 void SIVB::clbkPreStep(double simt, double simdt, double mjd)
-
 {
+	if (FirstTimestep)
+	{
+		FirstTimestep = false;
+		return;
+	}
+
 	MissionTime += simdt;
 
 	//
@@ -1470,12 +1476,10 @@ void SIVB::SetState(SIVBSettings &state)
 
 		if (SaturnVStage)
 		{
-			iu = new IUSV;
 			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		else
 		{
-			iu = new IU1B;
 			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		iu = state.iu_pointer;
@@ -1504,6 +1508,8 @@ void SIVB::SetState(SIVBSettings &state)
 
 	State = SIVB_STATE_WAITING;
 	SetS4b();
+
+	FirstTimestep = true;
 }
 
 double SIVB::GetJ2ThrustLevel()
@@ -1545,26 +1551,6 @@ double SIVB::GetSIVbPropellantMass()
 
 {
 	return GetPropellantMass(ph_main);
-}
-
-double SIVB::GetTotalMass()
-
-{
-	double mass = GetMass();
-
-	hDock = GetDockHandle(0);
-
-	if (hDock)
-	{
-		OBJHANDLE hVessel = GetDockStatus(hDock);
-		if (hVessel)
-		{
-			VESSEL *v = oapiGetVesselInterface(hVessel);
-			mass += v->GetMass();
-		}
-	}
-
-	return mass;
 }
 
 bool SIVB::PayloadIsDetachable()
@@ -1869,7 +1855,7 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	case IULV_GET_MASS:
 		if (OurVessel)
 		{
-			m.val1.dValue = OurVessel->GetTotalMass();
+			m.val1.dValue = OurVessel->GetMass();
 			return true;
 		}
 		break;
