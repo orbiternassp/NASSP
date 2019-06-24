@@ -132,31 +132,16 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 		}
 		else if ((MissionTime >= -6720.0) && (LastMissionTime < -6720.0))
 		{
-			//Lift-off light on
-			GetEDS()->SetEDSLiftoffEnableA();
-			GetEDS()->SetEDSLiftoffEnableB();
-			GetEDS()->SetEDSLiftoffInhibitA(false);
-			GetEDS()->SetEDSLiftoffInhibitB(false);
-		}
-		else if ((MissionTime >= -6600.0) && (LastMissionTime < -6600.0))
-		{
-			//Lift-off light off
-			GetEDS()->LiftoffEnableReset();
-			GetEDS()->SetEDSLiftoffInhibitA(true);
-			GetEDS()->SetEDSLiftoffInhibitB(true);
-		}
-		else if ((MissionTime >= -6540.0) && (LastMissionTime < -6540.0))
-		{
 			//LV rate light on
 			GetEDS()->SetGSEOverrateSimulate(true);
 		}
-		else if ((MissionTime >= -6480.0) && (LastMissionTime < -6480.0))
+		else if ((MissionTime >= -6660.0) && (LastMissionTime < -6660.0))
 		{
 			//LV rate light off, test over
 			GetEDS()->SetGSEOverrateSimulate(false);
 			GetEDS()->SetIUEDSBusPowered(false);
 		}
-		else if ((MissionTime >= -6480.0) && (MissionTime < -390.0))
+		else if ((MissionTime >= -6660.0) && (MissionTime < -390.0))
 		{
 			//EDS Mode in Monitor
 			GetEDS()->SetIUEDSBusPowered(false);
