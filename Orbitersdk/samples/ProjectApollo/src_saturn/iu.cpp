@@ -48,8 +48,9 @@ IU::IU() :
 dcs(this)
 {
 	State = 0;
-	NextMissionEventTime = MINUS_INFINITY;
-	LastMissionEventTime = MINUS_INFINITY;
+	FirstTimeStepDone = false;
+	MissionTime = 0.0;
+	LastMissionTime = MINUS_INFINITY;
 	UmbilicalConnected = false;
 
 	Crewed = true;
@@ -72,6 +73,15 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 	//
 	MissionTime = misst;
 
+	// Initialization
+	if (!FirstTimeStepDone) {
+
+		LastMissionTime = MissionTime;
+
+		FirstTimeStepDone = true;
+		return;
+	}
+
 	//Set the launch stage here
 	if (!UmbilicalConnected && lvCommandConnector.GetStage() == PRELAUNCH_STAGE)
 	{
@@ -82,6 +92,106 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 
 	lvimu.Timestep(mjd);
 	lvrg.Timestep(simdt);
+
+	if (GetControlDistributor()->GetGSECommandVehicleLiftoffIndicationInhibit() == false)
+	{
+		GetEngineCutoffEnableTimer()->SetRunning(true);
+	}
+
+	//Some events initiated from the ground, move to ML or LCC later
+	if (UmbilicalConnected)
+	{
+		GetEDS()->SetGSEAutoAbortInhibit(true);
+		GetEDS()->SetIULiftoffRelay(true);
+
+		//EDS Test
+		if (MissionTime < -6900.0)
+		{
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(true);
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(true);
+			GetEDS()->SetEDSLiftoffInhibitA(true);
+			GetEDS()->SetEDSLiftoffInhibitB(true);
+		}
+		else if ((MissionTime >= -6900.0) && (LastMissionTime < -6900.0))
+		{
+			//Abort Light On
+			GetEDS()->SetIUEDSBusPowered(true);
+			GetEDS()->SetPadAbortRequest(true);
+		}
+		else if ((MissionTime >= -6840.0) && (LastMissionTime < -6840.0))
+		{
+			//Abort Light Off
+			GetEDS()->SetIUEDSBusPowered(true);
+			GetEDS()->SetPadAbortRequest(false);
+		}
+		else if ((MissionTime >= -6780.0) && (LastMissionTime < -6780.0))
+		{
+			//LV engine indicators on
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(false);
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(false);
+		}
+		else if ((MissionTime >= -6720.0) && (LastMissionTime < -6720.0))
+		{
+			//Lift-off light on
+			GetEDS()->SetEDSLiftoffEnableA();
+			GetEDS()->SetEDSLiftoffEnableB();
+			GetEDS()->SetEDSLiftoffInhibitA(false);
+			GetEDS()->SetEDSLiftoffInhibitB(false);
+		}
+		else if ((MissionTime >= -6600.0) && (LastMissionTime < -6600.0))
+		{
+			//Lift-off light off
+			GetEDS()->LiftoffEnableReset();
+			GetEDS()->SetEDSLiftoffInhibitA(true);
+			GetEDS()->SetEDSLiftoffInhibitB(true);
+		}
+		else if ((MissionTime >= -6540.0) && (LastMissionTime < -6540.0))
+		{
+			//LV rate light on
+			GetEDS()->SetGSEOverrateSimulate(true);
+		}
+		else if ((MissionTime >= -6480.0) && (LastMissionTime < -6480.0))
+		{
+			//LV rate light off, test over
+			GetEDS()->SetGSEOverrateSimulate(false);
+			GetEDS()->SetIUEDSBusPowered(false);
+		}
+		else if ((MissionTime >= -6480.0) && (MissionTime < -390.0))
+		{
+			//EDS Mode in Monitor
+			GetEDS()->SetIUEDSBusPowered(false);
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(true);
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(true);
+			GetEDS()->SetEDSLiftoffInhibitA(true);
+			GetEDS()->SetEDSLiftoffInhibitB(true);
+			GetEDS()->LiftoffEnableReset();
+
+		}
+		else if ((MissionTime >= -390.0) && (MissionTime < -250.0))
+		{
+			//EDS Mode to Launch
+			GetEDS()->SetIUEDSBusPowered(true);
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(true);
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(true);
+			GetEDS()->SetEDSLiftoffInhibitA(true);
+			GetEDS()->SetEDSLiftoffInhibitB(true);
+			GetEDS()->SetEDSLiftoffEnableA();
+			GetEDS()->SetEDSLiftoffEnableB();
+		}
+		else if (MissionTime >= -250.0)
+		{
+			//EDS Mode to Launch, LV lights enabled
+			GetEDS()->SetIUEDSBusPowered(true);
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(false);
+			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(false);
+			GetEDS()->SetEDSLiftoffInhibitA(true);
+			GetEDS()->SetEDSLiftoffInhibitB(true);
+			GetEDS()->SetEDSLiftoffEnableA();
+			GetEDS()->SetEDSLiftoffEnableB();
+		}
+	}
+
+	LastMissionTime = MissionTime;
 }
 
 void IU::PostStep(double simt, double simdt, double mjd) {
@@ -95,8 +205,6 @@ void IU::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_int(scn, "STATE", State);
 	papiWriteScenario_bool(scn, "UMBILICALCONNECTED", UmbilicalConnected);
-	papiWriteScenario_double(scn, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
-	papiWriteScenario_double(scn, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 
 	SaveFCC(scn);
 	SaveEDS(scn);
@@ -117,8 +225,6 @@ void IU::LoadState(FILEHANDLE scn)
 
 		papiReadScenario_int(line, "STATE", State);
 		papiReadScenario_bool(line, "UMBILICALCONNECTED", UmbilicalConnected);
-		papiReadScenario_double(line, "NEXTMISSIONEVENTTIME", NextMissionEventTime);
-		papiReadScenario_double(line, "LASTMISSIONEVENTTIME", LastMissionEventTime);
 		if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
 			LoadFCC(scn);
 		}
@@ -192,6 +298,14 @@ bool IU::GetSIVBEngineOut()
 bool IU::DCSUplink(int type, void *upl)
 {
 	return dcs.Uplink(type, upl);
+}
+
+void IU::DisconnectUmbilical()
+{
+	UmbilicalConnected = false;
+
+	//Reset relays powered by GSE
+	GetEDS()->GSERelaysReset();
 }
 
 void IU::DisconnectIU()
@@ -676,6 +790,13 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 		if (ourIU)
 		{
 			m.val2.dValue = ourIU->GetEDS()->GetLVTankPressure(m.val1.iValue);
+			return true;
+		}
+		break;
+	case CSMIU_GET_ABORT_LIGHT_SIGNAL:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetEDS()->GetAbortLightSignal();
 			return true;
 		}
 		break;
@@ -1256,7 +1377,15 @@ void IUToLVCommandConnector::GetSIIThrustOK(bool *ok)
 	cm.messageType = IULV_GET_SII_THRUST_OK;
 	cm.val1.pValue = ok;
 
-	SendMessage(cm);
+	if (SendMessage(cm))
+	{
+		return;
+	}
+
+	for (int i = 0;i < 5;i++)
+	{
+		ok[i] = false;
+	}
 }
 
 bool IUToLVCommandConnector::GetSIIEngineOut()
@@ -1412,16 +1541,6 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 		lvdc->TimeStep(simdt);
 	}
 	fcc.Timestep(simdt);
-
-	//For now, enable the LV lights here
-	if (MissionTime > -250.0 && MissionTime < -10.0)
-	{
-		eds.SetIUEDSBusPowered(true);
-	}
-	if (ControlDistributor.GetGSECommandVehicleLiftoffIndicationInhibit() == false)
-	{
-		EngineCutoffEnableTimer.SetRunning(true);
-	}
 }
 
 bool IU1B::SIBLowLevelSensorsDry()
@@ -1510,7 +1629,7 @@ void IU1B::SwitchSelector(int item)
 		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibitEnable(true);
 		break;
 	case 16: //Auto-Abort Enable Relays Reset
-		eds.ResetAutoAbortRelays();
+		eds.LiftoffEnableReset();
 		break;
 	case 18: //S/C Control of Saturn Enable
 		eds.EnableSCControl();
@@ -1593,16 +1712,6 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 		lvdc->TimeStep(simdt);
 	}
 	fcc.Timestep(simdt);
-
-	//For now, enable the LV lights here
-	if (MissionTime > -250.0 && MissionTime < -10.0)
-	{
-		eds.SetIUEDSBusPowered(true);
-	}
-	if (ControlDistributor.GetGSECommandVehicleLiftoffIndicationInhibit() == false)
-	{
-		EngineCutoffEnableTimer.SetRunning(true);
-	}
 }
 
 void IUSV::LoadLVDC(FILEHANDLE scn) {
@@ -1705,7 +1814,7 @@ void IUSV::SwitchSelector(int item)
 		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibitEnable(true);
 		break;
 	case 16: //Auto-Abort Enable Relays Reset
-		eds.ResetAutoAbortRelays();
+		eds.LiftoffEnableReset();
 		break;
 	case 17: //Tape Recorder Record Off
 		break;

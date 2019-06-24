@@ -699,7 +699,7 @@ void LVDC1B::TimeStep(double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() || lvda.GetSIVBEngineOut()))
+				if (S4B_IGN == true && lvda.GetSIVBEngineOut())
 				{
 					S4B_IGN = false;
 					LVDC_Timebase = 4;

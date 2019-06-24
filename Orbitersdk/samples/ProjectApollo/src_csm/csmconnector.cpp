@@ -843,6 +843,21 @@ double CSMToIUConnector::GetLVTankPressure(int n)
 	return 0.0;
 }
 
+bool CSMToIUConnector::GetAbortLight()
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_ABORT_LIGHT_SIGNAL;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 CSMToLEMECSConnector::CSMToLEMECSConnector(Saturn *s) : SaturnConnector(s)
 {
 

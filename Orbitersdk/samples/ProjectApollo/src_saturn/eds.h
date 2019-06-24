@@ -33,6 +33,7 @@ public:
 	virtual ~EDS() {}
 	virtual void Timestep(double simdt) = 0;
 	void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
+	void SetLiftoffCircuitFailure(bool isSysA);
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -41,7 +42,6 @@ public:
 	void SetSIVBEngineOutIndicationA(bool set) { SIVBEngineOutIndicationA = set; }
 	void SetSIVBEngineOutIndicationB(bool set) { SIVBEngineOutIndicationB = set; }
 	void SetLVEnginesCutoffEnable1() { if (LVEnginesCutoffCommand2 == false) { LVEnginesCutoffEnable1 = true; } }
-	void ResetAutoAbortRelays() { AutoAbortEnableRelayA = false; AutoAbortEnableRelayB = false; }
 	void SetSIVBEngineCutoffDisabled() { SIVBEngineCutoffDisabled = true; }
 	void SetSIVBRestartAlert(bool set) { SIVBRestartAlert = set; }
 	void EnableSCControl() { SCControlEnableRelay = true; }
@@ -53,13 +53,15 @@ public:
 	void ResetBus2();
 
 	//To spacecraft
-	bool GetLiftoffCircuitA() { return LiftoffA; }
-	bool GetLiftoffCircuitB() { return LiftoffB; }
+	bool GetLiftoffCircuitA() { return !LiftoffCircuitAFailure && LiftoffA; }
+	bool GetLiftoffCircuitB() { return !LiftoffCircuitBFailure && LiftoffB; }
 	bool GetEDSAbort(int n);
 	virtual double GetLVTankPressure(int n);
+	bool GetAbortLightSignal() { return AbortLightSignal; }
 
-	//To IU
+	//To LVDA
 	bool GetIULiftoff() { return IULiftoffRelay; }
+	virtual bool GetSIISIVBSepSeqStart() { return false; }
 
 	//To FCC
 	bool GetSCControl();
@@ -68,10 +70,22 @@ public:
 	bool GetIUCommandSystemEnable();
 
 	//GSE
-	bool GetLiftoffEnableA() { return AutoAbortEnableRelayA; }
-	bool GetLiftoffEnableB() { return AutoAbortEnableRelayB; }
+	void GSERelaysReset();
+	bool GetLiftoffEnableA() { return EDSLiftoffEnableA; }
+	bool GetLiftoffEnableB() { return EDSLiftoffEnableB; }
 	bool GetAutoAbort() { return AutoAbortBus; }
 	void SetIUEDSBusPowered(bool set) { IUEDSBusPowered = set; }
+	void SetEDSLiftoffEnableA() { EDSLiftoffEnableA = true; }
+	void SetEDSLiftoffEnableB() { EDSLiftoffEnableB = true; }
+	void LiftoffEnableReset() { EDSLiftoffEnableA = false; EDSLiftoffEnableB = false; }
+	void SetGSEEngineThrustIndicationEnableInhibitA(bool set) { GSEEngineThrustIndicationEnableA = set; }
+	void SetGSEEngineThrustIndicationEnableInhibitB(bool set) { GSEEngineThrustIndicationEnableB = set; }
+	void SetIULiftoffRelay(bool set) { IULiftoffRelay = set; }
+	void SetEDSLiftoffInhibitA(bool set) { EDSLiftoffInhibitA = set; }
+	void SetEDSLiftoffInhibitB(bool set) { EDSLiftoffInhibitB = set; }
+	void SetGSEAutoAbortInhibit(bool set) { GSEAutoAbortInhibit = set; }
+	void SetPadAbortRequest(bool set) { PadAbortRequest = set; }
+	void SetGSEOverrateSimulate(bool set) { GSEOverrateSimulate = set; }
 protected:
 	IU* iu;
 
@@ -109,21 +123,25 @@ protected:
 	//K91 (K167)
 	bool SIVBEngineOutIndicationB;
 	//K2 (K90)
-	bool AutoAbortInhibitRelayA;
+	bool EDSLiftoffInhibitA;
 	//K3 (K91)
-	bool AutoAbortInhibitRelayB;
+	bool EDSLiftoffInhibitB;
 	//K4 (K4)
 	bool IULiftoffRelay;
 	//K65 (K92)
-	bool AutoAbortEnableRelayA;
+	bool EDSLiftoffEnableA;
 	//K66 (K93)
-	bool AutoAbortEnableRelayB;
+	bool EDSLiftoffEnableB;
 	//K40 (K20-1)
 	bool LVEnginesCutoffFromSC1;
 	//K41-1/2 (K20-2/4)
 	bool LVEnginesCutoffFromSC2;
 	//K42 (K20-3)
 	bool LVEnginesCutoffFromSC3;
+	//K51 (K51)
+	bool SIVBEngineThrustMonitorA;
+	//K63 (K134)
+	bool SIVBEngineThrustMonitorB;
 	//K76 (K232)
 	bool SIVBRestartAlert;
 	//K77-1/2
@@ -134,6 +152,20 @@ protected:
 	bool LVEnginesCutoffCommand2;
 	//K86-1/2 (K10-1/2)
 	bool LVEnginesCutoffCommand3;
+	//K89 (K171)
+	bool GSEEngineThrustIndicationEnableA;
+	//K90 (K172)
+	bool GSEEngineThrustIndicationEnableB;
+	//K49
+	bool RangeSafetyDestructArmedAFromSIVB;
+	//K50
+	bool RangeSafetyDestructArmedBFromSIVB;
+	//A8K1 (K71)
+	bool PadAbortRequest;
+	//A5K3 (K60), A6K3 (K61), A10K1 (K220)
+	bool ExcessiveRollRateIndication;
+	//A5K2 (K62), A7K3 (K63), A5K1 (K64), A8K2 (K65), A4K5 (K221), A9K5 (K222)
+	bool ExcessivePitchYawRateIndication;
 	bool SIVBEngineCutoffDisabled;
 
 	//Signals
@@ -142,17 +174,20 @@ protected:
 	bool EDSAbortSignal1;
 	bool EDSAbortSignal2;
 	bool EDSAbortSignal3;
+	bool AbortLightSignal;
 
 	//Other
-	bool SecondPlaneSeparationMonitor;
 	bool SIEDSCutoff;
 	bool SIIEDSCutoff;
 	bool SIVBEDSCutoff;
-	bool AttRefFailMonitor;
+	bool GSEAutoAbortInhibit;
+	bool GSEOverrateSimulate;
 
 	//Common Saturn Failures
 	bool PlatformFailure;
 	double PlatformFailureTime;
+	bool LiftoffCircuitAFailure;
+	bool LiftoffCircuitBFailure;
 };
 
 class EDS1B : public EDS
@@ -160,8 +195,6 @@ class EDS1B : public EDS
 public:
 	EDS1B(IU *iu);
 	void Timestep(double simdt);
-	void LVIndicatorsOff();
-	bool ThrustCommitEval();
 protected:
 
 	bool SIThrustNotOK[8];
@@ -174,21 +207,30 @@ class EDSSV : public EDS
 public:
 	EDSSV(IU *iu);
 	void Timestep(double simdt);
-	void LVIndicatorsOff();
-	bool ThrustCommitEval();
 	void SetSIIEngineOutIndicationA() { SIIEngineOutIndicationA = true; }
 	void SetSIIEngineOutIndicationB() { SIIEngineOutIndicationB = true; }
+
 	double GetLVTankPressure(int n);
+	bool GetSIISIVBSepSeqStart() { return SIISIVBSepSeqStart; }
 protected:
 	//K21-1-5, K22-1-5
 	bool SIThrustNotOK[5];
-	// A11K1-5, A12K1-5
-	bool SIIThrustNotOK[5];
+
+	// A11K1-5 (K81-K85)
+	bool SIIEngineThrustMonitorA[5];
+
+	// A12K1-5 (K151-K156)
+	bool SIIEngineThrustMonitorB[5];
+
 	//Temporary variables, not relays
 	bool ThrustOKSignal[5];
+
 	//K69 (K223), K70 (K224)
 	bool SIISIVBNotSeparated;
 
+	//A9K6, A10K2
+	bool SIISIVBSepSeqStart;
+
 private:
-	const int SIIEngInd[5] = { 2,4,1,3,5 };
+	const int SIIEngInd[5] = { 1,3,0,2,4 };
 };

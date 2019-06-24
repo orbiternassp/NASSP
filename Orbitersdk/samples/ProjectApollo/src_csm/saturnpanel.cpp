@@ -4500,7 +4500,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_ABORT_LIGHT:
-		if ((secs.AbortLightPowerA() && ((cws.UplinkTestState & 001) != 0)) || ((secs.AbortLightPowerB() && ((cws.UplinkTestState & 002) != 0)))) {
+		if ((secs.AbortLightPowerA() && ((cws.UplinkTestState & 001) != 0)) || ((secs.AbortLightPowerB() && ((cws.UplinkTestState & 002) != 0))) || (iuCommandConnector.GetAbortLight())) {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
 		} else {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);

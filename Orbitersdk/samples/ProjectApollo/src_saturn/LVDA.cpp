@@ -142,7 +142,7 @@ bool LVDA::SIVBInjectionDelay()
 
 bool LVDA::SCInitiationOfSIISIVBSeparation()
 {
-	return iu->GetCommandConnector()->GetSIISIVbDirectStagingSignal();
+	return iu->GetEDS()->GetSIISIVBSepSeqStart();
 }
 
 bool LVDA::GetSIIPropellantDepletionEngineCutoff()

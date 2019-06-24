@@ -59,6 +59,7 @@ public:
 	bool GetLiftOffCircuit(bool sysA);
 	bool GetEDSAbort(int n);
 	double GetLVTankPressure(int n);
+	bool GetAbortLight();
 
 protected:
 	CSMcomputer &agc;

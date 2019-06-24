@@ -77,6 +77,7 @@ enum IUCSMMessageType
 	CSMIU_GET_LIFTOFF_CIRCUIT,
 	CSMIU_GET_EDS_ABORT,					///< Set EDS abort signal.
 	CSMIU_GET_LV_TANK_PRESSURE,
+	CSMIU_GET_ABORT_LIGHT_SIGNAL
 };
 
 ///
@@ -333,7 +334,7 @@ public:
 	bool GetSCControlPoweredFlight() { return SCControlPoweredFlight; }
 
 	void ConnectUmbilical() { UmbilicalConnected = true; }
-	void DisconnectUmbilical() { UmbilicalConnected = false; }
+	void DisconnectUmbilical();
 
 	virtual bool DCSUplink(int type, void *upl);
 
@@ -351,9 +352,9 @@ public:
 	DCS dcs;
 
 protected:
+
 	int State;
-	double NextMissionEventTime;
-	double LastMissionEventTime;
+	bool FirstTimeStepDone;
 
 	//
 	// Saturn stuff
@@ -368,6 +369,7 @@ protected:
 	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.
 	///
 	double MissionTime;
+	double LastMissionTime;
 
 	///
 	/// \brief Connector to CSM.
