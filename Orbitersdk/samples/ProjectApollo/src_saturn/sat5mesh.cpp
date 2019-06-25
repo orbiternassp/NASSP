@@ -986,8 +986,8 @@ void SaturnV::SetThirdStageEngines (double offset)
 	VECTOR3	u_exhaust_pos6= _V(3.6, -0.425, -3.6 + offset);
 	VECTOR3 u_exhaust_pos7= _V(-3.6, 0.925, -3.6 + offset);
 
-	th_ver[0] = CreateThruster(u_exhaust_pos6, _V(-0.4, 0.0, 1), 15079.47, ph_ullage3, 2188.1);
-	th_ver[1] = CreateThruster(u_exhaust_pos7, _V(0.4, 0.0, 1), 15079.47, ph_ullage3, 2188.1);
+	th_ver[0] = CreateThruster(u_exhaust_pos6, _V(-0.368829, 0.043542, 0.928477), 15079.47, ph_ullage3, 2188.1);
+	th_ver[1] = CreateThruster(u_exhaust_pos7, _V(0.359706, -0.092425, 0.928477), 15079.47, ph_ullage3, 2188.1);
 
 	for (int i = 0; i < 2; i++)
 		AddExhaust (th_ver[i], 5.0, 0.25, exhaust_tex);

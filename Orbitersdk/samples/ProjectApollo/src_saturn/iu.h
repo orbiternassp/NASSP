@@ -374,8 +374,11 @@ protected:
 
 	//Subsystems:
 
+	//603A29
 	LVDA lvda;
+	//603A19
 	LVIMU lvimu;
+	//602A23
 	LVRG lvrg;
 	DCS dcs;
 };
@@ -398,8 +401,11 @@ public:
 	LVDC* GetLVDC() { return &lvdc; }
 
 protected:
+	//603A28
 	LVDC1B lvdc;
+	//602A27
 	FCC1B fcc;
+	//602A5
 	EDS1B eds;
 	IUControlDistributor1B ControlDistributor;
 	//603A36
@@ -425,9 +431,13 @@ public:
 	LVDC* GetLVDC() { return &lvdc; }
 
 protected:
+	//603A28
 	LVDCSV lvdc;
+	//602A27
 	FCCSV fcc;
+	//602A5
 	EDSSV eds;
+	//603A2
 	IUControlDistributorSV ControlDistributor;
 	//603A36
 	DelayTimer EngineCutoffEnableTimer;

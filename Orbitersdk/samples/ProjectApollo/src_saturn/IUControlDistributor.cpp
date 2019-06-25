@@ -265,7 +265,7 @@ void IUControlDistributorSV::LoadState(FILEHANDLE scn, char *end_str) {
 
 bool IUControlDistributorSV::GetSIBurnMode()
 {
-	//GSE S-I Burn Mode Substitute
+	//GSE S-IC Burn Mode Substitute
 	if (iu->GetLVCommandConnector()->GetStage() == PRELAUNCH_STAGE) return true;
 	//Normal S-IC Burn Mode Logic
 	if (iu->GetLVCommandConnector()->GetStage() < LAUNCH_STAGE_SIVB && !IsSIIBurnMode && !GSECommandVehicleLiftoffIndicationInhibit) return true;
