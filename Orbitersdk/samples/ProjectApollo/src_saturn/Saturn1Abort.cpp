@@ -251,25 +251,25 @@ void Sat1Abort1::Setup()
 	AddSepJunk();
 }
 
-void Sat1Abort1::clbkPreStep(double simt, double simdt, double mjd)
-
-{
+void Sat1Abort1::clbkPreStep(double simt, double simdt, double mjd) {
 	//
 	// Open the SLA panels.
 	//
 
-	if (panelTimestepCount < 2) {
-		panelTimestepCount++;
-	}
-	else
-	{
-		if (panelProc < RotationLimit) {
-			// Activate separation junk
-			if (thg_sep)
-				SetThrusterGroupLevel(thg_sep, 1);
+	if (!SmPresent) {
+		if (panelTimestepCount < 2) {
+			panelTimestepCount++;
+		}
+		else
+		{
+			if (panelProc < RotationLimit) {
+				// Activate separation junk
+				if (thg_sep)
+					SetThrusterGroupLevel(thg_sep, 1);
 
-			panelProc = min(RotationLimit, panelProc + simdt / 5.0);
-			SetAnimation(panelAnim, panelProc);
+				panelProc = min(RotationLimit, panelProc + simdt / 5.0);
+				SetAnimation(panelAnim, panelProc);
+			}
 		}
 	}
 }
