@@ -234,7 +234,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SaturnV *SatV = (SaturnV*)calcParams.src;
 		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
-		if (lvdc->first_op == false)
+		if (lvdc->LVDC_Timebase == 5)
 		{
 			scrubbed = true;
 		}
