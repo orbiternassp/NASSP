@@ -39,23 +39,33 @@
 
 #include "saturn.h"
 #include "papi.h"
+#include "IUUmbilical.h"
 
 #include "iu.h"
 
 
 IU::IU() :
-dcs(this)
+dcs(this),
+AuxiliaryPowerDistributor1(this),
+AuxiliaryPowerDistributor2(this)
 {
 	State = 0;
-	FirstTimeStepDone = false;
 	MissionTime = 0.0;
-	LastMissionTime = MINUS_INFINITY;
-	UmbilicalConnected = false;
 
 	Crewed = true;
 	SCControlPoweredFlight = false;
 
 	commandConnector.SetIU(this);
+
+	IuUmb = NULL;
+}
+
+IU::~IU()
+{
+	if (IuUmb)
+	{
+		IuUmb->AbortDisconnect();
+	}
 }
 
 void IU::SetMissionInfo(bool crewed, bool sccontpowered)
@@ -71,17 +81,11 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 	//
 	MissionTime = misst;
 
-	// Initialization
-	if (!FirstTimeStepDone) {
-
-		LastMissionTime = MissionTime;
-
-		FirstTimeStepDone = true;
-		return;
-	}
+	AuxiliaryPowerDistributor1.Timestep(simdt);
+	AuxiliaryPowerDistributor2.Timestep(simdt);
 
 	//Set the launch stage here
-	if (!UmbilicalConnected && lvCommandConnector.GetStage() == PRELAUNCH_STAGE)
+	if (!IsUmbilicalConnected() && lvCommandConnector.GetStage() == PRELAUNCH_STAGE)
 	{
 		lvCommandConnector.SetStage(LAUNCH_STAGE_ONE);
 	}
@@ -93,86 +97,6 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 	{
 		GetEngineCutoffEnableTimer()->SetRunning(true);
 	}
-
-	//Some events initiated from the ground, move to ML or LCC later
-	if (UmbilicalConnected)
-	{
-		GetEDS()->SetGSEAutoAbortInhibit(true);
-		GetEDS()->SetIULiftoffRelay(true);
-
-		//EDS Test
-		if (MissionTime < -6900.0)
-		{
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(true);
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(true);
-			GetEDS()->SetEDSLiftoffInhibitA(true);
-			GetEDS()->SetEDSLiftoffInhibitB(true);
-		}
-		else if ((MissionTime >= -6900.0) && (LastMissionTime < -6900.0))
-		{
-			//Abort Light On
-			GetEDS()->SetIUEDSBusPowered(true);
-			GetEDS()->SetPadAbortRequest(true);
-		}
-		else if ((MissionTime >= -6840.0) && (LastMissionTime < -6840.0))
-		{
-			//Abort Light Off
-			GetEDS()->SetIUEDSBusPowered(true);
-			GetEDS()->SetPadAbortRequest(false);
-		}
-		else if ((MissionTime >= -6780.0) && (LastMissionTime < -6780.0))
-		{
-			//LV engine indicators on
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(false);
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(false);
-		}
-		else if ((MissionTime >= -6720.0) && (LastMissionTime < -6720.0))
-		{
-			//LV rate light on
-			GetEDS()->SetGSEOverrateSimulate(true);
-		}
-		else if ((MissionTime >= -6660.0) && (LastMissionTime < -6660.0))
-		{
-			//LV rate light off, test over
-			GetEDS()->SetGSEOverrateSimulate(false);
-			GetEDS()->SetIUEDSBusPowered(false);
-		}
-		else if ((MissionTime >= -6660.0) && (MissionTime < -390.0))
-		{
-			//EDS Mode in Monitor
-			GetEDS()->SetIUEDSBusPowered(false);
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(true);
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(true);
-			GetEDS()->SetEDSLiftoffInhibitA(true);
-			GetEDS()->SetEDSLiftoffInhibitB(true);
-			GetEDS()->LiftoffEnableReset();
-
-		}
-		else if ((MissionTime >= -390.0) && (MissionTime < -250.0))
-		{
-			//EDS Mode to Launch
-			GetEDS()->SetIUEDSBusPowered(true);
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(true);
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(true);
-			GetEDS()->SetEDSLiftoffInhibitA(true);
-			GetEDS()->SetEDSLiftoffInhibitB(true);
-			GetEDS()->SetEDSLiftoffEnableA();
-			GetEDS()->SetEDSLiftoffEnableB();
-		}
-		else if (MissionTime >= -250.0)
-		{
-			//EDS Mode to Launch, LV lights enabled
-			GetEDS()->SetIUEDSBusPowered(true);
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitA(false);
-			GetEDS()->SetGSEEngineThrustIndicationEnableInhibitB(false);
-			GetEDS()->SetEDSLiftoffInhibitA(true);
-			GetEDS()->SetEDSLiftoffInhibitB(true);
-			GetEDS()->SetEDSLiftoffEnableA();
-			GetEDS()->SetEDSLiftoffEnableB();
-		}
-	}
-
-	LastMissionTime = MissionTime;
 }
 
 void IU::PostStep(double simt, double simdt, double mjd) {
@@ -185,7 +109,6 @@ void IU::SaveState(FILEHANDLE scn)
 	oapiWriteLine(scn, IU_START_STRING);
 
 	oapiWriteScenario_int(scn, "STATE", State);
-	papiWriteScenario_bool(scn, "UMBILICALCONNECTED", UmbilicalConnected);
 
 	GetFCC()->SaveState(scn, "FCC_BEGIN", "FCC_END");
 	GetEDS()->SaveState(scn, "EDS_BEGIN", "EDS_END");
@@ -205,7 +128,6 @@ void IU::LoadState(FILEHANDLE scn)
 			return;
 
 		papiReadScenario_int(line, "STATE", State);
-		papiReadScenario_bool(line, "UMBILICALCONNECTED", UmbilicalConnected);
 		if (!strnicmp(line, "FCC_BEGIN", sizeof("FCC_BEGIN"))) {
 			GetFCC()->LoadState(scn, "FCC_END");
 		}
@@ -281,18 +203,104 @@ bool IU::DCSUplink(int type, void *upl)
 	return dcs.Uplink(type, upl);
 }
 
+bool IU::IsUmbilicalConnected()
+{
+	if (IuUmb && IuUmb->IsIUUmbilicalConnected()) return true;
+
+	return false;
+}
+
+void IU::ConnectUmbilical(IUUmbilical *umb)
+{
+	IuUmb = umb;
+}
+
 void IU::DisconnectUmbilical()
 {
-	UmbilicalConnected = false;
-
-	//Reset relays powered by GSE
-	GetEDS()->GSERelaysReset();
+	IuUmb = NULL;
 }
 
 void IU::DisconnectIU()
 {
 	lvCommandConnector.Disconnect();
 	commandConnector.Disconnect();
+}
+
+bool IU::ESEGetCommandVehicleLiftoffIndicationInhibit()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetCommandVehicleLiftoffIndicationInhibit();
+}
+
+bool IU::ESEGetAutoAbortInhibit()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetAutoAbortInhibit();
+}
+
+bool IU::ESEGetGSEOverrateSimulate()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetGSEOverrateSimulate();
+}
+
+bool IU::ESEGetEDSPowerInhibit()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetEDSPowerInhibit();
+}
+
+bool IU::ESEPadAbortRequest()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEPadAbortRequest();
+}
+
+bool IU::ESEGetEngineThrustIndicationEnableInhibitA()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetThrustOKIndicateEnableInhibitA();
+}
+
+bool IU::ESEGetEngineThrustIndicationEnableInhibitB()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetThrustOKIndicateEnableInhibitB();
+}
+
+bool IU::ESEEDSLiftoffInhibitA()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEEDSLiftoffInhibitA();
+}
+
+bool IU::ESEEDSLiftoffInhibitB()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEEDSLiftoffInhibitB();
+}
+
+bool IU::ESEAutoAbortSimulate()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEAutoAbortSimulate();
+}
+
+bool IU::ESEGetSIBurnModeSubstitute()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetSIBurnModeSubstitute();
 }
 
 IUToCSMCommandConnector::IUToCSMCommandConnector()
@@ -1681,6 +1689,13 @@ bool IUSV::GetSIIPropellantDepletionEngineCutoff()
 bool IUSV::GetSIIEngineOut()
 {
 	return lvCommandConnector.GetSIIEngineOut();
+}
+
+bool IUSV::ESEGetSICOutboardEnginesCantInhibit()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetSICOutboardEnginesCantInhibit();
 }
 
 void IUSV::SwitchSelector(int item)

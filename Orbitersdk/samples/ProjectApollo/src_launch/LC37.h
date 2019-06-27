@@ -24,10 +24,15 @@
 
 #pragma once
 
+#include "IUUmbilicalInterface.h"
+
+class IUUmbilical;
+class IU_ESE;
+
 ///
 /// \ingroup Ground
 ///
-class LC37: public VESSEL2 {
+class LC37: public VESSEL2, public IUUmbilicalInterface {
 
 public:
 	LC37(OBJHANDLE hObj, int fmodel);
@@ -41,6 +46,19 @@ public:
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
+
+	// LC-37/IU Interface
+	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
+	bool ESEGetAutoAbortInhibit();
+	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetEDSPowerInhibit();
+	bool ESEPadAbortRequest();
+	bool ESEGetThrustOKIndicateEnableInhibitA();
+	bool ESEGetThrustOKIndicateEnableInhibitB();
+	bool ESEEDSLiftoffInhibitA();
+	bool ESEEDSLiftoffInhibitB();
+	bool ESEAutoAbortSimulate();
+	bool ESEGetSIBurnModeSubstitute();
 
 protected:
 	bool firstTimestepDone;
@@ -57,4 +75,7 @@ protected:
 	void DoFirstTimestep();
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
+
+	IUUmbilical *IuUmb;
+	IU_ESE *IuESE;
 };

@@ -146,10 +146,16 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_launch\IUUmbilical.cpp" />
+    <ClCompile Include="..\..\src_launch\IUUmbilicalInterface.cpp" />
+    <ClCompile Include="..\..\src_launch\IU_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\LC37.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_launch\IUUmbilical.h" />
+    <ClInclude Include="..\..\src_launch\IUUmbilicalInterface.h" />
+    <ClInclude Include="..\..\src_launch\IU_ESE.h" />
     <ClInclude Include="..\..\src_launch\LC37.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
     <ClInclude Include="..\..\src_sys\soundlib.h" />

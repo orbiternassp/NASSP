@@ -31,7 +31,7 @@ class EDS
 public:
 	EDS(IU *iu);
 	virtual ~EDS() {}
-	virtual void Timestep(double simdt) = 0;
+	virtual void Timestep(double simdt);
 	void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
 	void SetLiftoffCircuitAFailure() { LiftoffCircuitAFailure = true; }
 	void SetLiftoffCircuitBFailure() { LiftoffCircuitBFailure = true; }
@@ -71,22 +71,12 @@ public:
 	bool GetIUCommandSystemEnable();
 
 	//GSE
-	void GSERelaysReset();
 	bool GetLiftoffEnableA() { return EDSLiftoffEnableA; }
 	bool GetLiftoffEnableB() { return EDSLiftoffEnableB; }
 	bool GetAutoAbort() { return AutoAbortBus; }
-	void SetIUEDSBusPowered(bool set) { IUEDSBusPowered = set; }
 	void SetEDSLiftoffEnableA() { EDSLiftoffEnableA = true; }
 	void SetEDSLiftoffEnableB() { EDSLiftoffEnableB = true; }
 	void LiftoffEnableReset() { EDSLiftoffEnableA = false; EDSLiftoffEnableB = false; }
-	void SetGSEEngineThrustIndicationEnableInhibitA(bool set) { GSEEngineThrustIndicationEnableA = set; }
-	void SetGSEEngineThrustIndicationEnableInhibitB(bool set) { GSEEngineThrustIndicationEnableB = set; }
-	void SetIULiftoffRelay(bool set) { IULiftoffRelay = set; }
-	void SetEDSLiftoffInhibitA(bool set) { EDSLiftoffInhibitA = set; }
-	void SetEDSLiftoffInhibitB(bool set) { EDSLiftoffInhibitB = set; }
-	void SetGSEAutoAbortInhibit(bool set) { GSEAutoAbortInhibit = set; }
-	void SetPadAbortRequest(bool set) { PadAbortRequest = set; }
-	void SetGSEOverrateSimulate(bool set) { GSEOverrateSimulate = set; }
 protected:
 	IU* iu;
 
@@ -181,8 +171,6 @@ protected:
 	bool SIEDSCutoff;
 	bool SIIEDSCutoff;
 	bool SIVBEDSCutoff;
-	bool GSEAutoAbortInhibit;
-	bool GSEOverrateSimulate;
 
 	//Common Saturn Failures
 	bool PlatformFailure;

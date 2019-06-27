@@ -33,6 +33,8 @@
 #include "soundlib.h"
 #include "tracer.h"
 
+#include "IUUmbilical.h"
+#include "IU_ESE.h"
 #include "LC34.h"
 #include "nasspdefs.h"
 #include "toggleswitch.h"
@@ -109,9 +111,14 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	//meshoffsetMSS = _V(0,0,0);
+
+	IuUmb = new IUUmbilical(this);
+	IuESE = new IU_ESE(IuUmb);
 }
 
 LC34::~LC34() {
+	delete IuUmb;
+	delete IuESE;
 }
 
 void LC34::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -279,7 +286,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 
 		// Disconnect IU Umbilical
 		if (sat->GetMissionTime() >= -0.05) {
-			sat->SetIUUmbilicalState(false);
+			IuUmb->Disconnect();
 		}
 
 		// T+4s or later?
@@ -302,6 +309,13 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
+
+		//Cutoff
+		if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
+		{
+			sat->SIGSECutoff(true);
+		}
+
 		if (sat->GetMissionTime() < 10.0 && !abort)
 			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() - 10.0) / -6.0;
 		else {
@@ -328,14 +342,20 @@ void LC34::DoFirstTimestep() {
 
 	char buffer[256];
 
-	double vcount = oapiGetVesselCount();
-	for (int i = 0; i < vcount; i++)	{
-		OBJHANDLE h = oapiGetVesselByIndex(i);
-		oapiGetObjectName(h, buffer, 256);
-		if (!strcmp(LVName, buffer)){
-			hLV = h;
-			Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
-			sat->SetIUUmbilicalState(true);
+	if (swingarmProc == 0.0)
+	{
+		double vcount = oapiGetVesselCount();
+		for (int i = 0; i < vcount; i++) {
+			OBJHANDLE h = oapiGetVesselByIndex(i);
+			oapiGetObjectName(h, buffer, 256);
+			if (!strcmp(LVName, buffer)) {
+				hLV = h;
+				Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+				if (sat->GetStage() < LAUNCH_STAGE_ONE)
+				{
+					IuUmb->Connect(sat->GetIU());
+				}
+			}
 		}
 	}
 
@@ -563,4 +583,59 @@ int LC34::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 	return 0;
+}
+
+bool LC34::ESEGetCommandVehicleLiftoffIndicationInhibit()
+{
+	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
+}
+
+bool LC34::ESEGetAutoAbortInhibit()
+{
+	return IuESE->GetAutoAbortInhibit();
+}
+
+bool LC34::ESEGetGSEOverrateSimulate()
+{
+	return IuESE->GetOverrateSimulate();
+}
+
+bool LC34::ESEGetEDSPowerInhibit()
+{
+	return IuESE->GetEDSPowerInhibit();
+}
+
+bool LC34::ESEPadAbortRequest()
+{
+	return IuESE->GetEDSPadAbortRequest();
+}
+
+bool LC34::ESEGetThrustOKIndicateEnableInhibitA()
+{
+	return IuESE->GetThrustOKIndicateEnableInhibitA();
+}
+
+bool LC34::ESEGetThrustOKIndicateEnableInhibitB()
+{
+	return IuESE->GetThrustOKIndicateEnableInhibitB();
+}
+
+bool LC34::ESEEDSLiftoffInhibitA()
+{
+	return IuESE->GetEDSLiftoffInhibitA();
+}
+
+bool LC34::ESEEDSLiftoffInhibitB()
+{
+	return IuESE->GetEDSLiftoffInhibitB();
+}
+
+bool LC34::ESEAutoAbortSimulate()
+{
+	return IuESE->GetAutoAbortSimulate();
+}
+
+bool LC34::ESEGetSIBurnModeSubstitute()
+{
+	return IuESE->GetSIBurnModeSubstitute();
 }

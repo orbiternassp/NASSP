@@ -100,6 +100,7 @@ protected:
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
+	void CreateStageSpecificSystems();
 	void SaveVehicleStats(FILEHANDLE scn);
 	void LoadIU(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);

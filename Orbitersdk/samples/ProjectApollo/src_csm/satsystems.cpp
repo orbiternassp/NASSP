@@ -2209,6 +2209,23 @@ void Saturn::CabinFansSystemTimestep()
 		SuitCompressorSound.stop();
 }
 
+void Saturn::CheckSIVBSystemsState()
+{
+	if (stage >= CSM_LEM_STAGE)
+	{
+		if (sivb)
+		{
+			delete sivb;
+			sivb = 0;
+		}
+		if (iu && !DontDeleteIU)
+		{
+			delete iu;
+			iu = 0;
+		}
+	}
+}
+
 void Saturn::CheckSMSystemsState()
 
 {

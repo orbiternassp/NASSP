@@ -146,6 +146,9 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_launch\IUUmbilical.cpp" />
+    <ClCompile Include="..\..\src_launch\IUUmbilicalInterface.cpp" />
+    <ClCompile Include="..\..\src_launch\IU_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\ML.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -166,6 +169,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_launch\IUUmbilical.h" />
+    <ClInclude Include="..\..\src_launch\IUUmbilicalInterface.h" />
+    <ClInclude Include="..\..\src_launch\IU_ESE.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />

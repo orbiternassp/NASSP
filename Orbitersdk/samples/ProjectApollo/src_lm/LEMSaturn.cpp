@@ -1314,21 +1314,6 @@ void LEMSaturn::SetSIEngineStart(int n)
 	sib->SetEngineStart(n);
 }
 
-void LEMSaturn::SetIUUmbilicalState(bool connect)
-{
-	if (lemsat_stage <= PRELAUNCH_STAGE && iu)
-	{
-		if (connect)
-		{
-			iu->ConnectUmbilical();
-		}
-		else
-		{
-			iu->DisconnectUmbilical();
-		}
-	}
-}
-
 void LEMSaturn::GetApolloName(char *s)
 
 {

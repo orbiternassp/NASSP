@@ -630,30 +630,27 @@ void SaturnV::SaveVehicleStats(FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "INTERSTAGE", Interstage_Mass);
 }
 
+void SaturnV::CreateStageSpecificSystems()
+{
+	if (stage < CSM_LEM_STAGE)
+	{
+		iu = new IUSV;
+		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+	}
+}
+
 void SaturnV::LoadIU(FILEHANDLE scn)
 {
-	// If the IU does not yet exist, create it.
-	if (iu == NULL) {
-		iu = new IUSV;
-	}
 	iu->LoadState(scn);
 }
 
-void SaturnV::LoadLVDC(FILEHANDLE scn) {
-
-	if (iu == NULL) {
-		iu = new IUSV;
-	}
-
+void SaturnV::LoadLVDC(FILEHANDLE scn)
+{
 	iu->LoadLVDC(scn);
 }
 
-void SaturnV::LoadSIVB(FILEHANDLE scn) {
-
-	if (sivb == NULL) {
-		sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
-	}
-
+void SaturnV::LoadSIVB(FILEHANDLE scn)
+{
 	sivb->LoadState(scn);
 }
 
@@ -676,17 +673,6 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 
 	ClearMeshes();
 	SetupMeshes();
-
-	if (stage < CSM_LEM_STAGE)
-	{
-		if (iu == NULL) {
-			iu = new IUSV;
-		}
-		if (sivb == NULL)
-		{
-			sivb = new SIVB500Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
-		}
-	}
 
 	//
 	// This code all needs to be fixed up.

@@ -974,7 +974,6 @@ public:
 
 	virtual void ActivateStagingVent() {}
 
-	virtual void SetIUUmbilicalState(bool connect);
 	virtual void VHFRangingReturnSignal();
 	void StartSeparationPyros();
 
@@ -1077,6 +1076,14 @@ public:
 	/// \brief Check SM systems state.
 	///
 	void CheckSMSystemsState();
+
+	///
+	/// Enable or disable generic S-IVB systems based on current state.
+	/// \brief Check S-IVB systems state.
+	///
+	void CheckSIVBSystemsState();
+
+	virtual void CreateStageSpecificSystems() = 0;
 
 	///
 	/// If the scenario specified AUTOSLOW and time acceleration is enabled, slow it
@@ -3775,6 +3782,7 @@ protected:
 	bool SkylabCM;
 	bool S1bPanel;
 	bool bRecovery;
+	bool DontDeleteIU;
 
 	#define SATVIEW_LEFTSEAT		0
 	#define SATVIEW_RIGHTSEAT		1

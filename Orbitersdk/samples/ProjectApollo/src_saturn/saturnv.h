@@ -145,6 +145,7 @@ protected:
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
+	void CreateStageSpecificSystems();
 
 	//
 	// Mission-support functions.

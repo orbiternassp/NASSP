@@ -66,7 +66,6 @@ public:
 	void SetStage(int s);
 
 	virtual void SetSIEngineStart(int eng);
-	virtual void SetIUUmbilicalState(bool connect);
 
 	void PlayCountSound(bool StartStop);
 	void PlaySepsSound(bool StartStop);

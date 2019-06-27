@@ -24,12 +24,16 @@
 
 #pragma once
 
+#include "IUUmbilicalInterface.h"
+
 class Saturn;
+class IUUmbilical;
+class IUSV_ESE;
 
 ///
 /// \ingroup Ground
 ///
-class ML: public VESSEL2 {
+class ML: public VESSEL2, public IUUmbilicalInterface {
 
 public:
 	ML(OBJHANDLE hObj, int fmodel);
@@ -50,6 +54,19 @@ public:
 	virtual bool Attach();
 	virtual bool IsInVAB(); 
 
+	// ML/IU Interface
+	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
+	bool ESEGetSICOutboardEnginesCantInhibit();
+	bool ESEGetAutoAbortInhibit();
+	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetEDSPowerInhibit();
+	bool ESEPadAbortRequest();
+	bool ESEGetThrustOKIndicateEnableInhibitA();
+	bool ESEGetThrustOKIndicateEnableInhibitB();
+	bool ESEEDSLiftoffInhibitA();
+	bool ESEEDSLiftoffInhibitB();
+	bool ESEAutoAbortSimulate();
+	bool ESEGetSIBurnModeSubstitute();
 
 protected:
 	bool firstTimestepDone;
@@ -82,6 +99,8 @@ protected:
 	double liftoffStreamLevel;
 
 	Saturn *sat;
+	IUUmbilical *IuUmb;
+	IUSV_ESE *IuESE;
 
 	void DoFirstTimestep();
 	double GetDistanceTo(double lon, double lat);

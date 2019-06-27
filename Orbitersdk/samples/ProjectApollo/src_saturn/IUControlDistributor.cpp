@@ -54,7 +54,7 @@ IUControlDistributor::IUControlDistributor(IU *iu)
 
 void IUControlDistributor::Timestep(double simdt)
 {
-	if (iu->IsUmbilicalConnected())
+	if (iu->ESEGetCommandVehicleLiftoffIndicationInhibit())
 		GSECommandVehicleLiftoffIndicationInhibit = true;
 	else
 		GSECommandVehicleLiftoffIndicationInhibit = false;
@@ -227,6 +227,11 @@ void IUControlDistributorSV::Timestep(double simdt)
 {
 	IUControlDistributor::Timestep(simdt);
 
+	if (iu->ESEGetSICOutboardEnginesCantInhibit())
+		SICOutboardEnginesCantInhibit = true;
+	else
+		SICOutboardEnginesCantInhibit = false;
+
 	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", SwitchPoint1, SwitchPoint2, SwitchPoint3, SwitchPoint4, SwitchPoint5, SwitchPoint6);
 }
 
@@ -266,7 +271,7 @@ void IUControlDistributorSV::LoadState(FILEHANDLE scn, char *end_str) {
 bool IUControlDistributorSV::GetSIBurnMode()
 {
 	//GSE S-IC Burn Mode Substitute
-	if (iu->GetLVCommandConnector()->GetStage() == PRELAUNCH_STAGE) return true;
+	if (iu->ESEGetSIBurnModeSubstitute()) return true;
 	//Normal S-IC Burn Mode Logic
 	if (iu->GetLVCommandConnector()->GetStage() < LAUNCH_STAGE_SIVB && !IsSIIBurnMode && !GSECommandVehicleLiftoffIndicationInhibit) return true;
 

@@ -40,6 +40,8 @@
 #include "csmcomputer.h"
 #include "saturn.h"
 #include "papi.h"
+#include "IUUmbilical.h"
+#include "IU_ESE.h"
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo ML.log";
@@ -136,9 +138,14 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	sat = NULL;
+
+	IuUmb = new IUUmbilical(this);
+	IuESE = new IUSV_ESE(IuUmb);
 }
 
 ML::~ML() {
+	delete IuUmb;
+	delete IuESE;
 }
 
 void ML::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -449,7 +456,13 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		else
 		{
 			if (Commit()) {
-				sat->SetIUUmbilicalState(false);
+				IuUmb->Disconnect();
+			}
+
+			//Cutoff
+			if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
+			{
+				sat->SIGSECutoff(true);
 			}
 
 			// T+8s or later?
@@ -474,8 +487,15 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			// using it again. This prevents a crash if we later delete the vessel.
 			//
 			hLV = 0;
+			sat = 0;
 		}
 		break;
+	}
+
+	//IU ESE
+	if (sat)
+	{
+		IuESE->Timestep(sat->GetMissionTime(), simdt);
 	}
 
 	// sprintf(oapiDebugString(), "Dist %f", GetDistanceTo(VAB_LON, VAB_LAT));
@@ -558,16 +578,19 @@ void ML::DoFirstTimestep() {
 
 	char buffer[256];
 
-	double vcount = oapiGetVesselCount();
-	for (int i = 0; i < vcount; i++)	{
-		OBJHANDLE h = oapiGetVesselByIndex(i);
-		oapiGetObjectName(h, buffer, 256);
-		if (!strcmp(LVName, buffer)){
-			hLV = h;
-			Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
-			if (sat->GetMissionTime() < 0)
-			{
-				sat->SetIUUmbilicalState(true);
+	if (swingarmProc == 0.0)
+	{
+		double vcount = oapiGetVesselCount();
+		for (int i = 0; i < vcount; i++) {
+			OBJHANDLE h = oapiGetVesselByIndex(i);
+			oapiGetObjectName(h, buffer, 256);
+			if (!strcmp(LVName, buffer)) {
+				hLV = h;
+				Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+				if (sat->GetStage() < LAUNCH_STAGE_ONE)
+				{
+					IuUmb->Connect(sat->GetIU());
+				}
 			}
 		}
 	}
@@ -873,4 +896,64 @@ bool ML::Commit()
 {
 	if (!sat) return false;
 	return sat->AllSIEnginesRunning() && sat->GetMissionTime() >= -0.05 && !CutoffInterlock();
+}
+
+bool ML::ESEGetCommandVehicleLiftoffIndicationInhibit()
+{
+	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
+}
+
+bool ML::ESEGetSICOutboardEnginesCantInhibit()
+{
+	return IuESE->GetSICOutboardEnginesCantInhibit();
+}
+
+bool ML::ESEGetAutoAbortInhibit()
+{
+	return IuESE->GetAutoAbortInhibit();
+}
+
+bool ML::ESEGetGSEOverrateSimulate()
+{
+	return IuESE->GetOverrateSimulate();
+}
+
+bool ML::ESEGetEDSPowerInhibit()
+{
+	return IuESE->GetEDSPowerInhibit();
+}
+
+bool ML::ESEPadAbortRequest()
+{
+	return IuESE->GetEDSPadAbortRequest();
+}
+
+bool ML::ESEGetThrustOKIndicateEnableInhibitA()
+{
+	return IuESE->GetThrustOKIndicateEnableInhibitA();
+}
+
+bool ML::ESEGetThrustOKIndicateEnableInhibitB()
+{
+	return IuESE->GetThrustOKIndicateEnableInhibitB();
+}
+
+bool ML::ESEEDSLiftoffInhibitA()
+{
+	return IuESE->GetEDSLiftoffInhibitA();
+}
+
+bool ML::ESEEDSLiftoffInhibitB()
+{
+	return IuESE->GetEDSLiftoffInhibitB();
+}
+
+bool ML::ESEAutoAbortSimulate()
+{
+	return IuESE->GetAutoAbortSimulate();
+}
+
+bool ML::ESEGetSIBurnModeSubstitute()
+{
+	return IuESE->GetSIBurnModeSubstitute();
 }

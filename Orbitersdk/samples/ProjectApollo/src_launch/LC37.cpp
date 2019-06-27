@@ -33,6 +33,7 @@
 #include "soundlib.h"
 #include "tracer.h"
 
+#include "IUUmbilical.h"
 #include "LC37.h"
 #include "nasspdefs.h"
 #include "toggleswitch.h"
@@ -41,6 +42,7 @@
 #include "LEM.h"
 #include "LEMSaturn.h"
 #include "papi.h"
+#include "IU_ESE.h"
 
 HINSTANCE g_hDLL;
 
@@ -105,9 +107,14 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
 	//meshoffsetMSS = _V(0,0,0);
+
+	IuUmb = new IUUmbilical(this);
+	IuESE = new IU_ESE(IuUmb);
 }
 
 LC37::~LC37() {
+	delete IuUmb;
+	delete IuESE;
 }
 
 void LC37::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -241,7 +248,7 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 
 		// Disconnect IU Umbilical
 		if (sat->GetMissionTime() >= -0.05) {
-			sat->SetIUUmbilicalState(false);
+			IuUmb->Disconnect();
 		}
 
 		// T+4s or later?
@@ -291,7 +298,10 @@ void LC37::DoFirstTimestep() {
 		if (!strcmp(LVName, buffer)){
 			hLV = h;
 			LEMSaturn *sat = (LEMSaturn *)oapiGetVesselInterface(hLV);
-			sat->SetIUUmbilicalState(true);
+			if (sat->GetStage() < LAUNCH_STAGE_ONE)
+			{
+				IuUmb->Connect(sat->GetIU());
+			}
 		}
 	}
 
@@ -485,4 +495,59 @@ int LC37::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 0;
 	}
 	return 0;
+}
+
+bool LC37::ESEGetCommandVehicleLiftoffIndicationInhibit()
+{
+	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
+}
+
+bool LC37::ESEGetAutoAbortInhibit()
+{
+	return IuESE->GetAutoAbortInhibit();
+}
+
+bool LC37::ESEGetGSEOverrateSimulate()
+{
+	return IuESE->GetOverrateSimulate();
+}
+
+bool LC37::ESEGetEDSPowerInhibit()
+{
+	return IuESE->GetEDSPowerInhibit();
+}
+
+bool LC37::ESEPadAbortRequest()
+{
+	return IuESE->GetEDSPadAbortRequest();
+}
+
+bool LC37::ESEGetThrustOKIndicateEnableInhibitA()
+{
+	return IuESE->GetThrustOKIndicateEnableInhibitA();
+}
+
+bool LC37::ESEGetThrustOKIndicateEnableInhibitB()
+{
+	return IuESE->GetThrustOKIndicateEnableInhibitB();
+}
+
+bool LC37::ESEEDSLiftoffInhibitA()
+{
+	return IuESE->GetEDSLiftoffInhibitA();
+}
+
+bool LC37::ESEEDSLiftoffInhibitB()
+{
+	return IuESE->GetEDSLiftoffInhibitB();
+}
+
+bool LC37::ESEAutoAbortSimulate()
+{
+	return IuESE->GetAutoAbortSimulate();
+}
+
+bool LC37::ESEGetSIBurnModeSubstitute()
+{
+	return IuESE->GetSIBurnModeSubstitute();
 }

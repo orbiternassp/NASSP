@@ -457,28 +457,15 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn){
 
 void Saturn1b::LoadIU(FILEHANDLE scn)
 {
-	// If the IU does not yet exist, create it.
-	if (iu == NULL) {
-		iu = new IU1B;
-	}
 	iu->LoadState(scn);
 }
 
-void Saturn1b::LoadLVDC(FILEHANDLE scn) {
-
-	if (iu == NULL) {
-		iu = new IU1B;
-	}
-
+void Saturn1b::LoadLVDC(FILEHANDLE scn)
+{
 	iu->LoadLVDC(scn);
 }
 
 void Saturn1b::LoadSIVB(FILEHANDLE scn) {
-
-	if (sivb == NULL) {
-		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
-	}
-
 	sivb->LoadState(scn);
 }
 
@@ -496,17 +483,6 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	GetScenarioState(scn, vs);
 
 	SetupMeshes();
-
-	if (stage < CSM_LEM_STAGE)
-	{
-		if (iu == NULL) {
-			iu = new IU1B;
-		}
-		if (sivb == NULL)
-		{
-			sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
-		}
-	}
 
 	switch (stage) {
 
@@ -540,6 +516,15 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 		if (Crewed) {
 			soundlib.LoadMissionSound(SPUShiftS, PUSHIFT_SOUND, PUSHIFT_SOUND);
 		}
+	}
+}
+
+void Saturn1b::CreateStageSpecificSystems()
+{
+	if (stage < CSM_LEM_STAGE)
+	{
+		iu = new IU1B;
+		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
 	}
 }
 

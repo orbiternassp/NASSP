@@ -84,14 +84,50 @@ EDS::EDS(IU *iu)
 	AutoAbortBus = false;
 	IUEDSBusPowered = true;
 
-	GSEAutoAbortInhibit = false;
 	AbortLightSignal = false;
-	GSEOverrateSimulate = false;
 
 	PlatformFailure = false;
 	PlatformFailureTime = 0.0;
 	LiftoffCircuitAFailure = false;
 	LiftoffCircuitBFailure = false;
+}
+
+void EDS::Timestep(double simdt)
+{
+	if (iu->GetAuxPowrDistr()->IsIUEDSBusPowered())
+		IUEDSBusPowered = true;
+	else
+		IUEDSBusPowered = false;
+
+	if (iu->ESEGetCommandVehicleLiftoffIndicationInhibit())
+		IULiftoffRelay = true;
+	else
+		IULiftoffRelay = false;
+
+	if (iu->ESEPadAbortRequest())
+		PadAbortRequest = true;
+	else
+		PadAbortRequest = false;
+
+	if (iu->ESEGetEngineThrustIndicationEnableInhibitA())
+		GSEEngineThrustIndicationEnableA = true;
+	else
+		GSEEngineThrustIndicationEnableA = false;
+
+	if (iu->ESEGetEngineThrustIndicationEnableInhibitB())
+		GSEEngineThrustIndicationEnableB = true;
+	else
+		GSEEngineThrustIndicationEnableB = false;
+
+	if (iu->ESEEDSLiftoffInhibitA())
+		EDSLiftoffInhibitA = true;
+	else
+		EDSLiftoffInhibitA = false;
+
+	if (iu->ESEEDSLiftoffInhibitB())
+		EDSLiftoffInhibitB = true;
+	else
+		EDSLiftoffInhibitB = false;
 }
 
 void EDS::SetPlatformFailureParameters(bool PlatFail, double PlatFailTime)
@@ -147,22 +183,6 @@ double EDS::GetLVTankPressure(int n)
 bool EDS::GetSCControl()
 {
 	return (SCControlEnableRelay && iu->GetCommandConnector()->GetCMCSIVBTakeover());
-}
-
-void EDS::GSERelaysReset()
-{
-	//Reset non-latching relays powered by GSE
-	GSEEngineThrustIndicationEnableA = false;
-	GSEEngineThrustIndicationEnableB = false;
-	EDSLiftoffInhibitA = false;
-	EDSLiftoffInhibitB = false;
-	IULiftoffRelay = false;
-	IUEDSBusPowered = true;
-	PadAbortRequest = false;
-
-	//Not relays
-	GSEAutoAbortInhibit = false;
-	GSEOverrateSimulate = false;
 }
 
 void EDS::ResetBus1()
@@ -225,14 +245,7 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	//Only save GSE relays before liftoff
 	if (iu->IsUmbilicalConnected())
 	{
-		papiWriteScenario_bool(scn, "GSEENGINETHRUSTINDICATIONENABLEA", GSEEngineThrustIndicationEnableA);
-		papiWriteScenario_bool(scn, "GSEENGINETHRUSTINDICATIONENABLEB", GSEEngineThrustIndicationEnableB);
-		papiWriteScenario_bool(scn, "PADABORTREQUEST", PadAbortRequest);
-		papiWriteScenario_bool(scn, "GSEAUTOABORTINHIBIT", GSEAutoAbortInhibit);
-		papiWriteScenario_bool(scn, "EDSLIFTOFFINHIBITA", EDSLiftoffInhibitA);
-		papiWriteScenario_bool(scn, "EDSLIFTOFFINHIBITB", EDSLiftoffInhibitB);
 		papiWriteScenario_bool(scn, "IULIFTOFFRELAY", IULiftoffRelay);
-		papiWriteScenario_bool(scn, "GSEOVERRATESIMULATE", GSEOverrateSimulate);
 	}
 
 	oapiWriteLine(scn, end_str);
@@ -272,14 +285,7 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "ABORTLIGHTSIGNAL", AbortLightSignal);
 
 		//GSE
-		papiReadScenario_bool(line, "GSEENGINETHRUSTINDICATIONENABLEA", GSEEngineThrustIndicationEnableA);
-		papiReadScenario_bool(line, "GSEENGINETHRUSTINDICATIONENABLEB", GSEEngineThrustIndicationEnableB);
-		papiReadScenario_bool(line, "PADABORTREQUEST", PadAbortRequest);
-		papiReadScenario_bool(line, "GSEAUTOABORTINHIBIT", GSEAutoAbortInhibit);
-		papiReadScenario_bool(line, "EDSLIFTOFFINHIBITA", EDSLiftoffInhibitA);
-		papiReadScenario_bool(line, "EDSLIFTOFFINHIBITB", EDSLiftoffInhibitB);
 		papiReadScenario_bool(line, "IULIFTOFFRELAY", IULiftoffRelay);
-		papiReadScenario_bool(line, "GSEOVERRATESIMULATE", GSEOverrateSimulate);
 	}
 }
 
@@ -294,6 +300,8 @@ EDS1B::EDS1B(IU *iu) : EDS(iu)
 
 void EDS1B::Timestep(double simdt)
 {
+	EDS::Timestep(simdt);
+
 	if (iu->GetLVCommandConnector() == NULL) return;
 	if (iu->GetCommandConnector() == NULL) return;
 
@@ -314,6 +322,8 @@ void EDS1B::Timestep(double simdt)
 	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
 
 	AutoAbortBus = false;
+
+	if (iu->ESEAutoAbortSimulate()) AutoAbortBus = true;
 
 	//S-IB Thrust Monitor
 	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
@@ -344,17 +354,17 @@ void EDS1B::Timestep(double simdt)
 		SIVBEngineThrustMonitorB = false;
 
 	//Auto Abort Relays
-	if (GSEAutoAbortInhibit || iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
 		TwoEngOutAutoAbortDeactivate = true;
 	else
 		TwoEngOutAutoAbortDeactivate = false;
 
-	if (GSEAutoAbortInhibit || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
 		ExcessRatesAutoAbortDeactivatePY = true;
 	else
 		ExcessRatesAutoAbortDeactivatePY = false;
 
-	if (GSEAutoAbortInhibit || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
 		ExcessRatesAutoAbortDeactivateR = true;
 	else
 		ExcessRatesAutoAbortDeactivateR = false;
@@ -452,12 +462,12 @@ void EDS1B::Timestep(double simdt)
 		PYLimit = 4.0*RAD;
 	}
 
-	if (GSEOverrateSimulate || (IUEDSBusPowered && (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit)))
+	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit)))
 		ExcessivePitchYawRateIndication = true;
 	else
 		ExcessivePitchYawRateIndication = false;
 
-	if (GSEOverrateSimulate || (IUEDSBusPowered && abs(AttRate.x) > 20.0*RAD))
+	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && abs(AttRate.x) > 20.0*RAD))
 		ExcessiveRollRateIndication = true;
 	else
 		ExcessiveRollRateIndication = false;
@@ -619,6 +629,7 @@ double EDSSV::GetLVTankPressure(int n)
 
 void EDSSV::Timestep(double simdt)
 {
+	EDS::Timestep(simdt);
 
 	if (iu->GetLVCommandConnector() == NULL) return;
 	if (iu->GetCommandConnector() == NULL) return;
@@ -646,6 +657,8 @@ void EDSSV::Timestep(double simdt)
 		SIISIVBNotSeparated = false;
 
 	AutoAbortBus = false;
+
+	if (iu->ESEAutoAbortSimulate()) AutoAbortBus = true;
 
 	//S-IC Thrust Monitor
 	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
@@ -695,17 +708,17 @@ void EDSSV::Timestep(double simdt)
 		SIVBEngineThrustMonitorB = false;
 
 	//Auto Abort Relays
-	if (GSEAutoAbortInhibit || iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
 		TwoEngOutAutoAbortDeactivate = true;
 	else
 		TwoEngOutAutoAbortDeactivate = false;
 
-	if (GSEAutoAbortInhibit || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
 		ExcessRatesAutoAbortDeactivatePY = true;
 	else
 		ExcessRatesAutoAbortDeactivatePY = false;
 
-	if (GSEAutoAbortInhibit || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
 		ExcessRatesAutoAbortDeactivateR = true;
 	else
 		ExcessRatesAutoAbortDeactivateR = false;
@@ -816,12 +829,12 @@ void EDSSV::Timestep(double simdt)
 		PYLimit = 4.0*RAD;
 	}
 
-	if (GSEOverrateSimulate || (IUEDSBusPowered && (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit)))
+	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit)))
 		ExcessivePitchYawRateIndication = true;
 	else
 		ExcessivePitchYawRateIndication = false;
 
-	if (GSEOverrateSimulate || (IUEDSBusPowered && abs(AttRate.x) > 20.0*RAD))
+	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && abs(AttRate.x) > 20.0*RAD))
 		ExcessiveRollRateIndication = true;
 	else
 		ExcessiveRollRateIndication = false;
