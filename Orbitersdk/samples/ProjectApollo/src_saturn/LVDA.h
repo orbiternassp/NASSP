@@ -82,9 +82,6 @@ public:
 	void TLIEnded();
 	void SwitchSelectorOld(int chan);
 	double GetMissionTime();
-	void AddForce(VECTOR3 F, VECTOR3 r);
-	double GetFirstStageThrust();
-	double GetAltitude();
 	int GetStage();
 	void SetStage(int stage);
 	int GetApolloNo();

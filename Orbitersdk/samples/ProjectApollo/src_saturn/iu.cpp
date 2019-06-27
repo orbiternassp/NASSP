@@ -898,19 +898,6 @@ void IUToLVCommandConnector::SetQBallPowerOff()
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::AddForce(VECTOR3 F, VECTOR3 r)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_ADD_FORCE;
-	cm.val1.vValue = F;
-	cm.val2.vValue = r;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::ActivateNavmode(int mode)
 
 {
@@ -1093,22 +1080,6 @@ double IUToLVCommandConnector::GetJ2ThrustLevel()
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_J2_THRUST_LEVEL;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetAltitude()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_ALTITUDE;
 
 	if (SendMessage(cm))
 	{
@@ -1420,21 +1391,6 @@ bool IUToLVCommandConnector::GetSIVBThrustOK()
 	}
 
 	return false;
-}
-
-double IUToLVCommandConnector::GetFirstStageThrust()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_FIRST_STAGE_THRUST;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
 }
 
 double IUToLVCommandConnector::GetSIIFuelTankPressurePSI()

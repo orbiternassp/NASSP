@@ -124,13 +124,13 @@ void H1Engine::Timestep(double simdt)
 			{
 				if (ThrustTimer < tm_2)
 				{
-					ThrustLevel = 1.0 - 3.35*(ThrustTimer - tm_1);
+					ThrustLevel = min(ThrustLevel, 1.0 - 3.35*(ThrustTimer - tm_1));
 				}
 				else
 				{
 					if (ThrustTimer < tm_3)
 					{
-						ThrustLevel = 0.33 - 0.825*(ThrustTimer - tm_2);
+						ThrustLevel = min(ThrustLevel, 0.33 - 0.825*(ThrustTimer - tm_2));
 					}
 					else
 					{
@@ -140,7 +140,7 @@ void H1Engine::Timestep(double simdt)
 			}
 			else
 			{
-				ThrustLevel = 1;
+				ThrustLevel = min(ThrustLevel, 1);
 			}
 
 			vessel->SetThrusterLevel(th_h1, ThrustLevel);

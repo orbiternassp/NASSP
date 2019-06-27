@@ -127,18 +127,21 @@ void IU_ESE::SetEDSMode(int mode)
 	//Monitor
 	else if (mode == LCC_EDS_MODE_MONITOR)
 	{
+		AutoAbortInhibit = true;
 		EDSPowerInhibit = false;
 		Umbilical->EDSLiftoffEnableReset();
 	}
 	//Test
 	else if (mode == LCC_EDS_MODE_TEST)
 	{
+		AutoAbortInhibit = true;
 		EDSPowerInhibit = false;
 		Umbilical->EDSLiftoffEnableReset();
 	}
 	//Launch
 	else if (mode == LCC_EDS_MODE_LAUNCH)
 	{
+		AutoAbortInhibit = true;
 		EDSPowerInhibit = false;
 		Umbilical->SetEDSLiftoffEnableA();
 		Umbilical->SetEDSLiftoffEnableB();

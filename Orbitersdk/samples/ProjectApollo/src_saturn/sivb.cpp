@@ -1831,14 +1831,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		m.val1.iValue = STAGE_ORBIT_SIVB;
 		return true;
 
-	case IULV_GET_ALTITUDE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetAltitude();
-			return true;
-		}
-		break;
-
 	case IULV_GET_GLOBAL_ORIENTATION:
 		if (OurVessel)
 		{
@@ -1993,14 +1985,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_ADD_FORCE:
-		if (OurVessel)
-		{
-			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
 			return true;
 		}
 		break;

@@ -26,6 +26,7 @@
 
 #include "IUUmbilicalInterface.h"
 
+class Saturn;
 class IUUmbilical;
 class IU_ESE;
 
@@ -85,6 +86,7 @@ protected:
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
 
+	Saturn *sat;
 	IUUmbilical *IuUmb;
 	IU_ESE *IuESE;
 

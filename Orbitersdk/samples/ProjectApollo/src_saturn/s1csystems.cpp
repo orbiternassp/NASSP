@@ -110,41 +110,44 @@ void F1Engine::Timestep(double simdt)
 
 	if (EngineStop)
 	{
-		EngineStart = false;
-		EngineRunning = false;
-
-		double tm_1, tm_2, tm_3;
-
-		ThrustTimer += simdt;
-
-		tm_1 = 0.1;
-		tm_2 = 0.3;
-		tm_3 = 0.7;
-
-		if (ThrustTimer >= tm_1)
+		if (ThrustLevel > 0.0)
 		{
-			if (ThrustTimer < tm_2)
+			EngineStart = false;
+			EngineRunning = false;
+
+			double tm_1, tm_2, tm_3;
+
+			ThrustTimer += simdt;
+
+			tm_1 = 0.1;
+			tm_2 = 0.3;
+			tm_3 = 0.7;
+
+			if (ThrustTimer >= tm_1)
 			{
-				ThrustLevel = 1.0 - 3.35*(ThrustTimer - tm_1);
-			}
-			else
-			{
-				if (ThrustTimer < tm_3)
+				if (ThrustTimer < tm_2)
 				{
-					ThrustLevel = 0.33 - 0.825*(ThrustTimer - tm_2);
+					ThrustLevel = min(ThrustLevel, 1.0 - 3.35*(ThrustTimer - tm_1));
 				}
 				else
 				{
-					ThrustLevel = 0;
+					if (ThrustTimer < tm_3)
+					{
+						ThrustLevel = min(ThrustLevel, 0.33 - 0.825*(ThrustTimer - tm_2));
+					}
+					else
+					{
+						ThrustLevel = 0;
+					}
 				}
 			}
-		}
-		else
-		{
-			ThrustLevel = 1;
-		}
+			else
+			{
+				ThrustLevel = min(ThrustLevel, 1);
+			}
 
-		vessel->SetThrusterLevel(th_f1, ThrustLevel);
+			vessel->SetThrusterLevel(th_f1, ThrustLevel);
+		}
 	}
 	else if (EngineStart && !EngineRunning)
 	{

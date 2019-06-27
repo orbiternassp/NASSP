@@ -109,12 +109,10 @@ enum IULVMessageType
 	IULV_SET_STAGE,
 	IULV_NOSECAP_JETTISON,
 	IULV_DEPLOY_SLA_PANEL,
-	IULV_ADD_FORCE,							///< Add force.
 
 	IULV_GET_STAGE,							///< Get mission stage.
 	IULV_GET_GLOBAL_ORIENTATION,
 	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
-	IULV_GET_ALTITUDE,						///< Get the current altitude.
 	IULV_GET_MAX_FUEL_MASS,					///< Get max fuel mass.
 	IULV_GET_FUEL_MASS,
 	IULV_GET_MASS,							///< Get the spacecraft mass.
@@ -136,7 +134,6 @@ enum IULVMessageType
 	IULV_GET_SI_OUTBOARD_ENGINE_OUT,
 	IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY,
 	IULV_GET_SII_ENGINE_OUT,
-	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
 	IULV_GET_SII_FUEL_TANK_PRESSURE,
 	IULV_GET_SIVB_FUEL_TANK_PRESSURE,
@@ -242,10 +239,7 @@ public:
 	void DeactivatePrelaunchVenting();
 	void ActivatePrelaunchVenting();
 
-	void AddForce(VECTOR3 F, VECTOR3 r);
-
 	int GetStage();
-	double GetAltitude();
 	double GetJ2ThrustLevel();
 	double GetMass();
 	double GetMaxFuelMass();
@@ -265,7 +259,6 @@ public:
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
 	bool GetSIVBThrustOK();
-	double GetFirstStageThrust();
 	double GetSIIFuelTankPressurePSI();
 	double GetSIVBLOXTankPressurePSI();
 	double GetSIVBFuelTankPressurePSI();

@@ -280,21 +280,6 @@ double LVDA::GetMissionTime()
 	return iu->GetLVCommandConnector()->GetMissionTime();
 }
 
-void LVDA::AddForce(VECTOR3 F, VECTOR3 r)
-{
-	iu->GetLVCommandConnector()->AddForce(F, r);
-}
-
-double LVDA::GetFirstStageThrust()
-{
-	return iu->GetLVCommandConnector()->GetFirstStageThrust();
-}
-
-double LVDA::GetAltitude()
-{
-	return iu->GetLVCommandConnector()->GetAltitude();
-}
-
 int LVDA::GetStage()
 {
 	return iu->GetLVCommandConnector()->GetStage();

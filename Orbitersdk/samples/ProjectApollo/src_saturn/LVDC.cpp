@@ -612,10 +612,6 @@ void LVDC1B::TimeStep(double simdt) {
 				break;
 			case 0: // MORE TB0
 
-				if (lvda.GetMissionTime() > -4.0) {
-					lvda.AddForce(_V(0, 0, -8. * lvda.GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
-				}
-
 				if (LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()) {
 					LVDC_Timebase = 1;
 					LVDC_TB_ETime = 0;
@@ -629,12 +625,6 @@ void LVDC1B::TimeStep(double simdt) {
 			case 1: // LIFTOFF TIME
 				
 				SwitchSelectorProcessing(SSTTB[1]);
-
-				// Soft-Release Pin Dragging
-				if(lvda.GetMissionTime() < 0.5){
-					double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
-					lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
-				}
 
 				// Below here are timed events that must not be dependent on the iteration delay.
 
@@ -669,8 +659,7 @@ void LVDC1B::TimeStep(double simdt) {
 				// Done by low-level sensor.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1C thruster calibration
-					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
-						lvda.GetMissionTime(), lvda.GetFirstStageThrust(), lvda.GetAltitude());
+					fprintf(lvlog,"[T+%f] S1C OECO\r\n", lvda.GetMissionTime());
 					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					LVDC_Timebase = 3;
@@ -4625,9 +4614,9 @@ void LVDCSV::TimeStep(double simdt) {
 				}
 
 				//Hold-down force
-				if(lvda.GetMissionTime() > -4.0){
+				/*if(lvda.GetMissionTime() > -4.0){
 					lvda.AddForce(_V(0, 0, -5. * lvda.GetFirstStageThrust()), _V(0, 0, 0));
-					}
+					}*/
 
 				// LIFTOFF
 				if(LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()){
@@ -4649,10 +4638,10 @@ void LVDCSV::TimeStep(double simdt) {
 				SwitchSelectorProcessing(SSTTB[1]);
 
 				// Soft-Release Pin Dragging
-				if(lvda.GetMissionTime() < 0.5){
+				/*if(lvda.GetMissionTime() < 0.5){
 				  double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
 				  lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
-				}
+				}*/
 
 				// S1C CECO TRIGGER:
 				if (LVDC_TB_ETime > t_S1C_CECO) {
@@ -4684,8 +4673,7 @@ void LVDCSV::TimeStep(double simdt) {
 				// Done by low-level sensor.
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
-					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO @ Alt %f\r\n\r\n", lvda.GetMissionTime(), lvda.GetAltitude());
+					fprintf(lvlog,"[T+%f] S1 OECO\r\n", lvda.GetMissionTime());
 					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					TB3 = TAS;

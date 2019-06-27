@@ -4578,6 +4578,13 @@ bool Saturn::GetSIVBThrustOK()
 	return sivb->GetThrustOK();
 }
 
+double Saturn::GetFirstStageThrust()
+{
+	if (stage > PRELAUNCH_STAGE) return 0.0;
+
+	return THRUST_FIRST_VAC;
+}
+
 double Saturn::GetSIVBFuelTankPressurePSI()
 {
 	if (sivb && stage < CSM_LEM_STAGE)

@@ -95,6 +95,7 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	LVName[0] = '\0';
 	touchdownPointHeight = -0.01; // pad height
 	hLV = 0;
+	sat = 0;
 	state = STATE_PRELAUNCH;
 	abort = false;
 
@@ -134,15 +135,27 @@ void LC37::clbkSetClassCaps(FILEHANDLE cfg) {
 	SetTouchdownPointHeight(touchdownPointHeight);
 }
 
-void LC37::clbkPostCreation() {
-	
+void LC37::clbkPostCreation()
+{	
+	char buffer[256];
 
+	double vcount = oapiGetVesselCount();
+	for (int i = 0; i < vcount; i++) {
+		OBJHANDLE h = oapiGetVesselByIndex(i);
+		oapiGetObjectName(h, buffer, 256);
+		if (!strcmp(LVName, buffer)) {
+			hLV = h;
+			LEMSaturn *sat = (LEMSaturn *)oapiGetVesselInterface(hLV);
+			if (sat->GetStage() < LAUNCH_STAGE_ONE)
+			{
+				IuUmb->Connect(sat->GetIU());
+			}
+		}
+	}
 }
 
-void LC37::clbkPreStep(double simt, double simdt, double mjd) {
-
-	LEMSaturn *sat;
-
+void LC37::clbkPreStep(double simt, double simdt, double mjd)
+{
 	if (!firstTimestepDone) DoFirstTimestep();
 
 	if (hLV && !abort) {
@@ -241,6 +254,11 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 		else
 			liftoffStreamLevel = 1;
 		break;
+
+		//Hold-down force
+		if (sat->GetMissionTime() > -4.0) {
+			sat->AddForce(_V(0, 0, -8. * sat->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
+		}
 	
 	case STATE_LIFTOFF:
 		if (!hLV) break;
@@ -257,6 +275,12 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		if (abort) break; // Don't do anything if we have aborted.
+
+		// Soft-Release Pin Dragging
+		if (sat->GetMissionTime() < 0.5) {
+			double PinDragFactor = min(1.0, 1.0 - (sat->GetMissionTime() * 2.0));
+			sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+		}
 
 		liftoffStreamLevel = 1;
 	break;
@@ -275,8 +299,15 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd) {
 			// using it again. This prevents a crash if we later delete the vessel.
 			//
 			hLV = 0;
+			sat = 0;
 		}
 		break;
+	}
+
+	//IU ESE
+	if (sat)
+	{
+		IuESE->Timestep(sat->GetMissionTime(), simdt);
 	}
 }
 
@@ -289,21 +320,7 @@ void LC37::clbkPostStep (double simt, double simdt, double mjd) {
 
 void LC37::DoFirstTimestep() {
 
-	char buffer[256];
 
-	double vcount = oapiGetVesselCount();
-	for (int i = 0; i < vcount; i++)	{
-		OBJHANDLE h = oapiGetVesselByIndex(i);
-		oapiGetObjectName(h, buffer, 256);
-		if (!strcmp(LVName, buffer)){
-			hLV = h;
-			LEMSaturn *sat = (LEMSaturn *)oapiGetVesselInterface(hLV);
-			if (sat->GetStage() < LAUNCH_STAGE_ONE)
-			{
-				IuUmb->Connect(sat->GetIU());
-			}
-		}
-	}
 
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);

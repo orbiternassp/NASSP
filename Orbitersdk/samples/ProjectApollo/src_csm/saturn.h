@@ -944,7 +944,7 @@ public:
 	///
 	double GetMissionTime() { return MissionTime; };
 
-	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
+	virtual double GetFirstStageThrust();
 	virtual double GetSIIFuelTankPressurePSI() { return 0.0; }
 	double GetSIVBFuelTankPressurePSI();
 	double GetSIVBLOXTankPressurePSI();

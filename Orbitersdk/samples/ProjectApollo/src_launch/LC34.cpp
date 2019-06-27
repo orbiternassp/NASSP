@@ -95,6 +95,7 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	LVName[0] = '\0';
 	touchdownPointHeight = -0.01; // pad height
 	hLV = 0;
+	sat = 0;
 	state = STATE_PRELAUNCH;
 	abort = false;
 
@@ -146,17 +147,34 @@ void LC34::clbkSetClassCaps(FILEHANDLE cfg) {
 	SetTouchdownPointHeight(touchdownPointHeight);
 }
 
-void LC34::clbkPostCreation() {
-	
+void LC34::clbkPostCreation()
+{
+	char buffer[256];
+
+	if (swingarmProc == 0.0)
+	{
+		double vcount = oapiGetVesselCount();
+		for (int i = 0; i < vcount; i++) {
+			OBJHANDLE h = oapiGetVesselByIndex(i);
+			oapiGetObjectName(h, buffer, 256);
+			if (!strcmp(LVName, buffer)) {
+				hLV = h;
+				Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+				if (sat->GetStage() < LAUNCH_STAGE_ONE)
+				{
+					IuUmb->Connect(sat->GetIU());
+				}
+			}
+		}
+	}
+
 	SetAnimation(mssAnim, mssProc);
 	SetAnimation(cmarmAnim, cmarmProc);
 	SetAnimation(swingarmAnim, swingarmProc);
 }
 
-void LC34::clbkPreStep(double simt, double simdt, double mjd) {
-
-	Saturn *sat;
-
+void LC34::clbkPreStep(double simt, double simdt, double mjd)
+{
 	if (!firstTimestepDone) DoFirstTimestep();
 
 	if (hLV && !abort) {
@@ -278,6 +296,11 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() + 4.9) / 2.9;
 		else
 			liftoffStreamLevel = sat->GetSIThrustLevel();
+
+		//Hold-down force
+		if (sat->GetMissionTime() > -4.0) {
+			sat->AddForce(_V(0, 0, -8. * sat->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
+		}
 		break;
 	
 	case STATE_LIFTOFF:
@@ -295,6 +318,12 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 
 		if (abort) break; // Don't do anything if we have aborted.
+
+		// Soft-Release Pin Dragging
+		if (sat->GetMissionTime() < 0.5) {
+			double PinDragFactor = min(1.0, 1.0 - (sat->GetMissionTime() * 2.0));
+			sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+		}
 
 		// Move swingarms
 		if (swingarmProc < 1) {
@@ -326,8 +355,15 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd) {
 			// using it again. This prevents a crash if we later delete the vessel.
 			//
 			hLV = 0;
+			sat = 0;
 		}
 		break;
+	}
+
+	//IU ESE
+	if (sat)
+	{
+		IuESE->Timestep(sat->GetMissionTime(), simdt);
 	}
 }
 
@@ -338,27 +374,8 @@ void LC34::clbkPostStep (double simt, double simdt, double mjd) {
 	// Nothing for now
 }
 
-void LC34::DoFirstTimestep() {
-
-	char buffer[256];
-
-	if (swingarmProc == 0.0)
-	{
-		double vcount = oapiGetVesselCount();
-		for (int i = 0; i < vcount; i++) {
-			OBJHANDLE h = oapiGetVesselByIndex(i);
-			oapiGetObjectName(h, buffer, 256);
-			if (!strcmp(LVName, buffer)) {
-				hLV = h;
-				Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
-				if (sat->GetStage() < LAUNCH_STAGE_ONE)
-				{
-					IuUmb->Connect(sat->GetIU());
-				}
-			}
-		}
-	}
-
+void LC34::DoFirstTimestep()
+{
 	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
 	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
