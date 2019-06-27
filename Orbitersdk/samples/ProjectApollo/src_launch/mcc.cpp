@@ -1323,6 +1323,16 @@ int MCC::subThread(){
 	}
 	else if (MissionType == MTP_F || MissionType == MTP_G)
 	{
+		//Try to find LEM
+		if (rtcc->calcParams.tgt == NULL)
+		{
+			OBJHANDLE ves = oapiGetVesselByName(LEMName);
+			if (ves != NULL)
+			{
+				rtcc->calcParams.tgt = oapiGetVesselInterface(ves);
+			}
+		}
+
 		subThreadMacro(subThreadType, subThreadMode);
 		Result = 0;
 	}
