@@ -4613,11 +4613,6 @@ void LVDCSV::TimeStep(double simdt) {
 					lvda.SwitchSelectorOld(12);
 				}
 
-				//Hold-down force
-				/*if(lvda.GetMissionTime() > -4.0){
-					lvda.AddForce(_V(0, 0, -5. * lvda.GetFirstStageThrust()), _V(0, 0, 0));
-					}*/
-
 				// LIFTOFF
 				if(LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()){
 					TB1 = TAS;
@@ -4636,12 +4631,6 @@ void LVDCSV::TimeStep(double simdt) {
 			case 1: // LIFTOFF TIME
 
 				SwitchSelectorProcessing(SSTTB[1]);
-
-				// Soft-Release Pin Dragging
-				/*if(lvda.GetMissionTime() < 0.5){
-				  double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
-				  lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
-				}*/
 
 				// S1C CECO TRIGGER:
 				if (LVDC_TB_ETime > t_S1C_CECO) {
