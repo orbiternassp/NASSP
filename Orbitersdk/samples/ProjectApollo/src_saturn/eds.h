@@ -166,6 +166,12 @@ protected:
 	bool EDSAbortSignal2;
 	bool EDSAbortSignal3;
 	bool AbortLightSignal;
+	int LVRateAutoSwitch;
+	int TwoEngineOutAutoSwitch;
+	int Stage;
+	VECTOR3 AttRate;
+	bool EDSBus1Powered, EDSBus2Powered, EDSBus3Powered;
+	bool BECOA, BECOB;
 
 	//Other
 	bool SIEDSCutoff;

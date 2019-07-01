@@ -1,6 +1,6 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2017
+Copyright 2017-2019
 
 Saturn Emergency Detection System 602A5
 
@@ -90,6 +90,16 @@ EDS::EDS(IU *iu)
 	PlatformFailureTime = 0.0;
 	LiftoffCircuitAFailure = false;
 	LiftoffCircuitBFailure = false;
+
+	LVRateAutoSwitch = 0;
+	TwoEngineOutAutoSwitch = 0;
+	Stage = 0;
+	AttRate = _V(0, 0, 0);
+	EDSBus1Powered = false;
+	EDSBus2Powered = false;
+	EDSBus3Powered = false;
+	BECOA = false;
+	BECOB = false;
 }
 
 void EDS::Timestep(double simdt)
@@ -128,6 +138,168 @@ void EDS::Timestep(double simdt)
 		EDSLiftoffInhibitB = true;
 	else
 		EDSLiftoffInhibitB = false;
+
+	//S-IVB Thrust Monitor
+	if (IUEDSBusPowered && SIVBEngineOutIndicationA && iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
+		SIVBEngineThrustMonitorA = true;
+	else
+		SIVBEngineThrustMonitorA = false;
+
+	if (IUEDSBusPowered && SIVBEngineOutIndicationB && iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
+		SIVBEngineThrustMonitorB = true;
+	else
+		SIVBEngineThrustMonitorB = false;
+
+	//Input signals
+	LVRateAutoSwitch = iu->GetCommandConnector()->LVRateAutoSwitchState();
+	TwoEngineOutAutoSwitch = iu->GetCommandConnector()->TwoEngineOutAutoSwitchState();
+	AttRate = iu->GetLVRG()->GetRates();
+	Stage = iu->GetLVCommandConnector()->GetStage();
+	EDSBus1Powered = iu->GetCommandConnector()->IsEDSBusPowered(1);
+	EDSBus2Powered = iu->GetCommandConnector()->IsEDSBusPowered(2);
+	EDSBus3Powered = iu->GetCommandConnector()->IsEDSBusPowered(3);
+	BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
+	BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
+
+	//Auto Abort Relays
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
+		TwoEngOutAutoAbortDeactivate = true;
+	else
+		TwoEngOutAutoAbortDeactivate = false;
+
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
+		ExcessRatesAutoAbortDeactivatePY = true;
+	else
+		ExcessRatesAutoAbortDeactivatePY = false;
+
+	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
+		ExcessRatesAutoAbortDeactivateR = true;
+	else
+		ExcessRatesAutoAbortDeactivateR = false;
+
+	//Backup LV Engines Cutoff Enable
+	if (LVEnginesCutoffCommand2 == false && iu->GetEngineCutoffEnableTimer()->ContactClosed())
+	{
+		LVEnginesCutoffEnable2 = true;
+	}
+
+	//LV Engines EDS Cutoff Inhibit
+	if (IUEDSBusPowered && !BECOA)
+		LVEnginesCutoffFromSC1 = true;
+	else
+		LVEnginesCutoffFromSC1 = false;
+
+	if (IUEDSBusPowered && (!BECOA || !BECOB))
+		LVEnginesCutoffFromSC2 = true;
+	else
+		LVEnginesCutoffFromSC2 = false;
+
+	if (IUEDSBusPowered && !BECOB)
+		LVEnginesCutoffFromSC3 = true;
+	else
+		LVEnginesCutoffFromSC3 = false;
+
+	//LV Engines Cutoff Command
+	if (IUEDSBusPowered && LVEnginesCutoffEnable1 && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand1 = true;
+	else
+		LVEnginesCutoffCommand1 = false;
+
+	if (IUEDSBusPowered && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand2 = true;
+	else
+		LVEnginesCutoffCommand2 = false;
+
+	if (IUEDSBusPowered && LVEnginesCutoffEnable2 && LVEnginesCutoffVote())
+		LVEnginesCutoffCommand3 = true;
+	else
+		LVEnginesCutoffCommand3 = false;
+
+	//Auto Abort Logic
+	AutoAbortBus = false;
+
+	//Simulated Auto Abort
+	if (iu->ESEAutoAbortSimulate()) AutoAbortBus = true;
+
+	//Overrate Auto Abort
+	double PYLimit;
+
+	if (iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit())
+	{
+		PYLimit = 9.2*RAD;
+	}
+	else
+	{
+		PYLimit = 4.0*RAD;
+	}
+
+	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit)))
+		ExcessivePitchYawRateIndication = true;
+	else
+		ExcessivePitchYawRateIndication = false;
+
+	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && abs(AttRate.x) > 20.0*RAD))
+		ExcessiveRollRateIndication = true;
+	else
+		ExcessiveRollRateIndication = false;
+
+	if (ExcessRatesAutoAbortDeactivatePY == false && ExcessivePitchYawRateIndication) AutoAbortBus = true;
+	if (ExcessRatesAutoAbortDeactivateR == false && ExcessiveRollRateIndication) AutoAbortBus = true;
+
+	//LV Guidance Light
+	if (iu->GetLVDA()->GetGuidanceReferenceFailure())
+		LVAttRefFail = true;
+	else
+		LVAttRefFail = false;
+
+	if (LVAttRefFail && iu->GetSCControlPoweredFlight())
+	{
+		SCControlEnableRelay = true;
+	}
+
+	if (LVAttRefFail && (EDSBus1Powered || EDSBus3Powered))
+		iu->GetCommandConnector()->SetLVGuidLight();
+	else
+		iu->GetCommandConnector()->ClearLVGuidLight();
+
+	//LV Rates Light
+	bool logic = ((!ExcessRatesAutoAbortDeactivatePY && LVAttRefFail) || ExcessivePitchYawRateIndication || ExcessiveRollRateIndication) && (EDSBus1Powered || EDSBus3Powered);
+
+	if (logic)
+		iu->GetCommandConnector()->SetLVRateLight();
+	else
+		iu->GetCommandConnector()->ClearLVRateLight();
+
+	//Abort Light
+	if ((EDSBus1Powered || EDSBus3Powered) && (PadAbortRequest || RangeSafetyDestructArmedAFromSIVB || RangeSafetyDestructArmedBFromSIVB))
+		AbortLightSignal = true;
+	else
+		AbortLightSignal = false;
+
+	//Liftoff Circuits
+	if (EDSBus1Powered && !EDSLiftoffInhibitA && EDSLiftoffEnableA)
+	{
+		LiftoffA = true;
+	}
+	else
+	{
+		LiftoffA = false;
+	}
+
+	if (EDSBus3Powered && !EDSLiftoffInhibitB && EDSLiftoffEnableB)
+	{
+		LiftoffB = true;
+	}
+	else
+	{
+		LiftoffB = false;
+	}
+
+	//Failure code
+	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->GetLVIMU()->IsFailed())
+	{
+		iu->GetLVIMU()->SetFailed();
+	}
 }
 
 void EDS::SetPlatformFailureParameters(bool PlatFail, double PlatFailTime)
@@ -300,30 +472,10 @@ EDS1B::EDS1B(IU *iu) : EDS(iu)
 
 void EDS1B::Timestep(double simdt)
 {
-	EDS::Timestep(simdt);
-
 	if (iu->GetLVCommandConnector() == NULL) return;
 	if (iu->GetCommandConnector() == NULL) return;
 
-	VECTOR3 AttRate;
-	bool logic;
-
-	AttRate = iu->GetLVRG()->GetRates();
-
-	int LVRateAutoSwitch = iu->GetCommandConnector()->LVRateAutoSwitchState();
-	int TwoEngineOutAutoSwitch = iu->GetCommandConnector()->TwoEngineOutAutoSwitchState();
-	int Stage = iu->GetLVCommandConnector()->GetStage();
-
-	bool EDSBus1Powered = iu->GetCommandConnector()->IsEDSBusPowered(1);
-	bool EDSBus2Powered = iu->GetCommandConnector()->IsEDSBusPowered(2);
-	bool EDSBus3Powered = iu->GetCommandConnector()->IsEDSBusPowered(3);
-
-	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
-	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
-
-	AutoAbortBus = false;
-
-	if (iu->ESEAutoAbortSimulate()) AutoAbortBus = true;
+	EDS::Timestep(simdt);
 
 	//S-IB Thrust Monitor
 	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
@@ -341,68 +493,6 @@ void EDS1B::Timestep(double simdt)
 			SIThrustNotOK[i] = false;
 		}
 	}
-
-	//S-IVB Thrust Monitor
-	if (IUEDSBusPowered && SIVBEngineOutIndicationA && iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
-		SIVBEngineThrustMonitorA = true;
-	else
-		SIVBEngineThrustMonitorA = false;
-
-	if (IUEDSBusPowered && SIVBEngineOutIndicationB && iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
-		SIVBEngineThrustMonitorB = true;
-	else
-		SIVBEngineThrustMonitorB = false;
-
-	//Auto Abort Relays
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
-		TwoEngOutAutoAbortDeactivate = true;
-	else
-		TwoEngOutAutoAbortDeactivate = false;
-
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
-		ExcessRatesAutoAbortDeactivatePY = true;
-	else
-		ExcessRatesAutoAbortDeactivatePY = false;
-
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
-		ExcessRatesAutoAbortDeactivateR = true;
-	else
-		ExcessRatesAutoAbortDeactivateR = false;
-
-	if (LVEnginesCutoffCommand2 == false && iu->GetEngineCutoffEnableTimer()->ContactClosed())
-	{
-		LVEnginesCutoffEnable2 = true;
-	}
-
-	if (IUEDSBusPowered && !BECOA)
-		LVEnginesCutoffFromSC1 = true;
-	else
-		LVEnginesCutoffFromSC1 = false;
-
-	if (IUEDSBusPowered && !BECOA && !BECOB)
-		LVEnginesCutoffFromSC2 = true;
-	else
-		LVEnginesCutoffFromSC2 = false;
-
-	if (IUEDSBusPowered && !BECOB)
-		LVEnginesCutoffFromSC3 = true;
-	else
-		LVEnginesCutoffFromSC3 = false;
-
-	if (IUEDSBusPowered && LVEnginesCutoffEnable1 && LVEnginesCutoffVote())
-		LVEnginesCutoffCommand1 = true;
-	else
-		LVEnginesCutoffCommand1 = false;
-
-	if (IUEDSBusPowered && LVEnginesCutoffVote())
-		LVEnginesCutoffCommand2 = true;
-	else
-		LVEnginesCutoffCommand2 = false;
-
-	if (IUEDSBusPowered && LVEnginesCutoffEnable2 && LVEnginesCutoffVote())
-		LVEnginesCutoffCommand3 = true;
-	else
-		LVEnginesCutoffCommand3 = false;
 
 	//EDS Engine Cutoff
 	if (LVEnginesCutoffCommand1 || LVEnginesCutoffCommand3)
@@ -438,6 +528,7 @@ void EDS1B::Timestep(double simdt)
 		}
 	}
 
+	//Two Engines Out Auto Abort
 	if (IUEDSBusPowered && !TwoEngOutAutoAbortDeactivate)
 	{
 		int enginesout = 0;
@@ -449,31 +540,6 @@ void EDS1B::Timestep(double simdt)
 
 		if (enginesout >= 2) AutoAbortBus = true;
 	}
-
-	//Overrate Auto Abort
-	double PYLimit;
-
-	if (iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit())
-	{
-		PYLimit = 9.2*RAD;
-	}
-	else
-	{
-		PYLimit = 4.0*RAD;
-	}
-
-	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit)))
-		ExcessivePitchYawRateIndication = true;
-	else
-		ExcessivePitchYawRateIndication = false;
-
-	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && abs(AttRate.x) > 20.0*RAD))
-		ExcessiveRollRateIndication = true;
-	else
-		ExcessiveRollRateIndication = false;
-
-	if (ExcessRatesAutoAbortDeactivatePY == false && ExcessivePitchYawRateIndication) AutoAbortBus = true;
-	if (ExcessRatesAutoAbortDeactivateR == false && ExcessiveRollRateIndication) AutoAbortBus = true;
 
 	if (EDSBus1Powered && !AutoAbortBus)
 	{
@@ -500,30 +566,6 @@ void EDS1B::Timestep(double simdt)
 		EDSAbortSignal3 = false;
 	}
 
-	//LV Guidance Light
-	if (iu->GetLVDA()->GetGuidanceReferenceFailure())
-		LVAttRefFail = true;
-	else
-		LVAttRefFail = false;
-
-	if (LVAttRefFail && iu->GetSCControlPoweredFlight())
-	{
-		SCControlEnableRelay = true;
-	}
-
-	if (LVAttRefFail && (EDSBus1Powered || EDSBus3Powered))
-		iu->GetCommandConnector()->SetLVGuidLight();
-	else
-		iu->GetCommandConnector()->ClearLVGuidLight();
-
-	//LV Rates Light
-	logic = ((!ExcessRatesAutoAbortDeactivatePY && LVAttRefFail) || ExcessivePitchYawRateIndication || ExcessiveRollRateIndication) && (EDSBus1Powered || EDSBus3Powered);
-
-	if (logic)
-		iu->GetCommandConnector()->SetLVRateLight();
-	else
-		iu->GetCommandConnector()->ClearLVRateLight();
-
 	// Update engine indicators and failure flags
 	bool LVIndicatorsPower = ((EDSBus1Powered || EDSBus3Powered) && (!GSEEngineThrustIndicationEnableA || !GSEEngineThrustIndicationEnableB));
 
@@ -539,36 +581,6 @@ void EDS1B::Timestep(double simdt)
 			iu->GetCommandConnector()->SetEngineIndicator(i + 1);
 		else
 			iu->GetCommandConnector()->ClearEngineIndicator(i + 1);
-	}
-
-	if (EDSBus1Powered && !EDSLiftoffInhibitA && EDSLiftoffEnableA)
-	{
-		LiftoffA = true;
-	}
-	else
-	{
-		LiftoffA = false;
-	}
-
-	if (EDSBus3Powered && !EDSLiftoffInhibitB && EDSLiftoffEnableB)
-	{
-		LiftoffB = true;
-	}
-	else
-	{
-		LiftoffB = false;
-	}
-
-	if ((EDSBus1Powered || EDSBus3Powered) && (PadAbortRequest || RangeSafetyDestructArmedAFromSIVB || RangeSafetyDestructArmedBFromSIVB))
-		AbortLightSignal = true;
-	else
-		AbortLightSignal = false;
-
-	//Failure code
-
-	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->GetLVIMU()->IsFailed())
-	{
-		iu->GetLVIMU()->SetFailed();
 	}
 }
 
@@ -629,36 +641,15 @@ double EDSSV::GetLVTankPressure(int n)
 
 void EDSSV::Timestep(double simdt)
 {
-	EDS::Timestep(simdt);
-
 	if (iu->GetLVCommandConnector() == NULL) return;
 	if (iu->GetCommandConnector() == NULL) return;
 
-	VECTOR3 AttRate;
-	bool logic;
-
-	AttRate = iu->GetLVRG()->GetRates();
-
-	int LVRateAutoSwitch = iu->GetCommandConnector()->LVRateAutoSwitchState();
-	int TwoEngineOutAutoSwitch = iu->GetCommandConnector()->TwoEngineOutAutoSwitchState();
-	int Stage = iu->GetLVCommandConnector()->GetStage();
-
-	bool EDSBus1Powered = iu->GetCommandConnector()->IsEDSBusPowered(1);
-	bool EDSBus2Powered = iu->GetCommandConnector()->IsEDSBusPowered(2);
-	bool EDSBus3Powered = iu->GetCommandConnector()->IsEDSBusPowered(3);
-	bool EDSPowered = EDSBus1Powered || EDSBus2Powered || EDSBus3Powered;
-
-	bool BECOA = iu->GetCommandConnector()->GetBECOCommand(true);
-	bool BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
+	EDS::Timestep(simdt);
 
 	if (Stage < LAUNCH_STAGE_SIVB)
 		SIISIVBNotSeparated = true;
 	else
 		SIISIVBNotSeparated = false;
-
-	AutoAbortBus = false;
-
-	if (iu->ESEAutoAbortSimulate()) AutoAbortBus = true;
 
 	//S-IC Thrust Monitor
 	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
@@ -695,68 +686,6 @@ void EDSSV::Timestep(double simdt)
 			SIIEngineThrustMonitorB[i] = false;
 		}
 	}
-
-	//S-IVB Thrust Monitor
-	if (IUEDSBusPowered && SIVBEngineOutIndicationA && iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
-		SIVBEngineThrustMonitorA = true;
-	else
-		SIVBEngineThrustMonitorA = false;
-
-	if (IUEDSBusPowered && SIVBEngineOutIndicationB && iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
-		SIVBEngineThrustMonitorB = true;
-	else
-		SIVBEngineThrustMonitorB = false;
-
-	//Auto Abort Relays
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
-		TwoEngOutAutoAbortDeactivate = true;
-	else
-		TwoEngOutAutoAbortDeactivate = false;
-
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
-		ExcessRatesAutoAbortDeactivatePY = true;
-	else
-		ExcessRatesAutoAbortDeactivatePY = false;
-
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
-		ExcessRatesAutoAbortDeactivateR = true;
-	else
-		ExcessRatesAutoAbortDeactivateR = false;
-
-	if (LVEnginesCutoffCommand2 == false && iu->GetEngineCutoffEnableTimer()->ContactClosed())
-	{
-		LVEnginesCutoffEnable2 = true;
-	}
-
-	if (IUEDSBusPowered && !BECOA)
-		LVEnginesCutoffFromSC1 = true;
-	else
-		LVEnginesCutoffFromSC1 = false;
-
-	if (IUEDSBusPowered && !BECOA && !BECOB)
-		LVEnginesCutoffFromSC2 = true;
-	else
-		LVEnginesCutoffFromSC2 = false;
-
-	if (IUEDSBusPowered && !BECOB)
-		LVEnginesCutoffFromSC3 = true;
-	else
-		LVEnginesCutoffFromSC3 = false;
-
-	if (IUEDSBusPowered && LVEnginesCutoffEnable1 && LVEnginesCutoffVote())
-		LVEnginesCutoffCommand1 = true;
-	else
-		LVEnginesCutoffCommand1 = false;
-
-	if (IUEDSBusPowered && LVEnginesCutoffVote())
-		LVEnginesCutoffCommand2 = true;
-	else
-		LVEnginesCutoffCommand2 = false;
-
-	if (IUEDSBusPowered && LVEnginesCutoffEnable2 && LVEnginesCutoffVote())
-		LVEnginesCutoffCommand3 = true;
-	else
-		LVEnginesCutoffCommand3 = false;
 
 	//EDS Engine Cutoff
 	if (LVEnginesCutoffCommand1 || LVEnginesCutoffCommand3)
@@ -817,31 +746,6 @@ void EDSSV::Timestep(double simdt)
 		if (enginesout >= 2) AutoAbortBus = true;
 	}
 
-	//Overrate Auto Abort
-	double PYLimit;
-
-	if (iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit())
-	{
-		PYLimit = 9.2*RAD;
-	}
-	else
-	{
-		PYLimit = 4.0*RAD;
-	}
-
-	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit)))
-		ExcessivePitchYawRateIndication = true;
-	else
-		ExcessivePitchYawRateIndication = false;
-
-	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && abs(AttRate.x) > 20.0*RAD))
-		ExcessiveRollRateIndication = true;
-	else
-		ExcessiveRollRateIndication = false;
-
-	if (ExcessRatesAutoAbortDeactivatePY == false && ExcessivePitchYawRateIndication) AutoAbortBus = true;
-	if (ExcessRatesAutoAbortDeactivateR == false && ExcessiveRollRateIndication) AutoAbortBus = true;
-
 	if (EDSBus1Powered && !AutoAbortBus)
 	{
 		EDSAbortSignal1 = true;
@@ -866,30 +770,6 @@ void EDSSV::Timestep(double simdt)
 	{
 		EDSAbortSignal3 = false;
 	}
-
-	//LV Guidance Light
-	if (iu->GetLVDA()->GetGuidanceReferenceFailure())
-		LVAttRefFail = true;
-	else
-		LVAttRefFail = false;
-
-	if (LVAttRefFail && iu->GetSCControlPoweredFlight())
-	{
-		SCControlEnableRelay = true;
-	}
-
-	if (LVAttRefFail && (EDSBus1Powered || EDSBus3Powered))
-		iu->GetCommandConnector()->SetLVGuidLight();
-	else
-		iu->GetCommandConnector()->ClearLVGuidLight();
-
-	//LV Rates Light
-	logic = ((!ExcessRatesAutoAbortDeactivatePY && LVAttRefFail) || ExcessivePitchYawRateIndication || ExcessiveRollRateIndication) && (EDSBus1Powered || EDSBus3Powered);
-
-	if (logic)
-		iu->GetCommandConnector()->SetLVRateLight();
-	else
-		iu->GetCommandConnector()->ClearLVRateLight();
 
 	//Update engine indicators and failure flags
 	bool LVIndicatorsPower = ((EDSBus1Powered || EDSBus3Powered) && (!GSEEngineThrustIndicationEnableA || !GSEEngineThrustIndicationEnableB));
@@ -918,40 +798,11 @@ void EDSSV::Timestep(double simdt)
 	else
 		iu->GetCommandConnector()->ClearSIISep();
 
-	if (EDSBus1Powered && !EDSLiftoffInhibitA && EDSLiftoffEnableA)
-	{
-		LiftoffA = true;
-	}
-	else
-	{
-		LiftoffA = false;
-	}
-
-	if (EDSBus3Powered && !EDSLiftoffInhibitB && EDSLiftoffEnableB)
-	{
-		LiftoffB = true;
-	}
-	else
-	{
-		LiftoffB = false;
-	}
-
-	if ((EDSBus1Powered || EDSBus3Powered) && (PadAbortRequest || RangeSafetyDestructArmedAFromSIVB || RangeSafetyDestructArmedBFromSIVB))
-		AbortLightSignal = true;
-	else
-		AbortLightSignal = false;
-
+	//S-II/S-IVB Separation Sequence Start
 	if (IUEDSBusPowered && iu->GetCommandConnector()->GetSIISIVbDirectStagingSignal())
 		SIISIVBSepSeqStart = true;
 	else
 		SIISIVBSepSeqStart = false;
-
-	//Failure code
-
-	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->GetLVIMU()->IsFailed())
-	{
-		iu->GetLVIMU()->SetFailed();
-	}
 
 	//sprintf(oapiDebugString(), "%f", PlatformFailureTime);
 }

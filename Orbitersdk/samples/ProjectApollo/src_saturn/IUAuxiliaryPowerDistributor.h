@@ -52,6 +52,9 @@ public:
 	void Timestep(double simdt);
 
 	bool IsIUEDSBusPowered() { return (EDSBus1PowerOff == false); }
+	bool IsControlSignalProcessorPowered() { return ControlSignalProcessorPowerOn; }
+
+	void SetControlSignalProcessorPower(bool set) { ControlSignalProcessorPowerOn = set; }
 protected:
 
 	//K18 (K116)
@@ -60,6 +63,8 @@ protected:
 	bool EDSBus2PowerOff;
 	//K13 (K118)
 	bool EDSBus3PowerOff;
+	//K17-1/2 (K247-1/2)
+	bool ControlSignalProcessorPowerOn;
 
 	IU *iu;
 };

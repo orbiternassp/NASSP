@@ -49,6 +49,7 @@ IUAuxiliaryPowerDistributor2::IUAuxiliaryPowerDistributor2(IU *iu)
 	EDSBus1PowerOff = false;
 	EDSBus2PowerOff = false;
 	EDSBus3PowerOff = false;
+	ControlSignalProcessorPowerOn = true;
 }
 
 void IUAuxiliaryPowerDistributor2::Timestep(double simdt)
