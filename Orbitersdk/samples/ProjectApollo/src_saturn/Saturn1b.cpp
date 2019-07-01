@@ -72,8 +72,7 @@ static MESHHANDLE hCOAStarget;
 static MESHHANDLE hastp;
 
 Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
-	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk),
-	sib(this, th_1st, ph_1st, SIBSIVBSepPyros, LaunchS, SShutS, contrailLevel)
+	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk)
 {
 	hMaster = hObj;
 	initSaturn1b();
@@ -88,6 +87,11 @@ Saturn1b::~Saturn1b()
 	{
 		delete iu;
 		iu = 0;
+	}
+	if (sib)
+	{
+		delete sib;
+		sib = 0;
 	}
 }
 
@@ -269,7 +273,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	if (stage <= LAUNCH_STAGE_ONE)
 	{
-		sib.Timestep(simdt, stage >= LAUNCH_STAGE_ONE);
+		sib->Timestep(simdt, stage >= LAUNCH_STAGE_ONE);
 	}
 
 	if (stage < CSM_LEM_STAGE) {
@@ -343,7 +347,7 @@ void Saturn1b::SISwitchSelector(int channel)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sib.SwitchSelector(channel);
+	sib->SwitchSelector(channel);
 }
 
 void Saturn1b::GetSIThrustOK(bool *ok)
@@ -355,14 +359,14 @@ void Saturn1b::GetSIThrustOK(bool *ok)
 
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sib.GetThrustOK(ok);
+	sib->GetThrustOK(ok);
 }
 
 void Saturn1b::SIEDSCutoff(bool cut)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sib.EDSEnginesCutoff(cut);
+	sib->EDSEnginesCutoff(cut);
 }
 
 void Saturn1b::SIGSECutoff(bool cut)
@@ -374,42 +378,42 @@ bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sib.GetOutboardEnginesCutoff();
+	return sib->GetOutboardEnginesCutoff();
 }
 
 bool Saturn1b::GetSIInboardEngineOut()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sib.GetInboardEngineOut();
+	return sib->GetInboardEngineOut();
 }
 
 bool Saturn1b::GetSIOutboardEngineOut()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sib.GetOutboardEngineOut();
+	return sib->GetOutboardEngineOut();
 }
 
 bool Saturn1b::GetSIBLowLevelSensorsDry()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sib.GetLowLevelSensorsDry();
+	return sib->GetLowLevelSensorsDry();
 }
 
 void Saturn1b::SetSIEngineStart(int n)
 {
 	if (stage >= LAUNCH_STAGE_ONE) return;
 
-	sib.SetEngineStart(n);
+	sib->SetEngineStart(n);
 }
 
 void Saturn1b::SetSIThrusterDir(int n, double yaw, double pitch)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sib.SetThrusterDir(n, yaw, pitch);
+	sib->SetThrusterDir(n, yaw, pitch);
 }
 
 double Saturn1b::GetSIThrustLevel()
@@ -471,12 +475,12 @@ void Saturn1b::LoadSIVB(FILEHANDLE scn) {
 
 void Saturn1b::SaveSI(FILEHANDLE scn)
 {
-	sib.SaveState(scn);
+	sib->SaveState(scn);
 }
 
 void Saturn1b::LoadSI(FILEHANDLE scn)
 {
-	sib.LoadState(scn);
+	sib->LoadState(scn);
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
@@ -521,10 +525,28 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 
 void Saturn1b::CreateStageSpecificSystems()
 {
+	if (stage <= LAUNCH_STAGE_ONE)
+	{
+		sib = new SIBSystems(this, th_1st, ph_1st, SIBSIVBSepPyros, LaunchS, SShutS, contrailLevel);
+	}
 	if (stage < CSM_LEM_STAGE)
 	{
 		iu = new IU1B;
 		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+	}
+}
+
+void Saturn1b::CheckSaturnSystemsState()
+{
+	Saturn::CheckSaturnSystemsState();
+
+	if (stage > LAUNCH_STAGE_ONE)
+	{
+		if (sib)
+		{
+			delete sib;
+			sib = 0;
+		}
 	}
 }
 
@@ -697,7 +719,7 @@ void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime)
 {
 	if (failstage == 1)
 	{
-		sib.SetEngineFailureParameters(faileng, failtime);
+		sib->SetEngineFailureParameters(faileng, failtime);
 	}
 }
 
@@ -710,7 +732,7 @@ void Saturn1b::SetRandomFailures()
 
 	if (stage < STAGE_ORBIT_SIVB)
 	{
-		if (!sib.GetFailInit())
+		if (!sib->GetFailInit())
 		{
 			//
 			// Engine failure times for first stage.
@@ -734,7 +756,7 @@ void Saturn1b::SetRandomFailures()
 				}
 			}
 
-			sib.SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+			sib->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
 		}
 	}
 

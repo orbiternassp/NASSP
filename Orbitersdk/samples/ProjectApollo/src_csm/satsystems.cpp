@@ -2209,7 +2209,7 @@ void Saturn::CabinFansSystemTimestep()
 		SuitCompressorSound.stop();
 }
 
-void Saturn::CheckSIVBSystemsState()
+void Saturn::CheckSaturnSystemsState()
 {
 	if (stage >= CSM_LEM_STAGE)
 	{

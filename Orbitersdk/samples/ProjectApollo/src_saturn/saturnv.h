@@ -124,6 +124,7 @@ private:
 	void MoveEVA();
 
 	void SeparateStage (int stage);
+	void CheckSaturnSystemsState();
 
 	void SetVehicleStats();
 
@@ -207,8 +208,8 @@ protected:
 	Sound SRover;
 	Sound SecoSound;
 
-	SICSystems sic;
-	SIISystems sii;
+	SICSystems *sic;
+	SIISystems *sii;
 
 	Pyro SICSIISepPyros;
 	Pyro SIIInterstagePyros;

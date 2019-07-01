@@ -755,7 +755,7 @@ void SaturnV::SetSecondStageEngines(double offset)
 		thg_ull = CreateThrusterGroup (th_ull, SII_UllageNum, THGROUP_USER);
 	}
 
-	sii.RecalculateEngineParameters(THRUST_SECOND_VAC);
+	sii->RecalculateEngineParameters(THRUST_SECOND_VAC);
 }
 
 void SaturnV::SetThirdStage ()

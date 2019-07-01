@@ -2584,7 +2584,7 @@ void Saturn::SetStage(int s)
 	StageState = 0;
 
 	CheckSMSystemsState();
-	CheckSIVBSystemsState();
+	CheckSaturnSystemsState();
 	
 	//
 	// Event management
@@ -3855,9 +3855,9 @@ void Saturn::GenericLoadStateSetup()
 	soundlib.SoundOptionOnOff(PLAYDOCKINGSOUND, FALSE);
 
 	//
-	// Check S-IVB devices.
+	// Check Saturn devices.
 	//
-	CheckSIVBSystemsState();
+	CheckSaturnSystemsState();
 
 	//
 	// Initialize the IU

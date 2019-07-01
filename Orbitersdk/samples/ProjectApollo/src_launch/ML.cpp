@@ -27,17 +27,12 @@
 // To force orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "orbitersdk.h"
-#include "stdio.h"
-#include "math.h"
 #include "nasspsound.h"
 #include "soundlib.h"
 #include "tracer.h"
 
 #include "ML.h"
 #include "nasspdefs.h"
-#include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "csmcomputer.h"
 #include "saturn.h"
 #include "papi.h"
 #include "IUUmbilical.h"

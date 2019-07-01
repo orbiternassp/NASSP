@@ -1642,11 +1642,6 @@ bool SECS::NoAutoAbortLightPower()
 	return false;
 }
 
-bool SECS::BECO()
-{
-	return MESCA.BECO() || MESCB.BECO();
-}
-
 void SECS::SaveState(FILEHANDLE scn)
 
 {

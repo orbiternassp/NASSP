@@ -97,7 +97,6 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	hLV = 0;
 	sat = 0;
 	state = STATE_PRELAUNCH;
-	abort = false;
 
 	mssProc = 0;
 	cmarmProc = 0;
@@ -177,15 +176,12 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 {
 	if (!firstTimestepDone) DoFirstTimestep();
 
-	if (hLV && !abort) {
+	if (hLV) {
 		sat = (Saturn *)oapiGetVesselInterface(hLV);
-		abort = sat->GetAbort();
 	}
 
 	switch (state) {
 	case STATE_PRELAUNCH:
-		if (abort) break; // Don't do anything if we have aborted.
-
 		// Move MSS, no clue if 20min are OK?
 		if (mssProc < 1) {
 			mssProc = min(1.0, mssProc + simdt / (60.0 * 20.0));
@@ -209,8 +205,6 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		break;
 
 	case STATE_CMARM1:
-		if (abort) break; // Don't do anything if we have aborted.
-
 		// Move CM arm 12 deg, no clue if 60s are OK?
 		if (cmarmProc < 12.0 / 180.0 * 0.7) {
 			cmarmProc = min(12.0 / 180.0 * 0.7, cmarmProc + simdt / 60.0);
@@ -231,8 +225,6 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		break;
 
 	case STATE_CMARM2:
-		if (abort) break; // Don't do anything if we have aborted.
-
 		// Move CM arm to retracted position, no clue if 60s are OK?
 		if (cmarmProc < 1) {
 			cmarmProc = min(1.0, cmarmProc + simdt / 60.0);
@@ -290,8 +282,6 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 			state = STATE_LIFTOFF;
 		}
 
-		if (abort) break; // Don't do anything if we have aborted.
-
 		if (sat->GetMissionTime() < -2.0)
 			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() + 4.9) / 2.9;
 		else
@@ -316,8 +306,6 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		if (sat->GetMissionTime() > 4) {
 			state = STATE_POSTLIFTOFF;
 		}
-
-		if (abort) break; // Don't do anything if we have aborted.
 
 		// Soft-Release Pin Dragging
 		if (sat->GetMissionTime() < 0.5) {
@@ -345,7 +333,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 			sat->SIGSECutoff(true);
 		}
 
-		if (sat->GetMissionTime() < 10.0 && !abort)
+		if (sat->GetMissionTime() < 10.0)
 			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() - 10.0) / -6.0;
 		else {
 			liftoffStreamLevel = 0;

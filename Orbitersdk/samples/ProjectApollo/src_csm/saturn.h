@@ -1025,11 +1025,6 @@ public:
 	virtual void SIISwitchSelector(int channel);
 	void SIVBSwitchSelector(int channel);
 
-	///
-	/// \brief Has an abort been initiated?
-	///
-	bool GetAbort() { return secs.BECO(); };
-
 	//
 	// CWS functions.
 	//
@@ -1078,10 +1073,10 @@ public:
 	void CheckSMSystemsState();
 
 	///
-	/// Enable or disable generic S-IVB systems based on current state.
-	/// \brief Check S-IVB systems state.
+	/// Enable or disable Saturn systems based on current state.
+	/// \brief Check Saturn systems state.
 	///
-	void CheckSIVBSystemsState();
+	virtual void CheckSaturnSystemsState();
 
 	virtual void CreateStageSpecificSystems() = 0;
 

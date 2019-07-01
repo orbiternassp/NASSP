@@ -108,6 +108,7 @@ protected:
 	void SaveSI(FILEHANDLE scn);
 	void LoadSI(FILEHANDLE scn);
 	void SeparateStage (int stage);
+	void CheckSaturnSystemsState();
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);
 	void SetVehicleStats();
@@ -119,7 +120,7 @@ protected:
 	void SetRandomFailures();
 	void SetEngineFailure(int failstage, int faileng, double failtime);
 
-	SIBSystems sib;
+	SIBSystems *sib;
 
 	Pyro SIBSIVBSepPyros;
 };

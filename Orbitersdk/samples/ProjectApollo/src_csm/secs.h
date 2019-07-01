@@ -358,7 +358,6 @@ public:
 	bool AbortLightPowerB();
 	bool LiftoffLightPower();
 	bool NoAutoAbortLightPower();
-	virtual bool BECO();
 
 	bool GetDockingProbeRetractPrim1() { return LDECA.GetDockingProbeRetract1(); }
 	bool GetDockingProbeRetractPrim2() { return LDECA.GetDockingProbeRetract2(); }
