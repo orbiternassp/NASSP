@@ -88,13 +88,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 
 	switch (messageType)
 	{
-	case IULV_GET_J2_THRUST_LEVEL:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetJ2ThrustLevel();
-			return true;
-		}
-		break;
 
 	case IULV_GET_STAGE:
 		if (OurVessel)
@@ -129,22 +122,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetFuelMass();
-			return true;
-		}
-		break;
-
-	case IULV_GET_MAX_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMaxFuelMass();
 			return true;
 		}
 		break;
@@ -325,22 +302,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_ACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->ActivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->DeactivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_SWITCH_SELECTOR:
 		if (OurVessel)
 		{
@@ -449,30 +410,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->SetQBallPowerOff();
-			return true;
-		}
-		break;
-
-	case IULV_ADD_S4RCS:
-		if (OurVessel)
-		{
-			OurVessel->AddRCS_S4B();
-			return true;
-		}
-		break;
-
-	case IULV_ACTIVATE_PRELAUNCH_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->ActivatePrelaunchVenting();
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_PRELAUNCH_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->DeactivatePrelaunchVenting();
 			return true;
 		}
 		break;

@@ -1125,12 +1125,6 @@ public:
 	void ClearLVRateLight();
 
 	///
-	/// \brief Get thrust level of the SIVb J2 engine.
-	/// \return Thrust level 0.0 - 1.0.
-	///
-	double GetJ2ThrustLevel();
-
-	///
 	/// \brief Set propellant mass in the SIVb stage.
 	/// \param mass Propellant mass in kg.
 	///

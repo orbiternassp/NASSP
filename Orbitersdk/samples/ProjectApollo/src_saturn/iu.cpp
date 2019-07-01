@@ -898,30 +898,6 @@ void IUToLVCommandConnector::SetQBallPowerOff()
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::ActivateNavmode(int mode)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_ACTIVATE_NAVMODE;
-	cm.val1.iValue = mode;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::DeactivateNavmode(int mode)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_DEACTIVATE_NAVMODE;
-	cm.val1.iValue = mode;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SwitchSelector(int item)
 {
 	ConnectorMessage cm;
@@ -1008,39 +984,6 @@ void IUToLVCommandConnector::DeploySLAPanel()
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::AddRCS_S4B()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_ADD_S4RCS;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::DeactivatePrelaunchVenting()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_DEACTIVATE_PRELAUNCH_VENTING;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::ActivatePrelaunchVenting()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_ACTIVATE_PRELAUNCH_VENTING;
-
-	SendMessage(cm);
-}
-
 double IUToLVCommandConnector::GetMass()
 
 {
@@ -1071,54 +1014,6 @@ int IUToLVCommandConnector::GetStage()
 	}
 
 	return NULL_STAGE;
-}
-
-double IUToLVCommandConnector::GetJ2ThrustLevel()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_J2_THRUST_LEVEL;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetMaxFuelMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_MAX_FUEL_MASS;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetFuelMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_FUEL_MASS;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
 }
 
 void IUToLVCommandConnector::GetGlobalOrientation(VECTOR3 &arot)

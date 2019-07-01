@@ -70,7 +70,6 @@ public:
 	void PlayCountSound(bool StartStop);
 	void PlaySepsSound(bool StartStop);
 
-	double GetJ2ThrustLevel();
 	int GetStage() { return lemsat_stage; };
 	void GetSIThrustOK(bool *ok);
 	bool GetSIVBThrustOK();

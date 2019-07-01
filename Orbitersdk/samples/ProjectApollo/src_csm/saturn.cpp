@@ -4456,15 +4456,6 @@ void Saturn::SetRandomFailures()
 	}
 }
 
-double Saturn::GetJ2ThrustLevel()
-
-{
-	if (stage != STAGE_ORBIT_SIVB || !th_3rd[0])
-		return 0.0;
-
-	return GetThrusterLevel(th_3rd[0]);
-}
-
 void Saturn::SetSIVbPropellantMass(double mass)
 
 {

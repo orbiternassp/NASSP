@@ -1512,15 +1512,6 @@ void SIVB::SetState(SIVBSettings &state)
 	FirstTimestep = true;
 }
 
-double SIVB::GetJ2ThrustLevel()
-
-{
-	if (th_main[0])
-		return GetThrusterLevel(th_main[0]);
-
-	return 0.0;
-}
-
 double SIVB::GetMissionTime()
 
 {
@@ -1819,13 +1810,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 
 	switch (messageType)
 	{
-	case IULV_GET_J2_THRUST_LEVEL:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetJ2ThrustLevel();
-			return true;
-		}
-		break;
 
 	case IULV_GET_STAGE:
 		m.val1.iValue = STAGE_ORBIT_SIVB;
@@ -1856,14 +1840,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_MAX_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMaxFuelMass();
 			return true;
 		}
 		break;
@@ -1944,23 +1920,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val1.bValue = OurVessel->GetSIVBThrustOK();
-			return true;
-		}
-		break;
-
-
-	case IULV_ACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->ActivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->DeactivateNavmode(m.val1.iValue);
 			return true;
 		}
 		break;

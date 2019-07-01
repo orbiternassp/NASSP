@@ -250,12 +250,6 @@ public:
 	virtual void SetState(SIVBSettings &state);
 
 	///
-	/// \brief Get thrust level of the J2 engine.
-	/// \return Thrust level from 0.0 to 1.0.
-	///
-	double GetJ2ThrustLevel();
-
-	///
 	/// \brief Get mission time.
 	/// \return Mission time in seconds since launch.
 	///

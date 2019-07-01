@@ -1346,15 +1346,6 @@ void LEMSaturn::PlaySepsSound(bool StartStop)
 	}
 }
 
-double LEMSaturn::GetJ2ThrustLevel()
-
-{
-	if (lemsat_stage != STAGE_ORBIT_SIVB || !th_3rd[0])
-		return 0.0;
-
-	return GetThrusterLevel(th_3rd[0]);
-}
-
 void LEMSaturn::GetSIThrustOK(bool *ok)
 {
 	for (int i = 0;i < 5;i++)
@@ -1613,13 +1604,6 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 
 	switch (messageType)
 	{
-	case IULV_GET_J2_THRUST_LEVEL:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetJ2ThrustLevel();
-			return true;
-		}
-		break;
 
 	case IULV_GET_STAGE:
 		if (OurVessel)
@@ -1654,22 +1638,6 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetFuelMass();
-			return true;
-		}
-		break;
-
-	case IULV_GET_MAX_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMaxFuelMass();
 			return true;
 		}
 		break;
@@ -1802,22 +1770,6 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		}
 		break;
 
-	case IULV_ACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->ActivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->DeactivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_SWITCH_SELECTOR:
 		if (OurVessel)
 		{
@@ -1894,30 +1846,6 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		if (OurVessel)
 		{
 			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_ADD_S4RCS:
-		if (OurVessel)
-		{
-			OurVessel->AddRCS_S4B();
-			return true;
-		}
-		break;
-
-	case IULV_ACTIVATE_PRELAUNCH_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->ActivatePrelaunchVenting();
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_PRELAUNCH_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->DeactivatePrelaunchVenting();
 			return true;
 		}
 		break;

@@ -95,11 +95,6 @@ enum IULVMessageType
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
 	IULV_SET_SIVB_THRUSTER_DIR,
-	IULV_DEACTIVATE_NAVMODE,				///< Deactivate a navmode.
-	IULV_ACTIVATE_NAVMODE,					///< Activate a navmode.
-	IULV_ADD_S4RCS,
-	IULV_ACTIVATE_PRELAUNCH_VENTING,		///< Activate prelaunch venting.
-	IULV_DEACTIVATE_PRELAUNCH_VENTING,		///< Deactivate prelaunch venting.
 	IULV_SWITCH_SELECTOR,
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
@@ -112,9 +107,6 @@ enum IULVMessageType
 
 	IULV_GET_STAGE,							///< Get mission stage.
 	IULV_GET_GLOBAL_ORIENTATION,
-	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
-	IULV_GET_MAX_FUEL_MASS,					///< Get max fuel mass.
-	IULV_GET_FUEL_MASS,
 	IULV_GET_MASS,							///< Get the spacecraft mass.
 	IULV_GET_GRAVITY_REF,					///< Get gravity reference.
 	IULV_GET_RELATIVE_POS,					///< Get relative position.
@@ -231,19 +223,8 @@ public:
 	void JettisonNosecap();
 	void DeploySLAPanel();
 
-	void DeactivateNavmode(int mode);
-	void ActivateNavmode(int mode);
-
-	void AddRCS_S4B();
-
-	void DeactivatePrelaunchVenting();
-	void ActivatePrelaunchVenting();
-
 	int GetStage();
-	double GetJ2ThrustLevel();
 	double GetMass();
-	double GetMaxFuelMass();
-	double GetFuelMass();
 	void GetGlobalOrientation(VECTOR3 &arot);
 	bool GetWeightVector(VECTOR3 &w);
 	void GetRotationMatrix(MATRIX3 &rot);
