@@ -66,6 +66,7 @@ public:
 	void APSUllageEngineOn(int n);
 	void APSUllageEngineOff(int n);
 	void SetAPSAttitudeEngine(int n, bool on);
+	void PrevalvesCloseOnReset() { PrevalvesCloseOn = false; }
 	
 	bool GetThrustOK() { return ThrustOKRelay; }
 
@@ -86,8 +87,10 @@ protected:
 	bool ThrustOKRelay;
 	//K105
 	bool AftPowerDisableRelay;
-	//K112
+	//K112 (K76)
 	bool LVDCEngineStopRelay;
+	//K46 (K198)
+	bool PrevalvesCloseOn;
 
 	bool RSSEngineStop;
 	bool EDSEngineStop;
@@ -95,6 +98,7 @@ protected:
 
 	bool EnginePower;
 	bool EngineCutoffBus;
+	//K63 (K57)
 	bool EngineStart;
 	bool EngineStop;
 	bool ThrustOKCutoffInhibit;

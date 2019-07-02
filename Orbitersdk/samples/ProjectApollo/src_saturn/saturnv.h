@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "s1csystems.h"
+class SICSystems;
 
 ///
 /// \brief Saturn V launch vehicle class.
@@ -104,6 +104,8 @@ public:
 	bool GetSIIEngineOut();
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	double GetSIIFuelTankPressurePSI();
+
+	SICSystems *GetSIC() { return sic; }
 
 	//
 	// Functions that external code shouldn't need to access.

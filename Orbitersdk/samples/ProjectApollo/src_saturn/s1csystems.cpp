@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "csmcomputer.h"
 #include "saturn.h"
 #include "papi.h"
+#include "TSMUmbilical.h"
 
 #include "s1csystems.h"
 
@@ -293,6 +294,14 @@ SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	f1engines[4] = &f1engine5;
 }
 
+SICSystems::~SICSystems()
+{
+	if (TSMUmb)
+	{
+		TSMUmb->AbortDisconnect();
+	}
+}
+
 void SICSystems::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, SISYSTEMS_START_STRING);
 
@@ -362,7 +371,7 @@ void SICSystems::Timestep(double simdt, bool liftoff)
 	//Thrust OK
 	for (int i = 0;i < 5;i++)
 	{
-		ThrustOK[i] = f1engines[i]->GetThrustOK();
+		ThrustOK[i] = f1engines[i]->GetThrustOK() || ESEGetSICThrustOKSimulate(i + 1);
 	}
 
 	//Propellant Depletion
@@ -622,4 +631,28 @@ bool SICSystems::GetEngineStop()
 	for (int i = 0;i < 5;i++) if (f1engines[i]->GetEngineStop()) return true;
 
 	return false;
+}
+
+void SICSystems::ConnectUmbilical(TSMUmbilical *umb)
+{
+	TSMUmb = umb;
+}
+
+void SICSystems::DisconnectUmbilical()
+{
+	TSMUmb = NULL;
+}
+
+bool SICSystems::IsUmbilicalConnected()
+{
+	if (TSMUmb && TSMUmb->IsUmbilicalConnected()) return true;
+
+	return false;
+}
+
+bool SICSystems::ESEGetSICThrustOKSimulate(int eng)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return TSMUmb->ESEGetSICThrustOKSimulate(eng);
 }

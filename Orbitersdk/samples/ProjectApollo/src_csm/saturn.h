@@ -77,6 +77,7 @@
 #include "IMFD/IMFD_Client.h"
 
 class IU;
+class SICSystems;
 
 
 #define RCS_SM_QUAD_A		0
@@ -1006,6 +1007,8 @@ public:
 	/// \return Pointer to IU object.
 	///
 	IU *GetIU() { return iu; };
+
+	virtual SICSystems *GetSIC() { return NULL; }
 
 	///
 	/// \brief Get settings for the Saturn payload.

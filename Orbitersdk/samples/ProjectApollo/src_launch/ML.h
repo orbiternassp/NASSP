@@ -25,15 +25,18 @@
 #pragma once
 
 #include "IUUmbilicalInterface.h"
+#include "TSMUmbilicalInterface.h"
 
 class Saturn;
 class IUUmbilical;
+class TSMUmbilical;
 class IUSV_ESE;
+class SIC_ESE;
 
 ///
 /// \ingroup Ground
 ///
-class ML: public VESSEL2, public IUUmbilicalInterface {
+class ML: public VESSEL2, public IUUmbilicalInterface, public TSMUmbilicalInterface {
 
 public:
 	ML(OBJHANDLE hObj, int fmodel);
@@ -68,6 +71,9 @@ public:
 	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 
+	//ML/S-IC Interface
+	bool ESEGetSICThrustOKSimulate(int eng);
+
 protected:
 	bool firstTimestepDone;
 	int meshindexML;
@@ -100,7 +106,9 @@ protected:
 
 	Saturn *sat;
 	IUUmbilical *IuUmb;
+	TSMUmbilical *TSMUmb;
 	IUSV_ESE *IuESE;
+	SIC_ESE *SICESE;
 
 	void DoFirstTimestep();
 	double GetDistanceTo(double lon, double lat);

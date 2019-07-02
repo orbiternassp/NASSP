@@ -71,10 +71,15 @@ protected:
 	double yawPos;
 };
 
+class TSMUmbilical;
+class Pyro;
+class Sound;
+
 class SICSystems
 {
 public:
 	SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Pyro &SIC_SII_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl);
+	~SICSystems();
 	void Timestep(double simdt, bool liftoff);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -103,9 +108,14 @@ public:
 
 	bool AllEnginesRunning();
 	bool GetEngineStop();
+
+	virtual void ConnectUmbilical(TSMUmbilical *umb);
+	virtual void DisconnectUmbilical();
+	bool IsUmbilicalConnected();
 protected:
 
 	double GetSumThrust();
+	bool ESEGetSICThrustOKSimulate(int eng);
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -137,4 +147,6 @@ protected:
 	bool EarlySICutoff[5];
 	double FirstStageFailureTime[5];
 	double FailureTimer;
+
+	TSMUmbilical *TSMUmb;
 };

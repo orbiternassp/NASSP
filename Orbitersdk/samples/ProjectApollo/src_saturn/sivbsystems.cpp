@@ -53,6 +53,7 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 	PointLevelSensorArmed = false;
 	LH2ContinuousVentValveOpen = false;
 	ThrustOKCutoffInhibit = false;
+	PrevalvesCloseOn = false;
 	//Gets switched on at about T-8 minutes
 	AuxHydPumpFlightMode = true;
 
@@ -809,8 +810,10 @@ void SIVB500Systems::SwitchSelector(int channel)
 	case 81: //LH2 Tank Repressurization Control Valve Open Off
 		break;
 	case 82: //Prevalves Close On
+		PrevalvesCloseOn = true;
 		break;
 	case 83: //Prevalves Close Off
+		PrevalvesCloseOn = false;
 		break;
 	case 84: //LH2 Tank Continuous Vent Valve Close On
 		LH2ContinuousVentValveCloseOn();

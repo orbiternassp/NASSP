@@ -41,6 +41,7 @@
 #include "csmcomputer.h"
 #include "ioChannels.h"
 
+#include "s1csystems.h"
 #include "saturn.h"
 #include "saturnv.h"
 #include "s1c.h"

@@ -36,7 +36,9 @@
 #include "saturn.h"
 #include "papi.h"
 #include "IUUmbilical.h"
+#include "TSMUmbilical.h"
 #include "IU_ESE.h"
+#include "SIC_ESE.h"
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo ML.log";
@@ -136,11 +138,15 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	IuUmb = new IUUmbilical(this);
 	IuESE = new IUSV_ESE(IuUmb);
+	TSMUmb = new TSMUmbilical(this);
+	SICESE = new SIC_ESE(TSMUmb);
 }
 
 ML::~ML() {
 	delete IuUmb;
 	delete IuESE;
+	delete TSMUmb;
+	delete SICESE;
 }
 
 void ML::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -181,6 +187,7 @@ void ML::clbkPostCreation()
 				if (sat->GetStage() < LAUNCH_STAGE_ONE)
 				{
 					IuUmb->Connect(sat->GetIU());
+					TSMUmb->Connect(sat->GetSIC());
 				}
 			}
 		}
@@ -487,6 +494,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 			if (Commit()) {
 				IuUmb->Disconnect();
+				TSMUmb->Disconnect();
 			}
 
 			//Cutoff
@@ -967,4 +975,9 @@ bool ML::ESEAutoAbortSimulate()
 bool ML::ESEGetSIBurnModeSubstitute()
 {
 	return IuESE->GetSIBurnModeSubstitute();
+}
+
+bool ML::ESEGetSICThrustOKSimulate(int eng)
+{
+	return SICESE->GetSICThrustOKSimulate(eng);
 }
