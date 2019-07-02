@@ -303,6 +303,13 @@ bool IU::ESEGetSIBurnModeSubstitute()
 	return IuUmb->ESEGetSIBurnModeSubstitute();
 }
 
+bool IU::ESEGetGuidanceReferenceRelease()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetGuidanceReferenceRelease();
+}
+
 IUToCSMCommandConnector::IUToCSMCommandConnector()
 
 {
@@ -1547,6 +1554,13 @@ bool IUSV::ESEGetSICOutboardEnginesCantInhibit()
 	if (!IsUmbilicalConnected()) return false;
 
 	return IuUmb->ESEGetSICOutboardEnginesCantInhibit();
+}
+
+bool IUSV::ESEGetSICOutboardEnginesCantSimulate()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetSICOutboardEnginesCantSimulate();
 }
 
 void IUSV::SwitchSelector(int item)

@@ -31,6 +31,9 @@ class SIC_ESE
 public:
 	SIC_ESE(TSMUmbilical *TSMUmb);
 
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
 	bool GetSICThrustOKSimulate(int eng) { return SICThrustOKSimulate[eng - 1]; }
 
 	void SetSICThrustOKSimulate(int eng, bool set) { SICThrustOKSimulate[eng - 1] = set; }

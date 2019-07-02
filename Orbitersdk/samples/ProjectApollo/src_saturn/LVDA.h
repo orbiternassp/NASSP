@@ -24,12 +24,24 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include <bitset>
+
 class IU;
 
 #define SWITCH_SELECTOR_IU 0
 #define SWITCH_SELECTOR_SI 1
 #define SWITCH_SELECTOR_SII 2
 #define SWITCH_SELECTOR_SIVB 3
+
+enum LVDCOutputRegister {
+
+	ResetCommandDecoder = 1,
+	RCA110AInterrupt,
+	GuidanceReferenceFailureA = 3,
+	GuidanceReferenceFailureB = 5,
+	FiringCommitEnable = 11,
+	FiringCommitInhibit,
+};
 
 class LVDA
 {
@@ -59,6 +71,9 @@ public:
 	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
 	bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0);
 
+	void SetOutputRegisterBit(int bit, bool state);
+	bool GetOutputRegisterBit(int bit);
+
 	//LVDC Input Discretes and Interrupts
 
 	bool GetSIInboardEngineOut();
@@ -76,6 +91,7 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool SIBLowLevelSensorsDry();
 	bool GetLiftoff();
+	bool GetGuidanceReferenceRelease();
 
 	//Not real LVDA functions
 	void TLIBegun();
@@ -90,4 +106,6 @@ public:
 	bool GetSCControlPoweredFlight();
 protected:
 	IU *iu;
+
+	std::bitset<13> DiscreteOutputRegister;
 };

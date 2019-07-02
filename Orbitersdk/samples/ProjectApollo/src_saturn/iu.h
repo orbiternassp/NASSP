@@ -330,8 +330,10 @@ public:
 	bool ESEEDSLiftoffInhibitB();
 	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
+	bool ESEGetGuidanceReferenceRelease();
 
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }
+	virtual bool ESEGetSICOutboardEnginesCantSimulate() { return false; }
 
 protected:
 
@@ -425,6 +427,7 @@ public:
 
 	//ESE Functions
 	bool ESEGetSICOutboardEnginesCantInhibit();
+	bool ESEGetSICOutboardEnginesCantSimulate();
 
 protected:
 	//603A28

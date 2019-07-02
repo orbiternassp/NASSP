@@ -600,7 +600,7 @@ void LVDC1B::TimeStep(double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvda.GetMissionTime() >= -17){		
+				if (lvda.GetGuidanceReferenceRelease()){
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
@@ -4593,7 +4593,7 @@ void LVDCSV::TimeStep(double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvda.GetMissionTime() < -17){
+				if (!lvda.GetGuidanceReferenceRelease()){
 					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",lvCommandConnector->GetMissionTime(),
 						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
@@ -5082,6 +5082,8 @@ void LVDCSV::TimeStep(double simdt) {
 			if (LVDC_Timebase > 0 && lvda.GetLVIMUFailure())
 			{
 				GuidanceReferenceFailure = true;
+				lvda.SetOutputRegisterBit(GuidanceReferenceFailureA, true);
+				lvda.SetOutputRegisterBit(GuidanceReferenceFailureB, true);
 			}
 
 			if (!GuidanceReferenceFailure)

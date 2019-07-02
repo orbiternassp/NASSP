@@ -60,6 +60,7 @@ public:
 	// ML/IU Interface
 	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
 	bool ESEGetSICOutboardEnginesCantInhibit();
+	bool ESEGetSICOutboardEnginesCantSimulate();
 	bool ESEGetAutoAbortInhibit();
 	bool ESEGetGSEOverrateSimulate();
 	bool ESEGetEDSPowerInhibit();
@@ -70,6 +71,7 @@ public:
 	bool ESEEDSLiftoffInhibitB();
 	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
+	bool ESEGetGuidanceReferenceRelease();
 
 	//ML/S-IC Interface
 	bool ESEGetSICThrustOKSimulate(int eng);

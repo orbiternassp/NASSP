@@ -235,6 +235,12 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
 
+		//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
+		if (sat->GetMissionTime() >= -(17.0 + oapiGetSimStep()))
+		{
+			IuESE->SetGuidanceReferenceRelease(true);
+		}
+
 		if (sat->GetMissionTime() < -9)
 		{
 			sat->ActivatePrelaunchVenting();
@@ -643,4 +649,9 @@ bool LC34::ESEAutoAbortSimulate()
 bool LC34::ESEGetSIBurnModeSubstitute()
 {
 	return IuESE->GetSIBurnModeSubstitute();
+}
+
+bool LC34::ESEGetGuidanceReferenceRelease()
+{
+	return IuESE->GetGuidanceReferenceRelease();
 }

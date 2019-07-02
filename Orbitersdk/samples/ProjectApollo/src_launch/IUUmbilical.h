@@ -52,6 +52,7 @@ public:
 	//From SLV to ML
 	virtual bool ESEGetCommandVehicleLiftoffIndicationInhibit();
 	virtual bool ESEGetSICOutboardEnginesCantInhibit();
+	virtual bool ESEGetSICOutboardEnginesCantSimulate();
 	virtual bool ESEGetAutoAbortInhibit();
 	virtual bool ESEGetGSEOverrateSimulate();
 	virtual bool ESEGetEDSPowerInhibit();
@@ -62,6 +63,7 @@ public:
 	virtual bool ESEEDSLiftoffInhibitB();
 	virtual bool ESEAutoAbortSimulate();
 	virtual bool ESEGetSIBurnModeSubstitute();
+	virtual bool ESEGetGuidanceReferenceRelease();
 protected:
 	IU* iu;
 	IUUmbilicalInterface* IuUmb;

@@ -376,10 +376,19 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 		sat->ActivatePrelaunchVenting();
 
-		if (sat->GetMissionTime() > -16.2 && !CutoffInterlock()) {
-			s1cintertankarmProc = 1;
-			SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
-			state = STATE_SICFORWARDARM;
+		if (!CutoffInterlock())
+		{
+			//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
+			if (sat->GetMissionTime() >= -(17.0 + oapiGetSimStep()))
+			{
+				IuESE->SetGuidanceReferenceRelease(true);
+			}
+
+			if (sat->GetMissionTime() > -16.2) {
+				s1cintertankarmProc = 1;
+				SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
+				state = STATE_SICFORWARDARM;
+			}
 		}
 		break;
 
@@ -927,6 +936,11 @@ bool ML::ESEGetSICOutboardEnginesCantInhibit()
 	return IuESE->GetSICOutboardEnginesCantInhibit();
 }
 
+bool ML::ESEGetSICOutboardEnginesCantSimulate()
+{
+	return IuESE->GetSICOutboardEnginesCantSimulate();
+}
+
 bool ML::ESEGetAutoAbortInhibit()
 {
 	return IuESE->GetAutoAbortInhibit();
@@ -975,6 +989,11 @@ bool ML::ESEAutoAbortSimulate()
 bool ML::ESEGetSIBurnModeSubstitute()
 {
 	return IuESE->GetSIBurnModeSubstitute();
+}
+
+bool ML::ESEGetGuidanceReferenceRelease()
+{
+	return IuESE->GetGuidanceReferenceRelease();
 }
 
 bool ML::ESEGetSICThrustOKSimulate(int eng)

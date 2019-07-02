@@ -60,6 +60,7 @@ public:
 	bool ESEEDSLiftoffInhibitB();
 	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
+	bool ESEGetGuidanceReferenceRelease();
 
 protected:
 	bool firstTimestepDone;

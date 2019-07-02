@@ -293,10 +293,8 @@ bool IUControlDistributorSV::UseSICEngineCant()
 		if (SICEngineCantA) return true;
 		else if (SICEngineCantB) return true;
 	}
-	else if (SICEngineCantA && SICEngineCantB && !SICOutboardEnginesCantInhibit)
-	{
-		return true;
-	}
+	else if (SICEngineCantA && SICEngineCantB && !SICOutboardEnginesCantInhibit) return true;
+	else if (iu->ESEGetSICOutboardEnginesCantSimulate()) return true;
 
 	return false;
 }

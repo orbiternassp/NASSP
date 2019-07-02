@@ -71,6 +71,11 @@ bool IUUmbilical::ESEGetSICOutboardEnginesCantInhibit()
 	return IuUmb->ESEGetSICOutboardEnginesCantInhibit();
 }
 
+bool IUUmbilical::ESEGetSICOutboardEnginesCantSimulate()
+{
+	return IuUmb->ESEGetSICOutboardEnginesCantSimulate();
+}
+
 bool IUUmbilical::ESEGetAutoAbortInhibit()
 {
 	return IuUmb->ESEGetAutoAbortInhibit();
@@ -119,6 +124,11 @@ bool IUUmbilical::ESEAutoAbortSimulate()
 bool IUUmbilical::ESEGetSIBurnModeSubstitute()
 {
 	return IuUmb->ESEGetSIBurnModeSubstitute();
+}
+
+bool IUUmbilical::ESEGetGuidanceReferenceRelease()
+{
+	return IuUmb->ESEGetGuidanceReferenceRelease();
 }
 
 void IUUmbilical::SetEDSLiftoffEnableA()

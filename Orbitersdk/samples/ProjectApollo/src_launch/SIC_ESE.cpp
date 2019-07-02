@@ -35,3 +35,13 @@ SIC_ESE::SIC_ESE(TSMUmbilical *TSMUmb)
 		SICThrustOKSimulate[i] = false;
 	}
 }
+
+void SIC_ESE::SaveState(FILEHANDLE scn)
+{
+
+}
+
+void SIC_ESE::LoadState(FILEHANDLE scn)
+{
+
+}

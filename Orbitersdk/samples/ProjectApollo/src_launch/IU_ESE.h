@@ -51,6 +51,9 @@ public:
 	bool GetEDSPowerInhibit() { return EDSPowerInhibit; }
 	bool GetAutoAbortSimulate() { return AutoAbortSimulate; }
 	bool GetSIBurnModeSubstitute() { return SIBurnModeSubstitute; }
+	bool GetGuidanceReferenceRelease() { return GuidanceReferenceRelease; }
+
+	void SetGuidanceReferenceRelease(bool set) { GuidanceReferenceRelease = set; }
 protected:
 
 	void SetEDSMode(int mode);
@@ -66,6 +69,7 @@ protected:
 	bool EDSPowerInhibit;
 	bool AutoAbortSimulate;
 	bool SIBurnModeSubstitute;
+	bool GuidanceReferenceRelease;
 
 	double LastMissionTime = 0.0;
 
@@ -78,8 +82,11 @@ public:
 	IUSV_ESE(IUUmbilical *IuUmb);
 
 	bool GetSICOutboardEnginesCantInhibit() { return SICOutboardEnginesCantInhibit; }
+	bool GetSICOutboardEnginesCantSimulate() { return SICOutboardEnginesCantSimulate; }
 
 	void SetSICOutboardEnginesCantInhibit(bool set) { SICOutboardEnginesCantInhibit = set; }
+	void SetSICOutboardEnginesCantSimulate(bool set) { SICOutboardEnginesCantSimulate = set; }
 protected:
 	bool SICOutboardEnginesCantInhibit;
+	bool SICOutboardEnginesCantSimulate;
 };

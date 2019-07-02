@@ -175,6 +175,11 @@ bool LVDA::GetLiftoff()
 	return iu->GetEDS()->GetIULiftoff() == false;
 }
 
+bool LVDA::GetGuidanceReferenceRelease()
+{
+	return iu->ESEGetGuidanceReferenceRelease();
+}
+
 bool LVDA::GetSICInboardEngineCutoff()
 {
 	return iu->GetSIInboardEngineOut();
@@ -308,4 +313,14 @@ void LVDA::GetRelativeVel(VECTOR3 &v)
 bool LVDA::GetSCControlPoweredFlight()
 {
 	return iu->GetSCControlPoweredFlight();
+}
+
+void LVDA::SetOutputRegisterBit(int bit, bool state)
+{
+	DiscreteOutputRegister.set(bit, state);
+}
+
+bool LVDA::GetOutputRegisterBit(int bit)
+{
+	return DiscreteOutputRegister[bit];
 }

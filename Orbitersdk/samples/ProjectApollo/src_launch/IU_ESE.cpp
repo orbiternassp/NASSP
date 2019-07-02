@@ -41,6 +41,7 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb)
 	EDSPowerInhibit = false;
 	AutoAbortSimulate = false;
 	SIBurnModeSubstitute = false;
+	GuidanceReferenceRelease = false;
 
 	LastMissionTime = 10000000.0;
 }
@@ -151,4 +152,5 @@ void IU_ESE::SetEDSMode(int mode)
 IUSV_ESE::IUSV_ESE(IUUmbilical *IuUmb) : IU_ESE(IuUmb)
 {
 	SICOutboardEnginesCantInhibit = false;
+	SICOutboardEnginesCantSimulate = false;
 }
