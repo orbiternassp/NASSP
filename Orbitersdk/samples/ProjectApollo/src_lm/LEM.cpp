@@ -1373,8 +1373,14 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "SUITFANDPSENSOR", 15)) {
 			SuitFanDPSensor.LoadState(line);
 		}
+		else if (!strnicmp(line, "CABINPRESSURESWITCH", 19)) {
+			CabinPressureSwitch.LoadState(line, 19);
+		}
+		else if (!strnicmp(line, "SUITPRESSURESWITCH", 18)) {
+			SuitPressureSwitch.LoadState(line, 18);
+		}
 		else if (!strnicmp(line, "CREWSTATUS", 10)) {
-		CrewStatus.LoadState(line);
+			CrewStatus.LoadState(line);
 		}
 		else if (!strnicmp(line, "PANEL_ID", 8)) {
 			sscanf(line + 8, "%d", &PanelId);
@@ -1786,6 +1792,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	OverheadHatch.SaveState(scn);
 	PrimGlycolPumpController.SaveState(scn);
 	SuitFanDPSensor.SaveState(scn);
+	CabinPressureSwitch.SaveState(scn, "CABINPRESSURESWITCH");
+	SuitPressureSwitch.SaveState(scn, "SUITPRESSURESWITCH");
 	CrewStatus.SaveState(scn);
 
 	// Save EDS

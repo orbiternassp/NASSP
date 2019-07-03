@@ -638,6 +638,23 @@ void LEMPressureSwitch::SystemTimestep(double simdt)
 	}
 }
 
+void LEMPressureSwitch::LoadState(char *line, int strlen)
+{
+	int i;
+
+	sscanf(line + strlen + 1, "%i", &i);
+
+	PressureSwitch = (i != 0);
+}
+
+void LEMPressureSwitch::SaveState(FILEHANDLE scn, char *name_str)
+{
+	char buffer[100];
+
+	sprintf(buffer, "%d", PressureSwitch);
+	oapiWriteScenario_string(scn, name_str, buffer);
+}
+
 LEMSuitIsolValve::LEMSuitIsolValve()
 {
 	lem = NULL;

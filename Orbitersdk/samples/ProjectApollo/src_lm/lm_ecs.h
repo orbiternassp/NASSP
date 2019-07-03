@@ -162,6 +162,8 @@ public:
 	LEMPressureSwitch();
 	void Init(h_Tank *st, double max, double min);
 	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *name_str);
+	void LoadState(char *line, int strlen);
 
 	bool GetPressureSwitch() { return PressureSwitch; }
 protected:
