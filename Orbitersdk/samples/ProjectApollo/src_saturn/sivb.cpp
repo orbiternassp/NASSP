@@ -1093,6 +1093,17 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
+
+			if (SaturnVStage)
+			{
+				sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+				iu = new IUSV;
+			}
+			else
+			{
+				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+				iu = new IU1B;
+			}
 		}
 		else if (!strnicmp (line, "VECHNO", 6))
 		{
@@ -1235,25 +1246,9 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			}
 		}
 		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
-			if (SaturnVStage)
-			{
-				sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
-			}
-			else
-			{
-				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
-			}
 			sivbsys->LoadState(scn);
 		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-			if (SaturnVStage)
-			{
-				iu = new IUSV;
-			}
-			else
-			{
-				iu = new IU1B;
-			}
 			iu->LoadState(scn);
 		}
 		else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
@@ -1266,18 +1261,6 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		{
 			ParseScenarioLineEx (line, vstatus);
         }
-	}
-
-	if (sivbsys == NULL)
-	{
-		if (SaturnVStage)
-		{
-			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
-		}
-		else
-		{
-			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
-		}
 	}
 
 	SetS4b();
