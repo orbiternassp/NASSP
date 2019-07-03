@@ -80,6 +80,8 @@ EDS::EDS(IU *iu)
 	RangeSafetyDestructArmedBFromSIVB = false;
 	ExcessiveRollRateIndication = false;
 	ExcessivePitchYawRateIndication = false;
+	SIAllEnginesOKA = false;
+	SIAllEnginesOKB = false;
 
 	AutoAbortBus = false;
 	IUEDSBusPowered = true;
@@ -357,6 +359,16 @@ bool EDS::GetSCControl()
 	return (SCControlEnableRelay && iu->GetCommandConnector()->GetCMCSIVBTakeover());
 }
 
+bool EDS::GetAllSIEnginesRunning()
+{
+	return (!SIAllEnginesOKA && !SIAllEnginesOKB);
+}
+
+bool EDS::IsEDSUnsafe()
+{
+	return iu->GetCommandConnector()->IsEDSUnsafe();
+}
+
 void EDS::ResetBus1()
 {
 	LVEnginesCutoffEnable1 = false;
@@ -477,6 +489,9 @@ void EDS1B::Timestep(double simdt)
 
 	EDS::Timestep(simdt);
 
+	SIAllEnginesOKA = false;
+	SIAllEnginesOKB = false;
+
 	//S-IB Thrust Monitor
 	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
 	{
@@ -484,6 +499,12 @@ void EDS1B::Timestep(double simdt)
 		for (int i = 0;i < 8;i++)
 		{
 			SIThrustNotOK[i] = !ThrustOKSignal[i];
+
+			if (SIThrustNotOK[i])
+			{
+				SIAllEnginesOKA = true;
+				SIAllEnginesOKB = true;
+			}
 		}
 	}
 	else
@@ -651,6 +672,9 @@ void EDSSV::Timestep(double simdt)
 	else
 		SIISIVBNotSeparated = false;
 
+	SIAllEnginesOKA = false;
+	SIAllEnginesOKB = false;
+
 	//S-IC Thrust Monitor
 	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
 	{
@@ -658,6 +682,12 @@ void EDSSV::Timestep(double simdt)
 		for (int i = 0;i < 5;i++)
 		{
 			SIThrustNotOK[i] = !ThrustOKSignal[i];
+
+			if (SIThrustNotOK[i])
+			{
+				SIAllEnginesOKA = true;
+				SIAllEnginesOKB = true;
+			}
 		}
 	}
 	else

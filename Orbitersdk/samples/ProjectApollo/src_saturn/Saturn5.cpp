@@ -1109,18 +1109,6 @@ double SaturnV::GetSIThrustLevel()
 	return lvl / 5.0;
 }
 
-bool SaturnV::AllSIEnginesRunning()
-{
-	if (stage > PRELAUNCH_STAGE) return false;
-
-	return sic->AllEnginesRunning();
-}
-
-bool SaturnV::SIStageLogicCutoff()
-{
-	return sic->GetEngineStop();
-}
-
 void SaturnV::SetRandomFailures()
 {
 	Saturn::SetRandomFailures();

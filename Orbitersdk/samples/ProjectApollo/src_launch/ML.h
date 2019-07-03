@@ -33,6 +33,15 @@ class TSMUmbilical;
 class IUSV_ESE;
 class SIC_ESE;
 
+const double ML_SIC_INTERTANK_ARM_CONNECTING_SPEED = 1.0 / 300.0;
+const double ML_SIC_INTERTANK_ARM_RETRACT_SPEED = 1.0 / 13.0;
+const double ML_SIC_FORWARD_ARM_CONNECTING_SPEED = 1.0 / 300.0;
+const double ML_SIC_FORWARD_ARM_RETRACT_SPEED = 1.0 / 5.2;
+const double ML_SWINGARM_CONNECTING_SPEED = 1.0 / 200.0;
+const double ML_SWINGARM_RETRACT_SPEED = 1.0 / 5.0;
+const double ML_TAIL_SERVICE_MAST_CONNECTING_SPEED = 1.0 / 100.0;
+const double ML_TAIL_SERVICE_MAST_RETRACT_SPEED = 1.0 / 2.0;
+
 ///
 /// \ingroup Ground
 ///
@@ -98,10 +107,10 @@ protected:
 	UINT mastAnim;
 	double craneProc;
 	double cmarmProc;
-	double s1cintertankarmProc;
-	double s1cforwardarmProc;
-	double swingarmProc;
-	double mastProc;
+	AnimState s1cintertankarmState;
+	AnimState s1cforwardarmState;
+	AnimState swingarmState;
+	AnimState mastState;
 
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;

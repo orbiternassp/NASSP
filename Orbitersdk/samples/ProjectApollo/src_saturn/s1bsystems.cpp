@@ -759,6 +759,13 @@ void SIBSystems::GetThrustOK(bool *ok)
 	}
 }
 
+bool SIBSystems::GetEngineStop()
+{
+	for (int i = 0;i < 5;i++) if (h1engines[i]->GetEngineStop()) return true;
+
+	return false;
+}
+
 void SIBSystems::SwitchSelector(int channel)
 {
 	switch (channel)

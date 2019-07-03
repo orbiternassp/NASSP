@@ -47,7 +47,8 @@
 IU::IU() :
 dcs(this),
 AuxiliaryPowerDistributor1(this),
-AuxiliaryPowerDistributor2(this)
+AuxiliaryPowerDistributor2(this),
+lvimu(this)
 {
 	State = 0;
 	MissionTime = 0.0;
@@ -537,6 +538,21 @@ bool IUToCSMCommandConnector::GetIUUPTLMAccept()
 
 	cm.destination = CSM_IU_COMMAND;
 	cm.messageType = IUCSM_GET_IU_UPTLM_ACCEPT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToCSMCommandConnector::IsEDSUnsafe()
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_IS_EDS_UNSAFE;
 
 	if (SendMessage(cm))
 	{
@@ -1391,7 +1407,6 @@ void IU1B::LoadLVDC(FILEHANDLE scn) {
 	char *line;
 
 	lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
-	lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 	lvdc.Init();
 
@@ -1526,7 +1541,6 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 	char *line;
 
 	lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
-	lvimu.SetVessel(&lvCommandConnector);	// set vessel pointer
 	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
 	lvdc.Init();
 

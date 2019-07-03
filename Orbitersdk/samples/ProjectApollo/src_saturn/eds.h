@@ -74,6 +74,9 @@ public:
 	bool GetLiftoffEnableA() { return EDSLiftoffEnableA; }
 	bool GetLiftoffEnableB() { return EDSLiftoffEnableB; }
 	bool GetAutoAbort() { return AutoAbortBus; }
+	virtual bool GetAllSIEnginesRunning();
+	virtual bool IsEDSUnsafe();
+
 	void SetEDSLiftoffEnableA() { EDSLiftoffEnableA = true; }
 	void SetEDSLiftoffEnableB() { EDSLiftoffEnableB = true; }
 	void LiftoffEnableReset() { EDSLiftoffEnableA = false; EDSLiftoffEnableB = false; }
@@ -147,9 +150,9 @@ protected:
 	bool GSEEngineThrustIndicationEnableA;
 	//K90 (K172)
 	bool GSEEngineThrustIndicationEnableB;
-	//K49
+	//K49 (K69)
 	bool RangeSafetyDestructArmedAFromSIVB;
-	//K50
+	//K50 (K70)
 	bool RangeSafetyDestructArmedBFromSIVB;
 	//A8K1 (K71)
 	bool PadAbortRequest;
@@ -157,6 +160,10 @@ protected:
 	bool ExcessiveRollRateIndication;
 	//A5K2 (K62), A7K3 (K63), A5K1 (K64), A8K2 (K65), A4K5 (K221), A9K5 (K222)
 	bool ExcessivePitchYawRateIndication;
+	//A9K3 (K59)
+	bool SIAllEnginesOKA;
+	//A4K4 (K219)
+	bool SIAllEnginesOKB;
 	bool SIVBEngineCutoffDisabled;
 
 	//Signals

@@ -65,3 +65,10 @@ bool TSMUmbilical::ESEGetSICThrustOKSimulate(int eng)
 {
 	return TSMUmb->ESEGetSICThrustOKSimulate(eng);
 }
+
+bool TSMUmbilical::SIStageLogicCutoff()
+{
+	if (!UmbilicalConnected) return false;
+
+	return sic->GetEngineStop();
+}

@@ -42,6 +42,7 @@ public:
 	bool GetThrustOK() { return ThrustOK; }
 	double GetThrustLevel() { return ThrustLevel; }
 	bool GetFailed() { return EngineFailed; }
+	bool GetEngineStop() { return EngineStop; }
 protected:
 	THRUSTER_HANDLE &th_h1;
 	VESSEL *vessel;
@@ -100,6 +101,7 @@ public:
 	bool GetOutboardEngineOut();
 	bool GetOutboardEnginesCutoff();
 	void GetThrustOK(bool *ok);
+	bool GetEngineStop();
 protected:
 	double GetSumThrust();
 

@@ -37,6 +37,8 @@ class IUToLVCommandConnector;
 #define LVRegPIPAY 004
 #define LVRegPIPAZ 005
 
+class IU;
+
 ///
 /// \brief Saturn IMU simulation.
 /// \ingroup LVSystems
@@ -44,7 +46,7 @@ class IUToLVCommandConnector;
 class LVIMU {
 
 public:
-	LVIMU();
+	LVIMU(IU *iu);
 	~LVIMU();
 
 	void Init();
@@ -52,7 +54,6 @@ public:
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
-	void SetVessel(IUToLVCommandConnector *v) { OurVessel = v; };
 	VECTOR3 GetTotalAttitude();
 
 	bool IsCaged();
@@ -104,7 +105,7 @@ public: MATRIX3 getRotationMatrixX(double angle);
 	MATRIX3 getNavigationBaseToOrbiterLocalTransformation();
 	MATRIX3 getOrbiterLocalToNavigationBaseTransformation();
 
-	IUToLVCommandConnector *OurVessel;
+	IU *OurVessel;
 
 	bool Operate;
 	bool TurnedOn;

@@ -106,8 +106,7 @@ public:
 	bool GetInboardEngineOut();
 	bool GetOutboardEngineOut();
 
-	bool AllEnginesRunning();
-	bool GetEngineStop();
+	virtual bool GetEngineStop();
 
 	virtual void ConnectUmbilical(TSMUmbilical *umb);
 	virtual void DisconnectUmbilical();

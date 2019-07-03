@@ -634,6 +634,14 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
+	case IUCSM_IS_EDS_UNSAFE:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->IsEDSUnsafe();
+			return true;
+		}
+		break;
+
 	case IUCSM_LOAD_TLI_SOUNDS:
 		if (OurVessel)
 		{

@@ -429,14 +429,9 @@ double Saturn1b::GetSIThrustLevel()
 	return lvl / 8.0;
 }
 
-bool Saturn1b::AllSIEnginesRunning()
-{
-	return false;
-}
-
 bool Saturn1b::SIStageLogicCutoff()
 {
-	return false;
+	return sib->GetEngineStop();
 }
 
 //

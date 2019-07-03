@@ -121,10 +121,10 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	craneProc = 0;
 	cmarmProc = 0.00001;
-	s1cintertankarmProc = 0;
-	s1cforwardarmProc = 0;
-	swingarmProc = 0;
-	mastProc = 0;
+	s1cintertankarmState.Set(AnimState::CLOSED, 0.0);
+	s1cforwardarmState.Set(AnimState::CLOSED, 0.0);
+	swingarmState.Set(AnimState::CLOSED, 0.0);
+	mastState.Set(AnimState::CLOSED, 0.0);
 
 	int i;
 	for (i = 0; i < 2; i++) {
@@ -175,7 +175,7 @@ void ML::clbkPostCreation()
 {	
 	char buffer[256];
 
-	if (swingarmProc == 0.0)
+	if (swingarmState.action == AnimState::CLOSED)
 	{
 		double vcount = oapiGetVesselCount();
 		for (int i = 0; i < vcount; i++) {
@@ -195,13 +195,67 @@ void ML::clbkPostCreation()
 
 	SetAnimation(craneAnim, craneProc);
 	SetAnimation(cmarmAnim, cmarmProc);
-	SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
-	SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
-	SetAnimation(swingarmAnim, swingarmProc);
-	SetAnimation(mastAnim, mastProc);
+	SetAnimation(s1cintertankarmAnim, s1cintertankarmState.pos);
+	SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
+	SetAnimation(swingarmAnim, swingarmState.pos);
+	SetAnimation(mastAnim, mastState.pos);
 }
 
 void ML::clbkPreStep(double simt, double simdt, double mjd) {
+
+	if (s1cintertankarmState.Moving()) {
+		double dp;
+		if (s1cintertankarmState.Closing())
+		{
+			dp = simdt * ML_SIC_INTERTANK_ARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_SIC_INTERTANK_ARM_RETRACT_SPEED;
+		}
+		s1cintertankarmState.Move(dp);
+		SetAnimation(s1cintertankarmAnim, s1cintertankarmState.pos);
+	}
+
+	if (s1cforwardarmState.Moving()) {
+		double dp;
+		if (s1cforwardarmState.Closing())
+		{
+			dp = simdt * ML_SIC_FORWARD_ARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_SIC_FORWARD_ARM_RETRACT_SPEED;
+		}
+		s1cforwardarmState.Move(dp);
+		SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
+	}
+	if (swingarmState.Moving()) {
+		double dp;
+		if (swingarmState.Closing())
+		{
+			dp = simdt * ML_SWINGARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_SWINGARM_RETRACT_SPEED;
+		}
+		swingarmState.Move(dp);
+		SetAnimation(swingarmAnim, swingarmState.pos);
+	}
+	if (mastState.Moving()) {
+		double dp;
+		if (mastState.Closing())
+		{
+			dp = simdt * ML_TAIL_SERVICE_MAST_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_TAIL_SERVICE_MAST_RETRACT_SPEED;
+		}
+		mastState.Move(dp);
+		SetAnimation(mastAnim, mastState.pos);
+	}
 
 	ATTACHMENTHANDLE ah;
 
@@ -218,22 +272,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			cmarmProc = min(0.09, cmarmProc + simdt / 1000.0);
 			SetAnimation(cmarmAnim, cmarmProc);
 		}
-		if (swingarmProc < 1.0) {
-			swingarmProc = min(1.0, swingarmProc + simdt / 200.0);
-			SetAnimation(swingarmAnim, swingarmProc);
-		}
-		if (s1cintertankarmProc < 1.0) {
-			s1cintertankarmProc = min(1.0, s1cintertankarmProc + simdt / 200.0);
-			SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
-		}
-		if (s1cforwardarmProc < 1.0) {
-			s1cforwardarmProc = min(1.0, s1cforwardarmProc + simdt / 200.0);
-			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
-		}
-		if (mastProc < 1.0) {
-			mastProc = min(1.0, mastProc + simdt / 100.0);
-			SetAnimation(mastAnim, mastProc);
-		}
+		swingarmState.action = AnimState::OPENING;
+		s1cintertankarmState.action = AnimState::OPENING;
+		s1cforwardarmState.action = AnimState::OPENING;
+		mastState.action = AnimState::OPENING;
 		break;
 
 	case STATE_VABREADY:
@@ -247,22 +289,11 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			cmarmProc = max(0.00001, cmarmProc - simdt / 1000.0);
 			SetAnimation(cmarmAnim, cmarmProc);
 		}
-		if (swingarmProc > 0) {
-			swingarmProc = max(0, swingarmProc - simdt / 200.0);
-			SetAnimation(swingarmAnim, swingarmProc);
-		}
-		if (s1cintertankarmProc > 0) {
-			s1cintertankarmProc = max(0, s1cintertankarmProc - simdt / 200.0);
-			SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
-		}
-		if (s1cforwardarmProc > 0) {
-			s1cforwardarmProc = max(0, s1cforwardarmProc - simdt / 200.0);
-			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
-		}
-		if (mastProc > 0) {
-			mastProc = max(0, mastProc - simdt / 100.0);
-			SetAnimation(mastAnim, mastProc);
-		}
+
+		swingarmState.action = AnimState::CLOSING;
+		s1cintertankarmState.action = AnimState::CLOSING;
+		s1cforwardarmState.action = AnimState::CLOSING;
+		mastState.action = AnimState::CLOSING;
 
 		if (state == STATE_VABREADY) break;
 
@@ -359,16 +390,13 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (sat->GetMissionTime() > -30 && !CutoffInterlock()) {
 			cmarmProc = 1;
 			SetAnimation(cmarmAnim, cmarmProc);
+			// Move SIC intertank arm
+			s1cintertankarmState.action = AnimState::OPENING;
 			state = STATE_SICINTERTANKARM;
 		}
 		break;
 
 	case STATE_SICINTERTANKARM:
-		// Move SIC intertank arm
-		if (s1cintertankarmProc < 1) {
-			s1cintertankarmProc = min(1.0, s1cintertankarmProc + simdt / 13.0);
-			SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
-		}
 
 		// T-16.2s or later?
 		if (!hLV) break;
@@ -385,19 +413,14 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			}
 
 			if (sat->GetMissionTime() > -16.2) {
-				s1cintertankarmProc = 1;
-				SetAnimation(s1cintertankarmAnim, s1cintertankarmProc);
+				// Move SIC forward arm
+				s1cforwardarmState.action = AnimState::OPENING;
 				state = STATE_SICFORWARDARM;
 			}
 		}
 		break;
 
 	case STATE_SICFORWARDARM:
-		// Move SIC forward arm
-		if (s1cforwardarmProc < 1) {
-			s1cforwardarmProc = min(1.0, s1cforwardarmProc + simdt / 5.2);
-			SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
-		}
 
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
@@ -434,8 +457,6 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 			// T-4.9s or later?
 			if (sat->GetMissionTime() > -4.9) {
-				s1cforwardarmProc = 1;
-				SetAnimation(s1cforwardarmAnim, s1cforwardarmProc);
 				state = STATE_LIFTOFFSTREAM;
 			}
 		}
@@ -470,17 +491,6 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		break;
 	
 	case STATE_LIFTOFF:
-		// Move swingarms
-		if (swingarmProc < 1) {
-			swingarmProc = min(1.0, swingarmProc + simdt / 5.0);
-			SetAnimation(swingarmAnim, swingarmProc);
-		}
-
-		// Move masts
-		if (mastProc < 1) {
-			mastProc = min(1.0, mastProc + simdt / 2.0);
-			SetAnimation(mastAnim, mastProc);
-		}
 
 		if (!hLV) break;
 		sat = (Saturn *)oapiGetVesselInterface(hLV);
@@ -504,6 +514,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			if (Commit()) {
 				IuUmb->Disconnect();
 				TSMUmb->Disconnect();
+				// Move swingarms
+				swingarmState.action = AnimState::OPENING;
+				// Move masts
+				mastState.action = AnimState::OPENING;
 			}
 
 			//Cutoff
@@ -777,13 +791,13 @@ void ML::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 		} else if (!strnicmp (line, "CMARMPROC", 9)) {
 			sscanf (line + 9, "%lf", &cmarmProc);
 		} else if (!strnicmp (line, "S1CINTERTANKARMPROC", 19)) {
-			sscanf (line + 19, "%lf", &s1cintertankarmProc);
+			sscan_state(line + 19, s1cintertankarmState);
 		} else if (!strnicmp (line, "S1CFORWARDARMPROC", 17)) {
-			sscanf (line + 17, "%lf", &s1cforwardarmProc);
+			sscan_state(line + 17, s1cforwardarmState);
 		} else if (!strnicmp (line, "SWINGARMPROC", 12)) {
-			sscanf (line + 12, "%lf", &swingarmProc);
+			sscan_state(line + 12, swingarmState);
 		} else if (!strnicmp (line, "MASTPROC", 8)) {
-			sscanf (line + 8, "%lf", &mastProc);
+			sscan_state(line + 8, mastState);
 		} else if (!strnicmp (line, "LVNAME", 6)) {
 			strncpy (LVName, line + 7, 64);
 		} else {
@@ -801,10 +815,10 @@ void ML::clbkSaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	papiWriteScenario_double(scn, "CRANEPROC", craneProc);
 	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
-	papiWriteScenario_double(scn, "S1CINTERTANKARMPROC", s1cintertankarmProc);
-	papiWriteScenario_double(scn, "S1CFORWARDARMPROC", s1cforwardarmProc);
-	papiWriteScenario_double(scn, "SWINGARMPROC", swingarmProc);
-	papiWriteScenario_double(scn, "MASTPROC", mastProc);
+	WriteScenario_state(scn, "S1CINTERTANKARMPROC", s1cintertankarmState);
+	WriteScenario_state(scn, "S1CFORWARDARMPROC", s1cforwardarmState);
+	WriteScenario_state(scn, "SWINGARMPROC", swingarmState);
+	WriteScenario_state(scn, "MASTPROC", mastState);
 	if (LVName[0])
 		oapiWriteScenario_string(scn, "LVNAME", LVName);
 }
@@ -916,14 +930,13 @@ int ML::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 bool ML::CutoffInterlock()
 {
-	if (!sat) return false;
-	return sat->IsEDSUnsafe() || sat->SIStageLogicCutoff();
+	return (IuUmb->IsEDSUnsafe() || TSMUmb->SIStageLogicCutoff());
 }
 
 bool ML::Commit()
 {
 	if (!sat) return false;
-	return sat->AllSIEnginesRunning() && sat->GetMissionTime() >= -0.05 && !CutoffInterlock();
+	return IuUmb->AllSIEnginesRunning() && sat->GetMissionTime() >= -0.05 && !CutoffInterlock();
 }
 
 bool ML::ESEGetCommandVehicleLiftoffIndicationInhibit()

@@ -970,8 +970,7 @@ public:
 	void SetQBallPowerOff();
 	virtual void SetSIEngineStart(int n) = 0;
 	virtual double GetSIThrustLevel() = 0;
-	virtual bool AllSIEnginesRunning() = 0;
-	virtual bool SIStageLogicCutoff() = 0;
+	virtual bool SIStageLogicCutoff() { return false; }
 
 	virtual void ActivateStagingVent() {}
 
@@ -1138,7 +1137,7 @@ public:
 
 	bool GetBECOSignal(bool IsSysA);
 	bool IsEDSBusPowered(int eds);
-	virtual bool IsEDSUnsafe();
+	bool IsEDSUnsafe();
 	int GetAGCAttitudeError(int axis);
 
 	void AddRCS_S4B();

@@ -179,3 +179,17 @@ void IUUmbilical::SwitchQBallPowerOff()
 
 	iu->GetControlDistributor()->SetQBallPower(false);
 }
+
+bool IUUmbilical::AllSIEnginesRunning()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->GetAllSIEnginesRunning();
+}
+
+bool IUUmbilical::IsEDSUnsafe()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->IsEDSUnsafe();
+}

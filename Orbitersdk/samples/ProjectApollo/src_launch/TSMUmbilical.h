@@ -41,6 +41,8 @@ public:
 	virtual void AbortDisconnect();
 
 	//From ML to SLV
+	bool SIStageLogicCutoff();
+
 	//From SLV to ML
 	virtual bool ESEGetSICThrustOKSimulate(int eng);
 protected:

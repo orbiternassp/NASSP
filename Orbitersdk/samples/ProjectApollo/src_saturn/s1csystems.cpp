@@ -619,13 +619,6 @@ bool SICSystems::GetOutboardEngineOut()
 	return false;
 }
 
-bool SICSystems::AllEnginesRunning()
-{
-	for (int i = 0;i < 5;i++) if (!ThrustOK[i]) return false;
-
-	return true;
-}
-
 bool SICSystems::GetEngineStop()
 {
 	for (int i = 0;i < 5;i++) if (f1engines[i]->GetEngineStop()) return true;

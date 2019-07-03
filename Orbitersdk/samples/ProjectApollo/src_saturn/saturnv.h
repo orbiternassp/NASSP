@@ -95,8 +95,6 @@ public:
 	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	double GetSIThrustLevel();
-	bool AllSIEnginesRunning();
-	bool SIStageLogicCutoff();
 
 	void GetSIIThrustOK(bool *ok);
 	void SIIEDSCutoff(bool cut);

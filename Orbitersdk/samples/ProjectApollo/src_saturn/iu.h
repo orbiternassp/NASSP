@@ -73,6 +73,7 @@ enum IUCSMMessageType
 	IUCSM_CLEAR_TLI_SOUNDS,					///< Unload the sounds required for the TLI burn.
 	IUCSM_TLI_BEGUN,						///< Indicate for the event manager that the TLI burn has occured
 	IUCSM_TLI_ENDED,						///< Indicate for the event manager that the TLI burn has ended
+	IUCSM_IS_EDS_UNSAFE,
 
 	CSMIU_SET_VESSEL_STATS,					///< Set the vessel stats in the IU.
 	CSMIU_START_TLI_BURN,					///< Start the TLI burn.
@@ -161,6 +162,7 @@ public:
 	bool GetSIISIVbDirectStagingSignal();
 	bool GetTLIInhibitSignal();
 	bool GetIUUPTLMAccept();
+	bool IsEDSUnsafe();
 
 	bool GetEngineIndicator(int eng);
 	int LVRateAutoSwitchState();

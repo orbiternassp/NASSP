@@ -63,6 +63,10 @@ public:
 	bool ESEGetGuidanceReferenceRelease();
 
 protected:
+
+	bool CutoffInterlock();
+	bool Commit();
+
 	bool firstTimestepDone;
 	int meshindexLUT;
 	int meshindexMSS;
