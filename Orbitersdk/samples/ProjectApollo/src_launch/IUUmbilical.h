@@ -48,8 +48,10 @@ public:
 	void SwitchFCCPowerOff();
 	void SwitchQBallPowerOn();
 	void SwitchQBallPowerOff();
+	void SetControlSignalProcessorPower(bool set);
 	bool AllSIEnginesRunning();
 	bool IsEDSUnsafe();
+	void SwitchSelector(int stage, int channel);
 
 	//From SLV to ML
 	virtual bool ESEGetCommandVehicleLiftoffIndicationInhibit();

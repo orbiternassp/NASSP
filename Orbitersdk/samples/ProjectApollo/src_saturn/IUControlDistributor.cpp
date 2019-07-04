@@ -168,6 +168,11 @@ void IUControlDistributor::ResetBus2()
 	iu->GetEDS()->ResetBus2();
 }
 
+bool IUControlDistributor::GetEDSEnableLogic()
+{
+	return !(ExcessiveRatePYRAutoAbortInhibit || ExcessiveRatePYRAutoAbortInhibitEnable || ExcessiveRateRollAutoAbortInhibit || ExcessiveRateRollAutoAbortInhibitEnable || TwoEngOutAutoAbortInhibit || TwoEngOutAutoAbortInhibitEnable);
+}
+
 IUControlDistributor1B::IUControlDistributor1B(IU *iu) : IUControlDistributor(iu)
 {
 

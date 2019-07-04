@@ -128,4 +128,6 @@ protected:
 
 	bool CutoffInterlock();
 	bool Commit();
+
+	void MobileLauncherComputer(int mdo, bool on = true);
 };

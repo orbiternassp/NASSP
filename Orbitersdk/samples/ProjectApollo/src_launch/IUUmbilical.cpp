@@ -193,3 +193,15 @@ bool IUUmbilical::IsEDSUnsafe()
 
 	return iu->GetEDS()->IsEDSUnsafe();
 }
+
+void IUUmbilical::SetControlSignalProcessorPower(bool set)
+{
+	if (!IUUmbilicalConnected) return;
+
+	iu->GetControlDistributor()->SetControlSignalProcessorPowerOn(set);
+}
+
+void IUUmbilical::SwitchSelector(int stage, int channel)
+{
+	iu->GetControlDistributor()->SwitchSelector(stage, channel);
+}

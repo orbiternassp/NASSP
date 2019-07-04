@@ -54,8 +54,15 @@ public:
 	bool GetGuidanceReferenceRelease() { return GuidanceReferenceRelease; }
 
 	void SetGuidanceReferenceRelease(bool set) { GuidanceReferenceRelease = set; }
+	void SetEDSPowerInhibit(bool set) { EDSPowerInhibit = set; }
+	void SetEDSLiftoffInhibitA(bool set) { EDSLiftoffInhibitA = set; }
+	void SetEDSLiftoffInhibitB(bool set) { EDSLiftoffInhibitB = set; }
+	void SetAutoAbortSimulate(bool set) { AutoAbortSimulate = set; }
+	void SetEDSCutoffFromSC(int n, bool set) { EDSCutoffFromSC[n - 1] = set; }
+	void SetThrustOKIndicateEnableInhibitA(bool set) { ThrustOKIndicateEnableInhibitA = set; }
+	void SetThrustOKIndicateEnableInhibitB(bool set) { ThrustOKIndicateEnableInhibitB = set; }
+	void SetAutoAbortInhibit(bool set) { AutoAbortInhibit = set; }
 protected:
-
 	void SetEDSMode(int mode);
 
 	bool CommandVehicleLiftoffIndicationInhibit;
@@ -70,6 +77,7 @@ protected:
 	bool AutoAbortSimulate;
 	bool SIBurnModeSubstitute;
 	bool GuidanceReferenceRelease;
+	bool EDSCutoffFromSC[3];
 
 	double LastMissionTime = 0.0;
 

@@ -1013,3 +1013,123 @@ bool ML::ESEGetSICThrustOKSimulate(int eng)
 {
 	return SICESE->GetSICThrustOKSimulate(eng);
 }
+
+void ML::MobileLauncherComputer(int mdo, bool on)
+{
+	switch (mdo)
+	{
+	case 492: //EDS COMM Q-BALL UNIT PWR OFF
+		IuUmb->SwitchQBallPowerOff();
+		break;
+	case 493: //EDS COMM Q-BALL UNIT PWR ON
+		IuUmb->SwitchQBallPowerOn();
+		break;
+	case 734: //EDS GROUP NO 1 RESET
+		break;
+	case 737:
+		//EDS SIMULATE LIFTOFF A
+		if (on)
+		{
+			IuESE->SetEDSLiftoffInhibitA(false);
+			IuUmb->SetEDSLiftoffEnableA();
+		}
+		else
+		{
+			IuESE->SetEDSLiftoffInhibitA(true);
+			IuUmb->EDSLiftoffEnableReset();
+		}
+		break;
+	case 738:
+		//EDS SIMULATE LIFTOFF B
+		if (on)
+		{
+			IuESE->SetEDSLiftoffInhibitB(false);
+			IuUmb->SetEDSLiftoffEnableB();
+		}
+		else
+		{
+			IuESE->SetEDSLiftoffInhibitB(true);
+			IuUmb->EDSLiftoffEnableReset();
+		}
+		break;
+	case 741:
+	case 742:
+	case 743:
+	case 753:
+	case 765:
+	case 766:
+		//EDS ABORT COMMAND TO SC
+		IuESE->SetAutoAbortSimulate(on);
+		break;
+	case 778:
+	case 779:
+	case 780:
+		//EDS ENG NO 1 THRUST OK
+		SICESE->SetSICThrustOKSimulate(1, on);
+		break;
+	case 781:
+	case 782:
+	case 783:
+		//EDS ENG NO 2 THRUST OK
+		SICESE->SetSICThrustOKSimulate(2, on);
+		break;
+	case 784:
+	case 785:
+	case 786:
+		//EDS ENG NO 3 THRUST OK
+		SICESE->SetSICThrustOKSimulate(3, on);
+		break;
+	case 787:
+	case 788:
+	case 789:
+		//EDS ENG NO 4 THRUST OK
+		SICESE->SetSICThrustOKSimulate(4, on);
+		break;
+	case 790:
+	case 791:
+	case 792:
+		//EDS ENG NO 5 THRUST OK
+		SICESE->SetSICThrustOKSimulate(5, on);
+		break;
+	case 799:
+	case 800:
+	case 801:
+		//EDS COMD PWR FAIL SIM
+		IuESE->SetEDSPowerInhibit(on);
+		break;
+	case 802:
+		//EDS CUTOFF CMD NO 1 FROM S/C
+		IuESE->SetEDSCutoffFromSC(1, on);
+		break;
+	case 803:
+		//EDS CUTOFF CMD NO 2 FROM S/C
+		IuESE->SetEDSCutoffFromSC(2, on);
+		break;
+	case 804:
+		//EDS CUTOFF CMD NO 3 FROM S/C
+		IuESE->SetEDSCutoffFromSC(3, on);
+		break;
+	case 805: //EDS YAW-PITCH NO 1 ENABLE
+	case 806: //EDS YAW-PITCH NO 2 ENABLE
+	case 807: //EDS YAW-PITCH NO 3 ENABLE
+	case 808: //EDS ROLL NO 1 ENABLE
+	case 809: //EDS ROLL NO 2 ENABLE
+	case 810: //EDS ROLL NO 3 ENABLE
+	case 811: //EDS ENGINE OUT ENABLE NO 1
+	case 812: //EDS ENGINE OUT ENABLE NO 2
+	case 813: //EDS ENGINE OUT ENABLE NO 3
+		IuESE->SetAutoAbortInhibit(!on);
+		break;
+	case 825: //EDS GROUP NO 2 RESET 
+		break;
+	case 1903: //IU EDS RG SYSTEM POWER ON
+		IuUmb->SetControlSignalProcessorPower(on);
+		break;
+	case 1913: //EDS TH OK IND ENA INH A
+		IuESE->SetThrustOKIndicateEnableInhibitA(on);
+		break;
+	case 1914: //EDS TH OK IND ENA INH B
+		IuESE->SetThrustOKIndicateEnableInhibitB(on);
+		break;
+	}
+}

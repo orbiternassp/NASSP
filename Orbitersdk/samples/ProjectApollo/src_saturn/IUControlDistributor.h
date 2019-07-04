@@ -80,8 +80,10 @@ public:
 
 	//For GSE
 	void SetFCCPower(bool set) { FCCPowerOn = set; }
+	void SetControlSignalProcessorPowerOn(bool set) { ControlSignalProcessorPowerOn = set; }
 	virtual void ResetBus1();
 	virtual void ResetBus2();
+	bool GetEDSEnableLogic();
 protected:
 	IU *iu;
 
