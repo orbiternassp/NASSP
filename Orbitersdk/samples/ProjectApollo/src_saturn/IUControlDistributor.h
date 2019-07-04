@@ -73,7 +73,7 @@ public:
 	bool GetGSECommandVehicleLiftoffIndicationInhibit() { return GSECommandVehicleLiftoffIndicationInhibit; }
 
 	//For LVDA
-	void SwitchSelector(int stage, int channel);
+	virtual void SwitchSelector(int stage, int channel);
 
 	//For DCS
 	bool GetIUCommandSystemEnable() { return IUCommandSystemEnable; }

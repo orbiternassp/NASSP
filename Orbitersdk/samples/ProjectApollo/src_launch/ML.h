@@ -130,4 +130,9 @@ protected:
 	bool Commit();
 
 	void MobileLauncherComputer(int mdo, bool on = true);
+
+	void TerminalCountdownSequencer(double MissionTime);
+
+	int TCSSequence;
+	bool Hold;
 };

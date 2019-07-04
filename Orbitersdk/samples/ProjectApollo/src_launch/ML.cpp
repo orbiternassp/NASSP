@@ -50,11 +50,13 @@ char trace_file[] = "ProjectApollo ML.log";
 #define STATE_PRELAUNCH			1
 #define STATE_CMARM1			2
 #define STATE_CMARM2			3
-#define STATE_SICINTERTANKARM	4
-#define STATE_SICFORWARDARM		5
-#define STATE_LIFTOFFSTREAM		6
-#define STATE_LIFTOFF			7
-#define STATE_POSTLIFTOFF		8
+#define STATE_TERMINAL_COUNT	4
+#define STATE_SICINTERTANKARM	5
+#define STATE_SICFORWARDARM		6
+#define STATE_IGNITION_SEQUENCE 7
+#define STATE_LIFTOFFSTREAM		8
+#define STATE_LIFTOFF			9
+#define STATE_POSTLIFTOFF		10
 
 // Pad and VAB coordinates
 #define VAB_LON -80.6509353	///\todo fix for Orbiter 2010-P1
@@ -118,6 +120,8 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	touchdownPointHeight = -86.677; // pad height
 	hLV = 0;
 	state = STATE_ROLLOUT;
+	Hold = false;
+	TCSSequence = 0;
 
 	craneProc = 0;
 	cmarmProc = 0.00001;
@@ -387,32 +391,64 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 		sat->ActivatePrelaunchVenting();
 
-		if (sat->GetMissionTime() > -30 && !CutoffInterlock()) {
-			cmarmProc = 1;
-			SetAnimation(cmarmAnim, cmarmProc);
-			// Move SIC intertank arm
-			s1cintertankarmState.action = AnimState::OPENING;
-			state = STATE_SICINTERTANKARM;
+		if (sat->GetMissionTime() >= -187.0)
+		{
+			if (CutoffInterlock())
+			{
+				Hold = true;
+			}
+			else if (Hold == false)
+			{
+				cmarmProc = 1;
+				SetAnimation(cmarmAnim, cmarmProc);
+				state = STATE_TERMINAL_COUNT;
+			}
 		}
 		break;
+	case STATE_TERMINAL_COUNT:
+		
+		if (!hLV) break;
+		sat = (Saturn *)oapiGetVesselInterface(hLV);
 
+		sat->ActivatePrelaunchVenting();
+		
+		if (sat->GetMissionTime() > -30)
+		{
+			if (CutoffInterlock())
+			{
+				Hold = true;
+			}
+			else if (Hold == false)
+			{
+				// Move SIC intertank arm
+				s1cintertankarmState.action = AnimState::OPENING;
+				state = STATE_SICINTERTANKARM;
+			}
+		}
+		break;
 	case STATE_SICINTERTANKARM:
 
-		// T-16.2s or later?
+		
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
 
 		sat->ActivatePrelaunchVenting();
 
-		if (!CutoffInterlock())
+		//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
+		if (sat->GetMissionTime() >= -(17.0 + oapiGetSimStep()))
 		{
-			//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
-			if (sat->GetMissionTime() >= -(17.0 + oapiGetSimStep()))
-			{
-				IuESE->SetGuidanceReferenceRelease(true);
-			}
+			IuESE->SetGuidanceReferenceRelease(true);
+		}
 
-			if (sat->GetMissionTime() > -16.2) {
+		// T-16.2s or later?
+		if (sat->GetMissionTime() > -16.2)
+		{
+			if (CutoffInterlock())
+			{
+				Hold = true;
+			}
+			else if (Hold == false)
+			{
 				// Move SIC forward arm
 				s1cforwardarmState.action = AnimState::OPENING;
 				state = STATE_SICFORWARDARM;
@@ -425,20 +461,33 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (!hLV) break;
 		sat = (Saturn *) oapiGetVesselInterface(hLV);
 
-		if (sat->GetMissionTime() < -9)
+		sat->ActivatePrelaunchVenting();
+
+		// T-8.9s or later?
+		if (sat->GetMissionTime() > -8.9)
 		{
-			sat->ActivatePrelaunchVenting();
+			if (CutoffInterlock())
+			{
+				Hold = true;
+				break;
+			}
+			else if (Hold == false)
+			{
+				sat->DeactivatePrelaunchVenting();
+				state = STATE_IGNITION_SEQUENCE;
+			}
+			else break;
 		}
-		else
-		{
-			sat->DeactivatePrelaunchVenting();
-		}
+		//Fall into
+	case STATE_IGNITION_SEQUENCE:
+		break;
 
 		if (CutoffInterlock())
 		{
+			Hold = true;
 			sat->SIGSECutoff(true);
 		}
-		else
+		else if (Hold == false)
 		{
 			if (sat->GetMissionTime() > -8.9)
 			{
@@ -474,9 +523,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		// T-1s or later?
 		if (CutoffInterlock())
 		{
+			Hold = true;
 			sat->SIGSECutoff(true);
 		}
-		else
+		else if (Hold == false)
 		{
 			//Hold-down force
 			if (sat->GetMissionTime() > -4.0) {
@@ -497,12 +547,19 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 
 		liftoffStreamLevel = sat->GetSIThrustLevel();
 
-		// Disconnect IU Umbilical
-		if (CutoffInterlock())
+		//Cutoff
+		if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
 		{
 			sat->SIGSECutoff(true);
 		}
-		else
+
+		// T-1s or later?
+		if (CutoffInterlock())
+		{
+			Hold = true;
+			sat->SIGSECutoff(true);
+		}
+		else if (Hold == false)
 		{
 			// Soft-Release Pin Dragging
 			if (sat->GetMissionTime() < 0.5)
@@ -518,12 +575,6 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 				swingarmState.action = AnimState::OPENING;
 				// Move masts
 				mastState.action = AnimState::OPENING;
-			}
-
-			//Cutoff
-			if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
-			{
-				sat->SIGSECutoff(true);
 			}
 
 			// T+8s or later?
@@ -554,7 +605,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 	}
 
 	//IU ESE
-	if (sat)
+	if (sat && state >= STATE_PRELAUNCH)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
 	}
@@ -782,6 +833,9 @@ void ML::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	char *line;
 
 	while (oapiReadScenario_nextline (scn, line)) {
+		
+		papiReadScenario_bool(line, "HOLD", Hold);
+
 		if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line + 5, "%i", &state);
 		} else if (!strnicmp (line, "TOUCHDOWNPOINTHEIGHT", 20)) {
@@ -812,6 +866,7 @@ void ML::clbkSaveState(FILEHANDLE scn) {
 	VESSEL2::clbkSaveState(scn);
 
 	oapiWriteScenario_int(scn, "STATE", state);
+	papiWriteScenario_bool(scn, "HOLD", Hold);
 	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	papiWriteScenario_double(scn, "CRANEPROC", craneProc);
 	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
@@ -1018,6 +1073,14 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 {
 	switch (mdo)
 	{
+	case 84: //EDV SIC INTK ARM EXTEND
+		break;
+	case 202: //EDV COM MOD RETRACT PARK
+		break;
+	case 251: //EDV COM MOD AUTO ARM RETRACT
+		break;
+	case 252: //EDV COM MOD AUTO ARM EXTEND
+		break;
 	case 492: //EDS COMM Q-BALL UNIT PWR OFF
 		IuUmb->SwitchQBallPowerOff();
 		break;
@@ -1130,6 +1193,205 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 		break;
 	case 1914: //EDS TH OK IND ENA INH B
 		IuESE->SetThrustOKIndicateEnableInhibitB(on);
+		break;
+	}
+}
+
+void ML::TerminalCountdownSequencer(double MissionTime)
+{
+	switch (TCSSequence)
+	{
+	case 0:
+		if (MissionTime >= -187.0)
+		{
+			//S-II End Turbine Start Bottle Pressurization (GH2)
+			//S-II Bleed Turbine Start Bottle Press. Umbilical Line
+			//S-II End Ground Prepressurization Line Purge (GHe)
+			//S-II Begin LOX Tank Prepressurization (GHe)
+			TCSSequence++;
+		}
+		break;
+	case 1:
+		if (MissionTime >= -182.0)
+		{
+			//S-II Begin LOX Tank Prepressurization + 5 Seconds
+			TCSSequence++;
+		}
+		break;
+	case 2:
+		if (MissionTime >= -172.0)
+		{
+			//S-II End LOX Replenish
+			//S-II Begin LOX Tank Fill Line Drain and Purge
+			TCSSequence++;
+		}
+		break;
+	case 3:
+		if (MissionTime >= -167.0)
+		{
+			//S-IVB Begin LOX Tank Prepressurization
+			TCSSequence++;
+		}
+		break;
+	case 4:
+		if (MissionTime >= -152.0)
+		{
+			//S-IVB End LOX Replenish
+			//S-IVB Begin LOX Tank Fill Line Drain and Purge
+			TCSSequence++;
+		}
+		break;
+	case 5:
+		if (MissionTime >= -102.0)
+		{
+			//S-IC Bypass Engine Hydraulic Interlocks
+			TCSSequence++;
+		}
+		break;
+	case 6:
+		if (MissionTime >= -97.0)
+		{
+			//S-IC Begin Fuel Tank Prepressurization (GHe)
+			//S-II End LH2 Tank Pressurization System Purge (80 PSI)
+			//S-II Begin LH2 Tank Prepressurization (GHe)
+			//S-IVB Begin GH2 Vent Line Purge
+			//S-IVB Begin LH2 Tank Prepressurization
+			TCSSequence++;
+		}
+		break;
+	case 7:
+		if (MissionTime >= -96.0)
+		{
+			//S-II End LH2 Tank Pressurization System Purge (80 PSI) + 1 Second
+			TCSSequence++;
+		}
+		break;
+	case 8:
+		if (MissionTime >= -92.0)
+		{
+			//S-II Begin LH2 Tank Prepressurization (GHe) + 5 Seconds
+			TCSSequence++;
+		}
+		break;
+	case 9:
+		if (MissionTime >= -82.0)
+		{
+			//S-II End LH2 Replenish
+			//S-II Begin LH2 Tank Fill Line Drain and Purge
+			//S-IVB End LH2 Replenish
+			//S-IVB Begin LH2 Tank Fill Line Drain and Purge
+			TCSSequence++;
+		}
+		break;
+	case 10:
+		if (MissionTime >= -72.0)
+		{
+			//S-IC Begin LOX Tank Prepressurization (GHe)
+			//S-IC End LOX Replenish
+			//S-IC End LOX Suction Line Helium Bubbling (Lines 1 + 3)
+			//S-IC Begin LOX Fill Line Drain and Purge
+			TCSSequence++;
+		}
+		break;
+	case 11:
+		if (MissionTime >= -51.0)
+		{
+			//S-IC Begin Engine Calorimeter Purge (GN2)
+			TCSSequence++;
+		}
+		break;
+	case 12:
+		if (MissionTime >= -50.0)
+		{
+			//Veh. Ground Power to Space Vehicle Off
+			//Veh. Space Vehicle Internal Power On
+			TCSSequence++;
+		}
+		break;
+	case 13:
+		if (MissionTime >= -40.0)
+		{
+			//S-IVB LH2 Vent Directional Control Valve - Ground Pos. Off
+			//S-IVB LH2 Vent Directional Control Valve - Flight Pos. On
+			TCSSequence++;
+		}
+		break;
+	case 14:
+		if (MissionTime >= -30.0)
+		{
+			//Veh. Begin Retracting S-IC Intertank Service Arm
+			//S-IC Fuel and LOX Fill and Drain Valves Disabled
+			//S-IC Engine Hydraulic System Flight Activation
+			//S-IC End Intertank Umbilical Carrier Disconnect Purge
+			//S-IC End Intertank Umbilical Disconnect Pressurization
+			//S-II End Engine Helium Bottles Pressurization (GHe)
+			//S-II Bleed Engine Helium Bottle Press. Umbilical Line
+			//S-II End LOX Tank Prepressurization (GHe)
+			//S-II Bleed LOX Tank Pressurization Umbilical Line
+			//S-II End LH2 Tank Prepressurization (GHe)
+			//S-II Bleed LH2 Tank Pressurization Umbilical Line
+			//S-II End Actuation System (Recirc) Pressurization (GHe)
+			//S-II Bleed Actuation Sys Pressurization Umbilical
+			//S-II Bleed Start Bottle Vent Valve Umbilical Line
+			TCSSequence++;
+		}
+		break;
+	case 15:
+		if (MissionTime >= -29.0)
+		{
+			//S-II End LH2 Tank Prepressurization (GHe) + 1 Second
+			//S-II End LOX Tank Prepressurization (GHe) + 1 Second
+			TCSSequence++;
+		}
+		break;
+	case 16:
+		if (MissionTime >= -22.0)
+		{
+			//Guidance Reference Release Alert
+			TCSSequence++;
+		}
+		break;
+	case 17:
+		if (MissionTime >= -20.0)
+		{
+			//S-IC LOX Interconnect Valves Closed
+			TCSSequence++;
+		}
+		break;
+	case 18:
+		if (MissionTime >= -17.0)
+		{
+			//Veh. S-IC Intertank Service Arm Retracted and Locked
+			//Veh. Range Safety Command Receiver On Internal Power
+			//IU Guidance Reference Release
+			TCSSequence++;
+		}
+		break;
+	case 19:
+		if (MissionTime >= -16.2)
+		{
+			//Veh. Begin Retracting S-IC Forward Service Arm
+			//S-IC End Forward Umbilical Disconnect Pressurization
+			//S-IC End Electrical Housing Disconnect Purge
+			//S-IC End Fwd Compartment Instr. Cont. Conditioning
+			//S-IC Bleed LOX Suction Line Bubbling Umbilical 
+			//Veh. S-IC Foward Service Arm Retracted and Locked
+			TCSSequence++;
+		}
+		break;
+	case 20:
+		if (MissionTime >= -15.0)
+		{
+			//S-IC Bleed LOX Suction Line Bubbling Umbilical 
+			TCSSequence++;
+		}
+		break;
+	case 21:
+		if (MissionTime >= -10.2)
+		{
+			//Veh. S-IC Foward Service Arm Retracted and Locked
+			TCSSequence++;
+		}
 		break;
 	}
 }
