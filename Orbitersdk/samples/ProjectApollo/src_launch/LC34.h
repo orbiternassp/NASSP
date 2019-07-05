@@ -75,13 +75,14 @@ protected:
 	SoundLib soundlib;
 	OBJHANDLE hLV;
 	int state;
+	bool Hold;
 
 	UINT mssAnim;
 	UINT cmarmAnim;
 	UINT swingarmAnim;
 	double mssProc;
 	double cmarmProc;
-	double swingarmProc;
+	AnimState swingarmState;
 
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;

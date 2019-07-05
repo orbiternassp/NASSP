@@ -51,9 +51,10 @@ char trace_file[] = "ProjectApollo LC34.log";
 #define STATE_PRELAUNCH			0
 #define STATE_CMARM1			1
 #define STATE_CMARM2			2
-#define STATE_LIFTOFFSTREAM		3
-#define STATE_LIFTOFF			4
-#define STATE_POSTLIFTOFF		5
+#define STATE_TERMINAL_COUNT	3
+#define STATE_IGNITION_SEQUENCE 4
+#define STATE_LIFTOFF			5
+#define STATE_POSTLIFTOFF		6
 
 
 PARTICLESTREAMSPEC liftoffStreamSpec = {
@@ -97,10 +98,11 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	hLV = 0;
 	sat = 0;
 	state = STATE_PRELAUNCH;
+	Hold = false;
 
 	mssProc = 0;
 	cmarmProc = 0;
-	swingarmProc = 0;
+	swingarmState.Set(AnimState::CLOSED, 0.0);
 
 	int i;
 	for (i = 0; i < 2; i++) {
@@ -150,7 +152,7 @@ void LC34::clbkPostCreation()
 {
 	char buffer[256];
 
-	if (swingarmProc == 0.0)
+	if (swingarmState.action == AnimState::CLOSED)
 	{
 		double vcount = oapiGetVesselCount();
 		for (int i = 0; i < vcount; i++) {
@@ -158,7 +160,7 @@ void LC34::clbkPostCreation()
 			oapiGetObjectName(h, buffer, 256);
 			if (!strcmp(LVName, buffer)) {
 				hLV = h;
-				Saturn *sat = (Saturn *)oapiGetVesselInterface(hLV);
+				sat = (Saturn *)oapiGetVesselInterface(hLV);
 				if (sat->GetStage() < LAUNCH_STAGE_ONE)
 				{
 					IuUmb->Connect(sat->GetIU());
@@ -169,15 +171,17 @@ void LC34::clbkPostCreation()
 
 	SetAnimation(mssAnim, mssProc);
 	SetAnimation(cmarmAnim, cmarmProc);
-	SetAnimation(swingarmAnim, swingarmProc);
+	SetAnimation(swingarmAnim, swingarmState.pos);
 }
 
 void LC34::clbkPreStep(double simt, double simdt, double mjd)
 {
 	if (!firstTimestepDone) DoFirstTimestep();
 
-	if (hLV) {
-		sat = (Saturn *)oapiGetVesselInterface(hLV);
+	if (swingarmState.Moving()) {
+		double dp = simdt * 0.25;
+		swingarmState.Move(dp);
+		SetAnimation(swingarmAnim, swingarmState.pos);
 	}
 
 	switch (state) {
@@ -189,8 +193,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		}
 
 		// T-33min or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		if (sat->GetMissionTime() > -3 * 3600)
 		{
@@ -212,8 +215,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		}
 
 		// T-5min or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
 		sat->ActivatePrelaunchVenting();
 
@@ -231,46 +233,73 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 			SetAnimation(cmarmAnim, cmarmProc);
 		}
 
-		// T-4.9s or later?
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
+		if (!sat) break;
 
-		if (sat->GetMissionTime() < -9)
-		{
-			sat->ActivatePrelaunchVenting();
-		}
-		else
-		{
-			sat->DeactivatePrelaunchVenting();
-		}
+		sat->ActivatePrelaunchVenting();
 
-		if (!CutoffInterlock())
+		// T-2:43min or later?
+		if (sat->GetMissionTime() > -163.0)
 		{
-			//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
-			if (sat->GetMissionTime() >= -(17.0 + oapiGetSimStep()))
+			if (CutoffInterlock())
 			{
-				IuESE->SetGuidanceReferenceRelease(true);
+				Hold = true;
 			}
-
-			if (sat->GetMissionTime() > -4.9) {
+			else if (Hold == false)
+			{
 				cmarmProc = 1;
 				SetAnimation(cmarmAnim, cmarmProc);
-				state = STATE_LIFTOFFSTREAM;
+				state = STATE_TERMINAL_COUNT;
 			}
 		}
+
 		break;
+	case STATE_TERMINAL_COUNT:
+		if (!sat) break;
 
+		sat->ActivatePrelaunchVenting();
 
-	case STATE_LIFTOFFSTREAM:
-		if (!hLV) break;
-		sat = (Saturn *)oapiGetVesselInterface(hLV);
+		//GRR should happen at a fairly precise time and usually happens on the next timestep, so adding oapiGetSimStep is a decent solution
+		if (sat->GetMissionTime() >= -(17.0 + oapiGetSimStep()))
+		{
+			IuESE->SetGuidanceReferenceRelease(true);
+		}
+
+		// T-3.1s or later?
+		if (sat->GetMissionTime() > -3.1)
+		{
+			if (CutoffInterlock())
+			{
+				Hold = true;
+				break;
+			}
+			else if (Hold == false)
+			{
+				sat->DeactivatePrelaunchVenting();
+				state = STATE_IGNITION_SEQUENCE;
+			}
+			else break;
+		}
+		else break;
+		//Fall Into
+	case STATE_IGNITION_SEQUENCE:
+
+		if (!sat) break;
+
+		if (sat->GetMissionTime() > -2.0 && sat->GetMissionTime() < -1.0)
+			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() + 2.0) / 1.0;
+		else
+			liftoffStreamLevel = sat->GetSIThrustLevel();
 
 		if (CutoffInterlock())
 		{
+			Hold = true;
 			sat->SIGSECutoff(true);
 		}
-		else
+		else if (Hold == false)
 		{
+			//Hold-down force
+			sat->AddForce(_V(0, 0, -8. * sat->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
+
 			if (sat->GetMissionTime() > -3.1)
 			{
 				sat->SetSIEngineStart(5);
@@ -296,68 +325,54 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 			if (sat->GetMissionTime() > -1) {
 				state = STATE_LIFTOFF;
 			}
-
-			if (sat->GetMissionTime() < -2.0)
-				liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() + 4.9) / 2.9;
-			else
-				liftoffStreamLevel = sat->GetSIThrustLevel();
-
-			//Hold-down force
-			if (sat->GetMissionTime() > -4.0) {
-				sat->AddForce(_V(0, 0, -8. * sat->GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
-			}
 		}
+
 		break;
 	
 	case STATE_LIFTOFF:
-		if (!hLV) break;
-		sat = (Saturn *)oapiGetVesselInterface(hLV);
-
-		if (CutoffInterlock())
-		{
-			sat->SIGSECutoff(true);
-		}
-		else
-		{
-			if (Commit())
-			{
-				// Disconnect IU Umbilical
-				if (sat->GetMissionTime() >= -0.05) {
-					IuUmb->Disconnect();
-				}
-
-				// T+4s or later?
-				if (sat->GetMissionTime() > 4) {
-					state = STATE_POSTLIFTOFF;
-				}
-
-				// Soft-Release Pin Dragging
-				if (sat->GetMissionTime() < 0.5) {
-					double PinDragFactor = min(1.0, 1.0 - (sat->GetMissionTime() * 2.0));
-					sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
-				}
-
-				// Move swingarms
-				if (swingarmProc < 1) {
-					swingarmProc = min(1.0, swingarmProc + simdt / 4.0);
-					SetAnimation(swingarmAnim, swingarmProc);
-				}
-			}
-		}
+		if (!sat) break;
 
 		liftoffStreamLevel = sat->GetSIThrustLevel();
-	break;
-
-	case STATE_POSTLIFTOFF:
-
-		if (!hLV) break;
-		sat = (Saturn *) oapiGetVesselInterface(hLV);
 
 		//Cutoff
 		if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
 		{
 			sat->SIGSECutoff(true);
 		}
+
+		if (CutoffInterlock())
+		{
+			Hold = true;
+			sat->SIGSECutoff(true);
+		}
+		else if (Hold == false)
+		{
+			// Soft-Release Pin Dragging
+			if (sat->GetMissionTime() < 0.5) {
+				double PinDragFactor = min(1.0, 1.0 - (sat->GetMissionTime() * 2.0));
+				sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
+			}
+
+			if (Commit())
+			{
+				// Disconnect IU Umbilical
+				IuUmb->Disconnect();
+
+				// Move swingarms
+				swingarmState.action = AnimState::OPENING;
+			}
+
+			// T+4s or later?
+			if (sat->GetMissionTime() > 4) {
+				state = STATE_POSTLIFTOFF;
+			}
+		}
+		
+	break;
+
+	case STATE_POSTLIFTOFF:
+
+		if (!sat) break;
 
 		if (sat->GetMissionTime() < 10.0)
 			liftoffStreamLevel = sat->GetSIThrustLevel()*(sat->GetMissionTime() - 10.0) / -6.0;
@@ -375,7 +390,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 	}
 
 	//IU ESE
-	if (sat)
+	if (sat && state >= STATE_PRELAUNCH)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
 	}
@@ -441,6 +456,8 @@ void LC34::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	char *line;
 
 	while (oapiReadScenario_nextline (scn, line)) {
+
+		papiReadScenario_bool(line, "HOLD", Hold);
 		if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line + 5, "%i", &state);
 		} else if (!strnicmp (line, "TOUCHDOWNPOINTHEIGHT", 20)) {
@@ -449,8 +466,8 @@ void LC34::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 			sscanf (line + 7, "%lf", &mssProc);
 		} else if (!strnicmp (line, "CMARMPROC", 9)) {
 			sscanf (line + 9, "%lf", &cmarmProc);
-		} else if (!strnicmp (line, "SWINGARMPROC", 12)) {
-			sscanf (line + 12, "%lf", &swingarmProc);
+		} else if (!strnicmp (line, "SWINGARMSTATE", 13)) {
+			sscan_state(line + 13, swingarmState);
 		} else if (!strnicmp (line, "LVNAME", 6)) {
 			strncpy (LVName, line + 7, 64);
 		} else {
@@ -465,10 +482,11 @@ void LC34::clbkSaveState(FILEHANDLE scn) {
 	VESSEL2::clbkSaveState(scn);
 
 	oapiWriteScenario_int(scn, "STATE", state);
+	papiWriteScenario_bool(scn, "HOLD", Hold);
 	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	papiWriteScenario_double(scn, "MSSPROC", mssProc);
 	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
-	papiWriteScenario_double(scn, "SWINGARMPROC", swingarmProc);
+	WriteScenario_state(scn, "SWINGARMSTATE", swingarmState);
 	if (LVName[0])
 		oapiWriteScenario_string(scn, "LVNAME", LVName);
 

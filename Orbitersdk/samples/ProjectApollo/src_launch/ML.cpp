@@ -478,6 +478,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			}
 			else break;
 		}
+		else break;
 		//Fall into
 	case STATE_IGNITION_SEQUENCE:
 		break;
@@ -533,6 +534,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 				sat->AddForce(_V(0, 0, -5. * sat->GetFirstStageThrust()), _V(0, 0, 0));
 			}
 
+			// T-1s or later?
 			if (sat->GetMissionTime() > -1) {
 				state = STATE_LIFTOFF;
 			}
@@ -553,7 +555,6 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			sat->SIGSECutoff(true);
 		}
 
-		// T-1s or later?
 		if (CutoffInterlock())
 		{
 			Hold = true;
