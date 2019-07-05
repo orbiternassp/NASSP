@@ -25,15 +25,18 @@
 #pragma once
 
 #include "IUUmbilicalInterface.h"
+#include "SCMUmbilicalInterface.h"
 
 class LEMSaturn;
 class IUUmbilical;
 class IU_ESE;
+class SCMUmbilical;
+class SIB_ESE;
 
 ///
 /// \ingroup Ground
 ///
-class LC37: public VESSEL2, public IUUmbilicalInterface {
+class LC37: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface {
 
 public:
 	LC37(OBJHANDLE hObj, int fmodel);
@@ -62,6 +65,9 @@ public:
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
 
+	//ML/S-IC Interface
+	bool ESEGetSIBThrustOKSimulate(int eng);
+
 protected:
 	bool firstTimestepDone;
 	bool abort;
@@ -80,5 +86,7 @@ protected:
 
 	LEMSaturn *sat;
 	IUUmbilical *IuUmb;
+	SCMUmbilical *SCMUmb;
 	IU_ESE *IuESE;
+	SIB_ESE *SIBESE;
 };

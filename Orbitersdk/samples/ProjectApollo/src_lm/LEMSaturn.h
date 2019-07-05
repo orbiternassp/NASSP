@@ -65,8 +65,6 @@ public:
 	void SeparateStage(UINT stage);
 	void SetStage(int s);
 
-	virtual void SetSIEngineStart(int eng);
-
 	void PlayCountSound(bool StartStop);
 	void PlaySepsSound(bool StartStop);
 
@@ -94,6 +92,8 @@ public:
 	void LMSLASeparationFire();
 
 	virtual IU *GetIU();
+	//Subsystem Access
+	SIBSystems *GetSIB() { return sib; }
 
 protected:
 

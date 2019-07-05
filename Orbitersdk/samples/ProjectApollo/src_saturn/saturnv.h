@@ -92,7 +92,6 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
-	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	double GetSIThrustLevel();
 

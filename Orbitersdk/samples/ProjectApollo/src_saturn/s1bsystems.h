@@ -69,6 +69,9 @@ protected:
 	const double GIMBALLIMIT = 8.0*RAD;
 };
 
+class SCMUmbilical;
+class Pyro;
+class Sound;
 
 class SIBSystems
 {
@@ -82,7 +85,7 @@ public:
 	void SetEngineFailureParameters(int n, double SICutTimes);
 	bool GetFailInit() { return FailInit; }
 
-	void SetEngineStart(int n);
+	virtual void SetEngineStart(int n);
 	void SwitchSelector(int channel);
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 
@@ -101,9 +104,14 @@ public:
 	bool GetOutboardEngineOut();
 	bool GetOutboardEnginesCutoff();
 	void GetThrustOK(bool *ok);
-	bool GetEngineStop();
+	virtual bool GetEngineStop();
+
+	virtual void ConnectUmbilical(SCMUmbilical *umb);
+	virtual void DisconnectUmbilical();
+	bool IsUmbilicalConnected();
 protected:
 	double GetSumThrust();
+	bool ESEGetSIBThrustOKSimulate(int eng);
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -189,4 +197,6 @@ protected:
 	bool EarlySICutoff[8];
 	double FirstStageFailureTime[8];
 	double FailureTimer;
+
+	SCMUmbilical *SCMUmb;
 };

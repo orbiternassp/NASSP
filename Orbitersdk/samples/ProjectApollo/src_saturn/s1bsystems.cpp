@@ -32,6 +32,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "papi.h"
 
 #include "s1bsystems.h"
+#include "SCMUmbilical.h"
 
 H1Engine::H1Engine(VESSEL *v, THRUSTER_HANDLE &h1, bool cangimbal, double pcant, double ycant)
 	:vessel(v), th_h1(h1)
@@ -812,4 +813,28 @@ void SIBSystems::SwitchSelector(int channel)
 	default:
 		break;
 	}
+}
+
+void SIBSystems::ConnectUmbilical(SCMUmbilical *umb)
+{
+	SCMUmb = umb;
+}
+
+void SIBSystems::DisconnectUmbilical()
+{
+	SCMUmb = NULL;
+}
+
+bool SIBSystems::IsUmbilicalConnected()
+{
+	if (SCMUmb && SCMUmb->IsUmbilicalConnected()) return true;
+
+	return false;
+}
+
+bool SIBSystems::ESEGetSIBThrustOKSimulate(int eng)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return SCMUmb->ESEGetSIBThrustOKSimulate(eng);
 }

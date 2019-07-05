@@ -72,3 +72,10 @@ bool TSMUmbilical::SIStageLogicCutoff()
 
 	return sic->GetEngineStop();
 }
+
+void TSMUmbilical::SetEngineStart(int eng)
+{
+	if (!UmbilicalConnected) return;
+
+	return sic->SetEngineStart(eng);
+}

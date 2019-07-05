@@ -39,6 +39,7 @@
 #include "csmcomputer.h"
 #include "ioChannels.h"
 
+#include "s1bsystems.h"
 #include "saturn.h"
 #include "saturn1b.h"
 
@@ -402,13 +403,6 @@ bool Saturn1b::GetSIBLowLevelSensorsDry()
 	return sib->GetLowLevelSensorsDry();
 }
 
-void Saturn1b::SetSIEngineStart(int n)
-{
-	if (stage >= LAUNCH_STAGE_ONE) return;
-
-	sib->SetEngineStart(n);
-}
-
 void Saturn1b::SetSIThrusterDir(int n, double yaw, double pitch)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
@@ -427,11 +421,6 @@ double Saturn1b::GetSIThrustLevel()
 	}
 
 	return lvl / 8.0;
-}
-
-bool Saturn1b::SIStageLogicCutoff()
-{
-	return sib->GetEngineStop();
 }
 
 //

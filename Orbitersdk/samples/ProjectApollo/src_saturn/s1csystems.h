@@ -84,7 +84,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	void SetEngineStart(int n);
+	virtual void SetEngineStart(int n);
 	void InboardEngineCutoff();
 	void OutboardEnginesCutoff();
 	void OutboardEnginesCutoffEnable() { PointLevelSensorArmed = true; }

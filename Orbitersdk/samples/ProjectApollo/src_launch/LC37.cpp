@@ -33,6 +33,9 @@
 #include "soundlib.h"
 #include "tracer.h"
 
+#include "IU_ESE.h"
+#include "SCMUmbilical.h"
+#include "SIB_ESE.h"
 #include "IUUmbilical.h"
 #include "LC37.h"
 #include "nasspdefs.h"
@@ -42,7 +45,7 @@
 #include "LEM.h"
 #include "LEMSaturn.h"
 #include "papi.h"
-#include "IU_ESE.h"
+
 
 HINSTANCE g_hDLL;
 
@@ -111,11 +114,15 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	IuUmb = new IUUmbilical(this);
 	IuESE = new IU_ESE(IuUmb);
+	SCMUmb = new SCMUmbilical(this);
+	SIBESE = new SIB_ESE(SCMUmb);
 }
 
 LC37::~LC37() {
 	delete IuUmb;
 	delete IuESE;
+	delete SCMUmb;
+	delete SIBESE;
 }
 
 void LC37::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -149,6 +156,7 @@ void LC37::clbkPostCreation()
 			if (sat->GetStage() < LAUNCH_STAGE_ONE)
 			{
 				IuUmb->Connect(sat->GetIU());
+				SCMUmb->Connect(sat->GetSIB());
 			}
 		}
 	}
@@ -198,7 +206,6 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 	case STATE_CMARM2:
 		if (abort) break; // Don't do anything if we have aborted.
 
-		// T-4.9s or later?
 		if (!hLV) break;
 		sat = (LEMSaturn *) oapiGetVesselInterface(hLV);
 
@@ -217,6 +224,7 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 			sat->DeactivatePrelaunchVenting();
 		}
 
+		// T-4.9s or later?
 		if (sat->GetMissionTime() > -4.9) {
 			state = STATE_LIFTOFFSTREAM;
 		}
@@ -229,23 +237,23 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 
 		if (sat->GetMissionTime() > -3.1)
 		{
-			sat->SetSIEngineStart(5);
-			sat->SetSIEngineStart(7);
+			SCMUmb->SetEngineStart(5);
+			SCMUmb->SetEngineStart(7);
 		}
 		if (sat->GetMissionTime() > -3.0)
 		{
-			sat->SetSIEngineStart(6);
-			sat->SetSIEngineStart(8);
+			SCMUmb->SetEngineStart(6);
+			SCMUmb->SetEngineStart(8);
 		}
 		if (sat->GetMissionTime() > -2.9)
 		{
-			sat->SetSIEngineStart(2);
-			sat->SetSIEngineStart(4);
+			SCMUmb->SetEngineStart(2);
+			SCMUmb->SetEngineStart(4);
 		}
 		if (sat->GetMissionTime() > -2.8)
 		{
-			sat->SetSIEngineStart(1);
-			sat->SetSIEngineStart(3);
+			SCMUmb->SetEngineStart(1);
+			SCMUmb->SetEngineStart(3);
 		}
 
 		// T-1s or later?
@@ -273,6 +281,7 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 		// Disconnect IU Umbilical
 		if (sat->GetMissionTime() >= -0.05) {
 			IuUmb->Disconnect();
+			SCMUmb->Disconnect();
 		}
 
 		// T+4s or later?
@@ -578,4 +587,9 @@ bool LC37::ESEGetSIBurnModeSubstitute()
 bool LC37::ESEGetGuidanceReferenceRelease()
 {
 	return IuESE->GetGuidanceReferenceRelease();
+}
+
+bool LC37::ESEGetSIBThrustOKSimulate(int eng)
+{
+	return SIBESE->GetSIBThrustOKSimulate(eng);
 }

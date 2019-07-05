@@ -998,13 +998,6 @@ bool SaturnV::GetSIOutboardEngineOut()
 	return sic->GetOutboardEngineOut();
 }
 
-void SaturnV::SetSIEngineStart(int n)
-{
-	if (stage >= LAUNCH_STAGE_ONE) return;
-
-	sic->SetEngineStart(n);
-}
-
 void SaturnV::SetSIThrusterDir(int n, double yaw, double pitch)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;

@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2019
 
-S-IC Tail Service Mast Umbilical (Header)
+S-IB Short Cable Mast Umbilical
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,33 +22,60 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
-#pragma once
+#include "Orbitersdk.h"
+#include "s1bsystems.h"
+#include "SCMUmbilicalInterface.h"
+#include "SCMUmbilical.h"
 
-class SICSystems;
-class TSMUmbilicalInterface;
-
-class TSMUmbilical
+SCMUmbilical::SCMUmbilical(SCMUmbilicalInterface *ml)
 {
-public:
-	TSMUmbilical(TSMUmbilicalInterface *ml);
-	~TSMUmbilical();
+	SCMUmb = ml;
+	sib = NULL;
+	UmbilicalConnected = false;
+}
 
-	bool IsUmbilicalConnected() { return UmbilicalConnected; }
+SCMUmbilical::~SCMUmbilical()
+{
+}
 
-	void Connect(SICSystems* sic);
-	void Disconnect();
-	//Called by IU during a pad abort. Technically doesn't disconnect IU umbilical
-	virtual void AbortDisconnect();
+void SCMUmbilical::Connect(SIBSystems *sib)
+{
+	if (sib)
+	{
+		this->sib = sib;
+		sib->ConnectUmbilical(this);
+		UmbilicalConnected = true;
+	}
+}
 
-	//From ML to SLV
-	bool SIStageLogicCutoff();
-	void SetEngineStart(int eng);
+void SCMUmbilical::Disconnect()
+{
+	if (!UmbilicalConnected) return;
 
-	//From SLV to ML
-	virtual bool ESEGetSICThrustOKSimulate(int eng);
-protected:
-	SICSystems* sic;
-	TSMUmbilicalInterface* TSMUmb;
+	sib->DisconnectUmbilical();
+	UmbilicalConnected = false;
+}
 
-	bool UmbilicalConnected;
-};
+void SCMUmbilical::AbortDisconnect()
+{
+	UmbilicalConnected = false;
+}
+
+bool SCMUmbilical::ESEGetSIBThrustOKSimulate(int eng)
+{
+	return SCMUmb->ESEGetSIBThrustOKSimulate(eng);
+}
+
+bool SCMUmbilical::SIStageLogicCutoff()
+{
+	if (!UmbilicalConnected) return false;
+
+	return sib->GetEngineStop();
+}
+
+void SCMUmbilical::SetEngineStart(int eng)
+{
+	if (!UmbilicalConnected) return;
+
+	return sib->SetEngineStart(eng);
+}

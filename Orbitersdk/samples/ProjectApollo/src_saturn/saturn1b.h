@@ -23,7 +23,7 @@
   **************************************************************************/
 #pragma once
 
-#include "s1bsystems.h"
+class SIBSystems;
 
 ///
 /// \brief Saturn V launch vehicle class.
@@ -76,10 +76,14 @@ public:
 	bool GetSIOutboardEngineOut();
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIBLowLevelSensorsDry();
-	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	double GetSIThrustLevel();
-	bool SIStageLogicCutoff();
+
+	void ActivatePrelaunchVenting();
+	void DeactivatePrelaunchVenting();
+
+	//Subsystem Access
+	SIBSystems *GetSIB() { return sib; }
 
 protected:
 
@@ -114,8 +118,6 @@ protected:
 	void CalculateStageMass ();
 	void ActivateStagingVent();
 	void DeactivateStagingVent();
-	void ActivatePrelaunchVenting();
-	void DeactivatePrelaunchVenting();
 	void SetRandomFailures();
 	void SetEngineFailure(int failstage, int faileng, double failtime);
 

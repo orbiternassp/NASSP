@@ -968,9 +968,7 @@ public:
 	virtual void SIIEDSCutoff(bool cut) {};
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
-	virtual void SetSIEngineStart(int n) = 0;
 	virtual double GetSIThrustLevel() = 0;
-	virtual bool SIStageLogicCutoff() { return false; }
 
 	virtual void ActivateStagingVent() {}
 

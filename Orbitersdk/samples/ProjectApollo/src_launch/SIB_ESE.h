@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2019
 
-S-IC Tail Service Mast Umbilical (Header)
+Electrical Support Equipment for the S-IB Stage (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,31 +24,21 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class SICSystems;
-class TSMUmbilicalInterface;
+class SCMUmbilical;
 
-class TSMUmbilical
+class SIB_ESE
 {
 public:
-	TSMUmbilical(TSMUmbilicalInterface *ml);
-	~TSMUmbilical();
+	SIB_ESE(SCMUmbilical *TSMUmb);
 
-	bool IsUmbilicalConnected() { return UmbilicalConnected; }
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
 
-	void Connect(SICSystems* sic);
-	void Disconnect();
-	//Called by IU during a pad abort. Technically doesn't disconnect IU umbilical
-	virtual void AbortDisconnect();
+	bool GetSIBThrustOKSimulate(int eng) { return SIBThrustOKSimulate[eng - 1]; }
 
-	//From ML to SLV
-	bool SIStageLogicCutoff();
-	void SetEngineStart(int eng);
-
-	//From SLV to ML
-	virtual bool ESEGetSICThrustOKSimulate(int eng);
+	void SetSIBThrustOKSimulate(int eng, bool set) { SIBThrustOKSimulate[eng - 1] = set; }
 protected:
-	SICSystems* sic;
-	TSMUmbilicalInterface* TSMUmb;
+	bool SIBThrustOKSimulate[8];
 
-	bool UmbilicalConnected;
+	SCMUmbilical *Umbilical;
 };

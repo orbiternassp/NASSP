@@ -25,15 +25,18 @@
 #pragma once
 
 #include "IUUmbilicalInterface.h"
+#include "SCMUmbilicalInterface.h"
 
-class Saturn;
+class Saturn1b;
 class IUUmbilical;
 class IU_ESE;
+class SCMUmbilical;
+class SIB_ESE;
 
 ///
 /// \ingroup Ground
 ///
-class LC34: public VESSEL2, public IUUmbilicalInterface {
+class LC34: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface {
 
 public:
 	LC34(OBJHANDLE hObj, int fmodel);
@@ -61,6 +64,9 @@ public:
 	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
+
+	//ML/S-IC Interface
+	bool ESEGetSIBThrustOKSimulate(int eng);
 
 protected:
 
@@ -91,9 +97,11 @@ protected:
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
 
-	Saturn *sat;
+	Saturn1b *sat;
 	IUUmbilical *IuUmb;
+	SCMUmbilical *SCMUmb;
 	IU_ESE *IuESE;
+	SIB_ESE *SIBESE;
 
 	//VECTOR3 meshoffsetMSS;
 };

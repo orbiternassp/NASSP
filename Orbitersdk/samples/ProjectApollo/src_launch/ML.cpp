@@ -481,7 +481,6 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		else break;
 		//Fall into
 	case STATE_IGNITION_SEQUENCE:
-		break;
 
 		if (CutoffInterlock())
 		{
@@ -492,17 +491,17 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		{
 			if (sat->GetMissionTime() > -8.9)
 			{
-				sat->SetSIEngineStart(5);
+				TSMUmb->SetEngineStart(5);
 			}
 			if (sat->GetMissionTime() > -8.62)
 			{
-				sat->SetSIEngineStart(1);
-				sat->SetSIEngineStart(3);
+				TSMUmb->SetEngineStart(1);
+				TSMUmb->SetEngineStart(3);
 			}
 			if (sat->GetMissionTime() > -8.2)
 			{
-				sat->SetSIEngineStart(2);
-				sat->SetSIEngineStart(4);
+				TSMUmb->SetEngineStart(2);
+				TSMUmb->SetEngineStart(4);
 			}
 
 			// T-4.9s or later?

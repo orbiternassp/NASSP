@@ -1309,11 +1309,6 @@ void LEMSaturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1)
 	SIVBVessel->SetState(S4Config);
 }
 
-void LEMSaturn::SetSIEngineStart(int n)
-{
-	sib->SetEngineStart(n);
-}
-
 void LEMSaturn::GetApolloName(char *s)
 
 {
