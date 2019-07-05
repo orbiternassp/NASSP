@@ -509,13 +509,10 @@ void RCS_TCA::Timestep(double simdt)
 			}
 		}
 
-		if ((jetDriverSignal[i] && !resetSignal) && !thrusterTCP[i])
+		//Sim step constraint to below 0.08s, so that it takes at least two timesteps for the fail timer to reach >0.08s
+		if ((jetDriverSignal[i] && !resetSignal) && !thrusterTCP[i] && oapiGetSimStep() < 0.08)
 		{
-			//Above 1.0x time acceleration the timesteps are too long for this to properly work
-			if (oapiGetTimeAcceleration() <= 1.0)
-			{
-				failTimer[i] += simdt;
-			}
+			failTimer[i] += simdt;
 		}
 		else
 		{
