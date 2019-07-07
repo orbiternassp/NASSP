@@ -1087,7 +1087,7 @@ void SaturnSPSPropellantPressMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn
 	NeedleSurface = surf;
 	Sat = s;
 	Fuel = fuel;
-  WireTo(p);
+	WireTo(p);
 }
 
 double SaturnSPSPropellantPressMeter::QueryValue()
@@ -1111,7 +1111,7 @@ void SaturnSPSTempMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, e_obje
 	MeterSwitch::Init(row);
 	NeedleSurface = surf;
 	Sat = s;
-  WireTo(p);
+	WireTo(p);
 }
 
 double SaturnSPSTempMeter::QueryValue()
