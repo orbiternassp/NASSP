@@ -762,9 +762,6 @@ void SaturnH2oQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, T
 
 double SaturnH2oQuantityMeter::QueryValue()
 {
-	if (!IsPowered())
-		return 0;
-
 	if (H2oQtyIndSwitch->IsUp())
 		return Sat->PotH2OQtySensor.Voltage()*1.0 / 5.0;
 	else
