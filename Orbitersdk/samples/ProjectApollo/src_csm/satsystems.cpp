@@ -290,11 +290,6 @@ void Saturn::SystemsInit() {
 	GaugePower.WireToBuses(MainBusA, MainBusB);
 
 	//
-	//	Instrument bus
-	//
-	InstrumentationPowerFeeder.WireToBuses(&InstrumentLightingESSMnACircuitBraker, &InstrumentLightingESSMnBCircuitBraker);
-
-	//
 	// ECS devices
 	//
 
@@ -419,6 +414,7 @@ void Saturn::SystemsInit() {
 	//Instrumentation
 	sce.Init(this);
 
+	InstrumentationPowerFeeder.WireToBuses(&InstrumentLightingESSMnACircuitBraker, &InstrumentLightingESSMnBCircuitBraker);
 	ECSPressGroups1Feeder.WireToBuses(&ECSTransducerPressGroup1MnACircuitBraker, &ECSTransducerPressGroup1MnBCircuitBraker);
 	ECSPressGroups2Feeder.WireToBuses(&ECSTransducerPressGroup2MnACircuitBraker, &ECSTransducerPressGroup2MnBCircuitBraker);
 	ECSTempTransducerFeeder.WireToBuses(&ECSTransducerTempMnACircuitBraker, &ECSTransducerTempMnBCircuitBraker);

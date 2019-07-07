@@ -2864,7 +2864,7 @@ void Saturn::SetSwitches(int panel) {
 	Panel276CB1.Init( 0, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
 	Panel276CB2.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
 	Panel276CB3.Init(62, 89, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
-	Panel276CB4.Init(62, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
+	Panel276CB4.Init(62,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
 
 	//
 	// Panel 278
