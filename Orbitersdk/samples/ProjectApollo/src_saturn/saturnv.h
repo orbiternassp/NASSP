@@ -88,7 +88,6 @@ public:
 
 	void GetSIThrustOK(bool *ok);
 	void SIEDSCutoff(bool cut);
-	void SIGSECutoff(bool cut);
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();

@@ -497,11 +497,14 @@ void SIVB200Systems::SetSIVBMixtureRatio(double ratio)
 	double isp, thrust;
 
 	// Hardcoded ISP and thrust according to the the Apollo 7 Saturn IB Report, NTRS ID 19900067467
-
-	if (ratio >= 5.0) {
+	if (ratio >= 5.25) {
 		thrust = 1009902;
 		isp = 424 * G;
 
+	}
+	else if (ratio >= 4.75){
+		thrust = 889951.0;
+		isp = 426 * G;
 	}
 	else {
 		thrust = 770000.;
@@ -536,6 +539,10 @@ void SIVB200Systems::SwitchSelector(int channel)
 	case 19: //Engine Ready Bypass On
 		EngineReadyBypass();
 		break;
+	case 22: //LOX Chilldown Pump On
+		break;
+	case 23: //LOX Chilldown Pump Off
+		break;
 	case 28: //Aux Hydraulic Pump Flight Mode On
 		AuxHydPumpFlightModeOn();
 		break;
@@ -562,14 +569,28 @@ void SIVB200Systems::SwitchSelector(int channel)
 	case 49: //S-IVB Engine Cutoff No. 2 Off
 		LVDCEngineCutoffOff();
 		break;
+	case 54: //Charge Ullage Ignition On
+		break;
+	case 55: //Charge Ullage Jettison On
+		break;
 	case 56: //Fire Ullage Ignition On
 		FireUllageIgnitionOn();
+		break;
+	case 58: //Fuel Chilldown Pump On
+		break;
+	case 59: //Fuel Chilldown Pump Off
 		break;
 	case 79: //LOX Tank Flight Pressurization Shutoff Valves Close On
 		EndLOXVenting();
 		break;
 	case 80: //LOX Tank Flight Pressurization Shutoff Valves Close Off
 		StartLOXVenting();
+		break;
+	case 82: //Prevalves Close On
+		PrevalvesCloseOn = true;
+		break;
+	case 83: //Prevalves Close Off
+		PrevalvesCloseOn = false;
 		break;
 	case 97: //Point Level Sensor Arming
 		PointLevelSensorArming();

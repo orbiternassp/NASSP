@@ -476,6 +476,7 @@ void Saturn::initSaturn()
 	hDrogueChute = 0;
 	hMainChute = 0;
 	hOpticsCover = 0;
+	hLC34 = 0;
 
 	//
 	// Apollo 13 flags.
@@ -2566,6 +2567,10 @@ void Saturn::DestroyStages(double simt)
 		if (hMSS) {
 			KillDist(hMSS, 50000.0);
 		}
+
+		if (hLC34) {
+			KillDist(hLC34, 50000.0);
+		}
 	}
 
 	//
@@ -2644,6 +2649,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		hMSS = oapiGetVesselByName("MSS");
 		hCrawler = oapiGetVesselByName("Crawler-Transporter");
 		hVAB = oapiGetVesselByName("VAB");
+		hLC34 = oapiGetVesselByName("LC34");
 
 		GenericFirstTimestep = false;
 		SetView();
@@ -3704,7 +3710,10 @@ void Saturn::GenericLoadStateSetup()
 
 	if (stage < CSM_LEM_STAGE)
 	{
-		iu->ConnectToCSM(&iuCommandConnector);
+		if (CSMAttached)
+		{
+			iu->ConnectToCSM(&iuCommandConnector);
+		}
 		iu->ConnectToLV(&sivbCommandConnector);
 	}
 

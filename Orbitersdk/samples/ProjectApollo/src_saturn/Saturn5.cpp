@@ -1026,13 +1026,6 @@ void SaturnV::SIEDSCutoff(bool cut)
 	sic->EDSEnginesCutoff(cut);
 }
 
-void SaturnV::SIGSECutoff(bool cut)
-{
-	if (stage >= LAUNCH_STAGE_ONE) return;
-
-	sic->GSEEnginesCutoff(cut);
-}
-
 void SaturnV::GetSIIThrustOK(bool *ok)
 {
 	for (int i = 0;i < 5;i++)

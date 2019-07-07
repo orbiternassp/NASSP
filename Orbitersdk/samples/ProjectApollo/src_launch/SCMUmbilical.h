@@ -43,6 +43,7 @@ public:
 	//From ML to SLV
 	bool SIStageLogicCutoff();
 	void SetEngineStart(int eng);
+	void SIGSECutoff(bool cut);
 
 	//From SLV to ML
 	virtual bool ESEGetSIBThrustOKSimulate(int eng);

@@ -370,11 +370,6 @@ void Saturn1b::SIEDSCutoff(bool cut)
 	sib->EDSEnginesCutoff(cut);
 }
 
-void Saturn1b::SIGSECutoff(bool cut)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-}
-
 bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
@@ -687,7 +682,7 @@ void Saturn1b::CalculateStageMass()
 	}
 
 	Stage2Mass = Stage3Mass + SII_EmptyMass + S4PL_Mass;
-	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass + Abort_Mass;
+	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass + (LESAttached ? Abort_Mass : 0.0);
 }
 
 int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {

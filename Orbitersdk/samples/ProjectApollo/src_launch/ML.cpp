@@ -485,7 +485,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			sat->SIGSECutoff(true);
+			TSMUmb->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{
@@ -524,7 +524,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			sat->SIGSECutoff(true);
+			TSMUmb->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{
@@ -551,13 +551,13 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		//Cutoff
 		if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
 		{
-			sat->SIGSECutoff(true);
+			TSMUmb->SIGSECutoff(true);
 		}
 
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			sat->SIGSECutoff(true);
+			TSMUmb->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{

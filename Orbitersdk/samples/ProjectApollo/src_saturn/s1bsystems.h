@@ -35,6 +35,7 @@ public:
 	void SetEngineStart() { EngineStart = true; }
 	void SetProgrammedEngineCutoff() { ProgrammedCutoff = true; }
 	void SetEDSCutoff() { EDSCutoff = true; }
+	void SetGSECutoff() { GSECutoff = true; }
 	void SetThrustNotOKCutoff() { ThrustNotOKCutoff = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
 	void SetFailed() { EngineFailed = true; }
@@ -98,6 +99,7 @@ public:
 	void SetLOXDepletionCutoffEnable() { LOXDepletionCutoffEnabledLatch = true; }
 	void SetFuelDepletionCutoffEnable() { FuelDepletionCutoffEnabledLatch = true; }
 	void EDSEnginesCutoff(bool cut);
+	virtual void GSEEnginesCutoff(bool cut);
 
 	bool GetLowLevelSensorsDry();
 	bool GetInboardEngineOut();
@@ -190,6 +192,7 @@ protected:
 	bool LOXLevelSensor;
 	bool FuelDepletionSensors1;
 	bool FuelDepletionSensors2;
+	bool ThrustOK[8];
 
 	bool OutboardEnginesCutoffSignal;
 

@@ -92,7 +92,7 @@ public:
 	void TwoAdjacentOutboardEnginesOutCutoffEnable() { TwoAdjacentOutboardEnginesOutCutoff = true; }
 	void MultipleEngineCutoffEnable() { MultipleEngineCutoffEnabled = true; }
 	void EDSEnginesCutoff(bool cut);
-	void GSEEnginesCutoff(bool cut);
+	virtual void GSEEnginesCutoff(bool cut);
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 	void SwitchSelector(int channel);
 

@@ -70,7 +70,6 @@ public:
 	void SISwitchSelector(int channel);
 
 	void SIEDSCutoff(bool cut);
-	void SIGSECutoff(bool cut);
 	void GetSIThrustOK(bool *ok);
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();

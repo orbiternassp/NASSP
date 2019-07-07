@@ -964,7 +964,6 @@ public:
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void SetAPSAttitudeEngine(int n, bool on);
 	virtual void SIEDSCutoff(bool cut) = 0;
-	virtual void SIGSECutoff(bool cut) = 0;
 	virtual void SIIEDSCutoff(bool cut) {};
 	void SIVBEDSCutoff(bool cut);
 	void SetQBallPowerOff();
@@ -3927,6 +3926,7 @@ protected:
 	OBJHANDLE hMainChute;
 	OBJHANDLE hOpticsCover;
 	OBJHANDLE hNosecapVessel;
+	OBJHANDLE hLC34;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.

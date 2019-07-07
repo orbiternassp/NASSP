@@ -301,7 +301,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			sat->SIGSECutoff(true);
+			SCMUmb->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{
@@ -345,13 +345,13 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 		//Cutoff
 		if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
 		{
-			sat->SIGSECutoff(true);
+			SCMUmb->SIGSECutoff(true);
 		}
 
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			sat->SIGSECutoff(true);
+			SCMUmb->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{
@@ -361,14 +361,17 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 				sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 			}
 
-			if (Commit())
+			if (sat->GetMissionTime() >= -0.05)
 			{
-				// Disconnect Umbilicals
-				IuUmb->Disconnect();
-				SCMUmb->Disconnect();
+				if (Commit())
+				{
+					// Disconnect Umbilicals
+					IuUmb->Disconnect();
+					SCMUmb->Disconnect();
 
-				// Move swingarms
-				swingarmState.action = AnimState::OPENING;
+					// Move swingarms
+					swingarmState.action = AnimState::OPENING;
+				}
 			}
 
 			// T+4s or later?
@@ -651,7 +654,7 @@ bool LC34::CutoffInterlock()
 bool LC34::Commit()
 {
 	if (!sat) return false;
-	return IuUmb->AllSIEnginesRunning() && sat->GetMissionTime() >= -0.05 && !CutoffInterlock();
+	return IuUmb->AllSIEnginesRunning() && !CutoffInterlock();
 }
 
 bool LC34::ESEGetCommandVehicleLiftoffIndicationInhibit()

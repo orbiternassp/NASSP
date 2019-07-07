@@ -1472,6 +1472,10 @@ void IU1B::SwitchSelector(int item)
 	case 22: //Flight Control Computer Switch Point No. 3
 		ControlDistributor.SetFCCSwitchPoint3On();
 		break;
+	case 23: //Telemetry Calibrator Inflight Calibrate On
+		break;
+	case 24: //Telemetry Calibrator Inflight Calibrate Off
+		break;
 	case 29: //S-IVB Engine Out Indication "B" Enable
 		eds.SetSIVBEngineOutIndicationB(true);
 		break;
