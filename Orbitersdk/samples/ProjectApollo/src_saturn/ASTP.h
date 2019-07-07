@@ -22,11 +22,50 @@
 
   **************************************************************************/
 
-#if !defined(_PA_ASTP_H)
-#define _PA_ATSP_H
+#pragma once
 
 #include "connector.h"
 #include "payload.h"
+
+class ASTP;
+
+const VECTOR3 DM_CSM_DOCKING_PORT_DIR = _V(0, 0, 1);
+const VECTOR3 DM_SLA_DOCKING_PORT_DIR = _V(0, 0, -1);
+
+  ///
+  /// \ingroup Connectors
+  /// \brief DM to S-IVB connector type.
+  ///
+class DMToSIVBConnector : public Connector
+{
+public:
+	DMToSIVBConnector();
+	~DMToSIVBConnector();
+
+	void StartSeparationPyros();
+	void StopSeparationPyros();
+};
+
+class DMConnector : public Connector
+{
+public:
+	DMConnector(ASTP *a);
+	~DMConnector();
+
+	void SetDM(ASTP *dm) { OurVessel = dm; };
+
+protected:
+	ASTP *OurVessel;
+};
+
+class DMCommandConnector : public DMConnector
+{
+public:
+	DMCommandConnector(ASTP *a);
+	~DMCommandConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
 
 class ASTP: public Payload {
 
@@ -34,8 +73,17 @@ public:
 
 	ASTP (OBJHANDLE hObj, int fmodel);
 	virtual ~ASTP();
+
+	void clbkSetClassCaps(FILEHANDLE cfg);
+	void clbkPreStep(double simt, double simdt, double mjd);
+	void clbkDockEvent(int dock, OBJHANDLE connected);
+	void clbkPostCreation();
+
 	void init();
 	void Setup();
+
+	void StartSeparationPyros();
+	void StopSeparationPyros();
 
 protected:
 
@@ -44,7 +92,10 @@ protected:
 	//
 
 	ATTACHMENTHANDLE hattDROGUE;
+	DOCKHANDLE docksla;
+
+	MultiConnector DMToCSMConnector;
+	DMCommandConnector CSMToDMCommandConnector;
+	DMToSIVBConnector SLAConnector;
 
 };
-
-#endif // _PA_ASTP_H

@@ -43,6 +43,7 @@ e_object::e_object()
 
 	Volts = 0.0;
 	Amperes = 0.0;
+	Hertz = 0.0;
 }
 
 void e_object::refresh(double dt)
@@ -97,6 +98,18 @@ double e_object::Current()
 		if (SRC)
 			return SRC->Current();
 		return Amperes;
+	}
+
+	return 0.0;
+}
+
+double e_object::Frequency()
+
+{
+	if (IsEnabled()) {
+		if (SRC)
+			return SRC->Frequency();
+		return Hertz;
 	}
 
 	return 0.0;
@@ -452,12 +465,17 @@ void FCell::UpdateFlow(double dt)
 		}
 		Reaction(dt, thrust);
 		running = 0;
-		Volts = Volts * reaction; //case of reaction problems :-)
-		if (reaction && Volts > 0.0) 	
+		Volts = Volts * min(1.0, reaction); //case of reaction problems :-)
+		if (reaction && Volts > 0.0)
+		{
 			Amperes = (power_load / Volts);
-		else 
+		}
+		else
+		{
 			status = 2;
 			Amperes = 0;
+		}
+
 		break;
 	}
 
@@ -529,11 +547,26 @@ void Battery::PUNLOAD(double watts)
 	power_load -= watts;
 }
 
-double Battery::Current()
+double Battery::Voltage()
+{
+	if (IsEnabled())
+	{
+		return Volts;
+	}
 
+	return 0.0;
+}
+
+double Battery::Current()
 {
 //	sprintf(oapiDebugString(), "%s: Current = %gA (%g watts/%gV)", name, Amperes, power_load, Volts);
-	return Amperes;
+
+	if (IsEnabled())
+	{
+		return Amperes;
+	}
+
+	return 0.0;
 }
 
 void Battery::UpdateFlow(double dt)

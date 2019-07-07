@@ -134,6 +134,12 @@ public:
 	virtual double Current();
 
 	///
+	/// \brief Get the frequency.
+	/// \return Frequency in Hertz.
+	///
+	virtual double Frequency();
+
+	///
 	/// \brief Get the current power load.
 	/// \return Power load in Watts.
 	///
@@ -169,6 +175,7 @@ protected:
 
     double Amperes; //status
 	double Volts;   //
+	double Hertz;
 	double power_load;	//how much do we need to produce
 };
 
@@ -265,7 +272,7 @@ public:
     virtual void Load(char *line);
 	virtual void Save(FILEHANDLE scn);
 	void* GetComponent(char *component_name);
-	double Voltage() { return Volts; };
+	double Voltage();
 	double Current();
 	double Capacity() { return power; };
 	virtual therm_obj* GetThermalInterface(){return (therm_obj*)this;};

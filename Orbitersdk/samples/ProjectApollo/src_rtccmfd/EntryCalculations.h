@@ -1,20 +1,63 @@
-#ifndef _ENTRYCALCULATIONS_H
-#define _ENTRYCALCULATIONS_H
+/***************************************************************************
+This file is part of Project Apollo - NASSP
+Copyright 2014-2018
 
-#include "Orbitersdk.h"
-#include "OrbMech.h"
+RTCC Entry Calculations (Header)
+
+Project Apollo is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Project Apollo is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Project Apollo; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+See http://nassp.sourceforge.net/license/ for more details.
+
+**************************************************************************/
+
+#pragma once
 
 namespace EntryCalculations
 {
+	const double RTE_VEL_LINE[26] = { 25.5, 26.0, 26.5, 27.0, 27.5, 28.0, 28.5, 29.0, 29.5, 30.0, 30.5, 31.0, 31.5, 32.0, 32.5, 33.0, 33.5, 34.0, 34.5, 35.0, 35.5, 36.0, 36.5, 37.0, 37.5, 38.0 };
+	const double RTE_MSFN_LINE[26] = { 91.35, 91.91, 92.47, 92.91, 93.29, 93.62, 93.91, 94.17, 94.39, 94.59, 94.78, 94.96, 95.12, 95.27, 95.41, 95.54, 95.67, 95.8, 95.92, 96.03, 96.14, 96.24, 96.35, 96.44, 96.54, 96.58 };
+	const double RTE_CONT_LINE[26] = { 93.3, 93.74, 94.04, 94.31, 94.55, 94.78, 94.96, 95.13, 95.28, 95.41, 95.55, 95.66, 95.77, 95.86, 95.96, 96.05, 96.14, 96.21, 96.29, 96.36, 96.43, 96.48, 96.55, 96.61, 96.66, 96.74 };
+
+	double ReentryTargetLine(double vel, bool msfn);
+	double ReentryTargetLineTan(double vel, bool msfn);
 	void augekugel(double ve, double gammae, double &phie, double &Te);
 	void landingsite(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double &lambda, double &phi);
 	void Reentry(VECTOR3 REI, VECTOR3 VEI, double mjd0, bool highspeed, double &EntryLatPred, double &EntryLngPred, double &EntryRTGO, double &EntryVIO, double &EntryRET);
-	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl = 0, bool asc = true);
 	void Abort(VECTOR3 R0, VECTOR3 V0, double RCON, double dt, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	bool Abort_plane(VECTOR3 R0, VECTOR3 V0, double MJD0, double RCON, double dt, double mu, double Incl, double INTER, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &Incl_apo);
 	void time_reentry(VECTOR3 R0, VECTOR3 V0, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
+	void time_reentry_plane(VECTOR3 R0, VECTOR3 eta, double r1, double x2, double dt, double mu, VECTOR3 &V, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	double landingzonelong(int zone, double lat);
 
+	//Actual RTE processor routines
+	void REENTRYNew(double LD, int ICRNGG, double v_i, double i_r, double A_Z, double mu, double r_rbias, double &eta_rz1, double &theta_cr, double &T);
+	VECTOR3 TVECT(VECTOR3 a, VECTOR3 b, double alpha, double gamma);
+	void EGTR(VECTOR3 R_geoc, VECTOR3 V_geoc, double MJD, VECTOR3 &R_geogr, VECTOR3 &V_geogr);
+	double INTER(const double *X, const double *Y, int IMAX, double x);
+	double URF(double T, double x);
+	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P);
+	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1);
+	VECTOR3 MCDRIV(double t_I, double var, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, bool &NIR, double &Incl_apo, double &r_p);
+	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo);
+	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN);
+	double LNDING(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &MJD_L);
+	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
+
 	double MPL(double lat);
+	double MPL2(double lat);
 	double EPL(double lat);
 	double AOL(double lat);
 	double IOL(double lat);
@@ -71,7 +114,6 @@ private:
 	int f2;
 	double dlngapo, dt0, x2, x2_apo;
 	double EMSAlt;
-	double D1, D2, D3, D4;
 	double k1, k2, k3, k4;
 	double phi2;
 	double earthorbitangle; //31.7° nominal angled reentry DV vector
@@ -88,7 +130,7 @@ private:
 
 class Entry {
 public:
-	Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual);
+	Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI);
 	bool EntryIter();
 
 	double EntryTIGcor; //Corrected Time of Ignition for the Reentry Maneuver
@@ -137,7 +179,6 @@ private:
 	int f2;
 	double dlngapo,dt0, x2, x2_apo;
 	double EMSAlt;
-	double D1, D2, D3, D4;
 	double k1, k2, k3, k4;
 	int revcor;
 	double phi2;
@@ -149,13 +190,21 @@ private:
 	double xlim;
 	double t21;
 	double EntryInterface;
+	// relative range override (unit is nautical miles!)
+	double r_rbias;
 };
 
-class Flyby
+class RTEMoon
 {
 public:
-	Flyby(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int FlybyType);
-	bool Flybyiter();
+	RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double EntryLng, bool entrylongmanual);
+	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
+	bool MASTER();
+	void MCSS();
+	bool CLL(double &i_r, double &INTER, double &dv);
+	bool MCUA(double &i_r, double &INTER, double &dv);
+	
+	void MCSSLM(bool &REP, double t_z_apo);
 
 	int precision;
 	double EntryLatcor, EntryLngcor;
@@ -165,53 +214,55 @@ public:
 	double EntryAng;
 	VECTOR3 Rig, Vig, Vig_apo;
 	double TIG;
+	double ReturnInclination;
+	double FlybyPeriAlt;
 private:
 	OBJHANDLE hMoon, hEarth;
 	VECTOR3 DV;
-	double DT_TEI_EI;	//Tiem between TEI and EI
 	double EntryLng;
-	double mu_E, mu_M;
+	double mu_E, mu_M, w_E, R_E, R_M;
 	//double r_s; //Pseudostate sphere
 	CELBODY *cMoon;
 	double dlngapo, dtapo;
-	int ii;
-	bool entrylongmanual;
-	int landingzone;
-	int FlybyType;	//0 = Flyby, 1 = PC+2
-	bool INRFVsign;
-	double mjd0;
-	double dv[3], TIGvar[3];
-};
-
-class TEI
-{
-public:
-	TEI(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double MJDguess, double EntryLng, bool entrylongmanual, int returnspeed, int RevsTillTEI);
-	bool TEIiter();
-
-	int precision;
-	double EntryLatcor, EntryLngcor;
-	VECTOR3 Entry_DV;
-	VECTOR3 R_EI, V_EI;
-	double EIMJD;
-	double EntryAng;
-	VECTOR3 Rig, Vig, Vig_apo;
-	double TIG;
-private:
-	OBJHANDLE hMoon, hEarth;
-	VECTOR3 DV;
-	double DT_TEI_EI;	//Tiem between TEI and EI
-	double EntryLng;
-	double mu_E, mu_M;
-	//double r_s; //Pseudostate sphere
-	CELBODY *cMoon;
-	double dlngapo, dtapo;
-	int ii, jj;
 	bool entrylongmanual;
 	int landingzone;
 	bool INRFVsign;
-	double dTIG, mjd0;
-	double dv[3], TIGvar[3];
+	double dTIG, mjd0, GETbase;
+	double i_rmax, u_rmax;
+	int SMODE;
+	// 2: primary target point mode
+	// 4: alternate target point mode
+	// 6: fuel critical unspecified area mode
+	int CRIT;
+	// 1: abort at a discrete time
+	// 2: produce tradeoff display
+	// 3: optimize DV as a function of maneuver time
+	int LETSGO;
+	// 1: print flag for tradeoff display
+	// 2: print flag for discrete and search cases
+	int LFLAG;
+	int CENT;
+	// Minimum altitude allowed at closest approach to the moon
+	double h_min;
+	// the maximum allowable miss distance from the target site
+	double MD_max;
+	// 0: postmaneuver direction of motion is selected internal to the program
+	// 1: only noncircumlunar motion is allowed
+	// 2: only circumlunar motion is allowed
+	int CIRCUM;
+	// lift-to-drag ratio
+	double LD;
+	// maximum allowable DV
+	double DV_max;
+	// relative range override (unit is nautical miles!)
+	double r_rbias;
+	// 0: guide reentry to the steep target line
+	// 1: manual reentry to the shallow target line
+	// 2: manual reentry to the steep target line
+	int ICRNGG;
+	// desired inclination. Signed for the two azimuth options
+	double i_rk;
+	double t_zmin, t_zmax;
+	double mu_z, mu_z1;
+	double lambda_z, lambda_z1;
 };
-
-#endif

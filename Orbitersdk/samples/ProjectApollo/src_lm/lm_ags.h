@@ -22,7 +22,10 @@
 
   **************************************************************************/
 
+#pragma once
+
 #include "yaAGS/aea_engine.h"
+#include <queue>
 
 class LEM_DEDA;
 
@@ -73,16 +76,21 @@ public:
 	void Init(LEM *l, ThreePosSwitch *s, Boiler *fastht, Boiler *fineht, h_Radiator *hr, h_HeatLoad *asah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
+	bool IsHeaterPowered();
+	bool IsPowered();
+	double GetASATempF();
+	double GetASA12V();
+	double GetASAFreq();
+	double GetASA28V();
+
 	void PulseTimestep(int* AttPulses);
 	MATRIX3 transpose_matrix(MATRIX3 a);
 	VECTOR3 MatrixToEuler(MATRIX3 mat);
 	LEM *lem;					// Pointer at LEM
 protected:
 
-	bool IsHeaterPowered();
-	bool IsPowered();
 	void TurnOn();
 	void TurnOff();
 
@@ -116,7 +124,7 @@ public:
 	void Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah); // Init
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void TimeStep(double simt, double simdt);
+	void Timestep(double simt, double simdt);
 	void SystemTimestep(double simdt);
 	void InitVirtualAGS(char *binfile);
 	void SetInputPortBit(int port, int bit, bool val);
@@ -124,6 +132,7 @@ public:
 	void SetOutputChannel(int Type, int Data);
 	unsigned int GetOutputChannel(int channel);
 	unsigned int GetInputChannel(int channel);
+	bool GetInputChannelBit(int channel, int bit);
 	void SetMissionInfo(int MissionNo);
 	void SetFlightProgram(int FP);
 	void PadLoad(unsigned int address, unsigned int value);
@@ -134,6 +143,8 @@ public:
 	void SetLateralVelocity(int Data);
 	void SetAltitudeAltitudeRate(int Data);
 	void SetPGNSIntegratorRegister(int channel, int val);
+	void SetDownlinkTelemetryRegister(int val);
+	void PGNCSDownlinkStopPulse();
 
 	double GetLateralVelocity();
 	double GetAltitude();
@@ -147,6 +158,7 @@ public:
 	void WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s);
 	bool IsPowered();
 	bool IsACPowered();
+	bool GetTestModeFailure();
 	LEM *lem;					// Pointer at LEM
 	h_HeatLoad *aeaHeat;
 	h_HeatLoad *secaeaHeat;
@@ -185,6 +197,8 @@ protected:
 	double Altitude;
 	double AltitudeRate;
 
+	std::queue<uint16_t> ags_queue;
+
 	const double ATTITUDESCALEFACTOR = pow(2.0, -17.0);
 	const double ATTITUDEERRORSCALEFACTOR = 0.5113269e-3*pow(2.0, -8.0);
 	const double LATVELSCALEFACTOR = 100.0*pow(2.0, -16.0);
@@ -218,7 +232,7 @@ public:
 	// Timestep to run programs.
 	//
 
-	void TimeStep(double simt);
+	void Timestep(double simt);
 	void SystemTimestep(double simdt);
 
 	void ProcessChannel27(int val);
@@ -255,13 +269,17 @@ public:
 
 	void ProcessKeyPress(int mx, int my);
 	void ProcessKeyRelease(int mx, int my);
+	void ResetKeyDown();
 	void RenderOprErr(SURFHANDLE surf, SURFHANDLE lights);
 	void RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
 	void RenderData(SURFHANDLE surf, SURFHANDLE digits, int xoffset = 0, int yoffset = 0);
 	void RenderKeys(SURFHANDLE surf, SURFHANDLE keys, int xoffset = 0, int yoffset = 0);
 
 	void KeyClick();
-	bool IsPowered() { return Voltage() > 25.0; };
+	bool IsPowered();
+	bool HasAnnunPower();
+	bool HasNumPower();
+	bool HasIntglPower();
 
 	//
 	// Helper functions.
@@ -348,7 +366,6 @@ protected:
 	void SetData();
 	char ValueChar(unsigned val);
 	char ValueCharSign(unsigned val);
-	void ResetKeyDown();
 	void SendKeyCode(int val);
 
 	void DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 

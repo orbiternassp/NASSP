@@ -40,8 +40,6 @@
 #include "papi.h"
 #include "LEM.h"
 
-#define DECA_AUTOTHRUST_STEP 0.00026828571
-
 // RATE GYRO ASSEMBLY
 
 LEM_RGA::LEM_RGA()
@@ -169,7 +167,75 @@ void ATCA::Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl){
 	SECATCAHeat = sechl;
 	int x=0; while(x < 16){ jet_request[x] = 0; jet_last_request[x] = 0; jet_start[x] = 0; jet_stop[x] = 0; x++; }
 }
-// GuidContSwitch is the Guidance Control switch
+
+double ATCA::GetPrimPowerVoltage() {
+	if (lem->CDR_SCS_ATCA_CB.IsPowered())
+		return -4.7;
+	else
+		return 0.0;
+}
+double ATCA::GetBackupPowerVoltage() {
+	if (lem->SCS_ATCA_AGS_CB.IsPowered())
+		return -4.7;
+	else
+		return 0.0;
+}
+
+double ATCA::GetRGAPickoffExcitationVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 28.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetRGASpinMotorVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 26.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus15VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 15.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetMinus15VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return -15.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus6VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 6.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetMinus6VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return -6.0;
+	else
+		return 0.0;
+}
+
+double ATCA::GetPlus43VDCSupplyVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 4.3;
+	else
+		return 0.0;
+}
 
 void ATCA::Timestep(double simt, double simdt){
 	hasPrimPower = false, hasAbortPower = false;
@@ -467,6 +533,8 @@ void ATCA::Timestep(double simt, double simdt){
 			}
 		}
 
+		//sprintf(oapiDebugString(), "Thrust Logic Input Error: %f %f %f", thrustLogicInputError.x, thrustLogicInputError.y, thrustLogicInputError.z);
+
 		//TRANSLATIONAL COMMANDS
 		if (lem->SCS_ATCA_AGS_CB.IsPowered())
 		{
@@ -589,6 +657,9 @@ void ATCA::Timestep(double simt, double simdt){
 		//8
 		SummingAmplifierOutput[7] = 0.0 - thrustLogicInputError.y - (K1 ? 0.0 : thrustLogicInputError.x) - translationCommands.x;
 
+		//sprintf(oapiDebugString(), "Summing Amplifiers: %f %f %f %f %f %f %f %f", SummingAmplifierOutput[0], SummingAmplifierOutput[1], SummingAmplifierOutput[2],
+		//	SummingAmplifierOutput[3], SummingAmplifierOutput[4], SummingAmplifierOutput[5], SummingAmplifierOutput[6], SummingAmplifierOutput[7]);
+
 		//PULSE RATIO (DE)MODULATOR
 
 		for (int i = 0;i < 8;i++)
@@ -606,6 +677,8 @@ void ATCA::Timestep(double simt, double simdt){
 				PRMOffTime[i] = 0.0;
 			}
 		}
+
+		//sprintf(oapiDebugString(), "PRM: %d %d %d %d %d %d %d %d", PRMPulse[0], PRMPulse[1], PRMPulse[2], PRMPulse[3], PRMPulse[4], PRMPulse[5], PRMPulse[6], PRMPulse[7]);
 	}
 	else
 	{
@@ -995,7 +1068,8 @@ DECA::DECA() {
 	engOn = false;
 	lgcAutoThrust = 0.0;
 	ManualThrust = 0.0;
-	LMR = 0.859;
+	//85.9% for 12V
+	LMR = 0.859*12.0;
 
 	ResetRelays();
 }
@@ -1375,11 +1449,11 @@ void DECA::Timestep(double simdt) {
 
 		if (ttca_throttle_pos > 0.51 / 0.66)
 		{
-			ManualThrust = 1.8436*ttca_throttle_pos - 0.9186;
+			ManualThrust = 1.993081081*ttca_throttle_pos - 0.9930810811;
 		}
 		else
 		{
-			ManualThrust = 0.5254117647*ttca_throttle_pos + 0.1;
+			ManualThrust = 0.5785055644*ttca_throttle_pos + 0.1;
 		}
 	}
 	else
@@ -1392,23 +1466,12 @@ void DECA::Timestep(double simdt) {
 		ManualThrust = 0.0;
 	}
 
-	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust);
+	//TBD: Manual thrust also as a voltage. Throttle actuator input should be voltages eventually, too.
+	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust*0.9 / 12.0);
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 	//sprintf(oapiDebugString(), "Manual: K1 %d K3 %d K7 %d K10 %d K16 %d K23 %d K28 %d", K1, K3, K7, K10, K16, K23, K28);
 	//sprintf(oapiDebugString(), "Auto: X %d Y %d Q %d K6 %d K10 %d K15 %d K16 %d K23 %d K28 %d", X, Y, Q, K6, K10, K15, K16, K23, K28);
-}
-
-double DECA::GetCommandedThrust()
-{
-	if (lem->THRContSwitch.IsUp())
-	{
-		return AutoThrust + 0.1;
-	}
-	else
-	{
-		return ManualThrust;
-	}
 }
 
 void DECA::ProcessLGCThrustCommands(int val) {
@@ -1425,13 +1488,13 @@ void DECA::ProcessLGCThrustCommands(int val) {
 		pulses = val & 077777;
 	}
 
-	thrust_cmd = (DECA_AUTOTHRUST_STEP*pulses);
+	thrust_cmd = (0.0035*pulses);
 
 	lgcAutoThrust += thrust_cmd;
 
-	if (lgcAutoThrust > 0.825)
+	if (lgcAutoThrust > 12.0)
 	{
-		lgcAutoThrust = 0.825;
+		lgcAutoThrust = 12.0;
 	}
 	else if (lgcAutoThrust < 0)
 	{
@@ -1445,6 +1508,14 @@ void DECA::SystemTimestep(double simdt) {
 
 	if (powered && dc_source)
 		dc_source->DrawPower(10.6);  // take DC power
+}
+
+bool DECA::GetEngArm()
+{
+	if (lem->stage < 2 && dc_source && dc_source->Voltage() > SP_MIN_DCVOLTAGE && (K1 || K23))
+		return true;
+
+	return false;
 }
 
 void DECA::SaveState(FILEHANDLE scn) {

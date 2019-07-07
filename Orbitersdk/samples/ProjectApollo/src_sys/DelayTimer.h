@@ -24,6 +24,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "Orbitersdk.h"
+
+struct DelayTimerState
+{
+	double Running;
+	double seconds;
+};
+
 class DelayTimer {
 
 public:
@@ -32,7 +40,7 @@ public:
 	virtual void Timestep(double simdt);
 	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	virtual void LoadState(FILEHANDLE scn, char *end_str);
-	void SetTime(double t);
+	virtual void SetTime(double t);
 	double GetTime();
 
 	void Reset();
@@ -42,6 +50,9 @@ public:
 	bool ContactClosed() { return Contact; };
 
 	void SetDelay(double del) { delay = del; }
+
+	void SetState(const DelayTimerState &state);
+	void GetState(DelayTimerState &state);
 
 protected:
 	double seconds;
@@ -64,4 +75,12 @@ public:
 
 protected:
 	bool Start;
+};
+
+class DelayOffTimer : public DelayTimer
+{
+public:
+	DelayOffTimer(double delay);
+	void Timestep(double simdt);
+	void SetTime(double t);
 };

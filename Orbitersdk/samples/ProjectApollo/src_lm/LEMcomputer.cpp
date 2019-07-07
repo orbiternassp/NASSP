@@ -33,7 +33,6 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "dsky.h"
-#include "csmcomputer.h"
 #include "lemcomputer.h"
 #include "papi.h"
 #include "saturn.h"
@@ -126,7 +125,7 @@ void LEMcomputer::agcTimestep(double simt, double simdt)
 		SingleTimestep();
 		ThisTime += 0.00001171875;								// Add time
 		if ((ThisTime - lem->VHF.last_update) > 0.00015625) {	// If a step is needed
-			lem->VHF.TimeStep(ThisTime);						// do it
+			lem->VHF.Timestep(ThisTime);						// do it
 		}
 		x++;
 	}
@@ -203,7 +202,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			// Reset last cycling time
 			LastCycled = 0;
 			// We should issue telemetry though.
-			lem->VHF.TimeStep(simt);
+			lem->VHF.Timestep(simt);
 
 		// and do nothing more.
 		return;
@@ -351,6 +350,11 @@ void LEMcomputer::ProcessChannel143(ChannelValue val) {
 	}
 }
 
+void LEMcomputer::ProcessChannel34(ChannelValue val)
+{
+	lem->aea.SetDownlinkTelemetryRegister(((OutputChannel[013] & 0100) << 9) | val.to_ulong());
+}
+
 void LEMcomputer::ProcessIMUCDUReadCount(int channel, int val) {
 	SetErasable(0, channel, val);
 	lem->aea.SetPGNSIntegratorRegister(channel, val);
@@ -463,12 +467,17 @@ void LMOptics::Init(LEM *vessel) {
 }
 
 void LMOptics::SystemTimestep(double simdt) {
+	if (lem->AOTLampFeeder.Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		lem->AOTLampFeeder.DrawPower(9.3);
+		lem->CabinHeat->GenerateHeat(9.3);
+	}
 
-	// LEM Optics is a manual system... no power required.
-	// There were however heaters that would keep the optics from freezing or fogging.
-	// Might want to implment those...
-
-
+	if (lem->HTR_AOT_CB.Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		lem->HTR_AOT_CB.DrawPower(5.6);
+		lem->CabinHeat->GenerateHeat(5.6);	//Not sure if all AOT heat radiates into the cabin, but since the heaters/mirrors are in the cabin portion of the AOT, we will do this.
+	}
 }
 
 bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
@@ -501,7 +510,7 @@ bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
 	return true;
 }
 
-void LMOptics::TimeStep(double simdt) {
+void LMOptics::Timestep(double simdt) {
 	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
 
 	/*if (ReticleMoved)

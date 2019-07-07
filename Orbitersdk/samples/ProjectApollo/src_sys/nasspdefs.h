@@ -304,11 +304,20 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 	return (fahrenheit + 459.67) / 1.8;
 }
 
+///
+/// \brief sign function
+///
+static inline double sign(double x)
+{
+	if (x >= 0.0) return 1.0;
+	else return -1.0;
+}
+
 //
 // Engine information.
 //
 
-#define SPS_THRUST					92100.0		// Apollo 7 Mission Report
+#define SPS_THRUST					91188.544		// CMC fixed constant
 #define SPS_ISP						 3080.0
 #define SPS_DEFAULT_PROPELLANT		18500.0		// Apollo 11 Mission Report
 #define SPS_NORM_OXIDIZER_FLOW		(1.6 / (1.0 + 1.6))
@@ -389,7 +398,10 @@ static inline double FahrenheitToKelvin(double fahrenheit) {
 //#define CSM_H2TANK_CAPACITY 19050.87954   ///< Extended stay tank config (for testing Apollo 15-17)
 //#define CSM_O2TANK_CAPACITY 217724.3386	///< Extended stay tank config (for testing Apollo 15-17)
 
-#define LM_DES_H2O_CAPACITY 151046.0		///< in g, 333 lb
-#define LM_ASC_H2O_CAPACITY 19228.0			///< in g, 42.5 lb
+//#define LM_DES_H2O_CAPACITY 151046.2592		///< in g, 333 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
+//#define LM_ASC_H2O_CAPACITY 19277.67573		///< in g, 42.5 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
+#define LM_DES_H2O_CAPACITY 114795.157			//Pad fill 76%
+//#define LM_DES_H2O_CAPACITY 229590.3			//Pad fill 76% for J-Mission Conversion
+#define LM_ASC_H2O_CAPACITY 14651.03355			//Pad fill 76%
 
 #endif

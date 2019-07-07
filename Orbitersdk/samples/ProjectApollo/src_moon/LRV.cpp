@@ -36,15 +36,11 @@
 #include "OrbiterMath.h"
 
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "LEMcomputer.h"
 #include "LEM.h"
 
 #include "lrv.h"
 #include "lrv_console.h"
 #include "tracer.h"
-
-#include "CollisionSDK/CollisionSDK.h"
 
 //
 // Set the file name for the tracer code.
@@ -224,8 +220,6 @@ void LRV::init()
 void LRV::clbkSetClassCaps (FILEHANDLE cfg)
 {
 	TRACESETUP("clbkSetClassCaps");
-	VSEnableCollisions(GetHandle(),"ProjectApollo");	
-	VSSetCollisionFlags(GetHandle(),VSC_TILTING);
 	SetRoverStage();
 }
 
@@ -354,7 +348,6 @@ void LRV::SetRoverStage ()
 
 	double tdph = -0.9;
 	SetTouchdownPoints(_V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
-	VSSetTouchdownPoints(GetHandle(), _V(0, tdph, 1), _V(-1, tdph, -1), _V(1, tdph, -1));
 
 }
 
@@ -1102,7 +1095,7 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 
 DLLCLBK void InitModule (HINSTANCE hModule)
 {
-	InitCollisionSDK();
+
 }
 
 /* just some handy code for debugging purposes ...

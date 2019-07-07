@@ -282,8 +282,8 @@ void H_system::Create_h_Tank(char *line) {
 	else
 		new_one->isolation=1.0;
 
-	new_one->Area=pow(3.0/4.0*PI*volume/1000,0.3333); //radius of tank
-	new_one->Area=2*PI*new_one->Area*new_one->Area;//projection circle ois 2*PI*R
+	new_one->Area=pow(3.0/(4.0*PI)*volume/1000,0.3333); //radius of tank
+	new_one->Area=PI*new_one->Area*new_one->Area;//projection circle is PI*R^2
 	new_one->parent=this;
 }
 
@@ -420,8 +420,9 @@ void H_system::Build() {
 			Create_h_WaterSeparator(line);
 		else if (Compare(line, "<HEATLOAD>"))
 			Create_h_HeatLoad(line);
-
-		line = ReadConfigLine();
+		do {
+			line = ReadConfigLine();
+		} while (line == NULL);
 	}
 }
 
@@ -501,6 +502,12 @@ void* h_Tank::GetComponent(char *component_name) {
 		 return &(space.composition[4].p_press);
 	if (!strnicmp (component_name, "H2O_PPRESS",10 ))
 		 return &(space.composition[2].p_press);
+	if (!strnicmp(component_name, "AZ_PPRESS", 9))
+		return &(space.composition[6].p_press);
+	if (!strnicmp(component_name, "N2O4_PPRESS", 11))
+		return &(space.composition[7].p_press);
+	if (!strnicmp(component_name, "HE_PPRESS", 9))
+		return &(space.composition[8].p_press);
 	if (!strnicmp (component_name, "H2_VAPORMASS", 12))
 		 return &(space.composition[1].vapor_mass);
 	if (!strnicmp (component_name, "O2_VAPORMASS", 12))
@@ -596,6 +603,8 @@ void* h_WaterSeparator::GetComponent(char *component_name) {
 		return (void*)&flow;
 	if (Compare(component_name, "H2OREMOVALRATE"))
 		return (void*)&h2oremovalrate;
+	if (Compare(component_name, "RPM"))
+		return (void*)&RPM;
 
 	BuildError(2);	//no such component
 	return NULL;

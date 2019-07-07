@@ -35,6 +35,9 @@ public:
 	void SystemTimestep(double simdt);
 
 	VECTOR3 GetRates() { return rates; }
+	double GetPitchRateVRMS() { return rates.x * 0.14*DEG; }
+	double GetYawRateVRMS() { return rates.y * 0.14*DEG; }
+	double GetRollRateVRMS() { return rates.z * 0.14*DEG; }
 protected:
 	bool powered;
 	VECTOR3 rates;
@@ -53,6 +56,15 @@ class ATCA {
 public:
 	ATCA();								// Cons
 	void Init(LEM *vessel, h_HeatLoad *hl, h_HeatLoad *sechl);				// Init
+	double GetPrimPowerVoltage();
+	double GetBackupPowerVoltage();
+	double GetRGAPickoffExcitationVoltage();
+	double GetRGASpinMotorVoltage();
+	double GetPlus15VDCSupplyVoltage();
+	double GetMinus15VDCSupplyVoltage();
+	double GetPlus43VDCSupplyVoltage();
+	double GetPlus6VDCSupplyVoltage();
+	double GetMinus6VDCSupplyVoltage();
 	void Timestep(double simt, double simdt);			// Timestep
 	void SystemTimestep(double simdt);
 	void ProcessLGC(int ch, int val);   // To process LGC commands
@@ -62,6 +74,15 @@ public:
 
 	double GetDPSPitchGimbalError();
 	double GetDPSRollGimbalError();
+	double GetPitchAttenuatorErrorVRMS() { return aea_attitude_error.y * 3.5 / 15.0; }
+	double GetYawAttenuatorErrorVRMS() { return aea_attitude_error.z * 3.5 / 15.0; }
+	double GetRollAttenuatorErrorVRMS() { return aea_attitude_error.x * 3.5 / 15.0; }
+	double GetXTransCommandVoltage() { return translationCommands.x; }
+	double GetYTransCommandVoltage() { return translationCommands.y; }
+	double GetZTransCommandVoltage() { return translationCommands.z; }
+	double GetPitchLogicInputErrorVoltage() { return thrustLogicInputError.y; }
+	double GetYawLogicInputErrorVoltage() { return thrustLogicInputError.z; }
+	double GetRollLogicInputErrorVoltage() { return thrustLogicInputError.x; }
 
 	LEM *lem;
 	h_HeatLoad *ATCAHeat;
@@ -138,15 +159,18 @@ public:
 	void ResetRelays();
 	void Timestep(double simdt);				// Timestep
 	void SystemTimestep(double simdt);			// System Timestep
-	double GetCommandedThrust();
 	void ProcessLGCThrustCommands(int val);
 
 	bool GetK1() { return K1; }
 	bool GetK10() { return K10; }
 	bool GetK16() { return K16; }
+	bool GetK21() { return K21; }
+	bool GetK22() { return K22; }
 	bool GetK23() { return K23; }
+	bool GetK25() { return K25; }
 	bool GetThrustOn() { return engOn; }
-	double GetAutoThrustVoltage() { return AutoThrust * 12.0; }
+	bool GetEngArm();
+	double GetAutoThrustVoltage() { return AutoThrust; }
 	double GetManualThrustVoltage() { return ManualThrust * 14.6; }
 
 	void SaveState(FILEHANDLE scn);
@@ -159,6 +183,7 @@ protected:
 	int pitchactuatorcommand, rollactuatorcommand;
 	bool engOn, DEArm;
 	double AutoThrust, ManualThrust;
+	//Voltage, 0-12V
 	double lgcAutoThrust;
 
 	//Relays
@@ -252,9 +277,11 @@ public:
 	bool GetK15() { return K15; }
 	bool GetK17() { return K17; }
 	bool GetK18() { return K18; }
+	bool GetK19() { return K19; }
 	bool GetK20() { return K20; }
 	bool GetK203() { return K203; }
 	bool GetK204() { return K204; }
+	bool GetThrustOn() { return thrustOn; }
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -345,10 +372,13 @@ public:
 	bool GetK3() { return K3; }
 	bool GetK4() { return K4; }
 	bool GetK5() { return K5; }
+	bool GetK7() { return K7; }
 	bool GetK8() { return K8; }
 	bool GetK11() { return K11; }
 	bool GetK12() { return K12; }
 	bool GetK13() { return K13; }
+	bool GetK15() { return K15; }
+	bool GetK16() { return K16; }
 	bool GetK17() { return K17; }
 	bool GetK19() { return K19; }
 	bool GetK23() { return K23; }

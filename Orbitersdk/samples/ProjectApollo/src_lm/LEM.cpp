@@ -35,14 +35,12 @@
 #include "soundlib.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "LEMcomputer.h"
 #include "lm_channels.h"
 #include "mcc.h"
 
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "CollisionSDK/CollisionSDK.h"
 
 #include "connector.h"
 
@@ -91,7 +89,6 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	case DLL_PROCESS_ATTACH:
 		InitGParam(hModule);
 		g_Param.hDLL = hModule; // DS20060413 Save for later
-		InitCollisionSDK();
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -194,19 +191,16 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	agc(soundlib, dsky, imu, scdu, tcdu, Panelsdk),
 	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
-	EPSDCAmMeter(0, 120.0, 220.0, -50.0),
-	EPSDCVoltMeter(20.0, 40.0, 215.0, -35.0),
 	RadarSignalStrengthAttenuator("RadarSignalStrengthAttenuator", 0.0, 5.0, 0.0, 5.0),
 	RadarSignalStrengthMeter(0.0, 5.0, 220.0, -50.0),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
-	//imucase("LM-IMU-Case",_vector3(0.013, 3.0, 0.03),0.03,0.04),
-	//imuheater("LM-IMU-Heater",1,NULL,150,53,0,326,328,&imucase),
 	imu(agc, Panelsdk),
 	scdu(agc, RegOPTX, 0140, 0),
 	tcdu(agc, RegOPTY, 0141, 0),
 	aea(Panelsdk, deda),
 	deda(this,soundlib, aea),
+	CWEA(soundlib, Bclick),
 	DPS(th_hover),
 	DPSPropellant(ph_Dsc, Panelsdk),
 	APSPropellant(ph_Asc, Panelsdk),
@@ -227,8 +221,14 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	ForwardHatch(HatchOpenSound, HatchCloseSound),
 	OverheadHatch(HatchOpenSound, HatchCloseSound),
 	CabinFan(CabinFans),
+	CrewStatus(CrewDeadSound),
 	ecs(Panelsdk),
-	CSMToLEMECSConnector(this)
+	CSMToLEMECSConnector(this),
+	CSMToLEMPowerConnector(this),
+	LEMToSLAConnector(this),
+	CSMToLEMCommandConnector(this),
+	cdi(this),
+	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -236,13 +236,26 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
+	// Switch to compatible dock mode
+	SetDockMode(0);
+
+	// Docking port (0)
+	SetLmDockingPort(2.6);
+
+	// Docking port used for LM/SLA connection (1)
+	VECTOR3 dockpos = { 0.0 , -1.0, 0.0 };
+	VECTOR3 dockdir = { 0,-1,0 };
+	VECTOR3 dockrot = { -0.8660254, 0, 0.5 };
+	docksla = CreateDock(dockpos, dockdir, dockrot);
+
 	// Init further down
 	Init();
 }
 
 LEM::~LEM()
-
 {
+	ReleaseSurfaces();
+
 #ifdef DIRECTSOUNDENABLED
     sevent.Stop();
 	sevent.Done();
@@ -259,7 +272,6 @@ LEM::~LEM()
 		dx8ppv->Release();
 		dx8ppv = NULL;
 	}
-
 }
 
 void LEM::Init()
@@ -267,22 +279,21 @@ void LEM::Init()
 {
 	DebugLineClearTimer = 0;
 
-	ABORT_IND=false;
-
-	bModeDocked=false;
-	bModeHover=false;
 	ToggleEva=false;
 	CDREVA_IP=false;
 	refcount = 0;
-	viewpos = LMVIEW_LMP;
+	viewpos = LMVIEW_CDR;
 	stage = 0;
 	status = 0;
 	HasProgramer = false;
 	NoAEA = false;
 	InvertStageBit = false;
+	CDRinPLSS = 0;
+	LMPinPLSS = 0;
 
 	InVC = false;
 	InPanel = false;
+	ExtView = false;
 	CheckPanelIdInTimestep = false;
 	RefreshPanelIdInTimestep = false;
 	InFOV = true;
@@ -309,10 +320,18 @@ void LEM::Init()
 		th_rcs[i] = 0;
 	}
 
-	for (int i = 0;i < 2;i++)
+	th_hover[0] = 0;
+
+	// Clobber checklist variables
+	for (int i = 0; i < 16; i++)
 	{
-		th_hover[i] = 0;
+		Checklist_Variable[i][0] = 0;
 	}
+
+	// Camera jostle.
+	ViewOffsetx = 0;
+	ViewOffsety = 0;
+	ViewOffsetz = 0;
 
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
@@ -329,11 +348,14 @@ void LEM::Init()
 	NoLegs = false;
 
 	// Mesh Indexes
-	
-	lpdgret = -1;
-	lpdgext = -1;
-	fwdhatch = -1;
-	ovhdhatch = -1;
+	ascidx = -1;
+	dscidx = -1;
+	vcidx = -1;
+
+	drogue = NULL;
+	probes = NULL;
+	cdrmesh = NULL;
+	lmpmesh = NULL;
 
 	pMCC = NULL;
 
@@ -351,8 +373,10 @@ void LEM::Init()
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
 	CSMToLEMECSConnector.SetType(LEM_CSM_ECS);
+	LEMToSLAConnector.SetType(PAYLOAD_SLA_CONNECT);
 
 	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
+	LEMToCSMConnector.AddTo(&CSMToLEMCommandConnector);
 	CSMToLEMPowerSource.SetConnector(&CSMToLEMPowerConnector);
 
 	//
@@ -373,6 +397,9 @@ void LEM::Init()
 	///		  Enable before CSM docking
 	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
 
+	// Disable Rolling, landing, speedbrake, crash sound. This causes issues in Orbiter 2016.
+	soundlib.SoundOptionOnOff(PLAYLANDINGANDGROUNDSOUND, FALSE);
+
 	strncpy(AudioLanguage, "English", 64);
 	soundlib.SetLanguage(AudioLanguage);
 	SoundsLoaded = false;
@@ -383,8 +410,10 @@ void LEM::Init()
 	// Register visible connectors.
 	//
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &MFDToPanelConnector);
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &cdi);
 	RegisterConnector(0, &LEMToCSMConnector);
 	RegisterConnector(0, &CSMToLEMECSConnector);
+	RegisterConnector(1, &LEMToSLAConnector);
 
 	// Do this stuff only once
 	if(!InitLEMCalled){
@@ -455,6 +484,16 @@ void LEM::LoadDefaultSounds()
 	soundlib.LoadSound(RCSSustainSound, RCSSUSTAIN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchOpenSound, HATCHOPEN_SOUND, INTERNAL_ONLY);
 	soundlib.LoadSound(HatchCloseSound, HATCHCLOSE_SOUND, INTERNAL_ONLY);
+	soundlib.LoadSound(GlycolPumpSound, "GlycolPump.wav", INTERNAL_ONLY);
+	soundlib.LoadSound(SuitFanSound, "LMSuitFan.wav", INTERNAL_ONLY);
+	soundlib.LoadSound(CrewDeadSound, CREWDEAD_SOUND);
+
+	// Configure sound options where needed
+	SuitFanSound.setFadeTime(5);
+	SuitFanSound.setFrequencyShift(3000, 11025);
+	GlycolPumpSound.setRiseTime(3);
+	GlycolPumpSound.setFadeTime(3);
+	GlycolPumpSound.setFrequencyShift(3000, 11025);
 
 // MODIF X15 manage landing sound
 #ifdef DIRECTSOUNDENABLED
@@ -473,10 +512,13 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		// Do DSKY stuff
 		if(down){
 			switch(key){
+				case OAPI_KEY_DECIMAL:
+					dsky.ClearPressed();
+					break;
 				case OAPI_KEY_PRIOR:
 					dsky.ResetPressed();
 					break;
-				case OAPI_KEY_NEXT:
+				case OAPI_KEY_HOME:
 					dsky.KeyRel();
 					break;
 				case OAPI_KEY_NUMPADENTER:
@@ -494,7 +536,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				case OAPI_KEY_SUBTRACT:
 					dsky.MinusPressed();
 					break;
-				case OAPI_KEY_DECIMAL:
+				case OAPI_KEY_END:
 					dsky.ProgPressed();
 					break;
 				case OAPI_KEY_NUMPAD1:
@@ -527,14 +569,82 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				case OAPI_KEY_NUMPAD0:
 					dsky.NumberPressed(0);
 					break;
-				
+				case OAPI_KEY_K:
+					//kill rotation
+					SetAngularVel(_V(0, 0, 0));
+					break;
 			}
 		}else{
 			// KEY UP
 			switch(key){
-				case OAPI_KEY_DECIMAL:
+				case OAPI_KEY_END:
 					dsky.ProgReleased();
 					break;
+
+			}
+		}
+		return 0;
+	}
+	else if (KEYMOD_CONTROL(keystate)) {
+		// Do DEDA stuff
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_DECIMAL:
+				deda.ClearPressed();
+				break;
+			case OAPI_KEY_NUMPADENTER:
+				deda.EnterPressed();
+				break;
+			case OAPI_KEY_DIVIDE:
+				deda.HoldPressed();
+				break;
+			case OAPI_KEY_MULTIPLY:
+				deda.ReadOutPressed();
+				break;
+			case OAPI_KEY_ADD:
+				deda.PlusPressed();
+				break;
+			case OAPI_KEY_SUBTRACT:
+				deda.MinusPressed();
+				break;
+			case OAPI_KEY_NUMPAD1:
+				deda.NumberPressed(1);
+				break;
+			case OAPI_KEY_NUMPAD2:
+				deda.NumberPressed(2);
+				break;
+			case OAPI_KEY_NUMPAD3:
+				deda.NumberPressed(3);
+				break;
+			case OAPI_KEY_NUMPAD4:
+				deda.NumberPressed(4);
+				break;
+			case OAPI_KEY_NUMPAD5:
+				deda.NumberPressed(5);
+				break;
+			case OAPI_KEY_NUMPAD6:
+				deda.NumberPressed(6);
+				break;
+			case OAPI_KEY_NUMPAD7:
+				deda.NumberPressed(7);
+				break;
+			case OAPI_KEY_NUMPAD8:
+				deda.NumberPressed(8);
+				break;
+			case OAPI_KEY_NUMPAD9:
+				deda.NumberPressed(9);
+				break;
+			case OAPI_KEY_NUMPAD0:
+				deda.NumberPressed(0);
+				break;
+			}
+		}
+		else {
+			// KEY UP
+			switch (key) {
+			case OAPI_KEY_DECIMAL:
+				deda.ResetKeyDown();
+				break;
 
 			}
 		}
@@ -777,6 +887,22 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	//
+	// Internal/External view check
+	//
+
+	if (!ExtView && !oapiCameraInternal()) {
+		ExtView = true;
+		SetLMMeshVis();
+		if (!InFOV) oapiCameraSetAperture(SaveFOV);
+	}
+
+	if (ExtView && oapiCameraInternal()) {
+		ExtView = false;
+		SetLMMeshVis();
+		SetView();
+	}
+
+	//
 	// Update mission time.
 	//
 
@@ -805,6 +931,12 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 			SeparateStage(stage);
 		}
 	}
+
+	// Delete LM/SLA docking port at LM extraction from SIVB
+	if (docksla && !DockingStatus(1)) {
+		DelDock(docksla);
+		docksla = NULL;
+	}
 }
 
 
@@ -817,7 +949,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	{
 		double dustlvl = min(1.0, max(0.0, GetThrusterLevel(th_hover[0]))*(-(vsAlt - 2.0) / 15.0 + 1.0));
 
-		if (stage == 1 && thg_dust) {
+		if (stage < 2 && thg_dust) {
 			if (vsAlt < 15.0) {
 				SetThrusterGroupLevel(thg_dust, dustlvl);
 			}
@@ -826,10 +958,24 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 			}
 		}
 	}
-	
-	//Set visbility flag for LPD view meshes
-	SetLPDMesh();
-	
+
+	//
+	// Camera jostle.
+	//
+
+	ViewOffsetx *= 0.95;
+	ViewOffsety *= 0.95;
+	ViewOffsetz *= 0.95;
+
+	if (th_hover[0] && !ExtView)
+	{
+		if ((GetThrusterLevel(th_hover[0]) > 0) && (InVC || (InPanel && PanelId == LMPANEL_LPDWINDOW)))
+		{
+			double amt = max(0.02, GetThrusterLevel(th_hover[0]) / 20);
+			JostleViewpoint(amt);
+		}
+	}
+
 	//
 	// If we switch focus to the astronaut immediately after creation, Orbitersound doesn't
 	// play any sounds, or plays LEM sounds rather than astronauts sounds. We need to delay
@@ -865,8 +1011,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	RCSSoundTimestep();
 
-	if (stage == 0)	{
-		
+	if (stage == 0 || NoLegs)	{
+
 
 	}else if (stage == 1 || stage == 5)	{
 
@@ -889,11 +1035,6 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 				Scontact.play();
 
 			SetLmLandedMesh();
-		}
-
-		if (CPswitch && EVAswitch && GroundContact()){
-			ToggleEva = true;
-			EVAswitch = false;
 		}
 
 		//sprintf (oapiDebugString(),"FUEL %d",GetPropellantMass(ph_Dsc));
@@ -960,7 +1101,11 @@ void LEM::SetGenericStageState(int stat)
 
 	case 1:
 		stage = 1;
+		SetLmVesselDockStage();
 		SetLmVesselHoverStage();
+
+		// Update touchdown points with current mass
+		if (Landed) HoverStageTouchdownPoints(GetMass());
 
 		if (CDREVA_IP) {
 			SetupEVA();
@@ -969,14 +1114,16 @@ void LEM::SetGenericStageState(int stat)
 
 	case 2:
 		stage = 2;
+		SetLmVesselDockStage();
 		SetLmAscentHoverStage();
 		break;
 	}
 }
 
-void LEM::PostLoadSetup()
+void LEM::PostLoadSetup(bool define_anims)
 {
 	CheckDescentStageSystems();
+	if (define_anims) DefineAnimations();
 
 	//
 	// Pass on the mission number and realism setting to the AGC.
@@ -1017,22 +1164,18 @@ void LEM::PostLoadSetup()
 	// Also cause the AC busses to wire up
 	switch (EPSInverterSwitch.GetState()) {
 	case THREEPOSSWITCH_UP:      // INV 2
-		INV_1.active = 0;
-		INV_2.active = 1;
 		ACBusA.WireTo(&AC_A_INV_2_FEED_CB);
 		ACBusB.WireTo(&AC_B_INV_2_FEED_CB);
 		break;
 	case THREEPOSSWITCH_CENTER:  // INV 1
-		INV_1.active = 1;
-		INV_2.active = 0;
 		ACBusA.WireTo(&AC_A_INV_1_FEED_CB);
 		ACBusB.WireTo(&AC_B_INV_1_FEED_CB);
 		break;
 	case THREEPOSSWITCH_DOWN:    // OFF	
 		break;                   // Handled later
 	}
-	HRESULT         hr;
 
+	HRESULT         hr;
 	// Having read the configuration file, set up DirectX...	
 	hr = DirectInput8Create(dllhandle, DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
 	if (!FAILED(hr)) {
@@ -1042,7 +1185,7 @@ void LEM::PostLoadSetup()
 		if (js_enabled == 0) {   // Did we get anything?			
 			dx8ppv->Release(); // No. Close down DirectInput
 			dx8ppv = NULL;     // otherwise it won't get closed later
-			sprintf(oapiDebugString(), "DX8JS: No joysticks found");
+			//sprintf(oapiDebugString(), "DX8JS: No joysticks found");
 		}
 		else {
 			while (x < js_enabled) {                                // For each joystick
@@ -1146,6 +1289,12 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "ORDEALENABLED", 13)) {
 			sscanf(line + 13, "%i", &ordealEnabled);
 		}
+		else if (!strnicmp(line, "CDRINPLSS", 9)) {
+			sscanf(line + 9, "%i", &CDRinPLSS);
+		}
+		else if (!strnicmp(line, "LMPINPLSS", 9)) {
+			sscanf(line + 9, "%i", &LMPinPLSS);
+		}
 		else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 			dsky.LoadState(scn, DSKY_END_STRING);
 		}
@@ -1203,6 +1352,15 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "STEERABLEANTENNA", 16)) {
 			SBandSteerable.LoadState(line);
 		}
+		else if (!strnicmp(line, "VHFTRANSCEIVER", 14)) {
+			VHF.LoadState(line);
+		}
+		else if (!strnicmp(line, "LCA_START", sizeof("LCA_START"))) {
+			lca.LoadState(scn,"LCA_END");
+		}
+		else if (!strnicmp(line, CWEA_START_STRING, sizeof(CWEA_START_STRING))) {
+			CWEA.LoadState(scn, CWEA_END_STRING);
+		}
 		else if (!strnicmp(line, "FORWARDHATCH", 12)) {
 			ForwardHatch.LoadState(line);
 		}
@@ -1214,6 +1372,15 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "SUITFANDPSENSOR", 15)) {
 			SuitFanDPSensor.LoadState(line);
+		}
+		else if (!strnicmp(line, "CABINPRESSURESWITCH", 19)) {
+			CabinPressureSwitch.LoadState(line, 19);
+		}
+		else if (!strnicmp(line, "SUITPRESSURESWITCH", 18)) {
+			SuitPressureSwitch.LoadState(line, 18);
+		}
+		else if (!strnicmp(line, "CREWSTATUS", 10)) {
+			CrewStatus.LoadState(line);
 		}
 		else if (!strnicmp(line, "PANEL_ID", 8)) {
 			sscanf(line + 8, "%d", &PanelId);
@@ -1229,6 +1396,12 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "LEM_LR_START", sizeof("LEM_LR_START"))) {
 			LR.LoadState(scn, "LEM_LR_END");
+		}
+		else if (!strnicmp(line, "RADARTAPE_START", sizeof("RADARTAPE_START"))) {
+			RadarTape.LoadState(scn, "RADARTAPE_END");
+		}
+		else if (!strnicmp(line, LMOPTICS_START_STRING, sizeof(LMOPTICS_START_STRING))) {
+			optics.LoadState(scn);
 		}
 		else if (!strnicmp(line, FDAI_START_STRING, sizeof(FDAI_START_STRING))) {
 			fdaiLeft.LoadState(scn, FDAI_END_STRING);
@@ -1330,12 +1503,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 
 void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
-	VSEnableCollisions(GetHandle(),"ProjectApollo");
-	// Switch to compatible dock mode 
-	SetDockMode(0);
-
-	SetLmVesselDockStage();
-
 	//
 	// Scan the launchpad config file.
 	//
@@ -1348,6 +1515,9 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 		ProcessConfigFileLine(hFile, line);
 	}
 	oapiCloseFile(hFile, FILE_IN);
+
+	// Load all meshes here so that DEVMESHHANDLE'S properly initialize at initial LM creation.
+	SetMeshes();
 }
 
 void LEM::clbkPostCreation()
@@ -1362,6 +1532,65 @@ void LEM::clbkPostCreation()
 		}
 		else pMCC = NULL;
 	}
+
+	// Delete LM/SLA docking port if LM extracted from SIVB
+	if (docksla && !DockingStatus(1)) {
+		DelDock(docksla);
+		docksla = NULL;
+	}
+}
+
+void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
+{
+	if (ascidx != -1) {
+		drogue = GetDevMesh(vis, ascidx);
+		DrogueVis();
+		cdrmesh = GetDevMesh(vis, ascidx);
+		lmpmesh = GetDevMesh(vis, ascidx);
+		SetCrewMesh();
+	}
+
+	if (dscidx != -1 && !NoLegs) {
+		probes = GetDevMesh(vis, dscidx);
+		HideProbes();
+	}
+}
+
+void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
+{
+	drogue = NULL;
+	probes = NULL;
+	cdrmesh = NULL;
+	lmpmesh = NULL;
+}
+
+void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
+{
+	//For now restrict this to docking port 1 (aka LM/SLA connection)
+	if (dock == 1)
+	{
+		if (connected)
+		{
+			DockConnectors(dock);
+		}
+		else
+		{
+			UndockConnectors(dock);
+		}
+	}
+}
+
+void LEM::DefineAnimations()
+{
+	// Call Animation Definitions where required
+	RR.DefineAnimations(ascidx);
+	SBandSteerable.DefineAnimations(ascidx);
+	OverheadHatch.DefineAnimations(ascidx);
+	ForwardHatch.DefineAnimations(ascidx);
+	OverheadHatch.DefineAnimationsVC(vcidx);
+	ForwardHatch.DefineAnimationsVC(vcidx);
+	if (stage < 2) DPS.DefineAnimations(dscidx);
+	if (stage < 1 && !NoLegs) eds.DefineAnimations(dscidx);
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
@@ -1407,9 +1636,9 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		sscanf (line + 12, "%i", &thc_rot_id);
 		if(thc_rot_id > 2){ thc_rot_id = 2; } // Be paranoid
 	}
-	else if (!strnicmp (line, "JOYSTICK_TSL", 12)) {
-		sscanf (line + 12, "%i", &thc_sld_id);
-		if(thc_sld_id > 2){ thc_sld_id = 2; } // Be paranoid
+	else if (!strnicmp(line, "JOYSTICK_TSL", 12)) {
+		sscanf(line + 12, "%i", &thc_tjt_id);
+		if (thc_tjt_id > 2) { thc_tjt_id = 2; } // Be paranoid
 	}
 	else if (!strnicmp (line, "JOYSTICK_TZX", 12)) {
 		thc_rzx_id = 1;
@@ -1438,6 +1667,16 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		int i;
 		sscanf(line + 24, "%d", &i);
 		VAGCChecklistAutoEnabled = (i != 0);
+	}
+	else if (!strnicmp(line, "CHKVAR_", 7)) {
+		for (int i = 0; i < 16; i++) {
+			char name[16];
+			sprintf(name, "CHKVAR_%d", i);
+			if (!strnicmp(line, name, strlen(name))) {
+				strncpy(Checklist_Variable[i], line + (strlen(name) + 1), 32);
+				break;
+			}
+		}
 	}
 	return true;
 }
@@ -1482,6 +1721,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
 	papiWriteScenario_bool(scn, "INFOV", InFOV);
 	oapiWriteScenario_int(scn, "ORDEALENABLED", ordealEnabled);
+	oapiWriteScenario_int(scn, "CDRINPLSS", CDRinPLSS);
+	oapiWriteScenario_int(scn, "LMPINPLSS", LMPinPLSS);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);
@@ -1490,6 +1731,14 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
+	}
+
+	for (int i = 0; i < 16; i++) {
+		if (Checklist_Variable[i][0] != 0) {
+			char name[16];
+			sprintf(name, "CHKVAR_%d", i);
+			oapiWriteScenario_string(scn, name, Checklist_Variable[i]);
+		}
 	}
 
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
@@ -1530,17 +1779,31 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	// Save COMM
 	SBand.SaveState(scn);
 	SBandSteerable.SaveState(scn);
+	VHF.SaveState(scn);
+
+	// Save Lighting
+	lca.SaveState(scn, "LCA_START", "LCA_END");
+
+	// Save CWEA
+	CWEA.SaveState(scn, CWEA_START_STRING, CWEA_END_STRING);
 
 	// Save ECS
 	ForwardHatch.SaveState(scn);
 	OverheadHatch.SaveState(scn);
 	PrimGlycolPumpController.SaveState(scn);
 	SuitFanDPSensor.SaveState(scn);
+	CabinPressureSwitch.SaveState(scn, "CABINPRESSURESWITCH");
+	SuitPressureSwitch.SaveState(scn, "SUITPRESSURESWITCH");
+	CrewStatus.SaveState(scn);
 
 	// Save EDS
 	eds.SaveState(scn,"LEM_EDS_START","LEM_EDS_END");
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
 	LR.SaveState(scn, "LEM_LR_START", "LEM_LR_END");
+	RadarTape.SaveState(scn, "RADARTAPE_START", "RADARTAPE_END");
+
+	//Save Optics
+	optics.SaveState(scn);
 
 	// Save FDAIs
 	fdaiLeft.SaveState(scn, FDAI_START_STRING, FDAI_END_STRING);
@@ -1606,12 +1869,12 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	MissionTime = ls.MissionTime;
 
-	strncpy (AudioLanguage, ls.language, 64);
 	strncpy (CSMName, ls.CSMName, 64);
 
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
 	ApolloNo = ls.MissionNo;
+	NoLegs = ls.NoLegs;
 
 	DescentFuelMassKg = ls.DescentFuelKg;
 	AscentFuelMassKg = ls.AscentFuelKg;
@@ -1619,12 +1882,14 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	AscentEmptyMassKg = ls.AscentEmptyKg;
 
 	agc.SetMissionInfo(ApolloNo, CSMName);
-	aea.SetMissionInfo(ApolloNo);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
 
 	// Sounds are initialized during the first timestep
+	// or here
+	SetLmVesselDockStage();
+	PostLoadSetup();
 
 	return true;
 }
@@ -1736,4 +2001,29 @@ void LEM::RCSSoundTimestep() {
 	else {
 		RCSSustainSound.stop();
 	}
+}
+
+double LEM::GetAscentStageMass()
+{
+	if (stage < 2)
+	{
+		return GetMass() - GetPropellantMass(ph_Dsc) - DescentEmptyMassKg;
+	}
+
+	return GetMass();
+}
+
+void LEM::SendVHFRangingSignal(Saturn *sat, bool isAcquiring)
+{
+	VHF.RangingSignal(sat, isAcquiring);
+}
+
+void LEM::StartSeparationPyros()
+{
+	LEMToSLAConnector.StartSeparationPyros();
+}
+
+void LEM::StopSeparationPyros()
+{
+	LEMToSLAConnector.StopSeparationPyros();
 }

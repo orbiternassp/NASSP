@@ -501,6 +501,28 @@ protected:
 };
 
 ///
+/// A two-position switch which can switch multiple connections between sources and output buses.
+/// \brief N-sources to outputs switch.
+/// \ingroup PanelItems
+///
+class NSourceDestSwitch : public ToggleSwitch {
+public:
+	NSourceDestSwitch(int nSources);
+	~NSourceDestSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
+	void LoadState(char *line);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+	void WireSourcesToBuses(int bus, e_object* i, DCbus* o);
+
+protected:
+	virtual void UpdateSourceState();
+
+	int nSources;
+	e_object **sources;
+	DCbus **buses;
+};
+
+///
 /// A three-position switch which can switch its power between three different electrical outputs.
 /// \brief Three power output switch.
 /// \ingroup PanelItems
@@ -672,6 +694,7 @@ public:
 
 	double Voltage();
 	double Current();
+	double Frequency();
 	void DrawPower(double watts);
 
 	///
@@ -755,7 +778,7 @@ class AGCSwitch: public ToggleSwitch {
 
 public:
 	AGCSwitch() { agc = 0; };
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, int xoffset = 0, int yoffset = 0);
 
 protected:
 	ApolloGuidance *agc;
@@ -796,8 +819,17 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
-class CMCOpticsModeSwitch : public AGCThreePoswitch {
+class CMCOpticsModeSwitch : public AGCSwitch {
 public:
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, ToggleSwitch * zeroSwitch);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+protected:
+	ToggleSwitch *opticsZeroSwitch;
+};
+
+class CMCOpticsZeroSwitch : public AGCSwitch {
+public:
+	void DoDrawSwitch(SURFHANDLE DrawSurface);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
@@ -1060,12 +1092,15 @@ public:
 	operator int();
 	virtual void SetState(int value);
 	void SoundEnabled(bool on) { soundEnabled = on; };
+	void SetWraparound(bool w) { Wraparound = w; };
 
 protected:
 	int	x;
 	int y;
 	int width;
 	int height;
+	int maxState;
+	bool Wraparound;
 	RotationalSwitchPosition *position;
 	RotationalSwitchPosition *positionList;
 
@@ -1209,6 +1244,24 @@ protected:
 	SURFHANDLE switchBorder;
 	Sound sclick;
 	SwitchRow *switchRow;
+};
+
+class ContinuousThumbwheelSwitch : public ThumbwheelSwitch {
+public:
+	ContinuousThumbwheelSwitch();
+	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal, int multPos);
+	bool CheckMouseClick(int event, int mx, int my);
+	bool SwitchTo(int newPosition);
+	void LoadState(char *line);
+	void SetState(int value);
+	int GetPosition();
+protected:
+	int StateToPosition(int st);
+	int PositionToState(int pos);
+
+	int multiplicator;
+	int numPositions;
+	int position;
 };
 
 

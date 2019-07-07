@@ -718,6 +718,14 @@ double CircuitBrakerSwitch::Current()
 	return Amperes;
 }
 
+double CircuitBrakerSwitch::Frequency()
+{
+	if ((state != 0) && SRC)
+		return SRC->Frequency();
+
+	return 0.0;
+}
+
 void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
@@ -1662,6 +1670,8 @@ RotationalSwitch::RotationalSwitch() {
 	positionList = 0;
 	next = 0;
 	soundEnabled = true;
+	maxState = -1;
+	Wraparound = false;
 
 	switchSurface = 0;
 	switchBorder = 0;
@@ -1801,6 +1811,7 @@ void RotationalSwitch::AddPosition(int value, double angle) {
 	RotationalSwitchPosition *p = new RotationalSwitchPosition(value, angle);
 	p->SetNext(positionList);
 	positionList = p;
+	maxState++;
 
 	if (position == 0) {
 		position = p;
@@ -1855,24 +1866,23 @@ bool RotationalSwitch::CheckMouseClick(int event, int mx, int my) {
 	if (mx > (x + width) || my > (y + height))
 		return false;
 
-	// Calculate angle of click
-	double angle = atan((mx - x - width / 2.0) / (height / 2.0 - my + y)) * DEG;
-	if ((height / 2.0 - my + y) < 0.0) angle += 180.0;
-	if (angle < 0.0) angle += 360.0;
+	int state = GetState();
 
-	// Find closest position
-	RotationalSwitchPosition *bestPosition = 0, *p = positionList; 
-	while (p) {
-		if (bestPosition == 0) {
-			bestPosition = p;
-		} else if (AngleDiff(p->GetAngle(), angle) < AngleDiff(bestPosition->GetAngle(), angle)) {
-			bestPosition = p;
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (state > 0) {
+			SwitchTo(state - 1);
 		}
-		p = p->GetNext();
+		else if (state == 0 && Wraparound) {
+			SwitchTo(maxState);
+		}
 	}
-
-	if (position != bestPosition) {
-		SwitchTo(bestPosition->GetValue());
+	else if (event == PANEL_MOUSE_RBDOWN) {
+		if (state < maxState) {
+			SwitchTo(state + 1);
+		}
+		else if (state == maxState && Wraparound) {
+			SwitchTo(0);
+		}
 	}
 	return true;
 }
@@ -2312,6 +2322,154 @@ void ThumbwheelSwitch::LoadState(char *line) {
 void ThumbwheelSwitch::SetState(int value)
 {
 	SwitchTo(value);
+}
+
+ContinuousThumbwheelSwitch::ContinuousThumbwheelSwitch()
+{
+	numPositions = 0;
+	multiplicator = 0;
+	position = 0;
+}
+
+void ContinuousThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal, int multPos)
+{
+	if (horizontal)
+		ThumbwheelSwitch::Register(scnh, n, defaultState, maximumState, horizontal);
+	else
+		ThumbwheelSwitch::Register(scnh, n, defaultState, maximumState);
+
+	multiplicator = multPos;
+	numPositions = maximumState * multPos;
+	position = StateToPosition(defaultState);
+}
+
+bool ContinuousThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
+
+	//
+	// Check whether it's actually in our switch region.
+	//
+
+	if (mx < x || my < y)
+		return false;
+
+	if (mx > (x + width) || my > (y + height))
+		return false;
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (isHorizontal) {
+			if (mx < (x + (width / 2.0))) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
+					sclick.play();
+				}
+			}
+			else {
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
+					sclick.play();
+				}
+			}
+		}
+		else {
+			if (my < (y + (height / 2.0))) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
+					sclick.play();
+				}
+			}
+			else {
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
+					sclick.play();
+				}
+			}
+		}
+	}
+	else if (event == PANEL_MOUSE_RBDOWN)
+	{
+		if (isHorizontal) {
+			if (mx < (x + (width / 2.0))) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
+					sclick.play();
+				}
+			}
+			else {
+				if (position > 0) {
+					SwitchTo(position - 1);
+					sclick.play();
+				}
+			}
+		}
+		else {
+			if (my < (y + (height / 2.0))) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
+					sclick.play();
+				}
+			}
+			else {
+				if (position > 0) {
+					SwitchTo(position - 1);
+					sclick.play();
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
+bool ContinuousThumbwheelSwitch::SwitchTo(int newPosition) {
+
+	if (newPosition >= 0 && newPosition <= numPositions && position != newPosition) {
+		position = newPosition;
+		state = PositionToState(position);
+		sclick.play();
+		if (callback)
+			callback->call(this);
+		return true;
+	}
+	return false;
+}
+
+int ContinuousThumbwheelSwitch::StateToPosition(int st)
+{
+	return st * multiplicator;
+}
+
+int ContinuousThumbwheelSwitch::PositionToState(int pos)
+{
+	double temp = ((double)pos) / ((double)multiplicator);
+	return (int)round(temp);
+}
+
+void ContinuousThumbwheelSwitch::LoadState(char *line) {
+
+	char buffer[100];
+	int st;
+
+	sscanf(line, "%s %i", buffer, &st);
+	if (!strnicmp(buffer, name, strlen(name))) {
+		state = st;
+	}
+
+	position = StateToPosition(state);
+}
+
+int ContinuousThumbwheelSwitch::GetPosition() {
+
+	return position;
+}
+
+void ContinuousThumbwheelSwitch::SetState(int value)
+{
+	SwitchTo(StateToPosition(value));
 }
 
 //
@@ -3020,6 +3178,83 @@ void TwoOutputSwitch::LoadState(char *line)
 }
 
 
+NSourceDestSwitch::NSourceDestSwitch(int n)
+{
+	nSources = n;
+	sources = new e_object *[nSources];
+	buses = new DCbus *[nSources];
+
+	int i;
+
+	for (i = 0; i < nSources; i++)
+	{
+		sources[i] = 0;
+		buses[i] = 0;
+	}
+}
+
+NSourceDestSwitch::~NSourceDestSwitch()
+{
+	if (sources)
+	{
+		delete[] sources;
+		sources = 0;
+	}
+	if (buses)
+	{
+		delete[] buses;
+		buses = 0;
+	}
+}
+
+void NSourceDestSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row)
+{
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+
+	UpdateSourceState();
+}
+
+bool NSourceDestSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggleSwitch::SwitchTo(newState, dontspring))
+	{
+		UpdateSourceState();
+		return true;
+	}
+	return false;
+}
+
+void NSourceDestSwitch::UpdateSourceState()
+{
+	if (IsUp()) {
+		for (int i = 0;i < nSources;i++)
+		{
+			buses[i]->WireTo(sources[i]);
+		}
+	}
+	else if (IsDown()) {
+		for (int i = 0;i < nSources;i++)
+		{
+			buses[i]->Disconnect();
+		}
+	}
+}
+
+void NSourceDestSwitch::WireSourcesToBuses(int bus, e_object* i, DCbus* o)
+{
+	if (bus > 0 && bus <= nSources)
+	{
+		sources[bus - 1] = i;
+		buses[bus - 1] = o;
+	}
+}
+
+void NSourceDestSwitch::LoadState(char *line)
+{
+	ToggleSwitch::LoadState(line);
+	UpdateSourceState();
+}
+
 //
 // ThreeOutputSwitch allows you to connect one of the three outputs to the input based on the position
 // of the switch.
@@ -3699,27 +3934,63 @@ bool CMCModeHoldFreeSwitch::SwitchTo(int newState, bool dontspring)
 // CMC Optics Mode Switch
 //
 
-bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
-
+void CMCOpticsModeSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, ToggleSwitch * zeroSwitch)
 {
-	if (AGCThreePoswitch::SwitchTo(newState,dontspring)) {
+	AGCSwitch::Init(xp, yp, w, h, surf, bsurf, row, c);
+
+	opticsZeroSwitch = zeroSwitch;
+}
+
+bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (AGCSwitch::SwitchTo(newState,dontspring)) {
+		if (agc) {
+			if (IsUp() && opticsZeroSwitch->IsDown()) {
+				// CMC MODE			
+				agc->SetInputChannelBit(033, CMCControl, true);
+				return true;
+			}
+			else
+			{
+				agc->SetInputChannelBit(033, CMCControl, false);
+				return true;
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+//
+// CMC Optics Mode Switch
+//
+
+void CMCOpticsZeroSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
+{
+	if (IsUp())
+	{
+		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
+	}
+	else
+	{
+		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset - width, yOffset, width, height, SURF_PREDEF_CK);
+	}
+}
+
+bool CMCOpticsZeroSwitch::SwitchTo(int newState, bool dontspring)
+{
+	if (AGCSwitch::SwitchTo(newState, dontspring)) {
 		if (agc) {
 			if (IsUp()) {
-				// CMC MODE, ZERO OFF				
-				agc->SetInputChannelBit(033, CMCControl, true);
-				agc->SetInputChannelBit(033, ZeroOptics_33, false);
-				return true;
-			}
-			if (IsCenter()) {
-				// MANUAL MODE, ZERO OFF
-				agc->SetInputChannelBit(033, CMCControl, false);
-				agc->SetInputChannelBit(033, ZeroOptics_33, false);
-				return true;
-			}
-			if (IsDown()) {
-				// MANUAL MODE, ZERO ON
-				agc->SetInputChannelBit(033, CMCControl, false);
+				// ZERO MODE			
 				agc->SetInputChannelBit(033, ZeroOptics_33, true);
+				agc->SetInputChannelBit(033, CMCControl, false);
+				return true;
+			}
+			else
+			{
+				agc->SetInputChannelBit(033, ZeroOptics_33, false);
 				return true;
 			}
 		}
@@ -3788,10 +4059,10 @@ void CWSSourceSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHA
 }
 
 
-void AGCSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c)
+void AGCSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, int xoffset, int yoffset)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	agc = c;
 }
 

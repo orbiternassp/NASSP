@@ -141,6 +141,7 @@ public:
 	SCEA_SA_5051();
 	void Reset();
 	double GetVoltage(int chan) { return Output[chan - 1]; }
+	void SetOutput(int n, double val) { Output[n - 1] = val; }
 protected:
 	double Output[3];
 };
@@ -164,6 +165,7 @@ public:
 	SCEA_SA_5071();
 	void Reset();
 	double GetVoltage(int chan) { return Output[chan - 1]; }
+	void SetOutput(int n, double val) { Output[n - 1] = val; }
 protected:
 	double Output[4];
 };
@@ -181,6 +183,7 @@ public:
 	virtual SCEA_SolidStateSwitch* GetSwitch(int sa, int chan) = 0;
 	virtual void Reset() = 0;
 	double scale_data(double data, double low, double high);
+	bool IsSet(int sa, int chan);
 	bool IsPowered();
 protected:
 	LEM *lem;

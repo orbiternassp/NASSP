@@ -26,13 +26,6 @@
 
 #include "thread.h"
 
-//
-// Flagword definitions. These are really intended for future
-// expansion as the AGC simulation gets closer to the real thing.
-// For the moment only a few of these flags will actually be
-// used.
-//
-
 class LEM;
 
 ///
@@ -77,6 +70,7 @@ protected:
 	void ProcessChannel141(ChannelValue val);
 	void ProcessChannel142(ChannelValue val);
 	void ProcessChannel143(ChannelValue val);
+	void ProcessChannel34(ChannelValue val);
 
 	//
 	// log file for autoland debugging
@@ -99,7 +93,7 @@ class LMOptics {
 public: 
 	LMOptics();													// Cons
 	void Init(LEM *vessel);										// Initialization
-	void TimeStep(double simdt);                                // Timestep
+	void Timestep(double simdt);                                // Timestep
 	void SystemTimestep(double simdt);
 	bool PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
 	void SaveState(FILEHANDLE scn);

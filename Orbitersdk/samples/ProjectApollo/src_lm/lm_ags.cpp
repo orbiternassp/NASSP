@@ -36,13 +36,10 @@
 
 #include "soundlib.h"
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "LEMcomputer.h"
 
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "CollisionSDK/CollisionSDK.h"
 
 #include "connector.h"
 
@@ -105,7 +102,7 @@ void LEM_ASA::TurnOff()
 	Initialized = false;
 }
 
-void LEM_ASA::TimeStep(double simdt){
+void LEM_ASA::Timestep(double simdt){
 	if(lem == NULL){ return; }
 	// AGS OFF  = ASA heaters active (OFF mode)
 	// AGS STBY = ASA fully active   (WARMUP mode, becomes OPERATE mode when temp allows)
@@ -380,6 +377,35 @@ bool LEM_ASA::IsPowered()
 	return true;
 }
 
+double LEM_ASA::GetASATempF() {
+
+	return KelvinToFahrenheit(hsink->GetTemp());
+
+}
+
+double LEM_ASA::GetASA12V() {
+	if (IsPowered())
+		return 12.0;
+	else if (GetASATempF() > 145.0)
+		return 0;
+	else
+		return 0;
+}
+
+double LEM_ASA::GetASA28V() {
+	if (IsPowered())
+		return 28.0;
+	else
+		return 0;
+}
+
+double LEM_ASA::GetASAFreq() {
+	if (IsPowered() && (lem->CDR_SCS_AEA_CB.Voltage() > SP_MIN_DCVOLTAGE || lem->SCS_AEA_CB.Voltage() > SP_MIN_DCVOLTAGE))
+		return 400.0;
+	else
+		return 0;
+}
+
 void LEM_ASA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 {
 	oapiWriteLine(scn, start_str);
@@ -411,15 +437,15 @@ void LEM_ASA::LoadState(FILEHANDLE scn,char *end_str)
 		papiReadScenario_vec(line, "LASTGLOBALVEL", LastGlobalVel);
 		papiReadScenario_vec(line, "REMAININGDELTAVEL", RemainingDeltaVel);
 		papiReadScenario_double(line, "LASTSIMDT", LastSimDT);
-		papiReadScenario_bool(line, "INITIALIZED", Initialized);
-		papiReadScenario_bool(line, "OPERATE", Operate);
-		papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
+papiReadScenario_bool(line, "INITIALIZED", Initialized);
+papiReadScenario_bool(line, "OPERATE", Operate);
+papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
 	}
 }
 
 // Abort Electronics Assembly
 LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) {
-	lem = NULL;	
+	lem = NULL;
 	AEAInitialized = false;
 	FlightProgram = 0;
 	PowerSwitch = 0;
@@ -449,14 +475,14 @@ LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) 
 	vags.ags_clientdata = this;
 }
 
-void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah){
+void LEM_AEA::Init(LEM *s, h_HeatLoad *aeah, h_HeatLoad *secaeah) {
 	lem = s;
 	aeaHeat = aeah;
 	secaeaHeat = secaeah;
 }
 
-void LEM_AEA::TimeStep(double simt, double simdt){
-	if(lem == NULL){ return; }
+void LEM_AEA::Timestep(double simt, double simdt) {
+	if (lem == NULL) { return; }
 
 	if (!IsPowered()) return;
 
@@ -502,6 +528,14 @@ void LEM_AEA::TimeStep(double simt, double simdt){
 			vags.InputPorts[IO_6100] &= 0377700;
 
 			ASACycleCounter -= 1024;
+		}
+
+		//PGNS to AGS downlink queue
+		if (((vags.InputPorts[IO_2020] & 0200000) != 0) && (ags_queue.size() > 0))
+		{
+			SetInputPort(IO_6200, ags_queue.front() << 2);
+			ags_queue.pop();
+			PGNCSDownlinkStopPulse();
 		}
 	}
 
@@ -670,6 +704,15 @@ unsigned int LEM_AEA::GetInputChannel(int channel)
 	return val;
 }
 
+bool LEM_AEA::GetInputChannelBit(int channel, int bit)
+
+{
+	if (channel < 0 || channel > MAX_INPUT_CHANNELS)
+		return false;
+
+	return (GetInputChannel(channel) & (1 << (bit))) != 0;
+}
+
 void LEM_AEA::SetAGSAttitudeError(int Type, int Data)
 {
 	int DataVal;
@@ -816,6 +859,16 @@ void LEM_AEA::SetPGNSIntegratorRegister(int channel, int val)
 	}
 }
 
+void LEM_AEA::SetDownlinkTelemetryRegister(int val)
+{
+	if (ags_queue.size() < 3) ags_queue.push(val);
+}
+
+void LEM_AEA::PGNCSDownlinkStopPulse()
+{
+	SetInputPortBit(IO_2020, AGSDownlinkTelemetryStopDiscrete, false);
+}
+
 VECTOR3 LEM_AEA::GetTotalAttitude()
 {
 	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE)
@@ -875,6 +928,15 @@ bool LEM_AEA::IsACPowered()
 {
 	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE) {	return false; }
 	return true;
+}
+
+bool LEM_AEA::GetTestModeFailure()
+{
+		if (!IsPowered())
+			return false;
+		AGSChannelValue40 agsval40;
+		agsval40 = OutputPorts[IO_ODISCRETES];
+		return ~agsval40[AGSTestModeFailure];
 }
 
 void LEM_AEA::InitVirtualAGS(char *binfile)
@@ -1098,7 +1160,7 @@ void LEM_DEDA::Init(e_object *powered)
 	FirstTimeStep = true;
 }
 
-void LEM_DEDA::TimeStep(double simdt){
+void LEM_DEDA::Timestep(double simdt){
 	if(lem == NULL){ return; }
 
 	if(FirstTimeStep)
@@ -1170,6 +1232,36 @@ void LEM_DEDA::LoadState(FILEHANDLE scn,char *end_str){
 		papiReadScenario_intarr(line, "SHIFTREGISTER", ShiftRegister, 9);
 		papiReadScenario_int(line, "STATE", State);
 	}
+}
+
+bool LEM_DEDA::IsPowered()
+{ 
+	if (Voltage() > 25.0)
+		return true;
+
+	return false;
+}
+
+bool LEM_DEDA::HasAnnunPower()
+{
+	if (lem->lca.GetAnnunVoltage() > 2.25)
+		return true;
+
+	return false;
+}
+bool LEM_DEDA::HasNumPower()
+{
+	if (lem->lca.GetNumericVoltage() > 25.0)
+		return true;
+
+	return false;
+}
+bool LEM_DEDA::HasIntglPower()
+{
+	if (lem->lca.GetIntegralVoltage() > 20.0)
+		return true;
+
+	return false;
 }
 
 void LEM_DEDA::KeyClick()
@@ -1347,7 +1439,7 @@ void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dst
 void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
 
 {
-	if (!IsPowered())
+	if (!IsPowered() || !HasNumPower())
 		return;
 
 	RenderThreeDigitDisplay(surf, digits, xOffset, yOffset, Adr);
@@ -1356,7 +1448,7 @@ void LEM_DEDA::RenderAdr(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yO
 void LEM_DEDA::RenderData(SURFHANDLE surf, SURFHANDLE digits, int xOffset, int yOffset)
 
 {
-	if (!IsPowered())
+	if (!IsPowered() || !HasNumPower())
 		return;
 
 	//
@@ -1407,7 +1499,7 @@ void LEM_DEDA::DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, 
 void LEM_DEDA::RenderOprErr(SURFHANDLE surf, SURFHANDLE lights)
 
 {
-	if (!IsPowered())
+	if (!HasAnnunPower())
 		return;
 
 	//

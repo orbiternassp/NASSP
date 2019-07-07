@@ -32,7 +32,7 @@ class MechanicalAccelerometer
 public:
 	MechanicalAccelerometer();
 	void Init(VESSEL* v);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 

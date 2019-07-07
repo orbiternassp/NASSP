@@ -13,7 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1DE45393-14EC-4D29-A2F8-61FC60C2C286}</ProjectGuid>
     <RootNamespace>LC34</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -146,11 +146,22 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_launch\IUUmbilical.cpp" />
+    <ClCompile Include="..\..\src_launch\IUUmbilicalInterface.cpp" />
+    <ClCompile Include="..\..\src_launch\IU_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\LC37.cpp" />
+    <ClCompile Include="..\..\src_launch\SCMUmbilical.cpp" />
+    <ClCompile Include="..\..\src_launch\SIB_ESE.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_launch\IUUmbilical.h" />
+    <ClInclude Include="..\..\src_launch\IUUmbilicalInterface.h" />
+    <ClInclude Include="..\..\src_launch\IU_ESE.h" />
     <ClInclude Include="..\..\src_launch\LC37.h" />
+    <ClInclude Include="..\..\src_launch\SCMUmbilical.h" />
+    <ClInclude Include="..\..\src_launch\SCMUmbilicalInterface.h" />
+    <ClInclude Include="..\..\src_launch\SIB_ESE.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />
     <ClInclude Include="..\..\src_sys\soundlib.h" />
   </ItemGroup>

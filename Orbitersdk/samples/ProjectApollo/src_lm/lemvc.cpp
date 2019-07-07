@@ -39,8 +39,39 @@
 
 #include "LEM.h"
 
+void LEM::JostleViewpoint(double amount)
+
+{
+	double j = ((double)((rand() & 65535) - 32768) * amount) / 3276800.0;
+	ViewOffsetx += j;
+
+	j = ((double)((rand() & 65535) - 32768) * amount) / 3276800.0;
+	ViewOffsety += j;
+
+	j = ((double)((rand() & 65535) - 32768) * amount) / 3276800.0;
+	ViewOffsetz += j;
+
+	if (ViewOffsetx > 0.10)
+		ViewOffsetx = 0.10;
+	if (ViewOffsetx < -0.10)
+		ViewOffsetx = -0.10;
+
+	if (ViewOffsety > 0.10)
+		ViewOffsety = 0.10;
+	if (ViewOffsety < -0.10)
+		ViewOffsety = -0.10;
+
+	if (ViewOffsetz > 0.05)
+		ViewOffsetz = 0.05;
+	if (ViewOffsetz < -0.05)
+		ViewOffsetz = -0.05;
+
+	SetView();
+}
+
 void LEM::SetView() {
 
+	VECTOR3 v;
 	//
 	// Set camera offset
 	//
@@ -48,22 +79,30 @@ void LEM::SetView() {
 		switch (viewpos) {
 		case LMVIEW_CDR:
 			if (stage == 2) {
-				SetCameraOffset(_V(-0.68, -0.195, 1.35));
+				v = _V(-0.55, -0.07, 1.35);
 			}
 			else {
-				SetCameraOffset(_V(-0.68, 1.65, 1.35));
+				v = _V(-0.55, 1.68, 1.35);
 			}
+			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			break;
 
 		case LMVIEW_LMP:
 			if (stage == 2) {
-				SetCameraOffset(_V(0.92, -0.195, 1.23));
+				v = _V(0.55, -0.07, 1.35);
 			}
 			else {
-				SetCameraOffset(_V(0.92, 1.65, 1.23));
+				v = _V(0.55, 1.68, 1.35);
 			}
+			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			break;
 		}
+
+		v.x += ViewOffsetx;
+		v.y += ViewOffsety;
+		v.z += ViewOffsetz;
+
+		SetCameraOffset(v);
 
 	} else {
 
@@ -73,7 +112,7 @@ void LEM::SetView() {
 			{
 				case LMPANEL_MAIN:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 0.055, 1.26));
+						SetCameraOffset(_V(0, 0.15, 1.26));
 					}
 					else {
 						SetCameraOffset(_V(0, 1.90, 1.26));
@@ -81,7 +120,7 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_RIGHTWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(0.576, 0.055, 1.26));
+						SetCameraOffset(_V(0.576, 0.15, 1.26));
 					}
 					else {
 						SetCameraOffset(_V(0.576, 1.90, 1.26));
@@ -89,7 +128,7 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_LEFTWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+						SetCameraOffset(_V(-0.576, 0.15, 1.26));
 					}
 					else {
 						SetCameraOffset(_V(-0.576, 1.90, 1.26));
@@ -97,25 +136,28 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_LPDWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.68, -0.195, 1.35));
-						//SetCameraOffset(_V(-1, 0.055, 1.26));
+						v = _V(-0.61, -0.125, 1.39);
 					}
 					else {
-						SetCameraOffset (_V(-0.68, 1.65, 1.35));
-						//SetCameraOffset(_V(-1, 1.90, 1.26));
+						v = _V(-0.61, 1.625, 1.39);
 					}
+					v.x += ViewOffsetx;
+					v.y += ViewOffsety;
+					v.z += ViewOffsetz;
+
+					SetCameraOffset(v);
 					break;
 				case LMPANEL_RNDZWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.598, 0.555, 1.106));
+						SetCameraOffset(_V(-0.598, 0.15, 1.106));
 					}
 					else {
-						SetCameraOffset(_V(-0.598, 2.40, 1.106));
+						SetCameraOffset(_V(-0.598, 1.90, 1.106));
 					}
 					break;
 				case LMPANEL_LEFTPANEL:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+						SetCameraOffset(_V(-0.576, 0.15, 1.26));
 					}
 					else {
 						SetCameraOffset(_V(-0.576, 1.90, 1.26));
@@ -123,7 +165,7 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_AOTVIEW:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 1.035, 1.26));
+						SetCameraOffset(_V(0, 1.13, 1.26));
 					}
 					else {
 						SetCameraOffset(_V(0, 2.88, 1.26));
@@ -131,7 +173,7 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_AOTZOOM:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 1.035, 1.26));
+						SetCameraOffset(_V(0, 1.13, 1.26));
 					}
 					else {
 						SetCameraOffset(_V(0, 2.88, 1.26));
@@ -139,16 +181,16 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_DOCKVIEW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.598, 0.555, 1.106));
+						SetCameraOffset(_V(-0.598, 0.15, 1.106));
 					}
 					else {
-						SetCameraOffset(_V(-0.598, 2.40, 1.106));
+						SetCameraOffset(_V(-0.598, 1.90, 1.106));
 					}
 					break;
 				
 				case LMPANEL_LEFTZOOM:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.576, 0.055, 1.26));
+						SetCameraOffset(_V(-0.576, 0.15, 1.26));
 					}
 					else {
 						SetCameraOffset(_V(-0.576, 1.90, 1.26));
@@ -156,18 +198,20 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_UPPERHATCH:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 0.055, 0));
+						SetCameraOffset(_V(0, -0.55, 0));
 					}
 					else {
-						SetCameraOffset(_V(0, 1.90, 0));
+						SetCameraOffset(_V(0, 1.20, 0));
 					}
+					SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+					oapiCameraSetCockpitDir(180 * RAD, 0);
 					break;
 				case LMPANEL_FWDHATCH:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 0.055, 1.26));
+						SetCameraOffset(_V(0, -1.4, 1.5));
 					}
 					else {
-						SetCameraOffset(_V(0, 1.90, 1.26));
+						SetCameraOffset(_V(0, 0.35, 1.5));
 					}
 					break;
 			}
@@ -177,7 +221,7 @@ void LEM::SetView() {
 	}
 
 	//
-	// Change FOV for the LPD window, AOT zoom and docking view
+	// Change FOV for the LPD window and AOT zoom
 	//
 	if (InPanel && PanelId == LMPANEL_LPDWINDOW) {
 	   // if this is the first time we've been here, save the current FOV
@@ -185,36 +229,23 @@ void LEM::SetView() {
 			SaveFOV = oapiCameraAperture();
 			InFOV = false;
 		}
-		//set FOV to 60 degrees
-		oapiCameraSetAperture(RAD * 30.0);
+		//set FOV to 60 degrees (except for lower resolutions)
+		DWORD w, h;
+		oapiGetViewportSize(&w, &h);
+		oapiCameraSetAperture(atan(tan(RAD*30.0)*min(h / 1080.0, 1.0)));
 	}
-	else if (PanelId == LMPANEL_AOTZOOM) {
+	else if (InPanel && PanelId == LMPANEL_AOTZOOM) {
 		// if this is the first time we've been here, save the current FOV
 		if (InFOV) {
 			SaveFOV = oapiCameraAperture();
 			InFOV = false;
 		}
-		//set FOV to 60 degrees
-		oapiCameraSetAperture(RAD * 30.0);
+		//set FOV to 60 degrees (except for lower resolutions)
+		DWORD w, h;
+		oapiGetViewportSize(&w, &h);
+		oapiCameraSetAperture(atan(tan(RAD*30.0)*min(h / 1050.0, 1.0)));
 	}
-	else if (PanelId == LMPANEL_DOCKVIEW) {
-		// if this is the first time we've been here, save the current FOV
-		if (InFOV) {
-			SaveFOV = oapiCameraAperture();
-			InFOV = false;
-		}
-		//set FOV to 40 degrees
-		oapiCameraSetAperture(RAD * 20.0);
-	}
-	else if (PanelId == LMPANEL_UPPERHATCH) {
-		// if this is the first time we've been here, save the current FOV
-		if (InFOV) {
-			SaveFOV = oapiCameraAperture();
-			InFOV = false;
-		}
-		//set FOV to 30 degrees so that only the tunnel is visible when docked with CSM
-		oapiCameraSetAperture(RAD * 15.0);
-	} else {
+    else {
 		if(InFOV == false) {
 			oapiCameraSetAperture(SaveFOV);
 			InFOV = true;
@@ -231,6 +262,7 @@ bool LEM::clbkLoadVC (int id)
 		InVC = true;
 		InPanel = false;
 		SetView();
+		SetLMMeshVis();
 		return true;
 
 	default:

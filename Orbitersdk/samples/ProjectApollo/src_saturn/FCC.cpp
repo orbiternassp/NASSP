@@ -1,6 +1,6 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2017
+Copyright 2017-2019
 
 Flight Control Computer
 
@@ -25,19 +25,17 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Orbitersdk.h"
 
 #include "LVIMU.h"
-
+#include "IUControlDistributor.h"
 #include "papi.h"
 #include "iu.h"
 
 #include "FCC.h"
 
-FCC::FCC(LVRG &rg) : lvrg(rg)
+FCC::FCC(IU *iu)
 {
-	GainSwitch = -1;
-	StageSwitch = 0;
+	SIBurnMode = false;
 	SIVBBurnMode = false;
 	SCControlEnableRelay = false;
-	PermanentSCControlEnabled = false;
 
 	a_0p = a_0y = a_0r = 0.0;
 	a_1p = a_1y = a_1r = 0.0;
@@ -48,22 +46,12 @@ FCC::FCC(LVRG &rg) : lvrg(rg)
 
 	LVDCAttitudeError = _V(0.0, 0.0, 0.0);
 
-	iu = NULL;
-}
-
-void FCC::Init(IU *i)
-{
-	iu = i;
+	this->iu = iu;
 }
 
 void FCC::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
-	oapiWriteScenario_int(scn, "GAINSWITCH", GainSwitch);
-	oapiWriteScenario_int(scn, "STAGESWITCH", StageSwitch);
-	papiWriteScenario_bool(scn, "SIVBBURNMODE", SIVBBurnMode);
-	papiWriteScenario_bool(scn, "SCCONTROLENABLERELAY", SCControlEnableRelay);
-	papiWriteScenario_bool(scn, "PERMANENTSCCONTROLENABLED", PermanentSCControlEnabled);
 	papiWriteScenario_vec(scn, "LVDCATTITUDEERROR", LVDCAttitudeError);
 
 	oapiWriteLine(scn, end_str);
@@ -78,32 +66,30 @@ void FCC::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, end_str, end_len)) {
 			break;
 		}
-		papiReadScenario_int(line, "GAINSWITCH", GainSwitch);
-		papiReadScenario_int(line, "STAGESWITCH", StageSwitch);
-		papiReadScenario_bool(line, "SIVBBURNMODE", SIVBBurnMode);
-		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
-		papiReadScenario_bool(line, "PERMANENTSCCONTROLENABLED", PermanentSCControlEnabled);
 		papiReadScenario_vec(line, "LVDCATTITUDEERROR", LVDCAttitudeError);
 
 	}
 }
 
-FCC1B::FCC1B(LVRG &rg) : FCC(rg)
+FCC1B::FCC1B(IU *iu) : FCC(iu)
 {
 
 }
 
 void FCC1B::Timestep(double simdt)
 {
-	if (GainSwitch < 0) return;
 	if (iu == NULL) return;
 
 	VECTOR3 AttRate, AttitudeError;
 
-	AttRate = lvrg.GetRates();
+	//Input signals
+	AttRate = iu->GetLVRG()->GetRates();
+	SIBurnMode = iu->GetControlDistributor()->GetSIBurnMode();
+	SIVBBurnMode = iu->GetControlDistributor()->GetSIVBBurnMode();
+	SCControlEnableRelay = iu->GetEDS()->GetSCControl();
 
 	// S/C takeover function
-	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
+	if (SCControlEnableRelay) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 31.6;
@@ -116,48 +102,63 @@ void FCC1B::Timestep(double simdt)
 	}
 
 	/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
-	if (GainSwitch == 0) {
-		a_0p = a_0y = 2;
-		a_0r = 0.3;
-		a_1p = a_1y = 1.6;
-		a_1r = 0.25;
+	if (SIBurnMode)
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint3())
+		{
+			a_0p = a_0y = 0.7;
+			a_0r = 0.2;
+			a_1p = a_1y = 0.75;
+			a_1r = 0.15;
+			//sprintf(oapiDebugString(), "S-IB Mode, Gain 3");
+		}
+		else if (iu->GetControlDistributor()->GetFCCSwitchPoint2())
+		{
+			a_0p = a_0y = 2;
+			a_0r = 0.3;
+			a_1p = a_1y = 1.6;
+			a_1r = 0.25;
+			//sprintf(oapiDebugString(), "S-IB Mode, Gain 2");
+		}
+		else if (iu->GetControlDistributor()->GetFCCSwitchPoint1())
+		{
+			a_0p = a_0y = 3;
+			a_0r = 0.3;
+			a_1p = a_1y = 1.6;
+			a_1r = 0.25;
+			//sprintf(oapiDebugString(), "S-IB Mode, Gain 1");
+		}
+		else
+		{
+			a_0p = a_0y = 2;
+			a_0r = 0.3;
+			a_1p = a_1y = 1.6;
+			a_1r = 0.25;
+			//sprintf(oapiDebugString(), "S-IB Mode, None");
+		}
 	}
-	else if (GainSwitch == 1) {
-		a_0p = a_0y = 3;
-		a_0r = 0.3;
-		a_1p = a_1y = 1.6;
-		a_1r = 0.25;
-	}
-	else if (GainSwitch == 2) {
-		a_0p = a_0y = 2;
-		a_0r = 0.3;
-		a_1p = a_1y = 1.6;
-		a_1r = 0.25;
-	}
-	else if (GainSwitch == 3 && StageSwitch == 0) {
-		a_0p = a_0y = 0.7;
-		a_0r = 0.2;
-		a_1p = a_1y = 0.75;
-		a_1r = 0.15;
-	}
-	else if (StageSwitch == 2 && SIVBBurnMode == true) {
+	else if (SIVBBurnMode)
+	{
 		a_0p = a_0y = 0.6;
 		a_0r = 1;
 		a_1p = a_1y = 0.5;
 		a_1r = 5;
+		//sprintf(oapiDebugString(), "S-IVB Burn Mode, None");
 	}
-	else if (StageSwitch == 2 && SIVBBurnMode == false) {
+	else
+	{
 		a_0p = a_0y = 1;
 		a_0r = 1;
 		a_1p = a_1y = 5;
 		a_1r = 5;
+		//sprintf(oapiDebugString(), "S-IVB Coast Mode, None");
 	}
 
 	beta_pc = a_0p * AttitudeError.y + a_1p * AttRate.y;
 	beta_yc = a_0y * AttitudeError.z + a_1y * AttRate.z;
 	beta_rc = a_0r * AttitudeError.x + a_1r * AttRate.x;
 
-	if (StageSwitch < 1) {
+	if (SIBurnMode) {
 		beta_y1c = beta_yc + beta_rc / pow(2, 0.5); //orbiter's engines are gimballed differently then the real one
 		beta_p1c = beta_pc - beta_rc / pow(2, 0.5);
 		beta_y2c = beta_yc - beta_rc / pow(2, 0.5);
@@ -181,14 +182,14 @@ void FCC1B::Timestep(double simdt)
 		eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 		eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
 	}
-	else if (SIVBBurnMode == false) {
+	else {
 		//SIVB coast flight; full APS control
 		eps_p = (a_0p * AttitudeError.y * DEG) + (a_1p * AttRate.y * DEG); //pitch thruster demand
 		eps_ymr = (a_0y * AttitudeError.z * DEG) - (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) - (a_1r * AttRate.x * DEG); //yaw minus roll
 		eps_ypr = (a_0y * AttitudeError.z * DEG) + (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) + (a_1r * AttRate.x * DEG); //yaw plus roll
 	}
 
-	if (StageSwitch > 0) {
+	if (SIBurnMode == false) {
 		//APS thruster on/off control
 		if (eps_p > 1) {
 			//fire+pitch
@@ -247,21 +248,31 @@ void FCC1B::Timestep(double simdt)
 	}
 }
 
-FCCSV::FCCSV(LVRG &rg) : FCC(rg)
+FCCSV::FCCSV(IU *iu) : FCC(iu)
 {
-
+	SIIBurnMode = false;
+	SICOrSIIBurnMode = false;
+	UseSICEngineCant = false;
+	//2° split among pitch and yaw (divided by sqrt(2))
+	SICCant = 0.0247;
 }
 
 void FCCSV::Timestep(double simdt)
 {
-	if (GainSwitch < 0) return;
 	if (iu == NULL) return;
 
 	VECTOR3 AttRate, AttitudeError;
 
-	AttRate = lvrg.GetRates();
+	//Input Signals
+	AttRate = iu->GetLVRG()->GetRates();
+	SIBurnMode = iu->GetControlDistributor()->GetSIBurnMode();
+	SIIBurnMode = iu->GetControlDistributor()->GetSIIBurnMode();
+	SICOrSIIBurnMode = SIBurnMode || SIIBurnMode;
+	SIVBBurnMode = iu->GetControlDistributor()->GetSIVBBurnMode();
+	SCControlEnableRelay = iu->GetEDS()->GetSCControl();
+	UseSICEngineCant = iu->GetControlDistributor()->UseSICEngineCant();
 
-	if (SCControlEnableRelay == true && iu->lvda.GetCMCSIVBTakeover()) {
+	if (SCControlEnableRelay) {
 		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
 		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
 		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 31.6;
@@ -274,71 +285,103 @@ void FCCSV::Timestep(double simdt)
 	}
 
 	/* **** FLIGHT CONTROL COMPUTER OPERATIONS **** */
-	if (GainSwitch == 0) {
-		a_0p = a_0y = 0.9;
-		a_0r = 0.9;
-		a_1p = a_1y = 0.69;
-		a_1r = 0.69;
+	if (SIBurnMode)
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint2())
+		{
+			a_0p = a_0y = 0.32;
+			a_0r = 0.32;
+			a_1p = a_1y = 0.30;
+			a_1r = 0.30;
+			//sprintf(oapiDebugString(), "S-IC Mode, Gain 2");
+		}
+		else if (iu->GetControlDistributor()->GetFCCSwitchPoint1())
+		{
+			a_0p = a_0y = 0.45;
+			a_0r = 0.45;
+			a_1p = a_1y = 0.44;
+			a_1r = 0.44;
+			//sprintf(oapiDebugString(), "S-IC Mode, Gain 1");
+		}
+		else
+		{
+			a_0p = a_0y = 0.9;
+			a_0r = 0.9;
+			a_1p = a_1y = 0.69;
+			a_1r = 0.69;
+			//sprintf(oapiDebugString(), "S-IC Mode, None");
+		}
 	}
-	else if (GainSwitch == 1) {
-		a_0p = a_0y = 0.45;
-		a_0r = 0.45;
-		a_1p = a_1y = 0.44;
-		a_1r = 0.44;
+	else if (SIIBurnMode)
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint4())
+		{
+			a_0p = a_0y = 0.44;
+			a_0r = 0.44;
+			a_1p = a_1y = 0.74;
+			a_1r = 0.74;
+			//sprintf(oapiDebugString(), "S-II Mode, Gain 4");
+		}
+		else if (iu->GetControlDistributor()->GetFCCSwitchPoint3())
+		{
+			a_0p = a_0y = 0.65;
+			a_0r = 0.65;
+			a_1p = a_1y = 1.1;
+			a_1r = 1.1;
+			//sprintf(oapiDebugString(), "S-II Mode, Gain 3");
+		}
+		else
+		{
+			a_0p = a_0y = 1.12;
+			a_0r = 1.12;
+			a_1p = a_1y = 1.9;
+			a_1r = 1.9;
+			//sprintf(oapiDebugString(), "S-II Mode, None");
+		}
 	}
-	else if (GainSwitch == 2 && StageSwitch == 0) {
-		a_0p = a_0y = 0.32;
-		a_0r = 0.32;
-		a_1p = a_1y = 0.30;
-		a_1r = 0.30;
+	else if (SIVBBurnMode)
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint6())
+		{
+			a_0p = a_0y = 0.81;
+			a_0r = 1;
+			a_1p = a_1y = 0.7;
+			a_1r = 5;
+			//sprintf(oapiDebugString(), "S-IVB Burn Mode, Gain 6");
+		}
+		else
+		{
+			a_0p = a_0y = 0.81;
+			a_0r = 1;
+			a_1p = a_1y = 0.97;
+			a_1r = 5;
+			//sprintf(oapiDebugString(), "S-IVB Burn Mode, None");
+		}
 	}
-	else if (GainSwitch == 2 && StageSwitch == 1) {
-		a_0p = a_0y = 1.12;
-		a_0r = 1.12;
-		a_1p = a_1y = 1.9;
-		a_1r = 1.9;
-	}
-	else if (GainSwitch == 3) {
-		a_0p = a_0y = 0.65;
-		a_0r = 0.65;
-		a_1p = a_1y = 1.1;
-		a_1r = 1.1;
-	}
-	else if (GainSwitch == 4 && StageSwitch == 1) {
-		a_0p = a_0y = 0.44;
-		a_0r = 0.44;
-		a_1p = a_1y = 0.74;
-		a_1r = 0.74;
-	}
-	else if (GainSwitch == 4 && StageSwitch == 2 && SIVBBurnMode == true) {
-		a_0p = a_0y = 0.81;
-		a_0r = 1;
-		a_1p = a_1y = 0.97;
-		a_1r = 5;
-	}
-	else if ((GainSwitch == 4 || GainSwitch == 6) && SIVBBurnMode == false) {
-		a_0p = a_0y = 1;
-		a_0r = 1;
-		a_1p = a_1y = 5;
-		a_1r = 5;
-	}
-	else if (GainSwitch == 5) {
-		a_0p = a_0y = 1;
-		a_0r = 1;
-		a_1p = a_1y = 5;
-		a_1r = 5;
-	}
-	else if (GainSwitch == 6 && SIVBBurnMode == true) {
-		a_0p = a_0y = 0.81;
-		a_0r = 1;
-		a_1p = a_1y = 0.7;
-		a_1r = 5;
+	else
+	{
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint5())
+		{
+			a_0p = a_0y = 1;
+			a_0r = 1;
+			a_1p = a_1y = 5;
+			a_1r = 5;
+			//sprintf(oapiDebugString(), "S-IVB Coast Mode, Gain 5");
+		}
+		else
+		{
+			a_0p = a_0y = 1;
+			a_0r = 1;
+			a_1p = a_1y = 5;
+			a_1r = 5;
+			//sprintf(oapiDebugString(), "S-IVB Coast Mode, None");
+		}
 	}
 
 	beta_pc = a_0p * AttitudeError.y + a_1p * AttRate.y;
 	beta_yc = a_0y * AttitudeError.z + a_1y * AttRate.z;
 	beta_rc = a_0r * AttitudeError.x + a_1r * AttRate.x;
-	if (StageSwitch < 2) {
+	if (SICOrSIIBurnMode) {
 		//orbiter's engines are gimballed differently then the real one
 		beta_p1c = beta_pc + beta_rc / pow(2, 0.5);
 		beta_p2c = beta_pc + beta_rc / pow(2, 0.5);
@@ -348,12 +391,12 @@ void FCCSV::Timestep(double simdt)
 		beta_y2c = beta_yc - beta_rc / pow(2, 0.5);
 		beta_y3c = beta_yc - beta_rc / pow(2, 0.5);
 		beta_y4c = beta_yc + beta_rc / pow(2, 0.5);
-		if (StageSwitch < 1) {
+		if (SIBurnMode) {
 			//SIC
-			iu->GetLVCommandConnector()->SetSIThrusterDir(0, beta_y1c, beta_p1c);
-			iu->GetLVCommandConnector()->SetSIThrusterDir(1, beta_y2c, beta_p2c);
-			iu->GetLVCommandConnector()->SetSIThrusterDir(2, beta_y3c, beta_p3c);
-			iu->GetLVCommandConnector()->SetSIThrusterDir(3, beta_y4c, beta_p4c);
+			iu->GetLVCommandConnector()->SetSIThrusterDir(0, beta_y1c + (UseSICEngineCant ? SICCant : 0.0), beta_p1c - (UseSICEngineCant ? SICCant : 0.0));
+			iu->GetLVCommandConnector()->SetSIThrusterDir(1, beta_y2c + (UseSICEngineCant ? SICCant : 0.0), beta_p2c + (UseSICEngineCant ? SICCant : 0.0));
+			iu->GetLVCommandConnector()->SetSIThrusterDir(2, beta_y3c - (UseSICEngineCant ? SICCant : 0.0), beta_p3c + (UseSICEngineCant ? SICCant : 0.0));
+			iu->GetLVCommandConnector()->SetSIThrusterDir(3, beta_y4c - (UseSICEngineCant ? SICCant : 0.0), beta_p4c - (UseSICEngineCant ? SICCant : 0.0));
 		}
 		else {
 			//SII: engines 2 & 4 are flipped!
@@ -364,7 +407,7 @@ void FCCSV::Timestep(double simdt)
 			iu->GetLVCommandConnector()->SetSIIThrusterDir(3, beta_y3c, beta_p3c);
 		}
 	}
-	else if (SIVBBurnMode == true && StageSwitch == 2) {
+	else if (SIVBBurnMode) {
 		//SIVB powered flight
 		beta_p1c = beta_pc; //gimbal angles
 		beta_y1c = beta_yc;
@@ -373,14 +416,14 @@ void FCCSV::Timestep(double simdt)
 		eps_ymr = -(a_0r * AttitudeError.x * DEG) - (a_1r * AttRate.x * DEG); //nor the yaw thrusters
 		eps_ypr = (a_0r * AttitudeError.x * DEG) + (a_1r * AttRate.x * DEG);
 	}
-	else if (SIVBBurnMode == false && StageSwitch == 2) {
+	else {
 		//SIVB coast flight; full APS control
 		eps_p = (a_0p * AttitudeError.y * DEG) + (a_1p * AttRate.y * DEG); //pitch thruster demand
 		eps_ymr = (a_0y * AttitudeError.z * DEG) - (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) - (a_1r * AttRate.x * DEG); //yaw minus roll
 		eps_ypr = (a_0y * AttitudeError.z * DEG) + (a_0r * AttitudeError.x * DEG) + (a_1y * AttRate.z * DEG) + (a_1r * AttRate.x * DEG); //yaw plus roll
 	}
 
-	if (StageSwitch == 2) {
+	if (SICOrSIIBurnMode == false) {
 		//APS thruster on/off control
 		if (eps_p > 1) {
 			//fire+pitch
@@ -438,6 +481,6 @@ void FCCSV::Timestep(double simdt)
 		}
 	}
 
-	//sprintf(oapiDebugString(), "%d %d %d %f %f %f", GainSwitch, StageSwitch, SIVBBurnMode, AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
+	//sprintf(oapiDebugString(), "%d %d %d %d %f %f %f", SIBurnMode, SIIBurnMode, SIVBBurnMode, UseSICEngineCant, AttitudeError.x*DEG, AttitudeError.y*DEG, AttitudeError.z*DEG);
 	//sprintf(oapiDebugString(), "%f %f %f", eps_p, eps_ymr, eps_ypr);
 }

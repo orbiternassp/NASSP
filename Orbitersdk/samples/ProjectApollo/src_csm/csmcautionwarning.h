@@ -241,6 +241,9 @@ protected:
 #define CSM_CWS_FC1_LIGHT			31			///< CSM Fuel Cell 1 warning light.
 #define CSM_CWS_FC2_LIGHT			32			///< CSM Fuel Cell 2 warning light.
 #define CSM_CWS_FC3_LIGHT			33			///< CSM Fuel Cell 3 warning light.
+#define CSM_CWS_INV1_TEMP_HI		35			///< CSM Inverter 1 temperature high warning light.
+#define CSM_CWS_INV2_TEMP_HI		36			///< CSM Inverter 2 temperature high warning light.
+#define CSM_CWS_INV3_TEMP_HI		37			///< CSM Inverter 3 temperature high warning light.
 #define CSM_CWS_SPS_PRESS			38			///< CSM Service Propulsion System warning light.
 #define CSM_CWS_AC_BUS1_LIGHT		40			///< CSM AC Bus 1 warning light.
 #define CSM_CWS_AC_BUS2_LIGHT		41			///< CSM AC Bus 2 warning light.

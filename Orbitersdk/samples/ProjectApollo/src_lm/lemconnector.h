@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "connector.h"
 
 class LEM;
+class LEMcomputer;
 
 class LEMConnector : public Connector
 {
@@ -49,10 +50,10 @@ public:
 
 // ELECTRICAL
 // LEM to CSM Power Connector
-class LEMPowerConnector : public Connector
+class LEMPowerConnector : public LEMConnector
 {
 public:
-	LEMPowerConnector();
+	LEMPowerConnector(LEM *l);
 	int csm_power_latch;
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };
@@ -66,7 +67,7 @@ enum IULMMessageType
 
 ///
 /// \ingroup Connectors
-/// \brief CSM to IU connector type.
+/// \brief LM to IU connector type.
 ///
 class LMToIUConnector : public LEMConnector
 {
@@ -78,4 +79,29 @@ public:
 
 protected:
 	LEMcomputer & agc;
+};
+
+///
+/// \ingroup Connectors
+/// \brief LM to S-IVB connector type.
+///
+class LMToSIVBConnector : public LEMConnector
+{
+public:
+	LMToSIVBConnector(LEM *l);
+	~LMToSIVBConnector();
+
+	void StartSeparationPyros();
+	void StopSeparationPyros();
+};
+
+//CSM to LM command connector
+
+class LEMCommandConnector : public LEMConnector
+{
+public:
+	LEMCommandConnector(LEM *l);
+	~LEMCommandConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };

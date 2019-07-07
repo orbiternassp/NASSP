@@ -61,6 +61,7 @@ static MESHHANDLE hSat1stg21;
 static MESHHANDLE hSat1stg22;
 static MESHHANDLE hSat1stg23;
 static MESHHANDLE hSat1stg24;
+static MESHHANDLE hSat1stg2cross;
 static MESHHANDLE hsat5stg3;
 static MESHHANDLE hsat5stg31;
 static MESHHANDLE hsat5stg32;
@@ -73,10 +74,8 @@ static MESHHANDLE hsat5stg33low;
 static MESHHANDLE hsat5stg34low;
 static MESHHANDLE hastp;
 static MESHHANDLE hCOAStarget;
-static MESHHANDLE hLMPKD;
 static MESHHANDLE hapollo8lta;
 static MESHHANDLE hlta_2r;
-static MESHHANDLE hlm_1;
 
 static SURFHANDLE SMMETex;
 
@@ -127,9 +126,9 @@ void SIVbLoadMeshes()
 	hSat1stg22 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg22");
 	hSat1stg23 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg23");
 	hSat1stg24 = oapiLoadMeshGlobal ("ProjectApollo/nsat1stg24");
+	hSat1stg2cross = oapiLoadMeshGlobal("ProjectApollo/nsat1stg2cross");
 	hastp = oapiLoadMeshGlobal ("ProjectApollo/nASTP3");
 	hCOAStarget = oapiLoadMeshGlobal ("ProjectApollo/sat_target");
-	hlm_1 = oapiLoadMeshGlobal ("ProjectApollo/LM_1");
 
 	//
 	// Saturn V
@@ -147,7 +146,6 @@ void SIVbLoadMeshes()
 	hsat5stg33low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg33");
 	hsat5stg34low = oapiLoadMeshGlobal ("ProjectApollo/LowRes/sat5stg34");
 
-	hLMPKD = oapiLoadMeshGlobal ("ProjectApollo/LM_Parked");
 	hapollo8lta = oapiLoadMeshGlobal ("ProjectApollo/apollo8_lta");
 	hlta_2r = oapiLoadMeshGlobal ("ProjectApollo/LTA_2R");
 
@@ -155,9 +153,7 @@ void SIVbLoadMeshes()
 	seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 }
 
-SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
-		SIVBToCSMPowerDrain("SIVBToCSMPower", Panelsdk)
-
+SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel)
 {
 	PanelSDKInitalised = false;
 
@@ -208,6 +204,7 @@ void SIVB::InitS4b()
 	State = SIVB_STATE_SETUP;
 	LowRes = false;
 	IUSCContPermanentEnabled = true;
+	PayloadCreated = false;
 
 	hDock = 0;
 	ph_aps1 = 0;
@@ -228,6 +225,7 @@ void SIVB::InitS4b()
 	CurrentThrust = 0;
 	RotationLimit = 0.25;
 
+	FirstTimestep = false;
 	MissionTime = MINUS_INFINITY;
 	NextMissionEventTime = MINUS_INFINITY;
 	LastMissionEventTime = MINUS_INFINITY;
@@ -266,7 +264,6 @@ void SIVB::InitS4b()
 	meshCOASTarget_A = -1;
 	meshCOASTarget_B = -1;
 	meshCOASTarget_C = -1;
-	meshLMPKD = -1;
 	meshApollo8LTA = -1;
 	meshLTA_2r = -1;
 
@@ -275,17 +272,19 @@ void SIVB::InitS4b()
 	//
 	sprintf(PayloadName, "%s-PAYLOAD", GetName());
 
-	LMDescentFuelMassKg = 8375.0;
-	LMAscentFuelMassKg = 2345.0;
-	LMAscentEmptyMassKg = 2150.0;
-	LMDescentEmptyMassKg = 2224.0;
+	payloadSettings.DescentFuelKg = 8375.0;
+	payloadSettings.AscentFuelKg = 2345.0;
+	payloadSettings.AscentEmptyKg = 2150.0;
+	payloadSettings.DescentEmptyKg = 2224.0;
+	payloadSettings.MissionNo = 0;
+	payloadSettings.NoLegs = false;
 	Payloaddatatransfer = false;
 
 	//
 	// Checklist
 	//
 
-	LEMCheck[0] = 0;
+	payloadSettings.checklistFile[0] = 0;
 
 	//
 	// LM PAD data.
@@ -304,13 +303,9 @@ void SIVB::InitS4b()
 	//
 	// Set up the connections.
 	//
-	SIVBToCSMConnector.SetType(CSM_SIVB_DOCKING);
 
 	IUCommandConnector.SetSIVb(this);
-	csmCommandConnector.SetSIVb(this);
-
-	SIVBToCSMPowerConnector.SetType(CSM_SIVB_POWER);
-	SIVBToCSMPowerConnector.SetPowerDrain(&SIVBToCSMPowerDrain);
+	payloadSeparationConnector.SetSIVb(this);
 
 	if (!PanelSDKInitalised)
 	{
@@ -321,12 +316,10 @@ void SIVB::InitS4b()
 
 	MainBattery = static_cast<Battery *> (Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY"));
 
-	SIVBToCSMPowerDrain.WireTo(MainBattery);
-
 	//
-	// Register docking connector so the CSM can find it.
+	// Register docking connector so the payload can find it.
 	//
-	RegisterConnector(0, &SIVBToCSMConnector);
+	RegisterConnector(0, &payloadSeparationConnector);
 }
 
 void SIVB::Boiloff()
@@ -441,10 +434,10 @@ void SIVB::SetS4b()
 
 	switch (PayloadType) {
 	case PAYLOAD_LEM:
-		SetMeshVisibilityMode(meshLMPKD, MESHVIS_EXTERNAL);
+	case PAYLOAD_LM1:
+		dockpos = { 0, 0, 9.0 };
 		SetDockParams(dockpos, dockdir, dockrot);
-		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
-		mass += PayloadMass;
+		CreatePayload();
 		break;
 
 	case PAYLOAD_LTA:
@@ -481,22 +474,16 @@ void SIVB::SetS4b()
 
 	case PAYLOAD_TARGET:
 		SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_EXTERNAL);
+		if(SaturnVStage == false) SetMeshVisibilityMode(meshSivbSaturn1bcross, MESHVIS_EXTERNAL);
 		ClearDockDefinitions();
 		mass += PayloadMass;
 		break;
 
 	case PAYLOAD_ASTP:
-		SetMeshVisibilityMode(meshASTP_B, MESHVIS_EXTERNAL);
-		dockpos = _V(0.0, 0.15, 9.9);
+		dockpos = _V(0.0, 0.16, 8.5);
 		dockrot = _V(-1.0, 0.0, 0);
 		SetDockParams(dockpos, dockdir, dockrot);
-		hattDROGUE = CreateAttachment(true, dockpos, dockdir, dockrot, "PADROGUE");
-		mass += PayloadMass;
-		break;
-
-	case PAYLOAD_LM1:
-		SetMeshVisibilityMode(meshLM_1, MESHVIS_EXTERNAL);
-		mass += PayloadMass;
+		CreatePayload();
 		break;
 	}
 
@@ -514,16 +501,18 @@ void SIVB::SetS4b()
 		// Set up the IU connections.
 		//
 
-		iu->ConnectToMultiConnector(&SIVBToCSMConnector);
-		SIVBToCSMConnector.AddTo(&SIVBToCSMPowerConnector);
 	}
 	iu->ConnectToLV(&IUCommandConnector);
-	SIVBToCSMConnector.AddTo(&csmCommandConnector);
 }
 
 void SIVB::clbkPreStep(double simt, double simdt, double mjd)
-
 {
+	if (FirstTimestep)
+	{
+		FirstTimestep = false;
+		return;
+	}
+
 	MissionTime += simdt;
 
 	//
@@ -816,6 +805,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "APSFMASS2", ApsFuel2Kg);
 	oapiWriteScenario_float (scn, "T3V", THRUST_THIRD_VAC);
 	oapiWriteScenario_float (scn, "I3V", ISP_THIRD_VAC);
+	oapiWriteScenario_int(scn, "MISSIONNO", payloadSettings.MissionNo);
 	oapiWriteScenario_float (scn, "MISSNTIME", MissionTime);
 	oapiWriteScenario_float (scn, "NMISSNTIME", NextMissionEventTime);
 	oapiWriteScenario_float (scn, "LMISSNTIME", LastMissionEventTime);
@@ -830,13 +820,13 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	}
 	if (!Payloaddatatransfer)
 	{
-		if (LEMCheck[0]) {
-			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
+		if (payloadSettings.checklistFile[0]) {
+			oapiWriteScenario_string(scn, "LEMCHECK", payloadSettings.checklistFile);
 		}
-		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
-		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
-		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
-		oapiWriteScenario_float(scn, "LMASCEMPTY", LMAscentEmptyMassKg);
+		oapiWriteScenario_float (scn, "LMDSCFUEL", payloadSettings.DescentFuelKg);
+		oapiWriteScenario_float (scn, "LMASCFUEL", payloadSettings.AscentFuelKg);
+		oapiWriteScenario_float(scn, "LMDSCEMPTY", payloadSettings.DescentEmptyKg);
+		oapiWriteScenario_float(scn, "LMASCEMPTY", payloadSettings.AscentEmptyKg);
 		if (LMPadCount > 0 && LMPad) {
 			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
 			char str[64];
@@ -873,6 +863,7 @@ int SIVB::GetMainState()
 	state.LowRes = LowRes;
 	state.Payloaddatatransfer = Payloaddatatransfer;
 	state.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
+	state.PayloadCreated = PayloadCreated;
 
 	return state.word;
 }
@@ -1082,6 +1073,7 @@ void SIVB::SetMainState(int s)
 	LowRes = (state.LowRes != 0);
 	Payloaddatatransfer = (state.Payloaddatatransfer != 0);
 	IUSCContPermanentEnabled = (state.IUSCContPermanentEnabled != 0);
+	PayloadCreated = (state.PayloadCreated != 0);
 }
 
 void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -1101,6 +1093,17 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
             int MainState = 0;;
 			sscanf (line+9, "%d", &MainState);
 			SetMainState(MainState);
+
+			if (SaturnVStage)
+			{
+				sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+				iu = new IUSV;
+			}
+			else
+			{
+				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
+				iu = new IU1B;
+			}
 		}
 		else if (!strnicmp (line, "VECHNO", 6))
 		{
@@ -1140,6 +1143,10 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		{
             sscanf (line + 3, "%f", &flt);
 			ISP_THIRD_VAC = flt;
+		}
+		else if (!strnicmp(line, "MISSIONNO", 9))
+		{
+			sscanf(line + 9, "%d", &payloadSettings.MissionNo);
 		}
 		else if (!strnicmp(line, "MISSNTIME", 9))
 		{
@@ -1183,26 +1190,26 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			State = (SIVbState) i;
 		}
 		else if (!strnicmp(line, "LEMCHECK", 8)) {
-			strcpy(LEMCheck, line + 9);
+			strcpy(payloadSettings.checklistFile, line + 9);
 		}
 		else if (!strnicmp(line, "PAYN", 4)) {
 			strncpy (PayloadName, line + 5, 64);
 		}
 		else if (!strnicmp(line, "LMDSCFUEL", 9)) {
 			sscanf(line + 9, "%f", &flt);
-			LMDescentFuelMassKg = flt;
+			payloadSettings.DescentFuelKg = flt;
 		}
 		else if (!strnicmp(line, "LMASCFUEL", 9)) {
 			sscanf(line + 9, "%f", &flt);
-			LMAscentFuelMassKg = flt;
+			payloadSettings.AscentFuelKg = flt;
 		}
 		else if (!strnicmp(line, "LMDSCEMPTY", 10)) {
 			sscanf(line + 10, "%f", &flt);
-			LMDescentEmptyMassKg = flt;
+			payloadSettings.DescentEmptyKg = flt;
 		}
 		else if (!strnicmp(line, "LMASCEMPTY", 10)) {
 			sscanf(line + 10, "%f", &flt);
-			LMAscentEmptyMassKg = flt;
+			payloadSettings.AscentEmptyKg = flt;
 		}
 		else if (!strnicmp (line, "LMPADCNT", 8)) {
 			if (!LMPad) {
@@ -1239,25 +1246,9 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			}
 		}
 		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
-			if (SaturnVStage)
-			{
-				sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
-			}
-			else
-			{
-				sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
-			}
 			sivbsys->LoadState(scn);
 		}
 		else if (!strnicmp(line, IU_START_STRING, sizeof(IU_START_STRING))) {
-			if (SaturnVStage)
-			{
-				iu = new IUSV;
-			}
-			else
-			{
-				iu = new IU1B;
-			}
 			iu->LoadState(scn);
 		}
 		else if (!strnicmp(line, LVDC_START_STRING, sizeof(LVDC_START_STRING))) {
@@ -1270,18 +1261,6 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		{
 			ParseScenarioLineEx (line, vstatus);
         }
-	}
-
-	if (sivbsys == NULL)
-	{
-		if (SaturnVStage)
-		{
-			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
-		}
-		else
-		{
-			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
-		}
 	}
 
 	SetS4b();
@@ -1365,12 +1344,7 @@ void SIVB::clbkSetClassCaps (FILEHANDLE cfg)
 	meshSivbSaturnV = AddMesh(hsat5stg3, &mesh_dir);
 	meshSivbSaturn1bLow = AddMesh(hSat1stg2low, &mesh_dir);
 	meshSivbSaturn1b = AddMesh(hSat1stg2, &mesh_dir);
-
-	mesh_dir = _V(0, 0, 9.8);
-	meshLMPKD = AddMesh(hLMPKD, &mesh_dir);
-
-	mesh_dir = _V(0, 0, 9.8);
-	meshLM_1 = AddMesh(hlm_1, &mesh_dir);
+	meshSivbSaturn1bcross = AddMesh(hSat1stg2cross, &mesh_dir);
 
 	mesh_dir = _V(0, 0, 9.6);	
 	meshLTA_2r = AddMesh(hlta_2r, &mesh_dir);
@@ -1417,13 +1391,13 @@ void SIVB::SetState(SIVBSettings &state)
 		}
 
 		if (state.LEMCheck[0]) {
-			strcpy(LEMCheck, state.LEMCheck);
+			strcpy(payloadSettings.checklistFile, state.LEMCheck);
 		}
 
-		LMDescentFuelMassKg = state.LMDescentFuelMassKg;
-		LMAscentFuelMassKg = state.LMAscentFuelMassKg;
-		LMDescentEmptyMassKg = state.LMDescentEmptyMassKg;
-		LMAscentEmptyMassKg = state.LMAscentEmptyMassKg;
+		payloadSettings.DescentFuelKg = state.LMDescentFuelMassKg;
+		payloadSettings.AscentFuelKg = state.LMAscentFuelMassKg;
+		payloadSettings.DescentEmptyKg = state.LMDescentEmptyMassKg;
+		payloadSettings.AscentEmptyKg = state.LMAscentEmptyMassKg;
 
 		//
 		// Copy LM PAD data across.
@@ -1459,6 +1433,9 @@ void SIVB::SetState(SIVBSettings &state)
 		VehicleNo = state.VehicleNo;
 		LowRes = state.LowRes;
 		IUSCContPermanentEnabled = state.IUSCContPermanentEnabled;
+		payloadSettings.MissionNo = state.MissionNo;
+		strncpy(payloadSettings.CSMName, state.CSMName, 63);
+		payloadSettings.Crewed = state.Crewed;
 
 		//
 		// Limit rotation angle to 0-150 degrees.
@@ -1482,12 +1459,10 @@ void SIVB::SetState(SIVBSettings &state)
 
 		if (SaturnVStage)
 		{
-			iu = new IUSV;
 			sivbsys = new SIVB500Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		else
 		{
-			iu = new IU1B;
 			sivbsys = new SIVB200Systems(this, th_main[0], ph_main, th_aps_rot, th_aps_ull, th_lox_vent, thg_ver);
 		}
 		iu = state.iu_pointer;
@@ -1516,15 +1491,8 @@ void SIVB::SetState(SIVBSettings &state)
 
 	State = SIVB_STATE_WAITING;
 	SetS4b();
-}
 
-double SIVB::GetJ2ThrustLevel()
-
-{
-	if (th_main[0])
-		return GetThrusterLevel(th_main[0]);
-
-	return 0.0;
+	FirstTimestep = true;
 }
 
 double SIVB::GetMissionTime()
@@ -1559,26 +1527,6 @@ double SIVB::GetSIVbPropellantMass()
 	return GetPropellantMass(ph_main);
 }
 
-double SIVB::GetTotalMass()
-
-{
-	double mass = GetMass();
-
-	hDock = GetDockHandle(0);
-
-	if (hDock)
-	{
-		OBJHANDLE hVessel = GetDockStatus(hDock);
-		if (hVessel)
-		{
-			VESSEL *v = oapiGetVesselInterface(hVessel);
-			mass += v->GetMass();
-		}
-	}
-
-	return mass;
-}
-
 bool SIVB::PayloadIsDetachable()
 
 {
@@ -1594,49 +1542,9 @@ bool SIVB::PayloadIsDetachable()
 	}
 }
 
-void SIVB::StartSeparationPyros()
+void SIVB::CreatePayload() {
 
-{
-	//
-	// Start separation. For now this function will probably do all the work.
-	//
-
-	if (!PayloadIsDetachable())
-	{
-		return;
-	}
-
-	//
-	// Do stuff to create a new payload vessel and dock it with the CSM.
-	//
-
-	//
-	// Try to get payload settings, or return if we fail.
-	//
-	PayloadSettings ps;
-
-	if (!csmCommandConnector.GetPayloadSettings(ps))
-	{
-		return;
-	}
-
-	//
-	// Now separate the payload.
-	//
-
-	OBJHANDLE hCSM = GetDockStatus(GetDockHandle(0));
-
-	if (!hCSM)
-	{
-		return;
-	}
-
-	VESSEL *CSMvessel = static_cast<VESSEL *> (oapiGetVesselInterface(hCSM));
-
-	if (!CSMvessel)
-	{
-		return;
-	}
+	if (PayloadCreated) return;
 
 	char *plName = 0;
 
@@ -1650,7 +1558,6 @@ void SIVB::StartSeparationPyros()
 	case PAYLOAD_LM1:
 		plName = "ProjectApollo/LEM";
 		break;
-
 	case PAYLOAD_ASTP:
 		plName = "ProjectApollo/ASTP";
 		break;
@@ -1659,27 +1566,15 @@ void SIVB::StartSeparationPyros()
 		return;
 	}
 
-	//
-	// Now we know we have a valid payload. Create it and
-	// dock it.
-	//
-
 	Payload *payloadvessel;
 	VESSELSTATUS2 vslm2;
 	VESSELSTATUS2::DOCKINFOSPEC dckinfo;
 
 	//
-	// Now Lets create a real LEM and dock it
+	// Now Lets create a payload and dock it to the SIVB
 	//
 
-	//
-	// The CSM docking probe has to ignore both the undock and dock
-	// events. Otherwise it will prevent us from 'docking' to the
-	// newly created LEM.
-	//
-	csmCommandConnector.SetIgnoreNextDockEvents(2);
-
-	CSMvessel->Undock(0);
+	OBJHANDLE hSIVBdock = GetHandle();
 
 	vslm2.version = 2;
 	vslm2.flag = 0;
@@ -1688,11 +1583,11 @@ void SIVB::StartSeparationPyros()
 	vslm2.ndockinfo = 1;
 	vslm2.dockinfo = &dckinfo;
 
-	CSMvessel->GetStatusEx(&vslm2);
+	GetStatusEx(&vslm2);
 
-	vslm2.dockinfo[0].idx = 0;
+	vslm2.dockinfo[0].idx = 1;
 	vslm2.dockinfo[0].ridx = 0;
-	vslm2.dockinfo[0].rvessel = hCSM;
+	vslm2.dockinfo[0].rvessel = hSIVBdock;
 	vslm2.ndockinfo = 1;
 	vslm2.flag = VS_DOCKINFOLIST;
 	vslm2.version = 2;
@@ -1703,31 +1598,28 @@ void SIVB::StartSeparationPyros()
 	// We have already gotten these information from the CSM
 	//
 
-	ps.DescentFuelKg = LMDescentFuelMassKg;
-	ps.AscentFuelKg = LMAscentFuelMassKg;
-	ps.DescentEmptyKg = LMDescentEmptyMassKg;
-	ps.AscentEmptyKg = LMAscentEmptyMassKg;
-	sprintf(ps.checklistFile, LEMCheck);
+	payloadSettings.MissionTime = MissionTime;
+	if (PayloadType == PAYLOAD_LM1) payloadSettings.NoLegs = true;
 
 	//
 	// Initialise the state of the LEM AGC information.
 	//
 
 	payloadvessel = static_cast<Payload *> (oapiGetVesselInterface(hPayload));
-	payloadvessel->SetupPayload(ps);
+	payloadvessel->SetupPayload(payloadSettings);
 	Payloaddatatransfer = true;
 
-	CSMvessel->GetStatusEx(&vslm2);
+	GetStatusEx(&vslm2);
 
 	vslm2.dockinfo = &dckinfo;
 	vslm2.dockinfo[0].idx = 0;
-	vslm2.dockinfo[0].ridx = 0;
+	vslm2.dockinfo[0].ridx = 1;
 	vslm2.dockinfo[0].rvessel = hPayload;
 	vslm2.ndockinfo = 1;
 	vslm2.flag = VS_DOCKINFOLIST;
 	vslm2.version = 2;
 
-	CSMvessel->DefSetStateEx(&vslm2);
+	DefSetStateEx(&vslm2);
 
 	//
 	// Finally, do any special case configuration.
@@ -1737,43 +1629,50 @@ void SIVB::StartSeparationPyros()
 	{
 	case PAYLOAD_LEM:
 	case PAYLOAD_LM1:
+	{
+		//
+		// PAD load.
+		//
+
+		LEM *lmvessel = static_cast<LEM *> (payloadvessel);
+
+		if (LMPad && LMPadCount > 0)
 		{
-			//
-			// PAD load.
-			//
-
-			LEM *lmvessel = static_cast<LEM *> (payloadvessel);
-
-			if (LMPad && LMPadCount > 0)
-			{
-				int i;
-				for (i = 0; i < LMPadCount; i++) {
-					lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
-				}
+			int i;
+			for (i = 0; i < LMPadCount; i++) {
+				lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
 			}
-
-			if (AEAPad && AEAPadCount > 0)
-			{
-				int i;
-				for (i = 0; i < AEAPadCount; i++) {
-					lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
-				}
-			}
-
 		}
-		break;
+
+		if (AEAPad && AEAPadCount > 0)
+		{
+			int i;
+			for (i = 0; i < AEAPadCount; i++) {
+				lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
+			}
+		}
+	}
+	break;
 
 	default:
 		break;
 	}
 
-	//
-	// Set the payload to none.
-	//
+	PayloadCreated = true;
+}
 
-	PayloadType = PAYLOAD_EMPTY;
+void SIVB::StartSeparationPyros()
+{
+	if (!PayloadIsDetachable())
+	{
+		return;
+	}
 
-	SetS4b();
+	if (PayloadCreated) {
+		Undock(0);
+		PayloadType = PAYLOAD_EMPTY;
+		SetS4b();
+	}
 }
 
 void SIVB::StopSeparationPyros()
@@ -1808,7 +1707,7 @@ void SIVB::HideAllMeshes()
 	SetMeshVisibilityMode(meshSivbSaturnVLow, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshSivbSaturn1b, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshSivbSaturn1bLow, MESHVIS_NEVER);
-	SetMeshVisibilityMode(meshLMPKD, MESHVIS_NEVER);
+	SetMeshVisibilityMode(meshSivbSaturn1bcross, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshLTA_2r, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshApollo8LTA, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshASTP_A, MESHVIS_NEVER);
@@ -1816,7 +1715,6 @@ void SIVB::HideAllMeshes()
 	SetMeshVisibilityMode(meshCOASTarget_A, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_B, MESHVIS_NEVER);
 	SetMeshVisibilityMode(meshCOASTarget_C, MESHVIS_NEVER);
-	SetMeshVisibilityMode(meshLM_1, MESHVIS_NEVER);
 }
 
 
@@ -1895,25 +1793,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 
 	switch (messageType)
 	{
-	case IULV_GET_J2_THRUST_LEVEL:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetJ2ThrustLevel();
-			return true;
-		}
-		break;
 
 	case IULV_GET_STAGE:
 		m.val1.iValue = STAGE_ORBIT_SIVB;
 		return true;
-
-	case IULV_GET_ALTITUDE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetAltitude();
-			return true;
-		}
-		break;
 
 	case IULV_GET_GLOBAL_ORIENTATION:
 		if (OurVessel)
@@ -1931,7 +1814,7 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	case IULV_GET_MASS:
 		if (OurVessel)
 		{
-			m.val1.dValue = OurVessel->GetTotalMass();
+			m.val1.dValue = OurVessel->GetMass();
 			return true;
 		}
 		break;
@@ -1940,14 +1823,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_MAX_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMaxFuelMass();
 			return true;
 		}
 		break;
@@ -2032,23 +1907,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-
-	case IULV_ACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->ActivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->DeactivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_SIVB_EDS_CUTOFF:
 		if (OurVessel)
 		{
@@ -2073,14 +1931,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_ADD_FORCE:
-		if (OurVessel)
-		{
-			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
-			return true;
-		}
-		break;
-
 	case IULV_SIVB_SWITCH_SELECTOR:
 		if (OurVessel)
 		{
@@ -2101,59 +1951,16 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	return false;
 }
 
-CSMToSIVBCommandConnector::CSMToSIVBCommandConnector()
-
+PayloadToSLACommandConnector::PayloadToSLACommandConnector()
 {
-	type = CSM_SIVB_COMMAND;
+	type = PAYLOAD_SLA_CONNECT;
 }
 
-CSMToSIVBCommandConnector::~CSMToSIVBCommandConnector()
-
+PayloadToSLACommandConnector::~PayloadToSLACommandConnector()
 {
 }
 
-void CSMToSIVBCommandConnector::SetIgnoreNextDockEvent()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = SIVBCSM_IGNORE_DOCK_EVENT;
-
-	SendMessage(cm);
-}
-
-void CSMToSIVBCommandConnector::SetIgnoreNextDockEvents(int n)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = SIVBCSM_IGNORE_DOCK_EVENTS;
-	cm.val1.iValue = n;
-
-	SendMessage(cm);
-}
-
-bool CSMToSIVBCommandConnector::GetPayloadSettings(PayloadSettings &p)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = type;
-	cm.messageType = SIVBCSM_GET_PAYLOAD_SETTINGS;
-	cm.val1.pValue = &p;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-
+bool PayloadToSLACommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 {
 	//
 	// Sanity check.
@@ -2164,21 +1971,13 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 		return false;
 	}
 
-	CSMSIVBMessageType messageType;
+	PayloadSIVBMessageType messageType;
 
-	messageType = (CSMSIVBMessageType) m.messageType;
+	messageType = (PayloadSIVBMessageType)m.messageType;
 
 	switch (messageType)
 	{
-	case CSMSIVB_IS_VENTABLE:
-		if (OurVessel)
-		{
-			m.val1.bValue = true;
-			return true;
-		}
-		break;
-
-	case CSMSIVB_START_SEPARATION:
+	case SLA_START_SEPARATION:
 		if (OurVessel)
 		{
 			OurVessel->StartSeparationPyros();
@@ -2186,36 +1985,10 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 		}
 		break;
 
-	case CSMSIVB_STOP_SEPARATION:
+	case SLA_STOP_SEPARATION:
 		if (OurVessel)
 		{
 			OurVessel->StopSeparationPyros();
-			return true;
-		}
-		break;
-
-	case CSMSIVB_GET_VESSEL_FUEL:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIVbPropellantMass();
-			return true;
-		}
-		break;
-
-	case CSMSIVB_GET_MAIN_BATTERY_POWER:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMainBatteryPower();
-			m.val2.dValue = OurVessel->GetMainBatteryPowerDrain();
-			return true;
-		}
-		break;
-
-	case CSMSIVB_GET_MAIN_BATTERY_ELECTRICS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMainBatteryVoltage();
-			m.val2.dValue = OurVessel->GetMainBatteryCurrent();
 			return true;
 		}
 		break;
@@ -2223,4 +1996,3 @@ bool CSMToSIVBCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage
 
 	return false;
 }
-

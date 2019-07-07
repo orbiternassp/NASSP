@@ -1,6 +1,6 @@
 /***************************************************************************
 This file is part of Project Apollo - NASSP
-Copyright 2017
+Copyright 2017-2019
 
 Flight Control Computer (Header)
 
@@ -24,32 +24,26 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class LVRG;
 class IU;
 
 class FCC
 {
 public:
-	FCC(LVRG &rg);
+	FCC(IU *iu);
 	virtual ~FCC() {}
 	virtual void Timestep(double simdt) = 0;
-	void Init(IU *i);
+
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void SetAttitudeError(VECTOR3 atterr) { LVDCAttitudeError = atterr; }
-	void SetGainSwitch(int n) { GainSwitch = n; }
-	void SetStageSwitch(int n) { StageSwitch = n; }
-	void SetSIVBBurnMode(bool n) { SIVBBurnMode = n; }
-	void EnableSCControl() { SCControlEnableRelay = true; }
-	void DisableSCControl() { if (PermanentSCControlEnabled == false) SCControlEnableRelay = false; }
-	void SetPermanentSCControlEnabled() { PermanentSCControlEnabled = true; }
 protected:
-	int GainSwitch;
-	int StageSwitch;
+	//K1-1/2
+	bool SIBurnMode;
+	//K2
 	bool SIVBBurnMode;
+	//K35/K37
 	bool SCControlEnableRelay;
-	bool PermanentSCControlEnabled;
 
 	double a_0p, a_0y, a_0r;
 	double a_1p, a_1y, a_1r;
@@ -60,20 +54,26 @@ protected:
 
 	VECTOR3 LVDCAttitudeError;
 
-	LVRG &lvrg;
 	IU *iu;
 };
 
 class FCC1B : public FCC
 {
 public:
-	FCC1B(LVRG &rg);
+	FCC1B(IU *iu);
 	void Timestep(double simdt);
 };
 
 class FCCSV : public FCC
 {
 public:
-	FCCSV(LVRG &rg);
+	FCCSV(IU *iu);
 	void Timestep(double simdt);
+protected:
+	//K2-1/2
+	bool SIIBurnMode;
+	//K4
+	bool SICOrSIIBurnMode;
+	bool UseSICEngineCant;
+	double SICCant;
 };

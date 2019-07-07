@@ -382,10 +382,10 @@
 #define AID_TELCOMSWITCHES                                  614
 #define IDB_CSMRIGHTWINDOWCOVER                             615
 #define AID_RIGHTWINDOWCOVER                                616
-#define AID_GNMODESWITCH                                    617
-#define AID_CONTROLLERSPEEDSWITCH                           618
+#define AID_GNZEROSWITCH                                    617
+#define AID_TELESCOPETRUNNIONSWITCH                         618
 #define AID_CONTROLLERCOUPLINGSWITCH                        619
-#define AID_CONTORLLERSWITCHES                              620
+#define AID_OPTICSMODESPEEDSWITCHES                         620
 #define AID_CONDITIONLAMPSSWITCH                            621
 #define AID_UPLINKTELEMETRYSWITCH                           622
 #define AID_LOWEREQUIPMENTBAYCWLIGHTS                       623
@@ -764,8 +764,11 @@
 #define AID_EVENT_TIMER306                                 1049
 #define AID_MISSION_CLOCK306							   1050
 #define AID_PRESS_EQUAL_VALVE_HANDLE                       1051
-#define IDB_CSM_LOWER_MAIN_PANEL_OPEN					   1052
-#define AID_FORWARD_HATCH								   1053
+#define IDB_CSM_TUNNEL					                   1052
+#define IDB_CSM_TUNNEL_OPEN					               1053
+#define AID_FORWARD_HATCH								   1054
+#define IDB_CSM_LEFT_317_WINDOW                            1055
+#define IDB_CSM_PRESS_EQUAL_HANDLE                         1056
 
 // Next default values for new objects
 //

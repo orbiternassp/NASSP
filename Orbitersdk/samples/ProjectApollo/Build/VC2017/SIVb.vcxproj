@@ -12,6 +12,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1FD6B39B-FC9F-4219-AB56-4F7D698EEEC4}</ProjectGuid>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -148,12 +149,15 @@
     <ClCompile Include="..\..\src_saturn\dcs.cpp" />
     <ClCompile Include="..\..\src_saturn\eds.cpp" />
     <ClCompile Include="..\..\src_saturn\FCC.cpp" />
+    <ClCompile Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.cpp" />
+    <ClCompile Include="..\..\src_saturn\IUControlDistributor.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDC.cpp" />
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
     <ClCompile Include="..\..\src_saturn\sivbsystems.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
     <ClCompile Include="..\..\src_saturn\iu.cpp" />
+    <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp" />
     <ClCompile Include="..\..\src_aux\Prediction.cpp" />
     <ClCompile Include="..\..\src_saturn\sivb.cpp">
@@ -168,12 +172,15 @@
     <ClInclude Include="..\..\src_saturn\dcs.h" />
     <ClInclude Include="..\..\src_saturn\eds.h" />
     <ClInclude Include="..\..\src_saturn\FCC.h" />
+    <ClInclude Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.h" />
+    <ClInclude Include="..\..\src_saturn\IUControlDistributor.h" />
     <ClInclude Include="..\..\src_saturn\LVDA.h" />
     <ClInclude Include="..\..\src_saturn\LVDC.h" />
     <ClInclude Include="..\..\src_saturn\LVIMU.h" />
     <ClInclude Include="..\..\src_saturn\sivbsystems.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_saturn\iu.h" />
+    <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\powersource.h" />
     <ClInclude Include="..\..\src_saturn\sivb.h" />
   </ItemGroup>

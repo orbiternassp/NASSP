@@ -89,39 +89,32 @@ public:
 	SPSGimbalActuator();
 	virtual ~SPSGimbalActuator();
 
-	void Init(Saturn *s, ThreePosSwitch *driveSwitch, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
-	          e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource,
-			  ThumbwheelSwitch *tThumbwheel, ThreePosSwitch* modeSwitch, AGCIOSwitch* csmlmcogSwitch);
-	void Timestep(double simt, double simdt, double attitudeError, double attitudeRate, int rhcAxis);
+	void Init(Saturn *s, ServoAmplifierModule *servoAmp, ThreePosSwitch *m1Switch, ThreePosSwitch *m2Switch,
+	          e_object *m1Source, e_object *m1StartSource, e_object *m2Source, e_object *m2StartSource);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	double GetPosition() { return position; }
-	void ChangeCMCPosition(double delta);
-	void ZeroCMCPosition() { cmcPosition = 0; }
-
-	void GimbalTimestep(double simdt);
+	double GetCommandedPosition() { return commandedPosition; }
+	void CommandedPositionInc(double dangle) { commandedPosition += dangle; }
+	bool HasGimbalMotorOverCurrent() { return false; }
 
 protected:
+	void GimbalTimestep(double simdt, double desPos);
+
 	bool IsSystem1Powered();
 	bool IsSystem2Powered();
-	void DrawSystem1Power();
-	void DrawSystem2Power();
 
 	double position;
 	double commandedPosition;
-	double cmcPosition;
-	double scsPosition;
-	double lastAttitudeError;
-	int activeSystem;
 	bool motor1Running;
 	bool motor2Running;
 
 	Saturn *saturn;
-	ThreePosSwitch *tvcGimbalDriveSwitch, *gimbalMotor1Switch, *gimbalMotor2Switch, *scsTvcModeSwitch;
+	ThreePosSwitch *gimbalMotor1Switch, *gimbalMotor2Switch;
 	e_object *motor1Source, *motor1StartSource, *motor2Source, *motor2StartSource;
-	ThumbwheelSwitch *trimThumbwheel;
-	AGCIOSwitch *CGSwitch;
+	ServoAmplifierModule *servoAmplifier;
 };
 
 ///
@@ -134,23 +127,26 @@ public:
 	virtual ~SPSEngine();
 
 	void Init(Saturn *s);
-	void Timestep(double simt, double simdt);
+	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	double GetChamberPressurePSI();
-	bool IsThrustOn() { return thrustOn; };
+	bool IsThrustOnA() { return thrustOnA; };
+	bool IsThrustOnB() { return thrustOnB; };
 	bool GetInjectorValves12Open() { return injectorValves12Open; };
 	bool GetInjectorValves34Open() { return injectorValves34Open; };
 	double GetNitrogenPressureAPSI() { return nitrogenPressureAPSI; };
 	double GetNitrogenPressureBPSI() { return nitrogenPressureBPSI; };
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
+	void clbkPostCreation();
 
 	SPSGimbalActuator pitchGimbalActuator;
 	SPSGimbalActuator yawGimbalActuator;
-	bool cmcErrorCountersEnabled;
 
 protected:
-	bool thrustOn;
+	bool thrustOnA, thrustOnB;
 	bool injectorValves12Open;
 	bool injectorValves34Open;
 	bool engineOnCommanded;
@@ -159,6 +155,11 @@ protected:
 
 	Saturn *saturn;
 	THRUSTER_HANDLE &spsThruster;
+
+	// Animations
+	UINT anim_SPSGimbalPitch, anim_SPSGimbalYaw;
+	double spsgimbal_proc[2];
+	double spsgimbal_proc_last[2];
 };
 
 

@@ -56,6 +56,7 @@ public:
 	bool IsPowered();
 	void SetCaged(bool val);
 	Boiler *GetHeater() { return IMUHeater; };
+	double GetPIPATempF();
 
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
@@ -155,6 +156,8 @@ protected:
 
 	// Allow the MFD to touch our privates
 	friend class ProjectApolloMFD;
+	// And the RTCC as well
+	friend class RTCC;
 };
 
 //

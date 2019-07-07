@@ -22,6 +22,10 @@
 
   **************************************************************************/
 
+#pragma once
+
+#include "smjc.h"
+
 ///
 /// Flags structure indicating which of the SM  settings are valid.
 ///
@@ -63,10 +67,18 @@ typedef struct {
 	double RCSBFuelKg;					///< RCS Quad B fuel in kg.
 	double RCSCFuelKg;					///< RCS Quad C fuel in kg.
 	double RCSDFuelKg;					///< RCS Quad B fuel in kg.
+	double HGAalpha;                    ///< HGA Alpha
+	double HGAbeta;                     ///< HGA Beta
+	double HGAgamma;                    ///< HGA Gamma
 
 	bool LowRes;						///< Using low-res meshes?
 	bool showHGA;						///< Do we have an HGA?
 	bool A13Exploded;					///< Did the SM explode on Apollo 13 mission?
+
+	bool SMBusAPowered;
+	bool SMBusBPowered;
+	SMJCState SMJCAState;
+	SMJCState SMJCBState;
 
 } SMSettings;
 
@@ -171,6 +183,7 @@ protected:
 	void InitSM();
 	void AddEngines();
 	void DefineAnimations();
+	void DefineAnimationsHGA(UINT idx);
 
 	///
 	/// \brief Setup variables on first timestep.
@@ -357,6 +370,27 @@ protected:
 	double Temperature;
 
 	///
+	/// \brief HGA Position.
+	///
+
+	double Alpha;
+	double Beta;
+	double Gamma;
+
+	//
+	/// \brief SM buses status
+
+	bool SMBusAPowered;
+	bool SMBusBPowered;
+
+	///
+	/// \brief HGA Animations.
+	///
+
+	UINT anim_HGAalpha, anim_HGAbeta, anim_HGAgamma;
+	double	hga_proc[3];
+
+	///
 	/// \brief Re-entry texture.
 	///
 	SURFHANDLE CMTex;
@@ -420,4 +454,7 @@ protected:
 	/// \brief Breakup sound.
 	///
 	Sound BreakS;
+
+	SMJC SMJCA;
+	SMJC SMJCB;
 };

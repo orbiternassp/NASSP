@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "s1csystems.h"
+class SICSystems;
 
 ///
 /// \brief Saturn V launch vehicle class.
@@ -91,14 +91,17 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
-	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
+	double GetSIThrustLevel();
 
 	void GetSIIThrustOK(bool *ok);
 	void SIIEDSCutoff(bool cut);
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
+	double GetSIIFuelTankPressurePSI();
+
+	SICSystems *GetSIC() { return sic; }
 
 	//
 	// Functions that external code shouldn't need to access.
@@ -119,6 +122,7 @@ private:
 	void MoveEVA();
 
 	void SeparateStage (int stage);
+	void CheckSaturnSystemsState();
 
 	void SetVehicleStats();
 
@@ -140,6 +144,7 @@ protected:
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
+	void CreateStageSpecificSystems();
 
 	//
 	// Mission-support functions.
@@ -201,8 +206,8 @@ protected:
 	Sound SRover;
 	Sound SecoSound;
 
-	SICSystems sic;
-	SIISystems sii;
+	SICSystems *sic;
+	SIISystems *sii;
 
 	Pyro SICSIISepPyros;
 	Pyro SIIInterstagePyros;

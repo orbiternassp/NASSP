@@ -62,7 +62,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	INH = false;
 	INH1 = false;
 	INH2 = false;
-	i_op = false;
 	liftoff = false;
 	LVDC_GRR = false;
 	LVDC_Stop = false;
@@ -71,7 +70,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	S1B_Engine_Out = false;
 	S1B_CECO_Commanded = false;
 	S4B_IGN = false;
-	theta_N_op = false;
 	TerminalConditions = false;
 	GuidanceReferenceFailure = false;
 	PermanentSCControl = false;
@@ -94,10 +92,12 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	alpha_1 = 0;
 	alpha_2 = 0;
 	alpha_D = 0;
+	for (x = 0;x < 4;x++)
+	{
+		Ax[x] = 0;
+	}
 	Azimuth = 0;
 	A_zL = 0;
-	Azo = 0;
-	Azs = 0;
 	B_11 = 0;
 	B_21 = 0;
 	B_12 = 0;
@@ -152,10 +152,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 			Fx[x][y] = 0;
 		}
 	}
-	for(x=0; x < 7; x++){
-		fx[x] = 0;
-		gx[x] = 0;
-	}
 	G_T = 0;
 	IGMInterval = 0;
 	Inclination = 0;
@@ -186,6 +182,8 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	L_2 = 0;
 	dL_2 = 0;
 	Lt_2 = 0;
+	Lambda_0 = 0;
+	lambda_dot = 0;
 	L_P = 0;
 	L_Y = 0;
 	Lt_Y = 0;
@@ -242,9 +240,13 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	tchi_p = 0;
 	t_clock = 0;
 	T_CO = 0;
+	t_D = 0;
 	t_fail = 0;
 	T_GO = 0;
+	T_GRR = 0;
+	T_GRR0 = 0;
 	TI5F2 = 0;
+	T_L_apo = 0;
 	T_LET = 0;
 	T_S1 = 0;
 	T_S2 = 0;
@@ -324,10 +326,11 @@ void LVDC1B::Init(){
 	e = 0.00417135950879776;
 	f = 359.611584444894;
 	C_3 = -60139891.8062616; // Stored as twice the etc etc.
-	Inclination = 31.6050041807581;
-	DescNodeAngle = 118.998976688105;
+	Inclination = 31.605;
+	DescNodeAngle = 119.0;
 	A_zL = 100.0;
 	Azimuth = 72.0;
+	Lambda_0 = 119.0;
 	GATE = false;							// 'chi-freeze-gate': freezes steering commands when true
 	GATE5 = false;							// allows single pass through HSL initialization when false
 	INH = false;							// inhibits restart preparations; set by x-lunar inject/inhibit switch
@@ -338,9 +341,6 @@ void LVDC1B::Init(){
 	TA3 = 11820;							// time for final attitude
 	T_LET = 25;								// LET Jettison Time, i.e. the time IGM starts after start of TB3
 	UP = 0;									// switching variable for Tt_t parameter update
-	//alpha _d_op?
-	i_op = true;							// flag for selecting method of EPO inclination calculation
-	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
 	PermanentSCControl = false;
 	SCControlOfSaturn = false;
@@ -370,6 +370,11 @@ void LVDC1B::Init(){
 	Fx[4][2] = 0.0;
 	Fx[4][3] = 0.0;
 	Fx[4][4] = 0.0;
+	//Azimuth polynomial (AS-205)
+	Ax[0] = 72.0;
+	Ax[1] = 0.0;
+	Ax[2] = 0.0;
+	Ax[3] = 0.0;
 	t_1 = 10;								// Backup timer for Pre-IGM pitch maneuver
 	t_2 = 25;								// Time to initiate pitch freeze for S1C engine failure
 	t_3 = 36;								// Constant pitch freeze for S1C engine failure prior to t_2
@@ -389,13 +394,7 @@ void LVDC1B::Init(){
 	t_fail =0;								// S1C Engine Failure time
 	TI5F2 = 20.0;
 	CommandRateLimits=_V(1*RAD,1*RAD,1*RAD);// Radians per second
-	//IGM BOOST TO ORBIT
-	// Inclination from azimuth polynomial
-	fx[0] = 32.55754;  fx[1] = -15.84615; fx[2] = 11.64780; fx[3] = 9.890970;
-	fx[4] = -5.111430; fx[5] = 0;         fx[6] = 0;
-	// Descending Node Angle from azimuth polynomial
-	gx[0] = 123.1935; gx[1] = -55.06485; gx[2] = -35.26208; gx[3] = 26.01324;
-	gx[4] = -1.47591; gx[5] = 0;         gx[6] = 0;			
+	//IGM BOOST TO ORBIT	
 	MRS = false;							// MR Shift
 	dotM_1 = 242.7976615;						// Mass flowrate of SIVB from approximately LET jettison to second MRS
 	dotM_2 = 183.3909139;						// Mass flowrate of SIVB after second MRS
@@ -449,10 +448,6 @@ void LVDC1B::Init(){
 	LVDC_GRR = false;
 	tau1=0;									// Time to consume all fuel before S2 MRS
 	Fm=0;									// sensed total accel
-	//Azimuth = 72.124;
-	//Inclination=0;							// Inclination
-	//DescNodeAngle=0;						// Descending Node Angle -- THETA_N
-	Azo=0; Azs=0;							// Variables for scaling the -from-azimuth polynomials
 	CommandedAttitude=_V(0,0,0);			// Commanded Attitude (RADIANS)
 	PCommandedAttitude=_V(0,0,0);			// Previous Commanded Attitude (RADIANS)
 	CurrentAttitude=_V(0,0,0);				// Current Attitude   (RADIANS)
@@ -564,24 +559,24 @@ bool LVDC1B::SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> table
 void LVDC1B::TimeStep(double simdt) {
 	// Bail if uninitialized
 	if (Initialized == false) { return; }
-	// Update timebase ET
-	LVDC_TB_ETime += simdt;
 	
 	// Note that GenericTimestep will update MissionTime.
 	if(LVDC_Stop == false){
+
+		// Update timebase ET
+		LVDC_TB_ETime += simdt;
+
+		//Engine failure code
+		if (!S1B_Engine_Out && ((LVDC_Timebase == 1 && LVDC_TB_ETime > 5.8) || LVDC_Timebase == 2))
+		{
+			S1B_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
+		}
+
 		/* **** LVDC GUIDANCE PROGRAM **** */
 		switch(LVDC_Timebase){
 			case -1: // LOOP WAITING FOR PTL
 				// Lock time accel to 100x
 				if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
-
-				// Prelaunch tank venting between -3:00h and engine ignition
-				// No clue if the venting start time is correct
-				if (lvda.GetMissionTime() < -10800){
-					lvda.SwitchSelectorOld(10);
-				}else{
-					lvda.SwitchSelectorOld(11);
-				}
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 				{
@@ -605,11 +600,7 @@ void LVDC1B::TimeStep(double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvda.GetMissionTime() >= -17){
-					lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
-					lvda.DriveLVIMUGimbals((Azimuth - A_zL)*RAD, 0, 0);	// Now bring to alignment
-					lvda.ReleaseLVIMU();							// Release IMU
-					CountPIPA = true;								// Enable PIPA storage			
+				if (lvda.GetGuidanceReferenceRelease()){
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
@@ -620,17 +611,6 @@ void LVDC1B::TimeStep(double simdt) {
 				}
 				break;
 			case 0: // MORE TB0
-				// At 10 seconds, play the countdown sound.
-				if (lvda.GetMissionTime() >= -10.3) { // Was -10.9
-					lvda.SwitchSelectorOld(13);
-				}
-
-				// Shut down venting at T - 9
-				if (lvda.GetMissionTime() > -9) { lvda.SwitchSelectorOld(14); }
-
-				if (lvda.GetMissionTime() > -4.0) {
-					lvda.AddForce(_V(0, 0, -8. * lvda.GetFirstStageThrust()), _V(0, 0, 0)); // Maintain hold-down lock
-				}
 
 				if (LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()) {
 					LVDC_Timebase = 1;
@@ -639,19 +619,12 @@ void LVDC1B::TimeStep(double simdt) {
 					liftoff = true;
 					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
-					sinceLastIGM = 1.7 - simdt; // Rig to pass on fall-in
 				}
 				break;
 
 			case 1: // LIFTOFF TIME
 				
 				SwitchSelectorProcessing(SSTTB[1]);
-
-				// Soft-Release Pin Dragging
-				if(lvda.GetMissionTime() < 0.5){
-					double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
-					lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
-				}
 
 				// Below here are timed events that must not be dependent on the iteration delay.
 
@@ -686,8 +659,7 @@ void LVDC1B::TimeStep(double simdt) {
 				// Done by low-level sensor.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1C thruster calibration
-					fprintf(lvlog,"[T+%f] S1C OECO - Thrust %f N @ Alt %f\r\n\r\n",
-						lvda.GetMissionTime(), lvda.GetFirstStageThrust(), lvda.GetAltitude());
+					fprintf(lvlog,"[T+%f] S1C OECO\r\n", lvda.GetMissionTime());
 					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					LVDC_Timebase = 3;
@@ -716,7 +688,7 @@ void LVDC1B::TimeStep(double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && (lvda.SCInitiationOfSIISIVBSeparation() || lvda.GetSIVBEngineOut()))
+				if (S4B_IGN == true && lvda.GetSIVBEngineOut())
 				{
 					S4B_IGN = false;
 					LVDC_Timebase = 4;
@@ -816,61 +788,35 @@ void LVDC1B::TimeStep(double simdt) {
 		if(LVDC_GRR && GRR_init == false){			
 			fprintf(lvlog,"[T%f] GRR received!\r\n", lvda.GetMissionTime());
 
-			// Initial Position & Velocity
-			PosS = _V(cos(PHI - PHIP), sin(PHI - PHIP)*sin(Azimuth*RAD), -sin(PHI - PHIP)*cos(Azimuth*RAD))*R_L;
-			DotS = _V(0, cos(PHIP)*cos(Azimuth*RAD), cos(PHIP)*sin(Azimuth*RAD))*R_L*omega_E;
-			Dot0 = DotS;
-
-			fprintf(lvlog, "Initial Position = %f %f %f\r\n", PosS.x, PosS.y, PosS.z);
-			fprintf(lvlog, "Initial Velocity = %f %f %f\r\n", DotS.x, DotS.y, DotS.z);
-			
 			// Time into launch window = launch time from midnight - reference time of launch from midnight
-			// azimuth = coeff. of azimuth polynomial * time into launch window
 
-			// Azo and Azs are used to scale the polys below. These numbers are from Apollo 11.
-			// Dunno if this actually works. The numbers are in "PIRADS", whatever that is.
-			Azo = 4; 
-			Azs = 2;
+			fprintf(lvlog, "Inclination = %f\r\n", Inclination);
 
-			if(i_op == true){
-				// CALCULATE INCLINATION FROM AZIMUTH
-				Inclination = 0;
-				int x=0;
-				while(x < 7){
-					Inclination += fx[x] * pow((Azimuth-Azo)/Azs,x);
-					x++;
-				}
-			}else{
-				// CALCULATE INCLINATION FROM TIME INTO LAUNCH WINDOW
-				// inclination = coeff. for inclination-from-time polynomial * Time into launch window
-			}
-			// Let's cheat a little. (Apollo 7)
-			Inclination = 31.605;
-			fprintf(lvlog,"Inclination = %f\r\n",Inclination);
+			double day = 0.0;
+			T_GRR = modf(oapiGetSimMJD(), &day)*24.0*3600.0;
+			t_D = T_GRR - T_GRR0;
+			fprintf(lvlog, "Time into launch window (if applicable) = %f\r\n", t_D);
 
-			if(theta_N_op == true){
-				// CALCULATE DESCENDING NODAL ANGLE FROM AZIMUTH
-				DescNodeAngle = 0;
-				int x=0;
-				while(x < 7){
-					DescNodeAngle += gx[x] * pow((Azimuth-Azo)/Azs,x);
-					x++;
-				}
-			}else{
-				// CALCULATE DESCENDING NODAL ANGLE FROM TIME INTO LAUNCH WINDOW
-				// DNA = coeff. for DNA-from-time polynomial * Time into launch window
-			}
-			
-			// Cheat a little more. (Apollo 7)
-			DescNodeAngle = 119.0; 
-			fprintf(lvlog,"DescNodeAngle = %f\r\n",DescNodeAngle);
+			DescNodeAngle = Lambda_0 - lambda_dot * t_D;
+			fprintf(lvlog, "DescNodeAngle = %f\r\n", DescNodeAngle);
+
+			Azimuth = Ax[0] + Ax[1] * Inclination + Ax[2] * DescNodeAngle + Ax[3] * Inclination*DescNodeAngle;
+			fprintf(lvlog, "Azimuth = %f\r\n", Azimuth);
 
 			// Need to make those into radians
 			Azimuth *= RAD;
 			Inclination *= RAD;
 			DescNodeAngle *= RAD;
 
-			fprintf(lvlog,"Rad Convert: Az / Inc / DNA = %f %f %f\r\n",Azimuth,Inclination,DescNodeAngle);
+			fprintf(lvlog, "Rad Convert: Az / Inc / DNA = %f %f %f\r\n", Azimuth, Inclination, DescNodeAngle);
+
+			// Initial Position & Velocity
+			PosS = _V(cos(PHI - PHIP), sin(PHI - PHIP)*sin(Azimuth), -sin(PHI - PHIP)*cos(Azimuth))*R_L;
+			DotS = _V(0, cos(PHIP)*cos(Azimuth), cos(PHIP)*sin(Azimuth))*R_L*omega_E;
+			Dot0 = DotS;
+
+			fprintf(lvlog, "Initial Position = %f %f %f\r\n", PosS.x, PosS.y, PosS.z);
+			fprintf(lvlog, "Initial Velocity = %f %f %f\r\n", DotS.x, DotS.y, DotS.z);
 
 			if (TerminalConditions == false)
 			{
@@ -887,7 +833,7 @@ void LVDC1B::TimeStep(double simdt) {
 				gamma_T = atan((e*(sin(f))) / (1 + (e*(cos(f)))));
 				G_T = -mu / pow(R_T, 2);
 			}
-			fprintf(lvlog,"R_T = %f (Expecting 6,563,366), V_T = %f (Expecting 7793.0429), gamma_T = %f\r\n",R_T,V_T,gamma_T);
+			fprintf(lvlog,"R_T = %f, V_T = %f, gamma_T = %f\r\n",R_T,V_T,gamma_T);
 
 			// G MATRIX CALCULATION
 			MX_A.m11 = cos(PHI);  MX_A.m12 = sin(PHI)*sin(Azimuth); MX_A.m13 = -(sin(PHI)*cos(Azimuth));
@@ -901,6 +847,7 @@ void LVDC1B::TimeStep(double simdt) {
 			MX_B.m33 = cos(DescNodeAngle)*cos(Inclination);
 
 			MX_G = mul(MX_B,MX_A); // Matrix Multiply
+
 			Y_u= -(PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
 			R = pow(pow(PosS.x,2)+pow(PosS.y,2)+pow(PosS.z,2),0.5);  //instantaneous distance from earth's center
 			S = (-mu/pow(R,3))*(1+J*pow(a/R,2)*(1-5*pow(Y_u/R,2)));
@@ -908,11 +855,17 @@ void LVDC1B::TimeStep(double simdt) {
 			ddotG_last.x = PosS.x*S+MX_A.m21*P; //gravity acceleration vector
 			ddotG_last.y = PosS.y*S+MX_A.m22*P;
 			ddotG_last.z = PosS.z*S+MX_A.m23*P;
-			PCommandedAttitude.x = (1.5* PI) + Azimuth;
+			PCommandedAttitude.x = (360.0 - A_zL)*RAD + Azimuth;
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
 			lvda.ZeroLVIMUPIPACounters();
 			sinceLastIGM = 0;
+
+			lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
+			lvda.DriveLVIMUGimbals(Azimuth - A_zL*RAD, 0, 0);	// Now bring to alignment
+			lvda.ReleaseLVIMU();							// Release IMU
+			CountPIPA = true;								// Enable PIPA storage
+
 			GRR_init = true;
 			fprintf(lvlog,"Initialization completed.\r\n\r\n");
 			goto minorloop;
@@ -933,9 +886,9 @@ void LVDC1B::TimeStep(double simdt) {
 				DotM_act += lvda.GetLVIMUPIPARegisters(); //read the PIPA CDUs
 			}
 			Fm = pow((pow(((DotM_act.x - DotM_last.x)/dt_c),2)+ pow(((DotM_act.y - DotM_last.y)/dt_c),2)+ pow(((DotM_act.z - DotM_last.z)/dt_c),2)),0.5);
-			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2 + (DotG_last.x + ddotG_last.x * dt_c / 2)*dt_c + Dot0.x * dt_c; //position vector
-			PosS.y += (DotM_act.y + DotM_last.y) * dt_c / 2 + (DotG_last.y + ddotG_last.y * dt_c / 2)*dt_c + Dot0.y * dt_c;
-			PosS.z += (DotM_act.z + DotM_last.z) * dt_c / 2 + (DotG_last.z + ddotG_last.z * dt_c / 2)*dt_c + Dot0.z * dt_c;
+			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2.0 + (DotG_last.x + ddotG_last.x * dt_c / 2.0)*dt_c + Dot0.x * dt_c; //position vector
+			PosS.y += (DotM_act.y + DotM_last.y) * dt_c / 2.0 + (DotG_last.y + ddotG_last.y * dt_c / 2.0)*dt_c + Dot0.y * dt_c;
+			PosS.z += (DotM_act.z + DotM_last.z) * dt_c / 2.0 + (DotG_last.z + ddotG_last.z * dt_c / 2.0)*dt_c + Dot0.z * dt_c;
 			Y_u= -(PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
 			R = pow(pow(PosS.x,2)+pow(PosS.y,2)+pow(PosS.z,2),0.5); //instantaneous distance from earth's center
 			S = (-mu/pow(R,3))*(1+J*pow(a/R,2)*(1-5*pow(Y_u/R,2)));
@@ -998,7 +951,7 @@ void LVDC1B::TimeStep(double simdt) {
 		}
 
 		if(liftoff == false){//liftoff not received; initial roll command for FCC
-			CommandedAttitude.x =  (360-100)*RAD + Azimuth;
+			CommandedAttitude.x =  (360- A_zL)*RAD + Azimuth;
 			CommandedAttitude.y =  0;
 			CommandedAttitude.z =  0;
 			fprintf(lvlog,"[%d+%f] Initial roll command: %f\r\n",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.x*DEG);
@@ -1492,8 +1445,8 @@ orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
 
 limittest:
 		//command rate test; part of major loop;
-		//if(CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD){CommandedAttitude.z = -45 * RAD;}
-		//if(CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD){CommandedAttitude.z = 45 * RAD;}
+		if(CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD){CommandedAttitude.z = -45 * RAD;}
+		if(CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD){CommandedAttitude.z = 45 * RAD;}
 		double diff; //aux variable for limit test
 		diff = fmod((CommandedAttitude.x - PCommandedAttitude.x + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
@@ -1512,6 +1465,8 @@ limittest:
 			}else{
 				CommandedAttitude.y = fmod(PCommandedAttitude.y - CommandRateLimits.y * dt_c,TWO_PI);
 			}
+			if (CommandedAttitude.y > PI) CommandedAttitude.y -= PI2;
+			if (CommandedAttitude.y < -PI) CommandedAttitude.y += PI2;
 		}
 		diff = fmod((CommandedAttitude.z - PCommandedAttitude.z + TWO_PI),TWO_PI);
 		if(diff > PI) {diff -= TWO_PI;} ;
@@ -1521,6 +1476,8 @@ limittest:
 			}else{
 				CommandedAttitude.z = fmod(PCommandedAttitude.z - CommandRateLimits.z * dt_c,TWO_PI);
 			}
+			if (CommandedAttitude.z > PI) CommandedAttitude.z -= PI2;
+			if (CommandedAttitude.z < -PI) CommandedAttitude.z += PI2;
 		}
 		PCommandedAttitude = CommandedAttitude;
 
@@ -1553,7 +1510,12 @@ minorloop: //minor loop;
 
 		if (SCControlOfSaturn || PermanentSCControl)
 		{
-			CommandedAttitude = ACommandedAttitude = PCommandedAttitude = CurrentAttitude;
+			PCommandedAttitude = CurrentAttitude;
+			if (PCommandedAttitude.y > PI) PCommandedAttitude.y -= PI2;
+			if (PCommandedAttitude.y < -PI) PCommandedAttitude.y += PI2;
+			if (PCommandedAttitude.z > PI) PCommandedAttitude.z -= PI2;
+			if (PCommandedAttitude.z < -PI) PCommandedAttitude.z += PI2;
+			CommandedAttitude = ACommandedAttitude = PCommandedAttitude;
 			AttitudeError = _V(0.0, 0.0, 0.0);
 		}
 		else if (!GuidanceReferenceFailure)
@@ -1566,7 +1528,14 @@ minorloop: //minor loop;
 			AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
 		}
 
-		lvda.SetFCCAttitudeError(AttitudeError);
+		if (LVDC_Timebase > 0)
+		{
+			lvda.SetFCCAttitudeError(AttitudeError);
+		}
+		else
+		{
+			lvda.SetFCCAttitudeError(_V(0, 0, 0));
+		}
 
 		// Debug if we're launched
 		/*if(LVDC_Timebase > -1){
@@ -1587,12 +1556,6 @@ minorloop: //minor loop;
 					eps_p, eps_ymr, eps_ypr,V,R/1000);
 			}
 		}*/
-
-		//Engine failure code
-		if (!S1B_Engine_Out && ((LVDC_Timebase == 1 && LVDC_TB_ETime > 5.8) || LVDC_Timebase == 2))
-		{
-			S1B_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
-		}
 	}
 
 	/*
@@ -1619,7 +1582,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
-	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
 	oapiWriteScenario_int(scn, "LVDC_liftoff", liftoff);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_GRR", LVDC_GRR);
 	oapiWriteScenario_int(scn, "LVDC_GuidanceReferenceFailure", GuidanceReferenceFailure);
@@ -1632,7 +1594,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
-	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	// int
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
@@ -1652,10 +1613,12 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_alpha_1", alpha_1);
 	papiWriteScenario_double(scn, "LVDC_alpha_2", alpha_2);
 	papiWriteScenario_double(scn, "LVDC_alpha_D", alpha_D);
+	papiWriteScenario_double(scn, "LVDC_Ax[0]", Ax[0]);
+	papiWriteScenario_double(scn, "LVDC_Ax[1]", Ax[1]);
+	papiWriteScenario_double(scn, "LVDC_Ax[2]", Ax[2]);
+	papiWriteScenario_double(scn, "LVDC_Ax[3]", Ax[3]);
 	papiWriteScenario_double(scn, "LVDC_Azimuth", Azimuth);
 	papiWriteScenario_double(scn, "LVDC_A_zL", A_zL);
-	papiWriteScenario_double(scn, "LVDC_Azo", Azo);
-	papiWriteScenario_double(scn, "LVDC_Azs", Azs);
 	papiWriteScenario_double(scn, "LVDC_B_11", B_11);
 	papiWriteScenario_double(scn, "LVDC_B_21", B_21);
 	papiWriteScenario_double(scn, "LVDC_B_12", B_12);
@@ -1729,21 +1692,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Fx[4][2]", Fx[4][2]);
 	papiWriteScenario_double(scn, "LVDC_Fx[4][3]", Fx[4][3]);
 	papiWriteScenario_double(scn, "LVDC_Fx[4][4]", Fx[4][4]);
-	papiWriteScenario_double(scn, "LVDC_fx[0]", fx[0]);
-	papiWriteScenario_double(scn, "LVDC_fx[1]", fx[1]);
-	papiWriteScenario_double(scn, "LVDC_fx[2]", fx[2]);
-	papiWriteScenario_double(scn, "LVDC_fx[3]", fx[3]);
-	papiWriteScenario_double(scn, "LVDC_fx[4]", fx[4]);
-	papiWriteScenario_double(scn, "LVDC_fx[5]", fx[5]);
-	papiWriteScenario_double(scn, "LVDC_fx[6]", fx[6]);
 	papiWriteScenario_double(scn, "LVDC_G_T", G_T);
-	papiWriteScenario_double(scn, "LVDC_gx[0]", gx[0]);
-	papiWriteScenario_double(scn, "LVDC_gx[1]", gx[1]);
-	papiWriteScenario_double(scn, "LVDC_gx[2]", gx[2]);
-	papiWriteScenario_double(scn, "LVDC_gx[3]", gx[3]);
-	papiWriteScenario_double(scn, "LVDC_gx[4]", gx[4]);
-	papiWriteScenario_double(scn, "LVDC_gx[5]", gx[5]);
-	papiWriteScenario_double(scn, "LVDC_gx[6]", gx[6]);
 	papiWriteScenario_double(scn, "LVDC_IGMInterval", IGMInterval);
 	papiWriteScenario_double(scn, "LVDC_Inclination", Inclination);
 	papiWriteScenario_double(scn, "LVDC_J", J);
@@ -1773,6 +1722,8 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_L_2", L_2);
 	papiWriteScenario_double(scn, "LVDC_dL_2", dL_2);
 	papiWriteScenario_double(scn, "LVDC_Lt_2", Lt_2);
+	papiWriteScenario_double(scn, "LVDC_Lambda_0", Lambda_0);
+	papiWriteScenario_double(scn, "LVDC_lambda_dot", lambda_dot);
 	papiWriteScenario_double(scn, "LVDC_L_P", L_P);
 	papiWriteScenario_double(scn, "LVDC_L_Y", L_Y);
 	papiWriteScenario_double(scn, "LVDC_Lt_Y", Lt_Y);
@@ -1830,9 +1781,13 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_tchi_p", tchi_p);
 	papiWriteScenario_double(scn, "LVDC_t_clock", t_clock);
 	papiWriteScenario_double(scn, "LVDC_T_CO", T_CO);
+	papiWriteScenario_double(scn, "LVDC_t_D", t_D);
 	papiWriteScenario_double(scn, "LVDC_t_fail", t_fail);
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
+	papiWriteScenario_double(scn, "LVDC_T_GRR", T_GRR);
+	papiWriteScenario_double(scn, "LVDC_T_GRR0", T_GRR0);
 	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
+	papiWriteScenario_double(scn, "LVDC_T_L_apo", T_L_apo);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
 	papiWriteScenario_double(scn, "LVDC_T_S1", T_S1);
 	papiWriteScenario_double(scn, "LVDC_T_S2", T_S2);
@@ -1972,7 +1927,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
-		papiReadScenario_bool(line, "LVDC_i_op", i_op);
 		papiReadScenario_bool(line, "LVDC_liftoff", liftoff);
 		papiReadScenario_bool(line, "LVDC_LVDC_GRR", LVDC_GRR);
 		papiReadScenario_bool(line, "LVDC_GuidanceReferenceFailure", GuidanceReferenceFailure);
@@ -1985,7 +1939,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
-		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 
 		// DOUBLE
 		papiReadScenario_double(line, "LVDC_a", a);
@@ -1999,10 +1952,12 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_alpha_1", alpha_1);
 		papiReadScenario_double(line, "LVDC_alpha_2", alpha_2);
 		papiReadScenario_double(line, "LVDC_alpha_D", alpha_D);
+		papiReadScenario_double(line, "LVDC_Ax[0]", Ax[0]);
+		papiReadScenario_double(line, "LVDC_Ax[1]", Ax[1]);
+		papiReadScenario_double(line, "LVDC_Ax[2]", Ax[2]);
+		papiReadScenario_double(line, "LVDC_Ax[3]", Ax[3]);
 		papiReadScenario_double(line, "LVDC_Azimuth", Azimuth);
 		papiReadScenario_double(line, "LVDC_A_zL", A_zL);
-		papiReadScenario_double(line, "LVDC_Azo", Azo);
-		papiReadScenario_double(line, "LVDC_Azs", Azs);
 		papiReadScenario_double(line, "LVDC_B_11", B_11);
 		papiReadScenario_double(line, "LVDC_B_12", B_12);
 		papiReadScenario_double(line, "LVDC_B_21", B_21);
@@ -2075,21 +2030,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Fx[4][2]", Fx[4][2]);
 		papiReadScenario_double(line, "LVDC_Fx[4][3]", Fx[4][3]);
 		papiReadScenario_double(line, "LVDC_Fx[4][4]", Fx[4][4]);
-		papiReadScenario_double(line, "LVDC_fx[0]", fx[0]);
-		papiReadScenario_double(line, "LVDC_fx[1]", fx[1]);
-		papiReadScenario_double(line, "LVDC_fx[2]", fx[2]);
-		papiReadScenario_double(line, "LVDC_fx[3]", fx[3]);
-		papiReadScenario_double(line, "LVDC_fx[4]", fx[4]);
-		papiReadScenario_double(line, "LVDC_fx[5]", fx[5]);
-		papiReadScenario_double(line, "LVDC_fx[6]", fx[6]);
 		papiReadScenario_double(line, "LVDC_G_T", G_T);
-		papiReadScenario_double(line, "LVDC_gx[0]", gx[0]);
-		papiReadScenario_double(line, "LVDC_gx[1]", gx[1]);
-		papiReadScenario_double(line, "LVDC_gx[2]", gx[2]);
-		papiReadScenario_double(line, "LVDC_gx[3]", gx[3]);
-		papiReadScenario_double(line, "LVDC_gx[4]", gx[4]);
-		papiReadScenario_double(line, "LVDC_gx[5]", gx[5]);
-		papiReadScenario_double(line, "LVDC_gx[6]", gx[6]);
 		papiReadScenario_double(line, "LVDC_IGMInterval", IGMInterval);
 		papiReadScenario_double(line, "LVDC_Inclination", Inclination);
 		papiReadScenario_double(line, "LVDC_J", J);
@@ -2119,6 +2060,8 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_L_2", L_2);
 		papiReadScenario_double(line, "LVDC_dL_2", dL_2);
 		papiReadScenario_double(line, "LVDC_Lt_2", Lt_2);
+		papiReadScenario_double(line, "LVDC_Lambda_0", Lambda_0);
+		papiReadScenario_double(line, "LVDC_lambda_dot", lambda_dot);
 		papiReadScenario_double(line, "LVDC_L_P", L_P);
 		papiReadScenario_double(line, "LVDC_L_Y", L_Y);
 		papiReadScenario_double(line, "LVDC_Lt_Y", Lt_Y);
@@ -2176,9 +2119,13 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_tchi_p", tchi_p);
 		papiReadScenario_double(line, "LVDC_t_clock", t_clock);
 		papiReadScenario_double(line, "LVDC_T_CO", T_CO);
+		papiReadScenario_double(line, "LVDC_t_D", t_D);
 		papiReadScenario_double(line, "LVDC_t_fail", t_fail);
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
+		papiReadScenario_double(line, "LVDC_T_GRR", T_GRR);
+		papiReadScenario_double(line, "LVDC_T_GRR0", T_GRR0);
 		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
+		papiReadScenario_double(line, "LVDC_T_L_apo", T_L_apo);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
 		papiReadScenario_double(line, "LVDC_T_S1", T_S1);
 		papiReadScenario_double(line, "LVDC_T_S2", T_S2);
@@ -2357,6 +2304,24 @@ bool LVDC1B::InhibitAttitudeManeuver()
 	{
 		INH1 = true;
 		INH2 = true;
+
+		return true;
+	}
+
+	return false;
+}
+
+bool LVDC1B::LaunchTargetingUpdate(double v_t, double r_t, double theta_t, double inc, double dsc, double dsc_dot, double t_grr0)
+{
+	if (LVDC_Timebase < 0)
+	{
+		V_T = v_t;
+		R_T = r_t;
+		gamma_T = theta_t;
+		T_GRR0 = t_grr0;
+		Inclination = inc;
+		Lambda_0 = dsc;
+		lambda_dot = dsc_dot;
 
 		return true;
 	}
@@ -2831,45 +2796,45 @@ void LVDCSV::Init(){
 	CommandSequence = 0;
 
 	//PRE_IGM GUIDANCE
-	B_11 = -0.62;							// Coefficients for determining freeze time after S1C engine failure
-	B_12 = 40.9;							// dto.
-	B_21 = -0.3611;							// dto.
-	B_22 = 29.25;							// dto.
+	B_11 = -1.2;							// Coefficients for determining freeze time after S1C engine failure
+	B_12 = 67.2;							// dto.
+	B_21 = -0.77;							// dto.
+	B_22 = 50.9;							// dto.
 
 	Drag_Area[0] = 0.0;
 	Drag_Area[1] = 0.0;
 	Drag_Area[2] = 0.0;
 	Drag_Area[3] = 0.0;
 	Drag_Area[4] = 0.0;
-	// PITCH POLYNOMIAL (Apollo 9)
-	Fx[1][0] =  3.19840;
-	Fx[1][1] =  -0.544236;
-	Fx[1][2] =  0.0351605;
-	Fx[1][3] =  -0.00116379;
-	Fx[1][4] =  0.000011386;
-	Fx[2][0] =  -10.9607;
-	Fx[2][1] =  0.946620;
-	Fx[2][2] =  -0.0294206;
-	Fx[2][3] =  0.000207717;
-	Fx[2][4] =  -0.000000439036;
-	Fx[3][0] =  78.7826;
-	Fx[3][1] =  -2.83749;
-	Fx[3][2] =  0.0289710;
-	Fx[3][3] =  -0.000178363;
-	Fx[3][4] =  0.000000463029;
-	Fx[4][0] =  69.9191;
-	Fx[4][1] =  -2.007490;
-	Fx[4][2] =  0.0105367;
-	Fx[4][3] =  -0.0000233163;
-	Fx[4][4] =  0.0000000136702;
+	// PITCH POLYNOMIAL (Apollo 11)
+	Fx[1][0] = 0.104707442e1;
+	Fx[1][1] = -0.147669484;
+	Fx[1][2] = 0.824109168e-2;
+	Fx[1][3] = -0.403816898e-3;
+	Fx[1][4] = 0.338751980e-5;
+	Fx[2][0] = -0.687116080e1;
+	Fx[2][1] = 0.664009046;
+	Fx[2][2] = -0.231195092e-1;
+	Fx[2][3] = 0.137310354e-3;
+	Fx[2][4] = -0.124330390e-6;
+	Fx[3][0] = -0.663318417e1;
+	Fx[3][1] = 0.810101295;
+	Fx[3][2] = -0.299134054e-1;
+	Fx[3][3] = 0.239665250e-3;
+	Fx[3][4] = -0.635979551e-6;
+	Fx[4][0] = 0.425287982e2;
+	Fx[4][1] = -0.125455452e1,
+	Fx[4][2] = 0.237693395e-2,
+	Fx[4][3] = 0.163508094e-4;
+	Fx[4][4] = -0.587090259e-7;
 	t_1 = 13;								// Backup timer for Pre-IGM pitch maneuver
-	t_2 = 25;								// Time to initiate pitch freeze for S1C engine failure
-	t_3 = 36;								// Constant pitch freeze for S1C engine failure prior to t_2
+	t_2 = 6;								// Time to initiate pitch freeze for S1C engine failure
+	t_3 = 60;								// Constant pitch freeze for S1C engine failure prior to t_2
 	t_3i = 0;								// Clock time at S4B ignition
-	t_4 = 45;								// Upper bound of validity for first segment of pitch freeze
-	t_5 = 81;								// Upper bound of validity for second segment of pitch freeze
+	t_4 = 38;								// Upper bound of validity for first segment of pitch freeze
+	t_5 = 66;								// Upper bound of validity for second segment of pitch freeze
 	t_6 = 0;								// Time to terminate pitch freeze after S1C engine failure
-	T_ar = 147;								// S1C Tilt Arrest Time	   
+	T_ar = 160.0;							// S1C Tilt Arrest Time
 	T_S1 = 33.6;							// Pitch Polynomial Segment Times
 	T_S2 = 68.6;							// dto.
 	T_S3 = 95.6;							// dto.
@@ -4596,19 +4561,21 @@ void LVDCSV::TimeStep(double simdt) {
 			directstagereset = true;
 		}
 
+		//Engine failure code
+		if (LVDC_Timebase == 1 && LVDC_TB_ETime > t_2)
+		{
+			S1_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
+		}
+		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
+		{
+			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
+		}
+
 		/* **** LVDC GUIDANCE PROGRAM **** */		
 		switch(LVDC_Timebase){//this is the sequential event control logic
 			case -1: // LOOP WAITING FOR PTL
 				// Limit time accel to 100x
 				if (oapiGetTimeAcceleration() > 100) { oapiSetTimeAcceleration(100); }
-
-				// Prelaunch tank venting between -3:00h and engine ignition
-				// No clue if the venting start time is correct
-				if(lvda.GetMissionTime() < -10800){
-					lvda.SwitchSelectorOld(10);
-				}else{
-					lvda.SwitchSelectorOld(11);
-				}
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
 				if(lvda.GetMissionTime() < -1200){
@@ -4626,7 +4593,7 @@ void LVDCSV::TimeStep(double simdt) {
 				// At GRR we transfer control to the flight program and start TB0.
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (lvda.GetMissionTime() < -17){
+				if (!lvda.GetGuidanceReferenceRelease()){
 					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",lvCommandConnector->GetMissionTime(),
 						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
@@ -4646,18 +4613,6 @@ void LVDCSV::TimeStep(double simdt) {
 					lvda.SwitchSelectorOld(12);
 				}
 
-				// At 10 seconds, play the countdown sound.
-				if (lvda.GetMissionTime() >= -10.3) { // Was -10.9
-					lvda.SwitchSelectorOld(13);
-				}
-				// Shut down venting at T - 9
-				if(lvda.GetMissionTime() > -9) { lvda.SwitchSelectorOld(14); }
-
-				//Hold-down force
-				if(lvda.GetMissionTime() > -4.0){
-					lvda.AddForce(_V(0, 0, -5. * lvda.GetFirstStageThrust()), _V(0, 0, 0));
-					}
-
 				// LIFTOFF
 				if(LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()){
 					TB1 = TAS;
@@ -4667,7 +4622,6 @@ void LVDCSV::TimeStep(double simdt) {
 
 					liftoff = true;
 					// Fall into TB1
-					sinceLastCycle = 1.7 - simdt; // Rig to pass on fall-in
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
 					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
 					break;
@@ -4677,12 +4631,6 @@ void LVDCSV::TimeStep(double simdt) {
 			case 1: // LIFTOFF TIME
 
 				SwitchSelectorProcessing(SSTTB[1]);
-
-				// Soft-Release Pin Dragging
-				if(lvda.GetMissionTime() < 0.5){
-				  double PinDragFactor = 1 - (lvda.GetMissionTime()*2);
-				  lvda.AddForce(_V(0, 0, -(lvda.GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
-				}
 
 				// S1C CECO TRIGGER:
 				if (LVDC_TB_ETime > t_S1C_CECO) {
@@ -4714,8 +4662,7 @@ void LVDCSV::TimeStep(double simdt) {
 				// Done by low-level sensor.
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
-					// For S1B/C thruster calibration
-					fprintf(lvlog,"[T+%f] S1 OECO @ Alt %f\r\n\r\n", lvda.GetMissionTime(), lvda.GetAltitude());
+					fprintf(lvlog,"[T+%f] S1 OECO\r\n", lvda.GetMissionTime());
 					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					TB3 = TAS;
@@ -4757,7 +4704,7 @@ void LVDCSV::TimeStep(double simdt) {
 				if (SIICenterEngineCutoff && S2_ENGINE_OUT == false && LVDC_TB_ETime >= 299.0)
 				{
 					S2_ENGINE_OUT = true;
-					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 17);
+					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 15);
 				}
 			
 				// MR Shift
@@ -4913,7 +4860,10 @@ void LVDCSV::TimeStep(double simdt) {
 						CommandSequence = CommandSequenceStored;
 
 						poweredflight = false;
+						//S-IVB Restart Alert Off
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
+						//S/C Control of Saturn Enable
+						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
 
 						TB6 = 100000;
 					}
@@ -5026,6 +4976,14 @@ void LVDCSV::TimeStep(double simdt) {
 					fprintf(lvlog, "[TB%d+%f] Lunar impact burn stopped\r\n", LVDC_Timebase, LVDC_TB_ETime);
 				}
 
+				//For now, disable LVDC at TB8+10,000 seconds
+				if (LVDC_TB_ETime > 10000.0)
+				{
+					LVDC_Stop = true;
+					return;
+				}
+				break;
+
 				break;
 			case 40:
 
@@ -5124,6 +5082,8 @@ void LVDCSV::TimeStep(double simdt) {
 			if (LVDC_Timebase > 0 && lvda.GetLVIMUFailure())
 			{
 				GuidanceReferenceFailure = true;
+				lvda.SetOutputRegisterBit(GuidanceReferenceFailureA, true);
+				lvda.SetOutputRegisterBit(GuidanceReferenceFailureB, true);
 			}
 
 			if (!GuidanceReferenceFailure)
@@ -5147,7 +5107,7 @@ void LVDCSV::TimeStep(double simdt) {
 			fprintf(lvlog, "Time into launch window = %f\r\n", t_D);
 
 			//Azimuth determination
-			if (t_DS0 <= t_D && t_D < t_DS1)
+			if (t_D < t_DS1)
 			{
 				Azimuth = hx[0][0] + hx[0][1]*((t_D - t_D1) / t_SD1) + hx[0][2]*pow((t_D - t_D1) / t_SD1, 2) + hx[0][3]*pow((t_D - t_D1) / t_SD1, 3) + hx[0][4]*pow((t_D - t_D1) / t_SD1, 4);
 			}
@@ -5157,7 +5117,7 @@ void LVDCSV::TimeStep(double simdt) {
 			}
 			else
 			{
-				Azimuth = hx[2][0] + hx[2][1]*((t_D - t_D3) / t_SD3) + hx[2][2]*pow((t_D - t_D1) / t_SD3, 2) + hx[2][3]*pow((t_D - t_D3) / t_SD3, 3) + hx[2][4]*pow((t_D - t_D3) / t_SD3, 4);
+				Azimuth = hx[2][0] + hx[2][1]*((t_D - t_D3) / t_SD3) + hx[2][2]*pow((t_D - t_D3) / t_SD3, 2) + hx[2][3]*pow((t_D - t_D3) / t_SD3, 3) + hx[2][4]*pow((t_D - t_D3) / t_SD3, 4);
 			}
 
 			if (i_op)
@@ -5327,14 +5287,19 @@ void LVDCSV::TimeStep(double simdt) {
 				//Orbital navigation
 				sinceLastCycle += simdt;
 				sinceLastGuidanceCycle += simdt;
-				if (sinceLastGuidanceCycle>1.0)
+				if (sinceLastCycle < 8.0)
 				{
-					dt_g = sinceLastGuidanceCycle;
-					sinceLastGuidanceCycle = 0.0;
-					goto GuidanceLoop;
+					if (sinceLastGuidanceCycle < 1.0)
+					{
+						goto minorloop;
+					}
+					else
+					{
+						dt_g = sinceLastGuidanceCycle;
+						sinceLastGuidanceCycle = 0.0;
+						goto GuidanceLoop;
+					}
 				}
-				if(sinceLastCycle<8.0)
-				{goto minorloop;}
 				dt_c = sinceLastCycle;
 				sinceLastCycle = 0.0;
 				OrbNavCycle++;		//For debugging
@@ -5576,15 +5541,16 @@ GuidanceLoop:
 			}				
 			if((PosS.x - a) > 137 || t_clock > t_1){
 				//roll/pitch program
-				if (t_clock >= t_2 && T_EO1 > 0){
+				if (t_clock >= t_4 && T_EO1 > 0){
 					//time to re-calculate freeze time?
 					T_EO1 = -1; //allow only one pass thru re-calculation
 					if (t_fail <= t_2){dT_F = t_3;}
-					if (t_2 < t_clock && t_clock <= t_4){ dT_F = (B_11 * t_fail) + B_12; }
-					if (t_4 < t_clock && t_clock <= t_5){ dT_F = (B_21 * t_fail) + B_22; }
-					if (t_5 < t_clock){ dT_F = 0; }
+					if (t_2 < t_fail && t_fail <= t_4){ dT_F = (B_11 * t_fail) + B_12; }
+					if (t_4 < t_fail && t_fail <= t_5){ dT_F = (B_21 * t_fail) + B_22; }
+					if (t_5 < t_fail){ dT_F = 0; }
+
 					t_6 = t_clock + dT_F;
-					T_ar = T_ar + (0.25*(T_ar - t_fail));
+					T_ar = T_ar + dT_F;
 					fprintf(lvlog,"[%d+%f] Freeze time recalculated! t_6 = %f T_ar = %f\r\n",LVDC_Timebase,LVDC_TB_ETime,t_6,T_ar);
 				}
 				if (t_clock >= t_6){
@@ -6590,7 +6556,7 @@ restartprep:
 			//Determination of S-bar and S-bar-dot
 			theta_E = theta_EO + TVRATE * t_D;
 
-			MX_EPH = mul(OrbMech::transpose_matrix(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+			MX_EPH = mul(OrbMech::tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
 
 			T_P = mul(MX_EPH, unit(TargetVector));
 			N = unit(crossp(PosS, DotS));
@@ -6743,17 +6709,17 @@ minorloop:
 			lvda.TLIEnded();
 		}
 
-		if(CommandedAttitude.z < -45 * RAD){CommandedAttitude.z = -45 * RAD; } //yaw limits
-		if(CommandedAttitude.z > 45 * RAD){CommandedAttitude.z = 45 * RAD; }
+		if (CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD) { CommandedAttitude.z = -45 * RAD; } //yaw limits
+		if (CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD) { CommandedAttitude.z = 45 * RAD; }
 		double diff; //aux variable for limit test
 		diff = fmod((CommandedAttitude.x - PCommandedAttitude.x + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
 		if(abs(diff/dt_g) > CommandRateLimits.x){
 			fprintf(lvlog, "Rate limit x-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.x*DEG, PCommandedAttitude.x*DEG, diff*DEG, dt_g);
 			if(diff > 0){
-				CommandedAttitude.x = PCommandedAttitude.x + CommandRateLimits.x * dt_g;
+				CommandedAttitude.x = fmod(PCommandedAttitude.x + CommandRateLimits.x * dt_g, PI2);
 			}else{
-				CommandedAttitude.x = PCommandedAttitude.x - CommandRateLimits.x * dt_g;
+				CommandedAttitude.x = fmod(PCommandedAttitude.x - CommandRateLimits.x * dt_g, PI2);
 			}
 		}
 		diff = fmod((CommandedAttitude.y - PCommandedAttitude.y + TWO_PI),TWO_PI);
@@ -6761,20 +6727,24 @@ minorloop:
 		if(abs(diff/dt_g) > CommandRateLimits.y){
 			fprintf(lvlog, "Rate limit y-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.y*DEG, PCommandedAttitude.y*DEG, diff*DEG, dt_g);
 			if(diff > 0){
-				CommandedAttitude.y = PCommandedAttitude.y + CommandRateLimits.y * dt_g;
+				CommandedAttitude.y = fmod(PCommandedAttitude.y + CommandRateLimits.y * dt_g, PI2);
 			}else{
-				CommandedAttitude.y = PCommandedAttitude.y - CommandRateLimits.y * dt_g;
+				CommandedAttitude.y = fmod(PCommandedAttitude.y - CommandRateLimits.y * dt_g, PI2);
 			}
+			if (CommandedAttitude.y > PI) CommandedAttitude.y -= PI2;
+			if (CommandedAttitude.y < -PI) CommandedAttitude.y += PI2;
 		}
 		diff = fmod((CommandedAttitude.z - PCommandedAttitude.z + TWO_PI),TWO_PI);
 		if(diff > PI){ diff -= TWO_PI; }
 		if(abs(diff/dt_g) > CommandRateLimits.z){
 			fprintf(lvlog, "Rate limit z-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.z*DEG, PCommandedAttitude.z*DEG, diff*DEG, dt_g);
 			if(diff > 0){
-				CommandedAttitude.z = PCommandedAttitude.z + CommandRateLimits.z * dt_g;
+				CommandedAttitude.z = fmod(PCommandedAttitude.z + CommandRateLimits.z * dt_g, PI2);
 			}else{
-				CommandedAttitude.z = PCommandedAttitude.z - CommandRateLimits.z * dt_g;
+				CommandedAttitude.z = fmod(PCommandedAttitude.z - CommandRateLimits.z * dt_g, PI2);
 			}
+			if (CommandedAttitude.z > PI) CommandedAttitude.z -= PI2;
+			if (CommandedAttitude.z < -PI) CommandedAttitude.z += PI2;
 		}
 		PCommandedAttitude = CommandedAttitude;
 
@@ -6799,7 +6769,12 @@ minorloop:
 
 		if (SCControlOfSaturn || PermanentSCControl)
 		{
-			CommandedAttitude = ACommandedAttitude = PCommandedAttitude = CurrentAttitude;
+			PCommandedAttitude = CurrentAttitude;
+			if (PCommandedAttitude.y > PI) PCommandedAttitude.y -= PI2;
+			if (PCommandedAttitude.y < -PI) PCommandedAttitude.y += PI2;
+			if (PCommandedAttitude.z > PI) PCommandedAttitude.z -= PI2;
+			if (PCommandedAttitude.z < -PI) PCommandedAttitude.z += PI2;
+			CommandedAttitude = ACommandedAttitude = PCommandedAttitude;
 			AttitudeError = _V(0.0, 0.0, 0.0);
 		}
 		else if (!GuidanceReferenceFailure)
@@ -6812,7 +6787,14 @@ minorloop:
 			AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
 		}
 
-		lvda.SetFCCAttitudeError(AttitudeError);
+		if (LVDC_Timebase > 0)
+		{
+			lvda.SetFCCAttitudeError(AttitudeError);
+		}
+		else
+		{
+			lvda.SetFCCAttitudeError(_V(0, 0, 0));
+		}
 
 		// Debug if we're launched
 		/*if(LVDC_Timebase > -1){
@@ -6843,16 +6825,6 @@ minorloop:
 			DotS.x,DotS.y,DotS.z);
 			*/
 		//	CurrentAttitude.x*DEG,CurrentAttitude.y*DEG,CurrentAttitude.z*DEG,V);								
-
-		//Engine failure code
-		if (LVDC_Timebase == 1 && LVDC_TB_ETime > 38.0)
-		{
-			S1_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
-		}
-		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
-		{
-			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
-		}
 
 		// End of test for LVDC_Stop
 	}

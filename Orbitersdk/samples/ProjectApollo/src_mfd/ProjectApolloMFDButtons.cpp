@@ -55,7 +55,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Crew number", 0, 'C' },
 		{ "CDR in suit", 0, 'D' },
 		{ "LMP in suit", 0, 'L' },
-		{ 0,0,0 },
+		{ "Start EVA",0,'E' },
 		{ 0,0,0 },
 		{ "Primary coolant loop test heating", 0, 'P' },
 		{ "Secondary coolant loop test heating", 0, 'S' }
@@ -67,22 +67,27 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("CRW", OAPI_KEY_C, &ProjectApolloMFD::menuSetCrewNumber);
 	RegisterFunction("CDR", OAPI_KEY_D, &ProjectApolloMFD::menuSetCDRInSuit);
 	RegisterFunction("LMP", OAPI_KEY_L, &ProjectApolloMFD::menuSetLMPInSuit);
+	RegisterFunction("EVA", OAPI_KEY_E, &ProjectApolloMFD::menuStartEVA);
 	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
 
 	RegisterFunction("PRM", OAPI_KEY_P, &ProjectApolloMFD::menuSetPrimECSTestHeaterPower);
 	RegisterFunction("SEC", OAPI_KEY_S, &ProjectApolloMFD::menuSetSecECSTestHeaterPower);
 
 
-	static const MFDBUTTONMENU mnuIU[8] = {
+	static const MFDBUTTONMENU mnuIU[12] = {
 		{ "Back", 0, 'B' },
 		{ "Request Burn Data", 0, 'R' },
 		{ "Switch selector stage", 0, 'A' },
 		{ "Switch selector channel",0,'C' },
-		{ "Timebase update",0,0 },
+		{ "Timebase update",0,'D' },
 		{ "Change Source",0,'S' },
+
 		{ "IU uplink type",0,'T' },
-		{ 0,0,0 }
+		{ "Uplink to IU",0,'U' },
+		{ "Impact TIG",0,'I' },
+		{ "Impact burntime",0,'E' },
+		{ "Pitch angle",0,'P' },
+		{ "Yaw angle", 0, 'Y'}
 	};
 
 	RegisterPage(mnuIU, sizeof(mnuIU) / sizeof(MFDBUTTONMENU));
@@ -96,6 +101,10 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	RegisterFunction("TYP", OAPI_KEY_T, &ProjectApolloMFD::menuCycleIUUplinkType);
 	RegisterFunction("UPL", OAPI_KEY_U, &ProjectApolloMFD::menuIUUplink);
+	RegisterFunction("TIG", OAPI_KEY_I, &ProjectApolloMFD::menuSetImpactTIG);
+	RegisterFunction("BT", OAPI_KEY_E, &ProjectApolloMFD::menuSetImpactBT);
+	RegisterFunction("PIT", OAPI_KEY_P, &ProjectApolloMFD::menuSetImpactPitch);
+	RegisterFunction("YAW", OAPI_KEY_Y, &ProjectApolloMFD::menuSetImpactYaw);
 
 	static const MFDBUTTONMENU mnuTELE[11] = {
 		{ "Back", 0, 'B' },
@@ -168,21 +177,23 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 
 
-	static const MFDBUTTONMENU mnuLGC[5] = {
+	static const MFDBUTTONMENU mnuLGC[6] = {
 		{ "Back", 0, 'B' },
+		{ "Press ENTR on DSKY and DEDA",0,'D' },
+		{ "Press ENTR on DSKY in CSM and LM",0,'E' },
+		{ "Calculate V42 Angles", 0, 'F' },
 		{ 0,0,0 },
-		{ 0,0,0 },
-		{ 0,0,0 },
-		{ "Calculate V42 Angles", 0, 'F' }
+		{ "CSM and LM REFSMMAT types",0,'R' }
 	};
 
 	RegisterPage(mnuLGC, sizeof(mnuLGC) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
-	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_G, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("V47", OAPI_KEY_D, &ProjectApolloMFD::menuPressEnterOnDSKYDEDA);
+	RegisterFunction("ENT", OAPI_KEY_E, &ProjectApolloMFD::menuPressEnterOnCMCLGC);
 	RegisterFunction("V42", OAPI_KEY_F, &ProjectApolloMFD::CalculateV42Angles);
+	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("REF", OAPI_KEY_R, &ProjectApolloMFD::menuCycleLMAlignType);
 }
 
 bool ProjectApolloMFDButtons::SearchForKeysInOtherPages() const

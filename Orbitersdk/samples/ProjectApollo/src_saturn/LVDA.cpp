@@ -50,7 +50,7 @@ void LVDA::SwitchSelector(int stage, int channel)
 {
 	if (stage < 0 || stage > 3) return;
 
-	iu->ControlDistributor(stage, channel);
+	iu->GetControlDistributor()->SwitchSelector(stage, channel);
 }
 
 void LVDA::SetFCCAttitudeError(VECTOR3 atterr)
@@ -60,37 +60,37 @@ void LVDA::SetFCCAttitudeError(VECTOR3 atterr)
 
 VECTOR3 LVDA::GetLVIMUAttitude()
 {
-	return iu->lvimu.GetTotalAttitude();
+	return iu->GetLVIMU()->GetTotalAttitude();
 }
 
 void LVDA::ZeroLVIMUPIPACounters()
 {
-	iu->lvimu.ZeroPIPACounters();
+	iu->GetLVIMU()->ZeroPIPACounters();
 }
 
 void LVDA::ZeroLVIMUCDUs()
 {
-	iu->lvimu.ZeroIMUCDUFlag = true;
+	iu->GetLVIMU()->ZeroIMUCDUFlag = true;
 }
 
 void LVDA::ReleaseLVIMUCDUs()
 {
-	iu->lvimu.ZeroIMUCDUFlag = false;
+	iu->GetLVIMU()->ZeroIMUCDUFlag = false;
 }
 
 void LVDA::ReleaseLVIMU()
 {
-	iu->lvimu.SetCaged(false);
+	iu->GetLVIMU()->SetCaged(false);
 }
 
 void LVDA::DriveLVIMUGimbals(double x, double y, double z)
 {
-	iu->lvimu.DriveGimbals(x, y, z);
+	iu->GetLVIMU()->DriveGimbals(x, y, z);
 }
 
 VECTOR3 LVDA::GetLVIMUPIPARegisters()
 {
-	return _V(iu->lvimu.CDURegisters[LVRegPIPAX], iu->lvimu.CDURegisters[LVRegPIPAY], iu->lvimu.CDURegisters[LVRegPIPAZ]);
+	return _V(iu->GetLVIMU()->CDURegisters[LVRegPIPAX], iu->GetLVIMU()->CDURegisters[LVRegPIPAY], iu->GetLVIMU()->CDURegisters[LVRegPIPAZ]);
 }
 
 bool LVDA::GetSIInboardEngineOut()
@@ -124,7 +124,15 @@ bool LVDA::GetCMCSIVBTakeover()
 }
 bool LVDA::GetLVIMUFailure()
 {
-	return iu->lvimu.IsFailed();
+	return iu->GetLVIMU()->IsFailed();
+}
+
+bool LVDA::GetGuidanceReferenceFailure()
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->GetGuidanceReferenceFailure();
+
+	return false;
 }
 
 bool LVDA::SIVBInjectionDelay()
@@ -134,7 +142,7 @@ bool LVDA::SIVBInjectionDelay()
 
 bool LVDA::SCInitiationOfSIISIVBSeparation()
 {
-	return iu->GetCommandConnector()->GetSIISIVbDirectStagingSignal();
+	return iu->GetEDS()->GetSIISIVBSepSeqStart();
 }
 
 bool LVDA::GetSIIPropellantDepletionEngineCutoff()
@@ -164,7 +172,12 @@ bool LVDA::SIBLowLevelSensorsDry()
 
 bool LVDA::GetLiftoff()
 {
-	return iu->IsUmbilicalConnected() == false;
+	return iu->GetEDS()->GetIULiftoff() == false;
+}
+
+bool LVDA::GetGuidanceReferenceRelease()
+{
+	return iu->ESEGetGuidanceReferenceRelease();
 }
 
 bool LVDA::GetSICInboardEngineCutoff()
@@ -254,6 +267,14 @@ bool LVDA::SIVBIULunarImpact(double tig, double dt, double pitch, double yaw)
 	return false;
 }
 
+bool LVDA::LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->LaunchTargetingUpdate(V_T, R_T, theta_T, inc, dsc, dsc_dot, t_grr0);
+
+	return false;
+}
+
 void LVDA::SwitchSelectorOld(int chan)
 {
 	iu->GetLVCommandConnector()->SwitchSelector(chan);
@@ -262,21 +283,6 @@ void LVDA::SwitchSelectorOld(int chan)
 double LVDA::GetMissionTime()
 {
 	return iu->GetLVCommandConnector()->GetMissionTime();
-}
-
-void LVDA::AddForce(VECTOR3 F, VECTOR3 r)
-{
-	iu->GetLVCommandConnector()->AddForce(F, r);
-}
-
-double LVDA::GetFirstStageThrust()
-{
-	return iu->GetLVCommandConnector()->GetFirstStageThrust();
-}
-
-double LVDA::GetAltitude()
-{
-	return iu->GetLVCommandConnector()->GetAltitude();
 }
 
 int LVDA::GetStage()
@@ -307,4 +313,14 @@ void LVDA::GetRelativeVel(VECTOR3 &v)
 bool LVDA::GetSCControlPoweredFlight()
 {
 	return iu->GetSCControlPoweredFlight();
+}
+
+void LVDA::SetOutputRegisterBit(int bit, bool state)
+{
+	DiscreteOutputRegister.set(bit, state);
+}
+
+bool LVDA::GetOutputRegisterBit(int bit)
+{
+	return DiscreteOutputRegister[bit];
 }

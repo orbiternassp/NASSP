@@ -26,8 +26,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "LEMcomputer.h"
-#include "lm_channels.h"
 #include "LEM.h"
 #include "papi.h"
 #include "lm_aps.h"
@@ -77,134 +75,122 @@ void APSPropellantSource::Timestep(double simt, double simdt)
 {
 	if (!our_vessel) return;
 
-	double p;
+	double p, pMaxForPressures;
 
 	if (!source_prop)
 	{
-		p = 0;
-		helium1PressurePSI = 0;
-		helium2PressurePSI = 0;
-		heliumRegulator1OutletPressurePSI = 0;
-		heliumRegulator2OutletPressurePSI = 0;
-		heliumRegulatorManifoldPressurePSI = 0;
-		FuelTankUllagePressurePSI = 0;
-		OxidTankUllagePressurePSI = 0;
-		FuelTrimOrificeOutletPressurePSI = 0;
-		OxidTrimOrificeOutletPressurePSI = 0;
-
-		fuelLevelLow = false;
-		oxidLevelLow = false;
+		p = pMaxForPressures = our_vessel->AscentFuelMassKg;
 	}
 	else
 	{
 		p = our_vessel->GetPropellantMass(source_prop);
-		double pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
+		pMaxForPressures = our_vessel->GetPropellantMaxMass(source_prop);
+	}
 
-		helium1PressurePSI = 3020.0;
-		helium2PressurePSI = 3020.0;
+	helium1PressurePSI = 3020.0;
+	helium2PressurePSI = 3020.0;
 
-		double InletPressure1, InletPressure2;
+	double InletPressure1, InletPressure2;
 
-		//Primary Helium Regulator Inlet
-		if (PrimaryHeRegulatorShutoffValve.IsOpen() && PrimaryHeliumIsolationValve.IsOpen())
-		{
-			InletPressure1 = helium1PressurePSI;
-		}
-		else
-		{
-			InletPressure1 = 0.0;
-		}
+	//Primary Helium Regulator Inlet
+	if (PrimaryHeRegulatorShutoffValve.IsOpen() && PrimaryHeliumIsolationValve.IsOpen())
+	{
+		InletPressure1 = helium1PressurePSI;
+	}
+	else
+	{
+		InletPressure1 = 0.0;
+	}
 
-		//Secondary Helium Regulator Inlet
-		if (SecondaryHeRegulatorShutoffValve.IsOpen() && RedundantHeliumIsolationValve.IsOpen())
-		{
-			InletPressure2 = helium2PressurePSI;
-		}
-		else
-		{
-			InletPressure2 = 0.0;
-		}
+	//Secondary Helium Regulator Inlet
+	if (SecondaryHeRegulatorShutoffValve.IsOpen() && RedundantHeliumIsolationValve.IsOpen())
+	{
+		InletPressure2 = helium2PressurePSI;
+	}
+	else
+	{
+		InletPressure2 = 0.0;
+	}
 
-		//Helium Regulator 1 Outlet
-		if (InletPressure1 > 190.0)
-		{
-			heliumRegulator1OutletPressurePSI = 190.0;
-		}
-		else
-		{
-			heliumRegulator1OutletPressurePSI = InletPressure1;
-		}
+	//Helium Regulator 1 Outlet
+	if (InletPressure1 > 190.0)
+	{
+		heliumRegulator1OutletPressurePSI = 190.0;
+	}
+	else
+	{
+		heliumRegulator1OutletPressurePSI = InletPressure1;
+	}
 
-		//Helium Regulator 2 Outlet
-		if (InletPressure2 > 182.0)
-		{
-			heliumRegulator2OutletPressurePSI = 182.0;
-		}
-		else
-		{
-			heliumRegulator2OutletPressurePSI = InletPressure2;
-		}
+	//Helium Regulator 2 Outlet
+	if (InletPressure2 > 182.0)
+	{
+		heliumRegulator2OutletPressurePSI = 182.0;
+	}
+	else
+	{
+		heliumRegulator2OutletPressurePSI = InletPressure2;
+	}
 
-		//Helium Manifold
-		heliumRegulatorManifoldPressurePSI = (heliumRegulator1OutletPressurePSI + heliumRegulator2OutletPressurePSI) / 2.0;
+	//Helium Manifold
+	heliumRegulatorManifoldPressurePSI = (heliumRegulator1OutletPressurePSI + heliumRegulator2OutletPressurePSI) / 2.0;
 
-		//Fuel Tank
-		if (FuelCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 133.5*p / pMaxForPressures)
-		{
-			FuelTankUllagePressurePSI = max(0.0, heliumRegulatorManifoldPressurePSI - 2.0);
-		}
-		else
-		{
-			FuelTankUllagePressurePSI = 133.5*p / pMaxForPressures;
-		}
+	//Fuel Tank
+	if (FuelCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 133.5*p / pMaxForPressures)
+	{
+		FuelTankUllagePressurePSI = max(0.0, heliumRegulatorManifoldPressurePSI - 2.0);
+	}
+	else
+	{
+		FuelTankUllagePressurePSI = 133.5*p / pMaxForPressures;
+	}
 
-		//Oxidizer Tank
-		if (OxidCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 133.5*p / pMaxForPressures)
-		{
-			OxidTankUllagePressurePSI = max(0.0, heliumRegulatorManifoldPressurePSI - 2.0);
-		}
-		else
-		{
-			OxidTankUllagePressurePSI = 133.5*p / pMaxForPressures;
-		}
+	//Oxidizer Tank
+	if (OxidCompatibilityValve.IsOpen() && heliumRegulatorManifoldPressurePSI - 2.0 > 133.5*p / pMaxForPressures)
+	{
+		OxidTankUllagePressurePSI = max(0.0, heliumRegulatorManifoldPressurePSI - 2.0);
+	}
+	else
+	{
+		OxidTankUllagePressurePSI = 133.5*p / pMaxForPressures;
+	}
 
-		FuelTrimOrificeOutletPressurePSI = max(0.0, FuelTankUllagePressurePSI - 14.0);
-		OxidTrimOrificeOutletPressurePSI = max(0.0, OxidTankUllagePressurePSI - 14.0);
+	FuelTrimOrificeOutletPressurePSI = max(0.0, FuelTankUllagePressurePSI - 14.0);
+	OxidTrimOrificeOutletPressurePSI = max(0.0, OxidTankUllagePressurePSI - 14.0);
 
-		//Primary Helium Isolation Valve
-		if (!PrimaryHeliumIsolationValve.IsOpen() && our_vessel->AscentHeliumIsol1Pyros.Blown())
-		{
-			PrimaryHeliumIsolationValve.SetState(true);
-		}
+	//Primary Helium Isolation Valve
+	if (!PrimaryHeliumIsolationValve.IsOpen() && our_vessel->AscentHeliumIsol1Pyros.Blown())
+	{
+		PrimaryHeliumIsolationValve.SetState(true);
+	}
 
-		//Redundant Helium Isolation Valve
-		if (!RedundantHeliumIsolationValve.IsOpen() && our_vessel->AscentHeliumIsol2Pyros.Blown())
-		{
-			RedundantHeliumIsolationValve.SetState(true);
-		}
+	//Redundant Helium Isolation Valve
+	if (!RedundantHeliumIsolationValve.IsOpen() && our_vessel->AscentHeliumIsol2Pyros.Blown())
+	{
+		RedundantHeliumIsolationValve.SetState(true);
+	}
 
-		//Propellant Compatibility Valves
-		if (!OxidCompatibilityValve.IsOpen() && our_vessel->AscentOxidCompValvePyros.Blown())
-		{
-			OxidCompatibilityValve.SetState(true);
-		}
+	//Propellant Compatibility Valves
+	if (!OxidCompatibilityValve.IsOpen() && our_vessel->AscentOxidCompValvePyros.Blown())
+	{
+		OxidCompatibilityValve.SetState(true);
+	}
 
-		if (!FuelCompatibilityValve.IsOpen() && our_vessel->AscentFuelCompValvePyros.Blown())
-		{
-			FuelCompatibilityValve.SetState(true);
-		}
+	if (!FuelCompatibilityValve.IsOpen() && our_vessel->AscentFuelCompValvePyros.Blown())
+	{
+		FuelCompatibilityValve.SetState(true);
+	}
 
-		//Propellant Low
-		if (our_vessel->INST_SIG_SENSOR_CB.IsPowered() && p < 50.5)
-		{
-			fuelLevelLow = true;
-			oxidLevelLow = true;
-		}
-		else
-		{
-			fuelLevelLow = false;
-			oxidLevelLow = false;
-		}
+	//Propellant Low
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered() && p < 50.5)
+	{
+		fuelLevelLow = true;
+		oxidLevelLow = true;
+	}
+	else
+	{
+		fuelLevelLow = false;
+		oxidLevelLow = false;
 	}
 }
 
@@ -244,6 +230,14 @@ double APSPropellantSource::GetHeliumRegulator1OutletPressurePSI()
 {
 	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return heliumRegulator1OutletPressurePSI;
+
+	return 0.0;
+}
+
+double APSPropellantSource::GetHeliumRegulator2OutletPressurePSI()
+{
+	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+		return heliumRegulator2OutletPressurePSI;
 
 	return 0.0;
 }
@@ -328,7 +322,7 @@ void LEM_APS::Init(LEM *s) {
 	lem = s;
 }
 
-void LEM_APS::TimeStep(double simdt) {
+void LEM_APS::Timestep(double simdt) {
 	if (lem == NULL) { return; }
 
 	ChamberPressure = 0.0;
@@ -338,12 +332,10 @@ void LEM_APS::TimeStep(double simdt) {
 		if (armedOn)
 		{
 			lem->SetThrusterResource(lem->th_hover[0], lem->ph_Asc);
-			lem->SetThrusterResource(lem->th_hover[1], lem->ph_Asc);
 		}
 		else
 		{
 			lem->SetThrusterResource(lem->th_hover[0], NULL);
-			lem->SetThrusterResource(lem->th_hover[1], NULL);
 		}
 
 
@@ -364,14 +356,19 @@ void LEM_APS::TimeStep(double simdt) {
 			double ThrustDecay = min(1.0, ChamberPressure / 120.0);
 
 			lem->SetThrusterLevel(lem->th_hover[0], ThrustDecay);
-			lem->SetThrusterLevel(lem->th_hover[1], ThrustDecay);
 		}
 		else
 		{
 			lem->SetThrusterLevel(lem->th_hover[0], 0.0);
-			lem->SetThrusterLevel(lem->th_hover[1], 0.0);
 		}
 	}
+}
+
+double LEM_APS::GetThrustChamberPressurePSI()
+{
+	if (!lem->INST_SIG_SENSOR_CB.IsPowered()) return 0.0;
+
+	return ChamberPressure;
 }
 
 void LEM_APS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {

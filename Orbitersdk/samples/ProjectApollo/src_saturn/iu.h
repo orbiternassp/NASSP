@@ -27,14 +27,18 @@
 
 #include "connector.h"
 #include "LVIMU.h"
+#include "LVDC.h"
 #include "FCC.h"
 #include "eds.h"
 #include "LVDA.h"
 #include "dcs.h"
+#include "DelayTimer.h"
+#include "IUControlDistributor.h"
+#include "IUAuxiliaryPowerDistributor.h"
 
 class SoundLib;
 class IU;
-class LVDC;
+class IUUmbilical;
 
 ///
 /// \ingroup Connectors
@@ -43,7 +47,6 @@ class LVDC;
 enum IUCSMMessageType
 {
 	IUCSM_SET_INPUT_CHANNEL_BIT,			///< Set an AGC input channel bit value.
-	IUCSM_SET_OUTPUT_CHANNEL,				///< Set an AGC output channel value.
 	IUCSM_SET_SII_SEP_LIGHT,				///< Light or clear SII Sep light.
 	IUCSM_SET_LV_RATE_LIGHT,
 	IUCSM_SET_LV_GUID_LIGHT,
@@ -56,7 +59,6 @@ enum IUCSMMessageType
 	IUCSM_GET_CMC_SIVB_TAKEOVER,			///< Get CMC S-IVB takeover signal.
 	IUCSM_GET_CMC_SIVB_IGNITION,			///< Get CMC S-IVB ignition sequence start signal.
 	IUCSM_GET_CMC_SIVB_CUTOFF,				///< Get CMC S-IVB cutoff signal.
-	IUCSM_GET_EDS_SWITCH_STATE,
 	IUCSM_GET_LV_RATE_AUTO_SWITCH_STATE,
 	IUCSM_GET_TWO_ENGINE_OUT_AUTO_SWITCH_STATE,
 	IUCSM_GET_BECO_COMMAND,					///< Get Boost Engine Cutoff command from SECS.
@@ -71,16 +73,14 @@ enum IUCSMMessageType
 	IUCSM_CLEAR_TLI_SOUNDS,					///< Unload the sounds required for the TLI burn.
 	IUCSM_TLI_BEGUN,						///< Indicate for the event manager that the TLI burn has occured
 	IUCSM_TLI_ENDED,						///< Indicate for the event manager that the TLI burn has ended
+	IUCSM_IS_EDS_UNSAFE,
 
 	CSMIU_SET_VESSEL_STATS,					///< Set the vessel stats in the IU.
 	CSMIU_START_TLI_BURN,					///< Start the TLI burn.
-	CSMIU_IS_TLI_CAPABLE,					///< Is the IU TLI capable?
-	CSMIU_CHANNEL_OUTPUT,					///< Process AGC channel output.
-	CSMIU_GET_VESSEL_STATS,					///< Get vessel ISP and thrust.
-	CSMIU_GET_VESSEL_MASS,					///< Get vessel mass.
-	CSMIU_GET_VESSEL_FUEL,					///< Get vessel fuel.
 	CSMIU_GET_LIFTOFF_CIRCUIT,
 	CSMIU_GET_EDS_ABORT,					///< Set EDS abort signal.
+	CSMIU_GET_LV_TANK_PRESSURE,
+	CSMIU_GET_ABORT_LIGHT_SIGNAL
 };
 
 ///
@@ -96,11 +96,6 @@ enum IULVMessageType
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
 	IULV_SET_SIVB_THRUSTER_DIR,
-	IULV_DEACTIVATE_NAVMODE,				///< Deactivate a navmode.
-	IULV_ACTIVATE_NAVMODE,					///< Activate a navmode.
-	IULV_ADD_S4RCS,
-	IULV_ACTIVATE_PRELAUNCH_VENTING,		///< Activate prelaunch venting.
-	IULV_DEACTIVATE_PRELAUNCH_VENTING,		///< Deactivate prelaunch venting.
 	IULV_SWITCH_SELECTOR,
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
@@ -110,14 +105,9 @@ enum IULVMessageType
 	IULV_SET_STAGE,
 	IULV_NOSECAP_JETTISON,
 	IULV_DEPLOY_SLA_PANEL,
-	IULV_ADD_FORCE,							///< Add force.
 
 	IULV_GET_STAGE,							///< Get mission stage.
 	IULV_GET_GLOBAL_ORIENTATION,
-	IULV_GET_J2_THRUST_LEVEL,				///< Get the J2 engine thrust level.
-	IULV_GET_ALTITUDE,						///< Get the current altitude.
-	IULV_GET_MAX_FUEL_MASS,					///< Get max fuel mass.
-	IULV_GET_FUEL_MASS,
 	IULV_GET_MASS,							///< Get the spacecraft mass.
 	IULV_GET_GRAVITY_REF,					///< Get gravity reference.
 	IULV_GET_RELATIVE_POS,					///< Get relative position.
@@ -137,8 +127,10 @@ enum IULVMessageType
 	IULV_GET_SI_OUTBOARD_ENGINE_OUT,
 	IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY,
 	IULV_GET_SII_ENGINE_OUT,
-	IULV_GET_FIRST_STAGE_THRUST,
 	IULV_CSM_SEPARATION_SENSED,
+	IULV_GET_SII_FUEL_TANK_PRESSURE,
+	IULV_GET_SIVB_FUEL_TANK_PRESSURE,
+	IULV_GET_SIVB_LOX_TANK_PRESSURE,
 };
 
 ///
@@ -152,7 +144,6 @@ public:
 	~IUToCSMCommandConnector();
 
 	void SetAGCInputChannelBit(int channel, int bit, bool val);
-	void SetAGCOutputChannel(int channel, int val);
 	void SetSIISep();
 	void ClearSIISep();
 	void SetEngineIndicator(int eng);
@@ -171,9 +162,9 @@ public:
 	bool GetSIISIVbDirectStagingSignal();
 	bool GetTLIInhibitSignal();
 	bool GetIUUPTLMAccept();
+	bool IsEDSUnsafe();
 
 	bool GetEngineIndicator(int eng);
-	int EDSSwitchState();
 	int LVRateAutoSwitchState();
 	int TwoEngineOutAutoSwitchState();
 	bool GetBECOCommand(bool IsSysA);
@@ -234,22 +225,8 @@ public:
 	void JettisonNosecap();
 	void DeploySLAPanel();
 
-	void DeactivateNavmode(int mode);
-	void ActivateNavmode(int mode);
-
-	void AddRCS_S4B();
-
-	void DeactivatePrelaunchVenting();
-	void ActivatePrelaunchVenting();
-
-	void AddForce(VECTOR3 F, VECTOR3 r);
-
 	int GetStage();
-	double GetAltitude();
-	double GetJ2ThrustLevel();
 	double GetMass();
-	double GetMaxFuelMass();
-	double GetFuelMass();
 	void GetGlobalOrientation(VECTOR3 &arot);
 	bool GetWeightVector(VECTOR3 &w);
 	void GetRotationMatrix(MATRIX3 &rot);
@@ -265,7 +242,9 @@ public:
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
 	bool GetSIVBThrustOK();
-	double GetFirstStageThrust();
+	double GetSIIFuelTankPressurePSI();
+	double GetSIVBLOXTankPressurePSI();
+	double GetSIVBFuelTankPressurePSI();
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);
 	void GetRelativeVel(OBJHANDLE ref, VECTOR3 &v);
@@ -287,12 +266,11 @@ class IU {
 
 public:
 	IU();
-	virtual ~IU() {}
+	virtual ~IU();
 
 	void SetMissionInfo(bool crewed, bool sccontpowered);
 
 	virtual void ConnectToCSM(Connector *csmConnector);
-	virtual void ConnectToMultiConnector(MultiConnector *csmConnector);
 	virtual void ConnectToLV(Connector *CommandConnector);
 
 	void DisconnectIU();
@@ -312,16 +290,6 @@ public:
 	void SaveLVDC(FILEHANDLE scn);
 	virtual void LoadLVDC(FILEHANDLE scn) = 0;
 
-	virtual void SaveFCC(FILEHANDLE scn) = 0;
-	virtual void LoadFCC(FILEHANDLE scn) = 0;
-
-	virtual void SaveEDS(FILEHANDLE scn) = 0;
-	virtual void LoadEDS(FILEHANDLE scn) = 0;
-
-	virtual EDS* GetEDS() = 0;
-	virtual FCC* GetFCC() = 0;
-	LVDC* GetLVDC() { return lvdc; }
-
 	bool GetSIPropellantDepletionEngineCutoff();
 	virtual bool SIBLowLevelSensorsDry();
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
@@ -329,30 +297,49 @@ public:
 	bool GetSIOutboardEngineOut();
 	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
-	bool IsUmbilicalConnected() { return UmbilicalConnected; }
+	bool IsUmbilicalConnected();
 	bool GetSCControlPoweredFlight() { return SCControlPoweredFlight; }
 
-	void ConnectUmbilical() { UmbilicalConnected = true; }
-	void DisconnectUmbilical() { UmbilicalConnected = false; }
+	virtual void ConnectUmbilical(IUUmbilical *umb);
+	virtual void DisconnectUmbilical();
 
 	virtual bool DCSUplink(int type, void *upl);
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
 
-	void ControlDistributor(int stage, int channel);
+	//Subsystem Access
+	virtual EDS* GetEDS() = 0;
+	virtual FCC* GetFCC() = 0;
+	virtual IUControlDistributor *GetControlDistributor() = 0;
+	virtual DelayTimer *GetEngineCutoffEnableTimer() = 0;
+	virtual LVDC* GetLVDC() = 0;
+	LVRG* GetLVRG() { return &lvrg; }
+	LVDA* GetLVDA() { return &lvda; }
+	LVIMU* GetLVIMU() { return &lvimu; }
+	DCS* GetDCS() { return &dcs; }
+	IUAuxiliaryPowerDistributor2 *GetAuxPowrDistr() { return &AuxiliaryPowerDistributor2; }
 
-	LVDC* lvdc;
-	LVIMU lvimu;
-	LVRG lvrg;
-	LVDA lvda;
-	DCS dcs;
+	//ESE Functions
+	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
+	bool ESEGetAutoAbortInhibit();
+	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetEDSPowerInhibit();
+	bool ESEPadAbortRequest();
+	bool ESEGetEngineThrustIndicationEnableInhibitA();
+	bool ESEGetEngineThrustIndicationEnableInhibitB();
+	bool ESEEDSLiftoffInhibitA();
+	bool ESEEDSLiftoffInhibitB();
+	bool ESEAutoAbortSimulate();
+	bool ESEGetSIBurnModeSubstitute();
+	bool ESEGetGuidanceReferenceRelease();
+
+	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }
+	virtual bool ESEGetSICOutboardEnginesCantSimulate() { return false; }
 
 protected:
+
 	int State;
-	double NextMissionEventTime;
-	double LastMissionEventTime;
-	bool FirstTimeStepDone;
 
 	//
 	// Saturn stuff
@@ -360,8 +347,6 @@ protected:
 
 	bool Crewed;
 	bool SCControlPoweredFlight;
-
-	bool UmbilicalConnected;
 
 	///
 	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.
@@ -377,6 +362,22 @@ protected:
 	/// \brief Connector to launch vehicle.
 	///
 	IUToLVCommandConnector lvCommandConnector;
+
+	//Subsystems:
+
+	//603A29
+	LVDA lvda;
+	//603A19
+	LVIMU lvimu;
+	//602A23
+	LVRG lvrg;
+	DCS dcs;
+	//601A33
+	IUAuxiliaryPowerDistributor1 AuxiliaryPowerDistributor1;
+	//602A34
+	IUAuxiliaryPowerDistributor2 AuxiliaryPowerDistributor2;
+
+	IUUmbilical *IuUmb;
 };
 
 class IU1B :public IU
@@ -388,15 +389,24 @@ public:
 	bool SIBLowLevelSensorsDry();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
-	void SaveFCC(FILEHANDLE scn);
-	void LoadFCC(FILEHANDLE scn);
-	void SaveEDS(FILEHANDLE scn);
-	void LoadEDS(FILEHANDLE scn);
+
+	//Subsystem access
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
+	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
+	DelayTimer *GetEngineCutoffEnableTimer() { return &EngineCutoffEnableTimer; }
+	LVDC* GetLVDC() { return &lvdc; }
+
 protected:
+	//603A28
+	LVDC1B lvdc;
+	//602A27
 	FCC1B fcc;
+	//602A5
 	EDS1B eds;
+	IUControlDistributor1B ControlDistributor;
+	//603A36
+	DelayTimer EngineCutoffEnableTimer;
 };
 
 class IUSV :public IU
@@ -409,16 +419,29 @@ public:
 	bool GetSIIEngineOut();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
-	void SaveFCC(FILEHANDLE scn);
-	void LoadFCC(FILEHANDLE scn);
-	void SaveEDS(FILEHANDLE scn);
-	void LoadEDS(FILEHANDLE scn);
+
+	//Subsystem access
 	FCC* GetFCC() { return &fcc; }
 	EDS* GetEDS() { return &eds; }
+	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
+	DelayTimer *GetEngineCutoffEnableTimer() { return &EngineCutoffEnableTimer; }
+	LVDC* GetLVDC() { return &lvdc; }
+
+	//ESE Functions
+	bool ESEGetSICOutboardEnginesCantInhibit();
+	bool ESEGetSICOutboardEnginesCantSimulate();
 
 protected:
+	//603A28
+	LVDCSV lvdc;
+	//602A27
 	FCCSV fcc;
+	//602A5
 	EDSSV eds;
+	//603A2
+	IUControlDistributorSV ControlDistributor;
+	//603A36
+	DelayTimer EngineCutoffEnableTimer;
 };
 
 //

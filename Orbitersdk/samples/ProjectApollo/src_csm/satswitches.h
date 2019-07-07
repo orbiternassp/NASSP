@@ -31,6 +31,8 @@ class RCSPropellantValve;
 class SMRCSPropellantSource;
 class CMRCSPropellantSource;
 class DSE;
+class SECS;
+class EDA;
 
 class SaturnToggleSwitch : public ToggleSwitch {
 public:
@@ -356,14 +358,12 @@ protected:
 
 class SaturnH2oQuantityMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, CircuitBrakerSwitch *cba, CircuitBrakerSwitch *cbb);
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, PowerSource *src);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	ToggleSwitch *H2oQtyIndSwitch;
-	CircuitBrakerSwitch *CbA;
-	CircuitBrakerSwitch *CbB;
 };
 
 class SaturnAccelGMeter : public SaturnRoundMeter {
@@ -597,8 +597,8 @@ protected:
 
 class SaturnGPFPIMeter : public MeterSwitch {
 public:
-	SaturnGPFPIMeter() { DCSource = 0; ACSource = 0; }
-	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *gpfpiindswitch, int xoffset);
+	SaturnGPFPIMeter() { DCSource = 0; ACSource = 0; system = 0; }
+	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, int sys, int xoffset);
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void WireTo(e_object *dc, e_object *ac) { DCSource = dc; ACSource = ac; };
 	virtual double AdjustForPower(double val);
@@ -606,9 +606,9 @@ public:
 protected:
 	SURFHANDLE NeedleSurface;
 	Saturn *Sat;
-	ToggleSwitch *GPFPIIndicatorSwitch;
 	e_object *DCSource, *ACSource;
 	int xOffset;
+	int system;
 };
 
 class SaturnGPFPIPitchMeter : public SaturnGPFPIMeter {
@@ -623,10 +623,10 @@ public:
 
 class FDAIPowerRotationalSwitch: public RotationalSwitch {
 public:
-	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = NULL; ACSource1 = ACSource2 = DCSource1 = DCSource2 = NULL; GPFPIPitch1 = GPFPIPitch2 = GPFPIYaw1 = GPFPIYaw2 = NULL; };
+	FDAIPowerRotationalSwitch() { FDAI1 = FDAI2 = NULL; ACSource1 = ACSource2 = DCSource1 = DCSource2 = NULL; GPFPIPitch1 = GPFPIPitch2 = GPFPIYaw1 = GPFPIYaw2 = NULL; eda = NULL; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2, 
 		      e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2, 
-			  SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2);
+			  SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2, EDA *ed);
 
 	virtual bool SwitchTo(int newValue);
 	void LoadState(char *line);
@@ -636,6 +636,7 @@ protected:
 
 	FDAI *FDAI1, *FDAI2;
 	SaturnGPFPIMeter *GPFPIPitch1, *GPFPIPitch2, *GPFPIYaw1, *GPFPIYaw2;
+	EDA *eda;
 	e_object *DCSource1, *DCSource2, *ACSource1, *ACSource2;
 };
 
@@ -672,7 +673,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
 	virtual bool SwitchTo(int newValue);
 	bool IsClockwise() { return GetState() == 2; }
-	bool IsCounterClockwise() { return GetState() == 3; }
+	bool IsCounterClockwise() { return GetState() == 0; }
 
 protected:
 	Saturn *sat;
@@ -862,8 +863,7 @@ class CSMLMPowerSwitch : public SaturnThreePosSwitch
 public:
 	CSMLMPowerSwitch() { sat = 0; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Saturn *s);
-	bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my);
-	bool CSMLMPowerSwitch::SwitchTo(int newState);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
 	void LoadState(char *line);
 protected:
 	Saturn *sat;
@@ -873,4 +873,15 @@ class DockingTargetSwitch : public SaturnThreePosSwitch
 {
 public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
+};
+
+class SaturnLiftoffNoAutoAbortSwitch :public GuardedPushSwitch
+{
+public:
+	SaturnLiftoffNoAutoAbortSwitch();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, SECS *s,
+		int xoffset = 0, int yoffset = 0, int lxoffset = 0, int lyoffset = 0);
+	void DoDrawSwitch(SURFHANDLE drawSurface);
+protected:
+	SECS * secs;
 };

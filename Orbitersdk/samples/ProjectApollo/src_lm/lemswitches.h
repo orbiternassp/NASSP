@@ -112,6 +112,7 @@ protected:
 
 class LEMDCVoltMeter: public LEMRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -123,6 +124,7 @@ protected:
 
 class LEMDCAmMeter: public LEMRoundMeter {
 public:
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -364,13 +366,14 @@ protected:
 class MainFuelTempInd : public MeterSwitch {
 public:
 	MainFuelTempInd();
-	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
+	ThreePosSwitch *monswitch;
 };
 
 class MainFuelPressInd : public MeterSwitch {
@@ -389,13 +392,14 @@ protected:
 class MainOxidizerTempInd : public MeterSwitch {
 public:
 	MainOxidizerTempInd();
-	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
+	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
+	ThreePosSwitch *monswitch;
 };
 
 class MainOxidizerPressInd : public MeterSwitch {
@@ -415,22 +419,26 @@ class EngineStartButton : public ToggleSwitch {
 
 public:
 	EngineStartButton() {};
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool Push();
+	void DoDrawSwitch(SURFHANDLE DrawSurface);
 protected:
 	ToggleSwitch* stopbutton;
+	LEM *lem;
 };
 
 class EngineStopButton : public ToggleSwitch {
 
 public:
 	EngineStopButton() {};
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool Push();
+	void DoDrawSwitch(SURFHANDLE DrawSurface);
 protected:
 	ToggleSwitch* startbutton;
+	LEM *lem;
 };
 
 class LMAbortButton : public ToggleSwitch {
@@ -516,11 +524,22 @@ protected:
 class LEMSCEATalkback : public IndicatorSwitch {
 public:
 	LEMSCEATalkback();
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, bool failopen);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s, bool failopen = false);
 	int GetState();
 
 protected:
 	SCEA_SolidStateSwitch * ssswitch;
+};
+
+class LEMDoubleSCEATalkback : public IndicatorSwitch {
+public:
+	LEMDoubleSCEATalkback();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, SCEA_SolidStateSwitch *s1, SCEA_SolidStateSwitch *s2);
+	int GetState();
+
+protected:
+	SCEA_SolidStateSwitch * ssswitch1;
+	SCEA_SolidStateSwitch * ssswitch2;
 };
 
 class LEMRCSQuadTalkback : public IndicatorSwitch {

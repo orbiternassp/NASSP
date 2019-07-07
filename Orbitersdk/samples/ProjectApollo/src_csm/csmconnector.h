@@ -56,46 +56,13 @@ public:
 
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
-	bool IsTLICapable();
-	void GetVesselStats(double &isp, double &thrust);
-	void ChannelOutput(int channel, int value);
-
-	double GetMass();
-	double GetFuelMass();
-
 	bool GetLiftOffCircuit(bool sysA);
 	bool GetEDSAbort(int n);
+	double GetLVTankPressure(int n);
+	bool GetAbortLight();
 
 protected:
 	CSMcomputer &agc;
-};
-
-class DockingProbe;
-
-///
-/// \ingroup Connectors
-/// \brief CSM to SIVb connector type.
-///
-class CSMToSIVBControlConnector : public SaturnConnector
-{
-public:
-	CSMToSIVBControlConnector(CSMcomputer &c, DockingProbe &probe, Saturn *s);
-	~CSMToSIVBControlConnector();
-
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-
-	bool IsVentable();
-
-	double GetFuelMass();
-	void GetMainBatteryPower(double &capacity, double &drain);
-	void GetMainBatteryElectrics(double &volts, double &current);
-
-	void StartSeparationPyros();
-	void StopSeparationPyros();
-
-protected:
-	CSMcomputer &agc;
-	DockingProbe &dockingprobe;
 };
 
 ///
@@ -124,6 +91,16 @@ public:
 
 	h_Pipe* GetDockingTunnelPipe();
 	void ConnectLMTunnelToCabinVent();
+};
+
+class CSMToPayloadConnector : public SaturnConnector
+{
+public:
+	CSMToPayloadConnector(Saturn *s);
+	~CSMToPayloadConnector();
+
+	void StartSeparationPyros();
+	void StopSeparationPyros();
 };
 
 #endif // _PA_CSMCONNECTOR_H

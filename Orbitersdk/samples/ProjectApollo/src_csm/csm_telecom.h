@@ -322,7 +322,7 @@ public:
 	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
-	unsigned char mcc_data[1024];	// MCC-provided incoming data
+	unsigned char mcc_data[2048];	// MCC-provided incoming data
 
 	bool registerSocket(SOCKET sock);
 
@@ -380,19 +380,45 @@ class HGA:public SBandAntenna {
 public:
 	HGA();
 	void Init(Saturn *vessel);					// Initialization
+	void DefineAnimations(UINT idx);
+	void DeleteAnimations();
 	void TimeStep(double simt, double simdt);   // TimeStep
 	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool ScanLimitWarning();
 	bool IsPowered();
+	void clbkPostCreation();
+
+	double GetResolvedPitch() { return PitchRes * DEG; }
+	double GetResolvedYaw() { return YawRes * DEG; }
+	double GetAlpha() { return Alpha; }
+	double GetBeta() { return Beta; }
+	double GetGamma() { return Gamma; }
+
+private:
+	VECTOR3 PitchYawToBodyVector(double pit, double ya);
+	void BodyVectorToPitchYaw(VECTOR3 U_R, double &pitch, double &yaw);
+	void BodyToAC(VECTOR3 U_R, double &alpha, double &gamma);
+	VECTOR3 ABCAndVectorToBody(double alpha, double beta, double gamma, VECTOR3 U_R);
+	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 
 	Saturn *sat;								// Ship we're installed in
-	double Pitch;								// Antenna Pitch
-	double Yaw;									// Antenna Yaw
+	double Alpha;								// Antenna alpha
+	double Beta;								// Antenna beta
+	double Gamma;								// Antenna gamma
+	double PitchRes;
+	double YawRes;
+	bool scanlimit;
 	bool scanlimitwarn;
-private:
-	void ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
+	double HornSignalStrength[4];
+
+	VECTOR3 U_Horn[4];
+
+	// Animations
+	UINT anim_HGAalpha, anim_HGAbeta, anim_HGAgamma;
+	double	hga_proc[3];
+	double	hga_proc_last[3];
 };
 
 //S-Band Omnidirectional Antenna system
@@ -414,4 +440,60 @@ class VHFAntenna
 {
 public:
 	VHFAntenna(VECTOR3 dir);
+};
+
+class VHFAMTransceiver
+{
+public:
+	VHFAMTransceiver();
+	void Timestep();
+	void Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb);
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
+protected:
+	bool K1;
+	bool K2;
+
+	bool receiveA;
+	bool receiveB;
+	bool transmitA;
+	bool transmitB;
+
+	ThreePosSwitch *vhfASwitch;
+	ThreePosSwitch *vhfBSwitch;
+	ThreePosSwitch *rcvSwitch;
+	CircuitBrakerSwitch *ctrPowerCB;
+};
+
+class LEM;
+
+class VHFRangingSystem
+{
+public:
+	VHFRangingSystem();
+	void Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc);
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
+	bool IsPowered();
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
+	double GetRange() { return range / 185.20; }
+	void RangingReturnSignal();
+protected:
+
+	bool dataGood;
+	double internalrange;
+	double range;
+	bool isRanging;
+	double phaseLockTimer;
+	int hasLock;
+
+	Saturn *sat;
+	LEM *lem;
+	VHFAMTransceiver *transceiver;
+	CircuitBrakerSwitch *powercb;
+	ToggleSwitch *powerswitch;
+	ToggleSwitch *resetswitch;
 };

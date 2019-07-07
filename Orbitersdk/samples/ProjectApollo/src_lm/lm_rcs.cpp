@@ -25,9 +25,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "Orbitersdk.h"
 #include "soundlib.h"
 #include "toggleswitch.h"
-#include "apolloguidance.h"
-#include "LEMcomputer.h"
-#include "lm_channels.h"
 #include "LEM.h"
 #include "papi.h"
 #include "lm_rcs.h"
@@ -75,6 +72,11 @@ RCSPropellantSource::RCSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p, boo
 	//Open at launch
 	primOxidInterconnectValve.SetState(true);
 	primFuelInterconnectValve.SetState(true);
+	mainShutoffValve.SetState(true);
+	quad1IsolationValve.SetState(true);
+	quad2IsolationValve.SetState(true);
+	quad3IsolationValve.SetState(true);
+	quad4IsolationValve.SetState(true);
 }
 
 RCSPropellantSource::~RCSPropellantSource()
@@ -499,11 +501,16 @@ void RCS_TCA::Timestep(double simdt)
 		}
 		else if (jetDriverSignal[i] && !pulseFlag[i])
 		{
-			pulseCounter[i]++;
-			pulseFlag[i] = true;
+			//Below 1.0x time acceleration this accumulates pulses too quickly
+			if (oapiGetTimeAcceleration() >= 1.0)
+			{
+				pulseCounter[i]++;
+				pulseFlag[i] = true;
+			}
 		}
 
-		if ((jetDriverSignal[i] && !resetSignal) && !thrusterTCP[i])
+		//Sim step constraint to below 0.08s, so that it takes at least two timesteps for the fail timer to reach >0.08s
+		if ((jetDriverSignal[i] && !resetSignal) && !thrusterTCP[i] && oapiGetSimStep() < 0.08)
 		{
 			failTimer[i] += simdt;
 		}

@@ -35,6 +35,7 @@ public:
 	void SetEngineStart() { EngineStart = true; }
 	void SetProgrammedEngineCutoff() { ProgrammedCutoff = true; }
 	void SetEDSCutoff() { EDSCutoff = true; }
+	void SetGSECutoff() { GSECutoff = true; }
 	void SetThrustNotOKCutoff() { ThrustNotOKCutoff = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
 	void SetFailed() { EngineFailed = true; }
@@ -42,6 +43,7 @@ public:
 	bool GetThrustOK() { return ThrustOK; }
 	double GetThrustLevel() { return ThrustLevel; }
 	bool GetFailed() { return EngineFailed; }
+	bool GetEngineStop() { return EngineStop; }
 protected:
 	THRUSTER_HANDLE &th_h1;
 	VESSEL *vessel;
@@ -68,6 +70,9 @@ protected:
 	const double GIMBALLIMIT = 8.0*RAD;
 };
 
+class SCMUmbilical;
+class Pyro;
+class Sound;
 
 class SIBSystems
 {
@@ -81,7 +86,7 @@ public:
 	void SetEngineFailureParameters(int n, double SICutTimes);
 	bool GetFailInit() { return FailInit; }
 
-	void SetEngineStart(int n);
+	virtual void SetEngineStart(int n);
 	void SwitchSelector(int channel);
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 
@@ -94,14 +99,21 @@ public:
 	void SetLOXDepletionCutoffEnable() { LOXDepletionCutoffEnabledLatch = true; }
 	void SetFuelDepletionCutoffEnable() { FuelDepletionCutoffEnabledLatch = true; }
 	void EDSEnginesCutoff(bool cut);
+	virtual void GSEEnginesCutoff(bool cut);
 
 	bool GetLowLevelSensorsDry();
 	bool GetInboardEngineOut();
 	bool GetOutboardEngineOut();
 	bool GetOutboardEnginesCutoff();
 	void GetThrustOK(bool *ok);
+	virtual bool GetEngineStop();
+
+	virtual void ConnectUmbilical(SCMUmbilical *umb);
+	virtual void DisconnectUmbilical();
+	bool IsUmbilicalConnected();
 protected:
 	double GetSumThrust();
+	bool ESEGetSIBThrustOKSimulate(int eng);
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -180,6 +192,7 @@ protected:
 	bool LOXLevelSensor;
 	bool FuelDepletionSensors1;
 	bool FuelDepletionSensors2;
+	bool ThrustOK[8];
 
 	bool OutboardEnginesCutoffSignal;
 
@@ -187,4 +200,6 @@ protected:
 	bool EarlySICutoff[8];
 	double FirstStageFailureTime[8];
 	double FailureTimer;
+
+	SCMUmbilical *SCMUmb;
 };

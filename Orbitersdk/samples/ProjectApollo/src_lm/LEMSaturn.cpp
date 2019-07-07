@@ -450,7 +450,7 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 		habort = oapiCreateVessel("Saturn_Abort", "ProjectApollo/Saturn1bAbort1", vs1);
 
 		Sat1Abort1 *stage1 = static_cast<Sat1Abort1 *> (oapiGetVesselInterface(habort));
-		stage1->SetState(new_stage == CM_STAGE);
+		stage1->SetState(new_stage == CM_STAGE, false, 7);
 
 		TransformToLM();
 
@@ -488,6 +488,7 @@ void LEMSaturn::TransformToLM()
 	}
 
 	SetLmVesselDockStage();
+	DefineAnimations();
 
 	imu.SetVesselFlag(true);
 }
@@ -522,6 +523,7 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 		CreateSIBSystems();
 		CreateSIVBSystems();
 		CreateIUSystems();
+		PostLoadSetup(false);
 		break;
 
 	case LAUNCH_STAGE_SIVB:
@@ -534,14 +536,14 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 
 		CreateSIVBSystems();
 		CreateIUSystems();
+		PostLoadSetup(false);
 		
 		break;
 	default:
 		SetGenericStageState(status);
+		PostLoadSetup();
 		break;
 	}
-
-	PostLoadSetup();
 
 	if (lemsat_stage < CSM_LEM_STAGE)
 	{
@@ -1150,7 +1152,7 @@ void LEMSaturn::Saturn1bLoadMeshes()
 	hSat1stg24 = oapiLoadMeshGlobal("ProjectApollo/nsat1stg24");
 	hCOAStarget = oapiLoadMeshGlobal("ProjectApollo/sat_target");
 	hNosecap = oapiLoadMeshGlobal("ProjectApollo/nsat1aerocap");
-	hlm_1 = oapiLoadMeshGlobal("ProjectApollo/LM_Parked");
+	hlm_1 = oapiLoadMeshGlobal("ProjectApollo/LM_1");
 
 	exhaust_tex = oapiRegisterExhaustTexture("ProjectApollo/Exhaust2");
 	solid_exhaust.tex = oapiRegisterParticleTexture("Contrail3");
@@ -1307,26 +1309,6 @@ void LEMSaturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1)
 	SIVBVessel->SetState(S4Config);
 }
 
-void LEMSaturn::SetSIEngineStart(int n)
-{
-	sib->SetEngineStart(n);
-}
-
-void LEMSaturn::SetIUUmbilicalState(bool connect)
-{
-	if (lemsat_stage <= PRELAUNCH_STAGE && iu)
-	{
-		if (connect)
-		{
-			iu->ConnectUmbilical();
-		}
-		else
-		{
-			iu->DisconnectUmbilical();
-		}
-	}
-}
-
 void LEMSaturn::GetApolloName(char *s)
 
 {
@@ -1357,15 +1339,6 @@ void LEMSaturn::PlaySepsSound(bool StartStop)
 	{
 		SepS.stop();
 	}
-}
-
-double LEMSaturn::GetJ2ThrustLevel()
-
-{
-	if (lemsat_stage != STAGE_ORBIT_SIVB || !th_3rd[0])
-		return 0.0;
-
-	return GetThrusterLevel(th_3rd[0]);
 }
 
 void LEMSaturn::GetSIThrustOK(bool *ok)
@@ -1518,7 +1491,7 @@ void LEMSaturn::JettisonNosecap()
 		char VName[256];
 
 		// Use VC offset to calculate the optics cover offset
-		VECTOR3 ofs = _V(0, 0, 22.7 + 0.25);
+		VECTOR3 ofs = _V(0, 0, 18.2);
 		VECTOR3 vel = { 0.0, 0.0, 2.5 };
 		VESSELSTATUS vs4b;
 		GetStatus(vs4b);
@@ -1626,26 +1599,11 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 
 	switch (messageType)
 	{
-	case IULV_GET_J2_THRUST_LEVEL:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetJ2ThrustLevel();
-			return true;
-		}
-		break;
 
 	case IULV_GET_STAGE:
 		if (OurVessel)
 		{
 			m.val1.iValue = OurVessel->GetStage();
-			return true;
-		}
-		break;
-
-	case IULV_GET_ALTITUDE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetAltitude();
 			return true;
 		}
 		break;
@@ -1675,22 +1633,6 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		if (OurVessel)
 		{
 			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
-	case IULV_GET_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetFuelMass();
-			return true;
-		}
-		break;
-
-	case IULV_GET_MAX_FUEL_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMaxFuelMass();
 			return true;
 		}
 		break;
@@ -1823,31 +1765,6 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		}
 		break;
 
-	case IULV_GET_FIRST_STAGE_THRUST:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetFirstStageThrust();
-			return true;
-		}
-		break;
-
-
-	case IULV_ACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->ActivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_NAVMODE:
-		if (OurVessel)
-		{
-			OurVessel->DeactivateNavmode(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_SWITCH_SELECTOR:
 		if (OurVessel)
 		{
@@ -1924,38 +1841,6 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		if (OurVessel)
 		{
 			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_ADD_FORCE:
-		if (OurVessel)
-		{
-			OurVessel->AddForce(m.val1.vValue, m.val2.vValue);
-			return true;
-		}
-		break;
-
-	case IULV_ADD_S4RCS:
-		if (OurVessel)
-		{
-			OurVessel->AddRCS_S4B();
-			return true;
-		}
-		break;
-
-	case IULV_ACTIVATE_PRELAUNCH_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->ActivatePrelaunchVenting();
-			return true;
-		}
-		break;
-
-	case IULV_DEACTIVATE_PRELAUNCH_VENTING:
-		if (OurVessel)
-		{
-			OurVessel->DeactivatePrelaunchVenting();
 			return true;
 		}
 		break;

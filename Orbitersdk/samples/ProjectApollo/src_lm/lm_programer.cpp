@@ -26,7 +26,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "soundlib.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
-#include "LEMcomputer.h"
 #include "LEM.h"
 #include "lm_programer.h"
 #include "papi.h"

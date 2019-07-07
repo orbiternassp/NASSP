@@ -124,11 +124,12 @@ class DCBusController : public e_object {
 
 public:
 	DCBusController(char *i_name, PanelSDK &p);
-	void Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp, e_object *bc1, e_object *bc2, e_object *bc3);
+	void Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *bc1, e_object *bc2, e_object *bc3);
 	void refresh(double dt);
 	void ConnectFuelCell(int fc, bool connect);
 	bool IsFuelCellConnected(int fc);
 	bool IsBusContPowered(int fc);
+	bool IsSMBusPowered();
 	bool IsFuelCellDisconnectAlarm();
 	e_object *GetBusSource() { return &busPower; };
 	void SetTieState(int s) { tieState = s; };
@@ -161,7 +162,8 @@ public:
 	BatteryCharger(char *i_name, PanelSDK &p);
 	void Init(e_object *bat1, e_object *bat2, e_object *bat3, 
 		      e_object *batSup1, e_object *batSup2, e_object *batSup3,
-			  e_object *dc1, e_object *dc2, e_object* ac);
+			  e_object *dc1, e_object *dc2, e_object* ac,
+			  e_object *bat3pwr);
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
 	void Charge(int bat);
@@ -178,6 +180,8 @@ protected:
 	e_object *acPower;
 
 	e_object *currentBattery;
+
+	e_object *bat3Power;
 };
 
 class Connector;

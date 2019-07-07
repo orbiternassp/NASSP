@@ -24,10 +24,19 @@
 
 #pragma once
 
+#include "IUUmbilicalInterface.h"
+#include "SCMUmbilicalInterface.h"
+
+class Saturn1b;
+class IUUmbilical;
+class IU_ESE;
+class SCMUmbilical;
+class SIB_ESE;
+
 ///
 /// \ingroup Ground
 ///
-class LC34: public VESSEL2 {
+class LC34: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface {
 
 public:
 	LC34(OBJHANDLE hObj, int fmodel);
@@ -42,9 +51,29 @@ public:
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
 
+	// LC-34/IU Interface
+	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
+	bool ESEGetAutoAbortInhibit();
+	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetEDSPowerInhibit();
+	bool ESEPadAbortRequest();
+	bool ESEGetThrustOKIndicateEnableInhibitA();
+	bool ESEGetThrustOKIndicateEnableInhibitB();
+	bool ESEEDSLiftoffInhibitA();
+	bool ESEEDSLiftoffInhibitB();
+	bool ESEAutoAbortSimulate();
+	bool ESEGetSIBurnModeSubstitute();
+	bool ESEGetGuidanceReferenceRelease();
+
+	//ML/S-IC Interface
+	bool ESEGetSIBThrustOKSimulate(int eng);
+
 protected:
+
+	bool CutoffInterlock();
+	bool Commit();
+
 	bool firstTimestepDone;
-	bool abort;
 	int meshindexLUT;
 	int meshindexMSS;
 	double touchdownPointHeight;
@@ -52,13 +81,14 @@ protected:
 	SoundLib soundlib;
 	OBJHANDLE hLV;
 	int state;
+	bool Hold;
 
 	UINT mssAnim;
 	UINT cmarmAnim;
 	UINT swingarmAnim;
 	double mssProc;
 	double cmarmProc;
-	double swingarmProc;
+	AnimState swingarmState;
 
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;
@@ -66,6 +96,12 @@ protected:
 	void DoFirstTimestep();
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
+
+	Saturn1b *sat;
+	IUUmbilical *IuUmb;
+	SCMUmbilical *SCMUmb;
+	IU_ESE *IuESE;
+	SIB_ESE *SIBESE;
 
 	//VECTOR3 meshoffsetMSS;
 };

@@ -130,11 +130,11 @@ double SaturnO2PressureMeter::QueryValue()
 	TankPressures press;
 	Sat->GetTankPressures(press);
 
-	if (Index == 1) 
-		if (O2PressIndSwitch->IsUp())  
+	if (Index == 1)
+		if (O2PressIndSwitch->IsUp())
 			return press.O2Tank1PressurePSI;
 		else
-			return press.O2SurgeTankPressurePSI;
+			return Sat->O2SurgeTankPressSensor.Voltage()*200.0 + 50.0;
 	else
 		return press.O2Tank2PressurePSI;
 }
@@ -426,7 +426,7 @@ void SaturnFuelCellMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, Rotat
 double SaturnFuelCellH2FlowMeter::QueryValue()
 {
 	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState(), fc);
+	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState() + 1, fc);
 
 	return fc.H2FlowLBH; 
 }
@@ -445,7 +445,7 @@ void SaturnFuelCellH2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 double SaturnFuelCellO2FlowMeter::QueryValue()
 {
 	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState(), fc);
+	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState() + 1, fc);
 
 	return fc.O2FlowLBH; 
 }
@@ -463,10 +463,7 @@ void SaturnFuelCellO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnFuelCellTempMeter::QueryValue()
 {
-	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState(), fc);
-
-	return fc.TempF; 
+	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 6)*94.0 + 80.0);
 }
 
 void SaturnFuelCellTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -482,10 +479,7 @@ void SaturnFuelCellTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnFuelCellCondenserTempMeter::QueryValue()
 {
-	FuelCellStatus fc;
-	Sat->GetFuelCellStatus(FuelCellIndicatorsSwitch->GetState(), fc);
-
-	return fc.CondenserTempF; 
+	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 3)*21.0 + 145.0);
 }
 
 void SaturnFuelCellCondenserTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -504,10 +498,7 @@ void SaturnCabinMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s)
 
 double SaturnSuitTempMeter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	return KelvinToFahrenheit(atm.SuitTempK);
+	return Sat->CabinTempSensor.Voltage()*15.0 + 20.0;
 }
 
 void SaturnSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -518,10 +509,7 @@ void SaturnSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnCabinTempMeter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	return KelvinToFahrenheit(atm.CabinTempK);
+	return Sat->CabinTempSensor.Voltage()*17.0 + 40.0;
 }
 
 void SaturnCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -532,10 +520,7 @@ void SaturnCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnSuitPressMeter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	return atm.SuitPressurePSI;
+	return Sat->SuitPressSensor.Voltage()*3.4;
 }
 
 void SaturnSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -549,10 +534,7 @@ void SaturnSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnCabinPressMeter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	return atm.CabinPressurePSI;
+	return Sat->CabinPressSensor.Voltage()*3.4;
 }
 
 void SaturnCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -566,22 +548,19 @@ void SaturnCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnPartPressCO2Meter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	return atm.SuitCO2MMHG;
+	return pow(Sat->CO2PartPressSensor.Voltage(), 2)*30.0 / 25.0;
 }
 
 void SaturnPartPressCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (v < 10.0)
-		oapiBlt(drawSurface, NeedleSurface,  215, (109 - (int)(v / 10.0 * 55.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface, 215, (109 - (int)(v / 10.0 * 55.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 	else if (v < 15.0)
-		oapiBlt(drawSurface, NeedleSurface,  215, (54 - (int)((v - 10.0) / 5.0 * 19.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface, 215, (54 - (int)((v - 10.0) / 5.0 * 19.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 	else if (v < 20.0)
-		oapiBlt(drawSurface, NeedleSurface,  215, (35 - (int)((v - 15.0) / 5.0 * 15.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface, 215, (35 - (int)((v - 15.0) / 5.0 * 15.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 	else
-		oapiBlt(drawSurface, NeedleSurface,  215, (20 - (int)((v - 20.0) / 10.0 * 14.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface, 215, (20 - (int)((v - 20.0) / 10.0 * 14.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 void SaturnRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s)
@@ -592,11 +571,7 @@ void SaturnRoundMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s)
 
 double SaturnSuitComprDeltaPMeter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	// Suit compressor pressure difference
-	return (atm.SuitPressurePSI - atm.SuitReturnPressurePSI);
+	return Sat->SuitCompressorDeltaPSensor.Voltage()*1.0 / 5.0;
 }
 
 void SaturnSuitComprDeltaPMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -608,14 +583,7 @@ void SaturnSuitComprDeltaPMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnLeftO2FlowMeter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	// O2 main regulator output flow 
-	/// \todo Is this the correct flow for that meter? No documentation found yet...
-	
-	return atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH + 
-		   atm.SuitTestFlowLBH + atm.CabinRepressFlowLBH + atm.EmergencyCabinRegulatorFlowLBH;
+	return Sat->ECSO2FlowO2SupplyManifoldSensor.Voltage()*0.16 + 0.2;
 }
 
 void SaturnLeftO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -627,11 +595,7 @@ void SaturnLeftO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnSuitCabinDeltaPMeter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	// Suit cabin pressure difference
-	return (atm.SuitReturnPressurePSI - atm.CabinPressurePSI) * (INH2O / PSI);
+	return Sat->SuitCabinDeltaPressSensor.Voltage()*2.0 - 5.0;
 }
 
 void SaturnSuitCabinDeltaPMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -644,12 +608,7 @@ void SaturnSuitCabinDeltaPMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnRightO2FlowMeter::QueryValue()
 {
-	AtmosStatus atm;
-	Sat->GetAtmosStatus(atm);
-
-	// O2 main regulator output flow 	
-	return atm.CabinRegulatorFlowLBH + atm.O2DemandFlowLBH + atm.DirectO2FlowLBH + 
-		   atm.SuitTestFlowLBH + atm.CabinRepressFlowLBH + atm.EmergencyCabinRegulatorFlowLBH;
+	return Sat->ECSO2FlowO2SupplyManifoldSensor.Voltage()*0.16 + 0.2;
 }
 
 void SaturnRightO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -668,14 +627,10 @@ void SaturnEcsRadTempInletMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *
 
 double SaturnEcsRadTempInletMeter::QueryValue()
 {
-	if (ECSIndicatorsSwitch->GetState() == 1) {
-		PrimECSCoolingStatus pcs;
-		Sat->GetPrimECSCoolingStatus(pcs);
-		return pcs.RadiatorInletTempF; 
+	if (ECSIndicatorsSwitch->GetState() == 0) {
+		return Sat->PriRadInTempSensor.Voltage()*13.0 + 55.0;
 	} else {
-		SecECSCoolingStatus scs;
-		Sat->GetSecECSCoolingStatus(scs);
-		return scs.RadiatorInletTempF;
+		return Sat->SecRadInTempSensor.Voltage()*13.0 + 55.0;
 	}
 }
 
@@ -688,10 +643,7 @@ void SaturnEcsRadTempInletMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnEcsRadTempPrimOutletMeter::QueryValue()
 {
-	PrimECSCoolingStatus pcs;
-	Sat->GetPrimECSCoolingStatus(pcs);
-
-	return pcs.RadiatorOutletTempF; 
+	return Sat->ECSRadOutTempSensor.Voltage()*30.0 - 50.0;
 }
 
 void SaturnEcsRadTempPrimOutletMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -703,10 +655,7 @@ void SaturnEcsRadTempPrimOutletMeter::DoDrawSwitch(double v, SURFHANDLE drawSurf
 
 double SaturnEcsRadTempSecOutletMeter::QueryValue()
 {
-	SecECSCoolingStatus scs;
-	Sat->GetSecECSCoolingStatus(scs);
-
-	return scs.RadiatorOutletTempF; 
+	return Sat->SecRadOutTempSensor.Voltage()*8.0 + 30.0;
 }
 
 void SaturnEcsRadTempSecOutletMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -725,13 +674,9 @@ void SaturnGlyEvapTempOutletMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn
 double SaturnGlyEvapTempOutletMeter::QueryValue()
 {
 	if (ECSIndicatorsSwitch->GetState() == 1) {
-		PrimECSCoolingStatus pcs;
-		Sat->GetPrimECSCoolingStatus(pcs);
-		return pcs.EvaporatorOutletTempF; 
+		return Sat->GlyEvapOutTempSensor.Voltage()*10.0 + 25.0;
 	} else {
-		SecECSCoolingStatus scs;
-		Sat->GetSecECSCoolingStatus(scs);
-		return scs.EvaporatorOutletTempF;
+		return Sat->SecEvapOutLiqTempSensor.Voltage()*10.0 + 25.0;
 	}
 }
 
@@ -751,13 +696,9 @@ void SaturnGlyEvapSteamPressMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn
 double SaturnGlyEvapSteamPressMeter::QueryValue()
 {
 	if (ECSIndicatorsSwitch->GetState() == 1) {
-		PrimECSCoolingStatus pcs;
-		Sat->GetPrimECSCoolingStatus(pcs);
-		return pcs.EvaporatorSteamPressurePSI; 
+		return Sat->GlyEvapBackPressSensor.Voltage()*0.04 + 0.05; 
 	} else {
-		SecECSCoolingStatus scs;
-		Sat->GetSecECSCoolingStatus(scs);
-		return scs.EvaporatorSteamPressurePSI;
+		return Sat->SecEvapOutSteamPressSensor.Voltage()*0.04 + 0.05;
 	}
 }
 
@@ -777,13 +718,9 @@ void SaturnGlycolDischPressMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn 
 double SaturnGlycolDischPressMeter::QueryValue()
 {
 	if (ECSIndicatorsSwitch->GetState() == 1) {
-		PrimECSCoolingStatus pcs;
-		Sat->GetPrimECSCoolingStatus(pcs);
-		return pcs.RadiatorInletPressurePSI; 
+		return Sat->GlycolPumpOutPressSensor.Voltage()*12.0;
 	} else {
-		SecECSCoolingStatus scs;
-		Sat->GetSecECSCoolingStatus(scs);
-		return scs.RadiatorInletPressurePSI;
+		return Sat->SecGlyPumpOutPressSensor.Voltage()*12.0;
 	}
 }
 
@@ -803,13 +740,9 @@ void SaturnAccumQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s,
 double SaturnAccumQuantityMeter::QueryValue()
 {
 	if (ECSIndicatorsSwitch->GetState() == 1) {
-		PrimECSCoolingStatus pcs;
-		Sat->GetPrimECSCoolingStatus(pcs);
-		return pcs.AccumulatorQuantityPercent; 
+		return Sat->GlycolAccumQtySensor.Voltage()*1.0 / 5.0;
 	} else {
-		SecECSCoolingStatus scs;
-		Sat->GetSecECSCoolingStatus(scs);
-		return scs.AccumulatorQuantityPercent;
+		return Sat->SecGlycolAccumQtySensor.Voltage()*1.0 / 5.0;
 	}
 }
 
@@ -820,25 +753,22 @@ void SaturnAccumQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 }
 
 
-void SaturnH2oQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, CircuitBrakerSwitch *cba, CircuitBrakerSwitch *cbb)
+void SaturnH2oQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, PowerSource *pwr)
 {
 	SaturnRoundMeter::Init(p0, p1, row, s);
 	H2oQtyIndSwitch = h2oqtyindswitch;
-	CbA = cba;
-	CbB = cbb;
+	WireTo(pwr);
 }
 
 double SaturnH2oQuantityMeter::QueryValue()
 {
-	ECSWaterStatus ws;
-	Sat->GetECSWaterStatus(ws);
-
-	if (!CbA->IsPowered() && !CbB->IsPowered())
+	if (!IsPowered())
 		return 0;
-	else if (H2oQtyIndSwitch->IsUp())
-		return ws.PotableH2oTankQuantityPercent; 
-	else 
-		return ws.WasteH2oTankQuantityPercent;
+
+	if (H2oQtyIndSwitch->IsUp())
+		return Sat->PotH2OQtySensor.Voltage()*1.0 / 5.0;
+	else
+		return Sat->WasteH2OQtySensor.Voltage()*1.0 / 5.0;
 }
 
 void SaturnH2oQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
@@ -883,7 +813,7 @@ bool DirectO2RotationalSwitch::SwitchTo(int newValue)
 	}
 	return false;
 }
-
+/*
 void DirectO2RotationalSwitch::CheckValve()
 {
 	if (GetState() == 6) {
@@ -911,6 +841,46 @@ void DirectO2RotationalSwitch::CheckValve()
 		Pipe->flowMax = 31.8 / LBH;		//0.53 lb/min
 
 	} else if (GetState() == 0) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 40.2 / LBH;		//0.67 lb/min
+	}
+}
+*/
+
+void DirectO2RotationalSwitch::CheckValve()
+
+{
+	if (GetState() == 6) {
+		Pipe->in->h_open = SP_VALVE_CLOSE;
+		Pipe->flowMax = 0;
+
+	}
+	else if (GetState() == 5) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.42 / LBH;  //0.007 lb/min
+
+	}
+	else if (GetState() == 4) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 0.78 / LBH;  //0.013 lb/min
+
+	}
+	else if (GetState() == 3) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 1.56 / LBH;  //0.026 lb/min
+
+	}
+	else if (GetState() == 2) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 24.6 / LBH;		//0.41 lb/min
+
+	}
+	else if (GetState() == 1) {
+		Pipe->in->h_open = SP_VALVE_OPEN;
+		Pipe->flowMax = 31.8 / LBH;		//0.53 lb/min
+
+	}
+	else if (GetState() == 0) {
 		Pipe->in->h_open = SP_VALVE_OPEN;
 		Pipe->flowMax = 40.2 / LBH;		//0.67 lb/min
 	}
@@ -1163,7 +1133,7 @@ void SaturnSPSHeliumNitrogenPressMeter::Init(SURFHANDLE surf, SwitchRow &row, Sa
 double SaturnSPSHeliumNitrogenPressMeter::QueryValue()
 {
     if (SPSPressIndSwitch->IsUp()) {
-        WireTo(&Sat->InstrumentBus); // InstrumentBus until proper source found
+        WireTo(&Sat->InstrumentationPowerFeeder); // InstrumentationPowerFeeder until proper source found
         return Sat->GetSPSPropellant()->GetHeliumPressurePSI();
     } else if (SPSPressIndSwitch->IsCenter()) {
         WireTo(&Sat->Panel276CB3);
@@ -1290,11 +1260,9 @@ double SaturnSystemTestAttenuator::GetValue()
 		switch (right)
 		{
 		case 1:	//BAT RLY BUS VOLT
-			val = Sat->pcm.measure(11, TLM_A, 75);
-			break;
+			return Sat->sce.GetVoltage(0, 4)*256.0 / 5.0;	//Temporary scaling
 		case 3:	//CSM TO LM CURRENT
-			val = Sat->pcm.measure(11, TLM_A, 47);
-			break;
+			return Sat->sce.GetVoltage(1, 7)*256.0 / 5.0;	//Temporary scaling
 		}
 		break;
 	case 5:
@@ -1333,12 +1301,12 @@ double SaturnSystemTestAttenuator::GetValue()
 	return (double)val;
 }
 
-void SaturnGPFPIMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *gpfpiindswitch, int xoffset)
+void SaturnGPFPIMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, int sys, int xoffset)
 {
 	MeterSwitch::Init(row);
 	NeedleSurface = surf;
 	Sat = s;
-	GPFPIIndicatorSwitch = gpfpiindswitch;
+	system = sys;
 	xOffset = xoffset;
 }
 
@@ -1360,42 +1328,19 @@ void SaturnGPFPIMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 double SaturnGPFPIPitchMeter::QueryValue()
 {
-	if (GPFPIIndicatorSwitch->IsUp()) {
-		
-		LVTankQuantities LVq;
-		Sat->GetLVTankQuantities(LVq);
-		
-		if (Sat->GetStage() > LAUNCH_STAGE_TWO_ISTG_JET) {  
-			return 89.0 * LVq.SIVBOxQuantity / LVq.S4BOxMass;
-		} 
-		else {
-			return 89.0 * LVq.SIIQuantity / LVq.SIIFuelMass;
-		}
-	}
-	else {
-		return (10.0 * Sat->GetSPSEngine()->pitchGimbalActuator.GetPosition()) + 44.0;
-	}
+	return Sat->GetEDA()->GetGPFPIPitch(system);
 }
 
 
 double SaturnGPFPIYawMeter::QueryValue()
 {
-	if (GPFPIIndicatorSwitch->IsUp()) {
-		
-		LVTankQuantities LVq;
-		Sat->GetLVTankQuantities(LVq);
-		
-		return 89.0 * LVq.SIVBFuelQuantity / LVq.S4BFuelMass;
-	}
-	else {
-		return (10.0 * Sat->GetSPSEngine()->yawGimbalActuator.GetPosition()) + 44.0;
-	}
+	return Sat->GetEDA()->GetGPFPIYaw(system);
 }
 
 
 void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, FDAI *F1, FDAI *F2,
     					 		     e_object *dc1, e_object *dc2, e_object *ac1, e_object *ac2,
-									 SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2)
+									 SaturnGPFPIMeter *gpfpiPitch1, SaturnGPFPIMeter *gpfpiPitch2, SaturnGPFPIMeter *gpfpiYaw1, SaturnGPFPIMeter *gpfpiYaw2, EDA *ed)
 {
 	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	FDAI1 = F1;
@@ -1410,6 +1355,8 @@ void FDAIPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE su
 	GPFPIPitch2 =gpfpiPitch2;
 	GPFPIYaw1 =gpfpiYaw1;
 	GPFPIYaw2 =gpfpiYaw2;
+
+	eda = ed;
 
 	CheckFDAIPowerState();
 }
@@ -1430,6 +1377,9 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIPitch2->WireTo(NULL, NULL);
 		GPFPIYaw1->WireTo(NULL, NULL);
 		GPFPIYaw2->WireTo(NULL, NULL);
+
+		eda->WireTo(NULL, NULL, NULL, NULL);
+
 		break;
 
 	case 1:
@@ -1440,6 +1390,8 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIPitch2->WireTo(NULL, NULL);
 		GPFPIYaw1->WireTo(DCSource1, ACSource1);
 		GPFPIYaw2->WireTo(NULL, NULL);
+
+		eda->WireTo(ACSource1, NULL, DCSource1, NULL);
 		break;
 
 	case 2:
@@ -1450,6 +1402,8 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIPitch2->WireTo(DCSource2, ACSource2);
 		GPFPIYaw1->WireTo(NULL, NULL);
 		GPFPIYaw2->WireTo(DCSource2, ACSource2);
+
+		eda->WireTo(NULL, ACSource2, NULL, DCSource2);
 		break;
 
 	case 3:
@@ -1460,6 +1414,8 @@ void FDAIPowerRotationalSwitch::CheckFDAIPowerState()
 		GPFPIPitch2->WireTo(DCSource2, ACSource2);
 		GPFPIYaw1->WireTo(DCSource1, ACSource1);
 		GPFPIYaw2->WireTo(DCSource2, ACSource2);
+
+		eda->WireTo(ACSource1, ACSource2, DCSource1, DCSource2);
 		break;
 	}
 }
@@ -1735,7 +1691,10 @@ void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 			Curdigit = buffer[i] - '0';
 			oapiBlt(drawSurface, Digits, (i == 6 ? 0 : 10) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
 		} else if (buffer[i] == '.') {
-			oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
+			if (!Sat->ems.IsDecimalPointBlanked())
+			{
+				oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
+			}
 		}
 	}
 }
@@ -2123,58 +2082,49 @@ void CSMLMPowerSwitch::LoadState(char *line)
 
 }
 
-bool CSMLMPowerSwitch::CheckMouseClick(int event, int mx, int my)
+bool CSMLMPowerSwitch::SwitchTo(int newState, bool dontspring)
 {
-	if (SaturnThreePosSwitch::CheckMouseClick(event, mx, my)) {
+	if (SaturnThreePosSwitch::SwitchTo(newState, dontspring)) {
 		// First -- Are we docked?
-		if(sat->dockingprobe.IsHardDocked() == false){ return true; }
-		// Umbilical connected? (Supposed to be by docking!)
-		if(sat->CSMToLEMConnector.connectedTo == NULL){ return true; }
+		if (sat->dockingprobe.IsHardDocked() == false) { return true; }
+		// Umbilical connected? (Supposed to be after LM Pressurization and hatch removal)
+		if (sat->CSMToLEMConnector.connectedTo == NULL) { return true; }
 		ConnectorMessage msg;
 		ConnectorMessageValue mval;
-		msg.destination = LEM_CSM_POWER;		
+		msg.destination = LEM_CSM_POWER;
 		msg.messageType = 42;
-		switch(state){
-			case THREEPOSSWITCH_UP:
-				// Connect the bus
-				sat->CSMToLEMPowerDrain.Enable();
-				sat->CSMToLEMPowerDrain.WireTo(&sat->LMUmbilicalFeeder);				
-				// Turn on LEM				
-				mval.iValue = 1; // Relay State 1 = Deny Descent ECA operation
-				msg.val1 = mval;
-				sat->CSMToLEMConnector.SendMessage(msg);
-				break;
-			case THREEPOSSWITCH_CENTER:
-				// Turn off LEM (but don't disconnect it)
-				sat->CSMToLEMPowerDrain.Disable();
-				sat->CSMToLEMPowerDrain.WireTo(NULL);
-				break;
-			case THREEPOSSWITCH_DOWN:
-				// Reset LEM				
-				mval.iValue = 0; // Relay State 0 = Permit Descent ECA operation
-				msg.val1 = mval;
-				sat->CSMToLEMConnector.SendMessage(msg);
-				// Ensure disconnected
-				sat->CSMToLEMPowerDrain.Disable();
-				sat->CSMToLEMPowerDrain.WireTo(NULL);
-				break;
+		switch (state) {
+		case THREEPOSSWITCH_UP:
+			// Connect the bus
+			sat->CSMToLEMPowerDrain.Enable();
+			sat->CSMToLEMPowerDrain.WireTo(&sat->LMUmbilicalFeeder);
+			// Turn on LEM
+			mval.iValue = 1; // Relay State 1 = Deny Descent ECA operation
+			msg.val1 = mval;
+			sat->CSMToLEMConnector.SendMessage(msg);
+			break;
+		case THREEPOSSWITCH_CENTER:
+			// Turn off LEM (but don't disconnect it)
+			sat->CSMToLEMPowerDrain.Disable();
+			sat->CSMToLEMPowerDrain.WireTo(NULL);
+			break;
+		case THREEPOSSWITCH_DOWN:
+			// Reset LEM
+			mval.iValue = 0; // Relay State 0 = Permit Descent ECA operation
+			msg.val1 = mval;
+			sat->CSMToLEMConnector.SendMessage(msg);
+			// Ensure disconnected
+			sat->CSMToLEMPowerDrain.Disable();
+			sat->CSMToLEMPowerDrain.WireTo(NULL);
+			break;
 		}
-
-		return true;
-	}
-	return false;
-}
-
-bool CSMLMPowerSwitch::SwitchTo(int newState)
-{
-	if (SaturnThreePosSwitch::SwitchTo(newState)) {
 		return true;
 	}
 	return false;
 }
 
 double SaturnHighGainAntennaPitchMeter::QueryValue(){
-	return Sat->hga.Pitch;
+	return Sat->hga.GetResolvedPitch();
 }
 
 void SaturnHighGainAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
@@ -2194,7 +2144,7 @@ void SaturnHighGainAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawS
 }
 
 double SaturnHighGainAntennaYawMeter::QueryValue(){
-	return Sat->hga.Yaw;
+	return Sat->hga.GetResolvedYaw();
 }
 
 void SaturnHighGainAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
@@ -2258,3 +2208,30 @@ bool DockingTargetSwitch::SwitchTo(int newState, bool dontspring)
 	return false;
 }
 
+SaturnLiftoffNoAutoAbortSwitch::SaturnLiftoffNoAutoAbortSwitch()
+{
+	secs = NULL;
+}
+
+void SaturnLiftoffNoAutoAbortSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, SECS *s,
+	int xoffset, int yoffset, int lxoffset, int lyoffset)
+{
+	GuardedPushSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset, lxoffset, lyoffset);
+
+	secs = s;
+}
+
+void SaturnLiftoffNoAutoAbortSwitch::DoDrawSwitch(SURFHANDLE drawSurface)
+{
+	if (secs->LiftoffLightPower()) {
+		if (!secs->NoAutoAbortLightPower())
+			SetOffset(78, 81);
+		else
+			SetOffset(234, 81);
+	}
+	else {
+		SetOffset(0, 81);
+	}
+
+	GuardedPushSwitch::DoDrawSwitch(drawSurface);
+}

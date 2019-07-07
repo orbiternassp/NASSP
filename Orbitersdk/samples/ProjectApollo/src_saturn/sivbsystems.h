@@ -61,13 +61,20 @@ public:
 	void SetThrusterDir(double beta_y, double beta_p);
 	void PointLevelSensorArming() { PointLevelSensorArmed = true; }
 	void PointLevelSensorDisarming() { PointLevelSensorArmed = false; }
+	void AuxHydPumpFlightModeOn() { AuxHydPumpFlightMode = true; }
+	void AuxHydPumpFlightModeOff() { AuxHydPumpFlightMode = false; }
 	void APSUllageEngineOn(int n);
 	void APSUllageEngineOff(int n);
 	void SetAPSAttitudeEngine(int n, bool on);
+	void PrevalvesCloseOnReset() { PrevalvesCloseOn = false; }
 	
 	bool GetThrustOK() { return ThrustOKRelay; }
 
 	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
+
+	//To IU
+	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }
+	double GetLOXTankUllagePressurePSI() { return LOXTankUllagePressurePSI; }
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -80,8 +87,10 @@ protected:
 	bool ThrustOKRelay;
 	//K105
 	bool AftPowerDisableRelay;
-	//K112
+	//K112 (K76)
 	bool LVDCEngineStopRelay;
+	//K46 (K198)
+	bool PrevalvesCloseOn;
 
 	bool RSSEngineStop;
 	bool EDSEngineStop;
@@ -89,6 +98,7 @@ protected:
 
 	bool EnginePower;
 	bool EngineCutoffBus;
+	//K63 (K57)
 	bool EngineStart;
 	bool EngineStop;
 	bool ThrustOKCutoffInhibit;
@@ -104,9 +114,13 @@ protected:
 	bool PointLevelSensorArmed;
 	bool LH2ContinuousVentValveOpen;
 	bool APSUllageOnRelay[2];
+	bool AuxHydPumpFlightMode;
 
 	double J2DefaultThrust;
 	int PUValveState;
+
+	double LH2TankUllagePressurePSI;
+	double LOXTankUllagePressurePSI;
 
 	VESSEL *vessel;
 	THRUSTER_HANDLE &j2engine;

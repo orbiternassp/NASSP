@@ -65,13 +65,9 @@ public:
 	void SeparateStage(UINT stage);
 	void SetStage(int s);
 
-	virtual void SetSIEngineStart(int eng);
-	virtual void SetIUUmbilicalState(bool connect);
-
 	void PlayCountSound(bool StartStop);
 	void PlaySepsSound(bool StartStop);
 
-	double GetJ2ThrustLevel();
 	int GetStage() { return lemsat_stage; };
 	void GetSIThrustOK(bool *ok);
 	bool GetSIVBThrustOK();
@@ -89,13 +85,15 @@ public:
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
 	void AddRCS_S4B();
-	void ActivatePrelaunchVenting();
-	void DeactivatePrelaunchVenting();
+	virtual void ActivatePrelaunchVenting();
+	virtual void DeactivatePrelaunchVenting();
 	void JettisonNosecap();
 	void SetSLADeployCommand() { DeploySLACommand = true; }
 	void LMSLASeparationFire();
 
 	virtual IU *GetIU();
+	//Subsystem Access
+	SIBSystems *GetSIB() { return sib; }
 
 protected:
 

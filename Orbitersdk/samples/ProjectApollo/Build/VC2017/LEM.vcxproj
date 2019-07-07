@@ -13,6 +13,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1E53A199-CCDF-4FCF-B2E8-5F8FF80AFEC8}</ProjectGuid>
     <RootNamespace>LEM</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -147,21 +148,26 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_aux\animations.cpp" />
     <ClCompile Include="..\..\src_aux\CDK.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_lm\CWEA_FlipFlop.cpp" />
     <ClCompile Include="..\..\src_lm\lemconnector.cpp" />
     <ClCompile Include="..\..\src_lm\LEMSaturn.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aca.cpp" />
     <ClCompile Include="..\..\src_lm\lm_aps.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_cwea.cpp" />
     <ClCompile Include="..\..\src_lm\lm_dps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_ecs.cpp" />
     <ClCompile Include="..\..\src_lm\lm_eds.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_eps.cpp" />
     <ClCompile Include="..\..\src_lm\lm_programer.cpp" />
     <ClCompile Include="..\..\src_lm\lm_rcs.cpp" />
+    <ClCompile Include="..\..\src_lm\lm_rr.cpp" />
     <ClCompile Include="..\..\src_lm\lm_scea.cpp" />
     <ClCompile Include="..\..\src_lm\lm_ttca.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
@@ -169,6 +175,8 @@
     <ClCompile Include="..\..\src_saturn\eds.cpp" />
     <ClCompile Include="..\..\src_saturn\FCC.cpp" />
     <ClCompile Include="..\..\src_saturn\iu.cpp" />
+    <ClCompile Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.cpp" />
+    <ClCompile Include="..\..\src_saturn\IUControlDistributor.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDC.cpp" />
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
@@ -344,12 +352,6 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\CollisionSDK\CollisionSDK.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
     <ClCompile Include="..\..\src_lm\yaAGS\aea_engine.c">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -370,23 +372,33 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_aux\animations.h" />
+    <ClInclude Include="..\..\src_lm\CWEA_FlipFlop.h" />
     <ClInclude Include="..\..\src_lm\lemconnector.h" />
     <ClInclude Include="..\..\src_lm\LEMSaturn.h" />
+    <ClInclude Include="..\..\src_lm\LM_AscentStageResource.h" />
+    <ClInclude Include="..\..\src_lm\LM_DescentStageResource.h" />
+    <ClInclude Include="..\..\src_lm\lm_eps.h" />
     <ClInclude Include="..\..\src_lm\lmresource.h" />
     <ClInclude Include="..\..\src_lm\lm_aca.h" />
     <ClInclude Include="..\..\src_lm\lm_aps.h" />
     <ClInclude Include="..\..\src_lm\lm_channels.h" />
+    <ClInclude Include="..\..\src_lm\lm_cwea.h" />
     <ClInclude Include="..\..\src_lm\lm_dps.h" />
     <ClInclude Include="..\..\src_lm\lm_ecs.h" />
     <ClInclude Include="..\..\src_lm\lm_eds.h" />
     <ClInclude Include="..\..\src_lm\lm_programer.h" />
     <ClInclude Include="..\..\src_lm\lm_rcs.h" />
+    <ClInclude Include="..\..\src_lm\lm_rr.h" />
     <ClInclude Include="..\..\src_lm\lm_scea.h" />
     <ClInclude Include="..\..\src_lm\lm_ttca.h" />
+    <ClInclude Include="..\..\src_lm\LM_VC_Resource.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_saturn\dcs.h" />
     <ClInclude Include="..\..\src_saturn\eds.h" />
     <ClInclude Include="..\..\src_saturn\FCC.h" />
+    <ClInclude Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.h" />
+    <ClInclude Include="..\..\src_saturn\IUControlDistributor.h" />
     <ClInclude Include="..\..\src_saturn\LVDA.h" />
     <ClInclude Include="..\..\src_saturn\LVDC.h" />
     <ClInclude Include="..\..\src_saturn\LVIMU.h" />
@@ -399,7 +411,6 @@
     <ClInclude Include="..\..\src_sys\checklistController.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_csm\csmcautionwarning.h" />
-    <ClInclude Include="..\..\src_csm\CSMcomputer.h" />
     <ClInclude Include="..\..\src_csm\dockingprobe.h" />
     <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\dsky.h" />
@@ -434,7 +445,6 @@
     <ClInclude Include="..\..\src_aux\tracer.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h" />
-    <ClInclude Include="..\..\src_aux\CollisionSDK\CollisionSDK.h" />
     <ClInclude Include="..\..\src_lm\yaAGS\aea_engine.h" />
     <ClInclude Include="..\..\src_lm\yaAGS\yaAEA.h" />
   </ItemGroup>

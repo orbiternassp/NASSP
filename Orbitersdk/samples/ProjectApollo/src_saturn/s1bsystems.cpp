@@ -32,6 +32,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "papi.h"
 
 #include "s1bsystems.h"
+#include "SCMUmbilical.h"
 
 H1Engine::H1Engine(VESSEL *v, THRUSTER_HANDLE &h1, bool cangimbal, double pcant, double ycant)
 	:vessel(v), th_h1(h1)
@@ -124,13 +125,13 @@ void H1Engine::Timestep(double simdt)
 			{
 				if (ThrustTimer < tm_2)
 				{
-					ThrustLevel = 1.0 - 3.35*(ThrustTimer - tm_1);
+					ThrustLevel = min(ThrustLevel, 1.0 - 3.35*(ThrustTimer - tm_1));
 				}
 				else
 				{
 					if (ThrustTimer < tm_3)
 					{
-						ThrustLevel = 0.33 - 0.825*(ThrustTimer - tm_2);
+						ThrustLevel = min(ThrustLevel, 0.33 - 0.825*(ThrustTimer - tm_2));
 					}
 					else
 					{
@@ -140,7 +141,7 @@ void H1Engine::Timestep(double simdt)
 			}
 			else
 			{
-				ThrustLevel = 1;
+				ThrustLevel = min(ThrustLevel, 1);
 			}
 
 			vessel->SetThrusterLevel(th_h1, ThrustLevel);
@@ -262,6 +263,7 @@ SIBSystems::SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 
 	for (int i = 0;i < 8;i++)
 	{
+		ThrustOK[i] = false;
 		EarlySICutoff[i] = false;
 		FirstStageFailureTime[i] = 0.0;
 		EngineCutoffRelay[i] = false;
@@ -340,10 +342,15 @@ void SIBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFENABLEDRELAY", FuelDepletionCutoffEnabledRelay);
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY1", FuelDepletionCutoffInhibitRelay1);
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY2", FuelDepletionCutoffInhibitRelay2);
-	papiWriteScenario_bool(scn, "FAILINIT", FailInit);
 	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
-	papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 8);
-	papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
+	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 8);
+
+	if (FailInit)
+	{
+		papiWriteScenario_bool(scn, "FAILINIT", FailInit);
+		papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 8);
+		papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
+	}
 
 	h1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	h1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -395,6 +402,7 @@ void SIBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
 		papiReadScenario_boolarr(line, "EARLYSICUTOFF", EarlySICutoff, 8);
 		papiReadScenario_doublearr(line, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
+		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			h1engine1.LoadState(scn, "ENGINE_END");
@@ -433,6 +441,12 @@ void SIBSystems::Timestep(double simdt, bool liftoff)
 	h1engine6.Timestep(simdt);
 	h1engine7.Timestep(simdt);
 	h1engine8.Timestep(simdt);
+
+	//Thrust OK
+	for (int i = 0;i < 8;i++)
+	{
+		ThrustOK[i] = h1engines[i]->GetThrustOK() || ESEGetSIBThrustOKSimulate(i + 1);
+	}
 
 	if (liftoff)
 	{
@@ -587,7 +601,7 @@ void SIBSystems::Timestep(double simdt, bool liftoff)
 	//Outboard Engines
 	for (int i = 0;i < 4;i++)
 	{
-		if (((!SingleEngineFailedInhibitRelay && (!MultiEngineCutoffInhibitRelay || !SingleEngineCutoffInhibitRelay)) || EngineCutoffRelay[i]) && !h1engines[i]->GetThrustOK())
+		if (((!SingleEngineFailedInhibitRelay && (!MultiEngineCutoffInhibitRelay || !SingleEngineCutoffInhibitRelay)) || EngineCutoffRelay[i]) && !ThrustOK[i])
 		{
 			EngineCutoffRelay[i] = true;
 		}
@@ -605,7 +619,7 @@ void SIBSystems::Timestep(double simdt, bool liftoff)
 	//Inboard Engines
 	for (int i = 4;i < 8;i++)
 	{
-		if (((!SingleEngineFailedInhibitRelay && !SingleEngineCutoffInhibitRelay) || EngineCutoffRelay[i]) && !h1engines[i]->GetThrustOK())
+		if (((!SingleEngineFailedInhibitRelay && !SingleEngineCutoffInhibitRelay) || EngineCutoffRelay[i]) && !ThrustOK[i])
 		{
 			EngineCutoffRelay[i] = true;
 		}
@@ -634,11 +648,14 @@ void SIBSystems::Timestep(double simdt, bool liftoff)
 		FailureTimer += simdt;
 	}
 
-	for (int i = 0;i < 8;i++)
+	if (vessel->GetDamageModel())
 	{
-		if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
+		for (int i = 0;i < 8;i++)
 		{
-			h1engines[i]->SetFailed();
+			if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
+			{
+				h1engines[i]->SetFailed();
+			}
 		}
 	}
 
@@ -695,14 +712,20 @@ bool SIBSystems::GetLowLevelSensorsDry()
 
 bool SIBSystems::GetOutboardEngineOut()
 {
-	if (!h1engine1.GetThrustOK() || !h1engine2.GetThrustOK() || !h1engine3.GetThrustOK() || !h1engine4.GetThrustOK()) return true;
+	for (int i = 0;i < 4;i++)
+	{
+		if (!ThrustOK[i]) return true;
+	}
 
 	return false;
 }
 
 bool SIBSystems::GetInboardEngineOut()
 {
-	if (!h1engine5.GetThrustOK() || !h1engine6.GetThrustOK() || !h1engine7.GetThrustOK() || !h1engine8.GetThrustOK()) return true;
+	for (int i = 4;i < 8;i++)
+	{
+		if (!ThrustOK[i]) return true;
+	}
 
 	return false;
 }
@@ -744,12 +767,11 @@ void SIBSystems::SetEngineFailureParameters(int n, double SICutTimes)
 	FailInit = true;
 }
 
-void SIBSystems::GetThrustOK(bool *ok)
+bool SIBSystems::GetEngineStop()
 {
-	for (int i = 0;i < 8;i++)
-	{
-		ok[i] = h1engines[i]->GetThrustOK();
-	}
+	for (int i = 0;i < 5;i++) if (h1engines[i]->GetEngineStop()) return true;
+
+	return false;
 }
 
 void SIBSystems::SwitchSelector(int channel)
@@ -778,7 +800,7 @@ void SIBSystems::SwitchSelector(int channel)
 		break;
 	case 39: //Telemeter Calibration Off
 		break;
-	case 79: //FUel Depletion Cutoff Enable
+	case 79: //Fuel Depletion Cutoff Enable
 		SetFuelDepletionCutoffEnable();
 		break;
 	case 97: //LOX Depletion Cutoff Enable
@@ -797,5 +819,48 @@ void SIBSystems::SwitchSelector(int channel)
 		break;
 	default:
 		break;
+	}
+}
+
+void SIBSystems::ConnectUmbilical(SCMUmbilical *umb)
+{
+	SCMUmb = umb;
+}
+
+void SIBSystems::DisconnectUmbilical()
+{
+	SCMUmb = NULL;
+}
+
+bool SIBSystems::IsUmbilicalConnected()
+{
+	if (SCMUmb && SCMUmb->IsUmbilicalConnected()) return true;
+
+	return false;
+}
+
+bool SIBSystems::ESEGetSIBThrustOKSimulate(int eng)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return SCMUmb->ESEGetSIBThrustOKSimulate(eng);
+}
+
+void SIBSystems::GetThrustOK(bool *ok)
+{
+	for (int i = 0;i < 8;i++)
+	{
+		ok[i] = ThrustOK[i];
+	}
+}
+
+void SIBSystems::GSEEnginesCutoff(bool cut)
+{
+	if (cut)
+	{
+		for (int i = 0;i < 8;i++)
+		{
+			h1engines[i]->SetGSECutoff();
+		}
 	}
 }

@@ -34,13 +34,13 @@ enum ConnectorType
 	NO_CONNECTION,				///< Dummy.
 	CSM_IU_COMMAND,				///< Passes commands and data between CSM and IU.
 	LV_IU_COMMAND,				///< Passes commands between launch vehicle and IU.
-	CSM_SIVB_DOCKING,			///< Docking connector between CSM and SIVb.
 	CSM_LEM_DOCKING,			///< Docking connector between CSM and LEM.
-	CSM_SIVB_COMMAND,			///< Passes commands and data between CSM and SIVb.
-	CSM_SIVB_POWER,				///< Power connection from SIVB to CSM.
 	LEM_CSM_POWER,				///< Power connection from CSM to LEM.
 	MFD_PANEL_INTERFACE,		///< Connector from an MFD to a panel.
 	LEM_CSM_ECS,				///< Tunnel connection from CSM to LEM.
+	CHECKLIST_DATA_INTERFACE,	///< Data connector from checklist controller to vessel
+	PAYLOAD_SLA_CONNECT,		///< Passes commands and data between payload and SIVb.
+	CSM_PAYLOAD_COMMAND,		///< Docking connector between CSM and Payload
 };
 
 #define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.

@@ -23,7 +23,7 @@
   **************************************************************************/
 #pragma once
 
-#include "s1bsystems.h"
+class SIBSystems;
 
 ///
 /// \brief Saturn V launch vehicle class.
@@ -75,8 +75,14 @@ public:
 	bool GetSIOutboardEngineOut();
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIBLowLevelSensorsDry();
-	void SetSIEngineStart(int n);
 	void SetSIThrusterDir(int n, double yaw, double pitch);
+	double GetSIThrustLevel();
+
+	void ActivatePrelaunchVenting();
+	void DeactivatePrelaunchVenting();
+
+	//Subsystem Access
+	SIBSystems *GetSIB() { return sib; }
 
 protected:
 
@@ -84,7 +90,6 @@ protected:
 
 	OBJHANDLE hSoyuz;
 	OBJHANDLE hAstpDM;
-	double LiftCoeff (double aoa);
 
 	void SetupMeshes();
 	void SetFirstStage ();
@@ -97,6 +102,7 @@ protected:
 	void ConfigureStageMeshes(int stage_state);
 	void ConfigureStageEngines(int stage_state);
 	void CreateStageOne();
+	void CreateStageSpecificSystems();
 	void SaveVehicleStats(FILEHANDLE scn);
 	void LoadIU(FILEHANDLE scn);
 	void LoadLVDC(FILEHANDLE scn);
@@ -104,18 +110,17 @@ protected:
 	void SaveSI(FILEHANDLE scn);
 	void LoadSI(FILEHANDLE scn);
 	void SeparateStage (int stage);
+	void CheckSaturnSystemsState();
 	void DoFirstTimestep(double simt);
 	void Timestep (double simt, double simdt, double mjd);
 	void SetVehicleStats();
 	void CalculateStageMass ();
 	void ActivateStagingVent();
 	void DeactivateStagingVent();
-	void ActivatePrelaunchVenting();
-	void DeactivatePrelaunchVenting();
 	void SetRandomFailures();
 	void SetEngineFailure(int failstage, int faileng, double failtime);
 
-	SIBSystems sib;
+	SIBSystems *sib;
 
 	Pyro SIBSIVBSepPyros;
 };

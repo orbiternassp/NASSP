@@ -39,15 +39,12 @@
 #include "saturn.h"
 #include "papi.h"
 
-#include "CollisionSDK/CollisionSDK.h"
-
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo VAB.log";
 
 
 DLLCLBK void InitModule(HINSTANCE hModule) {
 	g_hDLL = hModule;
-	InitCollisionSDK();
 }
 
 

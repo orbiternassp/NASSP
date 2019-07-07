@@ -171,18 +171,31 @@
 #define LTLM_DS		3
 #define LTLM_E		4
 
+class Saturn;
+
 // VHF system (and shared stuff)
 class LM_VHF {
 public:
 	LM_VHF();
 	void Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh);	       // Initialization
-	void TimeStep(double simt);        // TimeStep
+	void Timestep(double simt);        // TimeStep
 	void SystemTimestep(double simdt); // System Timestep
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+	void RangingSignal(Saturn *sat, bool isAcquiring);
+
 	LEM *lem;					   // Ship we're installed in
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
 	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
 	h_HeatLoad *PCMHeat;			//PCM Heat Load
 	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
+
+	bool receiveA;
+	bool receiveB;
+	bool transmitA;
+	bool transmitB;
+	bool isRanging;
+
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
 	SOCKET m_socket;				// TCP socket
@@ -195,6 +208,7 @@ public:
 	void generate_stream_lbr();     // Generate LBR datastream
 	void generate_stream_hbr();     // Same for HBR datastream
 	unsigned char scale_data(double data, double low, double high); // Scale data for PCM transmission
+	unsigned char scale_scea(double data); // Scale preconditioned data from the SCEA for PCM transmission
 	unsigned char measure(int channel, int type, int ccode);
 	// Error control
 	int wsk_error;                  // Winsock error
@@ -213,7 +227,7 @@ public:
 	int pcm_rate_override;          // Downtelemetry rate override
 	unsigned char tx_data[1024];    // Characters to be transmitted
 	unsigned char rx_data[1024];    // Characters recieved
-	unsigned char mcc_data[1024];	// MCC-provided incoming data
+	unsigned char mcc_data[2048];	// MCC-provided incoming data
 
 	bool registerSocket(SOCKET sock);
 
@@ -235,7 +249,7 @@ class LM_SBAND {
 public:
 	LM_SBAND();
 	void Init(LEM *vessel, h_HeatLoad *sbxh, h_HeatLoad *secsbxh, h_HeatLoad *sbph, h_HeatLoad *secsbph);	       // Initialization
-	void TimeStep(double simt);        // TimeStep
+	void Timestep(double simt);        // Timestep
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -260,8 +274,9 @@ public:
 	void Init(LEM *s, h_Radiator *an, Boiler *anheat);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
-	void TimeStep(double simdt);
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);			// System Timestep
+	void DefineAnimations(UINT idx);
 	bool IsPowered();
 	double GetAntennaTempF();
 	double GetPitch() { return pitch*DEG; }
@@ -273,6 +288,11 @@ public:
 protected:
 	double pitch;
 	double yaw;
+
+	// Animations
+	UINT anim_SBandPitch, anim_SBandYaw;
+	double	sband_proc[2];
+	double	sband_proc_last[2];
 
 	bool moving;
 	double hpbw_factor;
@@ -288,11 +308,72 @@ class LM_OMNI :public LM_SBandAntenna {
 public:
 	LM_OMNI(VECTOR3 dir);
 	void Init(LEM *vessel);	// Initialization
-	void TimeStep();			// TimeStep
+	void Timestep();			// Timestep
 protected:
 	LEM *lem;					// Ship we're installed in
 	VECTOR3 direction;
 	double hpbw_factor;			//Beamwidth factor
 	OBJHANDLE hMoon;
 	OBJHANDLE hEarth;
+};
+
+///
+/// LM DSE holds 5,400 inches of tape (4 tracks, 2.5 hours each at 0.6 inches/second, making 21,600 inches of recordable tape)
+///
+class LM_DSEA : public e_object
+{
+	enum LM_DSEAState
+	{
+		STOPPED,			/// Tape is stopped
+		STARTING_RECORD,	/// Tape is accelerating to play speed
+		SLOWING_RECORD,		/// Tape is slowing to record speed
+		RECORDING,			/// Tape is recording
+		STOPPING,			/// Tape is stopping
+	};
+
+public:
+	LM_DSEA();
+	virtual ~LM_DSEA();
+
+	void Init(LEM *l, h_HeatLoad *dseht);	       // Initialization
+
+									   ///
+									   /// \brief Tape motion indicator.
+									   ///
+	bool TapeMotion();
+
+	///
+	/// \brief Stop tape playing.
+	///
+	void Stop();
+
+	///
+	/// \brief Start tape recording.
+	///
+	void Record();
+
+	bool RecordLogic();
+	bool IsSWPowered();
+	bool IsACPowered();
+	bool IsPCMPowered();
+	bool LMPVoiceXmit();
+	bool CDRVoiceXmit();
+	bool VoiceXmit();
+	bool ICSPTT();
+	bool VOXPTT();
+	void SystemTimestep(double simdt);
+	void Timestep(double simt, double simdt);
+
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
+protected:
+	LEM *lem;						    /// Ship we're installed in
+	h_HeatLoad *DSEHeat;				/// Heatload
+	double tapeSpeedInchesPerSecond;	/// Tape speed in inches per second.
+	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
+	double tapeMotion;					/// Tape motion from 0.0 to 1.0.
+	LM_DSEAState state;					/// Tape state.
+
+	double lastEventTime;				/// Last event time.
 };

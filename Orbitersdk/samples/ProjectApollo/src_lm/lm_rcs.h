@@ -26,6 +26,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "lm_dps.h"
 
+class LEM;
+
 class LEMRCSValve {
 
 public:

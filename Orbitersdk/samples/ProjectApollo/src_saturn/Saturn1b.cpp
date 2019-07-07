@@ -39,6 +39,7 @@
 #include "csmcomputer.h"
 #include "ioChannels.h"
 
+#include "s1bsystems.h"
 #include "saturn.h"
 #include "saturn1b.h"
 
@@ -72,8 +73,7 @@ static MESHHANDLE hCOAStarget;
 static MESHHANDLE hastp;
 
 Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
-	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk),
-	sib(this, th_1st, ph_1st, SIBSIVBSepPyros, LaunchS, SShutS, contrailLevel)
+	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk)
 {
 	hMaster = hObj;
 	initSaturn1b();
@@ -88,6 +88,11 @@ Saturn1b::~Saturn1b()
 	{
 		delete iu;
 		iu = 0;
+	}
+	if (sib)
+	{
+		delete sib;
+		sib = 0;
 	}
 }
 
@@ -169,34 +174,6 @@ void Saturn1b::initSaturn1b()
 
 	// Moved to instantiation time
 	// lvdc.init(this);
-}
-
-void CoeffFunc (double aoa, double M, double Re, double *cl, double *cm, double *cd)
-
-{
-	const int nlift = 11;
-	double factor,dfact,lfact,frac,drag,lift;
-	static const double AOA[nlift] =
-		{-180.*RAD,-160.*RAD,-150.*RAD,-120.*RAD,-90.*RAD,0*RAD,90.*RAD,120.*RAD,150.*RAD,160.*RAD,180.*RAD};
-	static const double Mach[17] = {0.0,0.7,0.9,1.1,1.2,1.35,1.65,2.0,3.0,5.0,8.0,10.5,13.5,18.2,21.5,31.0,50.0};
-	static const double LFactor[17] = {0.3,0.392,0.466,0.607,0.641,0.488,0.446,0.435,0.416,0.415,0.405,0.400,0.385,0.385,0.375,0.35,0.33};
-	static const double DFactor[17] = {0.9,0.944,0.991,1.068,1.044,1.270,1.28,1.267,1.213,1.134,1.15,1.158,1.18,1.18,1.193,1.224,1.25};
-	static const double CL[nlift]  = {0.0,-0.9,-1.1,-0.5,0.0,0.0,0.0,0.5,1.1,0.9,0.0};
-	static const double CM[nlift]  = {0.0,0.004,0.006,0.012,0.015,0.0,-0.015,-0.012,-0.006,-0.004,0.};
-	static const double CD[nlift]  = {1.143,1.0,1.0,0.8,0.8,0.8,0.8,0.8,1.0,1.0,1.143};
-	int j;
-	factor = -5.0;
-	dfact = 1.05;
-	lfact = 0.94;
-	for(j = 0; (j < 16) && (Mach[j+1] < M); j++);
-	frac = (M-Mach[j])/(Mach[j+1]-Mach[j]);
-	drag = dfact*(frac*DFactor[j+1]+(1.0-frac)*DFactor[j]);
-	lift = drag * lfact*(frac*LFactor[j+1]+(1.0-frac)*LFactor[j]);
-	for(j = 0; (j < nlift-1) && (AOA[j+1] < aoa); j++);
-	frac = (aoa-AOA[j])/(AOA[j+1]-AOA[j]);
-	*cd = drag*(frac*CD[j+1]+(1.0-frac)*CD[j]);
-	*cl = lift*(frac*CL[j+1]+(1.0-frac)*CL[j]);
-	*cm = factor*(frac*CM[j+1]+(1.0-frac)*CM[j]);
 }
 
 // ==============================================================
@@ -297,7 +274,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	if (stage <= LAUNCH_STAGE_ONE)
 	{
-		sib.Timestep(simdt, stage >= LAUNCH_STAGE_ONE);
+		sib->Timestep(simdt, stage >= LAUNCH_STAGE_ONE);
 	}
 
 	if (stage < CSM_LEM_STAGE) {
@@ -348,27 +325,12 @@ void Saturn1b::SwitchSelector(int item){
 	int i=0;
 
 	switch(item){
-	case 10:
-		DeactivatePrelaunchVenting();
-		break;
-	case 11:
-		ActivatePrelaunchVenting();
-		break;
 	case 12:
 		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
 		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
 			SetThrusterResource(th_1st[i], ph_1st);
 		}
 		CreateStageOne();								// Create hidden stage one, for later use in staging
-		break;
-	case 13:
-		if (!UseATC && Scount.isValid()) {
-			Scount.play();
-			Scount.done();
-		}
-		break;
-	case 14:
-		DeactivatePrelaunchVenting();
 		break;
 	case 17:
 		// Move hidden S1B
@@ -386,7 +348,7 @@ void Saturn1b::SISwitchSelector(int channel)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sib.SwitchSelector(channel);
+	sib->SwitchSelector(channel);
 }
 
 void Saturn1b::GetSIThrustOK(bool *ok)
@@ -398,56 +360,62 @@ void Saturn1b::GetSIThrustOK(bool *ok)
 
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sib.GetThrustOK(ok);
+	sib->GetThrustOK(ok);
 }
 
 void Saturn1b::SIEDSCutoff(bool cut)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sib.EDSEnginesCutoff(cut);
+	sib->EDSEnginesCutoff(cut);
 }
 
 bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sib.GetOutboardEnginesCutoff();
+	return sib->GetOutboardEnginesCutoff();
 }
 
 bool Saturn1b::GetSIInboardEngineOut()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sib.GetInboardEngineOut();
+	return sib->GetInboardEngineOut();
 }
 
 bool Saturn1b::GetSIOutboardEngineOut()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sib.GetOutboardEngineOut();
+	return sib->GetOutboardEngineOut();
 }
 
 bool Saturn1b::GetSIBLowLevelSensorsDry()
 {
 	if (stage > LAUNCH_STAGE_ONE) return false;
 
-	return sib.GetLowLevelSensorsDry();
-}
-
-void Saturn1b::SetSIEngineStart(int n)
-{
-	if (stage >= LAUNCH_STAGE_ONE) return;
-
-	sib.SetEngineStart(n);
+	return sib->GetLowLevelSensorsDry();
 }
 
 void Saturn1b::SetSIThrusterDir(int n, double yaw, double pitch)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;
 
-	sib.SetThrusterDir(n, yaw, pitch);
+	sib->SetThrusterDir(n, yaw, pitch);
+}
+
+double Saturn1b::GetSIThrustLevel()
+{
+	if (stage > LAUNCH_STAGE_ONE) return 0.0;
+
+	double lvl = 0.0;
+	for (int i = 0;i < 8;i++)
+	{
+		lvl += GetThrusterLevel(th_1st[i]);
+	}
+
+	return lvl / 8.0;
 }
 
 //
@@ -472,56 +440,32 @@ void Saturn1b::SaveVehicleStats(FILEHANDLE scn){
 
 void Saturn1b::LoadIU(FILEHANDLE scn)
 {
-	// If the IU does not yet exist, create it.
-	if (iu == NULL) {
-		iu = new IU1B;
-	}
 	iu->LoadState(scn);
 }
 
-void Saturn1b::LoadLVDC(FILEHANDLE scn) {
-
-	if (iu == NULL) {
-		iu = new IU1B;
-	}
-
+void Saturn1b::LoadLVDC(FILEHANDLE scn)
+{
 	iu->LoadLVDC(scn);
 }
 
 void Saturn1b::LoadSIVB(FILEHANDLE scn) {
-
-	if (sivb == NULL) {
-		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
-	}
-
 	sivb->LoadState(scn);
 }
 
 void Saturn1b::SaveSI(FILEHANDLE scn)
 {
-	sib.SaveState(scn);
+	sib->SaveState(scn);
 }
 
 void Saturn1b::LoadSI(FILEHANDLE scn)
 {
-	sib.LoadState(scn);
+	sib->LoadState(scn);
 }
 
 void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	GetScenarioState(scn, vs);
 
 	SetupMeshes();
-
-	if (stage < CSM_LEM_STAGE)
-	{
-		if (iu == NULL) {
-			iu = new IU1B;
-		}
-		if (sivb == NULL)
-		{
-			sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
-		}
-	}
 
 	switch (stage) {
 
@@ -554,6 +498,33 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	if (stage < STAGE_ORBIT_SIVB) {
 		if (Crewed) {
 			soundlib.LoadMissionSound(SPUShiftS, PUSHIFT_SOUND, PUSHIFT_SOUND);
+		}
+	}
+}
+
+void Saturn1b::CreateStageSpecificSystems()
+{
+	if (stage <= LAUNCH_STAGE_ONE)
+	{
+		sib = new SIBSystems(this, th_1st, ph_1st, SIBSIVBSepPyros, LaunchS, SShutS, contrailLevel);
+	}
+	if (stage < CSM_LEM_STAGE)
+	{
+		iu = new IU1B;
+		sivb = new SIVB200Systems(this, th_3rd[0], ph_3rd, th_aps_rot, th_aps_ull, th_3rd_lox, thg_ver);
+	}
+}
+
+void Saturn1b::CheckSaturnSystemsState()
+{
+	Saturn::CheckSaturnSystemsState();
+
+	if (stage > LAUNCH_STAGE_ONE)
+	{
+		if (sib)
+		{
+			delete sib;
+			sib = 0;
 		}
 	}
 }
@@ -696,8 +667,8 @@ void Saturn1b::CalculateStageMass()
 {
 	SI_Mass = SI_EmptyMass + SI_FuelMass;
 	SII_Mass = SII_EmptyMass + SII_FuelMass;
-	SM_Mass = SM_EmptyMass + SM_FuelMass + RCS_FUEL_PER_QUAD * 4.;
-	CM_Mass = CM_EmptyMass + CM_FuelMass;
+	SM_Mass = SM_EmptyMass + SM_FuelMass;
+	CM_Mass = CM_EmptyMass;
 
 	//
 	// This needs fixing.
@@ -711,7 +682,7 @@ void Saturn1b::CalculateStageMass()
 	}
 
 	Stage2Mass = Stage3Mass + SII_EmptyMass + S4PL_Mass;
-	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass + Abort_Mass;
+	Stage1Mass = Stage2Mass + SI_EmptyMass + SII_FuelMass + (LESAttached ? Abort_Mass : 0.0);
 }
 
 int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
@@ -727,7 +698,7 @@ void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime)
 {
 	if (failstage == 1)
 	{
-		sib.SetEngineFailureParameters(faileng, failtime);
+		sib->SetEngineFailureParameters(faileng, failtime);
 	}
 }
 
@@ -740,7 +711,7 @@ void Saturn1b::SetRandomFailures()
 
 	if (stage < STAGE_ORBIT_SIVB)
 	{
-		if (!sib.GetFailInit())
+		if (!sib->GetFailInit())
 		{
 			//
 			// Engine failure times for first stage.
@@ -764,7 +735,7 @@ void Saturn1b::SetRandomFailures()
 				}
 			}
 
-			sib.SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
+			sib->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
 		}
 	}
 
@@ -783,6 +754,30 @@ void Saturn1b::SetRandomFailures()
 		if (!(random() & 255))
 		{
 			LaunchFail.LESJetMotorFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.LiftoffSignalAFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.LiftoffSignalBFail = 1;
+		}
+		if (!(random() & 255))
+		{
+			LaunchFail.AutoAbortEnableFail = 1;
+		}
+
+		if (stage < CSM_LEM_STAGE)
+		{
+			if (LaunchFail.LiftoffSignalAFail)
+			{
+				iu->GetEDS()->SetLiftoffCircuitAFailure();
+			}
+			if (LaunchFail.LiftoffSignalBFail)
+			{
+				iu->GetEDS()->SetLiftoffCircuitBFailure();
+			}
 		}
 	}
 }

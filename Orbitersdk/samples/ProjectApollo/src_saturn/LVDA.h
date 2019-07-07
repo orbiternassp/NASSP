@@ -24,12 +24,24 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include <bitset>
+
 class IU;
 
 #define SWITCH_SELECTOR_IU 0
 #define SWITCH_SELECTOR_SI 1
 #define SWITCH_SELECTOR_SII 2
 #define SWITCH_SELECTOR_SIVB 3
+
+enum LVDCOutputRegister {
+
+	ResetCommandDecoder = 1,
+	RCA110AInterrupt,
+	GuidanceReferenceFailureA = 3,
+	GuidanceReferenceFailureB = 5,
+	FiringCommitEnable = 11,
+	FiringCommitInhibit,
+};
 
 class LVDA
 {
@@ -46,6 +58,7 @@ public:
 	void DriveLVIMUGimbals(double x, double y, double z);
 	VECTOR3 GetLVIMUPIPARegisters();
 	bool GetLVIMUFailure();
+	bool GetGuidanceReferenceFailure();
 
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool TimebaseUpdate(double dt);
@@ -56,6 +69,10 @@ public:
 	bool EvasiveManeuverEnable();
 	bool ExecuteCommManeuver();
 	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
+	bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0);
+
+	void SetOutputRegisterBit(int bit, bool state);
+	bool GetOutputRegisterBit(int bit);
 
 	//LVDC Input Discretes and Interrupts
 
@@ -74,15 +91,13 @@ public:
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool SIBLowLevelSensorsDry();
 	bool GetLiftoff();
+	bool GetGuidanceReferenceRelease();
 
 	//Not real LVDA functions
 	void TLIBegun();
 	void TLIEnded();
 	void SwitchSelectorOld(int chan);
 	double GetMissionTime();
-	void AddForce(VECTOR3 F, VECTOR3 r);
-	double GetFirstStageThrust();
-	double GetAltitude();
 	int GetStage();
 	void SetStage(int stage);
 	int GetApolloNo();
@@ -91,4 +106,6 @@ public:
 	bool GetSCControlPoweredFlight();
 protected:
 	IU *iu;
+
+	std::bitset<13> DiscreteOutputRegister;
 };

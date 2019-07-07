@@ -26,6 +26,7 @@
 #define _PA_SECS_H
 
 #include "DelayTimer.h"
+#include "smjc.h"
 
 class Saturn;
 class FloatBag;
@@ -43,6 +44,7 @@ public:
 	bool GetMode1ASignal() { return Mode1ASignal; };
 	bool GetCMTransferMotor1() { return CMTransferMotor1; };
 	bool GetCMTransferMotor2() { return CMTransferMotor2; };
+	bool GetCMTransferMotor(bool IsSystemA);
 	bool GetInterconnectAndPropellantBurnRelayA() { return InterconnectAndPropellantBurnA; }
 	bool GetInterconnectAndPropellantBurnRelayB() { return InterconnectAndPropellantBurnB; }
 	bool GetOxidFuelPurgeRelay() { return FuelAndOxidBypassPurgeA || FuelAndOxidBypassPurgeB; }
@@ -114,6 +116,8 @@ protected:
 	bool Mode1ASignal;
 
 	Saturn *Sat;
+
+	//NOTEHANDLE RCSCDisplay;
 };
 
 //Master Events Sequence Controller
@@ -121,7 +125,7 @@ class MESC
 {
 public:
 	MESC();
-	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, MESC* OtherMESCSystem, int IsSysA);
+	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, SMJC *smjc, MESC* OtherMESCSystem, int IsSysA);
 	void Timestep(double simdt);
 
 	bool GetApexCoverJettisonRelay() { return ApexCoverJettison; }
@@ -134,12 +138,10 @@ public:
 	bool GetLESAbortRelay() { return LESAbortRelay;	}
 	bool GetLETJettisonAndFrangibleNutsRelay() { return LETJettisonAndFrangibleNutsRelay; }
 	void SetAutoRCSEnableRelay(bool relay) { RCSEnableDisableRelay = relay; };
-	void SetEDSAbortRelay1(bool relay) { EDSAbort1Relay = relay; }
-	void SetEDSAbortRelay2(bool relay) { EDSAbort2Relay = relay; }
-	void SetEDSAbortRelay3(bool relay) { EDSAbort3Relay = relay; }
 	bool FireUllage() { return MESCLogicArm && UllageRelay; };
 	bool BECO() { return BoosterCutoffAbortStartRelay; };
 	bool ELSActivateLogic();
+	bool EDSUnsafeIndicateSignal();
 
 	//Source 12
 	bool MESCLogicBus();
@@ -165,6 +167,8 @@ public:
 	bool EDSAbortLogicOutput;
 	//Forward Heatshield Jettison Event
 	bool FwdHeatshieldJett;
+	//Hand Controller Input Event
+	bool CrewAbortSignal;
 protected:
 
 	void TimerTimestep(double simdt);
@@ -272,8 +276,11 @@ protected:
 	CircuitBrakerSwitch *EDSBatteryBreaker;
 	MissionTimer *MissionTimerDisplay;
 	EventTimer *EventTimerDisplay;
+	SMJC *SMJettCont;
 
 	CircuitBrakerSwitch *EDSLogicBreaker;
+
+	//NOTEHANDLE MESCDisplay;
 };
 
 //Lunar Docking Events Controller
@@ -292,6 +299,10 @@ public:
 	bool GetDockingProbeRetract1() { return DockingProbeRetract1; }
 	bool GetDockingProbeRetract2() { return DockingProbeRetract2; }
 	void ResetLMSLASeparationInitiate() { LMSLASeparationInitiate = false; }
+
+	//Telemetry
+
+	bool CSM_LEM_LockRingSepRelaySignal;
 protected:
 	//Relays
 
@@ -347,16 +358,11 @@ public:
 	bool AbortLightPowerB();
 	bool LiftoffLightPower();
 	bool NoAutoAbortLightPower();
-	virtual bool BECO();
 
 	bool GetDockingProbeRetractPrim1() { return LDECA.GetDockingProbeRetract1(); }
 	bool GetDockingProbeRetractPrim2() { return LDECA.GetDockingProbeRetract2(); }
 	bool GetDockingProbeRetractSec1() { return LDECB.GetDockingProbeRetract1(); }
 	bool GetDockingProbeRetractSec2() { return LDECB.GetDockingProbeRetract2(); }
-
-	void SetEDSAbort1(bool set) { MESCA.SetEDSAbortRelay1(set); MESCB.SetEDSAbortRelay1(set); };
-	void SetEDSAbort2(bool set) { MESCA.SetEDSAbortRelay2(set); MESCB.SetEDSAbortRelay2(set); };
-	void SetEDSAbort3(bool set) { MESCA.SetEDSAbortRelay3(set); MESCB.SetEDSAbortRelay3(set); };
 
 	void SetSaturnType(int sattype);
 
@@ -373,6 +379,9 @@ public:
 	LDEC LDECA;
 	//Lunar Docking Events Controller B
 	LDEC LDECB;
+	//
+	SMJC SMJCA;
+	SMJC SMJCB;
 
 protected:
 	bool IsLogicPoweredAndArmedA();
@@ -470,7 +479,7 @@ protected:
 	
 	//Drogue Parachute Deploy
 	DelayTimer TD1;
-	//Pilot parachute Deploy
+	//Pilot Parachute Deploy
 	DelayTimer TD3;
 
 	CircuitBrakerSwitch *ELSBatteryBreaker;
@@ -479,6 +488,8 @@ protected:
 	MESC* mesc;
 
 	Saturn *Sat;
+
+	//NOTEHANDLE ELSCDisplay;
 
 	friend class PCVB;
 };

@@ -251,12 +251,9 @@
 #define AID_XPOINTER2_SWITCH            464
 #define AID_AUDIO_CONT_SWITCH           465
 #define AID_RELAY_AUDIO_SWITCH          470
-#define AID_CABIN_PRESS_SWITCH          471
 #define AID_HATCH_SWITCH                472
-#define AID_EVA_SWITCH                  473
 #define AID_RCS_PRESS                   474
 #define AID_RCS_QTY                     475
-#define AID_ECS_GAUGES                  476
 #define AID_COAS                        477
 #define AID_PANEL4_SWITCH1              478
 #define AID_PANEL4_SWITCH2              479
@@ -817,6 +814,36 @@
 #define IDB_LEM_UPPER_HATCH_OPEN        1091
 #define AID_LEM_UPPER_HATCH_HANDLE		1092
 #define AID_LEM_UPPER_HATCH_VALVE	    1093
+#define AID_CO2_LIGHT					1094
+#define AID_SUITFAN_LIGHT				1095
+#define AID_H2OSEP_LIGHT				1096
+#define AID_GLYCOL_LIGHT				1097
+#define AID_DC_BUS_LIGHT				1098
+#define AID_BAT_FAULT_LIGHT				1099
+#define IDB_LEM_MASTERALARM             2000
+#define AID_LEM_MA_LEFT                 2001
+#define AID_LEM_MA_RIGHT                2002
+#define IDB_BORDER_47x43                2003
+#define AID_LEM_ISOL_ROTARY				2004
+#define AID_LEM_UTILITY_LT              2005
+#define IDB_LEM_PWRFAIL_LIGHT           2006
+#define AID_LEM_PWRFAIL_THRUST          2007
+#define AID_LEM_PWRFAIL_DPSPRESS        2008
+#define AID_LEM_PWRFAIL_RCSPRESS        2009
+#define AID_LEM_PWRFAIL_ECSPRESS        2010
+#define AID_LEM_PWRFAIL_RCSQUAN         2011
+#define AID_LEM_PWRFAIL_ECSQUAN         2012
+#define AID_LEM_PWRFAIL_GLYCOL          2013
+#define AID_LEM_PWRFAIL_XPTRCDR         2014
+#define AID_LEM_PWRFAIL_XPTRLMP         2015
+#define IDB_RADAR_TAPE2                 2016
+#define IDB_BORDER_55x55                2017
+#define IDB_BORDER_109x119              2018
+#define IDB_BORDER_68x69                2019
+#define IDB_BORDER_210x200              2020
+#define IDB_BORDER_104x106              2021
+#define IDB_BORDER_286x197              2022
+
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

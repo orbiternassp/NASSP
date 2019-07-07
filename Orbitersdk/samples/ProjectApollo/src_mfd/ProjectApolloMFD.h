@@ -53,6 +53,13 @@ public:
 	bool SetSwitchSelectorChannel(char *rstr);
 	bool SetTimebaseUpdate(char *rstr);
 	void CalculateV42Angles(void);
+	void menuPressEnterOnCMCLGC(void);
+	void menuPressEnterOnDSKYDEDA(void);
+	void menuCycleLMAlignType();
+	bool SetImpactTIG(char *rstr);
+	bool SetImpactBT(char *rstr);
+	bool SetImpactPitch(char *rstr);
+	bool SetImpactYaw(char *rstr);
 
 	void menuVoid();
 	void menuSetMainPage();
@@ -70,6 +77,7 @@ public:
 	void menuSetCrewNumber();
 	void menuSetCDRInSuit();
 	void menuSetLMPInSuit();
+	void menuStartEVA();
 	void menuSetPrimECSTestHeaterPower();
 	void menuSetSecECSTestHeaterPower();
 	void menuAbortUplink();
@@ -88,6 +96,10 @@ public:
 	void menuSetSwitSelChannel();
 	void menuIUUplink();
 	void menuSetTBUpdateTime();
+	void menuSetImpactTIG();
+	void menuSetImpactBT();
+	void menuSetImpactPitch();
+	void menuSetImpactYaw();
 
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
@@ -96,6 +108,9 @@ public:
 	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 protected:
+
+	void GetCSM();
+
 	HBITMAP hBmpLogo;
 	DWORD width;
 	DWORD height;

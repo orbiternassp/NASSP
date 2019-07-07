@@ -409,7 +409,7 @@ void NWayPowerMerge::WireToBus(int bus, e_object* e)
 }
 
 DCBusController::DCBusController(char *i_name, PanelSDK &p) : 
-	sdk(p), fcPower(0, p), batPower(0, p), busPower(0, p, 4)
+	sdk(p), fcPower(0, p), batPower(0, p), busPower(0, p, 3)
 
 {
 	if (i_name)
@@ -431,7 +431,7 @@ DCBusController::DCBusController(char *i_name, PanelSDK &p) :
 	sdk.AddElectrical(this, false);
 }
 
-void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *vp, e_object *bc1, e_object *bc2, e_object *bc3)
+void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object *bat1, e_object *bat2, e_object *gse, e_object *bc1, e_object *bc2, e_object *bc3)
 
 {
 	fuelcell1 = fc1;
@@ -449,7 +449,6 @@ void DCBusController::Init(e_object *fc1, e_object *fc2, e_object *fc3, e_object
 	busPower.WireToBus(1, &fcPower);
 	busPower.WireToBus(2, &batPower);
 	busPower.WireToBus(3, NULL);		// Source 3 is for ground power.
-	busPower.WireToBus(4, vp);			// Source 4 is for docked vessel power.
 }
 
 void DCBusController::ConnectFuelCell(int fc, bool connect)
@@ -552,6 +551,11 @@ bool DCBusController::IsBusContPowered(int fc)
 		return (busCont3->Voltage() > SP_MIN_DCVOLTAGE);
 }
 
+//Temporary until the SM buses are properly simulated
+bool DCBusController::IsSMBusPowered()
+{
+	return (fcPower.Voltage() > SP_MIN_DCVOLTAGE);
+}
 
 bool DCBusController::IsFuelCellDisconnectAlarm()
 
@@ -621,13 +625,15 @@ BatteryCharger::BatteryCharger(char *i_name, PanelSDK &p) :
 	batSupply3 = NULL;
 	currentBattery = NULL;
 	acPower = NULL;
+	bat3Power = NULL;
 
 	sdk.AddElectrical(this, false);
 }
 
 void BatteryCharger::Init(e_object *bat1, e_object *bat2, e_object *bat3, 
 					      e_object *batSup1, e_object *batSup2, e_object *batSup3,
-			              e_object *dc1, e_object *dc2, e_object *ac)
+			              e_object *dc1, e_object *dc2, e_object *ac,
+						  e_object *bat3pwr)
 {
 	battery1 = bat1;
 	battery2 = bat2;
@@ -637,35 +643,56 @@ void BatteryCharger::Init(e_object *bat1, e_object *bat2, e_object *bat3,
 	batSupply2 = batSup2;
 	batSupply3 = batSup3;
 
+	bat3Power = bat3pwr;
+
 	dcPower.WireToBuses(dc1, dc2);
 	acPower = ac;
 }
 
 void BatteryCharger::Charge(int bat)
-
 {
 	if (bat == 0) {
 		batSupply1->WireTo(NULL);
 		batSupply2->WireTo(NULL);
-		batSupply3->WireTo(NULL);
+
+		//Battery 3 online
+		battery3->WireTo(NULL);
+		bat3Power->WireTo(battery3);
+		batSupply3->WireTo(bat3Power);
+
 		currentBattery = NULL;
 
 	} else if (bat == 1) {
 		batSupply1->WireTo(this);
 		batSupply2->WireTo(NULL);
-		batSupply3->WireTo(NULL);
+
+		//Battery 3 online
+		battery3->WireTo(NULL);
+		bat3Power->WireTo(battery3);
+		batSupply3->WireTo(bat3Power);
+
 		currentBattery = battery1;
 
 	} else if (bat == 2) {
 		batSupply1->WireTo(NULL);
 		batSupply2->WireTo(this);
-		batSupply3->WireTo(NULL);
+
+		//Battery 3 online
+		battery3->WireTo(NULL);
+		bat3Power->WireTo(battery3);
+		batSupply3->WireTo(bat3Power);
+
 		currentBattery = battery2;
 
 	} else if (bat == 3) {
 		batSupply1->WireTo(NULL);
 		batSupply2->WireTo(NULL);
+
+		//Battery 3 offline
 		batSupply3->WireTo(this);
+		bat3Power->WireTo(batSupply3);
+		battery3->WireTo(bat3Power);
+
 		currentBattery = battery3;
 	}
 }
