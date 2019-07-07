@@ -3898,8 +3898,8 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 	if (s == &FuelCellPhIndicator) {
-    if (stage <= CSM_LEM_STAGE && FuelCell1PumpsACCB.IsPowered())
-			FuelCellPhIndicator.SetState(1);	// Not simulated at the moment. Tb wired to pump cb.
+		if (stage <= CSM_LEM_STAGE && FuelCell1PumpsACCB.IsPowered())
+			FuelCellPhIndicator.SetState(1);	// Not simulated at the moment. Gets power from FC1 pump CB.
 		else
 			FuelCellPhIndicator.SetState(0);	
 
