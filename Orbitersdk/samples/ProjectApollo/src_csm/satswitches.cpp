@@ -1057,17 +1057,20 @@ void SaturnSPSPercentMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 }
 
 
-double SaturnSPSOxidPercentMeter::QueryValue(){
+double SaturnSPSOxidPercentMeter::QueryValue()
+{
 	return Sat->GetSPSPropellant()->GetOxidPercent(); 
 }
 
 
-double SaturnSPSFuelPercentMeter::QueryValue(){
+double SaturnSPSFuelPercentMeter::QueryValue()
+{
 	return Sat->GetSPSPropellant()->GetFuelPercent(); 
 }
 
 
-double SaturnSPSOxidUnbalMeter::QueryValue(){
+double SaturnSPSOxidUnbalMeter::QueryValue()
+{
 	return Sat->GetSPSPropellant()->GetOxidUnbalanceLB();
 }
 
