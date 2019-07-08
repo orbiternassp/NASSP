@@ -1699,7 +1699,7 @@ void Saturn::SetSwitches(int panel) {
 	MasterAlarmSwitch.Init(&cws);
 	MasterAlarmSwitchRow.AddSwitch(&MasterAlarmSwitch);
 
-	AccelGMeterRow.Init(AID_GMETER, MainPanel, &GaugePower);
+	AccelGMeterRow.Init(AID_GMETER, MainPanel);
 	AccelGMeter.Init(g_Param.pen[4], g_Param.pen[4], AccelGMeterRow, this);
 
 	THCRotaryRow.Init(AID_THC, MainPanel);
@@ -1849,7 +1849,7 @@ void Saturn::SetSwitches(int panel) {
 	// RCS Gauges.
 	//
 
-	RCSGaugeRow.Init(AID_RCS_GAUGES, MainPanel, &GaugePower);
+	RCSGaugeRow.Init(AID_RCS_GAUGES, MainPanel, &Panel276CB3);
 	RCSQuantityMeter.Init(srf[SRF_NEEDLE], RCSGaugeRow, &RCSIndicatorsSwitch, &SMRCSIndSwitch);
 	RCSFuelPressMeter.Init(srf[SRF_NEEDLE], RCSGaugeRow, &RCSIndicatorsSwitch);
 	RCSHeliumPressMeter.Init(srf[SRF_NEEDLE], RCSGaugeRow, &RCSIndicatorsSwitch);
@@ -2237,7 +2237,7 @@ void Saturn::SetSwitches(int panel) {
 	DCAmpMeter.Init(g_Param.pen[4], g_Param.pen[4], DCAmpMeterRow, this, &DCIndicatorsRotary);
 	DCAmpMeter.SetSurface(srf[SRF_DCAMPS], 99, 98);
 
-	CryoTankMetersRow.Init(AID_CYROTANKINDICATORS, MainPanel, &GaugePower);
+	CryoTankMetersRow.Init(AID_CYROTANKINDICATORS, MainPanel, &InstrumentationPowerFeeder);
 	H2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 	H2Pressure2Meter.Init(2, srf[SRF_NEEDLE], CryoTankMetersRow, this);
 	O2Pressure1Meter.Init(1, srf[SRF_NEEDLE], CryoTankMetersRow, this, &O2PressIndSwitch);
@@ -2295,7 +2295,7 @@ void Saturn::SetSwitches(int panel) {
 
 	EcsQuantityMetersRow.Init(AID_ECSQUANTITYMETERS, MainPanel, &GaugePower);
 	AccumQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this, &ECSIndicatorsSwitch);
-	H2oQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this, &H2oQtyIndSwitch);
+	H2oQuantityMeter.Init(g_Param.pen[4], g_Param.pen[4], EcsQuantityMetersRow, this, &H2oQtyIndSwitch, &ECSWastePotTransducerFeeder);
 
 	EcsRadiatorIndicatorRow.Init(AID_ECSRADIATORINDICATOR, MainPanel, &GaugePower);
 	EcsRadiatorIndicator.Init( 0, 0, 23, 23, srf[SRF_ECSINDICATOR], EcsRadiatorIndicatorRow);
@@ -2387,11 +2387,11 @@ void Saturn::SetSwitches(int panel) {
 	SPSOxidUnbalMeterRow.Init(AID_SPSOXIDUNBALMETER, MainPanel);
 	SPSOxidUnbalMeter.Init(g_Param.pen[3], g_Param.pen[3], SPSOxidUnbalMeterRow, this);
 
-	SPSMetersRow.Init(AID_SPSMETERS, MainPanel, &GaugePower);
-	SPSTempMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this);
-	SPSHeliumNitrogenPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, &SPSPressIndSwitch);
-	SPSFuelPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, true);
-	SPSOxidPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, false);
+	SPSMetersRow.Init(AID_SPSMETERS, MainPanel);
+	SPSTempMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, &Panel276CB3);
+	SPSHeliumNitrogenPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, &SPSPressIndSwitch); // Needs wiring to multiple sources
+	SPSFuelPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, true, &Panel276CB4);
+	SPSOxidPressMeter.Init(srf[SRF_NEEDLE], SPSMetersRow, this, false, &Panel276CB3);
 
 	LVSPSPcMeterRow.Init(AID_THRUSTMETER, MainPanel, &GaugePower);
 	LVSPSPcMeter.Init(g_Param.pen[4], g_Param.pen[4], LVSPSPcMeterRow, this, &LVSPSPcIndicatorSwitch, srf[SRF_THRUSTMETER]);
@@ -3898,8 +3898,8 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 	if (s == &FuelCellPhIndicator) {
-		if (stage <= CSM_LEM_STAGE)
-			FuelCellPhIndicator.SetState(1);	// Not simulated at the moment
+		if (stage <= CSM_LEM_STAGE && FuelCell1PumpsACCB.IsPowered())
+			FuelCellPhIndicator.SetState(1);	// Not simulated at the moment. Gets power from FC1 pump CB.
 		else
 			FuelCellPhIndicator.SetState(0);	
 
