@@ -51,8 +51,8 @@ AS-203:ProjectApollo/Saturn1B
   SIIEMPTYMASS 15672.0
   LVDC_BEGIN
     LVDC_FSPFileName Config\ProjectApollo\AS-203 Flight Sequence Program.txt
-    LVDC_Azimuth 72.0
-    LVDC_DescNodeAngle 120.5405773
+    LVDC_Ax[0] 72.0
+    LVDC_Lambda_0 120.5405773
 	LVDC_dV_B 12.0
 	LVDC_Fx[1][0] -3.430731017
 	LVDC_Fx[1][1] 0.6280592536
