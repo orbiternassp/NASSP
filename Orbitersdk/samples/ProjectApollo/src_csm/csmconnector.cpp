@@ -642,61 +642,6 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_LOAD_TLI_SOUNDS:
-		if (OurVessel)
-		{
-			OurVessel->LoadTLISounds();
-			return true;
-		}
-		break;
-
-	case IUCSM_PLAY_COUNT_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlayCountSound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_PLAY_SECO_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlaySecoSound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_PLAY_SEPS_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlaySepsSound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_PLAY_TLI_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlayTLISound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_PLAY_TLISTART_SOUND:
-		if (OurVessel)
-		{
-			OurVessel->PlayTLIStartSound(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IUCSM_CLEAR_TLI_SOUNDS:
-		if (OurVessel)
-		{
-			OurVessel->ClearTLISounds();
-			return true;
-		}
-		break;
 	case IUCSM_TLI_BEGUN:
 		if (OurVessel)
 		{
@@ -704,6 +649,7 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			return true;
 		}
 		break;
+
 	case IUCSM_TLI_ENDED:
 		if (OurVessel)
 		{

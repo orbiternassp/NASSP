@@ -32,11 +32,6 @@
 #include "nasspsound.h"
 #include "nasspdefs.h"
 
-#include "ioChannels.h"
-#include "apolloguidance.h"
-
-#include "csmcomputer.h"
-
 #include "saturn.h"
 #include "papi.h"
 #include "IUUmbilical.h"
@@ -658,69 +653,6 @@ int IUToCSMCommandConnector::GetAGCAttitudeError(int axis)
 	return 0;
 }
 
-void IUToCSMCommandConnector::LoadTLISounds()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_LOAD_TLI_SOUNDS;
-
-	SendMessage(cm);
-}
-
-void IUToCSMCommandConnector::ClearTLISounds()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_CLEAR_TLI_SOUNDS;
-
-	SendMessage(cm);
-}
-
-void IUToCSMCommandConnector::PlayCountSound(bool StartStop)
-
-{
-	PlayStopSound(IUCSM_PLAY_COUNT_SOUND, StartStop);
-}
-
-void IUToCSMCommandConnector::PlaySecoSound(bool StartStop)
-
-{
-	PlayStopSound(IUCSM_PLAY_SECO_SOUND, StartStop);
-}
-
-void IUToCSMCommandConnector::PlaySepsSound(bool StartStop)
-
-{
-	PlayStopSound(IUCSM_PLAY_SEPS_SOUND, StartStop);
-}
-
-void IUToCSMCommandConnector::PlayTLISound(bool StartStop)
-
-{
-	PlayStopSound(IUCSM_PLAY_TLI_SOUND, StartStop);
-}
-
-void IUToCSMCommandConnector::PlayTLIStartSound(bool StartStop)
-
-{
-	PlayStopSound(IUCSM_PLAY_TLISTART_SOUND, StartStop);
-}
-
-void IUToCSMCommandConnector::PlayStopSound(IUCSMMessageType sound, bool StartStop)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = sound;
-	cm.val1.bValue = StartStop;
-
-	SendMessage(cm);
-}
 void IUToCSMCommandConnector::TLIBegun()
 {
 	ConnectorMessage cm;
@@ -1423,9 +1355,6 @@ void IU1B::SwitchSelector(int item)
 {
 	switch (item)
 	{
-	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
-		commandConnector.SetAGCInputChannelBit(030, LiftOff, true);
-		break;
 	case 1: //Q-Ball Power Off
 		lvCommandConnector.SetQBallPowerOff();
 		break;
@@ -1585,9 +1514,6 @@ void IUSV::SwitchSelector(int item)
 {
 	switch (item)
 	{
-	case 0:	//Liftoff (NOT A REAL SWITCH SELECTOR CHANNEL)
-		commandConnector.SetAGCInputChannelBit(030, LiftOff, true);
-		break;
 	case 1: //Q-Ball Power Off
 		lvCommandConnector.SetQBallPowerOff();
 		break;
@@ -1697,7 +1623,7 @@ void IUSV::SwitchSelector(int item)
 		ControlDistributor.SetExcessiveRateRollAutoAbortInhibitEnable(false);
 		break;
 	case 43: // S-IVB Ullage Thrust Present Indication On
-		commandConnector.SetAGCInputChannelBit(030, UllageThrust, true);
+		eds.SetUllageThrustIndicate(true);
 		break;
 	case 44: //Flight Control Computer Switch Point No. 5
 		ControlDistributor.SetFCCSwitchPoint5On();
@@ -1705,7 +1631,7 @@ void IUSV::SwitchSelector(int item)
 	case 45: //Spare
 		break;
 	case 46: //S-IVB Ullage Thrust Present Indication Off
-		commandConnector.SetAGCInputChannelBit(030, UllageThrust, false);
+		eds.SetUllageThrustIndicate(false);
 		break;
 	case 47: //Flight Control Computer Switch Point No. 8
 		ControlDistributor.SetFCCSwitchPoint8On();

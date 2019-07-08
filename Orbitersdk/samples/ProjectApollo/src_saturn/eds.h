@@ -61,7 +61,7 @@ public:
 	bool GetAbortLightSignal() { return AbortLightSignal; }
 
 	//To LVDA
-	bool GetIULiftoff() { return IULiftoffRelay; }
+	bool GetIULiftoff() { return LiftoffRelay; }
 	virtual bool GetSIISIVBSepSeqStart() { return false; }
 
 	//To FCC
@@ -121,11 +121,7 @@ protected:
 	//K3 (K91)
 	bool EDSLiftoffInhibitB;
 	//K4 (K4)
-	bool IULiftoffRelay;
-	//K65 (K92)
-	bool EDSLiftoffEnableA;
-	//K66 (K93)
-	bool EDSLiftoffEnableB;
+	bool LiftoffRelay;
 	//K40 (K20-1)
 	bool LVEnginesCutoffFromSC1;
 	//K41-1/2 (K20-2/4)
@@ -136,6 +132,10 @@ protected:
 	bool SIVBEngineThrustMonitorA;
 	//K63 (K134)
 	bool SIVBEngineThrustMonitorB;
+	//K65 (K92)
+	bool EDSLiftoffEnableA;
+	//K66 (K93)
+	bool EDSLiftoffEnableB;
 	//K76 (K232)
 	bool SIVBRestartAlert;
 	//K77-1/2
@@ -164,6 +164,8 @@ protected:
 	bool SIAllEnginesOKA;
 	//A4K4 (K219)
 	bool SIAllEnginesOKB;
+	//K26 (K233)
+	bool UllageThrustIndicate;
 	bool SIVBEngineCutoffDisabled;
 
 	//Signals
@@ -211,6 +213,7 @@ public:
 	void Timestep(double simdt);
 	void SetSIIEngineOutIndicationA() { SIIEngineOutIndicationA = true; }
 	void SetSIIEngineOutIndicationB() { SIIEngineOutIndicationB = true; }
+	void SetUllageThrustIndicate(bool set) { UllageThrustIndicate = set; }
 
 	double GetLVTankPressure(int n);
 	bool GetSIISIVBSepSeqStart() { return SIISIVBSepSeqStart; }

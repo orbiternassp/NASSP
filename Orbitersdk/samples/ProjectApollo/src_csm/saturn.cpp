@@ -4680,51 +4680,6 @@ void Saturn::SetContrailLevel(double level)
 	contrailLevel = level;
 }
 
-void Saturn::PlayCountSound(bool StartStop)
-
-{
-	if (StartStop)
-	{
-		Scount.play(NOLOOP,245);
-	}
-	else
-	{
-		Scount.stop();
-	}
-}
-
-void Saturn::PlaySecoSound(bool StartStop)
-
-{
-}
-
-void Saturn::PlaySepsSound(bool StartStop)
-
-{
-	if (StartStop)
-	{
-		SepS.play(LOOP, 130);
-	}
-	else
-	{
-		SepS.stop();
-	}
-}
-
-void Saturn::PlayTLISound(bool StartStop)
-
-{
-}
-
-void Saturn::PlayTLIStartSound(bool StartStop)
-
-{
-}
-
-void Saturn::SIISwitchSelector(int channel)
-{
-}
-
 void Saturn::SIVBSwitchSelector(int channel)
 {
 	sivb->SwitchSelector(channel);

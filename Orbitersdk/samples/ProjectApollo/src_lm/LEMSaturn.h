@@ -65,9 +65,6 @@ public:
 	void SeparateStage(UINT stage);
 	void SetStage(int s);
 
-	void PlayCountSound(bool StartStop);
-	void PlaySepsSound(bool StartStop);
-
 	int GetStage() { return lemsat_stage; };
 	void GetSIThrustOK(bool *ok);
 	bool GetSIVBThrustOK();
@@ -214,7 +211,6 @@ protected:
 	///
 	/// \brief Connector from LM to IU.
 	///
-	LMToIUConnector iuCommandConnector;
 	LEMSaturnToIUCommandConnector sivbCommandConnector;
 };
 

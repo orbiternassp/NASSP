@@ -1021,7 +1021,7 @@ public:
 	/// 
 	virtual void SwitchSelector(int item) = 0;
 	virtual void SISwitchSelector(int channel) = 0;
-	virtual void SIISwitchSelector(int channel);
+	virtual void SIISwitchSelector(int channel) {}
 	void SIVBSwitchSelector(int channel);
 
 	//
@@ -1148,36 +1148,6 @@ public:
 	/// \brief Clear TLI sounds.
 	///
 	void ClearTLISounds();
-
-	///
-	/// \brief Play or stop countdown sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlayCountSound(bool StartStop);
-
-	///
-	/// \brief Play or stop SECO sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlaySecoSound(bool StartStop);
-
-	///
-	/// \brief Play or stop seperation sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlaySepsSound(bool StartStop);
-
-	///
-	/// \brief Play or stop TLI sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlayTLISound(bool StartStop);
-
-	///
-	/// \brief Play or stop TLI start sound.
-	/// \param StartStop True to start, false to stop.
-	///
-	void PlayTLIStartSound(bool StartStop);
 
 	///
 	/// \brief We've hard docked, so check connections.

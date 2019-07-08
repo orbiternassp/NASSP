@@ -64,13 +64,6 @@ enum IUCSMMessageType
 	IUCSM_GET_BECO_COMMAND,					///< Get Boost Engine Cutoff command from SECS.
 	IUCSM_IS_EDS_BUS_POWERED,
 	IUCSM_GET_AGC_ATTITUDE_ERROR,
-	IUCSM_LOAD_TLI_SOUNDS,					///< Load sounds required for TLI burn.
-	IUCSM_PLAY_COUNT_SOUND,					///< Play/stop countdown sound.
-	IUCSM_PLAY_SECO_SOUND,					///< Play/stop SECO sound.
-	IUCSM_PLAY_SEPS_SOUND,					///< Play/stop Seperation sound.
-	IUCSM_PLAY_TLI_SOUND,					///< Play/stop TLI sound.
-	IUCSM_PLAY_TLISTART_SOUND,				///< Play/stop TLI start sound.
-	IUCSM_CLEAR_TLI_SOUNDS,					///< Unload the sounds required for the TLI burn.
 	IUCSM_TLI_BEGUN,						///< Indicate for the event manager that the TLI burn has occured
 	IUCSM_TLI_ENDED,						///< Indicate for the event manager that the TLI burn has ended
 	IUCSM_IS_EDS_UNSAFE,
@@ -173,24 +166,10 @@ public:
 
 	void SetIU(IU *iu) { ourIU = iu; };
 
-	//
-	// Sound functions.
-	//
-
-	void LoadTLISounds();
-	void ClearTLISounds();
 	void TLIBegun();
-	void TLIEnded();
-
-	void PlayCountSound(bool StartStop);
-	void PlaySecoSound(bool StartStop);
-	void PlaySepsSound(bool StartStop);
-	void PlayTLISound(bool StartStop);
-	void PlayTLIStartSound(bool StartStop);
+	void TLIEnded();	
 
 protected:
-
-	void PlayStopSound(IUCSMMessageType sound, bool StartStop);
 
 	IU *ourIU;
 };

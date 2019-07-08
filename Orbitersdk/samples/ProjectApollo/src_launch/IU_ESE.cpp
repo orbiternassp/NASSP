@@ -117,7 +117,6 @@ void IU_ESE::SetEDSMode(int mode)
 		EDSPowerInhibit = true;
 		EDSLiftoffInhibitA = true;
 		EDSLiftoffInhibitB = true;
-		CommandVehicleLiftoffIndicationInhibit = true;
 		AutoAbortInhibit = true;
 		OverrateSimulate = false;
 		ThrustOKIndicateEnableInhibitA = true;

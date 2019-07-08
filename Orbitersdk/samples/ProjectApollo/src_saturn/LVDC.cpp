@@ -617,7 +617,6 @@ void LVDC1B::TimeStep(double simdt) {
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
 					liftoff = true;
-					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
 				}
 				break;
@@ -4623,7 +4622,6 @@ void LVDCSV::TimeStep(double simdt) {
 					liftoff = true;
 					// Fall into TB1
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
-					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 0);
 					break;
 				}
 				break;

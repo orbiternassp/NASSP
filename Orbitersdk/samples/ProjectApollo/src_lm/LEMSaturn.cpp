@@ -189,7 +189,6 @@ DLLCLBK void ovcExit(VESSEL *vessel)
 LEMSaturn::LEMSaturn(OBJHANDLE hObj, int fmodel) : LEM(hObj, fmodel),
 	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk),
 	LMLVSeparationPyros("LM-LV-Separation-Pyros", Panelsdk),
-	iuCommandConnector(agc, this),
 	sivbCommandConnector(this)
 {
 	refcount = 0;
@@ -308,7 +307,6 @@ void LEMSaturn::initSaturn1b()
 
 	SetAnimation(panelAnim, panelProc);
 
-	iuCommandConnector.SetLEM(this);
 	sivbCommandConnector.SetLEM(this);
 }
 
@@ -320,7 +318,6 @@ void LEMSaturn::SetStage(int s)
 
 		soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, TRUE);
 
-		iuCommandConnector.Disconnect();
 		sivbCommandConnector.Disconnect();
 	}
 }
@@ -547,7 +544,6 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 
 	if (lemsat_stage < CSM_LEM_STAGE)
 	{
-		iu->ConnectToCSM(&iuCommandConnector);
 		iu->ConnectToLV(&sivbCommandConnector);
 
 		imu.SetVesselFlag(false);
@@ -678,6 +674,15 @@ void LEMSaturn::clbkPreStep(double simt, double simdt, double mjd)
 	{
 		if (sivb)
 			sivb->Timestep(simdt);
+	}
+
+	//Countdown
+	if (lemsat_stage == PRELAUNCH_STAGE && MissionTime > -10.9)
+	{
+		if (Scount.isValid()) {
+			Scount.play();
+			Scount.done();
+		}
 	}
 
 	// S-IB/S-IVB separation
@@ -1315,32 +1320,6 @@ void LEMSaturn::GetApolloName(char *s)
 	sprintf(s, "AS-204");
 }
 
-void LEMSaturn::PlayCountSound(bool StartStop)
-
-{
-	if (StartStop)
-	{
-		Scount.play(NOLOOP, 245);
-	}
-	else
-	{
-		Scount.stop();
-	}
-}
-
-void LEMSaturn::PlaySepsSound(bool StartStop)
-
-{
-	if (StartStop)
-	{
-		SepS.play(LOOP, 130);
-	}
-	else
-	{
-		SepS.stop();
-	}
-}
-
 void LEMSaturn::GetSIThrustOK(bool *ok)
 {
 	for (int i = 0;i < 5;i++)
@@ -1525,27 +1504,12 @@ void LEMSaturn::SwitchSelector(int item) {
 	int i = 0;
 
 	switch (item) {
-	case 10:
-		DeactivatePrelaunchVenting();
-		break;
-	case 11:
-		ActivatePrelaunchVenting();
-		break;
 	case 12:
 		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
 		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
 			SetThrusterResource(th_1st[i], ph_1st);
 		}
 		CreateStageOne();								// Create hidden stage one, for later use in staging
-		break;
-	case 13:
-		if (Scount.isValid()) {
-			Scount.play();
-			Scount.done();
-		}
-		break;
-	case 14:
-		DeactivatePrelaunchVenting();
 		break;
 	case 17:
 		// Move hidden S1B

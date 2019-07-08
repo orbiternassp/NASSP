@@ -24,6 +24,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 
+#include "ioChannels.h"
 #include "LVIMU.h"
 #include "iu.h"
 
@@ -64,7 +65,7 @@ EDS::EDS(IU *iu)
 	EDSAbortSignal2 = false;
 	EDSAbortSignal3 = false;
 	SIVBRestartAlert = false;
-	IULiftoffRelay = false;
+	LiftoffRelay = false;
 	SCControlEnableRelay = false;
 	LVAttRefFail = false;
 	IUCommandSystemEnable = false;
@@ -82,6 +83,7 @@ EDS::EDS(IU *iu)
 	ExcessivePitchYawRateIndication = false;
 	SIAllEnginesOKA = false;
 	SIAllEnginesOKB = false;
+	UllageThrustIndicate = false;
 
 	AutoAbortBus = false;
 	IUEDSBusPowered = true;
@@ -112,9 +114,9 @@ void EDS::Timestep(double simdt)
 		IUEDSBusPowered = false;
 
 	if (iu->ESEGetCommandVehicleLiftoffIndicationInhibit())
-		IULiftoffRelay = true;
+		LiftoffRelay = true;
 	else
-		IULiftoffRelay = false;
+		LiftoffRelay = false;
 
 	if (iu->ESEPadAbortRequest())
 		PadAbortRequest = true;
@@ -302,6 +304,18 @@ void EDS::Timestep(double simdt)
 	{
 		iu->GetLVIMU()->SetFailed();
 	}
+
+	//Guidance Reference Release
+	if (iu->ESEGetGuidanceReferenceRelease())
+		iu->GetCommandConnector()->SetAGCInputChannelBit(030, GuidanceReferenceRelease, true);
+	else
+		iu->GetCommandConnector()->SetAGCInputChannelBit(030, GuidanceReferenceRelease, false);
+
+	//Liftoff
+	if (LiftoffRelay)
+		iu->GetCommandConnector()->SetAGCInputChannelBit(030, LiftOff, false);
+	else
+		iu->GetCommandConnector()->SetAGCInputChannelBit(030, LiftOff, true);
 }
 
 void EDS::SetPlatformFailureParameters(bool PlatFail, double PlatFailTime)
@@ -425,12 +439,8 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "IUEDSBUSPOWERED", IUEDSBusPowered);
 	papiWriteScenario_bool(scn, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	papiWriteScenario_bool(scn, "ABORTLIGHTSIGNAL", AbortLightSignal);
-
-	//Only save GSE relays before liftoff
-	if (iu->IsUmbilicalConnected())
-	{
-		papiWriteScenario_bool(scn, "IULIFTOFFRELAY", IULiftoffRelay);
-	}
+	papiWriteScenario_bool(scn, "LIFTOFFRELAY", LiftoffRelay);
+	papiWriteScenario_bool(scn, "ULLAGETHRUSTINDICATE", UllageThrustIndicate);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -467,9 +477,8 @@ void EDS::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "IUEDSBUSPOWERED", IUEDSBusPowered);
 		papiReadScenario_bool(line, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 		papiReadScenario_bool(line, "ABORTLIGHTSIGNAL", AbortLightSignal);
-
-		//GSE
-		papiReadScenario_bool(line, "IULIFTOFFRELAY", IULiftoffRelay);
+		papiReadScenario_bool(line, "LIFTOFFRELAY", LiftoffRelay);
+		papiReadScenario_bool(line, "ULLAGETHRUSTINDICATE", UllageThrustIndicate);
 	}
 }
 
@@ -833,6 +842,12 @@ void EDSSV::Timestep(double simdt)
 		SIISIVBSepSeqStart = true;
 	else
 		SIISIVBSepSeqStart = false;
+
+	//CMC Ullage Thrust Indication
+	if (UllageThrustIndicate)
+		iu->GetCommandConnector()->SetAGCInputChannelBit(030, UllageThrust, true);
+	else
+		iu->GetCommandConnector()->SetAGCInputChannelBit(030, UllageThrust, false);
 
 	//sprintf(oapiDebugString(), "%f", PlatformFailureTime);
 }
