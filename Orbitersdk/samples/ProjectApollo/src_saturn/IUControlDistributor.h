@@ -33,9 +33,8 @@ public:
 	virtual ~IUControlDistributor() {}
 
 	virtual void Timestep(double simdt);
-	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str) = 0;
 	virtual void LoadState(FILEHANDLE scn, char *end_str) = 0;
-	void LoadState(char *line);
 
 	virtual bool GetSIBurnMode() = 0;
 	virtual bool GetSIIBurnMode() { return false; }
@@ -83,9 +82,12 @@ public:
 	void SetControlSignalProcessorPowerOn(bool set) { ControlSignalProcessorPowerOn = set; }
 	virtual void ResetBus1();
 	virtual void ResetBus2();
-	bool GetEDSEnableLogic();
+	bool GetEDSEnableLogicZero();
 protected:
 	IU *iu;
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
 
 	//Relays:
 

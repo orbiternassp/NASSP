@@ -36,8 +36,8 @@ public:
 	void SetLiftoffCircuitAFailure() { LiftoffCircuitAFailure = true; }
 	void SetLiftoffCircuitBFailure() { LiftoffCircuitBFailure = true; }
 
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
+	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str) = 0;
+	virtual void LoadState(FILEHANDLE scn, char *end_str) = 0;
 
 	//Switch Selector Functions
 	void SetSIVBEngineOutIndicationA(bool set) { SIVBEngineOutIndicationA = set; }
@@ -50,8 +50,8 @@ public:
 	void EnableCommandSystem() { IUCommandSystemEnable = true; }
 
 	//GSE Reset Buses
-	void ResetBus1();
-	void ResetBus2();
+	virtual void ResetBus1();
+	virtual void ResetBus2();
 
 	//To spacecraft
 	bool GetLiftoffCircuitA() { return !LiftoffCircuitAFailure && LiftoffA; }
@@ -83,6 +83,9 @@ public:
 protected:
 	IU* iu;
 
+	void SaveState(FILEHANDLE scn);
+	void LoadState(char *line);
+
 	bool LVEnginesCutoffVote();
 
 	//Buses:
@@ -108,10 +111,6 @@ protected:
 	bool LVEnginesCutoffEnable1;
 	//K29 (K19-2)
 	bool LVEnginesCutoffEnable2;
-	//K78-1 (K173)
-	bool SIIEngineOutIndicationA;
-	//K88-2 (K174)
-	bool SIIEngineOutIndicationB;
 	//K6 (K66)
 	bool SIVBEngineOutIndicationA;
 	//K91 (K167)
@@ -164,8 +163,6 @@ protected:
 	bool SIAllEnginesOKA;
 	//A4K4 (K219)
 	bool SIAllEnginesOKB;
-	//K26 (K233)
-	bool UllageThrustIndicate;
 	bool SIVBEngineCutoffDisabled;
 
 	//Signals
@@ -184,7 +181,6 @@ protected:
 
 	//Other
 	bool SIEDSCutoff;
-	bool SIIEDSCutoff;
 	bool SIVBEDSCutoff;
 
 	//Common Saturn Failures
@@ -199,6 +195,9 @@ class EDS1B : public EDS
 public:
 	EDS1B(IU *iu);
 	void Timestep(double simdt);
+
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
 protected:
 
 	bool SIThrustNotOK[8];
@@ -211,12 +210,20 @@ class EDSSV : public EDS
 public:
 	EDSSV(IU *iu);
 	void Timestep(double simdt);
+
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
 	void SetSIIEngineOutIndicationA() { SIIEngineOutIndicationA = true; }
 	void SetSIIEngineOutIndicationB() { SIIEngineOutIndicationB = true; }
 	void SetUllageThrustIndicate(bool set) { UllageThrustIndicate = set; }
 
 	double GetLVTankPressure(int n);
 	bool GetSIISIVBSepSeqStart() { return SIISIVBSepSeqStart; }
+
+	//GSE Reset Buses
+	void ResetBus1();
+	void ResetBus2();
 protected:
 	//K21-1-5, K22-1-5
 	bool SIThrustNotOK[5];
@@ -233,8 +240,16 @@ protected:
 	//K69 (K223), K70 (K224)
 	bool SIISIVBNotSeparated;
 
+	//K78-1 (K173)
+	bool SIIEngineOutIndicationA;
+	//K88-2 (K174)
+	bool SIIEngineOutIndicationB;
 	//A9K6, A10K2
 	bool SIISIVBSepSeqStart;
+	//K26 (K233)
+	bool UllageThrustIndicate;
+
+	bool SIIEDSCutoff;
 
 private:
 	const int SIIEngInd[5] = { 1,3,0,2,4 };

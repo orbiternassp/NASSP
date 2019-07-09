@@ -542,12 +542,27 @@ bool IUToCSMCommandConnector::GetIUUPTLMAccept()
 	return false;
 }
 
-bool IUToCSMCommandConnector::IsEDSUnsafe()
+bool IUToCSMCommandConnector::IsEDSUnsafeA()
 {
 	ConnectorMessage cm;
 
 	cm.destination = CSM_IU_COMMAND;
-	cm.messageType = IUCSM_IS_EDS_UNSAFE;
+	cm.messageType = IUCSM_IS_EDS_UNSAFE_A;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToCSMCommandConnector::IsEDSUnsafeB()
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = IUCSM_IS_EDS_UNSAFE_B;
 
 	if (SendMessage(cm))
 	{

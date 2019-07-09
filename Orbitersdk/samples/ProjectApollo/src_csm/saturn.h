@@ -994,17 +994,7 @@ public:
 	///
 	/// \brief Triggers EMS scroll saving
 	///
-	virtual void SaveEMSScroll() { ems.WriteScrollToFile(); }
-
-	///
-	/// Get a pointer to the Saturn Instrument Unit, which controls the autopilot prior to SIVb/CSM
-	/// seperation.
-	/// \brief Access the Saturn IU.
-	/// \return Pointer to IU object.
-	///
-	IU *GetIU() { return iu; };
-
-	virtual SICSystems *GetSIC() { return NULL; }
+	virtual void SaveEMSScroll() { ems.WriteScrollToFile(); }	
 
 	///
 	/// \brief Get settings for the Saturn payload.
@@ -1134,7 +1124,6 @@ public:
 
 	bool GetBECOSignal(bool IsSysA);
 	bool IsEDSBusPowered(int eds);
-	bool IsEDSUnsafe();
 	int GetAGCAttitudeError(int axis);
 
 	void AddRCS_S4B();
@@ -1248,6 +1237,9 @@ public:
 	SPSEngine *GetSPSEngine() { return &SPSEngine; };
 	SCE *GetSCE() { return &sce; }
 	EDA *GetEDA() { return &eda; }
+	IU *GetIU() { return iu; };
+	virtual SICSystems *GetSIC() { return NULL; }
+	SECS *GetSECS() { return &secs; }
 
 protected:
 

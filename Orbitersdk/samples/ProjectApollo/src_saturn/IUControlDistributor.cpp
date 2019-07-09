@@ -70,7 +70,7 @@ void IUControlDistributor::Timestep(double simdt)
 		IUCommandSystemEnable = false;
 }
 
-void IUControlDistributor::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
+void IUControlDistributor::SaveState(FILEHANDLE scn)
 {
 	papiWriteScenario_bool(scn, "TWOENGOUTAUTOABORTINHIBITENABLE", TwoEngOutAutoAbortInhibitEnable);
 	papiWriteScenario_bool(scn, "TWOENGOUTAUTOABORTINHIBIT", TwoEngOutAutoAbortInhibit);
@@ -168,7 +168,7 @@ void IUControlDistributor::ResetBus2()
 	iu->GetEDS()->ResetBus2();
 }
 
-bool IUControlDistributor::GetEDSEnableLogic()
+bool IUControlDistributor::GetEDSEnableLogicZero()
 {
 	return !(ExcessiveRatePYRAutoAbortInhibit || ExcessiveRatePYRAutoAbortInhibitEnable || ExcessiveRateRollAutoAbortInhibit || ExcessiveRateRollAutoAbortInhibitEnable || TwoEngOutAutoAbortInhibit || TwoEngOutAutoAbortInhibitEnable);
 }
@@ -186,7 +186,7 @@ void IUControlDistributor1B::Timestep(double simdt)
 void IUControlDistributor1B::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
-	IUControlDistributor::SaveState(scn, start_str, end_str);
+	IUControlDistributor::SaveState(scn);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -243,7 +243,7 @@ void IUControlDistributorSV::Timestep(double simdt)
 void IUControlDistributorSV::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
-	IUControlDistributor::SaveState(scn, start_str, end_str);
+	IUControlDistributor::SaveState(scn);
 
 	papiWriteScenario_boolarr(scn, "SWITCHPOINT6TO9", SwitchPoint6to9, 4);
 	papiWriteScenario_bool(scn, "SIIBURNMODE", IsSIIBurnMode);

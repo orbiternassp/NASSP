@@ -66,7 +66,8 @@ enum IUCSMMessageType
 	IUCSM_GET_AGC_ATTITUDE_ERROR,
 	IUCSM_TLI_BEGUN,						///< Indicate for the event manager that the TLI burn has occured
 	IUCSM_TLI_ENDED,						///< Indicate for the event manager that the TLI burn has ended
-	IUCSM_IS_EDS_UNSAFE,
+	IUCSM_IS_EDS_UNSAFE_A,
+	IUCSM_IS_EDS_UNSAFE_B,
 
 	CSMIU_SET_VESSEL_STATS,					///< Set the vessel stats in the IU.
 	CSMIU_START_TLI_BURN,					///< Start the TLI burn.
@@ -155,7 +156,8 @@ public:
 	bool GetSIISIVbDirectStagingSignal();
 	bool GetTLIInhibitSignal();
 	bool GetIUUPTLMAccept();
-	bool IsEDSUnsafe();
+	bool IsEDSUnsafeA();
+	bool IsEDSUnsafeB();
 
 	bool GetEngineIndicator(int eng);
 	int LVRateAutoSwitchState();

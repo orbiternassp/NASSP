@@ -44,8 +44,6 @@ EDS::EDS(IU *iu)
 	ExcessRatesAutoAbortDeactivateR = false;
 	LVEnginesCutoffEnable1 = false;
 	LVEnginesCutoffEnable2 = false;
-	SIIEngineOutIndicationA = false;
-	SIIEngineOutIndicationB = false;
 	SIVBEngineOutIndicationA = false;
 	SIVBEngineOutIndicationB = false;
 	EDSLiftoffEnableA = false;
@@ -59,7 +57,6 @@ EDS::EDS(IU *iu)
 	LVEnginesCutoffFromSC3 = false;
 	SIVBEngineCutoffDisabled = false;
 	SIEDSCutoff = false;
-	SIIEDSCutoff = false;
 	SIVBEDSCutoff = false;
 	EDSAbortSignal1 = false;
 	EDSAbortSignal2 = false;
@@ -83,7 +80,6 @@ EDS::EDS(IU *iu)
 	ExcessivePitchYawRateIndication = false;
 	SIAllEnginesOKA = false;
 	SIAllEnginesOKB = false;
-	UllageThrustIndicate = false;
 
 	AutoAbortBus = false;
 	IUEDSBusPowered = true;
@@ -380,13 +376,12 @@ bool EDS::GetAllSIEnginesRunning()
 
 bool EDS::IsEDSUnsafe()
 {
-	return iu->GetCommandConnector()->IsEDSUnsafe();
+	return (iu->GetCommandConnector()->IsEDSUnsafeA() || iu->GetCommandConnector()->IsEDSUnsafeB());
 }
 
 void EDS::ResetBus1()
 {
 	LVEnginesCutoffEnable1 = false;
-	SIIEngineOutIndicationA = false;
 	SIVBRestartAlert = false;
 	SIVBEngineOutIndicationB = false;
 	IUCommandSystemEnable = false;
@@ -394,7 +389,6 @@ void EDS::ResetBus1()
 void EDS::ResetBus2()
 {
 	LVEnginesCutoffEnable2 = false;
-	SIIEngineOutIndicationB = false;
 	SIVBEngineOutIndicationA = false;
 	SCControlEnableRelay = false;
 }
@@ -413,22 +407,17 @@ bool EDS::GetIUCommandSystemEnable()
 	return IUEDSBusPowered && (IUCommandSystemEnable || iu->GetCommandConnector()->GetIUUPTLMAccept() || LVEnginesCutoffCommand2);
 }
 
-void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
-	oapiWriteLine(scn, start_str);
-
+void EDS::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "AUTOABORTBUS", AutoAbortBus);
 	papiWriteScenario_bool(scn, "EDSLIFTOFFENABLEA", EDSLiftoffEnableA);
 	papiWriteScenario_bool(scn, "EDSLIFTOFFENABLEB", EDSLiftoffEnableB);
 	papiWriteScenario_bool(scn, "LIFTOFFA", LiftoffA);
 	papiWriteScenario_bool(scn, "LIFTOFFB", LiftoffB);
-	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
-	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
 	papiWriteScenario_bool(scn, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFFENABLE1", LVEnginesCutoffEnable1);
 	papiWriteScenario_bool(scn, "LVENGINESCUTOFFENABLE2", LVEnginesCutoffEnable2);
 	papiWriteScenario_bool(scn, "SIEDSCUTOFF", SIEDSCutoff);
-	papiWriteScenario_bool(scn, "SIIEDSCUTOFF", SIIEDSCutoff);
 	papiWriteScenario_bool(scn, "SIVBEDSCUTOFF", SIVBEDSCutoff);
 	papiWriteScenario_bool(scn, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
 	papiWriteScenario_bool(scn, "EDSABORTSIGNAL1", EDSAbortSignal1);
@@ -440,46 +429,31 @@ void EDS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	papiWriteScenario_bool(scn, "ABORTLIGHTSIGNAL", AbortLightSignal);
 	papiWriteScenario_bool(scn, "LIFTOFFRELAY", LiftoffRelay);
-	papiWriteScenario_bool(scn, "ULLAGETHRUSTINDICATE", UllageThrustIndicate);
-
-	oapiWriteLine(scn, end_str);
 }
 
-void EDS::LoadState(FILEHANDLE scn, char *end_str) {
-	char *line;
-	int tmp = 0; // Used in boolean type loader
-	int end_len = strlen(end_str);
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, end_str, end_len)) {
-			break;
-		}
-		papiReadScenario_bool(line, "AUTOABORTBUS", AutoAbortBus);
-		papiReadScenario_bool(line, "EDSLIFTOFFENABLEA", EDSLiftoffEnableA);
-		papiReadScenario_bool(line, "EDSLIFTOFFENABLEB", EDSLiftoffEnableB);
-		papiReadScenario_bool(line, "LIFTOFFA", LiftoffA);
-		papiReadScenario_bool(line, "LIFTOFFB", LiftoffB);
-		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
-		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
-		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
-		papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
-		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE1", LVEnginesCutoffEnable1);
-		papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE2", LVEnginesCutoffEnable2);
-		papiReadScenario_bool(line, "SIEDSCUTOFF", SIEDSCutoff);
-		papiReadScenario_bool(line, "SIIEDSCUTOFF", SIIEDSCutoff);
-		papiReadScenario_bool(line, "SIVBEDSCUTOFF", SIVBEDSCutoff);
-		papiReadScenario_bool(line, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
-		papiReadScenario_bool(line, "EDSABORTSIGNAL1", EDSAbortSignal1);
-		papiReadScenario_bool(line, "EDSABORTSIGNAL2", EDSAbortSignal2);
-		papiReadScenario_bool(line, "EDSABORTSIGNAL3", EDSAbortSignal3);
-		papiReadScenario_bool(line, "SIVBRESTARTALERT", SIVBRestartAlert);
-		papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
-		papiReadScenario_bool(line, "IUEDSBUSPOWERED", IUEDSBusPowered);
-		papiReadScenario_bool(line, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
-		papiReadScenario_bool(line, "ABORTLIGHTSIGNAL", AbortLightSignal);
-		papiReadScenario_bool(line, "LIFTOFFRELAY", LiftoffRelay);
-		papiReadScenario_bool(line, "ULLAGETHRUSTINDICATE", UllageThrustIndicate);
-	}
+void EDS::LoadState(char *line)
+{
+	papiReadScenario_bool(line, "AUTOABORTBUS", AutoAbortBus);
+	papiReadScenario_bool(line, "EDSLIFTOFFENABLEA", EDSLiftoffEnableA);
+	papiReadScenario_bool(line, "EDSLIFTOFFENABLEB", EDSLiftoffEnableB);
+	papiReadScenario_bool(line, "LIFTOFFA", LiftoffA);
+	papiReadScenario_bool(line, "LIFTOFFB", LiftoffB);
+	papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONA", SIVBEngineOutIndicationA);
+	papiReadScenario_bool(line, "SIVBENGINEOUTINDICATIONB", SIVBEngineOutIndicationB);
+	papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE1", LVEnginesCutoffEnable1);
+	papiReadScenario_bool(line, "LVENGINESCUTOFFENABLE2", LVEnginesCutoffEnable2);
+	papiReadScenario_bool(line, "SIEDSCUTOFF", SIEDSCutoff);
+	papiReadScenario_bool(line, "SIVBEDSCUTOFF", SIVBEDSCutoff);
+	papiReadScenario_bool(line, "SIVBENGINECUTOFFDISABLED", SIVBEngineCutoffDisabled);
+	papiReadScenario_bool(line, "EDSABORTSIGNAL1", EDSAbortSignal1);
+	papiReadScenario_bool(line, "EDSABORTSIGNAL2", EDSAbortSignal2);
+	papiReadScenario_bool(line, "EDSABORTSIGNAL3", EDSAbortSignal3);
+	papiReadScenario_bool(line, "SIVBRESTARTALERT", SIVBRestartAlert);
+	papiReadScenario_bool(line, "SCCONTROLENABLERELAY", SCControlEnableRelay);
+	papiReadScenario_bool(line, "IUEDSBUSPOWERED", IUEDSBusPowered);
+	papiReadScenario_bool(line, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
+	papiReadScenario_bool(line, "ABORTLIGHTSIGNAL", AbortLightSignal);
+	papiReadScenario_bool(line, "LIFTOFFRELAY", LiftoffRelay);
 }
 
 EDS1B::EDS1B(IU *iu) : EDS(iu)
@@ -614,6 +588,28 @@ void EDS1B::Timestep(double simdt)
 	}
 }
 
+void EDS1B::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+	oapiWriteLine(scn, start_str);
+
+	EDS::SaveState(scn);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void EDS1B::LoadState(FILEHANDLE scn, char *end_str) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+
+		EDS::LoadState(line);
+	}
+}
+
 EDSSV::EDSSV(IU *iu) : EDS(iu)
 {
 	for (int i = 0;i < 5;i++)
@@ -625,6 +621,10 @@ EDSSV::EDSSV(IU *iu) : EDS(iu)
 	}
 	SIISIVBNotSeparated = false;
 	SIISIVBSepSeqStart = false;
+	UllageThrustIndicate = false;
+	SIIEngineOutIndicationA = false;
+	SIIEngineOutIndicationB = false;
+	SIIEDSCutoff = false;
 }
 
 double EDSSV::GetLVTankPressure(int n)
@@ -850,4 +850,50 @@ void EDSSV::Timestep(double simdt)
 		iu->GetCommandConnector()->SetAGCInputChannelBit(030, UllageThrust, false);
 
 	//sprintf(oapiDebugString(), "%f", PlatformFailureTime);
+}
+
+void EDSSV::ResetBus1()
+{
+	EDS::ResetBus1();
+
+	SIIEngineOutIndicationA = false;
+}
+
+void EDSSV::ResetBus2()
+{
+	EDS::ResetBus2();
+
+	SIIEngineOutIndicationB = false;
+}
+
+void EDSSV::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
+	oapiWriteLine(scn, start_str);
+
+	EDS::SaveState(scn);
+
+	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
+	papiWriteScenario_bool(scn, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
+	papiWriteScenario_bool(scn, "SIIEDSCUTOFF", SIIEDSCutoff);
+	papiWriteScenario_bool(scn, "ULLAGETHRUSTINDICATE", UllageThrustIndicate);
+
+	oapiWriteLine(scn, end_str);
+}
+
+void EDSSV::LoadState(FILEHANDLE scn, char *end_str) {
+	char *line;
+	int tmp = 0; // Used in boolean type loader
+	int end_len = strlen(end_str);
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, end_len)) {
+			break;
+		}
+
+		EDS::LoadState(line);
+
+		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONA", SIIEngineOutIndicationA);
+		papiReadScenario_bool(line, "SIIENGINEOUTINDICATIONB", SIIEngineOutIndicationB);
+		papiReadScenario_bool(line, "SIIEDSCUTOFF", SIIEDSCutoff);
+		papiReadScenario_bool(line, "ULLAGETHRUSTINDICATE", UllageThrustIndicate);
+	}
 }

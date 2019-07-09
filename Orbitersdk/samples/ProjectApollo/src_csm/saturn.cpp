@@ -4538,13 +4538,6 @@ bool Saturn::IsEDSBusPowered(int eds)
 	return false;
 }
 
-bool Saturn::IsEDSUnsafe()
-{
-	if (secs.MESCA.EDSUnsafeIndicateSignal() || secs.MESCB.EDSUnsafeIndicateSignal()) return true;
-
-	return false;
-}
-
 int Saturn::GetAGCAttitudeError(int axis)
 {
 	if (axis == 0)

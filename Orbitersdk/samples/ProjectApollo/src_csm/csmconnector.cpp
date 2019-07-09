@@ -634,10 +634,18 @@ bool CSMToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 		}
 		break;
 
-	case IUCSM_IS_EDS_UNSAFE:
+	case IUCSM_IS_EDS_UNSAFE_A:
 		if (OurVessel)
 		{
-			m.val1.bValue = OurVessel->IsEDSUnsafe();
+			m.val1.bValue = OurVessel->GetSECS()->MESCA.EDSUnsafeIndicateSignal();
+			return true;
+		}
+		break;
+
+	case IUCSM_IS_EDS_UNSAFE_B:
+		if (OurVessel)
+		{
+			m.val1.bValue = OurVessel->GetSECS()->MESCB.EDSUnsafeIndicateSignal();
 			return true;
 		}
 		break;
