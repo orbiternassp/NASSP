@@ -5042,7 +5042,7 @@ void ApolloRTCCMFD::set_entrylng(double lng)
 void ApolloRTCCMFD::menuSetEntryDesiredInclination()
 {
 	bool EntryDesiredInclinationInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the desired inclination (X°A for asc, X°D for desc):", EntryDesiredInclinationInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the desired inclination (e.g. 40A for asc, 40D for desc):", EntryDesiredInclinationInput, 0, 20, (void*)this);
 }
 
 bool EntryDesiredInclinationInput(void *id, char *str, void *data)
@@ -5053,12 +5053,12 @@ bool EntryDesiredInclinationInput(void *id, char *str, void *data)
 	{
 		if (sscanf(str, "%lf%s", &inc, dir) == 2)
 		{
-			if (strcmp(dir, "°A") == 0)
+			if (strcmp(dir, "A") == 0)
 			{
 				((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(-inc);
 				return true;
 			}
-			else if (strcmp(dir, "°D") == 0)
+			else if (strcmp(dir, "D") == 0)
 			{
 				((ApolloRTCCMFD*)data)->set_EntryDesiredInclination(inc);
 				return true;
