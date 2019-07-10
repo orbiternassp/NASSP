@@ -358,7 +358,7 @@ protected:
 
 class SaturnH2oQuantityMeter: public SaturnRoundMeter {
 public:
-	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch);
+	void Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s, ToggleSwitch *h2oqtyindswitch, PowerSource *src);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -370,6 +370,7 @@ class SaturnAccelGMeter : public SaturnRoundMeter {
 public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	double AdjustForPower(double val) { return val; };
 };
 
 class DirectO2RotationalSwitch: public RotationalSwitch {
@@ -550,7 +551,7 @@ protected:
 
 class SaturnSPSPropellantPressMeter : public MeterSwitch {
 public:
-	void Init(SURFHANDLE surf, SwitchRow &row, 	Saturn *s, bool fuel);
+	void Init(SURFHANDLE surf, SwitchRow &row, 	Saturn *s, bool fuel, e_object *p);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
@@ -562,7 +563,7 @@ protected:
 
 class SaturnSPSTempMeter : public MeterSwitch {
 public:
-	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s);
+	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, e_object *p);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 
