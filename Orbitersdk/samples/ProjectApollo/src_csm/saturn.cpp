@@ -477,6 +477,7 @@ void Saturn::initSaturn()
 	hMainChute = 0;
 	hOpticsCover = 0;
 	hLC34 = 0;
+	hLC37 = 0;
 
 	//
 	// Apollo 13 flags.
@@ -2571,6 +2572,10 @@ void Saturn::DestroyStages(double simt)
 		if (hLC34) {
 			KillDist(hLC34, 50000.0);
 		}
+
+		if (hLC37) {
+			KillDist(hLC37, 50000.0);
+		}
 	}
 
 	//
@@ -2650,6 +2655,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		hCrawler = oapiGetVesselByName("Crawler-Transporter");
 		hVAB = oapiGetVesselByName("VAB");
 		hLC34 = oapiGetVesselByName("LC34");
+		hLC37 = oapiGetVesselByName("LC37");
 
 		GenericFirstTimestep = false;
 		SetView();

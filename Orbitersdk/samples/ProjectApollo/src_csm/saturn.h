@@ -3889,6 +3889,7 @@ protected:
 	OBJHANDLE hOpticsCover;
 	OBJHANDLE hNosecapVessel;
 	OBJHANDLE hLC34;
+	OBJHANDLE hLC37;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
