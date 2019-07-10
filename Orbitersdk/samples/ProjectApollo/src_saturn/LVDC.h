@@ -65,6 +65,7 @@ public:
 	virtual bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw) { return false; }
 	virtual bool ExecuteCommManeuver() { return false; }
 	virtual bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0) { return false; }
+	virtual bool DiscreteOutputTest(int bit, bool on) = 0;
 protected:
 
 	LVDA &lvda;
@@ -98,6 +99,7 @@ public:
 	bool TimeBase8Enable();
 	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
 	bool ExecuteCommManeuver();
+	bool DiscreteOutputTest(int bit, bool on);
 private:								// Saturn LV
 	FILE* lvlog;									// LV Log file
 	char FSPFileName[256];
@@ -518,6 +520,7 @@ public:
 	bool LMAbort();
 	bool InhibitAttitudeManeuver();
 	bool LaunchTargetingUpdate(double v_t, double r_t, double theta_t, double inc, double dsc, double dsc_dot, double t_grr0);
+	bool DiscreteOutputTest(int bit, bool on);
 private:
 	bool Initialized;								// Clobberness flag
 	FILE* lvlog;									// LV Log file

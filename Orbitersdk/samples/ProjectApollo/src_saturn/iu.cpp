@@ -110,6 +110,7 @@ void IU::SaveState(FILEHANDLE scn)
 	GetEDS()->SaveState(scn, "EDS_BEGIN", "EDS_END");
 	GetControlDistributor()->SaveState(scn, "CONTROLDISTRIBUTOR_BEGIN", "CONTROLDISTRIBUTOR_END");
 	GetEngineCutoffEnableTimer()->SaveState(scn, "ENGINECUTOFFENABLETIMER_BEGIN", "ENGINECUTOFFENABLETIMER_END");
+	lvda.SaveState(scn);
 	
 	oapiWriteLine(scn, IU_END_STRING);
 }
@@ -135,6 +136,9 @@ void IU::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp(line, "ENGINECUTOFFENABLETIMER_BEGIN", sizeof("ENGINECUTOFFENABLETIMER_BEGIN"))) {
 			GetEngineCutoffEnableTimer()->LoadState(scn, "ENGINECUTOFFENABLETIMER_END");
+		}
+		else if (!strnicmp(line, LVDA_START_STRING, sizeof(LVDA_START_STRING))) {
+			lvda.LoadState(scn);
 		}
 	}
 }

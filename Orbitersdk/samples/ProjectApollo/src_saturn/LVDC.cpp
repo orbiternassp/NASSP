@@ -618,6 +618,7 @@ void LVDC1B::TimeStep(double simdt) {
 					CommandSequence = 0;
 					liftoff = true;
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
+					lvda.SetOutputRegisterBit(FiringCommitEnable, false);
 				}
 				break;
 
@@ -767,6 +768,8 @@ void LVDC1B::TimeStep(double simdt) {
 			if (LVDC_Timebase > 0 && lvda.GetLVIMUFailure())
 			{
 				GuidanceReferenceFailure = true;
+				lvda.SetOutputRegisterBit(GuidanceReferenceFailureA, true);
+				lvda.SetOutputRegisterBit(GuidanceReferenceFailureB, true);
 			}
 
 			if (!GuidanceReferenceFailure)
@@ -866,6 +869,7 @@ void LVDC1B::TimeStep(double simdt) {
 			CountPIPA = true;								// Enable PIPA storage
 
 			GRR_init = true;
+			lvda.SetOutputRegisterBit(FiringCommitEnable, true);
 			fprintf(lvlog,"Initialization completed.\r\n\r\n");
 			goto minorloop;
 		}
@@ -2325,6 +2329,16 @@ bool LVDC1B::LaunchTargetingUpdate(double v_t, double r_t, double theta_t, doubl
 		return true;
 	}
 
+	return false;
+}
+
+bool LVDC1B::DiscreteOutputTest(int bit, bool on)
+{
+	if (bit >= 0 && bit <= 12)
+	{
+		lvda.SetOutputRegisterBit(bit, on);
+		return true;
+	}
 	return false;
 }
 
@@ -4622,6 +4636,7 @@ void LVDCSV::TimeStep(double simdt) {
 					liftoff = true;
 					// Fall into TB1
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
+					lvda.SetOutputRegisterBit(FiringCommitEnable, false);
 					break;
 				}
 				break;
@@ -5222,6 +5237,7 @@ void LVDCSV::TimeStep(double simdt) {
 			lvda.ZeroLVIMUPIPACounters();
 			sinceLastCycle = 0;
 			init = true;
+			lvda.SetOutputRegisterBit(FiringCommitEnable, true);
 			fprintf(lvlog, "Initialization completed.\r\n\r\n");
 			goto minorloop;
 		}
@@ -6988,5 +7004,15 @@ bool LVDCSV::ExecuteCommManeuver()
 		}
 	}
 
+	return false;
+}
+
+bool LVDCSV::DiscreteOutputTest(int bit, bool on)
+{
+	if (bit >= 0 && bit <= 12)
+	{
+		lvda.SetOutputRegisterBit(bit, on);
+		return true;
+	}
 	return false;
 }

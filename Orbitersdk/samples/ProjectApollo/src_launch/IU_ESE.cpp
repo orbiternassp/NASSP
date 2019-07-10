@@ -24,6 +24,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "IUUmbilical.h"
+#include "LVDA.h"
 #include "IU_ESE.h"
 
 IU_ESE::IU_ESE(IUUmbilical *IuUmb)
@@ -42,6 +43,8 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb)
 	AutoAbortSimulate = false;
 	SIBurnModeSubstitute = false;
 	GuidanceReferenceRelease = false;
+	EDSNotReady = false;
+	InstrumentUnitReady = false;
 
 	LastMissionTime = 10000000.0;
 }
@@ -76,8 +79,8 @@ void IU_ESE::Timestep(double MissionTime, double simdt)
 	{
 		//LV engine indicators on
 		SetEDSMode(LCC_EDS_MODE_TEST);
-		ThrustOKIndicateEnableInhibitA = true;
-		ThrustOKIndicateEnableInhibitB = true;
+		ThrustOKIndicateEnableInhibitA = false;
+		ThrustOKIndicateEnableInhibitB = false;
 	}
 	else if ((MissionTime >= -6720.0) && (LastMissionTime < -6720.0))
 	{
@@ -104,6 +107,12 @@ void IU_ESE::Timestep(double MissionTime, double simdt)
 		ThrustOKIndicateEnableInhibitA = false;
 		ThrustOKIndicateEnableInhibitB = false;
 		SIBurnModeSubstitute = true;
+
+		EDSNotReady = Umbilical->IsEDSUnsafe() || !Umbilical->GetEDSSCCutoff1() || !Umbilical->GetEDSSCCutoff2() || !Umbilical->GetEDSSCCutoff3();
+		EDSNotReady = EDSNotReady || Umbilical->GetEDSAutoAbortBus() || Umbilical->GetEDSExcessiveRateIndication();
+
+		InstrumentUnitReady = !Umbilical->GetLVDCOutputRegisterDiscrete(FiringCommitInhibit) && !Umbilical->GetLVDCOutputRegisterDiscrete(GuidanceReferenceFailureA)
+			&& !Umbilical->GetLVDCOutputRegisterDiscrete(GuidanceReferenceFailureB) && !EDSNotReady;
 	}
 
 	LastMissionTime = MissionTime;

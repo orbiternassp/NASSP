@@ -76,6 +76,10 @@ public:
 	bool GetAutoAbort() { return AutoAbortBus; }
 	virtual bool GetAllSIEnginesRunning();
 	virtual bool IsEDSUnsafe();
+	bool GetLVEnginesCutoffFromSC1() { return LVEnginesCutoffFromSC1; }
+	bool GetLVEnginesCutoffFromSC2() { return LVEnginesCutoffFromSC2; }
+	bool GetLVEnginesCutoffFromSC3() { return LVEnginesCutoffFromSC3; }
+	bool GetExcessiveRateIndication() { return ExcessivePitchYawRateIndication || ExcessiveRollRateIndication; }
 
 	void SetEDSLiftoffEnableA() { EDSLiftoffEnableA = true; }
 	void SetEDSLiftoffEnableB() { EDSLiftoffEnableB = true; }

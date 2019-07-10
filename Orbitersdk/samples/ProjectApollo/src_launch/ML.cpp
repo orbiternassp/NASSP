@@ -1185,6 +1185,8 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 		break;
 	case 825: //EDS GROUP NO 2 RESET 
 		break;
+	case 1584: //IVB MAIN STAGE OK SIM ON
+		break;
 	case 1903: //IU EDS RG SYSTEM POWER ON
 		IuUmb->SetControlSignalProcessorPower(on);
 		break;

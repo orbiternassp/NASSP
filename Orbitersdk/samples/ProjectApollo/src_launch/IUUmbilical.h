@@ -51,6 +51,12 @@ public:
 	void SetControlSignalProcessorPower(bool set);
 	bool AllSIEnginesRunning();
 	bool IsEDSUnsafe();
+	bool GetEDSSCCutoff1();
+	bool GetEDSSCCutoff2();
+	bool GetEDSSCCutoff3();
+	bool GetEDSAutoAbortBus();
+	bool GetEDSExcessiveRateIndication();
+	bool GetLVDCOutputRegisterDiscrete(int bit);
 	void SwitchSelector(int stage, int channel);
 
 	//From SLV to ML

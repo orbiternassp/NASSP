@@ -79,6 +79,9 @@ protected:
 	bool GuidanceReferenceRelease;
 	bool EDSCutoffFromSC[3];
 
+	bool EDSNotReady;
+	bool InstrumentUnitReady;
+
 	double LastMissionTime = 0.0;
 
 	IUUmbilical *Umbilical;

@@ -44,6 +44,29 @@ LVDA::LVDA()
 void LVDA::Init(IU *i)
 {
 	iu = i;
+
+}
+
+void LVDA::SaveState(FILEHANDLE scn)
+{
+	oapiWriteLine(scn, LVDA_START_STRING);
+	oapiWriteScenario_int(scn, "DiscreteOutputRegister", DiscreteOutputRegister.to_ulong());
+	oapiWriteLine(scn, LVDA_END_STRING);
+}
+
+void LVDA::LoadState(FILEHANDLE scn)
+{
+	char *line;
+	int temp = 0;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, LVDA_END_STRING, sizeof(LVDA_END_STRING))) {
+			break;
+		}
+		papiReadScenario_int(line, "DiscreteOutputRegister", temp);
+	}
+
+	DiscreteOutputRegister = temp;
 }
 
 void LVDA::SwitchSelector(int stage, int channel)

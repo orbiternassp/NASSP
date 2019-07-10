@@ -48,6 +48,10 @@ class LVDA
 public:
 	LVDA();
 	void Init(IU* i);
+	
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
 	void SwitchSelector(int stage, int channel);
 	void SetFCCAttitudeError(VECTOR3 atterr);
 	VECTOR3 GetLVIMUAttitude();
@@ -72,7 +76,7 @@ public:
 	bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0);
 
 	void SetOutputRegisterBit(int bit, bool state);
-	bool GetOutputRegisterBit(int bit);
+	virtual bool GetOutputRegisterBit(int bit);
 
 	//LVDC Input Discretes and Interrupts
 
@@ -109,3 +113,6 @@ protected:
 
 	std::bitset<13> DiscreteOutputRegister;
 };
+
+#define LVDA_START_STRING "LVDA_BEGIN"
+#define LVDA_END_STRING "LVDA_END"

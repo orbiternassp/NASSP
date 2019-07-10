@@ -194,6 +194,48 @@ bool IUUmbilical::IsEDSUnsafe()
 	return iu->GetEDS()->IsEDSUnsafe();
 }
 
+bool IUUmbilical::GetEDSSCCutoff1()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->GetLVEnginesCutoffFromSC1();
+}
+
+bool IUUmbilical::GetEDSSCCutoff2()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->GetLVEnginesCutoffFromSC2();
+}
+
+bool IUUmbilical::GetEDSSCCutoff3()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->GetLVEnginesCutoffFromSC3();
+}
+
+bool IUUmbilical::GetEDSAutoAbortBus()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->GetAutoAbort();
+}
+
+bool IUUmbilical::GetEDSExcessiveRateIndication()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->GetExcessiveRateIndication();
+}
+
+bool IUUmbilical::GetLVDCOutputRegisterDiscrete(int bit)
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetLVDA()->GetOutputRegisterBit(bit);
+}
+
 void IUUmbilical::SetControlSignalProcessorPower(bool set)
 {
 	if (!IUUmbilicalConnected) return;
