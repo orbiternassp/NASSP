@@ -2114,7 +2114,7 @@ bool EarthEntry::EntryIter()
 	}
 }
 
-Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI)
+Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI, double DVMAXI)
 {
 	MA1 = -6.986643e7;//8e8;
 	C0 = 1.81000432e8;
@@ -2179,6 +2179,7 @@ Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GET
 	precision = 1;
 	errorstate = 0;
 	r_rbias = RRBI;
+	dv_max = DVMAXI;
 }
 
 void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo)
@@ -2552,7 +2553,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 	{
 		if (ii == 0 && entryphase == 0)
 		{
-			x = dvmaxiterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, dxmax, 2804.0);
+			x = dvmaxiterator(R1B, V1B, theta1, theta2, theta3, U_R1, U_H, xmin, dxmax, dv_max);
 			dx = dxmax;
 		}
 		if (ii == 0)
@@ -2764,7 +2765,7 @@ bool Entry::EntryIter()
 		else
 		{
 			dx = (x - xapo) / (theta_long - dlngapo)*dlng;
-			if (length(V2 - V1B) > 2804.0 && dx < 0)
+			if (length(V2 - V1B) > dv_max && dx < 0)
 			{
 				dx = 0.5*max(1.0, revcor);
 				revcor++;

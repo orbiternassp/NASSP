@@ -130,7 +130,7 @@ private:
 
 class Entry {
 public:
-	Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI);
+	Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI, double DVMAXI);
 	bool EntryIter();
 
 	double EntryTIGcor; //Corrected Time of Ignition for the Reentry Maneuver
@@ -192,6 +192,7 @@ private:
 	double EntryInterface;
 	// relative range override (unit is nautical miles!)
 	double r_rbias;
+	double dv_max;
 };
 
 class RTEMoon

@@ -399,7 +399,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	sv = opt->RV_MCC;
 	GET = (sv.MJD - opt->GETbase)*24.0*3600.0;
 
-	entry = new Entry(sv.R, sv.V, sv.MJD, sv.gravref, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->entrylongmanual, opt->r_rbias);
+	entry = new Entry(sv.R, sv.V, sv.MJD, sv.gravref, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->entrylongmanual, opt->r_rbias, opt->dv_max);
 
 	while (!stop)
 	{

@@ -279,6 +279,8 @@ struct EntryOpt
 	int vesseltype = 0;			//0 = CSM, 1 = LM
 	// relative range override
 	double r_rbias = 1285.0;
+	//Maximum DV
+	double dv_max = 2804.0;
 };
 
 struct EntryResults
