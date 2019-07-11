@@ -276,10 +276,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			cmarmProc = min(0.09, cmarmProc + simdt / 1000.0);
 			SetAnimation(cmarmAnim, cmarmProc);
 		}
-		swingarmState.action = AnimState::OPENING;
-		s1cintertankarmState.action = AnimState::OPENING;
-		s1cforwardarmState.action = AnimState::OPENING;
-		mastState.action = AnimState::OPENING;
+		if (swingarmState.action != AnimState::OPEN) swingarmState.action = AnimState::OPENING;
+		if (s1cintertankarmState.action != AnimState::OPEN) s1cintertankarmState.action = AnimState::OPENING;
+		if (s1cforwardarmState.action != AnimState::OPEN) s1cforwardarmState.action = AnimState::OPENING;
+		if (mastState.action != AnimState::OPEN) mastState.action = AnimState::OPENING;
 		break;
 
 	case STATE_VABREADY:
@@ -294,10 +294,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			SetAnimation(cmarmAnim, cmarmProc);
 		}
 
-		swingarmState.action = AnimState::CLOSING;
-		s1cintertankarmState.action = AnimState::CLOSING;
-		s1cforwardarmState.action = AnimState::CLOSING;
-		mastState.action = AnimState::CLOSING;
+		if (swingarmState.action != AnimState::CLOSED) swingarmState.action = AnimState::CLOSING;
+		if (s1cintertankarmState.action != AnimState::CLOSED) s1cintertankarmState.action = AnimState::CLOSING;
+		if (s1cforwardarmState.action != AnimState::CLOSED) s1cforwardarmState.action = AnimState::CLOSING;
+		if (mastState.action != AnimState::CLOSED) mastState.action = AnimState::CLOSING;
 
 		if (state == STATE_VABREADY) break;
 
