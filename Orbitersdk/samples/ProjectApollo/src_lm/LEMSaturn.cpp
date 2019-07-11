@@ -484,6 +484,8 @@ void LEMSaturn::TransformToLM()
 		ph_aps2 = 0;
 	}
 
+	ClearMeshes();
+	SetMeshes();
 	SetLmVesselDockStage();
 	DefineAnimations();
 
@@ -537,6 +539,7 @@ void LEMSaturn::clbkLoadStateEx(FILEHANDLE scn, void *vs)
 		
 		break;
 	default:
+		SetMeshes();
 		SetGenericStageState(status);
 		PostLoadSetup();
 		break;
