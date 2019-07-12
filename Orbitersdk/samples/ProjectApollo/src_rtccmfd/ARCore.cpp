@@ -223,7 +223,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_PeriAng = 16.0*RAD;
 		DOI_option = 1;
 		DOI_N = 11;
-		RTEMaxReturnInclination = 80.0*RAD;
+		RTEMaxReturnInclination = 40.0*RAD;
 		RTERangeOverrideNM = 1190.0;
 	}
 	else if (mission == 16)
@@ -736,14 +736,25 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	else if (GC->mission == 12)
 	{
 		AGSKFactor = 100.0*3600.0;
+		//For PTC REFSMMAT
+		REFSMMATTime = OrbMech::HHMMSSToSS(183, 0, 30);
+	}
+	else if (GC->mission == 13)
+	{
+		//For PTC REFSMMAT
+		REFSMMATTime = OrbMech::HHMMSSToSS(178, 30, 0);
 	}
 	else if (GC->mission == 14)
 	{
 		AGSKFactor = 100.0*3600.0;
+		//For PTC REFSMMAT
+		REFSMMATTime = OrbMech::HHMMSSToSS(166, 10, 30);
 	}
 	else if (GC->mission == 15)
 	{
 		AGSKFactor = 100.0*3600.0;
+		//For PTC REFSMMAT
+		REFSMMATTime = OrbMech::HHMMSSToSS(230, 9, 0);
 	}
 	else if (GC->mission == 16)
 	{
@@ -753,6 +764,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	else if (GC->mission == 17)
 	{
 		AGSKFactor = 110.0*3600.0;
+		//For PTC REFSMMAT
+		REFSMMATTime = OrbMech::HHMMSSToSS(241, 29, 30);
 	}
 
 	Skylabmaneuver = 0;
