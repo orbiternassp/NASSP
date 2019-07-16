@@ -763,6 +763,9 @@ void LVDC1B::TimeStep(double simdt) {
 				break;
 		}
 
+		//No need to run the code below before GRR
+		if (LVDC_Timebase < 0) return;
+
 		if (GuidanceReferenceFailure == false)
 		{
 			if (LVDC_Timebase > 0 && lvda.GetLVIMUFailure())
