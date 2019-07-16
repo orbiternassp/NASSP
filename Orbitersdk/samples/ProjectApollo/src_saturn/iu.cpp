@@ -1386,6 +1386,7 @@ void IU1B::SwitchSelector(int item)
 		eds.SetSIVBEngineCutoffDisabled();
 		break;
 	case 4: //Flight Control Computer Switch Point No. 4
+		ControlDistributor.SetFCCSwitchPoint4On();
 		break;
 	case 5: //Flight Control Computer S-IVB Burn Mode Off "B"
 		ControlDistributor.SetSIVBBurnModeB(false);
@@ -1446,6 +1447,7 @@ void IU1B::SwitchSelector(int item)
 		ControlDistributor.SetFCCSwitchPoint1On();
 		break;
 	case 44: //Flight Control Computer Switch Point No. 5
+		ControlDistributor.SetFCCSwitchPoint5On();
 		break;
 	case 50: //Excess Rate (Roll) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "B"
 		ControlDistributor.SetExcessiveRateRollAutoAbortInhibit(true);

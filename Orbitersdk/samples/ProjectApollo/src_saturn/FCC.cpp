@@ -139,11 +139,27 @@ void FCC1B::Timestep(double simdt)
 	}
 	else if (SIVBBurnMode)
 	{
-		a_0p = a_0y = 0.6;
-		a_0r = 1;
-		a_1p = a_1y = 0.5;
-		a_1r = 5;
-		//sprintf(oapiDebugString(), "S-IVB Burn Mode, None");
+		if (iu->GetControlDistributor()->GetFCCSwitchPoint5())
+		{
+			a_0p = a_0y = 0.81;
+			a_0r = 1;
+			a_1p = a_1y = 0.7;
+			a_1r = 5;
+		}
+		else if (iu->GetControlDistributor()->GetFCCSwitchPoint4())
+		{
+			a_0p = a_0y = 0.81;
+			a_0r = 1;
+			a_1p = a_1y = 0.97;
+			a_1r = 5;
+		}
+		else
+		{
+			a_0p = a_0y = 0.81;
+			a_0r = 1;
+			a_1p = a_1y = 0.97;
+			a_1r = 5;
+		}
 	}
 	else
 	{
