@@ -876,15 +876,15 @@ void LVDC1B::TimeStep(double simdt) {
 		// various clocks the LVDC needs...
 		if(LVDC_GRR == true){ TAS += simdt; } //time since GRR
 		if(liftoff == true){ t_clock += simdt; } //time since liftoff
-		sinceLastIGM += simdt;
-		if(sinceLastIGM < 1.7){ goto minorloop; }
-		dt_c = sinceLastIGM;
-		IGMInterval = sinceLastIGM;
-		sinceLastIGM = 0;
-		IGMCycle++;				// For debugging
-		fprintf(lvlog,"[%d+%f] *** Major Loop %d ***\r\n",LVDC_Timebase,LVDC_TB_ETime,IGMCycle);
 		//powered flight nav
 		if(LVDC_GRR == true){
+			sinceLastIGM += simdt;
+			if (sinceLastIGM < 1.7) { goto minorloop; }
+			dt_c = sinceLastIGM;
+			IGMInterval = sinceLastIGM;
+			sinceLastIGM = 0;
+			IGMCycle++;				// For debugging
+			fprintf(lvlog, "[%d+%f] *** Major Loop %d ***\r\n", LVDC_Timebase, LVDC_TB_ETime, IGMCycle);
 			if(poweredflight == true){
 				DotM_act += lvda.GetLVIMUPIPARegisters(); //read the PIPA CDUs
 			}
