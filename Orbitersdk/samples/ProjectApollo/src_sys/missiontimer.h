@@ -86,6 +86,8 @@ protected:
 	bool Running;
 	bool TimerTrash;
 	int CountUp;
+	bool ResetFlag;
+	bool ResetStatus;
 
 	//
 	// Don't need to be saved.

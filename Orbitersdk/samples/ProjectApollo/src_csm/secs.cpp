@@ -452,12 +452,10 @@ MESC::MESC():
 
 	CrewAbortSignal = false;
 
-	AbortStarted = false;
 	AutoTowerJettison = false;
 	SSSInput1 = false;
 	SSSInput2 = false;
 	IsSystemA = false;
-	LiftoffFlag = false;
 
 	EDSLogicBreaker = NULL;
 	//MESCDisplay = NULL;
@@ -566,21 +564,9 @@ void MESC::Timestep(double simdt)
 
 	if (EDSLiftoffCircuitPower())
 	{
-		if (!LiftoffFlag)
-		{
-			MissionTimerDisplay->Reset();
-			EventTimerDisplay->Reset();
-			EventTimerDisplay->SetRunning(true);
-
-			LiftoffFlag = true;
-		}
-	}
-	else
-	{
-		if (LiftoffFlag)
-		{
-			LiftoffFlag = false;
-		}
+		MissionTimerDisplay->Reset();
+		EventTimerDisplay->Reset();
+		EventTimerDisplay->SetRunning(true);
 	}
 
 	// Monitor LET Status
@@ -626,13 +612,8 @@ void MESC::Timestep(double simdt)
 	//Start Event Timer
 	if (SequentialLogicBus() && BoosterCutoffAbortStartRelay)
 	{
-		if (!AbortStarted)
-		{
-			Sat->EventTimerDisplay.Reset();
-			Sat->EventTimerDisplay.SetRunning(true);
-
-			AbortStarted = true;
-		}
+		Sat->EventTimerDisplay.Reset();
+		Sat->EventTimerDisplay.SetRunning(true);
 	}
 
 	//Canard Deploy Timer
@@ -1180,7 +1161,6 @@ void MESC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "CSMLVSEPARATERELAY", CSMLVSeparateRelay);
 	papiWriteScenario_bool(scn, "LESMOTORFIRE", LESMotorFire);
 	papiWriteScenario_bool(scn, "PITCHCONTROLMOTORFIRE", PitchControlMotorFire);
-	papiWriteScenario_bool(scn, "ABORTSTARTED", AbortStarted);
 	papiWriteScenario_bool(scn, "RCSENABLEARMRELAY", RCSEnableArmRelay);
 	papiWriteScenario_bool(scn, "RCSENABLEDISABLERELAY", RCSEnableDisableRelay);
 	papiWriteScenario_bool(scn, "LETJETTISONANDFRANGIBLENUTSRELAY", LETJettisonAndFrangibleNutsRelay);
@@ -1192,7 +1172,6 @@ void MESC::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_bool(scn, "EDSABORT2RELAY", EDSAbort2Relay);
 	papiWriteScenario_bool(scn, "EDSABORT3RELAY", EDSAbort3Relay);
 	papiWriteScenario_bool(scn, "ELSACTIVATESOLIDSTATESWITCH", ELSActivateSolidStateSwitch);
-	papiWriteScenario_bool(scn, "LIFTOFFFLAG", LiftoffFlag);
 
 	TD1.SaveState(scn, "TD1_BEGIN", "TD1_END");
 	TD3.SaveState(scn, "TD3_BEGIN", "TD_END");
@@ -1232,7 +1211,6 @@ void MESC::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "CSMLVSEPARATERELAY", CSMLVSeparateRelay);
 		papiReadScenario_bool(line, "LESMOTORFIRE", LESMotorFire);
 		papiReadScenario_bool(line, "PITCHCONTROLMOTORFIRE", PitchControlMotorFire);
-		papiReadScenario_bool(line, "ABORTSTARTED", AbortStarted);
 		papiReadScenario_bool(line, "RCSENABLEARMRELAY", RCSEnableArmRelay);
 		papiReadScenario_bool(line, "RCSENABLEDISABLERELAY", RCSEnableDisableRelay);
 		papiReadScenario_bool(line, "LETJETTISONANDFRANGIBLENUTSRELAY", LETJettisonAndFrangibleNutsRelay);
@@ -1244,7 +1222,6 @@ void MESC::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "EDSABORT2RELAY", EDSAbort2Relay);
 		papiReadScenario_bool(line, "EDSABORT3RELAY", EDSAbort3Relay);
 		papiReadScenario_bool(line, "ELSACTIVATESOLIDSTATESWITCH", ELSActivateSolidStateSwitch);
-		papiReadScenario_bool(line, "LIFTOFFFLAG", LiftoffFlag);
 
 		if (!strnicmp(line, "TD1_BEGIN", sizeof("TD1_BEGIN"))) {
 			TD1.LoadState(scn, "TD_END");

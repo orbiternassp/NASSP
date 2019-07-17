@@ -48,7 +48,12 @@ MissionTimer::MissionTimer(PanelSDK &p) : DCPower(0, p)
 	DimmerOverride = NULL;
 	srand((unsigned int) time(NULL));
 
-	Reset();
+	ResetFlag = false;
+	ResetStatus = false;
+	hours = 0;
+	minutes = 0;
+	seconds = 0;
+	extra = 0.0;
 }
 
 MissionTimer::~MissionTimer()
@@ -65,11 +70,18 @@ void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_ob
 }
 
 void MissionTimer::Reset()
-{
-	hours = 0;
-	minutes = 0;
-	seconds = 0;
-	extra = 0.0;
+{	
+	//Only reset, if it isn't already being reset
+	if (!ResetStatus)
+	{
+		hours = 0;
+		minutes = 0;
+		seconds = 0;
+		extra = 0.0;
+		ResetStatus = true;
+	}
+
+	ResetFlag = true;
 }
 
 void MissionTimer::Garbage()
@@ -220,6 +232,16 @@ void MissionTimer::Timestep(double simt, double deltat, bool persistent)
 
 		SetTime(t);
 	}
+
+	//If the reset condition is over (ResetFlag false), then reset the ResetStatus, to allow new resets
+	if (!ResetFlag && ResetStatus)
+	{
+		ResetStatus = false;
+	}
+	else
+	{
+		ResetFlag = false;
+	}
 }
 
 double MissionTimer::GetTime()
@@ -237,7 +259,10 @@ double MissionTimer::GetTime()
 void MissionTimer::SetTime(double t)
 {
 	if (t < 0.0) {
-		Reset();
+		hours = 0;
+		minutes = 0;
+		seconds = 0;
+		extra = 0.0;
 		return;
 	}
 
@@ -337,6 +362,8 @@ void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, boo
 	oapiWriteLine(scn, start_str);
 	papiWriteScenario_bool(scn, "RUNNING", Running);
 	oapiWriteScenario_int(scn, "COUNTUP", CountUp);
+	papiWriteScenario_bool(scn, "RESETFLAG", ResetFlag);
+	papiWriteScenario_bool(scn, "RESETSTATUS", ResetStatus);
 	if (!persistent)
 		papiWriteScenario_bool(scn, "TIMERTRASH", TimerTrash);
 	papiWriteScenario_double(scn, "MTD", GetTime());
@@ -362,6 +389,8 @@ void MissionTimer::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_bool(line, "RUNNING", Running);
 		papiReadScenario_int(line, "COUNTUP", CountUp);
 		papiReadScenario_bool(line, "TIMERTRASH", TimerTrash);
+		papiReadScenario_bool(line, "RESETFLAG", ResetFlag);
+		papiReadScenario_bool(line, "RESETSTATUS", ResetStatus);
 	}
 }
 

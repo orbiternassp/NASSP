@@ -237,13 +237,11 @@ protected:
 	bool ELSActivateSolidStateSwitch;
 
 	//Miscellaneous
-	bool AbortStarted;
 	bool CMSMSeparateLogic;
 	bool AutoTowerJettison;
 	bool SSSInput1;
 	bool SSSInput2;
 	bool IsSystemA;
-	bool LiftoffFlag;
 	MESC* OtherMESC;
 
 	//Abort Start Delay
