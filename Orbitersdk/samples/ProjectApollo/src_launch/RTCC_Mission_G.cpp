@@ -1558,7 +1558,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.N = 0;
 		opt.NCC_NSR_Flag = true;
 		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
-		opt.PhaseAngle = -4.47*RAD;
+		//Angle confirmed by Apollo 11 FIDO loop (finally!)
+		opt.PhaseAngle = -4.475*RAD;
 		opt.sv_A = sv_DOI;
 		opt.sv_P = sv_CSM;
 		//PDI+12

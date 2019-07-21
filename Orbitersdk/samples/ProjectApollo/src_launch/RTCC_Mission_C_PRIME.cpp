@@ -151,6 +151,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.vessel = calcParams.src;
 		entopt.RV_MCC = sv2;
 		entopt.r_rbias = 1350.0;
+		entopt.dv_max = 7000.0*0.3048;
 
 		EntryTargeting(&entopt, &res); //Target Load for uplink
 
@@ -288,6 +289,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.type = RTCC_ENTRY_ABORT;
 		entopt.vessel = calcParams.src;
 		entopt.r_rbias = 1350.0;
+		entopt.dv_max = 7000.0*0.3048;
 
 		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
 
