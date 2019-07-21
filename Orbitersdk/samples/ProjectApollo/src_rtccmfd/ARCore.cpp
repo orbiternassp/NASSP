@@ -928,6 +928,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PDAP_K2 = 0.0;
 	PDAP_Theta_LIM = 0.0;
 	PDAP_R_amin = 0.0;
+
+	nextstatcont_lunar = false;
 }
 
 ARCore::~ARCore()
@@ -1169,6 +1171,18 @@ void ARCore::SpaceDigitalsGET()
 	if (subThreadStatus == 0 && spacedigitalssv.gravref != NULL)
 	{
 		startSubthread(30);
+	}
+}
+
+void ARCore::CycleNextStationContactsDisplay()
+{
+	if (subThreadStatus == 0)
+	{
+		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
+		if (GET > nextstatconttable.GET + 12.0)
+		{
+			startSubthread(35);
+		}
 	}
 }
 
@@ -4088,6 +4102,19 @@ int ARCore::subThread()
 		}		
 
 		rtcc->FIDOOrbitDigitalsCalculateGETBV(opt, fidoorbit);
+
+		Result = 0;
+	}
+	break;
+	case 35: //Next Station Contacts Display
+	{
+		NextStationContactOpt opt;
+
+		opt.GETbase = GC->GETbase;
+		opt.sv_A = rtcc->StateVectorCalc(vessel);
+		opt.lunar = nextstatcont_lunar;
+
+		rtcc->NextStationContactDisplay(opt, nextstatconttable);
 
 		Result = 0;
 	}

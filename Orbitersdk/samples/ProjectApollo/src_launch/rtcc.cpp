@@ -183,6 +183,29 @@ MPTManDisplay::MPTManDisplay()
 	AftMJD = 0.0;
 }
 
+NextStationContact::NextStationContact()
+{
+	GETAOS = 0.0;
+	GETLOS = 0.0;
+	sprintf_s(StationID, "");
+	DELTAT = 0.0;
+	MAXELEV = 0.0;
+	MINRANGE = 0.0;
+	BestAvailableAOS = false;
+	BestAvailableLOS = false;
+	BestAvailableEMAX = false;
+}
+
+bool NextStationContact::operator<(const NextStationContact& rhs) const
+{
+	if (GETAOS == rhs.GETAOS)
+	{
+		return GETLOS < rhs.GETLOS;
+	}
+
+	return GETAOS < rhs.GETAOS;
+}
+
 RTCC::RTCC()
 {
 	mcc = NULL;
@@ -5370,6 +5393,19 @@ SV RTCC::coast(SV sv0, double dt)
 	return sv1;
 }
 
+SV RTCC::coast_conic(SV sv0, double dt)
+{
+	SV sv1;
+	double mu = GGRAV * oapiGetMass(sv0.gravref);
+
+	OrbMech::rv_from_r0v0(sv0.R, sv0.V, dt, sv1.R, sv1.V, mu);
+	sv1.gravref = sv0.gravref;
+	sv1.mass = sv0.mass;
+	sv1.MJD = sv0.MJD + dt / 24.0 / 3600.0;
+
+	return sv1;
+}
+
 void RTCC::GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD)
 {
 	VECTOR3 RIgn, VIgn;
@@ -9666,6 +9702,17 @@ void RTCC::FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res)
 	res.IEMP = acos(H_EMP.z / length(H_EMP))*DEG;
 }
 
+void RTCC::NextStationContactDisplay(const NextStationContactOpt &opt, NextStationContactTable &res)
+{
+	//Create Ephemeris
+	std::vector<SV>ephemeris;
+	OrbMech::GenerateEphemeris(opt.sv_A, 7200.0, ephemeris);
+
+	res.GET = OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase);
+
+	EMGENGEN(ephemeris, opt.GETbase, opt.lunar, res);
+}
+
 int RTCC::MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV)
 {
 	if (mptable.fulltable.size() == 0)
@@ -9931,4 +9978,294 @@ bool RTCC::MPTHasManeuvers(MPTable &mptable, int L)
 	}
 
 	return false;
+}
+
+void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, NextStationContactTable &res)
+{
+	double MJD_AOS, MJD_LOS, EMAX, GET_AOS, GET_LOS, MINRANGE;
+	bool BestAOS, BestLOS, BestEMAX;
+	std::vector<NextStationContact> acquisitions;
+	NextStationContact current;
+	NextStationContact empty;
+
+	for (int i = 0;i < NUMBEROFGROUNDSTATIONS;i++)
+	{
+		if (lunar && !groundstationslunar[i]) continue;
+		if (EMXING(ephemeris, i, MJD_AOS, MJD_LOS, EMAX, MINRANGE, BestAOS, BestLOS, BestEMAX))
+		{
+			GET_AOS = OrbMech::GETfromMJD(MJD_AOS, GETbase);
+			GET_LOS = OrbMech::GETfromMJD(MJD_LOS, GETbase);
+
+			current.DELTAT = GET_LOS - GET_AOS;
+			current.GETAOS = GET_AOS;
+			current.GETLOS = GET_LOS;
+			current.MAXELEV = EMAX*DEG;
+			current.MINRANGE = MINRANGE / 1852.0;
+			current.BestAvailableAOS = BestAOS;
+			current.BestAvailableLOS = BestLOS;
+			current.BestAvailableEMAX = BestEMAX;
+			sprintf_s(current.StationID, gsabbreviations[i]);
+
+			acquisitions.push_back(current);
+		}
+	}
+
+	//Sort
+	std::sort(acquisitions.begin(), acquisitions.end());
+
+	//Put first six in table
+	for (unsigned i = 0;i < 6;i++)
+	{
+		if (i < acquisitions.size())
+		{
+			res.NextStations[i] = acquisitions[i];
+		}
+		else
+		{
+			res.NextStations[i] = empty;
+		}
+	}
+}
+
+bool RTCC::EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS_out, double &MJD_LOS_out, double &EMAX_out, double &MINRANGE_out, bool &BestAOS, bool &BestLOS, bool &BestEMAX)
+{
+	if (ephemeris.size() == 0) return false;
+
+	SV svtemp;
+	VECTOR3 R_S_equ, R, rho, N, Ntemp, rhotemp, V;
+	double MJD, sinang, MJD_AOS, LastMJD, LastSinang, MJD0, f, last_f, MJD_EMAX, sinangtemp, EMAX, MJD_LOS, MINRANGE;
+	unsigned iter = 0;
+	int n, nmax;
+	bool BestAvailableAOS = false, BestAvailableLOS = false, BestAvailableEMAX = false;
+	OBJHANDLE hEarth, hMoon;
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+
+	n = 0;
+	nmax = 10;
+	f = last_f = 0.0;
+	MJD0 = ephemeris[0].MJD;
+	R_S_equ = OrbMech::r_from_latlong(groundstations[station][0], groundstations[station][1], 6.373338e6);
+
+	//Find AOS
+	while (ephemeris.size() > iter)
+	{
+		R = ephemeris[iter].R;
+		V = ephemeris[iter].V;
+		MJD = ephemeris[iter].MJD;
+
+		OrbMech::EMXINGElev(R, R_S_equ, MJD, hEarth, N, rho, sinang);
+		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
+
+		//Elevation angle above 0, there is an AOS
+		if (sinang >= 0) break;
+		//Slope of the elevation curve has changed sign, there might be an AOS
+		if (iter > 0 && f*last_f < 0)
+		{
+			MJD_EMAX = OrbMech::LinearInterpolation(f, MJD, last_f, LastMJD, 0.0);
+			svtemp = EphemerisInterpolationConic(ephemeris, MJD_EMAX, iter - 1);
+
+			OrbMech::EMXINGElev(svtemp.R, R_S_equ, svtemp.MJD, hEarth, Ntemp, rhotemp, sinangtemp);
+			//Elevation angle above 0, there is an AOS
+			if (sinangtemp >= 0) break;
+		}
+
+		LastMJD = MJD;
+		LastSinang = sinang;
+		last_f = f;
+		iter++;
+	}
+
+	if (iter == ephemeris.size())
+	{
+		//Out of ephemeris
+		return false;
+	}
+
+	//Already in AOS
+	if (iter == 0)
+	{
+		MJD_AOS = MJD;
+		BestAvailableAOS = true;
+	}
+	else
+	{
+		MJD_AOS = OrbMech::LinearInterpolation(sinang, MJD, LastSinang, LastMJD, 0.0);
+		svtemp = EphemerisInterpolationConic(ephemeris, MJD_AOS, iter - 1);
+
+		n = 0;
+
+		while (abs(LastMJD - MJD_AOS)*24.0*3600.0 >= 3.0 && nmax > n)
+		{
+			R = svtemp.R;
+			V = svtemp.V;
+			MJD = svtemp.MJD;
+
+			OrbMech::EMXINGElev(R, R_S_equ, MJD, hEarth, N, rho, sinang);
+
+			MJD_AOS = OrbMech::LinearInterpolation(sinang, MJD, LastSinang, LastMJD, 0.0);
+			svtemp = coast_conic(svtemp, (MJD_AOS - svtemp.MJD)*24.0*3600.0);
+
+			LastMJD = MJD;
+			LastSinang = sinang;
+			n++;
+		}
+	}
+
+	//Find maximum elevation angle
+	if (iter > 0) iter--;
+
+	while (ephemeris.size() > iter)
+	{
+		R = ephemeris[iter].R;
+		V = ephemeris[iter].V;
+		MJD = ephemeris[iter].MJD;
+
+		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
+
+		//EMAX before first SV in ephemeris
+		if (iter == 0 && f < 0)
+		{
+			svtemp = ephemeris.front();
+			MJD_EMAX = ephemeris.front().MJD;
+			BestAvailableEMAX = true;
+			break;
+		}
+		//Sign is changing, EMAX was passed
+		if (f*last_f < 0)
+		{
+			MJD_EMAX = OrbMech::LinearInterpolation(f, MJD, last_f, LastMJD, 0.0);
+			svtemp = EphemerisInterpolationConic(ephemeris, MJD_EMAX, iter - 1);
+			LastMJD = MJD;
+			last_f = f;
+			break;
+		}
+
+		LastMJD = MJD;
+		last_f = f;
+		iter++;
+	}
+
+	//Out of SVs in the ephemeris, EMAX must be after end of ephemeris
+	if (iter == ephemeris.size())
+	{
+		svtemp = ephemeris.back();
+		MJD_EMAX = ephemeris.back().MJD;
+		BestAvailableEMAX = true;
+	}
+	else
+	{
+		n = 0;
+
+		while (abs(LastMJD - MJD_EMAX)*24.0*3600.0 >= 3.0 && nmax > n)
+		{
+			R = svtemp.R;
+			V = svtemp.V;
+			MJD = svtemp.MJD;
+
+			f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
+
+			MJD_EMAX = OrbMech::LinearInterpolation(f, MJD, last_f, LastMJD, 0.0);
+			svtemp = coast_conic(svtemp, (MJD_EMAX - svtemp.MJD)*24.0*3600.0);
+
+			LastMJD = MJD;
+			last_f = f;
+			n++;
+		}
+	}
+
+	OrbMech::EMXINGElev(svtemp.R, R_S_equ, svtemp.MJD, hEarth, N, rho, sinang);
+	EMAX = asin(sinang);
+	MINRANGE = length(rho);
+
+	//Find LOS
+	if (iter > 0) iter--;
+
+	while (ephemeris.size() > iter)
+	{
+		R = ephemeris[iter].R;
+		V = ephemeris[iter].V;
+		MJD = ephemeris[iter].MJD;
+
+		OrbMech::EMXINGElev(R, R_S_equ, MJD, hEarth, N, rho, sinang);
+
+		//Elevation angle below 0, there is an LOS
+		if (sinang < 0) break;
+
+		LastMJD = MJD;
+		LastSinang = sinang;
+		iter++;
+	}
+
+	if (iter == ephemeris.size())
+	{
+		MJD_LOS = ephemeris.back().MJD;
+		BestAvailableLOS = true;
+	}
+	else
+	{
+		MJD_LOS = OrbMech::LinearInterpolation(sinang, MJD, LastSinang, LastMJD, 0.0);
+		svtemp = EphemerisInterpolationConic(ephemeris, MJD_LOS, iter - 1);
+
+		n = 0;
+
+		while (abs(LastMJD - MJD_LOS)*24.0*3600.0 >= 3.0 && nmax > n)
+		{
+			R = svtemp.R;
+			V = svtemp.V;
+			MJD = svtemp.MJD;
+
+			OrbMech::EMXINGElev(R, R_S_equ, MJD, hEarth, N, rho, sinang);
+
+			MJD_LOS = OrbMech::LinearInterpolation(sinang, MJD, LastSinang, LastMJD, 0.0);
+			svtemp = coast_conic(svtemp, (MJD_LOS - svtemp.MJD)*24.0*3600.0);
+
+			LastMJD = MJD;
+			LastSinang = sinang;
+			n++;
+		}
+	}
+
+	MJD_AOS_out = MJD_AOS;
+	MJD_LOS_out = MJD_LOS;
+	EMAX_out = EMAX;
+	MINRANGE_out = MINRANGE;
+	BestAOS = BestAvailableAOS;
+	BestLOS = BestAvailableLOS;
+	BestEMAX = BestAvailableEMAX;
+
+	return true;
+}
+
+SV RTCC::EphemerisInterpolationConic(std::vector<SV> &ephemeris, double MJD, unsigned start)
+{
+	if (start == 0)
+	{
+		//MJD is before first SV
+		if (MJD < ephemeris.front().MJD)
+		{
+			return coast_conic(ephemeris.front(), (MJD - ephemeris.front().MJD)*24.0*3600.0);
+		}
+		//After last SV
+		else if (MJD > ephemeris.back().MJD)
+		{
+			return coast_conic(ephemeris.back(), (MJD - ephemeris.back().MJD)*24.0*3600.0);
+		}
+	}
+
+	//In between
+	unsigned i = start;
+
+	while (MJD > ephemeris[i].MJD)
+	{
+		i++;
+	}
+	if ((ephemeris[i].MJD - MJD) < (MJD - ephemeris[i - 1].MJD))
+	{
+		return coast_conic(ephemeris[i], (MJD - ephemeris[i].MJD)*24.0*3600.0);
+	}
+	else
+	{
+		return coast_conic(ephemeris[i - 1], (MJD - ephemeris[i - 1].MJD)*24.0*3600.0);
+	}
 }

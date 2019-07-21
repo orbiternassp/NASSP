@@ -43,7 +43,7 @@ _V(0.817196194, -0.436629484, 0.376224766),
 _V(0.837327731, -0.410968743, -0.360537048)
 };
 
-#define NUMBEROFGROUNDSTATIONS 18
+#define NUMBEROFGROUNDSTATIONS 19
 
 static const char* gsnames[NUMBEROFGROUNDSTATIONS] = {
 	{ "BERMUDA" },
@@ -63,7 +63,30 @@ static const char* gsnames[NUMBEROFGROUNDSTATIONS] = {
 	{ "USNS MERCURY" },
 	{ "USNS HUNTSVILLE" },
 	{ "USNS REDSTONE" },
-	{ "GOLDSTONE" }
+	{ "GOLDSTONE" },
+	{ "MADRID" }
+};
+
+static const char* gsabbreviations[NUMBEROFGROUNDSTATIONS] = {
+	{ "BDA" },
+	{ "CYI" },
+	{ "CRO" },
+	{ "HSK" },
+	{ "GYM" },
+	{ "HAW" },
+	{ "VAN" },
+	{ "ASC" },
+	{ "GWM" },
+	{ "MIL" },
+	{ "TEX" },
+	{ "GBM" },
+	{ "ANG" },
+	{ "TAN" },
+	{ "MER" },
+	{ "HTV" },
+	{ "RED" },
+	{ "GDS" },
+	{ "MAD" }
 };
 
 const double groundstations[NUMBEROFGROUNDSTATIONS][2] = {
@@ -79,12 +102,35 @@ const double groundstations[NUMBEROFGROUNDSTATIONS][2] = {
 	{ 28.40433*RAD, -80.60192*RAD },
 	{ 27.65273*RAD, -97.37588*RAD },
 	{ 26.62022*RAD, -78.35825*RAD },
-	{ 28.40433*RAD, -80.60192*RAD },
+	{ 17.137222*RAD, -61.775833*RAD },
 	{ -19.00000*RAD, 47.27556*RAD },
 	{ 25.0*RAD, 125.0*RAD },
 	{ 25.0*RAD, -136.0*RAD },
 	{ -24.0*RAD, -118.0*RAD },
-	{ 35.33820*RAD, -116.87421*RAD }
+	{ 35.33820*RAD, -116.87421*RAD },
+	{ 40.45443*RAD, -4.16990*RAD }
+};
+
+const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
+	false,
+	false,
+	false,
+	true,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	false,
+	true,
+	true
 };
 
 struct SV
@@ -152,6 +198,11 @@ public:
 	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, OBJHANDLE planet, OBJHANDLE outplanet);
 	~CoastIntegrator();
 	bool iteration();
+
+	VECTOR3 GetPosition();
+	VECTOR3 GetVelocity();
+	double GetMJD();
+	OBJHANDLE GetGravRef();
 
 	VECTOR3 R2, V2;
 	OBJHANDLE outplanet;
@@ -265,6 +316,7 @@ namespace OrbMech {
 	//void adfunc(double* dfdt, double t, double* f);
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
+	void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future = false);
@@ -399,6 +451,10 @@ namespace OrbMech {
 	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
 	double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng);
+	//RTCC EMXING support routine, calculate direction vectors and sine of elevation angle
+	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth, VECTOR3 &N, VECTOR3 &rho, double &sinang);
+	//RTCC EMXING support routine, calculates elevation slope function
+	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);
@@ -409,6 +465,7 @@ namespace OrbMech {
 	double fraction_pq(double x);
 	double fraction_xi(double x);
 	void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2);
+	double LinearInterpolation(double x0, double y0, double x1, double y1, double x);
 	void CubicInterpolation(double *x, double *y, double *a);
 	void VandermondeMatrix(double *x, int N, double **V);
 	int LUPDecompose(double **A, int N, double Tol, int *P);

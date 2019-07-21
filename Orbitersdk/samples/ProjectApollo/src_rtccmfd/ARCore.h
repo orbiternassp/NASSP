@@ -92,6 +92,7 @@ public:
 	void UpdateSpaceDigitals();
 	void CycleSpaceDigitals();
 	void SpaceDigitalsGET();
+	void CycleNextStationContactsDisplay();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -431,6 +432,10 @@ public:
 	//SPACE DIGITALS
 	SpaceDigitals spacedigit;
 	SV spacedigitalssv;
+
+	//NEXT STATION CONTACT DISPLAY
+	NextStationContactTable nextstatconttable;
+	bool nextstatcont_lunar; //Only use stations with lunar capability
 
 	protected:
 		int GetPowEngType();

@@ -3805,6 +3805,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(1 * W / 8, 2 * H / 14, "FIDO Orbit Digitals", 19);
 		skp->Text(1 * W / 8, 4 * H / 14, "Space Digitals", 14);
+		skp->Text(1 * W / 8, 6 * H / 14, "Next Station Contacts", 21);
 	}
 	else if (screen == 43)
 	{
@@ -4167,6 +4168,75 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(10 * W / 32, (i * 2 + 6) * H / 28, Buffer, strlen(Buffer));
 		}
 
+	}
+	else if (screen == 45)
+	{
+		G->CycleNextStationContactsDisplay();
+
+		if (G->nextstatcont_lunar)
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "Lunar", 5);
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "All", 3);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 1 * H / 14, "NEXT STATION CONTACTS", 21);
+
+		skp->SetFont(font2);
+
+		skp->Text(2 * W / 32, 6 * H / 28, "STATION", 7);
+		skp->Text(2 * W / 32, 7 * H / 28, "CODE", 4);
+		skp->Text(7 * W / 32, 6 * H / 28, "AOS", 3);
+		skp->Text(7 * W / 32, 7 * H / 28, "GET", 3);
+		skp->Text(13 * W / 32, 6 * H / 28, "LOS", 3);
+		skp->Text(13 * W / 32, 7 * H / 28, "GET", 3);
+		skp->Text(18 * W / 32, 6 * H / 28, "DELTA", 11);
+		skp->Text(18 * W / 32, 7 * H / 28, "T", 3);
+		skp->Text(23 * W / 32, 6 * H / 28, "MAX ELEV", 8);
+		skp->Text(23 * W / 32, 7 * H / 28, "DEG", 3);
+		skp->Text(29 * W / 32, 6 * H / 28, "MIN RANGE", 9);
+		skp->Text(29 * W / 32, 7 * H / 28, "N.MI.", 5);
+
+		for (unsigned i = 0;i < 6;i++)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+			sprintf_s(Buffer, G->nextstatconttable.NextStations[i].StationID);
+			skp->Text(1 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+			if (G->nextstatconttable.NextStations[i].BestAvailableAOS)
+			{
+				skp->Text(4 * W / 32, (i + 9) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, G->nextstatconttable.NextStations[i].GETAOS, false);
+			skp->Text(7 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+
+			if (G->nextstatconttable.NextStations[i].BestAvailableLOS)
+			{
+				skp->Text(10 * W / 32, (i + 9) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, G->nextstatconttable.NextStations[i].GETLOS, false);
+			skp->Text(13 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, G->nextstatconttable.NextStations[i].DELTAT, false);
+			skp->Text(18 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+
+			if (G->nextstatconttable.NextStations[i].BestAvailableEMAX)
+			{
+				skp->Text(22 * W / 32, (i + 9) * H / 28, "*", 1);
+			}
+			sprintf_s(Buffer, "%.0f", G->nextstatconttable.NextStations[i].MAXELEV);
+			skp->Text(23 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.0f", G->nextstatconttable.NextStations[i].MINRANGE);
+			skp->Text(29 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }
@@ -4585,6 +4655,12 @@ void ApolloRTCCMFD::menuSetSpaceDigitalsPage()
 void ApolloRTCCMFD::menuSetMPTPage()
 {
 	screen = 44;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetNextStationContactsPage()
+{
+	screen = 45;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -8431,6 +8507,11 @@ void ApolloRTCCMFD::menuMPTCycleActive()
 void ApolloRTCCMFD::menuMPTDeleteManeuver()
 {
 	G->rtcc->MPTDeleteManeuver(GC->mptable);
+}
+
+void ApolloRTCCMFD::menuNextStationContactLunar()
+{
+	G->nextstatcont_lunar = !G->nextstatcont_lunar;
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)

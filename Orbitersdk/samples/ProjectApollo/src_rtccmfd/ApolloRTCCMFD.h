@@ -390,6 +390,8 @@ public:
 	void menuSetMPTPage();
 	void menuMPTCycleActive();
 	void menuMPTDeleteManeuver();
+	void menuSetNextStationContactsPage();
+	void menuNextStationContactLunar();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

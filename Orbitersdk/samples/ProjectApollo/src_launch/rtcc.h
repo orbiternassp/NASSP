@@ -1082,6 +1082,37 @@ struct MPTable
 	double LMInitMass;
 };
 
+struct NextStationContact
+{
+	NextStationContact();
+	double GETAOS;
+	double GETLOS;
+	char StationID[4];
+	double DELTAT;
+	double MAXELEV;
+	double MINRANGE;
+	bool BestAvailableAOS;
+	bool BestAvailableLOS;
+	bool BestAvailableEMAX;
+
+	//For sorting
+	bool operator<(const NextStationContact& rhs) const;
+};
+
+struct NextStationContactTable
+{
+	NextStationContact NextStations[6];
+	double GET = 0.0;
+};
+
+struct NextStationContactOpt
+{
+	SV sv_A;
+	double GETbase;
+	//Only use stations with lunar capability
+	bool lunar;
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;		// Our ship
@@ -1272,6 +1303,7 @@ public:
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
+	SV coast_conic(SV sv0, double dt);
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
@@ -1286,6 +1318,8 @@ public:
 	bool PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAND, MATRIX3 REFSMMAT, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	VECTOR3 RLS_from_latlng(double lat, double lng, double alt);
+
+	//Mission Operations Control Room Displays
 	void FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 	void FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 	void FIDOOrbitDigitalsApsidesCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
@@ -1295,6 +1329,8 @@ public:
 	void FIDOSpaceDigitalsUpdate(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	void FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	void FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
+	//Orbit Station Contact Generation Control (EMSTAGEN)
+	void NextStationContactDisplay(const NextStationContactOpt &opt, NextStationContactTable &res);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1363,6 +1399,13 @@ private:
 	bool CalculationMTP_D(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_F(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+
+	//Generalized Contact Generator
+	void EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, NextStationContactTable &res);
+	//Horizon Crossing Subprogram
+	bool EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS, double &MJD_LOS, double &EMAX, double &MINRANGE_out, bool &BestAOS, bool &BestLOS, bool &BestEMAX);
+
+	SV EphemerisInterpolationConic(std::vector<SV> &ephemeris, double MJD, unsigned start = 0);
 
 protected:
 	double TimeofIgnition;

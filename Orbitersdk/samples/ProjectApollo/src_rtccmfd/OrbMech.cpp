@@ -978,6 +978,31 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	return soichange;
 }
 
+void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris)
+{
+	SV svtemp;
+	bool stop;
+	CoastIntegrator* coast;
+	coast = new CoastIntegrator(sv0.R, sv0.V, sv0.MJD, dt, sv0.gravref, NULL);
+	stop = false;
+
+	svtemp = sv0;
+	ephemeris.push_back(svtemp);
+
+	while (stop == false)
+	{
+		stop = coast->iteration();
+
+		svtemp.gravref = coast->GetGravRef();
+		svtemp.mass = sv0.mass;
+		svtemp.MJD = coast->GetMJD();
+		svtemp.R = coast->GetPosition();
+		svtemp.V = coast->GetVelocity();
+		ephemeris.push_back(svtemp);
+	}
+	delete coast;
+}
+
 VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot, double tol)
 {
 	VECTOR3 R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I;
@@ -2464,7 +2489,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 		E_A = PI2 - E_A;
 	}
 
-	while ((abs(E_err) > 0.005*RAD || abs(dt)>1.0) && i < 30)
+	while ((abs(E_err) > 0.01*RAD || abs(dt)>1.0) && i < 30)
 	{
 		dE_0 = dE;
 		dE = E_A - E;
@@ -3724,7 +3749,7 @@ bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double la
 		{
 			dt = dt_des;
 		}*/
-		if (dt > 0 && abs(dt - dt_old) > 0.5*T)
+		if (dt > 0 && (dt_old - dt) > 0.5*T)
 		{
 			dt += T;
 		}
@@ -4087,6 +4112,11 @@ MATRIX3 tmat(MATRIX3 a)
 
 	b = _M(a.m11, a.m21, a.m31, a.m12, a.m22, a.m32, a.m13, a.m23, a.m33);
 	return b;
+}
+
+double LinearInterpolation(double x0, double y0, double x1, double y1, double x)
+{
+	return y0 + (x - x0)*(y1 - y0) / (x1 - x0);
 }
 
 void CubicInterpolation(double *x, double *y, double *a)
@@ -6562,6 +6592,42 @@ double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
 	return theta_rad * 3437.7468;
 }
 
+void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth, VECTOR3 &N, VECTOR3 &rho, double &sinang)
+{
+	MATRIX3 Rot;
+	VECTOR3 rho_apo, R_S;
+
+	Rot = OrbMech::GetRotationMatrix(hEarth, MJD);
+	R_S = rhmul(Rot, R_S_equ);
+	N = unit(R_S);
+	rho = R - R_S;
+	rho_apo = unit(rho);
+	sinang = dotp(rho_apo, N);
+}
+
+double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth)
+{
+	MATRIX3 Rot;
+	VECTOR3 R_S, V_S, N, rho, rho_apo, W_E, rho_dot, N_dot;
+	double w_E;
+
+	w_E = 7.292115147e-5;
+
+	Rot = OrbMech::GetRotationMatrix(hEarth, MJD);
+	R_S = rhmul(Rot, R_S_equ);
+	N = unit(R_S);
+	rho = R - R_S;
+	rho_apo = unit(rho);
+	
+	W_E = rhmul(Rot, _V(0, 0, 1))*w_E;
+	V_S = crossp(W_E, R_S);
+	rho_dot = (V - V_S) / length(rho);
+
+	N_dot = V_S / length(R_S);
+
+	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
+}
+
 }
 
 CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)
@@ -6650,6 +6716,26 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 CoastIntegrator::~CoastIntegrator()
 {
 	delete[] JCoeff;
+}
+
+VECTOR3 CoastIntegrator::GetPosition()
+{
+	return R_CON + delta;
+}
+
+VECTOR3 CoastIntegrator::GetVelocity()
+{
+	return V_CON + nu;
+}
+
+double CoastIntegrator::GetMJD()
+{
+	return mjd0 + t / 24.0 / 3600.0;
+}
+
+OBJHANDLE CoastIntegrator::GetGravRef()
+{
+	return planet;
 }
 
 bool CoastIntegrator::iteration()
