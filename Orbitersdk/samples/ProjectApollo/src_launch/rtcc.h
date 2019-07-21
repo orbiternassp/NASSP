@@ -1090,7 +1090,6 @@ struct NextStationContact
 	char StationID[4];
 	double DELTAT;
 	double MAXELEV;
-	double MINRANGE;
 	bool BestAvailableAOS;
 	bool BestAvailableLOS;
 	bool BestAvailableEMAX;
@@ -1403,7 +1402,7 @@ private:
 	//Generalized Contact Generator
 	void EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, NextStationContactTable &res);
 	//Horizon Crossing Subprogram
-	bool EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS, double &MJD_LOS, double &EMAX, double &MINRANGE_out, bool &BestAOS, bool &BestLOS, bool &BestEMAX);
+	bool EMXING(std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions);
 
 	SV EphemerisInterpolationConic(std::vector<SV> &ephemeris, double MJD, unsigned start = 0);
 

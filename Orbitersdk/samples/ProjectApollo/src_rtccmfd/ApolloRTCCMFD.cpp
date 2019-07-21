@@ -4198,8 +4198,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(18 * W / 32, 7 * H / 28, "T", 3);
 		skp->Text(23 * W / 32, 6 * H / 28, "MAX ELEV", 8);
 		skp->Text(23 * W / 32, 7 * H / 28, "DEG", 3);
-		skp->Text(29 * W / 32, 6 * H / 28, "MIN RANGE", 9);
-		skp->Text(29 * W / 32, 7 * H / 28, "N.MI.", 5);
 
 		for (unsigned i = 0;i < 6;i++)
 		{
@@ -4233,9 +4231,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			}
 			sprintf_s(Buffer, "%.0f", G->nextstatconttable.NextStations[i].MAXELEV);
 			skp->Text(23 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
-
-			sprintf_s(Buffer, "%.0f", G->nextstatconttable.NextStations[i].MINRANGE);
-			skp->Text(29 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
 		}
 	}
 	return true;

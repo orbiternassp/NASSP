@@ -190,7 +190,6 @@ NextStationContact::NextStationContact()
 	sprintf_s(StationID, "");
 	DELTAT = 0.0;
 	MAXELEV = 0.0;
-	MINRANGE = 0.0;
 	BestAvailableAOS = false;
 	BestAvailableLOS = false;
 	BestAvailableEMAX = false;
@@ -9704,9 +9703,9 @@ void RTCC::FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res)
 
 void RTCC::NextStationContactDisplay(const NextStationContactOpt &opt, NextStationContactTable &res)
 {
-	//Create Ephemeris
+	//Create Ephemeris, either 20 hours or 100 vectors
 	std::vector<SV>ephemeris;
-	OrbMech::GenerateEphemeris(opt.sv_A, 7200.0, ephemeris);
+	OrbMech::GenerateEphemeris(opt.sv_A, 72000.0, ephemeris);
 
 	res.GET = OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase);
 
@@ -9982,8 +9981,6 @@ bool RTCC::MPTHasManeuvers(MPTable &mptable, int L)
 
 void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, NextStationContactTable &res)
 {
-	double MJD_AOS, MJD_LOS, EMAX, GET_AOS, GET_LOS, MINRANGE;
-	bool BestAOS, BestLOS, BestEMAX;
 	std::vector<NextStationContact> acquisitions;
 	NextStationContact current;
 	NextStationContact empty;
@@ -9991,23 +9988,8 @@ void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, Next
 	for (int i = 0;i < NUMBEROFGROUNDSTATIONS;i++)
 	{
 		if (lunar && !groundstationslunar[i]) continue;
-		if (EMXING(ephemeris, i, MJD_AOS, MJD_LOS, EMAX, MINRANGE, BestAOS, BestLOS, BestEMAX))
-		{
-			GET_AOS = OrbMech::GETfromMJD(MJD_AOS, GETbase);
-			GET_LOS = OrbMech::GETfromMJD(MJD_LOS, GETbase);
-
-			current.DELTAT = GET_LOS - GET_AOS;
-			current.GETAOS = GET_AOS;
-			current.GETLOS = GET_LOS;
-			current.MAXELEV = EMAX*DEG;
-			current.MINRANGE = MINRANGE / 1852.0;
-			current.BestAvailableAOS = BestAOS;
-			current.BestAvailableLOS = BestLOS;
-			current.BestAvailableEMAX = BestEMAX;
-			sprintf_s(current.StationID, gsabbreviations[i]);
-
-			acquisitions.push_back(current);
-		}
+		EMXING(ephemeris, GETbase, i, acquisitions);
+		if (acquisitions.size() >= 45) break;
 	}
 
 	//Sort
@@ -10027,25 +10009,30 @@ void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, Next
 	}
 }
 
-bool RTCC::EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS_out, double &MJD_LOS_out, double &EMAX_out, double &MINRANGE_out, bool &BestAOS, bool &BestLOS, bool &BestEMAX)
+bool RTCC::EMXING(std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions)
 {
 	if (ephemeris.size() == 0) return false;
 
-	SV svtemp;
+	SV svtemp, sv_AOS;
+	NextStationContact current;
 	VECTOR3 R_S_equ, R, rho, N, Ntemp, rhotemp, V;
-	double MJD, sinang, MJD_AOS, LastMJD, LastSinang, MJD0, f, last_f, MJD_EMAX, sinangtemp, EMAX, MJD_LOS, MINRANGE;
+	double MJD, sinang, MJD_AOS, LastMJD, LastSinang, MJD0, f, last_f, MJD_EMAX, sinangtemp, EMAX, MJD_LOS, GET_AOS, GET_LOS;
 	unsigned iter = 0;
 	int n, nmax;
-	bool BestAvailableAOS = false, BestAvailableLOS = false, BestAvailableEMAX = false;
+	bool BestAvailableAOS, BestAvailableLOS, BestAvailableEMAX;
 	OBJHANDLE hEarth, hMoon;
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
 
+	MJD0 = ephemeris[0].MJD;
+	R_S_equ = OrbMech::r_from_latlong(groundstations[station][0], groundstations[station][1], 6.373338e6);
+
+EMXING_LOOP:
+
+	BestAvailableAOS = false, BestAvailableLOS = false, BestAvailableEMAX = false;
 	n = 0;
 	nmax = 10;
 	f = last_f = 0.0;
-	MJD0 = ephemeris[0].MJD;
-	R_S_equ = OrbMech::r_from_latlong(groundstations[station][0], groundstations[station][1], 6.373338e6);
 
 	//Find AOS
 	while (ephemeris.size() > iter)
@@ -10086,7 +10073,8 @@ bool RTCC::EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS_out, 
 	if (iter == 0)
 	{
 		MJD_AOS = MJD;
-		BestAvailableAOS = true;
+		svtemp = ephemeris.front();
+		BestAvailableAOS = true;	
 	}
 	else
 	{
@@ -10111,6 +10099,8 @@ bool RTCC::EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS_out, 
 			n++;
 		}
 	}
+
+	sv_AOS = svtemp;
 
 	//Find maximum elevation angle
 	if (iter > 0) iter--;
@@ -10179,7 +10169,6 @@ bool RTCC::EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS_out, 
 
 	OrbMech::EMXINGElev(svtemp.R, R_S_equ, svtemp.MJD, hEarth, N, rho, sinang);
 	EMAX = asin(sinang);
-	MINRANGE = length(rho);
 
 	//Find LOS
 	if (iter > 0) iter--;
@@ -10229,13 +10218,29 @@ bool RTCC::EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS_out, 
 		}
 	}
 
-	MJD_AOS_out = MJD_AOS;
-	MJD_LOS_out = MJD_LOS;
-	EMAX_out = EMAX;
-	MINRANGE_out = MINRANGE;
-	BestAOS = BestAvailableAOS;
-	BestLOS = BestAvailableLOS;
-	BestEMAX = BestAvailableEMAX;
+	//If in lunar SOI check if Moon occults AOS
+	if (sv_AOS.gravref == hMoon)
+	{
+		//TBD: Implement this
+	}
+
+	GET_AOS = OrbMech::GETfromMJD(MJD_AOS, GETbase);
+	GET_LOS = OrbMech::GETfromMJD(MJD_LOS, GETbase);
+	current.GETAOS = GET_AOS;
+	current.GETLOS = GET_LOS;
+	current.DELTAT = GET_LOS - GET_AOS;
+	current.MAXELEV = EMAX * DEG;
+	current.BestAvailableAOS = BestAvailableAOS;
+	current.BestAvailableLOS = BestAvailableLOS;
+	current.BestAvailableEMAX = BestAvailableEMAX;
+	sprintf_s(current.StationID, gsabbreviations[station]);
+
+	acquisitions.push_back(current);
+
+	if (iter < ephemeris.size())
+	{
+		goto EMXING_LOOP;
+	}
 
 	return true;
 }
