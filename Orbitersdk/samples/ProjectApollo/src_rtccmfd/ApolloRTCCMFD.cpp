@@ -4184,53 +4184,53 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
-		skp->Text(4 * W / 8, 1 * H / 14, "NEXT STATION CONTACTS", 21);
+		skp->Text(4 * W / 8, 3 * H / 28, "NEXT STATION CONTACTS", 21);
 
 		skp->SetFont(font2);
 
-		skp->Text(2 * W / 32, 6 * H / 28, "STATION", 7);
-		skp->Text(2 * W / 32, 7 * H / 28, "CODE", 4);
-		skp->Text(7 * W / 32, 6 * H / 28, "AOS", 3);
-		skp->Text(7 * W / 32, 7 * H / 28, "GET", 3);
-		skp->Text(13 * W / 32, 6 * H / 28, "LOS", 3);
-		skp->Text(13 * W / 32, 7 * H / 28, "GET", 3);
-		skp->Text(18 * W / 32, 6 * H / 28, "DELTA", 11);
-		skp->Text(18 * W / 32, 7 * H / 28, "T", 3);
-		skp->Text(23 * W / 32, 6 * H / 28, "MAX ELEV", 8);
-		skp->Text(23 * W / 32, 7 * H / 28, "DEG", 3);
+		skp->Text(5 * W / 32, 7 * H / 28, "STATION", 7);
+		skp->Text(5 * W / 32, 8 * H / 28, "CODE", 4);
+		skp->Text(10 * W / 32, 7 * H / 28, "AOS", 3);
+		skp->Text(10 * W / 32, 8 * H / 28, "GET", 3);
+		skp->Text(16 * W / 32, 7 * H / 28, "LOS", 3);
+		skp->Text(16 * W / 32, 8 * H / 28, "GET", 3);
+		skp->Text(21 * W / 32, 7 * H / 28, "DELTA", 11);
+		skp->Text(21 * W / 32, 8 * H / 28, "T", 3);
+		skp->Text(26 * W / 32, 7 * H / 28, "MAX ELEV", 8);
+		skp->Text(26 * W / 32, 8 * H / 28, "DEG", 3);
 
 		for (unsigned i = 0;i < 6;i++)
 		{
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 			sprintf_s(Buffer, G->nextstatconttable.NextStations[i].StationID);
-			skp->Text(1 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(4 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
 			if (G->nextstatconttable.NextStations[i].BestAvailableAOS)
 			{
-				skp->Text(9 * W / 64, (i + 9) * H / 28, "*", 1);
+				skp->Text(15 * W / 64, (i + 10) * H / 28, "*", 1);
 			}
 			GET_Display(Buffer, G->nextstatconttable.NextStations[i].GETAOS, false);
-			skp->Text(7 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(10 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 
 			if (G->nextstatconttable.NextStations[i].BestAvailableLOS)
 			{
-				skp->Text(21 * W / 64, (i + 9) * H / 28, "*", 1);
+				skp->Text(27 * W / 64, (i + 10) * H / 28, "*", 1);
 			}
 			GET_Display(Buffer, G->nextstatconttable.NextStations[i].GETLOS, false);
-			skp->Text(13 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(16 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 
 			GET_Display(Buffer, G->nextstatconttable.NextStations[i].DELTAT, false);
-			skp->Text(18 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(21 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 
 			if (G->nextstatconttable.NextStations[i].BestAvailableEMAX)
 			{
-				skp->Text(22 * W / 32, (i + 9) * H / 28, "*", 1);
+				skp->Text(25 * W / 32, (i + 10) * H / 28, "*", 1);
 			}
 			sprintf_s(Buffer, "%.0f", G->nextstatconttable.NextStations[i].MAXELEV);
-			skp->Text(23 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(26 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 		}
 	}
 	return true;
