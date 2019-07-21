@@ -10146,31 +10146,34 @@ bool RTCC::EMXING(std::vector<SV> &ephemeris, int station, double &MJD_AOS_out, 
 		iter++;
 	}
 
-	//Out of SVs in the ephemeris, EMAX must be after end of ephemeris
-	if (iter == ephemeris.size())
+	if (BestAvailableEMAX == false)
 	{
-		svtemp = ephemeris.back();
-		MJD_EMAX = ephemeris.back().MJD;
-		BestAvailableEMAX = true;
-	}
-	else
-	{
-		n = 0;
-
-		while (abs(LastMJD - MJD_EMAX)*24.0*3600.0 >= 3.0 && nmax > n)
+		//Out of SVs in the ephemeris, EMAX must be after end of ephemeris
+		if (iter == ephemeris.size())
 		{
-			R = svtemp.R;
-			V = svtemp.V;
-			MJD = svtemp.MJD;
+			svtemp = ephemeris.back();
+			MJD_EMAX = ephemeris.back().MJD;
+			BestAvailableEMAX = true;
+		}
+		else
+		{
+			n = 0;
 
-			f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
+			while (abs(LastMJD - MJD_EMAX)*24.0*3600.0 >= 3.0 && nmax > n)
+			{
+				R = svtemp.R;
+				V = svtemp.V;
+				MJD = svtemp.MJD;
 
-			MJD_EMAX = OrbMech::LinearInterpolation(f, MJD, last_f, LastMJD, 0.0);
-			svtemp = coast_conic(svtemp, (MJD_EMAX - svtemp.MJD)*24.0*3600.0);
+				f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
 
-			LastMJD = MJD;
-			last_f = f;
-			n++;
+				MJD_EMAX = OrbMech::LinearInterpolation(f, MJD, last_f, LastMJD, 0.0);
+				svtemp = coast_conic(svtemp, (MJD_EMAX - svtemp.MJD)*24.0*3600.0);
+
+				LastMJD = MJD;
+				last_f = f;
+				n++;
+			}
 		}
 	}
 

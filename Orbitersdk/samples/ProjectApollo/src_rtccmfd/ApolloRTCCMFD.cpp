@@ -4212,14 +4212,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			if (G->nextstatconttable.NextStations[i].BestAvailableAOS)
 			{
-				skp->Text(4 * W / 32, (i + 9) * H / 28, "*", 1);
+				skp->Text(9 * W / 64, (i + 9) * H / 28, "*", 1);
 			}
 			GET_Display(Buffer, G->nextstatconttable.NextStations[i].GETAOS, false);
 			skp->Text(7 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
 
 			if (G->nextstatconttable.NextStations[i].BestAvailableLOS)
 			{
-				skp->Text(10 * W / 32, (i + 9) * H / 28, "*", 1);
+				skp->Text(21 * W / 64, (i + 9) * H / 28, "*", 1);
 			}
 			GET_Display(Buffer, G->nextstatconttable.NextStations[i].GETLOS, false);
 			skp->Text(13 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
