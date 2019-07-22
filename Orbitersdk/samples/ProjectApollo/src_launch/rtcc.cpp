@@ -9703,7 +9703,7 @@ void RTCC::FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res)
 
 void RTCC::NextStationContactDisplay(const NextStationContactOpt &opt, NextStationContactTable &res)
 {
-	//Create Ephemeris, either 20 hours or 100 vectors
+	//Create Ephemeris, either 20 hours or 100 vectors or until reference change
 	std::vector<SV>ephemeris;
 	OrbMech::GenerateEphemeris(opt.sv_A, 72000.0, ephemeris);
 
@@ -10276,4 +10276,103 @@ SV RTCC::EphemerisInterpolationConic(std::vector<SV> &ephemeris, double MJD, uns
 	{
 		return coast_conic(ephemeris[i - 1], (MJD - ephemeris[i - 1].MJD)*24.0*3600.0);
 	}
+}
+
+int RTCC::ELVARY(std::vector<SV> EPH, unsigned ORER, double MJD, bool EXTRAP, SV &sv_out)
+{
+	SV RES;
+	VECTOR3 TERM1, TERM2;
+	double TERM3;
+	unsigned DESLEF, DESRI;
+	unsigned i = 0;
+	int ERR = 0;
+	//Ephemeris too small
+	if (EPH.size() < 2)
+	{
+		return 128;
+	}
+	//Requested order too high
+	if (ORER > 8)
+	{
+		return 64;
+	}
+	if (EPH.size() > ORER)
+	{
+		//Store Order(?)
+	}
+	else
+	{
+		ERR += 2;
+		ORER = EPH.size() - 1;
+	}
+
+	if (MJD < EPH.front().MJD)
+	{
+		if (EXTRAP == false) return 32;
+		if (MJD < EPH.front().MJD - 4.0 / 24.0 / 3600.0) { return 8; }
+		else { ERR += 1; }
+	}
+	if (MJD > EPH.back().MJD)
+	{
+		if (EXTRAP == false) return 16;
+		if (MJD > EPH.front().MJD + 4.0 / 24.0 / 3600.0) { return 4; }
+		else { ERR += 1; }
+	}
+
+	while (MJD > EPH[i].MJD)
+	{
+		i++;
+	} 
+
+	//Direct hit
+	if (MJD == EPH[i].MJD)
+	{
+		sv_out = EPH[i];
+		return ERR;
+	}
+
+	if (ORER % 2)
+	{
+		DESLEF = DESRI = (ORER + 1) / 2;
+	}
+	else
+	{
+		DESLEF = ORER / 2 + 1;
+		DESRI = ORER / 2;
+	}
+
+	if (i < DESLEF)
+	{
+		i = 0;
+	}
+	else if (i > EPH.size() - DESRI)
+	{
+		i = EPH.size() - ORER - 1;
+	}
+	else
+	{
+		i = i - DESLEF;
+	}
+
+	for (unsigned j = 0; j < ORER + 1; j++)
+	{
+		TERM1 = EPH[i + j].R;
+		TERM2 = EPH[i + j].V;
+		TERM3 = 1.0;
+		for (unsigned k = 0;k < ORER + 1;k++)
+		{
+			if (k != j)
+			{
+				TERM3 *= (MJD - EPH[i + k].MJD) / (EPH[i + j].MJD - EPH[i + k].MJD);
+			}
+		}
+		RES.R += TERM1 * TERM3;
+		RES.V += TERM2 * TERM3;
+	}
+
+	RES.MJD = MJD;
+	RES.mass = EPH[0].mass;
+	RES.gravref = EPH[0].gravref;
+
+	return ERR;
 }

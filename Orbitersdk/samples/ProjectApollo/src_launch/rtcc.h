@@ -1403,6 +1403,8 @@ private:
 	void EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, NextStationContactTable &res);
 	//Horizon Crossing Subprogram
 	bool EMXING(std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions);
+	//Variable Order Interpolation
+	int ELVARY(std::vector<SV> EPH, unsigned ORER, double MJD, bool EXTRAP, SV &sv_out);
 
 	SV EphemerisInterpolationConic(std::vector<SV> &ephemeris, double MJD, unsigned start = 0);
 

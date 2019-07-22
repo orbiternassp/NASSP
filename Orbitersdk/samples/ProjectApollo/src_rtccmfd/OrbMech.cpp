@@ -978,7 +978,7 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	return soichange;
 }
 
-void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, int nmax)
+void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned nmax)
 {
 	SV svtemp;
 	bool stop;
@@ -998,7 +998,15 @@ void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, int nmax)
 		svtemp.MJD = coast->GetMJD();
 		svtemp.R = coast->GetPosition();
 		svtemp.V = coast->GetVelocity();
+
+		//Break conditions (before push_back):
+		//Only generate ephemeris for one sphere of influence
+		if (sv0.gravref != svtemp.gravref) break;
+
 		ephemeris.push_back(svtemp);
+
+		//Break conditions (after push_back):
+		//If NMAX has been reached, stop ephemeris generation
 		if (ephemeris.size() >= nmax) break;
 	}
 	delete coast;
