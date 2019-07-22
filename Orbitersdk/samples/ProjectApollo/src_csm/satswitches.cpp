@@ -673,7 +673,7 @@ void SaturnGlyEvapTempOutletMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn
 
 double SaturnGlyEvapTempOutletMeter::QueryValue()
 {
-	if (ECSIndicatorsSwitch->GetState() == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 0) {
 		return Sat->GlyEvapOutTempSensor.Voltage()*10.0 + 25.0;
 	} else {
 		return Sat->SecEvapOutLiqTempSensor.Voltage()*10.0 + 25.0;
@@ -695,7 +695,7 @@ void SaturnGlyEvapSteamPressMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn
 
 double SaturnGlyEvapSteamPressMeter::QueryValue()
 {
-	if (ECSIndicatorsSwitch->GetState() == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 0) {
 		return Sat->GlyEvapBackPressSensor.Voltage()*0.04 + 0.05; 
 	} else {
 		return Sat->SecEvapOutSteamPressSensor.Voltage()*0.04 + 0.05;
@@ -717,7 +717,7 @@ void SaturnGlycolDischPressMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn 
 
 double SaturnGlycolDischPressMeter::QueryValue()
 {
-	if (ECSIndicatorsSwitch->GetState() == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 0) {
 		return Sat->GlycolPumpOutPressSensor.Voltage()*12.0;
 	} else {
 		return Sat->SecGlyPumpOutPressSensor.Voltage()*12.0;
@@ -739,7 +739,7 @@ void SaturnAccumQuantityMeter::Init(HPEN p0, HPEN p1, SwitchRow &row, Saturn *s,
 
 double SaturnAccumQuantityMeter::QueryValue()
 {
-	if (ECSIndicatorsSwitch->GetState() == 1) {
+	if (ECSIndicatorsSwitch->GetState() == 0) {
 		return Sat->GlycolAccumQtySensor.Voltage()*1.0 / 5.0;
 	} else {
 		return Sat->SecGlycolAccumQtySensor.Voltage()*1.0 / 5.0;
