@@ -205,6 +205,18 @@ bool NextStationContact::operator<(const NextStationContact& rhs) const
 	return GETAOS < rhs.GETAOS;
 }
 
+LunarLiftoffTimeOpt::LunarLiftoffTimeOpt()
+{
+	theta_1 = 17.0*RAD;
+	dt_1 = 7.0*60.0 + 15.0;
+	DH = 15.0*1852.0;
+	IsInsVelInput = false;
+	v_LH = 5509.5*0.3048;
+	v_LV = 19.5*0.3048;
+	theta_F = 130.0*RAD;
+	E = 26.6*RAD;
+}
+
 RTCC::RTCC()
 {
 	mcc = NULL;
@@ -7277,30 +7289,26 @@ bool RTCC::TLMCIntegratedFlybyToInclinationSubprocessor(SV sv_mcc, double h_peri
 	return true;
 }
 
-void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res)
+void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res)
 {
 	VECTOR3 R_LS;
-	double h_1, theta_Ins, DH, E, theta_F, R_M, MJD_guess, t_L_guess;
+	double h_1, theta_Ins, R_M, MJD_guess, t_L_guess;
 	SV sv_P, sv_Ins;
 	OBJHANDLE hMoon;
 
 	hMoon = oapiGetObjectByName("Moon");
 	R_M = oapiGetSize(hMoon);
-
-	theta_F = 130.0*RAD;
 	h_1 = 60000.0*0.3048;
 	theta_Ins = 18.2*RAD;
-	DH = 15.0*1852.0;
-	E = 26.6*RAD;
 
-	R_LS = OrbMech::r_from_latlong(opt->lat, opt->lng, R_M + opt->alt);
+	R_LS = OrbMech::r_from_latlong(opt.lat, opt.lng, R_M + opt.alt);
 
 	//Initial guess for launch is CSM flying over landing site longitude
-	sv_P = GeneralTrajectoryPropagation(opt->sv_CSM, 0, OrbMech::MJDfromGET(opt->t_hole,opt->GETbase));
-	MJD_guess = OrbMech::P29TimeOfLongitude(sv_P.R, sv_P.V, sv_P.MJD, sv_P.gravref, opt->lng);
-	t_L_guess = OrbMech::GETfromMJD(MJD_guess, opt->GETbase);
+	sv_P = GeneralTrajectoryPropagation(opt.sv_CSM, 0, OrbMech::MJDfromGET(opt.t_hole, opt.GETbase));
+	MJD_guess = OrbMech::P29TimeOfLongitude(sv_P.R, sv_P.V, sv_P.MJD, sv_P.gravref, opt.lng);
+	t_L_guess = OrbMech::GETfromMJD(MJD_guess, opt.GETbase);
 
-	if (opt->opt == 0)
+	if (opt.opt == 0)
 	{
 		SV sv_TPI_guess;
 		double t_TPI_guess, ttoMidnight;
@@ -7310,20 +7318,20 @@ void RTCC::LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffR
 
 		//About 2.5 hours between liftoff and TPI
 		t_TPI_guess = t_L_guess + 2.5*3600.0;
-		sv_TPI_guess = GeneralTrajectoryPropagation(sv_P, 0, OrbMech::MJDfromGET(t_TPI_guess, opt->GETbase));
+		sv_TPI_guess = GeneralTrajectoryPropagation(sv_P, 0, OrbMech::MJDfromGET(t_TPI_guess, opt.GETbase));
 
 		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, hMoon, hSun, 1, 1, false);
-		res->t_TPI = t_TPI_guess + ttoMidnight;
+		res.t_TPI = t_TPI_guess + ttoMidnight;
 
-		LunarLiftoffTimePredictionCFP(R_LS, sv_P, opt->GETbase, hMoon, opt->dt_1, h_1, opt->theta_1, theta_Ins, DH, E, t_L_guess, res->t_TPI, theta_F, *res);
+		LunarLiftoffTimePredictionCFP(opt, R_LS, sv_P, hMoon, h_1, theta_Ins, t_L_guess, res.t_TPI, res);
 	}
-	else if (opt->opt == 1)
+	else if (opt.opt == 1)
 	{
-		LunarLiftoffTimePredictionDT(R_LS, sv_P, opt->GETbase, hMoon, opt->dt_1, h_1, opt->theta_1, opt->dt_2, DH, E, t_L_guess, theta_F, *res);
+		LunarLiftoffTimePredictionDT(opt, R_LS, sv_P, hMoon, h_1, t_L_guess, res);
 	}
-	else if (opt->opt == 2)
+	else if (opt.opt == 2)
 	{
-		LunarLiftoffTimePredictionTCDT(R_LS, sv_P, opt->GETbase, hMoon, opt->dt_1, h_1, opt->theta_1, t_L_guess, *res);
+		LunarLiftoffTimePredictionTCDT(opt, R_LS, sv_P, hMoon, h_1, t_L_guess, res);
 	}
 }
 
@@ -8780,7 +8788,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	return true;
 }
 
-bool RTCC::LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double t_L_guess, double t_TPI, double theta_F, LunarLiftoffResults &res)
+bool RTCC::LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res)
 {
 	// NOMENCLATURE:
 	// R = position vector, V = velocity vector
@@ -8791,12 +8799,12 @@ bool RTCC::LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, 
 	VECTOR3 u, R_1, V_1, R_2, V_2, R_5, V_2F, R_3, V_3, R_L, U_L, R_3F, V_3F, R_PJ, V_PJ, R_P3S, V_P3S, R_4, V_4, V_4F, R_7, V_7, R_7F, V_7F;
 	int n;
 	double r_M, mu, r_A, dt_3, MJD_TPI, dt, MJD_L, t_3, r_Ins, dV_CSI;
-	double dt_2, e_Ins, h_Ins, t_L, t_1, t_2, dt_4, e_P, eps, to_L, eo_P, c_F, p_C;
+	double dt_2, t_L, t_1, t_2, dt_4, e_P, eps, to_L, eo_P, c_F, p_C;
 	int s_F;
 
 	r_M = length(R_LS);
 	mu = GGRAV * oapiGetMass(hMoon);
-	MJD_TPI = GETbase + t_TPI / 24.0 / 3600.0;
+	MJD_TPI = opt.GETbase + t_TPI / 24.0 / 3600.0;
 
 	s_F = 0;
 	c_F = p_C = 0.0;
@@ -8810,30 +8818,39 @@ bool RTCC::LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, 
 	sv_6 = coast(sv_P, (MJD_TPI - sv_P.MJD)*24.0*3600.0);
 	u = unit(crossp(sv_6.R, sv_6.V));
 
-	OrbMech::QDRTPI(sv_6.R, sv_6.V, MJD_TPI, hMoon, mu, DH, E, 0, R_PJ, V_PJ);
-	R_5 = R_PJ - unit(R_PJ)*DH;
+	OrbMech::QDRTPI(sv_6.R, sv_6.V, MJD_TPI, hMoon, mu, opt.DH, opt.E, 0, R_PJ, V_PJ);
+	R_5 = R_PJ - unit(R_PJ)*opt.DH;
 	r_A = length(R_5);
 
-	e_Ins = (r_A - r_Ins) / (r_A + cos(theta_Ins)*r_Ins);
-	h_Ins = sqrt(r_A*mu*(1.0 - e_Ins));
-	res.v_LV = mu / h_Ins * e_Ins*sin(theta_Ins);
-	res.v_LH = mu / h_Ins * (1.0 + e_Ins * cos(theta_Ins));
+	if (opt.IsInsVelInput)
+	{
+		res.v_LH = opt.v_LH;
+		res.v_LV = opt.v_LV;
+	}
+	else
+	{
+		double e_Ins, h_Ins;
+		e_Ins = (r_A - r_Ins) / (r_A + cos(theta_Ins)*r_Ins);
+		h_Ins = sqrt(r_A*mu*(1.0 - e_Ins));
+		res.v_LV = mu / h_Ins * e_Ins*sin(theta_Ins);
+		res.v_LH = mu / h_Ins * (1.0 + e_Ins * cos(theta_Ins));
+	}
 
 	do
 	{
 		//Launch to Insertion
-		MJD_L = GETbase + t_L / 24.0 / 3600.0;
+		MJD_L = opt.GETbase + t_L / 24.0 / 3600.0;
 		Rot = OrbMech::GetRotationMatrix(hMoon, MJD_L);
 		R_L = rhmul(Rot, R_LS);
 		U_L = unit(R_L - u * dotp(u, R_L));
-		R_1 = (U_L*cos(theta_1) + crossp(u, U_L)*sin(theta_1))*r_Ins;
+		R_1 = (U_L*cos(opt.theta_1) + crossp(u, U_L)*sin(opt.theta_1))*r_Ins;
 		V_1 = unit(crossp(u, unit(R_1)))*res.v_LH + unit(R_1)*res.v_LV;
-		t_1 = t_L + dt_1;
+		t_1 = t_L + opt.dt_1;
 		//Insertion to CSI
 		dt_2 = OrbMech::timetoapo(R_1, V_1, mu);
 		OrbMech::rv_from_r0v0(R_1, V_1, dt_2, R_2, V_2, mu);
 		t_2 = t_1 + dt_2;
-		OrbMech::CSIToDH(R_2, V_2, sv_6.R, sv_6.V, DH, mu, dV_CSI);
+		OrbMech::CSIToDH(R_2, V_2, sv_6.R, sv_6.V, opt.DH, mu, dV_CSI);
 		V_2F = V_2 + unit(crossp(u, R_2))*dV_CSI;
 		//CSI to CDH
 		OrbMech::REVUP(R_2, V_2F, 0.5, mu, R_3, V_3, dt_3);
@@ -8863,7 +8880,7 @@ bool RTCC::LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, 
 	res.t_CSI = t_2;
 	res.t_CDH = t_3;
 
-	dt_F = OrbMech::time_theta(sv_6.R, sv_6.V, theta_F, mu);
+	dt_F = OrbMech::time_theta(sv_6.R, sv_6.V, opt.theta_F, mu);
 	OrbMech::rv_from_r0v0(sv_6.R, sv_6.V, dt_F, R_7, V_7, mu);
 	V_4F = OrbMech::elegant_lambert(R_4, V_4, R_7, dt_F, 0, false, mu);
 	OrbMech::rv_from_r0v0(R_4, V_4F, dt_F, R_7F, V_7F, mu);
@@ -8878,7 +8895,7 @@ bool RTCC::LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, 
 	return true;
 }
 
-bool RTCC::LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double t_L_guess, LunarLiftoffResults &res)
+bool RTCC::LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res)
 {
 	SV sv_PLI;
 	MATRIX3 Rot;
@@ -8890,7 +8907,7 @@ bool RTCC::LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, SV sv_P, double GETbase,
 	mu = GGRAV * oapiGetMass(hMoon);
 	t_L = t_L_guess;
 
-	sv_PLI = coast(sv_P, t_L - OrbMech::GETfromMJD(sv_P.MJD, GETbase));
+	sv_PLI = coast(sv_P, t_L - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
 
 	r_Ins = r_M + h_1;
 	r_A = r_M + 60.0*1852.0;
@@ -8909,17 +8926,17 @@ bool RTCC::LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, SV sv_P, double GETbase,
 	do
 	{
 		//Launch to Insertion
-		MJD_L = GETbase + t_L / 24.0 / 3600.0;
+		MJD_L = opt.GETbase + t_L / 24.0 / 3600.0;
 		Rot = OrbMech::GetRotationMatrix(hMoon, MJD_L);
 		R_L = rhmul(Rot, R_LS);
 		U_L = unit(R_L - u * dotp(u, R_L));
-		R_1 = (U_L*cos(theta_1) + crossp(u, U_L)*sin(theta_1))*r_Ins;
+		R_1 = (U_L*cos(opt.theta_1) + crossp(u, U_L)*sin(opt.theta_1))*r_Ins;
 		V_1 = unit(crossp(u, unit(R_1)))*res.v_LH;
-		t_1 = t_L + dt_1;
+		t_1 = t_L + opt.dt_1;
 		//Insertion to TPF
 		OrbMech::REVUP(R_1, V_1, 0.5, mu, R_AF, V_AF, dt_2);
 		t_2 = t_1 + dt_2;
-		OrbMech::rv_from_r0v0(sv_PLI.R, sv_PLI.V, (t_L - t_L_guess) + dt_1 + dt_2, R_PF, V_PF, mu);
+		OrbMech::rv_from_r0v0(sv_PLI.R, sv_PLI.V, (t_L - t_L_guess) + opt.dt_1 + dt_2, R_PF, V_PF, mu);
 
 		e_P = OrbMech::sign(dotp(crossp(R_AF, R_PF), u))*acos(dotp(unit(R_PF), unit(R_AF)));
 		if (abs(e_P) >= eps)
@@ -8933,8 +8950,8 @@ bool RTCC::LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, SV sv_P, double GETbase,
 	} while (abs(e_P) >= eps);
 
 	res.t_L = t_L;
-	res.t_Ins = t_L + dt_1;
-	res.t_TPF = t_L + dt_1 + dt_2;
+	res.t_Ins = t_L + opt.dt_1;
+	res.t_TPF = t_L + opt.dt_1 + dt_2;
 	res.DV_CSI = 0.0;
 	res.DV_CDH = 0.0;
 	res.DV_TPI = 0.0;
@@ -8944,7 +8961,7 @@ bool RTCC::LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, SV sv_P, double GETbase,
 	return true;
 }
 
-bool RTCC::LunarLiftoffTimePredictionDT(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double dt_2, double DH, double E, double t_L_guess, double theta_F, LunarLiftoffResults &res)
+bool RTCC::LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res)
 {
 	MATRIX3 Rot;
 	VECTOR3 R_1, V_1, R_2, V_2, R_6, V_6, R_5, R_L, U_L, R_PJ, V_PJ, u, R_7, V_7, V_2F, R_7F, V_7F;
@@ -8968,20 +8985,20 @@ bool RTCC::LunarLiftoffTimePredictionDT(VECTOR3 R_LS, SV sv_P, double GETbase, O
 
 	while (n < 10 && abs(dt)>0.5)
 	{
-		res.t_TPI = t_L + dt_1 + dt_2;
-		MJD_TPI = GETbase + res.t_TPI / 24.0 / 3600.0;
+		res.t_TPI = t_L + opt.dt_1 + opt.dt_2;
+		MJD_TPI = opt.GETbase + res.t_TPI / 24.0 / 3600.0;
 		OrbMech::oneclickcoast(sv_P.R, sv_P.V, sv_P.MJD, (MJD_TPI - sv_P.MJD)*24.0*3600.0, R_6, V_6, hMoon, hMoon);
-		OrbMech::QDRTPI(R_6, V_6, MJD_TPI, hMoon, mu, DH, E, 1, R_PJ, V_PJ);
-		R_5 = R_PJ - unit(R_PJ)*DH;
+		OrbMech::QDRTPI(R_6, V_6, MJD_TPI, hMoon, mu, opt.DH, opt.E, 1, R_PJ, V_PJ);
+		R_5 = R_PJ - unit(R_PJ)*opt.DH;
 		r_A = length(R_5);
 		u = unit(crossp(R_6, V_6));
 
 		//Launch to Insertion
-		MJD_L = GETbase + t_L / 24.0 / 3600.0;
+		MJD_L = opt.GETbase + t_L / 24.0 / 3600.0;
 		Rot = OrbMech::GetRotationMatrix(hMoon, MJD_L);
 		R_L = rhmul(Rot, R_LS);
 		U_L = unit(R_L - u * dotp(u, R_L));
-		R_1 = (U_L*cos(theta_1) + crossp(u, U_L)*sin(theta_1))*r_Ins;
+		R_1 = (U_L*cos(opt.theta_1) + crossp(u, U_L)*sin(opt.theta_1))*r_Ins;
 
 		p_I = c_I = 0.0;
 		s_F = 0;
@@ -8989,7 +9006,7 @@ bool RTCC::LunarLiftoffTimePredictionDT(VECTOR3 R_LS, SV sv_P, double GETbase, O
 		do
 		{
 			V_1 = unit(crossp(u, unit(R_1)))*res.v_LH + unit(R_1)*res.v_LV;
-			OrbMech::rv_from_r0v0(R_1, V_1, dt_2, R_2, V_2, mu);
+			OrbMech::rv_from_r0v0(R_1, V_1, opt.dt_2, R_2, V_2, mu);
 
 			e_T = r_A - length(R_2);
 
@@ -9005,10 +9022,10 @@ bool RTCC::LunarLiftoffTimePredictionDT(VECTOR3 R_LS, SV sv_P, double GETbase, O
 		} while (abs(e_T) >= eps1);
 
 		
-		t_1 = t_L + dt_1;
+		t_1 = t_L + opt.dt_1;
 		//Insertion to TPI
-		OrbMech::rv_from_r0v0(R_1, V_1, dt_2, R_2, V_2, mu);
-		t_2 = t_1 + dt_2;
+		OrbMech::rv_from_r0v0(R_1, V_1, opt.dt_2, R_2, V_2, mu);
+		t_2 = t_1 + opt.dt_2;
 
 		sw = OrbMech::sign(dotp(u, crossp(R_2, R_5)));
 		theta_u = sw * acos(dotp(unit(R_2), unit(R_5))) + PI * (1.0 - sw);
@@ -9018,10 +9035,10 @@ bool RTCC::LunarLiftoffTimePredictionDT(VECTOR3 R_LS, SV sv_P, double GETbase, O
 	}
 
 	res.t_L = t_L;
-	res.t_Ins = t_L + dt_1;
-	res.t_TPI = t_L + dt_1 + dt_2;
+	res.t_Ins = t_L + opt.dt_1;
+	res.t_TPI = t_L + opt.dt_1 + opt.dt_2;
 
-	dt_F = OrbMech::time_theta(R_6, V_6, theta_F, mu);
+	dt_F = OrbMech::time_theta(R_6, V_6, opt.theta_F, mu);
 	OrbMech::rv_from_r0v0(R_6, V_6, dt_F, R_7, V_7, mu);
 	V_2F = OrbMech::elegant_lambert(R_2, V_2, R_7, dt_F, 0, false, mu);
 	OrbMech::rv_from_r0v0(R_2, V_2F, dt_F, R_7F, V_7F, mu);

@@ -2685,6 +2685,18 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		GET_Display(Buffer, G->t_Liftoff_guess);
 		skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
 
+		if (G->LunarLiftoffTimeOption == 0)
+		{
+			if (G->LunarLiftoffInsVelInput)
+			{
+				skp->Text((int)(0.5 * W / 8), 4 * H / 14, "Input Ins. Velocity", 19);
+			}
+			else
+			{
+				skp->Text((int)(0.5 * W / 8), 4 * H / 14, "Calc. Ins. Velocity", 19);
+			}
+		}
+
 		skp->Text((int)(0.5 * W / 8), 8 * H / 21, "Rendezvous Schedule:", 20);
 
 		skp->Text((int)(0.5 * W / 8), 9 * H / 21, "Launch:", 7);
@@ -7644,6 +7656,11 @@ bool LiftoffGuessInput(void *id, char *str, void *data)
 	return false;
 }
 
+void ApolloRTCCMFD::menuCycleLunarLiftoffInsVelOption()
+{
+	G->LunarLiftoffInsVelInput = !G->LunarLiftoffInsVelInput;
+}
+
 void ApolloRTCCMFD::set_Liftoffguess(double time)
 {
 	G->t_Liftoff_guess = time;
@@ -7807,6 +7824,54 @@ bool LiftoffDTInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_LiftoffDT(double dt)
 {
 	G->DT_Ins_TPI = dt * 60.0;
+}
+
+void ApolloRTCCMFD::menuLunarLiftoffVHorInput()
+{
+	if (G->LunarLiftoffInsVelInput && G->LunarLiftoffTimeOption == 0)
+	{
+		bool LunarLiftoffVHorInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Input horizontal velocity in ft/s:", LunarLiftoffVHorInput, 0, 20, (void*)this);
+	}
+}
+
+bool LunarLiftoffVHorInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_LunarLiftoffVHorInput(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LunarLiftoffVHorInput(double v_lh)
+{
+	G->LunarLiftoffRes.v_LH = v_lh * 0.3048;
+}
+
+void ApolloRTCCMFD::menuLunarLiftoffVVertInput()
+{
+	if (G->LunarLiftoffInsVelInput && G->LunarLiftoffTimeOption == 0)
+	{
+		bool LunarLiftoffVVertInput(void* id, char *str, void *data);
+		oapiOpenInputBox("Input vertical velocity in ft/s:", LunarLiftoffVVertInput, 0, 20, (void*)this);
+	}
+}
+
+bool LunarLiftoffVVertInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_LunarLiftoffVVertInput(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LunarLiftoffVVertInput(double v_lv)
+{
+	G->LunarLiftoffRes.v_LV = v_lv * 0.3048;
 }
 
 void ApolloRTCCMFD::menuSetEMPUplinkP99()

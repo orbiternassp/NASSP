@@ -291,12 +291,17 @@ public:
 	void menuSetPCLanded();
 	void menuSetLiftoffguess();
 	void set_Liftoffguess(double time);
+	void menuCycleLunarLiftoffInsVelOption();
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLunarLiftoffTimeOption();
 	void menuSetLiftoffDT();
 	void set_LiftoffDT(double dt);
 	void set_TPIguess(double time);
+	void menuLunarLiftoffVHorInput();
+	void set_LunarLiftoffVHorInput(double v_lh);
+	void menuLunarLiftoffVVertInput();
+	void set_LunarLiftoffVVertInput(double v_lv);
 	void menuSetEMPUplinkP99();
 	void menuEMPUplink();
 	void menuSetEMPUplinkNumber();

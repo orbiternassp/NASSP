@@ -521,12 +521,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.GETbase = GETbase;
-		entopt.returnspeed = 1;
 		entopt.SMODE = 14;
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = calcParams.LOI - 5.0*3600.0;
 		entopt.vessel = calcParams.src;
 		entopt.r_rbias = 1285.0;
+		entopt.t_zmin = 145.0*3600.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -1684,13 +1684,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
 
 		//Initial pass through the processor
-		LaunchTimePredictionProcessor(&opt, &res);
+		LaunchTimePredictionProcessor(opt, res);
 		//Refine ascent parameters
 		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through
-		LaunchTimePredictionProcessor(&opt, &res);
+		LaunchTimePredictionProcessor(opt, res);
 
 		sv_CSM2 = GeneralTrajectoryPropagation(sv_CSM, 0, OrbMech::MJDfromGET(calcParams.PDI, GETbase));
 		MJD_over = OrbMech::P29TimeOfLongitude(sv_CSM2.R, sv_CSM2.V, sv_CSM2.MJD, sv_CSM2.gravref, calcParams.LSLng);
@@ -1810,13 +1810,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
 
 		//Initial pass through the processor
-		LaunchTimePredictionProcessor(&opt, &res);
+		LaunchTimePredictionProcessor(opt, res);
 		//Refine ascent parameters
 		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through
-		LaunchTimePredictionProcessor(&opt, &res);
+		LaunchTimePredictionProcessor(opt, res);
 
 		calcParams.LunarLiftoff = res.t_L;
 		calcParams.Insertion = res.t_Ins;
@@ -1918,7 +1918,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
 
 		//Initial pass through the processor
-		LaunchTimePredictionProcessor(&opt, &res);
+		LaunchTimePredictionProcessor(opt, res);
 		//Refine ascent parameters
 		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
 		opt.theta_1 = theta_1;
@@ -1927,7 +1927,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		for (int i = 0;i < form->entries;i++)
 		{
-			LaunchTimePredictionProcessor(&opt, &res);
+			LaunchTimePredictionProcessor(opt, res);
 			form->TIG[i] = res.t_L;
 			opt.t_hole += 2.0*3600.0;
 		}
@@ -2095,13 +2095,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
 
 		//Initial pass through the processor
-		LaunchTimePredictionProcessor(&opt, &res);
+		LaunchTimePredictionProcessor(opt, res);
 		//Refine ascent parameters
 		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through
-		LaunchTimePredictionProcessor(&opt, &res);
+		LaunchTimePredictionProcessor(opt, res);
 
 		calcParams.LunarLiftoff = res.t_L;
 		calcParams.Insertion = res.t_Ins;
@@ -2111,7 +2111,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Calculate T14
 		opt.t_hole += 2.0*3600.0;
-		LaunchTimePredictionProcessor(&opt, &res);
+		LaunchTimePredictionProcessor(opt, res);
 		//Store for Ascent PAD
 		TimeofIgnition = res.t_L;
 

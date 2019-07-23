@@ -796,14 +796,15 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	t_TPIguess = 0.0;
 	DT_Ins_TPI = 40.0*60.0;
 	t_Liftoff_guess = 0.0;
+	LunarLiftoffInsVelInput = false;
 	LunarLiftoffRes.t_CDH = 0.0;
 	LunarLiftoffRes.t_CSI = 0.0;
 	LunarLiftoffRes.t_Ins = 0.0;
 	LunarLiftoffRes.t_L = 0.0;
 	LunarLiftoffRes.t_TPI = 0.0;
 	LunarLiftoffRes.t_TPF = 0.0;
-	LunarLiftoffRes.v_LH = 0.0;
-	LunarLiftoffRes.v_LV = 0.0;
+	LunarLiftoffRes.v_LH = 5509.5*0.3048;
+	LunarLiftoffRes.v_LV = 19.5*0.3048;
 	LunarLiftoffRes.DV_CDH = 0.0;
 	LunarLiftoffRes.DV_CSI = 0.0;
 	LunarLiftoffRes.DV_T = 0.0;
@@ -3516,6 +3517,9 @@ int ARCore::subThread()
 		opt.sv_CSM = sv_CSM;
 		opt.dt_1 = LAP_DT;
 		opt.theta_1 = LAP_Theta;
+		opt.IsInsVelInput = LunarLiftoffInsVelInput;
+		opt.v_LH = LunarLiftoffRes.v_LH;
+		opt.v_LV = LunarLiftoffRes.v_LV;
 
 		if (vessel->GroundContact())
 		{
@@ -3534,7 +3538,7 @@ int ARCore::subThread()
 			opt.lng = GC->LSLng;
 		}
 
-		rtcc->LaunchTimePredictionProcessor(&opt, &LunarLiftoffRes);
+		rtcc->LaunchTimePredictionProcessor(opt, LunarLiftoffRes);
 		t_TPI = LunarLiftoffRes.t_TPI;
 
 		Result = 0;

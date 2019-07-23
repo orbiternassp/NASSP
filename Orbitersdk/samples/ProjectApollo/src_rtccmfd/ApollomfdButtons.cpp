@@ -786,9 +786,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu23[] =
 	{
 		{ "Earliest liftoff time", 0, 'T' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Input or calc. insertion", 0, 'A' },
+		{ "Horizontal velocity", 0, 'H' },
+		{ "Vertical velocity", 0, 'V' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
@@ -796,16 +796,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Target Vessel", 0, 'V' },
 		{ "Calculate liftoff times", 0, 'C' },
 		{ "Time between Ins and TPI", 0, 'D' },
-		{ "", 0, ' ' },
+		{ "Input for VHOR/VERT", 0, 'V' },
 		{ "Back to menu", 0, 'B' }
 	};
 
 	RegisterPage(mnu23, sizeof(mnu23) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TLO", OAPI_KEY_T, &ApolloRTCCMFD::menuSetLiftoffguess);
-	RegisterFunction("", OAPI_KEY_J, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("VOP", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleLunarLiftoffInsVelOption);
+	RegisterFunction("VLH", OAPI_KEY_H, &ApolloRTCCMFD::menuLunarLiftoffVHorInput);
+	RegisterFunction("VLV", OAPI_KEY_V, &ApolloRTCCMFD::menuLunarLiftoffVVertInput);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 
@@ -813,7 +813,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TGT", OAPI_KEY_V, &ApolloRTCCMFD::set_target);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLunarLiftoffCalc);
 	RegisterFunction("DT", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLiftoffDT);
-	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
 

@@ -729,7 +729,7 @@ struct SkylabRendezvousResults
 
 struct LunarLiftoffTimeOpt
 {
-	LunarLiftoffTimeOpt() :theta_1(17.0*RAD), dt_1(7.0*60.0 + 15.0) {};
+	LunarLiftoffTimeOpt();
 	double lat;
 	double lng;
 	double alt;
@@ -738,8 +738,14 @@ struct LunarLiftoffTimeOpt
 	SV sv_CSM;			//CSM State vector
 	int opt;			// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
 	double dt_2;		//Fixed time from insertion to TPI for direct profile
-	double theta_1;	//Angle travelled between liftoff and insertion
+	double theta_1;		//Angle travelled between liftoff and insertion
 	double dt_1;		//Ascent burn time (liftoff to insertion)
+	double DH;			//Delta height for concentric profile
+	bool IsInsVelInput;	//0 = calculate insertion velocity, 1 = use input velocity
+	double v_LH;
+	double v_LV;
+	double theta_F;		//Transfer angle for terminal phase
+	double E;			//Elevation angle to initiate terminal phase on
 };
 
 struct LunarLiftoffResults
@@ -1308,10 +1314,10 @@ public:
 	bool TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, SV &sv_reentry, double &lat_EMPcor);
 	bool TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
-	void LaunchTimePredictionProcessor(LunarLiftoffTimeOpt *opt, LunarLiftoffResults *res);
-	bool LunarLiftoffTimePredictionCFP(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double theta_Ins, double DH, double E, double t_L_guess, double t_TPI, double theta_F, LunarLiftoffResults &res);
-	bool LunarLiftoffTimePredictionTCDT(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double t_L_guess, LunarLiftoffResults &res);
-	bool LunarLiftoffTimePredictionDT(VECTOR3 R_LS, SV sv_P, double GETbase, OBJHANDLE hMoon, double dt_1, double h_1, double theta_1, double dt_2, double DH, double E, double t_L_guess, double theta_F, LunarLiftoffResults &res);
+	void LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
+	bool LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res);
+	bool LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
+	bool LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
