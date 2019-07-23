@@ -9701,7 +9701,7 @@ void RTCC::FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res)
 	res.IEMP = acos(H_EMP.z / length(H_EMP))*DEG;
 }
 
-void RTCC::NextStationContactDisplay(const NextStationContactOpt &opt, NextStationContactTable &res)
+void RTCC::OrbitStationContactsDisplay(const OrbitStationContactsOpt &opt, OrbitStationContactsTable &res)
 {
 	//Create Ephemeris, either 20 hours or 100 vectors or until reference change
 	std::vector<SV>ephemeris;
@@ -9979,7 +9979,7 @@ bool RTCC::MPTHasManeuvers(MPTable &mptable, int L)
 	return false;
 }
 
-void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, NextStationContactTable &res)
+void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, OrbitStationContactsTable &res)
 {
 	std::vector<NextStationContact> acquisitions;
 	NextStationContact current;
@@ -9989,22 +9989,21 @@ void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, Next
 	{
 		if (lunar && !groundstationslunar[i]) continue;
 		EMXING(ephemeris, GETbase, i, acquisitions);
-		if (acquisitions.size() >= 45) break;
 	}
 
 	//Sort
 	std::sort(acquisitions.begin(), acquisitions.end());
 
-	//Put first six in table
-	for (unsigned i = 0;i < 6;i++)
+	//Put first 45 in table
+	for (unsigned i = 0;i < 45;i++)
 	{
 		if (i < acquisitions.size())
 		{
-			res.NextStations[i] = acquisitions[i];
+			res.Stations[i] = acquisitions[i];
 		}
 		else
 		{
-			res.NextStations[i] = empty;
+			res.Stations[i] = empty;
 		}
 	}
 }
@@ -10375,4 +10374,39 @@ int RTCC::ELVARY(std::vector<SV> EPH, unsigned ORER, double MJD, bool EXTRAP, SV
 	RES.gravref = EPH[0].gravref;
 
 	return ERR;
+}
+
+void RTCC::EMDSTAC(const OrbitStationContactsTable &in, NextStationContactsTable &out)
+{
+	//Just copy over the first six
+	for (unsigned i = 0;i < 6;i++)
+	{
+		out.NextStations[i] = in.Stations[i];
+	}
+}
+
+void RTCC::EMDPESAD(const PredictedSiteAcquisitionOpt &opt, const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out)
+{
+	NextStationContact empty;
+	unsigned i = 0, j = 0;
+	double GET_END = opt.GET + opt.dt;
+
+	while (opt.GET > in.Stations[i].GETAOS && i < 44)
+	{
+		i++;
+	}
+
+	while (GET_END >= in.Stations[i].GETAOS && i < 44 && j < 39)
+	{
+		out.Stations[j] = in.Stations[i];
+		i++;
+		j++;
+	}
+
+	//Fill the rest with empty data
+	while (j < 40)
+	{
+		out.Stations[j] = empty;
+		j++;
+	}
 }

@@ -392,6 +392,12 @@ public:
 	void menuMPTDeleteManeuver();
 	void menuSetNextStationContactsPage();
 	void menuNextStationContactLunar();
+	void menuSetPredSiteAcquisitionPage();
+	void menuPredSiteAcqGET();
+	void set_PredSiteAcqGET(double GET);
+	void menuPredSiteAcqDT();
+	void set_PredSiteAcqDT(double DT);
+	void PredSiteAcqCalc();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

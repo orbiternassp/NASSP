@@ -930,6 +930,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PDAP_R_amin = 0.0;
 
 	nextstatcont_lunar = false;
+	predsiteacq_GET = 0.0;
+	predsiteacq_DT = 0.0;
 }
 
 ARCore::~ARCore()
@@ -1179,10 +1181,34 @@ void ARCore::CycleNextStationContactsDisplay()
 	if (subThreadStatus == 0)
 	{
 		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
-		if (GET > nextstatconttable.GET + 12.0)
+		if (GET > orbitstatconttable.GET + 12.0)
 		{
 			startSubthread(35);
 		}
+		else if (GET > nextstatconttable.GET + 12.0)
+		{
+			startSubthread(36);
+		}
+	}
+}
+
+void ARCore::CyclePredictedSiteAcquisitionDisplay()
+{
+	if (subThreadStatus == 0)
+	{
+		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
+		if (GET > orbitstatconttable.GET + 12.0)
+		{
+			startSubthread(35);
+		}
+	}
+}
+
+void ARCore::CalculatePredictedSiteAcquisitionDisplay()
+{
+	if (subThreadStatus == 0)
+	{
+		startSubthread(37);
 	}
 }
 
@@ -4106,15 +4132,36 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 35: //Next Station Contacts Display
+	case 35: //Orbit Station Contacts Display
 	{
-		NextStationContactOpt opt;
+		OrbitStationContactsOpt opt;
 
 		opt.GETbase = GC->GETbase;
 		opt.sv_A = rtcc->StateVectorCalc(vessel);
 		opt.lunar = nextstatcont_lunar;
 
-		rtcc->NextStationContactDisplay(opt, nextstatconttable);
+		rtcc->OrbitStationContactsDisplay(opt, orbitstatconttable);
+
+		Result = 0;
+	}
+	break;
+	case 36: //Next Station Contacts Display
+	{
+		rtcc->EMDSTAC(orbitstatconttable, nextstatconttable);
+
+		nextstatconttable.GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
+
+		Result = 0;
+	}
+	break;
+	case 37: //Predicted Site Acquisition Display
+	{
+		PredictedSiteAcquisitionOpt opt;
+
+		opt.dt = predsiteacq_DT;
+		opt.GET = predsiteacq_GET;
+
+		rtcc->EMDPESAD(opt, orbitstatconttable, predsiteacqtable);
 
 		Result = 0;
 	}

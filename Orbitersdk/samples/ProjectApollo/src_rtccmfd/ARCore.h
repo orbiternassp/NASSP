@@ -93,6 +93,8 @@ public:
 	void CycleSpaceDigitals();
 	void SpaceDigitalsGET();
 	void CycleNextStationContactsDisplay();
+	void CyclePredictedSiteAcquisitionDisplay();
+	void CalculatePredictedSiteAcquisitionDisplay();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -434,8 +436,12 @@ public:
 	SV spacedigitalssv;
 
 	//NEXT STATION CONTACT DISPLAY
-	NextStationContactTable nextstatconttable;
+	OrbitStationContactsTable orbitstatconttable;
+	NextStationContactsTable nextstatconttable;
+	PredictedSiteAcquisitionTable predsiteacqtable;
 	bool nextstatcont_lunar; //Only use stations with lunar capability
+	double predsiteacq_GET;
+	double predsiteacq_DT;
 
 	protected:
 		int GetPowEngType();

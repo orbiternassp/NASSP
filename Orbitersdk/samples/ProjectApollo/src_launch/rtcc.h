@@ -1098,18 +1098,35 @@ struct NextStationContact
 	bool operator<(const NextStationContact& rhs) const;
 };
 
-struct NextStationContactTable
+struct OrbitStationContactsTable
+{
+	NextStationContact Stations[45];
+	double GET = 0.0;
+};
+
+struct NextStationContactsTable
 {
 	NextStationContact NextStations[6];
 	double GET = 0.0;
 };
 
-struct NextStationContactOpt
+struct PredictedSiteAcquisitionTable
+{
+	NextStationContact Stations[40];
+};
+
+struct OrbitStationContactsOpt
 {
 	SV sv_A;
 	double GETbase;
 	//Only use stations with lunar capability
 	bool lunar;
+};
+
+struct PredictedSiteAcquisitionOpt
+{
+	double GET;
+	double dt;
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -1329,7 +1346,11 @@ public:
 	void FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	void FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	//Orbit Station Contact Generation Control (EMSTAGEN)
-	void NextStationContactDisplay(const NextStationContactOpt &opt, NextStationContactTable &res);
+	void OrbitStationContactsDisplay(const OrbitStationContactsOpt &opt, OrbitStationContactsTable &res);
+	//Next Station Contact Display
+	void EMDSTAC(const OrbitStationContactsTable &in, NextStationContactsTable &out);
+	//Predicted and Experimental Site Acquisition Displays
+	void EMDPESAD(const PredictedSiteAcquisitionOpt &opt, const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1400,7 +1421,7 @@ private:
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
-	void EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, NextStationContactTable &res);
+	void EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, OrbitStationContactsTable &res);
 	//Horizon Crossing Subprogram
 	bool EMXING(std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions);
 	//Variable Order Interpolation

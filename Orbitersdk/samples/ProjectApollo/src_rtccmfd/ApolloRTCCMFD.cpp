@@ -3806,6 +3806,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "FIDO Orbit Digitals", 19);
 		skp->Text(1 * W / 8, 4 * H / 14, "Space Digitals", 14);
 		skp->Text(1 * W / 8, 6 * H / 14, "Next Station Contacts", 21);
+		skp->Text(1 * W / 8, 8 * H / 14, "Predicted Site Acquisitions", 27);
 	}
 	else if (screen == 43)
 	{
@@ -4233,6 +4234,66 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(26 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 46)
+	{
+		G->CyclePredictedSiteAcquisitionDisplay();
+
+		GET_Display(Buffer, G->predsiteacq_GET);
+		skp->Text(1 * W / 16, 3 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->predsiteacq_DT);
+		skp->Text(10 * W / 16, 3 * H / 28, Buffer, strlen(Buffer));
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 5 * H / 28, "PREDICTED SITE ACQUISITION", 26);
+
+		skp->SetFont(font2);
+
+		skp->Text(5 * W / 32, 7 * H / 28, "STATION", 7);
+		skp->Text(5 * W / 32, 8 * H / 28, "CODE", 4);
+		skp->Text(10 * W / 32, 7 * H / 28, "AOS", 3);
+		skp->Text(10 * W / 32, 8 * H / 28, "GET", 3);
+		skp->Text(16 * W / 32, 7 * H / 28, "LOS", 3);
+		skp->Text(16 * W / 32, 8 * H / 28, "GET", 3);
+		skp->Text(21 * W / 32, 7 * H / 28, "DELTA", 11);
+		skp->Text(21 * W / 32, 8 * H / 28, "T", 3);
+		skp->Text(26 * W / 32, 7 * H / 28, "MAX ELEV", 8);
+		skp->Text(26 * W / 32, 8 * H / 28, "DEG", 3);
+
+		for (unsigned i = 0;i < 12;i++)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+			sprintf_s(Buffer, G->predsiteacqtable.Stations[i].StationID);
+			skp->Text(4 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+			if (G->predsiteacqtable.Stations[i].BestAvailableAOS)
+			{
+				skp->Text(15 * W / 64, (i + 10) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, G->predsiteacqtable.Stations[i].GETAOS, false);
+			skp->Text(10 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+
+			if (G->predsiteacqtable.Stations[i].BestAvailableLOS)
+			{
+				skp->Text(27 * W / 64, (i + 10) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, G->predsiteacqtable.Stations[i].GETLOS, false);
+			skp->Text(16 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, G->predsiteacqtable.Stations[i].DELTAT, false);
+			skp->Text(21 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+
+			if (G->predsiteacqtable.Stations[i].BestAvailableEMAX)
+			{
+				skp->Text(25 * W / 32, (i + 10) * H / 28, "*", 1);
+			}
+			sprintf_s(Buffer, "%.0f", G->predsiteacqtable.Stations[i].MAXELEV);
+			skp->Text(26 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+		}
+	}
 	return true;
 }
 
@@ -4656,6 +4717,12 @@ void ApolloRTCCMFD::menuSetMPTPage()
 void ApolloRTCCMFD::menuSetNextStationContactsPage()
 {
 	screen = 45;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetPredSiteAcquisitionPage()
+{
+	screen = 46;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -8507,6 +8574,57 @@ void ApolloRTCCMFD::menuMPTDeleteManeuver()
 void ApolloRTCCMFD::menuNextStationContactLunar()
 {
 	G->nextstatcont_lunar = !G->nextstatcont_lunar;
+}
+
+void ApolloRTCCMFD::menuPredSiteAcqGET()
+{
+	bool PredSiteAcqGETInput(void* id, char *str, void *data);
+	oapiOpenInputBox("GET to start search form station contacts (Format: hhh:mm:ss)", PredSiteAcqGETInput, 0, 20, (void*)this);
+}
+
+bool PredSiteAcqGETInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, get;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_PredSiteAcqGET(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_PredSiteAcqGET(double get)
+{
+	G->predsiteacq_GET = get;
+}
+
+void ApolloRTCCMFD::menuPredSiteAcqDT()
+{
+	bool PredSiteAcqDTInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Time interval for searching station contacts (Format: hhh:mm:ss)", PredSiteAcqDTInput, 0, 20, (void*)this);
+}
+
+bool PredSiteAcqDTInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, dt;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		dt = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_PredSiteAcqDT(dt);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_PredSiteAcqDT(double dt)
+{
+	G->predsiteacq_DT = dt;
+}
+
+void ApolloRTCCMFD::PredSiteAcqCalc()
+{
+	G->CalculatePredictedSiteAcquisitionDisplay();
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)
