@@ -3508,7 +3508,17 @@ int ARCore::subThread()
 		LunarLiftoffTimeOpt opt;
 		SV sv_CSM;
 
-		sv_CSM = rtcc->StateVectorCalc(target);
+		if (GC->MissionPlanningActive)
+		{
+			if (!rtcc->MPTTrajectory(GC->mptable, sv_CSM, mptotherveh))
+			{
+				sv_CSM = rtcc->StateVectorCalc(target);
+			}
+		}
+		else
+		{
+			sv_CSM = rtcc->StateVectorCalc(target);
+		}
 
 		opt.GETbase = GC->GETbase;
 		opt.opt = LunarLiftoffTimeOption;
