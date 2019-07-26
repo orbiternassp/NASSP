@@ -223,11 +223,11 @@ struct AP10CSIPADOpt
 
 struct AP7TPIPADOpt
 {
-	VESSEL* vessel; //vessel
-	VESSEL* target; //Target vessel
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
+	SV sv_A;
+	SV sv_P;
 };
 
 struct AP9LMTPIPADOpt
@@ -347,6 +347,7 @@ struct RTEMoonOpt
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool entrylongmanual = true; //Targeting a landing zone or a manual landing longitude
 	int vesseltype = 0;			//0 = CSM, 1 = LM
+	int enginetype = 1;			//0 = RCS, 1 = SPS/DPS
 	double Inclination = 0.0;	//Specified return inclination (sign is azimuth option)
 	// 12: PTP discrete option (not implemented yet)
 	// 14: ATP discrete option
@@ -423,7 +424,6 @@ struct AP11BLKOpt
 
 struct EarthEntryPADOpt
 {
-	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double P30TIG; //Time of Ignition (deorbit maneuver)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (deorbit maneuver)
@@ -431,6 +431,7 @@ struct EarthEntryPADOpt
 	bool preburn; //
 	double lat; //splashdown latitude
 	double lng; //splashdown longitude
+	SV sv0;
 };
 
 struct LunarEntryPADOpt
@@ -1243,13 +1244,13 @@ public:
 	void SetManeuverData(double TIG, VECTOR3 DV);
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
 
-	void AP7TPIPAD(AP7TPIPADOpt *opt, AP7TPI &pad);
+	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
 	void AP9LMTPIPAD(AP9LMTPIPADOpt *opt, AP9LMTPI &pad);
 	void AP9LMCDHPAD(AP9LMCDHPADOpt *opt, AP9LMCDH &pad);
 	void TLI_PAD(TLIPADOpt* opt, TLIPAD &pad);
 	bool PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad);
 	void LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad);
-	void EarthOrbitEntry(EarthEntryPADOpt *opt, AP7ENT &pad);
+	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
 	double TPISearch(SV sv_A, SV sv_P, double GETbase, double elev);

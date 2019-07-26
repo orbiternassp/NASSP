@@ -863,32 +863,31 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv, sv1;
 		MATRIX3 Q_Xx;
 		VECTOR3 dV_LVLH, DV;
-		double mu, eps, a, n0, n1, n2, dt1, dt2, dh1, dh2, dphase, dv, dphase_bias, t_TPI0, GETbase, P30TIG, t_Sep;
+		double eps, a, n0, n1, n2, dt1, dt2, dh1, dh2, dphase, dv, dphase_bias, t_TPI0, GETbase, P30TIG, t_Sep;
 
 		//about 10NM less phasing in the coelliptic orbit above
 		dphase_bias = 0.0027987178;
 
 		sv = StateVectorCalc(calcParams.src);
 		GETbase = getGETBase();
-		mu = GGRAV * oapiGetMass(sv.gravref);
 
 		DMissionRendezvousPlan(sv, GETbase, t_TPI0);
 		//Store the TPI0 time here, the nominal TPI time is already stored in calcParams.TPI
 		TimeofIgnition = t_TPI0;
 
-		eps = length(sv.V)*length(sv.V) / 2.0 - mu / length(sv.R);
-		a = -mu / (2.0*eps);
-		n0 = sqrt(mu / pow(a, 3));
+		eps = length(sv.V)*length(sv.V) / 2.0 - OrbMech::mu_Earth / length(sv.R);
+		a = -OrbMech::mu_Earth / (2.0*eps);
+		n0 = sqrt(OrbMech::mu_Earth / pow(a, 3));
 
 		dt1 = calcParams.CSI - calcParams.Insertion;
 		dt2 = calcParams.TPI - calcParams.CDH;
 
 		dh2 = 10.0*1852.0;
-		n2 = sqrt(mu / pow((a - dh2), 3));
+		n2 = sqrt(OrbMech::mu_Earth / pow((a - dh2), 3));
 		dphase = (n2 - n0)*dt2 - dphase_bias;
 
 		n1 = -dphase / dt1 + n0;
-		dh1 = OrbMech::power(mu / (n1*n1), 1.0 / 3.0) - a;
+		dh1 = OrbMech::power(OrbMech::mu_Earth / (n1*n1), 1.0 / 3.0) - a;
 		dv = dh1 * n0;
 
 		sv1 = coast(sv, calcParams.Phasing - OrbMech::GETfromMJD(sv.MJD, GETbase));
@@ -927,12 +926,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LambertMan opt;
 		AP9LMTPIPADOpt manopt;
 		TwoImpulseResuls res;
-		double GETbase, mu;
+		double GETbase;
 
 		sv_P = StateVectorCalc(calcParams.src);
 		sv_A = StateVectorCalc(calcParams.tgt);
 		GETbase = getGETBase();
-		mu = GGRAV * oapiGetMass(sv_P.gravref);
 
 		opt.GETbase = GETbase;
 		opt.N = 0;
@@ -941,7 +939,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.T1 = TimeofIgnition;
-		opt.T2 = TimeofIgnition + OrbMech::time_theta(sv_P.R, sv_P.V, 130.0*RAD, mu);
+		opt.T2 = TimeofIgnition + OrbMech::time_theta(sv_P.R, sv_P.V, 130.0*RAD, OrbMech::mu_Earth);
 
 		LambertTargeting(&opt, res);
 
@@ -1045,14 +1043,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SPQResults res;
 		SV sv_A, sv_P, sv_CDH;
 		VECTOR3 dV_LVLH;
-		double GETbase, mu;
+		double GETbase;
 
 		GETbase = getGETBase();
 		sv_A = StateVectorCalc(calcParams.tgt);
 		sv_P = StateVectorCalc(calcParams.src);
 
-		mu = GGRAV * oapiGetMass(sv_A.gravref);
-		calcParams.CDH = calcParams.CSI + OrbMech::period(sv_A.R, sv_A.V, mu) / 2.0;
+		calcParams.CDH = calcParams.CSI + OrbMech::period(sv_A.R, sv_A.V, OrbMech::mu_Earth) / 2.0;
 
 		opt.GETbase = GETbase;
 		opt.maneuver = 1;
@@ -1082,12 +1079,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LambertMan opt;
 		AP9LMTPIPADOpt manopt;
 		TwoImpulseResuls res;
-		double GETbase, mu, dt;
+		double GETbase, dt;
 
 		sv_P = StateVectorCalc(calcParams.src);
 		sv_A = StateVectorCalc(calcParams.tgt);
 		GETbase = getGETBase();
-		mu = GGRAV * oapiGetMass(sv_P.gravref);
 
 		sv_A1 = coast(sv_A, calcParams.TPI - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
 		sv_P1 = coast(sv_P, calcParams.TPI - OrbMech::GETfromMJD(sv_P.MJD, GETbase));
@@ -1102,7 +1098,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.T1 = calcParams.TPI;
-		opt.T2 = opt.T1 + OrbMech::time_theta(sv_P.R, sv_P.V, 130.0*RAD, mu);
+		opt.T2 = opt.T1 + OrbMech::time_theta(sv_P.R, sv_P.V, 130.0*RAD, OrbMech::mu_Earth);
 
 		LambertTargeting(&opt, res);
 
@@ -2095,12 +2091,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = getGETBase();
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = REFSMMAT;
-		opt.vessel = calcParams.src;
+		opt.sv0 = StateVectorCalc(calcParams.src);
 		opt.preburn = true;
 		opt.lat = SplashLatitude;
 		opt.lng = SplashLongitude;
 
-		EarthOrbitEntry(&opt, *form);
+		EarthOrbitEntry(opt, *form);
 		sprintf(form->Area[0], "151-1A");
 		form->Lat[0] = SplashLatitude * DEG;
 		form->Lng[0] = SplashLongitude * DEG;
@@ -2119,9 +2115,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 		opt.preburn = false;
-		opt.vessel = calcParams.src;
+		opt.sv0 = StateVectorCalc(calcParams.src);
 
-		EarthOrbitEntry(&opt, *form);
+		EarthOrbitEntry(opt, *form);
 	}
 	break;
 	}

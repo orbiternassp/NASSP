@@ -3193,12 +3193,13 @@ bool RTEMoon::CLL(double &i_r, double &INTER, double &dv)
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB, Vig_apo;
 	double theta_long, theta_lat, dlng, dt, i_r_apo, TOL, i_rmin, DV_min, delta_S, i_rc, h_p, r_p, t_temp, D1, D2, DVS, DVSS, i_rs, INS, u_r;
-	double EIMJD_apo, t_z, t_z1, t_z_apo, indvar, eps, MJD_zmin, MJD_L;
+	double EIMJD_apo, t_z, t_z1, t_z_apo, indvar, eps, MJD_zmin, MJD_L, h_mins;
 	int ISUB, KOUNT, ICNT, jj, ICONVG, ii, ITCNT, LOPCNT;
 	bool NIR, IOPT, NIRS, KIP;
 
 	ii = 0;
 	jj = 0;
+	h_mins = h_min;
 	DV_min = pow(10, 10);
 	ZTAB = _V(0, 0, 0);
 	DVS = pow(10, 10);
@@ -3232,6 +3233,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, double &dv)
 	}
 	MJD_zmin = OrbMech::MJDfromGET(t_zmin, GETbase);
 	Vig_apo = EntryCalculations::MCDRIV(TIG, indvar, Rig, Vig, mu_E, mu_M, INRFVsign, i_r, INTER, KIP, MJD_zmin, R_EI, V_EI, EIMJD_apo, NIR, i_r_apo, r_p);
+	h_p = r_p - R_M;
 	t_z = OrbMech::GETfromMJD(EIMJD_apo, GETbase);
 	EntryCalculations::LNDING(R_EI, V_EI, EIMJD_apo, LD, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
 

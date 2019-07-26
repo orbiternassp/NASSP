@@ -238,8 +238,14 @@ private:
 
 namespace OrbMech {
 
-	//public:
-		//OrbMech(VESSEL *v, OBJHANDLE gravref);
+	//Constants
+	const double mu_Earth = 0.3986032e15;
+	const double R_Earth = 6.373338e6;//6378165.0; We use LC-39 launchpad radius, because Orbiter Earth is spherical
+	const double w_Earth = 7.29211514667e-5;
+	const double mu_Moon = 0.4902778e13;
+	const double R_Moon = 1738090.0;
+	const double w_Moon = 2.66169948e-6;
+	const double mu_Sun = 0.13271244e21; //Different from GSOP. Guess they hadn't properly figured this out yet.
 
 	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref);
 	double kepler_E(double e, double M);

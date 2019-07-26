@@ -369,7 +369,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-											  //Free Return - Best Adaptive Path
+		//Free Return - Best Adaptive Path
 		if (fcn == 20 || fcn == 21)
 		{
 			MCCFRMan opt;
@@ -493,6 +493,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				MPTTrajectory(mpt, refsopt.REFSMMATTime, GETbase, refsopt.RV_MCC, 2);
 
 				REFSMMAT = REFSMMATCalc(&refsopt);
+
+				//Step 5: Store SV for use with PC+2
+				calcParams.SVSTORE1 = sv_cut1;
 			}
 
 			manopt.dV_LVLH = dV_LVLH;
@@ -638,6 +641,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.vessel = calcParams.src;
 		opt.vesseltype = 0;
 
+		//Save for use with PC+2
+		calcParams.SVSTORE1 = res.sv_postburn;
+
 		AP11ManeuverPAD(&opt, *form);
 
 		if (!REFSMMATDecision(form->Att*RAD))
@@ -692,23 +698,25 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (fcn == 41)
 		{
 			//AOL
-			entopt.EntryLng = 2.0;
+			entopt.entrylongmanual = true;
+			entopt.EntryLng = -25.0*RAD;
 			entopt.returnspeed = 1;
+			entopt.enginetype = RTCC_ENGINETYPE_RCS;
 			sprintf(manname, "PC+2");
 		}
 		else
 		{
 			//IOL
+			entopt.entrylongmanual = false;
 			entopt.EntryLng = 3.0;
 			entopt.returnspeed = 2;
 			sprintf(manname, "PC+2 fast return");
 			entopt.u_rmax = 37500.0*0.3048;
 		}
 
-		entopt.entrylongmanual = false;
+		entopt.RV_MCC = calcParams.SVSTORE1;
 		entopt.GETbase = GETbase;
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
-		entopt.RV_MCC = sv;
 		entopt.vessel = calcParams.src;
 		entopt.SMODE = 14;
 		entopt.r_rbias = 1350.0;
@@ -717,7 +725,14 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		if (fcn == 41)
+		{
+			opt.enginetype = RTCC_ENGINETYPE_RCS;
+		}
+		else
+		{
+			opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		}
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);

@@ -2550,11 +2550,11 @@ int ARCore::subThread()
 
 		opt.dV_LVLH = dV_LVLH;
 		opt.GETbase = GC->GETbase;
-		opt.target = target;
-		opt.vessel = vessel;
 		opt.TIG = P30TIG;
+		opt.sv_A = rtcc->StateVectorCalc(vessel);
+		opt.sv_P = rtcc->StateVectorCalc(target);
 
-		rtcc->AP7TPIPAD(&opt, pad);
+		rtcc->AP7TPIPAD(opt, pad);
 
 		TPIPAD_AZ = pad.AZ;
 		TPIPAD_BT = pad.Backup_bT;
@@ -3988,7 +3988,7 @@ int ARCore::subThread()
 			opt.GETbase = GC->GETbase;
 			opt.P30TIG = EntryTIGcor;
 			opt.REFSMMAT = REFSMMAT;
-			opt.vessel = vessel;
+			opt.sv0 = rtcc->StateVectorCalc(vessel);
 
 			if (EntryLatcor == 0)
 			{
@@ -4010,12 +4010,12 @@ int ARCore::subThread()
 			if (peri < oapiGetSize(gravref) + 50 * 1852.0)
 			{
 				opt.preburn = false;
-				rtcc->EarthOrbitEntry(&opt, earthentrypad);
+				rtcc->EarthOrbitEntry(opt, earthentrypad);
 			}
 			else
 			{
 				opt.preburn = true;
-				rtcc->EarthOrbitEntry(&opt, earthentrypad);
+				rtcc->EarthOrbitEntry(opt, earthentrypad);
 			}
 		}
 		else

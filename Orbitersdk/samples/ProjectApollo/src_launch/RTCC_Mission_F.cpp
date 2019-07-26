@@ -436,7 +436,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		RTEMoonTargeting(&entopt, &res);
 
 		SV sv_peri = FindPericynthion(res.sv_postburn);
-		double h_peri = length(sv_peri.R) - oapiGetSize(oapiGetObjectByName("Moon"));
+		double h_peri = length(sv_peri.R) - OrbMech::R_Moon;
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -481,12 +481,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MCCNodeMan opt;
 		VECTOR3 dV_LVLH, dV_LOI;
 		SV sv, sv_peri, sv_node;
-		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
+		double GETbase, MCCGET, P30TIG, TIG_LOI, h_peri, h_node;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		GETbase = getGETBase();
-		r_M = oapiGetSize(oapiGetObjectByName("Moon"));
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		loiopt.alt = LSAlt;
@@ -506,8 +505,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_peri = FindPericynthion(sv);
 
-		h_peri = length(sv_peri.R) - r_M;
-		h_node = length(sv_node.R) - r_M;
+		h_peri = length(sv_peri.R) - OrbMech::R_Moon;
+		h_node = length(sv_node.R) - OrbMech::R_Moon;
 
 		//Maneuver execution criteria
 		if (h_peri > 50.0*1852.0 && h_peri < 70.0*1852.0)
@@ -586,12 +585,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VECTOR3 dV_LVLH, dV_LOI;
 		SV sv, sv_peri, sv_node;
 		MATRIX3 REFSMMAT;
-		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
+		double GETbase, MCCGET, P30TIG, TIG_LOI, h_peri, h_node;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		GETbase = getGETBase();
-		r_M = oapiGetSize(oapiGetObjectByName("Moon"));
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		loiopt.alt = LSAlt;
@@ -611,8 +609,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_peri = FindPericynthion(sv);
 
-		h_peri = length(sv_peri.R) - r_M;
-		h_node = length(sv_node.R) - r_M;
+		h_peri = length(sv_peri.R) - OrbMech::R_Moon;
+		h_node = length(sv_node.R) - OrbMech::R_Moon;
 
 		//Maneuver execution criteria
 		if (h_peri > 50.0*1852.0 && h_peri < 70.0*1852.0)
@@ -1450,7 +1448,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManPADOpt opt;
 		SV sv;
 		VECTOR3 dV_LVLH;
-		double GETbase, t_P, mu, t_Sep;
+		double GETbase, t_P, t_Sep;
 		char buffer1[1000];
 		char buffer2[1000];
 
@@ -1458,9 +1456,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 		GETbase = getGETBase();
-		mu = GGRAV * oapiGetMass(sv.gravref);
 
-		t_P = OrbMech::period(sv.R, sv.V, mu);
+		t_P = OrbMech::period(sv.R, sv.V, OrbMech::mu_Moon);
 		t_Sep = floor(calcParams.DOI - t_P / 2.0);
 		dV_LVLH = _V(0, 0, -2.5)*0.3048;
 
@@ -1837,7 +1834,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv_CSM, sv_LM, sv_CSI;
 		MATRIX3 Q_Xx;
 		VECTOR3 dV_LVLH;
-		double GETbase, dt_apo, mu;
+		double GETbase, dt_apo;
 
 		AP10CSI * form = (AP10CSI *)pad;
 
@@ -1846,8 +1843,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = getGETBase();
 
 		//CSI at apolune
-		mu = GGRAV * oapiGetMass(sv_LM.gravref);
-		dt_apo = OrbMech::timetoapo(sv_LM.R, sv_LM.V, mu);
+		dt_apo = OrbMech::timetoapo(sv_LM.R, sv_LM.V, OrbMech::mu_Moon);
 		calcParams.CSI = OrbMech::GETfromMJD(sv_LM.MJD, GETbase) + dt_apo;
 
 		opt.DH = 15.0*1852.0;
@@ -2307,12 +2303,10 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 
 	LambertMan lamopt, lamopt2;
 	TwoImpulseResuls lamres;
-	double t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, mu, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
+	double t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
 	VECTOR3 dV_Phasing, dV_Insertion, dV_CDH, DVX;
 	MATRIX3 Q_Xx;
 	SV sv_P0, sv_P_CSI, sv_Phasing, sv_Phasing_apo, sv_Insertion, sv_Insertion_apo, sv_CSI, sv_CSI_apo, sv_CDH, sv_CDH_apo, sv_P_CDH;
-
-	mu = GGRAV * oapiGetMass(sv_A0.gravref);
 
 	t_Phasing = t_TIG;
 	dt = 7017.0;
@@ -2369,8 +2363,8 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 			sv_Insertion_apo.V += dV_Insertion;
 
 			sv_CSI = coast(sv_Insertion_apo, t_CSI - t_Insertion);
-			T_P = OrbMech::period(sv_CSI.R, sv_CSI.V, mu);
-			ddt2 = OrbMech::timetoapo(sv_CSI.R, sv_CSI.V, mu);
+			T_P = OrbMech::period(sv_CSI.R, sv_CSI.V, OrbMech::mu_Moon);
+			ddt2 = OrbMech::timetoapo(sv_CSI.R, sv_CSI.V, OrbMech::mu_Moon);
 
 			if (ddt2 > T_P / 2.0)
 			{
@@ -2381,12 +2375,12 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 
 		//CSI Targeting
 		sv_P_CSI = coast(sv_P0, t_CSI - OrbMech::GETfromMJD(sv_P0.MJD, GETbase));
-		OrbMech::CSIToDH(sv_CSI.R, sv_CSI.V, sv_P_CSI.R, sv_P_CSI.V, DH, mu, dv_CSI);
+		OrbMech::CSIToDH(sv_CSI.R, sv_CSI.V, sv_P_CSI.R, sv_P_CSI.V, DH, OrbMech::mu_Moon, dv_CSI);
 		sv_CSI_apo = sv_CSI;
 		sv_CSI_apo.V = sv_CSI.V + OrbMech::ApplyHorizontalDV(sv_CSI.R, sv_CSI.V, dv_CSI);
 
 		//CDH Targeting
-		T_P = OrbMech::period(sv_CSI_apo.R, sv_CSI_apo.V, mu);
+		T_P = OrbMech::period(sv_CSI_apo.R, sv_CSI_apo.V, OrbMech::mu_Moon);
 		t_CDH = t_CSI + T_P / 2.0;
 		NSRProgram(sv_CSI_apo, sv_P_CSI, GETbase, 0.0, t_CDH, 0.0, dV_CDH);
 		sv_CDH = coast(sv_CSI_apo, t_CDH - t_CSI);

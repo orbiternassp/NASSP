@@ -531,7 +531,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		RTEMoonTargeting(&entopt, &res);
 
 		SV sv_peri = FindPericynthion(res.sv_postburn);
-		double h_peri = length(sv_peri.R) - oapiGetSize(oapiGetObjectByName("Moon"));
+		double h_peri = length(sv_peri.R) - OrbMech::R_Moon;
 
 		opt.alt = calcParams.LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -576,12 +576,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MCCNodeMan opt;
 		VECTOR3 dV_LVLH, dV_LOI;
 		SV sv, sv_peri, sv_node;
-		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
+		double GETbase, MCCGET, P30TIG, TIG_LOI, h_peri, h_node;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		GETbase = calcParams.TEPHEM;
-		r_M = oapiGetSize(oapiGetObjectByName("Moon"));
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		loiopt.alt = calcParams.LSAlt;
@@ -601,8 +600,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_peri = FindPericynthion(sv);
 
-		h_peri = length(sv_peri.R) - r_M;
-		h_node = length(sv_node.R) - r_M;
+		h_peri = length(sv_peri.R) - OrbMech::R_Moon;
+		h_node = length(sv_node.R) - OrbMech::R_Moon;
 
 		//Maneuver execution criteria
 		if (h_peri > 50.0*1852.0 && h_peri < 70.0*1852.0)
@@ -681,12 +680,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VECTOR3 dV_LVLH, dV_LOI;
 		SV sv, sv_peri, sv_node;
 		MATRIX3 REFSMMAT;
-		double GETbase, MCCGET, P30TIG, r_M, TIG_LOI, h_peri, h_node;
+		double GETbase, MCCGET, P30TIG, TIG_LOI, h_peri, h_node;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		GETbase = calcParams.TEPHEM;
-		r_M = oapiGetSize(oapiGetObjectByName("Moon"));
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
 		loiopt.alt = calcParams.LSAlt;
@@ -706,8 +704,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_peri = FindPericynthion(sv);
 
-		h_peri = length(sv_peri.R) - r_M;
-		h_node = length(sv_node.R) - r_M;
+		h_peri = length(sv_peri.R) - OrbMech::R_Moon;
+		h_node = length(sv_node.R) - OrbMech::R_Moon;
 
 		//Maneuver execution criteria
 		if (h_peri > 50.0*1852.0 && h_peri < 70.0*1852.0)
@@ -1126,7 +1124,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManPADOpt opt;
 		SV sv;
 		VECTOR3 dV_LVLH;
-		double GETbase, t_P, mu, t_Sep;
+		double GETbase, t_P, t_Sep;
 		char buffer1[1000];
 		char buffer2[1000];
 
@@ -1134,9 +1132,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 		GETbase = calcParams.TEPHEM;
-		mu = GGRAV * oapiGetMass(sv.gravref);
 
-		t_P = OrbMech::period(sv.R, sv.V, mu);
+		t_P = OrbMech::period(sv.R, sv.V, OrbMech::mu_Moon);
 		t_Sep = floor(calcParams.DOI - t_P / 2.0);
 		calcParams.SEP = t_Sep;
 		dV_LVLH = _V(0, 0, -2.5)*0.3048;
@@ -1540,7 +1537,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		TwoImpulseResuls res;
 		SV sv_LM, sv_DOI, sv_CSM;
 		VECTOR3 dV_LVLH;
-		double GETbase, t_sunrise, t_CSI, t_TPI, dt, P30TIG, t_P, mu;
+		double GETbase, t_sunrise, t_CSI, t_TPI, dt, P30TIG, t_P;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1575,8 +1572,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.T2 += dt;
 		}
 
-		mu = GGRAV * oapiGetMass(sv_DOI.gravref);
-		t_P = OrbMech::period(sv_DOI.R, sv_DOI.V + res.dV, mu);
+		t_P = OrbMech::period(sv_DOI.R, sv_DOI.V + res.dV, OrbMech::mu_Moon);
 		t_CSI = opt.T2 - t_P / 2.0;
 
 		PoweredFlightProcessor(sv_DOI, GETbase, opt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
@@ -1609,14 +1605,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		SV sv_CSM, sv_Ins, sv_CSM_upl;
 		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
-		double T2, rad, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, mu, dt1, dt2, t_CSI1, t_sunrise, t_TPI;
+		double T2, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, dt1, dt2, t_CSI1, t_sunrise, t_TPI;
 		char buffer1[1000];
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
-
-		rad = oapiGetSize(sv_CSM.gravref);
-		mu = GGRAV * oapiGetMass(sv_CSM.gravref);
 		
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
@@ -1625,15 +1618,15 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		v_LV = 19.6*0.3048;
 
 		T2 = calcParams.PDI + 21.0*60.0 + 24.0;
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt + rad);
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt + OrbMech::R_Moon);
 
 		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, T2, v_LH, v_LV, theta, dt_asc, sv_Ins);
-		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, mu);
-		OrbMech::rv_from_r0v0(sv_Ins.R, sv_Ins.V, dt1, R_C1, V_C1, mu);
+		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, OrbMech::mu_Moon);
+		OrbMech::rv_from_r0v0(sv_Ins.R, sv_Ins.V, dt1, R_C1, V_C1, OrbMech::mu_Moon);
 		t_C1 = T2 + dt_asc + dt1;
 		u = unit(crossp(R_C1, V_C1));
 		V_C1F = V_C1 + unit(crossp(u, V_C1))*10.0*0.3048;
-		OrbMech::REVUP(R_C1, V_C1F, 1.5, mu, R_CSI1, V_CSI1, dt2);
+		OrbMech::REVUP(R_C1, V_C1F, 1.5, OrbMech::mu_Moon, R_CSI1, V_CSI1, dt2);
 		t_CSI1 = t_C1 + dt2;
 
 		t_sunrise = calcParams.PDI + 7.0*3600.0;
@@ -1664,11 +1657,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarLiftoffResults res;
 		SV sv_CSM, sv_CSM2, sv_CSM_over, sv_Ins;
 		VECTOR3 R_LS;
-		double GETbase, m0, MJD_over, t_P, mu, t_PPlusDT, theta_1, dt_1, R_M;
+		double GETbase, m0, MJD_over, t_P, t_PPlusDT, theta_1, dt_1;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
-		mu = GGRAV * oapiGetMass(sv_CSM.gravref);
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
@@ -1680,8 +1672,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv_CSM = sv_CSM;
 		opt.t_hole = calcParams.PDI + 1.5*3600.0;
 
-		R_M = oapiGetSize(sv_CSM.gravref);
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, OrbMech::R_Moon + calcParams.LSAlt);
 
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
@@ -1696,7 +1687,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MJD_over = OrbMech::P29TimeOfLongitude(sv_CSM2.R, sv_CSM2.V, sv_CSM2.MJD, sv_CSM2.gravref, calcParams.LSLng);
 		sv_CSM_over = coast(sv_CSM2, (MJD_over - sv_CSM2.MJD)*24.0*3600.0);
 
-		t_P = OrbMech::period(sv_CSM_over.R, sv_CSM_over.V, mu);
+		t_P = OrbMech::period(sv_CSM_over.R, sv_CSM_over.V, OrbMech::mu_Moon);
 		t_PPlusDT = res.t_L - OrbMech::GETfromMJD(sv_CSM_over.MJD, GETbase);
 
 		form->TIG = round(res.t_L);
@@ -1748,15 +1739,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 78: //PDI EVALUATION
 	{
 		SV sv;
-		double R_M, mu, apo, peri;
+		double apo, peri;
 
 		sv = StateVectorCalc(calcParams.tgt);
-		R_M = oapiGetSize(sv.gravref);
-		mu = GGRAV * oapiGetMass(sv.gravref);
 
-		OrbMech::periapo(sv.R, sv.V, mu, apo, peri);
+		OrbMech::periapo(sv.R, sv.V, OrbMech::mu_Moon, apo, peri);
 
-		if (peri - R_M > 0.)
+		if (peri - OrbMech::R_Moon > 0.)
 		{
 			sprintf(upMessage, "Recycle to next PDI attempt");
 			scrubbed = true;
@@ -1789,7 +1778,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		MATRIX3 Rot, Rot2;
 		VECTOR3 R_LS;
 		char buffer1[100], buffer2[1000];
-		double GETbase, m0, theta_1, dt_1, R_M;
+		double GETbase, m0, theta_1, dt_1;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1806,8 +1795,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv_CSM = sv_CSM;
 		opt.t_hole = calcParams.PDI + 1.5*3600.0;
 
-		R_M = oapiGetSize(sv_CSM.gravref);
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, OrbMech::R_Moon + calcParams.LSAlt);
 
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
@@ -1882,7 +1870,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarLiftoffResults res;
 		SV sv_CSM, sv_CSM_upl, sv_Ins;
 		VECTOR3 R_LS;
-		double GETbase, m0, theta_1, dt_1, R_M;
+		double GETbase, m0, theta_1, dt_1;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1914,8 +1902,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->startdigit = 10;
 		}
 
-		R_M = oapiGetSize(sv_CSM.gravref);
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, OrbMech::R_Moon + calcParams.LSAlt);
 
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
@@ -2075,7 +2062,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv_CSM, sv_CSM_upl, sv_Ins;
 		VECTOR3 R_LS;
 		char buffer1[100];
-		double GETbase, m0, theta_1, dt_1, R_M;
+		double GETbase, m0, theta_1, dt_1;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -2091,8 +2078,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//1.5 hours from "now"
 		opt.t_hole = OrbMech::GETfromMJD(sv_CSM.MJD, GETbase) + 1.5*3600.0;
 
-		R_M = oapiGetSize(sv_CSM.gravref);
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, R_M + calcParams.LSAlt);
+		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, OrbMech::R_Moon + calcParams.LSAlt);
 
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
@@ -2231,12 +2217,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 105: //TEI EVALUATION
 	{
 		SV sv;
-		double mu;
 		OELEMENTS coe;
 
 		sv = StateVectorCalc(calcParams.src);
-		mu = GGRAV * oapiGetMass(sv.gravref);
-		coe = OrbMech::coe_from_sv(sv.R, sv.V, mu);
+		coe = OrbMech::coe_from_sv(sv.R, sv.V, OrbMech::mu_Moon);
 
 		if (coe.e < 0.5)
 		{

@@ -172,21 +172,6 @@ double fischer_ellipsoid(VECTOR3 R)		//Used in the AGC to calculate the radius o
 	return sqrt(b*b / (1 - (1 - b*b / a / a)*(1 - sinl*sinl)));	//Calculates the radius dependent on the latitude
 }
 
-
-/*OrbMech::OrbMech(VESSEL *v, OBJHANDLE gravref)
-{
-	vessel = v;
-	mu = GGRAV*oapiGetMass(gravref);
-	this->gravref = gravref;
-	this->JCoeffCount = oapiGetPlanetJCoeffCount(gravref);
-	this->JCoeff = new double[JCoeffCount];
-	for (int i = 0; i < JCoeffCount; i++)
-	{
-		JCoeff[i] = oapiGetPlanetJCoeff(gravref, i);
-	}
-	this->R_b = oapiGetSize(gravref);
-}*/
-
 void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu)
 {
 	double f, g, fdot, gdot;
@@ -1490,7 +1475,7 @@ VECTOR3 function_TLMCIntegratedXYZTEval(VECTOR3 var, void *constPtr)
 {
 	TLMCXYZTConstants *constants;
 	VECTOR3 DV, R2, V2, Y, R_EMP, V_EMP;
-	double MJD_N, R_M, H, lat, lng;
+	double MJD_N, H, lat, lng;
 	OBJHANDLE hMoon;
 
 	hMoon = oapiGetObjectByName("Moon");
@@ -1498,11 +1483,10 @@ VECTOR3 function_TLMCIntegratedXYZTEval(VECTOR3 var, void *constPtr)
 	constants = static_cast<TLMCXYZTConstants*>(constPtr);
 	DV = var;
 	MJD_N = constants->MJD + constants->dt / 24.0 / 3600.0;
-	R_M = oapiGetSize(hMoon);
 
 	oneclickcoast(constants->R1, constants->V1 + DV, constants->MJD, constants->dt, R2, V2, constants->gravin, hMoon);
 
-	H = length(R2) - R_M;
+	H = length(R2) - R_Moon;
 	EclToEMP(R2, V2, MJD_N, R_EMP, V_EMP);
 
 	latlong_from_r(R_EMP, lat, lng);
@@ -1552,21 +1536,17 @@ VECTOR3 function_TLMCConicFlybyEval(VECTOR3 DV, void *constPtr)
 	TLMCFlybyConstants *constants;
 	OBJHANDLE hMoon, hEarth;
 	VECTOR3 R_peri, V_peri, R_reentry, V_reentry, R_EMP, V_EMP, R_patch, V_patch;
-	double dt1, dt2, mu_E, mu_M, MJD_peri, MJD_reentry, R_E, R_M, lat, lng;
+	double dt1, dt2, MJD_peri, MJD_reentry, lat, lng;
 	double H_pc, lat_pc, H_fr_rtny;
 
 	constants = static_cast<TLMCFlybyConstants*>(constPtr);
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
-	mu_E = GGRAV*oapiGetMass(hEarth);
-	mu_M = GGRAV*oapiGetMass(hMoon);
-	R_E = oapiGetSize(hEarth);
-	R_M = oapiGetSize(hMoon);
 
 	if (constants->gravin == hEarth)
 	{
-		dt1 = findpatchpoint(constants->R1, constants->V1 + DV, constants->mjd0, mu_E, mu_M, R_patch, V_patch);
+		dt1 = findpatchpoint(constants->R1, constants->V1 + DV, constants->mjd0, mu_Earth, mu_Moon, R_patch, V_patch);
 	}
 	else
 	{
@@ -1575,8 +1555,8 @@ VECTOR3 function_TLMCConicFlybyEval(VECTOR3 DV, void *constPtr)
 		dt1 = 0.0;
 	}
 
-	dt2 = timetoperi(R_patch, V_patch, mu_M);
-	rv_from_r0v0(R_patch, V_patch, dt2, R_peri, V_peri, mu_M);
+	dt2 = timetoperi(R_patch, V_patch, mu_Moon);
+	rv_from_r0v0(R_patch, V_patch, dt2, R_peri, V_peri, mu_Moon);
 
 	MJD_peri = constants->mjd0 + (dt1 + dt2) / 24.0 / 3600.0;
 	EclToEMP(R_peri, V_peri, MJD_peri, R_EMP, V_EMP);
@@ -1584,9 +1564,9 @@ VECTOR3 function_TLMCConicFlybyEval(VECTOR3 DV, void *constPtr)
 
 	ReturnPerigeeConic(R_peri, V_peri, MJD_peri, hMoon, hEarth, MJD_reentry, R_reentry, V_reentry);
 
-	H_pc = length(R_peri) - R_M;
+	H_pc = length(R_peri) - R_Moon;
 	lat_pc = lat;
-	H_fr_rtny = length(R_reentry) - R_E;
+	H_fr_rtny = length(R_reentry) - R_Earth;
 
 	return _V(H_pc, lat_pc, H_fr_rtny);
 }
@@ -1613,14 +1593,12 @@ VECTOR3 function_TLMCIntegratedFlybyEval(VECTOR3 DV, void *constPtr)
 {
 	TLMCFlybyConstants *constants;
 	VECTOR3 R_peri, V_peri, R_EMP, V_EMP, R_reentry, V_reentry;
-	double dt1, MJD_peri, MJD_reentry, R_E, R_M, lat, lng;
+	double dt1, MJD_peri, MJD_reentry, lat, lng;
 	double H_pc, lat_pc, H_fr_rtny;
 	OBJHANDLE hEarth, hMoon;
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
-	R_E = oapiGetSize(hEarth);
-	R_M = oapiGetSize(hMoon);
 
 	constants = static_cast<TLMCFlybyConstants*>(constPtr);
 
@@ -1632,9 +1610,9 @@ VECTOR3 function_TLMCIntegratedFlybyEval(VECTOR3 DV, void *constPtr)
 
 	ReturnPerigee(R_peri, V_peri, MJD_peri, hMoon, hEarth, 1.0, MJD_reentry, R_reentry, V_reentry);
 
-	H_pc = length(R_peri) - R_M;
+	H_pc = length(R_peri) - R_Moon;
 	lat_pc = lat;
-	H_fr_rtny = length(R_reentry) - R_E;
+	H_fr_rtny = length(R_reentry) - R_Earth;
 
 	return _V(H_pc, lat_pc, H_fr_rtny);
 }
@@ -1676,21 +1654,17 @@ VECTOR3 function_TLMCConicSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
 	OBJHANDLE hMoon, hEarth;
 	MATRIX3 Rot_reentry;
 	VECTOR3 R_peri, V_peri, R_reentry, V_reentry, R_patch, V_patch, R_geo, V_geo, H_geo;
-	double dt1, dt2, mu_E, mu_M, MJD_peri, MJD_reentry, R_E, R_M;
+	double dt1, dt2, MJD_peri, MJD_reentry;
 	double H_pc, H_fr_rtny, Inc_FR;
 
 	constants = static_cast<TLMCFlybyConstants*>(constPtr);
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
-	mu_E = GGRAV*oapiGetMass(hEarth);
-	mu_M = GGRAV*oapiGetMass(hMoon);
-	R_E = oapiGetSize(hEarth);
-	R_M = oapiGetSize(hMoon);
 
 	if (constants->gravin == hEarth)
 	{
-		dt1 = findpatchpoint(constants->R1, constants->V1 + DV, constants->mjd0, mu_E, mu_M, R_patch, V_patch);
+		dt1 = findpatchpoint(constants->R1, constants->V1 + DV, constants->mjd0, mu_Earth, mu_Moon, R_patch, V_patch);
 	}
 	else
 	{
@@ -1699,8 +1673,8 @@ VECTOR3 function_TLMCConicSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
 		dt1 = 0.0;
 	}
 
-	dt2 = timetoperi(R_patch, V_patch, mu_M);
-	rv_from_r0v0(R_patch, V_patch, dt2, R_peri, V_peri, mu_M);
+	dt2 = timetoperi(R_patch, V_patch, mu_Moon);
+	rv_from_r0v0(R_patch, V_patch, dt2, R_peri, V_peri, mu_Moon);
 
 	MJD_peri = constants->mjd0 + (dt1 + dt2) / 24.0 / 3600.0;
 
@@ -1711,8 +1685,8 @@ VECTOR3 function_TLMCConicSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
 	H_geo = crossp(R_geo, V_geo);
 	Inc_FR = acos(H_geo.z / length(H_geo));
 
-	H_pc = length(R_peri) - R_M;
-	H_fr_rtny = length(R_reentry) - R_E;
+	H_pc = length(R_peri) - R_Moon;
+	H_fr_rtny = length(R_reentry) - R_Earth;
 
 	return _V(H_pc, H_fr_rtny, Inc_FR);
 }
@@ -1740,14 +1714,12 @@ VECTOR3 function_TLMCIntegratedSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
 	TLMCFlybyConstants *constants;
 	MATRIX3 Rot_reentry;
 	VECTOR3 R_peri, V_peri, R_reentry, V_reentry, R_geo, V_geo, H_geo;
-	double dt1, MJD_peri, MJD_reentry, R_E, R_M;
+	double dt1, MJD_peri, MJD_reentry;
 	double H_pc, H_fr_rtny, Inc_FR;
 	OBJHANDLE hEarth, hMoon;
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
-	R_E = oapiGetSize(hEarth);
-	R_M = oapiGetSize(hMoon);
 
 	constants = static_cast<TLMCFlybyConstants*>(constPtr);
 
@@ -1763,8 +1735,8 @@ VECTOR3 function_TLMCIntegratedSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
 
 	Inc_FR = acos(H_geo.z / length(H_geo));
 
-	H_pc = length(R_peri) - R_M;
-	H_fr_rtny = length(R_reentry) - R_E;
+	H_pc = length(R_peri) - R_Moon;
+	H_fr_rtny = length(R_reentry) - R_Earth;
 
 	return _V(H_pc, H_fr_rtny, Inc_FR);
 }
@@ -1997,12 +1969,10 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHANDLE gravout, double t, VECTOR3 &R1, VECTOR3 &V1)
 {
 	VECTOR3 RP_M, VP_M, R_EM, V_EM, RP_E, VP_E;
-	double dt, MJD, mu_M, phi4;
+	double dt, MJD, phi4;
 	double MoonPos[12];
 	CELBODY *cMoon;
 	cMoon = oapiGetCelbodyInterface(hMoon);
-
-	mu_M = GGRAV*oapiGetMass(hMoon);
 
 	if (t > 0.0)
 	{
@@ -2013,26 +1983,26 @@ void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHA
 		phi4 = -1.0;
 	}
 
-	dt = time_radius(R0, V0*phi4, 64373760.0, -phi4, mu_M);
+	dt = time_radius(R0, V0*phi4, 64373760.0, -phi4, mu_Moon);
 	dt = phi4*dt;
 
 	if (abs(dt) > abs(t))
 	{
 		if (gravout == hMoon)
 		{
-			rv_from_r0v0(R0, V0, t, R1, V1, mu_M);
+			rv_from_r0v0(R0, V0, t, R1, V1, mu_Moon);
 
 			return;
 		}
 		else
 		{
-			rv_from_r0v0(R0, V0, t, RP_M, VP_M, mu_M);
+			rv_from_r0v0(R0, V0, t, RP_M, VP_M, mu_Moon);
 			MJD = mjd0 + t / 86400.0;
 		}
 	}
 	else
 	{
-		rv_from_r0v0(R0, V0, dt, RP_M, VP_M, mu_M);
+		rv_from_r0v0(R0, V0, dt, RP_M, VP_M, mu_Moon);
 		MJD = mjd0 + dt / 86400.0;
 	}
 
@@ -2978,13 +2948,12 @@ void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE
 
 
 	VECTOR3 R_patch, V_patch;
-	double mu, r_SPH, dt, MJD_patch, dt2;
+	double r_SPH, dt, MJD_patch, dt2;
 
 	r_SPH = 64373760.0;
-	mu = GGRAV*oapiGetMass(hMoon);
 
 	//Assumption: reentry will never happen before 24 hours after leaving the lunar SOI
-	dt = time_radius(R, V*phi, r_SPH, 1.0, mu) + 24.0*3600.0;
+	dt = time_radius(R, V*phi, r_SPH, 1.0, mu_Moon) + 24.0*3600.0;
 	oneclickcoast(R, V, mjd0, dt*phi, R_patch, V_patch, hMoon, hEarth);
 	MJD_patch = mjd0 + dt*phi / 24.0 / 3600.0;
 
@@ -3000,17 +2969,15 @@ void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJH
 
 
 	VECTOR3 RP_M, VP_M, R_EM, V_EM, RP_E, VP_E;
-	double mu_M, mu_E, r_SPH, dt, MJD_patch, dt2;
+	double r_SPH, dt, MJD_patch, dt2;
 	double MoonPos[12];
 	CELBODY *cMoon;
 	cMoon = oapiGetCelbodyInterface(hMoon);
 
 	r_SPH = 64373760.0;
-	mu_M = GGRAV*oapiGetMass(hMoon);
-	mu_E = GGRAV*oapiGetMass(hEarth);
 
-	dt = time_radius(R, V, r_SPH, 1.0, mu_M);
-	rv_from_r0v0(R, V, dt, RP_M, VP_M, mu_M);
+	dt = time_radius(R, V, r_SPH, 1.0, mu_Moon);
+	rv_from_r0v0(R, V, dt, RP_M, VP_M, mu_Moon);
 
 	MJD_patch = mjd0 + dt / 24.0 / 3600.0;
 
@@ -3022,8 +2989,8 @@ void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJH
 	RP_E = R_EM + RP_M;
 	VP_E = V_EM + VP_M;
 
-	dt2 = timetoperi(RP_E, VP_E, mu_E);
-	rv_from_r0v0(RP_E, VP_E, dt2, R_peri, V_peri, mu_E);
+	dt2 = timetoperi(RP_E, VP_E, mu_Earth);
+	rv_from_r0v0(RP_E, VP_E, dt2, R_peri, V_peri, mu_Earth);
 
 	MJD_peri = MJD_patch + dt2 / 24.0 / 3600.0;
 }
@@ -3040,24 +3007,19 @@ double PATCH(VECTOR3 R, VECTOR3 V, double mjd0, bool earthsoi, VECTOR3 &R3, VECT
 	VECTOR3 R1, V1, R_EM, V_EM, R_21, V_21, R2, V2, A2;
 	double r1, r2, d1, d2, Ratio, dRatio, dRdB, v1v1, v2v2, r21, ddRddB, dB, v1, alpha, vr1, eps, dir;
 
-	OBJHANDLE hEarth, hMoon;
-
-	hEarth = oapiGetObjectByName("Earth");
-	hMoon = oapiGetObjectByName("Moon");
-
 	if (earthsoi)
 	{
 		RR = 0.275;
 		rad_guess = 40.0*6371.0e3;
-		mu1 = GGRAV * oapiGetMass(hEarth);
-		mu2 = GGRAV * oapiGetMass(hMoon);
+		mu1 = mu_Earth;
+		mu2 = mu_Moon;
 	}
 	else
 	{
 		RR = 1.0 / 0.275;
 		rad_guess = 10.0*6371.0e3;
-		mu1 = GGRAV * oapiGetMass(hMoon);
-		mu2 = GGRAV * oapiGetMass(hEarth);
+		mu1 = mu_Moon;
+		mu2 = mu_Earth;
 	}
 
 	if (Q)
@@ -5586,13 +5548,12 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0)
 
 	if (gravref == hEarth)
 	{
-		double costheta, R_E, J2E;
+		double costheta, J2E;
 		VECTOR3 g_b;
 
 		costheta = dotp(U_R, U_Z);
-		R_E = oapiGetSize(hEarth);
 		J2E = oapiGetPlanetJCoeff(hEarth, 0);
-		g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z*2.0*costheta)*mu / rr*3.0 / 2.0*J2E*power(R_E, 2.0) / rr;
+		g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z*2.0*costheta)*mu / rr*3.0 / 2.0*J2E*power(R_Earth, 2.0) / rr;
 		g = -U_R*mu / rr + g_b;
 	}
 	else
@@ -6592,7 +6553,7 @@ double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
 	UTR = crossp(RTE, UUZ);
 	urh = unit(R05G);//unit(r)*cos(theta) + crossp(unit(r), -unit(h_apo))*sin(theta);
 	theta_rad = acos(dotp(URT0, urh));
-	for (int i = 0;i < 10;i++)
+	for (int i = 0;i < 3;i++)
 	{
 		WT = WIE * (KTETA*theta_rad);
 		URT = URT0 + UTR * (cos(WT) - 1.0) + RTE * sin(WT);

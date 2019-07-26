@@ -457,11 +457,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.GETbase = GETbase;
-		opt.target = calcParams.tgt;
 		opt.TIG = res.T1;
-		opt.vessel = calcParams.src;
+		opt.sv_A = sv_A;
+		opt.sv_P = sv_P;
 
-		AP7TPIPAD(&opt, *form);
+		AP7TPIPAD(opt, *form);
 	}
 	break;
 	case 11: //MISSION C FINAL SEPARATION MANEUVER
@@ -1318,12 +1318,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = getGETBase();
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = REFSMMAT;
-		opt.vessel = calcParams.src;
+		opt.sv0 = StateVectorCalc(calcParams.src);
 		opt.preburn = true;
 		opt.lat = SplashLatitude;
 		opt.lng = SplashLongitude;
 
-		EarthOrbitEntry(&opt, *form);
+		EarthOrbitEntry(opt, *form);
 		sprintf(form->Area[0], "164-1A");
 		form->Lat[0] = SplashLatitude * DEG;
 		form->Lng[0] = SplashLongitude * DEG;
@@ -1342,9 +1342,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.P30TIG = TimeofIgnition;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 		opt.preburn = false;
-		opt.vessel = calcParams.src;
+		opt.sv0 = StateVectorCalc(calcParams.src);
 
-		EarthOrbitEntry(&opt, *form);
+		EarthOrbitEntry(opt, *form);
 	}
 	break;
 	case 50: //GENERIC CSM STATE VECTOR UPDATE
