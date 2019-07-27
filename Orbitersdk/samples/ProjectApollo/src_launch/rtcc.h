@@ -852,8 +852,11 @@ struct SPQOpt //Coelliptic Sequence Processor
 	double t_TPI;				// Only for calculation type = 0
 	double DH = 15.0*1852.0;	// Only for calculation type = 1
 	double E = 26.6*RAD;
-	int type;		//0 = fixed TIG at TPI, 1 = fixed DH at CDH
-	int maneuver;	//0 = CSI, 1 = CDH
+	bool K_CSI = true;	//0 = No CSI scheduled, 1 = CSI scheduled
+	//bool CDH = true;	//0 = No CDH scheduled, 1 = CDH scheduled 
+	//int I_CDH;			//CDH option.
+	int K_CDH;			//Height iteration. 0 = fixed TIG at TPI, 1 = fixed DH at CDH
+	int K_TPI = 0;		//-1 = Midpoint of darkness, 0 = on time, 1 = on longitude
 	bool CalculateTPIParams = true;
 };
 
@@ -1082,11 +1085,14 @@ struct MPTManDisplay
 
 struct MPTable
 {
+	MPTable() { CSMInitMass = 0; LMInitMass = 0; LunarStayTimes[0] = -1; LunarStayTimes[1] = -1; }
+
 	std::vector<MPTManDisplay> fulltable;
 	std::vector<MPTManeuver> cmtable;
 	std::vector<MPTManeuver> lmtable;
 	double CSMInitMass;
 	double LMInitMass;
+	double LunarStayTimes[2];
 };
 
 struct NextStationContact
@@ -1322,7 +1328,7 @@ public:
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
-	void ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res);
+	void ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);

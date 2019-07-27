@@ -569,9 +569,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	RTEMaxReentrySpeed = 36323.0*0.3048;
 
 	SVSlot = true; //true = CSM; false = Other
-	J2000Pos = _V(0.0, 0.0, 0.0);
-	J2000Vel = _V(0.0, 0.0, 0.0);
-	J2000GET = 0.0;
+	SVDesiredGET = 0.0;
 	manpad.Trun = 0.0;
 	manpad.Shaft = 0.0;
 	manpad.Star = 0;
@@ -634,8 +632,12 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PADSolGood = true;
 	svtarget = NULL;
 	svtargetnumber = -1;
-	svtimemode = 0;
-	svmode = 0;
+
+	for (int i = 0;i < 021;i++)
+	{
+		SVOctals[i] = 0;
+	}
+
 	lambertmultiaxis = 1;
 	entrylongmanual = true;
 	landingzone = 0;
@@ -1314,35 +1316,104 @@ void ARCore::LandingSiteUplink()
 
 void ARCore::StateVectorCalc()
 {
-	VECTOR3 R, V,R0B,V0B,R1B,V1B;
-	//MATRIX3 Rot;
-	double SVMJD,dt;
-	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
-	svtarget->GetRelativePos(gravref, R);
-	svtarget->GetRelativeVel(gravref, V);
-	SVMJD = oapiGetSimMJD();
+	SV sv0, sv1;
+	MATRIX3 Rot;
+	VECTOR3 pos, vel;
+	double get;
+	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
+	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 
-	R0B = _V(R.x, R.z, R.y);
-	V0B = _V(V.x, V.z, V.y);
+	int mptveh;
 
-	if (svtimemode)
+	if (SVSlot)
 	{
-		dt = J2000GET - (SVMJD - GC->GETbase)*24.0*3600.0;
-		OrbMech::oneclickcoast(R0B, V0B, SVMJD, dt, R1B, V1B, gravref, gravref);
+		mptveh = 2;
 	}
 	else
 	{
-		J2000GET = (SVMJD - GC->GETbase)*24.0*3600.0;
-		R1B = R0B;
-		V1B = V0B;
+		mptveh = 1;
 	}
 
-	//oapiGetPlanetObliquityMatrix(gravref, &obl);
+	if (!GC->MissionPlanningActive || !rtcc->MPTTrajectory(GC->mptable, SVDesiredGET, GC->GETbase, sv0, mptveh))
+	{
+		sv0 = rtcc->StateVectorCalc(svtarget);
+		sv1 = rtcc->GeneralTrajectoryPropagation(sv0, 0, OrbMech::MJDfromGET(SVDesiredGET, GC->GETbase));
+	}
+	else
+	{
+		sv1 = sv0;
+	}
 
-	//convmat = mul(_M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0),mul(transpose_matrix(obl),_M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0)));
+	UplinkSV = sv1;
 
-	J2000Pos = R1B;
-	J2000Vel = V1B;
+	Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+
+	UplinkSV.R = mul(Rot, UplinkSV.R);
+	UplinkSV.V = mul(Rot, UplinkSV.V);
+	UplinkSV.MJD = OrbMech::GETfromMJD(UplinkSV.MJD, GC->GETbase);
+
+	pos = UplinkSV.R;
+	vel = UplinkSV.V*0.01;
+	get = UplinkSV.MJD;
+
+	SVOctals[0] = 21;
+	SVOctals[1] = 1501;
+
+	if (sv1.gravref == hMoon)
+	{
+		if (SVSlot)
+		{
+			SVOctals[2] = 2;
+		}
+		else
+		{
+			SVOctals[2] = 77775;	// Octal coded decimal
+		}
+
+		SVOctals[3] = OrbMech::DoubleToBuffer(pos.x, 27, 1);
+		SVOctals[4] = OrbMech::DoubleToBuffer(pos.x, 27, 0);
+		SVOctals[5] = OrbMech::DoubleToBuffer(pos.y, 27, 1);
+		SVOctals[6] = OrbMech::DoubleToBuffer(pos.y, 27, 0);
+		SVOctals[7] = OrbMech::DoubleToBuffer(pos.z, 27, 1);
+		SVOctals[8] = OrbMech::DoubleToBuffer(pos.z, 27, 0);
+		SVOctals[9] = OrbMech::DoubleToBuffer(vel.x, 5, 1);
+		SVOctals[10] = OrbMech::DoubleToBuffer(vel.x, 5, 0);
+		SVOctals[11] = OrbMech::DoubleToBuffer(vel.y, 5, 1);
+		SVOctals[12] = OrbMech::DoubleToBuffer(vel.y, 5, 0);
+		SVOctals[13] = OrbMech::DoubleToBuffer(vel.z, 5, 1);
+		SVOctals[14] = OrbMech::DoubleToBuffer(vel.z, 5, 0);
+		SVOctals[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
+		SVOctals[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
+		return;
+	}
+
+	if (sv1.gravref == hEarth)
+	{
+		if (SVSlot)
+		{
+			SVOctals[2] = 1;
+		}
+		else
+		{
+			SVOctals[2] = 77776;	// Octal coded decimal
+		}
+
+		SVOctals[3] = OrbMech::DoubleToBuffer(pos.x, 29, 1);
+		SVOctals[4] = OrbMech::DoubleToBuffer(pos.x, 29, 0);
+		SVOctals[5] = OrbMech::DoubleToBuffer(pos.y, 29, 1);
+		SVOctals[6] = OrbMech::DoubleToBuffer(pos.y, 29, 0);
+		SVOctals[7] = OrbMech::DoubleToBuffer(pos.z, 29, 1);
+		SVOctals[8] = OrbMech::DoubleToBuffer(pos.z, 29, 0);
+		SVOctals[9] = OrbMech::DoubleToBuffer(vel.x, 7, 1);
+		SVOctals[10] = OrbMech::DoubleToBuffer(vel.x, 7, 0);
+		SVOctals[11] = OrbMech::DoubleToBuffer(vel.y, 7, 1);
+		SVOctals[12] = OrbMech::DoubleToBuffer(vel.y, 7, 0);
+		SVOctals[13] = OrbMech::DoubleToBuffer(vel.z, 7, 1);
+		SVOctals[14] = OrbMech::DoubleToBuffer(vel.z, 7, 0);
+		SVOctals[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
+		SVOctals[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
+		return;
+	}
 }
 
 void ARCore::AGSStateVectorCalc()
@@ -1363,89 +1434,12 @@ void ARCore::AGSStateVectorCalc()
 
 void ARCore::StateVectorUplink()
 {
-
-	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
-	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
-	OBJHANDLE gravref = rtcc->AGCGravityRef(vessel);
-	VECTOR3 vel,pos;
-	double get;
-	MATRIX3 Rot;
-
-	Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
-
-	pos = mul(Rot, J2000Pos);
-	vel = mul(Rot, J2000Vel)*0.01;
-	get = J2000GET;
-
-	if (gravref == hMoon) {
-
-		g_Data.emem[0] = 21;
-		g_Data.emem[1] = 1501;
-
-		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
-		if (SVSlot)
-		{
-			g_Data.emem[2] = 2;
-		}
-		else
-		{
-			g_Data.emem[2] = 77775;	// Octal coded decimal
-		}
-
-		g_Data.emem[3] = OrbMech::DoubleToBuffer(pos.x, 27, 1);
-		g_Data.emem[4] = OrbMech::DoubleToBuffer(pos.x, 27, 0);
-		g_Data.emem[5] = OrbMech::DoubleToBuffer(pos.y, 27, 1);
-		g_Data.emem[6] = OrbMech::DoubleToBuffer(pos.y, 27, 0);
-		g_Data.emem[7] = OrbMech::DoubleToBuffer(pos.z, 27, 1);
-		g_Data.emem[8] = OrbMech::DoubleToBuffer(pos.z, 27, 0);
-		g_Data.emem[9] = OrbMech::DoubleToBuffer(vel.x, 5, 1);
-		g_Data.emem[10] = OrbMech::DoubleToBuffer(vel.x, 5, 0);
-		g_Data.emem[11] = OrbMech::DoubleToBuffer(vel.y, 5, 1);
-		g_Data.emem[12] = OrbMech::DoubleToBuffer(vel.y, 5, 0);
-		g_Data.emem[13] = OrbMech::DoubleToBuffer(vel.z, 5, 1);
-		g_Data.emem[14] = OrbMech::DoubleToBuffer(vel.z, 5, 0);
-		g_Data.emem[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
-		g_Data.emem[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
-
-		//g_Data.uplinkDataReady = 2;
-		UplinkData(); // Go for uplink
-		return;
+	for (int i = 0;i < 021;i++)
+	{
+		g_Data.emem[i] = SVOctals[i];
 	}
 
-	if (gravref == hEarth) {
-
-		g_Data.emem[0] = 21;
-		g_Data.emem[1] = 1501;
-
-		//if (g_Data.vessel->GetHandle()==oapiGetFocusObject()) 
-		if (SVSlot)
-		{
-			g_Data.emem[2] = 1;
-		}
-		else
-		{
-			g_Data.emem[2] = 77776;	// Octal coded decimal
-		}
-
-		g_Data.emem[3] = OrbMech::DoubleToBuffer(pos.x, 29, 1);
-		g_Data.emem[4] = OrbMech::DoubleToBuffer(pos.x, 29, 0);
-		g_Data.emem[5] = OrbMech::DoubleToBuffer(pos.y, 29, 1);
-		g_Data.emem[6] = OrbMech::DoubleToBuffer(pos.y, 29, 0);
-		g_Data.emem[7] = OrbMech::DoubleToBuffer(pos.z, 29, 1);
-		g_Data.emem[8] = OrbMech::DoubleToBuffer(pos.z, 29, 0);
-		g_Data.emem[9] = OrbMech::DoubleToBuffer(vel.x, 7, 1);
-		g_Data.emem[10] = OrbMech::DoubleToBuffer(vel.x, 7, 0);
-		g_Data.emem[11] = OrbMech::DoubleToBuffer(vel.y, 7, 1);
-		g_Data.emem[12] = OrbMech::DoubleToBuffer(vel.y, 7, 0);
-		g_Data.emem[13] = OrbMech::DoubleToBuffer(vel.z, 7, 1);
-		g_Data.emem[14] = OrbMech::DoubleToBuffer(vel.z, 7, 0);
-		g_Data.emem[15] = OrbMech::DoubleToBuffer(get*100.0, 28, 1);
-		g_Data.emem[16] = OrbMech::DoubleToBuffer(get*100.0, 28, 0);
-
-		//g_Data.uplinkDataReady = 2;
-		UplinkData(); // Go for uplink
-		return;
-	}
+	UplinkData();
 }
 
 
@@ -2213,13 +2207,13 @@ int ARCore::subThread()
 		opt.DH = DH;
 		opt.E = lambertelev;
 		opt.GETbase = GC->GETbase;
-		opt.maneuver = SPQMode;
+		opt.K_CSI = (SPQMode == 0);
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		if (SPQMode == 0)
 		{
 			opt.t_TIG = CSItime;
-			opt.type = CDHtimemode;
+			opt.K_CDH = CDHtimemode;
 		}
 		else
 		{
@@ -2234,7 +2228,7 @@ int ARCore::subThread()
 		}
 		opt.t_TPI = t_TPI;
 
-		rtcc->ConcentricRendezvousProcessor(&opt, res);
+		rtcc->ConcentricRendezvousProcessor(opt, res);
 		spqresults = res;
 
 		if (SPQMode == 0)

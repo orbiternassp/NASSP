@@ -66,7 +66,7 @@ public:
 	void menuSetOffsetPage();
 	void menuSetREFSMMATPage();
 	void menuSetEntryPage();
-	void menuSetSVPage();
+	void menuSetAGSSVPage();
 	void menuSetMenu();
 	void menuSetConfigPage();
 	void menuSetOrbAdjPage();
@@ -135,6 +135,9 @@ public:
 	void menuSVCalc();
 	void menuSwitchSVSlot();
 	void menuSVUpload();
+	void menuLSCalc();
+	void menuLSUpload();
+	void menuAGSSVCalc();
 	void menuEntryUpload();
 	void menuEntryUpdateUpload();
 	void set_spherical();
@@ -184,8 +187,6 @@ public:
 	void set_offvec(VECTOR3 off);
 	void GetREFSMMATfromAGC();
 	void GetEntryTargetfromAGC();
-	void menuCycleSVTimeMode();
-	void menuCycleSVMode();
 	void set_lambertaxis();
 	void menuSwitchEntryNominal();
 	void menuSwitchDeorbitEngineOption();
@@ -403,6 +404,9 @@ public:
 	void menuPredSiteAcqDT();
 	void set_PredSiteAcqDT(double DT);
 	void PredSiteAcqCalc();
+	void menuSetUplinkMenu();
+	void menuSetStateVectorMenu();
+	void menuSetLSUpdateMenu();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

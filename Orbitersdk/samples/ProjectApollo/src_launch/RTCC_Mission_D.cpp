@@ -972,12 +972,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.CalculateTPIParams = false;
 		opt.GETbase = GETbase;
-		opt.maneuver = 1;
+		opt.K_CSI = false;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.t_TIG = TIG;
 
-		ConcentricRendezvousProcessor(&opt, res);
+		ConcentricRendezvousProcessor(opt, res);
 		PoweredFlightProcessor(sv_A, GETbase, TIG, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
 
 		manopt.dV_LVLH = dV_LVLH;
@@ -1011,14 +1011,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.E = 27.5*RAD;
 		opt.GETbase = GETbase;
-		opt.maneuver = 0;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
-		opt.type = 0;
+		opt.K_CDH = 0;
 		opt.t_TIG = calcParams.CSI;
 		opt.t_TPI = calcParams.TPI;
 
-		ConcentricRendezvousProcessor(&opt, res);
+		ConcentricRendezvousProcessor(opt, res);
 		sv_CSI = coast(sv_A, opt.t_TIG - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
 		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
 		dV_LVLH = res.dV_CSI;
@@ -1052,13 +1051,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.CDH = calcParams.CSI + OrbMech::period(sv_A.R, sv_A.V, OrbMech::mu_Earth) / 2.0;
 
 		opt.GETbase = GETbase;
-		opt.maneuver = 1;
+		opt.K_CSI = false;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
-		opt.type = 0;
+		opt.K_CDH = 0;
 		opt.t_TIG = calcParams.CDH;
 
-		ConcentricRendezvousProcessor(&opt, res);
+		ConcentricRendezvousProcessor(opt, res);
 		sv_CDH = coast(sv_A, opt.t_TIG - OrbMech::GETfromMJD(sv_A.MJD, GETbase));
 		dV_LVLH = res.dV_CDH;
 

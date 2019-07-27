@@ -7586,7 +7586,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	return true;
 }
 
-void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
+void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 {
 	SV sv_A1, sv_P1;
 	MATRIX3 Q_Xx;
@@ -7595,9 +7595,14 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 
 	dv_CSI = 0.0;
 
-	mu = GGRAV * oapiGetMass(opt->sv_A.gravref);
-	sv_A1 = coast(opt->sv_A, opt->t_TIG - OrbMech::GETfromMJD(opt->sv_A.MJD, opt->GETbase));
-	sv_P1 = coast(opt->sv_P, opt->t_TIG - OrbMech::GETfromMJD(opt->sv_P.MJD, opt->GETbase));
+	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
+	sv_A1 = coast(opt.sv_A, opt.t_TIG - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
+	sv_P1 = coast(opt.sv_P, opt.t_TIG - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
+
+	if (opt.K_CDH == 0)
+	{
+
+	}
 
 	u = unit(crossp(sv_P1.R, sv_P1.V));
 
@@ -7605,7 +7610,7 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 	V_A1 = unit(sv_A1.V - u * dotp(sv_A1.V, u))*length(sv_A1.V);
 
 	//CDH calculation
-	if (opt->maneuver == 1)
+	if (opt.K_CSI == false)
 	{
 		VECTOR3 u2;
 		double Y_c_dot;
@@ -7618,17 +7623,17 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 
 		res.DH = length(R_PC) - length(R_A1);
 		res.dV_CDH = mul(Q_Xx, V_A1F - V_A1) + _V(0.0, -Y_c_dot, 0.0);
-		res.t_CDH = opt->t_TIG;
+		res.t_CDH = opt.t_TIG;
 
-		if (opt->CalculateTPIParams)
+		if (opt.CalculateTPIParams)
 		{
-			dt_TPI = OrbMech::findelev_conic(R_A1, V_A1F, sv_P1.R, sv_P1.V, opt->E, mu);
-			res.t_TPI = opt->t_TIG + dt_TPI;
+			dt_TPI = OrbMech::findelev_conic(R_A1, V_A1F, sv_P1.R, sv_P1.V, opt.E, mu);
+			res.t_TPI = opt.t_TIG + dt_TPI;
 		}
 		return;
 	}
 
-	if (opt->type == 0)
+	if (opt.K_CDH <= 0)
 	{
 		VECTOR3 R_P3, V_P3, R_PJ, V_PJ, R_AF, V_AF, R_AFD;
 		double p_C, c_C, eps_C, e_C, e_Co, dv_CSIo, DH;
@@ -7639,19 +7644,19 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 		s_C = 0;
 		dv_CSI = 10.0*0.3048;
 
-		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, opt->t_TPI - opt->t_TIG, R_P3, V_P3, mu);
+		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, opt.t_TPI - opt.t_TIG, R_P3, V_P3, mu);
 
 		do
 		{
 			V_A1F = V_A1 + unit(crossp(u, R_A1))*dv_CSI;
 			OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
-			t_CDH = opt->t_TIG + dt_1;
+			t_CDH = opt.t_TIG + dt_1;
 			OrbMech::RADUP(R_P3, V_P3, R_A2, mu, R_PC, V_PC);
 			DH = length(R_PC) - length(R_A2);
 			V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
-			OrbMech::rv_from_r0v0(R_A2, V_A2F, opt->t_TPI - t_CDH, R_AF, V_AF, mu);
+			OrbMech::rv_from_r0v0(R_A2, V_A2F, opt.t_TPI - t_CDH, R_AF, V_AF, mu);
 
-			OrbMech::QDRTPI(R_P3, V_P3, opt->GETbase + opt->t_TPI / 24.0 / 3600.0, sv_P1.gravref, mu, DH, opt->E, 0, R_PJ, V_PJ);
+			OrbMech::QDRTPI(R_P3, V_P3, opt.GETbase + opt.t_TPI / 24.0 / 3600.0, sv_P1.gravref, mu, DH, opt.E, 0, R_PJ, V_PJ);
 			R_AFD = R_PJ - unit(R_PJ)*DH;
 
 			e_C = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
@@ -7666,28 +7671,28 @@ void RTCC::ConcentricRendezvousProcessor(SPQOpt *opt, SPQResults &res)
 		res.t_CDH = t_CDH;
 		Q_Xx = OrbMech::LVLH_Matrix(R_A2, V_A2);
 		res.dV_CDH = mul(Q_Xx, V_A2F - V_A2);
-		res.t_TPI = opt->t_TPI;
+		res.t_TPI = opt.t_TPI;
 		res.DH = DH;
 	}
 	else
 	{
-		OrbMech::CSIToDH(R_A1, V_A1, sv_P1.R, sv_P1.V, opt->DH, mu, dv_CSI);
+		OrbMech::CSIToDH(R_A1, V_A1, sv_P1.R, sv_P1.V, opt.DH, mu, dv_CSI);
 		V_A1F = V_A1 + unit(crossp(u, R_A1))*dv_CSI;
 		OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
-		t_CDH = opt->t_TIG + dt_1;
+		t_CDH = opt.t_TIG + dt_1;
 		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A2, mu, R_PC, V_PC);
 		V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
-		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt->t_TIG, R_P2, V_P2, mu);
+		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt.t_TIG, R_P2, V_P2, mu);
 
 		res.dV_CSI = _V(dv_CSI, 0, 0);
 		res.t_CDH = t_CDH;
 		Q_Xx = OrbMech::LVLH_Matrix(R_A2, V_A2);
 		res.dV_CDH = mul(Q_Xx, V_A2F - V_A2);
-		res.DH = opt->DH;
+		res.DH = opt.DH;
 
-		if (opt->CalculateTPIParams)
+		if (opt.CalculateTPIParams)
 		{
-			dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt->E, mu);
+			dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt.E, mu);
 			res.t_TPI = t_CDH + dt_TPI;
 		}
 	}
@@ -8511,8 +8516,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	dt_CAN = opt.dt_CAN;
 	conopt.E = 26.6*RAD;
 	conopt.GETbase = opt.GETbase;
-	conopt.maneuver = 0;
-	conopt.type = 0;
+	conopt.K_CDH = 0;
 	conopt.t_TPI = opt.t_TPI;
 
 	res.R_amin = length(opt.R_LS) + opt.h_amin;
@@ -8650,7 +8654,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			conopt.sv_P = sv_CSM_Ins;
 			conopt.t_TIG = t_CSI;
 
-			ConcentricRendezvousProcessor(&conopt, conres);
+			ConcentricRendezvousProcessor(conopt, conres);
 			K_loop++;
 			if (K_loop > 1)
 			{

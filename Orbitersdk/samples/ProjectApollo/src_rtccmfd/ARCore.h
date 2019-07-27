@@ -277,16 +277,15 @@ public:
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
-	VECTOR3 J2000Pos, J2000Vel;
-	double J2000GET;
+	SV UplinkSV;
+	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
-	bool svtimemode; //0 = Now, 1 = GET
-	int svmode;		//0 = state vector, 1 = landing site update, 2 = AGS State Vector Update
 	double AGSEpochTime;
 	VECTOR3 AGSPositionVector, AGSVelocityVector;
 	double AGSKFactor;
 	AP11AGSSVPAD agssvpad;
+	int SVOctals[021];
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;

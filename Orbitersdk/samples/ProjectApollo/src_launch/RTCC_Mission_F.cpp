@@ -1736,13 +1736,12 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		coeopt.DH = -15.0*1852.0;
 		coeopt.E = 208.3*RAD;
 		coeopt.GETbase = GETbase;
-		coeopt.maneuver = 0;
 		coeopt.sv_A = sv_Ins;
 		coeopt.sv_P = sv_LM;
-		coeopt.type = 1;
+		coeopt.K_CDH = 1;
 		coeopt.t_TIG = calcParams.CSI;
 
-		ConcentricRendezvousProcessor(&coeopt, coeres);
+		ConcentricRendezvousProcessor(coeopt, coeres);
 
 		OrbMech::format_time_HHMMSS(GETbuffer, calcParams.CSI);
 		OrbMech::format_time_HHMMSS(GETbuffer2, coeres.t_TPI);
@@ -1849,14 +1848,13 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.DH = 15.0*1852.0;
 		opt.E = 26.6*RAD;
 		opt.GETbase = GETbase;
-		opt.maneuver = 0;
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
-		opt.type = 0;
+		opt.K_CDH = 0;
 		opt.t_TIG = calcParams.CSI;
 		opt.t_TPI = calcParams.TPI;
 
-		ConcentricRendezvousProcessor(&opt, res);
+		ConcentricRendezvousProcessor(opt, res);
 
 		sv_CSI = coast(sv_LM, opt.t_TIG - OrbMech::GETfromMJD(sv_LM.MJD, GETbase));
 		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
