@@ -885,3 +885,24 @@ public:
 protected:
 	SECS * secs;
 };
+
+class PanelSwitchScenarioHandler;
+
+class SaturnPanel181
+{
+public:
+
+	void Register(PanelSwitchScenarioHandler *PSH);
+
+	SwitchRow SMSector1SwitchesRow;
+	ToggleSwitch SMSector1Cryo3ACPowerSwitch;
+	ToggleSwitch SMSector1SMACPowerSwitch;
+	CircuitBrakerSwitch SMSector1AC2ASystemBraker;
+	CircuitBrakerSwitch SMSector1AC2BSystemBraker;
+	CircuitBrakerSwitch SMSector1AC2CSystemBraker;
+	GuardedToggleSwitch SMSector1DoorJettisonSwitch;
+	ThreePosSwitch SMSector1LogicPower1Switch;
+	ThreePosSwitch SMSector1LogicPower2Switch;
+	CircuitBrakerSwitch SMSector1LogicPowerMNABraker;
+	CircuitBrakerSwitch SMSector1LogicPowerMNBBraker;
+};

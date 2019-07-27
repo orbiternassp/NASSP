@@ -38,7 +38,7 @@ struct PayloadSettings {
 	bool AutoSlow;
 	char checklistFile[100];
 	bool NoLegs;
-
+	char AGCVersion[100];
 };
 
 ///

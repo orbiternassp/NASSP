@@ -923,7 +923,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //double *pressequalFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE:FLOW");
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
 
-
 #ifdef _DEBUG
 
 /*		sprintf(oapiDebugString(), "Bus A %3.1fA/%3.1fV, Bus B %3.1fA/%3.1fV, Batt A %3.1fV/%3.1fA/%.3f, Batt B %3.1fV/%.3f Batt C %3.1fV/%.3f Charg %2.1fV/%3.1fA FC1 %3.1fV/%3.1fA", 
@@ -2330,6 +2329,25 @@ void Saturn::CheckSMSystemsState()
 		PriRadInTempSensor.WireTo(NULL);
 		SecRadInTempSensor.WireTo(NULL);
 		SecRadOutTempSensor.WireTo(NULL);
+	}
+}
+
+void Saturn::CreateMissionSpecificSystems()
+{
+	if (ApolloNo >= 15 && ApolloNo <= 17)
+	{
+		//J-type missions
+		Panel181 = new SaturnPanel181;
+
+		Panel181->Register(&PSH);
+
+		Panel181->SMSector1LogicPowerMNABraker.WireTo(MainBusA);
+		Panel181->SMSector1LogicPowerMNBBraker.WireTo(MainBusB);
+		Panel181->SMSector1AC2ASystemBraker.WireTo(&ACBus2PhaseA);
+		Panel181->SMSector1AC2BSystemBraker.WireTo(&ACBus2PhaseB);
+		Panel181->SMSector1AC2CSystemBraker.WireTo(&ACBus2PhaseC);
+
+		secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
 	}
 }
 

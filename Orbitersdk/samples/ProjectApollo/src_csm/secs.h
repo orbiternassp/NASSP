@@ -288,6 +288,7 @@ class LDEC
 public:
 	LDEC();
 	void Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe, ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed);
+	void InitSIMJett(CircuitBrakerSwitch *SMSec1Power);
 	void Timestep(double simdt);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -296,6 +297,7 @@ public:
 	bool GetLMSLASeparationInitiate() { return LMSLASeparationInitiate; }
 	bool GetDockingProbeRetract1() { return DockingProbeRetract1; }
 	bool GetDockingProbeRetract2() { return DockingProbeRetract2; }
+	bool GetSIMPyroArmRelay() { return SIMPyroArmRelay; }
 	void ResetLMSLASeparationInitiate() { LMSLASeparationInitiate = false; }
 
 	//Telemetry
@@ -319,6 +321,8 @@ protected:
 	bool DockingProbeRetract1;
 	//Z4
 	bool DockingRingFinalSeparation;
+	//Z5 (Only on Apollo 15 and later)
+	bool SIMPyroArmRelay;
 
 	//Delay Timers
 
@@ -336,6 +340,7 @@ protected:
 	ToggleSwitch *PyroArmSwitch;
 	DCbus *PyroBus;
 	PowerMerge *PyroBusFeeder;
+	CircuitBrakerSwitch *SMSector1LogicPowerBreaker;
 };
 
 ///
@@ -362,6 +367,7 @@ public:
 	bool GetDockingProbeRetractSec1() { return LDECB.GetDockingProbeRetract1(); }
 	bool GetDockingProbeRetractSec2() { return LDECB.GetDockingProbeRetract2(); }
 
+	void InitSIMJett(CircuitBrakerSwitch *SMSec1PowerA, CircuitBrakerSwitch *SMSec1PowerB);
 	void SetSaturnType(int sattype);
 
 	void LoadState(FILEHANDLE scn);
