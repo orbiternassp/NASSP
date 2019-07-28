@@ -84,7 +84,7 @@ class DescentGuidance
 {
 public:
 	DescentGuidance();
-	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W);
+	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W, double ttgo);
 	void Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDI, double &ttgo, double &Thrust, double &isp);
 protected:
 	//Descent phase
@@ -128,14 +128,6 @@ protected:
 	static const double XISP0;
 	static const double XISP1;
 	static const double XISP2;
-	//Braking and approach phase position targets 
-	double XRD[6];
-	//Braking and approach phase velocity targets 
-	double XVD[6];
-	//Braking and approach phase acceleration targets 
-	double XAD[6];
-	//Braking and approach phase jerk targets 
-	double XJD[6];
 	//time to go in current phase
 	double t_go;
 	VECTOR3 RDG, VDG, ADG, JDG;
@@ -151,6 +143,7 @@ protected:
 	double FC;
 	//Thrust of previous cycle
 	double Thrust_old;
+	LGCDescentConstants desc_const;
 };
 
 class AscDescIntegrator

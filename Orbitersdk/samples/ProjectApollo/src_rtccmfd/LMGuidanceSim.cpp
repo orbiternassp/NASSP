@@ -223,46 +223,22 @@ DescentGuidance::DescentGuidance()
 	Thrust_old = 0.0;
 }
 
-void DescentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W)
+void DescentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W, double ttgo)
 {
 	t_IG = t_I;
 	PHASE = -2;
-	XJD[0] = 0.;
-	XJD[1] = 0.;
-	XJD[2] = -0.011885*0.3048;
-	XJD[3] = 0.;
-	XJD[4] = 0.;
-	XJD[5] = 0.034336*0.3048;
-	XAD[0] = 0.6241*0.3048;
-	XAD[1] = 0.;
-	XAD[2] = -9.1044*0.3048;
-	XAD[3] = 0.05*0.3048;
-	XAD[4] = 0.;
-	XAD[5] = -0.65*0.3048;
-	XRD[0] = 171.835*0.3048;
-	XRD[1] = 0.;
-	XRD[2] = -10678.596*0.3048;
-	XRD[3] = 111.085*0.3048;
-	XRD[4] = 0.;
-	XRD[5] = -26.794*0.3048;
-	XVD[0] = -105.876*0.3048;
-	XVD[1] = 0.;
-	XVD[2] = -1.04*0.3048;
-	XVD[3] = -4.993*0.3048;
-	XVD[4] = 0.;
-	XVD[5] = 0.248*0.3048;
 
-	t_go = 664.4;
+	t_go = ttgo;
 	REFSMMAT = REFS;
 	R_LSP = R_LSP_init;
 	t_pip = t_P;
 	r_LS = length(R_LSP);
 	WP = W;
 
-	RDG = _V(XRD[0], XRD[1], XRD[2]);
-	VDG = _V(XVD[0], XVD[1], XVD[2]);
-	ADG = _V(XAD[0], XAD[1], XAD[2]);
-	JDG = _V(XJD[0], XJD[1], XJD[2]);
+	RDG = desc_const.RBRFG;
+	VDG = desc_const.VBRFG;
+	ADG = desc_const.ABRFG;
+	JDG = _V(0, 0, desc_const.JBRFGZ);
 }
 
 void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDI, double &ttgo, double &Thrust, double &isp)
@@ -286,10 +262,10 @@ void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VEC
 		if (t_go < 60.0)
 		{
 			PHASE = 1;
-			RDG = _V(XRD[3], XRD[4], XRD[5]);
-			VDG = _V(XVD[3], XVD[4], XVD[5]);
-			ADG = _V(XAD[3], XAD[4], XAD[5]);
-			JDG = _V(XJD[3], XJD[4], XJD[5]);
+			RDG = desc_const.RARFG;
+			VDG = desc_const.VARFG;
+			ADG = desc_const.AARFG;
+			JDG = _V(0, 0, desc_const.JARFGZ);
 		}
 	}
 	else if (PHASE == 1)
@@ -350,7 +326,7 @@ void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VEC
 	{
 		t_go = (length(RP) - length(R_LSP) - 15.0*0.3048) / length(VG);
 	}
-	else
+	else if (PHASE == 0 || PHASE == 1)
 	{
 		eps = abs(t_go / 128.0);
 		do

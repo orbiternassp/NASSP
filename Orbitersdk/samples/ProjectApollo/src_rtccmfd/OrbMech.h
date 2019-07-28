@@ -192,6 +192,30 @@ struct TLMCFlybyConstants
 	OBJHANDLE gravin;
 };
 
+struct LGCDescentConstants
+{
+	LGCDescentConstants();
+
+	VECTOR3 RBRFG;
+	VECTOR3 VBRFG;
+	VECTOR3 ABRFG;
+	double JBRFGZ;
+	VECTOR3 RARFG;
+	VECTOR3 VARFG;
+	VECTOR3 AARFG;
+	double JARFGZ;
+};
+
+struct LGCIgnitionConstants
+{
+	double v_IGG = 5545.46*0.3048;
+	double r_IGXG = -130519.86*0.3048;
+	double r_IGZG = -1432597.3*0.3048;
+	double K_X = 0.617631;
+	double K_Y = 0.755e-6 / 0.3048;
+	double K_V = 410.0;
+};
+
 class CoastIntegrator
 {
 public:

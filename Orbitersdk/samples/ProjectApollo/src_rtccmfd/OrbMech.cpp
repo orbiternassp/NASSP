@@ -6600,6 +6600,18 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHAN
 
 }
 
+LGCDescentConstants::LGCDescentConstants()
+{
+	RBRFG = _V(171.835, 0.0, -10678.596)*0.3048;
+	VBRFG = _V(-105.876, 0.0, -1.04)*0.3048;
+	ABRFG = _V(0.6241, 0.0, -9.1044)*0.3048;
+	JBRFGZ = -0.01882677*0.3048;
+	RARFG = _V(111.085, 0.0, -26.794)*0.3048;
+	VARFG = _V(-4.993, 0.0, 0.248)*0.3048;
+	AARFG = _V(-0.2624, 0.0, -0.512)*0.3048;
+	JARFGZ = 0.00180772*0.3048;
+}
+
 CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)
 {
 	hMoon = oapiGetObjectByName("Moon");
