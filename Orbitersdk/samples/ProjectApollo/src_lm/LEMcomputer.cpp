@@ -176,7 +176,7 @@ void LEMcomputer::Timestep(double simt, double simdt)
 			// Reset cycle counter and Extracode flags
 			vagc.CycleCounter = 0;
 			vagc.ExtraCode = 0;
-			vagc.ExtraDelay = 0;
+			vagc.ExtraDelay = 2; // GOJAM and TC 4000 both take 1 MCT to execute
 			// No idea about the interrupts/pending/etc so we reset those
 			vagc.AllowInterrupt = 1;
 			vagc.PendFlag = 0;
