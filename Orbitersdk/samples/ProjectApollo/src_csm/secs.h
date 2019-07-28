@@ -125,7 +125,8 @@ class MESC
 {
 public:
 	MESC();
-	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, SMJC *smjc, MESC* OtherMESCSystem, int IsSysA);
+	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, SMJC *smjc, MESC* OtherMESCSystem, int IsSysA);
+	void CBInit(CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker);
 	void Timestep(double simdt);
 
 	bool GetApexCoverJettisonRelay() { return ApexCoverJettison; }
@@ -274,6 +275,8 @@ protected:
 	CircuitBrakerSwitch *EDSBatteryBreaker;
 	MissionTimer *MissionTimerDisplay;
 	EventTimer *EventTimerDisplay;
+	ThreePosSwitch *EventTimerControl;
+	ThreePosSwitch *MissionTimerControl;
 	SMJC *SMJettCont;
 
 	CircuitBrakerSwitch *EDSLogicBreaker;

@@ -458,20 +458,31 @@ MESC::MESC():
 	IsSystemA = false;
 
 	EDSLogicBreaker = NULL;
+	SECSLogicBus = NULL;
+	SECSPyroBus = NULL;
+	MissionTimerDisplay = NULL;
+	MissionTimerControl = NULL;
+	EventTimerDisplay = NULL;
+	EventTimerControl = NULL;
+	Sat = NULL;
+	OtherMESC = NULL;
+	SMJettCont = NULL;
+	SECSLogicBreaker = NULL;
+	SECSArmBreaker = NULL;
+	RCSLogicCircuitBreaker = NULL;
+	ELSBatteryBreaker = NULL;
+	EDSBatteryBreaker = NULL;
 	//MESCDisplay = NULL;
 }
 
-void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker, MissionTimer *MT, EventTimer *ET, SMJC *smjc, MESC* OtherMESCSystem, int IsSysA)
+void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, SMJC *smjc, MESC* OtherMESCSystem, int IsSysA)
 {
 	SECSLogicBus = LogicBus;
 	SECSPyroBus = PyroBus;
-	SECSLogicBreaker = SECSLogic;
-	SECSArmBreaker = SECSArm;
-	RCSLogicCircuitBreaker = RCSLogicCB;
-	ELSBatteryBreaker = ELSBatteryCB;
-	EDSBatteryBreaker = EDSBreaker;
 	MissionTimerDisplay = MT;
+	MissionTimerControl = MTC;
 	EventTimerDisplay = ET;
+	EventTimerControl = ETC;
 	Sat = v;
 	OtherMESC = OtherMESCSystem;
 	IsSystemA = IsSysA;
@@ -479,6 +490,15 @@ void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, CircuitBrakerSwitch 
 
 	//MESCDisplay = oapiCreateAnnotation(false, 0.65, _V(1, 1, 0));
 	//oapiAnnotationSetPos(MESCDisplay, 0, 0.1, 0.33, 1);
+}
+
+void MESC::CBInit(CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker)
+{
+	SECSLogicBreaker = SECSLogic;
+	SECSArmBreaker = SECSArm;
+	RCSLogicCircuitBreaker = RCSLogicCB;
+	ELSBatteryBreaker = ELSBatteryCB;
+	EDSBatteryBreaker = EDSBreaker;
 }
 
 void MESC::TimerTimestep(double simdt)
@@ -564,9 +584,15 @@ void MESC::Timestep(double simdt)
 
 	if (EDSLiftoffCircuitPower())
 	{
-		MissionTimerDisplay->Reset();
-		EventTimerDisplay->Reset();
-		EventTimerDisplay->SetRunning(true);
+		if (MissionTimerControl->IsUp())
+		{
+			MissionTimerDisplay->Reset();
+		}
+		if (EventTimerControl->IsCenter())
+		{
+			EventTimerDisplay->Reset();
+			EventTimerDisplay->SetRunning(true);
+		}
 	}
 
 	// Monitor LET Status
@@ -612,8 +638,11 @@ void MESC::Timestep(double simdt)
 	//Start Event Timer
 	if (SequentialLogicBus() && BoosterCutoffAbortStartRelay)
 	{
-		Sat->EventTimerDisplay.Reset();
-		Sat->EventTimerDisplay.SetRunning(true);
+		if (Sat->EventTimerContSwitch.IsCenter())
+		{
+			Sat->EventTimerDisplay.Reset();
+			Sat->EventTimerDisplay.SetRunning(true);
+		}
 	}
 
 	//Canard Deploy Timer
@@ -1416,8 +1445,10 @@ void SECS::ControlVessel(Saturn *v)
 {
 	Sat = v;
 	rcsc.ControlVessel(v);
-	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker, &Sat->MissionTimer306Display, &Sat->EventTimer306Display, &SMJCA, &MESCB, true);
-	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker, &Sat->MissionTimerDisplay, &Sat->EventTimerDisplay, &SMJCB, &MESCA, false);
+	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->MissionTimer306Display, &Sat->MissionTimer306Switch, &Sat->EventTimer306Display, &Sat->EventTimerControl306Switch, &SMJCA, &MESCB, true);
+	MESCA.CBInit(&Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker);
+	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->MissionTimerDisplay, &Sat->MissionTimerSwitch, &Sat->EventTimerDisplay, &Sat->EventTimerContSwitch, &SMJCB, &MESCA, false);
+	MESCB.CBInit(&Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker);
 	LDECA.Init(v, &MESCA, &Sat->SECSArmBatACircuitBraker, &Sat->DockProbeMnACircuitBraker, &Sat->DockingProbeRetractPrimSwitch, &Sat->PyroArmASwitch, &Sat->PyroBusA, &Sat->PyroBusAFeeder);
 	LDECB.Init(v, &MESCB, &Sat->SECSArmBatBCircuitBraker, &Sat->DockProbeMnBCircuitBraker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
 }
