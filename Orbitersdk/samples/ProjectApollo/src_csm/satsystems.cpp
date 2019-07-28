@@ -449,7 +449,7 @@ void Saturn::SystemsInit() {
 	SecGlycolAccumQtySensor.Init(&ECSSecTransducersFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR"));
 	SecEvapOutSteamPressSensor.Init(&ECSSecTransducersFeeder, (h_Evaporator *)Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOR"));
 	PriEvapInletTempSensor.Init(&Panel276CB2, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATORINLET"));
-	PriRadInTempSensor.Init(&EcsRadiatorsHeaterPrimSwitch, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET"));
+	PriRadInTempSensor.Init(&CONTHTRSMnBCircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET"));
 	SecRadInTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATORINLET"));
 	SecRadOutTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATOROUTLET"));
 

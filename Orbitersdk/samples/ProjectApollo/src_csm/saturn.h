@@ -2125,7 +2125,7 @@ protected:
 	ThreePosSwitch EcsRadiatorsFlowContAutoSwitch;
 	ThreePosSwitch EcsRadiatorsFlowContPwrSwitch;
 	ThreePosSwitch EcsRadiatorsManSelSwitch;
-	ThreeSourceSwitch EcsRadiatorsHeaterPrimSwitch;
+	ThreePosSwitch EcsRadiatorsHeaterPrimSwitch;
 	ToggleSwitch EcsRadiatorsHeaterSecSwitch;
 
 	//
