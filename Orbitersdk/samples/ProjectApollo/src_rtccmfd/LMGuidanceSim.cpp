@@ -199,16 +199,22 @@ void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECT
 
 const double DescentGuidance::UT = 7.5;
 const double DescentGuidance::TRMT = 26.0;
-const double DescentGuidance::THRUL = 889.644;
-const double DescentGuidance::THRTRM = 4670.633;
-const double DescentGuidance::THRMAX = 43203.3275;
+const double DescentGuidance::THRUL = 200.0*4.4482216152605;
+const double DescentGuidance::THRTRM = 1050.0*4.4482216152605;
+const double DescentGuidance::THRMIN = 1050.0*4.4482216152605;
+const double DescentGuidance::THRMAX = 9710.0*4.4482216152605;
 const double DescentGuidance::ULISP = 268.0*G;
-const double DescentGuidance::XKISP = 3107.0;
+const double DescentGuidance::XKISP = 303.0*G;
 const double DescentGuidance::mu_M = GGRAV * 7.34763862e+22;
 const double DescentGuidance::MAXFORCE = 28023.8;
 const double DescentGuidance::MINFORCE = 4359.26;
 const double DescentGuidance::LOWCRIT = 5985.0*4.4482216152605;
 const double DescentGuidance::HIGHCRIT = 6615.0*4.4482216152605;
+const double DescentGuidance::DELHTR = 2.525;
+const double DescentGuidance::DELISP = 200.0*2.525 / (10500.0*4.4482216152605)*G;
+const double DescentGuidance::XISP2 = 4.4429572356347e-8;
+const double DescentGuidance::XISP1 = 6.177486342939e-4;
+const double DescentGuidance::XISP0 = 2865.8065891221;
 
 DescentGuidance::DescentGuidance()
 {
@@ -374,7 +380,7 @@ void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VEC
 			if (FC > LOWCRIT)
 			{
 				//Hold throttle up
-				Thrust = Thrust_old;
+				Thrust = THRMAX + DELHTR * (t_cur - t_IG - TRMT);
 			}
 			else
 			{
@@ -387,13 +393,22 @@ void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VEC
 			if (FC > HIGHCRIT)
 			{
 				//Throttle up
-				Thrust = THRMAX;
+				Thrust = THRMAX + DELHTR * (t_cur - t_IG - TRMT);
 			}
 			else
 			{
 				//Continuous Throttling
 				Thrust = FC;
 			}
+		}
+
+		if (Thrust > HIGHCRIT)
+		{
+			isp = XKISP - DELISP * (t_cur - t_IG - TRMT);
+		}
+		else
+		{
+			isp = XISP2 * Thrust*Thrust + XISP1 * Thrust + XISP0;
 		}
 	}
 	//P66
@@ -408,6 +423,8 @@ void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VEC
 		{
 			Thrust = MINFORCE;
 		}
+
+		isp = XISP2 * Thrust*Thrust + XISP1 * Thrust + XISP0;
 	}
 
 	Thrust_old = Thrust;

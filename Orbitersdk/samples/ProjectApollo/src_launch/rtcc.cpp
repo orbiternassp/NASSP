@@ -8294,6 +8294,48 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 	return IMUangles;
 }
 
+bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, MATRIX3 REFSMMAT)
+{
+	MATRIX3 Rot;
+	DescentGuidance descguid;
+	AscDescIntegrator integ;
+	SV sv_IG, sv_D;
+	VECTOR3 U_FDP, WI, W, R_LSP, U_FDP_abort;
+	double t_go, CR, t_PDI, t_UL, t_D, W_TD, T_DPS, isp;
+	bool stop;
+
+	bool LandFlag = false;
+	t_UL = 7.9;
+
+	if (!PDIIgnitionAlgorithm(sv, GETbase, R_LS, TLAND, REFSMMAT, sv_IG, t_go, CR, U_FDP))
+	{
+		return false;
+	}
+	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, GETbase);
+	t_D = t_PDI - t_UL;
+	sv_D = coast(sv_IG, -t_UL);
+
+	Rot = OrbMech::GetRotationMatrix(sv_IG.gravref, sv_IG.MJD);
+	WI = rhmul(Rot, _V(0, 0, 1));
+	W = mul(REFSMMAT, WI)*OrbMech::w_Moon;
+	R_LSP = mul(REFSMMAT, rhmul(Rot, R_LS));
+	descguid.Init(sv_IG.R, sv_IG.V, sv_IG.mass, t_PDI, REFSMMAT, R_LSP, t_PDI, W);
+	W_TD = sv_IG.mass;
+	U_FDP_abort = tmul(REFSMMAT, unit(U_FDP));
+
+	stop = false;
+
+	integ.Init(U_FDP_abort);
+
+	do
+	{
+		descguid.Guidance(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
+		LandFlag = integ.Integration(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
+	} while (LandFlag == false);
+
+	return true;
+}
+
 void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins)
 {
 	//Test

@@ -3511,6 +3511,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
+		if (G->REFSMMATcur != 5 && G->REFSMMATcur != 8)
+		{
+			skp->Text(5 * W / 8, 6 * H / 14, "No LS REFSMMAT!", 15);
+		}
+
 		skp->Text(5 * W / 8, 15 * H / 21, "Landing Site:", 13);
 		sprintf(Buffer, "%.3f°", GC->LSLat*DEG);
 		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));

@@ -106,6 +106,7 @@ protected:
 	static const double THRTRM;
 	//Max thrust setting
 	static const double THRMAX;
+	static const double THRMIN;
 	//Ullage specific impulse
 	static const double ULISP;
 	//DPS specific impulse
@@ -120,6 +121,13 @@ protected:
 	static const double LOWCRIT;
 	//Upper end of throttlable upper limit
 	static const double HIGHCRIT;
+	//Change in actual thrust with respect to time from braking phase initiation,
+	//for the DPS due to an eroding engine nozzle
+	static const double DELHTR;
+	static const double DELISP;
+	static const double XISP0;
+	static const double XISP1;
+	static const double XISP2;
 	//Braking and approach phase position targets 
 	double XRD[6];
 	//Braking and approach phase velocity targets 
