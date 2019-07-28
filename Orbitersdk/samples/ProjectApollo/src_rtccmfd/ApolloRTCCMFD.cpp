@@ -4264,6 +4264,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	else if (screen == 47)
 	{
 		skp->Text(1 * W / 8, 2 * H / 14, "State Vector Update", 19);
+		skp->Text(1 * W / 8, 4 * H / 14, "Landing Site Vector", 19);
 	}
 	else if (screen == 48)
 	{
@@ -4387,7 +4388,65 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%.2f NM", GC->LSAlt / 1852.0);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 50)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
+		if (G->vesseltype < 2)
+		{
+			skp->Text(4 * W / 8, 2 * H / 14, "LANDING SITE UPDT TO CMC (293)", 30);
+		}
+		else
+		{
+			skp->Text(4 * W / 8, 2 * H / 14, "LANDING SITE UPDT TO LGC (294)", 30);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(1 * W / 8, 4 * H / 14, "LAT", 3);
+		skp->Text(1 * W / 8, 5 * H / 14, "LNG", 3);
+		sprintf(Buffer, "%.3f°", GC->LSLat*DEG);
+		skp->Text(2 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3f°", GC->LSLng*DEG);
+		skp->Text(2 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(4 * W / 8, 4 * H / 14, "ALT", 3);
+		sprintf(Buffer, "%.4f NM", GC->LSAlt / 1852.0);
+		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 32, 14 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 14 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 14 * H / 28, "DSKY V71", 8);
+		skp->Text(22 * W / 32, 14 * H / 28, "VECTOR", 6);
+
+		for (int i = 1;i <= 010;i++)
+		{
+			sprintf(Buffer, "%o", i);
+			skp->Text(5 * W / 32, (i + 14) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(10 * W / 32, 15 * H / 28, "INDEX", 5);
+		skp->Text(10 * W / 32, 16 * H / 28, "ADD", 3);
+		skp->Text(10 * W / 32, 17 * H / 28, "X", 1);
+		skp->Text(10 * W / 32, 18 * H / 28, "X", 1);
+		skp->Text(10 * W / 32, 19 * H / 28, "Y", 1);
+		skp->Text(10 * W / 32, 20 * H / 28, "Y", 1);
+		skp->Text(10 * W / 32, 21 * H / 28, "Z", 1);
+		skp->Text(10 * W / 32, 22 * H / 28, "Z", 1);
+
+		for (int i = 0;i < 010;i++)
+		{
+			sprintf(Buffer, "%05d", G->RLSOctals[i]);
+			skp->Text(15 * W / 32, (i + 15) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		sprintf(Buffer, "%.1f", G->RLSUplink.x);
+		skp->Text(22 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.1f", G->RLSUplink.y);
+		skp->Text(22 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.1f", G->RLSUplink.z);
+		skp->Text(22 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
 	}
 	return true;
 }
@@ -4838,6 +4897,12 @@ void ApolloRTCCMFD::menuSetStateVectorMenu()
 void ApolloRTCCMFD::menuSetLSUpdateMenu()
 {
 	screen = 49;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLSUplinkPage()
+{
+	screen = 50;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6212,6 +6277,11 @@ void ApolloRTCCMFD::menuSVUpload()
 	{
 		G->StateVectorUplink();
 	}
+}
+
+void ApolloRTCCMFD::menuLSUplinkCalc()
+{
+	G->LSUplinkCalc();
 }
 
 void ApolloRTCCMFD::menuLSUpload()

@@ -76,6 +76,7 @@ public:
 	void StateVectorCalc();
 	void AGSStateVectorCalc();
 	void LandingSiteUpdate();
+	void LSUplinkCalc();
 	void LandingSiteUplink();
 	void VecPointCalc();
 	void TerrainModelCalc();
@@ -286,6 +287,8 @@ public:
 	double AGSKFactor;
 	AP11AGSSVPAD agssvpad;
 	int SVOctals[021];
+	VECTOR3 RLSUplink;
+	int RLSOctals[010];
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;

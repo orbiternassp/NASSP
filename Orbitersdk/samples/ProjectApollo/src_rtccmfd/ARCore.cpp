@@ -637,6 +637,11 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		SVOctals[i] = 0;
 	}
+	RLSUplink = _V(0, 0, 0);
+	for (int i = 0;i < 010;i++)
+	{
+		RLSOctals[i] = 0;
+	}
 
 	lambertmultiaxis = 1;
 	entrylongmanual = true;
@@ -1276,42 +1281,50 @@ void ARCore::LandingSiteUpdate()
 	GC->LSAlt = rad - oapiGetSize(svtarget->GetGravityRef());
 }
 
-void ARCore::LandingSiteUplink()
+void ARCore::LSUplinkCalc()
 {
-	VECTOR3 R_P, R;
+	VECTOR3 R_P;
 	double r_0;
 
 	R_P = unit(_V(cos(GC->LSLng)*cos(GC->LSLat), sin(GC->LSLng)*cos(GC->LSLat), sin(GC->LSLat)));
 	r_0 = oapiGetSize(oapiGetObjectByName("Moon"));
 
-	R = R_P*(r_0 + GC->LSAlt);
+	RLSUplink = R_P * (r_0 + GC->LSAlt);
 
-	g_Data.emem[0] = 10;
+	RLSOctals[0] = 10;
 
 	if (vesseltype < 2)
 	{
-		g_Data.emem[1] = 2025;
+		RLSOctals[1] = 2025;
 	}
 	else
 	{
 		if (GC->mission < 14)
 		{
-			g_Data.emem[1] = 2022;
+			RLSOctals[1] = 2022;
 		}
 		else
 		{
-			g_Data.emem[1] = 2020;
+			RLSOctals[1] = 2020;
 		}
 	}
 
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(R.x, 27, 1);
-	g_Data.emem[3] = OrbMech::DoubleToBuffer(R.x, 27, 0);
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(R.y, 27, 1);
-	g_Data.emem[5] = OrbMech::DoubleToBuffer(R.y, 27, 0);
-	g_Data.emem[6] = OrbMech::DoubleToBuffer(R.z, 27, 1);
-	g_Data.emem[7] = OrbMech::DoubleToBuffer(R.z, 27, 0);
+	RLSOctals[2] = OrbMech::DoubleToBuffer(RLSUplink.x, 27, 1);
+	RLSOctals[3] = OrbMech::DoubleToBuffer(RLSUplink.x, 27, 0);
+	RLSOctals[4] = OrbMech::DoubleToBuffer(RLSUplink.y, 27, 1);
+	RLSOctals[5] = OrbMech::DoubleToBuffer(RLSUplink.y, 27, 0);
+	RLSOctals[6] = OrbMech::DoubleToBuffer(RLSUplink.z, 27, 1);
+	RLSOctals[7] = OrbMech::DoubleToBuffer(RLSUplink.z, 27, 0);
+}
 
-	UplinkData(); // Go for uplink
+void ARCore::LandingSiteUplink()
+{
+	for (int i = 0;i < 010;i++)
+	{
+		g_Data.emem[i] = RLSOctals[i];
+	}
+
+	UplinkData();
 }
 
 void ARCore::StateVectorCalc()
