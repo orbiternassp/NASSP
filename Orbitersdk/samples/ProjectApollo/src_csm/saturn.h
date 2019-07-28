@@ -2506,7 +2506,7 @@ protected:
 	ToggleSwitch ControllerCouplingSwitch;
 
 	SwitchRow OpticsModeSpeedSwitchesRow;
-	CMCOpticsModeSwitch OpticsModeSwitch;
+	ToggleSwitch OpticsModeSwitch;
 	ThreePosSwitch ControllerSpeedSwitch;
 
 	SwitchRow ConditionLampsSwitchRow;

@@ -179,6 +179,7 @@ public:
 	void CMCTrunionDrive(int val, int ch12); 
 	bool PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits);		// Update panel image
 	bool PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
+	void OpticsSwitchToggled();
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);

@@ -3119,7 +3119,7 @@ void Saturn::SetSwitches(int panel) {
 	/////////////////////////////
 
 	ZeroSwitchRow.Init(AID_GNZEROSWITCH, MainPanel);
-	OpticsZeroSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ZeroSwitchRow, &agc, 68);
+	OpticsZeroSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], ZeroSwitchRow, 68);
 
 	TelescopeTrunnionSwitchRow.Init(AID_TELESCOPETRUNNIONSWITCH, MainPanel);
 	ControllerTelescopeTrunnionSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], TelescopeTrunnionSwitchRow);
@@ -3128,11 +3128,11 @@ void Saturn::SetSwitches(int panel) {
 	OpticsModeSpeedSwitchesRow.Init(AID_OPTICSMODESPEEDSWITCHES, MainPanel);
 
 	if (panel == SATPANEL_SEXTANT || panel == SATPANEL_TELESCOPE) {
-		OpticsModeSwitch.Init(0, 0, 23, 20, srf[SRF_SWITCHUPSMALL], srf[SRF_BORDER_23x20], OpticsModeSpeedSwitchesRow, &agc, &OpticsZeroSwitch);
+		OpticsModeSwitch.Init(0, 0, 23, 20, srf[SRF_SWITCHUPSMALL], srf[SRF_BORDER_23x20], OpticsModeSpeedSwitchesRow);
 		ControllerSpeedSwitch.Init(101, 0, 23, 20, srf[SRF_THREEPOSSWITCHSMALL], srf[SRF_BORDER_23x20], OpticsModeSpeedSwitchesRow);
 		ControllerCouplingSwitch.Init(0, 0, 23, 20, srf[SRF_SWITCHUPSMALL], srf[SRF_BORDER_23x20], ControllerCouplingSwitchRow);
 	} else {
-		OpticsModeSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], OpticsModeSpeedSwitchesRow, &agc, &OpticsZeroSwitch);
+		OpticsModeSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], OpticsModeSpeedSwitchesRow);
 		ControllerSpeedSwitch.Init(109, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], OpticsModeSpeedSwitchesRow);
 		ControllerCouplingSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], ControllerCouplingSwitchRow);
 	}
@@ -3892,6 +3892,8 @@ void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
 		} else {
 			agc.SetInputChannelBit(016, MarkReject, 0);
 		}
+	} else if (s == &OpticsModeSwitch || s == &OpticsZeroSwitch) {
+		optics.OpticsSwitchToggled();
 	}
 }
 

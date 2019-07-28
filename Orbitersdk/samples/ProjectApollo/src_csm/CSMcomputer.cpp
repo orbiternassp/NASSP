@@ -820,6 +820,26 @@ bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
 	return true;
 }
 
+void CMOptics::OpticsSwitchToggled()
+{
+	if (sat->OpticsZeroSwitch.IsUp())
+	{
+		sat->agc.SetInputChannelBit(033, ZeroOptics_33, true);
+	}
+	else
+	{
+		sat->agc.SetInputChannelBit(033, ZeroOptics_33, false);
+	}
+	if (sat->OpticsModeSwitch.IsUp() && sat->OpticsZeroSwitch.IsDown())
+	{
+		sat->agc.SetInputChannelBit(033, CMCControl, true);
+	}
+	else
+	{
+		sat->agc.SetInputChannelBit(033, CMCControl, false);
+	}
+}
+
 void CMOptics::TimeStep(double simdt) {
 
 	double ShaftRate = 0;

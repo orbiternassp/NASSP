@@ -3934,38 +3934,6 @@ bool CMCModeHoldFreeSwitch::SwitchTo(int newState, bool dontspring)
 // CMC Optics Mode Switch
 //
 
-void CMCOpticsModeSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, ToggleSwitch * zeroSwitch)
-{
-	AGCSwitch::Init(xp, yp, w, h, surf, bsurf, row, c);
-
-	opticsZeroSwitch = zeroSwitch;
-}
-
-bool CMCOpticsModeSwitch::SwitchTo(int newState, bool dontspring)
-{
-	if (AGCSwitch::SwitchTo(newState,dontspring)) {
-		if (agc) {
-			if (IsUp() && opticsZeroSwitch->IsDown()) {
-				// CMC MODE			
-				agc->SetInputChannelBit(033, CMCControl, true);
-				return true;
-			}
-			else
-			{
-				agc->SetInputChannelBit(033, CMCControl, false);
-				return true;
-			}
-		}
-		return true;
-	}
-
-	return false;
-}
-
-//
-// CMC Optics Mode Switch
-//
-
 void CMCOpticsZeroSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 {
 	if (IsUp())
@@ -3976,28 +3944,6 @@ void CMCOpticsZeroSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 	{
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset - width, yOffset, width, height, SURF_PREDEF_CK);
 	}
-}
-
-bool CMCOpticsZeroSwitch::SwitchTo(int newState, bool dontspring)
-{
-	if (AGCSwitch::SwitchTo(newState, dontspring)) {
-		if (agc) {
-			if (IsUp()) {
-				// ZERO MODE			
-				agc->SetInputChannelBit(033, ZeroOptics_33, true);
-				agc->SetInputChannelBit(033, CMCControl, false);
-				return true;
-			}
-			else
-			{
-				agc->SetInputChannelBit(033, ZeroOptics_33, false);
-				return true;
-			}
-		}
-		return true;
-	}
-
-	return false;
 }
 
 //
