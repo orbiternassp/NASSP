@@ -547,6 +547,10 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	P30TIG = 0;
 	dV_LVLH = _V(0.0, 0.0, 0.0);
+	for (int i = 0;i < 012;i++)
+	{
+		P30Octals[i] = 0;
+	}
 
 	EntryTIG = 0.0;
 	EntryLat = 0.0;
@@ -1601,6 +1605,46 @@ void ARCore::P30Uplink(void)
 
 	//g_Data.uplinkDataReady = 2;
 	UplinkData(); // Go for uplink
+}
+
+void ARCore::P30UplinkCalc()
+{
+	double getign = P30TIG;
+
+	P30Octals[0] = 12;
+	if (vesseltype < 2)
+	{
+		P30Octals[1] = 3404;
+	}
+	else
+	{
+		if (GC->mission < 11)
+		{
+			P30Octals[1] = 3431;
+		}
+		else
+		{
+			P30Octals[1] = 3433;
+		}
+	}
+	P30Octals[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
+	P30Octals[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
+	P30Octals[4] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
+	P30Octals[5] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
+	P30Octals[6] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
+	P30Octals[7] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
+	P30Octals[8] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
+	P30Octals[9] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
+}
+
+void ARCore::P30UplinkNew()
+{
+	for (int i = 0;i < 012;i++)
+	{
+		g_Data.emem[i] = P30Octals[i];
+	}
+
+	UplinkData();
 }
 
 void ARCore::EntryUplink(void)

@@ -109,6 +109,8 @@ public:
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
 	void menuP30Upload();
+	void menuP30UplinkNew();
+	void menuP30UplinkCalc();
 	void EntryAngDialogue();
 	void set_entryang(double ang);
 	void EntryTimeDialogue();
@@ -409,6 +411,7 @@ public:
 	void menuSetLSUpdateMenu();
 	void menuLSUplinkCalc();
 	void menuSetLSUplinkPage();
+	void menuSetP30UplinkPage();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

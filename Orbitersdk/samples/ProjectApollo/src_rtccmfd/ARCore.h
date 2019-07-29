@@ -104,6 +104,8 @@ public:
 	void send_agc_key(char key);
 	void uplink_word(char *data);
 	void P30Uplink(void);
+	void P30UplinkCalc();
+	void P30UplinkNew();
 	void EntryUplink(void);
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(void);
@@ -159,6 +161,7 @@ public:
 	int enginetype;				// 0 = RCS, 1 = SPS or DPS or APS
 	int directiontype;			// 0 = +X, 1 = -X (RCS only)
 	double t_TPI;				// Generally used TPI time
+	int P30Octals[012];
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
