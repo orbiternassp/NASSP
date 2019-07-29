@@ -1603,7 +1603,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "AGC State Vectors", 0, 'G' },
 		{ "Landing Site Vector", 0, 'L' },
 		{ "External DV Update", 0, 'E' },
-		{ "", 0, ' ' },
+		{ "Retrofire EXDV Update", 0, 'R' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
@@ -1620,7 +1620,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("SV", OAPI_KEY_G, &ApolloRTCCMFD::menuSetStateVectorMenu);
 	RegisterFunction("RLS", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLSUplinkPage);
 	RegisterFunction("P30", OAPI_KEY_E, &ApolloRTCCMFD::menuSetP30UplinkPage);
-	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("RET", OAPI_KEY_R, &ApolloRTCCMFD::menuSetRetrofireEXDVUplinkPage);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
@@ -1717,7 +1717,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Back to menu", 0, 'B' },
 	};
 
-	RegisterPage(mnu49, sizeof(mnu49) / sizeof(MFDBUTTONMENU));
+	RegisterPage(mnu50, sizeof(mnu50) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
@@ -1751,7 +1751,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Back to menu", 0, 'B' },
 	};
 
-	RegisterPage(mnu49, sizeof(mnu49) / sizeof(MFDBUTTONMENU));
+	RegisterPage(mnu51, sizeof(mnu51) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::menuManPADTIG);
 	RegisterFunction("DV", OAPI_KEY_D, &ApolloRTCCMFD::menuManPADDV);
@@ -1765,6 +1765,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuP30UplinkNew);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
+
+
+	static const MFDBUTTONMENU mnu52[] =
+	{
+		{ "Manual TIG", 0, 'T' },
+		{ "Manual DV", 0, 'D' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "Calculate P30 Uplink", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Uplink Ext DV", 0, 'U' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu52, sizeof(mnu52) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("TIG", OAPI_KEY_T, &ApolloRTCCMFD::menuManPADTIG);
+	RegisterFunction("DV", OAPI_KEY_D, &ApolloRTCCMFD::menuManPADDV);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuRetrofireEXDVUplinkCalc);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuRetrofireEXDVUplinkNew);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
 }
 

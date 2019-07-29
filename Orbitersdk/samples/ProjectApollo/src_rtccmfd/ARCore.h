@@ -107,6 +107,8 @@ public:
 	void P30UplinkCalc();
 	void P30UplinkNew();
 	void EntryUplink(void);
+	void RetrofireEXDVUplinkCalc();
+	void RetrofireEXDVUplinkNew();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(void);
 	void StateVectorUplink();
@@ -162,6 +164,7 @@ public:
 	int directiontype;			// 0 = +X, 1 = -X (RCS only)
 	double t_TPI;				// Generally used TPI time
 	int P30Octals[012];
+	int RetrofireEXDVOctals[016];
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver

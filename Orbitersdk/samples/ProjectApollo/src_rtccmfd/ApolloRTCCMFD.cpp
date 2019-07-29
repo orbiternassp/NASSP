@@ -4266,6 +4266,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 2 * H / 14, "State Vector Update", 19);
 		skp->Text(1 * W / 8, 4 * H / 14, "Landing Site Vector", 19);
 		skp->Text(1 * W / 8, 6 * H / 14, "External DV Update", 18);
+		skp->Text(1 * W / 8, 8 * H / 14, "Retrofire EXDV Update", 21);
 	}
 	else if (screen == 48)
 	{
@@ -4416,10 +4417,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.4f NM", GC->LSAlt / 1852.0);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 32, 14 * H / 28, "OID", 3);
-		skp->Text(10 * W / 32, 14 * H / 28, "FCT", 3);
-		skp->Text(15 * W / 32, 14 * H / 28, "DSKY V71", 8);
-		skp->Text(22 * W / 32, 14 * H / 28, "VECTOR", 6);
+		skp->Text(5 * W / 32, 13 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 13 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 13 * H / 28, "DSKY V71", 8);
+		skp->Text(22 * W / 32, 13 * H / 28, "VECTOR", 6);
 
 		for (int i = 1;i <= 010;i++)
 		{
@@ -4504,6 +4505,62 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(27 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
 
 	}
+	else if (screen == 52)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 2 * H / 14, "CMC RETROFIRE EXTERNAL DV UPDATE (360)", 38);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(5 * W / 32, 8 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 8 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 8 * H / 28, "DSKY V71", 8);
+
+		for (int i = 1;i <= 016;i++)
+		{
+			sprintf(Buffer, "%o", i);
+			skp->Text(5 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(10 * W / 32, 10 * H / 28, "INDEX", 5);
+		skp->Text(10 * W / 32, 11 * H / 28, "ADD", 3);
+		skp->Text(10 * W / 32, 12 * H / 28, "LAT", 3);
+		skp->Text(10 * W / 32, 13 * H / 28, "LAT", 3);
+		skp->Text(10 * W / 32, 14 * H / 28, "LONG", 4);
+		skp->Text(10 * W / 32, 15 * H / 28, "LONG", 4);
+		skp->Text(10 * W / 32, 16 * H / 28, "VGX", 3);
+		skp->Text(10 * W / 32, 17 * H / 28, "VGX", 3);
+		skp->Text(10 * W / 32, 18 * H / 28, "VGY", 3);
+		skp->Text(10 * W / 32, 19 * H / 28, "VGY", 3);
+		skp->Text(10 * W / 32, 20 * H / 28, "VGZ", 3);
+		skp->Text(10 * W / 32, 21 * H / 28, "VGZ", 3);
+		skp->Text(10 * W / 32, 22 * H / 28, "TIGN", 4);
+		skp->Text(10 * W / 32, 23 * H / 28, "TIGN", 4);
+
+		for (int i = 0;i < 016;i++)
+		{
+			sprintf(Buffer, "%05d", G->RetrofireEXDVOctals[i]);
+			skp->Text(15 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		skp->Text(27 * W / 32, 8 * H / 28, "DECIMAL", 7);
+		sprintf(Buffer, "%+.2f°", G->EntryLatcor*DEG);
+		skp->Text(27 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.2f°", G->EntryLngcor*DEG);
+		skp->Text(27 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
+		skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
+		skp->Text(27 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
+		skp->Text(27 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->P30TIG, false);
+		skp->Text(27 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
+
+	}
 	return true;
 }
 
@@ -4573,6 +4630,22 @@ void ApolloRTCCMFD::menuP30UplinkNew()
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
 		G->P30UplinkNew();
+	}
+}
+
+void ApolloRTCCMFD::menuRetrofireEXDVUplinkNew()
+{
+	if (G->vesseltype < 2)
+	{
+		G->RetrofireEXDVUplinkNew();
+	}
+}
+
+void ApolloRTCCMFD::menuRetrofireEXDVUplinkCalc()
+{
+	if (G->vesseltype < 2)
+	{
+		G->RetrofireEXDVUplinkCalc();
 	}
 }
 
@@ -4981,33 +5054,16 @@ void ApolloRTCCMFD::menuSetP30UplinkPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetRetrofireEXDVUplinkPage()
+{
+	if (G->vesseltype < 2)
+	{
+		screen = 52;
+		coreButtons.SelectPage(this, screen);
+	}
+}
+
 void ApolloRTCCMFD::menuVoid(){}
-
-void ApolloRTCCMFD::menuNextPage()
-{
-	if (screen < 2)
-	{
-		screen++;
-	}
-	else
-	{
-		screen = 0;
-	}
-	coreButtons.SelectPage(this, screen);
-}
-
-void ApolloRTCCMFD::menuLastPage()
-{
-	if (screen > 0)
-	{
-		screen--;
-	}
-	else
-	{
-		screen = 2;
-	}
-	coreButtons.SelectPage(this, screen);
-}
 
 void ApolloRTCCMFD::set_getbase()
 {
