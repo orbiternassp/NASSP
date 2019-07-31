@@ -10415,3 +10415,63 @@ void RTCC::EMDPESAD(const PredictedSiteAcquisitionOpt &opt, const OrbitStationCo
 		j++;
 	}
 }
+
+VECTOR3 RTCC::PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i)
+{
+	//INPUTS:
+	// i = 0: inertial to LVLH, 1: LVLH to inertial 
+
+	VECTOR3 H, Z_PA, P, X_PA, Y_PA, DV_out;
+
+	H = crossp(R_CSM, V_CSM);
+	Z_PA = -unit(R_LM);
+	P = crossp(Z_PA, H);
+	X_PA = unit(P);
+	Y_PA = crossp(Z_PA, X_PA);
+	if (i)
+	{
+		DV_out = X_PA * DV.x + Y_PA * DV.y + Z_PA * DV.z;
+	}
+	else
+	{
+		DV_out = _V(dotp(DV, X_PA), dotp(DV, Y_PA), dotp(DV, Z_PA));
+	}
+
+	return DV_out;
+}
+
+VECTOR3 RTCC::PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i)
+{
+	//INPUTS:
+	// i = 0: inertial to LVLH, 1: LVLH to inertial 
+	VECTOR3 H, Y_PH, Z_PH, X_PH, DV_out;
+	double h, rr, r, dv, theta, V_F, V_D;
+
+	H = crossp(R_ig, V_ig);
+	h = length(H);
+	rr = dotp(R_ig, R_ig);
+	r = sqrt(rr);
+	Y_PH = -H / h;
+	Z_PH = -R_ig / r;
+	X_PH = crossp(Y_PH, Z_PH);
+	dv = length(DV);
+	theta = h * dv*WT / (2.0*rr*T);
+	if (i)
+	{
+		double V_S;
+		V_F = DV.x*cos(theta) - DV.z*sin(theta);
+		V_S = DV.y;
+		V_D = DV.x*sin(theta) + DV.z*cos(theta);
+		DV_out = X_PH * V_F + Y_PH * V_S + Z_PH * V_D;
+	}
+	else
+	{
+		V_F = dotp(DV, X_PH);
+		DV_out.y = dotp(DV, Y_PH);
+		V_D = dotp(DV, Z_PH);
+		DV_out.x = V_F * cos(theta) + V_D * sin(theta);
+		DV_out.z = -V_F * sin(theta) + V_D * cos(theta);
+	}
+
+	return DV_out;
+}

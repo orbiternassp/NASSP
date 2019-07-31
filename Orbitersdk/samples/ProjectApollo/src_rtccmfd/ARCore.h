@@ -111,6 +111,7 @@ public:
 	void RetrofireEXDVUplinkNew();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(void);
+	void REFSMMATUplinkCalc();
 	void StateVectorUplink();
 	void TLANDUplink(void);
 	void EMPP99Uplink(int i);
@@ -253,6 +254,7 @@ public:
 	//REFSMMAT PAGE
 	double REFSMMATTime;
 	MATRIX3 REFSMMAT;
+	MATRIX3 REFSMMAT_BRCS;
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	int REFSMMAToct[20];
 	int REFSMMATcur; //Currently saved REFSMMAT

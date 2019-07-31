@@ -413,6 +413,8 @@ public:
 	void menuSetLSUplinkPage();
 	void menuSetP30UplinkPage();
 	void menuSetRetrofireEXDVUplinkPage();
+	void menuREFSMMATUplinkCalc();
+	void menuSetREFSMMATUplinkPage();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

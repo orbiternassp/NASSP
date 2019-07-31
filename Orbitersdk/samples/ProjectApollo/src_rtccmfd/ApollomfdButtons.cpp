@@ -175,7 +175,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu5[] =
 	{
 		{ "Time of Alignment", 0, 'G' },
-		{ "Uplink option", 0, 'K' },
+		{ "", 0, ' ' },
 		{ "Heads up/down for P30", 0, 'H' },
 		{ "Send REFSMMAT to MFD of target", 0, 'S' },
 		{ "REFSMMAT from AGC", 0, 'D' },
@@ -192,7 +192,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu5, sizeof(mnu5) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::REFSMMATTimeDialogue);
-	RegisterFunction("TYP", OAPI_KEY_K, &ApolloRTCCMFD::cycleREFSMMATupl);
+	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::cycleREFSMMATHeadsUp);
 	RegisterFunction("SEN", OAPI_KEY_S, &ApolloRTCCMFD::menuSendREFSMMATToOtherVessel);
 	RegisterFunction("DWN", OAPI_KEY_D, &ApolloRTCCMFD::GetREFSMMATfromAGC);
@@ -200,7 +200,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::CycleREFSMMATopt);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::calcREFSMMAT);
-	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::UploadREFSMMAT);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("LAT", OAPI_KEY_A, &ApolloRTCCMFD::menuLSLat);
 	RegisterFunction("LNG", OAPI_KEY_L, &ApolloRTCCMFD::menuLSLng);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
@@ -1604,7 +1604,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Landing Site Vector", 0, 'L' },
 		{ "External DV Update", 0, 'E' },
 		{ "Retrofire EXDV Update", 0, 'R' },
-		{ "", 0, ' ' },
+		{ "REFSMMAT Update", 0, 'H' },
 		{ "", 0, ' ' },
 
 		{ "", 0, ' ' },
@@ -1621,7 +1621,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("RLS", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLSUplinkPage);
 	RegisterFunction("P30", OAPI_KEY_E, &ApolloRTCCMFD::menuSetP30UplinkPage);
 	RegisterFunction("RET", OAPI_KEY_R, &ApolloRTCCMFD::menuSetRetrofireEXDVUplinkPage);
-	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("REF", OAPI_KEY_H, &ApolloRTCCMFD::menuSetREFSMMATUplinkPage);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
@@ -1799,6 +1799,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuRetrofireEXDVUplinkNew);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
+
+
+	static const MFDBUTTONMENU mnu53[] =
+	{
+		{ "Uplink Type", 0, 'T' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "Calculate P30 Uplink", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Uplink option", 0, 'K' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu53, sizeof(mnu53) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("TYP", OAPI_KEY_T, &ApolloRTCCMFD::cycleREFSMMATupl);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuREFSMMATUplinkCalc);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::UploadREFSMMAT);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
 }
 

@@ -314,7 +314,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	targetnumber = -1;
 	AGCEpoch = 40221.525;
 	AGCEphemTEphemZero = 40038.0;
-	REFSMMAT = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	REFSMMAT = REFSMMAT_BRCS = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	REFSMMATTime = 0.0;
 	REFSMMATopt = 4;
 	REFSMMATcur = 4;
@@ -441,30 +441,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		vesseltype++;
 	}
-
-	MATRIX3 a;
-	a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
-
-	REFSMMAToct[0] = 24;
-	REFSMMAToct[1] = 306;
-	REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
-	REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
-	REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
-	REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
-	REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
-	REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
-	REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
-	REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
-	REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
-	REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
-	REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
-	REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
-	REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
-	REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
-	REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
-	REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
-	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
-	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
 	REFSMMATHeadsUp = true;
 
@@ -1572,6 +1548,35 @@ void ARCore::REFSMMATUplink(void)
 	UplinkData();
 }
 
+void ARCore::REFSMMATUplinkCalc()
+{
+	MATRIX3 a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
+	REFSMMAT_BRCS = a;
+
+	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
+
+	REFSMMAToct[0] = 24;
+	REFSMMAToct[1] = REFSMMATUplinkAddress();
+	REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
+	REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
+	REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
+	REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
+	REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
+	REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
+	REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
+	REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
+	REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
+	REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
+	REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
+	REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
+	REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
+	REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
+	REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
+	REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
+	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
+	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
+}
+
 void ARCore::P30Uplink(void)
 {
 
@@ -2420,7 +2425,6 @@ int ARCore::subThread()
 	break;
 	case 4:	//REFSMMAT Calculation
 	{
-		MATRIX3 a;
 		REFSMMATOpt opt;
 
 		opt.dV_LVLH = dV_LVLH;
@@ -2486,29 +2490,6 @@ int ARCore::subThread()
 		REFSMMAT = rtcc->REFSMMATCalc(&opt);
 
 		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13, REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23, REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
-		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
-		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
-
-		REFSMMAToct[0] = 24;
-		REFSMMAToct[1] = REFSMMATUplinkAddress();
-		REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
-		REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
-		REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
-		REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
-		REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
-		REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
-		REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
-		REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
-		REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
-		REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
-		REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
-		REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
-		REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
-		REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
-		REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
-		REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
-		REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
-		REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
 		REFSMMATcur = REFSMMATopt;
 

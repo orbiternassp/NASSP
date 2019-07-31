@@ -1364,7 +1364,13 @@ public:
 	//Next Station Contact Display
 	void EMDSTAC(const OrbitStationContactsTable &in, NextStationContactsTable &out);
 	//Predicted and Experimental Site Acquisition Displays
+
+	//Actual RTCC Subroutines
 	void EMDPESAD(const PredictedSiteAcquisitionOpt &opt, const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out);
+	//LM AGS External DV Coordinate Transformation Subroutine
+	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
+	//External DV Coordinate Transformation Subroutine
+	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
