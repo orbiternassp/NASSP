@@ -255,9 +255,9 @@ void LEM::SetLmVesselHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	double Mass = 7137.75;
+	double td_mass = 7137.75;
 
-	if (!NoLegs) HoverStageTouchdownPoints(Mass);
+	if (!NoLegs) HoverStageTouchdownPoints(td_mass);
 
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -521,9 +521,6 @@ void LEM::SeparateStage (UINT stage)
 void LEM::SetLmLandedMesh() {
 
 	Landed = true;
-
-	// Update touchdown points with current mass
-	HoverStageTouchdownPoints(GetMass());
 
 	HideProbes();
 }
