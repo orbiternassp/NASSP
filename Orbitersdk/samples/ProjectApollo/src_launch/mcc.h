@@ -504,7 +504,7 @@ struct AP11AGSSVPAD
 
 struct AP10MAPUPDATE
 {
-	AP10MAPUPDATE() :Rev(0), LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0) {}
+	AP10MAPUPDATE() :Rev(0), LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0), LOSGET2(0.0), AOSGET2(0.0), PMGET2(0.0), SSGET2(0.0) {}
 
 	int Rev;		//Revolution of update
 	double LOSGET;	//Time of LOS
@@ -512,6 +512,10 @@ struct AP10MAPUPDATE
 	double PMGET;	//Time of meridian crossing (150° or 180° W), alternative: AOS without burn
 	double SSGET;	//Time of sunset
 	double SRGET;	//Time of sunrise
+	double LOSGET2;
+	double SSGET2;
+	double PMGET2;
+	double AOSGET2;
 	int type;		//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI
 };
 
