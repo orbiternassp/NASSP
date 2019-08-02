@@ -5000,7 +5000,6 @@ void LVDCSV::TimeStep(double simdt) {
 				}
 				break;
 
-				break;
 			case 40:
 
 				SwitchSelectorProcessing(SSTTB4A);

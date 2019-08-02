@@ -1330,6 +1330,10 @@ void IU::SaveLVDC(FILEHANDLE scn) {
 IU1B::IU1B() : fcc(this), eds(this), ControlDistributor(this), EngineCutoffEnableTimer(40.0), lvdc(lvda)
 {
 	lvda.Init(this);
+
+	lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
+	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
+	lvdc.Init();
 }
 
 IU1B::~IU1B()
@@ -1356,10 +1360,6 @@ bool IU1B::SIBLowLevelSensorsDry()
 void IU1B::LoadLVDC(FILEHANDLE scn) {
 
 	char *line;
-
-	lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
-	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-	lvdc.Init();
 
 	lvdc.LoadState(scn);
 
@@ -1472,6 +1472,10 @@ void IU1B::SwitchSelector(int item)
 IUSV::IUSV() : fcc(this), eds(this), ControlDistributor(this), EngineCutoffEnableTimer(30.0), lvdc(lvda)
 {
 	lvda.Init(this);
+
+	lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
+	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
+	lvdc.Init();
 }
 
 IUSV::~IUSV()
@@ -1493,10 +1497,6 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 void IUSV::LoadLVDC(FILEHANDLE scn) {
 
 	char *line;
-
-	lvrg.Init(&lvCommandConnector);			// LV Rate Gyro Package
-	lvimu.CoarseAlignEnableFlag = false;	// Clobber this
-	lvdc.Init();
 
 	lvdc.LoadState(scn);
 
