@@ -891,17 +891,60 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	}
 	break;
 	case 62: //Map Update Rev 3/4
+	case 63: //Map Update Rev 4/5
+	case 64: //Map Update Rev 5/6
+	case 65: //Map Update Rev 6/7
+	case 66: //Map Update Rev 7/8
+	case 67: //Map Update Rev 8/9
+	case 68: //Map Update Rev 9/10
+	case 69: //Map Update TEI
 	{
-		SV sv0;
+		SV sv0, sv1;
 		AP10MAPUPDATE upd_ellip;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
 		sv0 = StateVectorCalc(calcParams.src);
-		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_ellip);
+
+		if (fcn == 62)
+		{
+			form->Rev = 3;
+			sv1 = sv0;
+		}
+		else if (fcn == 63)
+		{
+			form->Rev = 4;
+			sv1 = coast(sv0, 15.0*60.0);
+		}
+		else if (fcn == 64)
+		{
+			form->Rev = 5;
+			sv1 = sv0;
+		}
+		else if (fcn == 65)
+		{
+			form->Rev = 6;
+			sv1 = sv0;
+		}
+		else if (fcn == 66)
+		{
+			form->Rev = 7;
+			sv1 = sv0;
+		}
+		else if (fcn == 67)
+		{
+			form->Rev = 8;
+			sv1 = coast(sv0, 20.0*60.0);
+		}
+		else if (fcn == 68)
+		{
+			form->Rev = 9;
+			sv1 = coast(sv0, 20.0*60.0);
+		}
+
+		LunarOrbitMapUpdate(sv1, calcParams.TEPHEM, upd_ellip);
 
 		form->type = 1;
-		form->Rev = 3;
 		form->LOSGET = upd_ellip.LOSGET;
 		form->SRGET = upd_ellip.SRGET;
 		form->PMGET = upd_ellip.PMGET;
