@@ -3343,7 +3343,14 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	aa = coe.h*coe.h / (mu*(1.0 - coe.e*coe.e));
 	p = aa * (1.0 - coe.e*coe.e);
 
-	if (beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
+	//Is shadow function vanishing for elliptical orbit?
+	if (coe.e < 1 && beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
+	{
+		v1 = 0;
+		return;
+	}
+	//Is shadow function vanishing for hyperbolic orbit?
+	else if (coe.e > 1.0 && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2))
 	{
 		v1 = 0;
 		return;
