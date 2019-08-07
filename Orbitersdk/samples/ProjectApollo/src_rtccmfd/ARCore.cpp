@@ -314,7 +314,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	targetnumber = -1;
 	AGCEpoch = 40221.525;
 	AGCEphemTEphemZero = 40038.0;
-	REFSMMAT = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
+	REFSMMAT = REFSMMAT_BRCS = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	REFSMMATTime = 0.0;
 	REFSMMATopt = 4;
 	REFSMMATcur = 4;
@@ -442,30 +442,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		vesseltype++;
 	}
 
-	MATRIX3 a;
-	a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
-
-	REFSMMAToct[0] = 24;
-	REFSMMAToct[1] = 306;
-	REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
-	REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
-	REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
-	REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
-	REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
-	REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
-	REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
-	REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
-	REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
-	REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
-	REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
-	REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
-	REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
-	REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
-	REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
-	REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
-	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
-	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
-
 	REFSMMATHeadsUp = true;
 
 	GMPManeuverCode = 0;
@@ -547,6 +523,14 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	P30TIG = 0;
 	dV_LVLH = _V(0.0, 0.0, 0.0);
+	for (int i = 0;i < 012;i++)
+	{
+		P30Octals[i] = 0;
+	}
+	for (int i = 0;i < 016;i++)
+	{
+		RetrofireEXDVOctals[i] = 0;
+	}
 
 	EntryTIG = 0.0;
 	EntryLat = 0.0;
@@ -636,6 +620,11 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	for (int i = 0;i < 021;i++)
 	{
 		SVOctals[i] = 0;
+	}
+	RLSUplink = _V(0, 0, 0);
+	for (int i = 0;i < 010;i++)
+	{
+		RLSOctals[i] = 0;
 	}
 
 	lambertmultiaxis = 1;
@@ -1276,42 +1265,50 @@ void ARCore::LandingSiteUpdate()
 	GC->LSAlt = rad - oapiGetSize(svtarget->GetGravityRef());
 }
 
-void ARCore::LandingSiteUplink()
+void ARCore::LSUplinkCalc()
 {
-	VECTOR3 R_P, R;
+	VECTOR3 R_P;
 	double r_0;
 
 	R_P = unit(_V(cos(GC->LSLng)*cos(GC->LSLat), sin(GC->LSLng)*cos(GC->LSLat), sin(GC->LSLat)));
 	r_0 = oapiGetSize(oapiGetObjectByName("Moon"));
 
-	R = R_P*(r_0 + GC->LSAlt);
+	RLSUplink = R_P * (r_0 + GC->LSAlt);
 
-	g_Data.emem[0] = 10;
+	RLSOctals[0] = 10;
 
 	if (vesseltype < 2)
 	{
-		g_Data.emem[1] = 2025;
+		RLSOctals[1] = 2025;
 	}
 	else
 	{
 		if (GC->mission < 14)
 		{
-			g_Data.emem[1] = 2022;
+			RLSOctals[1] = 2022;
 		}
 		else
 		{
-			g_Data.emem[1] = 2020;
+			RLSOctals[1] = 2020;
 		}
 	}
 
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(R.x, 27, 1);
-	g_Data.emem[3] = OrbMech::DoubleToBuffer(R.x, 27, 0);
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(R.y, 27, 1);
-	g_Data.emem[5] = OrbMech::DoubleToBuffer(R.y, 27, 0);
-	g_Data.emem[6] = OrbMech::DoubleToBuffer(R.z, 27, 1);
-	g_Data.emem[7] = OrbMech::DoubleToBuffer(R.z, 27, 0);
+	RLSOctals[2] = OrbMech::DoubleToBuffer(RLSUplink.x, 27, 1);
+	RLSOctals[3] = OrbMech::DoubleToBuffer(RLSUplink.x, 27, 0);
+	RLSOctals[4] = OrbMech::DoubleToBuffer(RLSUplink.y, 27, 1);
+	RLSOctals[5] = OrbMech::DoubleToBuffer(RLSUplink.y, 27, 0);
+	RLSOctals[6] = OrbMech::DoubleToBuffer(RLSUplink.z, 27, 1);
+	RLSOctals[7] = OrbMech::DoubleToBuffer(RLSUplink.z, 27, 0);
+}
 
-	UplinkData(); // Go for uplink
+void ARCore::LandingSiteUplink()
+{
+	for (int i = 0;i < 010;i++)
+	{
+		g_Data.emem[i] = RLSOctals[i];
+	}
+
+	UplinkData();
 }
 
 void ARCore::StateVectorCalc()
@@ -1551,6 +1548,35 @@ void ARCore::REFSMMATUplink(void)
 	UplinkData();
 }
 
+void ARCore::REFSMMATUplinkCalc()
+{
+	MATRIX3 a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
+	REFSMMAT_BRCS = a;
+
+	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
+
+	REFSMMAToct[0] = 24;
+	REFSMMAToct[1] = REFSMMATUplinkAddress();
+	REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
+	REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
+	REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
+	REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
+	REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
+	REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
+	REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
+	REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
+	REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
+	REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
+	REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
+	REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
+	REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
+	REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
+	REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
+	REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
+	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
+	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
+}
+
 void ARCore::P30Uplink(void)
 {
 
@@ -1588,6 +1614,76 @@ void ARCore::P30Uplink(void)
 
 	//g_Data.uplinkDataReady = 2;
 	UplinkData(); // Go for uplink
+}
+
+void ARCore::P30UplinkCalc()
+{
+	double getign = P30TIG;
+
+	P30Octals[0] = 12;
+	if (vesseltype < 2)
+	{
+		P30Octals[1] = 3404;
+	}
+	else
+	{
+		if (GC->mission < 11)
+		{
+			P30Octals[1] = 3431;
+		}
+		else
+		{
+			P30Octals[1] = 3433;
+		}
+	}
+	P30Octals[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
+	P30Octals[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
+	P30Octals[4] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
+	P30Octals[5] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
+	P30Octals[6] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
+	P30Octals[7] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
+	P30Octals[8] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
+	P30Octals[9] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
+}
+
+void ARCore::P30UplinkNew()
+{
+	for (int i = 0;i < 012;i++)
+	{
+		g_Data.emem[i] = P30Octals[i];
+	}
+
+	UplinkData();
+}
+
+void ARCore::RetrofireEXDVUplinkCalc()
+{
+	double getign = P30TIG;
+
+	RetrofireEXDVOctals[0] = 16;
+	RetrofireEXDVOctals[1] = 3400;
+	RetrofireEXDVOctals[2] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 1);
+	RetrofireEXDVOctals[3] = OrbMech::DoubleToBuffer(EntryLatcor / PI2, 0, 0);
+	RetrofireEXDVOctals[4] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 1);
+	RetrofireEXDVOctals[5] = OrbMech::DoubleToBuffer(EntryLngcor / PI2, 0, 0);
+	RetrofireEXDVOctals[6] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
+	RetrofireEXDVOctals[7] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
+	RetrofireEXDVOctals[8] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
+	RetrofireEXDVOctals[9] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
+	RetrofireEXDVOctals[10] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
+	RetrofireEXDVOctals[11] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
+	RetrofireEXDVOctals[12] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
+	RetrofireEXDVOctals[13] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
+}
+
+void ARCore::RetrofireEXDVUplinkNew()
+{
+	for (int i = 0;i < 016;i++)
+	{
+		g_Data.emem[i] = RetrofireEXDVOctals[i];
+	}
+
+	UplinkData();
 }
 
 void ARCore::EntryUplink(void)
@@ -2329,7 +2425,6 @@ int ARCore::subThread()
 	break;
 	case 4:	//REFSMMAT Calculation
 	{
-		MATRIX3 a;
 		REFSMMATOpt opt;
 
 		opt.dV_LVLH = dV_LVLH;
@@ -2395,29 +2490,6 @@ int ARCore::subThread()
 		REFSMMAT = rtcc->REFSMMATCalc(&opt);
 
 		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13, REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23, REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
-		a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
-		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
-
-		REFSMMAToct[0] = 24;
-		REFSMMAToct[1] = REFSMMATUplinkAddress();
-		REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
-		REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
-		REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
-		REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
-		REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
-		REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
-		REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
-		REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
-		REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
-		REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
-		REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
-		REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
-		REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
-		REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
-		REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
-		REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
-		REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
-		REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 
 		REFSMMATcur = REFSMMATopt;
 

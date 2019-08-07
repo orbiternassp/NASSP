@@ -59,8 +59,6 @@ public:
 	void set_Yoff(double y);
 	void set_Zoff(double z);
 	void menuVoid();
-	void menuNextPage();
-	void menuLastPage();
 	void menuSetLambertPage();
 	void menuSetCDHPage();
 	void menuSetOffsetPage();
@@ -109,6 +107,10 @@ public:
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
 	void menuP30Upload();
+	void menuP30UplinkNew();
+	void menuP30UplinkCalc();
+	void menuRetrofireEXDVUplinkNew();
+	void menuRetrofireEXDVUplinkCalc();
 	void EntryAngDialogue();
 	void set_entryang(double ang);
 	void EntryTimeDialogue();
@@ -407,6 +409,12 @@ public:
 	void menuSetUplinkMenu();
 	void menuSetStateVectorMenu();
 	void menuSetLSUpdateMenu();
+	void menuLSUplinkCalc();
+	void menuSetLSUplinkPage();
+	void menuSetP30UplinkPage();
+	void menuSetRetrofireEXDVUplinkPage();
+	void menuREFSMMATUplinkCalc();
+	void menuSetREFSMMATUplinkPage();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

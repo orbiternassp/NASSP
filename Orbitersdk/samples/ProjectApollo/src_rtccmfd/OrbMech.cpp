@@ -997,6 +997,90 @@ void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned n
 	delete coast;
 }
 
+void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem)
+{
+	if (ephem.init == false)
+	{
+		PZEFEMData data;
+		VECTOR3 R_EM, V_EM, R_ES;
+		double MJD, MoonPos[12], EarthPos[12];
+		OBJHANDLE hSun, hMoon, hEarth;
+		CELBODY *cMoon, *cEarth, *cSun;
+
+		hMoon = oapiGetObjectByName("Moon");
+		hEarth = oapiGetObjectByName("Earth");
+		hSun = oapiGetObjectByName("Sun");
+
+		cMoon = oapiGetCelbodyInterface(hMoon);
+		cEarth = oapiGetCelbodyInterface(hEarth);
+		cSun = oapiGetCelbodyInterface(hSun);
+
+		//Round to nearest 0.5
+		MJD0 = round(MJD0*2.0) / 2.0;
+
+		for (int i = 0;i < 120;i++)
+		{
+			MJD = MJD0 + 0.5*(double)(i - 60);
+
+			//Moon Ephemeris
+			cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
+			R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
+			V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
+
+			//Sun Ephemers
+			cEarth->clbkEphemeris(MJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
+			R_ES = -Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]);
+
+			data.MJD = MJD;
+			data.R_EM = R_EM;
+			data.R_ES = R_ES;
+			data.V_EM = V_EM;
+
+			ephem.data.push_back(data);
+		}
+
+		ephem.init = true;
+	}
+}
+
+bool PLEFEM(const PZEFEM &ephem, double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES)
+{
+	VECTOR3 REM, VEM, RES;
+	double c[6];
+	unsigned i = 0;
+
+	REM = VEM = RES = _V(0, 0, 0);
+
+	while (i < ephem.data.size() - 1 && MJD > ephem.data[i].MJD)
+	{
+		i++;
+	}
+
+	if (i < 3 || i > ephem.data.size() - 3) return false;
+
+	unsigned j = i - 3;
+
+	c[0] = (MJD - ephem.data[j + 1].MJD)*(MJD - ephem.data[j + 2].MJD)*(MJD - ephem.data[j + 3].MJD)*(MJD - ephem.data[j + 4].MJD)*(MJD - ephem.data[j + 5].MJD) / (-3.75);
+	c[1] = (MJD - ephem.data[j + 0].MJD)*(MJD - ephem.data[j + 2].MJD)*(MJD - ephem.data[j + 3].MJD)*(MJD - ephem.data[j + 4].MJD)*(MJD - ephem.data[j + 5].MJD) / (0.75);
+	c[2] = (MJD - ephem.data[j + 0].MJD)*(MJD - ephem.data[j + 1].MJD)*(MJD - ephem.data[j + 3].MJD)*(MJD - ephem.data[j + 4].MJD)*(MJD - ephem.data[j + 5].MJD) / (-0.375);
+	c[3] = (MJD - ephem.data[j + 0].MJD)*(MJD - ephem.data[j + 1].MJD)*(MJD - ephem.data[j + 2].MJD)*(MJD - ephem.data[j + 4].MJD)*(MJD - ephem.data[j + 5].MJD) / (0.375);
+	c[4] = (MJD - ephem.data[j + 0].MJD)*(MJD - ephem.data[j + 1].MJD)*(MJD - ephem.data[j + 2].MJD)*(MJD - ephem.data[j + 3].MJD)*(MJD - ephem.data[j + 5].MJD) / (-0.75);
+	c[5] = (MJD - ephem.data[j + 0].MJD)*(MJD - ephem.data[j + 1].MJD)*(MJD - ephem.data[j + 2].MJD)*(MJD - ephem.data[j + 3].MJD)*(MJD - ephem.data[j + 4].MJD) / (3.75);
+
+	for (unsigned k = 0;k < 6;k++)
+	{
+		REM += ephem.data[j + k].R_EM*c[k];
+		VEM += ephem.data[j + k].V_EM*c[k];
+		RES += ephem.data[j + k].R_ES*c[k];
+	}
+
+	R_EM = REM;
+	V_EM = VEM;
+	R_ES = RES;
+
+	return true;
+}
+
 VECTOR3 ThreeBodyLambert(double t_I, double t_E, VECTOR3 R_I, VECTOR3 V_init, VECTOR3 R_E, VECTOR3 R_m, VECTOR3 V_m, double r_s, double mu_E, double mu_M, VECTOR3 &R_I_star, VECTOR3 &delta_I_star, VECTOR3 &delta_I_star_dot, double tol)
 {
 	VECTOR3 R_I_sstar, V_I_sstar, V_I_star, R_S, R_I_star_apo, R_E_apo, V_E_apo, V_I;
@@ -3259,7 +3343,14 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 	aa = coe.h*coe.h / (mu*(1.0 - coe.e*coe.e));
 	p = aa * (1.0 - coe.e*coe.e);
 
-	if (beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
+	//Is shadow function vanishing for elliptical orbit?
+	if (coe.e < 1 && beta1*beta1 > 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2) && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 + coe.e)), 2))
+	{
+		v1 = 0;
+		return;
+	}
+	//Is shadow function vanishing for hyperbolic orbit?
+	else if (coe.e > 1.0 && beta1*beta1 < 1.0 - pow(R_E / (aa*(1.0 - coe.e)), 2))
 	{
 		v1 = 0;
 		return;
@@ -6598,6 +6689,18 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHAN
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
 }
 
+}
+
+LGCDescentConstants::LGCDescentConstants()
+{
+	RBRFG = _V(171.835, 0.0, -10678.596)*0.3048;
+	VBRFG = _V(-105.876, 0.0, -1.04)*0.3048;
+	ABRFG = _V(0.6241, 0.0, -9.1044)*0.3048;
+	JBRFGZ = -0.01882677*0.3048;
+	RARFG = _V(111.085, 0.0, -26.794)*0.3048;
+	VARFG = _V(-4.993, 0.0, 0.248)*0.3048;
+	AARFG = _V(-0.2624, 0.0, -0.512)*0.3048;
+	JARFGZ = 0.00180772*0.3048;
 }
 
 CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)

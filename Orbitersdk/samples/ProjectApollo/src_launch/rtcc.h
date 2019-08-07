@@ -1326,6 +1326,7 @@ public:
 	bool LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins);
+	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, MATRIX3 REFSMMAT);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
@@ -1363,7 +1364,13 @@ public:
 	//Next Station Contact Display
 	void EMDSTAC(const OrbitStationContactsTable &in, NextStationContactsTable &out);
 	//Predicted and Experimental Site Acquisition Displays
+
+	//Actual RTCC Subroutines
 	void EMDPESAD(const PredictedSiteAcquisitionOpt &opt, const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out);
+	//LM AGS External DV Coordinate Transformation Subroutine
+	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
+	//External DV Coordinate Transformation Subroutine
+	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

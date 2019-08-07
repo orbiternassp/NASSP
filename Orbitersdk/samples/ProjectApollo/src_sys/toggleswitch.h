@@ -819,18 +819,9 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
-class CMCOpticsModeSwitch : public AGCSwitch {
-public:
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, ApolloGuidance *c, ToggleSwitch * zeroSwitch);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-protected:
-	ToggleSwitch *opticsZeroSwitch;
-};
-
-class CMCOpticsZeroSwitch : public AGCSwitch {
+class CMCOpticsZeroSwitch : public ToggleSwitch {
 public:
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
-	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
 class PGNSSwitch : public AGCThreePoswitch {

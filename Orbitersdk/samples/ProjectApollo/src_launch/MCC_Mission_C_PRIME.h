@@ -107,6 +107,16 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_LUNAR_ORBIT18 118
 // Ends at TEI Calculation
 #define MST_CP_LUNAR_ORBIT19 119
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT20 120
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT21 121
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT22 122
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT23 123
+// Ends at TEI Calculation
+#define MST_CP_LUNAR_ORBIT24 124
 // Ends at TEI BURN
 
 #define MST_CP_TRANSEARTH1	201

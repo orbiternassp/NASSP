@@ -1642,6 +1642,15 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_PMGET", form->PMGET);
+			SAVE_DOUBLE("MCC_AP10MAPUPDATE_SRGET", form->SRGET);
+			SAVE_DOUBLE("MCC_AP10MAPUPDATE_SSGET", form->SSGET);
+			if (form->type == 3)
+			{
+				SAVE_DOUBLE("MCC_AP10MAPUPDATE_AOSGET2", form->AOSGET2);
+				SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET2", form->LOSGET2);
+				SAVE_DOUBLE("MCC_AP10MAPUPDATE_PMGET2", form->PMGET2);
+				SAVE_DOUBLE("MCC_AP10MAPUPDATE_SSGET2", form->SSGET2);
+			}
 		}
 		else if (padNumber == 13)
 		{
@@ -2171,6 +2180,12 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
 			LOAD_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
 			LOAD_DOUBLE("MCC_AP10MAPUPDATE_PMGET", form->PMGET);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_SRGET", form->SRGET);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_SSGET", form->SSGET);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_AOSGET2", form->AOSGET2);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_LOSGET2", form->LOSGET2);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_PMGET2", form->PMGET2);
+			LOAD_DOUBLE("MCC_AP10MAPUPDATE_SSGET2", form->SSGET2);
 		}
 		else if (padNumber == 13)
 		{
@@ -2689,6 +2704,25 @@ void MCC::drawPad(){
 			sprintf(buffer, "%sAOS WITH LOI1: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 			SStoHHMMSS(form->AOSGET, hh, mm, ss);
 			sprintf(buffer, "%sAOS W/O LOI1: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+		}
+		else if (form->type == 3)
+		{
+			SStoHHMMSS(form->PMGET, hh, mm, ss);
+			sprintf(buffer, "%sPM: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->AOSGET, hh, mm, ss);
+			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->SSGET, hh, mm, ss);
+			sprintf(buffer, "%sSS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->LOSGET2, hh, mm, ss);
+			sprintf(buffer, "%sLOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->SRGET, hh, mm, ss);
+			sprintf(buffer, "%sSR: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->PMGET2, hh, mm, ss);
+			sprintf(buffer, "%sPM: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->AOSGET2, hh, mm, ss);
+			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			SStoHHMMSS(form->SSGET2, hh, mm, ss);
+			sprintf(buffer, "%sSS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);

@@ -90,11 +90,18 @@ void FCC1B::Timestep(double simdt)
 
 	// S/C takeover function
 	if (SCControlEnableRelay) {
-		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
-		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 31.6;
-		AttitudeError.y = iu->GetCommandConnector()->GetAGCAttitudeError(1) * RAD / 31.6;
-		AttitudeError.z = iu->GetCommandConnector()->GetAGCAttitudeError(2) * RAD / -31.6;
+		//Scaling adjusted to the right value. Together with limits below should work right for any commanded rate and any CMC version.
+		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 22.8;
+		AttitudeError.y = iu->GetCommandConnector()->GetAGCAttitudeError(1) * RAD / 22.8;
+		AttitudeError.z = iu->GetCommandConnector()->GetAGCAttitudeError(2) * RAD / -22.8;
+
+		// S/C Control Limiter
+		if (AttitudeError.x > 3.5*RAD) AttitudeError.x = 3.5*RAD;
+		else if (AttitudeError.x < -3.5*RAD) AttitudeError.x = -3.5*RAD;
+		if (AttitudeError.y > 2.5*RAD) AttitudeError.y = 2.5*RAD;
+		else if (AttitudeError.y < -2.5*RAD) AttitudeError.y = -2.5*RAD;
+		if (AttitudeError.z > 2.5*RAD) AttitudeError.z = 2.5*RAD;
+		else if (AttitudeError.z < -2.5*RAD) AttitudeError.z = -2.5*RAD;
 	}
 	else
 	{
@@ -289,11 +296,18 @@ void FCCSV::Timestep(double simdt)
 	UseSICEngineCant = iu->GetControlDistributor()->UseSICEngineCant();
 
 	if (SCControlEnableRelay) {
-		//scaling factor seems to be 31.6; didn't find any source for it, but at least it leads to the right rates
-		//note that any 'threshold solution' is pointless: ARTEMIS supports EMEM-selectable saturn rate output
-		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 31.6;
-		AttitudeError.y = iu->GetCommandConnector()->GetAGCAttitudeError(1) * RAD / 31.6;
-		AttitudeError.z = iu->GetCommandConnector()->GetAGCAttitudeError(2) * RAD / -31.6;
+		//Scaling adjusted to the right value. Together with limits below should work right for any commanded rate and any CMC version.
+		AttitudeError.x = iu->GetCommandConnector()->GetAGCAttitudeError(0) * RAD / 22.8;
+		AttitudeError.y = iu->GetCommandConnector()->GetAGCAttitudeError(1) * RAD / 22.8;
+		AttitudeError.z = iu->GetCommandConnector()->GetAGCAttitudeError(2) * RAD / -22.8;
+
+		// S/C Control Limiter
+		if (AttitudeError.x > 3.5*RAD) AttitudeError.x = 3.5*RAD;
+		else if (AttitudeError.x < -3.5*RAD) AttitudeError.x = -3.5*RAD;
+		if (AttitudeError.y > 2.5*RAD) AttitudeError.y = 2.5*RAD;
+		else if (AttitudeError.y < -2.5*RAD) AttitudeError.y = -2.5*RAD;
+		if (AttitudeError.z > 2.5*RAD) AttitudeError.z = 2.5*RAD;
+		else if (AttitudeError.z < -2.5*RAD) AttitudeError.z = -2.5*RAD;
 	}
 	else
 	{

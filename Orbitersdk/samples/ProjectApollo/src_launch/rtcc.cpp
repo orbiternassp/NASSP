@@ -8294,6 +8294,49 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 	return IMUangles;
 }
 
+bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, MATRIX3 REFSMMAT)
+{
+	MATRIX3 Rot;
+	DescentGuidance descguid;
+	AscDescIntegrator integ;
+	SV sv_IG, sv_D;
+	VECTOR3 U_FDP, WI, W, R_LSP, U_FDP_abort;
+	double t_go, CR, t_PDI, t_UL, t_D, W_TD, T_DPS, isp;
+	bool stop;
+
+	bool LandFlag = false;
+	t_UL = 7.9;
+
+	if (!PDIIgnitionAlgorithm(sv, GETbase, R_LS, TLAND, REFSMMAT, sv_IG, t_go, CR, U_FDP))
+	{
+		return false;
+	}
+	t_go = -t_go;
+	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, GETbase);
+	t_D = t_PDI - t_UL;
+	sv_D = coast(sv_IG, -t_UL);
+
+	Rot = OrbMech::GetRotationMatrix(sv_IG.gravref, sv_IG.MJD);
+	WI = rhmul(Rot, _V(0, 0, 1));
+	W = mul(REFSMMAT, WI)*OrbMech::w_Moon;
+	R_LSP = mul(REFSMMAT, rhmul(Rot, R_LS));
+	descguid.Init(sv_IG.R, sv_IG.V, sv_IG.mass, t_PDI, REFSMMAT, R_LSP, t_PDI, W, t_go);
+	W_TD = sv_IG.mass;
+	U_FDP_abort = tmul(REFSMMAT, unit(U_FDP));
+
+	stop = false;
+
+	integ.Init(U_FDP_abort);
+
+	do
+	{
+		descguid.Guidance(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
+		LandFlag = integ.Integration(sv_D.R, sv_D.V, W_TD, t_D, U_FDP, t_go, T_DPS, isp);
+	} while (LandFlag == false);
+
+	return true;
+}
+
 void RTCC::LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins)
 {
 	//Test
@@ -8351,6 +8394,8 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	double J_TZG, A_TZG, V_TZG, R_TZG;
 	double LEADTIME, w_M, t_2, t_I, PIPTIME, t_pipold, eps, dTTT, TTT_P, TEM, q;
 	int n1, n2, COUNT_TTT;
+	LGCIgnitionConstants ign_const;
+	LGCDescentConstants desc_const;
 
 	GUIDDURN = 664.4;
 	AF_TRIM = 0.350133;
@@ -8365,19 +8410,19 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	dt_I = 1.0;
 	FRAC = 43455.0;
 
-	v_IGG = 1690.256208;
-	r_IGXG = -39782.453328;
-	r_IGZG = -436655.657;
-	K_X = 0.617631;
-	K_Y = 2.4770341207e-6;
-	K_V = 410.0;
-	J_TZG = -0.01882677*0.3048;
-	A_TZG = -54.6264*0.3048 / 6.0;
-	V_TZG = -18.72*0.3048 / 18.0;
-	R_TG = _V(52.375308, 0.0, -3254.836061);
-	R_TZG = R_TG.z;
-	V_TG = _V(-105.876, 0.0, -1.04)*0.3048;
-	A_TG = _V(0.6241, 0.0, -9.1044)*0.3048;
+	v_IGG = ign_const.v_IGG;
+	r_IGXG = ign_const.r_IGXG;
+	r_IGZG = ign_const.r_IGZG;
+	K_X = ign_const.K_X;
+	K_Y = ign_const.K_Y;
+	K_V = ign_const.K_V;
+	J_TZG = desc_const.JBRFGZ;
+	A_TZG = desc_const.ABRFG.z;
+	V_TZG = desc_const.VBRFG.z;
+	R_TG = desc_const.RBRFG;
+	R_TZG = desc_const.RBRFG.z;
+	V_TG = desc_const.VBRFG;
+	A_TG = desc_const.ABRFG;
 	LEADTIME = 2.2;
 	w_M = 2.66169948e-6;
 
@@ -8491,7 +8536,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	MATRIX3 Rot, Q_Xx;
 	VECTOR3 U_FDP, WM, WI, W, R_LSP, U_FDP_abort;
 	double t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, t_Ins, TS, theta, r_Ins, A_Ins, H_a, t_CSI, DH_D;
-	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, t_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo;
+	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, t_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort;
 	int K_loop;
 	bool K_stage;
 	//false = CSI/CDH, true = Boost + CSI/CDH
@@ -8527,6 +8572,8 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	{
 		return false;
 	}
+	t_go = -t_go;
+	t_go_abort = t_go;
 	t_PDI = OrbMech::GETfromMJD(sv_IG.MJD, opt.GETbase);
 	t_D = t_PDI - t_UL;
 	sv_Abort = coast(sv_IG, -t_UL);
@@ -8536,7 +8583,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	WI = rhmul(Rot, _V(0, 0, 1));
 	W = mul(opt.REFSMMAT, WI)*w_M;
 	R_LSP = mul(opt.REFSMMAT, rhmul(Rot, opt.R_LS));
-	descguid.Init(sv_IG.R, sv_IG.V, opt.sv_A.mass, t_PDI, opt.REFSMMAT, R_LSP, t_PDI, W);
+	descguid.Init(sv_IG.R, sv_IG.V, opt.sv_A.mass, t_PDI, opt.REFSMMAT, R_LSP, t_PDI, W, t_go);
 	W_TD = opt.sv_A.mass;
 	U_FDP_abort = tmul(opt.REFSMMAT, unit(U_FDP));
 
@@ -8549,6 +8596,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 
 		integ.Init(U_FDP_abort);
 		sv_D = sv_Abort;
+		t_go = t_go_abort;
 		K_loop = 0;
 		SLOPE = 2.0 / 1852.0*0.3048;
 
@@ -8576,6 +8624,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 		T = 43192.23;
 		sv_Abort = sv_D;
 		U_FDP_abort = U_FDP;
+		t_go_abort = t_go;
 
 		sv_CSM_Abort = coast(opt.sv_P, t_D - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 		WM = unit(crossp(sv_CSM_Abort.V, sv_CSM_Abort.R));
@@ -10365,4 +10414,64 @@ void RTCC::EMDPESAD(const PredictedSiteAcquisitionOpt &opt, const OrbitStationCo
 		out.Stations[j] = empty;
 		j++;
 	}
+}
+
+VECTOR3 RTCC::PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i)
+{
+	//INPUTS:
+	// i = 0: inertial to LVLH, 1: LVLH to inertial 
+
+	VECTOR3 H, Z_PA, P, X_PA, Y_PA, DV_out;
+
+	H = crossp(R_CSM, V_CSM);
+	Z_PA = -unit(R_LM);
+	P = crossp(Z_PA, H);
+	X_PA = unit(P);
+	Y_PA = crossp(Z_PA, X_PA);
+	if (i)
+	{
+		DV_out = X_PA * DV.x + Y_PA * DV.y + Z_PA * DV.z;
+	}
+	else
+	{
+		DV_out = _V(dotp(DV, X_PA), dotp(DV, Y_PA), dotp(DV, Z_PA));
+	}
+
+	return DV_out;
+}
+
+VECTOR3 RTCC::PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i)
+{
+	//INPUTS:
+	// i = 0: inertial to LVLH, 1: LVLH to inertial 
+	VECTOR3 H, Y_PH, Z_PH, X_PH, DV_out;
+	double h, rr, r, dv, theta, V_F, V_D;
+
+	H = crossp(R_ig, V_ig);
+	h = length(H);
+	rr = dotp(R_ig, R_ig);
+	r = sqrt(rr);
+	Y_PH = -H / h;
+	Z_PH = -R_ig / r;
+	X_PH = crossp(Y_PH, Z_PH);
+	dv = length(DV);
+	theta = h * dv*WT / (2.0*rr*T);
+	if (i)
+	{
+		double V_S;
+		V_F = DV.x*cos(theta) - DV.z*sin(theta);
+		V_S = DV.y;
+		V_D = DV.x*sin(theta) + DV.z*cos(theta);
+		DV_out = X_PH * V_F + Y_PH * V_S + Z_PH * V_D;
+	}
+	else
+	{
+		V_F = dotp(DV, X_PH);
+		DV_out.y = dotp(DV, Y_PH);
+		V_D = dotp(DV, Z_PH);
+		DV_out.x = V_F * cos(theta) + V_D * sin(theta);
+		DV_out.z = -V_F * sin(theta) + V_D * cos(theta);
+	}
+
+	return DV_out;
 }

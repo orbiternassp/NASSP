@@ -2134,7 +2134,7 @@ protected:
 	ThreePosSwitch EcsRadiatorsFlowContAutoSwitch;
 	ThreePosSwitch EcsRadiatorsFlowContPwrSwitch;
 	ThreePosSwitch EcsRadiatorsManSelSwitch;
-	ThreeSourceSwitch EcsRadiatorsHeaterPrimSwitch;
+	ThreePosSwitch EcsRadiatorsHeaterPrimSwitch;
 	ToggleSwitch EcsRadiatorsHeaterSecSwitch;
 
 	//
@@ -2515,7 +2515,7 @@ protected:
 	ToggleSwitch ControllerCouplingSwitch;
 
 	SwitchRow OpticsModeSpeedSwitchesRow;
-	CMCOpticsModeSwitch OpticsModeSwitch;
+	ToggleSwitch OpticsModeSwitch;
 	ThreePosSwitch ControllerSpeedSwitch;
 
 	SwitchRow ConditionLampsSwitchRow;

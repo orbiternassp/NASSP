@@ -1104,9 +1104,6 @@ void LEM::SetGenericStageState(int stat)
 		SetLmVesselDockStage();
 		SetLmVesselHoverStage();
 
-		// Update touchdown points with current mass
-		if (Landed) HoverStageTouchdownPoints(GetMass());
-
 		if (CDREVA_IP) {
 			SetupEVA();
 		}

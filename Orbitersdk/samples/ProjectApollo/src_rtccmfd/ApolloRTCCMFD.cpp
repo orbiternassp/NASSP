@@ -110,7 +110,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "VESSELTYPE", G->vesseltype);
 	papiWriteScenario_double(scn, "SXTSTARDTIME", G->sxtstardtime);
 	papiWriteScenario_mx(scn, "REFSMMAT", G->REFSMMAT);
-	papiWriteScenario_intarr(scn, "REFSMMAToct", G->REFSMMAToct, 20);
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
@@ -262,7 +261,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "VESSELTYPE", G->vesseltype);
 		papiReadScenario_double(line, "SXTSTARDTIME", G->sxtstardtime);
 		papiReadScenario_mat(line, "REFSMMAT", G->REFSMMAT);
-		papiReadScenario_intarr(line, "REFSMMAToct", G->REFSMMAToct, 20);
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
@@ -905,15 +903,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->Text(6 * W / 8,(int)(0.5 * H / 14), "REFSMMAT", 8);
 
-		if (G->REFSMMATupl == 0)
-		{
-			skp->Text((int)(0.5 * W / 8), 4 * H / 14, "Desired REFSMMAT", 16);
-		}
-		else
-		{
-			skp->Text((int)(0.5 * W / 8), 4 * H / 14, "REFSMMAT", 8);
-		}
-
 		if (G->REFSMMATopt == 0) //P30 Maneuver
 		{
 			if (G->REFSMMATHeadsUp)
@@ -1025,10 +1014,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text((int)(0.5 * W / 8), 15 * H / 21, Buffer, strlen(Buffer));
 		}
 
-		for (int i = 0; i < 20; i++)
+		for (int i = 0; i < 9; i++)
 		{
-			sprintf(Buffer, "%05d", G->REFSMMAToct[i]);
-			skp->Text(4 * W / 8, (6+i) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", G->REFSMMAT.data[i]);
+			skp->Text(7 * W / 16, (4 + i) * H / 14, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 6)
@@ -3511,6 +3500,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
+		if (G->REFSMMATcur != 5 && G->REFSMMATcur != 8)
+		{
+			skp->Text(5 * W / 8, 6 * H / 14, "No LS REFSMMAT!", 15);
+		}
+
 		skp->Text(5 * W / 8, 15 * H / 21, "Landing Site:", 13);
 		sprintf(Buffer, "%.3f°", GC->LSLat*DEG);
 		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
@@ -4259,6 +4253,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	else if (screen == 47)
 	{
 		skp->Text(1 * W / 8, 2 * H / 14, "State Vector Update", 19);
+		skp->Text(1 * W / 8, 4 * H / 14, "Landing Site Vector", 19);
+		skp->Text(1 * W / 8, 6 * H / 14, "External DV Update", 18);
+		if (G->vesseltype < 2)
+		{
+			skp->Text(1 * W / 8, 8 * H / 14, "Retrofire EXDV Update", 21);
+		}
+		skp->Text(1 * W / 8, 10 * H / 14, "REFSMMAT Update", 15);
 	}
 	else if (screen == 48)
 	{
@@ -4382,7 +4383,255 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%.2f NM", GC->LSAlt / 1852.0);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 50)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
+		if (G->vesseltype < 2)
+		{
+			skp->Text(4 * W / 8, 2 * H / 14, "LANDING SITE UPDT TO CMC (293)", 30);
+		}
+		else
+		{
+			skp->Text(4 * W / 8, 2 * H / 14, "LANDING SITE UPDT TO LGC (294)", 30);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(1 * W / 8, 4 * H / 14, "LAT", 3);
+		skp->Text(1 * W / 8, 5 * H / 14, "LNG", 3);
+		sprintf(Buffer, "%.3f°", GC->LSLat*DEG);
+		skp->Text(2 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3f°", GC->LSLng*DEG);
+		skp->Text(2 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(4 * W / 8, 4 * H / 14, "ALT", 3);
+		sprintf(Buffer, "%.4f NM", GC->LSAlt / 1852.0);
+		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 32, 13 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 13 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 13 * H / 28, "DSKY V71", 8);
+		skp->Text(22 * W / 32, 13 * H / 28, "VECTOR", 6);
+
+		for (int i = 1;i <= 010;i++)
+		{
+			sprintf(Buffer, "%o", i);
+			skp->Text(5 * W / 32, (i + 14) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(10 * W / 32, 15 * H / 28, "INDEX", 5);
+		skp->Text(10 * W / 32, 16 * H / 28, "ADD", 3);
+		skp->Text(10 * W / 32, 17 * H / 28, "X", 1);
+		skp->Text(10 * W / 32, 18 * H / 28, "X", 1);
+		skp->Text(10 * W / 32, 19 * H / 28, "Y", 1);
+		skp->Text(10 * W / 32, 20 * H / 28, "Y", 1);
+		skp->Text(10 * W / 32, 21 * H / 28, "Z", 1);
+		skp->Text(10 * W / 32, 22 * H / 28, "Z", 1);
+
+		for (int i = 0;i < 010;i++)
+		{
+			sprintf(Buffer, "%05d", G->RLSOctals[i]);
+			skp->Text(15 * W / 32, (i + 15) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		sprintf(Buffer, "%.1f", G->RLSUplink.x);
+		skp->Text(22 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.1f", G->RLSUplink.y);
+		skp->Text(22 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.1f", G->RLSUplink.z);
+		skp->Text(22 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
+	}
+	else if (screen == 51)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		if (G->vesseltype < 2)
+		{
+			skp->Text(4 * W / 8, 2 * H / 14, "CMC EXTERNAL DV UPDATE (264)", 28);
+		}
+		else
+		{
+			skp->Text(4 * W / 8, 2 * H / 14, "LGC EXTERNAL DV UPDATE (280)", 28);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(5 * W / 32, 8 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 8 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 8 * H / 28, "DSKY V71", 8);
+
+		for (int i = 1;i <= 012;i++)
+		{
+			sprintf(Buffer, "%o", i);
+			skp->Text(5 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(10 * W / 32, 10 * H / 28, "INDEX", 5);
+		skp->Text(10 * W / 32, 11 * H / 28, "ADD", 3);
+		skp->Text(10 * W / 32, 12 * H / 28, "VGX", 3);
+		skp->Text(10 * W / 32, 13 * H / 28, "VGX", 3);
+		skp->Text(10 * W / 32, 14 * H / 28, "VGY", 3);
+		skp->Text(10 * W / 32, 15 * H / 28, "VGY", 3);
+		skp->Text(10 * W / 32, 16 * H / 28, "VGZ", 3);
+		skp->Text(10 * W / 32, 17 * H / 28, "VGZ", 3);
+		skp->Text(10 * W / 32, 18 * H / 28, "TIGN", 4);
+		skp->Text(10 * W / 32, 19 * H / 28, "TIGN", 4);
+
+		for (int i = 0;i < 012;i++)
+		{
+			sprintf(Buffer, "%05d", G->P30Octals[i]);
+			skp->Text(15 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		skp->Text(27 * W / 32, 8 * H / 28, "DECIMAL", 7);
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
+		skp->Text(27 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
+		skp->Text(27 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
+		skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->P30TIG, false);
+		skp->Text(27 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+
+	}
+	else if (screen == 52)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 2 * H / 14, "CMC RETROFIRE EXTERNAL DV UPDATE (360)", 38);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(5 * W / 32, 8 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 8 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 8 * H / 28, "DSKY V71", 8);
+
+		for (int i = 1;i <= 016;i++)
+		{
+			sprintf(Buffer, "%o", i);
+			skp->Text(5 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(10 * W / 32, 10 * H / 28, "INDEX", 5);
+		skp->Text(10 * W / 32, 11 * H / 28, "ADD", 3);
+		skp->Text(10 * W / 32, 12 * H / 28, "LAT", 3);
+		skp->Text(10 * W / 32, 13 * H / 28, "LAT", 3);
+		skp->Text(10 * W / 32, 14 * H / 28, "LONG", 4);
+		skp->Text(10 * W / 32, 15 * H / 28, "LONG", 4);
+		skp->Text(10 * W / 32, 16 * H / 28, "VGX", 3);
+		skp->Text(10 * W / 32, 17 * H / 28, "VGX", 3);
+		skp->Text(10 * W / 32, 18 * H / 28, "VGY", 3);
+		skp->Text(10 * W / 32, 19 * H / 28, "VGY", 3);
+		skp->Text(10 * W / 32, 20 * H / 28, "VGZ", 3);
+		skp->Text(10 * W / 32, 21 * H / 28, "VGZ", 3);
+		skp->Text(10 * W / 32, 22 * H / 28, "TIGN", 4);
+		skp->Text(10 * W / 32, 23 * H / 28, "TIGN", 4);
+
+		for (int i = 0;i < 016;i++)
+		{
+			sprintf(Buffer, "%05d", G->RetrofireEXDVOctals[i]);
+			skp->Text(15 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		skp->Text(27 * W / 32, 8 * H / 28, "DECIMAL", 7);
+		sprintf(Buffer, "%+.2f°", G->EntryLatcor*DEG);
+		skp->Text(27 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+.2f°", G->EntryLngcor*DEG);
+		skp->Text(27 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
+		skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
+		skp->Text(27 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
+		skp->Text(27 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, G->P30TIG, false);
+		skp->Text(27 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
+
+	}
+	else if (screen == 53)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		if (G->vesseltype < 2)
+		{
+			if (G->REFSMMATupl == 0)
+			{
+				skp->Text(4 * W / 8, 1 * H / 14, "CMC DESIRED REFSMMAT UPDATE (266)", 33);
+			}
+			else
+			{
+				skp->Text(4 * W / 8, 1 * H / 14, "CMC REFSMMAT UPDATE (266)", 25);
+			}
+			
+		}
+		else
+		{
+			if (G->REFSMMATupl == 0)
+			{
+				skp->Text(4 * W / 8, 1 * H / 14, "LGC DESIRED REFSMMAT UPDATE (265)", 33);
+			}
+			else
+			{
+				skp->Text(4 * W / 8, 1 * H / 14, "LGC REFSMMAT UPDATE (265)", 25);
+			}
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(5 * W / 32, 4 * H / 28, "ID:", 3);
+		REFSMMATName(Buffer, G->REFSMMATcur);
+		skp->Text(7 * W / 32, 4 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 32, 6 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 6 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 6 * H / 28, "DSKY V71", 8);
+
+		for (int i = 1;i <= 024;i++)
+		{
+			sprintf(Buffer, "%o", i);
+			skp->Text(5 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(10 * W / 32, 8 * H / 28, "INDEX", 5);
+		skp->Text(10 * W / 32, 9 * H / 28, "ADD", 3);
+		skp->Text(10 * W / 32, 10 * H / 28, "XIXE", 4);
+		skp->Text(10 * W / 32, 11 * H / 28, "XIXE", 4);
+		skp->Text(10 * W / 32, 12 * H / 28, "XIYE", 4);
+		skp->Text(10 * W / 32, 13 * H / 28, "XIYE", 4);
+		skp->Text(10 * W / 32, 14 * H / 28, "XIZE", 4);
+		skp->Text(10 * W / 32, 15 * H / 28, "XIZE", 4);
+		skp->Text(10 * W / 32, 16 * H / 28, "YIXE", 4);
+		skp->Text(10 * W / 32, 17 * H / 28, "YIXE", 4);
+		skp->Text(10 * W / 32, 18 * H / 28, "YIYE", 4);
+		skp->Text(10 * W / 32, 19 * H / 28, "YIYE", 4);
+		skp->Text(10 * W / 32, 20 * H / 28, "YIZE", 4);
+		skp->Text(10 * W / 32, 21 * H / 28, "YIZE", 4);
+		skp->Text(10 * W / 32, 22 * H / 28, "ZIXE", 4);
+		skp->Text(10 * W / 32, 23 * H / 28, "ZIXE", 4);
+		skp->Text(10 * W / 32, 24 * H / 28, "ZIYE", 4);
+		skp->Text(10 * W / 32, 25 * H / 28, "ZIYE", 4);
+		skp->Text(10 * W / 32, 26 * H / 28, "ZIZE", 4);
+		skp->Text(10 * W / 32, 27 * H / 28, "ZIZE", 4);
+
+		for (int i = 0;i < 024;i++)
+		{
+			sprintf(Buffer, "%05d", G->REFSMMAToct[i]);
+			skp->Text(15 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		for (int i = 0;i < 9;i++)
+		{
+			sprintf(Buffer, "%f", G->REFSMMAT_BRCS.data[i]);
+			skp->Text(27 * W / 32, (i * 2 + 10) * H / 28, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }
@@ -4440,6 +4689,35 @@ void ApolloRTCCMFD::menuP30Upload()
 	else if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
 		G->P30Uplink();
+	}
+}
+
+void ApolloRTCCMFD::menuP30UplinkCalc()
+{
+	G->P30UplinkCalc();
+}
+
+void ApolloRTCCMFD::menuP30UplinkNew()
+{
+	if (!G->inhibUplLOS || !G->vesselinLOS())
+	{
+		G->P30UplinkNew();
+	}
+}
+
+void ApolloRTCCMFD::menuRetrofireEXDVUplinkNew()
+{
+	if (G->vesseltype < 2)
+	{
+		G->RetrofireEXDVUplinkNew();
+	}
+}
+
+void ApolloRTCCMFD::menuRetrofireEXDVUplinkCalc()
+{
+	if (G->vesseltype < 2)
+	{
+		G->RetrofireEXDVUplinkCalc();
 	}
 }
 
@@ -4836,33 +5114,34 @@ void ApolloRTCCMFD::menuSetLSUpdateMenu()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetLSUplinkPage()
+{
+	screen = 50;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetP30UplinkPage()
+{
+	screen = 51;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetRetrofireEXDVUplinkPage()
+{
+	if (G->vesseltype < 2)
+	{
+		screen = 52;
+		coreButtons.SelectPage(this, screen);
+	}
+}
+
+void ApolloRTCCMFD::menuSetREFSMMATUplinkPage()
+{
+	screen = 53;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid(){}
-
-void ApolloRTCCMFD::menuNextPage()
-{
-	if (screen < 2)
-	{
-		screen++;
-	}
-	else
-	{
-		screen = 0;
-	}
-	coreButtons.SelectPage(this, screen);
-}
-
-void ApolloRTCCMFD::menuLastPage()
-{
-	if (screen > 0)
-	{
-		screen--;
-	}
-	else
-	{
-		screen = 2;
-	}
-	coreButtons.SelectPage(this, screen);
-}
 
 void ApolloRTCCMFD::set_getbase()
 {
@@ -6209,12 +6488,22 @@ void ApolloRTCCMFD::menuSVUpload()
 	}
 }
 
+void ApolloRTCCMFD::menuLSUplinkCalc()
+{
+	G->LSUplinkCalc();
+}
+
 void ApolloRTCCMFD::menuLSUpload()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
 		G->LandingSiteUplink();
 	}
+}
+
+void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
+{
+	G->REFSMMATUplinkCalc();
 }
 
 void ApolloRTCCMFD::menuCycleTwoImpulseOption()

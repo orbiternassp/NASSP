@@ -116,10 +116,10 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 41, MST_CP_TRANSLUNAR14);
 		break;
 	case MST_CP_TRANSLUNAR14: //Fast PC+2 to Prel. LOI-1
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 1.0*3600.0 - 50.0*60.0), 42, MST_CP_TRANSLUNAR15);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 2.5*3600.0), 42, MST_CP_TRANSLUNAR15);
 		break;
 	case MST_CP_TRANSLUNAR15: //Prel. LOI-1 to Prel. TEI-1
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 30, MST_CP_TRANSLUNAR16);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI - 1.0*3600.0 - 50.0*60.0), 30, MST_CP_TRANSLUNAR16);
 		break;
 	case MST_CP_TRANSLUNAR16: //Prel. TEI-1 to Prel. TEI-2
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 50, MST_CP_TRANSLUNAR17);
@@ -135,49 +135,76 @@ void MCC::MissionSequence_C_Prime()
 		{
 			MissionPhase = MMST_LUNAR_ORBIT;
 		}
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 1.0*3600.0 + 25.0*60.0 + 31.0), 31, MST_CP_LUNAR_ORBIT1);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 1 && MoonRevTime > 1.0*3600.0 + 25.0*60.0, 31, MST_CP_LUNAR_ORBIT1);
 		break;
 	case MST_CP_LUNAR_ORBIT1: //TEI-2 to LOI-2
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 2.0*3600.0 + 30.0*60.0 + 31.0), 105, MST_CP_LUNAR_ORBIT2);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 2 && MoonRevTime > 20.0*60.0, 105, MST_CP_LUNAR_ORBIT2);
 		break;
-	case MST_CP_LUNAR_ORBIT2: //LOI-2 to TEI-3 Calc
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 3.0*3600.0 + 15.0*60.0 + 31.0), 102, MST_CP_LUNAR_ORBIT3);
+	case MST_CP_LUNAR_ORBIT2: //LOI-2 to Map Update 2
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0*60.0, 102, MST_CP_LUNAR_ORBIT3);
 		break;
-	case MST_CP_LUNAR_ORBIT3: //TEI-3 Calc to TEI-4 Calc
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 5.0*3600.0 + 45.0*60.0 + 31.0), 106, MST_CP_LUNAR_ORBIT7);
+	case MST_CP_LUNAR_ORBIT3: //Map Update 2 to TEI-3 Calc
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 2 && MoonRevTime > 3600.0 + 4.0*60.0, 61, MST_CP_LUNAR_ORBIT4);
 		break;
-	case MST_CP_LUNAR_ORBIT7: //TEI-4 Calc to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 7.0*3600.0 + 15.0*60.0 + 31.0), 107, MST_CP_LUNAR_ORBIT9);
+	case MST_CP_LUNAR_ORBIT4: //TEI-3 Calc to Map Update 3
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 3 && MoonRevTime > 59.0*60.0, 106, MST_CP_LUNAR_ORBIT5);
+		break;
+	case MST_CP_LUNAR_ORBIT5: //Map Update 3 to TEI-4 Calc
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 3 && MoonRevTime > 85.0*60.0, 62, MST_CP_LUNAR_ORBIT7);
+		break;
+	case MST_CP_LUNAR_ORBIT7: //TEI-4 Calc to Map Update 4
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 4 && MoonRevTime > 50.0*60.0, 107, MST_CP_LUNAR_ORBIT8);
+		break;
+	case MST_CP_LUNAR_ORBIT8: //Map Update 4 to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, true, 63, MST_CP_LUNAR_ORBIT9);
 		break;
 	case MST_CP_LUNAR_ORBIT9: //SV Update to TEI-5 Calc
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval(rtcc->calcParams.LOI + 7.0*3600.0 + 30.0*60.0 + 31.0), 103, MST_CP_LUNAR_ORBIT10);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 4 && MoonRevTime > 70.0*60.0, 103, MST_CP_LUNAR_ORBIT10);
 		break;
 	case MST_CP_LUNAR_ORBIT10: //TEI-5 Calc to TEI-6 Calc
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 9.0*3600.0 + 15.0*60.0 + 31.0), 108, MST_CP_LUNAR_ORBIT11);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 5 && MoonRevTime > 3600.0, 108, MST_CP_LUNAR_ORBIT11);
 		break;
-	case MST_CP_LUNAR_ORBIT11: //TEI-6 Calc to TEI-7 Calc
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 11.0*3600.0 + 10.0*60.0 + 31.0), 109, MST_CP_LUNAR_ORBIT12);
+	case MST_CP_LUNAR_ORBIT11: //TEI-6 Calc to Map Update 5
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0*60.0, 109, MST_CP_LUNAR_ORBIT12);
 		break;
-	case MST_CP_LUNAR_ORBIT12: //TEI-7 Calc to TEI-8 Calc
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 13.0*3600.0 + 10.0*60.0 + 31.0), 110, MST_CP_LUNAR_ORBIT13);
+	case MST_CP_LUNAR_ORBIT12: //Map Update 5 to TEI-7 Calc
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 6 && MoonRevTime > 3600.0, 64, MST_CP_LUNAR_ORBIT13);
 		break;
-	case MST_CP_LUNAR_ORBIT13: //TEI-8 Calc to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 15.0*3600.0 + 10.0*60.0 + 31.0), 111, MST_CP_LUNAR_ORBIT14);
+	case MST_CP_LUNAR_ORBIT13: //TEI-7 Calc to Map Update 6
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0*60.0, 110, MST_CP_LUNAR_ORBIT14);
 		break;
-	case MST_CP_LUNAR_ORBIT14: //SV Update to TEI-9 Calc
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval( rtcc->calcParams.LOI + 15.0*3600.0 + 25.0*60.0 + 31.0), 103, MST_CP_LUNAR_ORBIT15);
+	case MST_CP_LUNAR_ORBIT14: //Map Update 6 to TEI-8 Calc
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 7 && MoonRevTime > 3600.0, 65, MST_CP_LUNAR_ORBIT15);
 		break;
-	case MST_CP_LUNAR_ORBIT15: // TEI-9 Calc to Prel. TEI-10 Calc
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 17.0*3600.0 + 10.0*60.0 + 31.0), 112, MST_CP_LUNAR_ORBIT17);
+	case MST_CP_LUNAR_ORBIT15: //TEI-8 Calc to Map Update 7
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0*60.0, 111, MST_CP_LUNAR_ORBIT16);
 		break;
-	case MST_CP_LUNAR_ORBIT17: //Prel. TEI-10 Calc to TEI-10 Calc
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.LOI + 18.0*3600.0 + 35.0*60.0 + 31.0), 113, MST_CP_LUNAR_ORBIT18);
+	case MST_CP_LUNAR_ORBIT16: //Map Update 7 to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 8 && MoonRevTime > 3600.0, 66, MST_CP_LUNAR_ORBIT17);
 		break;
-	case MST_CP_LUNAR_ORBIT18: //TEI-10 Calc to TEI-11 Calc
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0*60.0, 200, MST_CP_LUNAR_ORBIT19);
+	case MST_CP_LUNAR_ORBIT17: //SV Update to TEI-9 Calc
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, MoonRev >= 8 && MoonRevTime > 3600.0 + 15.0*60.0, 103, MST_CP_LUNAR_ORBIT18);
 		break;
-	case MST_CP_LUNAR_ORBIT19: //TEI-11 Calc to TEI
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, rtcc->GETEval(rtcc->calcParams.TEI), 201, MST_CP_TRANSEARTH1);
+	case MST_CP_LUNAR_ORBIT18: // TEI-9 Calc to Map Update 8
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 112, MST_CP_LUNAR_ORBIT19);
+		break;
+	case MST_CP_LUNAR_ORBIT19: //Map Update 8 to Map Update 9
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 9 && MoonRevTime > 23.0*60.0, 67, MST_CP_LUNAR_ORBIT20);
+		break;
+	case MST_CP_LUNAR_ORBIT20: //Map Update 9 to Prel. TEI-10 Calc
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 9 && MoonRevTime > 3600.0, 68, MST_CP_LUNAR_ORBIT21);
+		break;
+	case MST_CP_LUNAR_ORBIT21: //Prel. TEI-10 Calc to TEI-10 Calc
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 10 && MoonRevTime > 30.0*60.0, 113, MST_CP_LUNAR_ORBIT22);
+		break;
+	case MST_CP_LUNAR_ORBIT22: //TEI-10 Calc to TEI-11 Calc
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0*60.0, 200, MST_CP_LUNAR_ORBIT23);
+		break;
+	case MST_CP_LUNAR_ORBIT23: //TEI-11 Calc to Map Update 10
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 201, MST_CP_LUNAR_ORBIT24);
+		break;
+	case MST_CP_LUNAR_ORBIT24: //Map Update 10 to TEI
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, rtcc->GETEval(rtcc->calcParams.TEI), 69, MST_CP_TRANSEARTH1);
 		break;
 	case MST_CP_TRANSEARTH1: //TEI to ENTRY REFSMMAT
 		if (rtcc->GETEval(rtcc->calcParams.TEI && MissionPhase == MMST_LUNAR_ORBIT))

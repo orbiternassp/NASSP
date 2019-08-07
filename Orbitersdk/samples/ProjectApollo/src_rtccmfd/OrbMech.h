@@ -142,6 +142,21 @@ struct SV
 	double mass = 0.0;
 };
 
+struct PZEFEMData
+{
+	VECTOR3 R_EM;
+	VECTOR3 V_EM;
+	VECTOR3 R_ES;
+	double MJD;
+};
+
+// Sun-Moon Ephemeris Data Table
+struct PZEFEM
+{
+	std::vector<PZEFEMData> data;
+	bool init = false;
+};
+
 struct ITERSTATE
 {
 	int s_F = 0;
@@ -190,6 +205,30 @@ struct TLMCFlybyConstants
 	VECTOR3 V1;
 	double mjd0;
 	OBJHANDLE gravin;
+};
+
+struct LGCDescentConstants
+{
+	LGCDescentConstants();
+
+	VECTOR3 RBRFG;
+	VECTOR3 VBRFG;
+	VECTOR3 ABRFG;
+	double JBRFGZ;
+	VECTOR3 RARFG;
+	VECTOR3 VARFG;
+	VECTOR3 AARFG;
+	double JARFGZ;
+};
+
+struct LGCIgnitionConstants
+{
+	double v_IGG = 5545.46*0.3048;
+	double r_IGXG = -130519.86*0.3048;
+	double r_IGZG = -1432597.3*0.3048;
+	double K_X = 0.617631;
+	double K_Y = 0.755e-6 / 0.3048;
+	double K_V = 410.0;
 };
 
 class CoastIntegrator
@@ -323,6 +362,8 @@ namespace OrbMech {
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned nmax = 100U);
+	void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem);
+	bool PLEFEM(const PZEFEM &ephem, double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future = false);

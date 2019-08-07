@@ -173,59 +173,61 @@ void CSMcomputer::Timestep(double simt, double simdt)
 		//
 		// Do nothing if we have no power. (vAGC)
 		//
-		if (!IsPowered()){
+		if (!IsPowered()) {
 			// HARDWARE MUST RESTART
-				// Clear flip-flop based registers
-				vagc.Erasable[0][00] = 0;     // A
-				vagc.Erasable[0][01] = 0;     // L
-				vagc.Erasable[0][02] = 0;     // Q
-				vagc.Erasable[0][03] = 0;     // EB
-				vagc.Erasable[0][04] = 0;     // FB
-				vagc.Erasable[0][05] = 04000; // Z
-				vagc.Erasable[0][06] = 0;     // BB
-				// Clear ISR flag
-				vagc.InIsr = 0;
-				// Clear interrupt requests
-				vagc.InterruptRequests[0] = 0;
-				vagc.InterruptRequests[1] = 0;
-				vagc.InterruptRequests[2] = 0;
-				vagc.InterruptRequests[3] = 0;
-				vagc.InterruptRequests[4] = 0;
-				vagc.InterruptRequests[5] = 0;
-				vagc.InterruptRequests[6] = 0;
-				vagc.InterruptRequests[7] = 0;
-				vagc.InterruptRequests[8] = 0;
-				vagc.InterruptRequests[9] = 0;
-				vagc.InterruptRequests[10] = 0;
-				// Reset cycle counter and Extracode flags
-				vagc.CycleCounter = 0;
-				vagc.ExtraCode = 0;
-				vagc.ExtraDelay = 0;
-				// No idea about the interrupts/pending/etc so we reset those
-				vagc.AllowInterrupt = 1;
-				vagc.PendFlag = 0;
-				vagc.PendDelay = 0;
-				// Don't disturb erasable core
-				// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-				// Reset standby flip-flop
-				vagc.Standby = 0;
-				// Turn on EL display and CMC Light (DSKYWarn).
-				vagc.DskyChannel163 = 1;
-				SetOutputChannel(0163, 1);
-				// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
-				vagc.InputChannel[033] &= 037777;				
-				OutputChannel[033] &= 037777;				
-				// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
-				// The RESTART light will come on as soon as the AGC receives power again.
-				// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
-				vagc.VoltageAlarm = 1;
-				vagc.RestartLight = 1;
-				dsky.ClearRestart();
-				dsky2.ClearRestart();
-				dsky.ClearStby();
-				dsky2.ClearStby();
-				// Reset last cycling time
-				LastCycled = 0;
+
+			// Clear flip-flop based registers
+			vagc.Erasable[0][00] = 0;     // A
+			vagc.Erasable[0][01] = 0;     // L
+			vagc.Erasable[0][02] = 0;     // Q
+			vagc.Erasable[0][03] = 0;     // EB
+			vagc.Erasable[0][04] = 0;     // FB
+			vagc.Erasable[0][05] = 04000; // Z
+			vagc.Erasable[0][06] = 0;     // BB
+			// Clear ISR flag
+			vagc.InIsr = 0;
+			// Clear interrupt requests
+			vagc.InterruptRequests[0] = 0;
+			vagc.InterruptRequests[1] = 0;
+			vagc.InterruptRequests[2] = 0;
+			vagc.InterruptRequests[3] = 0;
+			vagc.InterruptRequests[4] = 0;
+			vagc.InterruptRequests[5] = 0;
+			vagc.InterruptRequests[6] = 0;
+			vagc.InterruptRequests[7] = 0;
+			vagc.InterruptRequests[8] = 0;
+			vagc.InterruptRequests[9] = 0;
+			vagc.InterruptRequests[10] = 0;
+			// Reset cycle counter and Extracode flags
+			vagc.CycleCounter = 0;
+			vagc.ExtraCode = 0;
+			vagc.ExtraDelay = 2; // GOJAM and TC 4000 both take 1 MCT to execute
+			// No idea about the interrupts/pending/etc so we reset those
+			vagc.AllowInterrupt = 1;
+			vagc.PendFlag = 0;
+			vagc.PendDelay = 0;
+			// Don't disturb erasable core
+			// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+			// Reset standby flip-flop
+			vagc.Standby = 0;
+			// Turn on EL display and CMC Light (DSKYWarn).
+			vagc.DskyChannel163 = 1;
+			SetOutputChannel(0163, 1);
+			// Light OSCILLATOR FAILURE to signify power transient, and be forceful about it.
+			vagc.InputChannel[033] &= 037777;
+			OutputChannel[033] &= 037777;
+			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+			// The RESTART light will come on as soon as the AGC receives power again.
+			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
+			vagc.VoltageAlarm = 1;
+			vagc.RestartLight = 1;
+			dsky.ClearRestart();
+			dsky2.ClearRestart();
+			dsky.ClearStby();
+			dsky2.ClearStby();
+			// Reset last cycling time
+			LastCycled = 0;
+
 			// We should issue telemetry though.
 			sat->pcm.TimeStep(simt);
 			return;
@@ -828,6 +830,26 @@ bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value){
 	srx = 8 + (digit[0] * 25);
 	oapiBlt(surf, digits, 40, 0, srx, 33, 9, 12, SURF_PREDEF_CK);
 	return true;
+}
+
+void CMOptics::OpticsSwitchToggled()
+{
+	if (sat->OpticsZeroSwitch.IsUp())
+	{
+		sat->agc.SetInputChannelBit(033, ZeroOptics_33, true);
+	}
+	else
+	{
+		sat->agc.SetInputChannelBit(033, ZeroOptics_33, false);
+	}
+	if (sat->OpticsModeSwitch.IsUp() && sat->OpticsZeroSwitch.IsDown())
+	{
+		sat->agc.SetInputChannelBit(033, CMCControl, true);
+	}
+	else
+	{
+		sat->agc.SetInputChannelBit(033, CMCControl, false);
+	}
 }
 
 void CMOptics::TimeStep(double simdt) {

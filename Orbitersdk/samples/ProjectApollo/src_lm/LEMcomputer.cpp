@@ -155,64 +155,63 @@ void LEMcomputer::Run ()
 
 
 void LEMcomputer::Timestep(double simt, double simdt)
-
 {
 	lem = (LEM *) OurVessel;
 	// If the power is out, the computer should restart.
 	// HARDWARE MUST RESTART
 	if (!IsPowered()) {
-			// Clear flip-flop based registers
-			vagc.Erasable[0][00] = 0;     // A
-			vagc.Erasable[0][01] = 0;     // L
-			vagc.Erasable[0][02] = 0;     // Q
-			vagc.Erasable[0][03] = 0;     // EB
-			vagc.Erasable[0][04] = 0;     // FB
-			vagc.Erasable[0][05] = 04000; // Z
-			vagc.Erasable[0][06] = 0;     // BB
-			// Clear ISR flag
-			vagc.InIsr = 0;
-			// Clear interrupt requests
-			vagc.InterruptRequests[0] = 0;
-			vagc.InterruptRequests[1] = 0;
-			vagc.InterruptRequests[2] = 0;
-			vagc.InterruptRequests[3] = 0;
-			vagc.InterruptRequests[4] = 0;
-			vagc.InterruptRequests[5] = 0;
-			vagc.InterruptRequests[6] = 0;
-			vagc.InterruptRequests[7] = 0;
-			vagc.InterruptRequests[8] = 0;
-			vagc.InterruptRequests[9] = 0;
-			vagc.InterruptRequests[10] = 0;
-			// Reset cycle counter and Extracode flags
-			vagc.CycleCounter = 0;
-			vagc.ExtraCode = 0;
-			vagc.ExtraDelay = 0;
-			// No idea about the interrupts/pending/etc so we reset those
-			vagc.AllowInterrupt = 1;
-			vagc.PendFlag = 0;
-			vagc.PendDelay = 0;
-			// Don't disturb erasable core
-			// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
-			// Reset standby flip-flop
-			vagc.Standby = 0;
-			// Turn on EL display and LGC Light (DSKYWarn).
-			vagc.DskyChannel163 = 1;
-			SetOutputChannel(0163, 1);
-			// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
-			// Those two bits are what causes the CWEA to notice.
-			vagc.InputChannel[033] &= 037777;
-			OutputChannel[033] &= 037777;
-			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
-			// The RESTART light will come on as soon as the AGC receives power again.
-			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
-			vagc.VoltageAlarm = 1;
-			vagc.RestartLight = 1;
-			dsky.ClearRestart();
-			dsky.ClearStby();
-			// Reset last cycling time
-			LastCycled = 0;
-			// We should issue telemetry though.
-			lem->VHF.Timestep(simt);
+		// Clear flip-flop based registers
+		vagc.Erasable[0][00] = 0;     // A
+		vagc.Erasable[0][01] = 0;     // L
+		vagc.Erasable[0][02] = 0;     // Q
+		vagc.Erasable[0][03] = 0;     // EB
+		vagc.Erasable[0][04] = 0;     // FB
+		vagc.Erasable[0][05] = 04000; // Z
+		vagc.Erasable[0][06] = 0;     // BB
+		// Clear ISR flag
+		vagc.InIsr = 0;
+		// Clear interrupt requests
+		vagc.InterruptRequests[0] = 0;
+		vagc.InterruptRequests[1] = 0;
+		vagc.InterruptRequests[2] = 0;
+		vagc.InterruptRequests[3] = 0;
+		vagc.InterruptRequests[4] = 0;
+		vagc.InterruptRequests[5] = 0;
+		vagc.InterruptRequests[6] = 0;
+		vagc.InterruptRequests[7] = 0;
+		vagc.InterruptRequests[8] = 0;
+		vagc.InterruptRequests[9] = 0;
+		vagc.InterruptRequests[10] = 0;
+		// Reset cycle counter and Extracode flags
+		vagc.CycleCounter = 0;
+		vagc.ExtraCode = 0;
+		vagc.ExtraDelay = 2; // GOJAM and TC 4000 both take 1 MCT to execute
+		// No idea about the interrupts/pending/etc so we reset those
+		vagc.AllowInterrupt = 1;
+		vagc.PendFlag = 0;
+		vagc.PendDelay = 0;
+		// Don't disturb erasable core
+		// IO channels are flip-flop based and should reset, but that's difficult, so we'll ignore it.
+		// Reset standby flip-flop
+		vagc.Standby = 0;
+		// Turn on EL display and LGC Light (DSKYWarn).
+		vagc.DskyChannel163 = 1;
+		SetOutputChannel(0163, 1);
+		// Light OSCILLATOR FAILURE and LGC WARNING bits to signify power transient, and be forceful about it.	
+		// Those two bits are what causes the CWEA to notice.
+		vagc.InputChannel[033] &= 037777;
+		OutputChannel[033] &= 037777;
+		// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
+		// The RESTART light will come on as soon as the AGC receives power again.
+		// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
+		vagc.VoltageAlarm = 1;
+		vagc.RestartLight = 1;
+		dsky.ClearRestart();
+		dsky.ClearStby();
+		// Reset last cycling time
+		LastCycled = 0;
+		// We should issue telemetry though.
+		lem->VHF.Timestep(simt);
 
 		// and do nothing more.
 		return;
@@ -222,14 +221,15 @@ void LEMcomputer::Timestep(double simt, double simdt)
 	// If MultiThread is enabled and the simulation is accellerated, the run vAGC in the AGC Thread,
 	// otherwise run in main thread. at x1 acceleration, it is better to run vAGC totally synchronized
 	//
-	if(lem->isMultiThread && oapiGetTimeAcceleration() > 1.0){
+	if (lem->isMultiThread && oapiGetTimeAcceleration() > 1.0) {
 		Lock lock(agcCycleMutex);
 		thread_simt = simt;
 		thread_simdt = simdt;
 		timeStepEvent.Raise();
-	}else{
+	} else {
 		agcTimestep(simt,simdt);
 	}
+
 	return;
 }
 

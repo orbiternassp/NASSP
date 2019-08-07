@@ -76,6 +76,7 @@ public:
 	void StateVectorCalc();
 	void AGSStateVectorCalc();
 	void LandingSiteUpdate();
+	void LSUplinkCalc();
 	void LandingSiteUplink();
 	void VecPointCalc();
 	void TerrainModelCalc();
@@ -103,9 +104,14 @@ public:
 	void send_agc_key(char key);
 	void uplink_word(char *data);
 	void P30Uplink(void);
+	void P30UplinkCalc();
+	void P30UplinkNew();
 	void EntryUplink(void);
+	void RetrofireEXDVUplinkCalc();
+	void RetrofireEXDVUplinkNew();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(void);
+	void REFSMMATUplinkCalc();
 	void StateVectorUplink();
 	void TLANDUplink(void);
 	void EMPP99Uplink(int i);
@@ -158,6 +164,8 @@ public:
 	int enginetype;				// 0 = RCS, 1 = SPS or DPS or APS
 	int directiontype;			// 0 = +X, 1 = -X (RCS only)
 	double t_TPI;				// Generally used TPI time
+	int P30Octals[012];
+	int RetrofireEXDVOctals[016];
 
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
@@ -246,6 +254,7 @@ public:
 	//REFSMMAT PAGE
 	double REFSMMATTime;
 	MATRIX3 REFSMMAT;
+	MATRIX3 REFSMMAT_BRCS;
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
 	int REFSMMAToct[20];
 	int REFSMMATcur; //Currently saved REFSMMAT
@@ -286,6 +295,8 @@ public:
 	double AGSKFactor;
 	AP11AGSSVPAD agssvpad;
 	int SVOctals[021];
+	VECTOR3 RLSUplink;
+	int RLSOctals[010];
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
