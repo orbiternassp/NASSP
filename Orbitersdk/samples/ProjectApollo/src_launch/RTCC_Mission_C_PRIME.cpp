@@ -897,7 +897,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	case 66: //Map Update Rev 7/8
 	case 67: //Map Update Rev 8/9
 	case 68: //Map Update Rev 9/10
-	case 69: //Map Update TEI
 	{
 		SV sv0, sv1;
 		AP10MAPUPDATE upd_ellip;
@@ -934,12 +933,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		else if (fcn == 67)
 		{
 			form->Rev = 8;
-			sv1 = coast(sv0, 20.0*60.0);
+			sv1 = sv0;
 		}
 		else if (fcn == 68)
 		{
 			form->Rev = 9;
-			sv1 = coast(sv0, 20.0*60.0);
+			sv1 = coast(sv0, 35.0*60.0);
 		}
 
 		LunarOrbitMapUpdate(sv1, calcParams.TEPHEM, upd_ellip);
@@ -950,6 +949,28 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->PMGET = upd_ellip.PMGET;
 		form->AOSGET = upd_ellip.AOSGET;
 		form->SSGET = upd_ellip.SSGET;
+	}
+	break;
+	case 69: //Map Update TEI
+	{
+		SV sv0, sv1;
+		AP10MAPUPDATE upd_ellip, upd_hyper;
+
+		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+
+		sv0 = StateVectorCalc(calcParams.src);
+		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_ellip);
+
+		sv1 = ExecuteManeuver(calcParams.src, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, sv0, 0.0);
+		LunarOrbitMapUpdate(sv1, calcParams.TEPHEM, upd_hyper);
+
+		form->type = 1;
+		form->Rev = 10;
+		form->LOSGET = upd_ellip.LOSGET;
+		form->SRGET = upd_ellip.SRGET;
+		form->PMGET = upd_ellip.PMGET;
+		form->AOSGET = upd_hyper.AOSGET;
+		form->SSGET = 0.0;
 	}
 	break;
 	case 102:	// MISSION CP LOI-2 MANEUVER
@@ -1162,6 +1183,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			}
 		}
 
+		if (fcn == 200) //Save only for TEI-10
+		{
+			TimeofIgnition = res.P30TIG;
+			DeltaV_LVLH = res.dV_LVLH;
+		}
 		if (fcn != 201)	//Don't save it for TEI-11
 		{
 			//Save parameters for further use

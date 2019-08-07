@@ -189,13 +189,13 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 5.0*60.0, 112, MST_CP_LUNAR_ORBIT19);
 		break;
 	case MST_CP_LUNAR_ORBIT19: //Map Update 8 to Map Update 9
-		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 9 && MoonRevTime > 20.0*60.0, 67, MST_CP_LUNAR_ORBIT20);
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 9 && MoonRevTime > 23.0*60.0, 67, MST_CP_LUNAR_ORBIT20);
 		break;
 	case MST_CP_LUNAR_ORBIT20: //Map Update 9 to Prel. TEI-10 Calc
 		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 9 && MoonRevTime > 3600.0, 68, MST_CP_LUNAR_ORBIT21);
 		break;
 	case MST_CP_LUNAR_ORBIT21: //Prel. TEI-10 Calc to TEI-10 Calc
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 10 && MoonRevTime > 20.0*60.0, 113, MST_CP_LUNAR_ORBIT22);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, MoonRev >= 10 && MoonRevTime > 30.0*60.0, 113, MST_CP_LUNAR_ORBIT22);
 		break;
 	case MST_CP_LUNAR_ORBIT22: //TEI-10 Calc to TEI-11 Calc
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0*60.0, 200, MST_CP_LUNAR_ORBIT23);
