@@ -100,6 +100,8 @@ public:
 	bool thrustOn;
 	bool armedOn;
 	double ChamberPressure;
+	double ActuatorIsolationValve;
+	double ThrustDecay;
 };
 
 #define APSPROPELLANT_START_STRING   "APSPROPELLANT_BEGIN"

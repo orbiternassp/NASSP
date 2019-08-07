@@ -316,6 +316,8 @@ LEM_APS::LEM_APS()
 	thrustOn = false;
 	armedOn = false;
 	ChamberPressure = 0;
+	ActuatorIsolationValve = 0;
+	ThrustDecay = 0;
 }
 
 void LEM_APS::Init(LEM *s) {
@@ -329,38 +331,51 @@ void LEM_APS::Timestep(double simdt) {
 
 	if (lem->stage > 1)
 	{
-		if (armedOn)
+		ThrustDecay = 0.0;
+
+		//Thrust on and off delay
+		if (thrustOn && armedOn)
 		{
-			lem->SetThrusterResource(lem->th_hover[0], lem->ph_Asc);
+			if (ActuatorIsolationValve < 1)
+			{
+				//Based on 0.384s engine on delay from GSOP section 6, should probably be smaller
+				ActuatorIsolationValve += 1.3089*simdt;
+				if (ActuatorIsolationValve > 1) ActuatorIsolationValve = 1.0;
+			}
 		}
 		else
 		{
-			lem->SetThrusterResource(lem->th_hover[0], NULL);
+			if (ActuatorIsolationValve > 0)
+			{
+				// 17.65cs cutoff delay at 100% thrust in GSOP. To reach the same impulse, linear thrust decay over twice that time.
+				ActuatorIsolationValve -= 2.83286*simdt;
+				if (ActuatorIsolationValve < 0) ActuatorIsolationValve = 0.0;
+			}
 		}
 
-
-		if (thrustOn && armedOn)
+		if (ActuatorIsolationValve > 0)
 		{
 			//Thrust decay with low pressure
 			double FuelInletPressure = lem->GetAPSPropellant()->GetFuelTrimOrificeOutletPressurePSI();
 			double OxidInletPressure = lem->GetAPSPropellant()->GetOxidTrimOrificeOutletPressurePSI();
 			if (FuelInletPressure > OxidInletPressure)
 			{
-				ChamberPressure = OxidInletPressure*120.0 / 170.0;
+				ThrustDecay = OxidInletPressure / 170.0;
 			}
 			else
 			{
-				ChamberPressure = FuelInletPressure*120.0 / 170.0;
+				ThrustDecay = FuelInletPressure / 170.0;
 			}
 
-			double ThrustDecay = min(1.0, ChamberPressure / 120.0);
-
-			lem->SetThrusterLevel(lem->th_hover[0], ThrustDecay);
+			ThrustDecay = min(1.0, ThrustDecay);
 		}
 		else
 		{
-			lem->SetThrusterLevel(lem->th_hover[0], 0.0);
+			ThrustDecay = 0.0;
 		}
+
+		lem->SetThrusterLevel(lem->th_hover[0], ActuatorIsolationValve*ThrustDecay);
+		ChamberPressure = ActuatorIsolationValve * ThrustDecay*120.0;
 	}
 }
 
@@ -376,6 +391,7 @@ void LEM_APS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 
 	papiWriteScenario_bool(scn, "ARMEDON", armedOn);
 	papiWriteScenario_bool(scn, "THRUSTON", thrustOn);
+	papiWriteScenario_double(scn, "ACTUATORISOLATIONVALVE", ActuatorIsolationValve);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -391,6 +407,7 @@ void LEM_APS::LoadState(FILEHANDLE scn, char *end_str) {
 		}
 		papiReadScenario_bool(line, "ARMEDON", armedOn);
 		papiReadScenario_bool(line, "THRUSTON", thrustOn);
+		papiReadScenario_double(line, "ACTUATORISOLATIONVALVE", ActuatorIsolationValve);
 
 	}
 }
