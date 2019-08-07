@@ -142,6 +142,21 @@ struct SV
 	double mass = 0.0;
 };
 
+struct PZEFEMData
+{
+	VECTOR3 R_EM;
+	VECTOR3 V_EM;
+	VECTOR3 R_ES;
+	double MJD;
+};
+
+// Sun-Moon Ephemeris Data Table
+struct PZEFEM
+{
+	std::vector<PZEFEMData> data;
+	bool init = false;
+};
+
 struct ITERSTATE
 {
 	int s_F = 0;
@@ -347,6 +362,8 @@ namespace OrbMech {
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned nmax = 100U);
+	void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem);
+	bool PLEFEM(const PZEFEM &ephem, double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
 	void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	double sunrise(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, OBJHANDLE planet2, bool rise, bool midnight, bool future = false);
