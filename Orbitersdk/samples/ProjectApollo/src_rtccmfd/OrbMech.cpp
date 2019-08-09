@@ -2246,39 +2246,11 @@ double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, do
 {
 	double theta, SW, dh_CDH, mu;
 	VECTOR3 RA2, VA2, RP2, VP2, u, RA2_alt, VA2_alt, RPC, VPC;
-	bool stop;
-
-	stop = false;
 
 	mu = GGRAV*oapiGetMass(gravref);
 
-	//rv_from_r0v0(RA, VA, x, RA2, VA2, mu);
-	//rv_from_r0v0(RP, VP, x, RP2, VP2, mu);
-
-	CoastIntegrator *coast;
-	coast = new CoastIntegrator(RA, VA, mjd0, x, gravref, gravref);
-
-	while (stop == false)
-	{
-		stop = coast->iteration();
-	}
-	RA2 = coast->R2;
-	VA2 = coast->V2;
-
-	stop = false;
-
-	delete coast;
-
-	coast = new CoastIntegrator(RP, VP, mjd0, x, gravref, gravref);
-
-	while (stop == false)
-	{
-		stop = coast->iteration();
-	}
-	RP2 = coast->R2;
-	VP2 = coast->V2;
-
-	delete coast;
+	oneclickcoast(RA, VA, mjd0, x, RA2, VA2, gravref, gravref);
+	oneclickcoast(RP, VP, mjd0, x, RP2, VP2, gravref, gravref);
 
 	u = unit(crossp(RP2, VP2));
 	RA2_alt = RA2;
@@ -6714,12 +6686,6 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	dt_lim = 4000;
 	R_E = oapiGetSize(planet);
 	mu = oapiGetMass(planet)*GGRAV;
-	jcount = oapiGetPlanetJCoeffCount(planet);
-	JCoeff = new double[jcount];
-	for (int i = 0; i < jcount; i++)
-	{
-		JCoeff[i] = oapiGetPlanetJCoeff(planet, i);
-	}
 
 	this->R00 = R00;
 	this->V00 = V00;
@@ -6739,22 +6705,22 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	{
 		r_MP = 7178165.0;
 		r_dP = 80467200.0;
-		mu_Q = GGRAV*oapiGetMass(hMoon);
+		mu_Q = OrbMech::mu_Moon;
 		rect1 = 0.75*OrbMech::power(2.0, 22.0);
 		rect2 = 0.75*OrbMech::power(2.0, 3.0);
-		P = 0;
+		P = BODY_EARTH;
 	}
 	else
 	{
 		r_MP = 2538090.0;
 		r_dP = 16093440.0;
-		mu_Q = GGRAV*oapiGetMass(hEarth);
+		mu_Q = OrbMech::mu_Earth;
 		rect1 = 0.75*OrbMech::power(2.0, 18.0);
 		rect2 = 0.75*OrbMech::power(2.0, -1.0);
-		P = 1;
+		P = BODY_MOON;
 	}
 	hSun = oapiGetObjectByName("Sun");
-	mu_S = GGRAV*oapiGetMass(hSun);
+	mu_S = OrbMech::mu_Sun;
 
 	MATRIX3 obli_E = OrbMech::GetObliquityMatrix(hEarth, mjd0);
 	U_Z_E = mul(obli_E, _V(0, 1, 0));
@@ -6788,7 +6754,6 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 
 CoastIntegrator::~CoastIntegrator()
 {
-	delete[] JCoeff;
 }
 
 VECTOR3 CoastIntegrator::GetPosition()
@@ -6834,7 +6799,7 @@ bool CoastIntegrator::iteration()
 
 	if (M == 1)
 	{
-		if (P == 1)
+		if (P == BODY_MOON)
 		{
 			if (rr > r_SPH)
 			{
@@ -6854,22 +6819,15 @@ bool CoastIntegrator::iteration()
 				V_CON = V_CON - V_PQ;
 				planet = hEarth;
 
-				R_E = oapiGetSize(planet);
-				mu = oapiGetMass(planet)*GGRAV;
-				jcount = oapiGetPlanetJCoeffCount(planet);
-				delete[] JCoeff;
-				JCoeff = new double[jcount];
-				for (int i = 0; i < jcount; i++)
-				{
-					JCoeff[i] = oapiGetPlanetJCoeff(planet, i);
-				}
+				R_E = OrbMech::R_Earth;
+				mu = OrbMech::mu_Earth;
 
 				r_MP = 7178165.0;
 				r_dP = 80467200.0;
-				mu_Q = GGRAV*oapiGetMass(hMoon);
+				mu_Q = OrbMech::mu_Moon;
 				rect1 = 0.75*OrbMech::power(2.0, 22.0);
 				rect2 = 0.75*OrbMech::power(2.0, 3.0);
-				P = 0;
+				P = BODY_EARTH;
 				R0 = R_CON + delta;
 				V0 = V_CON + nu;
 				R_CON = R0;
@@ -6902,28 +6860,21 @@ bool CoastIntegrator::iteration()
 				V_CON = V_CON - V_PQ;
 				planet = hMoon;
 
-				R_E = oapiGetSize(planet);
-				mu = oapiGetMass(planet)*GGRAV;
-				jcount = oapiGetPlanetJCoeffCount(planet);
-				delete[] JCoeff;
-				JCoeff = new double[jcount];
-				for (int i = 0; i < jcount; i++)
-				{
-					JCoeff[i] = oapiGetPlanetJCoeff(planet, i);
-				}
+				R_E = OrbMech::R_Moon;
+				mu = OrbMech::mu_Moon;
 
 				r_MP = 2538090.0;
 				r_dP = 16093440.0;
-				mu_Q = GGRAV*oapiGetMass(hEarth);
+				mu_Q = OrbMech::mu_Earth;
 				rect1 = 0.75*OrbMech::power(2.0, 18.0);
 				rect2 = 0.75*OrbMech::power(2.0, -1.0);
-				P = 1;
+				P = BODY_MOON;
 				R0 = R_CON + delta;
 				V0 = V_CON + nu;
 				R_CON = R0;
 				V_CON = V0;
 				delta = _V(0, 0, 0);
-				nu = _V(0, 0, 0);// [0 0 0]';
+				nu = _V(0, 0, 0);
 				x = 0;
 				tau = 0;
 				soichange = true;
@@ -6937,7 +6888,7 @@ bool CoastIntegrator::iteration()
 		R_CON = R0;
 		V_CON = V0;
 		delta = _V(0, 0, 0);
-		nu = _V(0, 0, 0);// [0 0 0]';
+		nu = _V(0, 0, 0);
 		x = 0;
 		tau = 0;
 	}
@@ -6958,15 +6909,10 @@ bool CoastIntegrator::iteration()
 			alpha = delta + (nu + ff*h*0.5)*h;
 			t = t + 0.5*dt;
 			tau = tau + 0.5*dt;
-			//tau = t - t_0;
-			//R_apo = R_CON*(tau - dt / 2);
-			//	V_apo = V_CON*(tau - dt / 2);
-			//x_tau = x*(tau - dt / 2);
 			s = sqrt(mu) / length(R_apo)*0.5*dt;
 			gamma = dotp(R_apo, V_apo) / (length(R_apo)*sqrt(mu)*2.0);
 			alpha_N = 2.0 / length(R0) - OrbMech::power(length(V0), 2.0) / mu;
 			x_t = x_apo + s*(1.0 - gamma*s*(1.0 - 2.0 * gamma*s) - 1.0 / 6.0 * (1.0 / length(R_apo) - alpha_N)*s*s);
-			//[R_CON, V_CON, x] = rv_from_r0v0(R0, V0, tau, mu, x_t);
 			OrbMech::rv_from_r0v0(R0, V0, tau, R_CON, V_CON, mu, x_t);
 		}
 	}
@@ -6993,7 +6939,7 @@ bool CoastIntegrator::iteration()
 			R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
 			V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
 
-			if (planet == hEarth)
+			if (P == BODY_EARTH)
 			{
 				R_PQ = R_EM;
 				V_PQ = V_EM;
@@ -7040,31 +6986,34 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 	VECTOR3 U_R, U_Z, a_dP, a_d, a_dQ, a_dS;
 	a_dP = _V(0, 0, 0);
 	r = length(R);
-	if (r < r_dP)// && planet == hEarth)
+	if (r < r_dP)
 	{
 		U_R = unit(R);
-		if (planet == hEarth)
+		if (P == BODY_EARTH)
 		{
-			U_Z = U_Z_E;//_V(0, 0, 1.0);// [0 0 1]'; 
+			U_Z = U_Z_E;
 		}
 		else
 		{
-			U_Z = U_Z_M;//_V(obli.m12, obli.m22, obli.m32);
+			U_Z = U_Z_M;
 		}
 		costheta = dotp(U_R, U_Z);
 		P2 = 3.0 * costheta;
 		P3 = 0.5*(15.0*costheta*costheta - 3.0);
-		a_dP += (U_R*P3 - U_Z*P2)*JCoeff[0] * OrbMech::power(R_E / r, 2.0);
-		if (jcount > 1)
+
+		if (P == BODY_EARTH)
 		{
+			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Earth * OrbMech::power(R_E / r, 2.0);
 			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-			a_dP += (U_R*P4 - U_Z*P3)*JCoeff[1] * OrbMech::power(R_E / r, 3.0);
-			if (jcount > 2)
-			{
-				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-				a_dP += (U_R*P5 - U_Z*P4)*JCoeff[2] * OrbMech::power(R_E / r, 4.0);
-			}
+			a_dP += (U_R*P4 - U_Z * P3)*OrbMech::J3_Earth * OrbMech::power(R_E / r, 3.0);
+			P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
+			a_dP += (U_R*P5 - U_Z * P4)*OrbMech::J4_Earth * OrbMech::power(R_E / r, 4.0);
 		}
+		else
+		{
+			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Moon * OrbMech::power(R_E / r, 2.0);
+		}
+		
 		a_dP *= mu / OrbMech::power(r, 2.0);
 	}
 	if (M == 1)
@@ -7079,7 +7028,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 		SolarEphemeris(t - t_F/2.0, R_ES, V_ES);
 		R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
 
-		if (planet == hEarth)
+		if (P == BODY_EARTH)
 		{
 			R_PQ = R_EM;
 			R_PS = R_ES;

@@ -1443,11 +1443,11 @@ private:
 	//Generalized Contact Generator
 	void EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, OrbitStationContactsTable &res);
 	//Horizon Crossing Subprogram
-	bool EMXING(std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions);
+	bool EMXING(const std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions);
 	//Variable Order Interpolation
 	int ELVARY(std::vector<SV> EPH, unsigned ORER, double MJD, bool EXTRAP, SV &sv_out);
 
-	SV EphemerisInterpolationConic(std::vector<SV> &ephemeris, double MJD, unsigned start = 0);
+	SV EphemerisInterpolationConic(const std::vector<SV> &ephemeris, double MJD, unsigned start = 0);
 
 protected:
 	double TimeofIgnition;

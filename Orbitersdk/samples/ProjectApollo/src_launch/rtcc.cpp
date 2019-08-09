@@ -10013,7 +10013,7 @@ void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, Orbi
 	}
 }
 
-bool RTCC::EMXING(std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions)
+bool RTCC::EMXING(const std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions)
 {
 	if (ephemeris.size() == 0) return false;
 
@@ -10249,7 +10249,7 @@ EMXING_LOOP:
 	return true;
 }
 
-SV RTCC::EphemerisInterpolationConic(std::vector<SV> &ephemeris, double MJD, unsigned start)
+SV RTCC::EphemerisInterpolationConic(const std::vector<SV> &ephemeris, double MJD, unsigned start)
 {
 	if (start == 0)
 	{

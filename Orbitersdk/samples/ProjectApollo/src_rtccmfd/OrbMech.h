@@ -133,6 +133,9 @@ const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
 	true
 };
 
+#define BODY_EARTH 0
+#define BODY_MOON 1
+
 struct SV
 {
 	VECTOR3 R = _V(0, 0, 0);
@@ -254,8 +257,6 @@ private:
 
 	double R_E, mu;
 	double K, dt_lim;
-	int jcount;
-	double *JCoeff;
 	VECTOR3 R00, V00, R0, V0, R_CON, V_CON, R_QC, R_PQ;
 	double t_0, t, tau, t_F, x;
 	VECTOR3 delta, nu;
@@ -285,6 +286,11 @@ namespace OrbMech {
 	const double R_Moon = 1738090.0;
 	const double w_Moon = 2.66169948e-6;
 	const double mu_Sun = 0.13271244e21; //Different from GSOP. Guess they hadn't properly figured this out yet.
+	const double J2_Earth = 1082.6269e-6;
+	const double J3_Earth = -2.51e-6;
+	const double J4_Earth = -1.60e-6;
+	const double J5_Earth = -0.15e-6;
+	const double J2_Moon = 207.108e-6;
 
 	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref);
 	double kepler_E(double e, double M);
