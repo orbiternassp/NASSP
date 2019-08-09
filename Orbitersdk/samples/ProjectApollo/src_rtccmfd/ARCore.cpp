@@ -1974,7 +1974,7 @@ bool ARCore::vesselinLOS()
 	vessel->GetRelativeVel(gravref, V);
 	MJD = oapiGetSimMJD();
 
-	return OrbMech::vesselinLOS(R, V, MJD, gravref);
+	return OrbMech::vesselinLOS(R, V, MJD);
 }
 
 void ARCore::VecPointCalc()
@@ -4668,7 +4668,7 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	hMoon = oapiGetObjectByName("Moon");
 
 	Rot2 = _M(1., 0., 0., 0., 0., 1., 0., 1., 0.);
-	R = OrbMech::GetRotationMatrix(hEarth, mjd_mid);
+	R = OrbMech::GetRotationMatrix(BODY_EARTH, mjd_mid);
 
 	if (isCMC)
 	{
@@ -4899,12 +4899,12 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	if (isCMC)
 	{
 		t_M = (mjd_mid - t0) * 24.0 * 3600.0;
-		RM = OrbMech::GetRotationMatrix(hMoon, mjd_mid);
+		RM = OrbMech::GetRotationMatrix(BODY_MOON, mjd_mid);
 	}
 	else
 	{
 		t_M = (mjd_land - t0) * 24.0 * 3600.0;
-		RM = OrbMech::GetRotationMatrix(hMoon, mjd_land);
+		RM = OrbMech::GetRotationMatrix(BODY_MOON, mjd_land);
 	}
 
 	B = B_0 + B_dot * t_M;

@@ -263,11 +263,11 @@ private:
 	//0 = earth or lunar orbit, 1 = cislunar-midcourse flight
 	int M;
 	double r_MP, r_dP, r_SPH;
-	OBJHANDLE hEarth, hMoon, hSun, planet;
+	OBJHANDLE hEarth, hMoon, planet;
 	double mu_Q, mu_S;
 	double mjd0;
 	double rect1, rect2;
-	CELBODY *cMoon, *cEarth, *cSun;
+	CELBODY *cMoon, *cEarth;
 	VECTOR3 U_Z_E, U_Z_M;
 	int B;
 	//Primary Body, 0 = Earth, 1 = Moon
@@ -339,15 +339,14 @@ namespace OrbMech {
 	void ReturnPerigee(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double phi, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri);
 	void ReturnPerigeeConic(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE hMoon, OBJHANDLE hEarth, double &MJD_peri, VECTOR3 &R_peri, VECTOR3 &V_peri);
 	double PATCH(VECTOR3 R, VECTOR3 V, double mjd0, bool earthsoi, VECTOR3 &R3, VECTOR3 &V3, bool Q = true);
-	MATRIX3 GetRotationMatrix(OBJHANDLE plan, double t);
-	//MATRIX3 GetRotationMatrix2(OBJHANDLE plan, double t);
+	MATRIX3 GetRotationMatrix(int plan, double t);
 	MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi);
 	void PACSS4_from_coe(OELEMENTS coe, double mu, VECTOR3 &R, VECTOR3 &V);
 	void PACSS13_from_coe(OELEMENTS coe, double lat, double A_Z, double mu, VECTOR3 &R_S, VECTOR3 &V_S);
 	OELEMENTS coe_from_PACSS4(VECTOR3 R, VECTOR3 V, double mu);
 	MATRIX3 MSGMatrix(double phi_L, double A_Z);
 	MATRIX3 MEGMatrix(double theta_E);
-	double GetPlanetCurrentRotation(OBJHANDLE plan, double t);
+	double GetPlanetCurrentRotation(int plan, double t);
 	double findelev(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double mjd0, double E, OBJHANDLE gravref);
 	double findelev_conic(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_P0, VECTOR3 V_P0, double E, double mu);
 	double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double E, OBJHANDLE gravref, double &range);
@@ -393,7 +392,7 @@ namespace OrbMech {
 	bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
 	bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
-	bool vesselinLOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
+	bool vesselinLOS(VECTOR3 R, VECTOR3 V, double MJD);
 	MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z);
 	void LunarLandingPrediction(VECTOR3 R_D, VECTOR3 V_D, double t_D, double t_E, VECTOR3 R_LSA, double h_DP, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double &t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR);
 	void LunarLandingPrediction2(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VECTOR3 R_LSA, double h_P, double h_A, double theta_F, double t_F, OBJHANDLE plan, double GETbase, double mu, int N, double & t_DOI, double &t_PDI, double &t_L, VECTOR3 &DV_DOI, double &CR);
@@ -451,7 +450,7 @@ namespace OrbMech {
 	double power(double b, double e);
 	double calculateDifferenceBetweenAngles(double firstAngle, double secondAngle);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
-	MATRIX3 GetObliquityMatrix(OBJHANDLE plan, double t);
+	MATRIX3 GetObliquityMatrix(int plan, double t);
 	MATRIX3 J2000EclToBRCS(double mjd);
 	MATRIX3 _MRx(double a);
 	MATRIX3 _MRy(double a);
@@ -505,9 +504,9 @@ namespace OrbMech {
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
 	double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng);
 	//RTCC EMXING support routine, calculate direction vectors and sine of elevation angle
-	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth, VECTOR3 &N, VECTOR3 &rho, double &sinang);
+	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref, VECTOR3 &N, VECTOR3 &rho, double &sinang);
 	//RTCC EMXING support routine, calculates elevation slope function
-	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth);
+	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);

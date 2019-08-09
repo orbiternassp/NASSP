@@ -123,7 +123,7 @@ namespace EntryCalculations
 		U_H3 = unit(crossp(crossp(R3, V3), R3));
 		U_LS = UR3*Cphie + U_H3*Sphie;
 		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-		R = OrbMech::GetRotationMatrix(hEarth, tLSMJD);
+		R = OrbMech::GetRotationMatrix(BODY_EARTH, tLSMJD);
 		LSEF = tmul(R, U_LS);
 		l = LSEF.x;
 		m = LSEF.z;
@@ -180,7 +180,7 @@ namespace EntryCalculations
 		tLSMJD = mjd0 + t_LS / 24.0 / 3600.0;
 		//U_LS = tmul(Rot, U_LS);
 		U_LS = _V(U_LS.x, U_LS.z, U_LS.y);
-		R = OrbMech::GetRotationMatrix(hEarth, tLSMJD);
+		R = OrbMech::GetRotationMatrix(BODY_EARTH, tLSMJD);
 		LSEF = tmul(R, U_LS);
 		l = LSEF.x;
 		m = LSEF.z;
@@ -302,7 +302,7 @@ namespace EntryCalculations
 
 	void EGTR(VECTOR3 R_geoc, VECTOR3 V_geoc, double MJD, VECTOR3 &R_geogr, VECTOR3 &V_geogr)
 	{
-		MATRIX3 Rot = OrbMech::GetRotationMatrix(oapiGetObjectByName("Earth"), MJD);
+		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD);
 		R_geogr = rhtmul(Rot, R_geoc);
 		V_geogr = rhtmul(Rot, V_geoc);
 	}
@@ -678,17 +678,15 @@ namespace EntryCalculations
 
 	double LNDING(VECTOR3 REI, VECTOR3 VEI, double MJD_EI, double LD, int ICRNGG, double r_rbias, double &lambda, double &phi, double &MJD_L)
 	{
-		OBJHANDLE hEarth;
 		MATRIX3 Rot;
 		VECTOR3 R_equ, V_equ, H, R_EI_u, V_EI_u, R_1_u, N_u, R_1_apo, R_geo, V_geo;
 		double i_r, rmag, vmag, rtasc, decl, fpav, az, eta_rzI, theta_cr, T, NMPER;
 
 		NMPER = 3443.93359;
-		hEarth = oapiGetObjectByName("Earth");
 		
 		R_EI_u = unit(REI);
 		V_EI_u = unit(VEI);
-		Rot = OrbMech::GetRotationMatrix(hEarth, MJD_EI);
+		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_EI);
 		R_equ = rhtmul(Rot, REI);
 		V_equ = rhtmul(Rot, VEI);
 		OrbMech::rv_from_adbar(R_equ, V_equ, rmag, vmag, rtasc, decl, fpav, az);
@@ -714,18 +712,16 @@ namespace EntryCalculations
 
 	bool FINDUX(VECTOR3 R0, VECTOR3 V0, double MJD0, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &DV, VECTOR3 &R_EI, VECTOR3 &V_EI, double &MJD_EI, double &Incl_apo)
 	{
-		OBJHANDLE hEarth;
 		MATRIX3 Rot;
 		VECTOR3 X_x_equ_u, R_1, u_x_equ, U_x_equ, U_x;
 		double x_x, E, e, a, eta_r, eta_x, eta_xr, T_r, T_x, P, beta_x, alpha_x, delta_x, sin_delta_r, cos_delta_r, theta, alpha_r, eta_x1, t_z, T_xr;
 		bool NIR;
 
-		hEarth = oapiGetObjectByName("Earth");
 		Incl_apo = i_r;
 		NIR = false;
 
 		x_x = length(R0);
-		Rot = OrbMech::GetRotationMatrix(hEarth, MJD0);
+		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD0);
 		X_x_equ_u = unit(rhtmul(Rot, R0));
 		OrbMech::ra_and_dec_from_r(X_x_equ_u, alpha_x, delta_x);
 
@@ -1000,9 +996,6 @@ namespace EntryCalculations
 		double k4, x2, v2, x2_apo, x2_err, ra, dec, Omega, MJD_EI;
 		VECTOR3 V2, R0_equ, U_H;
 		MATRIX3 Rot;
-		OBJHANDLE hEarth;
-
-		hEarth = oapiGetObjectByName("Earth");
 
 		k4 = -0.10453;
 		NIR = false;
@@ -1011,7 +1004,7 @@ namespace EntryCalculations
 		x2_err = 1.0;
 
 		MJD_EI = MJD0 + dt / 24.0 / 3600.0;
-		Rot = OrbMech::GetRotationMatrix(hEarth, MJD_EI);
+		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_EI);
 		R0_equ = rhtmul(Rot, R0);
 		OrbMech::ra_and_dec_from_r(R0_equ, ra, dec);
 		//Make sure the inclination is larger than the declination
@@ -3052,7 +3045,7 @@ bool RTEMoon::MASTER()
 	x2 = cosg / sing;
 	EntryAng = atan(x2);
 
-	H_EI_equ = rhtmul(OrbMech::GetRotationMatrix(hEarth, EIMJD), unit(N));
+	H_EI_equ = rhtmul(OrbMech::GetRotationMatrix(BODY_EARTH, EIMJD), unit(N));
 	ReturnInclination = -acos(H_EI_equ.z)*INTER;
 
 	OrbMech::timetoperi_integ(Rig, Vig_apo, TIG, hMoon, hMoon, R_peri, V_peri);
