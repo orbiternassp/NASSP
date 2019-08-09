@@ -130,6 +130,9 @@ public:
 
 	TCA_FlipFlop *GetTCAFailureFlipFlop() { return &TCAFailure; }
 	bool GetTCAFailure() { return TCAFailure.IsSet(); }
+
+	//For external resets from the CWEA
+	void Reset();
 protected:
 	bool jetDriverSignal[2];
 	bool thrusterTCP[2];
