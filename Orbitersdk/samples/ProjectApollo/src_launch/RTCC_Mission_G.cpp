@@ -164,7 +164,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		entopt.entrylongmanual = false;
 		entopt.GETbase = GETbase;
-		entopt.impulsive = RTCC_NONIMPULSIVE;
+		entopt.enginetype = RTCC_ENGINETYPE_SPS;
 		//Code for Atlantic Ocean Line
 		entopt.lng = 2.0;
 		entopt.ReA = 0;
@@ -176,7 +176,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EntryTargeting(&entopt, &res); //Target Load for uplink
 
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.enginetype = RTCC_ENGINETYPE_SPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -281,7 +281,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11MNV * form = (AP11MNV *)pad;
 
 		opt.dV_LVLH = _V(5.1, 0.0, 19.0)*0.3048;
-		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.enginetype = RTCC_ENGINETYPE_SPS;
 		opt.GETbase = calcParams.TEPHEM;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -822,7 +822,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.alt = calcParams.LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.enginetype = RTCC_ENGINETYPE_SPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		//LS REFSMMAT
@@ -897,7 +897,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.alt = calcParams.LSAlt;
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.enginetype = RTCC_ENGINETYPE_SPS;
 		manopt.GETbase = GETbase;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -952,7 +952,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.alt = calcParams.LSAlt;
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.enginetype = RTCC_ENGINETYPE_SPS;
 		manopt.GETbase = GETbase;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -1009,7 +1009,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.PDI = t_PDI;
 		calcParams.TLAND = t_land;
 
-		PoweredFlightProcessor(sv, GETbase, t_DOI, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, t_DOI, RTCC_ENGINETYPE_DPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
 
 		opt.GETbase = GETbase;
 		opt.LSLat = calcParams.LSLat;
@@ -1140,7 +1140,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.alt = calcParams.LSAlt;
 		opt.dV_LVLH = dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_RCS;
+		opt.enginetype = RTCC_ENGINETYPE_RCSPLUS4;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -1193,12 +1193,12 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.PDI = t_PDI;
 		calcParams.TLAND = t_land;
 
-		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, t_DOI_imp, RTCC_ENGINETYPE_DPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
 
 		opt.alt = calcParams.LSAlt;
 		opt.csmlmdocked = false;
 		opt.dV_LVLH = DeltaV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.enginetype = RTCC_ENGINETYPE_DPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
@@ -1313,7 +1313,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.alt = calcParams.LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		opt.enginetype = RTCC_ENGINETYPE_SPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -1575,14 +1575,14 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_P = OrbMech::period(sv_DOI.R, sv_DOI.V + res.dV, OrbMech::mu_Moon);
 		t_CSI = opt.T2 - t_P / 2.0;
 
-		PoweredFlightProcessor(sv_DOI, GETbase, opt.T1, RTCC_VESSELTYPE_LM, RTCC_ENGINETYPE_SPSDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_DOI, GETbase, opt.T1, RTCC_ENGINETYPE_DPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 		//Store for P76 PAD
 		calcParams.TIGSTORE1 = P30TIG;
 		calcParams.DVSTORE1 = dV_LVLH;
 
 		manopt.alt = calcParams.LSAlt;
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+		manopt.enginetype = RTCC_ENGINETYPE_DPS;
 		manopt.GETbase = GETbase;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
@@ -1848,7 +1848,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = calcParams.TEPHEM;
 
 		opt.dV_LVLH = calcParams.DVSTORE1;
-		opt.enginetype = RTCC_ENGINETYPE_RCS;
+		opt.enginetype = RTCC_ENGINETYPE_RCSPLUS4;
 		opt.GETbase = GETbase;
 		opt.KFactor = 90.0*3600.0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, AGCEpoch, LGCREFSAddrOffs);
@@ -1964,7 +1964,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.RV_MCC = sv;
 		opt.t_A = calcParams.LunarLiftoff;
 		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
 
 		PlaneChangeTargeting(&opt, DeltaV_LVLH, TimeofIgnition);
 
@@ -2004,7 +2003,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			manopt.alt = calcParams.LSAlt;
 			manopt.dV_LVLH = DeltaV_LVLH;
-			manopt.enginetype = RTCC_ENGINETYPE_SPSDPS;
+			manopt.enginetype = RTCC_ENGINETYPE_SPS;
 			manopt.GETbase = GETbase;
 			manopt.HeadsUp = false;
 			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -2193,7 +2192,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = calcParams.TEPHEM;
 
 		opt.dV_LVLH = calcParams.DVSTORE1;
-		opt.enginetype = RTCC_ENGINETYPE_RCS;
+		opt.enginetype = RTCC_ENGINETYPE_RCSPLUS4;
 		opt.GETbase = GETbase;
 		opt.KFactor = 120.0*3600.0;
 		opt.REFSMMAT = calcParams.StoredREFSMMAT;
@@ -2275,7 +2274,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		entopt.entrylongmanual = true;
 		entopt.GETbase = GETbase;
-		entopt.impulsive = RTCC_NONIMPULSIVE;
+		entopt.enginetype = RTCC_ENGINETYPE_SPS;
 		entopt.lng = -172.37*RAD;
 		entopt.ReA = 0;
 		entopt.RV_MCC = sv;

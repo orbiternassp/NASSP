@@ -161,8 +161,8 @@ public:
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
 	bool inhibUplLOS;
 	bool PADSolGood;
-	int enginetype;				// 0 = RCS, 1 = SPS or DPS or APS
-	int directiontype;			// 0 = +X, 1 = -X (RCS only)
+	int csmenginetype;				// 0 = SPS, 1 = RCS+X (2 quads), 2 = RCS+X (4 quads), 3 = RCS-X (2 quads), 4 = RCS-X (4 quads)
+	int lemenginetype;				// 0 = APS, 1 = DPS, 2 = RCS+X (2 quads), 3 = RCS+X (4 quads), 4 = RCS-X (2 quads), 5 = RCS-X (4 quads)
 	double t_TPI;				// Generally used TPI time
 	int P30Octals[012];
 	int RetrofireEXDVOctals[016];
@@ -454,10 +454,20 @@ public:
 	double predsiteacq_GET;
 	double predsiteacq_DT;
 
-	protected:
-		int GetPowEngType();
+	//MPT MANEUVER TRANSFER
+
+	//1 = LM, 2 = CSM
+	int MPTTransferTable;
+	//Maneuver 1-15 in table
+	int MPTReplaceCode;
+	//0 = SPS, 1 = APS, 2 = DPS, 3-6 = L1-4, 7-10 = C1-4
+	int MPTThrusterCode;
 
 private:
+
+	int CSMToEngineType();
+	int LEMToEngineType();
+
 	AR_GCore* GC;
 };
 

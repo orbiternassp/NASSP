@@ -1220,17 +1220,25 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM/LM", 6);
 				}
 
-				if (G->enginetype == RTCC_ENGINETYPE_SPSDPS)
+				if (G->csmenginetype == 0)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "SPS", 3);
 				}
-				else if (G->enginetype == RTCC_ENGINETYPE_RCS && G->directiontype == RTCC_DIRECTIONTYPE_PLUSX)
+				else if (G->csmenginetype == 1)
 				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS +X", 6);
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "2xRCS +X", 8);
 				}
-				else if (G->enginetype == RTCC_ENGINETYPE_RCS && G->directiontype == RTCC_DIRECTIONTYPE_MINUSX)
+				else if (G->csmenginetype == 2)
 				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS -X", 6);
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "4xRCS +X", 8);
+				}
+				else if (G->csmenginetype == 3)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "2xRCS -X", 8);
+				}
+				else if (G->csmenginetype == 4)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "4xRCS -X", 8);
 				}
 
 				if (G->vesseltype == 1)
@@ -1283,7 +1291,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "%+06.0f WGT", G->manpad.Weight);
 				skp->Text((int)(3.5 * W / 8), 3 * H / 26, Buffer, strlen(Buffer));
 
-				if (G->enginetype == RTCC_ENGINETYPE_SPSDPS)
+				if (G->csmenginetype == 0)
 				{
 					sprintf(Buffer, "%+07.2f PTRIM", G->manpad.pTrim);
 					skp->Text((int)(3.5 * W / 8), 4 * H / 26, Buffer, strlen(Buffer));
@@ -1375,21 +1383,29 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			{
 				skp->Text(5 * W / 8, (int)(0.5 * H / 14), "P30 LM Maneuver", 15);
 
-				if (G->enginetype == 1 && G->lemdescentstage)
+				if (G->lemenginetype == 1)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "DPS", 3);
 				}
-				else if (G->enginetype == 1 && !G->lemdescentstage)
+				else if (G->lemenginetype == 0)
 				{
 					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "APS", 3);
 				}
-				else if (G->enginetype == 0 && G->directiontype == RTCC_DIRECTIONTYPE_PLUSX)
+				else if (G->lemenginetype == 2)
 				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS +X", 6);
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "2xRCS +X", 8);
 				}
-				else if (G->enginetype == 0 && G->directiontype == RTCC_DIRECTIONTYPE_MINUSX)
+				else if (G->lemenginetype == 3)
 				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "RCS -X", 6);
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "4xRCS +X", 8);
+				}
+				else if (G->lemenginetype == 4)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "2xRCS -X", 8);
+				}
+				else if (G->lemenginetype == 5)
+				{
+					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "4xRCS -X", 8);
 				}
 
 				if (G->vesseltype == 2)
@@ -2798,7 +2814,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 10 * H / 14, "Min DV", 6);
 		}
 
-		if (G->enginetype == RTCC_ENGINETYPE_SPSDPS)
+		if (G->csmenginetype == 0)
 		{
 			skp->Text(1 * W / 8, 12 * H / 14, "SPS Deorbit", 11);
 		}
@@ -6544,18 +6560,6 @@ void ApolloRTCCMFD::menuSwitchHeadsUp()
 	}
 }
 
-void ApolloRTCCMFD::menuManDirection()
-{
-	if (G->directiontype < 1)
-	{
-		G->directiontype++;
-	}
-	else
-	{
-		G->directiontype = 0;
-	}
-}
-
 void ApolloRTCCMFD::menuCalcManPAD()
 {
 	if (G->manpadopt == 0)
@@ -6620,15 +6624,28 @@ void ApolloRTCCMFD::menuSwitchManPADEngine()
 {
 	if (G->manpadopt == 0)
 	{
-		if (G->enginetype < 1)
+		if (G->vesseltype < 2)
 		{
-			G->enginetype++;
+			if (G->csmenginetype < 4)
+			{
+				G->csmenginetype++;
+			}
+			else
+			{
+				G->csmenginetype = 0;
+			}
 		}
 		else
 		{
-			G->enginetype = 0;
+			if (G->lemenginetype < 5)
+			{
+				G->lemenginetype++;
+			}
+			else
+			{
+				G->lemenginetype = 0;
+			}
 		}
-
 	}
 }
 
@@ -7071,13 +7088,13 @@ void ApolloRTCCMFD::menuSwitchEntryNominal()
 
 void ApolloRTCCMFD::menuSwitchDeorbitEngineOption()
 {
-	if (G->enginetype < 1)
+	if (G->csmenginetype < 4)
 	{
-		G->enginetype++;
+		G->csmenginetype++;
 	}
 	else
 	{
-		G->enginetype = 0;
+		G->csmenginetype = 0;
 	}
 }
 

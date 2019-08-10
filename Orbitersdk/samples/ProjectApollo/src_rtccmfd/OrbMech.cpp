@@ -508,27 +508,14 @@ double kepler_H(double e, double M)
 	return F;
 }
 
-void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref)
+void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, double J2, double mu, double R_E, int P, VECTOR3 &R2, VECTOR3 &V2)
 {
 	OELEMENTS coe, coe2;
 	MATRIX3 Rot;
 	VECTOR3 R1_equ, V1_equ, R2_equ, V2_equ;
-	double h, e, Omega_0, i, omega_0, theta0, a, T, n, E_0, t_0, t_f, n_p, t_n, M_n, E_n, theta_n, Omega_dot, omega_dot, Omega_n, omega_n, mu, JCoeff, R_E;
+	double h, e, Omega_0, i, omega_0, theta0, a, T, n, E_0, t_0, t_f, n_p, t_n, M_n, E_n, theta_n, Omega_dot, omega_dot, Omega_n, omega_n;
 
-	if (gravref == oapiGetObjectByName("Earth"))
-	{
-		mu = mu_Earth;
-		JCoeff = J2_Earth;
-		R_E = R_Earth;
-		Rot = GetObliquityMatrix(BODY_EARTH, MJD);
-	}
-	else
-	{
-		mu = mu_Moon;
-		JCoeff = J2_Moon;
-		R_E = R_Moon;
-		Rot = GetObliquityMatrix(BODY_MOON, MJD);
-	}
+	Rot = GetObliquityMatrix(P, MJD);
 
 	R1_equ = rhtmul(Rot, R1);
 	V1_equ = rhtmul(Rot, V1);
@@ -557,8 +544,8 @@ void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R
 		theta_n += 2 * PI;
 	}
 
-	Omega_dot = -(3.0 / 2.0 * sqrt(mu)*JCoeff * OrbMech::power(R_E, 2.0) / (OrbMech::power(1.0 - OrbMech::power(e, 2.0), 2.0) * OrbMech::power(a, 7.0 / 2.0)))*cos(i);
-	omega_dot = -(3.0 / 2.0 * sqrt(mu)*JCoeff * OrbMech::power(R_E, 2.0) / (OrbMech::power(1.0 - OrbMech::power(e, 2.0), 2.0) * OrbMech::power(a, 7.0 / 2.0)))*(5.0 / 2.0 * sin(i)*sin(i) - 2.0);
+	Omega_dot = -(3.0 / 2.0 * sqrt(mu)*J2 * OrbMech::power(R_E, 2.0) / (OrbMech::power(1.0 - OrbMech::power(e, 2.0), 2.0) * OrbMech::power(a, 7.0 / 2.0)))*cos(i);
+	omega_dot = -(3.0 / 2.0 * sqrt(mu)*J2 * OrbMech::power(R_E, 2.0) / (OrbMech::power(1.0 - OrbMech::power(e, 2.0), 2.0) * OrbMech::power(a, 7.0 / 2.0)))*(5.0 / 2.0 * sin(i)*sin(i) - 2.0);
 
 	Omega_n = Omega_0 + Omega_dot*dt;
 	omega_n = omega_0 + omega_dot*dt;
@@ -1926,7 +1913,14 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 	nMax = 100;
 	nMax2 = 10;
 
-	mu = GGRAV*oapiGetMass(gravref);
+	if (gravref == hEarth)
+	{
+		mu = mu_Earth;
+	}
+	else
+	{
+		mu = mu_Moon;
+	}
 
 	double hvec[4] = { h / 2, -h / 2, rho*h / 2, -rho*h / 2 };
 
@@ -1973,8 +1967,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 
 	if (gravref == hEarth && gravin == gravout && dt>0)
 	{
-
-		rv_from_r0v0_obla(R1, V1_star, mjd0, dt, R2_star, V2_star, gravref);
+		rv_from_r0v0_obla(R1, V1_star, mjd0, dt, J2_Earth, mu_Earth, R_Earth, BODY_EARTH, R2_star, V2_star);
 		dr2 = R2 - R2_star;
 
 		while (length(dr2) > error3 && nMax2 >= n)
@@ -1990,7 +1983,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 			{
 				for (int j = 0; j < 4; j++)
 				{
-					rv_from_r0v0_obla(R1, v_l[i][j], mjd0, dt, R2l[i][j], V2l[i][j], gravref);
+					rv_from_r0v0_obla(R1, v_l[i][j], mjd0, dt, J2_Earth, mu_Earth, R_Earth, BODY_EARTH, R2l[i][j], V2l[i][j]);
 				}
 			}
 			for (int i = 0; i < 3; i++)
@@ -1999,7 +1992,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 			}
 			T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
 			V1_star = V1_star + mul(inverse(T2), dr2);
-			rv_from_r0v0_obla(R1, V1_star, mjd0, dt, R2_star, V2_star, gravref);
+			rv_from_r0v0_obla(R1, V1_star, mjd0, dt, J2_Earth, mu_Earth, R_Earth, BODY_EARTH, R2_star, V2_star);
 			dr2 = R2 - R2_star;
 		}
 		//return V1_star;
@@ -5650,7 +5643,7 @@ VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0)
 	return g;
 }
 
-void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff, bool agc)
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
 	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
@@ -5692,42 +5685,8 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	{
 		sprintf(oapiDebugString(), "Iteration failed!");
 	}
-	//Llambda = V_go;
-
-	//double apo, peri;
-	//periapo(R_p, V_p, mu, apo, peri);
-
-	if (agc)
-	{
-		VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
-
-		MATRIX3 Q_Xx;
-		double theta_T;
-
-		X = unit(crossp(crossp(R_ig, V_ig), R_ig));
-		Y = unit(crossp(V_ig, R_ig));
-		Z = -unit(R_ig);
-
-		Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
-		dV_LV = mul(Q_Xx, V_go);
-		DV_P = X * dV_LV.x + Z * dV_LV.z;
-		if (length(DV_P) != 0.0)
-		{
-			theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
-			DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
-			V_G = DV_C + Y * dV_LV.y;
-		}
-		else
-		{
-			V_G = X * dV_LV.x + Y * dV_LV.y + Z * dV_LV.z;
-		}
-		Llambda = V_G;
-	}
-	else
-	{
-		Llambda = V_go;
-	}
-
+	
+	Llambda = V_go;
 	R_cutoff = R_p;
 	V_cutoff = V_p;
 	m_cutoff = m_p;

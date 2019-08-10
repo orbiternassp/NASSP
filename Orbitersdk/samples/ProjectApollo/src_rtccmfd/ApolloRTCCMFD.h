@@ -145,7 +145,6 @@ public:
 	void set_spherical();
 	void menuCycleTwoImpulseOption();
 	void menuSwitchHeadsUp();
-	void menuManDirection();
 	void menuCalcManPAD();
 	void menuSetManPADPage();
 	void menuCalcEntryPAD();

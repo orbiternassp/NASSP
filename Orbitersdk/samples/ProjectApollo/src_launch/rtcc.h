@@ -52,12 +52,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_VESSELTYPE_LM		1
 #define RTCC_VESSELTYPE_SIVB	2
 
-#define RTCC_ENGINETYPE_RCS 0
-#define RTCC_ENGINETYPE_SPSDPS 1
-#define RTCC_ENGINETYPE_APS 2
-
-#define RTCC_DIRECTIONTYPE_PLUSX 0
-#define RTCC_DIRECTIONTYPE_MINUSX 1
+#define RTCC_ENGINETYPE_SPS 0
+#define RTCC_ENGINETYPE_APS 1
+#define RTCC_ENGINETYPE_DPS 2
+#define RTCC_ENGINETYPE_RCSPLUS2 3
+#define RTCC_ENGINETYPE_RCSPLUS4 4
+#define RTCC_ENGINETYPE_RCSMINUS2 5
+#define RTCC_ENGINETYPE_RCSMINUS4 6
+#define RTCC_ENGINETYPE_SIVB_APS 7
+#define RTCC_ENGINETYPE_LOX_DUMP 8
 
 #define RTCC_GMP_PCE 1
 #define RTCC_GMP_PCL 2
@@ -164,8 +167,7 @@ struct AP7ManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int enginetype = 1; //0 = RCS, 1 = SPS
-	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
+	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime; //time delay for the sextant star check (in case no star is available during the maneuver)
@@ -181,8 +183,7 @@ struct AP11ManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int enginetype = 1; //0 = RCS, 1 = SPS
-	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
+	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
@@ -198,8 +199,7 @@ struct AP11LMManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int enginetype = 1; //0 = RCS, 1 = DPS, 2 = APS
-	int directiontype = 0; //0 = +X, 1 = -X (RCS only)
+	int enginetype = RTCC_ENGINETYPE_DPS; //Engine type used for the maneuver
 	bool HeadsUp = false; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
@@ -217,7 +217,7 @@ struct AP10CSIPADOpt
 	double t_TPI;
 	VECTOR3 dV_LVLH;
 	MATRIX3 REFSMMAT;
-	int enginetype;
+	int enginetype = RTCC_ENGINETYPE_RCSPLUS4; //Engine type used for the maneuver
 	double KFactor = 0.0;
 };
 
@@ -257,7 +257,7 @@ struct EarthEntryOpt
 	double ReA = 0; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
 	double lng; //Longitude of the desired splashdown coordinates
 	bool nominal; //Calculates minimum DV deorbit or nominal 31.7° line deorbit
-	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+	int enginetype = RTCC_ENGINETYPE_SPS;		//Engine type used for the maneuver
 	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
@@ -272,11 +272,10 @@ struct EntryOpt
 	int type; //Type of reentry maneuver
 	double ReA = 0; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
 	double lng; //Longitude of the desired splashdown coordinates
-	int impulsive; //Calculated with nonimpulsive maneuver compensation or without
+	int enginetype;		//Engine type used for the maneuver
 	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
 	// relative range override
 	double r_rbias = 1285.0;
 	//Maximum DV
@@ -346,8 +345,7 @@ struct RTEMoonOpt
 	int RevsTillTEI = 0;	//Revolutions until TEI
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool entrylongmanual = true; //Targeting a landing zone or a manual landing longitude
-	int vesseltype = 0;			//0 = CSM, 1 = LM
-	int enginetype = 1;			//0 = RCS, 1 = SPS/DPS
+	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
 	double Inclination = 0.0;	//Specified return inclination (sign is azimuth option)
 	// 12: PTP discrete option (not implemented yet)
 	// 14: ATP discrete option
@@ -481,7 +479,7 @@ struct MCCNodeMan
 	double h_node;	//node altitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
+	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
 };
 
 struct MCCFRMan
@@ -495,7 +493,7 @@ struct MCCFRMan
 	double h_peri;	//pericynthion altitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
+	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
 
 	//LOI targets for BAP
 	double LSlat;			//landing site latitude
@@ -518,9 +516,9 @@ struct MCCNFRMan
 	double h_peri;	//pericynthion altitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
+	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
 
-					  //LOI targets for BAP
+	//LOI targets for BAP
 	double LSlat;			//landing site latitude
 	double LSlng;			//landing site longitude
 	double alt;			//landing site height
@@ -545,7 +543,7 @@ struct MCCFlybyMan
 	double h_peri;	//pericynthion altitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
+	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
 };
 
 struct MCCSPSLunarFlybyMan
@@ -560,7 +558,7 @@ struct MCCSPSLunarFlybyMan
 	bool AscendingNode;
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
+	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
 };
 
 struct LOIMan
@@ -577,7 +575,7 @@ struct LOIMan
 	double h_peri;		//perilune altitude
 	SV RV_MCC;			//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
+	int enginetype = RTCC_ENGINETYPE_SPS;	//Engine type to use for maneuver
 	int impulsive = RTCC_NONIMPULSIVE;	//Calculated with nonimpulsive maneuver compensation or without
 	int EllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 };
@@ -592,6 +590,7 @@ struct LOI2Man
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
 	double alt = 0.0;		//altitude of the landing site
+	int enginetype = RTCC_ENGINETYPE_SPS;	//Engine type to use for maneuver
 };
 
 struct DOIMan
@@ -617,7 +616,6 @@ struct PCMan
 	double t_A; //time when the orbit is aligned with the landing site
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
 	bool landed; //0 = use lat/lng/alt to calculate landing site, 1 = target vessel on the surface
 	double lat; //landing site latitude
 	double lng; //landing site longitude
@@ -1296,12 +1294,13 @@ public:
 	SevenParameterUpdate TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TLI, double GETbase, double P30TIG, double TB5, double mu, double T_RG);
 	void LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI);
 	void LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step);
-	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc = true);
-	void FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out, bool agc = true);
+	void FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc = true);
+	void FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_tig, SV &sv_cut, bool agc = true);
+	void EngineParametersTable(int enginetype, double &Thrust, double &Isp);
 	VECTOR3 ConvertDVtoLVLH(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_imp);
 	VECTOR3 ConvertDVtoInertial(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_LVLH_imp);
-	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, SV &sv_pre, SV &sv_post, bool agc = true);
-	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
+	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, SV &sv_pre, SV &sv_post, bool agc = true);
+	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
@@ -1371,6 +1370,8 @@ public:
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
 	//External DV Coordinate Transformation Subroutine
 	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
+	//Generalized Coordinate System Conversion Subroutine
+	int ELVCNV(const PZEFEM &ephem, SV sv, int in, int out, SV &sv_out);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);

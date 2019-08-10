@@ -280,7 +280,7 @@ void RTCC::AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad)
 
 	entopt.vessel = calcParams.src;
 	entopt.GETbase = getGETBase();
-	entopt.impulsive = RTCC_NONIMPULSIVE;
+	entopt.enginetype = RTCC_ENGINETYPE_SPS;
 	entopt.nominal = RTCC_ENTRY_NOMINAL;
 	entopt.ReA = 0;
 	entopt.entrylongmanual = true;
@@ -318,7 +318,7 @@ void RTCC::AP11BlockData(AP11BLKOpt *opt, P37PAD &pad)
 
 	entopt.entrylongmanual = true;
 	entopt.GETbase = getGETBase();
-	entopt.impulsive = RTCC_NONIMPULSIVE;
+	entopt.enginetype = RTCC_ENGINETYPE_SPS;
 	entopt.ReA = 0;
 	entopt.type = RTCC_ENTRY_ABORT;
 	entopt.vessel = calcParams.src;
@@ -385,40 +385,13 @@ void RTCC::BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res)
 
 	delete entry;
 
-	if (opt->impulsive > 0 )
-	{
-		bool main;
-		double t_slip;
-		VECTOR3 UX, UY, UZ, DV, Llambda, RA1_cor, VA1_cor;
-		MATRIX3 Q_Xx;
-		SV sv1;
+	double TIG_imp;
+	VECTOR3 DV_imp;
 
-		if (opt->impulsive == RTCC_NONIMPULSIVE)
-		{
-			main = true;
-		}
-		else
-		{
-			main = false;
-		}
+	TIG_imp = res->P30TIG;
+	DV_imp = res->dV_LVLH;
 
-		sv1 = coast(sv, res->P30TIG - GET);
-
-		UY = unit(crossp(sv1.V, sv1.R));
-		UZ = unit(-sv1.R);
-		UX = crossp(UY, UZ);
-
-		DV = UX*res->dV_LVLH.x + UY*res->dV_LVLH.y + UZ*res->dV_LVLH.z;
-
-		FiniteBurntimeCompensation(0, sv1, 0.0, DV, main, Llambda, t_slip);
-
-		OrbMech::oneclickcoast(sv1.R, sv1.V, sv1.MJD + (res->P30TIG - GET) / 24.0 / 3600.0, t_slip, RA1_cor, VA1_cor, sv1.gravref, sv1.gravref);
-
-		Q_Xx = OrbMech::LVLH_Matrix(RA1_cor, VA1_cor);
-
-		res->dV_LVLH = mul(Q_Xx, Llambda);
-		res->P30TIG += t_slip;
-	}
+	PoweredFlightProcessor(sv, opt->GETbase, TIG_imp, opt->enginetype, 0.0, DV_imp, true, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
 }
 
 void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
@@ -453,45 +426,22 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 
 	delete entry;
 
-	if (opt->impulsive == RTCC_NONIMPULSIVE)
+	double TIG_imp, LMmass;
+	VECTOR3 DV_imp;
+
+	TIG_imp = res->P30TIG;
+	DV_imp = res->dV_LVLH;
+
+	if (opt->csmlmdocked)
 	{
-		double t_slip, LMmass;
-		VECTOR3 UX, UY, UZ, DV, Llambda, RA1_cor, VA1_cor;
-		MATRIX3 Q_Xx;
-		SV sv1;
-
-		sv1 = coast(sv, res->P30TIG - GET);
-
-		UY = unit(crossp(sv1.V, sv1.R));
-		UZ = unit(-sv1.R);
-		UX = crossp(UY, UZ);
-
-		DV = UX*res->dV_LVLH.x + UY*res->dV_LVLH.y + UZ*res->dV_LVLH.z;
-
-		if (opt->csmlmdocked)
-		{
-			LMmass = GetDockedVesselMass(opt->vessel);
-		}
-		else
-		{
-			LMmass = 0.0;
-		}
-
-		FiniteBurntimeCompensation(opt->vesseltype, sv1, LMmass, DV, true, Llambda, t_slip, res->sv_postburn);
-
-		OrbMech::oneclickcoast(sv1.R, sv1.V, sv1.MJD + (res->P30TIG - GET) / 24.0 / 3600.0, t_slip, RA1_cor, VA1_cor, sv1.gravref, sv1.gravref);
-
-		Q_Xx = OrbMech::LVLH_Matrix(RA1_cor, VA1_cor);
-
-		res->dV_LVLH = mul(Q_Xx, Llambda);
-		res->P30TIG += t_slip;
-
-		res->sv_preburn.R = RA1_cor;
-		res->sv_preburn.V = VA1_cor;
-		res->sv_preburn.MJD = OrbMech::MJDfromGET(res->P30TIG, opt->GETbase);
-		res->sv_preburn.gravref = sv1.gravref;
-		res->sv_preburn.mass = sv1.mass;
+		LMmass = GetDockedVesselMass(opt->vessel);
 	}
+	else
+	{
+		LMmass = 0.0;
+	}
+
+	PoweredFlightProcessor(sv, opt->GETbase, TIG_imp, opt->enginetype, LMmass, DV_imp, true, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
 }
 
 void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
@@ -738,7 +688,8 @@ void RTCC::AP10CSIPAD(AP10CSIPADOpt *opt, AP10CSI &pad)
 	dt = opt->t_CSI - (opt->sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
 	sv1 = coast(opt->sv0, dt);
 
-	PoweredFlightProcessor(sv1, opt->GETbase, opt->t_CSI, RTCC_VESSELTYPE_LM, opt->enginetype, 0.0, opt->dV_LVLH, true, TIG_AGS, dV_AGS, false);
+	PoweredFlightProcessor(sv1, opt->GETbase, opt->t_CSI, opt->enginetype, 0.0, opt->dV_LVLH, true, TIG_AGS, dV_AGS, false);
+
 	Q_Xx = OrbMech::LVLH_Matrix(sv1.R, sv1.V);
 	V_G = tmul(Q_Xx, opt->dV_LVLH);
 
@@ -825,23 +776,9 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	}
 
 	//Engine parameters
-	if (opt->enginetype == RTCC_ENGINETYPE_RCS)
-	{
-		v_e = 2706.64;
-		F = 400 * 4.448222;
-	}
-	else if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
-	{
-		v_e = DPS_ISP;
-		F = DPS_THRUST;
-	}
-	else
-	{
-		v_e = APS_ISP;
-		F = APS_THRUST;
-	}
+	EngineParametersTable(opt->enginetype, F, v_e);
 
-	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
+	if (opt->enginetype == RTCC_ENGINETYPE_DPS)
 	{
 		//Estimates for average thrust (relevant for finite burntime compensation), complete and variable burntime
 		LMThrottleProgram(F, v_e, CSMmass + sv1.mass, length(opt->dV_LVLH), F_average, ManPADBurnTime, bt, step);
@@ -881,7 +818,7 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 	}
 
 	X_B = unit(V_G);
-	if (opt->enginetype == RTCC_ENGINETYPE_RCS && opt->directiontype == RTCC_DIRECTIONTYPE_MINUSX)
+	if (opt->enginetype == RTCC_ENGINETYPE_RCSMINUS2 || opt->enginetype == RTCC_ENGINETYPE_RCSMINUS4)
 	{
 		UX = -X_B;
 	}
@@ -986,16 +923,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 		LMmass = 0.0;
 	}
 
-	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
-	{
-		v_e = SPS_ISP;
-		F = SPS_THRUST;
-	}
-	else
-	{
-		v_e = 2706.64;
-		F = 400 * 4.448222;
-	}
+	EngineParametersTable(opt->enginetype, F, v_e);
 
 	//Execute maneuver, output state vector at cutoff
 	sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1, LMmass, Q_Xx, V_G, F, v_e);
@@ -1025,7 +953,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	ManPADApo = apo - R_E;
 	ManPADPeri = peri - R_E;
 
-	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
+	if (opt->enginetype == RTCC_ENGINETYPE_SPS)
 	{
 		CalcSPSGimbalTrimAngles(sv1.mass, LMmass, p_T, y_T);
 
@@ -1050,7 +978,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 		ManPADYTrim = 0.0;
 
 		X_B = unit(V_G);
-		if (opt->directiontype == RTCC_DIRECTIONTYPE_PLUSX)
+		if (opt->enginetype == RTCC_ENGINETYPE_RCSPLUS2 || opt->enginetype == RTCC_ENGINETYPE_RCSPLUS4)
 		{
 			UX = X_B;
 			ManPADDVC = length(opt->dV_LVLH);
@@ -1092,7 +1020,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 	pad.HA = min(9999.9, ManPADApo / 1852.0);
 	pad.HP = ManPADPeri / 1852.0;
 
-	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
+	if (opt->enginetype == RTCC_ENGINETYPE_SPS)
 	{
 		sprintf(pad.PropGuid, "SPS/G&N");
 	}
@@ -1167,16 +1095,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		LMmass = 0.0;
 	}
 
-	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
-	{
-		v_e = SPS_ISP;
-		F = SPS_THRUST;
-	}
-	else
-	{
-		v_e = 2706.64;
-		F = 400 * 4.448222;
-	}
+	EngineParametersTable(opt->enginetype, F, v_e);
 
 	//Execute maneuver, output state vector at cutoff
 	sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1, LMmass, Q_Xx, V_G, F, v_e);
@@ -1209,7 +1128,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 	pad.burntime = v_e / F *(sv1.mass + LMmass)*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
 
-	if (opt->enginetype == RTCC_ENGINETYPE_SPSDPS)
+	if (opt->enginetype == RTCC_ENGINETYPE_SPS)
 	{
 		CalcSPSGimbalTrimAngles(sv1.mass, LMmass, p_T, y_T);
 
@@ -1233,7 +1152,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		ManPADYTrim = 0.0;
 
 		X_B = unit(V_G);
-		if (opt->directiontype == RTCC_DIRECTIONTYPE_PLUSX)
+		if (opt->enginetype == RTCC_ENGINETYPE_RCSPLUS2 || opt->enginetype == RTCC_ENGINETYPE_RCSPLUS4)
 		{
 			UX = X_B;
 			pad.Vc = length(opt->dV_LVLH);
@@ -2373,9 +2292,9 @@ void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
 
 void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post)
 {
-	double cosA, sinA, A, dt, MJD_A, lng, lat, rad, GET, mu, LMmass, mass, t_slip;
-	MATRIX3 Rot, Q_Xx;
-	VECTOR3 RLS, n1, u, n2, V_PC2, DV, loc, Llambda;
+	double cosA, sinA, A, dt, MJD_A, lng, lat, rad, GET, mu, LMmass, mass;
+	MATRIX3 Rot;
+	VECTOR3 RLS, n1, u, n2, V_PC2, DV, loc;
 	SV sv0, sv1, sv_PC;
 
 	sv0 = opt->RV_MCC;
@@ -2422,15 +2341,7 @@ void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV
 
 	DV = V_PC2 - sv_PC.V;
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv_PC, LMmass, DV, true, Llambda, t_slip, sv_post);
-
-	sv_pre = coast(sv_PC, t_slip);
-
-	Q_Xx = OrbMech::LVLH_Matrix(sv_pre.R, sv_pre.V);
-
-	dV_LVLH = mul(Q_Xx, Llambda);
-
-	P30TIG = opt->EarliestGET + dt + t_slip;
+	PoweredFlightProcessor(sv_PC, opt->GETbase, opt->EarliestGET + dt, RTCC_ENGINETYPE_SPS, LMmass, DV, false, P30TIG, dV_LVLH, sv_pre, sv_post);
 }
 
 void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
@@ -2607,16 +2518,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		VECTOR3 Llambda, R_cut, V_cut;
 		double f_T, isp, t_slip, MJD_cut, m_cut;
 
-		if (opt->vesseltype == 0)
-		{
-			f_T = SPS_THRUST;
-			isp = SPS_ISP;
-		}
-		else
-		{
-			f_T = DPS_THRUST;
-			isp = DPS_ISP;
-		}
+		EngineParametersTable(opt->enginetype, f_T, isp);
 
 		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 		sv_pre = coast(sv_node, t_slip);
@@ -2688,7 +2590,6 @@ void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_
 
 	double a, dt2, LOIGET, v_circ;
 	VECTOR3 U_H, U_hor, VA2_apo, DVX;
-	MATRIX3 Q_Xx;
 
 	a = OrbMech::R_Moon + opt->h_circ + opt->alt;
 
@@ -2703,19 +2604,7 @@ void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_
 
 	DVX = VA2_apo - sv2.V;
 
-	VECTOR3 Llambda;
-	double t_slip;
-	SV sv_tig;
-
-	FiniteBurntimeCompensation(opt->vesseltype, sv2, LMmass, DVX, true, Llambda, t_slip, sv_post); //Calculate the impulsive equivalent of the maneuver
-	sv_tig = coast(sv2, t_slip);
-	sv_pre = sv_tig;
-
-	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
-
-	dV_LVLH = mul(Q_Xx, Llambda);
-
-	P30TIG = LOIGET + t_slip;
+	PoweredFlightProcessor(sv2, opt->GETbase, LOIGET, opt->enginetype, LMmass, DVX, false, P30TIG, dV_LVLH, sv_pre, sv_post);
 }
 
 void RTCC::TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
@@ -2821,7 +2710,7 @@ void RTCC::TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, 
 
 	m1 = (sv0.mass - m0)*exp(-boil*dt1);
 
-	OrbMech::impulsive(sv1.R, sv1.V, TIGMJD, hEarth, f_T, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
+	OrbMech::impulsive(sv1.R, sv1.V, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
 
 	OrbMech::oneclickcoast(sv1.R, sv1.V, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
 
@@ -2907,7 +2796,7 @@ void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *r
 
 	m1 = (sv0.mass - m0)*exp(-boil*dt1);
 
-	OrbMech::impulsive(sv2.R, sv2.V, TIGMJD, hEarth, f_T, f_T, isp, m0 + m1, DV, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
+	OrbMech::impulsive(sv2.R, sv2.V, TIGMJD, hEarth, f_T, isp, m0 + m1, DV, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
 
 	OrbMech::oneclickcoast(sv2.R, sv2.V, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
 
@@ -2943,9 +2832,9 @@ void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *r
 
 void RTCC::TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res)
 {
-	MATRIX3 Q_Xx, Rot, M_EMP;
-	VECTOR3 R_selen, R, R_EMP, DV1, DV2, var_conv1, var_conv2, DV3, Llambda;
-	double LMmass, mass, dt1, dt2, NodeMJD, t_slip;
+	MATRIX3 Rot, M_EMP;
+	VECTOR3 R_selen, R, R_EMP, DV1, DV2, var_conv1, var_conv2, DV3;
+	double LMmass, mass, dt1, dt2, NodeMJD;
 	double lat_EMP, lng_EMP;
 	OBJHANDLE hMoon;
 	SV sv0, sv1, sv_tig, sv_peri2;
@@ -2994,14 +2883,7 @@ void RTCC::TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCRes
 	//Step 3: Converge integrated XYZ and T trajectory
 	TLMCIntegratedXYZT(sv1, lat_EMP, lng_EMP, opt.h_node, NodeMJD, DV2, DV3);
 
-	FiniteBurntimeCompensation(opt.vesseltype, sv1, LMmass, DV3, true, Llambda, t_slip, res.sv_post); //Calculate the impulsive equivalent of the maneuver
-	sv_tig = coast(sv1, t_slip);
-
-	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
-
-	res.sv_pre = sv_tig;
-	res.dV_LVLH = mul(Q_Xx, Llambda);
-	res.P30TIG = opt.MCCGET + t_slip;
+	PoweredFlightProcessor(sv1, opt.GETbase, opt.MCCGET, opt.enginetype, LMmass, DV3, false, res.P30TIG, res.dV_LVLH, res.sv_pre, res.sv_post);
 }
 
 bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res)
@@ -3010,9 +2892,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCC
 	double mass, LMmass, dt1, dt2, PeriMJDguess, lat_EMP3;
 	double r_peri3, v_peri3, lng_peri3, lat_peri3, fpav_peri3, azi_peri3;
 	OBJHANDLE hMoon, hEarth;
-	VECTOR3 Llambda, DV, DV1, var_conv1, DV2, DV3, R_EMP3, V_EMP3, DV5, var_converged5;
-	MATRIX3 Q_Xx;
-	double t_slip;
+	VECTOR3 DV, DV1, var_conv1, DV2, DV3, R_EMP3, V_EMP3, DV5, var_converged5;
 	SV sv_tig;
 
 	hMoon = oapiGetObjectByName("Moon");
@@ -3064,14 +2944,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCC
 	res->PericynthionGET = (sv_peri.MJD - opt->GETbase)*24.0*3600.0;
 	res->EntryInterfaceGET = (sv_reentry.MJD - opt->GETbase)*24.0*3600.0;
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv1, LMmass, DV, true, Llambda, t_slip, res->sv_post); //Calculate the impulsive equivalent of the maneuver
-	sv_tig = coast(sv1, t_slip);
-	res->sv_pre = sv_tig;
-
-	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
-
-	res->dV_LVLH = mul(Q_Xx, Llambda);
-	res->P30TIG = opt->MCCGET + t_slip;
+	PoweredFlightProcessor(sv1, opt->GETbase, 0.0, opt->enginetype, LMmass, DV, false, res->P30TIG, res->dV_LVLH, res->sv_pre, res->sv_post);
 
 	//Calculate nodal target
 	OrbMech::latlong_from_J2000(sv_node.R, sv_node.MJD, sv_node.gravref, res->NodeLat, res->NodeLng);
@@ -3106,9 +2979,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 	double mass, LMmass, dt1, dt2, PeriMJD, lat_EMP2, r_nd2, v_nd2, fpa_nd2, azi_nd2;
 	double h_nd2, lat_nd2, lng_nd2, lat_nd4, lng_nd4, h_nd4;
 	OBJHANDLE hMoon;
-	VECTOR3 Llambda, DV1, var_conv1, DV2, DV4, R_EMP2, V_EMP2, var_conv4, DV5, R_EMP4, V_EMP4;
-	MATRIX3 Q_Xx;
-	double t_slip;
+	VECTOR3 DV1, var_conv1, DV2, DV4, R_EMP2, V_EMP2, var_conv4, DV5, R_EMP4, V_EMP4;
 	SV sv_tig;
 
 	hMoon = oapiGetObjectByName("Moon");
@@ -3187,7 +3058,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 	loiopt.type = opt->type;
 	loiopt.t_land = opt->t_land;
 	loiopt.vessel = opt->vessel;
-	loiopt.vesseltype = opt->vesseltype;
+	loiopt.enginetype = opt->enginetype;
 	loiopt.EllipseRotation = opt->LOIEllipseRotation;
 
 	LOITargeting(&loiopt, res->dV_LVLH_LOI, TIG_LOI, sv_node6, sv_preLOI, sv_postLOI);
@@ -3229,14 +3100,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 	}
 
 	//Finite burntime compensation
-	FiniteBurntimeCompensation(opt->vesseltype, sv1, LMmass, DV5, true, Llambda, t_slip, res->sv_post); //Calculate the impulsive equivalent of the maneuver
-	sv_tig = coast(sv1, t_slip);
-	res->sv_pre = sv_tig;
-
-	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
-
-	res->dV_LVLH = mul(Q_Xx, Llambda);
-	res->P30TIG = opt->MCCGET + t_slip;
+	PoweredFlightProcessor(sv1, opt->GETbase, 0.0, opt->enginetype, LMmass, DV5, false, res->P30TIG, res->dV_LVLH, res->sv_pre, res->sv_post);
 
 	res->EMPLatitude = lat_nd4;
 
@@ -3248,9 +3112,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCRe
 	SV sv0, sv1, sv_peri2, sv_peri3, sv_reentry3;
 	double mass, LMmass, dt1, dt2, PeriMJDguess;
 	OBJHANDLE hMoon, hEarth;
-	VECTOR3 Llambda, DV1, var_conv1, DV2, var_conv2, DV3;
-	MATRIX3 Q_Xx;
-	double t_slip;
+	VECTOR3 DV1, var_conv1, DV2, var_conv2, DV3;
 	SV sv_tig;
 
 	hEarth = oapiGetObjectByName("Earth");
@@ -3290,14 +3152,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCRe
 	res->PericynthionGET = (sv_peri3.MJD - opt->GETbase)*24.0*3600.0;
 	res->EntryInterfaceGET = (sv_reentry3.MJD - opt->GETbase)*24.0*3600.0;
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv1, LMmass, DV3, true, Llambda, t_slip, res->sv_post); //Calculate the impulsive equivalent of the maneuver
-	sv_tig = coast(sv1, t_slip);
-	res->sv_pre = sv_tig;
-
-	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
-
-	res->dV_LVLH = mul(Q_Xx, Llambda);
-	res->P30TIG = opt->MCCGET + t_slip;
+	PoweredFlightProcessor(sv1, opt->GETbase, 0.0, opt->enginetype, LMmass, DV3, false, res->P30TIG, res->dV_LVLH, res->sv_pre, res->sv_post);
 
 	//Calculate Reentry Parameters
 	MATRIX3 Rot;
@@ -3326,9 +3181,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyM
 	SV sv0, sv1, sv_peri, sv_reentry;
 	double mass, LMmass, dt1, dt2, PeriMJDguess;
 	OBJHANDLE hMoon, hEarth;
-	VECTOR3 Llambda, DV, var_converged;
-	MATRIX3 Q_Xx;
-	double t_slip;
+	VECTOR3 DV, var_converged;
 	SV sv_tig;
 
 	step = 0;
@@ -3468,14 +3321,8 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyM
 
 	step++;
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv1, LMmass, DV, true, Llambda, t_slip, res->sv_post); //Calculate the impulsive equivalent of the maneuver
-	sv_tig = coast(sv1, t_slip);
-	res->sv_pre = sv_tig;
+	PoweredFlightProcessor(sv1, opt->GETbase, 0.0, opt->enginetype, LMmass, DV, false, res->P30TIG, res->dV_LVLH, res->sv_pre, res->sv_post);
 
-	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
-
-	res->dV_LVLH = mul(Q_Xx, Llambda);
-	res->P30TIG = opt->MCCGET + t_slip;
 	res->PericynthionGET = (sv_peri.MJD - opt->GETbase)*24.0*3600.0;
 	res->EntryInterfaceGET = (sv_reentry.MJD - opt->GETbase)*24.0*3600.0;
 
@@ -4997,11 +4844,11 @@ int RTCC::SPSRCSDecision(double a, VECTOR3 dV_LVLH)
 
 	if (t > 0.5)
 	{
-		return RTCC_ENGINETYPE_SPSDPS;
+		return RTCC_ENGINETYPE_SPS;
 	}
 	else
 	{
-		return RTCC_ENGINETYPE_RCS;
+		return RTCC_ENGINETYPE_RCSPLUS4;
 	}
 }
 
@@ -5167,9 +5014,6 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	bool endi = false;
 	double EMSAlt, dt22, MJDguess, LMmass, TZMINI;
 	VECTOR3 R05G, V05G;
-	VECTOR3 Llambda;
-	double t_slip;
-	MATRIX3 Q_Xx;
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 
@@ -5275,12 +5119,7 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	sv_tig.R = teicalc->Rig;
 	sv_tig.V = teicalc->Vig;
 
-	FiniteBurntimeCompensation(opt->vesseltype, sv_tig, LMmass, teicalc->Vig_apo - teicalc->Vig, opt->enginetype, Llambda, t_slip, res->sv_postburn);
-	res->sv_preburn = coast(sv_tig, t_slip);
-
-	Q_Xx = OrbMech::LVLH_Matrix(res->sv_preburn.R, res->sv_preburn.V);
-	res->P30TIG = OrbMech::GETfromMJD(res->sv_preburn.MJD, opt->GETbase);
-	res->dV_LVLH = mul(Q_Xx, Llambda);
+	PoweredFlightProcessor(sv_tig, opt->GETbase, 0.0, opt->enginetype, LMmass, teicalc->Vig_apo - teicalc->Vig, false, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
 
 	delete teicalc;
 }
@@ -5673,15 +5512,53 @@ gtupdate:
 	dV_LVLH = _V(1.0, 0.0, 0.0)*(dV - a_T_cut * dt_tailoff);
 }
 
-void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_out, bool agc)
+void RTCC::EngineParametersTable(int enginetype, double &Thrust, double &Isp)
+{
+	if (enginetype == RTCC_ENGINETYPE_SPS)
+	{
+		Thrust = SPS_THRUST;
+		Isp = SPS_ISP;
+	}
+	else if (enginetype == RTCC_ENGINETYPE_APS)
+	{
+		Thrust = APS_THRUST;
+		Isp = APS_ISP;
+	}
+	else if (enginetype == RTCC_ENGINETYPE_DPS)
+	{
+		Thrust = DPS_THRUST;
+		Isp = DPS_ISP;
+	}
+	else if (enginetype == RTCC_ENGINETYPE_RCSPLUS2 || enginetype == RTCC_ENGINETYPE_RCSMINUS2)
+	{
+		Thrust = 441.5*2.0;
+		Isp = 2706.64;
+	}
+	else if (enginetype == RTCC_ENGINETYPE_RCSPLUS4 || enginetype == RTCC_ENGINETYPE_RCSMINUS4)
+	{
+		Thrust = 441.5*4.0;
+		Isp = 2706.64;
+	}
+	else if (enginetype == RTCC_ENGINETYPE_SIVB_APS)
+	{
+		Thrust = 2.0*310.0;
+		Isp = 290.0 * G;
+	}
+	else if (enginetype == RTCC_ENGINETYPE_LOX_DUMP)
+	{
+		Thrust = 3300.0;
+		Isp = 157.0;
+	}
+}
+
+void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, SV &sv_tig, SV &sv_out, bool agc)
 {
 	//For CSM, LM or CSM/LM docked maneuvers
 	//INPUT:
-	//vesseltype: thrusting vessel, 0 = CSM, 1 = LM, 2 = S-IVB
 	//sv: State vector at impulsive TIG
 	//attachedMass: mass of the attached vessel, 0 if no vessel present
 	//DV: Delta velocity of impulsive thrusting maneuver
-	//engine: 0 = use RCS (APS for S-IVB), 1 = use SPS/DPS engine (LOX dump for S-IVB), 2 = use LM APS engine
+	//engine: 0 = 
 	//
 	//OUTPUT:
 	//DV_imp: non-impulsive delta velocity
@@ -5692,99 +5569,68 @@ void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass
 
 	sv_out.gravref = sv.gravref;
 
-	//CSM
-	if (vesseltype == 0)
+	if (engine == RTCC_ENGINETYPE_DPS)
 	{
-		//RCS
-		if (engine == 0)
-		{
-			isp = 2706.64;
-			f_T = 400.0*4.448222;
-			F_average = f_T;
-		}
-		//SPS
-		else
-		{
-			f_T = SPS_THRUST;
-			isp = SPS_ISP;
-			F_average = f_T;
-		}
-	}
-	//LM
-	else if (vesseltype == 1)
-	{
-		//RCS
-		if (engine == 0)
-		{
-			isp = 2706.64;
-			f_T = 400.0*4.448222;
-			F_average = f_T;
-		}
-		//DPS
-		else if (engine == 1)
-		{
-			double bt, bt_var;
-			int step;
+		double bt, bt_var;
+		int step;
 
-			f_T = DPS_THRUST;
-			isp = DPS_ISP;
+		EngineParametersTable(engine, f_T, isp);
 
-			LMThrottleProgram(f_T, isp, sv.mass + attachedMass, length(DV), F_average, bt, bt_var, step);
-		}
-		//APS
-		else
-		{
-			f_T = APS_THRUST;
-			isp = APS_ISP;
-			F_average = f_T;
-		}
+		LMThrottleProgram(f_T, isp, sv.mass + attachedMass, length(DV), F_average, bt, bt_var, step);
 	}
-	//S-IVB
 	else
 	{
-		//APS burn
-		if (engine == 0)
-		{
-			f_T = 2.0*310.0;
-			isp = 290.0 * G;
-			F_average = f_T;
-		}
-		//LOX Dump
-		else if (engine == 1)
-		{
-			f_T = 3300.0;
-			isp = 157.0;
-			F_average = f_T;
-		}
+		EngineParametersTable(engine, f_T, isp);
+		F_average = f_T;
 	}
 
-	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, f_T, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass, agc);
+	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
+
+	sv_tig = coast(sv, t_slip);
+
+	if (agc)
+	{
+		DV_imp = PIEXDV(sv_tig.R, sv_tig.V, sv.mass + attachedMass, f_T, DV, false);
+	}
+	else
+	{
+		DV_imp = PIAEDV(DV, sv_tig.R, sv_tig.V, sv_tig.R, false);
+	}
 
 	sv_out.mass -= attachedMass;
 }
 
-void RTCC::FiniteBurntimeCompensation(int vesseltype, SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc)
+void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, int engine, VECTOR3 &DV_imp, double &t_slip, bool agc)
 {
-	SV sv_out;
+	SV sv_tig, sv_cut;
 
-	FiniteBurntimeCompensation(vesseltype, sv, attachedMass, DV, engine, DV_imp, t_slip, sv_out, agc);
+	FiniteBurntimeCompensation(sv, attachedMass, DV, engine, DV_imp, t_slip, sv_tig, sv_cut, agc);
 }
 
-void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc)
+void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc)
 {
 	SV sv_pre, sv_post;
 
-	PoweredFlightProcessor(sv0, GETbase, GET_TIG_imp, vesseltype, enginetype, attachedMass, DV, DVIsLVLH, GET_TIG, dV_LVLH, sv_pre, sv_post, agc);
+	PoweredFlightProcessor(sv0, GETbase, GET_TIG_imp, enginetype, attachedMass, DV, DVIsLVLH, GET_TIG, dV_LVLH, sv_pre, sv_post, agc);
 }
 
-void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int vesseltype, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, SV &sv_pre, SV &sv_post, bool agc)
+void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, SV &sv_pre, SV &sv_post, bool agc)
 {
-	SV sv_imp, sv_tig;
+	SV sv_imp;
 	MATRIX3 Q_Xx;
-	VECTOR3 Llambda, DeltaV;
+	VECTOR3 DeltaV;
 	double t_slip;
 
-	sv_imp = coast(sv0, GET_TIG_imp - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+	//If TIG set to 0 use input SV MJD as TIG
+	if (GET_TIG_imp == 0.0)
+	{
+		sv_imp = sv0;
+		GET_TIG_imp = OrbMech::GETfromMJD(sv_imp.MJD, GETbase);
+	}
+	else
+	{
+		sv_imp = coast(sv0, GET_TIG_imp - OrbMech::GETfromMJD(sv0.MJD, GETbase));
+	}
 
 	if (DVIsLVLH)
 	{
@@ -5796,14 +5642,9 @@ void RTCC::PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, in
 		DeltaV = DV;
 	}
 
-	FiniteBurntimeCompensation(vesseltype, sv_imp, attachedMass, DeltaV, enginetype, Llambda, t_slip, sv_post, agc);
+	FiniteBurntimeCompensation(sv_imp, attachedMass, DeltaV, enginetype, dV_LVLH, t_slip, sv_pre, sv_post, agc);
 
-	sv_tig = coast(sv_imp, t_slip);
-	sv_pre = sv_tig;
-
-	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
 	GET_TIG = GET_TIG_imp + t_slip;
-	dV_LVLH = mul(Q_Xx, Llambda);
 }
 
 VECTOR3 RTCC::ConvertDVtoLVLH(SV sv0, double GETbase, double TIG_imp, VECTOR3 DV_imp)
@@ -6431,24 +6272,9 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 		return false;
 	}
 
-	VECTOR3 R_cor, V_cor, Llambda, DVX;
-	MATRIX3 Q_Xx;
-	double t_slip;
-
 	sv_tig = coast(sv_C, (opt->GETbase - sv_C.MJD)*24.0*3600.0 + P30TIG);
 
-	Q_Xx = OrbMech::LVLH_Matrix(sv_tig.R, sv_tig.V);
-
-	DVX = tmul(Q_Xx, dV_LVLH);
-
-	FiniteBurntimeCompensation(RTCC_VESSELTYPE_CSM, sv_tig, LMmass, DVX, 1, Llambda, t_slip);
-
-	OrbMech::oneclickcoast(sv_tig.R, sv_tig.V, sv_tig.MJD, t_slip, R_cor, V_cor, gravref, gravref);
-
-	Q_Xx = OrbMech::LVLH_Matrix(R_cor, V_cor);
-
-	res->P30TIG = P30TIG + t_slip;
-	res->dV_LVLH = mul(Q_Xx, Llambda);
+	PoweredFlightProcessor(sv_tig, opt->GETbase, 0.0, RTCC_ENGINETYPE_SPS, LMmass, dV_LVLH, true, res->P30TIG, res->dV_LVLH);
 
 	return true;
 }
@@ -10564,4 +10390,160 @@ VECTOR3 RTCC::PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV
 	}
 
 	return DV_out;
+}
+
+int RTCC::ELVCNV(const PZEFEM &ephem, SV sv, int in, int out, SV &sv_out)
+{
+	int err;
+
+	sv_out = sv;
+
+	//1 = ECI, 2 = ECT, 3 = MCI, 4 = MCT, 5 = EMP
+
+	if ((in == 1 && out == 2) || (in == 2 && out == 1))
+	{
+		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, sv.MJD);
+
+		if (in == 1)
+		{
+			sv_out.R = rhtmul(Rot, sv.R);
+			sv_out.V = rhtmul(Rot, sv.V);
+		}
+		else
+		{
+			sv_out.R = rhmul(Rot, sv.R);
+			sv_out.V = rhmul(Rot, sv.V);
+		}
+	}
+	else if ((in == 1 && out == 3) || (in == 3 && out == 1))
+	{
+		VECTOR3 R_EM, V_EM, R_ES;
+
+		if (!OrbMech::PLEFEM(ephem, sv.MJD, R_EM, V_EM, R_ES)) return 1;
+
+		if (in == 1)
+		{
+			sv_out.R = sv.R - R_EM;
+			sv_out.V = sv.V - V_EM;
+		}
+		else
+		{
+			sv_out.R = sv.R + R_EM;
+			sv_out.V = sv.V + V_EM;
+		}
+	}
+	else if ((in == 3 && out == 4) || (in == 4 && out == 3))
+	{
+		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv.MJD);
+
+		if (in == 3)
+		{
+			sv_out.R = rhtmul(Rot, sv.R);
+			sv_out.V = rhtmul(Rot, sv.V);
+		}
+		else
+		{
+			sv_out.R = rhmul(Rot, sv.R);
+			sv_out.V = rhmul(Rot, sv.V);
+		}
+	}
+	else if ((in == 3 && out == 5) || (in == 5 && out == 3))
+	{
+		MATRIX3 Rot;
+		VECTOR3 R_EM, V_EM, R_ES;
+		VECTOR3 X_EMP, Y_EMP, Z_EMP;
+
+		if (!OrbMech::PLEFEM(ephem, sv.MJD, R_EM, V_EM, R_ES)) return 1;
+
+		X_EMP = -unit(R_EM);
+		Z_EMP = unit(crossp(R_EM, V_EM));
+		Y_EMP = crossp(Z_EMP, X_EMP);
+		Rot = _M(X_EMP.x, X_EMP.y, X_EMP.z, Y_EMP.x, Y_EMP.y, Y_EMP.z, Z_EMP.x, Z_EMP.y, Z_EMP.z);
+
+		if (in == 3)
+		{
+			sv_out.R = rhmul(Rot, sv.R);
+			sv_out.V = rhmul(Rot, sv.V);
+		}
+		else
+		{
+			sv_out.R = rhtmul(Rot, sv.R);
+			sv_out.V = rhtmul(Rot, sv.V);
+		}
+	}
+	else if (in == 1 && out == 4)
+	{
+		SV sv1;
+
+		err = ELVCNV(ephem, sv, 1, 3, sv1);
+		if (err) return err;
+		err = ELVCNV(ephem, sv1, 3, 4, sv_out);
+		if (err) return err;
+	}
+	else if (in == 4 && out == 1)
+	{
+		SV sv1;
+		err = ELVCNV(ephem, sv, 4, 3, sv1);
+		if (err) return err;
+		err = ELVCNV(ephem, sv1, 3, 1, sv_out);
+		if (err) return err;
+	}
+	else if (in == 1 && out == 5)
+	{
+		SV sv1;
+
+		err = ELVCNV(ephem, sv, 1, 3, sv1);
+		if (err) return err;
+		err = ELVCNV(ephem, sv1, 3, 5, sv_out);
+		if (err) return err;
+	}
+	else if (in == 5 && out == 1)
+	{
+		SV sv1;
+		err = ELVCNV(ephem, sv, 5, 3, sv1);
+		if (err) return err;
+		err = ELVCNV(ephem, sv1, 3, 1, sv_out);
+		if (err) return err;
+	}
+	else if (in == 2 && out == 5)
+	{
+		SV sv1, sv2;
+
+		err = ELVCNV(ephem, sv, 2, 1, sv1);
+		if (err) return err;
+		err = ELVCNV(ephem, sv1, 1, 3, sv2);
+		if (err) return err;
+		err = ELVCNV(ephem, sv2, 3, 5, sv_out);
+		if (err) return err;
+	}
+	else if (in == 5 && out == 2)
+	{
+		SV sv1, sv2;
+
+		err = ELVCNV(ephem, sv, 5, 3, sv1);
+		if (err) return err;
+		err = ELVCNV(ephem, sv1, 3, 1, sv2);
+		if (err) return err;
+		err = ELVCNV(ephem, sv2, 1, 2, sv_out);
+		if (err) return err;
+	}
+	else if (in == 4 && out == 5)
+	{
+		SV sv1;
+
+		err = ELVCNV(ephem, sv, 4, 3, sv1);
+		if (err) return err;
+		err = ELVCNV(ephem, sv1, 3, 5, sv_out);
+		if (err) return err;
+	}
+	else if (in == 5 && out == 4)
+	{
+		SV sv1;
+		err = ELVCNV(ephem, sv, 5, 3, sv1);
+		if (err) return err;
+		err = ELVCNV(ephem, sv1, 3, 4, sv_out);
+		if (err) return err;
+	}
+
+	return 0;
 }

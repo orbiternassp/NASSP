@@ -590,8 +590,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lmmanpad.SXP = 0.0;
 	sprintf(lmmanpad.remarks, "");
 	entrypadopt = 0;
-	enginetype = 1;
-	directiontype = 0;
+	csmenginetype = 0;
+	lemenginetype = 1;
 	TPIPAD_AZ = 0.0;
 	TPIPAD_dH = 0.0;
 	TPIPAD_dV_LOS = _V(0.0, 0.0, 0.0);
@@ -2121,28 +2121,26 @@ int ARCore::subThread()
 {
 	int Result = 0;
 
-	int poweredvesseltype, poweredenginetype, mptveh, docked, mptotherveh;
+	int poweredenginetype, mptveh, docked, mptotherveh;
 
 	if (vesseltype < 2)
 	{
-		poweredvesseltype = RTCC_VESSELTYPE_CSM;
 		mptveh = 2;
 		mptotherveh = 1;
 	}
 	else
 	{
-		poweredvesseltype = RTCC_VESSELTYPE_LM;
 		mptveh = 1;
 		mptotherveh = 2;
 	}
 
-	if (vesseltype >= 2 && !lemdescentstage)
+	if (vesseltype >= 2)
 	{
-		poweredenginetype = RTCC_ENGINETYPE_APS;
+		poweredenginetype = LEMToEngineType();
 	}
 	else
 	{
-		poweredenginetype = RTCC_ENGINETYPE_SPSDPS;
+		poweredenginetype = CSMToEngineType();
 	}
 
 	if (vesseltype == 1 || vesseltype == 3)
@@ -2233,7 +2231,7 @@ int ARCore::subThread()
 			attachedMass = rtcc->GetDockedVesselMass(vessel);
 		}
 		rtcc->LambertTargeting(&opt, res);
-		rtcc->PoweredFlightProcessor(sv_A, GC->GETbase, res.T1, poweredvesseltype, poweredenginetype, attachedMass, res.dV, false, P30TIG, dV_LVLH, sv_pre, sv_post);
+		rtcc->PoweredFlightProcessor(sv_A, GC->GETbase, res.T1, poweredenginetype, attachedMass, res.dV, false, P30TIG, dV_LVLH, sv_pre, sv_post);
 		LambertdeltaV = dV_LVLH;
 
 		if (twoimpulsemode == 1)
@@ -2330,11 +2328,11 @@ int ARCore::subThread()
 		if (SPQMode == 0)
 		{
 			CDHtime = res.t_CDH;
-			rtcc->PoweredFlightProcessor(sv_A, GC->GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CSI, true, SPQTIG, SPQDeltaV, sv_pre, sv_post);
+			rtcc->PoweredFlightProcessor(sv_A, GC->GETbase, opt.t_TIG, poweredenginetype, 0.0, res.dV_CSI, true, SPQTIG, SPQDeltaV, sv_pre, sv_post);
 		}
 		else
 		{
-			rtcc->PoweredFlightProcessor(sv_A, GC->GETbase, opt.t_TIG, poweredvesseltype, poweredenginetype, 0.0, res.dV_CDH, true, SPQTIG, SPQDeltaV, sv_pre, sv_post);
+			rtcc->PoweredFlightProcessor(sv_A, GC->GETbase, opt.t_TIG, poweredenginetype, 0.0, res.dV_CDH, true, SPQTIG, SPQDeltaV, sv_pre, sv_post);
 		}
 
 		P30TIG = SPQTIG;
@@ -2407,7 +2405,7 @@ int ARCore::subThread()
 		}
 
 		rtcc->GeneralManeuverProcessor(&opt, dV_imp, TIG_imp, GMPResults);
-		rtcc->PoweredFlightProcessor(sv0, GC->GETbase, TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, dV_imp, false, P30TIG, OrbAdjDVX, sv_pre, sv_post);
+		rtcc->PoweredFlightProcessor(sv0, GC->GETbase, TIG_imp, poweredenginetype, attachedMass, dV_imp, false, P30TIG, OrbAdjDVX, sv_pre, sv_post);
 
 		dV_LVLH = OrbAdjDVX;
 
@@ -2529,15 +2527,7 @@ int ARCore::subThread()
 			loiopt.type = LOIOption;
 			loiopt.EllipseRotation = GC->LOIEllipseRotation;
 			loiopt.RV_MCC = sv0;
-
-			if (vesseltype < 2)
-			{
-				loiopt.vesseltype = 0;
-			}
-			else
-			{
-				loiopt.vesseltype = 1;
-			}
+			loiopt.enginetype = poweredenginetype;
 
 			if (vesseltype == 0 || vesseltype == 2)
 			{
@@ -2651,15 +2641,6 @@ int ARCore::subThread()
 			opt.RV_MCC = rtcc->StateVectorCalc(vessel);
 		}
 
-		if (vesseltype < 2)
-		{
-			opt.vesseltype = 0;
-		}
-		else
-		{
-			opt.vesseltype = 1;
-		}
-
 		if (vesseltype == 0 || vesseltype == 2)
 		{
 			opt.csmlmdocked = false;
@@ -2679,7 +2660,7 @@ int ARCore::subThread()
 		}
 
 		opt.GETbase = GC->GETbase;
-		opt.impulsive = RTCC_NONIMPULSIVE;
+		opt.enginetype = poweredenginetype;
 		opt.entrylongmanual = entrylongmanual;
 		opt.ReA = EntryAng;
 		opt.TIGguess = EntryTIG;
@@ -2816,8 +2797,7 @@ int ARCore::subThread()
 			AP11ManPADOpt opt;
 
 			opt.dV_LVLH = dV_LVLH;
-			opt.directiontype = directiontype;
-			opt.enginetype = enginetype;
+			opt.enginetype = poweredenginetype;
 			opt.GETbase = GC->GETbase;
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
@@ -2836,8 +2816,7 @@ int ARCore::subThread()
 			AP11LMManPADOpt opt;
 
 			opt.dV_LVLH = dV_LVLH;
-			opt.directiontype = directiontype;
-			opt.enginetype = GetPowEngType();
+			opt.enginetype = poweredenginetype;
 			opt.GETbase = GC->GETbase;
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
@@ -2902,7 +2881,7 @@ int ARCore::subThread()
 		}
 
 		rtcc->DOITargeting(&opt, DOI_DV_imp, DOI_TIG_imp, DOI_t_PDI, GC->t_Land, DOI_CR);
-		rtcc->PoweredFlightProcessor(sv, GC->GETbase, DOI_TIG_imp, poweredvesseltype, poweredenginetype, attachedMass, DOI_DV_imp, false, DOI_TIG, DOI_dV_LVLH, sv_pre, sv_post);
+		rtcc->PoweredFlightProcessor(sv, GC->GETbase, DOI_TIG_imp, poweredenginetype, attachedMass, DOI_DV_imp, false, DOI_TIG, DOI_dV_LVLH, sv_pre, sv_post);
 
 		P30TIG = DOI_TIG;
 		dV_LVLH = DOI_dV_LVLH;
@@ -2937,15 +2916,6 @@ int ARCore::subThread()
 		}
 
 		entryprecision = 1;
-
-		if (vesseltype < 2)
-		{
-			opt.vesseltype = 0;
-		}
-		else
-		{
-			opt.vesseltype = 1;
-		}
 
 		if (vesseltype == 0 || vesseltype == 2)
 		{
@@ -3001,7 +2971,6 @@ int ARCore::subThread()
 		}
 		else
 		{
-
 			Entry_DV = res.dV_LVLH;
 			EntryTIGcor = res.P30TIG;
 			EntryLatcor = res.latitude;
@@ -3143,15 +3112,6 @@ int ARCore::subThread()
 			opt.RV_MCC = rtcc->StateVectorCalc(vessel);
 		}
 
-		if (vesseltype < 2)
-		{
-			opt.vesseltype = 0;
-		}
-		else
-		{
-			opt.vesseltype = 1;
-		}
-
 		if (vesseltype == 0 || vesseltype == 2)
 		{
 			opt.csmlmdocked = false;
@@ -3257,15 +3217,6 @@ int ARCore::subThread()
 			{
 				MCCNodeMan opt;
 
-				if (vesseltype < 2)
-				{
-					opt.vesseltype = 0;
-				}
-				else
-				{
-					opt.vesseltype = 1;
-				}
-
 				if (vesseltype == 0 || vesseltype == 2)
 				{
 					opt.csmlmdocked = false;
@@ -3283,6 +3234,7 @@ int ARCore::subThread()
 				opt.NodeGET = GC->TLCCNodeGET;
 				opt.RV_MCC = sv0;
 				opt.vessel = vessel;
+				opt.enginetype = poweredenginetype;
 
 				rtcc->TranslunarMidcourseCorrectionTargetingNodal(opt, res);
 				TLCC_TIG = res.P30TIG;
@@ -3315,15 +3267,7 @@ int ARCore::subThread()
 				opt.PeriGET = GC->TLCCPeriGET;
 				opt.MCCGET = TLCC_GET;
 				opt.vessel = vessel;
-
-				if (vesseltype < 2)
-				{
-					opt.vesseltype = 0;
-				}
-				else
-				{
-					opt.vesseltype = 1;
-				}
+				opt.enginetype = poweredenginetype;
 
 				if (vesseltype == 0 || vesseltype == 2)
 				{
@@ -3390,15 +3334,7 @@ int ARCore::subThread()
 				opt.PeriGET = GC->TLCCPeriGET;
 				opt.MCCGET = TLCC_GET;
 				opt.vessel = vessel;
-
-				if (vesseltype < 2)
-				{
-					opt.vesseltype = 0;
-				}
-				else
-				{
-					opt.vesseltype = 1;
-				}
+				opt.enginetype = poweredenginetype;
 
 				if (vesseltype == 0 || vesseltype == 2)
 				{
@@ -3467,15 +3403,7 @@ int ARCore::subThread()
 				opt.vessel = vessel;
 				opt.h_peri = GC->TLCCFlybyPeriAlt;
 				opt.RV_MCC = sv0;
-
-				if (vesseltype < 2)
-				{
-					opt.vesseltype = 0;
-				}
-				else
-				{
-					opt.vesseltype = 1;
-				}
+				opt.enginetype = poweredenginetype;
 
 				if (vesseltype == 0 || vesseltype == 2)
 				{
@@ -3522,15 +3450,7 @@ int ARCore::subThread()
 				opt.AscendingNode = TLCCAscendingNode;
 				opt.FRInclination = TLCCFRDesiredInclination;
 				opt.RV_MCC = sv0;
-
-				if (vesseltype < 2)
-				{
-					opt.vesseltype = 0;
-				}
-				else
-				{
-					opt.vesseltype = 1;
-				}
+				opt.enginetype = poweredenginetype;
 
 				if (vesseltype == 0 || vesseltype == 2)
 				{
@@ -3684,16 +3604,7 @@ int ARCore::subThread()
 		}
 		
 		opt.GETbase = GC->GETbase;
-
-		if (enginetype == RTCC_ENGINETYPE_SPSDPS)
-		{
-			opt.impulsive = RTCC_NONIMPULSIVE;
-		}
-		else
-		{
-			opt.impulsive = RTCC_NONIMPULSIVERCS;
-		}
-		
+		opt.enginetype = poweredenginetype;
 		opt.entrylongmanual = entrylongmanual;
 		opt.ReA = EntryAng;
 		opt.TIGguess = EntryTIG;
@@ -3760,7 +3671,7 @@ int ARCore::subThread()
 		rtcc->DockingInitiationProcessor(opt, dkiresult);
 		if (DKI_Profile != 3)
 		{
-			rtcc->PoweredFlightProcessor(sv_A, GC->GETbase, DKI_TIG, poweredvesseltype, poweredenginetype, 0.0, dkiresult.DV_Phasing, false, P30TIG, dV_LVLH, sv_pre, sv_post);
+			rtcc->PoweredFlightProcessor(sv_A, GC->GETbase, DKI_TIG, poweredenginetype, 0.0, dkiresult.DV_Phasing, false, P30TIG, dV_LVLH, sv_pre, sv_post);
 
 			if (GC->MissionPlanningActive)
 			{
@@ -4320,26 +4231,6 @@ int ARCore::REFSMMATUplinkAddress()
 	}
 
 	return addr;
-}
-
-int ARCore::GetPowEngType()
-{
-	int poweredenginetype;
-
-	if (enginetype == 0)
-	{
-		poweredenginetype = RTCC_ENGINETYPE_RCS;
-	}
-	else if (enginetype == 1 && vesseltype >= 2 && !lemdescentstage)
-	{
-		poweredenginetype = RTCC_ENGINETYPE_APS;
-	}
-	else
-	{
-		poweredenginetype = RTCC_ENGINETYPE_SPSDPS;
-	}
-
-	return poweredenginetype;
 }
 
 void ARCore::DetermineGMPCode()
@@ -4943,4 +4834,56 @@ void ARCore::AGCCorrectionVectors(double mjd_launch, double t_land, int mission,
 	fprintf(file, "EMEM%o %d\n", mem, OrbMech::DoubleToBuffer(lm.z, 0, 0)); mem++;
 
 	if (file) fclose(file);
+}
+
+int ARCore::CSMToEngineType()
+{
+	if (csmenginetype == 0)
+	{
+		return RTCC_ENGINETYPE_SPS;
+	}
+	else if (csmenginetype == 1)
+	{
+		return RTCC_ENGINETYPE_RCSPLUS2;
+	}
+	else if (csmenginetype == 2)
+	{
+		return RTCC_ENGINETYPE_RCSPLUS4;
+	}
+	else if (csmenginetype == 3)
+	{
+		return RTCC_ENGINETYPE_RCSMINUS2;
+	}
+	else
+	{
+		return RTCC_ENGINETYPE_RCSMINUS4;
+	}
+}
+
+int ARCore::LEMToEngineType()
+{
+	if (lemenginetype == 0)
+	{
+		return RTCC_ENGINETYPE_APS;
+	}
+	else if (lemenginetype == 1)
+	{
+		return RTCC_ENGINETYPE_DPS;
+	}
+	else if (lemenginetype == 2)
+	{
+		return RTCC_ENGINETYPE_RCSPLUS2;
+	}
+	else if (lemenginetype == 3)
+	{
+		return RTCC_ENGINETYPE_RCSPLUS4;
+	}
+	else if (lemenginetype == 4)
+	{
+		return RTCC_ENGINETYPE_RCSMINUS2;
+	}
+	else
+	{
+		return RTCC_ENGINETYPE_RCSMINUS4;
+	}
 }
