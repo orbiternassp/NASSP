@@ -747,8 +747,8 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 {
 	MATRIX3 M_R, M, Q_Xx;
 	VECTOR3 V_G, X_B, UX, UY, UZ, IMUangles, FDAIangles;
-	double dt, mu, CSMmass, F, v_e, F_average, ManPADBurnTime, bt, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E, headsswitch;
-	int step, ManCOASstaroct;
+	double dt, mu, CSMmass, ManPADBurnTime, apo, peri, ManPADApo, ManPADPeri, ManPADDVR, ManBSSpitch, ManBSSXPos, R_E, headsswitch;
+	int ManCOASstaroct;
 	SV sv, sv1, sv2;
 
 	//State vector from PAD options or get a new one
@@ -775,22 +775,9 @@ void RTCC::AP11LMManeuverPAD(AP11LMManPADOpt *opt, AP11LMMNV &pad)
 		CSMmass = 0.0;
 	}
 
-	//Engine parameters
-	EngineParametersTable(opt->enginetype, F, v_e);
-
-	if (opt->enginetype == RTCC_ENGINETYPE_DPS)
-	{
-		//Estimates for average thrust (relevant for finite burntime compensation), complete and variable burntime
-		LMThrottleProgram(F, v_e, CSMmass + sv1.mass, length(opt->dV_LVLH), F_average, ManPADBurnTime, bt, step);
-	}
-	else
-	{
-		F_average = F;
-		ManPADBurnTime = v_e / F * (sv1.mass + CSMmass)*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
-	}
-
 	//Execute maneuver, output state vector at cutoff
-	sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1, CSMmass, Q_Xx, V_G, F_average, v_e);
+	sv2 = ExecuteManeuver(sv1, opt->GETbase, opt->TIG, opt->dV_LVLH, CSMmass, opt->enginetype, Q_Xx, V_G);
+	ManPADBurnTime = (sv2.MJD - sv1.MJD)*24.0*3600.0;
 
 	//Only use landing site radius for the Moon
 	if (sv1.gravref == oapiGetObjectByName("Moon"))
@@ -896,7 +883,7 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 {
 	MATRIX3 Q_Xx, M_R, M, M_RTM;
 	VECTOR3 V_G, X_B, UX, UY, UZ, IMUangles, GDCangles;
-	double dt, LMmass, F, v_e, headsswitch, mu, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, p_T, y_T, ManPADDVC, ManPADBurnTime;
+	double dt, LMmass, headsswitch, mu, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, p_T, y_T, ManPADDVC, ManPADBurnTime;
 	double Mantrunnion, Manshaft, ManBSSpitch, ManBSSXPos, R_E;
 	int GDCset, Manstaroct, ManCOASstaroct;
 	SV sv, sv1, sv2;
@@ -923,10 +910,9 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 		LMmass = 0.0;
 	}
 
-	EngineParametersTable(opt->enginetype, F, v_e);
-
 	//Execute maneuver, output state vector at cutoff
-	sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1, LMmass, Q_Xx, V_G, F, v_e);
+	sv2 = ExecuteManeuver(sv1, opt->GETbase, opt->TIG, opt->dV_LVLH, LMmass, opt->enginetype, Q_Xx, V_G);
+	ManPADBurnTime = (sv2.MJD - sv1.MJD)*24.0*3600.0;
 
 	//Only use landing site radius for the Moon
 	if (sv1.gravref == oapiGetObjectByName("Moon"))
@@ -995,8 +981,6 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		M = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	}
-
-	ManPADBurnTime = v_e / F *(sv1.mass + LMmass)*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
 
 	IMUangles = OrbMech::CALCGAR(opt->REFSMMAT, mul(OrbMech::tmat(M), M_R));
 	//sprintf(oapiDebugString(), "%f, %f, %f", IMUangles.x*DEG, IMUangles.y*DEG, IMUangles.z*DEG);
@@ -1071,7 +1055,7 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 {
 	MATRIX3 Q_Xx, M, M_R, M_RTM;
 	VECTOR3 V_G, X_B, UX, UY, UZ, Att;
-	double dt, LMmass, v_e, F, mu, headsswitch, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, y_T, p_T, R_E;
+	double dt, LMmass, mu, headsswitch, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, y_T, p_T, R_E;
 	SV sv, sv1, sv2;
 
 	if (opt->useSV)
@@ -1095,10 +1079,9 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 		LMmass = 0.0;
 	}
 
-	EngineParametersTable(opt->enginetype, F, v_e);
-
 	//Execute maneuver, output state vector at cutoff
-	sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1, LMmass, Q_Xx, V_G, F, v_e);
+	sv2 = ExecuteManeuver(sv1, opt->GETbase, opt->TIG, opt->dV_LVLH, LMmass, opt->enginetype, Q_Xx, V_G);
+	pad.burntime = (sv2.MJD - sv1.MJD)*24.0*3600.0;
 
 	if (sv1.gravref == oapiGetObjectByName("Earth"))
 	{
@@ -1125,8 +1108,6 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 	ManPADPeri = peri - R_E;
 
 	pad.Weight = sv1.mass / 0.45359237;
-
-	pad.burntime = v_e / F *(sv1.mass + LMmass)*(1.0 - exp(-length(opt->dV_LVLH) / v_e));
 
 	if (opt->enginetype == RTCC_ENGINETYPE_SPS)
 	{
@@ -1644,7 +1625,7 @@ void RTCC::LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad)
 	}
 	else
 	{
-		sv1 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, opt->sv0, 0);
+		sv1 = ExecuteManeuver(opt->sv0, opt->GETbase, opt->P30TIG, opt->dV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
 	}
 
 	if (sv1.gravref == hMoon)
@@ -2513,7 +2494,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 	coe = OrbMech::coe_from_sv(sv_node.R, sv_node.V, OrbMech::mu_Moon);
 
-	if (opt->impulsive == RTCC_NONIMPULSIVE)
+	if (opt->impulsive == 0)
 	{
 		VECTOR3 Llambda, R_cut, V_cut;
 		double f_T, isp, t_slip, MJD_cut, m_cut;
@@ -3051,7 +3032,7 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 	loiopt.GETbase = opt->GETbase;
 	loiopt.h_apo = opt->LOIh_apo;
 	loiopt.h_peri = opt->LOIh_peri;
-	loiopt.impulsive = RTCC_NONIMPULSIVE;
+	loiopt.impulsive = 0;
 	loiopt.lat = opt->LSlat;
 	loiopt.lng = opt->LSlng;
 	loiopt.RV_MCC = sv_node4;
@@ -4051,8 +4032,8 @@ void RTCC::TLI_PAD(TLIPADOpt* opt, TLIPAD &pad)
 	}
 	else
 	{
-
-		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->TIG, opt->dV_LVLH, sv1, 0);
+		//TBD: This is broken
+		sv2 = ExecuteManeuver(sv1, opt->GETbase, opt->TIG, opt->dV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
 
 		sv3 = coast(sv2, 900.0);
 
@@ -4122,7 +4103,7 @@ bool RTCC::PDI_PAD(PDIPADOpt* opt, AP11PDIPAD &pad)
 	}
 	else
 	{
-		sv2 = ExecuteManeuver(opt->vessel, opt->GETbase, opt->P30TIG, opt->dV_LVLH, opt->sv0, 0.0);
+		sv2 = ExecuteManeuver(opt->sv0, opt->GETbase, opt->P30TIG, opt->dV_LVLH, 0.0, RTCC_ENGINETYPE_DPS);
 	}
 
 	if (!PDIIgnitionAlgorithm(sv2, opt->GETbase, opt->R_LS, opt->t_land, opt->REFSMMAT, sv_I, TTT, C_R, U_FDP))
@@ -4852,85 +4833,15 @@ int RTCC::SPSRCSDecision(double a, VECTOR3 dV_LVLH)
 	}
 }
 
-SV RTCC::ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F, double isp)
+SV RTCC::ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster)
 {
-	//INPUT:
-	//vessel: vessel interface
-	//GETbase: usually launch MJD
-	//P30TIG: Time of ignition in seconds relative to GETbase
-	//dV_LVLH: DV Vector in LVLH coordinates
-	//sv: state vector on trajectory before the maneuver, doesn't have to be at TIG
-	//attachedMass: mass of the attached vessel, 0 if no vessel present
-	//optional:
-	//F: thrust in Newton
-	//isp: specific impulse in m/s
-	//OUTPUT:
-	//sv3: state vector at cutoff
+	MATRIX3 Q_Xx;
+	VECTOR3 V_G;
 
-	if (length(dV_LVLH) == 0.0)
-	{
-		return sv;
-	}
-
-	double t_go, theta_T;
-	VECTOR3 UX, UY, UZ, DV, DV_P, V_G, DV_C;
-	SV sv2, sv3;
-
-	if (vessel->GetGroupThruster(THGROUP_MAIN, 0))
-	{
-		if (F == 0.0)
-		{
-			F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
-		}
-
-		if (isp == 0.0)
-		{
-			isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
-		}
-	}
-	else
-	{
-		if (F == 0.0)
-		{
-			F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_HOVER, 0));
-		}
-
-		if (isp == 0.0)
-		{
-			isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_HOVER, 0));
-		}
-	}
-
-	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, P30TIG - (sv.MJD - GETbase)*24.0*3600.0, sv2.R, sv2.V, sv.gravref, sv2.gravref);
-	sv2.mass = sv.mass;
-	sv2.MJD = GETbase + P30TIG / 24.0 / 3600.0;
-
-	UY = unit(crossp(sv2.V, sv2.R));
-	UZ = unit(-sv2.R);
-	UX = crossp(UY, UZ);
-	DV = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
-	DV_P = UX*dV_LVLH.x + UZ*dV_LVLH.z;
-
-	if (length(DV_P) != 0.0)
-	{
-		theta_T = length(crossp(sv2.R, sv2.V))*length(dV_LVLH)*(sv2.mass + attachedMass) / OrbMech::power(length(sv2.R), 2.0) / F;
-		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, UY))*sin(theta_T / 2.0))*length(DV_P);
-		V_G = DV_C + UY*dV_LVLH.y;
-	}
-	else
-	{
-		V_G = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
-	}
-
-	OrbMech::poweredflight(sv2.R, sv2.V, sv2.MJD, sv2.gravref, F, isp, sv2.mass + attachedMass, V_G, sv3.R, sv3.V, sv3.mass, t_go);
-	sv3.gravref = sv2.gravref;
-	sv3.MJD = sv2.MJD + t_go / 24.0 / 3600.0;
-	sv3.mass -= attachedMass;
-
-	return sv3;
+	return ExecuteManeuver(sv, GETbase, P30TIG, dV_LVLH, attachedMass, Thruster, Q_Xx, V_G);
 }
 
-SV RTCC::ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F, double isp)
+SV RTCC::ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G)
 {
 	//INPUT:
 	//vessel: vessel interface
@@ -4945,36 +4856,23 @@ SV RTCC::ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 
 	//OUTPUT:
 	//sv3: state vector at cutoff
 
-	double t_go, theta_T;
+	double t_go, theta_T, F, v_e, F_average;
 	VECTOR3 UX, UY, UZ, DV, DV_P, DV_C;
 	SV sv2, sv3;
 
-	if (vessel)
+	EngineParametersTable(Thruster, F, v_e);
+
+	if (Thruster == RTCC_ENGINETYPE_DPS)
 	{
-		if (vessel->GetGroupThruster(THGROUP_MAIN, 0))
-		{
-			if (F == 0.0)
-			{
-				F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
-			}
+		double ManPADBurnTime, bt;
+		int step;
 
-			if (isp == 0.0)
-			{
-				isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_MAIN, 0));
-			}
-		}
-		else
-		{
-			if (F == 0.0)
-			{
-				F = vessel->GetThrusterMax0(vessel->GetGroupThruster(THGROUP_HOVER, 0));
-			}
-
-			if (isp == 0.0)
-			{
-				isp = vessel->GetThrusterIsp0(vessel->GetGroupThruster(THGROUP_HOVER, 0));
-			}
-		}
+		//Estimates for average thrust (relevant for finite burntime compensation), complete and variable burntime
+		LMThrottleProgram(F, v_e, attachedMass + sv.mass, length(dV_LVLH), F_average, ManPADBurnTime, bt, step);
+	}
+	else
+	{
+		F_average = F;
 	}
 
 	OrbMech::oneclickcoast(sv.R, sv.V, sv.MJD, P30TIG - (sv.MJD - GETbase)*24.0*3600.0, sv2.R, sv2.V, sv.gravref, sv2.gravref);
@@ -4999,7 +4897,7 @@ SV RTCC::ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 
 		V_G = UX*dV_LVLH.x + UY*dV_LVLH.y + UZ*dV_LVLH.z;
 	}
 
-	OrbMech::poweredflight(sv2.R, sv2.V, sv2.MJD, sv2.gravref, F, isp, sv2.mass + attachedMass, V_G, sv3.R, sv3.V, sv3.mass, t_go);
+	OrbMech::poweredflight(sv2.R, sv2.V, sv2.MJD, sv2.gravref, F_average, v_e, sv2.mass + attachedMass, V_G, sv3.R, sv3.V, sv3.mass, t_go);
 	sv3.gravref = sv2.gravref;
 	sv3.MJD = sv2.MJD + t_go / 24.0 / 3600.0;
 	sv3.mass -= attachedMass;
@@ -5558,7 +5456,7 @@ void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, in
 	//sv: State vector at impulsive TIG
 	//attachedMass: mass of the attached vessel, 0 if no vessel present
 	//DV: Delta velocity of impulsive thrusting maneuver
-	//engine: 0 = 
+	//engine: see defintion of RTCC_ENGINETYPEs
 	//
 	//OUTPUT:
 	//DV_imp: non-impulsive delta velocity
@@ -6504,7 +6402,7 @@ bool RTCC::TLMCConic_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double
 	loiopt.lng = opt->LSlng;
 	loiopt.t_land = opt->t_land;
 	loiopt.vessel = opt->vessel;
-	loiopt.impulsive = RTCC_IMPULSIVE;
+	loiopt.impulsive = 1;
 	loiopt.type = opt->type;
 
 	sv_p.gravref = hMoon;
@@ -6580,7 +6478,7 @@ bool RTCC::TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_pe
 	loiopt.lng = opt->LSlng;
 	loiopt.t_land = opt->t_land;
 	loiopt.vessel = opt->vessel;
-	loiopt.impulsive = RTCC_IMPULSIVE;
+	loiopt.impulsive = 1;
 	loiopt.type = opt->type;
 
 	loiopt.RV_MCC.gravref = sv_mcc.gravref;
@@ -6652,7 +6550,7 @@ bool RTCC::TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, doub
 	loiopt.lng = opt->LSlng;
 	loiopt.t_land = opt->t_land;
 	loiopt.vessel = opt->vessel;
-	loiopt.impulsive = RTCC_IMPULSIVE;
+	loiopt.impulsive = 1;
 	loiopt.type = opt->type;
 	loiopt.EllipseRotation = opt->LOIEllipseRotation;
 
@@ -6780,7 +6678,7 @@ bool RTCC::TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_
 	loiopt.lng = opt->LSlng;
 	loiopt.t_land = opt->t_land;
 	loiopt.vessel = opt->vessel;
-	loiopt.impulsive = RTCC_IMPULSIVE;
+	loiopt.impulsive = 1;
 	loiopt.type = opt->type;
 
 	c_I = 0;
@@ -7408,7 +7306,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 		} while (abs(e_P) >= eps_P);
 	}
 
-	res.DV_Phasing = tmul(OrbMech::LVLH_Matrix(R_AP, V_AP), _V(dv_P, 0.0, dv_rad_const));
+	res.DV_Phasing = _V(dv_P, 0.0, dv_rad_const);
 	res.t_CSI = t_H;
 	res.dv_CSI = dv_H;
 	res.t_CDH = t_C;
@@ -9675,7 +9573,7 @@ int RTCC::MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV)
 	return 1;
 }
 
-int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, char *code, double LSAlt, double DV, int L, bool docked)
+int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, bool docked)
 {
 	if (mptable.fulltable.size() > 0)
 	{
@@ -9769,6 +9667,54 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, char *code, doub
 	}
 
 	return 0;
+}
+
+int RTCC::MPTDirectInput(MPTable &mptable, SV sv_ig, double GETbase, double LSAlt, double attachedMass)
+{
+	if (mptable.fulltable.size() > 0)
+	{
+		if (sv_ig.MJD < mptable.fulltable.back().AftMJD)
+		{
+			return 2;
+		}
+	}
+
+	VECTOR3 V_G, R_cut, V_cut;
+	double f_T, v_ex, t_go, m_cut;
+
+	EngineParametersTable(med_m66.Thruster, f_T, v_ex);
+
+	if (med_m66.BurnParamNo == 1)
+	{
+		if (med_m40.P1_DV == 0.0)
+		{
+
+		}
+		else
+		{
+
+		}
+	}
+	else if (med_m66.BurnParamNo == 2)
+	{
+		V_G = PIEXDV(sv_ig.R, sv_ig.V, sv_ig.mass + attachedMass, f_T, med_m40.P2_DV, true);
+	}
+	else if (med_m66.BurnParamNo == 4)
+	{
+		V_G = tmul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), med_m40.P4_DV);
+	}
+
+	OrbMech::poweredflight(sv_ig.R, sv_ig.V, sv_ig.MJD, sv_ig.gravref, f_T, v_ex, sv_ig.mass + attachedMass, V_G, R_cut, V_cut, m_cut, t_go);
+
+	SV sv_cut;
+
+	sv_cut.gravref = sv_ig.gravref;
+	sv_cut.mass = m_cut - attachedMass;
+	sv_cut.MJD = sv_ig.MJD + t_go / 24.0 / 3600.0;
+	sv_cut.R = R_cut;
+	sv_cut.V = V_cut;
+
+	return MPTAddManeuver(mptable, sv_ig, sv_cut, med_m66.code.c_str(), LSAlt, length(V_G), med_m66.Table, attachedMass > 0);
 }
 
 int RTCC::MPTDeleteManeuver(MPTable &mptable)

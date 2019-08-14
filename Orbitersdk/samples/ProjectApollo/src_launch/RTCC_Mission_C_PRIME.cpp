@@ -790,7 +790,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		GETbase = calcParams.TEPHEM;
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, 0);
+		sv1 = ExecuteManeuver(sv0, GETbase, TimeofIgnition, DeltaV_LVLH, 0, RTCC_ENGINETYPE_SPS);
 
 		if (fcn == 50)
 		{
@@ -849,7 +849,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_hyper);
 
-		sv1 = ExecuteManeuver(calcParams.src, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, sv0, 0.0);
+		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
 		sv2 = coast(sv1, -30.0*60.0);
 		LunarOrbitMapUpdate(sv2, calcParams.TEPHEM, upd_ellip);
 		sv3 = coast(sv2, 2.0*3600.0);
@@ -878,7 +878,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_ellip);
 
-		sv1 = ExecuteManeuver(calcParams.src, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, sv0, 0.0);
+		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
 		LunarOrbitMapUpdate(sv1, calcParams.TEPHEM, upd_ellip2);
 
 		form->type = 1;
@@ -961,7 +961,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_ellip);
 
-		sv1 = ExecuteManeuver(calcParams.src, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, sv0, 0.0);
+		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
 		LunarOrbitMapUpdate(sv1, calcParams.TEPHEM, upd_hyper);
 
 		form->type = 1;

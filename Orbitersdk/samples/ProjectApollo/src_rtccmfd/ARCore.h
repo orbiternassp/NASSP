@@ -31,6 +31,7 @@ class AR_GCore
 {
 public:
 	AR_GCore(VESSEL* v);
+	~AR_GCore();
 
 	MPTable mptable;
 	bool MissionPlanningActive;
@@ -52,6 +53,8 @@ public:
 	double DOI_alt;						//perilune altitude above landing site
 	double RTEMaxReturnInclination;
 	double RTERangeOverrideNM;
+
+	RTCC* rtcc;
 };
 
 class ARCore {
@@ -96,6 +99,10 @@ public:
 	void CycleNextStationContactsDisplay();
 	void CyclePredictedSiteAcquisitionDisplay();
 	void CalculatePredictedSiteAcquisitionDisplay();
+	void TransferTIToMPT();
+	void TransferSPQToMPT();
+	void TransferDKIToMPT();
+	void MPTDirectInputCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -145,7 +152,6 @@ public:
 	int subThreadMode;										// What should the subthread do?
 	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
-	RTCC* rtcc;
 	ApolloRTCCMFDData g_Data;
 
 	//TARGETING VESSELS
@@ -172,6 +178,7 @@ public:
 	double T2;				//Arrival time for Lambert Targeting
 	double lambertelev;		//Elevation of target for T1 calculation
 	int N;					//Number of revolutions for Lambert Targeting
+	double TwoImpulse_TIG;	//Impulsive time of ignition for two-impulse maneuver
 	VECTOR3 LambertdeltaV;	//LVLH maneuver vector
 	int lambertopt;			//0 = spherical, 1 = non-spherical
 	VECTOR3 offvec;			//Lambert offset vector
@@ -184,6 +191,7 @@ public:
 	int lambertTPFOpt;		//0 = T2 on time, 1 = use DT from T1, 2 = use travel angle
 	double lambertDT;		//DT from T1 to T2
 	double lambertWT;		//travel angle of passive vehicle between T1 and T2
+	SV TwoImpulse_SV;		//State vector at impulsive TIG
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
@@ -199,6 +207,8 @@ public:
 	int DKI_N_PB;		//Number of half revs between Phasing and Boost/Height
 	double t_TPIguess;
 	DKIResults dkiresult;
+	VECTOR3 DKI_DV;
+	SV DKI_SV;		//State vector at impulsive TIG
 
 	//CONCENTRIC RENDEZVOUS PAGE
 	int SPQMode;	//0 = CSI, 1 = CDH
@@ -209,6 +219,7 @@ public:
 	double DH;			//Delta Height for the CDH maneuver
 	VECTOR3 SPQDeltaV;
 	SPQResults spqresults;
+	SV SPQ_SV;		//State vector at impulsive TIG
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code

@@ -494,7 +494,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.GETbase = GETbase;
 		loiopt.h_apo = 170.0*1852.0;
 		loiopt.h_peri = 60.0*1852.0;
-		loiopt.impulsive = RTCC_IMPULSIVE;
+		loiopt.impulsive = 1;
 		loiopt.lat = LSLat;
 		loiopt.lng = LSLng;
 		loiopt.RV_MCC = sv;
@@ -598,7 +598,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.GETbase = GETbase;
 		loiopt.h_apo = 170.0*1852.0;
 		loiopt.h_peri = 60.0*1852.0;
-		loiopt.impulsive = RTCC_IMPULSIVE;
+		loiopt.impulsive = 1;
 		loiopt.lat = LSLat;
 		loiopt.lng = LSLng;
 		loiopt.RV_MCC = sv;
@@ -914,7 +914,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (fcn == 30 || fcn == 31 || fcn == 32)
 		{
-			sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+			sv1 = ExecuteManeuver(sv0, GETbase, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_SPS);
 		}
 		else
 		{
@@ -1067,7 +1067,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, getGETBase(), upd_hyper);
 
-		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		sv1 = ExecuteManeuver(sv0, getGETBase(), TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_SPS);
 		sv2 = coast(sv1, -30.0*60.0);
 		LunarOrbitMapUpdate(sv2, getGETBase(), upd_ellip);
 
@@ -1155,7 +1155,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, getGETBase(), upd_preloi);
 
-		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		sv1 = ExecuteManeuver(sv0, getGETBase(), TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_SPS);
 		LunarOrbitMapUpdate(sv0, getGETBase(), upd_postloi);
 
 		form->Rev = 3;
@@ -1174,7 +1174,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, getGETBase(), upd_pretei);
 
-		sv1 = ExecuteManeuver(calcParams.src, getGETBase(), TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		sv1 = ExecuteManeuver(sv0, getGETBase(), TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_SPS);
 		LunarOrbitMapUpdate(sv1, getGETBase(), upd_posttei);
 
 		form->Rev = 32;
@@ -1536,7 +1536,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Rendezvous Plan
 		double MJD_Phasing;
 
-		sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv, 0.0);
+		sv_DOI = ExecuteManeuver(sv, GETbase, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_DPS);
 		MJD_Phasing = OrbMech::P29TimeOfLongitude(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, -12.5*RAD);
 		calcParams.Phasing = (MJD_Phasing - GETbase)*24.0*3600.0;
 
@@ -1583,7 +1583,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (preliminary)
 		{
-			sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv_LM, 0.0);
+			sv_DOI = ExecuteManeuver(sv_LM, GETbase, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_DPS);
 		}
 		else
 		{
@@ -1645,7 +1645,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
-		sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv_LM, 0.0);
+		sv_DOI = ExecuteManeuver(sv_LM, GETbase, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_DPS);
 
 		dt_peri = OrbMech::timetoperi_integ(sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, sv_DOI.gravref);
 		t_Abort = (sv_DOI.MJD - GETbase)*24.0*3600.0 + dt_peri;
@@ -1662,7 +1662,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dkiopt.t_TPI_guess = t_TPI_Abort;
 
 		DockingInitiationProcessor(dkiopt, dkires);
-		PoweredFlightProcessor(sv_DOI, GETbase, t_Abort, RTCC_ENGINETYPE_DPS, 0.0, dkires.DV_Phasing, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_DOI, GETbase, t_Abort, RTCC_ENGINETYPE_DPS, 0.0, dkires.DV_Phasing, true, P30TIG, dV_LVLH);
 
 		opt.alt = LSAlt;
 		opt.csmlmdocked = false;
@@ -1727,7 +1727,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManeuverPAD(&opt, *form);
 		sprintf(form->purpose, "Backup Insertion");
 
-		sv_Ins = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv_CSM, 0.0);
+		sv_Ins = ExecuteManeuver(sv_CSM, GETbase, P30TIG, dV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
 
 		SPQOpt coeopt;
 		SPQResults coeres;

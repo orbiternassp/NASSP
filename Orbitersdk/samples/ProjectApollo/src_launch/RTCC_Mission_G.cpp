@@ -589,7 +589,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.GETbase = GETbase;
 		loiopt.h_apo = 170.0*1852.0;
 		loiopt.h_peri = 60.0*1852.0;
-		loiopt.impulsive = RTCC_IMPULSIVE;
+		loiopt.impulsive = 1;
 		loiopt.lat = calcParams.LSLat;
 		loiopt.lng = calcParams.LSLng;
 		loiopt.RV_MCC = sv;
@@ -693,7 +693,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		loiopt.GETbase = GETbase;
 		loiopt.h_apo = 170.0*1852.0;
 		loiopt.h_peri = 60.0*1852.0;
-		loiopt.impulsive = RTCC_IMPULSIVE;
+		loiopt.impulsive = 1;
 		loiopt.lat = calcParams.LSLat;
 		loiopt.lng = calcParams.LSLng;
 		loiopt.RV_MCC = sv;
@@ -1247,7 +1247,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Simulate the maneuver preceeding TEI (LOI-1 or LOI-2)
 		if (fcn == 40 || fcn == 41 || fcn == 42)
 		{
-			sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+			sv1 = ExecuteManeuver(sv0, GETbase, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_SPS);
 		}
 		else
 		{
@@ -1387,7 +1387,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, GETbase, upd_hyper);
 
-		sv1 = ExecuteManeuver(calcParams.src, GETbase, TimeofIgnition, DeltaV_LVLH, sv0, GetDockedVesselMass(calcParams.src));
+		sv1 = ExecuteManeuver(sv0, GETbase, TimeofIgnition, DeltaV_LVLH, GetDockedVesselMass(calcParams.src), RTCC_ENGINETYPE_SPS);
 		sv2 = coast(sv1, -30.0*60.0);
 		LunarOrbitMapUpdate(sv2, GETbase, upd_ellip);
 
@@ -1543,7 +1543,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
 
-		sv_DOI = ExecuteManeuver(calcParams.tgt, GETbase, TimeofIgnition, DeltaV_LVLH, sv_LM, 0.0);
+		sv_DOI = ExecuteManeuver(sv_LM, GETbase, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_DPS);
 
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
 		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*60.0;

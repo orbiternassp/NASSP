@@ -36,10 +36,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_LAMBERT_SPHERICAL 0
 #define RTCC_LAMBERT_PERTURBED 1
 
-#define RTCC_IMPULSIVE 0
-#define RTCC_NONIMPULSIVE 1
-#define RTCC_NONIMPULSIVERCS 2
-
 #define RTCC_ENTRY_DEORBIT 0
 #define RTCC_ENTRY_MCC 1
 #define RTCC_ENTRY_ABORT 2
@@ -137,6 +133,122 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 	41158.5652869,
 	41423.74583,
 	41658.120139
+};
+
+//MANUAL ENTRY DEVICES
+
+//Two Impulse Computation
+struct MED_K30
+{
+	int Vehicle = 1; //0 = LEM, 1 = CSM
+	int IVFlag = 0; //0 = Time of both maneuvers fixed, 1 = Time of first maneuver fixed, 2 = time of second maneuver fixed
+
+};
+
+//Burn parameters for CSM/LM direct input maneuvers
+struct MED_M40
+{
+	//P1: DV, DV IND, DT
+	double P1_DV = 0.0; //Vel increment or burn duration of the maneuver
+	//0 = MAG, Magnitude of maneuver
+	//1 = DVC, DV along X-body axis includes ullage, excludes tailoff
+	//2 = XBT, Includes both ullage and tailoff
+	int P1_DVIND = 0;
+	double P1_DT = 0.0; //Time duration of maneuver, excludes ullage and tailoff
+
+	//P2: VX, VY, VZ in command and display system
+	VECTOR3 P2_DV = _V(0, 0, 0);
+
+	//P3: VGX, VGY, VGZ DV Vector in IMU coordinates
+	VECTOR3 P3_DV = _V(0, 0, 0);
+
+	//P4: VF, VS, VD LVLH DV vector
+	VECTOR3 P4_DV = _V(0, 0, 0);
+
+	//P5: X, Y, Z, T Flight, C
+	VECTOR3 P5_RT;
+	double P5_TFLT; //Time from ignition to arrival at target vector
+	double P5_C;	//Cross product steering constant
+
+	//P6: RD, YD, RD DOT, YD DOT, ZD DOT, DT ascent man. targets
+	double P6_RD;	//Desired injection radius
+	double P6_YD;	//Desired injection cross range distance from the CSM orbital plane
+	double P6_RD_DOT;	//Desired injection radial velocity
+	double P6_YD_DOT;	//Desired injection crossrange velocity
+	double P6_ZD_DOT;	//Desired injection downrange velocity
+	double P6_DT;		//Time from descent ignition to descent abort
+
+	//P7: DVX, DVY, DVZ maneuver residuals in RCS control axes
+	VECTOR3 P7_DDV;
+};
+
+//Direct input of a maneuver to the MPT (CSM and LEM)
+struct MED_M66
+{
+	int Table = 2; //1 = LEM, 2 = CSM
+	std::string code; //Maneuver code 
+	double GETBI = 0; //Time of ignition
+	int Thruster = RTCC_ENGINETYPE_SPS; //Thruster for maneuver
+	int AttitudeOpt = 0; //Attitude option
+	int BurnParamNo = 1; //1 = P1, 2 = P2 etc.
+	int CoordInd = 0; //0 = LVLH, 1 = IMU, 2 = FDAI
+	VECTOR3 Att = _V(0, 0, 0);
+	double UllageDT = 0.0;	//Delta T of Ullage
+	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
+	bool HeadsUp = true; //false = heads down, true = heads up
+	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
+	MATRIX3 REFSMMAT;	//Used for IMU and inertial coordinate options
+	int ConfigChangeInd = 0; //0 = No change, 1 = Undocking, 2 = Docking
+	int FinalConfig = 0;
+	double DeltaDA = 0.0; //Delta docking angle
+	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
+};
+
+//Transfer a DKI, SPQ, or a Descent Plan to the MPT
+struct MED_M70
+{
+	int Plan = 0; //-1 = Descent Plan, 0 = SPQ, 1 = DKI
+	double DeleteGET = 0.0;
+	int Thruster = RTCC_ENGINETYPE_RCSPLUS4; //Thruster for the maneuver
+	int Attitude = 1;		//Attitude option (0 = AGS External DV, 1 = PGNS External DV, 2 = Manual, 3 = Inertial, 4 = Lambert)
+	double UllageDT = 0.0;	//Delta T of Ullage
+	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
+	bool Iteration = false; //false = do not iterate, true = iterate
+	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
+	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
+	bool TimeFlag = true;	//false = Start at impulsive time, true = use optimum time
+};
+
+//Transfer a Two Impulse Maneuver to the MPT
+struct MED_M72
+{
+	bool Table = false; //false = corrective solution, M = multiple solution
+	int Plan = 0; // Plan number to be transferred
+	double DeleteGET = 0.0; //Deletes all maneuvers in both tables occurring after the input GET (no delete if 0)
+	int Thruster = RTCC_ENGINETYPE_RCSPLUS4; //Thruster for the maneuver
+	int Attitude = 1;		//Attitude option (0 = AGS External DV, 1 = PGNS External DV, 2 = Manual, 3 = Inertial, 4 = Lambert)
+	double UllageDT = 0.0;	//Delta T of Ullage
+	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
+	bool Iteration = false; //false = do not iterate, true = iterate
+	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
+	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
+	bool TimeFlag = true;	//false = Start at impulsive time, true = use optimum time
+};
+
+//Offsets and elevation angle for two-impulse solution
+struct MED_P51
+{
+	double DH = 0.0; //Delta Height
+	double WT = 0.0; //Phase Angle
+	double E = 0.0; //Elevation Angle
+};
+
+//Two-Impulse Corrective Combination Nominals
+struct MED_P52
+{
+	double GET_NSR = 0.0; //Nominal Time of NSR Maneuver
+	double DH_NSR = 0.0; //Nominal Height Difference at NSR
+	double PH_NSR = 0.0; //Phase Angle at NSR
 };
 
 struct LambertMan //Data for Lambert targeting
@@ -576,7 +688,7 @@ struct LOIMan
 	SV RV_MCC;			//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int enginetype = RTCC_ENGINETYPE_SPS;	//Engine type to use for maneuver
-	int impulsive = RTCC_NONIMPULSIVE;	//Calculated with nonimpulsive maneuver compensation or without
+	int impulsive = 0;	//0 = finite burntime, 1 = impulsive
 	int EllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 };
 
@@ -1303,8 +1415,8 @@ public:
 	void PoweredFlightProcessor(SV sv0, double GETbase, double GET_TIG_imp, int enginetype, double attachedMass, VECTOR3 DV, bool DVIsLVLH, double &GET_TIG, VECTOR3 &dV_LVLH, bool agc = true);
 	double GetDockedVesselMass(VESSEL *vessel);
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
-	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, double F = 0.0, double isp = 0.0);
-	SV ExecuteManeuver(VESSEL* vessel, double GETbase, double P30TIG, VECTOR3 dV_LVLH, SV sv, double attachedMass, MATRIX3 &Q_Xx, VECTOR3 &V_G, double F = 0.0, double isp = 0.0);
+	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
+	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
 	void TLIFirstGuessConic(SV sv_mcc, double lat, double h_peri, double PeriMJD, VECTOR3 &DV, VECTOR3 &var_converged);
 	void TLMCIntegratedXYZT(SV sv_mcc, double lat_node, double lng_node, double h_node, double MJD_node, VECTOR3 DV_guess, VECTOR3 &DV);
 	VECTOR3 TLMCEmpiricalFirstGuess(double r, double dt);
@@ -1382,7 +1494,8 @@ public:
 
 	//Mission Planning
 	int MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV);
-	int MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, char *code, double LSAlt, double DV, int L, bool docked);
+	int MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, bool docked);
+	int MPTDirectInput(MPTable &mptable, SV sv_ig, double GETbase, double LSAlt, double attachedMass);
 	int MPTDeleteManeuver(MPTable &mptable);
 	bool MPTTrajectory(MPTable &mptable, SV &sv_out, int L);
 	bool MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
@@ -1394,6 +1507,12 @@ public:
 
 	MCC *mcc;
 	struct calculationParameters calcParams;
+
+	//MEDs
+	MED_M40 med_m40;
+	MED_M66 med_m66;
+	MED_M70 med_m70;
+	MED_M72 med_m72;
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
