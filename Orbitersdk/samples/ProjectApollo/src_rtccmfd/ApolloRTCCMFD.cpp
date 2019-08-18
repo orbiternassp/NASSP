@@ -178,7 +178,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "GMPManeuverType", G->GMPManeuverType);
 	oapiWriteScenario_int(scn, "GMPManeuverCode", G->GMPManeuverCode);
 	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
-	papiWriteScenario_vec(scn, "OrbAdjDVX", G->OrbAdjDVX);
 
 	oapiWriteScenario_int(scn, "LOIMANEUVER", G->LOImaneuver);
 	oapiWriteScenario_int(scn, "TLCCMANEUVER", G->TLCCmaneuver);
@@ -336,7 +335,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "GMPManeuverType", G->GMPManeuverType);
 		papiReadScenario_int(line, "GMPManeuverCode", G->GMPManeuverCode);
 		papiReadScenario_double(line, "SPSGET", G->SPSGET);
-		papiReadScenario_vec(line, "OrbAdjDVX", G->OrbAdjDVX);
 
 		papiReadScenario_int(line, "LOIMANEUVER", G->LOImaneuver);
 		papiReadScenario_int(line, "TLCCMANEUVER", G->TLCCmaneuver);
@@ -881,7 +879,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		GET_Display(Buffer, G->P30TIG);
+		GET_Display(Buffer, G->GPM_TIG);
 		skp->Text(5 * W / 8, 16 * H / 22, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 17 * H / 22, "DVX", 3);
@@ -3372,6 +3370,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.1f s", G->LAP_DT);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
+		if (G->svtarget != NULL)
+		{
+			sprintf(Buffer, G->svtarget->GetName());
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(5 * W / 8, 2 * H / 14, "No Target!", 10);
+		}
+
 		sprintf(Buffer, "%f", G->LAP_SV_Insertion.R.x);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f", G->LAP_SV_Insertion.R.y);
@@ -4109,8 +4117,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(8 * W / 32, 6 * H / 28, "DT", 2);
 		skp->Text(13 * W / 32, 6 * H / 28, "DELTAV", 6);
 		skp->Text(17 * W / 32, 6 * H / 28, "DVREM", 5);
-		skp->Text(21 * W / 32, 6 * H / 28, "HA", 2);
-		skp->Text(25 * W / 32, 6 * H / 28, "HP", 2);
+		skp->Text(20 * W / 32, 6 * H / 28, "HA", 2);
+		skp->Text(24 * W / 32, 6 * H / 28, "HP", 2);
 		skp->Text(29 * W / 32, 6 * H / 28, "CODE", 4);
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
@@ -4124,10 +4132,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(14 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].HA);
-			skp->Text(23 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(22 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].HP);
-			skp->Text(27 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(26 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, GC->mptable.fulltable[i].code.c_str());
 			skp->Text(31 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
@@ -4680,9 +4688,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(4 * W / 8, 1 * H / 14, "SPQ Transfer (MED M70)", 22);
 		}
-		else
+		else if (GC->rtcc->med_m70.Plan == 1)
 		{
 			skp->Text(4 * W / 8, 1 * H / 14, "DKI Transfer (MED M70)", 22);
+		}
+		else
+		{
+			skp->Text(4 * W / 8, 1 * H / 14, "DOI Transfer (MED M70)", 22);
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
@@ -4718,9 +4730,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 			sprintf(Buffer, "%+.2f ft/s", GC->rtcc->med_m40.P1_DV);
 			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%.2f s", GC->rtcc->med_m40.P1_DV);
-			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (GC->rtcc->med_m66.BurnParamNo == 2)
 		{
@@ -4754,8 +4763,52 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		GET_Display(Buffer, GC->rtcc->med_m66.GETBI);
 		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
+		if (GC->rtcc->med_m66.ConfigChangeInd == 0)
+		{
+			skp->Text(1 * W / 16, 10 * H / 14, "No change", 9);
+		}
+		else
+		{
+			if (GC->rtcc->med_m66.ConfigChangeInd == 1)
+			{
+				skp->Text(1 * W / 16, 10 * H / 14, "Undocking", 9);
+			}
+			else if (GC->rtcc->med_m66.ConfigChangeInd == 2)
+			{
+				skp->Text(1 * W / 16, 10 * H / 14, "Docking", 7);
+			}
+
+			VehicleConfigName(Buffer, GC->rtcc->med_m66.FinalConfig);
+			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+		}
+
 		ThrusterName(Buffer, GC->rtcc->med_m66.Thruster);
 		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+	}
+	else if (screen == 57)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 1 * H / 14, "GPM Transfer (MED M65)", 22);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		ThrusterName(Buffer, GC->rtcc->med_m65.Thruster);
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer, G->P30TIG);
+		skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 8, 11 * H / 21, "DVX", 3);
+		skp->Text(5 * W / 8, 12 * H / 21, "DVY", 3);
+		skp->Text(5 * W / 8, 13 * H / 21, "DVZ", 3);
+
+		AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
+		skp->Text(6 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
+		skp->Text(6 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
+		AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
+		skp->Text(6 * W / 8, 13 * H / 21, Buffer, strlen(Buffer));
 	}
 	return true;
 }
@@ -4916,6 +4969,34 @@ void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 	else if (n == RTCC_ENGINETYPE_LOX_DUMP)
 	{
 		sprintf(Buff, "S-IVB LOX");
+	}
+}
+
+void ApolloRTCCMFD::VehicleConfigName(char *Buff, int n)
+{
+	if (n == RTCC_CONFIG_CSM)
+	{
+		sprintf(Buff, "CSM");
+	}
+	else if (n == RTCC_CONFIG_LM)
+	{
+		sprintf(Buff, "LM");
+	}
+	else if (n == RTCC_CONFIG_CSM_LM)
+	{
+		sprintf(Buff, "CSM+LM");
+	}
+	else if (n == RTCC_CONFIG_CSM_SIVB)
+	{
+		sprintf(Buff, "CSM+SIVB");
+	}
+	else if (n == RTCC_CONFIG_LM_SIVB)
+	{
+		sprintf(Buff, "LM+SIVB");
+	}
+	else if (n == RTCC_CONFIG_CSM_LM_SIVB)
+	{
+		sprintf(Buff, "CSM+LM+SIVB");
 	}
 }
 
@@ -5310,31 +5391,23 @@ void ApolloRTCCMFD::menuSetTITransferPage()
 	coreButtons.SelectPage(this, screen);
 }
 
-void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()
+void ApolloRTCCMFD::menuSetSPQorDKIRTransferPage()
 {
 	if (screen == 3)
 	{
 		GC->rtcc->med_m70.Plan = 0;
 	}
-	else
+	else if (screen == 33)
 	{
 		GC->rtcc->med_m70.Plan = 1;
+	}
+	else
+	{
+		GC->rtcc->med_m70.Plan = -1;
 	}
 
 	screen = 55;
 	coreButtons.SelectPage(this, screen);
-}
-
-void ApolloRTCCMFD::menuBackToSPQorDKIPage()
-{
-	if (GC->rtcc->med_m70.Plan == 0)
-	{
-		menuSetCDHPage();
-	}
-	else
-	{
-		menuSetDKIPage();
-	}
 }
 
 void ApolloRTCCMFD::menuSetMPTDirectInputPage()
@@ -5343,7 +5416,50 @@ void ApolloRTCCMFD::menuSetMPTDirectInputPage()
 	coreButtons.SelectPage(this, screen);
 }
 
-void ApolloRTCCMFD::menuVoid(){}
+void ApolloRTCCMFD::menuSetGPMTransferPage()
+{
+	screen = 57;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuVoid() {}
+
+void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()
+{
+	if (GC->rtcc->med_m70.Plan == 0)
+	{
+		G->TransferSPQToMPT();
+	}
+	else if (GC->rtcc->med_m70.Plan == 1)
+	{
+		G->TransferDKIToMPT();
+	}
+	else
+	{
+		G->TransferDescentPlanToMPT();
+	}
+}
+
+void ApolloRTCCMFD::menuBackToSPQorDKIPage()
+{
+	if (GC->rtcc->med_m70.Plan == 0)
+	{
+		menuSetCDHPage();
+	}
+	else if (GC->rtcc->med_m70.Plan == 1)
+	{
+		menuSetDKIPage();
+	}
+	else
+	{
+		menuSetDOIPage();
+	}
+}
+
+void ApolloRTCCMFD::menuTransferGPMToMPT()
+{
+	G->TransferGPMToMPT();
+}
 
 void ApolloRTCCMFD::set_getbase()
 {
@@ -6015,6 +6131,18 @@ void ApolloRTCCMFD::menuCycleMPTDirectInputThruster()
 	}
 }
 
+void ApolloRTCCMFD::menuCycleGPMThruster()
+{
+	if (GC->rtcc->med_m65.Thruster < 6)
+	{
+		GC->rtcc->med_m65.Thruster++;
+	}
+	else
+	{
+		GC->rtcc->med_m65.Thruster = 0;
+	}
+}
+
 void ApolloRTCCMFD::menuMPTDirectInputTransfer()
 {
 	G->MPTDirectInputCalc();
@@ -6067,6 +6195,40 @@ bool MPTDirectInputCodeInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_MPTDirectInputCode(const char *code)
 {
 	GC->rtcc->med_m66.code.assign(code);
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputDock()
+{
+	if (GC->rtcc->med_m66.ConfigChangeInd < 2)
+	{
+		GC->rtcc->med_m66.ConfigChangeInd++;
+	}
+	else
+	{
+		GC->rtcc->med_m66.ConfigChangeInd = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputFinalConfig()
+{
+	if (GC->rtcc->med_m66.FinalConfig < 5)
+	{
+		GC->rtcc->med_m66.FinalConfig++;
+	}
+	else
+	{
+		GC->rtcc->med_m66.FinalConfig = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuTransferPoweredAscentToMPT()
+{
+	G->TransferPoweredAscentToMPT();
+}
+
+void ApolloRTCCMFD::menuTransferPoweredDescentToMPT()
+{
+	G->TransferPoweredDescentToMPT();
 }
 
 double ApolloRTCCMFD::timetoperi()

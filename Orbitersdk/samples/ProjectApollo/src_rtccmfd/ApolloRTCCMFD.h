@@ -102,6 +102,7 @@ public:
 	void AGC_Display(char * Buff, double time);
 	void REFSMMATName(char* Buff, int n);
 	void ThrusterName(char *Buff, int n);
+	void VehicleConfigName(char *Buffer, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	double timetoperi();
 	double timetoapo();
@@ -418,9 +419,13 @@ public:
 	void menuSetTITransferPage();
 	void menuCycleTIThruster();
 	void menuTransferTIToMPT();
+	void menuSetSPQorDKIRTransferPage();
 	void menuTransferSPQorDKIToMPT();
 	void menuBackToSPQorDKIPage();
 	void menuCycleSPQDKIThruster();
+	void menuSetGPMTransferPage();
+	void menuTransferGPMToMPT();
+	void menuCycleGPMThruster();
 	void menuSetMPTDirectInputPage();
 	void menuMPTDirectInputOption();
 	void menuMPTDirectInputDV();
@@ -431,6 +436,10 @@ public:
 	void set_MPTDirectInputTIG(double tig);
 	void menuMPTDirectInputCode();
 	void set_MPTDirectInputCode(const char *code);
+	void menuMPTDirectInputDock();
+	void menuMPTDirectInputFinalConfig();
+	void menuTransferPoweredAscentToMPT();
+	void menuTransferPoweredDescentToMPT();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

@@ -1603,9 +1603,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11T2ABORTPAD * form = (AP11T2ABORTPAD*)pad;
 
-		SV sv_CSM, sv_Ins, sv_CSM_upl;
+		SV sv_CSM, sv_Ins, sv_CSM_upl, sv_IG;
 		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
-		double T2, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, dt1, dt2, t_CSI1, t_sunrise, t_TPI;
+		double T2, GETbase, m0, v_LH, v_LV, theta, dt_asc, t_C1, dt1, dt2, t_CSI1, t_sunrise, t_TPI, dv;
 		char buffer1[1000];
 
 		GETbase = calcParams.TEPHEM;
@@ -1620,7 +1620,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		T2 = calcParams.PDI + 21.0*60.0 + 24.0;
 		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt + OrbMech::R_Moon);
 
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, T2, v_LH, v_LV, theta, dt_asc, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, T2, v_LH, v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
 		dt1 = OrbMech::timetoapo(sv_Ins.R, sv_Ins.V, OrbMech::mu_Moon);
 		OrbMech::rv_from_r0v0(sv_Ins.R, sv_Ins.V, dt1, R_C1, V_C1, OrbMech::mu_Moon);
 		t_C1 = T2 + dt_asc + dt1;
@@ -1655,9 +1655,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LunarLiftoffTimeOpt opt;
 		LunarLiftoffResults res;
-		SV sv_CSM, sv_CSM2, sv_CSM_over, sv_Ins;
+		SV sv_CSM, sv_CSM2, sv_CSM_over, sv_Ins, sv_IG;
 		VECTOR3 R_LS;
-		double GETbase, m0, MJD_over, t_P, t_PPlusDT, theta_1, dt_1;
+		double GETbase, m0, MJD_over, t_P, t_PPlusDT, theta_1, dt_1, dv;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1677,7 +1677,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through
@@ -1774,11 +1774,11 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		ASCPADOpt ascopt;
 		LunarLiftoffTimeOpt opt;
 		LunarLiftoffResults res;
-		SV sv_CSM, sv_CSM_upl, sv_Ins;
+		SV sv_CSM, sv_CSM_upl, sv_Ins, sv_IG;
 		MATRIX3 Rot, Rot2;
 		VECTOR3 R_LS;
 		char buffer1[100], buffer2[1000];
-		double GETbase, m0, theta_1, dt_1;
+		double GETbase, m0, theta_1, dt_1, dv;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1800,7 +1800,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through
@@ -1868,9 +1868,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LunarLiftoffTimeOpt opt;
 		LunarLiftoffResults res;
-		SV sv_CSM, sv_CSM_upl, sv_Ins;
+		SV sv_CSM, sv_CSM_upl, sv_Ins, sv_IG;
 		VECTOR3 R_LS;
-		double GETbase, m0, theta_1, dt_1;
+		double GETbase, m0, theta_1, dt_1, dv;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -1907,7 +1907,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 
@@ -2058,10 +2058,10 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarLiftoffTimeOpt opt;
 		REFSMMATOpt refsopt;
 		LunarLiftoffResults res;
-		SV sv_CSM, sv_CSM_upl, sv_Ins;
+		SV sv_CSM, sv_CSM_upl, sv_Ins, sv_IG;
 		VECTOR3 R_LS;
 		char buffer1[100];
-		double GETbase, m0, theta_1, dt_1;
+		double GETbase, m0, theta_1, dt_1, dv;
 
 		GETbase = calcParams.TEPHEM;
 		sv_CSM = StateVectorCalc(calcParams.src);
@@ -2082,7 +2082,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
 		//Refine ascent parameters
-		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, sv_Ins);
+		LunarAscentProcessor(R_LS, m0, sv_CSM, GETbase, res.t_L, res.v_LH, res.v_LV, theta_1, dt_1, dv, sv_IG, sv_Ins);
 		opt.theta_1 = theta_1;
 		opt.dt_1 = dt_1;
 		//Final pass through

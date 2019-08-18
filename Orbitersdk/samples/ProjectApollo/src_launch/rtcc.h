@@ -48,6 +48,18 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_VESSELTYPE_LM		1
 #define RTCC_VESSELTYPE_SIVB	2
 
+#define RTCC_CONFIG_CSM 0
+#define RTCC_CONFIG_LM 1
+#define RTCC_CONFIG_CSM_LM 2
+#define RTCC_CONFIG_CSM_SIVB 3
+#define RTCC_CONFIG_LM_SIVB 4
+#define RTCC_CONFIG_CSM_LM_SIVB 5
+
+#define RTCC_CONFIGCHANGE_NONE 0
+#define RTCC_CONFIGCHANGE_UNDOCKING 1
+#define RTCC_CONFIGCHANGE_DOCKING 2
+#define RTCC_CONFIGCHANGE_LM_STAGING 3
+
 #define RTCC_ENGINETYPE_SPS 0
 #define RTCC_ENGINETYPE_APS 1
 #define RTCC_ENGINETYPE_DPS 2
@@ -57,6 +69,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_ENGINETYPE_RCSMINUS4 6
 #define RTCC_ENGINETYPE_SIVB_APS 7
 #define RTCC_ENGINETYPE_LOX_DUMP 8
+#define RTCC_ENGINETYPE_SIVB_MAIN 9
+
+#define RTCC_MANVEHICLE_CSM 1
+#define RTCC_MANVEHICLE_SIVB 2
+#define RTCC_MAINVEHICLE_LM 3
 
 #define RTCC_GMP_PCE 1
 #define RTCC_GMP_PCL 2
@@ -182,6 +199,30 @@ struct MED_M40
 	VECTOR3 P7_DDV;
 };
 
+//Input initial configuration for Mission Plan Table
+struct MED_M55
+{
+	int Table = 2; //1 = LEM, 2 = CSM
+	int ConfigCode = 0;
+	double VentingGET = 0.0;
+	double DeltaDockingAngle = 0.0;
+};
+
+//Transfer a GPM to the MPT
+struct MED_M65
+{
+	int Table = 2; //1 = LEM, 2 = CSM
+	int ReplaceCode = 0; //1-15
+	int Thruster = RTCC_ENGINETYPE_SPS; //Thruster for the maneuver
+	int Attitude = 1;		//Attitude option (0 = AGS External DV, 1 = PGNS External DV, 2 = Manual, 3 = Inertial, 4 = Lambert)
+	double UllageDT = 0.0;	//Delta T of Ullage
+	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
+	bool Iteration = false; //false = do not iterate, true = iterate
+	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
+	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
+	bool TimeFlag = true;	//false = Start at impulsive time, true = use optimum time
+};
+
 //Direct input of a maneuver to the MPT (CSM and LEM)
 struct MED_M66
 {
@@ -233,6 +274,15 @@ struct MED_M72
 	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
 	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
 	bool TimeFlag = true;	//false = Start at impulsive time, true = use optimum time
+};
+
+//Direct Input of Lunar Descent Maneuver
+struct MED_M86
+{
+	int Veh = 1; //1 = LEM
+	int ReplaceCode = 0;
+	bool TimeFlag = false; //false = Nominal landing time to be input, true = Ignition time (only if replacing descent maneuver)
+	bool HeadsUp = true; //false = heads down, true = heads up
 };
 
 //Offsets and elevation angle for two-impulse solution
@@ -1179,6 +1229,11 @@ struct MPTManeuver
 	SV sv_after;
 	int LI;	//Maneuvering vehicle: 1 = LM, 2 = CSM
 	int ID;
+	int Thruster;
+	VECTOR3 A_T; //Unit thrust vector
+	MATRIX3 M_B; //Body direction matrix
+	int ConfigCodeBefore;
+	int ConfigCodeAfter;
 };
 
 struct MPTManDisplay
@@ -1203,6 +1258,8 @@ struct MPTable
 	double CSMInitMass;
 	double LMInitMass;
 	double LunarStayTimes[2];
+	int InitCSMConfigCode = RTCC_CONFIG_CSM;
+	int InitLMConfigCode = RTCC_CONFIG_LM;
 };
 
 struct NextStationContact
@@ -1436,8 +1493,8 @@ public:
 	bool LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
-	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, SV &sv_Ins);
-	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, MATRIX3 REFSMMAT);
+	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
+	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, MATRIX3 REFSMMAT, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
@@ -1494,13 +1551,21 @@ public:
 
 	//Mission Planning
 	int MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV);
-	int MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, bool docked);
+	int MPTAddDescent(MPTable &mptable, SV sv_IG, SV sv_land, double LSAlt, double DV);
+	int MPTAddAscent(MPTable &mptable, SV sv_IG, SV sv_asc, double LSAlt, double DV);
+	int MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI = RTCC_CONFIGCHANGE_NONE, int CC = RTCC_CONFIG_CSM);
 	int MPTDirectInput(MPTable &mptable, SV sv_ig, double GETbase, double LSAlt, double attachedMass);
 	int MPTDeleteManeuver(MPTable &mptable);
 	bool MPTTrajectory(MPTable &mptable, SV &sv_out, int L);
 	bool MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
 	int MPTMassInit(MPTable &mptable, double cmass, double lmass);
 	bool MPTHasManeuvers(MPTable &mptable, int L);
+	//Area and Weight Determination at a Time
+	void PLAWDT(const MPTable &mptable, double MJD, double &csmmass, double &lmmass);
+	//Weight Change Module
+	int PMMWTC(MPTable &mptable, int med);
+	int MPTGetVesselConfiguration(const MPTable &mptable, int L, double GET, double GETbase);
+	int MPTGetVesselConfiguration(const MPTable &mptable, int L);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -1510,6 +1575,8 @@ public:
 
 	//MEDs
 	MED_M40 med_m40;
+	MED_M55 med_m55;
+	MED_M65 med_m65;
 	MED_M66 med_m66;
 	MED_M70 med_m70;
 	MED_M72 med_m72;

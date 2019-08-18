@@ -446,7 +446,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				MPTable mpt;
 
 				//Step 1: Add MCC-4 to the mission plan table
-				MPTAddManeuver(mpt, sv_ig1, sv_cut1, "MCC", 0.0, 0.0, 2, false);
+				MPTAddManeuver(mpt, sv_ig1, sv_cut1, "MCC", 0.0, 0.0, 2, RTCC_ENGINETYPE_SPS);
 
 				LOIMan opt2;
 				LOI2Man opt3;
@@ -470,7 +470,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				//opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv, 0);
 
 				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, sv_node, sv_ig2, sv_cut2);
-				MPTAddManeuver(mpt, sv_ig2, sv_cut2, "LOI", 0.0, 0.0, 2, false);
+				MPTAddManeuver(mpt, sv_ig2, sv_cut2, "LOI", 0.0, 0.0, 2, RTCC_ENGINETYPE_SPS);
 
 				//Step 3: Calculate LOI-2 to get the TIG
 				opt3.alt = LSAlt;

@@ -274,6 +274,14 @@ AR_GCore::AR_GCore(VESSEL* v)
 	}
 
 	rtcc = new RTCC();
+
+	rtcc->med_m55.Table = 1;
+	rtcc->med_m55.ConfigCode = RTCC_CONFIG_LM;
+	rtcc->PMMWTC(mptable, 55);
+
+	rtcc->med_m55.Table = 2;
+	rtcc->med_m55.ConfigCode = RTCC_CONFIG_CSM_LM;
+	rtcc->PMMWTC(mptable, 55);
 }
 
 AR_GCore::~AR_GCore()
@@ -458,6 +466,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	OrbAdjAltRef = true;
 	OrbAdjDVX = _V(0, 0, 0);
 	SPSGET = 0.0;
+	GPM_TIG = 0.0;
 	GMPApogeeHeight = 0;
 	GMPPerigeeHeight = 0;
 	GMPWedgeAngle = 0.0;
@@ -811,6 +820,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	LAP_Theta = 10.0*RAD;
 	LAP_DT = 7.0*60.0 + 15.0;
+	LAP_dv = 0.0;
 
 	EMPUplinkType = 0;
 	EMPUplinkNumber = 0;
@@ -1228,6 +1238,26 @@ void ARCore::TransferDKIToMPT()
 void ARCore::MPTDirectInputCalc()
 {
 	startSubthread(41);
+}
+
+void ARCore::TransferDescentPlanToMPT()
+{
+	startSubthread(42);
+}
+
+void ARCore::TransferPoweredDescentToMPT()
+{
+	startSubthread(43);
+}
+
+void ARCore::TransferPoweredAscentToMPT()
+{
+	startSubthread(44);
+}
+
+void ARCore::TransferGPMToMPT()
+{
+	startSubthread(45);
 }
 
 void ARCore::DAPPADCalc()
@@ -2333,6 +2363,7 @@ int ARCore::subThread()
 		GC->rtcc->ConcentricRendezvousProcessor(opt, res);
 		spqresults = res;
 
+		SPQ_SV = sv_A;
 		SPQTIG = opt.t_TIG;
 
 		if (SPQMode == 0)
@@ -2352,8 +2383,6 @@ int ARCore::subThread()
 	{
 		GMPOpt opt;
 		SV sv0, sv_pre, sv_post;
-		double TIG_imp, attachedMass;
-		VECTOR3 dV_imp;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -2386,28 +2415,9 @@ int ARCore::subThread()
 		opt.N = GMPRevs;
 		opt.RV_MCC = sv0;
 
-		if (vesseltype == 0 || vesseltype == 2)
-		{
-			attachedMass = 0.0;
-		}
-		else
-		{
-			attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
-		}
-
-		GC->rtcc->GeneralManeuverProcessor(&opt, dV_imp, TIG_imp, GMPResults);
-		GC->rtcc->PoweredFlightProcessor(sv0, GC->GETbase, TIG_imp, poweredenginetype, attachedMass, dV_imp, false, P30TIG, OrbAdjDVX, sv_pre, sv_post);
-
-		dV_LVLH = OrbAdjDVX;
-
-		if (GC->MissionPlanningActive)
-		{
-			char code[64];
-
-			sprintf(code, "GPM");
-
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
-		}
+		GC->rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, GPM_TIG, GMPResults);
+		GPM_SV = GC->rtcc->GeneralTrajectoryPropagation(opt.RV_MCC, 0, OrbMech::MJDfromGET(GPM_TIG, GC->GETbase));
+		OrbAdjDVX = mul(OrbMech::LVLH_Matrix(GPM_SV.R, GPM_SV.V), OrbAdjDVX);
 
 		Result = 0;
 	}
@@ -2539,7 +2549,7 @@ int ARCore::subThread()
 
 				sprintf(code, "LOI");
 
-				GC->rtcc->MPTAddManeuver(GC->mptable, sv_preLOI, sv_postLOI, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+				GC->rtcc->MPTAddManeuver(GC->mptable, sv_preLOI, sv_postLOI, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 			}
 		}
 		else if (LOImaneuver == 1)
@@ -2554,6 +2564,7 @@ int ARCore::subThread()
 			opt.h_circ = LOI2Alt;
 			opt.vessel = vessel;
 			opt.RV_MCC = sv0;
+			opt.enginetype = poweredenginetype;
 
 			if (vesseltype < 2)
 			{
@@ -2583,7 +2594,7 @@ int ARCore::subThread()
 
 				sprintf(code, "LO2");
 
-				GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+				GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 			}
 		}
 
@@ -2685,7 +2696,7 @@ int ARCore::subThread()
 				sprintf(code, "TEMCC");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+			GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 		}
 
 		Result = 0;
@@ -2836,8 +2847,7 @@ int ARCore::subThread()
 	{
 		SV sv, sv_pre, sv_post;
 		DOIMan opt;
-		VECTOR3 DOI_DV_imp;
-		double DOI_TIG_imp, attachedMass;
+		double attachedMass;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -2871,20 +2881,9 @@ int ARCore::subThread()
 			attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 		}
 
-		GC->rtcc->DOITargeting(&opt, DOI_DV_imp, DOI_TIG_imp, DOI_t_PDI, GC->t_Land, DOI_CR);
-		GC->rtcc->PoweredFlightProcessor(sv, GC->GETbase, DOI_TIG_imp, poweredenginetype, attachedMass, DOI_DV_imp, false, DOI_TIG, DOI_dV_LVLH, sv_pre, sv_post);
-
-		P30TIG = DOI_TIG;
-		dV_LVLH = DOI_dV_LVLH;
-
-		if (GC->MissionPlanningActive)
-		{
-			char code[64];
-
-			sprintf(code, "DOI");
-
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
-		}
+		GC->rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, GC->t_Land, DOI_CR);
+		sv_DOI = GC->rtcc->GeneralTrajectoryPropagation(opt.sv0, 0, OrbMech::MJDfromGET(DOI_TIG, GC->GETbase));
+		DOI_dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_DOI.R, sv_DOI.V), DOI_dV_LVLH);
 
 		Result = 0;
 	}
@@ -2952,6 +2951,7 @@ int ARCore::subThread()
 		opt.r_rbias = GC->RTERangeOverrideNM;
 		opt.u_rmax = RTEMaxReentrySpeed;
 		opt.t_zmin = RTEReentryTime;
+		opt.enginetype = poweredenginetype;
 
 		GC->rtcc->RTEMoonTargeting(&opt, &res);
 		TLCCSolGood = res.solutionfound;
@@ -2981,7 +2981,7 @@ int ARCore::subThread()
 
 				sprintf(code, "RTE");
 
-				GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+				GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 			}
 		}
 		
@@ -3130,7 +3130,7 @@ int ARCore::subThread()
 		{
 			char code[64];
 			sprintf(code, "PC");
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 		}
 
 		Result = 0;
@@ -3237,7 +3237,7 @@ int ARCore::subThread()
 				{
 					char code[64];
 					sprintf(code, "TLM");
-					GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+					GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 				}
 			}
 			else if (TLCCmaneuver == 3 || TLCCmaneuver == 4)
@@ -3303,7 +3303,7 @@ int ARCore::subThread()
 					{
 						char code[64];
 						sprintf(code, "TLM");
-						GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+						GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 					}
 				}
 			}
@@ -3379,7 +3379,7 @@ int ARCore::subThread()
 					{
 						char code[64];
 						sprintf(code, "TLM");
-						GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+						GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 					}
 				}
 			}
@@ -3424,7 +3424,7 @@ int ARCore::subThread()
 					{
 						char code[64];
 						sprintf(code, "TLM");
-						GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+						GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 					}
 				}
 			}
@@ -3472,7 +3472,7 @@ int ARCore::subThread()
 					{
 						char code[64];
 						sprintf(code, "TLM");
-						GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+						GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_pre, res.sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked, poweredenginetype);
 					}
 				}
 			}
@@ -3674,20 +3674,33 @@ int ARCore::subThread()
 	break;
 	case 20: //Lunar Ascent Processor
 	{
-		SV sv_CSM, sv_Ins;
+		SV sv_CSM, sv_Ins, sv_IG;
 		VECTOR3 R_LS;
-		double theta, dt, m0;
+		double theta, dt, m0, dv;
 		double rad = oapiGetSize(oapiGetObjectByName("Moon"));
 
-		sv_CSM = GC->rtcc->StateVectorCalc(target);
+		if (GC->MissionPlanningActive)
+		{
+			if (!GC->rtcc->MPTTrajectory(GC->mptable, LunarLiftoffRes.t_L, GC->GETbase, sv_CSM, mptotherveh))
+			{
+				sv_CSM = GC->rtcc->StateVectorCalc(target);
+			}
+		}
+		else
+		{
+			sv_CSM = GC->rtcc->StateVectorCalc(target);
+		}
+
 		LEM *l = (LEM *)vessel;
 		m0 = l->GetAscentStageMass();
 		R_LS = OrbMech::r_from_latlong(GC->LSLat, GC->LSLng, GC->LSAlt + rad);
 
-		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GC->GETbase, LunarLiftoffRes.t_L, LunarLiftoffRes.v_LH, LunarLiftoffRes.v_LV, theta, dt, sv_Ins);
+		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GC->GETbase, LunarLiftoffRes.t_L, LunarLiftoffRes.v_LH, LunarLiftoffRes.v_LV, theta, dt, dv, sv_IG, sv_Ins);
 
 		LAP_Theta = theta;
 		LAP_DT = dt;
+		LAP_dv = dv;
+		LAP_SV_Ignition = sv_IG;
 		LAP_SV_Insertion = sv_Ins;
 
 		Result = 0;
@@ -4158,7 +4171,7 @@ int ARCore::subThread()
 				sprintf(code, "TPI");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m72.Thruster);
 		}
 
 		Result = 0;
@@ -4183,7 +4196,7 @@ int ARCore::subThread()
 				sprintf(code, "CDH");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
 		}
 
 		Result = 0;
@@ -4208,7 +4221,7 @@ int ARCore::subThread()
 				sprintf(code, "NH");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, docked);
+			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
 		}
 
 		Result = 0;
@@ -4232,14 +4245,7 @@ int ARCore::subThread()
 				sv_tig = GC->rtcc->GeneralTrajectoryPropagation(sv_A, 0, OrbMech::MJDfromGET(GC->rtcc->med_m66.GETBI, GC->GETbase));
 			}
 
-			if (vesseltype == 0 || vesseltype == 2)
-			{
-				attachedMass = 0.0;
-			}
-			else
-			{
-				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
-			}
+			attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 
 			if (vesseltype < 2)
 			{
@@ -4251,6 +4257,101 @@ int ARCore::subThread()
 			}
 
 			GC->rtcc->MPTDirectInput(GC->mptable, sv_tig, GC->GETbase, GC->LSAlt, attachedMass);
+		}
+		Result = 0;
+	}
+	break;
+	case 42: //Transfer Descent Plan to MPT
+	{
+		SV sv_pre, sv_post;
+		double attachedMass;
+
+		if (vesseltype == 0 || vesseltype == 2)
+		{
+			attachedMass = 0.0;
+		}
+		else
+		{
+			attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
+		}
+
+		GC->rtcc->PoweredFlightProcessor(sv_DOI, GC->GETbase, DOI_TIG, GC->rtcc->med_m70.Thruster, attachedMass, DOI_dV_LVLH, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+
+		if (GC->MissionPlanningActive)
+		{
+			char code[64];
+
+			sprintf(code, "DOI");
+
+			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
+		}
+
+		Result = 0;
+	}
+	break;
+	case 43: //Direct Input of Lunar Descent Maneuver
+	{
+		SV sv0, sv_PDI, sv_land;
+		VECTOR3 R_LS;
+		double dv;
+
+		R_LS = GC->rtcc->RLS_from_latlng(GC->LSLat, GC->LSLng, GC->LSAlt);
+
+		if (GC->MissionPlanningActive)
+		{
+			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv0, mptveh))
+			{
+				sv0 = GC->rtcc->StateVectorCalc(vessel);
+			}
+		}
+		else
+		{
+			sv0 = GC->rtcc->StateVectorCalc(vessel);
+		}
+
+		bool success = GC->rtcc->PoweredDescentProcessor(R_LS, GC->t_Land, sv0, GC->GETbase, REFSMMAT, sv_PDI, sv_land, dv);
+
+		if (success && GC->MissionPlanningActive)
+		{
+			GC->rtcc->MPTAddDescent(GC->mptable, sv_PDI, sv_land, GC->LSAlt, dv);
+		}
+
+		Result = 0;
+	}
+	break;
+	case 44: //Transfer ascent maneuver to MPT from lunar targeting
+	{
+		if (GC->MissionPlanningActive)
+		{
+			GC->rtcc->MPTAddAscent(GC->mptable, LAP_SV_Ignition, LAP_SV_Insertion, GC->LSAlt, LAP_dv);
+		}
+
+		Result = 0;
+	}
+	break;
+	case 45: //Transfer GPM to the MPT
+	{
+		SV sv_pre, sv_post;
+		double attachedMass;
+
+		if (GC->rtcc->MPTGetVesselConfiguration(GC->mptable, mptveh) == RTCC_CONFIG_CSM_LM)
+		{
+			attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
+		}
+		else
+		{
+			attachedMass = 0.0;
+		}
+
+		GC->rtcc->PoweredFlightProcessor(GPM_SV, GC->GETbase, GPM_TIG, GC->rtcc->med_m65.Thruster, attachedMass, OrbAdjDVX, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+
+		if (GC->MissionPlanningActive)
+		{
+			char code[64];
+
+			sprintf(code, "GPM");
+
+			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m65.Thruster);
 		}
 		Result = 0;
 	}

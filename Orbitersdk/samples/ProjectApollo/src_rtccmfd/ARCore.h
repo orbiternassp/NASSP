@@ -102,6 +102,10 @@ public:
 	void TransferTIToMPT();
 	void TransferSPQToMPT();
 	void TransferDKIToMPT();
+	void TransferDescentPlanToMPT();
+	void TransferPoweredDescentToMPT();
+	void TransferPoweredAscentToMPT();
+	void TransferGPMToMPT();
 	void MPTDirectInputCalc();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
@@ -237,7 +241,9 @@ public:
 	double GMPApseLineRotAngle;
 	int GMPRevs;
 	double SPSGET;		//Maneuver GET
+	double GPM_TIG;		//Maneuver GET output
 	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
+	SV GPM_SV;
 	//0 = Apogee
 	//1 = Equatorial crossing
 	//2 = Perigee
@@ -377,6 +383,7 @@ public:
 	double DOI_TIG;						//Integrated DOI TIG
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
 	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
+	SV sv_DOI;
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
@@ -413,6 +420,8 @@ public:
 	//Lunar Ascent Processor
 	double LAP_Theta;			//Angle travelled between liftoff and insertion
 	double LAP_DT;				//Ascent burntime (liftoff to insertion)
+	double LAP_dv;
+	SV LAP_SV_Ignition;
 	SV LAP_SV_Insertion;
 
 	//LM Ascent PAD
