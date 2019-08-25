@@ -16,6 +16,31 @@ namespace OrbMech{
 		return PI2*sqrt(power(a, 3.0) / mu);
 	}
 
+	double TrueToMeanAnomaly(double ta, double eccdp)
+	{
+		double ma = 0.0;
+		double E = TrueToEccentricAnomaly(ta, eccdp);
+		ma = E - eccdp * sin(E);
+		if (ma < 0.0)
+			ma = ma + PI2;
+		return ma;
+	}
+
+	double TrueToEccentricAnomaly(double ta, double ecc)
+	{
+		double ea;
+		double cosTa = cos(ta);
+		double eccCosTa = ecc * cosTa;
+		double sinEa = (sqrt(1.0 - ecc * ecc)*sin(ta)) / (1.0 + eccCosTa);
+		double cosEa = (ecc + cosTa) / (1.0 + eccCosTa);
+		ea = atan2(sinEa, cosEa);
+
+		if (ea < 0.0)
+			ea = ea + PI2;
+
+		return ea;
+	}
+
 	double fraction_an(int n)
 	{
 		if (n == 0)

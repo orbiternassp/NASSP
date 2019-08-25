@@ -100,7 +100,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		tliparam.Tt_3R = lvdc->Tt_3R;
 		tliparam.t_clock = lvdc->t_clock;
 
-		LVDCTLIPredict(tliparam, calcParams.src, sv, calcParams.TEPHEM, DeltaV_LVLH, TimeofIgnition, sv_IG, sv_TLI);
+		double m0 = calcParams.src->GetEmptyMass();
+		LVDCTLIPredict(tliparam, m0, sv, calcParams.TEPHEM, DeltaV_LVLH, TimeofIgnition, sv_IG, sv_TLI);
 
 		calcParams.R_TLI = sv_TLI.R;
 		calcParams.V_TLI = sv_TLI.V;
@@ -443,11 +444,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			if (fcn == 23)
 			{
-				MPTable mpt;
-
-				//Step 1: Add MCC-4 to the mission plan table
-				MPTAddManeuver(mpt, sv_ig1, sv_cut1, "MCC", 0.0, 0.0, 2, RTCC_ENGINETYPE_SPS);
-
 				LOIMan opt2;
 				LOI2Man opt3;
 				REFSMMATOpt refsopt;
@@ -455,7 +451,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				double P30TIG_LOI, P30TIG_LOI2;
 				VECTOR3 dV_LVLH_LOI, dV_LVLH_LOI2;
 
-				//Step 2: Calculate LOI-1 and add it to the mission plan
+				//Step 1: Calculate LOI-1 with MCC-4 burnout vector
 				opt2.csmlmdocked = false;
 				opt2.GETbase = GETbase;
 				opt2.h_apo = 170.0*1852.0;
@@ -466,35 +462,33 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt2.lng = LSLng;
 				opt2.vessel = calcParams.src;
 				opt2.t_land = t_land;
-				MPTTrajectory(mpt, opt2.RV_MCC, 2);
-				//opt2.RV_MCC = ExecuteManeuver(calcParams.src, GETbase, P30TIG, dV_LVLH, sv, 0);
+				opt2.RV_MCC = sv_cut1;
 
 				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, sv_node, sv_ig2, sv_cut2);
-				MPTAddManeuver(mpt, sv_ig2, sv_cut2, "LOI", 0.0, 0.0, 2, RTCC_ENGINETYPE_SPS);
 
-				//Step 3: Calculate LOI-2 to get the TIG
+				//Step 2: Calculate LOI-2 to get the TIG
 				opt3.alt = LSAlt;
 				opt3.csmlmdocked = false;
 				opt3.EarliestGET = P30TIG_LOI + 3.5*3600.0;
 				opt3.GETbase = GETbase;
 				opt3.h_circ = 60.0*1852.0;
-				MPTTrajectory(mpt, opt3.RV_MCC, 2);
+				opt3.RV_MCC = sv_cut2;
 				opt3.vessel = calcParams.src;
 				opt3.vesseltype = 0;
 
 				LOI2Targeting(&opt3, dV_LVLH_LOI2, P30TIG_LOI2);
 
-				//Step 4: Calculate LVLH REFSMMAT at LOI-2 TIG taking into account the trajectory leading up to that point
+				//Step 3: Calculate LVLH REFSMMAT at LOI-2 TIG taking into account the trajectory leading up to that point
 				refsopt.GETbase = GETbase;
 				refsopt.REFSMMATopt = 2;
 				refsopt.REFSMMATTime = P30TIG_LOI2;
 				refsopt.vessel = calcParams.src;
 				refsopt.useSV = true;
-				MPTTrajectory(mpt, refsopt.REFSMMATTime, GETbase, refsopt.RV_MCC, 2);
+				refsopt.RV_MCC = coast(sv_cut2, refsopt.REFSMMATTime - OrbMech::GETfromMJD(sv_cut2.MJD, GETbase));
 
 				REFSMMAT = REFSMMATCalc(&refsopt);
 
-				//Step 5: Store SV for use with PC+2
+				//Step 4: Store SV for use with PC+2
 				calcParams.SVSTORE1 = sv_cut1;
 			}
 

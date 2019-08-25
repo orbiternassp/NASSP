@@ -33,7 +33,10 @@ public:
 	AR_GCore(VESSEL* v);
 	~AR_GCore();
 
-	MPTable mptable;
+	void MPTMassUpdate();
+	int MPTTrajectoryUpdate();
+
+	FullMPTable mptable;
 	bool MissionPlanningActive;
 	double GETbase;			//Launch MJD
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
@@ -54,7 +57,16 @@ public:
 	double RTEMaxReturnInclination;
 	double RTERangeOverrideNM;
 
+	VESSEL *pCSM;
+	VESSEL *pLM;
+
+	int pCSMnumber;
+	int pLMnumber;
+	int mptInitError;
+
 	RTCC* rtcc;
+
+	CheckoutMonitor checkmon;
 };
 
 class ARCore {
@@ -107,6 +119,10 @@ public:
 	void TransferPoweredAscentToMPT();
 	void TransferGPMToMPT();
 	void MPTDirectInputCalc();
+	void MPTTLIDirectInput();
+	void CheckoutMonitorCalc();
+	void TransferLOIorMCCtoMPT();
+	void TransferRTEToMPT();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -117,9 +133,8 @@ public:
 	void P30Uplink(void);
 	void P30UplinkCalc();
 	void P30UplinkNew();
-	void EntryUplink(void);
 	void RetrofireEXDVUplinkCalc();
-	void RetrofireEXDVUplinkNew();
+	void RetrofireEXDVUplink();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(void);
 	void REFSMMATUplinkCalc();
@@ -195,7 +210,6 @@ public:
 	int lambertTPFOpt;		//0 = T2 on time, 1 = use DT from T1, 2 = use travel angle
 	double lambertDT;		//DT from T1 to T2
 	double lambertWT;		//travel angle of passive vehicle between T1 and T2
-	SV TwoImpulse_SV;		//State vector at impulsive TIG
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
@@ -212,7 +226,6 @@ public:
 	double t_TPIguess;
 	DKIResults dkiresult;
 	VECTOR3 DKI_DV;
-	SV DKI_SV;		//State vector at impulsive TIG
 
 	//CONCENTRIC RENDEZVOUS PAGE
 	int SPQMode;	//0 = CSI, 1 = CDH
@@ -223,7 +236,6 @@ public:
 	double DH;			//Delta Height for the CDH maneuver
 	VECTOR3 SPQDeltaV;
 	SPQResults spqresults;
-	SV SPQ_SV;		//State vector at impulsive TIG
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
@@ -243,7 +255,6 @@ public:
 	double SPSGET;		//Maneuver GET
 	double GPM_TIG;		//Maneuver GET output
 	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
-	SV GPM_SV;
 	//0 = Apogee
 	//1 = Equatorial crossing
 	//2 = Perigee
@@ -482,6 +493,8 @@ public:
 	int MPTReplaceCode;
 	//0 = SPS, 1 = APS, 2 = DPS, 3-6 = L1-4, 7-10 = C1-4
 	int MPTThrusterCode;
+
+	bool MPT_LOI_TLMCC_Flag; //false = MCC, true = LOI
 
 private:
 

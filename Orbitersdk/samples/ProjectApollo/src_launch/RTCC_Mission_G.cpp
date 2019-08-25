@@ -129,7 +129,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		tliparam.Tt_3R = lvdc->Tt_3R;
 		tliparam.t_clock = lvdc->t_clock;
 
-		LVDCTLIPredict(tliparam, calcParams.src, sv, calcParams.TEPHEM, DeltaV_LVLH, TimeofIgnition, sv_IG, sv_TLI);
+		double m0 = calcParams.src->GetEmptyMass();
+		LVDCTLIPredict(tliparam, m0, sv, calcParams.TEPHEM, DeltaV_LVLH, TimeofIgnition, sv_IG, sv_TLI);
 
 		calcParams.R_TLI = sv_TLI.R;
 		calcParams.V_TLI = sv_TLI.V;

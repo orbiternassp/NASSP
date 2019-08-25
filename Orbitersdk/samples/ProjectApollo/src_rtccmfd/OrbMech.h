@@ -322,6 +322,8 @@ namespace OrbMech {
 	void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHANDLE gravout, double t, VECTOR3 &R1, VECTOR3 &V1);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
 	double period(VECTOR3 R, VECTOR3 V, double mu);
+	double TrueToMeanAnomaly(double ta, double eccdp);
+	double TrueToEccentricAnomaly(double ta, double ecc);
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);

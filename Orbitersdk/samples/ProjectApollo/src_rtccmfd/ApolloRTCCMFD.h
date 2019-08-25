@@ -111,7 +111,7 @@ public:
 	void menuP30Upload();
 	void menuP30UplinkNew();
 	void menuP30UplinkCalc();
-	void menuRetrofireEXDVUplinkNew();
+	void menuRetrofireEXDVUplink();
 	void menuRetrofireEXDVUplinkCalc();
 	void EntryAngDialogue();
 	void set_entryang(double ang);
@@ -134,6 +134,7 @@ public:
 	void menuEntryUpdateCalc();
 	void menuDeorbitCalc();
 	void menuMoonRTECalc();
+	void menuTransferRTEToMPT();
 	void set_entryrange(double range);
 	void EntryRangeDialogue();
 	void menuSVCalc();
@@ -142,7 +143,6 @@ public:
 	void menuLSCalc();
 	void menuLSUpload();
 	void menuAGSSVCalc();
-	void menuEntryUpload();
 	void menuEntryUpdateUpload();
 	void set_spherical();
 	void menuCycleTwoImpulseOption();
@@ -200,6 +200,8 @@ public:
 	void menuSwitchLOIManeuver();
 	void menuSwitchLOIOption();
 	void menuCycleLOIEllipseOption();
+	void menuTransferLOItoMPT();
+	void menuTransferTLCCtoMPT();
 	void menuSwitchTLCCManeuver();
 	void menuSetTLCCGET();
 	void set_TLCCGET(double time);
@@ -399,6 +401,10 @@ public:
 	void menuSetMPTPage();
 	void menuMPTCycleActive();
 	void menuMPTDeleteManeuver();
+	void menuMPTTLIDirectInput();
+	void menuMPTCopyEphemeris();
+	void set_MPTCopyEphemeris(int OldVeh, int NewVeh, double GET, int ManNum);
+	void menuSetMPTInitPage();
 	void menuSetNextStationContactsPage();
 	void menuNextStationContactLunar();
 	void menuSetPredSiteAcquisitionPage();
@@ -426,10 +432,15 @@ public:
 	void menuSetGPMTransferPage();
 	void menuTransferGPMToMPT();
 	void menuCycleGPMThruster();
+	void menuSetCheckoutMonitorPage();
 	void menuSetMPTDirectInputPage();
+	void menuMPTDirectInputVehicle();
 	void menuMPTDirectInputOption();
 	void menuMPTDirectInputDV();
 	void set_MPTDirectInputDV(VECTOR3 DV);
+	void set_MPTDirectInputDTorDV(double val, bool IsDT);
+	void menuMPTDirectInputAtt();
+	void set_MPTDirectInputAtt(VECTOR3 Att, int mode);
 	void menuCycleMPTDirectInputThruster();
 	void menuMPTDirectInputTransfer();
 	void menuMPTDirectInputTIG();
@@ -440,6 +451,25 @@ public:
 	void menuMPTDirectInputFinalConfig();
 	void menuTransferPoweredAscentToMPT();
 	void menuTransferPoweredDescentToMPT();
+	void CheckoutMonitorCalc();
+	void menuCheckMonVehID();
+	void menuCheckMonOptionID();
+	void menuCheckMonParameter();
+	void set_CheckMonTime(double time);
+	void set_CheckMonMan(int man);
+	void menuCheckMonThresholdTime();
+	void menuCheckMonReference();
+	void menuCheckMonFeet();
+	void menuMPTInitM50M55Table();
+	void menuMPTInitM50CSMWT();
+	void menuMPTInitM50LMWT();
+	void menuMPTInitM50SIVBWT();
+	void menuMPTInitM55Config();
+	void menuMPTM50Update();
+	void menuMPTM55Update();
+	void menuMPTInitAutoUpdate();
+	void menuMPTInitM50M55Vehicle();
+	void menuMPTTrajectoryUpdate();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);
@@ -455,6 +485,10 @@ protected:
 		int screen;
 	} screenData;
 private:
+
+	static void papiWriteScenario_SV(FILEHANDLE scn, char *item, MPTSV sv);
+	static bool papiReadScenario_SV(char *line, char *item, MPTSV &sv);
+
 	ARCore* G;
 	AR_GCore* GC;
 	ApolloRTCCMFDButtons coreButtons;	

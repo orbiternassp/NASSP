@@ -73,7 +73,7 @@ void MCC::MissionSequence_F()
 				tliparam.Tt_3R = lvdc->Tt_3R;
 				tliparam.t_clock = lvdc->t_clock;
 
-				rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, sv, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, sv_IG, sv_TLI);
+				rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src->GetEmptyMass(), sv, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, sv_IG, sv_TLI);
 
 				rtcc->calcParams.R_TLI = sv_TLI.R;
 				rtcc->calcParams.V_TLI = sv_TLI.V;

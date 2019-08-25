@@ -167,11 +167,97 @@ SpaceDigitals::SpaceDigitals()
 	LN = 0.0;
 }
 
+CheckoutMonitor::CheckoutMonitor()
+{
+	sprintf_s(VEH, "");
+	GET = 0.0;
+	GMT = 0.0;
+	sprintf_s(VID, "");
+	Pos = _V(0, 0, 0);
+	Vel = _V(0, 0, 0);
+	V_i = 0.0;
+	gamma_i = 0.0;
+	psi = 0.0;
+	phi_c = 0.0;
+	lambda = 0.0;
+	h_s = 0.0;
+	h_a = 0.0;
+	h_p = 0.0;
+	h_o_NM = 0.0;
+	h_o_ft = 0.0;
+	phi_D = 0.0;
+	lambda_D = 0.0;
+	a = 0.0;
+	e = 0.0;
+	i = 0.0;
+	omega_p = 0.0;
+	Omega = 0.0;
+	nu = 0.0;
+	m = 0.0;
+	R = 0.0;
+	R_Day[0] = 0;
+	R_Day[1] = 0;
+	R_Day[2] = 0;
+	A = 0.0;
+	K_Fac = 0.0;
+	sprintf_s(CFG, "");
+	sprintf_s(RF, "");
+	WT = 0.0;
+	WC = 0.0;
+	WL = 0.0;
+	SPS = 0.0;
+	RCS_C = 0.0;
+	APS = 0.0;
+	DPS = 0.0;
+	RCS_L = 0.0;
+	J2 = 0.0;
+	LOC = 0.0;
+	GRRC = 0.0;
+	ZSC = 0.0;
+	GRRS = 0.0;
+	LAL = 0.0;
+	LOL = 0.0;
+	ZSL = 0.0;
+	ZSA = 0.0;
+	EPHB = 0.0;
+	EPHE = 0.0;
+	UpdateNo = 0;
+	NV = 0;
+	THT = 0.0;
+	RTT = 0.0;
+	LSB = 0.0;
+	LLS = 0.0;
+	deltaL = 0.0;
+	VSF = 0.0;
+	EB2 = 0.0;
+	EE2 = 0.0;
+	U_T = _V(0, 0, 0);
+	sprintf_s(Option, "");
+
+	unit = 0;
+	TABlank = false;
+	LSTBlank = false;
+	MABlank = false;
+	HOBlank = false;
+}
+
+MPTSV& MPTSV::operator=(const SV& other)
+{
+	this->gravref = other.gravref;
+	this->MJD = other.MJD;
+	this->R = other.R;
+	this->V = other.V;
+	return *this;
+}
+
 MPTManeuver::MPTManeuver()
 {
-	LI = 0;
+	ConfigCodeBefore = 0;
+	ConfigCodeAfter = 0;
 	ID = 0;
 	Thruster = 0;
+	A_T = _V(0, 0, 0);
+	dV_LVLH = _V(0, 0, 0);
 }
 
 MPTManDisplay::MPTManDisplay()
@@ -182,6 +268,7 @@ MPTManDisplay::MPTManDisplay()
 	DV = 0.0;
 	BefMJD = 0.0;
 	AftMJD = 0.0;
+	ID = 0;
 }
 
 NextStationContact::NextStationContact()
@@ -2490,10 +2577,6 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 			sol = 1;
 		}
 	}
-
-	OELEMENTS coe;
-
-	coe = OrbMech::coe_from_sv(sv_node.R, sv_node.V, OrbMech::mu_Moon);
 
 	if (opt->impulsive == 0)
 	{
@@ -5101,6 +5184,18 @@ void RTCC::LandmarkTrackingPAD(LMARKTRKPADOpt *opt, AP11LMARKTRKPAD &pad)
 	pad.entries = opt->entries;
 }
 
+MPTSV RTCC::coast(MPTSV sv0, double dt)
+{
+	MPTSV sv1;
+	OBJHANDLE gravout = NULL;
+
+	OrbMech::oneclickcoast(sv0.R, sv0.V, sv0.MJD, dt, sv1.R, sv1.V, sv0.gravref, gravout);
+	sv1.gravref = gravout;
+	sv1.MJD = sv0.MJD + dt / 24.0 / 3600.0;
+
+	return sv1;
+}
+
 SV RTCC::coast(SV sv0, double dt)
 {
 	SV sv1;
@@ -5179,11 +5274,8 @@ SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TL
 
 	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, GETbase - 17.0 / 24.0 / 3600.0);
 
-	R_TLI2 = tmul(Rot, _V(R_TLI.x, R_TLI.z, R_TLI.y));
-	V_TLI2 = tmul(Rot, _V(V_TLI.x, V_TLI.z, V_TLI.y));
-
-	R_TLI2 = _V(R_TLI2.x, R_TLI2.z, R_TLI2.y);
-	V_TLI2 = _V(V_TLI2.x, V_TLI2.z, V_TLI2.y);
+	R_TLI2 = rhtmul(Rot, R_TLI);
+	V_TLI2 = rhtmul(Rot, V_TLI);
 
 	coe = OrbMech::coe_from_PACSS4(R_TLI2, V_TLI2, mu);
 
@@ -5198,18 +5290,62 @@ SevenParameterUpdate RTCC::TLICutoffToLVDCParameters(VECTOR3 R_TLI, VECTOR3 V_TL
 	return param;
 }
 
-void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI)
+SV RTCC::PMMSPT(LVDCTLIparam lvdc, SV sv_A)
+{
+	SV sv1, sv2;
+	double day, theta_E, MJD_GRR, MJD_TST, dt;
+	VECTOR3 PosS, DotS, T_P, N, PosP, Sbar, DotP, Sbardot;
+	MATRIX3 mat, MX_EPH;
+
+	//State Vector
+	modf(oapiGetSimMJD(), &day);
+	if (lvdc.t_clock + lvdc.T_L > 24.0*3600.0)
+	{
+		day -= 1.0;
+	}
+	MJD_GRR = day + lvdc.T_L / 24.0 / 3600.0;
+	mat = OrbMech::Orbiter2PACSS13(MJD_GRR, lvdc.phi_L, -80.6041140*RAD, lvdc.Azimuth);
+
+	//Find TB6 start
+	//Determination of S-bar and S-bar-dot
+	theta_E = lvdc.theta_EO + lvdc.omega_E*lvdc.t_D;
+	MX_EPH = mul(OrbMech::tmat(lvdc.MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+	T_P = mul(MX_EPH, unit(lvdc.TargetVector));
+
+	MJD_TST = MJD_GRR + (lvdc.TB5 + lvdc.T_ST) / 24.0 / 3600.0;
+	sv1 = coast(sv_A, (MJD_TST - sv_A.MJD) * 24.0 * 3600.0);
+
+	dt = 0;
+
+	do
+	{
+		sv2 = coast(sv1, dt);
+		PosS = mul(mat, _V(sv2.R.x, sv2.R.z, sv2.R.y));
+		DotS = mul(mat, _V(sv2.V.x, sv2.V.z, sv2.V.y));
+
+		N = unit(crossp(PosS, DotS));
+		PosP = crossp(N, unit(PosS));
+		Sbar = unit(PosS)*cos(lvdc.beta) + PosP * sin(lvdc.beta);
+		DotP = crossp(N, DotS / length(PosS));
+
+		Sbardot = DotS / length(PosS)*cos(lvdc.beta) + DotP * sin(lvdc.beta);
+		dt += 1.0;
+
+	} while (!((dotp(Sbardot, T_P) < 0 && dotp(Sbar, T_P) <= cos(lvdc.alpha_TS))));
+
+	return coast(sv2, lvdc.T_RG);
+}
+
+void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, double m0, SV sv_A, double GETbase, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_IG, SV &sv_TLI)
 {
 	SV sv1, sv2;
 	double day, theta_E, MJD_GRR, MJD_TST, dt, cos_psiT, sin_psiT, Inclination, X_1, X_2, theta_N, p_N, T_M, R, e, p, alpha_D;
 	double MJD_TIG, R_T, V_T, K_5, G_T, gamma_T, boil, tau3, dL_3, F2, F3, V_ex2, V_ex3, dt_tailoff;
 	VECTOR3 PosS, DotS, T_P, N, PosP, Sbar, DotP, Sbardot, Sbar_1, Cbar_1, R_TLI, V_TLI;
 	MATRIX3 mat, MX_EPH, MX_B, MX_G;
-	OBJHANDLE gravref;
 	OELEMENTS coe;
 
 	//Constants
-	gravref = sv_A.gravref;
 	boil = (1.0 - 0.99998193) / 10.0;
 	F2 = 802543.5;
 	V_ex2 = 4226.708571;
@@ -5287,7 +5423,7 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, SV sv_A, double GET
 	G_T = -lvdc.mu / pow(R_T, 2);
 
 	int UP;
-	double mass, a_T, tau2, V, sin_gam, cos_gam, dot_phi_1, dot_phi_T, phi_T, xi_T, dot_zeta_T, dot_xi_T, ddot_zeta_GT, ddot_xi_GT, m0, m1, dt1;
+	double mass, a_T, tau2, V, sin_gam, cos_gam, dot_phi_1, dot_phi_T, phi_T, xi_T, dot_zeta_T, dot_xi_T, ddot_zeta_GT, ddot_xi_GT, m1, dt1;
 	double dot_dxit, dot_detat, dot_dzetat, dV, f, T_1c, Tt_3, T_2, L_2, L_12, Lt_3, Lt_Y, Tt_T, dT_3, T_3, T_T, dT, Tt_T_old, m2, m3, a_T3, a_T_cut;
 	VECTOR3 Pos4, PosXEZ, DotXEZ, ddotG_act, DDotXEZ_G;
 	MATRIX3 MX_phi_T, MX_K;
@@ -5301,7 +5437,6 @@ void RTCC::LVDCTLIPredict(LVDCTLIparam lvdc, VESSEL* vessel, SV sv_A, double GET
 	Tt_T = T_2 + Tt_3;
 
 	mass = sv_A.mass;
-	m0 = vessel->GetEmptyMass();
 	dt1 = dt + (MJD_TST - sv_A.MJD) * 24.0 * 3600.0;
 	m1 = (mass - m0)*exp(-boil*dt1);
 	m2 = m0 + m1;
@@ -8913,7 +9048,7 @@ void RTCC::FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDig
 	}
 	else
 	{
-		R_B = OrbMech::R_Moon;
+		R_B = OrbMech::R_Moon + opt.LSAlt;
 		mu = OrbMech::mu_Moon;
 		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, opt.sv_A.MJD);
 	}
@@ -9006,7 +9141,7 @@ void RTCC::FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigi
 	}
 	else
 	{
-		R_B = OrbMech::R_Moon;
+		R_B = OrbMech::R_Moon + opt.LSAlt;
 		mu = OrbMech::mu_Moon;
 		Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_cur.MJD);
 	}
@@ -9078,7 +9213,7 @@ void RTCC::FIDOOrbitDigitalsApsidesCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOr
 	}
 	else
 	{
-		R_B = OrbMech::R_Moon;
+		R_B = OrbMech::R_Moon + opt.LSAlt;
 		mu = OrbMech::mu_Moon;
 		Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_cur.MJD);
 	}
@@ -9155,7 +9290,7 @@ void RTCC::FIDOOrbitDigitalsCalculateGETBV(const FIDOOrbitDigitalsOpt &opt, FIDO
 	}
 	else
 	{
-		R_B = OrbMech::R_Moon;
+		R_B = OrbMech::R_Moon + opt.LSAlt;
 		mu = OrbMech::mu_Moon;
 		Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_cur.MJD);
 	}
@@ -9558,40 +9693,22 @@ void RTCC::OrbitStationContactsDisplay(const OrbitStationContactsOpt &opt, Orbit
 	EMGENGEN(ephemeris, opt.GETbase, opt.lunar, res);
 }
 
-int RTCC::MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV)
+int RTCC::MPTAddTLI(FullMPTable &mptable, SV sv_IG, SV sv_TLI, double DV, int L)
 {
-	if (mptable.fulltable.size() == 0)
+	MPTable *table;
+
+	if (L == 1)
 	{
-		MPTManeuver man;
-		MPTManDisplay dispman;
-		double apo, peri;
-		char buff[100];
+		table = &mptable.lmtable;
+	}
+	else
+	{
+		table = &mptable.cmtable;
+	}
 
-		man.ID = mptable.fulltable.size() + 1;
-		sprintf(buff, "TLI%03d", man.ID);
-		dispman.code.assign(buff);
-
-		man.LI = 2;
-		man.sv_before = sv_IG;
-		man.sv_after = sv_TLI;
-		man.sv_after.mass = 28862.0;
-		man.Thruster = RTCC_ENGINETYPE_SIVB_MAIN;
-
-		OrbMech::periapo(sv_TLI.R, sv_TLI.V, OrbMech::mu_Earth, apo, peri);
-		dispman.HA = (apo - OrbMech::R_Earth) / 1852.0;
-		if (dispman.HA > 99999.0)
-		{
-			dispman.HA = 99999.0;
-		}
-		dispman.HP = (peri - OrbMech::R_Earth) / 1852.0;
-		dispman.DV = DV / 0.3048;
-		dispman.BefMJD = man.sv_before.MJD;
-		dispman.AftMJD = man.sv_after.MJD;
-
-		mptable.fulltable.push_back(dispman);
-		mptable.cmtable.push_back(man);
-		man.sv_after.mass = 15200.0;
-		mptable.lmtable.push_back(man);
+	if (table->mantable.size() == 0)
+	{
+		MPTAddManeuver(mptable, sv_IG, sv_TLI, "TLI", 0.0, DV, L, RTCC_ENGINETYPE_SIVB_MAIN);
 
 		return 0;
 	}
@@ -9599,9 +9716,11 @@ int RTCC::MPTAddTLI(MPTable &mptable, SV sv_IG, SV sv_TLI, double DV)
 	return 1;
 }
 
-int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI, int CC)
+int RTCC::MPTAddManeuver(FullMPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI, int CC, int opt)
 {
-	int CCP, TVC;
+	int CCP;
+	MPTable *table, *othertable;
+	double CSMMass, LMMass, SIVBMass;
 
 	if (mptable.fulltable.size() > 0)
 	{
@@ -9611,27 +9730,41 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code
 		}
 	}
 
+	if (opt == 66)
+	{
+		L = med_m66.Table;
+		Thruster = med_m66.Thruster;
+		CCI = med_m66.ConfigChangeInd;
+		CC = med_m66.FinalConfig;
+	}
+
 	if (L == 1)
 	{
-		if (mptable.lmtable.size() > 0)
-		{
-			CCP = mptable.lmtable.back().ConfigCodeAfter;
-		}
-		else
-		{
-			CCP = mptable.InitLMConfigCode;
-		}
+		table = &mptable.lmtable;
+		othertable = &mptable.cmtable;
 	}
 	else
 	{
-		if (mptable.cmtable.size() > 0)
-		{
-			CCP = mptable.cmtable.back().ConfigCodeAfter;
-		}
-		else
-		{
-			CCP = mptable.InitCSMConfigCode;
-		}
+		table = &mptable.cmtable;
+		othertable = &mptable.lmtable;
+	}
+
+	//Ephemeris not established
+	if (table->TUP == 0) return 1;
+
+	if (table->mantable.size() > 0)
+	{
+		CCP = table->mantable.back().ConfigCodeAfter;
+		CSMMass = table->mantable.back().CSMMassAfter;
+		LMMass = table->mantable.back().LMMassAfter;
+		SIVBMass = table->mantable.back().SIVBMassAfter;
+	}
+	else
+	{
+		CCP = table->InitConfigCode;
+		CSMMass = table->CSMInitMass;
+		LMMass = table->LMInitMass;
+		SIVBMass = table->SIVBInitMass;
 	}
 
 	MPTManeuver man;
@@ -9640,36 +9773,41 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code
 	char buff[100], buff2, buff3;
 	int CCMI;
 
-	if (sv_cut.gravref == oapiGetObjectByName("Earth"))
+	//Determine thrusting vehicle
+	if (Thruster == RTCC_ENGINETYPE_SPS)
 	{
-		r = OrbMech::R_Earth;
-		mu = OrbMech::mu_Earth;
+		man.TVC = RTCC_MANVEHICLE_CSM;
+	}
+	else if (Thruster == RTCC_ENGINETYPE_APS || Thruster == RTCC_ENGINETYPE_DPS)
+	{
+		man.TVC = RTCC_MANVEHICLE_LM;
+	}
+	else if (Thruster >= RTCC_ENGINETYPE_SIVB_APS)
+	{
+		man.TVC = RTCC_MANVEHICLE_SIVB;
 	}
 	else
 	{
-		r = OrbMech::R_Moon + LSAlt;
-		mu = OrbMech::mu_Moon;
+		if (L == 1)
+		{
+			man.TVC = RTCC_MANVEHICLE_LM;
+		}
+		else
+		{
+			man.TVC = RTCC_MANVEHICLE_CSM;
+		}
 	}
 
-	if (L == 1)
-	{
-		TVC = 3;
-	}
-	else
-	{
-		TVC = 1;
-	}
-
-	//Docking
-	if (CCI > 1)
-	{
-		CCMI = CCP;
-	}
-	//No change
-	else if (CCI < 1)
+	//No change or Separation
+	if (CCI == RTCC_CONFIGCHANGE_NONE || CCI == RTCC_CONFIGCHANGE_LM_STAGING)
 	{
 		CC = CCP;
 		CCMI = CC;
+	}
+	//Docking
+	else if (CCI == RTCC_CONFIGCHANGE_DOCKING)
+	{
+		CCMI = CCP;
 	}
 	//Undocking
 	else
@@ -9677,7 +9815,7 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code
 		CCMI = CC;
 	}
 
-	if (TVC == 2)
+	if (man.TVC == RTCC_MANVEHICLE_SIVB)
 	{
 		if (CC >= RTCC_CONFIG_CSM_SIVB && CCP > RTCC_CONFIG_CSM_SIVB)
 		{
@@ -9695,7 +9833,7 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code
 			return 6;
 		}
 
-		if (TVC > 2)
+		if (man.TVC > 2)
 		{
 
 		}
@@ -9712,13 +9850,24 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code
 		}
 	}
 
-	if (CCI > 1)
+	if (CCI == RTCC_CONFIGCHANGE_DOCKING)
 	{
 		//TBD
 	}
-	else if (CCI < 1)
+	else if (CCI == RTCC_CONFIGCHANGE_NONE)
 	{
 		//All ok
+	}
+	else if (CCI == RTCC_CONFIGCHANGE_LM_STAGING)
+	{
+		if (man.TVC == RTCC_MANVEHICLE_LM && (CCP == RTCC_CONFIG_LM || CCP == RTCC_CONFIG_CSM_LM || CCP == RTCC_CONFIG_LM_SIVB))
+		{
+			//Ok
+		}
+		else
+		{
+			return 6;
+		}
 	}
 	else
 	{
@@ -9749,6 +9898,14 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code
 		}
 	}
 
+	if (opt == 66)
+	{
+		sv_ig.mass = MPTConfigMass(CCMI, CSMMass, LMMass, SIVBMass);
+		MPTDirectInput(mptable, sv_ig, sv_cut, DV);
+
+		sprintf(oapiDebugString(), "%f", sv_ig.mass);
+	}
+
 	if (L == 1)
 	{
 		buff2 = 'L';
@@ -9770,21 +9927,85 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code
 	{
 		buff3 = 'A';
 	}
+	else if (Thruster == RTCC_ENGINETYPE_SIVB_MAIN || Thruster == RTCC_ENGINETYPE_LOX_DUMP)
+	{
+		buff3 = 'J';
+	}
 	else
 	{
 		buff3 = 'R';
 	}
 
-	man.ID = mptable.fulltable.size() + 1;
+	if (mptable.fulltable.size() == 0)
+	{
+		dispman.ID = man.ID = 1;
+	}
+	else
+	{
+		dispman.ID = man.ID = mptable.fulltable.back().ID + 1;
+	}
 	man.Thruster = Thruster;
-	sprintf(buff, "%c%c%02d%s", buff2, buff3, man.ID, code);
+	sprintf(buff, "%c%c%02d%s", buff2, buff3, table->mantable.size() + 1, code);
 	dispman.code.assign(buff);
 
-	man.LI = L;
+	if (sv_cut.gravref == oapiGetObjectByName("Earth"))
+	{
+		r = OrbMech::R_Earth;
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		r = OrbMech::R_Moon + LSAlt;
+		mu = OrbMech::mu_Moon;
+	}
+
 	man.sv_before = sv_ig;
 	man.sv_after = sv_cut;
 	man.ConfigCodeBefore = CCP;
 	man.ConfigCodeAfter = CC;
+
+	//For now, use LM mass from sv_ig input
+	if (CCI == RTCC_CONFIGCHANGE_LM_STAGING)
+	{
+		LMMass = sv_ig.mass;
+	}
+
+	if (man.TVC == RTCC_MANVEHICLE_CSM)
+	{
+		man.CSMMassAfter = CSMMass - (sv_ig.mass - sv_cut.mass);
+		man.LMMassAfter = LMMass;
+		man.SIVBMassAfter = SIVBMass;
+	}
+	else if (man.TVC == RTCC_MANVEHICLE_SIVB)
+	{
+		man.CSMMassAfter = CSMMass;
+		man.LMMassAfter = LMMass;
+		man.SIVBMassAfter = SIVBMass - (sv_ig.mass - sv_cut.mass);
+	}
+	else
+	{
+		man.CSMMassAfter = CSMMass;
+		man.LMMassAfter = LMMass - (sv_ig.mass - sv_cut.mass);
+		man.SIVBMassAfter = SIVBMass;
+	}
+
+	if (!MPTConfigIncludesCSM(CC))
+	{
+		man.CSMMassAfter = 0.0;
+	}
+	if (!MPTConfigIncludesLM(CC))
+	{
+		man.LMMassAfter = 0.0;
+	}
+	if (!MPTConfigIncludesSIVB(CC))
+	{
+		man.SIVBMassAfter = 0.0;
+	}
+
+	man.TotalMassAfter = man.CSMMassAfter + man.LMMassAfter + man.SIVBMassAfter;
+
+	//man.A_T = unit(V_G);
+	//man.dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), V_G);
 
 	OrbMech::periapo(sv_cut.R, sv_cut.V, mu, apo, peri);
 	dispman.HA = (apo - r) / 1852.0;
@@ -9803,43 +10024,14 @@ int RTCC::MPTAddManeuver(MPTable &mptable, SV sv_ig, SV sv_cut, const char *code
 	}
 
 	mptable.fulltable.push_back(dispman);
-	if (man.LI == 1)
-	{
-		mptable.lmtable.push_back(man);
-		if (CC == RTCC_CONFIG_CSM_LM || CC == RTCC_CONFIG_CSM_LM_SIVB)
-		{
-			if (mptable.cmtable.size() > 0)
-			{
-				man.sv_before.mass = man.sv_after.mass = mptable.cmtable.back().sv_after.mass;
-			}
-			else
-			{
-				man.sv_before.mass = man.sv_after.mass = mptable.CSMInitMass;
-			}
-			mptable.cmtable.push_back(man);
-		}
-	}
-	else
-	{
-		mptable.cmtable.push_back(man);
-		if (CC == RTCC_CONFIG_CSM_LM || CC == RTCC_CONFIG_CSM_LM_SIVB)
-		{
-			if (mptable.lmtable.size() > 0)
-			{
-				man.sv_before.mass = man.sv_after.mass = mptable.lmtable.back().sv_after.mass;
-			}
-			else
-			{
-				man.sv_before.mass = man.sv_after.mass = mptable.LMInitMass;
-			}
-			mptable.lmtable.push_back(man);
-		}
-	}
+
+	//Put the maneuver on the MPT
+	table->mantable.push_back(man);
 
 	return 0;
 }
 
-int RTCC::MPTAddDescent(MPTable &mptable, SV sv_IG, SV sv_land, double LSAlt, double DV)
+int RTCC::MPTAddDescent(FullMPTable &mptable, SV sv_IG, SV sv_land, double LSAlt, double DV)
 {
 	if (mptable.LunarStayTimes[0] > 0 || mptable.LunarStayTimes[1] > 0)
 	{
@@ -9851,12 +10043,12 @@ int RTCC::MPTAddDescent(MPTable &mptable, SV sv_IG, SV sv_land, double LSAlt, do
 	//Assume we will never launch
 	mptable.LunarStayTimes[1] = 10e70;
 
-	return MPTAddManeuver(mptable, sv_IG, sv_land, "DES", LSAlt, DV, 1, RTCC_ENGINETYPE_APS);
+	return MPTAddManeuver(mptable, sv_IG, sv_land, "DES", LSAlt, DV, 1, RTCC_ENGINETYPE_DPS);
 }
 
-int RTCC::MPTAddAscent(MPTable &mptable, SV sv_IG, SV sv_asc, double LSAlt, double DV)
+int RTCC::MPTAddAscent(FullMPTable &mptable, SV sv_IG, SV sv_asc, double LSAlt, double DV)
 {
-	if (mptable.lmtable.size() > 0)
+	if (mptable.lmtable.mantable.size() > 0)
 	{
 		if (mptable.LunarStayTimes[0] < 0 || mptable.LunarStayTimes[1] < 10e10)
 		{
@@ -9867,10 +10059,10 @@ int RTCC::MPTAddAscent(MPTable &mptable, SV sv_IG, SV sv_asc, double LSAlt, doub
 	//Save launch time
 	mptable.LunarStayTimes[1] = sv_IG.MJD;
 
-	return MPTAddManeuver(mptable, sv_IG, sv_asc, "ASC", LSAlt, DV, 1, RTCC_ENGINETYPE_APS);
+	return MPTAddManeuver(mptable, sv_IG, sv_asc, "ASC", LSAlt, DV, 1, RTCC_ENGINETYPE_APS, RTCC_CONFIGCHANGE_LM_STAGING);
 }
 
-int RTCC::MPTDirectInput(MPTable &mptable, SV sv_ig, double GETbase, double LSAlt, double attachedMass)
+int RTCC::MPTDirectInput(FullMPTable &mptable, SV sv_ig, SV &sv_cut, double &DV)
 {
 	if (mptable.fulltable.size() > 0)
 	{
@@ -9883,27 +10075,62 @@ int RTCC::MPTDirectInput(MPTable &mptable, SV sv_ig, double GETbase, double LSAl
 	VECTOR3 V_G, R_cut, V_cut;
 	double f_T, v_ex, t_go, m_cut, F_average;
 
-	if (med_m66.FinalConfig != RTCC_CONFIG_CSM_LM)
-	{
-		attachedMass = 0.0;
-	}
-
 	EngineParametersTable(med_m66.Thruster, f_T, v_ex);
 
 	if (med_m66.BurnParamNo == 1)
 	{
+		double dv;
 		if (med_m40.P1_DV == 0.0)
 		{
-
+			dv = v_ex * log(sv_ig.mass / (sv_ig.mass - f_T / v_ex * med_m40.P1_DT));
 		}
 		else
 		{
+			dv = med_m40.P1_DV;
+		}
 
+		VECTOR3 X_B;
+
+		if (med_m66.Thruster == RTCC_ENGINETYPE_RCSMINUS2 || med_m66.Thruster == RTCC_ENGINETYPE_RCSMINUS4)
+		{
+			X_B = _V(-dv, 0, 0);
+		}
+		else
+		{
+			X_B = _V(dv, 0, 0);
+		}
+
+		//LVLH
+		if (med_m66.CoordInd == 0)
+		{
+			MATRIX3 M_PHV = OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V);
+			MATRIX3 M_BV = mul(OrbMech::_MRx(med_m66.Att.x), mul(OrbMech::_MRy(med_m66.Att.y), OrbMech::_MRz(med_m66.Att.z)));
+			MATRIX3 M_B = mul(M_BV, M_PHV);
+
+			V_G = tmul(M_B, X_B);
+		}
+		//IMU
+		else if (med_m66.CoordInd == 1)
+		{
+			MATRIX3 M_P = med_m66.REFSMMAT;
+			MATRIX3 M_BV = mul(OrbMech::_MRx(med_m66.Att.x), mul(OrbMech::_MRz(med_m66.Att.z), OrbMech::_MRy(med_m66.Att.y)));
+			MATRIX3 M_B = mul(M_BV, M_P);
+
+			V_G = tmul(M_B, X_B);
+		}
+		//FDAI
+		else
+		{
+			MATRIX3 M_P = med_m66.REFSMMAT;
+			MATRIX3 M_BV = mul(OrbMech::_MRx(med_m66.Att.x), mul(OrbMech::_MRz(med_m66.Att.z), OrbMech::_MRy(med_m66.Att.y)));
+			MATRIX3 M_B = mul(M_BV, M_P);
+
+			V_G = tmul(M_B, X_B);
 		}
 	}
 	else if (med_m66.BurnParamNo == 2)
 	{
-		V_G = PIEXDV(sv_ig.R, sv_ig.V, sv_ig.mass + attachedMass, f_T, med_m40.P2_DV, true);
+		V_G = PIEXDV(sv_ig.R, sv_ig.V, sv_ig.mass, f_T, med_m40.P2_DV, true);
 	}
 	else if (med_m66.BurnParamNo == 4)
 	{
@@ -9915,27 +10142,27 @@ int RTCC::MPTDirectInput(MPTable &mptable, SV sv_ig, double GETbase, double LSAl
 		double bt, bt_var;
 		int step;
 
-		LMThrottleProgram(f_T, v_ex, sv_ig.mass + attachedMass, length(V_G), F_average, bt, bt_var, step);
+		LMThrottleProgram(f_T, v_ex, sv_ig.mass, length(V_G), F_average, bt, bt_var, step);
 	}
 	else
 	{
 		F_average = f_T;
 	}
 
-	OrbMech::poweredflight(sv_ig.R, sv_ig.V, sv_ig.MJD, sv_ig.gravref, F_average, v_ex, sv_ig.mass + attachedMass, V_G, R_cut, V_cut, m_cut, t_go);
-
-	SV sv_cut;
+	OrbMech::poweredflight(sv_ig.R, sv_ig.V, sv_ig.MJD, sv_ig.gravref, F_average, v_ex, sv_ig.mass, V_G, R_cut, V_cut, m_cut, t_go);
 
 	sv_cut.gravref = sv_ig.gravref;
-	sv_cut.mass = m_cut - attachedMass;
+	sv_cut.mass = m_cut;
 	sv_cut.MJD = sv_ig.MJD + t_go / 24.0 / 3600.0;
 	sv_cut.R = R_cut;
 	sv_cut.V = V_cut;
+	DV = length(V_G);
 
-	return MPTAddManeuver(mptable, sv_ig, sv_cut, med_m66.code.c_str(), LSAlt, length(V_G), med_m66.Table, med_m66.Thruster, med_m66.ConfigChangeInd, med_m66.FinalConfig);
+	return 0;
+	//return MPTAddManeuver(mptable, sv_ig, sv_cut, med_m66.code.c_str(), LSAlt, length(V_G), med_m66.Table, med_m66.Thruster, med_m66.ConfigChangeInd, med_m66.FinalConfig);
 }
 
-int RTCC::MPTDeleteManeuver(MPTable &mptable)
+int RTCC::MPTDeleteManeuver(FullMPTable &mptable)
 {
 	unsigned i = mptable.fulltable.size();
 
@@ -9953,24 +10180,21 @@ int RTCC::MPTDeleteManeuver(MPTable &mptable)
 
 	mptable.fulltable.pop_back();
 
-	if (mptable.cmtable.size() > 0 && mptable.cmtable.back().ID == i)
+	if (mptable.cmtable.mantable.size() > 0 && mptable.cmtable.mantable.back().ID == i)
 	{
-		mptable.cmtable.pop_back();
+		mptable.cmtable.mantable.pop_back();
 	}
-	if (mptable.lmtable.size() > 0 && mptable.lmtable.back().ID == i)
+	if (mptable.lmtable.mantable.size() > 0 && mptable.lmtable.mantable.back().ID == i)
 	{
-		mptable.lmtable.pop_back();
+		mptable.lmtable.mantable.pop_back();
 	}
 
 	return 0;
 }
 
-bool RTCC::MPTTrajectory(MPTable &mptable, SV &sv_out, int L)
+void RTCC::MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L)
 {
-	//Returns:
-	//True if a state vector is returned, false if none is available
-
-	std::vector<MPTManeuver> *table;
+	MPTable *table;
 
 	if (L == 1)
 	{
@@ -9981,21 +10205,58 @@ bool RTCC::MPTTrajectory(MPTable &mptable, SV &sv_out, int L)
 		table = &mptable.cmtable;
 	}
 
-	//If table is completely empty
-	if (table->size() == 0) return false;
+	table->AnchorVector = sv;
+	table->TUP++;
+}
 
-	sv_out = table->back().sv_after;
+bool RTCC::MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L)
+{
+	//Returns:
+	//True if a state vector is returned, false if none is available
+
+	MPTable *table;
+
+	if (L == 1)
+	{
+		table = &mptable.lmtable;
+	}
+	else
+	{
+		table = &mptable.cmtable;
+	}
+
+	//If there is no anchor vector
+	if (table->TUP == 0) return false;
+
+	MPTSV sv;
+
+	if (table->mantable.size() == 0)
+	{
+		sv = table->AnchorVector;
+		sv_out.mass = table->TotalInitMass;
+	}
+	else
+	{
+		sv = table->mantable.back().sv_after;
+		sv_out.mass = table->mantable.back().TotalMassAfter;
+	}
+
+	sv_out.gravref = sv.gravref;
+	sv_out.MJD = sv.MJD;
+	sv_out.R = sv.R;
+	sv_out.V = sv.V;
 
 	return true;
 }
 
-bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_out, int L)
+bool RTCC::MPTTrajectory(FullMPTable &mptable, double GET, double GETbase, SV &sv_out, int L)
 {
 	//Returns:
 	//True if a state vector is returned, false if none is available
 	//If GET falls within a maneuver then return the burnout vector
 
-	std::vector<MPTManeuver> *table;
+	MPTable *table;
+	MPTSV sv;
 
 	if (L == 1)
 	{
@@ -10006,101 +10267,101 @@ bool RTCC::MPTTrajectory(MPTable &mptable, double GET, double GETbase, SV &sv_ou
 		table = &mptable.cmtable;
 	}
 
-	//If table is completely empty
-	if (table->size() == 0) return false;
+	//If there is no anchor vector
+	if (table->TUP == 0) return false;
 
 	double MJD = OrbMech::MJDfromGET(GET, GETbase);
 
 	//Use first "before" SV if the desired MJD is up to and including the MJD of the first "before" SV
-	if ((*table)[0].sv_before.MJD >= MJD)
+	if (table->mantable.size() == 0 || table->mantable[0].sv_before.MJD >= MJD)
 	{
 		//Check if on lunar surface
 		if (mptable.LunarStayTimes[0] <= MJD && MJD <= mptable.LunarStayTimes[1])
 		{
-			sv_out = (*table)[0].sv_before;
+			sv = table->AnchorVector;
 
 			//Convert sv_before
-			MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_out.MJD);
-			sv_out.R = rhtmul(Rot, sv_out.R);
-			sv_out.V = rhtmul(Rot, sv_out.V);
+			MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv.MJD);
+			sv.R = rhtmul(Rot, sv.R);
+			sv.V = rhtmul(Rot, sv.V);
 
-			sv_out.MJD = MJD;
-			Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_out.MJD);
-			sv_out.R = rhmul(Rot, sv_out.R);
-			sv_out.V = rhmul(Rot, sv_out.V);
+			sv.MJD = MJD;
+			Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv.MJD);
+			sv.R = rhmul(Rot, sv.R);
+			sv.V = rhmul(Rot, sv.V);
+
+			sv_out.gravref = sv.gravref;
+			sv_out.mass = table->TotalInitMass;
+			sv_out.MJD = sv.MJD;
+			sv_out.R = sv.R;
+			sv_out.V = sv.V;
 		}
 		else
 		{
-			sv_out = GeneralTrajectoryPropagation((*table)[0].sv_before, 0, MJD);
+			sv = table->AnchorVector;
+			sv_out.gravref = sv.gravref;
+			sv_out.mass = table->TotalInitMass;
+			sv_out.MJD = sv.MJD;
+			sv_out.R = sv.R;
+			sv_out.V = sv.V;
+			sv_out = GeneralTrajectoryPropagation(sv_out, 0, MJD);
 		}
-		return true;
-	}
-
-	unsigned i = 0;
-
-	//Use the "after" SV of the currently iterated SV while the MJD of the next "before" SV is smaller, but not including the desired MJD
-	while (table->size() - 1 > i && (*table)[i + 1].sv_before.MJD < MJD) i++;
-
-	//Check if on lunar surface
-	if (mptable.LunarStayTimes[0] <= MJD && MJD <= mptable.LunarStayTimes[1])
-	{
-		sv_out = (*table)[i].sv_after;
-		//Convert sv_after
-		MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_out.MJD);
-		sv_out.R = rhtmul(Rot, sv_out.R);
-		sv_out.V = rhtmul(Rot, sv_out.V);
-
-		sv_out.MJD = MJD;
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_out.MJD);
-		sv_out.R = rhmul(Rot, sv_out.R);
-		sv_out.V = rhmul(Rot, sv_out.V);
 	}
 	else
 	{
-		sv_out = GeneralTrajectoryPropagation((*table)[i].sv_after, 0, MJD);
+
+		unsigned i = 0;
+
+		//Use the "after" SV of the currently iterated SV while the MJD of the next "before" SV is smaller, but not including the desired MJD
+		while (table->mantable.size() - 1 > i && table->mantable[i + 1].sv_before.MJD < MJD) i++;
+
+		//Check if on lunar surface
+		if (mptable.LunarStayTimes[0] <= MJD && MJD <= mptable.LunarStayTimes[1])
+		{
+			sv = table->mantable[i].sv_after;
+			//Convert sv_after
+			MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv.MJD);
+			sv.R = rhtmul(Rot, sv.R);
+			sv.V = rhtmul(Rot, sv.V);
+
+			sv.MJD = MJD;
+			Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv.MJD);
+			sv.R = rhmul(Rot, sv.R);
+			sv.V = rhmul(Rot, sv.V);
+
+			sv_out.gravref = sv.gravref;
+			sv_out.mass = table->mantable.back().TotalMassAfter;
+			sv_out.MJD = sv.MJD;
+			sv_out.R = sv.R;
+			sv_out.V = sv.V;
+		}
+		else
+		{
+			sv = table->mantable[i].sv_after;
+			sv_out.gravref = sv.gravref;
+			sv_out.mass = table->mantable.back().TotalMassAfter;
+			sv_out.MJD = sv.MJD;
+			sv_out.R = sv.R;
+			sv_out.V = sv.V;
+			sv_out = GeneralTrajectoryPropagation(sv_out, 0, MJD);
+		}
 	}
 
 	return true;
 }
 
-int RTCC::MPTMassInit(MPTable &mptable, double cmass, double lmass)
-{
-	int code = 0;
-
-	if (cmass == 0)
-	{
-		mptable.CSMInitMass = 28862.0;
-		code = 1;
-	}
-	else
-	{
-		mptable.CSMInitMass = cmass;
-	}
-	if (lmass == 0)
-	{
-		mptable.LMInitMass = 15200.0;
-		code = 2;
-	}
-	else
-	{
-		mptable.LMInitMass = lmass;
-	}
-
-	return code;
-}
-
-bool RTCC::MPTHasManeuvers(MPTable &mptable, int L)
+bool RTCC::MPTHasManeuvers(FullMPTable &mptable, int L)
 {
 	if (L == 1)
 	{
-		if (mptable.lmtable.size() > 0)
+		if (mptable.lmtable.mantable.size() > 0)
 		{
 			return true;
 		}
 	}
 	else
 	{
-		if (mptable.cmtable.size() > 0)
+		if (mptable.cmtable.mantable.size() > 0)
 		{
 			return true;
 		}
@@ -10109,131 +10370,283 @@ bool RTCC::MPTHasManeuvers(MPTable &mptable, int L)
 	return false;
 }
 
-void RTCC::PLAWDT(const MPTable &mptable, double MJD, double &csmmass, double &lmmass)
+int RTCC::MPTConfirmManeuver(FullMPTable &mptable, int L)
 {
-	if (mptable.lmtable.size() > 0)
+	MPTable *table, *othertable;
+	if (L == 1)
 	{
-		unsigned i = 0;
-
-		//Special case: MJD is before first maneuver
-		if (MJD <= mptable.lmtable[0].sv_before.MJD)
-		{
-			lmmass = mptable.lmtable[0].sv_before.mass;
-		}
-		else
-		{
-			//Now iterate
-			while (i < mptable.lmtable.size() && MJD >= mptable.lmtable[i].sv_after.MJD)
-			{
-				i++;
-			}
-
-			//Is MJD inside maneuver?
-			if (i < mptable.lmtable.size() && MJD > mptable.lmtable[i].sv_before.MJD)
-			{
-				//Interpolate
-				lmmass = OrbMech::LinearInterpolation(mptable.lmtable[i].sv_before.MJD, mptable.lmtable[i].sv_after.MJD, mptable.lmtable[i].sv_before.mass, mptable.lmtable[i].sv_after.mass, MJD);
-			}
-			else
-			{
-				//Take mass from previous maneuver
-				lmmass = mptable.lmtable[i - 1].sv_after.mass;
-			}
-		}
+		table = &mptable.lmtable;
+		othertable = &mptable.cmtable;
 	}
 	else
 	{
-		lmmass = mptable.LMInitMass;
+		table = &mptable.cmtable;
+		othertable = &mptable.lmtable;
 	}
 
-	if (mptable.cmtable.size() > 0)
+	if (table->mantable.size() == 0)
 	{
-		unsigned i = 0;
-
-		//Special case: MJD is before first maneuver
-		if (MJD <= mptable.cmtable[0].sv_before.MJD)
-		{
-			csmmass = mptable.cmtable[0].sv_before.mass;
-		}
-		else
-		{
-			//Now iterate
-			while (i < mptable.cmtable.size() && MJD >= mptable.cmtable[i].sv_after.MJD)
-			{
-				i++;
-			}
-
-			//Is MJD inside maneuver?
-			if (i < mptable.cmtable.size() && MJD > mptable.cmtable[i].sv_before.MJD)
-			{
-				//Interpolate
-				csmmass = OrbMech::LinearInterpolation(mptable.cmtable[i].sv_before.MJD, mptable.cmtable[i].sv_after.MJD, mptable.cmtable[i].sv_before.mass, mptable.cmtable[i].sv_after.mass, MJD);
-			}
-			else
-			{
-				//Take mass from previous maneuver
-				csmmass = mptable.cmtable[i - 1].sv_after.mass;
-			}
-		}
+		//Error: MPT is empty
+		return 1;
 	}
-	else
+
+	if (table->mantable.front().ID != mptable.fulltable.front().ID)
 	{
-		csmmass = mptable.CSMInitMass;
+		//Error: Maneuver has to be very first of all maneuvers
+		return 2;
 	}
+
+	if (mptable.fulltable.front().code == "ASC")
+	{
+		mptable.LunarStayTimes[0] = -1;
+		mptable.LunarStayTimes[1] = -1;
+	}
+	else if (mptable.fulltable.front().code == "DES")
+	{
+		mptable.LunarStayTimes[0] = -1;
+	}
+
+	table->CSMInitMass = table->mantable.front().CSMMassAfter;
+	table->LMInitMass = table->mantable.front().LMMassAfter;
+	table->SIVBInitMass = table->mantable.front().SIVBMassAfter;
+	table->InitConfigCode = table->mantable.front().ConfigCodeAfter;
+	table->AnchorVector = table->mantable.front().sv_after;
+
+	if (table->mantable.front().ID == othertable->mantable.front().ID)
+	{
+		othertable->mantable.pop_front();
+	}
+
+	mptable.fulltable.pop_front();
+	table->mantable.pop_front();
+
+	return 0;
 }
 
-int RTCC::PMMWTC(MPTable &mptable, int med)
+int RTCC::PMMWTC(FullMPTable &mptable, int med)
 {
+	MPTable *table;
+
+	if (med == 49)
+	{
+
+	}
+	if (med == 50)
+	{
+		if (med_m50.Table == 1)
+		{
+			table = &mptable.lmtable;
+		}
+		else
+		{
+			table = &mptable.cmtable;
+		}
+
+		if (med_m50.CSMWT >= 0) table->CSMInitMass = med_m50.CSMWT;
+		if (med_m50.LMWT >= 0) table->LMInitMass = med_m50.LMWT;
+		if (med_m50.SIVBWT >= 0) table->SIVBInitMass = med_m50.SIVBWT;
+	}
+	if (med == 51)
+	{
+
+	}
 	if (med == 55)
 	{
-		if (mptable.fulltable.size() > 0)
+		if (med_m55.Table == 1)
+		{
+			table = &mptable.lmtable;
+		}
+		else
+		{
+			table = &mptable.cmtable;
+		}
+
+		if (table->mantable.size() > 0)
 		{
 			return 2;
 		}
 		else
 		{
-			if (med_m55.Table == 1)
-			{
-				mptable.InitLMConfigCode = med_m55.ConfigCode;
-			}
-			else
-			{
-				mptable.InitCSMConfigCode = med_m55.ConfigCode;
-			}
+			table->InitConfigCode = med_m55.ConfigCode;
+			table->DeltaDockingAngle = med_m55.DeltaDockingAngle;
+		}
+	}
+
+	if (med == 50 || med == 55)
+	{
+		table->TotalInitMass = 0.0;
+
+		if (MPTConfigIncludesCSM(table->InitConfigCode))
+		{
+			table->TotalInitMass += table->CSMInitMass;
+		}
+
+		if (MPTConfigIncludesLM(table->InitConfigCode))
+		{
+			table->TotalInitMass += table->LMInitMass;
+		}
+
+		if (MPTConfigIncludesSIVB(table->InitConfigCode))
+		{
+			table->TotalInitMass += table->SIVBInitMass;
 		}
 	}
 
 	return 0;
 }
 
-int RTCC::MPTGetVesselConfiguration(const MPTable &mptable, int L)
+int RTCC::PLAWDT(FullMPTable &mptable, int L, double mjd, double &cfg_weight)
 {
+	double csm_weight, lm_weight, sivb_weight;
+	int cfg;
+
+	return PLAWDT(mptable, L, mjd, cfg, cfg_weight, csm_weight, lm_weight, sivb_weight);
+}
+
+int RTCC::PLAWDT(FullMPTable &mptable, int L, double mjd, int &cfg, double &cfg_weight, double &csm_weight, double &lm_weight, double &sivb_weight)
+{
+	MPTable *table;
+	unsigned i = 0;
+
 	if (L == 1)
 	{
-		if (mptable.lmtable.size() > 0)
+		table = &mptable.lmtable;
+	}
+	else
+	{
+		table = &mptable.cmtable;
+	}
+
+	//No maneuver in MPT or time is before first maneuver. Use initial values
+	if (table->mantable.size() == 0 || mjd <= table->mantable[0].sv_before.MJD)
+	{
+		cfg = table->InitConfigCode;
+		cfg_weight = table->TotalInitMass;
+		if (MPTConfigIncludesCSM(cfg))
 		{
-			return mptable.lmtable.back().ConfigCodeAfter;
+			csm_weight = table->CSMInitMass;
 		}
 		else
 		{
-			return mptable.InitLMConfigCode;
+			csm_weight = 0.0;
+		}
+		if (MPTConfigIncludesLM(cfg))
+		{
+			lm_weight = table->LMInitMass;
+		}
+		else
+		{
+			lm_weight = 0.0;
+		}
+		if (MPTConfigIncludesSIVB(cfg))
+		{
+			sivb_weight = table->SIVBInitMass;
+		}
+		else
+		{
+			sivb_weight = 0.0;
+		}
+		return 0;
+	}
+
+	//Iterate to find maneuver
+	while ((i < table->mantable.size() - 1) && (mjd >= table->mantable[i + 1].sv_after.MJD))
+	{
+		i++;
+	}
+
+	cfg = table->mantable[i].ConfigCodeAfter;
+	cfg_weight = table->mantable[i].TotalMassAfter;
+	csm_weight = table->mantable[i].CSMMassAfter;
+	lm_weight = table->mantable[i].LMMassAfter;
+	sivb_weight = table->mantable[i].SIVBMassAfter;
+
+	return 0;
+}
+
+int RTCC::MPTGetVesselConfiguration(const FullMPTable &mptable, int L)
+{
+	if (L == 1)
+	{
+		if (mptable.lmtable.mantable.size() > 0)
+		{
+			return mptable.lmtable.mantable.back().ConfigCodeAfter;
+		}
+		else
+		{
+			return mptable.lmtable.InitConfigCode;
 		}
 	}
 	else
 	{
-		if (mptable.cmtable.size() > 0)
+		if (mptable.cmtable.mantable.size() > 0)
 		{
-			return mptable.cmtable.back().ConfigCodeAfter;
+			return mptable.cmtable.mantable.back().ConfigCodeAfter;
 		}
 		else
 		{
-			return mptable.InitCSMConfigCode;
+			return mptable.cmtable.InitConfigCode;
 		}
 	}
 }
 
-int RTCC::MPTGetVesselConfiguration(const MPTable &mptable, int L, double GET, double GETbase)
+int RTCC::MPTGetVesselConfiguration(const FullMPTable &mptable, int L, double GET, double GETbase)
 {
+	return 0;
+}
+
+int RTCC::MPTCopyEphemeris(FullMPTable &mptable, double GETbase)
+{
+	if (med_p16.OldVeh == med_p16.NewVeh)
+	{
+		return 1;
+	}
+
+	MPTable *table,*othertable;
+	MPTSV sv_out;
+
+	if (med_p16.OldVeh == 1)
+	{
+		table = &mptable.lmtable;
+		othertable = &mptable.cmtable;
+	}
+	else
+	{
+		table = &mptable.cmtable;
+		othertable = &mptable.lmtable;
+	}
+
+	if (med_p16.ManNum > 0)
+	{
+		//Use burnout vector
+		if (med_p16.ManNum > table->mantable.size())
+		{
+			//Not enough vectors
+			return 2;
+		}
+
+		sv_out = table->mantable[med_p16.ManNum - 1].sv_after;
+	}
+	else
+	{
+		//Use GMT
+		if (med_p16.GMT == 0.0)
+		{
+			sv_out = table->AnchorVector;
+		}
+		else
+		{
+			SV sv_test;
+			if (!MPTTrajectory(mptable, med_p16.GMT, GETbase, sv_test, med_p16.OldVeh))
+			{
+				return 3;
+			}
+			sv_out = sv_test;
+		}
+	}
+
+	othertable->AnchorVector = sv_out;
+
 	return 0;
 }
 
@@ -10883,4 +11296,389 @@ int RTCC::ELVCNV(const PZEFEM &ephem, SV sv, int in, int out, SV &sv_out)
 	}
 
 	return 0;
+}
+
+int RTCC::EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutMonitor &res)
+{
+	OBJHANDLE hEarth, hMoon;
+	double GMTbase;
+	MPTSV sv_out, sv_conv, sv_inert;
+	MPTable *table;
+
+	hEarth = oapiGetObjectByName("Earth");
+	hMoon = oapiGetObjectByName("Moon");
+	GMTbase = floor(GETbase);
+
+	if (med_u02.VEH == 1)
+	{
+		table = &mptable.lmtable;
+	}
+	else
+	{
+		table = &mptable.cmtable;
+	}
+
+	if (table->TUP == 0) return 8;
+
+	if (med_u02.IND == 2)
+	{
+		SV sv_test;
+		MPTTrajectory(mptable, med_u02.IND_val, GETbase, sv_test, med_u02.VEH);
+		sv_out = sv_test;
+		sprintf(res.Option, "GET");
+	}
+	else if (med_u02.IND == 1)
+	{
+		SV sv_test;
+		MPTTrajectory(mptable, med_u02.IND_val, GMTbase, sv_test, med_u02.VEH);
+		sv_out = sv_test;
+		sprintf(res.Option, "GMT");
+	}
+	else if (med_u02.IND == 3)
+	{
+		if (table->mantable.size() < med_u02.IND_man) return 7;
+		sv_out = table->mantable[med_u02.IND_man - 1].sv_before;
+		sprintf(res.Option, "MVI");
+	}
+	else if (med_u02.IND == 4)
+	{
+		if (table->mantable.size() < med_u02.IND_man) return 7;
+		sv_out = table->mantable[med_u02.IND_man - 1].sv_after;
+		sprintf(res.Option, "MVE");
+	}
+	else
+	{
+		//TBD
+		return 1;
+	}
+
+	if (med_u02.VEH == 1)
+	{
+		sprintf_s(res.VEH, "LM");
+	}
+	else
+	{
+		sprintf_s(res.VEH, "CSM");
+	}
+	res.GET = OrbMech::GETfromMJD(sv_out.MJD, GETbase);
+	res.GMT = OrbMech::GETfromMJD(sv_out.MJD, GMTbase);
+
+	sv_inert = sv_out;
+
+	//Convert vector to desired coordinate system
+	if (sv_out.gravref == hEarth)
+	{
+		if (med_u02.REF == 0)
+		{
+			sv_conv = sv_out;
+		}
+		else if (med_u02.REF == 1)
+		{
+			MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, sv_out.MJD);
+			sv_conv = sv_out;
+			sv_conv.R = rhtmul(Rot, sv_out.R);
+			sv_conv.V = rhtmul(Rot, sv_out.V);
+		}
+		else if (med_u02.REF == 2 || med_u02.REF == 3)
+		{
+			VECTOR3 R_EM, V_EM;
+			sv_conv = sv_out;
+			OrbMech::GetLunarEphemeris(sv_out.MJD, R_EM, V_EM);
+
+			sv_conv.R = sv_out.R - R_EM;
+			sv_conv.V = sv_out.V - V_EM;
+			sv_conv.gravref = hMoon;
+			sv_inert = sv_conv;
+
+			if (med_u02.REF == 3)
+			{
+				MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_conv.MJD);
+				sv_conv.R = rhtmul(Rot, sv_conv.R);
+				sv_conv.V = rhtmul(Rot, sv_conv.V);
+			}
+		}
+	}
+	else
+	{
+		if (med_u02.REF == 0 || med_u02.REF == 1)
+		{
+			VECTOR3 R_EM, V_EM;
+			sv_conv = sv_out;
+			OrbMech::GetLunarEphemeris(sv_out.MJD, R_EM, V_EM);
+		
+			sv_conv.R = sv_out.R + R_EM;
+			sv_conv.V = sv_out.V + V_EM;
+			sv_conv.gravref = hEarth;
+			sv_inert = sv_conv;
+
+			if (med_u02.REF == 1)
+			{
+				MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, sv_conv.MJD);
+				sv_conv.R = rhtmul(Rot, sv_conv.R);
+				sv_conv.V = rhtmul(Rot, sv_conv.V);
+			}
+		}
+		else if (med_u02.REF == 2)
+		{
+			sv_conv = sv_out;
+		}
+		else if (med_u02.REF == 3)
+		{
+			MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, sv_out.MJD);
+			sv_conv = sv_out;
+			sv_conv.R = rhtmul(Rot, sv_out.R);
+			sv_conv.V = rhtmul(Rot, sv_out.V);
+		}
+	}
+
+	if (med_u02.REF == 0)
+	{
+		sprintf(res.RF, "ECI");
+	}
+	else if (med_u02.REF == 1)
+	{
+		sprintf(res.RF, "ECT");
+	}
+	else if (med_u02.REF == 2)
+	{
+		sprintf(res.RF, "MCI");
+	}
+	else
+	{
+		sprintf(res.RF, "MCT");
+	}
+
+	//Display unit
+	double CONVFACR, CONVFACV, R_E, mu;
+
+	res.unit = med_u02.FT;
+	if (med_u02.FT == 1)
+	{
+		CONVFACR = CONVFACV = 0.3048;
+	}
+	else
+	{
+		CONVFACR = 6.371e6;
+		CONVFACV = 6.371e6 / 3600.0;
+	}
+
+	if (med_u02.REF < 2)
+	{
+		R_E = OrbMech::R_Earth;
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		R_E = OrbMech::R_Moon + LSAlt;
+		mu = OrbMech::mu_Moon;
+	}
+
+	res.Pos = sv_conv.R / CONVFACR;
+	res.Vel = sv_conv.V / CONVFACV;
+
+	double rmag, vmag, rtasc, decl, fpav, az;
+	OrbMech::rv_from_adbar(sv_conv.R, sv_conv.V, rmag, vmag, rtasc, decl, fpav, az);
+
+	res.V_i = vmag / 0.3048;
+	res.gamma_i = 90.0 - fpav * DEG;
+	res.psi = az*DEG;
+	res.phi_c = 0.0;
+	res.lambda = 0.0;
+	res.h_s = (rmag - R_E) / 1852.0;
+	res.R = rmag / 1852.0;
+
+	if (med_u02.REF < 2)
+	{
+		res.HOBlank = false;
+		res.h_o_ft = (rmag - OrbMech::R_Earth) / 0.3048;
+		if (res.h_o_ft > 9999999.0) res.h_o_ft = 9999999.0;
+		res.h_o_NM = (rmag - OrbMech::R_Earth) / 1852.0;
+		if (res.h_o_NM > 9999.99) res.h_o_NM = 9999.99;
+	}
+	else
+	{
+		res.HOBlank = true;
+		res.h_o_ft = res.h_o_NM = 0.0;
+	}
+
+	OELEMENTS coe;
+	coe = OrbMech::coe_from_sv(sv_conv.R, sv_conv.V, mu);
+
+	if (coe.e > 1)
+	{
+		res.a = 0.0;
+	}
+	else
+	{
+		res.a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e) / 1852.0;
+	}
+	res.e = coe.e;
+	res.i = coe.i*DEG;
+	res.omega_p = coe.w*DEG;
+	res.Omega = coe.RA*DEG;
+	res.nu = coe.TA*DEG;
+	if (coe.e < 0.00001)
+	{
+		res.TABlank = true;
+	}
+	else
+	{
+		res.TABlank = false;
+	}
+	if (coe.e < 1.0)
+	{
+		res.MABlank = false;
+		res.m = OrbMech::TrueToMeanAnomaly(coe.TA, coe.e)*DEG;
+	}
+	else
+	{
+		res.m = 0.0;
+		res.MABlank = true;
+	}
+
+	if (coe.e < 0.85)
+	{
+		SV sv_a, sv_p, sv_in;
+
+		//Make this better
+		sv_in.R = sv_inert.R;
+		sv_in.V = sv_inert.V;
+		sv_in.MJD = sv_inert.MJD;
+		sv_in.gravref = sv_inert.gravref;
+
+		ApsidesDeterminationSubroutine(sv_in, sv_a, sv_p);
+
+		res.h_a = (length(sv_a.R) - R_E) / 1852.0;
+		res.h_p = (length(sv_p.R) - R_E) / 1852.0;
+	}
+	else
+	{
+		res.h_a = 0.0;
+		res.h_p = 0.0;
+	}
+
+	double lat, lng;
+	OrbMech::latlong_from_r(sv_conv.R, lat, lng);
+	res.phi_c = res.phi_D = lat * DEG;
+	res.lambda = res.lambda_D = lng * DEG;
+
+	res.UpdateNo = table->TUP;
+	res.EPHB = OrbMech::GETfromMJD(table->AnchorVector.MJD, GETbase);
+	res.LOC = OrbMech::GETfromMJD(GETbase, GMTbase);
+	res.GRRC = OrbMech::GETfromMJD(GETbase, GMTbase);
+	res.ZSC = res.ZSL = OrbMech::GETfromMJD(GETbase, GMTbase);
+	res.GRRS = OrbMech::GETfromMJD(GETbase, GMTbase) - 17.0;
+
+	if (med_u02.VEH == 1)
+	{
+		if (mptable.LunarStayTimes[0] < 0)
+		{
+			res.LAL = 0.0;
+		}
+		else
+		{
+			res.LAL = OrbMech::GETfromMJD(mptable.LunarStayTimes[0], GMTbase);
+		}
+
+		if (mptable.LunarStayTimes[1] > 0 && mptable.LunarStayTimes[1] < 10e10)
+		{
+			res.LOL = OrbMech::GETfromMJD(mptable.LunarStayTimes[1], GMTbase);
+		}
+		else
+		{
+			res.LOL = 0.0;
+		}
+
+		res.LSTBlank = false;
+	}
+	else
+	{
+		res.LAL = 0.0;
+		res.LOL = 0.0;
+		res.LSTBlank = true;
+	}
+
+	double cfg_weight, csm_weight, lm_weight, sivb_weight;
+	int cfg;
+
+	PLAWDT(mptable, med_u02.VEH, sv_conv.MJD, cfg, cfg_weight, csm_weight, lm_weight, sivb_weight);
+
+	if (cfg == RTCC_CONFIG_CSM)
+	{
+		sprintf(res.CFG, "C");
+	}
+	else if (cfg == RTCC_CONFIG_LM)
+	{
+		sprintf(res.CFG, "L");
+	}
+	else if (cfg == RTCC_CONFIG_CSM_LM)
+	{
+		sprintf(res.CFG, "CL");
+	}
+	else if (cfg == RTCC_CONFIG_CSM_SIVB)
+	{
+		sprintf(res.CFG, "CS");
+	}
+	else if (cfg == RTCC_CONFIG_LM_SIVB)
+	{
+		sprintf(res.CFG, "LS");
+	}
+	else if (cfg == RTCC_CONFIG_CSM_LM_SIVB)
+	{
+		sprintf(res.CFG, "CSL");
+	}
+	
+	res.WT = cfg_weight / 0.45359237;
+	res.WC = csm_weight / 0.45359237;
+	res.WL = lm_weight / 0.45359237;
+
+	return 0;
+}
+
+bool RTCC::MPTConfigIncludesCSM(int config)
+{
+	if (config == RTCC_CONFIG_CSM) return true;
+	if (config == RTCC_CONFIG_CSM_LM) return true;
+	if (config == RTCC_CONFIG_CSM_SIVB) return true;
+	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
+
+	return false;
+}
+
+bool RTCC::MPTConfigIncludesLM(int config)
+{
+	if (config == RTCC_CONFIG_LM) return true;
+	if (config == RTCC_CONFIG_CSM_LM) return true;
+	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
+
+	return false;
+}
+
+bool RTCC::MPTConfigIncludesSIVB(int config)
+{
+	if (config == RTCC_CONFIG_CSM_SIVB) return true;
+	if (config == RTCC_CONFIG_LM_SIVB) return true;
+	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
+
+	return false;
+}
+
+double RTCC::MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass)
+{
+	double ConfigMass = 0.0;
+
+	if (MPTConfigIncludesCSM(config))
+	{
+		ConfigMass += CSMMass;
+	}
+	if (MPTConfigIncludesLM(config))
+	{
+		ConfigMass += LMMass;
+	}
+	if (MPTConfigIncludesSIVB(config))
+	{
+		ConfigMass += SIVBMass;
+	}
+
+	return ConfigMass;
 }
