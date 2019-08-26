@@ -241,6 +241,83 @@ CheckoutMonitor::CheckoutMonitor()
 	HOBlank = false;
 }
 
+DetailedManeuverTable::DetailedManeuverTable()
+{
+	sprintf_s(C_STA_ID, "");
+	C_GMTV = 0.0;
+	C_GETV = 0.0;
+	sprintf_s(C_CODE, "");
+	sprintf_s(L_STA_ID, "");
+	L_GMTV = 0.0;
+	L_GETV = 0.0;
+	sprintf_s(REF, "");
+	sprintf_s(X_STA_ID, "");
+	X_GMTV = 0.0;
+	GETR = 0.0;
+	WT = 0.0;
+	WC = 0.0;
+	WL = 0.0;
+	WF = 0.0;
+	GETI = 0.0;
+	PETI = 0.0;
+	DVM = 0.0;
+	DVREM = 0.0;
+	DVC = 0.0;
+	DT_B = 0.0;
+	DT_U = 0.0;
+	DT_TO = 0.0;
+	DV_TO = 0.0;
+	REFSMMAT_ID = 0;
+	DEL_P = 0.0;
+	DEL_Y = 0.0;
+	VG = _V(0, 0, 0);
+	IMUAtt = _V(0, 0, 0);
+	BodyAtt = _V(0, 0, 0);
+	LVLHAtt = _V(0, 0, 0);
+	VF = 0.0;
+	VS = 0.0;
+	VD = 0.0;
+	H_BI = 0.0;
+	P_BI = 0.0;
+	L_BI = 0.0;
+	F_BI = 0.0;
+	HA = 0.0;
+	HP = 0.0;
+	L_AN = 0.0;
+	E = 0.0;
+	I = 0.0;
+	WP = 0.0;
+	VP = 0.0;
+	THETA_P = 0.0;
+	DELTA_P = 0.0;
+	P_LLS = 0.0;
+	L_LLS = 0.0;
+	R_LLS = 0.0;
+	DH = 0.0;
+	PHASE = 0.0;
+	PHASE_DOT = 0.0;
+	WEDGE_ANG = 0.0;
+	YD = 0.0;
+	UntilDay = false;
+	TimeUntil = 0.0;
+	sprintf_s(PGNS_Veh, "");
+	sprintf_s(AGS_Veh, "");
+	PGNS_GETI = 0.0;
+	PGNS_DV = _V(0, 0, 0);
+	AGS_GETI = 0.0;
+	AGS_DV = _V(0, 0, 0);
+	Lam_GETI = 0.0;
+	Lam_TF = 0.0;
+	Lam_R = _V(0, 0, 0);
+	CFP_ID = 0;
+	CFP_GETI = 0.0;
+	CFP_APSIS = 0;
+	CFP_ELEV = 0.0;
+	CFP_TPI = 0.0;
+	CFP_DT = 0.0;
+	sprintf_s(CFP_OPTION, "");
+}
+
 MPTSV& MPTSV::operator=(const SV& other)
 {
 	this->gravref = other.gravref;
@@ -258,6 +335,8 @@ MPTManeuver::MPTManeuver()
 	Thruster = 0;
 	A_T = _V(0, 0, 0);
 	dV_LVLH = _V(0, 0, 0);
+	DV_M = 0.0;
+	dt = 0.0;
 }
 
 MPTManDisplay::MPTManDisplay()
@@ -9769,7 +9848,7 @@ int RTCC::MPTAddManeuver(FullMPTable &mptable, SV sv_ig, SV sv_cut, const char *
 
 	MPTManeuver man;
 	MPTManDisplay dispman;
-	double mu, apo, peri, r;
+	double mu, r;
 	char buff[100], buff2, buff3;
 	int CCMI;
 
@@ -9901,9 +9980,8 @@ int RTCC::MPTAddManeuver(FullMPTable &mptable, SV sv_ig, SV sv_cut, const char *
 	if (opt == 66)
 	{
 		sv_ig.mass = MPTConfigMass(CCMI, CSMMass, LMMass, SIVBMass);
-		MPTDirectInput(mptable, sv_ig, sv_cut, DV);
-
-		sprintf(oapiDebugString(), "%f", sv_ig.mass);
+		MPTDirectInput(man, sv_ig, sv_cut);
+		DV = man.DV_M;
 	}
 
 	if (L == 1)
@@ -10007,13 +10085,37 @@ int RTCC::MPTAddManeuver(FullMPTable &mptable, SV sv_ig, SV sv_cut, const char *
 	//man.A_T = unit(V_G);
 	//man.dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), V_G);
 
-	OrbMech::periapo(sv_cut.R, sv_cut.V, mu, apo, peri);
-	dispman.HA = (apo - r) / 1852.0;
-	if (dispman.HA > 99999.0)
+	OELEMENTS coe;
+	coe = OrbMech::coe_from_sv(sv_cut.R, sv_cut.V, mu);
+
+	if (coe.e < 0.85)
 	{
-		dispman.HA = 99999.0;
+		SV sv_a, sv_p;
+
+		ApsidesDeterminationSubroutine(sv_cut, sv_a, sv_p);
+
+		dispman.HA = (length(sv_a.R) - r) / 1852.0;
+		dispman.HP = (length(sv_p.R) - r) / 1852.0;
 	}
-	dispman.HP = (peri - r) / 1852.0;
+	else
+	{
+		dispman.HP = pow(length(crossp(sv_cut.R, sv_cut.V)), 2) / (mu*(1.0 + coe.e)) - r;
+		dispman.HP = dispman.HP / 1852.0;
+
+		if (coe.e >= 1.0)
+		{
+			dispman.HA = 99999.9;
+		}
+		else
+		{
+			dispman.HA = pow(length(crossp(sv_cut.R, sv_cut.V)), 2) / (mu*(1.0 - coe.e)) - r;
+			dispman.HA = dispman.HA / 1852.0;
+		}
+	}
+
+	if (dispman.HP > 99999.9) dispman.HP = 99999.9;
+	if (dispman.HA > 99999.9) dispman.HA = 99999.9;
+
 	dispman.DV = DV / 0.3048;
 	dispman.BefMJD = man.sv_before.MJD;
 	dispman.AftMJD = man.sv_after.MJD;
@@ -10062,16 +10164,8 @@ int RTCC::MPTAddAscent(FullMPTable &mptable, SV sv_IG, SV sv_asc, double LSAlt, 
 	return MPTAddManeuver(mptable, sv_IG, sv_asc, "ASC", LSAlt, DV, 1, RTCC_ENGINETYPE_APS, RTCC_CONFIGCHANGE_LM_STAGING);
 }
 
-int RTCC::MPTDirectInput(FullMPTable &mptable, SV sv_ig, SV &sv_cut, double &DV)
+int RTCC::MPTDirectInput(MPTManeuver &man, SV sv_ig, SV &sv_cut)
 {
-	if (mptable.fulltable.size() > 0)
-	{
-		if (sv_ig.MJD < mptable.fulltable.back().AftMJD)
-		{
-			return 2;
-		}
-	}
-
 	VECTOR3 V_G, R_cut, V_cut;
 	double f_T, v_ex, t_go, m_cut, F_average;
 
@@ -10105,27 +10199,43 @@ int RTCC::MPTDirectInput(FullMPTable &mptable, SV sv_ig, SV &sv_cut, double &DV)
 		{
 			MATRIX3 M_PHV = OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V);
 			MATRIX3 M_BV = mul(OrbMech::_MRx(med_m66.Att.x), mul(OrbMech::_MRy(med_m66.Att.y), OrbMech::_MRz(med_m66.Att.z)));
-			MATRIX3 M_B = mul(M_BV, M_PHV);
+			man.M_B = mul(M_BV, M_PHV);
 
-			V_G = tmul(M_B, X_B);
+			V_G = tmul(man.M_B, X_B);
 		}
 		//IMU
 		else if (med_m66.CoordInd == 1)
 		{
 			MATRIX3 M_P = med_m66.REFSMMAT;
-			MATRIX3 M_BV = mul(OrbMech::_MRx(med_m66.Att.x), mul(OrbMech::_MRz(med_m66.Att.z), OrbMech::_MRy(med_m66.Att.y)));
-			MATRIX3 M_B = mul(M_BV, M_P);
+			MATRIX3 M_BV;
+			if (med_m66.Table == 1)
+			{
+				M_BV = mul(OrbMech::_MRx(med_m66.Att.z), mul(OrbMech::_MRz(med_m66.Att.x), OrbMech::_MRy(med_m66.Att.y)));
+			}
+			else
+			{
+				M_BV = mul(OrbMech::_MRx(med_m66.Att.x), mul(OrbMech::_MRz(med_m66.Att.z), OrbMech::_MRy(med_m66.Att.y)));
+			}
+			man.M_B = mul(M_BV, M_P);
 
-			V_G = tmul(M_B, X_B);
+			V_G = tmul(man.M_B, X_B);
 		}
 		//FDAI
 		else
 		{
 			MATRIX3 M_P = med_m66.REFSMMAT;
-			MATRIX3 M_BV = mul(OrbMech::_MRx(med_m66.Att.x), mul(OrbMech::_MRz(med_m66.Att.z), OrbMech::_MRy(med_m66.Att.y)));
-			MATRIX3 M_B = mul(M_BV, M_P);
+			MATRIX3 M_BV;
+			if (med_m66.Table == 1)
+			{
+				M_BV = mul(OrbMech::_MRz(med_m66.Att.x), mul(OrbMech::_MRx(-med_m66.Att.z), OrbMech::_MRy(med_m66.Att.y)));
+			}
+			else
+			{
+				M_BV = mul(OrbMech::_MRx(med_m66.Att.x), mul(OrbMech::_MRz(med_m66.Att.z), OrbMech::_MRy(med_m66.Att.y)));
+			}
+			man.M_B = mul(M_BV, M_P);
 
-			V_G = tmul(M_B, X_B);
+			V_G = tmul(man.M_B, X_B);
 		}
 	}
 	else if (med_m66.BurnParamNo == 2)
@@ -10136,6 +10246,18 @@ int RTCC::MPTDirectInput(FullMPTable &mptable, SV sv_ig, SV &sv_cut, double &DV)
 	{
 		V_G = tmul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), med_m40.P4_DV);
 	}
+
+	man.DV_M = length(V_G);
+	if (man.DV_M > 0.00001)
+	{
+		man.A_T = unit(V_G);
+	}
+	else
+	{
+		man.A_T = _V(0, 0, 0);
+	}
+	//VECTOR3 DVtest = mul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), V_G) / 0.3048;
+	//sprintf(oapiDebugString(), "%f %f %f", DVtest.x, DVtest.y, DVtest.z);
 
 	if (med_m66.Thruster == RTCC_ENGINETYPE_DPS)
 	{
@@ -10156,7 +10278,8 @@ int RTCC::MPTDirectInput(FullMPTable &mptable, SV sv_ig, SV &sv_cut, double &DV)
 	sv_cut.MJD = sv_ig.MJD + t_go / 24.0 / 3600.0;
 	sv_cut.R = R_cut;
 	sv_cut.V = V_cut;
-	DV = length(V_G);
+	man.DV_M = length(V_G);
+	man.dt = t_go;
 
 	return 0;
 	//return MPTAddManeuver(mptable, sv_ig, sv_cut, med_m66.code.c_str(), LSAlt, length(V_G), med_m66.Table, med_m66.Thruster, med_m66.ConfigChangeInd, med_m66.FinalConfig);
@@ -11504,14 +11627,15 @@ int RTCC::EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutM
 	OELEMENTS coe;
 	coe = OrbMech::coe_from_sv(sv_conv.R, sv_conv.V, mu);
 
-	if (coe.e > 1)
+	if (coe.e >= 1)
 	{
-		res.a = 0.0;
+		res.a = 99999.99;
 	}
 	else
 	{
 		res.a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e) / 1852.0;
 	}
+	if (res.a > 99999.99) res.a = 99999.99;
 	res.e = coe.e;
 	res.i = coe.i*DEG;
 	res.omega_p = coe.w*DEG;
@@ -11553,14 +11677,31 @@ int RTCC::EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutM
 	}
 	else
 	{
-		res.h_a = 0.0;
-		res.h_p = 0.0;
+		res.h_p = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 + coe.e)) - R_E;
+		res.h_p = res.h_p / 1852.0;
+
+		if (coe.e >= 1)
+		{
+			res.h_a = 9999.99;
+		}
+		else
+		{
+			res.h_a = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 - coe.e)) - R_E;
+			res.h_a = res.h_a / 1852.0;
+		}
 	}
+
+	if (res.h_p > 9999.99) res.h_p = 9999.99;
+	if (res.h_a > 9999.99) res.h_a = 9999.99;
 
 	double lat, lng;
 	OrbMech::latlong_from_r(sv_conv.R, lat, lng);
 	res.phi_c = res.phi_D = lat * DEG;
 	res.lambda = res.lambda_D = lng * DEG;
+
+	double LunarRightAscension, LunarDeclination, LunarDistance;
+	OrbMech::GetLunarEquatorialCoordinates(sv_inert.MJD, LunarRightAscension, LunarDeclination, LunarDistance);
+	res.deltaL = LunarDeclination * DEG;
 
 	res.UpdateNo = table->TUP;
 	res.EPHB = OrbMech::GETfromMJD(table->AnchorVector.MJD, GETbase);
@@ -11681,4 +11822,167 @@ double RTCC::MPTConfigMass(int config, double CSMMass, double LMMass, double SIV
 	}
 
 	return ConfigMass;
+}
+
+int RTCC::PMDDMT(FullMPTable &mptable, double GETbase, double LSAlt, DetailedManeuverTable &res)
+{
+	MPTable *table, *othertable;
+	MPTManeuver *man;
+	int otherID;
+
+	if (med_u20.MPT_ID == 1)
+	{
+		table = &mptable.lmtable;
+		othertable = &mptable.cmtable;
+		otherID = 3;
+	}
+	else
+	{
+		table = &mptable.cmtable;
+		othertable = &mptable.lmtable;
+		otherID = 1;
+	}
+
+	if (med_u20.ManNo > table->mantable.size())
+	{
+		//Maneuver not in table
+		return 1;
+	}
+
+	double mu;
+
+	man = &table->mantable[med_u20.ManNo - 1];
+
+	res.GETI = OrbMech::GETfromMJD(man->sv_before.MJD, GETbase);
+	res.AGS_GETI = res.CFP_GETI = res.Lam_GETI = res.PGNS_GETI = res.GETI;
+
+	double GET_CUT = OrbMech::GETfromMJD(man->sv_after.MJD, GETbase);
+
+	if (man->sv_before.gravref == oapiGetObjectByName("Earth"))
+	{
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		mu = OrbMech::mu_Moon;
+	}
+
+	bool UseOtherMPT;
+
+	if (othertable->TUP > 0)
+	{
+		UseOtherMPT = true;
+	}
+	else
+	{
+		UseOtherMPT = false;
+	}
+
+	VECTOR3 X_B, Y_B, Z_B, X_P, Y_P, Z_P;
+
+	X_B = _V(man->M_B.m11, man->M_B.m12, man->M_B.m13);
+	Y_B = _V(man->M_B.m21, man->M_B.m22, man->M_B.m23);
+	Z_B = _V(man->M_B.m31, man->M_B.m32, man->M_B.m33);
+	X_P = _V(med_u20.REFSMMAT.m11, med_u20.REFSMMAT.m12, med_u20.REFSMMAT.m13);
+	Y_P = _V(med_u20.REFSMMAT.m21, med_u20.REFSMMAT.m22, med_u20.REFSMMAT.m23);
+	Z_P = _V(med_u20.REFSMMAT.m31, med_u20.REFSMMAT.m32, med_u20.REFSMMAT.m33);
+
+	double A, B, C, R, P, Y;
+
+	A = asin(dotp(X_B, Y_P));
+	C = abs(A);
+	if (A < 0) A = A + PI2;
+	if (abs(C - PI05) < 0.0017)
+	{
+		B = 0.0;
+		P = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
+	}
+	else
+	{
+		B = atan2(dotp(-Z_B, Y_P), dotp(Y_B, Y_P));
+		P = atan2(dotp(-X_B, Z_P), dotp(X_B, X_P));
+	}
+
+	if (med_u20.MPT_ID == 1)
+	{
+		R = A;
+		Y = B;
+	}
+	else
+	{
+		Y = A;
+		R = B;
+	}
+
+	res.IMUAtt = _V(R, P, Y)*DEG;
+
+	VECTOR3 DV, V_G;
+
+	DV = man->A_T*man->DV_M;
+
+	V_G.x = dotp(DV, X_P);
+	V_G.y = dotp(DV, Y_P);
+	V_G.z = dotp(DV, Z_P);
+
+	VECTOR3 X_PHV, Y_PHV, Z_PHV;
+	double P_H, Y_H, R_H, P_H_apo;
+
+	Z_PHV = -unit(man->sv_before.R);
+	Y_PHV = unit(crossp(man->sv_before.V, man->sv_before.R));
+	X_PHV = crossp(Y_PHV, Z_PHV);
+
+	P_H = asin(dotp(-Z_PHV, X_B));
+	P_H_apo = abs(P_H);
+
+	if (abs(P_H_apo - PI05) < 0.0017)
+	{
+		R_H = 0.0;
+		Y_H = atan2(dotp(-Y_B, X_PHV), dotp(Y_B, Y_PHV));
+	}
+	else
+	{
+		Y_H = atan2(dotp(Y_PHV, X_B), dotp(X_PHV, X_B));
+		R_H = atan2(dotp(Z_PHV, Y_B), dotp(Z_PHV, Z_B));
+	}
+
+	double V_F, V_S, V_D;
+	V_F = dotp(DV, X_PHV);
+	V_S = dotp(DV, Y_PHV);
+	V_D = dotp(DV, Z_PHV);
+
+	if (UseOtherMPT)
+	{
+		SV sv_other;
+		MPTTrajectory(mptable, GET_CUT, GETbase, sv_other, otherID);
+
+		VECTOR3 R_m = man->sv_after.R;
+		VECTOR3 V_m = man->sv_after.V;
+		VECTOR3 H_m = crossp(R_m, V_m);
+
+		VECTOR3 R_a = sv_other.R;
+		VECTOR3 V_a = sv_other.V;
+		VECTOR3 H_a = crossp(R_a, V_a);
+
+		VECTOR3 N = crossp(H_a, H_m);
+		double h_m = length(H_m);
+		double h_a = length(H_a);
+		double v_a_sq = dotp(V_a, V_a);
+		double v_m_sq = dotp(V_m, V_m);
+		double r_a = length(R_a);
+		double r_m = length(R_m);
+		double a_a = r_a / (2.0 - r_a * v_a_sq / mu);
+		double a_m = r_m / (2.0 - r_m * v_m_sq / mu);
+		double theta_dot = PI2 * (sqrt(pow(a_a, 3) / pow(a_m, 3)) - 1.0);
+		double delta = asin(length(N) / h_m / h_a);
+
+		res.PHASE_DOT = theta_dot * DEG;
+		res.WEDGE_ANG = delta * DEG;
+	}
+	else
+	{
+		res.PHASE_DOT = 0.0;
+		res.WEDGE_ANG = 0.0;
+	}
+
+	return 0;
 }

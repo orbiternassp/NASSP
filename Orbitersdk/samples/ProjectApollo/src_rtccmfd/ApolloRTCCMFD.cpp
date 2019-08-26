@@ -4947,26 +4947,26 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (GC->checkmon.unit == 0)
 		{
-			sprintf(Buffer, "%+014.10f", GC->checkmon.Pos.x);
+			sprintf(Buffer, "%+013.9f", GC->checkmon.Pos.x);
 			skp->Text(10 * W / 32, 7 * H / 28, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+014.10f", GC->checkmon.Pos.y);
+			sprintf(Buffer, "%+013.9f", GC->checkmon.Pos.y);
 			skp->Text(10 * W / 32, 9 * H / 28, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+014.10f", GC->checkmon.Pos.z);
+			sprintf(Buffer, "%+013.9f", GC->checkmon.Pos.z);
 			skp->Text(10 * W / 32, 11 * H / 28, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+014.10f", GC->checkmon.Vel.x);
+			sprintf(Buffer, "%+013.9f", GC->checkmon.Vel.x);
 			skp->Text(10 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+014.10f", GC->checkmon.Vel.y);
+			sprintf(Buffer, "%+013.9f", GC->checkmon.Vel.y);
 			skp->Text(10 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+014.10f", GC->checkmon.Vel.z);
+			sprintf(Buffer, "%+013.9f", GC->checkmon.Vel.z);
 			skp->Text(10 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			sprintf(Buffer, "%+013.0f", GC->checkmon.Pos.x);
+			sprintf(Buffer, "%+012.0f", GC->checkmon.Pos.x);
 			skp->Text(10 * W / 32, 7 * H / 28, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+013.0f", GC->checkmon.Pos.y);
+			sprintf(Buffer, "%+012.0f", GC->checkmon.Pos.y);
 			skp->Text(10 * W / 32, 9 * H / 28, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+013.0f", GC->checkmon.Pos.z);
+			sprintf(Buffer, "%+012.0f", GC->checkmon.Pos.z);
 			skp->Text(10 * W / 32, 11 * H / 28, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%+013.6f", GC->checkmon.Vel.x);
 			skp->Text(10 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
@@ -5024,7 +5024,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(17 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
 
 		skp->Text(19 * W / 32, 7 * H / 28, "A", 1);
-		sprintf(Buffer, "%06.2f", GC->checkmon.a);
+		sprintf(Buffer, "%08.2f", GC->checkmon.a);
 		skp->Text(24 * W / 32, 7 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(20 * W / 32, 9 * H / 28, "E", 1);
 		sprintf(Buffer, "%07.5f", GC->checkmon.e);
@@ -5044,6 +5044,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, "%07.3f", GC->checkmon.nu);
 			skp->Text(24 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
+		}
+		if (GC->checkmon.MABlank == false)
+		{
 			sprintf(Buffer, "%07.3f", GC->checkmon.m);
 			skp->Text(24 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
 		}
@@ -5093,15 +5096,17 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(14 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
 		}
 		skp->Text(10 * W / 32, 23 * H / 28, "LATD", 4);
-		sprintf(Buffer, "%+07.4f", GC->checkmon.phi_D);
+		sprintf(Buffer, "%+07.3f", GC->checkmon.phi_D);
 		skp->Text(14 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(10 * W / 32, 24 * H / 28, "LOND", 4);
-		sprintf(Buffer, "%+07.3f", GC->checkmon.lambda_D);
+		sprintf(Buffer, "%07.3f", GC->checkmon.lambda_D);
 		skp->Text(14 * W / 32, 24 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(10 * W / 32, 25 * H / 28, "R", 1);
 		sprintf(Buffer, "%+09.2f", GC->checkmon.R);
 		skp->Text(14 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(10 * W / 32, 26 * H / 28, "DECL", 4);
+		sprintf(Buffer, "%+07.3f", GC->checkmon.deltaL);
+		skp->Text(14 * W / 32, 26 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(10 * W / 32, 27 * H / 28, "LSB", 3);
 		skp->Text(20 * W / 32, 27 * H / 28, "LLS", 3);
 		if (GC->checkmon.LSTBlank == false)
@@ -5116,7 +5121,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
-		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "MPT Initialization", 18);
+		skp->Text(5 * W / 8, 1 * H / 28, "MPT INITIALIZATION", 18);
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 

@@ -342,6 +342,15 @@ struct MED_U02
 	unsigned IND_man = 0; //For options 2-3
 };
 
+//Generate Detailed Maneuver Table
+struct MED_U20
+{
+	int MPT_ID = 2;	//1 = LEM, 2 = CSM
+	unsigned ManNo = 0; //Maneuver in table
+	MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	bool HeadsUp = true;
+};
+
 struct LambertMan //Data for Lambert targeting
 {
 	double GETbase; //usually MJD at launch
@@ -1338,6 +1347,84 @@ struct CheckoutMonitor
 	bool HOBlank; //Is oblate height blank
 };
 
+struct DetailedManeuverTable
+{
+	DetailedManeuverTable();
+	char C_STA_ID[10];
+	double C_GMTV;
+	double C_GETV;
+	char C_CODE[10];
+	char L_STA_ID[10];
+	double L_GMTV;
+	double L_GETV;
+	char REF[10];
+	char X_STA_ID[10];
+	double X_GMTV;
+	double GETR;
+	double WT;
+	double WC;
+	double WL;
+	double WF;
+	double GETI;
+	double PETI;
+	double DVM;
+	double DVREM;
+	double DVC;
+	double DT_B;
+	double DT_U;
+	double DT_TO;
+	double DV_TO;
+	int REFSMMAT_ID;
+	double DEL_P;
+	double DEL_Y;
+	VECTOR3 VG;
+	VECTOR3 IMUAtt;
+	VECTOR3 BodyAtt;
+	VECTOR3 LVLHAtt;
+	double VF;
+	double VS;
+	double VD;
+	double H_BI;
+	double P_BI;
+	double L_BI;
+	double F_BI;
+	double HA;
+	double HP;
+	double L_AN;
+	double E;
+	double I;
+	double WP;
+	double VP;
+	double THETA_P;
+	double DELTA_P;
+	double P_LLS;
+	double L_LLS;
+	double R_LLS;
+	double DH;
+	double PHASE;
+	double PHASE_DOT;
+	double WEDGE_ANG;
+	double YD;
+	bool UntilDay; //false = until night, true = until day
+	double TimeUntil;
+	char PGNS_Veh[8];
+	char AGS_Veh[8];
+	double PGNS_GETI;
+	VECTOR3 PGNS_DV;
+	double AGS_GETI;
+	VECTOR3 AGS_DV;
+	double Lam_GETI;
+	double Lam_TF;
+	VECTOR3 Lam_R;
+	int CFP_ID;
+	double CFP_GETI;
+	int CFP_APSIS;
+	double CFP_ELEV;
+	double CFP_TPI;
+	double CFP_DT;
+	char CFP_OPTION[8];
+};
+
 struct MPTSV
 {
 	MPTSV& operator=(const SV& other);
@@ -1364,6 +1451,8 @@ struct MPTManeuver
 	double SIVBMassAfter;
 	double LMMassAfter;
 	double TotalMassAfter;
+	double DV_M;
+	double dt;
 };
 
 struct MPTManDisplay
@@ -1685,6 +1774,8 @@ public:
 	int ELVCNV(const PZEFEM &ephem, SV sv, int in, int out, SV &sv_out);
 	//Checkout Monitor Display
 	int EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutMonitor &res);
+	//Detailed Maneuver Table Display
+	int PMDDMT(FullMPTable &mptable, double GETbase, double LSAlt, DetailedManeuverTable &res);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1698,7 +1789,7 @@ public:
 	int MPTAddDescent(FullMPTable &mptable, SV sv_IG, SV sv_land, double LSAlt, double DV);
 	int MPTAddAscent(FullMPTable &mptable, SV sv_IG, SV sv_asc, double LSAlt, double DV);
 	int MPTAddManeuver(FullMPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI = RTCC_CONFIGCHANGE_NONE, int CC = RTCC_CONFIG_CSM, int opt = 0);
-	int MPTDirectInput(FullMPTable &mptable, SV sv_ig, SV &sv_cut, double &DV);
+	int MPTDirectInput(MPTManeuver &man, SV sv_ig, SV &sv_cut);
 	int MPTDeleteManeuver(FullMPTable &mptable);
 	void MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L);
 	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L);
@@ -1732,6 +1823,7 @@ public:
 	MED_M78 med_m78;
 	MED_P16 med_p16;
 	MED_U02 med_u02;
+	MED_U20 med_u20;
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);

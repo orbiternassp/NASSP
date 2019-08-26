@@ -4424,6 +4424,7 @@ protected:
 	// Friend class the MFD too so it can steal our data
 	friend class ProjectApolloMFD;
 	friend class ARCore;
+	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
 };
