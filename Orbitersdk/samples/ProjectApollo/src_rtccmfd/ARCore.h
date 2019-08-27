@@ -67,6 +67,7 @@ public:
 	RTCC* rtcc;
 
 	CheckoutMonitor checkmon;
+	SpaceDigitals spacedigit;
 };
 
 class ARCore {
@@ -105,7 +106,7 @@ public:
 	void FIDOOrbitDigitalsCalculateLongitude();
 	void FIDOOrbitDigitalsCalculateGETL();
 	void FIDOOrbitDigitalsApoPeriRequest();
-	void UpdateSpaceDigitals();
+	void SpaceDigitalsInit();
 	void CycleSpaceDigitals();
 	void SpaceDigitalsGET();
 	void CycleNextStationContactsDisplay();
@@ -472,10 +473,6 @@ public:
 	//FIDO ORBIT DIGITALS
 	FIDOOrbitDigitals fidoorbit;
 	SV fidoorbitsv;
-
-	//SPACE DIGITALS
-	SpaceDigitals spacedigit;
-	SV spacedigitalssv;
 
 	//NEXT STATION CONTACT DISPLAY
 	OrbitStationContactsTable orbitstatconttable;

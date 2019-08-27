@@ -330,6 +330,22 @@ struct MED_P52
 	double PH_NSR = 0.0; //Phase Angle at NSR
 };
 
+//Space Digitals Initialization
+struct MED_U00
+{
+	int VEH = 2; //1 = LEM, 2 = CSM
+	int REF = 0; //0 = Earth, 1 = Moon
+};
+
+//Generate Space Digitals
+struct MED_U01
+{
+	int ManualCol = 0;
+	int OptionInd = 0; //0 = GET, 1 = MNV
+	double GET = 0;
+	int MNV = 0;
+};
+
 //Initiate C/O Monitor Display
 struct MED_U02
 {
@@ -1210,6 +1226,7 @@ struct SpaceDigitals
 	double PSI;			//Current heading angle
 	double GETVector1;	//Ground elapsed time of the vector used to compute quantities below
 	char REF1[64];		//Inertial reference body used to compute quantities for GET Vector 1
+	double WT;			//Total vehicle weight at GET vector 1
 	double GETA;		//Ground elapsed time of next apogee (referenced from GET Vector 1)
 	double HA;			//Height of apogee (referenced from GET Vector 1)
 	double HP;			//Height of perigee (referenced from GET Vector 1)
@@ -1259,6 +1276,8 @@ struct SpaceDigitals
 	double PSIVP;		//Heading angle at vacuum perigee
 	double IE;			//Inclination angle at vacuum perigee
 	double LN;			//Geographic longitude of the earth return ascending node
+
+	bool Init;
 };
 
 struct SpaceDigitalsOpt
@@ -1270,7 +1289,6 @@ struct SpaceDigitalsOpt
 	double LSAlt;
 	double LSAzi;
 	double t_land;
-	double MJD;		//MJD to update the state vector to (only used in continuous and GET update)
 };
 
 struct CheckoutMonitor
@@ -1757,7 +1775,9 @@ public:
 	void FIDOOrbitDigitalsCalculateGETBV(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res);
 	void FIDOSpaceDigitalsUpdate(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	void FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
-	void FIDOSpaceDigitalsGET(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
+	void FIDOSpaceDigitalsGET1(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
+	void FIDOSpaceDigitalsGET2(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
+	void FIDOSpaceDigitalsGET3(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	//Orbit Station Contact Generation Control (EMSTAGEN)
 	void OrbitStationContactsDisplay(const OrbitStationContactsOpt &opt, OrbitStationContactsTable &res);
 	//Next Station Contact Display
@@ -1793,6 +1813,7 @@ public:
 	int MPTDeleteManeuver(FullMPTable &mptable);
 	void MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L);
 	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L);
+	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L, unsigned mnv);
 	bool MPTTrajectory(FullMPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
 	bool MPTHasManeuvers(FullMPTable &mptable, int L);
 	int MPTConfirmManeuver(FullMPTable &mptable, int L);
@@ -1822,6 +1843,8 @@ public:
 	MED_M72 med_m72;
 	MED_M78 med_m78;
 	MED_P16 med_p16;
+	MED_U00 med_u00;
+	MED_U01 med_u01;
 	MED_U02 med_u02;
 	MED_U20 med_u20;
 private:

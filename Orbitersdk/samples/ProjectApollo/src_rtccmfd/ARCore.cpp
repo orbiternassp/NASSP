@@ -1273,17 +1273,17 @@ void ARCore::FIDOOrbitDigitalsApoPeriRequest()
 	}
 }
 
-void ARCore::UpdateSpaceDigitals()
+void ARCore::SpaceDigitalsInit()
 {
 	startSubthread(28);
 }
 
 void ARCore::CycleSpaceDigitals()
 {
-	if (subThreadStatus == 0 && spacedigitalssv.gravref != NULL)
+	if (subThreadStatus == 0 && GC->spacedigit.Init)
 	{
 		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
-		if (GET > spacedigit.GET + 12.0)
+		if (GET > GC->spacedigit.GET + 12.0)
 		{
 			startSubthread(29);
 		}
@@ -1292,7 +1292,7 @@ void ARCore::CycleSpaceDigitals()
 
 void ARCore::SpaceDigitalsGET()
 {
-	if (subThreadStatus == 0 && spacedigitalssv.gravref != NULL)
+	if (subThreadStatus == 0 && GC->spacedigit.Init)
 	{
 		startSubthread(30);
 	}
@@ -3823,21 +3823,25 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 28: //FIDO Space Digitals Update
+	case 28: //FIDO Space Digitals Init
 	{
-		spacedigitalssv = GC->rtcc->StateVectorCalc(vessel);
+		double MJD = oapiGetSimMJD();
+		SV spacedigitalssv;
+
+		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(GC->mptable, OrbMech::GETfromMJD(MJD, GC->GETbase), GC->GETbase, spacedigitalssv, GC->rtcc->med_u00.VEH))
+		{
+			GC->spacedigit.Init = false;
+			Result = 0;
+			break;
+		}
 
 		SpaceDigitalsOpt opt;
 
 		opt.GETbase = GC->GETbase;
 		opt.sv_A = spacedigitalssv;
 		opt.LSAlt = GC->LSAlt;
-		opt.LSAzi = GC->LOIazi;
-		opt.LSLat = GC->LSLat;
-		opt.LSLng = GC->LSLng;
-		opt.t_land = GC->t_Land;
 
-		GC->rtcc->FIDOSpaceDigitalsUpdate(opt, spacedigit);
+		GC->rtcc->FIDOSpaceDigitalsUpdate(opt, GC->spacedigit);
 
 		Result = 0;
 	}
@@ -3845,26 +3849,39 @@ int ARCore::subThread()
 	case 29: //FIDO Space Digitals Cycle
 	{
 		double MJD = oapiGetSimMJD();
+		SV spacedigitalssv;
+
+		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(GC->mptable, OrbMech::GETfromMJD(MJD, GC->GETbase), GC->GETbase, spacedigitalssv, GC->rtcc->med_u00.VEH))
+		{
+			GC->spacedigit.Init = false;
+			Result = 0;
+			break;
+		}
 
 		SpaceDigitalsOpt opt;
 
 		opt.GETbase = GC->GETbase;
 		opt.LSAlt = GC->LSAlt;
-		opt.MJD = MJD;
 		opt.sv_A = spacedigitalssv;
 
-		GC->rtcc->FIDOSpaceDigitalsCycle(opt, spacedigit);
+		GC->rtcc->FIDOSpaceDigitalsCycle(opt, GC->spacedigit);
 
 		Result = 0;
 	}
 	break;
 	case 30: //FIDO Space Digitals GET
 	{
+		if (!GC->MissionPlanningActive)
+		{
+			Result = 0;
+			break;
+		}
+
 		SpaceDigitalsOpt opt;
 
-		if (GC->MissionPlanningActive)
+		if (GC->rtcc->med_u01.OptionInd == 0)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, spacedigit.GETVector1, GC->GETbase, opt.sv_A, mptveh))
+			if (!GC->rtcc->MPTTrajectory(GC->mptable, GC->rtcc->med_u01.GET, GC->GETbase, opt.sv_A, GC->rtcc->med_u00.VEH))
 			{
 				Result = 0;
 				break;
@@ -3872,16 +3889,32 @@ int ARCore::subThread()
 		}
 		else
 		{
-			opt.sv_A = spacedigitalssv;
+			if (!GC->rtcc->MPTTrajectory(GC->mptable, opt.sv_A, GC->rtcc->med_u00.VEH, GC->rtcc->med_u01.MNV))
+			{
+				Result = 0;
+				break;
+			}
 		}
-
-		double MJD = OrbMech::MJDfromGET(spacedigit.GETVector1, GC->GETbase);
 
 		opt.GETbase = GC->GETbase;
 		opt.LSAlt = GC->LSAlt;
-		opt.MJD = MJD;
+		opt.LSAzi = GC->LOIazi;
+		opt.LSLat = GC->LSLat;
+		opt.LSLng = GC->LSLng;
+		opt.t_land = GC->t_Land;
 
-		GC->rtcc->FIDOSpaceDigitalsGET(opt, spacedigit);
+		if (GC->rtcc->med_u01.ManualCol == 1)
+		{
+			GC->rtcc->FIDOSpaceDigitalsGET1(opt, GC->spacedigit);
+		}
+		else if (GC->rtcc->med_u01.ManualCol == 2)
+		{
+			GC->rtcc->FIDOSpaceDigitalsGET2(opt, GC->spacedigit);
+		}
+		else if (GC->rtcc->med_u01.ManualCol == 3)
+		{
+			GC->rtcc->FIDOSpaceDigitalsGET3(opt, GC->spacedigit);
+		}
 
 		Result = 0;
 	}

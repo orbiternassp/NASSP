@@ -395,9 +395,10 @@ public:
 	void set_FIDOOrbitDigitalsGETBV(double getbv);
 	void menuSetMCCDisplaysPage();
 	void menuSetSpaceDigitalsPage();
-	void menuUpdateSpaceDigitals();
-	void menuSetSpaceDigitalsGET();
-	void set_SpaceDigitalsGET(double get);
+	void menuSpaceDigitalsInit();
+	void set_SpaceDigitalsInit(int veh, int ref);
+	void menuGenerateSpaceDigitals();
+	void set_GenerateSpaceDigitals(int option, int column, double get, int mnv);
 	void menuSetMPTPage();
 	void menuMPTCycleActive();
 	void menuMPTDeleteManeuver();
