@@ -9113,11 +9113,12 @@ void RTCC::FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDig
 	OELEMENTS coe;
 	MATRIX3 Rot;
 	VECTOR3 R_equ, V_equ;
-	double lat, lng, mu, a, R_B, lng_cc, MJD_cc, intpart;
+	double lat, lng, mu, a, R_B, lng_cc, MJD_cc, GMTbase;
 
 	//sprintf(res.VEHID, opt.v->GetName());
 	res.K = 0.0;
-	res.GMTID = modf(opt.sv_A.MJD, &intpart)*24.0*3600.0;
+	GMTbase = floor(opt.GETbase);
+	res.GMTID = OrbMech::GETfromMJD(opt.sv_A.MJD, GMTbase);
 	res.GETID = OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase);
 	oapiGetObjectName(opt.sv_A.gravref, res.REF, 64);
 	res.REV = 0;
@@ -9416,7 +9417,7 @@ void RTCC::FIDOSpaceDigitalsUpdate(const SpaceDigitalsOpt &opt, SpaceDigitals &r
 	OELEMENTS coe;
 	MATRIX3 Rot;
 	VECTOR3 R_equ, V_equ;
-	double mu, r_B, lat, lng, rmag, vmag, fpav, az, intpart;
+	double mu, r_B, lat, lng, rmag, vmag, fpav, az, GMTbase;
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
@@ -9464,8 +9465,9 @@ void RTCC::FIDOSpaceDigitalsUpdate(const SpaceDigitalsOpt &opt, SpaceDigitals &r
 	coe = OrbMech::coe_from_sv(R_equ, V_equ, mu);
 	OrbMech::rv_from_adbar(R_equ, V_equ, rmag, vmag, lng, lat, fpav, az);
 
+	GMTbase = floor(opt.GETbase);
 	res.WEIGHT = sv_conv.mass / 0.45359237;
-	res.GMTV = modf(sv_conv.MJD, &intpart)*24.0*3600.0;
+	res.GMTV = OrbMech::GETfromMJD(sv_conv.MJD, GMTbase);
 	res.GETV = OrbMech::GETfromMJD(sv_conv.MJD, opt.GETbase);
 
 	res.GET = res.GETR = res.GETAxis = res.GETV;
@@ -9477,214 +9479,6 @@ void RTCC::FIDOSpaceDigitalsUpdate(const SpaceDigitalsOpt &opt, SpaceDigitals &r
 	res.GAM = 90.0 - fpav * DEG;
 	res.PSI = az * DEG;
 	res.Init = true;
-
-	
-	
-	/*VECTOR3 R_SI, V_SI;
-	double v_r, r_SPH, dt_SI, MJD_SI;
-	int phase;
-
-	r_SPH = 64373760.0;
-
-	
-
-	
-
-	if (opt.sv_A.gravref == hEarth && coe.e < 0.9)
-	{
-		//phase = 0
-		return;
-	}
-	else if (opt.sv_A.gravref == hMoon && coe.e < 1.0)
-	{
-		//phase = 0
-		return;
-	}
-
-	VECTOR3 R_CA, V_CA, R_SE, V_SE, R_VP, V_VP, R_EI, V_EI;
-	double r_M, r_E, dt_CA, MJD_CA, dt_SE, MJD_SE, dt_VP, MJD_VP, r_EI, dt_EI, MJD_EI;
-	
-	r_M = OrbMech::R_Moon + opt.LSAlt;
-	r_E = OrbMech::R_Earth;
-	r_EI = r_E + 400000.0*0.3048;
-
-	v_r = dotp(opt.sv_A.R, opt.sv_A.V) / length(opt.sv_A.R);
-
-	if (opt.sv_A.gravref == hEarth)
-	{
-		if (v_r > 0)
-		{
-			VECTOR3 Rtemp, Vtemp;
-			OBJHANDLE gravout = NULL;
-			//Check for SOI change within the next 100 hours
-			if (OrbMech::oneclickcoast(opt.sv_A.R, opt.sv_A.V, opt.sv_A.MJD, 100.0*3600.0, Rtemp, Vtemp, opt.sv_A.gravref, gravout))
-			{
-				phase = 1;
-			}
-			else
-			{
-				phase = 4;
-			}
-		}
-		else
-		{
-			phase = 4;
-		}
-	}
-	else
-	{
-		if (v_r < 0)
-		{
-			phase = 2;
-		}
-		else
-		{
-			phase = 3;
-		}
-	}
-
-	if (phase <= 1)
-	{
-		dt_SI = OrbMech::time_radius_integ(opt.sv_A.R, opt.sv_A.V, opt.sv_A.MJD, r_SPH, -1.0, opt.sv_A.gravref, hMoon, R_SI, V_SI);
-		MJD_SI = opt.sv_A.MJD + dt_SI / 24.0 / 3600.0;
-		res.GETSI = OrbMech::GETfromMJD(MJD_SI, opt.GETbase);
-	}
-	else
-	{
-		R_SI = opt.sv_A.R;
-		V_SI = opt.sv_A.V;
-		MJD_SI = opt.sv_A.MJD;
-	}
-
-	if (phase <= 2)
-	{
-		dt_CA = OrbMech::timetoperi_integ(R_SI, V_SI, MJD_SI, hMoon, hMoon, R_CA, V_CA);
-		MJD_CA = MJD_SI + dt_CA / 24.0 / 3600.0;
-		res.GETCA = OrbMech::GETfromMJD(MJD_CA, opt.GETbase);
-
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD_CA);
-		R_equ = rhtmul(Rot, R_CA);
-		V_equ = rhtmul(Rot, V_CA);
-		coe = OrbMech::coe_from_sv(R_equ, V_equ, OrbMech::mu_Moon);
-		OrbMech::rv_from_adbar(R_equ, V_equ, rmag, vmag, lng, lat, fpav, az);
-
-		res.VCA = vmag / 0.3048;
-		res.HCA = (rmag - r_M) / 1852.0;
-		res.PCA = lat * DEG;
-		res.LCA = lng * DEG;
-		res.PSICA = az * DEG;
-
-		VECTOR3 u_LAH, R_LPO, V_LPO, H_LPO, axis, u_LPO, u_node, R_MN, V_MN;
-		double r_LPO, v_LPO, MJD_LAND, dt_MN, MJD_MN, DMN;
-
-		MJD_LAND = opt.GETbase + opt.t_land / 24.0 / 3600.0;
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD_LAND);
-
-		u_LAH = unit(crossp(R_CA, V_CA));
-		r_LPO = r_M + 60.0*1852.0;
-		v_LPO = sqrt(mu / r_LPO);
-
-		OrbMech::adbar_from_rv(r_LPO, v_LPO, opt.LSLng, opt.LSLat, PI05, opt.LSAzi, R_LPO, V_LPO);
-		H_LPO = crossp(R_LPO, V_LPO);
-		axis = unit(H_LPO);
-		u_LPO = unit(rhmul(Rot, axis));
-
-		//Node unit vector
-		u_node = unit(crossp(u_LPO, u_LAH));
-
-		//Periapsis vector and node should be within 90°, if not the actual intersection is in the other direction
-		if (dotp(u_node, unit(R_CA)) < 0.0)
-		{
-			u_node = -u_node;
-		}
-
-		//state vector at the node
-		dt_MN = OrbMech::timetonode_integ(R_CA, V_CA, MJD_CA, hMoon, u_node, R_MN, V_MN);
-		MJD_MN = MJD_CA + dt_MN / 24.0 / 3600.0;
-		res.GETMN = OrbMech::GETfromMJD(MJD_MN, opt.GETbase);
-
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD_MN);
-		R_equ = rhtmul(Rot, R_MN);
-		V_equ = rhtmul(Rot, V_MN);
-		coe = OrbMech::coe_from_sv(R_equ, V_equ, OrbMech::mu_Moon);
-		OrbMech::rv_from_adbar(R_equ, V_equ, rmag, vmag, lng, lat, fpav, az);
-
-		res.HMN = (rmag - r_M) / 1852.0;
-		res.PMN = lat * DEG;
-		res.LMN = lng * DEG;
-
-		DMN = acos(dotp(u_LPO, u_LAH));
-		if (u_LPO.z > u_LAH.z)
-		{
-			DMN = -DMN;
-		}
-		res.DMN = DMN * DEG;
-	}
-	else
-	{
-		R_CA = R_SI;
-		V_CA = V_SI;
-		MJD_CA = MJD_SI;
-	}
-
-	if (phase <= 3)
-	{
-		dt_SE = OrbMech::time_radius_integ(R_CA, V_CA, MJD_CA, r_SPH, 1.0, hMoon, hMoon, R_SE, V_SE);
-		MJD_SE = MJD_CA + dt_SE / 24.0 / 3600.0;
-		res.GETSE = OrbMech::GETfromMJD(MJD_SE, opt.GETbase);
-
-		dt_VP = OrbMech::timetoperi_integ(R_SE, V_SE, MJD_SE, hMoon, hEarth, R_VP, V_VP);
-	}
-	else
-	{
-		R_SE = R_CA;
-		V_SE = V_CA;
-		MJD_SE = MJD_CA;
-
-		dt_VP = OrbMech::timetoperi_integ(R_SE, V_SE, MJD_SE, hEarth, hEarth, R_VP, V_VP);
-	}
-
-	MJD_VP = MJD_SE + dt_VP / 24.0 / 3600.0;
-	res.GETVP = OrbMech::GETfromMJD(MJD_VP, opt.GETbase);
-	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_VP);
-	R_equ = rhtmul(Rot, R_VP);
-	V_equ = rhtmul(Rot, V_VP);
-	coe = OrbMech::coe_from_sv(R_equ, V_equ, OrbMech::mu_Earth);
-	OrbMech::rv_from_adbar(R_equ, V_equ, rmag, vmag, lng, lat, fpav, az);
-
-	res.VVP = vmag / 0.3048;
-	res.HVP = (rmag - r_E) / 1852.0;
-	res.PVP = lat * DEG;
-	res.LVP = lng * DEG;
-	res.PSIVP = az * DEG;
-
-	res.IE = coe.i*DEG;
-	res.LN = coe.RA*DEG;
-
-	if (rmag < r_EI)
-	{
-		VECTOR3 R_INT, V_INT;
-		double dt_INT, MJD_INT;
-
-		dt_INT = -3600.0;
-		OrbMech::oneclickcoast(R_VP, V_VP, MJD_VP, dt_INT, R_INT, V_INT, hEarth, hEarth);
-		MJD_INT = MJD_VP + dt_INT / 24.0 / 3600.0;
-
-		dt_EI = OrbMech::time_radius_integ(R_INT, V_INT, MJD_INT, r_EI, -1.0, hEarth, hEarth, R_EI, V_EI);
-		MJD_EI = MJD_INT + dt_EI / 24.0 / 3600.0;
-		res.GETEI = OrbMech::GETfromMJD(MJD_EI, opt.GETbase);
-		Rot = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_EI);
-		R_equ = rhtmul(Rot, R_EI);
-		V_equ = rhtmul(Rot, V_EI);
-		coe = OrbMech::coe_from_sv(R_equ, V_equ, OrbMech::mu_Earth);
-		OrbMech::rv_from_adbar(R_equ, V_equ, rmag, vmag, lng, lat, fpav, az);
-
-		res.VEI = vmag / 0.3048;
-		res.GEI = 90.0 - fpav * DEG;
-		res.PEI = lat * DEG;
-		res.LEI = lng * DEG;
-		res.PSIEI = az * DEG;
-	}*/
 }
 
 void RTCC::FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &res)
@@ -9694,7 +9488,7 @@ void RTCC::FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &re
 	OELEMENTS coe;
 	MATRIX3 Rot;
 	VECTOR3 R_equ, V_equ;
-	double mu, r_B, lat, lng, rmag, vmag, fpav, az, intpart;
+	double mu, r_B, lat, lng, rmag, vmag, fpav, az, GMTbase;
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
@@ -9706,7 +9500,7 @@ void RTCC::FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &re
 		OrbMech::GetLunarEphemeris(opt.sv_A.MJD, R_EM, V_EM);
 		sv_conv = opt.sv_A;
 		sv_conv.R = sv_conv.R + R_EM;
-		sv_conv.R = sv_conv.V + V_EM;
+		sv_conv.V = sv_conv.V + V_EM;
 	}
 	else if (med_u00.REF == BODY_MOON && opt.sv_A.gravref == hEarth)
 	{
@@ -9715,7 +9509,7 @@ void RTCC::FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &re
 		OrbMech::GetLunarEphemeris(opt.sv_A.MJD, R_EM, V_EM);
 		sv_conv = opt.sv_A;
 		sv_conv.R = sv_conv.R - R_EM;
-		sv_conv.R = sv_conv.V - V_EM;
+		sv_conv.V = sv_conv.V - V_EM;
 	}
 	else
 	{
@@ -9742,8 +9536,9 @@ void RTCC::FIDOSpaceDigitalsCycle(const SpaceDigitalsOpt &opt, SpaceDigitals &re
 	coe = OrbMech::coe_from_sv(R_equ, V_equ, mu);
 	OrbMech::rv_from_adbar(R_equ, V_equ, rmag, vmag, lng, lat, fpav, az);
 
+	GMTbase = floor(opt.GETbase);
 	res.WEIGHT = sv_conv.mass / 0.45359237;
-	res.GMTV = modf(sv_conv.MJD, &intpart)*24.0*3600.0;
+	res.GMTV = OrbMech::GETfromMJD(sv_conv.MJD, GMTbase);
 	res.GETV = OrbMech::GETfromMJD(sv_conv.MJD, opt.GETbase);
 
 	res.GET = res.GETR = res.GETAxis = res.GETV;
