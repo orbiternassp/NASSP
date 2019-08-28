@@ -427,6 +427,7 @@ namespace OrbMech {
 	OELEMENTS NodeShift(OELEMENTS coe_b, double dLAN);
 	OELEMENTS ApoapsisPeriapsisChange(OELEMENTS coe_b, double mu, double r_A, double r_P);
 	VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu);
+	void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double MJD_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &MJD_BO);
 	//private:
 		//VESSEL* vessel;
 		//double mu;

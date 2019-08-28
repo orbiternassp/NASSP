@@ -547,6 +547,7 @@ struct TLMCCResults
 struct TwoImpulseResuls
 {
 	VECTOR3 dV;
+	VECTOR3 dV2;
 	VECTOR3 dV_LVLH;
 	double t_TPI;
 	double T1;

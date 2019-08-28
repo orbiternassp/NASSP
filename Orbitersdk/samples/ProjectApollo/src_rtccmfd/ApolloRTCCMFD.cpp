@@ -234,6 +234,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
 	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_Liftoff_guess);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
+	papiWriteScenario_double(scn, "DT_Ins_TPI", GC->DT_Ins_TPI);
 	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
 	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -408,6 +409,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
 		papiReadScenario_double(line, "t_Liftoff_guess", G->t_Liftoff_guess);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
+		papiReadScenario_double(line, "DT_Ins_TPI", GC->DT_Ins_TPI);
 		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
 		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -2774,7 +2776,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		if (G->LunarLiftoffTimeOption == 1)
 		{
 			skp->Text(5 * W / 8, 6 * H / 14, "DT Insertion-TPI:", 17);
-			sprintf(Buffer, "%.1f min", G->DT_Ins_TPI / 60.0);
+			sprintf(Buffer, "%.1f min", GC->DT_Ins_TPI / 60.0);
 			skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
 		}
 
@@ -9483,7 +9485,7 @@ bool LiftoffDTInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LiftoffDT(double dt)
 {
-	G->DT_Ins_TPI = dt * 60.0;
+	GC->DT_Ins_TPI = dt * 60.0;
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffVHorInput()

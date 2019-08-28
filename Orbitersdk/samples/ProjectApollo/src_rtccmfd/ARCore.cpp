@@ -58,6 +58,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	DOI_alt = 50000.0*0.3048;
 	RTEMaxReturnInclination = 40.0*RAD;
 	RTERangeOverrideNM = 0.0;
+	DT_Ins_TPI = 40.0*60.0;
 
 	if (strcmp(v->GetName(), "AS-205") == 0)
 	{
@@ -207,6 +208,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_option = 1;
 		DOI_N = 11;
 		RTERangeOverrideNM = 1250.0;
+		DT_Ins_TPI = 38.0*60.0;
 	}
 	else if (mission == 15)
 	{
@@ -229,6 +231,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_N = 11;
 		RTEMaxReturnInclination = 40.0*RAD;
 		RTERangeOverrideNM = 1190.0;
+		DT_Ins_TPI = 45.0*60.0;
 	}
 	else if (mission == 16)
 	{
@@ -252,6 +255,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_alt = 52500.0*0.3048;
 		RTEMaxReturnInclination = 80.0*RAD;
 		RTERangeOverrideNM = 1190.0;
+		DT_Ins_TPI = 47.0*60.0;
 	}
 	else if (mission == 17)
 	{
@@ -275,6 +279,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_alt = 84000.0*0.3048;
 		RTEMaxReturnInclination = 80.0*RAD;
 		RTERangeOverrideNM = 1190.0;
+		DT_Ins_TPI = 47.0*60.0;
 	}
 
 	rtcc = new RTCC();
@@ -913,7 +918,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 
 	LunarLiftoffTimeOption = 0;
 	t_TPIguess = 0.0;
-	DT_Ins_TPI = 40.0*60.0;
 	t_Liftoff_guess = 0.0;
 	LunarLiftoffInsVelInput = false;
 	LunarLiftoffRes.t_CDH = 0.0;
@@ -3429,7 +3433,7 @@ int ARCore::subThread()
 		opt.GETbase = GC->GETbase;
 		opt.opt = LunarLiftoffTimeOption;
 		opt.t_hole = t_Liftoff_guess;
-		opt.dt_2 = DT_Ins_TPI;
+		opt.dt_2 = GC->DT_Ins_TPI;
 		opt.sv_CSM = sv_CSM;
 		opt.dt_1 = LAP_DT;
 		opt.theta_1 = LAP_Theta;

@@ -6546,6 +6546,58 @@ VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu)
 	return V_HF - V;
 }
 
+void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double MJD_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &MJD_BO)
+{
+	VECTOR3 H, K, J, U_RLS;
+	double gamma_BO, psi, delta, Gamma, xi, phi, dv_pc, v_BO;
+
+	v_BO = sqrt(V_H*V_H + V_R * V_R);
+	gamma_BO = asin(V_R / V_H);
+
+	R_LS = rhmul(GetRotationMatrix(BODY_MOON, MJD_LO), R_LS);
+	U_RLS = unit(R_LS);
+	H = unit(crossp(R, V));
+	K = unit(crossp(H, U_RLS));
+	J = unit(crossp(K, H));
+
+	psi = asin(dotp(H, U_RLS));
+	delta = asin(sin(psi) / cos(theta_PF));
+	Gamma = asin(sin(theta_PF) / cos(psi));
+	xi = abs(delta) - y_s;
+
+	if (y_s <= 0)
+	{
+		dv_pc = 2.0*v_BO*sin(delta / 2.0);
+	}
+	else if (xi <= 0)
+	{
+		dv_pc = 0.0;
+		Gamma = acos(cos(theta_PF) / cos(psi));
+	}
+	else
+	{
+		double acos_term = acos(cos(theta_PF) / cos(y_s));
+		delta = abs(asin(sin(psi) / cos(acos_term))) - y_s;
+		Gamma = acos(abs(sqrt(1.0 - pow(sin(acos_term) / cos(psi), 2))));
+		dv_pc = 2.0*v_BO*sin(delta / 2.0);
+	}
+
+	phi = psi / abs(psi)*delta;
+
+	MATRIX3 JKH1, JKH2;
+
+	JKH1 = mul(_M(J.x, K.x, H.x, J.y, K.y, H.y, J.z, K.z, H.z), _M(cos(Gamma), -sin(Gamma), 0, sin(Gamma), cos(Gamma), 0, 0, 0, 1));
+	if (xi > 0)
+	{
+		JKH1 = mul(JKH1, _MRy(phi));
+	}
+
+	JKH2 = mul(JKH1, _MRz(gamma_BO));
+	R_BO = _V(JKH1.m11, JKH1.m21, JKH1.m31)*(length(R_LS) + h_bo);
+	V_BO = _V(JKH2.m12, JKH2.m22, JKH2.m32)*v_BO;
+	MJD_BO = MJD_LO + dt_pf / 24.0 / 3600.0;
+}
+
 VECTOR3 EclipticToECI(VECTOR3 v, double MJD)
 {
 	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);

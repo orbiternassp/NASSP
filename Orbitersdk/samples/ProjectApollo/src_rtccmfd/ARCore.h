@@ -56,6 +56,7 @@ public:
 	double DOI_alt;						//perilune altitude above landing site
 	double RTEMaxReturnInclination;
 	double RTERangeOverrideNM;
+	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 
 	VESSEL *pCSM;
 	VESSEL *pLM;
@@ -425,7 +426,6 @@ public:
 	//Lunar Liftoff Time Prediction
 	LunarLiftoffResults LunarLiftoffRes;
 	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
-	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 	double t_Liftoff_guess;		//Threshold time for lunar liftoff
 	bool LunarLiftoffInsVelInput;	//0 = Calculate velocity internally, 1 = use input velocity
 
