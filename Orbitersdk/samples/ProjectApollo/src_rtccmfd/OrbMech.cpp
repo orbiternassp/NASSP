@@ -7,6 +7,34 @@ inline double atanh(double z){ return 0.5*log(1.0 + z) - 0.5*log(1.0 - z); }
 
 namespace OrbMech{
 
+	CELEMENTS CELEMENTS::operator+(const CELEMENTS& c) const
+	{
+		CELEMENTS result;
+
+		result.a = this->a + c.a;
+		result.e = this->e + c.e;
+		result.i = this->i + c.i;
+		result.h = this->h + c.h;
+		result.g = this->g + c.g;
+		result.l = this->l + c.l;
+
+		return result;
+	}
+
+	CELEMENTS CELEMENTS::operator-(const CELEMENTS& c) const
+	{
+		CELEMENTS result;
+
+		result.a = this->a - c.a;
+		result.e = this->e - c.e;
+		result.i = this->i - c.i;
+		result.h = this->h - c.h;
+		result.g = this->g - c.g;
+		result.l = this->l - c.l;
+
+		return result;
+	}
+
 	double period(VECTOR3 R, VECTOR3 V, double mu)
 	{
 		double a, epsilon;
@@ -471,9 +499,9 @@ void fDot_and_gDot(double x, double r, double ro, double a, double &fdot, double
 	gdot = 1.0 - x*x / r*stumpC(z);
 }
 
-double kepler_E(double e, double M)
+double kepler_E(double e, double M, double error2)
 {
-	double error2, ratio, E;
+	double ratio, E;
 	//{
 	//	This function uses Newton's method to solve Kepler's
 	//		equation E - e*sin(E) = M for the eccentric anomaly,
@@ -484,7 +512,6 @@ double kepler_E(double e, double M)
 	//}
 	// ----------------------------------------------
 
-	error2 = 1.e-8;
 	ratio = 1.0;
 
 	if (M < PI)
@@ -979,6 +1006,24 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	delete coast;
 	stop = false;
 	return soichange;
+}
+
+SV coast(SV sv0, double dt)
+{
+	if (dt == 0.0)
+	{
+		return sv0;
+	}
+
+	SV sv1;
+	OBJHANDLE gravout = NULL;
+
+	OrbMech::oneclickcoast(sv0.R, sv0.V, sv0.MJD, dt, sv1.R, sv1.V, sv0.gravref, gravout);
+	sv1.gravref = gravout;
+	sv1.mass = sv0.mass;
+	sv1.MJD = sv0.MJD + dt / 24.0 / 3600.0;
+
+	return sv1;
 }
 
 void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned nmax)
@@ -6598,6 +6643,13 @@ void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, dou
 	MJD_BO = MJD_LO + dt_pf / 24.0 / 3600.0;
 }
 
+void EclipticToMCI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_MCI, VECTOR3 &V_MCI)
+{
+	MATRIX3 Rot = GetObliquityMatrix(BODY_MOON, MJD);
+	R_MCI = rhtmul(Rot, R);
+	V_MCI = rhtmul(Rot, V);
+}
+
 VECTOR3 EclipticToECI(VECTOR3 v, double MJD)
 {
 	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
@@ -6749,6 +6801,401 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHAN
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
 }
 
+SV PMMAEGS(SV sv0, int opt, double param, double DN)
+{
+	if (sv0.gravref == oapiGetObjectByName("Earth"))
+	{
+		return PMMAEG(sv0, opt, param, DN);
+	}
+	else
+	{
+		return PMMLAEG(sv0, opt, param, DN);
+	}
+}
+
+SV PMMAEG(SV sv0, int opt, double param, double DN)
+{
+	//Update to the given time
+	if (opt == 0)
+	{
+		double MJD1, dt;
+
+		MJD1 = param;
+		dt = (MJD1 - sv0.MJD)*24.0*3600.0;
+		return coast(sv0, dt);
+	}
+	else
+	{
+		SV sv1;
+		OrbMech::CELEMENTS osc0, osc1;
+		VECTOR3 R_equ, V_equ;
+		double DX_L, X_L, X_L_dot, dt, ddt, L_D, ll_dot, n0, g_dot, J20;
+		int LINE, COUNT;
+		bool DH;
+
+		J20 = 1082.6269e-6;
+
+		sv1 = sv0;
+		OrbMech::EclipticToECI(sv0.R, sv0.V, sv0.MJD, R_equ, V_equ);
+		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+
+		n0 = sqrt(mu_Moon / (osc0.a*osc0.a*osc0.a));
+		ll_dot = n0;
+		g_dot = n0 * ((3.0 / 4.0)*(J20*R_Moon*R_Moon*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
+
+		osc1 = osc0;
+		if (opt != 3)
+		{
+			L_D = param;
+		}
+		else
+		{
+			double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+			u = fmod(u, PI2);
+			if (u < 0)
+				u += PI2;
+			L_D = u;
+		}
+		DX_L = 1.0;
+		DH = DN > 0.0;
+		dt = 0.0;
+		LINE = 0;
+		COUNT = 24;
+
+		do
+		{
+			//Mean anomaly
+			if (opt == 1)
+			{
+				X_L = osc1.l;
+				X_L_dot = ll_dot;
+			}
+			//Argument of latitude
+			else if (opt == 2)
+			{
+				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = ll_dot + g_dot;
+			}
+			//Maneuver line
+			else
+			{
+				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = ll_dot + g_dot;
+				LINE = 2;
+			}
+
+			if (DH)
+			{
+				double DN_apo = DN * PI2;
+				ddt = DN_apo / ll_dot;
+				DH = false;
+
+				if (LINE != 0)
+				{
+					L_D = L_D + g_dot * ddt + DN_apo;
+					while (L_D < 0) L_D += PI2;
+					while (L_D >= PI2) L_D -= PI2;
+				}
+				else
+				{
+					ddt += (L_D - X_L) / X_L_dot;
+				}
+			}
+			else
+			{
+				DX_L = L_D - X_L;
+				if (abs(DX_L) - PI >= 0)
+				{
+					if (DX_L > 0)
+					{
+						DX_L -= PI2;
+					}
+					else
+					{
+						DX_L += PI2;
+					}
+				}
+				ddt = DX_L / X_L_dot;
+				if (LINE != 0)
+				{
+					L_D = L_D + ddt * g_dot;
+				}
+			}
+
+
+			dt += ddt;
+			sv1 = coast(sv1, ddt);
+			OrbMech::EclipticToECI(sv1.R, sv1.V, sv1.MJD, R_equ, V_equ);
+			osc1 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+
+			COUNT--;
+
+		} while (abs(DX_L) > 2e-4 && COUNT > 0);
+
+		return sv1;
+	}
+
+	return sv0;
+}
+
+SV PMMLAEG(SV sv0, int opt, double param, double DN)
+{
+	//Update to the given time
+	if (opt == 0)
+	{
+		double MJD1, dt;
+
+		MJD1 = param;
+		dt = (MJD1 - sv0.MJD)*24.0*3600.0;
+		return coast(sv0, dt);
+	}
+	//Update to the given mean anomaly (opt=1), argument of latitude (opt=2) or maneuver counter line (opt=3)
+	else
+	{
+		SV sv1;
+		OrbMech::CELEMENTS osc0, osc1;
+		VECTOR3 R_equ, V_equ;
+		double DX_L, X_L, X_L_dot, dt, ddt, L_D, ll_dot, n0, g_dot, J20;
+		int LINE, COUNT;
+		bool DH;
+
+		J20 = 207.108e-6;
+
+		sv1 = sv0;
+		OrbMech::EclipticToMCI(sv0.R, sv0.V, sv0.MJD, R_equ, V_equ);
+		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+
+		n0 = sqrt(mu_Moon / (osc0.a*osc0.a*osc0.a));
+		ll_dot = n0;
+		g_dot = n0 * ((3.0 / 4.0)*(J20*R_Moon*R_Moon*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
+
+		osc1 = osc0;
+		if (opt != 3)
+		{
+			L_D = param;
+		}
+		else
+		{
+			double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+			u = fmod(u, PI2);
+			if (u < 0)
+				u += PI2;
+			L_D = u;
+		}
+		DX_L = 1.0;
+		DH = DN > 0.0;
+		dt = 0.0;
+		LINE = 0;
+		COUNT = 24;
+
+		do
+		{
+			//Mean anomaly
+			if (opt == 1)
+			{
+				X_L = osc1.l;
+				X_L_dot = ll_dot;
+			}
+			//Argument of latitude
+			else if (opt == 2)
+			{
+				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = ll_dot + g_dot;
+			}
+			//Maneuver line
+			else
+			{
+				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = ll_dot + g_dot;
+				LINE = 2;
+			}
+
+			if (DH)
+			{
+				double DN_apo = DN * PI2;
+				ddt = DN_apo / ll_dot;
+				DH = false;
+
+				if (LINE != 0)
+				{
+					L_D = L_D + g_dot * ddt + DN_apo;
+					while (L_D < 0) L_D += PI2;
+					while (L_D >= PI2) L_D -= PI2;
+				}
+				else
+				{
+					ddt += (L_D - X_L) / X_L_dot;
+				}
+			}
+			else
+			{
+				DX_L = L_D - X_L;
+				if (abs(DX_L) - PI >= 0)
+				{
+					if (DX_L > 0)
+					{
+						DX_L -= PI2;
+					}
+					else
+					{
+						DX_L += PI2;
+					}
+				}
+				ddt = DX_L / X_L_dot;
+				if (LINE != 0)
+				{
+					L_D = L_D + ddt * g_dot;
+				}
+			}
+
+
+			dt += ddt;
+			sv1 = coast(sv1, ddt);
+			OrbMech::EclipticToMCI(sv1.R, sv1.V, sv1.MJD, R_equ, V_equ);
+			osc1 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+
+			COUNT--;
+
+		} while (abs(DX_L) > 2e-4 && COUNT > 0);
+
+		return sv1;
+	}
+
+	return sv0;
+}
+
+CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu)
+{
+	CELEMENTS elem;
+	VECTOR3 H, P;
+	double r, VV, RV, RVVMin1, RVVMins1DivR, Hxy2, Esinw, Ecosw, h, EsinEA, EcosEA, EA;
+
+	V = V / sqrt(mu);
+	r = length(R);
+	VV = dotp(V, V);
+	RV = dotp(R, V);
+	RVVMin1 = r * VV - 1.0;
+	RVVMins1DivR = RVVMin1 / r;
+	elem.a = r / (2.0 - r * VV);
+	H = crossp(R, V);
+	h = length(H);
+	Hxy2 = H.x*H.x + H.y*H.y;
+	P = R*RVVMins1DivR - V*RV;
+	Esinw = (P.z*Hxy2 - H.z*(P.x*H.x + P.y*H.y)) / h;
+	Ecosw = P.y*H.x - P.x*H.y;
+	elem.g = atan2(Esinw, Ecosw);
+	if (elem.g < 0) elem.g += PI2;
+	EcosEA = RVVMin1;
+	EsinEA = RV / sqrt(elem.a);
+	EA = atan2(EsinEA, EcosEA);
+	elem.l = EA - EsinEA;
+	if (elem.l < 0) elem.l += PI2;
+	elem.e = sqrt(EsinEA * EsinEA + EcosEA * EcosEA);
+	elem.h = atan2(H.x, -H.y);
+	if (elem.h < 0) elem.h += PI2;
+	elem.i = acos(H.z/ h);
+	return elem;
+}
+
+SV GIMKIC(CELEMENTS elem, double mu)
+{
+	SV sv;
+	double EA, EA_apo, RX, RY, VX, VY, X_apo, Y_apo;
+	int K = 20;
+	EA_apo = elem.l;
+
+	do
+	{
+		EA = EA_apo;
+		EA_apo = EA + (elem.l - EA - elem.e*sin(EA)) / (1.0 - elem.e*cos(EA));
+		if (EA == EA_apo) break;
+		K--;
+	} while (K > 0);
+	RX = elem.a*(cos(EA) - elem.e);
+	RY = elem.a*sqrt(1.0 - elem.e*elem.e)*sin(EA);
+	VX = -sin(EA) / ((1.0 - elem.e*cos(EA))*(sqrt(elem.a) / sqrt(mu)));
+	VY = sqrt(1.0 - elem.e*elem.e)*cos(EA) / ((1.0 - elem.e*cos(EA))*(sqrt(elem.a) / sqrt(mu)));
+	X_apo = RX * cos(elem.g) - RY * sin(elem.g);
+	Y_apo = RX * sin(elem.g) + RY * cos(elem.g);
+	sv.R = _V(X_apo*cos(elem.h) - Y_apo * cos(elem.i)*sin(elem.h), X_apo*sin(elem.h) + Y_apo * cos(elem.i)*cos(elem.h), Y_apo*sin(elem.i));
+	X_apo = VX * cos(elem.g) - VY * sin(elem.g);
+	Y_apo = VX * sin(elem.g) + VY * cos(elem.g);
+	sv.V = _V(X_apo*cos(elem.h) - Y_apo * cos(elem.i)*sin(elem.h), X_apo*sin(elem.h) + Y_apo * cos(elem.i)*cos(elem.h), Y_apo*sin(elem.i));
+	return sv;
+}
+
+double MeanToTrueAnomaly(double meanAnom, double eccdp, double error2)
+{
+	double ta;
+
+	double E = kepler_E(eccdp, meanAnom, error2);
+	if (E < 0.0)
+		E = E + PI2;
+	double c = abs(E - PI);
+	if (c >= 1.0e-8)
+	{
+		ta = 2.0 * atan(sqrt((1.0 + eccdp) / (1.0 - eccdp))*tan(E / 2.0));
+	}
+	else
+	{
+		ta = E;
+	}
+
+	if (ta < 0)
+		ta += PI2;
+
+	return ta;
+}
+
+SV PositionMatch(SV sv_A, SV sv_P, double mu)
+{
+	SV sv_A1, sv_P1;
+	VECTOR3 u, R_A1, U_L;
+	double phase, n, dt, ddt;
+
+	dt = 0.0;
+
+	u = unit(crossp(sv_P.R, sv_P.V));
+	U_L = unit(crossp(u, sv_P.R));
+	sv_A1 = PMMAEGS(sv_A, 0, sv_P.MJD);
+
+	do
+	{
+		R_A1 = unit(sv_A1.R - u * dotp(sv_A1.R, u))*length(sv_A1.R);
+		phase = acos(dotp(unit(R_A1), unit(sv_P.R)));
+		if (dotp(U_L, R_A1) > 0)
+		{
+			phase = -phase;
+		}
+		n = OrbMech::GetMeanMotion(sv_A1.R, sv_A1.V, mu);
+		ddt = phase / n;
+		sv_A1 = coast(sv_A1, ddt);
+		dt += ddt;
+	} while (abs(ddt) > 0.01);
+
+	return sv_A1;
+}
+
 }
 
 LGCDescentConstants::LGCDescentConstants()
@@ -6762,6 +7209,8 @@ LGCDescentConstants::LGCDescentConstants()
 	AARFG = _V(-0.2624, 0.0, -0.512)*0.3048;
 	JARFGZ = 0.00180772*0.3048;
 }
+
+const double CoastIntegrator::r_SPH = 64373760.0;
 
 CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)
 {
@@ -6809,7 +7258,6 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 		rect2 = 0.75*OrbMech::power(2.0, -1.0);
 		P = BODY_MOON;
 	}
-	mu_S = OrbMech::mu_Sun;
 
 	MATRIX3 obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, mjd0);
 	U_Z_E = mul(obli_E, _V(0, 1, 0));
@@ -6823,21 +7271,10 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	cEarth = oapiGetCelbodyInterface(hEarth);
 
 	R_QC = R0;
-	r_SPH = 64373760.0;
 
 	B = 1;
 	soichange = false;
-
-	double EarthPos[12];
-	VECTOR3 EarthVec, EarthVecVel;
-
-	cEarth->clbkEphemeris(mjd0 + t_F/2.0/24.0/3600.0, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
-
-	EarthVec = OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]);
-	EarthVecVel = OrbMech::Polar2CartesianVel(EarthPos[2] * AU, EarthPos[1], EarthPos[0], EarthPos[5] * AU, EarthPos[4], EarthPos[3]);
-	R_ES0 = -EarthVec;
-	V_ES0 = -EarthVecVel;
-	W_ES = length(crossp(R_ES0, V_ES0) / OrbMech::power(length(R_ES0), 2.0));
+	SunEphemerisInit = false;
 }
 
 CoastIntegrator::~CoastIntegrator()
@@ -7049,6 +7486,21 @@ bool CoastIntegrator::iteration()
 
 void CoastIntegrator::SolarEphemeris(double t, VECTOR3 &R_ES, VECTOR3 &V_ES)
 {
+	if (SunEphemerisInit == false)
+	{
+		double EarthPos[12];
+		VECTOR3 EarthVec, EarthVecVel;
+
+		cEarth->clbkEphemeris(mjd0 + t_F / 2.0 / 24.0 / 3600.0, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
+
+		EarthVec = OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]);
+		EarthVecVel = OrbMech::Polar2CartesianVel(EarthPos[2] * AU, EarthPos[1], EarthPos[0], EarthPos[5] * AU, EarthPos[4], EarthPos[3]);
+		R_ES0 = -EarthVec;
+		V_ES0 = -EarthVecVel;
+		W_ES = length(crossp(R_ES0, V_ES0) / OrbMech::power(length(R_ES0), 2.0));
+		SunEphemerisInit = true;
+	}
+
 	R_ES = R_ES0*cos(W_ES*t)+crossp(R_ES0,unit(crossp(R_ES0, V_ES0)))*sin(W_ES*t);
 	V_ES = V_ES0;
 }
@@ -7132,7 +7584,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 		q_Q = dotp(R - R_PQ*2.0, R) / OrbMech::power(length(R_PQ), 2.0);
 		q_S = dotp(R - R_PS*2.0, R) / OrbMech::power(length(R_PS), 2.0);
 		a_dQ = -(R_PQ*fq(q_Q) + R)*mu_Q / OrbMech::power(length(R_QC), 3.0);
-		a_dS = -(R_PS*fq(q_S) + R)*mu_S / OrbMech::power(length(R_SC), 3.0);
+		a_dS = -(R_PS*fq(q_S) + R)*OrbMech::mu_Sun / OrbMech::power(length(R_SC), 3.0);
 		B = 0;
 		a_d = a_dP + a_dQ + a_dS;
 	}

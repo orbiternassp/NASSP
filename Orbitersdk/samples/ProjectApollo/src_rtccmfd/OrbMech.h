@@ -262,9 +262,9 @@ private:
 	VECTOR3 delta, nu;
 	//0 = earth or lunar orbit, 1 = cislunar-midcourse flight
 	int M;
-	double r_MP, r_dP, r_SPH;
+	double r_MP, r_dP;
 	OBJHANDLE hEarth, hMoon, planet;
-	double mu_Q, mu_S;
+	double mu_Q;
 	double mjd0;
 	double rect1, rect2;
 	CELBODY *cMoon, *cEarth;
@@ -274,9 +274,31 @@ private:
 	int P;
 	VECTOR3 R_ES0, V_ES0;
 	double W_ES;
+	static const double r_SPH;
+	bool SunEphemerisInit;
 };
 
 namespace OrbMech {
+
+	//Classical elements
+	struct CELEMENTS
+	{
+		//Semi-major axis
+		double a = 0.0;
+		//Eccentricity
+		double e = 0.0;
+		//Inclination
+		double i = 0.0;
+		//Longitude of the ascending node
+		double h = 0.0;
+		//Argument of pericenter
+		double g = 0.0;
+		//Mean Anomaly
+		double l = 0.0;
+
+		CELEMENTS operator+(const CELEMENTS&) const;
+		CELEMENTS operator-(const CELEMENTS&) const;
+	};
 
 	//Constants
 	const double mu_Earth = 0.3986032e15;
@@ -293,7 +315,7 @@ namespace OrbMech {
 	const double J2_Moon = 207.108e-6;
 
 	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, double J2, double mu, double R_E, int P, VECTOR3 &R2, VECTOR3 &V2);
-	double kepler_E(double e, double M);
+	double kepler_E(double e, double M, double error2 = 1.e-8);
 	double kepler_H(double e, double M);
 	double power(double b, double e);
 	void sv_from_coe(OELEMENTS el, double mu, VECTOR3 &R, VECTOR3 &V);
@@ -322,6 +344,7 @@ namespace OrbMech {
 	void rv_from_r0v0_tb(VECTOR3 R0, VECTOR3 V0, double mjd0, OBJHANDLE hMoon, OBJHANDLE gravout, double t, VECTOR3 &R1, VECTOR3 &V1);
 	void local_to_equ(VECTOR3 R, double &r, double &phi, double &lambda);
 	double period(VECTOR3 R, VECTOR3 V, double mu);
+	double MeanToTrueAnomaly(double meanAnom, double eccdp, double error2 = 1e-12);
 	double TrueToMeanAnomaly(double ta, double eccdp);
 	double TrueToEccentricAnomaly(double ta, double ecc);
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
@@ -368,6 +391,7 @@ namespace OrbMech {
 	//void adfunc(double* dfdt, double t, double* f);
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
+	SV coast(SV sv0, double dt);
 	void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned nmax = 100U);
 	void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem);
 	bool PLEFEM(const PZEFEM &ephem, double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
@@ -503,6 +527,7 @@ namespace OrbMech {
 	void EclipticToECEF(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECEF, VECTOR3 &V_ECEF);
 	VECTOR3 ECEFToEcliptic(VECTOR3 v, double MJD);
 	void ECEFToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl);
+	void EclipticToMCI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_MCI, VECTOR3 &V_MCI);
 	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
 	double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng);
@@ -510,6 +535,16 @@ namespace OrbMech {
 	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref, VECTOR3 &N, VECTOR3 &rho, double &sinang);
 	//RTCC EMXING support routine, calculates elevation slope function
 	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref);
+
+	//AEG
+	SV PMMAEGS(SV sv0, int opt, double param, double DN = 0.0);
+	SV PMMAEG(SV sv0, int opt, double param, double DN = 0.0);
+	SV PMMLAEG(SV sv0, int opt, double param, double DN = 0.0);
+	//Inertial to Keplerian Conversion Subroutine
+	CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu);
+	//Keplerian to Inertial Conversion Subroutine
+	SV GIMKIC(CELEMENTS elem, double mu);
+	SV PositionMatch(SV sv_A, SV sv_P, double mu);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);
