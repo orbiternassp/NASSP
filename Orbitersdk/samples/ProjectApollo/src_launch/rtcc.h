@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include <vector>
 #include <deque>
 #include "../src_rtccmfd/OrbMech.h"
+#include "../src_rtccmfd/LDPP.h"
 
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"
@@ -150,6 +151,32 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 };
 
 //MANUAL ENTRY DEVICES
+
+//Computation for Lunar Descent Planning
+struct MED_K16
+{
+	double VectorTime = 0.0;
+	int Mode = 1;
+	int Sequence = 1;
+	double GETTH1 = 0.0;
+	double GETTH2 = 0.0;
+	double GETTH3 = 0.0;
+	double GETTH4 = 0.0;
+	double DesiredHeight = 60.0*1852.0;
+	int Vehicle = 1; //1 = LEM, 2 = CSM (Instead of Vector ID)
+};
+
+//Initialization for Lunar Descent Planning
+struct MED_K17
+{
+	double Azimuth = 0.0;					//Greater or equal to zero, lower than 360°. If 0, LDPP will compute azimuth
+	double DescIgnHeight = 50000.0*0.3048;	//Feet
+	bool PoweredDescSimFlag = false;//true = simulate powered descent
+	double PoweredDescTime = 0.0;	//Time for powered descent ignition
+	int DwellOrbits = 0;			//Number of dwell orbits desired between DOI and PDI
+	double DescentFlightTime = 11.0*60.0; //Minutes
+	double DescentFlightArc = 15.0*RAD;	//Degrees
+};
 
 //Two Impulse Computation
 struct MED_K30
@@ -1557,6 +1584,35 @@ struct PredictedSiteAcquisitionOpt
 	double dt;
 };
 
+struct LunarDescentPlanningTable
+{
+	LunarDescentPlanningTable();
+	double LMWT;
+	double GMTV;
+	double GETV;
+	int MODE;
+	double LAT_LLS;
+	double LONG_LLS;
+	double GETTH[4];
+	double GETIG[4];
+	double LIG[4];
+	double DV[4];
+	double AC[4];	//Altitude at cutoff?
+	double HPC[4];	//Perilune height at cutoff?
+	double DEL[4];	//???
+	double THPC[4];	//???
+	VECTOR3 DVVector[4];
+	std::string MVR[4];
+	double PD_ThetaIgn;
+	double PD_PropRem;
+	double PD_GETTH;
+	double PD_GETIG;
+	double PD_GETTD;
+	char DescAzMode[4];
+	double DescAsc;
+	double SN_LK_A; //???
+};
+
 // Parameter block for Calculation(). Expand as needed.
 struct calculationParameters {
 	Saturn *src;		// Our ship
@@ -1693,6 +1749,7 @@ public:
 	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post);
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
+	int LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad, LunarDescentPlanningTable &table);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post);
 	bool GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG);
@@ -1797,6 +1854,8 @@ public:
 	int EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutMonitor &res);
 	//Detailed Maneuver Table Display
 	int PMDDMT(FullMPTable &mptable, double GETbase, double LSAlt, DetailedManeuverTable &res);
+	//Lunar Descent Planning Table Display
+	void PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1834,6 +1893,8 @@ public:
 	struct calculationParameters calcParams;
 
 	//MEDs
+	MED_K16 med_k16;
+	MED_K17 med_k17;
 	MED_M40 med_m40;
 	MED_M50 med_m50;
 	MED_M55 med_m55;

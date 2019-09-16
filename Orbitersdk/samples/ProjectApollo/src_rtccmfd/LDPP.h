@@ -70,16 +70,18 @@ struct LDPPOptions
 struct LDPPResults
 {
 	LDPPResults();
-	//Number of maneuver computed
-	int i;
-	//Delta V costs of each maneuver
-	double DV[4];
-	//Yaw angle of each maneuver
-	double Y[4];
-	//Pitch angle of each maneuver
-	double P[4];
+	//Delta V vector in LVLH coordinates
+	VECTOR3 DeltaV_LVLH[4];
 	//Time of each maneuver
 	double T_M[4];
+	//Number of maneuvers in plan
+	int i;
+	//Time of PDI (if calculated)
+	double t_PDI;
+	//Time of touchdown (if calculated)
+	double t_Land;
+	//Azimuth at landing site
+	double azi;
 };
 
 class LDPP
@@ -87,12 +89,12 @@ class LDPP
 public:
 	LDPP();
 	void Init(const LDPPOptions &in);
-	void LDPPMain(LDPPResults &out);
+	int LDPPMain(LDPPResults &out);
 protected:
 	
 	VECTOR3 SAC(int L, double h_W, int J, SV sv_CSM);
 	void CHAPLA(SV sv_CSM, int IWA, int IGO, int I, double &t_m, VECTOR3 &DV);
-	void LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN);
+	void LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN, double &t_TD);
 	double ArgLat(VECTOR3 R, VECTOR3 V);
 	void CNODE(SV sv_A, SV sv_P, double &t_m, VECTOR3 &dV_LVLH);
 	//Subroutine that iterates to find an upcoming apsis point
@@ -111,9 +113,7 @@ protected:
 	int IRUT;
 
 	double t_M[4];
-	double DV_M[4];
-	double Y_M[4];
-	double P_M[4];
+	VECTOR3 DeltaV_LVLH[4];
 
 	LDPPOptions opt;
 

@@ -37,7 +37,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
 #include "../src_rtccmfd/LMGuidanceSim.h"
-#include "../src_rtccmfd/LDPP.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -386,6 +385,36 @@ LunarLiftoffTimeOpt::LunarLiftoffTimeOpt()
 	v_LV = 19.5*0.3048;
 	theta_F = 130.0*RAD;
 	E = 26.6*RAD;
+}
+
+LunarDescentPlanningTable::LunarDescentPlanningTable()
+{
+	LMWT = 0.0;
+	GMTV = 0.0;
+	GETV = 0.0;
+	MODE = 0;
+	LAT_LLS = 0.0;
+	LONG_LLS = 0.0;
+	for (int i = 0;i < 4;i++)
+	{
+		GETTH[i] = 0.0;
+		GETIG[i] = 0.0;
+		LIG[i] = 0.0;
+		DV[i] = 0.0;
+		AC[i] = 0.0;
+		HPC[i] = 0.0;
+		DEL[i] = 0.0;
+		THPC[i] = 0.0;
+		DVVector[i] = _V(0, 0, 0);
+	}
+	PD_ThetaIgn = 0.0;
+	PD_PropRem = 0.0;
+	PD_GETTH = 0.0;
+	PD_GETIG = 0.0;
+	PD_GETTD = 0.0;
+	sprintf(DescAzMode, "");
+	DescAsc = 0.0;
+	SN_LK_A = 0.0;
 }
 
 RTCC::RTCC()
@@ -2495,6 +2524,60 @@ void RTCC::PlaneChangeTargeting(PCMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV
 	DV = V_PC2 - sv_PC.V;
 
 	PoweredFlightProcessor(sv_PC, opt->GETbase, opt->EarliestGET + dt, RTCC_ENGINETYPE_SPS, LMmass, DV, false, P30TIG, dV_LVLH, sv_pre, sv_post);
+}
+
+int RTCC::LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad, LunarDescentPlanningTable &table)
+{
+	LDPPOptions opt;
+
+	opt.azi_nom = med_k17.Azimuth;
+	opt.GETbase = GETbase;
+	opt.H_DP = med_k17.DescIgnHeight;
+	opt.H_W = med_k16.DesiredHeight;
+	opt.IDO = med_k16.Sequence - 2;
+	if (med_k17.Azimuth != 0.0)
+	{
+		opt.I_AZ = 1;
+	}
+	else
+	{
+		opt.I_AZ = 0;
+	}
+	if (med_k17.PoweredDescSimFlag)
+	{
+		opt.I_PD = 1;
+	}
+	else
+	{
+		opt.I_PD = 0;
+	}
+	opt.I_SP = 0.0;
+	opt.I_TPD = 0;
+	opt.Lat_LS = lat;
+	opt.Lng_LS = lng;
+	opt.M = med_k17.DwellOrbits;
+	opt.MODE = med_k16.Mode;
+	opt.R_LS = rad;
+	opt.sv0 = sv;
+	opt.TH[0] = med_k16.GETTH1;
+	opt.TH[1] = med_k16.GETTH2;
+	opt.TH[2] = med_k16.GETTH3;
+	opt.TH[3] = med_k16.GETTH4;
+	opt.theta_D = med_k17.DescentFlightArc;
+	opt.t_D = med_k17.DescentFlightTime;
+	opt.T_PD = med_k17.PoweredDescTime;
+	opt.W_LM = 0.0;
+
+	LDPP ldpp;
+	LDPPResults res;
+	ldpp.Init(opt);
+	int error = ldpp.LDPPMain(res);
+
+	if (error) return error;
+
+	PMDLDPP(opt, res, table);
+
+	return 0;
 }
 
 void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG)
@@ -12247,4 +12330,71 @@ int RTCC::PMDDMT(FullMPTable &mptable, double GETbase, double LSAlt, DetailedMan
 	}
 
 	return 0;
+}
+
+void RTCC::PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table)
+{
+	double lat, lng, GMTbase;
+
+	for (int i = 0;i < 4;i++)
+	{
+		table.DV[i] = length(res.DeltaV_LVLH[i]) / 0.3048;
+		table.DVVector[i] = res.DeltaV_LVLH[i] / 0.3048;
+		table.GETIG[i] = res.T_M[i];
+		table.GETTH[i] = opt.TH[i];
+		table.MVR[i] = "";
+		table.AC[i] = 0.0;
+		table.HPC[i] = 0.0;
+		table.LIG[i] = 0.0;
+	}
+
+	table.LAT_LLS = opt.Lat_LS*DEG;
+	table.LONG_LLS = opt.Lng_LS*DEG;
+	table.MODE = opt.MODE;
+
+	GMTbase = floor(opt.GETbase);
+	table.GMTV = OrbMech::GETfromMJD(opt.sv0.MJD, GMTbase);
+	table.GETV = OrbMech::GETfromMJD(opt.sv0.MJD, opt.GETbase);
+
+	if (opt.MODE == 2)
+	{
+		table.MVR[0] = "CIR";
+		table.MVR[1] = "DOI";
+	}
+	else if (opt.MODE == 4)
+	{
+		table.MVR[0] = "DOI";
+	}
+	else if (opt.MODE == 7)
+	{
+		table.MVR[0] = "PPC";
+	}
+
+	SV sv_ig, sv_a, sv_p;
+	sv_ig = opt.sv0;
+
+	for (int i = 0;i < res.i;i++)
+	{
+		sv_ig = coast(sv_ig, res.T_M[i] - OrbMech::GETfromMJD(sv_ig.MJD, opt.GETbase));
+		OrbMech::latlong_from_J2000(sv_ig.R, sv_ig.MJD, sv_ig.gravref, lat, lng);
+		table.LIG[i] = lng * DEG;
+		sv_ig.V += tmul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), res.DeltaV_LVLH[i]);
+		ApsidesDeterminationSubroutine(sv_ig, sv_a, sv_p);
+		table.AC[i] = (length(sv_a.R) - opt.R_LS) / 1852.0;
+		table.HPC[i] = (length(sv_p.R) - opt.R_LS) / 1852.0;
+	}
+
+	table.PD_GETTH = opt.T_PD;
+	table.PD_GETIG = res.t_PDI;
+	table.PD_GETTD = res.t_Land;
+
+	if (opt.I_AZ == 0)
+	{
+		sprintf(table.DescAzMode, "OPT");
+	}
+	else
+	{
+		sprintf(table.DescAzMode, "DES");
+	}
+	table.DescAsc = res.azi*DEG;
 }

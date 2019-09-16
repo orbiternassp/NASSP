@@ -51,14 +51,15 @@ LDPPOptions::LDPPOptions()
 
 LDPPResults::LDPPResults()
 {
-	i = 0;
 	for (int ii = 0;ii < 4;ii++)
 	{
-		DV[ii] = 0.0;
-		Y[ii] = 0.0;
-		P[ii] = 0.0;
+		DeltaV_LVLH[ii] = _V(0, 0, 0);
 		T_M[ii] = 0.0;
 	}
+	i = 0;
+	t_PDI = 0.0;
+	t_Land = 0.0;
+	azi = 0.0;
 }
 
 const double LDPP::zeta_theta = 0.001*RAD;
@@ -72,9 +73,7 @@ LDPP::LDPP()
 	for (int ii = 0;ii < 4;ii++)
 	{
 		t_M[ii] = 0.0;
-		DV_M[ii] = 0.0;
-		Y_M[ii] = 0.0;
-		P_M[ii] = 0.0;
+		DeltaV_LVLH[ii] = _V(0, 0, 0);
 	}
 	hMoon = oapiGetObjectByName("Moon");
 }
@@ -105,13 +104,13 @@ void LDPP::Init(const LDPPOptions &in)
 }
 
 //All based on MSC memo 68-FM-23
-void LDPP::LDPPMain(LDPPResults &out)
+int LDPP::LDPPMain(LDPPResults &out)
 {
 	SV sv_in, sv_save, sv_V;
-	double dt, t_DOI, t_IGN, U_H_DOI, U_OC, MJD, DU_1, DU_2, t_LS, U_LS, t_D, xi, t_PC, t_H_DOI, U_DOI, P_L, DU, T_GO, U_A, DR, U_CSM;
+	double dt, t_DOI, t_IGN, U_H_DOI, U_OC, MJD, DU_1, DU_2, t_LS, U_LS, t_D, xi, t_PC, t_H_DOI, U_DOI, P_L, DU, T_GO, U_A, DR, U_CSM, t_L;
 	VECTOR3 DV, R_temp, V_temp, RR_LS, RR_CSM, VV_CSM, c, HH_CSM, rr_LS, R_P, DV_apo;
 
-	U_CSM = U_LS = 0.0;
+	U_CSM = U_LS = t_L = t_IGN = 0.0;
 
 	//Page 1
 	sv_in = opt.sv0;
@@ -191,10 +190,7 @@ LDPP_3_3:
 LDPP_4_1:
 	sv_in = APPLY(sv_in, DV_apo);
 	t_M[i - 1] = t_PC;
-	DV_M[i - 1] = length(DV_apo);
-	Y_M[i - 1] = atan2(DV_apo.y, DV_apo.x);
-	P_M[i - 1] = atan2(DV_apo.z, sqrt(DV_apo.x*DV_apo.x + DV_apo.y*DV_apo.y));
-
+	DeltaV_LVLH[i - 1] = DV_apo;
 	i++;
 	goto LDPP_9_1;
 
@@ -214,16 +210,14 @@ LDPP_6_1:
 		goto LDPP_19_1;
 	}
 LDPP_6_2:
-	LLTPR(opt.TH[i - 1], sv_in, t_DOI, t_IGN);
+	LLTPR(opt.TH[i - 1], sv_in, t_DOI, t_IGN, t_L);
 	dt = t_DOI - OrbMech::GETfromMJD(sv_in.MJD, opt.GETbase);
 	sv_in = OrbMech::coast(sv_in, dt);
 	//Page 7
 	DV = SAC(1, opt.H_DP, 0, sv_in);
 	sv_in = APPLY(sv_in, DV);
 	t_M[i - 1] = t_DOI;
-	DV_M[i - 1] = length(DV);
-	Y_M[i - 1] = atan2(DV.y, DV.x);
-	P_M[i - 1] = atan2(DV.z, sqrt(DV.x*DV.x + DV.y*DV.y));
+	DeltaV_LVLH[i - 1] = DV;
 	//Page 8
 	dt = t_IGN - OrbMech::GETfromMJD(sv_in.MJD, opt.GETbase);
 	sv_in = OrbMech::coast(sv_in, dt);
@@ -287,9 +281,7 @@ LDPP_10_1:
 		DV = DV + DV_apo;
 	}
 	sv_in = APPLY(sv_in, DV);
-	DV_M[i - 1] = length(DV);
-	Y_M[i - 1] = atan2(DV.y, DV.x);
-	P_M[i - 1] = atan2(DV.z, sqrt(DV.x*DV.x + DV.y*DV.y));
+	DeltaV_LVLH[i - 1] = DV;
 	//Page 12
 	i++;
 	if (t_M[i - 2] > opt.TH[i - 1])
@@ -308,9 +300,7 @@ LDPP_10_1:
 LDPP_13_2:
 	sv_save = sv_in;
 LDPP_13_3:
-	DV_M[i - 1] = length(DV);
-	Y_M[i - 1] = atan2(DV.y, DV.x);
-	P_M[i - 1] = atan2(DV.z, sqrt(DV.x*DV.x + DV.y*DV.y));
+	DeltaV_LVLH[i - 1] = DV;
 	i++;
 	goto LDPP_9_1;
 LDPP_14_1:
@@ -335,7 +325,7 @@ LDPP_15_2:
 	DV = SAC(1, opt.H_W, 0, sv_in);
 	//Page 16
 	sv_in = APPLY(sv_in, DV);
-	LLTPR(opt.TH[i - 1], sv_in, t_DOI, t_IGN);
+	LLTPR(opt.TH[i - 1], sv_in, t_DOI, t_IGN, t_L);
 	P_L = OrbMech::period(sv_in.R, sv_in.V, mu);
 	t_D = t_M[i - 1] + P_L * trunc((t_H_DOI - opt.TH[i - 1]) / P_L);
 	dt = t_D - OrbMech::GETfromMJD(sv_in.MJD, opt.GETbase);
@@ -396,9 +386,7 @@ LDPP_19_2:
 	DV = SAC(1, opt.H_W, 0, sv_in);
 	sv_in = APPLY(sv_in, DV);
 	sv_save = sv_in;
-	DV_M[i - 1] = length(DV);
-	Y_M[i - 1] = atan2(DV.y, DV.x);
-	P_M[i - 1] = atan2(DV.z, sqrt(DV.x*DV.x + DV.y*DV.y));
+	DeltaV_LVLH[i - 1] = DV;
 	//Page 21
 	i++;
 	if (t_M[i - 2] > opt.TH[i - 1])
@@ -424,9 +412,7 @@ LDPP_21_2:
 	//Page 22
 	DV = SAC(1, 0, 1, sv_in);
 	sv_in = APPLY(sv_in, DV);
-	DV_M[i - 1] = length(DV);
-	Y_M[i - 1] = atan2(DV.y, DV.x);
-	P_M[i - 1] = atan2(DV.z, sqrt(DV.x*DV.x + DV.y*DV.y));
+	DeltaV_LVLH[i - 1] = DV;
 	i++;
 	goto LDPP_9_2;
 LDPP_23_1:
@@ -446,9 +432,7 @@ LDPP_23_1:
 	//Page 24
 	sv_in = APPLY(sv_in, DV_apo);
 	t_M[i - 1] = t_PC;
-	DV_M[i - 1] = length(DV_apo);
-	Y_M[i - 1] = atan2(DV_apo.y, DV_apo.x);
-	P_M[i - 1] = atan2(DV_apo.z, sqrt(DV_apo.x*DV_apo.x + DV_apo.y*DV_apo.y));
+	DeltaV_LVLH[i - 1] = DV_apo;
 	sv_save = sv_in;
 	i++;
 	//Page 25
@@ -469,9 +453,7 @@ LDPP_25_2:
 	sv_in = APPLY(sv_in, DV_apo);
 	sv_save = sv_in;
 	t_M[i - 1] = t_PC;
-	DV_M[i - 1] = length(DV_apo);
-	Y_M[i - 1] = atan2(DV_apo.y, DV_apo.x);
-	P_M[i - 1] = atan2(DV_apo.z, sqrt(DV_apo.x*DV_apo.x + DV_apo.y*DV_apo.y));
+	DeltaV_LVLH[i - 1] = DV_apo;
 	i++;
 	goto LDPP_9_1;
 	//Page 27
@@ -484,9 +466,7 @@ LDPP_27_1:
 	sv_save = sv_in;
 	//Page 28
 	t_M[i - 1] = t_PC;
-	DV_M[i - 1] = length(DV_apo);
-	Y_M[i - 1] = atan2(DV_apo.y, DV_apo.x);
-	P_M[i - 1] = atan2(DV_apo.z, sqrt(DV_apo.x*DV_apo.x + DV_apo.y*DV_apo.y));
+	DeltaV_LVLH[i - 1] = DV_apo;
 	i++;
 	if (t_M[i - 2] > opt.TH[i - 1])
 	{
@@ -560,10 +540,20 @@ LDPP_32_1:
 	}
 LDPP_33_1:
 	//Compute display quantities and output
-	out.DV[0] = DV_M[0];
-	out.P[0] = P_M[0];
-	out.Y[0] = Y_M[0];
-	out.T_M[0] = t_M[0];
+	for (int ii = 0;ii < 4;ii++)
+	{
+		out.DeltaV_LVLH[ii] = DeltaV_LVLH[ii];
+		out.T_M[ii] = t_M[ii];
+	}
+	if (opt.MODE == 7)
+	{
+		i = i - 1;
+		out.azi = opt.azi_nom;
+	}
+	out.i = i;
+	out.t_Land = t_L;
+	out.t_PDI = t_IGN;
+	return 0;
 }
 
 VECTOR3 LDPP::SAC(int L, double h_W, int J, SV sv_CSM)
@@ -664,10 +654,10 @@ VECTOR3 LDPP::LATLON(double MJD)
 	return rhmul(OrbMech::GetRotationMatrix(BODY_MOON, MJD), OrbMech::r_from_latlong(opt.Lat_LS, opt.Lng_LS, opt.R_LS));
 }
 
-void LDPP::LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN)
+void LDPP::LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN, double &t_TD)
 {
 	SV sv_CSM0;
-	VECTOR3 H_c, h_c, C, c, V_H, R_PP, V_PP, d, R_ppu, D_L, RR_LS, rr_LS;
+	VECTOR3 H_c, h_c, C, c, V_H, R_PP, V_PP, d, R_ppu, D_L, RR_LS, rr_LS, h_c2;
 	double t, dt, R_D, S_w, R_p, R_a, a_D, t_H, t_L, cc, eps_R, alpha, E_I, t_x;
 	int N, S;
 
@@ -685,6 +675,7 @@ void LDPP::LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN)
 		if (N > 15)
 		{
 			//Fail
+			sprintf(oapiDebugString(), "LDPP Error");
 		}
 
 		t = t + S_w * dt;
@@ -704,8 +695,12 @@ void LDPP::LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN)
 		c = unit(C);
 		V_H = c * sqrt(2.0*mu*R_p / (R_a*(R_p + R_a)));
 		sv_CSM.V = V_H;
-		t_x = t + t_H;
 		OrbMech::oneclickcoast(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, t_H, R_PP, V_PP, hMoon, hMoon);
+
+		//Not in LDPP document
+		double dt_peri = OrbMech::timetoperi(R_PP, V_PP, mu);
+
+		t_x = t + t_H;
 
 		if (S <= 0)
 		{
@@ -714,15 +709,18 @@ void LDPP::LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN)
 			goto LDPP_LLTPR_2_2;
 		}
 
+		//Not in LDPP document
+		h_c2 = unit(crossp(R_PP, V_PP));
+
 		t_L = t + t_H + opt.t_D;
 		R_ppu = unit(R_PP);
-		d = unit(crossp(h_c, R_ppu));
+		d = unit(crossp(h_c2, R_ppu));
 		D_L = R_ppu * cos(opt.theta_D) + d * sin(opt.theta_D);
 
 		RR_LS = LATLON(opt.GETbase + t_L / 24.0 / 3600.0);
 
-		cc = dotp(h_c, RR_LS);
-		RR_LS = RR_LS - h_c * cc;
+		cc = dotp(h_c2, RR_LS);
+		RR_LS = RR_LS - h_c2 * cc;
 		rr_LS = unit(RR_LS);
 		eps_R = length(D_L - rr_LS);
 
@@ -733,7 +731,7 @@ void LDPP::LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN)
 		else
 		{
 			alpha = acos(dotp(D_L, rr_LS));
-			E_I = dotp(h_c, crossp(D_L, rr_LS));
+			E_I = dotp(h_c2, crossp(D_L, rr_LS));
 			if (E_I >= 0)
 			{
 				S_w = 1.0;
@@ -757,6 +755,7 @@ void LDPP::LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN)
 	} while (eps_R > zeta_theta);
 
 	t_IGN = t_x;
+	t_TD = t_L;
 }
 
 void LDPP::CHAPLA(SV sv_CSM, int IWA, int IGO, int I, double &t_m, VECTOR3 &DV)
@@ -809,7 +808,7 @@ void LDPP::CHAPLA(SV sv_CSM, int IWA, int IGO, int I, double &t_m, VECTOR3 &DV)
 
 	OELEMENTS coe_b, coe_a;
 	VECTOR3 R_J, V_J;
-	double rmag, vmag, rtasc, decl, fpav, az, u_w;
+	double rmag, vmag, rtasc, decl, fpav, az;//, u_w;
 
 	coe_b = OrbMech::coe_from_sv(R_L, V_L, mu);
 	OrbMech::rv_from_adbar(R_L, V_L, rmag, vmag, rtasc, decl, fpav, az);
@@ -823,14 +822,16 @@ void LDPP::CHAPLA(SV sv_CSM, int IWA, int IGO, int I, double &t_m, VECTOR3 &DV)
 		opt.azi_nom = az;
 	}
 
-	coe_a.i = acos(sin(opt.azi_nom)*cos(opt.Lat_LS));
+	OrbMech::adbar_from_rv(rmag, vmag, opt.Lng_LS, opt.Lat_LS, fpav, opt.azi_nom, R_J, V_J);
+
+	/*coe_a.i = acos(sin(opt.azi_nom)*cos(opt.Lat_LS));
 	u_w = atan2(sin(opt.Lat_LS)*sin(opt.azi_nom), -cos(coe_a.i)*cos(opt.azi_nom));
 	if (u_w < 0) u_w += PI2;
 	//This equation is probably wrong
 	coe_a.RA = opt.Lng_LS - u_w - 2.0*atan(tan(opt.Lat_LS / 2.0)*(sin(0.5*(opt.azi_nom + PI05)) / sin(0.5*(opt.azi_nom - PI05))));
 	coe_a.w = coe_b.w - 2.0*atan(tan((coe_a.RA - coe_b.RA) / 2.0)*(sin(0.5*(PI - coe_a.i - coe_b.i)) / sin(0.5*(PI - coe_a.i + coe_b.i))));
 
-	OrbMech::sv_from_coe(coe_a, mu, R_J, V_J);
+	OrbMech::sv_from_coe(coe_a, mu, R_J, V_J);*/
 	//U_J = unit(R_J);
 	R_J = rhmul(Rot, R_J);
 	V_J = rhmul(Rot, V_J);

@@ -50,10 +50,7 @@ public:
 	int LOIEllipseRotation;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
 	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
-	int DOI_N;							//Number of revolutions between DOI and PDI
 	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
-	double DOI_PeriAng;					//Angle from landing site to PDI position
-	double DOI_alt;						//perilune altitude above landing site
 	double RTEMaxReturnInclination;
 	double RTERangeOverrideNM;
 	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
@@ -69,6 +66,7 @@ public:
 
 	CheckoutMonitor checkmon;
 	SpaceDigitals spacedigit;
+	LunarDescentPlanningTable descplantable;
 };
 
 class ARCore {
@@ -80,8 +78,7 @@ public:
 	void GPMPCalc();
 	void REFSMMATCalc();
 	void SkylabCalc();
-	void DOICalc();
-	void PCCalc();
+	void LDPPalc();
 	void LunarLiftoffCalc();
 	void LOICalc();
 	void LmkCalc();
@@ -373,12 +370,9 @@ public:
 	double TLCCPostDOIPeriAlt, TLCCPostDOIApoAlt;
 
 	//LOI PAGE
-	int LOImaneuver; //0 = LOI-1, 1 = LOI-2
 	int LOIOption;	//0 = Fixed LPO, 1 = LOI at Peri
-	double LOI2Alt;
 	VECTOR3 LOI_dV_LVLH;
 	double LOI_TIG;
-	double LOI2_EarliestGET;
 
 	//LANDMARK TRACKING PAGE
 	AP11LMARKTRKPAD landmarkpad;
@@ -392,11 +386,7 @@ public:
 	VECTOR3 VECangles;	//IMU angles
 
 	//DOI Page
-	double DOIGET;						//Initial guess for the DOI TIG
-	double DOI_TIG;						//Integrated DOI TIG
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
-	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
-	SV sv_DOI;
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
@@ -411,14 +401,6 @@ public:
 	VECTOR3 Skylab_dV_NSR, Skylab_dV_NCC;//, Skylab_dV_NPC;
 	double Skylab_dH_NC2, Skylab_dv_NC2, Skylab_dv_NCC;
 	double Skylab_t_NC1, Skylab_t_NC2, Skylab_t_NCC, Skylab_t_NSR, Skylab_dt_TPM; //Skylab_t_NPC
-
-	//PC Page
-	double PCAlignGET;		//time when the orbit is aligned with the landing site
-	bool PClanded;			//0 = use lat/lng/alt to calculate landing site, 1 = target vessel on the surface
-	VECTOR3 PC_dV_LVLH;
-	double PCEarliestGET;	//Initial guess for the PC TIG
-	double PC_TIG;			//Corrected PC TIG
-
 
 	//Terrain Model
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;

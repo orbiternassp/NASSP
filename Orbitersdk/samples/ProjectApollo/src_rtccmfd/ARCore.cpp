@@ -27,6 +27,8 @@ static DWORD WINAPI RTCCMFD_Trampoline(LPVOID ptr) {
 
 AR_GCore::AR_GCore(VESSEL* v)
 {
+	rtcc = new RTCC();
+
 	MissionPlanningActive = false;
 	pCSMnumber = -1;
 	pLMnumber = -1;
@@ -52,10 +54,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	TLCCNodeLng = 0.0;
 	TLCCNodeAlt = 0.0;
 	TLCCNodeGET = 0.0;
-	DOI_N = 0;
 	DOI_option = 0;
-	DOI_PeriAng = 15.0*RAD;
-	DOI_alt = 50000.0*0.3048;
 	RTEMaxReturnInclination = 40.0*RAD;
 	RTERangeOverrideNM = 0.0;
 	DT_Ins_TPI = 40.0*60.0;
@@ -184,7 +183,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 		DOI_option = 1;
-		DOI_N = 11;
+		rtcc->med_k17.DwellOrbits = 11;
 		RTERangeOverrideNM = 1250.0;
 	}
 	else if (mission == 14)
@@ -206,7 +205,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 		DOI_option = 1;
-		DOI_N = 11;
+		rtcc->med_k17.DwellOrbits = 11;
 		RTERangeOverrideNM = 1250.0;
 		DT_Ins_TPI = 38.0*60.0;
 	}
@@ -226,9 +225,9 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCNodeLng = 171.57*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
-		DOI_PeriAng = 16.0*RAD;
+		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
 		DOI_option = 1;
-		DOI_N = 11;
+		rtcc->med_k17.DwellOrbits = 11;
 		RTEMaxReturnInclination = 40.0*RAD;
 		RTERangeOverrideNM = 1190.0;
 		DT_Ins_TPI = 45.0*60.0;
@@ -249,10 +248,10 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCNodeLng = 173.90*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
-		DOI_PeriAng = 16.0*RAD;
+		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
 		DOI_option = 1;
-		DOI_N = 10;
-		DOI_alt = 52500.0*0.3048;
+		rtcc->med_k17.DwellOrbits = 10;
+		rtcc->med_k17.DescIgnHeight = 52500.0*0.3048;
 		RTEMaxReturnInclination = 80.0*RAD;
 		RTERangeOverrideNM = 1190.0;
 		DT_Ins_TPI = 47.0*60.0;
@@ -273,16 +272,14 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCNodeLng = 161.21*RAD;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
-		DOI_PeriAng = -10.0*RAD;
+		rtcc->med_k17.DescentFlightArc = -10.0*RAD;
 		DOI_option = 1;
-		DOI_N = 10;
-		DOI_alt = 84000.0*0.3048;
+		rtcc->med_k17.DwellOrbits = 10;
+		rtcc->med_k17.DescIgnHeight = 84000.0*0.3048;
 		RTEMaxReturnInclination = 80.0*RAD;
 		RTERangeOverrideNM = 1190.0;
 		DT_Ins_TPI = 47.0*60.0;
 	}
-
-	rtcc = new RTCC();
 }
 
 AR_GCore::~AR_GCore()
@@ -766,12 +763,9 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	landingzone = 0;
 	entryprecision = -1;
 
-	LOImaneuver = 0;
 	LOIOption = 0;
 	LOI_dV_LVLH = _V(0.0, 0.0, 0.0);
 	LOI_TIG = 0.0;
-	LOI2Alt = 60.0*1852.0;
-	LOI2_EarliestGET = 0.0;
 
 	TLCCmaneuver = 2;
 	TLCC_GET = 0.0;
@@ -826,10 +820,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	VECangles = _V(0, 0, 0);
 
 	DOI_dV_LVLH = _V(0, 0, 0);
-	DOI_TIG = 0.0;
-	DOI_t_PDI = 0.0;
-	DOI_CR = 0.0;
-	DOIGET = 0.0;
 
 	AGSKFactor = 90.0*3600.0;
 
@@ -902,12 +892,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	Skylab_dV_NSR = Skylab_dV_NCC = _V(0, 0, 0);
 	Skylab_dH_NC2 = Skylab_dv_NC2 = Skylab_t_NC1 = Skylab_t_NC2 = Skylab_dv_NCC = Skylab_t_NCC = Skylab_t_NSR = Skylab_dt_TPM = 0.0;
 	Skylab_NPCOption = Skylab_PCManeuver = false;
-
-	PCAlignGET = 0.0;
-	PClanded = true;
-	PC_dV_LVLH = _V(0, 0, 0);
-	PC_TIG = 0;
-	PCEarliestGET = 0;
 
 	TMLat = 0.0;
 	TMLng = 0.0;
@@ -1129,7 +1113,7 @@ void ARCore::LOICalc()
 	startSubthread(5);
 }
 
-void ARCore::DOICalc()
+void ARCore::LDPPalc()
 {
 	startSubthread(10);
 }
@@ -1137,11 +1121,6 @@ void ARCore::DOICalc()
 void ARCore::SkylabCalc()
 {
 	startSubthread(12);
-}
-
-void ARCore::PCCalc()
-{
-	startSubthread(13);
 }
 
 void ARCore::LunarLiftoffCalc()
@@ -2590,58 +2569,27 @@ int ARCore::subThread()
 			sv0 = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		if (LOImaneuver == 0)
-		{
-			LOIMan loiopt;
-			SV sv_n, sv_preLOI, sv_postLOI;
+		LOIMan loiopt;
+		SV sv_n, sv_preLOI, sv_postLOI;
 
-			loiopt.GETbase = GC->GETbase;
-			loiopt.h_apo = GC->LOIapo;
-			loiopt.h_peri = GC->LOIperi;
-			loiopt.lat = GC->LSLat;
-			loiopt.lng = GC->LSLng;
-			loiopt.alt = GC->LSAlt;
-			loiopt.t_land = GC->t_Land;
-			loiopt.azi = GC->LOIazi;
-			loiopt.vessel = vessel;
-			loiopt.type = LOIOption;
-			loiopt.EllipseRotation = GC->LOIEllipseRotation;
-			loiopt.RV_MCC = sv0;
-			loiopt.enginetype = poweredenginetype;
-			loiopt.csmlmdocked = !GC->MissionPlanningActive && docked;
+		loiopt.GETbase = GC->GETbase;
+		loiopt.h_apo = GC->LOIapo;
+		loiopt.h_peri = GC->LOIperi;
+		loiopt.lat = GC->LSLat;
+		loiopt.lng = GC->LSLng;
+		loiopt.alt = GC->LSAlt;
+		loiopt.t_land = GC->t_Land;
+		loiopt.azi = GC->LOIazi;
+		loiopt.vessel = vessel;
+		loiopt.type = LOIOption;
+		loiopt.EllipseRotation = GC->LOIEllipseRotation;
+		loiopt.RV_MCC = sv0;
+		loiopt.enginetype = poweredenginetype;
+		loiopt.csmlmdocked = !GC->MissionPlanningActive && docked;
 
-			GC->rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG, sv_n, sv_preLOI, sv_postLOI);
-			P30TIG = LOI_TIG;
-			dV_LVLH = LOI_dV_LVLH;
-		}
-		else if (LOImaneuver == 1)
-		{
-			LOI2Man opt;
-
-			SV sv_pre, sv_post;
-
-			opt.alt = GC->LSAlt;
-			opt.EarliestGET = LOI2_EarliestGET;
-			opt.GETbase = GC->GETbase;
-			opt.h_circ = LOI2Alt;
-			opt.vessel = vessel;
-			opt.RV_MCC = sv0;
-			opt.enginetype = poweredenginetype;
-			opt.csmlmdocked = !GC->MissionPlanningActive && docked;
-
-			if (vesseltype < 2)
-			{
-				opt.vesseltype = 0;
-			}
-			else
-			{
-				opt.vesseltype = 1;
-			}
-
-			GC->rtcc->LOI2Targeting(&opt, LOI_dV_LVLH, LOI_TIG, sv_pre, sv_post);
-			P30TIG = LOI_TIG;
-			dV_LVLH = LOI_dV_LVLH;
-		}
+		GC->rtcc->LOITargeting(&loiopt, LOI_dV_LVLH, LOI_TIG, sv_n, sv_preLOI, sv_postLOI);
+		P30TIG = LOI_TIG;
+		dV_LVLH = LOI_dV_LVLH;
 
 		Result = 0;
 	}
@@ -2875,16 +2823,16 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 10:	//DOI Targeting
+	case 10: //Lunar Descent Planning Processor
 	{
-		SV sv, sv_pre, sv_post;
-		DOIMan opt;
-
+		SV sv;
+		
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv, mptveh))
+			if (!GC->rtcc->MPTTrajectory(GC->mptable, GC->rtcc->med_k16.VectorTime, GC->GETbase, sv, GC->rtcc->med_k16.Vehicle))
 			{
-				sv = GC->rtcc->StateVectorCalc(vessel);
+				Result = 0;
+				break;
 			}
 		}
 		else
@@ -2892,20 +2840,10 @@ int ARCore::subThread()
 			sv = GC->rtcc->StateVectorCalc(vessel);
 		}
 
-		opt.EarliestGET = DOIGET;
-		opt.GETbase = GC->GETbase;
-		opt.lat = GC->LSLat;
-		opt.lng = GC->LSLng;
-		opt.alt = GC->LSAlt;
-		opt.N = GC->DOI_N;
-		opt.PeriAng = GC->DOI_PeriAng;
-		opt.opt = GC->DOI_option;
-		opt.sv0 = sv;
-		opt.PeriAlt = GC->DOI_alt;
-
-		GC->rtcc->DOITargeting(&opt, DOI_dV_LVLH, DOI_TIG, DOI_t_PDI, GC->t_Land, DOI_CR);
-		sv_DOI = GC->rtcc->GeneralTrajectoryPropagation(opt.sv0, 0, OrbMech::MJDfromGET(DOI_TIG, GC->GETbase));
-		DOI_dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_DOI.R, sv_DOI.V), DOI_dV_LVLH);
+		if (!GC->rtcc->LunarDescentPlanningProcessor(sv, GC->GETbase, GC->LSLat, GC->LSLng, OrbMech::R_Moon + GC->LSAlt, GC->descplantable))
+		{
+			GC->t_Land = GC->descplantable.PD_GETTD;
+		}
 
 		Result = 0;
 	}
@@ -3100,47 +3038,8 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 13:	//PC Targeting
+	case 13:	//Spare
 	{
-		PCMan opt;
-		SV sv_pre, sv_post;
-
-		if (GC->MissionPlanningActive)
-		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, PCEarliestGET, GC->GETbase, opt.RV_MCC, mptveh))
-			{
-				Result = 0;
-				break;
-			}
-		}
-		else
-		{
-			opt.RV_MCC = GC->rtcc->StateVectorCalc(vessel);
-		}
-
-		opt.EarliestGET = PCEarliestGET;
-		opt.GETbase = GC->GETbase;
-		opt.lat = GC->LSLat;
-		opt.lng = GC->LSLng;
-		opt.alt = GC->LSAlt;
-		opt.vessel = vessel;
-		opt.target = target;
-		opt.landed = PClanded;
-		opt.t_A = PCAlignGET;
-		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
-
-		GC->rtcc->PlaneChangeTargeting(&opt, PC_dV_LVLH, PC_TIG, sv_pre, sv_post);
-
-		P30TIG = PC_TIG;
-		dV_LVLH = PC_dV_LVLH;
-
-		if (GC->MissionPlanningActive)
-		{
-			char code[64];
-			sprintf(code, "PC");
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, poweredenginetype);
-		}
-
 		Result = 0;
 	}
 	break;
@@ -3313,11 +3212,11 @@ int ARCore::subThread()
 				opt.t_land = GC->t_Land;
 				opt.azi = GC->LOIazi;
 				opt.h_peri = GC->TLCCLAHPeriAlt;
-				opt.N = GC->DOI_N;
+				opt.N = GC->rtcc->med_k17.DwellOrbits;
 				opt.DOIType = GC->DOI_option;
-				opt.DOIPeriAng = GC->DOI_PeriAng;
+				opt.DOIPeriAng = GC->rtcc->med_k17.DescentFlightArc;
 				opt.LOIEllipseRotation = GC->LOIEllipseRotation;
-				opt.DOIPeriAlt = GC->DOI_alt;
+				opt.DOIPeriAlt = GC->rtcc->med_k17.DescIgnHeight;
 				opt.RV_MCC = sv0;
 				opt.csmlmdocked = !GC->MissionPlanningActive && docked;
 
@@ -4309,23 +4208,46 @@ int ARCore::subThread()
 	break;
 	case 42: //Transfer Descent Plan to MPT
 	{
-		SV sv_pre, sv_post;
+		SV sv_pre, sv_post, sv_tig;
+		double attachedMass = 0.0;
 
-		if (!GC->MissionPlanningActive)
+		if (GC->MissionPlanningActive)
 		{
+			if (!GC->rtcc->MPTTrajectory(GC->mptable, GC->descplantable.GETIG[0], GC->GETbase, sv_tig, GC->rtcc->med_k16.Vehicle))
+			{
+				Result = 0;
+				break;
+			}
+		}
+		else
+		{
+			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
+			sv_tig = GC->rtcc->coast(sv_now, GC->descplantable.GETIG[0] - OrbMech::GETfromMJD(sv_now.MJD, GC->GETbase));
+
 			if (docked)
 			{
-				sv_DOI.mass += GC->rtcc->GetDockedVesselMass(vessel);
+				attachedMass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
 		}
 
-		GC->rtcc->PoweredFlightProcessor(sv_DOI, GC->GETbase, DOI_TIG, GC->rtcc->med_m70.Thruster, 0.0, DOI_dV_LVLH, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+		GC->rtcc->PoweredFlightProcessor(sv_tig, GC->GETbase, GC->descplantable.GETIG[0], GC->rtcc->med_m70.Thruster, attachedMass, GC->descplantable.DVVector[0]*0.3048, true, P30TIG, dV_LVLH, sv_pre, sv_post);
 
 		if (GC->MissionPlanningActive)
 		{
 			char code[64];
 
-			sprintf(code, "DOI");
+			if (GC->rtcc->med_k16.Mode == 1)
+			{
+				sprintf(code, "CIR");
+			}
+			if (GC->rtcc->med_k16.Mode == 4)
+			{
+				sprintf(code, "DOI");
+			}
+			else
+			{
+				sprintf(code, "PPC");
+			}
 
 			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
 		}
@@ -4498,15 +4420,7 @@ int ARCore::subThread()
 		if (MPT_LOI_TLMCC_Flag)
 		{
 			dv = LOI_dV_LVLH;
-
-			if (LOImaneuver == 0)
-			{
-				sprintf(code, "LOI");
-			}
-			else
-			{
-				sprintf(code, "LO2");
-			}
+			sprintf(code, "LOI");
 		}
 		else
 		{
