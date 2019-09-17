@@ -549,10 +549,17 @@ LDPP_33_1:
 	{
 		i = i - 1;
 		out.azi = opt.azi_nom;
+		out.t_Land = 0.0;
+		out.t_PDI = 0.0;
+	}
+	else
+	{
+		//For now, from the old DOI calculation
+		double dt4 = OrbMech::time_theta(sv_in.R, sv_in.V, opt.theta_D - 15.0*RAD, mu);
+		out.t_Land = t_L + dt4;
+		out.t_PDI = t_IGN + dt4;
 	}
 	out.i = i;
-	out.t_Land = t_L;
-	out.t_PDI = t_IGN;
 	return 0;
 }
 

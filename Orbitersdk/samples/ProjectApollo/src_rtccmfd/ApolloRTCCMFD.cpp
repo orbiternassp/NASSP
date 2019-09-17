@@ -4372,6 +4372,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			skp->Text(1 * W / 8, 8 * H / 14, "Retrofire EXDV Update", 21);
 		}
+		else
+		{
+			skp->Text(1 * W / 8, 8 * H / 14, "LGC Descent Update", 18);
+		}
 		skp->Text(1 * W / 8, 10 * H / 14, "REFSMMAT Update", 15);
 	}
 	else if (screen == 48)
@@ -5300,11 +5304,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		skp->Text(31 * W / 32, 4 * H / 28, Buffer, strlen(Buffer));
 
+		sprintf(Buffer, "%07.3f°", GC->descplantable.DescAsc);
+		skp->Text(30 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+
 		sprintf(Buffer, GC->descplantable.DescAzMode);
 		skp->Text(27 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%07.3f°", GC->descplantable.DescAsc);
-		skp->Text(30 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+06.2f", GC->descplantable.PD_ThetaIgn);
+		skp->Text(10 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
@@ -5364,6 +5371,40 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(21 * W / 32, 19 * H / 28, "MODE", 4);
 		skp->Text(21 * W / 32, 20 * H / 28, "DESC AZ", 7);
 		skp->Text(21 * W / 32, 21 * H / 28, "SN.LK.A", 7);
+	}
+	else if (screen == 61)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 2 * H / 14, "LGC DESCENT TARGET UPDATE (295)", 31);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(1 * W / 8, 4 * H / 14, "TLAND:", 6);
+		GET_Display(Buffer, GC->t_Land);
+		skp->Text(3 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 32, 13 * H / 28, "OID", 3);
+		skp->Text(10 * W / 32, 13 * H / 28, "FCT", 3);
+		skp->Text(15 * W / 32, 13 * H / 28, "DSKY V72", 8);
+
+		for (int i = 1;i <= 5;i++)
+		{
+			sprintf(Buffer, "%o", i);
+			skp->Text(5 * W / 32, (i + 14) * H / 28, Buffer, strlen(Buffer));
+		}
+
+		skp->Text(10 * W / 32, 15 * H / 28, "INDEX", 5);
+		skp->Text(10 * W / 32, 16 * H / 28, "ADD1", 4);
+		skp->Text(10 * W / 32, 17 * H / 28, "TLAND", 5);
+		skp->Text(10 * W / 32, 18 * H / 28, "ADD2", 4);
+		skp->Text(10 * W / 32, 19 * H / 28, "TLAND", 5);
+
+		for (int i = 0;i < 5;i++)
+		{
+			sprintf(Buffer, "%05d", G->TLANDOctals[i]);
+			skp->Text(15 * W / 32, (i + 15) * H / 28, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }
@@ -5436,6 +5477,11 @@ void ApolloRTCCMFD::menuRetrofireEXDVUplinkCalc()
 	{
 		G->RetrofireEXDVUplinkCalc();
 	}
+}
+
+void ApolloRTCCMFD::menuTLANDUplinkCalc()
+{
+	G->TLANDUplinkCalc();
 }
 
 void ApolloRTCCMFD::menuTLANDUpload()
@@ -5915,6 +5961,11 @@ void ApolloRTCCMFD::menuSetRetrofireEXDVUplinkPage()
 	if (G->vesseltype < 2)
 	{
 		screen = 52;
+		coreButtons.SelectPage(this, screen);
+	}
+	else
+	{
+		screen = 61;
 		coreButtons.SelectPage(this, screen);
 	}
 }

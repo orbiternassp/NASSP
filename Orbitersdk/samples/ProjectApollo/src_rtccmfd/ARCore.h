@@ -138,6 +138,7 @@ public:
 	void REFSMMATUplink(void);
 	void REFSMMATUplinkCalc();
 	void StateVectorUplink();
+	void TLANDUplinkCalc(void);
 	void TLANDUplink(void);
 	void EMPP99Uplink(int i);
 	void ManeuverPAD();
@@ -324,6 +325,7 @@ public:
 	int SVOctals[021];
 	VECTOR3 RLSUplink;
 	int RLSOctals[010];
+	int TLANDOctals[5];
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;

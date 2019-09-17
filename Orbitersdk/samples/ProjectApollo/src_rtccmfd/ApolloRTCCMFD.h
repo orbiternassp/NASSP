@@ -272,6 +272,7 @@ public:
 	void menuSetDescPlanCalcPage();
 	void menuSetLDPPMode();
 	void menuSetLDPPSequence();
+	void menuTLANDUplinkCalc();
 	void menuTLANDUpload();
 	void menuSetSkylabPage();
 	void menuSwitchSkylabManeuver();

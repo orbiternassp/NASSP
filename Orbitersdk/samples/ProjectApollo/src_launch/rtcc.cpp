@@ -12397,4 +12397,5 @@ void RTCC::PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentP
 		sprintf(table.DescAzMode, "DES");
 	}
 	table.DescAsc = res.azi*DEG;
+	table.PD_ThetaIgn = opt.theta_D*DEG;
 }

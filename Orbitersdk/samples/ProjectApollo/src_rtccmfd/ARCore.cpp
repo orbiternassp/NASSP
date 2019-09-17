@@ -757,6 +757,10 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	{
 		RLSOctals[i] = 0;
 	}
+	for (int i = 0;i < 5;i++)
+	{
+		TLANDOctals[i] = 0;
+	}
 
 	lambertmultiaxis = 1;
 	entrylongmanual = true;
@@ -1872,24 +1876,35 @@ void ARCore::EntryUpdateUplink(void)
 	UplinkData(); // Go for uplink
 }
 
+void ARCore::TLANDUplinkCalc(void)
+{
+	if (vesseltype > 1)
+	{
+		TLANDOctals[0] = 5;
+
+		if (GC->mission < 14)
+		{
+			TLANDOctals[1] = 2400;
+			TLANDOctals[3] = 2401;
+		}
+		else
+		{
+			TLANDOctals[1] = 2026;
+			g_Data.emem[3] = 2027;
+		}
+		TLANDOctals[2] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 1);
+		TLANDOctals[4] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 0);
+	}
+}
+
 void ARCore::TLANDUplink(void)
 {
 	if (vesseltype > 1)
 	{
-		g_Data.emem[0] = 5;
-
-		if (GC->mission < 14)
+		for (int i = 0;i < 5;i++)
 		{
-			g_Data.emem[1] = 2400;
-			g_Data.emem[3] = 2401;
+			g_Data.emem[i] = TLANDOctals[i];
 		}
-		else
-		{
-			g_Data.emem[1] = 2026;
-			g_Data.emem[3] = 2027;
-		}
-		g_Data.emem[2] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 1);
-		g_Data.emem[4] = OrbMech::DoubleToBuffer(GC->t_Land*100.0, 28, 0);
 
 		UplinkData2(); // Go for uplink
 	}
@@ -2842,7 +2857,10 @@ int ARCore::subThread()
 
 		if (!GC->rtcc->LunarDescentPlanningProcessor(sv, GC->GETbase, GC->LSLat, GC->LSLng, OrbMech::R_Moon + GC->LSAlt, GC->descplantable))
 		{
-			GC->t_Land = GC->descplantable.PD_GETTD;
+			if (GC->rtcc->med_k16.Mode != 7)
+			{
+				GC->t_Land = GC->descplantable.PD_GETTD;
+			}
 		}
 
 		Result = 0;

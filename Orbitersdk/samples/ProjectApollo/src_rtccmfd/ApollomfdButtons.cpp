@@ -2071,6 +2071,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("MPT", OAPI_KEY_U, &ApolloRTCCMFD::menuSetSPQorDKIRTransferPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDescPlanCalcPage);
+
+
+	static const MFDBUTTONMENU mnu61[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "Calculate uplink", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Uplink to LGC", 0, 'U' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu61, sizeof(mnu61) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuTLANDUplinkCalc);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::menuTLANDUpload);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
