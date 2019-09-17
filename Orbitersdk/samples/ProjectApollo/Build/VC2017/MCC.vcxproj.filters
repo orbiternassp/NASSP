@@ -72,6 +72,9 @@
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -108,6 +111,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\LDPP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
