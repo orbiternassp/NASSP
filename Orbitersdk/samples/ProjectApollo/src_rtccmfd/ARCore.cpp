@@ -2844,7 +2844,18 @@ int ARCore::subThread()
 		
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, GC->rtcc->med_k16.VectorTime, GC->GETbase, sv, GC->rtcc->med_k16.Vehicle))
+			double get;
+
+			if (GC->rtcc->med_k16.VectorTime != 0.0)
+			{
+				get = GC->rtcc->med_k16.VectorTime;
+			}
+			else
+			{
+				get = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
+			}
+
+			if (!GC->rtcc->MPTTrajectory(GC->mptable, get, GC->GETbase, sv, GC->rtcc->med_k16.Vehicle))
 			{
 				Result = 0;
 				break;
@@ -4254,7 +4265,7 @@ int ARCore::subThread()
 		{
 			char code[64];
 
-			if (GC->rtcc->med_k16.Mode == 1)
+			if (GC->rtcc->med_k16.Mode == 2)
 			{
 				sprintf(code, "CIR");
 			}
