@@ -4278,7 +4278,7 @@ int ARCore::subThread()
 				sprintf(code, "PPC");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
+			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), GC->rtcc->med_k16.Vehicle, GC->rtcc->med_m70.Thruster);
 		}
 
 		Result = 0;
