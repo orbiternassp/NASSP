@@ -10096,7 +10096,20 @@ void RTCC::EMSTAGEN(double GETBase, double GET, OrbitStationContactsTable &res)
 	EphemerisDataTable EPHEM;
 	ELFECH(OrbMech::MJDfromGET(GET, GETBase), med_b03.VEH, 300, 0, EPHEM);
 
-	EMGENGEN(EPHEM, GETBase, med_b04.FUNCTION, res);
+	Station station;
+	StationTable contact;
+
+	for (int i = 0;i < NUMBEROFGROUNDSTATIONS;i++)
+	{
+		if (med_b04.FUNCTION && !groundstationslunar[i]) continue;
+		station.alt = 0.0;
+		sprintf_s(station.code, gsabbreviations[i]);
+		station.lat = groundstations[i][0];
+		station.lng = groundstations[i][1];
+		contact.table.push_back(station);
+	}
+
+	EMGENGEN(EPHEM, contact, GETBase, res);
 
 	CapeCrossingTable *table;
 
@@ -11174,16 +11187,15 @@ int RTCC::MPTCopyEphemeris(FullMPTable &mptable, double GETbase)
 	return 0;
 }
 
-void RTCC::EMGENGEN(const EphemerisDataTable &ephemeris, double GETbase, bool suppress_cband, OrbitStationContactsTable &res)
+void RTCC::EMGENGEN(const EphemerisDataTable &ephemeris, const StationTable &stationlist, double GETbase, OrbitStationContactsTable &res)
 {
 	std::vector<NextStationContact> acquisitions;
 	NextStationContact current;
 	NextStationContact empty;
 
-	for (int i = 0;i < NUMBEROFGROUNDSTATIONS;i++)
+	for (unsigned i = 0;i < stationlist.table.size();i++)
 	{
-		if (suppress_cband && !groundstationslunar[i]) continue;
-		EMXING(ephemeris, GETbase, i, acquisitions);
+		EMXING(ephemeris, stationlist.table[i], GETbase, acquisitions);
 	}
 
 	//Sort
@@ -11203,7 +11215,7 @@ void RTCC::EMGENGEN(const EphemerisDataTable &ephemeris, double GETbase, bool su
 	}
 }
 
-bool RTCC::EMXING(const EphemerisDataTable &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions)
+bool RTCC::EMXING(const EphemerisDataTable &ephemeris, const Station & station, double GETbase, std::vector<NextStationContact> &acquisitions)
 {
 	if (ephemeris.table.size() == 0) return false;
 
@@ -11219,7 +11231,7 @@ bool RTCC::EMXING(const EphemerisDataTable &ephemeris, double GETbase, int stati
 	hMoon = oapiGetObjectByName("Moon");
 
 	MJD0 = ephemeris.table[0].MJD;
-	R_S_equ = OrbMech::r_from_latlong(groundstations[station][0], groundstations[station][1], 6.373338e6);
+	R_S_equ = OrbMech::r_from_latlong(station.lat, station.lng, 6.373338e6 + station.alt);
 
 EMXING_LOOP:
 
@@ -11449,7 +11461,7 @@ EMXING_LOOP:
 	current.BestAvailableAOS = BestAvailableAOS;
 	current.BestAvailableLOS = BestAvailableLOS;
 	current.BestAvailableEMAX = BestAvailableEMAX;
-	sprintf_s(current.StationID, gsabbreviations[station]);
+	sprintf_s(current.StationID, station.code);
 
 	acquisitions.push_back(current);
 

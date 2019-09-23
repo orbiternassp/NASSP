@@ -1637,6 +1637,19 @@ struct EphemerisDataTable
 	MANTIMES mantimes;
 };
 
+struct Station
+{
+	double lat = 0.0;
+	double lng = 0.0;
+	double alt = 0.0;
+	char code[4];
+};
+
+struct StationTable
+{
+	std::vector<Station> table;
+};
+
 struct LunarDescentPlanningTable
 {
 	LunarDescentPlanningTable();
@@ -2065,9 +2078,9 @@ private:
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
-	void EMGENGEN(const EphemerisDataTable &ephemeris, double GETbase, bool suppress_cband, OrbitStationContactsTable &res);
+	void EMGENGEN(const EphemerisDataTable &ephemeris, const StationTable &stationlist, double GETbase, OrbitStationContactsTable &res);
 	//Horizon Crossing Subprogram
-	bool EMXING(const EphemerisDataTable &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions);
+	bool EMXING(const EphemerisDataTable &ephemeris, const Station & station, double GETbase, std::vector<NextStationContact> &acquisitions);
 	//Variable Order Interpolation
 	int ELVARY(const std::vector<MPTSV> &EPH, unsigned ORER, double MJD, bool EXTRAP, MPTSV &sv_out);
 	//Extended Interpolation Routine
