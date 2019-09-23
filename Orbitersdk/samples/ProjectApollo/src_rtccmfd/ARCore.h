@@ -108,8 +108,11 @@ public:
 	void CycleSpaceDigitals();
 	void SpaceDigitalsGET();
 	void CycleNextStationContactsDisplay();
-	void CyclePredictedSiteAcquisitionDisplay();
+	void GenerateStationContacts();
 	void CalculatePredictedSiteAcquisitionDisplay();
+	void SunriseSunsetTimesCalc();
+	void MoonriseMoonsetTimesCalc();
+	void CapeCrossingTableUpdate();
 	void TransferTIToMPT();
 	void TransferSPQToMPT();
 	void TransferDKIToMPT();
@@ -462,9 +465,6 @@ public:
 	OrbitStationContactsTable orbitstatconttable;
 	NextStationContactsTable nextstatconttable;
 	PredictedSiteAcquisitionTable predsiteacqtable;
-	bool nextstatcont_lunar; //Only use stations with lunar capability
-	double predsiteacq_GET;
-	double predsiteacq_DT;
 
 	//MPT MANEUVER TRANSFER
 

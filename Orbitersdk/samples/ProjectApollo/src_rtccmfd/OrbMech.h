@@ -136,13 +136,27 @@ const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
 #define BODY_EARTH 0
 #define BODY_MOON 1
 
+struct MPTSV;
+
 struct SV
 {
+	SV& operator=(const MPTSV& other);
 	VECTOR3 R = _V(0, 0, 0);
 	VECTOR3 V = _V(0, 0, 0);
 	double MJD = 0.0;
 	OBJHANDLE gravref = NULL;
 	double mass = 0.0;
+};
+
+struct MPTSV
+{
+	MPTSV();
+	MPTSV(const SV sv);
+	MPTSV& operator=(const SV& other);
+	VECTOR3 R;
+	VECTOR3 V;
+	double MJD;
+	OBJHANDLE gravref;
 };
 
 struct PZEFEMData
@@ -392,7 +406,7 @@ namespace OrbMech {
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	SV coast(SV sv0, double dt);
-	void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned nmax = 100U);
+	void GenerateEphemeris(MPTSV sv0, double dt, std::vector<MPTSV> &ephemeris, unsigned nmax = 100U, unsigned skip = 0);
 	void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem);
 	bool PLEFEM(const PZEFEM &ephem, double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);
@@ -565,6 +579,7 @@ namespace OrbMech {
 	double SumProd(double *x, double *y, int N);
 	double SumQuad(double *x, int N);
 	double QuadSum(double *x, int N);
+	void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I);
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);

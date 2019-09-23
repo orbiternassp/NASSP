@@ -152,6 +152,18 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 
 //MANUAL ENTRY DEVICES
 
+//Generate Station Contact Table
+struct MED_B03
+{
+	int VEH = 2; //1 = LEM, 2 = CSM
+};
+
+//Suppress/Unsuppress C-Band Station Contacts Generation
+struct MED_B04
+{
+	bool FUNCTION = false; //false = unsuppress, true = suppress
+};
+
 //Computation for Lunar Descent Planning
 struct MED_K16
 {
@@ -341,6 +353,14 @@ struct MED_P16
 	unsigned ManNum = 0;
 };
 
+//Cape Crossing Table Update and Limit Change
+struct MED_P17
+{
+	int VEH = 1; //1 = LEM, 2 = CSM
+	bool IsEarth = true;
+	int REV = 1;
+};
+
 //Offsets and elevation angle for two-impulse solution
 struct MED_P51
 {
@@ -383,6 +403,30 @@ struct MED_U02
 	int FT = 0;		//0 = ER and ER/HR, 1 = ft and ft/s
 	double IND_val = 0.0; //For options 0-1, 4-6
 	unsigned IND_man = 0; //For options 2-3
+};
+
+//Moonrise/Moonset Times Initialization
+struct MED_U07
+{
+	int IND = 0; //0 = REV, 1 = GET
+	double PARM = 0.0; //Either GET or REV
+};
+
+//Sunrise/Sunset Times Initialization
+struct MED_U08
+{
+	int IND = 0; //0 = REV, 1 = GET
+	double PARM = 0.0; //Either GET or REV
+	int REF = BODY_EARTH; //Reference body
+};
+
+//Predicted Site Acquisition
+struct MED_U15
+{
+	int VEH = 2; //1 = LEM, 2 = CSM
+	int IND = 1; //1 = GET, 2 = REV
+	double PARAM1 = 0.0; //Begin Time for GET, Begin REV fo REV
+	double PARAM2 = 0.0; //Delta Time for GET, End REV for REV
 };
 
 //Generate Detailed Maneuver Table
@@ -1211,6 +1255,7 @@ struct FIDOOrbitDigitals
 	double TAPP;	//Present position, true anomaly
 	double LNPP;	//Longitude of ascending node (Earth-fixed or moon-fixed)
 	double GETL;	//Time spacecraft will pass over L
+	int REVL;		//Revolution associated with GETL
 	double L;		//The longitude associated with GETL
 	double TO;		//Orbital period
 	double K;		//K-Factor
@@ -1471,15 +1516,6 @@ struct DetailedManeuverTable
 	char CFP_OPTION[8];
 };
 
-struct MPTSV
-{
-	MPTSV& operator=(const SV& other);
-	VECTOR3 R = _V(0, 0, 0);
-	VECTOR3 V = _V(0, 0, 0);
-	double MJD = 0.0;
-	OBJHANDLE gravref = NULL;
-};
-
 struct MPTManeuver
 {
 	MPTManeuver();
@@ -1548,6 +1584,7 @@ struct NextStationContact
 	bool BestAvailableAOS;
 	bool BestAvailableLOS;
 	bool BestAvailableEMAX;
+	int REV;
 
 	//For sorting
 	bool operator<(const NextStationContact& rhs) const;
@@ -1556,7 +1593,6 @@ struct NextStationContact
 struct OrbitStationContactsTable
 {
 	NextStationContact Stations[45];
-	double GET = 0.0;
 };
 
 struct NextStationContactsTable
@@ -1570,18 +1606,35 @@ struct PredictedSiteAcquisitionTable
 	NextStationContact Stations[40];
 };
 
-struct OrbitStationContactsOpt
+struct MANTIMESData
 {
-	SV sv_A;
-	double GETbase;
-	//Only use stations with lunar capability
-	bool lunar;
+	double ManData[2];
 };
 
-struct PredictedSiteAcquisitionOpt
+struct MANTIMES
 {
-	double GET;
-	double dt;
+	std::vector<MANTIMESData> Table;
+};
+
+struct CapeCrossingTable
+{
+	CapeCrossingTable();
+	int TUP;
+	int NumRev;
+	int NumRevFirst;
+	int NumRevLast;
+	double GETEphemFirst;
+	double GETEphemLast;
+	//Time of last known cape crossing before the time of the update vector (zero if unknown)
+	double GETCrossPrev;
+	double GETCross[30];
+};
+
+struct EphemerisDataTable
+{
+	int TUP = 0;
+	std::vector<MPTSV> table;
+	MANTIMES mantimes;
 };
 
 struct LunarDescentPlanningTable
@@ -1611,6 +1664,34 @@ struct LunarDescentPlanningTable
 	char DescAzMode[4];
 	double DescAsc;
 	double SN_LK_A; //???
+};
+
+struct SunriseSunsetData
+{
+	//Revolution number
+	int REV = 0;
+	//GET of terminator rise from liftoff
+	double GETTR = 0.0;
+	//GET of sunrise from liftoff
+	double GETSR = 0.0;
+	//Pitch at sunrise
+	double theta_SR = 0.0;
+	//Yaw at sunrise
+	double psi_SR = 0.0;
+	//GET of terminator set from liftoff
+	double GETTS = 0.0;
+	//GET of sunset from liftoff
+	double GETSS = 0.0;
+	//Pitch at sunset
+	double theta_SS = 0.0;
+	//Yaw at sunset
+	double psi_SS = 0.0;
+};
+
+struct SunriseSunsetTable
+{
+	int num = 0;
+	SunriseSunsetData data[8];
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -1808,7 +1889,7 @@ public:
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
 	MPTSV coast(MPTSV sv0, double dt);
-	SV coast_conic(SV sv0, double dt);
+	MPTSV coast_conic(MPTSV sv0, double dt);
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
@@ -1836,14 +1917,14 @@ public:
 	void FIDOSpaceDigitalsGET1(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	void FIDOSpaceDigitalsGET2(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
 	void FIDOSpaceDigitalsGET3(const SpaceDigitalsOpt &opt, SpaceDigitals &res);
-	//Orbit Station Contact Generation Control (EMSTAGEN)
-	void OrbitStationContactsDisplay(const OrbitStationContactsOpt &opt, OrbitStationContactsTable &res);
+	//Orbit Station Contact Generation Control
+	void EMSTAGEN(double GETBase, double GET, OrbitStationContactsTable &res);
 	//Next Station Contact Display
-	void EMDSTAC(const OrbitStationContactsTable &in, NextStationContactsTable &out);
+	void EMDSTAC(const OrbitStationContactsTable &in, double GET, NextStationContactsTable &out);
 	//Predicted and Experimental Site Acquisition Displays
 
 	//Actual RTCC Subroutines
-	void EMDPESAD(const PredictedSiteAcquisitionOpt &opt, const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out);
+	void EMDPESAD(const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out);
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
 	//External DV Coordinate Transformation Subroutine
@@ -1856,6 +1937,18 @@ public:
 	int PMDDMT(FullMPTable &mptable, double GETbase, double LSAlt, DetailedManeuverTable &res);
 	//Lunar Descent Planning Table Display
 	void PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table);
+	//Time of Longitude Crossing Subroutine
+	double RLMTLC(const EphemerisDataTable &ephemeris, double GETBase, double long_des, double GET_min, double &GET_cross);
+	//Cape Crossing Table Generation
+	int RMMEACC(const EphemerisDataTable &ephemeris, double GETBase, CapeCrossingTable &table);
+	//Environment Change Calculations
+	int EMMENV(const EphemerisDataTable &ephemeris, double GETBase, double GET_begin, bool sun, SunriseSunsetTable &table);
+	//Sunrise/Sunset Display
+	void EMDSSEMD(double GETBase);
+	//Moonrise/Moonset Display
+	void EMDSSMMD(double GETBase);
+	//Ephemeris Fetch Routine
+	int ELFECH(double MJD, int L, unsigned vec_tot, unsigned vec_bef, EphemerisDataTable &EPHEM);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1871,7 +1964,7 @@ public:
 	int MPTAddManeuver(FullMPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI = RTCC_CONFIGCHANGE_NONE, int CC = RTCC_CONFIG_CSM, int opt = 0);
 	int MPTDirectInput(MPTManeuver &man, SV sv_ig, SV &sv_cut);
 	int MPTDeleteManeuver(FullMPTable &mptable);
-	void MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L);
+	void MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L, double GETBase);
 	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L);
 	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L, unsigned mnv);
 	bool MPTTrajectory(FullMPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
@@ -1893,6 +1986,8 @@ public:
 	struct calculationParameters calcParams;
 
 	//MEDs
+	MED_B03 med_b03;
+	MED_B04 med_b04;
 	MED_K16 med_k16;
 	MED_K17 med_k17;
 	MED_M40 med_m40;
@@ -1905,10 +2000,23 @@ public:
 	MED_M72 med_m72;
 	MED_M78 med_m78;
 	MED_P16 med_p16;
+	MED_P17 med_p17;
 	MED_U00 med_u00;
 	MED_U01 med_u01;
 	MED_U02 med_u02;
+	MED_U07 med_u07;
+	MED_U08 med_u08;
+	MED_U15 med_u15;
 	MED_U20 med_u20;
+
+	//Data Tables
+	PZEFEM pzefem;
+	EphemerisDataTable EZNITCSM;
+	EphemerisDataTable EZNITLEM;
+	CapeCrossingTable EZCCSM;
+	CapeCrossingTable EZCLEM;
+	SunriseSunsetTable EZSSTAB;
+	SunriseSunsetTable EZMMTAB;
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
@@ -1957,13 +2065,17 @@ private:
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
-	void EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, OrbitStationContactsTable &res);
+	void EMGENGEN(const EphemerisDataTable &ephemeris, double GETbase, bool suppress_cband, OrbitStationContactsTable &res);
 	//Horizon Crossing Subprogram
-	bool EMXING(const std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions);
+	bool EMXING(const EphemerisDataTable &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions);
 	//Variable Order Interpolation
-	int ELVARY(std::vector<SV> EPH, unsigned ORER, double MJD, bool EXTRAP, SV &sv_out);
-
-	SV EphemerisInterpolationConic(const std::vector<SV> &ephemeris, double MJD, unsigned start = 0);
+	int ELVARY(const std::vector<MPTSV> &EPH, unsigned ORER, double MJD, bool EXTRAP, MPTSV &sv_out);
+	//Extended Interpolation Routine
+	int ELVCTR(const EphemerisDataTable &EPH, unsigned ORER, double MJD, MPTSV &sv_out, int option, double *LUNRSTAY = NULL);
+	//
+	int CapeCrossingRev(int L, double GET);
+	double CapeCrossingGET(int L, int rev);
+	void ECMPAY(const EphemerisDataTable &EPH, double MJD, bool sun, double &Pitch, double &Yaw);
 
 	bool MPTConfigIncludesCSM(int config);
 	bool MPTConfigIncludesLM(int config);

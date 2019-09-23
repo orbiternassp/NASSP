@@ -19,7 +19,6 @@
 #include "LVDC.h"
 #include "iu.h"
 #include "ARoapiModule.h"
-#include "LDPP.h"
 
 // ==============================================================
 // Global variables
@@ -3787,6 +3786,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		skp->Text(8 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
 
+		sprintf(Buffer, "%04d", G->fidoorbit.REVL);
+		skp->Text(13 * W / 16, 3 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, G->fidoorbit.GETL, false);
 		skp->Text(13 * W / 16, 4 * H / 28, Buffer, strlen(Buffer));
 		if (G->fidoorbit.L > 0)
@@ -3862,6 +3863,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 6 * H / 14, "Next Station Contacts", 21);
 		skp->Text(1 * W / 8, 8 * H / 14, "Predicted Site Acquisitions", 27);
 		skp->Text(1 * W / 8, 10 * H / 14, "Checkout Monitor", 16);
+		skp->Text(1 * W / 8, 12 * H / 14, "Sunrise/Sunset Times", 20);
+
+		skp->Text(4 * W / 8, 2 * H / 14, "Moonrise/Moonset Times", 22);
 	}
 	else if (screen == 43)
 	{
@@ -4243,7 +4247,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		G->CycleNextStationContactsDisplay();
 
-		if (G->nextstatcont_lunar)
+		if (GC->rtcc->med_b04.FUNCTION)
 		{
 			skp->Text(1 * W / 16, 2 * H / 14, "Lunar", 5);
 		}
@@ -4305,11 +4309,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 46)
 	{
-		G->CyclePredictedSiteAcquisitionDisplay();
-
-		GET_Display(Buffer, G->predsiteacq_GET);
+		GET_Display(Buffer, GC->rtcc->med_u15.PARAM1);
 		skp->Text(1 * W / 16, 3 * H / 28, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->predsiteacq_DT);
+		GET_Display(Buffer, GC->rtcc->med_u15.PARAM2);
 		skp->Text(10 * W / 16, 3 * H / 28, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -5406,6 +5408,142 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(15 * W / 32, (i + 15) * H / 28, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 62)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 1 * H / 14, "SUNRISE/SUNSET TIMES (MSK 1502)", 31);
+
+		skp->SetFont(font2);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(9 * W / 32, 4 * H / 28, "SUNRISE", 7);
+		skp->Text(25 * W / 32, 4 * H / 28, "SUNSET", 6);
+
+		skp->Text(1 * W / 32, 5 * H / 28, "REV", 3);
+		skp->Text(1 * W / 32, 6 * H / 28, "NO", 2);
+
+		skp->Text(9 * W / 64, 5 * H / 28, "GETTR", 5);
+		skp->Text(9 * W / 64, 6 * H / 28, "HH:MM:SS", 8);
+
+		skp->Text(19 * W / 64, 5 * H / 28, "GETSR", 5);
+		skp->Text(19 * W / 64, 6 * H / 28, "HH:MM:SS", 8);
+
+		skp->Text(27 * W / 64, 5 * H / 28, "PIT", 3);
+		skp->Text(27 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->Text(32 * W / 64, 5 * H / 28, "YAW", 3);
+		skp->Text(32 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->Text(39 * W / 64, 5 * H / 28, "GETTS", 5);
+		skp->Text(39 * W / 64, 6 * H / 28, "HH:MM:SS", 8);
+
+		skp->Text(49 * W / 64, 5 * H / 28, "GETSS", 5);
+		skp->Text(49 * W / 64, 6 * H / 28, "HH:MM:SS", 8);
+
+		skp->Text(56 * W / 64, 5 * H / 28, "PIT", 3);
+		skp->Text(56 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->Text(61 * W / 64, 5 * H / 28, "YAW", 3);
+		skp->Text(61 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		for (int i = 0;i < 8;i++)
+		{
+			sprintf(Buffer, "%02d", GC->rtcc->EZSSTAB.data[i].REV);
+			skp->Text(1 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->EZSSTAB.data[i].GETTR, false);
+			skp->Text(3 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			GET_Display(Buffer, GC->rtcc->EZSSTAB.data[i].GETSR, false);
+			skp->Text(8 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%03.0f", GC->rtcc->EZSSTAB.data[i].theta_SR);
+			skp->Text(13 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%03.0f", GC->rtcc->EZSSTAB.data[i].psi_SR);
+			skp->Text(15 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->EZSSTAB.data[i].GETTS, false);
+			skp->Text(35 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			GET_Display(Buffer, GC->rtcc->EZSSTAB.data[i].GETSS, false);
+			skp->Text(45 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%03.0f", GC->rtcc->EZSSTAB.data[i].theta_SS);
+			skp->Text(55 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%03.0f", GC->rtcc->EZSSTAB.data[i].psi_SS);
+			skp->Text(59 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+		}
+	}
+	else if (screen == 63)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 1 * H / 14, "MOONRISE/MOONSET TIMES (MSK 1501)", 33);
+
+		skp->SetFont(font2);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(9 * W / 32, 4 * H / 28, "MOONRISE", 8);
+		skp->Text(25 * W / 32, 4 * H / 28, "MOONSET", 7);
+
+		skp->Text(1 * W / 32, 5 * H / 28, "REV", 3);
+		skp->Text(1 * W / 32, 6 * H / 28, "NO", 2);
+
+		skp->Text(9 * W / 64, 5 * H / 28, "GETTR", 5);
+		skp->Text(9 * W / 64, 6 * H / 28, "HH:MM:SS", 8);
+
+		skp->Text(19 * W / 64, 5 * H / 28, "GETMR", 5);
+		skp->Text(19 * W / 64, 6 * H / 28, "HH:MM:SS", 8);
+
+		skp->Text(27 * W / 64, 5 * H / 28, "PIT", 3);
+		skp->Text(27 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->Text(32 * W / 64, 5 * H / 28, "YAW", 3);
+		skp->Text(32 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->Text(39 * W / 64, 5 * H / 28, "GETTS", 5);
+		skp->Text(39 * W / 64, 6 * H / 28, "HH:MM:SS", 8);
+
+		skp->Text(49 * W / 64, 5 * H / 28, "GETMS", 5);
+		skp->Text(49 * W / 64, 6 * H / 28, "HH:MM:SS", 8);
+
+		skp->Text(56 * W / 64, 5 * H / 28, "PIT", 3);
+		skp->Text(56 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->Text(61 * W / 64, 5 * H / 28, "YAW", 3);
+		skp->Text(61 * W / 64, 6 * H / 28, "DEG", 3);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		for (int i = 0;i < 8;i++)
+		{
+			sprintf(Buffer, "%02d", GC->rtcc->EZMMTAB.data[i].REV);
+			skp->Text(1 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->EZMMTAB.data[i].GETTR, false);
+			skp->Text(3 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			GET_Display(Buffer, GC->rtcc->EZMMTAB.data[i].GETSR, false);
+			skp->Text(8 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%03.0f", GC->rtcc->EZMMTAB.data[i].theta_SR);
+			skp->Text(13 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%03.0f", GC->rtcc->EZMMTAB.data[i].psi_SR);
+			skp->Text(15 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->EZMMTAB.data[i].GETTS, false);
+			skp->Text(35 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			GET_Display(Buffer, GC->rtcc->EZMMTAB.data[i].GETSS, false);
+			skp->Text(45 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%03.0f", GC->rtcc->EZMMTAB.data[i].theta_SS);
+			skp->Text(55 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%03.0f", GC->rtcc->EZMMTAB.data[i].psi_SS);
+			skp->Text(59 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
+		}
+	}
 	return true;
 }
 
@@ -6030,6 +6168,18 @@ void ApolloRTCCMFD::menuSetMPTInitPage()
 void ApolloRTCCMFD::menuSetDescPlanTablePage()
 {
 	screen = 60;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetSunriseSunsetTablePage()
+{
+	screen = 62;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetMoonriseMoonsetTablePage()
+{
+	screen = 63;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -10313,21 +10463,25 @@ void ApolloRTCCMFD::set_FIDOOrbitDigitalsGETL(double getl)
 void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsL()
 {
 	bool FIDOOrbitDigitalsLInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Desired longitude:", FIDOOrbitDigitalsLInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: Revolution,desired longitude (Rev 0 to bypass check)", FIDOOrbitDigitalsLInput, 0, 20, (void*)this);
 }
 
 bool FIDOOrbitDigitalsLInput(void *id, char *str, void *data)
 {
-	if (strlen(str)<20)
+	int rev;
+	double lng;
+
+	if (sscanf(str, "%d,%lf", &rev, &lng) == 2)
 	{
-		((ApolloRTCCMFD*)data)->set_FIDOOrbitDigitalsL(atof(str));
+		((ApolloRTCCMFD*)data)->set_FIDOOrbitDigitalsL(rev, lng);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_FIDOOrbitDigitalsL(double lng)
+void ApolloRTCCMFD::set_FIDOOrbitDigitalsL(int rev, double lng)
 {
+	this->G->fidoorbit.REVL = rev;
 	this->G->fidoorbit.L = lng;
 	G->FIDOOrbitDigitalsCalculateGETL();
 }
@@ -10496,7 +10650,30 @@ void ApolloRTCCMFD::menuMPTTLIDirectInput()
 
 void ApolloRTCCMFD::menuNextStationContactLunar()
 {
-	G->nextstatcont_lunar = !G->nextstatcont_lunar;
+	GC->rtcc->med_b04.FUNCTION = !GC->rtcc->med_b04.FUNCTION;
+}
+
+void ApolloRTCCMFD::menuGenerateStationContacts()
+{
+	bool GenerateStationContactsInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Generate station contacts (Format: 1 = LEM, 2 = CSM):", GenerateStationContactsInput, 0, 20, (void*)this);
+}
+
+bool GenerateStationContactsInput(void* id, char *str, void *data)
+{
+	int veh;
+	if (sscanf(str, "%d", &veh) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_GenerateStationContacts(veh);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_GenerateStationContacts(int VEH)
+{
+	GC->rtcc->med_b03.VEH = VEH;
+	G->GenerateStationContacts();
 }
 
 void ApolloRTCCMFD::menuPredSiteAcqGET()
@@ -10519,7 +10696,7 @@ bool PredSiteAcqGETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_PredSiteAcqGET(double get)
 {
-	G->predsiteacq_GET = get;
+	GC->rtcc->med_u15.PARAM1 = get;
 }
 
 void ApolloRTCCMFD::menuPredSiteAcqDT()
@@ -10542,7 +10719,7 @@ bool PredSiteAcqDTInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_PredSiteAcqDT(double dt)
 {
-	G->predsiteacq_DT = dt;
+	GC->rtcc->med_u15.PARAM2 = dt;
 }
 
 void ApolloRTCCMFD::PredSiteAcqCalc()
@@ -10756,6 +10933,80 @@ void ApolloRTCCMFD::menuCycleDOIOption()
 	{
 		GC->DOI_option = 0;
 	}
+}
+
+void ApolloRTCCMFD::menuSunriseSunsetTimesCalc()
+{
+	bool SunriseSunsetTimesCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: IND,PARAM (IND: REV = 0, GET = 1)", SunriseSunsetTimesCalcInput, 0, 20, (void*)this);
+}
+
+bool SunriseSunsetTimesCalcInput(void* id, char *str, void *data)
+{
+	int ind;
+	double param;
+	if (sscanf(str, "%d,%lf", &ind, &param) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_SunriseSunsetTimesInput(ind, param);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SunriseSunsetTimesInput(int IND, double PARAM)
+{
+	GC->rtcc->med_u08.IND = IND;
+	GC->rtcc->med_u08.PARM = PARAM;
+	G->SunriseSunsetTimesCalc();
+}
+
+void ApolloRTCCMFD::menuMoonriseMoonsetTimesCalc()
+{
+	bool MoonriseMoonsetTimesCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: IND,PARAM (IND: REV = 0, GET = 1)", MoonriseMoonsetTimesCalcInput, 0, 20, (void*)this);
+}
+
+bool MoonriseMoonsetTimesCalcInput(void* id, char *str, void *data)
+{
+	int ind;
+	double param;
+	if (sscanf(str, "%d,%lf", &ind, &param) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_MoonriseMoonsetTimesInput(ind, param);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MoonriseMoonsetTimesInput(int IND, double PARAM)
+{
+	GC->rtcc->med_u07.IND = IND;
+	GC->rtcc->med_u07.PARM = PARAM;
+	G->MoonriseMoonsetTimesCalc();
+}
+
+void ApolloRTCCMFD::menuCapeCrossingInit()
+{
+	bool CapeCrossingInitInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: VEH,REV (1 = LEM, 3 = CSM)", CapeCrossingInitInput, 0, 20, (void*)this);
+}
+
+bool CapeCrossingInitInput(void* id, char *str, void *data)
+{
+	int veh, rev;
+	if (sscanf(str, "%d,%d", &veh, &rev) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_CapeCrossingRev(veh, rev);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_CapeCrossingRev(int veh, int rev)
+{
+	GC->rtcc->med_p17.VEH = veh;
+	GC->rtcc->med_p17.REV = rev;
+	G->CapeCrossingTableUpdate();
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)

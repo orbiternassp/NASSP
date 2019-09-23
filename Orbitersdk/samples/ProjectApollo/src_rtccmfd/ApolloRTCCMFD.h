@@ -387,7 +387,7 @@ public:
 	void menuSetFIDOOrbitDigitalsGETL();
 	void set_FIDOOrbitDigitalsGETL(double getl);
 	void menuSetFIDOOrbitDigitalsL();
-	void set_FIDOOrbitDigitalsL(double lng);
+	void set_FIDOOrbitDigitalsL(int rev, double lng);
 	void menuSetFIDOOrbitDigitalsGETBV();
 	void set_FIDOOrbitDigitalsGETBV(double getbv);
 	void menuSetMCCDisplaysPage();
@@ -405,6 +405,8 @@ public:
 	void menuSetMPTInitPage();
 	void menuSetNextStationContactsPage();
 	void menuNextStationContactLunar();
+	void menuGenerateStationContacts();
+	void set_GenerateStationContacts(int VEH);
 	void menuSetPredSiteAcquisitionPage();
 	void menuPredSiteAcqGET();
 	void set_PredSiteAcqGET(double GET);
@@ -482,6 +484,14 @@ public:
 	void menuLDPPThresholdTime4();
 	void set_LDPPThresholdTime(double dt, int thr);
 	void menuCycleDOIOption();
+	void menuSetSunriseSunsetTablePage();
+	void menuSunriseSunsetTimesCalc();
+	void set_SunriseSunsetTimesInput(int IND, double PARAM);
+	void menuSetMoonriseMoonsetTablePage();
+	void menuMoonriseMoonsetTimesCalc();
+	void set_MoonriseMoonsetTimesInput(int IND, double PARAM);
+	void menuCapeCrossingInit();
+	void set_CapeCrossingRev(int veh, int rev);
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

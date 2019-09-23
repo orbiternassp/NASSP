@@ -303,7 +303,7 @@ int AR_GCore::MPTTrajectoryUpdate()
 
 	SV sv = rtcc->StateVectorCalc(ves);
 
-	rtcc->MPTTrajectoryUpdate(mptable, sv, rtcc->med_m50.Table);
+	rtcc->MPTTrajectoryUpdate(mptable, sv, rtcc->med_m50.Table, GETbase);
 
 	return 0;
 }
@@ -1042,10 +1042,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PDAP_Theta_LIM = 0.0;
 	PDAP_R_amin = 0.0;
 
-	nextstatcont_lunar = false;
-	predsiteacq_GET = 0.0;
-	predsiteacq_DT = 0.0;
-
 	MPT_LOI_TLMCC_Flag = false;
 }
 
@@ -1290,35 +1286,59 @@ void ARCore::CycleNextStationContactsDisplay()
 	if (subThreadStatus == 0)
 	{
 		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
-		if (GET > orbitstatconttable.GET + 12.0)
-		{
-			startSubthread(35);
-		}
-		else if (GET > nextstatconttable.GET + 12.0)
+		if (GET > nextstatconttable.GET + 12.0)
 		{
 			startSubthread(36);
 		}
 	}
 }
 
-void ARCore::CyclePredictedSiteAcquisitionDisplay()
+void ARCore::GenerateStationContacts()
 {
-	if (subThreadStatus == 0)
-	{
-		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
-		if (GET > orbitstatconttable.GET + 12.0)
-		{
-			startSubthread(35);
-		}
-	}
+	startSubthread(35);
 }
 
 void ARCore::CalculatePredictedSiteAcquisitionDisplay()
 {
+	startSubthread(37);
+}
+
+void ARCore::SunriseSunsetTimesCalc()
+{
 	if (subThreadStatus == 0)
 	{
-		startSubthread(37);
+		startSubthread(50);
 	}
+}
+
+void ARCore::MoonriseMoonsetTimesCalc()
+{
+	if (subThreadStatus == 0)
+	{
+		startSubthread(51);
+	}
+}
+
+void ARCore::CapeCrossingTableUpdate()
+{
+	CapeCrossingTable *table;
+
+	if (GC->rtcc->med_p17.VEH == 1)
+	{
+		table = &GC->rtcc->EZCLEM;
+	}
+	else
+	{
+		table = &GC->rtcc->EZCCSM;
+	}
+
+	if (GC->rtcc->med_p17.REV < 1) return;
+	if (table->NumRev == 0) return;
+
+	int delta = GC->rtcc->med_p17.REV + 1 - table->NumRevFirst;
+
+	table->NumRevFirst += delta;
+	table->NumRevLast += delta;
 }
 
 void ARCore::TransferTIToMPT()
@@ -2318,6 +2338,9 @@ int ARCore::subThread()
 	{
 		docked = false;
 	}
+
+	//Generate ephemeris table, if necessary
+	OrbMech::GenerateSunMoonEphemeris(oapiGetSimMJD(), GC->rtcc->pzefem);
 
 	subThreadStatus = 2; // Running
 	switch (subThreadMode) {
@@ -4032,34 +4055,30 @@ int ARCore::subThread()
 	break;
 	case 35: //Orbit Station Contacts Display
 	{
-		OrbitStationContactsOpt opt;
+		if (!GC->MissionPlanningActive)
+		{
+			Result = 0;
+			break;
+		}
 
-		opt.GETbase = GC->GETbase;
-		opt.sv_A = GC->rtcc->StateVectorCalc(vessel);
-		opt.lunar = nextstatcont_lunar;
-
-		GC->rtcc->OrbitStationContactsDisplay(opt, orbitstatconttable);
+		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
+		GC->rtcc->EMSTAGEN(GC->GETbase, GET, orbitstatconttable);
+		nextstatconttable.GET = -1;
 
 		Result = 0;
 	}
 	break;
 	case 36: //Next Station Contacts Display
 	{
-		GC->rtcc->EMDSTAC(orbitstatconttable, nextstatconttable);
-
-		nextstatconttable.GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
+		double GET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
+		GC->rtcc->EMDSTAC(orbitstatconttable, GET, nextstatconttable);
 
 		Result = 0;
 	}
 	break;
 	case 37: //Predicted Site Acquisition Display
 	{
-		PredictedSiteAcquisitionOpt opt;
-
-		opt.dt = predsiteacq_DT;
-		opt.GET = predsiteacq_GET;
-
-		GC->rtcc->EMDPESAD(opt, orbitstatconttable, predsiteacqtable);
+		GC->rtcc->EMDPESAD(orbitstatconttable, predsiteacqtable);
 
 		Result = 0;
 	}
@@ -4476,6 +4495,33 @@ int ARCore::subThread()
 
 		SV sv_cut = GC->rtcc->ExecuteManeuver(sv_A, GC->GETbase, EntryTIGcor, Entry_DV, 0.0, poweredenginetype);
 		GC->rtcc->MPTAddManeuver(GC->mptable, sv_A, sv_cut, "RTE", GC->LSAlt, length(dV_LVLH), mptveh, poweredenginetype);
+
+		Result = 0;
+	}
+	break;
+	case 50: //Sunrise/Sunset Display
+	{
+		if (!GC->MissionPlanningActive)
+		{
+			Result = 0;
+			break;
+		}
+
+		GC->rtcc->EMDSSEMD(GC->GETbase);
+
+		Result = 0;
+	}
+	break;
+
+	case 51: //Moonrise/Moonset Display
+	{
+		if (!GC->MissionPlanningActive)
+		{
+			Result = 0;
+			break;
+		}
+
+		GC->rtcc->EMDSSMMD(GC->GETbase);
 
 		Result = 0;
 	}

@@ -5,6 +5,41 @@
 inline double acosh(double z) { return log(z + sqrt(z + 1.0)*sqrt(z - 1.0)); }
 inline double atanh(double z){ return 0.5*log(1.0 + z) - 0.5*log(1.0 - z); }
 
+SV& SV::operator=(const MPTSV& other)
+{
+	this->gravref = other.gravref;
+	this->mass = 0.0;
+	this->MJD = other.MJD;
+	this->R = other.R;
+	this->V = other.V;
+	return *this;
+}
+
+MPTSV::MPTSV()
+{
+	R = _V(0, 0, 0);
+	V = _V(0, 0, 0);
+	MJD = 0.0;
+	gravref = NULL;
+}
+
+MPTSV::MPTSV(const SV sv)
+{
+	R = sv.R;
+	V = sv.V;
+	MJD = sv.MJD;
+	gravref = sv.gravref;
+}
+
+MPTSV& MPTSV::operator=(const SV& other)
+{
+	this->gravref = other.gravref;
+	this->MJD = other.MJD;
+	this->R = other.R;
+	this->V = other.V;
+	return *this;
+}
+
 namespace OrbMech{
 
 	CELEMENTS CELEMENTS::operator+(const CELEMENTS& c) const
@@ -1026,13 +1061,17 @@ SV coast(SV sv0, double dt)
 	return sv1;
 }
 
-void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned nmax)
+void GenerateEphemeris(MPTSV sv0, double dt, std::vector<MPTSV> &ephemeris, unsigned nmax, unsigned skip)
 {
-	SV svtemp;
+	ephemeris.clear();
+
+	MPTSV svtemp;
+	unsigned iter;
 	bool stop;
 	CoastIntegrator* coast;
 	coast = new CoastIntegrator(sv0.R, sv0.V, sv0.MJD, dt, sv0.gravref, NULL);
 	stop = false;
+	iter = 0;
 
 	svtemp = sv0;
 	ephemeris.push_back(svtemp);
@@ -1042,7 +1081,6 @@ void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned n
 		stop = coast->iteration();
 
 		svtemp.gravref = coast->GetGravRef();
-		svtemp.mass = sv0.mass;
 		svtemp.MJD = coast->GetMJD();
 		svtemp.R = coast->GetPosition();
 		svtemp.V = coast->GetVelocity();
@@ -1050,6 +1088,19 @@ void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned n
 		//Break conditions (before push_back):
 		//Only generate ephemeris for one sphere of influence
 		if (sv0.gravref != svtemp.gravref) break;
+
+		if (skip > 0)
+		{
+			if (iter < skip)
+			{
+				iter++;
+				continue;
+			}
+			else
+			{
+				iter = 0;
+			}
+		}
 
 		ephemeris.push_back(svtemp);
 
@@ -7196,6 +7247,219 @@ SV PositionMatch(SV sv_A, SV sv_P, double mu)
 	return sv_A1;
 }
 
+void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I)
+{
+	double eps, a, b, delta;
+
+	M = 0;
+	I = 0;
+	x[0] = 0.0;
+	x[1] = 0.0;
+	x[2] = 0.0;
+	x[3] = 0.0;
+	eps = -pow(10, -6);
+	if (N == 3)
+	{
+		goto OrbMech_DROOTS_B;
+	}
+	else if (N == 4)
+	{
+		goto OrbMech_DROOTS_C;
+	}
+
+OrbMech_DROOTS_A:
+	if (C != 0.0)
+	{
+		a = D / C;
+		b = E / C;
+		delta = a * a - 4.0*b;
+		if (delta < 0)
+		{
+			I = 2;
+		}
+		else
+		{
+			x[0] = (-a - sqrt(delta)) / 2.0;
+			x[1] = (-a + sqrt(delta)) / 2.0;
+			M = 2;
+		}
+	}
+	else if (D != 0.0)
+	{
+		M = 1;
+		x[0] = -E / D;
+	}
+	return;
+
+OrbMech_DROOTS_B:
+	if (B == 0.0)
+	{
+		goto OrbMech_DROOTS_A;
+	}
+	
+	double p, q, r;
+
+	p = C / B;
+	q = D / B;
+	r = E / B;
+	a = 1.0 / 3.0*(3.0*q - p * p);
+	b = 1.0 / 27.0*(2.0*p*p*p - 9.0*p*q + 27.0*r);
+	delta = pow(a, 3) / 27.0 + b * b / 4.0;
+
+	if (delta == 0.0)
+	{
+		M = 3;
+		x[0] = 2.0*pow(-b / 2.0, 1.0 / 3.0) - p / 3.0;
+		x[1] = pow(b / 2.0, 1.0 / 3.0) - p / 3.0;
+		x[2] = x[1];
+	}
+	else if (delta > 0.0)
+	{
+		I = 2;
+		M = 1;
+		x[0] = pow(-b / 2.0 + sqrt(delta), 1.0 / 3.0) + pow(-b / 2.0 - sqrt(delta), 1.0 / 3.0);
+	}
+	else
+	{
+		double phi = atan(sqrt(1.0 - b * b / 4.0*27.0 / (-pow(a, 3))) / (-b / 2.0 / sqrt(-pow(a, 3) / 27.0)));
+		M = 3;
+		x[0] = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0) - p / 3.0;
+		x[1] = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0 + PI2 / 3.0) - p / 3.0;
+		x[2] = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0 + PI2 * 2.0 / 3.0) - p / 3.0;
+	}
+	return;
+
+OrbMech_DROOTS_C:
+	if (A == 0.0)
+	{
+		goto OrbMech_DROOTS_B;
+	}
+
+	double Ba, Ca, Da, Ea, h, z;
+
+	Ba = B / A;
+	Ca = C / A;
+	Da = D / A;
+	Ea = E / A;
+	h = -Ba / 4.0;
+	p = 6.0*h*h + 3.0*h*Ba + Ca;
+	q = 4.0*pow(h, 3) + 3.0*h*h*Ba + 2.0*h*Ca + Da;
+	r = pow(h, 4) + Ba * pow(h, 3) + Ca * pow(h, 2) + Da * h + Ea;
+
+	if (q == 0.0)
+	{
+		goto OrbMech_DROOTS_G;
+	}
+	a = (p*p - 4.0*r) - 4.0 / 3.0*p*p;
+	b = 1.0 / 27.0*(16 * pow(p, 3) - 18.0*p*(p*p - 4.0*r) - 27.0*q*q);
+	delta = pow(a, 3) / 27.0 + b * b / 4.0;
+
+	if (delta == 0.0)
+	{
+		double z1, z2;
+		z1 = 2.0*pow(-b/2.0, 1.0 / 3.0);
+		z2 = pow(b / 2.0, 1.0 / 3.0);
+		z = max(z1, z2);
+	}
+	else if (delta > 0.0)
+	{
+		z = pow(-b / 2.0 + sqrt(delta), 1.0 / 3.0) + pow(-b / 2.0 - sqrt(delta), 1.0 / 3.0);
+	}
+	else
+	{
+		double z1, z2, z3;
+		double phi = atan(sqrt(1.0 - b * b / 4.0*27.0 / (-pow(a, 3))) / (-b / 2.0 / sqrt(-pow(a, 3) / 27.0)));
+		M = 3;
+		z1 = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0) - p / 3.0;
+		z2 = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0 + PI2 / 3.0) - p / 3.0;
+		z3 = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0 + PI2 * 2.0 / 3.0) - p / 3.0;
+		z = max(z1, max(z2, z3));
+	}
+
+	double ra, xi, beta, delta1, delta2;
+
+	ra = z - 2.0*p / 3.0;
+	xi = 0.5*(p + ra - q / sqrt(ra));
+	beta = 0.5*(p + ra + q / sqrt(ra));
+	delta1 = ra - 4.0*xi;
+	delta2 = ra - 4.0*beta;
+	if (delta1 < eps)
+	{
+		I = 2;
+	}
+	else
+	{
+		x[0] = ((-sqrt(ra) - sqrt(abs(delta1))) / 2.0) + h;
+		x[1] = ((-sqrt(ra) + sqrt(abs(delta1))) / 2.0) + h;
+		M = 2;
+	}
+	if (delta2 < eps)
+	{
+		I = I + 2;
+		return;
+	}
+	x[2] = ((sqrt(ra) - sqrt(abs(delta2))) / 2.0) + h;
+	x[3] = ((sqrt(ra) + sqrt(abs(delta2))) / 2.0) + h;
+	M = M + 2;
+
+	if (M > 2)
+	{
+
+	}
+	else
+	{
+		x[0] = x[2];
+		x[1] = x[3];
+		x[2] = 0.0;
+		x[3] = 0.0;
+	}
+
+	return;
+
+OrbMech_DROOTS_G:
+	delta = p * p - 4.0*r;
+	if (delta < eps)
+	{
+		I = 4;
+		return;
+	}
+
+	double y1, y2;
+
+	y1 = (-p + sqrt(abs(delta)) / 2.0);
+	y2 = (-p - sqrt(abs(delta)) / 2.0);
+
+	if (y1 < eps)
+	{
+		I = 2;
+	}
+	else
+	{
+		x[0] = sqrt(abs(y1)) + h;
+		x[1] = -sqrt(abs(y1)) + h;
+		M = 2;
+	}
+
+	if (y2 < eps)
+	{
+		I = I + 2;
+		return;
+	}
+
+	x[2] = sqrt(abs(y2)) + h;
+	x[3] = -sqrt(abs(y2)) + h;
+
+	if (M <= 0)
+	{
+		x[0] = x[2];
+		x[1] = x[3];
+		x[2] = 0.0;
+		x[3] = 0.0;
+	}
+	M = M + 2;
+	return;
+}
+
 }
 
 LGCDescentConstants::LGCDescentConstants()
@@ -7318,7 +7582,7 @@ bool CoastIntegrator::iteration()
 	{
 		M = 1;
 	}
-	dt_max = 0.3*min(dt_lim, min(K*OrbMech::power(rr, 1.5) / sqrt(mu), K*OrbMech::power(r_qc, 1.5) / sqrt(mu_Q)));
+	dt_max = 0.3*min(dt_lim, min(K*OrbMech::power(rr, 1.5) / sqrt(mu), (M == 0 ? 10e10 : K * OrbMech::power(r_qc, 1.5) / sqrt(mu_Q))));
 	Y = OrbMech::sign(t_F - t);
 	dt = Y*min(abs(t_F - t), dt_max);
 

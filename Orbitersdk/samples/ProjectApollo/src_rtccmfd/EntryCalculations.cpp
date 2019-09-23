@@ -2107,7 +2107,7 @@ bool EarthEntry::EntryIter()
 	}
 }
 
-Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI, double DVMAXI)
+RTEEarth::RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI, double DVMAXI)
 {
 	MA1 = -6.986643e7;//8e8;
 	C0 = 1.81000432e8;
@@ -2175,7 +2175,7 @@ Entry::Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GET
 	dv_max = DVMAXI;
 }
 
-void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo)
+void RTEEarth::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &xt2err_apo)
 {
 	double Dxt2;
 
@@ -2192,7 +2192,7 @@ void Entry::newxt2(int n1, double xt2err, double &xt2_apo, double &xt2, double &
 	xt2 = xt2 + Dxt2;
 }
 
-void Entry::xdviterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x)
+void RTEEarth::xdviterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double dx, double xmin, double xmax, double &x)
 {
 	int i;
 	double epsilon, p_CON, dvapo, beta8, beta9;
@@ -2232,14 +2232,14 @@ void Entry::xdviterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, 
 	}
 }
 
-void Entry::dvcalc(VECTOR3 V1B, double theta1, double theta2, double theta3, double x, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, VECTOR3 &DV, double &p_CON)
+void RTEEarth::dvcalc(VECTOR3 V1B, double theta1, double theta2, double theta3, double x, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, VECTOR3 &DV, double &p_CON)
 {
 	p_CON = theta2 / (theta1 - x*x);
 	V2 = (U_R1*x + U_H)*theta3*sqrt(p_CON);
 	DV = V2 - V1B;
 }
 
-void Entry::limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1B, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x)
+void RTEEarth::limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1B, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double xmax, double &x)
 {
 	double beta7, p_CON;
 	VECTOR3 V2, DV;
@@ -2263,7 +2263,7 @@ void Entry::limitxchange(double theta1, double theta2, double theta3, VECTOR3 V1
 	}
 }
 
-void Entry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI)
+void RTEEarth::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI)
 {
 	if (n1 == 0)
 	{
@@ -2295,7 +2295,7 @@ void Entry::reentryconstraints(int n1, VECTOR3 R1B, VECTOR3 REI, VECTOR3 VEI)
 	}
 }
 
-void Entry::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21)
+void RTEEarth::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, double &theta_lat, VECTOR3 &V2, double &x, double &dx, double &t21)
 {
 	VECTOR3 U_R1, U_H, REI, VEI;
 	double MA2, x2_err, C_FPA, MJD_L;
@@ -2320,7 +2320,7 @@ void Entry::coniciter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &theta_long, d
 	EntryCalculations::LNDING(REI, VEI, GETbase + t2 / 24.0 / 3600.0, 0.3, 2, r_rbias, theta_long, theta_lat, MJD_L);
 }
 
-void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
+void RTEEarth::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, double &x, double &theta_long, double &theta_lat, VECTOR3 &V2)
 {
 	double RD, R_ERR, dRCON, rPRE_apo, r1b, lambda, beta1, beta5, theta1, theta2, p_CON, C_FPA, MA2, x2_err, MJD_L;
 	VECTOR3 U_R1, U_V1, RPRE, VPRE, U_H, eta;
@@ -2404,7 +2404,7 @@ void Entry::precisioniter(VECTOR3 R1B, VECTOR3 V1B, double t1, double &t21, doub
 	}
 }
 
-void Entry::newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo)
+void RTEEarth::newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON, double &rPRE_apo)
 {
 	double S;
 
@@ -2430,7 +2430,7 @@ void Entry::newrcon(int n1, double RD, double rPRE, double R_ERR, double &dRCON,
 	rPRE_apo = rPRE;
 }
 
-void Entry::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE)
+void RTEEarth::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21, VECTOR3 &RPRE, VECTOR3 &VPRE)
 {
 	VECTOR3 N;
 	double beta12, x2PRE, c3, alpha_N, sing, cosg, p_N, beta2, beta3, beta4, RF, phi4, dt21, beta13, dt21apo, beta14;
@@ -2498,7 +2498,7 @@ void Entry::finalstatevector(VECTOR3 R1B, VECTOR3 V2, double beta1, double &t21,
 	}
 }
 
-double Entry::dvmaxiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double dxmax, double dv_des)
+double RTEEarth::dvmaxiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double theta2, double theta3, VECTOR3 U_R1, VECTOR3 U_H, double xmin, double dxmax, double dv_des)
 {
 	double R0, R, x_apo, p, xx, dxx, dv, dv_apo;
 	int i;
@@ -2537,7 +2537,7 @@ double Entry::dvmaxiterator(VECTOR3 R1B, VECTOR3 V1B, double theta1, double thet
 	return xx;
 }
 
-void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_FPA, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, double &x, int &n1)
+void RTEEarth::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_FPA, VECTOR3 U_R1, VECTOR3 U_H, VECTOR3 &V2, double &x, int &n1)
 {
 	double theta1, theta2, theta3, xmin, xmax, p_CON, beta6, dx;
 	VECTOR3 DV;
@@ -2652,7 +2652,7 @@ void Entry::conicreturn(int f1, VECTOR3 R1B, VECTOR3 V1B, double MA2, double C_F
 	dvcalc(V1B, theta1, theta2, theta3, x, U_R1, U_H, V2, DV, p_CON);
 }
 
-void Entry::conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, double &theta1, double &theta2, double &theta3)
+void RTEEarth::conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, double &theta1, double &theta2, double &theta3)
 {
 	double r1b, lambda, beta1, beta5, beta10;
 	r1b = length(R1B);
@@ -2684,7 +2684,7 @@ void Entry::conicinit(VECTOR3 R1B, double MA2, double &xmin, double &xmax, doubl
 	}
 }
 
-void Entry::precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2, double &C_FPA)
+void RTEEarth::precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1, VECTOR3 &U_H, double &MA2, double &C_FPA)
 {
 	VECTOR3 U_V1, eta;
 	double r1b;
@@ -2713,7 +2713,7 @@ void Entry::precomputations(bool x2set, VECTOR3 R1B, VECTOR3 V1B, VECTOR3 &U_R1,
 	}
 }
 
-bool Entry::EntryIter()
+bool RTEEarth::EntryIter()
 {
 	double theta_long, theta_lat, dlng;
 	VECTOR3 R1B, V1B, V2;
@@ -2842,7 +2842,7 @@ bool Entry::EntryIter()
 	}
 }
 
-OBJHANDLE Entry::AGCGravityRef(VESSEL *vessel)
+OBJHANDLE RTEEarth::AGCGravityRef(VESSEL *vessel)
 {
 	OBJHANDLE gravref;
 	VECTOR3 rsph;
@@ -2855,6 +2855,346 @@ OBJHANDLE Entry::AGCGravityRef(VESSEL *vessel)
 	}
 	return gravref;
 }
+
+/*ConicRTEEarthNew::ConicRTEEarthNew(std::vector<SV> &SVArray) : XArray(SVArray)
+{
+	mu = OrbMech::mu_Earth;
+	RR = OrbMech::R_Earth + 400000.0 * 0.3048;
+}
+
+void ConicRTEEarthNew::MAIN()
+{
+	//Pre-initialization
+	int J = 0;
+	SV sv;
+
+	sv = XArray[J];
+
+}
+
+void ConicRTEEarthNew::INITAL(VECTOR3 X0, VECTOR3 U0)
+{
+	VECTOR3 R1, R2, R3, R4, R5;
+	double SAZ, CAZ, T_rz_avg, T_min, T_max, T1, A_m, beta_r, p, R_a;
+
+	R1 = crossp(X0, U0);
+	R1 = unit(R1);
+	R2 = crossp(R1, X0);
+	R2 = unit(R2);
+	R4 = crossp(_V(0, 0, 1), X0);
+	R4 = unit(R4);
+	R5 = crossp(X0, R4);
+	R5 = unit(R5);
+	SAZ = dotp(R2, R4);
+	CAZ = dotp(R2, R5);
+
+	T_min = T_zmin - T0 - T_rz_avg;
+	T_max = T_zmax - T0 - T_rz_avg;
+	T1 = 77.0 + 6.2 * length(X0) / OrbMech::R_Earth - 0.103333 * pow(length(X0) / OrbMech::R_Earth, 2);
+	T1 *= 3600.0;
+	A_m = 2.0 / RR - pow(U_rmax, 2) / 4.0;
+	beta_r = EntryCalculations::ReentryTargetLine(U_rmax, false);
+	p = RR * RR*U_rmax*U_rmax*pow(sin(beta_r), 2) / mu;
+	R_a = 1.0 / A_m * (1.0 + sqrt(1.0 - p * A_m));
+}
+
+void ConicRTEEarthNew::RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_0, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a)
+{
+	double E, T_ap, T_rp, Period, sin_beta_a;
+
+	E = U_r * U_r / mu - 2.0 / RR;
+
+	if (E > 0 && QA == 1)
+	{
+		//No solution
+		return;
+	}
+	if (abs(E) - 0.001 > 0)
+	{
+		A = -1.0 / E;
+		double P = pow(RR*U_r*sin(beta_r), 2) / mu;
+		e = sqrt(1.0 - P / A);
+	}
+	else
+	{
+		A = pow(RR*U_r*sin(beta_r), 2) / mu;
+		e = 1.0;
+	}
+	V_a = sqrt(mu*(U_r*U_r / mu + 2.0 / R_a - 2.0 / RR));
+	sin_beta_a = U_r * RR / V_a / R_a * sin(beta_r);
+	beta_a = asin(sin_beta_a);
+	if (QA == 1)
+	{
+		beta_a = PI - beta_a;
+	}
+	if (QE == 1)
+	{
+		beta_a = PI2 - beta_a;
+	}
+	DV = sqrt(U_0*U_0 + V_a * V_a - 2.0*U_0*V_a*cos(beta_a - beta_0));
+	EntryCalculations::TFPCR(mu, 1, A, e, R_a, T_ap, Period);
+	EntryCalculations::TFPCR(mu, 1, A, e, RR, T_rp, Period);
+	T = T_ap - T_rp;
+	if (T < 0)
+	{
+		T = T + Period;
+	}
+}
+
+void ConicRTEEarthNew::VARMIN(double &DDT, double MD, double &MDP, int &XKa, int &SOL)
+{
+	//TBD: Units???
+	double ERR;
+	if (abs(MD) >= 0.001)
+	{
+		ERR = MD - MDP;
+		if (abs(ERR) >= 0.0001)
+		{
+			if (abs(DDT) < 0.025 && MD > 0.5)
+			{
+
+			}
+			else
+			{
+				if (ERR*(double)XKa < 0)
+				{
+					MDP = MD;
+					return;
+				}
+				else
+				{
+					if (XKa < 0)
+					{
+						XKa = 1;
+						MDP = MD;
+						return;
+					}
+					else
+					{
+						DDT = -DDT / 2.0;
+						if (abs(DDT) >= 0.001)
+						{
+							MDP = MD;
+							return;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	MDP = pow(10, 10);
+	SOL = 1;
+	DDT = 1.0;
+	return;
+}
+
+void ConicRTEEarthNew::VELCOM(double T, double RR, double R_a, double beta_r, double &beta_rp)
+{
+	double U_r, V_a, beta_a, C0, C1, C2, S1, eta_ar, VT_a, VR_a, DVR, DVT, DV, a, e, VR0, VT0, TSW6, DT;
+	int k2, info, SW6, CLA, TEMP, QA;
+
+	do
+	{
+		beta_rp = beta_r;
+		EntryCalculations::AESR(RR, R_a, beta_r, T, OrbMech::R_Earth, mu, 0.01, a, e, k2, info, U_r);
+		beta_r = EntryCalculations::ReentryTargetLine(U_r, false);
+	} while (abs(beta_r - beta_rp) >= 10e-5);
+	V_a = sqrt(U_r*U_r + mu * (1.0 / R_a - 1.0 / RR));
+	beta_a = asin(RR*U_r*sin(beta_r) / (R_a*V_a));
+	beta_a = abs(beta_a + PI * ((double)QA - 1.0));
+	C0 = R_a / RR * OrbMech::cot(beta_r);
+	C1 = (OrbMech::cot(beta_a) + C0) / (1.0 - R_a / RR);
+	C2 = (C1*C1 - 1.0) / (C1*C1 + 1.0);
+	S1 = (1.0 - C2)*C1;
+	eta_ar = atan2(S1, C2);
+	VT_a = V_a * sin(beta_a);
+	VR_a = V_a * cos(beta_a);
+	DVR = VR_a - VR0;
+	DVT = VT_a - VT0;
+	DV = sqrt(DVR*DVR + DVT * DVT);
+	if (T < TSW6)
+	{
+		SW6 = 0;
+		DT = 0.5*3600.0;
+	}
+	else
+	{
+		SW6 = 1;
+		if (CLA)
+		{
+			DT = 3.0*3600.0;
+		}
+		else
+		{
+			DT = 0.5*3600.0;
+			TEMP = ICRNGG;
+			ICRNGG = 10;
+			//EntryCalculations::REENTRYNew(0.3, ICRNGG);
+		}
+	}
+}
+
+void ConicRTEEarthNew::FCUA(double DVM, double RR, VECTOR3 R_a, int SW2, double beta_0, double &beta_r, double &DV, double &U_r)
+{
+	double V_a, beta_a, r_a;
+	int QA;
+
+	r_a = length(R_a);
+
+	//DVMINQ(FLAG, Q_e, Q_0, RR, r_a, U0, beta_0, beta_r, DV, QA, V_a, beta_a);
+	//U_r = sqrt(V_a*V_a + 2.0*OrbMech::mu_Earth*(1.0 / RR - 1.0 / r_a));
+	//beta_ra = SUBINTER(U_r);
+}
+
+void ConicRTEEarthNew::DVMINQ(int FLAG, int Q_e, int Q_0, double RR, double R0, double U0, double beta_0, double beta_r, double &DV, int &QA, double &V_a, double &beta_a)
+{
+	double K1, K2, A0, B0, X[4], Y[4], A, B, C, D, E, DVV[4], TEST;
+	int k, km, K, J, a, I;
+
+	K1 = pow(R0 / (RR*sin(beta_r)), 2);
+	K2 = 2.0*OrbMech::mu_Earth*(1.0 / RR - 1.0 / R0);
+	QA = 0;
+	A0 = U0 * sin(beta_0);
+	B0 = U0 * cos(beta_0);
+	if (abs(B0) < 0.005) //TBD: is 0.005 in ER/hrs?
+	{
+		X[0] = A0 / K1;
+		X[1] = X[0];
+		X[2] = sqrt(K2 / (K1 - 1.0));
+		X[3] = -X[2];
+		if (X[0] < X[2])
+		{
+			X[0] = X[2];
+			X[1] = X[3];
+			Y[0] = 0.0;
+			Y[1] = 0.0;
+			k = 2;
+		}
+		else
+		{
+			Y[0] = sqrt(X[0] * X[0] * (K1 - 1.0) - K2);
+			Y[1] = -Y[0];
+			Y[2] = 0.0;
+			Y[3] = 0.0;
+			k = 4;
+		}
+	RTEEarth_DVQMIN_AA:
+		km = k;
+		k = 1;
+		do
+		{
+			DVV[k - 1] = sqrt(pow(X[k - 1] - A0, 2) + pow(Y[k - 1] - B0, 2));
+			if (k != km)
+			{
+				k++;
+			}
+		} while (k != km);
+
+		goto RTEEarth_DVQMIN_D;
+	}
+	else
+	{
+		A = K1 * K1 / (K1 - 1.0);
+		B = -2.0*A0*K1*(K1 - 1.0);
+		C = -K1 * K1*K2 + A0 * A0*(K1 - 1.0) - B0 * B0*pow(K1 - 1.0, 2);
+		D = 2.0*A0*K1*K2;
+		E = -A0 * A0*K2;
+		OrbMech::DROOTS(A, B, C, D, E, 4, X, K, I);
+		km = K;
+		J = 1;
+		k = 1;
+	RTEEarth_DVQMIN_C:
+		TEST = pow(X[k - 1], 2)*(K1 - 1.0) - K2;
+		if (TEST < 0)
+		{
+			goto RTEEarth_DVQMIN_A;
+		}
+		else
+		{
+			goto RTEEarth_DVQMIN_B;
+		}
+	}
+
+RTEEarth_DVQMIN_B:
+	Y[J - 1] = B0 * X[k - 1] * (K1 - 1.0) / (X[k - 1] * (K1 - A0));
+	X[J - 1] = X[k - 1];
+	J++;
+RTEEarth_DVQMIN_A:
+	k++;
+	if (k > km)
+	{
+		k = J - 1;
+		goto RTEEarth_DVQMIN_AA;
+	}
+	else
+	{
+		goto RTEEarth_DVQMIN_C;
+	}
+
+RTEEarth_DVQMIN_D:
+	if (FLAG == 0)
+	{
+		a = 2;
+	RTEEarth_DVQMIN_BB:
+		J = a - 1;
+		DV = DVV[a - 1];
+		k = a;
+	RTEEarth_DVQMIN_DD:
+		if ((Q_0 == Q_e && DVV[k - 1] < DV) || (Q_0 != Q_e && DVV[k - 1] > DV))
+		{
+			if (FLAG == 1 && Y[k - 1] > 0)
+			{
+				DV = DVV[k - 1];
+				J = k;
+			}
+		}
+		if (k == km)
+		{
+			beta_a = atan2(X[J - 1], Y[J - 1]);
+			V_a = sqrt(pow(X[J - 1], 2) + pow(Y[J - 1], 2));
+			if ((Q_e == 0 && beta_a < PI05) || (Q_e == 1 && beta_a > 3.0*PI05))
+			{
+				QA = 1;
+			}
+		}
+		else
+		{
+			k++;
+			goto RTEEarth_DVQMIN_DD;
+		}
+	}
+	else
+	{
+		k = 1;
+	RTEEarth_DVQMIN_CC:
+		if (X[k - 1] < 0)
+		{
+			if (k == km)
+			{
+				DV = pow(10, 10);
+				return;
+			}
+			else
+			{
+				k++;
+				goto RTEEarth_DVQMIN_CC;
+			}
+		}
+		else
+		{
+			if (Y[k - 1] < 0)
+			{
+				a = k + 1;
+				k = km;
+			}
+			else
+			{
+				goto RTEEarth_DVQMIN_BB;
+			}
+		}
+	}
+}*/
 
 RTEMoon::RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double EntryLng, bool entrylongmanual)
 {

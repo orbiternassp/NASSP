@@ -82,6 +82,7 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	PPP = 0.0;
 	sprintf(REF, "");
 	REV = 0;
+	REVL = 0;
 	TAPP = 0.0;
 	TO = 0.0;
 	V = 0.0;
@@ -321,15 +322,6 @@ DetailedManeuverTable::DetailedManeuverTable()
 	sprintf_s(CFP_OPTION, "");
 }
 
-MPTSV& MPTSV::operator=(const SV& other)
-{
-	this->gravref = other.gravref;
-	this->MJD = other.MJD;
-	this->R = other.R;
-	this->V = other.V;
-	return *this;
-}
-
 MPTManeuver::MPTManeuver()
 {
 	ConfigCodeBefore = 0;
@@ -363,6 +355,7 @@ NextStationContact::NextStationContact()
 	BestAvailableAOS = false;
 	BestAvailableLOS = false;
 	BestAvailableEMAX = false;
+	REV = 0;
 }
 
 bool NextStationContact::operator<(const NextStationContact& rhs) const
@@ -373,6 +366,21 @@ bool NextStationContact::operator<(const NextStationContact& rhs) const
 	}
 
 	return GETAOS < rhs.GETAOS;
+}
+
+CapeCrossingTable::CapeCrossingTable()
+{
+	TUP = 0;
+	NumRev = 0;
+	NumRevFirst = 0;
+	NumRevLast = 0;
+	GETEphemFirst = 0.0;
+	GETEphemLast = 0.0;
+	GETCrossPrev = 0.0;
+	for (int i = 0;i < 30;i++)
+	{
+		GETCross[i] = 0.0;
+	}
 }
 
 LunarLiftoffTimeOpt::LunarLiftoffTimeOpt()
@@ -596,7 +604,7 @@ void RTCC::BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res)
 
 void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 {
-	Entry* entry;
+	RTEEarth* entry;
 	double GET;
 	bool stop;
 	SV sv;
@@ -606,7 +614,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	sv = opt->RV_MCC;
 	GET = (sv.MJD - opt->GETbase)*24.0*3600.0;
 
-	entry = new Entry(sv.R, sv.V, sv.MJD, sv.gravref, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->entrylongmanual, opt->r_rbias, opt->dv_max);
+	entry = new RTEEarth(sv.R, sv.V, sv.MJD, sv.gravref, opt->GETbase, opt->TIGguess, opt->ReA, opt->lng, opt->type, opt->entrylongmanual, opt->r_rbias, opt->dv_max);
 
 	while (!stop)
 	{
@@ -5376,14 +5384,13 @@ SV RTCC::coast(SV sv0, double dt)
 	return sv1;
 }
 
-SV RTCC::coast_conic(SV sv0, double dt)
+MPTSV RTCC::coast_conic(MPTSV sv0, double dt)
 {
-	SV sv1;
+	MPTSV sv1;
 	double mu = GGRAV * oapiGetMass(sv0.gravref);
 
 	OrbMech::rv_from_r0v0(sv0.R, sv0.V, dt, sv1.R, sv1.V, mu);
 	sv1.gravref = sv0.gravref;
-	sv1.mass = sv0.mass;
 	sv1.MJD = sv0.MJD + dt / 24.0 / 3600.0;
 
 	return sv1;
@@ -9207,7 +9214,7 @@ void RTCC::FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDig
 	OELEMENTS coe;
 	MATRIX3 Rot;
 	VECTOR3 R_equ, V_equ;
-	double lat, lng, mu, a, R_B, lng_cc, MJD_cc, GMTbase;
+	double lat, lng, mu, a, R_B, GMTbase;
 
 	//sprintf(res.VEHID, opt.v->GetName());
 	res.K = 0.0;
@@ -9215,7 +9222,6 @@ void RTCC::FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDig
 	res.GMTID = OrbMech::GETfromMJD(opt.sv_A.MJD, GMTbase);
 	res.GETID = OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase);
 	oapiGetObjectName(opt.sv_A.gravref, res.REF, 64);
-	res.REV = 0;
 
 	if (opt.sv_A.gravref == oapiGetObjectByName("Earth"))
 	{
@@ -9282,18 +9288,21 @@ void RTCC::FIDOOrbitDigitalsUpdate(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDig
 
 	res.ORBWT = opt.sv_A.mass / 0.45359237;
 
-	if (opt.sv_A.gravref == oapiGetObjectByName("Earth"))
+	res.REV = 0;
+	res.GETCC = 0.0;
+	if (EZCCSM.NumRev > 0)
 	{
-		lng_cc = -80.0*RAD;
+		int i;
+		for (i = 0;i < EZCCSM.NumRev;i++)
+		{
+			if (res.GETID < EZCCSM.GETCross[i])
+			{
+				break;
+			}
+		}
+		res.REV = EZCCSM.NumRevFirst + i - 1;
+		res.GETCC = EZCCSM.GETCross[i];
 	}
-	else
-	{
-		lng_cc = -180.0*RAD;
-	}
-
-	MJD_cc = OrbMech::P29TimeOfLongitude(opt.sv_A.R, opt.sv_A.V, opt.sv_A.MJD, opt.sv_A.gravref, lng_cc);
-	sv_cc = GeneralTrajectoryPropagation(opt.sv_A, 0, MJD_cc);
-	res.GETCC = OrbMech::GETfromMJD(sv_cc.MJD, opt.GETbase);
 }
 
 void RTCC::FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res)
@@ -9302,7 +9311,7 @@ void RTCC::FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigi
 	OELEMENTS coe;
 	MATRIX3 Rot;
 	VECTOR3 R_equ, V_equ;
-	double lat, lng, mu, a, R_B, lng_cc, MJD_cc, GETCC;
+	double lat, lng, mu, a, R_B;
 
 	sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, opt.MJD);
 
@@ -9349,23 +9358,21 @@ void RTCC::FIDOOrbitDigitalsCycle(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigi
 	res.E = coe.e;
 	res.I = coe.i*DEG;
 
-	if (sv_cur.gravref == oapiGetObjectByName("Earth"))
+	res.REV = 0;
+	res.GETCC = 0.0;
+	if (EZCCSM.NumRev > 0)
 	{
-		lng_cc = -80.0*RAD;
+		int i;
+		for (i = 0;i < EZCCSM.NumRev;i++)
+		{
+			if (res.GET < EZCCSM.GETCross[i])
+			{
+				break;
+			}
+		}
+		res.REV = EZCCSM.NumRevFirst + i - 1;
+		res.GETCC = EZCCSM.GETCross[i];
 	}
-	else
-	{
-		lng_cc = -180.0*RAD;
-	}
-
-	MJD_cc = OrbMech::P29TimeOfLongitude(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, lng_cc);
-	sv_cc = GeneralTrajectoryPropagation(sv_cur, 0, MJD_cc);
-	GETCC = OrbMech::GETfromMJD(sv_cc.MJD, opt.GETbase);
-	if (GETCC > res.GETCC + 10.0)
-	{
-		res.REV++;
-	}
-	res.GETCC = GETCC;
 
 	if (coe.e < 1.0)
 	{
@@ -9440,9 +9447,23 @@ void RTCC::FIDOOrbitDigitalsCalculateLongitude(const FIDOOrbitDigitalsOpt &opt, 
 void RTCC::FIDOOrbitDigitalsCalculateGETL(const FIDOOrbitDigitalsOpt &opt, FIDOOrbitDigitals &res)
 {
 	SV sv_cur;
-	double MJD_L;
+	if (res.REVL == 0)
+	{
+		sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, opt.MJD);
+	}
+	else
+	{
+		if (res.REVL < EZCCSM.NumRevFirst || res.REVL > EZCCSM.NumRevLast)
+		{
+			return;
+		}
 
-	sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, opt.MJD);
+		double GET_guess = EZCCSM.GETCross[res.REVL - EZCCSM.NumRevFirst];
+
+		sv_cur = GeneralTrajectoryPropagation(opt.sv_A, 0, OrbMech::MJDfromGET(GET_guess, opt.GETbase));
+	}
+	
+	double MJD_L;
 	MJD_L = OrbMech::P29TimeOfLongitude(sv_cur.R, sv_cur.V, sv_cur.MJD, sv_cur.gravref, res.L*RAD);
 	res.GETL = OrbMech::GETfromMJD(MJD_L, opt.GETbase);
 }
@@ -10070,15 +10091,32 @@ void RTCC::FIDOSpaceDigitalsGET3(const SpaceDigitalsOpt &opt, SpaceDigitals &res
 	}
 }
 
-void RTCC::OrbitStationContactsDisplay(const OrbitStationContactsOpt &opt, OrbitStationContactsTable &res)
+void RTCC::EMSTAGEN(double GETBase, double GET, OrbitStationContactsTable &res)
 {
-	//Create Ephemeris, either 20 hours or 100 vectors or until reference change
-	std::vector<SV>ephemeris;
-	OrbMech::GenerateEphemeris(opt.sv_A, 72000.0, ephemeris);
+	EphemerisDataTable EPHEM;
+	ELFECH(OrbMech::MJDfromGET(GET, GETBase), med_b03.VEH, 300, 0, EPHEM);
 
-	res.GET = OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase);
+	EMGENGEN(EPHEM, GETBase, med_b04.FUNCTION, res);
 
-	EMGENGEN(ephemeris, opt.GETbase, opt.lunar, res);
+	CapeCrossingTable *table;
+
+	if (med_b03.VEH == 1)
+	{
+		table = &EZCLEM;
+	}
+	else
+	{
+		table = &EZCCSM;
+	}
+
+	if (table->NumRev == 0) return;
+
+	for (int i = 0;i < 45;i++)
+	{
+		if (res.Stations[i].GETAOS <= 0.0) break;
+
+		res.Stations[i].REV = CapeCrossingRev(med_b03.VEH, res.Stations[i].GETAOS);
+	}
 }
 
 int RTCC::MPTAddTLI(FullMPTable &mptable, SV sv_IG, SV sv_TLI, double DV, int L)
@@ -10624,7 +10662,7 @@ int RTCC::MPTDeleteManeuver(FullMPTable &mptable)
 	return 0;
 }
 
-void RTCC::MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L)
+void RTCC::MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L, double GETBase)
 {
 	MPTable *table;
 
@@ -10639,6 +10677,24 @@ void RTCC::MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L)
 
 	table->AnchorVector = sv;
 	table->TUP++;
+
+	if (L == 1)
+	{
+		//Generate ephemeris
+		OrbMech::GenerateEphemeris(table->AnchorVector, 48.0*3600.0, EZNITLEM.table, 2048U, 1U);
+		EZNITLEM.TUP = table->TUP;
+		//Generate cape crossing
+		RMMEACC(EZNITLEM, GETBase, EZCLEM);
+	}
+	else
+	{
+		//Generate ephemeris
+		OrbMech::GenerateEphemeris(table->AnchorVector, 48.0*3600.0, EZNITCSM.table, 2048U, 1U);
+		EZNITCSM.TUP = table->TUP;
+		//Generate cape crossing
+		RMMEACC(EZNITCSM, GETBase, EZCCSM);
+	}
+	
 }
 
 bool RTCC::MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L)
@@ -11118,7 +11174,7 @@ int RTCC::MPTCopyEphemeris(FullMPTable &mptable, double GETbase)
 	return 0;
 }
 
-void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, OrbitStationContactsTable &res)
+void RTCC::EMGENGEN(const EphemerisDataTable &ephemeris, double GETbase, bool suppress_cband, OrbitStationContactsTable &res)
 {
 	std::vector<NextStationContact> acquisitions;
 	NextStationContact current;
@@ -11126,7 +11182,7 @@ void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, Orbi
 
 	for (int i = 0;i < NUMBEROFGROUNDSTATIONS;i++)
 	{
-		if (lunar && !groundstationslunar[i]) continue;
+		if (suppress_cband && !groundstationslunar[i]) continue;
 		EMXING(ephemeris, GETbase, i, acquisitions);
 	}
 
@@ -11147,11 +11203,11 @@ void RTCC::EMGENGEN(std::vector<SV> &ephemeris, double GETbase, bool lunar, Orbi
 	}
 }
 
-bool RTCC::EMXING(const std::vector<SV> &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions)
+bool RTCC::EMXING(const EphemerisDataTable &ephemeris, double GETbase, int station, std::vector<NextStationContact> &acquisitions)
 {
-	if (ephemeris.size() == 0) return false;
+	if (ephemeris.table.size() == 0) return false;
 
-	SV svtemp, sv_AOS;
+	MPTSV svtemp, sv_AOS;
 	NextStationContact current;
 	VECTOR3 R_S_equ, R, rho, N, Ntemp, rhotemp, V;
 	double MJD, sinang, MJD_AOS, LastMJD, LastSinang, MJD0, f, last_f, MJD_EMAX, sinangtemp, EMAX, MJD_LOS, GET_AOS, GET_LOS;
@@ -11162,7 +11218,7 @@ bool RTCC::EMXING(const std::vector<SV> &ephemeris, double GETbase, int station,
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
 
-	MJD0 = ephemeris[0].MJD;
+	MJD0 = ephemeris.table[0].MJD;
 	R_S_equ = OrbMech::r_from_latlong(groundstations[station][0], groundstations[station][1], 6.373338e6);
 
 EMXING_LOOP:
@@ -11173,11 +11229,11 @@ EMXING_LOOP:
 	f = last_f = 0.0;
 
 	//Find AOS
-	while (ephemeris.size() > iter)
+	while (ephemeris.table.size() > iter)
 	{
-		R = ephemeris[iter].R;
-		V = ephemeris[iter].V;
-		MJD = ephemeris[iter].MJD;
+		R = ephemeris.table[iter].R;
+		V = ephemeris.table[iter].V;
+		MJD = ephemeris.table[iter].MJD;
 
 		OrbMech::EMXINGElev(R, R_S_equ, MJD, hEarth, N, rho, sinang);
 		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
@@ -11188,7 +11244,10 @@ EMXING_LOOP:
 		if (iter > 0 && f*last_f < 0)
 		{
 			MJD_EMAX = OrbMech::LinearInterpolation(f, MJD, last_f, LastMJD, 0.0);
-			svtemp = EphemerisInterpolationConic(ephemeris, MJD_EMAX, iter - 1);
+			if (ELVCTR(ephemeris, 8, MJD_EMAX, svtemp, 1))
+			{
+				return false;
+			}
 
 			OrbMech::EMXINGElev(svtemp.R, R_S_equ, svtemp.MJD, hEarth, Ntemp, rhotemp, sinangtemp);
 			//Elevation angle above 0, there is an AOS
@@ -11201,7 +11260,7 @@ EMXING_LOOP:
 		iter++;
 	}
 
-	if (iter == ephemeris.size())
+	if (iter == ephemeris.table.size())
 	{
 		//Out of ephemeris
 		return false;
@@ -11211,13 +11270,16 @@ EMXING_LOOP:
 	if (iter == 0)
 	{
 		MJD_AOS = MJD;
-		svtemp = ephemeris.front();
-		BestAvailableAOS = true;	
+		svtemp = ephemeris.table.front();
+		BestAvailableAOS = true;
 	}
 	else
 	{
 		MJD_AOS = OrbMech::LinearInterpolation(sinang, MJD, LastSinang, LastMJD, 0.0);
-		svtemp = EphemerisInterpolationConic(ephemeris, MJD_AOS, iter - 1);
+		if (ELVCTR(ephemeris, 8, MJD_AOS, svtemp, 1))
+		{
+			return false;
+		}
 
 		n = 0;
 
@@ -11230,7 +11292,10 @@ EMXING_LOOP:
 			OrbMech::EMXINGElev(R, R_S_equ, MJD, hEarth, N, rho, sinang);
 
 			MJD_AOS = OrbMech::LinearInterpolation(sinang, MJD, LastSinang, LastMJD, 0.0);
-			svtemp = coast_conic(svtemp, (MJD_AOS - svtemp.MJD)*24.0*3600.0);
+			if (ELVCTR(ephemeris, 8, MJD_AOS, svtemp, 1))
+			{
+				return false;
+			}
 
 			LastMJD = MJD;
 			LastSinang = sinang;
@@ -11243,19 +11308,19 @@ EMXING_LOOP:
 	//Find maximum elevation angle
 	if (iter > 0) iter--;
 
-	while (ephemeris.size() > iter)
+	while (ephemeris.table.size() > iter)
 	{
-		R = ephemeris[iter].R;
-		V = ephemeris[iter].V;
-		MJD = ephemeris[iter].MJD;
+		R = ephemeris.table[iter].R;
+		V = ephemeris.table[iter].V;
+		MJD = ephemeris.table[iter].MJD;
 
 		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
 
 		//EMAX before first SV in ephemeris
 		if (iter == 0 && f < 0)
 		{
-			svtemp = ephemeris.front();
-			MJD_EMAX = ephemeris.front().MJD;
+			svtemp = ephemeris.table.front();
+			MJD_EMAX = ephemeris.table.front().MJD;
 			BestAvailableEMAX = true;
 			break;
 		}
@@ -11263,7 +11328,10 @@ EMXING_LOOP:
 		if (f*last_f < 0)
 		{
 			MJD_EMAX = OrbMech::LinearInterpolation(f, MJD, last_f, LastMJD, 0.0);
-			svtemp = EphemerisInterpolationConic(ephemeris, MJD_EMAX, iter - 1);
+			if (ELVCTR(ephemeris, 8, MJD_EMAX, svtemp, 1))
+			{
+				return false;
+			}
 			LastMJD = MJD;
 			last_f = f;
 			break;
@@ -11277,10 +11345,10 @@ EMXING_LOOP:
 	if (BestAvailableEMAX == false)
 	{
 		//Out of SVs in the ephemeris, EMAX must be after end of ephemeris
-		if (iter == ephemeris.size())
+		if (iter == ephemeris.table.size())
 		{
-			svtemp = ephemeris.back();
-			MJD_EMAX = ephemeris.back().MJD;
+			svtemp = ephemeris.table.back();
+			MJD_EMAX = ephemeris.table.back().MJD;
 			BestAvailableEMAX = true;
 		}
 		else
@@ -11296,7 +11364,10 @@ EMXING_LOOP:
 				f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
 
 				MJD_EMAX = OrbMech::LinearInterpolation(f, MJD, last_f, LastMJD, 0.0);
-				svtemp = coast_conic(svtemp, (MJD_EMAX - svtemp.MJD)*24.0*3600.0);
+				if (ELVCTR(ephemeris, 8, MJD_EMAX, svtemp, 1))
+				{
+					return false;
+				}
 
 				LastMJD = MJD;
 				last_f = f;
@@ -11311,31 +11382,35 @@ EMXING_LOOP:
 	//Find LOS
 	if (iter > 0) iter--;
 
-	while (ephemeris.size() > iter)
+	while (ephemeris.table.size() > iter)
 	{
-		R = ephemeris[iter].R;
-		V = ephemeris[iter].V;
-		MJD = ephemeris[iter].MJD;
+		R = ephemeris.table[iter].R;
+		V = ephemeris.table[iter].V;
+		MJD = ephemeris.table[iter].MJD;
 
 		OrbMech::EMXINGElev(R, R_S_equ, MJD, hEarth, N, rho, sinang);
+		f = OrbMech::EMXINGElevSlope(R, V, R_S_equ, MJD, hEarth);
 
 		//Elevation angle below 0, there is an LOS
-		if (sinang < 0) break;
+		if (sinang < 0 && f < 0) break;
 
 		LastMJD = MJD;
 		LastSinang = sinang;
 		iter++;
 	}
 
-	if (iter == ephemeris.size())
+	if (iter == ephemeris.table.size())
 	{
-		MJD_LOS = ephemeris.back().MJD;
+		MJD_LOS = ephemeris.table.back().MJD;
 		BestAvailableLOS = true;
 	}
 	else
 	{
 		MJD_LOS = OrbMech::LinearInterpolation(sinang, MJD, LastSinang, LastMJD, 0.0);
-		svtemp = EphemerisInterpolationConic(ephemeris, MJD_LOS, iter - 1);
+		if (ELVCTR(ephemeris, 8, MJD_LOS, svtemp, 1))
+		{
+			return false;
+		}
 
 		n = 0;
 
@@ -11348,7 +11423,10 @@ EMXING_LOOP:
 			OrbMech::EMXINGElev(R, R_S_equ, MJD, hEarth, N, rho, sinang);
 
 			MJD_LOS = OrbMech::LinearInterpolation(sinang, MJD, LastSinang, LastMJD, 0.0);
-			svtemp = coast_conic(svtemp, (MJD_LOS - svtemp.MJD)*24.0*3600.0);
+			if (ELVCTR(ephemeris, 8, MJD_LOS, svtemp, 1))
+			{
+				return false;
+			}
 
 			LastMJD = MJD;
 			LastSinang = sinang;
@@ -11375,7 +11453,7 @@ EMXING_LOOP:
 
 	acquisitions.push_back(current);
 
-	if (iter < ephemeris.size())
+	if (iter < ephemeris.table.size() && acquisitions.size() <= 45)
 	{
 		goto EMXING_LOOP;
 	}
@@ -11383,42 +11461,9 @@ EMXING_LOOP:
 	return true;
 }
 
-SV RTCC::EphemerisInterpolationConic(const std::vector<SV> &ephemeris, double MJD, unsigned start)
+int RTCC::ELVARY(const std::vector<MPTSV> &EPH, unsigned ORER, double MJD, bool EXTRAP, MPTSV &sv_out)
 {
-	if (start == 0)
-	{
-		//MJD is before first SV
-		if (MJD < ephemeris.front().MJD)
-		{
-			return coast_conic(ephemeris.front(), (MJD - ephemeris.front().MJD)*24.0*3600.0);
-		}
-		//After last SV
-		else if (MJD > ephemeris.back().MJD)
-		{
-			return coast_conic(ephemeris.back(), (MJD - ephemeris.back().MJD)*24.0*3600.0);
-		}
-	}
-
-	//In between
-	unsigned i = start;
-
-	while (MJD > ephemeris[i].MJD)
-	{
-		i++;
-	}
-	if ((ephemeris[i].MJD - MJD) < (MJD - ephemeris[i - 1].MJD))
-	{
-		return coast_conic(ephemeris[i], (MJD - ephemeris[i].MJD)*24.0*3600.0);
-	}
-	else
-	{
-		return coast_conic(ephemeris[i - 1], (MJD - ephemeris[i - 1].MJD)*24.0*3600.0);
-	}
-}
-
-int RTCC::ELVARY(std::vector<SV> EPH, unsigned ORER, double MJD, bool EXTRAP, SV &sv_out)
-{
-	SV RES;
+	MPTSV RES;
 	VECTOR3 TERM1, TERM2;
 	double TERM3;
 	unsigned DESLEF, DESRI;
@@ -11509,33 +11554,79 @@ int RTCC::ELVARY(std::vector<SV> EPH, unsigned ORER, double MJD, bool EXTRAP, SV
 	}
 
 	RES.MJD = MJD;
-	RES.mass = EPH[0].mass;
 	RES.gravref = EPH[0].gravref;
+
+	sv_out = RES;
 
 	return ERR;
 }
 
-void RTCC::EMDSTAC(const OrbitStationContactsTable &in, NextStationContactsTable &out)
+void RTCC::EMDSTAC(const OrbitStationContactsTable &in, double GET, NextStationContactsTable &out)
 {
-	//Just copy over the first six
-	for (unsigned i = 0;i < 6;i++)
+	unsigned j = 0;
+
+	//Clear table
+	for (unsigned k = 0;k < 6;k++)
 	{
-		out.NextStations[i] = in.Stations[i];
+		out.NextStations[k].BestAvailableAOS = false;
+		out.NextStations[k].BestAvailableEMAX = false;
+		out.NextStations[k].BestAvailableLOS = false;
+		out.NextStations[k].DELTAT = 0.0;
+		out.NextStations[k].GETAOS = 0.0;
+		out.NextStations[k].GETLOS = 0.0;
+		out.NextStations[k].MAXELEV = 0.0;
+		out.NextStations[k].REV = 0;
+		sprintf(out.NextStations[k].StationID, "");
 	}
+
+	//Search through all station contacts
+	for (unsigned i = 0;i < 45;i++)
+	{
+		//If we got 6 contacts we are done
+		if (j >= 6) break;
+		//Skip over contacts from the past
+		if (GET > in.Stations[i].GETLOS)
+		{
+			continue;
+		}
+		//Found one
+		out.NextStations[j] = in.Stations[i];
+		//If we are in AOS, modify some numbers accordingly
+		if (GET > out.NextStations[j].GETAOS)
+		{
+			out.NextStations[j].GETAOS = GET;
+			out.NextStations[j].DELTAT = out.NextStations[j].GETLOS - out.NextStations[j].GETAOS;
+			out.NextStations[j].BestAvailableAOS = true;
+		}
+		j++;
+	}
+	//Save current GET for the 12 second update cycle
+	out.GET = GET;
 }
 
-void RTCC::EMDPESAD(const PredictedSiteAcquisitionOpt &opt, const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out)
+void RTCC::EMDPESAD(const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out)
 {
 	NextStationContact empty;
+	double GET_Begin, GET_End;
 	unsigned i = 0, j = 0;
-	double GET_END = opt.GET + opt.dt;
 
-	while (opt.GET > in.Stations[i].GETAOS && i < 44)
+	if (med_u15.IND == 1)
+	{
+		GET_Begin = med_u15.PARAM1;
+		GET_End = med_u15.PARAM2;
+	}
+	else
+	{
+		GET_Begin = CapeCrossingGET(med_u15.VEH, (int)med_u15.PARAM1);
+		GET_End = CapeCrossingGET(med_u15.VEH, 1 + (int)med_u15.PARAM2);
+	}
+
+	while (GET_Begin > in.Stations[i].GETAOS && i < 44)
 	{
 		i++;
 	}
 
-	while (GET_END >= in.Stations[i].GETAOS && i < 44 && j < 39)
+	while (GET_End >= in.Stations[i].GETAOS && i < 44 && j < 39)
 	{
 		out.Stations[j] = in.Stations[i];
 		i++;
@@ -11772,6 +11863,7 @@ int RTCC::EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutM
 	double GMTbase;
 	MPTSV sv_out, sv_conv, sv_inert;
 	MPTable *table;
+	EphemerisDataTable *ephem;
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
@@ -11780,10 +11872,12 @@ int RTCC::EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutM
 	if (med_u02.VEH == 1)
 	{
 		table = &mptable.lmtable;
+		ephem = &EZNITLEM;
 	}
 	else
 	{
 		table = &mptable.cmtable;
+		ephem = &EZNITCSM;
 	}
 
 	if (table->TUP == 0) return 8;
@@ -12049,7 +12143,16 @@ int RTCC::EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutM
 	res.deltaL = LunarDeclination * DEG;
 
 	res.UpdateNo = table->TUP;
-	res.EPHB = OrbMech::GETfromMJD(table->AnchorVector.MJD, GETbase);
+	if (ephem->table.size() > 0)
+	{
+		res.EPHB = OrbMech::GETfromMJD(ephem->table.front().MJD, GETbase);
+		res.EPHE = OrbMech::GETfromMJD(ephem->table.back().MJD, GETbase);
+	}
+	else
+	{
+		res.EPHB = 0.0;
+		res.EPHE = 0.0;
+	}
 	res.LOC = OrbMech::GETfromMJD(GETbase, GMTbase);
 	res.GRRC = OrbMech::GETfromMJD(GETbase, GMTbase);
 	res.ZSC = res.ZSL = OrbMech::GETfromMJD(GETbase, GMTbase);
@@ -12398,4 +12501,670 @@ void RTCC::PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentP
 	}
 	table.DescAsc = res.azi*DEG;
 	table.PD_ThetaIgn = opt.theta_D*DEG;
+}
+
+double RTCC::RLMTLC(const EphemerisDataTable &ephemeris, double GETBase, double long_des, double GET_min, double &GET_cross)
+{
+	if (ephemeris.TUP <= 0) return -1.0;
+	if (ephemeris.table.size() == 0) return -1.0;
+
+	MPTSV sv_cur;
+	double MJD, T1, lat, lng, dlng1, T2, dlng2, Tx, dlngx;
+	unsigned i = 0;
+
+	MJD = OrbMech::MJDfromGET(GET_min, GETBase);
+
+	if (MJD > ephemeris.table.front().MJD)
+	{
+		if (MJD > ephemeris.table.back().MJD)
+		{
+			return -1.0;
+		}
+		T1 = MJD;
+	}
+	else
+	{
+		T1 = ephemeris.table.front().MJD;
+	}
+
+	while (T1 > ephemeris.table[i + 1].MJD)
+	{
+		i++;
+	}
+
+	if (ELVCTR(ephemeris, 8, T1, sv_cur, 1))
+	{
+		return -1.0;
+	}
+
+	OrbMech::latlong_from_J2000(sv_cur.R, sv_cur.MJD, sv_cur.gravref, lat, lng);
+	dlng1 = lng - long_des;
+	if (dlng1 > PI) { dlng1 -= PI2; }
+	else if (dlng1 < -PI) { dlng1 += PI2; }
+
+	if (abs(dlng1) < 0.0001)
+	{
+		GET_cross = OrbMech::GETfromMJD(T1, GETBase);
+		return 0;
+	}
+
+	if (i >= ephemeris.table.size() - 1)
+	{
+		return -1.0;
+	}
+
+	while (i < ephemeris.table.size() - 1)
+	{
+		i++;
+		sv_cur = ephemeris.table[i];
+		T2 = sv_cur.MJD;
+
+		OrbMech::latlong_from_J2000(sv_cur.R, sv_cur.MJD, sv_cur.gravref, lat, lng);
+		dlng2 = lng - long_des;
+		if (dlng2 > PI) { dlng2 -= PI2; }
+		else if (dlng2 < -PI) { dlng2 += PI2; }
+
+		if (abs(dlng2) < 0.0001)
+		{
+			GET_cross = OrbMech::GETfromMJD(T2, GETBase);
+			return 0;
+		}
+
+		if (dlng1*dlng2 < 0 && abs(dlng1 - dlng2) < PI)
+		{
+			break;
+		}
+		if (i == ephemeris.table.size() - 1)
+		{
+			return -1.0;
+		}
+		T1 = T2;
+		dlng1 = dlng2;
+	}
+
+	int iter = 0;
+
+	do
+	{
+		Tx = T1 - (T2 - T1) / (dlng2 - dlng1)*dlng1;
+		if (ELVCTR(ephemeris, 8, Tx, sv_cur, 1))
+		{
+			return -1.0;
+		}
+		OrbMech::latlong_from_J2000(sv_cur.R, sv_cur.MJD, sv_cur.gravref, lat, lng);
+		dlngx = lng - long_des;
+		if (dlngx > PI) { dlngx -= PI2; }
+		else if (dlngx < -PI) { dlngx += PI2; }
+
+		if (abs(dlngx) < 0.0001)
+		{
+			GET_cross = OrbMech::GETfromMJD(Tx, GETBase);
+			return 0;
+		}
+		if (abs(dlng2) > abs(dlng1))
+		{
+			T2 = Tx;
+			dlng2 = dlngx;
+		}
+		else
+		{
+			T1 = Tx;
+			dlng1 = dlngx;
+		}
+		iter++;
+
+	} while (iter < 30);
+
+	GET_cross = OrbMech::GETfromMJD(Tx, GETBase);
+	return abs(dlngx);
+}
+
+int RTCC::ELVCTR(const EphemerisDataTable &EPH, unsigned ORER, double MJD, MPTSV &sv_out, int option, double *LUNRSTAY)
+{
+	int IND = 0, I;
+
+	if (MJD < EPH.table[0].MJD)
+	{
+		return 8;
+	}
+	if (MJD > EPH.table.back().MJD)
+	{
+		return 16;
+	}
+	if (LUNRSTAY != NULL)
+	{
+		if (MJD >= LUNRSTAY[0] && MJD <= LUNRSTAY[1])
+		{
+			IND = -1;
+		}
+	}
+	I = 0;
+	if (EPH.mantimes.Table.size() > 0)
+	{
+		for (unsigned J = 0;J < EPH.mantimes.Table.size();J++)
+		{
+			//Equal to maneuver initiate/burnout time, go directly to 5A
+			if (MJD == EPH.mantimes.Table[J].ManData[0] || MJD == EPH.mantimes.Table[J].ManData[1])
+			{
+				goto RTCC_ELVCTR_5A;
+			}
+			//Inside burn
+			if (MJD > EPH.mantimes.Table[J].ManData[0] || MJD < EPH.mantimes.Table[J].ManData[1])
+			{
+				IND = 1;
+				goto RTCC_ELVCTR_3;
+			}
+		}
+	}
+	
+	goto RTCC_ELVCTR_5A;
+
+RTCC_ELVCTR_3:
+	ORER = 1;
+
+RTCC_ELVCTR_5A:
+	ELVARY(EPH.table, ORER, MJD, false, sv_out);
+
+	return 0;
+}
+
+int RTCC::RMMEACC(const EphemerisDataTable &ephemeris, double GETBase, CapeCrossingTable &table)
+{
+	int i, rev, rev_max = 24, rev0;
+	double lng_des, GET_min, GET_cross, GET_cur;
+
+	GET_cur = OrbMech::GETfromMJD(oapiGetSimMJD(), GETBase);
+
+	rev0 = 1;
+
+	//Find current rev
+	for (i = 0;i < table.NumRev;i++)
+	{
+		if (GET_cur < table.GETCross[i])
+		{
+			rev0 = i + 1;
+			break;
+		}
+	}
+
+	for (i = 0;i < 30;i++)
+	{
+		table.GETCross[i] = 0.0;
+	}
+
+	if (ephemeris.table.front().gravref == oapiGetObjectByName("Earth"))
+	{
+		lng_des = -80.0*RAD;
+	}
+	else
+	{
+		lng_des = -180.0*RAD;
+	}
+
+	table.TUP = ephemeris.TUP;
+	table.GETEphemFirst = OrbMech::GETfromMJD(ephemeris.table.front().MJD, GETBase);
+	table.GETEphemLast = OrbMech::GETfromMJD(ephemeris.table.back().MJD, GETBase);
+
+	GET_min = OrbMech::GETfromMJD(ephemeris.table.front().MJD, GETBase);
+
+	for (rev = 0;rev < rev_max;rev++)
+	{
+		if (RLMTLC(ephemeris, GETBase, lng_des, GET_min, GET_cross))
+		{
+			break;
+		}
+
+		table.GETCross[rev] = GET_cross;
+
+		GET_min = GET_cross + 3600.0;
+	}
+
+	table.NumRevFirst = rev0 + 1;
+	table.NumRevLast = rev0 + rev;
+	table.NumRev = rev;
+
+	return 0;
+}
+
+int RTCC::EMMENV(const EphemerisDataTable &ephemeris, double GETBase, double GET_begin, bool sun, SunriseSunsetTable &table)
+{
+	SunriseSunsetData data;
+	MPTSV sv_cur;
+	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
+	VECTOR3 R_EM, V_EM, R_ES, R_MS, s;
+	double R_E, cos_theta, cos_theta_old, MJD_old, MJD, MJD_begin;
+	unsigned iter = 0;
+	bool sight, sight_old, rise;
+	int dataset = 0;
+	int counter = 0;
+	int iter2 = 0;
+
+	if (EZNITCSM.table.size() == 0) return 1;
+
+	if (sun == false && ephemeris.table.front().gravref != hEarth)
+	{
+		return 1;
+	}
+
+	MJD_begin = OrbMech::MJDfromGET(GET_begin, GETBase);
+
+	while (ephemeris.table[iter].MJD < MJD_begin)
+	{
+		iter++;
+	}
+
+	table.num = 0;
+
+	//Find environment change
+	while (iter < ephemeris.table.size())
+	{
+		sv_cur = ephemeris.table[iter];
+		OrbMech::PLEFEM(pzefem, sv_cur.MJD, R_EM, V_EM, R_ES);
+
+		if (sun)
+		{
+			if (sv_cur.gravref == hEarth)
+			{
+				R_MS = R_ES;
+				R_E = OrbMech::R_Earth;
+			}
+			else
+			{
+				R_MS = R_ES - R_EM;
+				R_E = OrbMech::R_Moon;
+			}
+		}
+		else
+		{
+			R_MS = R_EM;
+			R_E = OrbMech::R_Earth;
+		}
+
+		sight = OrbMech::sight(sv_cur.R, R_MS, R_E);
+		s = unit(R_MS);
+
+		cos_theta = length(sv_cur.R - s * dotp(sv_cur.R, s)) - R_E;
+		if (iter == 0)
+		{
+			sight_old = sight;
+		}
+		if (sight != sight_old)
+		{
+			if (sight)
+			{
+				//sunrise
+				rise = true;
+			}
+			else
+			{
+				//sunset
+				rise = false;
+			}
+
+			//Environment change found
+
+			iter2 = 0;
+
+			while (abs(sv_cur.MJD - MJD_old)*24.0*3600.0 > 1.5)
+			{
+				MJD = sv_cur.MJD - cos_theta * (sv_cur.MJD - MJD_old) / (cos_theta - cos_theta_old);
+				cos_theta_old = cos_theta;
+				MJD_old = sv_cur.MJD;
+				ELVCTR(ephemeris, 8, MJD, sv_cur, 1);
+				cos_theta = length(sv_cur.R - s * dotp(sv_cur.R, s)) - R_E;
+				iter2++;
+				if (iter2 > 20)
+				{
+					return 2;
+				}
+			}
+
+			if (rise)
+			{
+				data.GETSR = OrbMech::GETfromMJD(MJD, GETBase);
+			}
+			else
+			{
+				data.GETSS = OrbMech::GETfromMJD(MJD, GETBase);
+			}
+
+			VECTOR3 R_scal = unit(sv_cur.R)*R_E;
+			cos_theta_old = length(R_scal - s * dotp(R_scal, s)) - R_E;
+			MJD_old = sv_cur.MJD;
+			MJD = MJD_old + 10.0 / 24.0 / 3600.0;
+			ELVCTR(ephemeris, 8, MJD, sv_cur, 1);
+			R_scal = unit(sv_cur.R)*R_E;
+			cos_theta = length(R_scal - s * dotp(R_scal, s)) - R_E;
+			iter2 = 0;
+
+			while (abs(sv_cur.MJD - MJD_old)*24.0*3600.0 > 1.5)
+			{
+				MJD = sv_cur.MJD - cos_theta * (sv_cur.MJD - MJD_old) / (cos_theta - cos_theta_old);
+				cos_theta_old = cos_theta;
+				MJD_old = sv_cur.MJD;
+				ELVCTR(ephemeris, 8, MJD, sv_cur, 1);
+				R_scal = unit(sv_cur.R)*R_E;
+				cos_theta = length(R_scal - s * dotp(R_scal, s)) - R_E;
+				iter2++;
+				if (iter2 > 20)
+				{
+					return 2;
+				}
+			}
+
+			if (rise)
+			{
+				data.GETTR = OrbMech::GETfromMJD(MJD, GETBase);
+			}
+			else
+			{
+				data.GETTS = OrbMech::GETfromMJD(MJD, GETBase);
+			}
+			dataset++;
+			if (dataset >= 2)
+			{
+				dataset = 0;
+				table.data[counter] = data;
+				counter++;
+			}
+			if (counter >= 8)
+			{
+				break;
+			}
+		}
+
+		sight_old = sight;
+		cos_theta_old = cos_theta;
+		MJD_old = sv_cur.MJD;
+		iter++;
+	}
+
+	table.num = counter;
+
+	return 0;
+}
+
+void RTCC::EMDSSEMD(double GETBase)
+{
+	double GET_begin, get, Pitch, Yaw;
+
+	if (med_u08.IND == 1)
+	{
+		GET_begin = med_u08.PARM;
+	}
+	else
+	{
+		int rev = (int)med_u08.PARM;
+		if (EZCCSM.NumRevFirst < rev || rev > EZCCSM.NumRevLast)
+		{
+			return;
+		}
+		GET_begin = EZCCSM.GETCross[rev - EZCCSM.NumRevFirst];
+	}
+
+	for (int i = 0;i < 8;i++)
+	{
+		EZSSTAB.data[i].REV = 0;
+		EZSSTAB.data[i].GETTR = 0.0;
+		EZSSTAB.data[i].GETSR = 0.0;
+		EZSSTAB.data[i].theta_SR = 0.0;
+		EZSSTAB.data[i].psi_SR = 0.0;
+		EZSSTAB.data[i].GETTS = 0.0;
+		EZSSTAB.data[i].GETSS = 0.0;
+		EZSSTAB.data[i].theta_SS = 0.0;
+		EZSSTAB.data[i].psi_SS = 0.0;
+	}
+
+	if (EMMENV(EZNITCSM, GETBase, GET_begin, true, EZSSTAB))
+	{
+		return;
+	}
+
+	if (EZSSTAB.num == 0) return;
+
+	for (int i = 0;i < EZSSTAB.num;i++)
+	{
+		if (EZSSTAB.data[i].GETSR > EZSSTAB.data[i].GETSS)
+		{
+			get = EZSSTAB.data[i].GETSS;
+		}
+		else
+		{
+			get = EZSSTAB.data[i].GETSR;
+		}
+
+		EZSSTAB.data[i].REV = CapeCrossingRev(3, get);
+		ECMPAY(EZNITCSM, OrbMech::MJDfromGET(EZSSTAB.data[i].GETSR, GETBase), true, Pitch, Yaw);
+		EZSSTAB.data[i].theta_SR = Pitch * DEG;
+		EZSSTAB.data[i].psi_SR = Yaw * DEG;
+		ECMPAY(EZNITCSM, OrbMech::MJDfromGET(EZSSTAB.data[i].GETSS, GETBase), true, Pitch, Yaw);
+		EZSSTAB.data[i].theta_SS = Pitch * DEG;
+		EZSSTAB.data[i].psi_SS = Yaw * DEG;
+	}
+}
+
+void RTCC::EMDSSMMD(double GETBase)
+{
+	double GET_begin, get, Pitch, Yaw;
+
+	if (med_u07.IND == 1)
+	{
+		GET_begin = med_u07.PARM;
+	}
+	else
+	{
+		int rev = (int)med_u07.PARM;
+		if (EZCCSM.NumRevFirst < rev || rev > EZCCSM.NumRevLast)
+		{
+			return;
+		}
+		GET_begin = EZCCSM.GETCross[rev - EZCCSM.NumRevFirst];
+	}
+
+	for (int i = 0;i < 8;i++)
+	{
+		EZMMTAB.data[i].REV = 0;
+		EZMMTAB.data[i].GETTR = 0.0;
+		EZMMTAB.data[i].GETSR = 0.0;
+		EZMMTAB.data[i].theta_SR = 0.0;
+		EZMMTAB.data[i].psi_SR = 0.0;
+		EZMMTAB.data[i].GETTS = 0.0;
+		EZMMTAB.data[i].GETSS = 0.0;
+		EZMMTAB.data[i].theta_SS = 0.0;
+		EZMMTAB.data[i].psi_SS = 0.0;
+	}
+
+	if (EMMENV(EZNITCSM, GETBase, GET_begin, false, EZMMTAB))
+	{
+		return;
+	}
+
+	if (EZMMTAB.num == 0) return;
+
+	for (int i = 0;i < EZMMTAB.num;i++)
+	{
+		if (EZMMTAB.data[i].GETSR > EZMMTAB.data[i].GETSS)
+		{
+			get = EZMMTAB.data[i].GETSS;
+		}
+		else
+		{
+			get = EZMMTAB.data[i].GETSR;
+		}
+
+		EZMMTAB.data[i].REV = CapeCrossingRev(3, get);
+		ECMPAY(EZNITCSM, OrbMech::MJDfromGET(EZMMTAB.data[i].GETSR, GETBase), false, Pitch, Yaw);
+		EZMMTAB.data[i].theta_SR = Pitch * DEG;
+		EZMMTAB.data[i].psi_SR = Yaw * DEG;
+		ECMPAY(EZNITCSM, OrbMech::MJDfromGET(EZMMTAB.data[i].GETSS, GETBase), false, Pitch, Yaw);
+		EZMMTAB.data[i].theta_SS = Pitch * DEG;
+		EZMMTAB.data[i].psi_SS = Yaw * DEG;
+	}
+}
+
+int RTCC::CapeCrossingRev(int L, double GET)
+{
+	CapeCrossingTable *table;
+	if (L == 1)
+	{
+		table = &EZCLEM;
+	}
+	else
+	{
+		table = &EZCCSM;
+	}
+
+	if (table->NumRev == 0)
+	{
+		return 0;
+	}
+
+	if (GET < table->GETCross[0])
+	{
+		return table->NumRevFirst - 1;
+	}
+	else if (GET > table->GETCross[table->NumRev - 1])
+	{
+		return table->NumRevLast;
+	}
+
+	for (int i = 0;i < table->NumRev;i++)
+	{
+		if (table->GETCross[i] > GET)
+		{
+			return i + table->NumRevFirst - 1;
+		}
+	}
+
+	return 0;
+}
+
+double RTCC::CapeCrossingGET(int L, int rev)
+{
+	CapeCrossingTable *table;
+	if (L == 1)
+	{
+		table = &EZCLEM;
+	}
+	else
+	{
+		table = &EZCCSM;
+	}
+
+	if (table->NumRev == 0)
+	{
+		return -1.0;
+	}
+
+	if (rev < table->NumRevFirst || rev >table->NumRevLast)
+	{
+		return -1.0;
+	}
+
+	return table->GETCross[rev - table->NumRevFirst];
+}
+
+void RTCC::ECMPAY(const EphemerisDataTable &EPH, double MJD, bool sun, double &Pitch, double &Yaw)
+{
+	MPTSV sv_out;
+	VECTOR3 R_EM, V_EM, R_ES, R_VS, X_B, X_L, Y_L, Z_L;
+
+	ELVCTR(EPH, 8, MJD, sv_out, 1);
+	OrbMech::PLEFEM(pzefem, MJD, R_EM, V_EM, R_ES);
+	if (sun)
+	{
+		if (sv_out.gravref == oapiGetObjectByName("Earth"))
+		{
+			R_VS = R_ES - sv_out.R;
+		}
+		else
+		{
+			R_VS = (R_ES - R_EM) - sv_out.R;
+		}
+	}
+	else
+	{
+		if (sv_out.gravref == oapiGetObjectByName("Earth"))
+		{
+			R_VS = R_EM - sv_out.R;
+		}
+		else
+		{
+			R_VS = -sv_out.R;
+		}
+	}
+
+	X_B = unit(R_VS);
+	Z_L = unit(-sv_out.R);
+	Y_L = unit(crossp(sv_out.V, sv_out.R));
+	X_L = crossp(Y_L, Z_L);
+
+	Pitch = asin(dotp(-X_B, Z_L));
+	Yaw = atan2(dotp(X_B, Y_L), dotp(X_B, X_L));
+}
+
+int RTCC::ELFECH(double MJD, int L, unsigned vec_tot, unsigned vec_bef, EphemerisDataTable &EPHEM)
+{
+	EphemerisDataTable *maintable;
+	unsigned LO, HI, temp;
+
+	if (L == 1)
+	{
+		maintable = &EZNITLEM;
+	}
+	else
+	{
+		maintable = &EZNITCSM;
+	}
+
+	if (MJD < maintable->table.front().MJD)
+	{
+		return 1;
+	}
+	if (MJD > maintable->table.back().MJD)
+	{
+		return 1;
+	}
+
+	LO = 0;
+	HI = maintable->table.size() - 1;
+
+	do
+	{
+		temp = (LO + HI) / 2;
+		if (MJD > maintable->table[temp].MJD)
+		{
+			LO = temp;
+		}
+		else
+		{
+			HI = temp;
+		}
+	} while (HI - LO > 1);
+
+	if (LO - vec_bef < 0)
+	{
+		LO = 0;
+	}
+	else
+	{
+		LO = LO - vec_bef;
+	}
+
+	HI = LO + vec_tot;
+
+	if (HI >= maintable->table.size())
+	{
+		HI = maintable->table.size() - 1;
+	}
+
+	auto first = maintable->table.cbegin() + LO;
+	auto last = maintable->table.cbegin() + HI;
+
+	EPHEM.table.clear();
+	EPHEM.table.assign(first, last);
+	EPHEM.mantimes = maintable->mantimes;
+	EPHEM.TUP = maintable->TUP;
+
+	return 0;
 }

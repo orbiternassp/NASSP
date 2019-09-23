@@ -128,9 +128,9 @@ private:
 	double EntryInterface;
 };
 
-class Entry {
+class RTEEarth {
 public:
-	Entry(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI, double DVMAXI);
+	RTEEarth(VECTOR3 R0B, VECTOR3 V0B, double mjd, OBJHANDLE gravref, double GETbase, double EntryTIG, double EntryAng, double EntryLng, int critical, bool entrylongmanual, double RRBI, double DVMAXI);
 	bool EntryIter();
 
 	double EntryTIGcor; //Corrected Time of Ignition for the Reentry Maneuver
@@ -194,6 +194,62 @@ private:
 	double r_rbias;
 	double dv_max;
 };
+
+/*class ConicRTEEarthNew
+{
+public:
+	ConicRTEEarthNew(std::vector<SV> &SVArray);
+	void MAIN();
+protected:
+
+	//SUBROUTINES:
+	void INITAL(VECTOR3 X0, VECTOR3 U0);
+	void RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_0, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a);
+	void DVMINQ(int FLAG, int Q_e, int Q_0, double RR, double R0, double U0, double beta_0, double beta_r, double &DV, int &QA, double &V_a, double &beta_a);
+	void FCUA(double DVM, double RR, VECTOR3 R_a, int SW2, double beta_0, double &beta_r, double &DV, double &U_r);
+	void VELCOM(double T, double RR, double R_a, double beta_r, double &beta_rp);
+	void VARMIN(double &DDT, double MD, double &MDP, int &XKa, int &SOL);
+	void TMIN();
+
+	//INPUTS:
+
+	//State vector array
+	std::vector<SV> &XArray;
+	//Maximum DV to be used for the abort manuever
+	double DVM;
+	//Time at which maneuver is to be computed
+	double T0;
+	//Flag that defines the reentry mode which is to be simulated
+	int ICRNGG;
+	//Maximum inclination computed at reentry
+	double I_rmax;
+	//Maximum reentry speed
+	double U_rmax;
+	//Constant reentry relative range
+	double RRBI;
+	//Flag that selects the reentry target line
+	int IMSFN;
+	//Earliest abort time to be considered
+	double T_omin;
+	//Latest abort time to be considered
+	double T_omax;
+	double lambda_z;
+	double delta_z;
+	double T_zmin;
+	double T_zmax;
+	double MDM;
+
+	//PROGRAM SYMBOLS
+
+	double mu;
+	double RR;
+	
+	//Flag that indicates whether solution has been found
+	//0 = TCUA or FCUA solution found
+	//1 = no solution found
+	//2 = PTP or ATP solution found
+	int NOSOLN;
+};*/
 
 class RTEMoon
 {
