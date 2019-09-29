@@ -467,7 +467,7 @@ void SoundLib::SoundOptionOnOff(int option,BOOL status)
 		Soundlib->SetDefaultSoundEnabled(XRSound::Touchdown, status);
 		Soundlib->SetDefaultSoundEnabled(XRSound::WheelStop, status);
 		Soundlib->SetDefaultSoundEnabled(XRSound::TiresRolling, status);
-		Soundlib->SetDefaultSoundEnabled(XRSound::WheekBrakes, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Wheekbrakes, status);
 		break;
 	case PLAYCABINAIRCONDITIONING:
 		Soundlib->SetDefaultSoundEnabled(XRSound::AirConditioning, status);
