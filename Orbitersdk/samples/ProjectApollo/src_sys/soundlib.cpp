@@ -413,7 +413,56 @@ void SoundLib::LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 void SoundLib::SoundOptionOnOff(int option,BOOL status)
 
 {
-	::SoundOptionOnOff(SoundlibId, option, status);
+	// The right way to do this is to go through every vessel and modify
+	// the option to be the enum, but that would mean including XRSound.h
+	// to every vessel. I'll instead do a lookup here.
+	switch (option) {
+	case PLAYCOUNTDOWNWHENTAKEOFF:
+		Soundlib->SetDefaultSoundEnabled(XRSound::Liftoff, status);
+		break;
+	case PLAYWHENATTITUDEMODECHANGE:
+		Soundlib->SetDefaultSoundEnabled(XRSound::Rotation, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Translation, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Off, status);
+		break;
+	case PLAYDOCKINGSOUND:
+		Soundlib->SetDefaultSoundEnabled(XRSound::Docking, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::DockingCallout, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Undocking, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::UndockingCallout, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::DockingDistanceCalloutsGroup, status);
+		break;
+	case PLAYRADARBIP:
+		Soundlib->SetDefaultSoundEnabled(XRSound::DockingRadarBeep, status);
+		break;
+	case PLAYLANDINGANDGROUNDSOUND:
+		Soundlib->SetDefaultSoundEnabled(XRSound::Crash, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::MetalCrunch, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::WheelChirp, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::Touchdown, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::WheelStop, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::TireRolling, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::WheelBrakes, status);
+		break;
+	case PLAYCABINAIRCONDITIONING:
+		Soundlib->SetDefaultSoundEnabled(XRSound::AirConditioning, status);
+		break;
+	case PLAYCABINRANDOMAMBIANCE:
+		Soundlib->SetDefaultSoundEnabled(XRSound::CabinAmbianceGroup, status);
+		break;
+	case PLAYRADIOATC:
+		Soundlib->SetDefaultSoundEnabled(XRSound::RadioATCGroup, status);
+		break;
+	case DISPLAYTIMER:
+		// XRSound doesn't have this
+		break;
+	}
+
+	// Disable XRSound things while we're at it
+	Soundlib->SetDefaultSoundEnabled(XRSound::AudioGreeting, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::SubsonicCallout, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::MachCalloutsGroup, false);
+	Soundlib->SetDefaultSoundEnabled(XRSound::OneHundredKnots, false);
 }
 
 void SoundLib::SetLanguage(char *language)
