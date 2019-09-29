@@ -77,7 +77,7 @@ bool SoundData::play(int flags, int libflags, int volume, int playvolume, int fr
 
 {
 	if (valid) {
-		if (!Soundlib->PlayWav(id, (bool) flags, playvolume/255.0))
+		if (!Soundlib->PlayWav(id, (bool) flags, playvolume/255.0f))
 		{
 			return false;
 		}
@@ -249,6 +249,31 @@ SoundData *SoundLib::DoLoadSound(char *SoundPath, EXTENDEDPLAY extended)
 
 {
 	SoundData *s;
+	XRSound::PlaybackType t;
+
+	switch (extended) {
+	case INTERNAL_ONLY:
+		t = XRSound::InternalOnly;
+		break;
+	case BOTHVIEW_FADED_CLOSE:
+		t = XRSound::BothViewClose;
+		break;
+	case BOTHVIEW_FADED_MEDIUM:
+		t = XRSound::BothViewMedium;
+		break;
+	case BOTHVIEW_FADED_FAR:
+		t = XRSound::BothViewFar;
+		break;
+	case EXTERNAL_ONLY_FADED_CLOSE:
+	case EXTERNAL_ONLY_FADED_MEDIUM:
+	case EXTERNAL_ONLY_FADED_FAR:
+		// Will hope these all will work with Wind
+		t = XRSound::Wind;
+		break;
+	case DEFAULT:
+	default:
+		t = XRSound::Global;
+	}
 
 	//
 	// If the sound already exists, return it.
@@ -272,7 +297,7 @@ SoundData *SoundLib::DoLoadSound(char *SoundPath, EXTENDEDPLAY extended)
 	// So the file exists and we have a free slot. Try to load it.
 	//
 
-	if (Soundlib->LoadWav(id, s->GetFilename(), extended) == 0)
+	if (Soundlib->LoadWav(id, s->GetFilename(), t) == 0)
 		return 0;
 
 
@@ -441,14 +466,14 @@ void SoundLib::SoundOptionOnOff(int option,BOOL status)
 		Soundlib->SetDefaultSoundEnabled(XRSound::WheelChirp, status);
 		Soundlib->SetDefaultSoundEnabled(XRSound::Touchdown, status);
 		Soundlib->SetDefaultSoundEnabled(XRSound::WheelStop, status);
-		Soundlib->SetDefaultSoundEnabled(XRSound::TireRolling, status);
-		Soundlib->SetDefaultSoundEnabled(XRSound::WheelBrakes, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::TiresRolling, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::WheekBrakes, status);
 		break;
 	case PLAYCABINAIRCONDITIONING:
 		Soundlib->SetDefaultSoundEnabled(XRSound::AirConditioning, status);
 		break;
 	case PLAYCABINRANDOMAMBIANCE:
-		Soundlib->SetDefaultSoundEnabled(XRSound::CabinAmbianceGroup, status);
+		Soundlib->SetDefaultSoundEnabled(XRSound::CabinAmbienceGroup, status);
 		break;
 	case PLAYRADIOATC:
 		Soundlib->SetDefaultSoundEnabled(XRSound::RadioATCGroup, status);
