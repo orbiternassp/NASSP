@@ -77,7 +77,7 @@ bool SoundData::play(int flags, int libflags, int volume, int playvolume, int fr
 
 {
 	if (valid) {
-		if (!Soundlib->PlayWav(id, flags, playvolume/255.0))
+		if (!Soundlib->PlayWav(id, (bool) flags, playvolume/255.0))
 		{
 			return false;
 		}

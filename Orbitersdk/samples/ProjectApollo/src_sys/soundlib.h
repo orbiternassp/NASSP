@@ -27,6 +27,106 @@
 
 #include "XRSound.h"
 
+/** ORBITERSOUND CODE DUMP  **/
+////////////////////////////////////////////
+// KEYWORDS
+////////////////////////////////////////////
+
+//These are the keywords used by SoundOptionOnOff()
+#define PLAYCOUNTDOWNWHENTAKEOFF		1	// The countdown when you take-off
+#define PLAYWHENATTITUDEMODECHANGE		3	// Play "rotation" "linear" sound 
+#define PLAYGPWS						4	// The GPWS sound
+#define PLAYMAINTHRUST					5	// Main thrust sound
+#define PLAYHOVERTHRUST					6	// The hover thrust sound
+#define PLAYATTITUDETHRUST				7	// The attitude thrust sound
+#define PLAYDOCKINGSOUND				8	// The docking sound and radio
+#define PLAYRADARBIP					9	// The radar 'bip' when near another vessel
+#define PLAYWINDAIRSPEED				10	// The wind airspeed when atmosphere
+#define PLAYDOCKLANDCLEARANCE			11	// The landing clearance sound.
+#define PLAYLANDINGANDGROUNDSOUND		12	// Rolling, landing, speedbrake, crash sound
+#define PLAYCABINAIRCONDITIONING		13	// Play the air conditionning sound
+#define PLAYCABINRANDOMAMBIANCE			14	// Play the random pump and rumble sound
+#define PLAYWINDAMBIANCEWHENLANDED		15	// Play the wind sound when landed
+#define PLAYRADIOATC					16	// Play the atc radio sound 
+#define DISPLAYTIMER					17	// Display the timer text at the bottom of the screen
+#define DISABLEAUTOPILOTWHENTIMEWARP 	18	// The auto-disable of pilot if you time warp
+#define ALLOWRADIOBLACKOUT				19	// Allows the radio blackout when reentry
+#define MUTEORBITERSOUND				20	// Stop all sound (but doesn't forbid further play)
+#define PLAYRETROTHRUST					21	// --- NEW OrbiterSound 4.0 
+#define PLAYUSERTHRUST					22	// --- NEW OrbiterSound 4.0, the aux or user group thrust. (eg: atlantis SRB)
+#define PLAYWINDCOCKPITOPEN				23	// --- NEW OrbiterSound 4.0 if TRUE play planet wind and base sound even in internal view.
+#define PLAYREENTRYAIRSPEED				24	// --- NEW OrbiterSound 4.0 the reentry sound, see demo scenario "reentry sound"
+
+//These are the keywords used by ReplaceStockSound()
+#define REPLACE_MAIN_THRUST					10	// Replace the main thrust sound
+#define REPLACE_HOVER_THRUST				11	// Replace the hover sound
+#define REPLACE_RCS_THRUST_ATTACK			12	// Replace the rcs attack thrust
+#define REPLACE_RCS_THRUST_SUSTAIN			13	// Replace the rcs sustain thrust
+#define REPLACE_AIR_CONDITIONNING	 		14	// Replace the air conditionning sound
+#define REPLACE_COCKPIT_AMBIENCE_1	 		15	// Replace the wave 1 used for cockpit ambience
+#define REPLACE_COCKPIT_AMBIENCE_2			16	// Replace the wave 2 used for cockpit ambience
+#define REPLACE_COCKPIT_AMBIENCE_3			17	// Replace the wave 3 used for cockpit ambience
+#define REPLACE_COCKPIT_AMBIENCE_4			18	// Replace the wave 4 used for cockpit ambience
+#define REPLACE_COCKPIT_AMBIENCE_5	 		19	// Replace the wave 5 used for cockpit ambience
+#define REPLACE_COCKPIT_AMBIENCE_6			20	// Replace the wave 6 used for cockpit ambience
+#define REPLACE_COCKPIT_AMBIENCE_7			21	// Replace the wave 7 used for cockpit ambience
+#define REPLACE_COCKPIT_AMBIENCE_8			22	// Replace the wave 8 used for cockpit ambience
+#define REPLACE_COCKPIT_AMBIENCE_9			23	// Replace the wave 9 used for cockpit ambience
+#define REPLACE_MODE_ROTATION				24	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_MODE_TRANSLATION			25	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_MODE_ATTITUDEOFF			26	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_WIND_AIRSPEED				27	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_REENTRY_AIRSPEED			28	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_LAND_TOUCHDOWN				29	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_GROUND_ROLL					30	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_WHEELBRAKE		   			31	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_CRASH_SOUND					32	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_DOCKING						33	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_UNDOCKING					34	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_RADIOLANDCLEARANCE	 		35	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_DOCKING_RADIO				36	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_UNDOCKING_RADIO		 		37	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_RADAR_APPROACH		 		38	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_RADAR_CLOSE					39	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_RETRO_THRUST		 		40	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_USER_THRUST					41	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACE_COUNTDOWN_WHENTAKEOFF 		42	// --- NEW OrbiterSound 4.0 Self explanatory
+#define REPLACEALLGPWSSOUND_README_FOR_USE	43	// see below warning!
+//
+// WARNING for "REPLACEALLGPWSSOUND_README_FOR_USE"
+// Set parm to "yes" instead of WAV filename. You must provide all the 12 GPWS sound in your 
+// vessel's config folder. To find this folder's name without headache, simply watch 
+// OrbiterSound_log.txt after trying your vessel; you'll have a load error with the full path.
+// Example: 
+// 'unable to load 3D wave: Sound\_CustomVesselsSounds\ShuttlePBSDKDemo\-10.wav'
+
+// This is the structure used by Set3dWaveParameters
+typedef struct OS3DCONE {
+    DWORD dwInsideConeAngle;
+    DWORD dwOutsideConeAngle;
+    VECTOR3 vConeOrientation;
+    double lConeOutsideVolume;
+} OS3DCONE;
+
+// These are the keywords used by PlayVesselWave
+#define NOLOOP	0
+#define LOOP	1
+
+// These are the keywords used by "RequestLoadWave***()"
+typedef enum{
+		DEFAULT,
+		INTERNAL_ONLY,
+		BOTHVIEW_FADED_CLOSE,
+		BOTHVIEW_FADED_MEDIUM,
+		BOTHVIEW_FADED_FAR,
+		EXTERNAL_ONLY_FADED_CLOSE,
+		EXTERNAL_ONLY_FADED_MEDIUM,
+		EXTERNAL_ONLY_FADED_FAR,
+		RADIO_SOUND,
+}EXTENDEDPLAY;
+
+/** END ORBITERSOUND CODE DUMP  **/
+
 ///
 /// \ingroup Sound
 ///
