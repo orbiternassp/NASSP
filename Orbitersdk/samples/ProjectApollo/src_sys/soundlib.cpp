@@ -3,7 +3,7 @@
   Copyright 2004-2005 Mark Grant
 
   ORBITER sound library.
-  This code caches sounds for the OrbiterSound library so that
+  This code caches sounds for the XRSound library so that
   you don't have to keep track of IDs.
 
   Project Apollo is free software; you can redistribute it and/or modify
@@ -43,7 +43,7 @@ SoundData::SoundData()
 	valid = false;
 	id = (-1);
 	filename[0] = 0;
-	SoundlibId = 0;
+	Soundlib = NULL;
 }
 
 SoundData::~SoundData()
@@ -77,7 +77,7 @@ bool SoundData::play(int flags, int libflags, int volume, int playvolume, int fr
 
 {
 	if (valid) {
-		if (!PlayVesselWave(SoundlibId, id, flags, playvolume, frequency))
+		if (!Soundlib->PlayWav(id, flags, playvolume/255.0))
 		{
 			return false;
 		}
@@ -108,7 +108,7 @@ void SoundData::stop()
 	if (!isPlaying())
 		return;
 
-	StopVesselWave(SoundlibId, id);
+	Soundlib->StopWav(id);
 }
 
 bool SoundData::isPlaying()
@@ -117,7 +117,7 @@ bool SoundData::isPlaying()
 	if (id < 0)
 		return false;
 
-	return (IsPlaying(SoundlibId, id) != 0);
+	return (Soundlib->IsWavPlaying(id) != 0);
 }
 
 bool SoundData::matches(char *s)
@@ -148,8 +148,8 @@ SoundLib::SoundLib()
 		sounds[i].MakeInvalid();
 	}
 
-	SoundlibId = 0;
-	OrbiterSoundActive = 0;
+	Soundlib = NULL;
+	XRSoundActive = 0;
 	missionpath[0] = 0;
 	basepath[0] = 0;
 	strcpy(languagepath, "English");
@@ -168,13 +168,13 @@ SoundLib::~SoundLib()
 	//
 }
 
-void SoundLib::InitSoundLib(OBJHANDLE h, char *soundclass)
+void SoundLib::InitSoundLib(VESSEL *v, char *soundclass)
 
 {
 	_snprintf(basepath, 255, "Sound/%s", soundclass);
 
-	SoundlibId = ConnectToOrbiterSoundDLL(h);
-	OrbiterSoundActive = (SoundlibId >= 0);
+	Soundlib = XRSound::CreateInstance(v);
+	XRSoundActive = Soundlib->IsPresent();
 }
 
 void SoundLib::SetSoundLibMissionPath(char *mission)
@@ -220,7 +220,7 @@ int SoundLib::FindSlot()
 	int	i;
 
 	//
-	// Orbitersound doesn't seem to like reusing slots much, so we won't do that until we run out
+	// XRSound doesn't seem to like reusing slots much, so we won't do that until we run out
 	// of slots. That won't happen too often unless you try to fly an entire mission without
 	// quitting Orbiter and reloading.
 	//
@@ -272,11 +272,11 @@ SoundData *SoundLib::DoLoadSound(char *SoundPath, EXTENDEDPLAY extended)
 	// So the file exists and we have a free slot. Try to load it.
 	//
 
-	if (RequestLoadVesselWave(SoundlibId, id, s->GetFilename(), extended) == 0)
+	if (Soundlib->LoadWav(id, s->GetFilename(), extended) == 0)
 		return 0;
 
 
-	s->setSoundlibId(SoundlibId);
+	s->setSoundlib(Soundlib);
 	s->setID(id);
 	s->MakeValid();
 	s->AddRef();
@@ -294,7 +294,7 @@ void SoundLib::LoadSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 
 {
 
-	if (!OrbiterSoundActive) {
+	if (!XRSoundActive) {
 		s.SetSoundData(0);
 		return;
 	}
@@ -347,7 +347,7 @@ void SoundLib::LoadMissionSound(Sound &s, char *soundname, char *genericname, EX
 {
 	char	SoundPath[256];
 
-	if (!OrbiterSoundActive) {
+	if (!XRSoundActive) {
 		s.SetSoundData(0);
 		return;
 	}
@@ -399,7 +399,7 @@ void SoundLib::LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended)
 {
 	char	SoundPath[256];
 
-	if (!OrbiterSoundActive) {
+	if (!XRSoundActive) {
 		s.SetSoundData(0);
 		return;
 	}
@@ -800,8 +800,8 @@ TimedSoundManager::~TimedSoundManager()
 void TimedSoundManager::Timestep(double simt, double simdt, bool autoslow)
 
 {
-	// Is OrbiterSound available?
-	if (!soundlib.IsOrbiterSoundActive()) return;
+	// Is XRSound available?
+	if (!soundlib.IsXRSoundActive()) return;
 
 	double timeaccel = oapiGetTimeAcceleration();
 	if (LaunchSoundsLoaded && simt >= TimeToPlay)
@@ -1051,12 +1051,3 @@ void TimedSoundManager::LoadFromFile(char *dataFile, double MissionTime)
 
 	fclose(fp);
 }
-
-//
-// To use OrbiterSound 3.5 with compilers older 
-// than Microsoft Visual Studio Version 2003 
-//
-
-#if defined(_MSC_VER) && (_MSC_VER < 1300) 
-void operator delete[] (void *) {}
-#endif

@@ -25,7 +25,7 @@
 #ifndef SOUNDLIB_H
 #define SOUNDLIB_H
 
-#include "OrbiterSoundSDK40.h"
+#include "XRSound.h"
 
 ///
 /// \ingroup Sound
@@ -41,7 +41,7 @@ public:
 	void stop();
 	void done();
 	void setID(int num) { id = num; };
-	void setSoundlibId(int num) { SoundlibId = num; };
+	void setSoundlib(XRSound *s) { Soundlib = s; };
 	void setFileName(char *s);
 	void AddRef() { refcount++; };
 	void MakeValid() { valid = true; refcount = 0; };
@@ -58,12 +58,12 @@ protected:
 	int refcount;
 	bool valid;
 
-	int	id;
+	int id;
 	int PlayVolume;
 	int PlayFlags;
 	int LibFlags;
 	int BaseVolume;
-	int SoundlibId;
+	XRSound *Soundlib;
 };
 
 class SoundLib;
@@ -81,6 +81,7 @@ public:
 	bool isPlaying();
 	void setFlags(int fl);
 	void clearFlags(int fl);
+/* TODO: A true port would change all int volumes to floats */
 	bool play(int flags = NOLOOP, int volume = 255, int frequency = NULL);
 	void stop();
 	void done();
@@ -126,8 +127,8 @@ private:
 #define VOLUME_COMMS2	2
 
 ///
-/// The sound library class which wraps all calls to OrbiterSound into one simple
-/// interface. Amongst other things it ensures that OrbiterSound is actually activated
+/// The sound library class which wraps all calls to XRSound into one simple
+/// interface. Amongst other things it ensures that XRSound is actually activated
 /// before making any calls, saving the caller doing so.
 ///
 /// \ingroup Sound
@@ -140,12 +141,12 @@ public:
 	virtual ~SoundLib();
 
 	///
-	/// \brief Initialise library and connection to Orbitersound.
-	/// \param h Vessel handle to pass to Orbitersound.
+	/// \brief Initialise library and connection to XRSound.
+	/// \param v Vessel pointer to pass to XRSound.
 	/// \param soundclass The 'class' of sound to use (e.g. 'ProjectApollo'). This is 
 	/// appended to the sound path to find the right files.
 	///
-	void InitSoundLib(OBJHANDLE h, char *soundclass);
+	void InitSoundLib(VESSEL *v, char *soundclass);
 	void LoadSound(Sound &s, char *soundname, EXTENDEDPLAY extended = DEFAULT);
 	void LoadMissionSound(Sound &s, char *soundname, char *genericname = NULL, EXTENDEDPLAY extended = DEFAULT);
 	void LoadVesselSound(Sound &s, char *soundname, EXTENDEDPLAY extended = DEFAULT);
@@ -161,18 +162,18 @@ public:
 	void SetSoundLibMissionPath(char *mission);
 
 	///
-	/// Turn an Orbitersound option on or off. See the Orbitersound header file for the
+	/// Turn an XRSound option on or off. See the XRSound header file for the
 	/// appropriate definitions to pass to it.
 	///
-	/// \brief Control Orbitersound options.
-	/// \param option Orbitersound option number.
-	/// \param onoff Turn Orbitersound option on or off.
+	/// \brief Control XRSound options.
+	/// \param option XRSound option number.
+	/// \param onoff Turn XRSound option on or off.
 	///
 	void SoundOptionOnOff(int option, int onoff);
 	void SetLanguage(char *language);
 	void SetVolume(int type, int percent);
 	int GetSoundVolume(int flags, int volume);
-	bool IsOrbiterSoundActive() { return OrbiterSoundActive; };
+	bool IsXRSoundActive() { return XRSoundActive; };
 
 protected:
 
@@ -185,9 +186,9 @@ protected:
 	int MasterVolume[N_VOLUMES];
 
 ///
-/// OrbiterSound currently supports 60 sounds. Note that zero is
-/// an invalid id and 60 is valid, so we actually allocate 61 entries
-/// here.
+/// XRSound supports any number of sounds, starting at an ID of
+/// 12000. If we've only used 60 sounds before though, no need
+/// to change that here.
 ///
 #define MAX_SOUNDS 60
 
@@ -209,14 +210,14 @@ protected:
 	char languagepath[256];
 
 	///
-	/// \brief Is Orbitersound active? If not, we don't call it.
+	/// \brief Is XRSound active? If not, we don't call it.
 	///
-	bool OrbiterSoundActive;
+	bool XRSoundActive;
 
 	///
-	/// \brief Connection ID returned from initialising Orbitersound.
+	/// \brief Handle for XRSound from CreateInstance
 	///
-	int SoundlibId;
+	XRSound *Soundlib;
 	int NextSlot;
 
 	friend class TimedSound;
