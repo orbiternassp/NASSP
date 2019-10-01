@@ -1043,6 +1043,17 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	return soichange;
 }
 
+MPTSV coast(MPTSV sv0, double dt)
+{
+	SV sv;
+	
+	sv.gravref = sv0.gravref;
+	sv.MJD = sv0.MJD;
+	sv.R = sv0.R;
+	sv.V = sv0.V;
+	return coast(sv, dt);
+}
+
 SV coast(SV sv0, double dt)
 {
 	if (dt == 0.0)
@@ -1058,6 +1069,96 @@ SV coast(SV sv0, double dt)
 	sv1.mass = sv0.mass;
 	sv1.MJD = sv0.MJD + dt / 24.0 / 3600.0;
 
+	return sv1;
+}
+
+MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_cond, double dir)
+{
+	double dt, funct, TIME, RCALC, RES1, TIME_old, t_new;
+	int INITE = 0;
+	bool stop = false, allow_stop = false;
+	OBJHANDLE gravref = sv0.gravref;
+
+	if (dir > 0)
+	{
+		dt = dt_max;
+	}
+	else
+	{
+		dt = -dt_max;
+	}
+
+	CoastIntegrator coast(sv0.R, sv0.V, sv0.MJD, dt, sv0.gravref, NULL);
+
+	while (stop == false)
+	{
+		stop = coast.iteration(allow_stop);
+
+		if (stop)
+		{
+			break;
+		}
+
+		if (stop_ind != 1)
+		{
+			if (gravref != coast.GetGravRef())
+			{
+				gravref = coast.GetGravRef();
+				INITE = 0;
+			}
+
+			TIME = coast.GetTime();
+
+			if (abs(TIME) > dt_min)
+			{
+				if (stop_ind == 2)
+				{
+					funct = dotp(unit(coast.GetPosition()), unit(coast.GetVelocity()));
+				}
+				else
+				{
+					funct = length(coast.GetPosition());
+				}
+				RCALC = funct - end_cond;
+
+				//1st pass
+				if (INITE == 0)
+				{
+					INITE = -1;
+				}
+				//Not bounded, not 1st pass
+				else if (INITE < 0)
+				{
+					if (RCALC*RES1 < 0)
+					{
+						INITE = 1;
+
+						t_new = LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
+						coast.AdjustTF(t_new);
+					}
+				}
+				//Bounded
+				else
+				{
+					t_new = LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
+					coast.AdjustTF(t_new);
+					if (abs(TIME - t_new) < 1e-6)
+					{
+						allow_stop = true;
+					}
+				}
+
+				RES1 = RCALC;
+				TIME_old = TIME;
+			}
+		}
+	}
+
+	MPTSV sv1;
+	sv1.R = coast.R2;
+	sv1.V = coast.V2;
+	sv1.gravref = coast.outplanet;
+	sv1.MJD = coast.GetMJD();
 	return sv1;
 }
 
@@ -4376,7 +4477,10 @@ int LUPDecompose(double **A, int N, double Tol, int *P)
 				imax = k;
 			}
 
-		if (maxA < Tol) return 0; //failure, matrix is degenerate
+		if (maxA < Tol)
+		{
+			return 0; //failure, matrix is degenerate
+		}
 
 		if (imax != i) {
 			//pivoting P
@@ -4418,6 +4522,28 @@ void LUPSolve(double **A, int *P, double *b, int N, double *x) {
 			x[i] -= A[i][k] * x[k];
 
 		x[i] = x[i] / A[i][i];
+	}
+}
+
+void LUPInvert(double **A, int *P, int N, double **IA) {
+
+	for (int j = 0; j < N; j++) {
+		for (int i = 0; i < N; i++) {
+			if (P[i] == j)
+				IA[i][j] = 1.0;
+			else
+				IA[i][j] = 0.0;
+
+			for (int k = 0; k < i; k++)
+				IA[i][j] -= A[i][k] * IA[k][j];
+		}
+
+		for (int i = N - 1; i >= 0; i--) {
+			for (int k = i + 1; k < N; k++)
+				IA[i][j] -= A[i][k] * IA[k][j];
+
+			IA[i][j] = IA[i][j] / A[i][i];
+		}
 	}
 }
 
@@ -7545,6 +7671,11 @@ CoastIntegrator::~CoastIntegrator()
 {
 }
 
+double CoastIntegrator::GetTime()
+{
+	return t;
+}
+
 VECTOR3 CoastIntegrator::GetPosition()
 {
 	return R_CON + delta;
@@ -7565,7 +7696,7 @@ OBJHANDLE CoastIntegrator::GetGravRef()
 	return planet;
 }
 
-bool CoastIntegrator::iteration()
+bool CoastIntegrator::iteration(bool allow_stop)
 {
 	double rr, dt_max, dt, h, x_apo, gamma, s, alpha_N, x_t, Y, r_qc;
 	VECTOR3 alpha, R_apo, V_apo, R, a_d, ff;
@@ -7708,7 +7839,7 @@ bool CoastIntegrator::iteration()
 	delta = delta + (nu + (k[0] + k[1] * 2.0)*dt*1.0 / 6.0)*dt;
 	nu = nu + (k[0] + k[1] * 4.0 + k[2]) * 1.0 / 6.0 *dt;
 
-	if (abs(t - t_F) < 1e-6)
+	if (allow_stop && abs(t - t_F) < 1e-6)
 	{
 		R2 = R_CON + delta;
 		V2 = V_CON + nu;
@@ -7888,4 +8019,14 @@ double acos2(double _X)
 double asin2(double _X)
 {
 	return asin(min(1.0, max(-1.0, _X)));
+}
+
+double factorial(unsigned n)
+{
+	double fact = 1.0;
+	for (unsigned i = 1;i <= n;i++)
+	{
+		fact = fact * i;
+	}
+	return fact;
 }

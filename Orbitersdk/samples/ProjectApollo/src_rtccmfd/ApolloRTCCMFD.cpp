@@ -19,6 +19,7 @@
 #include "LVDC.h"
 #include "iu.h"
 #include "ARoapiModule.h"
+#include "TLMCC.h"
 
 // ==============================================================
 // Global variables
@@ -467,6 +468,55 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	OrbMech::latlong_from_r(R_EMP, lat_EMP, lng_EMP);
 
 	sprintf(oapiDebugString(), "%f %f", lat_EMP*DEG, lng_EMP*DEG);*/
+
+	MPTSV sv = GC->rtcc->StateVectorCalc(G->vessel);
+	TLMCCProcessor tlmcc;
+	PZEFEM pzefem;
+	OrbMech::GenerateSunMoonEphemeris(oapiGetSimMJD(), pzefem);
+
+	TLMCCDataTable datatable;
+	TLMCCMEDQuantities medquant;
+
+	datatable.MJD_pc1 = OrbMech::MJDfromGET(76.0*3600.0, GC->GETbase);
+	datatable.MJD_pc2 = OrbMech::MJDfromGET(76.0*3600.0, GC->GETbase);
+	datatable.MJD_nd = OrbMech::MJDfromGET(76.0*3600.0, GC->GETbase);
+	datatable.H_nd = 60.0*1852.0;
+	datatable.lat_nd = 0.279074*RAD;
+	datatable.lng_nd = PI;
+	datatable.H_pc1 = 60.0*1852.0;
+	datatable.H_pc2 = 60.0*1852.0;
+	datatable.lat_pc1 = 0.279074*RAD;
+	datatable.lat_pc2 = 0.279074*RAD;
+	datatable.lng_pc1 = PI;
+	datatable.lat_lls = GC->LSLat;
+	datatable.lng_lls = GC->LSLng;
+	datatable.R_lls = OrbMech::R_Moon + GC->LSAlt;
+	datatable.gamma_loi = 0.0;
+	datatable.psi_lls = -91.0*RAD;
+	datatable.dpsi_loi = 0.0;
+	datatable.dt_lls = 26.7;
+
+	medquant.T_MCC = 27.0*3600.0;
+	medquant.sv0 = sv;
+	medquant.Config = false;
+	medquant.GETBase = GC->GETbase;
+	medquant.CSMMass = 30000.0;
+	medquant.Mode = 2;
+	medquant.useSPS = true;
+	medquant.INCL_fr = 40.0*RAD;
+	medquant.H_pl_min = 40.0*1852.0;
+	medquant.H_pl_max = 5000.0*1852.0;
+	medquant.H_A_LPO1 = 170.0*1852.0;
+	medquant.H_P_LPO1 = 60.0*1852.0;
+	medquant.H_A_LPO2 = 60.0*1852.0;
+	medquant.H_P_LPO2 = 60.0*1852.0;//8.4*1852.0;
+	medquant.site_rotation_LPO2 = 15.0*RAD;
+	medquant.Revs_LPO1 = 2.0;
+	medquant.Revs_LPO2 = 9.0;
+	medquant.TA_LOI = 0.0;
+
+	tlmcc.Init(&pzefem, datatable, medquant);
+	tlmcc.Main();
 
 	// Draws the MFD title
 

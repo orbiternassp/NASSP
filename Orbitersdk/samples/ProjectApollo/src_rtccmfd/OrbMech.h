@@ -253,12 +253,14 @@ class CoastIntegrator
 public:
 	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, OBJHANDLE planet, OBJHANDLE outplanet);
 	~CoastIntegrator();
-	bool iteration();
+	bool iteration(bool allow_stop = true);
 
+	double GetTime();
 	VECTOR3 GetPosition();
 	VECTOR3 GetVelocity();
 	double GetMJD();
 	OBJHANDLE GetGravRef();
+	void AdjustTF(double t_f) { t_F = t_f; }
 
 	VECTOR3 R2, V2;
 	OBJHANDLE outplanet;
@@ -406,6 +408,8 @@ namespace OrbMech {
 	//int rkf45(double*, double**, double*, double*, int, double tol = 1e-15);
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	SV coast(SV sv0, double dt);
+	MPTSV coast(MPTSV sv0, double dt);
+	MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_cond, double dir);
 	void GenerateEphemeris(MPTSV sv0, double dt, std::vector<MPTSV> &ephemeris, unsigned nmax = 100U, unsigned skip = 0);
 	void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem);
 	bool PLEFEM(const PZEFEM &ephem, double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
@@ -574,6 +578,7 @@ namespace OrbMech {
 	void VandermondeMatrix(double *x, int N, double **V);
 	int LUPDecompose(double **A, int N, double Tol, int *P);
 	void LUPSolve(double **A, int *P, double *b, int N, double *x);
+	void LUPInvert(double **A, int *P, int N, double **IA);
 	void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &b1, double &b2);
 	double Sum(double *x, int N);
 	double SumProd(double *x, double *y, int N);
@@ -587,6 +592,7 @@ VECTOR3 rhmul(const MATRIX3 &A, const VECTOR3 &b);
 VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b);
 double acos2(double _X);
 double asin2(double _X);
+double factorial(unsigned n);
 
 //void(*)(double*, double, double*)
 #endif
