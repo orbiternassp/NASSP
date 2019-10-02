@@ -21,6 +21,7 @@
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_launch\rtcc.cpp" />
@@ -34,6 +35,7 @@
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LWP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{3F97A697-44DB-4A22-A5F3-7168A990B3C0}</ProjectGuid>
