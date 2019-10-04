@@ -2,7 +2,7 @@
   This file is part of Shuttle FDO MFD for Orbiter Space Flight Simulator
   Copyright (C) 2019 Niklas Beug
 
-  Launch Descent Planning Processor (Header)
+  Lunar Descent Planning Processor (Header)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -92,16 +92,16 @@ public:
 	int LDPPMain(LDPPResults &out);
 protected:
 	
-	VECTOR3 SAC(int L, double h_W, int J, SV sv_CSM);
-	void CHAPLA(SV sv_CSM, int IWA, int IGO, int I, double &t_m, VECTOR3 &DV);
-	void LLTPR(double T_H, SV sv_CSM, double &t_DOI, double &t_IGN, double &t_TD);
+	VECTOR3 SAC(int L, double h_W, int J, SV sv_L);
+	void CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV);
+	void LLTPR(double T_H, SV sv_L, double &t_DOI, double &t_IGN, double &t_TD);
 	double ArgLat(VECTOR3 R, VECTOR3 V);
 	void CNODE(SV sv_A, SV sv_P, double &t_m, VECTOR3 &dV_LVLH);
 	//Subroutine that iterates to find an upcoming apsis point
-	SV STAP(SV sv0);
+	SV STAP(SV sv0, bool &error);
 	//Subroutine that iterates to find a specified radius in a given orbit
-	SV STCIR(SV sv0, double h_W);
-	SV TIMA(SV sv0, double u);
+	bool STCIR(SV sv0, double h_W, bool ca_flag, SV &sv_out);
+	SV TIMA(SV sv0, double u, bool &error);
 	SV APPLY(SV sv0, VECTOR3 dV_LVLH);
 	VECTOR3 LATLON(double MJD);
 	double mu;
@@ -114,6 +114,14 @@ protected:
 
 	double t_M[4];
 	VECTOR3 DeltaV_LVLH[4];
+	double deltaw_s, u_man, deltaw;
+
+	//State vector index
+	//0 = CSM, 1 = LM
+	//0-3 = maneuvers
+	//0 = before, 1 = after
+	MPTSV LDPP_SV_E[2][4][2];
+	SV sv_CSM, sv_LM, sv_V;
 
 	LDPPOptions opt;
 

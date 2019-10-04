@@ -6852,20 +6852,22 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHAN
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
 }
 
-SV PMMAEGS(SV sv0, int opt, double param, double DN)
+SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN)
 {
 	if (sv0.gravref == oapiGetObjectByName("Earth"))
 	{
-		return PMMAEG(sv0, opt, param, DN);
+		return PMMAEG(sv0, opt, param, error, DN);
 	}
 	else
 	{
-		return PMMLAEG(sv0, opt, param, DN);
+		return PMMLAEG(sv0, opt, param, error, DN);
 	}
 }
 
-SV PMMAEG(SV sv0, int opt, double param, double DN)
+SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 {
+	error = false;
+
 	//Update to the given time
 	if (opt == 0)
 	{
@@ -6908,7 +6910,7 @@ SV PMMAEG(SV sv0, int opt, double param, double DN)
 			L_D = u;
 		}
 		DX_L = 1.0;
-		DH = DN > 0.0;
+		DH = abs(DN) > 0.0;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;
@@ -6993,14 +6995,21 @@ SV PMMAEG(SV sv0, int opt, double param, double DN)
 
 		} while (abs(DX_L) > 2e-4 && COUNT > 0);
 
+		if (COUNT == 0)
+		{
+			error = true;
+		}
+
 		return sv1;
 	}
 
 	return sv0;
 }
 
-SV PMMLAEG(SV sv0, int opt, double param, double DN)
+SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN)
 {
+	error = false;
+
 	//Update to the given time
 	if (opt == 0)
 	{
@@ -7044,7 +7053,7 @@ SV PMMLAEG(SV sv0, int opt, double param, double DN)
 			L_D = u;
 		}
 		DX_L = 1.0;
-		DH = DN > 0.0;
+		DH = abs(DN) > 0.0;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;
@@ -7128,6 +7137,11 @@ SV PMMLAEG(SV sv0, int opt, double param, double DN)
 			COUNT--;
 
 		} while (abs(DX_L) > 2e-4 && COUNT > 0);
+
+		if (COUNT == 0)
+		{
+			error = true;
+		}
 
 		return sv1;
 	}
@@ -7223,12 +7237,13 @@ SV PositionMatch(SV sv_A, SV sv_P, double mu)
 	SV sv_A1, sv_P1;
 	VECTOR3 u, R_A1, U_L;
 	double phase, n, dt, ddt;
+	bool error;
 
 	dt = 0.0;
 
 	u = unit(crossp(sv_P.R, sv_P.V));
 	U_L = unit(crossp(u, sv_P.R));
-	sv_A1 = PMMAEGS(sv_A, 0, sv_P.MJD);
+	sv_A1 = PMMAEGS(sv_A, 0, sv_P.MJD, error);
 
 	do
 	{

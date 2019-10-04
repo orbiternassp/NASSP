@@ -2109,27 +2109,27 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (GC->rtcc->med_k16.Mode == 1)
 		{
-			skp->Text(1 * W / 16, 8 * H / 14, "CSM Phase Change (N/A)", 22);
+			skp->Text(1 * W / 16, 8 * H / 14, "CSM Phase Change", 16);
 
 			if (GC->rtcc->med_k16.Sequence == 1)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "1: PC, DOI (N/A)", 16);
+				skp->Text(1 * W / 16, 10 * H / 14, "1: PC, DOI", 10);
 			}
 			else if (GC->rtcc->med_k16.Sequence == 2)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "2: PCC, DOI (N/A)", 17);
+				skp->Text(1 * W / 16, 10 * H / 14, "2: PCC, DOI", 11);
 			}
 			else if (GC->rtcc->med_k16.Sequence == 3)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "3: ASP, CIA, DOI (N/A)", 22);
+				skp->Text(1 * W / 16, 10 * H / 14, "3: ASP, CIA, DOI", 16);
 			}
 			else if (GC->rtcc->med_k16.Sequence == 4)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "4: PCCH, DOI (N/A)", 18);
+				skp->Text(1 * W / 16, 10 * H / 14, "4: PCCH, DOI", 12);
 			}
 			else if (GC->rtcc->med_k16.Sequence == 5)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "5: PCCT, DOI (N/A)", 18);
+				skp->Text(1 * W / 16, 10 * H / 14, "5: PCCT, DOI", 12);
 			}
 		}
 		else if (GC->rtcc->med_k16.Mode == 2)
@@ -2138,7 +2138,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		
 			if (GC->rtcc->med_k16.Sequence == 2)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "2: ASH, DOI (N/A)", 17);
+				skp->Text(1 * W / 16, 10 * H / 14, "2: ASH, DOI", 11);
 			}
 			else if (GC->rtcc->med_k16.Sequence == 3)
 			{
@@ -2152,15 +2152,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else if (GC->rtcc->med_k16.Mode == 3)
 		{
-			skp->Text(1 * W / 16, 8 * H / 14, "Double CSM Maneuver (N/A)", 25);
+			skp->Text(1 * W / 16, 8 * H / 14, "Double CSM Maneuver", 19);
 
 			if (GC->rtcc->med_k16.Sequence == 1)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "2: ASH at time, CIA, DOI (N/A)", 30);
+				skp->Text(1 * W / 16, 10 * H / 14, "1: ASH at time, CIA, DOI", 24);
 			}
 			else if (GC->rtcc->med_k16.Sequence == 3)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "3: ASH at apsis, CIA, DOI (N/A)", 31);
+				skp->Text(1 * W / 16, 10 * H / 14, "3: ASH at apsis, CIA, DOI", 25);
 			}
 			else
 			{
@@ -2175,19 +2175,19 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else if (GC->rtcc->med_k16.Mode == 5)
 		{
-			skp->Text(1 * W / 16, 8 * H / 14, "Double Hohmann, PC (N/A)", 34);
+			skp->Text(1 * W / 16, 8 * H / 14, "Double Hohmann, PC", 28);
 		
 			if (GC->rtcc->med_k16.Sequence == 1)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "1: PC, HO1, HO2, DOI (N/A)", 26);
+				skp->Text(1 * W / 16, 10 * H / 14, "1: PC, HO1, HO2, DOI", 20);
 			}
 			else if (GC->rtcc->med_k16.Sequence == 2)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "2: HO1, PC, HO2, DOI (N/A)", 26);
+				skp->Text(1 * W / 16, 10 * H / 14, "2: HO1, PC, HO2, DOI", 20);
 			}
 			else if (GC->rtcc->med_k16.Sequence == 3)
 			{
-				skp->Text(1 * W / 16, 10 * H / 14, "3: HO1, HO2, PC, DOI (N/A)", 26);
+				skp->Text(1 * W / 16, 10 * H / 14, "3: HO1, HO2, PC, DOI", 20);
 			}
 			else
 			{
@@ -2205,11 +2205,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 10 * H / 14, "PPC", 3);
 		}
 
-		if (GC->rtcc->med_k16.Mode == 1)
-		{
-			sprintf(Buffer, "%.3f NM", GC->rtcc->med_k16.DesiredHeight / 1852.0);
-			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
-		}
+		sprintf(Buffer, "%.3f NM", GC->rtcc->med_k16.DesiredHeight / 1852.0);
+		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 
 		GET_Display(Buffer, GC->rtcc->med_k16.GETTH1, false);
 		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
@@ -10849,14 +10846,38 @@ void ApolloRTCCMFD::set_LDPPThresholdTime(double dt, int thr)
 	if (thr == 1)
 	{
 		GC->rtcc->med_k16.GETTH1 = dt;
+		if (GC->rtcc->med_k16.GETTH2 < GC->rtcc->med_k16.GETTH1)
+		{
+			GC->rtcc->med_k16.GETTH2 = GC->rtcc->med_k16.GETTH1;
+		}
+		if (GC->rtcc->med_k16.GETTH3 < GC->rtcc->med_k16.GETTH2)
+		{
+			GC->rtcc->med_k16.GETTH3 = GC->rtcc->med_k16.GETTH2;
+		}
+		if (GC->rtcc->med_k16.GETTH4 < GC->rtcc->med_k16.GETTH3)
+		{
+			GC->rtcc->med_k16.GETTH4 = GC->rtcc->med_k16.GETTH3;
+		}
 	}
 	else if (thr == 2)
 	{
 		GC->rtcc->med_k16.GETTH2 = dt;
+		if (GC->rtcc->med_k16.GETTH3 < GC->rtcc->med_k16.GETTH2)
+		{
+			GC->rtcc->med_k16.GETTH3 = GC->rtcc->med_k16.GETTH2;
+		}
+		if (GC->rtcc->med_k16.GETTH4 < GC->rtcc->med_k16.GETTH3)
+		{
+			GC->rtcc->med_k16.GETTH4 = GC->rtcc->med_k16.GETTH3;
+		}
 	}
 	else if (thr == 3)
 	{
 		GC->rtcc->med_k16.GETTH3 = dt;
+		if (GC->rtcc->med_k16.GETTH4 < GC->rtcc->med_k16.GETTH3)
+		{
+			GC->rtcc->med_k16.GETTH4 = GC->rtcc->med_k16.GETTH3;
+		}
 	}
 	else if (thr == 4)
 	{
@@ -10912,7 +10933,7 @@ bool LDPPDesiredHeightInput(void* id, char *str, void *data)
 	double alt;
 	if (sscanf(str, "%lf", &alt) == 1)
 	{
-		((ApolloRTCCMFD*)data)->set_LDPPDescentFlightTime(alt);
+		((ApolloRTCCMFD*)data)->set_LDPPDesiredHeight(alt);
 		return true;
 	}
 	return false;
@@ -10920,7 +10941,7 @@ bool LDPPDesiredHeightInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LDPPDesiredHeight(double alt)
 {
-	GC->rtcc->med_k16.DesiredHeight = alt / 1852.0;
+	GC->rtcc->med_k16.DesiredHeight = alt * 1852.0;
 }
 
 void ApolloRTCCMFD::menuCycleDOIOption()

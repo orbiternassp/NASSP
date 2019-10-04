@@ -248,6 +248,48 @@ struct LGCIgnitionConstants
 	double K_V = 410.0;
 };
 
+struct AEGHeader
+{
+	int AEGInd;
+	int ErrorInd;
+	int NumBlocks;
+	int Spare;
+};
+
+struct AEGBlock
+{
+	int Spare1;
+	int InitUpdateInd;
+	int UpdateOptInd;
+	int HarmonicsInd;
+	double KFactor;
+	double VehArea;
+	double VehWeight;
+	double Item8;
+	double MJD_oc;
+	double DN;
+	double a_osc;
+	double e_osc;
+	double i_osc;
+	double l_osc;
+	double g_osc;
+	double h_osc;
+	double a_mean;
+	double e_mean;
+	double i_mean;
+	double l_mean;
+	double g_mean;
+	double h_mean;
+	double MJD;
+	double l_dot;
+	double g_dot;
+	double h_dot;
+	double MJD_upd;
+	double f;
+	double U;
+	double R;
+};
+
 class CoastIntegrator
 {
 public:
@@ -551,9 +593,9 @@ namespace OrbMech {
 	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref);
 
 	//AEG
-	SV PMMAEGS(SV sv0, int opt, double param, double DN = 0.0);
-	SV PMMAEG(SV sv0, int opt, double param, double DN = 0.0);
-	SV PMMLAEG(SV sv0, int opt, double param, double DN = 0.0);
+	SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
 	//Inertial to Keplerian Conversion Subroutine
 	CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu);
 	//Keplerian to Inertial Conversion Subroutine
