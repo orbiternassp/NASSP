@@ -201,10 +201,10 @@ LDPP_3_2:
 LDPP_3_3:
 	dt = t_PC - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 LDPP_4_1:
 	sv_CSM = APPLY(sv_CSM, DV_apo);
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	t_M[i - 1] = t_PC;
 	DeltaV_LVLH[i - 1] = DV_apo;
 	i++;
@@ -214,7 +214,7 @@ LDPP_5_1:
 	dt = t_PC - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
 	DV = SAC(2, 0, 1, sv_CSM);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	DV_apo = DV + DV_apo;
 
 	goto LDPP_4_1;
@@ -233,10 +233,10 @@ LDPP_6_2:
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
 	sv_LM = sv_CSM;
 	//Page 7
-	LDPP_SV_E[1][i - 1][0] = sv_LM;
+	LDPP_SV_E[i - 1][0] = sv_LM;
 	DV = SAC(1, opt.H_DP, 0, sv_LM);
 	sv_LM = APPLY(sv_LM, DV);
-	LDPP_SV_E[1][i - 1][1] = sv_LM;
+	LDPP_SV_E[i - 1][1] = sv_LM;
 	t_M[i - 1] = t_DOI;
 	DeltaV_LVLH[i - 1] = DV;
 	//Page 8
@@ -260,8 +260,8 @@ LDPP_6_2:
 LDPP_9_2:
 	if (I_PC >= 3)
 	{
-		LDPP_SV_E[0][i - 1][0] = sv_CSM;
-		LDPP_SV_E[0][i - 1][1] = sv_CSM;
+		LDPP_SV_E[i - 1][0] = sv_CSM;
+		LDPP_SV_E[i - 1][1] = sv_CSM;
 		if (t_M[i - 2] > opt.TH[i - 1])
 		{
 			opt.TH[i - 1] = t_M[i - 2];
@@ -309,13 +309,13 @@ LDPP_10_1:
 	}
 	DV = SAC(2, opt.H_W, 0, sv_CSM);
 	//Page 11
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	if (opt.MODE < 3)
 	{
 		DV = DV + DV_apo;
 	}
 	sv_CSM = APPLY(sv_CSM, DV);
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	DeltaV_LVLH[i - 1] = DV;
 	//Page 12
 	i++;
@@ -335,11 +335,11 @@ LDPP_10_1:
 	} while (abs(length(sv_CSM.R) - (opt.R_LS + opt.H_W)) > 2.0*1852.0);
 	//Page 13
 	t_M[i - 1] = OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	DV = SAC(1, 0, 1, sv_CSM);
 	sv_CSM = APPLY(sv_CSM, DV);
 LDPP_13_2:
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 LDPP_13_3:
 	DeltaV_LVLH[i - 1] = DV;
 	i++;
@@ -356,7 +356,7 @@ LDPP_14_1:
 		return 1;
 	}
 	t_M[i - 1] = OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	DV = SAC(2, 0, 1, sv_CSM);
 	sv_CSM = APPLY(sv_CSM, DV);
 	goto LDPP_13_2;
@@ -374,12 +374,12 @@ LDPP_15_2:
 		return 1;
 	}
 	t_M[i - 1] = OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	DV = SAC(1, opt.H_W, 0, sv_CSM);
 	//Page 16
 	sv_CSM = APPLY(sv_CSM, DV);
 	LLTPR(opt.TH[i - 1], sv_CSM, t_DOI, t_IGN, t_L);
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	P_L = OrbMech::period(sv_CSM.R, sv_CSM.V, mu);
 	t_D = t_M[i - 1] + P_L * trunc((t_H_DOI - opt.TH[i - 1]) / P_L);
 	dt = t_D - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
@@ -444,8 +444,8 @@ LDPP_19_1:
 	IRUT = 1;
 	if (opt.IDO < 0)
 	{
-		LDPP_SV_E[0][i - 1][0] = sv_CSM;
-		LDPP_SV_E[0][i - 1][1] = sv_CSM;
+		LDPP_SV_E[i - 1][0] = sv_CSM;
+		LDPP_SV_E[i - 1][1] = sv_CSM;
 		t_M[i - 1] = opt.TH[i - 1];
 		i++;
 		T_GO = opt.TH[i - 1];
@@ -472,9 +472,9 @@ LDPP_19_2:
 	t_M[i - 1] = OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	//Page 20
 	DV = SAC(1, opt.H_W, 0, sv_CSM);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	sv_CSM = APPLY(sv_CSM, DV);
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	DeltaV_LVLH[i - 1] = DV;
 	//Page 21
 	i++;
@@ -486,8 +486,8 @@ LDPP_19_2:
 	{
 		dt = opt.TH[i - 1] - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 		sv_CSM = OrbMech::coast(sv_CSM, dt);
-		LDPP_SV_E[0][i - 1][0] = sv_CSM;
-		LDPP_SV_E[0][i - 1][1] = sv_CSM;
+		LDPP_SV_E[i - 1][0] = sv_CSM;
+		LDPP_SV_E[i - 1][1] = sv_CSM;
 		t_M[i - 1] = opt.TH[i - 1];
 		i++;
 	}
@@ -506,9 +506,9 @@ LDPP_21_2:
 	} while (DR > 1000.0*0.3048);
 	//Page 22
 	DV = SAC(1, 0, 1, sv_CSM);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	sv_CSM = APPLY(sv_CSM, DV);
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	DeltaV_LVLH[i - 1] = DV;
 	i++;
 	goto LDPP_9_2;
@@ -525,12 +525,12 @@ LDPP_23_1:
 	sv_CSM = sv_V;
 	dt = t_PC - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	//Page 24
 	sv_CSM = APPLY(sv_CSM, DV_apo);
 	t_M[i - 1] = t_PC;
 	DeltaV_LVLH[i - 1] = DV_apo;
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	i++;
 	//Page 25
 	if (t_M[i - 2] > opt.TH[i - 1])
@@ -541,27 +541,27 @@ LDPP_23_1:
 	goto LDPP_19_2;
 LDPP_25_2:
 	i = 2;
-	sv_CSM = LDPP_SV_E[0][1][1];
+	sv_CSM = LDPP_SV_E[1][1];
 	dt = t_PC - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
 	//Page 26
 	i++;
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	sv_CSM = APPLY(sv_CSM, DV_apo);
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	t_M[i - 1] = t_PC;
 	DeltaV_LVLH[i - 1] = DV_apo;
 	i++;
 	goto LDPP_9_1;
 	//Page 27
 LDPP_27_1:
-	sv_CSM = LDPP_SV_E[0][0][1];
+	sv_CSM = LDPP_SV_E[0][1];
 	i = 2;
 	dt = t_PC - OrbMech::GETfromMJD(sv_CSM.MJD, opt.GETbase);
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	sv_CSM = APPLY(sv_CSM, DV_apo);
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	//Page 28
 	t_M[i - 1] = t_PC;
 	DeltaV_LVLH[i - 1] = DV_apo;
@@ -681,7 +681,7 @@ LDPP_34_1:
 	sv_CSM = OrbMech::coast(sv_CSM, dt);
 	OrbMech::EclipticToMCI(sv_CSM.R, sv_CSM.V, sv_CSM.MJD, R_temp, V_temp);
 	u_man = ArgLat(R_temp, V_temp);
-	LDPP_SV_E[0][i - 1][0] = sv_CSM;
+	LDPP_SV_E[i - 1][0] = sv_CSM;
 	DV = SAC(1, 0, 1, sv_CSM);
 	DV_aapo = DV;
 
@@ -693,7 +693,7 @@ LDPP_35_2:
 	DV = DV_apo + DV_aapo;
 LDPP_35_1:
 	sv_CSM = APPLY(sv_CSM, DV);
-	LDPP_SV_E[0][i - 1][1] = sv_CSM;
+	LDPP_SV_E[i - 1][1] = sv_CSM;
 	DeltaV_LVLH[i - 1] = DV;
 	i++;
 	if (t_M[i - 2] > t_H_DOI)
@@ -1010,12 +1010,14 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 		{
 			sv_A = OrbMech::PMMLAEG(sv_A, 0, OrbMech::MJDfromGET(t_M[ii - 1], opt.GETbase), error);
 			sv_P = OrbMech::PMMLAEG(sv_P, 0, OrbMech::MJDfromGET(t_M[ii - 1], opt.GETbase), error);
-			sv_A = LDPP_SV_E[0][ii - 1][0];
+			sv_A = LDPP_SV_E[ii - 1][0];
 			elem_A = OrbMech::GIMIKC(sv_A.R, sv_A.V, mu);
 			elem_P = OrbMech::GIMIKC(sv_P.R, sv_P.V, mu);
 			elem_P.a = elem_A.a;
 			elem_P.e = elem_A.e;
 			sv_P = OrbMech::GIMKIC(elem_P, mu);
+			sv_P.MJD = sv_A.MJD;
+			sv_P.gravref = hMoon;
 			if (ii > I_PC)
 			{
 				ii--;
@@ -1031,6 +1033,9 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 	{
 		ii = 1;
 	}
+
+	I = ii;
+	sv_CSM = sv_A;
 	
 	sv_A = OrbMech::PMMLAEG(sv_A, 0, OrbMech::MJDfromGET(opt.TH[ii - 1], opt.GETbase), error);
 	sv_P = OrbMech::PositionMatch(sv_P, sv_A, mu);
@@ -1042,7 +1047,9 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 
 LDPP_CHAPLA_9_1:
 
-	double u_ca = ArgLat(R_L, V_L);
+	VECTOR3 R_temp, V_temp;
+	OrbMech::EclipticToMCI(R_L, V_L, MJD_LS, R_temp, V_temp);
+	double u_ca = ArgLat(R_temp, V_temp);
 	double nu = acos(dotp(rr_LS, rr_p));
 	double delta_nu = acos(dotp(rr_LS, h_L));
 	deltaw = sin(nu) / (cos(nu)*cos(u_ca - u_man));
@@ -1050,7 +1057,7 @@ LDPP_CHAPLA_9_1:
 	I = 1;
 	deltaw = deltaw_s + deltaw;
 
-	sv_CSM = LDPP_SV_E[0][0][0];
+	sv_CSM = LDPP_SV_E[0][0];
 
 	double dv_pc = 2.0*length(V_L)*sin(abs(deltaw) / 2.0);
 	double dv_z = dv_pc * cos(abs(deltaw) / 2.0);

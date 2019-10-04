@@ -117,10 +117,9 @@ protected:
 	double deltaw_s, u_man, deltaw;
 
 	//State vector index
-	//0 = CSM, 1 = LM
 	//0-3 = maneuvers
 	//0 = before, 1 = after
-	MPTSV LDPP_SV_E[2][4][2];
+	MPTSV LDPP_SV_E[4][2];
 	SV sv_CSM, sv_LM, sv_V;
 
 	LDPPOptions opt;
