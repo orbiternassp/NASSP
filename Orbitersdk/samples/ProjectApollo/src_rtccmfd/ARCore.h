@@ -51,8 +51,6 @@ public:
 	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
 	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
 	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
-	double RTEMaxReturnInclination;
-	double RTERangeOverrideNM;
 	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 
 	VESSEL *pCSM;
@@ -313,7 +311,6 @@ public:
 	double EntryDesiredInclination;
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	double RTEReturnInclination;
-	double RTEMaxReentrySpeed;
 
 	//STATE VECTOR PAGE
 	bool SVSlot;

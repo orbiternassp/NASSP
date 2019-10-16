@@ -621,7 +621,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.TIGguess = calcParams.LOI - 8.0*3600.0;
 		entopt.vessel = calcParams.src;
 		entopt.SMODE = 14;
-		entopt.r_rbias = 1350.0;
+		PZREAP.RRBIAS = 1350.0;
 
 		RTEMoonTargeting(&entopt, &res);
 
@@ -705,7 +705,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.EntryLng = 3.0;
 			entopt.returnspeed = 2;
 			sprintf(manname, "PC+2 fast return");
-			entopt.u_rmax = 37500.0*0.3048;
+			PZREAP.VRMAX = 37500.0;
 		}
 
 		entopt.RV_MCC = calcParams.SVSTORE1;
@@ -713,9 +713,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.TIGguess = calcParams.LOI + 2.0*3600.0;
 		entopt.vessel = calcParams.src;
 		entopt.SMODE = 14;
-		entopt.r_rbias = 1350.0;
+		PZREAP.RRBIAS = 1350.0;
 
 		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
+
+		//Reset to default
+		PZREAP.VRMAX = 36323.0;
 
 		opt.alt = LSAlt;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -802,7 +805,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.GETbase = GETbase;
 		entopt.RV_MCC = sv1;
 		entopt.vessel = calcParams.src;
-		entopt.r_rbias = 1350.0;
+		PZREAP.RRBIAS = 1350.0;
 
 		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
@@ -1124,7 +1127,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.vessel = calcParams.src;
 		entopt.returnspeed = 1;
 		entopt.RV_MCC = sv;
-		entopt.r_rbias = 1350.0;
+		PZREAP.RRBIAS = 1350.0;
 
 		RTEMoonTargeting(&entopt, &res);
 

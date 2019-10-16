@@ -7372,13 +7372,13 @@ OrbMech_DROOTS_C:
 	if (delta == 0.0)
 	{
 		double z1, z2;
-		z1 = 2.0*pow(-b/2.0, 1.0 / 3.0);
-		z2 = pow(b / 2.0, 1.0 / 3.0);
+		z1 = 2.0*power(-b/2.0, 1.0 / 3.0);
+		z2 = power(b / 2.0, 1.0 / 3.0);
 		z = max(z1, z2);
 	}
 	else if (delta > 0.0)
 	{
-		z = pow(-b / 2.0 + sqrt(delta), 1.0 / 3.0) + pow(-b / 2.0 - sqrt(delta), 1.0 / 3.0);
+		z = power(-b / 2.0 + sqrt(delta), 1.0 / 3.0) + power(-b / 2.0 - sqrt(delta), 1.0 / 3.0);
 	}
 	else
 	{

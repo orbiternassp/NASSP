@@ -28,6 +28,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include <deque>
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/LDPP.h"
+#include "../src_rtccmfd/EntryCalculations.h"
 
 #define RTCC_START_STRING	"RTCC_BEGIN"
 #define RTCC_END_STRING	    "RTCC_END"
@@ -162,6 +163,16 @@ struct MED_B03
 struct MED_B04
 {
 	bool FUNCTION = false; //false = unsuppress, true = suppress
+};
+
+struct MED_F70
+{
+	std::string Site;
+	double T_V;
+	double T_omin;
+	double T_omax;
+	//1 = Constant G reentry (HB1), 2 = G&N reentry (HGN)
+	int EntryProfile;
 };
 
 //Computation for Lunar Descent Planning
@@ -342,39 +353,6 @@ struct MED_M86
 	int ReplaceCode = 0;
 	bool TimeFlag = false; //false = Nominal landing time to be input, true = Ignition time (only if replacing descent maneuver)
 	bool HeadsUp = true; //false = heads down, true = heads up
-};
-
-//Generate an ephemeris for one vehicle using a vector from the other vehicle
-struct MED_P16
-{
-	int OldVeh = 12; //1 = LEM, 2 = CSM
-	int NewVeh = 1; //1 = LEM, 2 = CSM
-	double GMT = 0.0;
-	unsigned ManNum = 0;
-};
-
-//Cape Crossing Table Update and Limit Change
-struct MED_P17
-{
-	int VEH = 1; //1 = LEM, 2 = CSM
-	bool IsEarth = true;
-	int REV = 1;
-};
-
-//Offsets and elevation angle for two-impulse solution
-struct MED_P51
-{
-	double DH = 0.0; //Delta Height
-	double WT = 0.0; //Phase Angle
-	double E = 0.0; //Elevation Angle
-};
-
-//Two-Impulse Corrective Combination Nominals
-struct MED_P52
-{
-	double GET_NSR = 0.0; //Nominal Time of NSR Maneuver
-	double DH_NSR = 0.0; //Nominal Height Difference at NSR
-	double PH_NSR = 0.0; //Phase Angle at NSR
 };
 
 //Space Digitals Initialization
@@ -656,18 +634,16 @@ struct RTEMoonOpt
 	// 34: ATP search option
 	// 36: UA search option
 	int SMODE = 34;
-	//Maximum allowable return inclination
-	double IRMAX = 40.0*RAD;
-	// 0: postmaneuver direction of motion is selected internal to the program
-	// 1: only noncircumlunar motion is allowed
-	// 2: only circumlunar motion is allowed
-	int CIRCUM = 2;
-	// relative range override
-	double r_rbias = 0.0;
-	// maximum allowable reentry speed
-	double u_rmax = 36323.0*0.3048;
 	//Approximate landing time
 	double t_zmin = 0;
+	int ATPLine = 0;
+};
+
+struct TradeoffDataDisplay
+{
+	TradeoffData data[10][44];
+	unsigned curves;
+	unsigned NumInCurve[10];
 };
 
 struct REFSMMATOpt
@@ -1962,6 +1938,16 @@ public:
 	void EMDSSMMD(double GETBase);
 	//Ephemeris Fetch Routine
 	int ELFECH(double MJD, int L, unsigned vec_tot, unsigned vec_bef, EphemerisDataTable &EPHEM);
+	//RTE Tradeoff Display Sort and Order Routine
+	int PMQREAP(const std::vector<TradeoffData> &TOdata);
+	//Return to Earth Abort Planning Supervisor
+	void PMMREAP(int med);
+	//'F' MED Module
+	int PMQAFMED(int med);
+	//'P' Code MED Processor
+	void GMSMED(int med);
+	void FDOLaunchAnalog1(MPTSV sv);
+	void FDOLaunchAnalog2(MPTSV sv);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1999,8 +1985,167 @@ public:
 	struct calculationParameters calcParams;
 
 	//MEDs
+
+	//Update return to Earth constraints
+	struct MED_F86
+	{
+		std::string Constraint;
+		double Value;
+	} med_f86;
+
+	//Update return to Earth constraints
+	struct MED_F87
+	{
+		std::string Constraint;
+		std::string Value;
+	} med_f87;
+
+	struct MED_P08
+	{
+		double PitchAngle;
+	} med_p08;
+
+	struct MED_P10
+	{
+		//1 = LEM, 2 = CSM
+		int VEH;
+		//Liftoff time in hours
+		double GMTALO;
+		//Traj or no traj
+		bool TRAJ;
+	} med_p10;
+
+	struct MED_P12
+	{
+		//0 = CSM, 1 = IU1, 2 = IU2
+		int VEH;
+		double GMTGRR;
+		double LaunchAzimuth;
+	} med_p12;
+
+	//Enter vector in Keplerian elements (spherical coordinates)
+	struct MED_P13
+	{
+		//0 = CSM, 1 = LEM
+		int VEH;
+		//Velocity in ft/s
+		double Vel;
+		//Flight path angle in degrees (-90° to 90°)
+		double FPA;
+		//Azimuth in degrees (0° to 360°)
+		double Azi;
+		//Geocentric latitude in degrees (-90° to 90°)
+		double Lat;
+		//Longitude in degrees (-180° to 180°)
+		double Lng;
+		//Height above oblate Earth
+		double Height;
+		//Time in hours
+		double Time;
+		//Ephemeris Indicator
+		int EPHIND = 0;
+		//Coordinate system indicator (0 = ECT, 1 = MCT)
+		int COORDIND;
+	} med_p13;
+
+	//Enter vector in X,Y,Z format
+	struct MED_P14
+	{
+		//0 = CSM, 1 = LEM
+		int VEH;
+		//Position (-60 to 60 Er)
+		double X;
+		double Y;
+		double Z;
+		//Velocity (-60 to 60 Er/hr)
+		double X_dot;
+		double Y_dot;
+		double Z_dot;
+		//Time in hours
+		double Time;
+		//Ephemeris Indicator
+		int EPHIND = 0;
+		//Coordinate system indicator (0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP, 5 = PLUM)
+		int COORDIND;
+	} med_p14;
+
+	//Update GMTZS for specified vehicle
+	struct MED_P15
+	{
+		//0 = AGC, 1 = LGC, 2 = AGS
+		int VEH;
+		double GMTZS;
+		double DT;
+	} med_p15;
+
+	//Generate an ephemeris for one vehicle using a vector from the other vehicle
+	struct MED_P16
+	{
+		int OldVeh = 12; //1 = LEM, 2 = CSM
+		int NewVeh = 1; //1 = LEM, 2 = CSM
+		double GMT = 0.0;
+		unsigned ManNum = 0;
+	} med_p16;
+
+	//Cape Crossing Table Update and Limit Change
+	struct MED_P17
+	{
+		int VEH = 1; //1 = LEM, 2 = CSM
+		bool IsEarth = true;
+		int REV = 1;
+	} med_p17;
+
+	//Modify A and E used to determine integration limits
+	struct MED_P30
+	{
+		//In NM
+		double SMA;
+		double ECC;
+	} med_p30;
+
+	//Initialize phase reference time (GET)
+	struct MED_P31
+	{
+		double GET;
+	} med_p31;
+
+	//Update scaling factor used by venting model
+	struct MED_P33
+	{
+		double ScaleFactor;
+	} med_p33;
+
+	//Offsets and elevation angle for two-impulse solution
+	struct MED_P51
+	{
+		double DH = 0.0; //Delta Height
+		double Phase = 0.0; //Phase Angle
+		double E = 0.0; //Elevation Angle
+		double WT = 0.0; //Travel angle for terminal phase
+	} med_p51;
+
+	//Two-Impulse Corrective Combination Nominals
+	struct MED_P52
+	{
+		double GET_NSR = 0.0; //Nominal Time of NSR Maneuver
+		double DH_NSR = 0.0; //Nominal Height Difference at NSR
+		double PH_NSR = 0.0; //Phase Angle at NSR
+	} med_p52;
+
+	//Initialize number of vehicles, first launch vehicle, mission date
+	struct MED_P80
+	{
+		int NumVeh = 1;
+		int FirstVeh;
+		int Month;
+		int Day;
+		int Year;
+		int DeltaDay;
+	} med_p80;
+
 	MED_B03 med_b03;
 	MED_B04 med_b04;
+	MED_F70 med_f70;
 	MED_K16 med_k16;
 	MED_K17 med_k17;
 	MED_M40 med_m40;
@@ -2012,8 +2157,6 @@ public:
 	MED_M70 med_m70;
 	MED_M72 med_m72;
 	MED_M78 med_m78;
-	MED_P16 med_p16;
-	MED_P17 med_p17;
 	MED_U00 med_u00;
 	MED_U01 med_u01;
 	MED_U02 med_u02;
@@ -2030,6 +2173,79 @@ public:
 	CapeCrossingTable EZCLEM;
 	SunriseSunsetTable EZSSTAB;
 	SunriseSunsetTable EZMMTAB;
+	TradeoffDataDisplay RTETradeoffTable;
+
+	struct RTEConstraintsTable
+	{
+		RTEConstraintsTable();
+
+		//Block 11
+
+		//Maximum allowable DV for tradeoff display (in ft/s)
+		double DVMAX;
+		//Minimum time of landing for tradeoff display (in hours GET)
+		double TZMIN;
+		//Maximum time of landing for tradeoff display (in hours GET)
+		double TZMAX;
+		//Constant g-level for use in return-to-earth digitals and EFCUA mode of the abort scan table (AST)
+		double GMAX;
+		//Minimum height of pericynthion (NM)
+		double HMINMC;
+		//Maximum return inclination (DEG)
+		double IRMAX;
+		//Relative range override (NM)
+		double RRBIAS;
+		//Maximum return velocity
+		double VRMAX;
+		//Vector source (0 = CSM, 1 = LEM)
+		int VECID;
+		//Vector type (0 = CMC, 1 = LGC, 2 = AGS, 3 = IU, 4 = HSR, 5 = DC, 6 = ANC, 7 = EPH)
+		int VECTYPE;
+		//Target line (0 = shallow, 1 = steep)
+		int TGTLN;
+		//Circumlunar motion (0 = either, 1 = direct, 2 = circumlunar)
+		int MOTION;
+
+		//Names of PTP sites
+		std::string PTPSite[5];
+		//Latitude of PTP sites
+		double PTPLatitude[5];
+		//Longitude of PTP sites
+		double PTPLongitude[5];
+		//Names of ATP sites
+		std::string ATPSite[5];
+		//Latitude and longitude of ATP data points
+		double ATPCoordinates[5][10];
+
+		//Block 12
+		std::string RTESite;
+		double RTEVectorTime;
+		double RTET0Min;
+		double RTET0Max;
+		double RTETimeOfLanding;
+		double RTEUADVMax;
+		double RTEPTPMissDistance;
+		double RTEInclination;
+		int EntryProfile;
+		int RTETradeoffRemotePage;
+
+		//Block 13
+		int RTETradeoffLabelling[5];
+	} PZREAP;
+
+	struct FIDOLaunchAnalogNo1DisplayTable
+	{
+		double LastUpdateTime = -1.0;
+		std::vector<double> XVal;
+		std::vector<double> YVal;
+	} fdolaunchanalog1tab;
+
+	struct FIDOLaunchAnalogNo2DisplayTable
+	{
+		double LastUpdateTime = -1.0;
+		std::vector<double> XVal;
+		std::vector<double> YVal;
+	} fdolaunchanalog2tab;
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
@@ -2037,6 +2253,7 @@ private:
 	double GetTEPHEMFromAGC(agc_t *agc);
 	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
 	double getGETBase();
+	double CalcGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
@@ -2089,17 +2306,155 @@ private:
 	int CapeCrossingRev(int L, double GET);
 	double CapeCrossingGET(int L, int rev);
 	void ECMPAY(const EphemerisDataTable &EPH, double MJD, bool sun, double &Pitch, double &Yaw);
+	//Spherical to Inertial Conversion
+	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
+	//base hour Angle
+	double PIGMHA(int E, int Y, int D);
 
 	bool MPTConfigIncludesCSM(int config);
 	bool MPTConfigIncludesLM(int config);
 	bool MPTConfigIncludesSIVB(int config);
 	double MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass);
 
+	double GLHTCS(double FLTHRS) { return FLTHRS * 360000.0; }
+	double GLCSTH(double FIXCSC) { return FIXCSC / 360000.0; }
+	double TJUDAT(int Y, int M, int D);
+
 protected:
 	double TimeofIgnition;
 	double SplashLatitude, SplashLongitude;
 	VECTOR3 DeltaV_LVLH;
 	int REFSMMATType;
+
+	struct GeneralConstraintsTable
+	{
+		//Block 1
+		int Year;
+		//Block 2
+		int RefDayOfYear;
+		//Block 3
+		int DaysInYear;
+		//Block 4
+		int MonthofLiftoff;
+		int DayofLiftoff;
+		int DaysinMonthofLiftoff;
+		//Block 5
+		double ElevationAngle;
+		//Block 8
+		double TerminalPhaseAngle;
+		//Block 9
+		double TIDeltaH;
+		//Block 10
+		double TIPhaseAngle;
+		//Block 11
+		double TIElevationAngle;
+		//Block 12
+		double TITravelAngle;
+		//Block 13
+		double TINSRNominalTime;
+		//Block 14
+		double TINSRNominalDeltaH;
+		//Block 15
+		double TINSRNominalPhaseAngle;
+		//Block 18 Bytes 5-8
+		int TPFDefinition;
+		//Block 25
+		double DKIDeltaH;
+		//Block 26
+		double TPFDefinitionValue;
+		//Block 27
+		double MinPerigee;
+		//Block 28 Bytes 1-4
+		double DeltaNSR;
+		//Block 29
+		double TPIDefinitionValue;
+		//Block 30
+		double OrbitsFromCSItoTPI;
+		//Block 31 Bytes 1-4
+		int TPIDefinition;
+		//Block 31 Bytes 5-8
+		int TPICounterNum;
+		//Block 32 Bytes 5-8
+		int PhaseAngleSetting;
+		//Block 36
+		double ActualDH;
+		//Block 37
+		double ActualPhaseAngle;
+		//Block 38
+		double ActualWedgeAngle;
+		//Block 40
+		double LDPPAzimuth;
+		//Block 41
+		double LDPPHeightofPDI;
+		//Block 42 1st word
+		int LDPPDwellOrbits;
+		//Block 42 2nd word
+		bool LDPPPoweredDescentSimFlag;
+		//Block 43
+		double LDPPTimeofPDI;
+		//Block 44
+		double LDPPDescentFlightTime;
+		//Block 45
+		double LDPPDescentFlightArc;
+		//Block 46
+		double SPQDeltaH;
+		//Block 47
+		double SPQElevationAngle;
+		//Block 48
+		double SPQTerminalPhaseAngle;
+		//Block 49
+		double SPQMinimumPerifocus;
+
+	} GZGENCSN;
+
+	//RTCC System Parameters
+	
+	//Burnout launch azimuth (rad.)
+	double MCLABN;
+	//Sine of burnout launch azimuth
+	double MCLSBN;
+	//Cosine of burnout launch azimuth
+	double MCLCBN;
+	//Pitch angle from horizon (rad.)
+	double MCGHZA;
+	//L/O time first vehicle (hrs.)
+	double MCGMTL;
+	//L/O time second vehicle (hrs.)
+	double MCGMTS;
+	//L/O time first vehicle (centisec.)
+	double MGLGMT;
+	//L/O time second vehicle (centisec.)
+	double MGGGMT;
+	//CSM GMTGRR (hrs.)
+	double MCGRAG;
+	//IU1 GMTGRR (hrs.)
+	double MCGRIC;
+	//IU2 GMTGRR (hrs.)
+	double MCGRIL;
+	//AGC GMTZS (hrs.)
+	double MCGZSA;
+	//LGC GMTZS (hrs.)
+	double MCGZSL;
+	//AGS GMTZS (hrs.)
+	double MCGZSS;
+	//Semimajor axis (Er.)
+	double MCGSMA;
+	//Eccentricity
+	double MCGECC;
+	//Phase reference time - GET (hrs.)
+	double MCGREF;
+	//Venting scale factor
+	double MCTVEN;
+	//Lambda Zero
+	double MCLAMD;
+
+	//MJD of launch day (days)
+	double GMTBASE;
+
+
+	//CONSTANTS
+	//Nautical miles per Earth radii
+	const double MCCNMC = 3443.93359;
 };
 
 

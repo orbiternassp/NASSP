@@ -123,12 +123,10 @@ public:
 	void EntryLngDialogue();
 	void menuSetEntryDesiredInclination();
 	void set_EntryDesiredInclination(double inc);
-	void menuSetEntryMaxInclination();
-	void set_EntryMaxInclination(double inc);
-	void menuSetEntryRangeOverride();
-	void set_EntryRangeOverride(double range);
-	void menuSetMaxReentrySpeed();
-	void set_MaxReentrySpeed(double vel);
+	void menuSetRTEConstraintF86();
+	void set_RTEConstraintF86(std::string constr, double value);
+	void menuSetRTEConstraintF87();
+	void set_RTEConstraintF87(std::string constr, std::string value);
 	void CycleRTECalcMode();
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();
@@ -492,6 +490,8 @@ public:
 	void set_MoonriseMoonsetTimesInput(int IND, double PARAM);
 	void menuCapeCrossingInit();
 	void set_CapeCrossingRev(int veh, int rev);
+	void menuSetFIDOLaunchAnalogNo1Page();
+	void menuSetFIDOLaunchAnalogNo2Page();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

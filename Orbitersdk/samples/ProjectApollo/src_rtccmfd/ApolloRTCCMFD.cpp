@@ -3155,16 +3155,95 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 29)
 	{
-		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "RTE Constraints", 15);
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 1 * H / 14, "RETURN TO EARTH TARGET (MSK 366)", 32);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		sprintf(Buffer, "Max Return Inclination: %.3f°", GC->RTEMaxReturnInclination*DEG);
-		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		skp->SetFont(font2);
 
-		sprintf(Buffer, "Range Override: %.1f NM", GC->RTERangeOverrideNM);
-		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(2 * W / 32, 4 * H / 28, "CONSTRAINTS", 11);
+		skp->Text(2 * W / 32, 6 * H / 28, "DVMAX", 5);
+		skp->Text(2 * W / 32, 8 * H / 28, "TZMIN", 5);
+		skp->Text(2 * W / 32, 10 * H / 28, "TZMAX", 5);
+		skp->Text(2 * W / 32, 12 * H / 28, "GMAX", 4);
+		skp->Text(2 * W / 32, 14 * H / 28, "HMINMC", 6);
+		skp->Text(2 * W / 32, 16 * H / 28, "IRMAX", 5);
+		skp->Text(2 * W / 32, 18 * H / 28, "RRBIAS", 6);
+		skp->Text(2 * W / 32, 20 * H / 28, "VRMAX", 5);
+		skp->Text(2 * W / 32, 22 * H / 28, "MOTION", 6);
+		skp->Text(2 * W / 32, 24 * H / 28, "TGTLN", 5);
+		skp->Text(2 * W / 32, 26 * H / 28, "VECID", 5);
 
-		sprintf(Buffer, "Max Reentry Speed: %.0f ft/s", G->RTEMaxReentrySpeed / 0.3048);
-		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(20 * W / 32, 4 * H / 28, "ATP", 5);
+		skp->Text(20 * W / 32, 18 * H / 28, "PTP", 5);
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		sprintf(Buffer, "%.0f", GC->rtcc->PZREAP.DVMAX);
+		skp->Text(10 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, GC->rtcc->PZREAP.TZMIN, false);
+		skp->Text(10 * W / 32, 8 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, GC->rtcc->PZREAP.TZMAX, false);
+		skp->Text(10 * W / 32, 10 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.1f", GC->rtcc->PZREAP.GMAX);
+		skp->Text(10 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.1f", GC->rtcc->PZREAP.HMINMC);
+		skp->Text(10 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2f", GC->rtcc->PZREAP.IRMAX);
+		skp->Text(10 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.0f", GC->rtcc->PZREAP.RRBIAS);
+		skp->Text(10 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.0f", GC->rtcc->PZREAP.VRMAX);
+		skp->Text(10 * W / 32, 20 * H / 28, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->PZREAP.MOTION == 0)
+		{
+			skp->Text(10 * W / 32, 22 * H / 28, "EITHER", 6);
+		}
+		else if (GC->rtcc->PZREAP.MOTION == 1)
+		{
+			skp->Text(10 * W / 32, 22 * H / 28, "DIRECT", 6);
+		}
+		else
+		{
+			skp->Text(10 * W / 32, 22 * H / 28, "CIRCUM", 6);
+		}
+
+		if (GC->rtcc->PZREAP.TGTLN == 0)
+		{
+			skp->Text(10 * W / 32, 24 * H / 28, "SHALLOW", 7);
+		}
+		else
+		{
+			skp->Text(10 * W / 32, 24 * H / 28, "STEEP", 5);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		for (unsigned i = 0;i < 5;i++)
+		{
+			//If first element is not valid, skip this ATP
+			if (GC->rtcc->PZREAP.ATPCoordinates[i][0] >= 1e9)
+			{
+				continue;
+			}
+
+			sprintf(Buffer, GC->rtcc->PZREAP.ATPSite[i].c_str());
+			skp->Text((11 + i * 4) * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
+			for (unsigned j = 0;j < 5;j++)
+			{
+				//If current element isn't valid, skip the rest
+				if (GC->rtcc->PZREAP.ATPCoordinates[i][2 * j] >= 1e9)
+				{
+					break;
+				}
+
+				sprintf(Buffer, "%.2f", GC->rtcc->PZREAP.ATPCoordinates[i][2 * j] * DEG);
+				skp->Text((11 + i * 4) * W / 32, (7 + j * 2) * H / 28, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%.2f", GC->rtcc->PZREAP.ATPCoordinates[i][2 * j + 1] * DEG);
+				skp->Text((11 + i * 4) * W / 32, (8 + j * 2) * H / 28, Buffer, strlen(Buffer));
+			}
+		}
 	}
 	else if (screen == 30)
 	{
@@ -3614,7 +3693,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		G->CycleFIDOOrbitDigitals();
 
-		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "FIDO ORBIT DIGITALS", 19);
+		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "FDO ORBIT DIGITALS", 18);
 
 		skp->SetFont(font2);
 
@@ -3855,14 +3934,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	}
 	else if (screen == 42)
 	{
-		skp->Text(1 * W / 8, 2 * H / 14, "FIDO Orbit Digitals", 19);
-		skp->Text(1 * W / 8, 4 * H / 14, "Space Digitals", 14);
-		skp->Text(1 * W / 8, 6 * H / 14, "Next Station Contacts", 21);
-		skp->Text(1 * W / 8, 8 * H / 14, "Predicted Site Acquisitions", 27);
-		skp->Text(1 * W / 8, 10 * H / 14, "Checkout Monitor", 16);
-		skp->Text(1 * W / 8, 12 * H / 14, "Sunrise/Sunset Times", 20);
+		skp->Text(1 * W / 16, 2 * H / 14, "FDO Orbit Digitals", 18);
+		skp->Text(1 * W / 16, 4 * H / 14, "Space Digitals", 14);
+		skp->Text(1 * W / 16, 6 * H / 14, "Next Station Contacts", 21);
+		skp->Text(1 * W / 16, 8 * H / 14, "Predicted Site Acquisitions", 27);
+		skp->Text(1 * W / 16, 10 * H / 14, "Checkout Monitor", 16);
+		skp->Text(1 * W / 16, 12 * H / 14, "Sunrise/Sunset Times", 20);
 
 		skp->Text(4 * W / 8, 2 * H / 14, "Moonrise/Moonset Times", 22);
+		skp->Text(4 * W / 8, 4 * H / 14, "FDO Launch Analog No 1", 22);
+		skp->Text(4 * W / 8, 6 * H / 14, "FDO Launch Analog No 2", 22);
 	}
 	else if (screen == 43)
 	{
@@ -5541,6 +5622,218 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(59 * W / 64, (i + 8) * H / 28, Buffer, strlen(Buffer));
 		}
 	}
+	//FDO Launch Analog No. 1
+	else if (screen == 64)
+	{
+		if (oapiGetSimTime() > GC->rtcc->fdolaunchanalog1tab.LastUpdateTime + 0.5)
+		{
+			MPTSV sv = GC->rtcc->StateVectorCalc(G->vessel);
+			GC->rtcc->FDOLaunchAnalog1(sv);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 1 * H / 14, "FDO LAUNCH ANALOG NO 1 (MSK 0040)", 33);
+
+		skp->SetFont(font2);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER, oapi::Sketchpad::BASELINE);
+
+		skp->Text(2 * W / 64, 13 * H / 80, "2.0", 3);
+		skp->Text(5 * W / 64, 13 * H / 80, "35", 2);
+		skp->Text(8 * W / 64, 13 * H / 80, "40", 2);
+
+		skp->Text(2 * W / 64, 20 * H / 80, "1.5", 3);
+		skp->Text(5 * W / 64, 20 * H / 80, "30", 2);
+		skp->Text(8 * W / 64, 20 * H / 80, "35", 2);
+
+		skp->Text(2 * W / 64, 27 * H / 80, "1.0", 3);
+		skp->Text(5 * W / 64, 27 * H / 80, "25", 2);
+		skp->Text(8 * W / 64, 27 * H / 80, "30", 2);
+
+		skp->Text(5 * W / 64, 61 * H / 160, "(y)", 3);
+
+		skp->Text(2 * W / 64, 34 * H / 80, ".5", 2);
+		skp->Text(5 * W / 64, 34 * H / 80, "20", 2);
+		skp->Text(8 * W / 64, 34 * H / 80, "25", 2);
+
+		skp->Text(2 * W / 64, 41 * H / 80, "0", 1);
+		skp->Text(5 * W / 64, 41 * H / 80, "15", 2);
+		skp->Text(8 * W / 64, 41 * H / 80, "20", 2);
+
+		skp->Text(2 * W / 64, 48 * H / 80, "-.5", 3);
+		skp->Text(5 * W / 64, 48 * H / 80, "10", 2);
+		skp->Text(8 * W / 64, 48 * H / 80, "15", 2);
+
+		skp->Text(2 * W / 64, 55 * H / 80, "-1.0", 4);
+		skp->Text(5 * W / 64, 55 * H / 80, "5", 1);
+		skp->Text(8 * W / 64, 55 * H / 80, "10", 2);
+
+		skp->Text(2 * W / 64, 62 * H / 80, "-1.5", 4);
+		skp->Text(5 * W / 64, 62 * H / 80, "0", 1);
+		skp->Text(8 * W / 64, 62 * H / 80, "5", 1);
+
+		skp->Text(2 * W / 64, 69 * H / 80, "-2.0", 4);
+		skp->Text(5 * W / 64, 69 * H / 80, "-5", 2);
+		skp->Text(8 * W / 64, 69 * H / 80, "0", 1);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(3 * W / 20, 21 * H / 24, "0", 1);
+		skp->Text(3 * W / 20, 22 * H / 24, "5", 1);
+		skp->Text(3 * W / 20, 23 * H / 24, "21", 2);
+
+		skp->Text(13 * W / 60, 22 * H / 24, "6.5", 3);
+
+		skp->Text(17 * W / 60, 21 * H / 24, "1", 1);
+		skp->Text(17 * W / 60, 22 * H / 24, "8", 1);
+		skp->Text(17 * W / 60, 23 * H / 24, "22", 2);
+
+		skp->Text(21 * W / 60, 22 * H / 24, "9.5", 3);
+
+		skp->Text(25 * W / 60, 21 * H / 24, "2", 1);
+		skp->Text(25 * W / 60, 22 * H / 24, "11", 2);
+		skp->Text(25 * W / 60, 23 * H / 24, "23", 2);
+
+		skp->Text(29 * W / 60, 22 * H / 24, "12.5", 4);
+		skp->Text(29 * W / 60, 23 * H / 24, "(V)", 3);
+
+		skp->Text(33 * W / 60, 21 * H / 24, "3", 1);
+		skp->Text(33 * W / 60, 22 * H / 24, "14", 2);
+		skp->Text(33 * W / 60, 23 * H / 24, "24", 2);
+
+		skp->Text(37 * W / 60, 22 * H / 24, "15.5", 4);
+
+		skp->Text(41 * W / 60, 21 * H / 24, "4", 1);
+		skp->Text(41 * W / 60, 22 * H / 24, "17", 2);
+		skp->Text(41 * W / 60, 23 * H / 24, "25", 2);
+
+		skp->Text(45 * W / 60, 22 * H / 24, "18.5", 4);
+
+		skp->Text(49 * W / 60, 21 * H / 24, "5", 1);
+		skp->Text(49 * W / 60, 22 * H / 24, "20", 2);
+		skp->Text(49 * W / 60, 23 * H / 24, "26", 2);
+
+		skp->Text(53 * W / 60, 22 * H / 24, "21.5", 4);
+
+		skp->Text(57 * W / 60, 21 * H / 24, "6", 1);
+		skp->Text(57 * W / 60, 22 * H / 24, "23", 2);
+		skp->Text(57 * W / 60, 23 * H / 24, "27", 2);
+
+		skp->Line(W * 3 / 20, H * 3 / 20, W * 19 / 20, H * 3 / 20);
+		skp->Line(W * 3 / 20, H * 3 / 20, W * 3 / 20, H * 17 / 20);
+		skp->Line(W * 3 / 20, H * 17 / 20, W * 19 / 20, H * 17 / 20);
+		skp->Line(W * 3 / 20, H * 17 / 20, W * 19 / 20, H * 17 / 20);
+		skp->Line(W * 19 / 20, H * 3 / 20, W * 19 / 20, H * 17 / 20);
+
+		for (unsigned i = 0;i < GC->rtcc->fdolaunchanalog1tab.XVal.size();i++)
+		{
+			skp->Pixel((int)(GC->rtcc->fdolaunchanalog1tab.XVal[i] * W), (int)(GC->rtcc->fdolaunchanalog1tab.YVal[i] * H), 0x00FFFF);
+		}
+		
+	}
+	//FDO Launch Analog No. 2
+	else if (screen == 65)
+	{
+		if (oapiGetSimTime() > GC->rtcc->fdolaunchanalog2tab.LastUpdateTime + 0.5)
+		{
+			MPTSV sv = GC->rtcc->StateVectorCalc(G->vessel);
+			GC->rtcc->FDOLaunchAnalog2(sv);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(4 * W / 8, 1 * H / 14, "FDO LAUNCH ANALOG NO 2 (MSK 0041)", 33);
+
+		skp->SetFont(font2);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER, oapi::Sketchpad::BASELINE);
+
+		skp->Text(2 * W / 64, 10 * H / 60, "0", 1);
+		skp->Text(5 * W / 64, 10 * H / 60, "0", 1);
+		skp->Text(8 * W / 64, 10 * H / 60, "0", 1);
+
+		skp->Text(2 * W / 64, 17 * H / 60, "-2", 2);
+		skp->Text(5 * W / 64, 17 * H / 60, "-2", 2);
+		skp->Text(8 * W / 64, 17 * H / 60, "-6", 2);
+
+		skp->Text(2 * W / 64, 24 * H / 60, "-4", 2);
+		skp->Text(5 * W / 64, 24 * H / 60, "-4", 2);
+		skp->Text(8 * W / 64, 24 * H / 60, "-12", 3);
+
+		skp->Text(5 * W / 64, 55 * H / 120, "(yEI)", 5);
+
+		skp->Text(2 * W / 64, 31 * H / 60, "-6", 2);
+		skp->Text(5 * W / 64, 31 * H / 60, "-6", 2);
+		skp->Text(8 * W / 64, 31 * H / 60, "-18", 3);
+
+		skp->Text(2 * W / 64, 38 * H / 60, "-8", 2);
+		skp->Text(5 * W / 64, 38 * H / 60, "-8", 2);
+		skp->Text(8 * W / 64, 38 * H / 60, "-24", 3);
+
+		skp->Text(2 * W / 64, 45 * H / 60, "-10", 3);
+		skp->Text(5 * W / 64, 45 * H / 60, "-10", 3);
+		skp->Text(8 * W / 64, 45 * H / 60, "-30", 3);
+
+		skp->Text(2 * W / 64, 52 * H / 60, "-12", 3);
+		skp->Text(5 * W / 64, 52 * H / 60, "-12", 3);
+		skp->Text(8 * W / 64, 52 * H / 60, "-36", 3);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		skp->Text(3 * W / 20, 21 * H / 24, "6", 1);
+		skp->Text(3 * W / 20, 22 * H / 24, "22.5", 4);
+		skp->Text(3 * W / 20, 23 * H / 24, "25", 2);
+
+		skp->Text(83 * W / 340, 21 * H / 24, "8", 1);
+		skp->Text(83 * W / 340, 22 * H / 24, "23", 2);
+		skp->Text(83 * W / 340, 23 * H / 24, "26", 2);
+
+		skp->Text(115 * W / 340, 21 * H / 24, "10", 2);
+		skp->Text(115 * W / 340, 22 * H / 24, "23.5", 4);
+		skp->Text(115 * W / 340, 23 * H / 24, "27", 2);
+
+		skp->Text(147 * W / 340, 21 * H / 24, "12", 2);
+		skp->Text(147 * W / 340, 22 * H / 24, "24", 2);
+		skp->Text(147 * W / 340, 23 * H / 24, "28", 2);
+
+		skp->Text(163 * W / 340, 22 * H / 24, "V", 1);
+
+		skp->Text(179 * W / 340, 21 * H / 24, "14", 2);
+		skp->Text(179 * W / 340, 22 * H / 24, "24.5", 4);
+		skp->Text(179 * W / 340, 23 * H / 24, "29", 2);
+
+		skp->Text(211 * W / 340, 21 * H / 24, "16", 2);
+		skp->Text(211 * W / 340, 22 * H / 24, "25", 2);
+		skp->Text(211 * W / 340, 23 * H / 24, "30", 2);
+
+		skp->Text(243 * W / 340, 21 * H / 24, "18", 2);
+		skp->Text(243 * W / 340, 22 * H / 24, "25.5", 4);
+		skp->Text(243 * W / 340, 23 * H / 24, "31", 2);
+
+		skp->Text(275 * W / 340, 21 * H / 24, "20", 2);
+		skp->Text(275 * W / 340, 22 * H / 24, "26", 2);
+		skp->Text(275 * W / 340, 23 * H / 24, "32", 2);
+
+		skp->Text(307 * W / 340, 21 * H / 24, "22", 2);
+		skp->Text(307 * W / 340, 22 * H / 24, "26.5", 4);
+		skp->Text(307 * W / 340, 23 * H / 24, "33", 2);
+
+		skp->Text(323 * W / 340, 21 * H / 24, "23", 2);
+		skp->Text(323 * W / 340, 23 * H / 24, "33.5", 4);
+
+		skp->Line(W * 3 / 20, H * 3 / 20, W * 19 / 20, H * 3 / 20);
+		skp->Line(W * 3 / 20, H * 3 / 20, W * 3 / 20, H * 17 / 20);
+		skp->Line(W * 3 / 20, H * 17 / 20, W * 19 / 20, H * 17 / 20);
+		skp->Line(W * 3 / 20, H * 17 / 20, W * 19 / 20, H * 17 / 20);
+		skp->Line(W * 19 / 20, H * 3 / 20, W * 19 / 20, H * 17 / 20);
+
+		for (unsigned i = 0;i < GC->rtcc->fdolaunchanalog2tab.XVal.size();i++)
+		{
+			skp->Pixel((int)(GC->rtcc->fdolaunchanalog2tab.XVal[i] * W), (int)(GC->rtcc->fdolaunchanalog2tab.YVal[i] * H), 0x00FFFF);
+		}
+
+	}
 	return true;
 }
 
@@ -6180,6 +6473,18 @@ void ApolloRTCCMFD::menuSetMoonriseMoonsetTablePage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetFIDOLaunchAnalogNo1Page()
+{
+	screen = 64;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetFIDOLaunchAnalogNo2Page()
+{
+	screen = 65;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()
@@ -6816,67 +7121,60 @@ void ApolloRTCCMFD::set_EntryDesiredInclination(double inc)
 	G->EntryDesiredInclination = inc * RAD;
 }
 
-void ApolloRTCCMFD::menuSetEntryMaxInclination()
+void ApolloRTCCMFD::menuSetRTEConstraintF86()
 {
-	bool EntryMaxInclinationInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the maximum inclination:", EntryMaxInclinationInput, 0, 20, (void*)this);
+	bool RTEConstraintF86Input(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter the RTE constraint (Format: Constraint,Value)", RTEConstraintF86Input, 0, 20, (void*)this);
 }
 
-bool EntryMaxInclinationInput(void *id, char *str, void *data)
+bool RTEConstraintF86Input(void *id, char *str, void *data)
 {
-	if (strlen(str) < 20)
+	double val;
+
+	if (sscanf(str, "%[^','],%lf", Buffer, &val) == 2)
 	{
-		((ApolloRTCCMFD*)data)->set_EntryMaxInclination(atof(str));
+		std::string constr(Buffer);
+		((ApolloRTCCMFD*)data)->set_RTEConstraintF86(constr, val);
 		return true;
 	}
+
 	return false;
 }
 
-void ApolloRTCCMFD::set_EntryMaxInclination(double inc)
+void ApolloRTCCMFD::set_RTEConstraintF86(std::string constr, double value)
 {
-	GC->RTEMaxReturnInclination = inc * RAD;
+	GC->rtcc->med_f86.Constraint = constr;
+	GC->rtcc->med_f86.Value = value;
+
+	GC->rtcc->PMQAFMED(86);
 }
 
-void ApolloRTCCMFD::menuSetEntryRangeOverride()
+void ApolloRTCCMFD::menuSetRTEConstraintF87()
 {
-	bool EntryRangeOverrideInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the entry range in NM:", EntryRangeOverrideInput, 0, 20, (void*)this);
+	bool RTEConstraintF87Input(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter the RTE constraint (Format: Constraint,Value)", RTEConstraintF87Input, 0, 20, (void*)this);
 }
 
-bool EntryRangeOverrideInput(void *id, char *str, void *data)
+bool RTEConstraintF87Input(void *id, char *str, void *data)
 {
-	if (strlen(str) < 20)
+	char buff1[100], buff2[100];
+	if (sscanf(str, "%[^','],%s", buff1, buff2) == 2)
 	{
-		((ApolloRTCCMFD*)data)->set_EntryRangeOverride(atof(str));
+		std::string constr(buff1);
+		std::string val(buff2);
+		((ApolloRTCCMFD*)data)->set_RTEConstraintF87(constr, val);
 		return true;
 	}
+
 	return false;
 }
 
-void ApolloRTCCMFD::set_EntryRangeOverride(double range)
+void ApolloRTCCMFD::set_RTEConstraintF87(std::string constr, std::string value)
 {
-	GC->RTERangeOverrideNM = range;
-}
+	GC->rtcc->med_f87.Constraint = constr;
+	GC->rtcc->med_f87.Value = value;
 
-void ApolloRTCCMFD::menuSetMaxReentrySpeed()
-{
-	bool MaxReentrySpeedInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the entry range in ft/s:", MaxReentrySpeedInput, 0, 20, (void*)this);
-}
-
-bool MaxReentrySpeedInput(void *id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_MaxReentrySpeed(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MaxReentrySpeed(double vel)
-{
-	G->RTEMaxReentrySpeed = vel * 0.3048;
+	GC->rtcc->PMQAFMED(87);
 }
 
 void ApolloRTCCMFD::CycleRTECalcMode()

@@ -55,8 +55,6 @@ AR_GCore::AR_GCore(VESSEL* v)
 	TLCCNodeAlt = 0.0;
 	TLCCNodeGET = 0.0;
 	DOI_option = 0;
-	RTEMaxReturnInclination = 40.0*RAD;
-	RTERangeOverrideNM = 0.0;
 	DT_Ins_TPI = 40.0*60.0;
 
 	if (strcmp(v->GetName(), "AS-205") == 0)
@@ -109,7 +107,15 @@ AR_GCore::AR_GCore(VESSEL* v)
 		GETbase = LaunchMJD[mission - 7];
 	}
 
-	if (mission == 8)
+	if (mission == 7)
+	{
+		rtcc->med_p80.Day = 11;
+		rtcc->med_p80.Month = 10;
+		rtcc->med_p80.Year = 1968;
+
+		rtcc->GMSMED(80);
+	}
+	else if (mission == 8)
 	{
 		LSLat = 2.6317*RAD;
 		LSLng = 34.0253*RAD;
@@ -118,7 +124,21 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -5.67822*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(69.0, 9.0, 29.4);
 		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
-		RTERangeOverrideNM = 1350.0;
+		rtcc->PZREAP.RRBIAS = 1350.0;
+
+		rtcc->med_p80.Day = 21;
+		rtcc->med_p80.Month = 12;
+		rtcc->med_p80.Year = 1968;
+
+		rtcc->GMSMED(80);
+	}
+	else if (mission == 9)
+	{
+		rtcc->med_p80.Day = 3;
+		rtcc->med_p80.Month = 3;
+		rtcc->med_p80.Year = 1969;
+
+		rtcc->GMSMED(80);
 	}
 	else if (mission == 10)
 	{
@@ -129,7 +149,13 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -4.933294*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
 		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
-		RTERangeOverrideNM = 1285.0;
+		rtcc->PZREAP.RRBIAS = 1285.0;
+
+		rtcc->med_p80.Day = 18;
+		rtcc->med_p80.Month = 5;
+		rtcc->med_p80.Year = 1969;
+
+		rtcc->GMSMED(80);
 	}
 	else if (mission == 11)
 	{
@@ -142,7 +168,13 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 0.279074*RAD;
 		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 53.0, 35.0);
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
-		RTERangeOverrideNM = 1285.0;
+		rtcc->PZREAP.RRBIAS = 1285.0;
+
+		rtcc->med_p80.Day = 16;
+		rtcc->med_p80.Month = 7;
+		rtcc->med_p80.Year = 1969;
+
+		rtcc->GMSMED(80);
 	}
 	else if (mission == 12)
 	{
@@ -162,7 +194,13 @@ AR_GCore::AR_GCore(VESSEL* v)
 		TLCCNodeAlt = 59.9*1852.0;
 		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
-		RTERangeOverrideNM = 1250.0;
+		rtcc->PZREAP.RRBIAS = 1250.0;
+
+		rtcc->med_p80.Day = 14;
+		rtcc->med_p80.Month = 11;
+		rtcc->med_p80.Year = 1969;
+
+		rtcc->GMSMED(80);
 	}
 	else if (mission == 13)
 	{
@@ -184,7 +222,13 @@ AR_GCore::AR_GCore(VESSEL* v)
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 		DOI_option = 1;
 		rtcc->med_k17.DwellOrbits = 11;
-		RTERangeOverrideNM = 1250.0;
+		rtcc->PZREAP.RRBIAS = 1250.0;
+
+		rtcc->med_p80.Day = 11;
+		rtcc->med_p80.Month = 4;
+		rtcc->med_p80.Year = 1970;
+
+		rtcc->GMSMED(80);
 	}
 	else if (mission == 14)
 	{
@@ -206,8 +250,14 @@ AR_GCore::AR_GCore(VESSEL* v)
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 		DOI_option = 1;
 		rtcc->med_k17.DwellOrbits = 11;
-		RTERangeOverrideNM = 1250.0;
+		rtcc->PZREAP.RRBIAS = 1250.0;
 		DT_Ins_TPI = 38.0*60.0;
+
+		rtcc->med_p80.Day = 31;
+		rtcc->med_p80.Month = 1;
+		rtcc->med_p80.Year = 1971;
+
+		rtcc->GMSMED(80);
 	}
 	else if (mission == 15)
 	{
@@ -228,9 +278,15 @@ AR_GCore::AR_GCore(VESSEL* v)
 		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
 		DOI_option = 1;
 		rtcc->med_k17.DwellOrbits = 11;
-		RTEMaxReturnInclination = 40.0*RAD;
-		RTERangeOverrideNM = 1190.0;
+		rtcc->PZREAP.IRMAX = 40.0;
+		rtcc->PZREAP.RRBIAS = 1190.0;
 		DT_Ins_TPI = 45.0*60.0;
+
+		rtcc->med_p80.Day = 26;
+		rtcc->med_p80.Month = 7;
+		rtcc->med_p80.Year = 1971;
+
+		rtcc->GMSMED(80);
 	}
 	else if (mission == 16)
 	{
@@ -252,9 +308,15 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_option = 1;
 		rtcc->med_k17.DwellOrbits = 10;
 		rtcc->med_k17.DescIgnHeight = 52500.0*0.3048;
-		RTEMaxReturnInclination = 80.0*RAD;
-		RTERangeOverrideNM = 1190.0;
+		rtcc->PZREAP.IRMAX = 80.0;
+		rtcc->PZREAP.RRBIAS = 1190.0;
 		DT_Ins_TPI = 47.0*60.0;
+
+		rtcc->med_p80.Day = 16;
+		rtcc->med_p80.Month = 4;
+		rtcc->med_p80.Year = 1972;
+
+		rtcc->GMSMED(80);
 	}
 	else if (mission == 17)
 	{
@@ -276,9 +338,15 @@ AR_GCore::AR_GCore(VESSEL* v)
 		DOI_option = 1;
 		rtcc->med_k17.DwellOrbits = 10;
 		rtcc->med_k17.DescIgnHeight = 84000.0*0.3048;
-		RTEMaxReturnInclination = 80.0*RAD;
-		RTERangeOverrideNM = 1190.0;
+		rtcc->PZREAP.IRMAX = 80.0;
+		rtcc->PZREAP.RRBIAS = 1190.0;
 		DT_Ins_TPI = 47.0*60.0;
+
+		rtcc->med_p80.Day = 7;
+		rtcc->med_p80.Month = 12;
+		rtcc->med_p80.Year = 1972;
+
+		rtcc->GMSMED(80);
 	}
 }
 
@@ -681,7 +749,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	EntryDesiredInclination = 0.0;
 	RTECalcMode = 1;
 	RTEReturnInclination = 0.0;
-	RTEMaxReentrySpeed = 36323.0*0.3048;
 
 	SVSlot = true; //true = CSM; false = Other
 	SVDesiredGET = 0.0;
@@ -2691,7 +2758,7 @@ int ARCore::subThread()
 		opt.TIGguess = EntryTIG;
 		opt.vessel = vessel;
 		opt.type = entrycritical;
-		opt.r_rbias = GC->RTERangeOverrideNM;
+		opt.r_rbias = GC->rtcc->PZREAP.RRBIAS;
 		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
 
 		GC->rtcc->EntryTargeting(&opt, &res);
@@ -2919,14 +2986,9 @@ int ARCore::subThread()
 
 		entryprecision = 1;
 		
-		if (entrylongmanual)
-		{
-			opt.EntryLng = EntryLng;
-		}
-		else
-		{
-			opt.EntryLng = (double)landingzone;
-		}
+		opt.EntryLng = EntryLng;
+		opt.ATPLine = landingzone;
+
 		if (RTECalcMode == 1)
 		{
 			opt.SMODE = 34;
@@ -2950,9 +3012,6 @@ int ARCore::subThread()
 		opt.entrylongmanual = entrylongmanual;
 		opt.TIGguess = EntryTIG;
 		opt.Inclination = EntryDesiredInclination;
-		opt.IRMAX = GC->RTEMaxReturnInclination;
-		opt.r_rbias = GC->RTERangeOverrideNM;
-		opt.u_rmax = RTEMaxReentrySpeed;
 		opt.t_zmin = RTEReentryTime;
 		opt.enginetype = poweredenginetype;
 		opt.csmlmdocked = !GC->MissionPlanningActive && docked;

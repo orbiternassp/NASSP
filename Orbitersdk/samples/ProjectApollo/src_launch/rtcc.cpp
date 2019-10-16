@@ -425,6 +425,84 @@ LunarDescentPlanningTable::LunarDescentPlanningTable()
 	SN_LK_A = 0.0;
 }
 
+RTCC::RTEConstraintsTable::RTEConstraintsTable()
+{
+	DVMAX = 10000.0;
+	TZMIN = 0.0;
+	TZMAX = 0.0;
+	GMAX = 4.0;
+	HMINMC = 50.0;
+	IRMAX = 40.0;
+	RRBIAS = 0.0;
+	VRMAX = 36323.0;
+	VECID = 0;
+	TGTLN = 1;
+	VECTYPE = 7;
+	MOTION = 0;
+	for (int i = 0;i < 5;i++)
+	{
+		PTPLatitude[i] = 0.0;
+		PTPLongitude[i] = 0.0;
+		for (int j = 0;j < 10;j++)
+		{
+			ATPCoordinates[i][j] = 1e10;
+		}
+	}
+
+	//0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
+
+	//MPL
+	ATPSite[0] = "MPL";
+	ATPCoordinates[0][0] = 40.0*RAD;
+	ATPCoordinates[0][1] = -175.0*RAD;
+	ATPCoordinates[0][2] = 15.0*RAD;
+	ATPCoordinates[0][3] = -175.0*RAD;
+	ATPCoordinates[0][4] = 0.0*RAD;
+	ATPCoordinates[0][5] = -165.0*RAD;
+	ATPCoordinates[0][6] = -40.0*RAD;
+	ATPCoordinates[0][7] = -165.0*RAD;
+
+	//EPL
+	ATPSite[1] = "EPL";
+	ATPCoordinates[1][0] = 40.0*RAD;
+	ATPCoordinates[1][1] = -135.0*RAD;
+	ATPCoordinates[1][2] = 21.0*RAD;
+	ATPCoordinates[1][3] = -122.0*RAD;
+	ATPCoordinates[1][4] = -11.0*RAD;
+	ATPCoordinates[1][5] = -89.0*RAD;
+	ATPCoordinates[1][6] = -40.0*RAD;
+	ATPCoordinates[1][7] = -83.0*RAD;
+
+	//AOL
+	ATPSite[2] = "AOL";
+	ATPCoordinates[2][0] = 40.0*RAD;
+	ATPCoordinates[2][1] = -30.0*RAD;
+	ATPCoordinates[2][2] = 10.0*RAD;
+	ATPCoordinates[2][3] = -30.0*RAD;
+	ATPCoordinates[2][4] = -5.0*RAD;
+	ATPCoordinates[2][5] = -25.0*RAD;
+	ATPCoordinates[2][6] = -40.0*RAD;
+	ATPCoordinates[2][7] = -25.0*RAD;
+
+	//IOL
+	ATPSite[3] = "IOL";
+	ATPCoordinates[3][0] = 15.0*RAD;
+	ATPCoordinates[3][1] = 65.0*RAD;
+	ATPCoordinates[3][2] = -40.0*RAD;
+	ATPCoordinates[3][3] = 65.0*RAD;
+
+	//WPL
+	ATPSite[4] = "WPL";
+	ATPCoordinates[4][0] = 40.0*RAD;
+	ATPCoordinates[4][1] = 150.0*RAD;
+	ATPCoordinates[4][2] = 10.0*RAD;
+	ATPCoordinates[4][3] = 150.0*RAD;
+	ATPCoordinates[4][4] = -15.0*RAD;
+	ATPCoordinates[4][5] = 170.0*RAD;
+	ATPCoordinates[4][6] = -40.0*RAD;
+	ATPCoordinates[4][7] = 170.0*RAD;
+}
+
 RTCC::RTCC()
 {
 	mcc = NULL;
@@ -2116,6 +2194,11 @@ double RTCC::getGETBase()
 	SVMJD = oapiGetSimMJD();
 	GET = mcc->cm->GetMissionTime();
 	return SVMJD - GET / 24.0 / 3600.0;
+}
+
+double RTCC::CalcGETBase()
+{
+	return GMTBASE + MCGMTL / 24.0;
 }
 
 MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
@@ -5175,7 +5258,7 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 
 	EMSAlt = 297431.0*0.3048;
-	
+
 	sv0 = opt->RV_MCC;
 
 	if (opt->TIGguess == 0.0)
@@ -5230,9 +5313,33 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 	{
 		TZMINI = opt->t_zmin;
 	}
+
+	double LINE[10];
+
+	if (opt->entrylongmanual)
+	{
+		LINE[0] = PI05;
+		LINE[1] = opt->EntryLng;
+		LINE[2] = -PI05;
+		LINE[3] = opt->EntryLng;
+		LINE[4] = 1e10;
+		LINE[5] = 1e10;
+	}
+	else
+	{
+		if (opt->ATPLine < 0 || opt->ATPLine>4)
+		{
+			return;
+		}
+
+		for (int i = 0;i < 10;i++)
+		{
+			LINE[i] = PZREAP.ATPCoordinates[opt->ATPLine][i];
+		}
+	}
 	
-	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->GETbase, opt->EntryLng, opt->entrylongmanual);
-	teicalc->READ(opt->SMODE, opt->IRMAX, opt->u_rmax, opt->r_rbias, opt->CIRCUM, 50.0*1852.0, 2, 0.3, 10000.0*0.3048, 0.0, opt->Inclination, 1.0*1852.0, TZMINI, 0.0);
+	teicalc = new RTEMoon(sv2.R, sv2.V, sv2.MJD, sv2.gravref, opt->GETbase, LINE);
+	teicalc->READ(opt->SMODE, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.MOTION, PZREAP.HMINMC, 2, 0.3, PZREAP.DVMAX, 0.0, opt->Inclination, 1.0*1852.0, TZMINI, 0.0);
 
 	endi = teicalc->MASTER();
 
@@ -13170,6 +13277,16 @@ void RTCC::ECMPAY(const EphemerisDataTable &EPH, double MJD, bool sun, double &P
 	Yaw = atan2(dotp(X_B, Y_L), dotp(X_B, X_L));
 }
 
+int RTCC::EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V)
+{
+	double r = h + OrbMech::R_Earth;
+
+	R = _V(cos(lat)*cos(lng), cos(lat)*sin(lng), sin(lat))*r;
+	V = mul(_M(cos(lat)*cos(lng), -sin(lng), -sin(lat)*cos(lng), cos(lat)*sin(lng), cos(lng), -sin(lat)*sin(lng), sin(lat), 0, cos(lat)), _V(sin(fpa), cos(fpa)*sin(azi), cos(fpa)*cos(azi))*vel);
+
+	return 0;
+}
+
 int RTCC::ELFECH(double MJD, int L, unsigned vec_tot, unsigned vec_bef, EphemerisDataTable &EPHEM)
 {
 	EphemerisDataTable *maintable;
@@ -13234,4 +13351,644 @@ int RTCC::ELFECH(double MJD, int L, unsigned vec_tot, unsigned vec_bef, Ephemeri
 	EPHEM.TUP = maintable->TUP;
 
 	return 0;
+}
+
+int RTCC::PMQREAP(const std::vector<TradeoffData> &TOdata)
+{
+	if (TOdata.size() == 0) return 1;
+
+	TradeoffData empty;
+	double TZData[10];
+	unsigned i, j;
+	bool found;
+
+	//Clear tradeoff data
+	RTETradeoffTable.curves = 0;
+	for (i = 0;i < 10;i++)
+	{
+		RTETradeoffTable.NumInCurve[i] = 0;
+		for (j = 0;j < 44;j++)
+		{
+			RTETradeoffTable.data[i][j] = empty;
+		}
+	}
+
+	for (i = 0;i < TOdata.size();i++)
+	{
+		//Check if the data belongs to an already existing curve
+		found = false;
+		for (j = 0;j < RTETradeoffTable.curves;j++)
+		{
+			//Is data within an hour of already existing curve?
+			if (abs(TZData[j] - TOdata[i].T_Z) < 1.0)
+			{
+				//Save for a closer estimate next time around
+				TZData[j] = TOdata[i].T_Z;
+
+				if (RTETradeoffTable.NumInCurve[j] < 44)
+				{
+					//Store data
+					RTETradeoffTable.data[j][RTETradeoffTable.NumInCurve[j]] = TOdata[i];
+					RTETradeoffTable.NumInCurve[j]++;
+				}
+				found = true;
+				break;
+			}
+		}
+		//Didn't find one, it's a new set of data
+		if (found == false && RTETradeoffTable.curves < 10)
+		{
+			TZData[RTETradeoffTable.curves] = TOdata[i].T_Z;
+			RTETradeoffTable.NumInCurve[RTETradeoffTable.curves] = 1;
+
+			//Store data
+			RTETradeoffTable.data[RTETradeoffTable.curves][0] = TOdata[i];
+
+			RTETradeoffTable.curves++;
+		}
+	}
+
+	return 0;
+}
+
+void RTCC::PMMREAP(int med)
+{
+	//Near Earth Tradeoff 
+	if (med == 70)
+	{
+		EphemerisDataTable EPHEM;
+
+		ELFECH(CalcGETBase() + PZREAP.RTEVectorTime / 24.0, 3, 44, 0, EPHEM);
+
+		//Calculate maximum time difference
+
+	}
+}
+
+int RTCC::PMQAFMED(int med)
+{
+	//Generation of near Earth tradeoff
+	if (med == 70)
+	{
+		bool found = false;
+		//Check and find site
+		for (int i = 0;i < 5;i++)
+		{
+			if (med_f70.Site == PZREAP.ATPSite[i])
+			{
+				PZREAP.RTESite = med_f70.Site;
+				found = true;
+				break;
+			}
+			if (med_f70.Site == PZREAP.PTPSite[i])
+			{
+				PZREAP.RTESite = med_f70.Site;
+				found = true;
+				break;
+			}
+		}
+
+		if (found == false)
+		{
+			return 1;
+		}
+		//Check vector time
+		//TBD: T_V greater than present time
+		PZREAP.RTEVectorTime = med_f70.T_V;
+
+		//Check min abort time
+		if (med_f70.T_omin < PZREAP.RTEVectorTime)
+		{
+			return 2;
+		}
+		PZREAP.RTET0Min = med_f70.T_omin;
+
+		//Check max abort time
+		if (med_f70.T_omax == -1.0)
+		{
+			med_f70.T_omax = med_f70.T_omin + 24.0;
+		}
+		else if (med_f70.T_omax < PZREAP.RTET0Min)
+		{
+			return 3;
+		}
+		PZREAP.RTET0Max = med_f70.T_omax;
+
+		//Check entry profile
+		if (med_f70.EntryProfile == 2 && PZREAP.TGTLN == 1)
+		{
+			return 4;
+		}
+		PZREAP.EntryProfile = med_f70.EntryProfile;
+
+		PMMREAP(med);
+	}
+	//Update the target table for return to Earth
+	else if (med == 85)
+	{
+
+	}
+	//Update return to Earth constraints
+	else if (med == 86)
+	{
+		if (med_f86.Constraint == "DVMAX")
+		{
+			PZREAP.DVMAX = med_f86.Value;
+		}
+		else if (med_f86.Constraint == "TZMIN")
+		{
+			PZREAP.TZMIN = med_f86.Value*3600.0;
+		}
+		else if (med_f86.Constraint == "TZMAX")
+		{
+			PZREAP.TZMAX = med_f86.Value*3600.0;
+		}
+		else if (med_f86.Constraint == "GMAX")
+		{
+			PZREAP.GMAX = med_f86.Value;
+		}
+		else if (med_f86.Constraint == "HMINMC")
+		{
+			PZREAP.HMINMC = med_f86.Value;
+		}
+		else if (med_f86.Constraint == "IRMAX")
+		{
+			PZREAP.IRMAX = med_f86.Value;
+		}
+		else if (med_f86.Constraint == "RRBIAS")
+		{
+			PZREAP.RRBIAS = med_f86.Value;
+		}
+		else if (med_f86.Constraint == "VRMAX")
+		{
+			PZREAP.VRMAX = med_f86.Value;
+		}
+	}
+	//Update return to Earth constraints
+	else if (med == 87)
+	{
+		if (med_f87.Constraint == "TGTLN")
+		{
+			if (med_f87.Value == "SHALLOW")
+			{
+				PZREAP.TGTLN = 0;
+			}
+			else if (med_f87.Value == "SHALLOW")
+			{
+				PZREAP.TGTLN = 1;
+			}
+		}
+		else if (med_f87.Constraint == "MOTION")
+		{
+			if (med_f87.Value == "EITHER")
+			{
+				PZREAP.MOTION = 0;
+			}
+			else if (med_f87.Value == "DIRECT")
+			{
+				PZREAP.MOTION = 1;
+			}
+			else if (med_f87.Value == "CIRCUM")
+			{
+				PZREAP.MOTION = 2;
+			}
+		}
+	}
+
+	return 0;
+}
+
+void RTCC::GMSMED(int med)
+{
+	if (med == 10)
+	{
+		double gmtlocs = GLHTCS(med_p10.GMTALO);
+		if (med_p10.VEH == 1)
+		{
+			MGGGMT = gmtlocs;
+			MCGMTS = med_p10.GMTALO;
+		}
+		else
+		{
+			MGLGMT = gmtlocs;
+			MCGMTL = med_p10.GMTALO;
+		}
+	}
+	else if (med == 12)
+	{
+		MCLABN = med_p12.LaunchAzimuth*RAD;
+		MCLSBN = sin(MCLABN);
+		MCLCBN = cos(MCLABN);
+		if (med_p12.VEH == 0)
+		{
+			MCGRAG = med_p12.GMTGRR;
+		}
+		else if (med_p12.VEH == 1)
+		{
+			MCGRIC = med_p12.GMTGRR;
+		}
+		else
+		{
+			MCGRIL = med_p12.GMTGRR;
+		}
+	}
+	else if (med == 30)
+	{
+		if (med_p30.SMA != -1)
+		{
+			MCGSMA = med_p30.SMA / MCCNMC;
+		}
+		if (med_p30.ECC != -1)
+		{
+			MCGECC = med_p30.ECC;
+		}
+	}
+	else if (med == 31)
+	{
+		MCGREF = med_p31.GET;
+	}
+	else if (med == 33)
+	{
+		MCTVEN = med_p33.ScaleFactor;
+	}
+	else if (med == 7)
+	{
+		//TBD
+	}
+	else if (med == 15)
+	{
+		if (med_p15.VEH == 1)
+		{
+			MCGZSL = med_p15.GMTZS;
+		}
+		else if (med_p15.VEH == 0)
+		{
+			MCGZSA = med_p15.GMTZS;
+		}
+		else
+		{
+			double ACCUM;
+			if (med_p15.GMTZS == -1)
+			{
+				ACCUM = MCGZSL;
+			}
+			else
+			{
+				ACCUM = med_p15.GMTZS;
+			}
+			if (med_p15.DT != -1)
+			{
+				ACCUM += med_p15.DT;
+			}
+			MCGZSS = ACCUM;
+		}
+	}
+	else if (med == 81)
+	{
+		//TBD
+	}
+	else if (med == 82)
+	{
+		//TBD
+	}
+	else if (med == 16)
+	{
+		//TBD: Q EMSCTRL1 (ID = 6)
+	}
+	else if (med == 60)
+	{
+		//TBD
+	}
+	else if (med == 92)
+	{
+		//TBD
+	}
+	else if (med == 17)
+	{
+		//TBD
+	}
+	else if (med == 32)
+	{
+		//TBD
+	}
+	else if (med == 13 || med == 14)
+	{
+		//TBD
+	}
+	else if (med == 60)
+	{
+		//TBD
+	}
+	else if (med == 59)
+	{
+		//TBD
+	}
+	else if (med == 51)
+	{
+		GZGENCSN.TIDeltaH = med_p51.DH*MCCNMC;
+		GZGENCSN.TIPhaseAngle = med_p51.Phase*RAD;
+		GZGENCSN.TIElevationAngle = med_p51.E*RAD;
+		GZGENCSN.TITravelAngle = med_p51.WT*RAD;
+	}
+	else if (med == 52)
+	{
+		GZGENCSN.TINSRNominalTime = med_p52.GET_NSR;
+		GZGENCSN.TINSRNominalDeltaH = med_p52.DH_NSR;
+		GZGENCSN.TINSRNominalPhaseAngle = med_p52.PH_NSR;
+	}
+	else if (med == 8)
+	{
+		MCGHZA = med_p08.PitchAngle*RAD;
+	}
+	else if (med == 80)
+	{
+		if (1960 <= med_p80.Year && med_p80.Year <= 1980)
+		{
+			GZGENCSN.Year = med_p80.Year;
+		}
+		else
+		{
+			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
+			return;
+		}
+		if (1 <= med_p80.Month && med_p80.Month <= 12)
+		{
+			GZGENCSN.MonthofLiftoff = med_p80.Month;
+		}
+		else
+		{
+			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
+			return;
+		}
+		if (1 <= med_p80.Day && med_p80.Day <= 31)
+		{
+			GZGENCSN.DayofLiftoff = med_p80.Day;
+		}
+		else
+		{
+			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
+			return;
+		}
+
+		int m[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
+		double Y_J = (double)GZGENCSN.Year + 0.001;
+		double J = Y_J - 1960.0;
+		int K = (int)(J / 4);
+		J = floor(J);
+		if (((int)J) == 4 * K)
+		{
+			m[1] = 29;
+			GZGENCSN.DaysInYear = 366;
+		}
+		else
+		{
+			GZGENCSN.DaysInYear = 365;
+		}
+		double T = (double)GZGENCSN.DayofLiftoff + 0.5;
+		J = floor(T);
+		double T_apo = (double)GZGENCSN.MonthofLiftoff - 0.5;
+		K = (int)T_apo;
+		GZGENCSN.DaysinMonthofLiftoff = m[K];
+		GZGENCSN.RefDayOfYear = (int)J;
+
+		if (K != 0)
+		{
+			for (int i = 0;i < K;i++)
+			{
+				GZGENCSN.RefDayOfYear += m[i];
+			}
+		}
+
+		double J_D = TJUDAT(med_p80.Year, med_p80.Month, med_p80.Day);
+		GMTBASE = J_D - 2400000.5;
+	}
+}
+
+double RTCC::PIGMHA(int E, int Y, int D)
+{
+	int XN;
+	static const double A = 0.0929;
+	static const double B = 8640184.542;
+	static const double W1 = 1.720217954160054e-2;
+	double C, T, DE, BHA, DI, DELTA;
+
+	XN = (E - 1901) / 4;
+	C = -86400.0*(double)(E - 1900) - 74.164;
+	T = 2 * C / (-B - sqrt(B*B - 4 * A*C));
+	DE = 36525.0*T - 365.0*(double)(E - 1900) + 0.5 - (double)XN;
+	if (Y == E)
+	{
+		DI = D;
+	}
+	else
+	{
+		int X = Y % 4;
+		if (X == 0)
+		{
+			DI = D - 366.0;
+		}
+		else
+		{
+			DI = D - 365.0;
+		}
+	}
+	DELTA = DI - DE;
+	BHA = 2.0 / 3.6 + W1 * DELTA;
+	return BHA;
+}
+
+double RTCC::TJUDAT(int Y, int M, int D)
+{
+	int Y_apo = Y - 1900;
+	int TMM[] = { 0,31,59,90,120,151,181,212,243,273,304,334 };
+
+	int Z = Y_apo / 4;
+	if (Y_apo % 4 == 0)
+	{
+		Z = Z - 1;
+		for (int i = 2;i < 12;i++)
+		{
+			TMM[i] += 1;
+		}
+	}
+	return 2415020.5 + (double)(365 * Y_apo + Z + TMM[M - 1] + D - 1);
+}
+
+void RTCC::FDOLaunchAnalog1(MPTSV sv)
+{
+	fdolaunchanalog1tab.LastUpdateTime = oapiGetSimTime();
+
+	double xval = 0.0;
+	double yval = 0.0;
+
+	if (sv.gravref != oapiGetObjectByName("Earth"))
+	{
+		return;
+	}
+
+	double r_apo, r_peri;
+	OrbMech::periapo(sv.R, sv.V, OrbMech::mu_Earth, r_apo, r_peri);
+
+	if (r_peri > OrbMech::R_Earth + 50.0*1852.0 || length(sv.R) < OrbMech::R_Earth + 100.0)
+	{
+		return;
+	}
+
+	double v_fps = length(sv.V) / 0.3048;
+	double gamma_deg = asin(dotp(unit(sv.R), unit(sv.V)))*DEG;
+
+	if (v_fps < 5500.0)
+	{
+		if (v_fps < 0)
+		{
+			v_fps = 0.0;
+		}
+		xval = v_fps / 6000.0;
+		
+		if (gamma_deg < 0.0)
+		{
+			gamma_deg = 0.0;
+		}
+		else if (gamma_deg > 40.0)
+		{
+			gamma_deg = 40.0;
+		}
+		yval = gamma_deg / 40.0;
+	}
+	else if (v_fps < 22000.0)
+	{
+		xval = (v_fps - 5000.0) / (23000.0 - 5000.0);
+
+		if (gamma_deg > 35.0)
+		{
+			gamma_deg = 35.0;
+		}
+		else if (gamma_deg < -5.0)
+		{
+			gamma_deg = -5.0;
+		}
+		yval = (gamma_deg + 5.0) / (35.0 + 5.0);
+	}
+	else if (v_fps < 27000.0)
+	{
+		xval = (v_fps - 21000.0) / (27000.0 - 21000.0);
+
+		if (gamma_deg > 2.0)
+		{
+			gamma_deg = 2.0;
+		}
+		else if (gamma_deg < -2.0)
+		{
+			gamma_deg = -2.0;
+		}
+		yval = (gamma_deg + 2.0) / (2.0 + 2.0);
+	}
+	else
+	{
+		return;
+	}
+
+	yval = 1.0 - yval;
+
+	double xscalmin = 0.15;
+	double xscalmax = 0.95;
+	double yscalmin = 0.15;
+	double yscalmax = 0.85;
+
+	xval = xval * (xscalmax - xscalmin) + xscalmin;
+	yval = yval * (yscalmax - yscalmin) + yscalmin;
+
+	fdolaunchanalog1tab.XVal.push_back(xval);
+	fdolaunchanalog1tab.YVal.push_back(yval);
+}
+
+void RTCC::FDOLaunchAnalog2(MPTSV sv)
+{
+	fdolaunchanalog2tab.LastUpdateTime = oapiGetSimTime();
+
+	double r_EI = OrbMech::R_Earth + 400000.0*0.3048;
+	double xval = 0.0;
+	double yval = 0.0;
+
+	if (sv.gravref != oapiGetObjectByName("Earth"))
+	{
+		return;
+	}
+
+	double r_apo, r_peri;
+	OrbMech::periapo(sv.R, sv.V, OrbMech::mu_Earth, r_apo, r_peri);
+
+	if (r_peri > r_EI || r_apo < r_EI)
+	{
+		return;
+	}
+
+	double dt = OrbMech::time_radius(sv.R, sv.V, r_EI, -1.0, OrbMech::mu_Earth);
+	VECTOR3 R_EI, V_EI;
+	OrbMech::rv_from_r0v0(sv.R, sv.V, dt, R_EI, V_EI, OrbMech::mu_Earth);
+
+	double v_fps = length(V_EI) / 0.3048;
+	double gamma_deg = asin(dotp(unit(R_EI), unit(V_EI)))*DEG;
+
+	if (v_fps < 22750.0)
+	{
+		if (v_fps < 6000.0)
+		{
+			v_fps = 6000.0;
+		}
+		xval = (v_fps - 6000.0) / (23000.0 - 6000.0);
+
+		if (gamma_deg > 0.0)
+		{
+			gamma_deg = 0.0;
+		}
+		else if (gamma_deg < -36.0)
+		{
+			gamma_deg = -36.0;
+		}
+		yval = -gamma_deg / 36.0;
+	}
+	else if (v_fps < 26250.0)
+	{
+		xval = (v_fps - 22500.0) / (26750.0 - 22500.0);
+
+		if (gamma_deg > 0.0)
+		{
+			gamma_deg = 0.0;
+		}
+		else if (gamma_deg < -12.0)
+		{
+			gamma_deg = -12.0;
+		}
+		yval = -gamma_deg / 12.0;
+	}
+	else if (v_fps < 33500.0)
+	{
+		xval = (v_fps - 25000.0) / (33500.0 - 25000.0);
+
+		if (gamma_deg > 0.0)
+		{
+			gamma_deg = 0.0;
+		}
+		else if (gamma_deg < -12.0)
+		{
+			gamma_deg = -12.0;
+		}
+		yval = -gamma_deg / 12.0;
+	}
+	else
+	{
+		return;
+	}
+
+	double xscalmin = 0.15;
+	double xscalmax = 0.95;
+	double yscalmin = 0.15;
+	double yscalmax = 0.85;
+
+	xval = xval * (xscalmax - xscalmin) + xscalmin;
+	yval = yval * (yscalmax - yscalmin) + yscalmin;
+
+	fdolaunchanalog2tab.XVal.push_back(xval);
+	fdolaunchanalog2tab.YVal.push_back(yval);
 }
