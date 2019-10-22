@@ -165,16 +165,6 @@ struct MED_B04
 	bool FUNCTION = false; //false = unsuppress, true = suppress
 };
 
-struct MED_F70
-{
-	std::string Site;
-	double T_V;
-	double T_omin;
-	double T_omax;
-	//1 = Constant G reentry (HB1), 2 = G&N reentry (HGN)
-	int EntryProfile;
-};
-
 //Computation for Lunar Descent Planning
 struct MED_K16
 {
@@ -644,6 +634,24 @@ struct TradeoffDataDisplay
 	TradeoffData data[10][44];
 	unsigned curves;
 	unsigned NumInCurve[10];
+};
+
+struct TradeoffDataDisplayBuffer
+{
+	TradeoffDataDisplayBuffer();
+
+	double xval[10][44];
+	double yval[10][44];
+	unsigned curves;
+	unsigned NumInCurve[10];
+	int XLabels[3];
+	int YLabels[3];
+	int TZDisplay[10];
+	double TZxval[10];
+	double TZyval[10];
+	std::string XAxisName;
+	std::string YAxisName;
+	std::string Site;
 };
 
 struct REFSMMATOpt
@@ -1779,6 +1787,118 @@ struct GPMPRESULTS
 	double lat_Man;
 };
 
+struct ASTData
+{
+	int ASTCode;
+	std::string StationID;
+	//Time of abort (hr.)
+	double AbortGMT;
+	//Inclination of reentry (rad.)
+	double incl_EI;
+	//DV abort (Er/hr.)
+	double dv;
+	//Height of pericynthion (Er)
+	double h_PC;
+	//Reentry velocity magnitude (Er/hr.)
+	double v_EI;
+	//Gamma at reentry (rad.)
+	double gamma_EI;
+	//Time of reentry (GMT)
+	double ReentryGMT;
+	//Geodetic latitude of impact (rad.)
+	double lat_SPL;
+	//Longitude of impact (rad.)
+	double lng_SPL;
+	//Time of impact (hr.)
+	double SplashdownGMT;
+	//Time of vector in MPT (hr.)
+	double VectorGMT;
+	//Abort mode
+	int AbortMode;
+	//Primary reentry mode
+	int ReentryMode;
+	//Miss distance (Er)
+	double MissDistance;
+	//Site ID
+	std::string SiteID;
+	//G-level sensed (Er/hr.^2)
+	double GLevel;
+	//Reentry range bias (Er)
+	double RRBIAS;
+	//State and time at reentry (Er, Er/hr.)
+	VECTOR3 R_EI;
+	VECTOR3 V_EI;
+	double MJD_EI;
+	//Year of input
+	int Year;
+	//Geodetic latitude of target
+	double lat_TGT;
+	//Longitude of target
+	double lng_TGT;
+	//Preabort state and time (Er, Er/hr)
+	VECTOR3 R0;
+	VECTOR3 V0;
+	double MJD0;
+};
+
+struct EMSMISSInputTable
+{
+	MPTSV AnchorVector;
+	//Desired value of stopping parameter relative to the Earth
+	double EarthRelStopParam;
+	//Desired value of stopping parameter relative to the Moon
+	double MoonRelStopParam;
+	//Maximum time of integration
+	double MaxIntegTime;
+	//Storage interval for maneuver ephemeris
+	double ManEphemDT = 10.0;
+	//Storage interval for lunar surface ephemeris
+	double LunarEphemDT = 3.0*60.0;
+	//Density multiplier value
+	double DensityMultiplier = 1.0;
+	//Left limit of ephemeris (time to begin ephemeris)
+	double EphemerisLeftLimitMJD;
+	//Right limit of ephemeris (time to end ephemeris)
+	double EphemerRightLimitMJD;
+	//Minimum time between ephemeris points
+	double MinEphemDT;
+	//Reference frame of desired stopping parameter
+	int StopParamRefFrame;
+	//Minimum number of points desired in ephemeris
+	unsigned MinNumEphemPoints;
+	bool ECIEphemerisIndicator = true;
+	bool ECTEphemerisIndicator = false;
+	bool MCIEphemerisIndicator = false;
+	bool MCTEphemerisIndicator = false;
+	//Ephemeris build indicator
+	bool EphemerisBuildIndicator;
+	//Maneuver cut-off indicator (0 = cut at begin of maneuver, 1 = cut at end of maneuver, 2 = don't cut off)
+	int ManCutoffIndicator;
+	//Descent burn indicator
+	bool DescentBurnIndicator;
+	//Cut-off indicator (0 = none, 1 = radial distance, 2 = first reference switch, 3 = altitude above Earth or moon, 4 = flight-path angle)
+	int CutoffIndicator = 0;
+	//Integration direction indicator (true = forward, false = backward)
+	bool IsForwardIntegration = true;
+	//Coordinate system indicator (TBD)
+	//Maneuver indicator (true = consider maneuvers, false = don't consider maneuvers)
+	bool ManeuverIndicator;
+	//Vehicle code (1 = LEM, 3 = CSM)
+	int VehicleCode;
+	//Density multiplication override indicator
+	bool DensityMultOverrideIndicator = false;
+	//Table of ephemeris addresses indicator
+	EphemerisDataTable *EphemTableIndicator;
+	//Reference switch table indicator
+	//Maneuver times table indicator
+	//Runge-Kutta auxiliary output table indicator
+	//Runge-Kutta dense ephemeris table indicator
+	//Update in process override indicator (true = override, false = don't override)
+	bool UIPOverrideIndicator = false;
+	//Maneuver number of last maneuver to be ignored
+	unsigned IgnoreManueverNumber = 10000U;
+};
+
 class RTCC {
 
 	friend class MCC;
@@ -1913,6 +2033,8 @@ public:
 	//Predicted and Experimental Site Acquisition Displays
 
 	//Actual RTCC Subroutines
+
+	//Predicted Site Acquisition Display
 	void EMDPESAD(const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out);
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
@@ -1948,6 +2070,11 @@ public:
 	void GMSMED(int med);
 	void FDOLaunchAnalog1(MPTSV sv);
 	void FDOLaunchAnalog2(MPTSV sv);
+	double GetGMTLO() { return MCGMTL; }
+	void SetGMTLO(double gmt) { MCGMTL = gmt; }
+	double CalcGETBase();
+	double GetGMTBase() { return GMTBASE; }
+	void SetGMTBase(double gmt) { GMTBASE = gmt; }
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -1963,7 +2090,12 @@ public:
 	int MPTAddManeuver(FullMPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI = RTCC_CONFIGCHANGE_NONE, int CC = RTCC_CONFIG_CSM, int opt = 0);
 	int MPTDirectInput(MPTManeuver &man, SV sv_ig, SV &sv_cut);
 	int MPTDeleteManeuver(FullMPTable &mptable);
-	void MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L, double GETBase);
+	//Trajectory Update Control Module
+	void EMSTRAJ(FullMPTable &mptable, SV sv, int L, double GETBase);
+	//Ephemeris Storage and Control Module
+	void EMSEPH(MPTSV sv0, double CurMJD, EphemerisDataTable &ephem, MPTable &table);
+	//Miscellaneous Numerical Integration Control Module
+	void EMSMISS(const EMSMISSInputTable &in);
 	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L);
 	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L, unsigned mnv);
 	bool MPTTrajectory(FullMPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
@@ -1985,6 +2117,32 @@ public:
 	struct calculationParameters calcParams;
 
 	//MEDs
+
+	//Generate the near Earth tradeoff display
+	struct MED_F70
+	{
+		std::string Site;
+		//Time of vector (hrs.)
+		double T_V = 0.0;
+		//Minimum abort time (hrs.)
+		double T_omin = 0.0;
+		//Maximum abort time (hrs.)
+		double T_omax = 0.0;
+		//1 = Constant G reentry (HB1), 2 = G&N reentry (HGN)
+		int EntryProfile = 1;
+	} med_f70;
+
+	//Generate the remote Earth tradeoff display
+	struct MED_F71
+	{
+		int Page = 1;
+		std::string Site;
+		double T_V = 0.0;
+		double T_omin = 0.0;
+		double T_omax = 0.0;
+		//1 = Constant G reentry (HB1), 2 = G&N reentry (HGN)
+		int EntryProfile = 1;
+	} med_f71;
 
 	//Update return to Earth constraints
 	struct MED_F86
@@ -2135,7 +2293,9 @@ public:
 	//Initialize number of vehicles, first launch vehicle, mission date
 	struct MED_P80
 	{
+		//Number of vehicles
 		int NumVeh = 1;
+		//Primary ephemeris (0 = CSM, 1 = LEM)
 		int FirstVeh;
 		int Month;
 		int Day;
@@ -2145,7 +2305,6 @@ public:
 
 	MED_B03 med_b03;
 	MED_B04 med_b04;
-	MED_F70 med_f70;
 	MED_K16 med_k16;
 	MED_K17 med_k17;
 	MED_M40 med_m40;
@@ -2174,157 +2333,13 @@ public:
 	SunriseSunsetTable EZSSTAB;
 	SunriseSunsetTable EZMMTAB;
 	TradeoffDataDisplay RTETradeoffTable;
+	TradeoffDataDisplayBuffer RTETradeoffTableBuffer[5];
 
-	struct RTEConstraintsTable
+	struct HistoryAnchorVectorTable
 	{
-		RTEConstraintsTable();
-
-		//Block 11
-
-		//Maximum allowable DV for tradeoff display (in ft/s)
-		double DVMAX;
-		//Minimum time of landing for tradeoff display (in hours GET)
-		double TZMIN;
-		//Maximum time of landing for tradeoff display (in hours GET)
-		double TZMAX;
-		//Constant g-level for use in return-to-earth digitals and EFCUA mode of the abort scan table (AST)
-		double GMAX;
-		//Minimum height of pericynthion (NM)
-		double HMINMC;
-		//Maximum return inclination (DEG)
-		double IRMAX;
-		//Relative range override (NM)
-		double RRBIAS;
-		//Maximum return velocity
-		double VRMAX;
-		//Vector source (0 = CSM, 1 = LEM)
-		int VECID;
-		//Vector type (0 = CMC, 1 = LGC, 2 = AGS, 3 = IU, 4 = HSR, 5 = DC, 6 = ANC, 7 = EPH)
-		int VECTYPE;
-		//Target line (0 = shallow, 1 = steep)
-		int TGTLN;
-		//Circumlunar motion (0 = either, 1 = direct, 2 = circumlunar)
-		int MOTION;
-
-		//Names of PTP sites
-		std::string PTPSite[5];
-		//Latitude of PTP sites
-		double PTPLatitude[5];
-		//Longitude of PTP sites
-		double PTPLongitude[5];
-		//Names of ATP sites
-		std::string ATPSite[5];
-		//Latitude and longitude of ATP data points
-		double ATPCoordinates[5][10];
-
-		//Block 12
-		std::string RTESite;
-		double RTEVectorTime;
-		double RTET0Min;
-		double RTET0Max;
-		double RTETimeOfLanding;
-		double RTEUADVMax;
-		double RTEPTPMissDistance;
-		double RTEInclination;
-		int EntryProfile;
-		int RTETradeoffRemotePage;
-
-		//Block 13
-		int RTETradeoffLabelling[5];
-	} PZREAP;
-
-	struct FIDOLaunchAnalogNo1DisplayTable
-	{
-		double LastUpdateTime = -1.0;
-		std::vector<double> XVal;
-		std::vector<double> YVal;
-	} fdolaunchanalog1tab;
-
-	struct FIDOLaunchAnalogNo2DisplayTable
-	{
-		double LastUpdateTime = -1.0;
-		std::vector<double> XVal;
-		std::vector<double> YVal;
-	} fdolaunchanalog2tab;
-private:
-	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
-	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
-	double GetClockTimeFromAGC(agc_t *agc);
-	double GetTEPHEMFromAGC(agc_t *agc);
-	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
-	double getGETBase();
-	double CalcGETBase();
-	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
-	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
-	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
-	void AGCExternalDeltaVUpdate(char *str, double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
-	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
-	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
-	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
-	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
-	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
-	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
-	void IncrementAGCTime(char *list, double dt);
-	void TLANDUpdate(char *list, double t_land, int tlandaddr);
-	void V71Update(char *list, int* emem, int n);
-	void V72Update(char *list, int *emem, int n);
-	void SunburstAttitudeManeuver(char *list, VECTOR3 imuangles);
-	void SunburstLMPCommand(char *list, int code);
-	void SunburstMassUpdate(char *list, double masskg);
-	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
-	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
-	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
-	double PericynthionTime(VESSEL* vessel);
-	SV FindPericynthion(SV sv0);
-	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
-	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
-	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
-	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
-	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
-	double GetSemiMajorAxis(SV sv);
-	void papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv);
-	bool papiReadScenario_SV(char *line, char *item, SV &sv);
-	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
-	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
-
-	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
-	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
-	bool CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
-	bool CalculationMTP_D(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
-	bool CalculationMTP_F(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
-	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
-
-	//Generalized Contact Generator
-	void EMGENGEN(const EphemerisDataTable &ephemeris, const StationTable &stationlist, double GETbase, OrbitStationContactsTable &res);
-	//Horizon Crossing Subprogram
-	bool EMXING(const EphemerisDataTable &ephemeris, const Station & station, double GETbase, std::vector<NextStationContact> &acquisitions);
-	//Variable Order Interpolation
-	int ELVARY(const std::vector<MPTSV> &EPH, unsigned ORER, double MJD, bool EXTRAP, MPTSV &sv_out);
-	//Extended Interpolation Routine
-	int ELVCTR(const EphemerisDataTable &EPH, unsigned ORER, double MJD, MPTSV &sv_out, int option, double *LUNRSTAY = NULL);
-	//
-	int CapeCrossingRev(int L, double GET);
-	double CapeCrossingGET(int L, int rev);
-	void ECMPAY(const EphemerisDataTable &EPH, double MJD, bool sun, double &Pitch, double &Yaw);
-	//Spherical to Inertial Conversion
-	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
-	//base hour Angle
-	double PIGMHA(int E, int Y, int D);
-
-	bool MPTConfigIncludesCSM(int config);
-	bool MPTConfigIncludesLM(int config);
-	bool MPTConfigIncludesSIVB(int config);
-	double MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass);
-
-	double GLHTCS(double FLTHRS) { return FLTHRS * 360000.0; }
-	double GLCSTH(double FIXCSC) { return FIXCSC / 360000.0; }
-	double TJUDAT(int Y, int M, int D);
-
-protected:
-	double TimeofIgnition;
-	double SplashLatitude, SplashLongitude;
-	VECTOR3 DeltaV_LVLH;
-	int REFSMMATType;
+		MPTSV AnchorVectors[10];
+		std::string StationIDs[10];
+	} EZANCHR1, EZANCHR3;
 
 	struct GeneralConstraintsTable
 	{
@@ -2407,6 +2422,160 @@ protected:
 
 	} GZGENCSN;
 
+	struct RTEConstraintsTable
+	{
+		RTEConstraintsTable();
+
+		//Block 11
+
+		//Maximum allowable DV for tradeoff display (in ft/s)
+		double DVMAX;
+		//Minimum time of landing for tradeoff display (in hours GET)
+		double TZMIN;
+		//Maximum time of landing for tradeoff display (in hours GET)
+		double TZMAX;
+		//Constant g-level for use in return-to-earth digitals and EFCUA mode of the abort scan table (AST)
+		double GMAX;
+		//Minimum height of pericynthion (NM)
+		double HMINMC;
+		//Maximum return inclination (DEG)
+		double IRMAX;
+		//Relative range override (NM)
+		double RRBIAS;
+		//Maximum return velocity
+		double VRMAX;
+		//Vector source (0 = CSM, 1 = LEM)
+		int VECID;
+		//Vector type (0 = CMC, 1 = LGC, 2 = AGS, 3 = IU, 4 = HSR, 5 = DC, 6 = ANC, 7 = EPH)
+		int VECTYPE;
+		//Target line (0 = shallow, 1 = steep)
+		int TGTLN;
+		//Circumlunar motion (0 = either, 1 = direct, 2 = circumlunar)
+		int MOTION;
+
+		//Names of PTP sites
+		std::string PTPSite[5];
+		//Latitude of PTP sites
+		double PTPLatitude[5];
+		//Longitude of PTP sites
+		double PTPLongitude[5];
+		//Names of ATP sites
+		std::string ATPSite[5];
+		//Latitude and longitude of ATP data points
+		double ATPCoordinates[5][10];
+
+		//Block 12
+		std::string RTESite;
+		double RTEVectorTime;
+		double RTET0Min;
+		double RTET0Max;
+		double RTETimeOfLanding;
+		double RTEUADVMax;
+		double RTEPTPMissDistance;
+		double RTEInclination;
+		int EntryProfile;
+		int RTETradeoffRemotePage;
+		int RTESiteNum;
+		bool RTEIsPTPSite;
+
+		//Block 13
+		int RTETradeoffLabelling[5];
+	} PZREAP;
+
+	struct FIDOLaunchAnalogNo1DisplayTable
+	{
+		double LastUpdateTime = -1.0;
+		std::vector<double> XVal;
+		std::vector<double> YVal;
+	} fdolaunchanalog1tab;
+
+	struct FIDOLaunchAnalogNo2DisplayTable
+	{
+		double LastUpdateTime = -1.0;
+		std::vector<double> XVal;
+		std::vector<double> YVal;
+	} fdolaunchanalog2tab;
+private:
+	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
+	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
+	double GetClockTimeFromAGC(agc_t *agc);
+	double GetTEPHEMFromAGC(agc_t *agc);
+	void navcheck(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double &lat, double &lng, double &alt);
+	double getGETBase();
+	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
+	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
+	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
+	void AGCExternalDeltaVUpdate(char *str, double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
+	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
+	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
+	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
+	void AGCREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, int offset = 0, bool AGCCoordSystem = false);
+	void CMCRetrofireExternalDeltaVUpdate(char *list, double LatSPL, double LngSPL, double P30TIG, VECTOR3 dV_LVLH);
+	void CMCEntryUpdate(char *list, double LatSPL, double LngSPL);
+	void IncrementAGCTime(char *list, double dt);
+	void TLANDUpdate(char *list, double t_land, int tlandaddr);
+	void V71Update(char *list, int* emem, int n);
+	void V72Update(char *list, int *emem, int n);
+	void SunburstAttitudeManeuver(char *list, VECTOR3 imuangles);
+	void SunburstLMPCommand(char *list, int code);
+	void SunburstMassUpdate(char *list, double masskg);
+	void P27PADCalc(P27Opt *opt, double AGCEpoch, P27PAD &pad);
+	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
+	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
+	double PericynthionTime(VESSEL* vessel);
+	SV FindPericynthion(SV sv0);
+	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
+	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
+	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
+	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
+	void FindRadarMidPass(SV sv, double GETbase, double lat, double lng, double &GET_Mid);
+	double GetSemiMajorAxis(SV sv);
+	void papiWriteScenario_SV(FILEHANDLE scn, char *item, SV sv);
+	bool papiReadScenario_SV(char *line, char *item, SV &sv);
+	void DMissionRendezvousPlan(SV sv_A0, double GETbase, double &t_TPI0);
+	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double GETbase, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
+
+	bool CalculationMTP_B(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_C(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_D(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_F(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+
+	//Generalized Contact Generator
+	void EMGENGEN(const EphemerisDataTable &ephemeris, const StationTable &stationlist, double GETbase, OrbitStationContactsTable &res);
+	//Horizon Crossing Subprogram
+	bool EMXING(const EphemerisDataTable &ephemeris, const Station & station, double GETbase, std::vector<NextStationContact> &acquisitions);
+	//Variable Order Interpolation
+	int ELVARY(const std::vector<MPTSV> &EPH, unsigned ORER, double MJD, bool EXTRAP, MPTSV &sv_out);
+	//Extended Interpolation Routine
+	int ELVCTR(const EphemerisDataTable &EPH, unsigned ORER, double MJD, MPTSV &sv_out, int option, double *LUNRSTAY = NULL);
+	//
+	int CapeCrossingRev(int L, double GET);
+	double CapeCrossingGET(int L, int rev);
+	void ECMPAY(const EphemerisDataTable &EPH, double MJD, bool sun, double &Pitch, double &Yaw);
+	//Spherical to Inertial Conversion
+	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
+	//Base hour Angle
+	double PIGMHA(int E, int Y, int D);
+	//Return-to-Earth Tradeoff Display
+	void PMDTRDFF(int med, unsigned page);
+
+	bool MPTConfigIncludesCSM(int config);
+	bool MPTConfigIncludesLM(int config);
+	bool MPTConfigIncludesSIVB(int config);
+	double MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass);
+
+	double GLHTCS(double FLTHRS) { return FLTHRS * 360000.0; }
+	double GLCSTH(double FIXCSC) { return FIXCSC / 360000.0; }
+	double TJUDAT(int Y, int M, int D);
+
+protected:
+	double TimeofIgnition;
+	double SplashLatitude, SplashLongitude;
+	VECTOR3 DeltaV_LVLH;
+	int REFSMMATType;
+
 	//RTCC System Parameters
 	
 	//Burnout launch azimuth (rad.)
@@ -2437,9 +2606,9 @@ protected:
 	double MCGZSL;
 	//AGS GMTZS (hrs.)
 	double MCGZSS;
-	//Semimajor axis (Er.)
+	//Semimajor axis for integration limit (Er.)
 	double MCGSMA;
-	//Eccentricity
+	//Eccentricity for integration limit
 	double MCGECC;
 	//Phase reference time - GET (hrs.)
 	double MCGREF;

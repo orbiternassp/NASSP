@@ -4392,10 +4392,10 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 	Z2 = dotp(R_a, V_a);
 	cos_beta_a = Z2 / Z1;
 	beta_a = acos(cos_beta_a);
-	a = mu * r0 / (2.0*mu - Z1 * v_a);
+	a = mu * r_a / (2.0*mu - Z1 * v_a);
 	p = pow(Z1*sin(beta_a), 2) / mu;
 	e = sqrt(1.0 - p / a);
-	cos_eta = (p / r0 - 1.0) / e;
+	cos_eta = (p / r_a - 1.0) / e;
 	HANG = crossp(R_a, V_a);
 
 	if (cos_eta > 1.0)
@@ -4415,7 +4415,7 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 		r_cap = length(R);
 		r_m_sq = r_m * r_m;
 		R_p = a * (1.0 + e);
-		EAA = acos((1.0 - r0 / a) / e);
+		EAA = acos((1.0 - r_a / a) / e);
 		AMAA = EAA - e * sin(EAA);
 		TAA = a * sqrt(a / mu)*(PI - AMAA);
 		TJ = T0 + TAA;
@@ -4431,7 +4431,7 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 		FKB = 1.0 - ((R_p*R_p + R_p * r_a + r_a * r_a) / (3.0*r_m_sq) - 2.0*r_m / r_cap + r_m_sq / (r_cap*RCAPAP));
 	
 		deltat = -0.012299896*(3.0 / sqrt(mu*p))*e*a*a*sqrt(1.0 - cos_eta * cos_eta)*(2.0*FKB - FK);
-		deltat1 = 0.012299896*(sqrt(pow(a, 3) / mu)*acos(abs(1.0 - r_a / a) / e))*(FK*(1.0 - 3.0*a / r_a) + 3.0*a*(1.0 / r_m - 1.0 / r_cap + r_a / r_m_sq));
+		deltat1 = 0.012299896*(sqrt(pow(a, 3) / mu)*acos((1.0 - r_a / a) / e))*(FK*(1.0 - 3.0*a / r_a) + 3.0*a*(1.0 / r_m - 1.0 / r_cap + r_a / r_m_sq));
 		cos_PV = dotp(R, R_a) / r_cap / r_a;
 		deltaT = cos_PV * (deltat + deltat1);
 	}

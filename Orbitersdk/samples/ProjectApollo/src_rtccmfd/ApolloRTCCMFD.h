@@ -94,11 +94,13 @@ public:
 	void menuSetGMPInput();
 	void menuCycleOrbAdjAltRef();
 	void phasedialogue();
-	void set_getbase();
+	void menuMissionNumberInput();
+	void set_MissionNumber(int mission);
 	void set_TIPhaseAngle(double angdeg);
 	void CDHcalc();
 	void lambertcalc();
 	void GET_Display(char * Buff, double time, bool DispGET = true);
+	void GET_Display2(char * Buff, double time);
 	void AGC_Display(char * Buff, double time);
 	void REFSMMATName(char* Buff, int n);
 	void ThrusterName(char *Buff, int n);
@@ -175,8 +177,10 @@ public:
 	void menuSwitchUplinkInhibit();
 	void menuCycleSPQMode();
 	void set_CDHtimemode();
-	void menuSetLaunchMJD();
-	void set_launchmjd(double mjd);
+	void menuSetLaunchDate();
+	void set_launchdate(int year, int month, int day);
+	void menuSetLaunchTime();
+	void set_LaunchTime(int hours, int minutes, double seconds);
 	void menuSetAGCEpoch();
 	void set_AGCEpoch(double mjd);
 	void menuChangeVesselType();
@@ -492,6 +496,21 @@ public:
 	void set_CapeCrossingRev(int veh, int rev);
 	void menuSetFIDOLaunchAnalogNo1Page();
 	void menuSetFIDOLaunchAnalogNo2Page();
+	void menuSetRTETradeoffDisplayPage();
+	void menuCycleRTETradeoffPage();
+	void menuCalcRTETradeoff();
+	void menuSetRTETradeoffSite();
+	void menuSetRTETradeoffRemoteEarthPage();
+	void set_RTETradeoffRemoteEarthPage(int page);
+	void set_TradeoffSiteInput(const std::string &site);
+	void menuSetRTETradeoffVectorTime();
+	void set_RTETradeoffVectorTime(double tv);
+	void menuSetRTETradeoffT0MinTime();
+	void set_RTETradeoffT0MinTime(double get);
+	void menuSetRTETradeoffT0MaxTime();
+	void set_RTETradeoffT0MaxTime(double get);
+	void menuSetRTETradeoffEntryProfile();
+	void menuSetRTETradeoffMode();
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);
@@ -499,12 +518,16 @@ public:
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;
+	oapi::Font *font2vert;
+	oapi::Pen *pen;
 	Saturn *saturn;
 	LEM *lem;
 	int screen;
 	int marker;
+	int RTETradeoffScreen;
 	static struct ScreenData {
 		int screen;
+		int RTETradeoffScreen;
 	} screenData;
 private:
 

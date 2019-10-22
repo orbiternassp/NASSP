@@ -47,6 +47,8 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	//font = oapiCreateFont(w / 20, true, "Arial", FONT_NORMAL, 0);
 	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
 	font2 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
+	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
+	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	bool found = false;
 	for (int i = 0; i < nGutsUsed; i++) {
 		if (i == 32){
@@ -63,6 +65,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	{
 		GCoreData[nGutsUsed] = new ARCore(vessel, GC);
 		screen = 0;
+		RTETradeoffScreen = 0;
 		G = GCoreData[nGutsUsed];
 		GCoreVessel[nGutsUsed] = vessel;
 		nGutsUsed++;
@@ -74,8 +77,10 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 // Destructor
 ApolloRTCCMFD::~ApolloRTCCMFD ()
 {
-	oapiReleaseFont (font);
 	// Add MFD cleanup code here
+	oapiReleaseFont(font);
+	oapiReleaseFont(font2);
+	oapiReleasePen(pen);
 }
 
 // Return button labels
@@ -136,7 +141,16 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_vec(scn, "OFFVEC", G->offvec);
 	papiWriteScenario_double(scn, "ANGDEG", G->angdeg);
 	oapiWriteScenario_int(scn, "MISSION", GC->mission);
-	papiWriteScenario_double(scn, "GETBASE", GC->GETbase);
+
+	papiWriteScenario_double(scn, "GMTBASE", GC->rtcc->GetGMTBase());
+	papiWriteScenario_double(scn, "GMTLO", GC->rtcc->GetGMTLO());
+	oapiWriteScenario_int(scn, "YEAR", GC->rtcc->GZGENCSN.Year);
+	oapiWriteScenario_int(scn, "REFDAYOFYEAR", GC->rtcc->GZGENCSN.RefDayOfYear);
+	oapiWriteScenario_int(scn, "DAYSINYEAR", GC->rtcc->GZGENCSN.DaysInYear);
+	oapiWriteScenario_int(scn, "MONTHOFLIFTOFF", GC->rtcc->GZGENCSN.MonthofLiftoff);
+	oapiWriteScenario_int(scn, "DAYOFLIFTOFF", GC->rtcc->GZGENCSN.DayofLiftoff);
+	oapiWriteScenario_int(scn, "DAYSINMONTHOFLIFTOFF", GC->rtcc->GZGENCSN.DaysinMonthofLiftoff);
+
 	papiWriteScenario_double(scn, "LSLat", GC->LSLat);
 	papiWriteScenario_double(scn, "LSLng", GC->LSLng);
 	papiWriteScenario_double(scn, "LSAlt", GC->LSAlt);
@@ -263,6 +277,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 	char *line;
 	char Buffer2[100];
 	bool istarget = false;
+	double temp;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, "END_MFD", 7))
@@ -306,7 +321,21 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_vec(line, "OFFVEC", G->offvec);
 		papiReadScenario_double(line, "ANGDEG", G->angdeg);
 		papiReadScenario_int(line, "MISSION", GC->mission);
-		papiReadScenario_double(line, "GETBASE", GC->GETbase);
+		if (papiReadScenario_double(line, "GMTBASE", temp))
+		{
+			GC->rtcc->SetGMTBase(temp);
+		}
+		if (papiReadScenario_double(line, "GMTLO", temp))
+		{
+			GC->rtcc->SetGMTLO(temp);
+		}
+		papiReadScenario_int(line, "YEAR", GC->rtcc->GZGENCSN.Year);
+		papiReadScenario_int(line, "REFDAYOFYEAR", GC->rtcc->GZGENCSN.RefDayOfYear);
+		papiReadScenario_int(line, "DAYSINYEAR", GC->rtcc->GZGENCSN.DaysInYear);
+		papiReadScenario_int(line, "MONTHOFLIFTOFF", GC->rtcc->GZGENCSN.MonthofLiftoff);
+		papiReadScenario_int(line, "DAYOFLIFTOFF", GC->rtcc->GZGENCSN.DayofLiftoff);
+		papiReadScenario_int(line, "DAYSINMONTHOFLIFTOFF", GC->rtcc->GZGENCSN.DaysinMonthofLiftoff);
+
 		papiReadScenario_double(line, "LSLat", GC->LSLat);
 		papiReadScenario_double(line, "LSLng", GC->LSLng);
 		papiReadScenario_double(line, "LSAlt", GC->LSAlt);
@@ -1069,6 +1098,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 8, 6 * H / 14, "Return to Earth (Moon-centered)", 31);
 		skp->Text(1 * W / 8, 8 * H / 14, "Splashdown Update", 17);
 		skp->Text(1 * W / 8, 10 * H / 14, "RTE Constraints", 15);
+		skp->Text(1 * W / 8, 12 * H / 14, "Tradeoff", 15);
 	}
 	else if (screen == 7)
 	{
@@ -1169,13 +1199,17 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "Apollo %i", GC->mission);
 			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 		}
-		sprintf(Buffer, "Launch MJD: %f", GC->GETbase);
+
+		sprintf(Buffer, "%02d:%02d:%04d", GC->rtcc->GZGENCSN.DayofLiftoff, GC->rtcc->GZGENCSN.MonthofLiftoff, GC->rtcc->GZGENCSN.Year);
 		skp->Text(4 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "AGC Epoch: %f", G->AGCEpoch);
+		GET_Display2(Buffer, GC->rtcc->GetGMTLO()*3600.0);
 		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(4 * W / 8, 6 * H / 14, "Update Liftoff MJD", 18);
+		sprintf(Buffer, "AGC Epoch: %f", G->AGCEpoch);
+		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		skp->Text(4 * W / 8, 8 * H / 14, "Update Liftoff Time", 19);
 
 		if (G->vesseltype == 0)
 		{
@@ -1206,19 +1240,19 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			}
 		}
 
-		skp->Text(1 * W / 8, 8 * H / 14, "Sxt/Star Check:", 15);
+		skp->Text(1 * W / 8, 10 * H / 14, "Sxt/Star Check:", 15);
 		sprintf(Buffer, "%.0f min", -G->sxtstardtime / 60.0);
-		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(4 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(1 * W / 8, 10 * H / 14, "Uplink in LOS:", 14);
+		skp->Text(1 * W / 8, 12 * H / 14, "Uplink in LOS:", 14);
 
 		if (G->inhibUplLOS)
 		{
-			skp->Text(4 * W / 8, 10 * H / 14, "Inhibit", 7);
+			skp->Text(4 * W / 8, 12 * H / 14, "Inhibit", 7);
 		}
 		else
 		{
-			skp->Text(4 * W / 8, 10 * H / 14, "Enabled", 7);
+			skp->Text(4 * W / 8, 12 * H / 14, "Enabled", 7);
 		}
 
 		//skp->Text(1 * W / 8, 12 * H / 14, "DV Format:", 9);
@@ -3181,9 +3215,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%.0f", GC->rtcc->PZREAP.DVMAX);
 		skp->Text(10 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
-		GET_Display(Buffer, GC->rtcc->PZREAP.TZMIN, false);
+		GET_Display(Buffer, GC->rtcc->PZREAP.TZMIN*3600.0, false);
 		skp->Text(10 * W / 32, 8 * H / 28, Buffer, strlen(Buffer));
-		GET_Display(Buffer, GC->rtcc->PZREAP.TZMAX, false);
+		GET_Display(Buffer, GC->rtcc->PZREAP.TZMAX*3600.0, false);
 		skp->Text(10 * W / 32, 10 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.1f", GC->rtcc->PZREAP.GMAX);
 		skp->Text(10 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
@@ -4298,7 +4332,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		for (unsigned i = 0;i < GC->mptable.fulltable.size();i++)
 		{
-			GET_Display(Buffer, OrbMech::GETfromMJD(GC->mptable.fulltable[i].BefMJD, GC->GETbase), false);
+			GET_Display(Buffer, OrbMech::GETfromMJD(GC->mptable.fulltable[i].BefMJD, GC->rtcc->CalcGETBase()), false);
 			skp->Text(5 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].DV);
@@ -5039,6 +5073,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(4 * W / 32, 5 * H / 28, GC->checkmon.VEH, 3);
 
 		skp->Text(9 * W / 32, 3 * H / 28, "R-DAY", 5);
+		sprintf(Buffer, "%02d:%02d:%04d", GC->checkmon.R_Day[0], GC->checkmon.R_Day[1], GC->checkmon.R_Day[2]);
+		skp->Text(11 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(10 * W / 32, 4 * H / 28, "VID", 3);
 		skp->Text(7 * W / 32, 5 * H / 28, "XT", 2);
 		skp->Text(18 * W / 32, 3 * H / 28, "K-FAC", 5);
@@ -5723,7 +5759,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Line(W * 3 / 20, H * 3 / 20, W * 19 / 20, H * 3 / 20);
 		skp->Line(W * 3 / 20, H * 3 / 20, W * 3 / 20, H * 17 / 20);
 		skp->Line(W * 3 / 20, H * 17 / 20, W * 19 / 20, H * 17 / 20);
-		skp->Line(W * 3 / 20, H * 17 / 20, W * 19 / 20, H * 17 / 20);
 		skp->Line(W * 19 / 20, H * 3 / 20, W * 19 / 20, H * 17 / 20);
 
 		for (unsigned i = 0;i < GC->rtcc->fdolaunchanalog1tab.XVal.size();i++)
@@ -5825,7 +5860,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Line(W * 3 / 20, H * 3 / 20, W * 19 / 20, H * 3 / 20);
 		skp->Line(W * 3 / 20, H * 3 / 20, W * 3 / 20, H * 17 / 20);
 		skp->Line(W * 3 / 20, H * 17 / 20, W * 19 / 20, H * 17 / 20);
-		skp->Line(W * 3 / 20, H * 17 / 20, W * 19 / 20, H * 17 / 20);
 		skp->Line(W * 19 / 20, H * 3 / 20, W * 19 / 20, H * 17 / 20);
 
 		for (unsigned i = 0;i < GC->rtcc->fdolaunchanalog2tab.XVal.size();i++)
@@ -5834,6 +5868,127 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 
 	}
+	//Return-to-Earth Tradeoff Display
+	else if (screen == 66)
+	{
+		if (RTETradeoffScreen == 0)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(4 * W / 8, 1 * H / 14, "RTE TRADE OFF INPUTS", 32);
+
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+			if (G->RTETradeoffMode == 0)
+			{
+				skp->Text(1 * W / 16, 2 * H / 14, "Near-Earth", 11);
+
+				sprintf(Buffer, "%s", GC->rtcc->med_f70.Site.c_str());
+				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+				GET_Display(Buffer, GC->rtcc->med_f70.T_V *3600.0, false);
+				skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+				GET_Display(Buffer, GC->rtcc->med_f70.T_omin*3600.0, false);
+				skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+				GET_Display(Buffer, GC->rtcc->med_f70.T_omax*3600.0, false);
+				skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+				if (GC->rtcc->med_f70.EntryProfile == 1)
+				{
+					skp->Text(10 * W / 16, 12 * H / 14, "Constant G", 10);
+				}
+				else
+				{
+					skp->Text(10 * W / 16, 12 * H / 14, "G&N", 3);
+				}
+			}
+			else
+			{
+				skp->Text(1 * W / 16, 2 * H / 14, "Remote-Earth", 13);
+
+				sprintf(Buffer, "%d", GC->rtcc->med_f71.Page);
+				skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%s", GC->rtcc->med_f71.Site.c_str());
+				skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+				GET_Display(Buffer, GC->rtcc->med_f71.T_V *3600.0, false);
+				skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+				GET_Display(Buffer, GC->rtcc->med_f71.T_omin*3600.0, false);
+				skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+				GET_Display(Buffer, GC->rtcc->med_f71.T_omax*3600.0, false);
+				skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+				if (GC->rtcc->med_f71.EntryProfile == 1)
+				{
+					skp->Text(10 * W / 16, 12 * H / 14, "Constant G", 10);
+				}
+				else
+				{
+					skp->Text(10 * W / 16, 12 * H / 14, "G&N", 3);
+				}
+			}
+		}
+		else
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(4 * W / 8, 1 * H / 14, "RTE TRADE OFF DISPLAY (MSK 0364)", 32);
+
+			skp->SetFont(font2);
+
+			skp->SetTextAlign(oapi::Sketchpad::CENTER, oapi::Sketchpad::BASELINE);
+
+			skp->Line(W * 1 / 10, H * 3 / 20, W * 19 / 20, H * 3 / 20);
+			skp->Line(W * 1 / 10, H * 3 / 20, W * 1 / 10, H * 9 / 10);
+			skp->Line(W * 1 / 10, H * 9 / 10, W * 19 / 20, H * 9 / 10);
+			skp->Line(W * 19 / 20, H * 3 / 20, W * 19 / 20, H * 9 / 10);
+
+			unsigned p = RTETradeoffScreen - 1;
+
+			sprintf(Buffer, "%d", GC->rtcc->RTETradeoffTableBuffer[p].XLabels[0]);
+			skp->Text(4 * W / 40, 23 * H / 24, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%d", GC->rtcc->RTETradeoffTableBuffer[p].XLabels[1]);
+			skp->Text(21 * W / 40, 23 * H / 24, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%d", GC->rtcc->RTETradeoffTableBuffer[p].XLabels[2]);
+			skp->Text(38 * W / 40, 23 * H / 24, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%d", GC->rtcc->RTETradeoffTableBuffer[p].YLabels[2]);
+			skp->Text(1 * W / 16, 6 * H / 40, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%d", GC->rtcc->RTETradeoffTableBuffer[p].YLabels[1]);
+			skp->Text(1 * W / 16, 21 * H / 40, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%d", GC->rtcc->RTETradeoffTableBuffer[p].YLabels[0]);
+			skp->Text(1 * W / 16, 36 * H / 40, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "Site: %s", GC->rtcc->RTETradeoffTableBuffer[p].Site.c_str());
+			skp->Text(12 * W / 40, 23 * H / 24, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%s", GC->rtcc->RTETradeoffTableBuffer[p].XAxisName.c_str());
+			skp->Text(29 * W / 40, 23 * H / 24, Buffer, strlen(Buffer));
+
+			skp->SetFont(font2vert);
+			sprintf(Buffer, "%s", GC->rtcc->RTETradeoffTableBuffer[p].YAxisName.c_str());
+			skp->Text(1 * W / 32, 14 * H / 40, Buffer, strlen(Buffer));
+			skp->SetFont(font2);
+
+			skp->SetPen(pen);
+
+			for (unsigned i = 0;i < GC->rtcc->RTETradeoffTableBuffer[p].curves;i++)
+			{
+				if (GC->rtcc->RTETradeoffTableBuffer[p].TZDisplay[i] >= 0)
+				{
+					sprintf(Buffer, "%d", GC->rtcc->RTETradeoffTableBuffer[p].TZDisplay[i]);
+					skp->Text((int)(GC->rtcc->RTETradeoffTableBuffer[p].TZxval[i] * W), (int)(GC->rtcc->RTETradeoffTableBuffer[p].TZyval[i] * H), Buffer, strlen(Buffer));
+				}
+
+				for (unsigned j = 0;j < GC->rtcc->RTETradeoffTableBuffer[p].NumInCurve[i] - 1;j++)
+				{
+					skp->Line((int)(GC->rtcc->RTETradeoffTableBuffer[p].xval[i][j] * W), (int)(GC->rtcc->RTETradeoffTableBuffer[p].yval[i][j] * H),
+						(int)(GC->rtcc->RTETradeoffTableBuffer[p].xval[i][j + 1] * W), (int)(GC->rtcc->RTETradeoffTableBuffer[p].yval[i][j + 1] * H));
+				}
+			}
+		}
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->SetFont(font2);
+
+		sprintf(Buffer, "%d/5", RTETradeoffScreen);
+		skp->Text(15 * W / 16, 1 * H / 14, Buffer, strlen(Buffer));
+	}	
 	return true;
 }
 
@@ -5858,7 +6013,7 @@ void ApolloRTCCMFD::menuP30Upload()
 		testves = (SaturnV*)G->g_Data.progVessel;
 		LVDCSV *lvdc = (LVDCSV*)testves->iu->GetLVDC();
 
-		coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, GC->GETbase, G->P30TIG, lvdc->TB5, lvdc->mu, lvdc->T_RG);
+		coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, GC->rtcc->CalcGETBase(), G->P30TIG, lvdc->TB5, lvdc->mu, lvdc->T_RG);
 
 		lvdc->TU = true;
 		lvdc->TU10 = false;
@@ -5929,6 +6084,12 @@ void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display
 		sprintf(Buff, "%03.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
 	}
 	//sprintf(Buff, "%03d:%02d:%02d", hh, mm, ss);
+}
+
+void ApolloRTCCMFD::GET_Display2(char* Buff, double time) //Display a time in the format hhh:mm:ss.ss
+{
+	double time2 = round(time);
+	sprintf(Buff, "%03.0f:%02.0f:%05.2f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
 }
 
 void ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
@@ -6363,7 +6524,7 @@ void ApolloRTCCMFD::menuSetStateVectorMenu()
 	screen = 48;
 	coreButtons.SelectPage(this, screen);
 
-	G->SVDesiredGET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->GETbase);
+	G->SVDesiredGET = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->rtcc->CalcGETBase());
 }
 
 void ApolloRTCCMFD::menuSetLSUpdateMenu()
@@ -6485,7 +6646,220 @@ void ApolloRTCCMFD::menuSetFIDOLaunchAnalogNo2Page()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetRTETradeoffDisplayPage()
+{
+	screen = 66;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
+
+void ApolloRTCCMFD::menuCycleRTETradeoffPage()
+{
+	if (RTETradeoffScreen < 5)
+	{
+		RTETradeoffScreen++;
+	}
+	else
+	{
+		RTETradeoffScreen = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuCalcRTETradeoff()
+{
+	G->RTETradeoffDisplayCalc();
+}
+
+void ApolloRTCCMFD::menuSetRTETradeoffSite()
+{
+	bool RTETradeoffSiteInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the landing site from target table:", RTETradeoffSiteInput, 0, 20, (void*)this);
+}
+
+bool RTETradeoffSiteInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 7)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_TradeoffSiteInput(buf);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_TradeoffSiteInput(const std::string &site)
+{
+	if (G->RTETradeoffMode == 0)
+	{
+		GC->rtcc->med_f70.Site = site;
+	}
+	else
+	{
+		GC->rtcc->med_f71.Site = site;
+	}
+}
+
+void ApolloRTCCMFD::menuSetRTETradeoffRemoteEarthPage()
+{
+	bool RTETradeoffRemoteEarthPageInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Page for the Remote-Earth tradeoff display (1-5):", RTETradeoffRemoteEarthPageInput, 0, 20, (void*)this);
+}
+
+bool RTETradeoffRemoteEarthPageInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_RTETradeoffRemoteEarthPage(atoi(str));
+		return true;
+
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTETradeoffRemoteEarthPage(int page)
+{
+	GC->rtcc->med_f71.Page = page;
+}
+
+void ApolloRTCCMFD::menuSetRTETradeoffVectorTime()
+{
+	bool RTETradeoffVectorTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the vector time in GET (Format: hhh:mm:ss)", RTETradeoffVectorTimeInput, 0, 20, (void*)this);
+}
+
+bool RTETradeoffVectorTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, get;
+
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_RTETradeoffVectorTime(get);
+
+		return true;
+
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTETradeoffVectorTime(double tv)
+{
+	if (G->RTETradeoffMode == 0)
+	{
+		GC->rtcc->med_f70.T_V = tv / 3600.0;
+	}
+	else
+	{
+		GC->rtcc->med_f71.T_V = tv / 3600.0;
+	}
+}
+
+void ApolloRTCCMFD::menuSetRTETradeoffT0MinTime()
+{
+	bool RTETradeoffT0MinTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the minimum abort time in GET (Format: hhh:mm:ss)", RTETradeoffT0MinTimeInput, 0, 20, (void*)this);
+}
+
+bool RTETradeoffT0MinTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, get;
+
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_RTETradeoffT0MinTime(get);
+
+		return true;
+
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTETradeoffT0MinTime(double get)
+{
+	if (G->RTETradeoffMode == 0)
+	{
+		GC->rtcc->med_f70.T_omin = get / 3600.0;
+	}
+	else
+	{
+		GC->rtcc->med_f71.T_omin = get / 3600.0;
+	}
+}
+
+void ApolloRTCCMFD::menuSetRTETradeoffT0MaxTime()
+{
+	bool RTETradeoffT0MaxTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the maximum abort time in GET (Format: hhh:mm:ss)", RTETradeoffT0MaxTimeInput, 0, 20, (void*)this);
+}
+
+bool RTETradeoffT0MaxTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, get;
+
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_RTETradeoffT0MaxTime(get);
+
+		return true;
+
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTETradeoffT0MaxTime(double get)
+{
+	if (G->RTETradeoffMode == 0)
+	{
+		GC->rtcc->med_f70.T_omax = get / 3600.0;
+	}
+	else
+	{
+		GC->rtcc->med_f71.T_omax = get / 3600.0;
+	}
+}
+
+void ApolloRTCCMFD::menuSetRTETradeoffEntryProfile()
+{
+	if (G->RTETradeoffMode == 0)
+	{
+		if (GC->rtcc->med_f70.EntryProfile < 2)
+		{
+			GC->rtcc->med_f70.EntryProfile++;
+		}
+		else
+		{
+			GC->rtcc->med_f70.EntryProfile = 1;
+		}
+	}
+	else
+	{
+		if (GC->rtcc->med_f71.EntryProfile < 2)
+		{
+			GC->rtcc->med_f71.EntryProfile++;
+		}
+		else
+		{
+			GC->rtcc->med_f71.EntryProfile = 1;
+		}
+	}	
+}
+
+void ApolloRTCCMFD::menuSetRTETradeoffMode()
+{
+	if (G->RTETradeoffMode < 1)
+	{
+		G->RTETradeoffMode++;
+	}
+	else
+	{
+		G->RTETradeoffMode = 0;
+	}
+}
 
 void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()
 {
@@ -6524,25 +6898,29 @@ void ApolloRTCCMFD::menuTransferGPMToMPT()
 	G->TransferGPMToMPT();
 }
 
-void ApolloRTCCMFD::set_getbase()
+void ApolloRTCCMFD::menuMissionNumberInput()
 {
-	if (GC->mission < 7)
-	{
-		GC->mission = 7;
-	}
-	else if (GC->mission < 17)
-	{
-		GC->mission++;
-	}
-	else
-	{
-		GC->mission = 0;
-	}
+	bool MissionNumberInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the mission number (7 to 17, 0 for custom mission):", MissionNumberInput, 0, 20, (void*)this);
+}
 
-	if (GC->mission >= 7)
+bool MissionNumberInput(void *id, char *str, void *data)
+{
+	int Num;
+	if (sscanf(str, "%d", &Num) == 1)
 	{
-		GC->GETbase = LaunchMJD[GC->mission-7];
+		((ApolloRTCCMFD*)data)->set_MissionNumber(Num);
+
+		return true;
+
 	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MissionNumber(int mission)
+{
+	GC->mission = mission;
+	GC->SetMissionSpecificParameters();
 }
 
 void ApolloRTCCMFD::menuMPTDirectInputVehicle()
@@ -7656,7 +8034,7 @@ double ApolloRTCCMFD::timetoperi()
 	mu = GGRAV*oapiGetMass(gravref);
 	pet = OrbMech::timetoperi(R, V, mu);
 	mjd = oapiTime2MJD(oapiGetSimTime() + pet);
-	return (mjd - GC->GETbase)*24.0*3600.0;
+	return (mjd - GC->rtcc->CalcGETBase())*24.0*3600.0;
 }
 
 double ApolloRTCCMFD::timetoapo()
@@ -7670,7 +8048,7 @@ double ApolloRTCCMFD::timetoapo()
 	mu = GGRAV*oapiGetMass(gravref);
 	pet = OrbMech::timetoapo(R, V, mu);
 	mjd = oapiTime2MJD(oapiGetSimTime() + pet);
-	return (mjd - GC->GETbase)*24.0*3600.0;
+	return (mjd - GC->rtcc->CalcGETBase())*24.0*3600.0;
 }
 
 bool REFSMMATGETInput(void *id, char *str, void *data)
@@ -8632,28 +9010,62 @@ void ApolloRTCCMFD::set_CDHtimemode()
 	}
 }
 
-void ApolloRTCCMFD::menuSetLaunchMJD()
+void ApolloRTCCMFD::menuSetLaunchDate()
 {
 	if (GC->mission == 0)
 	{
-		bool LaunchMJDInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the launch MJD:", LaunchMJDInput, 0, 20, (void*)this);
+		bool LaunchDateInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the launch date (Format: day,month,year)", LaunchDateInput, 0, 20, (void*)this);
 	}
 }
 
-bool LaunchMJDInput(void *id, char *str, void *data)
+bool LaunchDateInput(void *id, char *str, void *data)
 {
-	if (strlen(str)<20)
+	int year, month, day;
+	if (sscanf(str, "%d,%d,%d", &day, &month, &year) == 3)
 	{
-		((ApolloRTCCMFD*)data)->set_launchmjd(atof(str));
+		((ApolloRTCCMFD*)data)->set_launchdate(year, month, day);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_launchmjd(double mjd)
+void ApolloRTCCMFD::set_launchdate(int year, int month, int day)
 {
-	this->GC->GETbase = mjd;
+	GC->rtcc->med_p80.Year = year;
+	GC->rtcc->med_p80.Month = month;
+	GC->rtcc->med_p80.Day = day;
+	GC->rtcc->med_p80.FirstVeh = 0;
+
+	GC->rtcc->GMSMED(80);
+}
+
+void ApolloRTCCMFD::menuSetLaunchTime()
+{
+	bool LaunchTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the launch time (Format: HH:MM:SS.SS)", LaunchTimeInput, 0, 20, (void*)this);
+}
+
+bool LaunchTimeInput(void *id, char *str, void *data)
+{
+	int hours, minutes;
+	double seconds;
+
+	if (sscanf(str, "%d:%d:%lf", &hours, &minutes, &seconds) == 3)
+	{
+		((ApolloRTCCMFD*)data)->set_LaunchTime(hours, minutes, seconds);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LaunchTime(int hours, int minutes, double seconds)
+{
+	GC->rtcc->med_p10.GMTALO = (double)hours + ((double)(minutes)) / 60.0 + seconds / 3600.0;
+	GC->rtcc->med_p10.TRAJ = true;
+	GC->rtcc->med_p10.VEH = 2;
+
+	GC->rtcc->GMSMED(10);
 }
 
 void ApolloRTCCMFD::menuSetAGCEpoch()
@@ -8723,7 +9135,7 @@ void ApolloRTCCMFD::menuCycleLMStage()
 
 void ApolloRTCCMFD::menuUpdateLiftoffTime()
 {
-	double TEPHEM0;
+	double TEPHEM0, LaunchMJD;
 
 	if (GC->mission < 11)		//NBY 1968/1969
 	{
@@ -8749,7 +9161,7 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 		double tephem = saturn->agc.vagc.Erasable[0][01710] +
 			saturn->agc.vagc.Erasable[0][01707] * pow((double) 2., (double) 14.) +
 			saturn->agc.vagc.Erasable[0][01706] * pow((double) 2., (double) 28.);
-		GC->GETbase = (tephem / 8640000.) + TEPHEM0;
+		LaunchMJD = (tephem / 8640000.) + TEPHEM0;
 	}
 	else
 	{
@@ -8758,8 +9170,16 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 		double tephem = lem->agc.vagc.Erasable[0][01710] +
 			lem->agc.vagc.Erasable[0][01707] * pow((double) 2., (double) 14.) +
 			lem->agc.vagc.Erasable[0][01706] * pow((double) 2., (double) 28.);
-		GC->GETbase = (tephem / 8640000.) + TEPHEM0;
+		LaunchMJD = (tephem / 8640000.) + TEPHEM0;
 	}
+
+	double GMTBase = floor(LaunchMJD);
+	LaunchMJD = (LaunchMJD - GMTBase)*24.0;
+	GC->rtcc->med_p10.GMTALO = LaunchMJD;
+	GC->rtcc->med_p10.TRAJ = false;
+	GC->rtcc->med_p10.VEH = 2;
+
+	GC->rtcc->GMSMED(10);
 }
 
 void ApolloRTCCMFD::cycleREFSMMATupl()
@@ -8879,12 +9299,13 @@ void ApolloRTCCMFD::menuVECPOINTCalc()
 void ApolloRTCCMFD::StoreStatus(void) const
 {
 	screenData.screen = screen;
-	
+	screenData.RTETradeoffScreen = RTETradeoffScreen;
 }
 
 void ApolloRTCCMFD::RecallStatus(void)
 {
 	screen = screenData.screen;
+	RTETradeoffScreen = screenData.RTETradeoffScreen;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -9625,7 +10046,7 @@ void ApolloRTCCMFD::menuSetSkylabGET()
 		VP0 = _V(VP0_orb.x, VP0_orb.z, VP0_orb.y);
 
 		dt1 = OrbMech::findelev(RA0, VA0, RP0, VP0, SVMJD, G->Skylab_E_L, gravref);
-		G->t_TPI = dt1 + (SVMJD - GC->GETbase) * 24.0 * 60.0 * 60.0;
+		G->t_TPI = dt1 + (SVMJD - GC->rtcc->CalcGETBase()) * 24.0 * 60.0 * 60.0;
 	}
 	else if (G->Skylabmaneuver == 6)
 	{
@@ -10935,7 +11356,7 @@ void ApolloRTCCMFD::set_MPTCopyEphemeris(int OldVeh, int NewVeh, double GET, int
 	GC->rtcc->med_p16.GMT = GET;
 	GC->rtcc->med_p16.ManNum = ManNum;
 
-	GC->rtcc->MPTCopyEphemeris(GC->mptable, GC->GETbase);
+	GC->rtcc->MPTCopyEphemeris(GC->mptable, GC->rtcc->CalcGETBase());
 }
 
 void ApolloRTCCMFD::menuMPTTLIDirectInput()

@@ -322,6 +322,29 @@ DetailedManeuverTable::DetailedManeuverTable()
 	sprintf_s(CFP_OPTION, "");
 }
 
+TradeoffDataDisplayBuffer::TradeoffDataDisplayBuffer()
+{
+	curves = 0;
+	XLabels[0] = 0;
+	XLabels[1] = 0;
+	XLabels[2] = 0;
+	YLabels[0] = 0;
+	YLabels[1] = 0;
+	YLabels[2] = 0;
+	for (int i = 0;i < 10;i++)
+	{
+		TZDisplay[i] = 0;
+		TZxval[i] = 0.0;
+		TZyval[i] = 0.0;
+		NumInCurve[i] = 0;
+		for (int j = 0;j < 44;j++)
+		{
+			xval[i][j] = 0.0;
+			yval[i][j] = 0.0;
+		}
+	}
+}
+
 MPTManeuver::MPTManeuver()
 {
 	ConfigCodeBefore = 0;
@@ -429,7 +452,7 @@ RTCC::RTEConstraintsTable::RTEConstraintsTable()
 {
 	DVMAX = 10000.0;
 	TZMIN = 0.0;
-	TZMAX = 0.0;
+	TZMAX = 350.0;
 	GMAX = 4.0;
 	HMINMC = 50.0;
 	IRMAX = 40.0;
@@ -547,6 +570,11 @@ RTCC::RTCC()
 	calcParams.SVSTORE1.MJD = 0.0;
 	calcParams.SVSTORE1.R = _V(0, 0, 0);
 	calcParams.SVSTORE1.V = _V(0, 0, 0);
+
+	GMTBASE = 0.0;
+	MCGMTL = MGLGMT = 0.0;
+	MCGECC = 0.85;
+	MCGSMA = 25.0;
 }
 
 void RTCC::Init(MCC *ptr)
@@ -10782,7 +10810,7 @@ int RTCC::MPTDeleteManeuver(FullMPTable &mptable)
 	return 0;
 }
 
-void RTCC::MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L, double GETBase)
+void RTCC::EMSTRAJ(FullMPTable &mptable, SV sv, int L, double GETBase)
 {
 	MPTable *table;
 
@@ -10815,6 +10843,156 @@ void RTCC::MPTTrajectoryUpdate(FullMPTable &mptable, SV sv, int L, double GETBas
 		RMMEACC(EZNITCSM, GETBase, EZCCSM);
 	}
 	
+}
+
+void RTCC::EMSEPH(MPTSV sv0, double CurMJD, EphemerisDataTable &ephem, MPTable &table)
+{
+	EMSMISSInputTable InTable;
+	MPTSV sv1;
+
+	ephem.TUP = -ephem.TUP;
+
+	InTable.AnchorVector = sv0;
+	InTable.EarthRelStopParam = OrbMech::R_Earth + 400000.0*0.3048;
+	InTable.MoonRelStopParam = 0.0;
+	InTable.CutoffIndicator = 1;
+	InTable.MaxIntegTime = 10.0*24.0*3600.0;
+	InTable.EphemerisBuildIndicator = false;
+
+	bool HighOrbit;
+	double mu;
+
+	if (sv1.gravref == oapiGetObjectByName("Earth"))
+	{
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		mu = OrbMech::mu_Moon;
+	}
+
+	OELEMENTS coe = OrbMech::coe_from_sv(sv1.R, sv1.V, mu);
+	double SMA = OrbMech::GetSemiMajorAxis(sv1.R, sv1.V, mu);
+
+	if (coe.e > MCGECC)
+	{
+		HighOrbit = true;
+	}
+	else
+	{
+		if (SMA < 0 || SMA > MCGSMA*OrbMech::R_Earth)
+		{
+			HighOrbit = true;
+		}
+		else
+		{
+			HighOrbit = false;
+		}
+	}
+
+	double DTMAX;
+
+	if (HighOrbit)
+	{
+		DTMAX = 10.0*24.0*3600.0;
+	}
+	else
+	{
+		DTMAX = 48.0*3600.0;
+	}
+
+	InTable.EphemerisLeftLimitMJD = CurMJD;
+	InTable.EphemerRightLimitMJD = CurMJD + DTMAX / 24.0 / 3600.0;
+	InTable.EphemerisBuildIndicator = true;
+	InTable.ManCutoffIndicator = 1;
+
+	ephem.table.empty();
+
+	//Unlock
+	ephem.TUP = -ephem.TUP;
+	//Increment
+	ephem.TUP++;
+}
+
+void RTCC::EMSMISS(const EMSMISSInputTable &in)
+{
+	double dt, dt2;
+
+	if (in.EphemerisBuildIndicator == false)
+	{
+		MPTSV sv_left;
+		
+		dt = (in.EphemerisLeftLimitMJD - in.AnchorVector.MJD)*24.0*3600.0;
+		sv_left = coast(in.AnchorVector, dt);
+		in.EphemTableIndicator->table.push_back(sv_left);
+		return;
+	}
+
+	MPTable *mpt = NULL;
+	if (in.VehicleCode == 1)
+	{
+		
+	}
+	else
+	{
+
+	}
+
+	bool manflag = false;
+	dt = in.MaxIntegTime;
+	if (mpt->mantable.size() > 0)
+	{
+		unsigned i = 0;
+
+		while (mpt->mantable[i].sv_before.MJD < in.EphemTableIndicator->table.back().MJD)
+		{
+			i++;
+
+			if (i >= mpt->mantable.size())
+			{
+				break;
+			}
+		}
+
+		if (mpt->mantable[i].sv_before.MJD > in.EphemTableIndicator->table.back().MJD)
+		{
+			manflag = true;
+			dt2 = (mpt->mantable[i].sv_before.MJD - in.EphemTableIndicator->table.back().MJD)*24.0*3600.0;
+			if (dt2 < dt)
+			{
+				dt = dt2;
+			}
+		}		
+	}
+
+	dt2 = (in.EphemerRightLimitMJD - in.EphemTableIndicator->table.back().MJD)*24.0*3600.0;
+	if (dt2 < dt)
+	{
+		dt = dt2;
+	}
+
+	CoastIntegrator* coast;
+	coast = new CoastIntegrator(in.EphemTableIndicator->table.back().R, in.EphemTableIndicator->table.back().V, in.EphemTableIndicator->table.back().MJD, dt, in.EphemTableIndicator->table.back().gravref, NULL);
+	bool stop = false;
+
+	MPTSV svtemp;
+
+	while (stop == false)
+	{
+		stop = coast->iteration();
+
+		svtemp.gravref = coast->GetGravRef();
+		svtemp.MJD = coast->GetMJD();
+		svtemp.R = coast->GetPosition();
+		svtemp.V = coast->GetVelocity();
+
+		in.EphemTableIndicator->table.push_back(svtemp);
+	}
+
+	if (manflag)
+	{
+
+	}
 }
 
 bool RTCC::MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L)
@@ -12276,6 +12454,9 @@ int RTCC::EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutM
 	res.GRRC = OrbMech::GETfromMJD(GETbase, GMTbase);
 	res.ZSC = res.ZSL = OrbMech::GETfromMJD(GETbase, GMTbase);
 	res.GRRS = OrbMech::GETfromMJD(GETbase, GMTbase) - 17.0;
+	res.R_Day[0] = GZGENCSN.DayofLiftoff;
+	res.R_Day[1] = GZGENCSN.MonthofLiftoff;
+	res.R_Day[2] = GZGENCSN.Year;
 
 	if (med_u02.VEH == 1)
 	{
@@ -13301,6 +13482,11 @@ int RTCC::ELFECH(double MJD, int L, unsigned vec_tot, unsigned vec_bef, Ephemeri
 		maintable = &EZNITCSM;
 	}
 
+	if (maintable->table.size() == 0)
+	{
+		return 1;
+	}
+
 	if (MJD < maintable->table.front().MJD)
 	{
 		return 1;
@@ -13355,12 +13541,8 @@ int RTCC::ELFECH(double MJD, int L, unsigned vec_tot, unsigned vec_bef, Ephemeri
 
 int RTCC::PMQREAP(const std::vector<TradeoffData> &TOdata)
 {
-	if (TOdata.size() == 0) return 1;
-
 	TradeoffData empty;
-	double TZData[10];
 	unsigned i, j;
-	bool found;
 
 	//Clear tradeoff data
 	RTETradeoffTable.curves = 0;
@@ -13372,6 +13554,11 @@ int RTCC::PMQREAP(const std::vector<TradeoffData> &TOdata)
 			RTETradeoffTable.data[i][j] = empty;
 		}
 	}
+
+	if (TOdata.size() == 0) return 1;
+
+	double TZData[10];
+	bool found;
 
 	for (i = 0;i < TOdata.size();i++)
 	{
@@ -13414,14 +13601,100 @@ int RTCC::PMQREAP(const std::vector<TradeoffData> &TOdata)
 void RTCC::PMMREAP(int med)
 {
 	//Near Earth Tradeoff 
-	if (med == 70)
+	if (med == 70 || med == 71)
 	{
 		EphemerisDataTable EPHEM;
+		MPTSV sv0;
 
-		ELFECH(CalcGETBase() + PZREAP.RTEVectorTime / 24.0, 3, 44, 0, EPHEM);
+		double GETBase = CalcGETBase();
+
+		ELFECH(GETBase + PZREAP.RTEVectorTime / 24.0, 3, 1, 0, EPHEM);
+
+		if (EPHEM.table.size() == 0)
+		{
+			return;
+		}
+
+		sv0 = EPHEM.table[0];
+		EPHEM.table.clear();
+
+		double dt = PZREAP.RTET0Min*3600.0 - OrbMech::GETfromMJD(sv0.MJD, GETBase);
+		sv0 = coast(sv0, dt);
+
+		double mu;
+
+		if (sv0.gravref == oapiGetObjectByName("Earth"))
+		{
+			mu = OrbMech::mu_Earth;
+		}
+		else
+		{
+			mu = OrbMech::mu_Moon;
+		}
 
 		//Calculate maximum time difference
+		double T_P = OrbMech::period(sv0.R, sv0.V, mu);
+		dt = (PZREAP.RTET0Max - PZREAP.RTET0Min)*3600.0;
+		if (T_P < dt)
+		{
+			dt = T_P;
+		}
+		if (dt > 24.0*3600.0)
+		{
+			dt = 24.0*3600.0;
+		}
 
+		OrbMech::GenerateEphemeris(sv0, dt, EPHEM.table, 44U, 2U);
+
+		int mode;
+		if (PZREAP.RTEIsPTPSite)
+		{
+			mode = 2;
+		}
+		else
+		{
+			mode = 4;
+		}
+
+		std::vector<TradeoffData>todata;
+
+		ConicRTEEarthNew rteproc(EPHEM.table, pzefem, todata);
+		rteproc.READ(mode, CalcGETBase(), PZREAP.TZMIN, PZREAP.TZMAX);
+		rteproc.Init(PZREAP.DVMAX, PZREAP.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
+
+		std::vector<ATPData> line;
+		ATPData data;
+
+		double lat;
+
+		if (mode == 4)
+		{
+			for (int i = 0;i < 5;i++)
+			{
+				lat = PZREAP.ATPCoordinates[PZREAP.RTESiteNum][i*2];
+
+				if (lat > 1e8)
+				{
+					break;
+				}
+
+				data.lat = lat;
+				data.lng= PZREAP.ATPCoordinates[PZREAP.RTESiteNum][i * 2 + 1];
+
+				line.push_back(data);
+			}
+		}
+
+		if (line.size() == 0)
+		{
+			return;
+		}
+
+		rteproc.ATP(line);
+		rteproc.MAIN();
+
+		PMQREAP(todata);
+		PMDTRDFF(med, PZREAP.RTETradeoffRemotePage);
 	}
 }
 
@@ -13437,12 +13710,16 @@ int RTCC::PMQAFMED(int med)
 			if (med_f70.Site == PZREAP.ATPSite[i])
 			{
 				PZREAP.RTESite = med_f70.Site;
+				PZREAP.RTESiteNum = i;
+				PZREAP.RTEIsPTPSite = false;
 				found = true;
 				break;
 			}
 			if (med_f70.Site == PZREAP.PTPSite[i])
 			{
 				PZREAP.RTESite = med_f70.Site;
+				PZREAP.RTESiteNum = i;
+				PZREAP.RTEIsPTPSite = true;
 				found = true;
 				break;
 			}
@@ -13459,20 +13736,26 @@ int RTCC::PMQAFMED(int med)
 		//Check min abort time
 		if (med_f70.T_omin < PZREAP.RTEVectorTime)
 		{
-			return 2;
+			PZREAP.RTET0Min = PZREAP.RTEVectorTime;
 		}
-		PZREAP.RTET0Min = med_f70.T_omin;
+		else
+		{
+			PZREAP.RTET0Min = med_f70.T_omin;
+		}
 
 		//Check max abort time
 		if (med_f70.T_omax == -1.0)
 		{
 			med_f70.T_omax = med_f70.T_omin + 24.0;
 		}
-		else if (med_f70.T_omax < PZREAP.RTET0Min)
+		if (med_f70.T_omax < PZREAP.RTET0Min)
 		{
-			return 3;
+			PZREAP.RTET0Max = PZREAP.RTET0Min;
 		}
-		PZREAP.RTET0Max = med_f70.T_omax;
+		else
+		{
+			PZREAP.RTET0Max = med_f70.T_omax;
+		}
 
 		//Check entry profile
 		if (med_f70.EntryProfile == 2 && PZREAP.TGTLN == 1)
@@ -13480,6 +13763,78 @@ int RTCC::PMQAFMED(int med)
 			return 4;
 		}
 		PZREAP.EntryProfile = med_f70.EntryProfile;
+
+		PMMREAP(med);
+	}
+	//Generation of remote Earth tradeoff
+	else if (med == 71)
+	{
+		if (med_f71.Page < 1 || med_f71.Page > 5)
+		{
+			return 5;
+		}
+		PZREAP.RTETradeoffRemotePage = med_f71.Page;
+
+		bool found = false;
+		//Check and find site
+		for (int i = 0;i < 5;i++)
+		{
+			if (med_f71.Site == PZREAP.ATPSite[i])
+			{
+				PZREAP.RTESite = med_f71.Site;
+				PZREAP.RTESiteNum = i;
+				PZREAP.RTEIsPTPSite = false;
+				found = true;
+				break;
+			}
+			if (med_f71.Site == PZREAP.PTPSite[i])
+			{
+				PZREAP.RTESite = med_f71.Site;
+				PZREAP.RTESiteNum = i;
+				PZREAP.RTEIsPTPSite = true;
+				found = true;
+				break;
+			}
+		}
+
+		if (found == false)
+		{
+			return 1;
+		}
+		//Check vector time
+		//TBD: T_V greater than present time
+		PZREAP.RTEVectorTime = med_f71.T_V;
+
+		//Check min abort time
+		if (med_f71.T_omin < PZREAP.RTEVectorTime)
+		{
+			PZREAP.RTET0Min = PZREAP.RTEVectorTime;
+		}
+		else
+		{
+			PZREAP.RTET0Min = med_f71.T_omin;
+		}
+
+		//Check max abort time
+		if (med_f71.T_omax == -1.0)
+		{
+			med_f71.T_omax = med_f71.T_omin + 24.0;
+		}
+		if (med_f71.T_omax < PZREAP.RTET0Min)
+		{
+			PZREAP.RTET0Max = PZREAP.RTET0Min;
+		}
+		else
+		{
+			PZREAP.RTET0Max = med_f71.T_omax;
+		}
+
+		//Check entry profile
+		if (med_f71.EntryProfile == 2 && PZREAP.TGTLN == 1)
+		{
+			return 4;
+		}
+		PZREAP.EntryProfile = med_f71.EntryProfile;
 
 		PMMREAP(med);
 	}
@@ -13497,11 +13852,11 @@ int RTCC::PMQAFMED(int med)
 		}
 		else if (med_f86.Constraint == "TZMIN")
 		{
-			PZREAP.TZMIN = med_f86.Value*3600.0;
+			PZREAP.TZMIN = med_f86.Value;
 		}
 		else if (med_f86.Constraint == "TZMAX")
 		{
-			PZREAP.TZMAX = med_f86.Value*3600.0;
+			PZREAP.TZMAX = med_f86.Value;
 		}
 		else if (med_f86.Constraint == "GMAX")
 		{
@@ -13991,4 +14346,263 @@ void RTCC::FDOLaunchAnalog2(MPTSV sv)
 
 	fdolaunchanalog2tab.XVal.push_back(xval);
 	fdolaunchanalog2tab.YVal.push_back(yval);
+}
+
+void RTCC::PMDTRDFF(int med, unsigned page)
+{
+	//To figure out how to format the display, search for the largest DV and the maximum time difference
+
+	unsigned i, j, p;
+	double maxdv = 0;
+	double MinTime = RTETradeoffTable.data[0][0].T0;
+	double MaxTime = 0;
+
+	for (i = 0;i < RTETradeoffTable.curves;i++)
+	{
+		for (j = 0;j < RTETradeoffTable.NumInCurve[i];j++)
+		{
+			if (RTETradeoffTable.data[i][j].DV > maxdv)
+			{
+				maxdv = RTETradeoffTable.data[i][j].DV;
+			}
+			if (RTETradeoffTable.data[i][j].T0 > MaxTime)
+			{
+				MaxTime = RTETradeoffTable.data[i][j].T0;
+			}
+		}
+	}
+
+	//Origin of x-axis should be at least below the minimum time
+	double MinTimeLabel = floor(MinTime);
+	//If the minimum time was very close to the previous hour, go back even one more hour
+	if (MinTime - MinTimeLabel < 0.1)
+	{
+		MinTimeLabel -= 1.0;
+	}
+	//End of x-axis should be at least above the maximum time
+	double MaxTimeLabel = ceil(MaxTime);
+	//Difference between minimum and maximum time
+	int DeltaTimeLabel = (int)(MaxTimeLabel - MinTimeLabel);
+	//Enforce even number of hours on scale, so that the middle value is also a full hour
+	if (DeltaTimeLabel % 2 != 0)
+	{
+		MaxTimeLabel += 1.0;
+	}
+	//If the maximum time was very close to the next hour, go up even one more hour
+	else if (MaxTimeLabel - MaxTime < 0.1)
+	{
+		MaxTimeLabel += 1.0;
+	}
+
+	double MidTimeLabel = (MaxTimeLabel + MinTimeLabel) / 2.0;
+
+	double MinDVLabel = 0;
+	double MaxDVLabel = ceil(maxdv / 1000.0)*1000.0;
+	int DeltaDVLabel = (int)((MaxDVLabel - MinDVLabel) / 1000.0);
+	if (DeltaDVLabel % 2 != 0)
+	{
+		MaxDVLabel += 1000.0;
+	}
+
+	double MidDVLabel = (MaxDVLabel + MinDVLabel) / 2.0;
+
+	double xscalmin = 0.1;
+	double xscalmax = 0.95;
+	double yscalmin = 0.1;
+	double yscalmax = 0.85;
+	double xval, yval;
+
+	if (med == 70)
+	{
+		p = 0;
+	}
+	else
+	{
+		p = page - 1;
+	}
+
+	RTETradeoffTableBuffer[p].curves = RTETradeoffTable.curves;
+	RTETradeoffTableBuffer[p].XLabels[0] = (int)MinTimeLabel;
+	RTETradeoffTableBuffer[p].XLabels[1] = (int)MidTimeLabel;
+	RTETradeoffTableBuffer[p].XLabels[2] = (int)MaxTimeLabel;
+	RTETradeoffTableBuffer[p].YLabels[0] = (int)MinDVLabel / 1000;
+	RTETradeoffTableBuffer[p].YLabels[1] = (int)MidDVLabel / 1000;
+	RTETradeoffTableBuffer[p].YLabels[2] = (int)MaxDVLabel / 1000;
+
+	//Set to -1, will not display the unused curves
+	for (i = 0;i < 10;i++)
+	{
+		RTETradeoffTableBuffer[p].TZDisplay[i] = -1;
+	}
+	for (i = 0;i < RTETradeoffTable.curves;i++)
+	{
+		RTETradeoffTableBuffer[p].NumInCurve[i] = RTETradeoffTable.NumInCurve[i];
+
+		//Rounded average of landing time
+		RTETradeoffTableBuffer[p].TZDisplay[i] = (int)round((RTETradeoffTable.data[i][0].T_Z + RTETradeoffTable.data[i][RTETradeoffTable.NumInCurve[i] - 1].T_Z) / 2.0);
+
+		for (j = 0;j < RTETradeoffTable.NumInCurve[i];j++)
+		{
+			xval = (RTETradeoffTable.data[i][j].T0 - MinTimeLabel) / (MaxTimeLabel - MinTimeLabel);
+			yval = (RTETradeoffTable.data[i][j].DV - MinDVLabel) / (MaxDVLabel - MinDVLabel);
+
+			xval = xval * (xscalmax - xscalmin) + xscalmin;
+			yval = yval * (yscalmax - yscalmin) + yscalmin;
+			yval = 1.0 - yval;
+
+			RTETradeoffTableBuffer[p].xval[i][j] = xval;
+			RTETradeoffTableBuffer[p].yval[i][j] = yval;
+		}
+
+		RTETradeoffTableBuffer[p].TZxval[i] = min(xscalmax, xval + 0.01);
+		RTETradeoffTableBuffer[p].TZyval[i] = yval;
+	}
+
+	RTETradeoffTableBuffer[p].XAxisName = "Time of abort, hr";
+	RTETradeoffTableBuffer[p].YAxisName = "Abort velocity, kfps";
+	RTETradeoffTableBuffer[p].Site = PZREAP.RTESite;
+
+	//If remote Earth tradeoff then we are done
+	if (med == 71)
+	{
+		return;
+	}
+
+	//Now latitude and time of landing for near-Earth tradeoff
+
+	//Unused for time of landing, same for latitude
+	for (i = 0;i < 10;i++)
+	{
+		RTETradeoffTableBuffer[1].TZDisplay[i] = -1;
+		RTETradeoffTableBuffer[2].TZDisplay[i] = RTETradeoffTableBuffer[0].TZDisplay[i];
+	}
+
+	for (i = 0;i < RTETradeoffTable.curves;i++)
+	{
+		for (j = 0;j < RTETradeoffTable.NumInCurve[i];j++)
+		{
+			//X-values are the same
+			RTETradeoffTableBuffer[2].xval[i][j] = RTETradeoffTableBuffer[1].xval[i][j] = RTETradeoffTableBuffer[0].xval[i][j];
+		}
+	}
+
+	double mintz = 10e10;
+	double maxtz = 0;
+	double minlat = 10e10;
+	double maxlat = 0;
+
+	//Find min and max values
+	for (i = 0;i < RTETradeoffTable.curves;i++)
+	{
+		for (j = 0;j < RTETradeoffTable.NumInCurve[i];j++)
+		{
+			if (RTETradeoffTable.data[i][j].T_Z > maxtz)
+			{
+				maxtz = RTETradeoffTable.data[i][j].T_Z;
+			}
+			if (RTETradeoffTable.data[i][j].T_Z < mintz)
+			{
+				mintz = RTETradeoffTable.data[i][j].T_Z;
+			}
+
+			if (RTETradeoffTable.data[i][j].lat > maxlat)
+			{
+				maxlat = RTETradeoffTable.data[i][j].lat;
+			}
+			if (RTETradeoffTable.data[i][j].lat < minlat)
+			{
+				minlat = RTETradeoffTable.data[i][j].lat;
+			}
+		}
+	}
+
+	double MinTZLabel = floor(mintz);
+	if (mintz - MinTZLabel < 0.1)
+	{
+		MinTZLabel -= 1.0;
+	}
+	double MaxTZLabel = ceil(maxtz);
+	if (MaxTZLabel - maxtz < 0.1)
+	{
+		MaxTZLabel += 1.0;
+	}
+
+	int DeltaTZLabel = (int)(MaxTZLabel - MinTZLabel);
+	if (DeltaTZLabel % 2 != 0)
+	{
+		MaxTZLabel += 1.0;
+	}
+
+	double MidTZLabel = (MaxTZLabel + MinTZLabel) / 2.0;
+
+	RTETradeoffTableBuffer[1].curves = RTETradeoffTable.curves;
+	RTETradeoffTableBuffer[1].XLabels[0] = (int)MinTimeLabel;
+	RTETradeoffTableBuffer[1].XLabels[1] = (int)MidTimeLabel;
+	RTETradeoffTableBuffer[1].XLabels[2] = (int)MaxTimeLabel;
+	RTETradeoffTableBuffer[1].YLabels[0] = (int)MinTZLabel;
+	RTETradeoffTableBuffer[1].YLabels[1] = (int)MidTZLabel;
+	RTETradeoffTableBuffer[1].YLabels[2] = (int)MaxTZLabel;
+
+	double MinlatLabel = floor(minlat);
+	if (minlat - MinlatLabel < 0.1)
+	{
+		MinlatLabel -= 1.0;
+	}
+	double MaxlatLabel = ceil(maxlat);
+	if (MaxlatLabel - maxlat < 0.1)
+	{
+		MaxlatLabel += 1.0;
+	}
+
+	int DeltalatLabel = (int)(MaxlatLabel - MinlatLabel);
+	if (DeltalatLabel % 2 != 0)
+	{
+		MaxlatLabel += 1.0;
+	}
+
+	double MidlatLabel = (MaxlatLabel + MinlatLabel) / 2.0;
+
+	RTETradeoffTableBuffer[2].curves = RTETradeoffTable.curves;
+	RTETradeoffTableBuffer[2].XLabels[0] = (int)MinTimeLabel;
+	RTETradeoffTableBuffer[2].XLabels[1] = (int)MidTimeLabel;
+	RTETradeoffTableBuffer[2].XLabels[2] = (int)MaxTimeLabel;
+	RTETradeoffTableBuffer[2].YLabels[0] = (int)MinlatLabel;
+	RTETradeoffTableBuffer[2].YLabels[1] = (int)MidlatLabel;
+	RTETradeoffTableBuffer[2].YLabels[2] = (int)MaxlatLabel;
+
+	for (i = 0;i < RTETradeoffTable.curves;i++)
+	{
+		RTETradeoffTableBuffer[1].NumInCurve[i] = RTETradeoffTable.NumInCurve[i];
+		RTETradeoffTableBuffer[2].NumInCurve[i] = RTETradeoffTable.NumInCurve[i];
+
+		for (j = 0;j < RTETradeoffTable.NumInCurve[i];j++)
+		{
+			//Landing time
+			yval = (RTETradeoffTable.data[i][j].T_Z - MinTZLabel) / (MaxTZLabel - MinTZLabel);
+
+			yval = yval * (yscalmax - yscalmin) + yscalmin;
+			yval = 1.0 - yval;
+
+			RTETradeoffTableBuffer[1].yval[i][j] = yval;
+
+			//Latitude
+			yval = (RTETradeoffTable.data[i][j].lat - MinlatLabel) / (MaxlatLabel - MinlatLabel);
+
+			yval = yval * (yscalmax - yscalmin) + yscalmin;
+			yval = 1.0 - yval;
+
+			RTETradeoffTableBuffer[2].yval[i][j] = yval;
+		}
+
+		RTETradeoffTableBuffer[2].TZxval[i] = RTETradeoffTableBuffer[0].TZxval[i];
+		RTETradeoffTableBuffer[2].TZyval[i] = yval;
+	}
+
+	RTETradeoffTableBuffer[1].XAxisName = "Time of abort, hr";
+	RTETradeoffTableBuffer[1].YAxisName = "Time of landing, hr";
+	RTETradeoffTableBuffer[1].Site = PZREAP.RTESite;
+
+	RTETradeoffTableBuffer[2].XAxisName = "Time of abort, hr";
+	RTETradeoffTableBuffer[2].YAxisName = "Latitude of landing, deg";
+	RTETradeoffTableBuffer[2].Site = PZREAP.RTESite;
 }

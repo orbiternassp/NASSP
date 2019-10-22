@@ -33,12 +33,12 @@ public:
 	AR_GCore(VESSEL* v);
 	~AR_GCore();
 
+	void SetMissionSpecificParameters();
 	void MPTMassUpdate();
 	int MPTTrajectoryUpdate();
 
 	FullMPTable mptable;
 	bool MissionPlanningActive;
-	double GETbase;			//Launch MJD
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
 	double t_Land;				//Time of landing
@@ -110,6 +110,7 @@ public:
 	void CalculatePredictedSiteAcquisitionDisplay();
 	void SunriseSunsetTimesCalc();
 	void MoonriseMoonsetTimesCalc();
+	void RTETradeoffDisplayCalc();
 	void CapeCrossingTableUpdate();
 	void TransferTIToMPT();
 	void TransferSPQToMPT();
@@ -311,6 +312,7 @@ public:
 	double EntryDesiredInclination;
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	double RTEReturnInclination;
+	int RTETradeoffMode; //0 = Near-Earth (F70), 1 = Remote-Earth (F71)
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
