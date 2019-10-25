@@ -253,23 +253,23 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 
 	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
 
-	oapiWriteScenario_int(scn, "MPTCM_InitConfigCode", GC->mptable.cmtable.InitConfigCode);
-	papiWriteScenario_double(scn, "MPTCM_CSMInitMass", GC->mptable.cmtable.CSMInitMass);
-	papiWriteScenario_double(scn, "MPTCM_LMInitMass", GC->mptable.cmtable.LMInitMass);
-	papiWriteScenario_double(scn, "MPTCM_SIVBInitMass", GC->mptable.cmtable.SIVBInitMass);
-	papiWriteScenario_double(scn, "MPTCM_TotalInitMass", GC->mptable.cmtable.TotalInitMass);
+	oapiWriteScenario_int(scn, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.InitConfigCode);
+	papiWriteScenario_double(scn, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CSMInitMass);
+	papiWriteScenario_double(scn, "MPTCM_LMInitMass", GC->rtcc->PZMPTCSM.LMInitDescentMass);
+	papiWriteScenario_double(scn, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.SIVBInitMass);
+	papiWriteScenario_double(scn, "MPTCM_TotalInitMass", GC->rtcc->PZMPTCSM.TotalInitMass);
 	oapiWriteScenario_int(scn, "MPTCM_number", GC->pCSMnumber);
-	oapiWriteScenario_int(scn, "MPTCM_TUP", GC->mptable.cmtable.TUP);
-	papiWriteScenario_SV(scn, "MPTCM_ANCHOR", GC->mptable.cmtable.AnchorVector);
+	oapiWriteScenario_int(scn, "MPTCM_TUP", GC->rtcc->PZMPTCSM.TUP);
+	papiWriteScenario_SV(scn, "MPTCM_ANCHOR", GC->rtcc->PZMPTCSM.AnchorVector);
 	
-	oapiWriteScenario_int(scn, "MPTLM_InitConfigCode", GC->mptable.lmtable.InitConfigCode);
-	papiWriteScenario_double(scn, "MPTLM_CSMInitMass", GC->mptable.lmtable.CSMInitMass);
-	papiWriteScenario_double(scn, "MPTLM_LMInitMass", GC->mptable.lmtable.LMInitMass);
-	papiWriteScenario_double(scn, "MPTLM_SIVBInitMass", GC->mptable.lmtable.SIVBInitMass);
-	papiWriteScenario_double(scn, "MPTLM_TotalInitMass", GC->mptable.lmtable.TotalInitMass);
+	oapiWriteScenario_int(scn, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.InitConfigCode);
+	papiWriteScenario_double(scn, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CSMInitMass);
+	papiWriteScenario_double(scn, "MPTLM_LMInitMass", GC->rtcc->PZMPTLEM.LMInitDescentMass);
+	papiWriteScenario_double(scn, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.SIVBInitMass);
+	papiWriteScenario_double(scn, "MPTLM_TotalInitMass", GC->rtcc->PZMPTLEM.TotalInitMass);
 	oapiWriteScenario_int(scn, "MPTLM_number", GC->pLMnumber);
-	oapiWriteScenario_int(scn, "MPTLM_TUP", GC->mptable.lmtable.TUP);
-	papiWriteScenario_SV(scn, "MPTLM_ANCHOR", GC->mptable.lmtable.AnchorVector);
+	oapiWriteScenario_int(scn, "MPTLM_TUP", GC->rtcc->PZMPTLEM.TUP);
+	papiWriteScenario_SV(scn, "MPTLM_ANCHOR", GC->rtcc->PZMPTLEM.AnchorVector);
 }
 
 void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
@@ -438,23 +438,23 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 
 		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
-		papiReadScenario_int(line, "MPTCM_InitConfigCode", GC->mptable.cmtable.InitConfigCode);
-		papiReadScenario_double(line, "MPTCM_CSMInitMass", GC->mptable.cmtable.CSMInitMass);
-		papiReadScenario_double(line, "MPTCM_LMInitMass", GC->mptable.cmtable.LMInitMass);
-		papiReadScenario_double(line, "MPTCM_SIVBInitMass", GC->mptable.cmtable.SIVBInitMass);
-		papiReadScenario_double(line, "MPTCM_TotalInitMass", GC->mptable.cmtable.TotalInitMass);
+		papiReadScenario_int(line, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.InitConfigCode);
+		papiReadScenario_double(line, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CSMInitMass);
+		papiReadScenario_double(line, "MPTCM_LMInitMass", GC->rtcc->PZMPTCSM.LMInitDescentMass);
+		papiReadScenario_double(line, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.SIVBInitMass);
+		papiReadScenario_double(line, "MPTCM_TotalInitMass", GC->rtcc->PZMPTCSM.TotalInitMass);
 		papiReadScenario_int(line, "MPTCM_number", GC->pCSMnumber);
-		papiReadScenario_int(line, "MPTCM_TUP", GC->mptable.cmtable.TUP);
-		papiReadScenario_SV(line, "MPTCM_ANCHOR", GC->mptable.cmtable.AnchorVector);
+		papiReadScenario_int(line, "MPTCM_TUP", GC->rtcc->PZMPTCSM.TUP);
+		papiReadScenario_SV(line, "MPTCM_ANCHOR", GC->rtcc->PZMPTCSM.AnchorVector);
 
-		papiReadScenario_int(line, "MPTLM_InitConfigCode", GC->mptable.lmtable.InitConfigCode);
-		papiReadScenario_double(line, "MPTLM_CSMInitMass", GC->mptable.lmtable.CSMInitMass);
-		papiReadScenario_double(line, "MPTLM_LMInitMass", GC->mptable.lmtable.LMInitMass);
-		papiReadScenario_double(line, "MPTLM_SIVBInitMass", GC->mptable.lmtable.SIVBInitMass);
-		papiReadScenario_double(line, "MPTLM_TotalInitMass", GC->mptable.lmtable.TotalInitMass);
+		papiReadScenario_int(line, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.InitConfigCode);
+		papiReadScenario_double(line, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CSMInitMass);
+		papiReadScenario_double(line, "MPTLM_LMInitMass", GC->rtcc->PZMPTLEM.LMInitDescentMass);
+		papiReadScenario_double(line, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.SIVBInitMass);
+		papiReadScenario_double(line, "MPTLM_TotalInitMass", GC->rtcc->PZMPTLEM.TotalInitMass);
 		papiReadScenario_int(line, "MPTLM_number", GC->pLMnumber);
-		papiReadScenario_int(line, "MPTLM_TUP", GC->mptable.lmtable.TUP);
-		papiReadScenario_SV(line, "MPTLM_ANCHOR", GC->mptable.lmtable.AnchorVector);
+		papiReadScenario_int(line, "MPTLM_TUP", GC->rtcc->PZMPTLEM.TUP);
+		papiReadScenario_SV(line, "MPTLM_ANCHOR", GC->rtcc->PZMPTLEM.AnchorVector);
 
 		//G->coreButtons.SelectPage(this, G->screen);
 	}
@@ -4330,27 +4330,27 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
-		for (unsigned i = 0;i < GC->mptable.fulltable.size();i++)
+		for (unsigned i = 0;i < GC->rtcc->MPTDISPLAY.man.size();i++)
 		{
-			GET_Display(Buffer, OrbMech::GETfromMJD(GC->mptable.fulltable[i].BefMJD, GC->rtcc->CalcGETBase()), false);
+			sprintf(Buffer, GC->rtcc->MPTDISPLAY.man[i].GETBI.c_str());
 			skp->Text(5 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].DV);
+			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].DELTAV);
 			skp->Text(14 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].HA);
+			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].HA);
 			skp->Text(22 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f", GC->mptable.fulltable[i].HP);
+			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].HP);
 			skp->Text(26 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, GC->mptable.fulltable[i].code.c_str());
+			sprintf(Buffer, GC->rtcc->MPTDISPLAY.man[i].code.c_str());
 			skp->Text(31 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 		}
 
-		for (unsigned i = 1;i < GC->mptable.fulltable.size();i++)
+		for (unsigned i = 1;i < GC->rtcc->MPTDISPLAY.man.size();i++)
 		{
-			GET_Display(Buffer, GC->mptable.fulltable[i].dt, false);
+			sprintf(Buffer, GC->rtcc->MPTDISPLAY.man[i].DT.c_str());
 			skp->Text(10 * W / 32, (i * 2 + 6) * H / 28, Buffer, strlen(Buffer));
 		}
 
@@ -5074,7 +5074,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(9 * W / 32, 3 * H / 28, "R-DAY", 5);
 		sprintf(Buffer, "%02d:%02d:%04d", GC->checkmon.R_Day[0], GC->checkmon.R_Day[1], GC->checkmon.R_Day[2]);
-		skp->Text(11 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(12 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(10 * W / 32, 4 * H / 28, "VID", 3);
 		skp->Text(7 * W / 32, 5 * H / 28, "XT", 2);
 		skp->Text(18 * W / 32, 3 * H / 28, "K-FAC", 5);
@@ -7793,7 +7793,7 @@ void ApolloRTCCMFD::menuMPTInitM55Config()
 
 void ApolloRTCCMFD::menuMPTM50Update()
 {
-	if (GC->rtcc->PMMWTC(GC->mptable, 50))
+	if (GC->rtcc->PMMWTC(50))
 	{
 		GC->mptInitError = 2;
 	}
@@ -7805,7 +7805,7 @@ void ApolloRTCCMFD::menuMPTM50Update()
 
 void ApolloRTCCMFD::menuMPTM55Update()
 {
-	if (GC->rtcc->PMMWTC(GC->mptable, 55))
+	if (GC->rtcc->PMMWTC(55))
 	{
 		GC->mptInitError = 4;
 	}
@@ -9035,7 +9035,6 @@ void ApolloRTCCMFD::set_launchdate(int year, int month, int day)
 	GC->rtcc->med_p80.Year = year;
 	GC->rtcc->med_p80.Month = month;
 	GC->rtcc->med_p80.Day = day;
-	GC->rtcc->med_p80.FirstVeh = 0;
 
 	GC->rtcc->GMSMED(80);
 }
@@ -11322,7 +11321,30 @@ void ApolloRTCCMFD::menuMPTCycleActive()
 
 void ApolloRTCCMFD::menuMPTDeleteManeuver()
 {
-	GC->rtcc->MPTDeleteManeuver(GC->mptable);
+	bool MPTDeleteManeuverInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Delete last maneuver in MPT (Format: CSM or LEM)", MPTDeleteManeuverInput, 0, 20, (void*)this);
+}
+
+bool MPTDeleteManeuverInput(void* id, char *str, void *data)
+{
+	char buff1[100];
+
+	if (sscanf(str, "%s", buff1) == 1)
+	{
+		std::string buff2(buff1);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_MPTDeleteManever(std::string table)
+{
+	GC->rtcc->med_m62.Action = "D";
+	GC->rtcc->med_m62.ManNum = 1;
+	GC->rtcc->med_m62.MPTCode = table;
+	GC->rtcc->PMMMED(62);
 }
 
 void ApolloRTCCMFD::menuMPTCopyEphemeris()
@@ -11356,7 +11378,7 @@ void ApolloRTCCMFD::set_MPTCopyEphemeris(int OldVeh, int NewVeh, double GET, int
 	GC->rtcc->med_p16.GMT = GET;
 	GC->rtcc->med_p16.ManNum = ManNum;
 
-	GC->rtcc->MPTCopyEphemeris(GC->mptable, GC->rtcc->CalcGETBase());
+	GC->rtcc->MPTCopyEphemeris();
 }
 
 void ApolloRTCCMFD::menuMPTTLIDirectInput()

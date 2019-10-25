@@ -401,6 +401,7 @@ public:
 	void menuSetMPTPage();
 	void menuMPTCycleActive();
 	void menuMPTDeleteManeuver();
+	void set_MPTDeleteManever(std::string table);
 	void menuMPTTLIDirectInput();
 	void menuMPTCopyEphemeris();
 	void set_MPTCopyEphemeris(int OldVeh, int NewVeh, double GET, int ManNum);

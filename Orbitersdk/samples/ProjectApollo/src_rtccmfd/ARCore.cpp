@@ -104,6 +104,11 @@ AR_GCore::AR_GCore(VESSEL* v)
 	SetMissionSpecificParameters();
 }
 
+AR_GCore::~AR_GCore()
+{
+	delete rtcc;
+}
+
 void AR_GCore::SetMissionSpecificParameters()
 {
 	if (mission == 7)
@@ -382,11 +387,6 @@ void AR_GCore::SetMissionSpecificParameters()
 	}
 }
 
-AR_GCore::~AR_GCore()
-{
-	delete rtcc;
-}
-
 int AR_GCore::MPTTrajectoryUpdate()
 {
 	VESSEL *ves;
@@ -403,7 +403,7 @@ int AR_GCore::MPTTrajectoryUpdate()
 
 	SV sv = rtcc->StateVectorCalc(ves);
 
-	rtcc->EMSTRAJ(mptable, sv, rtcc->med_m50.Table, rtcc->CalcGETBase());
+	rtcc->EMSTRAJ(sv, rtcc->med_m50.Table);
 
 	return 0;
 }
@@ -1633,7 +1633,7 @@ void ARCore::StateVectorCalc()
 		mptveh = 1;
 	}
 
-	if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(GC->mptable, SVDesiredGET, GC->rtcc->CalcGETBase(), sv0, mptveh))
+	if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(SVDesiredGET, sv0, mptveh))
 	{
 		sv0 = GC->rtcc->StateVectorCalc(svtarget);
 		sv1 = GC->rtcc->GeneralTrajectoryPropagation(sv0, 0, OrbMech::MJDfromGET(SVDesiredGET, GC->rtcc->CalcGETBase()));
@@ -2461,12 +2461,12 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_A, mptveh))
+			if (!GC->rtcc->MPTTrajectory(sv_A, mptveh))
 			{
 				Result = 0;
 				break;
 			}
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_P, mptotherveh))
+			if (!GC->rtcc->MPTTrajectory(sv_P, mptotherveh))
 			{
 				Result = 0;
 				break;
@@ -2531,11 +2531,11 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_A, mptveh))
+			if (!GC->rtcc->MPTTrajectory(sv_A, mptveh))
 			{
 				sv_A = GC->rtcc->StateVectorCalc(vessel);
 			}
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_P, mptotherveh))
+			if (!GC->rtcc->MPTTrajectory(sv_P, mptotherveh))
 			{
 				sv_P = GC->rtcc->StateVectorCalc(target);
 			}
@@ -2595,7 +2595,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv0, mptveh))
+			if (!GC->rtcc->MPTTrajectory(sv0, mptveh))
 			{
 				sv0 = GC->rtcc->StateVectorCalc(vessel);
 			}
@@ -2663,19 +2663,19 @@ int ARCore::subThread()
 		opt.IMUAngles = VECangles;
 		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
 
-		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(GC->mptable, mptveh))
+		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(mptveh))
 		{
 			opt.useSV = true;
 
 			if (REFSMMATopt == 0 || REFSMMATopt == 1 || REFSMMATopt == 2 || REFSMMATopt == 5)
 			{
 				//SV at specified time
-				GC->rtcc->MPTTrajectory(GC->mptable, opt.REFSMMATTime, GC->rtcc->CalcGETBase(), opt.RV_MCC, mptveh);
+				GC->rtcc->MPTTrajectory(opt.REFSMMATTime, opt.RV_MCC, mptveh);
 			}
 			else if (REFSMMATopt == 3)
 			{
 				//Last SV in the table
-				GC->rtcc->MPTTrajectory(GC->mptable, opt.RV_MCC, mptveh);
+				GC->rtcc->MPTTrajectory(opt.RV_MCC, mptveh);
 			}
 			else
 			{
@@ -2702,7 +2702,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv0, mptveh))
+			if (!GC->rtcc->MPTTrajectory(sv0, mptveh))
 			{
 				sv0 = GC->rtcc->StateVectorCalc(vessel);
 			}
@@ -2769,7 +2769,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, EntryTIG, GC->rtcc->CalcGETBase(), opt.RV_MCC, mptveh))
+			if (!GC->rtcc->MPTTrajectory(EntryTIG, opt.RV_MCC, mptveh))
 			{
 				Result = 0;
 				break;
@@ -2893,12 +2893,12 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->MPTTrajectory(GC->mptable, P30TIG, GC->rtcc->CalcGETBase(), sv_A, mptveh))
+			if (GC->rtcc->MPTTrajectory(P30TIG, sv_A, mptveh))
 			{
 				int cfg;
 				double cfg_weight, csm_weight, lm_weight, sivb_weight;
 				
-				if (GC->rtcc->PLAWDT(GC->mptable, mptveh, sv_A.MJD, cfg, cfg_weight, csm_weight, lm_weight, sivb_weight))
+				if (GC->rtcc->PLAWDT(mptveh, sv_A.MJD, cfg, cfg_weight, csm_weight, lm_weight, sivb_weight))
 				{
 					Result = 0;
 					break;
@@ -2983,7 +2983,7 @@ int ARCore::subThread()
 				get = OrbMech::GETfromMJD(oapiGetSimMJD(), GC->rtcc->CalcGETBase());
 			}
 
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, get, GC->rtcc->CalcGETBase(), sv, GC->rtcc->med_k16.Vehicle))
+			if (!GC->rtcc->MPTTrajectory(get, sv, GC->rtcc->med_k16.Vehicle))
 			{
 				Result = 0;
 				break;
@@ -3012,7 +3012,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, opt.RV_MCC, mptveh))
+			if (!GC->rtcc->MPTTrajectory(opt.RV_MCC, mptveh))
 			{
 				opt.RV_MCC = GC->rtcc->StateVectorCalc(vessel);
 			}
@@ -3082,7 +3082,7 @@ int ARCore::subThread()
 
 				sprintf(code, "RTE");
 
-				GC->rtcc->MPTAddManeuver(GC->mptable, res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, poweredenginetype);
+				GC->rtcc->MPTAddManeuver(res.sv_preburn, res.sv_postburn, code, GC->LSAlt, length(dV_LVLH), mptveh, poweredenginetype);
 			}
 		}
 		
@@ -3250,7 +3250,7 @@ int ARCore::subThread()
 
 			if (GC->MissionPlanningActive)
 			{
-				if (!GC->rtcc->MPTTrajectory(GC->mptable, TLCC_GET, GC->rtcc->CalcGETBase(), sv0, mptveh))
+				if (!GC->rtcc->MPTTrajectory(TLCC_GET, sv0, mptveh))
 				{
 					sv0 = GC->rtcc->StateVectorCalc(vessel);
 				}
@@ -3468,7 +3468,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_CSM, mptotherveh))
+			if (!GC->rtcc->MPTTrajectory(sv_CSM, mptotherveh))
 			{
 				sv_CSM = GC->rtcc->StateVectorCalc(target);
 			}
@@ -3519,7 +3519,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, opt.sv0, mptveh))
+			if (!GC->rtcc->MPTTrajectory(opt.sv0, mptveh))
 			{
 				opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
 			}
@@ -3556,7 +3556,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, opt.RV_MCC, mptveh))
+			if (!GC->rtcc->MPTTrajectory(opt.RV_MCC, mptveh))
 			{
 				opt.RV_MCC = GC->rtcc->StateVectorCalc(vessel);
 			}
@@ -3607,11 +3607,11 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_A, mptveh))
+			if (!GC->rtcc->MPTTrajectory(sv_A, mptveh))
 			{
 				sv_A = GC->rtcc->StateVectorCalc(vessel);
 			}
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_P, mptotherveh))
+			if (!GC->rtcc->MPTTrajectory(sv_P, mptotherveh))
 			{
 				sv_P = GC->rtcc->StateVectorCalc(target);
 			}
@@ -3661,7 +3661,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, LunarLiftoffRes.t_L, GC->rtcc->CalcGETBase(), sv_CSM, mptotherveh))
+			if (!GC->rtcc->MPTTrajectory(LunarLiftoffRes.t_L, sv_CSM, mptotherveh))
 			{
 				Result = 0;
 				break;
@@ -3722,7 +3722,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_LM, mptveh))
+			if (!GC->rtcc->MPTTrajectory(sv_LM, mptveh))
 			{
 				sv_LM = GC->rtcc->StateVectorCalc(vessel);
 			}
@@ -3880,7 +3880,7 @@ int ARCore::subThread()
 		double MJD = oapiGetSimMJD();
 		SV spacedigitalssv;
 
-		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(GC->mptable, OrbMech::GETfromMJD(MJD, GC->rtcc->CalcGETBase()), GC->rtcc->CalcGETBase(), spacedigitalssv, GC->rtcc->med_u00.VEH))
+		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(OrbMech::GETfromMJD(MJD, GC->rtcc->CalcGETBase()), spacedigitalssv, GC->rtcc->med_u00.VEH))
 		{
 			GC->spacedigit.Init = false;
 			Result = 0;
@@ -3903,7 +3903,7 @@ int ARCore::subThread()
 		double MJD = oapiGetSimMJD();
 		SV spacedigitalssv;
 
-		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(GC->mptable, OrbMech::GETfromMJD(MJD, GC->rtcc->CalcGETBase()), GC->rtcc->CalcGETBase(), spacedigitalssv, GC->rtcc->med_u00.VEH))
+		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(OrbMech::GETfromMJD(MJD, GC->rtcc->CalcGETBase()), spacedigitalssv, GC->rtcc->med_u00.VEH))
 		{
 			GC->spacedigit.Init = false;
 			Result = 0;
@@ -3933,7 +3933,7 @@ int ARCore::subThread()
 
 		if (GC->rtcc->med_u01.OptionInd == 0)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, GC->rtcc->med_u01.GET, GC->rtcc->CalcGETBase(), opt.sv_A, GC->rtcc->med_u00.VEH))
+			if (!GC->rtcc->MPTTrajectory(GC->rtcc->med_u01.GET, opt.sv_A, GC->rtcc->med_u00.VEH))
 			{
 				Result = 0;
 				break;
@@ -3941,7 +3941,7 @@ int ARCore::subThread()
 		}
 		else
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, opt.sv_A, GC->rtcc->med_u00.VEH, GC->rtcc->med_u01.MNV))
+			if (!GC->rtcc->MPTTrajectory(opt.sv_A, GC->rtcc->med_u00.VEH, GC->rtcc->med_u01.MNV))
 			{
 				Result = 0;
 				break;
@@ -4033,7 +4033,7 @@ int ARCore::subThread()
 			{
 				if (GC->MissionPlanningActive)
 				{
-					if (!GC->rtcc->MPTTrajectory(GC->mptable, opt.sv0, mptveh))
+					if (!GC->rtcc->MPTTrajectory(opt.sv0, mptveh))
 					{
 						opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
 					}
@@ -4062,15 +4062,15 @@ int ARCore::subThread()
 	{
 		SV sv0;
 
-		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(GC->mptable, mptveh))
+		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(mptveh))
 		{
 			if (mapUpdateGET <= 0.0)
 			{
-				GC->rtcc->MPTTrajectory(GC->mptable, sv0, mptveh);
+				GC->rtcc->MPTTrajectory(sv0, mptveh);
 			}
 			else
 			{
-				GC->rtcc->MPTTrajectory(GC->mptable, mapUpdateGET, GC->rtcc->CalcGETBase(), sv0, mptveh);
+				GC->rtcc->MPTTrajectory(mapUpdateGET, sv0, mptveh);
 			}
 		}
 		else
@@ -4104,9 +4104,9 @@ int ARCore::subThread()
 		LMARKTRKPADOpt opt;
 		SV sv0;
 
-		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(GC->mptable, mptveh))
+		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(mptveh))
 		{
-			GC->rtcc->MPTTrajectory(GC->mptable, LmkTime, GC->rtcc->CalcGETBase(), sv0, mptveh);
+			GC->rtcc->MPTTrajectory(LmkTime, sv0, mptveh);
 		}
 		else
 		{
@@ -4134,7 +4134,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, fidoorbit.GETBV, GC->rtcc->CalcGETBase(), opt.sv_A, mptveh))
+			if (!GC->rtcc->MPTTrajectory(fidoorbit.GETBV, opt.sv_A, mptveh))
 			{
 				Result = 0;
 				break;
@@ -4187,7 +4187,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, TwoImpulse_TIG, GC->rtcc->CalcGETBase(), sv_tig, mptveh))
+			if (!GC->rtcc->MPTTrajectory(TwoImpulse_TIG, sv_tig, mptveh))
 			{
 				Result = 0;
 				break;
@@ -4227,7 +4227,7 @@ int ARCore::subThread()
 				sprintf(code, "TPI");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m72.Thruster);
+			GC->rtcc->MPTAddManeuver(sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m72.Thruster);
 		}
 
 		Result = 0;
@@ -4240,7 +4240,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, SPQTIG, GC->rtcc->CalcGETBase(), sv_tig, mptveh))
+			if (!GC->rtcc->MPTTrajectory(SPQTIG, sv_tig, mptveh))
 			{
 				Result = 0;
 				break;
@@ -4276,7 +4276,7 @@ int ARCore::subThread()
 				sprintf(code, "CDH");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
+			GC->rtcc->MPTAddManeuver(sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
 		}
 
 		Result = 0;
@@ -4289,7 +4289,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, DKI_TIG, GC->rtcc->CalcGETBase(), sv_tig, mptveh))
+			if (!GC->rtcc->MPTTrajectory(DKI_TIG, sv_tig, mptveh))
 			{
 				Result = 0;
 				break;
@@ -4325,7 +4325,7 @@ int ARCore::subThread()
 				sprintf(code, "NH");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
+			GC->rtcc->MPTAddManeuver(sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m70.Thruster);
 		}
 
 		Result = 0;
@@ -4337,7 +4337,7 @@ int ARCore::subThread()
 		{
 			SV sv_tig, sv_temp;
 
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, GC->rtcc->med_m66.GETBI, GC->rtcc->CalcGETBase(), sv_tig, GC->rtcc->med_m66.Table))
+			if (!GC->rtcc->MPTTrajectory(GC->rtcc->med_m66.GETBI, sv_tig, GC->rtcc->med_m66.Table))
 			{
 				Result = 0;
 				break;
@@ -4346,7 +4346,7 @@ int ARCore::subThread()
 			GC->rtcc->med_m66.REFSMMAT = REFSMMAT;
 
 			//GC->rtcc->MPTDirectInput(GC->mptable, sv_tig, GC->LSAlt);
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_tig, sv_temp, GC->rtcc->med_m66.code.c_str(), GC->LSAlt, 0.0, 0, 0, 0, 0, 66);
+			GC->rtcc->MPTAddManeuver(sv_tig, sv_temp, GC->rtcc->med_m66.code.c_str(), GC->LSAlt, 0.0, 0, 0, 0, 0, 66);
 		}
 		Result = 0;
 	}
@@ -4358,7 +4358,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, GC->descplantable.GETIG[0], GC->rtcc->CalcGETBase(), sv_tig, GC->rtcc->med_k16.Vehicle))
+			if (!GC->rtcc->MPTTrajectory(GC->descplantable.GETIG[0], sv_tig, GC->rtcc->med_k16.Vehicle))
 			{
 				Result = 0;
 				break;
@@ -4394,7 +4394,7 @@ int ARCore::subThread()
 				sprintf(code, "PPC");
 			}
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), GC->rtcc->med_k16.Vehicle, GC->rtcc->med_m70.Thruster);
+			GC->rtcc->MPTAddManeuver(sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), GC->rtcc->med_k16.Vehicle, GC->rtcc->med_m70.Thruster);
 		}
 
 		Result = 0;
@@ -4406,7 +4406,7 @@ int ARCore::subThread()
 		VECTOR3 R_LS;
 		double dv;
 
-		if (mptveh != 1 || !GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(GC->mptable, sv0, mptveh))
+		if (mptveh != 1 || !GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(sv0, mptveh))
 		{
 			Result = 0;
 			break;
@@ -4418,7 +4418,7 @@ int ARCore::subThread()
 
 		if (success)
 		{
-			GC->rtcc->MPTAddDescent(GC->mptable, sv_PDI, sv_land, GC->LSAlt, dv);
+			GC->rtcc->MPTAddDescent(sv_PDI, sv_land, GC->LSAlt, dv);
 		}
 
 		Result = 0;
@@ -4428,7 +4428,7 @@ int ARCore::subThread()
 	{
 		if (GC->MissionPlanningActive)
 		{
-			GC->rtcc->MPTAddAscent(GC->mptable, LAP_SV_Ignition, LAP_SV_Insertion, GC->LSAlt, LAP_dv);
+			GC->rtcc->MPTAddAscent(LAP_SV_Ignition, LAP_SV_Insertion, GC->LSAlt, LAP_dv);
 		}
 
 		Result = 0;
@@ -4441,7 +4441,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (!GC->rtcc->MPTTrajectory(GC->mptable, GPM_TIG, GC->rtcc->CalcGETBase(), sv_tig, mptveh))
+			if (!GC->rtcc->MPTTrajectory(GPM_TIG, sv_tig, mptveh))
 			{
 				Result = 0;
 				break;
@@ -4470,7 +4470,7 @@ int ARCore::subThread()
 
 			sprintf(code, "GPM");
 
-			GC->rtcc->MPTAddManeuver(GC->mptable, sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m65.Thruster);
+			GC->rtcc->MPTAddManeuver(sv_pre, sv_post, code, GC->LSAlt, length(dV_LVLH), mptveh, GC->rtcc->med_m65.Thruster);
 		}
 		Result = 0;
 	}
@@ -4490,7 +4490,7 @@ int ARCore::subThread()
 
 		SV sv_A;
 
-		if (!GC->rtcc->MPTTrajectory(GC->mptable, sv_A, GC->rtcc->med_m68.Table))
+		if (!GC->rtcc->MPTTrajectory(sv_A, GC->rtcc->med_m68.Table))
 		{
 			Result = 0;
 			break;
@@ -4527,14 +4527,14 @@ int ARCore::subThread()
 
 		double m0 = vessel->GetEmptyMass();
 		GC->rtcc->LVDCTLIPredict(tliparam, m0, sv_A, GC->rtcc->CalcGETBase(), dV_LVLH, P30TIG, sv_IG, sv_TLI);
-		GC->rtcc->MPTAddTLI(GC->mptable, sv_IG, sv_TLI, length(dV_LVLH), GC->rtcc->med_m68.Table);
+		GC->rtcc->MPTAddTLI(sv_IG, sv_TLI, length(dV_LVLH), GC->rtcc->med_m68.Table);
 
 		Result = 0;
 	}
 	break;
 	case 47: //Checkout Monitor
 	{
-		GC->rtcc->EMDCHECK(GC->mptable, GC->rtcc->CalcGETBase(), GC->LSAlt, GC->checkmon);
+		GC->rtcc->EMDCHECK(GC->LSAlt, GC->checkmon);
 
 		Result = 0;
 	}
@@ -4553,7 +4553,7 @@ int ARCore::subThread()
 			tig = TLCC_TIG;
 		}
 
-		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(GC->mptable, tig, GC->rtcc->CalcGETBase(), sv_A, GC->rtcc->med_m78.Table))
+		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(tig, sv_A, GC->rtcc->med_m78.Table))
 		{
 			Result = 0;
 			break;
@@ -4575,7 +4575,7 @@ int ARCore::subThread()
 
 		SV sv_cut = GC->rtcc->ExecuteManeuver(sv_A, GC->rtcc->CalcGETBase(), tig, dv, 0.0, poweredenginetype);
 
-		GC->rtcc->MPTAddManeuver(GC->mptable, sv_A, sv_cut, code, GC->LSAlt, length(dv), GC->rtcc->med_m78.Table, poweredenginetype);
+		GC->rtcc->MPTAddManeuver(sv_A, sv_cut, code, GC->LSAlt, length(dv), GC->rtcc->med_m78.Table, poweredenginetype);
 
 		Result = 0;
 	}
@@ -4584,14 +4584,14 @@ int ARCore::subThread()
 	{
 		SV sv_A;
 
-		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(GC->mptable, EntryTIGcor, GC->rtcc->CalcGETBase(), sv_A, mptveh))
+		if (!GC->MissionPlanningActive || !GC->rtcc->MPTTrajectory(EntryTIGcor, sv_A, mptveh))
 		{
 			Result = 0;
 			break;
 		}
 
 		SV sv_cut = GC->rtcc->ExecuteManeuver(sv_A, GC->rtcc->CalcGETBase(), EntryTIGcor, Entry_DV, 0.0, poweredenginetype);
-		GC->rtcc->MPTAddManeuver(GC->mptable, sv_A, sv_cut, "RTE", GC->LSAlt, length(dV_LVLH), mptveh, poweredenginetype);
+		GC->rtcc->MPTAddManeuver(sv_A, sv_cut, "RTE", GC->LSAlt, length(dV_LVLH), mptveh, poweredenginetype);
 
 		Result = 0;
 	}

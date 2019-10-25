@@ -37,7 +37,6 @@ public:
 	void MPTMassUpdate();
 	int MPTTrajectoryUpdate();
 
-	FullMPTable mptable;
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 	double LSLat, LSLng, LSAlt;	//Landing Site coordinates

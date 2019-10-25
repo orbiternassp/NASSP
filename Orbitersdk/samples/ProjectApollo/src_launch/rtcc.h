@@ -53,6 +53,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_CONFIG_CSM_SIVB 3
 #define RTCC_CONFIG_LM_SIVB 4
 #define RTCC_CONFIG_CSM_LM_SIVB 5
+#define RTCC_CONFIG_ASC 6
+#define RTCC_CONFIG_CSM_ASC 7
+#define RTCC_CONFIG_DSC 8
 
 #define RTCC_CONFIGCHANGE_NONE 0
 #define RTCC_CONFIGCHANGE_UNDOCKING 1
@@ -359,18 +362,6 @@ struct MED_U01
 	int OptionInd = 0; //0 = GET, 1 = MNV
 	double GET = 0;
 	int MNV = 0;
-};
-
-//Initiate C/O Monitor Display
-struct MED_U02
-{
-	int VEH = 1;	//1 = LEM, 2 = CSM
-	int IND = 0;	//1 = GMT, 2 = GET, 3 = MVI, 4 = MVE, 5 = RAD, 6 = ALT, 7 = FPA
-	double ThresholdTime = 0.0;
-	int REF = 0;	//0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP
-	int FT = 0;		//0 = ER and ER/HR, 1 = ft and ft/s
-	double IND_val = 0.0; //For options 0-1, 4-6
-	unsigned IND_man = 0; //For options 2-3
 };
 
 //Moonrise/Moonset Times Initialization
@@ -1503,16 +1494,39 @@ struct DetailedManeuverTable
 struct MPTManeuver
 {
 	MPTManeuver();
+
+	//Word 12 (Bytes 1, 2)
+	int ConfigCodeAfter;
+	//Word 12 (Bytes 3, 4)
+	int ConfigChangeInd;
+	//Word 12 (Bytes 5, 6)
+	int TUP;
+	//Word 31 (Bytes 1, 2)
+	int AttitudeCode;
+	//Word 31 (Bytes 3, 4)
+	int Thruster;
+	//Word 31 (Bytes 5, 6)
+	int UllageThrusterOpt;
+	//Word 32 (Bytes 1, 2)
+	int ConfigCodeBefore;
+	//Word 32 (Bytes 3, 4)
+	int TVC; //Maneuvering vehicle: 1 = CSM, 2 = S-IVB, 3 = LM
+	//Word 32 (Bytes 7, 8)
+	int FrozenManeuverInd;
+	//Word 34
+	double DockingAngle;
+	//Words 52-58
+	MPTSV FrozenManeuverVector;
+
 	MPTSV sv_before;
 	MPTSV sv_after;
-	int TVC; //Maneuvering vehicle: 1 = CSM, 2 = S-IVB, 3 = LM
-	int ID;
-	int Thruster;
+	std::string code;
+	
 	VECTOR3 A_T; //Unit thrust vector
 	VECTOR3 dV_LVLH; //In P30 coordinates
 	MATRIX3 M_B; //Body direction matrix
-	int ConfigCodeBefore;
-	int ConfigCodeAfter;
+	
+	
 	double CSMMassAfter;
 	double SIVBMassAfter;
 	double LMMassAfter;
@@ -1524,37 +1538,13 @@ struct MPTManeuver
 struct MPTManDisplay
 {
 	MPTManDisplay();
-	double AftMJD;
-	double BefMJD;
-	std::string code;
+	std::string GETBI;
+	std::string DT;
+	double DELTAV;
+	double DVREM;
 	double HA;
 	double HP;
-	double dt;
-	double DV;
-	int ID;
-};
-
-struct MPTable
-{
-	std::deque<MPTManeuver> mantable;
-	double CSMInitMass = 0.0;
-	double LMInitMass = 0.0;
-	double SIVBInitMass = 0.0;
-	double TotalInitMass = 0.0;
-	int InitConfigCode = -1;
-	double DeltaDockingAngle = 0.0;
-	int TUP = 0;
-	MPTSV AnchorVector;
-};
-
-struct FullMPTable
-{
-	FullMPTable() { LunarStayTimes[0] = -1; LunarStayTimes[1] = -1; }
-
-	std::deque<MPTManDisplay> fulltable;
-	MPTable cmtable;
-	MPTable lmtable;
-	double LunarStayTimes[2];
+	std::string code;
 };
 
 struct NextStationContact
@@ -2043,15 +2033,15 @@ public:
 	//Generalized Coordinate System Conversion Subroutine
 	int ELVCNV(const PZEFEM &ephem, SV sv, int in, int out, SV &sv_out);
 	//Checkout Monitor Display
-	int EMDCHECK(FullMPTable &mptable, double GETbase, double LSAlt, CheckoutMonitor &res);
+	int EMDCHECK(double LSAlt, CheckoutMonitor &res);
 	//Detailed Maneuver Table Display
-	int PMDDMT(FullMPTable &mptable, double GETbase, double LSAlt, DetailedManeuverTable &res);
+	int PMDDMT(double LSAlt, DetailedManeuverTable &res);
 	//Lunar Descent Planning Table Display
 	void PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table);
 	//Time of Longitude Crossing Subroutine
 	double RLMTLC(const EphemerisDataTable &ephemeris, double GETBase, double long_des, double GET_min, double &GET_cross);
 	//Cape Crossing Table Generation
-	int RMMEACC(const EphemerisDataTable &ephemeris, double GETBase, CapeCrossingTable &table);
+	int RMMEACC(const EphemerisDataTable &ephemeris, CapeCrossingTable &table);
 	//Environment Change Calculations
 	int EMMENV(const EphemerisDataTable &ephemeris, double GETBase, double GET_begin, bool sun, SunriseSunsetTable &table);
 	//Sunrise/Sunset Display
@@ -2066,6 +2056,8 @@ public:
 	void PMMREAP(int med);
 	//'F' MED Module
 	int PMQAFMED(int med);
+	//'M' MED Module
+	void PMMMED(int med);
 	//'P' Code MED Processor
 	void GMSMED(int med);
 	void FDOLaunchAnalog1(MPTSV sv);
@@ -2084,31 +2076,32 @@ public:
 	void NPCProgram(SV sv_C, SV sv_W, double GETbase, double t, double &t_NPC, VECTOR3 &dV_NPC_LVLH);
 
 	//Mission Planning
-	int MPTAddTLI(FullMPTable &mptable, SV sv_IG, SV sv_TLI, double DV, int L);
-	int MPTAddDescent(FullMPTable &mptable, SV sv_IG, SV sv_land, double LSAlt, double DV);
-	int MPTAddAscent(FullMPTable &mptable, SV sv_IG, SV sv_asc, double LSAlt, double DV);
-	int MPTAddManeuver(FullMPTable &mptable, SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI = RTCC_CONFIGCHANGE_NONE, int CC = RTCC_CONFIG_CSM, int opt = 0);
+	int MPTAddTLI(SV sv_IG, SV sv_TLI, double DV, int L);
+	int MPTAddDescent(SV sv_IG, SV sv_land, double LSAlt, double DV);
+	int MPTAddAscent(SV sv_IG, SV sv_asc, double LSAlt, double DV);
+	int MPTAddManeuver(SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI = RTCC_CONFIGCHANGE_NONE, int CC = RTCC_CONFIG_CSM, int opt = 0);
 	int MPTDirectInput(MPTManeuver &man, SV sv_ig, SV &sv_cut);
-	int MPTDeleteManeuver(FullMPTable &mptable);
+	//Freeue, Unfreeze, Delete Processor
+	int PMMFUD(int veh, unsigned man, int action);
 	//Trajectory Update Control Module
-	void EMSTRAJ(FullMPTable &mptable, SV sv, int L, double GETBase);
+	void EMSTRAJ(SV sv, int L);
 	//Ephemeris Storage and Control Module
-	void EMSEPH(MPTSV sv0, double CurMJD, EphemerisDataTable &ephem, MPTable &table);
+	void EMSEPH(MPTSV sv0, double CurMJD, EphemerisDataTable &ephem, int L);
 	//Miscellaneous Numerical Integration Control Module
 	void EMSMISS(const EMSMISSInputTable &in);
-	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L);
-	bool MPTTrajectory(FullMPTable &mptable, SV &sv_out, int L, unsigned mnv);
-	bool MPTTrajectory(FullMPTable &mptable, double GET, double GETbase, SV &sv_out, int L);
-	bool MPTHasManeuvers(FullMPTable &mptable, int L);
-	int MPTConfirmManeuver(FullMPTable &mptable, int L);
+	bool MPTTrajectory(SV &sv_out, int L);
+	bool MPTTrajectory(SV &sv_out, int L, unsigned mnv);
+	bool MPTTrajectory(double GET, SV &sv_out, int L);
+	bool MPTHasManeuvers(int L);
+	int MPTConfirmManeuver(int L);
 	//Weight Change Module
-	int PMMWTC(FullMPTable &mptable, int med);
+	int PMMWTC(int med);
 	//Weight Determination at a Time
-	int PLAWDT(FullMPTable &mptable, int L, double mjd, double &cfg_weight);
-	int PLAWDT(FullMPTable &mptable, int L, double mjd, int &cfg, double &cfg_weight, double &csm_weight, double &lm_weight, double &sivb_weight);
-	int MPTGetVesselConfiguration(const FullMPTable &mptable, int L, double GET, double GETbase);
-	int MPTGetVesselConfiguration(const FullMPTable &mptable, int L);
-	int MPTCopyEphemeris(FullMPTable &mptable, double GETbase);
+	int PLAWDT(int L, double mjd, double &cfg_weight);
+	int PLAWDT(int L, double mjd, int &cfg, double &cfg_weight, double &csm_weight, double &lm_weight, double &sivb_weight);
+	int MPTGetVesselConfiguration(int L, double GET, double GETbase);
+	int MPTGetVesselConfiguration(int L);
+	int MPTCopyEphemeris();
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -2157,6 +2150,15 @@ public:
 		std::string Constraint;
 		std::string Value;
 	} med_f87;
+
+	//To freeze, unfreeze and delete (future and history) maneuvers
+	struct MED_M62
+	{
+		std::string MPTCode; //1 = CSM, 3 = LEM
+		unsigned ManNum; //1-15
+		std::string Action; //0 = Delete, 1 = History Delete, 2 = Freeze, 3 = Unfreeze
+		std::string VectorID;
+	} med_m62;
 
 	struct MED_P08
 	{
@@ -2296,12 +2298,24 @@ public:
 		//Number of vehicles
 		int NumVeh = 1;
 		//Primary ephemeris (0 = CSM, 1 = LEM)
-		int FirstVeh;
+		std::string FirstVeh;
 		int Month;
 		int Day;
 		int Year;
 		int DeltaDay;
 	} med_p80;
+
+	//Initiate C/O Monitor Display
+	struct MED_U02
+	{
+		int VEH = 1;	//1 = LEM, 2 = CSM
+		int IND = 0;	//1 = GMT, 2 = GET, 3 = MVI, 4 = MVE, 5 = RAD, 6 = ALT, 7 = FPA
+		double ThresholdTime = 0.0;
+		int REF = 0;	//0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP
+		int FT = 0;		//0 = ER and ER/HR, 1 = ft and ft/s
+		double IND_val = 0.0; //For options 0-1, 4-6
+		unsigned IND_man = 0; //For options 2-3
+	} med_u02;
 
 	MED_B03 med_b03;
 	MED_B04 med_b04;
@@ -2318,7 +2332,6 @@ public:
 	MED_M78 med_m78;
 	MED_U00 med_u00;
 	MED_U01 med_u01;
-	MED_U02 med_u02;
 	MED_U07 med_u07;
 	MED_U08 med_u08;
 	MED_U15 med_u15;
@@ -2422,6 +2435,61 @@ public:
 
 	} GZGENCSN;
 
+	struct MissionPlanTable
+	{
+		MissionPlanTable() { LunarStayTimes[0] = -1; LunarStayTimes[1] = -1; }
+
+		//Word 1 (Byte 1,2)
+		//Trajectory Update No. (- if in process)
+		int TUP = 0;
+		//Word 1 (Byte 3,4)
+		//Number of maneuvers in table
+		int ManeuverNum = 0;
+		//Word 1 (Byte 5,6)
+		//Not needed
+		//Word 1 (Byte 7,8)
+		int MaxManeuverNum = 15;
+		//Word 2
+		std::string StationID;
+		//Word 3
+		//Anchor vector time
+		double GMTAV;
+		//Word 4
+		double KFactor = 0.0;
+		//Word 8
+		double LMStagingGMT = 0.0;
+		//Word 9
+		double UpcomingManeuverGMT = 1e70;
+		//Word 11
+		double SIVBVentingBeginGET = 0.0;
+		//Word 12
+		int InitConfigCode = -1;
+		//Word 13
+		double CSMInitArea = 0.0;
+		//Word 14
+		double SIVBInitArea = 0.0;
+		//Word 15
+		double LMInitAscentArea = 0.0;
+		//Word 16
+		double LMInitDescentArea = 0.0;
+		//Word 17
+		double CSMInitMass = 0.0;
+		//Word 18
+		double SIVBInitMass = 0.0;
+		//Word 19
+		double LMInitAscentMass = 0.0;
+		//Word 20
+		double LMInitDescentMass = 0.0;
+		
+		double TotalInitMass = 0.0;
+		//Word 34
+		double DeltaDockingAngle = 0.0;
+		
+		MPTSV AnchorVector;
+		double LunarStayTimes[2];
+		std::deque<MPTManeuver> mantable;
+	} PZMPTCSM, PZMPTLEM;
+
 	struct RTEConstraintsTable
 	{
 		RTEConstraintsTable();
@@ -2495,6 +2563,23 @@ public:
 		std::vector<double> XVal;
 		std::vector<double> YVal;
 	} fdolaunchanalog2tab;
+
+	struct MPTManDisplayBuffer
+	{
+		std::string CSMSTAID;
+		std::string LEMSTAID;
+		std::string CSMGETAV;
+		std::string LEMGETAV;
+		std::vector<MPTManDisplay> man;
+	} MPTDISPLAY;
+
+	struct VehicleNameTable
+	{
+		VehicleNameTable() { tab.push_back("CSM"); tab.push_back("LEM");
+		}
+
+		std::vector<std::string> tab;
+	} MHGVNM;
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
@@ -2560,6 +2645,8 @@ private:
 	double PIGMHA(int E, int Y, int D);
 	//Return-to-Earth Tradeoff Display
 	void PMDTRDFF(int med, unsigned page);
+	//Mission Plan Table Display
+	void PMDMPT(double LSAlt);
 
 	bool MPTConfigIncludesCSM(int config);
 	bool MPTConfigIncludesLM(int config);
@@ -2616,6 +2703,8 @@ protected:
 	double MCTVEN;
 	//Lambda Zero
 	double MCLAMD;
+	//P80 first launch vehicle
+	std::string MCGPRM;
 
 	//MJD of launch day (days)
 	double GMTBASE;
