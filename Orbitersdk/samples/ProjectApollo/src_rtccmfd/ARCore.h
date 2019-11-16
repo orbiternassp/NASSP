@@ -39,7 +39,7 @@ public:
 
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
-	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
+	double LSLat, LSLng;	//Landing Site coordinates
 	double t_Land;				//Time of landing
 	double LOIazi;
 	double TLCCFreeReturnEMPLat, TLCCNonFreeReturnEMPLat;
@@ -110,6 +110,7 @@ public:
 	void SunriseSunsetTimesCalc();
 	void MoonriseMoonsetTimesCalc();
 	void RTETradeoffDisplayCalc();
+	void GeneralMEDRequest();
 	void CapeCrossingTableUpdate();
 	void TransferTIToMPT();
 	void TransferSPQToMPT();
@@ -187,8 +188,7 @@ public:
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
 	bool inhibUplLOS;
 	bool PADSolGood;
-	int csmenginetype;				// 0 = SPS, 1 = RCS+X (2 quads), 2 = RCS+X (4 quads), 3 = RCS-X (2 quads), 4 = RCS-X (4 quads)
-	int lemenginetype;				// 0 = APS, 1 = DPS, 2 = RCS+X (2 quads), 3 = RCS+X (4 quads), 4 = RCS-X (2 quads), 5 = RCS-X (4 quads)
+	int manpadenginetype;
 	double t_TPI;				// Generally used TPI time
 	int P30Octals[012];
 	int RetrofireEXDVOctals[016];
@@ -312,6 +312,7 @@ public:
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	double RTEReturnInclination;
 	int RTETradeoffMode; //0 = Near-Earth (F70), 1 = Remote-Earth (F71)
+	int deorbitenginetype;
 
 	//STATE VECTOR PAGE
 	bool SVSlot;
@@ -476,9 +477,6 @@ public:
 	bool MPT_LOI_TLMCC_Flag; //false = MCC, true = LOI
 
 private:
-
-	int CSMToEngineType();
-	int LEMToEngineType();
 
 	AR_GCore* GC;
 };

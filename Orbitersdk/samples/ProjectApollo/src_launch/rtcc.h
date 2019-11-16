@@ -47,6 +47,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_ENTRY_MINDV 0
 #define RTCC_ENTRY_NOMINAL 1
 
+#define RTCC_MPT_CSM 1
+#define RTCC_MPT_SIVB 2
+#define RTCC_MPT_LM 3
+
 #define RTCC_CONFIG_CSM 0
 #define RTCC_CONFIG_LM 1
 #define RTCC_CONFIG_CSM_LM 2
@@ -62,20 +66,44 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_CONFIGCHANGE_DOCKING 2
 #define RTCC_CONFIGCHANGE_LM_STAGING 3
 
-#define RTCC_ENGINETYPE_SPS 0
-#define RTCC_ENGINETYPE_APS 1
-#define RTCC_ENGINETYPE_DPS 2
-#define RTCC_ENGINETYPE_RCSPLUS2 3
-#define RTCC_ENGINETYPE_RCSPLUS4 4
-#define RTCC_ENGINETYPE_RCSMINUS2 5
-#define RTCC_ENGINETYPE_RCSMINUS4 6
-#define RTCC_ENGINETYPE_SIVB_APS 7
-#define RTCC_ENGINETYPE_LOX_DUMP 8
-#define RTCC_ENGINETYPE_SIVB_MAIN 9
+#define RTCC_ENGINETYPE_CSMRCSPLUS2 1
+#define RTCC_ENGINETYPE_CSMRCSPLUS4 2
+#define RTCC_ENGINETYPE_CSMRCSMINUS2 3
+#define RTCC_ENGINETYPE_CSMRCSMINUS4 4
+#define RTCC_ENGINETYPE_LOX_DUMP 16
+#define RTCC_ENGINETYPE_LMRCSPLUS2 17
+#define RTCC_ENGINETYPE_LMRCSPLUS4 18
+#define RTCC_ENGINETYPE_LMRCSMINUS2 19
+#define RTCC_ENGINETYPE_LMRCSMINUS4 20
+#define RTCC_ENGINETYPE_CSMSPS 33
+#define RTCC_ENGINETYPE_LMAPS 34
+#define RTCC_ENGINETYPE_LMDPS 35
+#define RTCC_ENGINETYPE_SIVB_MAIN 36
+#define RTCC_ENGINETYPE_SIVB_APS 37
 
 #define RTCC_MANVEHICLE_CSM 1
 #define RTCC_MANVEHICLE_SIVB 2
 #define RTCC_MANVEHICLE_LM 3
+
+#define RTCC_ATTITUDE_INERTIAL 1
+#define RTCC_ATTITUDE_MANUAL 2
+#define RTCC_ATTITUDE_LAMBERT 3
+#define RTCC_ATTITUDE_PGNS_EXDV 4
+#define RTCC_ATTITUDE_AGS_EXDV 5
+#define RTCC_ATTITUDE_SIVB_IGM 6
+#define RTCC_ATTITUDE_PGNS_ASCENT 8
+#define RTCC_ATTITUDE_AGS_ASCENT 9
+
+#define RTCC_REFSMMAT_TYPE_CUR 1
+#define RTCC_REFSMMAT_TYPE_PCR 2
+#define RTCC_REFSMMAT_TYPE_TLM 3
+#define RTCC_REFSMMAT_TYPE_OST 4
+#define RTCC_REFSMMAT_TYPE_MED 5
+#define RTCC_REFSMMAT_TYPE_DMT 6
+#define RTCC_REFSMMAT_TYPE_DOD 7
+#define RTCC_REFSMMAT_TYPE_LCV 8
+#define RTCC_REFSMMAT_TYPE_AGS 9
+#define RTCC_REFSMMAT_TYPE_DOK 10
 
 #define RTCC_GMP_PCE 1
 #define RTCC_GMP_PCL 2
@@ -179,7 +207,7 @@ struct MED_K16
 	double GETTH3 = 0.0;
 	double GETTH4 = 0.0;
 	double DesiredHeight = 60.0*1852.0;
-	int Vehicle = 1; //1 = LEM, 2 = CSM (Instead of Vector ID)
+	int Vehicle = RTCC_MPT_CSM; //1 = CSM, 2 = LEM (Instead of Vector ID)
 };
 
 //Initialization for Lunar Descent Planning
@@ -202,47 +230,10 @@ struct MED_K30
 
 };
 
-//Burn parameters for CSM/LM direct input maneuvers
-struct MED_M40
-{
-	//P1: DV, DV IND, DT
-	double P1_DV = 0.0; //Vel increment or burn duration of the maneuver
-	//0 = MAG, Magnitude of maneuver
-	//1 = DVC, DV along X-body axis includes ullage, excludes tailoff
-	//2 = XBT, Includes both ullage and tailoff
-	int P1_DVIND = 0;
-	double P1_DT = 0.0; //Time duration of maneuver, excludes ullage and tailoff
-
-	//P2: VX, VY, VZ in command and display system
-	VECTOR3 P2_DV = _V(0, 0, 0);
-
-	//P3: VGX, VGY, VGZ DV Vector in IMU coordinates
-	VECTOR3 P3_DV = _V(0, 0, 0);
-
-	//P4: VF, VS, VD LVLH DV vector
-	VECTOR3 P4_DV = _V(0, 0, 0);
-
-	//P5: X, Y, Z, T Flight, C
-	VECTOR3 P5_RT;
-	double P5_TFLT; //Time from ignition to arrival at target vector
-	double P5_C;	//Cross product steering constant
-
-	//P6: RD, YD, RD DOT, YD DOT, ZD DOT, DT ascent man. targets
-	double P6_RD;	//Desired injection radius
-	double P6_YD;	//Desired injection cross range distance from the CSM orbital plane
-	double P6_RD_DOT;	//Desired injection radial velocity
-	double P6_YD_DOT;	//Desired injection crossrange velocity
-	double P6_ZD_DOT;	//Desired injection downrange velocity
-	double P6_DT;		//Time from descent ignition to descent abort
-
-	//P7: DVX, DVY, DVZ maneuver residuals in RCS control axes
-	VECTOR3 P7_DDV;
-};
-
 //Change Vehicle Weight
 struct MED_M50
 {
-	int Table = 2; //1 = LEM, 2 = CSM
+	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
 	double CSMWT = -1.0;
 	double SIVBWT = -1.0;
 	double LMWT = -1.0;
@@ -252,7 +243,7 @@ struct MED_M50
 //Input initial configuration for Mission Plan Table
 struct MED_M55
 {
-	int Table = 2; //1 = LEM, 2 = CSM
+	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
 	int ConfigCode = 0;
 	double VentingGET = 0.0;
 	double DeltaDockingAngle = 0.0;
@@ -261,9 +252,9 @@ struct MED_M55
 //Transfer a GPM to the MPT
 struct MED_M65
 {
-	int Table = 2; //1 = LEM, 2 = CSM
+	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
 	int ReplaceCode = 0; //1-15
-	int Thruster = RTCC_ENGINETYPE_SPS; //Thruster for the maneuver
+	int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for the maneuver
 	int Attitude = 1;		//Attitude option (0 = AGS External DV, 1 = PGNS External DV, 2 = Manual, 3 = Inertial, 4 = Lambert)
 	double UllageDT = 0.0;	//Delta T of Ullage
 	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
@@ -271,28 +262,6 @@ struct MED_M65
 	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
 	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
 	bool TimeFlag = true;	//false = Start at impulsive time, true = use optimum time
-};
-
-//Direct input of a maneuver to the MPT (CSM and LEM)
-struct MED_M66
-{
-	int Table = 2; //1 = LEM, 2 = CSM
-	std::string code; //Maneuver code 
-	double GETBI = 0; //Time of ignition
-	int Thruster = RTCC_ENGINETYPE_SPS; //Thruster for maneuver
-	int AttitudeOpt = 0; //Attitude option
-	int BurnParamNo = 1; //1 = P1, 2 = P2 etc.
-	int CoordInd = 0; //0 = LVLH, 1 = IMU, 2 = FDAI
-	VECTOR3 Att = _V(0, 0, 0);
-	double UllageDT = 0.0;	//Delta T of Ullage
-	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
-	bool HeadsUp = true; //false = heads down, true = heads up
-	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
-	MATRIX3 REFSMMAT;	//Used for IMU and inertial coordinate options
-	int ConfigChangeInd = 0; //0 = No change, 1 = Undocking, 2 = Docking
-	int FinalConfig = 0;
-	double DeltaDA = 0.0; //Delta docking angle
-	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
 };
 
 //TLI Direct Input
@@ -306,14 +275,14 @@ struct MED_M70
 {
 	int Plan = 0; //-1 = Descent Plan, 0 = SPQ, 1 = DKI
 	double DeleteGET = 0.0;
-	int Thruster = RTCC_ENGINETYPE_RCSPLUS4; //Thruster for the maneuver
-	int Attitude = 1;		//Attitude option (0 = AGS External DV, 1 = PGNS External DV, 2 = Manual, 3 = Inertial, 4 = Lambert)
-	double UllageDT = 0.0;	//Delta T of Ullage
+	int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS2; //Thruster for the maneuver
+	int Attitude = 4;		//Attitude option (1 = Inertial, 2 = Manual, 3 = Lambert, 4 = PGNS External DV, 5 = AGS External DV)
+	double UllageDT = -1;	//Delta T of Ullage
 	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
 	bool Iteration = false; //false = do not iterate, true = iterate
 	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
 	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
-	bool TimeFlag = true;	//false = Start at impulsive time, true = use optimum time
+	bool TimeFlag = false;	//false = use optimum time, true = start at impulsive time
 };
 
 //Transfer a Two Impulse Maneuver to the MPT
@@ -322,7 +291,7 @@ struct MED_M72
 	bool Table = false; //false = corrective solution, M = multiple solution
 	int Plan = 0; // Plan number to be transferred
 	double DeleteGET = 0.0; //Deletes all maneuvers in both tables occurring after the input GET (no delete if 0)
-	int Thruster = RTCC_ENGINETYPE_RCSPLUS4; //Thruster for the maneuver
+	int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4; //Thruster for the maneuver
 	int Attitude = 1;		//Attitude option (0 = AGS External DV, 1 = PGNS External DV, 2 = Manual, 3 = Inertial, 4 = Lambert)
 	double UllageDT = 0.0;	//Delta T of Ullage
 	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
@@ -391,9 +360,9 @@ struct MED_U15
 //Generate Detailed Maneuver Table
 struct MED_U20
 {
-	int MPT_ID = 2;	//1 = LEM, 2 = CSM
+	int MPT_ID = 1;	//1 = CSM, 3 = LM
 	unsigned ManNo = 0; //Maneuver in table
-	MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	int REFSMMAT = 5;
 	bool HeadsUp = true;
 };
 
@@ -425,7 +394,7 @@ struct AP7ManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime; //time delay for the sextant star check (in case no star is available during the maneuver)
@@ -441,14 +410,14 @@ struct AP11ManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
 	bool HeadsUp; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
 	int vesseltype = 0; //0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
-	double alt = 0.0;	//Altitude above mean radius
+	double R_LLS = OrbMech::R_Moon;	//Landing site radius
 };
 
 struct AP11LMManPADOpt
@@ -457,14 +426,14 @@ struct AP11LMManPADOpt
 	double GETbase; //usually MJD at launch
 	double TIG; //Time of Ignition
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates
-	int enginetype = RTCC_ENGINETYPE_DPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_LMDPS; //Engine type used for the maneuver
 	bool HeadsUp = false; //Orientation during the maneuver
 	MATRIX3 REFSMMAT;//REFSMMAT during the maneuver
 	double sxtstardtime = 0; //time delay for the sextant star check (in case no star is available during the maneuver)
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
-	double alt = 0.0;	//Altitude above mean radius
+	double R_LLS = OrbMech::R_Moon;	//Landing site radius
 };
 
 struct AP10CSIPADOpt
@@ -475,7 +444,7 @@ struct AP10CSIPADOpt
 	double t_TPI;
 	VECTOR3 dV_LVLH;
 	MATRIX3 REFSMMAT;
-	int enginetype = RTCC_ENGINETYPE_RCSPLUS4; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4; //Engine type used for the maneuver
 	double KFactor = 0.0;
 };
 
@@ -515,7 +484,7 @@ struct EarthEntryOpt
 	double ReA = 0; //Reentry angle at entry interface, 0 starts iteration to find reentry angle
 	double lng; //Longitude of the desired splashdown coordinates
 	bool nominal; //Calculates minimum DV deorbit or nominal 31.7° line deorbit
-	int enginetype = RTCC_ENGINETYPE_SPS;		//Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS;		//Engine type used for the maneuver
 	bool entrylongmanual; //Targeting a landing zone or a manual landing longitude
 	bool useSV = false;		//true if state vector is to be used
 	SV RV_MCC;		//State vector as input
@@ -604,7 +573,7 @@ struct RTEMoonOpt
 	int RevsTillTEI = 0;	//Revolutions until TEI
 	bool csmlmdocked = false;	//0 = CSM or LM alone, 1 = CSM/LM docked
 	bool entrylongmanual = true; //Targeting a landing zone or a manual landing longitude
-	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
 	double Inclination = 0.0;	//Specified return inclination (sign is azimuth option)
 	// 12: PTP discrete option (not implemented yet)
 	// 14: ATP discrete option
@@ -754,7 +723,7 @@ struct MCCNodeMan
 	double h_node;	//node altitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
 };
 
 struct MCCFRMan
@@ -768,12 +737,12 @@ struct MCCFRMan
 	double h_peri;	//pericynthion altitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
 
 	//LOI targets for BAP
 	double LSlat;			//landing site latitude
 	double LSlng;			//landing site longitude
-	double alt;			//landing site height
+	double R_LLS;			//landing site radius
 	double azi;			//landing site approach azimuth
 	double t_land;		//time of landing
 	double LOIh_apo;		//apolune altitude
@@ -791,12 +760,12 @@ struct MCCNFRMan
 	double h_peri;	//pericynthion altitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
 
 	//LOI targets for BAP
 	double LSlat;			//landing site latitude
 	double LSlng;			//landing site longitude
-	double alt;			//landing site height
+	double R_LLS;			//landing site radius
 	double azi;			//landing site approach azimuth
 	double t_land;		//time of landing
 	double LOIh_apo;		//apolune altitude
@@ -818,7 +787,7 @@ struct MCCFlybyMan
 	double h_peri;	//pericynthion altitude
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
 };
 
 struct MCCSPSLunarFlybyMan
@@ -833,7 +802,7 @@ struct MCCSPSLunarFlybyMan
 	bool AscendingNode;
 	SV RV_MCC;		//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int enginetype = RTCC_ENGINETYPE_SPS; //Engine type used for the maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS; //Engine type used for the maneuver
 };
 
 struct LOIMan
@@ -843,14 +812,14 @@ struct LOIMan
 	double GETbase;		//usually MJD at launch
 	double lat;			//landing site latitude
 	double lng;			//landing site longitude
-	double alt;			//landing site height
+	double R_LLS;		//landing site radius
 	double azi;			//landing site approach azimuth
 	double t_land;		//time of landing
 	double h_apo;		//apolune altitude
 	double h_peri;		//perilune altitude
 	SV RV_MCC;			//State vector as input
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int enginetype = RTCC_ENGINETYPE_SPS;	//Engine type to use for maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS;	//Engine type to use for maneuver
 	int impulsive = 0;	//0 = finite burntime, 1 = impulsive
 	int EllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 };
@@ -865,7 +834,7 @@ struct LOI2Man
 	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
 	int vesseltype = 0;			//0 = CSM, 1 = LM
 	double alt = 0.0;		//altitude of the landing site
-	int enginetype = RTCC_ENGINETYPE_SPS;	//Engine type to use for maneuver
+	int enginetype = RTCC_ENGINETYPE_CSMSPS;	//Engine type to use for maneuver
 };
 
 struct DOIMan
@@ -875,7 +844,7 @@ struct DOIMan
 	double EarliestGET;	//Earliest GET for the DOI maneuver
 	double lat; //landing site latitude
 	double lng; //landing site longitude
-	double alt;	//altitude of the landing site
+	double R_LLS;	//landing site radius
 	SV sv0;		//State vector as input
 	int N = 0;	// Revolutions between DOI and PDI
 	double PeriAng = 15.0*RAD;	//Angle from landing site to perilune
@@ -911,7 +880,7 @@ struct GMPOpt
 	double GETbase; //usually MJD at launch
 	SV RV_MCC;		//State vector as inputn or without
 	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
-	double LSAlt;	//Landing site altitude, if used
+	double R_LLS;	//Landing site radius
 
 	//maneuver parameters
 
@@ -1006,7 +975,7 @@ struct LunarLiftoffTimeOpt
 	LunarLiftoffTimeOpt();
 	double lat;
 	double lng;
-	double alt;
+	double R_LLS;
 	double GETbase;		//usually MJD at launch
 	double t_hole;		//Threshold time
 	SV sv_CSM;			//CSM State vector
@@ -1252,7 +1221,6 @@ struct FIDOOrbitDigitalsOpt
 	SV sv_A;
 	double GETbase;
 	double MJD;		//MJD to update the state vector to (only used in continuous update)
-	double LSAlt = 0.0;
 };
 
 struct SpaceDigitals
@@ -1334,7 +1302,6 @@ struct SpaceDigitalsOpt
 	double GETbase;
 	double LSLat;
 	double LSLng;
-	double LSAlt;
 	double LSAzi;
 	double t_land;
 };
@@ -1419,13 +1386,14 @@ struct DetailedManeuverTable
 	char C_STA_ID[10];
 	double C_GMTV;
 	double C_GETV;
-	char C_CODE[10];
+	char CODE[10];
 	char L_STA_ID[10];
 	double L_GMTV;
 	double L_GETV;
 	char REF[10];
 	char X_STA_ID[10];
 	double X_GMTV;
+	double X_GETV;
 	double GETR;
 	double WT;
 	double WC;
@@ -1445,7 +1413,7 @@ struct DetailedManeuverTable
 	double DEL_Y;
 	VECTOR3 VG;
 	VECTOR3 IMUAtt;
-	VECTOR3 BodyAtt;
+	VECTOR3 FDAIAtt;
 	VECTOR3 LVLHAtt;
 	double VF;
 	double VS;
@@ -1495,44 +1463,133 @@ struct MPTManeuver
 {
 	MPTManeuver();
 
+	//Word 1
+	std::string code;
 	//Word 12 (Bytes 1, 2)
 	int ConfigCodeAfter;
 	//Word 12 (Bytes 3, 4)
 	int ConfigChangeInd;
 	//Word 12 (Bytes 5, 6)
 	int TUP;
+	//Word 27
+	std::string StationIDFrozen;
+	//Word 28, GMT of frozen anchor vector
+	double GMTFrozen;
 	//Word 31 (Bytes 1, 2)
 	int AttitudeCode;
 	//Word 31 (Bytes 3, 4)
 	int Thruster;
-	//Word 31 (Bytes 5, 6)
-	int UllageThrusterOpt;
+	//Word 31 (Bytes 5, 6), false = 2 thrusters, true = 4 thrusters
+	bool UllageThrusterOpt;
+	//Word 31 (Bytes 7,8)
+	bool AttitudesInput;
 	//Word 32 (Bytes 1, 2)
 	int ConfigCodeBefore;
-	//Word 32 (Bytes 3, 4)
-	int TVC; //Maneuvering vehicle: 1 = CSM, 2 = S-IVB, 3 = LM
+	//Word 32 (Bytes 3, 4), Maneuvering vehicle: 1 = CSM, 2 = S-IVB, 3 = LM
+	int TVC;
+	//Word 32 (Bytes 5,6)
+	int TrimAngleInd;
 	//Word 32 (Bytes 7, 8)
-	int FrozenManeuverInd;
+	bool FrozenManeuverInd;
+	//Word 33 (Bytes 3,4)
+	int CoordSysInd;
+	//Word 33 (Bytes 5,6), false = down, true = up
+	bool HeadsUpDownInd;
 	//Word 34
 	double DockingAngle;
+	//Word 35, GMT time to begin maneuver (first phase, aka ullage)
+	double GMTMAN;
+	//Word 36
+	double dt_ullage;
+	//Word 37
+	double DT_10PCT;
+	//Word 38
+	double dt;
+	//Word 39
+	double dv;
+	//Word 40-42
+	VECTOR3 A_T; //Unit thrust vector
+	//Word 43-51
+	VECTOR3 X_B, Y_B, Z_B; //Body direction matrix
 	//Words 52-58
 	MPTSV FrozenManeuverVector;
+	//Word 59
+	double DPSScaleFactor;
+	//Word 61-63
+	VECTOR3 dV_inertial; //In RTCC coordinates
+	//Word 64-66, In P30 coordinates
+	VECTOR3 dV_LVLH;
+	//Word 67 (Bytes 1,2)
+	int ExtDVCoordInd;
+	//Word 67 (Bytes 3,4)
+	int DVDTOverrideInd;
+	//Word 106
+	double GMTI;
+	//Word 110 (Byte 1)
+	//X'FF'???
+	//Word 148-150
+	int TrajDet[3];
 
 	MPTSV sv_before;
 	MPTSV sv_after;
-	std::string code;
 	
-	VECTOR3 A_T; //Unit thrust vector
-	VECTOR3 dV_LVLH; //In P30 coordinates
-	MATRIX3 M_B; //Body direction matrix
-	
+	VECTOR3 V_G;
 	
 	double CSMMassAfter;
 	double SIVBMassAfter;
-	double LMMassAfter;
+	double LMAscMassAfter;
+	double LMDscMassAfter;
 	double TotalMassAfter;
+	double SPSFuelAfter = -1.0;
+	double CSMRCSFuelAfter = -1.0;
+	double SIVBJ2FuelAfter = -1.0;
+	double APSFuelAfter = -1.0;
+	double LMRCSFuelAfter = -1.0;
+	double DPSFuelAfter = -1.0;
+	double DVREM;
+	double DVC;
+	double DVXBT;
 	double DV_M;
-	double dt;
+	double V_F, V_S, V_D;
+	double P_H, Y_H, R_H;
+	double GMTCO;
+	//Burn duration, GMTCO minus GMTI
+	double dt_BD;
+	//DT of tailoff
+	double dt_TO;
+	//DV of tailoff
+	double dv_TO;
+	//Pitch gimbal at ignition
+	double P_G;
+	//Yaw or roll gimbal at ignition
+	double Y_G;
+	//Latitude at burn initiation
+	double lat_BI;
+	//Longitude at burn initiation
+	double lng_BI;
+	//Height at burn initiation
+	double h_BI;
+	//True anomaly at burn initiation
+	double eta_BI;
+	//Eccentricity of orbit after this maneuver
+	double e_BO;
+	//Inclination of orbit after this maneuver
+	double i_BO;
+	//Argument of periapsis after this maneuver
+	double g_BO;
+	//Altitude at first apogee after the maneuver
+	double h_a;
+	double lat_a;
+	double lng_a;
+	double GMT_a;
+	double h_p;
+	double lat_p;
+	double lng_p;
+	double GMT_p;
+	double GMT_AN;
+	double lng_AN;
+	//Impulsive maneuver time
+	double IMPT;
 };
 
 struct MPTManDisplay
@@ -1545,6 +1602,204 @@ struct MPTManDisplay
 	double HA;
 	double HP;
 	std::string code;
+};
+
+struct MissionPlanTable
+{
+	//Word 1 (Byte 1,2)
+	//Trajectory Update No. (- if in process)
+	int TUP = 0;
+	//Word 1 (Byte 3,4)
+	//Number of maneuvers in table
+	unsigned ManeuverNum = 0;
+	//Word 1 (Byte 5,6)
+	//Not needed
+	//Word 1 (Byte 7,8)
+	unsigned MaxManeuverNum = 15;
+	//Word 2
+	std::string StationID;
+	//Word 3
+	//Anchor vector time
+	double GMTAV;
+	//Word 4
+	double KFactor = 0.0;
+	//Word 8
+	double LMStagingGMT = 0.0;
+	//Word 9
+	double UpcomingManeuverGMT = 1e70;
+	//Word 11
+	double SIVBVentingBeginGET = 0.0;
+	//Word 12
+	int InitConfigCode = -1;
+	//Word 13
+	double CSMInitArea = 0.0;
+	//Word 14
+	double SIVBInitArea = 0.0;
+	//Word 15
+	double LMInitAscentArea = 0.0;
+	//Word 16
+	double LMInitDescentArea = 0.0;
+	//Word 17
+	double CSMInitMass = 0.0;
+	//Word 18
+	double SIVBInitMass = 0.0;
+	//Word 19
+	double LMInitAscentMass = 0.0;
+	//Word 20
+	double LMInitDescentMass = 0.0;
+	double SPSFuelRemaining = -1.0;
+	double CSMRCSFuelRemaining = -1.0;
+	double SIVBJ2FuelRemaining = -1.0;
+	double APSFuelRemaining = -1.0;
+	double LMRCSFuelRemaining = -1.0;
+	double DPSFuelRemaining = -1.0;
+	double TotalInitMass = 0.0;
+	double ConfigurationArea = 0.0;
+	//Word 34
+	double DeltaDockingAngle = 0.0;
+
+	double TimeToBeginManeuver[15];
+	double TimeToEndManeuver[15];
+
+	MPTSV AnchorVector;
+	std::deque<MPTManeuver> mantable;
+};
+
+struct BurnParameterTable
+{
+	//P1: DV, DV IND, DT
+	double P1_DV = 0.0; //Vel increment or burn duration of the maneuver
+	//0 = MAG, Magnitude of maneuver
+	//1 = DVC, DV along X-body axis includes ullage, excludes tailoff
+	//2 = XBT, Includes both ullage and tailoff
+	int P1_DVIND = 0;
+	double P1_DT = 0.0; //Time duration of maneuver, excludes ullage and tailoff
+
+	//P2: VX, VY, VZ in command and display system
+	VECTOR3 P2_DV = _V(0, 0, 0);
+
+	//P3: VGX, VGY, VGZ DV Vector in IMU coordinates
+	VECTOR3 P3_DV = _V(0, 0, 0);
+
+	//P4: VF, VS, VD LVLH DV vector
+	VECTOR3 P4_DV = _V(0, 0, 0);
+
+	//P5: X, Y, Z, T Flight, C
+	VECTOR3 P5_RT;
+	double P5_TFLT; //Time from ignition to arrival at target vector
+	double P5_C;	//Cross product steering constant
+
+	//P6: RD, YD, RD DOT, YD DOT, ZD DOT, DT ascent man. targets
+	double P6_RD;	//Desired injection radius
+	double P6_YD;	//Desired injection cross range distance from the CSM orbital plane
+	double P6_RD_DOT;	//Desired injection radial velocity
+	double P6_YD_DOT;	//Desired injection crossrange velocity
+	double P6_ZD_DOT;	//Desired injection downrange velocity
+	double P6_DT;		//Time from descent ignition to descent abort
+
+	//P7: DVX, DVY, DVZ maneuver residuals in RCS control axes
+	VECTOR3 P7_DDV;
+};
+
+struct PMMXFRDirectInput
+{
+	int TableCode;
+	unsigned ReplaceCode;
+	double GMTI;
+	int ThrusterCode;
+	int AttitudeCode;
+	int BurnParameterNumber;
+	int CoordinateIndicator;
+	double Pitch;
+	double Yaw;
+	double Roll;
+	double dt_ullage;
+	bool UllageThrusterOption;
+	bool HeadsUpDownIndicator;
+	double DT10P;
+	int REFSMMATIndicator;
+	int ConfigurationChangeIndicator;
+	int EndConfiguration;
+	double DockingAngle;
+	double DPSScaleFactor;
+	int TrimAngleIndicator;
+};
+
+struct PMMXFR_DKI_SPQ_LDPP_Input
+{
+	int Plan;
+	double DeleteGMT;
+	int Thruster[4];
+	int Attitude[4];
+	double dt_ullage[4];
+	bool UllageThrusterOption[4];
+	bool IterationFlag[4];
+	double DT10P[4];
+	double DPSScaleFactor[4];
+	bool TimeFlag[4];
+};
+
+struct PMMMCDInput
+{
+	double GMTI;
+	int Thruster;
+	int Attitude;
+	double dt_ullage;
+	int ConfigChangeInd;
+	int ConfigCodeAfter;
+	int TVC;
+	double DockingAngle;
+	int CCMI;
+	int BPIND;
+	int ID;
+	bool UllageThrusterOpt;
+	double DT_10PCT;
+	double DPSScaleFactor;
+	bool HeadsUpDownInd;
+	int CoordinateInd;
+	double StartTimeLimit;
+	double EndTimeLimit;
+	MissionPlanTable *mpt;
+	MPTManeuver *prevman;
+	unsigned CurrentManeuver;
+	double Pitch, Yaw, Roll;
+	MPTSV sv_anchor;
+	MPTSV sv_other;
+	bool FrozenManeuver;
+	double BurnParm72;
+	int BurnParm73;
+	double BurnParm74;
+	double BurnParm75;
+	double BurnParm76;
+	double BurnParm77;
+	double BurnParm78;
+	double BurnParm79;
+	double WTMI;
+};
+
+struct PMMMPTInput
+{
+	MPTSV sv_before;
+	VECTOR3 V_aft;
+	int Thruster;
+	int Attitude;
+	double DockingAngle;
+	double DETU;
+	bool UT;
+	int CONFIG;
+	int VC;
+	double DT_10PCT;
+	double DPSScaleFactor;
+	double VehicleWeight;
+	double CSMWeight;
+	double LMWeight;
+	bool IgnitionTimeOption;
+	bool IterationFlag;
+	double LowerTimeLimit;
+	double UpperTimeLimit;
+	MissionPlanTable *mpt;
+	unsigned CurrentManeuver;
+	MPTSV sv_other;
 };
 
 struct NextStationContact
@@ -1606,9 +1861,12 @@ struct CapeCrossingTable
 
 struct EphemerisDataTable
 {
+	EphemerisDataTable() { LunarStayTimes[0] = -1.0; LunarStayTimes[1] = -1.0; }
+
 	int TUP = 0;
 	std::vector<MPTSV> table;
 	MANTIMES mantimes;
+	double LunarStayTimes[2];
 };
 
 struct Station
@@ -1831,6 +2089,63 @@ struct ASTData
 	double MJD0;
 };
 
+struct NIAuxOutputTable
+{
+	//SV at main engine on
+	MPTSV sv_BI;
+	//SV at end of maneuver (after tailoff?)
+	MPTSV sv_BO;
+	//SV at main engine on, without ullage (free flight)
+	MPTSV sv_FF;
+	//Unit thrust vector at main engine on
+	VECTOR3 A_T;
+	//Body axes
+	VECTOR3 X_B, Y_B, Z_B;
+	//Duration of main engine burn to cutoff signal
+	double DT_B;
+	//DT of tailoff
+	double DT_TO;
+	//Pitch and Yaw gimbal at main engine on
+	double P_G;
+	double Y_G;
+	//Total tailoff DV
+	double DV_TO;
+	//Total DV (includes ullage and tailoff)
+	double DV;
+	//DV along X-body axis (includes ullage, excludes tailoff)
+	double DV_C;
+	//DV along X-body axis of tailoff
+	double DV_cTO;
+	//DV of pure ullage
+	double DV_U;
+	//SV at beginning of thrust (first phase)
+	MPTSV sv_1;
+	//Weight at main engine on
+	double WTENGON;
+	//Weight at end of maneuver
+	double WTEND;
+	//Main fuel weight loss during maneuver
+	double MainFuelUsed;
+	//RCS fuel weight loss during maneuver
+	double RCSFuelUsed;
+	//Velocity-to-be-gained
+	VECTOR3 V_G;
+	double W_CSM, W_LMA, W_LMD, W_SIVB;
+	
+};
+
+struct EMSMISSAuxOutputTable
+{
+	MPTSV sv_cutoff;
+	int ErrorCode;
+	//0 = free-flight, 1 = end of maneuver
+	int TerminationCode;
+	//Maneuver number of last processed maneuver
+	unsigned ManeuverNumber;
+	double LunarStayBeginGMT;
+	double LunarStayEndGMT;
+};
+
 struct EMSMISSInputTable
 {
 	MPTSV AnchorVector;
@@ -1878,15 +2193,76 @@ struct EMSMISSInputTable
 	//Density multiplication override indicator
 	bool DensityMultOverrideIndicator = false;
 	//Table of ephemeris addresses indicator
-	EphemerisDataTable *EphemTableIndicator;
+	EphemerisDataTable *EphemTableIndicator = NULL;
 	//Reference switch table indicator
 	//Maneuver times table indicator
 	//Runge-Kutta auxiliary output table indicator
+	NIAuxOutputTable *AuxTableIndicator = NULL;
 	//Runge-Kutta dense ephemeris table indicator
 	//Update in process override indicator (true = override, false = don't override)
 	bool UIPOverrideIndicator = false;
 	//Maneuver number of last maneuver to be ignored
 	unsigned IgnoreManueverNumber = 10000U;
+	EMSMISSAuxOutputTable NIAuxOutputTable;
+};
+
+struct PMMRKJInputArray
+{
+	//SV at maneuver initiation (first phase)
+	MPTSV sv0;
+	//Ephemeris output time cycle (sec.)
+	double DTOUT;
+	//Weight loss rate multiplier
+	double WDMULT = 1.0;
+	//Time of LM jettison of descent stage
+	double LMDESCJETT = 1e10;
+	//Density multiplier
+	double DENSMULT = 1.0;
+	//Vehicle Cross Section
+	double A = 0.0;
+	//Weight of specified configuration
+	double CAPWT = 0.0;
+	//Ephemeris output option: -1 for R only, 0 for none, 1 for R and V, 2 for R and V and weights
+	int KEPHOP;
+	//Auxiliary output option (1 for table desired, 0 for table not desired)
+	bool KAUXOP;
+	double CSMWT = 0.0;
+	double LMAWT = 0.0;
+	double LMDWT = 0.0;
+	double SIVBWT = 0.0;
+	//0 = no maneuver, 1 = fixed inertial, 2 = manual holding body orientation, 3 = Lambert Guidance, 4 = External DV (primary), 5 = External DV (LM AGS)
+	int MANOP;
+	int ThrusterCode;
+	//0 = two thrusters, 1 = four thrusters
+	bool UllageOption;
+	//Configuration code at maneuver initiation (0 for CSM, 1 for LM, 2 for CSM and LM)
+	int IC;
+	//DT of ullage (=0 for RCS)
+	double DTU = 0.0;
+	//DT of maneuver (no pure ullage or tailoff, =0 if DV is given)
+	double DTMAN = 0.0;
+	//DV desired (if <0 it is DV along X-body excluding tailoff)
+	double DVMAN = 0.0;
+	//Unit thrust vector at burn initiate
+	VECTOR3 AT;
+	//Body axes vectors
+	VECTOR3 XB, YB, ZB;
+	//DT at 10% thrust level for DPS thruster
+	double DTPS10 = 26.0;
+	//Maneuvering vehicle code (1 = CSM, 2 = S-IVB, 3 = LM)
+	int TVC;
+	//Thruster trim angle indicator (-1 = compute angles, 1 = system parameters)
+	int KTRIMOP;
+	//Docking angle
+	double DOCKANG;
+	//Velocity-to-be-gained for External DV
+	VECTOR3 VG;
+	//DPS scale factor
+	double DPSScale = 0.925;
+	//Heads up/down indicator, false = down, true = up
+	bool HeadsUpDownInd;
+	//false = inertial, true = P30
+	bool ExtDVCoordInd;
 };
 
 class RTCC {
@@ -1896,7 +2272,7 @@ class RTCC {
 public:
 	RTCC();
 	void Init(MCC *ptr);
-	bool Calculation(int mission, int fcn,LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
+	bool Calculation(int mission, int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	void SetManeuverData(double TIG, VECTOR3 DV);
 	void GetTLIParameters(VECTOR3 &RIgn_global, VECTOR3 &VIgn_global, VECTOR3 &dV_LVLH, double &IgnMJD);
@@ -2031,11 +2407,11 @@ public:
 	//External DV Coordinate Transformation Subroutine
 	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
 	//Generalized Coordinate System Conversion Subroutine
-	int ELVCNV(const PZEFEM &ephem, SV sv, int in, int out, SV &sv_out);
+	int ELVCNV(MPTSV sv, int in, int out, MPTSV &sv_out);
 	//Checkout Monitor Display
-	int EMDCHECK(double LSAlt, CheckoutMonitor &res);
+	int EMDCHECK(CheckoutMonitor &res);
 	//Detailed Maneuver Table Display
-	int PMDDMT(double LSAlt, DetailedManeuverTable &res);
+	int PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, DetailedManeuverTable &res);
 	//Lunar Descent Planning Table Display
 	void PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table);
 	//Time of Longitude Crossing Subroutine
@@ -2054,12 +2430,20 @@ public:
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
 	//Return to Earth Abort Planning Supervisor
 	void PMMREAP(int med);
+	//Central Manual Entry Device Decoder
+	bool GMGMED(char *str);
 	//'F' MED Module
 	int PMQAFMED(int med);
+	//K-MED Decoder
+	void PMKMED(int med);
 	//'M' MED Module
-	void PMMMED(int med);
+	void PMMMED(int med, std::vector<std::string> data);
 	//'P' Code MED Processor
 	void GMSMED(int med);
+	//'U' Code MED Processor
+	void EMGTVMED(int med, std::vector<std::string> data);
+	//Detailed Maneuver Table Math Module
+	void PMMDMT(int L, unsigned man, NIAuxOutputTable *aux);
 	void FDOLaunchAnalog1(MPTSV sv);
 	void FDOLaunchAnalog2(MPTSV sv);
 	double GetGMTLO() { return MCGMTL; }
@@ -2067,6 +2451,8 @@ public:
 	double CalcGETBase();
 	double GetGMTBase() { return GMTBASE; }
 	void SetGMTBase(double gmt) { GMTBASE = gmt; }
+	double GETfromGMT(double GMT);
+	double GMTfromGET(double GET);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -2076,19 +2462,29 @@ public:
 	void NPCProgram(SV sv_C, SV sv_W, double GETbase, double t, double &t_NPC, VECTOR3 &dV_NPC_LVLH);
 
 	//Mission Planning
+
+	//Maneuver Transfer Module
+	int PMMXFR(int id, void* data);
 	int MPTAddTLI(SV sv_IG, SV sv_TLI, double DV, int L);
 	int MPTAddDescent(SV sv_IG, SV sv_land, double LSAlt, double DV);
 	int MPTAddAscent(SV sv_IG, SV sv_asc, double LSAlt, double DV);
 	int MPTAddManeuver(SV sv_ig, SV sv_cut, const char *code, double LSAlt, double DV, int L, int Thruster, int CCI = RTCC_CONFIGCHANGE_NONE, int CC = RTCC_CONFIG_CSM, int opt = 0);
-	int MPTDirectInput(MPTManeuver &man, SV sv_ig, SV &sv_cut);
+	//Maneuver direct input and confirmation math module
+	int PMMMCD(PMMMCDInput in, MPTManeuver &man);
+	//Impulsive Maneuver Transfer Math Module
+	void PMMMPT(PMMMPTInput in, MPTManeuver &man);
 	//Freeue, Unfreeze, Delete Processor
 	int PMMFUD(int veh, unsigned man, int action);
+	//Vector Routing Load Module
+	void PMSVCT(int QUEID, int L, MPTSV *sv0 = NULL);
 	//Trajectory Update Control Module
-	void EMSTRAJ(SV sv, int L);
+	void EMSTRAJ(MPTSV sv, int L);
 	//Ephemeris Storage and Control Module
-	void EMSEPH(MPTSV sv0, double CurMJD, EphemerisDataTable &ephem, int L);
+	MPTSV EMSEPH(int QUEID, MPTSV sv0, EphemerisDataTable &ephem, int L);
 	//Miscellaneous Numerical Integration Control Module
-	void EMSMISS(const EMSMISSInputTable &in);
+	void EMSMISS(EMSMISSInputTable &in);
+	//Encke Integrator
+	MPTSV EMMENI(MPTSV sv, double dt);
 	bool MPTTrajectory(SV &sv_out, int L);
 	bool MPTTrajectory(SV &sv_out, int L, unsigned mnv);
 	bool MPTTrajectory(double GET, SV &sv_out, int L);
@@ -2098,10 +2494,16 @@ public:
 	int PMMWTC(int med);
 	//Weight Determination at a Time
 	int PLAWDT(int L, double mjd, double &cfg_weight);
-	int PLAWDT(int L, double mjd, int &cfg, double &cfg_weight, double &csm_weight, double &lm_weight, double &sivb_weight);
+	int PLAWDT(int L, double mjd, int &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
 	int MPTGetVesselConfiguration(int L, double GET, double GETbase);
 	int MPTGetVesselConfiguration(int L);
 	int MPTCopyEphemeris();
+	//Gimbal, Thrust and Weight Loss Rate Subroutine
+	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, int IC, int IA, int IJ, double D);
+	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
+	double GetOnboardComputerThrust(int thruster);
+	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
+	double RTCCPresentTimeGMT();
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -2151,14 +2553,28 @@ public:
 		std::string Value;
 	} med_f87;
 
-	//To freeze, unfreeze and delete (future and history) maneuvers
-	struct MED_M62
+	//Direct input of a maneuver to the MPT (CSM and LEM)
+	struct MED_M66
 	{
-		std::string MPTCode; //1 = CSM, 3 = LEM
-		unsigned ManNum; //1-15
-		std::string Action; //0 = Delete, 1 = History Delete, 2 = Freeze, 3 = Unfreeze
-		std::string VectorID;
-	} med_m62;
+		int Table = 1; //1 = CSM, 3 = LEM
+		unsigned ReplaceCode = 0; //1-15
+		double GETBI = 0; //Time of ignition
+		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for maneuver
+		int AttitudeOpt = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
+		int BurnParamNo = 2; //1 = P1, 2 = P2 etc.
+		int CoordInd = -1; //0 = LVLH, 1 = IMU, 2 = FDAI
+		VECTOR3 Att = _V(0, 0, 0);
+		double UllageDT = -1;	//Delta T of Ullage
+		bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
+		bool HeadsUp = true; //false = heads down, true = heads up
+		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
+		int REFSMMATInd = RTCC_REFSMMAT_TYPE_CUR;	//Used for IMU and inertial coordinate options
+		int ConfigChangeInd = 0; //0 = No change, 1 = Undocking, 2 = Docking
+		int FinalConfig = 0;
+		double DeltaDA = 0.0; //Delta docking angle
+		double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
+		int TrimAngleIndicator = 0; //0 = computed, 2 = system
+	} med_m66;
 
 	struct MED_P08
 	{
@@ -2308,10 +2724,10 @@ public:
 	//Initiate C/O Monitor Display
 	struct MED_U02
 	{
-		int VEH = 1;	//1 = LEM, 2 = CSM
+		int VEH = 1;	//1 = CSM, 2 = LM
 		int IND = 0;	//1 = GMT, 2 = GET, 3 = MVI, 4 = MVE, 5 = RAD, 6 = ALT, 7 = FPA
 		double ThresholdTime = 0.0;
-		int REF = 0;	//0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP
+		int REF = 1;	//1 = ECI, 2 = ECT, 3 = MCI, 4 = MCT, 5 = EMP
 		int FT = 0;		//0 = ER and ER/HR, 1 = ft and ft/s
 		double IND_val = 0.0; //For options 0-1, 4-6
 		unsigned IND_man = 0; //For options 2-3
@@ -2321,11 +2737,9 @@ public:
 	MED_B04 med_b04;
 	MED_K16 med_k16;
 	MED_K17 med_k17;
-	MED_M40 med_m40;
 	MED_M50 med_m50;
 	MED_M55 med_m55;
 	MED_M65 med_m65;
-	MED_M66 med_m66;
 	MED_M68 med_m68;
 	MED_M70 med_m70;
 	MED_M72 med_m72;
@@ -2335,7 +2749,6 @@ public:
 	MED_U07 med_u07;
 	MED_U08 med_u08;
 	MED_U15 med_u15;
-	MED_U20 med_u20;
 
 	//Data Tables
 	PZEFEM pzefem;
@@ -2347,6 +2760,18 @@ public:
 	SunriseSunsetTable EZMMTAB;
 	TradeoffDataDisplay RTETradeoffTable;
 	TradeoffDataDisplayBuffer RTETradeoffTableBuffer[5];
+	MissionPlanTable PZMPTCSM, PZMPTLEM;
+	DetailedManeuverTable DMTBuffer[2];
+	BurnParameterTable PZBURN;
+
+	struct LDPPElementsTable
+	{
+		MPTSV sv_man_bef[4];
+		VECTOR3 V_man_after[4];
+		int num_man;
+		int plan[4];
+		std::string code[4];
+	} PZLDPELM;
 
 	struct HistoryAnchorVectorTable
 	{
@@ -2435,61 +2860,6 @@ public:
 
 	} GZGENCSN;
 
-	struct MissionPlanTable
-	{
-		MissionPlanTable() { LunarStayTimes[0] = -1; LunarStayTimes[1] = -1; }
-
-		//Word 1 (Byte 1,2)
-		//Trajectory Update No. (- if in process)
-		int TUP = 0;
-		//Word 1 (Byte 3,4)
-		//Number of maneuvers in table
-		int ManeuverNum = 0;
-		//Word 1 (Byte 5,6)
-		//Not needed
-		//Word 1 (Byte 7,8)
-		int MaxManeuverNum = 15;
-		//Word 2
-		std::string StationID;
-		//Word 3
-		//Anchor vector time
-		double GMTAV;
-		//Word 4
-		double KFactor = 0.0;
-		//Word 8
-		double LMStagingGMT = 0.0;
-		//Word 9
-		double UpcomingManeuverGMT = 1e70;
-		//Word 11
-		double SIVBVentingBeginGET = 0.0;
-		//Word 12
-		int InitConfigCode = -1;
-		//Word 13
-		double CSMInitArea = 0.0;
-		//Word 14
-		double SIVBInitArea = 0.0;
-		//Word 15
-		double LMInitAscentArea = 0.0;
-		//Word 16
-		double LMInitDescentArea = 0.0;
-		//Word 17
-		double CSMInitMass = 0.0;
-		//Word 18
-		double SIVBInitMass = 0.0;
-		//Word 19
-		double LMInitAscentMass = 0.0;
-		//Word 20
-		double LMInitDescentMass = 0.0;
-		
-		double TotalInitMass = 0.0;
-		//Word 34
-		double DeltaDockingAngle = 0.0;
-		
-		MPTSV AnchorVector;
-		double LunarStayTimes[2];
-		std::deque<MPTManeuver> mantable;
-	} PZMPTCSM, PZMPTLEM;
-
 	struct RTEConstraintsTable
 	{
 		RTEConstraintsTable();
@@ -2575,11 +2945,15 @@ public:
 
 	struct VehicleNameTable
 	{
-		VehicleNameTable() { tab.push_back("CSM"); tab.push_back("LEM");
+		VehicleNameTable() {
+			tab.push_back("CSM"); tab.push_back("LEM");
 		}
 
 		std::vector<std::string> tab;
 	} MHGVNM;
+
+	char RTCCMEDBUFFER[256];
+
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, double AGCEpoch, int addroff = 0);
@@ -2590,7 +2964,7 @@ private:
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
 	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
-	void AGCExternalDeltaVUpdate(char *str, double P30TIG,VECTOR3 dV_LVLH, int DVAddr = 3404);
+	void AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr = 3404);
 	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
 	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
@@ -2609,7 +2983,6 @@ private:
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	double PericynthionTime(VESSEL* vessel);
 	SV FindPericynthion(SV sv0);
-	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
 	double FindOrbitalMidnight(SV sv, double GETbase, double t_TPI_guess);
 	double FindOrbitalSunrise(SV sv, double GETbase, double t_sunrise_guess);
 	void FindRadarAOSLOS(SV sv, double GETbase, double lat, double lng, double &GET_AOS, double &GET_LOS);
@@ -2634,8 +3007,8 @@ private:
 	//Variable Order Interpolation
 	int ELVARY(const std::vector<MPTSV> &EPH, unsigned ORER, double MJD, bool EXTRAP, MPTSV &sv_out);
 	//Extended Interpolation Routine
-	int ELVCTR(const EphemerisDataTable &EPH, unsigned ORER, double MJD, MPTSV &sv_out, int option, double *LUNRSTAY = NULL);
-	//
+	int ELVCTR(int L, unsigned ORER, double MJD, MPTSV &sv_out);
+	int ELVCTR(const EphemerisDataTable &EPH, unsigned ORER, double MJD, MPTSV &sv_out, int option, MANTIMES *mantimes = NULL, double *LUNRSTAY = NULL);
 	int CapeCrossingRev(int L, double GET);
 	double CapeCrossingGET(int L, int rev);
 	void ECMPAY(const EphemerisDataTable &EPH, double MJD, bool sun, double &Pitch, double &Yaw);
@@ -2643,15 +3016,40 @@ private:
 	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
 	//Base hour Angle
 	double PIGMHA(int E, int Y, int D);
+	//Orbit Desired REFSMMAT Computation Subroutine
+	MATRIX3 PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K);
+	//Universal Cartesian to Kepler Coordinates
+	void PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h);
+	//Begin Burn Time Computation Subroutine
+	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
 	//Return-to-Earth Tradeoff Display
 	void PMDTRDFF(int med, unsigned page);
 	//Mission Plan Table Display
-	void PMDMPT(double LSAlt);
+	void PMDMPT();
+	int ThrusterNameToCode(std::string thruster);
+	int AttitudeNameToCode(std::string attitude);
 
 	bool MPTConfigIncludesCSM(int config);
 	bool MPTConfigIncludesLM(int config);
 	bool MPTConfigIncludesSIVB(int config);
+	bool MPTConfigIncludesLMAsc(int config);
+	bool MPTConfigIncludesLMDsc(int config);
+	bool MPTConfigIncludesVeh(int config, int veh);
+	bool MPTConfigSubset(int CfgOld, int CfgNew);
+	bool MPTIsRCSThruster(int thruster);
+
 	double MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass);
+
+	//Auxiliary subroutines
+	MissionPlanTable *GetMPTPointer(int L);
+	int PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan);
+	int PMMXFRFormatManeuverCode(int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
+	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC, int Thruster, int &CC, int &CCMI);
+	int PMMXFRFetchVector(double GMTI, int L, MPTSV &sv);
+	void PMMXFRWeightAtInitiation(int CCI, int CCMI, double &weight);
+	void PMMXFRDeleteOption(int working_man, double GMTI);
+	int PMMMCDCallEMSMISS(MPTSV sv0, double GMTI, MPTSV &sv1);
+	int PMSVCTAuxVectorFetch(int L, double T_F, MPTSV &sv);
 
 	double GLHTCS(double FLTHRS) { return FLTHRS * 360000.0; }
 	double GLCSTH(double FIXCSC) { return FIXCSC / 360000.0; }
@@ -2664,7 +3062,9 @@ protected:
 	int REFSMMATType;
 
 	//RTCC System Parameters
-	
+
+	//Radians per degree
+	double MCCRPD = RAD;
 	//Burnout launch azimuth (rad.)
 	double MCLABN;
 	//Sine of burnout launch azimuth
@@ -2705,6 +3105,12 @@ protected:
 	double MCLAMD;
 	//P80 first launch vehicle
 	std::string MCGPRM;
+	//Geodetic Earth constant B²/A²
+	double MCEBAS;
+	//Geodetic Earth constant A²
+	double MCEASQ;
+	//Geodetic Earth constant B²
+	double MCEBSQ;
 
 	//MJD of launch day (days)
 	double GMTBASE;
@@ -2713,7 +3119,308 @@ protected:
 	//CONSTANTS
 	//Nautical miles per Earth radii
 	const double MCCNMC = 3443.93359;
+
+public:
+	//Radius of lunar landing site
+	double MCSMLR;
+	//Nominal LM cross-product steering constant
+	double MCVLMC;
+	//Nominal CSM cross-product steering constant
+	double MCVCMC;
+	//Thrust of CSM RCS+X (2 quads)
+	double MCTCT1;
+	//Thrust of CSM RCS+X (4 quads)
+	double MCTCT2;
+	//Thrust of CSM RCS-X (2 quads)
+	double MCTCT3;
+	//Thrust of CSM RCS-X (4 quads)
+	double MCTCT4;
+	//On-board computer thrust level for CSM RCS+/-X thruster (2 quads)
+	double MCTCT5;
+	//On-board computer thrust level for CSM RCS+/-X thruster (4 quads)
+	double MCTCT6;
+	//Weight loss rate CSM RCS+X (2 quads)
+	double MCTCW1;
+	//Weight loss rate CSM RCS+X (4 quads)
+	double MCTCW2;
+	//Weight loss rate CSM RCS-X (2 quads)
+	double MCTCW3;
+	//Weight loss rate CSM RCS-X (4 quads)
+	double MCTCW4;
+	//Thrust of LM RCS+X (2 quads)
+	double MCTLT1;
+	//Thrust of LM RCS+X (4 quads)
+	double MCTLT2;
+	//Thrust of LM RCS-X (2 quads)
+	double MCTLT3;
+	//Thrust of LM RCS-X (4 quads)
+	double MCTLT4;
+	//On-board computer thrust level for LM RCS+/-X thruster (2 quads)
+	double MCTLT5;
+	//On-board computer thrust level for LM RCS+/-X thruster (4 quads)
+	double MCTLT6;
+	//Weight loss rate LM RCS+X (2 quads)
+	double MCTLW1;
+	//Weight loss rate LM RCS+X (4 quads)
+	double MCTLW2;
+	//Weight loss rate LM RCS-X (2 quads)
+	double MCTLW3;
+	//Weight loss rate LM RCS-X (4 quads)
+	double MCTLW4;
+	//APS buildup thrust level
+	double MCTAT2;
+	//APS full load thrust level
+	double MCTAT4;
+	//On-board computer thrust level for LM APS thruster
+	double MCTAT9;
+	//APS weight loss rate for buildup
+	double MCTAW2;
+	//APS weight loss rate for full load
+	double MCTAW4;
+	//APS phase two burn time
+	double MCTAD2;
+	//APS phase three burn time
+	double MCTAD3;
+	//Total APS ullage overlap
+	double MCTAD9;
+	//DPS phase 2 thrust level
+	double MCTDT2;
+	//DPS phase 3 thrust level
+	double MCTDT3;
+	//DPS 10% thrust level
+	double MCTDT4;
+	//DPS thrust for buildup from 10% to maximum
+	double MCTDT5;
+	//DPS full load thrust level
+	double MCTDT6;
+	//On-board computer thrust level for LM DPS thruster
+	double MCTDT9;
+	//DPS phase 2 weight loss rate
+	double MCTDW2;
+	//DPS phase 3 weight loss rate
+	double MCTDW3;
+	//DPS 10% weight loss rate
+	double MCTDW4;
+	//DPS weight loss rate for build from 10% to max.
+	double MCTDW5;
+	//DPS full load weight loss rate
+	double MCTDW6;
+	//DPS phase 2 burn time
+	double MCTDD2;
+	//DPS phase 3 burn time
+	double MCTDD3;
+	//Nominal dt of 10% DPS thrust
+	double MCTDD4;
+	//DPS burn time for building from 10% to max
+	double MCTDD5;
+	//DPS burn time used to determine if 20% thrust level is to be maintained throughout the burn
+	double MCTDD6;
+	//Total DPS ullage overlap
+	double MCTDD9;
+	//SPS thrust level for buildup
+	double MCTST2;
+	//SPS thrust level for full load
+	double MCTST4;
+	//On-board computer thrust level for CSM SPS thruster
+	double MCTST9;
+	//SPS weight loss rate for buildup
+	double MCTSW2;
+	//SPS weight loss rate for full load
+	double MCTSW4;
+	//SPS phase two burn time
+	double MCTSD2;
+	//SPS phase three burn time
+	double MCTSD3;
+	//Total SPS ullage overlap
+	double MCTSD9;
+	//LM RCS impulse due to 7 second, 2 jet ullage
+	double MCTAK4;
+
+	//SPS pitch gimbal system parameter
+	double MCTSPG;
+	//SPS yaw gimbal system parameter
+	double MCTSYG;
+	//APS pitch engine cant system parameter
+	double MCTAPG;
+	//APS roll engine cant system parameter
+	double MCTARG;
+	//DPS pitch gimbal system parameter
+	double MCTDPG;
+	//DPS roll gimbal system parameter
+	double MCTDRG;
+	//Nominal scaling factor for main DPS thrust level and weight loss rate
+	double MCTDTF = 0.925;	
 };
 
+class CSMLMPoweredFlightIntegration
+{
+public:
+	CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable *E, NIAuxOutputTable *A);
+	void PMMRKJ();
+private:
+	void PCINIT();
+	void PCRUNG(EphemerisDataTable *E, std::vector<double> &W);
+	void PCRDD();
+	void PCGUID();
+	void CalcBodyAttitude();
+
+	//Current position vector
+	VECTOR3 R;
+	//Current working position vector
+	VECTOR3 RP;
+	//Current velocity vector
+	VECTOR3 V;
+	//Current working velocity vector
+	VECTOR3 VP;
+	//Thruster switch
+	int KTHSWT;
+	//Current weight
+	double WT;
+	//Thrust level
+	double THRUST;
+	//Weight loss rate
+	double WTLRT;
+	double DT, DT2, DT4, DT6, DTPREV;
+	//Maneuver initiation time (first phase, ullage)
+	double TBM = 0.0;
+	//Maneuver initiate time (second phase, maneuver engine on time)
+	double TBI;
+	//Current Time
+	double T;
+	//Time of next ephemeris storage
+	double TNEXT;
+	//Time of last ephemeris or weight storage
+	double TLOP;
+	//Indicator
+	double TLARGE;
+	//Previous time
+	double TPREV;
+	//Time of next event
+	double TI;
+	//End of current integration step
+	double TAU;
+	//End of current step
+	double TE;
+	//Manuever phase
+	//1 = Ullage
+	//2 = Thrust buildup during ullage
+	//3 = Mainstage thrust during ullage
+	//7 = Max thrust phase
+	//8 = Tailoff
+	int MPHASE;
+	//Short maneuver test
+	int KGN;
+	//Current integration step
+	double STEP;
+	int KEND;
+	//0 = guidance started, 1 = before steering started
+	int IATT;
+	//Thrust along x-axis
+	double THX;
+	//Thrust unit vector
+	VECTOR3 A_T;
+	//Code for Runge-Kutta function
+	int KCODE;
+	//Potential acceleration
+	VECTOR3 RDDP;
+	//Calculated acceleration
+	VECTOR3 RDD;
+	//Thrust acceleration
+	VECTOR3 RDDT;
+	//DeltaV to go
+	double DVGO;
+	//Current thrust level
+	double T_c;
+	//Time to begin guidance
+	double Tg;
+	//Accumulated DV
+	double DV;
+	//Accumulated DV alongf X-axis
+	double DVX;
+	//Weight limit
+	double WTLIM;
+	double TEND;
+	double P_G = 0.0;
+	double Y_G = 0.0;
+	double WC, WL, WS;
+	int IA, IJ;
+	double DTUL;
+	double SIGN;
+	//Area over mass ratio
+	double AOM;
+	double CD = 0.0;
+	//Tailoff DV
+	double DVTO = 0.0;
+	//Tailoff DV along x-axis
+	double DVTOX = 0.0;
+	double DTGO;
+	double TCO;
+	VECTOR3 X_B, Y_B, Z_B;
+	bool AttGiven;
+	VECTOR3 A_TR, A_TM, A_TL;
+	VECTOR3 VG;
+	//Previous step through guidance
+	double DTP;
+	//Current step through guidance
+	double DTN;
+	VECTOR3 Vn_apo, g_apo;
+	double Vg_apo;
+	//Steering enabled: 0 = no, 1 = yes
+	int Kg;
+
+	//Thrust and weight loss rate tables
+	//0 = Ullage
+	//1 = phase 2 (buildup + ullage)
+	//2 = phase 3 (main + ullage)
+	//3 = 10% thrust level (DPS only)
+	//4 = buildup to maximum thrust level (DPS only)
+	//5 = ?
+	//6 = thrust level for short maneuver test
+	//7 = tail-off thrust level
+	//8 = ?
+	//9 = full load thrust level
+	double THPS[10];
+	double WDOTPS[10];
+
+	//Thruster specific times
+	//0 = ullage?
+	//1 = phase 2 burn time
+	//2 = phase 3 burn time
+	//3 = burn time for short maneuver test
+	//4 = build-up to maximum burn time (DPS only)
+	//5 = elapsed time from engine on to initial steer
+	//6 = Minimum impulse time, time for ten percent test (DPS)
+	//7 = tail-off burn time
+	//8 = total ullage overlap
+	double DTSPAN[9];
+
+	//Minimum impulse constants
+	//0 = Impulse in one second SPS/APS/DPS burn
+	//1 = Initial value of SPS/APS/DPS minimum impulse curve
+	//2 = Slope of SPS/APS/DPS curve
+	//3 = RCS ullage impulse
+	double XK[4];
+
+	//Stored for Aux Table
+	VECTOR3 A_T_out;
+	double PGBI;
+	double YGBI;
+	double DV_ul;
+	double DTMANE;
+	MPTSV sv1, sv2, sv_ff;
+	double WTENGON;
+	VECTOR3 VGN;
+	double DTTOC;
+	double RCSFUELUSED;
+	double MAINFUELUSED;
+
+	RTCC *rtcc;
+	PMMRKJInputArray &TArr;
+	int &IERR;
+	NIAuxOutputTable *Aux;
+	EphemerisDataTable *Eph;
+	std::vector<double> WeightTable;
+	
+};
 
 #endif

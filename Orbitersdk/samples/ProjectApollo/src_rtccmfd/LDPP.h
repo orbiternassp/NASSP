@@ -82,6 +82,8 @@ struct LDPPResults
 	double t_Land;
 	//Azimuth at landing site
 	double azi;
+	MPTSV sv_before[4];
+	VECTOR3 V_after[4];
 };
 
 class LDPP

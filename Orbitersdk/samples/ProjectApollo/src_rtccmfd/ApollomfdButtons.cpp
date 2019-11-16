@@ -1456,8 +1456,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LUN", OAPI_KEY_U, &ApolloRTCCMFD::menuSetMoonriseMoonsetTablePage);
 	RegisterFunction("AN1", OAPI_KEY_G, &ApolloRTCCMFD::menuSetFIDOLaunchAnalogNo1Page);
 	RegisterFunction("AN2", OAPI_KEY_L, &ApolloRTCCMFD::menuSetFIDOLaunchAnalogNo2Page);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("DM1", OAPI_KEY_D, &ApolloRTCCMFD::menuSetDetailedManeuverTableNo1Page);
+	RegisterFunction("DM2", OAPI_KEY_E, &ApolloRTCCMFD::menuSetDetailedManeuverTableNo2Page);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
 
 
@@ -1669,7 +1669,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "Selen. latitude", 0, 'A' },
 		{ "Selen. longitude", 0, 'O' },
-		{ "Selen. altitude", 0, 'L' },
+		{ "Selen. radius", 0, 'L' },
 		{ "Set Target", 0, 'T' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -1686,7 +1686,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("LAT", OAPI_KEY_A, &ApolloRTCCMFD::menuLSLat);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::menuLSLng);
-	RegisterFunction("ALT", OAPI_KEY_L, &ApolloRTCCMFD::menuLSAlt);
+	RegisterFunction("RAD", OAPI_KEY_L, &ApolloRTCCMFD::menuLSRadius);
 	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_svtarget);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
@@ -1871,8 +1871,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu55[] =
 	{
-		{ "Select Thruster", 0, 'T' },
 		{ "", 0, ' ' },
+		{ "Select Thruster", 0, 'T' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -1888,8 +1888,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu55, sizeof(mnu55) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleSPQDKIThruster);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleSPQDKIThruster);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
@@ -1922,17 +1922,17 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu56, sizeof(mnu56) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuMPTDirectInputVehicle);
-	RegisterFunction("COD", OAPI_KEY_C, &ApolloRTCCMFD::menuMPTDirectInputCode);
-	RegisterFunction("OPT", OAPI_KEY_I, &ApolloRTCCMFD::menuMPTDirectInputOption);
-	RegisterFunction("TIG", OAPI_KEY_G, &ApolloRTCCMFD::menuMPTDirectInputTIG);
-	RegisterFunction("DV", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTDirectInputDV);
-	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuMPTDirectInputAtt);
-
+	RegisterFunction("MPT", OAPI_KEY_V, &ApolloRTCCMFD::menuMPTDirectInputMPTCode);
+	RegisterFunction("REP", OAPI_KEY_C, &ApolloRTCCMFD::menuMPTDirectInputReplaceCode);
+	RegisterFunction("TIG", OAPI_KEY_I, &ApolloRTCCMFD::menuMPTDirectInputTIG);
 	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleMPTDirectInputThruster);
+	RegisterFunction("ATT", OAPI_KEY_G, &ApolloRTCCMFD::menuMPTDirectInputAttitude);
+	RegisterFunction("BPA", OAPI_KEY_A, &ApolloRTCCMFD::menuMPTDirectInputBurnParameters);
+
+	RegisterFunction("COO", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTDirectInputCoord);
+	RegisterFunction("ULL", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("DOC", OAPI_KEY_P, &ApolloRTCCMFD::menuMPTDirectInputDock);
 	RegisterFunction("CFG", OAPI_KEY_F, &ApolloRTCCMFD::menuMPTDirectInputFinalConfig);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("MPT", OAPI_KEY_M, &ApolloRTCCMFD::menuMPTDirectInputTransfer);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMPTPage);
 
@@ -2029,10 +2029,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("CSM", OAPI_KEY_C, &ApolloRTCCMFD::menuMPTInitM50CSMWT);
 	RegisterFunction("S4B", OAPI_KEY_S, &ApolloRTCCMFD::menuMPTInitM50SIVBWT);
 	RegisterFunction("LM", OAPI_KEY_L, &ApolloRTCCMFD::menuMPTInitM50LMWT);
-	RegisterFunction("AUT", OAPI_KEY_U, &ApolloRTCCMFD::menuMPTInitAutoUpdate);
+	RegisterFunction("LMA", OAPI_KEY_F, &ApolloRTCCMFD::menuMPTInitM50LMAscentWT);
 
 	RegisterFunction("CFG", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTInitM55Config);
-	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("AUT", OAPI_KEY_U, &ApolloRTCCMFD::menuMPTInitAutoUpdate);
 	RegisterFunction("M55", OAPI_KEY_M, &ApolloRTCCMFD::menuMPTM55Update);
 	RegisterFunction("M50", OAPI_KEY_N, &ApolloRTCCMFD::menuMPTM50Update);
 	RegisterFunction("TUP", OAPI_KEY_P, &ApolloRTCCMFD::menuMPTTrajectoryUpdate);
@@ -2275,6 +2275,74 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("ENT", OAPI_KEY_E, &ApolloRTCCMFD::menuSetRTETradeoffEntryProfile);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetEntryPage);
+
+
+	static const MFDBUTTONMENU mnu67[] =
+	{
+		{ "Generate DMT", 0, 'G' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu67, sizeof(mnu67) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("U20", OAPI_KEY_G, &ApolloRTCCMFD::menuGenerateDMT);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
+
+
+	static const MFDBUTTONMENU mnu68[] =
+	{
+		{ "Generate DMT", 0, 'G' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu68, sizeof(mnu68) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("U20", OAPI_KEY_G, &ApolloRTCCMFD::menuGenerateDMT);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

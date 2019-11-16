@@ -642,6 +642,8 @@ LDPP_33_1:
 	{
 		out.DeltaV_LVLH[ii] = DeltaV_LVLH[ii];
 		out.T_M[ii] = t_M[ii];
+		out.sv_before[ii] = LDPP_SV_E[ii][0];
+		out.V_after[ii] = LDPP_SV_E[ii][1].V;
 	}
 	if (opt.MODE == 7)
 	{

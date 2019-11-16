@@ -153,7 +153,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 
 	papiWriteScenario_double(scn, "LSLat", GC->LSLat);
 	papiWriteScenario_double(scn, "LSLng", GC->LSLng);
-	papiWriteScenario_double(scn, "LSAlt", GC->LSAlt);
+	papiWriteScenario_double(scn, "LSRadius", GC->rtcc->MCSMLR);
 	papiWriteScenario_double(scn, "TLAND", GC->t_Land);
 	papiWriteScenario_double(scn, "P30TIG", G->P30TIG);
 	papiWriteScenario_vec(scn, "DV_LVLH", G->dV_LVLH);
@@ -255,7 +255,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 
 	oapiWriteScenario_int(scn, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.InitConfigCode);
 	papiWriteScenario_double(scn, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CSMInitMass);
-	papiWriteScenario_double(scn, "MPTCM_LMInitMass", GC->rtcc->PZMPTCSM.LMInitDescentMass);
+	papiWriteScenario_double(scn, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.LMInitAscentMass);
+	papiWriteScenario_double(scn, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.LMInitDescentMass);
 	papiWriteScenario_double(scn, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.SIVBInitMass);
 	papiWriteScenario_double(scn, "MPTCM_TotalInitMass", GC->rtcc->PZMPTCSM.TotalInitMass);
 	oapiWriteScenario_int(scn, "MPTCM_number", GC->pCSMnumber);
@@ -264,7 +265,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	
 	oapiWriteScenario_int(scn, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.InitConfigCode);
 	papiWriteScenario_double(scn, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CSMInitMass);
-	papiWriteScenario_double(scn, "MPTLM_LMInitMass", GC->rtcc->PZMPTLEM.LMInitDescentMass);
+	papiWriteScenario_double(scn, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.LMInitAscentMass);
+	papiWriteScenario_double(scn, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.LMInitDescentMass);
 	papiWriteScenario_double(scn, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.SIVBInitMass);
 	papiWriteScenario_double(scn, "MPTLM_TotalInitMass", GC->rtcc->PZMPTLEM.TotalInitMass);
 	oapiWriteScenario_int(scn, "MPTLM_number", GC->pLMnumber);
@@ -338,7 +340,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 
 		papiReadScenario_double(line, "LSLat", GC->LSLat);
 		papiReadScenario_double(line, "LSLng", GC->LSLng);
-		papiReadScenario_double(line, "LSAlt", GC->LSAlt);
+		papiReadScenario_double(line, "LSRadius", GC->rtcc->MCSMLR);
 		papiReadScenario_double(line, "TLAND", GC->t_Land);
 		papiReadScenario_double(line, "P30TIG", G->P30TIG);
 		papiReadScenario_vec(line, "DV_LVLH", G->dV_LVLH);
@@ -440,7 +442,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 
 		papiReadScenario_int(line, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.InitConfigCode);
 		papiReadScenario_double(line, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CSMInitMass);
-		papiReadScenario_double(line, "MPTCM_LMInitMass", GC->rtcc->PZMPTCSM.LMInitDescentMass);
+		papiReadScenario_double(line, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.LMInitAscentMass);
+		papiReadScenario_double(line, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.LMInitDescentMass);
 		papiReadScenario_double(line, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.SIVBInitMass);
 		papiReadScenario_double(line, "MPTCM_TotalInitMass", GC->rtcc->PZMPTCSM.TotalInitMass);
 		papiReadScenario_int(line, "MPTCM_number", GC->pCSMnumber);
@@ -449,7 +452,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 
 		papiReadScenario_int(line, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.InitConfigCode);
 		papiReadScenario_double(line, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CSMInitMass);
-		papiReadScenario_double(line, "MPTLM_LMInitMass", GC->rtcc->PZMPTLEM.LMInitDescentMass);
+		papiReadScenario_double(line, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.LMInitAscentMass);
+		papiReadScenario_double(line, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.LMInitDescentMass);
 		papiReadScenario_double(line, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.SIVBInitMass);
 		papiReadScenario_double(line, "MPTLM_TotalInitMass", GC->rtcc->PZMPTLEM.TotalInitMass);
 		papiReadScenario_int(line, "MPTLM_number", GC->pLMnumber);
@@ -474,6 +478,14 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		{
 			GC->pLM = oapiGetVesselInterface(hVes);
 		}
+	}
+	if (GC->rtcc->PZMPTCSM.AnchorVector.MJD != 0)
+	{
+		GC->rtcc->PMSVCT(4, RTCC_MPT_CSM, &GC->rtcc->PZMPTCSM.AnchorVector);
+	}
+	if (GC->rtcc->PZMPTLEM.AnchorVector.MJD != 0)
+	{
+		GC->rtcc->PMSVCT(4, RTCC_MPT_LM, &GC->rtcc->PZMPTLEM.AnchorVector);
 	}
 }
 
@@ -1294,26 +1306,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "CSM/LM", 6);
 				}
 
-				if (G->csmenginetype == 0)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "SPS", 3);
-				}
-				else if (G->csmenginetype == 1)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "2xRCS +X", 8);
-				}
-				else if (G->csmenginetype == 2)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "4xRCS +X", 8);
-				}
-				else if (G->csmenginetype == 3)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "2xRCS -X", 8);
-				}
-				else if (G->csmenginetype == 4)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "4xRCS -X", 8);
-				}
+				ThrusterName(Buffer, G->manpadenginetype);
+				skp->Text(1* W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
 				if (G->vesseltype == 1)
 				{
@@ -1365,7 +1359,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "%+06.0f WGT", G->manpad.Weight);
 				skp->Text((int)(3.5 * W / 8), 3 * H / 26, Buffer, strlen(Buffer));
 
-				if (G->csmenginetype == 0)
+				if (G->manpadenginetype == RTCC_ENGINETYPE_CSMSPS)
 				{
 					sprintf(Buffer, "%+07.2f PTRIM", G->manpad.pTrim);
 					skp->Text((int)(3.5 * W / 8), 4 * H / 26, Buffer, strlen(Buffer));
@@ -1457,30 +1451,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			{
 				skp->Text(5 * W / 8, (int)(0.5 * H / 14), "P30 LM Maneuver", 15);
 
-				if (G->lemenginetype == 1)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "DPS", 3);
-				}
-				else if (G->lemenginetype == 0)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "APS", 3);
-				}
-				else if (G->lemenginetype == 2)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "2xRCS +X", 8);
-				}
-				else if (G->lemenginetype == 3)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "4xRCS +X", 8);
-				}
-				else if (G->lemenginetype == 4)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "2xRCS -X", 8);
-				}
-				else if (G->lemenginetype == 5)
-				{
-					skp->Text((int)(0.5 * W / 8), 4 * H / 14, "4xRCS -X", 8);
-				}
+				ThrusterName(Buffer, G->manpadenginetype);
+				skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 
 				if (G->vesseltype == 2)
 				{
@@ -1704,8 +1676,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 				sprintf(Buffer, "%.3f°", GC->LSLng*DEG);
 				skp->Text(5 * W / 8, 17 * H / 20, Buffer, strlen(Buffer));
 
-				skp->Text(4 * W / 8, 18 * H / 20, "Alt:", 4);
-				sprintf(Buffer, "%.2f NM", GC->LSAlt / 1852.0);
+				skp->Text(4 * W / 8, 18 * H / 20, "Rad:", 4);
+				sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
 				skp->Text(5 * W / 8, 18 * H / 20, Buffer, strlen(Buffer));
 
 				if (!G->PADSolGood)
@@ -1980,7 +1952,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f°", GC->LSLng*DEG);
 		skp->Text(5 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f NM", GC->LSAlt / 1852.0);
+		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
 		skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
 
 		if (GC->LOIEllipseRotation == 0)
@@ -2128,7 +2100,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->med_k16.Vehicle == 1)
+			if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_LM)
 			{
 				skp->Text(1 * W / 16, 4 * H / 14, "LEM", 3);
 			}
@@ -2913,7 +2885,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 10 * H / 14, "Min DV", 6);
 		}
 
-		if (G->csmenginetype == 0)
+		if (G->deorbitenginetype == RTCC_ENGINETYPE_CSMSPS)
 		{
 			skp->Text(1 * W / 8, 12 * H / 14, "SPS Deorbit", 11);
 		}
@@ -3717,7 +3689,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f°", GC->LSLng*DEG);
 		skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f NM", GC->LSAlt / 1852.0);
+		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
 		skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
 		skp->Text(5 * W / 8, 19 * H / 21, "TLAND:", 6);
 		GET_Display(Buffer, GC->t_Land);
@@ -3971,13 +3943,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(1 * W / 16, 2 * H / 14, "FDO Orbit Digitals", 18);
 		skp->Text(1 * W / 16, 4 * H / 14, "Space Digitals", 14);
 		skp->Text(1 * W / 16, 6 * H / 14, "Next Station Contacts", 21);
-		skp->Text(1 * W / 16, 8 * H / 14, "Predicted Site Acquisitions", 27);
+		skp->Text(1 * W / 16, 8 * H / 14, "PSAT", 4);
 		skp->Text(1 * W / 16, 10 * H / 14, "Checkout Monitor", 16);
 		skp->Text(1 * W / 16, 12 * H / 14, "Sunrise/Sunset Times", 20);
 
 		skp->Text(4 * W / 8, 2 * H / 14, "Moonrise/Moonset Times", 22);
 		skp->Text(4 * W / 8, 4 * H / 14, "FDO Launch Analog No 1", 22);
 		skp->Text(4 * W / 8, 6 * H / 14, "FDO Launch Analog No 2", 22);
+		skp->Text(4 * W / 8, 8 * H / 14, "Detailed Maneuver Table 1", 25);
+		skp->Text(4 * W / 8, 10 * H / 14, "Detailed Maneuver Table 2", 25);
 	}
 	else if (screen == 43)
 	{
@@ -4338,6 +4312,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].DELTAV);
 			skp->Text(14 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
+			sprintf(Buffer, "%.1f", GC->rtcc->MPTDISPLAY.man[i].DVREM);
+			skp->Text(18 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+
 			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].HA);
 			skp->Text(22 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
@@ -4345,7 +4322,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(26 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, GC->rtcc->MPTDISPLAY.man[i].code.c_str());
-			skp->Text(31 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(63 * W / 64, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 		}
 
 		for (unsigned i = 1;i < GC->rtcc->MPTDISPLAY.man.size();i++)
@@ -4612,7 +4589,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.3f°", GC->LSLng*DEG);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.2f NM", GC->LSAlt / 1852.0);
+		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
 		skp->Text(5 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 50)
@@ -4637,8 +4614,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.3f°", GC->LSLng*DEG);
 		skp->Text(2 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(4 * W / 8, 4 * H / 14, "ALT", 3);
-		sprintf(Buffer, "%.4f NM", GC->LSAlt / 1852.0);
+		skp->Text(4 * W / 8, 4 * H / 14, "RAD", 3);
+		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 32, 13 * H / 28, "OID", 3);
@@ -4908,8 +4885,64 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
+		if (GC->rtcc->med_m70.DeleteGET > 0)
+		{
+			GET_Display(Buffer, GC->rtcc->med_m70.DeleteGET);
+			skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 2 * H / 14, "Do not delete", 13);
+		}
+		
 		ThrusterName(Buffer, GC->rtcc->med_m70.Thruster);
-		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+		MPTAttitudeName(Buffer, GC->rtcc->med_m70.Attitude);
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_m70.UllageDT < 0)
+		{
+			sprintf_s(Buffer, "Nominal ullage");
+		}
+		else
+		{
+			if (GC->rtcc->med_m70.UllageQuads)
+			{
+				sprintf_s(Buffer, "4 quads, %.1f s", GC->rtcc->med_m70.UllageDT);
+			}
+			else
+			{
+				sprintf_s(Buffer, "2 quads, %.1f s", GC->rtcc->med_m70.UllageDT);
+			}
+		}
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_m70.Iteration)
+		{
+			skp->Text(1 * W / 8, 10 * H / 14, "Iterate", 7);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 10 * H / 14, "Do not iterate", 14);
+		}
+
+		if (GC->rtcc->med_m70.TimeFlag)
+		{
+			skp->Text(1 * W / 8, 12 * H / 14, "Impulsive TIG", 13);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 12 * H / 14, "Optimum TIG", 11);
+		}
+
+		if (GC->rtcc->med_m70.Thruster == RTCC_ENGINETYPE_LMDPS)
+		{
+			sprintf_s(Buffer, "%.1f s", GC->rtcc->med_m70.TenPercentDT);
+			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.3f %%", GC->rtcc->med_m70.DPSThrustFactor);
+			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		}
 
 		GET_Display(Buffer, G->P30TIG);
 		skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
@@ -4933,97 +4966,114 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		if (GC->rtcc->med_m66.Table == 1)
-		{
-			skp->Text(1 * W / 16, 2 * H / 14, "LM", 2);
-		}
-		else
+		if (GC->rtcc->med_m66.Table == RTCC_MPT_CSM)
 		{
 			skp->Text(1 * W / 16, 2 * H / 14, "CSM", 3);
 		}
-
-		sprintf(Buffer, GC->rtcc->med_m66.code.c_str());
-		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-
-		if (GC->rtcc->med_m66.BurnParamNo == 1)
+		else
 		{
-			skp->Text(1 * W / 16, 6 * H / 14, "Specify DV or DT", 16);
-
-			if (GC->rtcc->med_m40.P1_DV == 0.0)
-			{
-				sprintf(Buffer, "%.1f s", GC->rtcc->med_m40.P1_DT);
-			}
-			else
-			{
-				sprintf(Buffer, "%+.2f ft/s", GC->rtcc->med_m40.P1_DV / 0.3048);
-			}
-			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%06.2f° %06.2f° %06.2f°", GC->rtcc->med_m66.Att.x*DEG, GC->rtcc->med_m66.Att.y*DEG, GC->rtcc->med_m66.Att.z*DEG);
-			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
-
-			if (GC->rtcc->med_m66.CoordInd == 0)
-			{
-				skp->Text(9 * W / 16, 12 * H / 14, "LVLH", 4);
-			}
-			else if (GC->rtcc->med_m66.CoordInd == 1)
-			{
-				skp->Text(9 * W / 16, 12 * H / 14, "IMU", 4);
-			}
-			else
-			{
-				skp->Text(9 * W / 16, 12 * H / 14, "FDAI", 4);
-			}
+			skp->Text(1 * W / 16, 2 * H / 14, "LM", 2);
 		}
-		else if (GC->rtcc->med_m66.BurnParamNo == 2)
-		{
-			skp->Text(1 * W / 16, 6 * H / 14, "DV Vector (P30)", 15);
 
-			sprintf(Buffer, "%+.1f %+.1f %+.1f", GC->rtcc->med_m40.P2_DV.x / 0.3048, GC->rtcc->med_m40.P2_DV.y / 0.3048, GC->rtcc->med_m40.P2_DV.z / 0.3048);
-			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
-		}
-		else if (GC->rtcc->med_m66.BurnParamNo == 3)
+		if (GC->rtcc->med_m66.ReplaceCode == 0)
 		{
-			skp->Text(1 * W / 16, 6 * H / 14, "DV Vector (IMU)", 15);
-
-			sprintf(Buffer, "%+.1f %+.1f %+.1f", GC->rtcc->med_m40.P3_DV.x / 0.3048, GC->rtcc->med_m40.P3_DV.y / 0.3048, GC->rtcc->med_m40.P3_DV.z / 0.3048);
-			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 16, 4 * H / 14, "Don't replace", 13);
 		}
-		else if (GC->rtcc->med_m66.BurnParamNo == 4)
+		else
 		{
-			skp->Text(1 * W / 16, 6 * H / 14, "DV Vector (LVLH)", 16);
-
-			sprintf(Buffer, "%+.1f %+.1f %+.1f", GC->rtcc->med_m40.P4_DV.x / 0.3048, GC->rtcc->med_m40.P4_DV.y / 0.3048, GC->rtcc->med_m40.P4_DV.z / 0.3048);
-			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
-		}
-		else if (GC->rtcc->med_m66.BurnParamNo == 5)
-		{
-			skp->Text(1 * W / 16, 6 * H / 14, "Lambert", 7);
+			sprintf_s(Buffer, "%d", GC->rtcc->med_m66.ReplaceCode);
+			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		GET_Display(Buffer, GC->rtcc->med_m66.GETBI);
-		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
 
 		ThrusterName(Buffer, GC->rtcc->med_m66.Thruster);
-		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		MPTAttitudeName(Buffer, GC->rtcc->med_m66.AttitudeOpt);
+		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_m66.BurnParamNo == 1)
+		{
+			char Buffer2[4];
+			skp->Text(1 * W / 16, 12 * H / 14, "P1: DV or DT", 16);
+			if (GC->rtcc->PZBURN.P1_DVIND == 0)
+			{
+				sprintf(Buffer2, "MAG");
+			}
+			if (GC->rtcc->PZBURN.P1_DVIND == 1)
+			{
+				sprintf(Buffer2, "DVC");
+			}
+			else
+			{
+				sprintf(Buffer2, "XBT");
+			}
+			sprintf(Buffer, "%.1f ft/s, %s, %.1f s", GC->rtcc->PZBURN.P1_DV / 0.3048, Buffer2, GC->rtcc->PZBURN.P1_DT);
+			skp->Text(1 * W / 16, 13 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->med_m66.BurnParamNo == 2)
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "DV Vector (P30)", 15);
+
+			sprintf(Buffer, "%+.1f %+.1f %+.1f", GC->rtcc->PZBURN.P2_DV.x / 0.3048, GC->rtcc->PZBURN.P2_DV.y / 0.3048, GC->rtcc->PZBURN.P2_DV.z / 0.3048);
+			skp->Text(1 * W / 16, 13 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->med_m66.BurnParamNo == 3)
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "DV Vector (IMU)", 15);
+
+			sprintf(Buffer, "%+.1f %+.1f %+.1f", GC->rtcc->PZBURN.P3_DV.x / 0.3048, GC->rtcc->PZBURN.P3_DV.y / 0.3048, GC->rtcc->PZBURN.P3_DV.z / 0.3048);
+			skp->Text(1 * W / 16, 13 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->med_m66.BurnParamNo == 4)
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "DV Vector (LVLH)", 16);
+
+			sprintf(Buffer, "%+.1f %+.1f %+.1f", GC->rtcc->PZBURN.P4_DV.x / 0.3048, GC->rtcc->PZBURN.P4_DV.y / 0.3048, GC->rtcc->PZBURN.P4_DV.z / 0.3048);
+			skp->Text(1 * W / 16, 13 * H / 14, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->med_m66.BurnParamNo == 5)
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "Lambert", 7);
+		}		
+
+		if (GC->rtcc->med_m66.BurnParamNo == 1)
+		{
+			if (GC->rtcc->med_m66.CoordInd == 0)
+			{
+				skp->Text(9 * W / 16, 2 * H / 14, "LVLH", 4);
+			}
+			else if (GC->rtcc->med_m66.CoordInd == 1)
+			{
+				skp->Text(9 * W / 16, 2 * H / 14, "IMU", 4);
+			}
+			else
+			{
+				skp->Text(9 * W / 16, 2 * H / 14, "FDAI", 4);
+			}
+			sprintf(Buffer, "%06.2f° %06.2f° %06.2f°", GC->rtcc->med_m66.Att.x*DEG, GC->rtcc->med_m66.Att.y*DEG, GC->rtcc->med_m66.Att.z*DEG);
+			skp->Text(9 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
+		}
 
 		if (GC->rtcc->med_m66.ConfigChangeInd == 0)
 		{
-			skp->Text(5 * W / 8, 4 * H / 14, "No change", 9);
+			skp->Text(5 * W / 8, 6 * H / 14, "No change", 9);
 		}
 		else
 		{
 			if (GC->rtcc->med_m66.ConfigChangeInd == 1)
 			{
-				skp->Text(5 * W / 8, 4 * H / 14, "Undocking", 9);
+				skp->Text(5 * W / 8, 6 * H / 14, "Undocking", 9);
 			}
 			else if (GC->rtcc->med_m66.ConfigChangeInd == 2)
 			{
-				skp->Text(5 * W / 8, 4 * H / 14, "Docking", 7);
+				skp->Text(5 * W / 8, 6 * H / 14, "Docking", 7);
 			}
 
 			VehicleConfigName(Buffer, GC->rtcc->med_m66.FinalConfig);
-			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 57)
@@ -5074,7 +5124,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(9 * W / 32, 3 * H / 28, "R-DAY", 5);
 		sprintf(Buffer, "%02d:%02d:%04d", GC->checkmon.R_Day[0], GC->checkmon.R_Day[1], GC->checkmon.R_Day[2]);
-		skp->Text(12 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(13 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(10 * W / 32, 4 * H / 28, "VID", 3);
 		skp->Text(7 * W / 32, 5 * H / 28, "XT", 2);
 		skp->Text(18 * W / 32, 3 * H / 28, "K-FAC", 5);
@@ -5280,7 +5330,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		if (GC->rtcc->med_m50.Table == 1)
+		if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
 		{
 			skp->Text(1 * W / 16, 2 * H / 14, "LM", 2);
 		}
@@ -5289,7 +5339,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 2 * H / 14, "CSM", 3);
 		}
 
-		if (GC->rtcc->med_m50.Table == 1)
+		if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
 			{
 				if (GC->pLM != NULL)
 				{
@@ -5342,6 +5392,16 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		else
 		{
 			skp->Text(1 * W / 16, 10 * H / 14, "No Update", 9);
+		}
+
+		if (GC->rtcc->med_m50.LMASCWT >= 0)
+		{
+			sprintf(Buffer, "%.0f lbs", GC->rtcc->med_m50.LMASCWT / 0.45359237);
+			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "No Update", 9);
 		}
 
 		VehicleConfigName(Buffer, GC->rtcc->med_m55.ConfigCode);
@@ -5989,6 +6049,300 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%d/5", RTETradeoffScreen);
 		skp->Text(15 * W / 16, 1 * H / 14, Buffer, strlen(Buffer));
 	}	
+	//Detailed Maneuver Table 1 and 2
+	else if (screen == 67 || screen == 68)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+
+		DetailedManeuverTable *tab;
+		if (screen == 67)
+		{
+			tab = &GC->rtcc->DMTBuffer[0];
+			skp->Text(4 * W / 8, 1 * H / 14, "FDO DETAILED MANEUVER TABLE (MSK 0054)", 38);
+		}
+		else
+		{
+			tab = &GC->rtcc->DMTBuffer[1];
+			skp->Text(4 * W / 8, 1 * H / 14, "FDO DETAILED MANEUVER TABLE (MSK 0069)", 38);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->SetFont(font2);
+
+		skp->Text(1 * W / 64, 5 * H / 32, "C STA ID", 8);
+		skp->Text(1 * W / 64, 6 * H / 32, "GMTV", 4);
+		skp->Text(1 * W / 64, 7 * H / 32, "GETV", 4);
+		skp->Text(1 * W / 64, 8 * H / 32, "CODE", 4);
+
+		skp->Text(18 * W / 64, 5 * H / 32, "L STA ID", 8);
+		skp->Text(18 * W / 64, 6 * H / 32, "GMTV", 4);
+		skp->Text(18 * W / 64, 7 * H / 32, "GETV", 4);
+		skp->Text(18 * W / 64, 8 * H / 32, "REF", 3);
+
+		skp->Text(35 * W / 64, 5 * H / 32, "C STA ID", 8);
+		skp->Text(35 * W / 64, 6 * H / 32, "GMTV", 4);
+		skp->Text(35 * W / 64, 7 * H / 32, "GETV", 4);
+		skp->Text(35 * W / 64, 8 * H / 32, "GETR", 4);
+
+		skp->Text(52 * W / 64, 5 * H / 32, "WT", 2);
+		skp->Text(52 * W / 64, 6 * H / 32, "WC", 2);
+		skp->Text(52 * W / 64, 7 * H / 32, "WL", 2);
+		skp->Text(52 * W / 64, 8 * H / 32, "WF", 2);
+
+		skp->Text(1 * W / 64, 10 * H / 32, "GETI", 4);
+		skp->Text(1 * W / 64, 11 * H / 32, "PETI", 4);
+		skp->Text(1 * W / 64, 12 * H / 32, "DVM", 3);
+		skp->Text(1 * W / 64, 13 * H / 32, "DVREM", 5);
+		skp->Text(1 * W / 64, 14 * H / 32, "DVC", 3);
+
+		skp->Text(18 * W / 64, 10 * H / 32, "DT B", 4);
+		skp->Text(18 * W / 64, 11 * H / 32, "DT U", 4);
+
+		skp->Text(29 * W / 64, 10 * H / 32, "DT TO", 5);
+		skp->Text(29 * W / 64, 11 * H / 32, "DV TO", 5);
+
+		skp->Text(40 * W / 64, 10 * H / 32, "REFSMMAT", 8);
+
+		skp->Text(52 * W / 64, 10 * H / 32, "DEL P", 5);
+		skp->Text(52 * W / 64, 11 * H / 32, "DEL Y", 5);
+
+		skp->Text(17 * W / 64, 12 * H / 32, "VGX", 3);
+		skp->Text(17 * W / 64, 13 * H / 32, "VGY", 3);
+		skp->Text(17 * W / 64, 14 * H / 32, "VGZ", 3);
+
+		skp->Text(29 * W / 64, 12 * H / 32, "OR", 2);
+		skp->Text(29 * W / 64, 13 * H / 32, "IP", 2);
+		skp->Text(29 * W / 64, 14 * H / 32, "MY", 2);
+
+		skp->Text(39 * W / 64, 12 * H / 32, "YB", 2);
+		skp->Text(39 * W / 64, 13 * H / 32, "PB", 2);
+		skp->Text(39 * W / 64, 14 * H / 32, "RB", 2);
+
+		skp->Text(52 * W / 64, 12 * H / 32, "YH", 2);
+		skp->Text(52 * W / 64, 13 * H / 32, "PH", 2);
+		skp->Text(52 * W / 64, 14 * H / 32, "RH", 2);
+
+		skp->Text(1 * W / 64, 16 * H / 32, "VF", 2);
+		skp->Text(1 * W / 64, 17 * H / 32, "VS", 2);
+		skp->Text(1 * W / 64, 18 * H / 32, "VD", 2);
+		skp->Text(1 * W / 64, 19 * H / 32, "DH", 2);
+		skp->Text(1 * W / 64, 20 * H / 32, "PHASE", 5);
+		skp->Text(1 * W / 64, 21 * H / 32, "PHASE DOT", 9);
+		skp->Text(1 * W / 64, 22 * H / 32, "WEDGE ANG", 9);
+		skp->Text(1 * W / 64, 23 * H / 32, "YD", 2);
+
+		skp->Text(17 * W / 64, 16 * H / 32, "H BI", 4);
+		skp->Text(17 * W / 64, 17 * H / 32, "P BI", 4);
+		skp->Text(17 * W / 64, 18 * H / 32, "L BI", 4);
+		skp->Text(17 * W / 64, 19 * H / 32, "F BI", 4);
+
+		skp->Text(29 * W / 64, 16 * H / 32, "HA", 2);
+		skp->Text(29 * W / 64, 17 * H / 32, "HP", 2);
+		skp->Text(29 * W / 64, 18 * H / 32, "L AN", 4);
+		skp->Text(29 * W / 64, 19 * H / 32, "E", 1);
+		skp->Text(29 * W / 64, 20 * H / 32, "I", 1);
+		skp->Text(29 * W / 64, 21 * H / 32, "WP", 2);
+
+		skp->Text(42 * W / 64, 16 * H / 32, "VP", 2);
+		skp->Text(42 * W / 64, 17 * H / 32, "THETA P", 7);
+		skp->Text(42 * W / 64, 18 * H / 32, "DELTA P", 7);
+		skp->Text(42 * W / 64, 19 * H / 32, "P LLS", 5);
+		skp->Text(42 * W / 64, 20 * H / 32, "L LLS", 5);
+		skp->Text(42 * W / 64, 21 * H / 32, "R LLS", 5);
+
+		skp->Text(1 * W / 64, 25 * H / 32, "PGNS", 4);
+		skp->Text(1 * W / 64, 26 * H / 32, "EXT DV", 6);
+		skp->Text(1 * W / 64, 27 * H / 32, "GETI", 4);
+		skp->Text(2 * W / 64, 28 * H / 32, "VX", 2);
+		skp->Text(2 * W / 64, 29 * H / 32, "VY", 2);
+		skp->Text(2 * W / 64, 30 * H / 32, "VZ", 2);
+
+		skp->Text(18 * W / 64, 25 * H / 32, "AGS", 3);
+		skp->Text(18 * W / 64, 26 * H / 32, "EXT DV", 6);
+		skp->Text(18 * W / 64, 27 * H / 32, "GETI", 4);
+		skp->Text(19 * W / 64, 28 * H / 32, "VX", 2);
+		skp->Text(19 * W / 64, 29 * H / 32, "VY", 2);
+		skp->Text(19 * W / 64, 30 * H / 32, "VZ", 2);
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		sprintf_s(Buffer, "%s", tab->C_STA_ID);
+		skp->Text(17 * W / 64, 5 * H / 32, Buffer, strlen(Buffer));
+		GET_Display3(Buffer, tab->C_GMTV);
+		skp->Text(17 * W / 64, 6 * H / 32, Buffer, strlen(Buffer));
+		GET_Display3(Buffer, tab->C_GETV);
+		skp->Text(17 * W / 64, 7 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%s", tab->CODE);
+		skp->Text(17 * W / 64, 8 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%s", tab->L_STA_ID);
+		skp->Text(34 * W / 64, 5 * H / 32, Buffer, strlen(Buffer));
+		GET_Display3(Buffer, tab->L_GMTV);
+		skp->Text(34 * W / 64, 6 * H / 32, Buffer, strlen(Buffer));
+		GET_Display3(Buffer, tab->L_GETV);
+		skp->Text(34 * W / 64, 7 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%s", tab->REF);
+		skp->Text(34 * W / 64, 8 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%s", tab->X_STA_ID);
+		skp->Text(51 * W / 64, 5 * H / 32, Buffer, strlen(Buffer));
+		GET_Display3(Buffer, tab->X_GMTV);
+		skp->Text(51 * W / 64, 6 * H / 32, Buffer, strlen(Buffer));
+		GET_Display3(Buffer, tab->X_GETV);
+		skp->Text(51 * W / 64, 7 * H / 32, Buffer, strlen(Buffer));
+		GET_Display3(Buffer, tab->GETR);
+		skp->Text(51 * W / 64, 8 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%07.1f", tab->WT);
+		skp->Text(63 * W / 64, 5 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%07.1f", tab->WC);
+		skp->Text(63 * W / 64, 6 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%07.1f", tab->WL);
+		skp->Text(63 * W / 64, 7 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%07.1f", tab->WF);
+		skp->Text(63 * W / 64, 8 * H / 32, Buffer, strlen(Buffer));
+
+		GET_Display3(Buffer, tab->GETI);
+		skp->Text(17 * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
+		GET_Display3(Buffer, tab->PETI);
+		skp->Text(17 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->DVM);
+		skp->Text(15 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->DVREM);
+		skp->Text(15 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->DVC);
+		skp->Text(15 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
+
+		int hh, mm;
+		double ss;
+		SStoHHMMSS(tab->DT_B, hh, mm, ss);
+		sprintf_s(Buffer, "%d:%04.1f", mm, ss);
+		skp->Text(28 * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->DT_U);
+		skp->Text(28 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->VG.x);
+		skp->Text(28 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->VG.y);
+		skp->Text(28 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->VG.z);
+		skp->Text(28 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.2f", tab->DT_TO);
+		skp->Text(39 * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->DV_TO);
+		skp->Text(39 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->IMUAtt.x);
+		skp->Text(37 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->IMUAtt.x);
+		skp->Text(37 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->IMUAtt.x);
+		skp->Text(37 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.1f", tab->FDAIAtt.x);
+		skp->Text(51 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->FDAIAtt.y);
+		skp->Text(51 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->FDAIAtt.z);
+		skp->Text(51 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%5.2f", tab->DEL_P);
+		skp->Text(63 * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%5.2f", tab->DEL_Y);
+		skp->Text(63 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->LVLHAtt.x);
+		skp->Text(62 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->LVLHAtt.y);
+		skp->Text(62 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1f", tab->LVLHAtt.z);
+		skp->Text(62 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.2f", tab->VF);
+		skp->Text(15 * W / 64, 16 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->VS);
+		skp->Text(15 * W / 64, 17 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->VD);
+		skp->Text(15 * W / 64, 18 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->DH);
+		skp->Text(15 * W / 64, 19 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.3f", tab->PHASE);
+		skp->Text(18 * W / 64, 20 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.3f", tab->PHASE_DOT);
+		skp->Text(18 * W / 64, 21 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.3f", tab->WEDGE_ANG);
+		skp->Text(18 * W / 64, 22 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->YD);
+		skp->Text(18 * W / 64, 23 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.1f", tab->H_BI);
+		skp->Text(28 * W / 64, 16 * H / 32, Buffer, strlen(Buffer));
+		if (tab->P_BI > 0)
+		{
+			sprintf_s(Buffer, "%.2f N", tab->P_BI);
+		}
+		else
+		{
+			sprintf_s(Buffer, "%.2f S", abs(tab->P_BI));
+		}
+		skp->Text(28 * W / 64, 17 * H / 32, Buffer, strlen(Buffer));
+		if (tab->L_BI > 0)
+		{
+			sprintf_s(Buffer, "%.2f E", tab->L_BI);
+		}
+		else
+		{
+			sprintf_s(Buffer, "%.2f W", abs(tab->L_BI));
+		}
+		skp->Text(28 * W / 64, 18 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->F_BI);
+		skp->Text(28 * W / 64, 19 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.3f", tab->HA);
+		skp->Text(41 * W / 64, 16 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.3f", tab->HP);
+		skp->Text(41 * W / 64, 17 * H / 32, Buffer, strlen(Buffer));
+		if (tab->L_AN > 0)
+		{
+			sprintf_s(Buffer, "%.2f E", tab->L_AN);
+		}
+		else
+		{
+			sprintf_s(Buffer, "%.2f W", abs(tab->L_AN));
+		}
+		skp->Text(41 * W / 64, 18 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.8f", tab->E);
+		skp->Text(41 * W / 64, 19 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->I);
+		skp->Text(41 * W / 64, 20 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->WP);
+		skp->Text(41 * W / 64, 21 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.2f", tab->VP);
+		skp->Text(57 * W / 64, 16 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->THETA_P);
+		skp->Text(57 * W / 64, 17 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->DELTA_P);
+		skp->Text(57 * W / 64, 18 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.2f", tab->R_LLS);
+		skp->Text(57 * W / 64, 21 * H / 32, Buffer, strlen(Buffer));
+
+		GET_Display3(Buffer, tab->PGNS_GETI);
+		skp->Text(17 * W / 64, 27 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->PGNS_DV.x);
+		skp->Text(17 * W / 64, 28 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->PGNS_DV.y);
+		skp->Text(17 * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->PGNS_DV.z);
+		skp->Text(17 * W / 64, 30 * H / 32, Buffer, strlen(Buffer));
+
+		GET_Display3(Buffer, tab->AGS_GETI);
+		skp->Text(34 * W / 64, 27 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->AGS_DV.x);
+		skp->Text(34 * W / 64, 28 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->AGS_DV.y);
+		skp->Text(34 * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.4f", tab->AGS_DV.z);
+		skp->Text(34 * W / 64, 30 * H / 32, Buffer, strlen(Buffer));
+	}
 	return true;
 }
 
@@ -6092,6 +6446,12 @@ void ApolloRTCCMFD::GET_Display2(char* Buff, double time) //Display a time in th
 	sprintf(Buff, "%03.0f:%02.0f:%05.2f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
 }
 
+void ApolloRTCCMFD::GET_Display3(char* Buff, double time) //Display a time in the format hhh:mm:ss.ss
+{
+	double time2 = round(time);
+	sprintf(Buff, "%03.0f:%02.0f:%04.1f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
+}
+
 void ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
 {
 	//int velf;
@@ -6109,33 +6469,49 @@ void ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
 
 void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 {
-	if (n == RTCC_ENGINETYPE_SPS)
+	if (n == RTCC_ENGINETYPE_CSMSPS)
 	{
 		sprintf(Buff, "SPS");
 	}
-	else if (n == RTCC_ENGINETYPE_APS)
+	else if (n == RTCC_ENGINETYPE_LMAPS)
 	{
 		sprintf(Buff, "APS");
 	}
-	else if (n == RTCC_ENGINETYPE_DPS)
+	else if (n == RTCC_ENGINETYPE_LMDPS)
 	{
 		sprintf(Buff, "DPS");
 	}
-	else if (n == RTCC_ENGINETYPE_RCSPLUS2)
+	else if (n == RTCC_ENGINETYPE_CSMRCSPLUS2)
 	{
-		sprintf(Buff, "RCS +X (2 quads)");
+		sprintf(Buff, "CSM RCS +X (2 quads)");
 	}
-	else if (n == RTCC_ENGINETYPE_RCSPLUS4)
+	else if (n == RTCC_ENGINETYPE_LMRCSPLUS2)
 	{
-		sprintf(Buff, "RCS +X (4 quads)");
+		sprintf(Buff, "LM RCS +X (2 quads)");
 	}
-	else if (n == RTCC_ENGINETYPE_RCSMINUS2)
+	else if (n == RTCC_ENGINETYPE_CSMRCSPLUS4)
 	{
-		sprintf(Buff, "RCS -X (2 quads)");
+		sprintf(Buff, "CSM RCS +X (4 quads)");
 	}
-	else if (n == RTCC_ENGINETYPE_RCSMINUS4)
+	else if (n == RTCC_ENGINETYPE_LMRCSPLUS4)
 	{
-		sprintf(Buff, "RCS -X (4 quads)");
+		sprintf(Buff, "LM RCS +X (4 quads)");
+	}
+	else if (n == RTCC_ENGINETYPE_CSMRCSMINUS2)
+	{
+		sprintf(Buff, "CSM RCS -X (2 quads)");
+	}
+	else if (n == RTCC_ENGINETYPE_LMRCSMINUS2)
+	{
+		sprintf(Buff, "LM RCS -X (2 quads)");
+	}
+	else if (n == RTCC_ENGINETYPE_CSMRCSMINUS4)
+	{
+		sprintf(Buff, "CSM RCS -X (4 quads)");
+	}
+	else if (n == RTCC_ENGINETYPE_LMRCSMINUS4)
+	{
+		sprintf(Buff, "LM RCS -X (4 quads)");
 	}
 	else if (n == RTCC_ENGINETYPE_SIVB_APS)
 	{
@@ -6144,6 +6520,38 @@ void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 	else if (n == RTCC_ENGINETYPE_LOX_DUMP)
 	{
 		sprintf(Buff, "S-IVB LOX");
+	}
+	else
+	{
+		sprintf(Buff, "");
+	}
+}
+
+void ApolloRTCCMFD::MPTAttitudeName(char *Buff, int n)
+{
+	if (n == RTCC_ATTITUDE_INERTIAL)
+	{
+		sprintf_s(Buff, 100, "Inertial");
+	}
+	else if (n == RTCC_ATTITUDE_MANUAL)
+	{
+		sprintf_s(Buff, 100, "Manual");
+	}
+	else if (n == RTCC_ATTITUDE_LAMBERT)
+	{
+		sprintf_s(Buff, 100, "Lambert (N/A)");
+	}
+	else if (n == RTCC_ATTITUDE_PGNS_EXDV)
+	{
+		sprintf_s(Buff, 100, "PGNS External DV");
+	}
+	else if (n == RTCC_ATTITUDE_AGS_EXDV)
+	{
+		sprintf_s(Buff, 100, "AGS External DV");
+	}
+	else
+	{
+		sprintf_s(Buff, 100, "");
 	}
 }
 
@@ -6172,6 +6580,22 @@ void ApolloRTCCMFD::VehicleConfigName(char *Buff, int n)
 	else if (n == RTCC_CONFIG_CSM_LM_SIVB)
 	{
 		sprintf(Buff, "CSM+LM+SIVB");
+	}
+	else if (n == RTCC_CONFIG_ASC)
+	{
+		sprintf(Buff, "LM Asc");
+	}
+	else if (n == RTCC_CONFIG_CSM_ASC)
+	{
+		sprintf(Buff, "CSM+Asc");
+	}
+	else if (n == RTCC_CONFIG_DSC)
+	{
+		sprintf(Buff, "LM Dsc");
+	}
+	else
+	{
+		sprintf(Buff, "");
 	}
 }
 
@@ -6652,6 +7076,18 @@ void ApolloRTCCMFD::menuSetRTETradeoffDisplayPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetDetailedManeuverTableNo1Page()
+{
+	screen = 67;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetDetailedManeuverTableNo2Page()
+{
+	screen = 68;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -6923,137 +7359,109 @@ void ApolloRTCCMFD::set_MissionNumber(int mission)
 	GC->SetMissionSpecificParameters();
 }
 
-void ApolloRTCCMFD::menuMPTDirectInputVehicle()
+void ApolloRTCCMFD::menuMPTDirectInputMPTCode()
 {
-	if (GC->rtcc->med_m66.Table < 2)
+	if (GC->rtcc->med_m66.Table == RTCC_MPT_CSM)
 	{
-		GC->rtcc->med_m66.Table++;
+		GC->rtcc->med_m66.Table = RTCC_MPT_LM;
 	}
 	else
 	{
-		GC->rtcc->med_m66.Table = 1;
+		GC->rtcc->med_m66.Table = RTCC_MPT_CSM;
 	}
 }
 
-void ApolloRTCCMFD::menuMPTDirectInputOption()
+void ApolloRTCCMFD::menuMPTDirectInputReplaceCode()
 {
-	if (GC->rtcc->med_m66.BurnParamNo < 5)
+	bool MPTDirectInputReplaceCodeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter maneuver to replace (0 for none):", MPTDirectInputReplaceCodeInput, 0, 20, (void*)this);
+}
+
+bool MPTDirectInputReplaceCodeInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_MPTDirectInputReplaceCode(atoi(str));
+	return true;
+}
+
+void ApolloRTCCMFD::set_MPTDirectInputReplaceCode(unsigned n)
+{
+	GC->rtcc->med_m66.ReplaceCode = n;
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputAttitude()
+{
+	if (GC->rtcc->med_m66.AttitudeOpt < RTCC_ATTITUDE_AGS_EXDV)
 	{
-		GC->rtcc->med_m66.BurnParamNo++;
+		GC->rtcc->med_m66.AttitudeOpt++;
 	}
 	else
 	{
-		GC->rtcc->med_m66.BurnParamNo = 1;
+		GC->rtcc->med_m66.AttitudeOpt = RTCC_ATTITUDE_INERTIAL;
 	}
 }
 
-void ApolloRTCCMFD::menuMPTDirectInputDV()
+void ApolloRTCCMFD::menuMPTDirectInputBurnParameters()
+{
+	bool MPTDirectInputM40DataInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the burn parameter (P1-P7) or DV (Format: M40,PX,X,Y,Z;):", MPTDirectInputM40DataInput, 0, 20, (void*)this);
+}
+
+bool MPTDirectInputM40DataInput(void *id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_MPTDirectInputM40Data(str);
+}
+
+bool ApolloRTCCMFD::set_MPTDirectInputM40Data(char *str)
+{
+	if (strlen(str) == 2)
+	{
+		char buff = str[1];
+		int parm = buff - '0';
+		if (parm < 1 || parm > 7)
+		{
+			return false;
+		}
+		GC->rtcc->med_m66.BurnParamNo = parm;
+		return true;
+	}
+
+	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, str);
+	G->GeneralMEDRequest();
+	return true;
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputCoord()
 {
 	if (GC->rtcc->med_m66.BurnParamNo == 1)
 	{
-		bool MPTDirectInputDTorDVInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the DT/DV for the maneuver (Format: DT/DV=X)", MPTDirectInputDTorDVInput, 0, 20, (void*)this);
-	}
-	else if (GC->rtcc->med_m66.BurnParamNo >= 2 && GC->rtcc->med_m66.BurnParamNo <= 4)
-	{
-		bool MPTDirectInputDVInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the DV for the maneuver (Format: DVX DVY DVZ)", MPTDirectInputDVInput, 0, 20, (void*)this);
+		bool MPTDirectInputCoordInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the attitude for the maneuver (Format: LVLH/IMU/FDAI=X Y Z)", MPTDirectInputCoordInput, 0, 20, (void*)this);
 	}
 }
 
-bool MPTDirectInputDVInput(void *id, char *str, void *data)
-{
-	VECTOR3 DV;
-
-	if (sscanf(str, "%lf %lf %lf", &DV.x, &DV.y, &DV.z) == 3)
-	{
-		((ApolloRTCCMFD*)data)->set_MPTDirectInputDV(DV*0.3048);
-
-		return true;
-
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MPTDirectInputDV(VECTOR3 DV)
-{
-	if (GC->rtcc->med_m66.BurnParamNo == 2)
-	{
-		GC->rtcc->med_m40.P2_DV = DV;
-	}
-	else if (GC->rtcc->med_m66.BurnParamNo == 3)
-	{
-		GC->rtcc->med_m40.P3_DV = DV;
-	}
-	else if (GC->rtcc->med_m66.BurnParamNo == 4)
-	{
-		GC->rtcc->med_m40.P4_DV = DV;
-	}
-}
-
-bool MPTDirectInputDTorDVInput(void *id, char *str, void *data)
-{
-	double val;
-
-	if (sscanf(str, "DT=%lf", &val) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_MPTDirectInputDTorDV(val, true);
-
-		return true;
-	}
-	else if (sscanf(str, "DV=%lf", &val) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_MPTDirectInputDTorDV(val, false);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MPTDirectInputDTorDV(double val, bool IsDT)
-{
-	if (IsDT)
-	{
-		GC->rtcc->med_m40.P1_DT = val;
-	}
-	else
-	{
-		GC->rtcc->med_m40.P1_DV = val * 0.3048;
-	}
-}
-
-void ApolloRTCCMFD::menuMPTDirectInputAtt()
-{
-	if (GC->rtcc->med_m66.BurnParamNo == 1)
-	{
-		bool MPTDirectInputAttInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the attitude for the maneuver (Format: LVLH/IMU/FDAI=X Y Z)", MPTDirectInputAttInput, 0, 20, (void*)this);
-	}
-}
-
-bool MPTDirectInputAttInput(void *id, char *str, void *data)
+bool MPTDirectInputCoordInput(void *id, char *str, void *data)
 {
 	VECTOR3 Att;
 
 	if (sscanf(str, "LVLH=%lf %lf %lf", &Att.x, &Att.y, &Att.z) == 3)
 	{
-		((ApolloRTCCMFD*)data)->set_MPTDirectInputAtt(Att*RAD, 0);
+		((ApolloRTCCMFD*)data)->set_MPTDirectInputCoord(Att*RAD, 0);
 		return true;
 	}
 	else if (sscanf(str, "IMU=%lf %lf %lf", &Att.x, &Att.y, &Att.z) == 3)
 	{
-		((ApolloRTCCMFD*)data)->set_MPTDirectInputAtt(Att*RAD, 1);
+		((ApolloRTCCMFD*)data)->set_MPTDirectInputCoord(Att*RAD, 1);
 		return true;
 	}
 	else if (sscanf(str, "FDAI=%lf %lf %lf", &Att.x, &Att.y, &Att.z) == 3)
 	{
-		((ApolloRTCCMFD*)data)->set_MPTDirectInputAtt(Att*RAD, 2);
+		((ApolloRTCCMFD*)data)->set_MPTDirectInputCoord(Att*RAD, 2);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_MPTDirectInputAtt(VECTOR3 Att, int mode)
+void ApolloRTCCMFD::set_MPTDirectInputCoord(VECTOR3 Att, int mode)
 {
 	GC->rtcc->med_m66.Att = Att;
 	GC->rtcc->med_m66.CoordInd = mode;
@@ -7628,26 +8036,12 @@ void ApolloRTCCMFD::menuCycleTIThruster()
 
 void ApolloRTCCMFD::menuCycleSPQDKIThruster()
 {
-	if (GC->rtcc->med_m70.Thruster < 6)
-	{
-		GC->rtcc->med_m70.Thruster++;
-	}
-	else
-	{
-		GC->rtcc->med_m70.Thruster = 0;
-	}
+	CycleThrusterOption(GC->rtcc->med_m70.Thruster);
 }
 
 void ApolloRTCCMFD::menuCycleMPTDirectInputThruster()
 {
-	if (GC->rtcc->med_m66.Thruster < 8)
-	{
-		GC->rtcc->med_m66.Thruster++;
-	}
-	else
-	{
-		GC->rtcc->med_m66.Thruster = 0;
-	}
+	CycleThrusterOption(GC->rtcc->med_m66.Thruster);
 }
 
 void ApolloRTCCMFD::menuCycleGPMThruster()
@@ -7698,24 +8092,6 @@ void ApolloRTCCMFD::set_MPTDirectInputTIG(double tig)
 	GC->rtcc->med_m66.GETBI = tig;
 }
 
-void ApolloRTCCMFD::menuMPTDirectInputCode()
-{
-	bool MPTDirectInputCodeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Code for Maneuver:", MPTDirectInputCodeInput, 0, 20, (void*)this);
-}
-
-bool MPTDirectInputCodeInput(void *id, char *str, void *data)
-{
-	((ApolloRTCCMFD*)data)->set_MPTDirectInputCode(str);
-
-	return true;
-}
-
-void ApolloRTCCMFD::set_MPTDirectInputCode(const char *code)
-{
-	GC->rtcc->med_m66.code.assign(code);
-}
-
 void ApolloRTCCMFD::menuMPTDirectInputDock()
 {
 	if (GC->rtcc->med_m66.ConfigChangeInd < 2)
@@ -7752,15 +8128,15 @@ void ApolloRTCCMFD::menuTransferPoweredDescentToMPT()
 
 void ApolloRTCCMFD::menuMPTInitM50M55Table()
 {
-	if (GC->rtcc->med_m50.Table == 1)
+	if (GC->rtcc->med_m50.Table == RTCC_MPT_CSM)
 	{
-		GC->rtcc->med_m50.Table = 2;
-		GC->rtcc->med_m55.Table = 2;
+		GC->rtcc->med_m50.Table = RTCC_MPT_LM;
+		GC->rtcc->med_m55.Table = RTCC_MPT_LM;
 	}
 	else
 	{
-		GC->rtcc->med_m50.Table = 1;
-		GC->rtcc->med_m55.Table = 1;
+		GC->rtcc->med_m50.Table = RTCC_MPT_CSM;
+		GC->rtcc->med_m55.Table = RTCC_MPT_CSM;
 	}
 }
 
@@ -7774,6 +8150,11 @@ void ApolloRTCCMFD::menuMPTInitM50LMWT()
 
 }
 
+void ApolloRTCCMFD::menuMPTInitM50LMAscentWT()
+{
+
+}
+
 void ApolloRTCCMFD::menuMPTInitM50SIVBWT()
 {
 
@@ -7781,7 +8162,7 @@ void ApolloRTCCMFD::menuMPTInitM50SIVBWT()
 
 void ApolloRTCCMFD::menuMPTInitM55Config()
 {
-	if (GC->rtcc->med_m55.ConfigCode < RTCC_CONFIG_CSM_LM_SIVB)
+	if (GC->rtcc->med_m55.ConfigCode < RTCC_CONFIG_DSC)
 	{
 		GC->rtcc->med_m55.ConfigCode++;
 	}
@@ -7838,7 +8219,7 @@ void ApolloRTCCMFD::menuMPTInitM50M55Vehicle()
 
 	vesselcount = oapiGetVesselCount();
 
-	if (GC->rtcc->med_m50.Table == 1)
+	if (GC->rtcc->med_m50.Table == RTCC_MPT_LM)
 	{
 		if (GC->pLMnumber < vesselcount - 1)
 		{
@@ -7916,28 +8297,28 @@ void ApolloRTCCMFD::menuCheckMonOptionID()
 
 void ApolloRTCCMFD::menuCheckMonReference()
 {
-	if (GC->rtcc->med_u02.REF < 3)
+	if (GC->rtcc->med_u02.REF < 4)
 	{
 		GC->rtcc->med_u02.REF++;
 	}
 	else
 	{
-		GC->rtcc->med_u02.REF = 0;
+		GC->rtcc->med_u02.REF = 1;
 	}
 
-	if (GC->rtcc->med_u02.REF == 0)
+	if (GC->rtcc->med_u02.REF == 1)
 	{
 		sprintf(GC->checkmon.RF, "ECI");
 	}
-	else if (GC->rtcc->med_u02.REF == 1)
+	else if (GC->rtcc->med_u02.REF == 2)
 	{
 		sprintf(GC->checkmon.RF, "ECT");
 	}
-	else if (GC->rtcc->med_u02.REF == 2)
+	else if (GC->rtcc->med_u02.REF == 3)
 	{
 		sprintf(GC->checkmon.RF, "MCI");
 	}
-	else if (GC->rtcc->med_u02.REF == 3)
+	else if (GC->rtcc->med_u02.REF == 4)
 	{
 		sprintf(GC->checkmon.RF, "MCT");
 	}
@@ -8907,30 +9288,38 @@ void ApolloRTCCMFD::menuSwitchEntryPADOpt()
 
 void ApolloRTCCMFD::menuSwitchManPADEngine()
 {
-	if (G->manpadopt == 0)
+	CycleThrusterOption(G->manpadenginetype);
+}
+
+void ApolloRTCCMFD::CycleThrusterOption(int &thruster)
+{
+	if (thruster < RTCC_ENGINETYPE_CSMRCSMINUS4)
 	{
-		if (G->vesseltype < 2)
-		{
-			if (G->csmenginetype < 4)
-			{
-				G->csmenginetype++;
-			}
-			else
-			{
-				G->csmenginetype = 0;
-			}
-		}
-		else
-		{
-			if (G->lemenginetype < 5)
-			{
-				G->lemenginetype++;
-			}
-			else
-			{
-				G->lemenginetype = 0;
-			}
-		}
+		thruster++;
+	}
+	else if (thruster == RTCC_ENGINETYPE_CSMRCSMINUS4)
+	{
+		thruster = RTCC_ENGINETYPE_LOX_DUMP;
+	}
+	else if (thruster < RTCC_ENGINETYPE_LMRCSMINUS4)
+	{
+		thruster++;
+	}
+	else if (thruster == RTCC_ENGINETYPE_LMRCSMINUS4)
+	{
+		thruster = RTCC_ENGINETYPE_CSMSPS;
+	}
+	else if (thruster < RTCC_ENGINETYPE_LMDPS)
+	{
+		thruster++;
+	}
+	else if (thruster == RTCC_ENGINETYPE_LMDPS)
+	{
+		thruster = RTCC_ENGINETYPE_SIVB_APS;
+	}
+	else
+	{
+		thruster = RTCC_ENGINETYPE_CSMRCSPLUS2;
 	}
 }
 
@@ -9415,13 +9804,13 @@ void ApolloRTCCMFD::menuSwitchEntryNominal()
 
 void ApolloRTCCMFD::menuSwitchDeorbitEngineOption()
 {
-	if (G->csmenginetype < 4)
+	if (G->deorbitenginetype == RTCC_ENGINETYPE_CSMSPS)
 	{
-		G->csmenginetype++;
+		G->deorbitenginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
 	}
 	else
 	{
-		G->csmenginetype = 0;
+		G->deorbitenginetype = RTCC_ENGINETYPE_CSMSPS;
 	}
 }
 
@@ -9870,25 +10259,25 @@ void ApolloRTCCMFD::set_LDPPVectorTime(double time)
 	GC->rtcc->med_k16.VectorTime = time;
 }
 
-void ApolloRTCCMFD::menuLSAlt()
+void ApolloRTCCMFD::menuLSRadius()
 {
-	bool LSAltInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the landing site altitude:", LSAltInput, 0, 20, (void*)this);
+	bool LSRadiusInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the landing site altitude:", LSRadiusInput, 0, 20, (void*)this);
 }
 
-bool LSAltInput(void *id, char *str, void *data)
+bool LSRadiusInput(void *id, char *str, void *data)
 {
 	if (strlen(str)<20)
 	{
-		((ApolloRTCCMFD*)data)->set_LSAlt(atof(str));
+		((ApolloRTCCMFD*)data)->set_LSRadius(atof(str));
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_LSAlt(double alt)
+void ApolloRTCCMFD::set_LSRadius(double rad)
 {
-	GC->LSAlt = alt*1852.0;
+	GC->rtcc->MCSMLR = rad*1852.0;
 }
 
 void ApolloRTCCMFD::menuSetLDPPDwellOrbits()
@@ -11322,11 +11711,16 @@ void ApolloRTCCMFD::menuMPTCycleActive()
 void ApolloRTCCMFD::menuMPTDeleteManeuver()
 {
 	bool MPTDeleteManeuverInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Delete last maneuver in MPT (Format: CSM or LEM)", MPTDeleteManeuverInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Freeze/unfreeze/delete maneuver in MPT (Format: M62,Table,Manv No.,Action,Vector;)", MPTDeleteManeuverInput, 0, 20, (void*)this);
 }
 
 bool MPTDeleteManeuverInput(void* id, char *str, void *data)
 {
+
+	((ApolloRTCCMFD*)data)->set_MPTDeleteManever(str);
+
+	return true;
+
 	char buff1[100];
 
 	if (sscanf(str, "%s", buff1) == 1)
@@ -11339,12 +11733,10 @@ bool MPTDeleteManeuverInput(void* id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::set_MPTDeleteManever(std::string table)
+void ApolloRTCCMFD::set_MPTDeleteManever(char *str)
 {
-	GC->rtcc->med_m62.Action = "D";
-	GC->rtcc->med_m62.ManNum = 1;
-	GC->rtcc->med_m62.MPTCode = table;
-	GC->rtcc->PMMMED(62);
+	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, str);
+	G->GeneralMEDRequest();
 }
 
 void ApolloRTCCMFD::menuMPTCopyEphemeris()
@@ -11652,13 +12044,13 @@ void ApolloRTCCMFD::cycleLDPPVehicle()
 {
 	if (GC->MissionPlanningActive)
 	{
-		if (GC->rtcc->med_k16.Vehicle < 2)
+		if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_CSM)
 		{
-			GC->rtcc->med_k16.Vehicle++;
+			GC->rtcc->med_k16.Vehicle = RTCC_MPT_LM;
 		}
 		else
 		{
-			GC->rtcc->med_k16.Vehicle = 1;
+			GC->rtcc->med_k16.Vehicle = RTCC_MPT_CSM;
 		}
 	}
 }
@@ -11769,6 +12161,24 @@ void ApolloRTCCMFD::set_CapeCrossingRev(int veh, int rev)
 	GC->rtcc->med_p17.VEH = veh;
 	GC->rtcc->med_p17.REV = rev;
 	G->CapeCrossingTableUpdate();
+}
+
+void ApolloRTCCMFD::menuGenerateDMT()
+{
+	bool GenerateDMTInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: U20,MPT ID,Maneuver No,MSK No (54 or 69),REFSMMAT,Heads Up/Down;", GenerateDMTInput, 0, 20, (void*)this);
+}
+
+bool GenerateDMTInput(void* id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_GenerateDMT(str, 54);
+}
+
+bool ApolloRTCCMFD::set_GenerateDMT(char *buff, int msk)
+{
+	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, buff);
+	G->GeneralMEDRequest();
+	return true;
 }
 
 void ApolloRTCCMFD::GMPManeuverTypeName(char *buffer, int typ)
