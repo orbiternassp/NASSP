@@ -6668,7 +6668,7 @@ O3precalc:
 		R_T = p / (1.0 + e*cos(f));
 		K_5 = sqrt(mu / p);
 		V_T = K_5*sqrt(1.0 + 2.0 * e*cos(f) + pow(e, 2));
-		gamma_T = atan((e*sin(f)) / (1.0 + cos(f)));
+		gamma_T = atan((e*sin(f)) / (1.0 + e * cos(f)));
 		G_T = -mu / pow(R_T, 2);
 
 		fprintf(lvlog, "TLI Targets: R_T: %f, V_T: %f, gamma_T: %f, G_T: %f\r\n", R_T, V_T, gamma_T, G_T);

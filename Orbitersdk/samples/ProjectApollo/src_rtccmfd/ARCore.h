@@ -39,7 +39,6 @@ public:
 
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
-	double LSLat, LSLng;	//Landing Site coordinates
 	double t_Land;				//Time of landing
 	double LOIazi;
 	double TLCCFreeReturnEMPLat, TLCCNonFreeReturnEMPLat;
@@ -62,7 +61,6 @@ public:
 	RTCC* rtcc;
 
 	CheckoutMonitor checkmon;
-	SpaceDigitals spacedigit;
 	LunarDescentPlanningTable descplantable;
 };
 
@@ -71,7 +69,7 @@ public:
 	ARCore(VESSEL* v, AR_GCore* gcin);
 	~ARCore();
 	void lambertcalc();
-	void CDHcalc();
+	void SPQcalc();
 	void GPMPCalc();
 	void REFSMMATCalc();
 	void SkylabCalc();
@@ -96,22 +94,15 @@ public:
 	void DAPPADCalc();
 	void AscentPADCalc();
 	void PDAPCalc();
-	void UpdateFIDOOrbitDigitals();
-	void CycleFIDOOrbitDigitals();
-	void FIDOOrbitDigitalsCalculateLongitude();
-	void FIDOOrbitDigitalsCalculateGETL();
-	void FIDOOrbitDigitalsApoPeriRequest();
-	void SpaceDigitalsInit();
+	void CycleFIDOOrbitDigitals1();
+	void CycleFIDOOrbitDigitals2();
 	void CycleSpaceDigitals();
-	void SpaceDigitalsGET();
+	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
 	void GenerateStationContacts();
 	void CalculatePredictedSiteAcquisitionDisplay();
-	void SunriseSunsetTimesCalc();
-	void MoonriseMoonsetTimesCalc();
 	void RTETradeoffDisplayCalc();
 	void GeneralMEDRequest();
-	void CapeCrossingTableUpdate();
 	void TransferTIToMPT();
 	void TransferSPQToMPT();
 	void TransferDKIToMPT();
@@ -196,7 +187,6 @@ public:
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
 	double T2;				//Arrival time for Lambert Targeting
-	double lambertelev;		//Elevation of target for T1 calculation
 	int N;					//Number of revolutions for Lambert Targeting
 	double TwoImpulse_TIG;	//Impulsive time of ignition for two-impulse maneuver
 	VECTOR3 LambertdeltaV;	//LVLH maneuver vector
@@ -206,7 +196,6 @@ public:
 	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
 	int twoimpulsemode;		//0 = General, 1 = NCC/NSR, 2 = TPI/TPF
 	double TwoImpulse_TPI;	//TPI time calculated by the NCC/NSR option
-	double TwoImpulse_PhaseAngle;	//Phase angle of chaser relative to target at T2 time
 	int lambertElevOpt;		//0 = T1 on time, 1 = search for elevation angle
 	int lambertTPFOpt;		//0 = T2 on time, 1 = use DT from T1, 2 = use travel angle
 	double lambertDT;		//DT from T1 to T2
@@ -234,7 +223,6 @@ public:
 	double CDHtime;	//Time of the CDH maneuver
 	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
-	double DH;			//Delta Height for the CDH maneuver
 	VECTOR3 SPQDeltaV;
 	SPQResults spqresults;
 
@@ -315,8 +303,8 @@ public:
 	int deorbitenginetype;
 
 	//STATE VECTOR PAGE
-	bool SVSlot;
-	SV UplinkSV;
+	bool SVSlot; //true = CSM, false = LEM
+	MPTSV UplinkSV;
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
@@ -415,13 +403,6 @@ public:
 	double t_Liftoff_guess;		//Threshold time for lunar liftoff
 	bool LunarLiftoffInsVelInput;	//0 = Calculate velocity internally, 1 = use input velocity
 
-	//Lunar Ascent Processor
-	double LAP_Theta;			//Angle travelled between liftoff and insertion
-	double LAP_DT;				//Ascent burntime (liftoff to insertion)
-	double LAP_dv;
-	SV LAP_SV_Ignition;
-	SV LAP_SV_Insertion;
-
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
 
@@ -456,13 +437,7 @@ public:
 	int AGCEphemMission;
 	bool AGCEphemIsCMC;
 
-	//FIDO ORBIT DIGITALS
-	FIDOOrbitDigitals fidoorbit;
-	SV fidoorbitsv;
-
 	//NEXT STATION CONTACT DISPLAY
-	OrbitStationContactsTable orbitstatconttable;
-	NextStationContactsTable nextstatconttable;
 	PredictedSiteAcquisitionTable predsiteacqtable;
 
 	//MPT MANEUVER TRANSFER
@@ -473,8 +448,6 @@ public:
 	int MPTReplaceCode;
 	//0 = SPS, 1 = APS, 2 = DPS, 3-6 = L1-4, 7-10 = C1-4
 	int MPTThrusterCode;
-
-	bool MPT_LOI_TLMCC_Flag; //false = MCC, true = LOI
 
 private:
 

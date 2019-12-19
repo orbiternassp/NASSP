@@ -3811,6 +3811,13 @@ double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref,
 	return t;
 }
 
+void latlong_from_J2000(VECTOR3 R, double MJD, int RefBody, double &lat, double &lng)
+{
+	MATRIX3 Rot = OrbMech::GetRotationMatrix(RefBody, MJD);
+	VECTOR3 R_equ = rhtmul(Rot, R);
+	latlong_from_r(R_equ, lat, lng);
+}
+
 void latlong_from_J2000(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng)
 {
 	MATRIX3 Rot2;
@@ -5889,6 +5896,53 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
+void impulsive2(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
+{
+	VECTOR3 R_ig, V_ig, V_go, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
+	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
+	int n, nmax;
+
+	nmax = 100;
+	t_slip = 0;
+	t_slip_old = 1;
+	dt_go = 1;
+	mu = GGRAV * oapiGetMass(gravref);
+	V_go = V_ref - V;
+	i_y = -unit(crossp(R_ref, V_ref));
+
+	while (abs(t_slip - t_slip_old) > 0.01)
+	{
+		n = 0;
+		//rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
+		oneclickcoast(R, V, MJD, t_slip, R_ig, V_ig, gravref, gravref);
+		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
+		{
+			poweredflight(R_ig, V_ig, MJD, gravref, f_av, isp, m, V_go, R_p, V_p, m_p, t_go);
+			//rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
+			oneclickcoast(R_ref, V_ref, MJD, t_go + t_slip, R_d, V_d, gravref, gravref);
+			i_z = unit(crossp(R_d, i_y));
+			dr_z = dotp(i_z, R_d - R_p);
+			v_goz = dotp(i_z, V_go);
+			dt_go = -2.0 * dr_z / v_goz;
+			dV_go = V_d - V_p;
+			//dV_go = (V_go_apo - V_go)*0.5;
+			V_go = V_go + dV_go;
+			n++;
+		}
+		t_slip_old = t_slip;
+		t_slip += dt_go * 0.1;
+	}
+	if (n >= nmax)
+	{
+		sprintf(oapiDebugString(), "Iteration failed!");
+	}
+	Llambda = V_go;
+	R_cutoff = R_p;
+	V_cutoff = V_p;
+	m_cutoff = m_p;
+	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
+}
+
 double DVFromBurnTime(double bt, double thrust, double isp, double mass)
 {
 	double mf = mass - thrust / isp * bt;
@@ -6796,22 +6850,12 @@ double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
 	return theta_rad * 3437.7468;
 }
 
-void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref, VECTOR3 &N, VECTOR3 &rho, double &sinang)
+void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body, VECTOR3 &N, VECTOR3 &rho, double &sinang)
 {
 	MATRIX3 Rot;
 	VECTOR3 rho_apo, R_S;
-	int body;
 
-	if (gravref == oapiGetObjectByName("Earth"))
-	{
-		body = BODY_EARTH;
-	}
-	else
-	{
-		body = BODY_MOON;
-	}
-
-	Rot = OrbMech::GetRotationMatrix(body, MJD);
+	Rot = OrbMech::GetRotationMatrix(body, MJDfromGET(GMT, GMTBASE));
 	R_S = rhmul(Rot, R_S_equ);
 	N = unit(R_S);
 	rho = R - R_S;
@@ -6819,25 +6863,22 @@ void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref, VECTO
 	sinang = dotp(rho_apo, N);
 }
 
-double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref)
+double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body)
 {
 	MATRIX3 Rot;
 	VECTOR3 R_S, V_S, N, rho, rho_apo, W_E, rho_dot, N_dot;
 	double w_E;
-	int body;
 
-	if (gravref == oapiGetObjectByName("Earth"))
+	if (body == BODY_EARTH)
 	{
-		body = BODY_EARTH;
 		w_E = w_Earth;
 	}
 	else
 	{
-		body = BODY_MOON;
 		w_E = w_Moon;
 	}
 
-	Rot = OrbMech::GetRotationMatrix(body, MJD);
+	Rot = OrbMech::GetRotationMatrix(body, MJDfromGET(GMT, GMTBASE));
 	R_S = rhmul(Rot, R_S_equ);
 	N = unit(R_S);
 	rho = R - R_S;
@@ -6863,6 +6904,307 @@ SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN)
 		return PMMLAEG(sv0, opt, param, error, DN);
 	}
 }
+
+
+//WORK IN PROGRESS
+/*
+void NewPMMAEG(AEGHeader *header, AEGDataBlock *aeg)
+{
+	//Blocks 2 is g_apo, 3 is g_aapo, 4 is saved osc
+
+	AEGDataBlock *in;
+	double DELH, C2IT, DELT, TIME, A, E, I, L, G, H, TS, TE, LDOT, GDOT, HDOT, theta, theta2, theta3, theta4, C18, SINOFI, C0;
+	double a2, a3, a4, gamma2, gamma3, gamma4, eta, eta2, eta4, eta6, eta8, LP4, gamma2_apo, gamma3_apo, gamma4_apo;
+	double C7, C17, C19, C11, C12, C13, ERRID, delta_i_e;
+	int LLL, KG, KKG, ENTRY, OUTT2, LOWE, K, J;
+	//Block 2
+	double a_apo, e_apo, i_apo, l_apo, g_apo, h_apo;
+	//Block 3
+	double a_aapo, e_aapo, i_aapo, l_aapo, g_aapo, h_aapo;
+	//Block 4
+	double a_0, e_0, i_0, l_0, g_0, h_0, f_0, u_0;
+
+	const double K2 = OrbMech::J2_Earth*pow(OrbMech::R_Earth, 2) / 2.0;
+	const double K3 = -OrbMech::J3_Earth*pow(OrbMech::R_Earth, 3);
+	const double K4 = -OrbMech::J4_Earth*pow(OrbMech::R_Earth, 4) / 8.0;
+
+	int IB = header->NumBlocks;
+NewPMMAEG_V9999:
+	if (header->NumBlocks == 1)
+	{
+		in = aeg;
+	}
+	else
+	{
+		in = &aeg[IB - 1];
+	}
+
+	TIME = in->TE - in->TS;
+	A = in->a_osc;
+	E = in->e_osc;
+	I = in->i_osc;
+	L = in->l_osc;
+	G = in->g_osc;
+	H = in->h_osc;
+	ENTRY = in->ENTRY;
+
+	if (abs(TIME) > 96.0)
+	{
+		//goto NewPMMAEG_V846;
+	}
+	if (A > 9.0 || A < 0.4)
+	{
+		//goto NewPMMAEG_V846;
+	}
+	if (E > 0.85 || E < 0.0)
+	{
+		//goto NewPMMAEG_V846;
+	}
+	if (I > 1.05 || I < 0.18)
+	{
+		//goto NewPMMAEG_V846;
+	}
+	if (L > PI2 || L < 0 || G > PI2 || G < 0 || H > PI2 || H < 0)
+	{
+		//goto NewPMMAEG_V846;
+	}
+	//Input equals final time
+	if (TS == TE)
+	{
+		//Are the elements initialized?
+		if (ENTRY != 0)
+		{
+			//Yes. Is the update option an update to time?
+			if (in->TIMA == 0)
+			{
+				//TBD: Move input area to output area
+				//goto NewPMMAEG_V1030;
+			}
+		}
+	}
+	LLL = 0;
+	DELH = 1.0;
+	if (in->TIMA >= 4)
+	{
+		//TBD: Save a,e,i,u,t,h,r,T_f from previous block for phase lag routine
+	}
+	C2IT = 0.0;
+	KG = 0;
+	L = 0;
+	KKG = 0;
+	DELT = 0.0;
+	
+	a_0 = in->a_osc;
+	e_0 = in->e_osc;
+	i_0 = in->i_osc;
+	l_0 = in->l_osc;
+	g_0 = in->g_osc;
+	h_0 = in->h_osc;
+
+	if (E < 1.0e-6)
+	{
+		E = 1.0e-6;
+	}
+	//High e
+	if (e_0 >= 0.005)
+	{
+		goto NewPMMAEG_V3000;
+	}
+	//High e by choice
+	if (ENTRY > 1)
+	{
+		goto NewPMMAEG_V3003;
+	}
+
+NewPMMAEG_V3001:
+	OUTT2 = 1;
+	ENTRY = 1;
+NewPMMAEG_V3002:
+	LOWE = 0;
+	goto NewPMMAEG_V3;
+NewPMMAEG_V3003:
+	LOWE = 1;
+	goto NewPMMAEG_V2;
+
+NewPMMAEG_V3000:
+	if (ENTRY > 1)
+	{
+		goto NewPMMAEG_V3003;
+	}
+	if (ENTRY == 1)
+	{
+		goto NewPMMAEG_V3002;
+	}
+NewPMMAEG_V3004:
+	LOWE = 1;
+	ENTRY = 2;
+	OUTT2 = 2;
+	goto NewPMMAEG_V3;
+NewPMMAEG_V2:
+	//Set input mean elements to block 3
+	a_aapo = in->a_mean;
+	e_aapo = in->e_mean;
+	i_aapo = in->i_mean;
+	l_aapo = in->l_mean;
+	g_aapo = in->g_mean;
+	h_aapo = in->h_mean;
+NewPMMAEG_V960:
+	K = 0;
+	if (in->TIMA == 0)
+	{
+		goto NewPMMAEG_V401;
+	}
+	if (in->TIMA >= 4)
+	{
+		goto NewPMMAEG_V401;
+	}
+	//TBD: Is this right?
+	LDOT = in->l_dot;
+	GDOT = in->g_dot;
+	//TBD: Call time of arrival routine
+	goto NewPMMAEG_V401;
+NewPMMAEG_V3:
+	//This entry is for non-initialized input elements
+	//Set Block 2 and 3 to the input osculating elements
+	a_apo = a_aapo = in->a_osc;
+	e_apo = e_aapo = in->e_osc;
+	i_apo = i_aapo = in->i_osc;
+	l_apo = l_aapo = in->l_osc;
+	g_apo = g_aapo = in->g_osc;
+	h_apo = h_aapo = in->h_osc;
+
+	LDOT = 0.0;
+	HDOT = 0.0;
+	GDOT = 0.0;
+	K = 1;
+	J = 0;
+NewPMMAEG_V401:
+	LP4 = -1;
+	//TBD: Call true anomaly routine
+	u_0 = f_0 + G;
+	if (u_0 > PI2)
+	{
+		u_0 = u_0 - PI2;
+	}
+NewPMMAEG_V403:
+	theta = cos(i_aapo);
+	theta2 = theta * theta;
+	theta3 = theta2 * theta;
+	theta4 = theta3 * theta;
+	C18 = 1.0 - theta2;
+	SINOFI = sqrt(C18);
+	C0 = 1.0 - 5.0*theta2;
+	a2 = a_aapo * a_aapo;
+	a3 = a2 * a_aapo;
+	a4 = a3 * a_aapo;
+	gamma2 = K2 / a2;
+	gamma3 = K3 / a3;
+	gamma4 = K4 / a4;
+	eta = sqrt(1.0 - e_aapo);//Only one apo?
+	eta2 = eta * eta;
+	eta4 = eta2 * eta2;
+	eta6 = eta2 * eta2 * eta2;
+	eta8 = eta4 * eta4;
+	gamma2_apo = gamma2 * eta4;
+	gamma3_apo = gamma3 * eta6;
+	gamma4_apo = gamma4 * eta8;
+	C7 = 0.25*gamma3_apo / gamma2_apo;
+	C17 = -1.0 + 3.0*theta2;
+	C19 = 3.0*C18;
+	C11 = 0.75*gamma2_apo;
+	C12 = 3.0 - 5.0*theta2;
+	C13 = C11 * C12;
+	if (K != 0)
+	{
+		goto NewPMMAEG_V402;
+	}
+NewPMMAEG_V12:
+	//TBD: Call secular rate routine
+	if (in->ICSUBD == 0.0)
+	{
+		goto NewPMMAEG_V402;
+	}
+	//Call drag routine
+	if (ERRID != 0)
+	{
+		//goto NewPMMAEG_V305;
+	}
+NewPMMAEG_V402:
+	if (LOWE != 1)
+	{
+		//goto NewPMMAEG_V400;
+	}
+	e_apo = e_aapo;
+	g_apo = g_aapo;
+	h_apo = h_aapo;
+	delta_i_e = 0.0;
+	//Entering LOWE routing
+	/*A16L = sin(u_0);
+	A17L = cos(u_0);
+	A18L = 3.0*u_0;
+	A1L = -C11 * C0;
+	A2L = A1L * A17L;
+	A3L = C11 * (-3.0 + 7.0*theta2);
+	A4L = A3L * A16L;
+	A5L = 1.75*gamma2_apo*pow(sin(g_aapo), 2);
+	A7L = 2.0*A1L;
+	A6L = A7L * u_0;
+	SINA6 = sin(A6L);
+	COSA6 = cos(A6L);
+	A9L = e_0 * sin(g_0);
+	A10L = e_0 * cos(g_0);
+	ARGL = A18L - A6L;
+	A11L = sin(ARGL);
+	A12L = cos(ARGL);
+	AK1L = SINA6 * (A9L - A4L) + COSA6 * (A10L - A2L) - A5L * A12L;
+	AK2L = COSA6 * (A9L - A4L) + SINA6 * (A2L - A10L) - A5L * A11L;
+	if (C20T - 1 != 0)
+	{
+		XMEB = sqrt(pow(A10L - A2L - cos(A18L)*A5L, 2) + pow(A9L + A4L - sin(A18L)*A5L, 2));
+		C20T = 1;
+	}
+	U_L = l_0 + g_0;
+	if (U_L > PI2)
+	{
+		U_L = U_L - PI2;
+	}
+	XL = U_L - C13 * sin(2.0*u_0);
+	U_1 = U_L + (LDOT + GDOT)*DT;
+	U_2 = U_1 + U_L + C13 * sin(2.0*U_1) + X_L;
+	KK = 0;
+NewPMMAEG_VVV1:
+	B0 = AKL * U_2;
+	B1 = sin(B0);
+	B2 = cos(B0);
+	B3 = sin(U_2);
+	B4 = cos(U_2);
+	B5 = sin(BARG);
+	B6 = cos(BARG);
+	esinG = AK1L * B1 + AK2L * B2 + A3L * B3 + A5L * B5;
+	ecosG = AK1L * B2 + AK2L * B1 + A1L * B4 + A5L * B6;
+	g = atan2(esinG, ecosG);
+	if (g < 0)
+	{
+		g = g + PI2;
+	}
+	e = sqrt(esinG*esinG + ecosG * ecosG);
+	if (KK == 1)
+	{
+		LOWE = 0;
+		goto NewPMMAEG_V10;
+	}
+	U_2 = U_2 + (ecosG*B3 - esinG * B4)*(1.0 + 10.0 / 8.0*ecosG*B4);
+	f = U_2 - 8.0;//????
+	KK = 1;
+	goto NewPMMAEG_VVV1;
+NewPMMAEG_V400:
+	eta3 = eta2 * eta;
+	gamma5=AA
+//Page 25
+NewPMMAEG_V1030:;
+//Page 33
+NewPMMAEG_V846:;
+}*/
 
 SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 {
@@ -6890,11 +7232,11 @@ SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 
 		sv1 = sv0;
 		OrbMech::EclipticToECI(sv0.R, sv0.V, sv0.MJD, R_equ, V_equ);
-		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Earth);
 
-		n0 = sqrt(mu_Moon / (osc0.a*osc0.a*osc0.a));
+		n0 = sqrt(mu_Earth / (osc0.a*osc0.a*osc0.a));
 		ll_dot = n0;
-		g_dot = n0 * ((3.0 / 4.0)*(J20*R_Moon*R_Moon*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
+		g_dot = n0 * ((3.0 / 4.0)*(J20*R_Earth*R_Earth*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
 
 		osc1 = osc0;
 		if (opt != 3)
@@ -6989,7 +7331,7 @@ SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 			dt += ddt;
 			sv1 = coast(sv1, ddt);
 			OrbMech::EclipticToECI(sv1.R, sv1.V, sv1.MJD, R_equ, V_equ);
-			osc1 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+			osc1 = OrbMech::GIMIKC(R_equ, V_equ, mu_Earth);
 
 			COUNT--;
 
@@ -7893,6 +8235,11 @@ VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b)
 		A.m11*b.x + A.m21*b.z + A.m31*b.y,
 		A.m13*b.x + A.m23*b.z + A.m33*b.y,
 		A.m12*b.x + A.m22*b.z + A.m32*b.y);
+}
+
+MATRIX3 MatrixRH_LH(MATRIX3 A)
+{
+	return _M(A.m11, A.m13, A.m12, A.m31, A.m33, A.m32, A.m21, A.m23, A.m22);
 }
 
 double acos2(double _X)

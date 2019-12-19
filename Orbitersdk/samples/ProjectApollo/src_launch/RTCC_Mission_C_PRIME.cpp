@@ -44,7 +44,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	double AGCEpoch = 40221.525;
 	double LSLat = 2.6317*RAD;
 	double LSLng = 34.0253*RAD;
-	double LSAlt = -0.82*1852.0;
+	double LSRad = -0.82*1852.0 + OrbMech::R_Moon;
 	double LSAzi = -78.0*RAD;
 	double t_land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 
@@ -82,16 +82,15 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		tliparam.beta = lvdc->beta;
 		tliparam.cos_sigma = lvdc->cos_sigma;
 		tliparam.C_3 = lvdc->C_3;
+		tliparam.DEC = lvdc->DEC;
 		tliparam.e_N = lvdc->e_N;
 		tliparam.f = lvdc->f;
 		tliparam.mu = lvdc->mu;
-		tliparam.MX_A = lvdc->MX_A;
 		tliparam.omega_E = lvdc->omega_E;
 		tliparam.phi_L = lvdc->PHI;
+		tliparam.RA = lvdc->RAS;
 		tliparam.R_N = lvdc->R_N;
 		tliparam.T_2R = lvdc->T_2R;
-		tliparam.TargetVector = lvdc->TargetVector;
-		tliparam.TB5 = lvdc->TB5;
 		tliparam.theta_EO = lvdc->theta_EO;
 		tliparam.t_D = lvdc->t_D;
 		tliparam.T_L = lvdc->T_L;
@@ -145,7 +144,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		entopt.entrylongmanual = true;
 		entopt.GETbase = GETbase;
-		entopt.enginetype = RTCC_ENGINETYPE_SPS;
+		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.ReA = 0;
 		entopt.TIGguess = TimeofIgnition + TLIplus;//(TIGMJD - GETbase)*24.0*3600.0 + TLIplus;
 		entopt.type = RTCC_ENTRY_ABORT;
@@ -157,7 +156,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		EntryTargeting(&entopt, &res); //Target Load for uplink
 
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -282,7 +281,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		entopt.entrylongmanual = true;
 		entopt.GETbase = GETbase;
-		entopt.enginetype = RTCC_ENGINETYPE_SPS;
+		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -165.0*RAD;
 		entopt.ReA = 0;
 		entopt.RV_MCC = sv0;
@@ -295,7 +294,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
 
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -325,6 +324,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	{
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG, MCCGET;
+		int engine;
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
 		SV sv, sv_ig1, sv_cut1;
@@ -380,9 +380,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			opt.lat = -5.67822*RAD;
 			opt.PeriGET = calcParams.LOI;
 			opt.h_peri = 60.0 * 1852.0;
-			opt.alt = LSAlt;
+			opt.R_LLS = LSRad;
 			opt.azi = LSAzi;
-			opt.csmlmdocked = false;
 			opt.GETbase = GETbase;
 			opt.MCCGET = MCCGET;
 
@@ -393,7 +392,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			opt.PeriGET = calcParams.LOI;
 			opt.RV_MCC = sv;
 			opt.t_land = t_land;
-			opt.vessel = calcParams.src;
 
 			if (TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res))
 			{
@@ -402,8 +400,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				calcParams.lng_node = res.NodeLng;
 				calcParams.GET_node = res.NodeGET;
 				calcParams.LOI = res.PericynthionGET;
-				dV_LVLH = res.dV_LVLH;
-				P30TIG = res.P30TIG;
+
+				engine = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.DV);
+				PoweredFlightProcessor(sv, GETbase, res.TIG, engine, 0.0, res.DV, false, P30TIG, dV_LVLH, sv_ig1, sv_cut1);
 			}
 		}
 		else //Nodal Targeting
@@ -415,17 +414,14 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			opt.lng = calcParams.lng_node;
 			opt.NodeGET = calcParams.GET_node;
 			opt.h_node = calcParams.alt_node;
-			opt.csmlmdocked = false;
 			opt.GETbase = GETbase;
 			opt.MCCGET = MCCGET;
 			opt.RV_MCC = sv;
-			opt.vessel = calcParams.src;
 
 			TranslunarMidcourseCorrectionTargetingNodal(opt, res);
-			P30TIG = res.P30TIG;
-			dV_LVLH = res.dV_LVLH;
-			sv_ig1 = res.sv_pre;
-			sv_cut1 = res.sv_post;
+
+			engine = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.DV);
+			PoweredFlightProcessor(sv, GETbase, res.TIG, engine, 0.0, res.DV, false, P30TIG, dV_LVLH, sv_ig1, sv_cut1);
 		}
 
 		if (fcn != 23)
@@ -456,7 +452,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				opt2.GETbase = GETbase;
 				opt2.h_apo = 170.0*1852.0;
 				opt2.h_peri = 60.0*1852.0;
-				opt2.alt = LSAlt;
+				opt2.R_LLS = LSRad;
 				opt2.azi = LSAzi;
 				opt2.lat = LSLat;
 				opt2.lng = LSLng;
@@ -467,7 +463,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, sv_node, sv_ig2, sv_cut2);
 
 				//Step 2: Calculate LOI-2 to get the TIG
-				opt3.alt = LSAlt;
+				opt3.alt = LSRad - OrbMech::R_Moon;
 				opt3.csmlmdocked = false;
 				opt3.EarliestGET = P30TIG_LOI + 3.5*3600.0;
 				opt3.GETbase = GETbase;
@@ -558,7 +554,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.GETbase = GETbase;
 		opt.h_apo = 170.0*1852.0;
 		opt.h_peri = 60.0*1852.0;
-		opt.alt = LSAlt;
+		opt.R_LLS = LSRad;
 		opt.azi = LSAzi;
 		opt.lat = LSLat;
 		opt.lng = LSLng;
@@ -568,9 +564,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		LOITargeting(&opt, dV_LVLH, P30TIG);
 
-		manopt.alt = LSAlt;
+		manopt.R_LLS = LSRad;
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_SPS;
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.GETbase = GETbase;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -625,9 +621,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		RTEMoonTargeting(&entopt, &res);
 
-		opt.alt = LSAlt;
+		opt.R_LLS = LSRad;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -695,7 +691,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.entrylongmanual = true;
 			entopt.EntryLng = -25.0*RAD;
 			entopt.returnspeed = 1;
-			entopt.enginetype = RTCC_ENGINETYPE_RCSPLUS4;
+			entopt.enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
 			sprintf(manname, "PC+2");
 		}
 		else
@@ -720,15 +716,15 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		//Reset to default
 		PZREAP.VRMAX = 36323.0;
 
-		opt.alt = LSAlt;
+		opt.R_LLS = LSRad;
 		opt.dV_LVLH = res.dV_LVLH;
 		if (fcn == 41)
 		{
-			opt.enginetype = RTCC_ENGINETYPE_RCSPLUS4;
+			opt.enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
 		}
 		else
 		{
-			opt.enginetype = RTCC_ENGINETYPE_SPS;
+			opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		}
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
@@ -787,7 +783,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		GETbase = calcParams.TEPHEM;
 		sv0 = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		sv1 = ExecuteManeuver(sv0, GETbase, TimeofIgnition, DeltaV_LVLH, 0, RTCC_ENGINETYPE_SPS);
+		sv1 = ExecuteManeuver(sv0, GETbase, TimeofIgnition, DeltaV_LVLH, 0, RTCC_ENGINETYPE_CSMSPS);
 
 		if (fcn == 50)
 		{
@@ -809,9 +805,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		RTEMoonTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, EntryAng);
 
-		opt.alt = LSAlt;
+		opt.R_LLS = LSRad;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -846,7 +842,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_hyper);
 
-		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
+		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
 		sv2 = coast(sv1, -30.0*60.0);
 		LunarOrbitMapUpdate(sv2, calcParams.TEPHEM, upd_ellip);
 		sv3 = coast(sv2, 2.0*3600.0);
@@ -875,7 +871,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_ellip);
 
-		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
+		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
 		LunarOrbitMapUpdate(sv1, calcParams.TEPHEM, upd_ellip2);
 
 		form->type = 1;
@@ -958,7 +954,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sv0 = StateVectorCalc(calcParams.src);
 		LunarOrbitMapUpdate(sv0, calcParams.TEPHEM, upd_ellip);
 
-		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_SPS);
+		sv1 = ExecuteManeuver(sv0, calcParams.TEPHEM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
 		LunarOrbitMapUpdate(sv1, calcParams.TEPHEM, upd_hyper);
 
 		form->type = 1;
@@ -986,7 +982,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		opt.alt = LSAlt;
+		opt.alt = LSRad - OrbMech::R_Moon;
 		opt.csmlmdocked = false;
 		opt.GETbase = GETbase;
 		opt.h_circ = 60.0*1852.0;
@@ -998,9 +994,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
 
-		manopt.alt = LSAlt;
+		manopt.R_LLS = LSRad;
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_SPS;
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.GETbase = GETbase;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -1131,9 +1127,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		RTEMoonTargeting(&entopt, &res);
 
-		opt.alt = LSAlt;
+		opt.R_LLS = LSRad;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -1279,7 +1275,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		entopt.entrylongmanual = true;
 		entopt.GETbase = GETbase;
-		entopt.enginetype = RTCC_ENGINETYPE_SPS;
+		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -165.0*RAD;
 		entopt.ReA = 0;
 		entopt.RV_MCC = sv;
