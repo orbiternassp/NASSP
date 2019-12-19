@@ -100,7 +100,6 @@ public:
 	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
 	void GenerateStationContacts();
-	void CalculatePredictedSiteAcquisitionDisplay();
 	void RTETradeoffDisplayCalc();
 	void GeneralMEDRequest();
 	void TransferTIToMPT();
@@ -436,18 +435,6 @@ public:
 	double AGCEphemTLAND;
 	int AGCEphemMission;
 	bool AGCEphemIsCMC;
-
-	//NEXT STATION CONTACT DISPLAY
-	PredictedSiteAcquisitionTable predsiteacqtable;
-
-	//MPT MANEUVER TRANSFER
-
-	//1 = LM, 2 = CSM
-	int MPTTransferTable;
-	//Maneuver 1-15 in table
-	int MPTReplaceCode;
-	//0 = SPS, 1 = APS, 2 = DPS, 3-6 = L1-4, 7-10 = C1-4
-	int MPTThrusterCode;
 
 private:
 

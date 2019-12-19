@@ -12144,14 +12144,8 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 	unsigned i = 0, NextMan;
 	bool manflag = false, surfaceflag = false;
-	if (in.MaxIntegTime == 0.0)
-	{
-		dt = 1e70;
-	}
-	else
-	{
-		dt = in.MaxIntegTime;
-	}
+
+	dt = in.MaxIntegTime;
 
 	in.NIAuxOutputTable.LunarStayBeginGMT = -1;
 	in.NIAuxOutputTable.LunarStayEndGMT = -1;
@@ -12384,7 +12378,6 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			in.EphemTableIndicator->Header.Offset = 0;
 			in.EphemTableIndicator->Header.TL = in.EphemTableIndicator->table.front().GMT;
 			in.EphemTableIndicator->Header.TR = in.EphemTableIndicator->table.back().GMT;
-			in.EphemTableIndicator->Header.TUP = 1;
 			in.EphemTableIndicator->Header.VEH = in.VehicleCode;
 		}
 		return;
@@ -13870,31 +13863,59 @@ void RTCC::EMDSTAC()
 	NextStationContactsBuffer.GET = GET;
 }
 
-void RTCC::EMDPESAD(const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out)
+void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int body)
 {
 	NextStationContact empty;
 	double GET_Begin, GET_End;
 	unsigned i = 0, j = 0;
 
-	if (med_u15.IND == 1)
+	OrbitStationContactsTable *stcont;
+	PredictedSiteAcquisitionTable *tab;
+
+	if (veh == 1)
 	{
-		GET_Begin = med_u15.PARAM1;
-		GET_End = med_u15.PARAM2;
+		stcont = &EZSTACT1;
+		if (num == 1)
+		{
+			tab = &EZACQ1;
+		}
+		else
+		{
+			tab = &EZDPSAD1;
+		}
 	}
 	else
 	{
-		GET_Begin = CapeCrossingGET(med_u15.VEH, (int)med_u15.PARAM1);
-		GET_End = CapeCrossingGET(med_u15.VEH, 1 + (int)med_u15.PARAM2);
+		stcont = &EZSTACT3;
+		if (num == 1)
+		{
+			tab = &EZACQ3;
+		}
+		else
+		{
+			tab = &EZDPSAD3;
+		}
 	}
 
-	while (GET_Begin > in.Stations[i].GETAOS && i < 44)
+	if (ind == 1)
+	{
+		GET_Begin = vala;
+		GET_End = valb;
+	}
+	else
+	{
+		GET_Begin = CapeCrossingGET(veh, (int)vala);
+		GET_End = CapeCrossingGET(veh, 1 + (int)valb);
+	}
+
+	while (GET_Begin > stcont->Stations[i].GETAOS && i < 44)
 	{
 		i++;
 	}
 
-	while (GET_End >= in.Stations[i].GETAOS && i < 44 && j < 39)
+	while (GET_End >= stcont->Stations[i].GETAOS && i < 44 && j < 39)
 	{
-		out.Stations[j] = in.Stations[i];
+		tab->Stations[j] = stcont->Stations[i];
 		i++;
 		j++;
 	}
@@ -13902,7 +13923,7 @@ void RTCC::EMDPESAD(const OrbitStationContactsTable &in, PredictedSiteAcquisitio
 	//Fill the rest with empty data
 	while (j < 40)
 	{
-		out.Stations[j] = empty;
+		tab->Stations[j] = empty;
 		j++;
 	}
 }
@@ -19048,6 +19069,115 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		double param = hh * 3600.0 + mm * 60.0 + ss;
 		EMMDYNMC(L, 5, 0, param);
+	}
+	//Predicted site acquisition
+	else if (med == 15 || med == 55)
+	{
+		if (data.size() < 4)
+		{
+			return;
+		}
+		int veh;
+		if (data[0] == "CSM")
+		{
+			veh = 1;
+		}
+		else if (data[0] == "LEM")
+		{
+			veh = 3;
+		}
+		else
+		{
+			return;
+		}
+		int ind;
+		if (data[1] == "REV")
+		{
+			ind = 0;
+		}
+		else if (data[1] == "GET")
+		{
+			ind = 1;
+		}
+		else
+		{
+			return;
+		}
+		double vala, valb;
+		if (ind == 0)
+		{
+			int revb, reve;
+
+			if (sscanf(data[2].c_str(), "%d", &revb) != 1)
+			{
+				return;
+			}
+			if (revb <= 0)
+			{
+				return;
+			}
+			if (sscanf(data[3].c_str(), "%d", &reve) != 1)
+			{
+				return;
+			}
+			if (reve <= 0)
+			{
+				return;
+			}
+			vala = (double)revb;
+			valb = (double)reve;
+		}
+		else
+		{
+			double hh, mm, ss;
+			double stime, dt;
+			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return;
+			}
+			stime = hh * 3600.0 + mm * 60.0 + ss;
+			if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return;
+			}
+			dt = hh * 3600.0 + mm * 60.0 + ss;
+			if (dt < 0 || dt > 24.0*3600.0)
+			{
+				return;
+			}
+			vala = stime;
+			valb = stime + dt;
+		}
+		int body = 0;
+		if (data.size() >= 5)
+		{
+			if (data[4] == "E")
+			{
+				body = 0;
+			}
+			else if (data[4] == "M")
+			{
+				body = 2;
+			}
+			else
+			{
+				return;
+			}
+		}
+		
+		int num;
+		if (med == 15)
+		{
+			num = 1;
+		}
+		else
+		{
+			num = 2;
+		}
+
+		//TBD: Store in EZETVMED
+
+		EMDPESAD(num, veh, ind, vala, valb, body);
 	}
 	else if (med == 20)
 	{

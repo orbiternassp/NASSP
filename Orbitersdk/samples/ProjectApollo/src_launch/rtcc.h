@@ -284,24 +284,6 @@ struct MED_M72
 	bool TimeFlag = false;	//false = use optimum time, true = start at impulsive time
 };
 
-//Predicted Site Acquisition
-struct MED_U15
-{
-	int VEH = 2; //1 = LEM, 2 = CSM
-	int IND = 1; //1 = GET, 2 = REV
-	double PARAM1 = 0.0; //Begin Time for GET, Begin REV fo REV
-	double PARAM2 = 0.0; //Delta Time for GET, End REV for REV
-};
-
-//Generate Detailed Maneuver Table
-struct MED_U20
-{
-	int MPT_ID = 1;	//1 = CSM, 3 = LM
-	unsigned ManNo = 0; //Maneuver in table
-	int REFSMMAT = 5;
-	bool HeadsUp = true;
-};
-
 struct LambertMan //Data for Lambert targeting
 {
 	double GETbase; //usually MJD at launch
@@ -2169,7 +2151,7 @@ struct EMSMISSInputTable
 	//Desired value of stopping parameter relative to the Moon
 	double MoonRelStopParam;
 	//Maximum time of integration
-	double MaxIntegTime;
+	double MaxIntegTime = 10e70;
 	//Storage interval for maneuver ephemeris
 	double ManEphemDT = 10.0;
 	//Storage interval for lunar surface ephemeris
@@ -2440,7 +2422,7 @@ public:
 	//Actual RTCC Subroutines
 
 	//Predicted Site Acquisition Display
-	void EMDPESAD(const OrbitStationContactsTable &in, PredictedSiteAcquisitionTable &out);
+	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
 	//External DV Coordinate Transformation Subroutine
@@ -2865,7 +2847,6 @@ public:
 	MED_M68 med_m68;
 	MED_M70 med_m70;
 	MED_M72 med_m72;
-	MED_U15 med_u15;
 
 	//Data Tables
 	PZEFEM pzefem;
@@ -2883,6 +2864,7 @@ public:
 	SpaceDigitals EZSPACE;
 	OrbitStationContactsTable EZSTACT1, EZSTACT3;
 	NextStationContactsTable NextStationContactsBuffer;
+	PredictedSiteAcquisitionTable EZACQ1, EZACQ3, EZDPSAD1, EZDPSAD3;
 
 	struct OrbitEphemerisTable
 	{

@@ -1432,11 +1432,6 @@ void ARCore::GenerateStationContacts()
 	startSubthread(35);
 }
 
-void ARCore::CalculatePredictedSiteAcquisitionDisplay()
-{
-	startSubthread(37);
-}
-
 void ARCore::RTETradeoffDisplayCalc()
 {
 	startSubthread(52);
@@ -4154,10 +4149,8 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 37: //Predicted Site Acquisition Display
+	case 37: //Spare
 	{
-		GC->rtcc->EMDPESAD(GC->rtcc->EZSTACT1, predsiteacqtable);
-
 		Result = 0;
 	}
 	break;
