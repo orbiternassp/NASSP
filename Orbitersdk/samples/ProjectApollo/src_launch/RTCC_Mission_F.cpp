@@ -1745,7 +1745,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		coeopt.sv_A = sv_Ins;
 		coeopt.sv_P = sv_LM;
 		coeopt.K_CDH = 1;
-		coeopt.t_TIG = calcParams.CSI;
+		coeopt.t_CSI = calcParams.CSI;
 
 		ConcentricRendezvousProcessor(coeopt, coeres);
 
@@ -1857,12 +1857,12 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
 		opt.K_CDH = 0;
-		opt.t_TIG = calcParams.CSI;
+		opt.t_CSI = calcParams.CSI;
 		opt.t_TPI = calcParams.TPI;
 
 		ConcentricRendezvousProcessor(opt, res);
 
-		sv_CSI = coast(sv_LM, opt.t_TIG - OrbMech::GETfromMJD(sv_LM.MJD, GETbase));
+		sv_CSI = coast(sv_LM, opt.t_CSI - OrbMech::GETfromMJD(sv_LM.MJD, GETbase));
 		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
 		dV_LVLH = res.dV_CSI;
 

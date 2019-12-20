@@ -96,6 +96,7 @@ public:
 	void OrbAdjRevDialogue();
 	void set_OrbAdjRevs(int N);
 	void GPMPCalc();
+	void menuCycleGMPManeuverVehicle();
 	void menuCycleGMPManeuverPoint();
 	void menuCycleGMPManeuverType();
 	void menuCycleGMPMarkerUp();

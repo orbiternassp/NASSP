@@ -2611,24 +2611,24 @@ int ARCore::subThread()
 		opt.DH = GC->rtcc->GZGENCSN.SPQDeltaH;
 		opt.E = GC->rtcc->GZGENCSN.SPQElevationAngle;
 		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.K_CSI = (SPQMode == 0);
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.ChaserID = GC->rtcc->med_k01.ChaserVehicle;
 		if (SPQMode == 0)
 		{
-			opt.t_TIG = CSItime;
+			opt.t_CSI = CSItime;
 			opt.K_CDH = CDHtimemode;
 		}
 		else
 		{
+			opt.t_CSI = -1;
 			if (CDHtimemode == 0)
 			{
-				opt.t_TIG = CDHtime;
+				opt.t_CDH = CDHtime;
 			}
 			else
 			{
-				opt.t_TIG = GC->rtcc->FindDH(sv_A, sv_P, GC->rtcc->CalcGETBase(), CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
+				opt.t_CDH = GC->rtcc->FindDH(sv_A, sv_P, GC->rtcc->CalcGETBase(), CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
 			}
 		}
 		opt.t_TPI = t_TPI;
@@ -2636,7 +2636,14 @@ int ARCore::subThread()
 		GC->rtcc->ConcentricRendezvousProcessor(opt, res);
 		spqresults = res;
 
-		SPQTIG = opt.t_TIG;
+		if (SPQMode == 0)
+		{
+			SPQTIG = opt.t_CSI;
+		}
+		else
+		{
+			SPQTIG = opt.t_CDH;
+		}
 
 		if (SPQMode == 0)
 		{
@@ -2660,7 +2667,7 @@ int ARCore::subThread()
 		{
 			double GMT = GC->rtcc->GMTfromGET(SPSGET);
 			EphemerisData EPHEM;
-			if (GC->rtcc->ELFECH(GMT, mptveh, EPHEM))
+			if (GC->rtcc->ELFECH(GMT, GC->rtcc->med_k20.Vehicle, EPHEM))
 			{
 				Result = 0;
 				break;
@@ -2693,7 +2700,6 @@ int ARCore::subThread()
 		opt.dLOA = GMPApseLineRotAngle;
 		opt.N = GMPRevs;
 		opt.RV_MCC = sv0;
-		opt.plan = mptveh;
 
 		GC->rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, GPM_TIG, GMPResults);
 		SV GPM_SV = GC->rtcc->GeneralTrajectoryPropagation(opt.RV_MCC, 0, OrbMech::MJDfromGET(GPM_TIG, GC->rtcc->CalcGETBase()));

@@ -393,10 +393,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		spqopt.E = 27.45*RAD;
 		spqopt.GETbase = GETbase;
-		spqopt.K_CSI = false;
 		spqopt.sv_A = sv_A;
 		spqopt.sv_P = sv_P;
-		spqopt.t_TIG = FindDH(sv_A, sv_P, GETbase, 28.0*3600.0, 8.0*1852.0);
+		spqopt.t_CSI = -1;
+		spqopt.t_CDH = FindDH(sv_A, sv_P, GETbase, 28.0*3600.0, 8.0*1852.0);
 		
 		ConcentricRendezvousProcessor(spqopt, res);
 		PoweredFlightProcessor(sv_A, GETbase, res.t_CDH, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);

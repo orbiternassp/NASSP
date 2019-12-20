@@ -4627,7 +4627,6 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	coe_after.param.TrA = coe_a.TA;*/
 
 	//Store elements
-	PZGPMELM.plan = opt->plan;
 	PZGPMELM.SV_before.R = sv2.R;
 	PZGPMELM.SV_before.V = sv2.V;
 	PZGPMELM.SV_before.GMT = OrbMech::GETfromMJD(sv2.MJD, GMTBASE);
@@ -8461,17 +8460,27 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	SV sv_A1, sv_P1, sv_temp;
 	MATRIX3 Q_Xx;
 	VECTOR3 u, R_A1, V_A1, V_A1F, R_A2, V_A2, R_P2, V_P2, R_PC, V_PC, V_A2F;
-	double dv_CSI, mu, dt_1, t_CDH, dt_TPI;
+	double dv_CSI, mu, dt_1, t_CDH, dt_TPI, T_TPI;
 
 	dv_CSI = 0.0;
-
 	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
-	sv_A1 = coast(opt.sv_A, opt.t_TIG - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
-	sv_P1 = coast(opt.sv_P, opt.t_TIG - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 
 	if (opt.K_CDH == 0)
 	{
+		//TBD: Environment change and longitude crossing logic
+		T_TPI = opt.t_TPI;
+	}
 
+	//CSI scheduled?
+	if (opt.t_CSI > 0)
+	{
+		sv_A1 = coast(opt.sv_A, opt.t_CSI - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
+		sv_P1 = coast(opt.sv_P, opt.t_CSI - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
+	}
+	else
+	{
+		sv_A1 = coast(opt.sv_A, opt.t_CDH - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase));
+		sv_P1 = coast(opt.sv_P, opt.t_CDH - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 	}
 
 	u = unit(crossp(sv_P1.R, sv_P1.V));
@@ -8480,7 +8489,7 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	V_A1 = unit(sv_A1.V - u * dotp(sv_A1.V, u))*length(sv_A1.V);
 
 	//CDH calculation
-	if (opt.K_CSI == false)
+	if (opt.t_CSI <= 0)
 	{
 		VECTOR3 u2;
 		double Y_c_dot;
@@ -8493,13 +8502,8 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 
 		res.DH = length(R_PC) - length(R_A1);
 		res.dV_CDH = mul(Q_Xx, V_A1F - V_A1) + _V(0.0, -Y_c_dot, 0.0);
-		res.t_CDH = opt.t_TIG;
-
-		if (opt.CalculateTPIParams)
-		{
-			dt_TPI = OrbMech::findelev_conic(R_A1, V_A1F, sv_P1.R, sv_P1.V, opt.E, mu);
-			res.t_TPI = opt.t_TIG + dt_TPI;
-		}
+		res.t_CDH = opt.t_CDH;
+		res.t_TPI = 0.0;
 
 		PZDKIT.Block[0].NumMan = 1;
 		sv_temp.R = R_A1;
@@ -8535,13 +8539,13 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 		s_C = 0;
 		dv_CSI = 10.0*0.3048;
 
-		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, opt.t_TPI - opt.t_TIG, R_P3, V_P3, mu);
+		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, opt.t_TPI - opt.t_CSI, R_P3, V_P3, mu);
 
 		do
 		{
 			V_A1F = V_A1 + unit(crossp(u, R_A1))*dv_CSI;
 			OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
-			t_CDH = opt.t_TIG + dt_1;
+			t_CDH = opt.t_CSI + dt_1;
 			OrbMech::RADUP(R_P3, V_P3, R_A2, mu, R_PC, V_PC);
 			DH = length(R_PC) - length(R_A2);
 			V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
@@ -8570,10 +8574,10 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 		OrbMech::CSIToDH(R_A1, V_A1, sv_P1.R, sv_P1.V, opt.DH, mu, dv_CSI);
 		V_A1F = V_A1 + unit(crossp(u, R_A1))*dv_CSI;
 		OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
-		t_CDH = opt.t_TIG + dt_1;
+		t_CDH = opt.t_CSI + dt_1;
 		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A2, mu, R_PC, V_PC);
 		V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
-		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt.t_TIG, R_P2, V_P2, mu);
+		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt.t_CSI, R_P2, V_P2, mu);
 
 		res.dV_CSI = _V(dv_CSI, 0, 0);
 		res.t_CDH = t_CDH;
@@ -8581,14 +8585,11 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 		res.dV_CDH = mul(Q_Xx, V_A2F - V_A2);
 		res.DH = opt.DH;
 
-		if (opt.CalculateTPIParams)
-		{
-			dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt.E, mu);
-			res.t_TPI = t_CDH + dt_TPI;
-		}
+		dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt.E, mu);
+		res.t_TPI = t_CDH + dt_TPI;
 	}
 
-	PZDKIT.Block[0].NumMan = 2;
+	PZDKIT.Block[0].NumMan = 1;
 	sv_temp.R = R_A1;
 	sv_temp.V = V_A1;
 	sv_temp.MJD = sv_A1.MJD;
@@ -8614,16 +8615,16 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	sv_temp.V = V_A2;
 	sv_temp.MJD = OrbMech::MJDfromGET(t_CDH, opt.GETbase);
 	sv_temp.gravref = sv_A1.gravref;
-	PZDKIELM.Block[0].SV_before[0].R = sv_temp.R;
-	PZDKIELM.Block[0].SV_before[0].V = sv_temp.V;
-	PZDKIELM.Block[0].SV_before[0].GMT = OrbMech::GETfromMJD(sv_temp.MJD, GMTBASE);
+	PZDKIELM.Block[0].SV_before[1].R = sv_temp.R;
+	PZDKIELM.Block[0].SV_before[1].V = sv_temp.V;
+	PZDKIELM.Block[0].SV_before[1].GMT = OrbMech::GETfromMJD(sv_temp.MJD, GMTBASE);
 	if (sv_temp.gravref == hEarth)
 	{
-		PZDKIELM.Block[0].SV_before[0].RBI = BODY_EARTH;
+		PZDKIELM.Block[0].SV_before[1].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZDKIELM.Block[0].SV_before[0].RBI = BODY_MOON;
+		PZDKIELM.Block[0].SV_before[1].RBI = BODY_MOON;
 	}
 	PZDKIELM.Block[0].V_after[1] = V_A2F;
 	PZDKIT.Block[0].Man_ID[1] = "CDH";
@@ -9707,7 +9708,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			}
 
 			conopt.sv_P = sv_CSM_Ins;
-			conopt.t_TIG = t_CSI;
+			conopt.t_CSI = t_CSI;
 
 			ConcentricRendezvousProcessor(conopt, conres);
 			K_loop++;
@@ -14993,7 +14994,7 @@ int RTCC::PMMXFR(int id, void *data)
 		{
 			GMTI = PZGPMELM.SV_before.GMT;
 			purpose = PZGPMELM.code;
-			plan = PZGPMELM.plan;
+			plan = inp->Plan;
 		}
 		else if (id == 41)
 		{
@@ -17891,7 +17892,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 
 		inp.IterationFlag[0] = med_m65.Iteration;
-		inp.Plan = 0;
+		inp.Plan = med_m65.Table;
 		inp.Thruster[0] = med_m65.Thruster;
 		inp.TimeFlag[0] = med_m65.TimeFlag;
 		inp.UllageThrusterOption[0] = med_m65.UllageQuads;
@@ -19179,9 +19180,10 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 
 		EMDPESAD(num, veh, ind, vala, valb, body);
 	}
+	//Detailed Maneuver Table
 	else if (med == 20)
 	{
-		if (data.size() != 5)
+		if (data.size() < 2)
 		{
 			return;
 		}
@@ -19209,11 +19211,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 
 		DetailedManeuverTable *dmt;
-		if (data[2] == "")
-		{
-			dmt = &DMTBuffer[0];
-		}
-		else if (data[2] == "54")
+		if (data.size() < 3 || data[2] == "" || data[2] == "54")
 		{
 			dmt = &DMTBuffer[0];
 		}
@@ -19227,7 +19225,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 
 		int refscode;
-		if (data[3] == "" || data[3] == "CUR")
+		if (data.size() < 4 || data[3] == "" || data[3] == "CUR")
 		{
 			refscode = 1;
 		}
@@ -19272,23 +19270,22 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			return;
 		}
 		bool headsupdownind;
-		if (refscode != 6 && data[4] != "")
+		if (refscode == 6)
 		{
-			return;
+			if (data.size() < 5 || data[4] == "" || data[4] == "U")
+			{
+				headsupdownind = true;
+			}
+			else if (data[4] == "D")
+			{
+				headsupdownind = false;
+			}
+			else
+			{
+				return;
+			}
 		}
 
-		if (data[3] == "" || data[4] == "U")
-		{
-			headsupdownind = true;
-		}
-		else if (data[4] == "D")
-		{
-			headsupdownind = false;
-		}
-		else
-		{
-			return;
-		}
 		PMDDMT(veh, num, refscode, headsupdownind, *dmt);
 	}
 }

@@ -785,7 +785,6 @@ struct GMPOpt
 	SV RV_MCC;		//State vector as inputn or without
 	bool AltRef = 0;	//0 = use mean radius, 1 = use launchpad or landing site radius
 	double R_LLS;	//Landing site radius
-	int plan = 1;	//1 = CSM, 3 = LEM
 
 	//maneuver parameters
 
@@ -996,16 +995,15 @@ struct SPQOpt //Coelliptic Sequence Processor
 	SV sv_A;
 	SV sv_P;
 	double GETbase;
-	double t_TIG;
+	double t_CSI;
+	double t_CDH;
 	double t_TPI;				// Only for calculation type = 0
 	double DH = 15.0*1852.0;	// Only for calculation type = 1
 	double E = 26.6*RAD;
-	bool K_CSI = true;	//0 = No CSI scheduled, 1 = CSI scheduled
 	//bool CDH = true;	//0 = No CDH scheduled, 1 = CDH scheduled 
 	//int I_CDH;			//CDH option.
 	int K_CDH;			//Height iteration. 0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int K_TPI = 0;		//-1 = Midpoint of darkness, 0 = on time, 1 = on longitude
-	bool CalculateTPIParams = true;
 	int ChaserID = 1;
 };
 
@@ -2614,6 +2612,14 @@ public:
 		double MLDAngle = 0.0;
 	} med_k10;
 
+	//GPM Maneuver Computation
+	struct MED_K20
+	{
+		int Vehicle = 1; //1 = CSM, 3 = LM
+		double VectorTime = 0.0;
+		double ThresholdTime = 0.0;
+	} med_k20;
+
 	//Two Impulse Computation
 	struct MED_K30
 	{
@@ -3242,7 +3248,6 @@ public:
 	{
 		EphemerisData SV_before;
 		VECTOR3 V_after;
-		int plan;
 		std::string code;
 	} PZGPMELM;
 
