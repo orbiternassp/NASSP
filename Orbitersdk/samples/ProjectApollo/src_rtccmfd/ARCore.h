@@ -195,10 +195,6 @@ public:
 	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
 	int twoimpulsemode;		//0 = General, 1 = NCC/NSR, 2 = TPI/TPF
 	double TwoImpulse_TPI;	//TPI time calculated by the NCC/NSR option
-	int lambertElevOpt;		//0 = T1 on time, 1 = search for elevation angle
-	int lambertTPFOpt;		//0 = T2 on time, 1 = use DT from T1, 2 = use travel angle
-	double lambertDT;		//DT from T1 to T2
-	double lambertWT;		//travel angle of passive vehicle between T1 and T2
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition

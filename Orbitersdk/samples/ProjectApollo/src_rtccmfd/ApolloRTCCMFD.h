@@ -38,12 +38,14 @@ public:
 	void StoreStatus(void) const;
 	void RecallStatus(void);
 
+	void set_TIChaserVectorTime(double get);
+	void set_TITargetVectorTime(double get);
+	void menuTIVectorTimes();
+	void set_TIVectorTimes(double chaser_time, double target_time);
 	void t1dialogue();
 	void set_t1(double t1);
-	void set_t1_PDI(double t1);
 	void t2dialogue();
-	void set_t2(double t2, bool t1dep);
-	void set_lambertWT(double wt);
+	void set_t2(double t2);
 	void menuCycleK30Vehicle();
 	void SPQtimedialogue();
 	void set_SPQtime(double tig);
@@ -51,8 +53,6 @@ public:
 	void set_SPQChaserThresholdTime(double get);
 	void menuSetSPQTargetThresholdTime();
 	void set_SPQTargetThresholdTime(double get);
-	void TIDHdialogue();
-	void set_TIDH(double DH);
 	void DKIDHdialogue();
 	void set_DKIDH(double DH);
 	void SPQDHdialogue();
@@ -103,10 +103,8 @@ public:
 	void menuCycleGMPMarkerDown();
 	void menuSetGMPInput();
 	void menuCycleOrbAdjAltRef();
-	void phasedialogue();
 	void menuMissionNumberInput();
 	void set_MissionNumber(int mission);
-	void set_TIPhaseAngle(double angdeg);
 	void SPQcalc();
 	void lambertcalc();
 	void GET_Display(char * Buff, double time, bool DispGET = true);
@@ -352,6 +350,8 @@ public:
 	void menuCycleDKITPIMode();
 	void menuSetSPQElevation();
 	void set_SPQElevation(double elev);
+	void menuSetSPQTPIDefinitionValue();
+	void set_SPQTPIDefinitionValue(double get);
 	void menuSetDKIElevation();
 	void set_DKIElevation(double elev);
 	void menuCycleDKIManeuverLine();

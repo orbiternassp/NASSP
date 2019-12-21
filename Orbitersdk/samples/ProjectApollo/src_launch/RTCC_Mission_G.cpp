@@ -1552,12 +1552,14 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
 		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*60.0;
 
+		GZGENCSN.TIElevationAngle = 26.6*RAD;
+
+		opt.mode = 1;
 		opt.axis = RTCC_LAMBERT_MULTIAXIS;
 		opt.DH = 15.0*1852.0;
-		opt.Elevation = 26.6*RAD;
+		opt.ElevationAngle = 26.6*RAD;
 		opt.GETbase = GETbase;
 		opt.N = 0;
-		opt.NCC_NSR_Flag = true;
 		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
 		//Angle confirmed by Apollo 11 FIDO loop (finally!)
 		opt.PhaseAngle = -4.475*RAD;
@@ -1567,7 +1569,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.T1 = calcParams.PDI + 12.0*60.0;
 		//Estimate for T2
 		opt.T2 = opt.T1 + 3600.0 + 46.0*60.0;
-		opt.use_XYZ_Offset = false;
 
 		for (int i = 0;i < 2;i++)
 		{

@@ -286,6 +286,7 @@ struct MED_M72
 
 struct LambertMan //Data for Lambert targeting
 {
+	int mode;		//0 = General, 1 = Corrective Combination (NCC), 2 = Two-Impulse Computation (TPI)
 	double GETbase; //usually MJD at launch
 	double T1;	//GET of the maneuver
 	double T2;	// GET of the arrival
@@ -293,18 +294,15 @@ struct LambertMan //Data for Lambert targeting
 	int axis;	//Multi-axis or horizontal burn
 	int Perturbation; //Spherical or non-spherical gravity
 	VECTOR3 Offset = _V(0, 0, 0); //Offset vector
-	double PhaseAngle; //Phase angle to target
-	double DH;					//Delta height at arrival
 	SV sv_A;		//Chaser state vector
 	SV sv_P;		//Target state vector
-	bool NCC_NSR_Flag = false;	//true = NCC/NSR combination, false = TPI/TPF combination
-	bool use_XYZ_Offset = true;	//true = use offset vector, false = use phase angle and DH
-	double Elevation;	//Elevation angle at TPI
-	int elevOpt = 0;		//0 = T1 on time, 1 = search for elevation angle
-	int TPFOpt = 0;			//0 = T2 on time, 1 = use DT from T1, 2 = use travel angle
-	double DT;				//Time between T1 and T2
-	double WT;				//Central angle travelled between T1 and T2
 	int ChaserVehicle = 1;	//1 = CSM, 3 = LEM
+
+	//For mode 1 and 2
+	double PhaseAngle = 0.0;
+	double DH = 0.0;
+	double ElevationAngle = 26.6*RAD;
+	double TravelAngle = 130.0*RAD;
 };
 
 struct AP7ManPADOpt
@@ -2803,23 +2801,6 @@ public:
 		double ScaleFactor;
 	} med_p33;
 
-	//Offsets and elevation angle for two-impulse solution
-	struct MED_P51
-	{
-		double DH = 0.0; //Delta Height
-		double Phase = 0.0; //Phase Angle
-		double E = 0.0; //Elevation Angle
-		double WT = 0.0; //Travel angle for terminal phase
-	} med_p51;
-
-	//Two-Impulse Corrective Combination Nominals
-	struct MED_P52
-	{
-		double GET_NSR = 0.0; //Nominal Time of NSR Maneuver
-		double DH_NSR = 0.0; //Nominal Height Difference at NSR
-		double PH_NSR = 0.0; //Phase Angle at NSR
-	} med_p52;
-
 	//Initialize number of vehicles, first launch vehicle, mission date
 	struct MED_P80
 	{
@@ -3029,23 +3010,23 @@ public:
 		int DayofLiftoff;
 		int DaysinMonthofLiftoff;
 		//Block 5
-		double ElevationAngle = 26.6*RAD;
+		double DKIElevationAngle = 26.6*RAD;
 		//Block 8
-		double TerminalPhaseAngle;
+		double DKITerminalPhaseAngle = 130.0*RAD;
 		//Block 9
 		double TIDeltaH = 0.0;
 		//Block 10
-		double TIPhaseAngle;
+		double TIPhaseAngle = 0.0;
 		//Block 11
 		double TIElevationAngle = 26.6*RAD;
 		//Block 12
-		double TITravelAngle;
+		double TITravelAngle = 130.0*RAD;
 		//Block 13
-		double TINSRNominalTime;
+		double TINSRNominalTime = 0.0;
 		//Block 14
-		double TINSRNominalDeltaH;
+		double TINSRNominalDeltaH = 0.0;
 		//Block 15
-		double TINSRNominalPhaseAngle;
+		double TINSRNominalPhaseAngle = 0.0;
 		//Block 18 Bytes 5-8
 		int TPFDefinition;
 		//Block 25
@@ -3053,7 +3034,7 @@ public:
 		//Block 26
 		double TPFDefinitionValue;
 		//Block 27
-		double MinPerigee;
+		double DKIMinPerigee = 0.0;
 		//Block 28 Bytes 1-4
 		double DeltaNSR;
 		//Block 29
@@ -3340,7 +3321,6 @@ private:
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
-	LambertMan set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle);
 	void AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr = 3404);
 	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
@@ -3624,6 +3604,13 @@ public:
 	double MCTSD3;
 	//Total SPS ullage overlap
 	double MCTSD9;
+
+	//Impulse in one second SPS / APS / DPS burn
+	double MCTAK1;
+	//Initial value of SPS/APS/DPS minimum impulse curve
+	double MCTAK2;
+	//Slope of SPS/APS/DPS curve
+	double MCTAK3;
 	//LM RCS impulse due to 7 second, 2 jet ullage
 	double MCTAK4;
 

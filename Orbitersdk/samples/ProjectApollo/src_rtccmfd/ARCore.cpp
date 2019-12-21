@@ -598,9 +598,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lambertopt = 0;
 	twoimpulsemode = 0;
 	TwoImpulse_TPI = 0.0;
-	lambertElevOpt = 0;
-	lambertTPFOpt = 0;
-	lambertDT = 0.0;
 
 	SPQDeltaV = _V(0, 0, 0);
 	target = NULL;
@@ -2462,13 +2459,12 @@ int ARCore::subThread()
 
 			double GMT;
 			
-			if (lambertElevOpt == 0)
+			if (GC->rtcc->med_k30.ChaserVectorTime > 0)
 			{
-				GMT = GC->rtcc->GMTfromGET(T1);
+				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.ChaserVectorTime);
 			}
 			else
 			{
-				//Fix this
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
 
@@ -2482,6 +2478,15 @@ int ARCore::subThread()
 			sv_A.V = EPHEM.V;
 			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+
+			if (GC->rtcc->med_k30.TargetVectorTime > 0)
+			{
+				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.TargetVectorTime);
+			}
+			else
+			{
+				GMT = GC->rtcc->RTCCPresentTimeGMT();
+			}
 
 			if (GC->rtcc->ELFECH(GMT, 4 - GC->rtcc->med_k30.Vehicle, EPHEM))
 			{
@@ -2500,24 +2505,28 @@ int ARCore::subThread()
 		}
 
 		opt.axis = !lambertmultiaxis;
-		opt.Elevation = GC->rtcc->GZGENCSN.TIElevationAngle;
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.N = N;
-		opt.NCC_NSR_Flag = (twoimpulsemode == 1);
-		opt.use_XYZ_Offset = (twoimpulsemode != 1);
 		opt.Offset = offvec;
-		opt.DH = GC->rtcc->GZGENCSN.TIDeltaH;
 		opt.Perturbation = lambertopt;
-		opt.PhaseAngle = GC->rtcc->GZGENCSN.TIPhaseAngle;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.T1 = T1;
 		opt.T2 = T2;	
-		opt.elevOpt = lambertElevOpt;
-		opt.TPFOpt = lambertTPFOpt;
-		opt.DT = lambertDT;
-		opt.WT = lambertWT;
 		opt.ChaserVehicle = GC->rtcc->med_k30.Vehicle;
+		opt.mode = twoimpulsemode;
+		opt.ElevationAngle = GC->rtcc->GZGENCSN.TIElevationAngle;
+		opt.TravelAngle = GC->rtcc->GZGENCSN.TITravelAngle;
+		if (twoimpulsemode == 1)
+		{
+			opt.DH = GC->rtcc->GZGENCSN.TINSRNominalDeltaH;
+			opt.PhaseAngle = GC->rtcc->GZGENCSN.TINSRNominalPhaseAngle;
+		}
+		else if (twoimpulsemode == 2)
+		{
+			opt.DH = GC->rtcc->GZGENCSN.TIDeltaH;
+			opt.PhaseAngle = GC->rtcc->GZGENCSN.TIPhaseAngle;
+		}
 
 		GC->rtcc->LambertTargeting(&opt, res);
 
@@ -2529,18 +2538,8 @@ int ARCore::subThread()
 			TwoImpulse_TPI = res.t_TPI;
 		}
 
-		if (lambertElevOpt > 0)
-		{
-			T1 = res.T1;
-		}
-		if (lambertTPFOpt > 0)
-		{
-			T2 = res.T2;
-		}
-
-		//Reset these to display times
-		lambertElevOpt = 0;
-		lambertTPFOpt = 0;
+		T1 = res.T1;
+		T2 = res.T2;
 
 		Result = 0;
 	}
@@ -2631,7 +2630,7 @@ int ARCore::subThread()
 				opt.t_CDH = GC->rtcc->FindDH(sv_A, sv_P, GC->rtcc->CalcGETBase(), CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
 			}
 		}
-		opt.t_TPI = t_TPI;
+		opt.t_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue;
 
 		GC->rtcc->ConcentricRendezvousProcessor(opt, res);
 		spqresults = res;
@@ -3736,7 +3735,7 @@ int ARCore::subThread()
 		}		
 
 		opt.DH = GC->rtcc->GZGENCSN.DKIDeltaH;
-		opt.E = GC->rtcc->GZGENCSN.ElevationAngle;
+		opt.E = GC->rtcc->GZGENCSN.DKIElevationAngle;
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.maneuverline = DKI_Maneuver_Line;
 		opt.N_HC = DKI_N_HC;

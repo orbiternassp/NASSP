@@ -663,6 +663,9 @@ RTCC::RTCC()
 	MCTSD2 = 0.0;
 	MCTSD3 = 0.0;
 	MCTSD9 = 1.0;
+	MCTAK1 = 12455.0;
+	MCTAK2 = 31138.0;
+	MCTAK3 = 15569.0;
 	MCTAK4 = 6181.0;
 	MCTDTF = 0.925;
 	MCTJD1 = 570.0;
@@ -920,13 +923,20 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		mu = OrbMech::mu_Moon;
 	}
 
-	if (lambert->elevOpt == 0)
+	if (lambert->mode == 2)
 	{
-		T1 = lambert->T1;
+		if (lambert->T1 >= 0)
+		{
+			T1 = lambert->T1;
+		}
+		else
+		{
+			T1 = TPISearch(lambert->sv_A, lambert->sv_P, lambert->GETbase, lambert->ElevationAngle);
+		}
 	}
 	else
 	{
-		T1 = TPISearch(lambert->sv_A, lambert->sv_P, lambert->GETbase, lambert->Elevation);
+		T1 = lambert->T1;
 	}
 
 	dt1 = T1 - (lambert->sv_A.MJD - lambert->GETbase) * 24.0 * 60.0 * 60.0;
@@ -943,17 +953,20 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		OrbMech::rv_from_r0v0(lambert->sv_P.R, lambert->sv_P.V, dt1_apo, sv_P1.R, sv_P1.V, mu);
 	}
 
-	if (lambert->TPFOpt == 0)
+	if (lambert->mode == 2)
 	{
-		T2 = lambert->T2;
-	}
-	else if (lambert->TPFOpt == 1)
-	{
-		T2 = T1 + lambert->DT;
+		if (lambert->T2 >= 0)
+		{
+			T2 = lambert->T2;
+		}
+		else
+		{
+			T2 = T1 + OrbMech::time_theta(sv_P1.R, sv_P1.V, lambert->TravelAngle, mu);
+		}
 	}
 	else
 	{
-		T2 = T1 + OrbMech::time_theta(sv_P1.R, sv_P1.V, lambert->WT, mu);
+		T2 = lambert->T2;
 	}
 
 	dt2 = T2 - T1;
@@ -970,7 +983,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	VECTOR3 RP2off, VP2off;
 	double angle;
 
-	if (lambert->use_XYZ_Offset)
+	if (lambert->mode == 0)
 	{
 		angle = lambert->Offset.x / length(sv_P2.R);
 	}
@@ -989,7 +1002,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	i = crossp(j, k);
 	Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
-	if (lambert->use_XYZ_Offset)
+	if (lambert->mode == 0)
 	{
 		RP2off = RP2off + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
 	}
@@ -1035,7 +1048,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		res.dV_LVLH.y = 0.0;
 	}
 
-	if (lambert->NCC_NSR_Flag)
+	if (lambert->mode == 1)
 	{
 		SV sv_A2_apo;
 		VECTOR3 u, R_A2, V_A2, R_PC, V_PC, DV;
@@ -1052,7 +1065,7 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		DV = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu) - V_A2;
 		sv_A2_apo.V += DV;
 
-		dt_TPI = OrbMech::findelev(sv_A2_apo.R, sv_A2_apo.V, sv_P2.R, sv_P2.V, sv_P2.MJD, lambert->Elevation, gravref);
+		dt_TPI = OrbMech::findelev(sv_A2_apo.R, sv_A2_apo.V, sv_P2.R, sv_P2.V, sv_P2.MJD, lambert->ElevationAngle, gravref);
 		res.t_TPI = OrbMech::GETfromMJD(sv_P2.MJD, lambert->GETbase) + dt_TPI;
 	}
 
@@ -1070,7 +1083,11 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	}
 	PZMYSAVE.V_after[0] = sv_A1_apo.V;
 	PZMYSAVE.plan[0] = lambert->ChaserVehicle;
-	if (lambert->NCC_NSR_Flag)
+	if (lambert->mode == 0)
+	{
+		PZMYSAVE.code[0] = "LAM";
+	}
+	else if (lambert->mode == 1)
 	{
 		PZMYSAVE.code[0] = "NCC";
 	}
@@ -2721,24 +2738,6 @@ double RTCC::FindDH(MPTSV sv_A, MPTSV sv_P, double GETbase, double TIGguess, dou
 
 	CDHtime_cor = dt2 + (SVMJD - GETbase) * 24 * 60 * 60;		//the new, calculated CDH time
 	return CDHtime_cor;
-}
-
-LambertMan RTCC::set_lambertoptions(SV sv_A, SV sv_P, double GETbase, double T1, double T2, int N, int axis, int Perturbation, VECTOR3 Offset, double PhaseAngle)
-{
-	LambertMan opt;
-
-	opt.axis = axis;
-	opt.GETbase = GETbase;
-	opt.N = N;
-	opt.Offset = Offset;
-	opt.Perturbation = Perturbation;
-	opt.PhaseAngle = PhaseAngle;
-	opt.sv_A = sv_A;
-	opt.sv_P = sv_P;
-	opt.T1 = T1;
-	opt.T2 = T2;
-	
-	return opt;
 }
 
 double RTCC::TPISearch(SV sv_A, SV sv_P, double GETbase, double elev)
@@ -7265,7 +7264,18 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 		double dt;
 
 		dt = OrbMech::time_theta(sv_W.R, sv_W.V, 140.0*RAD, GGRAV*oapiGetMass(gravref));
-		lambert = set_lambertoptions(sv_C, sv_W, opt->GETbase, opt->t_C, opt->t_C + dt, 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 0), 0);
+
+		lambert.mode = 0;
+		lambert.GETbase = opt->GETbase;
+		lambert.T1 = opt->t_C;
+		lambert.T2 = opt->t_C + dt;
+		lambert.N = 0;
+		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
+		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lambert.Offset = _V(0, 0, 0);
+		lambert.sv_A = sv_C;
+		lambert.sv_P = sv_W;
+
 		LambertTargeting(&lambert, lamres);
 
 		res->dV_LVLH = dV_LVLH = lamres.dV_LVLH;
@@ -7280,7 +7290,18 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 		double dt;
 
 		dt = OrbMech::time_theta(sv_W.R, sv_W.V, 140.0*RAD, GGRAV*oapiGetMass(gravref));
-		lambert = set_lambertoptions(sv_C, sv_W, opt->GETbase, opt->t_C, opt->t_TPI + dt, 0, RTCC_LAMBERT_MULTIAXIS, RTCC_LAMBERT_PERTURBED, _V(0, 0, 0), 0);
+
+		lambert.mode = 0;
+		lambert.GETbase = opt->GETbase;
+		lambert.T1 = opt->t_C;
+		lambert.T2 = opt->t_TPI + dt;
+		lambert.N = 0;
+		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
+		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
+		lambert.Offset = _V(0, 0, 0);
+		lambert.sv_A = sv_C;
+		lambert.sv_P = sv_W;
+
 		LambertTargeting(&lambert, lamres);
 
 		res->dV_LVLH = dV_LVLH = lamres.dV_LVLH;
@@ -9978,7 +9999,7 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 
 	lamman.GETbase = opt.GETbase;
 	lamman.N = 0;
 	lamman.axis = RTCC_LAMBERT_MULTIAXIS;
-	lamman.use_XYZ_Offset = false;
+	lamman.mode = 2;
 
 	sv_INS.gravref = sv_P.gravref;
 	//Bias by 1 minute from CSM over LS
@@ -10006,15 +10027,14 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 
 			lamman.T2 = res.t_TPI;
 			lamman.PhaseAngle = DTheta_i;
 			lamman.DH = opt.DH;
-			lamman.TPFOpt = 0;
 		}
 		else
 		{
 			lamman.T1 = res.t_TPI;
-			lamman.WT = opt.theta_F;
+			lamman.T2 = -1.0;
+			GZGENCSN.TITravelAngle = opt.theta_F;
 			lamman.PhaseAngle = 0.0;
 			lamman.DH = 0.0;
-			lamman.TPFOpt = 2;
 		}
 		
 		lamman.sv_A = sv_INS;
@@ -15909,6 +15929,71 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 			{
 				res.AGS_DV = PIAEDV(man->dV_inertial, R_m, V_m, man->R_BI, false) / 0.3048;
 			}
+
+			EphemerisData sv_dh;
+			OrbMech::CELEMENTS elem_a, elem_m;
+			double h1, h2, i1, i2, u1, u2, gamma, Cg, Tg, alpha1, alpha2, beta, theta_R, n, dt, t_R;
+			int i = 0;
+			dt = 1.0;
+			t_R = man->GMT_BO;
+
+			sv_dh.RBI = man->RefBodyInd;
+
+			while (i<10 && abs(dt)>0.01)
+			{
+				elem_a = OrbMech::GIMIKC(R_a, V_a, mu);
+				elem_m = OrbMech::GIMIKC(R_m, V_m, mu);
+
+				h1 = elem_m.h;
+				h2 = elem_a.h;
+				i1 = elem_m.i;
+				i2 = elem_a.i;
+				u1 = OrbMech::MeanToTrueAnomaly(elem_m.l, elem_m.e) + elem_m.g;
+				if (u1 > PI2)
+				{
+					u1 -= PI2;
+				}
+				u2 = OrbMech::MeanToTrueAnomaly(elem_a.l, elem_a.e) + elem_a.g;
+				if (u2 > PI2)
+				{
+					u2 -= PI2;
+				}
+
+				gamma = (h2 - h1) / 2.0;
+				Cg = cos(gamma);
+				Tg = sin(gamma) / Cg;
+				alpha2 = (i2 + i1) / 2.0;
+				alpha1 = alpha2 - i1;
+				beta = 2.0*atan(cos(alpha2) / cos(alpha1)*Tg);
+				theta_R = u1 - u2 + beta;
+				if (theta_R > PI)
+				{
+					theta_R -= PI2;
+				}
+				if (theta_R < -PI)
+				{
+					theta_R += PI2;
+				}
+				if (i == 0)
+				{
+					res.PHASE = theta_R * DEG;
+				}
+
+				n = OrbMech::GetMeanMotion(R_a, V_a, mu);
+				dt = theta_R / n;
+
+				sv_dh.R = R_a;
+				sv_dh.V = V_a;
+				sv_dh.GMT = t_R;
+				
+				sv_dh = coast(sv_dh, dt);
+				R_a = sv_dh.R;
+				V_a = sv_dh.V;
+				t_R = sv_dh.GMT;
+
+				i++;
+			}
+			res.DH = (length(R_a) - length(R_m)) / 1852.0;
 		}
 	}
 	else
@@ -18624,18 +18709,66 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 	{
 		//TBD
 	}
+	//Offsets and elevation angle for two-impulse solution
 	else if (med == 51)
 	{
-		GZGENCSN.TIDeltaH = med_p51.DH*MCCNMC;
-		GZGENCSN.TIPhaseAngle = med_p51.Phase*RAD;
-		GZGENCSN.TIElevationAngle = med_p51.E*RAD;
-		GZGENCSN.TITravelAngle = med_p51.WT*RAD;
+		double val;
+		if (data.size() > 0 && data[0] != "")
+		{
+			if (sscanf(data[0].c_str(), "%lf", &val) == 1)
+			{
+				GZGENCSN.TIDeltaH = val * 1852.0;
+			}
+		}
+		if (data.size() > 1 && data[1] != "")
+		{
+			if (sscanf(data[1].c_str(), "%lf", &val) == 1)
+			{
+				GZGENCSN.TIPhaseAngle = val * RAD;
+			}
+		}
+		if (data.size() > 2 && data[2] != "")
+		{
+			if (sscanf(data[2].c_str(), "%lf", &val) == 1)
+			{
+				GZGENCSN.TIElevationAngle = val * RAD;
+			}
+		}
+		if (data.size() > 3 && data[3] != "")
+		{
+			if (sscanf(data[3].c_str(), "%lf", &val) == 1)
+			{
+				GZGENCSN.TITravelAngle = val * RAD;
+			}
+		}
 	}
+	//Two-impulse corrective combination nominals
 	else if (med == 52)
 	{
-		GZGENCSN.TINSRNominalTime = med_p52.GET_NSR;
-		GZGENCSN.TINSRNominalDeltaH = med_p52.DH_NSR;
-		GZGENCSN.TINSRNominalPhaseAngle = med_p52.PH_NSR;
+		double val;
+		if (data.size() > 0 && data[0] != "")
+		{
+			double hh, mm, ss;
+			if (sscanf(data[0].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
+			{
+				val = hh * 3600.0 + mm * 60.0 + ss;
+				GZGENCSN.TINSRNominalTime = val;
+			}
+		}
+		if (data.size() > 1 && data[1] != "")
+		{
+			if (sscanf(data[1].c_str(), "%lf", &val) == 1)
+			{
+				GZGENCSN.TINSRNominalDeltaH = val * 1852.0;
+			}
+		}
+		if (data.size() > 2 && data[2] != "")
+		{
+			if (sscanf(data[2].c_str(), "%lf", &val) == 1)
+			{
+				GZGENCSN.TINSRNominalPhaseAngle = val * RAD;
+			}
+		}
 	}
 	else if (med == 8)
 	{
@@ -21568,14 +21701,11 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		DTSPAN[7] = 0.1765;
 		DTSPAN[8] = 0.5;
 
-		XK[0] = Thrust;
-		XK[1] = 0.0;
-		XK[2] = Thrust;
-		XK[3] = 6975.34;
-		if (TArr.UllageOption)
-		{
-			XK[3] *= 2.0;
-		}
+		XK[0] = rtcc->MCTAK1;
+		XK[1] = rtcc->MCTAK2;
+		XK[2] = rtcc->MCTAK3;
+		XK[3] = rtcc->MCTAK4;
+
 		if (TArr.DTU == 0.0)
 		{
 			XK[3] = 0.0;

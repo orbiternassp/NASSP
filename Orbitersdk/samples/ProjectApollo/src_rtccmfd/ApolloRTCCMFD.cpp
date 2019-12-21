@@ -148,10 +148,15 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "MONTHOFLIFTOFF", GC->rtcc->GZGENCSN.MonthofLiftoff);
 	oapiWriteScenario_int(scn, "DAYOFLIFTOFF", GC->rtcc->GZGENCSN.DayofLiftoff);
 	oapiWriteScenario_int(scn, "DAYSINMONTHOFLIFTOFF", GC->rtcc->GZGENCSN.DaysinMonthofLiftoff);
-	papiWriteScenario_double(scn, "ELEVATIONANGLE", GC->rtcc->GZGENCSN.ElevationAngle);
+	papiWriteScenario_double(scn, "DKIELEVATIONANGLE", GC->rtcc->GZGENCSN.DKIElevationAngle);
+	papiWriteScenario_double(scn, "DKITERMINALPHASEANGLE", GC->rtcc->GZGENCSN.DKITerminalPhaseAngle);
 	papiWriteScenario_double(scn, "TIDELTAH", GC->rtcc->GZGENCSN.TIDeltaH);
-	papiWriteScenario_double(scn, "TIELEVATIONANGLE", GC->rtcc->GZGENCSN.TIElevationAngle);
 	papiWriteScenario_double(scn, "TIPHASEANGLE", GC->rtcc->GZGENCSN.TIPhaseAngle);
+	papiWriteScenario_double(scn, "TIELEVATIONANGLE", GC->rtcc->GZGENCSN.TIElevationAngle);
+	papiWriteScenario_double(scn, "TITRAVELANGLE", GC->rtcc->GZGENCSN.TITravelAngle);
+	papiWriteScenario_double(scn, "TINSRNOMINALTIME", GC->rtcc->GZGENCSN.TINSRNominalTime);
+	papiWriteScenario_double(scn, "TINSRNOMINALDELTAH", GC->rtcc->GZGENCSN.TINSRNominalDeltaH);
+	papiWriteScenario_double(scn, "TINSRNOMINALPHASEANGLE", GC->rtcc->GZGENCSN.TINSRNominalPhaseAngle);
 	papiWriteScenario_double(scn, "DKIDELTAH", GC->rtcc->GZGENCSN.DKIDeltaH);
 	papiWriteScenario_double(scn, "SPQDELTAH", GC->rtcc->GZGENCSN.SPQDeltaH);
 	papiWriteScenario_double(scn, "SPQELEVATIONANGLE", GC->rtcc->GZGENCSN.SPQElevationAngle);
@@ -340,10 +345,15 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "MONTHOFLIFTOFF", GC->rtcc->GZGENCSN.MonthofLiftoff);
 		papiReadScenario_int(line, "DAYOFLIFTOFF", GC->rtcc->GZGENCSN.DayofLiftoff);
 		papiReadScenario_int(line, "DAYSINMONTHOFLIFTOFF", GC->rtcc->GZGENCSN.DaysinMonthofLiftoff);
-		papiReadScenario_double(line, "ELEVATIONANGLE", GC->rtcc->GZGENCSN.ElevationAngle);
+		papiReadScenario_double(line, "DKIELEVATIONANGLE", GC->rtcc->GZGENCSN.DKIElevationAngle);
+		papiReadScenario_double(line, "DKITERMINALPHASEANGLE", GC->rtcc->GZGENCSN.DKITerminalPhaseAngle);
 		papiReadScenario_double(line, "TIDELTAH", GC->rtcc->GZGENCSN.TIDeltaH);
-		papiReadScenario_double(line, "TIELEVATIONANGLE", GC->rtcc->GZGENCSN.TIElevationAngle);
 		papiReadScenario_double(line, "TIPHASEANGLE", GC->rtcc->GZGENCSN.TIPhaseAngle);
+		papiReadScenario_double(line, "TIELEVATIONANGLE", GC->rtcc->GZGENCSN.TIElevationAngle);
+		papiReadScenario_double(line, "TITRAVELANGLE", GC->rtcc->GZGENCSN.TITravelAngle);
+		papiReadScenario_double(line, "TINSRNOMINALTIME", GC->rtcc->GZGENCSN.TINSRNominalTime);
+		papiReadScenario_double(line, "TINSRNOMINALDELTAH", GC->rtcc->GZGENCSN.TINSRNominalDeltaH);
+		papiReadScenario_double(line, "TINSRNOMINALPHASEANGLE", GC->rtcc->GZGENCSN.TINSRNominalPhaseAngle);
 		papiReadScenario_double(line, "DKIDELTAH", GC->rtcc->GZGENCSN.DKIDeltaH);
 		papiReadScenario_double(line, "SPQDELTAH", GC->rtcc->GZGENCSN.SPQDeltaH);
 		papiReadScenario_double(line, "SPQELEVATIONANGLE", GC->rtcc->GZGENCSN.SPQElevationAngle);
@@ -564,7 +574,32 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 2 * H / 14, "TPI/TPF", 7);
 		}
 
-		if (G->lambertElevOpt == 0)
+		if (GC->MissionPlanningActive)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "CHA:", 4);
+			if (GC->rtcc->med_k30.ChaserVectorTime > 0)
+			{
+				GET_Display(Buffer, GC->rtcc->med_k30.ChaserVectorTime);
+			}
+			else
+			{
+				sprintf_s(Buffer, "Present time");
+			}
+			skp->Text(2 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+
+			skp->Text(1 * W / 8, 5 * H / 14, "TGT:", 4);
+			if (GC->rtcc->med_k30.TargetVectorTime > 0)
+			{
+				GET_Display(Buffer, GC->rtcc->med_k30.TargetVectorTime);
+			}
+			else
+			{
+				sprintf_s(Buffer, "Present time");
+			}
+			skp->Text(2 * W / 8, 5 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		if (G->twoimpulsemode != 2 || G->T1 >= 0)
 		{
 			GET_Display(Buffer, G->T1);
 		}
@@ -572,42 +607,21 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, "E = %.2f°", GC->rtcc->GZGENCSN.TIElevationAngle*DEG);
 		}
-		skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		
-		if (G->lambertTPFOpt == 0)
+		if (G->twoimpulsemode != 2 || G->T2 >= 0)
 		{
 			GET_Display(Buffer, G->T2);
 		}
-		else if (G->lambertTPFOpt == 1)
-		{
-			sprintf(Buffer, "DT = %.0f min", G->lambertDT / 60.0);
-		}
 		else
 		{
-			sprintf(Buffer, "WT = %.2f°", G->lambertWT*DEG);
+			sprintf(Buffer, "WT = %.2f°", GC->rtcc->GZGENCSN.TITravelAngle*DEG);
 		}
-		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-		sprintf(Buffer, "%d", G->N);
 		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
-		if (G->lambertmultiaxis)
-		{
-			skp->Text(1 * W / 8, 10 * H / 14, "Multi-Axis", 10);
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 10 * H / 14, "X-Axis", 6);
-		}
+		sprintf(Buffer, "%d", G->N);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
-		/*if (G->orient == 0)
-		{
-			skp->Text(1 * W / 8, 12 * H / 14, "LVLH", 4);
-		}
-		else
-		{
-			skp->Text(1 * W / 8, 12 * H / 14, "P30", 3);
-		}*/
 		if (G->lambertopt == 0)
 		{
 			skp->Text(1 * W / 8, 12 * H / 14, "Spherical", 9);
@@ -615,6 +629,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		else
 		{
 			skp->Text(1 * W / 8, 12 * H / 14, "Perturbed", 9);
+		}
+
+		if (G->lambertmultiaxis)
+		{
+			skp->Text(1 * W / 8, 13 * H / 14, "Multi-Axis", 10);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 13 * H / 14, "X-Axis", 6);
 		}
 
 		if (GC->MissionPlanningActive)
@@ -650,8 +673,17 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 		else if (G->twoimpulsemode == 1)
 		{
-			skp->Text((int)(4.5 * H / 8), 6 * H / 21, "PHASE", 5);
-			skp->Text((int)(4.5 * H / 8), 7 * H / 21, "DEL H", 5);
+			skp->Text(9 * W / 16, 6 * H / 21, "PHASE", 5);
+			skp->Text(9 * W / 16, 7 * H / 21, "DEL H", 5);
+			sprintf(Buffer, "%.3f°", GC->rtcc->GZGENCSN.TINSRNominalPhaseAngle*DEG);
+			skp->Text(6 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3f NM", GC->rtcc->GZGENCSN.TINSRNominalDeltaH / 1852.0);
+			skp->Text(6 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			skp->Text(9 * W / 16, 6 * H / 21, "PHASE", 5);
+			skp->Text(9 * W / 16, 7 * H / 21, "DEL H", 5);
 			sprintf(Buffer, "%.3f°", GC->rtcc->GZGENCSN.TIPhaseAngle*DEG);
 			skp->Text(6 * W / 8, 6 * H / 21, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%.3f NM", GC->rtcc->GZGENCSN.TIDeltaH / 1852.0);
@@ -6605,11 +6637,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		sprintf_s(Buffer, "%.1f NM", GC->rtcc->GZGENCSN.DKIDeltaH / 1852.0);
 		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.2f°", GC->rtcc->GZGENCSN.ElevationAngle*DEG);
+		sprintf_s(Buffer, "%.2f°", GC->rtcc->GZGENCSN.DKIElevationAngle*DEG);
 		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.2f°", GC->rtcc->GZGENCSN.TerminalPhaseAngle*DEG);
+		sprintf_s(Buffer, "%.2f°", GC->rtcc->GZGENCSN.DKITerminalPhaseAngle*DEG);
 		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1f NM", GC->rtcc->GZGENCSN.MinPerigee / 1852.0);
+		sprintf_s(Buffer, "%.1f NM", GC->rtcc->GZGENCSN.DKIMinPerigee / 1852.0);
 		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	return true;
@@ -7828,7 +7860,7 @@ void ApolloRTCCMFD::menuCycleGMPManeuverType()
 
 void ApolloRTCCMFD::menuCycleGMPMarkerUp()
 {
-	if (marker >= 7)
+	if (marker >= 8)
 	{
 		marker = 0;
 	}
@@ -7842,7 +7874,7 @@ void ApolloRTCCMFD::menuCycleGMPMarkerDown()
 {
 	if (marker <= 0)
 	{
-		marker = 7;
+		marker = 8;
 	}
 	else
 	{
@@ -7971,27 +8003,46 @@ void ApolloRTCCMFD::set_P30DV(VECTOR3 dv)
 	G->dV_LVLH = dv*0.3048;
 }
 
+void ApolloRTCCMFD::menuTIVectorTimes()
+{
+	if (GC->MissionPlanningActive)
+	{
+		bool TIVectorTimesInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Choose the chaser and target vector GET (Format: hhh:mm:ss, hh:mm:ss), 0 or smaller for present time", TIVectorTimesInput, 0, 25, (void*)this);
+	}
+}
+
+bool TIVectorTimesInput(void *id, char *str, void *data)
+{
+	int hh1, mm1, ss1, hh2, mm2, ss2;
+	double chaser_time, target_time;
+	if (sscanf(str, "%d:%d:%d, %d:%d:%d", &hh1, &mm1, &ss1, &hh2, &mm2, &ss2) == 6)
+	{
+		chaser_time = ss1 + 60 * (mm1 + 60 * hh1);
+		target_time = ss2 + 60 * (mm2 + 60 * hh2);
+		((ApolloRTCCMFD*)data)->set_TIVectorTimes(chaser_time, target_time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TIVectorTimes(double chaser_time, double target_time)
+{
+	GC->rtcc->med_k30.ChaserVectorTime = chaser_time;
+	GC->rtcc->med_k30.TargetVectorTime = target_time;
+}
+
 void ApolloRTCCMFD::t1dialogue()
 {
 	bool T1GETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", T1GETInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss), negative time for TPI search", T1GETInput, 0, 20, (void*)this);
 }
 
 bool T1GETInput(void *id, char *str, void *data)
 {
-	int hh, mm, ss, t1time;
-	double elev, pdidt;
-	if (sscanf(str, "E=%lf", &elev) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_lambertelev(elev);
-		return true;
-	}
-	else if (sscanf(str, "PDI+%lf", &pdidt) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_t1_PDI(pdidt * 60.0);
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	int hh, mm, ss;
+	double t1time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		t1time = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_t1(t1time);
@@ -8002,14 +8053,17 @@ bool T1GETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_t1(double t1)
 {
-	G->lambertElevOpt = 0;
 	this->G->T1 = t1;
 }
 
-void ApolloRTCCMFD::set_t1_PDI(double dt)
+void ApolloRTCCMFD::set_TIChaserVectorTime(double get)
 {
-	G->lambertElevOpt = 0;
-	G->T1 = G->pdipad.GETI + dt;
+	GC->rtcc->med_k30.ChaserVectorTime = get;
+}
+
+void ApolloRTCCMFD::set_TITargetVectorTime(double get)
+{
+	GC->rtcc->med_k30.TargetVectorTime = get;
 }
 
 void ApolloRTCCMFD::OrbAdjGETDialogue()
@@ -8701,7 +8755,7 @@ void ApolloRTCCMFD::menuMPTDirectInputDock()
 
 void ApolloRTCCMFD::menuMPTDirectInputFinalConfig()
 {
-	if (GC->rtcc->med_m66.FinalConfig < 5)
+	if (GC->rtcc->med_m66.FinalConfig < RTCC_CONFIG_SIVB)
 	{
 		GC->rtcc->med_m66.FinalConfig++;
 	}
@@ -9050,7 +9104,6 @@ bool REFSMMATGETInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_lambertelev(double elev)
 {
 	GC->rtcc->GZGENCSN.TIElevationAngle = elev*RAD;
-	G->lambertElevOpt = 1;
 }
 
 void ApolloRTCCMFD::calcREFSMMAT()
@@ -9366,27 +9419,6 @@ void ApolloRTCCMFD::set_GMPInput4(double val)
 	}
 }
 
-void ApolloRTCCMFD::TIDHdialogue()
-{
-	bool TIDHInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the DH:", TIDHInput, 0, 20, (void*)this);
-}
-
-bool TIDHInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_TIDH(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TIDH(double DH)
-{
-	GC->rtcc->GZGENCSN.TIDeltaH = DH * 1852.0;
-}
-
 void ApolloRTCCMFD::DKIDHdialogue()
 {
 	bool DKIDHInput(void *id, char *str, void *data);
@@ -9427,30 +9459,6 @@ bool SPQDHInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_SPQDH(double DH)
 {
 	this->GC->rtcc->GZGENCSN.SPQDeltaH = DH * 1852.0;
-}
-
-void ApolloRTCCMFD::phasedialogue()
-{
-	if (G->twoimpulsemode == 1)
-	{
-		bool PhaseInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the phase angle:", PhaseInput, 0, 20, (void*)this);
-	}
-}
-
-bool PhaseInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_TIPhaseAngle(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TIPhaseAngle(double angdeg)
-{
-	GC->rtcc->GZGENCSN.TIPhaseAngle = angdeg * RAD;
 }
 
 void ApolloRTCCMFD::xdialogue()
@@ -9579,68 +9587,26 @@ void ApolloRTCCMFD::set_AGSKFactor(double time)
 void ApolloRTCCMFD::t2dialogue()
 {
 	bool T2GETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the arrival (Format: hhh:mm:ss)", T2GETInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the GET for the arrival (Format: hhh:mm:ss), negative time for TPF search", T2GETInput, 0, 20, (void*)this);
 }
 
 bool T2GETInput(void *id, char *str, void *data)
 {
 	int hh, mm, ss;
-	double t2time,unival;
-	char uni[10];
-	if (sscanf(str, "DT=%lf%s", &t2time, &uni) == 2)
-	{
-		if (strcmp(uni, "min") == 0)
-		{
-			unival = 60.0;
-		}
-		else if (strcmp(uni, "h") == 0)
-		{
-			unival = 3600.0;
-		}
-		else if (strcmp(uni, "s") == 0)
-		{
-			unival = 1.0;
-		}
-		else
-		{
-			return false;
-		}
-		((ApolloRTCCMFD*)data)->set_t2(t2time*unival, false);
-		return true;
-	}
-	else if (sscanf(str, "WT=%lf", &t2time) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_lambertWT(t2time);
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	double t2time;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		t2time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_t2(t2time, true);
+		((ApolloRTCCMFD*)data)->set_t2(t2time);
 
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_t2(double t2, bool t1dep)
+void ApolloRTCCMFD::set_t2(double t2)
 {
-	if (t1dep)
-	{
-		this->G->T2 = t2;
-		G->lambertTPFOpt = 0;
-	}
-	else
-	{
-		this->G->lambertDT = t2;
-		G->lambertTPFOpt = 1;
-	}
-}
-
-void ApolloRTCCMFD::set_lambertWT(double wt)
-{
-	G->lambertWT = wt * RAD;
-	G->lambertTPFOpt = 2;
+	G->T2 = t2;
 }
 
 void ApolloRTCCMFD::menuCycleK30Vehicle()
@@ -9729,7 +9695,7 @@ void ApolloRTCCMFD::SPQcalc()
 
 void ApolloRTCCMFD::lambertcalc()
 {
-	if (G->target != NULL)// && G->iterator == 0)
+	if (GC->MissionPlanningActive || G->target != NULL)// && G->iterator == 0)
 	{
 		G->lambertcalc();
 	}
@@ -10270,7 +10236,13 @@ void ApolloRTCCMFD::offvecdialogue()
 	}
 	else if (G->twoimpulsemode == 1)
 	{
-		TIDHdialogue();
+		bool MPTP52Input(void *id, char *str, void *data);
+		oapiOpenInputBox("Format: P52, Nom. Time of NSR, Nom. DH at NSR, Nom. Phase Angle at NSR; (leave open for no update)", MPTP52Input, 0, 30, (void*)this);
+	}
+	else
+	{
+		bool MPTP51Input(void *id, char *str, void *data);
+		oapiOpenInputBox("Format: P51, Delta Height, Phase Angle, Elevation Angle, Travel Angle; (leave open for no update)", MPTP51Input, 0, 30, (void*)this);
 	}
 }
 
@@ -10303,6 +10275,18 @@ bool OffVecInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_offvec(VECTOR3 off)
 {
 	G->offvec = off;
+}
+
+bool MPTP51Input(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+bool MPTP52Input(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
 }
 
 void ApolloRTCCMFD::cycleVECDirOpt()
@@ -11827,6 +11811,30 @@ bool SPQElevInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_SPQElevation(double elev)
 {
 	this->GC->rtcc->GZGENCSN.SPQElevationAngle = elev * RAD;
+}
+
+void ApolloRTCCMFD::menuSetSPQTPIDefinitionValue()
+{
+	bool SPQTPIDefinitionValueInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the TPI time (Format: hhh:mm:ss)", SPQTPIDefinitionValueInput, 0, 20, (void*)this);
+}
+
+bool SPQTPIDefinitionValueInput(void *id, char *str, void *data)
+{
+	double t1time;
+	int hh, mm, ss;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		t1time = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_SPQTPIDefinitionValue(t1time);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SPQTPIDefinitionValue(double get)
+{
+	GC->rtcc->GZGENCSN.TPIDefinitionValue = get;
 }
 
 void ApolloRTCCMFD::menuSetDKIElevation()
