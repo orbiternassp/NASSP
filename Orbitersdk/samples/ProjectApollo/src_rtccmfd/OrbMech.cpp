@@ -7604,6 +7604,11 @@ SV PositionMatch(SV sv_A, SV sv_P, double mu)
 	return sv_A1;
 }
 
+double THETR(double u1, double u2, double i1, double i2, double h1, double h2)
+{
+	return u1 - u2 - 2.0*atan(tan((h1 - h2) / 2.0)*(sin(0.5*(i1 + i2 - PI)) / sin(0.5*(i1 - i2 + PI))));
+}
+
 void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I)
 {
 	double eps, a, b, delta;

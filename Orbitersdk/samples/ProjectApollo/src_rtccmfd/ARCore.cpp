@@ -1641,7 +1641,7 @@ void ARCore::StateVectorCalc()
 	else
 	{
 		sv0 = GC->rtcc->StateVectorCalc(svtarget);
-		sv1 = GC->rtcc->GeneralTrajectoryPropagation(sv0, 0, OrbMech::MJDfromGET(SVDesiredGET, GC->rtcc->CalcGETBase()));
+		sv1 = GC->rtcc->coast(sv0, SVDesiredGET - OrbMech::GETfromMJD(sv0.MJD, GC->rtcc->CalcGETBase()));
 	}
 
 	UplinkSV = sv1;
@@ -2701,7 +2701,7 @@ int ARCore::subThread()
 		opt.RV_MCC = sv0;
 
 		GC->rtcc->GeneralManeuverProcessor(&opt, OrbAdjDVX, GPM_TIG, GMPResults);
-		SV GPM_SV = GC->rtcc->GeneralTrajectoryPropagation(opt.RV_MCC, 0, OrbMech::MJDfromGET(GPM_TIG, GC->rtcc->CalcGETBase()));
+		SV GPM_SV = GC->rtcc->coast(opt.RV_MCC, GPM_TIG - OrbMech::GETfromMJD(opt.RV_MCC.MJD, GC->rtcc->CalcGETBase()));
 		OrbAdjDVX = mul(OrbMech::LVLH_Matrix(GPM_SV.R, GPM_SV.V), OrbAdjDVX);
 
 		Result = 0;

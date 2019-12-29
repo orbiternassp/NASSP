@@ -615,6 +615,8 @@ namespace OrbMech {
 	//Keplerian to Inertial Conversion Subroutine
 	SV GIMKIC(CELEMENTS elem, double mu);
 	SV PositionMatch(SV sv_A, SV sv_P, double mu);
+	//Phase angle determination
+	double THETR(double u1, double u2, double i1, double i2, double h1, double h2);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);

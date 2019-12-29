@@ -875,22 +875,90 @@ struct SkylabRendezvousResults
 struct LunarLiftoffTimeOpt
 {
 	LunarLiftoffTimeOpt();
+
+	int opt;			// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+
+	//Flag that controls at which time CSI is done
+	//0: CSI is done 90° from insertion
+	//1: CSI is done at an input elapsed time from insertion
+	//2: CSI is done at LM apocynthion
+	int I_BURN;
+	//Flag that controls at what position TPI is done
+	//1: TPI is done over an input longitude
+	int I_TPI;
+	//Flag that controls CDH position
+	//0: CDH is done at the upcoming apsis after CSI
+	//1, 3, 5, etc., CDH is done I_CDP*period/2 after CSIU
+	int I_CDH;
+	//Time base for CSI if CSM is active vehicle and CSI was done on an apsis
+	double t_BASE;
+	//Flag that controls the search option for the absolute opening and closing of the launch window
+	//0: compute the launch window for only the input DH table
+	//1: compute the complete window
+	int I_SRCH;
+	//Flag that controls position for final maneuver
+	//0: Compute final maneuver for a rendezvous solution
+	//1: compute final maneuver for an offset in height and phase
+	int I_OS;
+	//Number of maneuvering vehicle
+	//1: CSM is maneuvering vehicle
+	//2: LM is maneuvering vehicle
+	int M;
+	//Number of non-maneuvering vehicle
+	//1: CSM is non-maneuvering vehicle
+	//2: LM is non-maneuvering vehicle
+	int P;
+	//Number of points used in the curve fit
+	int N_CURV;
+	//Number of entries in the DH table
+	int L_DH;
+	//Maximum in-orbit lifetime of the LM ascent stage pwoer systems
+	double t_max;
+	//Minimum safe height of an orbiting vehicle
+	double H_S;
+	//Rendezvous DV budge for both vehicles
+	double DV_MAX[2];
+	//Input table of coelliptic altitude differences
+	std::vector<double> DH;
+	double theta_1;		//Angle travelled between liftoff and insertion
+	double v_LH;
+	double dt_1;		//Ascent burn time (liftoff to insertion)
+	double v_LV;
+	//Height at insertion
+	double h_BO;
+	//Angle from TPI to the earth-moon line
+	double phi_TPI;
+	//Yaw steer capability of LM
+	double Y_S;
+	//Time to travel from insertion to CSI
+	double DT_B;
+	//Height difference to begin curve fit with
+	double DH_SRCH;
+	//Height difference to increment curve fit with
+	double DH_STEP;
+	//Transfer angle for terminal phase
+	double theta_F;
+	//Elevation angle to initiate terminal phase on
+	double E;
+	//Offset height difference
+	double DH_OFF;
+	//Phase angle offset
+	double dTheta_OFF;
+	//Threshold time to determine which launch window is obtained
+	double t_hole;
+	//Time of TPI
+	double t_TPI;
 	double lat;
 	double lng;
 	double R_LLS;
+	//Longitude at which TPI is to be scheduled
+	double lng_TPI;
+
 	double GETbase;		//usually MJD at launch
-	double t_hole;		//Threshold time
 	SV sv_CSM;			//CSM State vector
-	int opt;			// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	
 	double dt_2;		//Fixed time from insertion to TPI for direct profile
-	double theta_1;		//Angle travelled between liftoff and insertion
-	double dt_1;		//Ascent burn time (liftoff to insertion)
-	double DH;			//Delta height for concentric profile
 	bool IsInsVelInput;	//0 = calculate insertion velocity, 1 = use input velocity
-	double v_LH;
-	double v_LV;
-	double theta_F;		//Transfer angle for terminal phase
-	double E;			//Elevation angle to initiate terminal phase on
 };
 
 struct LunarLiftoffResults
@@ -2371,6 +2439,7 @@ public:
 	bool TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, SV &sv_reentry, double &lat_EMPcor);
 	bool TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
+	void LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
 	void LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
@@ -2389,8 +2458,6 @@ public:
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
-	//option: 0 = propagate to specified MJD, 1 = to mean anomaly, 2 = to argument of latitude
-	SV GeneralTrajectoryPropagation(SV sv0, int opt, double param);
 	void ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p);
 	VECTOR3 HeightManeuverInteg(SV sv0, double dh);
 	VECTOR3 ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD);
@@ -3681,6 +3748,18 @@ public:
 	double MCVEP3;
 	//Epsilon to allow cut-off computations to be sensed
 	double MCVEP4;
+	//Maximum allowable total yaw angle (IGM)
+	double MCVYMX;
+	//Maximum pitch rate (IGM)
+	double MCVPDL;
+	//Maximum yaw rate (IGM)
+	double MCVYDL;
+	//Time-to-go reference velocity increment
+	double MCVTGQ;
+	//IGM range angle constant
+	double MCVRQV;
+	//Terminal valus rotation indicator
+	double MCVRQT;
 };
 
 class CSMLMPoweredFlightIntegration
@@ -3996,20 +4075,24 @@ private:
 	//Time of last ephemeris or weight storage
 	double TLOP;
 	//Velocity cutoff storage
-	double VSB1, VSB2;
+	double VSB0, VSB1, VSB2;
 	//Weight at maneuver initiation
 	double WBM;
 	//Cutoff indicator (1 = cutoff time has been calculated)
 	int ICO;
 	//Last time IGM calculations were done
 	double TLAST;
-	//Pitch gimbal angle at ignition
+	//New pitch angle
 	double PITN;
-	//Yaw gimbal angle at ignition
+	//New yaw angle
 	double YAWN;
+	//Old pitch angle
+	double PITO;
+	//Old yaw angle
+	double YAWO;
 	//Ephemeris storage index
 	int JT;
-	//Weight tablr storage index
+	//Weight table storage index
 	int KWT;
 	//Number of items to be stored
 	int NITEMS;
@@ -4031,6 +4114,9 @@ private:
 	//Epsilon to allow cut-off computations to be sensed
 	double EPSL4;
 	VECTOR3 PLPS;
+	//Intermediate variables for cutoff computation
+	double DT1P, DT2P;
+	double XL2, XK1;
 
 	//Targeting parameters
 

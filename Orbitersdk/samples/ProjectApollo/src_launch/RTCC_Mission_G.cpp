@@ -1688,7 +1688,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Final pass through
 		LaunchTimePredictionProcessor(opt, res);
 
-		sv_CSM2 = GeneralTrajectoryPropagation(sv_CSM, 0, OrbMech::MJDfromGET(calcParams.PDI, GETbase));
+		sv_CSM2 = coast(sv_CSM, calcParams.PDI - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
 		MJD_over = OrbMech::P29TimeOfLongitude(sv_CSM2.R, sv_CSM2.V, sv_CSM2.MJD, sv_CSM2.gravref, calcParams.LSLng);
 		sv_CSM_over = coast(sv_CSM2, (MJD_over - sv_CSM2.MJD)*24.0*3600.0);
 
@@ -1938,7 +1938,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.LunarLiftoff = OrbMech::HHMMSSToSS(124, 23, 26);
 		TIG_nom = calcParams.LunarLiftoff;
 		MJD_TIG_nom = OrbMech::MJDfromGET(TIG_nom, GETbase);
-		sv_Liftoff = GeneralTrajectoryPropagation(sv_CSM, 0, MJD_TIG_nom);
+		sv_Liftoff = coast(sv_CSM, (MJD_TIG_nom - sv_CSM.MJD)*24.0*3600.0);
 
 		R_LS = RLS_from_latlng(calcParams.LSLat, calcParams.LSLng, calcParams.LSAlt);
 
@@ -2120,7 +2120,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.DVSTORE1 = _V(res.DV_CSI, 0, 0);
 		calcParams.SVSTORE1 = sv_Ins;
 
-		sv_CSM_upl = GeneralTrajectoryPropagation(sv_CSM, 0, OrbMech::MJDfromGET(res.t_Ins + 18.0*60.0, GETbase));
+		sv_CSM_upl = coast(sv_CSM, res.t_Ins + 18.0*60.0 - OrbMech::GETfromMJD(sv_CSM.MJD, GETbase));
 		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true, AGCEpoch, GETbase);
 
 		sprintf(uplinkdata, "%s", buffer1);
@@ -2140,7 +2140,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = calcParams.TEPHEM;
 
 		sv_CSM_upl = StateVectorCalc(calcParams.src, OrbMech::MJDfromGET(calcParams.Insertion + 18.0*60.0, GETbase));
-		sv_LM_upl = GeneralTrajectoryPropagation(calcParams.SVSTORE1, 0, OrbMech::MJDfromGET(calcParams.Insertion + 18.0*60.0, GETbase));
+		sv_LM_upl = coast(calcParams.SVSTORE1, calcParams.Insertion + 18.0*60.0 - OrbMech::GETfromMJD(calcParams.SVSTORE1.MJD, GETbase));
 
 		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true, AGCEpoch, GETbase);
 		AGCStateVectorUpdate(buffer2, sv_LM_upl, false, AGCEpoch, GETbase);
