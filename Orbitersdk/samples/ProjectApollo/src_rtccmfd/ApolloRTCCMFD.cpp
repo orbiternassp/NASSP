@@ -476,6 +476,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 	TLMCCDataTable datatable;
 	TLMCCMEDQuantities medquant;
+	TLMCCMissionConstants cst;
 
 	datatable.MJD_pc1 = OrbMech::MJDfromGET(76.0*3600.0, GC->GETbase);
 	datatable.MJD_pc2 = OrbMech::MJDfromGET(76.0*3600.0, GC->GETbase);
@@ -488,6 +489,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	datatable.lat_pc1 = 0.279074*RAD;
 	datatable.lat_pc2 = 0.279074*RAD;
 	datatable.lng_pc1 = PI;
+	datatable.lng_pc2 = PI;
 	datatable.lat_lls = GC->LSLat;
 	datatable.lng_lls = GC->LSLng;
 	datatable.R_lls = OrbMech::R_Moon + GC->LSAlt;
@@ -501,7 +503,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	medquant.Config = false;
 	medquant.GETBase = GC->GETbase;
 	medquant.CSMMass = 30000.0;
-	medquant.Mode = 2;
+	medquant.LMMass = 0.0;
+	medquant.Mode = 8;
 	medquant.useSPS = true;
 	medquant.INCL_fr = 40.0*RAD;
 	medquant.H_pl_min = 40.0*1852.0;
@@ -515,7 +518,10 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	medquant.Revs_LPO2 = 9.0;
 	medquant.TA_LOI = 0.0;
 
-	tlmcc.Init(&pzefem, datatable, medquant);
+	cst.m = 3;
+	cst.n = 8;
+
+	tlmcc.Init(&pzefem, datatable, medquant, cst);
 	tlmcc.Main();
 
 	// Draws the MFD title

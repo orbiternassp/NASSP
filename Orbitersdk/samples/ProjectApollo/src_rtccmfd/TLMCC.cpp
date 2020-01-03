@@ -24,6 +24,465 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "OrbMech.h"
 #include "TLMCC.h"
 
+namespace GenIterator
+{
+	double CalcCost(const std::vector<double> &A, const std::vector<double> &B)
+	{
+		unsigned i;
+		double D = 0.0;
+
+		for (i = 0;i < A.size();i++)
+		{
+			D += A[i] * B[i] * B[i];
+		}
+
+		return D;
+	}
+
+	void tmat_mul_mat(double **A, double **B, int m, int n, int p, double **C)
+	{
+		//A is NxM
+		//B is NxP
+		//C is MxP
+
+		int i, j, k;
+
+		for (i = 0;i < m;i++)
+		{
+			for (j = 0;j < p;j++)
+			{
+				C[i][j] = 0.0;
+				for (k = 0;k < n;k++)
+				{
+					C[i][j] += A[k][i] * B[k][j];
+				}
+			}
+		}
+	}
+
+	void diag_mul_mat(const std::vector<double> &a, double **B, int m, int n, double **C)
+	{
+		//a is M
+		//B is MxN
+		//C is MxN
+
+		int i, j;
+
+		for (i = 0;i < m;i++)
+		{
+			for (j = 0;j < n;j++)
+			{
+				C[i][j] = a[i] * B[i][j];
+			}
+		}
+	}
+
+	void vec_mul_vec(const std::vector<double> &a, const std::vector<double> &b, double *c)
+	{
+		for (unsigned i = 0;i < a.size();i++)
+		{
+			c[i] = a[i] * b[i];
+		}
+	}
+
+	void vec_mul_skal(const std::vector<double> &a, double b, double *c)
+	{
+		for (unsigned i = 0;i < a.size();i++)
+		{
+			c[i] = a[i] * b;
+		}
+	}
+
+	void mat_mul_vec(double **A, double *b, int m, int n, double *c)
+	{
+		for (int i = 0;i < m;i++)
+		{
+			c[i] = 0.0;
+			for (int j = 0;j < n;j++)
+			{
+				c[i] += A[i][j] * b[j];
+			}
+		}
+	}
+
+	void tmat_mul_vec(double **A, double *b, int m, int n, double *c)
+	{
+		for (int i = 0;i < m;i++)
+		{
+			c[i] = 0.0;
+			for (int j = 0;j < n;j++)
+			{
+				c[i] += A[j][i] * b[j];
+			}
+		}
+	}
+
+	void mat_plus_vec(double **A, double *b, int n, double **C)
+	{
+		int i, j;
+
+		for (i = 0;i < n;i++)
+		{
+			for (j = 0;j < n;j++)
+			{
+				C[i][j] = A[i][j];
+				if (i == j)
+				{
+					C[i][j] += b[i];
+				}
+			}
+		}
+	}
+
+	void CalcDX2(double **P, const std::vector<double> &W_X, const std::vector<double> &W_Y, double lambda, const std::vector<double> &dy, int m, int n, std::vector<double> &dx)
+	{
+		//W_X is M
+		//W_Y is N
+		//P is NxM
+		//dy, b are N
+		//c is M
+		//A is M
+		//B is NxM
+		//C is MxM
+		//D is MxM
+
+		int *PP = new int[m + 1];
+		double *b = new double[n];
+		double *c = new double[m];
+		double *A = new double[m];
+		double **B = new double*[n];
+		double **C = new double*[m];
+		double **D = new double*[m];
+		int i;
+
+		for (i = 0;i < m;i++)
+		{
+			C[i] = new double[m];
+			D[i] = new double[m];
+		}
+		for (i = 0;i < n;i++)
+		{
+			B[i] = new double[m];
+		}
+
+		vec_mul_vec(W_Y, dy, b);
+		tmat_mul_vec(P, b, m, n, c);
+		vec_mul_skal(W_X, lambda, A);
+		diag_mul_mat(W_Y, P, n, m, B);
+		tmat_mul_mat(P, B, m, n, m, C);
+		mat_plus_vec(C, A, m, D);
+
+		OrbMech::LUPDecompose(D, m, 0.0, PP);
+		OrbMech::LUPSolve(D, PP, c, m, dx);
+
+		delete[] b;
+		delete[] c;
+		delete[] A;
+		delete[] B;
+		delete[] C;
+		delete[] D;
+		delete[] PP;
+	}
+
+	void GeneralizedIterator(bool(*state_evaluation)(void*, std::vector<double>, void*, std::vector<double>&), const std::vector<double> &Y_min, const std::vector<double> &Y_max, const std::vector<double> &var_guess, const std::vector<double> &stepsizes, const std::vector<double> &x_weights, void *constants, void *data, const std::vector<int> &class_des, const std::vector<double> &y_weight, std::vector<double> &x_res, std::vector<double> &y_res)
+	{
+		double lambda, R, R_old, lambda1, w_avg;
+		bool terminate, select = true, terminate2, hasclass3, sizing;
+		int n, nMax, class1num;
+		unsigned N, M, i, j;
+		std::vector<double> Target, var_star, *v_l, *Y, var_star_temp, Y_star, C, dx, dy, dy_temp, W_Y, W_Y_apo, W_X;
+
+		//Get number of independent and dependent variables
+		M = var_guess.size();
+		N = Y_min.size();
+		//Set up some vectors
+		v_l = new std::vector<double>[M];
+		Y = new std::vector<double>[M];
+
+		var_star.assign(M, 0);
+		var_star_temp.assign(M, 0);
+		dx.assign(M, 0);
+		W_X.assign(M, 0);
+
+		Target.assign(N, 0);
+		Y_star.assign(N, 0);
+		C.assign(N, 0);
+		dy.assign(N, 0);
+		dy_temp.assign(N, 0);
+		W_Y.assign(N, 0);
+		W_Y_apo.assign(N, 0);
+
+		double **P = new double*[N];
+
+		for (i = 0;i < M;i++)
+		{
+			v_l[i].assign(M, 0);
+			Y[i].assign(N, 0);
+		}
+
+		for (i = 0;i < N;i++)
+		{
+			P[i] = new double[M];
+		}
+
+		//Set up iteration counters
+		nMax = 100;
+		n = 0;
+
+		//Calculate target as the average between min and max value
+		for (i = 0;i < N;i++)
+		{
+			Target[i] = (Y_max[i] + Y_min[i]) / 2.0;
+		}
+		//Set up initial guess
+		for (i = 0;i < M;i++)
+		{
+			var_star[i] = var_guess[i];
+		}
+
+		//Use initial guess to get a first vector
+		state_evaluation(data, var_star, constants, Y_star);
+		for (i = 0;i < N;i++)
+		{
+			dy[i] = Target[i] - Y_star[i];
+		}
+
+		//Initial guess
+		lambda = pow(2, -28);
+		//This needs work
+		for (i = 0;i < M;i++)
+		{
+			W_X[i] = x_weights[i];
+		}
+		//Select y weights based on class designation
+		class1num = 0;
+		hasclass3 = false;
+		w_avg = 1.0;
+		for (i = 0;i < N;i++)
+		{
+			if (class_des[i] == 1)
+			{
+				W_Y[i] = pow(2, -40) / pow((Y_max[i] - Y_min[i]) / 2.0, 2);
+				class1num++;
+				w_avg *= W_Y[i];
+			}
+			else if (class_des[i] == 3)
+			{
+				if (hasclass3)
+				{
+					//Error
+				}
+				else
+				{
+					hasclass3 = true;
+				}
+			}
+		}
+		w_avg = pow(w_avg, 1.0 / ((double)(class1num)));
+		for (i = 0;i < N;i++)
+		{
+			if (class_des[i] == 2)
+			{
+				W_Y[i] = y_weight[i] * w_avg;
+			}
+			else if (class_des[i] == 3)
+			{
+				W_Y[i] = y_weight[i] * pow(10, -4)*pow(2, -40)*((double)(class1num)) / pow(dy[i], 2);
+			}
+		}
+
+		do
+		{
+			terminate = true;
+
+			//Check on the class variables
+			for (i = 0;i < N;i++)
+			{
+				if (class_des[i] == 1)
+				{
+					C[i] = 1.0;
+					if ((Y_star[i] <= Y_min[i]) || (Y_star[i] >= Y_max[i]))
+					{
+						terminate = false;
+					}
+				}
+				else if (class_des[i] == 2)
+				{
+					if ((Y_star[i] > Y_min[i]) && (Y_star[i] < Y_max[i]))
+					{
+						C[i] = 0.0;
+					}
+					else
+					{
+						C[i] = 1.0;
+						terminate = false;
+					}
+				}
+				else
+				{
+					C[i] = 1.0;
+					if (terminate)
+					{
+						if (select)
+						{
+							W_Y[i] = y_weight[i] * pow(2, -32)*((double)(class1num)) / pow(dy[i], 2);
+						}
+						select = false;
+					}
+					/*else
+					{
+						if (select == false)
+						{
+							W_Y[i] = y_weight[i] * pow(10, -4)*pow(2, -40)*((double)(class1num)) / pow(dy[i], 2);
+							select = true;
+						}
+					}*/
+					terminate = false;
+				}
+				W_Y_apo[i] = W_Y[i] * C[i];
+			}
+
+			if (terminate)
+			{
+				break;
+			}
+
+			if (n == 0)
+			{
+				R_old = CalcCost(W_Y_apo, dy);
+			}
+
+			//x-vectors for partial derivatives
+			for (i = 0;i < M;i++)
+			{
+				v_l[i] = var_star;
+				v_l[i][i] += stepsizes[i];
+			}
+
+			//Evaluate these vectors
+			for (i = 0;i < M;i++)
+			{
+				state_evaluation(data, v_l[i], constants, Y[i]);
+			}
+			//Calculate partial derivatives matrix (Jacobi)
+			for (i = 0;i < N;i++)
+			{
+				for (j = 0;j < M;j++)
+				{
+					P[i][j] = (Y[j][i] - Y_star[i]) / stepsizes[j];
+				}
+			}
+			//Inhibitor control
+			if (lambda > pow(2, -49))
+			{
+				if (select)
+				{
+					lambda = lambda / 64.0;
+				}
+				else
+				{
+					lambda = lambda / 2.0;
+				}
+			}
+			do
+			{
+				CalcDX2(P, W_X, W_Y_apo, lambda, dy, M, N, dx);
+				sizing = false;
+				for (i = 0;i < M;i++)
+				{
+					if (abs(dx[i]) > 65536.0*stepsizes[i])
+					{
+						sizing = true;
+						break;
+					}
+				}
+
+				if (sizing == false)
+				{
+					lambda1 = lambda;
+					break;
+				}
+				lambda = lambda * 8.0;
+
+			} while (sizing);
+			do
+			{
+				CalcDX2(P, W_X, W_Y_apo, lambda1, dy, M, N, dx);
+				for (i = 0;i < M;i++)
+				{
+					var_star_temp[i] = var_star[i] + dx[i];
+				}
+				state_evaluation(data, var_star_temp, constants, Y_star);
+
+				for (i = 0;i < N;i++)
+				{
+					dy_temp[i] = Target[i] - Y_star[i];
+
+					if (class_des[i] == 2)
+					{
+						if ((Y_star[i] > Y_min[i]) && (Y_star[i] < Y_max[i]))
+						{
+							C[i] = 0.0;
+						}
+						else
+						{
+							C[i] = 1.0;
+						}
+						W_Y_apo[i] = W_Y[i] * C[i];
+					}
+				}
+
+				R = CalcCost(W_Y_apo, dy_temp);
+
+				if (R <= R_old)
+				{
+					lambda = lambda1;
+					break;
+				}
+				else
+				{
+					lambda1 = 8.0 * lambda1;
+				}
+			} while (R > R_old);
+
+			terminate2 = true;
+
+			for (i = 0;i < M;i++)
+			{
+				if (abs(dx[i]) > stepsizes[i] / 100.0)
+				{
+					terminate2 = false;
+				}
+			}
+
+			if (terminate2)
+			{
+				break;
+			}
+
+			R_old = R;
+			CalcDX2(P, W_X, W_Y_apo, lambda, dy, M, N, dx);
+			for (i = 0;i < M;i++)
+			{
+				var_star[i] += dx[i];
+			}
+			state_evaluation(data, var_star, constants, Y_star);
+			for (i = 0;i < N;i++)
+			{
+				dy[i] = Target[i] - Y_star[i];
+			}
+			n++;
+		} while (nMax >= n);
+
+		delete[] v_l;
+		delete[] Y;
+		delete[] P;
+
+		x_res = var_star;
+		y_res = Y_star;
+	}
+}
+
 TLMCCProcessor::TLMCCProcessor()
 {
 	R_E = OrbMech::R_Earth;
@@ -35,7 +494,7 @@ TLMCCProcessor::TLMCCProcessor()
 	isp_DPS = 3107.0;
 }
 
-void TLMCCProcessor::Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med)
+void TLMCCProcessor::Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst)
 {
 	ephemeris = ephem;
 	
@@ -43,6 +502,7 @@ void TLMCCProcessor::Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities
 
 	DataTable = data;
 	MEDQuantities = med;
+	Constants = cst;
 }
 
 void TLMCCProcessor::Main()
@@ -120,6 +580,8 @@ void TLMCCProcessor::Option1()
 
 void TLMCCProcessor::Option2()
 {
+	std::vector<double> BAP_guess3, BAP_guess4, BAP_res3, BAP_res4;
+
 	//Step 1
 	VECTOR3 guess;
 	VECTOR3 DV1 = ConicTLMC(DataTable.MJD_pc2, 0.0, DataTable.H_pc2 + DataTable.R_lls, DataTable.lat_pc2, PI, guess);
@@ -129,10 +591,25 @@ void TLMCCProcessor::Option2()
 
 	//Step 3
 	std::vector<double> BAP_guess2{ DV2.x,DV2.y,DV2.z, DataTable.gamma_loi, DataTable.dpsi_loi,DataTable.dt_lls };
-	std::vector<double> BAP_guess3 = ConicFreeReturnFixedOrbitLOI2BAP(sv_MCC, BAP_guess2);
+	ConicFreeReturnFixedOrbitLOI2BAP(sv_MCC, BAP_guess2, BAP_guess3, BAP_res3);
 
 	//Step 4
-	std::vector<double> BAP_guess4 = ConicFreeReturnFixedOrbitLOI2BAP(sv_MCC, BAP_guess3, true);
+	ConicFreeReturnFixedOrbitLOI2BAP(sv_MCC, BAP_guess3, BAP_guess4, BAP_res4, true, mass_stored);
+
+	//Step 5
+	double h_pl4, MJD_pl4, lat_pl4;
+	h_pl4 = h_pl_stored;
+	MJD_pl4 = MJD_pl_stored;
+	lat_pl4 = lat_pl_stored;
+	VECTOR3 DV5 = IntegratedTLMC(MJD_pl4, h_pl4 + DataTable.R_lls, lat_pl4, guess);
+
+	//Step 6
+	VECTOR3 DV6 = IntegratedFreeReturnFlyby(sv_MCC, h_pl4, lat_pl4, DV5);
+
+	VECTOR3 RF, VF;
+	double mfm0;
+	BURN(sv_MCC.R, sv_MCC.V, DV6.x, DV6.y, DV6.z, isp_MCC, mfm0, RF, VF);
+	DV_MCC = VF - sv_MCC.V;
 }
 
 void TLMCCProcessor::Option3()
@@ -466,7 +943,8 @@ VECTOR3 TLMCCProcessor::ConicTLMC(double MJD_P, double dt, double r_pl, double l
 	constants.r_pl = r_pl;
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::FirstGuessTrajectoryComputer;
+	bool ConicTLMCPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicTLMCPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -478,9 +956,9 @@ VECTOR3 TLMCCProcessor::ConicTLMC(double MJD_P, double dt, double r_pl, double l
 	Y_max.push_back(sv_MCC.R.y + 0.0657*1852.0);
 	Y_max.push_back(sv_MCC.R.z + 0.0657*1852.0);
 
-	std::vector<double> step { 0.1*0.3048, 0.01*RAD, 0.01*RAD };
+	std::vector<double> step { 0.01*0.3048, pow(2,-19), pow(2,-19) };
 	std::vector<double> guess { v_pl, 270.0*RAD, lambda_pl };
-	std::vector<double> x_weight { 1e-3,1.0,1.0 };
+	std::vector<double> x_weight { 0.3,512.0,512.0 };
 	std::vector<double> y_weight { 0,0,0 };
 	std::vector<int> class_des { 1,1,1 };
 
@@ -492,7 +970,9 @@ VECTOR3 TLMCCProcessor::ConicTLMC(double MJD_P, double dt, double r_pl, double l
 		class_des.push_back(2);
 	}
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	pl_state = _V(result[0], result[1], result[2]);
 	
 	double r, v1, v2, theta, phi, gamma1, psi1, gamma2, psi2;
@@ -512,7 +992,8 @@ VECTOR3 TLMCCProcessor::IntegratedTLMC(double MJD_P, double r_pl, double lat, VE
 	constants.r_pl = r_pl;
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::IntegratedTLMCComputer;
+	bool IntegratedTLMCComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedTLMCComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -524,9 +1005,9 @@ VECTOR3 TLMCCProcessor::IntegratedTLMC(double MJD_P, double r_pl, double lat, VE
 	Y_max.push_back(sv_MCC.R.y + 0.0657*1852.0);
 	Y_max.push_back(sv_MCC.R.z + 0.0657*1852.0);
 
-	std::vector<double> step { 0.1*0.3048, 0.01*RAD, 0.01*RAD };
+	std::vector<double> step{ 0.01*0.3048, pow(2,-19), pow(2,-19) };
 	std::vector<double> guess2{ guess.x,guess.y,guess.z };
-	std::vector<double> x_weight{ 1e-3,1.0,1.0 };
+	std::vector<double> x_weight{ 0.3,512.0,512.0 };
 	std::vector<double> y_weight{ 0,0,0 };
 	std::vector<int> class_des{ 1,1,1 };
 
@@ -538,7 +1019,9 @@ VECTOR3 TLMCCProcessor::IntegratedTLMC(double MJD_P, double r_pl, double lat, VE
 		class_des.push_back(2);
 	}
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	VECTOR3 newguess = _V(result[0], result[1], result[2]);
 
 	double r, v1, v2, theta, phi, gamma1, gamma2, psi1, psi2;
@@ -557,7 +1040,8 @@ VECTOR3 TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double H_nd, double 
 	constants.NodeStopIndicator = true;
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::IntegratedNodeComputer;
+	bool IntegratedNodeComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedNodeComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -571,13 +1055,15 @@ VECTOR3 TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double H_nd, double 
 	Y_max.push_back(lng_nd + 0.01*RAD);
 	Y_max.push_back(182.0*RAD);
 
-	std::vector<double> step { 0.1*0.3048, 0.01*RAD, 0.01*RAD };
+	std::vector<double> step{ 0.01*0.3048, pow(2,-19), pow(2,-19) };
 	std::vector<double> guess2{ guess.x,guess.y,guess.z };
-	std::vector<double> x_weight{ 1e-3,1.0,1.0 };
+	std::vector<double> x_weight{ 0.3,512.0,512.0 };
 	std::vector<double> y_weight{ 0,0,0,64 };
 	std::vector<int> class_des{ 1,1,1,2 };
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	return _V(result[0], result[1], result[2]);
 }
 
@@ -593,7 +1079,8 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, 
 	constants.OptimizeIndicator = false;
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::ConicMissionComputer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -621,7 +1108,9 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, 
 		class_des.push_back(2);
 	}
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	return _V(result[0], result[1], result[2]);
 }
 
@@ -637,7 +1126,8 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, doub
 	constants.OptimizeIndicator = true;
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::ConicMissionComputer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -659,7 +1149,9 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, doub
 	std::vector<double> y_weight{ 8.0,1.0,0,0,8.0 };
 	std::vector<int> class_des{ 2,2,inc_class,1,3 };
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	return _V(result[0], result[1], result[2]);
 }
 
@@ -673,7 +1165,8 @@ VECTOR3 TLMCCProcessor::IntegratedFreeReturnFlyby(MPTSV sv0, double H_pl, double
 	constants.sv0 = sv0;
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::IntegratedNodeComputer;
+	bool IntegratedNodeComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedNodeComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -695,7 +1188,9 @@ VECTOR3 TLMCCProcessor::IntegratedFreeReturnFlyby(MPTSV sv0, double H_pl, double
 	std::vector<double> y_weight{ 0,1,0,1,0 };
 	std::vector<int> class_des{ 1,2,1,2,1 };
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	return _V(result[0], result[1], result[2]);
 }
 
@@ -710,7 +1205,8 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_
 
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::ConicMissionComputer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -726,13 +1222,15 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_
 	Y_max.push_back(90.0*RAD);
 	Y_max.push_back(67.5665*1852.0);
 
-	std::vector<double> step { 0.1*0.3048, 0.001*RAD, 0.001*RAD };
+	std::vector<double> step { 0.01*0.3048, pow(2,-19), pow(2,-19) };
 	std::vector<double> guess2{ guess.x,guess.y,guess.z };
-	std::vector<double> x_weight{ 1e-3,1.0,1.0 };
-	std::vector<double> y_weight{ 0,1,0,1,0 };
+	std::vector<double> x_weight{ 1e-3,512.0,512.0 };
+	std::vector<double> y_weight{ 0,64.0,0,8.0,0 };
 	std::vector<int> class_des{ 1,2,1,2,1 };
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	return _V(result[0], result[1], result[2]);
 }
 
@@ -746,7 +1244,8 @@ VECTOR3 TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double H
 	constants.sv0 = sv0;
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::IntegratedNodeComputer;
+	bool IntegratedNodeComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedNodeComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -766,7 +1265,9 @@ VECTOR3 TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double H
 	std::vector<double> y_weight{ 0,0,1.0,0 };
 	std::vector<int> class_des{ 1,1,2,1 };
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	return _V(result[0], result[1], result[2]);
 }
 
@@ -785,7 +1286,8 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitBAP(MPTSV sv0, VECTOR3
 
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::ConicMissionComputer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -809,11 +1311,13 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitBAP(MPTSV sv0, VECTOR3
 	std::vector<double> y_weight{ 0,64,0,0,64,8.0 };
 	std::vector<int> class_des{ 1,2,1,1,2,3 };
 
-	std::vector<double> result = GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
 	return _V(result[0], result[1], result[2]);
 }
 
-std::vector<double> TLMCCProcessor::ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, std::vector<double> guess, bool optimize)
+void TLMCCProcessor::ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, std::vector<double> guess, std::vector<double> &x_res, std::vector<double> &y_res, bool optimize, double mass)
 {
 	void *constPtr;
 	TLMCCConicTrajectoryVars constants;
@@ -827,7 +1331,8 @@ std::vector<double> TLMCCProcessor::ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, 
 
 	constPtr = &constants;
 
-	void(TLMCCProcessor::*fptr)(std::vector<double>, void*, std::vector<double>& arr) = &TLMCCProcessor::ConicMissionComputer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
 
 	std::vector<double> Y_min, Y_max;
 
@@ -849,22 +1354,26 @@ std::vector<double> TLMCCProcessor::ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, 
 	Y_max.push_back(DataTable.lng_lls + 0.01*RAD);
 	Y_max.push_back(DataTable.psi_lls + 0.01*RAD);
 
-	std::vector<double> step{ 0.1*0.3048, 0.001*RAD, 0.001*RAD, 0.001*RAD, 0.001*RAD, 0.1 };
+	std::vector<double> step{ 0.00277*0.3048, pow(2,-21), pow(2,-19), pow(2,-19), pow(2,-19), pow(2,-18) };
 	std::vector<double> guess2 = guess;
-	std::vector<double> x_weight{ 1.0,512.0,512.0,1.0,1.0,10e-3 };
+	std::vector<double> x_weight{ 0.3,512.0,512.0,1.0,1.0,1e-3 };
 	std::vector<double> y_weight{ 1.0, 64.0, 0.0, 0.0, 8.0, 0.0, 0.0, 0.0 };
 	std::vector<int> class_des{ 2, 2, 1, 1, 2, 1, 1, 1 };
 
 	if (optimize)
 	{
-		Y_min.push_back(MEDQuantities.CSMMass + 5000.0*0.453);
-		Y_max.push_back(MEDQuantities.CSMMass + 5000.0*0.453);
-		y_weight.push_back(8.0);
+		Y_min.push_back(mass + 5000.0*0.453);
+		Y_max.push_back(mass + 5000.0*0.453);
+		y_weight.push_back(pow(2,-4));
 		class_des.push_back(3);
 		constants.OptimizeIndicator = true;
 	}
 
-	return GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, class_des, y_weight);
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
+	x_res = result;
+	y_res = y_vals;
 }
 
 void TLMCCProcessor::EmpiricalFirstGuess(double r, double lng, double dt, double &V, double &lambda)
@@ -891,12 +1400,18 @@ void TLMCCProcessor::EmpiricalFirstGuess(double r, double lng, double dt, double
 	}
 }
 
-void TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
+bool ConicTLMCPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr)
+{
+	return ((TLMCCProcessor*)data)->FirstGuessTrajectoryComputer(var, varPtr, arr);
+}
+
+bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
 {
 	TLMCCFirstGuessVars *vars;
 	vars = static_cast<TLMCCFirstGuessVars*>(varPtr);
 	VECTOR3 R, V, R_MCC, V_MCC;
 	double MJD, v_pl, psi_pl, lng_pl;
+	bool err;
 
 	v_pl = var[0];
 	psi_pl = var[1];
@@ -912,11 +1427,13 @@ void TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> var, void 
 		R_patch = R;
 		V_patch = V;
 		PATCH(R_patch, V_patch, MJD, -1, 2);
-		CTBODY(R_patch, V_patch, MJD, sv_MCC.MJD, 1, mu_E, R_MCC, V_MCC);
+		err = CTBODY(R_patch, V_patch, MJD, sv_MCC.MJD, 1, mu_E, R_MCC, V_MCC);
+		if (err) return true;
 	}
 	else
 	{
-		CTBODY(R, V, MJD, sv_MCC.MJD, 2, mu_M, R_MCC, V_MCC);
+		err = CTBODY(R, V, MJD, sv_MCC.MJD, 2, mu_M, R_MCC, V_MCC);
+		if (err) return true;
 	}
 
 	//Store for later use
@@ -933,9 +1450,16 @@ void TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> var, void 
 
 		arr[3] = gamma;
 	}
+
+	return false;
 }
 
-void TLMCCProcessor::IntegratedTLMCComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
+bool IntegratedTLMCComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr)
+{
+	return ((TLMCCProcessor*)data)->IntegratedTLMCComputer(var, varPtr, arr);
+}
+
+bool TLMCCProcessor::IntegratedTLMCComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
 {
 	TLMCCFirstGuessVars *vars;
 	vars = static_cast<TLMCCFirstGuessVars*>(varPtr);
@@ -965,9 +1489,16 @@ void TLMCCProcessor::IntegratedTLMCComputer(std::vector<double> var, void *varPt
 
 		arr[3] = gamma;
 	}
+
+	return false;
 }
 
-void TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
+bool IntegratedNodeComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr)
+{
+	return ((TLMCCProcessor*)data)->IntegratedNodeComputer(var, varPtr, arr);
+}
+
+bool TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
 {
 	TLMCCIntegratingTrajectoryVars *vars;
 	vars = static_cast<TLMCCIntegratingTrajectoryVars*>(varPtr);
@@ -997,7 +1528,7 @@ void TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPt
 		arr[2] = lng_nd;
 		arr[3] = inc_pg;
 
-		return;
+		return false;
 	}
 	else
 	{
@@ -1030,11 +1561,8 @@ void TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPt
 
 		if (vars->LunarFlybyIndicator)
 		{
-
-		}
-		else
-		{
-			
+			double lat, lng, dlng;
+			RNTSIM(sv_reentry.R, sv_reentry.V, sv_reentry.MJD, Constants.lambda_IP, lat, lng, dlng);
 		}
 
 		if (vars->FreeReturnInclinationIndicator)
@@ -1043,7 +1571,7 @@ void TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPt
 			arr[1] = inc_fr;
 			arr[2] = inc_pl;
 			arr[3] = H_fr_rtny;
-			return;
+			return false;
 		}
 		else
 		{
@@ -1052,19 +1580,24 @@ void TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPt
 			arr[2] = lat_pl;
 			arr[3] = inc_fr;
 			arr[4] = H_fr_rtny;
-			return;
+			return false;
 		}
 	}
 }
 
-void TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
+bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr)
+{
+	return ((TLMCCProcessor*)data)->ConicMissionComputer(var, varPtr, arr);
+}
+
+bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
 {
 	TLMCCConicTrajectoryVars *vars;
 	vars = static_cast<TLMCCConicTrajectoryVars*>(varPtr);
 	MPTSV sv0, SGSLOI;
-	VECTOR3 RF, VF, R_patch, V_patch, R_pl, V_pl, R_temp, V_temp, HH_pl;
+	VECTOR3 RF, VF, R_patch, V_patch, R_pl, V_pl, R_temp, V_temp, HH_pl, H;
 	double dv_mcc, dgamma_mcc, dpsi_mcc, m_before_MCC, mfm0, beta, MJD_patch, MJD_pl, ainv, m_before_LOI, H_fr_rtny, DT_1st_pass;
-	double H_pl, lat_pl, lng_pl, inc_pl, i_pg, gamma_loi, dpsi_loi, m_before_DOI, ainv_pl;
+	double H_pl, lat_pl, lng_pl, inc_pl, i_pg, gamma_loi, dpsi_loi, m_before_DOI, ainv_pl, a, e, i, n, P, eta, dpsi_lopc, DV_R;
 
 	if (vars->MCCIndicator == false)
 	{
@@ -1073,7 +1606,7 @@ void TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 			//Set mass
 			//Call TLIBRN
 			//Call ELEMT
-			return;
+			return false;
 		}
 		else
 		{
@@ -1178,7 +1711,7 @@ void TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 					arr[2] = i_pg;
 					arr[3] = H_fr_rtny;
 					arr[4] = m_before_LOI;
-					return;
+					return false;
 				}
 				else
 				{
@@ -1191,7 +1724,7 @@ void TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 					{
 						arr[4] = lat_pl;
 					}
-					return;
+					return false;
 				}
 			}
 			else
@@ -1201,7 +1734,7 @@ void TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 				arr[2] = lat_pl;
 				arr[3] = i_pg;
 				arr[4] = H_fr_rtny;
-				return;
+				return false;
 			}
 		}
 	}
@@ -1296,7 +1829,7 @@ TLMCC_Conic_A1:
 		arr[3] = H_fr_rtny;
 		arr[4] = i_pg;
 		arr[5] = m_before_DOI;
-		return;
+		return false;
 	}
 
 	goto TLMCC_Conic_F5;
@@ -1306,13 +1839,26 @@ TLMCC_Conic_C4:
 	double MJD_LLS, lat_S, lng_S, psi_S;
 
 	SCALE(RF, VF, MEDQuantities.H_A_LPO2, MEDQuantities.H_P_LPO2, R_LPO, V_LPO);
-	MJD_LLS = MJD_LOI + DT_1st_pass / 24.0 / 3600.0;
+	MJD_LLS = MJD_LPO + DT_1st_pass / 24.0 / 3600.0;
 	CTBODY(R_LPO, V_LPO, MJD_LPO, MJD_LLS, 2, mu_M, R_LLS, V_LLS);
 	R_temp = R_LLS;
 	V_temp = V_LLS;
 	LIBRAT(R_temp, V_temp, MJD_LLS, 5);
 	OrbMech::latlong_from_r(R_temp, lat_S, lng_S);
 	RVIO(true, R_temp, V_temp, r, v, theta, phi, gamma, psi_S);
+	ELEMT(R_LLS, V_LLS, mu_M, H, a, e, i, n, P, eta);
+	P = PI2 / (length(V_LLS) / length(R_LLS) + OrbMech::w_Moon);
+	VECTOR3 R_LLS2, V_LLS2;
+	double MJD_LLS2, m_before_TEI;
+	LOPC(R_LLS, V_LLS, MJD_LLS, unit(R_temp), Constants.m, Constants.n, P, R_LLS2, V_LLS2, MJD_LLS2, mfm0, dpsi_lopc);
+	if (vars->FixedOrbitIndicator == false && abs(dpsi_lopc) < 8e-3)
+	{
+		DV_R = 2.0*length(V_LLS2)*(31.24975000037*dpsi_lopc*dpsi_lopc + 2.0000053333202e-3);
+		mfm0 = exp(-DV_R / isp_MCC);
+	}
+	m_before_TEI = (m_before_DOI - MEDQuantities.LMMass)*mfm0;
+
+TLMCC_Conic_F5:
 
 	if (vars->FreeReturnIndicator)
 	{
@@ -1328,6 +1874,7 @@ TLMCC_Conic_C4:
 		{
 			arr[8] = m_before_DOI;
 		}
+		mass_stored = m_before_DOI;
 	}
 	else
 	{
@@ -1342,12 +1889,7 @@ TLMCC_Conic_C4:
 			arr[6] = m_before_DOI;
 		}
 	}
-	return;
-
-TLMCC_Conic_F5:
-
-
-	return;
+	return false;
 }
 
 double TLMCCProcessor::EBETA(VECTOR3 R, VECTOR3 V, double mu, double &ainv)
@@ -1738,10 +2280,6 @@ bool TLMCCProcessor::CTBODY(VECTOR3 R0, VECTOR3 V0, double MJD0, double MJDF, in
 	{
 		alpha = -beta * beta*ainv;
 		FCOMP(alpha, F1, F2, F3, F4);
-
-		double tesval1 = OrbMech::stumpC(-alpha);
-		double tesval2 = OrbMech::stumpS(-alpha);
-
 		t = (beta*beta*F1 + D0 / sqrt(mu)*beta*F2 + r0 * F3)*beta / sqrt(mu);
 		r = D0 / sqrt(mu)*beta*F3 + beta * beta*F2 + r0 * F4;
 		beta = beta + (dt - t)*sqrt(mu) / r;
@@ -1932,10 +2470,10 @@ void TLMCCProcessor::RNTSIM(VECTOR3 R, VECTOR3 V, double MJD, double lng_L, doub
 	}
 }
 
-void TLMCCProcessor::LOPC(VECTOR3 R0, VECTOR3 V0, double MJD0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &MJD3, double &mfm0)
+void TLMCCProcessor::LOPC(VECTOR3 R0, VECTOR3 V0, double MJD0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &MJD3, double &mfm0, double &dpsi)
 {
 	VECTOR3 R1, V1, R2, V2;
-	double dt1, MJD1, MJD2, dt2, dpsi;
+	double dt1, MJD1, MJD2, dt2;
 
 	dt1 = P * (-0.25 + (double)m);
 	MJD1 = MJD0 + dt1 / 24.0 / 3600.0;
@@ -2135,512 +2673,4 @@ double TLMCCProcessor::DDELTATIME(double a, double dt_apo, double xm, double bet
 		b[29] * dt*dt*xm*xm / (a*a);
 
 	return ddt * 3600.0;
-}
-
-double TLMCCProcessor::CalcCost(double *A, double *B, int N)
-{
-	int i;
-	double D = 0.0;
-
-	for (i = 0;i < N;i++)
-	{
-		D += A[i] * B[i] * B[i];
-	}
-
-	return D;
-}
-
-void tmat_mul_mat(double **A, double **B, int m, int n, int p, double **C)
-{
-	//A is NxM
-	//B is NxP
-	//C is MxP
-
-	int i, j, k;
-
-	for (i = 0;i < m;i++)
-	{
-		for (j = 0;j < p;j++)
-		{
-			C[i][j] = 0.0;
-			for (k = 0;k < n;k++)
-			{
-				C[i][j] += A[k][i] * B[k][j];
-			}
-		}
-	}
-}
-
-void diag_mul_mat(double *a, double **B, int m, int n, double **C)
-{
-	//a is M
-	//B is MxN
-	//C is MxN
-
-	int i, j;
-
-	for (i = 0;i < m;i++)
-	{
-		for (j = 0;j < n;j++)
-		{
-			C[i][j] = a[i] * B[i][j];
-		}
-	}
-}
-
-void vec_mul_vec(double *a, double *b, int n, double *c)
-{
-	for (int i = 0;i < n;i++)
-	{
-		c[i] = a[i] * b[i];
-	}
-}
-
-void vec_mul_skal(double *a, double b, int n, double *c)
-{
-	for (int i = 0;i < n;i++)
-	{
-		c[i] = a[i] * b;
-	}
-}
-
-void mat_mul_vec(double **A, double *b, int m, int n, double *c)
-{
-	for (int i = 0;i < m;i++)
-	{
-		c[i] = 0.0;
-		for (int j = 0;j < n;j++)
-		{
-			c[i] += A[i][j] * b[j];
-		}
-	}
-}
-
-void tmat_mul_vec(double **A, double *b, int m, int n, double *c)
-{
-	for (int i = 0;i < m;i++)
-	{
-		c[i] = 0.0;
-		for (int j = 0;j < n;j++)
-		{
-			c[i] += A[j][i] * b[j];
-		}
-	}
-}
-
-void mat_plus_vec(double **A, double *b, int n, double **C)
-{
-	int i, j;
-
-	for (i = 0;i < n;i++)
-	{
-		for (j = 0;j < n;j++)
-		{
-			C[i][j] = A[i][j];
-			if (i == j)
-			{
-				C[i][j] += b[i];
-			}
-		}
-	}
-}
-
-void TLMCCProcessor::CalcDX2(double **P, double *W_X, double *W_Y, double lambda, double *dy, int m, int n, double *dx)
-{
-	//W_X is M
-	//W_Y is N
-	//P is NxM
-	//dy, b are N
-	//c is M
-	//A is M
-	//B is NxM
-	//C is MxM
-	//D is MxM
-
-	int *PP = new int[m + 1];
-	double *b = new double[n];
-	double *c = new double[m];
-	double *A = new double[m];
-	double **B = new double*[n];
-	double **C = new double*[m];
-	double **D = new double*[m];
-	int i;
-
-	for (i = 0;i < m;i++)
-	{
-		C[i] = new double[m];
-		D[i] = new double[m];
-	}
-	for (i = 0;i < n;i++)
-	{
-		B[i] = new double[m];
-	}
-
-	vec_mul_vec(W_Y, dy, n, b);
-	tmat_mul_vec(P, b, m, n, c);
-	vec_mul_skal(W_X, lambda, m, A);
-	diag_mul_mat(W_Y, P, n, m, B);
-	tmat_mul_mat(P, B, m, n, m, C);
-	mat_plus_vec(C, A, m, D);
-
-	OrbMech::LUPDecompose(D, m, 0.0, PP);
-	OrbMech::LUPSolve(D, PP, c, m, dx);
-
-	delete[] b;
-	delete[] c;
-	delete[] A;
-	delete[] B;
-	delete[] C;
-	delete[] D;
-	delete[] PP;
-}
-
-std::vector<double> TLMCCProcessor::GeneralizedIterator(void(TLMCCProcessor::*state_evaluation)(std::vector<double>, void*, std::vector<double>&), const std::vector<double> &Y_min, const std::vector<double> &Y_max, const std::vector<double> &var_guess, const std::vector<double> &stepsizes, const std::vector<double> &x_weights, void *constants, const std::vector<int> &class_des, const std::vector<double> &y_weight)
-{
-	double lambda, a, b, R, S, R_old, lambda1, S0;
-	bool terminate, select = true, terminate2;
-	int n, nMax;
-	unsigned N, M, i, j;
-	std::vector<double> Target, var_star, *v_l, *Y, var_star_temp, Y_star;
-
-	//Get number of independent and dependent variables
-	M = var_guess.size();
-	N = Y_min.size();
-	//Set up some vectors
-	v_l = new std::vector<double>[M];
-	Y = new std::vector<double>[M];
-	Target.assign(N, 0);
-	var_star.assign(M, 0);
-	var_star_temp.assign(M, 0);
-	Y_star.assign(N, 0);
-
-	double **P = new double*[N];
-	double *W_X = new double[M];
-	double *W_Y = new double[N];
-	double *W_Y_apo = new double[N];
-	double *dx = new double[M];
-	double *dy = new double[N];
-	double *dy_temp = new double[N];
-	double *C = new double[N];
-
-	for (i = 0;i < M;i++)
-	{
-		v_l[i].assign(M, 0);
-		Y[i].assign(N, 0);
-	}
-
-	for (i = 0;i < N;i++)
-	{
-		P[i] = new double[M];
-	}
-
-	//Set up iteration counters
-	nMax = 50;
-	n = 0;
-
-	//Calculate target as the average between min and max value
-	for (i = 0;i < N;i++)
-	{
-		Target[i] = ((Y_max[i] + Y_min[i]) / 2.0);
-	}
-	//Set up initial guess
-	for (i = 0;i < M;i++)
-	{
-		var_star[i] = var_guess[i];
-	}
-
-	//Use initial guess to get a first vector
-	(this->*state_evaluation)(var_star, constants, Y_star);
-	for (i = 0;i < N;i++)
-	{
-		dy[i] = Target[i] - Y_star[i];
-	}
-
-	//Initial guess
-	lambda = 10e-6;
-	//This needs work
-	for (i = 0;i < M;i++)
-	{
-		W_X[i] = x_weights[i];
-	}
-	//This even more
-	S0 = 2.0;//sqrt(W_X.m11*W_X.m11 + W_X.m22*W_X.m22 + W_X.m33*W_X.m33);
-	//Select y weights based on class designation
-	for (i = 0;i < N;i++)
-	{
-		if (class_des[i] == 1)
-		{
-			W_Y[i] = pow(1.0 / abs(Y_max[i] - Y_min[i]), 2);
-		}
-		else if (class_des[i] == 2)
-		{
-			W_Y[i] = y_weight[i];//pow(1.0 / abs(Y_max[i] - Y_min[i]), 2)*y_weight[i];
-		}
-		else
-		{
-			W_Y[i] = y_weight[i];
-		}
-	}
-	a = 2.0;
-	b = 64.0;
-	
-	do
-	{
-		terminate = true;
-
-		//Check on the class variables
-		for (i = 0;i < N;i++)
-		{
-			if (class_des[i] == 1)
-			{
-				C[i] = 1.0;
-				if ((Y_star[i] <= Y_min[i]) || (Y_star[i] >= Y_max[i]))
-				{
-					terminate = false;
-				}
-			}
-			else if (class_des[i] == 2)
-			{
-				if ((Y_star[i] > Y_min[i]) && (Y_star[i] < Y_max[i]))
-				{
-					C[i] = 0.0;
-				}
-				else
-				{
-					C[i] = 1.0;
-					terminate = false;
-				}
-			}
-			else
-			{
-				if (terminate)
-				{
-					C[i] = 1.0;
-					if (select)
-					{
-						W_Y[i] = pow(1.0 / abs(dy[i]), 2)*y_weight[i];
-					}
-					select = false;
-				}
-				else
-				{
-					C[i] = 0.0;
-					if (select == false)
-					{
-						W_Y[i] = 0.0000001;
-						select = true;
-					}
-				}
-				terminate = false;
-			}
-			W_Y_apo[i] = W_Y[i] * C[i];
-		}
-
-		if (terminate)
-		{
-			break;
-		}
-
-		if (n == 0)
-		{
-			R_old = CalcCost(W_Y_apo, dy, N);
-		}
-
-		//x-vectors for partial derivatives
-		for (i = 0;i < M;i++)
-		{
-			v_l[i] = var_star;
-			v_l[i][i] += stepsizes[i];
-		}
-
-		//Evaluate these vectors
-		for (i = 0;i < M;i++)
-		{
-			(this->*state_evaluation)(v_l[i], constants, Y[i]);
-		}
-		//Calculate partial derivatives matrix (Jacobi)
-		for (i = 0;i < N;i++)
-		{
-			for (j = 0;j < M;j++)
-			{
-				P[i][j] = (Y[j][i] - Y_star[i]) / (v_l[j][j] - var_star[j]);
-			}
-		}
-		//Inhibitor control
-		lambda = lambda / b;
-		do
-		{
-			CalcDX2(P, W_X, W_Y_apo, lambda, dy, M, N, dx);
-			S = CalcCost(W_X, dx, M);
-
-			if (S <= S0)
-			{
-				lambda1 = lambda;
-				break;
-			}
-			lambda = lambda * a;
-
-		} while (S > S0);
-		do
-		{
-			CalcDX2(P, W_X, W_Y_apo, lambda1, dy, M, N, dx);
-			for (i = 0;i < M;i++)
-			{
-				var_star_temp[i] = var_star[i] + dx[i];
-			}
-			(this->*state_evaluation)(var_star_temp, constants, Y_star);
-
-			for (i = 0;i < N;i++)
-			{
-				dy_temp[i] = Target[i] - Y_star[i];
-
-				if (class_des[i] == 2)
-				{
-					if ((Y_star[i] > Y_min[i]) && (Y_star[i] < Y_max[i]))
-					{
-						C[i] = 0.0;
-					}
-					else
-					{
-						C[i] = 1.0;
-					}
-					W_Y_apo[i] = W_Y[i] * C[i];
-				}
-			}
-
-			R = CalcCost(W_Y_apo, dy_temp, N);
-
-			if (R <= R_old)
-			{
-				lambda = lambda1;
-				break;
-			}
-			else
-			{
-				lambda1 = a * lambda1;
-			}
-		} while (R > R_old);
-
-		terminate2 = true;
-
-		for (i = 0;i < M;i++)
-		{
-			if (abs(dx[i]) > stepsizes[i] / 100.0)
-			{
-				terminate2 = false;
-			}
-		}
-
-		if (terminate2)
-		{
-			break;
-		}
-
-		R_old = R;
-		CalcDX2(P, W_X, W_Y_apo, lambda, dy, M, N, dx);
-		for (i = 0;i < M;i++)
-		{
-			var_star[i] += dx[i];
-		}
-		(this->*state_evaluation)(var_star, constants, Y_star);
-		for (i = 0;i < N;i++)
-		{
-			dy[i] = Target[i] - Y_star[i];
-		}
-		n++;
-	} while (nMax >= n);
-
-	delete[] v_l;
-	delete[] Y;
-	delete[] W_Y;
-	delete[] P;
-	delete[] W_X;
-	delete[] W_Y_apo;
-	delete[] dx;
-	delete[] dy;
-	delete[] dy_temp;
-	delete[] C;
-
-	return var_star;
-}
-
-VECTOR3 TLMCCProcessor::GeneralizedIterator2(VECTOR3(TLMCCProcessor::*state_evaluation)(VECTOR3, void*), VECTOR3 Y_min, VECTOR3 Y_max, VECTOR3 var_guess, VECTOR3 stepsizes, void *constants)
-{
-	VECTOR3 var_star;
-	VECTOR3 dy, Y_star;
-	VECTOR3 v_l[3][4];
-	VECTOR3 Y[3][4];
-	VECTOR3 T[3];
-	VECTOR3 Target;
-	MATRIX3 T2;
-	double h, rho, max_dr;
-	int n, nMax;
-	bool terminate;
-
-	nMax = 100;
-	h = 1.0;//10e-3;
-	rho = 0.5;
-	n = 0;
-
-	double hvec[4] = { h / 2, -h / 2, rho*h / 2, -rho * h / 2 };
-
-	Target = (Y_max + Y_min) / 2.0;
-	var_star = var_guess;
-
-	Y_star = (this->*state_evaluation)(var_star, constants);
-	dy = Target - Y_star;
-	max_dr = 0.5*length(Y_star);
-	if (length(dy) > max_dr)
-	{
-		dy = unit(dy)*max_dr;
-	}
-
-	do
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			v_l[0][i] = var_star + _V(stepsizes.x, 0, 0)*hvec[i];
-			v_l[1][i] = var_star + _V(0, stepsizes.y, 0)*hvec[i];
-			v_l[2][i] = var_star + _V(0, 0, stepsizes.z)*hvec[i];
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			for (int j = 0; j < 4; j++)
-			{
-				Y[i][j] = (this->*state_evaluation)(v_l[i][j], constants);
-			}
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			T[i] = (Y[i][2] - Y[i][3] - (Y[i][0] - Y[i][1])*OrbMech::power(rho, 3.0)) * 1.0 / (rho*stepsizes.data[i] * (1.0 - OrbMech::power(rho, 2.0)));
-		}
-		T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
-		var_star = var_star + mul(OrbMech::inverse(T2), dy);
-		Y_star = (this->*state_evaluation)(var_star, constants);
-		dy = Target - Y_star;
-		max_dr = 0.5*length(Y_star);
-		if (length(dy) > max_dr)
-		{
-			dy = unit(dy)*max_dr;
-		}
-
-		//Termination condition
-		terminate = true;
-
-		for (int i = 0;i < 3;i++)
-		{
-			if (Y_star.data[i] < Y_min.data[i])
-			{
-				terminate = false;
-			}
-			if (Y_star.data[i] > Y_max.data[i])
-			{
-				terminate = false;
-			}
-		}
-
-		n++;
-	} while (!terminate && nMax >= n);
-
-	return var_star;
 }

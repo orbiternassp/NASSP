@@ -4402,12 +4402,12 @@ void CubicInterpolation(double *x, double *y, double *a)
 	double **V = NULL;
 	double **A = NULL;
 	int *P = NULL;
-	double *sol = NULL;
+	std::vector<double> sol;
 	double Tol;
 	V = new double*[4];
 	A = new double*[4];
 	P = new int[5];
-	sol = new double[4];
+	sol.assign(4, 0);
 	for (int i = 0;i < 4;i++)
 	{
 		V[i] = new double[4];
@@ -4441,7 +4441,6 @@ void CubicInterpolation(double *x, double *y, double *a)
 	delete[] A;
 	delete[] V;
 	delete[] P;
-	delete[]sol;
 }
 
 //x = N+1 data points
@@ -4508,7 +4507,7 @@ int LUPDecompose(double **A, int N, double Tol, int *P)
 	return 1;  //decomposition done 
 }
 
-void LUPSolve(double **A, int *P, double *b, int N, double *x) {
+void LUPSolve(double **A, int *P, double *b, int N, std::vector<double> &x) {
 
 	for (int i = 0; i < N; i++) {
 		x[i] = b[P[i]];

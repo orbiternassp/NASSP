@@ -23,6 +23,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+namespace GenIterator
+{
+	void GeneralizedIterator(bool(*state_evaluation)(void *, std::vector<double>, void*, std::vector<double>&), const std::vector<double> &Y_min, const std::vector<double> &Y_max, const std::vector<double> &var_guess, const std::vector<double> &stepsizes, const std::vector<double> &x_weights, void *constants, void *data, const std::vector<int> &class_des, const std::vector<double> &y_weight, std::vector<double> &x_res, std::vector<double> &y_res);
+	double CalcCost(const std::vector<double> &A, const std::vector<double> &B);
+	void CalcDX2(double **P, const std::vector<double> &W_X, const std::vector<double> &W_Y, double lambda, const std::vector<double> &dy, int m, int n, std::vector<double> &dx);
+}
+
 struct TLMCCDataTable
 {
 	double MJD_pc1;
@@ -82,6 +89,12 @@ struct TLMCCMEDQuantities
 	double TA_LOI;
 };
 
+struct TLMCCMissionConstants
+{
+	int n, m;
+	double lambda_IP;
+};
+
 struct TLMCCFirstGuessVars
 {
 	double r_pl;
@@ -118,9 +131,14 @@ class TLMCCProcessor
 {
 public:
 	TLMCCProcessor();
-	void Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med);
+	void Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst);
 	void Main();
 
+	//The trajectory computers
+	bool FirstGuessTrajectoryComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool IntegratedTLMCComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool ConicMissionComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool IntegratedNodeComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
 
 protected:
 
@@ -146,18 +164,7 @@ protected:
 	VECTOR3 IntegratedFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_pl, VECTOR3 guess);
 	VECTOR3 IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, double inc_fr, VECTOR3 guess);
 	VECTOR3 ConicFreeReturnOptimizedFixedOrbitBAP(MPTSV sv0, VECTOR3 guess);
-	std::vector<double> ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, std::vector<double> guess, bool optimize = false);
-
-	//The trajectory computers
-	void FirstGuessTrajectoryComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	void IntegratedTLMCComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	void ConicMissionComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	void IntegratedNodeComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
-
-	std::vector<double> GeneralizedIterator(void(TLMCCProcessor::*state_evaluation)(std::vector<double>, void*, std::vector<double>&), const std::vector<double> &Y_min, const std::vector<double> &Y_max, const std::vector<double> &var_guess, const std::vector<double> &stepsizes, const std::vector<double> &x_weights, void *constants, const std::vector<int> &class_des, const std::vector<double> &y_weight);
-	VECTOR3 GeneralizedIterator2(VECTOR3(TLMCCProcessor::*state_evaluation)(VECTOR3, void*), VECTOR3 Y_min, VECTOR3 Y_max, VECTOR3 var_guess, VECTOR3 stepsizes, void *constants);
-	double CalcCost(double *A, double *B, int N);
-	void CalcDX2(double **P, double *W_X, double *W_Y, double lambda, double *dy, int m, int n, double *dx);
+	void ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, std::vector<double> guess, std::vector<double> &x_res, std::vector<double> &y_res, bool optimize = false, double mass = 0.0);
 
 	//Subroutines
 	void EmpiricalFirstGuess(double r, double lng, double dt, double &V, double &lambda);
@@ -178,7 +185,7 @@ protected:
 	void RVIO(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &theta, double &phi, double &gamma, double&psi);
 	double MCOMP(double dv, bool docked, bool useSPS, double m0);
 	void RNTSIM(VECTOR3 R, VECTOR3 V, double MJD, double lng_L, double &lat, double &lng, double &dlng);
-	void LOPC(VECTOR3 R0, VECTOR3 V0, double MJD0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &MJD3, double &mfm0);
+	void LOPC(VECTOR3 R0, VECTOR3 V0, double MJD0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &MJD3, double &mfm0, double &dpsi);
 	void ELEMT(VECTOR3 R, VECTOR3 V, double mu, VECTOR3 &H, double &a, double &e, double &i, double &n, double &P, double &eta);
 	void PRCOMP(VECTOR3 R_nd, VECTOR3 V_nd, double MJD_nd, double &RA_LPO1, double &A_L, double &E_L, VECTOR3 &u_pl, double &dw_p, double &dh_a, double &dh_p, double &DT, double &DT_1st_pass, MPTSV &SGSLOI);
 	double DDELTATIME(double a, double dt_apo, double xm, double betam, double dt);
@@ -200,10 +207,12 @@ protected:
 
 	TLMCCDataTable DataTable;
 	TLMCCMEDQuantities MEDQuantities;
+	TLMCCMissionConstants Constants;
 
 	VECTOR3 V_MCC_stored;
 	double lat_pl_stored;
 	double inc_fr_stored;
 	double MJD_pl_stored;
 	double h_pl_stored;
+	double mass_stored;
 };

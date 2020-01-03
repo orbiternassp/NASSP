@@ -577,7 +577,7 @@ namespace OrbMech {
 	void CubicInterpolation(double *x, double *y, double *a);
 	void VandermondeMatrix(double *x, int N, double **V);
 	int LUPDecompose(double **A, int N, double Tol, int *P);
-	void LUPSolve(double **A, int *P, double *b, int N, double *x);
+	void LUPSolve(double **A, int *P, double *b, int N, std::vector<double> &x);
 	void LUPInvert(double **A, int *P, int N, double **IA);
 	void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &b1, double &b2);
 	double Sum(double *x, int N);
