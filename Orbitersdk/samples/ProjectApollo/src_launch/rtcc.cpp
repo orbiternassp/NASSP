@@ -6086,7 +6086,7 @@ RTCC_PMMSPT_7_1:
 	VECTOR3 S = R * C1 + P * C2;
 	VECTOR3 P_dot = V * dotp(R, V) - R * vv;
 	double p_dot = length(P_dot);
-	C2 = SINB / p_dot;
+	C2 = SINB / p;
 	VECTOR3 S_dot = V * C1 + P_dot * C2;
 	if (dotp(S_dot, T_P) < 0 && dotp(S, T_P) <= COSATS)
 	{
