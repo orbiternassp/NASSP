@@ -6462,9 +6462,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(39 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->IMUAtt.x);
 		skp->Text(37 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1f", tab->IMUAtt.x);
+		sprintf_s(Buffer, "%.1f", tab->IMUAtt.y);
 		skp->Text(37 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1f", tab->IMUAtt.x);
+		sprintf_s(Buffer, "%.1f", tab->IMUAtt.z);
 		skp->Text(37 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.1f", tab->FDAIAtt.x);
@@ -6494,13 +6494,13 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%.2f", tab->DH);
 		skp->Text(15 * W / 64, 19 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.3f", tab->PHASE);
-		skp->Text(18 * W / 64, 20 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(19 * W / 64, 20 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.3f", tab->PHASE_DOT);
-		skp->Text(18 * W / 64, 21 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(19 * W / 64, 21 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.3f", tab->WEDGE_ANG);
-		skp->Text(18 * W / 64, 22 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(19 * W / 64, 22 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.4f", tab->YD);
-		skp->Text(18 * W / 64, 23 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(19 * W / 64, 23 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.1f", tab->H_BI);
 		skp->Text(28 * W / 64, 16 * H / 32, Buffer, strlen(Buffer));

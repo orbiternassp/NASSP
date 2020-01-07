@@ -387,10 +387,18 @@ MPTManeuver::MPTManeuver()
 	Word70 = 0.0;
 	Word71 = 0.0;
 	Word72 = 0.0;
-	for (int i = 0;i < 12;i++)
-	{
-		BurnData[i] = 0.0;
-	}
+	Word73 = 0.0;
+	Word74 = 0.0;
+	Word75 = 0.0;
+	Word76 = 0.0;
+	Word77 = 0.0;
+	Word78d = 0.0;
+	Word79 = 0.0;
+	Word80 = 0.0;
+	Word81 = 0.0;
+	Word83 = 0.0;
+	Word83 = 0.0;
+	Word84 = 0.0;
 	GMTI = 0.0;
 	TrajDet[0] = 0;
 	TrajDet[1] = 0;
@@ -668,15 +676,33 @@ RTCC::RTCC()
 	MCTAK3 = 15569.0;
 	MCTAK4 = 6181.0;
 	MCTDTF = 0.925;
+
 	MCTJD1 = 570.0;
 	MCTJD3 = 2.5;
 	MCTJD6 = 1.8;
+	//MCTJD6 = 592.0;
+
 	MCTJT1 = 38.8 / LBF;
 	MCTJT2 = 5889.0 / LBF;
 	MCTJT3 = 110900.0 / LBF;
+	MCTJT4 = 178147.0 / LBF;
+	MCTJTL = 202097.0 / LBF;
+	MCTJTH = 202256.0 / LBF;
+	MCTJT6 = 27784.0 / LBF;
+	//MCTJT6 = 12.0 / LBF;
+
 	MCTJW1 = 0.111 / (LBS*1000.0);
 	MCTJW2 = 0.75 / (LBS*1000.0);
 	MCTJW3 = 157.6 / (LBS*1000.0);
+	MCTJW4 = 412.167 / (LBS*1000.0);
+	MCTJWL = 472.121 / (LBS*1000.0);
+	MCTJWH = 472.18 / (LBS*1000.0);
+	MCTJW6 = 61.7 / (LBS*1000.0);
+	//MCTJW6 = 0.209 / (LBS*1000.0);
+
+	MCTSAV = 202097.0;
+	MCTWAV = 472.121 / (LBS*1000.0);
+
 	MCVIGM = 584.0;
 	MCVWMN = 0.0;
 	MCVKPC = 0.0;
@@ -691,6 +717,10 @@ RTCC::RTCC()
 	MCVTGQ = 300.0;
 	MCVRQV = -0.4;
 	MCVRQT = 1.0;
+	MCTIND = 0;
+	MCVVX3 = 4198.1678;
+	MCVWD3 = 472.159 / (LBS*1000.0);
+	MCVTB2 = 1.0;
 
 	GMTBASE = 0.0;
 	MCGMTL = MGLGMT = 0.0;
@@ -6126,9 +6156,10 @@ RTCC_PMMSPT_14_1:
 	}
 	double P_N = (OrbMech::mu_Earth / C3)*(e_N*e_N - 1.0);
 	double T_M = P_N / (1.0 - e_N * cos_sigma);
-	double alpha_D_apo = acos(cos_psi) + atan(dotp(Sbar_1, crossp(Cbar_1, Omega_Y)) / dotp(S, crossp(Cbar_1, Omega_Y)));
+	double alpha_D_apo = acos(cos_psi) + atan2(dotp(Sbar_1, crossp(Cbar_1, Omega_Y)), dotp(S, crossp(Cbar_1, Omega_Y)));
 	in.CurMan->dV_inertial.x = i;
 	in.CurMan->dV_inertial.y = theta_N;
+	in.CurMan->dV_inertial.z = e_N;
 	in.CurMan->dV_LVLH.x = C3;
 	in.CurMan->dV_LVLH.y = alpha_D_apo;
 	in.CurMan->dV_LVLH.z = f;
@@ -6141,15 +6172,17 @@ RTCC_PMMSPT_15_2:
 	double Y_RP = KP0 + MDVSTP.KY1 * dt4_apo + MDVSTP.KY2 * dt4_apo*dt4_apo;
 	double T3 = T3_apo - dt4_apo;
 	double tau3 = tau3R - dt4_apo;
-	in.CurMan->BurnData[0] = P_RP;
-	in.CurMan->BurnData[1] = Y_RP;
-	in.CurMan->BurnData[3] = T3;
-	in.CurMan->BurnData[4] = tau3;
-	in.CurMan->BurnData[6] = T2;
-	in.CurMan->BurnData[7] = Vex2;
-	in.CurMan->BurnData[8] = Mdot2;
-	in.CurMan->BurnData[9] = DV_BR;
-	in.CurMan->BurnData[10] = tau2N;
+	in.CurMan->Word73 = P_RP;
+	in.CurMan->Word74 = Y_RP;
+	in.CurMan->Word76 = T3;
+	in.CurMan->Word77 = tau3;
+	in.CurMan->Word78i[0] = CurTLIInd;
+	in.CurMan->Word78i[1] = OrigTLIInd;
+	in.CurMan->Word79 = T2;
+	in.CurMan->Word80 = Vex2;
+	in.CurMan->Word81 = Mdot2;
+	in.CurMan->Word82 = DV_BR;
+	in.CurMan->Word83 = tau2N;
 
 	double A_Z = 0.0;
 	if (t_D < MDVSTP.t_DS1)
@@ -6199,7 +6232,7 @@ RTCC_PMMSPT_15_2:
 	MATRIX3 G = mul(B, A);
 
 	in.CurMan->GMTI = T_RP + MDVSTP.DTIG;
-	in.CurMan->BurnData[11] = MDVSTP.DTIG - MCTJD1;
+	in.CurMan->Word84 = MDVSTP.DTIG - MCTJD1;
 //RTCC_PMMSPT_18_1:
 	PZTLIMAT.EPH = EPH;
 	PZTLIMAT.GG = GG;
@@ -6240,48 +6273,6 @@ RTCC_PMMSPT_19_1:
 	return 0;
 RTCC_PMMSPT_20_1:
 	return 0;
-	/*EphemerisData sv1, sv2;
-	double theta_E, MJD_GRR, GMT_TST, dt, t_D;
-	VECTOR3 PosS, DotS, T_P, N, PosP, Sbar, DotP, Sbardot, TargetVector;
-	MATRIX3 mat, MX_A, MX_EPH;
-
-	//State Vector
-	MJD_GRR = GMTBASE + GetGMTLO() / 24.0 - 17.0 / 24.0 / 3600.0;
-	mat = OrbMech::Orbiter2PACSS13(MJD_GRR, MDVSTP.PHIL, -80.6041140*RAD, lvdc.Azimuth);
-
-	//Find TB6 start
-	//Determination of S-bar and S-bar-dot
-	t_D = GetGMTLO()*3600.0 - lvdc.T_LO;
-	theta_E = lvdc.theta_EO + lvdc.omega_E*t_D;
-	MX_A.m11 = cos(lvdc.phi_L);  MX_A.m12 = sin(lvdc.phi_L)*sin(lvdc.Azimuth); MX_A.m13 = -(sin(lvdc.phi_L)*cos(lvdc.Azimuth));
-	MX_A.m21 = -sin(lvdc.phi_L); MX_A.m22 = cos(lvdc.phi_L)*sin(lvdc.Azimuth); MX_A.m23 = -(cos(lvdc.phi_L)*cos(lvdc.Azimuth));
-	MX_A.m31 = 0;  MX_A.m32 = cos(lvdc.Azimuth);  MX_A.m33 = sin(lvdc.Azimuth);
-	MX_EPH = mul(OrbMech::tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
-	TargetVector = _V(cos(lvdc.RA)*cos(lvdc.DEC), sin(lvdc.RA)*cos(lvdc.DEC), sin(lvdc.DEC));
-	T_P = mul(MX_EPH, unit(TargetVector));
-
-	GMT_TST = GetGMTLO()*3600.0 + MDVSTP.T4C + lvdc.T_ST;
-	sv1 = coast(sv_A, GMT_TST - sv_A.GMT);
-
-	dt = 0;
-
-	do
-	{
-		sv2 = coast(sv1, dt);
-		PosS = mul(mat, _V(sv2.R.x, sv2.R.z, sv2.R.y));
-		DotS = mul(mat, _V(sv2.V.x, sv2.V.z, sv2.V.y));
-
-		N = unit(crossp(PosS, DotS));
-		PosP = crossp(N, unit(PosS));
-		Sbar = unit(PosS)*cos(lvdc.beta) + PosP * sin(lvdc.beta);
-		DotP = crossp(N, DotS / length(PosS));
-
-		Sbardot = DotS / length(PosS)*cos(lvdc.beta) + DotP * sin(lvdc.beta);
-		dt += 1.0;
-
-	} while (!((dotp(Sbardot, T_P) < 0 && dotp(Sbar, T_P) <= cos(lvdc.alpha_TS))));
-
-	return;*/
 }
 
 void RTCC::PCMSP2(int J, double t_D, double &cos_sigma, double &C3, double &e_N, double &RA, double &DEC)
@@ -11808,50 +11799,6 @@ RTCC_PMMMPT_12_A:
 	goto RTCC_PMMMPT_10_A;
 }
 
-int RTCC::PMMSIU(RTCCNIInputTable in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E)
-{
-	EphemerisData data;
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-
-	aux.R_1 = in.R;
-	aux.V_1 = in.V;
-	aux.GMT_1 = OrbMech::MJDfromGET(in.GMTI, GMTBASE);
-	aux.CSI = in.ICOORD;
-	aux.RBI = in.IREF;
-
-	MPTSV sv_1;
-	sv_1.gravref = hEarth;
-	sv_1.MJD = OrbMech::MJDfromGET(in.GMTI, GMTBASE);
-	sv_1.R = in.R;
-	sv_1.V = in.V;
-
-	MPTSV sv_BI = coast(sv_1, MDVSTP.DTIG);
-	aux.R_BI = sv_BI.R;
-	aux.V_BI = sv_BI.V;
-	aux.GMT_BI = OrbMech::GETfromMJD(sv_BI.MJD, GMTBASE);
-
-	if (in.IEPHOP > 0)
-	{
-		data.R = sv_BI.R;
-		data.V = sv_BI.V;
-		data.GMT = OrbMech::GETfromMJD(sv_BI.MJD, GMTBASE);
-		data.RBI = BODY_EARTH;
-		E->table.push_back(data);
-	}
-
-	MPTSV sv_BO;
-
-	if (in.IEPHOP > 0)
-	{
-		data.R = sv_BO.R;
-		data.V = sv_BO.V;
-		data.GMT = OrbMech::GETfromMJD(sv_BO.MJD, GMTBASE);
-		data.RBI = BODY_EARTH;
-		E->table.push_back(data);
-	}
-	return 0;
-}
-
 int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E)
 {
 	EphemerisData data;
@@ -12709,12 +12656,18 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		if (i == 0)
 		{
 			integin.Area = mpt->ConfigurationArea;
+			integin.CSMWT = mpt->CSMInitMass;
+			integin.LMAWT = mpt->LMInitAscentMass;
+			integin.LMDWT = mpt->LMInitDescentMass;
 			integin.SIVBWT = mpt->SIVBInitMass;
 			integin.CAPWT = mpt->TotalInitMass;
 		}
 		else
 		{
 			integin.Area = mpt->mantable[i - 1].TotalAreaAfter;
+			integin.CSMWT = mpt->mantable[i - 1].CSMMassAfter;
+			integin.LMAWT = mpt->mantable[i - 1].LMAscMassAfter;
+			integin.LMDWT = mpt->mantable[i - 1].LMDscMassAfter;
 			integin.SIVBWT = mpt->mantable[i - 1].SIVBMassAfter;
 			integin.CAPWT = mpt->mantable[i - 1].TotalMassAfter;
 		}
@@ -12743,7 +12696,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.Params[4] = mpt->mantable[i].Word67d;
 		//K5
 		integin.Params[5] = mpt->mantable[i].Word68;
-		//R_T
+		//R_T or T_M
 		integin.Params[6] = mpt->mantable[i].Word69;
 		//V_T
 		integin.Params[7] = mpt->mantable[i].Word70;
@@ -12751,17 +12704,18 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.Params[8] = mpt->mantable[i].Word71;
 		//G_T
 		integin.Params[9] = mpt->mantable[i].Word72;
-		integin.Params[10] = mpt->mantable[i].BurnData[0];
-		integin.Params[11] = mpt->mantable[i].BurnData[1];
-		integin.Params[13] = mpt->mantable[i].BurnData[3];
-		integin.Params[14] = mpt->mantable[i].BurnData[4];
-		integin.Params[15] = mpt->mantable[i].BurnData[5];
-		integin.Params[16] = mpt->mantable[i].BurnData[6];
-		integin.Params[17] = mpt->mantable[i].BurnData[7];
-		integin.Params[18] = mpt->mantable[i].BurnData[8];
-		integin.Params[19] = mpt->mantable[i].BurnData[9];
-		integin.Params[20] = mpt->mantable[i].BurnData[10];
-		integin.Params[21] = mpt->mantable[i].BurnData[11];
+		integin.Params[10] = mpt->mantable[i].Word73;
+		integin.Params[11] = mpt->mantable[i].Word74;
+		integin.Params[13] = mpt->mantable[i].Word76;
+		integin.Params[14] = mpt->mantable[i].Word77;
+		integin.Word68i[0] = mpt->mantable[i].Word78i[0];
+		integin.Word68i[1] = mpt->mantable[i].Word78i[1];
+		integin.Params2[0] = mpt->mantable[i].Word79;
+		integin.Params2[1] = mpt->mantable[i].Word80;
+		integin.Params2[2] = mpt->mantable[i].Word81;
+		integin.Params2[3] = mpt->mantable[i].Word82;
+		integin.Params2[4] = mpt->mantable[i].Word83;
+		integin.Params2[5] = mpt->mantable[i].Word84;
 
 		if (in.EphemerisBuildIndicator)
 		{
@@ -12771,7 +12725,10 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		{
 			E = NULL;
 		}
-		PMMSIU(integin, *in.AuxTableIndicator, E);
+
+		int err;
+		TLIGuidanceSim numin(this, integin, err, E, in.AuxTableIndicator);
+		numin.PCMTRL();
 	}
 	else if (mpt->mantable[i].AttitudeCode == RTCC_ATTITUDE_PGNS_DESCENT)
 	{
@@ -12842,13 +12799,13 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 		if (mpt->mantable[i].FrozenManeuverInd)
 		{
-			integin.sv_CSM.R.x = mpt->mantable[i].BurnData[0];
-			integin.sv_CSM.R.y = mpt->mantable[i].BurnData[1];
-			integin.sv_CSM.R.z = mpt->mantable[i].BurnData[2];
-			integin.sv_CSM.V.x = mpt->mantable[i].BurnData[3];
-			integin.sv_CSM.V.y = mpt->mantable[i].BurnData[4];
-			integin.sv_CSM.V.z = mpt->mantable[i].BurnData[5];
-			integin.sv_CSM.MJD = OrbMech::MJDfromGET(mpt->mantable[i].BurnData[6], GMTBASE);
+			integin.sv_CSM.R.x = mpt->mantable[i].Word73;
+			integin.sv_CSM.R.y = mpt->mantable[i].Word74;
+			integin.sv_CSM.R.z = mpt->mantable[i].Word75;
+			integin.sv_CSM.V.x = mpt->mantable[i].Word76;
+			integin.sv_CSM.V.y = mpt->mantable[i].Word77;
+			integin.sv_CSM.V.z = mpt->mantable[i].Word78d;
+			integin.sv_CSM.MJD = OrbMech::MJDfromGET(mpt->mantable[i].Word79, GMTBASE);
 			integin.sv_CSM.gravref = oapiGetObjectByName("Moon");
 		}
 		else
@@ -14977,6 +14934,7 @@ int RTCC::PMMXFR(int id, void *data)
 
 			tliin.QUEID = id;
 			tliin.PresentGMT = RTCCPresentTimeGMT();
+			tliin.ReplaceCode = 0;
 
 			PMMSPT(tliin);
 			inp->GMTI = tliin.T_RP;
@@ -15899,6 +15857,10 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 	res.I = man->i_BO*DEG;
 	res.WP = man->g_BO*DEG;
 	res.HA = man->h_a / 1852.0;
+	if (res.HA > 99999.999)
+	{
+		res.HA = 99999.999;
+	}
 	res.HP = man->h_p / 1852.0;
 	res.L_AN = man->lng_AN*DEG;
 
@@ -15984,7 +15946,14 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 	}
 	else
 	{
-		REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
+		if (man->TVC == 3)
+		{
+			REFSMMAT = EZJGMTX3.data[REFSMMAT_ID - 1].REFSMMAT;
+		}
+		else
+		{
+			REFSMMAT = EZJGMTX1.data[REFSMMAT_ID - 1].REFSMMAT;
+		}
 	}
 
 	X_P = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
@@ -16036,7 +16005,14 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 
 	VECTOR3 DV, V_G;
 
-	DV = man->dV_inertial;
+	if (man->AttitudeCode < 3 || man->AttitudeCode > 5)
+	{
+		DV = man->A_T*man->DV_M;
+	}
+	else
+	{
+		DV = man->dV_inertial;
+	}
 
 	V_G.x = dotp(DV, X_P);
 	V_G.y = dotp(DV, Y_P);
@@ -16093,7 +16069,7 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 
 			if (man->AttitudeCode == 4 && man->TVC == 3)
 			{
-				res.AGS_DV = PIAEDV(man->dV_inertial, R_m, V_m, man->R_BI, false) / 0.3048;
+				res.AGS_DV = PIAEDV(DV, R_m, V_m, man->R_BI, false) / 0.3048;
 			}
 
 			EphemerisData sv_dh;
@@ -20558,6 +20534,10 @@ void RTCC::PMDMPT()
 		}
 
 		man.HA = mptman->h_a / 1852.0;
+		if (man.HA > 99999.9)
+		{
+			man.HA = 99999.9;
+		}
 		man.HP = mptman->h_p / 1852.0;
 
 		if (MPTDISPLAY.man.size() > 0)
@@ -20790,6 +20770,8 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 {
 	MissionPlanTable *mpt = GetMPTPointer(L);
 	MPTManeuver *mptman;
+	EphemerisData sv_FF;
+	VECTOR3 V_G;
 	
 	if (mpt->mantable.size() < man)
 	{
@@ -20801,6 +20783,9 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mpt->TimeToEndManeuver[man - 1] = aux->GMT_BO;
 
 	mptman->A_T = aux->A_T;
+	mptman->R_BI = aux->R_BI;
+	mptman->V_BI = aux->V_BI;
+	mptman->GMT_BI = aux->GMT_BI;
 	mptman->R_BO = aux->R_BO;
 	mptman->V_BO = aux->V_BO;
 	mptman->GMT_BO = aux->GMT_BO;
@@ -20841,9 +20826,25 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		{
 			mptman->SIVBJ2FuelAfter = S_Fuel - aux->MainFuelUsed;
 
-			EngineParametersTable(mptman->Thruster, T, isp);
-			WDOT = T / isp;
+			T = MCTSAV;
+			WDOT = MCTWAV;
 			F = mptman->SIVBJ2FuelAfter;
+			if (man == 1)
+			{
+				mptman->SPSFuelAfter = mpt->SPSFuelRemaining;
+				mptman->CSMRCSFuelAfter = mpt->CSMRCSFuelRemaining;
+				mptman->LMRCSFuelAfter = mpt->LMRCSFuelRemaining;
+				mptman->APSFuelAfter = mpt->APSFuelRemaining;
+				mptman->DPSFuelAfter = mpt->DPSFuelRemaining;
+			}
+			else
+			{
+				mptman->SPSFuelAfter = mpt->mantable[man - 2].SPSFuelAfter;
+				mptman->CSMRCSFuelAfter = mpt->mantable[man - 2].CSMRCSFuelAfter;
+				mptman->LMRCSFuelAfter = mpt->mantable[man - 2].LMRCSFuelAfter;
+				mptman->APSFuelAfter = mpt->mantable[man - 2].APSFuelAfter;
+				mptman->DPSFuelAfter = mpt->mantable[man - 2].DPSFuelAfter;
+			}
 		}
 	}
 
@@ -20965,27 +20966,51 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	//Inertial, manual
 	if (mptman->AttitudeCode < 3)
 	{
-		mptman->dV_inertial = aux->A_T*aux->DV;
-		mptman->R_BI = aux->R_BI;
-		mptman->V_BI = aux->V_BI;
-		mptman->GMT_BI = aux->GMT_BI;
+		V_G = aux->A_T*aux->DV;
+		sv_FF = aux->sv_FF;
 	}
 	//Lambert, External DV, AGS
 	else if (mptman->AttitudeCode != 6)
 	{
-		mptman->dV_inertial = aux->V_G;
-		mptman->R_BI = aux->R_BI;
-		mptman->V_BI = aux->V_BI;
-		mptman->GMT_BI = aux->GMT_BI;
+		V_G = aux->V_G;
+		sv_FF = aux->sv_FF;
 	}
 	//IGM
 	else
 	{
-		//TBD
-		//EMSMISS
+		EMSMISSInputTable intab;
+		intab.AnchorVector.R = aux->R_1;
+		intab.AnchorVector.V = aux->V_1;
+		intab.AnchorVector.GMT = aux->GMT_1;
+		intab.AnchorVector.RBI = aux->RBI;
+		intab.AuxTableIndicator = NULL;
+		intab.CutoffIndicator = 0;
+		intab.EphemerisBuildIndicator = false;
+		intab.ManCutoffIndicator = 2;
+		intab.ManeuverIndicator = false;
+		intab.MaxIntegTime = aux->GMT_BI - aux->GMT_1;
+
+		EMSMISS(intab);
+		sv_FF = intab.NIAuxOutputTable.sv_cutoff;
+
+		if (mptman->Word78i[0] != 0)
+		{
+			mptman->dV_inertial.z = aux->Word60;
+			mptman->dV_LVLH.x = aux->Word61;
+			mptman->dV_LVLH.y = aux->Word62;
+			mptman->dV_LVLH.z = aux->Word63;
+			mptman->Word67d = aux->Word64;
+			mptman->Word68 = aux->Word65;
+			mptman->Word69 = aux->Word66;
+			mptman->Word70 = aux->Word67;
+			mptman->Word71 = aux->Word68;
+			mptman->Word72 = aux->Word69;
+			mptman->Word78i[0] = 0;
+		}
+		V_G = aux->A_T*aux->DV;
 	}
-	VECTOR3 Z_PHV = -unit(mptman->R_BI);
-	VECTOR3 Y_PHV = unit(crossp(mptman->V_BI, mptman->R_BI));
+	VECTOR3 Z_PHV = -unit(sv_FF.R);
+	VECTOR3 Y_PHV = unit(crossp(sv_FF.V, sv_FF.R));
 	VECTOR3 X_PHV = crossp(Y_PHV, Z_PHV);
 	mptman->P_H = asin(dotp(-Z_PHV, aux->X_B));
 	double P_H_apo = abs(mptman->P_H);
@@ -21007,9 +21032,9 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	{
 		mptman->R_H += PI2;
 	}
-	mptman->V_F = dotp(X_PHV, aux->V_G);
-	mptman->V_S = dotp(Y_PHV, aux->V_G);
-	mptman->V_D = dotp(Z_PHV, aux->V_G);
+	mptman->V_F = dotp(X_PHV, V_G);
+	mptman->V_S = dotp(Y_PHV, V_G);
+	mptman->V_D = dotp(Z_PHV, V_G);
 
 	double mu, R_E;
 	int in, out, body;
@@ -22473,8 +22498,8 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 	}
 }
 
-TLIGuidanceSim::TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable tablin, int &iretn, std::vector<double> *ephem, RTCCNIAuxOutputTable *aux, std::vector<double> *wtabl, RTCCEphemerisHeader *ephdr) :
-	TABLIN(tablin), IRETN(iretn), EPHEM(ephem), AUX(aux), WTABL(wtabl), EPHDR(ephdr)
+TLIGuidanceSim::TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable tablin, int &iretn, EphemerisDataTable *ephem, RTCCNIAuxOutputTable *aux, std::vector<double> *wtabl) :
+	TABLIN(tablin), IRETN(iretn), EPHEM(ephem), AUX(aux), WTABL(wtabl)
 {
 	T = 0.0;
 	TPR = 0.0;
@@ -22485,6 +22510,10 @@ TLIGuidanceSim::TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable tablin, int &iretn, 
 	MPHASE = 0;
 	DT = 0.0;
 	DTPREV = 0.0;
+	DVMAG = 0.0;
+	DVTO = 0.0;
+	DVX = 0.0;
+	DVXTO = 0.0;
 	for (int i = 0;i < 7;i++)
 	{
 		DTPHASE[i] = 0.0;
@@ -22509,11 +22538,11 @@ TLIGuidanceSim::TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable tablin, int &iretn, 
 	YRP = TABLIN.Params[11];
 	T3 = TABLIN.Params[13];
 	TAU3 = TABLIN.Params[14];
-	T2 = TABLIN.Params[16];
-	VEX2 = TABLIN.Params[17];
-	WDOT2 = TABLIN.Params[18];
-	DVBIAS = TABLIN.Params[19];
-	TAU2N = TABLIN.Params[20];
+	T2 = TABLIN.Params2[0];
+	VEX2 = TABLIN.Params2[1];
+	WDOT2 = TABLIN.Params2[2];
+	DVBIAS = TABLIN.Params2[3];
+	TAU2N = TABLIN.Params2[4];
 
 	VEX3 = 0.0;
 	WDOT3 = 0.0;
@@ -22526,16 +22555,31 @@ void TLIGuidanceSim::PCMTRL()
 {
 	DTPHASE[0] = rtcc->MCTJD1;
 	DTPHASE[2] = rtcc->MCTJD3;
+
+	FORCE[0] = rtcc->MCTJT1;
+	FORCE[1] = rtcc->MCTJT2;
+	FORCE[2] = rtcc->MCTJT3;
+	FORCE[3] = rtcc->MCTJT4;
+	FORCE[5] = rtcc->MCTJT5;
+	FORCE[6] = rtcc->MCTJT6;
+	WTFLO[0] = rtcc->MCTJW1;
+	WTFLO[1] = rtcc->MCTJW2;
+	WTFLO[2] = rtcc->MCTJW3;
+	WTFLO[3] = rtcc->MCTJW4;
+	WTFLO[5] = rtcc->MCTJW5;
+	WTFLO[6] = rtcc->MCTJW6;
+
 	EPSL1 = rtcc->MCVEP1;
 	EPSL2 = rtcc->MCVEP2;
 	EPSL3 = rtcc->MCVEP3;
 	EPSL4 = rtcc->MCVEP4;
+	VEX3 = rtcc->MCVVX3;
+	WDOT3 = rtcc->MCVWD3;
+	TB2 = rtcc->MCVTB2;
 
 	G = rtcc->PZTLIMAT.G;
 	GG = rtcc->PZTLIMAT.GG;
 	PLMB = rtcc->PZTLIMAT.EPH;
-
-	TEND = 999999999.0;
 
 	IGMSKP = 0;
 	IERR = 0;
@@ -22578,16 +22622,28 @@ void TLIGuidanceSim::PCMTRL()
 	TLAST = TABLIN.GMTI;
 	CDFACT = 0.0 * TABLIN.DENSMULT *TABLIN.Area;
 	AOM = CDFACT / WT;
-	DTPHASE[IPUTIG - 1] = TABLIN.Params[21];
-	TLARGE = T + 4096.0;
+	DTPHASE[1] = TABLIN.Params2[5];
+	DTPHASE[3] = T2 + (rtcc->MCVIGM - (DTPHASE[0] + DTPHASE[1] + DTPHASE[2]));
+	TLARGE = T + 4096.0*3600.0;
+	DTPHASE[4] = TLARGE;
+	DTPHASE[5] = rtcc->MCTJD5;
+	DTPHASE[6] = rtcc->MCTJD6;
 	PITN = PRP;
 	YAWN = YRP;
 	TIG = TABLIN.GMTI + DTPHASE[0] + DTPHASE[1];
-	TIGM = TIG + rtcc->MCVIGM;
+	TI = TABLIN.GMTI + DTPHASE[0];
+	TIGM = TABLIN.GMTI + rtcc->MCVIGM;
 	T = TABLIN.GMTI;
 	KEHOP = abs(TABLIN.IEPHOP);
-
-	ITUP = 1;
+	RE = TABLIN.R;
+	VE = TABLIN.V;
+	RV = TABLIN.R_frozen;
+	VV = TABLIN.V_frozen;
+	TEND = TLARGE;
+	if (TABLIN.Word68i[0] != 0)
+	{
+		ITUP = 1;
+	}
 
 	if (TABLIN.MANOP == 1)
 	{
@@ -22604,7 +22660,19 @@ void TLIGuidanceSim::PCMTRL()
 		TENDF = TABLIN.GMTI;
 		TIG = TABLIN.GMTI;
 	}
-	//TBD: Thrust values
+	
+	if (rtcc->MCTIND == 1)
+	{
+		//Low thrust
+		FORCE[4] = rtcc->MCTJTL;
+		WTFLO[4] = rtcc->MCTJWL;
+	}
+	else
+	{
+		//High thrust
+		FORCE[4] = rtcc->MCTJTH;
+		WTFLO[4] = rtcc->MCTJWH;
+	}
 
 	//Ephemeris storage initialization
 	if (KEHOP != 0)
@@ -22613,7 +22681,7 @@ void TLIGuidanceSim::PCMTRL()
 		KWT = 1;
 		NITEMS = 7;
 		IEPHCT = 0;
-		TNEXT = TABLIN.GMTI;
+		TNEXT = TABLIN.GMTI + TABLIN.DTOUT;
 	}
 	//Double integration required
 	if (TABLIN.IFROZN == 1)
@@ -22626,7 +22694,7 @@ void TLIGuidanceSim::PCMTRL()
 		AUX->R_1 = TABLIN.R;
 		AUX->V_1 = TABLIN.V;
 		AUX->GMT_1 = TABLIN.GMTI;
-		AUX->WTENGON = WBM;
+		AUX->WTINIT = WBM;
 	}
 	if (TABLIN.DTINP > 0)
 	{
@@ -22653,7 +22721,7 @@ void TLIGuidanceSim::PCMTRL()
 		{
 			if (MPHASE != IPHTOF)
 			{
-				TE = TEND;
+				TI = TEND;
 			}
 		}
 		if (TI - TE <= 0)
@@ -22718,15 +22786,15 @@ void TLIGuidanceSim::PCMTRL()
 			if (abs(TIG - T) <= EPS)
 			{
 				//Store auxiliary quantities for ignition
+				AUX->R_BI = RE;
+				AUX->V_BI = VE;
+				AUX->GMT_BI = T;
+				AUX->A_T = UT;
+				AUX->X_B = UT;
+				AUX->Y_B = unit(crossp(UT, -RE));
+				AUX->Z_B = unit(crossp(UT, AUX->Y_B));
+				AUX->WTENGON = WT;
 			}
-		}
-		if (TABLIN.KAUXOP != 0)
-		{
-			//Store final auxiliary quantities
-		}
-		if (KEHOP != 0)
-		{
-			//Store ephemeris and header information
 		}
 		if (IEND != 0)
 		{
@@ -22737,11 +22805,10 @@ void TLIGuidanceSim::PCMTRL()
 		}
 		else
 		{
-			if (abs(TEND - TI) <= EPS)
+			/*if (abs(TEND - TI) <= EPS)
 			{
-				//TBD:
-				//goto PMMSIU_XCUT;
-			}
+				goto PMMSIU_XCUT;
+			}*/
 			if (abs(TI - T) <= EPS)
 			{
 				if (abs(TEND - T) <= EPS)
@@ -22751,7 +22818,7 @@ void TLIGuidanceSim::PCMTRL()
 					TENDF = T + DTPHASE[MPHASE - 1];
 					if (TCO == 0.0)
 					{
-						TCO = 4096.0;
+						TCO = 4096.0*3600.0;
 					}
 				}
 				else
@@ -22766,6 +22833,45 @@ void TLIGuidanceSim::PCMTRL()
 		TE = TE + STEP;
 		continue;
 	} while (1 == 1);
+	if (TABLIN.KAUXOP != 0)
+	{
+		//Store final auxiliary quantities
+		AUX->R_BO = RE;
+		AUX->V_BO = VE;
+		AUX->GMT_BO = T;
+		AUX->DT_TO = DTPHASE[6];
+		double DTU = TIG - TABLIN.GMTI;
+		AUX->DT_B = TCO - TABLIN.GMTI - AUX->DT_TO - DTU;
+		AUX->P_G = PITCHG;
+		AUX->Y_G = YAWG;
+		AUX->DV_TO = DVTO;
+		AUX->DV = DVMAG;
+		AUX->DV_C = DVX;
+		AUX->DV_cTO = DVXTO;
+		AUX->DV_U = DVULL;
+		AUX->W_CSM = TABLIN.CSMWT;
+		AUX->W_LMA = TABLIN.LMAWT;
+		AUX->W_LMD = TABLIN.LMDWT;
+		AUX->W_SIVB = TABLIN.SIVBWT;
+		AUX->WTEND = WT;
+		AUX->MainFuelUsed = AUX->WTINIT - AUX->WTEND;
+		AUX->RBI = BODY_EARTH;
+		AUX->CSI = 0;
+		AUX->Word60 = E;
+		AUX->Word61 = C3;
+		AUX->Word62 = ALPHD;
+		AUX->Word63 = F;
+		AUX->Word64 = P;
+		AUX->Word65 = XK5;
+		AUX->Word66 = RT;
+		AUX->Word67 = VT;
+		AUX->Word68 = GAMT;
+		AUX->Word69 = GT;
+	}
+	if (KEHOP != 0)
+	{
+		//Store ephemeris and header information
+	}
 PMMSIU_999:
 	IRETN = IERR;
 	return;
@@ -22796,6 +22902,7 @@ void TLIGuidanceSim::PCMTH()
 		}
 		else
 		{
+			DVX = DVX - THRUST * CPITG*CYAWG*ALOGC;
 			if (MPHASE <= IPUTIG)
 			{
 				DVULL = DVULL - THRUST * ALOGC;
@@ -22819,15 +22926,15 @@ void TLIGuidanceSim::PCMEP()
 	}
 	else
 	{
-		EPHEM->push_back(T);
-		EPHEM->push_back(RE.x);
-		EPHEM->push_back(RE.y);
-		EPHEM->push_back(RE.z);
-		EPHEM->push_back(VE.x);
-		EPHEM->push_back(VE.y);
-		EPHEM->push_back(VE.z);
+		EphemerisData sv;
 
-		if (KEHOP >= 2)
+		sv.GMT = T;
+		sv.R = RE;
+		sv.V = VE;
+		sv.RBI = BODY_EARTH;
+		EPHEM->table.push_back(sv);
+
+		if (KEHOP >= 2 && WTABL)
 		{
 			WTABL->push_back(T);
 			WTABL->push_back(WT);
@@ -22843,7 +22950,6 @@ void TLIGuidanceSim::PCMEP()
 void TLIGuidanceSim::PCMRK()
 {
 	VECTOR3 RDD1, RDD2, RDD3, RDD4, TEMP1, RDDTH1, RDDTH2, RDDTH4;
-	double H, H2, H4, H6;
 
 	if (DT == 0.0)
 	{
@@ -22943,7 +23049,7 @@ VECTOR3 TLIGuidanceSim::PCMDC()
 	}
 	if (K3SWT == 0)
 	{
-		RDD = OrbMech::gravityroutine(RP, hEarth, TABLIN.GMTBASE + T / 24.0);
+		PVEC = OrbMech::gravityroutine(RP, hEarth, TABLIN.GMTBASE + T / 24.0 / 3600.0);
 		if (KTHSWT != 0)
 		{
 			if (IDOUBL != 0 || INPASS == 1)
@@ -22953,18 +23059,19 @@ VECTOR3 TLIGuidanceSim::PCMDC()
 		}
 	}
 
+	RDD = PVEC;
 	RDD = RDD + RDDTH;
 	return RDD;
 }
 
 void TLIGuidanceSim::PCMGN()
 {
-	MATRIX3 MX_phi_T, MX_K, MX_EKX;
+	MATRIX3 MX_phi_T, MX_EKX;
 	VECTOR3 RINP, VINP, X4, GS0D, GS1D, GS2D, TEMPY, AGS, UTA, THRSTL, AVG;
-	double TEMP1, TEMP2, TEMP4, RMAG, VMAG, FOM, DDLT, CPP, SPP, VTEST, T3P, XJ2, S2, P2, Q2, U2, TTOTP, XL3P, XJ3P, XLYP, PHIT, SGAMT, CGAMT, DELL2;
+	double TEMP1, TEMP2, TEMP4, RMAG, VMAG, FOM, DDLT, CPP, SPP, T3P, TTOTP, XL3P, XJ3P, XLYP, PHIT, SGAMT, CGAMT, DELL2;
 	double SGAM, CGAM, XIT, XITD, ZETATD, ZETATG, PHIDI, PHIDT, XITG, DXIDP, DETADP, DZETDP, DELL3, DELT3, XL3, XJ3, U3, P3, S3, Q3;
-	double DXID, DETAD, DZETD, XLY, XBRY, XBRP, XJY, SY, QY, XKY, DY, DETA, XK2, XK3, XK4, XLP, C2, C4, XJP, QP, XKP, DP, DXI, XPRY, XPRP;
-	double CYP, SYP, ZCP, ZSP, ZCY, ZSY, TTOT;
+	double DXID, DETAD, DZETD, XLY, XBRY, XBRP, XJY, SY, QY, XKY, DY, DETA, XLP, C2, C4, XJP, QP, XKP, DP, DXI, XPRY, XPRP;
+	double ZCP, ZSP, ZCY, ZSY, TTOT, SP;
 	int IFLOP;
 
 	if (T == TLAST)
@@ -22979,17 +23086,17 @@ void TLIGuidanceSim::PCMGN()
 	}
 	if (IDOUBL == 1)
 	{
-		RINP = RE;
-		VINP = VE;
-	}
-	else
-	{
 		RINP = RV;
 		VINP = VV;
 	}
+	else
+	{
+		RINP = RE;
+		VINP = VE;
+	}
 	RMAG = length(RINP);
 	VMAG = length(VINP);
-	if (abs(T - TIGM) <= EPS || T >= TIGM)
+	if (MPHASE != IPHTOF && (abs(T - TIGM) <= EPS || T >= TIGM))
 	{
 		goto PMMSIU_PCMGN_1A;
 	}
@@ -22998,7 +23105,7 @@ void TLIGuidanceSim::PCMGN()
 		goto PMMSIU_PCMGN_20;
 	}
 	RN = P;
-	E = RMAG * (E - 1.0)*RN + 1.0;
+	E = RMAG * (E - 1.0) / RN + 1.0;
 	TEMP1 = E * E;
 	P = EMU * (TEMP1 - 1.0) / C3;
 	XK5 = sqrt(EMU / P);
@@ -23022,7 +23129,7 @@ PMMSIU_PCMGN_1A:
 	DDLT = T - TLAST;
 	goto PMMSIU_PCMGN_2A;
 PMMSIU_PCMGN_1B:
-	ALPHD = ALPHD * acos(TEMP4);
+	ALPHD = ALPHD - acos(TEMP4);
 	TEMP2 = E * cos(F);
 	RT = P / (1.0 + TEMP2);
 	VT = XK5 * sqrt(1.0 + 2.0*TEMP2 + TEMP1);
@@ -23036,14 +23143,19 @@ PMMSIU_PCMGN_1B:
 PMMSIU_PCMGN_20:
 	PLPS = mul(PLMB, RINP);
 	X4 = mul(GG, PLPS);
-	double CP, SP;
-	CP = 1.0;
-	SP = 0.0;
-	SPP = (-X4.x*CP + X4.z*SP) / RMAG;
-	CPP = (-X4.z*CP + X4.x*SP) / RMAG;
+	double R4;
+	R4 = sqrt(X4.x*X4.x + X4.z*X4.z);
+	SPP = (-X4.x*1.0 - X4.z*0.0) / R4;
+	CPP = (-X4.z*1.0 + X4.x*0.0) / R4;
+	SYP = 0.0;
+	CYP = 1.0;
 	DDLT = T - TLAST;
 	TLAST = T;
-	goto PMMSIU_PCMGN_310;
+	AGS.x = CPP * CYP;
+	AGS.y = SYP;
+	AGS.z = -SPP * CYP;
+	UTA = mul(OrbMech::tmat(GG), AGS);
+	goto PMMSIU_PCMGN_330;
 PMMSIU_PCMGN_2A:
 	if (IMRS == 0)
 	{
@@ -23069,7 +23181,7 @@ PMMSIU_PCMGN_2A:
 		else
 		{
 			PC = PC + DT;
-			if (PC <= rtcc->MCVKPC)
+			if (PC > rtcc->MCVKPC)
 			{
 				IMRS = 1;
 				TB4 = 0.0;
@@ -23085,7 +23197,7 @@ PMMSIU_PCMGN_2A:
 		T2 = (WDOT2*(TB4 - TB2) - WDOT3 * TB4);
 		TEMP1 = WDOT2 * TB2;
 		T2 = T2 / TEMP1;
-		if (TB2 < TB4)
+		if (TB2 >= TB4)
 		{
 			TB4 = TB4 + DT;
 			TEMP1 = T2 * WDOT2 / WDOT3;
@@ -23143,10 +23255,10 @@ PMMSIU_PCMGN_2A:
 	XLYP = XL2 + XL3P;
 	PLPS = mul(PLMB, RINP);
 	X4 = mul(G, PLPS);
-	PHIT = atan2(X4.z, X4.x);
 	CGAMT = cos(GAMT);
 	IFLOP = 230;
 PMMSIU_PCMGN_5A:
+	PHIT = atan2(X4.z, X4.x);
 	if (TTOTP > EPSL1)
 	{
 		DELL2 = (VMAG * TTOTP) - XJ3P + (XLYP * T3P) - (rtcc->MCVRQV / VEX3) *((TAU2 - T2) * XL2 + (TAU3 - T3P) * XL3P)*(XLYP + VMAG - VT);
@@ -23195,23 +23307,10 @@ PMMSIU_PCMGN_5A:
 	MX_phi_T.m21 = 0;               MX_phi_T.m22 = 1; MX_phi_T.m23 = 0;
 	MX_phi_T.m31 = (-sin(PHIT)); MX_phi_T.m32 = 0; MX_phi_T.m33 = (cos(PHIT));
 	MX_K = mul(MX_phi_T, G);
-	MX_EKX = mul(PLMB, MX_K);
+	MX_EKX = mul(MX_K, PLMB);
 
 	AVG = OrbMech::gravityroutine(RINP, hEarth, TABLIN.GMTBASE + T / 24.0 / 3600.0);
-	/*URN = unit(RINP);
-	CPHI = URN.z;
-	TEMP3 = XHARMC * (1.0 - 5.0*CPHI*CPHI);
-	RSQ = RMAG * RMAG;
-	TEMP4 = -EMU / RSQ;
-	for (int I = 0;I<3;I++)
-	{
-		TEMP1 = TEMP3 * URN.data[I] / RSQ;
-		if (I == 3)
-		{
-			TEMP1 = TEMP1 + XHARMQ * 2.0*CPHI / RSQ;
-		}
-		AVG.data[I] = TEMP4 * (URN.data[I] + TEMP1);
-	}*/
+
 	GS0D = mul(MX_EKX, RINP);
 	GS1D = mul(MX_EKX, VINP);
 	TEMPY = mul(MX_EKX, AVG);
@@ -23249,8 +23348,8 @@ PMMSIU_PCMGN_5A:
 	DZETD = DZETDP - GS2D.z*DELT3;
 	XLY = XL2 + XL3;
 	TEMP1 = DETAD / sqrt(DXID*DXID + DZETD * DZETD);
-	XBRY = atan(TEMP1);
-	XBRP = atan(DXID / DZETD);
+	XBRY = atan2(DETAD, sqrt(DXID*DXID + DZETD * DZETD));
+	XBRP = atan2(DXID, DZETD);
 	if (TTOTP <= EPSL2)
 	{
 		goto PMMSIU_PCMGN_2B;
@@ -23261,7 +23360,7 @@ PMMSIU_PCMGN_5A:
 	QY = Q2 + Q3 + S3 * T2 + XJ2 * T3;
 	XKY = XLY / XJY;
 	DY = SY - XKY * QY;
-	DETA = GS0D.y + GS1D.y*TTOT + GS2D.y + TTOT * TTOT / 2.0 + SY * TEMP1;
+	DETA = GS0D.y + GS1D.y*TTOT + GS2D.y*TTOT * TTOT / 2.0 + SY * sin(XBRY);
 	XK3 = DETA / (DY*TEMP2);
 	XK4 = XKY * XK3;
 	XLP = XLY * TEMP2;
@@ -23277,24 +23376,30 @@ PMMSIU_PCMGN_5A:
 	XK1 = DXI / (DP*cos(XBRP));
 	XK2 = XKP * XK1;
 PMMSIU_PCMGN_300:
-	XPRY = XBRY - XK3 + XK4 * TABLIN.DTOUT*0.5;
-	XPRP = XBRP - XK1 + XK2 * TABLIN.DTOUT*0.5;
+	XPRY = XBRY - XK3 + XK4 * DDLT;
+	XPRP = XBRP - XK1 + XK2 * DDLT;
 	CYP = cos(XPRY);
 	SYP = sin(XPRY);
 	CPP = cos(XPRP);
 	SPP = sin(XPRP);
-PMMSIU_PCMGN_310:
+//PMMSIU_PCMGN_310:
 	AGS.x = SPP * CYP;
 	AGS.y = SYP;
 	AGS.z = CPP * CYP;
 	UTA = mul(OrbMech::tmat(MX_K), AGS);
-	PITN = atan2(UTA.y, UTA.x);
-	YAWN = asin(UTA.z);
+PMMSIU_PCMGN_330:
+	PITN = atan2(-UTA.z, UTA.x);
+	YAWN = asin(UTA.y);
 	if (abs(YAWN) > rtcc->MCVYMX)
 	{
 		YAWN = rtcc->MCVYMX*(YAWN / abs(YAWN));
 	}
-	if (abs(YAWN - YAWO) / DDLT > rtcc->MCVYDL)
+	if (T == TABLIN.GMTI)
+	{
+		PITO = PITN;
+		YAWO = YAWN;
+	}
+	if (DDLT == 0.0 || abs(YAWN - YAWO) / DDLT > rtcc->MCVYDL)
 	{
 		if (YAWN > YAWO)
 		{
@@ -23305,7 +23410,7 @@ PMMSIU_PCMGN_310:
 			YAWN = YAWO - rtcc->MCVYDL*DDLT;
 		}
 	}
-	if (abs(PITN - PITO) / DDLT > rtcc->MCVPDL)
+	if (DDLT == 0.0 || abs(PITN - PITO) / DDLT > rtcc->MCVPDL)
 	{
 		if (PITN > PITO)
 		{
@@ -23321,14 +23426,15 @@ PMMSIU_PCMGN_310:
 	ZCY = cos(YAWN);
 	ZSY = sin(YAWN);
 	UTA.x = ZCP * ZCY;
-	UTA.y = ZSP * ZCY;
-	UTA.z = ZSY;
+	UTA.y = ZSY;
+	UTA.z = -ZSP * ZCY;
 	PITO = PITN;
 	YAWO = YAWN;
-	THRSTM = mul(OrbMech::tmat(PLMB), UTA);
+	THRSTM = unit(mul(OrbMech::tmat(PLMB), UTA));
 	if (INITL == 0)
 	{
-
+		UT = THRSTL = THRSTR = THRSTM;
+		INITL = 1;
 	}
 	else
 	{
@@ -23336,6 +23442,7 @@ PMMSIU_PCMGN_310:
 		THRSTR = THRSTM;
 		THRSTM = THRSTL + THRSTR;
 		THRSTM = unit(THRSTM);
+		UT = THRSTL;
 	}
 	return;
 PMMSIU_PCMGN_2B:
@@ -23370,12 +23477,12 @@ PMMSIU_PCMGN_2B:
 	double RTCO, VTCO;
 	RTCO = RMAG + TGO * dotp(RINP, VINP) / RMAG;
 	VTCO = sqrt(C3 + 2.0*EMU / RTCO);
-	TEMP1 = VSB2 * VSB1;
+	TEMP1 = VSB2 - VSB1;
 
 	double A1, A2;
 	A2 = DT2P * DT1P*(DT2P + DT1P);
 	A2 = (TEMP1*DT1P - (VSB1 - VSB0)*DT2P) / A2;
-	A1 = TEMP1 / DT2P;
+	A1 = TEMP1 / DT2P + A2 * DT2P;
 	TGO = ((VTCO - DVBIAS) - VSB2) / (A1 + A2 * TGO);
 	UT = THRSTR;
 	THRSTM = THRSTR;

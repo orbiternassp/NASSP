@@ -1517,7 +1517,23 @@ struct MPTManeuver
 	//Words 73-84
 	//For ascent maneuver this is: R, V, MJD of CSM
 	//For TLI this is: P_RP, Y_RP, , T3, tau3, TLI ind,T2,Vex2,Mdot2,DV_BR,tau2N,dtP
-	double BurnData[12];
+	double Word73;
+	double Word74;
+	double Word75;
+	double Word76;
+	double Word77;
+	union
+	{
+		double Word78d;
+		//For TLI this is current and original TLI computation indicator
+		int Word78i[2];
+	};
+	double Word79;
+	double Word80;
+	double Word81;
+	double Word82;
+	double Word83;
+	double Word84;
 	//Word 106
 	double GMTI;
 	//Word 110 (Byte 1)
@@ -2562,8 +2578,6 @@ public:
 	int PMMMCD(PMMMCDInput in, MPTManeuver &man);
 	//Impulsive Maneuver Transfer Math Module
 	void PMMMPT(PMMMPTInput in, MPTManeuver &man);
-	//TLI Integration Module
-	int PMMSIU(RTCCNIInputTable in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E = NULL);
 	//Lunar Ascent Integrator
 	int PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E = NULL);
 	//LM Lunar Descent Numerical Integration Module
@@ -2997,10 +3011,31 @@ public:
 
 	struct SIVBTLIMatrixTable
 	{
+		//Plumbline coordinate axes in ECI coordinates
 		MATRIX3 EPH;
+		//Plumbline to parking orbit nodal system transformation matrix
 		MATRIX3 GG;
+		//Plumbline to target orbit nodal system transformation matrix
 		MATRIX3 G;
 	} PZTLIMAT;
+
+	struct TLIPlanningOutputTable
+	{
+		//Target vector
+		VECTOR3 T;
+		//Unit nodal vector which defines node of desired cutoff plane and parking orbit plane at time of restart preparation
+		VECTOR3 S;
+		//Position vector at time of restart preparation
+		VECTOR3 R;
+		//Velocity vector at time of restart preparation
+		VECTOR3 V;
+		double TB6;
+		double TIG;
+		double i;
+		double theta_N;
+		double sigma;
+		double C3;
+	} PZTTLIPL;
 
 	struct LOIElementsTable
 	{
@@ -3706,11 +3741,11 @@ public:
 	double MCTJD3;
 	//Phase 4 burn time for S-IVB TLI maneuver (main burn)
 	double MCTJD4;
-	//Phase 5 burn time for S-IVB TLI maneuver (MRS)
+	//Phase 5 burn time for S-IVB TLI maneuver (main burn after MRS)
 	double MCTJDS;
-	//Phase 6 burn time for S-IVB TLI maneuver (main burn after MRS)
+	//Phase 6 burn time for S-IVB TLI maneuver (tailoff)
 	double MCTJD5;
-	//Phase 7 burn time for S-IVB TLI maneuver (tailoff)
+	//Phase 7 burn time for S-IVB TLI maneuver (tailoff vent)
 	double MCTJD6;
 	//Thrust level of first S-IVB thrust phase (vent and ullage)
 	double MCTJT1;
@@ -3718,20 +3753,32 @@ public:
 	double MCTJT2;
 	//Thrust level of third S-IVB thrust phase (buildup)
 	double MCTJT3;
-	//S-IVB Post-MRS Phase Thrust
+	//Thrust level of third S-IVB thrust phase (pre MRS)
+	double MCTJT4;
+	//Thrust level of fifth S-IVB thrust phase (high)
+	double MCTJTH;
+	//Thrust level of fifth S-IVB thrust phase (low)
+	double MCTJTL;
+	//Thrust level of sixth S-IVB thrust phase (tailoff)
 	double MCTJT5;
+	//Thrust level of sevent S-IVB thrust phase (tailoff vent)
+	double MCTJT6;
 	//Weight flow rate for first S-IVB thrust phase
 	double MCTJW1;
 	//Weight flow rate for second S-IVB thrust phase
 	double MCTJW2;
 	//Weight flow rate for third S-IVB thrust phase
 	double MCTJW3;
-	//S-IVB Post-MRS Phase Weight Loss Rate
-	double MCTJW5;
-	//S-IVB MRS Phase Thrust
-	double MCTJTH;
-	//S-IVB MRS Phase Weight Loss Rate
+	//Weight flow rate for fourth S-IVB thrust phase
+	double MCTJW4;
+	//Weight flow rate for fifth S-IVB thrust phase (high)
 	double MCTJWH;
+	//Weight flow rate for fifth S-IVB thrust phase (low)
+	double MCTJWL;
+	//Weight flow rate for sixth S-IVB thrust phase
+	double MCTJW5;
+	//Weight flow rate for seventh S-IVB thrust phase
+	double MCTJW6;
 	//Time from ignition to start IGM guidance
 	double MCVIGM;
 	//Minimum allowable S-IVB weight
@@ -3760,6 +3807,18 @@ public:
 	double MCVRQV;
 	//Terminal valus rotation indicator
 	double MCVRQT;
+	//High or low thrust indicator
+	int MCTIND;
+	//Second stage exhaust velocity
+	double MCVVX3;
+	//Second stage flow rate
+	double MCVWD3;
+	//Transition time for mixture ratio shift (MRS)
+	double MCVTB2;
+	//S-IVB thrust level
+	double MCTSAV;
+	//S-IVB weight loss rate
+	double MCTWAV;
 };
 
 class CSMLMPoweredFlightIntegration
@@ -3937,7 +3996,7 @@ private:
 class TLIGuidanceSim
 {
 public:
-	TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable TABLIN, int &IRETN, std::vector<double> *EPHEM, RTCCNIAuxOutputTable *AUX, std::vector<double> *WTABL, RTCCEphemerisHeader *EPHDR);
+	TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable TABLIN, int &IRETN, EphemerisDataTable *EPHEM, RTCCNIAuxOutputTable *AUX, std::vector<double> *WTABL = NULL);
 	void PCMTRL();
 private:
 	//Thrust Subroutine
@@ -3990,6 +4049,8 @@ private:
 	double DVMAG;
 	//Thrust acceleration vector
 	VECTOR3 RDDTH;
+	//Gravity vector
+	VECTOR3 PVEC;
 	//Unit thrust vector
 	VECTOR3 UT;
 	//Some large number
@@ -4104,7 +4165,7 @@ private:
 	double PC;
 	//Artificial tau timer
 	double CPR;
-	MATRIX3 G, GG, PLMB;
+	MATRIX3 G, GG, PLMB, MX_K;
 	//Epsilon to control range angle computation
 	double EPSL1;
 	//Epsilon to terminate computation of K1, K2, K3, and K4
@@ -4116,7 +4177,11 @@ private:
 	VECTOR3 PLPS;
 	//Intermediate variables for cutoff computation
 	double DT1P, DT2P;
-	double XL2, XK1;
+	//Thrust integral values that need to be global
+	double XL2, XK1, XK2, XK3, XK4, XJ2, S2, P2, Q2, U2;
+	double CYP, SYP;
+	double H, H2, H4, H6;
+	double VTEST;
 
 	//Targeting parameters
 
@@ -4174,10 +4239,9 @@ private:
 
 	RTCCNIInputTable TABLIN;
 	int &IRETN;
-	std::vector<double> *EPHEM;
+	EphemerisDataTable *EPHEM;
 	RTCCNIAuxOutputTable *AUX;
 	std::vector<double> *WTABL;
-	RTCCEphemerisHeader *EPHDR;
 	RTCC *rtcc;
 
 	OBJHANDLE hEarth;

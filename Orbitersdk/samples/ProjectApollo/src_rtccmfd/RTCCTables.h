@@ -104,10 +104,18 @@ struct RTCCNIInputTable
 	VECTOR3 R_frozen;
 	//Word 46-48
 	VECTOR3 V_frozen;
-	//Word 53-74
-	double Params[22];
+	//Word 53-67
+	double Params[15];
+	union
+	{
+		double Word68d;
+		int Word68i[2];
+	};
+	//Word 69-74
+	double Params2[6];
 
 	double GMTBASE;
+	double CSMWT, LMAWT, LMDWT;
 };
 
 struct RTCCNIAuxOutputTable
@@ -147,17 +155,19 @@ struct RTCCNIAuxOutputTable
 	double DV_cTO;
 	//Word 39, DV of pure ullage
 	double DV_U;
-	//Word 43, weight at main engine on
+	//Word 43, total configuration weight at maneuver initiation
+	double WTINIT;
+	//Word 45, weight at main engine on
 	double WTENGON;
-	//Weight at end of maneuver
+	//Word 46, weight at end of maneuver
 	double WTEND;
-	//Main fuel weight loss during maneuver
+	//Word 48, main fuel weight loss during maneuver
 	double MainFuelUsed;
-	//Reference body indicator (0 = Earth)
+	//Word 49 (Bytes 1-2), reference body indicator (0 = Earth)
 	bool RBI;
-	//Coordinate system indicator (0 = ECI)
+	//Word 49 (Byptes 3-4), coordinate system indicator (0 = ECI)
 	int CSI;
-	//SV at beginning of thrust (first phase)
+	//Words 50-56, SV at beginning of thrust (first phase)
 	VECTOR3 R_1;
 	VECTOR3 V_1;
 	double GMT_1;
@@ -168,4 +178,24 @@ struct RTCCNIAuxOutputTable
 	double W_CSM, W_LMA, W_LMD, W_SIVB;
 	//SV at main engine on, without ullage (free flight)
 	EphemerisData sv_FF;
+	//Eccentricity of target conic (TLI)
+	double Word60;
+	//Energy of target conic (TLI)
+	double Word61;
+	//True anomaly of descending node of target conic (TLI)
+	double Word62;
+	//Estimate true anomaly of target conic (TLI)
+	double Word63;
+	//Semi-latus rectum of target conic (TLI)
+	double Word64;
+	//K5 (mu/P) (TLI)
+	double Word65;
+	//Desired terminal radius (TLI)
+	double Word66;
+	//Desired terminal velocity (TLI)
+	double Word67;
+	//Desired terminal flight-path angle (TLI)
+	double Word68;
+	//Gravitational acceleration at maneuver burnout (TLI)
+	double Word69;
 };

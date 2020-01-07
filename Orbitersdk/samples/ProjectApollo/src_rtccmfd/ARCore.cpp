@@ -2419,11 +2419,15 @@ int ARCore::subThread()
 		{
 			mptveh = RTCC_MPT_CSM;
 			mptotherveh = RTCC_MPT_LM;
+			//Remove this later
+			GC->rtcc->EZJGMTX1.data[0].REFSMMAT = REFSMMAT;
 		}
 		else
 		{
 			mptveh = RTCC_MPT_LM;
 			mptotherveh = RTCC_MPT_CSM;
+			//Remove this later
+			GC->rtcc->EZJGMTX3.data[0].REFSMMAT = REFSMMAT;
 		}
 	}
 
