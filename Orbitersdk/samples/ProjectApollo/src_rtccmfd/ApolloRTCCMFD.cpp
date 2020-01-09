@@ -4079,6 +4079,8 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 	{
 		G->CycleSpaceDigitals();
 
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
 		if (GC->rtcc->EZETVMED.SpaceDigVehID == 3)
 		{
 			skp->Text(5 * W / 8, 1 * H / 64, "LEM SPACE DIGITALS", 18);
@@ -4089,8 +4091,6 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		}
 
 		skp->SetFont(font2);
-
-		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		skp->Text(1 * W / 32, 2 * H / 28, "STA ID", 6);
 		skp->Text(1 * W / 32, 3 * H / 28, "GMTV", 4);

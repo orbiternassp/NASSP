@@ -2592,6 +2592,8 @@ public:
 	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false);
 	//Vector Fetch Load Module
 	int PMSVEC(int L, double GMT, OrbMech::CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
+	//Earth Orbit Insertion Processor
+	void PMMIEV(double T_L);
 	//Trajectory Update Control Module
 	void EMSTRAJ(EphemerisData sv, int L, bool landed = false);
 	//Ephemeris Storage and Control Module
@@ -2600,6 +2602,8 @@ public:
 	void EMSMISS(EMSMISSInputTable &in);
 	//Encke Integrator
 	EphemerisData EMMENI(EphemerisData sv, double dt);
+	//Spherical to inertial conversion
+	int EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	//Anchor Vector Maintenance Module
 	void EMGVECSTInput(int L, EphemerisData sv);
 	int EMGVECSTOutput(int L, EphemerisData &sv);
@@ -2611,8 +2615,6 @@ public:
 	//Weight Determination at a Time
 	int PLAWDT(int L, double gmt, double &cfg_weight);
 	int PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
-	int MPTGetVesselConfiguration(int L, double GET, double GETbase);
-	int MPTGetVesselConfiguration(int L);
 	//Gimbal, Thrust and Weight Loss Rate Subroutine
 	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, int IC, int IA, int IJ, double D);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
@@ -3102,15 +3104,15 @@ public:
 	struct GeneralConstraintsTable
 	{
 		//Block 1
-		int Year;
+		int Year = 0;
 		//Block 2
-		int RefDayOfYear;
+		int RefDayOfYear = 0;
 		//Block 3
-		int DaysInYear;
+		int DaysInYear = 0;
 		//Block 4
-		int MonthofLiftoff;
-		int DayofLiftoff;
-		int DaysinMonthofLiftoff;
+		int MonthofLiftoff = 0;
+		int DayofLiftoff = 0;
+		int DaysinMonthofLiftoff = 0;
 		//Block 5
 		double DKIElevationAngle = 26.6*RAD;
 		//Block 8
@@ -3149,6 +3151,7 @@ public:
 		int TPICounterNum;
 		//Block 32 Bytes 5-8
 		int PhaseAngleSetting;
+		//Block 34 (something for PMMIEV)
 		//Block 36
 		double ActualDH;
 		//Block 37
@@ -3179,6 +3182,16 @@ public:
 		double SPQMinimumPerifocus = 0.0;
 
 	} GZGENCSN;
+
+	struct LaunchInterfaceTable
+	{
+		//Block 56-62
+		double GMT_T;
+		VECTOR3 R_T;
+		VECTOR3 V_T;
+		//Block 73
+		double Azimuth;
+	} GZLTRA;
 
 	struct RTEDigitalSolutionTable
 	{
@@ -3412,7 +3425,10 @@ public:
 		std::vector<std::string> tab;
 	} MHGVNM;
 
+	//RTCC MED Buffer
 	char RTCCMEDBUFFER[256];
+	//RTCC On-line Monitor Buffer
+	std::deque<std::string> RTCCONLINEMON;
 
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
@@ -3494,6 +3510,8 @@ private:
 	void EMGSTGENName(int ID, char *Buffer);
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
+	//Mission PLanning Print Load Module
+	void PMXSPT(std::string message);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
 
@@ -3741,11 +3759,11 @@ public:
 	double MCTJD3;
 	//Phase 4 burn time for S-IVB TLI maneuver (main burn)
 	double MCTJD4;
-	//Phase 5 burn time for S-IVB TLI maneuver (main burn after MRS)
+	//Phase 5 burn time for S-IVB TLI maneuver (during MRS)
 	double MCTJDS;
-	//Phase 6 burn time for S-IVB TLI maneuver (tailoff)
+	//Phase 6 burn time for S-IVB TLI maneuver (main burn after MRS)
 	double MCTJD5;
-	//Phase 7 burn time for S-IVB TLI maneuver (tailoff vent)
+	//Phase 7 burn time for S-IVB TLI maneuver (tailoff)
 	double MCTJD6;
 	//Thrust level of first S-IVB thrust phase (vent and ullage)
 	double MCTJT1;
@@ -3759,9 +3777,9 @@ public:
 	double MCTJTH;
 	//Thrust level of fifth S-IVB thrust phase (low)
 	double MCTJTL;
-	//Thrust level of sixth S-IVB thrust phase (tailoff)
+	//Thrust level of sixth S-IVB thrust phase (main burn after MRS)
 	double MCTJT5;
-	//Thrust level of sevent S-IVB thrust phase (tailoff vent)
+	//Thrust level of sevent S-IVB thrust phase (tailoff)
 	double MCTJT6;
 	//Weight flow rate for first S-IVB thrust phase
 	double MCTJW1;
@@ -3819,6 +3837,11 @@ public:
 	double MCTSAV;
 	//S-IVB weight loss rate
 	double MCTWAV;
+
+	//Polynomial coefficients for insertion conditions
+	double MDLIEV[16];
+	//Earth orbit insertion constants
+	double MDLEIC[3];
 };
 
 class CSMLMPoweredFlightIntegration
