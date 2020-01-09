@@ -417,6 +417,7 @@ public:
 	void set_MPTDeleteManever(char *str);
 	void menuMPTTLIDirectInput();
 	void menuMPTCopyEphemeris();
+	void menuMPTVehicleOrientationChange();
 	void menuSetMPTInitPage();
 	void menuSetNextStationContactsPage();
 	void menuNextStationContactLunar();
@@ -555,6 +556,7 @@ public:
 	void GMPManeuverCodeName(char *buffer, int code);
 	void menuMSKRequest();
 	void SelectMCCScreen(int num);
+	void menuSetOnlineMonitorPage();
 
 protected:
 	oapi::Font *font;

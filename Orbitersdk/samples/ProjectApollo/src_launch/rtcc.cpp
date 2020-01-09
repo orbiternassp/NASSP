@@ -11278,22 +11278,28 @@ RTCC_PMMMCD_10_1:
 		//Get REFSMMAT from inputs
 		goto RTCC_PMMMCD_11_1;
 	}
+	MATRIX3 REFSMMAT;
 	if (in.Thruster != RTCC_ENGINETYPE_LOX_DUMP)
 	{
 		if (in.TVC == 3)
 		{
 			//Get LM REFSMMAT
+			REFSMMAT = EZJGMTX3.data[in.RefMatCode - 1].REFSMMAT;
 		}
 		else
 		{
 			//Get CSM REFSMMAT
+			REFSMMAT = EZJGMTX1.data[in.RefMatCode - 1].REFSMMAT;
 		}
-		//Store REFSMMAT code
 	}
 	else
 	{
 		///Get IU REFSMMAT
+		REFSMMAT = GZLTRA.IU1_REFSMMAT;
 	}
+	X_P = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
+	Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
+	Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
 	//Obtain REFSMMAT
 	if (in.Thruster != RTCC_ENGINETYPE_LOX_DUMP)
 	{
@@ -12093,19 +12099,27 @@ void RTCC::PMMUDT(int L, unsigned man, int headsup, int trim)
 	}
 	if (tab->mantable.size() < man)
 	{
-		//Error 53: Requested maneuver not in MPT - MED ignore
+		//Error 53
+		PMXSPT("PMMUDT: Requested maneuver not in MPT - M58 MED ignored");
 		return;
 	}
 	MPTManeuver *pMan = &tab->mantable[man - 1];
-	//TBD: Maneuver is executed
-	if (pMan->FrozenManeuverInd)
+	if (RTCCPresentTimeGMT() > pMan->GMTMAN)
 	{
-		//Error 55: Requested maneuver frozen - MED ignored
+		//Error 54
+		PMXSPT("PMMUDT: Requested maneuver is executed - M58 MED ignored");
 		return;
 	}
-	if (pMan->AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+	if (pMan->FrozenManeuverInd)
 	{
-		//Error 56: Request is for TLI maneuver - MED ignored
+		//Error 55
+		PMXSPT("PMMUDT: Requested maneuver frozen - M58 MED ignored");
+		return;
+	}
+	if (pMan->AttitudeCode == RTCC_ATTITUDE_SIVB_IGM || pMan->AttitudeCode == RTCC_ATTITUDE_AGS_ASCENT || pMan->AttitudeCode == RTCC_ATTITUDE_PGNS_ASCENT)
+	{
+		//Error 56
+		PMXSPT("PMMUDT: Request is for TLI/ASC maneuver - M58 MED ignored");
 		return;
 	}
 	if (headsup >= 0)
@@ -12589,6 +12603,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.DTPS10 = mpt->mantable[i].DT_10PCT;
 		integin.DTU = mpt->mantable[i].dt_ullage;
 		integin.DVMAN = mpt->mantable[i].dv;
+		integin.HeadsUpDownInd = mpt->mantable[i].HeadsUpDownInd;
 		integin.IC = mpt->mantable[i].ConfigCodeAfter;
 		integin.KAUXOP = 1;
 		if (in.EphemerisBuildIndicator)
@@ -21077,12 +21092,14 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	{
 		V_G = aux->A_T*aux->DV;
 		sv_FF = aux->sv_FF;
+		mptman->dV_inertial = V_G;
 	}
 	//Lambert, External DV, AGS
 	else if (mptman->AttitudeCode != 6)
 	{
 		V_G = aux->V_G;
 		sv_FF = aux->sv_FF;
+		mptman->dV_inertial = V_G;
 	}
 	//IGM
 	else

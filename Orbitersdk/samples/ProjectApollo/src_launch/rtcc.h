@@ -1790,6 +1790,7 @@ struct PMMMCDInput
 	double BurnParm78;
 	double BurnParm79;
 	double WTMI;
+	int RefMatCode = 1;
 };
 
 struct PMMMPTInput
@@ -3185,6 +3186,8 @@ public:
 
 	struct LaunchInterfaceTable
 	{
+		//Block 1-9
+		MATRIX3 IU1_REFSMMAT;
 		//Block 56-62
 		double GMT_T;
 		VECTOR3 R_T;

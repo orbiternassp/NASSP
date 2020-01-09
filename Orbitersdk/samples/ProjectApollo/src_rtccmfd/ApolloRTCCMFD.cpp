@@ -4074,6 +4074,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(8 * W / 16, 5 * H / 28, "1502 Sunrise/Sunset Times", 25);
 		skp->Text(8 * W / 16, 6 * H / 28, "1503 Next Station Contacts", 26);
 		skp->Text(8 * W / 16, 7 * H / 28, "1619 Checkout Monitor", 21);
+		skp->Text(8 * W / 16, 8 * H / 28, "1629 On Line Monitor", 20);
 	}
 	else if (screen == 43)
 	{
@@ -6644,6 +6645,19 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%.1f NM", GC->rtcc->GZGENCSN.DKIMinPerigee / 1852.0);
 		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 	}
+	else if (screen == 75)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 1 * H / 14, "ON LINE MONITOR (MSK 1629)", 28);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->SetFont(font2);
+
+		for (unsigned i = 0;i < GC->rtcc->RTCCONLINEMON.size();i++)
+		{
+			sprintf(Buffer, GC->rtcc->RTCCONLINEMON[i].c_str());
+			skp->Text(1 * W / 16, (3 + i) * H / 14, Buffer, strlen(Buffer));
+		}
+	}
 	return true;
 }
 
@@ -7436,6 +7450,12 @@ void ApolloRTCCMFD::menuSetPredSiteAcquisitionCSM2Page()
 void ApolloRTCCMFD::menuSetPredSiteAcquisitionLM2Page()
 {
 	screen = 74;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetOnlineMonitorPage()
+{
+	screen = 75;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -12337,10 +12357,22 @@ void ApolloRTCCMFD::set_MPTDeleteManever(char *str)
 void ApolloRTCCMFD::menuMPTCopyEphemeris()
 {
 	bool MPTCopyEphemerisInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: P16,OldVeh;NewVeh;GMT;ManNum;", MPTCopyEphemerisInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: P16, OldVeh, NewVeh, GMT, ManNum;", MPTCopyEphemerisInput, 0, 20, (void*)this);
 }
 
 bool MPTCopyEphemerisInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+void ApolloRTCCMFD::menuMPTVehicleOrientationChange()
+{
+	bool MPTVehicleOrientationChangeInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: M58, CSM or LEM, maneuver number, U (Up) or D (Down), S or C, system param or trim angle computed (optional);", MPTVehicleOrientationChangeInput, 0, 20, (void*)this);
+}
+
+bool MPTVehicleOrientationChangeInput(void* id, char *str, void *data)
 {
 	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
@@ -12782,6 +12814,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 1619:
 		menuSetCheckoutMonitorPage();
+		break;
+	case 1629:
+		menuSetOnlineMonitorPage();
 		break;
 	}
 }
