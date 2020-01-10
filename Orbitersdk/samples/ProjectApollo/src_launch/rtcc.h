@@ -2757,8 +2757,8 @@ public:
 		bool Type = false; //false = MCC, true = LOI
 		unsigned ManeuverNumber = 1; //For MCC options?
 		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for maneuver
-		int AttitudeOpt = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
-		double UllageDT = -1;	//Delta T of Ullage
+		int Attitude = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
+		double UllageDT = 0.0;	//Delta T of Ullage
 		bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
 		bool Iteration = false; //false = do not iterate, true = iterate
 		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS

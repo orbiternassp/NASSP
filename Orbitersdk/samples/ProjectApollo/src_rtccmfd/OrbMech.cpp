@@ -8127,7 +8127,7 @@ void CoastIntegrator::SolarEphemeris(double t, VECTOR3 &R_ES, VECTOR3 &V_ES)
 		SunEphemerisInit = true;
 	}
 
-	R_ES = R_ES0*cos(W_ES*t)+crossp(R_ES0,unit(crossp(R_ES0, V_ES0)))*sin(W_ES*t);
+	R_ES = R_ES0*cos(W_ES*t)+crossp(R_ES0,unit(crossp(V_ES0, R_ES0)))*sin(W_ES*t);
 	V_ES = V_ES0;
 }
 

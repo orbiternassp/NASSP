@@ -5244,7 +5244,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 2 * H / 14, "LEM", 3);
 		}
 
-		if (GC->rtcc->med_m66.ReplaceCode == 0)
+		if (GC->rtcc->med_m65.ReplaceCode == 0)
 		{
 			skp->Text(1 * W / 16, 4 * H / 14, "Don't replace", 13);
 		}
@@ -6658,6 +6658,101 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, (3 + i) * H / 14, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 76)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		if (GC->rtcc->med_m78.Type)
+		{
+			skp->Text(4 * W / 8, 1 * H / 14, "LOI Transfer (MED M78)", 22);
+		}
+		else
+		{
+			skp->Text(4 * W / 8, 1 * H / 14, "MCC Transfer (MED M78)", 22);
+		}
+		
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		if (GC->rtcc->med_m78.Table == 1)
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "CSM", 3);
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "LEM", 3);
+		}
+
+		if (GC->rtcc->med_m78.ReplaceCode == 0)
+		{
+			skp->Text(1 * W / 16, 4 * H / 14, "Don't replace", 13);
+		}
+		else
+		{
+			sprintf_s(Buffer, "%d", GC->rtcc->med_m78.ReplaceCode);
+			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		ThrusterName(Buffer, GC->rtcc->med_m78.Thruster);
+		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+		MPTAttitudeName(Buffer, GC->rtcc->med_m78.Attitude);
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%lf s", GC->rtcc->med_m78.UllageDT);
+		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_m78.UllageQuads)
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "4 Thrusters", 11);
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 12 * H / 14, "2 Thrusters", 11);
+		}
+
+		if (GC->rtcc->med_m78.Iteration)
+		{
+			skp->Text(10 * W / 16, 2 * H / 14, "Iterate", 7);
+		}
+		else
+		{
+			skp->Text(10 * W / 16, 2 * H / 14, "Don't iterate", 13);
+		}
+
+		if (GC->rtcc->med_m78.Thruster == RTCC_ENGINETYPE_LMDPS)
+		{
+			sprintf_s(Buffer, "%lf s", GC->rtcc->med_m78.TenPercentDT);
+			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%lf", GC->rtcc->med_m78.DPSThrustFactor);
+			skp->Text(10 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		if (GC->rtcc->med_m78.TimeFlag)
+		{
+			skp->Text(10 * W / 16, 8 * H / 14, "Impulsive TIG", 13);
+		}
+		else
+		{
+			skp->Text(10 * W / 16, 8 * H / 14, "Optimum TIG", 11);
+		}
+
+		if (GC->MissionPlanningActive == false)
+		{
+			GET_Display(Buffer, G->P30TIG);
+			skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
+
+			skp->Text(5 * W / 8, 18 * H / 21, "DVX", 3);
+			skp->Text(5 * W / 8, 19 * H / 21, "DVY", 3);
+			skp->Text(5 * W / 8, 20 * H / 21, "DVZ", 3);
+
+			AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
+			skp->Text(6 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
+			skp->Text(6 * W / 8, 19 * H / 21, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
+			skp->Text(6 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));
+		}
+	}
 	return true;
 }
 
@@ -7459,6 +7554,20 @@ void ApolloRTCCMFD::menuSetOnlineMonitorPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuLOIMCCTransferPage()
+{
+	if (screen == 12)
+	{
+		GC->rtcc->med_m78.Type = true;
+	}
+	else
+	{
+		GC->rtcc->med_m78.Type = false;
+	}
+	screen = 76;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -7697,6 +7806,18 @@ void ApolloRTCCMFD::menuBackToSPQorDKIPage()
 	else
 	{
 		menuSetDescPlanTablePage();
+	}
+}
+
+void ApolloRTCCMFD::menuBacktoLOIorMCCPage()
+{
+	if (GC->rtcc->med_m78.Type)
+	{
+		menuSetLOIPage();
+	}
+	else
+	{
+		menuTranslunarPage();
 	}
 }
 
@@ -8728,6 +8849,135 @@ void ApolloRTCCMFD::menuCycleGPMTimeFlag()
 void ApolloRTCCMFD::menuMPTDirectInputTransfer()
 {
 	G->MPTDirectInputCalc();
+}
+
+void ApolloRTCCMFD::menuCycleLOIMCCTable()
+{
+	if (GC->rtcc->med_m78.Table == 1)
+	{
+		GC->rtcc->med_m78.Table = 3;
+	}
+	else
+	{
+		GC->rtcc->med_m78.Table = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuLOIMCCReplaceCode()
+{
+	bool LOIMCCReplaceCodeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter maneuver to replace (0 for none):", LOIMCCReplaceCodeInput, 0, 20, (void*)this);
+}
+
+bool LOIMCCReplaceCodeInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_LOIMCCReplaceCode(atoi(str));
+	return true;
+}
+
+void ApolloRTCCMFD::set_LOIMCCReplaceCode(unsigned n)
+{
+	GC->rtcc->med_m78.ReplaceCode = n;
+}
+
+void ApolloRTCCMFD::menuCycleLOIMCCThruster()
+{
+	CycleThrusterOption(GC->rtcc->med_m78.Thruster);
+}
+
+void ApolloRTCCMFD::menuCycleLOIMCCAttitude()
+{
+	if (GC->rtcc->med_m78.Attitude < RTCC_ATTITUDE_AGS_EXDV)
+	{
+		GC->rtcc->med_m78.Attitude++;
+	}
+	else
+	{
+		GC->rtcc->med_m78.Attitude = RTCC_ATTITUDE_INERTIAL;
+	}
+}
+
+void ApolloRTCCMFD::menuLOIMCCUllageDT()
+{
+	bool LOIMCCUllageDTInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the ullage duration in seconds:", LOIMCCUllageDTInput, 0, 20, (void*)this);
+}
+
+bool LOIMCCUllageDTInput(void *id, char *str, void *data)
+{
+	double ss;
+	if (sscanf(str, "%lf", &ss) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_LOIMCCUllageDT(ss);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LOIMCCUllageDT(double dt)
+{
+	GC->rtcc->med_m78.UllageDT = dt;
+}
+
+void ApolloRTCCMFD::menuLOIMCCUllageThrusters()
+{
+	GC->rtcc->med_m78.UllageQuads = !GC->rtcc->med_m78.UllageQuads;
+}
+
+void ApolloRTCCMFD::menuCycleLOIMCCIterationFlag()
+{
+	GC->rtcc->med_m78.Iteration = !GC->rtcc->med_m78.Iteration;
+}
+
+void ApolloRTCCMFD::menuLOIMCCDPSTenPercentDeltaT()
+{
+	bool LOIMCCDPSTenPercentDeltaTInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Delta T of 10% thrust for DPS (negative to ignore short burn test):", LOIMCCDPSTenPercentDeltaTInput, 0, 20, (void*)this);
+}
+
+bool LOIMCCDPSTenPercentDeltaTInput(void *id, char *str, void *data)
+{
+	double deltat;
+	if (sscanf(str, "%lf", &deltat) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_LOIMCCDPSTenPercentDeltaT(deltat);
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_LOIMCCDPSTenPercentDeltaT(double deltat)
+{
+	GC->rtcc->med_m78.TenPercentDT = deltat;
+}
+
+void ApolloRTCCMFD::menuLOIMCCDPSThrustScaling()
+{
+	bool LOIMCCDPSThrustScalingInput(void *id, char *str, void *data);
+	oapiOpenInputBox("DPS thrust scaling factor (0 to 1):", LOIMCCDPSThrustScalingInput, 0, 20, (void*)this);
+}
+
+bool LOIMCCDPSThrustScalingInput(void *id, char *str, void *data)
+{
+	double scale;
+	if (sscanf(str, "%lf", &scale) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_LOIMCCDPSThrustScaling(scale);
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_LOIMCCDPSThrustScaling(double scale)
+{
+	GC->rtcc->med_m78.DPSThrustFactor = scale;
+}
+
+void ApolloRTCCMFD::menuCycleLOIMCCTimeFlag()
+{
+	GC->rtcc->med_m78.TimeFlag = !GC->rtcc->med_m78.TimeFlag;
 }
 
 void ApolloRTCCMFD::menuTransferTIToMPT()
@@ -10541,17 +10791,8 @@ void ApolloRTCCMFD::menuCycleLOIEllipseOption()
 	}
 }
 
-void ApolloRTCCMFD::menuTransferLOItoMPT()
+void ApolloRTCCMFD::menuTransferLOIMCCtoMPT()
 {
-	GC->rtcc->med_m78.Type = true;
-	GC->rtcc->med_m78.Iteration = true;
-	G->TransferLOIorMCCtoMPT();
-}
-
-void ApolloRTCCMFD::menuTransferTLCCtoMPT()
-{
-	GC->rtcc->med_m78.Type = false;
-	GC->rtcc->med_m78.Iteration = false;
 	G->TransferLOIorMCCtoMPT();
 }
 

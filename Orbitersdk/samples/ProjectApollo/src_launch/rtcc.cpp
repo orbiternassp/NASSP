@@ -12491,15 +12491,14 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	}
 	else
 	{
-		CoastIntegrator* coast;
-		coast = new CoastIntegrator(sv1.R, sv1.V, OrbMech::MJDfromGET(sv1.GMT, GMTBASE), dt, GetGravref(sv1.RBI), NULL);
+		CoastIntegrator coast(sv1.R, sv1.V, OrbMech::MJDfromGET(sv1.GMT, GMTBASE), dt, GetGravref(sv1.RBI), NULL);
 		bool stop = false;
 
 		while (stop == false)
 		{
-			stop = coast->iteration();
+			stop = coast.iteration();
 
-			if (coast->GetGravRef() == hEarth)
+			if (coast.GetGravRef() == hEarth)
 			{
 				svtemp.RBI = BODY_EARTH;
 			}
@@ -12508,9 +12507,9 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 				svtemp.RBI = BODY_MOON;
 			}
 
-			svtemp.GMT = OrbMech::GETfromMJD(coast->GetMJD(), GMTBASE);
-			svtemp.R = coast->GetPosition();
-			svtemp.V = coast->GetVelocity();
+			svtemp.GMT = OrbMech::GETfromMJD(coast.GetMJD(), GMTBASE);
+			svtemp.R = coast.GetPosition();
+			svtemp.V = coast.GetVelocity();
 
 			//Additional stop conditions
 			if (in.StopParamRefFrame == 2 || svtemp.RBI == in.StopParamRefFrame)
@@ -14451,7 +14450,7 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		interin.GMT = GMT;
 		interin.L = med_u02.VEH;
 		ELVCTR(interin, interout);
-		if (interout.ErrorCode)
+		if (interout.ErrorCode > 2)
 		{
 			//Error: Input time is outside of ephemeris range
 			return 4;
@@ -14737,19 +14736,19 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 	{
 		sprintf(res.CFG, "CSL");
 	}
-	else if (cfg = RTCC_CONFIG_ASC)
+	else if (cfg == RTCC_CONFIG_ASC)
 	{
 		sprintf(res.CFG, "A");
 	}
-	else if (cfg = RTCC_CONFIG_CSM_ASC)
+	else if (cfg == RTCC_CONFIG_CSM_ASC)
 	{
 		sprintf(res.CFG, "CA");
 	}
-	else if (cfg = RTCC_CONFIG_DSC)
+	else if (cfg == RTCC_CONFIG_DSC)
 	{
 		sprintf(res.CFG, "D");
 	}
-	else if (cfg = RTCC_CONFIG_SIVB)
+	else if (cfg == RTCC_CONFIG_SIVB)
 	{
 		sprintf(res.CFG, "S");
 	}
@@ -14950,10 +14949,10 @@ OBJHANDLE RTCC::GetGravref(int body)
 {
 	if (body == BODY_EARTH)
 	{
-		return oapiGetObjectByName("Earth");
+		return hEarth;
 	}
 
-	return oapiGetObjectByName("Moon");
+	return hMoon;
 }
 
 MPTSV RTCC::SVfromRVGMT(VECTOR3 R, VECTOR3 V, double GMT, int body)
@@ -15152,7 +15151,7 @@ int RTCC::PMMXFR(int id, void *data)
 			in.dt_ullage = inp->dt_ullage;
 			in.Attitude = inp->AttitudeCode;
 			in.ConfigChangeInd = inp->ConfigurationChangeIndicator;
-			in.ConfigCodeAfter = inp->EndConfiguration;
+			in.ConfigCodeAfter = CC;
 			in.TVC = TVC;
 			in.DockingAngle = inp->DockingAngle;
 			in.CCMI = CCMI;
@@ -18576,7 +18575,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 	{
 		PMMXFR_Impulsive_Input inp;
 
-		inp.Attitude[0] = med_m78.AttitudeOpt;
+		inp.Attitude[0] = med_m78.Attitude;
 		inp.DeleteGMT = 0.0;
 		inp.DPSScaleFactor[0] = med_m78.DPSThrustFactor;
 		inp.DT10P[0] = med_m78.TenPercentDT;
@@ -21077,6 +21076,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	{
 		mptman->TotalMassAfter += aux->W_SIVB;
 	}
+
 	mptman->DVREM = T / WDOT * log(mptman->TotalMassAfter / (mptman->TotalMassAfter - F));
 	if (mptman->Thruster == RTCC_ENGINETYPE_LOX_DUMP)
 	{
@@ -21177,7 +21177,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	{
 		in = 2;
 		out = 3;
-		mu = OrbMech::mu_Earth;
+		mu = OrbMech::mu_Moon;
 		body = BODY_MOON;
 		R_E = MCSMLR;
 	}
@@ -21199,8 +21199,8 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 
 	if (body == BODY_EARTH)
 	{
-		double R_E = length(sv_true.R) / sqrt((sv_true.R.x*sv_true.R.x + sv_true.R.y*sv_true.R.y) / MCEASQ + sv_true.R.z*sv_true.R.z / MCEBSQ);
-		mptman->h_BI = length(sv_true.R) - R_E;
+		double R_EE = length(sv_true.R) / sqrt((sv_true.R.x*sv_true.R.x + sv_true.R.y*sv_true.R.y) / MCEASQ + sv_true.R.z*sv_true.R.z / MCEBSQ);
+		mptman->h_BI = length(sv_true.R) - R_EE;
 		mptman->lat_BI = atan(MCEBAS*sv_true.R.z / sqrt(sv_true.R.x*sv_true.R.x + sv_true.R.y*sv_true.R.y));
 	}
 	else
