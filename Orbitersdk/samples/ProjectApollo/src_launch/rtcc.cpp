@@ -17702,6 +17702,103 @@ void RTCC::PMMREAP(int med)
 	}
 }
 
+EphemerisData RTCC::PMMCEN(EphemerisData sv0, double dt_min, double dt_max, int stop_ind, double end_cond, double dir)
+{
+	double dt, funct, TIME, RCALC, RES1, TIME_old, t_new;
+	int INITE = 0;
+	bool stop = false, allow_stop = false;
+	OBJHANDLE gravref = GetGravref(sv0.RBI);
+
+	if (dir > 0)
+	{
+		dt = dt_max;
+	}
+	else
+	{
+		dt = -dt_max;
+	}
+
+	CoastIntegrator coast(sv0.R, sv0.V, OrbMech::MJDfromGET(sv0.GMT, GMTBASE), dt, GetGravref(sv0.RBI), NULL);
+
+	while (stop == false)
+	{
+		stop = coast.iteration(allow_stop);
+
+		if (stop)
+		{
+			break;
+		}
+
+		if (stop_ind != 1)
+		{
+			if (gravref != coast.GetGravRef())
+			{
+				gravref = coast.GetGravRef();
+				INITE = 0;
+			}
+
+			TIME = coast.GetTime();
+
+			if (abs(TIME) > dt_min)
+			{
+				if (stop_ind == 2)
+				{
+					funct = dotp(unit(coast.GetPosition()), unit(coast.GetVelocity()));
+				}
+				else
+				{
+					funct = length(coast.GetPosition());
+				}
+				RCALC = funct - end_cond;
+
+				//1st pass
+				if (INITE == 0)
+				{
+					INITE = -1;
+				}
+				//Not bounded, not 1st pass
+				else if (INITE < 0)
+				{
+					if (RCALC*RES1 < 0)
+					{
+						INITE = 1;
+
+						t_new = OrbMech::LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
+						coast.AdjustTF(t_new);
+					}
+				}
+				//Bounded
+				else
+				{
+					t_new = OrbMech::LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
+					coast.AdjustTF(t_new);
+					if (abs(TIME - t_new) < 1e-6)
+					{
+						allow_stop = true;
+					}
+				}
+
+				RES1 = RCALC;
+				TIME_old = TIME;
+			}
+		}
+	}
+
+	EphemerisData sv1;
+	sv1.R = coast.R2;
+	sv1.V = coast.V2;
+	if (coast.outplanet == hEarth)
+	{
+		sv1.RBI = BODY_EARTH;
+	}
+	else
+	{
+		sv1.RBI = BODY_MOON;
+	}
+	sv1.GMT = OrbMech::GETfromMJD(coast.GetMJD(), GMTBASE);
+	return sv1;
+}
+
 bool RTCC::GMGMED(char *str)
 {
 	int i = 0;

@@ -307,12 +307,16 @@ class CoastIntegrator
 public:
 	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, OBJHANDLE planet, OBJHANDLE outplanet);
 	~CoastIntegrator();
-	bool iteration();
+	bool iteration(bool allow_stop = true);
+
+	void AdjustTF(double t_f) { t_F = t_f; }
+
 
 	VECTOR3 GetPosition();
 	VECTOR3 GetVelocity();
 	double GetMJD();
 	OBJHANDLE GetGravRef();
+	double GetTime();
 
 	VECTOR3 R2, V2;
 	OBJHANDLE outplanet;

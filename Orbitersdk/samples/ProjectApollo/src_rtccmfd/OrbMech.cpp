@@ -7917,6 +7917,11 @@ VECTOR3 CoastIntegrator::GetVelocity()
 	return V_CON + nu;
 }
 
+double CoastIntegrator::GetTime()
+{
+	return t;
+}
+
 double CoastIntegrator::GetMJD()
 {
 	return mjd0 + t / 24.0 / 3600.0;
@@ -7927,7 +7932,7 @@ OBJHANDLE CoastIntegrator::GetGravRef()
 	return planet;
 }
 
-bool CoastIntegrator::iteration()
+bool CoastIntegrator::iteration(bool allow_stop)
 {
 	double rr, dt_max, dt, h, x_apo, gamma, s, alpha_N, x_t, Y, r_qc;
 	VECTOR3 alpha, R_apo, V_apo, R, a_d, ff;
@@ -8070,7 +8075,7 @@ bool CoastIntegrator::iteration()
 	delta = delta + (nu + (k[0] + k[1] * 2.0)*dt*1.0 / 6.0)*dt;
 	nu = nu + (k[0] + k[1] * 4.0 + k[2]) * 1.0 / 6.0 *dt;
 
-	if (abs(t - t_F) < 1e-6)
+	if (allow_stop && abs(t - t_F) < 1e-6)
 	{
 		R2 = R_CON + delta;
 		V2 = V_CON + nu;
