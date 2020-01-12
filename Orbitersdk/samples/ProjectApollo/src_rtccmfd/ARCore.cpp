@@ -2411,7 +2411,7 @@ int ARCore::subThread()
 {
 	int Result = 0;
 
-	int poweredenginetype, mptveh, docked, mptotherveh;
+	int mptveh, docked, mptotherveh;
 
 	if (GC->MissionPlanningActive)
 	{
@@ -2430,8 +2430,6 @@ int ARCore::subThread()
 			GC->rtcc->EZJGMTX3.data[0].REFSMMAT = REFSMMAT;
 		}
 	}
-
-	poweredenginetype = manpadenginetype;
 
 	if (vesseltype == 1 || vesseltype == 3)
 	{
@@ -2901,7 +2899,14 @@ int ARCore::subThread()
 		}
 
 		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.enginetype = poweredenginetype;
+		if (mptveh == RTCC_MPT_CSM)
+		{
+			opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		}
+		else
+		{
+			opt.enginetype = RTCC_ENGINETYPE_LMDPS;
+		}
 		opt.entrylongmanual = entrylongmanual;
 		opt.ReA = EntryAng;
 		opt.TIGguess = EntryTIG;
@@ -3045,7 +3050,7 @@ int ARCore::subThread()
 			AP11ManPADOpt opt;
 
 			opt.dV_LVLH = dV_LVLH;
-			opt.enginetype = poweredenginetype;
+			opt.enginetype = manpadenginetype;
 			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
@@ -3064,7 +3069,7 @@ int ARCore::subThread()
 			AP11LMManPADOpt opt;
 
 			opt.dV_LVLH = dV_LVLH;
-			opt.enginetype = poweredenginetype;
+			opt.enginetype = manpadenginetype;
 			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.HeadsUp = HeadsUp;
 			opt.REFSMMAT = REFSMMAT;
@@ -3174,7 +3179,14 @@ int ARCore::subThread()
 		opt.TIGguess = EntryTIG;
 		opt.Inclination = EntryDesiredInclination;
 		opt.t_zmin = RTEReentryTime;
-		opt.enginetype = poweredenginetype;
+		if (mptveh == RTCC_MPT_CSM)
+		{
+			opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		}
+		else
+		{
+			opt.enginetype = RTCC_ENGINETYPE_LMDPS;
+		}
 		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
 
 		GC->rtcc->RTEMoonTargeting(&opt, &res);
@@ -3810,7 +3822,6 @@ int ARCore::subThread()
 			m0 = l->GetAscentStageMass();
 		}
 
-		
 		R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
 
 		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GC->rtcc->CalcGETBase(), LunarLiftoffRes.t_L, LunarLiftoffRes.v_LH, LunarLiftoffRes.v_LV, theta, dt, dv, sv_IG, sv_Ins);
@@ -4085,7 +4096,16 @@ int ARCore::subThread()
 			}
 			else
 			{
-				//GC->rtcc->NewMPTTrajectory(mapUpdateGET, sv0, mptveh);
+				EphemerisData sv;
+				if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(mapUpdateGET), mptveh, sv))
+				{
+					Result = 0;
+					break;
+				}
+				sv0.R = sv.R;
+				sv0.V = sv.V;
+				sv0.MJD = OrbMech::MJDfromGET(sv.GMT, GC->rtcc->GetGMTBase());
+				sv0.gravref = GC->rtcc->GetGravref(sv.RBI);
 			}
 		}
 		else
@@ -4121,7 +4141,23 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive && GC->rtcc->MPTHasManeuvers(mptveh))
 		{
-			//GC->rtcc->MPTTrajectory(LmkTime, sv0, mptveh);
+			if (LmkTime <= 0.0)
+			{
+				GC->rtcc->NewMPTTrajectory(mptveh, sv0);
+			}
+			else
+			{
+				EphemerisData sv;
+				if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(LmkTime), mptveh, sv))
+				{
+					Result = 0;
+					break;
+				}
+				sv0.R = sv.R;
+				sv0.V = sv.V;
+				sv0.MJD = OrbMech::MJDfromGET(sv.GMT, GC->rtcc->GetGMTBase());
+				sv0.gravref = GC->rtcc->GetGravref(sv.RBI);
+			}
 		}
 		else
 		{

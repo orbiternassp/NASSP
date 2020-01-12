@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 #include "OrbMech.h"
+#include "RTCCTables.h"
 
 struct ATPData
 {
@@ -238,10 +239,10 @@ struct DiscreteData
 class ConicRTEEarthNew
 {
 public:
-	ConicRTEEarthNew(std::vector<MPTSV> &SVArray, PZEFEM &ephemeris, std::vector<TradeoffData> &todata);
+	ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris, std::vector<TradeoffData> &todata);
 	void MAIN();
 	void Init(double dvm, int icrngg, double irmax, double urmax, double rrbi, int imsfn);
-	void READ(int Mode, double getbase, double tzmin, double tzmax);
+	void READ(int Mode, double gmtbase, double tzmin, double tzmax);
 	void ATP(std::vector<ATPData> line);
 protected:
 
@@ -269,7 +270,7 @@ protected:
 	//0 = TCUA, 1 = FCUA, 2 = PTP tradeoff, 3 = PTP discrete, 4 = ATP tradeoff, 5 = ATP discrete
 	int Mode;
 	//State vector array
-	std::vector<MPTSV> &XArray;
+	std::vector<EphemerisData> &XArray;
 	PZEFEM &ephem;
 	std::vector<TradeoffData> &TOData;
 	//Maximum DV to be used for the abort manuever
@@ -305,7 +306,7 @@ protected:
 	//Maximum time of landing
 	double T_zmax;
 	double MDM;
-	double GETbase;
+	double GMTbase;
 
 	//PROGRAM SYMBOLS
 

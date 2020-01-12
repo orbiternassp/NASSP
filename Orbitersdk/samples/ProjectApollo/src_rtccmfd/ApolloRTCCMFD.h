@@ -518,6 +518,10 @@ public:
 	void menuMPTInitM50LMWT();
 	void menuMPTInitM50LMAscentWT();
 	void menuMPTInitM50SIVBWT();
+	void set_MPTInitM50CSMWT(double mass);
+	void set_MPTInitM50LMWT(double mass);
+	void set_MPTInitM50LMAscentWT(double mass);
+	void set_MPTInitM50SIVBWT(double mass);
 	void menuMPTInitM55Config();
 	void menuMPTM50Update();
 	void menuMPTM55Update();

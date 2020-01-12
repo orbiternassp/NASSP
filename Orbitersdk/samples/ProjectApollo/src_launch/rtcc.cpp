@@ -409,6 +409,19 @@ MPTManeuver::MPTManeuver()
 	R_BO = _V(0, 0, 0);
 	V_BO = _V(0, 0, 0);
 	GMT_BO = 0.0;
+
+	CSMMassAfter = 0.0;
+	SIVBMassAfter = 0.0;
+	LMAscMassAfter = 0.0;
+	LMDscMassAfter = 0.0;
+	TotalMassAfter = 0.0;
+	TotalAreaAfter = 0.0;
+	SPSFuelAfter = 0.0;
+	CSMRCSFuelAfter = 0.0;
+	SIVBJ2FuelAfter = 0.0;
+	APSFuelAfter = 0.0;
+	LMRCSFuelAfter = 0.0;
+	DPSFuelAfter = 0.0;
 }
 
 MPTManDisplay::MPTManDisplay()
@@ -644,20 +657,24 @@ RTCC::RTCC()
 	MCTLW2 = 0.62076;
 	MCTLW3 = 0.31038;
 	MCTLW4 = 0.62076;
+	MCTAT1 = 15297.43;
 	MCTAT2 = 693.0329277;
 	MCTAT4 = 15297.43;
 	MCTAT9 = 15569.0;
+	MCTAW1 = 5.049776716;
 	MCTAW2 = 0.2290767466;
 	MCTAW4 = 5.049776716;
 	MCTAD2 = 0.308;
 	MCTAD3 = 0.192;
 	MCTAD9 = 0.5;
+	MCTDT1 = 9712.5 / LBF;
 	MCTDT2 = 1.0 / LBF;
 	MCTDT3 = 467.7 / LBF;
 	MCTDT4 = 1180.0 / LBF;
 	MCTDT5 = 4326.5 / LBF;
 	MCTDT6 = 10500.0 / LBF;
 	MCTDT9 = 43670.0;
+	MCTDW1 = 14.63626597;
 	MCTDW2 = 0.000126;
 	MCTDW3 = 0.7048;
 	MCTDW4 = 1.778203048;
@@ -669,9 +686,11 @@ RTCC::RTCC()
 	MCTDD5 = 0.4;
 	MCTDD6 = 95.0;
 	MCTDD9 = 0.5;
+	MCTST1 = 91188.544;
 	MCTST2 = 424.015 / LBF;
 	MCTST4 = 91188.544;
 	MCTST9 = 91188.544;
+	MCTSW1 = 29.60667013;
 	MCTSW2 = 0.6107646462;
 	MCTSW4 = 29.60667013;
 	MCTSD2 = 0.0;
@@ -10449,6 +10468,11 @@ void RTCC::EMSNAP(int L, int ID)
 	{
 		EMMDYNMC(L, 2);
 	}
+	//MPT update without trajectory update
+	else if (ID == 2)
+	{
+		PMDMPT();
+	}
 }
 
 void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
@@ -12023,27 +12047,33 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 	return 0;
 }
 
-int RTCC::PMMFUD(int veh, unsigned man, int action)
+void RTCC::PMMFUD(int veh, unsigned man, int action)
 {
 	MissionPlanTable *mpt = GetMPTPointer(veh);
 
 	if (man > mpt->mantable.size())
 	{
-		return 40;
+		//Error 40
+		PMXSPT("PMMFUD: Maneuver does not exist");
+		return;
 	}
 
 	//Future Delete
 	if (action == 0)
 	{
 		//Maneuver executed?
-		if (RTCCPresentTimeGMT() > mpt->mantable[man - 1].GMT_BO)
+		if (RTCCPresentTimeGMT() > mpt->mantable[man - 1].GMTMAN)
 		{
-			return 43;
+			//Error 43
+			PMXSPT("PMMFUD: Maneuver executed - cannot delete as future");
+			return;
 		}
 		//Maneuver frozen?
 		if (mpt->mantable[man - 1].FrozenManeuverInd)
 		{
-			return 47;
+			//Error 47
+			PMXSPT("PMMFUD: Maneuver frozen - cannot delete");
+			return;
 		}
 
 		while (mpt->mantable.size() >= man)
@@ -12061,29 +12091,127 @@ int RTCC::PMMFUD(int veh, unsigned man, int action)
 	//History Delete
 	else if (action == 1)
 	{
+		//Maneuver not executed?
+		if (RTCCPresentTimeGMT() <= mpt->mantable[man - 1].GMTMAN)
+		{
+			//Error 42
+			PMXSPT("PMMFUD: Maneuver not executed - cannot delete as history");
+			return;
+		}
 
+		for (unsigned i = 0;i < 15 - man;i++)
+		{
+			mpt->TimeToBeginManeuver[i] = mpt->TimeToBeginManeuver[man + i];
+			mpt->TimeToEndManeuver[i] = mpt->TimeToEndManeuver[man + i];
+			mpt->AreaAfterManeuver[i] = mpt->AreaAfterManeuver[man + i];
+			mpt->WeightAfterManeuver[i] = mpt->WeightAfterManeuver[man + i];
+		}
+
+		mpt->InitConfigCode = mpt->mantable[man - 1].ConfigCodeAfter;
+		mpt->DeltaDockingAngle = mpt->mantable[man - 1].DockingAngle;
+		mpt->ConfigurationArea = mpt->mantable[man - 1].TotalAreaAfter;
+		mpt->CSMInitArea = mpt->mantable[man - 1].CSMAreaAfter;
+		mpt->SIVBInitArea = mpt->mantable[man - 1].SIVBAreaAfter;
+		mpt->LMInitAscentArea = mpt->mantable[man - 1].AscentAreaAfter;
+		mpt->LMInitDescentArea = mpt->mantable[man - 1].DescentAreaAfter;
+		mpt->CSMInitMass = mpt->mantable[man - 1].CSMMassAfter;
+		mpt->SIVBInitMass = mpt->mantable[man - 1].SIVBMassAfter;
+		mpt->LMInitAscentMass = mpt->mantable[man - 1].LMAscMassAfter;
+		mpt->LMInitDescentMass = mpt->mantable[man - 1].LMDscMassAfter;
+		mpt->APSFuelRemaining = mpt->mantable[man - 1].APSFuelAfter;
+		mpt->CSMRCSFuelRemaining = mpt->mantable[man - 1].CSMRCSFuelAfter;
+		mpt->DPSFuelRemaining = mpt->mantable[man - 1].DPSFuelAfter;
+		mpt->LMRCSFuelRemaining = mpt->mantable[man - 1].LMRCSFuelAfter;
+		mpt->SIVBJ2FuelRemaining = mpt->mantable[man - 1].SIVBJ2FuelAfter;
+		mpt->SPSFuelRemaining = mpt->mantable[man - 1].SPSFuelAfter;
+
+		//TBD: Compute and store new GET to begin venting
+
+		for (unsigned i = 0;i < man;i++)
+		{
+			mpt->mantable.pop_front();
+		}
+
+		mpt->ManeuverNum = mpt->mantable.size();
+		if (mpt->ManeuverNum > 0)
+		{
+			if (mpt->TUP > 0)
+			{
+				mpt->TUP = -mpt->TUP;
+			}
+			//Here it would move up the maneuvers
+		}
+		if (mpt->TUP < 0)
+		{
+			mpt->TUP = -mpt->TUP;
+		}
+		EMSNAP(veh, 2);
 	}
 	//Freeze
 	else if (action == 2)
 	{
+		//Maneuver executed?
+		if (RTCCPresentTimeGMT() > mpt->mantable[man - 1].GMTMAN)
+		{
+			//Error 10
+			PMXSPT("PMMFUD: Maneuver executed - cannot freeze");
+			return;
+		}
+		//Determine 1st maneuver to be frozen
+		unsigned i = man;
 
+		while (RTCCPresentTimeGMT() > mpt->mantable[i - 1].GMTMAN && mpt->mantable[i - 1].FrozenManeuverInd == false)
+		{
+			i--;
+			if (i == 0)
+			{
+				break;
+			}
+		}
+		if (mpt->TUP > 0)
+		{
+			mpt->TUP = -mpt->TUP;
+		}
+
+		do
+		{
+			if (mpt->mantable[i - 1].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+			{
+
+			}
+			else
+			{
+				mpt->mantable[i - 1].FrozenManeuverVector.GMT = mpt->mantable[i - 1].GMTMAN;
+				mpt->mantable[i - 1].FrozenManeuverVector.R = mpt->mantable[i - 1].R_1;
+				mpt->mantable[i - 1].FrozenManeuverVector.V = mpt->mantable[i - 1].V_1;
+				mpt->mantable[i - 1].FrozenManeuverVector.RBI = mpt->mantable[i - 1].RefBodyInd;
+			}
+			//External DV
+			if (mpt->mantable[i - 1].AttitudeCode < 3 && mpt->mantable[i - 1].AttitudeCode <= 5)
+			{
+				mpt->mantable[i - 1].Word67i[0] = 0;
+			}
+			i++;
+		} while (i < man);
 	}
 	//Unfreeze
 	else
 	{
 		//Maneuver executed?
-		if (RTCCPresentTimeGMT() > mpt->mantable[man - 1].GMT_BO)
+		if (RTCCPresentTimeGMT() > mpt->mantable[man - 1].GMTMAN)
 		{
-			return 46;
+			//Error 46
+			PMXSPT("PMMFUD: Maneuver executed - cannot unfreeze");
+			return;
 		}
 		//Maneuver frozen?
-		if (mpt->mantable[man - 1].FrozenManeuverInd == false)
+		if (mpt->mantable[man - 1].FrozenManeuverInd)
 		{
-			return 45;
+			//Error 45
+			PMXSPT("PMMFUD: Maneuver frozen - cannot unfreeze");
+			return;
 		}
 	}
-
-	return 0;
 }
 
 void RTCC::PMMUDT(int L, unsigned man, int headsup, int trim)
@@ -12211,6 +12339,7 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 	InTable.VehicleCode = L;
 	InTable.IgnoreManueverNumber = 0;
 	InTable.landed = landed;
+	InTable.ManeuverIndicator = true;
 
 	if (QUEID == 2)
 	{
@@ -12337,7 +12466,12 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	EphemerisData sv1;
 	double dt, dt2, t_right, StopCondParam, R_E;
 
-	MissionPlanTable *mpt = GetMPTPointer(in.VehicleCode);
+	MissionPlanTable *mpt = NULL;
+	
+	if (in.ManeuverIndicator)
+	{
+		mpt = GetMPTPointer(in.VehicleCode);
+	}
 
 	unsigned i = 0, NextMan;
 	bool manflag = false, surfaceflag = false;
@@ -12373,7 +12507,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		sv1 = in.AnchorVector;
 	}
 
-	if (in.ManCutoffIndicator != 2)
+	if (in.ManeuverIndicator && in.ManCutoffIndicator != 2)
 	{
 		dt2 = 1e70;
 		for (unsigned i = 0;i < mpt->mantable.size();i++)
@@ -17525,8 +17659,6 @@ void RTCC::PMMREAP(int med)
 	{
 		EphemerisData sv0;
 
-		double GETBase = CalcGETBase();
-
 		if (ELFECH(GMTfromGET(PZREAP.RTEVectorTime*3600.0), RTCC_MPT_CSM, sv0))
 		{
 			return;
@@ -17560,7 +17692,22 @@ void RTCC::PMMREAP(int med)
 			dt = 24.0*3600.0;
 		}
 
-		//OrbMech::GenerateEphemeris(sv0, dt, EPHEM.table, 44U, 2U);
+		EMSMISSInputTable in;
+
+		in.AnchorVector = sv0;
+		in.CutoffIndicator = 3;
+		in.EarthRelStopParam = 400000.0*0.3048;
+		in.EphemerisBuildIndicator = true;
+		in.EphemerisLeftLimitGMT = sv0.GMT;
+		in.EphemerRightLimitGMT = sv0.GMT + dt;
+		in.EphemTableIndicator = &EPHEM;
+		in.ManCutoffIndicator = 2;
+		in.ManeuverIndicator = false;
+		in.MoonRelStopParam = 0.0;
+		in.StopParamRefFrame = 2;
+		in.VehicleCode = RTCC_MPT_CSM;
+
+		EMSMISS(in);
 
 		int mode;
 		if (PZREAP.RTEIsPTPSite)
@@ -17574,9 +17721,9 @@ void RTCC::PMMREAP(int med)
 
 		std::vector<TradeoffData>todata;
 
-		//ConicRTEEarthNew rteproc(EPHEM.table, pzefem, todata);
-		//rteproc.READ(mode, CalcGETBase(), PZREAP.TZMIN, PZREAP.TZMAX);
-		//rteproc.Init(PZREAP.DVMAX, PZREAP.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
+		ConicRTEEarthNew rteproc(EPHEM.table, pzefem, todata);
+		rteproc.READ(mode, GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX);
+		rteproc.Init(PZREAP.DVMAX, PZREAP.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
 
 		std::vector<ATPData> line;
 		ATPData data;
@@ -17606,8 +17753,8 @@ void RTCC::PMMREAP(int med)
 			return;
 		}
 
-		//rteproc.ATP(line);
-		//rteproc.MAIN();
+		rteproc.ATP(line);
+		rteproc.MAIN();
 
 		PMQREAP(todata);
 		PMDTRDFF(med, PZREAP.RTETradeoffRemotePage);
@@ -19238,6 +19385,157 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 
 		EMDSPACE(queid, opt, val, incl, ascnode);
 	}
+	//Initiate Checkout Monitor Display
+	else if (med == 2)
+	{
+		if (data.size() < 3)
+		{
+			return;
+		}
+		int tab;
+		if (data[0] == "CSM")
+		{
+			tab = 1;
+		}
+		else if (data[0] == "LEM")
+		{
+			tab = 3;
+		}
+		else
+		{
+			return;
+		}
+		int opt;
+		if (data[1] == "GMT")
+		{
+			opt = 1;
+		}
+		else if (data[1] == "GET")
+		{
+			opt = 2;
+		}
+		else if (data[1] == "MVI")
+		{
+			opt = 3;
+		}
+		else if (data[1] == "MVE")
+		{
+			opt = 4;
+		}
+		else if (data[1] == "RAD")
+		{
+			opt = 5;
+		}
+		else if (data[1] == "ALT")
+		{
+			opt = 6;
+		}
+		else if (data[1] == "FPA")
+		{
+			opt = 7;
+		}
+		else
+		{
+			return;
+		}
+		double param;
+		if (opt == 1 || opt == 2)
+		{
+			double hh, mm, ss;
+			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return;
+			}
+			param = hh * 3600.0 + mm * 60.0 + ss;
+		}
+		else
+		{
+			if (sscanf(data[2].c_str(), "%lf", &param) != 1)
+			{
+				return;
+			}
+		}
+		bool hasTHT;
+		double THTime;
+		if (data.size() < 4 || data[3] == "")
+		{
+			hasTHT = false;
+		}
+		else
+		{
+			hasTHT = true;
+		}
+		//Illegal for MVI and MVE
+		if (hasTHT && (opt == 3 || opt == 4))
+		{
+			return;
+		}
+		if (opt >= 5)
+		{
+			//Mandatory for RAD, ALT, FPA
+			if (hasTHT == false)
+			{
+				return;
+			}
+			double hh, mm, ss;
+			if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return;
+			}
+			THTime = hh * 3600.0 + mm * 60.0 + ss;
+		}
+		else if (opt <= 2)
+		{
+			if (hasTHT)
+			{
+				double hh, mm, ss;
+				if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+				{
+					return;
+				}
+				THTime = hh * 3600.0 + mm * 60.0 + ss;
+			}
+			else
+			{
+				THTime = -1.0;
+			}
+		}
+		int ref;
+		if (data.size() < 5 || data[4] == "" || data[4] == "ECI")
+		{
+			ref = 0;
+		}
+		else if (data[4] == "ECT")
+		{
+			ref = 1;
+		}
+		else if (data[4] == "MCI")
+		{
+			ref = 2;
+		}
+		else if (data[4] == "MCT")
+		{
+			ref = 3;
+		}
+		else
+		{
+			return;
+		}
+		bool feet;
+		if (data.size() < 6 || data[5] == "")
+		{
+			feet = false;
+		}
+		else if (data[5] == "FT")
+		{
+			feet = true;
+		}
+		else
+		{
+			return;
+		}
+		//TBD: Call EMDCHECK
+	}
 	//Moonrise/Moonset Display
 	else if (med == 7)
 	{
@@ -19320,12 +19618,15 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			{
 				param = 0.0;
 			}
-			double hh, mm, ss;
-			if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			else
 			{
-				return;
+				double hh, mm, ss;
+				if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+				{
+					return;
+				}
+				param = hh * 3600.0 + mm * 60.0 + ss;
 			}
-			param = hh * 3600.0 + mm * 60.0 + ss;
 		}
 		else
 		{
@@ -20345,7 +20646,7 @@ void RTCC::PMDTRDFF(int med, unsigned page)
 
 	unsigned i, j, p;
 	double maxdv = 0;
-	double MinTime = RTETradeoffTable.data[0][0].T0;
+	double MinTime = (RTETradeoffTable.data[0][0].T0 - MCGMTL);
 	double MaxTime = 0;
 
 	for (i = 0;i < RTETradeoffTable.curves;i++)
@@ -20356,9 +20657,9 @@ void RTCC::PMDTRDFF(int med, unsigned page)
 			{
 				maxdv = RTETradeoffTable.data[i][j].DV;
 			}
-			if (RTETradeoffTable.data[i][j].T0 > MaxTime)
+			if ((RTETradeoffTable.data[i][j].T0 - MCGMTL) > MaxTime)
 			{
-				MaxTime = RTETradeoffTable.data[i][j].T0;
+				MaxTime = (RTETradeoffTable.data[i][j].T0 - MCGMTL);
 			}
 		}
 	}
@@ -20430,11 +20731,11 @@ void RTCC::PMDTRDFF(int med, unsigned page)
 		RTETradeoffTableBuffer[p].NumInCurve[i] = RTETradeoffTable.NumInCurve[i];
 
 		//Rounded average of landing time
-		RTETradeoffTableBuffer[p].TZDisplay[i] = (int)round((RTETradeoffTable.data[i][0].T_Z + RTETradeoffTable.data[i][RTETradeoffTable.NumInCurve[i] - 1].T_Z) / 2.0);
+		RTETradeoffTableBuffer[p].TZDisplay[i] = (int)round(((RTETradeoffTable.data[i][0].T_Z - MCGMTL) + (RTETradeoffTable.data[i][RTETradeoffTable.NumInCurve[i] - 1].T_Z - MCGMTL)) / 2.0);
 
 		for (j = 0;j < RTETradeoffTable.NumInCurve[i];j++)
 		{
-			xval = (RTETradeoffTable.data[i][j].T0 - MinTimeLabel) / (MaxTimeLabel - MinTimeLabel);
+			xval = ((RTETradeoffTable.data[i][j].T0 - MCGMTL) - MinTimeLabel) / (MaxTimeLabel - MinTimeLabel);
 			yval = (RTETradeoffTable.data[i][j].DV - MinDVLabel) / (MaxDVLabel - MinDVLabel);
 
 			xval = xval * (xscalmax - xscalmin) + xscalmin;
@@ -20487,13 +20788,13 @@ void RTCC::PMDTRDFF(int med, unsigned page)
 	{
 		for (j = 0;j < RTETradeoffTable.NumInCurve[i];j++)
 		{
-			if (RTETradeoffTable.data[i][j].T_Z > maxtz)
+			if ((RTETradeoffTable.data[i][j].T_Z - MCGMTL) > maxtz)
 			{
-				maxtz = RTETradeoffTable.data[i][j].T_Z;
+				maxtz = (RTETradeoffTable.data[i][j].T_Z - MCGMTL);
 			}
-			if (RTETradeoffTable.data[i][j].T_Z < mintz)
+			if ((RTETradeoffTable.data[i][j].T_Z - MCGMTL) < mintz)
 			{
-				mintz = RTETradeoffTable.data[i][j].T_Z;
+				mintz = (RTETradeoffTable.data[i][j].T_Z - MCGMTL);
 			}
 
 			if (RTETradeoffTable.data[i][j].lat > maxlat)
@@ -20569,7 +20870,7 @@ void RTCC::PMDTRDFF(int med, unsigned page)
 		for (j = 0;j < RTETradeoffTable.NumInCurve[i];j++)
 		{
 			//Landing time
-			yval = (RTETradeoffTable.data[i][j].T_Z - MinTZLabel) / (MaxTZLabel - MinTZLabel);
+			yval = ((RTETradeoffTable.data[i][j].T_Z - MCGMTL) - MinTZLabel) / (MaxTZLabel - MinTZLabel);
 
 			yval = yval * (yscalmax - yscalmin) + yscalmin;
 			yval = 1.0 - yval;
@@ -20912,6 +21213,9 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mptman->R_BO = aux->R_BO;
 	mptman->V_BO = aux->V_BO;
 	mptman->GMT_BO = aux->GMT_BO;
+	mptman->R_1 = aux->R_1;
+	mptman->V_1 = aux->V_1;
+	mptman->GMT_1 = aux->GMT_1;
 	mptman->CoordSysInd = aux->CSI;
 	mptman->RefBodyInd = aux->RBI;
 	mptman->DV_M = aux->DV;
@@ -21039,22 +21343,49 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 
 		EngineParametersTable(mptman->Thruster, T, isp);
 		WDOT = T / isp;
-		if (L == RTCC_MPT_CSM)
+
+		if (mptman->Thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || mptman->Thruster == RTCC_ENGINETYPE_CSMRCSMINUS2)
 		{
+			T = MCTCT1;
+			WDOT = MCTCW1;
+			F = mptman->CSMRCSFuelAfter;
+		}
+		else if (mptman->Thruster == RTCC_ENGINETYPE_CSMRCSPLUS4 || mptman->Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4)
+		{
+			T = 2.0*MCTCT1;
+			WDOT = 2.0*MCTCW1;
+			F = mptman->CSMRCSFuelAfter;
+		}
+		else if (mptman->Thruster == RTCC_ENGINETYPE_LMRCSPLUS4 || mptman->Thruster == RTCC_ENGINETYPE_LMRCSMINUS4)
+		{
+			T = MCTLT1;
+			WDOT = MCTLW1;
+			F = mptman->LMRCSFuelAfter;
+		}
+		else if (mptman->Thruster == RTCC_ENGINETYPE_LMRCSPLUS4 || mptman->Thruster == RTCC_ENGINETYPE_LMRCSMINUS4)
+		{
+			T = 2.0*MCTLT1;
+			WDOT = 2.0*MCTLW1;
+			F = mptman->LMRCSFuelAfter;
+		}
+		else if (mptman->Thruster == RTCC_ENGINETYPE_CSMSPS)
+		{
+			T = MCTST1;
+			WDOT = MCTSW1;
 			F = mptman->SPSFuelAfter;
+		}
+		else if (mptman->Thruster == RTCC_ENGINETYPE_LMAPS)
+		{
+			T = MCTAT1;
+			WDOT = MCTAW1;
+			F = mptman->APSFuelAfter;
 		}
 		else
 		{
-			if (MPTConfigIncludesLMDsc(mptman->ConfigCodeAfter))
-			{
-				F = mptman->DPSFuelAfter;
-			}
-			else
-			{
-				F = mptman->APSFuelAfter;
-			}
+			T = MCTDT1;
+			WDOT = MCTDW1;
+			F = mptman->DPSFuelAfter;
 		}
-
 	}
 
 	//TBD: Docking maneuver

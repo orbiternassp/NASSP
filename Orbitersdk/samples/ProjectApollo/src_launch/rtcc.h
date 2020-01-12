@@ -1547,6 +1547,9 @@ struct MPTManeuver
 	VECTOR3 R_BO;
 	VECTOR3 V_BO;
 	double GMT_BO;
+	VECTOR3 R_1;
+	VECTOR3 V_1;
+	double GMT_1;
 	
 	double CSMMassAfter;
 	double SIVBMassAfter;
@@ -1554,12 +1557,16 @@ struct MPTManeuver
 	double LMDscMassAfter;
 	double TotalMassAfter;
 	double TotalAreaAfter;
-	double SPSFuelAfter = -1.0;
-	double CSMRCSFuelAfter = -1.0;
-	double SIVBJ2FuelAfter = -1.0;
-	double APSFuelAfter = -1.0;
-	double LMRCSFuelAfter = -1.0;
-	double DPSFuelAfter = -1.0;
+	double CSMAreaAfter;
+	double SIVBAreaAfter;
+	double AscentAreaAfter;
+	double DescentAreaAfter;
+	double SPSFuelAfter;
+	double CSMRCSFuelAfter;
+	double SIVBJ2FuelAfter;
+	double APSFuelAfter;
+	double LMRCSFuelAfter;
+	double DPSFuelAfter;
 	double DVREM;
 	double DVC;
 	double DVXBT;
@@ -1673,6 +1680,8 @@ struct MissionPlanTable
 
 	double TimeToBeginManeuver[15];
 	double TimeToEndManeuver[15];
+	double AreaAfterManeuver[15];
+	double WeightAfterManeuver[15];
 	unsigned LastFrozenManeuver = 0;
 	unsigned LastExecutedManeuver = 0;
 
@@ -1959,32 +1968,6 @@ struct CapeCrossingTable
 	//Time of last known cape crossing before the time of the update vector (zero if unknown)
 	double GETCrossPrev;
 	double GETCross[30];
-};
-
-struct EphemerisHeader
-{
-	//Update number
-	int TUP = 0;
-	//Vehicle code
-	int VEH = 0;
-	//Coordinate indicator
-	int CSI = 0;
-	//Vector offset
-	unsigned Offset = 0;
-	//Number of vectors returned
-	unsigned NumVec = 0;
-	//Status indicator
-	int Status = 0;
-	//Time of first returned vector
-	double TL = 0.0;
-	//Time of last returned vector
-	double TR = 0.0;
-};
-
-struct EphemerisDataTable
-{
-	EphemerisHeader Header;
-	std::vector<EphemerisData> table;
 };
 
 struct Station
@@ -2586,7 +2569,7 @@ public:
 	//LM Lunar Descent Pre-Thrust Targeting Module
 	int PMMLDP(PMMLDPInput in, MPTManeuver &man);
 	//Freeze, Unfreeze, Delete Processor
-	int PMMFUD(int veh, unsigned man, int action);
+	void PMMFUD(int veh, unsigned man, int action);
 	//Vehicle Orientation Change Processor
 	void PMMUDT(int L, unsigned man, int headsup, int trim);
 	//Vector Routing Load Module
@@ -3661,12 +3644,16 @@ public:
 	double MCTLW3;
 	//Weight loss rate LM RCS-X (4 quads)
 	double MCTLW4;
+	//APS thrust level
+	double MCTAT1;
 	//APS buildup thrust level
 	double MCTAT2;
 	//APS full load thrust level
 	double MCTAT4;
 	//On-board computer thrust level for LM APS thruster
 	double MCTAT9;
+	//APS weight loss rate
+	double MCTAW1;
 	//APS weight loss rate for buildup
 	double MCTAW2;
 	//APS weight loss rate for full load
@@ -3677,6 +3664,8 @@ public:
 	double MCTAD3;
 	//Total APS ullage overlap
 	double MCTAD9;
+	//DPS thrust level
+	double MCTDT1;
 	//DPS phase 2 thrust level
 	double MCTDT2;
 	//DPS phase 3 thrust level
@@ -3689,6 +3678,8 @@ public:
 	double MCTDT6;
 	//On-board computer thrust level for LM DPS thruster
 	double MCTDT9;
+	//DPS weight loss rate
+	double MCTDW1;
 	//DPS phase 2 weight loss rate
 	double MCTDW2;
 	//DPS phase 3 weight loss rate
@@ -3711,12 +3702,16 @@ public:
 	double MCTDD6;
 	//Total DPS ullage overlap
 	double MCTDD9;
+	//SPS thrust level
+	double MCTST1;
 	//SPS thrust level for buildup
 	double MCTST2;
 	//SPS thrust level for full load
 	double MCTST4;
 	//On-board computer thrust level for CSM SPS thruster
 	double MCTST9;
+	//SPS weight loss rate
+	double MCTSW1;
 	//SPS weight loss rate for buildup
 	double MCTSW2;
 	//SPS weight loss rate for full load

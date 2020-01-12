@@ -34,22 +34,30 @@ struct EphemerisData
 	int RBI = -1; //0 = Earth, 1 = Moon
 };
 
-struct RTCCEphemerisHeader
+struct EphemerisHeader
 {
-	//Word 1 (Bytes 1-4)
-	//Open
-	//Word 1 (Bytes 5,6), coordinate system ID (0 = ECI)
+	//Update number
+	int TUP = 0;
+	//Vehicle code
+	int VEH = 0;
+	//Coordinate indicator
 	int CSI = 0;
-	//Word 2 (Bytes 1-4), numbers of bytes in ephemeris
-	//TBD
-	//Word 2 (Bytes 5,6), number of entries in ephemeris and weight tables
-	unsigned NumEntries = 0;
-	//Word 2 (Bytes 7,8), error return indicator
-	int IERR = 0;
-	//Word 3, time of first entry in ephemeris and weight tables (GMT, hrs.)
-	double TFIRST = 0.0;
-	//Word 4, time of last entry in ephemeris and weight tables (GMT, hrs.)
-	double TEND = 0.0;
+	//Vector offset
+	unsigned Offset = 0;
+	//Number of vectors returned
+	unsigned NumVec = 0;
+	//Status indicator
+	int Status = 0;
+	//Time of first returned vector
+	double TL = 0.0;
+	//Time of last returned vector
+	double TR = 0.0;
+};
+
+struct EphemerisDataTable
+{
+	EphemerisHeader Header;
+	std::vector<EphemerisData> table;
 };
 
 struct RTCCNIInputTable

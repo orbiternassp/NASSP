@@ -6183,11 +6183,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 				if (GC->rtcc->med_f70.EntryProfile == 1)
 				{
-					skp->Text(10 * W / 16, 12 * H / 14, "Constant G", 10);
+					skp->Text(10 * W / 16, 10 * H / 14, "Constant G", 10);
 				}
 				else
 				{
-					skp->Text(10 * W / 16, 12 * H / 14, "G&N", 3);
+					skp->Text(10 * W / 16, 10 * H / 14, "G&N", 3);
 				}
 			}
 			else
@@ -6207,11 +6207,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 				if (GC->rtcc->med_f71.EntryProfile == 1)
 				{
-					skp->Text(10 * W / 16, 12 * H / 14, "Constant G", 10);
+					skp->Text(10 * W / 16, 10 * H / 14, "Constant G", 10);
 				}
 				else
 				{
-					skp->Text(10 * W / 16, 12 * H / 14, "G&N", 3);
+					skp->Text(10 * W / 16, 10 * H / 14, "G&N", 3);
 				}
 			}
 		}
@@ -9061,22 +9061,98 @@ void ApolloRTCCMFD::menuMPTInitM50M55Table()
 
 void ApolloRTCCMFD::menuMPTInitM50CSMWT()
 {
+	bool MPTInitM50CSMWTInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input CSM mass in lbs (negative number for no update):", MPTInitM50CSMWTInput, 0, 20, (void*)this);
+}
 
+bool MPTInitM50CSMWTInput(void* id, char *str, void *data)
+{
+	double mass;
+
+	if (sscanf(str, "%lf", &mass) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_MPTInitM50CSMWT(mass);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MPTInitM50CSMWT(double mass)
+{
+	GC->rtcc->med_m50.CSMWT = mass * 0.45359237;
 }
 
 void ApolloRTCCMFD::menuMPTInitM50LMWT()
 {
+	bool MPTInitM50LMWTInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input LM total mass in lbs (negative number for no update):", MPTInitM50LMWTInput, 0, 20, (void*)this);
+}
 
+bool MPTInitM50LMWTInput(void* id, char *str, void *data)
+{
+	double mass;
+
+	if (sscanf(str, "%lf", &mass) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_MPTInitM50LMWT(mass);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MPTInitM50LMWT(double mass)
+{
+	GC->rtcc->med_m50.LMWT = mass * 0.45359237;
 }
 
 void ApolloRTCCMFD::menuMPTInitM50LMAscentWT()
 {
+	bool MPTInitM50LMAscentWTInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input LM ascent stage mass in lbs (negative number for no update):", MPTInitM50LMAscentWTInput, 0, 20, (void*)this);
+}
 
+bool MPTInitM50LMAscentWTInput(void* id, char *str, void *data)
+{
+	double mass;
+
+	if (sscanf(str, "%lf", &mass) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_MPTInitM50LMAscentWT(mass);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MPTInitM50LMAscentWT(double mass)
+{
+	GC->rtcc->med_m50.LMASCWT = mass * 0.45359237;
 }
 
 void ApolloRTCCMFD::menuMPTInitM50SIVBWT()
 {
+	bool MPTInitM50SIVBWTInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input S-IVB stage mass in lbs (negative number for no update):", MPTInitM50SIVBWTInput, 0, 20, (void*)this);
+}
 
+bool MPTInitM50SIVBWTInput(void* id, char *str, void *data)
+{
+	double mass;
+
+	if (sscanf(str, "%lf", &mass) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_MPTInitM50SIVBWT(mass);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MPTInitM50SIVBWT(double mass)
+{
+	GC->rtcc->med_m50.SIVBWT = mass * 0.45359237;
 }
 
 void ApolloRTCCMFD::menuMPTInitM55Config()
@@ -9995,7 +10071,7 @@ void ApolloRTCCMFD::menuEntryCalc()
 void ApolloRTCCMFD::menuTransferRTEToMPT()
 {
 	bool TransferRTEInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Format: M74,MPT (CSM or LEM), Replace Code (1-15 or missing), Maneuver Type (RTEP);", TransferRTEInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: M74,MPT (CSM or LEM), Replace Code (1-15 or missing), Maneuver Type (TTFP for deorbit, otherwise RTEP);", TransferRTEInput, 0, 20, (void*)this);
 }
 
 bool TransferRTEInput(void *id, char *str, void *data)

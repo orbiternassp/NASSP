@@ -2926,7 +2926,7 @@ OBJHANDLE RTEEarth::AGCGravityRef(VESSEL *vessel)
 	return gravref;
 }
 
-ConicRTEEarthNew::ConicRTEEarthNew(std::vector<MPTSV> &SVArray, PZEFEM &ephemeris, std::vector<TradeoffData> &todata) :
+ConicRTEEarthNew::ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris, std::vector<TradeoffData> &todata) :
 	XArray(SVArray), ephem(ephemeris), TOData(todata)
 {
 	mu = OrbMech::mu_Earth*pow(SCPHR, 2) / pow(KMPER*1000.0, 3);
@@ -2953,10 +2953,10 @@ void ConicRTEEarthNew::Init(double dvm, int icrngg, double irmax, double urmax, 
 	IMSFN = imsfn;
 }
 
-void ConicRTEEarthNew::READ(int mode, double getbase, double tzmin, double tzmax)
+void ConicRTEEarthNew::READ(int mode, double gmtbase, double tzmin, double tzmax)
 {
 	Mode = mode;
-	GETbase = getbase;
+	GMTbase = gmtbase;
 	T_zmax = tzmax;
 	T_zmin = tzmin;
 }
@@ -2978,7 +2978,7 @@ void ConicRTEEarthNew::MAIN()
 	VECTOR3 DV, V_a, V_a2;
 	double beta_r, dv, U_r, DVC, T, VT_a, VR_a, v_a, beta_a, T_z, alpha, delta, lambda, p, eta_ar, phi, phi_z, theta_z, TP;
 	int J, J_m, FLAG, QA;
-	MPTSV sv;
+	EphemerisData sv;
 
 	J = 0;
 	J_m = XArray.size();
@@ -2987,16 +2987,16 @@ void ConicRTEEarthNew::MAIN()
 	{
 		sv = XArray[J];
 
-		if (sv.gravref != hEarth)
+		if (sv.RBI != BODY_EARTH)
 		{
 			goto ConicRTEEarth_MAIN_E;
 		}
 
-		OrbMech::EclipticToECI(sv.R, sv.V, sv.MJD, sv.R, sv.V);
+		OrbMech::EclipticToECI(sv.R, sv.V, OrbMech::MJDfromGET(sv.GMT, GMTbase), sv.R, sv.V);
 
 		X0 = sv.R / KMPER / 1000.0;
 		U0 = sv.V*SCPHR / KMPER / 1000.0;
-		T0 = OrbMech::GETfromMJD(sv.MJD, GETbase) / SCPHR;
+		T0 = sv.GMT / SCPHR;
 		INITAL();
 		if (NOSOLN == 1)
 		{
@@ -3205,7 +3205,7 @@ void ConicRTEEarthNew::INITAL()
 	theta_mu = A_Z - Am1;
 	//Down (south) azimuth change constraint
 	theta_md = A_Z - Am2;
-	double alpha_g0 = OrbMech::GetPlanetCurrentRotation(BODY_EARTH, GETbase);
+	double alpha_g0 = OrbMech::GetPlanetCurrentRotation(BODY_EARTH, GMTbase);
 	alpha_g = alpha_g0 + w_E * T0;
 	//Radial speed
 	VR_0 = dotp(X0 / length(X0), U0);
@@ -4382,9 +4382,9 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 	double deltat, deltat1, cos_PV, deltaT, Tr, T_arm, T_arm2, Z3, TERM, dt_dbetaa, dt_dva, dbetar_dbetaa, dbetar_dva, ALVA, D, dv, dbeta, T_art, dw;
 	double DUM, DUM2, ES, ESS, PS, h, Sbeta_s, beta_s, CDB, DLBET, ZIT;
 
-	OrbMech::PLEFEM(ephem, GETbase + T0 / 24.0, R_EM, V_EM, R_ES);
+	OrbMech::PLEFEM(ephem, GMTbase + T0 / 24.0, R_EM, V_EM, R_ES);
 	R_Moon = R_EM / (KMPER*1000.0);
-	R_Moon = OrbMech::EclipticToECI(R_Moon, GETbase + T0 / 24.0);
+	R_Moon = OrbMech::EclipticToECI(R_Moon, GMTbase + T0 / 24.0);
 
 	r_a = length(R_a);
 	v_a = length(V_a);
@@ -4419,9 +4419,9 @@ void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r
 		AMAA = EAA - e * sin(EAA);
 		TAA = a * sqrt(a / mu)*(PI - AMAA);
 		TJ = T0 + TAA;
-		OrbMech::PLEFEM(ephem, GETbase + TJ / 24.0, R_EM, V_EM, R_ES);
+		OrbMech::PLEFEM(ephem, GMTbase + TJ / 24.0, R_EM, V_EM, R_ES);
 		RMAP = R_EM / (KMPER*1000.0);
-		RMAP = OrbMech::EclipticToECI(RMAP, GETbase + T0 / 24.0);
+		RMAP = OrbMech::EclipticToECI(RMAP, GMTbase + T0 / 24.0);
 		theta = PI - eta - beta_a;
 		RAPOG = (V_a*cos(theta) / v_a + (V_a*cos(beta_a) / v_a - R_a / r_a)*sin(theta) / sin(beta_a))*R_p;
 		R_apo = RMAP - RAPOG;
