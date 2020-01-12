@@ -3220,65 +3220,6 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 }
 
-void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG)
-{
-	SV sv_pre, sv_post;
-
-	LOI2Targeting(opt, dV_LVLH, P30TIG, sv_pre, sv_post);
-}
-
-void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post)
-{
-	SV sv0, sv1, sv2;
-	double GET, LMmass, mass, EarliestMJD;
-	OBJHANDLE hMoon;
-
-	sv0 = opt->RV_MCC;
-	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
-
-	if (opt->csmlmdocked)
-	{
-		LMmass = GetDockedVesselMass(opt->vessel);
-	}
-	else
-	{
-		LMmass = 0.0;
-	}
-
-	if (opt->EarliestGET == 0.0)
-	{
-		EarliestMJD = sv0.MJD;
-	}
-	else
-	{
-		EarliestMJD = OrbMech::MJDfromGET(opt->EarliestGET, opt->GETbase);
-	}
-
-	sv1 = coast(sv0, (EarliestMJD - sv0.MJD)*24.0*3600.0);
-
-	mass = LMmass + sv1.mass;
-
-	hMoon = oapiGetObjectByName("Moon");
-
-	double a, dt2, LOIGET, v_circ;
-	VECTOR3 U_H, U_hor, VA2_apo, DVX;
-
-	a = OrbMech::R_Moon + opt->h_circ + opt->alt;
-
-	dt2 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, a, -1, hMoon, hMoon);
-	sv2 = coast(sv1, dt2);
-	LOIGET = OrbMech::GETfromMJD(sv2.MJD, opt->GETbase);
-
-	U_H = unit(crossp(sv2.R, sv2.V));
-	U_hor = unit(crossp(U_H, unit(sv2.R)));
-	v_circ = sqrt(OrbMech::mu_Moon*(2.0 / length(sv2.R) - 1.0 / a));
-	VA2_apo = U_hor*v_circ;
-
-	DVX = VA2_apo - sv2.V;
-
-	PoweredFlightProcessor(sv2, opt->GETbase, LOIGET, opt->enginetype, LMmass, DVX, false, P30TIG, dV_LVLH, sv_pre, sv_post);
-}
-
 void RTCC::TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
 {
 	double GET;

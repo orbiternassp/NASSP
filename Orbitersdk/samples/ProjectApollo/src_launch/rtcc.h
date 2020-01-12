@@ -726,19 +726,6 @@ struct LOIMan
 	int plan = 1;		//1 = CSM, 3 = LEM
 };
 
-struct LOI2Man
-{
-	VESSEL* vessel;			//vessel
-	double GETbase;			//usually MJD at launch
-	double EarliestGET = 0.0;	//Earliest GET for the LOI-2 maneuver
-	double h_circ;			//altitude of circular orbit
-	SV RV_MCC;				//State vector as input
-	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
-	double alt = 0.0;		//altitude of the landing site
-	int enginetype = RTCC_ENGINETYPE_CSMSPS;	//Engine type to use for maneuver
-};
-
 struct DOIMan
 {
 	int opt;		//0 = DOI from circular orbit, 1 = DOI as LOI-2
@@ -2387,8 +2374,6 @@ public:
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_pre, SV &sv_post);
-	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post);
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	int LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad, LunarDescentPlanningTable &table);
