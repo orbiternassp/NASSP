@@ -248,6 +248,60 @@ struct LGCIgnitionConstants
 	double K_V = 410.0;
 };
 
+struct AEGHeader
+{
+	//0 = Earth, 1 = Lunar
+	int AEGInd;
+	int ErrorInd;
+	int NumBlocks;
+	//int Spare;
+};
+
+struct AEGDataBlock
+{
+	int Spare1;
+	//Item 2, initialize/update indicator (0 = Osculating elements provided, 1 = osc and mean elements provided, use low e form., 2 = same as 1, but high e)
+	int ENTRY;
+	//Item 3, update option indicator (0 = to time, 1 = to mean anomaly, 2 = to argument of latitude, 3 = to maneuver counter line...)
+	int TIMA;
+	int HarmonicsInd;
+	//Item 5, drag indicator. If nonzero it is the K-Factor
+	double ICSUBD;
+	double VehArea;
+	double VehWeight;
+	double Item8;
+	double MJD_oc;
+	double DN;
+	double a_osc;
+	double e_osc;
+	double i_osc;
+	double l_osc;
+	double g_osc;
+	double h_osc;
+	double a_mean;
+	double e_mean;
+	double i_mean;
+	double l_mean;
+	double g_mean;
+	double h_mean;
+	//Item 23, time associated with elements 11-16 (in GMT)
+	double TS;
+	double l_dot;
+	double g_dot;
+	double h_dot;
+	//Item 27, time to which to update elements (in GMT)
+	double TE;
+	double f;
+	double U;
+	double R;
+};
+
+struct AEGBlock
+{
+	AEGHeader Header;
+	AEGDataBlock Data;
+};
+
 class CoastIntegrator
 {
 public:
@@ -255,12 +309,13 @@ public:
 	~CoastIntegrator();
 	bool iteration(bool allow_stop = true);
 
+	void AdjustTF(double t_f) { t_F = t_f; }
+
 	double GetTime();
 	VECTOR3 GetPosition();
 	VECTOR3 GetVelocity();
 	double GetMJD();
 	OBJHANDLE GetGravRef();
-	void AdjustTF(double t_f) { t_F = t_f; }
 
 	VECTOR3 R2, V2;
 	OBJHANDLE outplanet;
@@ -424,6 +479,7 @@ namespace OrbMech {
 	VECTOR3 RotateVelocityVector(VECTOR3 R, VECTOR3 V, double ang);
 	double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref, double phi_d);
 	void latlong_from_J2000(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng);
+	void latlong_from_J2000(VECTOR3 R, double MJD, int RefBody, double &lat, double &lng);
 	void latlong_from_r(VECTOR3 R, double &lat, double &lng);
 	VECTOR3 r_from_latlong(double lat, double lng);
 	VECTOR3 r_from_latlong(double lat, double lng, double r);
@@ -446,6 +502,7 @@ namespace OrbMech {
 	VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0);
 	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
 	void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
+	void impulsive2(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff);
 	double DVFromBurnTime(double bt, double thrust, double isp, double mass);
 	void checkstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft);
 	void coascheckstar(MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &spa, double &sxp);
@@ -550,19 +607,21 @@ namespace OrbMech {
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
 	double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng);
 	//RTCC EMXING support routine, calculate direction vectors and sine of elevation angle
-	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref, VECTOR3 &N, VECTOR3 &rho, double &sinang);
+	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body, VECTOR3 &N, VECTOR3 &rho, double &sinang);
 	//RTCC EMXING support routine, calculates elevation slope function
-	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE gravref);
+	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body);
 
 	//AEG
-	SV PMMAEGS(SV sv0, int opt, double param, double DN = 0.0);
-	SV PMMAEG(SV sv0, int opt, double param, double DN = 0.0);
-	SV PMMLAEG(SV sv0, int opt, double param, double DN = 0.0);
+	SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
+	SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
 	//Inertial to Keplerian Conversion Subroutine
 	CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu);
 	//Keplerian to Inertial Conversion Subroutine
 	SV GIMKIC(CELEMENTS elem, double mu);
 	SV PositionMatch(SV sv_A, SV sv_P, double mu);
+	//Phase angle determination
+	double THETR(double u1, double u2, double i1, double i2, double h1, double h2);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);
@@ -590,6 +649,7 @@ namespace OrbMech {
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);
 VECTOR3 rhmul(const MATRIX3 &A, const VECTOR3 &b);
 VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b);
+MATRIX3 MatrixRH_LH(MATRIX3 A);
 double acos2(double _X);
 double asin2(double _X);
 double factorial(unsigned n);

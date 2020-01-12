@@ -54,14 +54,24 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GET_TIG = OrbMech::HHMMSSToSS(3, 20, 0);
 
-		lambert = set_lambertoptions(sv_A, sv_P, getGETBase(), GET_TIG, OrbMech::HHMMSSToSS(26, 25, 0), 15, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0);
+		lambert.mode = 0;
+		lambert.GETbase = getGETBase();
+		lambert.T1 = GET_TIG;
+		lambert.T2 = OrbMech::HHMMSSToSS(26, 25, 0);
+		lambert.N = 15;
+		lambert.axis = RTCC_LAMBERT_XAXIS;
+		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
+		lambert.Offset = _V(76.5 * 1852, 0, 0);
+		lambert.sv_A = sv_A;
+		lambert.sv_P = sv_P;
+
 		LambertTargeting(&lambert, res);
 
 		opt.GETbase = getGETBase();
 		opt.vessel = calcParams.src;
 		opt.TIG = GET_TIG;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_RCSMINUS4;
+		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
 		opt.HeadsUp = false;
 		opt.sxtstardtime = 0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -92,7 +102,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		entopt.vessel = calcParams.src;
 		entopt.GETbase = GETbase;
-		entopt.enginetype = RTCC_ENGINETYPE_SPS;
+		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -163.0*RAD;
 		entopt.nominal = RTCC_ENTRY_NOMINAL;
 		entopt.ReA = 0;
@@ -113,7 +123,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.GETbase = GETbase;
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
 		opt.sxtstardtime = -25 * 60;
 		opt.REFSMMAT = REFSMMAT;
@@ -167,7 +177,16 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GET_TIG = OrbMech::HHMMSSToSS(15, 52, 0);
 
-		lambert = set_lambertoptions(sv_A, sv_P, getGETBase(), OrbMech::HHMMSSToSS(15, 52, 0), OrbMech::HHMMSSToSS(26, 25, 0), 7, RTCC_LAMBERT_XAXIS, RTCC_LAMBERT_SPHERICAL, _V(76.5 * 1852, 0, 0), 0);
+		lambert.mode = 0;
+		lambert.GETbase = getGETBase();
+		lambert.T1 = GET_TIG;
+		lambert.T2 = OrbMech::HHMMSSToSS(26, 25, 0);
+		lambert.N = 7;
+		lambert.axis = RTCC_LAMBERT_XAXIS;
+		lambert.Perturbation = RTCC_LAMBERT_SPHERICAL;
+		lambert.Offset = _V(76.5 * 1852, 0, 0);
+		lambert.sv_A = sv_A;
+		lambert.sv_P = sv_P;
 
 		LambertTargeting(&lambert, res);
 
@@ -241,28 +260,29 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GET_TIG_imp = OrbMech::HHMMSSToSS(26, 25, 0);
 
+		GZGENCSN.TIElevationAngle = 27.45*RAD;
+
+		lambert.mode = 1;
 		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
 		lambert.DH = 8.0*1852.0;
-		lambert.Elevation = 27.45*RAD;
+		lambert.ElevationAngle = 27.45*RAD;
 		lambert.GETbase = GETBase;
 		lambert.N = 1;
-		lambert.NCC_NSR_Flag = true;
 		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
 		lambert.PhaseAngle = -1.32*RAD;
 		lambert.sv_A = sv_A;
 		lambert.sv_P = sv_P;
 		lambert.T1 = GET_TIG_imp;
 		lambert.T2 = OrbMech::HHMMSSToSS(28, 0, 0);
-		lambert.use_XYZ_Offset = false;
 
 		LambertTargeting(&lambert, res);
-		PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_ENGINETYPE_SPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_A, GETBase, GET_TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
 		opt.GETbase = GETBase;
 		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
 		opt.sxtstardtime = -30 * 60;
 		if (preliminary)
@@ -315,19 +335,20 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETBase = getGETBase();
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 
+		GZGENCSN.TIElevationAngle = 27.45*RAD;
+
+		lambert.mode = 1;
 		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
 		lambert.DH = 8.0*1852.0;
-		lambert.Elevation = 27.45*RAD;
+		lambert.ElevationAngle = 27.45*RAD;
 		lambert.GETbase = GETBase;
 		lambert.N = 0;
-		lambert.NCC_NSR_Flag = true;
 		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
 		lambert.PhaseAngle = -1.32*RAD;
 		lambert.sv_A = sv_A;
 		lambert.sv_P = sv_P;
 		lambert.T1 = GET_TIG_imp;
 		lambert.T2 = OrbMech::HHMMSSToSS(28, 0, 0);
-		lambert.use_XYZ_Offset = false;
 
 		LambertTargeting(&lambert, res);
 
@@ -393,19 +414,19 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		spqopt.E = 27.45*RAD;
 		spqopt.GETbase = GETbase;
-		spqopt.K_CSI = false;
 		spqopt.sv_A = sv_A;
 		spqopt.sv_P = sv_P;
-		spqopt.t_TIG = FindDH(sv_A, sv_P, GETbase, 28.0*3600.0, 8.0*1852.0);
+		spqopt.t_CSI = -1;
+		spqopt.t_CDH = FindDH(sv_A, sv_P, GETbase, 28.0*3600.0, 8.0*1852.0);
 		
 		ConcentricRendezvousProcessor(spqopt, res);
-		PoweredFlightProcessor(sv_A, GETbase, res.t_CDH, RTCC_ENGINETYPE_SPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_A, GETbase, res.t_CDH, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
 
 		opt.GETbase = GETbase;
 		opt.vessel = calcParams.src;
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = false;
 		opt.sxtstardtime = 0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
@@ -441,16 +462,17 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_P = StateVectorCalc(calcParams.tgt);
 		GETbase = getGETBase();
 
+		GZGENCSN.TIElevationAngle= 27.45*RAD;
+		GZGENCSN.TITravelAngle = 140.0*RAD;
+
 		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
-		lambert.DT = 35.0*60.0;
-		lambert.Elevation = 27.45*RAD;
-		lambert.elevOpt = 1;
 		lambert.GETbase = GETbase;
 		lambert.N = 0;
 		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
 		lambert.sv_A = sv_A;
 		lambert.sv_P = sv_P;
-		lambert.TPFOpt = 1;
+		lambert.T1 = -1;
+		lambert.T2 = -1;
 
 		LambertTargeting(&lambert, res);
 
@@ -470,7 +492,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 
 		opt.dV_LVLH = _V(2.0*0.3048, 0.0, 0.0);
-		opt.enginetype = RTCC_ENGINETYPE_RCSMINUS4;
+		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
 		opt.GETbase = getGETBase();
 		opt.HeadsUp = false;
 		opt.navcheckGET = 0;
@@ -604,7 +626,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		orbopt.TIG_GET= OrbMech::HHMMSSToSS(75, 18, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_ENGINETYPE_SPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -615,7 +637,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_SPS;
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.GETbase = GETbase;
 		manopt.HeadsUp = true;
 		manopt.navcheckGET = OrbMech::HHMMSSToSS(75, 5, 0);
@@ -760,7 +782,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
 		opt.dV_LVLH = dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.navcheckGET = 120.0*3600.0;
@@ -884,7 +906,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(164, 30, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_ENGINETYPE_SPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.GETbase = GETbase;
@@ -895,7 +917,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_SPS;
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.GETbase = GETbase;
 		manopt.HeadsUp = true;
 		manopt.navcheckGET = OrbMech::HHMMSSToSS(164, 18, 0);
@@ -1043,7 +1065,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
 		opt.dV_LVLH = dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.navcheckGET = OrbMech::HHMMSSToSS(209, 20, 0);
@@ -1157,7 +1179,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 35, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_ENGINETYPE_SPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, GETbase, TIG_imp, RTCC_ENGINETYPE_CSMSPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 		dV_LVLH.y = -100.0*0.3048;
 
 		refsopt.dV_LVLH = dV_LVLH;
@@ -1169,7 +1191,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
 		manopt.dV_LVLH = dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_SPS;
+		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.GETbase = GETbase;
 		manopt.HeadsUp = true;
 		manopt.navcheckGET = OrbMech::HHMMSSToSS(238, 24, 0);
@@ -1248,7 +1270,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		entopt.vessel = calcParams.src;
 		entopt.GETbase = GETbase;
-		entopt.enginetype = RTCC_ENGINETYPE_SPS;
+		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -64.17*RAD;
 		entopt.nominal = RTCC_ENTRY_NOMINAL;
 		entopt.ReA = -2.062*RAD;
@@ -1272,7 +1294,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		REFSMMAT = REFSMMATCalc(&refsopt); //REFSMMAT for uplink
 
 		opt.dV_LVLH = res.dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_SPS;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.GETbase = GETbase;
 		opt.HeadsUp = true;
 		opt.navcheckGET = res.P30TIG - 40.0*60.0;

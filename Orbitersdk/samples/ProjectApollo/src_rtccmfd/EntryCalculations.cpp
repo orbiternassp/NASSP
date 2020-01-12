@@ -223,15 +223,6 @@ namespace EntryCalculations
 		// theta_cr = crossrange angle from reentry to landing
 		// T = time from reentry to landing
 
-		static const double b[6] = { 0.61974454e4, -0.26277752, -0.38675677e-5, 0.15781674e-9, 0.67856872e-14, -0.14887772e-18 };
-		static const double cc = 0.105;
-		static const double ee[3] = { 0.18957317e3, 0.17640466, 0.19321074e-2 };
-		static const double ff[3] = { 0.64623407e2, 0.57834928e-1,-0.48255307e-3 };
-		static const double jj[2][6] = { {0.10718858e7, -0.1627124e3, 0.98775571e-2, -0.29943037e-6, 0.45325217e-11, -0.27404876e-16},
-										 {0.18262030e6, -0.27810612e2, 0.16998821e-2, -0.51884802e-7, 0.79087925e-12, -0.48128071e-17} };
-		static const double pp[2][2] = { {0.59e2, 0.3006}, {0.193e3, 0.1795} };
-		static const double q[2][6] = { {0.0, 0.555e-4, -0.1025e1, 0.4e3, 0.335e3, -0.4215e2},{0.0, 0.555e-4, -0.1025e1, 0.7e3, 0.31e3, -0.45e2} };
-
 		double u_r, r_r, r, CR, NMPER;
 		NMPER = 3443.93359;
 		r_r = 0.0;
@@ -254,20 +245,20 @@ namespace EntryCalculations
 			{
 				for (int k = 0;k < 6;k++)
 				{
-					r_r += b[k] * pow(u_r, k);
+					r_r += RTE_b[k] * pow(u_r, k);
 				}
 			}
 			else
 			{
 				//B/2
 				int i = ICRNGG - 1;
-				r = (q[i][1] * u_r + q[i][2])*q[i][3] * (LD - 0.3);
+				r = (RTE_q[i][1] * u_r + RTE_q[i][2])*RTE_q[i][3] * (LD - 0.3);
 				for (int k = 0;k < 6;k++)
 				{
-					r += jj[i][k] * pow(u_r, k);
+					r += RTE_jj[i][k] * pow(u_r, k);
 				}
-				T = pp[i][0] + pp[i][1] * r;
-				CR = cc * T*cos(mu)*cos(A_Z + 0.3*mu) + q[i][4] * LD + q[i][5];
+				T = RTE_pp[i][0] + RTE_pp[i][1] * r;
+				CR = RTE_cc * T*cos(mu)*cos(A_Z + 0.3*mu) + RTE_q[i][4] * LD + RTE_q[i][5];
 				//NM to radians
 				eta_rz1 = abs(r) / NMPER;
 				theta_cr = CR / NMPER;
@@ -279,9 +270,9 @@ namespace EntryCalculations
 			r_r = r_rbias;
 		}
 
-		r = r_r + (ff[0] + ff[1] * r_r + ff[2] * u_r)*cos(i_r);
-		T = ee[0] + ee[1] * r + ee[2] * u_r;
-		CR = cc * T*cos(mu)*cos(A_Z + 0.3*mu);
+		r = r_r + (RTE_ff[0] + RTE_ff[1] * r_r + RTE_ff[2] * u_r)*cos(i_r);
+		T = RTE_ee[0] + RTE_ee[1] * r + RTE_ee[2] * u_r;
+		CR = RTE_cc * T*cos(mu)*cos(A_Z + 0.3*mu);
 		//NM to radians
 		eta_rz1 = abs(r) / NMPER;
 		theta_cr = CR / NMPER;
@@ -433,8 +424,15 @@ namespace EntryCalculations
 		return u_r;
 	}
 
-	void TFPCR(double mu, bool k, double a_apo, double e, double r, double &T, double &P)
+	void TFPCR(double mu, int k, double a_apo, double e, double r, double &T, double &P)
 	{
+		//INPUT:
+		//mu: gravitational constant
+		//k: outward leg (0.) and return lef (1.) flag. k is input as a floating point number
+		//a: semimajor axis or semilatus rectum
+		//e: eccentricity
+		//r: radial distance from focus
+
 		double a, c_3, eta_apo, E;
 
 		a = a_apo;
@@ -484,28 +482,43 @@ namespace EntryCalculations
 
 	void AESR(double r1, double r2, double beta1, double T, double R, double mu, double eps, double &a, double &e, int &k2, int &info, double &V1)
 	{
-		double tan_eta1_2, M_1, q, p, tan_eta2_2, M_2, T_P, DT, T_m, a_m, T_1, DDT, esinE_1, ecosE_1, E_1, DT_m, Q, k_1_apo, DT_1, DDT_m;
-		double esinhE_1, ecoshE_1, esinE_2, ecosE_2, E_2, esinhE_2, T_12, k_apo, k, B;
+		double tan_eta1_2, M_1, q, p, tan_eta2_2, M_2, T_P, DT, T_m, a_m, T_1, DDT, esinE_1, ecosE_1, E_1, DT_m, Q, k_1_apo, DT_1;
+		double esinE_2, ecosE_2, E_2, T_12, k_apo, k, B, sec2_eta12;
 		int iter, IH, C_2;
 
+		//On parabolic trajectories the flight path angle (measured from local horizontal!) is always one-half the true anomaly
 		tan_eta1_2 = OrbMech::cot(beta1);
+		//M_1 is twice of parabolic mean anomaly
 		M_1 = tan_eta1_2 + 1.0 / 3.0*pow(tan_eta1_2, 3);
-		q = r1 / pow(tan_eta1_2, 2); //TBD: this should be secant of eta1_2?!
+		sec2_eta12 = 1.0 + tan_eta1_2 * tan_eta1_2;
+		//This seems to be the periapsis radius
+		q = r1 / sec2_eta12;
 		p = 2.0*q;
+		//MSC memo had no minus here. But we are returning home on a parabolic trajectory, so we better have a minus here.
 		tan_eta2_2 = sqrt(r2 / q - 1.0);
-		M_2 = sqrt(tan_eta2_2 + 1.0 / 3.0*pow(tan_eta2_2, 3));
+		//MSC memo had square root here. MSC memos is clearly wrong.
+		M_2 = tan_eta2_2 + 1.0 / 3.0*pow(tan_eta2_2, 3);
+		//M_1 and M_2 exchanged from what MSC memo had.
 		T_P = q * sqrt(p / mu)*(M_2 - M_1);
+		//Difference between parabolic and desired flight time
 		DT = T_P - T;
+		//We have no error... yet
 		info = 0;
+		//If we are very nearly parabolic, assume we are parabolic
 		if (abs(DT) <= eps)
 		{
+			//Semi-major axis is undefined, just set it to 0
 			a = 0.0;
+			//Eccentricity is 1, as we are hyperbolic
 			e = 1.0;
+			//Parabolic velocity is easily found
 			V1 = 2.0*mu / r1;
 			return;
 		}
+		//If parabolic flight time is greater than desired flight time then we are hyperbolic
 		if (T_P > T)
 		{
+			//Set up hyberbolic iteration
 			iter = 2;
 			k_1_apo = 0.0;
 			T_m = 0.0;
@@ -518,22 +531,35 @@ namespace EntryCalculations
 		else
 		{
 			IH = 1;
-			a_m = 0.5*(r2*r2 - r1 * r1*sin(beta1)*sin(beta1));
+			//Assumes r2 is at apogee to distingush between no apogee passage vs. apogee passage?
+			a_m = 0.5*(pow(r2, 2) - pow(r1, 2)*pow(sin(beta1), 2)) / (r2 - r1 * pow(sin(beta1), 2));
+			//Velocity at r1 with semi-major axis a_m
 			V1 = sqrt(mu*(2.0 / r1 - 1.0 / a_m));
+			//Terms for eccentric anomaly
 			esinE_1 = r1 * V1*cos(beta1) / sqrt(a_m*mu);
 			ecosE_1 = 1.0 - r1 / a_m;
+			//Calculate eccentric anomaly
 			E_1 = atan2(esinE_1, ecosE_1);
+			//E_1 between 0° and 360°
+			if (E_1 < 0)
+			{
+				E_1 += PI2;
+			}
+			//Calculate mean anomaly
 			M_1 = E_1 - esinE_1;
 			T_m = a_m * sqrt(a_m / mu)*(PI - M_1);
 			DT_m = T_m - T;
+			//r2 was at apogee
 			if (abs(T_m) < eps)
 			{
 				e = esinE_1 / sin(E_1);
 				a = a_m;
 				return;
 			}
+			//Check if T is greater than the time it takes to return from apogee
 			if (T_m < T)
 			{
+				//We have an apogee passage
 				Q = -1.0;
 				k2 = 1;
 				iter = 2;
@@ -542,6 +568,7 @@ namespace EntryCalculations
 			}
 			else
 			{
+				//We have no apogee passage
 				Q = 1.0;
 				k2 = 0;
 				if (T <= 1.2*T_P)
@@ -557,37 +584,50 @@ namespace EntryCalculations
 				}
 			}
 			a = a_m + 2.0*R;
-			DDT_m = pow(DT_m - T, 2);
 			C_2 = 1;
 		}
 
 		do
 		{
 			V1 = sqrt(mu*(2.0 / r1 - 1.0 / a));
-			esinE_1 = esinhE_1 = r1 * V1*cos(beta1) / sqrt(abs(a)*mu);
-			ecosE_1 = ecoshE_1 = 1.0 - r1 / a;
+			esinE_1 = r1 * V1*cos(beta1) / sqrt(abs(a)*mu);
+			ecosE_1 = 1.0 - r1 / a;
 			e = sqrt(esinE_1*esinE_1 + ecosE_1 * ecosE_1);
 			if (a > 0.0)
 			{
 				E_1 = atan2(esinE_1, ecosE_1);
+				if (E_1 < 0)
+				{
+					E_1 += PI2;
+				}
 				ecosE_2 = 1.0 - r2 / a;
 				esinE_2 = Q * sqrt(e*e - ecosE_2 * ecosE_2);
 				E_2 = atan2(esinE_2, ecosE_2);
-				M_1 = a / abs(a)*(E_1 - esinE_1);
-				M_2 = a / abs(a)*(E_2 - esinE_2);
+				if (E_2 < 0)
+				{
+					E_2 += PI2;
+				}
 			}
 			else
 			{
-				E_1 = tanh(esinhE_1 / ecoshE_1);
-				E_2 = cosh(1.0 / e * (1.0 - r2 / a));
-				esinhE_2 = e * sinh(E_2);
-				M_1 = a / abs(a)*(E_1 - esinhE_1);
-				M_2 = a / abs(a)*(E_2 - esinhE_2);
+				E_1 = atanh(esinE_1 / ecosE_1);
+				E_2 = acosh(1.0 / e * (1.0 - r2 / a));
+				esinE_2 = e * sinh(E_2);
 			}
+			//Mean anomalies
+			M_1 = a / abs(a)*(E_1 - esinE_1);
+			M_2 = a / abs(a)*(E_2 - esinE_2);
+			//Flight time between the two mean anomalies
 			T_12 = sqrt(pow(abs(a), 3) / mu)*(M_2 - M_1);
+			//Time difference between desired and calculated flight time
 			DT = T_12 - T;
+			//Calculation has converged, return
 			if (abs(DT) < eps) return;
-			if (C_2 > 20) return;
+			if (C_2 > 20)
+			{
+				info = 2;
+				return;
+			}
 			C_2++;
 			k_apo = pow(T_12 - T_m, 2) / (a - a_m);
 			if (iter == 1)
@@ -598,8 +638,9 @@ namespace EntryCalculations
 			else
 			{
 				B = (k_apo - k_1_apo) / (T_12 - T_1);
-				k = k_apo + B * (T - T_1);
+				k = k_apo + B * (T - T_12);
 				k_1_apo = k_apo;
+				T_1 = T_12;
 			}
 			a = DT_m * DT_m / k + a_m;
 		} while (abs(DT) >= eps);
@@ -907,6 +948,35 @@ namespace EntryCalculations
 		{
 			return -dt / 2.0;
 		}
+	}
+
+	void SIDCOM(double JD0, double DT, double N, double &alpha_go, double &T)
+	{
+		double JDt, JDf, JD, J1, J12;
+		int JDI, J11;
+
+		JDt = JD0 - 2.43e6 + DT / 86.4;
+		JDI = (int)JDt;
+		JDf = JDt - (double)JDI;
+
+		if (JDf < 0.5)
+		{
+			if (JDf != 0.5)
+			{
+				JDf = 0.5;
+			}
+			JD = (double)JDI + JDf;
+		}
+		else
+		{
+			JDf = 0.5;
+			JDI = JDI - 1;
+		}
+		J1 = (JD + 14980.0) / 365.25;
+		J11 = (int)J1;
+		J12 = J1 - (double)J11;
+		alpha_go = PI / 43200.0*(23925.836 + 1.84542*(double)J11 + 9.29e-6*pow((double)J11, 2) + N) + PI2 * J12;
+		T = fmod(alpha_go, PI2);
 	}
 	
 	VECTOR3 ThreeBodyAbort(double t_I, double t_EI, VECTOR3 R_I, VECTOR3 V_I, double mu_E, double mu_M, bool INRFVsign, VECTOR3 &R_EI, VECTOR3 &V_EI, double Incl, bool asc)
@@ -2856,84 +2926,466 @@ OBJHANDLE RTEEarth::AGCGravityRef(VESSEL *vessel)
 	return gravref;
 }
 
-/*ConicRTEEarthNew::ConicRTEEarthNew(std::vector<SV> &SVArray) : XArray(SVArray)
+ConicRTEEarthNew::ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris, std::vector<TradeoffData> &todata) :
+	XArray(SVArray), ephem(ephemeris), TOData(todata)
 {
-	mu = OrbMech::mu_Earth;
-	RR = OrbMech::R_Earth + 400000.0 * 0.3048;
+	mu = OrbMech::mu_Earth*pow(SCPHR, 2) / pow(KMPER*1000.0, 3);
+	RR = (OrbMech::R_Earth + 400000.0 * 0.3048) / (KMPER*1000.0);
+	R_E = 1.0;
+	w_E = OrbMech::w_Earth*SCPHR;
+	T_rz_avg = 0.14;
+	eta_rz_avg = 0.5;
+	hEarth = oapiGetObjectByName("Earth");
+}
+
+void ConicRTEEarthNew::Init(double dvm, int icrngg, double irmax, double urmax, double rrbi, int imsfn)
+{
+	double CV, CD;
+
+	CV = FTPER / SCPHR;
+	CD = NMPER;
+
+	DVMAX = dvm / CV;
+	ICRNGG = icrngg;
+	I_rmax = irmax / DPR;
+	U_rmax = urmax / CV;
+	RRBI = rrbi;
+	IMSFN = imsfn;
+}
+
+void ConicRTEEarthNew::READ(int mode, double gmtbase, double tzmin, double tzmax)
+{
+	Mode = mode;
+	GMTbase = gmtbase;
+	T_zmax = tzmax;
+	T_zmin = tzmin;
+}
+
+void ConicRTEEarthNew::ATP(std::vector<ATPData> line)
+{
+	mm = line.size();
+
+	for (unsigned i = 0;i < line.size();i++)
+	{
+		delta_apo[i] = line[i].lat;
+		lambda_apo[i] = line[i].lng;
+	}
 }
 
 void ConicRTEEarthNew::MAIN()
 {
 	//Pre-initialization
-	int J = 0;
-	SV sv;
+	VECTOR3 DV, V_a, V_a2;
+	double beta_r, dv, U_r, DVC, T, VT_a, VR_a, v_a, beta_a, T_z, alpha, delta, lambda, p, eta_ar, phi, phi_z, theta_z, TP;
+	int J, J_m, FLAG, QA;
+	EphemerisData sv;
 
-	sv = XArray[J];
+	J = 0;
+	J_m = XArray.size();
 
+	do
+	{
+		sv = XArray[J];
+
+		if (sv.RBI != BODY_EARTH)
+		{
+			goto ConicRTEEarth_MAIN_E;
+		}
+
+		OrbMech::EclipticToECI(sv.R, sv.V, OrbMech::MJDfromGET(sv.GMT, GMTbase), sv.R, sv.V);
+
+		X0 = sv.R / KMPER / 1000.0;
+		U0 = sv.V*SCPHR / KMPER / 1000.0;
+		T0 = sv.GMT / SCPHR;
+		INITAL();
+		if (NOSOLN == 1)
+		{
+			goto ConicRTEEarth_MAIN_E;
+		}
+		if (Mode == 1)
+		{
+			beta_r = EntryCalculations::ReentryTargetLine(U_rmax*KMPER*1000.0 / SCPHR, false);
+			FCUA(0, X0, beta_r, dv, U_r, v_a, beta_a);
+			if (NOSOLN == 1)
+			{
+				goto ConicRTEEarth_MAIN_E;
+			}
+			VT_a = v_a * sin(beta_a);
+			//Radial velocity
+			VR_a = v_a * cos(beta_a);
+		ConicRTEEarth_MAIN_A:
+			VACOMP(VR_a, VT_a, beta_r, theta_0, DV, T_z, V_a, alpha, delta, lambda);
+			if (Mode != 1)
+			{
+				VUP2(X0, V_a, T, beta_r, V_a2);
+				V_a = V_a2;
+			}
+			//Store solutions
+			StoreSolution(V_a - U0, delta, T0, T_z);
+		}
+		else
+		{
+			TMIN(dv, FLAG, T, U_r, VT_a, VR_a, beta_r);
+			if (NOSOLN != 0)
+			{
+				goto ConicRTEEarth_MAIN_E;
+			}
+			if (Mode == 0)
+			{
+				DVC = dv;
+				goto ConicRTEEarth_MAIN_A;
+			}
+			T_mt = T;
+		ConicRTEEarth_MAIN_B:
+			VELCOM(T, r0, beta_r, DT, p, QA, SW6, U_r, VR_a, VT_a, beta_a, eta_ar, dv);
+			MSDS(VR_a, VT_a, beta_r, theta_0, delta, phi, phi_z, lambda, theta_z);
+			if (SW2 == 0 || Mode >= 4)
+			{
+				if (T > T_mt && abs(MD) < 10e-4 && (Mode == 2 || Mode == 3))
+				{
+					SW2 = 1;
+					//MD1 = 50;
+					//TARSP?
+					goto ConicRTEEarth_MAIN_C;
+				}
+				else
+				{
+					TCOMP(dv, delta, T, TP);
+					if (STORE)
+					{
+						VACOMP(VR_a, VT_a, beta_r, theta_0, DV, T_z, V_a, alpha, delta, lambda);
+						VUP2(X0, V_a, T_ar_stored, beta_r, V_a2);
+						V_a = V_a2;
+						StoreSolution(V_a - U0, delta, T0, T_z);
+						STORE = false;
+					}
+				ConicRTEEarth_MAIN_C:
+
+					if (SOL && (Mode == 2 || Mode == 3) && MDM != 0)
+					{
+						//SCAN();
+					}
+
+					if (END == 1)
+					{
+						if (NOSOLN == 2)
+						{
+							goto ConicRTEEarth_MAIN_A;
+						}
+						else
+						{
+							goto ConicRTEEarth_MAIN_E;
+						}
+					}
+					else
+					{
+						goto ConicRTEEarth_MAIN_B;
+					}
+				}
+			}
+		}
+	ConicRTEEarth_MAIN_E:
+		J++;
+		if (J >= J_m)
+		{
+			return;
+		}
+	} while (J < J_m);
 }
 
-void ConicRTEEarthNew::INITAL(VECTOR3 X0, VECTOR3 U0)
+void ConicRTEEarthNew::StoreSolution(VECTOR3 dv, double lat, double t0, double tz)
 {
-	VECTOR3 R1, R2, R3, R4, R5;
-	double SAZ, CAZ, T_rz_avg, T_min, T_max, T1, A_m, beta_r, p, R_a;
+	if (Mode == 2 || Mode == 4)
+	{
+		TradeoffData data;
+		data.DV = length(dv) * FTPER / SCPHR;
+		data.lat = lat*DEG;
+		data.T0 = t0;
+		data.T_Z = tz;
+		TOData.push_back(data);
+	}
+}
 
+void ConicRTEEarthNew::INITAL()
+{
+	VECTOR3 R4, R5, R_p, U0_apo;
+	double SAZ, CAZ, T1, T2, A_m, beta_r, p, R_a, A, DV, e, V_a, beta_a, T_1i, T_s, delta_0, Am1, Am2, beta_r_apo, A_Z;
+	double theta_mu, theta_md, K1, K2, U_rmin, T_apo, DNDT, I_0, T, delta, U_r, VR_a, VT_a, eta_ar;
+	int QA, FLAG;
+
+	NOSOLN = 0;
+	STORE = false;
+	//Values from initial state vector
+	beta_0 = PI05 - asin(dotp(unit(X0), unit(U0)));
+	R0 = unit(X0);
+	r0 = length(X0);
+	u0 = length(U0);
+
+	//angular momentum vector
 	R1 = crossp(X0, U0);
+	//unit angular momentum vector
 	R1 = unit(R1);
+	//Local horizon vector, pointing forward
 	R2 = crossp(R1, X0);
+	//Unit vector of above
 	R2 = unit(R2);
+	//Vector pointing east?
 	R4 = crossp(_V(0, 0, 1), X0);
 	R4 = unit(R4);
+	//Vector pointing north?
 	R5 = crossp(X0, R4);
 	R5 = unit(R5);
+	//Sine of azimuth
 	SAZ = dotp(R2, R4);
+	//Cosine of azimuth
 	CAZ = dotp(R2, R5);
+
+	if (Mode == 3 || Mode == 5)
+	{
+		T_zmax = T_zmin + 12.0;
+		T_zmin = T_zmin - 12.0;
+	}
 
 	T_min = T_zmin - T0 - T_rz_avg;
 	T_max = T_zmax - T0 - T_rz_avg;
-	T1 = 77.0 + 6.2 * length(X0) / OrbMech::R_Earth - 0.103333 * pow(length(X0) / OrbMech::R_Earth, 2);
-	T1 *= 3600.0;
-	A_m = 2.0 / RR - pow(U_rmax, 2) / 4.0;
-	beta_r = EntryCalculations::ReentryTargetLine(U_rmax, false);
+	//Landing time limit (looks like upper limit)
+	T1 = 77.0 + 6.2 * length(X0) - 0.103333 * pow(length(X0), 2);
+	//Reciproke of semi-major axis, memo had 4 instead of mu
+	A_m = 2.0 / RR - pow(U_rmax, 2) / mu;
+	beta_r = EntryCalculations::ReentryTargetLine(U_rmax*KMPER*1000.0 / SCPHR, false);
+	//Orbit parameter
 	p = RR * RR*U_rmax*U_rmax*pow(sin(beta_r), 2) / mu;
+	//Apoapsis radius with max reentry speed
 	R_a = 1.0 / A_m * (1.0 + sqrt(1.0 - p * A_m));
+	//If max apoapsis radius is greater than abort position radius, we have an error
+	if (R_a < length(X0) && Mode != 1)
+	{
+		NOSOLN = 1;
+		return;
+	}
+	//Generate return flight time for max reentry speed and apogee passage (also prograde)
+	RUBR(1, 0, length(X0), length(U0), U_rmax, beta_r, A, DV, e, T_1i, V_a, beta_a);
+	//Generate return flight time for max reentry speed and no apogee passage (also prograde)
+	RUBR(0, 0, length(X0), length(U0), U_rmax, beta_r, A, DV, e, T_s, V_a, beta_a);
+	
+	if (T_1i < T1)
+	{
+		T1 = T_1i;
+	}
+	//Specified maximum time is too high, use T1 (upper limit?) instead
+	if (T1 < T_max)
+	{
+		T_max = T1;
+	}
+	//If T_min is returning too quickly, use min return time (max speed) in its place
+	if (T_s > T_min)
+	{
+		T_min = T_s;
+	}
+	//Latitude
+	delta_0 = asin(dotp(X0, _V(0, 0, 1)) / length(X0));
+	//Azimuth
+	A_Z = atan2(SAZ, CAZ);
+	if (A_Z < 0)
+	{
+		A_Z += PI2;
+	}
+	//Preabort motion direct flag (chose based on azimuth)
+	// 0 = prograde, 1 = retrograde
+	Q0 = 1;
+	if (A_Z < PI)
+	{
+		Q0 = 0;
+	}
+	//Azimuth limit for max inclination
+	Am1 = asin(cos(I_rmax) / cos(delta_0));
+	//Other azimuth limit
+	Am2 = PI - Am1;
+	//Upper (north) azimuth change constraint
+	theta_mu = A_Z - Am1;
+	//Down (south) azimuth change constraint
+	theta_md = A_Z - Am2;
+	double alpha_g0 = OrbMech::GetPlanetCurrentRotation(BODY_EARTH, GMTbase);
+	alpha_g = alpha_g0 + w_E * T0;
+	//Radial speed
+	VR_0 = dotp(X0 / length(X0), U0);
+	//Tangential speed
+	VT_0 = sqrt(pow(length(U0), 2) - VR_0 * VR_0);
+RTEEarth_INITAL_B:
+	//Coefficients for calculating slowest reentry speed. Calculates speed assuming apogee?
+	K1 = pow(r0 / (RR * sin(beta_r)), 2);
+	K2 = 2.0*mu*(1.0 / RR - 1.0 / r0);
+	U_rmin = sqrt(K2*K1 / (K1 - 1.0));
+	beta_r_apo = EntryCalculations::ReentryTargetLine(U_rmin*KMPER*1000.0 / SCPHR, false);
+	if (abs(beta_r - beta_r_apo) >= 10e-4)
+	{
+		beta_r = beta_r_apo;
+		goto RTEEarth_INITAL_B;
+	}
+	//Return time with minimum reentry speed
+	RUBR(0, 0, length(X0), length(U0), U_rmin, beta_r, A, DV, e, T_apo, V_a, beta_a);
+	//Azimuth change nearest to inclination constraint
+	if (Am1 <= A_Z && A_Z <= Am2)
+	{
+		//If inside limit, set to 0
+		theta_0 = 0.0;
+	}
+	else if (A_Z > 3.0*PI05 || A_Z < PI05)
+	{
+		//If outside limit and direction is northerly, use northerly constraint
+		theta_0 = theta_mu;
+	}
+	else
+	{
+		//If outside limit and direction is southerly, use southherly constraint
+		theta_0 = theta_md;
+	}
+	DVM = pow(DVMAX, 2) - pow(VT_0*sin(theta_0), 2);
+	if (DVM < 0)
+	{
+		NOSOLN = 1;
+		return;
+	}
+	DVM = sqrt(DVM);
+	R_p = unit(X0);
+	U0_apo = R_p * VR_0 + R2 * VT_0*pow(cos(theta_0), 2) + R1 * VT_0*cos(theta_0)*sin(theta_0);
+	if (theta_0 == 0.0)
+	{
+		I_0 = acos(dotp(R1, _V(0, 0, 1)));
+	}
+	else
+	{
+		I_0 = I_rmax;
+	}
+	if (T_min > 4.0)
+	{
+		TSW6 = T_min - 0.01;
+		goto RTEEarth_INITAL_End;
+	}
+
+	TSW6 = max(2.0, T_min);
+	T = TSW6;
+	VELCOM(TSW6, r0, beta_r, DT, p, QA, SW6, U_r, VR_a, VT_a, beta_a, eta_ar, DV);
+	if (T > T_apo)
+	{
+		FLAG = 1;
+	}
+	else
+	{
+		FLAG = -1;
+	}
+	DNDT = PRTIAL(FLAG, r0, U_rmax);
+	delta = asin(cos(eta_ar + eta_rz_avg))*dotp(R0, _V(0, 0, 1)) + sin(eta_ar + eta_rz_avg)*dotp(R2, _V(0, 0, 1));
+	if (DNDT <= w_E*pow(cos(delta), 2) / cos(I_0))
+	{
+		TSW6 = T_min - 0.01;
+		goto RTEEarth_INITAL_End;
+	}
+
+	T1 = TSW6;
+	T2 = 4.0*3600.0;
+RTEEarth_INITAL_C:
+	TSW6 = (T1 + T2) / 2.0;
+	if (abs(T1 - T2) < 0.1)
+	{
+		goto RTEEarth_INITAL_End;
+	}
+
+	T = TSW6;
+	VELCOM(TSW6, r0, beta_r, DT, p, QA, SW6, U_r, VR_a, VT_a, beta_a, eta_ar, DV);
+	if (T > T_apo)
+	{
+		FLAG = 1;
+	}
+	else
+	{
+		FLAG = -1;
+	}
+
+	DNDT = PRTIAL(FLAG, r0, U_rmax);
+	delta = asin(cos(eta_ar + eta_rz_avg))*dotp(R0, _V(0, 0, 1)) + sin(eta_ar + eta_rz_avg)*dotp(R2, _V(0, 0, 1));
+	double eps = 0.005; //TBD
+	if (DNDT > w_E*pow(cos(delta), 2) / cos(I_0) + eps)
+	{
+		T1 = TSW6;
+		goto RTEEarth_INITAL_C;
+	}
+	if (DNDT <= w_E*pow(cos(delta), 2) / cos(I_0) - eps)
+	{
+		T2 = TSW6;
+		goto RTEEarth_INITAL_C;
+	}
+
+RTEEarth_INITAL_End:
+	//KK = 1;
+	MDP = 10e10;
+	XK = 1;
+	SW2 = 0;
+	//DVSP[0] = DVSP[1] = DVSP[2] = DVSP[3] = DVSP[4] = 10.0;
+	SW6 = 0;
+	TEST = 0;
+	DDT = 1.0;
+	DT = 0.1;
+	//PARP = 0;
 }
 
-void ConicRTEEarthNew::RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_0, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a)
+void ConicRTEEarthNew::RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a)
 {
+	//INPUTS:
+	//QA: Apogee passage flag. 0 = no apogee passage, 1 = apogee passage
+	//QE: Postabort motion flag. 0 = direct, 1 = retrograde
+
 	double E, T_ap, T_rp, Period, sin_beta_a;
 
+	//Specific orbital energy
 	E = U_r * U_r / mu - 2.0 / RR;
 
+	//E>0 means hyperbolic orbit. If apogee passage is desired and orbit is hyperbolic, then you aren't coming home
 	if (E > 0 && QA == 1)
 	{
 		//No solution
 		return;
 	}
+	//Check for elliptic vs. hyperbolic. If nearly hyperbolic use hyperbolic
 	if (abs(E) - 0.001 > 0)
 	{
+		//Elliptical orbit
+		//Semi-major axis
 		A = -1.0 / E;
+		//Orbit parameter (semi-latus rectum)
 		double P = pow(RR*U_r*sin(beta_r), 2) / mu;
+		//Eccentricity
 		e = sqrt(1.0 - P / A);
 	}
 	else
 	{
+		//Hyperbolic or nearly hyperbolic orbit. Equations assume parabolic?
 		A = pow(RR*U_r*sin(beta_r), 2) / mu;
 		e = 1.0;
 	}
+	//Postabort speed
 	V_a = sqrt(mu*(U_r*U_r / mu + 2.0 / R_a - 2.0 / RR));
+	//Sine of postabort flight-path angle
 	sin_beta_a = U_r * RR / V_a / R_a * sin(beta_r);
+	//Postabort flight-path angle (-90° to 90°)
 	beta_a = asin(sin_beta_a);
-	if (QA == 1)
+	//If no apogee passage is desired, make angle 90° to 270°. MSC memo was wrong, probably.
+	if (QA == 0)
 	{
 		beta_a = PI - beta_a;
 	}
+	//If postabort motion is retrograde, invert angle
 	if (QE == 1)
 	{
 		beta_a = PI2 - beta_a;
 	}
+	//Change in velocity
 	DV = sqrt(U_0*U_0 + V_a * V_a - 2.0*U_0*V_a*cos(beta_a - beta_0));
-	EntryCalculations::TFPCR(mu, 1, A, e, R_a, T_ap, Period);
-	EntryCalculations::TFPCR(mu, 1, A, e, RR, T_rp, Period);
+	//Time from abort to perigee
+	EntryCalculations::TFPCR(mu, 1 - QA, A, e, R_a, T_ap, Period);
+	//Time from reentry to perigee
+	EntryCalculations::TFPCR(mu, 1 - QA, A, e, RR, T_rp, Period);
+	//Time from abort to reentry
 	T = T_ap - T_rp;
 	if (T < 0)
 	{
@@ -2941,36 +3393,43 @@ void ConicRTEEarthNew::RUBR(int QA, int QE, double R_a, double U_0, double U_r, 
 	}
 }
 
-void ConicRTEEarthNew::VARMIN(double &DDT, double MD, double &MDP, int &XKa, int &SOL)
+void ConicRTEEarthNew::VARMIN()
 {
-	//TBD: Units???
+	SOL = false;
+
 	double ERR;
+	//Miss distance larger than 0.001, we have not found a solution yet
 	if (abs(MD) >= 0.001)
 	{
-		ERR = MD - MDP;
+		//Difference to previous miss distance
+		ERR = abs(MD) - abs(MDP);
+		//Miss distance has changed to before, no solution yet
 		if (abs(ERR) >= 0.0001)
 		{
-			if (abs(DDT) < 0.025 && MD > 0.5)
+			//DDT has gotten quite small, don't continue
+			if (!(abs(DDT) < 0.025 && MD > 0.5))
 			{
-
-			}
-			else
-			{
-				if (ERR*(double)XKa < 0)
+				//Is miss distance changing in the right direction?
+				if (ERR*(double)XK < 0)
 				{
+					//Yes, just continue on
 					MDP = MD;
 					return;
 				}
 				else
 				{
-					if (XKa < 0)
+					//No, it's going in the wrong direction
+					//Did we want to maximize MD?
+					if (XK < 0)
 					{
-						XKa = 1;
+						//Extremum has been reached, now do minimization
+						XK = 1;
 						MDP = MD;
 						return;
 					}
 					else
 					{
+						//Change direction for minimization
 						DDT = -DDT / 2.0;
 						if (abs(DDT) >= 0.001)
 						{
@@ -2984,80 +3443,190 @@ void ConicRTEEarthNew::VARMIN(double &DDT, double MD, double &MDP, int &XKa, int
 	}
 
 	MDP = pow(10, 10);
-	SOL = 1;
+	SOL = true;
 	DDT = 1.0;
 	return;
 }
 
-void ConicRTEEarthNew::VELCOM(double T, double RR, double R_a, double beta_r, double &beta_rp)
+void ConicRTEEarthNew::VELCOM(double T, double R_a, double &beta_r, double &dt, double &p, int &QA, int &sw6, double &U_r, double &VR_a, double &VT_a, double &beta_a, double &eta_ar, double &DV)
 {
-	double U_r, V_a, beta_a, C0, C1, C2, S1, eta_ar, VT_a, VR_a, DVR, DVT, DV, a, e, VR0, VT0, TSW6, DT;
-	int k2, info, SW6, CLA, TEMP, QA;
+	double V_a, C0, C1, C2, S1, DVR, DVT, a, e, beta_rp;
+	int info, TEMP;
 
 	do
 	{
+		//Set current flight-path angle at reentry into past value
 		beta_rp = beta_r;
-		EntryCalculations::AESR(RR, R_a, beta_r, T, OrbMech::R_Earth, mu, 0.01, a, e, k2, info, U_r);
-		beta_r = EntryCalculations::ReentryTargetLine(U_r, false);
+		//Calculate new trajectory
+		EntryCalculations::AESR(RR, R_a, PI - beta_r, T, R_E, mu, 0.01 / SCPHR, a, e, QA, info, U_r);
+		//Calculate new flight path angle
+		beta_r = EntryCalculations::ReentryTargetLine(U_r*KMPER*1000.0 / SCPHR, false);
+		//Check if flight path angle has converged
 	} while (abs(beta_r - beta_rp) >= 10e-5);
-	V_a = sqrt(U_r*U_r + mu * (1.0 / R_a - 1.0 / RR));
+	//Calculate velocity after abort
+	V_a = sqrt(U_r*U_r + 2.0*mu * (1.0 / R_a - 1.0 / RR));
+	//Flight path angle after abort (0 to 90°)
 	beta_a = asin(RR*U_r*sin(beta_r) / (R_a*V_a));
+	//Full range (0° to 180°)
 	beta_a = abs(beta_a + PI * ((double)QA - 1.0));
 	C0 = R_a / RR * OrbMech::cot(beta_r);
 	C1 = (OrbMech::cot(beta_a) + C0) / (1.0 - R_a / RR);
 	C2 = (C1*C1 - 1.0) / (C1*C1 + 1.0);
 	S1 = (1.0 - C2)*C1;
+	//Transfer angle from abort to reentry
 	eta_ar = atan2(S1, C2);
-	VT_a = V_a * sin(beta_a);
-	VR_a = V_a * cos(beta_a);
-	DVR = VR_a - VR0;
-	DVT = VT_a - VT0;
-	DV = sqrt(DVR*DVR + DVT * DVT);
-	if (T < TSW6)
+	if (eta_ar < 0)
 	{
-		SW6 = 0;
-		DT = 0.5*3600.0;
+		eta_ar += PI2;
+	}
+	//Tangential velocity
+	VT_a = V_a * sin(beta_a);
+	//Radial velocity
+	VR_a = V_a * cos(beta_a);
+	//Radial DV
+	DVR = VR_a - VR_0;
+	//Tangential DV
+	DVT = VT_a - VT_0;
+	//Total DV
+	DV = sqrt(DVR*DVR + DVT * DVT);
+	//Is return time smaller than motion switch time?
+	if (T <= TSW6)
+	{
+		//Yes, motion is easterly
+		sw6 = 0;
+		dt = 0.5;
 	}
 	else
 	{
-		SW6 = 1;
-		if (CLA)
+		//No, motion is westerly (we don't want this)
+		sw6 = 1;
+		if (Mode >= 4)
 		{
-			DT = 3.0*3600.0;
+			dt = 3.0;
 		}
 		else
 		{
-			DT = 0.5*3600.0;
+			double T_rz, eta_rz, theta_cr;
+			dt = 0.5;
 			TEMP = ICRNGG;
 			ICRNGG = 10;
-			//EntryCalculations::REENTRYNew(0.3, ICRNGG);
+			RENTRY(0.3, U_r, eta_ar, 0.0, T_rz, eta_rz, theta_cr);
+			ICRNGG = TEMP;
+			eta_rz_avg = eta_rz;
 		}
 	}
 }
 
-void ConicRTEEarthNew::FCUA(double DVM, double RR, VECTOR3 R_a, int SW2, double beta_0, double &beta_r, double &DV, double &U_r)
+void ConicRTEEarthNew::FCUA(int FLAG, VECTOR3 R_a, double &beta_r, double &DV, double &U_r, double &V_a, double &beta_a)
 {
-	double V_a, beta_a, r_a;
+	double r_a, beta_r_apo, dbeta, ER, ERR, BS, U_rmax_apo, A, e, T;
 	int QA;
 
 	r_a = length(R_a);
+	U_rmax_apo = U_rmax;
+ConicRTE_FCUA_A:
 
-	//DVMINQ(FLAG, Q_e, Q_0, RR, r_a, U0, beta_0, beta_r, DV, QA, V_a, beta_a);
-	//U_r = sqrt(V_a*V_a + 2.0*OrbMech::mu_Earth*(1.0 / RR - 1.0 / r_a));
-	//beta_ra = SUBINTER(U_r);
+	DVMINQ(FLAG, 0, Q0, beta_r, DV, QA, V_a, beta_a);
+	if (DV > 10e8)
+	{
+		return;
+	}
+	U_r = sqrt(V_a*V_a + 2.0*mu*(1.0 / RR - 1.0 / r_a));
+	beta_r_apo = EntryCalculations::ReentryTargetLine(U_r*KMPER*1000.0 / SCPHR, false);
+	if (SW2 == 0)
+	{
+		if (abs(beta_r - beta_r_apo) < 10e-4)
+		{
+			if (DV > DVM)
+			{
+				dbeta = 2.0*RAD;
+				SW2 = 1;
+				beta_r = PI05;
+				goto ConicRTE_FCUA_A;
+			}
+			else
+			{
+				goto ConicRTE_FCUA_B;
+			}
+		}
+		else
+		{
+			beta_r = beta_r_apo;
+			goto ConicRTE_FCUA_A;
+		}
+	}
+	else
+	{
+		if (beta_r == PI05)
+		{
+		ConicRTE_FCUA_C:
+			ER = DVM - DV;
+			BS = beta_r;
+			beta_r += dbeta;
+			if (beta_r > 110.0*RAD)
+			{
+				NOSOLN = 1;
+				return;
+			}
+			goto ConicRTE_FCUA_A;
+		}
+		ERR = DVM - DV;
+		if (ERR < 10e-4)
+		{
+			goto ConicRTE_FCUA_B;
+		}
+		if (ERR*ER < 0 || SW2 == 2)
+		{
+			dbeta = (beta_r - BS) / (ERR - ER)*(DVM - DV);
+		}
+		goto ConicRTE_FCUA_C;
+	}
+
+ConicRTE_FCUA_B:
+	if (U_r > U_rmax)
+	{
+		if (SW2 == 0)
+		{
+			QA = 1;
+			if (beta_0 > PI05)
+			{
+				QA = 0;
+			}
+			else
+			{
+				U_rmax_apo = min(U_rmax, 36323.0*0.3048);
+			}
+			beta_r = EntryCalculations::ReentryTargetLine(U_rmax_apo*KMPER*1000.0 / SCPHR, false);
+			RUBR(QA, 0, r_a, u0, U_r, beta_r, A, DV, e, T, V_a, beta_a);
+			if (DV > DVM)
+			{
+				NOSOLN = 1;
+			}
+			return;
+		}
+		else
+		{
+			NOSOLN = 1;
+			return;
+		}
+	}
 }
 
-void ConicRTEEarthNew::DVMINQ(int FLAG, int Q_e, int Q_0, double RR, double R0, double U0, double beta_0, double beta_r, double &DV, int &QA, double &V_a, double &beta_a)
+void ConicRTEEarthNew::DVMINQ(int FLAG, int QE, int Q0, double beta_r, double &DV, int &QA, double &V_a, double &beta_a)
 {
 	double K1, K2, A0, B0, X[4], Y[4], A, B, C, D, E, DVV[4], TEST;
 	int k, km, K, J, a, I;
 
-	K1 = pow(R0 / (RR*sin(beta_r)), 2);
-	K2 = 2.0*OrbMech::mu_Earth*(1.0 / RR - 1.0 / R0);
+	K1 = pow(r0 / (RR*sin(beta_r)), 2);
+	K2 = 2.0*mu*(1.0 / RR - 1.0 / r0);
+	//By default no apogee passage
 	QA = 0;
-	A0 = U0 * sin(beta_0);
-	B0 = U0 * cos(beta_0);
-	if (abs(B0) < 0.005) //TBD: is 0.005 in ER/hrs?
+	//Tangential velocity
+	A0 = u0 * sin(beta_0);
+	//Radial velocity
+	B0 = u0 * cos(beta_0);
+	//If radial velocity is small, use this path
+	if (abs(B0) < 0.005)
 	{
 		X[0] = A0 / K1;
 		X[1] = X[0];
@@ -3085,17 +3654,14 @@ void ConicRTEEarthNew::DVMINQ(int FLAG, int Q_e, int Q_0, double RR, double R0, 
 		do
 		{
 			DVV[k - 1] = sqrt(pow(X[k - 1] - A0, 2) + pow(Y[k - 1] - B0, 2));
-			if (k != km)
-			{
-				k++;
-			}
-		} while (k != km);
+			k++;
+		} while (k <= km);
 
 		goto RTEEarth_DVQMIN_D;
 	}
 	else
 	{
-		A = K1 * K1 / (K1 - 1.0);
+		A = K1 * K1 * (K1 - 1.0);
 		B = -2.0*A0*K1*(K1 - 1.0);
 		C = -K1 * K1*K2 + A0 * A0*(K1 - 1.0) - B0 * B0*pow(K1 - 1.0, 2);
 		D = 2.0*A0*K1*K2;
@@ -3117,7 +3683,7 @@ void ConicRTEEarthNew::DVMINQ(int FLAG, int Q_e, int Q_0, double RR, double R0, 
 	}
 
 RTEEarth_DVQMIN_B:
-	Y[J - 1] = B0 * X[k - 1] * (K1 - 1.0) / (X[k - 1] * (K1 - A0));
+	Y[J - 1] = B0 * X[k - 1] * (K1 - 1.0) / ((X[k - 1] * K1 - A0));
 	X[J - 1] = X[k - 1];
 	J++;
 RTEEarth_DVQMIN_A:
@@ -3133,17 +3699,20 @@ RTEEarth_DVQMIN_A:
 	}
 
 RTEEarth_DVQMIN_D:
-	if (FLAG == 0)
+	if (FLAG <= 0)
 	{
 		a = 2;
 	RTEEarth_DVQMIN_BB:
 		J = a - 1;
-		DV = DVV[a - 1];
+		DV = DVV[a - 2];
 		k = a;
 	RTEEarth_DVQMIN_DD:
-		if ((Q_0 == Q_e && DVV[k - 1] < DV) || (Q_0 != Q_e && DVV[k - 1] > DV))
+		if ((Q0 == QE && DVV[k - 1] < DV) || (Q0 != QE && DVV[k - 1] > DV))
 		{
 			if (FLAG == 1 && Y[k - 1] > 0)
+			{
+			}
+			else
 			{
 				DV = DVV[k - 1];
 				J = k;
@@ -3152,8 +3721,12 @@ RTEEarth_DVQMIN_D:
 		if (k == km)
 		{
 			beta_a = atan2(X[J - 1], Y[J - 1]);
+			if (beta_a < 0)
+			{
+				beta_a += PI2;
+			}
 			V_a = sqrt(pow(X[J - 1], 2) + pow(Y[J - 1], 2));
-			if ((Q_e == 0 && beta_a < PI05) || (Q_e == 1 && beta_a > 3.0*PI05))
+			if ((QE == 0 && beta_a < PI05) || (QE == 1 && beta_a > 3.0*PI05))
 			{
 				QA = 1;
 			}
@@ -3168,7 +3741,13 @@ RTEEarth_DVQMIN_D:
 	{
 		k = 1;
 	RTEEarth_DVQMIN_CC:
-		if (X[k - 1] < 0)
+		if (X[k - 1] >= 0 && Y[k - 1] < 0)
+		{
+			a = k + 1;
+			k = km;
+			goto RTEEarth_DVQMIN_BB;
+		}
+		else
 		{
 			if (k == km)
 			{
@@ -3181,38 +3760,817 @@ RTEEarth_DVQMIN_D:
 				goto RTEEarth_DVQMIN_CC;
 			}
 		}
+	}
+}
+
+void ConicRTEEarthNew::MSDS(double VR_a, double VT_a, double beta_r, double theta, double &delta, double &phi, double &phi_z, double &lambda, double &theta_z)
+{
+	if (Mode >= 4)
+	{
+		VECTOR3 DV, V_a;
+		double L, T_z, alpha, DL;
+		int m;
+
+		VACOMP(VR_a, VT_a, beta_r, theta, DV, T_z, V_a, alpha, delta, lambda);
+		m = 1;
+		if (delta >= delta_apo[m - 1])
+		{
+			L = lambda_apo[m - 1];
+		}
+		else if (delta <= delta_apo[mm - 1])
+		{
+			L = lambda_apo[mm - 1];
+		}
 		else
 		{
-			if (Y[k - 1] < 0)
+			while (delta < delta_apo[m] && m < mm - 1)
 			{
-				a = k + 1;
-				k = km;
+				m++;
 			}
-			else
+			DL = lambda_apo[m] - lambda_apo[m - 1];
+			if (abs(DL) > PI)
 			{
-				goto RTEEarth_DVQMIN_BB;
+				DL = -DL / abs(DL)*(PI2 - abs(DL));
 			}
+			L = lambda_apo[m - 1] + DL / (delta_apo[m] - delta_apo[m - 1])*(delta - delta_apo[m - 1]);
+		}
+
+		MD = L - lambda;
+		if (abs(MD) > PI)
+		{
+			MD = -MD / abs(MD)*(PI2 - abs(MD));
+		}
+		return;
+	}
+
+	/*double phi;
+
+	//Angle inplane from abort to impact point
+	phi = eta_ar + eta_rz;
+	cos_theta_m = (DVR*DVR + VT_a * VT_a + VT_0 * VT_0 - DVM * DVM) / (2.0*VT_0*VT_a);
+	if (cos_theta_m < -1 || cos_theta_m > 1)
+	{
+		cos_theta_m = cos_theta_m / abs(cos_theta_m);
+	}
+	theta_m = acos(cos_theta_m);
+	Azz1 = A_z - theta_m;
+	Azz2 = A_z + theta_m;
+	if (Azz1 < -PI)
+	{
+		Azz1 += PI2;
+	}
+	else if (Azz1 > PI)
+	{
+		Azz1 -= PI2;
+	}
+	if (Azz2 < 0)
+	{
+		Azz2 += PI2;
+	}
+	else if (Azz2 > PI2)
+	{
+		Azz2 -= PI2;
+	}
+	if (Azz1 < 0)
+	{
+		Azz1 = 0.0;
+	}
+	if (Azz2 <= Azz1)
+	{
+		DUM = Azz1;
+		Azz1 = Azz2;
+		Azz2 = DUM;
+	}
+	theta_mu = theta_mu_apo;
+	theta_md = theta_md_apo;
+	A_zp = A_z;
+	if (theta_m > PI)
+	{
+
+	}
+	if (A_zp<)*/
+}
+
+double ConicRTEEarthNew::PRTIAL(int FLAG, double R_a, double U_r)
+{
+	double beta_r, a, p, e, PER, DFDA[2], DTDA[2], X, SF, CE, E, T, DNDT;
+	int J;
+
+	//Flight path angle
+	beta_r = EntryCalculations::ReentryTargetLine(U_r*KMPER*1000.0 / SCPHR, false);
+	//Semi-major axis
+	a = 1.0 / (2.0 / RR - U_r * U_r / mu);
+	//Semi-latus rectum
+	p = pow(U_r*RR*sin(beta_r), 2) / mu;
+	e = sqrt(1.0 - p / a);
+	//Half period?
+	PER = PI * sqrt(pow(abs(a), 3) / mu);
+	if (e <= 1)
+	{
+		if (R_a >= a * (1.0 + e))
+		{
+			goto RTEEarth_PRTIAL_A;
 		}
 	}
-}*/
 
-RTEMoon::RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double EntryLng, bool entrylongmanual)
-{
-	this->EntryLng = EntryLng;
-
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
-	this->entrylongmanual = entrylongmanual;
-
-	if (entrylongmanual)
+	J = 1;
+	X = R_a;
+RTEEarth_PRTIAL_E:
+	SF = (double)(FLAG)*sqrt(1.0 - pow((p / X - 1.0) / e, 2));
+	CE = (1.0 - X / a) / e;
+	if (U_r > 36333.0*SCPHR/FTPER)
 	{
-		this->EntryLng = EntryLng;
+		E = log(CE + sqrt(CE*CE - 1.0));
+		T = PER / PI * (e*sinh(E) - E);
+		DTDA[J - 1] = 1.5*T / abs(a) + PER / PI * (CE + e * (CE - 1.0) - 1.0 - e * e*pow(sinh(E), 2)) / (a*e*sinh(E));
+
+		goto RTEEarth_PRTIAL_C;
+	}
+	E = atan2((double)(FLAG)*sqrt(1.0 - CE * CE), CE);
+	if (E < 0)
+	{
+		E += PI2;
+	}
+	if (abs(E - PI) < 10e-5)
+	{
+		goto RTEEarth_PRTIAL_A;
+	}
+	T = PER * (E - e * sin(E)) / PI;
+	DTDA[J - 1] = 1.5*(2.0*PER - T) / a - PER / PI * ((X*(CE - 1.0)) / (a*a*e*sin(E)) - (1.0 - e)*sin(E) / a);
+RTEEarth_PRTIAL_C:
+	DFDA[J - 1] = (1.0 - e)*(p - X - a * e*(1.0 - e)) / (a*e*e*X*SF);
+	if (J == 2)
+	{
+		goto RTEEarth_PRTIAL_D;
+	}
+	J = 2;
+	X = RR;
+	FLAG = -1;
+	goto RTEEarth_PRTIAL_E;
+RTEEarth_PRTIAL_D:
+	DNDT = (DFDA[1] - DFDA[0]) / (DTDA[0] - DTDA[1]);
+	return DNDT;
+RTEEarth_PRTIAL_A:
+	DNDT = PI / PER * sqrt((1.0 - e) / (1.0 + e))*1.0 / (1.0 + e);
+	return DNDT;
+}
+
+void ConicRTEEarthNew::RENTRY(double LD, double U_r, double eta_ar, double theta, double &T_rz, double &eta_rz, double &theta_cr)
+{
+	VECTOR3 RR_vec, P, PP, Z;
+	double delta_r, I_r, A_z, RO, DR, CR;
+	int i;
+
+	U_r = U_r * FTPER / SCPHR;
+	Z = _V(0, 0, 1);
+	//Vector pointing at reentry position=
+	RR_vec = R0 * cos(eta_ar) + R1 * sin(eta_ar)*sin(theta) + R2 * sin(eta_ar)*cos(theta);
+	//Latitude of above
+	delta_r = asin(dotp(RR_vec, Z));
+	//Orbital plane at reentry
+	P = unit(crossp(R0, RR_vec))*sin(eta_ar) / abs(sin(eta_ar));
+	//Inclination at reentry
+	I_r = acos(dotp(P, Z));
+	//Azimuth at reentry
+	A_z = asin(cos(I_r) / cos(delta_r));
+	//Local horizon vector?
+	PP = unit(crossp(P, RR_vec));
+	if (dotp(P, Z) - dotp(RR_vec, Z)*dotp(RR_vec, PP) < 0)
+	{
+		A_z = PI - A_z;
+	}
+	if (RRBI > 0)
+	{
+		RO = RRBI;
 	}
 	else
 	{
-		landingzone = (int)EntryLng;
-		this->EntryLng = EntryCalculations::landingzonelong(landingzone, 0);
+		if (ICRNGG == 1)
+		{
+			DR = 0.0;
+			for (i = 0;i <= 5;i++)
+			{
+				DR += EntryCalculations::RTE_jj[IMSFN - 1][i] * pow(U_r, i);
+			}
+			DR += (EntryCalculations::RTE_q[IMSFN - 1][1] * U_r + EntryCalculations::RTE_q[IMSFN - 1][2])*EntryCalculations::RTE_q[IMSFN - 1][3] * (LD - 0.3);
+			T_rz = EntryCalculations::RTE_ee[0] + EntryCalculations::RTE_ee[1] * DR;
+			CR = EntryCalculations::RTE_cc*T_rz*cos(delta_r)*cos(A_z + 0.3*delta_r) + EntryCalculations::RTE_q[IMSFN - 1][4] * LD + EntryCalculations::RTE_q[IMSFN - 1][5];
+			eta_rz = DR / NMPER;
+			theta_cr = CR / NMPER;
+			T_rz = T_rz / 3600.0;
+			return;
+		}
+		else
+		{
+			RO = 0.0;
+			for (i = 0;i <= 5;i++)
+			{
+				RO += EntryCalculations::RTE_b[i] * pow(U_r, i);
+			}
+		}
 	}
+
+	if (ICRNGG < 9)
+	{
+		DR = RO + (EntryCalculations::RTE_ff[0] + EntryCalculations::RTE_ff[1] * RO + EntryCalculations::RTE_ff[2] * U_r)*cos(I_r);
+		T_rz = EntryCalculations::RTE_ee[0] + EntryCalculations::RTE_ee[1] * DR + EntryCalculations::RTE_ee[2] * U_r;
+		CR = EntryCalculations::RTE_cc*T_rz*cos(delta_r)*cos(A_z + 0.3*delta_r);
+
+		eta_rz = DR / NMPER;
+		theta_cr = CR / NMPER;
+		T_rz = T_rz / 3600.0;
+	}
+}
+
+void ConicRTEEarthNew::SCAN()
+{
+	/*VACOMP();
+	if ((DVS > DVMAX && T > T_mt&&SW2 == 0) || T > T_max)
+	{
+		END = 1;
+		return;
+	}
+	MDMM = MD + MDSP[0];
+	DVSPP = DVS;
+	DVS = length(DV);
+	if (SEEK != 1)
+	{
+		if (SW2 == 2 && MD > 0)
+		{
+
+		}
+	}*/
+}
+
+void ConicRTEEarthNew::TCOMP(double dv, double delta, double &T, double &TP)
+{
+	END = false;
+
+	if (Mode >= 4)
+	{
+		goto ConicRTEEarth_TCOMP_A2;
+	}
+
+	/*if (T > T_max || DVS > T_max)
+	{
+		SOL = 1;
+		return;
+	}
+
+	P_ar = phi - phi_z;
+	if (MDM != 0)
+	{
+		P_ar = MD;
+	}
+	if (abs(P_ar) < pow(10, -4))
+	{
+		SOL = 1;
+		P_arp = 0;
+		TEST = 0;
+		DDT = 1.0;
+	}
+	else
+	{
+		if (TEST == 0)
+		{
+			if (theta != theta_z || P_ar * P_arp > 0 || P_arp == 0.0)
+			{
+				P_arp = P_ar;
+				SOL = 0;
+				VARMIN();
+			}
+			else
+			{
+
+			}
+		}
+	}*/
+
+ConicRTEEarth_TCOMP_A2:
+
+	if (T != T_mt)
+	{
+		if (SW2 == 1 || (MD * MDP < 0 && abs(MD - MDP) < PI))
+		{
+			goto ConicRTEEarth_TCOMP_C2;
+		}
+	}
+	
+	VARMIN();
+	if (SOL == true)
+	{
+		if (abs(MD) > 0.1)
+		{
+		ConicRTEEarth_TCOMP_E2:
+			DDT = 1.0;
+			XK = -1;
+			MDP = 0.0;
+			TP = T;
+			T = T + DDT * DT;
+			return;
+		}
+		else
+		{
+			goto ConicRTEEarth_TCOMP_D2;
+		}
+	}
+	else
+	{
+		if (T <= T_mt && DDT < 0.0)
+		{
+			DDT = 1.0;
+			XK = -1;
+			MDP = 0.0;
+		}
+		
+		TP = T;
+		T = T + DDT * DT;
+		return;
+	}
+
+ConicRTEEarth_TCOMP_C2:
+	if (abs(MD) < 0.01)
+	{
+	ConicRTEEarth_TCOMP_D2:
+		SW2 = 0;
+		if (T > T_max || dv > DVMAX)
+		{
+			END = true;
+			if (Mode == 2 || Mode == 4)
+			{
+				NOSOLN = 0;
+			}
+			return;
+		}
+		if (delta <= delta_apo[0] && delta >= delta_apo[mm - 1])
+		{
+			//Store solution
+			NOSOLN = 2;
+			if (Mode == 2 || Mode == 4)
+			{
+				STORE = true;
+				T_ar_stored = T;
+			}
+		}
+		if (SW6)
+		{
+			T = T + 24.0;
+			MDP = pow(10, 10);
+			XK = 1;
+			return;
+		}
+
+		goto ConicRTEEarth_TCOMP_E2;
+	}
+	else
+	{
+		DT = -(TP - T) / (MDP - MD)*MD / DDT;
+		MDP = MD;
+		SW2 = 1;
+		TP = T;
+		T = T + DDT * DT;
+		return;
+	}
+}
+
+void ConicRTEEarthNew::TMIN(double &dv, int &FLAG, double &T, double &U_r, double &VT_a, double &VR_a, double &beta_r)
+{
+	VECTOR3 V_a;
+	double A, e, v_a, beta_a, T1, p, eta_ar, eps1, eps2, T2;
+	int QA, SW;
+
+	eps1 = 10e-3;
+	eps2 = 10e-5;
+
+	U_r = U_rmax;
+	QA = 0;
+	beta_r = EntryCalculations::ReentryTargetLine(U_r*KMPER*1000.0 / SCPHR, false);
+	RUBR(QA, 0, r0, u0, U_r, beta_r, A, dv, e, T, v_a, beta_a);
+	if (T < T_min)
+	{
+		T = T_min;
+		T1 = T;
+	}
+	else
+	{
+		if (dv < DVM)
+		{
+			return;
+		}
+		else
+		{
+			T1 = T;
+			T_min = T;
+		}
+	}
+	SW = 0;
+ConicRTEEarth_TMIN_E:
+	VELCOM(T, r0, beta_r, DT, p, QA, SW6, U_r, VR_a, VT_a, beta_a, eta_ar, dv);
+	V_a = R0 * VR_a + R2 * VT_a*cos(theta_0) + R1 * VT_a*sin(theta_0);
+	dv = length(V_a - U0);
+
+	if (abs(dv - DVM) < eps1)
+	{
+		if (U_r < U_rmax)
+		{
+			return;
+		}
+		else
+		{
+			NOSOLN = 1;
+			return;
+		}
+	}
+	else
+	{
+		if (SW == 0)
+		{
+			if (dv < DVM)
+			{
+				if (U_r < U_rmax)
+				{
+					return;
+				}
+			}
+			goto ConicRTEEarth_TMIN_A;
+		}
+		else
+		{
+			goto ConicRTEEarth_TMIN_C;
+		}
+	}
+
+ConicRTEEarth_TMIN_A:
+	FLAG = 1;
+ConicRTEEarth_TMIN_F:
+	FCUA(FLAG, X0, beta_r, dv, U_r, v_a, beta_a);
+	T = TripTime(v_a, beta_a);
+ConicRTEEarth_TMIN_D:
+	if (dv > DVM || T < T_min)
+	{
+		if (FLAG == 1)
+		{
+			FLAG = -1;
+			goto ConicRTEEarth_TMIN_F;
+		}
+		else
+		{
+			NOSOLN = 1;
+			return;
+		}
+	}
+	if (T > T_max)
+	{
+		T2 = 2 * T_max - T_min;
+		SW = 2;
+	}
+	else
+	{
+		T2 = T;
+		SW = 1;
+	}
+	T1 = T_min;
+ConicRTEEarth_TMIN_B:
+	if (abs(T1 - T2) < eps2)
+	{
+		NOSOLN = 1;
+		return;
+	}
+	T = (T1 + T2) / 2.0;
+	goto ConicRTEEarth_TMIN_E;
+
+ConicRTEEarth_TMIN_C:
+	if (SW == 2)
+	{
+		if (dv > DVM)
+		{
+			goto ConicRTEEarth_TMIN_D;
+		}
+		else
+		{
+			T2 = T;
+			SW = 1;
+			goto ConicRTEEarth_TMIN_B;
+		}
+	}
+	else
+	{
+		if (dv < DVM)
+		{
+			T2 = T;
+			goto ConicRTEEarth_TMIN_B;
+		}
+		else
+		{
+			T1 = T;
+			goto ConicRTEEarth_TMIN_B;
+		}
+	}
+}
+
+void ConicRTEEarthNew::VACOMP(double VR_a, double VT_a, double beta_r, double theta, VECTOR3 &DV, double &T_z, VECTOR3 &V_a, double &alpha, double &delta, double &lambda)
+{
+	VECTOR3 R_z, N, R_e;
+	double T_rz, eta_rz, theta_cr, eta, A, e, E, P, beta_a, Period, T_ap, T_rp, T, eta_ar, U_r, C0, C1, C2, S1;
+	int k;
+
+	if (Mode == 2 || Mode == 3)
+	{
+		if (PI05 < abs(theta) && abs(theta) < C3PIO2)
+		{
+
+		}
+		else
+		{
+			theta = theta + PI;
+		}
+		if (theta < 0)
+		{
+			theta += PI2;
+		}
+		else if (theta >= PI2)
+		{
+			theta -= PI2;
+		}
+		/*double cos_dtheta = (cos(MD + 1.0) - cos(phi_Z)*cos(phi)) / (sin(phi_z)*sin(phi));
+		if (cos_dtheta > 1.0)
+		{
+			cos_dtheta = 1.0;
+		}
+		dtheta = acos(cos_dtheta);
+		if (abs(dtheta) < abs(theta_z))
+		{
+
+		}
+		else
+		{
+
+		}*/
+	}
+
+	theta = theta_0;
+	V_a = R0 * VR_a + R2 * VT_a*cos(theta) + R1 * VT_a*sin(theta);
+
+	E = pow(length(V_a), 2) / mu - 2.0 / r0;
+	beta_a = atan2(VT_a, VR_a);
+	if (abs(E) - 0.001 > 0)
+	{
+		A = -1.0 / E;
+		P = pow(r0*length(V_a)*sin(beta_a), 2) / mu;
+		e = sqrt(1.0 - P / A);
+	}
+	else
+	{
+		P = pow(r0*length(V_a)*sin(beta_a), 2) / mu;
+		e = 1.0;
+	}
+
+	if (beta_a > PI05)
+	{
+		k = 1;
+	}
+	else
+	{
+		k = 0;
+	}
+
+	EntryCalculations::TFPCR(mu, k, A, e, r0, T_ap, Period);
+	EntryCalculations::TFPCR(mu, k, A, e, RR, T_rp, Period);
+	T = T_ap - T_rp;
+	if (T < 0)
+	{
+		T += Period;
+	}
+	U_r = sqrt(pow(length(V_a), 2) + 2.0*mu*(1.0 / RR - 1.0 / r0));
+	C0 = r0 / RR * OrbMech::cot(beta_r);
+	C1 = (OrbMech::cot(beta_a) + C0) / (1.0 - r0 / RR);
+	C2 = (C1*C1 - 1.0) / (C1*C1 + 1.0);
+	S1 = (1.0 - C2)*C1;
+	//Transfer angle from abort to reentry
+	eta_ar = atan2(S1, C2);
+	if (eta_ar < 0)
+	{
+		eta_ar += PI2;
+	}
+
+	RENTRY(0.3, U_r, eta_ar, theta, T_rz, eta_rz, theta_cr);
+	N = unit(crossp(V_a, X0));
+	eta = eta_ar + eta_rz;
+	R_z = R0 * cos(eta) + R2 * cos(theta)*sin(eta) - R1 * sin(theta)*sin(eta);
+	R_z = R_z * cos(theta_cr) + N * sin(theta_cr);
+	delta = dotp(R_z, _V(0, 0, 1));
+	delta = asin(delta);
+	R_e = R_z - _V(0, 0, 1)*sin(delta);
+	alpha = atan2(R_e.y, R_e.x);
+	lambda = alpha - alpha_g - w_E * (T + T_rz);
+	while (lambda >= PI2)
+	{
+		lambda -= PI2;
+	}
+	while (lambda < 0)
+	{
+		lambda += PI2;
+	}
+	T_z = T0 + T + T_rz;
+	DV = V_a - U0;
+}
+
+void ConicRTEEarthNew::VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r, VECTOR3 &V_a2)
+{
+	VECTOR3 HANG, R_Moon, R_EM, V_EM, R_ES, R, RMAP, RAPOG, R_apo;
+	double r_a, v_a, Z1, Z2, cos_beta_a, a, p, beta_a, e, cos_eta, sin_eta, eta, r_m, r_m_sq, r_cap, R_p, EAA, TAA, AMAA, TJ, theta, RCAPAP, FK, FKB;
+	double deltat, deltat1, cos_PV, deltaT, Tr, T_arm, T_arm2, Z3, TERM, dt_dbetaa, dt_dva, dbetar_dbetaa, dbetar_dva, ALVA, D, dv, dbeta, T_art, dw;
+	double DUM, DUM2, ES, ESS, PS, h, Sbeta_s, beta_s, CDB, DLBET, ZIT;
+
+	OrbMech::PLEFEM(ephem, GMTbase + T0 / 24.0, R_EM, V_EM, R_ES);
+	R_Moon = R_EM / (KMPER*1000.0);
+	R_Moon = OrbMech::EclipticToECI(R_Moon, GMTbase + T0 / 24.0);
+
+	r_a = length(R_a);
+	v_a = length(V_a);
+	Z1 = r_a * v_a;
+	Z2 = dotp(R_a, V_a);
+	cos_beta_a = Z2 / Z1;
+	beta_a = acos(cos_beta_a);
+	a = mu * r_a / (2.0*mu - Z1 * v_a);
+	p = pow(Z1*sin(beta_a), 2) / mu;
+	e = sqrt(1.0 - p / a);
+	cos_eta = (p / r_a - 1.0) / e;
+	HANG = crossp(R_a, V_a);
+
+	if (cos_eta > 1.0)
+	{
+		cos_eta = 1.0;
+	}
+	else if (cos_eta < -1.0)
+	{
+		cos_eta = -1.0;
+	}
+	sin_eta = sign(Z2)*sqrt(1.0 - pow(cos_eta, 2));
+	eta = atan2(sin_eta, cos_eta);
+	if (Z2 >= 0.0)
+	{
+		R = R_Moon - R_a;
+		r_m = length(R_Moon);
+		r_cap = length(R);
+		r_m_sq = r_m * r_m;
+		R_p = a * (1.0 + e);
+		EAA = acos((1.0 - r_a / a) / e);
+		AMAA = EAA - e * sin(EAA);
+		TAA = a * sqrt(a / mu)*(PI - AMAA);
+		TJ = T0 + TAA;
+		OrbMech::PLEFEM(ephem, GMTbase + TJ / 24.0, R_EM, V_EM, R_ES);
+		RMAP = R_EM / (KMPER*1000.0);
+		RMAP = OrbMech::EclipticToECI(RMAP, GMTbase + T0 / 24.0);
+		theta = PI - eta - beta_a;
+		RAPOG = (V_a*cos(theta) / v_a + (V_a*cos(beta_a) / v_a - R_a / r_a)*sin(theta) / sin(beta_a))*R_p;
+		R_apo = RMAP - RAPOG;
+		ZIT = sign(dotp(crossp(RAPOG, RMAP), HANG));
+		RCAPAP = length(R_apo);
+		FK = r_a * (dotp(R_a, R) / pow(r_cap, 3) - dotp(R_a, R_Moon) / pow(r_m, 3));
+		FKB = 1.0 - ((R_p*R_p + R_p * r_a + r_a * r_a) / (3.0*r_m_sq) - 2.0*r_m / r_cap + r_m_sq / (r_cap*RCAPAP));
+	
+		deltat = -0.012299896*(3.0 / sqrt(mu*p))*e*a*a*sqrt(1.0 - cos_eta * cos_eta)*(2.0*FKB - FK);
+		deltat1 = 0.012299896*(sqrt(pow(a, 3) / mu)*acos((1.0 - r_a / a) / e))*(FK*(1.0 - 3.0*a / r_a) + 3.0*a*(1.0 / r_m - 1.0 / r_cap + r_a / r_m_sq));
+		cos_PV = dotp(R, R_a) / r_cap / r_a;
+		deltaT = cos_PV * (deltat + deltat1);
+	}
+
+	if (Z2 < 0)
+	{
+		if (r_a < 35.6)
+		{
+			Tr = 22.0 + 1.31*(35.6 - r_a);
+		}
+		else if (r_a < 41.7)
+		{
+			Tr = 14.0 + 1.31*(41.7 - r_a);
+		}
+		else
+		{
+			Tr = 1.555*(50.7 - r_a);
+		}
+
+		deltaT = -1.377229 + 0.093*(T_ar - Tr) - 0.00157*pow(T_ar - Tr, 2);
+		T_arm = 59.0 - 1.456*(r_a - 30.0);
+		if (T_ar <= T_arm)
+		{
+			T_arm2 = T_arm - 8.0;
+			deltaT = 0.0;
+			if (T_ar < T_arm2)
+			{
+				deltaT = 0.0;
+			}
+		}
+		if (e > 0.989)
+		{
+			deltaT = 0.0;
+		}
+	}
+	Z3 = p * cos_eta / (e*e*sin_eta);
+	TERM = 2.0*r_a / cos(beta_a) + r_a * sin(beta_a)*Z3*(1.0 / a - v_a * v_a / mu);
+	if (abs(sin_eta) < pow(10,-3))
+	{
+		TERM = 0.0;
+	}
+	dt_dbetaa = r_a * r_a*v_a*sin(beta_a)*cos_eta / (e*mu);
+	dt_dva = a / mu * (3.0*v_a*(T_ar - deltaT) + TERM);
+
+	dbetar_dbetaa = tan(beta_r) / tan(beta_a);
+	dbetar_dva = tan(beta_r) / v_a;
+	ALVA = (1.9624867 - 1.0 / a)*mu;
+	dbetar_dva = dbetar_dva * (1.0 - v_a * v_a / ALVA);
+	D = dt_dva * dbetar_dbetaa - dt_dbetaa * dbetar_dva;
+	dv = deltaT / D * dbetar_dbetaa;
+	dbeta = (-deltaT / D)*dbetar_dva;
+	T_art = 1.4272*r_a + 0.01784*r_a*r_a;
+
+	if (r_a >= 2.5 && T_ar >= T_art)
+	{
+		deltaT = deltaT / cos_PV - deltat1;
+		dw = deltaT * sqrt(mu*p) / (3.0*a*a*e*e);
+		eta = atan2(sin_eta, cos_eta) - dw;
+		DUM = a / r_a;
+		DUM2 = cos_eta * cos_eta - 4.0*(DUM - DUM * DUM);
+		if (DUM2 < 0)
+		{
+			ES = sqrt(r_a / a - 1.0);
+		}
+		else
+		{
+			ES = (-cos_eta + sqrt(DUM2)) / (2.0*DUM);
+			ESS = (-cos_eta - sqrt(DUM2)) / (2.0*DUM);
+			if (abs(ESS - e) < abs(ES - e))
+			{
+				ES = ESS;
+			}
+		}
+		PS = a * (1.0 - ES * ES);
+		h = sqrt(mu*PS);
+		Sbeta_s = h / (r_a*v_a);
+		beta_s = asin(Sbeta_s);
+		DLBET = -abs(beta_s - beta_a)*ZIT;
+		dbeta = dbeta + DLBET;
+	}
+	CDB = cos(dbeta) / v_a;
+	Z1 = sin(dbeta) / sin(beta_a);
+	Z2 = cos(beta_a) / v_a;
+	v_a = v_a + dv;
+	V_a2 = (V_a*CDB + (V_a*Z2 - R_a / r_a)*Z1)*v_a;
+}
+
+double ConicRTEEarthNew::TripTime(double v_a, double beta_a)
+{
+	VECTOR3 V_a;
+	double VT_a, VR_a, E, A, P, e, T_ap, T_rp, Period, T;
+	int k;
+
+	VT_a = v_a * sin(beta_a);
+	VR_a = v_a * cos(beta_a);
+	V_a = R0 * VR_a + R2 * VT_a*cos(theta_0) + R1 * VT_a*sin(theta_0);
+
+	E = pow(v_a, 2) / mu - 2.0 / r0;
+	if (abs(E) - 0.001 > 0)
+	{
+		A = -1.0 / E;
+		P = pow(r0*v_a*sin(beta_a), 2) / mu;
+		e = sqrt(1.0 - P / A);
+	}
+	else
+	{
+		P = pow(r0*v_a*sin(beta_a), 2) / mu;
+		e = 1.0;
+	}
+
+	if (beta_a > PI05)
+	{
+		k = 1;
+	}
+	else
+	{
+		k = 0;
+	}
+
+	EntryCalculations::TFPCR(mu, k, A, e, r0, T_ap, Period);
+	EntryCalculations::TFPCR(mu, k, A, e, RR, T_rp, Period);
+	T = T_ap - T_rp;
+	if (T < 0)
+	{
+		T += Period;
+	}
+	return T;
+}
+
+RTEMoon::RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, double GETbase, double *line)
+{
+	for (int i = 0;i < 10;i++)
+	{
+		LINE[i] = line[i];
+	}
+
+	hMoon = oapiGetObjectByName("Moon");
+	hEarth = oapiGetObjectByName("Earth");
+
 	this->mjd0 = mjd0;
 	this->GETbase = GETbase;
 
@@ -3232,24 +4590,25 @@ RTEMoon::RTEMoon(VECTOR3 R0M, VECTOR3 V0M, double mjd0, OBJHANDLE gravref, doubl
 	dTIG = 30.0;
 	precision = 1;
 	ReturnInclination = 0.0;
+	EntryLng = 0.0;
 }
 
 void RTEMoon::READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI)
 {
 	double LETSGOF, CRITF;
 
-	u_rmax = URMAXI;
-	i_rmax = IRMAXI;
+	u_rmax = URMAXI * 0.3048;
+	i_rmax = IRMAXI * RAD;
 	CENT = 1;
 	t_zmax = TZMAXI;
-	h_min = HMINI;
+	h_min = HMINI * 1852.0;
 	t_zmin = TZMINI;
 	MD_max = MDMAXI;
 	SMODE = SMODEI;
 	CIRCUM = CIRI;
 	LD = L2DI;
-	DV_max = DVMAXI;
-	lambda_z = EntryLng;
+	DV_max = DVMAXI * 0.3048;
+	lambda_z = 0.0;
 	mu_z = MUZI;
 	lambda_z1 = lambda_z;
 	mu_z1 = mu_z;
@@ -3350,10 +4709,7 @@ bool RTEMoon::MASTER()
 		EntryCalculations::LNDING(R_EI, V_EI, EIMJD, LD, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
 		if (CRIT == 6) break;
 
-		if (!entrylongmanual)
-		{
-			EntryLng = EntryCalculations::landingzonelong(landingzone, theta_lat);
-		}
+		 TBLOOK(theta_lat, EntryLng);
 
 		dlng = theta_long - EntryLng;
 		if (abs(dlng) > PI)
@@ -3577,10 +4933,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, double &dv)
 	//This loop roughly converges on the desired landing site
 	do
 	{
-		if (!entrylongmanual)
-		{
-			EntryLng = EntryCalculations::landingzonelong(landingzone, theta_lat);
-		}
+		TBLOOK(theta_lat, EntryLng);
 		dlng = theta_long - EntryLng;
 		if (ITCNT > 0 && abs(dlng) < eps)
 		{
@@ -3656,10 +5009,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, double &dv)
 			t_z = OrbMech::GETfromMJD(EIMJD, GETbase);
 			EntryCalculations::LNDING(R_EI, V_EI, EIMJD, LD, ICRNGG, r_rbias, theta_long, theta_lat, MJD_L);
 
-			if (!entrylongmanual)
-			{
-				EntryLng = EntryCalculations::landingzonelong(landingzone, theta_lat);
-			}
+			TBLOOK(theta_lat, EntryLng);
 
 			dlng = theta_long - EntryLng;
 			if (abs(dlng) > PI)
@@ -4032,4 +5382,70 @@ bool RTEMoon::MCUA(double &i_r, double &INTER, double &dv)
 	}
 
 	return ISOL;
+}
+
+bool RTEMoon::TBLOOK(double lat, double &lng)
+{
+	double XR[5], YR[5];
+	bool LF = false;
+	int N, J = 2;
+
+	while (J - 1 < 10 && LINE[J - 1] != 1e10)
+	{
+		N = J / 2;
+		YR[N - 1] = LINE[J - 2];
+		XR[N - 1] = LINE[J - 1];
+		J = J + 2;
+	}
+
+	if (lat > YR[0])
+	{
+		lng = XR[0];
+		LF = true;
+	}
+	else
+	{
+		J = 2;
+
+		while (lat <= YR[J - 1])
+		{
+			J++;
+			if (J > N)
+			{
+				lng = XR[N - 1];
+				LF = true;
+				break;
+			}
+		}
+
+		double TEST = XR[J - 1] - XR[J - 2];
+		if (abs(TEST) >= PI)
+		{
+			if (TEST < 0)
+			{
+				TEST = TEST + PI2;
+			}
+			else
+			{
+				TEST = TEST - PI2;
+			}
+		}
+		if (TEST == 0.0)
+		{
+			lng = XR[J - 1];
+		}
+		else
+		{
+			lng = TEST * (lat - YR[J - 2]) / (YR[J - 1] - YR[J - 2]) + XR[J - 2];
+		}
+	}
+	if (lng > PI2)
+	{
+		lng = lng - PI2;
+	}
+	if (lng < 0)
+	{
+		lng = lng + PI2;
+	}
+	return LF;
 }
