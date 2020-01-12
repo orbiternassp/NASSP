@@ -23,13 +23,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-namespace GenIterator
-{
-	void GeneralizedIterator(bool(*state_evaluation)(void *, std::vector<double>, void*, std::vector<double>&), const std::vector<double> &Y_min, const std::vector<double> &Y_max, const std::vector<double> &var_guess, const std::vector<double> &stepsizes, const std::vector<double> &x_weights, void *constants, void *data, const std::vector<int> &class_des, const std::vector<double> &y_weight, std::vector<double> &x_res, std::vector<double> &y_res);
-	double CalcCost(const std::vector<double> &A, const std::vector<double> &B);
-	void CalcDX2(double **P, const std::vector<double> &W_X, const std::vector<double> &W_Y, double lambda, const std::vector<double> &dy, int m, int n, std::vector<double> &dx);
-}
-
 struct TLMCCDataTable
 {
 	double MJD_pc1;

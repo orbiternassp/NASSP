@@ -2503,8 +2503,6 @@ public:
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
 	//Return to Earth Abort Planning Supervisor
 	void PMMREAP(int med);
-	//Coast numerical integrator
-	EphemerisData PMMCEN(EphemerisData sv0, double dt_min, double dt_max, int stop_ind, double end_cond, double dir);
 	//Central Manual Entry Device Decoder
 	bool GMGMED(char *str);
 	//MED Decoder for G, A and B MEDs
