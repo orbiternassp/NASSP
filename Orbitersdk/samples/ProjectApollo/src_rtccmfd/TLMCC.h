@@ -25,9 +25,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 struct TLMCCDataTable
 {
-	double MJD_pc1;
-	double MJD_pc2;
-	double MJD_nd;
+	double GET_TLI;
+	double GMT_pc1;
+	double GMT_pc2;
+	double GMT_nd;
 	double H_nd;
 	double lat_nd;
 	double lng_nd;
@@ -54,6 +55,7 @@ struct TLMCCMEDQuantities
 {
 	int Mode;
 	double T_MCC;
+	double GMTBase;
 	double GETBase;
 	MPTSV sv0;
 	double CSMMass;
@@ -86,23 +88,91 @@ struct TLMCCMissionConstants
 {
 	int n, m;
 	double lambda_IP;
+	double V_pcynlo;
 };
 
-struct TLMCCFirstGuessVars
+struct TLMCCOutputData
 {
-	double r_pl;
-	double lat_pl;
-	double gamma_pl;
-	double MJD_pl;
+	//For Display
+	int Mode;
+	int Return;
+	double AZ_min;
+	double AZ_max;
+	int Config;
+	double GET_MCC;
+	VECTOR3 DV_MCC;
+	double YAW_MCC;
+	double h_PC;
+	double GET_LOI;
+	VECTOR3 DV_LOI;
+	double AZ_act;
+	double H_bo;
+	double delta_lat;
+	double HA_LPO;
+	double HP_LPO;
+	VECTOR3 DV_LOPC;
+	double GET_TEI;
+	VECTOR3 DV_TEI;
+	double DV_REM;
+	//Landing computed at Earth
+	double GET_LC;
+	double lat_IP;
+	double lng_IP;
+	std::string STAID;
+	double GMTV;
+	double GETV;
+	double CSMWT;
+	double LMWT;
+	//For Data Table
+	TLMCCDataTable outtab;
+	//For MPT
+	VECTOR3 R_MCC;
+	VECTOR3 V_MCC;
+	double GMT_MCC;
+	int RBI;
+	VECTOR3 V_MCC_apo;
 };
 
-struct TLMCCIntegratingTrajectoryVars
+struct TLMCCGeneralizedIteratorArray
 {
+	//Input
 	MPTSV sv0;
+	//For first guess logic
+	bool TLMCIntegrating;
+	//For integrating trajectory computer
+	bool MidcourseCorrectionIndicator = true;
 	bool NodeStopIndicator;
 	bool LunarFlybyIndicator;
 	bool FreeReturnInclinationIndicator;
-	double dt_node;
+
+	//Output
+	double dv_mcc;
+	double dgamma_mcc;
+	double dpsi_mcc;
+	VECTOR3 V_MCC;
+	//All EMP
+	double h_nd;
+	double gamma_nd;
+	double MJD_nd;
+	double h_pl;
+	double v_pl;
+	double gamma_pl;
+	double psi_pl;
+	double lat_pl;
+	double lng_pl;
+	double MJD_pl;
+	double dgamma_loi;
+	double dpsi_loi;
+	double dt_lls;
+	double AZ_act;
+
+	//Masses
+	double M_i;
+	double M_mcc;
+	double M_loi;
+	double M_lc;
+	double M_lopc;
+	double M_tei;
 };
 
 struct TLMCCConicTrajectoryVars
@@ -125,11 +195,10 @@ class TLMCCProcessor
 public:
 	TLMCCProcessor();
 	void Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities med, TLMCCMissionConstants cst);
-	void Main();
+	void Main(TLMCCOutputData &out);
 
 	//The trajectory computers
 	bool FirstGuessTrajectoryComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	bool IntegratedTLMCComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
 	bool ConicMissionComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
 	bool IntegratedNodeComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
 
@@ -137,7 +206,7 @@ protected:
 
 	//The Options
 	void Option1();
-	void Option2();
+	/*void Option2();
 	void Option3();
 	void Option4();
 	void Option5();
@@ -145,12 +214,11 @@ protected:
 	void Option7();
 	void Option8();
 	void Option9A();
-	void Option9B();
+	void Option9B();*/
 
 	//These appear as the boxes in the main program flow
-	VECTOR3 ConicTLMC(double MJD_P, double dt, double r, double lat, double lng, VECTOR3 &pl_state);
-	VECTOR3 IntegratedTLMC(double MJD_P, double r, double lat, VECTOR3 guess);
-	VECTOR3 IntegratedXYZTTrajectory(MPTSV sv0, double H_nd, double lat_nd, double lng_nd, double MJD_node, VECTOR3 guess);
+	void ConvergeTLMC(double V, double azi, double lng, double lat, double r, double GMT_pl, bool integrating);
+	void IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double R_nd, double lat_nd, double lng_nd, double GMT_node);
 	VECTOR3 ConicFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_pl, VECTOR3 guess);
 	VECTOR3 ConicFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, double inc_pg, VECTOR3 guess, double lat_pl_min = 0, double lat_pl_max = 0);
 	VECTOR3 ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double inc_pg_min, double inc_pg_max, int inc_class, VECTOR3 guess);
@@ -158,6 +226,7 @@ protected:
 	VECTOR3 IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, double inc_fr, VECTOR3 guess);
 	VECTOR3 ConicFreeReturnOptimizedFixedOrbitBAP(MPTSV sv0, VECTOR3 guess);
 	void ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, std::vector<double> guess, std::vector<double> &x_res, std::vector<double> &y_res, bool optimize = false, double mass = 0.0);
+	VECTOR3 CalcLOIDV(MPTSV sv_MCC_apo, double gamma_nd);
 
 	//Subroutines
 	void EmpiricalFirstGuess(double r, double lng, double dt, double &V, double &lambda);
@@ -189,7 +258,7 @@ protected:
 	PZEFEM *ephemeris;
 
 	MPTSV sv_MCC;
-	double isp_SPS, isp_DPS, isp_MCC;
+	double isp_SPS, isp_DPS, isp_MCC, Wdot;
 	int KREF_MCC;
 	OBJHANDLE hMoon;
 	VECTOR3 DV_MCC;
@@ -202,7 +271,7 @@ protected:
 	TLMCCMEDQuantities MEDQuantities;
 	TLMCCMissionConstants Constants;
 
-	VECTOR3 V_MCC_stored;
+	TLMCCGeneralizedIteratorArray outarray;
 	double lat_pl_stored;
 	double inc_fr_stored;
 	double MJD_pl_stored;

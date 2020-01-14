@@ -3357,6 +3357,82 @@ public:
 		DKIDataBlock Block[7];
 	} PZDKIT;
 
+	struct SkeletonFlightPlanBlock
+	{
+		//Time at which block was generated
+		double GMTTimeFlag;
+		//TLMCC Mode that was used to generate block
+		int mode;
+		//EMP latitude of TLI pericynthion
+		double lat_pc1;
+		//EMP latitude of LOI pericynthion
+		double lat_pc2;
+		//EMP longitude of TLI pericynthion
+		double lng_pc1;
+		//EMP longitude of LOI pericynthion
+		double lng_pc2;
+		//Height of TLI pericynthion
+		double h_pc1;
+		//Height of LOI pericynthion
+		double h_pc2;
+		//GET of TLI Ignition
+		double GET_TLI;
+		//GMT of Node
+		double GMT_nd;
+		//Latitude of Node
+		double lat_nd;
+		//Longitude of Node
+		double lng_nd;
+		//Height of Node
+		double h_nd;
+		//Delta Azimuth of LOI
+		double dpsi_loi;
+		//Flight Path Angle of LOI
+		double gamma_loi;
+		//DT of LPO (LOI to TEI)
+		double T_lo;
+		//DT of LLS (LOI to LLS first pass)
+		double dt_lls;
+		//Azimuth of LLS
+		double psi_lls;
+		//Latitude of LLS
+		double lat_lls;
+		//Longitude of LLS
+		double lng_lls;
+		//Radius of LLS
+		double rad_lls;
+		//Delta azimuth of TEI
+		double dpsi_tei;
+		//Delta V of TEI
+		double dv_tei;
+		//DT of Transearth (TEI to EI)
+		double T_te;
+		//Inclination of free return
+		double incl_fr;
+		//GMT of TLI pericynthion
+		double GMT_pc1;
+		//GMT of LOI pericynthion
+		double GMT_pc2;
+		double dt_upd_nom;//???
+	};
+
+	struct SkeletonFlightPlanTable
+	{
+		//Blocks
+		//1: Preflight
+		//2: Nominal nodal targets from options 2-5
+		//3-5: TBD
+		SkeletonFlightPlanBlock blocks[2];
+		//Block 6
+		int DisplayBlockNum;
+	} PZSFPTAB;
+
+	struct UpdatedSkeletonFlightPlansTable
+	{
+		//One for each MCC tradeoff display columns
+		SkeletonFlightPlanBlock blocks[6];
+	} PZMCCSFP;
+
 	struct UMEDSaveTable
 	{
 		//Block 3
@@ -3469,7 +3545,7 @@ private:
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
 	//PMMMPT Matrix Utility Subroutine
-	void PCMAT(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2);
+	void PCMATO(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2);
 	//PMMMPT Gaussian Elimination Subroutine
 	bool PCGAUS(double **A, double *Y, double *X, int N, double eps);
 	//Return-to-Earth Tradeoff Display

@@ -20245,7 +20245,7 @@ RTCC_PCBBT_2_C:
 	WA = WD;
 }
 
-void RTCC::PCMAT(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2)
+void RTCC::PCMATO(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2)
 {
 	double SUM;
 	int I, J, K;

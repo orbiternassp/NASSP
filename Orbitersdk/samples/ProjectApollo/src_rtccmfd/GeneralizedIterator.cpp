@@ -22,17 +22,37 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #include "OrbMech.h"
+#include "GeneralizedIterator.h"
 
 namespace GenIterator
 {
-	double CalcCost(const std::vector<double> &A, const std::vector<double> &B)
+	GeneralizedIteratorBlock::GeneralizedIteratorBlock()
+	{
+		for (int i = 0;i < 20;i++)
+		{
+			IndVarSwitch[i] = false;
+			IndVarGuess[i] = 0.0;
+			IndVarWeight[i] = 0.0;
+			IndVarStep[i] = 0.0;
+			DepVarSwitch[i] = false;
+			DepVarLowerLimit[i] = 0.0;
+			DepVarUpperLimit[i] = 0.0;
+			DepVarClass[i] = 0;
+			DepVarWeight[i] = 0.0;
+		}
+	}
+
+	double CalcCost(const std::vector<double> &A, const std::vector<double> &B, bool *yswitches)
 	{
 		unsigned i;
 		double D = 0.0;
 
 		for (i = 0;i < A.size();i++)
 		{
-			D += A[i] * B[i] * B[i];
+			if (yswitches[i])
+			{
+				D += A[i] * B[i] * B[i];
+			}
 		}
 
 		return D;
@@ -183,25 +203,39 @@ namespace GenIterator
 		delete[] PP;
 	}
 
-	void GeneralizedIterator(bool(*state_evaluation)(void*, std::vector<double>, void*, std::vector<double>&), const std::vector<double> &Y_min, const std::vector<double> &Y_max, const std::vector<double> &var_guess, const std::vector<double> &stepsizes, const std::vector<double> &x_weights, void *constants, void *data, const std::vector<int> &class_des, const std::vector<double> &y_weight, std::vector<double> &x_res, std::vector<double> &y_res)
+	void GeneralizedIterator(bool(*state_evaluation)(void*, std::vector<double>, void*, std::vector<double>&), GeneralizedIteratorBlock vars, void *constants, void *data, std::vector<double> &x_res, std::vector<double> &y_res)
 	{
-		double lambda, R, R_old, lambda1, w_avg;
+		double lambda, R, R_old, lambda1, w_avg, **P;
 		bool terminate, select = true, terminate2, hasclass3, sizing;
 		int n, nMax, class1num;
 		unsigned N, M, i, j;
-		std::vector<double> Target, var_star, *v_l, *Y, var_star_temp, Y_star, C, dx, dy, dy_temp, W_Y, W_Y_apo, W_X;
+		std::vector<double> Target, var_star, v_l, *Y, var_star_temp, Y_star, C, dx, dy, dy_temp, W_Y, W_Y_apo, W_X;
 
-		//Get number of independent and dependent variables
-		M = var_guess.size();
-		N = Y_min.size();
-		//Set up some vectors
-		v_l = new std::vector<double>[M];
+		M = 0;
+		for (i = 0;i < MGENITER;i++)
+		{
+			if (vars.IndVarSwitch[i])
+			{
+				M++;
+			}
+		}
+		N = 0;
+		for (i = 0;i < NGENITER;i++)
+		{
+			if (vars.DepVarSwitch[i])
+			{
+				N++;
+			}
+		}
+
+		//Set up a vector
 		Y = new std::vector<double>[M];
 
-		var_star.assign(M, 0);
-		var_star_temp.assign(M, 0);
-		dx.assign(M, 0);
+		var_star.assign(MGENITER, 0);
+		var_star_temp.assign(MGENITER, 0);
+		dx.assign(MGENITER, 0);
 		W_X.assign(M, 0);
+		v_l.assign(MGENITER, 0);
 
 		Target.assign(N, 0);
 		Y_star.assign(N, 0);
@@ -211,17 +245,19 @@ namespace GenIterator
 		W_Y.assign(N, 0);
 		W_Y_apo.assign(N, 0);
 
-		double **P = new double*[N];
-
 		for (i = 0;i < M;i++)
 		{
-			v_l[i].assign(M, 0);
 			Y[i].assign(N, 0);
 		}
 
+		P = new double*[NGENITER];
 		for (i = 0;i < N;i++)
 		{
-			P[i] = new double[M];
+			P[i] = new double[MGENITER];
+			for (j = 0;j < M;j++)
+			{
+				P[i][j] = 0.0;
+			}
 		}
 
 		//Set up iteration counters
@@ -231,12 +267,12 @@ namespace GenIterator
 		//Calculate target as the average between min and max value
 		for (i = 0;i < N;i++)
 		{
-			Target[i] = (Y_max[i] + Y_min[i]) / 2.0;
+			Target[i] = (vars.DepVarUpperLimit[i] + vars.DepVarLowerLimit[i]) / 2.0;
 		}
 		//Set up initial guess
-		for (i = 0;i < M;i++)
+		for (i = 0;i < MGENITER;i++)
 		{
-			var_star[i] = var_guess[i];
+			var_star[i] = vars.IndVarGuess[i];
 		}
 
 		//Use initial guess to get a first vector
@@ -248,10 +284,10 @@ namespace GenIterator
 
 		//Initial guess
 		lambda = pow(2, -28);
-		//This needs work
+
 		for (i = 0;i < M;i++)
 		{
-			W_X[i] = x_weights[i];
+			W_X[i] = vars.IndVarWeight[i];
 		}
 		//Select y weights based on class designation
 		class1num = 0;
@@ -259,13 +295,17 @@ namespace GenIterator
 		w_avg = 1.0;
 		for (i = 0;i < N;i++)
 		{
-			if (class_des[i] == 1)
+			if (vars.DepVarSwitch[i] == false)
 			{
-				W_Y[i] = pow(2, -40) / pow((Y_max[i] - Y_min[i]) / 2.0, 2);
+				continue;
+			}
+			if (vars.DepVarClass[i] == 1)
+			{
+				W_Y[i] = pow(2, -40) / pow((vars.DepVarUpperLimit[i] - vars.DepVarLowerLimit[i]) / 2.0, 2);
 				class1num++;
 				w_avg *= W_Y[i];
 			}
-			else if (class_des[i] == 3)
+			else if (vars.DepVarClass[i] == 3)
 			{
 				if (hasclass3)
 				{
@@ -280,13 +320,17 @@ namespace GenIterator
 		w_avg = pow(w_avg, 1.0 / ((double)(class1num)));
 		for (i = 0;i < N;i++)
 		{
-			if (class_des[i] == 2)
+			if (vars.DepVarSwitch[i] == false)
 			{
-				W_Y[i] = y_weight[i] * w_avg;
+				continue;
 			}
-			else if (class_des[i] == 3)
+			if (vars.DepVarClass[i] == 2)
 			{
-				W_Y[i] = y_weight[i] * pow(10, -4)*pow(2, -40)*((double)(class1num)) / pow(dy[i], 2);
+				W_Y[i] = vars.DepVarWeight[i] * w_avg;
+			}
+			else if (vars.DepVarClass[i] == 3)
+			{
+				W_Y[i] = vars.DepVarWeight[i] * pow(10, -4)*pow(2, -40)*((double)(class1num)) / pow(dy[i], 2);
 			}
 		}
 
@@ -297,17 +341,21 @@ namespace GenIterator
 			//Check on the class variables
 			for (i = 0;i < N;i++)
 			{
-				if (class_des[i] == 1)
+				if (vars.DepVarSwitch[i] == false)
+				{
+					continue;
+				}
+				if (vars.DepVarClass[i] == 1)
 				{
 					C[i] = 1.0;
-					if ((Y_star[i] <= Y_min[i]) || (Y_star[i] >= Y_max[i]))
+					if ((Y_star[i] <= vars.DepVarLowerLimit[i]) || (Y_star[i] >= vars.DepVarUpperLimit[i]))
 					{
 						terminate = false;
 					}
 				}
-				else if (class_des[i] == 2)
+				else if (vars.DepVarClass[i] == 2)
 				{
-					if ((Y_star[i] > Y_min[i]) && (Y_star[i] < Y_max[i]))
+					if ((Y_star[i] > vars.DepVarLowerLimit[i]) && (Y_star[i] < vars.DepVarUpperLimit[i]))
 					{
 						C[i] = 0.0;
 					}
@@ -317,14 +365,14 @@ namespace GenIterator
 						terminate = false;
 					}
 				}
-				else
+				else if (vars.DepVarClass[i] == 3)
 				{
 					C[i] = 1.0;
 					if (terminate)
 					{
 						if (select)
 						{
-							W_Y[i] = y_weight[i] * pow(2, -32)*((double)(class1num)) / pow(dy[i], 2);
+							W_Y[i] = vars.DepVarWeight[i] * pow(2, -32)*((double)(class1num)) / pow(dy[i], 2);
 						}
 						select = false;
 					}
@@ -348,27 +396,27 @@ namespace GenIterator
 
 			if (n == 0)
 			{
-				R_old = CalcCost(W_Y_apo, dy);
+				R_old = CalcCost(W_Y_apo, dy, vars.DepVarSwitch);
 			}
 
-			//x-vectors for partial derivatives
-			for (i = 0;i < M;i++)
-			{
-				v_l[i] = var_star;
-				v_l[i][i] += stepsizes[i];
-			}
-
-			//Evaluate these vectors
-			for (i = 0;i < M;i++)
-			{
-				state_evaluation(data, v_l[i], constants, Y[i]);
-			}
 			//Calculate partial derivatives matrix (Jacobi)
-			for (i = 0;i < N;i++)
+			for (j = 0;j < M;j++)
 			{
-				for (j = 0;j < M;j++)
+				if (vars.IndVarSwitch[j])
 				{
-					P[i][j] = (Y[j][i] - Y_star[i]) / stepsizes[j];
+					//Evalue trajectory computer
+					v_l = var_star;
+					v_l[j] += vars.IndVarStep[j];
+					state_evaluation(data, v_l, constants, Y[j]);
+
+					//Calculate matrix valuess
+					for (i = 0;i < N;i++)
+					{
+						if (vars.DepVarSwitch[i])
+						{
+							P[i][j] = (Y[j][i] - Y_star[i]) / vars.IndVarStep[j];
+						}
+					}
 				}
 			}
 			//Inhibitor control
@@ -389,7 +437,12 @@ namespace GenIterator
 				sizing = false;
 				for (i = 0;i < M;i++)
 				{
-					if (abs(dx[i]) > 65536.0*stepsizes[i])
+					if (vars.IndVarSwitch[i] == false)
+					{
+						continue;
+					}
+					
+					if (abs(dx[i]) > 65536.0*vars.IndVarStep[i])
 					{
 						sizing = true;
 						break;
@@ -407,7 +460,7 @@ namespace GenIterator
 			do
 			{
 				CalcDX2(P, W_X, W_Y_apo, lambda1, dy, M, N, dx);
-				for (i = 0;i < M;i++)
+				for (i = 0;i < MGENITER;i++)
 				{
 					var_star_temp[i] = var_star[i] + dx[i];
 				}
@@ -417,9 +470,9 @@ namespace GenIterator
 				{
 					dy_temp[i] = Target[i] - Y_star[i];
 
-					if (class_des[i] == 2)
+					if (vars.DepVarSwitch[i] && vars.DepVarClass[i] == 2)
 					{
-						if ((Y_star[i] > Y_min[i]) && (Y_star[i] < Y_max[i]))
+						if ((Y_star[i] > vars.DepVarLowerLimit[i]) && (Y_star[i] < vars.DepVarUpperLimit[i]))
 						{
 							C[i] = 0.0;
 						}
@@ -431,7 +484,7 @@ namespace GenIterator
 					}
 				}
 
-				R = CalcCost(W_Y_apo, dy_temp);
+				R = CalcCost(W_Y_apo, dy_temp, vars.DepVarSwitch);
 
 				if (R <= R_old)
 				{
@@ -448,7 +501,7 @@ namespace GenIterator
 
 			for (i = 0;i < M;i++)
 			{
-				if (abs(dx[i]) > stepsizes[i] / 100.0)
+				if (abs(dx[i]) > vars.IndVarStep[i] / 100.0)
 				{
 					terminate2 = false;
 				}
@@ -473,7 +526,6 @@ namespace GenIterator
 			n++;
 		} while (nMax >= n);
 
-		delete[] v_l;
 		delete[] Y;
 		delete[] P;
 
