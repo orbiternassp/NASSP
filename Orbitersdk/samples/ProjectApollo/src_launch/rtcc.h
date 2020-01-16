@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/LDPP.h"
 #include "../src_rtccmfd/EntryCalculations.h"
 #include "../src_rtccmfd/RTCCTables.h"
+#include "../src_rtccmfd/TLMCC.h"
 #include "MCCPADForms.h"
 
 #define RTCC_START_STRING	"RTCC_BEGIN"
@@ -2366,6 +2367,7 @@ public:
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
 	void TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
 	void TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *res, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void TranslunarMidcourseCorrectionProcessor(SV sv0);
 	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res);
 	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
@@ -3017,8 +3019,8 @@ public:
 
 	struct MCCTransferTable
 	{
-		EphemerisData sv_man_bef;
-		VECTOR3 V_man_after;
+		EphemerisData sv_man_bef[6];
+		VECTOR3 V_man_after[6];
 		int plan;
 	} PZMCCXFR;
 
@@ -3357,81 +3359,40 @@ public:
 		DKIDataBlock Block[7];
 	} PZDKIT;
 
-	struct SkeletonFlightPlanBlock
-	{
-		//Time at which block was generated
-		double GMTTimeFlag;
-		//TLMCC Mode that was used to generate block
-		int mode;
-		//EMP latitude of TLI pericynthion
-		double lat_pc1;
-		//EMP latitude of LOI pericynthion
-		double lat_pc2;
-		//EMP longitude of TLI pericynthion
-		double lng_pc1;
-		//EMP longitude of LOI pericynthion
-		double lng_pc2;
-		//Height of TLI pericynthion
-		double h_pc1;
-		//Height of LOI pericynthion
-		double h_pc2;
-		//GET of TLI Ignition
-		double GET_TLI;
-		//GMT of Node
-		double GMT_nd;
-		//Latitude of Node
-		double lat_nd;
-		//Longitude of Node
-		double lng_nd;
-		//Height of Node
-		double h_nd;
-		//Delta Azimuth of LOI
-		double dpsi_loi;
-		//Flight Path Angle of LOI
-		double gamma_loi;
-		//DT of LPO (LOI to TEI)
-		double T_lo;
-		//DT of LLS (LOI to LLS first pass)
-		double dt_lls;
-		//Azimuth of LLS
-		double psi_lls;
-		//Latitude of LLS
-		double lat_lls;
-		//Longitude of LLS
-		double lng_lls;
-		//Radius of LLS
-		double rad_lls;
-		//Delta azimuth of TEI
-		double dpsi_tei;
-		//Delta V of TEI
-		double dv_tei;
-		//DT of Transearth (TEI to EI)
-		double T_te;
-		//Inclination of free return
-		double incl_fr;
-		//GMT of TLI pericynthion
-		double GMT_pc1;
-		//GMT of LOI pericynthion
-		double GMT_pc2;
-		double dt_upd_nom;//???
-	};
-
 	struct SkeletonFlightPlanTable
 	{
 		//Blocks
 		//1: Preflight
 		//2: Nominal nodal targets from options 2-5
 		//3-5: TBD
-		SkeletonFlightPlanBlock blocks[2];
+		TLMCCDataTable blocks[2];
 		//Block 6
-		int DisplayBlockNum;
+		int DisplayBlockNum = 1;
 	} PZSFPTAB;
 
 	struct UpdatedSkeletonFlightPlansTable
 	{
 		//One for each MCC tradeoff display columns
-		SkeletonFlightPlanBlock blocks[6];
+		TLMCCDataTable blocks[6];
 	} PZMCCSFP;
+
+	struct TTLMCCPlanningDisplay
+	{
+		TLMCCDisplayData data[6];
+	} PZMCCDIS;
+
+	struct MidcourseCorrectionPlanTable
+	{
+		//Block 1
+		double VectorGET = 0.0;
+		int Column = 1;
+		int Mode = 1;
+		double MidcourseGET = 0.0;
+		bool Config = true; //false = undocked, true = docked
+		int SFPBlockNum = 1;
+		double h_PC = 60.0*1852.0;
+		double incl_fr = 0.0;
+	} PZMCCPLN;
 
 	struct UMEDSaveTable
 	{

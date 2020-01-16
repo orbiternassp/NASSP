@@ -121,6 +121,7 @@ public:
 	double timetoapo();
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
+	void menuIUUplink();
 	void menuP30Upload();
 	void menuP30UplinkNew();
 	void menuP30UplinkCalc();
@@ -215,9 +216,14 @@ public:
 	void menuSetLOIPage();
 	void menuSwitchLOIOption();
 	void menuCycleLOIEllipseOption();
+	void menuTLCCVectorTime();
+	void set_TLCCVectorTime(double time);
+	void menuCycleTLCCColumnNumber();
+	void menuCycleTLCCCSFPBlockNumber();
 	void menuSwitchTLCCManeuver();
 	void menuSetTLCCGET();
 	void set_TLCCGET(double time);
+	void menuCycleTLCCConfiguration();
 	void menuSetTLCCPeriGET();
 	void set_TLCCPeriGET(double time);
 	void menuSetTLCCLat();
@@ -228,7 +234,6 @@ public:
 	void set_TLCCAlt(double alt);
 	void menuSetTLCCDesiredInclination();
 	void set_TLCCDesiredInclination(double inc);
-	void menuSwitchTLCCAscendingNode();
 	void menuSetLOIApo();
 	void set_LOIApo(double alt);
 	void menuSetLOIPeri();
@@ -251,7 +256,7 @@ public:
 	void menuSetPADMenu();
 	void menuSetUtilityMenu();
 	void menuSetVECPOINTPage();
-	void menuTranslunarPage();
+	void menuMidcoursePage();
 	void menuSetLunarLiftoffPage();
 	void menuSetEMPPage();
 	void menuSetNavCheckPADPage();
@@ -576,12 +581,16 @@ public:
 	void menuMSKRequest();
 	void SelectMCCScreen(int num);
 	void menuSetOnlineMonitorPage();
+	void menuSetSkeletonFlightPlanPage();
+	void menuMidcourseTradeoffPage();
+	void menuTLIPlanningPage();
 
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;
 	oapi::Font *font2vert;
 	oapi::Pen *pen;
+	oapi::Pen *pen2;
 	Saturn *saturn;
 	LEM *lem;
 	int screen;

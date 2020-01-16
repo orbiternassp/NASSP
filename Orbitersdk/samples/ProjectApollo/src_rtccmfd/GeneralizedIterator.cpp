@@ -464,7 +464,12 @@ namespace GenIterator
 				{
 					var_star_temp[i] = var_star[i] + dx[i];
 				}
-				state_evaluation(data, var_star_temp, constants, Y_star);
+				if (state_evaluation(data, var_star_temp, constants, Y_star))
+				{
+					lambda1 = 8.0 * lambda1;
+					R = 10e10;
+					continue;
+				}
 
 				for (i = 0;i < N;i++)
 				{

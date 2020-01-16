@@ -32,6 +32,8 @@ TLMCCProcessor::TLMCCProcessor()
 	mu_E = OrbMech::mu_Earth;
 	mu_M = OrbMech::mu_Moon;
 	gamma_reentry = -6.52*RAD;
+	Reentry_range = 1380.0;
+	Reentry_dt = 500.0;
 	isp_SPS = 3080.0;
 	isp_DPS = 3107.0;
 }
@@ -93,7 +95,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 		break;
 	case 5:
 		Option5();
-		break;
+		break;*/
 	case 6:
 		Option6();
 		break;
@@ -104,11 +106,15 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 		Option8();
 		break;
 	case 9:
-		Option9A();
+		if (MEDQuantities.INCL_fr == 0.0)
+		{
+			Option9A();
+		}
+		else
+		{
+			Option9B();
+		}
 		break;
-	case 10:
-		Option9B();
-		break;*/
 	}
 
 	VECTOR3 DV_LOI;
@@ -120,67 +126,115 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 		sv_MCC_apo.V += DV_MCC;
 		DV_LOI = CalcLOIDV(sv_MCC_apo, outarray.gamma_nd);
 	}
+	//Calc MPT parameters
+	out.R_MCC = sv_MCC.R;
+	out.V_MCC = sv_MCC.V;
+	out.GMT_MCC = OrbMech::GETfromMJD(sv_MCC.MJD, MEDQuantities.GMTBase);
+	if (sv_MCC.gravref == oapiGetObjectByName("Earth"))
+	{
+		out.RBI = BODY_EARTH;
+	}
+	else
+	{
+		out.RBI = BODY_MOON;
+	}
+	out.V_MCC_apo = sv_MCC.V + DV_MCC;
+
 	//Calc display quantities
-	out.Mode = MEDQuantities.Mode;
-	if (out.Mode == 1)
+	out.display.Mode = MEDQuantities.Mode;
+	if (out.display.Mode == 1)
 	{
-		out.Return = 0;
+		out.display.Return = 0;
 	}
-	else if (out.Mode == 4 || out.Mode == 5)
+	else if (out.display.Mode == 4 || out.display.Mode == 5)
 	{
-		out.Return = 1;
-	}
-	else
-	{
-		out.Return = 2;
-	}
-	if (out.Mode >= 2 && out.Mode <= 5)
-	{
-		out.AZ_min = MEDQuantities.AZ_min;
-		out.AZ_max = MEDQuantities.AZ_max;
+		out.display.Return = 1;
 	}
 	else
 	{
-		out.AZ_max = 0.0;
-		out.AZ_min = 0.0;
+		out.display.Return = 2;
 	}
-	out.Config = MEDQuantities.Config;
+	if (out.display.Mode >= 2 && out.display.Mode <= 5)
+	{
+		out.display.AZ_min = MEDQuantities.AZ_min;
+		out.display.AZ_max = MEDQuantities.AZ_max;
+	}
+	else
+	{
+		out.display.AZ_max = 0.0;
+		out.display.AZ_min = 0.0;
+	}
+	out.display.Config = MEDQuantities.Config;
 	double dv = length(DV_MCC);
 	double T_start = -outarray.M_i / Wdot * (1.0 + (exp(-dv / isp_MCC) - 1.0) / (dv / isp_MCC));
-	out.GET_MCC = OrbMech::GETfromMJD(sv_MCC.MJD, MEDQuantities.GETBase) + T_start;
-	out.DV_MCC = DV_MCC;
-	out.h_PC = outarray.h_pl;
-	dv = length(DV_LOI);
-	T_start = -outarray.M_mcc / Wdot * (1.0 + (exp(-dv / isp_MCC) - 1.0) / (dv / isp_MCC));
-	out.GET_LOI = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GETBase) + T_start;
-	out.DV_LOI = DV_LOI;
-	out.AZ_act = outarray.AZ_act;
-	out.H_bo = 0.0;//???
-	if (out.Mode >= 2 && out.Mode <= 5)
+	out.display.GET_MCC = OrbMech::GETfromMJD(sv_MCC.MJD, MEDQuantities.GETBase) + T_start;
+	out.display.DV_MCC = DV_MCC;
+	out.display.h_PC = outarray.h_pl;
+	
+	if (out.display.Mode <= 5)
 	{
-		out.delta_lat = MEDQuantities.lat_bias;
-
+		dv = length(DV_LOI);
+		T_start = -outarray.M_mcc / Wdot * (1.0 + (exp(-dv / isp_MCC) - 1.0) / (dv / isp_MCC));
+		out.display.GET_LOI = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GETBase) + T_start;
+		out.display.DV_LOI = DV_LOI;
 	}
 	else
 	{
-		out.delta_lat = 0.0;
-		out.HA_LPO = 0.0;
-		out.HP_LPO = 0.0;
-		out.DV_LOPC = _V(0, 0, 0);
-		out.GET_TEI = 0.0;
-		out.DV_TEI = _V(0, 0, 0);
-		out.DV_REM = 0.0;
+		out.display.GET_LOI = 0.0;
+		out.display.DV_LOI = _V(0, 0, 0);
 	}
-	if (out.Mode == 1)
+	out.display.AZ_act = outarray.AZ_act;
+	out.display.H_bo = 0.0;//???
+	if (out.display.Mode >= 2 && out.display.Mode <= 5)
 	{
-		out.GET_LC = 0.0;
-		out.lat_IP = 0.0;
-		out.lng_IP = 0.0;
+		out.display.delta_lat = 0.0; //TBD
 	}
-	out.GMTV = OrbMech::GETfromMJD(MEDQuantities.sv0.MJD, MEDQuantities.GMTBase);
-	out.GETV = OrbMech::GETfromMJD(MEDQuantities.sv0.MJD, MEDQuantities.GETBase);
-	out.CSMWT = MEDQuantities.CSMMass;
-	out.LMWT = MEDQuantities.LMMass;
+	else
+	{
+		out.display.delta_lat = 0.0;
+		out.display.HA_LPO = 0.0;
+		out.display.HP_LPO = 0.0;
+		out.display.DV_LOPC = _V(0, 0, 0);
+		out.display.GET_TEI = 0.0;
+		out.display.DV_TEI = _V(0, 0, 0);
+		out.display.DV_REM = 0.0;
+	}
+	if (out.display.Mode == 1)
+	{
+		out.display.GET_LC = 0.0;
+		out.display.lat_IP = 0.0;
+		out.display.lng_IP = 0.0;
+		out.display.v_EI = 0.0;
+		out.display.gamma_EI = 0.0;
+	}
+	else
+	{
+		out.display.GET_LC = OrbMech::GETfromMJD(outarray.MJD_ip, MEDQuantities.GETBase);
+		out.display.lat_IP = outarray.lat_ip;
+		out.display.lng_IP = outarray.lng_ip;
+		out.display.v_EI = outarray.v_EI;
+		out.display.gamma_EI = gamma_reentry;
+	}
+	if (out.display.Mode == 2 || out.display.Mode == 3 || out.display.Mode >= 6)
+	{
+		out.display.incl_fr = outarray.incl_fr;
+	}
+	else
+	{
+		out.display.incl_fr = 0.0;
+	}
+	if (out.display.Mode >= 2 && out.display.Mode <= 5)
+	{
+		out.display.incl_pr = outarray.incl_pr;
+	}
+	else
+	{
+		out.display.incl_pr = 0.0;
+	}
+	out.display.GMTV = OrbMech::GETfromMJD(MEDQuantities.sv0.MJD, MEDQuantities.GMTBase);
+	out.display.GETV = OrbMech::GETfromMJD(MEDQuantities.sv0.MJD, MEDQuantities.GETBase);
+	out.display.CSMWT = MEDQuantities.CSMMass;
+	out.display.LMWT = MEDQuantities.LMMass;
 }
 
 VECTOR3 TLMCCProcessor::CalcLOIDV(MPTSV sv_MCC_apo, double gamma_nd)
@@ -194,7 +248,7 @@ VECTOR3 TLMCCProcessor::CalcLOIDV(MPTSV sv_MCC_apo, double gamma_nd)
 	double V = 1.0;
 	double gamma = 0.0;
 	RVIO(false, U1, U2, R, V, DataTable.lng_lls, DataTable.lat_lls, gamma, DataTable.psi_lls);
-	LIBRAT(U1, U2, sv_nd.MJD + DataTable.dt_lls / 24.0, 6);
+	LIBRAT(U1, U2, sv_nd.MJD + DataTable.dt_lls / 24.0 / 3600.0, 6);
 	double dpsi_loi = acos(dotp(h1, crossp(U1, U2)));
 	double dv_loi = Constants.V_pcynlo - length(sv_nd.V);
 	outarray.dgamma_loi = -gamma_nd;
@@ -208,7 +262,7 @@ void TLMCCProcessor::Option1()
 {
 	//Empirical first guess
 	double V, R, lng, lat, psi, T;
-	R = (DataTable.H_pc2 + DataTable.R_lls) / R_E;
+	R = (DataTable.h_pc2 + DataTable.rad_lls) / R_E;
 	V = sqrt(0.184 + 0.553 / R) + (DataTable.lng_pc2 - PI)*13.5*0.3048*3600.0 / R_E;
 	lng = DataTable.lng_pc2;
 	lat = DataTable.lat_pc2;
@@ -216,11 +270,11 @@ void TLMCCProcessor::Option1()
 	T = DataTable.GMT_pc2 / 3600.0;
 
 	//Step 1
-	ConvergeTLMC(V, 270.0*RAD, lng, lat, R, T, false);
+	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 	//Step 2
 	ConvergeTLMC(outarray.v_pl, outarray.psi_pl, outarray.lng_pl, lat, R, T, true);
 	//Step 3
-	double R_nd = DataTable.R_lls + DataTable.H_nd;
+	double R_nd = DataTable.rad_lls + DataTable.h_nd;
 	IntegratedXYZTTrajectory(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, R_nd, DataTable.lat_nd, DataTable.lng_nd, DataTable.GMT_nd);
 	VECTOR3 RF, VF;
 	double mfm0;
@@ -289,87 +343,130 @@ void TLMCCProcessor::Option4()
 void TLMCCProcessor::Option5()
 {
 
-}
+}*/
 
 void TLMCCProcessor::Option6()
 {
+	double V, R, lng, lat, psi, T;
+
+	//Empirical first guess
+	R = (DataTable.h_pc1 + DataTable.rad_lls) / R_E;
+	V = sqrt(0.184 + 0.553 / (R + 20.0*1852.0 / R_E));
+	lng = PI;
+	lat = DataTable.lat_pc1;
+	psi = 270.0*RAD;
+	T = DataTable.GMT_pc1 / 3600.0;
+	
 	//Step 1
-	VECTOR3 guess;
-	VECTOR3 DV1 = ConicTLMC(DataTable.MJD_pc1, 0.0, DataTable.H_pc1 + DataTable.R_lls, DataTable.lat_pc1, PI, guess);
+	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 	//Step 2
-	VECTOR3 DV2 = IntegratedTLMC(DataTable.MJD_pc1, DataTable.H_pc1 + DataTable.R_lls, DataTable.lat_pc1, guess);
+	ConvergeTLMC(outarray.v_pl, outarray.psi_pl, outarray.lng_pl, lat, R, T, true);
 	//Step4
-	VECTOR3 DV3 = IntegratedFreeReturnFlyby(sv_MCC, DataTable.H_pc1, DataTable.lat_pc1, DV2);
+	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, DataTable.h_pc1, DataTable.lat_pc1);
 	VECTOR3 RF, VF;
 	double mfm0;
 
-	BURN(sv_MCC.R, sv_MCC.V, DV3.x, DV3.y, DV3.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	DV_MCC = VF - sv_MCC.V;
+
+	outarray.AZ_act = 0.0;
 }
 
 void TLMCCProcessor::Option7()
 {
+	double V, R, lng, lat, psi, T;
+
+	//Empirical first guess
+	R = (MEDQuantities.H_pl + DataTable.rad_lls) / R_E;
+	V = sqrt(0.184 + 0.553 / (R + 20.0*1852.0 / R_E));
+	lng = PI;
+	lat = DataTable.lat_pc1;
+	psi = 270.0*RAD;
+	T = DataTable.GMT_pc1 / 3600.0;
+
 	//Step 1
-	VECTOR3 guess;
-	VECTOR3 DV1 = ConicTLMC(DataTable.MJD_pc1, 0.0, MEDQuantities.H_pl + DataTable.R_lls, DataTable.lat_pc1, PI, guess);
+	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 	//Step 2
-	VECTOR3 DV2 = IntegratedTLMC(DataTable.MJD_pc1, MEDQuantities.H_pl + DataTable.R_lls, DataTable.lat_pc1, guess);
+	ConvergeTLMC(outarray.v_pl, outarray.psi_pl, outarray.lng_pl, lat, R, T, true);
 	//Step4
-	VECTOR3 DV3 = IntegratedFreeReturnFlyby(sv_MCC, MEDQuantities.H_pl, DataTable.lat_pc1, DV2);
+	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, MEDQuantities.H_pl, DataTable.lat_pc1);
 	VECTOR3 RF, VF;
 	double mfm0;
 
-	BURN(sv_MCC.R, sv_MCC.V, DV3.x, DV3.y, DV3.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	DV_MCC = VF - sv_MCC.V;
+
+	outarray.AZ_act = 0.0;
 }
 
 void TLMCCProcessor::Option8()
 {
+	double V, R, lng, lat, psi, T, h_pl;
+
+	//Empirical first guess
+	R = (MEDQuantities.H_pl + DataTable.rad_lls) / R_E;
+	V = sqrt(0.184 + 0.553 / (R + 20.0*1852.0 / R_E));
+	lng = PI;
+	lat = DataTable.lat_pc1;
+	psi = 270.0*RAD;
+	T = DataTable.GMT_pc1 / 3600.0;
+
+	double dt = (OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase) - sv_MCC.MJD)*24.0;
+	if (dt < 15.0)
+	{
+		double R0 = (DataTable.rad_lls + 60.0*1852.0) / R_E;
+		R = R0 + dt * (R - R0) / 15.0;
+	}
+
+	h_pl = R* R_E - DataTable.rad_lls;
+
 	//Step 1
-	VECTOR3 guess;
-	VECTOR3 DV1 = ConicTLMC(DataTable.MJD_pc1, 0.0, DataTable.H_pc1 + DataTable.R_lls, DataTable.lat_pc1, PI, guess);
+	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
-	double incl_pg, lat_split;
-	EPHEM(DataTable.MJD_pc1, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, DataTable.MJD_pc1), R_EM);
+	double incl_pg, lat_split, MJD_pc;
+	MJD_pc = OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase);
+	EPHEM(MJD_pc, R_EM, V_EM, R_ES);
+	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_pc), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
-	VECTOR3 DV2 = ConicFreeReturnInclinationFlyby(sv_MCC, DataTable.H_pc1, incl_pg, DV1);
-	lat_split = lat_pl_stored;
+	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
+	lat_split = outarray.lat_pl;
 	if (MEDQuantities.INCL_fr > 0)
 	{
-		lat_split += 2.0*RAD;
+		lat_split += MEDQuantities.lat_bias;
 	}
 	else
 	{
-		lat_split -= 2.0*RAD;
+		lat_split -= MEDQuantities.lat_bias;
 	}
 
 	//Step 3
-	VECTOR3 DV3 = ConicFreeReturnFlyby(sv_MCC, DataTable.H_pc1, lat_split, DV1);
+	ConicFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, lat_split);
 
-	VECTOR3 DV_TLMC = IntegratedTLMC(MJD_pl_stored, DataTable.H_pc1 + DataTable.R_lls, lat_split, guess);
-
+	VECTOR3 DV3 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	ConvergeTLMC(V, psi, lng, lat_split, R, T, true);
 	//Step 4
-	VECTOR3 DV4 = IntegratedFreeReturnFlyby(sv_MCC, DataTable.H_pc1, lat_split, DV_TLMC);
+	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, lat_split);
 	VECTOR3 RF, VF, DV_temp;
 	double mfm0;
-	BURN(sv_MCC.R, sv_MCC.V, DV4.x, DV4.y, DV4.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	DV_temp = VF - sv_MCC.V;
 
 	//Step 5
-	VECTOR3 DV5 = ConicFreeReturnInclinationFlyby(sv_MCC, DataTable.H_pc1, inc_fr_stored, DV3);
+	ConicFreeReturnInclinationFlyby(sv_MCC, DV3.x, DV3.y, DV3.z, h_pl, outarray.incl_fr);
+	VECTOR3 DV5 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+
 	MPTSV S1 = sv_MCC;
 	MPTSV S2C = sv_MCC;
-	BURN(sv_MCC.R, sv_MCC.V, DV5.x, DV5.y, DV5.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, DV5.x*R_E / 3600.0, DV5.y, DV5.z, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
 	MPTSV S_apo = sv_MCC;
 	S_apo.V = S2C.V - DV_temp;
 	double theta, phi, r, v1, v2, gamma1, gamma2, psi1, psi2;
 	RVIO(true, S_apo.R, S_apo.V, r, v1, theta, phi, gamma1, psi1);
 	RVIO(true, S2C.R, S2C.V, r, v2, theta, phi, gamma2, psi2);
-	VECTOR3 NewGuess = _V(v2 - v1, gamma2 - gamma1, psi2 - psi1);
+	VECTOR3 NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
 	double lat_pl_max, lat_pl_min;
 	if (MEDQuantities.INCL_fr > 0)
@@ -384,62 +481,87 @@ void TLMCCProcessor::Option8()
 	}
 
 	//Step 6
-	VECTOR3 DV6 = ConicFreeReturnInclinationFlyby(S_apo, DataTable.H_pc1, abs(MEDQuantities.INCL_fr), NewGuess, lat_pl_min, lat_pl_max);
-	BURN(S_apo.R, S_apo.V, DV6.x, DV6.y, DV6.z, isp_MCC, mfm0, RF, VF);
+	ConicFreeReturnInclinationFlyby(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, h_pl, abs(MEDQuantities.INCL_fr), lat_pl_min, lat_pl_max);
+	VECTOR3 DV6 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	BURN(S_apo.R, S_apo.V, DV6.x*R_E / 3600.0, DV6.y, DV6.z, isp_MCC, mfm0, RF, VF);
 	DV_temp = VF - S_apo.V;
 	VF = sv_MCC.V + DV_temp;
 	RVIO(true, sv_MCC.R, sv_MCC.V, r, v1, theta, phi, gamma1, psi1);
 	RVIO(true, RF, VF, r, v2, theta, phi, gamma2, psi2);
-	NewGuess = _V(v2 - v1, gamma2 - gamma1, psi2 - psi1);
+	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
 	//Step 7
-	VECTOR3 DV7 = IntegratedFreeReturnInclinationFlyby(sv_MCC, DataTable.H_pc1, abs(MEDQuantities.INCL_fr), NewGuess);
-	BURN(sv_MCC.R, sv_MCC.V, DV7.x, DV7.y, DV7.z, isp_MCC, mfm0, RF, VF);
+	IntegratedFreeReturnInclinationFlyby(sv_MCC, NewGuess.x, NewGuess.y, NewGuess.z, h_pl, abs(MEDQuantities.INCL_fr));
+	VECTOR3 DV7 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	BURN(sv_MCC.R, sv_MCC.V, DV7.x*R_E / 3600.0, DV7.y, DV7.z, isp_MCC, mfm0, RF, VF);
 	DV_MCC = VF - sv_MCC.V;
+
+	outarray.AZ_act = 0.0;
 }
 
 void TLMCCProcessor::Option9A()
 {
 	bool recycle = false;
 
+	double V, R, lng, lat, psi, T, h_pl;
+
+	//Empirical first guess
+	R = (MEDQuantities.H_pl + DataTable.rad_lls) / R_E;
+	V = sqrt(0.184 + 0.553 / (R + 20.0*1852.0 / R_E));
+	lng = PI;
+	lat = DataTable.lat_pc1;
+	psi = 270.0*RAD;
+	T = DataTable.GMT_pc1 / 3600.0;
+
+	double dt = (OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase) - sv_MCC.MJD)*24.0;
+	if (dt < 15.0)
+	{
+		double R0 = (DataTable.rad_lls + 60.0*1852.0) / R_E;
+		R = R0 + dt * (R - R0) / 15.0;
+	}
+
+	h_pl = R * R_E - DataTable.rad_lls;
+
 	//Step 1
-	VECTOR3 guess;
-	VECTOR3 DV1 = ConicTLMC(DataTable.MJD_pc1, 0.0, DataTable.H_pc1 + DataTable.R_lls, DataTable.lat_pc1, PI, guess);
+	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
-	double incl_pg, lat_split;
-	EPHEM(DataTable.MJD_pc1, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, DataTable.MJD_pc1), R_EM);
+	double incl_pg, lat_split, MJD_pc;
+	MJD_pc = OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase);
+	EPHEM(MJD_pc, R_EM, V_EM, R_ES);
+	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_pc), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
-	VECTOR3 DV2 = ConicFreeReturnInclinationFlyby(sv_MCC, DataTable.H_pc1, incl_pg, DV1);
-	lat_split = lat_pl_stored;
-	lat_split += 2.0*RAD;
+	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
+	lat_split = outarray.lat_pl;
+	lat_split += MEDQuantities.lat_bias;
 
 	//Step 3
-	VECTOR3 DV3 = ConicFreeReturnFlyby(sv_MCC, DataTable.H_pc1, lat_split, DV1);
+	ConicFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, lat_split);
 
-	VECTOR3 DV_TLMC = IntegratedTLMC(MJD_pl_stored, DataTable.H_pc1 + DataTable.R_lls, lat_split, guess);
+	VECTOR3 DV3 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	ConvergeTLMC(V, psi, lng, lat_split, R, T, true);
 
 	//Step 4
-	VECTOR3 DV4 = IntegratedFreeReturnFlyby(sv_MCC, DataTable.H_pc1, lat_split, DV_TLMC);
-	double inc_fr_conv = inc_fr_stored;
+	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, lat_split);
+	double inc_fr_conv = outarray.incl_fr;
 	VECTOR3 RF, VF, DV_temp;
 	double mfm0;
-	BURN(sv_MCC.R, sv_MCC.V, DV4.x, DV4.y, DV4.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	DV_temp = VF - sv_MCC.V;
 
 	//Step 5
-	VECTOR3 DV5 = ConicFreeReturnInclinationFlyby(sv_MCC, DataTable.H_pc1, inc_fr_conv, DV3);
+	ConicFreeReturnInclinationFlyby(sv_MCC, DV3.x, DV3.y, DV3.z, h_pl, outarray.incl_fr);
+	VECTOR3 DV5 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 	MPTSV S1 = sv_MCC;
 	MPTSV S2C = sv_MCC;
-	BURN(sv_MCC.R, sv_MCC.V, DV5.x, DV5.y, DV5.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, DV5.x*R_E / 3600.0, DV5.y, DV5.z, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
 	MPTSV S_apo;
 	VECTOR3 NewGuess, DV6, DV7, DV8, DV9;
 	double h_conv, theta, phi, r, v1, v2, gamma1, gamma2, psi1, psi2, inc_opt, v_c, dv_char8, dv_char9;
 
-	h_conv = DataTable.H_pc1;
+	h_conv = DataTable.h_pc1;
 
 TLMCC_Option_9A_C:
 	
@@ -448,31 +570,35 @@ TLMCC_Option_9A_C:
 	
 	RVIO(true, S_apo.R, S_apo.V, r, v1, theta, phi, gamma1, psi1);
 	RVIO(true, S2C.R, S2C.V, r, v2, theta, phi, gamma2, psi2);
-	NewGuess = _V(v2 - v1, gamma2 - gamma1, psi2 - psi1);
+	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
 	if (recycle == false)
 	{
 		//Step 6
-		DV6 = ConicFreeReturnInclinationFlyby(S_apo, h_conv, inc_fr_conv, NewGuess);
+		ConicFreeReturnInclinationFlyby(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, h_conv, inc_fr_conv);
+		DV6 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 		//Step 7
-		DV7 = ConicFreeReturnOptimizedInclinationFlyby(S_apo, inc_fr_conv - 0.01*RAD, inc_fr_conv + 0.01*RAD, 1, DV6);
+		ConicFreeReturnOptimizedInclinationFlyby(S_apo, DV6.x, DV6.y, DV6.z, inc_fr_conv - 0.01*RAD, inc_fr_conv + 0.01*RAD, 1);
+		DV7 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 		//BURN(S_apo.R, S_apo.V, 3, 0.0, 0.0, DV7.x, DV7.y, DV7.z, isp_MCC, 0.0, v_c, dv_char7, mfm0, RF, VF);
 		NewGuess = DV7;
 	}
 	//Step 8
-	DV8 = ConicFreeReturnOptimizedInclinationFlyby(S_apo, 0.0*RAD, 88.0*RAD, 2, NewGuess);
-	inc_opt = inc_fr_stored;
-	h_conv = h_pl_stored;
-	BURN(S_apo.R, S_apo.V, 3, 0.0, 0.0, DV8.x, DV8.y, DV8.z, isp_MCC, 0.0, v_c, dv_char8, mfm0, RF, VF);
+	ConicFreeReturnOptimizedInclinationFlyby(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, 0.0*RAD, 88.0*RAD, 2);
+	DV8 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	inc_opt = outarray.incl_fr;
+	h_conv = outarray.h_pl;
+	BURN(S_apo.R, S_apo.V, 3, 0.0, 0.0, DV8.x*R_E / 3600.0, DV8.y, DV8.z, isp_MCC, 0.0, v_c, dv_char8, mfm0, RF, VF);
 	S2C.V = VF;
 	DV_temp = S2C.V - S_apo.V;
 	RVIO(true, S_apo.R, S1.V, r, v1, theta, phi, gamma1, psi1);
 	RVIO(true, S1.R, S1.V + DV_temp, r, v2, theta, phi, gamma2, psi2);
-	NewGuess = _V(v2 - v1, gamma2 - gamma1, psi2 - psi1);
+	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
 	//Step 9
-	DV9 = IntegratedFreeReturnInclinationFlyby(sv_MCC, h_conv, inc_opt, NewGuess);
-	BURN(sv_MCC.R, sv_MCC.V, 3, 0.0, 0.0, DV9.x, DV9.y, DV9.z, isp_MCC, 0.0, v_c, dv_char9, mfm0, RF, VF);
+	IntegratedFreeReturnInclinationFlyby(sv_MCC, NewGuess.x, NewGuess.y, NewGuess.z, h_conv, inc_opt);
+	DV9 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	BURN(sv_MCC.R, sv_MCC.V, 3, 0.0, 0.0, DV9.x*R_E / 3600.0, DV9.y, DV9.z, isp_MCC, 0.0, v_c, dv_char9, mfm0, RF, VF);
 	DV_temp = VF - sv_MCC.V;
 
 	if (abs(dv_char9 - dv_char8) > 1.0*0.3048 && ((dv_char9 / dv_char8) > 1.03 || (dv_char9 / dv_char8) < 1.0 / 1.03))
@@ -481,57 +607,76 @@ TLMCC_Option_9A_C:
 		goto TLMCC_Option_9A_C;
 	}
 
-	BURN(sv_MCC.R, sv_MCC.V, DV9.x, DV9.y, DV9.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, DV9.x*R_E / 3600.0, DV9.y, DV9.z, isp_MCC, mfm0, RF, VF);
 	DV_MCC = VF - sv_MCC.V;
 }
 
 void TLMCCProcessor::Option9B()
 {
+	double V, R, lng, lat, psi, T, h_pl;
 	bool recycle = false;
 
+	//Empirical first guess
+	R = (MEDQuantities.H_pl + DataTable.rad_lls) / R_E;
+	V = sqrt(0.184 + 0.553 / (R + 20.0*1852.0 / R_E));
+	lng = PI;
+	lat = DataTable.lat_pc1;
+	psi = 270.0*RAD;
+	T = DataTable.GMT_pc1 / 3600.0;
+
+	double dt = (OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase) - sv_MCC.MJD)*24.0;
+	if (dt < 15.0)
+	{
+		double R0 = (DataTable.rad_lls + 60.0*1852.0) / R_E;
+		R = R0 + dt * (R - R0) / 15.0;
+	}
+
+	h_pl = R * R_E - DataTable.rad_lls;
+
 	//Step 1
-	VECTOR3 guess;
-	VECTOR3 DV1 = ConicTLMC(DataTable.MJD_pc1, 0.0, DataTable.H_pc1 + DataTable.R_lls, DataTable.lat_pc1, PI, guess);
+	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
-	double incl_pg, lat_split;
-	EPHEM(DataTable.MJD_pc1, R_EM, V_EM, R_ES);
-	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, DataTable.MJD_pc1), R_EM);
+	double incl_pg, lat_split, MJD_pc;
+	MJD_pc = OrbMech::MJDfromGET(DataTable.GMT_pc1, MEDQuantities.GMTBase);
+	EPHEM(MJD_pc, R_EM, V_EM, R_ES);
+	R_EM = rhtmul(OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_pc), R_EM);
 	incl_pg = abs(asin(R_EM.z / length(R_EM))) + 2.0*RAD;
-	VECTOR3 DV2 = ConicFreeReturnInclinationFlyby(sv_MCC, DataTable.H_pc1, incl_pg, DV1);
-	lat_split = lat_pl_stored;
+	ConicFreeReturnInclinationFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, incl_pg);
+	lat_split = outarray.lat_pl;
 	if (MEDQuantities.INCL_fr > 0)
 	{
-		lat_split += 2.0*RAD;
+		lat_split += MEDQuantities.lat_bias;
 	}
 	else
 	{
-		lat_split -= 2.0*RAD;
+		lat_split -= MEDQuantities.lat_bias;
 	}
 
 	//Step 3
-	VECTOR3 DV3 = ConicFreeReturnFlyby(sv_MCC, DataTable.H_pc1, lat_split, DV1);
+	ConicFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, lat_split);
 
-	VECTOR3 DV_TLMC = IntegratedTLMC(MJD_pl_stored, DataTable.H_pc1 + DataTable.R_lls, lat_split, guess);
-
+	VECTOR3 DV3 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	ConvergeTLMC(V, psi, lng, lat_split, R, T, true);
 	//Step 4
-	VECTOR3 DV4 = IntegratedFreeReturnFlyby(sv_MCC, DataTable.H_pc1, lat_split, DV_TLMC);
-	double inc_fr_conv = inc_fr_stored;
+	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl, lat_split);
 	VECTOR3 RF, VF, DV_temp;
 	double mfm0;
-	BURN(sv_MCC.R, sv_MCC.V, DV4.x, DV4.y, DV4.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, outarray.dv_mcc*R_E / 3600.0, outarray.dgamma_mcc, outarray.dpsi_mcc, isp_MCC, mfm0, RF, VF);
 	DV_temp = VF - sv_MCC.V;
 
 	//Step 5
-	VECTOR3 DV5 = ConicFreeReturnInclinationFlyby(sv_MCC, DataTable.H_pc1, inc_fr_conv, DV3);
+	ConicFreeReturnInclinationFlyby(sv_MCC, DV3.x, DV3.y, DV3.z, h_pl, outarray.incl_fr);
+	VECTOR3 DV5 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+
 	MPTSV S1 = sv_MCC;
 	MPTSV S2C = sv_MCC;
 	MPTSV S_apo;
 	VECTOR3 NewGuess, DV6, DV7, DV8;
 	double theta, phi, r, v1, v2, gamma1, gamma2, psi1, psi2, lat_pl_max, lat_pl_min, v_c, dv_char7, h_conv, inc_conv, dv_char8;
 
-	BURN(sv_MCC.R, sv_MCC.V, DV5.x, DV5.y, DV5.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, DV5.x*R_E / 3600.0, DV5.y, DV5.z, isp_MCC, mfm0, RF, VF);
 	S2C.V = VF;
 
 TLMCC_Option_9B_C:
@@ -542,7 +687,7 @@ TLMCC_Option_9B_C:
 	
 	RVIO(true, S_apo.R, S_apo.V, r, v1, theta, phi, gamma1, psi1);
 	RVIO(true, S2C.R, S2C.V, r, v2, theta, phi, gamma2, psi2);
-	NewGuess = _V(v2 - v1, gamma2 - gamma1, psi2 - psi1);
+	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
  
 	if (MEDQuantities.INCL_fr > 0)
 	{
@@ -558,23 +703,30 @@ TLMCC_Option_9B_C:
 	if (recycle == false)
 	{
 		//Step 6
-		DV6 = ConicFreeReturnInclinationFlyby(S_apo, MEDQuantities.H_pl_min + 20.0*1852.0, abs(MEDQuantities.INCL_fr), NewGuess, lat_pl_min, lat_pl_max);
+		ConicFreeReturnInclinationFlyby(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, MEDQuantities.H_pl_min + 20.0*1852.0, abs(MEDQuantities.INCL_fr), lat_pl_min, lat_pl_max);
+		DV6 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	}
+	else
+	{
+		DV6 = NewGuess;
 	}
 
 	//Step 7
-	DV7 = ConicFreeReturnOptimizedInclinationFlyby(S_apo, abs(MEDQuantities.INCL_fr) - 0.01*RAD, abs(MEDQuantities.INCL_fr) + 0.01*RAD, 1, DV6);
-	inc_conv = inc_fr_stored;
-	h_conv = h_pl_stored;
-	BURN(S_apo.R, S_apo.V, 3, 0.0, 0.0, DV7.x, DV7.y, DV7.z, isp_MCC, 0.0, v_c, dv_char7, mfm0, RF, VF);
+	ConicFreeReturnOptimizedInclinationFlyby(S_apo, DV6.x, DV6.y, DV6.z, abs(MEDQuantities.INCL_fr) - 0.01*RAD, abs(MEDQuantities.INCL_fr) + 0.01*RAD, 1);
+	DV7 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	inc_conv = outarray.incl_fr;
+	h_conv = outarray.h_pl;
+	BURN(S_apo.R, S_apo.V, 3, 0.0, 0.0, DV7.x*R_E / 3600.0, DV7.y, DV7.z, isp_MCC, 0.0, v_c, dv_char7, mfm0, RF, VF);
 	S2C.V = VF;
 	DV_temp = S2C.V - S_apo.V;
 	RVIO(true, S_apo.R, S1.V, r, v1, theta, phi, gamma1, psi1);
 	RVIO(true, S1.R, S1.V + DV_temp, r, v2, theta, phi, gamma2, psi2);
-	NewGuess = _V(v2 - v1, gamma2 - gamma1, psi2 - psi1);
+	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
 	//Step 8
-	DV8 = IntegratedFreeReturnInclinationFlyby(sv_MCC, h_conv, inc_conv, NewGuess);
-	BURN(sv_MCC.R, sv_MCC.V, 3, 0.0, 0.0, DV8.x, DV8.y, DV8.z, isp_MCC, 0.0, v_c, dv_char8, mfm0, RF, VF);
+	IntegratedFreeReturnInclinationFlyby(sv_MCC, NewGuess.x, NewGuess.y, NewGuess.z, h_conv, inc_conv);
+	DV8 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
+	BURN(sv_MCC.R, sv_MCC.V, 3, 0.0, 0.0, DV8.x*R_E / 3600.0, DV8.y, DV8.z, isp_MCC, 0.0, v_c, dv_char8, mfm0, RF, VF);
 	DV_temp = VF - sv_MCC.V;
 
 	if (abs(dv_char8 - dv_char7) > 1.0*0.3048 && ((dv_char8 / dv_char7) > 1.03 || (dv_char8 / dv_char7) < 1.0 / 1.03))
@@ -583,9 +735,9 @@ TLMCC_Option_9B_C:
 		goto TLMCC_Option_9B_C;
 	}
 
-	BURN(sv_MCC.R, sv_MCC.V, DV8.x, DV8.y, DV8.z, isp_MCC, mfm0, RF, VF);
+	BURN(sv_MCC.R, sv_MCC.V, DV8.x*R_E / 3600.0, DV8.y, DV8.z, isp_MCC, mfm0, RF, VF);
 	DV_MCC = VF - sv_MCC.V;
-}*/
+}
 
 void TLMCCProcessor::ConvergeTLMC(double V, double azi, double lng, double lat, double r, double GMT_pl, bool integrating)
 {
@@ -650,8 +802,8 @@ void TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double
 	outarray.NodeStopIndicator = true;
 	constPtr = &outarray;
 
-	bool IntegratedNodeComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedNodeComputerPointer;
+	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedTrajectoryComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 	block.IndVarSwitch[0] = true;
@@ -690,17 +842,16 @@ void TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-VECTOR3 TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, double inc_pg, VECTOR3 guess, double lat_pl_min, double lat_pl_max)
+void TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_pg, double lat_pl_min, double lat_pl_max)
 {
 	void *constPtr;
-	TLMCCConicTrajectoryVars constants;
 
-	constants.sv0 = sv0;
-	constants.FreeReturnIndicator = true;
-	constants.FreeReturnOnlyIndicator = true;
-	constants.FreeReturnInclinationIndicator = true;
-	constants.OptimizeIndicator = false;
-	constPtr = &constants;
+	outarray.sv0 = sv0;
+	outarray.FreeReturnIndicator = true;
+	outarray.FreeReturnOnlyIndicator = true;
+	outarray.FreeReturnInclinationIndicator = true;
+	outarray.OptimizeIndicator = false;
+	constPtr = &outarray;
 
 	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
 	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
@@ -709,9 +860,9 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, 
 	block.IndVarSwitch[0] = true;
 	block.IndVarSwitch[1] = true;
 	block.IndVarSwitch[2] = true;
-	block.IndVarGuess[0] = guess.x;
-	block.IndVarGuess[1] = guess.y;
-	block.IndVarGuess[2] = guess.z;
+	block.IndVarGuess[0] = dv_guess;
+	block.IndVarGuess[1] = dgamma_guess;
+	block.IndVarGuess[2] = dpsi_guess;
 	block.IndVarStep[0] = pow(2, -23);
 	block.IndVarStep[1] = pow(2, -21);
 	block.IndVarStep[2] = pow(2, -21);
@@ -747,99 +898,18 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, 
 	std::vector<double> result;
 	std::vector<double> y_vals;
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
-	return _V(result[0], result[1], result[2]);
 }
 
-VECTOR3 TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double inc_pg_min, double inc_pg_max, int inc_class, VECTOR3 guess)
+void TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double inc_pg_min, double inc_pg_max, int inc_class)
 {
 	void *constPtr;
-	TLMCCConicTrajectoryVars constants;
 
-	constants.sv0 = sv0;
-	constants.FreeReturnIndicator = true;
-	constants.FreeReturnOnlyIndicator = true;
-	constants.FreeReturnInclinationIndicator = true;
-	constants.OptimizeIndicator = true;
-	constPtr = &constants;
-
-	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
-
-	std::vector<double> Y_min, Y_max;
-
-	Y_min.push_back(MEDQuantities.H_pl_min);
-	Y_min.push_back(90.0*RAD);
-	Y_min.push_back(inc_pg_min);
-	Y_min.push_back(64.0965*1852.0);
-	Y_min.push_back(MEDQuantities.CSMMass + 5000.0*0.453);
-
-	Y_max.push_back(MEDQuantities.H_pl_max);
-	Y_max.push_back(182.0*RAD);
-	Y_max.push_back(inc_pg_max);
-	Y_max.push_back(67.5665*1852.0);
-	Y_max.push_back(MEDQuantities.CSMMass + 5000.0*0.453);
-
-	std::vector<double> step { 0.01*0.3048, 0.001*RAD, 0.001*RAD };
-	std::vector<double> guess2{ guess.x,guess.y,guess.z };
-	std::vector<double> x_weight{ 1e-3,1.0,1.0 };
-	std::vector<double> y_weight{ 8.0,1.0,0,0,8.0 };
-	std::vector<int> class_des{ 2,2,inc_class,1,3 };
-
-	std::vector<double> result;
-	std::vector<double> y_vals;
-	//GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
-	return _V(result[0], result[1], result[2]);
-}
-
-VECTOR3 TLMCCProcessor::IntegratedFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_pl, VECTOR3 guess)
-{
-	void *constPtr;
-	TLMCCGeneralizedIteratorArray constants;
-	constants.NodeStopIndicator = false;
-	constants.LunarFlybyIndicator = true;
-	constants.FreeReturnInclinationIndicator = false;
-	constants.sv0 = sv0;
-	constPtr = &constants;
-
-	bool IntegratedNodeComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedNodeComputerPointer;
-
-	std::vector<double> Y_min, Y_max;
-
-	Y_min.push_back(H_pl - 0.5*1852.0);
-	Y_min.push_back(90.0*RAD);
-	Y_min.push_back(lat_pl - 0.01*RAD);
-	Y_min.push_back(0.0);
-	Y_min.push_back(64.0965*1852.0);
-
-	Y_max.push_back(H_pl + 0.5*1852.0);
-	Y_max.push_back(182.0*RAD);
-	Y_max.push_back(lat_pl + 0.01*RAD);
-	Y_max.push_back(90.0*RAD);
-	Y_max.push_back(67.5665*1852.0);
-
-	std::vector<double> step { 0.1*0.3048, 0.001*RAD, 0.001*RAD };
-	std::vector<double> guess2{ guess.x,guess.y,guess.z };
-	std::vector<double> x_weight{ 1e-3,1.0,1.0 };
-	std::vector<double> y_weight{ 0,1,0,1,0 };
-	std::vector<int> class_des{ 1,2,1,2,1 };
-
-	std::vector<double> result;
-	std::vector<double> y_vals;
-	//GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
-	return _V(result[0], result[1], result[2]);
-}
-
-VECTOR3 TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_pl, VECTOR3 guess)
-{
-	void *constPtr;
-	TLMCCConicTrajectoryVars constants;
-	constants.sv0 = sv0;
-	constants.FreeReturnIndicator = true;
-	constants.FreeReturnOnlyIndicator = true;
-	constants.FreeReturnInclinationIndicator = false;
-
-	constPtr = &constants;
+	outarray.sv0 = sv0;
+	outarray.FreeReturnIndicator = true;
+	outarray.FreeReturnOnlyIndicator = true;
+	outarray.FreeReturnInclinationIndicator = true;
+	outarray.OptimizeIndicator = true;
+	constPtr = &outarray;
 
 	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
 	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
@@ -848,9 +918,9 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_
 	block.IndVarSwitch[0] = true;
 	block.IndVarSwitch[1] = true;
 	block.IndVarSwitch[2] = true;
-	block.IndVarGuess[0] = guess.x;
-	block.IndVarGuess[1] = guess.y;
-	block.IndVarGuess[2] = guess.z;
+	block.IndVarGuess[0] = dv_guess;
+	block.IndVarGuess[1] = dgamma_guess;
+	block.IndVarGuess[2] = dpsi_guess;
 	block.IndVarStep[0] = pow(2, -23);
 	block.IndVarStep[1] = pow(2, -21);
 	block.IndVarStep[2] = pow(2, -21);
@@ -862,7 +932,60 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_
 	block.DepVarSwitch[2] = true;
 	block.DepVarSwitch[3] = true;
 	block.DepVarSwitch[4] = true;
-	block.DepVarSwitch[5] = true;
+	block.DepVarLowerLimit[0] = MEDQuantities.H_pl_min;
+	block.DepVarLowerLimit[1] = 90.0*RAD;
+	block.DepVarLowerLimit[2] = inc_pg_min;
+	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarLowerLimit[4] = MEDQuantities.CSMMass + 5000.0*0.453;
+	block.DepVarUpperLimit[0] = MEDQuantities.H_pl_max;
+	block.DepVarUpperLimit[1] = 182.0*RAD;
+	block.DepVarUpperLimit[2] = inc_pg_max;
+	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarUpperLimit[4] = MEDQuantities.CSMMass + 5000.0*0.453;
+	block.DepVarWeight[0] = 8.0;
+	block.DepVarWeight[1] = 1.0;
+	block.DepVarWeight[4] = 8.0;
+	block.DepVarClass[0] = 2;
+	block.DepVarClass[1] = 2;
+	block.DepVarClass[2] = inc_class;
+	block.DepVarClass[3] = 1;
+	block.DepVarClass[4] = 3;
+
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+}
+
+void TLMCCProcessor::IntegratedFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl)
+{
+	void *constPtr;
+	outarray.NodeStopIndicator = false;
+	outarray.LunarFlybyIndicator = true;
+	outarray.FreeReturnInclinationIndicator = false;
+	outarray.sv0 = sv0;
+	constPtr = &outarray;
+
+	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedTrajectoryComputerPointer;
+
+	GenIterator::GeneralizedIteratorBlock block;
+	block.IndVarSwitch[0] = true;
+	block.IndVarSwitch[1] = true;
+	block.IndVarSwitch[2] = true;
+	block.IndVarGuess[0] = dv_guess;
+	block.IndVarGuess[1] = dgamma_guess;
+	block.IndVarGuess[2] = dpsi_guess;
+	block.IndVarWeight[0] = 512.0;
+	block.IndVarWeight[1] = 512.0;
+	block.IndVarWeight[2] = 512.0;
+	block.IndVarStep[0] = pow(2, -21);
+	block.IndVarStep[1] = pow(2, -19);
+	block.IndVarStep[2] = pow(2, -19);
+	block.DepVarSwitch[0] = true;
+	block.DepVarSwitch[1] = true;
+	block.DepVarSwitch[2] = true;
+	block.DepVarSwitch[3] = true;
+	block.DepVarSwitch[4] = true;
 	block.DepVarLowerLimit[0] = H_pl - 0.5*1852.0;
 	block.DepVarLowerLimit[1] = 90.0*RAD;
 	block.DepVarLowerLimit[2] = lat_pl - 0.01*RAD;
@@ -884,44 +1007,108 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_
 	std::vector<double> result;
 	std::vector<double> y_vals;
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
-	return _V(result[0], result[1], result[2]);
 }
 
-VECTOR3 TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, double inc_fr, VECTOR3 guess)
+void TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl)
 {
 	void *constPtr;
-	TLMCCGeneralizedIteratorArray constants;
-	constants.NodeStopIndicator = false;
-	constants.LunarFlybyIndicator = true;
-	constants.FreeReturnInclinationIndicator = true;
-	constants.sv0 = sv0;
-	constPtr = &constants;
+	outarray.sv0 = sv0;
+	outarray.FreeReturnIndicator = true;
+	outarray.FreeReturnOnlyIndicator = true;
+	outarray.FreeReturnInclinationIndicator = false;
 
-	bool IntegratedNodeComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedNodeComputerPointer;
+	constPtr = &outarray;
 
-	std::vector<double> Y_min, Y_max;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
 
-	Y_min.push_back(H_pl - 0.5*1852.0);
-	Y_min.push_back(inc_fr - 0.01*RAD);
-	Y_min.push_back(90.0*RAD);
-	Y_min.push_back(64.0965*1852.0);
-
-	Y_max.push_back(H_pl + 0.5*1852.0);
-	Y_max.push_back(inc_fr + 0.01*RAD);
-	Y_max.push_back(182.0*RAD);
-	Y_max.push_back(67.5665*1852.0);
-
-	std::vector<double> step { 0.1*0.3048, 0.001*RAD, 0.001*RAD };
-	std::vector<double> guess2{ guess.x,guess.y,guess.z };
-	std::vector<double> x_weight{ 1e-3,1.0,1.0 };
-	std::vector<double> y_weight{ 0,0,1.0,0 };
-	std::vector<int> class_des{ 1,1,2,1 };
+	GenIterator::GeneralizedIteratorBlock block;
+	block.IndVarSwitch[0] = true;
+	block.IndVarSwitch[1] = true;
+	block.IndVarSwitch[2] = true;
+	block.IndVarGuess[0] = dv_guess;
+	block.IndVarGuess[1] = dgamma_guess;
+	block.IndVarGuess[2] = dpsi_guess;
+	block.IndVarStep[0] = pow(2, -23);
+	block.IndVarStep[1] = pow(2, -21);
+	block.IndVarStep[2] = pow(2, -21);
+	block.IndVarWeight[0] = 1.0;
+	block.IndVarWeight[1] = 1.0;
+	block.IndVarWeight[2] = 1.0;
+	block.DepVarSwitch[0] = true;
+	block.DepVarSwitch[1] = true;
+	block.DepVarSwitch[2] = true;
+	block.DepVarSwitch[3] = true;
+	block.DepVarSwitch[4] = true;
+	block.DepVarLowerLimit[0] = H_pl - 0.5*1852.0;
+	block.DepVarLowerLimit[1] = 90.0*RAD;
+	block.DepVarLowerLimit[2] = lat_pl - 0.01*RAD;
+	block.DepVarLowerLimit[3] = 0.0;
+	block.DepVarLowerLimit[4] = 64.0965*1852.0;
+	block.DepVarUpperLimit[0] = H_pl + 0.5*1852.0;
+	block.DepVarUpperLimit[1] = 182.0*RAD;
+	block.DepVarUpperLimit[2] = lat_pl + 0.01*RAD;
+	block.DepVarUpperLimit[3] = 90.0*RAD;
+	block.DepVarUpperLimit[4] = 67.5665*1852.0;
+	block.DepVarWeight[1] = 64.0;
+	block.DepVarWeight[3] = 8.0;
+	block.DepVarClass[0] = 1;
+	block.DepVarClass[1] = 2;
+	block.DepVarClass[2] = 1;
+	block.DepVarClass[3] = 2;
+	block.DepVarClass[4] = 1;
 
 	std::vector<double> result;
 	std::vector<double> y_vals;
-	//GenIterator::GeneralizedIterator(fptr, Y_min, Y_max, guess2, step, x_weight, constPtr, (void*)this, class_des, y_weight, result, y_vals);
-	return _V(result[0], result[1], result[2]);
+	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+}
+
+void TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_fr)
+{
+	void *constPtr;
+	outarray.NodeStopIndicator = false;
+	outarray.LunarFlybyIndicator = true;
+	outarray.FreeReturnInclinationIndicator = true;
+	outarray.sv0 = sv0;
+	constPtr = &outarray;
+
+	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool(*fptr)(void *, std::vector<double>, void*, std::vector<double>& arr) = &IntegratedTrajectoryComputerPointer;
+
+	GenIterator::GeneralizedIteratorBlock block;
+	block.IndVarSwitch[0] = true;
+	block.IndVarSwitch[1] = true;
+	block.IndVarSwitch[2] = true;
+	block.IndVarGuess[0] = dv_guess;
+	block.IndVarGuess[1] = dgamma_guess;
+	block.IndVarGuess[2] = dpsi_guess;
+	block.IndVarStep[0] = pow(2, -23);
+	block.IndVarStep[1] = pow(2, -21);
+	block.IndVarStep[2] = pow(2, -21);
+	block.IndVarWeight[0] = 1.0;
+	block.IndVarWeight[1] = 1.0;
+	block.IndVarWeight[2] = 1.0;
+	block.DepVarSwitch[0] = true;
+	block.DepVarSwitch[1] = true;
+	block.DepVarSwitch[2] = true;
+	block.DepVarSwitch[3] = true;
+	block.DepVarLowerLimit[0] = H_pl - 0.5*1852.0;
+	block.DepVarLowerLimit[1] = inc_fr - 0.01*RAD;
+	block.DepVarLowerLimit[2] = 90.0*RAD;
+	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarUpperLimit[0] = H_pl + 0.5*1852.0;
+	block.DepVarUpperLimit[1] = inc_fr + 0.01*RAD;
+	block.DepVarUpperLimit[2] = 182.0*RAD;
+	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarWeight[2] = 1.0;
+	block.DepVarClass[0] = 1;
+	block.DepVarClass[1] = 1;
+	block.DepVarClass[2] = 2;
+	block.DepVarClass[3] = 1;
+
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
 VECTOR3 TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitBAP(MPTSV sv0, VECTOR3 guess)
@@ -932,10 +1119,10 @@ VECTOR3 TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitBAP(MPTSV sv0, VECTOR3
 	constants.FreeReturnIndicator = true;
 	constants.FreeReturnOnlyIndicator = false;
 	constants.FreeReturnInclinationIndicator = false;
-	constants.AfterLOIStopIndicator = true;
-	constants.FirstSelect = true;
-	constants.FixedOrbitIndicator = true;
-	constants.HasLOI2Indicator = false;
+	//constants.AfterLOIStopIndicator = true;
+	//constants.FirstSelect = true;
+	//constants.FixedOrbitIndicator = true;
+	//constants.HasLOI2Indicator = false;
 
 	constPtr = &constants;
 
@@ -978,9 +1165,9 @@ void TLMCCProcessor::ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, std::vector<dou
 	constants.FreeReturnIndicator = true;
 	constants.FreeReturnOnlyIndicator = false;
 	constants.FreeReturnInclinationIndicator = false;
-	constants.FirstSelect = true;
-	constants.FixedOrbitIndicator = true;
-	constants.HasLOI2Indicator = true;
+	//constants.FirstSelect = true;
+	//constants.FixedOrbitIndicator = true;
+	//constants.HasLOI2Indicator = true;
 
 	constPtr = &constants;
 
@@ -1071,7 +1258,7 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> var, void 
 	vars->psi_pl = var[1];
 	vars->lng_pl = var[2];
 	vars->lat_pl = var[3];
-	vars->h_pl = var[4] * R_E - DataTable.R_lls;
+	vars->h_pl = var[4] * R_E - DataTable.rad_lls;
 	vars->gamma_pl = var[5];
 
 	v_pl = var[0] * R_E / 3600.0;
@@ -1130,12 +1317,12 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> var, void 
 	return false;
 }
 
-bool IntegratedNodeComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr)
+bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> var, void *varPtr, std::vector<double>& arr)
 {
-	return ((TLMCCProcessor*)data)->IntegratedNodeComputer(var, varPtr, arr);
+	return ((TLMCCProcessor*)data)->IntegratedTrajectoryComputer(var, varPtr, arr);
 }
 
-bool TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
+bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
 {
 	//Independent Variables:
 	//0: Delta velocity in Er/hr.
@@ -1190,7 +1377,7 @@ bool TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPt
 		vars->MJD_nd = MJD_node;
 		vars->lat_pl = lat_pl;
 		vars->lng_pl = lng_pl;
-		vars->h_pl = r_pl - DataTable.R_lls;
+		vars->h_pl = r_pl - DataTable.rad_lls;
 		vars->MJD_pl = MJD_pl;
 
 		return false;
@@ -1200,7 +1387,6 @@ bool TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPt
 		MPTSV sv1;
 		MATRIX3 Rot;
 		VECTOR3 R_temp, V_temp, HH_pl, H_equ;
-		double H_pl, lat_pl, lng_pl, inc_pl, inc_fr;
 
 		sv1.R = RF;
 		sv1.V = VF;
@@ -1211,10 +1397,10 @@ bool TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPt
 		R_temp = sv_pl.R;
 		V_temp = sv_pl.V;
 		LIBRAT(R_temp, V_temp, sv_pl.MJD, 4);
-		H_pl = length(R_temp) - DataTable.R_lls;
-		OrbMech::latlong_from_r(R_temp, lat_pl, lng_pl);
+		vars->h_pl = length(R_temp) - DataTable.rad_lls;
+		OrbMech::latlong_from_r(R_temp, vars->lat_pl, vars->lng_pl);
 		HH_pl = crossp(R_temp, V_temp);
-		inc_pl = acos(HH_pl.z / length(HH_pl));
+		vars->incl_pl = acos(HH_pl.z / length(HH_pl));
 
 		MPTSV sv_reentry = OrbMech::PMMCEN(sv_pl, 0.0, 100.0*3600.0, 2, sin(gamma_reentry), 1.0);
 		H_fr_rtny = length(sv_reentry.R) - R_E;
@@ -1222,28 +1408,30 @@ bool TLMCCProcessor::IntegratedNodeComputer(std::vector<double> var, void *varPt
 		R_temp = rhtmul(Rot, sv_reentry.R);
 		V_temp = rhtmul(Rot, sv_reentry.V);
 		H_equ = crossp(R_temp, V_temp);
-		inc_fr = inc_fr_stored = acos(H_equ.z / length(H_equ));
+		vars->incl_fr = acos(H_equ.z / length(H_equ));
+		vars->v_EI = length(sv_reentry.V);
 
 		if (vars->LunarFlybyIndicator)
 		{
-			double lat, lng, dlng;
-			RNTSIM(sv_reentry.R, sv_reentry.V, sv_reentry.MJD, Constants.lambda_IP, lat, lng, dlng);
+			double dlng;
+			RNTSIM(sv_reentry.R, sv_reentry.V, sv_reentry.MJD, Constants.lambda_IP, vars->lat_ip, vars->lng_ip, dlng);
+			outarray.MJD_ip = sv_reentry.MJD + Reentry_dt / 24.0 / 3600.0;
 		}
 
 		if (vars->FreeReturnInclinationIndicator)
 		{
-			arr[0] = H_pl;
-			arr[1] = inc_fr;
-			arr[2] = inc_pl;
+			arr[0] = vars->h_pl;
+			arr[1] = vars->incl_fr;
+			arr[2] = vars->incl_pl;
 			arr[3] = H_fr_rtny;
 			return false;
 		}
 		else
 		{
-			arr[0] = H_pl;
-			arr[1] = inc_pl;
-			arr[2] = lat_pl;
-			arr[3] = inc_fr;
+			arr[0] = vars->h_pl;
+			arr[1] = vars->incl_pl;
+			arr[2] = vars->lat_pl;
+			arr[3] = vars->incl_fr;
 			arr[4] = H_fr_rtny;
 			return false;
 		}
@@ -1257,14 +1445,14 @@ bool ConicMissionComputerPointer(void *data, std::vector<double> var, void *varP
 
 bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr)
 {
-	TLMCCConicTrajectoryVars *vars;
-	vars = static_cast<TLMCCConicTrajectoryVars*>(varPtr);
+	TLMCCGeneralizedIteratorArray *vars;
+	vars = static_cast<TLMCCGeneralizedIteratorArray*>(varPtr);
 	MPTSV sv0, SGSLOI;
 	VECTOR3 RF, VF, R_patch, V_patch, R_pl, V_pl, R_temp, V_temp, HH_pl, H;
 	double dv_mcc, dgamma_mcc, dpsi_mcc, m_before_MCC, mfm0, beta, MJD_patch, MJD_pl, ainv, m_before_LOI, H_fr_rtny, DT_1st_pass;
-	double H_pl, lat_pl, lng_pl, inc_pl, i_pg, gamma_loi, dpsi_loi, m_before_DOI, ainv_pl, a, e, i, n, P, eta, dpsi_lopc, DV_R;
+	double H_pl, lat_pl, lng_pl, inc_pl, gamma_loi, dpsi_loi, m_before_DOI, ainv_pl, a, e, i, n, P, eta, dpsi_lopc, DV_R;
 
-	if (vars->MCCIndicator == false)
+	if (vars->MidcourseCorrectionIndicator == false)
 	{
 		if (vars->TLIIndicator == true)
 		{
@@ -1279,7 +1467,12 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 		}
 	}
 
-	dv_mcc = var[0];
+	//Store in array
+	vars->dv_mcc = var[0];
+	vars->dgamma_mcc = var[1];
+	vars->dpsi_mcc = var[2];
+
+	dv_mcc = var[0] * R_E / 3600.0;
 	dgamma_mcc = var[1];
 	dpsi_mcc = var[2];
 	if (var.size() > 3)
@@ -1334,12 +1527,12 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 	R_temp = R_pl;
 	V_temp = V_pl;
 	LIBRAT(R_temp, V_temp, MJD_pl, 4);
-	H_pl = length(R_temp) - DataTable.R_lls;
+	H_pl = length(R_temp) - DataTable.rad_lls;
 	OrbMech::latlong_from_r(R_temp, lat_pl, lng_pl);
 
-	lat_pl_stored = lat_pl;
+	vars->lat_pl = lat_pl;
 	MJD_pl_stored = MJD_pl;
-	h_pl_stored = H_pl;
+	vars->h_pl = H_pl;
 	HH_pl = crossp(R_temp, V_temp);
 	inc_pl = acos(HH_pl.z / length(HH_pl));
 
@@ -1353,7 +1546,10 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 		V_patch2 = V_pl;
 		MJD_patch2 = MJD_pl;
 
-		PATCH(R_patch2, V_patch2, MJD_patch2, 1, 2);
+		if (PATCH(R_patch2, V_patch2, MJD_patch2, 1, 2))
+		{
+			return true;
+		}
 		beta = EBETA(R_patch2, V_patch2, mu_E, ainv);
 		XBETA(R_patch2, V_patch2, MJD_patch2, beta, 1, R_pg, V_pg, MJD_pg);
 		DGAMMA(length(R_pg), ainv, gamma_reentry, H, E, beta, e);
@@ -1363,7 +1559,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 		R_equ = rhtmul(Rot, R_reentry);
 		V_equ = rhtmul(Rot, V_reentry);
 		H_equ = crossp(R_equ, V_equ);
-		i_pg = inc_fr_stored = acos(H_equ.z / length(H_equ));
+		vars->incl_fr = acos(H_equ.z / length(H_equ));
 
 		if (vars->FreeReturnOnlyIndicator)
 		{
@@ -1373,7 +1569,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 				{
 					arr[0] = H_pl;
 					arr[1] = inc_pl;
-					arr[2] = i_pg;
+					arr[2] = vars->incl_fr;
 					arr[3] = H_fr_rtny;
 					arr[4] = m_before_LOI;
 					return false;
@@ -1383,7 +1579,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 					arr[0] = H_pl;
 					arr[1] = inc_pl;
 					arr[2] = H_fr_rtny;
-					arr[3] = i_pg;
+					arr[3] = vars->incl_fr;
 
 					if (arr.size() > 4)
 					{
@@ -1397,7 +1593,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 				arr[0] = H_pl;
 				arr[1] = inc_pl;
 				arr[2] = lat_pl;
-				arr[3] = i_pg;
+				arr[3] = vars->incl_fr;
 				arr[4] = H_fr_rtny;
 				return false;
 			}
@@ -1423,7 +1619,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 	VECTOR3 H_LOI;
 	double h_LOI, lat_LOI, lng_LOI, i_EMP, t_TL;
 
-	h_LOI = length(R_LOI) - DataTable.R_lls;
+	h_LOI = length(R_LOI) - DataTable.rad_lls;
 	R_temp = R_LOI;
 	V_temp = V_LOI;
 	LIBRAT(R_temp, V_temp, MJD_LOI, 4);
@@ -1440,14 +1636,14 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> var, void *varPtr,
 
 	double a_LPO1, e_LPO1, v_pl_LPO, dv, a_LPO2, dt_bias, MJD_LPO;
 
-	a_LPO1 = (2.0*DataTable.R_lls + MEDQuantities.H_A_LPO1 + MEDQuantities.H_P_LPO1) / 2.0;
-	e_LPO1 = (MEDQuantities.H_A_LPO1 - MEDQuantities.H_P_LPO1) / (2.0*DataTable.R_lls + MEDQuantities.H_A_LPO1 + MEDQuantities.H_P_LPO1);
+	a_LPO1 = (2.0*DataTable.rad_lls + MEDQuantities.H_A_LPO1 + MEDQuantities.H_P_LPO1) / 2.0;
+	e_LPO1 = (MEDQuantities.H_A_LPO1 - MEDQuantities.H_P_LPO1) / (2.0*DataTable.rad_lls + MEDQuantities.H_A_LPO1 + MEDQuantities.H_P_LPO1);
 	v_pl_LPO = sqrt((1.0 + e_LPO1)*mu_M / ((1.0 - e_LPO1)*a_LPO1));
 	dv = v_pl_LPO - length(V_LOI);
 	BURN(R_LOI, V_LOI, dv, -gamma_loi, dpsi_loi, isp_MCC, mfm0, RF, VF);
 	m_before_DOI = mfm0 * m_before_LOI;
 
-	a_LPO2 = (2.0*DataTable.R_lls + MEDQuantities.H_A_LPO2 + MEDQuantities.H_P_LPO2) / 2.0;
+	a_LPO2 = (2.0*DataTable.rad_lls + MEDQuantities.H_A_LPO2 + MEDQuantities.H_P_LPO2) / 2.0;
 	dt_bias = PI2*(sqrt(pow(a_LPO1, 3) / mu_M) - sqrt(pow(a_LPO2, 3) / mu_M))*MEDQuantities.Revs_LPO1;
 
 	MJD_LPO = MJD_LOI + dt_bias / 24.0 / 3600.0;
@@ -1492,7 +1688,7 @@ TLMCC_Conic_A1:
 		arr[1] = inc_pl;
 		arr[2] = dh_n;
 		arr[3] = H_fr_rtny;
-		arr[4] = i_pg;
+		arr[4] = vars->incl_fr;
 		arr[5] = m_before_DOI;
 		return false;
 	}
@@ -1531,7 +1727,7 @@ TLMCC_Conic_F5:
 		arr[1] = inc_pl;
 		arr[2] = h_LOI;
 		arr[3] = H_fr_rtny;
-		arr[4] = i_pg;
+		arr[4] = vars->incl_fr;
 		arr[5] = lat_S;
 		arr[6] = lng_S;
 		arr[7] = psi_S;
@@ -2163,9 +2359,9 @@ void TLMCCProcessor::PRCOMP(VECTOR3 R_nd, VECTOR3 V_nd, double MJD_nd, double &R
 
 	DR1 = modf(MEDQuantities.Revs_LPO1, &R1);
 
-	RA_LPO1 = MEDQuantities.H_A_LPO1 + DataTable.R_lls;
-	RP_LPO1 = MEDQuantities.H_P_LPO1 + DataTable.R_lls;
-	a_lls = DataTable.R_lls + (MEDQuantities.H_A_LPO2 + MEDQuantities.H_P_LPO2) / 2.0;
+	RA_LPO1 = MEDQuantities.H_A_LPO1 + DataTable.rad_lls;
+	RP_LPO1 = MEDQuantities.H_P_LPO1 + DataTable.rad_lls;
+	a_lls = DataTable.rad_lls + (MEDQuantities.H_A_LPO2 + MEDQuantities.H_P_LPO2) / 2.0;
 
 	a_LPO1 = (RA_LPO1 + RP_LPO1) / 2.0;
 	e_LPO1 = (RA_LPO1 - RP_LPO1) / (RA_LPO1 + RP_LPO1);
@@ -2216,7 +2412,7 @@ void TLMCCProcessor::PRCOMP(VECTOR3 R_nd, VECTOR3 V_nd, double MJD_nd, double &R
 		{
 			DA = DA_apo + PI2;
 		}
-		e = -1.0 + (MEDQuantities.H_A_LPO2 + DataTable.R_lls) / a_lls;
+		e = -1.0 + (MEDQuantities.H_A_LPO2 + DataTable.rad_lls) / a_lls;
 		phi2 = DataTable.lat_lls;
 		lambda2 = DataTable.lng_lls;
 		psi2 = DataTable.psi_lls;
@@ -2300,8 +2496,8 @@ void TLMCCProcessor::SCALE(VECTOR3 R0, VECTOR3 V0, double H_A, double H_P, VECTO
 	double v_ap, r_ap,r_per, e, a;
 
 	h = unit(crossp(R0, V0));
-	r_ap = H_A + DataTable.R_lls;
-	r_per = H_P + DataTable.R_lls;
+	r_ap = H_A + DataTable.rad_lls;
+	r_per = H_P + DataTable.rad_lls;
 	a = (r_per + r_ap) / 2.0;
 
 	RF = unit(R0)*r_ap;

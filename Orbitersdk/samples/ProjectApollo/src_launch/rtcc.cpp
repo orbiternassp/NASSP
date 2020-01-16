@@ -3444,6 +3444,50 @@ void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *r
 	EntryCalculations::Reentry(R_EI, V_EI, sv_reentry.MJD - dt_EI / 24.0 / 3600.0, true, res->SplashdownLat, res->SplashdownLng, rtgo, vio, ret);
 }
 
+void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0)
+{
+	TLMCCDataTable datatab;
+	TLMCCMEDQuantities medquant;
+	TLMCCMissionConstants mccconst;
+	TLMCCOutputData out;
+
+	datatab = PZSFPTAB.blocks[PZMCCPLN.SFPBlockNum - 1];
+
+	medquant.Mode = PZMCCPLN.Mode;
+	medquant.Config = PZMCCPLN.Config;
+	medquant.T_MCC = GMTfromGET(PZMCCPLN.MidcourseGET);
+	medquant.GMTBase = GetGMTBase();
+	medquant.GETBase = CalcGETBase();
+	medquant.sv0 = sv0;
+	medquant.CSMMass = sv0.mass;
+	medquant.LMMass = 0.0;
+	medquant.H_pl = PZMCCPLN.h_PC;
+	medquant.INCL_fr = PZMCCPLN.incl_fr;
+	medquant.H_pl_min = 40.0*1852.0;
+	medquant.H_pl_max = 5000.0*1852.0;
+
+	mccconst.V_pcynlo = 5480.0*0.3048;
+	mccconst.lambda_IP = 190.0*RAD;
+
+	TLMCCProcessor tlmcc;
+	tlmcc.Init(&pzefem, datatab, medquant, mccconst);
+	tlmcc.Main(out);
+
+	//Update display data
+	PZMCCDIS.data[PZMCCPLN.Column - 1] = out.display;
+
+	//Update MPT transfer table
+	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].R = out.R_MCC;
+	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].V = out.V_MCC;
+	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].GMT = out.GMT_MCC;
+	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].RBI = out.RBI;
+	PZMCCXFR.V_man_after[PZMCCPLN.Column - 1] = out.V_MCC_apo;
+	PZMCCXFR.plan = 1;
+
+	//Update skeleton flight plan table
+	PZMCCSFP.blocks[PZMCCPLN.Column - 1] = out.outtab;
+}
+
 void RTCC::TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res)
 {
 	MATRIX3 Rot, M_EMP;
@@ -3492,18 +3536,18 @@ void RTCC::TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCRes
 
 	//TBD
 	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res.DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res.DV;
 }
 
 bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res)
@@ -3559,18 +3603,18 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCC
 
 	//TBD
 	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res->DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res->DV;
 
 	//Calculate nodal target
 	OrbMech::latlong_from_J2000(sv_node.R, sv_node.MJD, sv_node.gravref, res->NodeLat, res->NodeLng);
@@ -3720,18 +3764,18 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 
 	//TBD
 	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res->DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res->DV;
 
 	res->EMPLatitude = lat_nd4;
 
@@ -3778,18 +3822,18 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCRe
 
 	//TBD
 	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res->DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res->DV;
 
 	//Calculate Reentry Parameters
 	MATRIX3 Rot;
@@ -3952,18 +3996,18 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyM
 
 	//TBD
 	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res->DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res->DV;
 
 	res->PericynthionGET = (sv_peri.MJD - opt->GETbase)*24.0*3600.0;
 	res->EntryInterfaceGET = (sv_reentry.MJD - opt->GETbase)*24.0*3600.0;
@@ -15308,7 +15352,7 @@ int RTCC::PMMXFR(int id, void *data)
 		{
 			if (inp->Plan == 0)
 			{
-				GMTI = PZMCCXFR.sv_man_bef.GMT;
+				GMTI = PZMCCXFR.sv_man_bef[0].GMT;
 				purpose = "MCC";
 				plan = PZMCCXFR.plan;
 			}
@@ -15410,8 +15454,8 @@ int RTCC::PMMXFR(int id, void *data)
 		{
 			if (inp->Plan == 0)
 			{
-				in.sv_before = PZMCCXFR.sv_man_bef;
-				in.V_aft = PZMCCXFR.V_man_after;
+				in.sv_before = PZMCCXFR.sv_man_bef[0];
+				in.V_aft = PZMCCXFR.V_man_after[0];
 			}
 			else
 			{

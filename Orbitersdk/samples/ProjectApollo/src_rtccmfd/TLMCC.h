@@ -25,30 +25,61 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 struct TLMCCDataTable
 {
-	double GET_TLI;
-	double GMT_pc1;
-	double GMT_pc2;
-	double GMT_nd;
-	double H_nd;
-	double lat_nd;
-	double lng_nd;
-	double H_pc1;
-	double H_pc2;
-	double lat_pc1;
-	double lat_pc2;
-	double lng_pc1;
-	double lng_pc2;
-	double gamma_loi;
-	double dpsi_loi;
-	double dt_lls;
-	double T_lo;
-	double psi_lls;
-	double dpsi_tei;
-	double dv_tei;
-	double T_te;
-	double lat_lls;
-	double lng_lls;
-	double R_lls;
+	//Time at which block was generated
+	double GMTTimeFlag = 0.0;
+	//TLMCC Mode that was used to generate block
+	int mode = 0;
+	//EMP latitude of TLI pericynthion
+	double lat_pc1 = 0.0;
+	//EMP latitude of LOI pericynthion
+	double lat_pc2 = 0.0;
+	//EMP longitude of TLI pericynthion
+	double lng_pc1 = 0.0;
+	//EMP longitude of LOI pericynthion
+	double lng_pc2 = 0.0;
+	//Height of TLI pericynthion
+	double h_pc1 = 0.0;
+	//Height of LOI pericynthion
+	double h_pc2 = 0.0;
+	//GET of TLI Ignition
+	double GET_TLI = 0.0;
+	//GMT of Node
+	double GMT_nd = 0.0;
+	//Latitude of Node
+	double lat_nd = 0.0;
+	//Longitude of Node
+	double lng_nd = 0.0;
+	//Height of Node
+	double h_nd = 0.0;
+	//Delta Azimuth of LOI
+	double dpsi_loi = 0.0;
+	//Flight Path Angle of LOI
+	double gamma_loi = 0.0;
+	//DT of LPO (LOI to TEI)
+	double T_lo = 0.0;
+	//DT of LLS (LOI to LLS first pass)
+	double dt_lls = 0.0;
+	//Azimuth of LLS
+	double psi_lls = 0.0;
+	//Latitude of LLS
+	double lat_lls = 0.0;
+	//Longitude of LLS
+	double lng_lls = 0.0;
+	//Radius of LLS
+	double rad_lls = 0.0;
+	//Delta azimuth of TEI
+	double dpsi_tei = 0.0;
+	//Delta V of TEI
+	double dv_tei = 0.0;
+	//DT of Transearth (TEI to EI)
+	double T_te = 0.0;
+	//Inclination of free return
+	double incl_fr = 0.0;
+	//GMT of TLI pericynthion
+	double GMT_pc1 = 0.0;
+	//GMT of LOI pericynthion
+	double GMT_pc2 = 0.0;
+	double dt_upd_nom = 0.0;//???
 };
 
 struct TLMCCMEDQuantities
@@ -69,7 +100,7 @@ struct TLMCCMEDQuantities
 	double H_pl_TLMC;
 	double GET_nd_min;
 	double GET_nd_max;
-	double lat_bias;
+	double lat_bias = 2.0*RAD;
 	double H_pl_min;
 	double H_pl_max;
 	double H_A_LPO1;
@@ -91,38 +122,46 @@ struct TLMCCMissionConstants
 	double V_pcynlo;
 };
 
+struct TLMCCDisplayData
+{
+	int Mode = 0;
+	int Return = 0;
+	double AZ_min = 0.0;
+	double AZ_max = 0.0;
+	int Config = 0;
+	double GET_MCC = 0.0;
+	VECTOR3 DV_MCC;
+	double YAW_MCC = 0.0;
+	double h_PC = 0.0;
+	double GET_LOI = 0.0;
+	VECTOR3 DV_LOI = _V(0, 0, 0);
+	double AZ_act = 0.0;
+	double H_bo = 0.0;
+	double delta_lat = 0.0;
+	double HA_LPO = 0.0;
+	double HP_LPO = 0.0;
+	VECTOR3 DV_LOPC = _V(0, 0, 0);
+	double GET_TEI = 0.0;
+	VECTOR3 DV_TEI = _V(0, 0, 0);
+	double DV_REM = 0.0;
+	double incl_fr = 0.0;
+	double incl_pr = 0.0;
+	double v_EI = 0.0;
+	double gamma_EI = 0.0;
+	//Landing computed at Earth
+	double GET_LC = 0.0;
+	double lat_IP = 0.0;
+	double lng_IP = 0.0;
+	std::string STAID;
+	double GMTV = 0.0;
+	double GETV = 0.0;
+	double CSMWT = 0.0;
+	double LMWT = 0.0;
+};
+
 struct TLMCCOutputData
 {
-	//For Display
-	int Mode;
-	int Return;
-	double AZ_min;
-	double AZ_max;
-	int Config;
-	double GET_MCC;
-	VECTOR3 DV_MCC;
-	double YAW_MCC;
-	double h_PC;
-	double GET_LOI;
-	VECTOR3 DV_LOI;
-	double AZ_act;
-	double H_bo;
-	double delta_lat;
-	double HA_LPO;
-	double HP_LPO;
-	VECTOR3 DV_LOPC;
-	double GET_TEI;
-	VECTOR3 DV_TEI;
-	double DV_REM;
-	//Landing computed at Earth
-	double GET_LC;
-	double lat_IP;
-	double lng_IP;
-	std::string STAID;
-	double GMTV;
-	double GETV;
-	double CSMWT;
-	double LMWT;
+	TLMCCDisplayData display;
 	//For Data Table
 	TLMCCDataTable outtab;
 	//For MPT
@@ -140,10 +179,20 @@ struct TLMCCGeneralizedIteratorArray
 	//For first guess logic
 	bool TLMCIntegrating;
 	//For integrating trajectory computer
-	bool MidcourseCorrectionIndicator = true;
 	bool NodeStopIndicator;
-	bool LunarFlybyIndicator;
+	//For conic trajectory computer
 	bool FreeReturnInclinationIndicator;
+	bool FreeReturnIndicator;
+	bool FreeReturnOnlyIndicator;
+	bool OptimizeIndicator = false;
+	bool TLIIndicator = false;
+	bool HasLOI2Indicator = true;
+	bool FixedOrbitIndicator;
+	bool FirstSelect;
+	bool AfterLOIStopIndicator = false;
+	//For conic and integrated
+	bool LunarFlybyIndicator;
+	bool MidcourseCorrectionIndicator = true;
 
 	//Output
 	double dv_mcc;
@@ -161,10 +210,19 @@ struct TLMCCGeneralizedIteratorArray
 	double lat_pl;
 	double lng_pl;
 	double MJD_pl;
+	double incl_pl;
 	double dgamma_loi;
 	double dpsi_loi;
 	double dt_lls;
 	double AZ_act;
+	double v_EI;
+	//Inclination of free return
+	double incl_fr;
+	//Inclination of powered return
+	double incl_pr;
+	double lat_ip;
+	double lng_ip;
+	double MJD_ip;
 
 	//Masses
 	double M_i;
@@ -180,14 +238,11 @@ struct TLMCCConicTrajectoryVars
 	MPTSV sv0;
 	bool FreeReturnIndicator;
 	bool FreeReturnOnlyIndicator;
-	bool FixedOrbitIndicator;
-	bool FirstSelect;
+	
+	
 	bool FreeReturnInclinationIndicator;
 	bool OptimizeIndicator = false;
 	bool MCCIndicator = true;
-	bool TLIIndicator = false;
-	bool AfterLOIStopIndicator = false;
-	bool HasLOI2Indicator = true;
 };
 
 class TLMCCProcessor
@@ -200,7 +255,7 @@ public:
 	//The trajectory computers
 	bool FirstGuessTrajectoryComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
 	bool ConicMissionComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
-	bool IntegratedNodeComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
+	bool IntegratedTrajectoryComputer(std::vector<double> var, void *varPtr, std::vector<double>& arr);
 
 protected:
 
@@ -209,21 +264,21 @@ protected:
 	/*void Option2();
 	void Option3();
 	void Option4();
-	void Option5();
+	void Option5();*/
 	void Option6();
 	void Option7();
 	void Option8();
 	void Option9A();
-	void Option9B();*/
+	void Option9B();
 
 	//These appear as the boxes in the main program flow
 	void ConvergeTLMC(double V, double azi, double lng, double lat, double r, double GMT_pl, bool integrating);
 	void IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double R_nd, double lat_nd, double lng_nd, double GMT_node);
-	VECTOR3 ConicFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_pl, VECTOR3 guess);
-	VECTOR3 ConicFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, double inc_pg, VECTOR3 guess, double lat_pl_min = 0, double lat_pl_max = 0);
-	VECTOR3 ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double inc_pg_min, double inc_pg_max, int inc_class, VECTOR3 guess);
-	VECTOR3 IntegratedFreeReturnFlyby(MPTSV sv0, double H_pl, double lat_pl, VECTOR3 guess);
-	VECTOR3 IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double H_pl, double inc_fr, VECTOR3 guess);
+	void ConicFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl);
+	void ConicFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_pg, double lat_pl_min = 0, double lat_pl_max = 0);
+	void ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double inc_pg_min, double inc_pg_max, int inc_class);
+	void IntegratedFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl);
+	void IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_fr);
 	VECTOR3 ConicFreeReturnOptimizedFixedOrbitBAP(MPTSV sv0, VECTOR3 guess);
 	void ConicFreeReturnFixedOrbitLOI2BAP(MPTSV sv0, std::vector<double> guess, std::vector<double> &x_res, std::vector<double> &y_res, bool optimize = false, double mass = 0.0);
 	VECTOR3 CalcLOIDV(MPTSV sv_MCC_apo, double gamma_nd);
@@ -272,9 +327,6 @@ protected:
 	TLMCCMissionConstants Constants;
 
 	TLMCCGeneralizedIteratorArray outarray;
-	double lat_pl_stored;
-	double inc_fr_stored;
 	double MJD_pl_stored;
-	double h_pl_stored;
 	double mass_stored;
 };
