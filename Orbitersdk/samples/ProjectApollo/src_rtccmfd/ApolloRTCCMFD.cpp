@@ -2688,6 +2688,15 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			sprintf(Buffer, "%.2f°", GC->rtcc->PZMCCPLN.incl_fr*DEG);
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		}
+
+		if (G->TLCCmaneuver == 3 || G->TLCCmaneuver == 5)
+		{
+			sprintf(Buffer, "%.2f°", GC->rtcc->PZMCCPLN.AZ_min*DEG);
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2f°", GC->rtcc->PZMCCPLN.AZ_max*DEG);
+			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		}
 		
 		/*if (G->TLCCmaneuver == 8)
 		{
@@ -6967,7 +6976,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text((26 + 11 * i) * W / 64, 9 * H / 32, Buffer, strlen(Buffer));
 			sprintf_s(Buffer, "%.3lf", GC->rtcc->PZMCCDIS.data[i].AZ_max*DEG);
 			skp->Text((26 + 11 * i) * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
-			sprintf_s(Buffer, "%.0lf", GC->rtcc->PZMCCDIS.data[i].CSMWT / 0.45359237);
+			sprintf_s(Buffer, "%.0lf", (GC->rtcc->PZMCCDIS.data[i].CSMWT + GC->rtcc->PZMCCDIS.data[i].LMWT) / 0.45359237);
 			skp->Text((26 + 11 * i) * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
 			GET_Display(Buffer, GC->rtcc->PZMCCDIS.data[i].GET_MCC, false);
 			skp->Text((26 + 11 * i) * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
@@ -8148,7 +8157,7 @@ void ApolloRTCCMFD::menuBacktoLOIorMCCPage()
 	}
 	else
 	{
-		menuMidcoursePage();
+		menuMidcourseTradeoffPage();
 	}
 }
 
@@ -11263,7 +11272,7 @@ void ApolloRTCCMFD::menuSwitchTLCCManeuver()
 	}
 	else
 	{
-		G->TLCCmaneuver = 0;
+		G->TLCCmaneuver = 1;
 	}
 }
 
@@ -11348,7 +11357,7 @@ void ApolloRTCCMFD::menuSetTLCCDesiredInclination()
 	if (G->TLCCmaneuver >= 8)
 	{
 		bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized):", TLCCDesiredInclinationInput, 0, 20, (void*)this);
+		oapiOpenInputBox("Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", TLCCDesiredInclinationInput, 0, 20, (void*)this);
 	}
 }
 
@@ -11365,6 +11374,48 @@ bool TLCCDesiredInclinationInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_TLCCDesiredInclination(double inc)
 {
 	GC->rtcc->PZMCCPLN.incl_fr = inc*RAD;
+}
+
+void ApolloRTCCMFD::menuSetTLCCMinimumAzimuth()
+{
+	bool TLCCMinimumAzimuthInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the minimum azimuth at the landing site:", TLCCMinimumAzimuthInput, 0, 20, (void*)this);
+}
+
+bool TLCCMinimumAzimuthInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_TLCCMinimumAzimuth(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TLCCMinimumAzimuth(double azi)
+{
+	GC->rtcc->PZMCCPLN.AZ_min = azi * RAD;
+}
+
+void ApolloRTCCMFD::menuSetTLCCMaximumAzimuth()
+{
+	bool TLCCMaximumAzimuthInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the maximum azimuth at the landing site:", TLCCMaximumAzimuthInput, 0, 20, (void*)this);
+}
+
+bool TLCCMaximumAzimuthInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_TLCCMaximumAzimuth(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TLCCMaximumAzimuth(double azi)
+{
+	GC->rtcc->PZMCCPLN.AZ_max = azi * RAD;
 }
 
 void ApolloRTCCMFD::menuSetTLCCLat()
@@ -13412,6 +13463,30 @@ bool ApolloRTCCMFD::set_GenerateDMT(char *buff, int msk)
 {
 	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, buff);
 	G->GeneralMEDRequest();
+	return true;
+}
+
+void ApolloRTCCMFD::menuCycleSFPDisplay()
+{
+	if (GC->rtcc->PZSFPTAB.DisplayBlockNum < 2)
+	{
+		GC->rtcc->PZSFPTAB.DisplayBlockNum++;
+	}
+	else
+	{
+		GC->rtcc->PZSFPTAB.DisplayBlockNum = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuTransferMCCPlanToSFP()
+{
+	bool TransferMCCPlanToSFPInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Column to move to SFP Block 2. Format: F30,Column Number;", TransferMCCPlanToSFPInput, 0, 20, (void*)this);
+}
+
+bool TransferMCCPlanToSFPInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
 }
 

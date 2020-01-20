@@ -234,6 +234,10 @@ public:
 	void set_TLCCAlt(double alt);
 	void menuSetTLCCDesiredInclination();
 	void set_TLCCDesiredInclination(double inc);
+	void menuSetTLCCMinimumAzimuth();
+	void set_TLCCMinimumAzimuth(double azi);
+	void menuSetTLCCMaximumAzimuth();
+	void set_TLCCMaximumAzimuth(double azi);
 	void menuSetLOIApo();
 	void set_LOIApo(double alt);
 	void menuSetLOIPeri();
@@ -584,6 +588,8 @@ public:
 	void menuSetSkeletonFlightPlanPage();
 	void menuMidcourseTradeoffPage();
 	void menuTLIPlanningPage();
+	void menuCycleSFPDisplay();
+	void menuTransferMCCPlanToSFP();
 
 protected:
 	oapi::Font *font;

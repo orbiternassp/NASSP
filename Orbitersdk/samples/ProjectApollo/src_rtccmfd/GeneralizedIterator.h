@@ -28,25 +28,27 @@ See http://nassp.sourceforge.net/license/ for more details.
 namespace GenIterator
 {
 	//Max number of independant variables
-	const int MGENITER = 20;
+	const int MGENITER = 30;
 	//Max number of dependant variables
-	const int NGENITER = 20;
+	const int NGENITER = 30;
 
 	struct GeneralizedIteratorBlock
 	{
 		GeneralizedIteratorBlock();
-		bool IndVarSwitch[20];
-		double IndVarGuess[20];
-		double IndVarWeight[20];
-		double IndVarStep[20];
-		bool DepVarSwitch[20];
-		double DepVarLowerLimit[20];
-		double DepVarUpperLimit[20];
-		int DepVarClass[20];
-		double DepVarWeight[20];
+		bool IndVarSwitch[30];
+		double IndVarGuess[30];
+		double IndVarWeight[30];
+		double IndVarStep[30];
+		bool DepVarSwitch[30];
+		double DepVarLowerLimit[30];
+		double DepVarUpperLimit[30];
+		int DepVarClass[30];
+		double DepVarWeight[30];
 	};
 
-	void GeneralizedIterator(bool(*state_evaluation)(void *, std::vector<double>, void*, std::vector<double>&), GeneralizedIteratorBlock vars, void *constants, void *data, std::vector<double> &x_res, std::vector<double> &y_res);
-	double CalcCost(const std::vector<double> &A, const std::vector<double> &B, bool *yswitches);
+	bool GeneralizedIterator(bool(*state_evaluation)(void *, std::vector<double>&, void*, std::vector<double>&), GeneralizedIteratorBlock vars, void *constants, void *data, std::vector<double> &x_res, std::vector<double> &y_res);
+	double CalcCost(const std::vector<double> &A, const std::vector<double> &B);
 	void CalcDX2(double **P, const std::vector<double> &W_X, const std::vector<double> &W_Y, double lambda, const std::vector<double> &dy, int m, int n, std::vector<double> &dx);
+	void OpenRanks(std::vector<int> &xmap, std::vector<double> &in, std::vector<double> &out, int m);
+	void CloseRanks(std::vector<int> &ymap, std::vector<double> &in, std::vector<double> &out, int n2);
 }

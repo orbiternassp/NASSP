@@ -2367,7 +2367,7 @@ public:
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
 	void TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
 	void TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *res, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
-	void TranslunarMidcourseCorrectionProcessor(SV sv0);
+	void TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double LMmass);
 	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res);
 	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
@@ -2511,6 +2511,7 @@ public:
 	int EMGABMED(int med, std::vector<std::string> data);
 	//'F' MED Module
 	int PMQAFMED(int med);
+	int PMQAFMED(int med, std::vector<std::string> data);
 	//K-MED Decoder
 	void PMKMED(int med);
 	//'M' MED Module
@@ -3392,6 +3393,10 @@ public:
 		int SFPBlockNum = 1;
 		double h_PC = 60.0*1852.0;
 		double incl_fr = 0.0;
+		double AZ_min = -110.0*RAD;
+		double AZ_max = -70.0*RAD;
+		double TLMIN = 0.0;
+		double TLMAX = 0.0;
 	} PZMCCPLN;
 
 	struct UMEDSaveTable

@@ -196,8 +196,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 44, 18);
 		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 4.4393618*RAD;
 		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
-		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(55, 32, 7);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(24, 48, 35);
+		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(59, 30, 5);
+		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 40, 45);
 		rtcc->PZSFPTAB.blocks[0].psi_lls = -91.0*RAD;
 		rtcc->PZSFPTAB.blocks[0].lat_lls = 0.71388888*RAD;
 		rtcc->PZSFPTAB.blocks[0].lng_lls = 23.7077777*RAD;
@@ -3387,9 +3387,11 @@ int ARCore::subThread()
 	{
 		TLMCCResults res;
 		SV sv0;
+		double CSMmass, LMmass;
 
 		if (GC->MissionPlanningActive)
 		{
+			int cfg;
 			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZMCCPLN.VectorGET);
 			EphemerisData EPHEM;
 			if (GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM))
@@ -3398,26 +3400,30 @@ int ARCore::subThread()
 				break;
 			}
 
+			double lm_asc_weight, lm_dsc_weight, sivb_weight;
+
 			sv0.R = EPHEM.R;
 			sv0.V = EPHEM.V;
 			sv0.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv0.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-			GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, sv0.mass);
+			GC->rtcc->PLAWDT(RTCC_MPT_CSM, GMT, cfg, sv0.mass, CSMmass, lm_asc_weight, lm_dsc_weight, sivb_weight);
+			LMmass = lm_asc_weight + lm_dsc_weight;
 		}
 		else
 		{
 			sv0 = GC->rtcc->StateVectorCalc(vessel);
 
+			CSMmass = sv0.mass;
 			if (GC->rtcc->PZMCCPLN.Config)
 			{
-				sv0.mass += GC->rtcc->GetDockedVesselMass(vessel);
+				LMmass = GC->rtcc->GetDockedVesselMass(vessel);
 			}
 		}
 
-		if (TLCCmaneuver == 1 || TLCCmaneuver == 6 || TLCCmaneuver == 7 || TLCCmaneuver == 8 || TLCCmaneuver == 9)
+		if (TLCCmaneuver == 1 || TLCCmaneuver == 2 || TLCCmaneuver == 3 || TLCCmaneuver == 4 || TLCCmaneuver == 5 || TLCCmaneuver == 6 || TLCCmaneuver == 7 || TLCCmaneuver == 8 || TLCCmaneuver == 9)
 		{
 			GC->rtcc->PZMCCPLN.Mode = TLCCmaneuver;
-			GC->rtcc->TranslunarMidcourseCorrectionProcessor(sv0);
+			GC->rtcc->TranslunarMidcourseCorrectionProcessor(sv0, CSMmass, LMmass);
 		}
 		else if (TLCCmaneuver == 2 || TLCCmaneuver == 3)
 		{
@@ -4491,16 +4497,19 @@ int ARCore::subThread()
 		{
 			VECTOR3 dv;
 			double tig;
+			bool p30;
 
 			if (GC->rtcc->med_m78.Type)
 			{
 				tig = LOI_TIG;
 				dv = LOI_dV_LVLH;
+				p30 = true;
 			}
 			else
 			{
-				tig = TLCC_TIG;
-				dv = TLCC_dV_LVLH;
+				tig = GC->rtcc->GETfromGMT(GC->rtcc->PZMCCXFR.sv_man_bef[0].GMT);
+				dv = GC->rtcc->PZMCCXFR.V_man_after[0] - GC->rtcc->PZMCCXFR.sv_man_bef[0].V;
+				p30 = false;
 			}
 
 			SV sv_pre, sv_post, sv_tig;
@@ -4516,7 +4525,7 @@ int ARCore::subThread()
 			{
 				attachedMass = 0.0;
 			}
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), tig, GC->rtcc->med_m78.Thruster, attachedMass, dv, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), tig, GC->rtcc->med_m78.Thruster, attachedMass, dv, p30, P30TIG, dV_LVLH, sv_pre, sv_post);
 		}
 
 		Result = 0;

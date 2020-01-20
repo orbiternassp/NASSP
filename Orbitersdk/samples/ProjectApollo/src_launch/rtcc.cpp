@@ -3444,7 +3444,7 @@ void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *r
 	EntryCalculations::Reentry(R_EI, V_EI, sv_reentry.MJD - dt_EI / 24.0 / 3600.0, true, res->SplashdownLat, res->SplashdownLng, rtgo, vio, ret);
 }
 
-void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0)
+void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double LMmass)
 {
 	TLMCCDataTable datatab;
 	TLMCCMEDQuantities medquant;
@@ -3459,15 +3459,35 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0)
 	medquant.GMTBase = GetGMTBase();
 	medquant.GETBase = CalcGETBase();
 	medquant.sv0 = sv0;
-	medquant.CSMMass = sv0.mass;
-	medquant.LMMass = 0.0;
+	medquant.CSMMass = CSMmass;
+	medquant.LMMass = LMmass;
 	medquant.H_pl = PZMCCPLN.h_PC;
 	medquant.INCL_fr = PZMCCPLN.incl_fr;
 	medquant.H_pl_min = 40.0*1852.0;
 	medquant.H_pl_max = 5000.0*1852.0;
+	medquant.AZ_min = PZMCCPLN.AZ_min;
+	medquant.AZ_max = PZMCCPLN.AZ_max;
+	medquant.H_A_LPO1 = 170.0*1852.0;
+	medquant.H_P_LPO1 = 60.0*1852.0;
+	medquant.H_A_LPO2 = 60.0*1852.0;
+	medquant.H_P_LPO2 = 8.0*1852.0;
+	medquant.Revs_LPO1 = 2.0;
+	medquant.Revs_LPO2 = 11.0;
+	medquant.TA_LOI = 0.0;
+	medquant.site_rotation_LPO2 = -15.0*RAD;
+	medquant.useSPS = true;
+	medquant.T_max_sea = 122.5*3600.0;
+	medquant.T_min_sea = 105.0*3600.0;
+	medquant.Revs_circ = 1;
+	medquant.H_T_circ = 60.0*1852.0;
 
 	mccconst.V_pcynlo = 5480.0*0.3048;
 	mccconst.lambda_IP = 190.0*RAD;
+	mccconst.dt_bias = 0.332;
+	mccconst.m = 3;
+	mccconst.n = 8;
+	mccconst.T_t1_min_dps = 1.0*3600.0;
+	mccconst.T_t1_max_dps = 100.0*3600.0;
 
 	TLMCCProcessor tlmcc;
 	tlmcc.Init(&pzefem, datatab, medquant, mccconst);
@@ -11051,6 +11071,10 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				double peri, apo;
 				OrbMech::periapo(sv.R, sv.V, mu, apo, peri);
 				EZSPACE.HA = (apo - R_E) / 1852.0;
+				if (EZSPACE.HA > 999999.9)
+				{
+					EZSPACE.HA = 999999.9;
+				}
 				EZSPACE.HP = (peri - R_E) / 1852.0;
 				EZSPACE.GETA = 0.0;
 			}
@@ -17807,6 +17831,10 @@ bool RTCC::GMGMED(char *str)
 	{
 		EMGABMED(number, MEDSequence);
 	}
+	else if (medtype == 'F')
+	{
+		PMQAFMED(number, MEDSequence);
+	}
 	else if (medtype == 'M')
 	{
 		PMMMED(number, MEDSequence);
@@ -17852,8 +17880,37 @@ int RTCC::EMGABMED(int med, std::vector<std::string> data)
 
 int RTCC::PMQAFMED(int med)
 {
+	std::vector<std::string> data;
+	return PMQAFMED(med, data);
+}
+
+int RTCC::PMQAFMED(int med, std::vector<std::string> data)
+{
+	//Transfer midcourse correction plan to skeleton flight plan table
+	if (med == 30)
+	{
+		if (data.size() < 1)
+		{
+			return 1;
+		}
+		int column;
+
+		if (sscanf(data[0].c_str(), "%d", &column) != 1)
+		{
+			return 1;
+		}
+		if (column < 1 || column > 4)
+		{
+			return 1;
+		}
+		if (PZMCCSFP.blocks[column - 1].mode <= 1 || PZMCCSFP.blocks[column - 1].mode >= 6)
+		{
+			return 1;
+		}
+		PZSFPTAB.blocks[1] = PZMCCSFP.blocks[column - 1];
+	}
 	//Generation of near Earth tradeoff
-	if (med == 70)
+	else if (med == 70)
 	{
 		bool found = false;
 		//Check and find site
