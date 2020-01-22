@@ -4262,7 +4262,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(25 * W / 32, 2 * H / 28, "GETR", 4);
 
 		sprintf(Buffer, GC->rtcc->EZSPACE.REF1);
-		skp->Text(11 * W / 64, 10 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(10 * W / 64, 10 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%05.0f", GC->rtcc->EZSPACE.WT);
 		skp->Text(10 * W / 32, 10 * H / 28, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%08.1f", GC->rtcc->EZSPACE.HA);
@@ -5237,18 +5237,18 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			if (GC->rtcc->med_m66.CoordInd == 0)
 			{
-				skp->Text(9 * W / 16, 2 * H / 14, "LVLH", 4);
+				skp->Text(8 * W / 16, 2 * H / 14, "LVLH", 4);
 			}
 			else if (GC->rtcc->med_m66.CoordInd == 1)
 			{
-				skp->Text(9 * W / 16, 2 * H / 14, "IMU", 4);
+				skp->Text(8 * W / 16, 2 * H / 14, "IMU", 4);
 			}
 			else
 			{
-				skp->Text(9 * W / 16, 2 * H / 14, "FDAI", 4);
+				skp->Text(8 * W / 16, 2 * H / 14, "FDAI", 4);
 			}
 			sprintf(Buffer, "%06.2f° %06.2f° %06.2f°", GC->rtcc->med_m66.Att.x*DEG, GC->rtcc->med_m66.Att.y*DEG, GC->rtcc->med_m66.Att.z*DEG);
-			skp->Text(9 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(8 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		if (GC->rtcc->med_m66.ConfigChangeInd == 0)
@@ -8328,7 +8328,7 @@ void ApolloRTCCMFD::menuMPTDirectInputCoord()
 	if (GC->rtcc->med_m66.BurnParamNo == 1)
 	{
 		bool MPTDirectInputCoordInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the attitude for the maneuver (Format: LVLH/IMU/FDAI=X Y Z)", MPTDirectInputCoordInput, 0, 20, (void*)this);
+		oapiOpenInputBox("Choose the attitude for the maneuver (Format: LVLH/IMU/FDAI=X Y Z)", MPTDirectInputCoordInput, 0, 30, (void*)this);
 	}
 }
 
@@ -13163,7 +13163,7 @@ bool SpaceDigitalsInitInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuGenerateSpaceDigitals()
 {
 	bool GenerateSpaceDigitalsInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Generate Space Digitals, format: U01, column (1-3), option (GET or MNV), parameter (time of mnv number);", GenerateSpaceDigitalsInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Generate Space Digitals, format: U01, column (1-3), option (GET or MNV), parameter (time or mnv number);", GenerateSpaceDigitalsInput, 0, 20, (void*)this);
 }
 
 bool GenerateSpaceDigitalsInput(void *id, char *str, void *data)

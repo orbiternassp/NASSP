@@ -1092,6 +1092,11 @@ MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_c
 
 	while (stop == false)
 	{
+		if (abs(coast.GetTime() - dt_max) < 1e-6)
+		{
+			allow_stop = true;
+		}
+
 		stop = coast.iteration(allow_stop);
 
 		if (stop)

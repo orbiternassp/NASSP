@@ -10401,7 +10401,7 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 	}
 	tab.azi = azi;
 	tab.e = length(E);
-	tab.gamma = fpa - PI05;
+	tab.gamma = PI05 - fpa;
 	tab.h = h;
 	tab.i = acos(H.z / length(H));
 	tab.l = pow(length(H), 2) / mu;
@@ -11096,7 +11096,161 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 		//Column 3
 		else
 		{
+			//Null all values
+			EZSPACE.GETSE = 0.0;
+			EZSPACE.GETEI = 0.0;
+			EZSPACE.VEI = 0.0;
+			EZSPACE.GEI = 0.0;
+			EZSPACE.PEI = 0.0;
+			EZSPACE.LEI = 0.0;
+			EZSPACE.PSIEI = 0.0;
+			EZSPACE.GETVP = 0.0;
+			EZSPACE.VVP = 0.0;
+			EZSPACE.HVP = 0.0;
+			EZSPACE.PVP = 0.0;
+			EZSPACE.LVP = 0.0;
+			EZSPACE.PSIVP = 0.0;
 
+			double mu;
+			bool HighOrbit;
+
+			EZSPACE.GETVector3 = GETfromGMT(sv.GMT);
+			if (sv.RBI == BODY_EARTH)
+			{
+				mu = OrbMech::mu_Earth;
+			}
+			else
+			{
+				mu = OrbMech::mu_Moon;
+			}
+
+			OELEMENTS coe = OrbMech::coe_from_sv(sv.R, sv.V, mu);
+			double SMA = OrbMech::GetSemiMajorAxis(sv.R, sv.V, mu);
+
+			if (coe.e > MCGECC)
+			{
+				HighOrbit = true;
+			}
+			else
+			{
+				if (SMA < 0 || SMA > MCGSMA*OrbMech::R_Earth)
+				{
+					HighOrbit = true;
+				}
+				else
+				{
+					HighOrbit = false;
+				}
+			}
+
+			if (HighOrbit == false)
+			{
+				return 0;
+			}
+
+			//sv1: "now"
+			//sv2: pericynthion
+			//sv3: lunar sphere exit
+			//sv4: vacuum perigee
+			//sv5: entry interface
+			MPTSV sv1, sv2, sv3, sv4, sv5;
+			sv1.R = sv.R;
+			sv1.V = sv.V;
+			sv1.MJD = OrbMech::MJDfromGET(sv.GMT, GMTBASE);
+			sv1.gravref = GetGravref(sv.RBI);
+
+			if (sv.RBI == BODY_EARTH)
+			{
+				//Integrate to next periapsis
+				sv4 = OrbMech::PMMCEN(sv1, 0.0, 10.0*24.0*3600.0, 2, 0.0, 1.0);
+
+				if (sv4.gravref == hEarth)
+				{
+					if (length(sv4.R) > OrbMech::GetSemiMajorAxis(sv4.R, sv4.V, OrbMech::mu_Earth))
+					{
+						//We are at apogee, try again
+						sv4 = OrbMech::PMMCEN(sv4, 30.0*60.0, 10.0*24.0*3600.0, 2, 0.0, 1.0);
+					}
+					//Found a vacuum perigee
+				}
+				else
+				{
+					//Found a pericynthion
+					sv2 = sv4;
+					sv3 = OrbMech::PMMCEN(sv2, 0.0, 10.0*24.0*3600.0, 3, 9.0*OrbMech::R_Earth, 1.0);
+
+					EZSPACE.GETSE = OrbMech::GETfromMJD(sv3.MJD, CalcGETBase());
+					//Find vacuum perigee
+					sv4 = OrbMech::PMMCEN(sv3, 0.0, 10.0*24.0*3600.0, 2, 0.0, 1.0);
+					if (abs((sv4.MJD - sv3.MJD - 10.0)*24.0*3600.0) < 0.1 || sv4.gravref == hMoon)
+					{
+						//Not found
+						return 0;
+					}
+				}
+			}
+			else
+			{
+				//Try to find lunar sphere exit
+				sv3 = OrbMech::PMMCEN(sv1, 0.0, 10.0*24.0*3600.0, 3, 9.0*OrbMech::R_Earth, 1.0);
+
+				if (((sv3.MJD - sv1.MJD - 10.0)*24.0*3600.0) < 0.1)
+				{
+					//Not found
+					return 0;
+				}
+				else
+				{
+					EZSPACE.GETSE = OrbMech::GETfromMJD(sv3.MJD, CalcGETBase());
+				}
+				//Find vacuum perigee
+				sv4 = OrbMech::PMMCEN(sv3, 0.0, 10.0*24.0*3600.0, 2, 0.0, 1.0);
+				if (abs((sv4.MJD - sv3.MJD - 10.0)*24.0*3600.0) < 0.1 || sv4.gravref == hMoon)
+				{
+					//Not found
+					return 0;
+				}
+			}
+			//Calc VP parameters
+			TimeConstraintsTable newtab;
+			EphemerisData svtemp, svtempout;
+
+			EZSPACE.GETVP = OrbMech::GETfromMJD(sv4.MJD, CalcGETBase());
+
+			svtemp.R = sv4.R;
+			svtemp.V = sv4.V;
+			svtemp.GMT = OrbMech::GETfromMJD(sv4.MJD, GMTBASE);
+			svtemp.RBI = BODY_EARTH;
+
+			ELVCNV(svtemp, 0, 1, svtempout);
+			EMMDYNEL(svtempout, newtab);
+
+			EZSPACE.VVP = newtab.V / 0.3048;
+			EZSPACE.HVP = newtab.h / 1852.0;
+			EZSPACE.PVP = newtab.lat * DEG;
+			EZSPACE.LVP = newtab.lng * DEG;
+			EZSPACE.PSIVP = newtab.azi*DEG;
+			//Do we have a reentry
+			if (length(sv4.R) < OrbMech::R_Earth + 400000.0*0.3048)
+			{
+				//Calc EI parameters
+				sv5 = OrbMech::PMMCEN(sv4, 0.0, 24.0*3600.0, 3, OrbMech::R_Earth + 400000.0*0.3048, -1.0);
+
+				EZSPACE.GETEI = OrbMech::GETfromMJD(sv5.MJD, CalcGETBase());
+
+				svtemp.R = sv5.R;
+				svtemp.V = sv5.V;
+				svtemp.GMT = OrbMech::GETfromMJD(sv5.MJD, GMTBASE);
+
+				ELVCNV(svtemp, 0, 1, svtempout);
+				EMMDYNEL(svtempout, newtab);
+
+				EZSPACE.VEI = newtab.V / 0.3048;
+				EZSPACE.GEI = newtab.gamma*DEG;
+				EZSPACE.PEI = newtab.lat * DEG;
+				EZSPACE.LEI = newtab.lng * DEG;
+				EZSPACE.PSIEI = newtab.azi*DEG;
+			}
 		}
 	}
 
@@ -15327,6 +15481,9 @@ int RTCC::PMMXFR(int id, void *data)
 			in.BurnParm75 = BurnParm75;
 			in.BurnParm76 = BurnParm76;
 			in.BurnParm77 = BurnParm77;
+			in.Pitch = inp->Pitch;
+			in.Yaw = inp->Yaw;
+			in.Roll = inp->Roll;
 
 			err = PMMMCD(in, man);
 		}
@@ -18638,9 +18795,9 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		inp.BurnParameterNumber = med_m66.BurnParamNo;
 		inp.CoordinateIndicator = med_m66.CoordInd;
-		inp.Pitch = med_m66.Att.x*MCCRPD;
-		inp.Yaw = med_m66.Att.y*MCCRPD;
-		inp.Roll = med_m66.Att.z*MCCRPD;
+		inp.Pitch = med_m66.Att.x;
+		inp.Yaw = med_m66.Att.y;
+		inp.Roll = med_m66.Att.z;
 
 		if (med_m66.UllageDT > 0 && med_m66.UllageDT <= 1)
 		{
@@ -23136,6 +23293,12 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 		}
 
 		Z_B = crossp(X_B, Y_B);
+	}
+	else
+	{
+		X_B = TArr.XB;
+		Y_B = TArr.YB;
+		Z_B = TArr.ZB;
 	}
 }
 
