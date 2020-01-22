@@ -3463,31 +3463,40 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double
 	medquant.LMMass = LMmass;
 	medquant.H_pl = PZMCCPLN.h_PC;
 	medquant.INCL_fr = PZMCCPLN.incl_fr;
-	medquant.H_pl_min = 40.0*1852.0;
-	medquant.H_pl_max = 5000.0*1852.0;
+	medquant.H_pl_min = PZMCCPLN.H_PCYN_MIN;
+	medquant.H_pl_max = PZMCCPLN.H_PCYN_MAX;
 	medquant.AZ_min = PZMCCPLN.AZ_min;
 	medquant.AZ_max = PZMCCPLN.AZ_max;
 	medquant.H_A_LPO1 = 170.0*1852.0;
 	medquant.H_P_LPO1 = 60.0*1852.0;
 	medquant.H_A_LPO2 = 60.0*1852.0;
-	medquant.H_P_LPO2 = 8.0*1852.0;
-	medquant.Revs_LPO1 = 2.0;
-	medquant.Revs_LPO2 = 11.0;
+	medquant.H_P_LPO2 = 60.0*1852.0;
+	medquant.Revs_LPO1 = PZMCCPLN.REVS1;
+	medquant.Revs_LPO2 = PZMCCPLN.REVS2;
 	medquant.TA_LOI = 0.0;
-	medquant.site_rotation_LPO2 = -15.0*RAD;
+	medquant.site_rotation_LPO2 = PZMCCPLN.SITEROT;
 	medquant.useSPS = true;
-	medquant.T_max_sea = 122.5*3600.0;
-	medquant.T_min_sea = 105.0*3600.0;
+	medquant.T_min_sea = PZMCCPLN.TLMIN;
+	if (PZMCCPLN.TLMAX <= 0)
+	{
+		medquant.T_max_sea = 1000.0;
+	}
+	else
+	{
+		medquant.T_max_sea = PZMCCPLN.TLMAX;
+	}
 	medquant.Revs_circ = 1;
 	medquant.H_T_circ = 60.0*1852.0;
+	medquant.lat_bias = PZMCCPLN.LATBIAS;
 
 	mccconst.V_pcynlo = 5480.0*0.3048;
+	mccconst.H_LPO = 60.0*1852.0;
 	mccconst.lambda_IP = 190.0*RAD;
 	mccconst.dt_bias = 0.332;
-	mccconst.m = 3;
-	mccconst.n = 8;
-	mccconst.T_t1_min_dps = 1.0*3600.0;
-	mccconst.T_t1_max_dps = 100.0*3600.0;
+	mccconst.m = PZMCCPLN.LOPC_M;
+	mccconst.n = PZMCCPLN.LOPC_N;
+	mccconst.T_t1_min_dps = PZMCCPLN.TT1_DPS_MIN;
+	mccconst.T_t1_max_dps = PZMCCPLN.TT1_DPS_MAX;
 
 	TLMCCProcessor tlmcc;
 	tlmcc.Init(&pzefem, datatab, medquant, mccconst);
@@ -11064,7 +11073,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 
 				EZSPACE.GETA = OrbMech::GETfromMJD(sv_a.MJD, CalcGETBase());
 				EZSPACE.HA = (length(sv_a.R) - R_E) / 1852.0;
-				EZSPACE.HP = (length(sv_a.R) - R_E) / 1852.0;
+				EZSPACE.HP = (length(sv_p.R) - R_E) / 1852.0;
 			}
 			else
 			{
@@ -17886,8 +17895,140 @@ int RTCC::PMQAFMED(int med)
 
 int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 {
+	//Initialize Azimuth Constraints for Midcourse Correction Planning
+	if (med == 22)
+	{
+		double azmin, azmax;
+		if (data.size() < 1 || data[0]== "")
+		{
+			azmin = -110.0*RAD;
+		}
+		else
+		{
+			if (sscanf(data[0].c_str(), "%lf", &azmin) != 1)
+			{
+				return 1;
+			}
+			if (azmin < -110.0)
+			{
+				return 1;
+			}
+			azmin *= RAD;
+		}
+		PZMCCPLN.AZ_min = azmin;
+		if (data.size() < 2 || data[1] == "")
+		{
+			azmax = -70.0*RAD;
+		}
+		else
+		{
+			if (sscanf(data[1].c_str(), "%lf", &azmax) != 1)
+			{
+				return 1;
+			}
+			if (azmax > -70.0)
+			{
+				return 1;
+			}
+			azmax *= RAD;
+		}
+		PZMCCPLN.AZ_max = azmax;
+	}
+	//Initialization of translunar time (minimum and maximum) for midcourse correction planning
+	else if (med == 23)
+	{
+		double hh, mm, ss, get;
+		if (data.size() < 1 || data[0] == "")
+		{
+			PZMCCPLN.TLMIN = 0.0;
+		}
+		else
+		{
+			if (sscanf(data[0].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return 1;
+			}
+			PZMCCPLN.TLMIN = hh + mm / 60.0 + ss / 3600.0;
+		}
+		if (data.size() < 2 || data[1] == "")
+		{
+			PZMCCPLN.TLMAX = 0.0;
+		}
+		else
+		{
+			if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return 1;
+			}
+			get = hh + mm / 60.0 + ss / 3600.0;
+			if (get > PZMCCPLN.TLMIN)
+			{
+				PZMCCPLN.TLMAX = get;
+			}
+		}
+	}
+	//Initalize gamma and reentry range for midcourse correction plans
+	else if (med == 24)
+	{
+		if (data.size() < 1 || data[0] == "")
+		{
+			PZMCCPLN.gamma_reentry = -6.52*RAD;
+		}
+		else
+		{
+			double gamma;
+			if (sscanf(data[0].c_str(), "%lf", &gamma) != 1)
+			{
+				return 1;
+			}
+			PZMCCPLN.gamma_reentry = gamma * RAD;
+		}
+		if (data.size() < 2 || data[1] == "")
+		{
+			PZMCCPLN.Reentry_range = -6.52*RAD;
+		}
+		else
+		{
+			double range;
+			if (sscanf(data[1].c_str(), "%lf", &range) != 1)
+			{
+				return 1;
+			}
+			PZMCCPLN.Reentry_range = 1350.0;
+		}
+	}
+	//Specify pericynthion height limits for optimized MCC
+	else if (med == 29)
+	{
+		if (data.size() < 1 || data[0] == "")
+		{
+			PZMCCPLN.H_PCYN_MIN = 40.0*1852.0;
+		}
+		else
+		{
+			double ht;
+			if (sscanf(data[0].c_str(), "%lf", &ht) != 1)
+			{
+				return 1;
+			}
+			PZMCCPLN.H_PCYN_MIN = ht * 1852.0;;
+		}
+		if (data.size() < 2 || data[1] == "")
+		{
+			PZMCCPLN.H_PCYN_MAX = 5000.0*1852.0;
+		}
+		else
+		{
+			double ht;
+			if (sscanf(data[1].c_str(), "%lf", &ht) != 1)
+			{
+				return 1;
+			}
+			PZMCCPLN.H_PCYN_MAX = ht * 1852.0;
+		}
+	}
 	//Transfer midcourse correction plan to skeleton flight plan table
-	if (med == 30)
+	else if (med == 30)
 	{
 		if (data.size() < 1)
 		{

@@ -134,6 +134,27 @@ void AR_GCore::SetMissionSpecificParameters()
 		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 		rtcc->PZREAP.RRBIAS = 1350.0;
 
+		rtcc->PZMCCPLN.LOPC_M = 1;
+		rtcc->PZMCCPLN.LOPC_N = 0;
+
+		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(82, 0, 0);
+		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -5.67822*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 60.0*1852.0;
+		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 50, 31);
+		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 2.4*RAD;
+		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
+		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(20, 3, 30);
+		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(12, 59, 26);
+		rtcc->PZSFPTAB.blocks[0].psi_lls = -78.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].lat_lls = 2.6317*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_lls = 34.0253*RAD;
+		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 0.82*1852.0;
+		rtcc->PZSFPTAB.blocks[0].dpsi_tei = -2.3*RAD;
+		rtcc->PZSFPTAB.blocks[0].dv_tei = 3531.7*0.3048;
+		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(57, 30, 35);
+		rtcc->PZSFPTAB.blocks[0].incl_fr = 33.73*RAD;
+
 		rtcc->med_p80.Day = 21;
 		rtcc->med_p80.Month = 12;
 		rtcc->med_p80.Year = 1968;
@@ -164,6 +185,9 @@ void AR_GCore::SetMissionSpecificParameters()
 		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
 		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
+
+		rtcc->PZMCCPLN.LOPC_M = 0;
+		rtcc->PZMCCPLN.LOPC_N = 0;
 
 		rtcc->med_p80.Day = 18;
 		rtcc->med_p80.Month = 5;
@@ -266,6 +290,34 @@ void AR_GCore::SetMissionSpecificParameters()
 		DOI_option = 1;
 		rtcc->med_k17.DwellOrbits = 11;
 		rtcc->PZREAP.RRBIAS = 1250.0;
+
+		rtcc->PZMCCPLN.LOPC_M = 5;
+		rtcc->PZMCCPLN.LOPC_N = 12;
+		rtcc->PZMCCPLN.H_P_LPO1 = 59.0*1852.0;
+
+		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = OrbMech::HHMMSSToSS(96, 53, 22);
+		rtcc->PZSFPTAB.blocks[0].lat_pc1 = 0.0;
+		rtcc->PZSFPTAB.blocks[0].lng_pc1 = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].h_pc1 = 211.7*1852.0;
+
+		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(96, 41, 16);
+		rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -0.20553*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 58.7*1852.0;
+
+		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 35, 24);
+		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 0.7*RAD;
+		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
+		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(90, 0, 0);
+		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 0, 0);
+		rtcc->PZSFPTAB.blocks[0].psi_lls = -93.88*RAD;
+		rtcc->PZSFPTAB.blocks[0].lat_lls = -3.6686*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_lls = 342.5158*RAD;
+		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 0.76*1852.0;
+		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 11.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].dv_tei = 3449.5*0.3048;
+		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(72, 0, 0);
+		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
 		rtcc->med_p80.Day = 11;
 		rtcc->med_p80.Month = 4;
@@ -3417,6 +3469,10 @@ int ARCore::subThread()
 			if (GC->rtcc->PZMCCPLN.Config)
 			{
 				LMmass = GC->rtcc->GetDockedVesselMass(vessel);
+			}
+			else
+			{
+				LMmass = 0.0;
 			}
 		}
 

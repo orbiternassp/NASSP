@@ -100,7 +100,7 @@ struct TLMCCMEDQuantities
 	double H_pl_TLMC;
 	double GET_nd_min;
 	double GET_nd_max;
-	double lat_bias = 2.0*RAD;
+	double lat_bias;
 	double H_pl_min;
 	double H_pl_max;
 	double H_A_LPO1;
@@ -108,7 +108,7 @@ struct TLMCCMEDQuantities
 	double Revs_LPO1;
 	double H_A_LPO2;
 	double H_P_LPO2;
-	double Revs_LPO2;
+	int Revs_LPO2;
 	double site_rotation_LPO2;
 	int Revs_circ;
 	double H_T_circ;
@@ -125,6 +125,7 @@ struct TLMCCMissionConstants
 	double dt_bias;
 	double T_t1_min_dps;
 	double T_t1_max_dps;
+	double H_LPO;
 };
 
 struct TLMCCDisplayData
@@ -247,6 +248,7 @@ struct TLMCCGeneralizedIteratorArray
 	double MJD_ip_pr;
 	double theta;
 	double DH_Node;
+	double dt_bias_conic_prec = 0.0;
 
 	//Masses
 	//Initial mass
@@ -348,7 +350,7 @@ protected:
 	//void PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &V2, double &gamma_L, double &V_L, double &A1, double &E1, double &gamma1, double &DT_1st_pass, MPTSV &SGSLOI);
 	void PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &A_L, double &E_L, double &dw_p, double &dh_a, double &dh_p, double &DT, double &DT_1st_pass, VECTOR3 &u_l, MPTSV &SGSLOI);
 	double DDELTATIME(double a, double dt_apo, double xm, double betam, double dt);
-	void SCALE(VECTOR3 R0, VECTOR3 V0, double H_A, double H_P, VECTOR3 &RF, VECTOR3 &VF);
+	void SCALE(VECTOR3 R0, VECTOR3 V0, double h, VECTOR3 &RF, VECTOR3 &VF);
 	MPTSV PPC(MPTSV SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS);
 
 	double R_E, R_M, mu_E, mu_M;

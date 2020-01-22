@@ -271,7 +271,7 @@ void TLMCCProcessor::Main(TLMCCOutputData &out)
 	Z_PHV = unit(-sv_MCC.R);
 	Y_PHV = unit(crossp(sv_MCC.V, sv_MCC.R));
 	X_PHV = crossp(Y_PHV, Z_PHV);
-	out.display.YAW_MCC = atan2(dotp(Y_PHV, unit(DV_MCC)), dotp(X_PHV, unit(DV_MCC)));
+	out.display.YAW_MCC = atan(dotp(Y_PHV, unit(DV_MCC)) / dotp(X_PHV, unit(DV_MCC)));
 
 	out.outtab = outtab;
 }
@@ -426,6 +426,10 @@ void TLMCCProcessor::Option2()
 
 	//Step 6
 	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl3, lat_pl3);
+	double GMT_pl6 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase) / 3600.0;
+	//With the trajectory computer, the time used for the state vector at the start of LPO is biased by the difference between the time of perilune passage
+	//in step 6 (integrated) and step 3 (conic).
+	outarray.dt_bias_conic_prec = GMT_pl6 - GMT_pl3;
 	VECTOR3 DV6 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 	BURN(sv_MCC.R, sv_MCC.V, DV6.x*R_E / 3600.0, DV6.y, DV6.z, isp_MCC, mfm0, RF, VF);
 	VECTOR3 DV_temp = VF - sv_MCC.V;
@@ -456,6 +460,7 @@ TLMCC_Option_2_E:
 	outtab.GMT_pc2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase);
 	outtab.h_pc2 = outarray.h_pl;
 	outtab.lat_pc2 = outarray.lat_pl;
+	outtab.lng_pc2 = outarray.lng_pl;
 	outtab.gamma_loi = outarray.gamma_nd;
 	outtab.dpsi_loi = outarray.dpsi_loi;
 	outtab.dt_lls = outarray.dt_lls;
@@ -583,6 +588,10 @@ void TLMCCProcessor::Option3()
 
 	//Step 6
 	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl3, lat_pl3);
+	double GMT_pl6 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase) / 3600.0;
+	//With the trajectory computer, the time used for the state vector at the start of LPO is biased by the difference between the time of perilune passage
+	//in step 6 (integrated) and step 3 (conic).
+	outarray.dt_bias_conic_prec = GMT_pl6 - GMT_pl3;
 	VECTOR3 DV6 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 	BURN(sv_MCC.R, sv_MCC.V, DV6.x*R_E / 3600.0, DV6.y, DV6.z, isp_MCC, mfm0, RF, VF);
 	VECTOR3 DV_temp = VF - sv_MCC.V;
@@ -613,6 +622,7 @@ TLMCC_Option_3_E:
 	outtab.GMT_pc2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase);
 	outtab.h_pc2 = outarray.h_pl;
 	outtab.lat_pc2 = outarray.lat_pl;
+	outtab.lng_pc2 = outarray.lng_pl;
 	outtab.gamma_loi = outarray.gamma_nd;
 	outtab.dpsi_loi = outarray.dpsi_loi;
 	outtab.dt_lls = outarray.dt_lls;
@@ -685,8 +695,8 @@ void TLMCCProcessor::Option4()
 	T = DataTable.GMT_pc2 / 3600.0 + ddt;
 
 	double T_min, T_max, T_min_sea, T_max_sea, T_min_dps, T_max_dps, dt_min, dt_max;
-	T_min_sea = MEDQuantities.T_min_sea - DataTable.dt_lls;
-	T_max_sea = MEDQuantities.T_max_sea - DataTable.dt_lls;
+	T_min_sea = MEDQuantities.T_min_sea*3600.0;
+	T_max_sea = MEDQuantities.T_max_sea*3600.0;
 	T_min_dps = Constants.T_t1_min_dps;
 	T_max_dps = Constants.T_t1_max_dps;
 	if (T_min_dps < T_min_sea)
@@ -758,8 +768,8 @@ void TLMCCProcessor::Option5()
 	T = DataTable.GMT_pc2 / 3600.0 + ddt;
 
 	double T_min, T_max, T_min_sea, T_max_sea, T_min_dps, T_max_dps, dt_min, dt_max;
-	T_min_sea = MEDQuantities.T_min_sea - DataTable.dt_lls;
-	T_max_sea = MEDQuantities.T_max_sea - DataTable.dt_lls;
+	T_min_sea = MEDQuantities.T_min_sea*3600.0;
+	T_max_sea = MEDQuantities.T_max_sea*3600.0;
 	T_min_dps = Constants.T_t1_min_dps;
 	T_max_dps = Constants.T_t1_max_dps;
 	if (T_min_dps < T_min_sea)
@@ -921,6 +931,7 @@ TLMCC_Option_5_D:
 	outtab.lng_nd = outarray.lng_nd;
 	outtab.h_pc2 = outarray.h_pl;
 	outtab.lat_pc2 = outarray.lat_pl;
+	outtab.lng_pc2 = outarray.lng_pl;
 	outtab.gamma_loi = outarray.gamma_nd;
 	outtab.dpsi_loi = outarray.dpsi_loi;
 	outtab.dt_lls = outarray.dt_lls;
@@ -1882,7 +1893,7 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double d
 	block.DepVarLowerLimit[2] = 90.0*RAD;
 	block.DepVarLowerLimit[3] = 64.0965*1852.0;
 	block.DepVarLowerLimit[4] = 0.0;
-	block.DepVarLowerLimit[7] = MEDQuantities.H_P_LPO1 - 0.5*1852.0;
+	block.DepVarLowerLimit[7] = Constants.H_LPO - 0.5*1852.0;
 	block.DepVarLowerLimit[8] = DataTable.lat_lls - 0.01*RAD;
 	block.DepVarLowerLimit[9] = DataTable.lng_lls - 0.01*RAD;
 	block.DepVarLowerLimit[10] = AZ_min;
@@ -1891,7 +1902,7 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double d
 	block.DepVarUpperLimit[2] = 182.0*RAD;
 	block.DepVarUpperLimit[3] = 67.5665*1852.0;
 	block.DepVarUpperLimit[4] = 75.0*RAD;
-	block.DepVarUpperLimit[7] = MEDQuantities.H_P_LPO1 + 0.5*1852.0;
+	block.DepVarUpperLimit[7] = Constants.H_LPO + 0.5*1852.0;
 	block.DepVarUpperLimit[8] = DataTable.lat_lls + 0.01*RAD;
 	block.DepVarUpperLimit[9] = DataTable.lng_lls + 0.01*RAD;
 	block.DepVarUpperLimit[10] = AZ_max;
@@ -1964,7 +1975,7 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, doubl
 	block.DepVarSwitch[20] = true;
 	block.DepVarLowerLimit[0] = DataTable.h_pc2 - 0.1*1852.0;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[7] = MEDQuantities.H_P_LPO1 - 0.5*1852.0;
+	block.DepVarLowerLimit[7] = Constants.H_LPO - 0.5*1852.0;
 	block.DepVarLowerLimit[8] = DataTable.lat_lls - 0.01*RAD;
 	block.DepVarLowerLimit[9] = DataTable.lng_lls - 0.01*RAD;
 	block.DepVarLowerLimit[10] = DataTable.psi_lls - 0.01*RAD;
@@ -1972,7 +1983,7 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, doubl
 	block.DepVarLowerLimit[20] = T_min - 2.0*3600.0;
 	block.DepVarUpperLimit[0] = DataTable.h_pc2 + 0.1*1852.0;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[7] = MEDQuantities.H_P_LPO1 + 0.5*1852.0;
+	block.DepVarUpperLimit[7] = Constants.H_LPO + 0.5*1852.0;
 	block.DepVarUpperLimit[8] = DataTable.lat_lls + 0.01*RAD;
 	block.DepVarUpperLimit[9] = DataTable.lng_lls + 0.01*RAD;
 	block.DepVarUpperLimit[10] = DataTable.psi_lls + 0.01*RAD;
@@ -2165,7 +2176,7 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	block.DepVarLowerLimit[2] = 90.0*RAD;
 	block.DepVarLowerLimit[3] = 64.0965*1852.0;
 	block.DepVarLowerLimit[4] = 0.0;
-	block.DepVarLowerLimit[7] = MEDQuantities.H_P_LPO1 - 0.5*1852.0;
+	block.DepVarLowerLimit[7] = Constants.H_LPO - 0.5*1852.0;
 	block.DepVarLowerLimit[8] = DataTable.lat_lls - 0.01*RAD;
 	block.DepVarLowerLimit[9] = DataTable.lng_lls - 0.01*RAD;
 	block.DepVarLowerLimit[10] = AZ_min;
@@ -2181,12 +2192,12 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	else
 	{
 		block.DepVarUpperLimit[0] = DataTable.h_pc2 + 0.1*1852.0;
-		block.DepVarLowerLimit[20] = T_max;
+		block.DepVarUpperLimit[20] = T_max;
 	}
 	block.DepVarUpperLimit[2] = 182.0*RAD;
 	block.DepVarUpperLimit[3] = 67.5665*1852.0;
 	block.DepVarUpperLimit[4] = 75.0*RAD;
-	block.DepVarUpperLimit[7] = MEDQuantities.H_P_LPO1 + 0.5*1852.0;
+	block.DepVarUpperLimit[7] = Constants.H_LPO + 0.5*1852.0;
 	block.DepVarUpperLimit[8] = DataTable.lat_lls + 0.01*RAD;
 	block.DepVarUpperLimit[9] = DataTable.lng_lls + 0.01*RAD;
 	block.DepVarUpperLimit[10] = AZ_max;
@@ -2538,6 +2549,7 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 		R_temp = sv_pl.R;
 		V_temp = sv_pl.V;
 		LIBRAT(R_temp, V_temp, sv_pl.MJD, 4);
+		vars->MJD_pl = sv_pl.MJD;
 		vars->h_pl = length(R_temp) - DataTable.rad_lls;
 		OrbMech::latlong_from_r(R_temp, vars->lat_pl, vars->lng_pl);
 		if (vars->lng_pl < 0)
@@ -2618,7 +2630,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	MPTSV sv0;
 	VECTOR3 RF, VF, R_patch, V_patch, R_pl, V_pl, R_temp, V_temp, HH_pl, H;
 	double dv_mcc, dgamma_mcc, dpsi_mcc, dv_tei;
-	double mfm0, beta, MJD_patch, MJD_pl, ainv;
+	double mfm0, beta, MJD_patch, ainv;
 	double H_pl, lat_pl, lng_pl, inc_pl, ainv_pl, a, e, i, n, P, eta, dpsi_lopc, DV_R;
 
 	//Store in array
@@ -2675,10 +2687,10 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	}
 	beta = EBETA(R_patch, V_patch, mu_M, ainv);
 	ainv_pl = ainv;
-	XBETA(R_patch, V_patch, MJD_patch, beta, 2, R_pl, V_pl, MJD_pl);
+	XBETA(R_patch, V_patch, MJD_patch, beta, 2, R_pl, V_pl, vars->MJD_pl);
 	R_temp = R_pl;
 	V_temp = V_pl;
-	LIBRAT(R_temp, V_temp, MJD_pl, 4);
+	LIBRAT(R_temp, V_temp, vars->MJD_pl, 4);
 	H_pl = length(R_temp) - DataTable.rad_lls;
 	OrbMech::latlong_from_r(R_temp, lat_pl, lng_pl);
 	if (lng_pl < 0)
@@ -2698,7 +2710,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 
 		R_patch2 = R_pl;
 		V_patch2 = V_pl;
-		MJD_patch2 = MJD_pl;
+		MJD_patch2 = vars->MJD_pl;
 
 		if (PATCH(R_patch2, V_patch2, MJD_patch2, 1, 2))
 		{
@@ -2733,13 +2745,13 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	{
 		R_LOI = R_pl;
 		V_LOI = V_pl;
-		vars->MJD_nd = MJD_pl;
+		vars->MJD_nd = vars->MJD_pl;
 	}
 	else
 	{
 		double H, E, e;
 		DGAMMA(length(R_pl), ainv_pl, vars->gamma_nd, H, E, beta, e);
-		XBETA(R_pl, V_pl, MJD_pl, beta, 2, R_LOI, V_LOI, vars->MJD_nd);
+		XBETA(R_pl, V_pl, vars->MJD_pl, beta, 2, R_LOI, V_LOI, vars->MJD_nd);
 	}
 
 	//Apply offset
@@ -2772,6 +2784,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	BURN(R_LOI, V_LOI, dv, -vars->gamma_nd, vars->dpsi_loi, isp_MCC, mfm0, RF, VF);
 	outarray.M_loi = mfm0 * outarray.M_mcc;
 	outarray.M_cir = MCOMP(157.8*0.3048, MEDQuantities.Config, MEDQuantities.useSPS, outarray.M_loi);
+	vars->MJD_nd += vars->dt_bias_conic_prec / 24.0;
 	MJD_LPO = vars->MJD_nd + Constants.dt_bias / 24.0;
 
 	goto TLMCC_Conic_C4;
@@ -2849,7 +2862,7 @@ TLMCC_Conic_C4:
 	VECTOR3 R_LPO, V_LPO, R_LLS, V_LLS;
 	double MJD_LLS, lat_S, lng_S;
 
-	SCALE(RF, VF, MEDQuantities.H_A_LPO2, MEDQuantities.H_P_LPO2, R_LPO, V_LPO);
+	SCALE(RF, VF, 60.0*1852.0, R_LPO, V_LPO);
 	MJD_LLS = vars->MJD_nd + vars->dt_lls / 24.0 / 3600.0;
 	CTBODY(R_LPO, V_LPO, MJD_LPO, MJD_LLS, 2, mu_M, R_LLS, V_LLS);
 	R_temp = R_LLS;
@@ -3578,7 +3591,7 @@ void TLMCCProcessor::PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &R
 		eta2 += PI2;
 	}
 
-	dt_LLS = PI2 / sqrt(mu_M)*(R1*pow((RA_LPO1 + RP_LPO1) / 2.0, 1.5) + MEDQuantities.Revs_LPO2 * pow(a_lls, 1.5)) + dt2;
+	dt_LLS = PI2 / sqrt(mu_M)*(R1*pow((RA_LPO1 + RP_LPO1) / 2.0, 1.5) + (double)(MEDQuantities.Revs_LPO2) * pow(a_lls, 1.5)) + dt2;
 	MJD_LLS = MJD_nd + dt_LLS / 24.0 / 3600.0;
 	u_lls_equ = OrbMech::r_from_latlong(DataTable.lat_lls, DataTable.lng_lls);
 	for (int i = 0;i < 2;i++)
@@ -3632,7 +3645,7 @@ TLMCC_PRCOMP_1:
 	outarray.sv_lls1.V = VV2S;
 	outarray.sv_lls1.MJD = MJD_LLS;
 
-	dt = -(OrbMech::period(RR2S, VV2S, mu_M)*MEDQuantities.Revs_LPO2 + dt3);
+	dt = -(OrbMech::period(RR2S, VV2S, mu_M)*(double)(MEDQuantities.Revs_LPO2) + dt3);
 	OrbMech::oneclickcoast(RR2S, VV2S, MJD_LLS, dt, R_L, V_L, hMoon, hMoon);
 	MJDI = MJD_LLS + dt / 24.0 / 3600.0;
 
@@ -3700,8 +3713,6 @@ TLMCC_PRCOMP_1:
 	SGSLOI.R = R1I;
 	SGSLOI.V = V1I;
 	LIBRAT(SGSLOI.R, SGSLOI.V, SGSLOI.MJD, 5);
-
-	//sprintf(oapiDebugString(), "%lf %lf", (RA1 - DataTable.rad_lls) / 1852.0, (RP1 - DataTable.rad_lls) / 1852.0);
 }
 
 void TLMCCProcessor::ELEMT(VECTOR3 R, VECTOR3 V, double mu, VECTOR3 &H, double &a, double &e, double &i, double &n, double &P, double &eta)
@@ -3727,20 +3738,13 @@ void TLMCCProcessor::ELEMT(VECTOR3 R, VECTOR3 V, double mu, VECTOR3 &H, double &
 	}
 }
 
-void TLMCCProcessor::SCALE(VECTOR3 R0, VECTOR3 V0, double H_A, double H_P, VECTOR3 &RF, VECTOR3 &VF)
+void TLMCCProcessor::SCALE(VECTOR3 R0, VECTOR3 V0, double h, VECTOR3 &RF, VECTOR3 &VF)
 {
-	VECTOR3 h;
-	double v_ap, r_ap,r_per, e, a;
+	VECTOR3 H;
 
-	h = unit(crossp(R0, V0));
-	r_ap = H_A + DataTable.rad_lls;
-	r_per = H_P + DataTable.rad_lls;
-	a = (r_per + r_ap) / 2.0;
-
-	RF = unit(R0)*r_ap;
-	e = 1.0 - 2.0 / (r_ap / r_per + 1.0);
-	v_ap = sqrt((1.0 - e)*mu_M / ((1.0 + e)*a));
-	VF = unit(crossp(h, RF))*v_ap;
+	RF = R0 * ((h + DataTable.rad_lls) / length(R0));
+	H = unit(crossp(R0, V0));
+	VF = unit(crossp(H, RF))*sqrt(mu_M / (h + DataTable.rad_lls));
 }
 
 double TLMCCProcessor::DDELTATIME(double a, double dt_apo, double xm, double betam, double dt)

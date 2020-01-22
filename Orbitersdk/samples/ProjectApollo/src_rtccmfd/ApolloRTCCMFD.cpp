@@ -2689,14 +2689,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (G->TLCCmaneuver == 3 || G->TLCCmaneuver == 5)
-		{
-			sprintf(Buffer, "%.2f°", GC->rtcc->PZMCCPLN.AZ_min*DEG);
-			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-
-			sprintf(Buffer, "%.2f°", GC->rtcc->PZMCCPLN.AZ_max*DEG);
-			skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
-		}
+		skp->Text(5 * W / 8, 10 * H / 14, "Constraints", 11);
 		
 		/*if (G->TLCCmaneuver == 8)
 		{
@@ -7074,6 +7067,68 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 	}
+	else if (screen == 80)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 1 * H / 14, "MIDCOURSE INPUTS AND CONSTANTS", 30);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->SetFont(font2);
+
+		skp->Text(1 * W / 16, 4 * H / 28, "MED F22", 7);
+		skp->Text(1 * W / 16, 5 * H / 28, "Azimuth Constraints (Modes 3/5)", 31);
+		sprintf_s(Buffer, "%.1lf°", GC->rtcc->PZMCCPLN.AZ_min*DEG);
+		skp->Text(2 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1lf°", GC->rtcc->PZMCCPLN.AZ_max*DEG);
+		skp->Text(2 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 9 * H / 28, "MED F23", 7);
+		skp->Text(1 * W / 16, 10 * H / 28, "Min/Max GET at Node (Modes 4/5)", 31);
+		GET_Display(Buffer, GC->rtcc->PZMCCPLN.TLMIN*3600.0);
+		skp->Text(2 * W / 16, 11 * H / 28, Buffer, strlen(Buffer));
+		GET_Display(Buffer, GC->rtcc->PZMCCPLN.TLMAX*3600.0);
+		skp->Text(2 * W / 16, 12 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 14 * H / 28, "MED F24", 7);
+		skp->Text(1 * W / 16, 15 * H / 28, "Gamma and Reentry Range", 23);
+		sprintf_s(Buffer, "%.2lf°", GC->rtcc->PZMCCPLN.gamma_reentry*DEG);
+		skp->Text(2 * W / 16, 16 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.0lf NM", GC->rtcc->PZMCCPLN.Reentry_range);
+		skp->Text(2 * W / 16, 17 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 19 * H / 28, "MED F29", 7);
+		skp->Text(1 * W / 16, 20 * H / 28, "Pericynthion height limits (Mode 9)", 35);
+		sprintf_s(Buffer, "Min: %.0lf NM", GC->rtcc->PZMCCPLN.H_PCYN_MIN / 1852.0);
+		skp->Text(2 * W / 16, 21 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "Max: %.0lf NM", GC->rtcc->PZMCCPLN.H_PCYN_MAX / 1852.0);
+		skp->Text(2 * W / 16, 22 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(1 * W / 16, 24 * H / 28, "Latitude Bias (Modes 8/9)", 25);
+		sprintf_s(Buffer, "%.1lf°", GC->rtcc->PZMCCPLN.LATBIAS*DEG);
+		skp->Text(2 * W / 16, 25 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(8 * W / 16, 4 * H / 28, "LOI/DOI Geometry (Modes 2/4)", 28);
+		sprintf_s(Buffer, "HALOI1 %.1lf", GC->rtcc->PZMCCPLN.H_A_LPO1 / 1852.0);
+		skp->Text(9 * W / 16, 5 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "HPLOI1 %.1lf", GC->rtcc->PZMCCPLN.H_P_LPO1 / 1852.0);
+		skp->Text(9 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "HALOI2 %.1lf", GC->rtcc->PZMCCPLN.H_A_LPO2 / 1852.0);
+		skp->Text(9 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "HPLOI2 %.1lf", GC->rtcc->PZMCCPLN.H_P_LPO2 / 1852.0);
+		skp->Text(9 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "REVS1 %.1lf", GC->rtcc->PZMCCPLN.REVS1);
+		skp->Text(9 * W / 16, 9 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "REVS2 %d", GC->rtcc->PZMCCPLN.REVS2);
+		skp->Text(9 * W / 16, 10 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "SITEROT %.1lf°", GC->rtcc->PZMCCPLN.SITEROT*DEG);
+		skp->Text(9 * W / 16, 11 * H / 28, Buffer, strlen(Buffer));
+
+		skp->Text(8 * W / 16, 13 * H / 28, "Mission Constants", 17);
+		sprintf_s(Buffer, "M %d", GC->rtcc->PZMCCPLN.LOPC_M);
+		skp->Text(9 * W / 16, 14 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "N %d", GC->rtcc->PZMCCPLN.LOPC_N);
+		skp->Text(9 * W / 16, 15 * H / 28, Buffer, strlen(Buffer));
+
+	}
 	return true;
 }
 
@@ -7908,6 +7963,12 @@ void ApolloRTCCMFD::menuTLIPlanningPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetMidcourseConstraintsPage()
+{
+	screen = 80;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -8235,7 +8296,7 @@ void ApolloRTCCMFD::menuMPTDirectInputAttitude()
 void ApolloRTCCMFD::menuMPTDirectInputBurnParameters()
 {
 	bool MPTDirectInputM40DataInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the burn parameter (P1-P7) or DV (Format: M40,PX,X,Y,Z;):", MPTDirectInputM40DataInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the burn parameter (P1-P7) or DV (Format: M40,PX,X,Y,Z;):", MPTDirectInputM40DataInput, 0, 30, (void*)this);
 }
 
 bool MPTDirectInputM40DataInput(void *id, char *str, void *data)
@@ -11299,36 +11360,6 @@ void ApolloRTCCMFD::set_TLCCGET(double time)
 	GC->rtcc->PZMCCPLN.MidcourseGET = time;
 }
 
-void ApolloRTCCMFD::menuSetTLCCPeriGET()
-{
-	bool TLCCPeriGETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the Pericyntheon GET (Format: hhh:mm:ss)", TLCCPeriGETInput, 0, 20, (void*)this);
-}
-
-bool TLCCPeriGETInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, t1time;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		t1time = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_TLCCPeriGET(t1time);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TLCCPeriGET(double time)
-{
-	if (G->TLCCmaneuver == 1)
-	{
-		GC->TLCCNodeGET = time;
-	}
-	else
-	{
-		GC->TLCCPeriGET = time;
-	}
-}
-
 void ApolloRTCCMFD::menuSetTLAND()
 {
 	bool TLandGETnput(void *id, char *str, void *data);
@@ -11356,14 +11387,14 @@ void ApolloRTCCMFD::menuSetTLCCDesiredInclination()
 {
 	if (G->TLCCmaneuver >= 8)
 	{
-		bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", TLCCDesiredInclinationInput, 0, 20, (void*)this);
+bool TLCCDesiredInclinationInput(void *id, char *str, void *data);
+oapiOpenInputBox("Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", TLCCDesiredInclinationInput, 0, 20, (void*)this);
 	}
 }
 
 bool TLCCDesiredInclinationInput(void *id, char *str, void *data)
 {
-	if (strlen(str)<20)
+	if (strlen(str) < 20)
 	{
 		((ApolloRTCCMFD*)data)->set_TLCCDesiredInclination(atof(str));
 		return true;
@@ -11373,105 +11404,196 @@ bool TLCCDesiredInclinationInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_TLCCDesiredInclination(double inc)
 {
-	GC->rtcc->PZMCCPLN.incl_fr = inc*RAD;
+	GC->rtcc->PZMCCPLN.incl_fr = inc * RAD;
 }
 
-void ApolloRTCCMFD::menuSetTLCCMinimumAzimuth()
+void ApolloRTCCMFD::menuSetTLMCCAzimuthConstraints()
 {
-	bool TLCCMinimumAzimuthInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the minimum azimuth at the landing site:", TLCCMinimumAzimuthInput, 0, 20, (void*)this);
+	bool TLMCCAzimuthConstraintsInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Input Format: F22,Minimum Azimuth,Maximum Azimuth; (must be between -110 and -70°)", TLMCCAzimuthConstraintsInput, 0, 20, (void*)this);
 }
 
-bool TLCCMinimumAzimuthInput(void *id, char *str, void *data)
+bool TLMCCAzimuthConstraintsInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+void ApolloRTCCMFD::menuSetTLMCCTLCTimesConstraints()
+{
+	bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint)", TLMCCTLCTimesConstraintsInput, 0, 20, (void*)this);
+}
+
+bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+void ApolloRTCCMFD::menuSetTLMCCReentryContraints()
+{
+	bool TLMCCReentryContraintsInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Input Format: F24,Flight Path Angle,Reentry Range;", TLMCCReentryContraintsInput, 0, 20, (void*)this);
+}
+
+bool TLMCCReentryContraintsInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+void ApolloRTCCMFD::menuSetTLMCCPericynthionHeightLimits()
+{
+	bool TLMCCPericynthionHeightLimitsInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Input Format: F29,height minimum,height maximum;", TLMCCPericynthionHeightLimitsInput, 0, 20, (void*)this);
+}
+
+bool TLMCCPericynthionHeightLimitsInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+void ApolloRTCCMFD::menuSetTLMCCLatitudeBias()
+{
+	bool TLMCCLatitudeBiasInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Latitude bias to find optimum mode 9 maneuver:", TLMCCLatitudeBiasInput, 0, 20, (void*)this);
+}
+
+bool TLMCCLatitudeBiasInput(void *id, char *str, void *data)
 {
 	if (strlen(str) < 20)
 	{
-		((ApolloRTCCMFD*)data)->set_TLCCMinimumAzimuth(atof(str));
+		((ApolloRTCCMFD*)data)->set_TLMCCLatitudeBias(atof(str));
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_TLCCMinimumAzimuth(double azi)
+void ApolloRTCCMFD::set_TLMCCLatitudeBias(double bias)
 {
-	GC->rtcc->PZMCCPLN.AZ_min = azi * RAD;
+	GC->rtcc->PZMCCPLN.LATBIAS = bias * RAD;
 }
 
-void ApolloRTCCMFD::menuSetTLCCMaximumAzimuth()
+void ApolloRTCCMFD::menuSetTLMCCLOIEllipseHeights()
 {
-	bool TLCCMaximumAzimuthInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the maximum azimuth at the landing site:", TLCCMaximumAzimuthInput, 0, 20, (void*)this);
+	bool TLMCCLOIEllipseHeightsInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Apolune and perilune heights of the LOI ellipse (Format: HA HP)", TLMCCLOIEllipseHeightsInput, 0, 20, (void*)this);
 }
 
-bool TLCCMaximumAzimuthInput(void *id, char *str, void *data)
+bool TLMCCLOIEllipseHeightsInput(void *id, char *str, void *data)
 {
-	if (strlen(str) < 20)
+	double ha, hp;
+
+	if (sscanf(str, "%lf %lf", &ha, &hp) == 2)
 	{
-		((ApolloRTCCMFD*)data)->set_TLCCMaximumAzimuth(atof(str));
+		((ApolloRTCCMFD*)data)->set_TLMCCLOIEllipseHeights(ha, hp);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_TLCCMaximumAzimuth(double azi)
+void ApolloRTCCMFD::set_TLMCCLOIEllipseHeights(double ha, double hp)
 {
-	GC->rtcc->PZMCCPLN.AZ_max = azi * RAD;
+	GC->rtcc->PZMCCPLN.H_A_LPO1 = ha * 1852.0;
+	GC->rtcc->PZMCCPLN.H_P_LPO1 = hp * 1852.0;
 }
 
-void ApolloRTCCMFD::menuSetTLCCLat()
+void ApolloRTCCMFD::menuSetTLMCCDOIEllipseHeights()
 {
-	bool TLCCLatInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the pericyntheon latitude:", TLCCLatInput, 0, 20, (void*)this);
+	bool TLMCCDOIEllipseHeightsInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Apolune and perilune heights of the DOI ellipse (Format: HA HP)", TLMCCDOIEllipseHeightsInput, 0, 20, (void*)this);
 }
 
-bool TLCCLatInput(void *id, char *str, void *data)
+bool TLMCCDOIEllipseHeightsInput(void *id, char *str, void *data)
 {
-	if (strlen(str)<20)
+	double ha, hp;
+
+	if (sscanf(str, "%lf %lf", &ha, &hp) == 2)
 	{
-		((ApolloRTCCMFD*)data)->set_TLCCLat(atof(str));
+		((ApolloRTCCMFD*)data)->set_TLMCCDOIEllipseHeights(ha, hp);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_TLCCLat(double lat)
+void ApolloRTCCMFD::set_TLMCCDOIEllipseHeights(double ha, double hp)
 {
-	if (G->TLCCmaneuver == 0 || G->TLCCmaneuver == 2)
-	{
-		GC->TLCCNodeLat = lat*RAD;
-	}
-	else if (G->TLCCmaneuver == 5 || G->TLCCmaneuver == 6)
-	{
-		GC->TLCCNonFreeReturnEMPLat = lat*RAD;
-	}
-	else
-	{
-		GC->TLCCFreeReturnEMPLat = lat*RAD;
-	}
+	GC->rtcc->PZMCCPLN.H_A_LPO2 = ha * 1852.0;
+	GC->rtcc->PZMCCPLN.H_P_LPO2 = hp * 1852.0;
 }
 
-void ApolloRTCCMFD::menuSetTLCCLng()
+void ApolloRTCCMFD::menuSetTLMCCLOIDOIRevs()
 {
-	if (G->TLCCmaneuver == 0 || G->TLCCmaneuver == 2)
-	{
-		bool TLCCLngInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the pericyntheon longitude:", TLCCLngInput, 0, 20, (void*)this);
-	}
+	bool TLMCCLOIDOIRevsInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Revolutions in LOI and DOI ellipses (Format: REVS1 REVS2)", TLMCCLOIDOIRevsInput, 0, 20, (void*)this);
 }
 
-bool TLCCLngInput(void *id, char *str, void *data)
+bool TLMCCLOIDOIRevsInput(void *id, char *str, void *data)
 {
-	if (strlen(str)<20)
+	double revs1;
+	int revs2;
+
+	if (sscanf(str, "%lf %d", &revs1, &revs2) == 2)
 	{
-		((ApolloRTCCMFD*)data)->set_TLCCLng(atof(str));
+		((ApolloRTCCMFD*)data)->set_TLMCCLOIDOIRevs(revs1, revs2);
 		return true;
 	}
 	return false;
 }
 
-void ApolloRTCCMFD::set_TLCCLng(double lng)
+void ApolloRTCCMFD::set_TLMCCLOIDOIRevs(double revs1, int revs2)
 {
-	GC->TLCCNodeLng = lng*RAD;
+	GC->rtcc->PZMCCPLN.REVS1 = revs1;
+	GC->rtcc->PZMCCPLN.REVS2 = revs2;
+}
+
+void ApolloRTCCMFD::menuSetTLMCCLSRotation()
+{
+	bool TLMCCLSRotationInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Rotation of the orbit at the landing site:", TLMCCLSRotationInput, 0, 20, (void*)this);
+}
+
+bool TLMCCLSRotationInput(void *id, char *str, void *data)
+{
+	double rot;
+
+	if (sscanf(str, "%lf", &rot) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_TLMCCLSRotation(rot);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TLMCCLSRotation(double rot)
+{
+	GC->rtcc->PZMCCPLN.SITEROT = rot * RAD;
+}
+
+void ApolloRTCCMFD::menuSetTLMCCLOPCRevs()
+{
+	bool TLMCCLOPCRevsInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Revolutions before and after LOPC (Format: m n)", TLMCCLOPCRevsInput, 0, 20, (void*)this);
+}
+
+bool TLMCCLOPCRevsInput(void *id, char *str, void *data)
+{
+	int m, n;
+
+	if (sscanf(str, "%d %d", &m, &n) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_TLMCCLOPCRevs(m, n);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TLMCCLOPCRevs(int m, int n)
+{
+	GC->rtcc->PZMCCPLN.LOPC_M = m;
+	GC->rtcc->PZMCCPLN.LOPC_N = n;
 }
 
 void ApolloRTCCMFD::menuSetLOIApo()

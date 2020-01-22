@@ -3395,8 +3395,26 @@ public:
 		double incl_fr = 0.0;
 		double AZ_min = -110.0*RAD;
 		double AZ_max = -70.0*RAD;
+		//Minimum and maximum time at pericynthion (GET, hours)
 		double TLMIN = 0.0;
 		double TLMAX = 0.0;
+		double gamma_reentry = -6.52*RAD;
+		double Reentry_range = 1350.0;
+		double H_PCYN_MIN = 40.0*1852.0;
+		double H_PCYN_MAX = 5000.0*1852.0;
+		double LATBIAS = 2.0*RAD;
+		double H_A_LPO1 = 170.0*1852.0;
+		double H_P_LPO1 = 60.0*1852.0;
+		double H_A_LPO2 = 60.0*1852.0;
+		double H_P_LPO2 = 8.0*1852.0;
+		double REVS1 = 2.0;
+		int REVS2 = 11;
+		double SITEROT = 345.0*RAD;
+		//Constants (some of these should be RTCC program constants, but we don't know their name)
+		int LOPC_M = 3;
+		int LOPC_N = 8;
+		double TT1_DPS_MIN = 1.0*3600.0;
+		double TT1_DPS_MAX = 100.0*3600.0;
 	} PZMCCPLN;
 
 	struct UMEDSaveTable
