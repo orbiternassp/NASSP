@@ -3467,23 +3467,23 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double
 	medquant.H_pl_max = PZMCCPLN.H_PCYN_MAX;
 	medquant.AZ_min = PZMCCPLN.AZ_min;
 	medquant.AZ_max = PZMCCPLN.AZ_max;
-	medquant.H_A_LPO1 = 170.0*1852.0;
-	medquant.H_P_LPO1 = 60.0*1852.0;
-	medquant.H_A_LPO2 = 60.0*1852.0;
-	medquant.H_P_LPO2 = 60.0*1852.0;
+	medquant.H_A_LPO1 = PZMCCPLN.H_A_LPO1;
+	medquant.H_P_LPO1 = PZMCCPLN.H_P_LPO1;
+	medquant.H_A_LPO2 = PZMCCPLN.H_A_LPO2;
+	medquant.H_P_LPO2 = PZMCCPLN.H_P_LPO2;
 	medquant.Revs_LPO1 = PZMCCPLN.REVS1;
 	medquant.Revs_LPO2 = PZMCCPLN.REVS2;
 	medquant.TA_LOI = 0.0;
 	medquant.site_rotation_LPO2 = PZMCCPLN.SITEROT;
 	medquant.useSPS = true;
-	medquant.T_min_sea = PZMCCPLN.TLMIN;
+	medquant.T_min_sea = PZMCCPLN.TLMIN + MCGMTL;
 	if (PZMCCPLN.TLMAX <= 0)
 	{
 		medquant.T_max_sea = 1000.0;
 	}
 	else
 	{
-		medquant.T_max_sea = PZMCCPLN.TLMAX;
+		medquant.T_max_sea = PZMCCPLN.TLMAX + MCGMTL;
 	}
 	medquant.Revs_circ = 1;
 	medquant.H_T_circ = 60.0*1852.0;
@@ -11050,9 +11050,11 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EZSPACE.IEMP = newtab.i*DEG;
 
 			EMMDYNEL(sv_true, newtab);
+			EZSPACE.V1 = newtab.V / 0.3048;
 			EZSPACE.PHI1 = EZSPACE.PHIO = newtab.lat * DEG;
 			EZSPACE.LAM1 = newtab.lng*DEG;
 			EZSPACE.GAM1 = newtab.gamma*DEG;
+			EZSPACE.PSI1 = newtab.azi*DEG;
 			EZSPACE.A1 = newtab.a / 1852.0;
 			EZSPACE.L1 = (newtab.TA + newtab.AoP)*DEG;
 			if (EZSPACE.L1 > 360.0)
@@ -11511,6 +11513,10 @@ RTCC_PMMMCD_11_1:
 	{
 		goto RTCC_PMMMCD_11_3;
 	}
+	if (in.BPIND < 3)
+	{
+		goto RTCC_PMMMCD_15_2;
+	}
 RTCC_PMMMCD_11_2:
 	DV_A = X_P * in.BurnParm75 + Y_P * in.BurnParm76 + Z_P * in.BurnParm77;
 	goto RTCC_PMMMCD_11_4;
@@ -11714,7 +11720,7 @@ RTCC_PMMMCD_15_2:
 		d2 = SINR;
 		d3 = COSY;
 		d4 = COSR;
-		goto RTCC_PMMMCD_16_3;
+		goto RTCC_PMMMCD_16_4;
 	}
 	if (in.CoordinateInd == 1)
 	{
@@ -11722,19 +11728,32 @@ RTCC_PMMMCD_15_2:
 		d2 = SINY;
 		d3 = COSR;
 		d4 = COSY;
-		goto RTCC_PMMMCD_16_3;
+		goto RTCC_PMMMCD_16_4;
 	}
 	AL = SINR * SINY;
 	BE = COSR * SINY;
 	a1 = COSR * COSP - AL * SINP;
 	a2 = SINR * COSP;
-	a3 = -COSR*SINP-AL*COSP;
-	b1 = -SINR*COSP - AL * COSP;
+	a3 = -COSR * SINP - AL * COSP;
+	b1 = -SINR * COSP - AL * COSP;
 	b2 = COSR * COSY;
 	b3 = SINR * SINP - BE * COSP;
 	c1 = COSY * SINP;
 	c2 = SINY;
 	c3 = COSY * COSP;
+	goto RTCC_PMMMCD_16_3;
+RTCC_PMMMCD_16_4:
+	AL = COSP * d1;
+	BE = SINP * d1;
+	a1 = COSP * d3;
+	a2 = d1;
+	a3 = -SINP * d3;
+	b1 = SINP * d2 - AL * d4;
+	b2 = d3 * d4;
+	b3 = COSP * d2 + BE * d4;
+	c1 = SINP * d4 + AL * d2;
+	c2 = -d3 * d2;
+	c3 = COSP * d4 - BE * d2;
 RTCC_PMMMCD_16_3:
 	man.X_B = X_P * a1 + Y_P * a2 + Z_P * a3;
 	man.Y_B = X_P * b1 + Y_P * b2 + Z_P * b3;

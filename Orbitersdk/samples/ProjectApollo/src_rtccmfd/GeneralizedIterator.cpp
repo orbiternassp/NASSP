@@ -231,8 +231,8 @@ namespace GenIterator
 		bool terminate, select = true, terminate2, hasclass3, sizing, errind;
 		int n, nMax, class1num;
 		unsigned N, M, i, j;
-		std::vector<double> Target, var_star, v_l, *Y, var_star_temp, Y_star, C, dx, dy, dy_temp, W_Y, W_Y_apo, W_X, step, LowerLimit, UpperLimit, trajin, trajout, depweight;
-		std::vector<int> xmap, ymap, yclass;
+		std::vector<double> Target, var_star, v_l, *Y, var_star_temp, Y_star, C, dx, dy, dy_temp, W_Y, W_Y_apo, W_X, step, LowerLimit, UpperLimit, trajin, trajout, depweight, borderinterval;
+		std::vector<int> xmap, ymap, yclass, KPULL;
 
 		trajin.assign(MGENITER, 0);
 		trajout.assign(NGENITER, 0);
@@ -292,6 +292,8 @@ namespace GenIterator
 		dy_temp.assign(N, 0);
 		W_Y.assign(N, 0);
 		W_Y_apo.assign(N, 0);
+		borderinterval.assign(N, 0);
+		KPULL.assign(N, 0);
 
 		for (i = 0;i < M;i++)
 		{
@@ -357,7 +359,8 @@ namespace GenIterator
 		{
 			if (yclass[i] == 2)
 			{
-				W_Y[i] = depweight[i] * w_avg / pow((UpperLimit[i] - LowerLimit[i]) / 2.0, 2);
+				W_Y[i] = depweight[i] * w_avg;
+				borderinterval[i] = 0.002*abs(UpperLimit[i] - LowerLimit[i]);
 			}
 			else if (yclass[i] == 3)
 			{
@@ -382,6 +385,44 @@ namespace GenIterator
 				}
 				else if (yclass[i] == 2)
 				{
+					if (select == false)
+					{
+						//Barrier checking for optimization mode
+						if (KPULL[i] == 3)
+						{
+							//Below lower limit, or within 0.2% of it
+							if (Y_star[i] <= LowerLimit[i] + borderinterval[i])
+							{
+								KPULL[i] = 4;
+								Target[i] = UpperLimit[i];
+							}
+							else if (Y_star[i] >= UpperLimit[i] - borderinterval[i])
+							{
+								//Above upper limit, or within 0.2% of it
+								KPULL[i] = 8;
+								Target[i] = LowerLimit[i];
+							}
+						}
+						else if (KPULL[i] == 4)
+						{
+							//Back in the limit
+							if (Y_star[i] >= LowerLimit[i])
+							{
+								KPULL[i] = 3;
+								Target[i] = (UpperLimit[i] + LowerLimit[i]) / 2.0;
+							}
+						}
+						else if (KPULL[i] == 8)
+						{
+							//Back in the limit
+							if (Y_star[i] <= UpperLimit[i])
+							{
+								KPULL[i] = 3;
+								Target[i] = (UpperLimit[i] + LowerLimit[i]) / 2.0;
+							}
+						}
+					}
+
 					if ((Y_star[i] > LowerLimit[i]) && (Y_star[i] < UpperLimit[i]))
 					{
 						C[i] = 0.0;
@@ -400,6 +441,17 @@ namespace GenIterator
 						if (select)
 						{
 							W_Y[i] = depweight[i] * pow(2, -32)*((double)(class1num)) / pow(dy[i], 2);
+							for (j = 0;j < N;j++)
+							{
+								if (yclass[j] == 1 || yclass[j] == 3)
+								{
+									KPULL[j] = 1;
+								}
+								else if (yclass[j] == 2)
+								{
+									KPULL[j] = 3;
+								}
+							}
 							n = 0;
 						}
 						select = false;
@@ -482,9 +534,10 @@ namespace GenIterator
 				lambda = lambda * 8.0;
 
 			} while (sizing);
+			dy_temp = dy;
 			do
 			{
-				CalcDX2(P, W_X, W_Y_apo, lambda1, dy, M, N, dx);
+				CalcDX2(P, W_X, W_Y_apo, lambda1, dy_temp, M, N, dx);
 				for (i = 0;i < M;i++)
 				{
 					var_star_temp[i] = var_star[i] + dx[i];
@@ -517,9 +570,19 @@ namespace GenIterator
 					}
 				}
 
+				terminate2 = true;
+
+				for (i = 0;i < M;i++)
+				{
+					if (abs(dx[i]) > step[i] / 100.0)
+					{
+						terminate2 = false;
+					}
+				}
+
 				R = CalcCost(W_Y_apo, dy_temp);
 
-				if (R <= R_old)
+				if (terminate2 || R <= R_old)
 				{
 					lambda = lambda1;
 					break;
@@ -529,21 +592,6 @@ namespace GenIterator
 					lambda1 = 8.0 * lambda1;
 				}
 			} while (R > R_old);
-
-			terminate2 = true;
-
-			for (i = 0;i < M;i++)
-			{
-				if (abs(dx[i]) > step[i] / 100.0)
-				{
-					terminate2 = false;
-				}
-			}
-
-			if (terminate2)
-			{
-				break;
-			}
 
 			R_old = R;
 			CalcDX2(P, W_X, W_Y_apo, lambda, dy, M, N, dx);
@@ -555,6 +603,11 @@ namespace GenIterator
 			OpenRanks(xmap, var_star, trajin, M);
 			state_evaluation(data, trajin, constants, trajout);
 			CloseRanks(ymap, trajout, Y_star, NGENITER);
+
+			if (terminate2)
+			{
+				break;
+			}
 
 			for (i = 0;i < N;i++)
 			{

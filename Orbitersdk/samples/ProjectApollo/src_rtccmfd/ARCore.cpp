@@ -303,16 +303,16 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(96, 41, 16);
 		rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -0.20553*RAD;
 		rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
-		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 58.7*1852.0;
+		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 60.0*1852.0;//58.7*1852.0;
 
 		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 35, 24);
-		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 0.7*RAD;
+		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -0.7*RAD;
 		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
 		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(90, 0, 0);
-		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 0, 0);
+		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 13, 35);
 		rtcc->PZSFPTAB.blocks[0].psi_lls = -93.88*RAD;
 		rtcc->PZSFPTAB.blocks[0].lat_lls = -3.6686*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_lls = 342.5158*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_lls = -17.4842*RAD;
 		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 0.76*1852.0;
 		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 11.0*RAD;
 		rtcc->PZSFPTAB.blocks[0].dv_tei = 3449.5*0.3048;

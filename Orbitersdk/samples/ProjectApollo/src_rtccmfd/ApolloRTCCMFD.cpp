@@ -4127,11 +4127,11 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		if (GC->rtcc->EZETVMED.SpaceDigVehID == 3)
 		{
-			skp->Text(5 * W / 8, 1 * H / 64, "LEM SPACE DIGITALS", 18);
+			skp->Text(4 * W / 8, 1 * H / 64, "LEM SPACE DIGITALS", 18);
 		}
 		else
 		{
-			skp->Text(5 * W / 8, 1 * H / 64, "CSM SPACE DIGITALS", 18);
+			skp->Text(4 * W / 8, 1 * H / 64, "CSM SPACE DIGITALS", 18);
 		}
 
 		skp->SetFont(font2);
@@ -4219,6 +4219,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		skp->Text(16 * W / 32, 2 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, GC->rtcc->EZSPACE.GETV, false);
 		skp->Text(14 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer, GC->rtcc->EZSPACE.GETR, false);
+		skp->Text(26 * W / 32, 2 * H / 28, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%05.0f", GC->rtcc->EZSPACE.V);
 		skp->Text(10 * W / 32, 5 * H / 28, Buffer, strlen(Buffer));
@@ -5237,18 +5240,18 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		{
 			if (GC->rtcc->med_m66.CoordInd == 0)
 			{
-				skp->Text(8 * W / 16, 2 * H / 14, "LVLH", 4);
+				skp->Text(7 * W / 16, 2 * H / 14, "LVLH", 4);
 			}
 			else if (GC->rtcc->med_m66.CoordInd == 1)
 			{
-				skp->Text(8 * W / 16, 2 * H / 14, "IMU", 4);
+				skp->Text(7 * W / 16, 2 * H / 14, "IMU", 4);
 			}
 			else
 			{
-				skp->Text(8 * W / 16, 2 * H / 14, "FDAI", 4);
+				skp->Text(7 * W / 16, 2 * H / 14, "FDAI", 4);
 			}
-			sprintf(Buffer, "%06.2f° %06.2f° %06.2f°", GC->rtcc->med_m66.Att.x*DEG, GC->rtcc->med_m66.Att.y*DEG, GC->rtcc->med_m66.Att.z*DEG);
-			skp->Text(8 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%06.2f°P %06.2f°Y %06.2f°R", GC->rtcc->med_m66.Att.x*DEG, GC->rtcc->med_m66.Att.y*DEG, GC->rtcc->med_m66.Att.z*DEG);
+			skp->Text(7 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		if (GC->rtcc->med_m66.ConfigChangeInd == 0)
@@ -6502,7 +6505,14 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		sprintf_s(Buffer, "%.2f", tab->DT_TO);
 		skp->Text(39 * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.2f", tab->DV_TO);
+		if (tab->DV_TO >= 10.0)
+		{
+			sprintf_s(Buffer, "%.1f", tab->DV_TO);
+		}
+		else
+		{
+			sprintf_s(Buffer, "%.2f", tab->DV_TO);
+		}
 		skp->Text(39 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->IMUAtt.x);
 		skp->Text(37 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
@@ -7076,9 +7086,9 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 
 		skp->Text(1 * W / 16, 4 * H / 28, "MED F22", 7);
 		skp->Text(1 * W / 16, 5 * H / 28, "Azimuth Constraints (Modes 3/5)", 31);
-		sprintf_s(Buffer, "%.1lf°", GC->rtcc->PZMCCPLN.AZ_min*DEG);
+		sprintf_s(Buffer, "%.2lf°", GC->rtcc->PZMCCPLN.AZ_min*DEG);
 		skp->Text(2 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1lf°", GC->rtcc->PZMCCPLN.AZ_max*DEG);
+		sprintf_s(Buffer, "%.2lf°", GC->rtcc->PZMCCPLN.AZ_max*DEG);
 		skp->Text(2 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
 
 		skp->Text(1 * W / 16, 9 * H / 28, "MED F23", 7);
