@@ -1683,19 +1683,18 @@ void ARCore::StateVectorCalc()
 	OBJHANDLE hMoon = oapiGetGbodyByName("Moon");
 	OBJHANDLE hEarth = oapiGetGbodyByName("Earth");
 
-	int mptveh;
-
-	if (SVSlot)
-	{
-		mptveh = RTCC_MPT_CSM;
-	}
-	else
-	{
-		mptveh = RTCC_MPT_LM;
-	}
-
 	if (GC->MissionPlanningActive)
 	{
+		int mptveh;
+
+		if (SVSlot)
+		{
+			mptveh = RTCC_MPT_CSM;
+		}
+		else
+		{
+			mptveh = RTCC_MPT_LM;
+		}
 		double GMT = GC->rtcc->GMTfromGET(SVDesiredGET);
 		EphemerisData EPHEM;
 		if (GC->rtcc->ELFECH(GMT, mptveh, EPHEM))

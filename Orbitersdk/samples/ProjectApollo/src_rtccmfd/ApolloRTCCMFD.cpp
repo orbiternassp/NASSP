@@ -4777,7 +4777,7 @@ bool ApolloRTCCMFD::Update (oapi::Sketchpad *skp)
 		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(5 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
@@ -10520,12 +10520,9 @@ void ApolloRTCCMFD::set_entryrange(double range)
 
 void ApolloRTCCMFD::menuSVCalc()
 {
-	if (G->svtarget != NULL)
+	if (GC->MissionPlanningActive || (G->svtarget != NULL && !G->svtarget->GroundContact()))
 	{
-		if (!G->svtarget->GroundContact())
-		{
-			G->StateVectorCalc();
-		}
+		G->StateVectorCalc();
 	}
 }
 

@@ -3773,7 +3773,14 @@ void TLMCCProcessor::PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &R
 		psi2 = DataTable.psi_lls;
 		R2 = a_lls * (1.0 - e * e) / (1.0 + e * cos(MEDQuantities.site_rotation_LPO2));
 		V2 = sqrt(mu_M*(2.0 / R2 - 1.0 / a_lls));
-		gamma2 = -OrbMech::sign(MEDQuantities.site_rotation_LPO2)*acos(sqrt(mu_M*a_lls*(1.0 - e * e)) / R2 / V2);
+		if (MEDQuantities.site_rotation_LPO2 != 0)
+		{
+			gamma2 = -OrbMech::sign(MEDQuantities.site_rotation_LPO2)*acos(sqrt(mu_M*a_lls*(1.0 - e * e)) / R2 / V2);
+		}
+		else
+		{
+			gamma2 = 0.0;
+		}
 		RVIO(false, RR2, VV2, R2, V2, lambda2, phi2, gamma2, psi2);
 
 		dt3 = OrbMech::time_theta(RR2, -VV2, DA, mu_M);
