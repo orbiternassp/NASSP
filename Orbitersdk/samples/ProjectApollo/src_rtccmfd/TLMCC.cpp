@@ -684,7 +684,7 @@ void TLMCCProcessor::Option4()
 		else
 		{
 			EPHEM(MJD_PC, R_EM, V_EM, R_ES);
-			ddt = DDELTATIME(1.0 / ainv / R_E, (sv_MCC.MJD - MJD_TLI)*24.0, length(R_EM) / R_E, PI - acos(dotp(unit(R_EM), unit(V_EM))), (MJD_PC - MJD_TLI)*24.0);
+			ddt = 0.0;//DDELTATIME(1.0 / ainv / R_E, (sv_MCC.MJD - MJD_TLI)*24.0, length(R_EM) / R_E, PI - acos(dotp(unit(R_EM), unit(V_EM))), (MJD_PC - MJD_TLI)*24.0);
 		}
 	}
 	R = (DataTable.h_pc2 + DataTable.rad_lls) / R_E;
@@ -750,10 +750,11 @@ void TLMCCProcessor::Option4()
 
 	double DV_PPC;
 	MPTSV sv_lls2 = PPC(sv_circ, DataTable.lat_lls, DataTable.lng_lls, DataTable.psi_lls, Constants.n, 0, DV_PPC);
+	outarray.DV_LOPC = _V(DV_PPC, 0, 0);
 	outarray.sv_lls2.R = sv_lls2.R;
 	outarray.sv_lls2.V = sv_lls2.V;
 	outarray.sv_lls2.MJD = sv_lls2.MJD;
-	outarray.M_lopc = MCOMP(DV_PPC, MEDQuantities.Config, MEDQuantities.useSPS, outarray.M_cir);
+	outarray.M_lopc = MCOMP(DV_PPC, MEDQuantities.Config, MEDQuantities.useSPS, outarray.M_cir) - MEDQuantities.LMMass;
 
 	double lat_TEI, lng_TEI, MJD_TEI, dlng, mfm0;
 	MPTSV sv_TEI1, sv_TEI2;
@@ -794,7 +795,7 @@ void TLMCCProcessor::Option4()
 	LIBRAT(R_TEI_EMP, V_TEI_EMP, sv_TEI2.MJD, 4);
 	RVIO(true, R_TEI_EMP, V_TEI_EMP, r_emp, v_emp, theta_emp, phi_emp, gamma_emp, psi_emp);
 	dpsi_tei = 270.0*RAD - psi_emp;
-	if (dpsi_tei > PI2)
+	if (dpsi_tei > PI)
 	{
 		dpsi_tei -= PI2;
 	}
@@ -3286,7 +3287,7 @@ bool TLMCCProcessor::RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, d
 		{
 			return true;
 		}
-		double E = atan(sqrt(temp) / cos_E);
+		double E = atan2(sqrt(temp), cos_E);
 		double theta = E0 - QD * E;
 		beta = QD * abs(theta)*sqrt(1.0 / ainv);
 	}

@@ -3515,6 +3515,7 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double
 
 	//Update skeleton flight plan table
 	PZMCCSFP.blocks[PZMCCPLN.Column - 1] = out.outtab;
+	PZMCCSFP.blocks[PZMCCPLN.Column - 1].GMTTimeFlag = RTCCPresentTimeGMT();
 }
 
 void RTCC::TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res)
@@ -18173,58 +18174,241 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 			PZMCCPLN.Reentry_range = 1350.0;
 		}
 	}
-	//Specify pericynthion height limits for optimized MCC
-	else if (med == 29)
-	{
-		if (data.size() < 1 || data[0] == "")
-		{
-			PZMCCPLN.H_PCYN_MIN = 40.0*1852.0;
-		}
-		else
-		{
-			double ht;
-			if (sscanf(data[0].c_str(), "%lf", &ht) != 1)
-			{
-				return 1;
-			}
-			PZMCCPLN.H_PCYN_MIN = ht * 1852.0;;
-		}
-		if (data.size() < 2 || data[1] == "")
-		{
-			PZMCCPLN.H_PCYN_MAX = 5000.0*1852.0;
-		}
-		else
-		{
-			double ht;
-			if (sscanf(data[1].c_str(), "%lf", &ht) != 1)
-			{
-				return 1;
-			}
-			PZMCCPLN.H_PCYN_MAX = ht * 1852.0;
-		}
-	}
-	//Transfer midcourse correction plan to skeleton flight plan table
-	else if (med == 30)
+	//Delete column of midcourse correction display
+	else if (med == 26)
 	{
 		if (data.size() < 1)
 		{
 			return 1;
 		}
 		int column;
-
 		if (sscanf(data[0].c_str(), "%d", &column) != 1)
 		{
 			return 1;
 		}
-		if (column < 1 || column > 4)
+		if (column < 0 || column>4)
 		{
 			return 1;
 		}
-		if (PZMCCSFP.blocks[column - 1].mode <= 1 || PZMCCSFP.blocks[column - 1].mode >= 6)
+		if (column == 0)
+		{
+			for (int i = 0;i < 4;i++)
+			{
+				PZMCCDIS.data[i].Mode = 0;
+			}
+		}
+		else
+		{
+			PZMCCDIS.data[column - 1].Mode = 0;
+		}
+	}
+	//Specify pericynthion height limits for optimized MCC
+	else if (med == 29)
+	{
+	if (data.size() < 1 || data[0] == "")
+	{
+		PZMCCPLN.H_PCYN_MIN = 40.0*1852.0;
+	}
+	else
+	{
+		double ht;
+		if (sscanf(data[0].c_str(), "%lf", &ht) != 1)
 		{
 			return 1;
 		}
-		PZSFPTAB.blocks[1] = PZMCCSFP.blocks[column - 1];
+		PZMCCPLN.H_PCYN_MIN = ht * 1852.0;;
+	}
+	if (data.size() < 2 || data[1] == "")
+	{
+		PZMCCPLN.H_PCYN_MAX = 5000.0*1852.0;
+	}
+	else
+	{
+		double ht;
+		if (sscanf(data[1].c_str(), "%lf", &ht) != 1)
+		{
+			return 1;
+		}
+		PZMCCPLN.H_PCYN_MAX = ht * 1852.0;
+	}
+	}
+	//Transfer midcourse correction plan to skeleton flight plan table
+	else if (med == 30)
+	{
+	if (data.size() < 1)
+	{
+		return 1;
+	}
+	int column;
+
+	if (sscanf(data[0].c_str(), "%d", &column) != 1)
+	{
+		return 1;
+	}
+	if (column < 1 || column > 4)
+	{
+		return 1;
+	}
+	if (PZMCCSFP.blocks[column - 1].mode <= 1 || PZMCCSFP.blocks[column - 1].mode >= 6)
+	{
+		return 1;
+	}
+	PZSFPTAB.blocks[1] = PZMCCSFP.blocks[column - 1];
+	}
+	//Alteration of Skeleton Flight Plan Table
+	else if (med == 32)
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		int tab;
+		if (sscanf(data[0].c_str(), "%d", &tab) != 1)
+		{
+			return 1;
+		}
+		if (tab < 1 || tab > 2)
+		{
+			return 1;
+		}
+		int item;
+		if (sscanf(data[1].c_str(), "%d", &item) != 1)
+		{
+			return 1;
+		}
+		if (item < 1 || item > 26)
+		{
+			return 1;
+		}
+		TLMCCDataTable *table = &PZSFPTAB.blocks[tab - 1];
+		double hh, mm, ss, val;
+		int mode;
+		switch (item)
+		{
+		case 1:
+		case 3:
+		case 7:
+		case 11:
+		case 12:
+		case 18:
+		case 19:
+		case 26:
+			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return 1;
+			}
+			val = hh * 3600.0 + mm * 60.0 + ss;
+			switch (item)
+			{
+			case 1:
+				table->GMTTimeFlag = val;
+				break;
+			case 3:
+				table->GMT_pc1 = val;
+				break;
+			case 7:
+				table->GMT_pc2 = val;
+				break;
+			case 11:
+				table->GET_TLI = val;
+				break;
+			case 12:
+				table->GMT_nd = val;
+				break;
+			case 18:
+				table->T_lo = val;
+				break;
+			case 19:
+				table->dt_lls = val;
+				break;
+			case 26:
+				table->T_te = val;
+				break;
+			}
+			break;
+		case 2:
+			if (sscanf(data[2].c_str(), "%d", &mode) != 1)
+			{
+				return 1;
+			}
+			table->mode = mode;
+			break;
+		case 4:
+		case 5:
+		case 8:
+		case 9:
+		case 10:
+		case 13:
+		case 14:
+		case 15:
+		case 16:
+		case 17:
+		case 20:
+		case 21:
+		case 22:
+		case 23:
+		case 24:
+		case 25:
+			if (sscanf(data[2].c_str(), "%lf", &val) != 1)
+			{
+				return 1;
+			}
+			switch (item)
+			{
+			case 4:
+				table->lat_pc1 = val * RAD;
+				break;
+			case 5:
+				table->lng_pc1 = val * RAD;
+				break;
+			case 6:
+				table->h_pc1 = val * 1852.0;
+				break;
+			case 8:
+				table->lat_pc2 = val * RAD;
+				break;
+			case 9:
+				table->lng_pc2 = val * RAD;
+				break;
+			case 10:
+				table->h_pc2 = val * 1852.0;
+				break;
+			case 13:
+				table->lat_nd = val * RAD;
+				break;
+			case 14:
+				table->lng_nd = val * RAD;
+				break;
+			case 15:
+				table->h_nd = val * 1852.0;
+				break;
+			case 16:
+				table->dpsi_loi = val * RAD;
+				break;
+			case 17:
+				table->gamma_loi = val * RAD;
+				break;
+			case 20:
+				table->psi_lls = val * RAD;
+				break;
+			case 21:
+				table->lat_lls = val * RAD;
+				break;
+			case 22:
+				table->lng_lls = val * RAD;
+				break;
+			case 23:
+				table->rad_lls = val * 1852.0;
+				break;
+			case 24:
+				table->dpsi_tei = val * RAD;
+				break;
+			case 25:
+				table->dv_tei = val * 0.3048;
+				break;
+			}
+			break;
+		}
 	}
 	//Generation of near Earth tradeoff
 	else if (med == 70)
@@ -24333,3 +24517,304 @@ PMMSIU_PCMGN_700:
 PMMSIU_PCMGN_999:
 	return;
 }
+
+/*NewLOITargeting::NewLOITargeting(NewLOIOptions o)
+{
+	opt = o;
+}
+
+bool NewLOITargeting::MAIN()
+{
+	VECTOR3 U_H, U_PC;
+	double RA_LPO, RP_LPO, R_PHYP, psi_XTRA;
+
+	RA_LPO = opt.HA_LPO + opt.R_LLS;
+	RP_LPO = opt.HP_LPO + opt.R_LLS;
+	R_PHYP = length(opt.SPH.R);
+	U_H = unit(crossp(opt.SPH.R, opt.SPH.V));
+	U_PC = unit(opt.SPH.R);
+
+	if (opt.R_LLS > R_PHYP || R_PHYP > RA_LPO)
+	{
+		return true;
+	}
+	if (opt.DV_maxp > 10000.0*0.3048 || opt.DV_maxm > 10000.0*0.3048)
+	{
+		return true;
+	}
+	if (opt.psi_mx < opt.psi_DS || opt.psi_DS < opt.psi_mn)
+	{
+		return true;
+	}
+	psi_XTRA = opt.psi_mx - 5.0*RAD;
+	if (opt.psi_mx - opt.psi_mn >= 170.0*RAD)
+	{
+		return true;
+	}
+	if (RA_LPO < RP_LPO)
+	{
+		return true;
+	}
+
+	//Compute LPO at LLS
+	double a_LLS, e_LLS, P_LLS, R, V, cos_gamma;
+	a_LLS = (opt.HA_LLS + opt.HP_LLS) / 2.0 + opt.R_LLS;
+	e_LLS = (opt.HA_LLS + opt.R_LLS) / a_LLS - 1.0;
+	P_LLS = a_LLS * (1.0 - e_LLS * e_LLS);
+	R = P_LLS / (1.0 + e_LLS * cos(opt.DW));
+	V = sqrt(OrbMech::mu_Moon*(2.0 / R - 1.0 / a_LLS));
+	cos_gamma = sqrt(OrbMech::mu_Moon*a_LLS*(1.0 + e_LLS * e_LLS)) / (R*V);
+	if (abs(cos_gamma) > 1.0)
+	{
+		cos_gamma = cos_gamma / abs(cos_gamma);
+	}
+	T_LLS = TIME(U_PC, U_H, RA_LPO, RP_LPO, a_LLS);
+	OrbMech::adbar_from_rv(R, V, opt.lng_LLS, opt.lat_LLS, fpa, opt.psi_DS, R_LLS, V_LLS);
+	BACKUP();
+	U_DS = unit(crossp(R_LOI, V_LOI));
+	OrbMech::adbar_from_rv(R, V, opt.lng_LLS, opt.lat_LLS, fpa, psi_XTRA, R_LLS, V_LLS);
+	BACKUP();
+	U_XTRA = unit(crossp(R_LOI2, V_LOI2));
+	U_N = unit(crossp(U_DS, U_XTRA));
+	NU = unit(crossp(U_N, U_DS));
+	U_MN = U_DS * cos(opt.psi_DS - opt.psi_mn) + NU * sin(opt.psi_DS - opt.psi_mn);
+	U_MN = U_DS * cos(opt.psi_mx - opt.psi_DS) - NU * sin(opt.psi_mx - opt.psi_DS);
+	U = U_DS;
+	theta_cop = acos(dotp(U, U_H));
+	COPLNR();
+	//Initalize +/-min theta solns with +/- coplanar soln
+	if (1.0 - dotp(U, U_H) < eps1psi)
+	{
+		//Store +/- coplanar solns as +/- plane solns
+		INTER();
+		INTER();
+		//To DISPLY (page 9)
+	}
+	else
+	{
+		NU = unit(crossp(U, U_H));
+		if (dotp(NU, U_PC) < 0)
+		{
+			NU = -NU;
+		}
+		R_N = a_H * (1.0 - e_H * e_H) / (1.0 + e_H * dotp(NU, U_PC));
+		if (R_N <= RA_LPO)
+		{
+			//Compute conic(?) hyperbolic state vector at node
+			if (R_N < RP_LPO)
+			{
+				R_P = R_N;
+			}
+			else
+			{
+				R_P = RP_LPO;
+			}
+			cos_dpsi_N = dotp(U, U_H);
+			theta = 0.0;
+			U_S = U_DS;
+			DVDA();
+			CANS();
+			DVDA();
+			CANS();
+			MIT = 0;
+			if (R_N < RP_LPO)
+			{
+				MT = 1;
+				MINTHT();
+			}
+			else
+			{
+				if (dvp > opt.DV_maxp)
+				{
+					MT = 1;
+					if (dvm > opt.DV_maxm)
+					{
+						MINTHT();
+					}
+					else
+					{
+						MINTHT();
+					}
+				}
+				else
+				{
+					MINTHT();
+					MT = 1;
+				}
+			}
+			if (MT == 0 || plansol)
+			{
+				INTER();
+				INTER();
+			}
+		}
+		else
+		{
+			//To MIN theta (page 8)
+		}
+	}
+
+	return false;
+}
+
+double NewLOITargeting::TIME(VECTOR3 U_PC, VECTOR3 U_H, double RA_LPO, double RP_LPO, double a_LLS)
+{
+	bool recycle = false;
+	VECTOR3 U_LLS_sg, U_LLS;
+	double R1, DR1, R2, dt1, dt2, dt3, T_LLS, DA;
+
+	DR1 = modf(opt.REVS1, &R1);
+	R2 = (double)opt.REVS2;
+	dt1 = R1 * PI2*sqrt(pow(RA_LPO + RP_LPO, 3) / (8.0*OrbMech::mu_Moon)) + R2 * PI2*sqrt(pow(a_LLS, 3) / OrbMech::mu_Moon);
+	T_LLS = opt.SPH.GMT + dt1;
+LOI_TIME_A:
+	U_LLS_sg = OrbMech::r_from_latlong(opt.lat_LLS, opt.lng_LLS);
+	U_LLS = rhmul(OrbMech::GetRotationMatrix(BODY_MOON, opt.GMTBASE + T_LLS / 24.0 / 3600.0), U_LLS_sg);
+	DA = acos(dotp(U_LLS, U_PC));
+	if (dotp(crossp(U_LLS, U_PC), U_H) > 0)
+	{
+		DA = PI2 - DA;
+	}
+	if (DA > DR1)
+	{
+		dt2 = 0.0;
+		dt3 = 0.0;
+		T_LLS = opt.SPH.GMT + dt1 + dt2 + dt3;
+	}
+	else
+	{
+		dt2 = 0.0;
+		T_LLS = opt.SPH.GMT + dt1 + dt2;
+	}
+	if (recycle == false)
+	{
+		recycle = true;
+		goto LOI_TIME_A;
+	}
+	return T_LLS;
+}
+
+void NewLOITargeting::BACKUP()
+{
+
+}
+
+bool NewLOITargeting::DHDR(double a_L, double e_L, double R_N, double dw_a, double R_L, double R_p, double SGN, double R_a, double &dhdr)
+{
+	double a, e, K1, K2, K3, K4;
+	if (R_a <= R_N)
+	{
+		//Error
+		return true;
+	}
+	if (R_p > R_N)
+	{
+		//Error
+		return true;
+	}
+	double P_L, P, sin_wp;
+	P_L = a_L * (1.0 - e_L * e_L);
+	a = (R_a + R_p) / 2.0;
+	e / R_a / a - 1.0;
+	P = a * (1.0 - e * e);
+	sin_wp = sqrt(1.0 - pow(P*R_N, 2) / (R_N*e*e));
+	K1 = -R_L * R_L*e_L / P_L;
+	K2 = cos(dw_a) + SGN * sin(dw_a)*cos(w_p) / sin(w_p);
+	K4 = cos(dw_p) + sin(dw_p)*cos(w_p) / sin(w_p);
+	K3 = (P*(R_a + a * e) + R_a * (a*e*e - R_N)) / (2.0*R_N*a*a*e*e);
+	dhdr = K4 * K1*K2*K3 - 1.0;
+	return false;
+}
+
+double NewLOITargeting::DELV2(VECTOR3 U_S, VECTOR3 R_P1_apo, double R_a, double R_p)
+{
+	VECTOR3 R_p1;
+	double a1, e1, P2, P1;
+
+	R_p1 = R_P1_apo * cos(opt.DW) - unit(crossp(R_P1_apo, U_S))*sign(opt.DW);
+	a1 = (R_a + R_p) / 2.0;
+	e1 = R_a / a1 - 1.0;
+	P2 = a2 * (1.0 - e_L * e_L);
+	P1 = a1 * (1.0 - e1 * e1);
+	cos_dw = dotp(R_p1, U_PL);
+	if (cos_dw > 1)
+	{
+		cos_dw = 1.0;
+	}
+	else if (cos_dw < -1)
+	{
+		cos_dw = -1.0;
+	}
+	sin_dw = sqrt(1.0 - cos_dw * cos_dw);
+	dw = atan2(sin_dw, cos_dw);
+	K_P = P1 - P2;
+	K_C = P1 * e2 - cos_dw * P2*e1;
+	K_S = P2 * e1*sin_dw;
+	a = K_C * K_C + K_S * K_S;
+	b = 2.0*K_P*K_C;
+	c = K_P * K_P - K_S * K_S;
+	DISC = b * b - 4.0*a*c;
+	if (DISC <= 0)
+	{
+		//No intersection, DV not calculated
+		return;
+	}
+	SGN1 = 1.0;
+LOI_DELV2_B:
+	cos_eta2 = (-b + SGN1 * sqrt(DISC)) / (2.0*a);
+	if (cos_eta2 > 1)
+	{
+		cos_eta2 = 1.0;
+	}
+	else if (cos_eta2 < -1)
+	{
+		cos_eta2 = -1.0;
+	}
+	eta2 = acos(cos_eta2);
+	eta1 = dw - eta2;
+	SGN2 = 1.0*sign(dotp(crossp(R_p1, U_PL), U_S));
+	SGN3 = sign(abs(PI - dw) - abs(eta2))*SGN2;
+	do
+	{
+		R1 = P1 / (1.0 + e1 * cos(eta1));
+		R2 = P2 / (1.0 + e2 * cos(eta2));
+		if (abs(R1 - R2) >= eps2)
+		{
+			eta1 = dw - eta2;
+			SGN2 = -SGN2;
+			SGN3 = sign(abs(dw) - abs(eta2))*SGN2;
+		}
+	} while (abs(R1 - R2) >= eps2);
+	eta2 = SGN2 * eta2;
+	eta1 = SGN3 * eta1;
+	V1 = sqrt(OrbMech::mu_Moon*(2.0 / R1 - 1.0 / a1));
+	V2 = sqrt(OrbMech::mu_Moon*(2.0 / R2 - 1.0 / a_L));
+	cos_g1 = sqrt(OrbMech::mu_Moon*P1) / (R1*V1);
+	cos_g2 = sqrt(OrbMech::mu_Moon*P2) / (R2*V2);
+	if (cos_g1 > 1)
+	{
+		cos_g1 = 1.0;
+	}
+	else if (cos_g1 < -1)
+	{
+		cos_g1 = -1.0;
+	}
+	if (cos_g2 > 1)
+	{
+		cos_g2 = 1.0;
+	}
+	else if (cos_g2 < -1)
+	{
+		cos_g2 = -1.0;
+	}
+	gamma1 = sign(eta1)*acos(cos_g1);
+	gamma2 = sign(eta2)*acos(cos_g2);
+	dgamma = abs(gamma1 - gamma2);
+	DV = sqrt(V1*V1 + V2 * V2 - 2.0*V1*V2*cos(dgamma));
+	if (SGN1 == 1.0)
+	{
+		SGN1 = -1.0;
+		goto LOI_DELV2_B;
+	}
+	//Select less of two DVs for display. Save eta1, eta2, dgamma, V1, V2, R1, R2 for possible output
+}*/

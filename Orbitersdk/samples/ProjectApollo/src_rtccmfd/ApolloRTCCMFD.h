@@ -596,7 +596,9 @@ public:
 	void menuMidcourseTradeoffPage();
 	void menuTLIPlanningPage();
 	void menuCycleSFPDisplay();
+	void menuAlterationSFPData();
 	void menuTransferMCCPlanToSFP();
+	void menuDeleteMidcourseColumn();
 
 protected:
 	oapi::Font *font;

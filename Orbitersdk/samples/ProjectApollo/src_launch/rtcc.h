@@ -4313,4 +4313,43 @@ private:
 	OBJHANDLE hEarth;
 };
 
+/*struct NewLOIOptions
+{
+	//State vector at hyperbolic apolune
+	EphemerisData SPH;
+	double HA_LPO;
+	double HP_LPO;
+	double psi_mx;
+	double psi_DS;
+	double psi_mn;
+	double DV_maxp;
+	double DV_maxm;
+	double HA_LLS;
+	double HP_LLS;
+	double R_LLS;
+	double REVS1;
+	int REVS2;
+	double eta1;
+	double dh_bias;
+	double DW;
+	double lat_LLS;
+	double lng_LLS;
+	double GMTBASE;
+};
+
+class NewLOITargeting
+{
+public:
+	NewLOITargeting(NewLOIOptions o);
+	bool MAIN();
+protected:
+	double TIME(VECTOR3 U_PC, VECTOR3 U_H, double RA_LPO, double RP_LPO, double a_LLS);
+	void BACKUP();
+	bool DHDR(double a_L, double e_L, double R_N, double dw_a, double R_L, double R_p, double SGN, double R_a, double &dhdr);
+	//Tom computer the DV for the maneuver after LOI
+	double DELV2(VECTOR3 U_S, VECTOR3 R_P1_apo, double R_a, double R_p);
+
+	NewLOIOptions opt;
+};*/
+
 #endif

@@ -11429,7 +11429,7 @@ bool TLMCCAzimuthConstraintsInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSetTLMCCTLCTimesConstraints()
 {
 	bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint)", TLMCCTLCTimesConstraintsInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint)", TLMCCTLCTimesConstraintsInput, 0, 30, (void*)this);
 }
 
 bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data)
@@ -13607,6 +13607,18 @@ void ApolloRTCCMFD::menuCycleSFPDisplay()
 	}
 }
 
+void ApolloRTCCMFD::menuAlterationSFPData()
+{
+	bool AlterationSFPDataInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: F32, Block (1-2), Item (1-26), Value;", AlterationSFPDataInput, 0, 20, (void*)this);
+}
+
+bool AlterationSFPDataInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::menuTransferMCCPlanToSFP()
 {
 	bool TransferMCCPlanToSFPInput(void* id, char *str, void *data);
@@ -13614,6 +13626,18 @@ void ApolloRTCCMFD::menuTransferMCCPlanToSFP()
 }
 
 bool TransferMCCPlanToSFPInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+void ApolloRTCCMFD::menuDeleteMidcourseColumn()
+{
+	bool DeleteMidcourseColumnInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Delete midcourse tradeoff column. Format: F26,Column; (0 for all)", DeleteMidcourseColumnInput, 0, 20, (void*)this);
+}
+
+bool DeleteMidcourseColumnInput(void* id, char *str, void *data)
 {
 	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
