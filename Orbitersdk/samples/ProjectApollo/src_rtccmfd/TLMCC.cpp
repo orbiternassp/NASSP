@@ -584,7 +584,7 @@ void TLMCCProcessor::Option3()
 	//Step 5
 	ConicTransEarthInjection(outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, DT_te, true);
 
-	ConvergeTLMC(outarray.v_pl, outarray.psi_pl, outarray.lng_pl, lat_pl3, (h_pl3 + DataTable.rad_lls) / R_E, GMT_pl3, true);
+	ConvergeTLMC(outarray.v_pl*3600.0 / R_E, outarray.psi_pl, outarray.lng_pl, lat_pl3, (h_pl3 + DataTable.rad_lls) / R_E, GMT_pl3, true);
 
 	//Step 6
 	IntegratedFreeReturnFlyby(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, h_pl3, lat_pl3);
@@ -732,9 +732,12 @@ void TLMCCProcessor::Option4()
 
 	//Step 2
 	ConicNonfreeReturnOptimizedFixedOrbitToLLS(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, DataTable.gamma_loi, dt_min, dt_max);
-	double h_pl2 = outarray.h_pl;
-	double lat_pl2 = outarray.lat_pl;
-	double GMT_pl2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase) / 3600.0;
+	double h_nd2 = outarray.h_nd;
+	double lat_nd2 = outarray.lat_nd;
+	double lng_nd2 = outarray.lng_nd;
+	double v_nd2 = outarray.v_pl*3600.0 / R_E;
+	double psi_nd2 = outarray.psi_pl;
+	double GMT_nd2 = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GMTBase) / 3600.0;
 	double gamma_loi2 = outarray.gamma_nd;
 	double dt_lls2 = outarray.dt_lls;
 
@@ -816,11 +819,10 @@ void TLMCCProcessor::Option4()
 	ConicTransEarthInjection(outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, DT_te, true);
 
 	//Step 3
-	double R_nd = DataTable.rad_lls + outarray.h_pl;
-	ConvergeTLMC(outarray.v_pl, outarray.psi_pl, outarray.lng_pl, lat_pl2, R_nd / R_E, GMT_pl2, true);
+	ConvergeTLMC(v_nd2, psi_nd2, lng_nd2, lat_nd2, (DataTable.rad_lls + h_nd2) / R_E, GMT_nd2, true);
 
 	//Step 4
-	IntegratedXYZTTrajectory(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, R_nd, lat_pl2, outarray.lng_pl, GMT_pl2*3600.0);
+	IntegratedXYZTTrajectory(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, DataTable.rad_lls + h_nd2, lat_nd2, lng_nd2, GMT_nd2*3600.0);
 
 	VECTOR3 DV4, DV_temp, NewGuess, DV5, DV6;
 	double r, v1, theta, phi, gamma1, psi1, v2, gamma2, psi2, GMT_nd, v_c, dv_char5, dv_char6;
@@ -958,12 +960,15 @@ void TLMCCProcessor::Option5()
 
 	//Step 2
 	ConicNonfreeReturnOptimizedFreeOrbitToLOPC(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, dt_min, dt_max);
-	double h_pl2 = outarray.h_pl;
-	double lat_pl2 = outarray.lat_pl;
-	double GMT_pl2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase) / 3600.0;
+	double h_nd2 = outarray.h_nd;
+	double lat_nd2 = outarray.lat_nd;
+	double lng_nd2 = outarray.lng_nd;
+	double GMT_nd2 = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GMTBase) / 3600.0;
 	double gamma_loi2 = outarray.gamma_nd;
 	double dpsi_loi2 = outarray.dpsi_loi;
 	double dt_lls2 = outarray.dt_lls;
+	double psi_nd2 = outarray.psi_pl;
+	double v_nd2 = outarray.v_pl*3600.0 / R_E;
 
 	double lat_TEI, lng_TEI, MJD_TEI, dlng, dt;
 	MPTSV sv_TEI1, sv_TEI2;
@@ -1025,11 +1030,11 @@ void TLMCCProcessor::Option5()
 	ConicTransEarthInjection(outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, DT_te, true);
 
 	//Step 3
-	double R_nd = DataTable.rad_lls + outarray.h_pl;
-	ConvergeTLMC(outarray.v_pl, outarray.psi_pl, outarray.lng_pl, lat_pl2, R_nd / R_E, GMT_pl2, true);
+	double R_nd2 = DataTable.rad_lls + h_nd2;
+	ConvergeTLMC(v_nd2, psi_nd2, lng_nd2, lat_nd2, R_nd2 / R_E, GMT_nd2, true);
 
 	//Step 4
-	IntegratedXYZTTrajectory(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, R_nd, lat_pl2, outarray.lng_pl, GMT_pl2*3600.0);
+	IntegratedXYZTTrajectory(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, R_nd2, lat_nd2, lng_nd2, GMT_nd2*3600.0);
 	
 	VECTOR3 DV4, DV_temp, NewGuess, DV5, DV6;
 	double r, v1, theta, phi, gamma1, psi1, v2, gamma2, psi2, GMT_nd, v_c, dv_char5, dv_char6;
@@ -1525,13 +1530,13 @@ void TLMCCProcessor::ConvergeTLMC(double V, double azi, double lng, double lat, 
 	{
 		block.DepVarSwitch[3] = true;
 	}
-	block.DepVarLowerLimit[0] = sv_MCC.R.x - 0.0657*1852.0;
-	block.DepVarLowerLimit[1] = sv_MCC.R.y - 0.0657*1852.0;
-	block.DepVarLowerLimit[2] = sv_MCC.R.z - 0.0657*1852.0;
+	block.DepVarLowerLimit[0] = (sv_MCC.R.x - 0.0657*1852.0) / R_E;
+	block.DepVarLowerLimit[1] = (sv_MCC.R.y - 0.0657*1852.0) / R_E;
+	block.DepVarLowerLimit[2] = (sv_MCC.R.z - 0.0657*1852.0) / R_E;
 	block.DepVarLowerLimit[3] = 0.0;
-	block.DepVarUpperLimit[0] = sv_MCC.R.x + 0.0657*1852.0;
-	block.DepVarUpperLimit[1] = sv_MCC.R.y + 0.0657*1852.0;
-	block.DepVarUpperLimit[2] = sv_MCC.R.z + 0.0657*1852.0;
+	block.DepVarUpperLimit[0] = (sv_MCC.R.x + 0.0657*1852.0) / R_E;
+	block.DepVarUpperLimit[1] = (sv_MCC.R.y + 0.0657*1852.0) / R_E;
+	block.DepVarUpperLimit[2] = (sv_MCC.R.z + 0.0657*1852.0) / R_E;
 	block.DepVarUpperLimit[3] = 92.0*RAD;
 	block.DepVarClass[0] = 1;
 	block.DepVarClass[1] = 1;
@@ -1573,11 +1578,11 @@ void TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double
 	block.DepVarSwitch[1] = true;
 	block.DepVarSwitch[2] = true;
 	block.DepVarSwitch[3] = true;
-	block.DepVarLowerLimit[0] = R_nd - 0.5*1852.0;
+	block.DepVarLowerLimit[0] = (R_nd - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[1] = lat_nd - 0.01*RAD;
 	block.DepVarLowerLimit[2] = lng_nd - 0.01*RAD;
 	block.DepVarLowerLimit[3] = 90.0*RAD;
-	block.DepVarUpperLimit[0] = R_nd + 0.5*1852.0;
+	block.DepVarUpperLimit[0] = (R_nd + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[1] = lat_nd + 0.01*RAD;
 	block.DepVarUpperLimit[2] = lng_nd + 0.01*RAD;
 	block.DepVarUpperLimit[3] = 182.0*RAD;
@@ -1626,15 +1631,15 @@ void TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess,
 	block.DepVarSwitch[2] = true;
 	block.DepVarSwitch[3] = true;
 	block.DepVarSwitch[4] = true;
-	block.DepVarLowerLimit[0] = H_pl - 0.5*1852.0;
+	block.DepVarLowerLimit[0] = (H_pl - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[1] = lat_pl_min;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarLowerLimit[3] = (64.0965*1852.0) / R_E;
 	block.DepVarLowerLimit[4] = inc_pg - 0.01*RAD;
-	block.DepVarUpperLimit[0] = H_pl + 0.5*1852.0;
+	block.DepVarUpperLimit[0] = (H_pl + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[1] = lat_pl_max;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarUpperLimit[3] = (67.5665*1852.0) / R_E;
 	block.DepVarUpperLimit[4] = inc_pg + 0.01*RAD;
 	block.DepVarWeight[1] = 32.0;
 	block.DepVarWeight[2] = 1.0;
@@ -1680,14 +1685,14 @@ void TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double 
 	block.DepVarSwitch[3] = true;
 	block.DepVarSwitch[4] = true;
 	block.DepVarSwitch[15] = true;
-	block.DepVarLowerLimit[0] = MEDQuantities.H_pl_min;
+	block.DepVarLowerLimit[0] = MEDQuantities.H_pl_min / R_E;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarLowerLimit[3] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[4] = inc_pg_min;
 	block.DepVarLowerLimit[15] = outarray.M_i + 5000.0*0.453;
-	block.DepVarUpperLimit[0] = MEDQuantities.H_pl_max;
+	block.DepVarUpperLimit[0] = MEDQuantities.H_pl_max / R_E;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarUpperLimit[3] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[4] = inc_pg_max;
 	block.DepVarUpperLimit[15] = outarray.M_i + 5000.0*0.453;
 	block.DepVarWeight[0] = 8.0;
@@ -1735,15 +1740,15 @@ void TLMCCProcessor::IntegratedFreeReturnFlyby(MPTSV sv0, double dv_guess, doubl
 	block.DepVarSwitch[6] = true;
 	block.DepVarSwitch[7] = true;
 	block.DepVarLowerLimit[3] = 90.0*RAD;
-	block.DepVarLowerLimit[4] = H_pl - 0.5*1852.0;
+	block.DepVarLowerLimit[4] = (H_pl - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[5] = lat_pl - 0.01*RAD;
 	block.DepVarLowerLimit[6] = 0.0;
-	block.DepVarLowerLimit[7] = 64.0965*1852.0;
+	block.DepVarLowerLimit[7] = (64.0965*1852.0) / R_E;
 	block.DepVarUpperLimit[3] = 182.0*RAD;
-	block.DepVarUpperLimit[4] = H_pl + 0.5*1852.0;
+	block.DepVarUpperLimit[4] = (H_pl + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[5] = lat_pl + 0.01*RAD;
 	block.DepVarUpperLimit[6] = 90.0*RAD;
-	block.DepVarUpperLimit[7] = 67.5665*1852.0;
+	block.DepVarUpperLimit[7] = (67.5665*1852.0) / R_E;
 	block.DepVarWeight[3] = 64.0;
 	block.DepVarWeight[6] = 8.0;
 	block.DepVarClass[3] = 2;
@@ -1787,15 +1792,15 @@ void TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double dv_guess, double dga
 	block.DepVarSwitch[2] = true;
 	block.DepVarSwitch[3] = true;
 	block.DepVarSwitch[4] = true;
-	block.DepVarLowerLimit[0] = H_pl - 0.5*1852.0;
+	block.DepVarLowerLimit[0] = (H_pl - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[1] = lat_pl - 0.01*RAD;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarLowerLimit[3] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[4] = 0.0;
-	block.DepVarUpperLimit[0] = H_pl + 0.5*1852.0;
+	block.DepVarUpperLimit[0] = (H_pl + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[1] = lat_pl + 0.01*RAD;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarUpperLimit[3] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[4] = 90.0*RAD;
 	block.DepVarWeight[2] = 64.0;
 	block.DepVarWeight[4] = 8.0;
@@ -1839,13 +1844,13 @@ void TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double dv_g
 	block.DepVarSwitch[6] = true;
 	block.DepVarSwitch[7] = true;
 	block.DepVarLowerLimit[3] = 90.0*RAD;
-	block.DepVarLowerLimit[4] = H_pl - 0.5*1852.0;
+	block.DepVarLowerLimit[4] = (H_pl - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[6] = inc_fr - 0.01*RAD;
-	block.DepVarLowerLimit[7] = 64.0965*1852.0;
+	block.DepVarLowerLimit[7] = (64.0965*1852.0) / R_E;
 	block.DepVarUpperLimit[3] = 182.0*RAD;
-	block.DepVarUpperLimit[4] = H_pl + 0.5*1852.0;
+	block.DepVarUpperLimit[4] = (H_pl + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[6] = inc_fr + 0.01*RAD;
-	block.DepVarUpperLimit[7] = 67.5665*1852.0;
+	block.DepVarUpperLimit[7] = (67.5665*1852.0) / R_E;
 	block.DepVarWeight[3] = 1.0;
 	block.DepVarClass[3] = 2;
 	block.DepVarClass[4] = 1;
@@ -1898,16 +1903,16 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double d
 	block.DepVarSwitch[6] = true;
 	block.DepVarSwitch[17] = true;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarLowerLimit[3] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[4] = 0.0;
 	block.DepVarLowerLimit[5] = -0.01*RAD;
-	block.DepVarLowerLimit[6] = -0.1*1852.0;
+	block.DepVarLowerLimit[6] = -0.1*1852.0 / R_E;
 	block.DepVarLowerLimit[17] = 100000.0*0.453;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarUpperLimit[3] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[4] = 75.0*RAD;
 	block.DepVarUpperLimit[5] = 0.01*RAD;
-	block.DepVarUpperLimit[6] = 0.1*1852.0;
+	block.DepVarUpperLimit[6] = 0.1*1852.0 / R_E;
 	block.DepVarUpperLimit[17] = 100000.0*0.453;
 	block.DepVarWeight[2] = 64.0;
 	block.DepVarWeight[4] = 8.0;
@@ -1961,14 +1966,14 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, doubl
 	block.DepVarSwitch[20] = true;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
 	block.DepVarLowerLimit[5] = -0.01*RAD;
-	block.DepVarLowerLimit[6] = -0.1*1852.0;
+	block.DepVarLowerLimit[6] = -0.1*1852.0 / R_E;
 	block.DepVarLowerLimit[17] = 100000.0*0.453;
-	block.DepVarLowerLimit[20] = T_min - 2.0*3600.0;
+	block.DepVarLowerLimit[20] = T_min / 3600.0 - 2.0;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
 	block.DepVarUpperLimit[5] = 0.01*RAD;
-	block.DepVarUpperLimit[6] = 0.1*1852.0;
+	block.DepVarUpperLimit[6] = 0.1*1852.0 / R_E;
 	block.DepVarUpperLimit[17] = 100000.0*0.453;
-	block.DepVarUpperLimit[20] = T_max + 2.0*3600.0;
+	block.DepVarUpperLimit[20] = T_max / 3600.0 + 2.0;
 	block.DepVarWeight[2] = 64.0;
 	block.DepVarWeight[17] = 1.0;
 	block.DepVarWeight[20] = 0.125;
@@ -2042,20 +2047,20 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double d
 	block.DepVarSwitch[9] = true;
 	block.DepVarSwitch[10] = true;
 	block.DepVarSwitch[18] = true;
-	block.DepVarLowerLimit[0] = 40.0*1852.0;
+	block.DepVarLowerLimit[0] = 40.0*1852.0 / R_E;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarLowerLimit[3] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[4] = 0.0;
-	block.DepVarLowerLimit[7] = Constants.H_LPO - 0.5*1852.0;
+	block.DepVarLowerLimit[7] = (Constants.H_LPO - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[8] = DataTable.lat_lls - 0.01*RAD;
 	block.DepVarLowerLimit[9] = DataTable.lng_lls - 0.01*RAD;
 	block.DepVarLowerLimit[10] = AZ_min;
 	block.DepVarLowerLimit[18] = 70000.0*0.453;
-	block.DepVarUpperLimit[0] = 100.0*1852.0;
+	block.DepVarUpperLimit[0] = 100.0*1852.0 / R_E;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarUpperLimit[3] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[4] = 75.0*RAD;
-	block.DepVarUpperLimit[7] = Constants.H_LPO + 0.5*1852.0;
+	block.DepVarUpperLimit[7] = (Constants.H_LPO + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[8] = DataTable.lat_lls + 0.01*RAD;
 	block.DepVarUpperLimit[9] = DataTable.lng_lls + 0.01*RAD;
 	block.DepVarUpperLimit[10] = AZ_max;
@@ -2126,22 +2131,22 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, doubl
 	block.DepVarSwitch[10] = true;
 	block.DepVarSwitch[18] = true;
 	block.DepVarSwitch[20] = true;
-	block.DepVarLowerLimit[0] = DataTable.h_pc2 - 0.1*1852.0;
+	block.DepVarLowerLimit[0] = (DataTable.h_pc2 - 0.1*1852.0) / R_E;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[7] = Constants.H_LPO - 0.5*1852.0;
+	block.DepVarLowerLimit[7] = (Constants.H_LPO - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[8] = DataTable.lat_lls - 0.01*RAD;
 	block.DepVarLowerLimit[9] = DataTable.lng_lls - 0.01*RAD;
 	block.DepVarLowerLimit[10] = DataTable.psi_lls - 0.01*RAD;
 	block.DepVarLowerLimit[18] = outarray.M_i + 6000.0*0.453;
-	block.DepVarLowerLimit[20] = T_min - 2.0*3600.0;
-	block.DepVarUpperLimit[0] = DataTable.h_pc2 + 0.1*1852.0;
+	block.DepVarLowerLimit[20] = T_min / 3600.0 - 2.0;
+	block.DepVarUpperLimit[0] = (DataTable.h_pc2 + 0.1*1852.0) / R_E;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[7] = Constants.H_LPO + 0.5*1852.0;
+	block.DepVarUpperLimit[7] = (Constants.H_LPO + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[8] = DataTable.lat_lls + 0.01*RAD;
 	block.DepVarUpperLimit[9] = DataTable.lng_lls + 0.01*RAD;
 	block.DepVarUpperLimit[10] = DataTable.psi_lls + 0.01*RAD;
 	block.DepVarUpperLimit[18] = outarray.M_i + 6000.0*0.453;
-	block.DepVarUpperLimit[20] = T_max + 2.0*3600.0;
+	block.DepVarUpperLimit[20] = T_max / 3600.0 + 2.0;
 	block.DepVarWeight[2] = 64.0;
 	block.DepVarWeight[18] = 1.0;
 	block.DepVarWeight[20] = 0.125;
@@ -2193,24 +2198,24 @@ void TLMCCProcessor::ConicTransEarthInjection(double T_lo, double dv_tei, double
 	{
 		block.DepVarSwitch[14] = true;
 		block.DepVarSwitch[19] = true;
-		block.DepVarLowerLimit[13] = T_te - 8.0*3600.0;
-		block.DepVarUpperLimit[13] = T_te + 8.0*3600.0;
+		block.DepVarLowerLimit[13] = T_te / 3600.0 - 8.0;
+		block.DepVarUpperLimit[13] = T_te / 3600.0 + 8.0;
 		block.DepVarClass[13] = 2;
 	}
 	else
 	{
-		block.DepVarLowerLimit[13] = T_te - 0.1*3600.0;
-		block.DepVarUpperLimit[13] = T_te + 0.1*3600.0;
+		block.DepVarLowerLimit[13] = T_te / 3600.0 - 0.1;
+		block.DepVarUpperLimit[13] = T_te / 3600.0 + 0.1;
 		block.DepVarClass[13] = 1;
 	}
-	block.DepVarLowerLimit[11] = 64.0965*1852.0;
+	block.DepVarLowerLimit[11] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[12] = 0.0;
 	block.DepVarLowerLimit[14] = -0.2*RAD;
-	block.DepVarLowerLimit[19] = outarray.M_i + 6000.0*0.453;
-	block.DepVarUpperLimit[11] = 67.5665*1852.0;
+	block.DepVarLowerLimit[19] = outarray.M_tei + 6000.0*0.453;
+	block.DepVarUpperLimit[11] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[12] = 75.0*RAD;
 	block.DepVarUpperLimit[14] = 0.2*RAD;
-	block.DepVarUpperLimit[19] = outarray.M_i + 6000.0*0.453;
+	block.DepVarUpperLimit[19] = outarray.M_tei + 6000.0*0.453;
 	block.DepVarWeight[12] = 8.0;
 	block.DepVarWeight[13] = 1.0;
 	block.DepVarWeight[19] = 1.0;
@@ -2319,44 +2324,44 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	block.DepVarSwitch[19] = true;
 	if (freereturn)
 	{
-		block.DepVarLowerLimit[0] = 40.0*1852.0;
+		block.DepVarLowerLimit[0] = 40.0*1852.0 / R_E;
 	}
 	else
 	{
-		block.DepVarLowerLimit[0] = DataTable.h_pc2 - 0.1*1852.0;
-		block.DepVarLowerLimit[20] = T_min;
+		block.DepVarLowerLimit[0] = (DataTable.h_pc2 - 0.1*1852.0) / R_E;
+		block.DepVarLowerLimit[20] = T_min / 3600.0;
 	}
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarLowerLimit[3] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[4] = 0.0;
-	block.DepVarLowerLimit[7] = Constants.H_LPO - 0.5*1852.0;
+	block.DepVarLowerLimit[7] = (Constants.H_LPO - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[8] = DataTable.lat_lls - 0.01*RAD;
 	block.DepVarLowerLimit[9] = DataTable.lng_lls - 0.01*RAD;
 	block.DepVarLowerLimit[10] = AZ_min;
-	block.DepVarLowerLimit[11] = 64.0965*1852.0;
+	block.DepVarLowerLimit[11] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[12] = 0.0;
-	block.DepVarLowerLimit[13] = T_te - 8.0*3600.0;
+	block.DepVarLowerLimit[13] = T_te / 3600.0 - 8.0;
 	block.DepVarLowerLimit[14] = -0.2*RAD;
 	block.DepVarLowerLimit[19] = outarray.M_tei + 6000.0*0.453;
 	if (freereturn)
 	{
-		block.DepVarUpperLimit[0] = 100.0*1852.0;
+		block.DepVarUpperLimit[0] = 100.0*1852.0 / R_E;
 	}
 	else
 	{
-		block.DepVarUpperLimit[0] = DataTable.h_pc2 + 0.1*1852.0;
-		block.DepVarUpperLimit[20] = T_max;
+		block.DepVarUpperLimit[0] = (DataTable.h_pc2 + 0.1*1852.0) / R_E;
+		block.DepVarUpperLimit[20] = T_max / 3600.0;
 	}
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarUpperLimit[3] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[4] = 75.0*RAD;
-	block.DepVarUpperLimit[7] = Constants.H_LPO + 0.5*1852.0;
+	block.DepVarUpperLimit[7] = (Constants.H_LPO + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[8] = DataTable.lat_lls + 0.01*RAD;
 	block.DepVarUpperLimit[9] = DataTable.lng_lls + 0.01*RAD;
 	block.DepVarUpperLimit[10] = AZ_max;
-	block.DepVarUpperLimit[11] = 67.5665*1852.0;
+	block.DepVarUpperLimit[11] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[12] = 75.0*RAD;
-	block.DepVarUpperLimit[13] = T_te + 8.0*3600.0;
+	block.DepVarUpperLimit[13] = T_te / 3600.0 + 8.0;
 	block.DepVarUpperLimit[14] = 0.2*RAD;
 	block.DepVarUpperLimit[19] = outarray.M_tei + 6000.0*0.453;
 	block.DepVarWeight[0] = 8.0;
@@ -2436,7 +2441,8 @@ void TLMCCProcessor::ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, doub
 	block.IndVarStep[1] = pow(2, -21);
 	block.IndVarStep[2] = pow(2, -19);
 	block.IndVarStep[3] = pow(2, -19);
-	block.IndVarStep[6] = pow(2, -21);
+	//Change to -19 (instead of -21) to permit faster convergence of time at node for non-free return
+	block.IndVarStep[6] = pow(2, -19);
 	block.IndVarStep[7] = pow(2, -21);
 	block.IndVarStep[8] = pow(2, -21);
 	block.IndVarStep[9] = pow(2, -21);
@@ -2471,16 +2477,16 @@ void TLMCCProcessor::ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, doub
 	}
 	else
 	{
-		block.DepVarLowerLimit[20] = T_min;
+		block.DepVarLowerLimit[20] = T_min / 3600.0;
 	}
 	block.DepVarLowerLimit[2] = 90.0*RAD;
-	block.DepVarLowerLimit[3] = 64.0965*1852.0;
+	block.DepVarLowerLimit[3] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[4] = 0.0;
 	block.DepVarLowerLimit[5] = -0.01*RAD;
-	block.DepVarLowerLimit[6] = -0.1*1852.0;
-	block.DepVarLowerLimit[11] = 64.0965*1852.0;
+	block.DepVarLowerLimit[6] = -0.1*1852.0 / R_E;
+	block.DepVarLowerLimit[11] = 64.0965*1852.0 / R_E;
 	block.DepVarLowerLimit[12] = 0.0;
-	block.DepVarLowerLimit[13] = T_te - 8.0*3600.0;
+	block.DepVarLowerLimit[13] = T_te / 3600.0 - 8.0;
 	block.DepVarLowerLimit[14] = -0.2*RAD;
 	block.DepVarLowerLimit[19] = outarray.M_tei + 6000.0*0.453;
 	if (freereturn)
@@ -2489,16 +2495,16 @@ void TLMCCProcessor::ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, doub
 	}
 	else
 	{
-		block.DepVarUpperLimit[20] = T_max;
+		block.DepVarUpperLimit[20] = T_max / 3600.0;
 	}
 	block.DepVarUpperLimit[2] = 182.0*RAD;
-	block.DepVarUpperLimit[3] = 67.5665*1852.0;
+	block.DepVarUpperLimit[3] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[4] = 75.0*RAD;
 	block.DepVarUpperLimit[5] = 0.01*RAD;
-	block.DepVarUpperLimit[6] = 0.1*1852.0;
-	block.DepVarUpperLimit[11] = 67.5665*1852.0;
+	block.DepVarUpperLimit[6] = 0.1*1852.0 / R_E;
+	block.DepVarUpperLimit[11] = 67.5665*1852.0 / R_E;
 	block.DepVarUpperLimit[12] = 75.0*RAD;
-	block.DepVarUpperLimit[13] = T_te + 8.0*3600.0;
+	block.DepVarUpperLimit[13] = T_te / 3600.0 + 8.0;
 	block.DepVarUpperLimit[14] = 0.2*RAD;
 	block.DepVarUpperLimit[19] = outarray.M_tei + 6000.0*0.453;
 	block.DepVarWeight[2] = 64.0;
@@ -2545,7 +2551,7 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void
 	//4 = Perilune radius in Er
 	//5 = Perilune flight-path angle in rad
 	//Dependent variables:
-	//0-2: Midcourse position in meters
+	//0-2: Midcourse position in Er
 	//3: Midcourse flight-path angle in rad
 
 	//Store in array
@@ -2580,7 +2586,10 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void
 			VECTOR3 R_patch, V_patch;
 			R_patch = R;
 			V_patch = V;
-			PATCH(R_patch, V_patch, MJD, -1, 2);
+			if (PATCH(R_patch, V_patch, MJD, -1, 2))
+			{
+				return true;
+			}
 			err = CTBODY(R_patch, V_patch, MJD, vars->sv0.MJD, 1, mu_E, R_MCC, V_MCC);
 			if (err) return true;
 		}
@@ -2591,9 +2600,9 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void
 		}
 	}
 
-	arr[0] = R_MCC.x;
-	arr[1] = R_MCC.y;
-	arr[2] = R_MCC.z;
+	arr[0] = R_MCC.x / R_E;
+	arr[1] = R_MCC.y / R_E;
+	arr[2] = R_MCC.z / R_E;
 	vars->V_MCC = V_MCC;
 
 	double r1, r2, v1, v2, theta, phi, gamma1, gamma2, psi1, psi2;
@@ -2625,14 +2634,14 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 	//2: Delta azimuth in rad
 	//3: Delta time to node in hr.
 	//Dependent variables:
-	//0: Radius of node
-	//1: Latitude of node
-	//2: Longitude of node
-	//3: Inclination at perilune
-	//4: Height at perilune
-	//5: Latitude at perilune
-	//6: Inclination of return
-	//7: Height of return
+	//0: Radius of node in Er
+	//1: Latitude of node in rad
+	//2: Longitude of node in rad
+	//3: Inclination at perilune in rad
+	//4: Height at perilune in Er
+	//5: Latitude at perilune in rad
+	//6: Inclination of return in rad
+	//7: Height of return in Er
 
 	TLMCCGeneralizedIteratorArray *vars;
 	vars = static_cast<TLMCCGeneralizedIteratorArray*>(varPtr);
@@ -2676,7 +2685,7 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 		LIBRAT(R_pl, V_pl, MJD_pl, 4);
 		RVIO(true, R_pl, V_pl, r_pl, v_pl, lng_pl, lat_pl, gamma_pl, psi_pl);
 
-		arr[0] = R_nd;
+		arr[0] = R_nd / R_E;
 		arr[1] = lat_nd;
 		arr[2] = lng_nd;
 		arr[3] = inc_pg;
@@ -2730,11 +2739,11 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 			outarray.MJD_ip = sv_reentry.MJD + Reentry_dt / 24.0 / 3600.0;
 		}
 
-		arr[4] = vars->h_pl;
+		arr[4] = vars->h_pl / R_E;
 		arr[3] = vars->incl_pl;
 		arr[5] = vars->lat_pl;
 		arr[6] = vars->incl_fr;
-		arr[7] = vars->h_fr;
+		arr[7] = vars->h_fr / R_E;
 		return false;
 	}
 }
@@ -2758,19 +2767,19 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	//8: TEI delta flight-path angle in rad
 	//9: TEI delta azimuth in rad
 	//Dependent variables:
-	//0: Height of perilune in meters
-	//1: Latitude of perilune in meters
+	//0: Height of perilune in Er
+	//1: Latitude of perilune in rad
 	//2: Inclination of perilune in rad
-	//3: Height of free return in meters
+	//3: Height of free return in Er
 	//4: Inclination of free return in rad
 	//5: theta in rad
-	//6: Delta height node in meters
-	//7: Height of lunar parking orbit in meters
+	//6: Delta height node in Er
+	//7: Height of lunar parking orbit in Er
 	//8: Latitude of landing site in rad
 	//9: Longitude of landing site in rad
 	//10: Azimuth at the landing site in rad
-	//11: Height of powered return in meters
-	//12: Inclination of powered return
+	//11: Height of powered return in Er
+	//12: Inclination of powered return in rad
 	//13: Time of transearth coast in sec
 	//14: Delta splashdown longitude in rad
 	//15: Mass after MCC
@@ -2778,7 +2787,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	//17: Mass after DOI
 	//18: Mass after LOPC
 	//19: Mass after TEI
-	//20: Translunar flight time in sec
+	//20: Translunar flight time in hours
 
 	TLMCCGeneralizedIteratorArray *vars;
 	vars = static_cast<TLMCCGeneralizedIteratorArray*>(varPtr);
@@ -2786,7 +2795,7 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	VECTOR3 RF, VF, R_patch, V_patch, R_pl, V_pl, R_temp, V_temp, HH_pl, H;
 	double dv_mcc, dgamma_mcc, dpsi_mcc, dv_tei;
 	double mfm0, beta, MJD_patch, ainv;
-	double H_pl, lat_pl, lng_pl, inc_pl, ainv_pl, a, e, i, n, P, eta, dpsi_lopc, DV_R;
+	double ainv_pl, a, e, i, n, P, eta, dpsi_lopc, DV_R;
 
 	//Store in array
 	vars->dv_mcc = var[0];
@@ -2832,7 +2841,10 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 		R_patch = RF;
 		V_patch = VF;
 		MJD_patch = sv0.MJD;
-		PATCH(R_patch, V_patch, MJD_patch, 1, 1);
+		if (PATCH(R_patch, V_patch, MJD_patch, 1, 1))
+		{
+			return true;
+		}
 	}
 	else
 	{
@@ -2846,16 +2858,11 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 	R_temp = R_pl;
 	V_temp = V_pl;
 	LIBRAT(R_temp, V_temp, vars->MJD_pl, 4);
-	H_pl = length(R_temp) - DataTable.rad_lls;
-	OrbMech::latlong_from_r(R_temp, lat_pl, lng_pl);
-	if (lng_pl < 0)
-	{
-		lng_pl += PI2;
-	}
-	vars->lat_pl = lat_pl;
-	vars->h_pl = H_pl;
+	double r_pl, gamma_temp;
+	RVIO(true, R_temp, V_temp, r_pl, vars->v_pl, vars->lng_pl, vars->lat_pl, gamma_temp, vars->psi_pl);
+	vars->h_pl = r_pl - DataTable.rad_lls;
 	HH_pl = crossp(R_temp, V_temp);
-	inc_pl = acos(HH_pl.z / length(HH_pl));
+	vars->incl_pl = acos(HH_pl.z / length(HH_pl));
 
 	if (vars->FreeReturnIndicator)
 	{
@@ -2884,11 +2891,11 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 
 		if (vars->FreeReturnOnlyIndicator)
 		{
-			arr[0] = H_pl;
-			arr[1] = lat_pl;
-			arr[2] = inc_pl;
+			arr[0] = vars->h_pl / R_E;
+			arr[1] = vars->lat_pl;
+			arr[2] = vars->incl_pl;
 			arr[4] = vars->incl_fr;
-			arr[3] = vars->h_fr;
+			arr[3] = vars->h_fr / R_E;
 			arr[15] = outarray.M_mcc;
 			return false;
 		}
@@ -2909,12 +2916,12 @@ bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr
 		XBETA(R_pl, V_pl, vars->MJD_pl, beta, 2, R_LOI, V_LOI, vars->MJD_nd);
 	}
 
-	//Apply offset
-	V_LOI += outarray.LOIOffset;
-
 	vars->sv_loi.R = R_LOI;
 	vars->sv_loi.V = V_LOI;
 	vars->sv_loi.MJD = vars->MJD_nd;
+
+	//Apply offset
+	V_LOI += outarray.LOIOffset;
 
 	VECTOR3 H_LOI;
 	double i_EMP;
@@ -3010,7 +3017,7 @@ TLMCC_Conic_A1:
 		goto TLMCC_Conic_Out;
 	}
 
-	outarray.M_lopc = outarray.M_cir;
+	outarray.M_lopc = outarray.M_cir - MEDQuantities.LMMass;
 
 	goto TLMCC_Conic_F5;
 TLMCC_Conic_C4:
@@ -3050,7 +3057,10 @@ TLMCC_Conic_F5:
 	vars->DV_TEI = V_TEC - V_TEI;
 	outarray.M_tei = outarray.M_lopc * mfm0;
 	MJD_TEC = vars->MJD_tei;
-	PATCH(R_TEC, V_TEC, MJD_TEC, 1, 2);
+	if (PATCH(R_TEC, V_TEC, MJD_TEC, 1, 2))
+	{
+		return true;
+	}
 	beta = EBETA(R_TEC, V_TEC, mu_E, ainv);
 	XBETA(R_TEC, V_TEC, MJD_TEC, beta, 1, R_pg, V_pg, MJD_pg);
 	//TBD: If T_reentry < T_patch, adjust T_reentry
@@ -3069,26 +3079,26 @@ TLMCC_Conic_F5:
 
 TLMCC_Conic_Out:
 
-	arr[0] = H_pl;
-	arr[2] = inc_pl;
-	arr[3] = vars->h_fr;
+	arr[0] = vars->h_pl / R_E;
+	arr[2] = vars->incl_pl;
+	arr[3] = vars->h_fr / R_E;
 	arr[4] = vars->incl_fr;
 	arr[5] = vars->theta;
-	arr[6] = vars->DH_Node;
-	arr[7] = vars->h_nd;
+	arr[6] = vars->DH_Node / R_E;
+	arr[7] = vars->h_nd / R_E;
 	arr[8] = lat_S;
 	arr[9] = lng_S;
 	arr[10] = vars->AZ_act;
-	arr[11] = vars->h_pr;
+	arr[11] = vars->h_pr / R_E;
 	arr[12] = vars->incl_pr;
-	arr[13] = vars->T_te;
+	arr[13] = vars->T_te / 3600.0;
 	arr[14] = dlng;
 	arr[15] = vars->M_mcc;
 	arr[16] = vars->M_loi;
 	arr[17] = vars->M_cir;
 	arr[18] = vars->M_lopc;
 	arr[19] = vars->M_tei;
-	arr[20] = vars->t_tl;
+	arr[20] = vars->t_tl / 3600.0;
 
 	return false;
 }
