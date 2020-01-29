@@ -216,7 +216,7 @@ namespace GenIterator
 		}
 	}
 
-	bool GeneralizedIterator(bool(*state_evaluation)(void*, std::vector<double>&, void*, std::vector<double>&), GeneralizedIteratorBlock vars, void *constants, void *data, std::vector<double> &x_res, std::vector<double> &y_res)
+	bool GeneralizedIterator(bool(*state_evaluation)(void*, std::vector<double>&, void*, std::vector<double>&, bool), GeneralizedIteratorBlock vars, void *constants, void *data, std::vector<double> &x_res, std::vector<double> &y_res)
 	{
 		double lambda, R, R_old, w_avg, **P, **CARR, *CVEC, **DARR;
 		bool select = true, hasclass3, errind;
@@ -325,7 +325,7 @@ namespace GenIterator
 
 		//Use initial guess to get a first vector
 		OpenRanks(xmap, var_star_temp, trajin, M);
-		errind = state_evaluation(data, trajin, constants, trajout);
+		errind = state_evaluation(data, trajin, constants, trajout, select);
 		CloseRanks(ymap, trajout, Y_star, NGENITER);
 		if (errind)
 		{
@@ -507,7 +507,7 @@ namespace GenIterator
 			v_l[j] += step[j];
 
 			OpenRanks(xmap, v_l, trajin, M);
-			errind = state_evaluation(data, trajin, constants, trajout);
+			errind = state_evaluation(data, trajin, constants, trajout, select);
 			CloseRanks(ymap, trajout, Y[j], NGENITER);
 
 			if (errind)
@@ -604,7 +604,7 @@ namespace GenIterator
 			goto NewGeneralizedIterator_DD;
 		}
 		OpenRanks(xmap, var_star_temp, trajin, M);
-		errind = state_evaluation(data, trajin, constants, trajout);
+		errind = state_evaluation(data, trajin, constants, trajout, select);
 		CloseRanks(ymap, trajout, Y_star, NGENITER);
 		if (errind)
 		{

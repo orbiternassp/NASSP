@@ -235,6 +235,8 @@ public:
 	void menuSetTLMCCPericynthionHeightLimits();
 	void menuSetTLMCCLatitudeBias();
 	void set_TLMCCLatitudeBias(double bias);
+	void menuSetTLMCCMaxInclination();
+	void set_TLMCCMaxInclination(double inc);
 	void menuSetTLMCCLOIEllipseHeights();
 	void set_TLMCCLOIEllipseHeights(double ha, double hp);
 	void menuSetTLMCCDOIEllipseHeights();
@@ -242,7 +244,7 @@ public:
 	void menuSetTLMCCLOIDOIRevs();
 	void set_TLMCCLOIDOIRevs(double revs1, int revs2);
 	void menuSetTLMCCLSRotation();
-	void set_TLMCCLSRotation(double rot);
+	void set_TLMCCLSRotation(double rot, double eta);
 	void menuSetTLMCCLOPCRevs();
 	void set_TLMCCLOPCRevs(int m, int n);
 	void menuSetLOIApo();

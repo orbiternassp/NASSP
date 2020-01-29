@@ -2727,7 +2727,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Reentry constraints", 0, 'R' },
 		{ "Height limits", 0, 'H' },
 		{ "Latitude bias", 0, 'L' },
-		{ "", 0, ' ' },
+		{ "Max powered incl", 0, 'C' },
 
 		{ "LOI ellipse heights", 0, 'K' },
 		{ "DOI ellipse heights", 0, 'D' },
@@ -2744,7 +2744,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("F24", OAPI_KEY_R, &ApolloRTCCMFD::menuSetTLMCCReentryContraints);
 	RegisterFunction("F29", OAPI_KEY_H, &ApolloRTCCMFD::menuSetTLMCCPericynthionHeightLimits);
 	RegisterFunction("LAT", OAPI_KEY_L, &ApolloRTCCMFD::menuSetTLMCCLatitudeBias);
-	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("INC", OAPI_KEY_C, &ApolloRTCCMFD::menuSetTLMCCMaxInclination);
 
 	RegisterFunction("LOI", OAPI_KEY_K, &ApolloRTCCMFD::menuSetTLMCCLOIEllipseHeights);
 	RegisterFunction("DOI", OAPI_KEY_D, &ApolloRTCCMFD::menuSetTLMCCDOIEllipseHeights);

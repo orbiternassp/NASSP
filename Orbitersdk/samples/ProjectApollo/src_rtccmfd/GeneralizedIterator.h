@@ -48,7 +48,7 @@ namespace GenIterator
 
 	void OpenRanks(std::vector<int> &xmap, std::vector<double> &in, std::vector<double> &out, int m);
 	void CloseRanks(std::vector<int> &ymap, std::vector<double> &in, std::vector<double> &out, int n2);
-	bool GeneralizedIterator(bool(*state_evaluation)(void *, std::vector<double>&, void*, std::vector<double>&), GeneralizedIteratorBlock vars, void *constants, void *data, std::vector<double> &x_res, std::vector<double> &y_res);
+	bool GeneralizedIterator(bool(*state_evaluation)(void *, std::vector<double>&, void*, std::vector<double>&, bool), GeneralizedIteratorBlock vars, void *constants, void *data, std::vector<double> &x_res, std::vector<double> &y_res);
 	void MatrixMultiply(double **P, const std::vector<double> &W_X, const std::vector<double> &W_Y, const std::vector<double> &dy, int m, int n, double **C, double *c);
 	void ComputeCoefficients(double **CARR, const std::vector<double> &W_X, double lambda, int m, int n, double **D);
 	bool SolveEquations(double **D, double *c, int m, std::vector<double> &dx);

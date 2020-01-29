@@ -738,7 +738,6 @@ void TLMCCProcessor::Option4()
 	double v_nd2 = outarray.v_pl*3600.0 / R_E;
 	double psi_nd2 = outarray.psi_pl;
 	double GMT_nd2 = OrbMech::GETfromMJD(outarray.MJD_nd, MEDQuantities.GMTBase) / 3600.0;
-	double gamma_loi2 = outarray.gamma_nd;
 	double dt_lls2 = outarray.dt_lls;
 
 	double dt = -OrbMech::period(outarray.sv_lls1.R, outarray.sv_lls1.V, mu_M)*(double)(MEDQuantities.Revs_circ + 1);
@@ -839,7 +838,7 @@ TLMCC_Option_4_D:
 	outarray.LOIOffset = S3I.V - S3C.V;
 
 	//Step 5
-	ConicFullMissionFixedOrbit(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, gamma_loi2, outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, outarray.T_te, outarray.M_tei, false, dt_min, dt_max);
+	ConicFullMissionFixedOrbit(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, DataTable.gamma_loi, outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, outarray.T_te, outarray.M_tei, false, dt_min, dt_max);
 	DV5 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 	S2C = sv_MCC;
 	S3C = outarray.sv_loi;
@@ -1501,8 +1500,8 @@ void TLMCCProcessor::ConvergeTLMC(double V, double azi, double lng, double lat, 
 	outarray.sv0 = sv_MCC;
 	constPtr = &outarray;
 
-	bool ConvergeTLMCPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConvergeTLMCPointer;
+	bool ConvergeTLMCPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConvergeTLMCPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 
@@ -1557,8 +1556,8 @@ void TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double
 	outarray.NodeStopIndicator = true;
 	constPtr = &outarray;
 
-	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &IntegratedTrajectoryComputerPointer;
+	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &IntegratedTrajectoryComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 	block.IndVarSwitch[0] = true;
@@ -1607,8 +1606,8 @@ void TLMCCProcessor::ConicFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess,
 	outarray.FreeReturnOnlyIndicator = true;
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 	block.IndVarSwitch[0] = true;
@@ -1664,8 +1663,8 @@ void TLMCCProcessor::ConicFreeReturnOptimizedInclinationFlyby(MPTSV sv0, double 
 	outarray.FreeReturnOnlyIndicator = true;
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 	block.IndVarSwitch[0] = true;
@@ -1718,8 +1717,8 @@ void TLMCCProcessor::IntegratedFreeReturnFlyby(MPTSV sv0, double dv_guess, doubl
 	outarray.sv0 = sv0;
 	constPtr = &outarray;
 
-	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &IntegratedTrajectoryComputerPointer;
+	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &IntegratedTrajectoryComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 	block.IndVarSwitch[0] = true;
@@ -1771,8 +1770,8 @@ void TLMCCProcessor::ConicFreeReturnFlyby(MPTSV sv0, double dv_guess, double dga
 
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 	block.IndVarSwitch[0] = true;
@@ -1823,8 +1822,8 @@ void TLMCCProcessor::IntegratedFreeReturnInclinationFlyby(MPTSV sv0, double dv_g
 	outarray.sv0 = sv0;
 	constPtr = &outarray;
 
-	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &IntegratedTrajectoryComputerPointer;
+	bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &IntegratedTrajectoryComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 	block.IndVarSwitch[0] = true;
@@ -1871,12 +1870,13 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double d
 	outarray.FreeReturnOnlyIndicator = false;
 	outarray.FixedOrbitIndicator = true;
 	outarray.FirstSelect = true;
+	outarray.FirstOptimize = true;
 	outarray.LLSStopIndicator = true;
 
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 
@@ -1937,12 +1937,13 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, doubl
 	outarray.FreeReturnIndicator = false;
 	outarray.FixedOrbitIndicator = true;
 	outarray.FirstSelect = true;
+	outarray.FirstOptimize = true;
 	outarray.LLSStopIndicator = true;
 
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 
@@ -1999,8 +2000,8 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double d
 
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 
@@ -2094,8 +2095,8 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, doubl
 
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 	block.IndVarSwitch[0] = true;
@@ -2170,8 +2171,8 @@ void TLMCCProcessor::ConicTransEarthInjection(double T_lo, double dv_tei, double
 	outarray.MidcourseCorrectionIndicator = false;
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 
@@ -2246,8 +2247,8 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	outarray.FixedOrbitIndicator = false;
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 
@@ -2413,18 +2414,22 @@ void TLMCCProcessor::ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, doub
 	outarray.FreeReturnOnlyIndicator = false;
 	outarray.FixedOrbitIndicator = true;
 	outarray.FirstSelect = true;
+	outarray.FirstOptimize = true;
 	outarray.LLSStopIndicator = false;
 	constPtr = &outarray;
 
-	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>& arr) = &ConicMissionComputerPointer;
+	bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &ConicMissionComputerPointer;
 
 	GenIterator::GeneralizedIteratorBlock block;
 
 	block.IndVarSwitch[0] = true;
 	block.IndVarSwitch[1] = true;
 	block.IndVarSwitch[2] = true;
-	block.IndVarSwitch[3] = true;
+	if (freereturn)
+	{
+		block.IndVarSwitch[3] = true;
+	}
 	block.IndVarSwitch[6] = true;
 	block.IndVarSwitch[7] = true;
 	block.IndVarSwitch[8] = true;
@@ -2530,12 +2535,12 @@ void TLMCCProcessor::ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, doub
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-bool ConvergeTLMCPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr)
+bool ConvergeTLMCPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
 {
-	return ((TLMCCProcessor*)data)->FirstGuessTrajectoryComputer(var, varPtr, arr);
+	return ((TLMCCProcessor*)data)->FirstGuessTrajectoryComputer(var, varPtr, arr, mode);
 }
 
-bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr)
+bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
 {
 	TLMCCGeneralizedIteratorArray *vars;
 	vars = static_cast<TLMCCGeneralizedIteratorArray*>(varPtr);
@@ -2621,12 +2626,12 @@ bool TLMCCProcessor::FirstGuessTrajectoryComputer(std::vector<double> &var, void
 	return false;
 }
 
-bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr)
+bool IntegratedTrajectoryComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
 {
-	return ((TLMCCProcessor*)data)->IntegratedTrajectoryComputer(var, varPtr, arr);
+	return ((TLMCCProcessor*)data)->IntegratedTrajectoryComputer(var, varPtr, arr, mode);
 }
 
-bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr)
+bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
 {
 	//Independent Variables:
 	//0: Delta velocity in Er/hr.
@@ -2748,12 +2753,12 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 	}
 }
 
-bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr)
+bool ConicMissionComputerPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
 {
-	return ((TLMCCProcessor*)data)->ConicMissionComputer(var, varPtr, arr);
+	return ((TLMCCProcessor*)data)->ConicMissionComputer(var, varPtr, arr, mode);
 }
 
-bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr)
+bool TLMCCProcessor::ConicMissionComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
 {
 	//Independent variables:
 	//0: MCC delta velocity in Er/hr
@@ -2960,12 +2965,19 @@ TLMCC_Conic_A1:
 	R_N = unit(R_LOI);
 	U_H = unit(crossp(R_LOI, V_LOI));
 
-	if (vars->FirstSelect)
+	if (vars->FirstSelect)// || (!mode && vars->FirstOptimize))
 	{
 		PRCOMP(R_N, U_H, vars->MJD_nd, vars->RA_LPO1, vars->A_L, vars->E_L, vars->dw_p, vars->dh_a, vars->dh_p, vars->DT_LOI_DOI, vars->dt_lls, vars->u_l, vars->SGSLOI);
 		//PRCOMP(R_N, U_H, vars->MJD_nd, vars->RA_LPO1, vars->V2, vars->gamma_L, vars->V_L, vars->A1, vars->E1, vars->gamma1, vars->dt_lls, vars->SGSLOI);
 		var[5] = vars->dt_lls / 3600.0;
-		vars->FirstSelect = false;
+		if (vars->FirstSelect)
+		{
+			vars->FirstSelect = false;
+		}
+		if (!mode && vars->FirstOptimize)
+		{
+			vars->FirstOptimize = false;
+		}
 	}
 
 	VECTOR3 Rtemp = vars->SGSLOI.R;
@@ -3711,17 +3723,17 @@ void TLMCCProcessor::LOPC(VECTOR3 R0, VECTOR3 V0, double MJD0, VECTOR3 L, int m,
 	MJD3 = MJD1;
 }
 
-void TLMCCProcessor::PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &A_L, double &E_L, double &dw_p, double &dh_a, double &dh_p, double &DT, double &DT_1st_pass, VECTOR3 &u_l, MPTSV &SGSLOI)
+void TLMCCProcessor::PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &A1, double &E1, double &dw_p, double &dh_a, double &dh_p, double &DT, double &DT_1st_pass, VECTOR3 &u_l, MPTSV &SGSLOI)
 {
 	VECTOR3 u_lls, RR2, VV2, R_L, V_L, RR_LPO1, VV_LPO1, u_lls_equ;
 	double RP_LPO1, a_lls, dt_LLS, MJD_LLS, da_apo, R1, DR1, da, DA, DA_apo, e, R2, phi2, lambda2, psi2, gamma2, eta2, dt3, dt, MJDI, dt2;
 	double a_LPO1, e_LPO1, r, v, gamma, psi, theta, phi;
 	//Old Version
 	VECTOR3 u_pl;
-	double V2, v_L, gamma_L, gamma1, A1, E1;
+	double V2, v_L, gamma_L, gamma1;//, A1, E1;
 	//New Version
 	//VECTOR3 u_pl;
-	//double A_L, E_L;
+	double A_L, E_L;
 
 	DR1 = modf(MEDQuantities.Revs_LPO1, &R1);
 
@@ -3829,6 +3841,10 @@ TLMCC_PRCOMP_1:
 	am = unit(crossp(R_L, V_L));
 	u_pc_proj = unit(u_pc - am * dotp(u_pc, am));
 	deta_apo = acos(dotp(u_pc_proj, unit(R_L)));
+	if (dotp(crossp(unit(R_L), u_pc_proj), am) < 0)
+	{
+		deta_apo = -deta_apo;
+	}
 	DTCORR = OrbMech::time_theta(R_L, V_L, deta_apo, mu_M);
 
 	OrbMech::oneclickcoast(R_L, V_L, MJDI, DTCORR, R_L, V_L, hMoon, hMoon);
@@ -3839,8 +3855,8 @@ TLMCC_PRCOMP_1:
 	//RA2 = (1.0 + E_L)*A_L;
 	//RP2 = (1.0 - E_L)*A_L;
 	gamma_L = asin(dotp(R_L, V_L) / r_L / v_L);
-	u_l = unit(crossp(V_L, crossp(R_L, V_L)) / mu_M - R_L / length(R_L));
-	LIBRAT(u_l, MJDI, 5);
+	//u_l = unit(crossp(V_L, crossp(R_L, V_L)) / mu_M - R_L / length(R_L));
+	//LIBRAT(u_l, MJDI, 5);
 
 	ddh = 0.0; //TBD
 
@@ -3862,6 +3878,8 @@ TLMCC_PRCOMP_1:
 	dt = (MJD_nd - MJDI)*24.0*3600.0;
 	OrbMech::oneclickcoast(Rtemp, Vtemp, MJDI, dt, R1I, V1I, hMoon, hMoon);
 	u_pl_apo = unit(crossp(V1I, crossp(R1I, V1I)) / mu_M - R1I / length(R1I));
+	u_l = u_pl_apo;
+	LIBRAT(u_l, MJDI, 5);
 	ELEMT(R1I, V1I, mu_M, H1, A1, E1, i1, n, P, eta);
 	
 	OrbMech::periapo(R1I, V1I, mu_M, RA1, RP1);
@@ -3871,6 +3889,10 @@ TLMCC_PRCOMP_1:
 	am = unit(crossp(R1I, V1I));
 	u_pc_proj = unit(u_pc - am * dotp(u_pc, am));
 	deta_apo = acos(dotp(u_pc_proj, unit(R1I)));
+	if (dotp(crossp(unit(R1I), u_pc_proj), am) < 0)
+	{
+		deta_apo = -deta_apo;
+	}
 	DTCORR = OrbMech::time_theta(R1I, V1I, deta_apo, mu_M);
 	MJD_LLS -= DTCORR / 24.0 / 3600.0;
 	if (recycle == false)

@@ -126,6 +126,7 @@ struct TLMCCMissionConstants
 	double T_t1_min_dps;
 	double T_t1_max_dps;
 	double H_LPO;
+	double INCL_PR_MAX;
 };
 
 struct TLMCCDisplayData
@@ -193,6 +194,7 @@ struct TLMCCGeneralizedIteratorArray
 	bool TLIIndicator = false;
 	bool FixedOrbitIndicator;
 	bool FirstSelect;
+	bool FirstOptimize;
 	//For conic and integrated
 	bool LunarFlybyIndicator;
 	bool MidcourseCorrectionIndicator = true;
@@ -292,9 +294,9 @@ public:
 	void Main(TLMCCOutputData &out);
 
 	//The trajectory computers
-	bool FirstGuessTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool ConicMissionComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr);
-	bool IntegratedTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr);
+	bool FirstGuessTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool ConicMissionComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool IntegratedTrajectoryComputer(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 
 protected:
 
