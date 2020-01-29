@@ -720,7 +720,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "REFSMMAT", 0, 'R' },
 		{ "Vector Pointing", 0, 'P' },
 		{ "Erasable Memory Programs", 0, 'E' },
-		{ "", 0, ' ' },
+		{ "Convert nodal target", 0, 'N' },
 		{ "", 0, ' ' },
 
 		{ "LVDC options", 0, 'L' },
@@ -737,7 +737,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("REF", OAPI_KEY_R, &ApolloRTCCMFD::menuSetREFSMMATPage);
 	RegisterFunction("VEC", OAPI_KEY_P, &ApolloRTCCMFD::menuSetVECPOINTPage);
 	RegisterFunction("EMP", OAPI_KEY_E, &ApolloRTCCMFD::menuSetEMPPage);
-	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("NOD", OAPI_KEY_N, &ApolloRTCCMFD::menuSetNodalTargetConversionPage);
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("IU", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLVDCPage);
@@ -1974,12 +1974,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu58[] =
 	{
-		{ "Choose vehicle", 0, 'V' },
-		{ "Choose option", 0, 'O' },
-		{ "Choose parameter", 0, 'P' },
-		{ "Threshold time", 0, 'T' },
-		{ "Reference", 0, 'R' },
-		{ "Feet or ER", 0, 'F' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 
 		{ "Calculate", 0, 'C' },
 		{ "", 0, ' ' },
@@ -1991,12 +1991,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu58, sizeof(mnu58) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuCheckMonVehID);
-	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::menuCheckMonOptionID);
-	RegisterFunction("PAR", OAPI_KEY_P, &ApolloRTCCMFD::menuCheckMonParameter);
-	RegisterFunction("THT", OAPI_KEY_T, &ApolloRTCCMFD::menuCheckMonThresholdTime);
-	RegisterFunction("REF", OAPI_KEY_R, &ApolloRTCCMFD::menuCheckMonReference);
-	RegisterFunction("FT", OAPI_KEY_F, &ApolloRTCCMFD::menuCheckMonFeet);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::CheckoutMonitorCalc);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
@@ -2752,6 +2752,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("ROT", OAPI_KEY_S, &ApolloRTCCMFD::menuSetTLMCCLSRotation);
 	RegisterFunction("PC", OAPI_KEY_P, &ApolloRTCCMFD::menuSetTLMCCLOPCRevs);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuMidcoursePage);
+
+
+	static const MFDBUTTONMENU mnu81[] =
+	{
+		{ "Node conversion option", 0, 'O' },
+		{ "Node conversion GET", 0, 'G' },
+		{ "Node conversion latitude", 0, 'A' },
+		{ "Node conversion longitude", 0, 'L' },
+		{ "Nodal height", 0, 'H' },
+		{ "", 0, ' ' },
+
+		{ "Convert", 0, 'C' },
+		{ "Send node to SFP", 0, 'S' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu81, sizeof(mnu81) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::menuCycleNodeConvOption);
+	RegisterFunction("GET", OAPI_KEY_G, &ApolloRTCCMFD::menuSetNodeConvGET);
+	RegisterFunction("LAT", OAPI_KEY_A, &ApolloRTCCMFD::menuSetNodeConvLat);
+	RegisterFunction("LNG", OAPI_KEY_L, &ApolloRTCCMFD::menuSetNodeConvLng);
+	RegisterFunction("HE", OAPI_KEY_H, &ApolloRTCCMFD::menuSetNodeConvHeight);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuNodeConvCalc);
+	RegisterFunction("SFP", OAPI_KEY_S, &ApolloRTCCMFD::menuSendNodeToSFP);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

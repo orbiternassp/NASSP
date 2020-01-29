@@ -1343,6 +1343,8 @@ struct CheckoutMonitor
 	bool LSTBlank; //Lunar stay time blank
 	bool MABlank; //Is mean anomaly blanked
 	bool HOBlank; //Is oblate height blank
+
+	std::string ErrorMessage;
 };
 
 struct DetailedManeuverTable
@@ -2421,7 +2423,7 @@ public:
 	//Generalized Coordinate System Conversion Subroutine
 	int ELVCNV(EphemerisData sv, int in, int out, EphemerisData &sv_out);
 	//Checkout Monitor Display
-	int EMDCHECK(CheckoutMonitor &res);
+	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
 	//Detailed Maneuver Table Display
 	int PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, DetailedManeuverTable &res);
 	//Lunar Descent Planning Table Display
@@ -2809,18 +2811,6 @@ public:
 		int Year;
 		int DeltaDay;
 	} med_p80;
-
-	//Initiate C/O Monitor Display
-	struct MED_U02
-	{
-		int VEH = 1;	//1 = CSM, 3 = LM
-		int IND = 1;	//1 = GMT, 2 = GET, 3 = MVI, 4 = MVE, 5 = RAD, 6 = ALT, 7 = FPA
-		double ThresholdTime = 0.0;
-		int REF = 0;	//0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP
-		int FT = 0;		//0 = ER and ER/HR, 1 = ft and ft/s
-		double IND_val = 0.0; //For options 0-1, 4-6
-		unsigned IND_man = 0; //For options 2-3
-	} med_u02;
 
 	MED_B04 med_b04;
 	MED_K16 med_k16;
@@ -3390,6 +3380,8 @@ public:
 		std::string LEMGETAV;
 		std::vector<MPTManDisplay> man;
 	} MPTDISPLAY;
+
+	CheckoutMonitor EZCHECKDIS;
 
 	struct VehicleNameTable
 	{

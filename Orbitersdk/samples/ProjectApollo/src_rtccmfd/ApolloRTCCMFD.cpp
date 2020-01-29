@@ -1348,6 +1348,12 @@ void ApolloRTCCMFD::menuSetMidcourseConstraintsPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetNodalTargetConversionPage()
+{
+	screen = 81;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -3029,159 +3035,18 @@ void ApolloRTCCMFD::menuMPTInitM50M55Vehicle()
 
 void ApolloRTCCMFD::CheckoutMonitorCalc()
 {
-	G->CheckoutMonitorCalc();
+	bool CheckoutMonitorCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: U02, CSM or LEM, Indicator (GMT,GET,MVI,MVE,RAD,ALT,FPA), Parameter, Threshold Time (opt.), Reference (ECI,ECF,MCI,MCT) (opt.), FT (opt.);", CheckoutMonitorCalcInput, 0, 30, (void*)this);
 }
 
-void ApolloRTCCMFD::menuCheckMonVehID()
+bool CheckoutMonitorCalcInput(void *id, char *str, void *data)
 {
-	if (GC->rtcc->med_u02.VEH == 1)
+	if (strlen(str) < 30)
 	{
-		GC->rtcc->med_u02.VEH = 3;
-		sprintf(GC->checkmon.VEH, "LEM");
-	}
-	else
-	{
-		GC->rtcc->med_u02.VEH = 1;
-		sprintf(GC->checkmon.VEH, "CSM");
-	}
-}
-
-void ApolloRTCCMFD::menuCheckMonOptionID()
-{
-	if (GC->rtcc->med_u02.IND < 4)
-	{
-		GC->rtcc->med_u02.IND++;
-	}
-	else
-	{
-		GC->rtcc->med_u02.IND = 1;
-	}
-
-	if (GC->rtcc->med_u02.IND == 1)
-	{
-		sprintf(GC->checkmon.Option, "GMT");
-	}
-	else if (GC->rtcc->med_u02.IND == 2)
-	{
-		sprintf(GC->checkmon.Option, "GET");
-	}
-	else if (GC->rtcc->med_u02.IND == 3)
-	{
-		sprintf(GC->checkmon.Option, "MVI");
-	}
-	else if (GC->rtcc->med_u02.IND == 4)
-	{
-		sprintf(GC->checkmon.Option, "MVE");
-	}
-}
-
-void ApolloRTCCMFD::menuCheckMonReference()
-{
-	if (GC->rtcc->med_u02.REF < 3)
-	{
-		GC->rtcc->med_u02.REF++;
-	}
-	else
-	{
-		GC->rtcc->med_u02.REF = 0;
-	}
-
-	if (GC->rtcc->med_u02.REF == 0)
-	{
-		sprintf(GC->checkmon.RF, "ECI");
-	}
-	else if (GC->rtcc->med_u02.REF == 1)
-	{
-		sprintf(GC->checkmon.RF, "ECT");
-	}
-	else if (GC->rtcc->med_u02.REF == 2)
-	{
-		sprintf(GC->checkmon.RF, "MCI");
-	}
-	else if (GC->rtcc->med_u02.REF == 3)
-	{
-		sprintf(GC->checkmon.RF, "MCT");
-	}
-}
-
-void ApolloRTCCMFD::menuCheckMonFeet()
-{
-	if (GC->rtcc->med_u02.FT < 1)
-	{
-		GC->rtcc->med_u02.FT = 1;
-		GC->checkmon.unit = 1;
-	}
-	else
-	{
-		GC->rtcc->med_u02.FT = 0;
-		GC->checkmon.unit = 0;
-	}
-}
-
-void ApolloRTCCMFD::menuCheckMonParameter()
-{
-	if (GC->rtcc->med_u02.IND == 1 || GC->rtcc->med_u02.IND == 2)
-	{
-		bool CheckMonTimeInput(void* id, char *str, void *data);
-		oapiOpenInputBox("Input GET or GMT in HH:MM:SS.SS", CheckMonTimeInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		bool CheckMonManInput(void* id, char *str, void *data);
-		oapiOpenInputBox("Input Maneuver ID:", CheckMonManInput, 0, 20, (void*)this);
-	}
-}
-
-bool CheckMonTimeInput(void* id, char *str, void *data)
-{
-	int hh, mm;
-	double ss, tig;
-
-	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
-	{
-		tig = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_CheckMonTime(tig);
-
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 		return true;
 	}
 	return false;
-}
-
-void ApolloRTCCMFD::set_CheckMonTime(double tig)
-{
-	GC->rtcc->med_u02.IND_val = tig;
-
-	if (GC->rtcc->med_u02.IND == 1)
-	{
-		GC->checkmon.GMT = tig;
-	}
-	else
-	{
-		GC->checkmon.GET = tig;
-	}
-}
-
-bool CheckMonManInput(void* id, char *str, void *data)
-{
-	int man;
-
-	if (sscanf(str, "%d", &man) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_CheckMonMan(man);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_CheckMonMan(int man)
-{
-	GC->rtcc->med_u02.IND_man = man;
-}
-
-void ApolloRTCCMFD::menuCheckMonThresholdTime()
-{
-
 }
 
 double ApolloRTCCMFD::timetoperi()
@@ -7038,6 +6903,110 @@ bool DeleteMidcourseColumnInput(void* id, char *str, void *data)
 {
 	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
+}
+
+void ApolloRTCCMFD::menuCycleNodeConvOption()
+{
+	G->NodeConvOpt = !G->NodeConvOpt;
+}
+
+void ApolloRTCCMFD::menuNodeConvCalc()
+{
+	G->NodeConvCalc();
+}
+
+void ApolloRTCCMFD::menuSendNodeToSFP()
+{
+	G->SendNodeToSFP();
+}
+
+void ApolloRTCCMFD::menuSetNodeConvGET()
+{
+	bool NodeConvGETInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input GET at node (Format: HH:MM:SS)", NodeConvGETInput, 0, 20, (void*)this);
+}
+
+bool NodeConvGETInput(void* id, char *str, void *data)
+{
+	double hh, mm, ss, get;
+	if (sscanf(str, "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_NodeConvGET(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_NodeConvGET(double get)
+{
+	G->NodeConvGET = get;
+}
+
+void ApolloRTCCMFD::menuSetNodeConvLat()
+{
+	bool NodeConvLatInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input latitude at node in degrees:", NodeConvLatInput, 0, 20, (void*)this);
+}
+
+bool NodeConvLatInput(void* id, char *str, void *data)
+{
+	double lat;
+	if (sscanf(str, "%lf", &lat) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_NodeConvLat(lat);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_NodeConvLat(double lat)
+{
+	G->NodeConvLat = lat * RAD;
+}
+
+void ApolloRTCCMFD::menuSetNodeConvLng()
+{
+	bool NodeConvLngInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input longitude at node in degrees:", NodeConvLngInput, 0, 20, (void*)this);
+}
+
+bool NodeConvLngInput(void* id, char *str, void *data)
+{
+	double lng;
+	if (sscanf(str, "%lf", &lng) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_NodeConvLng(lng);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_NodeConvLng(double lng)
+{
+	G->NodeConvLng = lng * RAD;
+}
+
+void ApolloRTCCMFD::menuSetNodeConvHeight()
+{
+	bool NodeConvHeightInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input height at node in NM:", NodeConvHeightInput, 0, 20, (void*)this);
+}
+
+bool NodeConvHeightInput(void* id, char *str, void *data)
+{
+	double height;
+	if (sscanf(str, "%lf", &height) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_NodeConvHeight(height);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_NodeConvHeight(double height)
+{
+	G->NodeConvHeight = height * 1852.0;
 }
 
 void ApolloRTCCMFD::menuMSKRequest()

@@ -1312,6 +1312,13 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PDAP_K2 = 0.0;
 	PDAP_Theta_LIM = 0.0;
 	PDAP_R_amin = 0.0;
+
+	NodeConvOpt = true;
+	NodeConvLat = 0.0;
+	NodeConvLng = 0.0;
+	NodeConvGET = 0.0;
+	NodeConvResLat = 0.0;
+	NodeConvResLng = 0.0;
 }
 
 ARCore::~ARCore()
@@ -1594,11 +1601,6 @@ void ARCore::TransferGPMToMPT()
 void ARCore::MPTTLIDirectInput()
 {
 	startSubthread(46);
-}
-
-void ARCore::CheckoutMonitorCalc()
-{
-	startSubthread(47);
 }
 
 void ARCore::TransferLOIorMCCtoMPT()
@@ -2495,6 +2497,42 @@ void ARCore::TerrainModelCalc()
 	}
 
 	if (file) fclose(file);
+}
+
+void ARCore::NodeConvCalc()
+{
+	VECTOR3 R_EMP, R_selen, R;
+
+	double MJD = GC->rtcc->CalcGETBase() + NodeConvGET / 24.0 / 3600.0;
+	MATRIX3 M_EMP = OrbMech::EMPMatrix(MJD);
+	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD);
+
+	if (NodeConvOpt)
+	{
+		R_selen = OrbMech::r_from_latlong(NodeConvLat, NodeConvLng);
+		R = rhmul(Rot, R_selen);
+		R_EMP = mul(M_EMP, R);
+		OrbMech::latlong_from_r(R_EMP, NodeConvResLat, NodeConvResLng);
+	}
+	else
+	{
+		R_EMP = OrbMech::r_from_latlong(NodeConvLat, NodeConvLng);
+		R = tmul(M_EMP, R_EMP);
+		R_selen = rhtmul(Rot, R);
+		OrbMech::latlong_from_r(R_selen, NodeConvResLat, NodeConvResLng);
+	}
+	if (NodeConvResLng < 0)
+	{
+		NodeConvResLng += PI2;
+	}
+}
+
+void ARCore::SendNodeToSFP()
+{
+	GC->rtcc->PZSFPTAB.blocks[0].GMT_nd = GC->rtcc->GMTfromGET(NodeConvGET);
+	GC->rtcc->PZSFPTAB.blocks[0].lat_nd = NodeConvResLat;
+	GC->rtcc->PZSFPTAB.blocks[0].lng_nd = NodeConvResLng;
+	GC->rtcc->PZSFPTAB.blocks[0].h_nd = NodeConvHeight;
 }
 
 int ARCore::startSubthread(int fcn) {
@@ -4576,10 +4614,8 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 47: //Checkout Monitor
+	case 47: //Spare
 	{
-		GC->rtcc->EMDCHECK(GC->checkmon);
-
 		Result = 0;
 	}
 	break;

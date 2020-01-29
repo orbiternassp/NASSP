@@ -60,7 +60,6 @@ public:
 
 	RTCC* rtcc;
 
-	CheckoutMonitor checkmon;
 	LunarDescentPlanningTable descplantable;
 };
 
@@ -111,7 +110,6 @@ public:
 	void TransferGPMToMPT();
 	void MPTDirectInputCalc();
 	void MPTTLIDirectInput();
-	void CheckoutMonitorCalc();
 	void TransferLOIorMCCtoMPT();
 	void TransferRTEToMPT();
 	bool vesselinLOS();
@@ -144,6 +142,8 @@ public:
 	int REFSMMATOctalAddress();
 	int REFSMMATUplinkAddress();
 	void DetermineGMPCode();
+	void NodeConvCalc();
+	void SendNodeToSFP();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -433,6 +433,15 @@ public:
 	double AGCEphemTLAND;
 	int AGCEphemMission;
 	bool AGCEphemIsCMC;
+
+	//NODAL TARGET CONVERSION
+	bool NodeConvOpt; //false = EMP to selenographc, true = selenographic to EMP
+	double NodeConvLat;
+	double NodeConvLng;
+	double NodeConvGET;
+	double NodeConvHeight;
+	double NodeConvResLat;
+	double NodeConvResLng;
 
 private:
 

@@ -523,14 +523,6 @@ public:
 	void menuTransferPoweredAscentToMPT();
 	void menuTransferPoweredDescentToMPT();
 	void CheckoutMonitorCalc();
-	void menuCheckMonVehID();
-	void menuCheckMonOptionID();
-	void menuCheckMonParameter();
-	void set_CheckMonTime(double time);
-	void set_CheckMonMan(int man);
-	void menuCheckMonThresholdTime();
-	void menuCheckMonReference();
-	void menuCheckMonFeet();
 	void menuMPTInitM50M55Table();
 	void menuMPTInitM50CSMWT();
 	void menuMPTInitM50LMWT();
@@ -601,6 +593,18 @@ public:
 	void menuAlterationSFPData();
 	void menuTransferMCCPlanToSFP();
 	void menuDeleteMidcourseColumn();
+	void menuSetNodalTargetConversionPage();
+	void menuCycleNodeConvOption();
+	void menuNodeConvCalc();
+	void menuSendNodeToSFP();
+	void menuSetNodeConvGET();
+	void set_NodeConvGET(double get);
+	void menuSetNodeConvLat();
+	void set_NodeConvLat(double lat);
+	void menuSetNodeConvLng();
+	void set_NodeConvLng(double lng);
+	void menuSetNodeConvHeight();
+	void set_NodeConvHeight(double height);
 
 protected:
 	oapi::Font *font;

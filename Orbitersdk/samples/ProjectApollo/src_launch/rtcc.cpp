@@ -14941,13 +14941,15 @@ int RTCC::ELVCNV(EphemerisData sv, int in, int out, EphemerisData &sv_out)
 	return 0;
 }
 
-int RTCC::EMDCHECK(CheckoutMonitor &res)
+void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet)
 {
 	EphemerisData sv_out, sv_conv, sv_inert;
 	MissionPlanTable *table;
 	OrbitEphemerisTable *ephem;
 
-	if (med_u02.VEH == RTCC_MPT_LM)
+	EZCHECKDIS.ErrorMessage = "";
+
+	if (veh == RTCC_MPT_LM)
 	{
 		table = &PZMPTLEM;
 		ephem = &EZEPH2;
@@ -14958,75 +14960,176 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		ephem = &EZEPH1;
 	}
 
-	if (table->TUP == 0) return 8;
+	if (table->TUP == 0)
+	{
+		EZCHECKDIS.ErrorMessage = "Error 8";
+		return;
+	}
+	else if (table->TUP < 0)
+	{
+		EZCHECKDIS.ErrorMessage = "Error 2";
+		return;
+	}
 
-	res.U_T = _V(-2, 0, 0);
-	res.NV = 0;
+	if (table->TUP != ephem->EPHEM.Header.TUP)
+	{
+		EZCHECKDIS.ErrorMessage = "Error 3";
+		return;
+	}
 
-	if (med_u02.IND == 1 || med_u02.IND == 2)
+	EZCHECKDIS.U_T = _V(-2, 0, 0);
+	EZCHECKDIS.NV = 0;
+	if (THTime > 0)
+	{
+		EZCHECKDIS.THT = THTime;
+	}
+	else
+	{
+		EZCHECKDIS.THT = 0.0;
+	}
+
+	//GMT and GET
+	if (opt == 1 || opt == 2)
 	{
 		double GMT;
 
-		if (med_u02.IND == 1)
+		if (opt == 1)
 		{
-			GMT = med_u02.IND_val;
-			sprintf(res.Option, "GMT");
+			GMT = param;
+			sprintf(EZCHECKDIS.Option, "GMT");
 		}
 		else
 		{
-			GMT = GMTfromGET(med_u02.IND_val);
-			sprintf(res.Option, "GET");
+			GMT = GMTfromGET(param);
+			sprintf(EZCHECKDIS.Option, "GET");
 		}
 
-		ELVCTRInputTable interin;
-		ELVCTROutputTable interout;
-		interin.GMT = GMT;
-		interin.L = med_u02.VEH;
-		ELVCTR(interin, interout);
-		if (interout.ErrorCode > 2)
+		if (THTime > 0)
 		{
-			//Error: Input time is outside of ephemeris range
-			return 4;
+			double THGMT;
+			if (opt == 1)
+			{
+				THGMT = THTime;
+			}
+			else
+			{
+				THGMT = GMTfromGET(THTime);
+			}
+			EphemerisData svtemp;
+			if (ELFECH(THGMT, veh, svtemp))
+			{
+				EZCHECKDIS.ErrorMessage = "Error 4";
+				return;
+			}
+			EMSMISSInputTable emsin;
+
+			emsin.MaxIntegTime = GMT - svtemp.GMT;
+			sv_out = EMMENI(emsin, svtemp, emsin.MaxIntegTime);
 		}
-		sv_out = interout.SV;
-		res.NV = interout.ORER + 1;
-	}
-	else if (med_u02.IND == 3)
-	{
-		if (med_u02.IND_man <= 0 || table->mantable.size() < med_u02.IND_man) return 7;
-		sv_out.R = table->mantable[med_u02.IND_man - 1].R_BI;
-		sv_out.V = table->mantable[med_u02.IND_man - 1].V_BI;
-		sv_out.GMT = table->mantable[med_u02.IND_man - 1].GMT_BI;
-		sv_out.RBI = table->mantable[med_u02.IND_man - 1].RefBodyInd;
-		sprintf(res.Option, "MVI");
+		else
+		{
+			ELVCTRInputTable interin;
+			ELVCTROutputTable interout;
+			interin.GMT = GMT;
+			interin.L = veh;
+			ELVCTR(interin, interout);
+			if (interout.ErrorCode > 2)
+			{
+				//Error: Input time is outside of ephemeris range
+				EZCHECKDIS.ErrorMessage = "Error 4";
+				return;
+			}
+			sv_out = interout.SV;
 
-		res.U_T = table->mantable[med_u02.IND_man - 1].A_T;
+			EZCHECKDIS.NV = interout.ORER + 1;
+		}
 	}
-	else if (med_u02.IND == 4)
+	//Maneuver Initiation
+	else if (opt == 3)
 	{
-		if (med_u02.IND_man <= 0 || table->mantable.size() < med_u02.IND_man) return 7;
-		sv_out.R = table->mantable[med_u02.IND_man - 1].R_BO;
-		sv_out.V = table->mantable[med_u02.IND_man - 1].V_BO;
-		sv_out.GMT = table->mantable[med_u02.IND_man - 1].GMT_BO;
-		sv_out.RBI = table->mantable[med_u02.IND_man - 1].RefBodyInd;
-		sprintf(res.Option, "MVE");
+		unsigned man = (unsigned)param;
+		if (man <= 0 || table->mantable.size() < man)
+		{
+			EZCHECKDIS.ErrorMessage = "Error 7";
+			return;
+		}
+		sv_out.R = table->mantable[man - 1].R_BI;
+		sv_out.V = table->mantable[man - 1].V_BI;
+		sv_out.GMT = table->mantable[man - 1].GMT_BI;
+		sv_out.RBI = table->mantable[man - 1].RefBodyInd;
+		sprintf(EZCHECKDIS.Option, "MVI");
+
+		EZCHECKDIS.U_T = table->mantable[man - 1].A_T;
+	}
+	//Maneuver cutoff
+	else if (opt == 4)
+	{
+		unsigned man = (unsigned)param;
+
+		if (man <= 0 || table->mantable.size() < man)
+		{
+			EZCHECKDIS.ErrorMessage = "Error 7";
+			return;
+		}
+		sv_out.R = table->mantable[man - 1].R_BO;
+		sv_out.V = table->mantable[man - 1].V_BO;
+		sv_out.GMT = table->mantable[man - 1].GMT_BO;
+		sv_out.RBI = table->mantable[man - 1].RefBodyInd;
+		sprintf(EZCHECKDIS.Option, "MVE");
 	}
 	else
 	{
-		//TBD
-		return 1;
+		EphemerisData svtemp;
+		if (ELFECH(GMTfromGET(THTime), veh, svtemp))
+		{
+			EZCHECKDIS.ErrorMessage = "Error 4";
+			return;
+		}
+
+		EMSMISSInputTable emsin;
+
+		if (opt == 5)
+		{
+			emsin.CutoffIndicator = 1;
+		}
+		else if (opt == 6)
+		{
+			emsin.CutoffIndicator = 3;
+		}
+		else
+		{
+			emsin.CutoffIndicator = 4;
+		}
+		if (ref <= 1)
+		{
+			emsin.StopParamRefFrame = 0;
+			emsin.EarthRelStopParam = param;
+		}
+		else
+		{
+			emsin.StopParamRefFrame = 1;
+			emsin.MoonRelStopParam = param;
+		}
+
+		sv_out = EMMENI(emsin, svtemp, 10.0*24.0*3600.0);
+
+		if (emsin.CutoffIndicator != emsin.NIAuxOutputTable.TerminationCode)
+		{
+			EZCHECKDIS.ErrorMessage = "Error 10";
+			return;
+		}
 	}
 
-	if (med_u02.VEH == RTCC_MPT_LM)
+	if (veh == RTCC_MPT_LM)
 	{
-		sprintf_s(res.VEH, "LM");
+		sprintf_s(EZCHECKDIS.VEH, "LM");
 	}
 	else
 	{
-		sprintf_s(res.VEH, "CSM");
+		sprintf_s(EZCHECKDIS.VEH, "CSM");
 	}
-	res.GET = GETfromGMT(sv_out.GMT);
-	res.GMT = sv_out.GMT;
+	EZCHECKDIS.GET = GETfromGMT(sv_out.GMT);
+	EZCHECKDIS.GMT = sv_out.GMT;
 
 	sv_inert = sv_out;
 
@@ -15041,30 +15144,30 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		inref = 2;
 	}
 
-	ELVCNV(sv_inert, inref, med_u02.REF, sv_conv);
+	ELVCNV(sv_inert, inref, ref, sv_conv);
 
-	if (med_u02.REF == 0)
+	if (ref == 0)
 	{
-		sprintf(res.RF, "ECI");
+		sprintf(EZCHECKDIS.RF, "ECI");
 	}
-	else if (med_u02.REF == 1)
+	else if (ref == 1)
 	{
-		sprintf(res.RF, "ECT");
+		sprintf(EZCHECKDIS.RF, "ECT");
 	}
-	else if (med_u02.REF == 2)
+	else if (ref == 2)
 	{
-		sprintf(res.RF, "MCI");
+		sprintf(EZCHECKDIS.RF, "MCI");
 	}
 	else
 	{
-		sprintf(res.RF, "MCT");
+		sprintf(EZCHECKDIS.RF, "MCT");
 	}
 
 	//Display unit
 	double CONVFACR, CONVFACV, R_E, mu;
 
-	res.unit = med_u02.FT;
-	if (med_u02.FT == 1)
+	EZCHECKDIS.unit = feet;
+	if (feet == 1)
 	{
 		CONVFACR = CONVFACV = 0.3048;
 	}
@@ -15074,7 +15177,7 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		CONVFACV = 6.371e6 / 3600.0;
 	}
 
-	if (med_u02.REF < 3)
+	if (ref < 2)
 	{
 		R_E = OrbMech::R_Earth;
 		mu = OrbMech::mu_Earth;
@@ -15085,32 +15188,32 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		mu = OrbMech::mu_Moon;
 	}
 
-	res.Pos = sv_conv.R / CONVFACR;
-	res.Vel = sv_conv.V / CONVFACV;
+	EZCHECKDIS.Pos = sv_conv.R / CONVFACR;
+	EZCHECKDIS.Vel = sv_conv.V / CONVFACV;
 
 	double rmag, vmag, rtasc, decl, fpav, az;
 	OrbMech::rv_from_adbar(sv_conv.R, sv_conv.V, rmag, vmag, rtasc, decl, fpav, az);
 
-	res.V_i = vmag / 0.3048;
-	res.gamma_i = 90.0 - fpav * DEG;
-	res.psi = az*DEG;
-	res.phi_c = 0.0;
-	res.lambda = 0.0;
-	res.h_s = (rmag - R_E) / 1852.0;
-	res.R = rmag / 1852.0;
+	EZCHECKDIS.V_i = vmag / 0.3048;
+	EZCHECKDIS.gamma_i = 90.0 - fpav * DEG;
+	EZCHECKDIS.psi = az*DEG;
+	EZCHECKDIS.phi_c = 0.0;
+	EZCHECKDIS.lambda = 0.0;
+	EZCHECKDIS.h_s = (rmag - R_E) / 1852.0;
+	EZCHECKDIS.R = rmag / 1852.0;
 
-	if (med_u02.REF < 3)
+	if (ref < 2)
 	{
-		res.HOBlank = false;
-		res.h_o_ft = (rmag - OrbMech::R_Earth) / 0.3048;
-		if (res.h_o_ft > 9999999.0) res.h_o_ft = 9999999.0;
-		res.h_o_NM = (rmag - OrbMech::R_Earth) / 1852.0;
-		if (res.h_o_NM > 9999.99) res.h_o_NM = 9999.99;
+		EZCHECKDIS.HOBlank = false;
+		EZCHECKDIS.h_o_ft = (rmag - OrbMech::R_Earth) / 0.3048;
+		if (EZCHECKDIS.h_o_ft > 9999999.0) EZCHECKDIS.h_o_ft = 9999999.0;
+		EZCHECKDIS.h_o_NM = (rmag - OrbMech::R_Earth) / 1852.0;
+		if (EZCHECKDIS.h_o_NM > 9999.99) EZCHECKDIS.h_o_NM = 9999.99;
 	}
 	else
 	{
-		res.HOBlank = true;
-		res.h_o_ft = res.h_o_NM = 0.0;
+		EZCHECKDIS.HOBlank = true;
+		EZCHECKDIS.h_o_ft = EZCHECKDIS.h_o_NM = 0.0;
 	}
 
 	OELEMENTS coe;
@@ -15118,35 +15221,35 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 
 	if (coe.e >= 1)
 	{
-		res.a = 99999.99;
+		EZCHECKDIS.a = 99999.99;
 	}
 	else
 	{
-		res.a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e) / 1852.0;
+		EZCHECKDIS.a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e) / 1852.0;
 	}
-	if (res.a > 99999.99) res.a = 99999.99;
-	res.e = coe.e;
-	res.i = coe.i*DEG;
-	res.omega_p = coe.w*DEG;
-	res.Omega = coe.RA*DEG;
-	res.nu = coe.TA*DEG;
+	if (EZCHECKDIS.a > 99999.99) EZCHECKDIS.a = 99999.99;
+	EZCHECKDIS.e = coe.e;
+	EZCHECKDIS.i = coe.i*DEG;
+	EZCHECKDIS.omega_p = coe.w*DEG;
+	EZCHECKDIS.Omega = coe.RA*DEG;
+	EZCHECKDIS.nu = coe.TA*DEG;
 	if (coe.e < 0.00001)
 	{
-		res.TABlank = true;
+		EZCHECKDIS.TABlank = true;
 	}
 	else
 	{
-		res.TABlank = false;
+		EZCHECKDIS.TABlank = false;
 	}
 	if (coe.e < 1.0)
 	{
-		res.MABlank = false;
-		res.m = OrbMech::TrueToMeanAnomaly(coe.TA, coe.e)*DEG;
+		EZCHECKDIS.MABlank = false;
+		EZCHECKDIS.m = OrbMech::TrueToMeanAnomaly(coe.TA, coe.e)*DEG;
 	}
 	else
 	{
-		res.m = 0.0;
-		res.MABlank = true;
+		EZCHECKDIS.m = 0.0;
+		EZCHECKDIS.MABlank = true;
 	}
 
 	if (coe.e < 0.85)
@@ -15161,136 +15264,136 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 
 		ApsidesDeterminationSubroutine(sv_in, sv_a, sv_p);
 
-		res.h_a = (length(sv_a.R) - R_E) / 1852.0;
-		res.h_p = (length(sv_p.R) - R_E) / 1852.0;
+		EZCHECKDIS.h_a = (length(sv_a.R) - R_E) / 1852.0;
+		EZCHECKDIS.h_p = (length(sv_p.R) - R_E) / 1852.0;
 	}
 	else
 	{
-		res.h_p = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 + coe.e)) - R_E;
-		res.h_p = res.h_p / 1852.0;
+		EZCHECKDIS.h_p = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 + coe.e)) - R_E;
+		EZCHECKDIS.h_p = EZCHECKDIS.h_p / 1852.0;
 
 		if (coe.e >= 1)
 		{
-			res.h_a = 9999.99;
+			EZCHECKDIS.h_a = 9999.99;
 		}
 		else
 		{
-			res.h_a = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 - coe.e)) - R_E;
-			res.h_a = res.h_a / 1852.0;
+			EZCHECKDIS.h_a = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 - coe.e)) - R_E;
+			EZCHECKDIS.h_a = EZCHECKDIS.h_a / 1852.0;
 		}
 	}
 
-	if (res.h_p > 9999.99) res.h_p = 9999.99;
-	if (res.h_a > 9999.99) res.h_a = 9999.99;
+	if (EZCHECKDIS.h_p > 9999.99) EZCHECKDIS.h_p = 9999.99;
+	if (EZCHECKDIS.h_a > 9999.99) EZCHECKDIS.h_a = 9999.99;
 
 	double lat, lng;
 	OrbMech::latlong_from_r(sv_conv.R, lat, lng);
-	res.phi_c = res.phi_D = lat * DEG;
-	res.lambda = res.lambda_D = lng * DEG;
+	EZCHECKDIS.phi_c = EZCHECKDIS.phi_D = lat * DEG;
+	EZCHECKDIS.lambda = EZCHECKDIS.lambda_D = lng * DEG;
 
 	double LunarRightAscension, LunarDeclination, LunarDistance;
 	OrbMech::GetLunarEquatorialCoordinates(OrbMech::MJDfromGET(sv_inert.GMT, GMTBASE), LunarRightAscension, LunarDeclination, LunarDistance);
-	res.deltaL = LunarDeclination * DEG;
+	EZCHECKDIS.deltaL = LunarDeclination * DEG;
 
-	res.UpdateNo = table->TUP;
+	EZCHECKDIS.UpdateNo = table->TUP;
 	if (ephem->EPHEM.table.size() > 0)
 	{
-		res.EPHB = ephem->EPHEM.table.front().GMT;
-		res.EPHE = ephem->EPHEM.table.back().GMT;
+		EZCHECKDIS.EPHB = ephem->EPHEM.table.front().GMT;
+		EZCHECKDIS.EPHE = ephem->EPHEM.table.back().GMT;
 	}
 	else
 	{
-		res.EPHB = 0.0;
-		res.EPHE = 0.0;
+		EZCHECKDIS.EPHB = 0.0;
+		EZCHECKDIS.EPHE = 0.0;
 	}
-	res.LOC = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
-	res.GRRC = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
-	res.ZSC = res.ZSL = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
-	res.GRRS = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase()) - 17.0;
-	res.R_Day[0] = GZGENCSN.DayofLiftoff;
-	res.R_Day[1] = GZGENCSN.MonthofLiftoff;
-	res.R_Day[2] = GZGENCSN.Year;
+	EZCHECKDIS.LOC = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
+	EZCHECKDIS.GRRC = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
+	EZCHECKDIS.ZSC = EZCHECKDIS.ZSL = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
+	EZCHECKDIS.GRRS = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase()) - 17.0;
+	EZCHECKDIS.R_Day[0] = GZGENCSN.DayofLiftoff;
+	EZCHECKDIS.R_Day[1] = GZGENCSN.MonthofLiftoff;
+	EZCHECKDIS.R_Day[2] = GZGENCSN.Year;
 
-	if (med_u02.VEH == RTCC_MPT_LM)
+	if (veh == RTCC_MPT_LM)
 	{
 		if (ephem->LUNRSTAY.LunarStayBeginGMT < 0)
 		{
-			res.LAL = 0.0;
+			EZCHECKDIS.LAL = 0.0;
 		}
 		else
 		{
-			res.LAL = ephem->LUNRSTAY.LunarStayBeginGMT;
+			EZCHECKDIS.LAL = ephem->LUNRSTAY.LunarStayBeginGMT;
 		}
 
 		if (ephem->LUNRSTAY.LunarStayEndGMT > 0 && ephem->LUNRSTAY.LunarStayEndGMT < 10e10)
 		{
-			res.LOL = ephem->LUNRSTAY.LunarStayEndGMT;
+			EZCHECKDIS.LOL = ephem->LUNRSTAY.LunarStayEndGMT;
 		}
 		else
 		{
-			res.LOL = 0.0;
+			EZCHECKDIS.LOL = 0.0;
 		}
 
-		res.LSTBlank = false;
+		EZCHECKDIS.LSTBlank = false;
 	}
 	else
 	{
-		res.LAL = 0.0;
-		res.LOL = 0.0;
-		res.LSTBlank = true;
+		EZCHECKDIS.LAL = 0.0;
+		EZCHECKDIS.LOL = 0.0;
+		EZCHECKDIS.LSTBlank = true;
 	}
 
 	double cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight;
 	int cfg;
 
-	PLAWDT(med_u02.VEH, sv_conv.GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight);
+	PLAWDT(veh, sv_conv.GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight);
 
 	if (cfg == RTCC_CONFIG_CSM)
 	{
-		sprintf(res.CFG, "C");
+		sprintf(EZCHECKDIS.CFG, "C");
 	}
 	else if (cfg == RTCC_CONFIG_LM)
 	{
-		sprintf(res.CFG, "L");
+		sprintf(EZCHECKDIS.CFG, "L");
 	}
 	else if (cfg == RTCC_CONFIG_CSM_LM)
 	{
-		sprintf(res.CFG, "CL");
+		sprintf(EZCHECKDIS.CFG, "CL");
 	}
 	else if (cfg == RTCC_CONFIG_CSM_SIVB)
 	{
-		sprintf(res.CFG, "CS");
+		sprintf(EZCHECKDIS.CFG, "CS");
 	}
 	else if (cfg == RTCC_CONFIG_LM_SIVB)
 	{
-		sprintf(res.CFG, "LS");
+		sprintf(EZCHECKDIS.CFG, "LS");
 	}
 	else if (cfg == RTCC_CONFIG_CSM_LM_SIVB)
 	{
-		sprintf(res.CFG, "CSL");
+		sprintf(EZCHECKDIS.CFG, "CSL");
 	}
 	else if (cfg == RTCC_CONFIG_ASC)
 	{
-		sprintf(res.CFG, "A");
+		sprintf(EZCHECKDIS.CFG, "A");
 	}
 	else if (cfg == RTCC_CONFIG_CSM_ASC)
 	{
-		sprintf(res.CFG, "CA");
+		sprintf(EZCHECKDIS.CFG, "CA");
 	}
 	else if (cfg == RTCC_CONFIG_DSC)
 	{
-		sprintf(res.CFG, "D");
+		sprintf(EZCHECKDIS.CFG, "D");
 	}
 	else if (cfg == RTCC_CONFIG_SIVB)
 	{
-		sprintf(res.CFG, "S");
+		sprintf(EZCHECKDIS.CFG, "S");
 	}
 	
-	res.WT = cfg_weight / 0.45359237;
-	res.WC = csm_weight / 0.45359237;
-	res.WL = (lma_weight + lmd_weight) / 0.45359237;
+	EZCHECKDIS.WT = cfg_weight / 0.45359237;
+	EZCHECKDIS.WC = csm_weight / 0.45359237;
+	EZCHECKDIS.WL = (lma_weight + lmd_weight) / 0.45359237;
 
-	return 0;
+	return;
 }
 
 bool RTCC::MPTConfigIncludesCSM(int config)
@@ -20204,9 +20307,17 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			{
 				return;
 			}
+			if (opt == 5 || opt == 6)
+			{
+				param *= 1852.0;
+			}
+			else if (opt == 7)
+			{
+				param = sin(param*RAD);
+			}
 		}
 		bool hasTHT;
-		double THTime;
+		double THTime = -1.0;
 		if (data.size() < 4 || data[3] == "")
 		{
 			hasTHT = false;
@@ -20284,7 +20395,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			return;
 		}
-		//TBD: Call EMDCHECK
+		EMDCHECK(tab, opt, param, THTime, ref, feet);
 	}
 	//Moonrise/Moonset Display
 	else if (med == 7)
