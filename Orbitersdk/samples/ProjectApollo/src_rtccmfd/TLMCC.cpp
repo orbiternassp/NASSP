@@ -3303,13 +3303,22 @@ bool TLMCCProcessor::RBETA(VECTOR3 R0, VECTOR3 V0, double r, int Q, double mu, d
 		{
 			return true;
 		}
-		double E0 = D0 / abs(D0)*atan(sqrt(temp) / cos_E0);
+		double E0 = atan2(sqrt(temp), cos_E0);
+		if (E0 < 0)
+		{
+			E0 += PI2;
+		}
+		E0 = D0 / abs(D0)*E0;
 		temp = 1.0 - cos_E * cos_E;
 		if (temp < 0)
 		{
 			return true;
 		}
 		double E = atan2(sqrt(temp), cos_E);
+		if (E < 0)
+		{
+			E += PI2;
+		}
 		double theta = E0 - QD * E;
 		beta = QD * abs(theta)*sqrt(1.0 / ainv);
 	}
