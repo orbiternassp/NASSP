@@ -11863,11 +11863,11 @@ void RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 	man.IMPT = TIMP;
 	if (in.Thruster == RTCC_ENGINETYPE_LMAPS)
 	{
-		man.TrimAngleInd = 2;
+		man.TrimAngleInd = 1;
 	}
 	else
 	{
-		man.TrimAngleInd = 0;
+		man.TrimAngleInd = -1;
 	}
 	VECTOR3 DV = in.V_aft - in.sv_before.V;
 	double dv = length(DV);
@@ -12281,7 +12281,7 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 	man.Thruster = RTCC_ENGINETYPE_LMDPS;
 	man.ConfigCodeBefore = RTCC_CONFIG_LM;
 	man.TVC = RTCC_MANVEHICLE_LM;
-	man.TrimAngleInd = in.TrimAngleInd;
+	man.TrimAngleInd = in.TrimAngleInd - 1;
 	man.HeadsUpDownInd = in.HeadsUpDownInd;
 	if (in.CurrentManeuver > 1U)
 	{
@@ -12515,7 +12515,7 @@ void RTCC::PMMUDT(int L, unsigned man, int headsup, int trim)
 	}
 	if (trim >= 0)
 	{
-		pMan->TrimAngleInd = trim;
+		pMan->TrimAngleInd = trim - 1;
 	}
 	PMSVCT(8, L);
 }

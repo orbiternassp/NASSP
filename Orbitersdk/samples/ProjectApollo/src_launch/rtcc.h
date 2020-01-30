@@ -3346,7 +3346,7 @@ public:
 		int LOPC_M = 3;
 		int LOPC_N = 8;
 		double TT1_DPS_MIN = 1.0*3600.0;
-		double TT1_DPS_MAX = 100.0*3600.0;
+		double TT1_DPS_MAX = 120.0*3600.0;
 		//Max inclination of powered return
 		double INCL_PR_MAX = 40.0*RAD;
 	} PZMCCPLN;
