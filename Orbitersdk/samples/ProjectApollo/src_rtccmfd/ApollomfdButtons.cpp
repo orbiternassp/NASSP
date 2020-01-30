@@ -2756,15 +2756,15 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu81[] =
 	{
-		{ "Node conversion option", 0, 'O' },
-		{ "Node conversion GET", 0, 'G' },
-		{ "Node conversion latitude", 0, 'A' },
-		{ "Node conversion longitude", 0, 'L' },
+		{ "Node conv. option", 0, 'O' },
+		{ "Node conv.n GET", 0, 'G' },
+		{ "Node conv. latitude", 0, 'A' },
+		{ "Node conv. longitude", 0, 'L' },
 		{ "Nodal height", 0, 'H' },
 		{ "", 0, ' ' },
 
 		{ "Convert", 0, 'C' },
-		{ "Send node to SFP", 0, 'S' },
+		{ "Send node to SFP 2", 0, 'S' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },

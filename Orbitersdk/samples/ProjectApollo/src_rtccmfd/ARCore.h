@@ -41,13 +41,9 @@ public:
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 	double t_Land;				//Time of landing
 	double LOIazi;
-	double TLCCFreeReturnEMPLat, TLCCNonFreeReturnEMPLat;
 	//Initial guess of pericynthion GET
-	double TLCCPeriGET;
 	double LOIapo, LOIperi;
 	int LOIEllipseRotation;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
-	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
-	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
 	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
 	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 
@@ -345,18 +341,10 @@ public:
 	//1 = XYZ and T (Nodal) Targeting, 2 = FR BAP Fixed LPO, 3 = FR BAP Free LPO, 4 = Non Free BAP Fixed LPO, 5 = Non Free BAP Free LPO
 	//6 = Circumlunar free-return flyby, nominal H_PC and phi_PC, 7 = Flyby with specific H_PC, 8 = SPS lunar flyby, 9 = Optimized RCS flyby
 	int TLCCmaneuver;
-	VECTOR3 TLCC_dV_LVLH;
-	//Corrected time of pericynthion
-	double TLCCPeriGETcor;
-	//Corrected TIG
 	double TLCC_TIG;
-	double TLCCReentryGET, TLCCFRIncl, TLCCEMPLatcor;
-	double TLCCFRLat, TLCCFRLng;
+	VECTOR3 TLCC_dV_LVLH;
 	VECTOR3 R_TLI, V_TLI;
-	bool TLCCSolGood;
-	int TLCCIterationStep;
-	double TLCCRev2MeridianGET;
-	double TLCCPostDOIPeriAlt, TLCCPostDOIApoAlt;
+	int TLCCSolGood;
 
 	//LOI PAGE
 	int LOIOption;	//0 = Fixed LPO, 1 = LOI at Peri

@@ -41,18 +41,9 @@ AR_GCore::AR_GCore(VESSEL* v)
 	rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 0.0;
 	t_Land = 0.0;
 	LOIazi = 0.0;
-	TLCCFreeReturnEMPLat = 0.0;
-	TLCCNonFreeReturnEMPLat = 0.0;
-	TLCCPeriGET = 0.0;
 	LOIapo = 170.0*1852.0;
 	LOIperi = 60.0*1852.0;
 	LOIEllipseRotation = 0;
-	TLCCLAHPeriAlt = 60.0*1852.0;
-	TLCCFlybyPeriAlt = 60.0*1852.0;
-	TLCCNodeLat = 0.0;
-	TLCCNodeLng = 0.0;
-	TLCCNodeAlt = 0.0;
-	TLCCNodeGET = 0.0;
 	DOI_option = 0;
 	DT_Ins_TPI = 40.0*60.0;
 	rtcc->GZGENCSN.TIPhaseAngle = 0.0;
@@ -129,8 +120,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 34.0253*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon - 0.82*1852.0;
 		LOIazi = -78.0*RAD;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -5.67822*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(69.0, 9.0, 29.4);
 		t_Land = OrbMech::HHMMSSToSS(82.0, 8.0, 26.0);
 		rtcc->PZREAP.RRBIAS = 1350.0;
 
@@ -181,10 +170,26 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 23.647*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon -1.66*1852.0;
 		LOIazi = -91.0*RAD;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -4.933294*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 49.0, 40.2);
 		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
+
+		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(92, 39, 0);
+		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -4.933294*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 60.0*1852.0;
+		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 33, 26);
+		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -6.1*RAD;
+		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
+		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(61, 31, 0);
+		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(24, 40, 45);
+		rtcc->PZSFPTAB.blocks[0].psi_lls = -91.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].lat_lls = 0.732*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_lls = 23.647*RAD;
+		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.66*1852.0;
+		rtcc->PZSFPTAB.blocks[0].dpsi_tei = -0.2*RAD;
+		rtcc->PZSFPTAB.blocks[0].dv_tei = 3622.5*0.3048;
+		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(54, 29, 32);
+		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
 		rtcc->PZMCCPLN.LOPC_M = 0;
 		rtcc->PZMCCPLN.LOPC_N = 0;
@@ -208,8 +213,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		LOIazi = -91.0*RAD;
 		LOIapo = 169.8*1852.0;
 		LOIperi = 59.2*1852.0;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 0.279074*RAD;
-		TLCCPeriGET = OrbMech::HHMMSSToSS(75.0, 53.0, 35.0);
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
 
@@ -249,14 +252,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		LOIapo = 168.9*1852.0;
 		LOIperi = 58.7*1852.0;
 		LOIEllipseRotation = 1;
-		TLCCFreeReturnEMPLat = -1.962929*RAD;
-		TLCCNonFreeReturnEMPLat = 3.35412*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(83.0, 28.0, 45.0);
-		TLCCFlybyPeriAlt = 1851.7*1852.0;
-		TLCCNodeLat = 0.49*RAD;
-		TLCCNodeLng = 162.54*RAD;
-		TLCCNodeAlt = 59.9*1852.0;
-		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1250.0;
 
@@ -302,14 +297,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		LOIapo = 170.0*1852.0;
 		LOIperi = 60.0*1852.0;
 		LOIEllipseRotation = 1;
-		TLCCFreeReturnEMPLat = 0.0*RAD;
-		TLCCNonFreeReturnEMPLat = -0.20553*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(77.0, 28.0, 16.0);
-		TLCCFlybyPeriAlt = 210 * 1852.0;
-		TLCCNodeLat = 3.7*RAD;
-		TLCCNodeLng = 176.6*RAD;
-		TLCCNodeAlt = 60.0*1852.0;
-		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(103.0, 42.0, 02.0);
 		DOI_option = 1;
 		rtcc->med_k17.DwellOrbits = 11;
@@ -323,12 +310,10 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].lat_pc1 = 0.0;
 		rtcc->PZSFPTAB.blocks[0].lng_pc1 = 180.0*RAD;
 		rtcc->PZSFPTAB.blocks[0].h_pc1 = 211.7*1852.0;
-
 		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(96, 41, 16);
 		rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -0.20553*RAD;
 		rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
 		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 57.0*1852.0;
-
 		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 35, 24);
 		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -0.7*RAD;
 		rtcc->PZSFPTAB.blocks[0].gamma_loi = 2.0*RAD;
@@ -361,19 +346,33 @@ void AR_GCore::SetMissionSpecificParameters()
 		LOIapo = 170.0*1852.0;
 		LOIperi = 59.6*1852.0;
 		LOIEllipseRotation = 1;
-		TLCCFreeReturnEMPLat = -0.048722*RAD;
-		TLCCNonFreeReturnEMPLat = -4.66089*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(82.0, 40.0, 45.0);
-		TLCCFlybyPeriAlt = 2030.9*1852.0;
-		TLCCNodeLat = 2.16*RAD;
-		TLCCNodeLng = 170.88*RAD;
-		TLCCNodeAlt = 58.8*1852.0;
-		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(108.0, 53.0, 32.6);
 		DOI_option = 1;
 		rtcc->med_k17.DwellOrbits = 11;
 		rtcc->PZREAP.RRBIAS = 1250.0;
 		DT_Ins_TPI = 38.0*60.0;
+
+		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = OrbMech::HHMMSSToSS(103, 2, 52);
+		rtcc->PZSFPTAB.blocks[0].lat_pc1 = -0.048722*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_pc1 = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].h_pc1 = 2030.9*1852.0;
+		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(103, 5, 0);
+		rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -4.66089*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 57.0*1852.0;
+		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 30, 38);
+		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -11.2*RAD;
+		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(66, 37, 36);
+		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 13, 47);
+		rtcc->PZSFPTAB.blocks[0].psi_lls = -76.31*RAD;
+		rtcc->PZSFPTAB.blocks[0].lat_lls = -3.672*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_lls = -17.463*RAD;
+		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 0.76*1852.0;
+		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 11.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].dv_tei = 3449.5*0.3048;
+		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(67, 10, 59);
+		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
 		rtcc->med_p80.Day = 31;
 		rtcc->med_p80.Month = 1;
@@ -393,12 +392,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		LOIapo = 170.0*1852.0;
 		LOIperi = 60.0*1852.0;
 		LOIEllipseRotation = 1;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -16.90093*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(78.0, 35.0, 0.0);
-		TLCCFlybyPeriAlt = TLCCNodeAlt = 67.88*1852.0;
-		TLCCNodeLat = -23.28*RAD;
-		TLCCNodeLng = 171.57*RAD;
-		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(104.0, 40.0, 57.0);
 		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
 		DOI_option = 1;
@@ -406,6 +399,24 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZREAP.IRMAX = 40.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
 		DT_Ins_TPI = 45.0*60.0;
+
+		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(92, 9, 0);
+		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -16.90093*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 67.88*1852.0;
+		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(2, 49, 58);
+		rtcc->PZSFPTAB.blocks[0].dpsi_loi = -7.9*RAD;
+		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
+		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(145, 14, 51);
+		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(26, 7, 40);
+		rtcc->PZSFPTAB.blocks[0].psi_lls = -91.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].lat_lls = 26.0739*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_lls = 3.6539*RAD;
+		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.92*1852.0;
+		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 5.6*RAD;
+		rtcc->PZSFPTAB.blocks[0].dv_tei = 3046.7*0.3048;
+		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(71, 13, 20);
+		rtcc->PZSFPTAB.blocks[0].incl_fr = 75.0*RAD;
 
 		rtcc->med_p80.Day = 26;
 		rtcc->med_p80.Month = 7;
@@ -425,12 +436,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		LOIapo = 170.0*1852.0;
 		LOIperi = 60.0*1852.0;
 		LOIEllipseRotation = 1;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = 4.88464*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(74.0, 32.0, 24.0);
-		TLCCFlybyPeriAlt = TLCCNodeAlt = 72.76*1852.0;
-		TLCCNodeLat = 7.45*RAD;
-		TLCCNodeLng = 173.90*RAD;
-		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
 		DOI_option = 1;
@@ -476,12 +481,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		LOIapo = 170.0*1852.0;
 		LOIperi = 52.8*1852.0;
 		LOIEllipseRotation = 1;
-		TLCCFreeReturnEMPLat = TLCCNonFreeReturnEMPLat = -11.11101*RAD;
-		TLCCPeriGET = TLCCNodeGET = OrbMech::HHMMSSToSS(88.0, 58.0, 53.0);
-		TLCCFlybyPeriAlt = TLCCNodeAlt = 49.35*1852.0;
-		TLCCNodeLat = -9.52*RAD;
-		TLCCNodeLng = 161.21*RAD;
-		TLCCLAHPeriAlt = TLCCNodeAlt;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 		rtcc->med_k17.DescentFlightArc = -10.0*RAD;
 		DOI_option = 1;
@@ -490,6 +489,24 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZREAP.IRMAX = 80.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
 		DT_Ins_TPI = 47.0*60.0;
+
+		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(109, 52, 24);
+		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -11.11101*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 51.3*1852.0;
+		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(3, 20, 58);
+		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 11.3*RAD;
+		rtcc->PZSFPTAB.blocks[0].gamma_loi = 0.0;
+		rtcc->PZSFPTAB.blocks[0].T_lo = OrbMech::HHMMSSToSS(147, 41, 0);
+		rtcc->PZSFPTAB.blocks[0].dt_lls = OrbMech::HHMMSSToSS(23, 59, 39);
+		rtcc->PZSFPTAB.blocks[0].psi_lls = -90.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].lat_lls = 20.164*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_lls = 30.750*RAD;
+		rtcc->PZSFPTAB.blocks[0].rad_lls = OrbMech::R_Moon - 1.95*1852.0;
+		rtcc->PZSFPTAB.blocks[0].dpsi_tei = 0.9*RAD;
+		rtcc->PZSFPTAB.blocks[0].dv_tei = 3045.7*0.3048;
+		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(67, 37, 2);
+		rtcc->PZSFPTAB.blocks[0].incl_fr = 75.0*RAD;
 
 		rtcc->med_p80.Day = 7;
 		rtcc->med_p80.Month = 12;
@@ -1050,19 +1067,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	TLImaneuver = 0;
 	TLCCmaneuver = 1;
 	GC->rtcc->PZMCCPLN.MidcourseGET = 0.0;
-	TLCCEMPLatcor = 0.0;
 	TLCC_dV_LVLH = _V(0.0, 0.0, 0.0);
-	TLCCPeriGETcor = 0.0;
 	TLCC_TIG = 0.0;
-	TLCCReentryGET = 0.0;
-	TLCCSolGood = true;
-	TLCCFRIncl = 0.0;
-	TLCCFRLat = 0.0;
-	TLCCFRLng = 0.0;
-	TLCCIterationStep = 0;
-	TLCCRev2MeridianGET = 0.0;
-	TLCCPostDOIApoAlt = 0.0;
-	TLCCPostDOIPeriAlt = 0.0;
 	
 	tlipad.TB6P = 0.0;
 	tlipad.BurnTime = 0.0;
@@ -2529,10 +2535,10 @@ void ARCore::NodeConvCalc()
 
 void ARCore::SendNodeToSFP()
 {
-	GC->rtcc->PZSFPTAB.blocks[0].GMT_nd = GC->rtcc->GMTfromGET(NodeConvGET);
-	GC->rtcc->PZSFPTAB.blocks[0].lat_nd = NodeConvResLat;
-	GC->rtcc->PZSFPTAB.blocks[0].lng_nd = NodeConvResLng;
-	GC->rtcc->PZSFPTAB.blocks[0].h_nd = NodeConvHeight;
+	GC->rtcc->PZSFPTAB.blocks[1].GMT_nd = GC->rtcc->GMTfromGET(NodeConvGET);
+	GC->rtcc->PZSFPTAB.blocks[1].lat_nd = NodeConvResLat;
+	GC->rtcc->PZSFPTAB.blocks[1].lng_nd = NodeConvResLng;
+	GC->rtcc->PZSFPTAB.blocks[1].h_nd = NodeConvHeight;
 }
 
 int ARCore::startSubthread(int fcn) {
@@ -3473,11 +3479,11 @@ int ARCore::subThread()
 			double MJDcut;
 
 			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.h_peri = GC->TLCCNodeAlt;
-			opt.lat = GC->TLCCNodeLat;
-			opt.lng = GC->TLCCNodeLng;
+			//opt.h_peri = GC->TLCCNodeAlt;
+			//opt.lat = GC->TLCCNodeLat;
+			//opt.lng = GC->TLCCNodeLng;
 			opt.TLI_TIG = GC->rtcc->PZMCCPLN.MidcourseGET;
-			opt.PeriGET = GC->TLCCNodeGET;
+			//opt.PeriGET = GC->TLCCNodeGET;
 			opt.RV_MCC = sv0;
 			opt.vessel = vessel;
 
@@ -3492,10 +3498,10 @@ int ARCore::subThread()
 			double MJDcut;
 
 			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.h_peri = GC->TLCCFlybyPeriAlt;
-			opt.lat = GC->TLCCFreeReturnEMPLat;
+			//opt.h_peri = GC->TLCCFlybyPeriAlt;
+			//opt.lat = GC->TLCCFreeReturnEMPLat;
 			opt.TLI_TIG = GC->rtcc->PZMCCPLN.MidcourseGET;
-			opt.PeriGET = GC->TLCCPeriGET;
+			//opt.PeriGET = GC->TLCCPeriGET;
 			opt.RV_MCC = sv0;
 			opt.vessel = vessel;
 
@@ -3503,20 +3509,19 @@ int ARCore::subThread()
 
 			TLCC_dV_LVLH = res.dV_LVLH_MCC;
 			TLCC_TIG = res.TIG;
-			TLCCPeriGETcor = res.PericynthionGET;
-			TLCCReentryGET = res.EntryInterfaceGET;
-			TLCCFRIncl = res.FRInclination;
+			//TLCCPeriGETcor = res.PericynthionGET;
+			//TLCCReentryGET = res.EntryInterfaceGET;
+			//TLCCFRIncl = res.FRInclination;
 			P30TIG = TLCC_TIG;
 			dV_LVLH = TLCC_dV_LVLH;
-			TLCCFRLat = EntryLatcor = res.SplashdownLat;
-			TLCCFRLng = EntryLngcor = res.SplashdownLng;
+			//TLCCFRLat = EntryLatcor = res.SplashdownLat;
+			//TLCCFRLng = EntryLngcor = res.SplashdownLng;
 		}
 		Result = 0;
 	}
 	break;
 	case 14: //MCC Targeting
 	{
-		TLMCCResults res;
 		SV sv0;
 		double CSMmass, LMmass;
 
@@ -3555,161 +3560,9 @@ int ARCore::subThread()
 			}
 		}
 
-		if (TLCCmaneuver == 1 || TLCCmaneuver == 2 || TLCCmaneuver == 3 || TLCCmaneuver == 4 || TLCCmaneuver == 5 || TLCCmaneuver == 6 || TLCCmaneuver == 7 || TLCCmaneuver == 8 || TLCCmaneuver == 9)
-		{
-			GC->rtcc->PZMCCPLN.Mode = TLCCmaneuver;
-			GC->rtcc->TranslunarMidcourseCorrectionProcessor(sv0, CSMmass, LMmass);
-		}
-		else if (TLCCmaneuver == 2 || TLCCmaneuver == 3)
-		{
-			MCCFRMan opt;
+		GC->rtcc->PZMCCPLN.Mode = TLCCmaneuver;
+		GC->rtcc->TranslunarMidcourseCorrectionProcessor(sv0, CSMmass, LMmass);
 
-			if (TLCCmaneuver == 2)
-			{
-				opt.type = 0;
-			}
-			else
-			{
-				opt.type = 1;
-			}
-
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.lat = GC->TLCCFreeReturnEMPLat;
-			opt.PeriGET = GC->TLCCPeriGET;
-			opt.MCCGET = GC->rtcc->PZMCCPLN.MidcourseGET;
-
-			opt.LOIh_apo = GC->LOIapo;
-			opt.LOIh_peri = GC->LOIperi;
-			opt.LSlat = GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST];
-			opt.LSlng = GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST];
-			opt.R_LLS = GC->rtcc->MCSMLR;
-			opt.t_land = GC->t_Land;
-			opt.azi = GC->LOIazi;
-			opt.h_peri = GC->TLCCLAHPeriAlt;
-			opt.RV_MCC = sv0;
-
-			TLCCSolGood = GC->rtcc->TranslunarMidcourseCorrectionTargetingFreeReturn(&opt, &res);
-
-			if (TLCCSolGood)
-			{
-				TLCC_dV_LVLH = res.dV_LVLH_MCC;
-				TLCC_TIG = res.TIG;
-				TLCCPeriGETcor = res.PericynthionGET;
-				TLCCReentryGET = res.EntryInterfaceGET;
-				GC->TLCCNodeLat = res.NodeLat;
-				GC->TLCCNodeLng = res.NodeLng;
-				GC->TLCCNodeAlt = res.NodeAlt;
-				GC->TLCCNodeGET = res.NodeGET;
-				TLCCFRIncl = res.FRInclination;
-				TLCCEMPLatcor = res.EMPLatitude;
-				TLCCFRLat = EntryLatcor = res.SplashdownLat;
-				TLCCFRLng = EntryLngcor = res.SplashdownLng;
-			}
-		}
-		else if (TLCCmaneuver == 4 || TLCCmaneuver == 5)
-		{
-			MCCNFRMan opt;
-
-			if (TLCCmaneuver == 4)
-			{
-				opt.type = 0;
-			}
-			else
-			{
-				opt.type = 1;
-			}
-
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.lat = GC->TLCCNonFreeReturnEMPLat;
-			opt.PeriGET = GC->TLCCPeriGET;
-			opt.MCCGET = GC->rtcc->PZMCCPLN.MidcourseGET;
-
-			opt.LOIh_apo = GC->LOIapo;
-			opt.LOIh_peri = GC->LOIperi;
-			opt.LSlat = GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST];
-			opt.LSlng = GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST];
-			opt.R_LLS = GC->rtcc->MCSMLR;
-			opt.t_land = GC->t_Land;
-			opt.azi = GC->LOIazi;
-			opt.h_peri = GC->TLCCLAHPeriAlt;
-			opt.N = GC->rtcc->med_k17.DwellOrbits;
-			opt.DOIType = GC->DOI_option;
-			opt.DOIPeriAng = GC->rtcc->med_k17.DescentFlightArc;
-			opt.LOIEllipseRotation = GC->LOIEllipseRotation;
-			opt.DOIPeriAlt = GC->rtcc->med_k17.DescIgnHeight;
-			opt.RV_MCC = sv0;
-
-			TLCCSolGood = GC->rtcc->TranslunarMidcourseCorrectionTargetingNonFreeReturn(&opt, &res);
-
-			if (TLCCSolGood)
-			{
-				TLCC_dV_LVLH = res.dV_LVLH_MCC;
-				TLCC_TIG = res.TIG;
-				GC->TLCCNodeLat = res.NodeLat;
-				GC->TLCCNodeLng = res.NodeLng;
-				GC->TLCCNodeAlt = res.NodeAlt;
-				GC->TLCCNodeGET = res.NodeGET;
-				TLCCEMPLatcor = res.EMPLatitude;
-				TLCCRev2MeridianGET = res.t_Rev2Meridian;
-				LOI_dV_LVLH = res.dV_LVLH_LOI;
-
-				if (GC->DOI_option == 1)
-				{
-					DOI_dV_LVLH = res.dV_LVLH_DOI;
-					TLCCPostDOIApoAlt = res.h_apo_postDOI;
-					TLCCPostDOIPeriAlt = res.h_peri_postDOI;
-				}
-			}
-		}
-
-			/*MCCFlybyMan opt;
-
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.lat = GC->TLCCFreeReturnEMPLat;
-			opt.PeriGET = GC->TLCCPeriGET;
-			opt.MCCGET = GC->rtcc->PZMCCPLN.MidcourseGET;
-			opt.h_peri = GC->TLCCFlybyPeriAlt;
-			opt.RV_MCC = sv0;
-
-			TLCCSolGood = GC->rtcc->TranslunarMidcourseCorrectionTargetingFlyby(&opt, &res);
-
-			if (TLCCSolGood)
-			{
-				TLCC_dV_LVLH = res.dV_LVLH_MCC;
-				TLCC_TIG = res.TIG;
-				TLCCPeriGETcor = res.PericynthionGET;
-				TLCCReentryGET = res.EntryInterfaceGET;
-				TLCCFRIncl = res.FRInclination;
-				TLCCFRLat = EntryLatcor = res.SplashdownLat;
-				TLCCFRLng = EntryLngcor = res.SplashdownLng;
-			}
-		else if (TLCCmaneuver == 8)
-		{
-			MCCSPSLunarFlybyMan opt;
-
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.lat = GC->TLCCFreeReturnEMPLat;
-			opt.PeriGET = GC->TLCCPeriGET;
-			opt.MCCGET = GC->rtcc->PZMCCPLN.MidcourseGET;
-			opt.h_peri = GC->TLCCFlybyPeriAlt;
-			opt.AscendingNode = TLCCAscendingNode;
-			opt.FRInclination = TLCCFRDesiredInclination;
-			opt.RV_MCC = sv0;
-
-			TLCCSolGood = GC->rtcc->TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(&opt, &res, TLCCIterationStep);
-
-			if (TLCCSolGood)
-			{
-				TLCC_dV_LVLH = res.dV_LVLH_MCC;
-				TLCC_TIG = res.TIG;
-				TLCCPeriGETcor = res.PericynthionGET;
-				TLCCReentryGET = res.EntryInterfaceGET;
-				TLCCFRIncl = res.FRInclination;
-				TLCCFRLat = EntryLatcor = res.SplashdownLat;
-				TLCCFRLng = EntryLngcor = res.SplashdownLng;
-				TLCCEMPLatcor = res.EMPLatitude;
-			}
-		}*/
 		Result = 0;
 	}
 	break;
