@@ -5750,9 +5750,18 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(17 * W / 64, 13 * H / 32, "VGY", 3);
 		skp->Text(17 * W / 64, 14 * H / 32, "VGZ", 3);
 
-		skp->Text(29 * W / 64, 12 * H / 32, "OR", 2);
-		skp->Text(29 * W / 64, 13 * H / 32, "IP", 2);
-		skp->Text(29 * W / 64, 14 * H / 32, "MY", 2);
+		if (tab->isCSMTV)
+		{
+			skp->Text(29 * W / 64, 12 * H / 32, "OR", 2);
+			skp->Text(29 * W / 64, 13 * H / 32, "IP", 2);
+			skp->Text(29 * W / 64, 14 * H / 32, "MY", 2);
+		}
+		else
+		{
+			skp->Text(29 * W / 64, 12 * H / 32, "OY", 2);
+			skp->Text(29 * W / 64, 13 * H / 32, "IP", 2);
+			skp->Text(29 * W / 64, 14 * H / 32, "MR", 2);
+		}
 
 		skp->Text(39 * W / 64, 12 * H / 32, "YB", 2);
 		skp->Text(39 * W / 64, 13 * H / 32, "PB", 2);
@@ -6400,52 +6409,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 8, 2 * H / 14, "TLI (free return)", 17);
 		}
 
-		//Nodal target display
-		if (G->TLImaneuver == 0)
-		{
-			//GET_Display(Buffer, GC->TLCCNodeGET);
-			//skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(4 * W / 8, 1 * H / 14, "TLI PLANNING DISPLAY (MSK 0080)", 31);
 
-			//sprintf(Buffer, "%.5f°", GC->TLCCNodeLat*DEG);
-			//skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-
-			//sprintf(Buffer, "%.5f°", GC->TLCCNodeLng*DEG);
-			//skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-			//sprintf(Buffer, "%.2f NM", GC->TLCCNodeAlt / 1852.0);
-			//skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		}
-		else //free return target display
-		{
-			//GET_Display(Buffer, GC->TLCCPeriGET);
-			//skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
-
-			/*skp->Text(1 * W / 8, 11 * H / 21, "Pericynthion:", 13);
-			GET_Display(Buffer, G->TLCCPeriGETcor);
-			skp->Text(1 * W / 8, 12 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 13 * H / 21, "Reentry:", 8);
-			GET_Display(Buffer, G->TLCCReentryGET);
-			skp->Text(1 * W / 8, 14 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 15 * H / 21, "FR Inclination:", 15);
-			sprintf(Buffer, "%.3f°", G->TLCCFRIncl*DEG);
-			skp->Text(1 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 17 * H / 21, "Splashdown Latitude:", 20);
-			sprintf(Buffer, "%.3f°", G->TLCCFRLat*DEG);
-			skp->Text(1 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));
-
-			skp->Text(1 * W / 8, 19 * H / 21, "Splashdown Longitude:", 21);
-			sprintf(Buffer, "%.3f°", G->TLCCFRLng*DEG);
-			skp->Text(1 * W / 8, 20 * H / 21, Buffer, strlen(Buffer));*/
-
-			//sprintf(Buffer, "%.5f°", GC->TLCCFreeReturnEMPLat*DEG);
-			//skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-
-			//sprintf(Buffer, "%.2f NM", GC->TLCCFlybyPeriAlt / 1852.0);
-			//skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-		}
+		skp->Text(4 * W / 8, 6 * H / 14, "Under construction!", 19);
 	}
 	else if (screen == 80)
 	{

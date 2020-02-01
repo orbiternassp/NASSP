@@ -330,6 +330,7 @@ DetailedManeuverTable::DetailedManeuverTable()
 	CFP_TPI = 0.0;
 	CFP_DT = 0.0;
 	sprintf_s(CFP_OPTION, "");
+	isCSMTV = true;
 }
 
 TradeoffDataDisplayBuffer::TradeoffDataDisplayBuffer()
@@ -3223,229 +3224,6 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 }
 
-void RTCC::TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
-{
-	double GET;
-	OBJHANDLE hMoon;
-	SV sv0, sv1;
-
-	hMoon = oapiGetObjectByName("Moon");
-
-	sv0 = opt->RV_MCC;
-	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
-
-	double TIGMJD, PeriMJD, dt1, dt2, TIGguess, dTIG;
-	VECTOR3 R_peri, VA1_apo, V_peri, RA2, DVX;
-	MATRIX3 Q_Xx;
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	int ii;
-
-	PeriMJD = opt->PeriGET / 24.0 / 3600.0 + opt->GETbase;
-
-	TIGguess = opt->TLI_TIG + 6.0*60.0;
-	dTIG = -60.0;
-	ii = 0;
-
-	double TIGvar[3], dv[3];
-	VECTOR3 Llambda, R2_cor, V2_cor, dVLVLH; double t_slip, f_T, isp, boil, m1, m0, TIG, mcut;
-
-	f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	boil = (1.0 - 0.99998193) / 10.0;
-	m0 = opt->vessel->GetEmptyMass();
-
-	while (abs(dTIG) > 1.0)
-	{
-		TIGMJD = TIGguess / 24.0 / 3600.0 + opt->GETbase;
-		dt1 = TIGguess - (sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-		dt2 = (PeriMJD - TIGMJD)*24.0*3600.0;
-
-		sv1 = coast(sv0, dt1);
-
-		double MoonPos[12];
-		CELBODY *cMoon;
-		VECTOR3 R_I_star, delta_I_star, delta_I_star_dot, R_P, R_m, V_m;
-		MATRIX3 Rot2;
-		R_I_star = delta_I_star = delta_I_star_dot = _V(0.0, 0.0, 0.0);
-
-		cMoon = oapiGetCelbodyInterface(hMoon);
-
-		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
-		Rot2 = OrbMech::GetRotationMatrix(BODY_MOON, PeriMJD);
-
-		R_peri = mul(Rot2, R_P);
-		//R_peri = unit(mul(Rot, _V(R_peri.x, R_peri.z, R_peri.y)))*(oapiGetSize(hMoon) + opt->h_peri);
-		R_peri = unit(_V(R_peri.x, R_peri.z, R_peri.y))*(OrbMech::R_Moon + opt->h_peri);
-
-		cMoon->clbkEphemeris(PeriMJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
-		//R_m = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
-		//V_m = mul(Rot, _V(MoonPos[3], MoonPos[5], MoonPos[4]));
-		R_m = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
-		V_m = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
-
-		//Initial trajectory, only accurate to 1000 meters
-		V_peri = OrbMech::ThreeBodyLambert(PeriMJD, TIGMJD, R_peri, V_m, sv1.R, R_m, V_m, 24.0*OrbMech::R_Earth, OrbMech::mu_Earth, OrbMech::mu_Moon, R_I_star, delta_I_star, delta_I_star_dot);
-		//OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, -dt2, RA2, VA1_apo, hMoon, hEarth);
-
-		//Precise backwards targeting
-		V_peri = OrbMech::Vinti(R_peri, V_peri, sv1.R, PeriMJD, -dt2, 0, false, hMoon, hMoon, hEarth, V_peri);
-
-		//Finding the new ignition state
-		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, (sv1.MJD - PeriMJD)*24.0*3600.0, RA2, VA1_apo, hMoon, hEarth);
-
-		//Final pass through the targeting, forwards and precise
-		//VA1_apo = OrbMech::Vinti(RA1, VA1, R_peri, TIGMJD, dt2, 0, true, hEarth, hEarth, hMoon, VA1_apo);
-
-		DVX = VA1_apo - sv1.V;
-
-		if (ii < 2)
-		{
-			TIGvar[ii + 1] = (TIGMJD - sv0.MJD)*24.0*3600.0;
-			dv[ii + 1] = length(DVX);
-		}
-		else
-		{
-			dv[0] = dv[1];
-			dv[1] = dv[2];
-			dv[2] = length(DVX);
-			TIGvar[0] = TIGvar[1];
-			TIGvar[1] = TIGvar[2];
-			TIGvar[2] = (TIGMJD - sv0.MJD)*24.0*3600.0;
-
-			dTIG = OrbMech::quadratic(TIGvar, dv) + (sv0.MJD - TIGMJD)*24.0*3600.0;
-
-			if (abs(dTIG) > 10.0*60.0)
-			{
-				dTIG = OrbMech::sign(dTIG)*10.0*60.0;
-			}
-		}
-
-		TIGguess += dTIG;
-		ii++;
-	}
-
-	m1 = (sv0.mass - m0)*exp(-boil*dt1);
-
-	OrbMech::impulsive(sv1.R, sv1.V, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
-
-	OrbMech::oneclickcoast(sv1.R, sv1.V, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
-
-	Q_Xx = OrbMech::LVLH_Matrix(R2_cor, V2_cor);
-
-	dVLVLH = mul(Q_Xx, Llambda);
-	TIG = TIGguess + t_slip;
-
-	P30TIG = TIG;
-	dV_LVLH = dVLVLH;
-}
-
-void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *res, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
-{
-	//state vector "now"
-	SV sv0;
-	//state vector at initial guess for ignition
-	SV sv1;
-	//state vector at current ignition time
-	SV sv2;
-	//state vector at periapsis
-	SV sv_peri;
-	//state vector at reentry
-	SV sv_reentry;
-	MATRIX3 Q_Xx;
-	VECTOR3 DV, DV_guess, Llambda, R2_cor, V2_cor, dVLVLH, var_conv;
-	double PeriMJDguess, dTIG, TIGguess, dt0, dt1, TIGMJD, f_T, isp, boil, m0, m1, t_slip, mcut, TIG;
-	double TIGvar[3], dv[3];
-	int ii;
-	OBJHANDLE hEarth;
-
-	sv0 = opt->RV_MCC;
-	dTIG = -60.0;
-	ii = 0;
-	hEarth = oapiGetObjectByName("Earth");
-
-	PeriMJDguess = opt->PeriGET / 24.0 / 3600.0 + opt->GETbase;
-	TIGguess = opt->TLI_TIG + 6.0*60.0;
-	dt0 = TIGguess - (sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-	sv1 = coast(sv0, dt0);
-
-	TLIFirstGuessConic(sv1, opt->lat, opt->h_peri, PeriMJDguess, DV_guess, var_conv);
-	IntegratedTLMC(sv1, opt->lat, opt->h_peri, 0.0, PeriMJDguess, var_conv, DV_guess, var_conv, sv_peri);
-
-	while (abs(dTIG) > 1.0)
-	{
-		TIGMJD = TIGguess / 24.0 / 3600.0 + opt->GETbase;
-		dt1 = (TIGMJD - sv1.MJD) * 24.0 * 60.0 * 60.0;
-		sv2 = coast(sv1, dt1);
-
-		TLIFlyby(sv2, opt->lat, opt->h_peri, sv_peri, DV, sv_peri, sv_reentry);
-
-		if (ii < 2)
-		{
-			TIGvar[ii + 1] = (TIGMJD - sv0.MJD)*24.0*3600.0;
-			dv[ii + 1] = length(DV);
-		}
-		else
-		{
-			dv[0] = dv[1];
-			dv[1] = dv[2];
-			dv[2] = length(DV);
-			TIGvar[0] = TIGvar[1];
-			TIGvar[1] = TIGvar[2];
-			TIGvar[2] = (TIGMJD - sv0.MJD)*24.0*3600.0;
-
-			dTIG = OrbMech::quadratic(TIGvar, dv) + (sv0.MJD - TIGMJD)*24.0*3600.0;
-
-			if (abs(dTIG) > 10.0*60.0)
-			{
-				dTIG = OrbMech::sign(dTIG)*10.0*60.0;
-			}
-		}
-
-		TIGguess += dTIG;
-		ii++;
-	}
-
-	f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	boil = (1.0 - 0.99998193) / 10.0;
-	m0 = opt->vessel->GetEmptyMass();
-
-	m1 = (sv0.mass - m0)*exp(-boil*dt1);
-
-	OrbMech::impulsive(sv2.R, sv2.V, TIGMJD, hEarth, f_T, isp, m0 + m1, DV, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
-
-	OrbMech::oneclickcoast(sv2.R, sv2.V, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
-
-	Q_Xx = OrbMech::LVLH_Matrix(R2_cor, V2_cor);
-
-	dVLVLH = mul(Q_Xx, Llambda);
-	TIG = TIGguess + t_slip;
-
-	res->TIG = TIG;
-	res->dV_LVLH_LOI = dVLVLH;
-	res->PericynthionGET = (sv_peri.MJD - opt->GETbase)*24.0*3600.0;
-	res->EntryInterfaceGET = (sv_reentry.MJD - opt->GETbase)*24.0*3600.0;
-
-	//Calculate Reentry Parameters
-	MATRIX3 Rot;
-	VECTOR3 R_geo, V_geo, H_geo;
-
-	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, sv_reentry.MJD);
-	R_geo = rhtmul(Rot, sv_reentry.R);
-	V_geo = rhtmul(Rot, sv_reentry.V);
-	H_geo = crossp(R_geo, V_geo);
-	res->FRInclination = acos(H_geo.z / length(H_geo));
-
-	double rtgo, vio, ret, r_EI, dt_EI;
-	VECTOR3 R_EI, V_EI;
-
-	r_EI = OrbMech::R_Earth + 400000.0*0.3048;
-	dt_EI = OrbMech::time_radius(sv_reentry.R, -sv_reentry.V, r_EI, 1.0, OrbMech::mu_Earth);
-	OrbMech::oneclickcoast(sv_reentry.R, sv_reentry.V, sv_reentry.MJD, -dt_EI, R_EI, V_EI, hEarth, hEarth);
-
-	EntryCalculations::Reentry(R_EI, V_EI, sv_reentry.MJD - dt_EI / 24.0 / 3600.0, true, res->SplashdownLat, res->SplashdownLng, rtgo, vio, ret);
-}
-
 void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double LMmass)
 {
 	TLMCCDataTable datatab;
@@ -6045,9 +5823,24 @@ RTCC_PMMSPT_3_1:
 		//J = abs(Original TLI Ind)
 		//goto RTCC_PMMSPT_4_1;
 	}
+	T_RP = in.T_RP;
+	if (in.QUEID == 34)
+	{
+		//TBD: load data from study aid
+		goto RTCC_PMMSPT_3_2;
+	}
+	if (T_RP > 0)
+	{
+		OrigTLIInd = -in.InjOpp;
+	}
+	else
+	{
+	RTCC_PMMSPT_3_2:
+		OrigTLIInd = in.InjOpp;
+	}
 
-	OrigTLIInd = CurTLIInd = 1;
-	J = OrigTLIInd;
+	CurTLIInd = OrigTLIInd;
+	J = in.InjOpp;
 	int LD = GZGENCSN.DayofLiftoff;
 	T_ST = PZSTARGP.T_ST[J - 1];
 	alpha_TSS = PZSTARGP.alpha_TS[J - 1];
@@ -6068,7 +5861,32 @@ RTCC_PMMSPT_3_1:
 	{
 		goto RTCC_PMMSPT_6_3;
 	}
+	else if (OrigTLIInd == 0)
+	{
+		//goto RTCC_PMMSPT_8_2;
+	}
 
+	emsin.MaxIntegTime = T_RP - in.GMT;
+	if (emsin.MaxIntegTime < 0)
+	{
+		emsin.IsForwardIntegration = false;
+		emsin.MaxIntegTime = abs(emsin.MaxIntegTime);
+		goto RTCC_PMMSPT_6_2;
+	}
+	else if (emsin.MaxIntegTime == 0.0)
+	{
+		//Move Time, R, V into Aux Output Table
+		goto RTCC_PMMSPT_8_2;
+	}
+	else
+	{
+		goto RTCC_PMMSPT_6_1;
+	}
+RTCC_PMMSPT_6_1:
+	emsin.IsForwardIntegration = true;
+RTCC_PMMSPT_6_2:
+	emsin.EphemerisBuildIndicator = false;
+	goto RTCC_PMMSPT_7_2;
 RTCC_PMMSPT_6_3:
 	T_TH = MDVSTP.T4C + GetGMTLO()*3600.0 + T_ST;
 	if (in.QUEID != 37)
@@ -6097,7 +5915,7 @@ RTCC_PMMSPT_7_1:
 	emsin.MCTEphemerisIndicator = false;
 	emsin.EphemerisBuildIndicator = true;
 	emsin.EphemTableIndicator = &ephtab;
-//RTCC_PMMSPT_7_2:
+RTCC_PMMSPT_7_2:
 	emsin.AnchorVector.R = in.R;
 	emsin.AnchorVector.V = in.V;
 	emsin.AnchorVector.GMT = in.GMT;
@@ -6115,7 +5933,7 @@ RTCC_PMMSPT_7_1:
 	{
 		return 72;
 	}
-
+RTCC_PMMSPT_8_2:
 	double lambda = MCLGRA + GetGMTLO()*3600.0*OrbMech::w_Earth;
 	MATRIX3 RMAT = mul(MatrixRH_LH(OrbMech::GetRotationMatrix(BODY_EARTH, GMTBASE)), _M(cos(lambda), -sin(lambda), 0, sin(lambda), cos(lambda), 0, 0, 0, 1));
 	MATRIX3 M = mul(_M(1, 0, 0, 0, 0, -1, 0, 1, 0), OrbMech::tmat(RMAT));
@@ -7396,75 +7214,6 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 	PoweredFlightProcessor(sv_tig, opt->GETbase, 0.0, RTCC_ENGINETYPE_CSMSPS, LMmass, dV_LVLH, true, res->P30TIG, res->dV_LVLH);
 
 	return true;
-}
-
-void RTCC::TLIFirstGuessConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P, VECTOR3 &DV, VECTOR3 &var_converged)
-{
-	SV sv_p;
-	MATRIX3 M_EMP;
-	VECTOR3 R_EMP, V_EMP, var_fg, V_MCC_apo;
-	double r_peri, ddt, R_E, lng_peri, azi_peri, v_peri;
-	OBJHANDLE hMoon, hEarth;
-	OELEMENTS coe;
-	double rtest, lngtest, lattest, fpatest;
-
-	R_E = 6378.137e3;
-
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
-
-	r_peri = OrbMech::R_Moon + h_peri;
-	sv_p.MJD = MJD_P;
-	sv_p.gravref = hMoon;
-
-	//Initial guess
-	var_fg = TLMCEmpiricalFirstGuess(r_peri, 0.0);
-	lng_peri = var_fg.z;
-	azi_peri = var_fg.y;
-	v_peri = var_fg.x;
-
-	//Conic first guess seems to break down above 1500NM pericynthion altitude
-	if (r_peri > 4.5e6)
-	{
-		var_converged = var_fg;
-		return;
-	}
-
-	do
-	{
-		//Position vector in EMP Coordinates
-		OrbMech::adbar_from_rv(r_peri, v_peri, lng_peri, lat_EMP, PI05, azi_peri, R_EMP, V_EMP);
-
-		//EMP Matrix
-		M_EMP = OrbMech::EMPMatrix(sv_p.MJD);
-
-		//Convert EMP position to ecliptic
-		sv_p.R = tmul(M_EMP, R_EMP);
-		sv_p.V = tmul(M_EMP, V_EMP);
-
-		//Calculate pericynthion velocity
-		OrbMech::ThirdBodyConic(sv_p.R, hMoon, sv_mcc.R, hEarth, sv_p.MJD, (sv_mcc.MJD - sv_p.MJD)*24.0*3600.0, sv_p.V, sv_p.V, V_MCC_apo, 100.0);
-
-		//save azi and vmag as new initial guess
-		V_EMP = mul(M_EMP, sv_p.V);
-		OrbMech::rv_from_adbar(R_EMP, V_EMP, rtest, v_peri, lngtest, lattest, fpatest, azi_peri);
-
-		coe = OrbMech::coe_from_sv(sv_p.R, sv_p.V, OrbMech::mu_Moon);
-		ddt = OrbMech::timetoperi(sv_p.R, sv_p.V, OrbMech::mu_Moon);
-
-		if (coe.TA > PI)
-		{
-			lng_peri += coe.TA - PI2;
-		}
-		else
-		{
-			lng_peri += coe.TA;
-		}
-	} while (abs(ddt) > 0.01);
-
-	DV = V_MCC_apo - sv_mcc.V;
-
-	var_converged = _V(v_peri, azi_peri, lng_peri);
 }
 
 VECTOR3 RTCC::TLMCEmpiricalFirstGuess(double r, double dt)
@@ -14649,6 +14398,11 @@ void RTCC::EMDSTAC()
 	NextStationContactsBuffer.GET = GET;
 }
 
+void RTCC::EMDLANDM(int L, double get, double dt, int ref)
+{
+
+}
+
 void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int body)
 {
 	NextStationContact empty;
@@ -15680,6 +15434,7 @@ int RTCC::PMMXFR(int id, void *data)
 			tliin.QUEID = id;
 			tliin.PresentGMT = RTCCPresentTimeGMT();
 			tliin.ReplaceCode = 0;
+			tliin.InjOpp = inp->BurnParameterNumber;
 
 			PMMSPT(tliin);
 			inp->GMTI = tliin.T_RP;
@@ -15708,7 +15463,7 @@ int RTCC::PMMXFR(int id, void *data)
 			return 1;
 		}
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(inp->ThrusterCode, inp->AttitudeCode, mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(inp->TableCode, inp->ThrusterCode, inp->AttitudeCode, mpt->mantable.size() + 1, purpose, TVC, code);
 		if (err)
 		{
 			return 1;
@@ -15755,7 +15510,7 @@ int RTCC::PMMXFR(int id, void *data)
 			in.CurMan = &man;
 			in.EndTimeLimit = UpperLimit;
 			in.GMT = sv.GMT;
-			in.InjOpp = 1;
+			in.InjOpp = inp->BurnParameterNumber;
 			in.mpt = mpt;
 			in.PresentGMT = RTCCPresentTimeGMT();
 			if (mpt->mantable.size() == 0)
@@ -15940,7 +15695,7 @@ int RTCC::PMMXFR(int id, void *data)
 			}
 		}
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(inp->Thruster[0], inp->Attitude[0], mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(plan, inp->Thruster[0], inp->Attitude[0], mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check thruster
 		if (mpt->mantable.size() == 0)
 		{
@@ -16094,7 +15849,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Check ground rules
 		err = PMMXFRGroundRules(replace, mpt, man.GMTI, med_m86.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(RTCC_ENGINETYPE_LMDPS, RTCC_ATTITUDE_PGNS_DESCENT, mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(med_m86.Veh, RTCC_ENGINETYPE_LMDPS, RTCC_ATTITUDE_PGNS_DESCENT, mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check configuration and thrust
 		CC = CCP;
 		err = PMMXFRCheckConfigThruster(true, 0, CCP, TVC, RTCC_ENGINETYPE_LMDPS, CC, CCMI);
@@ -16135,7 +15890,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Check ground rules
 		err = PMMXFRGroundRules(replace, mpt, man.GMTI, med_m85.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(RTCC_ENGINETYPE_LMAPS, RTCC_ATTITUDE_PGNS_ASCENT, mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(med_m85.VEH, RTCC_ENGINETYPE_LMAPS, RTCC_ATTITUDE_PGNS_ASCENT, mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check configuration and thrust
 		CC = RTCC_CONFIG_ASC;
 		err = PMMXFRCheckConfigThruster(true, RTCC_CONFIGCHANGE_UNDOCKING, CCP, TVC, RTCC_ENGINETYPE_LMAPS, CC, CCMI);
@@ -16262,27 +16017,35 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 	return 0;
 }
 
-int RTCC::PMMXFRFormatManeuverCode(int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code)
+int RTCC::PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code)
 {
 	char Veh, Thr, Guid;
 	char Buffer[20];
 
 	//Format all but purpose of maneuver code
-	//Set thrusting vehicle ID
-	if (Thruster == RTCC_ENGINETYPE_LOX_DUMP || Thruster == RTCC_ENGINETYPE_SIVB_APS || Thruster == RTCC_ENGINETYPE_SIVB_MAIN)
+
+	//Set MPT
+	if (Table == RTCC_MPT_CSM)
 	{
-		TVC = 2;
-		Veh = 'S';
-	}
-	else if (Thruster == RTCC_ENGINETYPE_CSMSPS || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS4)
-	{
-		TVC = 1;
 		Veh = 'C';
 	}
 	else
 	{
-		TVC = 3;
 		Veh = 'L';
+	}
+
+	//Set thrusting vehicle ID
+	if (Thruster == RTCC_ENGINETYPE_LOX_DUMP || Thruster == RTCC_ENGINETYPE_SIVB_APS || Thruster == RTCC_ENGINETYPE_SIVB_MAIN)
+	{
+		TVC = 2;
+	}
+	else if (Thruster == RTCC_ENGINETYPE_CSMSPS || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS4)
+	{
+		TVC = 1;
+	}
+	else
+	{
+		TVC = 3;
 	}
 
 	if (Thruster == RTCC_ENGINETYPE_CSMSPS)
@@ -16742,11 +16505,13 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 	{
 		R = A;
 		Y = B;
+		res.isCSMTV = false;
 	}
 	else
 	{
 		Y = A;
 		R = B;
+		res.isCSMTV = true;
 	}
 
 	res.FDAIAtt = _V(OrbMech::imulimit(R*DEG), OrbMech::imulimit(P*DEG), OrbMech::imulimit(Y*DEG));
@@ -19402,10 +19167,38 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 	//TLI Direct Input
 	else if (med == 68)
 	{
+		if (data.size() < 2)
+		{
+			return;
+		}
+		int veh;
+		if (data[0] == "CSM")
+		{
+			veh = 1;
+		}
+		else if (data[0] == "LEM")
+		{
+			veh = 3;
+		}
+		else
+		{
+			return;
+		}
+		int opp;
+		if (sscanf(data[1].c_str(), "%d", &opp) != 1)
+		{
+			return;
+		}
+		if (opp < 1 || opp > 2)
+		{
+			return;
+		}
+
 		PMMXFRDirectInput inp;
 
 		inp.ReplaceCode = 0;
-		inp.TableCode = RTCC_MPT_CSM;
+		inp.TableCode = veh;
+		inp.BurnParameterNumber = opp;
 
 		void *vPtr = &inp;
 		PMMXFR(37, vPtr);
@@ -20739,6 +20532,50 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		//TBD: Store in EZETVMED
 
 		EMDPESAD(num, veh, ind, vala, valb, body);
+	}
+	//Landmark Acquisition Display
+	else if (med == 17)
+	{
+		if (data.size() < 3)
+		{
+			return;
+		}
+		if (data[0] != "CSM")
+		{
+			return;
+		}
+		int veh = 1;
+		double hh, mm, ss, get, dt;
+		if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+		{
+			return;
+		}
+		get = hh * 3600.0 + mm * 60.0 + ss;
+		if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+		{
+			return;
+		}
+		dt = hh * 3600.0 + mm * 60.0 + ss;
+		int ref;
+		if (data.size() < 4 || data[3] == "" || data[3] == "E")
+		{
+			ref = 0;
+		}
+		else if (data[3] == "M")
+		{
+			ref = 2;
+		}
+		else
+		{
+			return;
+		}
+		double gmt = GMTfromGET(get);
+		EZETVMED.LandmarkVehID = veh;
+		EZETVMED.LandmarkGMT = gmt;
+		EZETVMED.LandmarkDT = dt;
+		EZETVMED.LandmarkRef = ref;
+
+		EMDLANDM(veh, gmt, dt, ref);
 	}
 	//Detailed Maneuver Table
 	else if (med == 20)

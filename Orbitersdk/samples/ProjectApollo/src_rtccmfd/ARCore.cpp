@@ -3468,55 +3468,8 @@ int ARCore::subThread()
 		Result = 0;
 	}
 	break;
-	case 13:	//TLI Planning
+	case 13: //Spare
 	{
-
-		SV sv0 = GC->rtcc->StateVectorCalc(vessel);
-
-		if (TLImaneuver == 0)
-		{
-			TLIManNode opt;
-			double MJDcut;
-
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			//opt.h_peri = GC->TLCCNodeAlt;
-			//opt.lat = GC->TLCCNodeLat;
-			//opt.lng = GC->TLCCNodeLng;
-			opt.TLI_TIG = GC->rtcc->PZMCCPLN.MidcourseGET;
-			//opt.PeriGET = GC->TLCCNodeGET;
-			opt.RV_MCC = sv0;
-			opt.vessel = vessel;
-
-			GC->rtcc->TranslunarInjectionProcessorNodal(&opt, TLCC_dV_LVLH, TLCC_TIG, R_TLI, V_TLI, MJDcut);
-			P30TIG = TLCC_TIG;
-			dV_LVLH = TLCC_dV_LVLH;
-		}
-		else
-		{
-			TLIManFR opt;
-			TLMCCResults res;
-			double MJDcut;
-
-			opt.GETbase = GC->rtcc->CalcGETBase();
-			//opt.h_peri = GC->TLCCFlybyPeriAlt;
-			//opt.lat = GC->TLCCFreeReturnEMPLat;
-			opt.TLI_TIG = GC->rtcc->PZMCCPLN.MidcourseGET;
-			//opt.PeriGET = GC->TLCCPeriGET;
-			opt.RV_MCC = sv0;
-			opt.vessel = vessel;
-
-			GC->rtcc->TranslunarInjectionProcessorFreeReturn(&opt, &res, R_TLI, V_TLI, MJDcut);
-
-			TLCC_dV_LVLH = res.dV_LVLH_MCC;
-			TLCC_TIG = res.TIG;
-			//TLCCPeriGETcor = res.PericynthionGET;
-			//TLCCReentryGET = res.EntryInterfaceGET;
-			//TLCCFRIncl = res.FRInclination;
-			P30TIG = TLCC_TIG;
-			dV_LVLH = TLCC_dV_LVLH;
-			//TLCCFRLat = EntryLatcor = res.SplashdownLat;
-			//TLCCFRLng = EntryLngcor = res.SplashdownLng;
-		}
 		Result = 0;
 	}
 	break;
@@ -3957,6 +3910,7 @@ int ARCore::subThread()
 	{
 		Result = 0;
 	}
+	break;
 	case 24: //FIDO Orbit Digitals No 1 Cycle
 	{
 		GC->rtcc->EMMDYNMC(1, 1);
@@ -4391,7 +4345,6 @@ int ARCore::subThread()
 		SaturnV *SatV = (SaturnV*)g_Data.progVessel;
 		LVDCSV *lvdc = (LVDCSV*)SatV->iu->GetLVDC();
 
-		
 		GC->rtcc->MDVSTP.T4IG = lvdc->t_3i - 17.0;
 		GC->rtcc->MDVSTP.T4C = lvdc->TB5 - 17.0;
 		GC->rtcc->MDVSTP.DT4N = lvdc->T_4N;
@@ -4461,8 +4414,8 @@ int ARCore::subThread()
 			}
 		}
 
-		std::vector<std::string> data;
-		GC->rtcc->PMMMED(68, data);
+		//MED string was previously saved
+		GC->rtcc->GMGMED(GC->rtcc->RTCCMEDBUFFER);
 
 		Result = 0;
 	}

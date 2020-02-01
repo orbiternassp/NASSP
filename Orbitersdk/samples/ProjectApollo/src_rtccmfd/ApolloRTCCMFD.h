@@ -430,8 +430,8 @@ public:
 	void menuSetMPTPage();
 	void menuMPTCycleActive();
 	void menuMPTDeleteManeuver();
-	void set_MPTDeleteManever(char *str);
 	void menuMPTTLIDirectInput();
+	void set_MPTTLIDirectInput(char *str);
 	void menuMPTCopyEphemeris();
 	void menuMPTVehicleOrientationChange();
 	void menuSetMPTInitPage();

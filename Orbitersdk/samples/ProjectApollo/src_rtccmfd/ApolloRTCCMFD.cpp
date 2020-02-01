@@ -39,6 +39,9 @@ bool initialised = false;
 ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 : MFD2 (w, h, vessel)
 {
+	screen = 0;
+	RTETradeoffScreen = 0;
+
 	if (!g_SC) {
 		g_SC = new AR_GCore(vessel);                     // First time only in this Orbiter session. Init the static core.
 	}
@@ -65,8 +68,6 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	if (!found)
 	{
 		GCoreData[nGutsUsed] = new ARCore(vessel, GC);
-		screen = 0;
-		RTETradeoffScreen = 0;
 		G = GCoreData[nGutsUsed];
 		GCoreVessel[nGutsUsed] = vessel;
 		nGutsUsed++;
@@ -6490,27 +6491,8 @@ void ApolloRTCCMFD::menuMPTDeleteManeuver()
 
 bool MPTDeleteManeuverInput(void* id, char *str, void *data)
 {
-
-	((ApolloRTCCMFD*)data)->set_MPTDeleteManever(str);
-
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
-
-	char buff1[100];
-
-	if (sscanf(str, "%s", buff1) == 1)
-	{
-		std::string buff2(buff1);
-
-		return true;
-	}
-
-	return false;
-}
-
-void ApolloRTCCMFD::set_MPTDeleteManever(char *str)
-{
-	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, str);
-	G->GeneralMEDRequest();
 }
 
 void ApolloRTCCMFD::menuMPTCopyEphemeris()
@@ -6539,6 +6521,19 @@ bool MPTVehicleOrientationChangeInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::menuMPTTLIDirectInput()
 {
+	bool MPTTLIDirectInputInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: M68, CSM or LEM, Opportunity (1 or 2);", MPTTLIDirectInputInput, 0, 20, (void*)this);
+}
+
+bool MPTTLIDirectInputInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_MPTTLIDirectInput(str);
+	return true;
+}
+
+void ApolloRTCCMFD::set_MPTTLIDirectInput(char *str)
+{
+	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, str);
 	G->MPTTLIDirectInput();
 }
 

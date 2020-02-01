@@ -1424,6 +1424,7 @@ struct DetailedManeuverTable
 	double CFP_TPI;
 	double CFP_DT;
 	char CFP_OPTION[8];
+	bool isCSMTV;
 };
 
 struct MPTManeuver
@@ -1833,7 +1834,7 @@ struct PMMSPTInput
 	unsigned ReplaceCode;
 	int InjOpp;
 	//Word 12
-	double T_RP;
+	double T_RP = -1;
 	//Word 13
 	int ThrusterCode;
 	int AttitudeMode;
@@ -2308,8 +2309,6 @@ public:
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
-	void TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
-	void TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *res, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
 	void TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double LMmass);
 	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res);
 	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res);
@@ -2354,7 +2353,6 @@ public:
 	EphemerisData StateVectorCalcEphem(VESSEL *vessel, double SVGMT = 0.0);
 	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
-	void TLIFirstGuessConic(SV sv_mcc, double lat, double h_peri, double PeriMJD, VECTOR3 &DV, VECTOR3 &var_converged);
 	void TLMCIntegratedXYZT(SV sv_mcc, double lat_node, double lng_node, double h_node, double MJD_node, VECTOR3 DV_guess, VECTOR3 &DV);
 	VECTOR3 TLMCEmpiricalFirstGuess(double r, double dt);
 	void IntegratedTLMC(SV sv_mcc, double lat, double h, double gamma, double MJD, VECTOR3 var_guess, VECTOR3 &DV, VECTOR3 &var_converged, SV &sv_node);
@@ -2408,14 +2406,15 @@ public:
 	void EMSTAGEN(int L);
 	//Next Station Contact Display
 	void EMDSTAC();
-	//Predicted and Experimental Site Acquisition Displays
+	//Predicted Site Acquisition Display
+	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
+	//Landmark Acquisition Display
+	void EMDLANDM(int L, double get, double dt, int ref);
 	//Display Updates
 	void EMSNAP(int L, int ID);
 
 	//Actual RTCC Subroutines
 
-	//Predicted Site Acquisition Display
-	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
 	//External DV Coordinate Transformation Subroutine
@@ -3356,6 +3355,11 @@ public:
 		//Block 3
 		int SpaceDigVehID = -1;
 		int SpaceDigCentralBody = -1;
+		//Block 17
+		int LandmarkVehID = 0;
+		double LandmarkGMT = 0.0;
+		double LandmarkDT = 0.0;
+		int LandmarkRef = 0;
 	} EZETVMED;
 
 	struct FIDOLaunchAnalogNo1DisplayTable
@@ -3497,7 +3501,7 @@ private:
 	MissionPlanTable *GetMPTPointer(int L);
 	MPTSV SVfromRVGMT(VECTOR3 R, VECTOR3 V, double GMT, int body);
 	int PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan);
-	int PMMXFRFormatManeuverCode(int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
+	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
 	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC, int Thruster, int &CC, int &CCMI);
 	int PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv);
 	int PMMXFRFetchAnchorVector(int L, EphemerisData &sv);
