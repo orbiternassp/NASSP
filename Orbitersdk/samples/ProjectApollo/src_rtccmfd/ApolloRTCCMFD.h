@@ -327,6 +327,7 @@ public:
 	void menuSetLiftoffguess();
 	void set_Liftoffguess(double time);
 	void menuCycleLunarLiftoffInsVelOption();
+	void menuCycleLunarLiftoffTPIOption();
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLunarLiftoffTimeOption();

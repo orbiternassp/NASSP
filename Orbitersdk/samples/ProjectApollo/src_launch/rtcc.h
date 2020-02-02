@@ -873,6 +873,7 @@ struct LunarLiftoffTimeOpt
 	int I_BURN;
 	//Flag that controls at what position TPI is done
 	//1: TPI is done over an input longitude
+	//2: TPI is at an input time
 	int I_TPI;
 	//Flag that controls CDH position
 	//0: CDH is done at the upcoming apsis after CSI
@@ -1889,6 +1890,7 @@ struct REFSMMATData
 {
 	MATRIX3 REFSMMAT;
 	int ID = 0;
+	double GMT = 0.0;
 };
 
 struct REFSMMATLocker
@@ -2420,7 +2422,8 @@ public:
 	//External DV Coordinate Transformation Subroutine
 	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
 	//Generalized Coordinate System Conversion Subroutine
-	int ELVCNV(EphemerisData sv, int in, int out, EphemerisData &sv_out);
+	int ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out);
+	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
 	//Checkout Monitor Display
 	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
 	//Detailed Maneuver Table Display
@@ -3477,11 +3480,18 @@ private:
 	//Mission Plan Table Display
 	void PMDMPT();
 	//GOST REFSMMAT Maintenance
-	void EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, MATRIX3 *refs = NULL);
+	void EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs = NULL);
 	void EMGSTGENName(int ID, char *Buffer);
+	int EMGSTGENCode(const char *Buffer);
+	//GOST Matrix Storage and Print
+	void EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt);
+	//GOST CSM/LM LCV Computation
+	void EMMGLCVP(int L, double gmt);
+	//Trajectory Update On-line Print
+	void EMGPRINT(int i, std::string mes = 0);
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
-	//Mission PLanning Print Load Module
+	//Mission Planning Print Load Module
 	void PMXSPT(std::string message);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);

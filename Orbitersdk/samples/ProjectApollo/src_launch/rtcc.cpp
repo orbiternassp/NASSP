@@ -484,6 +484,7 @@ LunarLiftoffTimeOpt::LunarLiftoffTimeOpt()
 	v_LV = 19.5*0.3048;
 	theta_F = 130.0*RAD;
 	E = 26.6*RAD;
+	I_TPI = 1;
 }
 
 LunarDescentPlanningTable::LunarDescentPlanningTable()
@@ -8218,25 +8219,38 @@ void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLi
 
 	R_LS = OrbMech::r_from_latlong(opt.lat, opt.lng, opt.R_LLS);
 
-	//Initial guess for launch is CSM flying over landing site longitude
-	sv_P = coast(opt.sv_CSM, opt.t_hole - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
-	MJD_guess = OrbMech::P29TimeOfLongitude(sv_P.R, sv_P.V, sv_P.MJD, sv_P.gravref, opt.lng);
-	t_L_guess = OrbMech::GETfromMJD(MJD_guess, opt.GETbase);
+	if (opt.opt == 0 && opt.I_TPI > 1)
+	{
+		//TPI time fixed for concentric profile
+		res.t_TPI = opt.t_hole;
+		t_L_guess = res.t_TPI - 1.5*7200.0;
+		sv_P = coast(opt.sv_CSM, t_L_guess - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
+	}
+	else
+	{
+		//Initial guess for launch is CSM flying over landing site longitude
+		sv_P = coast(opt.sv_CSM, opt.t_hole - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
+		MJD_guess = OrbMech::P29TimeOfLongitude(sv_P.R, sv_P.V, sv_P.MJD, sv_P.gravref, opt.lng);
+		t_L_guess = OrbMech::GETfromMJD(MJD_guess, opt.GETbase);
+	}
 
 	if (opt.opt == 0)
 	{
-		SV sv_TPI_guess;
-		double t_TPI_guess, ttoMidnight;
-		OBJHANDLE hSun;
+		if (opt.I_TPI <= 1)
+		{
+			SV sv_TPI_guess;
+			double t_TPI_guess, ttoMidnight;
+			OBJHANDLE hSun;
 
-		hSun = oapiGetObjectByName("Sun");
+			hSun = oapiGetObjectByName("Sun");
 
-		//About 2.5 hours between liftoff and TPI
-		t_TPI_guess = t_L_guess + 2.5*3600.0;
-		sv_TPI_guess = coast(sv_P, t_TPI_guess - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
+			//About 2.5 hours between liftoff and TPI
+			t_TPI_guess = t_L_guess + 2.5*3600.0;
+			sv_TPI_guess = coast(sv_P, t_TPI_guess - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
 
-		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, hMoon, hSun, 1, 1, false);
-		res.t_TPI = t_TPI_guess + ttoMidnight;
+			ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, hMoon, hSun, 1, 1, false);
+			res.t_TPI = t_TPI_guess + ttoMidnight;
+		}
 
 		LunarLiftoffTimePredictionCFP(opt, R_LS, sv_P, hMoon, h_1, theta_Ins, t_L_guess, res.t_TPI, res);
 	}
@@ -14528,7 +14542,32 @@ VECTOR3 RTCC::PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV
 	return DV_out;
 }
 
-int RTCC::ELVCNV(EphemerisData sv, int in, int out, EphemerisData &sv_out)
+int RTCC::ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out)
+{
+	EphemerisData sv, sv_out;
+	svtab_out.table.clear();
+	int err = 0;
+	for (unsigned i = 0;i < svtab.table.size();i++)
+	{
+		sv = svtab.table[i];
+		err = ELVCNV(sv, in, out, sv_out);
+		if (err)
+		{
+			break;
+		}
+		svtab_out.table.push_back(sv_out);
+	}
+	//Store some ephemeris header data
+	svtab_out.Header.CSI = out;
+	svtab_out.Header.NumVec = svtab_out.table.size();
+	svtab_out.Header.TL = svtab_out.table.front().GMT;
+	svtab_out.Header.TR = svtab_out.table.back().GMT;
+	svtab_out.Header.TUP = svtab.Header.TUP;
+	svtab_out.Header.VEH = svtab.Header.VEH;
+	return err;
+}
+
+int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 {
 	int err;
 
@@ -16019,7 +16058,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 
 int RTCC::PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code)
 {
-	char Veh, Thr, Guid;
+	char Veh, Thr, Guid, Tab;
 	char Buffer[20];
 
 	//Format all but purpose of maneuver code
@@ -16027,25 +16066,28 @@ int RTCC::PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsign
 	//Set MPT
 	if (Table == RTCC_MPT_CSM)
 	{
-		Veh = 'C';
+		Tab = 'C';
 	}
 	else
 	{
-		Veh = 'L';
+		Tab = 'L';
 	}
 
 	//Set thrusting vehicle ID
 	if (Thruster == RTCC_ENGINETYPE_LOX_DUMP || Thruster == RTCC_ENGINETYPE_SIVB_APS || Thruster == RTCC_ENGINETYPE_SIVB_MAIN)
 	{
 		TVC = 2;
+		Veh = 'S';
 	}
 	else if (Thruster == RTCC_ENGINETYPE_CSMSPS || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS2 || Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4 || Thruster == RTCC_ENGINETYPE_CSMRCSPLUS4)
 	{
 		TVC = 1;
+		Veh = 'C';
 	}
 	else
 	{
 		TVC = 3;
+		Veh = 'L';
 	}
 
 	if (Thruster == RTCC_ENGINETYPE_CSMSPS)
@@ -16102,7 +16144,7 @@ int RTCC::PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsign
 		Guid = 'U';
 	}
 
-	sprintf(Buffer, "%c%c%c%02d%s", Veh, Thr, Guid, Maneuver, ID.c_str());
+	sprintf(Buffer, "%c%c%c%c%02d%s", Tab, Veh, Thr, Guid, Maneuver, ID.c_str());
 	code.assign(Buffer);
 	
 	return 0;
@@ -18087,9 +18129,17 @@ bool RTCC::GMGMED(char *str)
 		return false;
 	}
 
-	if (medtype == 'A' || medtype == 'B' || medtype == 'G')
+	if (medtype == 'A')
 	{
 		EMGABMED(number, MEDSequence);
+	}
+	else if (medtype == 'B')
+	{
+		EMGABMED(number + 100, MEDSequence);
+	}
+	else if (medtype == 'G')
+	{
+		EMGABMED(number + 200, MEDSequence);
 	}
 	else if (medtype == 'F')
 	{
@@ -18114,7 +18164,7 @@ bool RTCC::GMGMED(char *str)
 int RTCC::EMGABMED(int med, std::vector<std::string> data)
 {
 	//Generate Station Contacts
-	if (med == 3)
+	if (med == 103)
 	{
 		if (data.size() < 1)
 		{
@@ -18134,6 +18184,90 @@ int RTCC::EMGABMED(int med, std::vector<std::string> data)
 			return 1;
 		}
 		EMSTAGEN(veh);
+	}
+	//CSM/LEM REFSMMAT locker movement
+	else if (med == 200)
+	{
+		if (data.size() < 4)
+		{
+			return 1;
+		}
+		int L1, ID1, L2, ID2;
+		if (data[0] == "CSM")
+		{
+			L1 = 1;
+		}
+		else if (data[0] == "LEM")
+		{
+			L1 = 3;
+		}
+		else
+		{
+			return 1;
+		}
+		ID1 = EMGSTGENCode(data[1].c_str());
+		if (ID1 < 0)
+		{
+			return 1;
+		}
+		if (data[2] == "CSM")
+		{
+			L2 = 1;
+		}
+		else if (data[2] == "LEM")
+		{
+			L2 = 3;
+		}
+		else
+		{
+			return 1;
+		}
+		ID2 = EMGSTGENCode(data[3].c_str());
+		if (ID2 < 0)
+		{
+			return 1;
+		}
+		double gmt, hh, mm, ss;
+		if (data.size() < 5 || data[4] == "")
+		{
+			gmt = RTCCPresentTimeGMT();
+		}
+		else if (sscanf(data[4].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
+		{
+			gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
+		}
+		else
+		{
+			return 1;
+		}
+		EMGSTGEN(2, L1, ID1, L2, ID2, gmt);
+	}
+	else if (med == 203)
+	{
+		if (data.size() < 2)
+		{
+			return 1;
+		}
+		int L;
+		if (data[0] == "CSM")
+		{
+			L = 1;
+		}
+		else if (data[0] == "LEM")
+		{
+			L = 3;
+		}
+		else
+		{
+			return 1;
+		}
+		double gmt, hh, mm, ss;
+		if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
+		{
+			gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
+		}
+		//TBD: Earth or Moon
+		EMMGLCVP(L, gmt);
 	}
 	return 0;
 }
@@ -20812,7 +20946,7 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	}
 }
 
-void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, MATRIX3 *refs)
+void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs)
 {
 	//CSM/LEM REFSMMAT locker movement
 	if (QUEID == 2)
@@ -20869,17 +21003,54 @@ void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, MATRIX3 *refs)
 		if (tab1->data[ID1 - 1].ID == 0)
 		{
 			//ERROR: REFSMMAT NOT AVAILABLE
+			EMGPRINT(1);
 			return;
 		}
 
 		if (ID2 == RTCC_REFSMMAT_TYPE_CUR)
 		{
-			tab2->data[1].REFSMMAT = tab2->data[0].REFSMMAT;
-			tab2->data[1].ID++;
+			EMGSTSTM(L2, tab2->data[0].REFSMMAT, RTCC_REFSMMAT_TYPE_PCR, gmt);
 		}
-		tab2->data[ID2 - 1].ID++;
-		tab2->data[ID2 - 1].REFSMMAT = tab1->data[ID1 - 1].REFSMMAT;
+		EMGSTSTM(L2, tab1->data[ID1 - 1].REFSMMAT, ID2, gmt);
 	}
+}
+
+void RTCC::EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt)
+{
+	REFSMMATLocker *tab;
+	if (L == RTCC_MANVEHICLE_CSM)
+	{
+		tab = &EZJGMTX1;
+	}
+	else
+	{
+		tab = &EZJGMTX3;
+	}
+
+	tab->data[id - 1].ID++;
+	tab->data[id - 1].REFSMMAT = tab->data[id - 1].REFSMMAT;
+	tab->data[id - 1].GMT = gmt;
+
+	char Buffer[128];
+	char Buff1[4];
+	char Buff2[32];
+	char Buff3[4];
+
+	EMGSTGENName(id, Buff1);
+	OrbMech::format_time_HHMMSS(Buff2, GETfromGMT(gmt));
+	if (L == 1)
+	{
+		sprintf_s(Buff3, "CSM");
+	}
+	else
+	{
+		sprintf_s(Buff3, "LEM");
+	}
+
+	sprintf_s(Buffer, "EMGSTSTM: NEW IMU MATRIX %s%03d %s GET = %s", Buff1, tab->data[id - 1].ID, Buff3, Buff2);
+	std::string message;
+	message.assign(Buffer);
+	EMGPRINT(2, message);
 }
 
 void RTCC::EMGSTGENName(int ID, char *Buffer)
@@ -20911,7 +21082,7 @@ void RTCC::EMGSTGENName(int ID, char *Buffer)
 		sprintf_s(Buffer, 4, "LCV");
 		break;
 	case RTCC_REFSMMAT_TYPE_AGS:
-		sprintf_s(Buffer, 4, "AHS");
+		sprintf_s(Buffer, 4, "AGS");
 		break;
 	case RTCC_REFSMMAT_TYPE_DOK:
 		sprintf_s(Buffer, 4, "DOK");
@@ -20926,6 +21097,138 @@ void RTCC::EMGSTGENName(int ID, char *Buffer)
 		sprintf_s(Buffer, 4, "");
 		break;
 	}
+}
+
+int RTCC::EMGSTGENCode(const char *Buffer)
+{
+	if (!strcmp(Buffer, "CUR"))
+	{
+		return RTCC_REFSMMAT_TYPE_CUR;
+	}
+	else if (!strcmp(Buffer, "PCR"))
+	{
+		return RTCC_REFSMMAT_TYPE_PCR;
+	}
+	else if (!strcmp(Buffer, "TLM"))
+	{
+		return RTCC_REFSMMAT_TYPE_TLM;
+	}
+	else if (!strcmp(Buffer, "OST"))
+	{
+		return RTCC_REFSMMAT_TYPE_OST;
+	}
+	else if (!strcmp(Buffer, "MED"))
+	{
+		return RTCC_REFSMMAT_TYPE_MED;
+	}
+	else if (!strcmp(Buffer, "DMT"))
+	{
+		return RTCC_REFSMMAT_TYPE_DMT;
+	}
+	else if (!strcmp(Buffer, "DOD"))
+	{
+		return RTCC_REFSMMAT_TYPE_DOD;
+	}
+	else if (!strcmp(Buffer, "LCV"))
+	{
+		return RTCC_REFSMMAT_TYPE_LCV;
+	}
+	else if (!strcmp(Buffer, "AGS"))
+	{
+		return RTCC_REFSMMAT_TYPE_AGS;
+	}
+	else if (!strcmp(Buffer, "DOK"))
+	{
+		return RTCC_REFSMMAT_TYPE_DOK;
+	}
+	else if (!strcmp(Buffer, "LLA"))
+	{
+		return RTCC_REFSMMAT_TYPE_LLA;
+	}
+	else if (!strcmp(Buffer, "LLD"))
+	{
+		return RTCC_REFSMMAT_TYPE_LLD;
+	}
+
+	return -1;
+}
+
+void RTCC::EMGPRINT(int i, std::string mes)
+{
+	std::string message;
+	switch (i)
+	{
+	case 1:
+		message = "EMGSTGEN: REFSMMAT NOT AVAILABLE";
+		break;
+	case 2:
+		message = mes;
+		break;
+	case 3:
+		message = "EMMGLCVP: EPHEMERIS NOT AVAILABLE";
+		break;
+	case 4:
+		message = "EMMGLCVP: RADIAL FLIGHT CONDITIONS";
+		break;
+	}
+
+	if (RTCCONLINEMON.size() >= 9)
+	{
+		RTCCONLINEMON.pop_front();
+	}
+
+	RTCCONLINEMON.push_back(message);
+}
+
+void RTCC::EMMGLCVP(int L, double gmt)
+{
+	EphemerisDataTable EPHEM;
+	ManeuverTimesTable MANTIMES;
+	LunarStayTimesTable LUNSTAY;
+
+	if (ELFECH(gmt, 16, 8, L, EPHEM, MANTIMES, LUNSTAY))
+	{
+		EMGPRINT(3);
+		return;
+	}
+	ELVCTRInputTable in;
+	ELVCTROutputTable out;
+
+	in.GMT = gmt;
+	in.L = L;
+	in.ORER = 8;
+
+	ELVCTR(in, out);
+
+	if (out.ErrorCode)
+	{
+		EMGPRINT(3);
+		return;
+	}
+
+	if (abs(dotp(unit(out.SV.R), unit(out.SV.V))) > 1.0 - 0.0017)
+	{
+		EMGPRINT(4);
+		return;
+	}
+
+	MATRIX3 REFSMMAT;
+	VECTOR3 X_SM, Y_SM, Z_SM;
+	if (L == 1)
+	{
+		Z_SM = unit(-out.SV.R);
+		Y_SM = unit(crossp(out.SV.V, out.SV.R));
+		X_SM = crossp(Y_SM, Z_SM);
+	}
+	else
+	{
+		X_SM = unit(out.SV.R);
+		Y_SM = unit(crossp(out.SV.V, out.SV.R));
+		Z_SM = crossp(X_SM, Y_SM);
+	}
+	REFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
+
+	EMGSTSTM(L, REFSMMAT, RTCC_REFSMMAT_TYPE_LCV, gmt);
 }
 
 void RTCC::PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA)

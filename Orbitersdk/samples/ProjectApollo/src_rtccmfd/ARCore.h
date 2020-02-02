@@ -387,6 +387,7 @@ public:
 	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
 	double t_Liftoff_guess;		//Threshold time for lunar liftoff
 	bool LunarLiftoffInsVelInput;	//0 = Calculate velocity internally, 1 = use input velocity
+	bool LunarLiftoffTPITimeOption; //false = on time, true = at orbital midnight
 
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;

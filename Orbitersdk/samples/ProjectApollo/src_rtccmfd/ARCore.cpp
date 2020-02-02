@@ -1189,6 +1189,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	t_TPIguess = 0.0;
 	t_Liftoff_guess = 0.0;
 	LunarLiftoffInsVelInput = false;
+	LunarLiftoffTPITimeOption = true;
 	LunarLiftoffRes.t_CDH = 0.0;
 	LunarLiftoffRes.t_CSI = 0.0;
 	LunarLiftoffRes.t_Ins = 0.0;
@@ -3551,6 +3552,14 @@ int ARCore::subThread()
 		opt.dt_1 = GC->rtcc->PZLTRT.PoweredFlightTime;
 		opt.theta_1 = GC->rtcc->PZLTRT.PoweredFlightArc;
 		opt.IsInsVelInput = LunarLiftoffInsVelInput;
+		if (LunarLiftoffTPITimeOption)
+		{
+			opt.I_TPI = 1;
+		}
+		else
+		{
+			opt.I_TPI = 2;
+		}
 		opt.v_LH = LunarLiftoffRes.v_LH;
 		opt.v_LV = LunarLiftoffRes.v_LV;
 

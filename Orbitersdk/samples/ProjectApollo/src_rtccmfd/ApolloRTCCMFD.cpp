@@ -5511,6 +5511,11 @@ void ApolloRTCCMFD::menuCycleLunarLiftoffInsVelOption()
 	G->LunarLiftoffInsVelInput = !G->LunarLiftoffInsVelInput;
 }
 
+void ApolloRTCCMFD::menuCycleLunarLiftoffTPIOption()
+{
+	G->LunarLiftoffTPITimeOption = !G->LunarLiftoffTPITimeOption;
+}
+
 void ApolloRTCCMFD::set_Liftoffguess(double time)
 {
 	G->t_Liftoff_guess = time;

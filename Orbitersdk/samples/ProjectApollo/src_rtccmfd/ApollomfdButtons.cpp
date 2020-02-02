@@ -788,7 +788,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Input or calc. insertion", 0, 'A' },
 		{ "Horizontal velocity", 0, 'H' },
 		{ "Vertical velocity", 0, 'V' },
-		{ "", 0, ' ' },
+		{ "TPI time option", 0, 'E' },
 		{ "", 0, ' ' },
 
 		{ "Liftoff Time Option", 0, 'O' },
@@ -801,11 +801,11 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu23, sizeof(mnu23) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("TLO", OAPI_KEY_T, &ApolloRTCCMFD::menuSetLiftoffguess);
+	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::menuSetLiftoffguess);
 	RegisterFunction("VOP", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleLunarLiftoffInsVelOption);
 	RegisterFunction("VLH", OAPI_KEY_H, &ApolloRTCCMFD::menuLunarLiftoffVHorInput);
 	RegisterFunction("VLV", OAPI_KEY_V, &ApolloRTCCMFD::menuLunarLiftoffVVertInput);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TPI", OAPI_KEY_E, &ApolloRTCCMFD::menuCycleLunarLiftoffTPIOption);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::menuLunarLiftoffTimeOption);

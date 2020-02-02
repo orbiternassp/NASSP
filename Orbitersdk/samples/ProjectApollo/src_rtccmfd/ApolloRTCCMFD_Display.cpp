@@ -2173,8 +2173,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Liftoff", 13);
 
+		if (G->LunarLiftoffTPITimeOption)
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "TLO:", 4);
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 2 * H / 14, "TPI:", 4);
+		}
 		GET_Display(Buffer, G->t_Liftoff_guess);
-		skp->Text((int)(0.5 * W / 8), 2 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(3 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->LunarLiftoffTimeOption == 0)
 		{
