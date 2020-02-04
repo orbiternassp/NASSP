@@ -905,7 +905,7 @@ struct LunarLiftoffTimeOpt
 	double t_max;
 	//Minimum safe height of an orbiting vehicle
 	double H_S;
-	//Rendezvous DV budge for both vehicles
+	//Rendezvous DV budget for both vehicles
 	double DV_MAX[2];
 	//Input table of coelliptic altitude differences
 	std::vector<double> DH;

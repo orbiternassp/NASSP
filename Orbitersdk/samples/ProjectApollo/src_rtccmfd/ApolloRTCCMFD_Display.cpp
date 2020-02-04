@@ -2261,12 +2261,18 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(4 * W / 8, 2 * H / 14, "Time Critical Profile", 21);
 		}
 
-		if (G->target != NULL)
+		if (GC->MissionPlanningActive)
 		{
-			sprintf(Buffer, G->target->GetName());
-			skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
-		}
 
+		}
+		else
+		{
+			if (G->target != NULL)
+			{
+				sprintf(Buffer, G->target->GetName());
+				skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
+			}
+		}
 		if (G->LunarLiftoffTimeOption == 1)
 		{
 			skp->Text(5 * W / 8, 6 * H / 14, "DT Insertion-TPI:", 17);

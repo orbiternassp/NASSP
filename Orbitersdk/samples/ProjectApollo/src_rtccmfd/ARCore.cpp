@@ -533,23 +533,33 @@ int AR_GCore::MPTTrajectoryUpdate()
 
 	if (ves == NULL) return 1;
 
-	MPTSV sv = rtcc->StateVectorCalc(ves);
 	bool landed = ves->GroundContact();
-
 	EphemerisData sv2;
 
-	sv2.R = sv.R;
-	sv2.V = sv.V;
-	sv2.GMT = OrbMech::GETfromMJD(sv.MJD, rtcc->GetGMTBase());
-	if (sv.gravref == oapiGetObjectByName("Earth"))
+	if (landed)
 	{
-		sv2.RBI = BODY_EARTH;
+		double lat, lng, rad;
+		ves->GetEquPos(lng, lat, rad);
+
+		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = lat;
+		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = lng;
 	}
 	else
 	{
-		sv2.RBI = BODY_MOON;
-	}
+		MPTSV sv = rtcc->StateVectorCalc(ves);
 
+		sv2.R = sv.R;
+		sv2.V = sv.V;
+		sv2.GMT = OrbMech::GETfromMJD(sv.MJD, rtcc->GetGMTBase());
+		if (sv.gravref == oapiGetObjectByName("Earth"))
+		{
+			sv2.RBI = BODY_EARTH;
+		}
+		else
+		{
+			sv2.RBI = BODY_MOON;
+		}
+	}
 	rtcc->PMSVCT(4, rtcc->med_m50.Table, &sv2, landed);
 
 	return 0;
@@ -3563,7 +3573,7 @@ int ARCore::subThread()
 		opt.v_LH = LunarLiftoffRes.v_LH;
 		opt.v_LV = LunarLiftoffRes.v_LV;
 
-		if (vessel->GroundContact())
+		if (GC->MissionPlanningActive == false && vessel->GroundContact())
 		{
 			double lng, lat, rad;
 			vessel->GetEquPos(lng, lat, rad);

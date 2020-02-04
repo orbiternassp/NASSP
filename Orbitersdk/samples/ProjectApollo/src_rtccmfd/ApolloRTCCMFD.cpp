@@ -5639,7 +5639,7 @@ void ApolloRTCCMFD::menuTLCCCalc()
 
 void ApolloRTCCMFD::menuLunarLiftoffCalc()
 {
-	if (G->target != NULL && G->vesseltype > 1)
+	if (GC->MissionPlanningActive ||(G->target != NULL && G->vesseltype > 1))
 	{
 		G->LunarLiftoffCalc();
 	}
