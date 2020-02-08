@@ -39,6 +39,27 @@
     <ClInclude Include="..\..\src_rtccmfd\LWP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\LDPP.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\TLMCC.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_launch\MCCPADForms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\GeneralizedIterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp">
@@ -69,6 +90,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\LWP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\GeneralizedIterator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD_Display.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

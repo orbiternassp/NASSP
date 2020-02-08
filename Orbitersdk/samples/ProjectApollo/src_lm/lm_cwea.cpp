@@ -638,14 +638,14 @@ void LEM_CWEA::TurnOn()
 		SBDCautFF.HardReset();
 
 		//Reset TCA FF's
-		lem->tca1A.GetTCAFailureFlipFlop()->Reset();
-		lem->tca1B.GetTCAFailureFlipFlop()->Reset();
-		lem->tca2A.GetTCAFailureFlipFlop()->Reset();
-		lem->tca2B.GetTCAFailureFlipFlop()->Reset();
-		lem->tca3A.GetTCAFailureFlipFlop()->Reset();
-		lem->tca3B.GetTCAFailureFlipFlop()->Reset();
-		lem->tca4A.GetTCAFailureFlipFlop()->Reset();
-		lem->tca4B.GetTCAFailureFlipFlop()->Reset();
+		lem->tca1A.Reset();
+		lem->tca1B.Reset();
+		lem->tca2A.Reset();
+		lem->tca2B.Reset();
+		lem->tca3A.Reset();
+		lem->tca3B.Reset();
+		lem->tca4A.Reset();
+		lem->tca4B.Reset();
 
 		Operate = true;
 	}

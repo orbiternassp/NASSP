@@ -31,27 +31,32 @@ class AR_GCore
 {
 public:
 	AR_GCore(VESSEL* v);
+	~AR_GCore();
 
-	MPTable mptable;
+	void SetMissionSpecificParameters();
+	void MPTMassUpdate();
+	int MPTTrajectoryUpdate();
+
 	bool MissionPlanningActive;
-	double GETbase;			//Launch MJD
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
-	double LSLat, LSLng, LSAlt;	//Landing Site coordinates
 	double t_Land;				//Time of landing
 	double LOIazi;
-	double TLCCFreeReturnEMPLat, TLCCNonFreeReturnEMPLat;
 	//Initial guess of pericynthion GET
-	double TLCCPeriGET;
 	double LOIapo, LOIperi;
 	int LOIEllipseRotation;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
-	double TLCCFlybyPeriAlt, TLCCLAHPeriAlt;
-	double TLCCNodeLat, TLCCNodeLng, TLCCNodeAlt, TLCCNodeGET;
-	int DOI_N;							//Number of revolutions between DOI and PDI
 	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
-	double DOI_PeriAng;					//Angle from landing site to PDI position
-	double DOI_alt;						//perilune altitude above landing site
-	double RTEMaxReturnInclination;
-	double RTERangeOverrideNM;
+	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
+
+	VESSEL *pCSM;
+	VESSEL *pLM;
+
+	int pCSMnumber;
+	int pLMnumber;
+	int mptInitError;
+
+	RTCC* rtcc;
+
+	LunarDescentPlanningTable descplantable;
 };
 
 class ARCore {
@@ -59,12 +64,11 @@ public:
 	ARCore(VESSEL* v, AR_GCore* gcin);
 	~ARCore();
 	void lambertcalc();
-	void CDHcalc();
+	void SPQcalc();
 	void GPMPCalc();
 	void REFSMMATCalc();
 	void SkylabCalc();
-	void DOICalc();
-	void PCCalc();
+	void LDPPalc();
 	void LunarLiftoffCalc();
 	void LOICalc();
 	void LmkCalc();
@@ -85,17 +89,25 @@ public:
 	void DAPPADCalc();
 	void AscentPADCalc();
 	void PDAPCalc();
-	void UpdateFIDOOrbitDigitals();
-	void CycleFIDOOrbitDigitals();
-	void FIDOOrbitDigitalsCalculateLongitude();
-	void FIDOOrbitDigitalsCalculateGETL();
-	void FIDOOrbitDigitalsApoPeriRequest();
-	void UpdateSpaceDigitals();
+	void CycleFIDOOrbitDigitals1();
+	void CycleFIDOOrbitDigitals2();
 	void CycleSpaceDigitals();
-	void SpaceDigitalsGET();
+	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
-	void CyclePredictedSiteAcquisitionDisplay();
-	void CalculatePredictedSiteAcquisitionDisplay();
+	void GenerateStationContacts();
+	void RTETradeoffDisplayCalc();
+	void GeneralMEDRequest();
+	void TransferTIToMPT();
+	void TransferSPQToMPT();
+	void TransferDKIToMPT();
+	void TransferDescentPlanToMPT();
+	void TransferPoweredDescentToMPT();
+	void TransferPoweredAscentToMPT();
+	void TransferGPMToMPT();
+	void MPTDirectInputCalc();
+	void MPTTLIDirectInput();
+	void TransferLOIorMCCtoMPT();
+	void TransferRTEToMPT();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
@@ -106,13 +118,13 @@ public:
 	void P30Uplink(void);
 	void P30UplinkCalc();
 	void P30UplinkNew();
-	void EntryUplink(void);
 	void RetrofireEXDVUplinkCalc();
-	void RetrofireEXDVUplinkNew();
+	void RetrofireEXDVUplink();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(void);
 	void REFSMMATUplinkCalc();
 	void StateVectorUplink();
+	void TLANDUplinkCalc(void);
 	void TLANDUplink(void);
 	void EMPP99Uplink(int i);
 	void ManeuverPAD();
@@ -126,6 +138,8 @@ public:
 	int REFSMMATOctalAddress();
 	int REFSMMATUplinkAddress();
 	void DetermineGMPCode();
+	void NodeConvCalc();
+	void SendNodeToSFP();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -145,7 +159,6 @@ public:
 	int subThreadMode;										// What should the subthread do?
 	int subThreadStatus;									// 0 = done/not busy, 1 = busy, negative = done with error
 
-	RTCC* rtcc;
 	ApolloRTCCMFDData g_Data;
 
 	//TARGETING VESSELS
@@ -161,8 +174,7 @@ public:
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
 	bool inhibUplLOS;
 	bool PADSolGood;
-	int enginetype;				// 0 = RCS, 1 = SPS or DPS or APS
-	int directiontype;			// 0 = +X, 1 = -X (RCS only)
+	int manpadenginetype;
 	double t_TPI;				// Generally used TPI time
 	int P30Octals[012];
 	int RetrofireEXDVOctals[016];
@@ -170,8 +182,8 @@ public:
 	//LAMBERT PAGE
 	double T1;				//Time of the Lambert targeted maneuver
 	double T2;				//Arrival time for Lambert Targeting
-	double lambertelev;		//Elevation of target for T1 calculation
 	int N;					//Number of revolutions for Lambert Targeting
+	double TwoImpulse_TIG;	//Impulsive time of ignition for two-impulse maneuver
 	VECTOR3 LambertdeltaV;	//LVLH maneuver vector
 	int lambertopt;			//0 = spherical, 1 = non-spherical
 	VECTOR3 offvec;			//Lambert offset vector
@@ -179,11 +191,6 @@ public:
 	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
 	int twoimpulsemode;		//0 = General, 1 = NCC/NSR, 2 = TPI/TPF
 	double TwoImpulse_TPI;	//TPI time calculated by the NCC/NSR option
-	double TwoImpulse_PhaseAngle;	//Phase angle of chaser relative to target at T2 time
-	int lambertElevOpt;		//0 = T1 on time, 1 = search for elevation angle
-	int lambertTPFOpt;		//0 = T2 on time, 1 = use DT from T1, 2 = use travel angle
-	double lambertDT;		//DT from T1 to T2
-	double lambertWT;		//travel angle of passive vehicle between T1 and T2
 
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
@@ -199,6 +206,7 @@ public:
 	int DKI_N_PB;		//Number of half revs between Phasing and Boost/Height
 	double t_TPIguess;
 	DKIResults dkiresult;
+	VECTOR3 DKI_DV;
 
 	//CONCENTRIC RENDEZVOUS PAGE
 	int SPQMode;	//0 = CSI, 1 = CDH
@@ -206,7 +214,6 @@ public:
 	double CDHtime;	//Time of the CDH maneuver
 	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
-	double DH;			//Delta Height for the CDH maneuver
 	VECTOR3 SPQDeltaV;
 	SPQResults spqresults;
 
@@ -226,6 +233,7 @@ public:
 	double GMPApseLineRotAngle;
 	int GMPRevs;
 	double SPSGET;		//Maneuver GET
+	double GPM_TIG;		//Maneuver GET output
 	VECTOR3 OrbAdjDVX;	//LVLH maneuver vector
 	//0 = Apogee
 	//1 = Equatorial crossing
@@ -282,11 +290,12 @@ public:
 	double EntryDesiredInclination;
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	double RTEReturnInclination;
-	double RTEMaxReentrySpeed;
+	int RTETradeoffMode; //0 = Near-Earth (F70), 1 = Remote-Earth (F71)
+	int deorbitenginetype;
 
 	//STATE VECTOR PAGE
-	bool SVSlot;
-	SV UplinkSV;
+	bool SVSlot; //true = CSM, false = LEM
+	MPTSV UplinkSV;
 	double SVDesiredGET;
 	VESSEL* svtarget;
 	int svtargetnumber;
@@ -297,6 +306,7 @@ public:
 	int SVOctals[021];
 	VECTOR3 RLSUplink;
 	int RLSOctals[010];
+	int TLANDOctals[5];
 
 	//MANEUVER PAD PAGE
 	AP11MNV manpad;
@@ -322,33 +332,24 @@ public:
 	int mappage, mapgs;
 	double mapUpdateGET;
 
+	//TLI PAGE
+	//0 = TLI (nodal), 1 = TLI (free return)
+	int TLImaneuver;
+
 	//TLCC PAGE
 
-	//0 = TLI (nodal), 1 = TLI (free return), 2 = XYZ and T (Nodal) Targeting, 3 = FR BAP Fixed LPO, 4 = FR BAP Free LPO
-	//5 = Non Free BAP Fixed LPO, 6 = Non Free BAP Free LPO, 7 = Circumlunar free-return flyby, specified H_PC and phi_PC
+	//1 = XYZ and T (Nodal) Targeting, 2 = FR BAP Fixed LPO, 3 = FR BAP Free LPO, 4 = Non Free BAP Fixed LPO, 5 = Non Free BAP Free LPO
+	//6 = Circumlunar free-return flyby, nominal H_PC and phi_PC, 7 = Flyby with specific H_PC, 8 = SPS lunar flyby, 9 = Optimized RCS flyby
 	int TLCCmaneuver;
+	double TLCC_TIG;
 	VECTOR3 TLCC_dV_LVLH;
-	//Corrected time of pericynthion
-	double TLCCPeriGETcor;
-	//Initial guess and corrected TIG
-	double TLCC_GET, TLCC_TIG;
-	double TLCCReentryGET, TLCCFRIncl, TLCCEMPLatcor;
-	double TLCCFRLat, TLCCFRLng;
 	VECTOR3 R_TLI, V_TLI;
-	bool TLCCSolGood;
-	bool TLCCAscendingNode;
-	double TLCCFRDesiredInclination;
-	int TLCCIterationStep;
-	double TLCCRev2MeridianGET;
-	double TLCCPostDOIPeriAlt, TLCCPostDOIApoAlt;
+	int TLCCSolGood;
 
 	//LOI PAGE
-	int LOImaneuver; //0 = LOI-1, 1 = LOI-2
 	int LOIOption;	//0 = Fixed LPO, 1 = LOI at Peri
-	double LOI2Alt;
 	VECTOR3 LOI_dV_LVLH;
 	double LOI_TIG;
-	double LOI2_EarliestGET;
 
 	//LANDMARK TRACKING PAGE
 	AP11LMARKTRKPAD landmarkpad;
@@ -362,10 +363,7 @@ public:
 	VECTOR3 VECangles;	//IMU angles
 
 	//DOI Page
-	double DOIGET;						//Initial guess for the DOI TIG
-	double DOI_TIG;						//Integrated DOI TIG
 	VECTOR3 DOI_dV_LVLH;				//Integrated DV Vector
-	double DOI_t_PDI, DOI_CR;			//Time of PDI, cross range at PDI
 
 	//Skylab Page
 	int Skylabmaneuver;					//0 = Presettings, 1 = NC1, 2 = NC2, 3 = NCC, 4 = NSR, 5 = TPI, 6 = TPM, 7 = NPC
@@ -381,28 +379,15 @@ public:
 	double Skylab_dH_NC2, Skylab_dv_NC2, Skylab_dv_NCC;
 	double Skylab_t_NC1, Skylab_t_NC2, Skylab_t_NCC, Skylab_t_NSR, Skylab_dt_TPM; //Skylab_t_NPC
 
-	//PC Page
-	double PCAlignGET;		//time when the orbit is aligned with the landing site
-	bool PClanded;			//0 = use lat/lng/alt to calculate landing site, 1 = target vessel on the surface
-	VECTOR3 PC_dV_LVLH;
-	double PCEarliestGET;	//Initial guess for the PC TIG
-	double PC_TIG;			//Corrected PC TIG
-
-
 	//Terrain Model
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
 
 	//Lunar Liftoff Time Prediction
 	LunarLiftoffResults LunarLiftoffRes;
 	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
-	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 	double t_Liftoff_guess;		//Threshold time for lunar liftoff
 	bool LunarLiftoffInsVelInput;	//0 = Calculate velocity internally, 1 = use input velocity
-
-	//Lunar Ascent Processor
-	double LAP_Theta;			//Angle travelled between liftoff and insertion
-	double LAP_DT;				//Ascent burntime (liftoff to insertion)
-	SV LAP_SV_Insertion;
+	bool LunarLiftoffTPITimeOption; //false = on time, true = at orbital midnight
 
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
@@ -438,26 +423,17 @@ public:
 	int AGCEphemMission;
 	bool AGCEphemIsCMC;
 
-	//FIDO ORBIT DIGITALS
-	FIDOOrbitDigitals fidoorbit;
-	SV fidoorbitsv;
-
-	//SPACE DIGITALS
-	SpaceDigitals spacedigit;
-	SV spacedigitalssv;
-
-	//NEXT STATION CONTACT DISPLAY
-	OrbitStationContactsTable orbitstatconttable;
-	NextStationContactsTable nextstatconttable;
-	PredictedSiteAcquisitionTable predsiteacqtable;
-	bool nextstatcont_lunar; //Only use stations with lunar capability
-	double predsiteacq_GET;
-	double predsiteacq_DT;
-
-	protected:
-		int GetPowEngType();
+	//NODAL TARGET CONVERSION
+	bool NodeConvOpt; //false = EMP to selenographc, true = selenographic to EMP
+	double NodeConvLat;
+	double NodeConvLng;
+	double NodeConvGET;
+	double NodeConvHeight;
+	double NodeConvResLat;
+	double NodeConvResLng;
 
 private:
+
 	AR_GCore* GC;
 };
 

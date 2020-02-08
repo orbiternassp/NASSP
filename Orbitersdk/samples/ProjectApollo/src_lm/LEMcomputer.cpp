@@ -85,13 +85,12 @@ void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel, char *Program
 		if (ApolloNo < 9)	// Sunburst 120
 		{
 			binfile = "Config/ProjectApollo/Sunburst120.bin";
-
 			LEM *lem = (LEM *)OurVessel;
 			lem->InvertStageBit = true;
 		}
-		else if (ApolloNo < 11)	// Luminary 069
+		else if (ApolloNo < 11)	// Luminary 069 Revision 2
 		{
-			binfile = "Config/ProjectApollo/Luminary069.bin";
+			binfile = "Config/ProjectApollo/LUM69R2.bin";
 		}
 		else if (ApolloNo < 12)	// Luminary 099
 		{
@@ -105,9 +104,9 @@ void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel, char *Program
 		{
 			binfile = "Config/ProjectApollo/Luminary131.bin";
 		}
-		else if (ApolloNo < 15)	// Luminary 210, modified for Apollo 14
+		else if (ApolloNo < 15)	// Luminary 178
 		{
-			binfile = "Config/ProjectApollo/Luminary210NBY71.bin";
+			binfile = "Config/ProjectApollo/Luminary178.bin";
 		}
 		else	//Luminary 210
 		{

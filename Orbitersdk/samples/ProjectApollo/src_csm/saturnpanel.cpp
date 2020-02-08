@@ -5476,7 +5476,7 @@ void Saturn::InitSwitches() {
 	CabinTempMeter.Register(PSH, "CabinTempMeter", 40, 120, 2);
 	SuitPressMeter.Register(PSH, "SuitPressMeter", 0, 16, 2);
 	CabinPressMeter.Register(PSH, "CabinPressMeter", 0, 16, 2);
-	PartPressCO2Meter.Register(PSH, "PartPressCO2Meter", 0, 5, 2);
+	PartPressCO2Meter.Register(PSH, "PartPressCO2Meter", 0, 30, 2);
 
 	SuitComprDeltaPMeter.Register(PSH, "SuitComprDeltaPMeter", -0.1, 1.1, 5);
 	LeftO2FlowMeter.Register(PSH, "LeftO2FlowMeter", 0.1, 1.1, 5);

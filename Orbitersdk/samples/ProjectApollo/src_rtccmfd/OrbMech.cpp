@@ -5,6 +5,69 @@
 inline double acosh(double z) { return log(z + sqrt(z + 1.0)*sqrt(z - 1.0)); }
 inline double atanh(double z){ return 0.5*log(1.0 + z) - 0.5*log(1.0 - z); }
 
+SV& SV::operator=(const MPTSV& other)
+{
+	this->gravref = other.gravref;
+	this->mass = 0.0;
+	this->MJD = other.MJD;
+	this->R = other.R;
+	this->V = other.V;
+	return *this;
+}
+
+MPTSV::MPTSV()
+{
+	R = _V(0, 0, 0);
+	V = _V(0, 0, 0);
+	MJD = 0.0;
+	gravref = NULL;
+}
+
+MPTSV::MPTSV(const SV sv)
+{
+	R = sv.R;
+	V = sv.V;
+	MJD = sv.MJD;
+	gravref = sv.gravref;
+}
+
+MPTSV& MPTSV::operator=(const SV& other)
+{
+	this->gravref = other.gravref;
+	this->MJD = other.MJD;
+	this->R = other.R;
+	this->V = other.V;
+	return *this;
+}
+
+CELEMENTS CELEMENTS::operator+(const CELEMENTS& c) const
+{
+	CELEMENTS result;
+
+	result.a = this->a + c.a;
+	result.e = this->e + c.e;
+	result.i = this->i + c.i;
+	result.h = this->h + c.h;
+	result.g = this->g + c.g;
+	result.l = this->l + c.l;
+
+	return result;
+}
+
+CELEMENTS CELEMENTS::operator-(const CELEMENTS& c) const
+{
+	CELEMENTS result;
+
+	result.a = this->a - c.a;
+	result.e = this->e - c.e;
+	result.i = this->i - c.i;
+	result.h = this->h - c.h;
+	result.g = this->g - c.g;
+	result.l = this->l - c.l;
+
+	return result;
+}
+
 namespace OrbMech{
 
 	double period(VECTOR3 R, VECTOR3 V, double mu)
@@ -14,6 +77,31 @@ namespace OrbMech{
 		epsilon = power(length(V), 2.0) / 2.0 - mu / length(R);
 		a = -mu / (2.0*epsilon);
 		return PI2*sqrt(power(a, 3.0) / mu);
+	}
+
+	double TrueToMeanAnomaly(double ta, double eccdp)
+	{
+		double ma = 0.0;
+		double E = TrueToEccentricAnomaly(ta, eccdp);
+		ma = E - eccdp * sin(E);
+		if (ma < 0.0)
+			ma = ma + PI2;
+		return ma;
+	}
+
+	double TrueToEccentricAnomaly(double ta, double ecc)
+	{
+		double ea;
+		double cosTa = cos(ta);
+		double eccCosTa = ecc * cosTa;
+		double sinEa = (sqrt(1.0 - ecc * ecc)*sin(ta)) / (1.0 + eccCosTa);
+		double cosEa = (ecc + cosTa) / (1.0 + eccCosTa);
+		ea = atan2(sinEa, cosEa);
+
+		if (ea < 0.0)
+			ea = ea + PI2;
+
+		return ea;
 	}
 
 	double fraction_an(int n)
@@ -446,9 +534,9 @@ void fDot_and_gDot(double x, double r, double ro, double a, double &fdot, double
 	gdot = 1.0 - x*x / r*stumpC(z);
 }
 
-double kepler_E(double e, double M)
+double kepler_E(double e, double M, double error2)
 {
-	double error2, ratio, E;
+	double ratio, E;
 	//{
 	//	This function uses Newton's method to solve Kepler's
 	//		equation E - e*sin(E) = M for the eccentric anomaly,
@@ -459,7 +547,6 @@ double kepler_E(double e, double M)
 	//}
 	// ----------------------------------------------
 
-	error2 = 1.e-8;
 	ratio = 1.0;
 
 	if (M < PI)
@@ -508,21 +595,14 @@ double kepler_H(double e, double M)
 	return F;
 }
 
-void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2, OBJHANDLE gravref)
+void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, double J2, double mu, double R_E, int P, VECTOR3 &R2, VECTOR3 &V2)
 {
 	OELEMENTS coe, coe2;
 	MATRIX3 Rot;
 	VECTOR3 R1_equ, V1_equ, R2_equ, V2_equ;
-	double h, e, Omega_0, i, omega_0, theta0, a, T, n, E_0, t_0, t_f, n_p, t_n, M_n, E_n, theta_n, Omega_dot, omega_dot, Omega_n, omega_n,mu,JCoeff;
+	double h, e, Omega_0, i, omega_0, theta0, a, T, n, E_0, t_0, t_f, n_p, t_n, M_n, E_n, theta_n, Omega_dot, omega_dot, Omega_n, omega_n;
 
-	mu = GGRAV*oapiGetMass(gravref);
-
-	if (oapiGetPlanetJCoeffCount(gravref) > 0)
-	{
-		JCoeff = oapiGetPlanetJCoeff(gravref, 0);
-	}
-
-	Rot = GetObliquityMatrix(gravref, MJD);
+	Rot = GetObliquityMatrix(P, MJD);
 
 	R1_equ = rhtmul(Rot, R1);
 	V1_equ = rhtmul(Rot, V1);
@@ -551,8 +631,8 @@ void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R
 		theta_n += 2 * PI;
 	}
 
-	Omega_dot = -(3.0 / 2.0 * sqrt(mu)*JCoeff * OrbMech::power(oapiGetSize(gravref), 2.0) / (OrbMech::power(1.0 - OrbMech::power(e, 2.0), 2.0) * OrbMech::power(a, 7.0 / 2.0)))*cos(i);
-	omega_dot = -(3.0 / 2.0 * sqrt(mu)*JCoeff * OrbMech::power(oapiGetSize(gravref), 2.0) / (OrbMech::power(1.0 - OrbMech::power(e, 2.0), 2.0) * OrbMech::power(a, 7.0 / 2.0)))*(5.0 / 2.0 * sin(i)*sin(i) - 2.0);
+	Omega_dot = -(3.0 / 2.0 * sqrt(mu)*J2 * OrbMech::power(R_E, 2.0) / (OrbMech::power(1.0 - OrbMech::power(e, 2.0), 2.0) * OrbMech::power(a, 7.0 / 2.0)))*cos(i);
+	omega_dot = -(3.0 / 2.0 * sqrt(mu)*J2 * OrbMech::power(R_E, 2.0) / (OrbMech::power(1.0 - OrbMech::power(e, 2.0), 2.0) * OrbMech::power(a, 7.0 / 2.0)))*(5.0 / 2.0 * sin(i)*sin(i) - 2.0);
 
 	Omega_n = Omega_0 + Omega_dot*dt;
 	omega_n = omega_0 + omega_dot*dt;
@@ -963,13 +1043,141 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	return soichange;
 }
 
-void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned nmax)
+MPTSV coast(MPTSV sv0, double dt)
 {
-	SV svtemp;
+	SV sv;
+	
+	sv.gravref = sv0.gravref;
+	sv.MJD = sv0.MJD;
+	sv.R = sv0.R;
+	sv.V = sv0.V;
+	return coast(sv, dt);
+}
+
+SV coast(SV sv0, double dt)
+{
+	if (dt == 0.0)
+	{
+		return sv0;
+	}
+
+	SV sv1;
+	OBJHANDLE gravout = NULL;
+
+	OrbMech::oneclickcoast(sv0.R, sv0.V, sv0.MJD, dt, sv1.R, sv1.V, sv0.gravref, gravout);
+	sv1.gravref = gravout;
+	sv1.mass = sv0.mass;
+	sv1.MJD = sv0.MJD + dt / 24.0 / 3600.0;
+
+	return sv1;
+}
+
+MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_cond, double dir)
+{
+	double dt, funct, TIME, RCALC, RES1, TIME_old, t_new;
+	int INITE = 0;
+	bool stop = false, allow_stop = false;
+	OBJHANDLE gravref = sv0.gravref;
+
+	if (dir > 0)
+	{
+		dt = dt_max;
+	}
+	else
+	{
+		dt = -dt_max;
+	}
+
+	CoastIntegrator coast(sv0.R, sv0.V, sv0.MJD, dt, sv0.gravref, NULL);
+
+	while (stop == false)
+	{
+		if (abs(coast.GetTime() - dt_max) < 1e-6)
+		{
+			allow_stop = true;
+		}
+
+		stop = coast.iteration(allow_stop);
+
+		if (stop)
+		{
+			break;
+		}
+
+		if (stop_ind != 1)
+		{
+			if (gravref != coast.GetGravRef())
+			{
+				gravref = coast.GetGravRef();
+				INITE = 0;
+			}
+
+			TIME = coast.GetTime();
+
+			if (abs(TIME) > dt_min)
+			{
+				if (stop_ind == 2)
+				{
+					funct = dotp(unit(coast.GetPosition()), unit(coast.GetVelocity()));
+				}
+				else
+				{
+					funct = length(coast.GetPosition());
+				}
+				RCALC = funct - end_cond;
+
+				//1st pass
+				if (INITE == 0)
+				{
+					INITE = -1;
+				}
+				//Not bounded, not 1st pass
+				else if (INITE < 0)
+				{
+					if (RCALC*RES1 < 0)
+					{
+						INITE = 1;
+
+						t_new = LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
+						coast.AdjustTF(t_new);
+					}
+				}
+				//Bounded
+				else
+				{
+					t_new = LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
+					coast.AdjustTF(t_new);
+					if (abs(TIME - t_new) < 1e-6)
+					{
+						allow_stop = true;
+					}
+				}
+
+				RES1 = RCALC;
+				TIME_old = TIME;
+			}
+		}
+	}
+
+	MPTSV sv1;
+	sv1.R = coast.R2;
+	sv1.V = coast.V2;
+	sv1.gravref = coast.outplanet;
+	sv1.MJD = coast.GetMJD();
+	return sv1;
+}
+
+void GenerateEphemeris(MPTSV sv0, double dt, std::vector<MPTSV> &ephemeris, unsigned nmax, unsigned skip)
+{
+	ephemeris.clear();
+
+	MPTSV svtemp;
+	unsigned iter;
 	bool stop;
 	CoastIntegrator* coast;
 	coast = new CoastIntegrator(sv0.R, sv0.V, sv0.MJD, dt, sv0.gravref, NULL);
 	stop = false;
+	iter = 0;
 
 	svtemp = sv0;
 	ephemeris.push_back(svtemp);
@@ -979,7 +1187,6 @@ void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned n
 		stop = coast->iteration();
 
 		svtemp.gravref = coast->GetGravRef();
-		svtemp.mass = sv0.mass;
 		svtemp.MJD = coast->GetMJD();
 		svtemp.R = coast->GetPosition();
 		svtemp.V = coast->GetVelocity();
@@ -987,6 +1194,19 @@ void GenerateEphemeris(SV sv0, double dt, std::vector<SV> &ephemeris, unsigned n
 		//Break conditions (before push_back):
 		//Only generate ephemeris for one sphere of influence
 		if (sv0.gravref != svtemp.gravref) break;
+
+		if (skip > 0)
+		{
+			if (iter < skip)
+			{
+				iter++;
+				continue;
+			}
+			else
+			{
+				iter = 0;
+			}
+		}
 
 		ephemeris.push_back(svtemp);
 
@@ -1004,16 +1224,14 @@ void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem)
 		PZEFEMData data;
 		VECTOR3 R_EM, V_EM, R_ES;
 		double MJD, MoonPos[12], EarthPos[12];
-		OBJHANDLE hSun, hMoon, hEarth;
-		CELBODY *cMoon, *cEarth, *cSun;
+		OBJHANDLE hMoon, hEarth;
+		CELBODY *cMoon, *cEarth;
 
 		hMoon = oapiGetObjectByName("Moon");
 		hEarth = oapiGetObjectByName("Earth");
-		hSun = oapiGetObjectByName("Sun");
 
 		cMoon = oapiGetCelbodyInterface(hMoon);
 		cEarth = oapiGetCelbodyInterface(hEarth);
-		cSun = oapiGetCelbodyInterface(hSun);
 
 		//Round to nearest 0.5
 		MJD0 = round(MJD0*2.0) / 2.0;
@@ -1763,7 +1981,7 @@ VECTOR3 function_TLMCConicSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
 	MJD_peri = constants->mjd0 + (dt1 + dt2) / 24.0 / 3600.0;
 
 	ReturnPerigeeConic(R_peri, V_peri, MJD_peri, hMoon, hEarth, MJD_reentry, R_reentry, V_reentry);
-	Rot_reentry = OrbMech::GetRotationMatrix(hEarth, MJD_reentry);
+	Rot_reentry = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_reentry);
 	R_geo = rhtmul(Rot_reentry, R_reentry);
 	V_geo = rhtmul(Rot_reentry, V_reentry);
 	H_geo = crossp(R_geo, V_geo);
@@ -1812,7 +2030,7 @@ VECTOR3 function_TLMCIntegratedSPSLunarFlybyEval(VECTOR3 DV, void *constPtr)
 
 
 	ReturnPerigee(R_peri, V_peri, MJD_peri, hMoon, hEarth, 1.0, MJD_reentry, R_reentry, V_reentry);
-	Rot_reentry = OrbMech::GetRotationMatrix(hEarth, MJD_reentry);
+	Rot_reentry = OrbMech::GetRotationMatrix(BODY_EARTH, MJD_reentry);
 	R_geo = rhtmul(Rot_reentry, R_reentry);
 	V_geo = rhtmul(Rot_reentry, V_reentry);
 	H_geo = crossp(R_geo, V_geo);
@@ -1922,7 +2140,14 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 	nMax = 100;
 	nMax2 = 10;
 
-	mu = GGRAV*oapiGetMass(gravref);
+	if (gravref == hEarth)
+	{
+		mu = mu_Earth;
+	}
+	else
+	{
+		mu = mu_Moon;
+	}
 
 	double hvec[4] = { h / 2, -h / 2, rho*h / 2, -rho*h / 2 };
 
@@ -1969,8 +2194,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 
 	if (gravref == hEarth && gravin == gravout && dt>0)
 	{
-
-		rv_from_r0v0_obla(R1, V1_star, mjd0, dt, R2_star, V2_star, gravref);
+		rv_from_r0v0_obla(R1, V1_star, mjd0, dt, J2_Earth, mu_Earth, R_Earth, BODY_EARTH, R2_star, V2_star);
 		dr2 = R2 - R2_star;
 
 		while (length(dr2) > error3 && nMax2 >= n)
@@ -1986,7 +2210,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 			{
 				for (int j = 0; j < 4; j++)
 				{
-					rv_from_r0v0_obla(R1, v_l[i][j], mjd0, dt, R2l[i][j], V2l[i][j], gravref);
+					rv_from_r0v0_obla(R1, v_l[i][j], mjd0, dt, J2_Earth, mu_Earth, R_Earth, BODY_EARTH, R2l[i][j], V2l[i][j]);
 				}
 			}
 			for (int i = 0; i < 3; i++)
@@ -1995,7 +2219,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 			}
 			T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
 			V1_star = V1_star + mul(inverse(T2), dr2);
-			rv_from_r0v0_obla(R1, V1_star, mjd0, dt, R2_star, V2_star, gravref);
+			rv_from_r0v0_obla(R1, V1_star, mjd0, dt, J2_Earth, mu_Earth, R_Earth, BODY_EARTH, R2_star, V2_star);
 			dr2 = R2 - R2_star;
 		}
 		//return V1_star;
@@ -2246,39 +2470,11 @@ double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, do
 {
 	double theta, SW, dh_CDH, mu;
 	VECTOR3 RA2, VA2, RP2, VP2, u, RA2_alt, VA2_alt, RPC, VPC;
-	bool stop;
-
-	stop = false;
 
 	mu = GGRAV*oapiGetMass(gravref);
 
-	//rv_from_r0v0(RA, VA, x, RA2, VA2, mu);
-	//rv_from_r0v0(RP, VP, x, RP2, VP2, mu);
-
-	CoastIntegrator *coast;
-	coast = new CoastIntegrator(RA, VA, mjd0, x, gravref, gravref);
-
-	while (stop == false)
-	{
-		stop = coast->iteration();
-	}
-	RA2 = coast->R2;
-	VA2 = coast->V2;
-
-	stop = false;
-
-	delete coast;
-
-	coast = new CoastIntegrator(RP, VP, mjd0, x, gravref, gravref);
-
-	while (stop == false)
-	{
-		stop = coast->iteration();
-	}
-	RP2 = coast->R2;
-	VP2 = coast->V2;
-
-	delete coast;
+	oneclickcoast(RA, VA, mjd0, x, RA2, VA2, gravref, gravref);
+	oneclickcoast(RP, VP, mjd0, x, RP2, VP2, gravref, gravref);
 
 	u = unit(crossp(RP2, VP2));
 	RA2_alt = RA2;
@@ -2294,12 +2490,12 @@ double NSRsecant(VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, do
 	return DH - dh_CDH;
 }
 
-MATRIX3 GetRotationMatrix(OBJHANDLE plan, double t)
+MATRIX3 GetRotationMatrix(int plan, double t)
 {
 	double t0, T_p, L_0, e_rel, phi_0, T_s, e_ref, L_ref, L_rel, phi;
 	MATRIX3 Rot1, Rot2, R_ref, Rot3, Rot4, R_rel, R_rot, R, Rot;
 
-	if (plan == oapiGetObjectByName("Earth"))
+	if (plan == BODY_EARTH)
 	{
 		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
 		T_p = -9413040.4;							//Precession Period
@@ -2310,7 +2506,7 @@ MATRIX3 GetRotationMatrix(OBJHANDLE plan, double t)
 		e_ref = 0;									//Precession Obliquity
 		L_ref = 0;									//Precession LAN
 	}
-	else if (plan == oapiGetObjectByName("Moon"))
+	else
 	{
 		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
 		T_p = -6793.468728092782;				//Precession Period
@@ -2348,13 +2544,10 @@ MATRIX3 GetRotationMatrix(OBJHANDLE plan, double t)
 
 MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi)
 {
-	OBJHANDLE hEarth;
 	MATRIX3 Rot1, Rot2, Rot3, Rot4;
 	VECTOR3 R_P, UX10, UY10, UZ10;
 
-	hEarth = oapiGetObjectByName("Earth");
-
-	Rot1 = GetRotationMatrix(hEarth, mjd);
+	Rot1 = GetRotationMatrix(BODY_EARTH, mjd);
 	Rot2 = _M(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0);
 	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
 	UX10 = R_P;
@@ -2367,13 +2560,13 @@ MATRIX3 Orbiter2PACSS13(double mjd, double lat, double lng, double azi)
 	return mul(tmat(Rot4), mul(Rot3, mul(Rot2, tmat(Rot1))));
 }
 
-double GetPlanetCurrentRotation(OBJHANDLE plan, double t)
+double GetPlanetCurrentRotation(int plan, double t)
 {
 	double t0, T_p, L_0, e_rel, phi_0, T_s, e_ref, L_ref, L_rel, phi, e_ecl, L_ecl, phi_off,r;
 	MATRIX3 Rot1, Rot2, R_ref, Rot3, Rot4, Rot5, Rot6, R_rel, R_rot, Rot, R_ecl, R_off;
 	VECTOR3 s;
 
-	if (plan == oapiGetObjectByName("Earth"))
+	if (plan == BODY_EARTH)
 	{
 		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
 		T_p = -9413040.4;							//Precession Period
@@ -2384,7 +2577,7 @@ double GetPlanetCurrentRotation(OBJHANDLE plan, double t)
 		e_ref = 0;									//Precession Obliquity
 		L_ref = 0;									//Precession LAN
 	}
-	else if (plan == oapiGetObjectByName("Moon"))
+	else
 	{
 		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
 		T_p = -6793.468728092782;				//Precession Period
@@ -2512,7 +2705,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	double w_A, w_P, r_A, v_A, r_P, alpha, t, dt, E_err, E_A, dE, dE_0, dt_0, dt_max, t_S, theta_0;
 	VECTOR3 R_A, V_A, R_P, U_L, U_P, U_N, U_LL, R_proj;
 	MATRIX3 Rot2;
-	int i;
+	int i, body;
 
 	t = 0;
 	E_err = 1.0;
@@ -2525,14 +2718,19 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 	dt_max = 150.0;
 	dt_0 = 0;
 
-	w_A = PI2 / oapiGetPlanetPeriod(gravref);
 	if (gravref == oapiGetObjectByName("Moon"))
 	{
-		w_A *= -1.0;
+		w_A = -w_Moon;
+		body = BODY_MOON;
+	}
+	else
+	{
+		w_A = w_Earth;
+		body = BODY_EARTH;
 	}
 	r_P = length(R_gs);
 
-	Rot2 = OrbMech::GetRotationMatrix(gravref, mjd0);
+	Rot2 = OrbMech::GetRotationMatrix(body, mjd0);
 	R_P = rhmul(Rot2, R_gs);
 
 	U_N = unit(crossp(R_A, V_A));
@@ -2591,7 +2789,7 @@ double findelev_gs(VECTOR3 R_A0, VECTOR3 V_A0, VECTOR3 R_gs, double mjd0, double
 			dt_0 = dt;
 		}
 		oneclickcoast(R_A, V_A, mjd0 + t_S / 24.0 / 3600.0, t - t_S, R_A, V_A, gravref, gravref);
-		Rot2 = OrbMech::GetRotationMatrix(gravref, mjd0 + t / 24.0 / 3600.0);
+		Rot2 = OrbMech::GetRotationMatrix(body, mjd0 + t / 24.0 / 3600.0);
 		R_P = rhmul(Rot2, R_gs);
 
 		U_N = unit(crossp(R_A, V_A));
@@ -2688,7 +2886,7 @@ double timetoapo_integ(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECT
 		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, 15.0*60.0, Rt[1], Vt[1], gravref, gravref);
 		oneclickcoast(R1, V1, MJD + dt_total / 24.0 / 3600.0, 30.0*60.0, Rt[2], Vt[2], gravref, gravref);
 
-		Rot = GetObliquityMatrix(gravref, MJD + dt_total / 24.0 / 3600.0);
+		Rot = GetObliquityMatrix(BODY_EARTH, MJD + dt_total / 24.0 / 3600.0);
 
 		for (int i = 0;i < 3;i++)
 		{
@@ -3607,17 +3805,29 @@ double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref,
 	MATRIX3 Rot2;
 	VECTOR3 mu_N, mu_S, mu_Z, U_Z, mu_E, mu_C, R, V, mu_D, mu_E_apo;
 	double mu, F, dphi, t, phi, lambda, eps_phi, absphidminphi, phidminphi, phi_0, theta_P, theta, t_F;
-	int n, s_G;
+	int n, s_G, body;
 	OBJHANDLE hEarth;
 
-	mu = GGRAV*oapiGetMass(gravref);
 	n = 0;
 	eps_phi = 0.0001*RAD;
 	hEarth = oapiGetObjectByName("Earth");
 	absphidminphi = 1.0;
 
+	if (gravref == hEarth)
+	{
+		body = BODY_EARTH;
+		mu = mu_Earth;
+		F = 16.0 / 15.0;
+	}
+	else
+	{
+		body = BODY_MOON;
+		mu = mu_Moon;
+		F = 327.8 / 328.8;
+	}
+
 	U_Z = _V(0.0, 1.0, 0.0);
-	Rot2 = OrbMech::GetRotationMatrix(gravref, MJD);
+	Rot2 = OrbMech::GetRotationMatrix(body, MJD);
 	mu_Z = mul(Rot2, U_Z);
 	mu_Z = _V(mu_Z.x, mu_Z.z, mu_Z.y);
 
@@ -3631,15 +3841,6 @@ double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref,
 	V = V0;
 	t = MJD;
 	dphi = 0.0;
-
-	if (gravref == hEarth)
-	{
-		F = 16.0 / 15.0;
-	}
-	else
-	{
-		F = 327.8 / 328.8;
-	}
 
 	while (absphidminphi > eps_phi && absphidminphi < PI2 - eps_phi)
 	{
@@ -3716,12 +3917,29 @@ double P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double MJD, OBJHANDLE gravref,
 	return t;
 }
 
+void latlong_from_J2000(VECTOR3 R, double MJD, int RefBody, double &lat, double &lng)
+{
+	MATRIX3 Rot = OrbMech::GetRotationMatrix(RefBody, MJD);
+	VECTOR3 R_equ = rhtmul(Rot, R);
+	latlong_from_r(R_equ, lat, lng);
+}
+
 void latlong_from_J2000(VECTOR3 R, double MJD, OBJHANDLE gravref, double &lat, double &lng)
 {
 	MATRIX3 Rot2;
 	VECTOR3 R_ecl, R_equ;
+	int body;
 
-	Rot2 = OrbMech::GetRotationMatrix(gravref, MJD);
+	if (gravref == oapiGetObjectByName("Earth"))
+	{
+		body = BODY_EARTH;
+	}
+	else
+	{
+		body = BODY_MOON;
+	}
+
+	Rot2 = OrbMech::GetRotationMatrix(body, MJD);
 
 	R_ecl = _V(R.x, R.z, R.y);
 	R_equ = tmul(Rot2, R_ecl);
@@ -3755,22 +3973,33 @@ bool groundstation(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double la
 	MATRIX3 Rot;
 	OELEMENTS coe;
 	bool los;
-	int nn, nmax;
+	int nn, nmax, body;
 
 	nn = 0;
 	dt = 0;
 	dt_max = 100.0;
 	nmax = 100;
 	dt_old = 1;
-	R_E = oapiGetSize(planet);
-	mu = GGRAV*oapiGetMass(planet);
 	rev = 0.0;
 	T_p = oapiGetPlanetPeriod(planet);
+
+	if (planet == oapiGetObjectByName("Earth"))
+	{
+		body = BODY_EARTH;
+		mu = mu_Earth;
+		R_E = R_Earth;
+	}
+	else
+	{
+		body = BODY_MOON;
+		mu = mu_Moon;
+		R_E = R_Moon;
+	}
 
 	while (abs(dt_old - dt) > 0.5 && nn <= nmax)
 	{
 
-		Rot = GetRotationMatrix(planet, MJD+dt/24.0/3600.0);
+		Rot = GetRotationMatrix(body, MJD+dt/24.0/3600.0);
 		R_GS = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*R_E;
 		gndst = mul(Rot, R_GS);
 		gndst = _V(gndst.x, gndst.z, gndst.y);
@@ -3905,24 +4134,23 @@ int findNextAOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet)
 	return gsmin;
 }
 
-bool vesselinLOS(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet)
+bool vesselinLOS(VECTOR3 R, VECTOR3 V, double MJD)
 {
 	VECTOR3 R_GS, gndst;
 	MATRIX3 Rot;
-	double lat, lng, R_E;
+	double lat, lng;
 	bool los;
 
-	Rot = GetRotationMatrix(planet, MJD);
-	R_E = oapiGetSize(planet);
+	Rot = GetRotationMatrix(BODY_EARTH, MJD);
 
 	for (int i = 0; i < NUMBEROFGROUNDSTATIONS; i++)
 	{
 		lat = groundstations[i][0];
 		lng = groundstations[i][1];
-		R_GS = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*R_E;
+		R_GS = unit(_V(cos(lng)*cos(lat), sin(lat), sin(lng)*cos(lat)))*R_Earth;
 		gndst = mul(Rot, R_GS);
 		gndst = _V(gndst.x, gndst.z, gndst.y);
-		los = sight(R, gndst, R_E);
+		los = sight(R, gndst, R_Earth);
 		if (los)
 		{
 			return false;
@@ -4186,12 +4414,12 @@ void CubicInterpolation(double *x, double *y, double *a)
 	double **V = NULL;
 	double **A = NULL;
 	int *P = NULL;
-	double *sol = NULL;
+	std::vector<double> sol;
 	double Tol;
 	V = new double*[4];
 	A = new double*[4];
 	P = new int[5];
-	sol = new double[4];
+	sol.assign(4, 0);
 	for (int i = 0;i < 4;i++)
 	{
 		V[i] = new double[4];
@@ -4225,7 +4453,6 @@ void CubicInterpolation(double *x, double *y, double *a)
 	delete[] A;
 	delete[] V;
 	delete[] P;
-	delete[]sol;
 }
 
 //x = N+1 data points
@@ -4261,7 +4488,10 @@ int LUPDecompose(double **A, int N, double Tol, int *P)
 				imax = k;
 			}
 
-		if (maxA < Tol) return 0; //failure, matrix is degenerate
+		if (maxA < Tol)
+		{
+			return 0; //failure, matrix is degenerate
+		}
 
 		if (imax != i) {
 			//pivoting P
@@ -4289,7 +4519,7 @@ int LUPDecompose(double **A, int N, double Tol, int *P)
 	return 1;  //decomposition done 
 }
 
-void LUPSolve(double **A, int *P, double *b, int N, double *x) {
+void LUPSolve(double **A, int *P, double *b, int N, std::vector<double> &x) {
 
 	for (int i = 0; i < N; i++) {
 		x[i] = b[P[i]];
@@ -4303,6 +4533,28 @@ void LUPSolve(double **A, int *P, double *b, int N, double *x) {
 			x[i] -= A[i][k] * x[k];
 
 		x[i] = x[i] / A[i][i];
+	}
+}
+
+void LUPInvert(double **A, int *P, int N, double **IA) {
+
+	for (int j = 0; j < N; j++) {
+		for (int i = 0; i < N; i++) {
+			if (P[i] == j)
+				IA[i][j] = 1.0;
+			else
+				IA[i][j] = 0.0;
+
+			for (int k = 0; k < i; k++)
+				IA[i][j] -= A[i][k] * IA[k][j];
+		}
+
+		for (int i = N - 1; i >= 0; i--) {
+			for (int k = i + 1; k < N; k++)
+				IA[i][j] -= A[i][k] * IA[k][j];
+
+			IA[i][j] = IA[i][j] / A[i][i];
+		}
 	}
 }
 
@@ -4626,13 +4878,13 @@ double vektor_max(double* vektor, int n)
 	return max;
 }
 
-MATRIX3 GetObliquityMatrix(OBJHANDLE plan, double t)
+MATRIX3 GetObliquityMatrix(int plan, double t)
 {
 	double t0, T_p, L_0, e_rel, phi_0, T_s, e_ref, L_ref, L_rel, phi, e_ecl, L_ecl;
 	MATRIX3 Rot1, Rot2, Rot3, Rot4, Rot5, Rot6, R_ref, R_rel, R_rot, Rot;
 	VECTOR3 s;
 
-	if (plan == oapiGetObjectByName("Earth"))
+	if (plan == BODY_EARTH)
 	{
 		t0 = 51544.5;								//LAN_MJD, MJD of the LAN in the "beginning"
 		T_p = -9413040.4;							//Precession Period
@@ -4643,7 +4895,7 @@ MATRIX3 GetObliquityMatrix(OBJHANDLE plan, double t)
 		e_ref = 0;									//Precession Obliquity
 		L_ref = 0;									//Precession LAN
 	}
-	else if (plan == oapiGetObjectByName("Moon"))
+	else
 	{
 		t0 = 51544.5;							//LAN_MJD, MJD of the LAN in the "beginning"
 		T_p = -6793.468728092782;				//Precession Period
@@ -5160,10 +5412,8 @@ MATRIX3 LaunchREFSMMAT(double lat, double lng, double mjd, double A_Z)
 {
 	VECTOR3 R_P, g_p, REFS0, REFS3, REFS6, E, S, U_Z;
 	MATRIX3 Rot1;
-	OBJHANDLE hEarth;
 
-	hEarth = oapiGetObjectByName("Earth");
-	Rot1 = GetRotationMatrix(hEarth, mjd);
+	Rot1 = GetRotationMatrix(BODY_EARTH, mjd);
 	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
 	g_p = -unit(R_P);
 	U_Z = _V(0.0, 0.0, 1.0);
@@ -5233,7 +5483,7 @@ void LunarLandingPrediction2(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, V
 		t_peri = t_0 + dt + dt2 + t_H + dt3;
 		PDI_MJD = t_peri / 24.0 / 3600.0 + GETbase;
 		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
-		Rot = GetRotationMatrix(plan, PDI_MJD);
+		Rot = GetRotationMatrix(BODY_MOON, PDI_MJD);
 		R_LS = rhmul(Rot, R_LSA);
 		U_LS = unit(R_LS - U_N*dotp(U_N, R_LS));
 		err = sign(dotp(U_N, crossp(U_L, U_LS)))*acos(dotp(U_L, U_LS));
@@ -5298,7 +5548,7 @@ void LunarLandingPrediction(VECTOR3 R_0, VECTOR3 V_0, double t_0, double t_E, VE
 		t_PP = t_D + t_H;
 		tLMJD = t_PP / 24.0 / 3600.0 + GETbase;
 		U_L = unit(R_PP)*cos(theta_F) + unit(crossp(U_N, R_PP))*sin(theta_F);
-		Rot = GetRotationMatrix(plan, tLMJD);
+		Rot = GetRotationMatrix(BODY_MOON, tLMJD);
 		R_LS = rhmul(Rot, R_LSA);
 		U_LS = unit(R_LS - U_N*dotp(U_N, R_LS));
 		er = length(U_L - U_LS);
@@ -5624,37 +5874,34 @@ void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double 
 
 VECTOR3 gravityroutine(VECTOR3 R, OBJHANDLE gravref, double mjd0)
 {
-	OBJHANDLE hEarth;
-	VECTOR3 U_R, U_Z, g;
-	double rr, mu;
+	VECTOR3 U_R, g;
+	double rr;
 
-	hEarth = oapiGetObjectByName("Earth");
 	U_R = unit(R);
-	MATRIX3 obli_E = OrbMech::GetObliquityMatrix(hEarth, mjd0);
-	U_Z = mul(obli_E, _V(0, 1, 0));
-	U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
-
 	rr = dotp(R, R);
-	mu = GGRAV*oapiGetMass(gravref);
 
-	if (gravref == hEarth)
+	if (gravref == oapiGetObjectByName("Earth"))
 	{
-		double costheta, J2E;
-		VECTOR3 g_b;
+		MATRIX3 obli_E;
+		VECTOR3 g_b, U_Z;
+		double costheta;
+
+		obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, mjd0);
+		U_Z = mul(obli_E, _V(0, 1, 0));
+		U_Z = _V(U_Z.x, U_Z.z, U_Z.y);
 
 		costheta = dotp(U_R, U_Z);
-		J2E = oapiGetPlanetJCoeff(hEarth, 0);
-		g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z*2.0*costheta)*mu / rr*3.0 / 2.0*J2E*power(R_Earth, 2.0) / rr;
-		g = -U_R*mu / rr + g_b;
+		g_b = -(U_R*(1.0 - 5.0*costheta*costheta) + U_Z*2.0*costheta)*mu_Earth / rr*3.0 / 2.0*J2_Earth*power(R_Earth, 2.0) / rr;
+		g = -U_R*mu_Earth / rr + g_b;
 	}
 	else
 	{
-		g = -U_R*mu / rr;
+		g = -U_R*mu_Moon / rr;
 	}
 	return g;
 }
 
-void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff, bool agc)
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 DV, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
 {
 	VECTOR3 R_ig, V_ig, V_go, R_ref, V_ref, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
 	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
@@ -5696,42 +5943,8 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	{
 		sprintf(oapiDebugString(), "Iteration failed!");
 	}
-	//Llambda = V_go;
-
-	//double apo, peri;
-	//periapo(R_p, V_p, mu, apo, peri);
-
-	if (agc)
-	{
-		VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
-
-		MATRIX3 Q_Xx;
-		double theta_T;
-
-		X = unit(crossp(crossp(R_ig, V_ig), R_ig));
-		Y = unit(crossp(V_ig, R_ig));
-		Z = -unit(R_ig);
-
-		Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
-		dV_LV = mul(Q_Xx, V_go);
-		DV_P = X * dV_LV.x + Z * dV_LV.z;
-		if (length(DV_P) != 0.0)
-		{
-			theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
-			DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
-			V_G = DV_C + Y * dV_LV.y;
-		}
-		else
-		{
-			V_G = X * dV_LV.x + Y * dV_LV.y + Z * dV_LV.z;
-		}
-		Llambda = V_G;
-	}
-	else
-	{
-		Llambda = V_go;
-	}
-
+	
+	Llambda = V_go;
 	R_cutoff = R_p;
 	V_cutoff = V_p;
 	m_cutoff = m_p;
@@ -5813,6 +6026,53 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
+void impulsive2(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
+{
+	VECTOR3 R_ig, V_ig, V_go, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
+	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
+	int n, nmax;
+
+	nmax = 100;
+	t_slip = 0;
+	t_slip_old = 1;
+	dt_go = 1;
+	mu = GGRAV * oapiGetMass(gravref);
+	V_go = V_ref - V;
+	i_y = -unit(crossp(R_ref, V_ref));
+
+	while (abs(t_slip - t_slip_old) > 0.01)
+	{
+		n = 0;
+		//rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
+		oneclickcoast(R, V, MJD, t_slip, R_ig, V_ig, gravref, gravref);
+		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
+		{
+			poweredflight(R_ig, V_ig, MJD, gravref, f_av, isp, m, V_go, R_p, V_p, m_p, t_go);
+			//rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
+			oneclickcoast(R_ref, V_ref, MJD, t_go + t_slip, R_d, V_d, gravref, gravref);
+			i_z = unit(crossp(R_d, i_y));
+			dr_z = dotp(i_z, R_d - R_p);
+			v_goz = dotp(i_z, V_go);
+			dt_go = -2.0 * dr_z / v_goz;
+			dV_go = V_d - V_p;
+			//dV_go = (V_go_apo - V_go)*0.5;
+			V_go = V_go + dV_go;
+			n++;
+		}
+		t_slip_old = t_slip;
+		t_slip += dt_go * 0.1;
+	}
+	if (n >= nmax)
+	{
+		sprintf(oapiDebugString(), "Iteration failed!");
+	}
+	Llambda = V_go;
+	R_cutoff = R_p;
+	V_cutoff = V_p;
+	m_cutoff = m_p;
+	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
+}
+
 double DVFromBurnTime(double bt, double thrust, double isp, double mass)
 {
 	double mf = mass - thrust / isp * bt;
@@ -5854,19 +6114,29 @@ double findlatitude(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gravref, double 
 	MATRIX3 Rot;
 	VECTOR3 R0, V0, R0_equ, V0_equ, R1, V1, R1_equ, V1_equ, H, u;
 	double dt, ddt, mu, Tguess, mjd0, sgn, sign2, inc, cosI, sinBeta, cosBeta, sinBeta2, cosBeta2, l1, l0, lat_now, dl, lat_des;
-	int i;
+	int i, body;
 
 	R0 = R;
 	V0 = V;
 	mjd0 = mjd;
 	lat_des = lat;
 
+	if (gravref == oapiGetObjectByName("Earth"))
+	{
+		body = BODY_EARTH;
+		mu = mu_Earth;
+	}
+	else
+	{
+		body = BODY_MOON;
+		mu = mu_Moon;
+	}
+
 	i = 0;
 	dt = 0.0;
 	ddt = 1.0;
-	mu = GGRAV*oapiGetMass(gravref);
 	Tguess = PI2 / sqrt(mu)*OrbMech::power(length(R0), 1.5);
-	Rot = GetObliquityMatrix(gravref, mjd);
+	Rot = GetObliquityMatrix(body, mjd);
 	if (up)
 	{
 		sgn = 1.0;
@@ -5943,8 +6213,17 @@ double FindNextEquatorialCrossing(VECTOR3 R, VECTOR3 V, double mjd, OBJHANDLE gr
 	double mu, u_b, u_d, du, ddt, dt, mjd0;
 	int n, nmax;
 
-	mu = GGRAV * oapiGetMass(gravref);
-	Rot = GetObliquityMatrix(gravref, mjd);
+	if (gravref == oapiGetObjectByName("Earth"))
+	{
+		mu = mu_Earth;
+		Rot = GetObliquityMatrix(BODY_EARTH, mjd);
+	}
+	else
+	{
+		mu = mu_Moon;
+		Rot = GetObliquityMatrix(BODY_MOON, mjd);
+	}
+	
 	R0 = R;
 	V0 = V;
 	mjd0 = mjd;
@@ -6146,6 +6425,18 @@ double trunc(double d)
 	return (d > 0) ? floor(d) : ceil(d);
 }
 
+void normalizeAngle(double & a)
+{
+	while (a >= PI2)
+	{
+		a -= PI2;
+	}
+	while (a < 0)
+	{
+		a += PI2;
+	}
+}
+
 double quadratic(double *T, double *DV)
 {
 	double a, b, x;
@@ -6265,12 +6556,11 @@ void GetLunarEquatorialCoordinates(double MJD, double &ra, double &dec, double &
 	VECTOR3 R_EM, R_EM2;
 	double MoonPos[12];
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 	CELBODY *cMoon;
 
 	cMoon = oapiGetCelbodyInterface(hMoon);
 	cMoon->clbkEphemeris(MJD, EPHEM_TRUEPOS, MoonPos);
-	Rot = GetObliquityMatrix(hEarth, MJD);
+	Rot = GetObliquityMatrix(BODY_EARTH, MJD);
 	R_EM = tmul(Rot, _V(MoonPos[0], MoonPos[1], MoonPos[2]));
 	R_EM2 = _V(R_EM.x, R_EM.z, R_EM.y);
 	radius = length(R_EM);
@@ -6548,62 +6838,113 @@ VECTOR3 HeightManeuver(VECTOR3 R, VECTOR3 V, double dh, double mu)
 	return V_HF - V;
 }
 
+void ENSERT(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double MJD_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &MJD_BO)
+{
+	VECTOR3 H, K, J, U_RLS;
+	double gamma_BO, psi, delta, Gamma, xi, phi, dv_pc, v_BO;
+
+	v_BO = sqrt(V_H*V_H + V_R * V_R);
+	gamma_BO = asin(V_R / V_H);
+
+	R_LS = rhmul(GetRotationMatrix(BODY_MOON, MJD_LO), R_LS);
+	U_RLS = unit(R_LS);
+	H = unit(crossp(R, V));
+	K = unit(crossp(H, U_RLS));
+	J = unit(crossp(K, H));
+
+	psi = asin(dotp(H, U_RLS));
+	delta = asin(sin(psi) / cos(theta_PF));
+	Gamma = asin(sin(theta_PF) / cos(psi));
+	xi = abs(delta) - y_s;
+
+	if (y_s <= 0)
+	{
+		dv_pc = 2.0*v_BO*sin(delta / 2.0);
+	}
+	else if (xi <= 0)
+	{
+		dv_pc = 0.0;
+		Gamma = acos(cos(theta_PF) / cos(psi));
+	}
+	else
+	{
+		double acos_term = acos(cos(theta_PF) / cos(y_s));
+		delta = abs(asin(sin(psi) / cos(acos_term))) - y_s;
+		Gamma = acos(abs(sqrt(1.0 - pow(sin(acos_term) / cos(psi), 2))));
+		dv_pc = 2.0*v_BO*sin(delta / 2.0);
+	}
+
+	phi = psi / abs(psi)*delta;
+
+	MATRIX3 JKH1, JKH2;
+
+	JKH1 = mul(_M(J.x, K.x, H.x, J.y, K.y, H.y, J.z, K.z, H.z), _M(cos(Gamma), -sin(Gamma), 0, sin(Gamma), cos(Gamma), 0, 0, 0, 1));
+	if (xi > 0)
+	{
+		JKH1 = mul(JKH1, _MRy(phi));
+	}
+
+	JKH2 = mul(JKH1, _MRz(gamma_BO));
+	R_BO = _V(JKH1.m11, JKH1.m21, JKH1.m31)*(length(R_LS) + h_bo);
+	V_BO = _V(JKH2.m12, JKH2.m22, JKH2.m32)*v_BO;
+	MJD_BO = MJD_LO + dt_pf / 24.0 / 3600.0;
+}
+
+void EclipticToMCI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_MCI, VECTOR3 &V_MCI)
+{
+	MATRIX3 Rot = GetObliquityMatrix(BODY_MOON, MJD);
+	R_MCI = rhtmul(Rot, R);
+	V_MCI = rhtmul(Rot, V);
+}
+
 VECTOR3 EclipticToECI(VECTOR3 v, double MJD)
 {
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	MATRIX3 Rot = GetObliquityMatrix(hEarth, MJD);
+	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
 	return rhtmul(Rot, v);
 }
 
 void EclipticToECI(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECI, VECTOR3 &V_ECI)
 {
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	MATRIX3 Rot = GetObliquityMatrix(hEarth, MJD);
+	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
 	R_ECI = rhtmul(Rot, R);
 	V_ECI = rhtmul(Rot, V);
 }
 
 VECTOR3 ECIToEcliptic(VECTOR3 v, double MJD)
 {
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	MATRIX3 Rot = GetObliquityMatrix(hEarth, MJD);
+	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
 	return rhmul(Rot, v);
 }
 
 void ECIToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl)
 {
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	MATRIX3 Rot = GetObliquityMatrix(hEarth, MJD);
+	MATRIX3 Rot = GetObliquityMatrix(BODY_EARTH, MJD);
 	R_ecl = rhmul(Rot, R);
 	V_ecl = rhmul(Rot, V);
 }
 
 VECTOR3 EclipticToECEF(VECTOR3 v, double MJD)
 {
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	MATRIX3 Rot = GetRotationMatrix(hEarth, MJD);
+	MATRIX3 Rot = GetRotationMatrix(BODY_EARTH, MJD);
 	return rhtmul(Rot, v);
 }
 
 void EclipticToECEF(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ECEF, VECTOR3 &V_ECEF)
 {
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	MATRIX3 Rot = GetRotationMatrix(hEarth, MJD);
+	MATRIX3 Rot = GetRotationMatrix(BODY_EARTH, MJD);
 	R_ECEF = rhtmul(Rot, R);
 	V_ECEF = rhtmul(Rot, V);
 }
 
 VECTOR3 ECEFToEcliptic(VECTOR3 v, double MJD)
 {
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	MATRIX3 Rot = GetRotationMatrix(hEarth, MJD);
+	MATRIX3 Rot = GetRotationMatrix(BODY_EARTH, MJD);
 	return rhmul(Rot, v);
 }
 
 void ECEFToEcliptic(VECTOR3 R, VECTOR3 V, double MJD, VECTOR3 &R_ecl, VECTOR3 &V_ecl)
 {
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	MATRIX3 Rot = GetRotationMatrix(hEarth, MJD);
+	MATRIX3 Rot = GetRotationMatrix(BODY_EARTH, MJD);
 	R_ecl = rhmul(Rot, R);
 	V_ecl = rhmul(Rot, V);
 }
@@ -6627,19 +6968,17 @@ double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
 	// lat: splashdown latitude
 	// lng: splashdown longitude
 
-	OBJHANDLE hEarth;
 	MATRIX3 Rot2;
 	VECTOR3 R_P, R_LS, URT0, UUZ, RTE, UTR, urh, URT;
 	double WIE, KTETA, theta_rad, WT;
 
-	hEarth = oapiGetObjectByName("Earth");
 	R_P = unit(_V(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat)));
-	Rot2 = GetRotationMatrix(hEarth, MJD05G);
+	Rot2 = GetRotationMatrix(BODY_EARTH, MJD05G);
 	R_LS = rhmul(Rot2, R_P);
 	URT0 = R_LS;
 	WIE = 72.9211505e-6;
 	KTETA = 1000.0;
-	UUZ = rhmul(GetObliquityMatrix(hEarth, MJD05G), _V(0, 0, 1));
+	UUZ = rhmul(GetObliquityMatrix(BODY_EARTH, MJD05G), _V(0, 0, 1));
 	RTE = crossp(UUZ, URT0);
 	UTR = crossp(RTE, UUZ);
 	urh = unit(R05G);//unit(r)*cos(theta) + crossp(unit(r), -unit(h_apo))*sin(theta);
@@ -6653,12 +6992,12 @@ double CMCEMSRangeToGo(VECTOR3 R05G, double MJD05G, double lat, double lng)
 	return theta_rad * 3437.7468;
 }
 
-void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth, VECTOR3 &N, VECTOR3 &rho, double &sinang)
+void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body, VECTOR3 &N, VECTOR3 &rho, double &sinang)
 {
 	MATRIX3 Rot;
 	VECTOR3 rho_apo, R_S;
 
-	Rot = OrbMech::GetRotationMatrix(hEarth, MJD);
+	Rot = OrbMech::GetRotationMatrix(body, MJDfromGET(GMT, GMTBASE));
 	R_S = rhmul(Rot, R_S_equ);
 	N = unit(R_S);
 	rho = R - R_S;
@@ -6666,15 +7005,22 @@ void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth, VECTOR
 	sinang = dotp(rho_apo, N);
 }
 
-double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHANDLE hEarth)
+double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body)
 {
 	MATRIX3 Rot;
 	VECTOR3 R_S, V_S, N, rho, rho_apo, W_E, rho_dot, N_dot;
 	double w_E;
 
-	w_E = 7.292115147e-5;
+	if (body == BODY_EARTH)
+	{
+		w_E = w_Earth;
+	}
+	else
+	{
+		w_E = w_Moon;
+	}
 
-	Rot = OrbMech::GetRotationMatrix(hEarth, MJD);
+	Rot = OrbMech::GetRotationMatrix(body, MJDfromGET(GMT, GMTBASE));
 	R_S = rhmul(Rot, R_S_equ);
 	N = unit(R_S);
 	rho = R - R_S;
@@ -6687,6 +7033,982 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double MJD, OBJHAN
 	N_dot = V_S / length(R_S);
 
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
+}
+
+CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body)
+{
+	CELEMENTS arr_mean, arr_osc2, arr_mean2;
+	int j;
+	bool stop;
+
+	arr_mean = arr_osc;
+	stop = true;
+	j = 0;
+	do
+	{
+		arr_osc2 = LyddaneMeanToOsculating(arr_mean, body);
+		arr_mean2 = arr_mean + (arr_osc - arr_osc2);
+
+		//Map to 0 to 2PI
+		while (arr_mean2.l < 0)
+		{
+			arr_mean2.l += PI2;
+		}
+		while (arr_mean2.l >= PI2)
+		{
+			arr_mean2.l -= PI2;
+		}
+
+		if (abs(arr_mean2.a - arr_mean.a) > 0.1)
+		{
+			stop = 0;
+		}
+		else if (abs(arr_mean2.e - arr_mean.e) > 0.0001)
+		{
+			stop = 0;
+		}
+		else if (abs(arr_mean2.i - arr_mean.i) > 0.0001)
+		{
+			stop = 0;
+		}
+		else if (abs(arr_mean2.l - arr_mean.l) > 0.0001)
+		{
+			stop = 0;
+		}
+		else if (abs(arr_mean2.g - arr_mean.g) > 0.0001)
+		{
+			stop = 0;
+		}
+		else if (abs(arr_mean2.h - arr_mean.h) > 0.0001)
+		{
+			stop = 0;
+		}
+		if (stop == 1)
+		{
+			arr_mean = arr_mean2;
+			break;
+		}
+		stop = 1;
+		arr_mean = arr_mean2;
+		j = j + 1;
+	} while (j < 25);
+	return arr_mean;
+}
+
+CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
+{
+	CELEMENTS out;
+	double ae, am, Em, fm, J2, J3, J4, J5, R_e, cn, cn2, theta, theta2, theta4, eccdp2, sinI, sinI2, cosI2, adr, adr2, adr3;
+	double sinta, costa, costa2, sn2gta, cs2gta, sinGD, cosGD, sin2gd, cs2gd, sin3gd, cs3gd, sn3fgd, snf2gd, csf2gd, cs3fgd;
+	double k2, k3, k4, k5, gamma2, gamma3, gamma4, gamma5, gamma2_apo, gamma3_apo, gamma4_apo, gamma5_apo, g3dg2, g4dg2, g5dg2;
+	double A1_apo, A1, A2_apo, A2, A3, A4, A5, A6, A7, A8p, A8, A9, A10, A11, A12, A13, A14, A15, A16, A17, A18, A20, A21, A25, A26;
+	double B1, B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12, B13, B14, B15;
+	double delta1e, de, edl, di, sin_im2_dh, lagaha, lgh, a1, sinMADP, cosMADP, sinraandp, cosraandp;
+	bool pseudostate = false;
+
+	if (body == BODY_EARTH)
+	{
+		J2 = J2_Earth;
+		J3 = J3_Earth;
+		J4 = J4_Earth;
+		J5 = 0.0;//J5_Earth;
+		R_e = R_Earth;
+	}
+	else
+	{
+		J2 = J2_Moon;
+		J3 = 0;
+		J4 = 0;
+		J5 = 0;
+		R_e = R_Moon;
+	}
+
+	if (arr.i > 175.0*RAD)
+	{
+		arr.i = PI - arr.i;
+		arr.h = -arr.h;
+		pseudostate = true;
+	}
+
+	ae = 1.0;
+	am = arr.a / R_e;
+	eccdp2 = arr.e*arr.e;
+	cn2 = 1.0 - eccdp2;
+	cn = sqrt(cn2);
+	theta = cos(arr.i);
+	theta2 = theta * theta;
+	theta4 = theta2 * theta2;
+	k2 = J2 * pow(ae, 2) / 2.0;
+	k3 = -J3 * pow(ae, 3);
+	k4 = -3.0 * J4*pow(ae,4) / 8.0;
+	k5 = -J5 * pow(ae, 5);
+	gamma2 = k2 / pow(am, 2);
+	gamma3 = k3 / pow(am, 3);
+	gamma4 = k4 / pow(am, 4);
+	gamma5 = k5 / pow(am, 5);
+	gamma2_apo = gamma2 / pow(cn, 4);
+	gamma3_apo = gamma3 / pow(cn, 6);
+	gamma4_apo = gamma4 / pow(cn, 8);
+	gamma5_apo = gamma5 / pow(cn, 10);
+
+	g3dg2 = gamma3_apo / gamma2_apo;
+	g4dg2 = gamma4_apo / gamma2_apo;
+	g5dg2 = gamma5_apo / gamma2_apo;
+
+	Em = kepler_E(arr.e, arr.l, 1e-12);
+	fm = atan2(sqrt(1.0 - eccdp2)*sin(Em), cos(Em) - arr.e);
+	if (fm < 0)
+	{
+		fm = fm + PI2;
+	}
+	adr = 1.0 / (1.0 - arr.e*cos(Em));
+	adr2 = adr * adr;
+	adr3 = adr2 * adr;
+
+	sinI = sin(arr.i);
+	sinI2 = sin(arr.i / 2.0);
+	cosI2 = cos(arr.i / 2.0);
+	sinta = sin(fm);
+	costa = cos(fm);
+	costa2 = costa * costa;
+	sn2gta = sin(2.0*arr.g + 2.0*fm);
+	cs2gta = cos(2.0*arr.g + 2.0*fm);
+	snf2gd = sin(2.0 * arr.g + fm);
+	csf2gd = cos(2.0 * arr.g + fm);
+	sinGD = sin(arr.g);
+	cosGD = cos(arr.g);
+	sin2gd = sin(2.0 * arr.g);
+	cs2gd = cos(2.0 * arr.g);
+	sin3gd = sin(3.0 * arr.g);
+	cs3gd = cos(3.0 * arr.g);
+	sn3fgd = sin(3.0*fm + 2.0*arr.g);
+	cs3fgd = cos(3.0*fm + 2.0*arr.g);
+	sinMADP = sin(arr.l);
+	cosMADP = cos(arr.l);
+	sinraandp = sin(arr.h);
+	cosraandp = cos(arr.h);
+
+	A1_apo = 1.0 / (1.0 - 5.0 * theta2);
+	A1 = 1.0 / 8.0 * gamma2_apo*cn2 * (1.0 - 11.0 * theta2 - 40.0 * theta4 * A1_apo);
+	A2_apo = 3.0 * theta2 + 8.0 * theta4 * A1_apo;
+	A2 = 5.0 / 12.0 * g4dg2 * cn2 * (1.0 - A2_apo);
+	A3 = g5dg2 * (3.0 * eccdp2 + 4.0);
+	A4 = g5dg2 * (1.0 - 3.0 * A2_apo);
+	A5 = A3 * (1.0 - 3.0 * A2_apo);
+	A6 = 1.0 / 4.0 * g3dg2;
+	A7 = A6 * cn2 * sinI;
+	A8p = g5dg2 * arr.e*(1.0 - 5.0 * theta2 - 16.0 * theta4 * A1_apo);
+	A8 = A8p * arr.e;
+	A9 = cn2 * sinI;
+	A10 = 2.0 + eccdp2;
+	A11 = 3.0 * eccdp2 + 2.0;
+	A12 = A11 * theta2;
+	A13 = (5.0 * eccdp2 + 2.0)*theta4 * A1_apo;
+	A14 = eccdp2 * theta4*theta2 * pow(A1_apo, 2);
+	A15 = theta2 * A1_apo;
+	A16 = pow(A15, 2);
+	A17 = arr.e * sinI;
+	A18 = A17 / (1.0 + cn);
+	A20 = arr.e * theta;
+	A21 = arr.e * A20;
+	A25 = 16.0 * A15 + 40.0 * A16 + 3.0;
+	A26 = 1.0 / 8.0 * A21*(11.0 + 200.0 * A16 + 80.0 * A15);
+
+	B1 = cn * (A1 - A2) - (1.0 / 16.0 * (A10 - 400.0 * A14 - 40.0 * A13 - 11.0 * A12) + 1.0 / 8.0 * A21*(11.0 + 200.0 * A16 + 80.0 * A15))*gamma2_apo
+		+ 5.0 / 24.0 * (-80.0 * A14 - 8.0 * A13 - 3.0 * A12 + 2.0 * A25*A21 + A10)*g4dg2;
+	B2 = A6 * A18*(2.0 + cn - eccdp2) + 5.0 / 64.0 * A5*A18*cn2 - 15.0 / 32.0 * A4*A17*cn*cn2
+		+ A20 * tan(arr.i / 2.0)*(5.0 / 64.0 * A5 + A6) + 5.0 / 64.0 * A4*A17*(9.0 * eccdp2 + 26.0)
+		+ 15.0 / 32.0*A3*A20*A25*sinI*(1.0 - theta);
+	B3 = 35.0 / 576.0 * g5dg2 * arr.e*sinI*(theta - 1.0)*A21*(80.0 * A16 + 5.0 + 32.0 * A15)
+		- 35.0 / 1152.0 * A8p*(A21*tan(arr.i / 2.0) + (2.0 * eccdp2 + 3.0 * (1.0 - cn*cn2))*sinI);
+	B4 = cn * arr.e*(A1 - A2);
+	B5 = cn * (5.0 / 64.0 * A4*A9*(9.0 * eccdp2 + 4.0) + A7);
+	B6 = 35.0 / 384.0 * cn*cn2 * A8*sinI;
+	B7 = cn2 * A17*A1_apo*(1.0 / 8.0 * gamma2_apo*(1.0 - 15.0 * theta2) - 5.0 / 12.0 * g4dg2 * (1.0 - 7.0 * theta2));
+	B8 = 5.0 / 64.0 * A3*cn2 * (1.0 - 9.0 * theta2 - 24.0 * theta4 * A1_apo) + cn2 * A6;
+	B9 = 35.0 / 384.0 * cn2 * A8;
+	B10 = sinI*(5.0 / 12.0 * g4dg2 * A21*A25 - A26 * gamma2_apo);
+	B11 = A21 * (5.0 / 64.0 * A5 + A6 + 15.0 / 32.0 * A3*A25*pow(sinI, 2));
+	B12 = -((80.0 * A16 + 32.0 * A15 + 5.0)*(36.0 / 576.0 * g5dg2 * arr.e*pow(sinI, 2) * A21) + 35.0 / 1152.0 * A8*A20);
+	B13 = arr.e * (A1 - A2);
+	B14 = 5.0 / 64.0 * A5*cn2 * sinI + A7;
+	B15 = 35.0 / 384.0 * A8*cn2 * sinI;
+
+	a1 = am * (1.0 + gamma2 * ((3.0 * theta2 - 1.0)*arr.e / (cn2*cn2*cn2)*(arr.e*cn + arr.e / (1.0 + cn) + costa *(3.0 + 3.0 * arr.e*costa
+		+ eccdp2 * costa2)) + 3.0 * (1.0 - theta2)*adr3 * cs2gta));
+
+	delta1e = B13 * cs2gd + B14 * sinGD - B15 * sin3gd;
+	de = delta1e - cn2 / 2.0 * (gamma2_apo*(1.0 - theta2)*(3.0 * csf2gd + cs3fgd)
+		- 3.0 * gamma2 * 1.0 / (cn2*cn2*cn2)*(1.0 - theta2)*cs2gta*(3.0 * arr.e*costa2
+			+ 3.0 * costa + eccdp2 * costa*costa2 + arr.e)
+		- gamma2 * 1.0 / (cn2*cn2*cn2)*(3.0 * theta2 - 1.0)*(arr.e*cn + arr.e / (1.0 + cn) + 3.0 * arr.e*costa2 + 3.0 * costa + eccdp2 * costa * costa2));
+	edl = B4 * sin2gd - B5 * cosGD + B6 * cs3gd
+		- 1.0 / 4.0 * cn*cn2 * gamma2_apo*(2.0 * (3.0 * theta2 - 1.0)*(cn2 * adr2 + adr + 1.0)*sinta
+			+ 3.0 * (1.0 - theta2)*((-cn2 * adr2 - adr + 1.0)*snf2gd
+				+ (cn2 * adr2 + adr + 1.0 / 3.0)*sn3fgd));
+	out.e = sqrt(pow(arr.e + de, 2) + pow(edl, 2));
+
+	di = 1.0 / 2.0 * theta*gamma2_apo*sinI*(arr.e*cs3fgd + 3.0 * (arr.e*csf2gd + cs2gta))
+		- A20 / cn2*(B7*cs2gd + B8 * sinGD - B9 * sin3gd);
+	sin_im2_dh = 1.0 / (2.0 * cosI2)*(B10*sin2gd + B11 * cosGD + B12 * cs3gd
+		- 1.0 / 2.0 * gamma2_apo*theta*sinI*(6.0 * (arr.e*sinta - arr.l + fm)
+			- 3.0 * (sn2gta + arr.e * snf2gd) - arr.e * sn3fgd));
+	out.i = 2.0 * asin(sqrt(pow(sin_im2_dh, 2) + pow(1.0 / 2.0 * di*cosI2 + sinI2, 2)));
+
+	if (out.e <= 1.0e-11)
+	{
+		out.l = 0;
+	}
+	else
+	{
+		out.l = atan2(edl*cosMADP + (arr.e + de)*sinMADP, (arr.e + de)*cosMADP - edl * sinMADP);
+		if (out.l < 0)
+		{
+			out.l = out.l + PI2;
+		}
+	}
+
+	if (out.i == 0.0)
+	{
+		out.h = 0;
+	}
+	else
+	{
+		out.h = atan2(sin_im2_dh*cosraandp + sinraandp *(1.0 / 2.0 * di*cosI2 + sinI2), cosraandp*(1.0 / 2.0 * di*cosI2 + sinI2) - sin_im2_dh * sinraandp);
+		if (out.h < 0)
+		{
+			out.h = out.h + PI2;
+		}
+	}
+
+	lagaha = arr.l + arr.g + arr.h + B3 * cs3gd + B1 * sin2gd + B2 * cosGD;
+	lgh = lagaha + (1.0 / 4.0 * (cn2 / (cn + 1.0))*arr.e*gamma2_apo*(3.0 * (1.0 - theta2)*(sn3fgd
+		*(1.0 / 3.0 + adr2 * cn2 + adr) + snf2gd *(1.0 - adr2 * cn2 - adr))
+		+ 2.0 * sinta*(3.0 * theta2 - 1.0)*(1.0 + adr2 * cn2 + adr)))
+		+ 3.0 / 2.0 * gamma2_apo*((5.0 * theta2 - 2.0 * theta - 1.0)*(arr.e*sinta + fm - arr.l)) + (3.0 + 2.0 * theta - 5.0 * theta2)
+		*(1.0 / 4.0 * gamma2_apo*(arr.e*sn3fgd + 3.0 * (sn2gta + arr.e * snf2gd)));
+
+	out.g = lgh - out.l - out.h;
+	while (out.g >= PI2)
+	{
+		out.g -= PI2;
+	}
+	while (out.g < 0)
+	{
+		out.g += PI2;
+	}
+
+	if (pseudostate)
+	{
+		out.i = PI - out.i;
+		out.h = -out.h;
+
+		if (out.h < 0)
+		{
+			out.h = out.h + PI2;
+		}
+	}
+
+	//Lyddane-Cohen improvement on the SMA
+	//double f = OrbMech::MeanToTrueAnomaly(out.l, out.e);
+	//double ar = (1.0 + out.e*cos(f)) / (1.0 - out.e*out.e);
+	//double psi = (-1.0 + 3.0*pow(cos(out.i), 2))*(pow(ar, 3) - pow(sqrt(1.0 - out.e*out.e), 3)) + 3.0*(1.0 - pow(cos(out.i), 2))*pow(ar, 3)*cos(2.0*out.g + 2.0*f);
+	//double da = 1.0 / pow(a1, 3)*(k2*psi*(a1*a1 - k2 * psi + 3.0 / 2.0*(k2 / (cn*cn2))*(1.0 - 3.0*theta2))
+	//	- k2 * k2 / (16.0*pow(cn, 7))*(15.0*cn2*(1.0 - 18.0 / 5.0*theta2 + theta4)
+	//		+ 12.0*cn*(1.0 - 6.0*theta2 + 9.0*theta4) - 15.0*(1.0 - 2.0*theta2 - 7.0*theta4)
+	//		+ 6.0*eccdp2*(1.0 - 16.0*theta2 + 15.0*theta4)*cos(2.0*arr.g))
+	//	+ 9.0*k2*k2 / (2.0*pow(cn, 7))*(1.0 - 6.0*theta2 + 5.0*theta4)*(cos(2.0*arr.g + 2.0*fm)
+	//		+ arr.e*cos(2.0*arr.g + fm) + 1.0 / 3.0*arr.e*cos(2.0*arr.g + 3.0*fm)));
+	//
+	//out.a = (am + da)*R_Earth;
+	//double a1r = a1 * R_Earth;
+	out.a = a1 * R_e;
+	return out;
+}
+
+void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double &l_dot, double &g_dot, double &h_dot)
+{
+	double mu, n0, eccdp2, cn, cn2, theta, theta2, theta3, theta4, k2, k4, gm2, gm4, gmp2, gmp4, J2, J3, J4, R_e;
+	double esing, ecosg, L, u, f, sin_lat, R, ainv;
+
+	if (body == BODY_EARTH)
+	{
+		mu = mu_Earth;
+		J2 = J2_Earth;
+		J3 = J3_Earth;
+		J4 = J4_Earth;
+		R_e = R_Earth;
+	}
+	else
+	{
+		mu = mu_Moon;
+		J2 = J2_Moon;
+		J3 = 0;
+		J4 = 0;
+		R_e = R_Moon;
+	}
+
+	n0 = sqrt(mu / pow(coe_mean.a, 3));
+	eccdp2 = coe_mean.e * coe_mean.e;
+	cn2 = 1.0 - eccdp2;
+	cn = sqrt(cn2);
+	theta = cos(coe_mean.i);
+	theta2 = theta * theta;
+	theta3 = theta2 * theta;
+	theta4 = theta2 * theta2;
+	k2 = J2 * pow(R_e, 2) / 2.0;
+	k4 = -3.0 * J4*pow(R_e, 4) / 8.0;
+	gm2 = k2 / pow(coe_mean.a, 2);
+	gm4 = k4 / pow(coe_mean.a, 4);
+	gmp2 = gm2 / pow(cn2, 2);
+	gmp4 = gm4 / pow(cn2, 4);
+
+	esing = coe_osc.e*sin(coe_osc.g);
+	ecosg = coe_osc.e*cos(coe_osc.g);
+	L = coe_osc.l + coe_osc.g;
+	u = L + (2.0*ecosg*sin(L) - 2.0*esing*cos(L))*(1.0 + 5.0 / 4.0*ecosg*cos(L) + esing * sin(L));
+	f = u - coe_osc.g;
+	sin_lat = sin(u)*sin(coe_osc.i);
+	R = coe_osc.a*(1.0 - coe_osc.e*coe_osc.e) / (1.0 + coe_osc.e*cos(f));
+	ainv = 1.0 / coe_osc.a + J2 * pow(R_e, 2) / pow(R, 3)*(1.0 - 3.0*pow(sin_lat, 2)) + J3 * pow(R_e, 3) / pow(R, 4)*(3.0*sin_lat - 5.0*pow(sin_lat, 3)) -
+		J4 * pow(R_e, 4) / pow(R, 5)*(1.0 - 10.0*pow(sin_lat, 2) + 35.0 / 3.0*pow(sin_lat, 4));
+	l_dot = sqrt(mu*pow(ainv, 3));
+
+	//l_dot = n0 * cn*(gmp2*(3.0 / 2.0*(3.0*theta2 - 1.0) + 3.0 / 32.0*gmp2*(25.0*cn2 + 16.0*cn - 15.0 + (30.0 - 96.0*cn - 90.0*cn2)*theta2
+	//	+ (105.0 + 144.0*cn + 25.0*cn2)*theta4)) + 15.0 / 16.0*gmp4*eccdp2*(3.0 - 30.0*theta2 + 35.0*theta4));
+	g_dot = n0 * (gmp2*(3.0 / 2.0*(5.0*theta2 - 1.0) + 3.0 / 32.0*gmp2*(25.0*cn2 + 24.0*cn - 35.0
+		+ (90.0 - 192.0*cn - 126.0*cn2)*theta2 + (385.0 + 360.0*cn + 45.0*cn2)*theta4))
+		+ 5.0 / 16.0*gmp4*(21.0 - 9.0*cn2 + (126.0*cn2 - 270.0)*theta2 + (385.0 - 189.0*cn2)*theta4));
+	h_dot = n0 * (gmp2*(3.0 / 8.0*gmp2*((9.0*cn2 + 12.0*cn - 5.0)*theta - (35.0 + 36.0*cn + 5.0*cn2)*theta3) - 3.0*theta)
+		+ 5.0 / 4.0*gmp4*theta*(5.0 - 3.0*cn2)*(3.0 - 7.0*theta2));
+}
+
+SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN)
+{
+	if (sv0.gravref == oapiGetObjectByName("Earth"))
+	{
+		return PMMAEG(sv0, opt, param, error, DN);
+	}
+	else
+	{
+		return PMMLAEG(sv0, opt, param, error, DN);
+	}
+}
+
+SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
+{
+	error = false;
+
+	//Update to the given time
+	if (opt == 0)
+	{
+		double MJD1, dt;
+
+		MJD1 = param;
+		dt = (MJD1 - sv0.MJD)*24.0*3600.0;
+		return coast(sv0, dt);
+	}
+	else
+	{
+		SV sv1;
+		CELEMENTS osc0, osc1;
+		VECTOR3 R_equ, V_equ;
+		double DX_L, X_L, X_L_dot, dt, ddt, L_D, ll_dot, n0, g_dot, J20;
+		int LINE, COUNT;
+		bool DH;
+
+		J20 = 1082.6269e-6;
+
+		sv1 = sv0;
+		OrbMech::EclipticToECI(sv0.R, sv0.V, sv0.MJD, R_equ, V_equ);
+		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Earth);
+
+		n0 = sqrt(mu_Earth / (osc0.a*osc0.a*osc0.a));
+		ll_dot = n0;
+		g_dot = n0 * ((3.0 / 4.0)*(J20*R_Earth*R_Earth*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
+
+		osc1 = osc0;
+		if (opt != 3)
+		{
+			L_D = param;
+		}
+		else
+		{
+			double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+			u = fmod(u, PI2);
+			if (u < 0)
+				u += PI2;
+			L_D = u;
+		}
+		DX_L = 1.0;
+		DH = abs(DN) > 0.0;
+		dt = 0.0;
+		LINE = 0;
+		COUNT = 24;
+
+		do
+		{
+			//Mean anomaly
+			if (opt == 1)
+			{
+				X_L = osc1.l;
+				X_L_dot = ll_dot;
+			}
+			//Argument of latitude
+			else if (opt == 2)
+			{
+				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = ll_dot + g_dot;
+			}
+			//Maneuver line
+			else
+			{
+				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = ll_dot + g_dot;
+				LINE = 2;
+			}
+
+			if (DH)
+			{
+				double DN_apo = DN * PI2;
+				ddt = DN_apo / ll_dot;
+				DH = false;
+
+				if (LINE != 0)
+				{
+					L_D = L_D + g_dot * ddt + DN_apo;
+					while (L_D < 0) L_D += PI2;
+					while (L_D >= PI2) L_D -= PI2;
+				}
+				else
+				{
+					ddt += (L_D - X_L) / X_L_dot;
+				}
+			}
+			else
+			{
+				DX_L = L_D - X_L;
+				if (abs(DX_L) - PI >= 0)
+				{
+					if (DX_L > 0)
+					{
+						DX_L -= PI2;
+					}
+					else
+					{
+						DX_L += PI2;
+					}
+				}
+				ddt = DX_L / X_L_dot;
+				if (LINE != 0)
+				{
+					L_D = L_D + ddt * g_dot;
+				}
+			}
+
+
+			dt += ddt;
+			sv1 = coast(sv1, ddt);
+			OrbMech::EclipticToECI(sv1.R, sv1.V, sv1.MJD, R_equ, V_equ);
+			osc1 = OrbMech::GIMIKC(R_equ, V_equ, mu_Earth);
+
+			COUNT--;
+
+		} while (abs(DX_L) > 2e-4 && COUNT > 0);
+
+		if (COUNT == 0)
+		{
+			error = true;
+		}
+
+		return sv1;
+	}
+
+	return sv0;
+}
+
+SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN)
+{
+	error = false;
+
+	//Update to the given time
+	if (opt == 0)
+	{
+		double MJD1, dt;
+
+		MJD1 = param;
+		dt = (MJD1 - sv0.MJD)*24.0*3600.0;
+		return coast(sv0, dt);
+	}
+	//Update to the given mean anomaly (opt=1), argument of latitude (opt=2) or maneuver counter line (opt=3)
+	else
+	{
+		SV sv1;
+		CELEMENTS osc0, osc1;
+		VECTOR3 R_equ, V_equ;
+		double DX_L, X_L, X_L_dot, dt, ddt, L_D, ll_dot, n0, g_dot, J20;
+		int LINE, COUNT;
+		bool DH;
+
+		J20 = 207.108e-6;
+
+		sv1 = sv0;
+		OrbMech::EclipticToMCI(sv0.R, sv0.V, sv0.MJD, R_equ, V_equ);
+		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+
+		n0 = sqrt(mu_Moon / (osc0.a*osc0.a*osc0.a));
+		ll_dot = n0;
+		g_dot = n0 * ((3.0 / 4.0)*(J20*R_Moon*R_Moon*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
+
+		osc1 = osc0;
+		if (opt != 3)
+		{
+			L_D = param;
+		}
+		else
+		{
+			double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+			u = fmod(u, PI2);
+			if (u < 0)
+				u += PI2;
+			L_D = u;
+		}
+		DX_L = 1.0;
+		DH = abs(DN) > 0.0;
+		dt = 0.0;
+		LINE = 0;
+		COUNT = 24;
+
+		do
+		{
+			//Mean anomaly
+			if (opt == 1)
+			{
+				X_L = osc1.l;
+				X_L_dot = ll_dot;
+			}
+			//Argument of latitude
+			else if (opt == 2)
+			{
+				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = ll_dot + g_dot;
+			}
+			//Maneuver line
+			else
+			{
+				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = ll_dot + g_dot;
+				LINE = 2;
+			}
+
+			if (DH)
+			{
+				double DN_apo = DN * PI2;
+				ddt = DN_apo / ll_dot;
+				DH = false;
+
+				if (LINE != 0)
+				{
+					L_D = L_D + g_dot * ddt + DN_apo;
+					while (L_D < 0) L_D += PI2;
+					while (L_D >= PI2) L_D -= PI2;
+				}
+				else
+				{
+					ddt += (L_D - X_L) / X_L_dot;
+				}
+			}
+			else
+			{
+				DX_L = L_D - X_L;
+				if (abs(DX_L) - PI >= 0)
+				{
+					if (DX_L > 0)
+					{
+						DX_L -= PI2;
+					}
+					else
+					{
+						DX_L += PI2;
+					}
+				}
+				ddt = DX_L / X_L_dot;
+				if (LINE != 0)
+				{
+					L_D = L_D + ddt * g_dot;
+				}
+			}
+
+
+			dt += ddt;
+			sv1 = coast(sv1, ddt);
+			OrbMech::EclipticToMCI(sv1.R, sv1.V, sv1.MJD, R_equ, V_equ);
+			osc1 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+
+			COUNT--;
+
+		} while (abs(DX_L) > 2e-4 && COUNT > 0);
+
+		if (COUNT == 0)
+		{
+			error = true;
+		}
+
+		return sv1;
+	}
+
+	return sv0;
+}
+
+CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu)
+{
+	CELEMENTS elem;
+	VECTOR3 H, P;
+	double r, VV, RV, RVVMin1, RVVMins1DivR, Hxy2, Esinw, Ecosw, h, EsinEA, EcosEA, EA;
+
+	V = V / sqrt(mu);
+	r = length(R);
+	VV = dotp(V, V);
+	RV = dotp(R, V);
+	RVVMin1 = r * VV - 1.0;
+	RVVMins1DivR = RVVMin1 / r;
+	elem.a = r / (2.0 - r * VV);
+	H = crossp(R, V);
+	h = length(H);
+	Hxy2 = H.x*H.x + H.y*H.y;
+	P = R*RVVMins1DivR - V*RV;
+	Esinw = (P.z*Hxy2 - H.z*(P.x*H.x + P.y*H.y)) / h;
+	Ecosw = P.y*H.x - P.x*H.y;
+	elem.g = atan2(Esinw, Ecosw);
+	if (elem.g < 0) elem.g += PI2;
+	EcosEA = RVVMin1;
+	EsinEA = RV / sqrt(elem.a);
+	EA = atan2(EsinEA, EcosEA);
+	elem.l = EA - EsinEA;
+	if (elem.l < 0) elem.l += PI2;
+	elem.e = sqrt(EsinEA * EsinEA + EcosEA * EcosEA);
+	elem.h = atan2(H.x, -H.y);
+	if (elem.h < 0) elem.h += PI2;
+	elem.i = acos(H.z/ h);
+	return elem;
+}
+
+SV GIMKIC(CELEMENTS elem, double mu)
+{
+	SV sv;
+	double EA, EA_apo, RX, RY, VX, VY, X_apo, Y_apo;
+	int K = 20;
+	EA_apo = elem.l;
+
+	do
+	{
+		EA = EA_apo;
+		EA_apo = EA + (elem.l - EA + elem.e*sin(EA)) / (1.0 - elem.e*cos(EA));
+		if (EA == EA_apo) break;
+		K--;
+	} while (K > 0);
+	RX = elem.a*(cos(EA) - elem.e);
+	RY = elem.a*sqrt(1.0 - elem.e*elem.e)*sin(EA);
+	VX = -sin(EA) / ((1.0 - elem.e*cos(EA))*(sqrt(elem.a) / sqrt(mu)));
+	VY = sqrt(1.0 - elem.e*elem.e)*cos(EA) / ((1.0 - elem.e*cos(EA))*(sqrt(elem.a) / sqrt(mu)));
+	X_apo = RX * cos(elem.g) - RY * sin(elem.g);
+	Y_apo = RX * sin(elem.g) + RY * cos(elem.g);
+	sv.R = _V(X_apo*cos(elem.h) - Y_apo * cos(elem.i)*sin(elem.h), X_apo*sin(elem.h) + Y_apo * cos(elem.i)*cos(elem.h), Y_apo*sin(elem.i));
+	X_apo = VX * cos(elem.g) - VY * sin(elem.g);
+	Y_apo = VX * sin(elem.g) + VY * cos(elem.g);
+	sv.V = _V(X_apo*cos(elem.h) - Y_apo * cos(elem.i)*sin(elem.h), X_apo*sin(elem.h) + Y_apo * cos(elem.i)*cos(elem.h), Y_apo*sin(elem.i));
+	return sv;
+}
+
+double MeanToTrueAnomaly(double meanAnom, double eccdp, double error2)
+{
+	double ta;
+
+	double E = kepler_E(eccdp, meanAnom, error2);
+	if (E < 0.0)
+		E = E + PI2;
+	double c = abs(E - PI);
+	if (c >= 1.0e-8)
+	{
+		ta = 2.0 * atan(sqrt((1.0 + eccdp) / (1.0 - eccdp))*tan(E / 2.0));
+	}
+	else
+	{
+		ta = E;
+	}
+
+	if (ta < 0)
+		ta += PI2;
+
+	return ta;
+}
+
+SV PositionMatch(SV sv_A, SV sv_P, double mu)
+{
+	SV sv_A1, sv_P1;
+	VECTOR3 u, R_A1, U_L;
+	double phase, n, dt, ddt;
+	bool error;
+
+	dt = 0.0;
+
+	u = unit(crossp(sv_P.R, sv_P.V));
+	U_L = unit(crossp(u, sv_P.R));
+	sv_A1 = PMMAEGS(sv_A, 0, sv_P.MJD, error);
+
+	do
+	{
+		R_A1 = unit(sv_A1.R - u * dotp(sv_A1.R, u))*length(sv_A1.R);
+		phase = acos(dotp(unit(R_A1), unit(sv_P.R)));
+		if (dotp(U_L, R_A1) > 0)
+		{
+			phase = -phase;
+		}
+		n = OrbMech::GetMeanMotion(sv_A1.R, sv_A1.V, mu);
+		ddt = phase / n;
+		sv_A1 = coast(sv_A1, ddt);
+		dt += ddt;
+	} while (abs(ddt) > 0.01);
+
+	return sv_A1;
+}
+
+double THETR(double u1, double u2, double i1, double i2, double h1, double h2)
+{
+	return u1 - u2 - 2.0*atan(tan((h1 - h2) / 2.0)*(sin(0.5*(i1 + i2 - PI)) / sin(0.5*(i1 - i2 + PI))));
+}
+
+void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I)
+{
+	double eps, a, b, delta;
+
+	M = 0;
+	I = 0;
+	x[0] = 0.0;
+	x[1] = 0.0;
+	x[2] = 0.0;
+	x[3] = 0.0;
+	eps = -pow(10, -6);
+	if (N == 3)
+	{
+		goto OrbMech_DROOTS_B;
+	}
+	else if (N == 4)
+	{
+		goto OrbMech_DROOTS_C;
+	}
+
+OrbMech_DROOTS_A:
+	if (C != 0.0)
+	{
+		a = D / C;
+		b = E / C;
+		delta = a * a - 4.0*b;
+		if (delta < 0)
+		{
+			I = 2;
+		}
+		else
+		{
+			x[0] = (-a - sqrt(delta)) / 2.0;
+			x[1] = (-a + sqrt(delta)) / 2.0;
+			M = 2;
+		}
+	}
+	else if (D != 0.0)
+	{
+		M = 1;
+		x[0] = -E / D;
+	}
+	return;
+
+OrbMech_DROOTS_B:
+	if (B == 0.0)
+	{
+		goto OrbMech_DROOTS_A;
+	}
+	
+	double p, q, r;
+
+	p = C / B;
+	q = D / B;
+	r = E / B;
+	a = 1.0 / 3.0*(3.0*q - p * p);
+	b = 1.0 / 27.0*(2.0*p*p*p - 9.0*p*q + 27.0*r);
+	delta = pow(a, 3) / 27.0 + b * b / 4.0;
+
+	if (delta == 0.0)
+	{
+		M = 3;
+		x[0] = 2.0*pow(-b / 2.0, 1.0 / 3.0) - p / 3.0;
+		x[1] = pow(b / 2.0, 1.0 / 3.0) - p / 3.0;
+		x[2] = x[1];
+	}
+	else if (delta > 0.0)
+	{
+		I = 2;
+		M = 1;
+		x[0] = pow(-b / 2.0 + sqrt(delta), 1.0 / 3.0) + pow(-b / 2.0 - sqrt(delta), 1.0 / 3.0);
+	}
+	else
+	{
+		double phi = atan(sqrt(1.0 - b * b / 4.0*27.0 / (-pow(a, 3))) / (-b / 2.0 / sqrt(-pow(a, 3) / 27.0)));
+		M = 3;
+		x[0] = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0) - p / 3.0;
+		x[1] = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0 + PI2 / 3.0) - p / 3.0;
+		x[2] = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0 + PI2 * 2.0 / 3.0) - p / 3.0;
+	}
+	return;
+
+OrbMech_DROOTS_C:
+	if (A == 0.0)
+	{
+		goto OrbMech_DROOTS_B;
+	}
+
+	double Ba, Ca, Da, Ea, h, z;
+
+	Ba = B / A;
+	Ca = C / A;
+	Da = D / A;
+	Ea = E / A;
+	h = -Ba / 4.0;
+	p = 6.0*h*h + 3.0*h*Ba + Ca;
+	q = 4.0*pow(h, 3) + 3.0*h*h*Ba + 2.0*h*Ca + Da;
+	r = pow(h, 4) + Ba * pow(h, 3) + Ca * pow(h, 2) + Da * h + Ea;
+
+	if (q == 0.0)
+	{
+		goto OrbMech_DROOTS_G;
+	}
+	a = (p*p - 4.0*r) - 4.0 / 3.0*p*p;
+	b = 1.0 / 27.0*(16 * pow(p, 3) - 18.0*p*(p*p - 4.0*r) - 27.0*q*q);
+	delta = pow(a, 3) / 27.0 + b * b / 4.0;
+
+	if (delta == 0.0)
+	{
+		double z1, z2;
+		z1 = 2.0*power(-b/2.0, 1.0 / 3.0);
+		z2 = power(b / 2.0, 1.0 / 3.0);
+		z = max(z1, z2);
+	}
+	else if (delta > 0.0)
+	{
+		z = power(-b / 2.0 + sqrt(delta), 1.0 / 3.0) + power(-b / 2.0 - sqrt(delta), 1.0 / 3.0);
+	}
+	else
+	{
+		double z1, z2, z3;
+		double phi = atan(sqrt(1.0 - b * b / 4.0*27.0 / (-pow(a, 3))) / (-b / 2.0 / sqrt(-pow(a, 3) / 27.0)));
+		M = 3;
+		z1 = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0) - p / 3.0;
+		z2 = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0 + PI2 / 3.0) - p / 3.0;
+		z3 = 2.0*sqrt(-a / 3.0)*cos(phi / 3.0 + PI2 * 2.0 / 3.0) - p / 3.0;
+		z = max(z1, max(z2, z3));
+	}
+
+	double ra, xi, beta, delta1, delta2;
+
+	ra = z - 2.0*p / 3.0;
+	xi = 0.5*(p + ra - q / sqrt(ra));
+	beta = 0.5*(p + ra + q / sqrt(ra));
+	delta1 = ra - 4.0*xi;
+	delta2 = ra - 4.0*beta;
+	if (delta1 < eps)
+	{
+		I = 2;
+	}
+	else
+	{
+		x[0] = ((-sqrt(ra) - sqrt(abs(delta1))) / 2.0) + h;
+		x[1] = ((-sqrt(ra) + sqrt(abs(delta1))) / 2.0) + h;
+		M = 2;
+	}
+	if (delta2 < eps)
+	{
+		I = I + 2;
+		return;
+	}
+	x[2] = ((sqrt(ra) - sqrt(abs(delta2))) / 2.0) + h;
+	x[3] = ((sqrt(ra) + sqrt(abs(delta2))) / 2.0) + h;
+	M = M + 2;
+
+	if (M > 2)
+	{
+
+	}
+	else
+	{
+		x[0] = x[2];
+		x[1] = x[3];
+		x[2] = 0.0;
+		x[3] = 0.0;
+	}
+
+	return;
+
+OrbMech_DROOTS_G:
+	delta = p * p - 4.0*r;
+	if (delta < eps)
+	{
+		I = 4;
+		return;
+	}
+
+	double y1, y2;
+
+	y1 = (-p + sqrt(abs(delta)) / 2.0);
+	y2 = (-p - sqrt(abs(delta)) / 2.0);
+
+	if (y1 < eps)
+	{
+		I = 2;
+	}
+	else
+	{
+		x[0] = sqrt(abs(y1)) + h;
+		x[1] = -sqrt(abs(y1)) + h;
+		M = 2;
+	}
+
+	if (y2 < eps)
+	{
+		I = I + 2;
+		return;
+	}
+
+	x[2] = sqrt(abs(y2)) + h;
+	x[3] = -sqrt(abs(y2)) + h;
+
+	if (M <= 0)
+	{
+		x[0] = x[2];
+		x[1] = x[3];
+		x[2] = 0.0;
+		x[3] = 0.0;
+	}
+	M = M + 2;
+	return;
 }
 
 }
@@ -6703,6 +8025,347 @@ LGCDescentConstants::LGCDescentConstants()
 	JARFGZ = 0.00180772*0.3048;
 }
 
+PMMAEG::PMMAEG()
+{
+
+}
+
+void PMMAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
+{
+	CELEMENTS coe_mean0;
+
+	if (abs(in.TE - in.TS) > 96.0*3600.0)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.a<0.4*OrbMech::R_Earth || in.coe_osc.a>9.0*OrbMech::R_Earth)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.e<0.0 || in.coe_osc.e>0.85)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.i<0.18 || in.coe_osc.i>1.05)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.l<0.0 || in.coe_osc.l>PI2)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.g<0.0 || in.coe_osc.g>PI2)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.h<0.0 || in.coe_osc.h>PI2)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.TE == in.TS && in.ENTRY != 0 && in.TIMA == 0)
+	{
+		//Input time equals output time, we have initialized elements and time option. Nothing to do
+		out = in;
+		goto NewPMMAEG_V1030;
+	}
+
+	//Uninitialized
+	if (in.ENTRY == 0)
+	{
+		coe_mean0 = OrbMech::LyddaneOsculatingToMean(in.coe_osc, BODY_EARTH);
+
+		out.coe_mean.a = coe_mean0.a;
+		out.coe_mean.e = coe_mean0.e;
+		out.coe_mean.i = coe_mean0.i;
+
+		OrbMech::BrouwerSecularRates(in.coe_osc, coe_mean0, BODY_EARTH, out.l_dot, out.g_dot, out.h_dot);
+	}
+	else
+	{
+		coe_mean0 = in.coe_mean;
+
+		out.coe_mean.a = in.coe_mean.a;
+		out.coe_mean.e = in.coe_mean.e;
+		out.coe_mean.i = in.coe_mean.i;
+
+		out.l_dot = in.l_dot;
+		out.g_dot = in.g_dot;
+		out.h_dot = in.h_dot;
+	}
+	out.ENTRY = 1;
+
+	double dt = in.TE - in.TS;
+
+	if (in.TIMA == 0)
+	{
+		out.coe_mean.l = out.l_dot * dt + coe_mean0.l;
+		out.coe_mean.g = out.g_dot*dt + coe_mean0.g;
+		out.coe_mean.h = out.h_dot*dt + coe_mean0.h;
+
+		while (out.coe_mean.l > PI2)
+		{
+			out.coe_mean.l -= PI2;
+		}
+		while (out.coe_mean.l < 0)
+		{
+			out.coe_mean.l += PI2;
+		}
+		while (out.coe_mean.g > PI2)
+		{
+			out.coe_mean.g -= PI2;
+		}
+		while (out.coe_mean.g < 0)
+		{
+			out.coe_mean.g += PI2;
+		}
+		while (out.coe_mean.h > PI2)
+		{
+			out.coe_mean.h -= PI2;
+		}
+		while (out.coe_mean.h < 0)
+		{
+			out.coe_mean.h += PI2;
+		}
+		out.TE = out.TS = in.TE;
+	}
+
+	out.coe_osc = OrbMech::LyddaneMeanToOsculating(out.coe_mean, BODY_EARTH);
+
+NewPMMAEG_V1030:
+	//Move output into area supplied by the calling program (already done)
+NewPMMAEG_V305:
+	return;
+NewPMMAEG_V846:
+	header.ErrorInd = -1;
+	goto NewPMMAEG_V305;
+}
+
+PMMLAEG::PMMLAEG()
+{
+
+}
+
+void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
+{
+	CELEMENTS coe_osc0, coe_osc1, coe_mean0, coe_mean1;
+	double u0, f0;
+
+	if (in.coe_osc.a<0.27*OrbMech::R_Earth || in.coe_osc.a > 5.0*OrbMech::R_Earth)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.e < 0.0 || in.coe_osc.e > 0.3)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.i < 0 || in.coe_osc.i >= PI)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.l < 0.0 || in.coe_osc.l >= PI2)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.g < 0.0 || in.coe_osc.g >= PI2)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.h < 0.0 || in.coe_osc.h >= PI2)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.TE == in.TS && in.ENTRY != 0 && in.TIMA == 0)
+	{
+		//Input time equals output time, we have initialized elements and time option. Nothing to do
+		out = in;
+		goto NewPMMLAEG_V1030;
+	}
+
+	coe_osc0 = in.coe_osc;
+
+	//Uninitialized
+	if (in.ENTRY == 0)
+	{
+		coe_mean0 = OrbMech::LyddaneOsculatingToMean(in.coe_osc, BODY_MOON);
+
+		CurrentBlock.coe_mean.a = coe_mean0.a;
+		CurrentBlock.coe_mean.e = coe_mean0.e;
+		CurrentBlock.coe_mean.i = coe_mean0.i;
+
+		OrbMech::BrouwerSecularRates(in.coe_osc, coe_mean0, BODY_MOON, CurrentBlock.l_dot, CurrentBlock.g_dot, CurrentBlock.h_dot);
+
+		f0 = OrbMech::MeanToTrueAnomaly(in.coe_osc.l, in.coe_osc.e);
+		u0 = in.f + in.coe_osc.g;
+		if (u0 >= PI2)
+		{
+			u0 -= PI2;
+		}
+	}
+	else
+	{
+		coe_mean0 = in.coe_mean;
+
+		CurrentBlock.coe_mean.a = in.coe_mean.a;
+		CurrentBlock.coe_mean.e = in.coe_mean.e;
+		CurrentBlock.coe_mean.i = in.coe_mean.i;
+
+		CurrentBlock.l_dot = in.l_dot;
+		CurrentBlock.g_dot = in.g_dot;
+		CurrentBlock.h_dot = in.h_dot;
+
+		f0 = in.f;
+		u0 = in.U;
+	}
+	CurrentBlock.ENTRY = 1;
+
+	double dt = in.TE - in.TS;
+
+	if (in.TIMA == 0)
+	{
+		CurrentBlock.coe_mean.l = CurrentBlock.l_dot*dt + coe_mean0.l;
+		CurrentBlock.coe_mean.g = CurrentBlock.g_dot*dt + coe_mean0.g;
+		CurrentBlock.coe_mean.h = CurrentBlock.h_dot*dt + coe_mean0.h;
+
+		OrbMech::normalizeAngle(CurrentBlock.coe_mean.l);
+		OrbMech::normalizeAngle(CurrentBlock.coe_mean.g);
+		OrbMech::normalizeAngle(CurrentBlock.coe_mean.h);
+
+		CurrentBlock.TE = CurrentBlock.TS = in.TE;
+		coe_osc1 = OrbMech::LyddaneMeanToOsculating(CurrentBlock.coe_mean, BODY_MOON);
+	}
+	else
+	{
+		coe_osc1 = coe_osc0;
+
+		double L_D, DX_L, DH, X_L, X_L_dot, ddt;
+		int LINE, COUNT;
+
+		if (in.TIMA != 3)
+		{
+			L_D = in.Item8;
+		}
+		else
+		{
+			L_D = u0;
+		}
+		DX_L = 1.0;
+		DH = abs(in.DN) > 0.0;
+		dt = 0.0;
+		LINE = 0;
+		COUNT = 24;
+
+		do
+		{
+			//Mean anomaly
+			if (in.TIMA == 1)
+			{
+				X_L = coe_osc1.l;
+				X_L_dot = CurrentBlock.l_dot;
+			}
+			//Argument of latitude
+			else if (in.TIMA == 2)
+			{
+				double u = OrbMech::MeanToTrueAnomaly(coe_osc1.l, coe_osc1.e) + coe_osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = CurrentBlock.l_dot + CurrentBlock.g_dot;
+			}
+			//Maneuver line
+			else
+			{
+				double u = OrbMech::MeanToTrueAnomaly(coe_osc1.l, coe_osc1.e) + coe_osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = CurrentBlock.l_dot + CurrentBlock.g_dot;
+				LINE = 2;
+			}
+
+			if (DH)
+			{
+				double DN_apo = in.DN * PI2;
+				ddt = DN_apo / CurrentBlock.l_dot;
+				DH = false;
+
+				if (LINE != 0)
+				{
+					L_D = L_D + CurrentBlock.g_dot * ddt + DN_apo;
+					while (L_D < 0) L_D += PI2;
+					while (L_D >= PI2) L_D -= PI2;
+				}
+				else
+				{
+					ddt += (L_D - X_L) / X_L_dot;
+				}
+			}
+			else
+			{
+				DX_L = L_D - X_L;
+				if (abs(DX_L) - PI >= 0)
+				{
+					if (DX_L > 0)
+					{
+						DX_L -= PI2;
+					}
+					else
+					{
+						DX_L += PI2;
+					}
+				}
+				ddt = DX_L / X_L_dot;
+				if (LINE != 0)
+				{
+					L_D = L_D + ddt * CurrentBlock.g_dot;
+				}
+			}
+
+			dt += ddt;
+			coe_mean1.l = CurrentBlock.l_dot*dt + coe_mean0.l;
+			coe_mean1.g = CurrentBlock.g_dot*dt + coe_mean0.g;
+			coe_mean1.h = CurrentBlock.h_dot*dt + coe_mean0.h;
+
+			OrbMech::normalizeAngle(coe_mean1.l);
+			OrbMech::normalizeAngle(coe_mean1.g);
+			OrbMech::normalizeAngle(coe_mean1.h);
+
+			coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
+
+			COUNT--;
+
+		} while (abs(DX_L) > 2e-4 && COUNT > 0);
+
+		if (COUNT == 0)
+		{
+			header.ErrorInd = -3;
+		}
+	}
+
+	CurrentBlock.coe_osc = coe_osc1;
+	CurrentBlock.f = OrbMech::MeanToTrueAnomaly(CurrentBlock.coe_osc.l, CurrentBlock.coe_osc.e);
+	CurrentBlock.U = CurrentBlock.f + CurrentBlock.coe_osc.g;
+	if (CurrentBlock.U >= PI2)
+	{
+		CurrentBlock.U -= PI2;
+	}
+
+NewPMMLAEG_V1030:
+	//Move output into area supplied by the calling program
+	PreviousBlock = CurrentBlock;
+	out = CurrentBlock;
+NewPMMLAEG_V305:
+	return;
+NewPMMLAEG_V846:
+	header.ErrorInd = -1;
+	goto NewPMMLAEG_V305;
+}
+
+const double CoastIntegrator::r_SPH = 64373760.0;
+
 CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)
 {
 	hMoon = oapiGetObjectByName("Moon");
@@ -6712,14 +8375,6 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 
 	K = 0.3;
 	dt_lim = 4000;
-	R_E = oapiGetSize(planet);
-	mu = oapiGetMass(planet)*GGRAV;
-	jcount = oapiGetPlanetJCoeffCount(planet);
-	JCoeff = new double[jcount];
-	for (int i = 0; i < jcount; i++)
-	{
-		JCoeff[i] = oapiGetPlanetJCoeff(planet, i);
-	}
 
 	this->R00 = R00;
 	this->V00 = V00;
@@ -6739,56 +8394,50 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	{
 		r_MP = 7178165.0;
 		r_dP = 80467200.0;
-		mu_Q = GGRAV*oapiGetMass(hMoon);
+		mu = OrbMech::mu_Earth;
+		mu_Q = OrbMech::mu_Moon;
+		R_E = OrbMech::R_Earth;
 		rect1 = 0.75*OrbMech::power(2.0, 22.0);
 		rect2 = 0.75*OrbMech::power(2.0, 3.0);
-		P = 0;
+		P = BODY_EARTH;
 	}
 	else
 	{
 		r_MP = 2538090.0;
 		r_dP = 16093440.0;
-		mu_Q = GGRAV*oapiGetMass(hEarth);
+		mu = OrbMech::mu_Moon;
+		mu_Q = OrbMech::mu_Earth;
+		R_E = OrbMech::R_Moon;
 		rect1 = 0.75*OrbMech::power(2.0, 18.0);
 		rect2 = 0.75*OrbMech::power(2.0, -1.0);
-		P = 1;
+		P = BODY_MOON;
 	}
-	hSun = oapiGetObjectByName("Sun");
-	mu_S = GGRAV*oapiGetMass(hSun);
 
-	MATRIX3 obli_E = OrbMech::GetObliquityMatrix(hEarth, mjd0);
+	MATRIX3 obli_E = OrbMech::GetObliquityMatrix(BODY_EARTH, mjd0);
 	U_Z_E = mul(obli_E, _V(0, 1, 0));
 	U_Z_E = _V(U_Z_E.x, U_Z_E.z, U_Z_E.y);
 
-	MATRIX3 obli_M = OrbMech::GetObliquityMatrix(hMoon, mjd0);
+	MATRIX3 obli_M = OrbMech::GetObliquityMatrix(BODY_MOON, mjd0);
 	U_Z_M = mul(obli_M, _V(0, 1, 0));
 	U_Z_M = _V(U_Z_M.x, U_Z_M.z, U_Z_M.y);
 
 	cMoon = oapiGetCelbodyInterface(hMoon);
 	cEarth = oapiGetCelbodyInterface(hEarth);
-	cSun = oapiGetCelbodyInterface(hSun);
 
 	R_QC = R0;
-	r_SPH = 64373760.0;
 
 	B = 1;
 	soichange = false;
-
-	double EarthPos[12];
-	VECTOR3 EarthVec, EarthVecVel;
-
-	cEarth->clbkEphemeris(mjd0 + t_F/2.0/24.0/3600.0, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
-
-	EarthVec = OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]);
-	EarthVecVel = OrbMech::Polar2CartesianVel(EarthPos[2] * AU, EarthPos[1], EarthPos[0], EarthPos[5] * AU, EarthPos[4], EarthPos[3]);
-	R_ES0 = -EarthVec;
-	V_ES0 = -EarthVecVel;
-	W_ES = length(crossp(R_ES0, V_ES0) / OrbMech::power(length(R_ES0), 2.0));
+	SunEphemerisInit = false;
 }
 
 CoastIntegrator::~CoastIntegrator()
 {
-	delete[] JCoeff;
+}
+
+double CoastIntegrator::GetTime()
+{
+	return t;
 }
 
 VECTOR3 CoastIntegrator::GetPosition()
@@ -6811,7 +8460,7 @@ OBJHANDLE CoastIntegrator::GetGravRef()
 	return planet;
 }
 
-bool CoastIntegrator::iteration()
+bool CoastIntegrator::iteration(bool allow_stop)
 {
 	double rr, dt_max, dt, h, x_apo, gamma, s, alpha_N, x_t, Y, r_qc;
 	VECTOR3 alpha, R_apo, V_apo, R, a_d, ff;
@@ -6828,13 +8477,13 @@ bool CoastIntegrator::iteration()
 	{
 		M = 1;
 	}
-	dt_max = 0.3*min(dt_lim, min(K*OrbMech::power(rr, 1.5) / sqrt(mu), K*OrbMech::power(r_qc, 1.5) / sqrt(mu_Q)));
+	dt_max = 0.3*min(dt_lim, min(K*OrbMech::power(rr, 1.5) / sqrt(mu), (M == 0 ? 10e10 : K * OrbMech::power(r_qc, 1.5) / sqrt(mu_Q))));
 	Y = OrbMech::sign(t_F - t);
 	dt = Y*min(abs(t_F - t), dt_max);
 
 	if (M == 1)
 	{
-		if (P == 1)
+		if (P == BODY_MOON)
 		{
 			if (rr > r_SPH)
 			{
@@ -6854,22 +8503,15 @@ bool CoastIntegrator::iteration()
 				V_CON = V_CON - V_PQ;
 				planet = hEarth;
 
-				R_E = oapiGetSize(planet);
-				mu = oapiGetMass(planet)*GGRAV;
-				jcount = oapiGetPlanetJCoeffCount(planet);
-				delete[] JCoeff;
-				JCoeff = new double[jcount];
-				for (int i = 0; i < jcount; i++)
-				{
-					JCoeff[i] = oapiGetPlanetJCoeff(planet, i);
-				}
+				R_E = OrbMech::R_Earth;
+				mu = OrbMech::mu_Earth;
 
 				r_MP = 7178165.0;
 				r_dP = 80467200.0;
-				mu_Q = GGRAV*oapiGetMass(hMoon);
+				mu_Q = OrbMech::mu_Moon;
 				rect1 = 0.75*OrbMech::power(2.0, 22.0);
 				rect2 = 0.75*OrbMech::power(2.0, 3.0);
-				P = 0;
+				P = BODY_EARTH;
 				R0 = R_CON + delta;
 				V0 = V_CON + nu;
 				R_CON = R0;
@@ -6902,28 +8544,21 @@ bool CoastIntegrator::iteration()
 				V_CON = V_CON - V_PQ;
 				planet = hMoon;
 
-				R_E = oapiGetSize(planet);
-				mu = oapiGetMass(planet)*GGRAV;
-				jcount = oapiGetPlanetJCoeffCount(planet);
-				delete[] JCoeff;
-				JCoeff = new double[jcount];
-				for (int i = 0; i < jcount; i++)
-				{
-					JCoeff[i] = oapiGetPlanetJCoeff(planet, i);
-				}
+				R_E = OrbMech::R_Moon;
+				mu = OrbMech::mu_Moon;
 
 				r_MP = 2538090.0;
 				r_dP = 16093440.0;
-				mu_Q = GGRAV*oapiGetMass(hEarth);
+				mu_Q = OrbMech::mu_Earth;
 				rect1 = 0.75*OrbMech::power(2.0, 18.0);
 				rect2 = 0.75*OrbMech::power(2.0, -1.0);
-				P = 1;
+				P = BODY_MOON;
 				R0 = R_CON + delta;
 				V0 = V_CON + nu;
 				R_CON = R0;
 				V_CON = V0;
 				delta = _V(0, 0, 0);
-				nu = _V(0, 0, 0);// [0 0 0]';
+				nu = _V(0, 0, 0);
 				x = 0;
 				tau = 0;
 				soichange = true;
@@ -6937,7 +8572,7 @@ bool CoastIntegrator::iteration()
 		R_CON = R0;
 		V_CON = V0;
 		delta = _V(0, 0, 0);
-		nu = _V(0, 0, 0);// [0 0 0]';
+		nu = _V(0, 0, 0);
 		x = 0;
 		tau = 0;
 	}
@@ -6958,22 +8593,17 @@ bool CoastIntegrator::iteration()
 			alpha = delta + (nu + ff*h*0.5)*h;
 			t = t + 0.5*dt;
 			tau = tau + 0.5*dt;
-			//tau = t - t_0;
-			//R_apo = R_CON*(tau - dt / 2);
-			//	V_apo = V_CON*(tau - dt / 2);
-			//x_tau = x*(tau - dt / 2);
 			s = sqrt(mu) / length(R_apo)*0.5*dt;
 			gamma = dotp(R_apo, V_apo) / (length(R_apo)*sqrt(mu)*2.0);
 			alpha_N = 2.0 / length(R0) - OrbMech::power(length(V0), 2.0) / mu;
 			x_t = x_apo + s*(1.0 - gamma*s*(1.0 - 2.0 * gamma*s) - 1.0 / 6.0 * (1.0 / length(R_apo) - alpha_N)*s*s);
-			//[R_CON, V_CON, x] = rv_from_r0v0(R0, V0, tau, mu, x_t);
 			OrbMech::rv_from_r0v0(R0, V0, tau, R_CON, V_CON, mu, x_t);
 		}
 	}
 	delta = delta + (nu + (k[0] + k[1] * 2.0)*dt*1.0 / 6.0)*dt;
 	nu = nu + (k[0] + k[1] * 4.0 + k[2]) * 1.0 / 6.0 *dt;
 
-	if (abs(t - t_F) < 1e-6)
+	if (allow_stop && abs(t - t_F) < 1e-6)
 	{
 		R2 = R_CON + delta;
 		V2 = V_CON + nu;
@@ -6993,7 +8623,7 @@ bool CoastIntegrator::iteration()
 			R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
 			V_EM = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
 
-			if (planet == hEarth)
+			if (P == BODY_EARTH)
 			{
 				R_PQ = R_EM;
 				V_PQ = V_EM;
@@ -7015,7 +8645,22 @@ bool CoastIntegrator::iteration()
 
 void CoastIntegrator::SolarEphemeris(double t, VECTOR3 &R_ES, VECTOR3 &V_ES)
 {
-	R_ES = R_ES0*cos(W_ES*t)+crossp(R_ES0,unit(crossp(R_ES0, V_ES0)))*sin(W_ES*t);
+	if (SunEphemerisInit == false)
+	{
+		double EarthPos[12];
+		VECTOR3 EarthVec, EarthVecVel;
+
+		cEarth->clbkEphemeris(mjd0 + t_F / 2.0 / 24.0 / 3600.0, EPHEM_TRUEPOS | EPHEM_TRUEVEL, EarthPos);
+
+		EarthVec = OrbMech::Polar2Cartesian(EarthPos[2] * AU, EarthPos[1], EarthPos[0]);
+		EarthVecVel = OrbMech::Polar2CartesianVel(EarthPos[2] * AU, EarthPos[1], EarthPos[0], EarthPos[5] * AU, EarthPos[4], EarthPos[3]);
+		R_ES0 = -EarthVec;
+		V_ES0 = -EarthVecVel;
+		W_ES = length(crossp(R_ES0, V_ES0) / OrbMech::power(length(R_ES0), 2.0));
+		SunEphemerisInit = true;
+	}
+
+	R_ES = R_ES0*cos(W_ES*t)+crossp(R_ES0,unit(crossp(V_ES0, R_ES0)))*sin(W_ES*t);
 	V_ES = V_ES0;
 }
 
@@ -7040,31 +8685,34 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 	VECTOR3 U_R, U_Z, a_dP, a_d, a_dQ, a_dS;
 	a_dP = _V(0, 0, 0);
 	r = length(R);
-	if (r < r_dP)// && planet == hEarth)
+	if (r < r_dP)
 	{
 		U_R = unit(R);
-		if (planet == hEarth)
+		if (P == BODY_EARTH)
 		{
-			U_Z = U_Z_E;//_V(0, 0, 1.0);// [0 0 1]'; 
+			U_Z = U_Z_E;
 		}
 		else
 		{
-			U_Z = U_Z_M;//_V(obli.m12, obli.m22, obli.m32);
+			U_Z = U_Z_M;
 		}
 		costheta = dotp(U_R, U_Z);
 		P2 = 3.0 * costheta;
 		P3 = 0.5*(15.0*costheta*costheta - 3.0);
-		a_dP += (U_R*P3 - U_Z*P2)*JCoeff[0] * OrbMech::power(R_E / r, 2.0);
-		if (jcount > 1)
+
+		if (P == BODY_EARTH)
 		{
+			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Earth * OrbMech::power(R_E / r, 2.0);
 			P4 = 1.0 / 3.0*(7.0*costheta*P3 - 4.0*P2);
-			a_dP += (U_R*P4 - U_Z*P3)*JCoeff[1] * OrbMech::power(R_E / r, 3.0);
-			if (jcount > 2)
-			{
-				P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
-				a_dP += (U_R*P5 - U_Z*P4)*JCoeff[2] * OrbMech::power(R_E / r, 4.0);
-			}
+			a_dP += (U_R*P4 - U_Z * P3)*OrbMech::J3_Earth * OrbMech::power(R_E / r, 3.0);
+			P5 = 0.25*(9.0*costheta*P4 - 5.0 * P3);
+			a_dP += (U_R*P5 - U_Z * P4)*OrbMech::J4_Earth * OrbMech::power(R_E / r, 4.0);
 		}
+		else
+		{
+			a_dP += (U_R*P3 - U_Z * P2)*OrbMech::J2_Moon * OrbMech::power(R_E / r, 2.0);
+		}
+		
 		a_dP *= mu / OrbMech::power(r, 2.0);
 	}
 	if (M == 1)
@@ -7079,7 +8727,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 		SolarEphemeris(t - t_F/2.0, R_ES, V_ES);
 		R_EM = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
 
-		if (planet == hEarth)
+		if (P == BODY_EARTH)
 		{
 			R_PQ = R_EM;
 			R_PS = R_ES;
@@ -7095,7 +8743,7 @@ VECTOR3 CoastIntegrator::adfunc(VECTOR3 R)
 		q_Q = dotp(R - R_PQ*2.0, R) / OrbMech::power(length(R_PQ), 2.0);
 		q_S = dotp(R - R_PS*2.0, R) / OrbMech::power(length(R_PS), 2.0);
 		a_dQ = -(R_PQ*fq(q_Q) + R)*mu_Q / OrbMech::power(length(R_QC), 3.0);
-		a_dS = -(R_PS*fq(q_S) + R)*mu_S / OrbMech::power(length(R_SC), 3.0);
+		a_dS = -(R_PS*fq(q_S) + R)*OrbMech::mu_Sun / OrbMech::power(length(R_SC), 3.0);
 		B = 0;
 		a_d = a_dP + a_dQ + a_dS;
 	}
@@ -7127,6 +8775,11 @@ VECTOR3 rhtmul(const MATRIX3 &A, const VECTOR3 &b)
 		A.m12*b.x + A.m22*b.z + A.m32*b.y);
 }
 
+MATRIX3 MatrixRH_LH(MATRIX3 A)
+{
+	return _M(A.m11, A.m13, A.m12, A.m31, A.m33, A.m32, A.m21, A.m23, A.m22);
+}
+
 double acos2(double _X)
 {
 	return acos(min(1.0, max(-1.0, _X)));
@@ -7135,4 +8788,14 @@ double acos2(double _X)
 double asin2(double _X)
 {
 	return asin(min(1.0, max(-1.0, _X)));
+}
+
+double factorial(unsigned n)
+{
+	double fact = 1.0;
+	for (unsigned i = 1;i <= n;i++)
+	{
+		fact = fact * i;
+	}
+	return fact;
 }

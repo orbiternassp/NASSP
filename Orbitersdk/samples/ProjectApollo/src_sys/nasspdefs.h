@@ -278,6 +278,7 @@ static const double INH2O = 0.00401474;				///< Pa to in H2O
 static const double LBH   = 7.93665;				///< g/s to lb/h
 static const double FPS   = 3.2808399;				///< m/s to ft/s
 static const double LBS = 0.0022046226218;			///< g to lbs
+static const double LBF = 0.2248089431;				///< N to lbf
 
 static const double TWO_PI = (PI * 2.);				///< Twice Pi.
 

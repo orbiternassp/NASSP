@@ -55,16 +55,15 @@ void MCC::MissionSequence_F()
 				tliparam.beta = lvdc->beta;
 				tliparam.cos_sigma = lvdc->cos_sigma;
 				tliparam.C_3 = lvdc->C_3;
+				tliparam.DEC = lvdc->DEC;
 				tliparam.e_N = lvdc->e_N;
 				tliparam.f = lvdc->f;
 				tliparam.mu = lvdc->mu;
-				tliparam.MX_A = lvdc->MX_A;
 				tliparam.omega_E = lvdc->omega_E;
 				tliparam.phi_L = lvdc->PHI;
+				tliparam.RA = lvdc->RAS;
 				tliparam.R_N = lvdc->R_N;
 				tliparam.T_2R = lvdc->T_2R;
-				tliparam.TargetVector = lvdc->TargetVector;
-				tliparam.TB5 = lvdc->TB5;
 				tliparam.theta_EO = lvdc->theta_EO;
 				tliparam.t_D = lvdc->t_D;
 				tliparam.T_L = lvdc->T_L;
@@ -73,7 +72,7 @@ void MCC::MissionSequence_F()
 				tliparam.Tt_3R = lvdc->Tt_3R;
 				tliparam.t_clock = lvdc->t_clock;
 
-				rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src, sv, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, sv_IG, sv_TLI);
+				rtcc->LVDCTLIPredict(tliparam, rtcc->calcParams.src->GetEmptyMass(), sv, rtcc->getGETBase(), rtcc->DeltaV_LVLH, rtcc->TimeofIgnition, sv_IG, sv_TLI);
 
 				rtcc->calcParams.R_TLI = sv_TLI.R;
 				rtcc->calcParams.V_TLI = sv_TLI.V;

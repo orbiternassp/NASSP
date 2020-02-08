@@ -532,6 +532,15 @@ void RCS_TCA::Timestep(double simdt)
 	}
 }
 
+void RCS_TCA::Reset()
+{
+	TCAFailure.Reset();
+	failTimer[0] = 0.0;
+	failTimer[1] = 0.0;
+	pulseCounter[0] = 0;
+	pulseCounter[1] = 0;
+}
+
 void RCS_TCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
 	oapiWriteLine(scn, start_str);
