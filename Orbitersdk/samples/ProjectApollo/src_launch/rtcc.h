@@ -2508,7 +2508,7 @@ public:
 	//Vector Routing Load Module
 	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false);
 	//Vector Fetch Load Module
-	int PMSVEC(int L, double GMT, OrbMech::CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
+	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	//Earth Orbit Insertion Processor
 	void PMMIEV(double T_L);
 	//Trajectory Update Control Module
@@ -2539,6 +2539,7 @@ public:
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
 	double RTCCPresentTimeGMT();
 	OBJHANDLE GetGravref(int body);
+	bool RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, double lmdscmass, int &thruster, double &manmass);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -3203,6 +3204,7 @@ public:
 		int RTEDDockingAngle;
 		int RTEDManeuverOrientation;
 		bool RTEDIterationFlag;
+		char RTEManeuverCode[4];
 
 		//Block 13
 		int RTETradeoffLabelling[5];
@@ -3465,6 +3467,8 @@ private:
 	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
 	//Base hour Angle
 	double PIGMHA(int E, int Y, int D);
+	//Delta True Anomaly Function
+	double PCDETA(double beta1, double beta2, double r1, double r2);
 	//Orbit Desired REFSMMAT Computation Subroutine
 	MATRIX3 PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K);
 	//Universal Cartesian to Kepler Coordinates

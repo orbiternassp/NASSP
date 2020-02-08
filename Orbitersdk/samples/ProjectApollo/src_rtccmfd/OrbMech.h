@@ -196,6 +196,26 @@ struct OELEMENTS
 	double TA = 0.0;
 };
 
+//Classical elements
+struct CELEMENTS
+{
+	//Semi-major axis
+	double a = 0.0;
+	//Eccentricity
+	double e = 0.0;
+	//Inclination
+	double i = 0.0;
+	//Longitude of the ascending node
+	double h = 0.0;
+	//Argument of pericenter
+	double g = 0.0;
+	//Mean Anomaly
+	double l = 0.0;
+
+	CELEMENTS operator+(const CELEMENTS&) const;
+	CELEMENTS operator-(const CELEMENTS&) const;
+};
+
 struct TLMCConstants
 {
 	double r;
@@ -269,21 +289,12 @@ struct AEGDataBlock
 	double ICSUBD;
 	double VehArea;
 	double VehWeight;
+	//Mean anomaly (option 1), argument of latitude (option 2)
 	double Item8;
 	double MJD_oc;
 	double DN;
-	double a_osc;
-	double e_osc;
-	double i_osc;
-	double l_osc;
-	double g_osc;
-	double h_osc;
-	double a_mean;
-	double e_mean;
-	double i_mean;
-	double l_mean;
-	double g_mean;
-	double h_mean;
+	CELEMENTS coe_osc;
+	CELEMENTS coe_mean;
 	//Item 23, time associated with elements 11-16 (in GMT)
 	double TS;
 	double l_dot;
@@ -350,26 +361,6 @@ private:
 };
 
 namespace OrbMech {
-
-	//Classical elements
-	struct CELEMENTS
-	{
-		//Semi-major axis
-		double a = 0.0;
-		//Eccentricity
-		double e = 0.0;
-		//Inclination
-		double i = 0.0;
-		//Longitude of the ascending node
-		double h = 0.0;
-		//Argument of pericenter
-		double g = 0.0;
-		//Mean Anomaly
-		double l = 0.0;
-
-		CELEMENTS operator+(const CELEMENTS&) const;
-		CELEMENTS operator-(const CELEMENTS&) const;
-	};
 
 	//Constants
 	const double mu_Earth = 0.3986032e15;
@@ -578,6 +569,7 @@ namespace OrbMech {
 	double DecToDouble(int dec1, int dec2);
 	double round(double number);
 	double trunc(double d);
+	void normalizeAngle(double & a);
 	double quadratic(double *T, double *DV);
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
@@ -612,6 +604,11 @@ namespace OrbMech {
 	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body);
 
 	//AEG
+	void NewPMMAEG(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out);
+	void NewPMMLAEG(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out);
+	CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body);
+	CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body);
+	void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double &l_dot, double &g_dot, double &h_dot);
 	SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN = 0.0);
 	SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);
 	SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);

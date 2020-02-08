@@ -593,6 +593,8 @@ RTCC::RTEConstraintsTable::RTEConstraintsTable()
 	ATPCoordinates[4][5] = 170.0*RAD;
 	ATPCoordinates[4][6] = -40.0*RAD;
 	ATPCoordinates[4][7] = 170.0*RAD;
+
+	sprintf_s(RTEManeuverCode, "CSU");
 }
 
 RTCC::RTCC()
@@ -13727,9 +13729,8 @@ void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed)
 	}
 }
 
-int RTCC::PMSVEC(int L, double GMT, OrbMech::CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI)
+int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI)
 {
-	EphemerisDataTable EPHEM;
 	double mu;
 	MissionPlanTable *mpt = GetMPTPointer(L);
 	EphemerisData sv;
@@ -13785,7 +13786,7 @@ int RTCC::PMSVEC(int L, double GMT, OrbMech::CELEMENTS &elem, double &KFactor, d
 
 PMSVEC_2_2:
 
-	if (EPHEM.table[0].RBI == BODY_EARTH)
+	if (sv.RBI == BODY_EARTH)
 	{
 		mu = OrbMech::mu_Earth;
 	}
@@ -13794,7 +13795,10 @@ PMSVEC_2_2:
 		mu = OrbMech::mu_Moon;
 	}
 
-	elem = OrbMech::GIMIKC(EPHEM.table[0].R, EPHEM.table[0].V, mu);
+	MATRIX3 Rot = OrbMech::GetObliquityMatrix(sv.RBI, OrbMech::MJDfromGET(sv.GMT, GMTBASE));
+	VECTOR3 R = rhtmul(Rot, sv.R);
+	VECTOR3 V = rhtmul(Rot, sv.V);
+	elem = OrbMech::GIMIKC(R, V, mu);
 	KFactor = mpt->KFactor;
 	StaID = mpt->StationID;
 
@@ -15346,6 +15350,7 @@ bool RTCC::MPTConfigIncludesLMAsc(int config)
 	if (config == RTCC_CONFIG_CSM_LM) return true;
 	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
 	if (config == RTCC_CONFIG_ASC) return true;
+	if (config == RTCC_CONFIG_CSM_ASC) return true;
 
 	return false;
 }
@@ -16746,7 +16751,7 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 			}
 
 			EphemerisData sv_dh;
-			OrbMech::CELEMENTS elem_a, elem_m;
+			CELEMENTS elem_a, elem_m;
 			double h1, h2, i1, i2, u1, u2, gamma, Cg, Tg, alpha1, alpha2, beta, theta_R, n, dt, t_R;
 			int i = 0;
 			dt = 1.0;
@@ -21007,6 +21012,18 @@ double RTCC::TJUDAT(int Y, int M, int D)
 	return 2415020.5 + (double)(365 * Y_apo + Z + TMM[M - 1] + D - 1);
 }
 
+double RTCC::PCDETA(double beta1, double beta2, double r1, double r2)
+{
+	double ctn_eta122 = (OrbMech::cot(beta1) + r1 / r2 * OrbMech::cot(beta2)) / (1 - r1 / r2);
+	double cos_eta12 = (pow(ctn_eta122, 2) - 1.0) / (pow(ctn_eta122, 2) + 1.0);
+	double eta12 = atan2((1.0 - cos_eta12)*ctn_eta122, cos_eta12);
+	if (eta12 < 0)
+	{
+		eta12 += PI2;
+	}
+	return eta12;
+}
+
 MATRIX3 RTCC::PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K)
 {
 	VECTOR3 X_T, Y_T, Z_T, X_P, Y_P, Z_P;
@@ -22154,6 +22171,82 @@ int RTCC::AttitudeNameToCode(std::string attitude)
 	return 0;
 }
 
+bool RTCC::RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, double lmdscmass, int &thruster, double &manmass)
+{
+	if (code[0] == 'C')
+	{
+		if (code[1] == 'S')
+		{
+			thruster = RTCC_ENGINETYPE_CSMSPS;
+		}
+		else if (code[1] == 'R')
+		{
+			thruster = RTCC_ENGINETYPE_CSMRCSPLUS4;
+		}
+		else
+		{
+			return true;
+		}
+		if (code[2] == 'D')
+		{
+			manmass = csmmass + lmascmass + lmdscmass;
+		}
+		else if (code[2] == 'A')
+		{
+			manmass = csmmass + lmascmass;
+		}
+		else if (code[2] == 'U')
+		{
+			manmass = csmmass;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else if (code[0] == 'L')
+	{
+		if (code[1] == 'D')
+		{
+			thruster = RTCC_ENGINETYPE_LMDPS;
+			if (code[2] == 'D')
+			{
+				manmass = csmmass + lmascmass + lmdscmass;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else if (code[1] == 'R')
+		{
+			thruster = RTCC_ENGINETYPE_LMRCSPLUS4;
+			if (code[2] == 'D')
+			{
+				manmass = csmmass + lmascmass + lmdscmass;
+			}
+			else if (code[2] == 'A')
+			{
+				manmass = csmmass + lmascmass;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, int IC, int IA, int IJ, double D)
 {
 	//INPUTS:
@@ -22653,6 +22746,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	EphemerisData sv_true;
 	EphemerisData sv_BI;
 	EphemerisData sv_BO;
+	AEGDataBlock aeg;
 
 	sv_BI.R = aux->R_BI;
 	sv_BI.V = aux->V_BI;
@@ -22699,13 +22793,12 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		goto RTCC_PMMDMT_PB2_6;
 	}
 
-	AEGDataBlock aeg;
-	PIMCKC(sv_true.R, sv_true.V, body, aeg.a_osc, aeg.e_osc, aeg.i_osc, aeg.l_osc, aeg.g_osc, aeg.h_osc);
-	mptman->e_BO = aeg.e_osc;
-	mptman->i_BO = aeg.i_osc;
-	mptman->g_BO = aeg.g_osc;
+	PIMCKC(sv_true.R, sv_true.V, body, aeg.coe_osc.a, aeg.coe_osc.e, aeg.coe_osc.i, aeg.coe_osc.l, aeg.coe_osc.g, aeg.coe_osc.h);
+	mptman->e_BO = aeg.coe_osc.e;
+	mptman->i_BO = aeg.coe_osc.i;
+	mptman->g_BO = aeg.coe_osc.g;
 
-	if (aeg.e_osc < 0.85)
+	if (aeg.coe_osc.e < 0.85)
 	{
 		SV sv_BO2, sv_a, sv_p;
 

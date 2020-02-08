@@ -1050,6 +1050,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	PADSolGood = true;
 	svtarget = NULL;
 	svtargetnumber = -1;
+	TLCCSolGood = true;
 
 	for (int i = 0;i < 021;i++)
 	{
@@ -3041,6 +3042,8 @@ int ARCore::subThread()
 	{
 		EntryResults res;
 		EntryOpt opt;
+		double csmmass, lmascmass, lmdscmass, cfg_weight, sivbmass;
+		int cfg;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -3049,10 +3052,55 @@ int ARCore::subThread()
 				Result = 0;
 				break;
 			}
+			if (GC->rtcc->PLAWDT(RTCC_MPT_CSM, EntryTIG, cfg, cfg_weight, csmmass, lmascmass, lmdscmass, sivbmass))
+			{
+				Result = 0;
+				break;
+			}
 		}
 		else
 		{
 			opt.RV_MCC = GC->rtcc->StateVectorCalc(vessel);
+
+			if (vesseltype == 0)
+			{
+				csmmass = vessel->GetMass();
+				lmascmass = lmdscmass = 0.0;
+			}
+			else if (vesseltype == 1)
+			{
+				csmmass = vessel->GetMass();
+				double lmmass;
+				if (lmmass = GC->rtcc->GetDockedVesselMass(vessel))
+				{
+					LEM *l = (LEM *)oapiGetVesselInterface(vessel->GetDockStatus(vessel->GetDockHandle(0)));
+					lmascmass = l->GetAscentStageMass();
+					lmdscmass = lmmass - lmascmass;
+				}
+			}
+			else if (vesseltype == 2)
+			{
+				Result = 0;
+				break;
+			}
+			else
+			{
+				double lmmass;
+				LEM *l = (LEM *)vessel;
+				lmmass = vessel->GetMass();
+				lmascmass = l->GetAscentStageMass();
+				lmdscmass = lmmass - lmascmass;
+
+				if (csmmass = GC->rtcc->GetDockedVesselMass(vessel))
+				{
+
+				}
+				else
+				{
+					Result = 0;
+					break;
+				}
+			}
 		}
 
 		if (entrylongmanual)
@@ -3065,21 +3113,21 @@ int ARCore::subThread()
 		}
 
 		opt.GETbase = GC->rtcc->CalcGETBase();
-		if (mptveh == RTCC_MPT_CSM)
+
+		if (GC->rtcc->RTEManeuverCodeLogic(GC->rtcc->PZREAP.RTEManeuverCode, csmmass, lmascmass, lmdscmass, opt.enginetype, opt.RV_MCC.mass))
 		{
-			opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+			Result = 0;
+			break;
 		}
-		else
-		{
-			opt.enginetype = RTCC_ENGINETYPE_LMDPS;
-		}
+
+		opt.csmlmdocked = false;
 		opt.entrylongmanual = entrylongmanual;
 		opt.ReA = EntryAng;
 		opt.TIGguess = EntryTIG;
 		opt.vessel = vessel;
 		opt.type = entrycritical;
 		opt.r_rbias = GC->rtcc->PZREAP.RRBIAS;
-		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
+		opt.csmlmdocked = false;
 
 		GC->rtcc->EntryTargeting(&opt, &res);
 
@@ -3247,7 +3295,7 @@ int ARCore::subThread()
 			opt.useSV = true;
 			opt.RV_MCC = sv_A;
 
-			GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
+GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		}
 
 		Result = 0;
@@ -3256,7 +3304,7 @@ int ARCore::subThread()
 	case 10: //Lunar Descent Planning Processor
 	{
 		SV sv;
-		
+
 		if (GC->MissionPlanningActive)
 		{
 			double gmt;
@@ -3302,6 +3350,8 @@ int ARCore::subThread()
 	{
 		RTEMoonOpt opt;
 		EntryResults res;
+		double csmmass, lmascmass, lmdscmass, cfg_weight, sivbmass;
+		int cfg;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -3310,10 +3360,55 @@ int ARCore::subThread()
 				Result = 0;
 				break;
 			}
+			if (GC->rtcc->PLAWDT(RTCC_MPT_CSM, EntryTIG, cfg, cfg_weight, csmmass, lmascmass, lmdscmass, sivbmass))
+			{
+				Result = 0;
+				break;
+			}
 		}
 		else
 		{
 			opt.RV_MCC = GC->rtcc->StateVectorCalc(vessel);
+
+			if (vesseltype == 0)
+			{
+				csmmass = vessel->GetMass();
+				lmascmass = lmdscmass = 0.0;
+			}
+			else if (vesseltype == 1)
+			{
+				csmmass = vessel->GetMass();
+				double lmmass;
+				if (lmmass = GC->rtcc->GetDockedVesselMass(vessel))
+				{
+					LEM *l = (LEM *)oapiGetVesselInterface(vessel->GetDockStatus(vessel->GetDockHandle(0)));
+					lmascmass = l->GetAscentStageMass();
+					lmdscmass = lmmass - lmascmass;
+				}
+			}
+			else if (vesseltype == 2)
+			{
+				Result = 0;
+				break;
+			}
+			else
+			{
+				double lmmass;
+				LEM *l = (LEM *)vessel;
+				lmmass = vessel->GetMass();
+				lmascmass = l->GetAscentStageMass();
+				lmdscmass = lmmass - lmascmass;
+
+				if (csmmass = GC->rtcc->GetDockedVesselMass(vessel))
+				{
+
+				}
+				else
+				{
+					Result = 0;
+					break;
+				}
+			}
 		}
 
 		entryprecision = 1;
@@ -3345,15 +3440,14 @@ int ARCore::subThread()
 		opt.TIGguess = EntryTIG;
 		opt.Inclination = EntryDesiredInclination;
 		opt.t_zmin = RTEReentryTime;
-		if (mptveh == RTCC_MPT_CSM)
+
+		if (GC->rtcc->RTEManeuverCodeLogic(GC->rtcc->PZREAP.RTEManeuverCode, csmmass, lmascmass, lmdscmass, opt.enginetype, opt.RV_MCC.mass))
 		{
-			opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+			Result = 0;
+			break;
 		}
-		else
-		{
-			opt.enginetype = RTCC_ENGINETYPE_LMDPS;
-		}
-		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
+
+		opt.csmlmdocked = false;
 
 		GC->rtcc->RTEMoonTargeting(&opt, &res);
 		TLCCSolGood = res.solutionfound;

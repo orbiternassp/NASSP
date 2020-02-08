@@ -2483,6 +2483,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 		}
 
+		sprintf_s(Buffer, "Man Code: %s", GC->rtcc->PZREAP.RTEManeuverCode);
+		skp->Text(5 * W / 8, 3 * H / 14, Buffer, strlen(Buffer));
+
 		GET_Display(Buffer, G->EntryTIGcor);
 		skp->Text(5 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f° Lat", G->EntryLatcor*DEG);
@@ -2587,12 +2590,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (G->subThreadStatus > 0)
 		{
-			skp->Text(5 * W / 8, 3 * H / 14, "Calculating...", 14);
+			skp->Text(5 * W / 8, 2 * H / 14, "Calculating...", 14);
 		}
 		else if (!G->TLCCSolGood)
 		{
-			skp->Text(5 * W / 8, 3 * H / 14, "Calculation Failed!", 19);
+			skp->Text(5 * W / 8, 2 * H / 14, "Calculation Failed!", 19);
 		}
+
+		sprintf_s(Buffer, "Man Code: %s", GC->rtcc->PZREAP.RTEManeuverCode);
+		skp->Text(5 * W / 8, 3 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.3f° Lat", G->EntryLatcor*DEG);
 		skp->Text(5 * W / 8, 7 * H / 21, Buffer, strlen(Buffer));

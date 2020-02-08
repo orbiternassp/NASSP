@@ -2384,6 +2384,27 @@ void ApolloRTCCMFD::CycleRTECalcMode()
 	}
 }
 
+void ApolloRTCCMFD::menuSetRTEManeuverCode()
+{
+	bool RTEManeuverCodeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Maneuver code: 1st char = C(CSM), L(LEM), 2nd char = S(SPS), R(RCS), D(DPS), 3rd char = D(docked), A(docked with ascent stage), U(undocked)", RTEManeuverCodeInput, 0, 20, (void*)this);
+}
+
+bool RTEManeuverCodeInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 4)
+	{
+		((ApolloRTCCMFD*)data)->set_RTEManeuverCode(str);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_RTEManeuverCode(char *code)
+{
+	sprintf_s(GC->rtcc->PZREAP.RTEManeuverCode, code);
+}
+
 void ApolloRTCCMFD::menusextantstartime()
 {
 	bool SextantStarTimeInput(void *id, char *str, void *data);

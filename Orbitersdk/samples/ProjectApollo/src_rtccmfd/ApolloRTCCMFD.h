@@ -142,6 +142,8 @@ public:
 	void menuSetRTEConstraintF87();
 	void set_RTEConstraintF87(std::string constr, std::string value);
 	void CycleRTECalcMode();
+	void menuSetRTEManeuverCode();
+	void set_RTEManeuverCode(char *code);
 	void menuEntryCalc();
 	void menuEntryUpdateCalc();
 	void menuDeorbitCalc();
