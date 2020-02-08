@@ -7035,333 +7035,6 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, do
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
 }
 
-void NewPMMAEG(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
-{
-	CELEMENTS coe_mean0;
-
-	if (abs(in.TE - in.TS) > 96.0*3600.0)
-	{
-		goto NewPMMAEG_V846;
-	}
-	if (in.coe_osc.a<0.4*R_Earth || in.coe_osc.a>9.0*R_Earth)
-	{
-		goto NewPMMAEG_V846;
-	}
-	if (in.coe_osc.e<0.0 || in.coe_osc.e>0.85)
-	{
-		goto NewPMMAEG_V846;
-	}
-	if (in.coe_osc.i<0.18 || in.coe_osc.i>1.05)
-	{
-		goto NewPMMAEG_V846;
-	}
-	if (in.coe_osc.l<0.0 || in.coe_osc.l>PI2)
-	{
-		goto NewPMMAEG_V846;
-	}
-	if (in.coe_osc.g<0.0 || in.coe_osc.g>PI2)
-	{
-		goto NewPMMAEG_V846;
-	}
-	if (in.coe_osc.h<0.0 || in.coe_osc.h>PI2)
-	{
-		goto NewPMMAEG_V846;
-	}
-	if (in.TE == in.TS && in.ENTRY != 0 && in.TIMA == 0)
-	{
-		//Input time equals output time, we have initialized elements and time option. Nothing to do
-		out = in;
-		goto NewPMMAEG_V1030;
-	}
-
-	//Uninitialized
-	if (in.ENTRY == 0)
-	{
-		coe_mean0 = LyddaneOsculatingToMean(in.coe_osc, BODY_EARTH);
-
-		out.coe_mean.a = coe_mean0.a;
-		out.coe_mean.e = coe_mean0.e;
-		out.coe_mean.i = coe_mean0.i;
-		
-		BrouwerSecularRates(in.coe_osc, coe_mean0, BODY_EARTH, out.l_dot, out.g_dot, out.h_dot);
-	}
-	else
-	{
-		coe_mean0 = in.coe_mean;
-
-		out.coe_mean.a = in.coe_mean.a;
-		out.coe_mean.e = in.coe_mean.e;
-		out.coe_mean.i = in.coe_mean.i;
-
-		out.l_dot = in.l_dot;
-		out.g_dot = in.g_dot;
-		out.h_dot = in.h_dot;
-	}
-	out.ENTRY = 1;
-
-	double dt = in.TE - in.TS;
-
-	if (in.TIMA == 0)
-	{
-		out.coe_mean.l = out.l_dot * dt + coe_mean0.l;
-		out.coe_mean.g = out.g_dot*dt + coe_mean0.g;
-		out.coe_mean.h = out.h_dot*dt + coe_mean0.h;
-
-		while (out.coe_mean.l > PI2)
-		{
-			out.coe_mean.l -= PI2;
-		}
-		while (out.coe_mean.l < 0)
-		{
-			out.coe_mean.l += PI2;
-		}
-		while (out.coe_mean.g > PI2)
-		{
-			out.coe_mean.g -= PI2;
-		}
-		while (out.coe_mean.g < 0)
-		{
-			out.coe_mean.g += PI2;
-		}
-		while (out.coe_mean.h > PI2)
-		{
-			out.coe_mean.h -= PI2;
-		}
-		while (out.coe_mean.h < 0)
-		{
-			out.coe_mean.h += PI2;
-		}
-		out.TE = out.TS = in.TE;
-	}
-
-	out.coe_osc = LyddaneMeanToOsculating(out.coe_mean, BODY_EARTH);
-
-NewPMMAEG_V1030:
-	//Move output into area supplied by the calling program (already done)
-NewPMMAEG_V305:
-	return;
-NewPMMAEG_V846:
-	header.ErrorInd = -1;
-	goto NewPMMAEG_V305;
-}
-
-void NewPMMLAEG(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
-{
-	CELEMENTS coe_osc0, coe_osc1, coe_mean0, coe_mean1;
-	double u0, f0;
-
-	if (in.coe_osc.a<0.27*R_Earth || in.coe_osc.a > 5.0*R_Earth)
-	{
-		goto NewPMMLAEG_V846;
-	}
-	if (in.coe_osc.e < 0.0 || in.coe_osc.e > 0.3)
-	{
-		goto NewPMMLAEG_V846;
-	}
-	if (in.coe_osc.i < 0 || in.coe_osc.i >= PI)
-	{
-		goto NewPMMLAEG_V846;
-	}
-	if (in.coe_osc.l < 0.0 || in.coe_osc.l >= PI2)
-	{
-		goto NewPMMLAEG_V846;
-	}
-	if (in.coe_osc.g < 0.0 || in.coe_osc.g >= PI2)
-	{
-		goto NewPMMLAEG_V846;
-	}
-	if (in.coe_osc.h < 0.0 || in.coe_osc.h >= PI2)
-	{
-		goto NewPMMLAEG_V846;
-	}
-	if (in.TE == in.TS && in.ENTRY != 0 && in.TIMA == 0)
-	{
-		//Input time equals output time, we have initialized elements and time option. Nothing to do
-		out = in;
-		goto NewPMMLAEG_V1030;
-	}
-
-	coe_osc0 = in.coe_osc;
-
-	//Uninitialized
-	if (in.ENTRY == 0)
-	{
-		coe_mean0 = LyddaneOsculatingToMean(in.coe_osc, BODY_MOON);
-
-		out.coe_mean.a = coe_mean0.a;
-		out.coe_mean.e = coe_mean0.e;
-		out.coe_mean.i = coe_mean0.i;
-
-		BrouwerSecularRates(in.coe_osc, coe_mean0, BODY_MOON, out.l_dot, out.g_dot, out.h_dot);
-
-		f0 = MeanToTrueAnomaly(in.coe_osc.l, in.coe_osc.e);
-		u0 = in.f + in.coe_osc.g;
-		if (u0 >= PI2)
-		{
-			u0 -= PI2;
-		}
-	}
-	else
-	{
-		coe_mean0 = in.coe_mean;
-
-		out.coe_mean.a = in.coe_mean.a;
-		out.coe_mean.e = in.coe_mean.e;
-		out.coe_mean.i = in.coe_mean.i;
-
-		out.l_dot = in.l_dot;
-		out.g_dot = in.g_dot;
-		out.h_dot = in.h_dot;
-
-		f0 = in.f;
-		u0 = in.U;
-	}
-	out.ENTRY = 1;
-
-	double dt = in.TE - in.TS;
-
-	if (in.TIMA == 0)
-	{
-		out.coe_mean.l = out.l_dot * dt + coe_mean0.l;
-		out.coe_mean.g = out.g_dot*dt + coe_mean0.g;
-		out.coe_mean.h = out.h_dot*dt + coe_mean0.h;
-
-		normalizeAngle(out.coe_mean.l);
-		normalizeAngle(out.coe_mean.g);
-		normalizeAngle(out.coe_mean.h);
-
-		out.TE = out.TS = in.TE;
-		coe_osc1 = LyddaneMeanToOsculating(out.coe_mean, BODY_MOON);
-	}
-	else
-	{
-		coe_osc1 = coe_osc0;
-
-		double L_D, DX_L, DH, X_L, X_L_dot, ddt;
-		int LINE, COUNT;
-
-		if (in.TIMA != 3)
-		{
-			L_D = in.Item8;
-		}
-		else
-		{
-			L_D = u0;
-		}
-		DX_L = 1.0;
-		DH = abs(in.DN) > 0.0;
-		dt = 0.0;
-		LINE = 0;
-		COUNT = 24;
-
-		do
-		{
-			//Mean anomaly
-			if (in.TIMA == 1)
-			{
-				X_L = coe_osc1.l;
-				X_L_dot = out.l_dot;
-			}
-			//Argument of latitude
-			else if (in.TIMA == 2)
-			{
-				double u = OrbMech::MeanToTrueAnomaly(coe_osc1.l, coe_osc1.e) + coe_osc1.g;
-				u = fmod(u, PI2);
-				if (u < 0)
-					u += PI2;
-
-				X_L = u;
-				X_L_dot = out.l_dot + out.g_dot;
-			}
-			//Maneuver line
-			else
-			{
-				double u = OrbMech::MeanToTrueAnomaly(coe_osc1.l, coe_osc1.e) + coe_osc1.g;
-				u = fmod(u, PI2);
-				if (u < 0)
-					u += PI2;
-
-				X_L = u;
-				X_L_dot = out.l_dot + out.g_dot;
-				LINE = 2;
-			}
-
-			if (DH)
-			{
-				double DN_apo = in.DN * PI2;
-				ddt = DN_apo / out.l_dot;
-				DH = false;
-
-				if (LINE != 0)
-				{
-					L_D = L_D + out.g_dot * ddt + DN_apo;
-					while (L_D < 0) L_D += PI2;
-					while (L_D >= PI2) L_D -= PI2;
-				}
-				else
-				{
-					ddt += (L_D - X_L) / X_L_dot;
-				}
-			}
-			else
-			{
-				DX_L = L_D - X_L;
-				if (abs(DX_L) - PI >= 0)
-				{
-					if (DX_L > 0)
-					{
-						DX_L -= PI2;
-					}
-					else
-					{
-						DX_L += PI2;
-					}
-				}
-				ddt = DX_L / X_L_dot;
-				if (LINE != 0)
-				{
-					L_D = L_D + ddt * out.g_dot;
-				}
-			}
-
-			dt += ddt;
-			coe_mean1.l = out.l_dot*dt + coe_mean0.l;
-			coe_mean1.g = out.g_dot*dt + coe_mean0.g;
-			coe_mean1.h = out.h_dot*dt + coe_mean0.h;
-
-			normalizeAngle(coe_mean1.l);
-			normalizeAngle(coe_mean1.g);
-			normalizeAngle(coe_mean1.h);
-
-			coe_osc1 = LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
-
-			COUNT--;
-
-		} while (abs(DX_L) > 2e-4 && COUNT > 0);
-
-		if (COUNT == 0)
-		{
-			header.ErrorInd = -3;
-		}
-	}
-
-	out.coe_osc = coe_osc1;
-	out.f = MeanToTrueAnomaly(out.coe_osc.l, out.coe_osc.e);
-	out.U = out.f + out.coe_osc.g;
-	if (out.U >= PI2)
-	{
-		out.U -= PI2;
-	}
-
-NewPMMLAEG_V1030:
-	//Move output into area supplied by the calling program (already done)
-NewPMMLAEG_V305:
-	return;
-NewPMMLAEG_V846:
-	header.ErrorInd = -1;
-	goto NewPMMLAEG_V305;
-}
-
 CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body)
 {
 	CELEMENTS arr_mean, arr_osc2, arr_mean2;
@@ -8350,6 +8023,345 @@ LGCDescentConstants::LGCDescentConstants()
 	VARFG = _V(-4.993, 0.0, 0.248)*0.3048;
 	AARFG = _V(-0.2624, 0.0, -0.512)*0.3048;
 	JARFGZ = 0.00180772*0.3048;
+}
+
+PMMAEG::PMMAEG()
+{
+
+}
+
+void PMMAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
+{
+	CELEMENTS coe_mean0;
+
+	if (abs(in.TE - in.TS) > 96.0*3600.0)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.a<0.4*OrbMech::R_Earth || in.coe_osc.a>9.0*OrbMech::R_Earth)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.e<0.0 || in.coe_osc.e>0.85)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.i<0.18 || in.coe_osc.i>1.05)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.l<0.0 || in.coe_osc.l>PI2)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.g<0.0 || in.coe_osc.g>PI2)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.coe_osc.h<0.0 || in.coe_osc.h>PI2)
+	{
+		goto NewPMMAEG_V846;
+	}
+	if (in.TE == in.TS && in.ENTRY != 0 && in.TIMA == 0)
+	{
+		//Input time equals output time, we have initialized elements and time option. Nothing to do
+		out = in;
+		goto NewPMMAEG_V1030;
+	}
+
+	//Uninitialized
+	if (in.ENTRY == 0)
+	{
+		coe_mean0 = OrbMech::LyddaneOsculatingToMean(in.coe_osc, BODY_EARTH);
+
+		out.coe_mean.a = coe_mean0.a;
+		out.coe_mean.e = coe_mean0.e;
+		out.coe_mean.i = coe_mean0.i;
+
+		OrbMech::BrouwerSecularRates(in.coe_osc, coe_mean0, BODY_EARTH, out.l_dot, out.g_dot, out.h_dot);
+	}
+	else
+	{
+		coe_mean0 = in.coe_mean;
+
+		out.coe_mean.a = in.coe_mean.a;
+		out.coe_mean.e = in.coe_mean.e;
+		out.coe_mean.i = in.coe_mean.i;
+
+		out.l_dot = in.l_dot;
+		out.g_dot = in.g_dot;
+		out.h_dot = in.h_dot;
+	}
+	out.ENTRY = 1;
+
+	double dt = in.TE - in.TS;
+
+	if (in.TIMA == 0)
+	{
+		out.coe_mean.l = out.l_dot * dt + coe_mean0.l;
+		out.coe_mean.g = out.g_dot*dt + coe_mean0.g;
+		out.coe_mean.h = out.h_dot*dt + coe_mean0.h;
+
+		while (out.coe_mean.l > PI2)
+		{
+			out.coe_mean.l -= PI2;
+		}
+		while (out.coe_mean.l < 0)
+		{
+			out.coe_mean.l += PI2;
+		}
+		while (out.coe_mean.g > PI2)
+		{
+			out.coe_mean.g -= PI2;
+		}
+		while (out.coe_mean.g < 0)
+		{
+			out.coe_mean.g += PI2;
+		}
+		while (out.coe_mean.h > PI2)
+		{
+			out.coe_mean.h -= PI2;
+		}
+		while (out.coe_mean.h < 0)
+		{
+			out.coe_mean.h += PI2;
+		}
+		out.TE = out.TS = in.TE;
+	}
+
+	out.coe_osc = OrbMech::LyddaneMeanToOsculating(out.coe_mean, BODY_EARTH);
+
+NewPMMAEG_V1030:
+	//Move output into area supplied by the calling program (already done)
+NewPMMAEG_V305:
+	return;
+NewPMMAEG_V846:
+	header.ErrorInd = -1;
+	goto NewPMMAEG_V305;
+}
+
+PMMLAEG::PMMLAEG()
+{
+
+}
+
+void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
+{
+	CELEMENTS coe_osc0, coe_osc1, coe_mean0, coe_mean1;
+	double u0, f0;
+
+	if (in.coe_osc.a<0.27*OrbMech::R_Earth || in.coe_osc.a > 5.0*OrbMech::R_Earth)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.e < 0.0 || in.coe_osc.e > 0.3)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.i < 0 || in.coe_osc.i >= PI)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.l < 0.0 || in.coe_osc.l >= PI2)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.g < 0.0 || in.coe_osc.g >= PI2)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.coe_osc.h < 0.0 || in.coe_osc.h >= PI2)
+	{
+		goto NewPMMLAEG_V846;
+	}
+	if (in.TE == in.TS && in.ENTRY != 0 && in.TIMA == 0)
+	{
+		//Input time equals output time, we have initialized elements and time option. Nothing to do
+		out = in;
+		goto NewPMMLAEG_V1030;
+	}
+
+	coe_osc0 = in.coe_osc;
+
+	//Uninitialized
+	if (in.ENTRY == 0)
+	{
+		coe_mean0 = OrbMech::LyddaneOsculatingToMean(in.coe_osc, BODY_MOON);
+
+		CurrentBlock.coe_mean.a = coe_mean0.a;
+		CurrentBlock.coe_mean.e = coe_mean0.e;
+		CurrentBlock.coe_mean.i = coe_mean0.i;
+
+		OrbMech::BrouwerSecularRates(in.coe_osc, coe_mean0, BODY_MOON, CurrentBlock.l_dot, CurrentBlock.g_dot, CurrentBlock.h_dot);
+
+		f0 = OrbMech::MeanToTrueAnomaly(in.coe_osc.l, in.coe_osc.e);
+		u0 = in.f + in.coe_osc.g;
+		if (u0 >= PI2)
+		{
+			u0 -= PI2;
+		}
+	}
+	else
+	{
+		coe_mean0 = in.coe_mean;
+
+		CurrentBlock.coe_mean.a = in.coe_mean.a;
+		CurrentBlock.coe_mean.e = in.coe_mean.e;
+		CurrentBlock.coe_mean.i = in.coe_mean.i;
+
+		CurrentBlock.l_dot = in.l_dot;
+		CurrentBlock.g_dot = in.g_dot;
+		CurrentBlock.h_dot = in.h_dot;
+
+		f0 = in.f;
+		u0 = in.U;
+	}
+	CurrentBlock.ENTRY = 1;
+
+	double dt = in.TE - in.TS;
+
+	if (in.TIMA == 0)
+	{
+		CurrentBlock.coe_mean.l = CurrentBlock.l_dot*dt + coe_mean0.l;
+		CurrentBlock.coe_mean.g = CurrentBlock.g_dot*dt + coe_mean0.g;
+		CurrentBlock.coe_mean.h = CurrentBlock.h_dot*dt + coe_mean0.h;
+
+		OrbMech::normalizeAngle(CurrentBlock.coe_mean.l);
+		OrbMech::normalizeAngle(CurrentBlock.coe_mean.g);
+		OrbMech::normalizeAngle(CurrentBlock.coe_mean.h);
+
+		CurrentBlock.TE = CurrentBlock.TS = in.TE;
+		coe_osc1 = OrbMech::LyddaneMeanToOsculating(CurrentBlock.coe_mean, BODY_MOON);
+	}
+	else
+	{
+		coe_osc1 = coe_osc0;
+
+		double L_D, DX_L, DH, X_L, X_L_dot, ddt;
+		int LINE, COUNT;
+
+		if (in.TIMA != 3)
+		{
+			L_D = in.Item8;
+		}
+		else
+		{
+			L_D = u0;
+		}
+		DX_L = 1.0;
+		DH = abs(in.DN) > 0.0;
+		dt = 0.0;
+		LINE = 0;
+		COUNT = 24;
+
+		do
+		{
+			//Mean anomaly
+			if (in.TIMA == 1)
+			{
+				X_L = coe_osc1.l;
+				X_L_dot = CurrentBlock.l_dot;
+			}
+			//Argument of latitude
+			else if (in.TIMA == 2)
+			{
+				double u = OrbMech::MeanToTrueAnomaly(coe_osc1.l, coe_osc1.e) + coe_osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = CurrentBlock.l_dot + CurrentBlock.g_dot;
+			}
+			//Maneuver line
+			else
+			{
+				double u = OrbMech::MeanToTrueAnomaly(coe_osc1.l, coe_osc1.e) + coe_osc1.g;
+				u = fmod(u, PI2);
+				if (u < 0)
+					u += PI2;
+
+				X_L = u;
+				X_L_dot = CurrentBlock.l_dot + CurrentBlock.g_dot;
+				LINE = 2;
+			}
+
+			if (DH)
+			{
+				double DN_apo = in.DN * PI2;
+				ddt = DN_apo / CurrentBlock.l_dot;
+				DH = false;
+
+				if (LINE != 0)
+				{
+					L_D = L_D + CurrentBlock.g_dot * ddt + DN_apo;
+					while (L_D < 0) L_D += PI2;
+					while (L_D >= PI2) L_D -= PI2;
+				}
+				else
+				{
+					ddt += (L_D - X_L) / X_L_dot;
+				}
+			}
+			else
+			{
+				DX_L = L_D - X_L;
+				if (abs(DX_L) - PI >= 0)
+				{
+					if (DX_L > 0)
+					{
+						DX_L -= PI2;
+					}
+					else
+					{
+						DX_L += PI2;
+					}
+				}
+				ddt = DX_L / X_L_dot;
+				if (LINE != 0)
+				{
+					L_D = L_D + ddt * CurrentBlock.g_dot;
+				}
+			}
+
+			dt += ddt;
+			coe_mean1.l = CurrentBlock.l_dot*dt + coe_mean0.l;
+			coe_mean1.g = CurrentBlock.g_dot*dt + coe_mean0.g;
+			coe_mean1.h = CurrentBlock.h_dot*dt + coe_mean0.h;
+
+			OrbMech::normalizeAngle(coe_mean1.l);
+			OrbMech::normalizeAngle(coe_mean1.g);
+			OrbMech::normalizeAngle(coe_mean1.h);
+
+			coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
+
+			COUNT--;
+
+		} while (abs(DX_L) > 2e-4 && COUNT > 0);
+
+		if (COUNT == 0)
+		{
+			header.ErrorInd = -3;
+		}
+	}
+
+	CurrentBlock.coe_osc = coe_osc1;
+	CurrentBlock.f = OrbMech::MeanToTrueAnomaly(CurrentBlock.coe_osc.l, CurrentBlock.coe_osc.e);
+	CurrentBlock.U = CurrentBlock.f + CurrentBlock.coe_osc.g;
+	if (CurrentBlock.U >= PI2)
+	{
+		CurrentBlock.U -= PI2;
+	}
+
+NewPMMLAEG_V1030:
+	//Move output into area supplied by the calling program
+	PreviousBlock = CurrentBlock;
+	out = CurrentBlock;
+NewPMMLAEG_V305:
+	return;
+NewPMMLAEG_V846:
+	header.ErrorInd = -1;
+	goto NewPMMLAEG_V305;
 }
 
 const double CoastIntegrator::r_SPH = 64373760.0;

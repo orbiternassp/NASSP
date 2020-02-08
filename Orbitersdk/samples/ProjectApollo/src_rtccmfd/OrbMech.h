@@ -313,6 +313,24 @@ struct AEGBlock
 	AEGDataBlock Data;
 };
 
+class PMMAEG
+{
+public:
+	PMMAEG();
+	void CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out);
+protected:
+	AEGDataBlock CurrentBlock, PreviousBlock;
+};
+
+class PMMLAEG
+{
+public:
+	PMMLAEG();
+	void CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out);
+protected:
+	AEGDataBlock CurrentBlock, PreviousBlock;
+};
+
 class CoastIntegrator
 {
 public:
@@ -604,8 +622,6 @@ namespace OrbMech {
 	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body);
 
 	//AEG
-	void NewPMMAEG(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out);
-	void NewPMMLAEG(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out);
 	CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body);
 	CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body);
 	void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double &l_dot, double &g_dot, double &h_dot);
