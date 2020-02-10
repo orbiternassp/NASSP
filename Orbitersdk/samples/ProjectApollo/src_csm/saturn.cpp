@@ -1839,6 +1839,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "APOLLONO", 8)) {
 		sscanf (line+8, "%d", &ApolloNo);
+		//Create mission specific systems
+		CreateMissionSpecificSystems();
 	}
 	else if (!strnicmp (line, "SATTYPE", 7)) {
 		sscanf (line+7, "%d", &SaturnType);
@@ -2420,9 +2422,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 		agc.SetMissionInfo(ApolloNo, PayloadName);
 
 	secs.SetSaturnType(SaturnType);
-
-	//Create mission specific systems
-	CreateMissionSpecificSystems();
 
 	//
 	// Set random failures if appropriate.

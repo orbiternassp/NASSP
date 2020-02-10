@@ -1705,7 +1705,7 @@ void Saturn::JettisonSIMBayPanel()
 
 	const double CGOffset = 12.25 + 21.5 - 1.8 + 0.35;
 
-	VECTOR3 vel1 = { 0.0, -0.25, 0.15 };
+	VECTOR3 vel1 = _V(cos(52.25*RAD), sin(52.25*RAD), 0.0)*13.7*0.3048;
 	VECTOR3 ofs1 = { 0, 0, 30.25 - CGOffset };
 
 	GetStatus(vs1);
@@ -1718,9 +1718,9 @@ void Saturn::JettisonSIMBayPanel()
 	vs1.rvel.x = rvel1.x + rofs1.x;
 	vs1.rvel.y = rvel1.y + rofs1.y;
 	vs1.rvel.z = rvel1.z + rofs1.z;
-	vs1.vrot.x = 0.005;
-	vs1.vrot.y = 0.05;
-	vs1.vrot.z = 0.01;
+	vs1.vrot.x = 0;
+	vs1.vrot.y = 0;
+	vs1.vrot.z = 0;
 
 	char VName[256];
 

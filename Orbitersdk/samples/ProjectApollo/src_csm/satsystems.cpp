@@ -2337,17 +2337,21 @@ void Saturn::CreateMissionSpecificSystems()
 	if (ApolloNo >= 15 && ApolloNo <= 17)
 	{
 		//J-type missions
-		Panel181 = new SaturnPanel181;
 
-		Panel181->Register(&PSH);
+		if (Panel181 == NULL)
+		{
+			Panel181 = new SaturnPanel181;
 
-		Panel181->SMSector1LogicPowerMNABraker.WireTo(MainBusA);
-		Panel181->SMSector1LogicPowerMNBBraker.WireTo(MainBusB);
-		Panel181->SMSector1AC2ASystemBraker.WireTo(&ACBus2PhaseA);
-		Panel181->SMSector1AC2BSystemBraker.WireTo(&ACBus2PhaseB);
-		Panel181->SMSector1AC2CSystemBraker.WireTo(&ACBus2PhaseC);
+			Panel181->Register(&PSH);
 
-		secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
+			Panel181->SMSector1LogicPowerMNABraker.WireTo(MainBusA);
+			Panel181->SMSector1LogicPowerMNBBraker.WireTo(MainBusB);
+			Panel181->SMSector1AC2ASystemBraker.WireTo(&ACBus2PhaseA);
+			Panel181->SMSector1AC2BSystemBraker.WireTo(&ACBus2PhaseB);
+			Panel181->SMSector1AC2CSystemBraker.WireTo(&ACBus2PhaseC);
+
+			secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
+		}
 	}
 }
 

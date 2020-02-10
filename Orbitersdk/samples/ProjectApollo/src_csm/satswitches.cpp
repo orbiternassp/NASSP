@@ -2246,6 +2246,6 @@ void SaturnPanel181::Register(PanelSwitchScenarioHandler *PSH)
 	SMSector1DoorJettisonSwitch.Register(*PSH, "SMSector1DoorJettisonSwitch", TOGGLESWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
 	SMSector1LogicPower1Switch.Register(*PSH, "SMSector1LogicPower1Switch", THREEPOSSWITCH_CENTER);
 	SMSector1LogicPower2Switch.Register(*PSH, "SMSector1LogicPower2Switch", THREEPOSSWITCH_CENTER);
-	SMSector1LogicPowerMNABraker.Register(*PSH, "SMSector1LogicPowerMNABraker", 1);
-	SMSector1LogicPowerMNBBraker.Register(*PSH, "SMSector1LogicPowerMNBBraker", 1);
+	SMSector1LogicPowerMNABraker.Register(*PSH, "SMSector1LogicPowerMNABraker", 0);
+	SMSector1LogicPowerMNBBraker.Register(*PSH, "SMSector1LogicPowerMNBBraker", 0);
 }
