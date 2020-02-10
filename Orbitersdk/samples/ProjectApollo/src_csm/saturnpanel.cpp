@@ -407,6 +407,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_EVENT_TIMER_DIGITS90]					= oapiCreateSurface (LOADBMP (IDB_EVENT_TIMER90));
 	srf[SRF_DIGITAL90]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL90));
 	srf[SRF_CSM_PRESS_EQUAL_HANDLE]                 = oapiCreateSurface (LOADBMP (IDB_CSM_PRESS_EQUAL_HANDLE));
+	srf[SRF_CSM_PANEL_181]                          = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_181));
 
 	//
 	// Flashing borders.
@@ -575,6 +576,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_CSM_CABINPRESSTESTSWITCH],				g_Param.col[4]);	
 	oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PRESS_EQUAL_HANDLE],               g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_181],                        g_Param.col[4]);
 
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1674,6 +1676,11 @@ void Saturn::AddRightCenterLowerPanelAreas(int offset)
 	oapiRegisterPanelArea (AID_DSKY2_DISPLAY,								_R(2602 + offset,  700, 2707 + offset,  876), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_DSKY2_LIGHTS,								_R(2458 + offset,  705, 2560 + offset,  825), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_DSKY2_KEY,			                        _R(2440 + offset,  896, 2725 + offset, 1016), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
+	
+	if (Panel181)
+	{
+		oapiRegisterPanelArea(AID_CSM_PANEL_181, _R(3241 + offset, 2180, 3673 + offset, 2431), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+	}
 }
 
 void Saturn::AddRightLowerPanelAreas(int offset)
@@ -3155,6 +3162,22 @@ void Saturn::SetSwitches(int panel) {
 	MinImpulseHandcontrollerSwitchRow.Init(AID_MINIMPULSE_HANDCONTROLLER, MainPanel);
 	MinImpulseHandcontrollerSwitch.Init(0, 0, 45, 49, srf[SRF_MINIMPULSE_HANDCONTROLLER], srf[SRF_BORDER_45x49], MinImpulseHandcontrollerSwitchRow, this);
 
+	if (Panel181)
+	{
+		Panel181->SMSector1SwitchesRow.Init(AID_CSM_PANEL_181, MainPanel);
+		Panel181->SMSector1DoorJettisonSwitch.Init(79, 169, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1DoorJettisonSwitch.InitGuard(78, 146, 36, 69, srf[SRF_SWITCHGUARDS], srf[SRF_BORDER_36x69]);
+		Panel181->SMSector1LogicPower1Switch.Init(144, 155, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1LogicPower2Switch.Init(188, 155, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1Cryo3ACPowerSwitch.Init(82, 70, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1SMACPowerSwitch.Init(188, 70, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1AC2ASystemBraker.Init(264, 70, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1AC2BSystemBraker.Init(302, 70, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1AC2CSystemBraker.Init(340, 70, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1LogicPowerMNABraker.Init(264, 155, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel181->SMSector1SwitchesRow);
+		Panel181->SMSector1LogicPowerMNBBraker.Init(302, 155, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel181->SMSector1SwitchesRow);
+	}
+
 	///////////////////////////////////
 	// Panel 300/301/302/303/305/306 //
 	///////////////////////////////////
@@ -4212,10 +4235,6 @@ void Saturn::RenderS1bEngineLight(bool EngineOn, SURFHANDLE dest, SURFHANDLE src
 bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 
 {
-	HDC hDC;
-	HGDIOBJ brush = NULL;
-	HGDIOBJ pen = NULL;
-
 	// Enable this to trace the redraws, but then it's running horrible slow!
 	// char tracebuffer[100];
 	// sprintf(tracebuffer, "Saturn::clbkPanelRedrawEvent id %i", id);
@@ -4355,6 +4374,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			}
 		}
 	}
+
+	//
+	// Special handling panel 181 (Apollo 15 and later)
+	//
+	if (id == AID_CSM_PANEL_181)
+		oapiBlt(surf, srf[SRF_CSM_PANEL_181], 0, 0, 0, 0, 432, 251, SURF_PREDEF_CK);
 
 	//
 	// Process all the generic switches.
@@ -4770,7 +4795,11 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_EMS_SCROLL_LEO: {
+	case AID_EMS_SCROLL_LEO:
+	{
+
+		HDC hDC;
+
 		hDC = oapiGetDC(srf[SRF_EMS_SCROLL_LEO]);
 
 		SetBkMode(hDC, TRANSPARENT);
@@ -4784,34 +4813,39 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BUG], 42, ems.GetGScribe() + 2, 0, 0, 5, 5, SURF_PREDEF_CK);
 		oapiBlt(surf, srf[SRF_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
-		return true; }
-
-	case AID_EMS_RSI_BKGRND:
-		oapiBlt(surf, srf[SRF_EMS_RSI_BKGRND], 0,0,0,0,86,84);
-		switch (ems.LiftVectLight()) {
-			case 1:
-				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 82, 6, 20, 6);
-				break;
-			case -1:
-				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 82, 22, 22, 10);
-				break;
-			case 0:
-				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 82, 0, 20, 6);
-				oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 82, 12, 22, 10);
-				break;
-		}
-		
-		hDC = oapiGetDC (srf[SRF_EMS_RSI_BKGRND]);
-		SetBkMode (hDC, TRANSPARENT);
-		pen = SelectObject(hDC,GetStockObject(WHITE_PEN));
-		Ellipse(hDC, 14,14,71,68);
-		brush = SelectObject(hDC,GetStockObject(BLACK_BRUSH));
-		Polygon(hDC, ems.RSITriangle, 3);
-		SelectObject(hDC,pen);
-		SelectObject(hDC,brush);
-		oapiReleaseDC (srf[SRF_EMS_RSI_BKGRND], hDC);
 		return true;
-	
+	}
+	case AID_EMS_RSI_BKGRND:
+	{
+		HDC hDC;
+		HGDIOBJ brush = NULL;
+		HGDIOBJ pen = NULL;
+
+		oapiBlt(surf, srf[SRF_EMS_RSI_BKGRND], 0, 0, 0, 0, 86, 84);
+		switch (ems.LiftVectLight()) {
+		case 1:
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 82, 6, 20, 6);
+			break;
+		case -1:
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 82, 22, 22, 10);
+			break;
+		case 0:
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 33, 8, 82, 0, 20, 6);
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 32, 69, 82, 12, 22, 10);
+			break;
+		}
+
+		hDC = oapiGetDC(srf[SRF_EMS_RSI_BKGRND]);
+		SetBkMode(hDC, TRANSPARENT);
+		pen = SelectObject(hDC, GetStockObject(WHITE_PEN));
+		Ellipse(hDC, 14, 14, 71, 68);
+		brush = SelectObject(hDC, GetStockObject(BLACK_BRUSH));
+		Polygon(hDC, ems.RSITriangle, 3);
+		SelectObject(hDC, pen);
+		SelectObject(hDC, brush);
+		oapiReleaseDC(srf[SRF_EMS_RSI_BKGRND], hDC);
+		return true;
+	}
 	case AID_EMSDVSETSWITCH:		
 		switch ((int)EMSDvSetSwitch.GetPosition()) {
 			case 1:

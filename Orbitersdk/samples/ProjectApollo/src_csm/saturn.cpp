@@ -328,6 +328,12 @@ Saturn::~Saturn()
 		sivb = 0;
 	}
 
+	if (Panel181)
+	{
+		delete Panel181;
+		Panel181 = 0;
+	}
+
 	if (LMPad) {
 		delete[] LMPad;
 		LMPad = 0;
@@ -376,6 +382,7 @@ void Saturn::initSaturn()
 	ApexCoverAttached = true;
 	ChutesAttached = true;
 	CSMAttached = true;
+	SIMBayPanelJett = false;
 
 	NosecapAttached = false;
 
@@ -819,6 +826,8 @@ void Saturn::initSaturn()
 		ENGIND[i] = false;
 
 	PayloadName[0] = 0;
+	CMCVersion[0] = 0;
+	LGCVersion[0] = 0;
 	LEMCheck[0] = 0;
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
@@ -864,6 +873,7 @@ void Saturn::initSaturn()
 	fwdhatchidx = -1;
 	opticscoveridx = -1;
 	cmdocktgtidx = -1;
+	simbaypanelidx = -1;
 
 	probe = NULL;
 
@@ -894,6 +904,8 @@ void Saturn::initSaturn()
 
 	iu = NULL;
 	sivb = NULL;
+
+	Panel181 = NULL;
 
 	//
 	// Timestep tracking for debugging.
@@ -1356,6 +1368,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		if (LEMCheck[0]) {
 			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
 		}
+		if (LGCVersion[0]) {
+			oapiWriteScenario_string(scn, "LGCVERSION", LGCVersion);
+		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
 		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
@@ -1592,6 +1607,7 @@ int Saturn::GetAttachState()
 	state.ApexCoverAttached = ApexCoverAttached;
 	state.ChutesAttached = ChutesAttached;
 	state.LESLegsCut = LESLegsCut;
+	state.SIMBayPanelJett = SIMBayPanelJett;
 
 	return state.word;
 }
@@ -1611,6 +1627,7 @@ void Saturn::SetAttachState(int s)
 	ApexCoverAttached = (state.ApexCoverAttached != 0);
 	ChutesAttached = (state.ChutesAttached != 0);
 	LESLegsCut = (state.LESLegsCut != 0);
+	SIMBayPanelJett = (state.SIMBayPanelJett != 0);
 }
 
 int Saturn::GetA13State()
@@ -1822,6 +1839,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "APOLLONO", 8)) {
 		sscanf (line+8, "%d", &ApolloNo);
+		//Create mission specific systems
+		CreateMissionSpecificSystems();
 	}
 	else if (!strnicmp (line, "SATTYPE", 7)) {
 		sscanf (line+7, "%d", &SaturnType);
@@ -1983,6 +2002,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
+	}
+	else if (!strnicmp(line, "CMCVERSION", 10)) {
+		strncpy(CMCVersion, line + 11, 64);
+	}
+	else if (!strnicmp(line, "LGCVERSION", 10)) {
+		strncpy(LGCVersion, line + 11, 64);
 	}
 	else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 		dsky.LoadState(scn, DSKY_END_STRING);
@@ -2391,7 +2416,10 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// And pass it the mission number and realism settings.
 	//
 
-	agc.SetMissionInfo(ApolloNo, PayloadName);
+	if (CMCVersion[0])
+		agc.SetMissionInfo(ApolloNo, PayloadName, CMCVersion);
+	else
+		agc.SetMissionInfo(ApolloNo, PayloadName);
 
 	secs.SetSaturnType(SaturnType);
 

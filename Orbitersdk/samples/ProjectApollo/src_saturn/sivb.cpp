@@ -1393,6 +1393,9 @@ void SIVB::SetState(SIVBSettings &state)
 		if (state.LEMCheck[0]) {
 			strcpy(payloadSettings.checklistFile, state.LEMCheck);
 		}
+		if (state.AGCVersion[0]) {
+			strcpy(payloadSettings.AGCVersion, state.AGCVersion);
+		}
 
 		payloadSettings.DescentFuelKg = state.LMDescentFuelMassKg;
 		payloadSettings.AscentFuelKg = state.LMAscentFuelMassKg;

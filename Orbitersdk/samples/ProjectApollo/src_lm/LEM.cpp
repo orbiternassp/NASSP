@@ -1862,11 +1862,12 @@ bool LEM::clbkLoadGenericCockpit ()
 bool LEM::SetupPayload(PayloadSettings &ls)
 
 {
-	char CSMName[64];
+	char CSMName[64], LGCVersion[64];
 
 	MissionTime = ls.MissionTime;
 
-	strncpy (CSMName, ls.CSMName, 64);
+	strncpy(CSMName, ls.CSMName, 64);
+	strncpy(LGCVersion, ls.AGCVersion, 64);
 
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
@@ -1878,7 +1879,10 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	DescentEmptyMassKg = ls.DescentEmptyKg;
 	AscentEmptyMassKg = ls.AscentEmptyKg;
 
-	agc.SetMissionInfo(ApolloNo, CSMName);
+	if (LGCVersion[0])
+		agc.SetMissionInfo(ApolloNo, CSMName, LGCVersion);
+	else
+		agc.SetMissionInfo(ApolloNo, CSMName);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);

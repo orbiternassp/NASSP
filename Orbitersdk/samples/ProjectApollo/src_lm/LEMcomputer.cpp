@@ -63,49 +63,58 @@ LEMcomputer::~LEMcomputer()
 	//
 }
 
-void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
+void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel, char *ProgramName)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
+	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel, ProgramName);
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//
 
-	char *binfile;
+	if (AGCVersion[0])
+	{
+		char Buffer[100];
+		sprintf(Buffer, "Config/ProjectApollo/%s.bin", AGCVersion);
 
-	if (ApolloNo < 9)	// Sunburst 120
+		agc_load_binfile(&vagc, Buffer);
+	}
+	else
 	{
-		binfile = "Config/ProjectApollo/Sunburst120.bin";
+		char *binfile;
 
-		LEM *lem = (LEM *)OurVessel;
-		lem->InvertStageBit = true;
-	}
-	else if (ApolloNo < 11)	// Luminary 069 Revision 2
-	{
-		binfile = "Config/ProjectApollo/LUM69R2.bin";
-	}
-	else if (ApolloNo < 12)	// Luminary 099
-	{
-		binfile = "Config/ProjectApollo/Luminary099.bin";
-	}
-	else if (ApolloNo < 13)	// Luminary 116
-	{
-		binfile = "Config/ProjectApollo/Luminary116.bin";
-	}
-	else if (ApolloNo < 14 || ApolloNo == 1301)	// Luminary 131
-	{
-		binfile = "Config/ProjectApollo/Luminary131.bin";
-	}
-	else if (ApolloNo < 15)	// Luminary 178
-	{
-		binfile = "Config/ProjectApollo/Luminary178.bin";
-	}
-	else	//Luminary 210
-	{
-		binfile = "Config/ProjectApollo/Luminary210.bin";
-	}
+		if (ApolloNo < 9)	// Sunburst 120
+		{
+			binfile = "Config/ProjectApollo/Sunburst120.bin";
+			LEM *lem = (LEM *)OurVessel;
+			lem->InvertStageBit = true;
+		}
+		else if (ApolloNo < 11)	// Luminary 069 Revision 2
+		{
+			binfile = "Config/ProjectApollo/LUM69R2.bin";
+		}
+		else if (ApolloNo < 12)	// Luminary 099
+		{
+			binfile = "Config/ProjectApollo/Luminary099.bin";
+		}
+		else if (ApolloNo < 13)	// Luminary 116
+		{
+			binfile = "Config/ProjectApollo/Luminary116.bin";
+		}
+		else if (ApolloNo < 14 || ApolloNo == 1301)	// Luminary 131
+		{
+			binfile = "Config/ProjectApollo/Luminary131.bin";
+		}
+		else if (ApolloNo < 15)	// Luminary 178
+		{
+			binfile = "Config/ProjectApollo/Luminary178.bin";
+		}
+		else	//Luminary 210
+		{
+			binfile = "Config/ProjectApollo/Luminary210.bin";
+		}
 
-	agc_load_binfile(&vagc, binfile);
+		agc_load_binfile(&vagc, binfile);
+	}
 }
 
 void LEMcomputer::agcTimestep(double simt, double simdt)

@@ -323,7 +323,11 @@ void Saturn::AddSM(double offset, bool showSPS)
 	else
 		AddMesh (hSMRCS, &mesh_dir);
 
-	AddMesh (hSMPanel1, &mesh_dir);
+	if (!SIMBayPanelJett)
+	{
+		simbaypanelidx = AddMesh(hSMPanel1, &mesh_dir);
+	}
+
 	AddMesh (hSMPanel2, &mesh_dir);
 	AddMesh (hSMPanel3, &mesh_dir);
 
@@ -836,6 +840,7 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.AEAPad = AEAPad;
 	S4Config.AEAPadCount = AEAPadCount;
 	sprintf(S4Config.LEMCheck, LEMCheck);
+	sprintf(S4Config.AGCVersion, LGCVersion);
 
 	S4Config.iu_pointer = iu;
 	DontDeleteIU = true;
@@ -862,6 +867,19 @@ void Saturn::SetDockingProbeMesh() {
 	} else {
 		SetMeshVisibilityMode(probeidx, MESHVIS_NEVER);
 		SetMeshVisibilityMode(probeextidx, MESHVIS_NEVER);
+	}
+}
+
+void Saturn::SetSIMBayPanelMesh()
+{
+	if (simbaypanelidx == -1)
+		return;
+
+	if (!SIMBayPanelJett) {
+		SetMeshVisibilityMode(simbaypanelidx, MESHVIS_EXTERNAL);
+	}
+	else {
+		SetMeshVisibilityMode(simbaypanelidx, MESHVIS_NEVER);
 	}
 }
 
@@ -1673,6 +1691,43 @@ void Saturn::JettisonDockingProbe()
 	GetApolloName(VName); 
 	strcat (VName, "-DCKPRB");
 	hPROBE = oapiCreateVessel(VName, "ProjectApollo/CMprobe", vs4b);
+}
+
+void Saturn::JettisonSIMBayPanel()
+{
+	//TBD: Correct offset and velocity
+
+	//
+	// Blow off Panel 1.
+	//
+
+	VESSELSTATUS vs1;
+
+	const double CGOffset = 12.25 + 21.5 - 1.8 + 0.35;
+
+	VECTOR3 vel1 = _V(cos(52.25*RAD), sin(52.25*RAD), 0.0)*13.7*0.3048;
+	VECTOR3 ofs1 = { 0, 0, 30.25 - CGOffset };
+
+	GetStatus(vs1);
+
+	VECTOR3 rofs1, rvel1 = { vs1.rvel.x, vs1.rvel.y, vs1.rvel.z };
+
+	Local2Rel(ofs1, vs1.rpos);
+	GlobalRot(vel1, rofs1);
+
+	vs1.rvel.x = rvel1.x + rofs1.x;
+	vs1.rvel.y = rvel1.y + rofs1.y;
+	vs1.rvel.z = rvel1.z + rofs1.z;
+	vs1.vrot.x = 0;
+	vs1.vrot.y = 0;
+	vs1.vrot.z = 0;
+
+	char VName[256];
+
+	GetApolloName(VName);
+	strcat(VName, "-PANEL1");
+
+	oapiCreateVessel(VName, "ProjectApollo/SM-Panel1", vs1);
 }
 
 void Saturn::JettisonOpticsCover() 

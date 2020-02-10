@@ -1291,6 +1291,9 @@ LDEC::LDEC():
 	DockingProbeRetract1 = false;
 	DockingRingFinalSeparation = false;
 	CSM_LEM_LockRingSepRelaySignal = false;
+	SIMPyroArmRelay = false;
+
+	SMSector1LogicPowerBreaker = NULL;
 }
 
 void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe,ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed)
@@ -1303,6 +1306,11 @@ void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, Ci
 	PyroArmSwitch = PyroArmSw;
 	PyroBus = PyroB;
 	PyroBusFeeder = PyroBusFeed;
+}
+
+void LDEC::InitSIMJett(CircuitBrakerSwitch *SMSec1Power)
+{
+	SMSector1LogicPowerBreaker = SMSec1Power;
 }
 
 void LDEC::Timestep(double simdt)
@@ -1361,6 +1369,22 @@ void LDEC::Timestep(double simdt)
 	else
 	{
 		DockingRingFinalSeparation = false;
+	}
+
+	//Apollo 15 and later
+	if (Sat->Panel181)
+	{
+		if (SMSector1LogicPowerBreaker)
+		{
+			if (SMSector1LogicPowerBreaker->IsPowered() && (Sat->Panel181->SMSector1LogicPower1Switch.IsUp() || Sat->Panel181->SMSector1LogicPower2Switch.IsUp()))
+			{
+				SIMPyroArmRelay = true;
+			}
+			else
+			{
+				SIMPyroArmRelay = false;
+			}
+		}
 	}
 
 	//Telemetry
@@ -1453,6 +1477,12 @@ void SECS::ControlVessel(Saturn *v)
 	LDECB.Init(v, &MESCB, &Sat->SECSArmBatBCircuitBraker, &Sat->DockProbeMnBCircuitBraker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
 }
 
+void SECS::InitSIMJett(CircuitBrakerSwitch *SMSec1PowerA, CircuitBrakerSwitch *SMSec1PowerB)
+{
+	LDECA.InitSIMJett(SMSec1PowerA);
+	LDECB.InitSIMJett(SMSec1PowerB);
+}
+
 void SECS::SetSaturnType(int sattype)
 {
 	if (sattype == SAT_SATURN1B)
@@ -1516,6 +1546,27 @@ void SECS::Timestep(double simt, double simdt)
 	/// \todo This assumes instantaneous separation of the LM, but it avoids connector calls each time step
 	if (pyroA || pyroB) {
 		Sat->StartSeparationPyros();
+	}
+
+	//
+	// SIM Bay Jettison
+	//
+
+	if (Sat->Panel181)
+	{
+		if (Sat->Panel181->SMSector1DoorJettisonSwitch.IsUp())
+		{
+			if (LDECA.GetSIMPyroArmRelay() || LDECB.GetSIMPyroArmRelay())
+			{
+				//TBD: Do Stuff
+				if (!Sat->SIMBayPanelJett)
+				{
+					Sat->SIMBayPanelJett = true;
+					Sat->JettisonSIMBayPanel();
+					Sat->SetSIMBayPanelMesh();
+				}
+			}
+		}
 	}
 
 	//

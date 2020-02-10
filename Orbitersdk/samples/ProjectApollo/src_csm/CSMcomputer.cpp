@@ -66,44 +66,56 @@ CSMcomputer::~CSMcomputer()
 	//
 }
 
-void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
+void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel, char *ProgramName)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
+	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel, ProgramName);
 
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//
 	// same criterium in CSMcomputer::Timestep because of pad load
 
-	char *binfile;
+	
 
-	if (ApolloNo < 9)	// Colossus 237
+	if (AGCVersion[0])
 	{
-		binfile = "Config/ProjectApollo/Colossus237.bin";
-	}
-	else if (ApolloNo < 10)	// Colossus 249
-	{
-		binfile = "Config/ProjectApollo/Colossus249.bin";
-	}
-	else if (ApolloNo < 11)	// Comanche 055, modified for Apollo 10
-	{
-		binfile = "Config/ProjectApollo/Comanche055NBY69.bin";
-	}
-	else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
-	{
-		binfile = "Config/ProjectApollo/Comanche055.bin";
-	}
-	else if (ApolloNo < 15)	// Artemis 72, modified for Apollo 14
-	{
-		binfile = "Config/ProjectApollo/Artemis072NBY71.bin";
-	}
-	else	//Artemis 072
-	{
-		binfile = "Config/ProjectApollo/Artemis072.bin";
-	}
+		char Buffer[100];
+		sprintf(Buffer, "Config/ProjectApollo/%s.bin", AGCVersion);
 
-	InitVirtualAGC(binfile);
+		InitVirtualAGC(Buffer);
+	}
+	else
+	{
+		char *binfile;
+
+		if (ApolloNo < 9)	// Colossus 237
+		{
+			binfile = "Config/ProjectApollo/Colossus237.bin";
+		}
+		else if (ApolloNo < 10)	// Colossus 249
+		{
+			binfile = "Config/ProjectApollo/Colossus249.bin";
+		}
+		else if (ApolloNo < 11)	// Comanche 055, modified for Apollo 10
+		{
+			binfile = "Config/ProjectApollo/Comanche055NBY69.bin";
+		}
+		else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
+		{
+			binfile = "Config/ProjectApollo/Comanche055.bin";
+		}
+		else if (ApolloNo < 15)	// Artemis 72, modified for Apollo 14
+		{
+			binfile = "Config/ProjectApollo/Artemis072NBY71.bin";
+		}
+		else	//Artemis 072
+		{
+			binfile = "Config/ProjectApollo/Artemis072.bin";
+		}
+
+		InitVirtualAGC(binfile);
+	}
 }
 
 void CSMcomputer::agcTimestep(double simt, double simdt)

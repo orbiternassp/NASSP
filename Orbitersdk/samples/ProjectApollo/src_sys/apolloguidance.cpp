@@ -60,6 +60,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	ApolloNo = 0;
 
 	OtherVesselName[0] = 0;
+	AGCVersion[0] = 0;
 
 	//
 	// Clear channels.
@@ -240,7 +241,7 @@ void ApolloGuidance::SystemTimestep(double simdt)
 	}
 }
 
-void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName) 
+void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName, char *ProgramName)
 
 {
 	//
@@ -254,12 +255,12 @@ void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName)
 
 	if (OtherName != 0)
 		strncpy(OtherVesselName, OtherName, 64);
+	if (ProgramName != 0)
+		strncpy(AGCVersion, ProgramName, 64);
 }
 
 //
 // Virtual AGC Erasable memory functions.
-//
-// Currenty do nothing.
 //
 
 
@@ -369,6 +370,8 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 
 	if (OtherVesselName[0])
 		oapiWriteScenario_string(scn, "ONAME", OtherVesselName);
+	if (AGCVersion[0])
+		oapiWriteScenario_string(scn, "PROGRAM", AGCVersion);
 
 	//
 	// Copy internal state to the structure.
@@ -578,6 +581,9 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);
+		}
+		else if (!strnicmp(line, "PROGRAM", 7)) {
+			strncpy(AGCVersion, line + 8, 64);
 		}
 
 		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);

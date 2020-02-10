@@ -524,6 +524,7 @@ public:
 		SRF_EVENT_TIMER_DIGITS90,
 		SRF_DIGITAL90,
 		SRF_CSM_PRESS_EQUAL_HANDLE,
+		SRF_CSM_PANEL_181,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -651,6 +652,7 @@ public:
 			unsigned CSMAttached:1;			///< Is there a CSM?
 			unsigned NosecapAttached:1;		///< Is there an Apollo 5-style nosecap?
 			unsigned LESLegsCut:1;			///< Are the LES legs attached?
+			unsigned SIMBayPanelJett:1;		///< Has the SIM bay panel been jettisoned?
 		};
 		unsigned long word;
 
@@ -1069,6 +1071,8 @@ public:
 
 	virtual void CreateStageSpecificSystems() = 0;
 
+	void CreateMissionSpecificSystems();
+
 	///
 	/// If the scenario specified AUTOSLOW and time acceleration is enabled, slow it
 	/// down to 1.0.
@@ -1184,6 +1188,8 @@ public:
 	///
 	void SetNosecapMesh();
 
+	void SetSIMBayPanelMesh();
+
 	///
 	/// \brief Set probe visibility flag
 	///
@@ -1273,6 +1279,8 @@ protected:
 
 	void JettisonNosecap();
 
+	void JettisonSIMBayPanel();
+
 	//
 	// State that needs to be saved.
 	//
@@ -1351,6 +1359,8 @@ protected:
 	/// \brief SLA panels separation flag.
 	///
 	bool SLAWillSeparate;
+
+	bool SIMBayPanelJett;
 
 	bool DeleteLaunchSite;
 
@@ -2568,6 +2578,11 @@ protected:
 	SwitchRow SCIUtilPowerSwitchRow;
 	ToggleSwitch SCIUtilPowerSwitch;
 
+	////////////////////////////////////
+	// Panel 181 (Apollo 15 and later //
+	////////////////////////////////////
+	SaturnPanel181 *Panel181;
+
 	///////////////////////
 	// Panel 15 switches //
 	///////////////////////
@@ -3763,6 +3778,7 @@ protected:
 	int cmdocktgtidx;
 	int nosecapidx;
 	int meshLM_1;
+	int simbaypanelidx;
 
 	DEVMESHHANDLE probe;
 
@@ -4263,6 +4279,9 @@ protected:
 	/// SIVB payload name
 	///
 	char PayloadName[64];
+
+	char CMCVersion[64];
+	char LGCVersion[64];
 
 	///
 	/// LEM checklist file
