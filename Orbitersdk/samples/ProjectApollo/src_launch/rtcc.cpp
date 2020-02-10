@@ -13795,7 +13795,7 @@ PMSVEC_2_2:
 		mu = OrbMech::mu_Moon;
 	}
 
-	MATRIX3 Rot = OrbMech::GetObliquityMatrix(sv.RBI, OrbMech::MJDfromGET(sv.GMT, GMTBASE));
+	MATRIX3 Rot = OrbMech::GetRotationMatrix(sv.RBI, GMTBASE);
 	VECTOR3 R = rhtmul(Rot, sv.R);
 	VECTOR3 V = rhtmul(Rot, sv.V);
 	elem = OrbMech::GIMIKC(R, V, mu);
@@ -21097,6 +21097,79 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	{
 		h = PI2 - h;
 	}
+}
+
+int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg)
+{
+	PMMLAEG aeg;
+	AEGHeader header;
+	MATRIX3 Rot;
+	VECTOR3 P, W, P_apo, W_apo;
+	double eps_i, eps_t, usg, du, theta_dot, dt;
+	int KE, K;
+
+	eps_i = 1e-4;
+	eps_t = 0.01;
+	header.AEGInd = 1;
+	header.ErrorInd = 0;
+
+	AEGOUT = AEGIN;
+	KE = 0;
+	K = 1;
+RTCC_PIATSU_1A:
+	Rot = OrbMech::GetObliquityMatrix(BODY_MOON, GMTBASE + AEGOUT.TS / 24.0 / 3600.0);
+	OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
+	P_apo = rhtmul(Rot, P);
+	W_apo = rhtmul(Rot, W);
+	OrbMech::PIVECT(P_apo, W_apo, isg, gsg, hsg);
+	if (isg < eps_i || isg > PI - eps_i)
+	{
+		KE = 2;
+		return KE;
+	}
+	usg = AEGOUT.f + gsg;
+	if (usg >= PI2)
+	{
+		usg = usg - PI2;
+	}
+	if (K > 1)
+	{
+		du = AEGOUT.Item8 - usg;
+		theta_dot = sqrt(OrbMech::mu_Moon*(1.0 - pow(AEGOUT.coe_osc.e, 2))) / pow(AEGOUT.R, 2) + AEGOUT.g_dot;
+		if (abs(du) > PI)
+		{
+			if (du > 0)
+			{
+				du = du - PI2;
+			}
+			else if (du <= 0)
+			{
+				du = du + PI2;
+			}
+		}
+	}
+	else
+	{
+		du = AEGOUT.Item8 - usg + AEGOUT.DN*PI2;
+		theta_dot = sqrt(OrbMech::mu_Moon / pow(AEGOUT.coe_osc.a, 3));
+	}
+	dt = du / theta_dot;
+	if (abs(dt) <= eps_t)
+	{
+		return KE;
+	}
+	if (K >= 7)
+	{
+		KE = 1;
+		return KE;
+	}
+	aeg.CALL(header, AEGIN, AEGOUT);
+	if (header.ErrorInd)
+	{
+		KE = -2;
+		return KE;
+	}
+	goto RTCC_PIATSU_1A;
 }
 
 void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs)

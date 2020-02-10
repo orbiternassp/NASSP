@@ -288,7 +288,7 @@ struct AEGDataBlock
 	//Item 5, drag indicator. If nonzero it is the K-Factor
 	double ICSUBD;
 	double VehArea;
-	double VehWeight;
+	double Item7;
 	//Mean anomaly (option 1), argument of latitude (option 2)
 	double Item8;
 	double MJD_oc;
@@ -620,10 +620,15 @@ namespace OrbMech {
 	void EMXINGElev(VECTOR3 R, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body, VECTOR3 &N, VECTOR3 &rho, double &sinang);
 	//RTCC EMXING support routine, calculates elevation slope function
 	double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, double GMT, int body);
+	//Generate orbit normal and ascending node vectors from elements, and vice versa
+	void PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h);
+	void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W);
 
 	//AEG
 	CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body);
 	CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body);
+	CELEMENTS KeplerToEquinoctial(CELEMENTS kep);
+	CELEMENTS EquinoctialToKepler(CELEMENTS aeq);
 	void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double &l_dot, double &g_dot, double &h_dot);
 	SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN = 0.0);
 	SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN = 0.0);

@@ -7035,19 +7035,103 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S_equ, double GMTBASE, do
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
 }
 
+void PIVECT(VECTOR3 P, VECTOR3 W, double &i, double &g, double &h)
+{
+	VECTOR3 n;
+
+	i = acos(W.z / length(W));
+	n = crossp(_V(0, 0, 1), W);
+	h = acos(n.x / length(n));
+	if (n.y < 0)
+	{
+		h = PI2 - h;
+	}
+	g = acos(dotp(unit(n), unit(P)));
+	if (P.z < 0)
+	{
+		g = PI2 - g;
+	}
+}
+
+void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W)
+{
+	P = _V(-sin(h)*cos(i)*sin(g) + cos(h)*cos(g), cos(h)*cos(i)*sin(g) + sin(h)*cos(g), sin(i)*sin(g));
+	W = _V(sin(h)*sin(i), -cos(h)*sin(i), cos(i));
+}
+
+CELEMENTS KeplerToEquinoctial(CELEMENTS kep)
+{
+	CELEMENTS aeq;
+
+	aeq.a = kep.a;
+	aeq.e = kep.e*sin(kep.g + kep.h);
+	aeq.i = kep.e*cos(kep.g + kep.h);
+	aeq.h = sin(kep.i / 2.0)*sin(kep.h);
+	aeq.g = sin(kep.i / 2.0)*cos(kep.h);
+	aeq.l = kep.h + kep.g + kep.l;
+	if (aeq.l >= PI2)
+	{
+		aeq.l -= PI2;
+	}
+
+	return aeq;
+}
+
+CELEMENTS EquinoctialToKepler(CELEMENTS aeq)
+{
+	CELEMENTS kep;
+
+	kep.a = aeq.a;
+	kep.e = sqrt(aeq.e*aeq.e + aeq.i*aeq.i);
+	if ((aeq.h*aeq.h + aeq.g*aeq.g) <= 1.0)
+		kep.i = acos2(1.0 - 2.0*(aeq.h*aeq.h + aeq.g*aeq.g));
+	if ((aeq.h*aeq.h + aeq.g*aeq.g) > 1.0)
+		kep.i = acos2(1.0 - 2.0*1.0);
+
+	kep.h = atan2(aeq.h, aeq.g);
+	if (kep.h < 0)
+	{
+		kep.h = kep.h + PI2;
+	}
+	kep.g = atan2(aeq.e, aeq.i) - kep.h;
+	if (kep.g < 0)
+	{
+		kep.g = kep.g + PI2;
+	}
+	kep.l = aeq.l - atan2(aeq.e, aeq.i);
+	if (kep.l < 0)
+	{
+		kep.l += PI2;
+	}
+
+	return kep;
+}
+
 CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body)
 {
 	CELEMENTS arr_mean, arr_osc2, arr_mean2;
+	CELEMENTS aeq, aeq2, aeq_mean, aeq_mean2;
 	int j;
-	bool stop;
+	bool stop, pseudostate = false;
 
-	arr_mean = arr_osc;
+	if (arr_osc.i > 175.0*RAD)
+	{
+		arr_osc.i = PI - arr_osc.i;
+		arr_osc.h = -arr_osc.h + PI2;
+		pseudostate = true;
+	}
+
+	aeq = KeplerToEquinoctial(arr_osc);
+	aeq_mean = aeq;
 	stop = true;
 	j = 0;
 	do
 	{
+		arr_mean = EquinoctialToKepler(aeq_mean);
 		arr_osc2 = LyddaneMeanToOsculating(arr_mean, body);
-		arr_mean2 = arr_mean + (arr_osc - arr_osc2);
+		aeq2 = KeplerToEquinoctial(arr_osc2);
+		aeq_mean2 = aeq_mean - (aeq2 - aeq);
+		arr_mean2 = EquinoctialToKepler(aeq_mean2);
 
 		//Map to 0 to 2PI
 		while (arr_mean2.l < 0)
@@ -7057,6 +7141,18 @@ CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body)
 		while (arr_mean2.l >= PI2)
 		{
 			arr_mean2.l -= PI2;
+		}
+		while (arr_mean2.g < 0)
+		{
+			arr_mean2.g += PI2;
+		}
+		while (arr_mean2.g >= PI2)
+		{
+			arr_mean2.g -= PI2;
+		}
+		if (arr_mean2.e < 1e-6)
+		{
+			arr_mean2.e = 1e-6;
 		}
 
 		if (abs(arr_mean2.a - arr_mean.a) > 0.1)
@@ -7083,16 +7179,22 @@ CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body)
 		{
 			stop = 0;
 		}
+		aeq_mean = aeq_mean2;
 		if (stop == 1)
 		{
-			arr_mean = arr_mean2;
 			break;
 		}
-		stop = 1;
-		arr_mean = arr_mean2;
+		stop = 1;		
 		j = j + 1;
 	} while (j < 25);
-	return arr_mean;
+
+	if (pseudostate != 0)
+	{
+		arr_mean2.i = PI - arr_mean2.i;
+		arr_mean2.h = -arr_mean2.h + PI2;
+	}
+
+	return arr_mean2;
 }
 
 CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body)
@@ -8147,7 +8249,9 @@ PMMLAEG::PMMLAEG()
 
 void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 {
-	CELEMENTS coe_osc0, coe_osc1, coe_mean0, coe_mean1;
+	CELEMENTS coe_osc0, coe_osc1, coe_mean0;
+	MATRIX3 Rot;
+	VECTOR3 P, W;
 	double u0, f0;
 
 	if (in.coe_osc.a<0.27*OrbMech::R_Earth || in.coe_osc.a > 5.0*OrbMech::R_Earth)
@@ -8158,7 +8262,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 	{
 		goto NewPMMLAEG_V846;
 	}
-	if (in.coe_osc.i < 0 || in.coe_osc.i >= PI)
+	if (in.coe_osc.i < 0 || in.coe_osc.i > PI)
 	{
 		goto NewPMMLAEG_V846;
 	}
@@ -8174,19 +8278,30 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 	{
 		goto NewPMMLAEG_V846;
 	}
+
+	CurrentBlock = in;
+
 	if (in.TE == in.TS && in.ENTRY != 0 && in.TIMA == 0)
 	{
 		//Input time equals output time, we have initialized elements and time option. Nothing to do
-		out = in;
 		goto NewPMMLAEG_V1030;
 	}
 
-	coe_osc0 = in.coe_osc;
+	//Matrix to rotate to selenographic inertial
+	Rot = OrbMech::GetObliquityMatrix(BODY_MOON, in.Item7 + in.TS / 24.0 / 3600.0);
 
 	//Uninitialized
 	if (in.ENTRY == 0)
 	{
-		coe_mean0 = OrbMech::LyddaneOsculatingToMean(in.coe_osc, BODY_MOON);
+		//Selenocentric to selenographic
+		coe_osc0 = in.coe_osc;
+		OrbMech::PIVECT(in.coe_osc.i, in.coe_osc.g, in.coe_osc.h, P, W);
+		P = rhtmul(Rot, P);
+		W = rhtmul(Rot, W);
+		OrbMech::PIVECT(P, W, coe_osc0.i, coe_osc0.g, coe_osc0.h);
+
+		//Osculating to mean
+		coe_mean0 = OrbMech::LyddaneOsculatingToMean(coe_osc0, BODY_MOON);
 
 		CurrentBlock.coe_mean.a = coe_mean0.a;
 		CurrentBlock.coe_mean.e = coe_mean0.e;
@@ -8195,7 +8310,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 		OrbMech::BrouwerSecularRates(in.coe_osc, coe_mean0, BODY_MOON, CurrentBlock.l_dot, CurrentBlock.g_dot, CurrentBlock.h_dot);
 
 		f0 = OrbMech::MeanToTrueAnomaly(in.coe_osc.l, in.coe_osc.e);
-		u0 = in.f + in.coe_osc.g;
+		u0 = f0 + in.coe_osc.g;
 		if (u0 >= PI2)
 		{
 			u0 -= PI2;
@@ -8218,10 +8333,19 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 	}
 	CurrentBlock.ENTRY = 1;
 
-	double dt = in.TE - in.TS;
+	double dt;
 
-	if (in.TIMA == 0)
+	if (in.TIMA == 0 || in.TIMA == 4)
 	{
+		if (in.TIMA == 0)
+		{
+			dt = in.TE - in.TS;
+		}
+		else
+		{
+			dt = PreviousBlock.TE - in.TS;
+		}
+
 		CurrentBlock.coe_mean.l = CurrentBlock.l_dot*dt + coe_mean0.l;
 		CurrentBlock.coe_mean.g = CurrentBlock.g_dot*dt + coe_mean0.g;
 		CurrentBlock.coe_mean.h = CurrentBlock.h_dot*dt + coe_mean0.h;
@@ -8235,7 +8359,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 	}
 	else
 	{
-		coe_osc1 = coe_osc0;
+		coe_osc1 = in.coe_osc;
 
 		double L_D, DX_L, DH, X_L, X_L_dot, ddt;
 		int LINE, COUNT;
@@ -8325,15 +8449,15 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 			}
 
 			dt += ddt;
-			coe_mean1.l = CurrentBlock.l_dot*dt + coe_mean0.l;
-			coe_mean1.g = CurrentBlock.g_dot*dt + coe_mean0.g;
-			coe_mean1.h = CurrentBlock.h_dot*dt + coe_mean0.h;
+			CurrentBlock.coe_mean.l = CurrentBlock.l_dot*dt + coe_mean0.l;
+			CurrentBlock.coe_mean.g = CurrentBlock.g_dot*dt + coe_mean0.g;
+			CurrentBlock.coe_mean.h = CurrentBlock.h_dot*dt + coe_mean0.h;
 
-			OrbMech::normalizeAngle(coe_mean1.l);
-			OrbMech::normalizeAngle(coe_mean1.g);
-			OrbMech::normalizeAngle(coe_mean1.h);
+			OrbMech::normalizeAngle(CurrentBlock.coe_mean.l);
+			OrbMech::normalizeAngle(CurrentBlock.coe_mean.g);
+			OrbMech::normalizeAngle(CurrentBlock.coe_mean.h);
 
-			coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
+			coe_osc1 = OrbMech::LyddaneMeanToOsculating(CurrentBlock.coe_mean, BODY_MOON);
 
 			COUNT--;
 
@@ -8343,7 +8467,15 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 		{
 			header.ErrorInd = -3;
 		}
+
+		CurrentBlock.TE = in.TS + dt;
 	}
+
+	//Selenographic to selenocentric
+	OrbMech::PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
+	P = rhmul(Rot, P);
+	W = rhmul(Rot, W);
+	OrbMech::PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
 
 	CurrentBlock.coe_osc = coe_osc1;
 	CurrentBlock.f = OrbMech::MeanToTrueAnomaly(CurrentBlock.coe_osc.l, CurrentBlock.coe_osc.e);
@@ -8351,6 +8483,19 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 	if (CurrentBlock.U >= PI2)
 	{
 		CurrentBlock.U -= PI2;
+	}
+
+	if (in.TIMA >= 4)
+	{
+		CurrentBlock.DN = CurrentBlock.U - PreviousBlock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - PreviousBlock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + PreviousBlock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - PreviousBlock.coe_osc.i + PI))));
+		if (CurrentBlock.DN < 0)
+		{
+			CurrentBlock.DN += PI2;
+		}
+		else if (CurrentBlock.DN >= PI2)
+		{
+			CurrentBlock.DN -= PI2;
+		}
 	}
 
 NewPMMLAEG_V1030:
