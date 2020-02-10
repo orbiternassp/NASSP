@@ -770,6 +770,7 @@
 #define IDB_CSM_LEFT_317_WINDOW                            1055
 #define IDB_CSM_PRESS_EQUAL_HANDLE                         1056
 #define AID_CSM_PANEL_181								   1057
+#define IDB_CSM_PANEL_181								   1058
 
 // Next default values for new objects
 //
