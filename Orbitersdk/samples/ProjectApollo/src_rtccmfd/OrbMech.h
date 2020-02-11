@@ -279,20 +279,26 @@ struct AEGHeader
 
 struct AEGDataBlock
 {
-	int Spare1;
+	//Item 1, 11 is Keplerian to Keplerian (only used in AEG service routine)
+	int InputOutputInd = 11;
 	//Item 2, initialize/update indicator (0 = Osculating elements provided, 1 = osc and mean elements provided, use low e form., 2 = same as 1, but high e)
-	int ENTRY;
+	int ENTRY = 0;
 	//Item 3, update option indicator (0 = to time, 1 = to mean anomaly, 2 = to argument of latitude, 3 = to maneuver counter line...)
-	int TIMA;
-	int HarmonicsInd;
+	int TIMA = 0;
+	//Item 4, 0 for J2 and J4, 1 for J2, J3, J4 and -1 for J2 and J3 (only 1 should be used in the real time system)
+	int HarmonicsInd = 1;
 	//Item 5, drag indicator. If nonzero it is the K-Factor
-	double ICSUBD;
-	double VehArea;
+	double ICSUBD = 0.0;
+	//Item 6, vehicle area
+	double VehArea = 0.0;
+	//Item 7, vehicle weight for Earth AEG, GMTBASE for Lunar AEG
 	double Item7;
-	//Mean anomaly (option 1), argument of latitude (option 2)
+	//Item 8, Input: Mean anomaly (option 1), argument of latitude (option 2), Output: DH (options 5-6) otherwise same as input
 	double Item8;
-	double MJD_oc;
-	double DN;
+	//Item 9, crossing time of the reference counter line
+	double t_oc;
+	//Item 10, number of times the AEG will cross the reference line (input), phase angle for options 4-6 (output)
+	double Item10;
 	CELEMENTS coe_osc;
 	CELEMENTS coe_mean;
 	//Item 23, time associated with elements 11-16 (in GMT)
@@ -326,9 +332,9 @@ class PMMLAEG
 {
 public:
 	PMMLAEG();
-	void CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out);
+	void CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out);
 protected:
-	AEGDataBlock CurrentBlock, PreviousBlock;
+	AEGDataBlock CurrentBlock;
 };
 
 class CoastIntegrator
@@ -625,6 +631,7 @@ namespace OrbMech {
 	void PIVECT(double i, double g, double h, VECTOR3 &P, VECTOR3 &W);
 
 	//AEG
+	CELEMENTS BrouwerMeanToOsculating(CELEMENTS arr, int body);
 	CELEMENTS LyddaneMeanToOsculating(CELEMENTS arr, int body);
 	CELEMENTS LyddaneOsculatingToMean(CELEMENTS arr_osc, int body);
 	CELEMENTS KeplerToEquinoctial(CELEMENTS kep);

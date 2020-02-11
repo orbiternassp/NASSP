@@ -21112,6 +21112,7 @@ int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &
 	eps_t = 0.01;
 	header.AEGInd = 1;
 	header.ErrorInd = 0;
+	AEGIN.TIMA = 0;
 
 	AEGOUT = AEGIN;
 	KE = 0;
@@ -21134,8 +21135,8 @@ RTCC_PIATSU_1A:
 	}
 	if (K > 1)
 	{
-		du = AEGOUT.Item8 - usg;
-		theta_dot = sqrt(OrbMech::mu_Moon*(1.0 - pow(AEGOUT.coe_osc.e, 2))) / pow(AEGOUT.R, 2) + AEGOUT.g_dot;
+		du = AEGIN.Item8 - usg;
+		theta_dot = sqrt(OrbMech::mu_Moon*AEGOUT.coe_osc.a*(1.0 - pow(AEGOUT.coe_osc.e, 2))) / pow(AEGOUT.R, 2) + AEGOUT.g_dot;
 		if (abs(du) > PI)
 		{
 			if (du > 0)
@@ -21150,8 +21151,8 @@ RTCC_PIATSU_1A:
 	}
 	else
 	{
-		du = AEGOUT.Item8 - usg + AEGOUT.DN*PI2;
-		theta_dot = sqrt(OrbMech::mu_Moon / pow(AEGOUT.coe_osc.a, 3));
+		du = AEGIN.Item8 - usg + AEGIN.Item10*PI2;
+		theta_dot = sqrt(OrbMech::mu_Moon / pow(AEGIN.coe_osc.a, 3));
 	}
 	dt = du / theta_dot;
 	if (abs(dt) <= eps_t)
@@ -21163,6 +21164,8 @@ RTCC_PIATSU_1A:
 		KE = 1;
 		return KE;
 	}
+	AEGIN.TE = AEGOUT.TS + dt;
+	K++;
 	aeg.CALL(header, AEGIN, AEGOUT);
 	if (header.ErrorInd)
 	{

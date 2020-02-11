@@ -7485,6 +7485,206 @@ void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double
 		+ 5.0 / 4.0*gmp4*theta*(5.0 - 3.0*cn2)*(3.0 - 7.0*theta2));
 }
 
+CELEMENTS BrouwerMeanToOsculating(CELEMENTS arr, int body)
+{
+	double theta, theta2, theta4, beta, f0, u0, mu, J2, J3, J4, R_e, edg, esing, ecosg;
+	double C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19, C20, C21, C22, C23, C24, C25, C26, C27, C28, C29, C30, C31, C32;
+	double gm2, gm3, gm4, gmp2, gmp3, gmp4, eta, eta_B, S7, S8, S9, S10, S11, S12, S13, S14, S15, S16, S17, S18;
+	double e1, e4, e5, e6, e7, e8, e9, e10, e11, e_B, d1e, gI4, g1, g2, g3, g4, g5, gI2, gI3, gI5, gI55, gI1, I2, I3, I4, I5, DI;
+	double O1, O2, O3, O4, O5, O6, O7, O8, O9, O10, O11, O12, I1, DL_A, L_A_aapo, h2, h3, h4, dh;
+	double e, g, L_A, u, f, a, l, h, i;
+	double a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, da;
+
+	if (body == BODY_EARTH)
+	{
+		mu = mu_Earth;
+		J2 = J2_Earth;
+		J3 = J3_Earth;
+		J4 = J4_Earth;
+		R_e = R_Earth;
+	}
+	else
+	{
+		mu = mu_Moon;
+		J2 = J2_Moon;
+		J3 = 0;
+		J4 = 0;
+		R_e = R_Moon;
+	}
+
+	f0 = MeanToTrueAnomaly(arr.l, arr.e);
+	u0 = arr.g + f0;
+	if (u0 >= PI2)
+	{
+		u0 -= PI2;
+	}
+	L_A_aapo = arr.l + arr.g;
+
+	theta = cos(arr.i);
+	theta2 = theta * theta;
+	theta4 = theta2 * theta2;
+	beta = sin(arr.i);
+
+	C1 = -1.0 + 5.0*theta2;
+	C2 = -3.0 + 7.0*theta2;
+	C3 = 3.0 - 5.0*theta2;
+	C4 = 15.0 / 32.0*(1.0 - 18.0 / 5.0*theta2 + theta4);
+	C5 = 3.0 / 8.0*(1.0 - 6.0*theta2 + 9.0*theta4);
+	C6 = 15.0 / 32.0*(1.0 - 2.0*theta2 - 7.0*theta4);
+	C7 = 3.0 / 2.0*(3.0*theta2 - 1.0);
+	C8 = 9.0 / 4.0*(1.0 - 6.0*theta2 + 5.0*theta4);
+	C9 = 3.0 / 16.0*(1.0 - 16.0*theta2 + 15.0*theta4);
+	C10 = 5.0 / 2.0*beta*theta2;
+	C11 = 3.0 / 2.0*beta;
+	C12 = -3.0 / 8.0*beta*C1;
+	C13 = 1.0 / 3.0*(35.0 - 70.0*theta2 + 35.0*theta4); //Check
+	C14 = 10.0 / 3.0*(4.0 - 11.0*theta2 + 7.0*theta4);
+	C15 = 1.0 / 3.0*(8.0 - 40.0*theta2 + 35.0*theta4);
+	C16 = 1.0 / 16.0*(3.0 - 30.0*theta2 + 35.0*theta4);
+	C17 = 1.0 / 4.0*(5.0 - 40.0*theta2 + 35.0*theta4);
+	C18 = 3.0 - 16.0*theta2 / C1 + 40.0*theta4 / C1 / C1;
+	C19 = theta / 4.0*(11.0 - 80.0*theta2 / C1 + 200.0*theta4 / C1 / C1);
+	C20 = 5.0 / 6.0*theta*C18;
+	C21 = 1.0 - 11.0*theta2 + 40.0*theta4 / C1;
+	C22 = 1.0 / 8.0*C21;
+	C23 = 1.0 - 3.0*theta2 + 8.0*theta4 / C1;
+	C24 = 5.0 / 12.0*C23;
+	C25 = theta * C11;
+	C26 = 1.0 / 4.0*C21;
+	C27 = 5.0 / 6.0*C23;
+	C28 = 3.0 / 4.0*C2*sin(u0); //Check
+	C29 = 3.0 / 4.0*C1*cos(u0);
+	C30 = 7.0 / 4.0*beta*beta; //Check
+	C31 = 1.0 - 33.0*theta2 + 200.0*theta4 / C1 - 400.0*theta4*theta2 / C1 / C1;
+	C32 = 1.0 - 9.0*theta2 + 40.0*theta4 / C1 - 80.0*theta4*theta2 / C1 / C1;
+	eta_B = sqrt(mu / pow(arr.a, 3));
+	eta = sqrt(1.0 - arr.e*arr.e);
+	gm2 = J2 * pow(R_e / arr.a, 2);
+	gmp2 = gm2 / pow(eta, 4);
+	gm3 = 2.0 / 5.0*J3*pow(R_e/arr.a, 3);
+	gmp3 = gm2 / pow(eta, 6);
+	gm4 = 1.0 / 1.0*J4*pow(R_e / arr.a, 4);
+	gmp4 = gm4 / pow(eta, 8);
+	//gdot and hdot
+	e6 = arr.e / (1.0 + pow(eta, 3))*(3.0 - arr.e*arr.e*(3.0 - arr.e*arr.e));
+	if (arr.e < 0.005)
+	{
+
+	}
+	else
+	{
+		e1 = arr.e*eta*eta / gmp2 * (C22*gmp2*gmp2 - C24 * gmp4);
+		S7 = sin(arr.g);
+		S8 = cos(arr.g);
+		S9 = sin(2.0*u0);
+		S10 = cos(2.0*u0);
+		S11 = sin(2.0*arr.g + f0);
+		S12 = cos(2.0*arr.g + f0);
+		S13 = sin(2.0*arr.g + 3.0*f0);
+		S14 = cos(2.0*arr.g + 3.0*f0);
+		S15 = sin(f0);
+		S16 = cos(f0);
+		S17 = sin(2.0*arr.g);
+		S18 = cos(2.0*arr.g);
+		e4 = -2.0*e1;
+		e5 = eta * eta*beta / (4.0*gmp2)*gmp3;
+		d1e = e1 * S18 + (e4*S7 + e5)*S7;
+		e7 = -1.0 / 2.0*eta*eta*gmp2*beta*beta*(3.0*S12 + S14);
+		e8 = S16 * (3.0 + arr.e*S16*(3.0 + arr.e*S16));
+		e9 = (e6 + e8) / pow(eta, 6);
+		e10 = (arr.e + e8) / pow(eta, 6);
+		e11 = e7 + 1.0 / 2.0*eta*eta*gm2*(2.0 / 3.0*C7*e9 + 3.0*beta*beta*e10*S10);
+		e_B = arr.e + d1e + e11;
+	}
+
+	gI4 = (1.0 + arr.e*S16) / pow(eta, 2);
+	g1 = 1.0 / (24.0*gmp2)*(-3.0*gmp2*gmp2*(2.0*C21 + arr.e*arr.e*C31) + 10.0*gmp4*(2.0*C23 + arr.e*arr.e*C32));
+	g2 = 1.0 / 4.0*gmp2 / gmp2 * arr.e*theta2 / beta;
+	gI1 = arr.e*(81.0*arr.e*arr.e - 32.0) / (4.0 + 3.0*arr.e*arr.e + eta * (4.0 + 9.0*arr.e*arr.e));
+	gI2 = 1.0 / 4.0*gmp3 / gmp2 * beta*e6;
+	gI55 = gI4 * gI4*eta*eta + gI4;
+	gI3 = 1.0 / 4.0*gmp2*(6.0*C1*(f0 - arr.l + arr.e*S15) + C3 * (3.0*S9 + 3.0*arr.e*S11 + arr.e*S13));
+	gI5 = 1.0 / 4.0*gmp2*(4.0 / 3.0*C7*(gI55 + 1.0)*S15 + 3.0*beta*beta*((1.0 - gI55)*S11 + (gI55 + 1.0 / 3.0)*S13));
+	g3 = 0.0;//???
+	g4 = 0.0;//???
+
+	if (arr.e >= 0.005)
+	{
+		g5 = 1.0 / 4.0*gmp3 / gmp2 * beta;
+		edg = 1.0 / 2.0*arr.e*g1*S17 + (arr.e*g2 + g5)*S8 + arr.e*gI4*S18 + eta * eta*gI5 + arr.e*gI3; //gI4??
+		esing = e_B * sin(arr.g) + edg * cos(arr.g);
+		ecosg = e_B * cos(arr.g) - edg * sin(arr.g);
+		g = atan2(esing, ecosg);
+		e = sqrt(ecosg*ecosg + esing * esing);
+	}
+	eta = sqrt(1.0 - e * e);
+	I1 = eta * eta*eta / gmp2 * (C26*gmp2*gmp2 - C27 * gmp4);
+	DL_A = 1.0 / 2.0*(I1 + g1)*sin(2.0*g) + (g3 + g4)*cos(3.0*g) + (g2 + gI2)*cos(g) + gI3 + e * eta*eta*gI5 / (1.0 + eta);
+	L_A = L_A_aapo + DL_A;
+	u = L_A + (2.0*ecosg*sin(L_A) - 2.0*esing*cos(L_A))*(1.0 + 5.0 / 4.0*(ecosg*cos(L_A) + esing * sin(L_A)))
+		+ 13.0 / 3.0*(pow(ecosg, 3)*sin(3.0*L_A) + pow(esing, 3)*cos(3.0*L_A)) - 13.0 / 4.0*(e*e*ecosg*sin(3.0*L_A)
+		+ e * e*esing*cos(3.0*L_A)) + 1.0 / 4.0*e*e*(esing*cos(L_A) - ecosg * sin(L_A));
+	f = u - g;
+	O1 = sin(f);
+	O2 = cos(f);
+	O3 = sin(u);
+	O4 = cos(u);
+	O5 = sin(2.0*u);
+	O6 = cos(2.0*u);
+	O7 = sin(g);
+	O8 = cos(g);
+	O9 = sin(2.0*g + f);
+	O10 = cos(2.0*g + f);
+	O11 = sin(2.0*g + 3.0*f);
+	O12 = cos(2.0*g + 3.0*f);
+	h2 = e * e / gmp2 * (C20*gmp4 - 1.0 / 2.0*C19*gmp2*gmp2);
+	h3 = 1.0 / 4.0*e*theta / beta * gmp3 / gmp2;
+	h4 = -1.0 / 2.0*gmp2*theta*(6.0*(u - L_A + e * O1) - 3.0*O5 - 3.0*e*O9 - e * O11);
+	dh = h2 * O7*O8 + h3 * O8 + h4;
+	h = arr.h + dh;
+	eta = sqrt(1.0 - arr.e*arr.e);
+	I1 = arr.e*theta / (eta*eta*beta);
+	I2 = C25 * gmp2;
+	I3 = 2.0 / 3.0*arr.e*I2;
+	DI = I1 * d1e + (I2 + 2.0*I3*O2)*O6 + I3 * O1*O5;
+	i = arr.i + DI;
+	I4 = cos(i);
+	I5 = sin(i);
+	a1 = -gm2 * gmp2*(C4*eta*eta + C5 * eta - C6);
+	a2 = gm2 * (1.0 - C7 * gmp2*eta);
+	a3 = -3.0 / 2.0*gm2*gmp2*eta;
+	a4 = C8 * gm2*gmp2;
+	a5 = 4.0 / 3.0*a4;
+	a6 = 2.0 / 3.0*a4;
+	a7 = -C9 * gm2*gmp2;
+	a8 = C10 * gm3;
+	a9 = -C11 * gm3;
+	a10 = -eta * C12*gmp3;
+	a11 = C13 * gm4;
+	a12 = C14 * gm4;
+	a13 = C15 * gm4;
+	a14 = -C16 * eta*gmp4*(2.0 + 3.0*arr.e*arr.e);
+	a15 = C17 * gmp4*eta;
+	a16 = (1.0 + arr.e*O2) / (1.0 - arr.e*arr.e);
+	a17 = 1.0 / 2.0*(1.0 - 3.0*I4*I4) + (3.0 / 2.0*I5*I5*(1.0 - 2.0*O3*O3) - 1.0 / 2.0*(1.0 - 3.0*I4*I4))*pow(a16, 3)*pow(eta, 3);
+	a18 = 1.0 / pow(eta, 3)*(a1 + a2 * a17 + a3 * a17*a17 + a4 * O6 + a5 * O6*O2*arr.e + a6 * O1*O5*arr.e + a7 * arr.e*arr.e*cos(2.0*g));
+	a19 = (a8*O3*O3 + a9)*O3*pow(a16, 4) + a10 * arr.e*O7 + ((a11*O4*O4 + a12)*O4*O4 + a13)*pow(a16, 5) + a14 + a15 * arr.e*arr.e*O8*O8;
+	da = arr.a*(a18*(2.0 - 5.0*a18) + 2.0*a19);
+	a = arr.a + da;
+	l = L_A - g;
+
+	CELEMENTS out;
+
+	out.a = a;
+	out.e = e;
+	out.i = i;
+	out.l = l;
+	out.g = g;
+	out.h = h;
+
+	return out;
+}
+
 SV PMMAEGS(SV sv0, int opt, double param, bool &error, double DN)
 {
 	if (sv0.gravref == oapiGetObjectByName("Earth"))
@@ -8247,12 +8447,12 @@ PMMLAEG::PMMLAEG()
 
 }
 
-void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
+void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 {
-	CELEMENTS coe_osc0, coe_osc1, coe_mean0;
+	AEGDataBlock tempblock;
+	CELEMENTS coe_osc0, coe_osc1, coe_mean1;
 	MATRIX3 Rot;
 	VECTOR3 P, W;
-	double u0, f0;
 
 	if (in.coe_osc.a<0.27*OrbMech::R_Earth || in.coe_osc.a > 5.0*OrbMech::R_Earth)
 	{
@@ -8279,13 +8479,21 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 		goto NewPMMLAEG_V846;
 	}
 
-	CurrentBlock = in;
-
 	if (in.TE == in.TS && in.ENTRY != 0 && in.TIMA == 0)
 	{
+		CurrentBlock = in;
 		//Input time equals output time, we have initialized elements and time option. Nothing to do
 		goto NewPMMLAEG_V1030;
 	}
+
+	if (in.TIMA >= 4)
+	{
+		//Save a, e, i, u, t, h, r, t_f from previous block for phase lag routine
+		tempblock = CurrentBlock;
+	}
+
+	CurrentBlock = in;
+	CurrentBlock.ENTRY = 0;
 
 	//Matrix to rotate to selenographic inertial
 	Rot = OrbMech::GetObliquityMatrix(BODY_MOON, in.Item7 + in.TS / 24.0 / 3600.0);
@@ -8301,37 +8509,30 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 		OrbMech::PIVECT(P, W, coe_osc0.i, coe_osc0.g, coe_osc0.h);
 
 		//Osculating to mean
-		coe_mean0 = OrbMech::LyddaneOsculatingToMean(coe_osc0, BODY_MOON);
+		in.coe_mean = OrbMech::LyddaneOsculatingToMean(coe_osc0, BODY_MOON);
 
-		CurrentBlock.coe_mean.a = coe_mean0.a;
-		CurrentBlock.coe_mean.e = coe_mean0.e;
-		CurrentBlock.coe_mean.i = coe_mean0.i;
-
-		OrbMech::BrouwerSecularRates(in.coe_osc, coe_mean0, BODY_MOON, CurrentBlock.l_dot, CurrentBlock.g_dot, CurrentBlock.h_dot);
-
-		f0 = OrbMech::MeanToTrueAnomaly(in.coe_osc.l, in.coe_osc.e);
-		u0 = f0 + in.coe_osc.g;
-		if (u0 >= PI2)
-		{
-			u0 -= PI2;
-		}
-	}
-	else
-	{
-		coe_mean0 = in.coe_mean;
-
-		CurrentBlock.coe_mean.a = in.coe_mean.a;
-		CurrentBlock.coe_mean.e = in.coe_mean.e;
-		CurrentBlock.coe_mean.i = in.coe_mean.i;
-
+		OrbMech::BrouwerSecularRates(in.coe_osc, in.coe_mean, BODY_MOON, in.l_dot, in.g_dot, in.h_dot);
 		CurrentBlock.l_dot = in.l_dot;
 		CurrentBlock.g_dot = in.g_dot;
 		CurrentBlock.h_dot = in.h_dot;
 
-		f0 = in.f;
-		u0 = in.U;
+		in.f = OrbMech::MeanToTrueAnomaly(in.coe_osc.l, in.coe_osc.e);
+		in.U = in.f + in.coe_osc.g;
+		if (in.U >= PI2)
+		{
+			in.U -= PI2;
+		}
+		in.R = in.coe_osc.a*(1.0 - in.coe_osc.e*in.coe_osc.e) / (1.0 + in.coe_osc.e*cos(in.coe_osc.g)*cos(in.U) + in.coe_osc.e*sin(in.coe_osc.g)*sin(in.U));
+		in.ENTRY = 1;
 	}
-	CurrentBlock.ENTRY = 1;
+	else
+	{
+		CurrentBlock.l_dot = in.l_dot;
+		CurrentBlock.g_dot = in.g_dot;
+		CurrentBlock.h_dot = in.h_dot;
+	}
+
+	coe_mean1 = in.coe_mean;
 
 	double dt;
 
@@ -8343,19 +8544,25 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 		}
 		else
 		{
-			dt = PreviousBlock.TE - in.TS;
+			dt = tempblock.TE - in.TS;
 		}
 
-		CurrentBlock.coe_mean.l = CurrentBlock.l_dot*dt + coe_mean0.l;
-		CurrentBlock.coe_mean.g = CurrentBlock.g_dot*dt + coe_mean0.g;
-		CurrentBlock.coe_mean.h = CurrentBlock.h_dot*dt + coe_mean0.h;
+		coe_mean1.l = CurrentBlock.l_dot*dt + in.coe_mean.l;
+		coe_mean1.g = CurrentBlock.g_dot*dt + in.coe_mean.g;
+		coe_mean1.h = CurrentBlock.h_dot*dt + in.coe_mean.h;
 
-		OrbMech::normalizeAngle(CurrentBlock.coe_mean.l);
-		OrbMech::normalizeAngle(CurrentBlock.coe_mean.g);
-		OrbMech::normalizeAngle(CurrentBlock.coe_mean.h);
+		OrbMech::normalizeAngle(coe_mean1.l);
+		OrbMech::normalizeAngle(coe_mean1.g);
+		OrbMech::normalizeAngle(coe_mean1.h);
 
 		CurrentBlock.TE = CurrentBlock.TS = in.TE;
-		coe_osc1 = OrbMech::LyddaneMeanToOsculating(CurrentBlock.coe_mean, BODY_MOON);
+		coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
+
+		//Selenographic to selenocentric
+		OrbMech::PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
+		P = rhmul(Rot, P);
+		W = rhmul(Rot, W);
+		OrbMech::PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
 	}
 	else
 	{
@@ -8370,10 +8577,10 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 		}
 		else
 		{
-			L_D = u0;
+			L_D = in.U;
 		}
 		DX_L = 1.0;
-		DH = abs(in.DN) > 0.0;
+		DH = abs(in.Item10) > 0.0;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;
@@ -8412,7 +8619,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 
 			if (DH)
 			{
-				double DN_apo = in.DN * PI2;
+				double DN_apo = in.Item10 * PI2;
 				ddt = DN_apo / CurrentBlock.l_dot;
 				DH = false;
 
@@ -8449,15 +8656,21 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 			}
 
 			dt += ddt;
-			CurrentBlock.coe_mean.l = CurrentBlock.l_dot*dt + coe_mean0.l;
-			CurrentBlock.coe_mean.g = CurrentBlock.g_dot*dt + coe_mean0.g;
-			CurrentBlock.coe_mean.h = CurrentBlock.h_dot*dt + coe_mean0.h;
+			coe_mean1.l = CurrentBlock.l_dot*dt + in.coe_mean.l;
+			coe_mean1.g = CurrentBlock.g_dot*dt + in.coe_mean.g;
+			coe_mean1.h = CurrentBlock.h_dot*dt + in.coe_mean.h;
 
-			OrbMech::normalizeAngle(CurrentBlock.coe_mean.l);
-			OrbMech::normalizeAngle(CurrentBlock.coe_mean.g);
-			OrbMech::normalizeAngle(CurrentBlock.coe_mean.h);
+			OrbMech::normalizeAngle(coe_mean1.l);
+			OrbMech::normalizeAngle(coe_mean1.g);
+			OrbMech::normalizeAngle(coe_mean1.h);
 
-			coe_osc1 = OrbMech::LyddaneMeanToOsculating(CurrentBlock.coe_mean, BODY_MOON);
+			coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
+
+			//Selenographic to selenocentric
+			OrbMech::PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
+			P = rhmul(Rot, P);
+			W = rhmul(Rot, W);
+			OrbMech::PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
 
 			COUNT--;
 
@@ -8471,12 +8684,6 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 		CurrentBlock.TE = in.TS + dt;
 	}
 
-	//Selenographic to selenocentric
-	OrbMech::PIVECT(coe_osc1.i, coe_osc1.g, coe_osc1.h, P, W);
-	P = rhmul(Rot, P);
-	W = rhmul(Rot, W);
-	OrbMech::PIVECT(P, W, coe_osc1.i, coe_osc1.g, coe_osc1.h);
-
 	CurrentBlock.coe_osc = coe_osc1;
 	CurrentBlock.f = OrbMech::MeanToTrueAnomaly(CurrentBlock.coe_osc.l, CurrentBlock.coe_osc.e);
 	CurrentBlock.U = CurrentBlock.f + CurrentBlock.coe_osc.g;
@@ -8484,23 +8691,23 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
 	{
 		CurrentBlock.U -= PI2;
 	}
+	CurrentBlock.R = CurrentBlock.coe_osc.a*(1.0 - CurrentBlock.coe_osc.e*CurrentBlock.coe_osc.e) / (1.0 + CurrentBlock.coe_osc.e*cos(CurrentBlock.coe_osc.g)*cos(CurrentBlock.U) + CurrentBlock.coe_osc.e*sin(CurrentBlock.coe_osc.g)*sin(CurrentBlock.U));
 
 	if (in.TIMA >= 4)
 	{
-		CurrentBlock.DN = CurrentBlock.U - PreviousBlock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - PreviousBlock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + PreviousBlock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - PreviousBlock.coe_osc.i + PI))));
-		if (CurrentBlock.DN < 0)
+		CurrentBlock.Item10 = CurrentBlock.U - tempblock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - tempblock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + tempblock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - tempblock.coe_osc.i + PI))));
+		if (CurrentBlock.Item10 < 0)
 		{
-			CurrentBlock.DN += PI2;
+			CurrentBlock.Item10 += PI2;
 		}
-		else if (CurrentBlock.DN >= PI2)
+		else if (CurrentBlock.Item10 >= PI2)
 		{
-			CurrentBlock.DN -= PI2;
+			CurrentBlock.Item10 -= PI2;
 		}
 	}
 
 NewPMMLAEG_V1030:
 	//Move output into area supplied by the calling program
-	PreviousBlock = CurrentBlock;
 	out = CurrentBlock;
 NewPMMLAEG_V305:
 	return;
