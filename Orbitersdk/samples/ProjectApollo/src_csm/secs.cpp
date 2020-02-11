@@ -1554,17 +1554,27 @@ void SECS::Timestep(double simt, double simdt)
 
 	if (Sat->Panel181)
 	{
+		pyroA = false, pyroB = false;
+
 		if (Sat->Panel181->SMSector1DoorJettisonSwitch.IsUp())
 		{
-			if (LDECA.GetSIMPyroArmRelay() || LDECB.GetSIMPyroArmRelay())
+			if (LDECA.GetSIMPyroArmRelay() && Sat->PyroBusAFeeder.Voltage() > SP_MIN_DCVOLTAGE)
 			{
-				//TBD: Do Stuff
-				if (!Sat->SIMBayPanelJett)
-				{
-					Sat->SIMBayPanelJett = true;
-					Sat->JettisonSIMBayPanel();
-					Sat->SetSIMBayPanelMesh();
-				}
+				pyroA = true;
+			}
+			if (LDECB.GetSIMPyroArmRelay() && Sat->PyroBusBFeeder.Voltage() > SP_MIN_DCVOLTAGE)
+			{
+				pyroB = true;
+			}
+		}
+
+		if (pyroA || pyroB)
+		{
+			if (!Sat->SIMBayPanelJett)
+			{
+				Sat->SIMBayPanelJett = true;
+				Sat->JettisonSIMBayPanel();
+				Sat->SetSIMBayPanelMesh();
 			}
 		}
 	}
