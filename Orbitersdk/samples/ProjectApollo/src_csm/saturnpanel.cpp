@@ -1030,8 +1030,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		{
 			oapiRegisterPanelArea(AID_CSM_PANEL_278_CSM112, _R(1356, 114, 1544, 547), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		}
-		else
-			if (Panel278CSM114)
+		else if (Panel278CSM114)
 			{
 				oapiRegisterPanelArea(AID_CSM_PANEL_278_CSM114, _R(1356, 114, 1544, 547), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 			}
@@ -2931,8 +2930,7 @@ void Saturn::SetSwitches(int panel) {
 		Panel278CSM112->O2Tank3IsolIndicator.Init(37, 57, 23, 23, srf[SRF_INDICATOR90], Panel278CSM112->Panel278JSwitchesRow);
 		Panel278CSM112->ExperimentCoversDeployBraker.Init(124, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CSM112->Panel278JSwitchesRow);
 	}
-	else
-		if (Panel278CSM114)
+	else if (Panel278CSM114)
 	{
 		Panel278CSM114->Panel278JSwitchesRow.Init(AID_CSM_PANEL_278_CSM114, MainPanel);
 		Panel278CSM114->ExperimentCovers1Switch.Init(125, 337, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
@@ -4450,8 +4448,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	{
 		oapiBlt(surf, srf[SRF_CSM_PANEL_278_CSM112], 0, 0, 0, 0, 188, 433, SURF_PREDEF_CK);
 	}
-	else
-		if (id == AID_CSM_PANEL_278_CSM114)
+	else if (id == AID_CSM_PANEL_278_CSM114)
 		{
 			oapiBlt(surf, srf[SRF_CSM_PANEL_278_CSM114], 0, 0, 0, 0, 188, 433, SURF_PREDEF_CK);
 		}

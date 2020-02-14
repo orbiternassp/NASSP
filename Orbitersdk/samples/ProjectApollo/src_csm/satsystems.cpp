@@ -2368,8 +2368,7 @@ void Saturn::CreateMissionSpecificSystems()
 			Panel278CSM114->Register(&PSH);
 			// Wire Stuff
 		}
-		else
-			if (Panel278CSM112 == NULL)
+		else if (Panel278CSM112 == NULL)
 			{
 				Panel278CSM112 = new SaturnPanel278J;
 
