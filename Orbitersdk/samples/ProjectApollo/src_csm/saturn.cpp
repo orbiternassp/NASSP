@@ -334,6 +334,24 @@ Saturn::~Saturn()
 		Panel181 = 0;
 	}
 
+	if (Panel277)
+	{
+		delete Panel277;
+		Panel277 = 0;
+	}
+
+	if (Panel278CSM112)
+	{
+		delete Panel278CSM112;
+		Panel278CSM112 = 0;
+	}
+
+	if (Panel278CSM114)
+	{
+		delete Panel278CSM114;
+		Panel278CSM114 = 0;
+	}
+
 	if (LMPad) {
 		delete[] LMPad;
 		LMPad = 0;
@@ -906,6 +924,9 @@ void Saturn::initSaturn()
 	sivb = NULL;
 
 	Panel181 = NULL;
+    Panel277 = NULL;
+	Panel278CSM112 = NULL;
+	Panel278CSM114 = NULL;
 
 	//
 	// Timestep tracking for debugging.
