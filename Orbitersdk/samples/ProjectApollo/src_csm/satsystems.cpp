@@ -2352,6 +2352,30 @@ void Saturn::CreateMissionSpecificSystems()
 
 			secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
 		}
+
+		if (Panel277 == NULL)
+		{
+			Panel277 = new SaturnPanel277;
+
+			Panel277->Register(&PSH);
+			// Wire Stuff
+		}
+
+		if (ApolloNo > 16 && Panel278CSM114 == NULL)
+		{
+			Panel278CSM114 = new SaturnPanel278J;
+
+			Panel278CSM114->Register(&PSH);
+			// Wire Stuff
+		}
+		else
+			if (Panel278CSM112 == NULL)
+			{
+				Panel278CSM112 = new SaturnPanel278J;
+
+				Panel278CSM112->Register(&PSH);
+				// Wire Stuff
+			}
 	}
 }
 

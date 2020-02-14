@@ -2249,3 +2249,29 @@ void SaturnPanel181::Register(PanelSwitchScenarioHandler *PSH)
 	SMSector1LogicPowerMNABraker.Register(*PSH, "SMSector1LogicPowerMNABraker", 0);
 	SMSector1LogicPowerMNBBraker.Register(*PSH, "SMSector1LogicPowerMNBBraker", 0);
 }
+
+void SaturnPanel277::Register(PanelSwitchScenarioHandler *PSH)
+{
+	SPSPressIndFuelSwitch.Register(*PSH, "SPSPressIndFuelSwitch", TOGGLESWITCH_UP);
+	SPSPressIndFuelSwitch.SetSideways(true);
+	SPSPressIndOxidSwitch.Register(*PSH, "SPSPressIndOxidSwitch", TOGGLESWITCH_UP);
+	SPSPressIndOxidSwitch.SetSideways(true);
+	CSMLMFinalSepABatABraker.Register(*PSH, "CSMLMFinalSepABatABraker", 1);
+	CSMLMFinalSepBBatBBraker.Register(*PSH, "CSMLMFinalSepBBatBBraker", 1);
+}
+
+void SaturnPanel278J::Register(PanelSwitchScenarioHandler *PSH)
+{
+	ExperimentCovers1Switch.Register(*PSH, "ExperimentCovers1Switch", THREEPOSSWITCH_CENTER);
+	ExperimentCovers1Switch.SetSideways(true);
+	ExperimentCovers2Switch.Register(*PSH, "ExperimentCovers2Switch", THREEPOSSWITCH_CENTER);
+	ExperimentCovers2Switch.SetSideways(true);
+	SMPowerSourceSwitch.Register(*PSH, "SMPowerSourceSwitch", THREEPOSSWITCH_CENTER);
+	SMPowerSourceSwitch.SetSideways(true);
+	O2Tank3IsolSwitch.Register(*PSH, "O2Tank3IsolSwitch", THREEPOSSWITCH_CENTER);
+	O2Tank3IsolSwitch.SetSideways(true);
+	ExperimentCovers1Indicator.Register(*PSH, "ExperimentCovers1Indicator", false);
+	ExperimentCovers2Indicator.Register(*PSH, "ExperimentCovers2Indicator", false);
+	O2Tank3IsolIndicator.Register(*PSH, "O2Tank3IsolIndicator", false);
+	ExperimentCoversDeployBraker.Register(*PSH, "ExperimentCoversDeployBraker", 1);
+}

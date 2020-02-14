@@ -408,6 +408,10 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_DIGITAL90]								= oapiCreateSurface (LOADBMP (IDB_DIGITAL90));
 	srf[SRF_CSM_PRESS_EQUAL_HANDLE]                 = oapiCreateSurface (LOADBMP (IDB_CSM_PRESS_EQUAL_HANDLE));
 	srf[SRF_CSM_PANEL_181]                          = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_181));
+	srf[SRF_CSM_PANEL_277]                          = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_277));
+	srf[SRF_CSM_PANEL_278_CSM112]                   = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_278_CSM112));
+	srf[SRF_CSM_PANEL_278_CSM114]                   = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_278_CSM114));
+	srf[SRF_INDICATOR90]                            = oapiCreateSurface (LOADBMP (IDB_INDICATOR90));
 
 	//
 	// Flashing borders.
@@ -1014,6 +1018,23 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_PANEL278,									_R(1422,  549, 1527,  628), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL227,									_R(1237,  206, 1267,  236), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_PANEL229CIRCUITBRAKERS,						_R( 288, 1550,  456, 1678), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+
+		if (Panel277)
+		{
+			oapiRegisterPanelArea(AID_CSM_PANEL_277, _R(1356, 662, 1511, 857), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		}
+
+		// Panel 278 Mission-Specific Additions
+
+		if (Panel278CSM112)
+		{
+			oapiRegisterPanelArea(AID_CSM_PANEL_278_CSM112, _R(1356, 114, 1544, 547), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+		}
+		else
+			if (Panel278CSM114)
+			{
+				oapiRegisterPanelArea(AID_CSM_PANEL_278_CSM114, _R(1356, 114, 1544, 547), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+			}
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -2874,6 +2895,19 @@ void Saturn::SetSwitches(int panel) {
 	Panel276CB4.Init(62,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel276CBRow, &InstrumentationPowerFeeder, 5.0);
 
 	//
+	// Panel 277 (Apollo 15 and later)
+	//
+
+	if (Panel277)
+	{
+		Panel277->Panel277SwitchesRow.Init(AID_CSM_PANEL_277, MainPanel);
+		Panel277->SPSPressIndFuelSwitch.Init(43, 33, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel277->Panel277SwitchesRow);
+		Panel277->SPSPressIndOxidSwitch.Init(110, 33, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel277->Panel277SwitchesRow);
+		Panel277->CSMLMFinalSepABatABraker.Init(71, 147, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel277->Panel277SwitchesRow);
+		Panel277->CSMLMFinalSepBBatBBraker.Init(71, 97, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel277->Panel277SwitchesRow);
+	}
+
+	//
 	// Panel 278
 	//
 	
@@ -2882,6 +2916,34 @@ void Saturn::SetSwitches(int panel) {
 	UprightingSystemCompressor2CircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CBRow, &BatteryBusB, 25.0);
 	SIVBLMSepPyroACircuitBraker.Init(76, 50, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CBRow, &PyroBusA, 7.5);
 	SIVBLMSepPyroBCircuitBraker.Init(76,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CBRow, &PyroBusB, 7.5);
+
+	// Panel 278 Mission-Specific Additions
+
+	if (Panel278CSM112)
+	{
+		Panel278CSM112->Panel278JSwitchesRow.Init(AID_CSM_PANEL_278_CSM112, MainPanel);
+		Panel278CSM112->ExperimentCovers1Switch.Init(125, 337, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM112->Panel278JSwitchesRow);
+		Panel278CSM112->ExperimentCovers2Switch.Init(125, 293, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM112->Panel278JSwitchesRow);
+		Panel278CSM112->SMPowerSourceSwitch.Init(125, 124, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM112->Panel278JSwitchesRow);
+		Panel278CSM112->O2Tank3IsolSwitch.Init(125, 53, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM112->Panel278JSwitchesRow);
+		Panel278CSM112->ExperimentCovers1Indicator.Init(36, 341, 23, 23, srf[SRF_INDICATOR90], Panel278CSM112->Panel278JSwitchesRow);
+		Panel278CSM112->ExperimentCovers2Indicator.Init(36, 297, 23, 23, srf[SRF_INDICATOR90], Panel278CSM112->Panel278JSwitchesRow);
+		Panel278CSM112->O2Tank3IsolIndicator.Init(37, 57, 23, 23, srf[SRF_INDICATOR90], Panel278CSM112->Panel278JSwitchesRow);
+		Panel278CSM112->ExperimentCoversDeployBraker.Init(124, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CSM112->Panel278JSwitchesRow);
+	}
+	else
+		if (Panel278CSM114)
+	{
+		Panel278CSM114->Panel278JSwitchesRow.Init(AID_CSM_PANEL_278_CSM114, MainPanel);
+		Panel278CSM114->ExperimentCovers1Switch.Init(125, 337, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
+		Panel278CSM114->ExperimentCovers2Switch.Init(125, 293, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
+		Panel278CSM114->SMPowerSourceSwitch.Init(125, 124, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
+		Panel278CSM114->O2Tank3IsolSwitch.Init(125, 53, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
+		Panel278CSM114->ExperimentCovers1Indicator.Init(36, 341, 23, 23, srf[SRF_INDICATOR90], Panel278CSM114->Panel278JSwitchesRow);
+		Panel278CSM114->ExperimentCovers2Indicator.Init(36, 297, 23, 23, srf[SRF_INDICATOR90], Panel278CSM114->Panel278JSwitchesRow);
+		Panel278CSM114->O2Tank3IsolIndicator.Init(37, 57, 23, 23, srf[SRF_INDICATOR90], Panel278CSM114->Panel278JSwitchesRow);
+		Panel278CSM114->ExperimentCoversDeployBraker.Init(124, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CSM114->Panel278JSwitchesRow);
+	}
 
 	SCIInstSwitchRow.Init(AID_PANEL227, MainPanel);
 	SCIInstSwitch.Init(0, 0, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], SCIInstSwitchRow); 
@@ -4376,10 +4438,23 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	}
 
 	//
-	// Special handling panel 181 (Apollo 15 and later)
+	// Special handling panels 181,277,278 (Apollo 15 and later)
 	//
 	if (id == AID_CSM_PANEL_181)
 		oapiBlt(surf, srf[SRF_CSM_PANEL_181], 0, 0, 0, 0, 432, 251, SURF_PREDEF_CK);
+
+	if (id == AID_CSM_PANEL_277)
+		oapiBlt(surf, srf[SRF_CSM_PANEL_277], 0, 0, 0, 0, 155, 195, SURF_PREDEF_CK);
+
+	if (id == AID_CSM_PANEL_278_CSM112)
+	{
+		oapiBlt(surf, srf[SRF_CSM_PANEL_278_CSM112], 0, 0, 0, 0, 188, 433, SURF_PREDEF_CK);
+	}
+	else
+		if (id == AID_CSM_PANEL_278_CSM114)
+		{
+			oapiBlt(surf, srf[SRF_CSM_PANEL_278_CSM114], 0, 0, 0, 0, 188, 433, SURF_PREDEF_CK);
+		}
 
 	//
 	// Process all the generic switches.

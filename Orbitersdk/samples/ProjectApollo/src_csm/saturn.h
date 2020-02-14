@@ -525,6 +525,10 @@ public:
 		SRF_DIGITAL90,
 		SRF_CSM_PRESS_EQUAL_HANDLE,
 		SRF_CSM_PANEL_181,
+		SRF_CSM_PANEL_277,
+		SRF_CSM_PANEL_278_CSM112,
+		SRF_CSM_PANEL_278_CSM114,
+		SRF_INDICATOR90,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -2578,9 +2582,9 @@ protected:
 	SwitchRow SCIUtilPowerSwitchRow;
 	ToggleSwitch SCIUtilPowerSwitch;
 
-	////////////////////////////////////
-	// Panel 181 (Apollo 15 and later //
-	////////////////////////////////////
+	/////////////////////////////////////
+	// Panel 181 (Apollo 15 and later) //
+	/////////////////////////////////////
 	SaturnPanel181 *Panel181;
 
 	///////////////////////
@@ -3010,6 +3014,15 @@ protected:
 	CircuitBrakerSwitch UprightingSystemCompressor2CircuitBraker;
 	CircuitBrakerSwitch SIVBLMSepPyroACircuitBraker;
 	CircuitBrakerSwitch SIVBLMSepPyroBCircuitBraker;
+
+	// Panel 278 Mission-Specific Additions
+	SaturnPanel278J *Panel278CSM112;
+	SaturnPanel278J *Panel278CSM114;
+
+	/////////////////////////////////////
+	// Panel 277 (Apollo 15 and later) //
+	/////////////////////////////////////
+	SaturnPanel277 *Panel277;
 	
 	///////////////////////////////
 	// Panel 300/301/302/303/305 //
