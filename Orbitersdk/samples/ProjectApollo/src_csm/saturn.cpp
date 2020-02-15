@@ -345,16 +345,10 @@ Saturn::~Saturn()
 		Panel277 = 0;
 	}
 
-	if (Panel278CSM112)
+	if (Panel278J)
 	{
-		delete Panel278CSM112;
-		Panel278CSM112 = 0;
-	}
-
-	if (Panel278CSM114)
-	{
-		delete Panel278CSM114;
-		Panel278CSM114 = 0;
+		delete Panel278J;
+		Panel278J = 0;
 	}
 
 	if (LMPad) {
@@ -366,6 +360,8 @@ Saturn::~Saturn()
 		delete[] AEAPad;
 		AEAPad = 0;
 	}
+
+	ClearMissionManagementMemory();
 
 	// Release DirectX joystick stuff
 	if(js_enabled > 0){
@@ -930,8 +926,7 @@ void Saturn::initSaturn()
 
 	Panel181 = NULL;
     Panel277 = NULL;
-	Panel278CSM112 = NULL;
-	Panel278CSM114 = NULL;
+	Panel278J = NULL;
 
 	//
 	// Timestep tracking for debugging.

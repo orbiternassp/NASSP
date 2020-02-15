@@ -89,6 +89,14 @@ namespace mission {
 	void Mission::SetDefaultValues()
 	{
 		iSMJCVersion = 1;
+		bJMission = false;
+		iPanel277Version = 0;
+		iPanel278Version = 1;
+		iLMDSKYVersion = 2;
+		bHasLMProgramer = false;
+		bHasAEA = true;
+		bHasAscEngArmAssy = false;
+		bLMHasLegs = true;
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -98,12 +106,12 @@ namespace mission {
 
 	bool Mission::LoadMission(const std::string& strMission)
 	{
-		char buffer[64];
+		char buffer[256];
 		std::string filename;
 		filename = "Missions\\ProjectApollo\\" + strMission + ".cfg";
 		strFileName = strMission;
 
-		sprintf_s(buffer, 64, "(Mission) Loading mission %s from file %s",
+		sprintf_s(buffer, 255, "(Mission) Loading mission %s from file %s",
 			strMission.c_str(), filename.c_str());
 		oapiWriteLog(buffer);
 		FILEHANDLE hFile = oapiOpenFile(filename.c_str(), FILE_IN);
@@ -119,6 +127,14 @@ namespace mission {
 			strMissionName = buffer;
 		}
 		oapiReadItem_int(hFile, "SMJCVersion", iSMJCVersion);
+		oapiReadItem_bool(hFile, "JMission", bJMission);
+		oapiReadItem_int(hFile, "Panel277Version", iPanel277Version);
+		oapiReadItem_int(hFile, "Panel278Version", iPanel278Version);
+		oapiReadItem_int(hFile, "LMDSKYVersion", iLMDSKYVersion);
+		oapiReadItem_bool(hFile, "HasLMProgramer", bHasLMProgramer);
+		oapiReadItem_bool(hFile, "HasAEA", bHasAEA);
+		oapiReadItem_bool(hFile, "HasAscEngArmAssy", bHasAscEngArmAssy);
+		oapiReadItem_bool(hFile, "LMHasLegs", bLMHasLegs);
 
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
@@ -127,5 +143,45 @@ namespace mission {
 	int Mission::GetSMJCVersion() const
 	{
 		return iSMJCVersion;
+	}
+
+	bool Mission::IsJMission() const
+	{
+		return bJMission;
+	}
+
+	int Mission::GetPanel277Version() const
+	{
+		return iPanel277Version;
+	}
+
+	int Mission::GetPanel278Version() const
+	{
+		return iPanel278Version;
+	}
+
+	int Mission::GetLMDSKYVersion() const
+	{
+		return iLMDSKYVersion;
+	}
+
+	bool Mission::HasLMProgramer() const
+	{
+		return bHasLMProgramer;
+	}
+
+	bool Mission::HasAEA() const
+	{
+		return bHasAEA;
+	}
+
+	bool Mission::HasAscEngArmAssy() const
+	{
+		return bHasAscEngArmAssy;
+	}
+
+	bool Mission::LMHasLegs() const
+	{
+		return bLMHasLegs;
 	}
 }

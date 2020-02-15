@@ -40,6 +40,7 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
+#include "Mission.h"
 
 #include "connector.h"
 
@@ -119,7 +120,7 @@ void LEM_ASA::Timestep(double simdt){
 	// sprintf(oapiDebugString(),"ASA Temp: %f AH %f",hsink.Temp,heater.pumping);
 
 	// Do we have an ASA?
-	if (lem->NoAEA) return;
+	if (!lem->pMission->HasAEA()) return;
 
 	if (IsHeaterPowered())
 	{
@@ -367,7 +368,7 @@ bool LEM_ASA::IsHeaterPowered()
 bool LEM_ASA::IsPowered()
 {
 	// Do we have an ASA?
-	if (lem->NoAEA) return false;
+	if (!lem->pMission->HasAEA()) return false;
 
 	if (lem->SCS_ASA_CB.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 	if (PowerSwitch) {
@@ -914,7 +915,7 @@ void LEM_AEA::WireToBuses(e_object *a, e_object *b, ThreePosSwitch *s)
 bool LEM_AEA::IsPowered()
 {
 	// Do we have an AEA?
-	if (lem->NoAEA) return false;
+	if (!lem->pMission->HasAEA()) return false;
 
 	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) { return false; }
 	if (PowerSwitch) {

@@ -41,6 +41,7 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
+#include "Mission.h"
 
 #include "connector.h"
 
@@ -233,6 +234,10 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
 
+	//Mission File
+	InitMissionManagementMemory();
+	pMission = paGetDefaultMission();
+
 	// VESSELSOUND initialisation
 	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 
@@ -255,6 +260,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 LEM::~LEM()
 {
 	ReleaseSurfaces();
+
+	ClearMissionManagementMemory();
 
 #ifdef DIRECTSOUNDENABLED
     sevent.Stop();
@@ -285,8 +292,6 @@ void LEM::Init()
 	viewpos = LMVIEW_CDR;
 	stage = 0;
 	status = 0;
-	HasProgramer = false;
-	NoAEA = false;
 	InvertStageBit = false;
 	CDRinPLSS = 0;
 	LMPinPLSS = 0;
@@ -345,7 +350,6 @@ void LEM::Init()
 
 	ApolloNo = 0;
 	Landed = false;
-	NoLegs = false;
 
 	// Mesh Indexes
 	ascidx = -1;
@@ -1011,7 +1015,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	RCSSoundTimestep();
 
-	if (stage == 0 || NoLegs)	{
+	if (stage == 0 || pMission->LMHasLegs() == false)	{
 
 
 	}else if (stage == 1 || stage == 5)	{
@@ -1236,24 +1240,12 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "APOLLONO", 8)) {
 			sscanf(line + 8, "%d", &ApolloNo);
+
+			pMission->LoadMission(ApolloNo);
+			CreateMissionSpecificSystems();
 		}
 		else if (!strnicmp(line, "LANDED", 6)) {
 			sscanf(line + 6, "%d", &Landed);
-		}
-		else if (!strnicmp(line, "HASPROGRAMER", 12)) {
-			int i;
-			sscanf(line + 12, "%d", &i);
-			HasProgramer = (i == 1);
-		}
-		else if (!strnicmp(line, "NOAEA", 5)) {
-			int i;
-			sscanf(line + 5, "%d", &i);
-			NoAEA = (i == 1);
-		}
-		else if (!strnicmp(line, "NOLEGS", 6)) {
-			int i;
-			sscanf(line + 6, "%d", &i);
-			NoLegs = (i == 1);
 		}
 		else if (!strnicmp(line, "DSCFUEL", 7)) {
 			sscanf(line + 7, "%f", &ftcp);
@@ -1547,7 +1539,7 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 		SetCrewMesh();
 	}
 
-	if (dscidx != -1 && !NoLegs) {
+	if (dscidx != -1 && pMission->LMHasLegs()) {
 		probes = GetDevMesh(vis, dscidx);
 		HideProbes();
 	}
@@ -1587,7 +1579,7 @@ void LEM::DefineAnimations()
 	OverheadHatch.DefineAnimationsVC(vcidx);
 	ForwardHatch.DefineAnimationsVC(vcidx);
 	if (stage < 2) DPS.DefineAnimations(dscidx);
-	if (stage < 1 && !NoLegs) eds.DefineAnimations(dscidx);
+	if (stage < 1 && pMission->LMHasLegs()) eds.DefineAnimations(dscidx);
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
@@ -1702,18 +1694,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
 	oapiWriteScenario_int (scn, "LANDED", Landed);
-	if (HasProgramer)
-	{
-		papiWriteScenario_bool(scn, "HASPROGRAMER", HasProgramer);
-	}
-	if (NoAEA)
-	{
-		papiWriteScenario_bool(scn, "NOAEA", NoAEA);
-	}
-	if (NoLegs)
-	{
-		papiWriteScenario_bool(scn, "NOLEGS", NoLegs);
-	}
 	oapiWriteScenario_int (scn, "FDAIDISABLED", fdaiDisabled);
 	oapiWriteScenario_float(scn, "SAVEFOV", SaveFOV);
 	papiWriteScenario_bool(scn, "INFOV", InFOV);
@@ -1744,7 +1724,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	scdu.SaveState(scn, "SCDU_START", "CDU_END");
 	tcdu.SaveState(scn, "TCDU_START", "CDU_END");
 	deda.SaveState(scn, "DEDA_START", "DEDA_END");
-	if (!NoAEA)
+	if (pMission->HasAEA())
 	{
 		aea.SaveState(scn, "AEA_START", "AEA_END");
 		asa.SaveState(scn, "ASA_START", "ASA_END");
@@ -1872,7 +1852,6 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
 	ApolloNo = ls.MissionNo;
-	NoLegs = ls.NoLegs;
 
 	DescentFuelMassKg = ls.DescentFuelKg;
 	AscentFuelMassKg = ls.AscentFuelKg;

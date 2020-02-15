@@ -43,6 +43,7 @@
 #include "Sat5LMDSC.h"
 #include "LM_AscentStageResource.h"
 #include "LM_DescentStageResource.h"
+#include "Mission.h"
 
 static MESHHANDLE hLMDescent;
 static MESHHANDLE hLMDescentNoLeg;
@@ -180,7 +181,7 @@ void LEM::SetLmVesselDockStage()
 	SetTouchdownPoints(td, 7);
 
 	// Configure meshes if needed
-	if (NoLegs) InsertMesh(hLMDescentNoLeg, dscidx, &mesh_dsc);
+	if (!pMission->LMHasLegs()) InsertMesh(hLMDescentNoLeg, dscidx, &mesh_dsc);
 	SetLMMeshVis();
 
 	if (!ph_Dsc)
@@ -257,7 +258,7 @@ void LEM::SetLmVesselHoverStage()
 
 	double td_mass = 7137.75;
 
-	if (!NoLegs) HoverStageTouchdownPoints(td_mass);
+	if (pMission->LMHasLegs()) HoverStageTouchdownPoints(td_mass);
 
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -451,7 +452,7 @@ void LEM::SeparateStage (UINT stage)
 		hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 
 		Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-		if (NoLegs)
+		if (!pMission->LMHasLegs())
 		{
 			dscstage->SetState(10);
 		}
@@ -474,7 +475,7 @@ void LEM::SeparateStage (UINT stage)
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 			
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-			if (NoLegs)
+			if (!pMission->LMHasLegs())
 			{
 				dscstage->SetState(10);
 			}
@@ -498,7 +499,7 @@ void LEM::SeparateStage (UINT stage)
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
 			
 			Sat5LMDSC *dscstage = static_cast<Sat5LMDSC *> (oapiGetVesselInterface(hdsc));
-			if (NoLegs)
+			if (!pMission->LMHasLegs())
 			{
 				dscstage->SetState(10);
 			}
@@ -630,7 +631,7 @@ void LEM::HideProbes() {
 	if (!probes)
 		return;
 
-	if (Landed && !NoLegs) {
+	if (Landed && pMission->LMHasLegs()) {
 		static UINT meshgroup_Probes1[3] = { DS_GRP_Probes1Aft, DS_GRP_Probes1Left, DS_GRP_Probes1Right };
 		static UINT meshgroup_Probes2[3] = { DS_GRP_Probes2Aft, DS_GRP_Probes2Left, DS_GRP_Probes2Right };
 		GROUPEDITSPEC ges;

@@ -38,6 +38,7 @@
 #include "lm_channels.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
+#include "Mission.h"
 
 #include "LEM.h"
  
@@ -3260,11 +3261,11 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_DSKY_LIGHTS:
-		if (ApolloNo >= 15 && ApolloNo != 1301)
+		if (pMission->GetLMDSKYVersion() == 3)
 		{
 			dsky.RenderLights(surf, srf[SRF_DSKY], 0, 0, true, true);
 		}
-		else if (ApolloNo >= 11)
+		else if (pMission->GetLMDSKYVersion() == 2)
 		{
 			dsky.RenderLights(surf, srf[SRF_DSKY]);
 		}

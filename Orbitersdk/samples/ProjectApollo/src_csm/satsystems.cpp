@@ -40,6 +40,7 @@
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
+#include "Mission.h"
 
 //FILE *PanelsdkLogFile;
 
@@ -2334,7 +2335,7 @@ void Saturn::CheckSMSystemsState()
 
 void Saturn::CreateMissionSpecificSystems()
 {
-	if (ApolloNo >= 15 && ApolloNo <= 17)
+	if (pMission->IsJMission())
 	{
 		//J-type missions
 
@@ -2352,7 +2353,10 @@ void Saturn::CreateMissionSpecificSystems()
 
 			secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
 		}
+	}
 
+	if (pMission->GetPanel277Version() == 1)
+	{
 		if (Panel277 == NULL)
 		{
 			Panel277 = new SaturnPanel277;
@@ -2360,21 +2364,16 @@ void Saturn::CreateMissionSpecificSystems()
 			Panel277->Register(&PSH);
 			// Wire Stuff
 		}
+	}
 
-		if (ApolloNo > 16 && Panel278CSM114 == NULL)
+	if (pMission->GetPanel278Version() == 2 || pMission->GetPanel278Version() == 3)
+	{
+		if (Panel278J == NULL)
 		{
-			Panel278CSM114 = new SaturnPanel278J;
-
-			Panel278CSM114->Register(&PSH);
+			Panel278J = new SaturnPanel278J;
+			Panel278J->Register(&PSH);
 			// Wire Stuff
 		}
-		else if (Panel278CSM112 == NULL)
-			{
-				Panel278CSM112 = new SaturnPanel278J;
-
-				Panel278CSM112->Register(&PSH);
-				// Wire Stuff
-			}
 	}
 }
 

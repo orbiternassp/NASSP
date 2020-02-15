@@ -45,6 +45,7 @@
 
 #include "saturn.h"
 #include "tracer.h"
+#include "Mission.h"
 
 extern GDIParams g_Param;
 
@@ -412,6 +413,7 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CSM_PANEL_278_CSM112]                   = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_278_CSM112));
 	srf[SRF_CSM_PANEL_278_CSM114]                   = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_278_CSM114));
 	srf[SRF_INDICATOR90]                            = oapiCreateSurface (LOADBMP (IDB_INDICATOR90));
+	srf[SRF_THREEPOSSWITCH90_RIGHT]					= oapiCreateSurface(LOADBMP(IDB_THREEPOSSWITCH90_RIGHT));
 
 	//
 	// Flashing borders.
@@ -581,6 +583,7 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PRESS_EQUAL_HANDLE],               g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_181],                        g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_THREEPOSSWITCH90_RIGHT],				g_Param.col[4]);
 
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1026,14 +1029,10 @@ bool Saturn::clbkLoadPanel (int id) {
 
 		// Panel 278 Mission-Specific Additions
 
-		if (Panel278CSM112)
+		if (Panel278J)
 		{
-			oapiRegisterPanelArea(AID_CSM_PANEL_278_CSM112, _R(1356, 114, 1544, 547), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
+			oapiRegisterPanelArea(AID_CSM_PANEL_278J, _R(1356, 114, 1544, 547), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		}
-		else if (Panel278CSM114)
-			{
-				oapiRegisterPanelArea(AID_CSM_PANEL_278_CSM114, _R(1356, 114, 1544, 547), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
-			}
 		
 		SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -2918,29 +2917,17 @@ void Saturn::SetSwitches(int panel) {
 
 	// Panel 278 Mission-Specific Additions
 
-	if (Panel278CSM112)
+	if (Panel278J)
 	{
-		Panel278CSM112->Panel278JSwitchesRow.Init(AID_CSM_PANEL_278_CSM112, MainPanel);
-		Panel278CSM112->ExperimentCovers1Switch.Init(125, 337, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM112->Panel278JSwitchesRow);
-		Panel278CSM112->ExperimentCovers2Switch.Init(125, 293, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM112->Panel278JSwitchesRow);
-		Panel278CSM112->SMPowerSourceSwitch.Init(125, 124, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM112->Panel278JSwitchesRow);
-		Panel278CSM112->O2Tank3IsolSwitch.Init(125, 53, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM112->Panel278JSwitchesRow);
-		Panel278CSM112->ExperimentCovers1Indicator.Init(36, 341, 23, 23, srf[SRF_INDICATOR90], Panel278CSM112->Panel278JSwitchesRow);
-		Panel278CSM112->ExperimentCovers2Indicator.Init(36, 297, 23, 23, srf[SRF_INDICATOR90], Panel278CSM112->Panel278JSwitchesRow);
-		Panel278CSM112->O2Tank3IsolIndicator.Init(37, 57, 23, 23, srf[SRF_INDICATOR90], Panel278CSM112->Panel278JSwitchesRow);
-		Panel278CSM112->ExperimentCoversDeployBraker.Init(124, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CSM112->Panel278JSwitchesRow);
-	}
-	else if (Panel278CSM114)
-	{
-		Panel278CSM114->Panel278JSwitchesRow.Init(AID_CSM_PANEL_278_CSM114, MainPanel);
-		Panel278CSM114->ExperimentCovers1Switch.Init(125, 337, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
-		Panel278CSM114->ExperimentCovers2Switch.Init(125, 293, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
-		Panel278CSM114->SMPowerSourceSwitch.Init(125, 124, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
-		Panel278CSM114->O2Tank3IsolSwitch.Init(125, 53, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278CSM114->Panel278JSwitchesRow);
-		Panel278CSM114->ExperimentCovers1Indicator.Init(36, 341, 23, 23, srf[SRF_INDICATOR90], Panel278CSM114->Panel278JSwitchesRow);
-		Panel278CSM114->ExperimentCovers2Indicator.Init(36, 297, 23, 23, srf[SRF_INDICATOR90], Panel278CSM114->Panel278JSwitchesRow);
-		Panel278CSM114->O2Tank3IsolIndicator.Init(37, 57, 23, 23, srf[SRF_INDICATOR90], Panel278CSM114->Panel278JSwitchesRow);
-		Panel278CSM114->ExperimentCoversDeployBraker.Init(124, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278CSM114->Panel278JSwitchesRow);
+		Panel278J->Panel278JSwitchesRow.Init(AID_CSM_PANEL_278J, MainPanel);
+		Panel278J->ExperimentCovers1Switch.Init(125, 337, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278J->Panel278JSwitchesRow);
+		Panel278J->ExperimentCovers2Switch.Init(125, 293, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278J->Panel278JSwitchesRow);
+		Panel278J->SMPowerSourceSwitch.Init(125, 124, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278J->Panel278JSwitchesRow);
+		Panel278J->O2Tank3IsolSwitch.Init(125, 53, 29, 30, srf[SRF_THREEPOSSWITCH90_LEFT], srf[SRF_BORDER_29x30], Panel278J->Panel278JSwitchesRow);
+		Panel278J->ExperimentCovers1Indicator.Init(36, 341, 23, 23, srf[SRF_INDICATOR90], Panel278J->Panel278JSwitchesRow);
+		Panel278J->ExperimentCovers2Indicator.Init(36, 297, 23, 23, srf[SRF_INDICATOR90], Panel278J->Panel278JSwitchesRow);
+		Panel278J->O2Tank3IsolIndicator.Init(37, 57, 23, 23, srf[SRF_INDICATOR90], Panel278J->Panel278JSwitchesRow);
+		Panel278J->ExperimentCoversDeployBraker.Init(124, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278J->Panel278JSwitchesRow);
 	}
 
 	SCIInstSwitchRow.Init(AID_PANEL227, MainPanel);
@@ -4444,14 +4431,17 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	if (id == AID_CSM_PANEL_277)
 		oapiBlt(surf, srf[SRF_CSM_PANEL_277], 0, 0, 0, 0, 155, 195, SURF_PREDEF_CK);
 
-	if (id == AID_CSM_PANEL_278_CSM112)
+	if (id == AID_CSM_PANEL_278J)
 	{
-		oapiBlt(surf, srf[SRF_CSM_PANEL_278_CSM112], 0, 0, 0, 0, 188, 433, SURF_PREDEF_CK);
-	}
-	else if (id == AID_CSM_PANEL_278_CSM114)
+		if (pMission->GetPanel278Version() == 2)
+		{
+			oapiBlt(surf, srf[SRF_CSM_PANEL_278_CSM112], 0, 0, 0, 0, 188, 433, SURF_PREDEF_CK);
+		}
+		else if (pMission->GetPanel278Version() == 3)
 		{
 			oapiBlt(surf, srf[SRF_CSM_PANEL_278_CSM114], 0, 0, 0, 0, 188, 433, SURF_PREDEF_CK);
 		}
+	}
 
 	//
 	// Process all the generic switches.

@@ -250,6 +250,7 @@ IDB_CSM_PANEL_277                           BITMAP  "..\\Bitmaps\\csm_panel_277.
 IDB_CSM_PANEL_278_CSM112                    BITMAP  "..\\Bitmaps\\csm_panel_278_CSM112.bmp"
 IDB_CSM_PANEL_278_CSM114                    BITMAP  "..\\Bitmaps\\csm_panel_278_CSM114.bmp"
 IDB_INDICATOR90                             BITMAP  "..\\Bitmaps\\Indicator90.bmp"
+IDB_THREEPOSSWITCH90_RIGHT                   BITMAP  "..\\Bitmaps\\threeposswitch90_right.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

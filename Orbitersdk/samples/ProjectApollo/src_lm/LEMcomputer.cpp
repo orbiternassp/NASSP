@@ -37,6 +37,7 @@
 #include "papi.h"
 #include "saturn.h"
 #include "LEM.h"
+#include "Mission.h"
 
 #include "lm_channels.h"
 
@@ -260,7 +261,7 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 
 void LEMcomputer::ProcessChannel10(ChannelValue val) {
 	dsky.ProcessChannel10(val);
-	if (lem->HasProgramer) lem->lmp.ProcessChannel10(val);
+	if (lem->pMission->HasLMProgramer()) lem->lmp.ProcessChannel10(val);
 }
 
 // DS20060413

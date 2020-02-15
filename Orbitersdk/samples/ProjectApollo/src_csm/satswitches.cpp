@@ -2266,7 +2266,7 @@ void SaturnPanel278J::Register(PanelSwitchScenarioHandler *PSH)
 	ExperimentCovers1Switch.SetSideways(true);
 	ExperimentCovers2Switch.Register(*PSH, "ExperimentCovers2Switch", THREEPOSSWITCH_CENTER);
 	ExperimentCovers2Switch.SetSideways(true);
-	SMPowerSourceSwitch.Register(*PSH, "SMPowerSourceSwitch", THREEPOSSWITCH_CENTER);
+	SMPowerSourceSwitch.Register(*PSH, "SMPowerSourceSwitch", THREEPOSSWITCH_DOWN);
 	SMPowerSourceSwitch.SetSideways(true);
 	O2Tank3IsolSwitch.Register(*PSH, "O2Tank3IsolSwitch", THREEPOSSWITCH_CENTER);
 	O2Tank3IsolSwitch.SetSideways(true);

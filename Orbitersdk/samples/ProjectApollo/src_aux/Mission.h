@@ -38,13 +38,37 @@ namespace mission
 		virtual bool LoadMission(const int iMission);
 		virtual bool LoadMission(const std::string& strMission);
 
+		//1 = Block I and pre Apollo 12, 2 = Apollo 12 and later
 		virtual int GetSMJCVersion() const;
+		//false = any other CSM, true = J-type mission CSM (for all systems and panels common to CSM-112 to 114)
+		virtual bool IsJMission() const;
+		//0 = none, 1 = J-type mission, 2 = Skylab
+		virtual int GetPanel277Version() const;
+		//1 = pre Apollo 15, 2 = Apollo 15-16, 3 = Apollo 17, 4 = Skylab, 5 = ASTP
+		virtual int GetPanel278Version() const;
+		//1 = No lights in the bottom two rows, 2 = ALT + VEL lights, 3 = ALT, VEL, PRIO DISP, NO DAP lights
+		virtual int GetLMDSKYVersion() const;
+		//false = LM has no Programer, true = LM has programer
+		virtual bool HasLMProgramer() const;
+		//false = LM has no abort electronics assembly, true = LM has abort electronics assembly
+		virtual bool HasAEA() const;
+		//false = LM has no ascent engine arming assembly, = true = LM has ascent engine arming assembly
+		virtual bool HasAscEngArmAssy() const;
+		//false = LM has no legs, true = LM has legs
+		virtual bool LMHasLegs() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
 
-		//1 = Block I and pre Apollo 12, 2 = Apollo 12 and later
 		int iSMJCVersion;
+		bool bJMission;
+		int iPanel277Version;
+		int iPanel278Version;
+		int iLMDSKYVersion;
+		bool bHasLMProgramer;
+		bool bHasAEA;
+		bool bHasAscEngArmAssy;
+		bool bLMHasLegs;
 
 		void SetDefaultValues();
 	};

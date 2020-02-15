@@ -534,6 +534,7 @@ public:
 		SRF_CSM_PANEL_278_CSM112,
 		SRF_CSM_PANEL_278_CSM114,
 		SRF_INDICATOR90,
+		SRF_THREEPOSSWITCH90_RIGHT,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -3021,8 +3022,7 @@ protected:
 	CircuitBrakerSwitch SIVBLMSepPyroBCircuitBraker;
 
 	// Panel 278 Mission-Specific Additions
-	SaturnPanel278J *Panel278CSM112;
-	SaturnPanel278J *Panel278CSM114;
+	SaturnPanel278J *Panel278J;
 
 	/////////////////////////////////////
 	// Panel 277 (Apollo 15 and later) //

@@ -773,11 +773,11 @@
 #define IDB_CSM_PANEL_181								   1058
 #define AID_CSM_PANEL_277								   1059
 #define IDB_CSM_PANEL_277								   1060
-#define AID_CSM_PANEL_278_CSM112						   1061
+#define AID_CSM_PANEL_278J								   1061
 #define IDB_CSM_PANEL_278_CSM112						   1062
-#define AID_CSM_PANEL_278_CSM114						   1063
-#define IDB_CSM_PANEL_278_CSM114						   1064
-#define IDB_INDICATOR90						               1065
+#define IDB_CSM_PANEL_278_CSM114						   1063
+#define IDB_INDICATOR90						               1064
+#define IDB_THREEPOSSWITCH90_RIGHT                         1065
 
 // Next default values for new objects
 //
