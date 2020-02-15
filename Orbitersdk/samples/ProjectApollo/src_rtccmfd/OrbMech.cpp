@@ -8015,9 +8015,8 @@ CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu)
 	return elem;
 }
 
-SV GIMKIC(CELEMENTS elem, double mu)
+void GIMKIC(CELEMENTS elem, double mu, VECTOR3 &R, VECTOR3 &V)
 {
-	SV sv;
 	double EA, EA_apo, RX, RY, VX, VY, X_apo, Y_apo;
 	int K = 20;
 	EA_apo = elem.l;
@@ -8035,11 +8034,10 @@ SV GIMKIC(CELEMENTS elem, double mu)
 	VY = sqrt(1.0 - elem.e*elem.e)*cos(EA) / ((1.0 - elem.e*cos(EA))*(sqrt(elem.a) / sqrt(mu)));
 	X_apo = RX * cos(elem.g) - RY * sin(elem.g);
 	Y_apo = RX * sin(elem.g) + RY * cos(elem.g);
-	sv.R = _V(X_apo*cos(elem.h) - Y_apo * cos(elem.i)*sin(elem.h), X_apo*sin(elem.h) + Y_apo * cos(elem.i)*cos(elem.h), Y_apo*sin(elem.i));
+	R = _V(X_apo*cos(elem.h) - Y_apo * cos(elem.i)*sin(elem.h), X_apo*sin(elem.h) + Y_apo * cos(elem.i)*cos(elem.h), Y_apo*sin(elem.i));
 	X_apo = VX * cos(elem.g) - VY * sin(elem.g);
 	Y_apo = VX * sin(elem.g) + VY * cos(elem.g);
-	sv.V = _V(X_apo*cos(elem.h) - Y_apo * cos(elem.i)*sin(elem.h), X_apo*sin(elem.h) + Y_apo * cos(elem.i)*cos(elem.h), Y_apo*sin(elem.i));
-	return sv;
+	V = _V(X_apo*cos(elem.h) - Y_apo * cos(elem.i)*sin(elem.h), X_apo*sin(elem.h) + Y_apo * cos(elem.i)*cos(elem.h), Y_apo*sin(elem.i));
 }
 
 double MeanToTrueAnomaly(double meanAnom, double eccdp, double error2)
@@ -8332,7 +8330,7 @@ PMMAEG::PMMAEG()
 
 }
 
-void PMMAEG::CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out)
+void PMMAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 {
 	CELEMENTS coe_mean0;
 
@@ -8681,7 +8679,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 			header.ErrorInd = -3;
 		}
 
-		CurrentBlock.TE = in.TS + dt;
+		CurrentBlock.TE = CurrentBlock.TS = in.TS + dt;
 	}
 
 	CurrentBlock.coe_osc = coe_osc1;
@@ -8708,7 +8706,14 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 NewPMMLAEG_V1030:
 	//Move output into area supplied by the calling program
-	out = CurrentBlock;
+	out.Item8 = CurrentBlock.Item8;
+	out.Item10 = CurrentBlock.Item10;
+	out.coe_osc = CurrentBlock.coe_osc;
+	out.f = CurrentBlock.f;
+	out.U = CurrentBlock.U;
+	out.R = CurrentBlock.R;
+	out.TS = CurrentBlock.TS;
+	out.TE = CurrentBlock.TE;
 NewPMMLAEG_V305:
 	return;
 NewPMMLAEG_V846:

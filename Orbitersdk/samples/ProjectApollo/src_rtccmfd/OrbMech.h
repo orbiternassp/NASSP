@@ -271,9 +271,9 @@ struct LGCIgnitionConstants
 struct AEGHeader
 {
 	//0 = Earth, 1 = Lunar
-	int AEGInd;
-	int ErrorInd;
-	int NumBlocks;
+	int AEGInd = 0;
+	int ErrorInd = 0;
+	int NumBlocks = 1;
 	//int Spare;
 };
 
@@ -323,9 +323,9 @@ class PMMAEG
 {
 public:
 	PMMAEG();
-	void CALL(AEGHeader &header, AEGDataBlock in, AEGDataBlock &out);
+	void CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out);
 protected:
-	AEGDataBlock CurrentBlock, PreviousBlock;
+	AEGDataBlock CurrentBlock;
 };
 
 class PMMLAEG
@@ -643,7 +643,7 @@ namespace OrbMech {
 	//Inertial to Keplerian Conversion Subroutine
 	CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu);
 	//Keplerian to Inertial Conversion Subroutine
-	SV GIMKIC(CELEMENTS elem, double mu);
+	void GIMKIC(CELEMENTS elem, double mu, VECTOR3 &R, VECTOR3 &V);
 	SV PositionMatch(SV sv_A, SV sv_P, double mu);
 	//Phase angle determination
 	double THETR(double u1, double u2, double i1, double i2, double h1, double h2);

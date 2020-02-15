@@ -945,6 +945,7 @@ struct LunarLiftoffTimeOpt
 
 	double GETbase;		//usually MJD at launch
 	SV sv_CSM;			//CSM State vector
+	AEGBlock sv_CSM2;
 	
 	double dt_2;		//Fixed time from insertion to TPI for direct profile
 	bool IsInsVelInput;	//0 = calculate insertion velocity, 1 = use input velocity
@@ -2417,6 +2418,12 @@ public:
 
 	//Actual RTCC Subroutines
 
+	//AEG Service Routine
+	void PMMAEGS(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out);
+	//Time of Longitude Crossing Determination
+	void PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC);
+	//AEG Day/Night Determination
+	void PMMDAN(AEGBlock aeg, int IND, int &ERR, double &T1, double &T2);
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
 	//External DV Coordinate Transformation Subroutine
@@ -3407,6 +3414,10 @@ public:
 	char RTCCMEDBUFFER[256];
 	//RTCC On-line Monitor Buffer
 	std::deque<std::string> RTCCONLINEMON;
+
+	//AEG
+	PMMAEG pmmaeg;
+	PMMLAEG pmmlaeg;
 
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);

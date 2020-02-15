@@ -1017,7 +1017,7 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 			elem_P = OrbMech::GIMIKC(sv_P.R, sv_P.V, mu);
 			elem_P.a = elem_A.a;
 			elem_P.e = elem_A.e;
-			sv_P = OrbMech::GIMKIC(elem_P, mu);
+			OrbMech::GIMKIC(elem_P, mu, sv_P.R, sv_P.V);
 			sv_P.MJD = sv_A.MJD;
 			sv_P.gravref = hMoon;
 			if (ii > I_PC)
