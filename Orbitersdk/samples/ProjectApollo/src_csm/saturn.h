@@ -79,6 +79,11 @@
 class IU;
 class SICSystems;
 
+namespace mission
+{
+	class Mission;
+};
+
 
 #define RCS_SM_QUAD_A		0
 #define RCS_SM_QUAD_B		1
@@ -3800,6 +3805,8 @@ protected:
 
 	bool StopRot;
 	bool PayloadDataTransfer;
+
+	mission::Mission* pMission;
 
 	//
 	// Panels

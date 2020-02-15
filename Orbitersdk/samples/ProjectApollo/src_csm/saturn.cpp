@@ -47,6 +47,7 @@
 #include "mcc.h"
 #include "LVDC.h"
 #include "iu.h"
+#include "Mission.h"
 
 #include <crtdbg.h>
 
@@ -279,6 +280,10 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	//_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF|_CRTDBG_CHECK_ALWAYS_DF );
 	InitSaturnCalled = false;
 	LastTimestep = 0;
+
+	//Mission File
+	InitMissionManagementMemory();
+	pMission = paGetDefaultMission();
 
 	//
 	// VESSELSOUND initialisation
@@ -1839,6 +1844,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp (line, "APOLLONO", 8)) {
 		sscanf (line+8, "%d", &ApolloNo);
+
+		pMission->LoadMission(ApolloNo);
 		//Create mission specific systems
 		CreateMissionSpecificSystems();
 	}
