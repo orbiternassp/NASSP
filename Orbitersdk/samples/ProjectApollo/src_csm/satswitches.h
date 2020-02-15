@@ -906,3 +906,33 @@ public:
 	CircuitBrakerSwitch SMSector1LogicPowerMNABraker;
 	CircuitBrakerSwitch SMSector1LogicPowerMNBBraker;
 };
+
+class SaturnPanel277
+{
+public:
+
+	void Register(PanelSwitchScenarioHandler *PSH);
+
+	SwitchRow Panel277SwitchesRow;
+	ToggleSwitch SPSPressIndFuelSwitch;
+	ToggleSwitch SPSPressIndOxidSwitch;
+	CircuitBrakerSwitch CSMLMFinalSepABatABraker;
+	CircuitBrakerSwitch CSMLMFinalSepBBatBBraker;
+};
+
+class SaturnPanel278J
+{
+public:
+
+	void Register(PanelSwitchScenarioHandler *PSH);
+
+	SwitchRow Panel278JSwitchesRow;
+	ThreePosSwitch ExperimentCovers1Switch;
+	ThreePosSwitch ExperimentCovers2Switch;
+	ThreePosSwitch SMPowerSourceSwitch;
+	ThreePosSwitch O2Tank3IsolSwitch;
+	IndicatorSwitch ExperimentCovers1Indicator;
+	IndicatorSwitch ExperimentCovers2Indicator;
+	IndicatorSwitch O2Tank3IsolIndicator;
+	CircuitBrakerSwitch ExperimentCoversDeployBraker;
+};
