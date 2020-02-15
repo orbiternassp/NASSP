@@ -89,8 +89,17 @@ SM::SM (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 }
 
 SM::~SM()
-
 {
+	if (SMJCA)
+	{
+		delete SMJCA;
+		SMJCA = NULL;
+	}
+	if (SMJCB)
+	{
+		delete SMJCB;
+		SMJCB = NULL;
+	}
 	//
 	// Unfortunately this makes Orbiter crash on shutdown.
 	//
@@ -185,6 +194,9 @@ void SM::InitSM()
 		th_att_lin[i] = 0;
 		th_att_rot[i] = 0;
 	}
+
+	SMJCA = NULL;
+	SMJCB = NULL;
 }
 
 const double SMVO = 0.0;//-0.14;
@@ -407,10 +419,10 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	// or the fuel cells stop providing power.
 	//
 
-	SMJCA.Timestep(simdt, SMBusAPowered);
-	SMJCB.Timestep(simdt, SMBusBPowered);
+	SMJCA->Timestep(simdt, SMBusAPowered);
+	SMJCB->Timestep(simdt, SMBusBPowered);
 
-	if (SMJCA.GetFireMinusXTranslation() || SMJCB.GetFireMinusXTranslation())
+	if (SMJCA->GetFireMinusXTranslation() || SMJCB->GetFireMinusXTranslation())
 	{
 		SetThrusterLevel(th_rcs_a[3], 1.0);
 		SetThrusterLevel(th_rcs_b[3], 1.0);
@@ -425,7 +437,7 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 		SetThrusterLevel(th_rcs_d[4], 0.0);
 	}
 
-	if (SMJCA.GetFirePositiveRoll() || SMJCB.GetFirePositiveRoll())
+	if (SMJCA->GetFirePositiveRoll() || SMJCB->GetFirePositiveRoll())
 	{
 		SetThrusterLevel(th_rcs_a[1], 1.0);
 		SetThrusterLevel(th_rcs_b[1], 1.0);
@@ -811,8 +823,8 @@ void SM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "ALPHA", Alpha);
 	oapiWriteScenario_float(scn, "BETA", Beta);
 	oapiWriteScenario_float(scn, "GAMMA", Gamma);
-	SMJCA.SaveState(scn, SMJCA_START_STRING);
-	SMJCB.SaveState(scn, SMJCB_START_STRING);
+	SMJCA->SaveState(scn, SMJCA_START_STRING);
+	SMJCB->SaveState(scn, SMJCB_START_STRING);
 }
 
 typedef union {
@@ -857,6 +869,34 @@ int SM::GetMainState()
 	state.u.SMBusBPowered = SMBusBPowered;
 
 	return state.word;
+}
+
+void SM::AddSMJC()
+{
+	if (VehicleNo < 507)
+	{
+		//Old SMJC
+		if (SMJCA == NULL)
+		{
+			SMJCA = new SMJC();
+		}
+		if (SMJCB == NULL)
+		{
+			SMJCB = new SMJC();
+		}
+	}
+	else
+	{
+		//New SMJC
+		if (SMJCA == NULL)
+		{
+			SMJCA = new SMJC_MOD1();
+		}
+		if (SMJCB == NULL)
+		{
+			SMJCB = new SMJC_MOD1();
+		}
+	}
 }
 
 void SM::AddEngines()
@@ -1015,6 +1055,11 @@ void SM::DefineAnimationsHGA(UINT idx) {
 	ach_HGAgamma = AddAnimationComponent(anim_HGAgamma, 0.0f, 1.0f, &mgt_HGA_Gamma, ach_HGAbeta);
 }
 
+void SM::AddMissionSpecificSystems()
+{
+	AddSMJC();
+}
+
 void SM::SetMainState(int s)
 
 {
@@ -1055,6 +1100,7 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 		else if (!strnicmp (line, "VECHNO", 6))
 		{
 			sscanf (line+6, "%d", &VehicleNo);
+			AddMissionSpecificSystems();
 		}
 		else if (!strnicmp (line, "EMASS", 5))
 		{
@@ -1113,10 +1159,10 @@ void SM::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			Gamma = flt;
 		}
 		else if (!strnicmp(line, SMJCA_START_STRING, sizeof(SMJCA_START_STRING))) {
-			SMJCA.LoadState(scn);
+			SMJCA->LoadState(scn);
 		}
 		else if (!strnicmp(line, SMJCB_START_STRING, sizeof(SMJCB_START_STRING))) {
-			SMJCB.LoadState(scn);
+			SMJCB->LoadState(scn);
 		}
 		else
 		{
@@ -1171,8 +1217,10 @@ void SM::SetState(SMSettings &state)
 
 		SMBusAPowered = state.SMBusAPowered;
 		SMBusBPowered = state.SMBusBPowered;
-		SMJCA.SetState(state.SMJCAState);
-		SMJCB.SetState(state.SMJCBState);
+
+		AddSMJC();
+		SMJCA->SetState(state.SMJCAState);
+		SMJCB->SetState(state.SMJCBState);
 	}
 
 	if (state.SettingsType.SM_SETTINGS_MASS)

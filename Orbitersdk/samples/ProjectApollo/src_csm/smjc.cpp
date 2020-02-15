@@ -26,7 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "papi.h"
 #include "smjc.h"
 
-SMJC::SMJC() : TD2(2.0), TD3(5.5)
+SMJC::SMJC(double td2, double td3) : TD2(td2), TD3(td3)
 {
 	Z1 = false;
 	Z2 = false;
@@ -135,4 +135,64 @@ void SMJC::GetState(SMJCState &state)
 	state.FirePlusRoll = FirePlusRoll;
 	TD2.GetState(state.TD2State);
 	TD3.GetState(state.TD3State);
+}
+
+SMJC_MOD1::SMJC_MOD1() : SMJC(2.0, 2.0) , TD4(25.0)
+{
+	Z4 = false;
+}
+
+void SMJC_MOD1::Timestep(double simdt, bool smjettbuspowered)
+{
+	TD2.Timestep(simdt);
+	TD3.Timestep(simdt);
+	TD4.Timestep(simdt);
+
+	if (smjettbuspowered && Z1)
+	{
+		TD2.SetRunning(true);
+		TD4.SetRunning(true);
+	}
+
+	if (TD4.ContactClosed())
+		Z4 = true;
+	else
+		Z4 = false;
+
+	if (smjettbuspowered && Z1 && !Z4)
+		FireMinusXTrans = true;
+	else
+		FireMinusXTrans = false;
+
+	if (TD2.ContactClosed())
+		Z2 = true;
+	else
+		Z2 = false;
+
+	if (smjettbuspowered && Z1 && Z2)
+		TD3.SetRunning(true);
+
+	if (smjettbuspowered && Z1 && Z2 && (TD3.ContactClosed() || Z3))
+		Z3 = true;
+	else
+		Z3 = false;
+
+	if (smjettbuspowered && Z1 && Z2 && !Z3)
+		FirePlusRoll = true;
+	else
+		FirePlusRoll = false;
+}
+
+void SMJC_MOD1::SetState(const SMJCState &state)
+{
+	SMJC::SetState(state);
+	Z4 = state.Z4;
+	TD4.SetState(state.TD4State);
+}
+
+void SMJC_MOD1::GetState(SMJCState &state)
+{
+	SMJC::GetState(state);
+	state.Z4 = Z4;
+	TD4.GetState(state.TD4State);
 }
