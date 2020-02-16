@@ -2205,7 +2205,12 @@ void LEM::CheckDescentStageSystems()
 
 void LEM::CreateMissionSpecificSystems()
 {
+	//
+	// Pass on the mission number and realism setting to the AGC.
+	//
 
+	agc.SetMissionInfo(ApolloNo, pMission->GetLGCVersion());
+	aea.SetMissionInfo(pMission->GetAEAVersion());
 }
 
 // SYSTEMS COMPONENTS

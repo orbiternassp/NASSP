@@ -661,7 +661,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		omnib.TimeStep();
 		omnic.TimeStep();
 		omnid.TimeStep();
-		if (!NoVHFRanging) vhfranging.TimeStep(simdt);
+		if (pMission->CSMHasVHFRanging()) vhfranging.TimeStep(simdt);
 		vhftransceiver.Timestep();
 		sce.Timestep();
 		dataRecorder.TimeStep( MissionTime, simdt );

@@ -415,14 +415,6 @@ void Saturn::initSaturn()
 	SkylabSM = false;
 	SkylabCM = false;
 
-	//
-	// Do we have an HGA? This is a 'negative' variable for backward
-	// compatibility with old scenarios... otherwise it would default
-	// to having no HGA when the state was read from those files.
-	//
-	NoHGA = false;
-	NoVHFRanging = false;
-
 	CMdocktgt = false;
 
 	//
@@ -845,8 +837,6 @@ void Saturn::initSaturn()
 		ENGIND[i] = false;
 
 	PayloadName[0] = 0;
-	CMCVersion[0] = 0;
-	LGCVersion[0] = 0;
 	LEMCheck[0] = 0;
 	LMDescentFuelMassKg = 8375.0;
 	LMAscentFuelMassKg = 2345.0;
@@ -1389,9 +1379,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		if (LEMCheck[0]) {
 			oapiWriteScenario_string(scn, "LEMCHECK", LEMCheck);
 		}
-		if (LGCVersion[0]) {
-			oapiWriteScenario_string(scn, "LGCVERSION", LGCVersion);
-		}
 		oapiWriteScenario_float (scn, "LMDSCFUEL", LMDescentFuelMassKg);
 		oapiWriteScenario_float (scn, "LMASCFUEL", LMAscentFuelMassKg);
 		oapiWriteScenario_float(scn, "LMDSCEMPTY", LMDescentEmptyMassKg);
@@ -1512,9 +1499,9 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	ForwardHatch.SaveState(scn);
 	SideHatch.SaveState(scn);
 	usb.SaveState(scn);
-	if (!NoHGA) hga.SaveState(scn);
+	if (pMission->CSMHasHGA()) hga.SaveState(scn);
 	vhftransceiver.SaveState(scn);
-	if (!NoVHFRanging) vhfranging.SaveState(scn);
+	if (pMission->CSMHasVHFRanging()) vhfranging.SaveState(scn);
 	dataRecorder.SaveState(scn);
 
 	Panelsdk.Save(scn);	
@@ -1559,10 +1546,8 @@ int Saturn::GetMainState()
 	state.SkylabSM = SkylabSM;
 	state.SkylabCM = SkylabCM;
 	state.S1bPanel = S1bPanel;
-	state.NoHGA = NoHGA;
 	state.TLISoundsLoaded = TLISoundsLoaded;
 	state.CMdocktgt = CMdocktgt;
-	state.NoVHFRanging = NoVHFRanging;
 
 	return state.word;
 }
@@ -1588,10 +1573,8 @@ void Saturn::SetMainState(int s)
 	SkylabSM = (state.SkylabSM != 0);
 	SkylabCM = (state.SkylabCM != 0);
 	S1bPanel = (state.S1bPanel != 0);
-	NoHGA = (state.NoHGA != 0);
 	TLISoundsLoaded = (state.TLISoundsLoaded != 0);
 	CMdocktgt = (state.CMdocktgt != 0);
-	NoVHFRanging = (state.NoVHFRanging != 0);
 }
 
 int Saturn::GetSLAState()
@@ -1859,9 +1842,18 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		agc.PadLoad(addr, val);
 	}
 	else if (!strnicmp (line, "APOLLONO", 8)) {
-		sscanf (line+8, "%d", &ApolloNo);
-
-		pMission->LoadMission(ApolloNo);
+		
+		if (sscanf(line + 8, "%d", &ApolloNo) == 1)
+		{
+			pMission->LoadMission(ApolloNo);
+		}
+		else
+		{
+			char tempBuffer[64];
+			strncpy(tempBuffer, line + 9, 63);
+			pMission->LoadMission(tempBuffer);
+		}
+		
 		//Create mission specific systems
 		CreateMissionSpecificSystems();
 	}
@@ -2026,12 +2018,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
 	}
-	else if (!strnicmp(line, "CMCVERSION", 10)) {
-		strncpy(CMCVersion, line + 11, 64);
-	}
-	else if (!strnicmp(line, "LGCVERSION", 10)) {
-		strncpy(LGCVersion, line + 11, 64);
-	}
 	else if (!strnicmp(line, DSKY_START_STRING, sizeof(DSKY_START_STRING))) {
 		dsky.LoadState(scn, DSKY_END_STRING);
 	}
@@ -2161,23 +2147,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 			int value;
 			sscanf (line+11, "%d", &value);
 			IsMultiThread=(value>0)?true:false;
-		}
-
-		else if (!strnicmp(line, "NOHGA", 5)) {
-			//
-			// NOHGA isn't saved in the scenario, this is solely to allow you
-			// to override the default NOHGA state in startup scenarios.
-			//
-			sscanf(line + 5, "%d", &i);
-			NoHGA = (i != 0);
-		}
-		else if (!strnicmp(line, "NOVHFRANGING", 12)) {
-			//
-			// NOVHFRANGING isn't saved in the scenario, this is solely to allow you
-			// to override the default NOVHFRANGING state in startup scenarios.
-			//
-			sscanf(line + 12, "%d", &i);
-			NoVHFRanging = (i != 0);
 		}
 		else if (!strnicmp(line, "NOMANUALTLI", 11)) {
 			//
@@ -2439,10 +2408,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// And pass it the mission number and realism settings.
 	//
 
-	if (CMCVersion[0])
-		agc.SetMissionInfo(ApolloNo, PayloadName, CMCVersion);
-	else
-		agc.SetMissionInfo(ApolloNo, PayloadName);
+	agc.SetMissionInfo(ApolloNo, pMission->GetCMCVersion(), PayloadName);
 
 	secs.SetSaturnType(SaturnType);
 
@@ -4752,7 +4718,7 @@ void Saturn::TLI_Ended()
 
 void Saturn::VHFRangingReturnSignal()
 {
-	if (!NoVHFRanging) vhfranging.RangingReturnSignal();
+	if (pMission->CSMHasVHFRanging()) vhfranging.RangingReturnSignal();
 }
 
 void Saturn::StartSeparationPyros()

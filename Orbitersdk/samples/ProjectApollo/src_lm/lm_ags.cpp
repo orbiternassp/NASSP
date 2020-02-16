@@ -448,7 +448,6 @@ papiReadScenario_bool(line, "PULSESSENT", PulsesSent);
 LEM_AEA::LEM_AEA(PanelSDK &p, LEM_DEDA &display) : DCPower(0, p), deda(display) {
 	lem = NULL;
 	AEAInitialized = false;
-	FlightProgram = 0;
 	PowerSwitch = 0;
 	aeaHeat = 0;
 	secaeaHeat = 0;
@@ -933,47 +932,25 @@ bool LEM_AEA::IsACPowered()
 
 bool LEM_AEA::GetTestModeFailure()
 {
-		if (!IsPowered())
-			return false;
-		AGSChannelValue40 agsval40;
-		agsval40 = OutputPorts[IO_ODISCRETES];
-		return ~agsval40[AGSTestModeFailure];
+	if (!IsPowered())
+		return false;
+	AGSChannelValue40 agsval40;
+	agsval40 = OutputPorts[IO_ODISCRETES];
+	return ~agsval40[AGSTestModeFailure];
 }
 
 void LEM_AEA::InitVirtualAGS(char *binfile)
-
 {
 	aea_engine_init(&vags, binfile, NULL);
 }
 
-void LEM_AEA::SetMissionInfo(int MissionNo)
+void LEM_AEA::SetMissionInfo(std::string ProgramName)
 {
 	if (AEAInitialized) { return; }
 
-	if (MissionNo < 13)
-	{
-		FlightProgram = 6;
-	}
-	else
-	{
-		FlightProgram = 8;
-	}
+	char binfile[100];
 
-	SetFlightProgram(FlightProgram);
-}
-
-void LEM_AEA::SetFlightProgram(int FP)
-{
-	char *binfile;
-
-	// Flight Program 6
-	binfile = "Config/ProjectApollo/FP6.bin";
-
-	if (FP == 8)	//Flight Program 8
-	{
-		binfile = "Config/ProjectApollo/FP8.bin";
-	}
-
+	sprintf_s(binfile, 100, "Config/ProjectApollo/%s.bin", ProgramName.c_str());
 	InitVirtualAGS(binfile);
 
 	AEAInitialized = true;
@@ -1020,9 +997,6 @@ void LEM_AEA::SaveState(FILEHANDLE scn,char *start_str,char *end_str)
 	char fname[32], str[32], buffer[256];
 	int i;
 	int val;
-
-	//Has to be first!
-	oapiWriteScenario_int(scn, "FLIGHTPROGRAM", FlightProgram);
 
 	for (i = 0; i < AEA_MEM_ENTRIES; i++) {
 		if (ReadMemory(i, val) && (val != 0)) {
@@ -1084,12 +1058,7 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 		if (!strnicmp(line, end_str, sizeof(end_str)))
 			break;
 
-		//Has to be first!
-		if (!strnicmp(line, "FLIGHTPROGRAM", 13)) {
-			sscanf(line + 13, "%d", &FlightProgram);
-			SetFlightProgram(FlightProgram);
-		}
-		else if (!strnicmp(line, "MEM", 3)) {
+		if (!strnicmp(line, "MEM", 3)) {
 			int num, val;
 			sscanf(line + 3, "%o", &num);
 			sscanf(line + 8, "%o", &val);

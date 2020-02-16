@@ -1126,13 +1126,6 @@ void LEM::PostLoadSetup(bool define_anims)
 	CheckDescentStageSystems();
 	if (define_anims) DefineAnimations();
 
-	//
-	// Pass on the mission number and realism setting to the AGC.
-	//
-
-	agc.SetMissionInfo(ApolloNo);
-	aea.SetMissionInfo(ApolloNo);
-
 	///
 	// Realism Mode Settings
 	//
@@ -1241,7 +1234,16 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "APOLLONO", 8)) {
 			sscanf(line + 8, "%d", &ApolloNo);
 
-			pMission->LoadMission(ApolloNo);
+			if (sscanf(line + 8, "%d", &ApolloNo) == 1)
+			{
+				pMission->LoadMission(ApolloNo);
+			}
+			else
+			{
+				char tempBuffer[64];
+				strncpy(tempBuffer, line + 9, 63);
+				pMission->LoadMission(tempBuffer);
+			}
 			CreateMissionSpecificSystems();
 		}
 		else if (!strnicmp(line, "LANDED", 6)) {
@@ -1842,12 +1844,11 @@ bool LEM::clbkLoadGenericCockpit ()
 bool LEM::SetupPayload(PayloadSettings &ls)
 
 {
-	char CSMName[64], LGCVersion[64];
+	char CSMName[64];
 
 	MissionTime = ls.MissionTime;
 
 	strncpy(CSMName, ls.CSMName, 64);
-	strncpy(LGCVersion, ls.AGCVersion, 64);
 
 	Crewed = ls.Crewed;
 	AutoSlow = ls.AutoSlow;
@@ -1858,10 +1859,9 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	DescentEmptyMassKg = ls.DescentEmptyKg;
 	AscentEmptyMassKg = ls.AscentEmptyKg;
 
-	if (LGCVersion[0])
-		agc.SetMissionInfo(ApolloNo, CSMName, LGCVersion);
-	else
-		agc.SetMissionInfo(ApolloNo, CSMName);
+	pMission->LoadMission(ApolloNo);
+
+	agc.SetMissionInfo(ApolloNo, pMission->GetLGCVersion(), CSMName);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);

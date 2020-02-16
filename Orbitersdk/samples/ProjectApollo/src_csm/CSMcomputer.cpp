@@ -66,10 +66,10 @@ CSMcomputer::~CSMcomputer()
 	//
 }
 
-void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel, char *ProgramName)
+void CSMcomputer::SetMissionInfo(int MissionNo, std::string AGCVersion, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel, ProgramName);
+	ApolloGuidance::SetMissionInfo(MissionNo, AGCVersion, OtherVessel);
 
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
@@ -78,44 +78,10 @@ void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel, char *Program
 
 	
 
-	if (AGCVersion[0])
-	{
-		char Buffer[100];
-		sprintf(Buffer, "Config/ProjectApollo/%s.bin", AGCVersion);
+	char Buffer[100];
+	sprintf(Buffer, "Config/ProjectApollo/%s.bin", AGCVersion.c_str());
 
-		InitVirtualAGC(Buffer);
-	}
-	else
-	{
-		char *binfile;
-
-		if (ApolloNo < 9)	// Colossus 237
-		{
-			binfile = "Config/ProjectApollo/Colossus237.bin";
-		}
-		else if (ApolloNo < 10)	// Colossus 249
-		{
-			binfile = "Config/ProjectApollo/Colossus249.bin";
-		}
-		else if (ApolloNo < 11)	// Comanche 055, modified for Apollo 10
-		{
-			binfile = "Config/ProjectApollo/Comanche055NBY69.bin";
-		}
-		else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
-		{
-			binfile = "Config/ProjectApollo/Comanche055.bin";
-		}
-		else if (ApolloNo < 15)	// Artemis 72, modified for Apollo 14
-		{
-			binfile = "Config/ProjectApollo/Artemis072NBY71.bin";
-		}
-		else	//Artemis 072
-		{
-			binfile = "Config/ProjectApollo/Artemis072.bin";
-		}
-
-		InitVirtualAGC(binfile);
-	}
+	InitVirtualAGC(Buffer);
 }
 
 void CSMcomputer::agcTimestep(double simt, double simdt)

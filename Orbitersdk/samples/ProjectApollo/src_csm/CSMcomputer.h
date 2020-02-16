@@ -127,7 +127,7 @@ public:
 	void SetInputChannelBit(int channel, int bit, bool val);
 	void SetOutputChannel(int channel, ChannelValue val);
 
-	void SetMissionInfo(int MissionNo, char *OtherVessel = 0, char *ProgramName = 0);
+	void SetMissionInfo(int MissionNo, std::string ProgramName, char *OtherVessel = 0);
 
 	VESSEL *GetLM();
 protected:

@@ -292,7 +292,7 @@ public:
 	/// \param MissionNo Apollo mission number.
 	/// \param OtherVessel Pointer to the LEM so that the CSM can track it for rendevouz.
 	///
-	virtual void SetMissionInfo(int MissionNo, char *OtherVessel = 0, char *ProgramName = 0);
+	virtual void SetMissionInfo(int MissionNo, std::string ProgramName, char *OtherName = 0);
 
 	///
 	/// \brief Initialise the Virtual AGC.
@@ -446,8 +446,6 @@ protected:
 	/// \brief The name of the 'other vessel' (e.g. CSM for LEM AGC, LEM for CSM AGC).
 	///
 	char OtherVesselName[64];
-
-	char AGCVersion[64];
 
 #ifdef _DEBUG
 	FILE *out_file;

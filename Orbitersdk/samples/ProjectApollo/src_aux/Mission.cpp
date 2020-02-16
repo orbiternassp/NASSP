@@ -97,6 +97,11 @@ namespace mission {
 		bHasAEA = true;
 		bHasAscEngArmAssy = false;
 		bLMHasLegs = true;
+		bCSMHasHGA = true;
+		bCSMHasVHFRanging = true;
+		strCMCVersion = "Artemis072";
+		strLGCVersion = "Luminary210";
+		strAEAVersion = "FP8";
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -135,6 +140,20 @@ namespace mission {
 		oapiReadItem_bool(hFile, "HasAEA", bHasAEA);
 		oapiReadItem_bool(hFile, "HasAscEngArmAssy", bHasAscEngArmAssy);
 		oapiReadItem_bool(hFile, "LMHasLegs", bLMHasLegs);
+		oapiReadItem_bool(hFile, "CSMHasHGA", bCSMHasHGA);
+		oapiReadItem_bool(hFile, "CSMHasVHFRanging", bCSMHasVHFRanging);
+		if (oapiReadItem_string(hFile, "CMCVersion", buffer))
+		{
+			strCMCVersion = buffer;
+		}
+		if (oapiReadItem_string(hFile, "LGCVersion", buffer))
+		{
+			strLGCVersion = buffer;
+		}
+		if (oapiReadItem_string(hFile, "AEAVersion", buffer))
+		{
+			strAEAVersion = buffer;
+		}
 
 		oapiCloseFile(hFile, FILE_IN);
 		return true;
@@ -183,5 +202,30 @@ namespace mission {
 	bool Mission::LMHasLegs() const
 	{
 		return bLMHasLegs;
+	}
+
+	bool Mission::CSMHasHGA() const
+	{
+		return bCSMHasHGA;
+	}
+
+	bool Mission::CSMHasVHFRanging() const
+	{
+		return bCSMHasVHFRanging;
+	}
+
+	const std::string& Mission::GetCMCVersion() const
+	{
+		return strCMCVersion;
+	}
+
+	const std::string& Mission::GetLGCVersion() const
+	{
+		return strLGCVersion;
+	}
+
+	const std::string& Mission::GetAEAVersion() const
+	{
+		return strAEAVersion;
 	}
 }

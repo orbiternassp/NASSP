@@ -704,13 +704,13 @@ public:
 			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
 			unsigned CMdocktgt:1;                   ///< CM docking target on
-			unsigned NoVHFRanging:1;				///< Do we have a VHF Ranging System?
+			unsigned unused4:1;						///< Spare
 			unsigned unused5:1;						///< Spare
 			unsigned unused6:2;						///< Spare
 			unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
 			unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
 			unsigned S1bPanel:1;					///< Is this a Command Module with a Saturn 1b panel?
-			unsigned NoHGA:1;						///< Do we have a High-Gain Antenna?
+			unsigned unused7:1;						///< Spare
 			unsigned viewpos:5;						///< Position of the virtual cockpit viewpoint.
 		};
 		unsigned long word;
@@ -3759,8 +3759,6 @@ protected:
 	bool IUSCContPermanentEnabled;
 	bool TLISoundsLoaded;
 	bool SkylabSM;
-	bool NoHGA;
-	bool NoVHFRanging;
 	bool CMdocktgt;
 	bool SkylabCM;
 	bool S1bPanel;
@@ -4299,9 +4297,6 @@ protected:
 	/// SIVB payload name
 	///
 	char PayloadName[64];
-
-	char CMCVersion[64];
-	char LGCVersion[64];
 
 	///
 	/// LEM checklist file

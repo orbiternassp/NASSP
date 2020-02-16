@@ -45,6 +45,7 @@
 #include "sivb.h"
 
 #include "LES.h"
+#include "Mission.h"
 
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
@@ -659,7 +660,7 @@ void Saturn::SetCSMStage ()
 	//
 	// Skylab SM and Apollo 7 have no HGA.
 	//
-	if (!NoHGA) {
+	if (pMission->CSMHasHGA()) {
 		UINT HGAidx;
 		mesh_dir=_V(-1.308,-1.18,29.042-CGOffset);
 		HGAidx = AddMesh (hSMhga, &mesh_dir);
@@ -840,7 +841,6 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.AEAPad = AEAPad;
 	S4Config.AEAPadCount = AEAPadCount;
 	sprintf(S4Config.LEMCheck, LEMCheck);
-	sprintf(S4Config.AGCVersion, LGCVersion);
 
 	S4Config.iu_pointer = iu;
 	DontDeleteIU = true;

@@ -56,9 +56,22 @@ namespace mission
 		virtual bool HasAscEngArmAssy() const;
 		//false = LM has no legs, true = LM has legs
 		virtual bool LMHasLegs() const;
+		//false = CSM has no HGA, true = CSM has a HGA
+		virtual bool CSMHasHGA() const;
+		//false = CSM has no VHF Ranging System, true = CSM has VHF Ranging System
+		virtual bool CSMHasVHFRanging() const;
+		//Name of CMC software
+		virtual const std::string& GetCMCVersion() const;
+		//Name of LGC software
+		virtual const std::string& GetLGCVersion() const;
+		//Name of AEA software
+		virtual const std::string& GetAEAVersion() const;
 	protected:
 		std::string strFileName;
 		std::string strMissionName;
+		std::string strCMCVersion;
+		std::string strLGCVersion;
+		std::string strAEAVersion;
 
 		int iSMJCVersion;
 		bool bJMission;
@@ -69,6 +82,8 @@ namespace mission
 		bool bHasAEA;
 		bool bHasAscEngArmAssy;
 		bool bLMHasLegs;
+		bool bCSMHasHGA;
+		bool bCSMHasVHFRanging;
 
 		void SetDefaultValues();
 	};
