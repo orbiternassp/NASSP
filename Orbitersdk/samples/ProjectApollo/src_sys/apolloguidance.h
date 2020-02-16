@@ -101,18 +101,6 @@ public:
 	void ControlVessel(VESSEL *v) { OurVessel = v; };
 
 	///
-	/// \brief Set the Apollo mission number for this spacecraft.
-	/// \param flight The mission number.
-	///
-	void SetApolloNo(int flight) { ApolloNo = flight; };
-
-	///
-	/// \brief Get the Apollo mission number for this flight.
-	/// \return Mission number.
-	///
-	int GetApolloNo() { return ApolloNo; };
-
-	///
 	/// \brief Force the AGC to restart.
 	///
 	void ForceRestart();
@@ -292,7 +280,7 @@ public:
 	/// \param MissionNo Apollo mission number.
 	/// \param OtherVessel Pointer to the LEM so that the CSM can track it for rendevouz.
 	///
-	virtual void SetMissionInfo(int MissionNo, std::string ProgramName, char *OtherName = 0);
+	virtual void SetMissionInfo(std::string ProgramName, char *OtherName = 0);
 
 	///
 	/// \brief Initialise the Virtual AGC.
@@ -386,14 +374,10 @@ protected:
 	CDU &tcdu;
 	CDU &scdu;
 
-	//
-	// Program data.
-	//
-
 	///
-	/// \brief Apollo mission number.
+	/// \brief AGC software name
 	///
-	int ApolloNo;
+	std::string ProgramName;
 
 	double LastTimestep;
 	double LastCycled;

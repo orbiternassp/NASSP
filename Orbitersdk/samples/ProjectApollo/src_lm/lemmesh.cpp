@@ -101,7 +101,7 @@ void LEM::ToggleEVA()
 		if (leva) {
 			LEVASettings evas;
 
-			evas.MissionNo = agc.GetApolloNo();
+			evas.MissionNo = ApolloNo;
 			leva->SetEVAStats(evas);
 		}
 	}

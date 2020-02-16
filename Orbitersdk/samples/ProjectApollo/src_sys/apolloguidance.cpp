@@ -53,12 +53,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	LastCycled = 0;
 	AGCHeat = NULL;
 
-	//
-	// Flight number.
-	//
-
-	ApolloNo = 0;
-
 	OtherVesselName[0] = 0;
 
 	//
@@ -240,17 +234,9 @@ void ApolloGuidance::SystemTimestep(double simdt)
 	}
 }
 
-void ApolloGuidance::SetMissionInfo(int MissionNo, std::string ProgramName, char *OtherName)
-
+void ApolloGuidance::SetMissionInfo(std::string ProgramName, char *OtherName)
 {
-	//
-	// Older scenarios saved the mission number in the AGC. For backwards
-	// compatibility we'll only let the new number overwrite the saved value
-	// if it's zero.
-	//
-
-	if (!ApolloNo)
-		ApolloNo = MissionNo; 
+	this->ProgramName = ProgramName; 
 
 	if (OtherName != 0)
 		strncpy(OtherVesselName, OtherName, 64);

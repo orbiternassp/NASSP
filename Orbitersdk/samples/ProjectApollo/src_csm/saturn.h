@@ -3802,16 +3802,6 @@ protected:
 
 	double DockAngle;
 
-	double AtempP;
-	double AtempY;
-	double AtempR;
-
-	ELEMENTS elemSaturn1B;
-	double refSaturn1B;
-	ELEMENTS elemPREV;
-	double refPREV;
-	double AltitudePREV;
-
 	double 	Offset1st;
 
 	bool StopRot;

@@ -66,17 +66,15 @@ CSMcomputer::~CSMcomputer()
 	//
 }
 
-void CSMcomputer::SetMissionInfo(int MissionNo, std::string AGCVersion, char *OtherVessel)
+void CSMcomputer::SetMissionInfo(std::string AGCVersion, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, AGCVersion, OtherVessel);
+	ApolloGuidance::SetMissionInfo(AGCVersion, OtherVessel);
 
 	//
-	// Pick the appropriate AGC binary file based on the mission number.
+	// Pick the appropriate AGC binary file based on name.
 	//
-	// same criterium in CSMcomputer::Timestep because of pad load
-
-	
+	//
 
 	char Buffer[100];
 	sprintf(Buffer, "Config/ProjectApollo/%s.bin", AGCVersion.c_str());
@@ -214,7 +212,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-			if (ApolloNo < 11)	//Colossus 237/249, Comanche 055 for Apollo 10
+			if (ProgramName == "Colossus237" || ProgramName == "Colossus249" || ProgramName == "Comanche055NBY69")
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -228,7 +226,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 
 				TEPHEM0 = 40038.;
 			}
-			else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
+			else if (ProgramName == "Comanche055")	// Comanche 055
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -242,7 +240,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 
 				TEPHEM0 = 40403.;
 			}
-			else if (ApolloNo < 15)	//Artemis 072 for Apollo 14
+			else if (ProgramName == "Artemis072NBY71")	//Artemis 072 for Apollo 14
 			{
 				// set launch pad longitude
 				if (longitude < 0) longitude += TWO_PI;

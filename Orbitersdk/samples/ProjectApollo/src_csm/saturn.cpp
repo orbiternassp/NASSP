@@ -447,10 +447,6 @@ void Saturn::initSaturn()
 
 	DockAngle = 0;
 
-	AtempP  = 0;
-	AtempY  = 0;
-	AtempR  = 0;
-
 	StopRot = false;
 	HasProbe = false;
 
@@ -468,10 +464,6 @@ void Saturn::initSaturn()
 	hStageSLA3Mesh = 0;
 	hStageSLA4Mesh = 0;
 	SPSidx = 0;
-
-	refSaturn1B = 0;
-	refPREV = 0;
-	AltitudePREV = 0;
 
 	hstg1 = 0;
 	hstg2 = 0;
@@ -2408,7 +2400,7 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	// And pass it the mission number and realism settings.
 	//
 
-	agc.SetMissionInfo(ApolloNo, pMission->GetCMCVersion(), PayloadName);
+	agc.SetMissionInfo(pMission->GetCMCVersion(), PayloadName);
 
 	secs.SetSaturnType(SaturnType);
 

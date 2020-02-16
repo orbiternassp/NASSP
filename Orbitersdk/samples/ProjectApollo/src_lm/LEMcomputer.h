@@ -54,7 +54,7 @@ public:
 
 	void SetInputChannelBit(int channel, int bit, bool val);
 
-	void SetMissionInfo(int MissionNo, std::string AGCVersion, char *OtherVessel = 0);
+	void SetMissionInfo(std::string AGCVersion, char *OtherVessel = 0);
 
 	VESSEL *GetCSM();
 protected:

@@ -64,10 +64,10 @@ LEMcomputer::~LEMcomputer()
 	//
 }
 
-void LEMcomputer::SetMissionInfo(int MissionNo, std::string ProgramName, char *OtherVessel)
+void LEMcomputer::SetMissionInfo(std::string ProgramName, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, ProgramName, OtherVessel);
+	ApolloGuidance::SetMissionInfo(ProgramName, OtherVessel);
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//

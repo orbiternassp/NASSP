@@ -2209,7 +2209,7 @@ void LEM::CreateMissionSpecificSystems()
 	// Pass on the mission number and realism setting to the AGC.
 	//
 
-	agc.SetMissionInfo(ApolloNo, pMission->GetLGCVersion());
+	agc.SetMissionInfo(pMission->GetLGCVersion());
 	aea.SetMissionInfo(pMission->GetAEAVersion());
 }
 

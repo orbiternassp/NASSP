@@ -467,7 +467,7 @@ void LEM::LoadDefaultSounds()
     char buffers[80];
 
 	soundlib.SetLanguage(AudioLanguage);
-	sprintf(buffers, "Apollo%d", agc.GetApolloNo());
+	sprintf(buffers, "Apollo%d", ApolloNo);
     soundlib.SetSoundLibMissionPath(buffers);
 
 	//
@@ -1861,7 +1861,7 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 
 	pMission->LoadMission(ApolloNo);
 
-	agc.SetMissionInfo(ApolloNo, pMission->GetLGCVersion(), CSMName);
+	agc.SetMissionInfo(pMission->GetLGCVersion(), CSMName);
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
