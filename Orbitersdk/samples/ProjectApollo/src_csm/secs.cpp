@@ -466,7 +466,6 @@ MESC::MESC():
 	EventTimerControl = NULL;
 	Sat = NULL;
 	OtherMESC = NULL;
-	SMJettCont = NULL;
 	SECSLogicBreaker = NULL;
 	SECSArmBreaker = NULL;
 	RCSLogicCircuitBreaker = NULL;
@@ -475,7 +474,7 @@ MESC::MESC():
 	//MESCDisplay = NULL;
 }
 
-void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, SMJC *smjc, MESC* OtherMESCSystem, int IsSysA)
+void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, MESC* OtherMESCSystem, int IsSysA)
 {
 	SECSLogicBus = LogicBus;
 	SECSPyroBus = PyroBus;
@@ -486,7 +485,6 @@ void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, Th
 	Sat = v;
 	OtherMESC = OtherMESCSystem;
 	IsSystemA = IsSysA;
-	SMJettCont = smjc;
 
 	//MESCDisplay = oapiCreateAnnotation(false, 0.65, _V(1, 1, 0));
 	//oapiAnnotationSetPos(MESCDisplay, 0, 0.1, 0.33, 1);
@@ -656,7 +654,7 @@ void MESC::Timestep(double simdt)
 	{
 		if (Sat->secs.rcsc.GetCMTransferMotor(IsSystemA) == false)
 		{
-			SMJettCont->SMJettControllerStart();
+			Sat->secs.GetSMJC(IsSystemA)->SMJettControllerStart();
 		}
 	}
 
@@ -1457,24 +1455,39 @@ SECS::SECS()
 	LastMissionEventTime = MINUS_INFINITY;
 
 	Sat = 0;
+
+	SMJCA = NULL;
+	SMJCB = NULL;
 }
 
 SECS::~SECS()
-
 {
+	if (SMJCA)
+	{
+		delete SMJCA;
+		SMJCA = NULL;
+	}
+	if (SMJCB)
+	{
+		delete SMJCB;
+		SMJCB = NULL;
+	}
 }
 
 void SECS::ControlVessel(Saturn *v)
-
 {
 	Sat = v;
 	rcsc.ControlVessel(v);
-	MESCA.Init(v, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->MissionTimer306Display, &Sat->MissionTimer306Switch, &Sat->EventTimer306Display, &Sat->EventTimerControl306Switch, &SMJCA, &MESCB, true);
+}
+
+void SECS::Realize()
+{
+	MESCA.Init(Sat, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->MissionTimer306Display, &Sat->MissionTimer306Switch, &Sat->EventTimer306Display, &Sat->EventTimerControl306Switch, &MESCB, true);
 	MESCA.CBInit(&Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker);
-	MESCB.Init(v, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->MissionTimerDisplay, &Sat->MissionTimerSwitch, &Sat->EventTimerDisplay, &Sat->EventTimerContSwitch, &SMJCB, &MESCA, false);
+	MESCB.Init(Sat, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->MissionTimerDisplay, &Sat->MissionTimerSwitch, &Sat->EventTimerDisplay, &Sat->EventTimerContSwitch, &MESCA, false);
 	MESCB.CBInit(&Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker);
-	LDECA.Init(v, &MESCA, &Sat->SECSArmBatACircuitBraker, &Sat->DockProbeMnACircuitBraker, &Sat->DockingProbeRetractPrimSwitch, &Sat->PyroArmASwitch, &Sat->PyroBusA, &Sat->PyroBusAFeeder);
-	LDECB.Init(v, &MESCB, &Sat->SECSArmBatBCircuitBraker, &Sat->DockProbeMnBCircuitBraker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
+	LDECA.Init(Sat, &MESCA, &Sat->SECSArmBatACircuitBraker, &Sat->DockProbeMnACircuitBraker, &Sat->DockingProbeRetractPrimSwitch, &Sat->PyroArmASwitch, &Sat->PyroBusA, &Sat->PyroBusAFeeder);
+	LDECB.Init(Sat, &MESCB, &Sat->SECSArmBatBCircuitBraker, &Sat->DockProbeMnBCircuitBraker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
 }
 
 void SECS::InitSIMJett(CircuitBrakerSwitch *SMSec1PowerA, CircuitBrakerSwitch *SMSec1PowerB)
@@ -1501,11 +1514,8 @@ void SECS::Timestep(double simt, double simdt)
 	rcsc.Timestep(simdt);
 	LDECA.Timestep(simdt);
 	LDECB.Timestep(simdt);
-	if (Sat->GetStage() < CM_STAGE)
-	{
-		SMJCA.Timestep(simdt, Sat->MainBusAController.IsSMBusPowered());
-		SMJCB.Timestep(simdt, Sat->MainBusBController.IsSMBusPowered());
-	}
+	if (SMJCA) SMJCA->Timestep(simdt, Sat->MainBusAController.IsSMBusPowered());
+	if (SMJCB) SMJCB->Timestep(simdt, Sat->MainBusBController.IsSMBusPowered());
 
 	//
 	// CSM LV separation relays
@@ -1711,6 +1721,12 @@ bool SECS::NoAutoAbortLightPower()
 	return false;
 }
 
+SMJC *SECS::GetSMJC(bool isSysA)
+{
+	if (isSysA) return SMJCA;
+	return SMJCB;
+}
+
 void SECS::SaveState(FILEHANDLE scn)
 
 {
@@ -1724,11 +1740,8 @@ void SECS::SaveState(FILEHANDLE scn)
 	MESCB.SaveState(scn, "MESCB_BEGIN", "MESC_END");
 	LDECA.SaveState(scn, "LDECA_BEGIN", "LDEC_END");
 	LDECB.SaveState(scn, "LDECB_BEGIN", "LDEC_END");
-	if (Sat->GetStage() < CM_STAGE)
-	{
-		SMJCA.SaveState(scn, SMJCA_START_STRING);
-		SMJCB.SaveState(scn, SMJCB_START_STRING);
-	}
+	if (SMJCA) SMJCA->SaveState(scn, SMJCA_START_STRING);
+	if (SMJCB) SMJCB->SaveState(scn, SMJCB_START_STRING);
 	
 	oapiWriteLine(scn, SECS_END_STRING);
 }
@@ -1763,10 +1776,10 @@ void SECS::LoadState(FILEHANDLE scn)
 			LDECB.LoadState(scn, "LDEC_END");
 		}
 		else if (!strnicmp(line, SMJCA_START_STRING, sizeof(SMJCA_START_STRING))) {
-			SMJCA.LoadState(scn);
+			if (SMJCA) SMJCA->LoadState(scn);
 		}
 		else if (!strnicmp(line, SMJCB_START_STRING, sizeof(SMJCB_START_STRING))) {
-			SMJCB.LoadState(scn);
+			if (SMJCB) SMJCB->LoadState(scn);
 		}
 	}
 }

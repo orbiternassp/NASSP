@@ -2127,7 +2127,14 @@ void Saturn::JoystickTimestep()
 	}
 
 	//SM Jettison Controller
-	if (secs.SMJCA.GetFireMinusXTranslation() || secs.SMJCB.GetFireMinusXTranslation())
+	bool fire = false;
+	if (secs.SMJCA && secs.SMJCA->GetFireMinusXTranslation())
+		fire = true;
+
+	if (secs.SMJCB && secs.SMJCB->GetFireMinusXTranslation())
+		fire = true;
+
+	if (fire)
 	{
 		SetRCSState(RCS_SM_QUAD_A, 3, true);
 		SetRCSState(RCS_SM_QUAD_B, 3, true);
@@ -2135,7 +2142,15 @@ void Saturn::JoystickTimestep()
 		SetRCSState(RCS_SM_QUAD_D, 4, true);
 	}
 
-	if (secs.SMJCA.GetFirePositiveRoll() || secs.SMJCB.GetFirePositiveRoll())
+	fire = false;
+
+	if (secs.SMJCA && secs.SMJCA->GetFirePositiveRoll())
+		fire = true;
+
+	if (secs.SMJCB && secs.SMJCB->GetFirePositiveRoll())
+		fire = true;
+
+	if (fire)
 	{
 		SetRCSState(RCS_SM_QUAD_A, 1, true);
 		SetRCSState(RCS_SM_QUAD_B, 1, true);
@@ -2330,6 +2345,17 @@ void Saturn::CheckSMSystemsState()
 		PriRadInTempSensor.WireTo(NULL);
 		SecRadInTempSensor.WireTo(NULL);
 		SecRadOutTempSensor.WireTo(NULL);
+
+		if (secs.SMJCA)
+		{
+			delete secs.SMJCA;
+			secs.SMJCA = NULL;
+		}
+		if (secs.SMJCB)
+		{
+			delete secs.SMJCB;
+			secs.SMJCB = NULL;
+		}
 	}
 }
 
@@ -2373,6 +2399,19 @@ void Saturn::CreateMissionSpecificSystems()
 			Panel278J = new SaturnPanel278J;
 			Panel278J->Register(&PSH);
 			// Wire Stuff
+		}
+	}
+	if (stage < CM_STAGE)
+	{
+		if (pMission->GetSMJCVersion() == 1)
+		{
+			secs.SMJCA = new SMJC();
+			secs.SMJCB = new SMJC();
+		}
+		else
+		{
+			secs.SMJCA = new SMJC_MOD1();
+			secs.SMJCB = new SMJC_MOD1();
 		}
 	}
 }

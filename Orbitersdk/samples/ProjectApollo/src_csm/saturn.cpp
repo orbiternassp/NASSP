@@ -946,8 +946,8 @@ void Saturn::initSaturn()
 	InitSaturnCalled = true;
 }
 
-void Saturn::clbkPostCreation() {
-
+void Saturn::clbkPostCreation()
+{
 	//
 	// Check propellants
 	//
@@ -1848,6 +1848,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		
 		//Create mission specific systems
 		CreateMissionSpecificSystems();
+		//
+		secs.Realize();
 	}
 	else if (!strnicmp (line, "SATTYPE", 7)) {
 		sscanf (line+7, "%d", &SaturnType);

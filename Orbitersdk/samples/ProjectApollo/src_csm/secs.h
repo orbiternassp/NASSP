@@ -125,7 +125,7 @@ class MESC
 {
 public:
 	MESC();
-	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, SMJC *smjc, MESC* OtherMESCSystem, int IsSysA);
+	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, MESC* OtherMESCSystem, int IsSysA);
 	void CBInit(CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker);
 	void Timestep(double simdt);
 
@@ -277,7 +277,6 @@ protected:
 	EventTimer *EventTimerDisplay;
 	ThreePosSwitch *EventTimerControl;
 	ThreePosSwitch *MissionTimerControl;
-	SMJC *SMJettCont;
 
 	CircuitBrakerSwitch *EDSLogicBreaker;
 
@@ -358,6 +357,7 @@ public:
 	virtual ~SECS();
 
 	void ControlVessel(Saturn *v);
+	void Realize();
 	void Timestep(double simt, double simdt);
 
 	bool AbortLightPowerA();
@@ -369,6 +369,8 @@ public:
 	bool GetDockingProbeRetractPrim2() { return LDECA.GetDockingProbeRetract2(); }
 	bool GetDockingProbeRetractSec1() { return LDECB.GetDockingProbeRetract1(); }
 	bool GetDockingProbeRetractSec2() { return LDECB.GetDockingProbeRetract2(); }
+
+	SMJC *GetSMJC(bool isSysA);
 
 	void InitSIMJett(CircuitBrakerSwitch *SMSec1PowerA, CircuitBrakerSwitch *SMSec1PowerB);
 	void SetSaturnType(int sattype);
@@ -385,10 +387,11 @@ public:
 	//Lunar Docking Events Controller A
 	LDEC LDECA;
 	//Lunar Docking Events Controller B
-	LDEC LDECB;
-	//
-	SMJC SMJCA;
-	SMJC SMJCB;
+	LDEC LDECB;	
+	//Service Module Jettison Controller A
+	SMJC* SMJCA;
+	//Service Module Jettison Controller B
+	SMJC* SMJCB;
 
 protected:
 	bool IsLogicPoweredAndArmedA();
