@@ -80,7 +80,7 @@ class SICSystems
 public:
 	SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop, Pyro &SIC_SII_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl);
 	~SICSystems();
-	void Timestep(double simdt, bool liftoff);
+	void Timestep(double misst, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -97,8 +97,8 @@ public:
 	void SwitchSelector(int channel);
 
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
-	void SetEngineFailureParameters(int n, double SICutTimes);
-	bool GetFailInit() { return FailInit; }
+	void SetEngineFailureParameters(int n, double SICutTimes, bool fail);
+	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
 
 	bool PropellantLowLevel();
 	void GetThrustOK(bool *ok);
@@ -142,10 +142,8 @@ protected:
 
 	bool ThrustOK[5];
 
-	bool FailInit;
 	bool EarlySICutoff[5];
 	double FirstStageFailureTime[5];
-	double FailureTimer;
 
 	TSMUmbilical *TSMUmb;
 };

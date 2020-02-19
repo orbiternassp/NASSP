@@ -25,7 +25,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("IU", OAPI_KEY_I, &ProjectApolloMFD::menuSetIUPage);
 	RegisterFunction("TELE", OAPI_KEY_T, &ProjectApolloMFD::menuSetTELEPage);
 	RegisterFunction("LGC", OAPI_KEY_L, &ProjectApolloMFD::menuSetLGCPage);
-	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("FAIL", OAPI_KEY_A, &ProjectApolloMFD::menuSetFailuresPage);
 
 	RegisterFunction("", OAPI_KEY_B, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_C, &ProjectApolloMFD::menuVoid);
@@ -194,6 +194,39 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("V42", OAPI_KEY_F, &ProjectApolloMFD::CalculateV42Angles);
 	RegisterFunction("", OAPI_KEY_A, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("REF", OAPI_KEY_R, &ProjectApolloMFD::menuCycleLMAlignType);
+
+
+	static const MFDBUTTONMENU mnuFailures[12] = {
+		{ "SECS failures",0,'S' },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+
+		{ "Cycle through pages",0,'P' },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ "Randomize failures",0,'R' },
+		{ "Back",0,'B' }
+	};
+
+	RegisterPage(mnuFailures, sizeof(mnuFailures) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("SEQ", OAPI_KEY_S, &ProjectApolloMFD::menuSetSaturnSwitchFailure);
+	RegisterFunction("PLAT", OAPI_KEY_D, &ProjectApolloMFD::menuSetIUPlatformFailure);
+	RegisterFunction("SI", OAPI_KEY_E, &ProjectApolloMFD::menuSetSIEngineFailure);
+	RegisterFunction("SII", OAPI_KEY_G, &ProjectApolloMFD::menuSetSIIEngineFailure);
+	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_I, &ProjectApolloMFD::menuVoid);
+
+	RegisterFunction("PAG", OAPI_KEY_P, &ProjectApolloMFD::menuCycleFailuresSubpage);
+	RegisterFunction("", OAPI_KEY_J, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_K, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_C, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("RAN", OAPI_KEY_R, &ProjectApolloMFD::menuSetRandomFailures);
+	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 }
 
 bool ProjectApolloMFDButtons::SearchForKeysInOtherPages() const

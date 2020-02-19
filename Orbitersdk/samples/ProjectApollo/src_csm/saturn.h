@@ -552,7 +552,6 @@ public:
 	///
 	union LandingFailures {
 		struct {
-			unsigned Init:1;		///< Flags have been initialised.
 			unsigned CoverFail:1;	///< Apex cover will fail to deploy automatically.
 			unsigned DrogueFail:1;	///< Drogue will fail to deploy automatically.
 			unsigned MainFail:1;	///< Main chutes will fail to deploy automatically.
@@ -568,7 +567,6 @@ public:
 	///
 	union LaunchFailures {
 		struct {
-			unsigned Init:1;					///< Flags have been initialised.
 			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
 			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
 			unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
@@ -589,7 +587,6 @@ public:
 	///
 	union SwitchFailures {
 		struct {
-			unsigned Init:1;				///< Flags have been initialised.
 			unsigned TowerJett1Fail:1;		///< TWR JETT switch 1 will fail.
 			unsigned TowerJett2Fail:1;		///< TWR JETT switch 2 will fail.
 			unsigned SMJett1Fail:1;			///< SM JETT switch 1 will fail.
@@ -1410,12 +1407,6 @@ protected:
 	/// \brief Time to next check for stage destruction.
 	///
 	double NextDestroyCheckTime;
-
-	///
-	/// The time in seconds when the next failure will occur.
-	/// \brief Time of next system failure.
-	///
-	double NextFailureTime;
 
 	///
 	/// Mission Timer display on control panel.
@@ -3864,9 +3855,6 @@ protected:
 	bool FireTJM;
 	bool FirePCM;
 
-	double FailureMultiplier;
-	double PlatFail;
-
 	OBJHANDLE hEVA;
 
 	SoundLib soundlib;
@@ -4019,7 +4007,6 @@ protected:
 	void DeactivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
-	virtual void SetRandomFailures();
 	void SetPipeMaxFlow(char *pipe, double flow);
 
 	//
@@ -4060,7 +4047,8 @@ protected:
 	virtual void LoadSI(FILEHANDLE scn) = 0;
 	virtual void SaveSII(FILEHANDLE scn) {};
 	virtual void LoadSII(FILEHANDLE scn) {};
-	virtual void SetEngineFailure(int failstage, int faileng, double failtime) = 0;
+	virtual void SetEngineFailure(int failstage, int faileng, double failtime, bool fail) = 0;
+	virtual void GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);

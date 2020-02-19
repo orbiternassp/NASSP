@@ -117,8 +117,8 @@ protected:
 	void CalculateStageMass ();
 	void ActivateStagingVent();
 	void DeactivateStagingVent();
-	void SetRandomFailures();
-	void SetEngineFailure(int failstage, int faileng, double failtime);
+	void SetEngineFailure(int failstage, int faileng, double failtime, bool fail);
+	void GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime);
 
 	SIBSystems *sib;
 

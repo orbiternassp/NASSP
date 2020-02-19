@@ -78,13 +78,13 @@ class SIBSystems
 {
 public:
 	SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Pyro &SIB_SIVB_Sep, Sound &LaunchS, Sound &SShutS, double &contraillvl);
-	void Timestep(double simdt, bool liftoff);
+	void Timestep(double misst, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
 	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
-	void SetEngineFailureParameters(int n, double SICutTimes);
-	bool GetFailInit() { return FailInit; }
+	void SetEngineFailureParameters(int n, double SICutTimes, bool fail);
+	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
 
 	virtual void SetEngineStart(int n);
 	void SwitchSelector(int channel);
@@ -196,10 +196,8 @@ protected:
 
 	bool OutboardEnginesCutoffSignal;
 
-	bool FailInit;
 	bool EarlySICutoff[8];
 	double FirstStageFailureTime[8];
-	double FailureTimer;
 
 	SCMUmbilical *SCMUmb;
 };

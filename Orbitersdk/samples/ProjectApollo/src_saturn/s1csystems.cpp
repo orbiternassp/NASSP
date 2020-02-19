@@ -283,9 +283,6 @@ SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	PropellantDepletionSensors = false;
 	PointLevelSensorArmed = false;
 	TwoAdjacentOutboardEnginesOutCutoff = false;
-	FailInit = false;
-
-	FailureTimer = 0.0;
 
 	f1engines[0] = &f1engine1;
 	f1engines[1] = &f1engine2;
@@ -310,12 +307,6 @@ void SICSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 5);
-	if (FailInit)
-	{
-		papiWriteScenario_bool(scn, "FAILINIT", FailInit);
-		papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 5);
-		papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
-	}
 
 	f1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	f1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -337,10 +328,7 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
-		papiReadScenario_bool(line, "FAILINIT", FailInit);
 		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 5);
-		papiReadScenario_boolarr(line, "EARLYSICUTOFF", EarlySICutoff, 5);
-		papiReadScenario_doublearr(line, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			f1engine1.LoadState(scn, "ENGINE_END");
@@ -360,7 +348,7 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 	}
 }
 
-void SICSystems::Timestep(double simdt, bool liftoff)
+void SICSystems::Timestep(double misst, double simdt)
 {
 	f1engine1.Timestep(simdt);
 	f1engine2.Timestep(simdt);
@@ -410,17 +398,11 @@ void SICSystems::Timestep(double simdt, bool liftoff)
 
 	//Failure code
 
-	if (liftoff)
-		FailureTimer += simdt;
-
-	if (vessel->GetDamageModel())
+	for (int i = 0;i < 5;i++)
 	{
-		for (int i = 0;i < 5;i++)
+		if (EarlySICutoff[i] && (misst > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
 		{
-			if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
-			{
-				f1engines[i]->SetFailed();
-			}
+			f1engines[i]->SetFailed();
 		}
 	}
 
@@ -514,18 +496,22 @@ void SICSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 		EarlySICutoff[i] = SICut[i];
 		FirstStageFailureTime[i] = SICutTimes[i];
 	}
-
-	FailInit = true;
 }
 
-void SICSystems::SetEngineFailureParameters(int n, double SICutTimes)
+void SICSystems::SetEngineFailureParameters(int n, double SICutTimes, bool fail)
 {
 	if (n < 1 || n > 5) return;
 
-	EarlySICutoff[n - 1] = true;
+	EarlySICutoff[n - 1] = fail;
 	FirstStageFailureTime[n - 1] = SICutTimes;
+}
 
-	FailInit = true;
+void SICSystems::GetEngineFailureParameters(int n, bool &fail, double &failtime)
+{
+	if (n < 1 || n > 5) return;
+
+	fail = EarlySICutoff[n - 1];
+	failtime = FirstStageFailureTime[n - 1];
 }
 
 double SICSystems::GetSumThrust()

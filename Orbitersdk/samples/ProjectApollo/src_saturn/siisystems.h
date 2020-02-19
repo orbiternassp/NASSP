@@ -62,8 +62,8 @@ public:
 	void SwitchSelector(int channel);
 
 	void SetEngineFailureParameters(bool *SIICut, double *SIICutTimes);
-	void SetEngineFailureParameters(int n, double SIICutTimes);
-	bool GetFailInit() { return FailInit; }
+	void SetEngineFailureParameters(int n, double SIICutTimes, bool fail);
+	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
 
 	void GetThrustOK(bool *ok);
 	bool GetPropellantDepletionEngineCutoff();
@@ -100,7 +100,6 @@ protected:
 	bool EarlySIICutoff[5];
 	double SecondStageFailureTime[5];
 	double FailureTimer;
-	bool FailInit;
 
 	double LH2TankUllagePressurePSI;
 

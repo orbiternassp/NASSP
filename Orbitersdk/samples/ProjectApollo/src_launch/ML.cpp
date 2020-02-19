@@ -121,6 +121,7 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	hLV = 0;
 	state = STATE_ROLLOUT;
 	Hold = false;
+	bCommit = false;
 	TCSSequence = 0;
 
 	craneProc = 0;
@@ -568,15 +569,33 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 				sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 			}
 
-			if (Commit()) {
-				IuUmb->Disconnect();
-				TSMUmb->Disconnect();
-				// Move swingarms
-				swingarmState.action = AnimState::OPENING;
-				// Move masts
-				mastState.action = AnimState::OPENING;
-			}
+			if (bCommit == false && sat->GetMissionTime() >= (-0.05 - simdt))
+			{
+				if (Commit())
+				{
+					bCommit = true;
+				}
+				else
+				{
+					bCommit = false;
+				}
 
+				if (bCommit)
+				{
+					IuUmb->Disconnect();
+					TSMUmb->Disconnect();
+					// Move swingarms
+					swingarmState.action = AnimState::OPENING;
+					// Move masts
+					mastState.action = AnimState::OPENING;
+				}
+				else
+				{
+					Hold = true;
+					TSMUmb->SIGSECutoff(true);
+				}
+			}
+			
 			// T+8s or later?
 			if (sat->GetMissionTime() > 8) {
 				state = STATE_POSTLIFTOFF;
@@ -835,6 +854,7 @@ void ML::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	while (oapiReadScenario_nextline (scn, line)) {
 		
 		papiReadScenario_bool(line, "HOLD", Hold);
+		papiReadScenario_bool(line, "COMMIT", bCommit);
 
 		if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line + 5, "%i", &state);
@@ -867,6 +887,7 @@ void ML::clbkSaveState(FILEHANDLE scn) {
 
 	oapiWriteScenario_int(scn, "STATE", state);
 	papiWriteScenario_bool(scn, "HOLD", Hold);
+	papiWriteScenario_bool(scn, "COMMIT", bCommit);
 	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	papiWriteScenario_double(scn, "CRANEPROC", craneProc);
 	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
@@ -991,7 +1012,7 @@ bool ML::CutoffInterlock()
 bool ML::Commit()
 {
 	if (!sat) return false;
-	return IuUmb->AllSIEnginesRunning() && sat->GetMissionTime() >= -0.05 && !CutoffInterlock();
+	return IuUmb->AllSIEnginesRunning() && !CutoffInterlock();
 }
 
 bool ML::ESEGetCommandVehicleLiftoffIndicationInhibit()

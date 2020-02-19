@@ -135,4 +135,5 @@ protected:
 
 	int TCSSequence;
 	bool Hold;
+	bool bCommit;
 };

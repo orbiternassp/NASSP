@@ -102,6 +102,7 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	sat = 0;
 	state = STATE_PRELAUNCH;
 	Hold = false;
+	bCommit = false;
 
 	mssProc = 0;
 	cmarmProc = 0;
@@ -361,9 +362,18 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 				sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 			}
 
-			if (sat->GetMissionTime() >= -0.05)
+			if (bCommit == false && sat->GetMissionTime() >= (-0.05 - simdt))
 			{
 				if (Commit())
+				{
+					bCommit = true;
+				}
+				else
+				{
+					bCommit = false;
+				}
+
+				if (bCommit)
 				{
 					// Disconnect Umbilicals
 					IuUmb->Disconnect();
@@ -371,6 +381,11 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 
 					// Move swingarms
 					swingarmState.action = AnimState::OPENING;
+				}
+				else
+				{
+					Hold = true;
+					SCMUmb->SIGSECutoff(true);
 				}
 			}
 
@@ -470,6 +485,7 @@ void LC34::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	while (oapiReadScenario_nextline (scn, line)) {
 
 		papiReadScenario_bool(line, "HOLD", Hold);
+		papiReadScenario_bool(line, "COMMIT", bCommit);
 		if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line + 5, "%i", &state);
 		} else if (!strnicmp (line, "TOUCHDOWNPOINTHEIGHT", 20)) {
@@ -495,6 +511,7 @@ void LC34::clbkSaveState(FILEHANDLE scn) {
 
 	oapiWriteScenario_int(scn, "STATE", state);
 	papiWriteScenario_bool(scn, "HOLD", Hold);
+	papiWriteScenario_bool(scn, "COMMIT", bCommit);
 	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	papiWriteScenario_double(scn, "MSSPROC", mssProc);
 	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);

@@ -438,9 +438,6 @@ void Saturn::initSaturn()
 	FireTJM = false;
 	FirePCM = false;
 
-	FailureMultiplier = 1.0;
-	PlatFail = 0;
-
 	DeleteLaunchSite = true;
 
 	buildstatus = 6;
@@ -523,7 +520,6 @@ void Saturn::initSaturn()
 	//
 
 	NextDestroyCheckTime = 0;
-	NextFailureTime = MINUS_INFINITY;
 
 	//
 	// Panel flash.
@@ -1244,13 +1240,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	char str[256];
 
 	oapiWriteScenario_int (scn, "NASSPVER", NASSP_VERSION);
-	if (stage < CSM_LEM_STAGE)
-	{
-		papiWriteScenario_double(scn, "FAILUREMULTIPLIER", FailureMultiplier);
-		if (PlatFail > 0) {
-			papiWriteScenario_double(scn, "PLATFAIL", PlatFail);
-		}
-	}
 	oapiWriteScenario_int (scn, "STAGE", stage);
 	oapiWriteScenario_int(scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_int (scn, "APOLLONO", ApolloNo);
@@ -1260,7 +1249,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	papiWriteScenario_double (scn, "MISSNTIME", MissionTime);
 	papiWriteScenario_double (scn, "NMISSNTIME", NextMissionEventTime);
 	papiWriteScenario_double (scn, "LMISSNTIME", LastMissionEventTime);
-	papiWriteScenario_double (scn, "NFAILTIME", NextFailureTime);
 
 //	oapiWriteScenario_string (scn, "STAGECONFIG", StagesString);
 
@@ -1346,15 +1334,6 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	if (AutoSlow) {
 		oapiWriteScenario_int (scn, "AUTOSLOW", 1);
-	}
-	if (LandFail.word) {
-		oapiWriteScenario_int (scn, "LANDFAIL", LandFail.word);
-	}
-	if (LaunchFail.word) {
-		oapiWriteScenario_int (scn, "LAUNCHFAIL", LaunchFail.word);
-	}
-	if (SwitchFail.word) {
-		oapiWriteScenario_int (scn, "SWITCHFAIL", SwitchFail.word);
 	}
 	if (ApolloNo == 1301) {
 		oapiWriteScenario_int (scn, "A13STATE", GetA13State());
@@ -1705,18 +1684,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp (line, "NASSPVER", 8)) {
 		sscanf (line + 8, "%d", &nasspver);
 	}
-	else if (!strnicmp(line, "FAILUREMULTIPLIER", 17)) {
-		sscanf(line + 17, "%lf", &FailureMultiplier);
-	}
-	else if (!strnicmp(line, "ENGINEFAIL", 10)) {
-		int st, en;
-		double tim;
-		sscanf(line + 10, "%d %d %lf", &st, &en, &tim);
-		SetEngineFailure(st, en, tim);
-	}
-	else if (!strnicmp(line, "PLATFAIL", 8)) {
-		sscanf(line + 8, "%lf", &PlatFail);
-	}
 	else if (!strnicmp (line, "BUILDSTATUS", 11)) {
 		sscanf (line+11, "%d", &buildstatus);
 	}
@@ -1866,10 +1833,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
         sscanf (line + 10, "%f", &ftcp);
 		LastMissionEventTime = ftcp;
 	}
-	else if (!strnicmp(line, "NFAILTIME", 9)) {
-        sscanf (line + 9, "%f", &ftcp);
-		NextFailureTime = ftcp;
-	}
 	else if (!strnicmp(line, "SIFUELMASS", 10)) {
         sscanf (line + 10, "%f", &ftcp);
 		SI_FuelMass = ftcp;
@@ -1978,27 +1941,6 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	else if (!strnicmp(line, "CMMASS", 6)) {
 		sscanf(line + 6, "%f", &ftcp);
 		CM_EmptyMass = ftcp;
-	}
-	else if (!strnicmp(line, "LANDFAIL", 8)) {
-		sscanf(line + 8, "%d", &LandFail.word);
-	}
-	else if (!strnicmp(line, "LAUNCHFAIL", 10)) {
-		sscanf(line + 10, "%d", &LaunchFail.word);
-
-		if (stage < CSM_LEM_STAGE)
-		{
-			if (LaunchFail.LiftoffSignalAFail)
-			{
-				iu->GetEDS()->SetLiftoffCircuitAFailure();
-			}
-			if (LaunchFail.LiftoffSignalBFail)
-			{
-				iu->GetEDS()->SetLiftoffCircuitBFailure();
-			}
-		}
-	}
-	else if (!strnicmp(line, "SWITCHCHFAIL", 10)) {
-		sscanf(line + 10, "%d", &SwitchFail.word);
 	}
 	else if (!strnicmp(line, "LANG", 4)) {
 		strncpy (AudioLanguage, line + 5, 64);
@@ -2405,14 +2347,6 @@ void Saturn::GetScenarioState (FILEHANDLE scn, void *vstatus)
 	agc.SetMissionInfo(pMission->GetCMCVersion(), PayloadName);
 
 	secs.SetSaturnType(SaturnType);
-
-	//
-	// Set random failures if appropriate.
-	//
-
-	if (GetDamageModel()) {
-		SetRandomFailures();
-	}
 
 	//
 	// Realism Mode Settings
@@ -4378,107 +4312,6 @@ void Saturn::SlowIfDesired()
 {
 	if (AutoSlow && (oapiGetTimeAcceleration() > 1.0)) {
 		oapiSetTimeAcceleration(1.0);
-	}
-}
-
-//
-// Set up random failures if required.
-//
-
-void Saturn::SetRandomFailures()
-
-{
-	//
-	// I'm not sure how reliable the random number generator is. We may want to get a
-	// number from 0-1000 and then see if that's less than some threshold, rather than
-	// checking for the bottom bits being zero.
-	//
-
-	//
-	// Set up landing failures.
-	//
-
-	if (!LandFail.Init)
-	{
-		LandFail.Init = 1;
-		if (!(random() & 127))
-		{
-			LandFail.CoverFail = 1;
-		}
-		if (!(random() & 127))
-		{
-			LandFail.DrogueFail = 1;
-		}
-		if (!(random() & 127)) 
-		{
-			LandFail.MainFail = 1;
-		}
-	}
-
-	//
-	// Set up switch failures.
-	//
-
-	if (!SwitchFail.Init)
-	{
-		SwitchFail.Init = 1;
-		if (!(random() & 127))
-		{
-			SwitchFail.TowerJett1Fail = 1;
-		}
-		else if (!(random() & 127))
-		{
-			SwitchFail.TowerJett2Fail = 1;
-		}
-		if (!(random() & 127))
-		{
-			SwitchFail.SMJett1Fail = 1;
-		}
-		else if (!(random() & 127))
-		{
-			SwitchFail.SMJett2Fail = 1;
-		}
-
-		//
-		// Random CWS light failures.
-		//
-		if (!(random() & 15)) 
-		{
-			int i, n = (random() & 7) + 1;
-
-			for (i = 0; i < n; i++)
-			{
-				cws.FailLight(random() & 63, true);
-			}
-		}
-	}
-
-	if (stage > PRELAUNCH_STAGE) return;
-
-	bool PlatformFailure;
-	double PlatformFailureTime;
-
-	if (PlatFail > 0)
-	{
-		if (PlatFail > 1)
-		{
-			PlatformFailure = true;
-			PlatformFailureTime = PlatFail;
-		}
-		else
-		{
-			PlatformFailure = true;
-			PlatformFailureTime = 20.0 + ((double)(random() & 1023) / 2.0);
-		}
-		
-		iu->GetEDS()->SetPlatformFailureParameters(PlatformFailure, PlatformFailureTime);
-	}
-	else if (!(random() & (int)(127.0 / FailureMultiplier)))
-	{
-		PlatformFailure = true;
-		PlatformFailureTime = 20.0 + ((double)(random() & 1023) / 2.0);
-
-		iu->GetEDS()->SetPlatformFailureParameters(PlatformFailure, PlatformFailureTime);
 	}
 }
 

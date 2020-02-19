@@ -274,7 +274,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 
 	if (stage <= LAUNCH_STAGE_ONE)
 	{
-		sib->Timestep(simdt, stage >= LAUNCH_STAGE_ONE);
+		sib->Timestep(MissionTime, simdt);
 	}
 
 	if (stage < CSM_LEM_STAGE) {
@@ -694,90 +694,18 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 
-void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime)
+void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime, bool fail)
 {
 	if (failstage == 1)
 	{
-		sib->SetEngineFailureParameters(faileng, failtime);
+		sib->SetEngineFailureParameters(faileng, failtime, fail);
 	}
 }
 
-void Saturn1b::SetRandomFailures()
+void Saturn1b::GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime)
 {
-	Saturn::SetRandomFailures();
-	//
-	// Set up launch failures.
-	//
-
-	if (stage < STAGE_ORBIT_SIVB)
+	if (failstage == 1 && sib)
 	{
-		if (!sib->GetFailInit())
-		{
-			//
-			// Engine failure times for first stage.
-			//
-
-			bool EarlySICutoff[8];
-			double FirstStageFailureTime[8];
-
-			for (int i = 0;i < 8;i++)
-			{
-				EarlySICutoff[i] = 0;
-				FirstStageFailureTime[i] = 0.0;
-			}
-
-			for (int i = 0;i < 8;i++)
-			{
-				if (!(random() & (int)(127.0 / FailureMultiplier)))
-				{
-					EarlySICutoff[i] = 1;
-					FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
-				}
-			}
-
-			sib->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
-		}
-	}
-
-	if (!LaunchFail.Init)
-	{
-		LaunchFail.Init = 1;
-
-		if (!(random() & 127))
-		{
-			LaunchFail.LETAutoJetFail = 1;
-		}
-		if (!(random() & 63))
-		{
-			LaunchFail.SIIAutoSepFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.LESJetMotorFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.LiftoffSignalAFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.LiftoffSignalBFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.AutoAbortEnableFail = 1;
-		}
-
-		if (stage < CSM_LEM_STAGE)
-		{
-			if (LaunchFail.LiftoffSignalAFail)
-			{
-				iu->GetEDS()->SetLiftoffCircuitAFailure();
-			}
-			if (LaunchFail.LiftoffSignalBFail)
-			{
-				iu->GetEDS()->SetLiftoffCircuitBFailure();
-			}
-		}
+		sib->GetEngineFailureParameters(faileng, fail, failtime);
 	}
 }

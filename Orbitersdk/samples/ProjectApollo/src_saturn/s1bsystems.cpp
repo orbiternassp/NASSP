@@ -296,11 +296,7 @@ SIBSystems::SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 	FuelDepletionCutoffEnabledRelay = false;
 	FuelDepletionCutoffInhibitRelay1 = false;
 	FuelDepletionCutoffInhibitRelay2 = false;
-
-	FailInit = false;
 	OutboardEnginesCutoffSignal = false;
-
-	FailureTimer = 0.0;
 
 	h1engines[0] = &h1engine1;
 	h1engines[1] = &h1engine2;
@@ -344,13 +340,6 @@ void SIBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY2", FuelDepletionCutoffInhibitRelay2);
 	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 8);
-
-	if (FailInit)
-	{
-		papiWriteScenario_bool(scn, "FAILINIT", FailInit);
-		papiWriteScenario_boolarr(scn, "EARLYSICUTOFF", EarlySICutoff, 8);
-		papiWriteScenario_doublearr(scn, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
-	}
 
 	h1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	h1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -398,10 +387,7 @@ void SIBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFENABLEDRELAY", FuelDepletionCutoffEnabledRelay);
 		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFINHIBITRELAY1", FuelDepletionCutoffInhibitRelay1);
 		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFINHIBITRELAY2", FuelDepletionCutoffInhibitRelay2);
-		papiReadScenario_bool(line, "FAILINIT", FailInit);
 		papiReadScenario_bool(line, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
-		papiReadScenario_boolarr(line, "EARLYSICUTOFF", EarlySICutoff, 8);
-		papiReadScenario_doublearr(line, "FIRSTSTAGEFAILURETIME", FirstStageFailureTime, 8);
 		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
@@ -431,7 +417,7 @@ void SIBSystems::LoadState(FILEHANDLE scn) {
 	}
 }
 
-void SIBSystems::Timestep(double simdt, bool liftoff)
+void SIBSystems::Timestep(double misst, double simdt)
 {
 	h1engine1.Timestep(simdt);
 	h1engine2.Timestep(simdt);
@@ -448,13 +434,13 @@ void SIBSystems::Timestep(double simdt, bool liftoff)
 		ThrustOK[i] = h1engines[i]->GetThrustOK() || ESEGetSIBThrustOKSimulate(i + 1);
 	}
 
-	if (liftoff)
+	if (IsUmbilicalConnected())
 	{
-		LiftoffRelay = false;
+		LiftoffRelay = true;
 	}
 	else
 	{
-		LiftoffRelay = true;
+		LiftoffRelay = false;
 	}
 
 	if (PropellantLevelSensorsEnabledLatch)
@@ -642,20 +628,11 @@ void SIBSystems::Timestep(double simdt, bool liftoff)
 	}
 
 	//Failure code
-
-	if (LiftoffRelay)
+	for (int i = 0;i < 8;i++)
 	{
-		FailureTimer += simdt;
-	}
-
-	if (vessel->GetDamageModel())
-	{
-		for (int i = 0;i < 8;i++)
+		if (EarlySICutoff[i] && (misst > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
 		{
-			if (EarlySICutoff[i] && (FailureTimer > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
-			{
-				h1engines[i]->SetFailed();
-			}
+			h1engines[i]->SetFailed();
 		}
 	}
 
@@ -753,18 +730,22 @@ void SIBSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
 		EarlySICutoff[i] = SICut[i];
 		FirstStageFailureTime[i] = SICutTimes[i];
 	}
-
-	FailInit = true;
 }
 
-void SIBSystems::SetEngineFailureParameters(int n, double SICutTimes)
+void SIBSystems::SetEngineFailureParameters(int n, double SICutTimes, bool fail)
 {
 	if (n < 1 || n > 8) return;
 
-	EarlySICutoff[n - 1] = true;
+	EarlySICutoff[n - 1] = fail;
 	FirstStageFailureTime[n - 1] = SICutTimes;
+}
 
-	FailInit = true;
+void SIBSystems::GetEngineFailureParameters(int n, bool &fail, double &failtime)
+{
+	if (n < 1 || n > 8) return;
+
+	fail = EarlySICutoff[n - 1];
+	failtime = FirstStageFailureTime[n - 1];
 }
 
 bool SIBSystems::GetEngineStop()

@@ -82,6 +82,7 @@ protected:
 	OBJHANDLE hLV;
 	int state;
 	bool Hold;
+	bool bCommit;
 
 	UINT mssAnim;
 	UINT cmarmAnim;

@@ -77,12 +77,12 @@ void SCMUmbilical::SetEngineStart(int eng)
 {
 	if (!UmbilicalConnected) return;
 
-	return sib->SetEngineStart(eng);
+	sib->SetEngineStart(eng);
 }
 
 void SCMUmbilical::SIGSECutoff(bool cut)
 {
 	if (!UmbilicalConnected) return;
 
-	return sib->GSEEnginesCutoff(cut);
+	sib->GSEEnginesCutoff(cut);
 }

@@ -32,9 +32,11 @@ public:
 	EDS(IU *iu);
 	virtual ~EDS() {}
 	virtual void Timestep(double simdt);
-	void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
-	void SetLiftoffCircuitAFailure() { LiftoffCircuitAFailure = true; }
-	void SetLiftoffCircuitBFailure() { LiftoffCircuitBFailure = true; }
+	virtual void SetPlatformFailureParameters(bool PlatFail, double PlatFailTime);
+	bool GetPlatformFail() { return PlatformFailure; }
+	double GetPlatformFailTime() { return PlatformFailureTime; }
+	virtual void SetLiftoffCircuitAFailure(bool fail) { LiftoffCircuitAFailure = fail; }
+	virtual void SetLiftoffCircuitBFailure(bool fail) { LiftoffCircuitBFailure = fail; }
 
 	virtual void SaveState(FILEHANDLE scn, char *start_str, char *end_str) = 0;
 	virtual void LoadState(FILEHANDLE scn, char *end_str) = 0;
