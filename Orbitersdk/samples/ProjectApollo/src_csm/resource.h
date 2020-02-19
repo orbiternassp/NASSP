@@ -778,12 +778,14 @@
 #define IDB_CSM_PANEL_278_CSM114						   1063
 #define IDB_INDICATOR90						               1064
 #define IDB_THREEPOSSWITCH90_RIGHT                         1065
+#define IDB_CRYO_SWITCHES_J                                1066
+#define IDB_CRYO_IND_J                                     1067
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            1066
+#define _APS_NEXT_RESOURCE_VALUE                            1068
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001
