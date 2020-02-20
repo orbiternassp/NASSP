@@ -253,6 +253,7 @@ IDB_INDICATOR90                             BITMAP  "..\\Bitmaps\\Indicator90.bm
 IDB_THREEPOSSWITCH90_RIGHT                  BITMAP  "..\\Bitmaps\\threeposswitch90_right.bmp"
 IDB_CRYO_SWITCHES_J                         BITMAP  "..\\Bitmaps\\csm_cryo_switches_J.bmp"
 IDB_CRYO_IND_J                              BITMAP  "..\\Bitmaps\\csm_cryo_indicators_J.bmp"
+IDB_SWITCHGUARDS90_RIGHT                    BITMAP  "..\\Bitmaps\\SwitchGuards90_right.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

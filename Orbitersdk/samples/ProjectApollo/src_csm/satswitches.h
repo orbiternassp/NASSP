@@ -929,7 +929,7 @@ public:
 	SwitchRow Panel278JSwitchesRow;
 	ThreePosSwitch ExperimentCovers1Switch;
 	ThreePosSwitch ExperimentCovers2Switch;
-	ThreePosSwitch SMPowerSourceSwitch;
+	GuardedThreePosSwitch SMPowerSourceSwitch;
 	ThreePosSwitch O2Tank3IsolSwitch;
 	IndicatorSwitch ExperimentCovers1Indicator;
 	IndicatorSwitch ExperimentCovers2Indicator;
