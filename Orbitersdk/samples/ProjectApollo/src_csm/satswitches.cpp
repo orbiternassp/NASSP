@@ -110,9 +110,9 @@ double SaturnH2PressureMeter::QueryValue()
 void SaturnH2PressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (Index == 1) 
-		oapiBlt(drawSurface, NeedleSurface,  0, (110 - (int)(v / 400.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface,  0, (130 - (int)(v / 400.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 	else
-		oapiBlt(drawSurface, NeedleSurface, 53, (110 - (int)(v / 400.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface, 53, (130 - (int)(v / 400.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 
@@ -150,25 +150,25 @@ void SaturnO2PressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 void SaturnO2PressureMeter::DoDrawSwitch(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle)
 {
 	if (value < 100.0)
-		oapiBlt(surf, needle, xOffset, 110, xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(surf, needle, xOffset, 130, xNeedle, 0, 10, 10, SURF_PREDEF_CK);
 
 	else if (value <= 500.0) 
-		oapiBlt(surf, needle, xOffset, 110 - (int)((value - 100.0) * 0.065), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(surf, needle, xOffset, 130 - (int)((value - 100.0) * 0.065), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
 
 	else if (value <= 850.0)
-		oapiBlt(surf, needle, xOffset, 84 - (int)((value - 500.0) * 0.07714), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(surf, needle, xOffset, 104 - (int)((value - 500.0) * 0.07714), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
 
 	else if (value <= 900.0)
-		oapiBlt(surf, needle, xOffset, 57 - (int)((value - 850.0) * 0.38), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(surf, needle, xOffset, 77 - (int)((value - 850.0) * 0.38), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
 
 	else if (value <= 950.0)
-		oapiBlt(surf, needle, xOffset, 38 - (int)((value - 900.0) * 0.42), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(surf, needle, xOffset, 58 - (int)((value - 900.0) * 0.42), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
 
 	else if (value <= 1050.0)
-		oapiBlt(surf, needle, xOffset, 17 - (int)((value - 950.0) * 0.13), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(surf, needle, xOffset, 37 - (int)((value - 950.0) * 0.13), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
 
 	else
-		oapiBlt(surf, needle, xOffset, 4, xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(surf, needle, xOffset, 24, xNeedle, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 
@@ -203,12 +203,12 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (!strcmp("H2", Substance)) {
 		if (Index == 1) 
-			oapiBlt(drawSurface, NeedleSurface,  172, (110 - (int)(v * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface,  172, (130 - (int)(v * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 		else
-			oapiBlt(drawSurface, NeedleSurface,  225, (110 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface,  225, (130 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 	} else {
 		if (Index == 1) 
-			oapiBlt(drawSurface, NeedleSurface,  258, (110 - (int)(v * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface,  258, (130 - (int)(v * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
 		else {
 			//
 			// Apollo 13 O2 tank 2 quantity display failed offscale high around 46:45.
@@ -224,7 +224,7 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 					v += (1.05 - value) * ((Sat->GetMissionTime() - O2FAILURETIME) / 5.0);
 				}
 			}
-			oapiBlt(drawSurface, NeedleSurface,  311, (110 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface,  311, (130 - (int)(v * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
 		}
 	}
 }

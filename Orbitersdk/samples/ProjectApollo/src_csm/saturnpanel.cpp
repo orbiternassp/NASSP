@@ -413,7 +413,10 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CSM_PANEL_278_CSM112]                   = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_278_CSM112));
 	srf[SRF_CSM_PANEL_278_CSM114]                   = oapiCreateSurface (LOADBMP (IDB_CSM_PANEL_278_CSM114));
 	srf[SRF_INDICATOR90]                            = oapiCreateSurface (LOADBMP (IDB_INDICATOR90));
-	srf[SRF_THREEPOSSWITCH90_RIGHT]					= oapiCreateSurface(LOADBMP(IDB_THREEPOSSWITCH90_RIGHT));
+	srf[SRF_THREEPOSSWITCH90_RIGHT]					= oapiCreateSurface (LOADBMP (IDB_THREEPOSSWITCH90_RIGHT));
+	srf[SRF_CRYO_SWITCHES_J]                        = oapiCreateSurface (LOADBMP (IDB_CRYO_SWITCHES_J));
+	srf[SRF_CRYO_IND_J]                             = oapiCreateSurface (LOADBMP (IDB_CRYO_IND_J));
+
 
 	//
 	// Flashing borders.
@@ -583,7 +586,9 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_ORDEAL_PANEL],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PRESS_EQUAL_HANDLE],               g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_181],                        g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_THREEPOSSWITCH90_RIGHT],				g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH90_RIGHT],				g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CRYO_SWITCHES_J],                      g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CRYO_IND_J],                           g_Param.col[4]);
 
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1546,8 +1551,8 @@ void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
 void Saturn::AddRightMiddleMainPanelAreas(int offset) {
 
 	oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1834 + offset,  303, 1977 + offset,  326), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1912 + offset,  490, 2488 + offset,  520), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
-	oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173 + offset,  315, 2495 + offset,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1902 + offset,  451, 2492 + offset,  537), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173 + offset,  295, 2495 + offset,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SUITCOMPRDELTAPMETER,       					_R(2069 + offset,  726, 2115 + offset,  770), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CABININDICATORS,        						_R(2278 + offset,  593, 2504 + offset,  717), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CAUTIONWARNING_SWITCHES,						_R(1908 + offset,  400, 2140 + offset,  434), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP,	PANEL_MAP_BACKGROUND);
@@ -1768,17 +1773,17 @@ void Saturn::SetSwitches(int panel) {
 	}
 
 	CryoTankSwitchesRow.Init(AID_CYROTANKSWITCHES, MainPanel);
-	CabinFan1Switch.Init (  0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29],       CryoTankSwitchesRow);
-	CabinFan2Switch.Init ( 59, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29],       CryoTankSwitchesRow);
-	H2Heater1Switch.Init (114, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
-	H2Heater2Switch.Init (157, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
-	O2Heater1Switch.Init (200, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
-	O2Heater2Switch.Init (250, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
-	O2PressIndSwitch.Init(293, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29],       CryoTankSwitchesRow);
-	H2Fan1Switch.Init    (349, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
-	H2Fan2Switch.Init    (413, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
-	O2Fan1Switch.Init    (478, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
-	O2Fan2Switch.Init    (541, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
+	CabinFan1Switch.Init (  10, 39, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29],       CryoTankSwitchesRow);
+	CabinFan2Switch.Init ( 69, 39, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29],       CryoTankSwitchesRow);
+	H2Heater1Switch.Init (124, 39, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
+	H2Heater2Switch.Init (167, 39, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
+	O2Heater1Switch.Init (210, 39, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
+	O2Heater2Switch.Init (260, 39, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
+	O2PressIndSwitch.Init(303, 39, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29],       CryoTankSwitchesRow);
+	H2Fan1Switch.Init    (359, 39, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
+	H2Fan2Switch.Init    (423, 39, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
+	O2Fan1Switch.Init    (488, 39, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
+	O2Fan2Switch.Init    (551, 39, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CryoTankSwitchesRow);
 
 	SCContCMCModeSwitchesRow.Init(AID_SCCONTCMCMODESWITCHES, MainPanel);
 	SCContSwitch.Init(  0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], SCContCMCModeSwitchesRow, this);
@@ -4423,7 +4428,7 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	}
 
 	//
-	// Special handling panels 181,277,278 (Apollo 15 and later)
+	// Special handling panels 181,277,278,cryo (Apollo 15 and later)
 	//
 	if (id == AID_CSM_PANEL_181)
 		oapiBlt(surf, srf[SRF_CSM_PANEL_181], 0, 0, 0, 0, 432, 251, SURF_PREDEF_CK);
@@ -4442,6 +4447,19 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			oapiBlt(surf, srf[SRF_CSM_PANEL_278_CSM114], 0, 0, 0, 0, 188, 433, SURF_PREDEF_CK);
 		}
 	}
+
+	/*if (pMission->IsJMission())   // Disabled for now
+	{
+		if (id == AID_CYROTANKINDICATORS)
+		{
+			oapiBlt(surf, srf[SRF_CRYO_IND_J], 0, 0, 0, 0, 321, 9, SURF_PREDEF_CK);
+		}
+
+		if (id == AID_CYROTANKSWITCHES)
+		{
+			oapiBlt(surf, srf[SRF_CRYO_SWITCHES_J], 0, 0, 0, 0, 590, 86, SURF_PREDEF_CK);
+		}
+	}*/
 
 	//
 	// Process all the generic switches.
