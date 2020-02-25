@@ -22,8 +22,7 @@
 
   **************************************************************************/
 
-#ifndef __toggleswitch_h
-#define __toggleswitch_h
+#pragma once
 
 #include "cautionwarning.h"
 #include "powersource.h"
@@ -290,7 +289,7 @@ public:
 	void SetHeld(bool s) { Held = s; };
 	bool IsHeld() { return Held; };
 	void SetActive(bool s);
-	void SetSideways(bool s) { Sideways = s; };
+	void SetSideways(int s) { Sideways = s; }
 	void SetDelayTime(double t) { delayTime = t; };
 
 	bool Toggled() { return SwitchToggled; };
@@ -330,7 +329,8 @@ protected:
 	bool Active;
 	bool SwitchToggled;
 	bool Held;
-	bool Sideways;
+	//0 = not sideways, 1 = sideways rotated 90° clockwise, 2 = sideways rotated 90° counterclockwise
+	int Sideways;
 
 	double delayTime;
 	double resetTime;
@@ -1610,4 +1610,22 @@ public:
 		(*obj_ptr.*func_ptr)(s);
 	}
 };
-#endif
+
+class BasicPanel
+{
+public:
+	BasicPanel() {}
+	virtual ~BasicPanel() {}
+	virtual void Register(PanelSwitchScenarioHandler *PSH) = 0;
+};
+
+class PanelGroup
+{
+public:
+	PanelGroup() {}
+	virtual ~PanelGroup();
+
+	virtual bool AddPanel(BasicPanel* pPanel, PanelSwitchScenarioHandler *PSH);
+private:
+	std::vector<BasicPanel*> panels;
+};

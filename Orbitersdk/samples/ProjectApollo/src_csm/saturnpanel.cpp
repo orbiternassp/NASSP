@@ -5951,7 +5951,7 @@ void Saturn::InitSwitches() {
 	AccumRotary.Register(PSH, "AccumRotary", 1);
 
 	PLVCSwitch.Register(PSH, "PLVCSwitch", TOGGLESWITCH_UP); 
-	PLVCSwitch.SetSideways(true);
+	PLVCSwitch.SetSideways(1);
 
 	PressureReliefRotary.AddPosition(0,   0);
 	PressureReliefRotary.AddPosition(1,  90);
@@ -6069,23 +6069,23 @@ void Saturn::InitSwitches() {
 	FoodPreparationWaterColdLever.SetCallback(new PanelSwitchCallback<SaturnWaterController>(&WaterController, &SaturnWaterController::FoodPreparationWaterSwitchToggled));
 
 	EventTimerUpDown306Switch.Register(PSH, "EventTimerUpDown306Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
-	EventTimerUpDown306Switch.SetSideways(true);
+	EventTimerUpDown306Switch.SetSideways(1);
 	EventTimerControl306Switch.Register(PSH, "EventTimerControl306Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
-	EventTimerControl306Switch.SetSideways(true);
+	EventTimerControl306Switch.SetSideways(1);
 	EventTimer306MinutesSwitch.Register(PSH, "EventTimer306MinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
-	EventTimer306MinutesSwitch.SetSideways(true);
+	EventTimer306MinutesSwitch.SetSideways(1);
 	EventTimer306SecondsSwitch.Register(PSH, "EventTimer306SecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
-	EventTimer306SecondsSwitch.SetSideways(true);
+	EventTimer306SecondsSwitch.SetSideways(1);
 	SaturnEventTimer306Display.Register(PSH, "SaturnEventTimer306Display", 0, 0, 0);	// dummy switch/display for checklist controller
 	MissionTimer306HoursSwitch.Register(PSH, "MissionTimer306HoursSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
-	MissionTimer306HoursSwitch.SetSideways(true);
+	MissionTimer306HoursSwitch.SetSideways(1);
 	MissionTimer306MinutesSwitch.Register(PSH, "MissionTimer306MinutesSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
-	MissionTimer306MinutesSwitch.SetSideways(true);
+	MissionTimer306MinutesSwitch.SetSideways(1);
 	MissionTimer306SecondsSwitch.Register(PSH, "MissionTimer306SecondsSwitch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER);
-	MissionTimer306SecondsSwitch.SetSideways(true);
+	MissionTimer306SecondsSwitch.SetSideways(1);
 	
 	MissionTimer306Switch.Register(PSH, "MissionTimer306Switch", THREEPOSSWITCH_UP, SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN); // Default state UP is correct!
-	MissionTimer306Switch.SetSideways(true);
+	MissionTimer306Switch.SetSideways(1);
 
 	LMTunnelVentValve.AddPosition(0, 300);
 	LMTunnelVentValve.AddPosition(1, 330);
@@ -6365,7 +6365,7 @@ void Saturn::InitSwitches() {
 	SCIUtilPowerSwitch.Register(PSH, "SCIUtilPowerSwitch", false);
 
 	SCIInstSwitch.Register(PSH, "SCIInstSwitch", TOGGLESWITCH_UP);
-	SCIInstSwitch.SetSideways(true);
+	SCIInstSwitch.SetSideways(1);
 
 	CenterSuitPowerSwitch.Register(PSH, "CenterSuitPowerSwitch", false);
 	CenterAudioControlSwitch.Register(PSH, "CenterAudioControlSwitch", TOGGLESWITCH_UP);

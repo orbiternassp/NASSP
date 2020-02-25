@@ -963,7 +963,7 @@ void LEM::InitSwitches() {
 	CabinGasReturnValveSwitch.Register(PSH, "CabinGasReturnValveSwitch", 1);
 
 	CO2CanisterSelectSwitch.Register(PSH, "CO2CanisterSelectSwitch", TOGGLESWITCH_UP);
-	CO2CanisterSelectSwitch.SetSideways(true);
+	CO2CanisterSelectSwitch.SetSideways(1);
 
 	CO2CanisterPrimValve.AddPosition(0, 300);
 	CO2CanisterPrimValve.AddPosition(1, 0);
@@ -981,7 +981,7 @@ void LEM::InitSwitches() {
 	// Upper Hatch
 	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", 0);
 	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_DOWN);
-	UpperHatchHandle.SetSideways(true);
+	UpperHatchHandle.SetSideways(1);
 
 	UtilityLightSwitchCDR.Register(PSH, "UtilityLightSwitchCDR", THREEPOSSWITCH_UP);
 	UtilityLightSwitchLMP.Register(PSH, "UtilityLightSwitchLMP", THREEPOSSWITCH_UP);
@@ -989,7 +989,7 @@ void LEM::InitSwitches() {
 	// Forward Hatch
 	ForwardHatchHandle.Register(PSH, "ForwardHandle", TOGGLESWITCH_DOWN);
 	ForwardHatchReliefValve.Register(PSH, "ForwardReliefValve", THREEPOSSWITCH_CENTER);
-	ForwardHatchReliefValve.SetSideways(true);
+	ForwardHatchReliefValve.SetSideways(1);
 
 	//
 	// Old stuff.

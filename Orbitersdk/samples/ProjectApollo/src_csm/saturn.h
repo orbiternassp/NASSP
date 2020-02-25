@@ -1548,6 +1548,11 @@ protected:
 
 	HBITMAP hBmpFDAIRollIndicator;
 
+	//Panels
+
+	PanelGroup pgPanels100;
+	PanelGroup pgPanels200;
+
 	SwitchRow MasterAlarmSwitchRow;
 	MasterAlarmSwitch MasterAlarmSwitch; 
 

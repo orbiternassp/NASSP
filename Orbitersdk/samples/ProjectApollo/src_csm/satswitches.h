@@ -888,7 +888,7 @@ protected:
 
 class PanelSwitchScenarioHandler;
 
-class SaturnPanel181
+class SaturnPanel181 : public BasicPanel
 {
 public:
 
@@ -907,7 +907,7 @@ public:
 	CircuitBrakerSwitch SMSector1LogicPowerMNBBraker;
 };
 
-class SaturnPanel277
+class SaturnPanel277 : public BasicPanel
 {
 public:
 
@@ -920,7 +920,7 @@ public:
 	CircuitBrakerSwitch CSMLMFinalSepBBatBBraker;
 };
 
-class SaturnPanel278J
+class SaturnPanel278J : public BasicPanel
 {
 public:
 

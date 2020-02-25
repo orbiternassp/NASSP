@@ -333,24 +333,6 @@ Saturn::~Saturn()
 		sivb = 0;
 	}
 
-	if (Panel181)
-	{
-		delete Panel181;
-		Panel181 = 0;
-	}
-
-	if (Panel277)
-	{
-		delete Panel277;
-		Panel277 = 0;
-	}
-
-	if (Panel278J)
-	{
-		delete Panel278J;
-		Panel278J = 0;
-	}
-
 	if (LMPad) {
 		delete[] LMPad;
 		LMPad = 0;

@@ -2363,43 +2363,25 @@ void Saturn::CreateMissionSpecificSystems()
 {
 	if (pMission->IsJMission())
 	{
-		//J-type missions
+		pgPanels100.AddPanel(Panel181 = new SaturnPanel181, &PSH);
 
-		if (Panel181 == NULL)
-		{
-			Panel181 = new SaturnPanel181;
+		Panel181->SMSector1LogicPowerMNABraker.WireTo(MainBusA);
+		Panel181->SMSector1LogicPowerMNBBraker.WireTo(MainBusB);
+		Panel181->SMSector1AC2ASystemBraker.WireTo(&ACBus2PhaseA);
+		Panel181->SMSector1AC2BSystemBraker.WireTo(&ACBus2PhaseB);
+		Panel181->SMSector1AC2CSystemBraker.WireTo(&ACBus2PhaseC);
 
-			Panel181->Register(&PSH);
-
-			Panel181->SMSector1LogicPowerMNABraker.WireTo(MainBusA);
-			Panel181->SMSector1LogicPowerMNBBraker.WireTo(MainBusB);
-			Panel181->SMSector1AC2ASystemBraker.WireTo(&ACBus2PhaseA);
-			Panel181->SMSector1AC2BSystemBraker.WireTo(&ACBus2PhaseB);
-			Panel181->SMSector1AC2CSystemBraker.WireTo(&ACBus2PhaseC);
-
-			secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
-		}
+		secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
 	}
 
 	if (pMission->GetPanel277Version() == 1)
 	{
-		if (Panel277 == NULL)
-		{
-			Panel277 = new SaturnPanel277;
-
-			Panel277->Register(&PSH);
-			// Wire Stuff
-		}
+		pgPanels200.AddPanel(Panel277 = new SaturnPanel277, &PSH);
 	}
 
 	if (pMission->GetPanel278Version() == 2 || pMission->GetPanel278Version() == 3)
 	{
-		if (Panel278J == NULL)
-		{
-			Panel278J = new SaturnPanel278J;
-			Panel278J->Register(&PSH);
-			// Wire Stuff
-		}
+		pgPanels200.AddPanel(Panel278J = new SaturnPanel278J, &PSH);
 	}
 	if (stage < CM_STAGE)
 	{
