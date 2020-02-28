@@ -77,7 +77,8 @@ public:
 	bool GetLiftoffEnableB() { return EDSLiftoffEnableB; }
 	bool GetAutoAbort() { return AutoAbortBus; }
 	virtual bool GetAllSIEnginesRunning();
-	virtual bool IsEDSUnsafe();
+	virtual bool IsEDSUnsafeA();
+	virtual bool IsEDSUnsafeB();
 	bool GetLVEnginesCutoffFromSC1() { return LVEnginesCutoffFromSC1; }
 	bool GetLVEnginesCutoffFromSC2() { return LVEnginesCutoffFromSC2; }
 	bool GetLVEnginesCutoffFromSC3() { return LVEnginesCutoffFromSC3; }

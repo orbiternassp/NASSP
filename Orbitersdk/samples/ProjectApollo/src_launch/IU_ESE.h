@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 class IUUmbilical;
+class LCCPadInterface;
 
 #define LCC_EDS_MODE_OFF 0
 #define LCC_EDS_MODE_MONITOR 1
@@ -34,7 +35,7 @@ class IUUmbilical;
 class IU_ESE
 {
 public:
-	IU_ESE(IUUmbilical *IuUmb);
+	IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p);
 
 	void Timestep(double MissionTime, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -52,6 +53,8 @@ public:
 	bool GetAutoAbortSimulate() { return AutoAbortSimulate; }
 	bool GetSIBurnModeSubstitute() { return SIBurnModeSubstitute; }
 	bool GetGuidanceReferenceRelease() { return GuidanceReferenceRelease; }
+	bool GetFCCPowerIsOn() { return FCCPowerIsOn; }
+	bool GetQBallSimulateCmd() { return QBallSimulateCmd; }
 
 	void SetGuidanceReferenceRelease(bool set) { GuidanceReferenceRelease = set; }
 	void SetEDSPowerInhibit(bool set) { EDSPowerInhibit = set; }
@@ -78,6 +81,12 @@ protected:
 	bool SIBurnModeSubstitute;
 	bool GuidanceReferenceRelease;
 	bool EDSCutoffFromSC[3];
+	bool SwitchFCCPowerOn;
+	bool SwitchFCCPowerOff;
+	bool QBallSimulateCmd;
+
+	//Signals from LV
+	bool FCCPowerIsOn;
 
 	bool EDSNotReady;
 	bool InstrumentUnitReady;
@@ -85,12 +94,13 @@ protected:
 	double LastMissionTime = 0.0;
 
 	IUUmbilical *Umbilical;
+	LCCPadInterface *Pad;
 };
 
 class IUSV_ESE : public IU_ESE
 {
 public:
-	IUSV_ESE(IUUmbilical *IuUmb);
+	IUSV_ESE(IUUmbilical *IuUmb, LCCPadInterface *p);
 
 	bool GetSICOutboardEnginesCantInhibit() { return SICOutboardEnginesCantInhibit; }
 	bool GetSICOutboardEnginesCantSimulate() { return SICOutboardEnginesCantSimulate; }

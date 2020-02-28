@@ -45,6 +45,7 @@
 #include "saturn.h"
 #include "saturn1b.h"
 #include "papi.h"
+#include "RCA110A.h"
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo LC34.log";
@@ -119,7 +120,7 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	//meshoffsetMSS = _V(0,0,0);
 
 	IuUmb = new IUUmbilical(this);
-	IuESE = new IU_ESE(IuUmb);
+	IuESE = new IU_ESE(IuUmb, this);
 	SCMUmb = new SCMUmbilical(this);
 	SIBESE = new SIB_ESE(SCMUmb);
 }
@@ -665,7 +666,7 @@ int LC34::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 bool LC34::CutoffInterlock()
 {
-	return IuUmb->IsEDSUnsafe() || SCMUmb->SIStageLogicCutoff();
+	return IuUmb->IsEDSUnsafeA() || IuUmb->IsEDSUnsafeB() || SCMUmb->SIStageLogicCutoff();
 }
 
 bool LC34::Commit()
@@ -734,7 +735,29 @@ bool LC34::ESEGetGuidanceReferenceRelease()
 	return IuESE->GetGuidanceReferenceRelease();
 }
 
+bool LC34::ESEGetQBallSimulateCmd()
+{
+	return IuESE->GetQBallSimulateCmd();
+}
+
 bool LC34::ESEGetSIBThrustOKSimulate(int eng)
 {
 	return SIBESE->GetSIBThrustOKSimulate(eng);
+}
+
+void LC34::SLCCCheckDiscreteInput(RCA110A *c)
+{
+	c->SetInput(0, true);
+	c->SetInput(1, false);
+	c->SetInput(861, IuESE->GetFCCPowerIsOn());
+}
+
+bool LC34::SLCCGetOutputSignal(size_t n)
+{
+	return rca110a->GetOutputSignal(n);
+}
+
+void LC34::ConnectGroundComputer(RCA110A *c)
+{
+	rca110a->Connect(c);
 }

@@ -26,8 +26,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "soundlib.h"
 
-#include "apolloguidance.h"
-#include "csmcomputer.h"
 #include "saturn.h"
 #include "papi.h"
 
@@ -35,7 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 QBall::QBall()
 {
-	IsPowered = true;
+	aoa = 0.0;
 }
 
 void QBall::Init(Saturn *vessel) {
@@ -45,18 +43,27 @@ void QBall::Init(Saturn *vessel) {
 
 double QBall::GetAOA()
 {
-	if (sat->LETAttached() && sat->GetDynPressure() > 100.0 && IsPowered) {
-		return sat->GetAOA();
+	aoa = 0.0;
+
+	if (sat->LETAttached() && sat->GetQBallPower())
+	{
+		if (sat->GetQBallSimulateCmd())
+		{
+			aoa = 10.0*RAD;
+		}
+		else if (sat->GetDynPressure() > 100.0)
+		{
+			aoa = sat->GetAOA();
+		}
 	}
-	else {
-		return 0;
-	}
+
+	return aoa;
 }
 
 void QBall::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
-	papiWriteScenario_bool(scn, "ISPOWERED", IsPowered);
+	papiWriteScenario_double(scn, "AOA", aoa);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -70,7 +77,7 @@ void QBall::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, end_str, end_len)) {
 			break;
 		}
-		papiReadScenario_bool(line, "ISPOWERED", IsPowered);
+		papiReadScenario_double(line, "AOA", aoa);
 
 	}
 }

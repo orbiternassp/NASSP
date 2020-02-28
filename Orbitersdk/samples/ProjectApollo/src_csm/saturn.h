@@ -979,8 +979,9 @@ public:
 	virtual void SIEDSCutoff(bool cut) = 0;
 	virtual void SIIEDSCutoff(bool cut) {};
 	void SIVBEDSCutoff(bool cut);
-	void SetQBallPowerOff();
 	virtual double GetSIThrustLevel() = 0;
+	bool GetQBallPower();
+	bool GetQBallSimulateCmd();
 
 	virtual void ActivateStagingVent() {}
 
@@ -3911,6 +3912,7 @@ protected:
 	OBJHANDLE hNosecapVessel;
 	OBJHANDLE hLC34;
 	OBJHANDLE hLC37;
+	OBJHANDLE hLCC;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.

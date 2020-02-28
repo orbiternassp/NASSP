@@ -74,7 +74,9 @@ enum IUCSMMessageType
 	CSMIU_GET_LIFTOFF_CIRCUIT,
 	CSMIU_GET_EDS_ABORT,					///< Set EDS abort signal.
 	CSMIU_GET_LV_TANK_PRESSURE,
-	CSMIU_GET_ABORT_LIGHT_SIGNAL
+	CSMIU_GET_ABORT_LIGHT_SIGNAL,
+	CSMIU_GET_QBALL_POWER,
+	CSMIU_GET_QBALL_SIMULATE_CMD
 };
 
 ///
@@ -94,7 +96,6 @@ enum IULVMessageType
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
 	IULV_SIVB_SWITCH_SELECTOR,
-	IULV_SET_QBALL_POWER_OFF,
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
 	IULV_NOSECAP_JETTISON,
@@ -193,8 +194,6 @@ public:
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
-
-	void SetQBallPowerOff();
 
 	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
@@ -314,6 +313,7 @@ public:
 	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
+	bool ESEESEGetQBallSimulateCmd();
 
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }
 	virtual bool ESEGetSICOutboardEnginesCantSimulate() { return false; }

@@ -26,17 +26,19 @@
 
 #include "IUUmbilicalInterface.h"
 #include "SCMUmbilicalInterface.h"
+#include "LCCPadInterface.h"
 
 class Saturn1b;
 class IUUmbilical;
 class IU_ESE;
 class SCMUmbilical;
 class SIB_ESE;
+class RCA110AM;
 
 ///
 /// \ingroup Ground
 ///
-class LC34: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface {
+class LC34: public VESSEL2, public IUUmbilicalInterface, public SCMUmbilicalInterface, public LCCPadInterface {
 
 public:
 	LC34(OBJHANDLE hObj, int fmodel);
@@ -64,9 +66,15 @@ public:
 	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
+	bool ESEGetQBallSimulateCmd();
 
 	//ML/S-IC Interface
 	bool ESEGetSIBThrustOKSimulate(int eng);
+
+	// LCC/ML Interface
+	void SLCCCheckDiscreteInput(RCA110A *c);
+	bool SLCCGetOutputSignal(size_t n);
+	void ConnectGroundComputer(RCA110A *c);
 
 protected:
 
@@ -103,6 +111,7 @@ protected:
 	SCMUmbilical *SCMUmb;
 	IU_ESE *IuESE;
 	SIB_ESE *SIBESE;
+	RCA110AM *rca110a;
 
 	//VECTOR3 meshoffsetMSS;
 };

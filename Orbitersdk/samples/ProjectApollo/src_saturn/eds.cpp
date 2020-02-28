@@ -374,9 +374,14 @@ bool EDS::GetAllSIEnginesRunning()
 	return (!SIAllEnginesOKA && !SIAllEnginesOKB);
 }
 
-bool EDS::IsEDSUnsafe()
+bool EDS::IsEDSUnsafeA()
 {
-	return (iu->GetCommandConnector()->IsEDSUnsafeA() || iu->GetCommandConnector()->IsEDSUnsafeB());
+	return iu->GetCommandConnector()->IsEDSUnsafeA();
+}
+
+bool EDS::IsEDSUnsafeB()
+{
+	return iu->GetCommandConnector()->IsEDSUnsafeB();
 }
 
 void EDS::ResetBus1()

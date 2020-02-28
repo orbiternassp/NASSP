@@ -24,12 +24,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "IUUmbilical.h"
+#include "LCCPadInterface.h"
 #include "LVDA.h"
 #include "IU_ESE.h"
 
-IU_ESE::IU_ESE(IUUmbilical *IuUmb)
+IU_ESE::IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p)
 {
 	Umbilical = IuUmb;
+	Pad = p;
 
 	CommandVehicleLiftoffIndicationInhibit = true;
 	AutoAbortInhibit = true;
@@ -46,6 +48,11 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb)
 	EDSNotReady = false;
 	InstrumentUnitReady = false;
 
+	FCCPowerIsOn = false;
+	QBallSimulateCmd = false;
+	SwitchFCCPowerOn = false;
+	SwitchFCCPowerOff = false;
+
 	LastMissionTime = 10000000.0;
 }
 
@@ -61,6 +68,37 @@ void IU_ESE::LoadState(FILEHANDLE scn)
 
 void IU_ESE::Timestep(double MissionTime, double simdt)
 {
+	//FCC Power (MDI 0861, MDO 1823)
+	FCCPowerIsOn = Umbilical->FCCPowerIsOn();
+
+	if (Pad->SLCCGetOutputSignal(1823))
+		SwitchFCCPowerOn = true;
+	else
+		SwitchFCCPowerOn = false;
+
+	//TBD: Get analog signal from LCC
+	SwitchFCCPowerOff = false;
+
+	if (SwitchFCCPowerOn && !SwitchFCCPowerOff)
+		Umbilical->SwitchFCCPowerOn();
+	if (SwitchFCCPowerOff || (!SwitchFCCPowerOn && !SwitchFCCPowerOff))
+		Umbilical->SwitchFCCPowerOff();
+
+	//Q-Ball Power
+	if (Pad->SLCCGetOutputSignal(492))
+	{
+		Umbilical->SwitchQBallPowerOn();
+	}
+	if (Pad->SLCCGetOutputSignal(493))
+	{
+		Umbilical->SwitchQBallPowerOff();
+	}
+
+	//Q-Ball Simulate Command
+	if (Pad->SLCCGetOutputSignal(413))
+		QBallSimulateCmd = true;
+	else
+		QBallSimulateCmd = false;
 
 	//EDS Test
 	if ((MissionTime >= -6900.0) && (LastMissionTime < -6900.0))
@@ -108,7 +146,7 @@ void IU_ESE::Timestep(double MissionTime, double simdt)
 		ThrustOKIndicateEnableInhibitB = false;
 		SIBurnModeSubstitute = true;
 
-		EDSNotReady = Umbilical->IsEDSUnsafe() || !Umbilical->GetEDSSCCutoff1() || !Umbilical->GetEDSSCCutoff2() || !Umbilical->GetEDSSCCutoff3();
+		EDSNotReady = Umbilical->IsEDSUnsafeA() || Umbilical->IsEDSUnsafeB() || !Umbilical->GetEDSSCCutoff1() || !Umbilical->GetEDSSCCutoff2() || !Umbilical->GetEDSSCCutoff3();
 		EDSNotReady = EDSNotReady || Umbilical->GetEDSAutoAbortBus() || Umbilical->GetEDSExcessiveRateIndication();
 
 		InstrumentUnitReady = !Umbilical->GetLVDCOutputRegisterDiscrete(FiringCommitInhibit) && !Umbilical->GetLVDCOutputRegisterDiscrete(GuidanceReferenceFailureA)
@@ -157,7 +195,7 @@ void IU_ESE::SetEDSMode(int mode)
 	}
 }
 
-IUSV_ESE::IUSV_ESE(IUUmbilical *IuUmb) : IU_ESE(IuUmb)
+IUSV_ESE::IUSV_ESE(IUUmbilical *IuUmb, LCCPadInterface *p) : IU_ESE(IuUmb, p)
 {
 	SICOutboardEnginesCantInhibit = false;
 	SICOutboardEnginesCantSimulate = false;

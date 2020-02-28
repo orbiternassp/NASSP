@@ -79,6 +79,7 @@ FCC1B::FCC1B(IU *iu) : FCC(iu)
 void FCC1B::Timestep(double simdt)
 {
 	if (iu == NULL) return;
+	if (iu->GetControlDistributor()->GetFCCPowerOn() == false) return;
 
 	VECTOR3 AttRate, AttitudeError;
 
@@ -283,6 +284,7 @@ FCCSV::FCCSV(IU *iu) : FCC(iu)
 void FCCSV::Timestep(double simdt)
 {
 	if (iu == NULL) return;
+	if (iu->GetControlDistributor()->GetFCCPowerOn() == false) return;
 
 	VECTOR3 AttRate, AttitudeError;
 

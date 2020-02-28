@@ -131,6 +131,11 @@ bool IUUmbilical::ESEGetGuidanceReferenceRelease()
 	return IuUmb->ESEGetGuidanceReferenceRelease();
 }
 
+bool IUUmbilical::ESEGetQBallSimulateCmd()
+{
+	return IuUmb->ESEGetQBallSimulateCmd();
+}
+
 void IUUmbilical::SetEDSLiftoffEnableA()
 {
 	if (!IUUmbilicalConnected) return;
@@ -187,11 +192,18 @@ bool IUUmbilical::AllSIEnginesRunning()
 	return iu->GetEDS()->GetAllSIEnginesRunning();
 }
 
-bool IUUmbilical::IsEDSUnsafe()
+bool IUUmbilical::IsEDSUnsafeA()
 {
 	if (!IUUmbilicalConnected) return false;
 
-	return iu->GetEDS()->IsEDSUnsafe();
+	return iu->GetEDS()->IsEDSUnsafeA();
+}
+
+bool IUUmbilical::IsEDSUnsafeB()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->IsEDSUnsafeB();
 }
 
 bool IUUmbilical::GetEDSSCCutoff1()
@@ -234,6 +246,13 @@ bool IUUmbilical::GetLVDCOutputRegisterDiscrete(int bit)
 	if (!IUUmbilicalConnected) return false;
 
 	return iu->GetLVDA()->GetOutputRegisterBit(bit);
+}
+
+bool IUUmbilical::FCCPowerIsOn()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetControlDistributor()->GetFCCPowerOn();
 }
 
 void IUUmbilical::SetControlSignalProcessorPower(bool set)

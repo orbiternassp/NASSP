@@ -39,6 +39,7 @@ public:
 	virtual bool ESEAutoAbortSimulate() = 0;
 	virtual bool ESEGetSIBurnModeSubstitute() = 0;
 	virtual bool ESEGetGuidanceReferenceRelease() = 0;
+	virtual bool ESEGetQBallSimulateCmd() = 0;
 
 	//Saturn V only
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }

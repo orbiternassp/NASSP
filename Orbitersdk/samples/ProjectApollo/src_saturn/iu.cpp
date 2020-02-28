@@ -310,6 +310,13 @@ bool IU::ESEGetGuidanceReferenceRelease()
 	return IuUmb->ESEGetGuidanceReferenceRelease();
 }
 
+bool IU::ESEESEGetQBallSimulateCmd()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetQBallSimulateCmd();
+}
+
 IUToCSMCommandConnector::IUToCSMCommandConnector()
 
 {
@@ -763,6 +770,20 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 			return true;
 		}
 		break;
+	case CSMIU_GET_QBALL_POWER:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetControlDistributor()->GetQBallPower();
+			return true;
+		}
+		break;
+	case CSMIU_GET_QBALL_SIMULATE_CMD:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->ESEESEGetQBallSimulateCmd();
+			return true;
+		}
+		break;
 	}
 
 	return false;
@@ -858,16 +879,6 @@ void IUToLVCommandConnector::SetSIVBThrusterDir(double yaw, double pitch)
 	cm.messageType = IULV_SET_SIVB_THRUSTER_DIR;
 	cm.val1.dValue = yaw;
 	cm.val2.dValue = pitch;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::SetQBallPowerOff()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_QBALL_POWER_OFF;
 
 	SendMessage(cm);
 }
@@ -1375,7 +1386,7 @@ void IU1B::SwitchSelector(int item)
 	switch (item)
 	{
 	case 1: //Q-Ball Power Off
-		lvCommandConnector.SetQBallPowerOff();
+		ControlDistributor.SetQBallPower(false);
 		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
 		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(true);
@@ -1536,7 +1547,7 @@ void IUSV::SwitchSelector(int item)
 	switch (item)
 	{
 	case 1: //Q-Ball Power Off
-		lvCommandConnector.SetQBallPowerOff();
+		ControlDistributor.SetQBallPower(false);
 		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
 		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(true);

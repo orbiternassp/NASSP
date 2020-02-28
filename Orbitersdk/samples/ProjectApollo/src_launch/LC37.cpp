@@ -45,7 +45,7 @@
 #include "LEM.h"
 #include "LEMSaturn.h"
 #include "papi.h"
-
+#include "RCA110A.h"
 
 HINSTANCE g_hDLL;
 
@@ -113,9 +113,10 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	//meshoffsetMSS = _V(0,0,0);
 
 	IuUmb = new IUUmbilical(this);
-	IuESE = new IU_ESE(IuUmb);
+	IuESE = new IU_ESE(IuUmb, this);
 	SCMUmb = new SCMUmbilical(this);
 	SIBESE = new SIB_ESE(SCMUmb);
+	rca110a = new RCA110AM(this);
 }
 
 LC37::~LC37() {
@@ -123,6 +124,7 @@ LC37::~LC37() {
 	delete IuESE;
 	delete SCMUmb;
 	delete SIBESE;
+	delete rca110a;
 }
 
 void LC37::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -589,7 +591,29 @@ bool LC37::ESEGetGuidanceReferenceRelease()
 	return IuESE->GetGuidanceReferenceRelease();
 }
 
+bool LC37::ESEGetQBallSimulateCmd()
+{
+	return IuESE->GetQBallSimulateCmd();
+}
+
 bool LC37::ESEGetSIBThrustOKSimulate(int eng)
 {
 	return SIBESE->GetSIBThrustOKSimulate(eng);
+}
+
+void LC37::SLCCCheckDiscreteInput(RCA110A *c)
+{
+	c->SetInput(0, true);
+	c->SetInput(1, false);
+	c->SetInput(861, IuESE->GetFCCPowerIsOn());
+}
+
+bool LC37::SLCCGetOutputSignal(size_t n)
+{
+	return rca110a->GetOutputSignal(n);
+}
+
+void LC37::ConnectGroundComputer(RCA110A *c)
+{
+	rca110a->Connect(c);
 }

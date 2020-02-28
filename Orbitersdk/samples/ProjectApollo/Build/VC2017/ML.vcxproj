@@ -155,6 +155,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_launch\RCA110A.cpp" />
     <ClCompile Include="..\..\src_launch\SIC_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\TSMUmbilical.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp">
@@ -174,6 +175,8 @@
     <ClInclude Include="..\..\src_launch\IUUmbilical.h" />
     <ClInclude Include="..\..\src_launch\IUUmbilicalInterface.h" />
     <ClInclude Include="..\..\src_launch\IU_ESE.h" />
+    <ClInclude Include="..\..\src_launch\LCCPadInterface.h" />
+    <ClInclude Include="..\..\src_launch\RCA110A.h" />
     <ClInclude Include="..\..\src_launch\SIC_ESE.h" />
     <ClInclude Include="..\..\src_launch\TSMUmbilical.h" />
     <ClInclude Include="..\..\src_launch\TSMUmbilicalInterface.h" />

@@ -50,13 +50,15 @@ public:
 	void SwitchQBallPowerOff();
 	void SetControlSignalProcessorPower(bool set);
 	bool AllSIEnginesRunning();
-	bool IsEDSUnsafe();
+	bool IsEDSUnsafeA();
+	bool IsEDSUnsafeB();
 	bool GetEDSSCCutoff1();
 	bool GetEDSSCCutoff2();
 	bool GetEDSSCCutoff3();
 	bool GetEDSAutoAbortBus();
 	bool GetEDSExcessiveRateIndication();
 	bool GetLVDCOutputRegisterDiscrete(int bit);
+	bool FCCPowerIsOn();
 	void SwitchSelector(int stage, int channel);
 
 	//From SLV to ML
@@ -74,6 +76,7 @@ public:
 	virtual bool ESEAutoAbortSimulate();
 	virtual bool ESEGetSIBurnModeSubstitute();
 	virtual bool ESEGetGuidanceReferenceRelease();
+	virtual bool ESEGetQBallSimulateCmd();
 protected:
 	IU* iu;
 	IUUmbilicalInterface* IuUmb;

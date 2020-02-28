@@ -24,14 +24,17 @@
 
 #pragma once
 
+#include "soundlib.h"
 #include "IUUmbilicalInterface.h"
 #include "TSMUmbilicalInterface.h"
+#include "LCCPadInterface.h"
 
 class Saturn;
 class IUUmbilical;
 class TSMUmbilical;
 class IUSV_ESE;
 class SIC_ESE;
+class RCA110AM;
 
 const double ML_SIC_INTERTANK_ARM_CONNECTING_SPEED = 1.0 / 300.0;
 const double ML_SIC_INTERTANK_ARM_RETRACT_SPEED = 1.0 / 13.0;
@@ -45,7 +48,7 @@ const double ML_TAIL_SERVICE_MAST_RETRACT_SPEED = 1.0 / 2.0;
 ///
 /// \ingroup Ground
 ///
-class ML: public VESSEL2, public IUUmbilicalInterface, public TSMUmbilicalInterface {
+class ML: public VESSEL2, public IUUmbilicalInterface, public TSMUmbilicalInterface, public LCCPadInterface {
 
 public:
 	ML(OBJHANDLE hObj, int fmodel);
@@ -81,9 +84,15 @@ public:
 	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
+	bool ESEGetQBallSimulateCmd();
 
 	//ML/S-IC Interface
 	bool ESEGetSICThrustOKSimulate(int eng);
+
+	// LCC/ML Interface
+	void SLCCCheckDiscreteInput(RCA110A *c);
+	bool SLCCGetOutputSignal(size_t n);
+	void ConnectGroundComputer(RCA110A *c);
 
 protected:
 	bool firstTimestepDone;
@@ -120,6 +129,7 @@ protected:
 	TSMUmbilical *TSMUmb;
 	IUSV_ESE *IuESE;
 	SIC_ESE *SICESE;
+	RCA110AM *rca110a;
 
 	void DoFirstTimestep();
 	double GetDistanceTo(double lon, double lat);

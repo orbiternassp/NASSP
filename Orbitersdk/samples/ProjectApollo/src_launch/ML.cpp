@@ -31,6 +31,7 @@
 #include "soundlib.h"
 #include "tracer.h"
 
+#include "RCA110A.h"
 #include "ML.h"
 #include "nasspdefs.h"
 #include "saturn.h"
@@ -142,9 +143,10 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	sat = NULL;
 
 	IuUmb = new IUUmbilical(this);
-	IuESE = new IUSV_ESE(IuUmb);
+	IuESE = new IUSV_ESE(IuUmb, this);
 	TSMUmb = new TSMUmbilical(this);
 	SICESE = new SIC_ESE(TSMUmb);
+	rca110a = new RCA110AM(this);
 }
 
 ML::~ML() {
@@ -152,6 +154,7 @@ ML::~ML() {
 	delete IuESE;
 	delete TSMUmb;
 	delete SICESE;
+	delete rca110a;
 }
 
 void ML::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -624,9 +627,10 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 	}
 
 	//IU ESE
-	if (sat && state >= STATE_PRELAUNCH)
+	if (sat && state >= STATE_ROLLOUT)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
+		rca110a->Timestep(simdt);
 	}
 
 	// sprintf(oapiDebugString(), "Dist %f", GetDistanceTo(VAB_LON, VAB_LAT));
@@ -1006,7 +1010,7 @@ int ML::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 bool ML::CutoffInterlock()
 {
-	return (IuUmb->IsEDSUnsafe() || TSMUmb->SIStageLogicCutoff());
+	return (IuUmb->IsEDSUnsafeA() || IuUmb->IsEDSUnsafeB() || TSMUmb->SIStageLogicCutoff());
 }
 
 bool ML::Commit()
@@ -1083,6 +1087,11 @@ bool ML::ESEGetSIBurnModeSubstitute()
 bool ML::ESEGetGuidanceReferenceRelease()
 {
 	return IuESE->GetGuidanceReferenceRelease();
+}
+
+bool ML::ESEGetQBallSimulateCmd()
+{
+	return IuESE->GetQBallSimulateCmd();
 }
 
 bool ML::ESEGetSICThrustOKSimulate(int eng)
@@ -1417,4 +1426,21 @@ void ML::TerminalCountdownSequencer(double MissionTime)
 		}
 		break;
 	}
+}
+
+void ML::SLCCCheckDiscreteInput(RCA110A *c)
+{
+	c->SetInput(646, IuUmb->GetEDSAutoAbortBus());
+	c->SetInput(647, IuUmb->IsEDSUnsafeA());
+	c->SetInput(861, IuESE->GetFCCPowerIsOn());
+}
+
+bool ML::SLCCGetOutputSignal(size_t n)
+{
+	return rca110a->GetOutputSignal(n);
+}
+
+void ML::ConnectGroundComputer(RCA110A *c)
+{
+	rca110a->Connect(c);
 }

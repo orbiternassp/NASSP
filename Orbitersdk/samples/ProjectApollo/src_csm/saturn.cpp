@@ -467,6 +467,7 @@ void Saturn::initSaturn()
 	hOpticsCover = 0;
 	hLC34 = 0;
 	hLC37 = 0;
+	hLCC = 0;
 
 	//
 	// Apollo 13 flags.
@@ -2503,6 +2504,10 @@ void Saturn::DestroyStages(double simt)
 		if (hLC37) {
 			KillDist(hLC37, 50000.0);
 		}
+
+		if (hLCC) {
+			KillDist(hLCC, 50000.0);
+		}
 	}
 
 	//
@@ -2583,6 +2588,7 @@ void Saturn::GenericTimestep(double simt, double simdt, double mjd)
 		hVAB = oapiGetVesselByName("VAB");
 		hLC34 = oapiGetVesselByName("LC34");
 		hLC37 = oapiGetVesselByName("LC37");
+		hLCC = oapiGetVesselByName("LCC");
 
 		GenericFirstTimestep = false;
 		SetView();
@@ -4455,9 +4461,14 @@ void Saturn::SIVBEDSCutoff(bool cut)
 	sivb->EDSEngineCutoff(cut);
 }
 
-void Saturn::SetQBallPowerOff()
+bool Saturn::GetQBallPower()
 {
-	qball.SetPowerOff();
+	return iuCommandConnector.GetQBallPower();
+}
+
+bool Saturn::GetQBallSimulateCmd()
+{
+	return iuCommandConnector.GetQBallSimulateCmd();
 }
 
 void Saturn::SetAPSAttitudeEngine(int n, bool on)
