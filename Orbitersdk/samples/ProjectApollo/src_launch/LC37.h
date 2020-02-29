@@ -64,7 +64,7 @@ public:
 	bool ESEGetThrustOKIndicateEnableInhibitB();
 	bool ESEEDSLiftoffInhibitA();
 	bool ESEEDSLiftoffInhibitB();
-	bool ESEAutoAbortSimulate();
+	bool ESEGetEDSAutoAbortSimulate(int n);
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
 	bool ESEGetQBallSimulateCmd();

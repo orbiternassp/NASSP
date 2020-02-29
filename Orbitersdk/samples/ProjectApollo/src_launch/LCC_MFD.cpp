@@ -28,11 +28,13 @@ LCC_MFD::LCC_MFD(DWORD w, DWORD h, VESSEL *v) :MFD2(w, h, v)
 {
 	pLCC = (LCC*)v;
 	screen = 0;
+	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
 	return;
 }
 
 LCC_MFD::~LCC_MFD(void)
 {
+	oapiReleaseFont(font);
 	return;
 }
 
@@ -48,6 +50,16 @@ int LCC_MFD::MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam)
 
 bool LCC_MFD::Update(oapi::Sketchpad* skp)
 {
+	Title(skp, "Apollo LCC MFD");
+	skp->SetFont(font);
+
+	if (screen == 0)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 2 * H / 14, "Checkout Programs", 17);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+	}
+
 	return true;
 }
 

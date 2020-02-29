@@ -52,5 +52,7 @@ public:
 protected:
 	const LCCMFDButtons m_buttonPages;
 
+	oapi::Font *font;
+
 	int screen;
 };

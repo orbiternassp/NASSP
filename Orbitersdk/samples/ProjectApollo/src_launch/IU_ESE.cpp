@@ -42,7 +42,6 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p)
 	EDSLiftoffInhibitB = true;
 	PadAbortRequest = false;
 	EDSPowerInhibit = false;
-	AutoAbortSimulate = false;
 	SIBurnModeSubstitute = false;
 	GuidanceReferenceRelease = false;
 	EDSNotReady = false;
@@ -52,6 +51,11 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p)
 	QBallSimulateCmd = false;
 	SwitchFCCPowerOn = false;
 	SwitchFCCPowerOff = false;
+
+	for (int i = 0;i < 6;i++)
+	{
+		EDSAutoAbortSimulate[i] = false;
+	}
 
 	LastMissionTime = 10000000.0;
 }
@@ -79,10 +83,11 @@ void IU_ESE::Timestep(double MissionTime, double simdt)
 	//TBD: Get analog signal from LCC
 	SwitchFCCPowerOff = false;
 
-	if (SwitchFCCPowerOn && !SwitchFCCPowerOff)
+	//TBD: Don't do this until the ground computers are further in development
+	/*if (SwitchFCCPowerOn && !SwitchFCCPowerOff)
 		Umbilical->SwitchFCCPowerOn();
 	if (SwitchFCCPowerOff || (!SwitchFCCPowerOn && !SwitchFCCPowerOff))
-		Umbilical->SwitchFCCPowerOff();
+		Umbilical->SwitchFCCPowerOff();*/
 
 	//Q-Ball Power
 	if (Pad->SLCCGetOutputSignal(492))
@@ -99,6 +104,37 @@ void IU_ESE::Timestep(double MissionTime, double simdt)
 		QBallSimulateCmd = true;
 	else
 		QBallSimulateCmd = false;
+
+	//EDS Auto Abort Simulate
+	if (Pad->SLCCGetOutputSignal(741))
+		EDSAutoAbortSimulate[0] = true;
+	else
+		EDSAutoAbortSimulate[0] = false;
+
+	if (Pad->SLCCGetOutputSignal(742))
+		EDSAutoAbortSimulate[1] = true;
+	else
+		EDSAutoAbortSimulate[1] = false;
+
+	if (Pad->SLCCGetOutputSignal(743))
+		EDSAutoAbortSimulate[2] = true;
+	else
+		EDSAutoAbortSimulate[2] = false;
+
+	if (Pad->SLCCGetOutputSignal(753))
+		EDSAutoAbortSimulate[3] = true;
+	else
+		EDSAutoAbortSimulate[3] = false;
+
+	if (Pad->SLCCGetOutputSignal(765))
+		EDSAutoAbortSimulate[4] = true;
+	else
+		EDSAutoAbortSimulate[4] = false;
+
+	if (Pad->SLCCGetOutputSignal(766))
+		EDSAutoAbortSimulate[5] = true;
+	else
+		EDSAutoAbortSimulate[5] = false;
 
 	//EDS Test
 	if ((MissionTime >= -6900.0) && (LastMissionTime < -6900.0))
@@ -193,6 +229,15 @@ void IU_ESE::SetEDSMode(int mode)
 		Umbilical->SetEDSLiftoffEnableA();
 		Umbilical->SetEDSLiftoffEnableB();
 	}
+}
+
+bool IU_ESE::GetEDSAutoAbortSimulate(int n)
+{
+	if (n >= 1 && n <= 6)
+	{
+		return EDSAutoAbortSimulate[n - 1];
+	}
+	return false;
 }
 
 IUSV_ESE::IUSV_ESE(IUUmbilical *IuUmb, LCCPadInterface *p) : IU_ESE(IuUmb, p)

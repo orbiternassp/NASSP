@@ -81,10 +81,10 @@ public:
 	bool ESEGetThrustOKIndicateEnableInhibitB();
 	bool ESEEDSLiftoffInhibitA();
 	bool ESEEDSLiftoffInhibitB();
-	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
 	bool ESEGetQBallSimulateCmd();
+	bool ESEGetEDSAutoAbortSimulate(int n);
 
 	//ML/S-IC Interface
 	bool ESEGetSICThrustOKSimulate(int eng);

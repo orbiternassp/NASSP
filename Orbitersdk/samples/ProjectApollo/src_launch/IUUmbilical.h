@@ -73,10 +73,10 @@ public:
 	virtual bool ESEGetThrustOKIndicateEnableInhibitB();
 	virtual bool ESEEDSLiftoffInhibitA();
 	virtual bool ESEEDSLiftoffInhibitB();
-	virtual bool ESEAutoAbortSimulate();
 	virtual bool ESEGetSIBurnModeSubstitute();
 	virtual bool ESEGetGuidanceReferenceRelease();
 	virtual bool ESEGetQBallSimulateCmd();
+	virtual bool ESEGetEDSAutoAbortSimulate(int n);
 protected:
 	IU* iu;
 	IUUmbilicalInterface* IuUmb;

@@ -116,11 +116,6 @@ bool IUUmbilical::ESEEDSLiftoffInhibitB()
 	return IuUmb->ESEEDSLiftoffInhibitB();
 }
 
-bool IUUmbilical::ESEAutoAbortSimulate()
-{
-	return IuUmb->ESEAutoAbortSimulate();
-}
-
 bool IUUmbilical::ESEGetSIBurnModeSubstitute()
 {
 	return IuUmb->ESEGetSIBurnModeSubstitute();
@@ -134,6 +129,11 @@ bool IUUmbilical::ESEGetGuidanceReferenceRelease()
 bool IUUmbilical::ESEGetQBallSimulateCmd()
 {
 	return IuUmb->ESEGetQBallSimulateCmd();
+}
+
+bool IUUmbilical::ESEGetEDSAutoAbortSimulate(int n)
+{
+	return IuUmb->ESEGetEDSAutoAbortSimulate(n);
 }
 
 void IUUmbilical::SetEDSLiftoffEnableA()

@@ -31,6 +31,8 @@ RCA110A::RCA110A()
 {
 	mode = 0;
 	other = NULL;
+	T0001 = 0.0;
+	simtime = 0.0;
 }
 
 RCA110A::~RCA110A()
@@ -54,6 +56,11 @@ void RCA110A::Disconnect()
 		other->other = NULL;
 		other = NULL;
 	}
+}
+
+void RCA110A::Timestep(double simt, double simdt)
+{
+	simtime = simt;
 }
 
 void RCA110A::SetInput(size_t n, bool val)
@@ -84,13 +91,63 @@ void RCA110A::SwitchMode(int m)
 	}
 }
 
+void RCA110A::TestProgram()
+{
+	if (simtime > 10.0 && simtime < 15.0)
+	{
+		other->SetOutput(741, true);
+	}
+	else if (simtime > 15.0 && simtime < 20.0)
+	{
+		other->SetOutput(742, true);
+	}
+	else if (simtime > 20.0 && simtime < 25.0)
+	{
+		other->SetOutput(742, false);
+		other->SetOutput(743, true);
+	}
+	else if (simtime > 25.0 && simtime < 30.0)
+	{
+		other->SetOutput(743, false);
+		other->SetOutput(753, true);
+	}
+	else if (simtime > 30.0 && simtime < 35.0)
+	{
+		other->SetOutput(753, false);
+		other->SetOutput(765, true);
+	}
+	else if (simtime > 35.0 && simtime < 40.0)
+	{
+		other->SetOutput(765, false);
+		other->SetOutput(766, true);
+	}
+	else if (simtime > 40.0 && simtime < 45.0)
+	{
+		other->SetOutput(741, false);
+		other->SetOutput(766, false);
+		other->SetOutput(742, true);
+		other->SetOutput(743, true);
+	}
+	else
+	{
+		other->SetOutput(741, false);
+		other->SetOutput(742, false);
+		other->SetOutput(743, false);
+		other->SetOutput(753, false);
+		other->SetOutput(765, false);
+		other->SetOutput(766, false);
+	}
+}
+
 RCA110AL::RCA110AL(PadLCCInterface *l)
 {
 	lcc = l;
 }
 
-void RCA110AL::Timestep(double simdt)
+void RCA110AL::Timestep(double simt, double simdt)
 {
+	RCA110A::Timestep(simt, simdt);
+
 	lcc->SLCCCheckDiscreteInput(this);
 
 	if (other == NULL) return;
@@ -118,8 +175,10 @@ RCA110AM::RCA110AM(LCCPadInterface *m)
 	pad = m;
 }
 
-void RCA110AM::Timestep(double simdt)
+void RCA110AM::Timestep(double simt, double simdt)
 {
+	RCA110A::Timestep(simt, simdt);
+
 	pad->SLCCCheckDiscreteInput(this);
 
 	if (other == NULL) return;
@@ -129,4 +188,6 @@ void RCA110AM::Timestep(double simdt)
 		//For now all inputs are directly sent to the LCC computer
 		other->SetOutput(i, GetInputSignal(i));
 	}
+
+	//TestProgram();
 }

@@ -78,7 +78,7 @@ void LCC::clbkPostCreation()
 
 void LCC::clbkPreStep(double simt, double simdt, double mjd)
 {
-	rca110a->Timestep(simdt);
+	rca110a->Timestep(simt, simdt);
 }
 
 void LCC::clbkSaveState(FILEHANDLE scn)

@@ -75,7 +75,7 @@ public:
 	//GSE
 	bool GetLiftoffEnableA() { return EDSLiftoffEnableA; }
 	bool GetLiftoffEnableB() { return EDSLiftoffEnableB; }
-	bool GetAutoAbort() { return AutoAbortBus; }
+	bool GetAutoAbort() { return AutoAbortBusGSEMonitor; }
 	virtual bool GetAllSIEnginesRunning();
 	virtual bool IsEDSUnsafeA();
 	virtual bool IsEDSUnsafeB();
@@ -94,6 +94,7 @@ protected:
 	void LoadState(char *line);
 
 	bool LVEnginesCutoffVote();
+	void AutoAbortCircuits();
 
 	//Buses:
 
@@ -170,6 +171,20 @@ protected:
 	bool SIAllEnginesOKA;
 	//A4K4 (K219)
 	bool SIAllEnginesOKB;
+	//K30-2 (K29-1)
+	bool AutoAbort1AToSC;
+	//K30-1 (K29-2)
+	bool AutoAbort1BToSC;
+	//K20-1 (K29-3)
+	bool AutoAbort2AToSC;
+	//K20-2 (K29-4)
+	bool AutoAbort2BToSC;
+	//K10-1 (K29-5)
+	bool AutoAbort3AToSC;
+	//K10-2 (K29-6)
+	bool AutoAbort3BToSC;
+	//K39 (K30)
+	bool AutoAbortBusGSEMonitor;
 	bool SIVBEngineCutoffDisabled;
 
 	//Signals

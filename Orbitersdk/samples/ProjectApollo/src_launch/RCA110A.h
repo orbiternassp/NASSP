@@ -37,7 +37,7 @@ class RCA110A
 public:
 	RCA110A();
 	virtual ~RCA110A();
-	virtual void Timestep(double simdt) = 0;
+	virtual void Timestep(double simt, double simdt);
 	void SwitchMode(int m);
 	void Connect(RCA110A *o);
 	void Disconnect();
@@ -48,12 +48,16 @@ public:
 	RCA110A *other;
 protected:
 	bool GetInputSignal(size_t n) const;
+	void TestProgram();
 private:
 	std::bitset<RCA110A_INPUT_LINES> inputdiscretes;
 	std::bitset<RCA110A_OUTPUT_LINES> outputdiscretes;
 
 	//0 = nothing, 1 = single scan mode, 2 = continuous scan mode, 3 = monitor mode, 4 = monitor mode with selectable priority interruot
 	int mode;
+
+	double simtime;
+	double T0001;
 };
 
 //LCC Computer
@@ -61,7 +65,7 @@ class RCA110AL : public RCA110A
 {
 public:
 	RCA110AL(PadLCCInterface *l);
-	void Timestep(double simdt);
+	void Timestep(double simt, double simdt);
 private:
 	PadLCCInterface *lcc;
 };
@@ -71,7 +75,7 @@ class RCA110AM : public RCA110A
 {
 public:
 	RCA110AM(LCCPadInterface *m);
-	void Timestep(double simdt);
+	void Timestep(double simt, double simdt);
 private:
 	LCCPadInterface *pad;
 };

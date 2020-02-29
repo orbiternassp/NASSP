@@ -50,17 +50,16 @@ public:
 	bool GetEDSLiftoffInhibitB() { return EDSLiftoffInhibitB; }
 	bool GetEDSPadAbortRequest() { return PadAbortRequest; }
 	bool GetEDSPowerInhibit() { return EDSPowerInhibit; }
-	bool GetAutoAbortSimulate() { return AutoAbortSimulate; }
 	bool GetSIBurnModeSubstitute() { return SIBurnModeSubstitute; }
 	bool GetGuidanceReferenceRelease() { return GuidanceReferenceRelease; }
 	bool GetFCCPowerIsOn() { return FCCPowerIsOn; }
 	bool GetQBallSimulateCmd() { return QBallSimulateCmd; }
+	bool GetEDSAutoAbortSimulate(int n);
 
 	void SetGuidanceReferenceRelease(bool set) { GuidanceReferenceRelease = set; }
 	void SetEDSPowerInhibit(bool set) { EDSPowerInhibit = set; }
 	void SetEDSLiftoffInhibitA(bool set) { EDSLiftoffInhibitA = set; }
 	void SetEDSLiftoffInhibitB(bool set) { EDSLiftoffInhibitB = set; }
-	void SetAutoAbortSimulate(bool set) { AutoAbortSimulate = set; }
 	void SetEDSCutoffFromSC(int n, bool set) { EDSCutoffFromSC[n - 1] = set; }
 	void SetThrustOKIndicateEnableInhibitA(bool set) { ThrustOKIndicateEnableInhibitA = set; }
 	void SetThrustOKIndicateEnableInhibitB(bool set) { ThrustOKIndicateEnableInhibitB = set; }
@@ -77,13 +76,13 @@ protected:
 	bool EDSLiftoffInhibitB;
 	bool PadAbortRequest;
 	bool EDSPowerInhibit;
-	bool AutoAbortSimulate;
 	bool SIBurnModeSubstitute;
 	bool GuidanceReferenceRelease;
 	bool EDSCutoffFromSC[3];
 	bool SwitchFCCPowerOn;
 	bool SwitchFCCPowerOff;
 	bool QBallSimulateCmd;
+	bool EDSAutoAbortSimulate[6];
 
 	//Signals from LV
 	bool FCCPowerIsOn;

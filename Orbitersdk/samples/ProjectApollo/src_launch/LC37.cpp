@@ -576,9 +576,9 @@ bool LC37::ESEEDSLiftoffInhibitB()
 	return IuESE->GetEDSLiftoffInhibitB();
 }
 
-bool LC37::ESEAutoAbortSimulate()
+bool LC37::ESEGetEDSAutoAbortSimulate(int n)
 {
-	return IuESE->GetAutoAbortSimulate();
+	return IuESE->GetEDSAutoAbortSimulate(n);
 }
 
 bool LC37::ESEGetSIBurnModeSubstitute()

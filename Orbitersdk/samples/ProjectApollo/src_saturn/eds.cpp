@@ -80,6 +80,13 @@ EDS::EDS(IU *iu)
 	ExcessivePitchYawRateIndication = false;
 	SIAllEnginesOKA = false;
 	SIAllEnginesOKB = false;
+	AutoAbort1AToSC = false;
+	AutoAbort1BToSC = false;
+	AutoAbort2AToSC = false;
+	AutoAbort2BToSC = false;
+	AutoAbort3AToSC = false;
+	AutoAbort3BToSC = false;
+	AutoAbortBusGSEMonitor = false;
 
 	AutoAbortBus = false;
 	IUEDSBusPowered = true;
@@ -215,12 +222,6 @@ void EDS::Timestep(double simdt)
 	else
 		LVEnginesCutoffCommand3 = false;
 
-	//Auto Abort Logic
-	AutoAbortBus = false;
-
-	//Simulated Auto Abort
-	if (iu->ESEAutoAbortSimulate()) AutoAbortBus = true;
-
 	//Overrate Auto Abort
 	double PYLimit;
 
@@ -243,6 +244,8 @@ void EDS::Timestep(double simdt)
 	else
 		ExcessiveRollRateIndication = false;
 
+	//Auto Abort Logic
+	AutoAbortBus = false;
 	if (ExcessRatesAutoAbortDeactivatePY == false && ExcessivePitchYawRateIndication) AutoAbortBus = true;
 	if (ExcessRatesAutoAbortDeactivateR == false && ExcessiveRollRateIndication) AutoAbortBus = true;
 
@@ -312,6 +315,71 @@ void EDS::Timestep(double simdt)
 		iu->GetCommandConnector()->SetAGCInputChannelBit(030, LiftOff, false);
 	else
 		iu->GetCommandConnector()->SetAGCInputChannelBit(030, LiftOff, true);
+}
+
+void EDS::AutoAbortCircuits()
+{
+	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(1))
+		AutoAbort1AToSC = true;
+	else
+		AutoAbort1AToSC = false;
+
+	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(2))
+		AutoAbort1BToSC = true;
+	else
+		AutoAbort1BToSC = false;
+
+	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(3))
+		AutoAbort2AToSC = true;
+	else
+		AutoAbort2AToSC = false;
+
+	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(4))
+		AutoAbort2BToSC = true;
+	else
+		AutoAbort2BToSC = false;
+
+	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(5))
+		AutoAbort3AToSC = true;
+	else
+		AutoAbort3AToSC = false;
+
+	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(6))
+		AutoAbort3BToSC = true;
+	else
+		AutoAbort3BToSC = false;
+
+	if (AutoAbortBus)
+		AutoAbortBusGSEMonitor = true;
+	else
+		AutoAbortBusGSEMonitor = false;
+
+	if (EDSBus1Powered && ((!AutoAbort2BToSC && !AutoAbort3AToSC) || (!AutoAbort3AToSC && !AutoAbort1BToSC) || (!AutoAbort2BToSC && AutoAbort3AToSC && !AutoAbort1BToSC)))
+	{
+		EDSAbortSignal1 = true;
+	}
+	else
+	{
+		EDSAbortSignal1 = false;
+	}
+	if (EDSBus2Powered && ((!AutoAbort3BToSC && !AutoAbort2AToSC) || (!AutoAbort2AToSC && !AutoAbort1BToSC) || (!AutoAbort3BToSC && AutoAbort2AToSC && !AutoAbort1BToSC)))
+	{
+		EDSAbortSignal2 = true;
+	}
+	else
+	{
+		EDSAbortSignal2 = false;
+	}
+	if (EDSBus3Powered && ((!AutoAbort3BToSC && !AutoAbort1AToSC) || (!AutoAbort1AToSC && !AutoAbort2BToSC) || (!AutoAbort3BToSC && AutoAbort1AToSC && !AutoAbort2BToSC)))
+	{
+		EDSAbortSignal3 = true;
+	}
+	else
+	{
+		EDSAbortSignal3 = false;
+	}
+
+	//sprintf(oapiDebugString(), "Relays: %d %d %d %d %d %d Signals: %d %d %d", AutoAbort1AToSC, AutoAbort1BToSC, AutoAbort2AToSC, AutoAbort2BToSC, AutoAbort3AToSC, AutoAbort3BToSC, EDSAbortSignal1, EDSAbortSignal2, EDSAbortSignal3);
 }
 
 void EDS::SetPlatformFailureParameters(bool PlatFail, double PlatFailTime)
@@ -550,30 +618,8 @@ void EDS1B::Timestep(double simdt)
 		if (enginesout >= 2) AutoAbortBus = true;
 	}
 
-	if (EDSBus1Powered && !AutoAbortBus)
-	{
-		EDSAbortSignal1 = true;
-	}
-	else
-	{
-		EDSAbortSignal1 = false;
-	}
-	if (EDSBus2Powered && !AutoAbortBus)
-	{
-		EDSAbortSignal2 = true;
-	}
-	else
-	{
-		EDSAbortSignal2 = false;
-	}
-	if (EDSBus3Powered && !AutoAbortBus)
-	{
-		EDSAbortSignal3 = true;
-	}
-	else
-	{
-		EDSAbortSignal3 = false;
-	}
+	//Auto Abort Logic
+	AutoAbortCircuits();
 
 	// Update engine indicators and failure flags
 	bool LVIndicatorsPower = ((EDSBus1Powered || EDSBus3Powered) && (!GSEEngineThrustIndicationEnableA || !GSEEngineThrustIndicationEnableB));
@@ -790,30 +836,8 @@ void EDSSV::Timestep(double simdt)
 		if (enginesout >= 2) AutoAbortBus = true;
 	}
 
-	if (EDSBus1Powered && !AutoAbortBus)
-	{
-		EDSAbortSignal1 = true;
-	}
-	else
-	{
-		EDSAbortSignal1 = false;
-	}
-	if (EDSBus2Powered && !AutoAbortBus)
-	{
-		EDSAbortSignal2 = true;
-	}
-	else
-	{
-		EDSAbortSignal2 = false;
-	}
-	if (EDSBus3Powered && !AutoAbortBus)
-	{
-		EDSAbortSignal3 = true;
-	}
-	else
-	{
-		EDSAbortSignal3 = false;
-	}
+	//Auto Abort Logic
+	AutoAbortCircuits();
 
 	//Update engine indicators and failure flags
 	bool LVIndicatorsPower = ((EDSBus1Powered || EDSBus3Powered) && (!GSEEngineThrustIndicationEnableA || !GSEEngineThrustIndicationEnableB));

@@ -289,13 +289,6 @@ bool IU::ESEEDSLiftoffInhibitB()
 	return IuUmb->ESEEDSLiftoffInhibitB();
 }
 
-bool IU::ESEAutoAbortSimulate()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEAutoAbortSimulate();
-}
-
 bool IU::ESEGetSIBurnModeSubstitute()
 {
 	if (!IsUmbilicalConnected()) return false;
@@ -315,6 +308,13 @@ bool IU::ESEESEGetQBallSimulateCmd()
 	if (!IsUmbilicalConnected()) return false;
 
 	return IuUmb->ESEGetQBallSimulateCmd();
+}
+
+bool IU::ESEGetEDSAutoAbortSimulate(int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetEDSAutoAbortSimulate(n);
 }
 
 IUToCSMCommandConnector::IUToCSMCommandConnector()

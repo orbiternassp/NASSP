@@ -720,9 +720,9 @@ bool LC34::ESEEDSLiftoffInhibitB()
 	return IuESE->GetEDSLiftoffInhibitB();
 }
 
-bool LC34::ESEAutoAbortSimulate()
+bool LC34::ESEGetEDSAutoAbortSimulate(int n)
 {
-	return IuESE->GetAutoAbortSimulate();
+	return IuESE->GetEDSAutoAbortSimulate(n);
 }
 
 bool LC34::ESEGetSIBurnModeSubstitute()

@@ -36,10 +36,10 @@ public:
 	virtual bool ESEGetThrustOKIndicateEnableInhibitB() = 0;
 	virtual bool ESEEDSLiftoffInhibitA() = 0;
 	virtual bool ESEEDSLiftoffInhibitB() = 0;
-	virtual bool ESEAutoAbortSimulate() = 0;
 	virtual bool ESEGetSIBurnModeSubstitute() = 0;
 	virtual bool ESEGetGuidanceReferenceRelease() = 0;
 	virtual bool ESEGetQBallSimulateCmd() = 0;
+	virtual bool ESEGetEDSAutoAbortSimulate(int n) = 0;
 
 	//Saturn V only
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }

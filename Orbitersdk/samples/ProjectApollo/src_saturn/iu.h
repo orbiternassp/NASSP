@@ -310,10 +310,10 @@ public:
 	bool ESEGetEngineThrustIndicationEnableInhibitB();
 	bool ESEEDSLiftoffInhibitA();
 	bool ESEEDSLiftoffInhibitB();
-	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
 	bool ESEESEGetQBallSimulateCmd();
+	bool ESEGetEDSAutoAbortSimulate(int n);
 
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }
 	virtual bool ESEGetSICOutboardEnginesCantSimulate() { return false; }

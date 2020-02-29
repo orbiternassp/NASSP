@@ -630,7 +630,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 	if (sat && state >= STATE_ROLLOUT)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
-		rca110a->Timestep(simdt);
+		rca110a->Timestep(simt, simdt);
 	}
 
 	// sprintf(oapiDebugString(), "Dist %f", GetDistanceTo(VAB_LON, VAB_LAT));
@@ -1074,11 +1074,6 @@ bool ML::ESEEDSLiftoffInhibitB()
 	return IuESE->GetEDSLiftoffInhibitB();
 }
 
-bool ML::ESEAutoAbortSimulate()
-{
-	return IuESE->GetAutoAbortSimulate();
-}
-
 bool ML::ESEGetSIBurnModeSubstitute()
 {
 	return IuESE->GetSIBurnModeSubstitute();
@@ -1092,6 +1087,11 @@ bool ML::ESEGetGuidanceReferenceRelease()
 bool ML::ESEGetQBallSimulateCmd()
 {
 	return IuESE->GetQBallSimulateCmd();
+}
+
+bool ML::ESEGetEDSAutoAbortSimulate(int n)
+{
+	return IuESE->GetEDSAutoAbortSimulate(n);
 }
 
 bool ML::ESEGetSICThrustOKSimulate(int eng)
@@ -1144,15 +1144,6 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 			IuESE->SetEDSLiftoffInhibitB(true);
 			IuUmb->EDSLiftoffEnableReset();
 		}
-		break;
-	case 741:
-	case 742:
-	case 743:
-	case 753:
-	case 765:
-	case 766:
-		//EDS ABORT COMMAND TO SC
-		IuESE->SetAutoAbortSimulate(on);
 		break;
 	case 778:
 	case 779:
