@@ -63,6 +63,9 @@
     <ClCompile Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_saturn\IUControlSignalProcessor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\connector.h">
@@ -108,6 +111,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_saturn\IUControlSignalProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -47,7 +47,7 @@ LCCMFDButtons::LCCMFDButtons()
 	RegisterPage(mnu0, sizeof(mnu0) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("INP", OAPI_KEY_I, &LCC_MFD::menuSetSLCCDiscreteInput);
-	RegisterFunction("", OAPI_KEY_P, &LCC_MFD::menuVoid);
+	RegisterFunction("LOA", OAPI_KEY_P, &LCC_MFD::menuLoadProgram);
 	RegisterFunction("", OAPI_KEY_U, &LCC_MFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_M, &LCC_MFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_B, &LCC_MFD::menuVoid);

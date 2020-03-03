@@ -55,8 +55,10 @@ public:
 
 	// LC-34/IU Interface
 	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
-	bool ESEGetAutoAbortInhibit();
-	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	bool ESEGetGSEOverrateSimulate(int n);
 	bool ESEGetEDSPowerInhibit();
 	bool ESEPadAbortRequest();
 	bool ESEGetThrustOKIndicateEnableInhibitA();
@@ -67,14 +69,16 @@ public:
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
 	bool ESEGetQBallSimulateCmd();
+	bool ESEGetEDSLVCutoffSimulate(int n);
 
 	//ML/S-IC Interface
-	bool ESEGetSIBThrustOKSimulate(int eng);
+	bool ESEGetSIBThrustOKSimulate(int eng, int n);
 
 	// LCC/ML Interface
 	void SLCCCheckDiscreteInput(RCA110A *c);
 	bool SLCCGetOutputSignal(size_t n);
 	void ConnectGroundComputer(RCA110A *c);
+	void IssueSwitchSelectorCmd(int stage, int chan);
 
 protected:
 

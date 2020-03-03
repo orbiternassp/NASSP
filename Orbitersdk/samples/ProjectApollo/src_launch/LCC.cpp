@@ -113,6 +113,11 @@ void LCC::SLCCCheckDiscreteInput(RCA110A *c)
 	}
 }
 
+void LCC::SLCCLoadProgram(const char *str)
+{
+	rca110a->ReadFile(str);
+}
+
 DLLCLBK void InitModule(HINSTANCE hDLL)
 {
 }

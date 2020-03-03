@@ -49,6 +49,8 @@ public:
 	void SwitchQBallPowerOn();
 	void SwitchQBallPowerOff();
 	void SetControlSignalProcessorPower(bool set);
+	void EDSGroupNo1Reset();
+	void EDSGroupNo2Reset();
 	bool AllSIEnginesRunning();
 	bool IsEDSUnsafeA();
 	bool IsEDSUnsafeB();
@@ -56,7 +58,8 @@ public:
 	bool GetEDSSCCutoff2();
 	bool GetEDSSCCutoff3();
 	bool GetEDSAutoAbortBus();
-	bool GetEDSExcessiveRateIndication();
+	bool GetEDSExcessiveRollRateIndication();
+	bool GetEDSExcessivePitchYawRateIndication();
 	bool GetLVDCOutputRegisterDiscrete(int bit);
 	bool FCCPowerIsOn();
 	void SwitchSelector(int stage, int channel);
@@ -65,8 +68,10 @@ public:
 	virtual bool ESEGetCommandVehicleLiftoffIndicationInhibit();
 	virtual bool ESEGetSICOutboardEnginesCantInhibit();
 	virtual bool ESEGetSICOutboardEnginesCantSimulate();
-	virtual bool ESEGetAutoAbortInhibit();
-	virtual bool ESEGetGSEOverrateSimulate();
+	virtual bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	virtual bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	virtual bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	virtual bool ESEGetGSEOverrateSimulate(int n);
 	virtual bool ESEGetEDSPowerInhibit();
 	virtual bool ESEPadAbortRequest();
 	virtual bool ESEGetThrustOKIndicateEnableInhibitA();
@@ -77,6 +82,7 @@ public:
 	virtual bool ESEGetGuidanceReferenceRelease();
 	virtual bool ESEGetQBallSimulateCmd();
 	virtual bool ESEGetEDSAutoAbortSimulate(int n);
+	virtual bool ESEGetEDSLVCutoffSimulate(int n);
 protected:
 	IU* iu;
 	IUUmbilicalInterface* IuUmb;

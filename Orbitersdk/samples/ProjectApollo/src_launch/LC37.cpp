@@ -115,7 +115,7 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	IuUmb = new IUUmbilical(this);
 	IuESE = new IU_ESE(IuUmb, this);
 	SCMUmb = new SCMUmbilical(this);
-	SIBESE = new SIB_ESE(SCMUmb);
+	SIBESE = new SIB_ESE(SCMUmb, this);
 	rca110a = new RCA110AM(this);
 }
 
@@ -325,6 +325,7 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 	if (sat)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
+		SIBESE->Timestep();
 	}
 }
 
@@ -536,14 +537,24 @@ bool LC37::ESEGetCommandVehicleLiftoffIndicationInhibit()
 	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
 }
 
-bool LC37::ESEGetAutoAbortInhibit()
+bool LC37::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
 {
-	return IuESE->GetAutoAbortInhibit();
+	return IuESE->GetExcessiveRollRateAutoAbortInhibit(n);
 }
 
-bool LC37::ESEGetGSEOverrateSimulate()
+bool LC37::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
 {
-	return IuESE->GetOverrateSimulate();
+	return IuESE->GetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool LC37::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	return IuESE->GetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool LC37::ESEGetGSEOverrateSimulate(int n)
+{
+	return IuESE->GetOverrateSimulate(n);
 }
 
 bool LC37::ESEGetEDSPowerInhibit()
@@ -581,6 +592,11 @@ bool LC37::ESEGetEDSAutoAbortSimulate(int n)
 	return IuESE->GetEDSAutoAbortSimulate(n);
 }
 
+bool LC37::ESEGetEDSLVCutoffSimulate(int n)
+{
+	return IuESE->GetEDSLVCutoffSimulate(n);
+}
+
 bool LC37::ESEGetSIBurnModeSubstitute()
 {
 	return IuESE->GetSIBurnModeSubstitute();
@@ -596,9 +612,9 @@ bool LC37::ESEGetQBallSimulateCmd()
 	return IuESE->GetQBallSimulateCmd();
 }
 
-bool LC37::ESEGetSIBThrustOKSimulate(int eng)
+bool LC37::ESEGetSIBThrustOKSimulate(int eng, int n)
 {
-	return SIBESE->GetSIBThrustOKSimulate(eng);
+	return SIBESE->GetSIBThrustOKSimulate(eng, n);
 }
 
 void LC37::SLCCCheckDiscreteInput(RCA110A *c)
@@ -616,4 +632,9 @@ bool LC37::SLCCGetOutputSignal(size_t n)
 void LC37::ConnectGroundComputer(RCA110A *c)
 {
 	rca110a->Connect(c);
+}
+
+void LC37::IssueSwitchSelectorCmd(int stage, int chan)
+{
+	IuUmb->SwitchSelector(stage, chan);
 }

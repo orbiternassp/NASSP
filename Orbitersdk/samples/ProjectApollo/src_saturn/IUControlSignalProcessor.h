@@ -2,7 +2,7 @@
 This file is part of Project Apollo - NASSP
 Copyright 2019
 
-Electrical Support Equipment for the S-IB Stage (Header)
+IU Control Signal Processor 601A24 (Header)
 
 Project Apollo is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,22 +24,45 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class SCMUmbilical;
-class LCCPadInterface;
+class IU;
 
-class SIB_ESE
+class IUControlSignalProcessor
 {
 public:
-	SIB_ESE(SCMUmbilical *TSMUmb, LCCPadInterface *p);
-
+	IUControlSignalProcessor(IU *iu);
 	void Timestep();
-	void SaveState(FILEHANDLE scn);
-	void LoadState(FILEHANDLE scn);
 
-	bool GetSIBThrustOKSimulate(int eng, int n) { return SIBThrustOKSimulate[eng - 1][n - 1]; }
-protected:
-	bool SIBThrustOKSimulate[8][3];
+	bool GetPitchNo1Overrate() { return PitchNo1Overrate; }
+	bool GetPitchNo2Overrate() { return PitchNo2Overrate; }
+	bool GetPitchNo3Overrate() { return PitchNo3Overrate; }
+	bool GetYawNo1Overrate() { return YawNo1Overrate; }
+	bool GetYawNo2Overrate() { return YawNo2Overrate; }
+	bool GetYawNo3Overrate() { return YawNo3Overrate; }
+	bool GetRollNo1Overrate() { return RollNo1Overrate; }
+	bool GetRollNo2Overrate() { return RollNo2Overrate; }
+	bool GetRollNo3Overrate() { return RollNo3Overrate; }
+private:
+	//K122
+	bool PitchNo1Overrate;
+	//K123
+	bool PitchNo2Overrate;
+	//K124
+	bool PitchNo3Overrate;
+	//K125
+	bool YawNo1Overrate;
+	//K126
+	bool YawNo2Overrate;
+	//K127
+	bool YawNo3Overrate;
+	//K128
+	bool RollNo1Overrate;
+	//K129
+	bool RollNo2Overrate;
+	//K130
+	bool RollNo3Overrate;
 
-	SCMUmbilical *Umbilical;
-	LCCPadInterface *Pad;
+	double PYLimit;
+	VECTOR3 AttRate;
+
+	IU *iu;
 };

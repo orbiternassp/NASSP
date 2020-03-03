@@ -113,7 +113,7 @@ public:
 	bool IsUmbilicalConnected();
 protected:
 	double GetSumThrust();
-	bool ESEGetSIBThrustOKSimulate(int eng);
+	bool ESEGetSIBThrustOKSimulate(int eng, int n);
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -192,7 +192,7 @@ protected:
 	bool LOXLevelSensor;
 	bool FuelDepletionSensors1;
 	bool FuelDepletionSensors2;
-	bool ThrustOK[8];
+	bool ThrustOK[24];
 
 	bool OutboardEnginesCutoffSignal;
 

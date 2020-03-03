@@ -76,14 +76,24 @@ bool IUUmbilical::ESEGetSICOutboardEnginesCantSimulate()
 	return IuUmb->ESEGetSICOutboardEnginesCantSimulate();
 }
 
-bool IUUmbilical::ESEGetAutoAbortInhibit()
+bool IUUmbilical::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
 {
-	return IuUmb->ESEGetAutoAbortInhibit();
+	return IuUmb->ESEGetExcessiveRollRateAutoAbortInhibit(n);
 }
 
-bool IUUmbilical::ESEGetGSEOverrateSimulate()
+bool IUUmbilical::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
 {
-	return IuUmb->ESEGetGSEOverrateSimulate();
+	return IuUmb->ESEGetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool IUUmbilical::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	return IuUmb->ESEGetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool IUUmbilical::ESEGetGSEOverrateSimulate(int n)
+{
+	return IuUmb->ESEGetGSEOverrateSimulate(n);
 }
 
 bool IUUmbilical::ESEGetEDSPowerInhibit()
@@ -134,6 +144,11 @@ bool IUUmbilical::ESEGetQBallSimulateCmd()
 bool IUUmbilical::ESEGetEDSAutoAbortSimulate(int n)
 {
 	return IuUmb->ESEGetEDSAutoAbortSimulate(n);
+}
+
+bool IUUmbilical::ESEGetEDSLVCutoffSimulate(int n)
+{
+	return IuUmb->ESEGetEDSLVCutoffSimulate(n);
 }
 
 void IUUmbilical::SetEDSLiftoffEnableA()
@@ -234,11 +249,18 @@ bool IUUmbilical::GetEDSAutoAbortBus()
 	return iu->GetEDS()->GetAutoAbort();
 }
 
-bool IUUmbilical::GetEDSExcessiveRateIndication()
+bool IUUmbilical::GetEDSExcessiveRollRateIndication()
 {
 	if (!IUUmbilicalConnected) return false;
 
-	return iu->GetEDS()->GetExcessiveRateIndication();
+	return iu->GetEDS()->GetExcessiveRollRateIndication();
+}
+
+bool IUUmbilical::GetEDSExcessivePitchYawRateIndication()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->GetExcessivePitchYawRateIndication();
 }
 
 bool IUUmbilical::GetLVDCOutputRegisterDiscrete(int bit)
@@ -260,6 +282,20 @@ void IUUmbilical::SetControlSignalProcessorPower(bool set)
 	if (!IUUmbilicalConnected) return;
 
 	iu->GetControlDistributor()->SetControlSignalProcessorPowerOn(set);
+}
+
+void IUUmbilical::EDSGroupNo1Reset()
+{
+	if (!IUUmbilicalConnected) return;
+
+	iu->GetControlDistributor()->ResetBus1();
+}
+
+void IUUmbilical::EDSGroupNo2Reset()
+{
+	if (!IUUmbilicalConnected) return;
+
+	iu->GetControlDistributor()->ResetBus2();
 }
 
 void IUUmbilical::SwitchSelector(int stage, int channel)

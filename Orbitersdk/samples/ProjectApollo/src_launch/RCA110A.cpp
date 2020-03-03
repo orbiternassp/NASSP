@@ -27,12 +27,208 @@
 #include "LCCPadInterface.h"
 #include "RCA110A.h"
 
+ATOLLSequence::ATOLLSequence()
+{
+	Clear();
+}
+
+void ATOLLSequence::Clear()
+{
+	Step = 0;
+	SubStep = 0;
+	Condition = 0;
+	Value = 0.0;
+	LowerLimit = 0.0;
+	UpperLimit = 0.0;
+	Time = 0.0;
+}
+
+bool ATOLLSequence::ReadIn(const char *str)
+{
+	int i = 0;
+
+	if (str[i] == '\0')
+	{
+		return false;
+	}
+
+	std::string word;
+	std::vector<std::string> seq;
+
+	do
+	{
+		if (str[i] == ';')
+		{
+			seq.push_back(word);
+			word.clear();
+		}
+		else
+		{
+			word.push_back(str[i]);
+		}
+		if (seq.size() == 10)
+		{
+			break;
+		}
+		i++;
+		if (str[i] == '\0')
+		{
+			seq.push_back(word);
+		}
+	} while (str[i] != '\0' && seq.size() < 10);
+
+	if (seq.size() != 10)
+	{
+		return false;
+	}
+	Step = atoi(seq[0].c_str());
+	SubStep = atoi(seq[1].c_str());
+	Operator = seq[2];
+	Condition = atoi(seq[3].c_str());
+	Value = atof(seq[4].c_str());
+	LowerLimit = atof(seq[5].c_str());
+	UpperLimit = atof(seq[6].c_str());
+	Units = seq[7];
+	Time = atof(seq[8].c_str());
+	Variable = seq[9];
+
+	return true;
+}
+
+int ATOLLSequence::GetOperator()
+{
+	if (Operator == "DISO")
+	{
+		return ATOLL_DISO;
+	}
+	else if (Operator == "DELY")
+	{
+		return ATOLL_DELY;
+	}
+	else if (Operator == "SCAN")
+	{
+		return ATOLL_SCAN;
+	}
+	else if (Operator == "SSEL")
+	{
+		return ATOLL_SSEL;
+	}
+
+	return -1;
+}
+
+ATOLLProcessor::ATOLLProcessor(RCA110AL *r)
+{
+	rca110a = r;
+	opcode = 0;
+	nextitemtime = 0.0;
+	skipgetline = false;
+	delaystatus = false;
+}
+
+void ATOLLProcessor::Timestep(double simt)
+{
+	if (ifs.is_open() == false) return;
+
+	simtime = simt;
+	if (simtime < nextitemtime) return;
+	if (skipgetline == false)
+	{
+		if (!ifs.getline(line, 100))
+		{
+			ifs.close();
+		}
+	}
+	seq.Clear();
+	if (seq.ReadIn(line))
+	{
+		opcode = seq.GetOperator();
+		switch (opcode)
+		{
+		case ATOLL_DELY:
+			DELY();
+			break;
+		case ATOLL_DISO:
+			DISO();
+			break;
+		case ATOLL_SCAN:
+			SCAN();
+			break;
+		case ATOLL_SSEL:
+			SSEL();
+			break;
+		}
+	}
+}
+
+void ATOLLProcessor::DELY()
+{
+	if (seq.Time <= 0) return;
+	nextitemtime = simtime + seq.Time / 1000.0;
+}
+
+void ATOLLProcessor::DISO()
+{
+	if (seq.Variable.size() == 0) return;
+	if (seq.Variable[0] == 'D')
+	{
+		//Discrete output
+		int chan;
+		if (sscanf(seq.Variable.c_str(), "D%d", &chan) == 1)
+		{
+			bool on;
+
+			if (seq.Condition == 1)
+				on = true;
+			else
+				on = false;
+			rca110a->SetConnectedOutput(chan, on);
+		}
+	}
+}
+
+void ATOLLProcessor::SCAN()
+{
+	if (seq.Time > 0)
+	{
+		if (skipgetline == false)
+		{
+			nextitemtime = simtime + seq.Time / 1000.0;
+			skipgetline = true;
+			delaystatus = true;
+		}
+		else
+		{
+			delaystatus = false;
+		}
+	}
+
+	if (delaystatus) return;
+
+	//Do Scanning
+	delaystatus = false;
+	skipgetline = false;
+}
+
+void ATOLLProcessor::SSEL()
+{
+	int stage, chan;
+
+	if (sscanf(seq.Variable.c_str(), "%d,%d", &stage, &chan) == 2)
+	{
+		rca110a->IssueSwitchSelectorCmd(stage, chan);
+	}
+}
+
+void ATOLLProcessor::ReadFile(const char *str)
+{
+	ifs.open(str);
+}
+
 RCA110A::RCA110A()
 {
 	mode = 0;
 	other = NULL;
-	T0001 = 0.0;
-	simtime = 0.0;
 }
 
 RCA110A::~RCA110A()
@@ -58,11 +254,6 @@ void RCA110A::Disconnect()
 	}
 }
 
-void RCA110A::Timestep(double simt, double simdt)
-{
-	simtime = simt;
-}
-
 void RCA110A::SetInput(size_t n, bool val)
 {
 	inputdiscretes.set(n, val);
@@ -71,6 +262,14 @@ void RCA110A::SetInput(size_t n, bool val)
 void RCA110A::SetOutput(size_t n, bool val)
 {
 	outputdiscretes.set(n, val);
+}
+
+void RCA110A::SetConnectedOutput(size_t n, bool val)
+{
+	if (other)
+	{
+		other->SetOutput(n, val);
+	}
 }
 
 bool RCA110A::GetInputSignal(size_t n) const
@@ -91,63 +290,14 @@ void RCA110A::SwitchMode(int m)
 	}
 }
 
-void RCA110A::TestProgram()
-{
-	if (simtime > 10.0 && simtime < 15.0)
-	{
-		other->SetOutput(741, true);
-	}
-	else if (simtime > 15.0 && simtime < 20.0)
-	{
-		other->SetOutput(742, true);
-	}
-	else if (simtime > 20.0 && simtime < 25.0)
-	{
-		other->SetOutput(742, false);
-		other->SetOutput(743, true);
-	}
-	else if (simtime > 25.0 && simtime < 30.0)
-	{
-		other->SetOutput(743, false);
-		other->SetOutput(753, true);
-	}
-	else if (simtime > 30.0 && simtime < 35.0)
-	{
-		other->SetOutput(753, false);
-		other->SetOutput(765, true);
-	}
-	else if (simtime > 35.0 && simtime < 40.0)
-	{
-		other->SetOutput(765, false);
-		other->SetOutput(766, true);
-	}
-	else if (simtime > 40.0 && simtime < 45.0)
-	{
-		other->SetOutput(741, false);
-		other->SetOutput(766, false);
-		other->SetOutput(742, true);
-		other->SetOutput(743, true);
-	}
-	else
-	{
-		other->SetOutput(741, false);
-		other->SetOutput(742, false);
-		other->SetOutput(743, false);
-		other->SetOutput(753, false);
-		other->SetOutput(765, false);
-		other->SetOutput(766, false);
-	}
-}
-
-RCA110AL::RCA110AL(PadLCCInterface *l)
+RCA110AL::RCA110AL(PadLCCInterface *l) : atoll(this)
 {
 	lcc = l;
 }
 
 void RCA110AL::Timestep(double simt, double simdt)
 {
-	RCA110A::Timestep(simt, simdt);
-
+	atoll.Timestep(simt);
 	lcc->SLCCCheckDiscreteInput(this);
 
 	if (other == NULL) return;
@@ -170,15 +320,35 @@ void RCA110AL::Timestep(double simt, double simdt)
 	}
 }
 
+void RCA110AL::ReadFile(const char *str)
+{
+	atoll.ReadFile(str);
+}
+
+void RCA110AL::IssueSwitchSelectorCmd(int stage, int chan)
+{
+	if (other)
+	{
+		other->IssueSwitchSelectorCmd(stage, chan);
+	}
+}
+
 RCA110AM::RCA110AM(LCCPadInterface *m)
 {
 	pad = m;
+
+	//Default outputs
+
+	//FCC Power On
+	outputdiscretes.set(1823, true);
+	//Thrust OK Indicate Enable Inhibit A
+	outputdiscretes.set(1913, true);
+	//Thrust OK Indicate Enable Inhibit B
+	outputdiscretes.set(1914, true);
 }
 
 void RCA110AM::Timestep(double simt, double simdt)
 {
-	RCA110A::Timestep(simt, simdt);
-
 	pad->SLCCCheckDiscreteInput(this);
 
 	if (other == NULL) return;
@@ -190,4 +360,9 @@ void RCA110AM::Timestep(double simt, double simdt)
 	}
 
 	//TestProgram();
+}
+
+void RCA110AM::IssueSwitchSelectorCmd(int stage, int chan)
+{
+	pad->IssueSwitchSelectorCmd(stage, chan);
 }

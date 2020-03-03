@@ -117,7 +117,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>
       </SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>false</SupportJustMyCode>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -126,7 +126,8 @@
       <AssemblerListingLocation>.\Debug\LCC/</AssemblerListingLocation>
       <ObjectFileName>.\Debug\LCC/</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\LCC/</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>../../../../include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../LaunchMFD/libMFD;../../src_sys;../../../../include;</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;_DEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <OutputFile>../../../../../Modules/ProjectApollo/LCC.dll</OutputFile>

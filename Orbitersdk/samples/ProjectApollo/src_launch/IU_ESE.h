@@ -42,8 +42,10 @@ public:
 	void LoadState(FILEHANDLE scn);
 
 	bool GetCommandVehicleLiftoffIndicationInhibit() { return CommandVehicleLiftoffIndicationInhibit; }
-	bool GetAutoAbortInhibit() { return AutoAbortInhibit; }
-	bool GetOverrateSimulate() { return OverrateSimulate; }
+	bool GetExcessiveRollRateAutoAbortInhibit(int n);
+	bool GetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool GetTwoEngineOutAutoAbortInhibit(int n);
+	bool GetOverrateSimulate(int n);
 	bool GetThrustOKIndicateEnableInhibitA() { return ThrustOKIndicateEnableInhibitA; }
 	bool GetThrustOKIndicateEnableInhibitB() { return ThrustOKIndicateEnableInhibitB; }
 	bool GetEDSLiftoffInhibitA() { return EDSLiftoffInhibitA; }
@@ -55,6 +57,7 @@ public:
 	bool GetFCCPowerIsOn() { return FCCPowerIsOn; }
 	bool GetQBallSimulateCmd() { return QBallSimulateCmd; }
 	bool GetEDSAutoAbortSimulate(int n);
+	bool GetEDSLVCutoffSimulate(int n);
 
 	void SetGuidanceReferenceRelease(bool set) { GuidanceReferenceRelease = set; }
 	void SetEDSPowerInhibit(bool set) { EDSPowerInhibit = set; }
@@ -63,13 +66,15 @@ public:
 	void SetEDSCutoffFromSC(int n, bool set) { EDSCutoffFromSC[n - 1] = set; }
 	void SetThrustOKIndicateEnableInhibitA(bool set) { ThrustOKIndicateEnableInhibitA = set; }
 	void SetThrustOKIndicateEnableInhibitB(bool set) { ThrustOKIndicateEnableInhibitB = set; }
-	void SetAutoAbortInhibit(bool set) { AutoAbortInhibit = set; }
 protected:
 	void SetEDSMode(int mode);
 
 	bool CommandVehicleLiftoffIndicationInhibit;
-	bool AutoAbortInhibit;
-	bool OverrateSimulate;
+	bool ExcessiveRollRateAutoAbortInhibit[3];
+	bool ExcessivePitchYawRateAutoAbortInhibit[3];
+	bool TwoEngineOutAutoAbortInhibit[3];
+	//Roll 1-3, Pitch 1-3, Yaw 1-3
+	bool OverrateSimulate[9];
 	bool ThrustOKIndicateEnableInhibitA;
 	bool ThrustOKIndicateEnableInhibitB;
 	bool EDSLiftoffInhibitA;

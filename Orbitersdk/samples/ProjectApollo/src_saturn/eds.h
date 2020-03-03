@@ -82,7 +82,8 @@ public:
 	bool GetLVEnginesCutoffFromSC1() { return LVEnginesCutoffFromSC1; }
 	bool GetLVEnginesCutoffFromSC2() { return LVEnginesCutoffFromSC2; }
 	bool GetLVEnginesCutoffFromSC3() { return LVEnginesCutoffFromSC3; }
-	bool GetExcessiveRateIndication() { return ExcessivePitchYawRateIndication || ExcessiveRollRateIndication; }
+	bool GetExcessiveRollRateIndication() { return ExcessiveRollRateIndication; }
+	bool GetExcessivePitchYawRateIndication() { return (ExcessivePitchYawRateIndicationA || ExcessivePitchYawRateIndicationB); }
 
 	void SetEDSLiftoffEnableA() { EDSLiftoffEnableA = true; }
 	void SetEDSLiftoffEnableB() { EDSLiftoffEnableB = true; }
@@ -93,7 +94,7 @@ protected:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 
-	bool LVEnginesCutoffVote();
+	bool TripleVoting(bool vote1, bool vote2, bool vote3);
 	void AutoAbortCircuits();
 
 	//Buses:
@@ -105,38 +106,60 @@ protected:
 
 	//Relays:
 	
-	//A4K1
-	bool SCControlEnableRelay;
-	//A4K6, A10K3, K55-1, K55-2
-	bool LVAttRefFail;
-	//A6K1, A7K1, A8K3 (K43-1 - K43-3)
-	bool TwoEngOutAutoAbortDeactivate;
-	//K46-K48 (K46-1 - K46-3)
-	bool ExcessRatesAutoAbortDeactivatePY;
-	//K52-K54 (K47-1 - K71-3)
-	bool ExcessRatesAutoAbortDeactivateR;
-	//K19 (K19-1)
-	bool LVEnginesCutoffEnable1;
-	//K29 (K19-2)
-	bool LVEnginesCutoffEnable2;
-	//K6 (K66)
-	bool SIVBEngineOutIndicationA;
-	//K91 (K167)
-	bool SIVBEngineOutIndicationB;
 	//K2 (K90)
 	bool EDSLiftoffInhibitA;
 	//K3 (K91)
 	bool EDSLiftoffInhibitB;
 	//K4 (K4)
 	bool LiftoffRelay;
+	//K6 (K66)
+	bool SIVBEngineOutIndicationA;
+	//K9-1/2, (K9-1/2)
+	bool LVEnginesCutoffCommand1;
+	//K10-1 (K29-5)
+	bool AutoAbort3AToSC;
+	//K10-2 (K29-6)
+	bool AutoAbort3BToSC;
+	//K19 (K19-1)
+	bool LVEnginesCutoffEnable1;
+	//K20-1 (K29-3)
+	bool AutoAbort2AToSC;
+	//K20-2 (K29-4)
+	bool AutoAbort2BToSC;
+	//K29 (K19-2)
+	bool LVEnginesCutoffEnable2;
+	//K30-2 (K29-1)
+	bool AutoAbort1AToSC;
+	//K30-1 (K29-2)
+	bool AutoAbort1BToSC;
+	//K39 (K30)
+	bool AutoAbortBusGSEMonitor;
 	//K40 (K20-1)
 	bool LVEnginesCutoffFromSC1;
 	//K41-1/2 (K20-2/4)
 	bool LVEnginesCutoffFromSC2;
 	//K42 (K20-3)
 	bool LVEnginesCutoffFromSC3;
+	//K46 (K46-1)
+	bool ExcessiveRateAutoAbortInhibitPY1;
+	//K47 (K46-2)
+	bool ExcessiveRateAutoAbortInhibitPY2;
+	//K48 (K46-3)
+	bool ExcessiveRateAutoAbortInhibitPY3;
+	//K49 (K69)
+	bool RangeSafetyDestructArmedAFromSIVB;
+	//K50 (K70)
+	bool RangeSafetyDestructArmedBFromSIVB;
 	//K51 (K51)
 	bool SIVBEngineThrustMonitorA;
+	//K52 (K47-1)
+	bool ExcessiveRateAutoAbortInhibitR1;
+	//K53 (K47-2)
+	bool ExcessiveRateAutoAbortInhibitR2;
+	//K54 (K47-3)
+	bool ExcessiveRateAutoAbortInhibitR3;
+	//K55-1 (K94-1), K55-2 (K94-2)
+	bool LVAttRefFail1;
 	//K63 (K134)
 	bool SIVBEngineThrustMonitorB;
 	//K65 (K92)
@@ -147,44 +170,51 @@ protected:
 	bool SIVBRestartAlert;
 	//K77-1/2
 	bool IUCommandSystemEnable;
-	//K9-1/2, (K9-1/2)
-	bool LVEnginesCutoffCommand1;
-	//K98, K99 (K230, K231)
-	bool LVEnginesCutoffCommand2;
 	//K86-1/2 (K10-1/2)
 	bool LVEnginesCutoffCommand3;
 	//K89 (K171)
 	bool GSEEngineThrustIndicationEnableA;
 	//K90 (K172)
 	bool GSEEngineThrustIndicationEnableB;
-	//K49 (K69)
-	bool RangeSafetyDestructArmedAFromSIVB;
-	//K50 (K70)
-	bool RangeSafetyDestructArmedBFromSIVB;
+	//K91 (K167)
+	bool SIVBEngineOutIndicationB;
+	//K98, K99 (K230, K231)
+	bool LVEnginesCutoffCommand2;
+
 	//A8K1 (K71)
 	bool PadAbortRequest;
-	//A5K3 (K60), A6K3 (K61), A10K1 (K220)
+	//A5K3 (K60)
+	bool ExcessiveRollRateVotingA;
+	//A6K3 (K61)
+	bool ExcessiveRollRateVotingB;
+	//A5K2 (K62)
+	bool ExcessivePitchRateVotingA;
+	//A7K3 (K63)
+	bool ExcessivePitchRateVotingB;
+	//A5K1(K64)
+	bool ExcessiveYawRateVotingA;
+	//A8K2(K65)
+	bool ExcessiveYawRateVotingB;
+	//A10K1 (K220)
 	bool ExcessiveRollRateIndication;
-	//A5K2 (K62), A7K3 (K63), A5K1 (K64), A8K2 (K65), A4K5 (K221), A9K5 (K222)
-	bool ExcessivePitchYawRateIndication;
+	//A4K5 (K221)
+	bool ExcessivePitchYawRateIndicationA;
+	//A9K5(K222)
+	bool ExcessivePitchYawRateIndicationB;
 	//A9K3 (K59)
 	bool SIAllEnginesOKA;
 	//A4K4 (K219)
 	bool SIAllEnginesOKB;
-	//K30-2 (K29-1)
-	bool AutoAbort1AToSC;
-	//K30-1 (K29-2)
-	bool AutoAbort1BToSC;
-	//K20-1 (K29-3)
-	bool AutoAbort2AToSC;
-	//K20-2 (K29-4)
-	bool AutoAbort2BToSC;
-	//K10-1 (K29-5)
-	bool AutoAbort3AToSC;
-	//K10-2 (K29-6)
-	bool AutoAbort3BToSC;
-	//K39 (K30)
-	bool AutoAbortBusGSEMonitor;
+	//A4K1
+	bool SCControlEnableRelay;
+	//A4K6 (K291-1), A10K3 (K291-2)
+	bool LVAttRefFail2;
+	//A6K1 (K43-1)
+	bool TwoEngineOutAutoAbortInhibitNo1;
+	//A7K1, A8K3 (K43-2)
+	bool TwoEngineOutAutoAbortInhibitNo2;
+	//A8K3 (K43-3)
+	bool TwoEngineOutAutoAbortInhibitNo3;
 	bool SIVBEngineCutoffDisabled;
 
 	//Signals
@@ -194,10 +224,9 @@ protected:
 	bool EDSAbortSignal2;
 	bool EDSAbortSignal3;
 	bool AbortLightSignal;
-	int LVRateAutoSwitch;
-	int TwoEngineOutAutoSwitch;
+	bool LVRateAutoSwitchOff;
+	bool TwoEngineOutAutoSwitchOff;
 	int Stage;
-	VECTOR3 AttRate;
 	bool EDSBus1Powered, EDSBus2Powered, EDSBus3Powered;
 	bool BECOA, BECOB;
 
@@ -224,7 +253,7 @@ protected:
 
 	bool SIThrustNotOK[8];
 	//Temporary variables, not relays
-	bool ThrustOKSignal[8];
+	bool ThrustOKSignal[24];
 };
 
 class EDSSV : public EDS
@@ -257,7 +286,7 @@ protected:
 	bool SIIEngineThrustMonitorB[5];
 
 	//Temporary variables, not relays
-	bool ThrustOKSignal[5];
+	bool ThrustOKSignal[15];
 
 	//K69 (K223), K70 (K224)
 	bool SIISIVBNotSeparated;

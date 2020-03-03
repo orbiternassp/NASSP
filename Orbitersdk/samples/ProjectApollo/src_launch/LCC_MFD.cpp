@@ -105,3 +105,24 @@ void LCC_MFD::set_SLCCDiscreteInput(int n, bool set)
 {
 	pLCC->SetDiscreteInput(n, set);
 }
+
+void LCC_MFD::menuLoadProgram()
+{
+	bool LoadCheckoutProgramInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter name of the checkout program:", LoadCheckoutProgramInput, 0, 20, (void*)this);
+}
+
+bool LoadCheckoutProgramInput(void *id, char *str, void *data)
+{
+	((LCC_MFD*)data)->LoadCheckoutProgram(str);
+	return true;
+}
+
+void  LCC_MFD::LoadCheckoutProgram(const char *str)
+{
+	char str2[128];
+
+	sprintf_s(str2, 128, "Config\\ProjectApollo\\Checkout\\%s.csv", str);
+
+	pLCC->SLCCLoadProgram(str2);
+}

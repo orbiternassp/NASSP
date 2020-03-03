@@ -122,7 +122,8 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	IuUmb = new IUUmbilical(this);
 	IuESE = new IU_ESE(IuUmb, this);
 	SCMUmb = new SCMUmbilical(this);
-	SIBESE = new SIB_ESE(SCMUmb);
+	SIBESE = new SIB_ESE(SCMUmb, this);
+	rca110a = new RCA110AM(this);
 }
 
 LC34::~LC34() {
@@ -130,6 +131,7 @@ LC34::~LC34() {
 	delete IuESE;
 	delete SCMUmb;
 	delete SIBESE;
+	delete rca110a;
 }
 
 void LC34::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -421,6 +423,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 	if (sat && state >= STATE_PRELAUNCH)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
+		SIBESE->Timestep();
 	}
 }
 
@@ -680,14 +683,24 @@ bool LC34::ESEGetCommandVehicleLiftoffIndicationInhibit()
 	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
 }
 
-bool LC34::ESEGetAutoAbortInhibit()
+bool LC34::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
 {
-	return IuESE->GetAutoAbortInhibit();
+	return IuESE->GetExcessiveRollRateAutoAbortInhibit(n);
 }
 
-bool LC34::ESEGetGSEOverrateSimulate()
+bool LC34::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
 {
-	return IuESE->GetOverrateSimulate();
+	return IuESE->GetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool LC34::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	return IuESE->GetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool LC34::ESEGetGSEOverrateSimulate(int n)
+{
+	return IuESE->GetOverrateSimulate(n);
 }
 
 bool LC34::ESEGetEDSPowerInhibit()
@@ -725,6 +738,11 @@ bool LC34::ESEGetEDSAutoAbortSimulate(int n)
 	return IuESE->GetEDSAutoAbortSimulate(n);
 }
 
+bool LC34::ESEGetEDSLVCutoffSimulate(int n)
+{
+	return IuESE->GetEDSLVCutoffSimulate(n);
+}
+
 bool LC34::ESEGetSIBurnModeSubstitute()
 {
 	return IuESE->GetSIBurnModeSubstitute();
@@ -740,9 +758,9 @@ bool LC34::ESEGetQBallSimulateCmd()
 	return IuESE->GetQBallSimulateCmd();
 }
 
-bool LC34::ESEGetSIBThrustOKSimulate(int eng)
+bool LC34::ESEGetSIBThrustOKSimulate(int eng, int n)
 {
-	return SIBESE->GetSIBThrustOKSimulate(eng);
+	return SIBESE->GetSIBThrustOKSimulate(eng, n);
 }
 
 void LC34::SLCCCheckDiscreteInput(RCA110A *c)
@@ -760,4 +778,9 @@ bool LC34::SLCCGetOutputSignal(size_t n)
 void LC34::ConnectGroundComputer(RCA110A *c)
 {
 	rca110a->Connect(c);
+}
+
+void LC34::IssueSwitchSelectorCmd(int stage, int chan)
+{
+	IuUmb->SwitchSelector(stage, chan);
 }

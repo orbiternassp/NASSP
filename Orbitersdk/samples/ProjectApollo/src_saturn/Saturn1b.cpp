@@ -353,7 +353,7 @@ void Saturn1b::SISwitchSelector(int channel)
 
 void Saturn1b::GetSIThrustOK(bool *ok)
 {
-	for (int i = 0;i < 5;i++)
+	for (int i = 0;i < 24;i++)
 	{
 		ok[i] = false;
 	}

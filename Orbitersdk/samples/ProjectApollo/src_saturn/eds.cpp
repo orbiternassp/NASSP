@@ -39,9 +39,15 @@ EDS::EDS(IU *iu)
 {
 	this->iu = iu;
 
-	TwoEngOutAutoAbortDeactivate = false;
-	ExcessRatesAutoAbortDeactivatePY = false;
-	ExcessRatesAutoAbortDeactivateR = false;
+	TwoEngineOutAutoAbortInhibitNo1 = false;
+	TwoEngineOutAutoAbortInhibitNo2 = false;
+	TwoEngineOutAutoAbortInhibitNo3 = false;
+	ExcessiveRateAutoAbortInhibitPY1 = false;
+	ExcessiveRateAutoAbortInhibitPY2 = false;
+	ExcessiveRateAutoAbortInhibitPY3 = false;
+	ExcessiveRateAutoAbortInhibitR1 = false;
+	ExcessiveRateAutoAbortInhibitR2 = false;
+	ExcessiveRateAutoAbortInhibitR3 = false;
 	LVEnginesCutoffEnable1 = false;
 	LVEnginesCutoffEnable2 = false;
 	SIVBEngineOutIndicationA = false;
@@ -64,7 +70,8 @@ EDS::EDS(IU *iu)
 	SIVBRestartAlert = false;
 	LiftoffRelay = false;
 	SCControlEnableRelay = false;
-	LVAttRefFail = false;
+	LVAttRefFail1 = false;
+	LVAttRefFail2 = false;
 	IUCommandSystemEnable = false;
 	LVEnginesCutoffCommand1 = false;
 	LVEnginesCutoffCommand2 = false;
@@ -76,8 +83,15 @@ EDS::EDS(IU *iu)
 	PadAbortRequest = false;
 	RangeSafetyDestructArmedAFromSIVB = false;
 	RangeSafetyDestructArmedBFromSIVB = false;
+	ExcessiveRollRateVotingA = false;
+	ExcessiveRollRateVotingB = false;
+	ExcessivePitchRateVotingA = false;
+	ExcessivePitchRateVotingB = false;
+	ExcessiveYawRateVotingA = false;
+	ExcessiveYawRateVotingB = false;
 	ExcessiveRollRateIndication = false;
-	ExcessivePitchYawRateIndication = false;
+	ExcessivePitchYawRateIndicationA = false;
+	ExcessivePitchYawRateIndicationB = false;
 	SIAllEnginesOKA = false;
 	SIAllEnginesOKB = false;
 	AutoAbort1AToSC = false;
@@ -98,10 +112,9 @@ EDS::EDS(IU *iu)
 	LiftoffCircuitAFailure = false;
 	LiftoffCircuitBFailure = false;
 
-	LVRateAutoSwitch = 0;
-	TwoEngineOutAutoSwitch = 0;
+	LVRateAutoSwitchOff = false;
+	TwoEngineOutAutoSwitchOff = false;
 	Stage = 0;
-	AttRate = _V(0, 0, 0);
 	EDSBus1Powered = false;
 	EDSBus2Powered = false;
 	EDSBus3Powered = false;
@@ -111,6 +124,8 @@ EDS::EDS(IU *iu)
 
 void EDS::Timestep(double simdt)
 {
+	bool tempsignal1, tempsignal2;
+
 	if (iu->GetAuxPowrDistr()->IsIUEDSBusPowered())
 		IUEDSBusPowered = true;
 	else
@@ -158,9 +173,8 @@ void EDS::Timestep(double simdt)
 		SIVBEngineThrustMonitorB = false;
 
 	//Input signals
-	LVRateAutoSwitch = iu->GetCommandConnector()->LVRateAutoSwitchState();
-	TwoEngineOutAutoSwitch = iu->GetCommandConnector()->TwoEngineOutAutoSwitchState();
-	AttRate = iu->GetLVRG()->GetRates();
+	LVRateAutoSwitchOff = iu->GetCommandConnector()->LVRateAutoSwitchState() == TOGGLESWITCH_DOWN;
+	TwoEngineOutAutoSwitchOff = iu->GetCommandConnector()->TwoEngineOutAutoSwitchState() == TOGGLESWITCH_DOWN;
 	Stage = iu->GetLVCommandConnector()->GetStage();
 	EDSBus1Powered = iu->GetCommandConnector()->IsEDSBusPowered(1);
 	EDSBus2Powered = iu->GetCommandConnector()->IsEDSBusPowered(2);
@@ -169,20 +183,55 @@ void EDS::Timestep(double simdt)
 	BECOB = iu->GetCommandConnector()->GetBECOCommand(false);
 
 	//Auto Abort Relays
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitch == TOGGLESWITCH_DOWN))
-		TwoEngOutAutoAbortDeactivate = true;
+	//Two-Engines Out
+	tempsignal1 = iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitchOff);
+	if (iu->ESEGetTwoEngineOutAutoAbortInhibit(1) || tempsignal1)
+		TwoEngineOutAutoAbortInhibitNo1 = true;
 	else
-		TwoEngOutAutoAbortDeactivate = false;
+		TwoEngineOutAutoAbortInhibitNo1 = false;
 
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
-		ExcessRatesAutoAbortDeactivatePY = true;
+	if (iu->ESEGetTwoEngineOutAutoAbortInhibit(2) || tempsignal1)
+		TwoEngineOutAutoAbortInhibitNo2 = true;
 	else
-		ExcessRatesAutoAbortDeactivatePY = false;
+		TwoEngineOutAutoAbortInhibitNo2 = false;
 
-	if (iu->ESEGetAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitch == TOGGLESWITCH_DOWN))
-		ExcessRatesAutoAbortDeactivateR = true;
+	if (iu->ESEGetTwoEngineOutAutoAbortInhibit(3) || tempsignal1)
+		TwoEngineOutAutoAbortInhibitNo2 = true;
 	else
-		ExcessRatesAutoAbortDeactivateR = false;
+		TwoEngineOutAutoAbortInhibitNo3 = false;
+
+	//Excessive Rate
+	tempsignal1 = iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitchOff);
+	if (iu->ESEGetExcessivePitchYawRateAutoAbortInhibit(1) || tempsignal1)
+		ExcessiveRateAutoAbortInhibitPY1 = true;
+	else
+		ExcessiveRateAutoAbortInhibitPY1 = false;
+
+	if (iu->ESEGetExcessivePitchYawRateAutoAbortInhibit(2) || tempsignal1)
+		ExcessiveRateAutoAbortInhibitPY2 = true;
+	else
+		ExcessiveRateAutoAbortInhibitPY2 = false;
+
+	if (iu->ESEGetExcessivePitchYawRateAutoAbortInhibit(3) || tempsignal1)
+		ExcessiveRateAutoAbortInhibitPY3 = true;
+	else
+		ExcessiveRateAutoAbortInhibitPY3 = false;
+
+	tempsignal1 = iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitchOff);
+	if (iu->ESEGetExcessiveRollRateAutoAbortInhibit(1) || tempsignal1)
+		ExcessiveRateAutoAbortInhibitR1 = true;
+	else
+		ExcessiveRateAutoAbortInhibitR1 = false;
+
+	if (iu->ESEGetExcessiveRollRateAutoAbortInhibit(2) || tempsignal1)
+		ExcessiveRateAutoAbortInhibitR2 = true;
+	else
+		ExcessiveRateAutoAbortInhibitR2 = false;
+
+	if (iu->ESEGetExcessiveRollRateAutoAbortInhibit(3) || tempsignal1)
+		ExcessiveRateAutoAbortInhibitR3 = true;
+	else
+		ExcessiveRateAutoAbortInhibitR3 = false;
 
 	//Backup LV Engines Cutoff Enable
 	if (LVEnginesCutoffCommand2 == false && iu->GetEngineCutoffEnableTimer()->ContactClosed())
@@ -191,84 +240,134 @@ void EDS::Timestep(double simdt)
 	}
 
 	//LV Engines EDS Cutoff Inhibit
-	if (IUEDSBusPowered && !BECOA)
+	if ((IUEDSBusPowered && !BECOA) || iu->ESEGetEDSLVCutoffSimulate(1))
 		LVEnginesCutoffFromSC1 = true;
 	else
 		LVEnginesCutoffFromSC1 = false;
 
-	if (IUEDSBusPowered && (!BECOA || !BECOB))
+	if ((IUEDSBusPowered && (!BECOA || !BECOB)) || iu->ESEGetEDSLVCutoffSimulate(2))
 		LVEnginesCutoffFromSC2 = true;
 	else
 		LVEnginesCutoffFromSC2 = false;
 
-	if (IUEDSBusPowered && !BECOB)
+	if ((IUEDSBusPowered && !BECOB) || iu->ESEGetEDSLVCutoffSimulate(3))
 		LVEnginesCutoffFromSC3 = true;
 	else
 		LVEnginesCutoffFromSC3 = false;
 
 	//LV Engines Cutoff Command
-	if (IUEDSBusPowered && LVEnginesCutoffEnable1 && LVEnginesCutoffVote())
+	if (IUEDSBusPowered && LVEnginesCutoffEnable1 && TripleVoting(!LVEnginesCutoffFromSC1, !LVEnginesCutoffFromSC2, !LVEnginesCutoffFromSC3))
 		LVEnginesCutoffCommand1 = true;
 	else
 		LVEnginesCutoffCommand1 = false;
 
-	if (IUEDSBusPowered && LVEnginesCutoffVote())
+	if (IUEDSBusPowered && TripleVoting(!LVEnginesCutoffFromSC1, !LVEnginesCutoffFromSC2, !LVEnginesCutoffFromSC3))
 		LVEnginesCutoffCommand2 = true;
 	else
 		LVEnginesCutoffCommand2 = false;
 
-	if (IUEDSBusPowered && LVEnginesCutoffEnable2 && LVEnginesCutoffVote())
+	if (IUEDSBusPowered && LVEnginesCutoffEnable2 && TripleVoting(!LVEnginesCutoffFromSC1, !LVEnginesCutoffFromSC2, !LVEnginesCutoffFromSC3))
 		LVEnginesCutoffCommand3 = true;
 	else
 		LVEnginesCutoffCommand3 = false;
 
 	//Overrate Auto Abort
-	double PYLimit;
-
-	if (iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit())
-	{
-		PYLimit = 9.2*RAD;
-	}
+	//Roll
+	if (iu->ESEGetGSEOverrateSimulate(3) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo3Overrate())
+		ExcessiveRollRateVotingA = true;
 	else
-	{
-		PYLimit = 4.0*RAD;
-	}
+		ExcessiveRollRateVotingA = false;
 
-	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && (abs(AttRate.y) > PYLimit || abs(AttRate.z) > PYLimit)))
-		ExcessivePitchYawRateIndication = true;
+	tempsignal1 = iu->ESEGetGSEOverrateSimulate(2) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo2Overrate();
+
+	if (tempsignal1)
+		ExcessiveRollRateVotingB = true;
 	else
-		ExcessivePitchYawRateIndication = false;
+		ExcessiveRollRateVotingB = false;
 
-	if (iu->ESEGetGSEOverrateSimulate() || (IUEDSBusPowered && abs(AttRate.x) > 20.0*RAD))
+	tempsignal2 = iu->ESEGetGSEOverrateSimulate(1) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo1Overrate();
+
+	if ((tempsignal1 && ExcessiveRollRateVotingA) || (tempsignal2 && ExcessiveRollRateVotingB))
 		ExcessiveRollRateIndication = true;
 	else
 		ExcessiveRollRateIndication = false;
 
+	//Pitch
+	if (iu->ESEGetGSEOverrateSimulate(6) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo3Overrate())
+		ExcessivePitchRateVotingA = true;
+	else
+		ExcessivePitchRateVotingA = false;
+
+	tempsignal1 = iu->ESEGetGSEOverrateSimulate(5) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo2Overrate();
+
+	if (tempsignal1)
+		ExcessivePitchRateVotingB = true;
+	else
+		ExcessivePitchRateVotingB = false;
+
+	tempsignal2 = iu->ESEGetGSEOverrateSimulate(4) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo1Overrate();
+
+	if ((tempsignal1 && ExcessivePitchRateVotingA) || (tempsignal2 && ExcessivePitchRateVotingB))
+		ExcessivePitchYawRateIndicationA = true;
+	else
+		ExcessivePitchYawRateIndicationA = false;
+
+	//Yaw
+	if (iu->ESEGetGSEOverrateSimulate(9) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo3Overrate())
+		ExcessiveYawRateVotingA = true;
+	else
+		ExcessiveYawRateVotingA = false;
+
+	tempsignal1 = iu->ESEGetGSEOverrateSimulate(8) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo2Overrate();
+
+	if (tempsignal1)
+		ExcessiveYawRateVotingB = true;
+	else
+		ExcessiveYawRateVotingB = false;
+
+	tempsignal2 = iu->ESEGetGSEOverrateSimulate(7) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo1Overrate();
+
+	if ((tempsignal1 && ExcessiveYawRateVotingA) || (tempsignal2 && ExcessiveYawRateVotingB))
+		ExcessivePitchYawRateIndicationB = true;
+	else
+		ExcessivePitchYawRateIndicationB = false;
+
+	//Both relays gets the same signal, so they enable each other for easier logic
+	if (ExcessivePitchYawRateIndicationA && !ExcessivePitchYawRateIndicationB) ExcessivePitchYawRateIndicationB = true;
+	if (ExcessivePitchYawRateIndicationB && !ExcessivePitchYawRateIndicationA) ExcessivePitchYawRateIndicationA = true;
+
 	//Auto Abort Logic
 	AutoAbortBus = false;
-	if (ExcessRatesAutoAbortDeactivatePY == false && ExcessivePitchYawRateIndication) AutoAbortBus = true;
-	if (ExcessRatesAutoAbortDeactivateR == false && ExcessiveRollRateIndication) AutoAbortBus = true;
+	if (TripleVoting(ExcessiveRateAutoAbortInhibitPY1, ExcessiveRateAutoAbortInhibitPY2, ExcessiveRateAutoAbortInhibitPY3) == false && (ExcessivePitchYawRateIndicationA || ExcessivePitchYawRateIndicationB)) AutoAbortBus = true;
+	if (TripleVoting(ExcessiveRateAutoAbortInhibitR1, ExcessiveRateAutoAbortInhibitR2, ExcessiveRateAutoAbortInhibitR3) == false && ExcessiveRollRateIndication) AutoAbortBus = true;
 
 	//LV Guidance Light
 	if (iu->GetLVDA()->GetGuidanceReferenceFailure())
-		LVAttRefFail = true;
+	{
+		LVAttRefFail1 = true;
+		LVAttRefFail2 = true;
+	}
 	else
-		LVAttRefFail = false;
+	{
+		LVAttRefFail1 = false;
+		LVAttRefFail2 = false;
+	}
 
-	if (LVAttRefFail && iu->GetSCControlPoweredFlight())
+	if ((LVAttRefFail1 || LVAttRefFail2) && iu->GetSCControlPoweredFlight())
 	{
 		SCControlEnableRelay = true;
 	}
 
-	if (LVAttRefFail && (EDSBus1Powered || EDSBus3Powered))
+	if (LVAttRefFail1 && (EDSBus1Powered || EDSBus3Powered))
 		iu->GetCommandConnector()->SetLVGuidLight();
 	else
 		iu->GetCommandConnector()->ClearLVGuidLight();
 
 	//LV Rates Light
-	bool logic = ((!ExcessRatesAutoAbortDeactivatePY && LVAttRefFail) || ExcessivePitchYawRateIndication || ExcessiveRollRateIndication) && (EDSBus1Powered || EDSBus3Powered);
+	tempsignal1 = (EDSBus1Powered && ((!ExcessiveRateAutoAbortInhibitPY2 && LVAttRefFail2) || ExcessiveRollRateIndication || ExcessivePitchYawRateIndicationA || ExcessivePitchYawRateIndicationB));
+	tempsignal2 = (EDSBus3Powered && ((!ExcessiveRateAutoAbortInhibitPY3 && LVAttRefFail2) || ExcessiveRollRateIndication || ExcessivePitchYawRateIndicationA || ExcessivePitchYawRateIndicationB));
 
-	if (logic)
+	if (tempsignal1 || tempsignal2)
 		iu->GetCommandConnector()->SetLVRateLight();
 	else
 		iu->GetCommandConnector()->ClearLVRateLight();
@@ -466,11 +565,12 @@ void EDS::ResetBus2()
 	SCControlEnableRelay = false;
 }
 
-bool EDS::LVEnginesCutoffVote()
+bool EDS::TripleVoting(bool vote1, bool vote2, bool vote3)
 {
-	if (!LVEnginesCutoffFromSC1 && !LVEnginesCutoffFromSC2) return true;
-	if (!LVEnginesCutoffFromSC1 && !LVEnginesCutoffFromSC3) return true;
-	if (!LVEnginesCutoffFromSC2 && !LVEnginesCutoffFromSC3) return true;
+	//2 out of 3 need to be true
+	if (vote1 && vote2) return true;
+	if (vote1 && vote3) return true;
+	if (vote2 && vote3) return true;
 
 	return false;
 }
@@ -554,7 +654,7 @@ void EDS1B::Timestep(double simdt)
 		iu->GetLVCommandConnector()->GetSIThrustOK(ThrustOKSignal);
 		for (int i = 0;i < 8;i++)
 		{
-			SIThrustNotOK[i] = !ThrustOKSignal[i];
+			SIThrustNotOK[i] = TripleVoting(!ThrustOKSignal[3 * i], !ThrustOKSignal[3 * i + 1], !ThrustOKSignal[3 * i + 2]);
 
 			if (SIThrustNotOK[i])
 			{
@@ -606,7 +706,7 @@ void EDS1B::Timestep(double simdt)
 	}
 
 	//Two Engines Out Auto Abort
-	if (IUEDSBusPowered && !TwoEngOutAutoAbortDeactivate)
+	if (IUEDSBusPowered && !TripleVoting(TwoEngineOutAutoAbortInhibitNo1, TwoEngineOutAutoAbortInhibitNo2, TwoEngineOutAutoAbortInhibitNo3))
 	{
 		int enginesout = 0;
 
@@ -741,7 +841,7 @@ void EDSSV::Timestep(double simdt)
 		iu->GetLVCommandConnector()->GetSIThrustOK(ThrustOKSignal);
 		for (int i = 0;i < 5;i++)
 		{
-			SIThrustNotOK[i] = !ThrustOKSignal[i];
+			SIThrustNotOK[i] = TripleVoting(!ThrustOKSignal[3 * i], !ThrustOKSignal[3 * i + 1], !ThrustOKSignal[3 * i + 2]);
 
 			if (SIThrustNotOK[i])
 			{
@@ -824,7 +924,7 @@ void EDSSV::Timestep(double simdt)
 		}
 	}
 
-	if (IUEDSBusPowered && !TwoEngOutAutoAbortDeactivate)
+	if (IUEDSBusPowered && !TripleVoting(TwoEngineOutAutoAbortInhibitNo1, TwoEngineOutAutoAbortInhibitNo2, TwoEngineOutAutoAbortInhibitNo3))
 	{
 		int enginesout = 0;
 

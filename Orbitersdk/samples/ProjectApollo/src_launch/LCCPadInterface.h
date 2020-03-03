@@ -32,4 +32,5 @@ public:
 	virtual void SLCCCheckDiscreteInput(RCA110A *set) = 0;
 	virtual bool SLCCGetOutputSignal(size_t n) = 0;
 	virtual void ConnectGroundComputer(RCA110A *set) = 0;
+	virtual void IssueSwitchSelectorCmd(int stage, int chan) = 0;
 };

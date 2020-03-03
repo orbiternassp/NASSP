@@ -43,7 +43,8 @@ IU::IU() :
 dcs(this),
 AuxiliaryPowerDistributor1(this),
 AuxiliaryPowerDistributor2(this),
-lvimu(this)
+lvimu(this),
+ControlSignalProcessor(this)
 {
 	State = 0;
 	MissionTime = 0.0;
@@ -233,18 +234,32 @@ bool IU::ESEGetCommandVehicleLiftoffIndicationInhibit()
 	return IuUmb->ESEGetCommandVehicleLiftoffIndicationInhibit();
 }
 
-bool IU::ESEGetAutoAbortInhibit()
+bool IU::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
 {
 	if (!IsUmbilicalConnected()) return false;
 
-	return IuUmb->ESEGetAutoAbortInhibit();
+	return IuUmb->ESEGetExcessiveRollRateAutoAbortInhibit(n);
 }
 
-bool IU::ESEGetGSEOverrateSimulate()
+bool IU::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
 {
 	if (!IsUmbilicalConnected()) return false;
 
-	return IuUmb->ESEGetGSEOverrateSimulate();
+	return IuUmb->ESEGetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool IU::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool IU::ESEGetGSEOverrateSimulate(int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetGSEOverrateSimulate(n);
 }
 
 bool IU::ESEGetEDSPowerInhibit()
@@ -315,6 +330,13 @@ bool IU::ESEGetEDSAutoAbortSimulate(int n)
 	if (!IsUmbilicalConnected()) return false;
 
 	return IuUmb->ESEGetEDSAutoAbortSimulate(n);
+}
+
+bool IU::ESEGetEDSLVCutoffSimulate(int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetEDSLVCutoffSimulate(n);
 }
 
 IUToCSMCommandConnector::IUToCSMCommandConnector()
@@ -1358,6 +1380,7 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 
 	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
+	ControlSignalProcessor.Timestep();
 	eds.Timestep(simdt);
 	lvdc.TimeStep(simdt);
 	fcc.Timestep(simdt);
@@ -1500,6 +1523,7 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 
 	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
+	ControlSignalProcessor.Timestep();
 	eds.Timestep(simdt);
 	lvdc.TimeStep(simdt);
 	fcc.Timestep(simdt);

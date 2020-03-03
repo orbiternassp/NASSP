@@ -145,7 +145,7 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	IuUmb = new IUUmbilical(this);
 	IuESE = new IUSV_ESE(IuUmb, this);
 	TSMUmb = new TSMUmbilical(this);
-	SICESE = new SIC_ESE(TSMUmb);
+	SICESE = new SIC_ESE(TSMUmb, this);
 	rca110a = new RCA110AM(this);
 }
 
@@ -630,6 +630,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 	if (sat && state >= STATE_ROLLOUT)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
+		SICESE->Timestep();
 		rca110a->Timestep(simt, simdt);
 	}
 
@@ -1034,14 +1035,24 @@ bool ML::ESEGetSICOutboardEnginesCantSimulate()
 	return IuESE->GetSICOutboardEnginesCantSimulate();
 }
 
-bool ML::ESEGetAutoAbortInhibit()
+bool ML::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
 {
-	return IuESE->GetAutoAbortInhibit();
+	return IuESE->GetExcessiveRollRateAutoAbortInhibit(n);
 }
 
-bool ML::ESEGetGSEOverrateSimulate()
+bool ML::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
 {
-	return IuESE->GetOverrateSimulate();
+	return IuESE->GetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool ML::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	return IuESE->GetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool ML::ESEGetGSEOverrateSimulate(int n)
+{
+	return IuESE->GetOverrateSimulate(n);
 }
 
 bool ML::ESEGetEDSPowerInhibit()
@@ -1094,9 +1105,14 @@ bool ML::ESEGetEDSAutoAbortSimulate(int n)
 	return IuESE->GetEDSAutoAbortSimulate(n);
 }
 
-bool ML::ESEGetSICThrustOKSimulate(int eng)
+bool ML::ESEGetEDSLVCutoffSimulate(int n)
 {
-	return SICESE->GetSICThrustOKSimulate(eng);
+	return IuESE->GetEDSLVCutoffSimulate(n);
+}
+
+bool ML::ESEGetSICThrustOKSimulate(int eng, int n)
+{
+	return SICESE->GetSICThrustOKSimulate(eng, n);
 }
 
 void ML::MobileLauncherComputer(int mdo, bool on)
@@ -1110,14 +1126,6 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 	case 251: //EDV COM MOD AUTO ARM RETRACT
 		break;
 	case 252: //EDV COM MOD AUTO ARM EXTEND
-		break;
-	case 492: //EDS COMM Q-BALL UNIT PWR OFF
-		IuUmb->SwitchQBallPowerOff();
-		break;
-	case 493: //EDS COMM Q-BALL UNIT PWR ON
-		IuUmb->SwitchQBallPowerOn();
-		break;
-	case 734: //EDS GROUP NO 1 RESET
 		break;
 	case 737:
 		//EDS SIMULATE LIFTOFF A
@@ -1145,36 +1153,6 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 			IuUmb->EDSLiftoffEnableReset();
 		}
 		break;
-	case 778:
-	case 779:
-	case 780:
-		//EDS ENG NO 1 THRUST OK
-		SICESE->SetSICThrustOKSimulate(1, on);
-		break;
-	case 781:
-	case 782:
-	case 783:
-		//EDS ENG NO 2 THRUST OK
-		SICESE->SetSICThrustOKSimulate(2, on);
-		break;
-	case 784:
-	case 785:
-	case 786:
-		//EDS ENG NO 3 THRUST OK
-		SICESE->SetSICThrustOKSimulate(3, on);
-		break;
-	case 787:
-	case 788:
-	case 789:
-		//EDS ENG NO 4 THRUST OK
-		SICESE->SetSICThrustOKSimulate(4, on);
-		break;
-	case 790:
-	case 791:
-	case 792:
-		//EDS ENG NO 5 THRUST OK
-		SICESE->SetSICThrustOKSimulate(5, on);
-		break;
 	case 799:
 	case 800:
 	case 801:
@@ -1193,29 +1171,10 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 		//EDS CUTOFF CMD NO 3 FROM S/C
 		IuESE->SetEDSCutoffFromSC(3, on);
 		break;
-	case 805: //EDS YAW-PITCH NO 1 ENABLE
-	case 806: //EDS YAW-PITCH NO 2 ENABLE
-	case 807: //EDS YAW-PITCH NO 3 ENABLE
-	case 808: //EDS ROLL NO 1 ENABLE
-	case 809: //EDS ROLL NO 2 ENABLE
-	case 810: //EDS ROLL NO 3 ENABLE
-	case 811: //EDS ENGINE OUT ENABLE NO 1
-	case 812: //EDS ENGINE OUT ENABLE NO 2
-	case 813: //EDS ENGINE OUT ENABLE NO 3
-		IuESE->SetAutoAbortInhibit(!on);
-		break;
-	case 825: //EDS GROUP NO 2 RESET 
-		break;
 	case 1584: //IVB MAIN STAGE OK SIM ON
 		break;
 	case 1903: //IU EDS RG SYSTEM POWER ON
 		IuUmb->SetControlSignalProcessorPower(on);
-		break;
-	case 1913: //EDS TH OK IND ENA INH A
-		IuESE->SetThrustOKIndicateEnableInhibitA(on);
-		break;
-	case 1914: //EDS TH OK IND ENA INH B
-		IuESE->SetThrustOKIndicateEnableInhibitB(on);
 		break;
 	}
 }
@@ -1423,6 +1382,7 @@ void ML::SLCCCheckDiscreteInput(RCA110A *c)
 {
 	c->SetInput(646, IuUmb->GetEDSAutoAbortBus());
 	c->SetInput(647, IuUmb->IsEDSUnsafeA());
+	c->SetInput(648, IuUmb->IsEDSUnsafeB());
 	c->SetInput(861, IuESE->GetFCCPowerIsOn());
 }
 
@@ -1434,4 +1394,9 @@ bool ML::SLCCGetOutputSignal(size_t n)
 void ML::ConnectGroundComputer(RCA110A *c)
 {
 	rca110a->Connect(c);
+}
+
+void ML::IssueSwitchSelectorCmd(int stage, int chan)
+{
+	IuUmb->SwitchSelector(stage, chan);
 }

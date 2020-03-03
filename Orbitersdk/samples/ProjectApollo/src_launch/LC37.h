@@ -56,8 +56,10 @@ public:
 
 	// LC-37/IU Interface
 	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
-	bool ESEGetAutoAbortInhibit();
-	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	bool ESEGetGSEOverrateSimulate(int n);
 	bool ESEGetEDSPowerInhibit();
 	bool ESEPadAbortRequest();
 	bool ESEGetThrustOKIndicateEnableInhibitA();
@@ -65,17 +67,19 @@ public:
 	bool ESEEDSLiftoffInhibitA();
 	bool ESEEDSLiftoffInhibitB();
 	bool ESEGetEDSAutoAbortSimulate(int n);
+	bool ESEGetEDSLVCutoffSimulate(int n);
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
 	bool ESEGetQBallSimulateCmd();
 
 	//ML/S-IC Interface
-	bool ESEGetSIBThrustOKSimulate(int eng);
+	bool ESEGetSIBThrustOKSimulate(int eng, int n);
 
 	// LCC/LC-37 Interface
 	void SLCCCheckDiscreteInput(RCA110A *c);
 	bool SLCCGetOutputSignal(size_t n);
 	void ConnectGroundComputer(RCA110A *c);
+	void IssueSwitchSelectorCmd(int stage, int chan);
 
 protected:
 	bool firstTimestepDone;

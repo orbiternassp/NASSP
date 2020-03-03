@@ -969,7 +969,7 @@ void SaturnV::SIISwitchSelector(int channel)
 
 void SaturnV::GetSIThrustOK(bool *ok)
 {
-	for (int i = 0;i < 5;i++)
+	for (int i = 0;i < 15;i++)
 	{
 		ok[i] = false;
 	}

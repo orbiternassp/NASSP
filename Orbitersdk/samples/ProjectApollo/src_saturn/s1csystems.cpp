@@ -274,9 +274,12 @@ SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 
 	for (int i = 0;i < 5;i++)
 	{
-		ThrustOK[i] = false;
 		EarlySICutoff[i] = false;
 		FirstStageFailureTime[i] = 0.0;
+	}
+	for (int i = 0;i < 15;i++)
+	{
+		ThrustOK[i] = false;
 	}
 
 	MultipleEngineCutoffEnabled = false;
@@ -306,7 +309,7 @@ void SICSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
-	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 5);
+	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 15);
 
 	f1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	f1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -328,7 +331,7 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "PROPELLANTDEPLETIONSENSORS", PropellantDepletionSensors);
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
-		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 5);
+		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 15);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			f1engine1.LoadState(scn, "ENGINE_END");
@@ -359,7 +362,10 @@ void SICSystems::Timestep(double misst, double simdt)
 	//Thrust OK
 	for (int i = 0;i < 5;i++)
 	{
-		ThrustOK[i] = f1engines[i]->GetThrustOK() || ESEGetSICThrustOKSimulate(i + 1);
+		for (int j = 0;j < 3;j++)
+		{
+			ThrustOK[i * 3 + j] = f1engines[i]->GetThrustOK() || ESEGetSICThrustOKSimulate(i + 1, j + 1);
+		}
 	}
 
 	//Propellant Depletion
@@ -483,7 +489,7 @@ void SICSystems::GSEEnginesCutoff(bool cut)
 
 void SICSystems::GetThrustOK(bool *ok)
 {
-	for (int i = 0;i < 5;i++)
+	for (int i = 0;i < 15;i++)
 	{
 		ok[i] = ThrustOK[i];
 	}
@@ -629,9 +635,9 @@ bool SICSystems::IsUmbilicalConnected()
 	return false;
 }
 
-bool SICSystems::ESEGetSICThrustOKSimulate(int eng)
+bool SICSystems::ESEGetSICThrustOKSimulate(int eng, int n)
 {
 	if (!IsUmbilicalConnected()) return false;
 
-	return TSMUmb->ESEGetSICThrustOKSimulate(eng);
+	return TSMUmb->ESEGetSICThrustOKSimulate(eng, n);
 }

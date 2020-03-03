@@ -45,8 +45,10 @@ public:
 
 	void menuVoid() {}
 	void menuSetSLCCDiscreteInput();
+	void menuLoadProgram();
 
 	void set_SLCCDiscreteInput(int n, bool set);
+	void LoadCheckoutProgram(const char *str);
 
 	static int MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 protected:

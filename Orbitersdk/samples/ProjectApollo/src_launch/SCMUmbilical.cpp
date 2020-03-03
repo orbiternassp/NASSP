@@ -61,9 +61,9 @@ void SCMUmbilical::AbortDisconnect()
 	UmbilicalConnected = false;
 }
 
-bool SCMUmbilical::ESEGetSIBThrustOKSimulate(int eng)
+bool SCMUmbilical::ESEGetSIBThrustOKSimulate(int eng, int n)
 {
-	return SCMUmb->ESEGetSIBThrustOKSimulate(eng);
+	return SCMUmb->ESEGetSIBThrustOKSimulate(eng, n);
 }
 
 bool SCMUmbilical::SIStageLogicCutoff()

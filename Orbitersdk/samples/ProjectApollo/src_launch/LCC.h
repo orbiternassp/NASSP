@@ -43,6 +43,7 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *status);
 
 	void SetDiscreteInput(size_t n, bool set);
+	void SLCCLoadProgram(const char *str);
 private:
 	char PadName[256];
 	int mfdID;

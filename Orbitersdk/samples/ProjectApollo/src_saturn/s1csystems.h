@@ -114,7 +114,7 @@ public:
 protected:
 
 	double GetSumThrust();
-	bool ESEGetSICThrustOKSimulate(int eng);
+	bool ESEGetSICThrustOKSimulate(int eng, int n);
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -140,7 +140,7 @@ protected:
 	//K3
 	bool PointLevelSensorArmed;
 
-	bool ThrustOK[5];
+	bool ThrustOK[15];
 
 	bool EarlySICutoff[5];
 	double FirstStageFailureTime[5];

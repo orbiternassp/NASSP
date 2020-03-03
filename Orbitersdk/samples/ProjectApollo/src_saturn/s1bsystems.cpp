@@ -339,7 +339,7 @@ void SIBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY1", FuelDepletionCutoffInhibitRelay1);
 	papiWriteScenario_bool(scn, "FUELDEPLETIONCUTOFFINHIBITRELAY2", FuelDepletionCutoffInhibitRelay2);
 	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
-	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 8);
+	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 24);
 
 	h1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	h1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -388,7 +388,7 @@ void SIBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFINHIBITRELAY1", FuelDepletionCutoffInhibitRelay1);
 		papiReadScenario_bool(line, "FUELDEPLETIONCUTOFFINHIBITRELAY2", FuelDepletionCutoffInhibitRelay2);
 		papiReadScenario_bool(line, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
-		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 5);
+		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 24);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			h1engine1.LoadState(scn, "ENGINE_END");
@@ -431,7 +431,10 @@ void SIBSystems::Timestep(double misst, double simdt)
 	//Thrust OK
 	for (int i = 0;i < 8;i++)
 	{
-		ThrustOK[i] = h1engines[i]->GetThrustOK() || ESEGetSIBThrustOKSimulate(i + 1);
+		for (int j = 0;j < 3;j++)
+		{
+			ThrustOK[i * 3 + j] = h1engines[i]->GetThrustOK() || ESEGetSIBThrustOKSimulate(i + 1, j + 1);
+		}
 	}
 
 	if (IsUmbilicalConnected())
@@ -820,16 +823,16 @@ bool SIBSystems::IsUmbilicalConnected()
 	return false;
 }
 
-bool SIBSystems::ESEGetSIBThrustOKSimulate(int eng)
+bool SIBSystems::ESEGetSIBThrustOKSimulate(int eng, int n)
 {
 	if (!IsUmbilicalConnected()) return false;
 
-	return SCMUmb->ESEGetSIBThrustOKSimulate(eng);
+	return SCMUmb->ESEGetSIBThrustOKSimulate(eng, n);
 }
 
 void SIBSystems::GetThrustOK(bool *ok)
 {
-	for (int i = 0;i < 8;i++)
+	for (int i = 0;i < 24;i++)
 	{
 		ok[i] = ThrustOK[i];
 	}

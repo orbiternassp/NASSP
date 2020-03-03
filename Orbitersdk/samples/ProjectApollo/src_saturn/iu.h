@@ -35,6 +35,7 @@
 #include "DelayTimer.h"
 #include "IUControlDistributor.h"
 #include "IUAuxiliaryPowerDistributor.h"
+#include "IUControlSignalProcessor.h"
 
 class SoundLib;
 class IU;
@@ -299,11 +300,14 @@ public:
 	LVIMU* GetLVIMU() { return &lvimu; }
 	DCS* GetDCS() { return &dcs; }
 	IUAuxiliaryPowerDistributor2 *GetAuxPowrDistr() { return &AuxiliaryPowerDistributor2; }
+	IUControlSignalProcessor *GetContSigProc() { return &ControlSignalProcessor; }
 
 	//ESE Functions
 	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
-	bool ESEGetAutoAbortInhibit();
-	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	bool ESEGetGSEOverrateSimulate(int n);
 	bool ESEGetEDSPowerInhibit();
 	bool ESEPadAbortRequest();
 	bool ESEGetEngineThrustIndicationEnableInhibitA();
@@ -314,6 +318,7 @@ public:
 	bool ESEGetGuidanceReferenceRelease();
 	bool ESEESEGetQBallSimulateCmd();
 	bool ESEGetEDSAutoAbortSimulate(int n);
+	bool ESEGetEDSLVCutoffSimulate(int n);
 
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }
 	virtual bool ESEGetSICOutboardEnginesCantSimulate() { return false; }
@@ -357,6 +362,8 @@ protected:
 	IUAuxiliaryPowerDistributor1 AuxiliaryPowerDistributor1;
 	//602A34
 	IUAuxiliaryPowerDistributor2 AuxiliaryPowerDistributor2;
+	//601A24
+	IUControlSignalProcessor ControlSignalProcessor;
 
 	IUUmbilical *IuUmb;
 };
