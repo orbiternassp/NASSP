@@ -96,7 +96,7 @@
       <AssemblerListingLocation>.\Release\LCC/</AssemblerListingLocation>
       <ObjectFileName>.\Release\LCC/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\LCC/</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>../../src_rtccmfd;../../src_sys;../../../../include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_rtccmfd;../../src_sys;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -126,7 +126,7 @@
       <AssemblerListingLocation>.\Debug\LCC/</AssemblerListingLocation>
       <ObjectFileName>.\Debug\LCC/</ObjectFileName>
       <ProgramDataBaseFileName>.\Debug\LCC/</ProgramDataBaseFileName>
-      <AdditionalIncludeDirectories>../../src_rtccmfd;../../src_sys;../../../../include;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_rtccmfd;../../src_sys;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;_DEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
