@@ -311,6 +311,8 @@ void RCA110AL::Timestep(double simt, double simdt)
 			other->SetOutput(i, GetInputSignal(i));
 		}
 
+		//TBD: 696 to 849, switch selector commands
+
 		//These switch signals on or off
 		if (i >= 1104 && GetInputSignal(i))
 		{
