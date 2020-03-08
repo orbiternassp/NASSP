@@ -355,6 +355,7 @@ protected:
 	void SCALE(VECTOR3 R0, VECTOR3 V0, double h, VECTOR3 &RF, VECTOR3 &VF);
 	MPTSV PPC(MPTSV SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS);
 	MPTSV TLIBRN(MPTSV sv, double C3, double sigma, double delta, double FW, double W_I, double F_I, double F, double W_dot, double T_MRS);
+	double DELTAT(double a, double e, double eta, double deta);
 
 	double R_E, R_M, mu_E, mu_M;
 

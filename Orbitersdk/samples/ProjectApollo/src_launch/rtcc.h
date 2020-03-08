@@ -1743,6 +1743,7 @@ struct PMMXFRDirectInput
 
 struct PMMXFR_Impulsive_Input
 {
+	int Table;
 	int Plan;
 	double DeleteGMT;
 	int Thruster[4];
@@ -1754,6 +1755,7 @@ struct PMMXFR_Impulsive_Input
 	double DPSScaleFactor[4];
 	bool TimeFlag[4];
 	unsigned ReplaceCode = 0;
+	int Type;
 };
 
 struct PMMMCDInput
@@ -2286,6 +2288,68 @@ struct ELVCTROutputTable
 	int TUP;
 };
 
+struct NewLOIOptions
+{
+	//State vector at hyperbolic perilune
+	EphemerisData SPH;
+	double HA_LPO;
+	double HP_LPO;
+	double psi_mx;
+	double psi_DS;
+	double psi_mn;
+	double DV_maxp;
+	double DV_maxm;
+	double HA_LLS;
+	double HP_LLS;
+	double R_LLS;
+	double REVS1;
+	int REVS2;
+	double eta1;
+	double dh_bias;
+	double DW;
+	double lat_LLS;
+	double lng_LLS;
+	double GMTBASE;
+	bool usePlaneSolnForInterSoln = true;
+};
+
+struct NewLOIDisplayData
+{
+	//Height at node
+	double H_ND = 0.0;
+	//True anomaly on hyperbola at node
+	double eta_N = 0.0;
+	//Angle between desired and maximum lunar orbit plane (?)
+	double delta_op = 0.0;
+	//Angle between desired lunar orbit plane and achieved lunar orbit plane
+	double theta = 0.0;
+	//Height of perilune of LOI ellipse after LOI
+	double h_P = 0.0;
+	//True anomaly on LOI1 ellipse after LOI
+	double W_P = 0.0;
+	//LOI-2/DOI maneuver DV
+	double dv_LOI2 = 0.0;
+};
+
+struct NewLOIOutputDataSet
+{
+	NewLOIDisplayData display;
+	//For MPT
+	VECTOR3 R_LOI = _V(0, 0, 0);
+	VECTOR3 V_LOI = _V(0, 0, 0);
+	double GMT_LOI = 0.0;
+	VECTOR3 V_LOI_apo = _V(0, 0, 0);
+	double dv_LOI = 0.0;
+	double dgamma_LOI = 0.0;
+	double dpsi_LOI = 0.0;
+};
+
+struct NewLOIOutputData
+{
+	NewLOIOutputDataSet data[8];
+};
+
+
 class RTCC {
 
 	friend class MCC;
@@ -2457,6 +2521,10 @@ public:
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
 	//Return to Earth Abort Planning Supervisor
 	void PMMREAP(int med);
+	//Lunar Orbit Insertion Computational Unit
+	void PMMLRBTI(EphemerisData sv);
+	//Lunar Orbit Insertion Display
+	void PMDLRBTI(const NewLOIOptions &opt, const NewLOIOutputData &out);
 	//Central Manual Entry Device Decoder
 	bool GMGMED(char *str);
 	//MED Decoder for G, A and B MEDs
@@ -2620,6 +2688,19 @@ public:
 		double MLDAngle = 0.0;
 	} med_k10;
 
+	//LOI Computation
+	struct MED_K18
+	{
+		double HALOI1 = 170.0;
+		double HPLOI1 = 60.0;
+		double DVMAXp = 10000.0;
+		double DVMAXm = 10000.0;
+		double psi_DS = 270.0;
+		double psi_MX = 271.0;
+		double psi_MN = 269.0;
+		double VectorTime = 0.0;
+	} med_k18;
+
 	//GPM Maneuver Computation
 	struct MED_K20
 	{
@@ -2636,6 +2717,19 @@ public:
 		double ChaserVectorTime = 0.0;
 		double TargetVectorTime = 0.0;
 	} med_k30;
+
+	//LOI Initialization (Apollo 14 and later, MED code is not from any documentation!)
+	struct MED_K40
+	{
+		double HA_LLS = 60.0;
+		double HP_LLS = 8.23;
+		double DW = -15.0;
+		double REVS1 = 2.0;
+		int REVS2 = 11;
+		double eta_1 = 0.0;
+		double dh_bias = 0.0;
+		bool PlaneSolnForInterSoln = true;
+	} med_k40;
 
 	//Transfer a GPM to the MPT
 	struct MED_M65
@@ -2681,7 +2775,7 @@ public:
 		int Table = 1; //1 = CSM, 3 = LEM
 		unsigned ReplaceCode = 0; //1-15
 		bool Type = false; //false = MCC, true = LOI
-		unsigned ManeuverNumber = 1; //For MCC options?
+		unsigned ManeuverNumber = 1; //Maneuver number in LOI or MCC table
 		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for maneuver
 		int Attitude = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
 		double UllageDT = 0.0;	//Delta T of Ullage
@@ -2956,16 +3050,50 @@ public:
 
 	struct LOIElementsTable
 	{
-		EphemerisData sv_man_bef;
-		VECTOR3 V_man_after;
-		int plan;
+		EphemerisData sv_man_bef[8];
+		VECTOR3 V_man_after[8];
 	} PZLRBELM;
+
+	struct LOIDisplayTableElement
+	{
+		double GETLOI = 0.0;
+		double DVLOI1 = 0.0;
+		double DVLOI2 = 0.0;
+		double H_ND = 0.0;
+		double f_ND_H = 0.0;
+		double H_PC = 0.0;
+		double Theta = 0.0;
+		double f_ND_E = 0.0;
+	};
+
+	struct LOIDisplayTable
+	{
+		std::string StaID = "STAT000";
+		double VectorGET = 0.0;
+		double lat_lls = 0.0;
+		double lng_lls = 0.0;
+		double R_lls = 0.0;
+		double AZMN_f_ND = 0.0;
+		double AZMX_f_ND = 0.0;
+		double REVS1 = 0.0;
+		int REVS2 = 0;
+		double DHBIAS = 0.0;
+		double AZ_LLS = 0.0;
+		double f_LLS = 0.0;
+		double HALOI1 = 0.0;
+		double HPLOI1 = 0.0;
+		double HALOI2 = 0.0;
+		double HPLOI2 = 0.0;
+		double DVMAXp = 0.0;
+		double DVMAXm = 0.0;
+		bool planesoln = true;
+		LOIDisplayTableElement sol[8];
+	} PZLRBTI;
 
 	struct MCCTransferTable
 	{
 		EphemerisData sv_man_bef[6];
 		VECTOR3 V_man_after[6];
-		int plan;
 	} PZMCCXFR;
 
 	struct LDPPElementsTable
@@ -3854,74 +3982,34 @@ public:
 	double MDLEIC[3];
 };
 
-/*struct NewLOIOptions
-{
-	//State vector at hyperbolic apolune
-	EphemerisData SPH;
-	double HA_LPO;
-	double HP_LPO;
-	double psi_mx;
-	double psi_DS;
-	double psi_mn;
-	double DV_maxp;
-	double DV_maxm;
-	double HA_LLS;
-	double HP_LLS;
-	double R_LLS;
-	double REVS1;
-	int REVS2;
-	double eta1;
-	double dh_bias;
-	double DW;
-	double lat_LLS;
-	double lng_LLS;
-	double GMTBASE;
-};
-
-struct NewLOIDisplayData
-{
-	//Height at node
-	double H_ND;
-	//True anomaly at node
-	double eta_N;
-	//
-};
-
-struct NewLOIOutputData
-{
-	NewLOIDisplayData display[8];
-	//For MPT
-	VECTOR3 R_LOI[8];
-	VECTOR3 V_LOI[8];
-	double GMT_LOI[8];
-	VECTOR3 V_LOI_apo[8];
-};
-
 class NewLOITargeting
 {
 public:
 	NewLOITargeting(NewLOIOptions o);
 	bool MAIN();
+
+	NewLOIOutputData out;
 protected:
-	double TIME(double a_LLS, double r_LLS, double v_LLS, double lng_LLS, double lat_LLS, double gamma_LLS, double psi_LLS, double &DA, double &eta2);
-	void BACKUP(VECTOR3 R_LLS, VECTOR3 V_LLS, double T_LLS, double DA, double eta2, double &a_DOI, double &e_DOI, VECTOR3 &u_pl, VECTOR3 &R_LOI, VECTOR3 &V_LOI);
+	double TIME(double a_LLS, double e_LLS, double lng_LLS, double lat_LLS, double &DA, double &eta2, double &dt3);
+	void BACKUP(VECTOR3 R_LLS, VECTOR3 V_LLS, double a_LLS, double T_LLS, double DA, double eta2, double dt3, double &dh_a, double &dh_p, double &dw_p, double &a_L, double &e_L, VECTOR3 &U_PL, VECTOR3 &R_LOI, VECTOR3 &V_LOI);
+	//To compute a conic DT to go from an input true anomaly in an ellipse through a delta true anomaly
+	double DELTAT(double a, double e, double eta, double deta);
 	//To compute +/- coplanar solns, pre-pcyn
 	void COPLNR(VECTOR3 U_DS);
 	//To compute a maneuver DV or the cosine of the allowable plane change within a given DV
-	double DVDA(VECTOR3 R_N, VECTOR3 V_N, bool soln, bool pre, bool dv, double cos_dpsi_N, double DV);
+	double DVDA(VECTOR3 R_N, VECTOR3 V_N, double soln, bool dv, double cos_dpsi_N, double DV);
 	//To compute DV, dgamma, dpsi of the solution and certain display quantities and the conic state after LOI
-	void CANS(VECTOR3 R_N, VECTOR3 V_N, double T_N, VECTOR3 U_S, double R_P, double SGN, int soln);
+	void CANS(VECTOR3 R_N, VECTOR3 V_N, double T_N, VECTOR3 U_S, double R_P, double theta, double SGN, int soln);
 	//To compute + and - minimum theta solns
-	void MINTHT(VECTOR3 U);
-	//To compute dh/dRp where dh is the difference between a position in the second LPO and Rp of the first LPO, used in computing intersection soln
-	bool DHDR(double a_L, double e_L, double R_N, double w_p, double dw_a, double dw_p, double R_L, double R_p, double SGN, double R_a, double &dhdr);
+	void MINTHT(VECTOR3 U_DS);
 	//To compute + or - intersection solns
-	void INTER();
+	void INTER(VECTOR3 R_N, VECTOR3 V_N, double T_N, VECTOR3 U_L, VECTOR3 U_S, bool soln);
+	//To compute the dh between R_p of the first LPO at DOI time and the R on the second LPO
+	double DELTAH(double R_p, double r_N, double dw_a, VECTOR3 U_L, VECTOR3 R_N_u, VECTOR3 U_S, double SGN);
 	//To compute the DV for the maneuver after LOI
-	double DELV2(VECTOR3 U_S, VECTOR3 R_P1_apo, double R_a, double R_p, double a_L, double e_L, VECTOR3 U_PL);
+	double DELV2(VECTOR3 R_N, VECTOR3 U_S, double R_a, double R_p, double W_P);
 
 	NewLOIOptions opt;
-	NewLOIOutputData out;
 	OBJHANDLE hMoon;
 	//Unit position vector to hyperbolic perilune
 	VECTOR3 U_PC;
@@ -3935,6 +4023,16 @@ protected:
 	double a_H, e_H;
 	//unit(crossp(U_DS, U_XTRA))
 	VECTOR3 U_N;
-};*/
+	//a, e of second LPO at DOI
+	double ALSAV, ELSAV;
+	//Unit inertial vector to LPO-2 perilune at LOI-2 time
+	VECTOR3 UPLSAV;
+	//Error in the estimated time at the LLS
+	double DT_CORR;
+	//Estimate of the change of apolune altitude, perilune altitude, and perilune position due to propagation in LPO-1
+	double DHASAV, DHPSAV, DWPSAV;
+	//Unit angular momentum vector to the plane of the solution
+	VECTOR3 USSAV[8];
+};
 
 #endif

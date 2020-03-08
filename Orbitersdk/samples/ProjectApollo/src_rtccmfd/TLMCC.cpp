@@ -4308,3 +4308,57 @@ MPTSV TLMCCProcessor::TLIBRN(MPTSV sv, double C3, double sigma, double delta, do
 
 	return out;
 }
+
+double TLMCCProcessor::DELTAT(double a, double e, double eta, double deta)
+{
+	double K_e, E, eta_apo, dE, E_apo, DE, DM;
+
+	if (eta < 0)
+	{
+		eta += PI2;
+	}
+	K_e = sqrt((1.0 - e) / (1.0 + e));
+	E = atan2(sqrt(1.0 - e * e)*sin(eta), cos(eta) + e);
+	if (E < 0)
+	{
+		E += PI2;
+	}
+	eta_apo = eta + deta;
+	if (eta_apo >= 0 && eta_apo < PI2)
+	{
+		dE = 0.0;
+	}
+	else
+	{
+		dE = 0.0;
+		if (eta_apo < 0)
+		{
+			while (eta_apo < 0)
+			{
+				eta_apo += PI2;
+				dE += PI2;
+			}
+			dE = -(dE); //plus PI2???
+		}
+		else
+		{
+			while (eta_apo >= PI2)
+			{
+				eta_apo -= PI2;
+				dE += PI2;
+			}
+		}
+	}
+	E_apo = atan2(sqrt(1.0 - e * e)*sin(eta_apo), cos(eta_apo) + e);
+	while (E_apo < 0)
+	{
+		E_apo += PI2;
+	}
+	while (E_apo >= PI2)
+	{
+		E_apo -= PI2;
+	}
+	DE = E_apo - E + dE;
+	DM = DE + e * (sin(E) - sin(E_apo));
+	return sqrt(pow(a, 3) / OrbMech::mu_Moon)*DM;
+}

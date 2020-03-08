@@ -40,11 +40,6 @@ public:
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 	double t_Land;				//Time of landing
-	double LOIazi;
-	//Initial guess of pericynthion GET
-	double LOIapo, LOIperi;
-	int LOIEllipseRotation;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
-	int DOI_option;						//0 = DOI from circular orbit, 1 = DOI as LOI-2
 	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 
 	VESSEL *pCSM;
@@ -345,11 +340,6 @@ public:
 	VECTOR3 TLCC_dV_LVLH;
 	VECTOR3 R_TLI, V_TLI;
 	int TLCCSolGood;
-
-	//LOI PAGE
-	int LOIOption;	//0 = Fixed LPO, 1 = LOI at Peri
-	VECTOR3 LOI_dV_LVLH;
-	double LOI_TIG;
 
 	//LANDMARK TRACKING PAGE
 	AP11LMARKTRKPAD landmarkpad;

@@ -3192,12 +3192,10 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 		EngineParametersTable(opt->enginetype, f_T, isp);
 
-		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
+		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 		sv_pre = coast(sv_node, t_slip);
 
-		Q_Xx = OrbMech::LVLH_Matrix(sv_pre.R, sv_pre.V);
-
-		dV_LVLH = mul(Q_Xx, Llambda);
+		dV_LVLH = PIEXDV(sv_node.R, sv_node.V, mass, f_T, Llambda, false);
 		P30TIG = GET_node + t_slip;
 
 		sv_post = sv_node;
@@ -3217,12 +3215,11 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		sv_post.R = R_ref[sol];
 		sv_post.V = V_ref[sol];
 
-		PZLRBELM.sv_man_bef.R = sv_node.R;
-		PZLRBELM.sv_man_bef.V = sv_node.V;
-		PZLRBELM.sv_man_bef.GMT = OrbMech::GETfromMJD(sv_node.MJD, GMTBASE);
-		PZLRBELM.sv_man_bef.RBI = BODY_MOON;
-		PZLRBELM.V_man_after = sv_post.V;
-		PZLRBELM.plan = opt->plan;
+		PZLRBELM.sv_man_bef[0].R = sv_node.R;
+		PZLRBELM.sv_man_bef[0].V = sv_node.V;
+		PZLRBELM.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv_node.MJD, GMTBASE);
+		PZLRBELM.sv_man_bef[0].RBI = BODY_MOON;
+		PZLRBELM.V_man_after[0] = sv_post.V;
 	}
 
 }
@@ -3295,7 +3292,6 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double
 	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].GMT = out.GMT_MCC;
 	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].RBI = out.RBI;
 	PZMCCXFR.V_man_after[PZMCCPLN.Column - 1] = out.V_MCC_apo;
-	PZMCCXFR.plan = 1;
 
 	//Update skeleton flight plan table
 	PZMCCSFP.blocks[PZMCCPLN.Column - 1] = out.outtab;
@@ -3349,7 +3345,6 @@ void RTCC::TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCRes
 	res.dV_LVLH_MCC = mul(OrbMech::LVLH_Matrix(sv1.R, sv1.V), res.DV);
 
 	//TBD
-	PZMCCXFR.plan = 1;
 	PZMCCXFR.sv_man_bef[0].R = sv1.R;
 	PZMCCXFR.sv_man_bef[0].V = sv1.V;
 	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
@@ -3416,7 +3411,6 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCC
 	res->dV_LVLH_MCC = mul(OrbMech::LVLH_Matrix(sv1.R, sv1.V), res->DV);
 
 	//TBD
-	PZMCCXFR.plan = 1;
 	PZMCCXFR.sv_man_bef[0].R = sv1.R;
 	PZMCCXFR.sv_man_bef[0].V = sv1.V;
 	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
@@ -3577,7 +3571,6 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 	res->dV_LVLH_MCC = mul(OrbMech::LVLH_Matrix(sv1.R, sv1.V), res->DV);
 
 	//TBD
-	PZMCCXFR.plan = 1;
 	PZMCCXFR.sv_man_bef[0].R = sv1.R;
 	PZMCCXFR.sv_man_bef[0].V = sv1.V;
 	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
@@ -3635,7 +3628,6 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCRe
 	res->dV_LVLH_MCC = mul(OrbMech::LVLH_Matrix(sv1.R, sv1.V), res->DV);
 
 	//TBD
-	PZMCCXFR.plan = 1;
 	PZMCCXFR.sv_man_bef[0].R = sv1.R;
 	PZMCCXFR.sv_man_bef[0].V = sv1.V;
 	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
@@ -3809,7 +3801,6 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyM
 	res->DV = DV;
 
 	//TBD
-	PZMCCXFR.plan = 1;
 	PZMCCXFR.sv_man_bef[0].R = sv1.R;
 	PZMCCXFR.sv_man_bef[0].V = sv1.V;
 	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
@@ -6483,6 +6474,7 @@ void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, in
 	//t_slip: time in seconds the maneuver has slipped to compensate for finite burntime; should always be negative
 	//sv_out: complete state vector at actual cutoff
 
+	VECTOR3 DV_imp_inert;
 	double f_T, isp, F_average;
 
 	sv_out.gravref = sv.gravref;
@@ -6502,17 +6494,17 @@ void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, in
 		F_average = f_T;
 	}
 
-	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
+	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, F_average, isp, sv.mass + attachedMass, sv.R, sv.V + DV, DV_imp_inert, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
 
 	sv_tig = coast(sv, t_slip);
 
 	if (agc)
 	{
-		DV_imp = PIEXDV(sv_tig.R, sv_tig.V, sv.mass + attachedMass, f_T, DV, false);
+		DV_imp = PIEXDV(sv_tig.R, sv_tig.V, sv.mass + attachedMass, f_T, DV_imp_inert, false);
 	}
 	else
 	{
-		DV_imp = PIAEDV(DV, sv_tig.R, sv_tig.V, sv_tig.R, false);
+		DV_imp = PIAEDV(DV_imp_inert, sv_tig.R, sv_tig.V, sv_tig.R, false);
 	}
 
 	sv_out.mass -= attachedMass;
@@ -16165,17 +16157,17 @@ int RTCC::PMMXFR(int id, void *data)
 
 		if (id == 39)
 		{
-			if (inp->Plan == 0)
+			if (inp->Type == 0)
 			{
-				GMTI = PZMCCXFR.sv_man_bef[0].GMT;
+				GMTI = PZMCCXFR.sv_man_bef[inp->Plan - 1].GMT;
 				purpose = "MCC";
-				plan = PZMCCXFR.plan;
+				plan = inp->Table;
 			}
 			else
 			{
-				GMTI = PZLRBELM.sv_man_bef.GMT;
+				GMTI = PZLRBELM.sv_man_bef[inp->Plan - 1].GMT;
 				purpose = "LOI";
-				plan = PZLRBELM.plan;
+				plan = inp->Table;
 			}
 		}
 		else if (id == 40)
@@ -16267,15 +16259,15 @@ int RTCC::PMMXFR(int id, void *data)
 		in.mpt = mpt;
 		if (id == 39)
 		{
-			if (inp->Plan == 0)
+			if (inp->Type == 0)
 			{
-				in.sv_before = PZMCCXFR.sv_man_bef[0];
-				in.V_aft = PZMCCXFR.V_man_after[0];
+				in.sv_before = PZMCCXFR.sv_man_bef[inp->Plan - 1];
+				in.V_aft = PZMCCXFR.V_man_after[inp->Plan - 1];
 			}
 			else
 			{
-				in.sv_before = PZLRBELM.sv_man_bef;
-				in.V_aft = PZLRBELM.V_man_after;
+				in.sv_before = PZLRBELM.sv_man_bef[inp->Plan - 1];
+				in.V_aft = PZLRBELM.V_man_after[inp->Plan - 1];
 			}
 		}
 		else if (id == 40)
@@ -18589,6 +18581,100 @@ void RTCC::PMMREAP(int med)
 	}
 }
 
+void RTCC::PMMLRBTI(EphemerisData sv)
+{
+	EMSMISSInputTable in;
+	in.StopParamRefFrame = 1;
+	in.MoonRelStopParam = 0.0;
+	in.CutoffIndicator = 4;
+
+	EphemerisData sv2 = EMMENI(in, sv, 5.0*24.0*3600.0);
+
+	if (in.NIAuxOutputTable.TerminationCode != 4)
+	{
+		return;
+	}
+
+	NewLOIOptions opt;
+	opt.SPH = sv2;
+	opt.dh_bias = med_k40.dh_bias*1852.0;
+	opt.DV_maxm = med_k18.DVMAXm*0.3048;
+	opt.DV_maxp = med_k18.DVMAXp*0.3048;
+	opt.DW = med_k40.DW*RAD;
+	opt.eta1 = med_k40.eta_1*RAD;
+	opt.GMTBASE = GMTBASE;
+	opt.HA_LLS = med_k40.HA_LLS*1852.0;
+	opt.HP_LLS = med_k40.HP_LLS*1852.0;
+	opt.HA_LPO = med_k18.HALOI1*1852.0;
+	opt.HP_LPO = med_k18.HPLOI1*1852.0;
+	opt.lat_LLS= BZLSDISP.lat[0];
+	opt.lng_LLS = BZLSDISP.lng[0];
+	opt.psi_DS = med_k18.psi_DS*RAD;
+	opt.psi_mn = med_k18.psi_MN*RAD;
+	opt.psi_mx = med_k18.psi_MX*RAD;
+	opt.REVS1 = med_k40.REVS1;
+	opt.REVS2 = med_k40.REVS2;
+	opt.R_LLS = MCSMLR;
+	opt.usePlaneSolnForInterSoln = med_k40.PlaneSolnForInterSoln;
+
+	NewLOITargeting loi(opt);
+	loi.MAIN();
+
+	PMDLRBTI(opt, loi.out);
+
+	for (int i = 0;i < 8;i++)
+	{
+		PZLRBELM.sv_man_bef[i].R = loi.out.data[i].R_LOI;
+		PZLRBELM.sv_man_bef[i].V = loi.out.data[i].V_LOI;
+		PZLRBELM.sv_man_bef[i].GMT = loi.out.data[i].GMT_LOI;
+		PZLRBELM.sv_man_bef[i].RBI = BODY_MOON;
+		PZLRBELM.V_man_after[i] = loi.out.data[i].V_LOI_apo;
+	}
+}
+
+void RTCC::PMDLRBTI(const NewLOIOptions &opt, const NewLOIOutputData &out)
+{
+	PZLRBTI.VectorGET = med_k18.VectorTime;
+	PZLRBTI.lat_lls = BZLSDISP.lat[0] * DEG;
+	PZLRBTI.lng_lls = BZLSDISP.lng[0] * DEG;
+	PZLRBTI.R_lls = MCSMLR / 1852.0;
+	PZLRBTI.REVS1 = opt.REVS1;
+	PZLRBTI.REVS2 = opt.REVS2;
+	PZLRBTI.DHBIAS = opt.dh_bias / 1852.0;
+	PZLRBTI.AZ_LLS = opt.psi_DS*DEG;
+	PZLRBTI.f_LLS = opt.DW*DEG;
+	if (PZLRBTI.f_LLS < 0)
+	{
+		PZLRBTI.f_LLS += 360.0;
+	}
+	PZLRBTI.HALOI1 = opt.HA_LPO / 1852.0;
+	PZLRBTI.HPLOI1 = opt.HP_LPO / 1852.0;
+	PZLRBTI.HALOI2 = opt.HA_LLS / 1852.0;
+	PZLRBTI.HPLOI2 = opt.HP_LLS / 1852.0;
+	PZLRBTI.DVMAXp = opt.DV_maxp / 0.3048;
+	PZLRBTI.DVMAXm = opt.DV_maxm / 0.3048;
+	PZLRBTI.planesoln = opt.usePlaneSolnForInterSoln;
+	for (int i = 0;i < 8;i++)
+	{
+		PZLRBTI.sol[i].GETLOI = GETfromGMT(out.data[i].GMT_LOI);
+		PZLRBTI.sol[i].DVLOI1 = length(out.data[i].V_LOI_apo - out.data[i].V_LOI) / 0.3048;
+		PZLRBTI.sol[i].DVLOI2 = out.data[i].display.dv_LOI2 / 0.3048;
+		PZLRBTI.sol[i].H_ND = out.data[i].display.H_ND / 1852.0;
+		PZLRBTI.sol[i].f_ND_H = out.data[i].display.eta_N*DEG;
+		if (PZLRBTI.sol[i].f_ND_H < 0)
+		{
+			PZLRBTI.sol[i].f_ND_H += 360.0;
+		}
+		PZLRBTI.sol[i].H_PC = out.data[i].display.h_P / 1852.0;
+		PZLRBTI.sol[i].Theta = out.data[i].display.theta*DEG;
+		PZLRBTI.sol[i].f_ND_E = out.data[i].display.W_P*DEG;
+		if (PZLRBTI.sol[i].f_ND_E < 0)
+		{
+			PZLRBTI.sol[i].f_ND_E += 360.0;
+		}
+	}
+}
+
 bool RTCC::GMGMED(char *str)
 {
 	int i = 0;
@@ -20018,6 +20104,8 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 	{
 		PMMXFR_Impulsive_Input inp;
 
+		inp.Table = med_m78.Table;
+		inp.Plan = med_m78.ManeuverNumber;
 		inp.Attitude[0] = med_m78.Attitude;
 		inp.DeleteGMT = 0.0;
 		inp.DPSScaleFactor[0] = med_m78.DPSThrustFactor;
@@ -20050,11 +20138,19 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.IterationFlag[0] = med_m78.Iteration;
 		if (med_m78.Type)
 		{
-			inp.Plan = 1;
+			inp.Type = 1;
+			if (inp.Plan < 1 || inp.Plan > 8)
+			{
+				return;
+			}
 		}
 		else
 		{
-			inp.Plan = 0;
+			inp.Type = 0;
+			if (inp.Plan < 1 || inp.Plan > 4)
+			{
+				return;
+			}
 		}
 		inp.Thruster[0] = med_m78.Thruster;
 		inp.TimeFlag[0] = med_m78.TimeFlag;
@@ -23352,7 +23448,7 @@ RTCC_PMMDMT_PB2_6:;
 
 }
 
-/*NewLOITargeting::NewLOITargeting(NewLOIOptions o)
+NewLOITargeting::NewLOITargeting(NewLOIOptions o)
 {
 	opt = o;
 	hMoon = oapiGetObjectByName("Moon");
@@ -23360,6 +23456,7 @@ RTCC_PMMDMT_PB2_6:;
 
 bool NewLOITargeting::MAIN()
 {
+	MATRIX3 Rot;
 	double psi_XTRA;
 
 	RA_LPO = opt.HA_LPO + opt.R_LLS;
@@ -23371,10 +23468,6 @@ bool NewLOITargeting::MAIN()
 	e_H = 1.0 - R_PHYP / a_H;
 
 	if (opt.R_LLS > R_PHYP || R_PHYP > RA_LPO)
-	{
-		return true;
-	}
-	if (opt.DV_maxp > 10000.0*0.3048 || opt.DV_maxm > 10000.0*0.3048)
 	{
 		return true;
 	}
@@ -23399,27 +23492,44 @@ bool NewLOITargeting::MAIN()
 	P_LLS = a_LLS * (1.0 - e_LLS * e_LLS);
 	R = P_LLS / (1.0 + e_LLS * cos(opt.DW));
 	V = sqrt(OrbMech::mu_Moon*(2.0 / R - 1.0 / a_LLS));
-	cos_gamma = sqrt(OrbMech::mu_Moon*a_LLS*(1.0 + e_LLS * e_LLS)) / (R*V);
+	cos_gamma = sqrt(OrbMech::mu_Moon*a_LLS*(1.0 - e_LLS * e_LLS)) / (R*V);
 	if (abs(cos_gamma) > 1.0)
 	{
 		cos_gamma = cos_gamma / abs(cos_gamma);
 	}
-	gamma = acos(cos_gamma);
-	if (opt.DW > 0 && opt.DW < PI)
-	{
-		gamma = -gamma;
-	}
-	VECTOR3 R_LLS_sg, V_LLS_sg, R_LLS, V_LLS, R_LOI, V_LOI, R_LOI2, V_LOI2, u_pl, U_DS, u_pl_temp, U_XTRA, NU, U_MN, U_MX, U, R_N, V_N, U_S;
-	double DA, eta2, a_DOI, e_DOI, a_temp, etemp, theta_cop, r_N, R_P, dt, cos_dpsi_N, theta, dv_p, dv_m;
+	gamma = -sign(opt.DW)*acos(cos_gamma);
+	VECTOR3 R_LLS_sg, V_LLS_sg, R_LLS, V_LLS, R_LOI, V_LOI, R_LOI2, V_LOI2, U_DS, U_XTRA, NU, U_MN, U_MX, U, R_N, V_N, U_S, U_PL, U_L;
+	double DA, eta2, theta_cop, r_N, R_P, dt, cos_dpsi_N, theta, dv_p, dv_m, dt3, dh_a, dh_p, dw_p, a_L, e_L;
 
-	T_LLS = TIME(a_LLS, R, V, opt.lng_LLS, opt.lat_LLS, gamma, opt.psi_DS, DA, eta2);
+	T_LLS = TIME(a_LLS, e_LLS, opt.lng_LLS, opt.lat_LLS, DA, eta2, dt3);
 	OrbMech::adbar_from_rv(R, V, opt.lng_LLS, opt.lat_LLS, PI05 - gamma, opt.psi_DS, R_LLS_sg, V_LLS_sg);
-	OrbMech::EclipticToMCI(R_LLS_sg, V_LLS_sg, opt.GMTBASE + T_LLS / 24.0 / 360.0, R_LLS, V_LLS);
-	BACKUP(R_LLS, V_LLS, T_LLS, DA, eta2, a_DOI, e_DOI, u_pl, R_LOI, V_LOI);
+	bool firstpass = true;
+LOI_MAIN_BACKUP:
+	Rot = OrbMech::GetRotationMatrix(BODY_MOON, OrbMech::MJDfromGET(T_LLS, opt.GMTBASE));
+	R_LLS = rhmul(Rot, R_LLS_sg);
+	V_LLS = rhmul(Rot, V_LLS_sg);
+	BACKUP(R_LLS, V_LLS, a_LLS, T_LLS, DA, eta2, dt3, dh_a, dh_p, dw_p, a_L, e_L, U_PL, R_LOI, V_LOI);
+	if (firstpass)
+	{
+		firstpass = false;
+		T_LLS = T_LLS + DT_CORR;
+		goto LOI_MAIN_BACKUP;
+	}
+
+	//Save the LPO-2, dh_a, dh_p, dw_p computed in backup for use later in the program
+	ALSAV = a_L;
+	ELSAV = e_L;
+	UPLSAV = U_PL;
+	DHASAV = dh_a;
+	DHPSAV = dh_p;
+	DWPSAV = dw_p;
 	U_DS = unit(crossp(R_LOI, V_LOI));
+
 	OrbMech::adbar_from_rv(R, V, opt.lng_LLS, opt.lat_LLS, PI05 - gamma, psi_XTRA, R_LLS_sg, V_LLS_sg);
-	OrbMech::EclipticToMCI(R_LLS_sg, V_LLS_sg, opt.GMTBASE + T_LLS / 24.0 / 360.0, R_LLS, V_LLS);
-	BACKUP(R_LLS, V_LLS, T_LLS, DA, eta2, a_temp, etemp, u_pl_temp, R_LOI2, V_LOI2);
+	Rot = OrbMech::GetRotationMatrix(BODY_MOON, OrbMech::MJDfromGET(T_LLS, opt.GMTBASE));
+	R_LLS = rhmul(Rot, R_LLS_sg);
+	V_LLS = rhmul(Rot, V_LLS_sg);
+	BACKUP(R_LLS, V_LLS, a_LLS, T_LLS, DA, eta2, dt3, dh_a, dh_p, dw_p, a_L, e_L, U_PL, R_LOI2, V_LOI2);
 	U_XTRA = unit(crossp(R_LOI2, V_LOI2));
 	U_N = unit(crossp(U_DS, U_XTRA));
 	NU = unit(crossp(U_N, U_DS));
@@ -23428,35 +23538,18 @@ bool NewLOITargeting::MAIN()
 	U = U_DS;
 	theta_cop = acos(dotp(U, U_H));
 	COPLNR(U_DS);
-	//Initalize +/-min theta solns with +/- coplanar soln
-	out.display[4] = out.display[2];
-	out.display[5] = out.display[3];
-	out.GMT_LOI[4] = out.GMT_LOI[2];
-	out.GMT_LOI[5] = out.GMT_LOI[3];
-	out.R_LOI[4] = out.R_LOI[2];
-	out.R_LOI[5] = out.R_LOI[3];
-	out.V_LOI[4] = out.V_LOI[2];
-	out.V_LOI[5] = out.V_LOI[3];
-	out.V_LOI_apo[4] = out.V_LOI_apo[2];
-	out.V_LOI_apo[5] = out.V_LOI_apo[3];
+
 	if (1.0 - dotp(U, U_H) >= 0.001*RAD)
 	{
 		goto LOI_MAIN_ONE_NODE;
 	}
 
 	//Store +/- coplanar solns as +/- plane solns
-	out.display[6] = out.display[2];
-	out.display[7] = out.display[3];
-	out.GMT_LOI[6] = out.GMT_LOI[2];
-	out.GMT_LOI[7] = out.GMT_LOI[3];
-	out.R_LOI[6] = out.R_LOI[2];
-	out.R_LOI[7] = out.R_LOI[3];
-	out.V_LOI[6] = out.V_LOI[2];
-	out.V_LOI[7] = out.V_LOI[3];
-	out.V_LOI_apo[6] = out.V_LOI_apo[2];
-	out.V_LOI_apo[7] = out.V_LOI_apo[3];
-	//INTER();
-	//INTER();
+	out.data[6] = out.data[2];
+	out.data[7] = out.data[3];
+
+	INTER(out.data[6].R_LOI, out.data[6].V_LOI, out.data[6].GMT_LOI, UPLSAV, USSAV[6], true);
+	INTER(out.data[7].R_LOI, out.data[7].V_LOI, out.data[7].GMT_LOI, UPLSAV, USSAV[7], false);
 	goto LOI_MAIN_DISPLAY;
 LOI_MAIN_ONE_NODE:
 	NU = unit(crossp(U, U_H));
@@ -23470,7 +23563,18 @@ LOI_MAIN_ONE_NODE:
 		goto LOI_MAIN_MIN_THETA;
 	}
 	//Compute conic hyperbolic state vector at node
-	dt = -OrbMech::time_radius(opt.SPH.R, -opt.SPH.V, r_N, 1.0, OrbMech::mu_Moon);
+	double sgn;
+	if (dotp(crossp(U_PC, NU), U_H) > 0.0)
+	{
+		sgn = 1.0;
+	}
+	else
+	{
+		sgn = -1.0;
+	}
+
+	dt = OrbMech::time_radius(opt.SPH.R, opt.SPH.V*sgn, r_N, 1.0, OrbMech::mu_Moon);
+	dt *= sgn;
 	OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
 	if (r_N < RP_LPO)
 	{
@@ -23484,16 +23588,17 @@ LOI_MAIN_ONE_NODE:
 	theta = 0.0;
 	U_S = U_DS;
 	//Call DVDA with cos_dpsi_N, R_P and state vector at node for DV+ of + plane soln
-	dv_p = DVDA(R_N, V_N, true, true, true, cos_dpsi_N, 0.0);
+	dv_p = DVDA(R_N, V_N, 1.0, true, cos_dpsi_N, 0.0);
 	//Call CANS to store + plane soln
-	CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, R_P, 1.0, 7);
+	CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, R_P, theta, 1.0, 7);
 	//Call DVDA with cos_dpsi_N, R_P and state vector at node for DV- of - plane soln
-	dt = OrbMech::time_radius(opt.SPH.R, opt.SPH.V, r_N, 1.0, OrbMech::mu_Moon);
-	OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
-	dv_m = DVDA(R_N, V_N, false, false, true, cos_dpsi_N, 0.0);
-	CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, R_P, 1.0, 8);
+	dv_m = DVDA(R_N, V_N, -1.0, true, cos_dpsi_N, 0.0);
+	CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, R_P, theta, -1.0, 8);
 	int MT;
 	MT = 0;
+	//Store plane solutions as min theta solutions
+	out.data[4] = out.data[6];
+	out.data[5] = out.data[7];
 	if (r_N < RP_LPO)
 	{
 		MT = 1;
@@ -23518,15 +23623,18 @@ LOI_MAIN_ONE_NODE:
 		}
 		else
 		{
-			//Call MINTHT for - min theta soln
-			MINTHT(U);
-			MT = 1;
+			if (dv_m > opt.DV_maxm)
+			{
+				//Call MINTHT for - min theta soln
+				MINTHT(U);
+				MT = 1;
+			}
 		}
 	}
-	if (MT == 0)
+	if (MT == 0 || opt.usePlaneSolnForInterSoln)
 	{
-		//INTER();
-		//INTER();
+		INTER(out.data[6].R_LOI, out.data[6].V_LOI, out.data[6].GMT_LOI, UPLSAV, U_DS, true);
+		INTER(out.data[7].R_LOI, out.data[7].V_LOI, out.data[7].GMT_LOI, UPLSAV, U_DS, false);
 		goto LOI_MAIN_DISPLAY;
 	}
 	else
@@ -23535,56 +23643,144 @@ LOI_MAIN_ONE_NODE:
 	}
 LOI_MAIN_MIN_THETA:
 	//Compute display parameters at the node for the +/- plane solns
-LOI_MAIN_A:;
-LOI_MAIN_DISPLAY:;
+	out.data[6].display.eta_N = sign(dotp(crossp(U_PC, out.data[6].R_LOI),U_H))*acos(dotp(U_PC, unit(out.data[6].R_LOI)));
+	out.data[7].display.eta_N = sign(dotp(crossp(U_PC, out.data[7].R_LOI), U_H))*acos(dotp(U_PC, unit(out.data[7].R_LOI)));
+	out.data[6].display.H_ND = length(out.data[6].R_LOI) - opt.R_LLS;
+	out.data[7].display.H_ND = length(out.data[7].R_LOI) - opt.R_LLS;
+	MINTHT(U_DS);
+LOI_MAIN_A:
+	VECTOR3 U_Sp, U_Sm;
+	U_Sp = USSAV[4];
+	U_Sm = USSAV[5];
+	U_L = unit(UPLSAV - U_Sp * dotp(UPLSAV, U_Sp));
+	INTER(out.data[4].R_LOI, out.data[4].V_LOI, out.data[4].GMT_LOI, U_L, U_Sp, true);
+	U_L = unit(UPLSAV - U_Sm * dotp(UPLSAV, U_Sm));
+	INTER(out.data[5].R_LOI, out.data[5].V_LOI, out.data[5].GMT_LOI, U_L, U_Sm, true);
+LOI_MAIN_DISPLAY:
+	VECTOR3 NU_MX, NU_MN, NU1, NU2;
+	double eta_MX, eta_MN, eta_DS;
+
+	NU_MX = unit(crossp(U_MX, U_H));
+	NU_MN = unit(crossp(U_MN, U_H));
+	eta_MX = sign(dotp(crossp(U_PC, NU_MX), U_H))*acos(dotp(U_PC, NU_MX));
+	eta_MN = sign(dotp(crossp(U_PC, NU_MN), U_H))*acos(dotp(U_PC, NU_MN));
+	eta_DS = out.data[7].display.eta_N;
+	if (opt.psi_DS = opt.psi_mn && opt.psi_DS == opt.psi_mx)
+	{
+		eta_MX = eta_MN = eta_DS;
+	}
+	else
+	{
+		if (opt.psi_mn == opt.psi_DS)
+		{
+			NU1 = NU_MX;
+			NU2 = NU_MN;
+		}
+		else
+		{
+			NU1 = NU_MN;
+			NU2 = NU_MX;
+		}
+		if (dotp(crossp(NU1, NU2),crossp(NU1, unit(R_N))) <= 0)
+		{
+			NU_MX = -NU_MX;
+			NU_MN = -NU_MN;
+			eta_MX = sign(dotp(crossp(U_PC, NU_MX), U_H))*acos(dotp(U_PC, NU_MX));
+			eta_MN = sign(dotp(crossp(U_PC, NU_MN), U_H))*acos(dotp(U_PC, NU_MN));
+		}
+	}
+	double h_NMX, h_NMN, e;
+	h_NMX = a_H * (1.0 - e_H * e_H) / (1.0 + e_H * dotp(NU_MX, U_PC)) - opt.R_LLS;
+	h_NMN = a_H * (1.0 - e_H * e_H) / (1.0 + e_H * dotp(NU_MN, U_PC)) - opt.R_LLS;
+	e = (RA_LPO - length(R_N)) / (length(R_N)*cos(opt.eta1) + RA_LPO);
+	R_P = 2.0*RA_LPO / (e + 1.0) - RA_LPO;
+	MPTSV sv, sv2;
+	sv.R = opt.SPH.R;
+	sv.V = opt.SPH.V;
+	sv.MJD = OrbMech::MJDfromGET(opt.SPH.GMT, opt.GMTBASE);
+	sv.gravref = hMoon;
+	VECTOR3 R_H, V_H, V_A, u;
+	double T_H, gamma_H, r_H, psi_H, v_A, psi_A, gamma_A, decl, rtasc;
+	for (int i = 0;i < 8;i++)
+	{
+		//If intersection solution wasn't calculated, skip
+		if (out.data[i].GMT_LOI == 0.0)
+		{
+			continue;
+		}
+		out.data[i].display.dv_LOI2 = DELV2(out.data[i].R_LOI, USSAV[i], RA_LPO + DHASAV, out.data[i].display.h_P + opt.R_LLS + DHPSAV, DWPSAV);
+		sv2 = OrbMech::PMMCEN(sv, 0.0, 10.0*24.0*3600.0, 3, length(out.data[i].R_LOI), sign(dotp(crossp(U_PC, out.data[i].R_LOI), U_H)));
+		R_H = sv2.R;
+		V_H = sv2.V;
+		T_H = OrbMech::GETfromMJD(sv2.MJD, opt.GMTBASE);
+		gamma_H = PI05 - acos2(dotp(unit(R_H), unit(V_H)));
+		r_H = length(R_H);
+		psi_H = atan2(R_H.x*V_H.y - R_H.y*V_H.x, V_H.z*r_H - R_H.z*dotp(R_H, V_H) / r_H);
+		if (psi_H < 0)
+		{
+			psi_H += PI2;
+		}
+		v_A = length(V_H) + out.data[i].dv_LOI;
+		psi_A = psi_H + out.data[i].dpsi_LOI;
+		gamma_A = gamma_H + out.data[i].dgamma_LOI;
+		u = unit(R_H);
+		decl = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
+		rtasc = atan2(u.y, u.x);
+		gamma_A = PI05 - gamma_A;
+		V_A.x = v_A * (cos(rtasc)*(-cos(psi_A)*sin(gamma_A)*sin(decl) + cos(gamma_A)*cos(decl)) - sin(psi_A)*sin(gamma_A)*sin(rtasc));
+		V_A.y = v_A * (sin(rtasc)*(-cos(psi_A)*sin(gamma_A)*sin(decl) + cos(gamma_A)*cos(decl)) + sin(psi_A)*sin(gamma_A)*cos(rtasc));
+		V_A.z = v_A * (cos(psi_A)*cos(decl)*sin(gamma_A) + cos(gamma_A)*sin(decl));
+		out.data[i].R_LOI = R_H;
+		out.data[i].V_LOI = V_H;
+		out.data[i].V_LOI_apo = V_A;
+		out.data[i].GMT_LOI = T_H;
+	}
 
 	return false;
 }
 
-double NewLOITargeting::TIME(double a_LLS, double r_LLS, double v_LLS, double lng_LLS, double lat_LLS, double gamma_LLS, double psi_LLS, double &DA, double &eta2)
+double NewLOITargeting::TIME(double a_LLS, double e_LLS, double lng_LLS, double lat_LLS, double &DA, double &eta2, double &dt3)
 {
 	bool recycle = false;
 	VECTOR3 U_LLS_sg, U_LLS;
-	double R1, DR1, R2, dt1, dt2, dt3, T_LLS;
+	double R1, DR1, R2, dt1, dt2, T_LLS, a1, e1, da;
 
 	DR1 = modf(opt.REVS1, &R1);
 	R2 = (double)opt.REVS2;
-	dt1 = R1 * PI2*sqrt(pow(RA_LPO + RP_LPO, 3) / (8.0*OrbMech::mu_Moon)) + R2 * PI2*sqrt(pow(a_LLS, 3) / OrbMech::mu_Moon);
-	T_LLS = opt.SPH.GMT + dt1;
+	a1 = (RA_LPO + RP_LPO) / 2.0;
+	e1 = RA_LPO / a1 - 1.0;
+	dt2 = DELTAT(a1, e1, opt.eta1, DR1);
+	eta2 = opt.eta1 + DR1;
+	while (eta2 < -PI)
+	{
+		eta2 += PI2;
+	}
+	while (eta2 > PI)
+	{
+		eta2 -= PI2;
+	}
 
-	//Build selenographic state vector at the LLS
-	VECTOR3 R_LLS, V_LLS;
-	OrbMech::adbar_from_rv(r_LLS, v_LLS, lng_LLS, lat_LLS, PI05 - gamma_LLS, psi_LLS, R_LLS, V_LLS);
+	dt1 = R1 * PI2*sqrt(pow(a1, 3) / OrbMech::mu_Moon) + R2 * PI2*sqrt(pow(a_LLS, 3) / OrbMech::mu_Moon);
+	T_LLS = opt.SPH.GMT + dt1 + dt2;
 	U_LLS_sg = OrbMech::r_from_latlong(opt.lat_LLS, opt.lng_LLS);
 
 LOI_TIME_A:
 	U_LLS = rhmul(OrbMech::GetRotationMatrix(BODY_MOON, opt.GMTBASE + T_LLS / 24.0 / 3600.0), U_LLS_sg);
-	DA = acos(dotp(U_LLS, U_PC));
+	da = acos(dotp(U_LLS, U_PC));
 	if (dotp(crossp(U_LLS, U_PC), U_H) > 0)
 	{
-		DA = PI2 - DA;
+		da = PI2 - da;
 	}
-	if (DA > DR1)
+	if (da > DR1)
 	{
-		dt2 = 0.0;
-		eta2 = 0.0;
-		dt3 = OrbMech::time_theta(R_LLS, -V_LLS, DA, OrbMech::mu_Moon);
-		if (DA > PI)
-		{
-			dt3 += OrbMech::period(R_LLS, V_LLS, OrbMech::mu_Moon);
-		}
-		else if (DA < -PI)
-		{
-			dt3 -= OrbMech::period(R_LLS, V_LLS, OrbMech::mu_Moon);
-		}
-		T_LLS = opt.SPH.GMT + dt1 + dt2 + dt3;
+		DA = da - DR1;
 	}
 	else
 	{
-		dt2 = 0.0;
-		eta2 = 0.0;
-		T_LLS = opt.SPH.GMT + dt1 + dt2;
+		DA = PI2 - (DR1 - da);
 	}
+	dt3 = DELTAT(a_LLS, e_LLS, opt.DW < 0 ? -opt.DW : PI2 - opt.DW, -DA);
+	T_LLS = opt.SPH.GMT + dt1 + dt2 - dt3;
 	if (recycle == false)
 	{
 		recycle = true;
@@ -23593,92 +23789,136 @@ LOI_TIME_A:
 	return T_LLS;
 }
 
-void NewLOITargeting::BACKUP(VECTOR3 R_LLS, VECTOR3 V_LLS, double T_LLS, double DA, double eta2, double &a_DOI, double &e_DOI, VECTOR3 &u_pl, VECTOR3 &R_LOI, VECTOR3 &V_LOI)
+void NewLOITargeting::BACKUP(VECTOR3 R_LLS, VECTOR3 V_LLS, double a_LLS,double T_LLS, double DA, double eta2, double dt3, double &dh_a, double &dh_p, double &dw_p, double &a_L, double &e_L, VECTOR3 &U_PL, VECTOR3 &R_LOI, VECTOR3 &V_LOI)
 {
-	VECTOR3 R_DOI_con, V_DOI_con, u_DOI, R_L, V_L, am, u_doi_proj;
-	double dt3, dt, T_L, deta_apo, DTCORR;
+	OELEMENTS coe;
+	VECTOR3 R, V, R_apo, U_LLS, U, R2, V2;
+	double T, a1, a, e, eta, deta, dt, T2, R_P;
 
-	dt3 = OrbMech::time_theta(R_LLS, -V_LLS, DA, OrbMech::mu_Moon);
-	if (DA > PI)
+	U_LLS = unit(R_LLS);
+	T = T_LLS + dt3 - ((double)opt.REVS2) * PI2*sqrt(pow(a_LLS, 3) / OrbMech::mu_Moon);
+	OrbMech::oneclickcoast(R_LLS, V_LLS, OrbMech::MJDfromGET(T_LLS, opt.GMTBASE), T - T_LLS, R, V, hMoon, hMoon);
+	R_apo = unit(R);
+
+	coe = OrbMech::coe_from_sv(R, V, OrbMech::mu_Moon);
+	a = OrbMech::GetSemiMajorAxis(R, V, OrbMech::mu_Moon);
+	e = coe.e;
+	eta = coe.TA;
+
+	a1 = acos(dotp(R_apo, U_LLS));
+	U = unit(crossp(R, V));
+	if (dotp(crossp(R_apo, U_LLS), U) <= 0)
 	{
-		dt3 += OrbMech::period(R_LLS, V_LLS, OrbMech::mu_Moon);
+		a1 = PI2 - a1;
 	}
-	else if (DA < -PI)
+	deta = a1 - DA;
+	dt = DELTAT(a, e, eta, deta);
+	OrbMech::oneclickcoast(R, V, OrbMech::MJDfromGET(T, opt.GMTBASE), dt, R2, V2, hMoon, hMoon);
+	T2 = T + dt;
+
+	coe = OrbMech::coe_from_sv(R2, V2, OrbMech::mu_Moon);
+	a_L = OrbMech::GetSemiMajorAxis(R2, V2, OrbMech::mu_Moon);
+	e_L = coe.e;
+	U_PL = unit(crossp(V2, crossp(R2, V2)) / OrbMech::mu_Moon - R2 / length(R2));
+	R_P = a * (1.0 - e);
+	if (R_P < length(R_LLS))
 	{
-		dt3 -= OrbMech::period(R_LLS, V_LLS, OrbMech::mu_Moon);
+		//Error
 	}
-	OrbMech::rv_from_r0v0(R_LLS, V_LLS, -dt3, R_DOI_con, V_DOI_con, OrbMech::mu_Moon);
-	u_DOI = unit(R_DOI_con);
-
-	dt = -(OrbMech::period(R_LLS, V_LLS, OrbMech::mu_Moon)*(double)(opt.REVS2) + dt3);
-	OrbMech::oneclickcoast(R_LLS, V_LLS, opt.GMTBASE + T_LLS / 24.0 / 3600.0, dt, R_L, V_L, hMoon, hMoon);
-	T_L = T_LLS + dt;
-
-	am = unit(crossp(R_L, V_L));
-	u_doi_proj = unit(u_DOI - am * dotp(u_DOI, am));
-	deta_apo = acos(dotp(u_doi_proj, unit(R_L)));
-	if (dotp(crossp(unit(R_L), u_doi_proj), am) < 0)
-	{
-		deta_apo = -deta_apo;
-	}
-	DTCORR = OrbMech::time_theta(R_L, V_L, deta_apo, OrbMech::mu_Moon);
-
-	OrbMech::oneclickcoast(R_L, V_L, opt.GMTBASE + T_L / 24.0 / 3600.0, DTCORR, R_L, V_L, hMoon, hMoon);
-	T_L = T_L + DTCORR;
-	u_pl = unit(crossp(V_L, crossp(R_L, V_L)) / OrbMech::mu_Moon - R_L / length(R_L));
-	OELEMENTS coe = OrbMech::coe_from_sv(R_L, V_L, OrbMech::mu_Moon);
-	a_DOI = OrbMech::GetSemiMajorAxis(R_L, V_L, OrbMech::mu_Moon);
-	e_DOI = coe.e;
-
-	//DOI to LOI
-	double rmag, vmag, rtasc, decl, fpav, az;
-	OrbMech::rv_from_adbar(R_L, V_L, rmag, vmag, rtasc, decl, fpav, az);
-
-	double a, e, p, R, V, gamma;
+	//TBD: Integrate backwards one period from this point to compute an(d?) LPO for display or on-line print
+	//Compute first LPO
+	VECTOR3 U_P2, U_PJ, U_P1;
+	double r, v, rtasc, decl, fpatemp, az, p, cos_gamma, gamma, R_A2, R_P2, dt_LOI_DOI, R_A1, R_P1;
+	OrbMech::rv_from_adbar(R2, V2, r, v, rtasc, decl, fpatemp, az);
 	a = (RA_LPO + RP_LPO) / 2.0;
 	e = RA_LPO / a - 1.0;
 	p = a * (1.0 - e * e);
-	R = p / (1.0 + e * cos(eta2));
-	V = sqrt(OrbMech::mu_Moon*(2.0 / R - 1.0 / a));
-	if (eta2 != 0)
+	r = p / (1.0 + e * cos(eta2));
+	v = sqrt(OrbMech::mu_Moon*(2.0 / r - 1.0 / a));
+	cos_gamma = sqrt(OrbMech::mu_Moon*p) / r / v;
+	T = T2;
+	if (cos_gamma > 1.0)
 	{
-		gamma = sign(eta2)*acos(sqrt(OrbMech::mu_Moon*a*(1.0 - e * e) / R / V));
+		cos_gamma = 1.0;
+	}
+	gamma = sign(eta2)*acos(cos_gamma);
+	R_A2 = RA_LPO;
+	R_P2 = RP_LPO;
+	OrbMech::adbar_from_rv(r, v, rtasc, decl, PI05 - gamma, az, R, V);
+	U_P2 = unit(crossp(V, crossp(R, V)) / OrbMech::mu_Moon - R / length(R));
+	OrbMech::oneclickcoast(R, V, OrbMech::MJDfromGET(T, opt.GMTBASE), opt.SPH.GMT - T, R_LOI, V_LOI, hMoon, hMoon);
+	coe = OrbMech::coe_from_sv(R_LOI, V_LOI, OrbMech::mu_Moon);
+	a = OrbMech::GetSemiMajorAxis(R_LOI, V_LOI, OrbMech::mu_Moon);
+	e = coe.e;
+	eta = coe.TA;
+	U = unit(crossp(R_LOI, V_LOI));
+	U_PJ = unit(U_PC - U * dotp(U_PC, U));
+	deta = sign(dotp(crossp(U_PJ, unit(R_LOI)), U))*acos(dotp(U_PJ, unit(R_LOI)));
+	DT_CORR = DELTAT(a, e, eta, deta);
+	dt_LOI_DOI = T2 - opt.SPH.GMT;
+	OrbMech::periapo(R_LOI, V_LOI, OrbMech::mu_Moon, R_A1, R_P1);
+	U_P1 = unit(crossp(V_LOI, crossp(R_LOI, V_LOI)) / OrbMech::mu_Moon - R_LOI / length(R_LOI));
+	if (R_P1 < (length(R_LLS) + 10.0*1852.0))
+	{
+		//Error
+	}
+	dh_a = R_A2 - R_A1;
+	dh_p = R_P2 - R_P1;
+	dw_p = sign(dotp(crossp(U_P1, U_P2), U))*acos(dotp(U_P1, U_P2));
+}
+
+double NewLOITargeting::DELTAT(double a, double e, double eta, double deta)
+{
+	double K_e, E, eta_apo, dE, E_apo, DE, DM;
+
+	if (eta < 0)
+	{
+		eta += PI2;
+	}
+	K_e = sqrt((1.0 - e) / (1.0 + e));
+	E = atan2(sqrt(1.0 - e * e)*sin(eta), cos(eta) + e);
+	if (E < 0)
+	{
+		E += PI2;
+	}
+	eta_apo = eta + deta;
+	if (eta_apo >= 0 && eta_apo < PI2)
+	{
+		dE = 0.0;
 	}
 	else
 	{
-		gamma = 0.0;
+		dE = 0.0;
+		if (eta_apo < 0)
+		{
+			while (eta_apo < 0)
+			{
+				eta_apo += PI2;
+				dE += PI2;
+			}
+			dE = -(dE); //plus PI2???
+		}
+		else
+		{
+			while (eta_apo >= PI2)
+			{
+				eta_apo -= PI2;
+				dE += PI2;
+			}
+		}
 	}
-
-	VECTOR3 R_LPO, V_LPO, u_pc_proj, R1I, V1I;
-	double T1;
-	OrbMech::adbar_from_rv(R, V, rtasc, decl, PI05 - gamma, az, R_LPO, V_LPO);
-
-	dt = -OrbMech::period(R_LPO, V_LPO, OrbMech::mu_Moon)*opt.REVS1;
-	OrbMech::oneclickcoast(R_LPO, V_LPO, opt.GMTBASE + T_L / 24.0 / 3600.0, dt, R1I, V1I, hMoon, hMoon);
-	T1 = T_L + dt;
-
-	am = unit(crossp(R1I, V1I));
-	u_pc_proj = unit(U_PC - am * dotp(U_PC, am));
-	deta_apo = acos(dotp(u_pc_proj, unit(R1I)));
-	if (dotp(crossp(unit(R1I), u_pc_proj), am) < 0)
+	E_apo = atan2(sqrt(1.0 - e * e)*sin(eta_apo), cos(eta_apo) + e);
+	while (E_apo < 0)
 	{
-		deta_apo = -deta_apo;
+		E_apo += PI2;
 	}
-	DTCORR = OrbMech::time_theta(R1I, V1I, deta_apo, OrbMech::mu_Moon);
-	OrbMech::oneclickcoast(R1I, V1I, opt.GMTBASE + T1 / 24.0 / 3600.0, DTCORR, R1I, V1I, hMoon, hMoon);
-	T1 = T1 + DTCORR;
-
-	VECTOR3 u_p1, u_p2;
-	double R_a1, R_a2, R_p1, R_p2;
-	OrbMech::periapo(R_LPO, V_LPO, OrbMech::mu_Moon, R_a2, R_p2);
-	u_p2 = unit(crossp(V_LPO, crossp(R_LPO, V_LPO)) / OrbMech::mu_Moon - R_LPO / length(R_LPO));
-	OrbMech::periapo(R1I, V1I, OrbMech::mu_Moon, R_a1, R_p1);
-	u_p1 = unit(crossp(V1I, crossp(R1I, V1I)) / OrbMech::mu_Moon - R1I / length(R1I));
-	double dh_a = R_a2 - R_a1;
-	double dh_p = R_p2 - R_p1;
-	double dw_p = sign(dotp(crossp(u_p1, u_p2), crossp(R1I, V1I)))*acos(dotp(u_p1, u_p2));
-	R_LOI = R1I;
-	V_LOI = V1I;
+	while (E_apo >= PI2)
+	{
+		E_apo -= PI2;
+	}
+	DE = E_apo - E + dE;
+	DM = DE + e * (sin(E) - sin(E_apo));
+	return sqrt(pow(a, 3) / OrbMech::mu_Moon)*DM;
 }
 
 void NewLOITargeting::COPLNR(VECTOR3 U_DS)
@@ -23705,7 +23945,7 @@ LOI_COPLNR_1:
 	}
 	dt = -OrbMech::time_radius(opt.SPH.R, -opt.SPH.V, R, 1.0, OrbMech::mu_Moon);
 	OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
-	DV_p = DVDA(R_N, V_N, true, true, true, cos_dpsi_N, 0.0);
+	DV_p = DVDA(R_N, V_N, 1.0, true, cos_dpsi_N, 0.0);
 	if (DV_p < DV_copp)
 	{
 		DV_copp = DV_p;
@@ -23714,54 +23954,33 @@ LOI_COPLNR_1:
 LOI_COPLNR_2:
 	//Call CANS with pre-hyperbolic perilune state at R-0.01NM for + soln
 	dt = -OrbMech::time_radius(opt.SPH.R, -opt.SPH.V, R - 0.01*1852.0, 1.0, OrbMech::mu_Moon);
-	OrbMech::oneclickcoast(opt.SPH.R, opt.SPH.V, OrbMech::MJDfromGET(opt.SPH.GMT, opt.GMTBASE), dt, R_N, V_N, hMoon, hMoon);
-	CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, RP_LPO, 1.0, 3);
+	OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
+	CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, RP_LPO, theta_cop, 1.0, 3);
 
-	//Call CANS with post-hyperbolic perilune state at R-0.01NM for - soln (SGN is + and DV_copm == DV_copp)
+	//Call CANS with post-hyperbolic perilune state at R-0.01NM for - soln (DV_copm == DV_copp)
 	dt = OrbMech::time_radius(opt.SPH.R, opt.SPH.V, R - 0.01*1852.0, 1.0, OrbMech::mu_Moon);
-	OrbMech::oneclickcoast(opt.SPH.R, opt.SPH.V, OrbMech::MJDfromGET(opt.SPH.GMT, opt.GMTBASE), dt, R_N, V_N, hMoon, hMoon);
-	CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, RP_LPO, 1.0, 4);
+	OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
+	CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, RP_LPO, theta_cop, -1.0, 4);
 }
 
-double NewLOITargeting::DVDA(VECTOR3 R_N, VECTOR3 V_N, bool soln, bool pre, bool dv, double cos_dpsi_N, double DV)
+double NewLOITargeting::DVDA(VECTOR3 R_N, VECTOR3 V_N, double soln, bool dv, double cos_dpsi_N, double DV)
 {
-	double SGN;
+	double SGN, gamma_H, r_N, v_H;
 
-	if (soln)
-	{
-		if (pre)
-		{
-			SGN = 1.0;
-		}
-		else
-		{
-			SGN = -1.0;
-		}
-	}
-	else
-	{
-		if (pre)
-		{
-			SGN = -1.0;
-		}
-		else
-		{
-			SGN = 1.0;
-		}
-	}
-	double r_N, v_H, gamma_H, R_p, a_L, e_L, V_L, H_L, cos_gamma_L, sin_gamma_L;
 	r_N = length(R_N);
 	v_H = length(V_N);
 	gamma_H = PI05 - acos2(dotp(unit(R_N), unit(V_N)));
+	SGN = -sign(gamma_H*soln);
+	double R_p, a_L, e_L, V_L, H_L, cos_gamma_L, sin_gamma_L;
 	R_p = RP_LPO;
 	a_L = (RA_LPO + R_p) / 2.0;
 	e_L = (RA_LPO / a_L - 1.0);
 	V_L = sqrt(OrbMech::mu_Moon*(2.0 / r_N - 1.0 / a_L));
 	H_L = sqrt(OrbMech::mu_Moon*a_L*(1.0 - e_L * e_L));
 	cos_gamma_L = H_L / r_N / V_L;
-	if (abs(cos_gamma_L) > 1.0)
+	if (cos_gamma_L > 1.0)
 	{
-		cos_gamma_L = 1.0*sign(cos_gamma_L);
+		cos_gamma_L = 1.0;
 	}
 	sin_gamma_L = sqrt(1.0 - cos_gamma_L * cos_gamma_L);
 	if (dv)
@@ -23770,20 +23989,24 @@ double NewLOITargeting::DVDA(VECTOR3 R_N, VECTOR3 V_N, bool soln, bool pre, bool
 	}
 	else
 	{
-		return ((V_L*V_L + v_H * v_H - DV) / (2.0*V_L*v_H) - SGN * sin(gamma_H)*sin_gamma_L) / (cos_gamma_L*cos(gamma_H));
+		return ((V_L*V_L + v_H * v_H - DV* DV) / (2.0*V_L*v_H) - SGN * sin(gamma_H)*sin_gamma_L) / (cos_gamma_L*cos(gamma_H));
 	}
 }
 
-void NewLOITargeting::CANS(VECTOR3 R_N, VECTOR3 V_N, double T_N, VECTOR3 U_S, double R_P, double SGN, int soln)
+void NewLOITargeting::CANS(VECTOR3 R_N, VECTOR3 V_N, double T_N, VECTOR3 U_S, double R_P, double theta, double SGN, int soln)
 {
-	VECTOR3 u;
-	double r_N, v_LPO, cos_gamma, DV, psi_LPO, dpsi, dgamma, gamma_LPO, v_H, gamma_H, psi_H, h_N, eta_N, delta_op;
+	VECTOR3 V_proj;
+	double r_N, v_LPO, cos_gamma, DV, psi_LPO, dpsi, dgamma, gamma_LPO, v_H, gamma_H, psi_H, h_N, eta_N, delta_op, cos_wp, a, e, W_P;
 
 	//Calculate parameters on hyperbola/node
 	r_N = length(R_N);
 	v_H = length(V_N);
 	gamma_H = PI05 - acos2(dotp(unit(R_N), unit(V_N)));
 	psi_H = atan2(R_N.x*V_N.y - R_N.y*V_N.x, V_N.z*r_N - R_N.z*dotp(R_N, V_N) / r_N);
+	if (psi_H < 0)
+	{
+		psi_H += PI2;
+	}
 
 	v_LPO = sqrt(OrbMech::mu_Moon*(2.0 / r_N - 2.0 / (RA_LPO + R_P)));
 	cos_gamma = sqrt(OrbMech::mu_Moon*(RA_LPO + R_P)*(1.0 - pow(2.0*RA_LPO / (RA_LPO + R_P) - 1.0, 2))) / sqrt(2.0) / r_N / v_LPO;
@@ -23792,261 +24015,375 @@ void NewLOITargeting::CANS(VECTOR3 R_N, VECTOR3 V_N, double T_N, VECTOR3 U_S, do
 		cos_gamma = 1.0*sign(cos_gamma);
 	}
 	gamma_LPO = acos(cos_gamma);
-	psi_LPO = atan2(R_N.x*U_S.y - R_N.y*U_S.x, U_S.z*r_N - R_N.z*dotp(R_N, U_S) / r_N);
+	V_proj = unit(crossp(U_S, R_N));
+	psi_LPO = atan2(R_N.x*V_proj.y - R_N.y*V_proj.x, V_proj.z*r_N - R_N.z*dotp(R_N, V_proj) / r_N);
+	if (psi_LPO < 0)
+	{
+		psi_LPO += PI2;
+	}
+
 	DV = v_LPO - v_H;
 	dpsi = psi_LPO - psi_H;
-	dgamma = SGN * sign(gamma_H)*gamma_LPO - gamma_H;
+	dgamma = -SGN*gamma_LPO - gamma_H;
+
 	h_N = r_N - opt.R_LLS;
-	eta_N = sign(dotp(crossp(U_PC, unit(R_N)), U_H))*acos(dotp(U_PC, unit(R_N)));
+	eta_N = sign(dotp(crossp(U_PC, unit(R_N)), U_H))*acos2(dotp(U_PC, unit(R_N)));
 	delta_op = abs(acos(dotp(U_S, U_N)) - PI05);
-	//Store: state at node, DV, dgamma, dpsi, h_N, eta_N, delta_op, theta, h_p
-	out.R_LOI[soln - 1] = R_N;
-	out.V_LOI[soln - 1] = V_N;
-	out.GMT_LOI[soln - 1] = T_N;
-	out.display[soln - 1].H_ND = h_N;
-	//Compute conic state after LOI for use in computing intersection solutions
-	double V_a, gamma_a, psi_a, decl, rtasc;
-	V_a = v_H + DV;
-	gamma_a = PI05 - (gamma_H + dgamma);
-	psi_a = psi_H + dpsi;
-	//Convert V, gamma, psi to Xdot, Ydot, Zdot
-	u = unit(R_N);
-	decl = atan2(u.z, sqrt(u.x*u.x + u.y*u.y));
-	rtasc = atan2(u.y, u.x);
-	out.V_LOI_apo[soln - 1].x = V_a * (cos(rtasc)*(-cos(psi_a)*sin(gamma_a)*sin(decl) + cos(gamma_a)*cos(decl)) - sin(psi_a)*sin(gamma_a)*sin(rtasc));
-	out.V_LOI_apo[soln - 1].y = V_a * (sin(rtasc)*(-cos(psi_a)*sin(gamma_a)*sin(decl) + cos(gamma_a)*cos(decl)) + sin(psi_a)*sin(gamma_a)*cos(rtasc));
-	out.V_LOI_apo[soln - 1].z = V_a * (cos(psi_a)*cos(decl)*sin(gamma_a) + cos(gamma_a)*sin(decl));
-	
+
+	a = (RA_LPO + R_P) / 2.0;
+	e = RA_LPO / a - 1.0;
+
+	if (RA_LPO - R_P > 0.01*1852.0)
+	{
+		cos_wp = (a*(1.0 - e * e) / r_N - 1.0) / e;
+	}
+	else
+	{
+		cos_wp = 1.0;
+	}
+	if (abs(cos_wp) > 1.0)
+	{
+		cos_wp = cos_wp / abs(cos_wp);
+	}
+	W_P = -SGN * acos(cos_wp);
+
+	//Store: state at node (R,V,T), dv, dgamma, dpsi, h_N, eta_N, delta_op, theta, h_P, W_P
+	out.data[soln - 1].R_LOI = R_N;
+	out.data[soln - 1].V_LOI = V_N;
+	out.data[soln - 1].GMT_LOI = T_N;
+	out.data[soln - 1].dv_LOI = DV;
+	out.data[soln - 1].dgamma_LOI = dgamma;
+	out.data[soln - 1].dpsi_LOI = dpsi;
+	out.data[soln - 1].display.H_ND = h_N;
+	out.data[soln - 1].display.eta_N = eta_N;
+	out.data[soln - 1].display.delta_op = delta_op;
+	out.data[soln - 1].display.theta = theta;
+	out.data[soln - 1].display.h_P = R_P - opt.R_LLS;
+	out.data[soln - 1].display.W_P = W_P;
+
+	USSAV[soln - 1] = U_S;
 }
 
-void NewLOITargeting::MINTHT(VECTOR3 U)
+void NewLOITargeting::MINTHT(VECTOR3 U_DS)
 {
-	VECTOR3 R_N, V_N, NU, U_P, U_S;
-	double dt, R, dv, dpsi_NA, cos_a, cos_dpsi_N;
-	bool soln;
+	VECTOR3 R_N, V_N, R_apo, U_P, U_S, NU, Rtemp, Vtemp;
+	double dt, r, dv, cos_dpsi_Na, SGN, cos_a, dv2, cos_dpsi_N, theta, dpsi_Na;
+	bool firstpass, plussoln;
+	double ddt = 10.0;
 
-	R = RA_LPO;
-	dt = -OrbMech::time_radius(opt.SPH.R, -opt.SPH.V, R, 1.0, OrbMech::mu_Moon);
+	//Initialize +/- Min Theta solns with +/- coplanar soln
+	out.data[4] = out.data[2];
+	out.data[5] = out.data[3];
+
+	//Propagate on the hyperbola conic to pre-perilune
+	r = RA_LPO;
+	dt = OrbMech::time_radius(opt.SPH.R, -opt.SPH.V, r, 1.0, OrbMech::mu_Moon);
+	dt = -dt;
 	OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
+	firstpass = true;
 LOI_MINTHT_S:
-	if (R < RP_LPO)
+	if (firstpass == false)
 	{
-		R = RP_LPO;
-		dt = OrbMech::time_radius(opt.SPH.R, opt.SPH.V, R, 1.0, OrbMech::mu_Moon);
-		OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
+		if (r < RP_LPO)
+		{
+			r = RP_LPO;
+			dt = OrbMech::time_radius(opt.SPH.R, opt.SPH.V, r, 1.0, OrbMech::mu_Moon);
+			OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
+		}
 	}
-	soln = true;
+	plussoln = true;
 LOI_MINTHT_T:
-	if (soln)
+	if (plussoln)
 	{
 		dv = opt.DV_maxp;
+		SGN = 1.0;
 	}
 	else
 	{
 		dv = opt.DV_maxm;
+		SGN = -1.0;
 	}
-	dpsi_NA = DVDA(R_N, V_N, soln, true, false, 0.0, dv);
-	U_P = unit(U - unit(R_N)*dotp(U, unit(R_N)));
+	cos_dpsi_Na = DVDA(R_N, V_N, SGN, false, 0.0, dv);
+	R_apo = unit(R_N);
+	U_P = unit(U_DS - R_apo * dotp(U_DS, R_apo));
 	cos_a = dotp(U_P, U_H);
-	NU = unit(crossp(crossp(U_H, U_P), U_H));
-	if (abs(cos(dpsi_NA)) <= 1.0)
+	if (cos_dpsi_Na > 1.0)
 	{
-		if (cos_a >= cos(dpsi_NA))
-		{
-			cos_dpsi_N = cos_a;
-			U_S = U_P;
-			dv = DVDA(R_N, V_N, soln, true, true, cos_dpsi_N, 0.0);
-		}
-		else
-		{
-			U_S = U_H * cos_dpsi_N + NU * sin(dpsi_NA);
-		}
-		theta = acos(dotp(U_S, U));
-		if (theta < theta_soln)
-		{
-			CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, RP_LPO, 1.0, 1);
-		}
+		goto LOI_MINTHT_B2;
 	}
-	if (solns)
+	if (cos_a >= cos_dpsi_Na)
 	{
-		solns = false;
+		cos_dpsi_N = cos_a;
+		U_S = U_P;
+		dv2 = DVDA(R_N, V_N, SGN, true, cos_dpsi_N, 0.0);
+	}
+	else
+	{
+		dv2 = dv;
+		NU = unit(crossp(crossp(U_H, U_P), U_H));
+		dpsi_Na = acos(cos_dpsi_Na);
+		U_S = U_H * cos_dpsi_Na + NU * sin(dpsi_Na);
+	}
+	theta = acos(dotp(U_S, U_DS));
+	if (theta < out.data[plussoln ? 4 : 5].display.theta)
+	{
+		CANS(R_N, V_N, opt.SPH.GMT + dt, U_S, RP_LPO, theta, SGN, plussoln ? 5 : 6);
+	}
+LOI_MINTHT_B2:
+	if (plussoln)
+	{
+		plussoln = false;
 		goto LOI_MINTHT_T;
 	}
+	//Propagate through a dbeta to next hyp state => R
+	OrbMech::rv_from_r0v0(R_N, V_N, ddt, Rtemp, Vtemp, OrbMech::mu_Moon);
+	R_N = Rtemp;
+	V_N = Vtemp;
+	dt += ddt;
+	r = length(R_N);
+	if (r <= RA_LPO)
+	{
+		firstpass = false;
+		goto LOI_MINTHT_S;
+	}
 }
 
-bool NewLOITargeting::DHDR(double a_L, double e_L, double R_N, double w_p, double dw_a, double dw_p, double R_L, double R_p, double SGN, double R_a, double &dhdr)
+void NewLOITargeting::INTER(VECTOR3 R_N, VECTOR3 V_N, double T_N, VECTOR3 U_L, VECTOR3 U_S, bool soln)
 {
-	double a, e, K1, K2, K3, K4;
-	if (R_a <= R_N)
-	{
-		//Error
-		return true;
-	}
-	if (R_p > R_N)
-	{
-		//Error
-		return true;
-	}
-	double P_L, P, sin_wp;
-	P_L = a_L * (1.0 - e_L * e_L);
-	a = (R_a + R_p) / 2.0;
-	e = R_a / a - 1.0;
-	P = a * (1.0 - e * e);
-	sin_wp = sqrt(1.0 - pow(P*R_N, 2) / (R_N*e*e));
-	K1 = -R_L * R_L*e_L / P_L;
-	K2 = cos(dw_a) + SGN * sin(dw_a)*cos(w_p) / sin(w_p);
-	K4 = cos(dw_p) + sin(dw_p)*cos(w_p) / sin(w_p);
-	K3 = (P*(R_a + a * e) + R_a * (a*e*e - R_N)) / (2.0*R_N*a*a*e*e);
-	dhdr = K4 * K1*K2*K3 - 1.0;
-	return false;
-}
+	VECTOR3 R_N_u;
+	double r_N, dw_a, R_p, dw, dh, SGN;
 
-void NewLOITargeting::INTER()
-{
-	r_N = length(R_N);
-	R_N_u = unit(R_N);
-	if (RP_LPO < r_N)
-	{
-		return;
-	}
-	dw_a = acos(dotp(unit(R_N), U_L);
-	if (dotp(crossp(unit(R_N), U_L), U_S) > 0)
+	if (soln)
 	{
 		SGN = 1.0;
 	}
 	else
 	{
-		dw_a = PI2 - dw_a;
 		SGN = -1.0;
 	}
-	theta = acos(dotp(U_DS, U_S));
-	R_P = length(R_N);
-	P_L = a_L * (1.0 - e_L * e_L);
-	R_NL = P_L / (1.0 + e_L * cos(dw_a - sign(dotp(crossp(unit(R_N), U_L), U_S))*dw_p);
-	dh_apo = R_NL - R_P - dh_D;
-	if (dh_apo > opt.dh_bias)
-	{
-		goto LOI_INTER_B;
-	}
-	R_P = length(R_N);
-	a = (RA_LPO + R_P) / 2.0;
-	e = RA_LPO / a - 1.0;
-LOI_INTER_C:
-	x = 1;
-LOI_INTER_D:
-	DHDR(a_L, e_L, r_N, w_p, dw_a, dw_p, R_L, R_P, SGN, R_a, D);
-	if (R_P + dh_D > R_NL)
-	{
-		if (D <= 0)
-		{
-			goto LOI_INTER_A3;
-		}
-	}
-	x = 2 * x;
-	R_P = R_P + dR_P;
-	dR_P = dR_P / x;
-	R_P = R_P + dR_P;
-	goto LOI_INTER_D2;
-LOI_INTER_A3:
-	DR_P = dh_apo / D * (abs(opt.dh_bias) + 1.0) / (abs(dh_apo) + 1.0);
-	R_P = R_P + dR_P;
 
+	r_N = length(R_N);
+	R_N_u = unit(R_N);
+	//Angle between position at node and desired post LOI2 perilune vector
+	dw_a = acos(dotp(R_N_u, U_L));
+	R_p = r_N;
+	dw = dw_a + sign(dotp(crossp(U_L, R_N_u), U_S))*DWPSAV;
+	dh = ALSAV * (1.0 - ELSAV * ELSAV) / (1.0 + ELSAV * cos(dw)) - R_p - DHPSAV;
+	if (dh >= opt.dh_bias)
+	{
+		goto LOI_INTER_B3;
+	}
+	double A[5], R[4];
+	double R_a, a, c1, K1, eca;
+	int N, M;
+
+	R_a = RA_LPO;
+	dh = DHPSAV + opt.dh_bias;
+	a = dw_a + sign(dotp(crossp(U_L, R_N_u), U_S))*DWPSAV;
+	c1 = ALSAV * (1.0 - ELSAV * ELSAV) - dh;
+	K1 = 2.0*R_a - r_N;
+	eca = ELSAV * cos(a);
+
+	//Scale to Earth radii
+	r_N = r_N / OrbMech::R_Earth;
+	K1 = K1 / OrbMech::R_Earth;
+	dh = dh / OrbMech::R_Earth;
+	R_a = R_a / OrbMech::R_Earth;
+	c1 = c1 / OrbMech::R_Earth;
+
+	A[0] = r_N * r_N*(1.0 + eca * eca) + ELSAV * ELSAV*(K1*K1 - r_N * r_N) - 2.0*K1*r_N*eca;
+	A[1] = 2.0*r_N*r_N*(eca*eca*(dh - R_a) - R_a - c1) + 2.0*ELSAV*ELSAV*(K1*K1*dh - K1 * r_N*R_a - r_N * r_N*(dh - R_a)) + 2.0*eca*r_N*(K1*(R_a - dh + c1) + R_a * r_N);
+	A[2] = r_N * r_N*(R_a*R_a + c1 * c1 + 4.0*c1*R_a + eca * eca*(R_a*R_a + dh * dh - 4.0*R_a*dh)) + ELSAV * ELSAV*(dh*dh*K1*K1 - 4.0*K1*R_a*r_N*dh + r_N * r_N*(4.0*R_a*dh - dh * dh))
+		- 2.0*eca*(R_a*r_N*(K1*c1 - K1 * dh - r_N * dh + r_N * R_a) + r_N * r_N*c1*R_a - c1 * dh*r_N*K1);
+	A[3] = 2.0*ELSAV*ELSAV*dh*dh*R_a*r_N*(r_N - K1) - 2.0*r_N*r_N*R_a*(c1*c1 + eca * eca*(dh*dh - R_a * dh) + c1 * R_a) + 2.0*eca*(r_N*r_N*R_a*R_a*(c1 - dh) - c1 * dh*R_a*r_N*(K1 + r_N));
+	A[4] = r_N * r_N*R_a*R_a*(c1*c1 + 2.0*eca*c1*dh + eca * eca*dh*dh);
+
+	OrbMech::SolveQuartic(A, R, N);
+
+	//Scale back
+	r_N = r_N * OrbMech::R_Earth;
+	K1 = K1 * OrbMech::R_Earth;
+	dh = dh * OrbMech::R_Earth;
+	R_a = R_a * OrbMech::R_Earth;
+	c1 = c1 * OrbMech::R_Earth;
+
+	if (N == 0)
+	{
+		//Error
+		return;
+	}
+	M = N;
+	R_p = R[M - 1] * OrbMech::R_Earth;
+LOI_INTER_B2:
+	dh = DELTAH(R_p, r_N, dw_a, U_L, R_N_u, U_S, SGN);
+	if (abs(dh - opt.dh_bias) < 0.1)
+	{
+		goto LOI_INTER_B3;
+	}
+	if (M > 1)
+	{
+		M--;
+		R_p = R[M - 1] * OrbMech::R_Earth;
+		goto LOI_INTER_B2;
+	}
+	//Average each root pair and compute dh with DELTAH
+	R_p = (R[0] + R[1]) / 2.0;
+	dh = DELTAH(R_p, r_N, dw_a, U_L, R_N_u, U_S, SGN);
+	if (abs(dh - opt.dh_bias) < 0.1)
+	{
+		goto LOI_INTER_B3;
+	}
+	if (N < 4)
+	{
+		goto LOI_INTER_B3;
+	}
+	R_p = (R[2] + R[3]) / 2.0;
+	double dh2 = DELTAH(R_p, r_N, dw_a, U_L, R_N_u, U_S, SGN);
+	if (abs(dh2 - opt.dh_bias) < 0.1)
+	{
+		goto LOI_INTER_B3;
+	}
+	//Use the R_p with the dh nearest to dhbias as the solution. Write online message and dh for this Rp
+	if (abs(dh2 - opt.dh_bias) > abs(dh - opt.dh_bias))
+	{
+		R_p = (R[0] + R[1]) / 2.0;
+	}
+LOI_INTER_B3:
+	//DVDA(R_N, V_N, soln, 1.0, cos_dpsi_N, 0.0);
+	CANS(R_N, V_N, T_N, U_S, R_p, 0.0, SGN, soln ? 1 : 2);
 }
 
-double NewLOITargeting::DELV2(VECTOR3 U_S, VECTOR3 R_P1_apo, double R_a, double R_p, double a_L, double e_L, VECTOR3 U_PL)
+double NewLOITargeting::DELTAH(double R_p, double r_N, double dw_a, VECTOR3 U_L, VECTOR3 R_N_u, VECTOR3 U_S, double SGN)
 {
-	VECTOR3 R_p1;
-	double a1, e1, P2, P1, cos_dw, sin_dw, K_P, K_C, K_S, a, b, c, DISC, SGN1, cos_eta2, eta2, dw, eta1, SGN2, SGN3, R1, R2;
-	double V1, V2, cos_g1, cos_g2, gamma1, gamma2, dgamma, DV1, DV2, eps2;
+	double a, e, p, cos_wp, dw, R_NL, w_p;
+
+	a = (RA_LPO + R_p) / 2.0;
+	e = RA_LPO / a - 1.0;
+	p = a * (1.0 - e * e);
+	cos_wp = (p - r_N) / (r_N*e);
+	if (cos_wp > 1.0)
+	{
+		cos_wp = 1.0;
+	}
+	w_p = acos(cos_wp);
+	dw = dw_a + (sign(dotp(crossp(U_L, R_N_u), U_S)))*(DWPSAV + SGN * w_p);
+	R_NL = ALSAV * (1.0 - ELSAV * ELSAV) / (1.0 + ELSAV * cos(dw));
+	return R_NL - R_p - DHPSAV;
+}
+
+double NewLOITargeting::DELV2(VECTOR3 R_N, VECTOR3 U_S, double R_a, double R_p, double W_P)
+{
+	VECTOR3 U_P_apo, R_N_apo, U_P, U_P1, U_P2;
+	double a, e, a1, a2, e1, e2, P1, P2, cos_dw, sin_dw, dw, K_P, K_C, K_S, b, c, disc, SGN1, cos_eta2, eta2, eta1, R1, R2, eps2, V1, V2, gamma1, gamma2, cos_gamma1, cos_gamma2, dv, dgamma, dvtemp;
+	bool first_pass;
 
 	eps2 = 0.1;
+	R_N_apo = unit(R_N);
+	U_P_apo = R_N_apo * cos(W_P) - unit(crossp(U_S, R_N_apo))*sin(W_P);
 
-	R_p1 = R_P1_apo * cos(opt.DW) - unit(crossp(R_P1_apo, U_S))*sign(opt.DW);
-	a1 = (R_a + R_p) / 2.0;
-	e1 = R_a / a1 - 1.0;
-	P2 = a_L * (1.0 - e_L * e_L);
-	P1 = a1 * (1.0 - e1 * e1);
-	cos_dw = dotp(R_p1, U_PL);
-	if (cos_dw > 1)
+	U_P = U_P_apo * cos(DWPSAV) - unit(crossp(U_P_apo, U_S))*sin(DWPSAV);
+	a = (R_a + R_p) / 2.0;
+	e = R_a / a - 1.0;
+
+	if (e > ELSAV)
 	{
-		cos_dw = 1.0;
+		e1 = ELSAV;
+		a1 = ALSAV;
+		U_P1 = UPLSAV;
+		e2 = e;
+		a2 = a;
+		U_P2 = U_P;
 	}
-	else if (cos_dw < -1)
+	else
 	{
-		cos_dw = -1.0;
+		e1 = e;
+		a1 = a;
+		U_P1 = U_P;
+		e2 = ELSAV;
+		a2 = ALSAV;
+		U_P2 = UPLSAV;
+	}
+	P2 = a2 * (1.0 - e2 * e2);
+	P1 = a1 * (1.0 - e1 * e1);
+	cos_dw = dotp(U_P1, U_P2);
+	if (abs(cos_dw) > 1.0)
+	{
+		cos_dw = cos_dw / abs(cos_dw);
 	}
 	sin_dw = sqrt(1.0 - cos_dw * cos_dw);
-	dw = atan2(sin_dw, cos_dw);
+	dw = sign(dotp(crossp(U_P1, U_P2), U_S))*acos(cos_dw);
 	K_P = P1 - P2;
-	K_C = P1 * e_L - cos_dw * P2*e1;
+	K_C = P1 * e2 - cos_dw * P2*e1;
 	K_S = P2 * e1*sin_dw;
 	a = K_C * K_C + K_S * K_S;
 	b = 2.0*K_P*K_C;
 	c = K_P * K_P - K_S * K_S;
-	DISC = b * b - 4.0*a*c;
-	if (DISC <= 0)
+	disc = b * b - 4.0*a*c;
+	if (disc < 0)
 	{
-		//No intersection, DV not calculated
-		return;
+		disc = 0.0;
 	}
 	SGN1 = 1.0;
-LOI_DELV2_B:
-	cos_eta2 = (-b + SGN1 * sqrt(DISC)) / (2.0*a);
-	if (cos_eta2 > 1)
+LOI_DELV2_B2:
+	cos_eta2 = (-b + SGN1 * sqrt(disc)) / (2.0*a);
+	if (abs(cos_eta2) > 1.0)
 	{
-		cos_eta2 = 1.0;
-	}
-	else if (cos_eta2 < -1)
-	{
-		cos_eta2 = -1.0;
+		cos_eta2 = cos_eta2 / abs(cos_eta2);
 	}
 	eta2 = acos(cos_eta2);
-	eta1 = dw - eta2;
-	SGN2 = 1.0*sign(dotp(crossp(R_p1, U_PL), U_S));
-	SGN3 = sign(abs(PI - dw) - abs(eta2))*SGN2;
-	do
+	first_pass = true;
+LOI_DELV2_A3:
+	eta1 = dw + eta2;
+	R1 = P1 / (1.0 + e1 * cos(eta1));
+	R2 = P2 / (1.0 + e2 * cos(eta2));
+	if (abs(R1 - R2) < eps2)
 	{
-		R1 = P1 / (1.0 + e1 * cos(eta1));
-		R2 = P2 / (1.0 + e_L * cos(eta2));
-		if (abs(R1 - R2) >= eps2)
+		if (abs(eta1) > PI)
 		{
-			eta1 = dw - eta2;
-			SGN2 = -SGN2;
-			SGN3 = sign(abs(dw) - abs(eta2))*SGN2;
+			eta1 = eta1 - sign(eta1)*PI2;
 		}
-	} while (abs(R1 - R2) >= eps2);
-	eta2 = SGN2 * eta2;
-	eta1 = SGN3 * eta1;
+		goto LOI_DELV2_A4;
+	}
+	if (first_pass)
+	{
+		eta2 = -eta2;
+		first_pass = false;
+		goto LOI_DELV2_A3;
+	}
+	dv = 0.0;
+	goto LOI_DELV2_B4;
+LOI_DELV2_A4:
 	V1 = sqrt(OrbMech::mu_Moon*(2.0 / R1 - 1.0 / a1));
-	V2 = sqrt(OrbMech::mu_Moon*(2.0 / R2 - 1.0 / a_L));
-	cos_g1 = sqrt(OrbMech::mu_Moon*P1) / (R1*V1);
-	cos_g2 = sqrt(OrbMech::mu_Moon*P2) / (R2*V2);
-	if (cos_g1 > 1)
+	V2 = sqrt(OrbMech::mu_Moon*(2.0 / R2 - 1.0 / a2));
+	cos_gamma1 = sqrt(OrbMech::mu_Moon*P1) / R1 / V1;
+	cos_gamma2 = sqrt(OrbMech::mu_Moon*P2) / R2 / V2;
+	if (abs(cos_gamma1) > 1.0)
 	{
-		cos_g1 = 1.0;
+		cos_gamma1 = cos_gamma1 / abs(cos_gamma1);
 	}
-	else if (cos_g1 < -1)
+	if (abs(cos_gamma2) > 1.0)
 	{
-		cos_g1 = -1.0;
+		cos_gamma2 = cos_gamma2 / abs(cos_gamma2);
 	}
-	if (cos_g2 > 1)
-	{
-		cos_g2 = 1.0;
-	}
-	else if (cos_g2 < -1)
-	{
-		cos_g2 = -1.0;
-	}
-	gamma1 = sign(eta1)*acos(cos_g1);
-	gamma2 = sign(eta2)*acos(cos_g2);
+	gamma1 = sign(eta1)*acos(cos_gamma1);
+	gamma2 = sign(eta2)*acos(cos_gamma2);
 	dgamma = abs(gamma1 - gamma2);
-	DV2 = sqrt(V1*V1 + V2 * V2 - 2.0*V1*V2*cos(dgamma));
+	dv = sqrt(V1*V1 + V2 * V2 - 2.0*V1*V2*cos(dgamma));
+LOI_DELV2_B4:
 	if (SGN1 == 1.0)
 	{
-		DV1 = DV2;
 		SGN1 = -1.0;
-		goto LOI_DELV2_B;
+		dvtemp = dv;
+		goto LOI_DELV2_B2;
 	}
-	//Select lesser of two DVs for display. Save eta1, eta2, dgamma, V1, V2, R1, R2 for possible output
-	return 0.0;
-}*/
+	if (dv < dvtemp)
+	{
+		//Current solution
+		return dv;
+	}
+	else
+	{
+		//Previous solution
+		return dvtemp;
+	}
+}

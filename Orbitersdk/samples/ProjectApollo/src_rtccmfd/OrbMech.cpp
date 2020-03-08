@@ -1074,7 +1074,7 @@ SV coast(SV sv0, double dt)
 
 MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_cond, double dir)
 {
-	double dt, funct, TIME, RCALC, RES1, TIME_old, t_new;
+	double dt, funct, TIME, RCALC, RES1, TIME_old, t_new, DEV;
 	int INITE = 0;
 	bool stop = false, allow_stop = false;
 	OBJHANDLE gravref = sv0.gravref;
@@ -1088,22 +1088,19 @@ MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_c
 		dt = -dt_max;
 	}
 
+	if (end_cond == 0.0)
+	{
+		DEV = 1.0;
+	}
+	else
+	{
+		DEV = end_cond;
+	}
+
 	CoastIntegrator coast(sv0.R, sv0.V, sv0.MJD, dt, sv0.gravref, NULL);
 
 	while (stop == false)
 	{
-		if (abs(coast.GetTime() - dt_max) < 1e-6)
-		{
-			allow_stop = true;
-		}
-
-		stop = coast.iteration(allow_stop);
-
-		if (stop)
-		{
-			break;
-		}
-
 		if (stop_ind != 1)
 		{
 			if (gravref != coast.GetGravRef())
@@ -1114,7 +1111,7 @@ MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_c
 
 			TIME = coast.GetTime();
 
-			if (abs(TIME) > dt_min)
+			if (abs(TIME) >= dt_min)
 			{
 				if (stop_ind == 2)
 				{
@@ -1125,6 +1122,13 @@ MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_c
 					funct = length(coast.GetPosition());
 				}
 				RCALC = funct - end_cond;
+
+				if (abs(RCALC / DEV) <= pow(10, -12))
+				{
+					coast.AdjustTF(TIME);
+					allow_stop = true;
+					goto PMMCEN_PMMIED_7B;
+				}
 
 				//1st pass
 				if (INITE == 0)
@@ -1157,6 +1161,14 @@ MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_c
 				TIME_old = TIME;
 			}
 		}
+
+		if (abs(coast.GetTime() - dt_max) < 1e-6)
+		{
+			allow_stop = true;
+		}
+
+	PMMCEN_PMMIED_7B:
+		stop = coast.iteration(allow_stop);
 	}
 
 	MPTSV sv1;
@@ -5951,7 +5963,7 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av,
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
-void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
+void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
 {
 	VECTOR3 R_ig, V_ig, V_go, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
 	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
@@ -5991,35 +6003,8 @@ void impulsive(VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, 
 	{
 		sprintf(oapiDebugString(), "Iteration failed!");
 	}
-	//Llambda = V_go;
 
-	//double apo, peri;
-	//periapo(R_p, V_p, mu, apo, peri);
-
-	VECTOR3 X, Y, Z, dV_LV, DV_P, DV_C, V_G;
-
-	MATRIX3 Q_Xx;
-	double theta_T;
-
-	X = unit(crossp(crossp(R_ig, V_ig), R_ig));
-	Y = unit(crossp(V_ig, R_ig));
-	Z = -unit(R_ig);
-
-	Q_Xx = _M(X.x, X.y, X.z, Y.x, Y.y, Y.z, Z.x, Z.y, Z.z);
-	dV_LV = mul(Q_Xx, V_go);
-	DV_P = X*dV_LV.x + Z*dV_LV.z;
-	if (length(DV_P) != 0.0)
-	{
-		theta_T = -length(crossp(R_ig, V_ig))*length(dV_LV)*m / OrbMech::power(length(R_ig), 2.0) / f_T;
-		DV_C = (unit(DV_P)*cos(theta_T / 2.0) + unit(crossp(DV_P, Y))*sin(theta_T / 2.0))*length(DV_P);
-		V_G = DV_C + Y*dV_LV.y;
-	}
-	else
-	{
-		V_G = X*dV_LV.x + Y*dV_LV.y + Z*dV_LV.z;
-	}
-	Llambda = V_G;
-
+	Llambda = V_go;
 	R_cutoff = R_p;
 	V_cutoff = V_p;
 	m_cutoff = m_p;
