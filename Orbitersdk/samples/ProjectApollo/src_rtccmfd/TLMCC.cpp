@@ -2426,10 +2426,7 @@ void TLMCCProcessor::ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, doub
 	block.IndVarSwitch[0] = true;
 	block.IndVarSwitch[1] = true;
 	block.IndVarSwitch[2] = true;
-	if (freereturn)
-	{
-		block.IndVarSwitch[3] = true;
-	}
+	block.IndVarSwitch[3] = true;
 	block.IndVarSwitch[6] = true;
 	block.IndVarSwitch[7] = true;
 	block.IndVarSwitch[8] = true;
