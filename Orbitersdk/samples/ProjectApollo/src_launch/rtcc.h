@@ -3481,7 +3481,7 @@ public:
 		double H_P_LPO2 = 8.0*1852.0;
 		double REVS1 = 2.0;
 		int REVS2 = 11;
-		double SITEROT = 345.0*RAD;
+		double SITEROT = -15.0*RAD;
 		double ETA1 = 0.0;
 		//Constants (some of these should be RTCC program constants, but we don't know their name)
 		int LOPC_M = 3;

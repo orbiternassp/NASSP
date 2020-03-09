@@ -23745,7 +23745,7 @@ double NewLOITargeting::TIME(double a_LLS, double e_LLS, double lng_LLS, double 
 	VECTOR3 U_LLS_sg, U_LLS;
 	double R1, DR1, R2, dt1, dt2, T_LLS, a1, e1, da;
 
-	DR1 = modf(opt.REVS1, &R1);
+	DR1 = modf(opt.REVS1, &R1)*PI2;
 	R2 = (double)opt.REVS2;
 	a1 = (RA_LPO + RP_LPO) / 2.0;
 	e1 = RA_LPO / a1 - 1.0;

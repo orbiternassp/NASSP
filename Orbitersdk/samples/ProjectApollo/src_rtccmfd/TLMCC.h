@@ -115,6 +115,7 @@ struct TLMCCMEDQuantities
 	double TA_LOI;
 	double T_min_sea;
 	double T_max_sea;
+	double dh_bias = 0.0;
 };
 
 struct TLMCCMissionConstants
@@ -269,21 +270,13 @@ struct TLMCCGeneralizedIteratorArray
 	//PRCOMP data
 	MPTSV SGSLOI;
 	double RA_LPO1;
-	//Old Version
-	double A_L;
-	double E_L;
-	double dh_a;
-	double dh_p;
-	double dw_p;
-	VECTOR3 u_l;
-	double DT_LOI_DOI;
 	//New Version
-	//double gamma_L;
-	//double A1;
-	//double E1;
-	//double gamma1;
-	//double V2;
-	//double V_L;
+	double gamma_L;
+	double A1;
+	double E1;
+	double gamma1;
+	double V2;
+	double V_L;
 };
 
 class TLMCCProcessor
@@ -349,8 +342,7 @@ protected:
 	void RNTSIM(VECTOR3 R, VECTOR3 V, double MJD, double lng_L, double &lat, double &lng, double &dlng);
 	void LOPC(VECTOR3 R0, VECTOR3 V0, double MJD0, VECTOR3 L, int m, int n, double P, VECTOR3 &R3, VECTOR3 &V3, double &MJD3, double &mfm0, double &dpsi, VECTOR3 &DV);
 	void ELEMT(VECTOR3 R, VECTOR3 V, double mu, VECTOR3 &H, double &a, double &e, double &i, double &n, double &P, double &eta);
-	//void PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &V2, double &gamma_L, double &V_L, double &A1, double &E1, double &gamma1, double &DT_1st_pass, MPTSV &SGSLOI);
-	void PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &A_L, double &E_L, double &dw_p, double &dh_a, double &dh_p, double &DT, double &DT_1st_pass, VECTOR3 &u_l, MPTSV &SGSLOI);
+	void PRCOMP(VECTOR3 u_pc, VECTOR3 h_pc, double MJD_nd, double &RA_LPO1, double &A1, double &E1, double &gamma1, double &V_L, double &gamma_L, double &V2, double &DT_1st_pass);
 	double DDELTATIME(double a, double dt_apo, double xm, double betam, double dt);
 	void SCALE(VECTOR3 R0, VECTOR3 V0, double h, VECTOR3 &RF, VECTOR3 &VF);
 	MPTSV PPC(MPTSV SIN, double lat1, double lng1, double azi1, int RT1, int INTL, double &DVS);

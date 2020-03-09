@@ -3794,7 +3794,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(22 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].HP);
-			skp->Text(26 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(51 * W / 64, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, GC->rtcc->MPTDISPLAY.man[i].code.c_str());
 			skp->Text(63 * W / 64, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
@@ -6449,9 +6449,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(9 * W / 16, 6 * H / 28, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "HALOI2 %.1lf", GC->rtcc->PZMCCPLN.H_A_LPO2 / 1852.0);
 		skp->Text(9 * W / 16, 7 * H / 28, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "HPLOI2 %.1lf", GC->rtcc->PZMCCPLN.H_P_LPO2 / 1852.0);
+		sprintf_s(Buffer, "HPLOI2 %.2lf", GC->rtcc->PZMCCPLN.H_P_LPO2 / 1852.0);
 		skp->Text(9 * W / 16, 8 * H / 28, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "REVS1 %.1lf", GC->rtcc->PZMCCPLN.REVS1);
+		sprintf_s(Buffer, "REVS1 %.2lf", GC->rtcc->PZMCCPLN.REVS1);
 		skp->Text(9 * W / 16, 9 * H / 28, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "REVS2 %d", GC->rtcc->PZMCCPLN.REVS2);
 		skp->Text(9 * W / 16, 10 * H / 28, Buffer, strlen(Buffer));
@@ -6507,11 +6507,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		sprintf_s(Buffer, "%.1lf NM", GC->rtcc->med_k40.HA_LLS);
 		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1lf NM", GC->rtcc->med_k40.HP_LLS);
+		sprintf_s(Buffer, "%.2lf NM", GC->rtcc->med_k40.HP_LLS);
 		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1lf°", GC->rtcc->med_k40.DW);
 		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1lf", GC->rtcc->med_k40.REVS1);
+		sprintf_s(Buffer, "%.2lf", GC->rtcc->med_k40.REVS1);
 		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%d", GC->rtcc->med_k40.REVS2);
 		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
@@ -6587,7 +6587,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(18 * W / 32, 10 * H / 32, "MIN THETA", 9);
 		}
 
-		sprintf(Buffer, "%.1lf", GC->rtcc->PZLRBTI.REVS1);
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZLRBTI.REVS1);
 		skp->Text(21 * W / 32, 7 * H / 32, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%d", GC->rtcc->PZLRBTI.REVS2);
 		skp->Text(21 * W / 32, 8 * H / 32, Buffer, strlen(Buffer));
@@ -6605,7 +6605,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(31 * W / 32, 8 * H / 32, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.1lf", GC->rtcc->PZLRBTI.HALOI2);
 		skp->Text(31 * W / 32, 9 * H / 32, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1lf", GC->rtcc->PZLRBTI.HPLOI2);
+		sprintf(Buffer, "%.2lf", GC->rtcc->PZLRBTI.HPLOI2);
 		skp->Text(31 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
 
 		skp->Text(6 * W / 32, 12 * H / 32, "AZMN FND", 8);

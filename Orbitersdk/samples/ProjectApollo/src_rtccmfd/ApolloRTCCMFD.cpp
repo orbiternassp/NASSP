@@ -4889,6 +4889,16 @@ void ApolloRTCCMFD::set_TLMCCLOIDOIRevs(double revs1, int revs2)
 {
 	GC->rtcc->PZMCCPLN.REVS1 = revs1;
 	GC->rtcc->PZMCCPLN.REVS2 = revs2;
+
+	//Calculate new ETA1
+	double R1;
+	double DR1 = modf(GC->rtcc->PZMCCPLN.REVS1, &R1)*PI2;
+
+	GC->rtcc->PZMCCPLN.ETA1 = 0.0 - DR1;
+	if (GC->rtcc->PZMCCPLN.ETA1 < 0)
+	{
+		GC->rtcc->PZMCCPLN.ETA1 += PI2;
+	}
 }
 
 void ApolloRTCCMFD::menuSetTLMCCLSRotation()
@@ -5188,7 +5198,7 @@ bool LOIEta1Input(void *id, char *str, void *data)
 {
 	if (strlen(str) < 20)
 	{
-		((ApolloRTCCMFD*)data)->set_LOIEta1(atoi(str));
+		((ApolloRTCCMFD*)data)->set_LOIEta1(atof(str));
 		return true;
 	}
 	return false;
