@@ -209,8 +209,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 23.7077777*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon -3073.263;
 		rtcc->med_k18.psi_DS = -91.0 + 360.0;
-		rtcc->med_k18.HALOI1 = 169.8;
-		rtcc->med_k18.HPLOI1 = 59.2;
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
@@ -248,8 +246,6 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -23.44333*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon -1.19*1852.0;
 		rtcc->med_k18.psi_DS = -75.0 + 360.0;
-		rtcc->med_k18.HALOI1 = 168.9;
-		rtcc->med_k18.HPLOI1 = 58.7;
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1250.0;
@@ -423,11 +419,14 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_k18.psi_DS = -90.0 + 360.0;
 		t_Land = OrbMech::HHMMSSToSS(98.0, 46.0, 42.4);
 		rtcc->med_k17.DescentFlightArc = 16.0*RAD;
-		rtcc->med_k17.DwellOrbits = 10;
+		rtcc->med_k17.DwellOrbits = rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
 		rtcc->med_k17.DescIgnHeight = 52500.0*0.3048;
+		rtcc->med_k40.DW = -16.0;
 		rtcc->PZREAP.IRMAX = 80.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
 		DT_Ins_TPI = 47.0*60.0;
+
+		rtcc->PZMCCPLN.SITEROT = -16.0*RAD;
 
 		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(92.0, 26.0, 24.0);
 		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = 7.45*RAD;
@@ -467,11 +466,15 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_k17.DescentFlightArc = -10.0*RAD;
 		rtcc->med_k40.DW = 10.0;
 		rtcc->med_k40.HP_LLS = 13.17;
-		rtcc->med_k17.DwellOrbits = rtcc->med_k40.REVS2 = 10;
+		rtcc->med_k17.DwellOrbits = rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
 		rtcc->med_k17.DescIgnHeight = 84000.0*0.3048;
 		rtcc->PZREAP.IRMAX = 80.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
 		DT_Ins_TPI = 47.0*60.0;
+
+		rtcc->PZMCCPLN.SITEROT = 10.0*RAD;
+		rtcc->PZMCCPLN.H_P_LPO1 = 51.3*1852.0;
+		rtcc->PZMCCPLN.H_P_LPO2 = 13.17*1852.0;
 
 		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(109, 52, 24);
 		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -11.11101*RAD;
