@@ -121,6 +121,7 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->PZMCCPLN.LOPC_M = 1;
 		rtcc->PZMCCPLN.LOPC_N = 0;
+		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -78.0*RAD;
 
 		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(82, 0, 0);
 		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -5.67822*RAD;
@@ -170,6 +171,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		t_Land = OrbMech::HHMMSSToSS(100.0, 46.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
 
+		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -91.0*RAD;
+
 		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(92, 39, 0);
 		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -4.933294*RAD;
 		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
@@ -213,6 +216,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		t_Land = OrbMech::HHMMSSToSS(102.0, 47.0, 11.0);
 		rtcc->PZREAP.RRBIAS = 1285.0;
 
+		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -91.0*RAD;
+
 		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(89, 25, 35);
 		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = 0.26206227*RAD;
 		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 179.81579*RAD;
@@ -249,6 +254,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_k40.HP_LLS = 60.0;
 		t_Land = OrbMech::HHMMSSToSS(110.0, 31.0, 19.0);
 		rtcc->PZREAP.RRBIAS = 1250.0;
+
+		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -75.0*RAD;
 
 		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = OrbMech::HHMMSSToSS(99, 47, 51);
 		rtcc->PZSFPTAB.blocks[0].lat_pc1 = -2.6*RAD;
