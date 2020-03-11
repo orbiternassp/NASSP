@@ -87,6 +87,9 @@
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_launch\mcc.h">
@@ -138,6 +141,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\LOITargeting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

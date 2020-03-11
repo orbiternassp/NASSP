@@ -22,6 +22,7 @@
     <ClInclude Include="..\..\src_rtccmfd\GeneralizedIterator.h" />
     <ClInclude Include="..\..\src_rtccmfd\LDPP.h" />
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LOITargeting.h" />
     <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
@@ -41,6 +42,7 @@
     <ClCompile Include="..\..\src_rtccmfd\GeneralizedIterator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LWP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
