@@ -18673,6 +18673,7 @@ void RTCC::PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out)
 	PZLRBTI.DVMAXp = opt.DV_maxp / 0.3048;
 	PZLRBTI.DVMAXm = opt.DV_maxm / 0.3048;
 	PZLRBTI.planesoln = opt.usePlaneSolnForInterSoln;
+	PZLRBTI.RARPGT = opt.RARPGT / 1852.0;
 	for (int i = 0;i < 8;i++)
 	{
 		PZLRBTI.sol[i].GETLOI = GETfromGMT(out.data[i].GMT_LOI);

@@ -3027,6 +3027,7 @@ public:
 		double HPLOI2 = 0.0;
 		double DVMAXp = 0.0;
 		double DVMAXm = 0.0;
+		double RARPGT = 0.0;
 		bool planesoln = true;
 		LOIDisplayTableElement sol[8];
 	} PZLRBTI;

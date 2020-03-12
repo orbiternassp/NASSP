@@ -130,8 +130,8 @@ namespace rtcc
 		out.data[6] = out.data[2];
 		out.data[7] = out.data[3];
 
-		INTER(out.data[6].R_LOI, out.data[6].V_LOI, out.data[6].GMT_LOI, UPLSAV, USSAV[6], true);
-		INTER(out.data[7].R_LOI, out.data[7].V_LOI, out.data[7].GMT_LOI, UPLSAV, USSAV[7], false);
+		INTER(out.data[6].R_LOI, out.data[6].V_LOI, out.data[6].GMT_LOI, UPLSAV, out.data[6].USSAV, true);
+		INTER(out.data[7].R_LOI, out.data[7].V_LOI, out.data[7].GMT_LOI, UPLSAV, out.data[7].USSAV, false);
 		goto LOI_MAIN_DISPLAY;
 	LOI_MAIN_ONE_NODE:
 		NU = unit(crossp(U, U_H));
@@ -232,8 +232,8 @@ namespace rtcc
 		MINTHT(U_DS);
 	LOI_MAIN_A:
 		VECTOR3 U_Sp, U_Sm;
-		U_Sp = USSAV[4];
-		U_Sm = USSAV[5];
+		U_Sp = out.data[4].USSAV;
+		U_Sm = out.data[5].USSAV;
 		U_L = unit(UPLSAV - U_Sp * dotp(UPLSAV, U_Sp));
 		INTER(out.data[4].R_LOI, out.data[4].V_LOI, out.data[4].GMT_LOI, U_L, U_Sp, true);
 		U_L = unit(UPLSAV - U_Sm * dotp(UPLSAV, U_Sm));
@@ -294,7 +294,7 @@ namespace rtcc
 			{
 				continue;
 			}
-			out.data[i].display.dv_LOI2 = DELV2(out.data[i].R_LOI, USSAV[i], RA_LPO + DHASAV, out.data[i].display.h_P + opt.R_LLS + DHPSAV, out.data[i].display.W_P);
+			out.data[i].display.dv_LOI2 = DELV2(out.data[i].R_LOI, out.data[i].USSAV, RA_LPO + DHASAV, out.data[i].display.h_P + opt.R_LLS + DHPSAV, out.data[i].display.W_P);
 			sgn = OrbMech::sign(dotp(crossp(U_PC, out.data[i].R_LOI), U_H));
 			sv2 = OrbMech::PMMCEN(sv, 0.0, 10.0*24.0*3600.0, 3, length(out.data[i].R_LOI), sgn);
 			R_H = sv2.R;
@@ -648,7 +648,7 @@ namespace rtcc
 		out.data[soln - 1].display.h_P = R_P - opt.R_LLS;
 		out.data[soln - 1].display.W_P = W_P;
 
-		USSAV[soln - 1] = U_S;
+		out.data[soln - 1].USSAV = U_S;
 	}
 
 	void LOITargeting::MINTHT(VECTOR3 U_DS)
@@ -664,8 +664,7 @@ namespace rtcc
 
 		//Propagate on the hyperbola conic to pre-perilune
 		r = RA_LPO;
-		dt = OrbMech::time_radius(opt.SPH.R, -opt.SPH.V, r, 1.0, OrbMech::mu_Moon);
-		dt = -dt;
+		dt = -OrbMech::time_radius(opt.SPH.R, -opt.SPH.V, r, 1.0, OrbMech::mu_Moon);
 		OrbMech::rv_from_r0v0(opt.SPH.R, opt.SPH.V, dt, R_N, V_N, OrbMech::mu_Moon);
 		firstpass = true;
 	LOI_MINTHT_S:
@@ -861,10 +860,9 @@ namespace rtcc
 	double LOITargeting::DELV2(VECTOR3 R_N, VECTOR3 U_S, double R_a, double R_p, double W_P)
 	{
 		VECTOR3 U_P_apo, R_N_apo, U_P, U_P1, U_P2;
-		double a, e, a1, a2, e1, e2, P1, P2, cos_dw, sin_dw, dw, K_P, K_C, K_S, b, c, disc, SGN1, cos_eta2, eta2, eta1, R1, R2, eps2, V1, V2, gamma1, gamma2, cos_gamma1, cos_gamma2, dv, dgamma, dvtemp;
+		double a, e, a1, a2, e1, e2, P1, P2, cos_dw, sin_dw, dw, K_P, K_C, K_S, b, c, disc, SGN1, cos_eta2, eta2, eta1, R1, R2, V1, V2, gamma1, gamma2, cos_gamma1, cos_gamma2, dv, dgamma, dvtemp;
 		bool first_pass;
 
-		eps2 = 1.0;
 		R_N_apo = unit(R_N);
 		U_P_apo = R_N_apo * cos(W_P) - unit(crossp(U_S, R_N_apo))*sin(W_P);
 
@@ -923,7 +921,7 @@ namespace rtcc
 		eta1 = dw + eta2;
 		R1 = P1 / (1.0 + e1 * cos(eta1));
 		R2 = P2 / (1.0 + e2 * cos(eta2));
-		if (abs(R1 - R2) < eps2)
+		if (abs(R1 - R2) < opt.RARPGT)
 		{
 			if (abs(eta1) > PI)
 			{

@@ -6626,11 +6626,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(27 * W / 32, 12 * H / 32, "DVMAX+", 6);
 		skp->Text(27 * W / 32, 13 * H / 32, "DVMAX-", 6);
+		skp->Text(27 * W / 32, 14 * H / 32, "RA-RP GT", 8);
 
 		sprintf(Buffer, "%.0lf", GC->rtcc->PZLRBTI.DVMAXp);
 		skp->Text(31 * W / 32, 12 * H / 32, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.0lf", GC->rtcc->PZLRBTI.DVMAXm);
 		skp->Text(31 * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.1lf", GC->rtcc->PZLRBTI.RARPGT);
+		skp->Text(31 * W / 32, 14 * H / 32, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(2 * W / 32, 16 * H / 32, "CODE", 4);

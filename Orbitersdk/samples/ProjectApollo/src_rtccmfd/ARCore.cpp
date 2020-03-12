@@ -2963,6 +2963,7 @@ int ARCore::subThread()
 			else
 			{
 				gmt = GC->rtcc->RTCCPresentTimeGMT();
+				GC->rtcc->med_k18.VectorTime = GC->rtcc->GETfromGMT(gmt);
 			}
 
 			if (GC->rtcc->ELFECH(gmt, RTCC_MPT_CSM, sv0))

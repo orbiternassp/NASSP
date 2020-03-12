@@ -53,6 +53,8 @@ namespace rtcc
 		double lng_LLS;
 		double GMTBASE;
 		bool usePlaneSolnForInterSoln = true;
+		//Convergence criterium for DELV2
+		double RARPGT = 10.0*1852.0;
 	};
 
 	struct LOIDisplayData
@@ -84,6 +86,9 @@ namespace rtcc
 		double dv_LOI = 0.0;
 		double dgamma_LOI = 0.0;
 		double dpsi_LOI = 0.0;
+		//Just for temporary storage really
+		//Unit angular momentum vector to the plane of the solution
+		VECTOR3 USSAV;
 	};
 
 	struct LOIOutputData
@@ -141,8 +146,6 @@ namespace rtcc
 		double DT_CORR;
 		//Estimate of the change of apolune altitude, perilune altitude, and perilune position due to propagation in LPO-1
 		double DHASAV, DHPSAV, DWPSAV;
-		//Unit angular momentum vector to the plane of the solution
-		VECTOR3 USSAV[8];
 	};
 
 }
