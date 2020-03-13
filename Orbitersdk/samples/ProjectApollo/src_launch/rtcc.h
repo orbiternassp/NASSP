@@ -2474,12 +2474,12 @@ public:
 	//K-MED Decoder
 	void PMKMED(int med);
 	//'M' MED Module
-	void PMMMED(int med, std::vector<std::string> data);
+	int PMMMED(int med, std::vector<std::string> data);
 	//'P' Code MED Processor
-	void GMSMED(int med);
-	void GMSMED(int med, std::vector<std::string> data);
+	int GMSMED(int med);
+	int GMSMED(int med, std::vector<std::string> data);
 	//'U' Code MED Processor
-	void EMGTVMED(int med, std::vector<std::string> data);
+	int EMGTVMED(int med, std::vector<std::string> data);
 	//Detailed Maneuver Table Math Module
 	void PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux);
 	//Time Queue Control Load Module

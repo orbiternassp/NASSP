@@ -18751,33 +18751,50 @@ bool RTCC::GMGMED(char *str)
 		return false;
 	}
 
+	char Buffer[128];
+	sprintf_s(Buffer, "GMGMED: MED %s", str);
+	PMXSPT(Buffer);
+
+	int err;
+
 	if (medtype == 'A')
 	{
-		EMGABMED(number, MEDSequence);
+		err = EMGABMED(number, MEDSequence);
 	}
 	else if (medtype == 'B')
 	{
-		EMGABMED(number + 100, MEDSequence);
+		err = EMGABMED(number + 100, MEDSequence);
 	}
 	else if (medtype == 'G')
 	{
-		EMGABMED(number + 200, MEDSequence);
+		err = EMGABMED(number + 200, MEDSequence);
 	}
 	else if (medtype == 'F')
 	{
-		PMQAFMED(number, MEDSequence);
+		err = PMQAFMED(number, MEDSequence);
 	}
 	else if (medtype == 'M')
 	{
-		PMMMED(number, MEDSequence);
+		err = PMMMED(number, MEDSequence);
 	}
 	else if (medtype == 'P')
 	{
-		GMSMED(number, MEDSequence);
+		err = GMSMED(number, MEDSequence);
 	}
 	else if (medtype == 'U')
 	{
-		EMGTVMED(number, MEDSequence);
+		err = EMGTVMED(number, MEDSequence);
+	}
+	
+	if (err == 0)
+	{
+		sprintf_s(Buffer, "GMGMED: MED %c%02d OK", medtype, number);
+		PMXSPT(Buffer);
+	}
+	else
+	{
+		sprintf_s(Buffer, "GMGMED: MED %c%02d ERR %d", medtype, number, err);
+		PMXSPT(Buffer);
 	}
 
 	return true;
@@ -19458,13 +19475,13 @@ void RTCC::PMKMED(int med)
 
 }
 
-void RTCC::PMMMED(int med, std::vector<std::string> data)
+int RTCC::PMMMED(int med, std::vector<std::string> data)
 {
 	if (med == 40)
 	{
 		if (data[0] == "")
 		{
-			return;
+			return 2;
 		}
 		if (data[0] == "P1")
 		{
@@ -19475,7 +19492,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			}
 			else if (sscanf(data[1].c_str(), "%lf", &dv) != 1)
 			{
-				return;
+				return 2;
 			}
 			int dvind;
 			if (data.size() < 3 || data[2] == "" || data[2] == "MAG")
@@ -19492,7 +19509,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			}
 			else
 			{
-				return;
+				return 2;
 			}
 
 			double dt;
@@ -19502,11 +19519,11 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			}
 			else if (sscanf(data[3].c_str(), "%lf", &dt) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (dt < 0)
 			{
-				return;
+				return 2;
 			}
 
 			PZBURN.P1_DV = dv * 0.3048;
@@ -19522,7 +19539,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			}
 			else if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[2] == "")
 			{
@@ -19530,7 +19547,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			}
 			else if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[3] == "")
 			{
@@ -19538,7 +19555,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			}
 			else if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
 			{
-				return;
+				return 2;
 			}
 			PZBURN.P2_DV = dv * 0.3048;
 		}
@@ -19547,27 +19564,27 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			VECTOR3 dv;
 			if (data[1] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[2] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[3] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
 			{
-				return;
+				return 2;
 			}
 			PZBURN.P3_DV = dv * 0.3048;
 		}
@@ -19576,27 +19593,27 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			VECTOR3 dv;
 			if (data[1] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[2] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[3] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
 			{
-				return;
+				return 2;
 			}
 			PZBURN.P4_DV = dv * 0.3048;
 		}
@@ -19606,7 +19623,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -19619,16 +19636,16 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		unsigned man;
 		if (sscanf(data[1].c_str(), "%d", &man) != 1)
 		{
-			return;
+			return 2;
 		}
 		if (man < 1 || man>15)
 		{
-			return;
+			return 2;
 		}
 		int headsup;
 		if (data.size() < 3)
@@ -19645,7 +19662,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int trim;
 		if (data.size() < 4)
@@ -19662,7 +19679,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		PMMUDT(veh, man, headsup, trim);
 	}
@@ -19672,12 +19689,12 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 
 		if (data[0] == "")
 		{
-			return;
+			return 2;
 		}
 		else if (data[0] == "CSM")
 		{
@@ -19689,25 +19706,25 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		if (data[1] == "")
 		{
-			return;
+			return 2;
 		}
 		if (sscanf(data[1].c_str(), "%d", &man) != 1)
 		{
-			return;
+			return 2;
 		}
 		if (man < 1 || man > 15)
 		{
-			return;
+			return 2;
 		}
 
 		if (data[2] == "")
 		{
-			return;
+			return 2;
 		}
 		else if (data[2] == "F")
 		{
@@ -19727,7 +19744,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		PMMFUD(mpt, man, act);
@@ -19744,7 +19761,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m65.UllageDT > 0 && med_m65.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m65.UllageDT < 0)
 		{
@@ -19778,52 +19795,52 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m66.Table != 1 && med_m66.Table != 3)
 		{
-			return;
+			return 2;
 		}
 		inp.TableCode = med_m66.Table;
 
 		if (med_m66.ReplaceCode < 0 || med_m66.ReplaceCode > 15)
 		{
-			return;
+			return 2;
 		}
 		inp.ReplaceCode = med_m66.ReplaceCode;
 		double GMT = GMTfromGET(med_m66.GETBI);
 		if (GMT < RTCCPresentTimeGMT())
 		{
-			return;
+			return 2;
 		}
 		inp.GMTI = GMT;
 		inp.ThrusterCode = med_m66.Thruster;
 
 		if (med_m66.Thruster == RTCC_ENGINETYPE_LOX_DUMP && med_m66.AttitudeOpt != RTCC_ATTITUDE_INERTIAL)
 		{
-			return;
+			return 2;
 		}
 		if ((med_m66.AttitudeOpt == RTCC_ATTITUDE_PGNS_ASCENT || med_m66.AttitudeOpt == RTCC_ATTITUDE_AGS_ASCENT) && med_m66.Thruster != RTCC_ENGINETYPE_LMAPS)
 		{
-			return;
+			return 2;
 		}
 
 		inp.AttitudeCode = med_m66.AttitudeOpt;
 
 		if (med_m66.BurnParamNo == 1 && !(med_m66.AttitudeOpt == RTCC_ATTITUDE_INERTIAL || med_m66.AttitudeOpt == RTCC_ATTITUDE_MANUAL))
 		{
-			return;
+			return 2;
 		}
 		if (med_m66.BurnParamNo == 2 && !(med_m66.AttitudeOpt == RTCC_ATTITUDE_PGNS_EXDV || med_m66.AttitudeOpt == RTCC_ATTITUDE_AGS_EXDV))
 		{
-			return;
+			return 2;
 		}
 		if (med_m66.BurnParamNo == 3 || med_m66.BurnParamNo == 4)
 		{
 			if (!(med_m66.AttitudeOpt == RTCC_ATTITUDE_INERTIAL || med_m66.AttitudeOpt == RTCC_ATTITUDE_MANUAL || med_m66.AttitudeOpt == RTCC_ATTITUDE_PGNS_EXDV || med_m66.AttitudeOpt == RTCC_ATTITUDE_AGS_EXDV))
 			{
-				return;
+				return 2;
 			}
 		}
 		if (med_m66.BurnParamNo == 6 && !(med_m66.AttitudeOpt == RTCC_ATTITUDE_PGNS_ASCENT || med_m66.AttitudeOpt == RTCC_ATTITUDE_AGS_ASCENT))
 		{
-			return;
+			return 2;
 		}
 
 		inp.BurnParameterNumber = med_m66.BurnParamNo;
@@ -19834,7 +19851,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m66.UllageDT > 0 && med_m66.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m66.UllageDT < 0)
 		{
@@ -19864,7 +19881,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else if (abs(med_m66.TenPercentDT) < (MCTDD2 + MCTDD3))
 		{
-			return;
+			return 2;
 		}
 		else
 		{
@@ -19904,7 +19921,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else if (med_m66.DPSThrustFactor <= 0 || med_m66.DPSThrustFactor > 1)
 		{
-			return;
+			return 2;
 		}
 
 		if (med_m66.TrimAngleIndicator != 0 && med_m66.TrimAngleIndicator != 2)
@@ -19925,7 +19942,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -19938,16 +19955,16 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int opp;
 		if (sscanf(data[1].c_str(), "%d", &opp) != 1)
 		{
-			return;
+			return 2;
 		}
 		if (opp < 1 || opp > 2)
 		{
-			return;
+			return 2;
 		}
 
 		PMMXFRDirectInput inp;
@@ -19971,7 +19988,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m70.UllageDT > 0 && med_m70.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m70.UllageDT < 0)
 		{
@@ -20010,7 +20027,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m72.UllageDT > 0 && med_m72.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m72.UllageDT < 0)
 		{
@@ -20046,7 +20063,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -20059,7 +20076,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int ReplaceCode;
 		if (data[1] == "")
@@ -20070,18 +20087,18 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[1].c_str(), "%d", &ReplaceCode) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (ReplaceCode < 1 || ReplaceCode > 15)
 			{
-				return;
+				return 2;
 			}
 		}
 		int type;
 		if (data[2] == "SCS")
 		{
 			//TBD
-			return;
+			return 2;
 		}
 		else if (data[2] == "TTFP")
 		{
@@ -20090,7 +20107,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		else if (data[2] == "TTFM")
 		{
 			//TBD
-			return;
+			return 2;
 		}
 		else if (data[2] == "RTEP")
 		{
@@ -20099,11 +20116,11 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		else if (data[2] == "RTEM")
 		{
 			//TBD
-			return;
+			return 2;
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		PMMXFRDirectInput inp;
@@ -20133,7 +20150,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m78.UllageDT > 0 && med_m78.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m78.UllageDT < 0)
 		{
@@ -20161,7 +20178,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			inp.Type = 1;
 			if (inp.Plan < 1 || inp.Plan > 8)
 			{
-				return;
+				return 2;
 			}
 		}
 		else
@@ -20169,7 +20186,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			inp.Type = 0;
 			if (inp.Plan < 1 || inp.Plan > 4)
 			{
-				return;
+				return 2;
 			}
 		}
 		inp.Thruster[0] = med_m78.Thruster;
@@ -20191,15 +20208,16 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		void *vPtr = NULL;
 		PMMXFR(43, vPtr);
 	}
+	return 0;
 }
 
-void RTCC::GMSMED(int med)
+int RTCC::GMSMED(int med)
 {
 	std::vector<std::string> data;
-	GMSMED(med, data);
+	return GMSMED(med, data);
 }
 
-void RTCC::GMSMED(int med, std::vector<std::string> data)
+int RTCC::GMSMED(int med, std::vector<std::string> data)
 {
 	if (med == 7)
 	{
@@ -20271,7 +20289,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int veh1, veh2;
 		if (data[0] == "CSM")
@@ -20284,7 +20302,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		if (data[1] == "CSM")
 		{
@@ -20296,7 +20314,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double gmt;
 		unsigned mnv;
@@ -20305,7 +20323,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		//Error: both GMT and maneuver used
 		if (data.size() > 3 && data[2] != "" && data[3] != "")
 		{
-			return;
+			return 2;
 		}
 		
 		//Use maneuver
@@ -20314,11 +20332,11 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			use_mnv = true;
 			if (sscanf(data[3].c_str(), "%d", &mnv) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (mnv <= 0)
 			{
-				return;
+				return 2;
 			}
 		}
 		else
@@ -20333,7 +20351,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 				double hh, mm, ss;
 				if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
 				{
-					return;
+					return 2;
 				}
 				gmt = hh * 3600.0 + mm * 60.0 + ss;
 			}
@@ -20352,7 +20370,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			}
 			if (mpt->mantable.size() < mnv)
 			{
-				return;
+				return 2;
 			}
 			sv0.R = mpt->mantable[mnv - 1].R_BO;
 			sv0.V = mpt->mantable[mnv - 1].V_BO;
@@ -20368,7 +20386,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 
 			if (ELFECH(gmt, veh1, sv0))
 			{
-				return;
+				return 2;
 			}
 		}
 		PMSVCT(4, veh2, &sv0);
@@ -20378,7 +20396,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -20391,7 +20409,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int body;
 		if (data[1] == "E")
@@ -20404,7 +20422,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int rev;
 		if (data.size() < 3 || data[2] == "")
@@ -20415,11 +20433,11 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[2].c_str(), "%d", &rev) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (rev <= 0)
 			{
-				return;
+				return 2;
 			}
 		}
 		double min_get, max_get, hh, mm, ss;
@@ -20431,12 +20449,12 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			min_get = hh * 3600.0 + mm * 60.0 + ss;
 			if (min_get < 0)
 			{
-				return;
+				return 2;
 			}
 		}
 		if (data.size() < 5 || data[4] == "")
@@ -20447,12 +20465,12 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[4].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			max_get = hh * 3600.0 + mm * 60.0 + ss;
 			if (max_get < 0)
 			{
-				return;
+				return 2;
 			}
 		}
 		
@@ -20467,7 +20485,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			table = &EZCLEM;
 		}
 
-		if (table->NumRev == 0) return;
+		if (table->NumRev == 0) return 2;
 
 		int delta = rev + 1 - table->NumRevFirst;
 
@@ -20607,7 +20625,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		else
 		{
 			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
-			return;
+			return 2;
 		}
 		if (1 <= med_p80.Month && med_p80.Month <= 12)
 		{
@@ -20616,7 +20634,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		else
 		{
 			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
-			return;
+			return 2;
 		}
 		if (1 <= med_p80.Day && med_p80.Day <= 31)
 		{
@@ -20625,7 +20643,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		else
 		{
 			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
-			return;
+			return 2;
 		}
 
 		int m[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
@@ -20668,16 +20686,17 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			}
 		}
 	}
+	return 0;
 }
 
-void RTCC::EMGTVMED(int med, std::vector<std::string> data)
+int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 {
 	//Space Digitals Initialization
 	if (med == 0)
 	{
 		if (data.size() < 1)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -20690,7 +20709,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int body;
 		if (data.size() < 2 || data[1] == "" || data[1] == "E")
@@ -20703,7 +20722,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		EZETVMED.SpaceDigVehID = veh;
 		EZETVMED.SpaceDigCentralBody = body;
@@ -20715,16 +20734,16 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int column;
 		if (sscanf(data[0].c_str(), "%d", &column) != 1)
 		{
-			return;
+			return 2;
 		}
-		if (column < 1 || column>3)
+		if (column < 1 || column > 3)
 		{
-			return;
+			return 2;
 		}
 		int opt;
 		if (data[1] == "GET")
@@ -20737,7 +20756,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double val;
 		if (opt == 0)
@@ -20745,7 +20764,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double hh, mm, ss;
 			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			val = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -20754,7 +20773,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			int man;
 			if (sscanf(data[2].c_str(), "%d", &man) != 1)
 			{
-				return;
+				return 2;
 			}
 			val = (double)man;
 		}
@@ -20764,20 +20783,20 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			if (data.size() < 5)
 			{
-				return;
+				return 1;
 			}
 			if (sscanf(data[3].c_str(), "%lf", &incl) != 1)
 			{
-				return;
+				return 2;
 			}
 			incl *= RAD;
 			if (incl < 0 || incl > PI)
 			{
-				return;
+				return 2;
 			}
 			if (sscanf(data[4].c_str(), "%lf", &ascnode) != 1)
 			{
-				return;
+				return 2;
 			}
 			ascnode *= RAD;
 		}
@@ -20802,7 +20821,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int tab;
 		if (data[0] == "CSM")
@@ -20815,7 +20834,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int opt;
 		if (data[1] == "GMT")
@@ -20848,7 +20867,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double param;
 		if (opt == 1 || opt == 2)
@@ -20856,7 +20875,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double hh, mm, ss;
 			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			param = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -20864,7 +20883,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[2].c_str(), "%lf", &param) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (opt == 5 || opt == 6)
 			{
@@ -20888,19 +20907,19 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		//Illegal for MVI and MVE
 		if (hasTHT && (opt == 3 || opt == 4))
 		{
-			return;
+			return 2;
 		}
 		if (opt >= 5)
 		{
 			//Mandatory for RAD, ALT, FPA
 			if (hasTHT == false)
 			{
-				return;
+				return 2;
 			}
 			double hh, mm, ss;
 			if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			THTime = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -20911,7 +20930,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 				double hh, mm, ss;
 				if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 				{
-					return;
+					return 2;
 				}
 				THTime = hh * 3600.0 + mm * 60.0 + ss;
 			}
@@ -20939,7 +20958,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		bool feet;
 		if (data.size() < 6 || data[5] == "")
@@ -20952,7 +20971,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		EMDCHECK(tab, opt, param, THTime, ref, feet);
 	}
@@ -20961,7 +20980,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 1)
 		{
-			return;
+			return 1;
 		}
 		int ind;
 
@@ -20975,7 +20994,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double param;
 		if (ind == 1)
@@ -20987,7 +21006,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double hh, mm, ss;
 			if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			param = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -20995,16 +21014,16 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			if (data.size() < 2)
 			{
-				return;
+				return 1;
 			}
 			int rev;
 			if (sscanf(data[1].c_str(), "%d", &rev) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (rev > EZCCSM.NumRevLast)
 			{
-				return;
+				return 2;
 			}
 			param = (double)rev;
 		}
@@ -21015,7 +21034,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 1)
 		{
-			return;
+			return 1;
 		}
 		int ind;
 
@@ -21029,7 +21048,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double param;
 		if (ind == 1)
@@ -21043,7 +21062,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 				double hh, mm, ss;
 				if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 				{
-					return;
+					return 2;
 				}
 				param = hh * 3600.0 + mm * 60.0 + ss;
 			}
@@ -21052,16 +21071,16 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			if (data.size() < 2)
 			{
-				return;
+				return 2;
 			}
 			int rev;
 			if (sscanf(data[1].c_str(), "%d", &rev) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (rev > EZCCSM.NumRevLast)
 			{
-				return;
+				return 2;
 			}
 			param = (double)rev;
 		}
@@ -21072,7 +21091,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int L;
 		if (data[0] == "CSM")
@@ -21085,7 +21104,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		int ind;
@@ -21103,7 +21122,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double param;
 		if (ind == 1 || ind == 3)
@@ -21111,7 +21130,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			int rev;
 			if (sscanf(data[2].c_str(), "%d", &rev) != 1)
 			{
-				return;
+				return 2;
 			}
 			param = (double)rev;
 		}
@@ -21120,7 +21139,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double hh, mm, ss;
 			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			param = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -21132,7 +21151,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int L;
 		if (data[0] == "CSM")
@@ -21145,19 +21164,19 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		int ind;
 		if (sscanf(data[1].c_str(), "%d", &ind) != 1)
 		{
-			return;
+			return 2;
 		}
 
 		double lng;
 		if (sscanf(data[2].c_str(), "%lf", &lng) != 1)
 		{
-			return;
+			return 2;
 		}
 		EMMDYNMC(L, 4, ind, lng*RAD);
 	}
@@ -21166,7 +21185,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int L;
 		if (data[0] == "CSM")
@@ -21179,13 +21198,13 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		double hh, mm, ss;
 		if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 		{
-			return;
+			return 2;
 		}
 		double param = hh * 3600.0 + mm * 60.0 + ss;
 		EMMDYNMC(L, 5, 0, param);
@@ -21195,7 +21214,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 4)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -21208,7 +21227,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int ind;
 		if (data[1] == "REV")
@@ -21221,7 +21240,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double vala, valb;
 		if (ind == 0)
@@ -21230,19 +21249,19 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 
 			if (sscanf(data[2].c_str(), "%d", &revb) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (revb <= 0)
 			{
-				return;
+				return 2;
 			}
 			if (sscanf(data[3].c_str(), "%d", &reve) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (reve <= 0)
 			{
-				return;
+				return 2;
 			}
 			vala = (double)revb;
 			valb = (double)reve;
@@ -21253,17 +21272,17 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double stime, dt;
 			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			stime = hh * 3600.0 + mm * 60.0 + ss;
 			if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			dt = hh * 3600.0 + mm * 60.0 + ss;
 			if (dt < 0 || dt > 24.0*3600.0)
 			{
-				return;
+				return 2;
 			}
 			vala = stime;
 			valb = stime + dt;
@@ -21281,7 +21300,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			}
 			else
 			{
-				return;
+				return 2;
 			}
 		}
 		
@@ -21304,22 +21323,22 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		if (data[0] != "CSM")
 		{
-			return;
+			return 2;
 		}
 		int veh = 1;
 		double hh, mm, ss, get, dt;
 		if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 		{
-			return;
+			return 2;
 		}
 		get = hh * 3600.0 + mm * 60.0 + ss;
 		if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 		{
-			return;
+			return 2;
 		}
 		dt = hh * 3600.0 + mm * 60.0 + ss;
 		int ref;
@@ -21333,7 +21352,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double gmt = GMTfromGET(get);
 		EZETVMED.LandmarkVehID = veh;
@@ -21348,7 +21367,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -21361,16 +21380,16 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int num;
 		if (sscanf(data[1].c_str(), "%d", &num) != 1)
 		{
-			return;
+			return 2;
 		}
 		if (num < 1 || num>15)
 		{
-			return;
+			return 2;
 		}
 
 		DetailedManeuverTable *dmt;
@@ -21384,7 +21403,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		int refscode;
@@ -21430,7 +21449,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		bool headsupdownind;
 		if (refscode == 6)
@@ -21445,12 +21464,13 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			}
 			else
 			{
-				return;
+				return 2;
 			}
 		}
 
 		PMDDMT(veh, num, refscode, headsupdownind, *dmt);
 	}
+	return 0;
 }
 
 double RTCC::PIGMHA(int E, int Y, int D)
