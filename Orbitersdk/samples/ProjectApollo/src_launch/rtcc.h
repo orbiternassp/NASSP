@@ -1890,6 +1890,65 @@ struct PMMLAIInput
 	double v_LV;
 };
 
+struct PCMATCArray
+{
+	//Words 31-44: State and time of preabort
+	VECTOR3 R0;
+	VECTOR3 V0;
+	double T0;
+	//Word 45: Solution type indicator (0 = AST, 1 = RTED)
+	int IASD;
+	//Word 46: Initial reference
+	int REF;
+	//Word 48: Stopping type (1 = gamma, -1 = time)
+	int ISTP;
+	//Words 49-50: Stopping gamma (for stopping type = 1)
+	double gamma_stop;
+	//Words 51-64: State and time of reentry
+	VECTOR3 R_r;
+	VECTOR3 V_r;
+	double T_r;
+	//Words 65-70: Unit thrust at MEI (RTED), output abort position vector (AST)
+	VECTOR3 Vec1;
+	//Words 71-76: Position at MEI (RTED), output abort velocity vector (AST)
+	VECTOR3 Vec2;
+	//Words 83-84: CSM weight at abort
+	double CSMWeight;
+	//Words 85-86: LM weight at abort
+	double LMWeight;
+	//Words 87-88: Docking angle
+	double DockingAngle;
+	//Words 89-90: DT of ullage
+	double dt_ullage;
+	//Words 91-92: DT of 10% thrust (both input and output)
+	double DT_10PCT;
+	//Words 93-94: DT of tailoff
+	double DT_TO;
+	//Words 95-112: XB, YB, ZB vehicle body axies
+	VECTOR3 X_B, Y_B, Z_B;
+	//Words 113-116: Ry, Rz trim angles at MEI
+	double R_Y, R_Z;
+	//Words 117-118: Velocity counter
+	double DVC;
+	//Word 130: Attitude control (3 Lambert, 4 Ext DV)
+	int AttitudeCode;
+	//Word 131: Thruster code
+	int ThrusterCode;
+	//Word 132: Ullage code
+	bool UllageCode;
+	//Word 133: Configuration code (as defined for MPT)
+	int ConfigCode;
+	//Word 134: Maneuvering vehicle (1 CSM, 3 LM)
+	int TVC;
+	//Word 135: Initial attitude (0-heads down, 1-up)
+	bool HeadsUpDownInd;
+	//Word 136: Trim angles (-1 compute, 1 system parameters)
+	int TrimAngleInd;
+	//Words 137-138: Time of midnight prior to launch
+	double GMTBASE;
+	bool h_pc_on;
+};
+
 struct REFSMMATData
 {
 	MATRIX3 REFSMMAT;
@@ -2137,6 +2196,50 @@ struct GPMPRESULTS
 	double lat_Man;
 };
 
+struct ASTInput
+{
+	double dgamma;
+	double dpsi;
+	double dv;
+	double T_a;
+	double T_r;
+	double h_r_des;
+	double lat_r_des;
+	double lng_r_des;
+	double azi_r_des;
+	double dt_ar;
+	double gamma_des;
+	double gamma_stop;
+	double R_E_equ;
+	double R_E_pole;
+	double RRBIAS;
+	double w_E;
+	double Area;
+	double Weight;
+	double lat_PLA;
+	double lng_PLA;
+	double GLevel;
+	double BankAngle;
+	double GLevelGuidInit;
+	int RollDir;
+	double GMTBASE;
+};
+
+struct ASTSettings
+{
+	//Mode indicator to RMMYNI (1 = zero lift, 2 = max lift, 3 = G&N, 6 = Constant G, then roll, 10 = Constant G) 
+	int ReentryMode;
+	int Ref;
+	//Type of reentry stop (1 = gamma, -1 = T)
+	int ReentryStop;
+	//Target line indicator (1 = Primary, 2 = Secondary)
+	int TargetLine;
+	//Entry profile (1 = G&N, <= 0 Constant G)
+	int EntryProfile;
+	//Miss distance indicator (0 = do not compute, 1 = compute)
+	int MissDistanceInd;
+};
+
 struct ASTData
 {
 	int ASTCode;
@@ -2188,7 +2291,7 @@ struct ASTData
 	//Preabort state and time (Er, Er/hr)
 	VECTOR3 R0;
 	VECTOR3 V0;
-	double MJD0;
+	double T0;
 };
 
 struct EMSMISSAuxOutputTable
@@ -2460,6 +2563,8 @@ public:
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
 	//Return to Earth Abort Planning Supervisor
 	void PMMREAP(int med);
+	//RTE Trajectory Computer
+	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 	//Lunar Orbit Insertion Computational Unit
 	void PMMLRBTI(EphemerisData sv);
 	//Lunar Orbit Insertion Display
@@ -3556,12 +3661,18 @@ private:
 	MATRIX3 PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K);
 	//Universal Cartesian to Kepler Coordinates
 	void PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h);
+	//Impulse Analytical Burn
+	void PIBURN(VECTOR3 R, VECTOR3 V, double T, double *B, VECTOR3 &ROUT, VECTOR3 &VOUT, double &TOUT);
+	//Coordinate transformation
+	void PICSSC(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &lat, double &lng, double &gamma, double &azi);
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
 	//PMMMPT Matrix Utility Subroutine
 	void PCMATO(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2);
 	//PMMMPT Gaussian Elimination Subroutine
 	bool PCGAUS(double **A, double *Y, double *X, int N, double eps);
+	//RTE Abort Scan Table (AST) Subroutine
+	void PMMDAB(VECTOR3 R, VECTOR3 V, double GMT, ASTInput ARIN, ASTSettings IRIN, ASTData &AST, int &IER, int IPRT);
 	//Return-to-Earth Tradeoff Display
 	void PMDTRDFF(int med, unsigned page);
 	//Mission Plan Table Display

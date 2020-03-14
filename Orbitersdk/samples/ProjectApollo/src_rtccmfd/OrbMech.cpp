@@ -1026,9 +1026,32 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 
 bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout)
 {
+	//Temporary
+	int gr, go;
+	if (gravref == oapiGetObjectByName("Earth"))
+	{
+		gr = BODY_EARTH;
+	}
+	else
+	{
+		gr = BODY_MOON;
+	}
+	if (gravout == NULL)
+	{
+		go = -1;
+	}
+	else if (gravout == oapiGetObjectByName("Earth"))
+	{
+		go = BODY_EARTH;
+	}
+	else
+	{
+		go = BODY_MOON;
+	}
+	
 	bool stop, soichange;
 	CoastIntegrator* coast;
-	coast = new CoastIntegrator(R0, V0, mjd0, dt, gravref, gravout);
+	coast = new CoastIntegrator(R0, V0, mjd0, dt, gr, go);
 	stop = false;
 	while (stop == false)
 	{
@@ -1036,7 +1059,15 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	}
 	R1 = coast->R2;
 	V1 = coast->V2;
-	gravout = coast->outplanet;
+	if (coast->outplanet == BODY_EARTH)
+	{
+		gravout = oapiGetObjectByName("Earth");
+	}
+	else
+	{
+		gravout = oapiGetObjectByName("Moon");
+	}
+	
 	soichange = coast->soichange;
 	delete coast;
 	stop = false;
@@ -1072,36 +1103,36 @@ SV coast(SV sv0, double dt)
 	return sv1;
 }
 
-MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_cond, double dir)
+void PMMCEN(PMMCEN_VNI VNI, PMMCEN_INI INI, VECTOR3 &R1, VECTOR3 &V1, double &T1, int &ITS, int &IRS)
 {
 	double dt, funct, TIME, RCALC, RES1, TIME_old, t_new, DEV;
 	int INITE = 0;
 	bool stop = false, allow_stop = false;
-	OBJHANDLE gravref = sv0.gravref;
+	int gravref = INI.body;
 
-	if (dir > 0)
+	if (VNI.dir > 0)
 	{
-		dt = dt_max;
+		dt = VNI.dt_max;
 	}
 	else
 	{
-		dt = -dt_max;
+		dt = -VNI.dt_max;
 	}
 
-	if (end_cond == 0.0)
+	if (VNI.end_cond == 0.0)
 	{
 		DEV = 1.0;
 	}
 	else
 	{
-		DEV = end_cond;
+		DEV = VNI.end_cond;
 	}
 
-	CoastIntegrator coast(sv0.R, sv0.V, sv0.MJD, dt, sv0.gravref, NULL);
+	CoastIntegrator coast(VNI.R, VNI.V, VNI.GMTBASE + VNI.T / 24.0 / 3600.0, dt, INI.body, -1);
 
 	while (stop == false)
 	{
-		if (stop_ind != 1)
+		if (INI.stop_ind != 1)
 		{
 			if (gravref != coast.GetGravRef())
 			{
@@ -1111,9 +1142,9 @@ MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_c
 
 			TIME = coast.GetTime();
 
-			if (abs(TIME) >= dt_min)
+			if (abs(TIME) >= VNI.dt_min)
 			{
-				if (stop_ind == 2)
+				if (INI.stop_ind == 2)
 				{
 					funct = dotp(unit(coast.GetPosition()), unit(coast.GetVelocity()));
 				}
@@ -1121,7 +1152,7 @@ MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_c
 				{
 					funct = length(coast.GetPosition());
 				}
-				RCALC = funct - end_cond;
+				RCALC = funct - VNI.end_cond;
 
 				if (abs(RCALC / DEV) <= pow(10, -12))
 				{
@@ -1162,71 +1193,21 @@ MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_c
 			}
 		}
 
-		if (abs(coast.GetTime() - dt_max) < 1e-6)
+		if (abs(coast.GetTime() - VNI.dt_max) < 1e-6)
 		{
 			allow_stop = true;
+			INI.stop_ind = 1;
 		}
 
 	PMMCEN_PMMIED_7B:
 		stop = coast.iteration(allow_stop);
 	}
 
-	MPTSV sv1;
-	sv1.R = coast.R2;
-	sv1.V = coast.V2;
-	sv1.gravref = coast.outplanet;
-	sv1.MJD = coast.GetMJD();
-	return sv1;
-}
-
-void GenerateEphemeris(MPTSV sv0, double dt, std::vector<MPTSV> &ephemeris, unsigned nmax, unsigned skip)
-{
-	ephemeris.clear();
-
-	MPTSV svtemp;
-	unsigned iter;
-	bool stop;
-	CoastIntegrator* coast;
-	coast = new CoastIntegrator(sv0.R, sv0.V, sv0.MJD, dt, sv0.gravref, NULL);
-	stop = false;
-	iter = 0;
-
-	svtemp = sv0;
-	ephemeris.push_back(svtemp);
-
-	while (stop == false)
-	{
-		stop = coast->iteration();
-
-		svtemp.gravref = coast->GetGravRef();
-		svtemp.MJD = coast->GetMJD();
-		svtemp.R = coast->GetPosition();
-		svtemp.V = coast->GetVelocity();
-
-		//Break conditions (before push_back):
-		//Only generate ephemeris for one sphere of influence
-		if (sv0.gravref != svtemp.gravref) break;
-
-		if (skip > 0)
-		{
-			if (iter < skip)
-			{
-				iter++;
-				continue;
-			}
-			else
-			{
-				iter = 0;
-			}
-		}
-
-		ephemeris.push_back(svtemp);
-
-		//Break conditions (after push_back):
-		//If NMAX has been reached, stop ephemeris generation
-		if (ephemeris.size() >= nmax) break;
-	}
-	delete coast;
+	R1 = coast.R2;
+	V1 = coast.V2;
+	T1 = GETfromMJD(coast.GetMJD(), VNI.GMTBASE);
+	IRS = coast.outplanet;
+	ITS = INI.stop_ind;
 }
 
 void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem)
@@ -8708,11 +8689,8 @@ NewPMMLAEG_V846:
 
 const double CoastIntegrator::r_SPH = 64373760.0;
 
-CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, OBJHANDLE planet, OBJHANDLE outplanet)
+CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double deltat, int planet, int outplanet)
 {
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
-	this->planet = planet;
 	this->outplanet = outplanet;
 
 	K = 0.3;
@@ -8732,7 +8710,7 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	R_CON = R0;
 	V_CON = V0;
 	x = 0;
-	if (planet == hEarth)
+	if (planet == BODY_EARTH)
 	{
 		r_MP = 7178165.0;
 		r_dP = 80467200.0;
@@ -8763,8 +8741,8 @@ CoastIntegrator::CoastIntegrator(VECTOR3 R00, VECTOR3 V00, double mjd0, double d
 	U_Z_M = mul(obli_M, _V(0, 1, 0));
 	U_Z_M = _V(U_Z_M.x, U_Z_M.z, U_Z_M.y);
 
-	cMoon = oapiGetCelbodyInterface(hMoon);
-	cEarth = oapiGetCelbodyInterface(hEarth);
+	cMoon = oapiGetCelbodyInterface(oapiGetObjectByName("Moon"));
+	cEarth = oapiGetCelbodyInterface(oapiGetObjectByName("Earth"));
 
 	R_QC = R0;
 
@@ -8797,9 +8775,9 @@ double CoastIntegrator::GetMJD()
 	return mjd0 + t / 24.0 / 3600.0;
 }
 
-OBJHANDLE CoastIntegrator::GetGravRef()
+int CoastIntegrator::GetGravRef()
 {
-	return planet;
+	return P;
 }
 
 bool CoastIntegrator::iteration(bool allow_stop)
@@ -8843,7 +8821,6 @@ bool CoastIntegrator::iteration(bool allow_stop)
 				V_PQ = -_V(MoonPos[3], MoonPos[5], MoonPos[4]);
 				R_CON = R_CON - R_PQ;
 				V_CON = V_CON - V_PQ;
-				planet = hEarth;
 
 				R_E = OrbMech::R_Earth;
 				mu = OrbMech::mu_Earth;
@@ -8884,7 +8861,6 @@ bool CoastIntegrator::iteration(bool allow_stop)
 				V_PQ = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
 				R_CON = R_CON - R_PQ;
 				V_CON = V_CON - V_PQ;
-				planet = hMoon;
 
 				R_E = OrbMech::R_Moon;
 				mu = OrbMech::mu_Moon;
@@ -8950,11 +8926,11 @@ bool CoastIntegrator::iteration(bool allow_stop)
 		R2 = R_CON + delta;
 		V2 = V_CON + nu;
 
-		if (outplanet == NULL)
+		if (outplanet == -1)
 		{
-			outplanet = planet;
+			outplanet = P;
 		}
-		else if (planet != outplanet)
+		else if (P != outplanet)
 		{
 			double MJD, MoonPos[12];
 			VECTOR3 R_EM, V_PQ, V_EM;

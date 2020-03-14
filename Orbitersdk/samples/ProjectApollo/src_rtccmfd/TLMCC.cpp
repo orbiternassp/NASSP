@@ -281,19 +281,46 @@ VECTOR3 TLMCCProcessor::CalcLOIDV(MPTSV sv_MCC_apo, double gamma_nd)
 	VECTOR3 U1, U2, RF, VF;
 	double mfm0;
 
-	MPTSV sv_nd = OrbMech::PMMCEN(sv_MCC_apo, 0.0, 10.0*24.0*3600.0, 2, sin(gamma_nd), 1.0);
-	VECTOR3 h1 = unit(crossp(sv_nd.R, sv_nd.V));
+	PMMCEN_VNI vni;
+	PMMCEN_INI ini;
+
+	vni.R = sv_MCC_apo.R;
+	vni.V = sv_MCC_apo.V;
+	vni.T = OrbMech::GETfromMJD(sv_MCC_apo.MJD, MEDQuantities.GMTBase);
+	vni.dir = 1.0;
+	vni.dt_min = 0.0;
+	vni.dt_max = 10.0*24.0*3600.0;
+	vni.end_cond = sin(gamma_nd);
+	vni.GMTBASE = MEDQuantities.GMTBase;
+
+	if (KREF_MCC == 1)
+	{
+		ini.body = BODY_EARTH;
+	}
+	else
+	{
+		ini.body = BODY_MOON;
+	}
+	ini.stop_ind = 2;
+
+	VECTOR3 R_nd, V_nd;
+	double T_nd;
+	int ITS, IRS;
+
+	OrbMech::PMMCEN(vni, ini, R_nd, V_nd, T_nd, ITS, IRS);
+
+	VECTOR3 h1 = unit(crossp(R_nd, V_nd));
 	double R = 1.0;
 	double V = 1.0;
 	double gamma = 0.0;
 	RVIO(false, U1, U2, R, V, DataTable.lng_lls, DataTable.lat_lls, gamma, outarray.AZ_act);
-	LIBRAT(U1, U2, sv_nd.MJD + DataTable.dt_lls / 24.0 / 3600.0, 6);
+	LIBRAT(U1, U2, OrbMech::MJDfromGET(T_nd + DataTable.dt_lls,MEDQuantities.GMTBase), 6);
 	double dpsi_loi = acos(dotp(h1, crossp(U1, U2)));
-	double dv_loi = Constants.V_pcynlo - length(sv_nd.V);
+	double dv_loi = Constants.V_pcynlo - length(V_nd);
 	outarray.dpsi_loi = dpsi_loi;
 
-	BURN(sv_nd.R, sv_nd.V, dv_loi, -gamma_nd, dpsi_loi, isp_MCC, mfm0, RF, VF);
-	return VF - sv_nd.V;
+	BURN(R_nd, V_nd, dv_loi, -gamma_nd, dpsi_loi, isp_MCC, mfm0, RF, VF);
+	return VF - V_nd;
 }
 
 void TLMCCProcessor::Option1()
@@ -486,17 +513,45 @@ TLMCC_Option_2_E:
 
 	MPTSV sv_MCC_apo = sv_MCC;
 	sv_MCC_apo.V = VF;
+
 	//Step 9
-	MPTSV sv_nd = OrbMech::PMMCEN(sv_MCC_apo, 0.0, 10.0*24.0*3600.0, 2, sin(outarray.gamma_nd), 1.0);
-	LIBRAT(sv_nd.R, sv_nd.MJD, 4);
-	OrbMech::latlong_from_r(sv_nd.R, outtab.lat_nd, outtab.lng_nd);
+	PMMCEN_VNI vni;
+	PMMCEN_INI ini;
+
+	vni.R = sv_MCC_apo.R;
+	vni.V = sv_MCC_apo.V;
+	vni.T = OrbMech::GETfromMJD(sv_MCC_apo.MJD, MEDQuantities.GMTBase);
+	vni.dir = 1.0;
+	vni.dt_min = 0.0;
+	vni.dt_max = 10.0*24.0*3600.0;
+	vni.end_cond = sin(outarray.gamma_nd);
+	vni.GMTBASE = MEDQuantities.GMTBase;
+
+	if (KREF_MCC == 1)
+	{
+		ini.body = BODY_EARTH;
+	}
+	else
+	{
+		ini.body = BODY_MOON;
+	}
+	ini.stop_ind = 2;
+
+	VECTOR3 R_nd, V_nd;
+	double T_nd;
+	int ITS, IRS;
+
+	OrbMech::PMMCEN(vni, ini, R_nd, V_nd, T_nd, ITS, IRS);
+
+	LIBRAT(R_nd, OrbMech::MJDfromGET(T_nd, MEDQuantities.GMTBase), 4);
+	OrbMech::latlong_from_r(R_nd, outtab.lat_nd, outtab.lng_nd);
 	if (outtab.lng_nd < 0)
 	{
 		outtab.lng_nd += PI2;
 	}
-	outtab.h_nd = length(sv_nd.R) - DataTable.rad_lls;
-	outtab.GMT_nd = OrbMech::GETfromMJD(sv_nd.MJD, MEDQuantities.GMTBase);
-	outarray.MJD_nd = sv_nd.MJD;
+	outtab.h_nd = length(R_nd) - DataTable.rad_lls;
+	outtab.GMT_nd = T_nd;
+	outarray.MJD_nd = OrbMech::MJDfromGET(T_nd, MEDQuantities.GMTBase);
 
 	outarray.AZ_act = DataTable.psi_lls;
 }
@@ -649,16 +704,43 @@ TLMCC_Option_3_E:
 	MPTSV sv_MCC_apo = sv_MCC;
 	sv_MCC_apo.V = VF;
 	//Step 9
-	MPTSV sv_nd = OrbMech::PMMCEN(sv_MCC_apo, 0.0, 10.0*24.0*3600.0, 2, sin(outarray.gamma_nd), 1.0);
-	LIBRAT(sv_nd.R, sv_nd.MJD, 4);
-	OrbMech::latlong_from_r(sv_nd.R, outtab.lat_nd, outtab.lng_nd);
+	PMMCEN_VNI vni;
+	PMMCEN_INI ini;
+
+	vni.R = sv_MCC_apo.R;
+	vni.V = sv_MCC_apo.V;
+	vni.T = OrbMech::GETfromMJD(sv_MCC_apo.MJD, MEDQuantities.GMTBase);
+	vni.dir = 1.0;
+	vni.dt_min = 0.0;
+	vni.dt_max = 10.0*24.0*3600.0;
+	vni.end_cond = sin(outarray.gamma_nd);
+	vni.GMTBASE = MEDQuantities.GMTBase;
+
+	if (KREF_MCC == 1)
+	{
+		ini.body = BODY_EARTH;
+	}
+	else
+	{
+		ini.body = BODY_MOON;
+	}
+	ini.stop_ind = 2;
+
+	VECTOR3 R_nd, V_nd;
+	double T_nd;
+	int ITS, IRS;
+
+	OrbMech::PMMCEN(vni, ini, R_nd, V_nd, T_nd, ITS, IRS);
+
+	LIBRAT(R_nd, OrbMech::MJDfromGET(T_nd, MEDQuantities.GMTBase), 4);
+	OrbMech::latlong_from_r(R_nd, outtab.lat_nd, outtab.lng_nd);
 	if (outtab.lng_nd < 0)
 	{
 		outtab.lng_nd += PI2;
 	}
-	outtab.h_nd = length(sv_nd.R) - DataTable.rad_lls;
-	outtab.GMT_nd = OrbMech::GETfromMJD(sv_nd.MJD, MEDQuantities.GMTBase);
-	outarray.MJD_nd = sv_nd.MJD;
+	outtab.h_nd = length(R_nd) - DataTable.rad_lls;
+	outtab.GMT_nd = T_nd;
+	outarray.MJD_nd = OrbMech::MJDfromGET(T_nd, MEDQuantities.GMTBase);
 }
 
 void TLMCCProcessor::Option4()
@@ -2702,20 +2784,34 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 	}
 	else
 	{
-		MPTSV sv1;
 		MATRIX3 Rot;
-		VECTOR3 R_temp, V_temp, HH_pl, H_equ;
+		VECTOR3 R_pl, V_pl, R_temp, V_temp, HH_pl, H_equ, R_r, V_r;
+		double T_pl, T_r, MJD_r;
+		int ITS, IRS;
+		PMMCEN_VNI vni;
+		PMMCEN_INI ini;
 
-		sv1.R = RF;
-		sv1.V = VF;
-		sv1.MJD = sv0.MJD;
-		sv1.gravref = sv0.gravref;
-		MPTSV sv_pl = OrbMech::PMMCEN(sv1, 0.0, 100.0*3600.0, 2, 0.0, 1.0);
+		vni.R = RF;
+		vni.V = VF;
+		vni.T = OrbMech::GETfromMJD(sv0.MJD, MEDQuantities.GMTBase);
+		vni.GMTBASE = MEDQuantities.GMTBase;
+		vni.dt_max = 100.0*3600.0;
+		
+		if (sv0.gravref==oapiGetObjectByName("Earth"))
+		{
+			ini.body = BODY_EARTH;
+		}
+		else
+		{
+			ini.body = BODY_MOON;
+		}
+		ini.stop_ind = 2;
+		OrbMech::PMMCEN(vni, ini, R_pl, V_pl, T_pl, ITS, IRS);
 	
-		R_temp = sv_pl.R;
-		V_temp = sv_pl.V;
-		LIBRAT(R_temp, V_temp, sv_pl.MJD, 4);
-		vars->MJD_pl = sv_pl.MJD;
+		R_temp = R_pl;
+		V_temp = V_pl;
+		vars->MJD_pl = OrbMech::MJDfromGET(T_pl, MEDQuantities.GMTBase);
+		LIBRAT(R_temp, V_temp, vars->MJD_pl, 4);
 		vars->h_pl = length(R_temp) - DataTable.rad_lls;
 		OrbMech::latlong_from_r(R_temp, vars->lat_pl, vars->lng_pl);
 		if (vars->lng_pl < 0)
@@ -2725,20 +2821,28 @@ bool TLMCCProcessor::IntegratedTrajectoryComputer(std::vector<double> &var, void
 		HH_pl = crossp(R_temp, V_temp);
 		vars->incl_pl = acos(HH_pl.z / length(HH_pl));
 
-		MPTSV sv_reentry = OrbMech::PMMCEN(sv_pl, 0.0, 100.0*3600.0, 2, sin(gamma_reentry), 1.0);
-		vars->h_fr = length(sv_reentry.R) - R_E;
-		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, sv_reentry.MJD);
-		R_temp = rhtmul(Rot, sv_reentry.R);
-		V_temp = rhtmul(Rot, sv_reentry.V);
+		vni.R = R_pl;
+		vni.V = V_pl;
+		vni.T = T_pl;
+		vni.end_cond = sin(gamma_reentry);
+
+		ini.body = BODY_MOON;
+		OrbMech::PMMCEN(vni, ini, R_r, V_r, T_r, ITS, IRS);
+
+		vars->h_fr = length(R_r) - R_E;
+		MJD_r = OrbMech::MJDfromGET(T_r, MEDQuantities.GMTBase);
+		Rot = OrbMech::GetObliquityMatrix(BODY_EARTH, MJD_r);
+		R_temp = rhtmul(Rot, R_r);
+		V_temp = rhtmul(Rot, V_r);
 		H_equ = crossp(R_temp, V_temp);
 		vars->incl_fr = acos(H_equ.z / length(H_equ));
-		vars->v_EI = length(sv_reentry.V);
+		vars->v_EI = length(V_r);
 
 		if (vars->LunarFlybyIndicator)
 		{
 			double dlng;
-			RNTSIM(sv_reentry.R, sv_reentry.V, sv_reentry.MJD, Constants.lambda_IP, vars->lat_ip, vars->lng_ip, dlng);
-			outarray.MJD_ip = sv_reentry.MJD + Reentry_dt / 24.0 / 3600.0;
+			RNTSIM(R_r, V_r, MJD_r, Constants.lambda_IP, vars->lat_ip, vars->lng_ip, dlng);
+			outarray.MJD_ip = MJD_r + Reentry_dt / 24.0 / 3600.0;
 		}
 
 		arr[4] = vars->h_pl / R_E;
@@ -2964,6 +3068,10 @@ TLMCC_Conic_A1:
 
 	if (vars->FirstSelect)// || (!mode && vars->FirstOptimize))
 	{
+		if (!mode && vars->FirstOptimize)
+		{
+			vars->MJD_nd += vars->dt_bias_conic_prec / 24.0;
+		}
 		PRCOMP(R_N, U_H, vars->MJD_nd, vars->RA_LPO1, vars->A1, vars->E1, vars->gamma1, vars->V_L, vars->gamma_L, vars->V2, vars->dt_lls);
 		var[5] = vars->dt_lls / 3600.0;
 		if (vars->FirstSelect)

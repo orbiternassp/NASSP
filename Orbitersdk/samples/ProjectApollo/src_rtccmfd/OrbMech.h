@@ -136,6 +136,26 @@ const bool groundstationslunar[NUMBEROFGROUNDSTATIONS] = {
 #define BODY_EARTH 0
 #define BODY_MOON 1
 
+struct PMMCEN_VNI
+{
+	VECTOR3 R;
+	VECTOR3 V;
+	double GMTBASE;
+	double T;
+	double dt_min = 0.0;
+	double dt_max = 10.0*24.0*3600.0;
+	double end_cond = 0.0;
+	double dir = 1.0;
+};
+
+struct PMMCEN_INI
+{
+	int body;
+	//1 = time, 2 = flight-path angle, 3 = radius
+	int stop_ind = 1;
+	int year;
+};
+
 struct MPTSV;
 
 struct SV
@@ -340,7 +360,7 @@ protected:
 class CoastIntegrator
 {
 public:
-	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, OBJHANDLE planet, OBJHANDLE outplanet);
+	CoastIntegrator(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, int planet, int outplanet);
 	~CoastIntegrator();
 	bool iteration(bool allow_stop = true);
 
@@ -350,10 +370,10 @@ public:
 	VECTOR3 GetPosition();
 	VECTOR3 GetVelocity();
 	double GetMJD();
-	OBJHANDLE GetGravRef();
+	int GetGravRef();
 
 	VECTOR3 R2, V2;
-	OBJHANDLE outplanet;
+	int outplanet;
 	bool soichange;
 private:
 	VECTOR3 f(VECTOR3 alpha, VECTOR3 R, VECTOR3 a_d);
@@ -369,7 +389,6 @@ private:
 	//0 = earth or lunar orbit, 1 = cislunar-midcourse flight
 	int M;
 	double r_MP, r_dP;
-	OBJHANDLE hEarth, hMoon, planet;
 	double mu_Q;
 	double mjd0;
 	double rect1, rect2;
@@ -479,8 +498,7 @@ namespace OrbMech {
 	bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	SV coast(SV sv0, double dt);
 	MPTSV coast(MPTSV sv0, double dt);
-	MPTSV PMMCEN(MPTSV sv0, double dt_min, double dt_max, int stop_ind, double end_cond, double dir);
-	void GenerateEphemeris(MPTSV sv0, double dt, std::vector<MPTSV> &ephemeris, unsigned nmax = 100U, unsigned skip = 0);
+	void PMMCEN(PMMCEN_VNI VNI, PMMCEN_INI INI, VECTOR3 &R1, VECTOR3 &V1, double &T1, int &ITS, int &IRS);
 	void GenerateSunMoonEphemeris(double MJD0, PZEFEM &ephem);
 	bool PLEFEM(const PZEFEM &ephem, double MJD, VECTOR3 &R_EM, VECTOR3 &V_EM, VECTOR3 &R_ES);
 	void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri);

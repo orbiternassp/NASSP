@@ -280,13 +280,20 @@ namespace rtcc
 			e = (RA_LPO - length(out.data[i].R_LOI)) / (length(out.data[i].R_LOI)*cos(opt.eta1) + RA_LPO);
 			R_P = 2.0*RA_LPO / (e + 1.0) - RA_LPO;
 		}
-		MPTSV sv, sv2;
-		sv.R = opt.SPH.R;
-		sv.V = opt.SPH.V;
-		sv.MJD = OrbMech::MJDfromGET(opt.SPH.GMT, opt.GMTBASE);
-		sv.gravref = hMoon;
+
 		VECTOR3 R_H, V_H, V_A, u;
 		double T_H, gamma_H, r_H, psi_H, v_A, psi_A, gamma_A, decl, rtasc;
+		int ITS, IRS;
+		PMMCEN_VNI vni;
+		PMMCEN_INI ini;
+
+		vni.R = opt.SPH.R;
+		vni.V = opt.SPH.V;
+		vni.T = opt.SPH.GMT;
+		vni.GMTBASE = opt.GMTBASE;
+		ini.body = BODY_MOON;
+		ini.stop_ind = 3;
+
 		for (int i = 0;i < 8;i++)
 		{
 			//If intersection solution wasn't calculated, skip
@@ -296,10 +303,11 @@ namespace rtcc
 			}
 			out.data[i].display.dv_LOI2 = DELV2(out.data[i].R_LOI, out.data[i].USSAV, RA_LPO + DHASAV, out.data[i].display.h_P + opt.R_LLS + DHPSAV, out.data[i].display.W_P);
 			sgn = OrbMech::sign(dotp(crossp(U_PC, out.data[i].R_LOI), U_H));
-			sv2 = OrbMech::PMMCEN(sv, 0.0, 10.0*24.0*3600.0, 3, length(out.data[i].R_LOI), sgn);
-			R_H = sv2.R;
-			V_H = sv2.V;
-			T_H = OrbMech::GETfromMJD(sv2.MJD, opt.GMTBASE);
+			
+			vni.dir = sgn;
+			vni.end_cond = length(out.data[i].R_LOI);
+			OrbMech::PMMCEN(vni, ini, R_H, V_H, T_H, ITS, IRS);
+
 			gamma_H = PI05 - acos2(dotp(unit(R_H), unit(V_H)));
 			r_H = length(R_H);
 			psi_H = atan2(R_H.x*V_H.y - R_H.y*V_H.x, V_H.z*r_H - R_H.z*dotp(R_H, V_H) / r_H);

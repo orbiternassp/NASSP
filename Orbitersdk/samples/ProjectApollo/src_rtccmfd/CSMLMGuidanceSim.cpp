@@ -128,7 +128,10 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 	R = RSAVE;
 	V = VSAVE;
 	T = TSAVE;
-	TNEXT = TArr.DTOUT;
+	if (TArr.KEPHOP != 0)
+	{
+		TNEXT = TArr.DTOUT;
+	}
 
 	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
 	{
