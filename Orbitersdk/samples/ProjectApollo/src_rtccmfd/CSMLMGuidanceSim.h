@@ -202,6 +202,8 @@ private:
 	double Vg_apo;
 	//Steering enabled: 0 = no, 1 = yes
 	int Kg;
+	//DT of maneuver (no pure ullage or tailoff, =0 if DV is given)
+	double DTMAN = 0.0;
 
 	//Thrust and weight loss rate tables
 	//0 = Ullage

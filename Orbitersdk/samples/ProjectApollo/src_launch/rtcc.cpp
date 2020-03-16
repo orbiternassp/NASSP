@@ -11720,9 +11720,10 @@ RTCC_PMMMCD_17_1:
 void RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 {
 	EMSMISSInputTable emsin;
+	CELEMENTS ELA;
 	EphemerisData sv_gmti, sv_gmti_other;
 	VECTOR3 DV_LVLH;
-	double WDI[6], TH[6], DELT[6], TIDPS, MASS, DELVB, T, GMTBB, GMTI, WAITA, DT;
+	double WDI[6], TH[6], DELT[6], TIDPS, MASS, DELVB, T, GMTBB, GMTI, WAITA, DT, mu;
 
 	int NPHASE = 1;
 
@@ -11754,6 +11755,16 @@ void RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 	{
 		man.TrimAngleInd = -1;
 	}
+
+	if (in.sv_before.RBI == BODY_EARTH)
+	{
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		mu = OrbMech::mu_Moon;
+	}
+	ELA = OrbMech::GIMIKC(in.sv_before.R, in.V_aft, mu);
 	VECTOR3 DV = in.V_aft - in.sv_before.V;
 	double dv = length(DV);
 	if (in.Attitude < 3)
@@ -12002,8 +12013,312 @@ RTCC_PMMMPT_11_B:
 	}
 	return;
 RTCC_PMMMPT_12_A:
-	//TBD: Iteration
-	double MJD = OrbMech::MJDfromGET(in.sv_before.GMT, GMTBASE);
+	PMMRKJInputArray integin;
+
+	integin.A = 0.0;
+	integin.DENSMULT = 1.0;
+	integin.DOCKANG = man.DockingAngle;
+	integin.DPSScale = man.DPSScaleFactor;
+	integin.DTPS10 = man.DT_10PCT;
+	integin.DTU = man.dt_ullage;
+	integin.HeadsUpDownInd = man.HeadsUpDownInd;
+	integin.IC = man.ConfigCodeAfter;
+	integin.KAUXOP = 1;
+	integin.KEPHOP = 0;
+	integin.KTRIMOP = man.TrimAngleInd;
+	integin.LMDESCJETT = 1e70;
+	integin.MANOP = 4;
+	integin.ThrusterCode = man.Thruster;
+	integin.TVC = man.TVC;
+	integin.UllageOption = man.UllageThrusterOpt;
+	integin.ExtDVCoordInd = false;
+	integin.WDMULT = 1.0;
+	integin.XB = man.X_B;
+	integin.YB = man.Y_B;
+	integin.ZB = man.Z_B;
+	integin.CAPWT = in.VehicleWeight;
+	integin.CSMWT = 0.0;
+	integin.LMAWT = 0.0;
+	integin.LMDWT = 0.0;
+	integin.SIVBWT = 0.0;
+	if (man.TVC = RTCC_MANVEHICLE_CSM)
+	{
+		integin.CSMWT = in.VehicleWeight;
+	}
+	else if (man.TVC = RTCC_MANVEHICLE_LM)
+	{
+		integin.LMDWT = in.VehicleWeight;
+	}
+	else
+	{
+		integin.SIVBWT = in.VehicleWeight;
+	}
+
+	int Ierr;
+	RTCCNIAuxOutputTable aux;
+
+	CSMLMPoweredFlightIntegration numin(this, integin, Ierr, NULL, &aux);
+
+	double SUM;
+	int ITCNT;
+
+	SUM = 1.0e75;
+	ITCNT = 0;
+	VECTOR3 ATV;
+	if (man.AttitudeCode >= 4)
+	{
+		ATV = DV / length(DV);
+	}
+	else
+	{
+		ATV = man.A_T;
+	}
+	EphemerisData sv_BO, sv_impt;
+	VECTOR3 H, YT;
+	double P, Y, PARM[6], SUMN, DA[6], DAS[6], X, LAMI, LAMP, WX[6], WY[6], EPS[6], SAVEX, DP[6], TIG, YV[6], DELP[6], LAML;
+	int ICNT, i, ITMAX, J, IPI, ii, NIP, IPT;
+	bool IP[6], IFLAG, DFLAG, IC[6];
+	CELEMENTS ELPRES, OSCELB;
+
+	double **A, **XP;
+	A = new double*[6];
+	XP = new double*[6];
+	for (i = 0;i < 6;i++)
+	{
+		A[i] = new double[6];
+		XP[i] = new double[6];
+		for (ii = 0;ii < 6;ii++)
+		{
+			A[i][ii] = 0.0;
+			XP[i][ii] = 0.0;
+		}
+	}
+
+	//Constants
+	double WNULL[6] = { 0,0,0,0,0,0 };
+	LAMI = pow(2, -28);
+	LAML = 1.0;
+	EPS[0] = 1.0;
+	EPS[1] = 0.0001;
+	EPS[2] = 0.00001;
+	EPS[3] = 0.00001;
+	EPS[4] = 0.00001;
+	WX[0] = 1.0;
+	WX[1] = 1.0;
+	WX[2] = 0.01;
+	WX[3] = 0.01;
+	WX[4] = 1.0;
+	WX[5] = 1.0;
+	for (i = 0;i < 5;i++)
+	{
+		WY[i] = pow(2, -40) / pow(EPS[i], 2);
+	}
+	ITMAX = 5;
+	DP[0] = 0.001*RAD;
+	DP[1] = 0.001*RAD;
+	DP[2] = 0.1*0.3048;
+	DP[3] = 0.01;
+	IC[0] = IC[1] = IC[2] = IC[3] = IC[4] = true;
+	IC[5] = false;
+
+	PARM[3] = GMTBB;
+	IP[3] = true;
+	TIG = GMTBB;
+	sv_gmti = EMMENI(emsin, in.sv_before, TIG - TIMP);
+	LAMP = LAMI * 10.0;
+	NIP = 6;
+	if (man.AttitudeCode == 3)
+	{
+		goto RTCC_PMMMPT_14_A;
+	}
+	IP[0] = true;
+	IP[1] = true;
+	IP[2] = true;
+	IP[4] = false;
+	IP[5] = false;
+	PARM[0] = P = asin(ATV.z);
+	if (abs(P - PI05) >= 0.0017)
+	{
+		PARM[1] = Y = atan2(ATV.y, ATV.x);
+	}
+	else
+	{
+		H = crossp(ATV, sv_gmti.R / OrbMech::R_Earth);
+		if (length(H) >= 0.001)
+		{
+			YT = unit(H);
+		}
+		else
+		{
+			YT = unit(crossp(sv_gmti.V, sv_gmti.R));
+		}
+		Y = PARM[1] = atan2(YT.y, YT.x);
+	}
+	PARM[2] = dv;
+	NIP = 4;
+	goto RTCC_PMMMPT_14_B;
+RTCC_PMMMPT_14_A:
+	IP[0] = false;
+	IP[1] = false;
+	IP[2] = false;
+	IP[4] = true;
+	IP[5] = true;
+	//TBD: Lambert
+	goto RTCC_PMMMPT_14_B;
+RTCC_PMMMPT_14_C:
+	if (DFLAG)
+	{
+		for (i = 0;i < 6;i++)
+		{
+			DAS[i] = DA[i];
+		}
+	}
+RTCC_PMMMPT_14_B:
+	//Input parameters
+	integin.sv0 = sv_gmti;
+	ATV = _V(cos(PARM[1])*cos(PARM[0]), sin(PARM[1])*cos(PARM[0]), sin(PARM[0]));
+	integin.VG = ATV * PARM[2];
+
+	numin.PMMRKJ();
+	sv_BO.R = aux.R_BO;
+	sv_BO.V = aux.V_BO;
+	sv_BO.GMT = aux.GMT_BO;
+	sv_BO.RBI = aux.RBI;
+	sv_impt = EMMENI(emsin, sv_BO, TIMP - sv_BO.GMT);
+	ELPRES = OrbMech::GIMIKC(sv_impt.R, sv_impt.V, mu);
+	SUMN = 0.0;
+	IFLAG = false;
+	ICNT = 0;
+	for (i = 0;i < 6;i++)
+	{
+		if (IC[i])
+		{
+			DA[ICNT] = X = ELA.data[i] - ELPRES.data[i];
+			ICNT++;
+			SUMN = SUMN + WY[i] * X*X;
+			if (abs(X) > EPS[i])
+			{
+				IFLAG = true;
+			}
+		}
+	}
+	if (IFLAG)
+	{
+		goto RTCC_PMMMPT_16_B;
+	}
+	if (ITCNT != 0)
+	{
+		//Move burn parameters from integrator input table to PMMMPT output area
+		DV = integin.VG;
+		GMTBB = integin.sv0.GMT;
+		GMTI = GMTBB + DT;
+	}
+	goto RTCC_PMMMPT_10_A;
+RTCC_PMMMPT_16_B:
+	if (ITCNT != 0)
+	{
+		//Did fit improve?
+		if (SUMN >= SUM)
+		{
+			//No
+			goto RTCC_PMMMPT_20_A;
+		}
+	}
+	if (LAMP > LAMI)
+	{
+		LAMP = LAMP / 10.0;
+	}
+	//Save burn parameters
+	DFLAG = true;
+	SUM = SUMN;
+	ITCNT++;
+	if (ITCNT > ITMAX)
+	{
+		//Put best burn parameters in PMMMPT output area - print message
+		PMXSPT("PMMMPT: ITERATION LIMIT, MVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
+		goto RTCC_PMMMPT_10_A;
+	}
+	J = 0;
+RTCC_PMMMPT_17_B:
+	if (IP[J] == false)
+	{
+		goto RTCC_PMMMPT_19_B;
+	}
+	SAVEX = PARM[J];
+	PARM[J] = PARM[J] + DP[J];
+	if (TIG != PARM[3])
+	{
+		TIG = PARM[3];
+		sv_gmti = EMMENI(emsin, in.sv_before, TIG - in.sv_before.GMT);
+	}
+	//Update PMMRKJ input table
+	integin.sv0 = sv_gmti;
+	ATV = _V(cos(PARM[1])*cos(PARM[0]), sin(PARM[1])*cos(PARM[0]), sin(PARM[0]));
+	integin.VG = ATV * PARM[2];
+	numin.PMMRKJ();
+	sv_BO.R = aux.R_BO;
+	sv_BO.V = aux.V_BO;
+	sv_BO.GMT = aux.GMT_BO;
+	sv_BO.RBI = aux.RBI;
+	sv_impt = EMMENI(emsin, sv_BO, TIMP - sv_BO.GMT);
+	OSCELB = OrbMech::GIMIKC(sv_impt.R, sv_impt.V, mu);
+	IPI = 0;
+	for (ii = 0;ii < 6;ii++)
+	{
+		if (IC[ii])
+		{
+			XP[IPI][J] = (OSCELB.data[ii] - ELPRES.data[ii]) / DP[J];
+			IPI++;
+		}
+	}
+	PARM[J] = SAVEX;
+RTCC_PMMMPT_19_B:
+	J++;
+	if (J <= 5)
+	{
+		goto RTCC_PMMMPT_17_B;
+	}
+	char Buffer[100];
+	
+	PCMATO(A, YV, XP, DA, 5, NIP, WY, 0.0, WNULL);
+	goto RTCC_PMMMPT_20_B;
+RTCC_PMMMPT_20_A:
+	//Reset independent variables
+	LAMP = LAMP * 10.0;
+	DFLAG = false;
+	for (i = 0;i < 6;i++)
+	{
+		DA[i] = DAS[i];
+	}
+	if (LAMP > LAML)
+	{
+		//Put best burn parameters in PMMMPT output area - print message
+		PMXSPT("PMMMPT: ITERATION FAILURE, MVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
+		goto RTCC_PMMMPT_10_A;
+	}
+RTCC_PMMMPT_20_B:
+	for (i = 0;i < NIP;i++)
+	{
+		A[i][i] = A[i][i] + WX[i] * LAMP;
+	}
+	PCGAUS(A, YV, DELP, NIP, 0.0);
+	IPT = 0;
+	for (i = 0;i < 6;i++)
+	{
+		if (IP[i])
+		{
+			PARM[i] = PARM[i] + DELP[IPT];
+			IPT++;
+		}
+	}
+	TIG = PARM[3];
+	sv_gmti = EMMENI(emsin, in.sv_before, TIG - in.sv_before.GMT);
+	goto RTCC_PMMMPT_14_C;
+
+	delete[] A;
+	delete[] XP;
+
+	/*double MJD = OrbMech::MJDfromGET(in.sv_before.GMT, GMTBASE);
 	OBJHANDLE gravref = GetGravref(in.sv_before.RBI);
 	VECTOR3 R_cut, V_cut;
 	double m_cut, MJD_cut, t_slip;
@@ -12011,7 +12326,7 @@ RTCC_PMMMPT_12_A:
 	OrbMech::impulsive2(in.sv_before.R, in.sv_before.V, MJD, gravref, GetOnboardComputerThrust(in.Thruster), TH[NPHASE - 1], TH[NPHASE - 1] / WDI[NPHASE - 1], in.VehicleWeight, in.sv_before.R, in.V_aft, DV, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 	GMTI = TIMP + t_slip;
 	GMTBB = GMTI - DT;
-	goto RTCC_PMMMPT_10_A;
+	goto RTCC_PMMMPT_10_A;*/
 }
 
 int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E)
@@ -22185,12 +22500,12 @@ void RTCC::PCMATO(double **A, double *Y, double **B, double *X, int M, int N, do
 			{
 				SUM = SUM + B[K][I] * B[K][J] * W1[K];
 				K++;
-			} while (K < M - 1);
+			} while (K < M);
 			A[I][J] = SUM;
 			J++;
-		} while (J < I);
+		} while (J <= I);
 		I++;
-	} while (I < N - 1);
+	} while (I < N);
 	I = 0;
 	do
 	{
@@ -22199,9 +22514,9 @@ void RTCC::PCMATO(double **A, double *Y, double **B, double *X, int M, int N, do
 		{
 			A[I][J] = A[J][I];
 			J++;
-		} while (J < N - 1);
+		} while (J < N);
 		I++;
-	} while (I < N - 2);
+	} while (I < N - 1);
 	I = 0;
 	do
 	{
@@ -22211,31 +22526,45 @@ void RTCC::PCMATO(double **A, double *Y, double **B, double *X, int M, int N, do
 		{
 			SUM = SUM + B[K][I] * X[K] * W1[K];
 			K++;
-		} while (K < M - 1);
+		} while (K < M);
+		Y[I] = SUM;
 		I++;
-	} while (I < N - 1);
+	} while (I < N);
 	I = 0;
 	do
 	{
 		A[I][I] = A[I][I] + lambda * W2[I];
 		I++;
-	} while (I < N - 1);
+	} while (I < N);
 }
 
 bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 {
-	double AMAX, DUMI;
+	int *PP = new int[N + 1];
+
+	if (OrbMech::LUPDecompose(A, N, 0.0, PP) == 0)
+	{
+		return true;
+	}
+	std::vector<double> dx;
+	dx.resize(N);
+	OrbMech::LUPSolve(A, PP, Y, N, dx);
+	delete[] PP;
+
+	for (int i = 0;i < N;i++)
+	{
+		X[i] = dx[i];
+	}
+
+	/*double AMAX, DUMI;
 	int I, J, K, *IP, IMAX, JMAX, IDUM;
 	IP = new int[N];
 
-	I = 0;
-	do
+	for (I = 0;I < N;I++)
 	{
 		IP[I] = I;
-		I++;
-	} while (I < N - 1);
-	K = 0;
-	do
+	}
+	for (K = 0;K < N;K++)
 	{
 		if (K != N - 1)
 		{
@@ -22245,6 +22574,7 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 			I = 0;
 			do
 			{
+				//Find maximum element
 				J = 0;
 				do
 				{
@@ -22256,11 +22586,12 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 						JMAX = J;
 					}
 					J++;
-				} while (J < N - 1);
+				} while (J < N);
 				I++;
-			} while (I < N - 1);
+			} while (I < N);
 			if (IMAX != K)
 			{
+				//Interchange rows
 				I = K;
 				do
 				{
@@ -22268,21 +22599,22 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 					A[IMAX][I] = A[K][I];
 					A[K][I] = DUMI;
 					I++;
-				} while (I < N - 1);
+				} while (I < N);
 				DUMI = Y[IMAX];
 				Y[IMAX] = Y[K];
 				Y[K] = DUMI;
 			}
 			if (JMAX != K)
 			{
+				//Interchange columns
 				I = 0;
-				DUMI = A[I][K];
-				A[I][K] = A[I][JMAX];
 				do
 				{
+					DUMI = A[I][K];
+					A[I][K] = A[I][JMAX];
 					A[I][JMAX] = DUMI;
 					I++;
-				} while (I < N - 1);
+				} while (I < N);
 				IDUM = IP[K];
 				IP[K] = IP[JMAX];
 				IP[JMAX] = IDUM;
@@ -22293,36 +22625,50 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 			//error
 			return true;
 		}
-		I = K;
-		do
+
+		for (I = K + 1;I < N;I++)
+		{
+			DUMI = A[I][K] / A[K][K];
+			for (J = K + 1;J < N;J++)
+			{
+				A[I][J] = A[I][J] - DUMI * A[K][J];
+			}
+			Y[I] = Y[I] - DUMI * Y[K];
+		}
+
+		
+		//Normalize row
+		for (I = K + 1;I < N;I++)
 		{
 			A[K][I] = A[K][I] / A[K][K];
-			I++;
-		} while (I < N - 1);
+		}
 		Y[K] = Y[K] / A[K][K];
-		I = 0;
-		if (I != K)
+		A[K][K] = 1.0;
+		//Reduce matrix
+		for (I = 0;I < N;I++)
 		{
-			do
+			if (I != K)
 			{
-				J = K;
-				do
+				for (J = K + 1;J < N;J++)
 				{
 					A[I][J] = A[I][J] - A[I][K] * A[K][J];
-					J++;
-				} while (J < N - 1);
+				}
 				Y[I] = Y[I] - A[I][K] * Y[K];
-				I++;
-			} while (I < N - 1);
+			}
 		}
+		
 		K++;
-	} while (K < N - 1);
+	}
 
 	I = 0;
-	X[IP[I]] = Y[I];
+	do
+	{
+		X[IP[I]] = Y[I];
+		I++;
+	} while (I < N);
 
 	delete[] IP;
-
+	*/
 	return false;
 }
 

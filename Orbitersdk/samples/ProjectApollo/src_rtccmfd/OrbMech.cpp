@@ -40,34 +40,6 @@ MPTSV& MPTSV::operator=(const SV& other)
 	return *this;
 }
 
-CELEMENTS CELEMENTS::operator+(const CELEMENTS& c) const
-{
-	CELEMENTS result;
-
-	result.a = this->a + c.a;
-	result.e = this->e + c.e;
-	result.i = this->i + c.i;
-	result.h = this->h + c.h;
-	result.g = this->g + c.g;
-	result.l = this->l + c.l;
-
-	return result;
-}
-
-CELEMENTS CELEMENTS::operator-(const CELEMENTS& c) const
-{
-	CELEMENTS result;
-
-	result.a = this->a - c.a;
-	result.e = this->e - c.e;
-	result.i = this->i - c.i;
-	result.h = this->h - c.h;
-	result.g = this->g - c.g;
-	result.l = this->l - c.l;
-
-	return result;
-}
-
 namespace OrbMech{
 
 	double period(VECTOR3 R, VECTOR3 V, double mu)

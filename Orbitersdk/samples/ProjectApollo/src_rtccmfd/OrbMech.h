@@ -217,24 +217,19 @@ struct OELEMENTS
 };
 
 //Classical elements
-struct CELEMENTS
+typedef union
 {
-	//Semi-major axis
-	double a = 0.0;
-	//Eccentricity
-	double e = 0.0;
-	//Inclination
-	double i = 0.0;
-	//Longitude of the ascending node
-	double h = 0.0;
-	//Argument of pericenter
-	double g = 0.0;
-	//Mean Anomaly
-	double l = 0.0;
-
-	CELEMENTS operator+(const CELEMENTS&) const;
-	CELEMENTS operator-(const CELEMENTS&) const;
-};
+	double data[6];
+	//a: Semi-major axis
+	//e: Eccentricity
+	//i: Inclination
+	//h: Longitude of the ascending node
+	//g: Argument of pericenter
+	//l: Mean Anomaly
+	struct { 
+		double a, e, i, h, g, l;
+	};
+} CELEMENTS;
 
 struct TLMCConstants
 {
@@ -687,6 +682,30 @@ namespace OrbMech {
 	double SumQuad(double *x, int N);
 	double QuadSum(double *x, int N);
 	void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I);
+}
+
+inline CELEMENTS operator+(const CELEMENTS &a, const CELEMENTS &b)
+{
+	CELEMENTS c;
+	c.a = a.a + b.a;
+	c.e = a.e + b.e;
+	c.i = a.i + b.i;
+	c.h = a.h + b.h;
+	c.g = a.g + b.g;
+	c.l = a.l + b.l;
+	return c;
+}
+
+inline CELEMENTS operator-(const CELEMENTS &a, const CELEMENTS &b)
+{
+	CELEMENTS c;
+	c.a = a.a - b.a;
+	c.e = a.e - b.e;
+	c.i = a.i - b.i;
+	c.h = a.h - b.h;
+	c.g = a.g - b.g;
+	c.l = a.l - b.l;
+	return c;
 }
 
 MATRIX3 operator+(MATRIX3 a, MATRIX3 b);

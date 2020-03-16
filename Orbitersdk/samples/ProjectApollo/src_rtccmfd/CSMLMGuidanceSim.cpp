@@ -36,25 +36,6 @@ CSMLMPoweredFlightIntegration::CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInpu
 	rtcc = r;
 
 	TLARGE = 10e80;
-	KGN = 0;
-	STEP = 2.0;
-	WTLIM = 0.0;
-	DV = 0.0;
-	DVX = 0.0;
-	DVTOX = 0.0;
-	DVTO = 0.0;
-	P_G = 0.0;
-	Y_G = 0.0;
-	PGBI = 0.0;
-	YGBI = 0.0;
-	DV_ul = 0.0;
-	X_B = Y_B = Z_B = _V(0, 0, 0);
-	Kg = 0;
-	IJ = 0;
-	DTMANE = 0.0;
-
-	RCSFUELUSED = 0.0;
-	MAINFUELUSED = 0.0;
 }
 
 void CSMLMPoweredFlightIntegration::PMMRKJ()
@@ -145,9 +126,9 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 		sv1.RBI = TArr.sv0.RBI;
 		TEND = TLARGE;
 		TBI = TBM;
-		if (TArr.DTMAN > 0)
+		if (DTMAN > 0)
 		{
-			TI = TBM + TArr.DTMAN;
+			TI = TBM + DTMAN;
 			TEND = TI;
 			goto PMMRKJ_LABEL_9A;
 		}
@@ -169,7 +150,7 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 					}
 					else
 					{
-						TArr.DTMAN = TLARGE;
+						DTMAN = TLARGE;
 						goto PMMRKJ_LABEL_8B;
 					}
 				}
@@ -222,7 +203,7 @@ PMMRKJ_LABEL_9A:
 	{
 		DT = TI - T;
 	}
-	if (TArr.DTMAN > 0)
+	if (DTMAN > 0)
 	{
 		goto PMMRKJ_LABEL_11A;
 	}
@@ -397,7 +378,7 @@ PMMRKJ_LABEL_18D:
 	else
 	{
 	PMMRKJ_LABEL_18E:
-		if (TArr.DTMAN <= 0)
+		if (DTMAN <= 0)
 		{
 			TEND = TLARGE;
 		}
@@ -415,16 +396,16 @@ PMMRKJ_LABEL_20A:
 	}
 	if (!(TArr.MANOP == 1 || TArr.MANOP == 2))
 	{
-		if (TArr.DTMAN <= 0)
+		if (DTMAN <= 0)
 		{
 			if (TArr.DVMAN == 0.0)
 			{
-				TArr.DTMAN = TLARGE;
+				DTMAN = TLARGE;
 			}
 		}
 	}
 	TI = TBI;
-	TEND = TBI + TArr.DTMAN;
+	TEND = TBI + DTMAN;
 	if (DTSPAN[0] != 0.0)
 	{
 		goto PMMRKJ_LABEL_9A;
@@ -526,6 +507,26 @@ PMMRKJ_LABEL_22C:
 
 void CSMLMPoweredFlightIntegration::PCINIT()
 {
+	KGN = 0;
+	STEP = 2.0;
+	WTLIM = 0.0;
+	DV = 0.0;
+	DVX = 0.0;
+	DVTOX = 0.0;
+	DVTO = 0.0;
+	P_G = 0.0;
+	Y_G = 0.0;
+	PGBI = 0.0;
+	YGBI = 0.0;
+	DV_ul = 0.0;
+	X_B = Y_B = Z_B = _V(0, 0, 0);
+	Kg = 0;
+	IJ = 0;
+	DTMANE = 0.0;
+
+	RCSFUELUSED = 0.0;
+	MAINFUELUSED = 0.0;
+	DTMAN = TArr.DTMAN;
 	for (int i = 0;i < 10;i++)
 	{
 		THPS[i] = 0.0;
@@ -986,7 +987,7 @@ PCRDD_LABEL_3C:
 		else
 		{
 			DVX = DVX - A * abs(THX);
-			if (TArr.DTMAN <= 0)
+			if (DTMAN <= 0)
 			{
 				if (TArr.DVMAN > 0)
 				{
@@ -1132,9 +1133,9 @@ void CSMLMPoweredFlightIntegration::PCGUID()
 	{
 		goto PCGUID_4_A;
 	}
-	if (TArr.DTMAN > 0)
+	if (DTMAN > 0)
 	{
-		TGO = TArr.DTMAN;
+		TGO = DTMAN;
 		goto PCGUID_5_C;
 	}
 	if (DV == 0.0)
@@ -1195,13 +1196,13 @@ PCGUID_5_C:
 PCGUID_5_E:
 	//Short burn logic, no guidance steering
 	Tg = TLARGE;
-	if (TArr.DTMAN > TGO)
+	if (DTMAN > TGO)
 	{
 	PCGUID_5_D:
-		TArr.DTMAN = TGO;
+		DTMAN = TGO;
 		goto PCGUID_5_B;
 	}
-	if (TArr.DTMAN > 0)
+	if (DTMAN > 0)
 	{
 		goto PCGUID_5_B;
 	}
