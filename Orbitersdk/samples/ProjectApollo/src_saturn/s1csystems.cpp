@@ -525,6 +525,16 @@ double SICSystems::GetSumThrust()
 	return (f1engine1.GetThrustLevel() + f1engine2.GetThrustLevel() + f1engine3.GetThrustLevel() + f1engine4.GetThrustLevel() + f1engine5.GetThrustLevel()) / 5.0;
 }
 
+bool SICSystems::TripleVoting(bool vote1, bool vote2, bool vote3)
+{
+	int num = 0;
+	if (vote1) num++;
+	if (vote2) num++;
+	if (vote3) num++;
+	if (num >= 2) return true;
+	return false;
+}
+
 void SICSystems::SwitchSelector(int channel)
 {
 	switch (channel)
@@ -591,7 +601,7 @@ bool SICSystems::GetPropellantDepletionEngineCutoff()
 	if (PointLevelSensorArmed)
 	{
 		if (PropellantDepletionSensors) return true;
-		if (!ThrustOK[0] && !ThrustOK[1] && !ThrustOK[2] && !ThrustOK[3]) return true;
+		if (!TripleVoting(ThrustOK[0], ThrustOK[1], ThrustOK[2]) && !TripleVoting(ThrustOK[3], ThrustOK[4], ThrustOK[5]) && !TripleVoting(ThrustOK[6], ThrustOK[7], ThrustOK[8]) && !TripleVoting(ThrustOK[9], ThrustOK[10], ThrustOK[11])) return true;
 	}
 
 	return false;
@@ -599,14 +609,14 @@ bool SICSystems::GetPropellantDepletionEngineCutoff()
 
 bool SICSystems::GetInboardEngineOut()
 {
-	if (!ThrustOK[4]) return true;
+	if (!TripleVoting(ThrustOK[12], ThrustOK[13], ThrustOK[14])) return true;
 
 	return false;
 }
 
 bool SICSystems::GetOutboardEngineOut()
 {
-	for (int i = 0;i < 4;i++) if (!ThrustOK[i]) return true;
+	for (int i = 0;i < 4;i++) if (!TripleVoting(ThrustOK[3 * i], ThrustOK[3 * i + 1], ThrustOK[3 * i + 2])) return true;
 
 	return false;
 }

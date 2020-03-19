@@ -113,6 +113,7 @@ public:
 	bool IsUmbilicalConnected();
 protected:
 
+	bool TripleVoting(bool vote1, bool vote2, bool vote3);
 	double GetSumThrust();
 	bool ESEGetSICThrustOKSimulate(int eng, int n);
 
