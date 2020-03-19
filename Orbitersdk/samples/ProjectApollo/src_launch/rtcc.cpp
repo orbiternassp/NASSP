@@ -12277,9 +12277,7 @@ RTCC_PMMMPT_19_B:
 	if (J <= 5)
 	{
 		goto RTCC_PMMMPT_17_B;
-	}
-	char Buffer[100];
-	
+	}	
 	PCMATO(A, YV, XP, DA, 5, NIP, WY, 0.0, WNULL);
 	goto RTCC_PMMMPT_20_B;
 RTCC_PMMMPT_20_A:
