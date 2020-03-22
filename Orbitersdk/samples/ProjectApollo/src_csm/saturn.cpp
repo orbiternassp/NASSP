@@ -135,8 +135,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	dsky(soundlib, agc, 015),
 	dsky2(soundlib, agc, 016), 
 	imu(agc, Panelsdk),
-	tcdu(agc, RegOPTY, 0140, 0),
-	scdu(agc, RegOPTX, 0141, 0),
+	scdu(agc, RegOPTX, 0140, 2),
+	tcdu(agc, RegOPTY, 0141, 2),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
 	MissionTimerDisplay(Panelsdk),
@@ -1198,6 +1198,8 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 
 		// Better acceleration measurement stability
 		imu.Timestep(simdt);
+		tcdu.Timestep(simdt);
+		scdu.Timestep(simdt);
 		ems.TimeStep(simdt);
 		CrewStatus.Timestep(simdt);
 
@@ -1358,6 +1360,8 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	dsky2.SaveState(scn, DSKY2_START_STRING, DSKY2_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
+	scdu.SaveState(scn, "SCDU_START", "CDU_END");
+	tcdu.SaveState(scn, "TCDU_START", "CDU_END");
 	cws.SaveState(scn);
 	secs.SaveState(scn);
 	els.SaveState(scn);
@@ -1954,6 +1958,12 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 		imu.LoadState(scn);
+	}
+	else if (!strnicmp(line, "SCDU_START", sizeof("SCDU_START"))) {
+		scdu.LoadState(scn, "CDU_END");
+	}
+	else if (!strnicmp(line, "TCDU_START", sizeof("TCDU_START"))) {
+		tcdu.LoadState(scn, "CDU_END");
 	}
 	else if (!strnicmp(line, GDC_START_STRING, sizeof(GDC_START_STRING))) {
 		gdc.LoadState(scn);

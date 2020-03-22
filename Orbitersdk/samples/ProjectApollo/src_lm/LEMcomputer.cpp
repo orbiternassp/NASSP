@@ -263,41 +263,6 @@ void LEMcomputer::ProcessChannel6(ChannelValue val){
 	lem->atca.ProcessLGC(6,val.to_ulong());
 }
 
-
-void LEMcomputer::ProcessChannel140(ChannelValue val) {
-	
-	/*ChannelValue val12;
-	val12 = GetOutputChannel(012);
-	LEM *lem = (LEM *) OurVessel;
-
-	if (val12[DispayInertialData])
-	{
-		lem->crossPointerLeft.SetForwardVelocity(val.to_ulong(), val12);
-		lem->crossPointerRight.SetForwardVelocity(val.to_ulong(), val12);
-	}
-	else
-	{
-		lem->RR.RRShaftDrive(val.to_ulong(), val12);
-	}*/
-}
-
-void LEMcomputer::ProcessChannel141(ChannelValue val) {
-
-	/*ChannelValue val12;
-	val12 = GetOutputChannel(012);
-	LEM *lem = (LEM *) OurVessel;
-
-	if (val12[DispayInertialData])
-	{
-		lem->crossPointerLeft.SetLateralVelocity(val.to_ulong(), val12);
-		lem->crossPointerRight.SetLateralVelocity(val.to_ulong(), val12);
-	}
-	else
-	{
-		lem->RR.RRTrunionDrive(val.to_ulong(), val12);
-	}*/
-}
-
 void LEMcomputer::ProcessChannel142(ChannelValue val) {
 
 	LEM *lem = (LEM *)OurVessel;

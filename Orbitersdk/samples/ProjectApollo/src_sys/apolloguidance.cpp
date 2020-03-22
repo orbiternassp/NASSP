@@ -771,16 +771,10 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 		ProcessIMUCDUErrorCount(channel, val);
 		imu.ChannelOutput(channel, val);
 		break;
-
-	// DS20060225 Enable SPS gimbal control
-	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
 	case 0140:
-		ProcessChannel140(val);
 		scdu.ChannelOutput(channel, val);
 		break;
-
 	case 0141:
-		ProcessChannel141(val);
 		tcdu.ChannelOutput(channel, val);
 		break;
 	case 0142:
@@ -821,12 +815,6 @@ void ApolloGuidance::ProcessChannel14(ChannelValue val){
 }
 
 void ApolloGuidance::ProcessChannel34(ChannelValue val) {
-}
-
-void ApolloGuidance::ProcessChannel140(ChannelValue val){
-}
-
-void ApolloGuidance::ProcessChannel141(ChannelValue val){
 }
 
 // Stub for LGC thrust drive

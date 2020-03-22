@@ -327,8 +327,6 @@ protected:
 	virtual void ProcessChannel13(ChannelValue val);
 	virtual void ProcessChannel14(ChannelValue val);
 	virtual void ProcessChannel34(ChannelValue val);
-	virtual void ProcessChannel140(ChannelValue val);
-	virtual void ProcessChannel141(ChannelValue val);
 	virtual void ProcessChannel142(ChannelValue val);
 	virtual void ProcessChannel143(ChannelValue val);
 	virtual void ProcessChannel163(ChannelValue val);
