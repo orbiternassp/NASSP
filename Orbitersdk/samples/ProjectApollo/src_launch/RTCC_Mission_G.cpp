@@ -2497,7 +2497,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.P30TIG = TimeofIgnition;
 		entopt.REFSMMAT = REFSMMAT;
 		entopt.sv0 = sv;
-		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");

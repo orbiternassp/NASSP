@@ -10154,6 +10154,31 @@ VECTOR3 RTCC::RLS_from_latlng(double lat, double lng, double alt)
 	return OrbMech::r_from_latlong(lat, lng, OrbMech::R_Moon + alt);
 }
 
+void RTCC::PMXSPT(int n)
+{
+	switch (n)
+	{
+	case 1:
+		PMXSPT("PMMXFR: MANEUVER PRIOR TO PRESENT TIME.");
+		break;
+	case 2:
+		PMXSPT("PMMXFR: MANEUVER TO BE REPLACED NOT IN THE MPT.");
+		break;
+	case 3:
+		PMXSPT("PMMXFR: MANEUVER TO BE REPLACED OVERLAPS ANOTHER MANEUVER.");
+		break;
+	case 4:
+		PMXSPT("PMMXFR: MANEUVER PRIOR TO FROZEN MANEUVER.");
+		break;
+	case 5:
+		PMXSPT("PMMXFR: MPT IS FULL - REQUESTED MANEUVER TRANSFER REJECTED.");
+		break;
+	case 6:
+		PMXSPT("PMMXFR: INVALID CONFIGURATION CODE OR THRUSTER CODE - MPT UNCHANGED.");
+		break;
+	}
+}
+
 void RTCC::PMXSPT(std::string message)
 {
 	if (RTCCONLINEMON.size() >= 9)
@@ -16246,7 +16271,7 @@ int RTCC::PMMXFR(int id, void *data)
 	//Setup input table for PMSVCT
 	//Move MED inputs to proper location
 	//Initialize flags
-	//Direct inputs (MPT, RTE, TLI)
+	//Direct inputs (RTE, MPT, TLI)
 	if (id == 32 || id == 33 || id == 37)
 	{
 		PMMXFRDirectInput *inp = static_cast<PMMXFRDirectInput*>(data);
@@ -16804,12 +16829,14 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		//Is maneuver prior to present time?
 		if (GMTI < CurrentGMT)
 		{
+			PMXSPT(1);
 			return 1;
 		}
 		UpperLimit = 1e70;
 		//Does maneuver to be replaced exist?
 		if (ReplaceMan > mpt->mantable.size())
 		{
+			PMXSPT(2);
 			return 2;
 		}
 		//Is this the last maneuver in MPT?
@@ -16818,6 +16845,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 			LastManReplaceFlag = false;
 			if (GMTI > mpt->mantable[ReplaceMan].GMTMAN)
 			{
+				PMXSPT(3);
 				return 3;
 			}
 		}
@@ -16828,6 +16856,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		}
 		if (GMTI < LowerLimit)
 		{
+			PMXSPT(3);
 			return 3;
 		}
 	}
@@ -16836,6 +16865,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		//Is maneuver prior to present time?
 		if (GMTI < CurrentGMT)
 		{
+			PMXSPT(1);
 			return 1;
 		}
 		if (mpt->mantable.size() == 0)
@@ -16863,10 +16893,12 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		CurMan = mpt->mantable.size() + 1;
 		if (CurMan > mpt->MaxManeuverNum)
 		{
+			PMXSPT(5);
 			return 5;
 		}
 		if (CurMan == 1 && DeleteFlag)
 		{
+			PMXSPT(3);
 			return 3;
 		}
 		mpt->ManeuverNum = CurMan;
@@ -17005,6 +17037,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 	{
 		if (!(MPTConfigIncludesSIVB(CC) && MPTConfigIncludesSIVB(CCP)))
 		{
+			PMXSPT(6);
 			return 6;
 		}
 	}
@@ -17018,10 +17051,12 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 		{
 			if (Thruster == RTCC_ENGINETYPE_LMAPS && !(MPTConfigIncludesLMAsc(CC) && MPTConfigIncludesLMAsc(CCP)))
 			{
+				PMXSPT(6);
 				return 6;
 			}
 			else if (Thruster == RTCC_ENGINETYPE_LMDPS && !(MPTConfigIncludesLMDsc(CC) && MPTConfigIncludesLMDsc(CCP)))
 			{
+				PMXSPT(6);
 				return 6;
 			}
 		}
@@ -17029,6 +17064,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 		{
 			if (!(MPTConfigIncludesCSM(CC) && MPTConfigIncludesCSM(CCP)))
 			{
+				PMXSPT(6);
 				return 6;
 			}
 		}
@@ -17043,10 +17079,12 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 	{
 		if (CCP == CC)
 		{
+			PMXSPT(6);
 			return 6;
 		}
 		else if (!MPTConfigSubset(CCP, CC))
 		{
+			PMXSPT(6);
 			return 6;
 		}
 		else
@@ -20128,7 +20166,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.UllageThrusterOption[0] = med_m65.UllageQuads;
 
 		void *vPtr = &inp;
-		PMMXFR(40, vPtr);
+		return PMMXFR(40, vPtr);
 	}
 	//Direct Input to MPT
 	else if (med == 66)
@@ -20277,7 +20315,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		void *vPtr = &inp;
 
-		PMMXFR(33, vPtr);
+		return PMMXFR(33, vPtr);
 	}
 	//TLI Direct Input
 	else if (med == 68)
@@ -20316,7 +20354,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.BurnParameterNumber = opp;
 
 		void *vPtr = &inp;
-		PMMXFR(37, vPtr);
+		return PMMXFR(37, vPtr);
 	}
 	//Transfer Descent Plan, DKI or SPQ
 	else if (med == 70)
@@ -20355,7 +20393,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.UllageThrusterOption[0] = med_m70.UllageQuads;
 
 		void *vPtr = &inp;
-		PMMXFR(41, vPtr);
+		return PMMXFR(41, vPtr);
 	}
 	//Transfer two-impulse plan to MPT
 	else if (med == 72)
@@ -20398,7 +20436,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.UllageThrusterOption[0] = med_m72.UllageQuads;
 
 		void *vPtr = &inp;
-		PMMXFR(42, vPtr);
+		return PMMXFR(42, vPtr);
 	}
 	//Transfer of planned Earth entry maneuver
 	else if (med == 74)
@@ -20476,7 +20514,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.TableCode = veh;
 
 		void *vPtr = &inp;
-		PMMXFR(32, vPtr);
+		return PMMXFR(32, vPtr);
 	}
 	//LOI and MCC Transfer
 	else if (med == 78)
@@ -20536,19 +20574,19 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.UllageThrusterOption[0] = med_m78.UllageQuads;
 
 		void *vPtr = &inp;
-		PMMXFR(39, vPtr);
+		return PMMXFR(39, vPtr);
 	}
 	//Transfer ascent maneuver to MPT from lunar targeting
 	else if (med == 85)
 	{
 		void *vPtr = NULL;
-		PMMXFR(44, vPtr);
+		return PMMXFR(44, vPtr);
 	}
 	//Direct input of lunar descent maneuver
 	else if (med == 86)
 	{
 		void *vPtr = NULL;
-		PMMXFR(43, vPtr);
+		return PMMXFR(43, vPtr);
 	}
 	return 0;
 }

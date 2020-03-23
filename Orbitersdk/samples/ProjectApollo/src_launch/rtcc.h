@@ -596,7 +596,6 @@ struct EarthEntryPADOpt
 
 struct LunarEntryPADOpt
 {
-	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double P30TIG; //Time of Ignition (MCC)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
@@ -2633,6 +2632,7 @@ public:
 	//Earth Orbit Insertion Processor
 	void PMMIEV(double T_L);
 	//Mission Planning Print Load Module
+	void PMXSPT(int n);
 	void PMXSPT(std::string message);
 	//Trajectory Update Control Module
 	void EMSTRAJ(EphemerisData sv, int L, bool landed = false);

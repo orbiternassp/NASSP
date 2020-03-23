@@ -4226,7 +4226,6 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 				opt.lng = EntryLngcor;
 				opt.P30TIG = P30TIG;
 				opt.REFSMMAT = REFSMMAT;
-				opt.vessel = vessel;
 
 				GC->rtcc->LunarEntryPAD(&opt, lunarentrypad);
 			}

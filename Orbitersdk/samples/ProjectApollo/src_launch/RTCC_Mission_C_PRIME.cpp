@@ -1461,7 +1461,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.P30TIG = TimeofIgnition;
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 		entopt.sv0 = sv;
-		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
@@ -1491,7 +1490,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.lng = SplashLongitude;
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 		entopt.sv0 = sv;
-		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
