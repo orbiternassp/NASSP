@@ -601,9 +601,6 @@ CMOptics::CMOptics() {
 	SextDVLOSTog = false;
 	SextDVTimer = 0.0;
 	OpticsCovered = true;
-
-	TargetShaft = 0;
-	TargetTrunion = 0;
 }
 
 void CMOptics::Init(Saturn *vessel) {
@@ -875,8 +872,6 @@ void CMOptics::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "OPTICSSHAFT", OpticsShaft);
 	papiWriteScenario_double(scn, "SEXTTRUNION", SextTrunion);
 	papiWriteScenario_double(scn, "TELETRUNION", TeleTrunion);
-	papiWriteScenario_double(scn, "TARGETSHAFT", TargetShaft);
-	papiWriteScenario_double(scn, "TARGETTRUNION", TargetTrunion);
 	papiWriteScenario_bool(scn, "OPTICSCOVERED", OpticsCovered); 
 	oapiWriteLine(scn, CMOPTICS_END_STRING);
 }
@@ -903,12 +898,6 @@ void CMOptics::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "TELETRUNION", 11)) {
 			sscanf (line+11, "%lf", &TeleTrunion);
 		}
-		else if (!strnicmp (line, "TARGETSHAFT", 11)) {
-			sscanf (line+11, "%lf", &TargetShaft);
-		}
-		else if (!strnicmp (line, "TARGETTRUNION", 13)) {
-			sscanf (line+13, "%lf", &TargetTrunion);
-		} 
 		papiReadScenario_bool(line, "OPTICSCOVERED", OpticsCovered); 
 	}
 }

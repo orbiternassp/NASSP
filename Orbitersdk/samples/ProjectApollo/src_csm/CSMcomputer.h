@@ -191,8 +191,6 @@ public:
 	double OpticsShaft;												// Shaft Position
 	double SextTrunion;												// SXT Trunion
 	double TeleTrunion;												// SCT Trunion
-	double TargetShaft;												// Reserved
-	double TargetTrunion;											// Reserved
 	double dShaft;
 	double dTrunion;
 	bool SextDualView;												// Toggle logical for sextant dual-view

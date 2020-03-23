@@ -30,6 +30,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #define CHECK_BIT(var,pos) ( (((var) & (pos)) > 0 ) ? (1) : (0) )
 
+// The auto optics don't work right with the current logic for some reason. What the CMC wants is a total desired angle change,
+// but what it sends is increments that always make the auto optics overshoot the target. This flag can be used to let the CMC
+// send the total new value of the error counter to the OCDUs instead of an increment. The downside is that the optics drive never
+// reaches the maximum speed, which probably isn't correct either. This logic is only used in the OCDUs and only when the
+// coarse align mode is active.
+#define OCDU_CA_ERROR_INCREMENT true
+
 CDU::CDU(ApolloGuidance &comp, int l, int err, int cdutype) : agc(comp)
 {
 	loc = l;
@@ -121,13 +128,9 @@ void CDU::Timestep(double simdt)
 						agc.vagc.Erasable[0][loc]++;
 						agc.vagc.Erasable[0][loc] &= 077777;
 					}
-					if (CA && (CHECK_BIT(ReadCounter, 8) != CHECK_BIT(readcountertemp, 8)))
+					if (ErrorCounterEnabled && CA && (ErrorCounter > -0600) && (CHECK_BIT(ReadCounter, 8) != CHECK_BIT(readcountertemp, 8)))
 					{
 						ErrorCounter--;
-						if (ErrorCounter < -0600)
-						{
-							ErrorCounter = -0600;
-						}
 					}
 					readcountertemp = ReadCounter;
 				}
@@ -143,13 +146,9 @@ void CDU::Timestep(double simdt)
 						agc.vagc.Erasable[0][loc]--;
 						agc.vagc.Erasable[0][loc] &= 077777;
 					}
-					if (CA && (CHECK_BIT(ReadCounter, 8) != CHECK_BIT(readcountertemp, 8)))
+					if (ErrorCounterEnabled && CA && (ErrorCounter < 0600) && (CHECK_BIT(ReadCounter, 8) != CHECK_BIT(readcountertemp, 8)))
 					{
 						ErrorCounter++;
-						if (ErrorCounter > 0600)
-						{
-							ErrorCounter = 0600;
-						}
 					}
 					readcountertemp = ReadCounter;
 				}
@@ -232,6 +231,7 @@ void CDU::ChannelOutput(int address, ChannelValue val)
 					ErrorCounter = 0600;
 				}
 			}
+			//sprintf(oapiDebugString(), "Channel %d ErrorCounter %d Delta %d", err_channel, ErrorCounter, ErrorCounter - ErrorCounterOld);
 		}
 	}
 
