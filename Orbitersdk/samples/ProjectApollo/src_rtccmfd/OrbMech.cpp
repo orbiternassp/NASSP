@@ -7663,6 +7663,12 @@ SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 		OrbMech::EclipticToECI(sv0.R, sv0.V, sv0.MJD, R_equ, V_equ);
 		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Earth);
 
+		if (osc0.e > 0.85)
+		{
+			error = true;
+			return sv0;
+		}
+
 		n0 = sqrt(mu_Earth / (osc0.a*osc0.a*osc0.a));
 		ll_dot = n0;
 		g_dot = n0 * ((3.0 / 4.0)*(J20*R_Earth*R_Earth*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
@@ -7805,6 +7811,12 @@ SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN)
 		sv1 = sv0;
 		OrbMech::EclipticToMCI(sv0.R, sv0.V, sv0.MJD, R_equ, V_equ);
 		osc0 = OrbMech::GIMIKC(R_equ, V_equ, mu_Moon);
+
+		if (osc0.e > 0.3)
+		{
+			error = true;
+			return sv0;
+		}
 
 		n0 = sqrt(mu_Moon / (osc0.a*osc0.a*osc0.a));
 		ll_dot = n0;
