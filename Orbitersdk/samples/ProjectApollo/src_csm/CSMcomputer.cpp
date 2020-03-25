@@ -805,9 +805,9 @@ void CMOptics::TimeStep(double simdt) {
 
 		if (sat->agc.GetOutputChannelBit(012, DisengageOpticsDAC) == false)
 		{
-			//26mV per bit, 2.0°/s/volt (shaft), 0.51°/s/volt (trunnion)
-			dShaft += 0.026*2.0*RAD*simdt*(double)sat->scdu.GetErrorCounter();
-			dTrunion += 0.026*0.51*RAD*simdt*(double)sat->tcdu.GetErrorCounter();
+			//26mV per bit, 30.8 revolutions per second per volt, 1/3080 gear ratio (Shaft), 2/11780 gear ratio (Trunnion)
+			dShaft += 0.026*30.8*PI2*1.0 / 3080.0*simdt*(double)sat->scdu.GetErrorCounter();
+			dTrunion += 0.026*30.8*PI2*2.0 / 11780.0*simdt*(double)sat->tcdu.GetErrorCounter();
 		}
 
 		//sprintf(oapiDebugString(), "Trun Err: %lf Shaft Err: %lf", (double)sat->tcdu.GetErrorCounter()*180.0*pow(2, -14), (double)sat->scdu.GetErrorCounter()*180.0*pow(2, -12));
