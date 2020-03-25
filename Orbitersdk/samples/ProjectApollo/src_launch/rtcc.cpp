@@ -19054,6 +19054,16 @@ void RTCC::PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out)
 	PZLRBTI.DVMAXm = opt.DV_maxm / 0.3048;
 	PZLRBTI.planesoln = opt.usePlaneSolnForInterSoln;
 	PZLRBTI.RARPGT = opt.RARPGT / 1852.0;
+	PZLRBTI.AZMN_f_ND = out.eta_MN*DEG;
+	if (PZLRBTI.AZMN_f_ND < 0)
+	{
+		PZLRBTI.AZMN_f_ND += 360.0;
+	}
+	PZLRBTI.AZMX_f_ND = out.eta_MX*DEG;
+	if (PZLRBTI.AZMX_f_ND < 0)
+	{
+		PZLRBTI.AZMX_f_ND += 360.0;
+	}
 	for (int i = 0;i < 8;i++)
 	{
 		PZLRBTI.sol[i].GETLOI = GETfromGMT(out.data[i].GMT_LOI);

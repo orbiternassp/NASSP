@@ -187,7 +187,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "LANDINGZONE", G->landingzone);
 	oapiWriteScenario_int(scn, "ENTRYPRECISION", G->entryprecision);
 
-	papiWriteScenario_double(scn, "P37GET400K", G->P37GET400K);
 	oapiWriteScenario_int(scn, "MAPPAGE", G->mappage);
 	papiWriteScenario_bool(scn, "INHIBITUPLINK", G->inhibUplLOS);
 	papiWriteScenario_double(scn, "GMPApogeeHeight", G->GMPApogeeHeight);
@@ -396,7 +395,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "LANDINGZONE", G->landingzone);
 		papiReadScenario_int(line, "ENTRYPRECISION", G->entryprecision);
 
-		papiReadScenario_double(line, "P37GET400K", G->P37GET400K);
 		papiReadScenario_int(line, "MAPPAGE", G->mappage);
 		papiReadScenario_bool(line, "INHIBITUPLINK", G->inhibUplLOS);
 		papiReadScenario_double(line, "GMPApogeeHeight", G->GMPApogeeHeight);
@@ -3134,12 +3132,12 @@ void ApolloRTCCMFD::menuMPTInitM50M55Vehicle()
 void ApolloRTCCMFD::CheckoutMonitorCalc()
 {
 	bool CheckoutMonitorCalcInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U02, CSM or LEM, Indicator (GMT,GET,MVI,MVE,RAD,ALT,FPA), Parameter, Threshold Time (opt.), Reference (ECI,ECF,MCI,MCT) (opt.), FT (opt.);", CheckoutMonitorCalcInput, 0, 30, (void*)this);
+	oapiOpenInputBox("Format: U02, CSM or LEM, Indicator (GMT,GET,MVI,MVE,RAD,ALT,FPA), Parameter, Threshold Time (opt.), Reference (ECI,ECF,MCI,MCT) (opt.), FT (opt.);", CheckoutMonitorCalcInput, 0, 40, (void*)this);
 }
 
 bool CheckoutMonitorCalcInput(void *id, char *str, void *data)
 {
-	if (strlen(str) < 30)
+	if (strlen(str) < 40)
 	{
 		((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 		return true;

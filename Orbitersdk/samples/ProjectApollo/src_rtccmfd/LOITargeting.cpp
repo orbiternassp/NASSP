@@ -263,7 +263,7 @@ namespace rtcc
 				NU1 = NU_MN;
 				NU2 = NU_MX;
 			}
-			if (dotp(crossp(NU1, NU2), crossp(NU1, unit(R_N))) <= 0)
+			if (dotp(crossp(NU1, NU2), crossp(NU1, unit(out.data[7].R_LOI))) <= 0)
 			{
 				NU_MX = -NU_MX;
 				NU_MN = -NU_MN;
@@ -271,6 +271,8 @@ namespace rtcc
 				eta_MN = OrbMech::sign(dotp(crossp(U_PC, NU_MN), U_H))*acos(dotp(U_PC, NU_MN));
 			}
 		}
+		out.eta_MN = eta_MN;
+		out.eta_MX = eta_MX;
 		double h_NMX, h_NMN, e;
 		h_NMX = a_H * (1.0 - e_H * e_H) / (1.0 + e_H * dotp(NU_MX, U_PC)) - opt.R_LLS;
 		h_NMN = a_H * (1.0 - e_H * e_H) / (1.0 + e_H * dotp(NU_MN, U_PC)) - opt.R_LLS;

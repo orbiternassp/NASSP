@@ -2375,8 +2375,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%.3f° ReA", G->EntryAngcor*DEG);
 		skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->P37GET400K);
-		sprintf(Buffer, "%s RRT", Buffer);
+		GET_Display(Buffer, G->EntryRET05G);
+		sprintf(Buffer, "%s RET 0.05G", Buffer);
 		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
@@ -2464,8 +2464,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%.3f° ReA", G->EntryAngcor*DEG);
 		skp->Text(5 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->P37GET400K);
-		sprintf(Buffer, "%s RRT", Buffer);
+		GET_Display(Buffer, G->EntryRET05G);
+		sprintf(Buffer, "%s RET 0.05G", Buffer);
 		skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 10 * H / 14, "DVX", 3);
@@ -2576,8 +2576,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		sprintf(Buffer, "%.3f° ReA", G->EntryAngcor*DEG);
 		skp->Text(5 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->P37GET400K);
-		sprintf(Buffer, "%s RRT", Buffer);
+		GET_Display(Buffer, G->EntryRET05G);
+		sprintf(Buffer, "%s RET 0.05G", Buffer);
 		skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
 
 		skp->Text(5 * W / 8, 11 * H / 21, "Return Inclination:", 19);
@@ -2729,7 +2729,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "X%+04.0f LONG", G->EntryLngcor*DEG);
 		skp->Text(4 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->P37GET400K);
+		GET_Display(Buffer, G->EntryRRT);
 		sprintf(Buffer, "%s 400K", Buffer);
 		skp->Text(4 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 	}

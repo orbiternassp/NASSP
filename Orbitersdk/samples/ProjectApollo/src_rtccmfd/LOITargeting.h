@@ -95,6 +95,8 @@ namespace rtcc
 	{
 		LOIOutputDataSet data[8];
 		double T_LLS;
+		double eta_MX;
+		double eta_MN;
 	};
 
 	class LOITargeting

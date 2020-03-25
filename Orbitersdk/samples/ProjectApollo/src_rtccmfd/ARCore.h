@@ -276,11 +276,12 @@ public:
 	double EntryLngcor;
 	VECTOR3 Entry_DV;
 	double entryrange;
-	double P37GET400K;
+	double EntryRET05G; //Time of 0.05g
+	double EntryRRT; //Time of entry interface (400k feet altitude)
 	bool entrylongmanual; //0 = landing zone, 1 = manual longitude input
 	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
 	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
-	double RTEReentryTime;
+	double RTEReentryTime; //Desired landing time
 	double FlybyPeriAlt;
 	double EntryDesiredInclination;
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
