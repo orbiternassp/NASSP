@@ -569,21 +569,21 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_k18.HPLOI1 = 52.8;
 		t_Land = OrbMech::HHMMSSToSS(113.0, 01.0, 38.4);
 		rtcc->med_k17.DescentFlightArc = -10.0*RAD;
-		rtcc->med_k40.DW = 10.0;
+		rtcc->med_k40.DW = 20.0;
 		rtcc->med_k40.HP_LLS = 13.17;
-		rtcc->med_k17.DwellOrbits = rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
-		rtcc->med_k17.DescIgnHeight = 84000.0*0.3048;
+		rtcc->med_k40.REVS2 = rtcc->PZMCCPLN.REVS2 = 10;
+		rtcc->med_k17.DescIgnHeight = 40000.0*0.3048;
 		rtcc->PZREAP.IRMAX = 80.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
 		DT_Ins_TPI = 47.0*60.0;
 
-		rtcc->PZMCCPLN.SITEROT = 10.0*RAD;
+		rtcc->PZMCCPLN.SITEROT = 20.0*RAD;
 		rtcc->PZMCCPLN.H_P_LPO1 = 51.3*1852.0;
 		rtcc->PZMCCPLN.H_P_LPO2 = 13.17*1852.0;
 
-		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(91, 48, 38);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -11.11101*RAD;
-		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 180.0*RAD;
+		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(91, 52, 23);
+		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -9.75*RAD;
+		rtcc->PZSFPTAB.blocks[0].lng_pc1 = rtcc->PZSFPTAB.blocks[0].lng_pc2 = rtcc->PZSFPTAB.blocks[0].lng_nd = 161.779*RAD;
 		rtcc->PZSFPTAB.blocks[0].h_pc1 = rtcc->PZSFPTAB.blocks[0].h_pc2 = rtcc->PZSFPTAB.blocks[0].h_nd = 51.3*1852.0;
 		rtcc->PZSFPTAB.blocks[0].GET_TLI = OrbMech::HHMMSSToSS(3, 20, 58);
 		rtcc->PZSFPTAB.blocks[0].dpsi_loi = 11.3*RAD;
