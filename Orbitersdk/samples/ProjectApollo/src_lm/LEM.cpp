@@ -1862,6 +1862,7 @@ bool LEM::SetupPayload(PayloadSettings &ls)
 	pMission->LoadMission(ApolloNo);
 
 	agc.SetMissionInfo(pMission->GetLGCVersion(), CSMName);
+	aea.SetMissionInfo(pMission->GetAEAVersion());
 
 	// Initialize the checklist Controller in accordance with scenario settings.
 	checkControl.init(ls.checklistFile, true);
