@@ -3876,8 +3876,18 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		if (GC->MissionPlanningActive)
 		{
 			EphemerisData EPHEM;
-			double GMT = GC->rtcc->GMTfromGET(DKI_TIG);
-			int err = GC->rtcc->ELFECH(GMT,  GC->rtcc->med_k00.ChaserVehicle, EPHEM);
+			double GMT;
+
+			if (GC->rtcc->med_k10.MLDTime < 0)
+			{
+				GMT = GC->rtcc->RTCCPresentTimeGMT();
+			}
+			else
+			{
+				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k10.MLDTime);
+			}
+
+			int err = GC->rtcc->ELFECH(GMT, GC->rtcc->med_k00.ChaserVehicle, EPHEM);
 			if (err)
 			{
 				Result = 0;

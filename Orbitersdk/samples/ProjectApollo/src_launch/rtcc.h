@@ -2730,7 +2730,7 @@ public:
 	struct MED_K10
 	{
 		int MLDOption = 2; //1 = Angle, 2 = Time, 3 = Delta Time, 4 = Time and Angle
-		double MLDTime = 0.0;
+		double MLDTime = -1.0;
 		double MLDAngle = 0.0;
 	} med_k10;
 

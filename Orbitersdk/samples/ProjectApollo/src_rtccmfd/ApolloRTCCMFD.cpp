@@ -2458,9 +2458,150 @@ void ApolloRTCCMFD::set_REFSMMATTime(double time)
 	this->G->REFSMMATTime = time;
 }
 
+void ApolloRTCCMFD::menuCycleTITable()
+{
+
+}
+
+void ApolloRTCCMFD::menuCycleTIPlanNumber()
+{
+
+}
+
+void ApolloRTCCMFD::menuTIDeleteGET()
+{
+	bool TIDeleteGETInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Delete all maneuvers in both MPTs after GET (Format: hhh:mm:ss, or negative number for no delete)", TIDeleteGETInput, 0, 20, (void*)this);
+}
+
+bool TIDeleteGETInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss;
+	double tig;
+
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		tig = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_TIDeleteGET(tig);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TIDeleteGET(double get)
+{
+	GC->rtcc->med_m72.DeleteGET = get;
+}
+
 void ApolloRTCCMFD::menuCycleTIThruster()
 {
 	CycleThrusterOption(GC->rtcc->med_m72.Thruster);
+}
+
+void ApolloRTCCMFD::menuCycleTIAttitude()
+{
+	if (GC->rtcc->med_m72.Attitude < 5)
+	{
+		GC->rtcc->med_m72.Attitude++;
+	}
+	else
+	{
+		GC->rtcc->med_m72.Attitude = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuTIUllageOption()
+{
+	bool TIUllageOptionInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the number and duration of ullage (Format: number time)", TIUllageOptionInput, 0, 20, (void*)this);
+}
+
+bool TIUllageOptionInput(void *id, char *str, void *data)
+{
+	double ss;
+	int num;
+	if (sscanf(str, "%d %lf", &num, &ss) == 2)
+	{
+		((ApolloRTCCMFD*)data)->set_TIUllageOption(num, ss);
+		return true;
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_TIUllageOption(int num, double dt)
+{
+	if (num == 2)
+	{
+		GC->rtcc->med_m72.UllageQuads = false;
+	}
+	else if (num == 4)
+	{
+		GC->rtcc->med_m72.UllageQuads = true;
+	}
+	else
+	{
+		return false;
+	}
+
+	GC->rtcc->med_m72.UllageDT = dt;
+	return true;
+}
+
+void ApolloRTCCMFD::menuCycleTIIterationFlag()
+{
+	GC->rtcc->med_m72.Iteration = !GC->rtcc->med_m72.Iteration;
+}
+
+void ApolloRTCCMFD::menuCycleTITimeFlag()
+{
+	GC->rtcc->med_m72.TimeFlag = !GC->rtcc->med_m72.TimeFlag;
+}
+
+void ApolloRTCCMFD::menuTIDPSTenPercentTime()
+{
+	bool MPTTIDPSTenPercentTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Delta T of 10% thrust for DPS (negative to ignore short burn test):", MPTTIDPSTenPercentTimeInput, 0, 20, (void*)this);
+}
+
+bool MPTTIDPSTenPercentTimeInput(void *id, char *str, void *data)
+{
+	double deltat;
+	if (sscanf(str, "%lf", &deltat) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_TIDPSTenPercentTime(deltat);
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_TIDPSTenPercentTime(double deltat)
+{
+	GC->rtcc->med_m72.TenPercentDT = deltat;
+}
+
+void ApolloRTCCMFD::menuTIDPSScaleFactor()
+{
+	bool TIDPSScaleFactorInput(void *id, char *str, void *data);
+	oapiOpenInputBox("DPS thrust scaling factor (0 to 1):", TIDPSScaleFactorInput, 0, 20, (void*)this);
+}
+
+bool TIDPSScaleFactorInput(void *id, char *str, void *data)
+{
+	double scale;
+	if (sscanf(str, "%lf", &scale) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_TIDPSScaleFactor(scale);
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_TIDPSScaleFactor(double scale)
+{
+	GC->rtcc->med_m72.DPSThrustFactor = scale;
 }
 
 void ApolloRTCCMFD::menuCycleSPQDKIThruster()
@@ -6099,6 +6240,36 @@ void ApolloRTCCMFD::menuRequestLTMFD()
 			}
 		}
 	}
+}
+
+void ApolloRTCCMFD::menuCycleDKIChaser()
+{
+	GC->rtcc->med_k00.ChaserVehicle = 4 - GC->rtcc->med_k00.ChaserVehicle;
+}
+
+void ApolloRTCCMFD::menuSetDKIThresholdTime()
+{
+	bool DKIThresholdInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the DKI threshold time (Format: hhh:mm:ss)", DKIThresholdInput, 0, 20, (void*)this);
+}
+
+bool DKIThresholdInput(void *id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, get;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + (double)(60 * (mm + 60 * hh));
+		((ApolloRTCCMFD*)data)->set_DKIThresholdInput(get);
+
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_DKIThresholdInput(double get)
+{
+	GC->rtcc->med_k10.MLDTime = get;
 }
 
 void ApolloRTCCMFD::menuDKICalc()

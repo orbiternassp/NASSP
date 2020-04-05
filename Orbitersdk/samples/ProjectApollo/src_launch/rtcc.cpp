@@ -12355,7 +12355,7 @@ RTCC_PMMMPT_20_B:
 int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E)
 {
 	EphemerisData data;
-	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lat[RTCC_LMPOS_BEST], MCSMLR);
+	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lng[RTCC_LMPOS_BEST], MCSMLR);
 	double theta, dt_asc, dv;
 	SV sv_IG, sv_Ins;
 	LunarAscentProcessor(R_LS, in.m0, in.sv_CSM, GMTBASE, in.t_liftoff, in.v_LH, in.v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
@@ -19066,21 +19066,35 @@ void RTCC::PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out)
 	}
 	for (int i = 0;i < 8;i++)
 	{
-		PZLRBTI.sol[i].GETLOI = GETfromGMT(out.data[i].GMT_LOI);
-		PZLRBTI.sol[i].DVLOI1 = length(out.data[i].V_LOI_apo - out.data[i].V_LOI) / 0.3048;
-		PZLRBTI.sol[i].DVLOI2 = out.data[i].display.dv_LOI2 / 0.3048;
-		PZLRBTI.sol[i].H_ND = out.data[i].display.H_ND / 1852.0;
-		PZLRBTI.sol[i].f_ND_H = out.data[i].display.eta_N*DEG;
-		if (PZLRBTI.sol[i].f_ND_H < 0)
+		if (out.data[i].GMT_LOI == 0.0)
 		{
-			PZLRBTI.sol[i].f_ND_H += 360.0;
+			PZLRBTI.sol[i].GETLOI = 0.0;
+			PZLRBTI.sol[i].DVLOI1 = 0.0;
+			PZLRBTI.sol[i].DVLOI2 = 0.0;
+			PZLRBTI.sol[i].H_ND = 0.0;
+			PZLRBTI.sol[i].f_ND_H = 0.0;
+			PZLRBTI.sol[i].H_PC = 0.0;
+			PZLRBTI.sol[i].Theta = 0.0;
+			PZLRBTI.sol[i].f_ND_E = 0.0;
 		}
-		PZLRBTI.sol[i].H_PC = out.data[i].display.h_P / 1852.0;
-		PZLRBTI.sol[i].Theta = out.data[i].display.theta*DEG;
-		PZLRBTI.sol[i].f_ND_E = out.data[i].display.W_P*DEG;
-		if (PZLRBTI.sol[i].f_ND_E < 0)
+		else
 		{
-			PZLRBTI.sol[i].f_ND_E += 360.0;
+			PZLRBTI.sol[i].GETLOI = GETfromGMT(out.data[i].GMT_LOI);
+			PZLRBTI.sol[i].DVLOI1 = length(out.data[i].V_LOI_apo - out.data[i].V_LOI) / 0.3048;
+			PZLRBTI.sol[i].DVLOI2 = out.data[i].display.dv_LOI2 / 0.3048;
+			PZLRBTI.sol[i].H_ND = out.data[i].display.H_ND / 1852.0;
+			PZLRBTI.sol[i].f_ND_H = out.data[i].display.eta_N*DEG;
+			if (PZLRBTI.sol[i].f_ND_H < 0)
+			{
+				PZLRBTI.sol[i].f_ND_H += 360.0;
+			}
+			PZLRBTI.sol[i].H_PC = out.data[i].display.h_P / 1852.0;
+			PZLRBTI.sol[i].Theta = out.data[i].display.theta*DEG;
+			PZLRBTI.sol[i].f_ND_E = out.data[i].display.W_P*DEG;
+			if (PZLRBTI.sol[i].f_ND_E < 0)
+			{
+				PZLRBTI.sol[i].f_ND_E += 360.0;
+			}
 		}
 	}
 }

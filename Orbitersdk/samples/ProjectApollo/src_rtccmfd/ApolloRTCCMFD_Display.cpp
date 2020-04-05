@@ -2744,42 +2744,74 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Docking Initiate", 16);
 
-		skp->Text(1 * W / 8, 2 * H / 14, "Init", 4);
+		skp->Text(1 * W / 16, 2 * H / 14, "Init", 4);
 
 		if (G->DKI_Profile == 0)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "CSI/CDH Sequence", 16);
+			skp->Text(1 * W / 16, 4 * H / 14, "CSI/CDH Sequence", 16);
 		}
 		else if (G->DKI_Profile == 1)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "HAM-CSI/CDH Sequence", 20);
+			skp->Text(1 * W / 16, 4 * H / 14, "HAM-CSI/CDH Sequence", 20);
 		}
 		else if (G->DKI_Profile == 2)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "Rescue-2 Sequence", 17);
+			skp->Text(1 * W / 16, 4 * H / 14, "Rescue-2 Sequence", 17);
 		}
 		else if (G->DKI_Profile == 3)
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "TPI Time Only", 13);
+			skp->Text(1 * W / 16, 4 * H / 14, "TPI Time Only", 13);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 4 * H / 14, "High Dwell Sequence", 19);
+			skp->Text(1 * W / 16, 4 * H / 14, "High Dwell Sequence", 19);
 		}
+
+		if (GC->MissionPlanningActive)
+		{
+			if (GC->rtcc->med_k00.ChaserVehicle == 1)
+			{
+				skp->Text(1 * W / 16, 6 * H / 14, "Chaser: CSM", 11);
+				skp->Text(1 * W / 16, 7 * H / 14, "Target: LEM", 11);
+			}
+			else
+			{
+				skp->Text(1 * W / 16, 6 * H / 14, "Chaser: LEM", 11);
+				skp->Text(1 * W / 16, 7 * H / 14, "Target: CSM", 11);
+			}
+		}
+		else
+		{
+			sprintf_s(Buffer, "Chaser: %s", G->vessel->GetName());
+			skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+			if (G->target)
+			{
+				sprintf_s(Buffer, "Target: %s", G->target->GetName());
+			}
+			else
+			{
+				sprintf_s(Buffer, "Target: Not set!");
+			}
+			skp->Text(1 * W / 16, 7 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		if (GC->rtcc->med_k10.MLDTime < 0)
+		{
+			sprintf_s(Buffer, "Present Time");
+		}
+		else
+		{
+			GET_Display(Buffer, GC->rtcc->med_k10.MLDTime);
+		}
+		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->DKI_Profile != 3)
 		{
 			GET_Display(Buffer, G->DKI_TIG);
-			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 		}
 		GET_Display(Buffer, G->t_TPIguess);
-		skp->Text(1 * W / 8, 7 * H / 14, Buffer, strlen(Buffer));
-
-		if (G->target != NULL)
-		{
-			sprintf(Buffer, G->target->GetName());
-			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
-		}
+		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->DKI_Profile != 3)
 		{
@@ -4379,9 +4411,68 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		ThrusterName(Buffer, GC->rtcc->med_m72.Thruster);
-		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
 
-		if (!GC->MissionPlanningActive)
+		if (GC->MissionPlanningActive)
+		{
+			if (GC->rtcc->med_m72.DeleteGET > 0)
+			{
+				GET_Display(Buffer, GC->rtcc->med_m72.DeleteGET);
+				skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				skp->Text(1 * W / 8, 6 * H / 14, "Do not delete", 13);
+			}
+
+			MPTAttitudeName(Buffer, GC->rtcc->med_m72.Attitude);
+			skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m72.UllageDT < 0)
+			{
+				sprintf_s(Buffer, "Nominal ullage");
+			}
+			else
+			{
+				if (GC->rtcc->med_m72.UllageQuads)
+				{
+					sprintf_s(Buffer, "4 quads, %.1f s", GC->rtcc->med_m72.UllageDT);
+				}
+				else
+				{
+					sprintf_s(Buffer, "2 quads, %.1f s", GC->rtcc->med_m72.UllageDT);
+				}
+			}
+			skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->med_m72.Iteration)
+			{
+				skp->Text(5 * W / 8, 4 * H / 14, "Iterate", 7);
+			}
+			else
+			{
+				skp->Text(5 * W / 8, 4 * H / 14, "Do not iterate", 14);
+			}
+
+			
+			if (GC->rtcc->med_m72.Thruster == RTCC_ENGINETYPE_LMDPS)
+			{
+				sprintf_s(Buffer, "%.1f s", GC->rtcc->med_m72.TenPercentDT);
+				skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+				sprintf_s(Buffer, "%.3f", GC->rtcc->med_m72.DPSThrustFactor);
+				skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+			}
+
+			if (GC->rtcc->med_m72.TimeFlag)
+			{
+				skp->Text(5 * W / 8, 10 * H / 14, "Impulsive TIG", 13);
+			}
+			else
+			{
+				skp->Text(5 * W / 8, 10 * H / 14, "Optimum TIG", 11);
+			}
+		}
+		else
 		{
 			GET_Display(Buffer, G->P30TIG);
 			skp->Text(5 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
