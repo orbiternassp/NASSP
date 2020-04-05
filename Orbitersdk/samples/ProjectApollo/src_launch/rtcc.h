@@ -473,6 +473,7 @@ struct TwoImpulseResuls
 
 struct SPQResults
 {
+	double t_CSI;
 	double t_CDH;
 	double t_TPI;
 	double DH;
@@ -1061,6 +1062,7 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int K_CDH;			//Height iteration. 0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int K_TPI = 0;		//-1 = Midpoint of darkness, 0 = on time, 1 = on longitude
 	int ChaserID = 1;
+	bool OptimumCSI = false;
 };
 
 struct PDAPOpt //Powered Descent Abort Program

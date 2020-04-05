@@ -6274,10 +6274,7 @@ void ApolloRTCCMFD::set_DKIThresholdInput(double get)
 
 void ApolloRTCCMFD::menuDKICalc()
 {
-	if (G->target != NULL)
-	{
-		G->DKICalc();
-	}
+	G->DKICalc();
 }
 
 void ApolloRTCCMFD::menuLAPCalc()

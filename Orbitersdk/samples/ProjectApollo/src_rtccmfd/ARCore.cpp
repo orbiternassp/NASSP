@@ -2874,10 +2874,18 @@ int ARCore::subThread()
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.ChaserID = GC->rtcc->med_k01.ChaserVehicle;
-		if (SPQMode == 0)
+		if (SPQMode != 1)
 		{
 			opt.t_CSI = CSItime;
 			opt.K_CDH = CDHtimemode;
+			if (SPQMode == 2)
+			{
+				opt.OptimumCSI = true;
+			}
+			else
+			{
+				opt.OptimumCSI = false;
+			}
 		}
 		else
 		{
@@ -2896,7 +2904,7 @@ int ARCore::subThread()
 		GC->rtcc->ConcentricRendezvousProcessor(opt, res);
 		spqresults = res;
 
-		if (SPQMode == 0)
+		if (SPQMode != 1)
 		{
 			SPQTIG = opt.t_CSI;
 		}
@@ -2905,7 +2913,7 @@ int ARCore::subThread()
 			SPQTIG = opt.t_CDH;
 		}
 
-		if (SPQMode == 0)
+		if (SPQMode != 1)
 		{
 			CDHtime = res.t_CDH;
 			SPQDeltaV = res.dV_CSI;
@@ -3911,6 +3919,12 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		}
 		else
 		{
+			if (target == NULL)
+			{
+				Result = 0;
+				break;
+			}
+
 			sv_A = GC->rtcc->StateVectorCalc(vessel);
 			sv_P = GC->rtcc->StateVectorCalc(target);
 		}		

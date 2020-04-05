@@ -204,7 +204,7 @@ public:
 	VECTOR3 DKI_DV;
 
 	//CONCENTRIC RENDEZVOUS PAGE
-	int SPQMode;	//0 = CSI, 1 = CDH
+	int SPQMode;	//0 = CSI on time, 1 = CDH, 2 = optimum CSI
 	double CSItime;	//Time of the CSI maneuver
 	double CDHtime;	//Time of the CDH maneuver
 	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
