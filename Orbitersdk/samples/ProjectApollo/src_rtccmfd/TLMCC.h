@@ -116,6 +116,7 @@ struct TLMCCMEDQuantities
 	double T_min_sea;
 	double T_max_sea;
 	double dh_bias = 0.0;
+	double H_pl_mode5;
 };
 
 struct TLMCCMissionConstants
@@ -316,8 +317,8 @@ protected:
 	void ConicFreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi);
 	void ConicNonfreeReturnOptimizedFixedOrbitToLLS(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_min, double T_max);
 	void ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double dpsi_loi, double DT_lls, double AZ_min, double AZ_max);
-	void ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double T_min, double T_max);
-	void ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double dpsi_loi, double dt_lls, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double AZ_min, double AZ_max, double mass, bool freereturn, double T_min = 0.0, double T_max = 0.0);
+	void ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double T_min, double T_max, double h_pl);
+	void ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double h_pl, double gamma_loi, double dpsi_loi, double dt_lls, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double AZ_min, double AZ_max, double mass, bool freereturn, double T_min = 0.0, double T_max = 0.0);
 	void ConicFullMissionFixedOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double mass, bool freereturn, double T_min = 0.0, double T_max = 0.0);
 	void ConicTransEarthInjection(double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, bool lngiter);
 	VECTOR3 CalcLOIDV(MPTSV sv_MCC_apo, double gamma_nd);

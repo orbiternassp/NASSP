@@ -665,7 +665,7 @@ TLMCC_Option_3_E:
 	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
 	//Step 7
-	ConicFullMissionFreeOrbit(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, gamma_loi3, dpsi_loi3, dt_lls3 / 3600.0, outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, outarray.T_te, MEDQuantities.AZ_min, MEDQuantities.AZ_max, outarray.M_tei, true);
+	ConicFullMissionFreeOrbit(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, 0.0, gamma_loi3, dpsi_loi3, dt_lls3 / 3600.0, outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, outarray.T_te, MEDQuantities.AZ_min, MEDQuantities.AZ_max, outarray.M_tei, true);
 	DV7 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 	BURN(S_apo.R, S_apo.V, 3, 0.0, 0.0, DV7.x*R_E / 3600.0, DV7.y, DV7.z, isp_MCC, 0.0, v_c, dv_char7, mfm0, RF, VF);
 	S2C.V = VF;
@@ -974,7 +974,7 @@ void TLMCCProcessor::Option5()
 {
 	bool recycle = false;
 	//Empirical first guess
-	double V, R, lng, lat, psi, T, ddt;
+	double V, R, lng, lat, psi, T, ddt, h_pl;
 	if (KREF_MCC == 2)
 	{
 		ddt = 0.0;
@@ -996,7 +996,18 @@ void TLMCCProcessor::Option5()
 			ddt = DDELTATIME(1.0 / ainv / R_E, (sv_MCC.MJD - MJD_TLI)*24.0, length(R_EM) / R_E, PI - acos(dotp(unit(R_EM), unit(V_EM))), (MJD_PC - MJD_TLI)*24.0);
 		}
 	}
-	R = (DataTable.h_pc2 + DataTable.rad_lls) / R_E;
+
+	//MED override
+	if (MEDQuantities.H_pl_mode5 < 0)
+	{
+		h_pl = DataTable.h_pc2;
+	}
+	else
+	{
+		h_pl = MEDQuantities.H_pl_mode5;
+	}
+
+	R = (h_pl + DataTable.rad_lls) / R_E;
 	V = sqrt(0.184 + 0.553 / R) - 0.0022*ddt + (DataTable.lng_pc2 - PI)*13.5*0.3048*3600.0 / R_E;
 	lng = DataTable.lng_pc2 - 0.025*ddt;
 	lat = DataTable.lat_pc2;
@@ -1040,7 +1051,7 @@ void TLMCCProcessor::Option5()
 	ConvergeTLMC(V, psi, lng, lat, R, T, false);
 
 	//Step 2
-	ConicNonfreeReturnOptimizedFreeOrbitToLOPC(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, dt_min, dt_max);
+	ConicNonfreeReturnOptimizedFreeOrbitToLOPC(sv_MCC, outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc, dt_min, dt_max, h_pl);
 	double h_nd2 = outarray.h_nd;
 	double lat_nd2 = outarray.lat_nd;
 	double lng_nd2 = outarray.lng_nd;
@@ -1132,7 +1143,7 @@ TLMCC_Option_5_D:
 	outarray.LOIOffset = S3I.V - S3C.V;
 
 	//Step 5
-	ConicFullMissionFreeOrbit(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, DataTable.gamma_loi, dpsi_loi2, dt_lls2 / 3600.0, outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, outarray.T_te, MEDQuantities.AZ_min, MEDQuantities.AZ_max, outarray.M_tei, false, dt_min, dt_max);
+	ConicFullMissionFreeOrbit(S_apo, NewGuess.x, NewGuess.y, NewGuess.z, h_pl, DataTable.gamma_loi, dpsi_loi2, dt_lls2 / 3600.0, outarray.T_lo / 3600.0, outarray.dv_tei, outarray.dgamma_tei, outarray.dpsi_tei, outarray.T_te, MEDQuantities.AZ_min, MEDQuantities.AZ_max, outarray.M_tei, false, dt_min, dt_max);
 	DV5 = _V(outarray.dv_mcc, outarray.dgamma_mcc, outarray.dpsi_mcc);
 	S2C = sv_MCC;
 	S3C = outarray.sv_loi;
@@ -2167,7 +2178,7 @@ void TLMCCProcessor::ConicFreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double d
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double T_min, double T_max)
+void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double T_min, double T_max, double h_pl)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -2208,13 +2219,14 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, doubl
 	block.IndVarWeight[5] = 1e-3;
 	block.DepVarSwitch[0] = true;
 	block.DepVarSwitch[2] = true;
-	block.DepVarSwitch[7] = true;
+	//RTCC Requirements document say to use this, but I think that is outdated
+	//block.DepVarSwitch[7] = true;
 	block.DepVarSwitch[8] = true;
 	block.DepVarSwitch[9] = true;
 	block.DepVarSwitch[10] = true;
 	block.DepVarSwitch[18] = true;
 	block.DepVarSwitch[20] = true;
-	block.DepVarLowerLimit[0] = (DataTable.h_pc2 - 0.1*1852.0) / R_E;
+	block.DepVarLowerLimit[0] = (h_pl - 0.1*1852.0) / R_E;
 	block.DepVarLowerLimit[2] = 90.0*RAD;
 	block.DepVarLowerLimit[7] = (Constants.H_LPO - 0.5*1852.0) / R_E;
 	block.DepVarLowerLimit[8] = DataTable.lat_lls - 0.01*RAD;
@@ -2222,7 +2234,7 @@ void TLMCCProcessor::ConicNonfreeReturnOptimizedFreeOrbitToLOPC(MPTSV sv0, doubl
 	block.DepVarLowerLimit[10] = DataTable.psi_lls - 0.01*RAD;
 	block.DepVarLowerLimit[18] = outarray.M_i + 6000.0*0.453;
 	block.DepVarLowerLimit[20] = T_min / 3600.0 - 2.0;
-	block.DepVarUpperLimit[0] = (DataTable.h_pc2 + 0.1*1852.0) / R_E;
+	block.DepVarUpperLimit[0] = (h_pl + 0.1*1852.0) / R_E;
 	block.DepVarUpperLimit[2] = 182.0*RAD;
 	block.DepVarUpperLimit[7] = (Constants.H_LPO + 0.5*1852.0) / R_E;
 	block.DepVarUpperLimit[8] = DataTable.lat_lls + 0.01*RAD;
@@ -2312,7 +2324,7 @@ void TLMCCProcessor::ConicTransEarthInjection(double T_lo, double dv_tei, double
 	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double gamma_loi, double dpsi_loi, double dt_lls, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double AZ_min, double AZ_max, double mass, bool freereturn, double T_min, double T_max)
+void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double h_pl, double gamma_loi, double dpsi_loi, double dt_lls, double T_lo, double dv_tei, double dgamma_tei, double dpsi_tei, double T_te, double AZ_min, double AZ_max, double mass, bool freereturn, double T_min, double T_max)
 {
 	void *constPtr;
 	outarray.sv0 = sv0;
@@ -2391,12 +2403,14 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	{
 		block.DepVarSwitch[3] = true;
 		block.DepVarSwitch[4] = true;
+		block.DepVarSwitch[7] = true;
 	}
 	else
 	{
+		//RTCC Requirements document says to use this, but I think that is outdated
+		//block.DepVarSwitch[7] = true;
 		block.DepVarSwitch[20] = true;
 	}
-	block.DepVarSwitch[7] = true;
 	block.DepVarSwitch[8] = true;
 	block.DepVarSwitch[9] = true;
 	block.DepVarSwitch[10] = true;
@@ -2411,7 +2425,7 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	}
 	else
 	{
-		block.DepVarLowerLimit[0] = (DataTable.h_pc2 - 0.1*1852.0) / R_E;
+		block.DepVarLowerLimit[0] = (h_pl - 0.1*1852.0) / R_E;
 		block.DepVarLowerLimit[20] = T_min / 3600.0;
 	}
 	block.DepVarLowerLimit[2] = 90.0*RAD;
@@ -2432,7 +2446,7 @@ void TLMCCProcessor::ConicFullMissionFreeOrbit(MPTSV sv0, double dv_guess, doubl
 	}
 	else
 	{
-		block.DepVarUpperLimit[0] = (DataTable.h_pc2 + 0.1*1852.0) / R_E;
+		block.DepVarUpperLimit[0] = (h_pl + 0.1*1852.0) / R_E;
 		block.DepVarUpperLimit[20] = T_max / 3600.0;
 	}
 	block.DepVarUpperLimit[2] = 182.0*RAD;
@@ -3128,6 +3142,7 @@ TLMCC_Conic_C4:
 	SCALE(RF, VF, 60.0*1852.0, R_LPO, V_LPO);
 	MJD_LLS = vars->MJD_nd + vars->dt_lls / 24.0 / 3600.0;
 	CTBODY(R_LPO, V_LPO, MJD_LPO, MJD_LLS, 2, mu_M, R_LLS, V_LLS);
+
 	R_temp = R_LLS;
 	V_temp = V_LLS;
 	LIBRAT(R_temp, V_temp, MJD_LLS, 5);
@@ -3310,6 +3325,10 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF)
 		A2 = -R1 * mu1 / pow(r1, 3) + R21 * (mu1 + mu2) / pow(r21, 3);
 		DRatioDBeta = 1.0 / r2 / sqrt(mu1)*(d2 - r2 * r2*d1 / r1 / r1);
 		DDRatioDDBeta = r1 / mu1 * (v22 + dotp(R2, A2)) / r2 - d1 * d2 / (mu1*r1*r2) - d2 * d2*r1 / (mu1*pow(r2, 3)) - r2 * v12 / r1 / mu1 + r2 / r1 / r1 + 2.0*d1*d1*r2 / (mu1*pow(r1, 3));
+		if (DRatioDBeta*DRatioDBeta + 2.0*DRatio*DDRatioDDBeta < 0)
+		{
+			DDRatioDDBeta = 0.0;
+		}
 		dbeta = 2.0*DRatio / (DRatioDBeta + DRatioDBeta / abs(DRatioDBeta)*sqrt(DRatioDBeta*DRatioDBeta + 2.0*DRatio*DDRatioDDBeta));
 		beta = beta + dbeta;
 		i++;
@@ -3592,10 +3611,10 @@ bool TLMCCProcessor::CTBODY(VECTOR3 R0, VECTOR3 V0, double MJD0, double MJDF, in
 	v0 = length(V0);
 	ainv = 2.0 / r0 - v0 * v0 / mu;
 	D0 = dotp(R0, V0);
-	//Initial guess
 
-	OrbMech::rv_from_r0v0(R0, V0, dt, RF, VF, mu);
+	//Initial guess
 	beta = 1.0 / 5.0*dt*sqrt(mu) / r0;
+
 	do
 	{
 		alpha = -beta * beta*ainv;

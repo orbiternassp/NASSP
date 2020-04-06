@@ -2136,6 +2136,19 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(5 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 		}
 
+		if (G->TLCCmaneuver == 5)
+		{
+			if (GC->rtcc->PZMCCPLN.h_PC_mode5 < 0)
+			{
+				sprintf(Buffer, "Height from SFP");
+			}
+			else
+			{
+				sprintf(Buffer, "%.2f NM", GC->rtcc->PZMCCPLN.h_PC_mode5 / 1852.0);
+			}
+			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		}
+
 		skp->Text(5 * W / 8, 10 * H / 14, "Constraints", 11);
 	}
 	else if (screen == 23)

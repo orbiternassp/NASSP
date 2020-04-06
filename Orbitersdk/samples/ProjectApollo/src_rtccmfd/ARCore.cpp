@@ -122,6 +122,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZMCCPLN.LOPC_M = 1;
 		rtcc->PZMCCPLN.LOPC_N = 0;
 		rtcc->PZMCCPLN.AZ_min = rtcc->PZMCCPLN.AZ_max = -78.0*RAD;
+		rtcc->PZMCCPLN.REVS2 = rtcc->med_k40.REVS2 = 4;
 
 		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(82, 0, 0);
 		rtcc->PZSFPTAB.blocks[0].lat_pc1 = rtcc->PZSFPTAB.blocks[0].lat_pc2 = rtcc->PZSFPTAB.blocks[0].lat_nd = -5.67822*RAD;

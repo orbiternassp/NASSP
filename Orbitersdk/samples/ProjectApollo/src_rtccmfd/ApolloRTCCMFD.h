@@ -227,6 +227,8 @@ public:
 	void menuCycleTLCCConfiguration();
 	void menuSetTLCCAlt();
 	void set_TLCCAlt(double alt);
+	void menuSetTLCCAltMode5();
+	void set_TLCCAltMode5(double alt);
 	void menuSetTLCCDesiredInclination();
 	void set_TLCCDesiredInclination(double inc);
 	void menuSetMidcourseConstraintsPage();

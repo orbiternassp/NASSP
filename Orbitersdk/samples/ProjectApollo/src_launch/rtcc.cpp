@@ -3243,6 +3243,7 @@ void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double
 	medquant.CSMMass = CSMmass;
 	medquant.LMMass = LMmass;
 	medquant.H_pl = PZMCCPLN.h_PC;
+	medquant.H_pl_mode5 = PZMCCPLN.h_PC_mode5;
 	medquant.INCL_fr = PZMCCPLN.incl_fr;
 	medquant.H_pl_min = PZMCCPLN.H_PCYN_MIN;
 	medquant.H_pl_max = PZMCCPLN.H_PCYN_MAX;
@@ -12260,6 +12261,9 @@ RTCC_PMMMPT_16_B:
 	if (ITCNT > ITMAX)
 	{
 		//Put best burn parameters in PMMMPT output area - print message
+		DV = integin.VG;
+		GMTBB = integin.sv0.GMT;
+		GMTI = GMTBB + DT;
 		PMXSPT("PMMMPT: ITERATION LIMIT, MVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
 		goto RTCC_PMMMPT_10_A;
 	}
@@ -24202,10 +24206,6 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		mptman->lat_BI = asin(sv_true.R.z / sv_true.R.x);
 	}
 	mptman->lng_BI = atan2(sv_true.R.y, sv_true.R.x);
-	if (mptman->lng_BI < 0)
-	{
-		mptman->lng_BI += PI2;
-	}
 	double h = length(crossp(sv_true.R, sv_true.V));
 	mptman->eta_BI = atan2(h*dotp(sv_true.R, sv_true.V), h*h - mu * length(sv_true.R));
 	if (mptman->eta_BI < 0)

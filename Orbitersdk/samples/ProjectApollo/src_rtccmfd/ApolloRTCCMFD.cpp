@@ -209,6 +209,8 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "TLCCMANEUVER", G->TLCCmaneuver);
 	papiWriteScenario_double(scn, "TLCCGET", GC->rtcc->PZMCCPLN.MidcourseGET);
 	papiWriteScenario_double(scn, "TLCCVectorGET", GC->rtcc->PZMCCPLN.VectorGET);
+	papiWriteScenario_double(scn, "TLCC_TLMIN", GC->rtcc->PZMCCPLN.TLMIN);
+	papiWriteScenario_double(scn, "TLCC_TLMAX", GC->rtcc->PZMCCPLN.TLMAX);
 	papiWriteScenario_double(scn, "SFP_DPSI_LOI", GC->rtcc->PZSFPTAB.blocks[1].dpsi_loi);
 	papiWriteScenario_double(scn, "SFP_DPSI_TEI", GC->rtcc->PZSFPTAB.blocks[1].dpsi_tei);
 	papiWriteScenario_double(scn, "SFP_DT_LLS", GC->rtcc->PZSFPTAB.blocks[1].dt_lls);
@@ -417,6 +419,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "TLCCMANEUVER", G->TLCCmaneuver);
 		papiReadScenario_double(line, "TLCCGET", GC->rtcc->PZMCCPLN.MidcourseGET);
 		papiReadScenario_double(line, "TLCCVectorGET", GC->rtcc->PZMCCPLN.VectorGET);
+		papiReadScenario_double(line, "TLCC_TLMIN", GC->rtcc->PZMCCPLN.TLMIN);
+		papiReadScenario_double(line, "TLCC_TLMAX", GC->rtcc->PZMCCPLN.TLMAX);
 		papiReadScenario_double(line, "SFP_DPSI_LOI", GC->rtcc->PZSFPTAB.blocks[1].dpsi_loi);
 		papiReadScenario_double(line, "SFP_DPSI_TEI", GC->rtcc->PZSFPTAB.blocks[1].dpsi_tei);
 		papiReadScenario_double(line, "SFP_DT_LLS", GC->rtcc->PZSFPTAB.blocks[1].dt_lls);
@@ -5367,6 +5371,27 @@ bool TLCCPeriInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_TLCCAlt(double alt)
 {
 	GC->rtcc->PZMCCPLN.h_PC = alt * 1852.0;
+}
+
+void ApolloRTCCMFD::menuSetTLCCAltMode5()
+{
+	bool TLCCPeriMode5Input(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the pericynthion height for mode 5 (negative number to use data table value):", TLCCPeriMode5Input, 0, 20, (void*)this);
+}
+
+bool TLCCPeriMode5Input(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_TLCCAltMode5(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TLCCAltMode5(double alt)
+{
+	GC->rtcc->PZMCCPLN.h_PC_mode5 = alt * 1852.0;
 }
 
 void ApolloRTCCMFD::menuSetLOIDesiredAzi()
