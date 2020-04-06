@@ -12067,11 +12067,11 @@ RTCC_PMMMPT_12_A:
 	integin.LMAWT = 0.0;
 	integin.LMDWT = 0.0;
 	integin.SIVBWT = 0.0;
-	if (man.TVC = RTCC_MANVEHICLE_CSM)
+	if (man.TVC == RTCC_MANVEHICLE_CSM)
 	{
 		integin.CSMWT = in.VehicleWeight;
 	}
-	else if (man.TVC = RTCC_MANVEHICLE_LM)
+	else if (man.TVC == RTCC_MANVEHICLE_LM)
 	{
 		integin.LMDWT = in.VehicleWeight;
 	}
@@ -20943,6 +20943,7 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 	{
 		//TBD
 	}
+	//Update Fixed Ground Point Table and Landmark Acquisition Ground Point Table
 	else if (med == 32)
 	{
 		//TBD
