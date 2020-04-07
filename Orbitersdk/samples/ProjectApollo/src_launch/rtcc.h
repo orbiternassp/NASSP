@@ -1995,6 +1995,14 @@ struct PredictedSiteAcquisitionTable
 	NextStationContact Stations[40];
 };
 
+struct StationCharacteristicsBlock
+{
+	double lat;
+	double lng;
+	double alt;
+	double rad;
+};
+
 struct MANTIMESData
 {
 	MANTIMESData() { ManData[0] = 0.0;ManData[1] = 0.0; }
@@ -2636,6 +2644,8 @@ public:
 	//Mission Planning Print Load Module
 	void PMXSPT(int n);
 	void PMXSPT(std::string message);
+	//Mission Control Print Program
+	void GMSPRINT(std::string message);
 	//Trajectory Update Control Module
 	void EMSTRAJ(EphemerisData sv, int L, bool landed = false);
 	//Ephemeris Storage and Control Module
@@ -2992,6 +3002,22 @@ public:
 	OrbitStationContactsTable EZSTACT1, EZSTACT3;
 	NextStationContactsTable NextStationContactsBuffer;
 	PredictedSiteAcquisitionTable EZACQ1, EZACQ3, EZDPSAD1, EZDPSAD3;
+
+	struct ExperimentalSiteGroundPointTable
+	{
+		//-1 when empty, 0 = Earth, 1 = Moon
+		int REF;
+		std::string StationName[12];
+		StationCharacteristicsBlock Data[12];
+	} EZEXSITE;
+
+	struct LandmarkSitesTable
+	{
+		//-1 when empty, 0 = Earth, 1 = Moon
+		int REF;
+		std::string StationName[12];
+		StationCharacteristicsBlock Data[12];
+	} EZLASITE;
 
 	struct OrbitEphemerisTable
 	{
@@ -3692,6 +3718,8 @@ private:
 	void EMGPRINT(int i, std::string mes = 0);
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
+	//Ground Point Characteristics Block Routine
+	void EMGGPCHR(double lat, double lng, double alt, int body, StationCharacteristicsBlock *stat);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
 

@@ -8373,7 +8373,6 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 		if (opt.N_PB % 2 != 0) return false;
 	}
 
-	MPTSV sv_temp;
 	SV sv_AP, sv_TPI_guess, sv_TPI, sv_PC;
 	VECTOR3 u, R_AP, V_AP, V_APF, R_AH, V_AH, V_AHF, R_AC, V_AC, R_PC, V_PC, V_ACF, R_PJ, V_PJ, R_AFD, R_AF, V_AF;
 	double mu, dv_P, p_P, dt_PH, c_P, eps_P, dv_H, dt_HC, t_H, t_C, dv_Po, e_Po, e_P, dv_rad_const;
@@ -8472,11 +8471,6 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 				OrbMech::ITER(c_P, s_P, e_P, p_P, dv_H, e_Po, dv_Po);
 			}
 		} while (abs(e_P) >= eps_P);
-
-		sv_temp.gravref = sv_AP.gravref;
-		sv_temp.MJD = OrbMech::MJDfromGET(opt.t_TIG, opt.GETbase);
-		sv_temp.R = R_AP;
-		sv_temp.V = V_AP;
 	}
 	else
 	{
@@ -8606,10 +8600,10 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	res.t_CDH = t_C;
 	res.DV_CDH = V_ACF - V_AC;
 
-	PZDKIELM.Block[0].SV_before[0].R = sv_temp.R;
-	PZDKIELM.Block[0].SV_before[0].V = sv_temp.V;
-	PZDKIELM.Block[0].SV_before[0].GMT = OrbMech::GETfromMJD(sv_temp.MJD, GMTBASE);
-	if (sv_temp.gravref == hEarth)
+	PZDKIELM.Block[0].SV_before[0].R = sv_AP.R;
+	PZDKIELM.Block[0].SV_before[0].V = sv_AP.V;
+	PZDKIELM.Block[0].SV_before[0].GMT = OrbMech::GETfromMJD(sv_AP.MJD, GMTBASE);
+	if (sv_AP.gravref == hEarth)
 	{
 		PZDKIELM.Block[0].SV_before[0].RBI = BODY_EARTH;
 	}
@@ -8618,7 +8612,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 		PZDKIELM.Block[0].SV_before[0].RBI = BODY_MOON;
 	}
 	
-	PZDKIELM.Block[0].V_after[0] = V_APF;
+	PZDKIELM.Block[0].V_after[0] = sv_AP.V + (V_APF - V_AP);
 	PZDKIT.Block[0].ManGET[0] = opt.t_TIG;
 	PZDKIT.Block[0].VEH[0] = opt.ChaserID;
 	PZDKIT.Block[0].Man_ID[0] = "NC";
@@ -10188,6 +10182,31 @@ void RTCC::PMXSPT(std::string message)
 	}
 
 	RTCCONLINEMON.push_back(message);
+}
+
+void RTCC::GMSPRINT(std::string message)
+{
+	if (RTCCONLINEMON.size() >= 9)
+	{
+		RTCCONLINEMON.pop_front();
+	}
+
+	RTCCONLINEMON.push_back(message);
+}
+
+void RTCC::EMGGPCHR(double lat, double lng, double alt, int body, StationCharacteristicsBlock *stat)
+{
+	stat->lat = lat;
+	stat->lng = lng;
+	stat->alt = alt;
+	if (body == BODY_EARTH)
+	{
+		stat->rad = alt + OrbMech::R_Earth;
+	}
+	else
+	{
+		stat->rad = alt + OrbMech::R_Moon;
+	}
 }
 
 void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
@@ -20966,7 +20985,294 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 	//Update Fixed Ground Point Table and Landmark Acquisition Ground Point Table
 	else if (med == 32)
 	{
-		//TBD
+		if (data.size() < 4)
+		{
+			return 1;
+		}
+		int ActionCode;
+		if (data[0] == "ADD")
+		{
+			ActionCode = 0;
+		}
+		else if (data[0] == "MOD")
+		{
+			ActionCode = 1;
+		}
+		else if (data[0] == "DEL")
+		{
+			ActionCode = 2;
+		}
+		else
+		{
+			return 2;
+		}
+		int BodyInd;
+		if (data[1] == "E")
+		{
+			BodyInd = BODY_EARTH;
+		}
+		else if (data[1] == "M")
+		{
+			BodyInd = BODY_MOON;
+		}
+		int DataTableInd;
+		if (data[2] == "EXST")
+		{
+			DataTableInd = 0;
+		}
+		else if (data[2] == "LDMK")
+		{
+			DataTableInd = 1;
+		}
+		else
+		{
+			return 2;
+		}
+		std::string STAID = data[3];
+		if (STAID == "")
+		{
+			return 2;
+		}
+		if (ActionCode == 2)
+		{
+			if (data.size() != 4)
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			if (data.size() != 8)
+			{
+				return 1;
+			}
+		}
+
+		//Read rest of values
+		double lat, lng, height;
+		int HeightUnits;
+		if (ActionCode != 2)
+		{
+			if (sscanf(data[4].c_str(), "%lf", &lat) != 1)
+			{
+				return 2;
+			}
+			lat *= RAD;
+			if (sscanf(data[5].c_str(), "%lf", &lng) != 1)
+			{
+				return 2;
+			}
+			lng *= RAD;
+			if (data[6] == "NM")
+			{
+				HeightUnits = 0;
+			}
+			else if (data[6] == "METR")
+			{
+				HeightUnits = 1;
+			}
+			else
+			{
+				return 2;
+			}
+			if (sscanf(data[7].c_str(), "%lf", &height) != 1)
+			{
+				return 2;
+			}
+			if (HeightUnits == 0)
+			{
+				height /= 1852.0;
+			}
+		}
+
+		//Delete all logic
+		if (ActionCode == 2 && STAID == "ALL")
+		{
+			if (DataTableInd == 0)
+			{
+				EZEXSITE.REF = -1;
+			}
+			else
+			{
+				EZLASITE.REF = -1;
+			}
+
+			for (int i = 0;i < 12;i++)
+			{
+				if (DataTableInd == 0)
+				{
+					EZEXSITE.StationName[i] = "";
+				}
+				else
+				{
+					EZLASITE.StationName[i] = "";
+				}
+			}
+		}
+		else
+		{
+			//Add
+			if (ActionCode == 0)
+			{
+				if (DataTableInd == 0)
+				{
+					if (BodyInd != EZEXSITE.REF)
+					{
+						GMSPRINT("GMSMED: P32 E/M CONFLICT, RELEASE TABLE AND RE-ENTER MED");
+						return 2;
+					}
+				}
+				else
+				{
+					if (BodyInd != EZLASITE.REF)
+					{
+						GMSPRINT("GMSMED: P32 E/M CONFLICT, RELEASE TABLE AND RE-ENTER MED");
+						return 2;
+					}
+				}
+
+				bool tablefull = true;
+				int freeslot = -1;
+				std::string tempname;
+				for (int i = 0;i < 12;i++)
+				{
+					if (DataTableInd == 0)
+					{
+						tempname = EZEXSITE.StationName[i];
+					}
+					else
+					{
+						tempname = EZLASITE.StationName[i];
+					}
+
+					if (STAID == tempname)
+					{
+						GMSPRINT("GMSMED: P32, ADD... STA ALREADY IN TABLE");
+						return 2;
+					}
+					if (tempname == "")
+					{
+						tablefull = false;
+						if (freeslot == -1)
+						{
+							freeslot = i;
+						}
+					}
+				}
+				if (tablefull)
+				{
+					GMSPRINT("GMSMED: P32, ADD... SORRY TABLE FULL");
+					return 2;
+				}
+				if (DataTableInd == 0)
+				{
+					EMGGPCHR(lat, lng, height, BodyInd, &EZEXSITE.Data[freeslot]);
+				}
+				else
+				{
+					EMGGPCHR(lat, lng, height, BodyInd, &EZLASITE.Data[freeslot]);
+				}
+			}
+			//MOD
+			else if (ActionCode == 1)
+			{
+				std::string tempname;
+				int found = -1;
+				for (int i = 0;i < 12;i++)
+				{
+					if (DataTableInd == 0)
+					{
+						tempname = EZEXSITE.StationName[i];
+					}
+					else
+					{
+						tempname = EZLASITE.StationName[i];
+					}
+					if (STAID == tempname)
+					{
+						found = i;
+						break;
+					}
+				}
+				if (found == -1)
+				{
+					GMSPRINT("GMSMED: P32, MOD... STA NOT IN TABLE");
+					return 2;
+				}
+				if (DataTableInd == 0)
+				{
+					EMGGPCHR(lat, lng, height, BodyInd, &EZEXSITE.Data[found]);
+				}
+				else
+				{
+					EMGGPCHR(lat, lng, height, BodyInd, &EZLASITE.Data[found]);
+				}
+			}
+			//DEL
+			else
+			{
+				std::string tempname;
+				int found = -1;
+				for (int i = 0;i < 12;i++)
+				{
+					if (DataTableInd == 0)
+					{
+						tempname = EZEXSITE.StationName[i];
+					}
+					else
+					{
+						tempname = EZLASITE.StationName[i];
+					}
+					if (STAID == tempname)
+					{
+						found = i;
+						break;
+					}
+				}
+				if (found == -1)
+				{
+					GMSPRINT("GMSMED: P32, DEL... STA NOT IN TABLE");
+					return 2;
+				}
+				if (DataTableInd == 0)
+				{
+					EZEXSITE.StationName[found] = "";
+				}
+				else
+				{
+					EZLASITE.StationName[found] = "";
+				}
+				//Is table now empty?
+				bool empty = true;
+				for (int i = 0;i < 12;i++)
+				{
+					if (DataTableInd == 0)
+					{
+						tempname = EZEXSITE.StationName[i];
+					}
+					else
+					{
+						tempname = EZLASITE.StationName[i];
+					}
+					if (tempname != "")
+					{
+						empty = false;
+						break;
+					}
+				}
+				if (empty)
+				{
+					if (DataTableInd == 0)
+					{
+						EZEXSITE.REF = -1;
+					}
+					else
+					{
+						EZLASITE.REF = -1;
+					}
+				}
+			}
+		}
 	}
 	else if (med == 13 || med == 14)
 	{
