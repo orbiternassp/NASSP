@@ -19185,7 +19185,7 @@ bool RTCC::GMGMED(char *str)
 			word.push_back(str[i]);
 		}
 		i++;
-		if (str[i] == ';')
+		if (str[i] == '\0' || str[i] == ';')
 		{
 			MEDSequence.push_back(word);
 		}
@@ -19926,6 +19926,11 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 {
 	if (med == 40)
 	{
+		if (data.size() < 1)
+		{
+			return 1;
+		}
+
 		if (data[0] == "")
 		{
 			return 2;
@@ -19979,28 +19984,21 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else if (data[0] == "P2")
 		{
+			if (data.size() < 4)
+			{
+				return 1;
+			}
+
 			VECTOR3 dv;
-			if (data[1] == "")
-			{
-				dv.x = -99999999.0;
-			}
-			else if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
+			if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
 			{
 				return 2;
 			}
-			if (data[2] == "")
-			{
-				dv.x = -99999999.0;
-			}
-			else if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
+			if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
 			{
 				return 2;
 			}
-			if (data[3] == "")
-			{
-				dv.z = -99999999.0;
-			}
-			else if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
+			if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
 			{
 				return 2;
 			}
@@ -24221,6 +24219,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mptman->LMAscMassAfter = aux->W_LMA;
 	mptman->LMDscMassAfter = aux->W_LMD;
 	mptman->SIVBMassAfter = aux->W_SIVB;
+	mptman->lng_AN = 0.0;
 
 	double W_S_Prior, S_Fuel, WDOT, T, F, isp;
 
