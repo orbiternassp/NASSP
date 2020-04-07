@@ -17387,50 +17387,70 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 	Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
 	Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
 
-	double A, B, C, R, P, Y;
+	double MG, OG, IG, C;
 
-	A = asin(dotp(X_B, Y_P));
-	C = abs(A);
-	if (A < 0)
-	{
-		A += PI2;
-	}
+	MG = asin(dotp(Y_P, X_B));
+	C = abs(MG);
+
 	if (abs(C - PI05) < 0.0017)
 	{
-		B = 0.0;
-		P = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
+		OG = 0.0;
+		IG = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
 	}
 	else
 	{
-		B = atan2(dotp(-Z_B, Y_P), dotp(Y_B, Y_P));
-		P = atan2(dotp(-X_B, Z_P), dotp(X_B, X_P));
+		OG = atan2(-dotp(Z_B, Y_P), dotp(Y_B, Y_P));
+		IG = atan2(-dotp(X_B, Z_P), dotp(X_B, X_P));
 	}
-
-	if (B < 0)
-	{
-		B += PI2;
-	}
-	if (P < 0)
-	{
-		P += PI2;
-	}
-
-	res.IMUAtt = _V(OrbMech::imulimit(B*DEG), OrbMech::imulimit(P*DEG), OrbMech::imulimit(A*DEG));
 
 	if (man->TVC == 3)
 	{
-		R = A;
-		Y = B;
+		double Y, P, R;
+		Y = asin(-cos(MG)*sin(OG));
+		if (abs(sin(Y)) != 1.0)
+		{
+			R = atan2(sin(MG), cos(OG)*cos(MG));
+			P = atan2(sin(IG)*cos(OG) + sin(MG)*sin(OG)*cos(IG), cos(OG)*cos(IG) - sin(MG)*sin(OG)*sin(IG));
+		}
+		else
+		{
+			P = 0.0;
+			R = 0.0;
+		}
+		res.FDAIAtt = _V(R, P, Y);
 		res.isCSMTV = false;
 	}
 	else
 	{
-		Y = A;
-		R = B;
+		res.FDAIAtt = _V(OG, IG, MG);
 		res.isCSMTV = true;
 	}
 
-	res.FDAIAtt = _V(OrbMech::imulimit(R*DEG), OrbMech::imulimit(P*DEG), OrbMech::imulimit(Y*DEG));
+	for (int i = 0;i < 3;i++)
+	{
+		res.FDAIAtt.data[i] *= DEG;
+		if (res.FDAIAtt.data[i] < 0)
+		{
+			res.FDAIAtt.data[i] += 360.0;
+		}
+		if (res.FDAIAtt.data[i] >= 359.95)
+		{
+			res.FDAIAtt.data[i] = 0.0;
+		}
+	}
+	res.IMUAtt = _V(OG, IG, MG);
+	for (int i = 0;i < 3;i++)
+	{
+		res.IMUAtt.data[i] *= DEG;
+		if (res.IMUAtt.data[i] < 0)
+		{
+			res.IMUAtt.data[i] += 360.0;
+		}
+		if (res.IMUAtt.data[i] >= 359.95)
+		{
+			res.IMUAtt.data[i] = 0.0;
+		}
+	}
 
 	VECTOR3 DV, V_G;
 
