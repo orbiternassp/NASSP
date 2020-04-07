@@ -36,7 +36,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
-#include "../src_rtccmfd/LMGuidanceSim.h"
 #include "../src_rtccmfd/TLMCC.h"
 #include "../src_rtccmfd/TLIGuidanceSim.h"
 #include "../src_rtccmfd/CSMLMGuidanceSim.h"
@@ -9340,7 +9339,7 @@ bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GET
 	WI = rhmul(Rot, _V(0, 0, 1));
 	W = mul(REFSMMAT, WI)*OrbMech::w_Moon;
 	R_LSP = mul(REFSMMAT, rhmul(Rot, R_LS));
-	descguid.Init(sv_IG.R, sv_IG.V, sv_IG.mass, t_PDI, REFSMMAT, R_LSP, t_PDI, W, t_go);
+	descguid.Init(sv_IG.R, sv_IG.V, sv_IG.mass, t_PDI, REFSMMAT, R_LSP, t_PDI, W, t_go, &RTCCDescentTargets);
 	W_TD = sv_IG.mass;
 	U_FDP_abort = tmul(REFSMMAT, unit(U_FDP));
 
@@ -9435,8 +9434,6 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	double J_TZG, A_TZG, V_TZG, R_TZG;
 	double LEADTIME, w_M, t_2, t_I, PIPTIME, t_pipold, eps, dTTT, TTT_P, TEM, q;
 	int n1, n2, COUNT_TTT;
-	LGCIgnitionConstants ign_const;
-	LGCDescentConstants desc_const;
 
 	GUIDDURN = 664.4;
 	AF_TRIM = 0.350133;
@@ -9451,19 +9448,19 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	dt_I = 1.0;
 	FRAC = 43455.0;
 
-	v_IGG = ign_const.v_IGG;
-	r_IGXG = ign_const.r_IGXG;
-	r_IGZG = ign_const.r_IGZG;
-	K_X = ign_const.K_X;
-	K_Y = ign_const.K_Y;
-	K_V = ign_const.K_V;
-	J_TZG = desc_const.JBRFGZ;
-	A_TZG = desc_const.ABRFG.z;
-	V_TZG = desc_const.VBRFG.z;
-	R_TG = desc_const.RBRFG;
-	R_TZG = desc_const.RBRFG.z;
-	V_TG = desc_const.VBRFG;
-	A_TG = desc_const.ABRFG;
+	v_IGG = RTCCPDIIgnitionTargets.v_IGG;
+	r_IGXG = RTCCPDIIgnitionTargets.r_IGXG;
+	r_IGZG = RTCCPDIIgnitionTargets.r_IGZG;
+	K_X = RTCCPDIIgnitionTargets.K_X;
+	K_Y = RTCCPDIIgnitionTargets.K_Y;
+	K_V = RTCCPDIIgnitionTargets.K_V;
+	J_TZG = RTCCDescentTargets.JBRFGZ;
+	A_TZG = RTCCDescentTargets.ABRFG.z;
+	V_TZG = RTCCDescentTargets.VBRFG.z;
+	R_TG = RTCCDescentTargets.RBRFG;
+	R_TZG = RTCCDescentTargets.RBRFG.z;
+	V_TG = RTCCDescentTargets.VBRFG;
+	A_TG = RTCCDescentTargets.ABRFG;
 	LEADTIME = 2.2;
 	w_M = 2.66169948e-6;
 
@@ -9630,7 +9627,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	WI = rhmul(Rot, _V(0, 0, 1));
 	W = mul(opt.REFSMMAT, WI)*w_M;
 	R_LSP = mul(opt.REFSMMAT, rhmul(Rot, opt.R_LS));
-	descguid.Init(sv_IG.R, sv_IG.V, opt.sv_A.mass, t_PDI, opt.REFSMMAT, R_LSP, t_PDI, W, t_go);
+	descguid.Init(sv_IG.R, sv_IG.V, opt.sv_A.mass, t_PDI, opt.REFSMMAT, R_LSP, t_PDI, W, t_go, &RTCCDescentTargets);
 	W_TD = opt.sv_A.mass;
 	U_FDP_abort = tmul(opt.REFSMMAT, unit(U_FDP));
 

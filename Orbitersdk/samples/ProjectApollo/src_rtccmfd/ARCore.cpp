@@ -374,6 +374,22 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 16.0 + 22.0 / 60.0;
 		rtcc->GMSMED(10);
+
+		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5551.1299*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -133067.52*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1437887.4*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_X = 0.331;
+		rtcc->RTCCPDIIgnitionTargets.K_Y = 5.8694e-7 / 0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_V = 438.0;
+
+		rtcc->RTCCDescentTargets.RBRFG = _V(-3.56205e3, 0.0, -1.370571e4)*0.3048;
+		rtcc->RTCCDescentTargets.VBRFG = _V(-1.8690305e2, 0.0, -9.873819e1)*0.3048;
+		rtcc->RTCCDescentTargets.ABRFG = _V(-4.502495e-1, 0.0, -9.5150975)*0.3048;
+		rtcc->RTCCDescentTargets.JBRFGZ = -1.4742736e-2*0.3048;
+		rtcc->RTCCDescentTargets.RARFG = _V(8.29275e1, 0.0, -2.01605e1)*0.3048;
+		rtcc->RTCCDescentTargets.VARFG = _V(-3.19e-1, 0.0, 3.1233e-1)*0.3048;
+		rtcc->RTCCDescentTargets.AARFG = _V(2.9982e-1, 0.0, -4.0165e-1)*0.3048;
+		rtcc->RTCCDescentTargets.JARFGZ = 3.76954e-2*0.3048;
 	}
 	else if (mission == 13)
 	{
@@ -422,6 +438,22 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 19.0 + 13.0 / 60.0;
 		rtcc->GMSMED(10);
+
+		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1464980.0*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_X = 0.419;
+		rtcc->RTCCPDIIgnitionTargets.K_Y = 9.05e-7 / 0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_V = 470.0;
+
+		rtcc->RTCCDescentTargets.RBRFG = _V(-3.56205e3, 0.0, -1.370571e4)*0.3048;
+		rtcc->RTCCDescentTargets.VBRFG = _V(-1.8690305e2, 0.0, -9.873819e1)*0.3048;
+		rtcc->RTCCDescentTargets.ABRFG = _V(-4.502495e-1, 0.0, -9.5150975)*0.3048;
+		rtcc->RTCCDescentTargets.JBRFGZ = -1.4742736e-2*0.3048;
+		rtcc->RTCCDescentTargets.RARFG = _V(8.29275e1, 0.0, -2.01605e1)*0.3048;
+		rtcc->RTCCDescentTargets.VARFG = _V(-3.19e-1, 0.0, 3.1233e-1)*0.3048;
+		rtcc->RTCCDescentTargets.AARFG = _V(2.9982e-1, 0.0, -4.0165e-1)*0.3048;
+		rtcc->RTCCDescentTargets.JARFGZ = 3.769542e-2*0.3048;
 	}
 	else if (mission == 14)
 	{
@@ -469,6 +501,22 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 20.0 + 23.0 / 60.0;
 		rtcc->GMSMED(10);
+
+		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1464980.0*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_X = 0.419;
+		rtcc->RTCCPDIIgnitionTargets.K_Y = 9.05e-7 / 0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_V = 470.0;
+
+		rtcc->RTCCDescentTargets.RBRFG = _V(-1773.725, 0.0, -14488.027)*0.3048;
+		rtcc->RTCCDescentTargets.VBRFG = _V(-168.10646, 0.0, -77.614367)*0.3048;
+		rtcc->RTCCDescentTargets.ABRFG = _V(-0.64723603, 0.0, -8.4143819)*0.3048;
+		rtcc->RTCCDescentTargets.JBRFGZ = 8.2572949e-3*0.3048;
+		rtcc->RTCCDescentTargets.RARFG = _V(94.9191, 0.0, -15.7208)*0.3048;
+		rtcc->RTCCDescentTargets.VARFG = _V(2.08358, 0.0, 0.83031879)*0.3048;
+		rtcc->RTCCDescentTargets.AARFG = _V(0.540285, 0.0, -0.235423)*0.3048;
+		rtcc->RTCCDescentTargets.JARFGZ = 0.045092421*0.3048;
 	}
 	else if (mission == 15)
 	{
@@ -513,6 +561,13 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 13.0 + 34.0 / 60.0;
 		rtcc->GMSMED(10);
+
+		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5548.14101*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -162539.6686*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1547120.997*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_X = 0.334;
+		rtcc->RTCCPDIIgnitionTargets.K_Y = 2.207e-7 / 0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_V = 498.0;
 	}
 	else if (mission == 16)
 	{
@@ -560,6 +615,13 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 17.0 + 54.0 / 60.0;
 		rtcc->GMSMED(10);
+
+		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5543.4605*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -159548.72*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1547623.3*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_X = 0.334;
+		rtcc->RTCCPDIIgnitionTargets.K_Y = 2.207e-7 / 0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_V = 498.0;
 	}
 	else if (mission == 17)
 	{
@@ -608,6 +670,25 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 2.0 + 53.0 / 60.0;
 		rtcc->GMSMED(10);
+
+		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5542.8976*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -156145.03*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.r_IGZG = -1541941.8*0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_X = 0.334;
+		rtcc->RTCCPDIIgnitionTargets.K_Y = 2.207e-7 / 0.3048;
+		rtcc->RTCCPDIIgnitionTargets.K_V = 498.0;
+	}
+
+	if (mission == 15 || mission == 16 || mission == 17)
+	{
+		rtcc->RTCCDescentTargets.RBRFG = _V(-3.1183588e3, 0.0, -1.1741441e4)*0.3048;
+		rtcc->RTCCDescentTargets.VBRFG = _V(-1.9646916e2, 0.0, -1.6675997e2)*0.3048;
+		rtcc->RTCCDescentTargets.ABRFG = _V(-7.1824814e-1, 0.0, -8.3024503)*0.3048;
+		rtcc->RTCCDescentTargets.JBRFGZ = -1.5123659e-2*0.3048;
+		rtcc->RTCCDescentTargets.RARFG = _V(1.585e2, 0.0, -2.73554e1)*0.3048;
+		rtcc->RTCCDescentTargets.VARFG = _V(-3.53476, 0.0, 2.49505e-2)*0.3048;
+		rtcc->RTCCDescentTargets.AARFG = _V(7.71783e-2, 0.0, -5.89627e-1)*0.3048;
+		rtcc->RTCCDescentTargets.JARFGZ = 4.31736e-2*0.3048;
 	}
 
 	rtcc->med_k18.psi_MX = rtcc->med_k18.psi_DS + 1.0;

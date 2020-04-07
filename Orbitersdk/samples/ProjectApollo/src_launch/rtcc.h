@@ -32,6 +32,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/RTCCTables.h"
 #include "../src_rtccmfd/TLMCC.h"
 #include "../src_rtccmfd/LOITargeting.h"
+#include "../src_rtccmfd/LMGuidanceSim.h"
 #include "MCCPADForms.h"
 
 #define RTCC_START_STRING	"RTCC_BEGIN"
@@ -3613,6 +3614,10 @@ public:
 
 		std::vector<std::string> tab;
 	} MHGVNM;
+
+	//System parameters for PDI
+	LGCDescentConstants RTCCDescentTargets;
+	LGCIgnitionConstants RTCCPDIIgnitionTargets;
 
 	//RTCC MED Buffer
 	char RTCCMEDBUFFER[256];

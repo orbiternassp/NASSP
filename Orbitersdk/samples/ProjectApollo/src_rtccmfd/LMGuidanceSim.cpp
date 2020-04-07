@@ -197,6 +197,19 @@ void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECT
 	isp = Isp;
 }
 
+LGCDescentConstants::LGCDescentConstants()
+{
+	//Apollo 11 targets
+	RBRFG = _V(171.835, 0.0, -10678.596)*0.3048;
+	VBRFG = _V(-105.876, 0.0, -1.04)*0.3048;
+	ABRFG = _V(0.6241, 0.0, -9.1044)*0.3048;
+	JBRFGZ = -0.01882677*0.3048;
+	RARFG = _V(111.085, 0.0, -26.794)*0.3048;
+	VARFG = _V(-4.993, 0.0, 0.248)*0.3048;
+	AARFG = _V(-0.2624, 0.0, -0.512)*0.3048;
+	JARFGZ = 0.00180772*0.3048;
+}
+
 const double DescentGuidance::UT = 7.5;
 const double DescentGuidance::TRMT = 26.0;
 const double DescentGuidance::THRUL = 200.0*4.4482216152605;
@@ -223,7 +236,7 @@ DescentGuidance::DescentGuidance()
 	Thrust_old = 0.0;
 }
 
-void DescentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W, double ttgo)
+void DescentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W, double ttgo, LGCDescentConstants *consts)
 {
 	t_IG = t_I;
 	PHASE = -2;
@@ -235,10 +248,12 @@ void DescentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATR
 	r_LS = length(R_LSP);
 	WP = W;
 
-	RDG = desc_const.RBRFG;
-	VDG = desc_const.VBRFG;
-	ADG = desc_const.ABRFG;
-	JDG = _V(0, 0, desc_const.JBRFGZ);
+	desc_const = consts;
+
+	RDG = desc_const->RBRFG;
+	VDG = desc_const->VBRFG;
+	ADG = desc_const->ABRFG;
+	JDG = _V(0, 0, desc_const->JBRFGZ);
 }
 
 void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDI, double &ttgo, double &Thrust, double &isp)
@@ -262,10 +277,10 @@ void DescentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VEC
 		if (t_go < 60.0)
 		{
 			PHASE = 1;
-			RDG = desc_const.RARFG;
-			VDG = desc_const.VARFG;
-			ADG = desc_const.AARFG;
-			JDG = _V(0, 0, desc_const.JARFGZ);
+			RDG = desc_const->RARFG;
+			VDG = desc_const->VARFG;
+			ADG = desc_const->AARFG;
+			JDG = _V(0, 0, desc_const->JARFGZ);
 		}
 	}
 	else if (PHASE == 1)

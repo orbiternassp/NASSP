@@ -259,20 +259,6 @@ struct TLMCFlybyConstants
 	OBJHANDLE gravin;
 };
 
-struct LGCDescentConstants
-{
-	LGCDescentConstants();
-
-	VECTOR3 RBRFG;
-	VECTOR3 VBRFG;
-	VECTOR3 ABRFG;
-	double JBRFGZ;
-	VECTOR3 RARFG;
-	VECTOR3 VARFG;
-	VECTOR3 AARFG;
-	double JARFGZ;
-};
-
 struct LGCIgnitionConstants
 {
 	double v_IGG = 5545.46*0.3048;
