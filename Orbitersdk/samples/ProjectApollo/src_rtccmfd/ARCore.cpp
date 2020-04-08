@@ -4129,7 +4129,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 	{
 		PDAPOpt opt;
 		PDAPResults res;
-		SV sv_LM;
+		SV sv_LM, sv_CSM;
 		double m0;
 
 		LEM *l = (LEM *)vessel;
@@ -4142,10 +4142,16 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 				Result = 0;
 				break;
 			}
+			if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, sv_CSM))
+			{
+				Result = 0;
+				break;
+			}
 		}
 		else
 		{
 			sv_LM = GC->rtcc->StateVectorCalc(vessel);
+			sv_CSM = GC->rtcc->StateVectorCalc(target);
 		}
 
 		if (PDAPEngine == 0)
@@ -4163,7 +4169,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.REFSMMAT = REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
 		opt.sv_A = sv_LM;
-		opt.sv_P = GC->rtcc->StateVectorCalc(target);
+		opt.sv_P = sv_CSM;
 		opt.TLAND = GC->t_Land;
 		opt.t_TPI = t_TPI;
 		opt.W_TAPS = m0;
