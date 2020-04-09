@@ -506,7 +506,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer3[1000];
 
 				AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
-				AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -522,7 +522,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer2[1000];
 
 				AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
-				AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 				if (upString != NULL) {
@@ -585,7 +585,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			char buffer2[1000];
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -1008,7 +1008,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sprintf(form->purpose, "LOI-2");
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {

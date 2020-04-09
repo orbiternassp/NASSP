@@ -123,8 +123,7 @@ public:
 	void CycleREFSMMATopt();
 	void UploadREFSMMAT();
 	void menuIUUplink();
-	void menuP30Upload();
-	void menuP30UplinkNew();
+	void menuP30Uplink();
 	void menuP30UplinkCalc();
 	void menuRetrofireEXDVUplink();
 	void menuRetrofireEXDVUplinkCalc();

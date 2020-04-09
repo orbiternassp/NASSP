@@ -161,6 +161,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 16.0;
 		rtcc->GMSMED(10);
+
+		rtcc->MCCLEX = 3431;
 	}
 	else if (mission == 10)
 	{
@@ -206,6 +208,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->GMSMED(10);
 
 		rtcc->MCLGRA = -80.602087222*RAD;
+		rtcc->MCCLEX = 3431;
 	}
 	else if (mission == 11) // July 16th Launch
 	{
@@ -1133,10 +1136,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	P30TIG = 0;
 	dV_LVLH = _V(0.0, 0.0, 0.0);
-	for (int i = 0;i < 012;i++)
-	{
-		P30Octals[i] = 0;
-	}
 	for (int i = 0;i < 016;i++)
 	{
 		RetrofireEXDVOctals[i] = 0;
@@ -2185,77 +2184,29 @@ void ARCore::REFSMMATUplinkCalc()
 	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 }
 
-void ARCore::P30Uplink(void)
-{
-
-	//if (saturn){ get = fabs(saturn->GetMissionTime()); }
-	//if (crawler){ get = fabs(crawler->GetMissionTime()); }
-	//if (lem){ get = fabs(lem->GetMissionTime()); }
-
-	//double liftoff = oapiGetSimMJD() - get / 86400.0;
-	double getign = P30TIG;// (pbd->IgnMJD - liftoff) * 86400.0;
-
-	g_Data.emem[0] = 12;
-	if (vesseltype < 2)
-	{
-		g_Data.emem[1] = 3404;
-	}
-	else
-	{
-		if (GC->mission < 11)
-		{
-			g_Data.emem[1] = 3431;
-		}
-		else
-		{
-			g_Data.emem[1] = 3433;
-		}
-	}
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
-	g_Data.emem[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
-	g_Data.emem[5] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
-	g_Data.emem[6] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
-	g_Data.emem[7] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
-	g_Data.emem[8] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
-	g_Data.emem[9] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
-
-	//g_Data.uplinkDataReady = 2;
-	UplinkData(); // Go for uplink
-}
-
 void ARCore::P30UplinkCalc()
 {
-	double getign = P30TIG;
-
-	P30Octals[0] = 12;
 	if (vesseltype < 2)
 	{
-		P30Octals[1] = 3404;
+		GC->rtcc->CMMAXTDV(P30TIG, dV_LVLH);
 	}
 	else
 	{
-		if (GC->mission < 11)
-		{
-			P30Octals[1] = 3431;
-		}
-		else
-		{
-			P30Octals[1] = 3433;
-		}
+		GC->rtcc->CMMLXTDV(P30TIG, dV_LVLH);
 	}
-	P30Octals[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
-	P30Octals[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
-	P30Octals[4] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
-	P30Octals[5] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
-	P30Octals[6] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
-	P30Octals[7] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
-	P30Octals[8] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
-	P30Octals[9] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
 }
 
-void ARCore::P30UplinkNew()
+void ARCore::P30Uplink()
 {
+	int *P30Octals;
+	if (vesseltype < 2)
+	{
+		P30Octals = GC->rtcc->CZAXTRDV.Octals;
+	}
+	else
+	{
+		P30Octals = GC->rtcc->CZLXTRDV.Octals;
+	}
 	for (int i = 0;i < 012;i++)
 	{
 		g_Data.emem[i] = P30Octals[i];
@@ -4130,10 +4081,9 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		PDAPOpt opt;
 		PDAPResults res;
 		SV sv_LM, sv_CSM;
-		double m0;
 
 		LEM *l = (LEM *)vessel;
-		m0 = l->GetAscentStageMass();
+
 
 		if (GC->MissionPlanningActive)
 		{
@@ -4147,9 +4097,21 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 				Result = 0;
 				break;
 			}
+
+			opt.W_TAPS = 0.0;
+			opt.W_TDRY = 0.0;
 		}
 		else
 		{
+			if (vesseltype < 2 || target == NULL)
+			{
+				Result = 0;
+				break;
+			}
+
+			opt.W_TAPS = l->GetAscentStageMass();
+			opt.W_TDRY = opt.sv_A.mass - vessel->GetPropellantMass(vessel->GetPropellantHandleByIndex(0));
+
 			sv_LM = GC->rtcc->StateVectorCalc(vessel);
 			sv_CSM = GC->rtcc->StateVectorCalc(target);
 		}
@@ -4172,8 +4134,6 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.sv_P = sv_CSM;
 		opt.TLAND = GC->t_Land;
 		opt.t_TPI = t_TPI;
-		opt.W_TAPS = m0;
-		opt.W_TDRY = opt.sv_A.mass - vessel->GetPropellantMass(vessel->GetPropellantHandleByIndex(0));
 		if (opt.IsTwoSegment)
 		{
 			opt.dt_step = 20.0;

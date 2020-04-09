@@ -43,7 +43,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	//Mission Constants
 	double AGCEpoch = 40586.767239;
 	int LGCREFSAddrOffs = -2;
-	int LGCDeltaVAddr = 3433;
+	MCCLEX = 3433;
 	double R_LLS = calcParams.LSAlt + OrbMech::R_Moon;
 
 	switch (fcn) {
@@ -493,7 +493,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				sprintf(form->remarks, "LM weight is %.0f.", form->LMWeight);
 
 				AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-				AGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
+				CMCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 
 				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 				if (upString != NULL) {
@@ -663,7 +663,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->purpose, "MCC-3");
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -783,7 +783,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->purpose, "MCC-4");
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 			AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 			sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -920,7 +920,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer2[1000];
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -973,7 +973,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		DeltaV_LVLH = dV_LVLH;
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -1217,7 +1217,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_uplink = StateVectorCalc(calcParams.tgt, OrbMech::MJDfromGET(calcParams.DOI - 10.0*60.0, GETbase));
 
 		AGCStateVectorUpdate(buffer1, sv_uplink, false, AGCEpoch, GETbase);
-		AGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH, LGCDeltaVAddr);
+		LGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 		TLANDUpdate(TLANDbuffer, calcParams.TLAND, 2400);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, TLANDbuffer);
@@ -1369,7 +1369,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			DeltaV_LVLH = res.dV_LVLH;
 
 			AGCStateVectorUpdate(buffer1, sv2, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, res.P30TIG, res.dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, res.P30TIG, res.dV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -2021,7 +2021,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->purpose, "PLANE CHANGE");
 
 			AGCStateVectorUpdate(buffer1, sv_CSM, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -2075,6 +2075,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
 
+		opt.opt = 0;
 		opt.R_LLS = R_LLS;
 		opt.GETbase = GETbase;
 		opt.lat = calcParams.LSLat;

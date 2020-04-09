@@ -573,24 +573,24 @@ void ApolloRTCCMFD::menuIUUplink()
 	lvdc->theta_N = coe.theta_N;
 }
 
-void ApolloRTCCMFD::menuP30Upload()
+void ApolloRTCCMFD::menuP30UplinkCalc()
+{
+	if (GC->MissionPlanningActive)
+	{
+		bool GenerateEXDVfromMPTInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Get TIG and DV from MPT. Format: C10, Vehicle Type (CMC or LGC), Maneuver Number (1-15), MPT Indicator (CSM or LEM);", GenerateEXDVfromMPTInput, 0, 20, (void*)this);
+	}
+	else
+	{
+		G->P30UplinkCalc();
+	}
+}
+
+void ApolloRTCCMFD::menuP30Uplink()
 {
 	if (!G->inhibUplLOS || !G->vesselinLOS())
 	{
 		G->P30Uplink();
-	}
-}
-
-void ApolloRTCCMFD::menuP30UplinkCalc()
-{
-	G->P30UplinkCalc();
-}
-
-void ApolloRTCCMFD::menuP30UplinkNew()
-{
-	if (!G->inhibUplLOS || !G->vesselinLOS())
-	{
-		G->P30UplinkNew();
 	}
 }
 
@@ -640,14 +640,14 @@ void ApolloRTCCMFD::GET_Display2(char* Buff, double time) //Display a time in th
 	sprintf(Buff, "%03.0f:%02.0f:%05.2f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
 }
 
-void ApolloRTCCMFD::GET_Display3(char* Buff, double time) //Display a time in the format hhh:mm:ss.ss
+void ApolloRTCCMFD::GET_Display3(char* Buff, double time) //Display a time in the format hhh:mm:ss.s
 {
 	double time2 = round(time);
 	sprintf(Buff, "%03.0f:%02.0f:%04.1f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
 }
 
 //Format: HH:MM:SS
-void ApolloRTCCMFD::GET_Display4(char* Buff, double time) //Display a time in the format hhh:mm:ss.ss
+void ApolloRTCCMFD::GET_Display4(char* Buff, double time) //Display a time in the format hh:mm:ss
 {
 	double time2 = round(time);
 	sprintf(Buff, "%02.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time, 60.0));
@@ -1979,6 +1979,16 @@ bool ManPADDVInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_P30DV(VECTOR3 dv)
 {
 	G->dV_LVLH = dv*0.3048;
+}
+
+bool GenerateEXDVfromMPTInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 40)
+	{
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+		return true;
+	}
+	return false;
 }
 
 void ApolloRTCCMFD::menuTIVectorTimes()

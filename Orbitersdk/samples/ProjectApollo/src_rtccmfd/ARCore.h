@@ -110,9 +110,8 @@ public:
 	void UplinkData2();
 	void send_agc_key(char key);
 	void uplink_word(char *data);
-	void P30Uplink(void);
 	void P30UplinkCalc();
-	void P30UplinkNew();
+	void P30Uplink();
 	void RetrofireEXDVUplinkCalc();
 	void RetrofireEXDVUplink();
 	void EntryUpdateUplink(void);
@@ -171,7 +170,6 @@ public:
 	bool PADSolGood;
 	int manpadenginetype;
 	double t_TPI;				// Generally used TPI time
-	int P30Octals[012];
 	int RetrofireEXDVOctals[016];
 
 	//LAMBERT PAGE

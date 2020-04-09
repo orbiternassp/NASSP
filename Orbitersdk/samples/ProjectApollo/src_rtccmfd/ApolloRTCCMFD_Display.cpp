@@ -4261,23 +4261,47 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(10 * W / 32, 18 * H / 28, "TIGN", 4);
 		skp->Text(10 * W / 32, 19 * H / 28, "TIGN", 4);
 
+		RTCC::ExternalDVMakeupBuffer *tab;
+		if (G->vesseltype < 2)
+		{
+			tab = &GC->rtcc->CZAXTRDV;
+		}
+		else
+		{
+			tab = &GC->rtcc->CZLXTRDV;
+		}
+
 		for (int i = 0;i < 012;i++)
 		{
-			sprintf(Buffer, "%05d", G->P30Octals[i]);
+			sprintf(Buffer, "%05d", tab->Octals[i]);
 			skp->Text(15 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
 		skp->Text(27 * W / 32, 8 * H / 28, "DECIMAL", 7);
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
-		skp->Text(27 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
-		skp->Text(27 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
-		skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
-		GET_Display(Buffer, G->P30TIG, false);
-		skp->Text(27 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		if (GC->MissionPlanningActive)
+		{
+			sprintf(Buffer, "%+07.1f", tab->DV.x);
+			skp->Text(27 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", tab->DV.y);
+			skp->Text(27 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", tab->DV.z);
+			skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+			GET_Display2(Buffer, tab->GET);
+			skp->Text(27 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		}
+		else
+		{
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.x / 0.3048);
+			skp->Text(27 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.y / 0.3048);
+			skp->Text(27 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
+			skp->Text(27 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+			GET_Display2(Buffer, G->P30TIG);
+			skp->Text(27 * W / 32, 18 * H / 28, Buffer, strlen(Buffer));
+		}
 
 	}
 	else if (screen == 52)

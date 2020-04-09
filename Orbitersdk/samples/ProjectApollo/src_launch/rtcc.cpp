@@ -801,6 +801,9 @@ RTCC::RTCC()
 	//Inertial velocity of EI, fps
 	MDLEIC[2] = 25567.72868;
 
+	MCCCEX = 3404;
+	MCCLEX = 3433;
+
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_AGS - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -4748,23 +4751,16 @@ void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 	pad.DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 14);
 }
 
-void RTCC::AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr)
+void RTCC::CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
 {
-	double getign = P30TIG;
-	int emem[24];
+	CMMAXTDV(P30TIG, dV_LVLH);
+	V71Update(str, CZAXTRDV.Octals, 10);
+}
 
-	emem[0] = 12;
-	emem[1] = DVAddr;
-	emem[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
-	emem[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
-	emem[4] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
-	emem[5] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
-	emem[6] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
-	emem[7] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
-	emem[8] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
-	emem[9] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
-
-	V71Update(str, emem, 10);
+void RTCC::LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
+{
+	CMMLXTDV(P30TIG, dV_LVLH);
+	V71Update(str, CZLXTRDV.Octals, 10);
 }
 
 void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66)
@@ -9310,7 +9306,7 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 	return IMUangles;
 }
 
-bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, SV &sv_PDI, SV &sv_land, double &dv)
+bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv)
 {
 	MATRIX3 Rot, REFSMMAT;
 	DescentGuidance descguid;
@@ -10191,7 +10187,7 @@ void RTCC::GMSPRINT(std::string message)
 	RTCCONLINEMON.push_back(message);
 }
 
-void RTCC::EMGGPCHR(double lat, double lng, double alt, int body, StationCharacteristicsBlock *stat)
+void RTCC::EMGGPCHR(double lat, double lng, double alt, int body, Station *stat)
 {
 	stat->lat = lat;
 	stat->lng = lng;
@@ -11259,7 +11255,7 @@ void RTCC::EMSTAGEN(int L)
 	{
 		if (med_b04.FUNCTION && !groundstationslunar[i]) continue;
 		station.alt = 0.0;
-		sprintf_s(station.code, gsabbreviations[i]);
+		station.code = gsabbreviations[i];
 		station.lat = groundstations[i][0];
 		station.lng = groundstations[i][1];
 		contact.table.push_back(station);
@@ -12444,7 +12440,7 @@ int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *
 	double dv;
 	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lng[RTCC_LMPOS_BEST], MCSMLR);
 
-	PoweredDescentProcessor(R_LS, in.TLAND, in.sv, CalcGETBase(), sv_PDI, sv_land, dv);
+	PoweredDescentProcessor(R_LS, in.TLAND, in.sv, CalcGETBase(), aux, E, sv_PDI, sv_land, dv);
 
 	aux.A_T = _V(1, 0, 0);
 	aux.DT_B = (sv_land.MJD - sv_PDI.MJD)*24.0*3600.0;
@@ -14764,7 +14760,7 @@ EMXING_LOOP:
 	current.BestAvailableAOS = BestAvailableAOS;
 	current.BestAvailableLOS = BestAvailableLOS;
 	current.BestAvailableEMAX = BestAvailableEMAX;
-	sprintf_s(current.StationID, station.code);
+	sprintf_s(current.StationID, station.code.c_str());
 
 	acquisitions.push_back(current);
 
@@ -19209,6 +19205,10 @@ bool RTCC::GMGMED(char *str)
 	{
 		err = EMGABMED(number + 100, MEDSequence);
 	}
+	else if (medtype == 'C')
+	{
+		err = CMRMEDIN(number, MEDSequence);
+	}
 	else if (medtype == 'G')
 	{
 		err = EMGABMED(number + 200, MEDSequence);
@@ -19352,6 +19352,64 @@ int RTCC::EMGABMED(int med, std::vector<std::string> data)
 		//TBD: Earth or Moon
 		EMMGLCVP(L, gmt);
 	}
+	return 0;
+}
+
+int RTCC::CMRMEDIN(int med, std::vector<std::string> data)
+{
+	//Initiate a CMC/LGC external delta-V update
+	if (med == 10)
+	{
+		if (data.size() != 3)
+		{
+			return 1;
+		}
+		int VehicleType;
+		if (data[0] == "CMC")
+		{
+			VehicleType = 1;
+		}
+		else if (data[0] == "LGC")
+		{
+			VehicleType = 2;
+		}
+		else
+		{
+			return 2;
+		}
+		unsigned ManeuverNum;
+		if (sscanf(data[1].c_str(), "%d", &ManeuverNum) != 1)
+		{
+			return 2;
+		}
+		if (ManeuverNum < 1 || ManeuverNum > 15)
+		{
+			return 2;
+		}
+		int L;
+		if (data[2] == "CSM")
+		{
+			L = 1;
+		}
+		else if (data[2] == "LEM")
+		{
+			L = 3;
+		}
+		else
+		{
+			return 2;
+		}
+		MissionPlanTable *tab = GetMPTPointer(L);
+		if (tab->mantable.size() < ManeuverNum)
+		{
+			return 2;
+		}
+		//TBD: This should use CMC liftoff time, not RTCC
+		double TIG = GETfromGMT(tab->mantable[ManeuverNum - 1].GMTI);
+		VECTOR3 DV = tab->mantable[ManeuverNum - 1].dV_LVLH;
+		CMMAXTDV(TIG, DV);
+	}
+
 	return 0;
 }
 
@@ -21096,11 +21154,11 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 			{
 				if (DataTableInd == 0)
 				{
-					EZEXSITE.StationName[i] = "";
+					EZEXSITE.Data[i].code = "";
 				}
 				else
 				{
-					EZLASITE.StationName[i] = "";
+					EZLASITE.Data[i].code = "";
 				}
 			}
 		}
@@ -21133,11 +21191,11 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 				{
 					if (DataTableInd == 0)
 					{
-						tempname = EZEXSITE.StationName[i];
+						tempname = EZEXSITE.Data[i].code;
 					}
 					else
 					{
-						tempname = EZLASITE.StationName[i];
+						tempname = EZLASITE.Data[i].code;
 					}
 
 					if (STAID == tempname)
@@ -21177,11 +21235,11 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 				{
 					if (DataTableInd == 0)
 					{
-						tempname = EZEXSITE.StationName[i];
+						tempname = EZEXSITE.Data[i].code;
 					}
 					else
 					{
-						tempname = EZLASITE.StationName[i];
+						tempname = EZLASITE.Data[i].code;
 					}
 					if (STAID == tempname)
 					{
@@ -21212,11 +21270,11 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 				{
 					if (DataTableInd == 0)
 					{
-						tempname = EZEXSITE.StationName[i];
+						tempname = EZEXSITE.Data[i].code;
 					}
 					else
 					{
-						tempname = EZLASITE.StationName[i];
+						tempname = EZLASITE.Data[i].code;
 					}
 					if (STAID == tempname)
 					{
@@ -21231,11 +21289,11 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 				}
 				if (DataTableInd == 0)
 				{
-					EZEXSITE.StationName[found] = "";
+					EZEXSITE.Data[found].code = "";
 				}
 				else
 				{
-					EZLASITE.StationName[found] = "";
+					EZLASITE.Data[found].code = "";
 				}
 				//Is table now empty?
 				bool empty = true;
@@ -21243,11 +21301,11 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 				{
 					if (DataTableInd == 0)
 					{
-						tempname = EZEXSITE.StationName[i];
+						tempname = EZEXSITE.Data[i].code;
 					}
 					else
 					{
-						tempname = EZLASITE.StationName[i];
+						tempname = EZLASITE.Data[i].code;
 					}
 					if (tempname != "")
 					{
@@ -24651,4 +24709,39 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 
 RTCC_PMMDMT_PB2_6:;
 
+}
+
+//CMC External Delta-V Update Generator
+void RTCC::CMMAXTDV(double GETIG, VECTOR3 DV_EXDV)
+{
+	CZAXTRDV.Octals[0] = 12;
+	CZAXTRDV.Octals[1] = MCCCEX;
+	CZAXTRDV.Octals[2] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 1);
+	CZAXTRDV.Octals[3] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 0);
+	CZAXTRDV.Octals[4] = OrbMech::DoubleToBuffer(DV_EXDV.y / 100.0, 7, 1);
+	CZAXTRDV.Octals[5] = OrbMech::DoubleToBuffer(DV_EXDV.y / 100.0, 7, 0);
+	CZAXTRDV.Octals[6] = OrbMech::DoubleToBuffer(DV_EXDV.z / 100.0, 7, 1);
+	CZAXTRDV.Octals[7] = OrbMech::DoubleToBuffer(DV_EXDV.z / 100.0, 7, 0);
+	CZAXTRDV.Octals[8] = OrbMech::DoubleToBuffer(GETIG*100.0, 28, 1);
+	CZAXTRDV.Octals[9] = OrbMech::DoubleToBuffer(GETIG*100.0, 28, 0);
+
+	CZAXTRDV.GET = GETIG;
+	CZAXTRDV.DV = DV_EXDV / 0.3048;
+}
+//LGC External Delta-V Update Generator
+void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV)
+{
+	CZLXTRDV.Octals[0] = 12;
+	CZLXTRDV.Octals[1] = MCCLEX;
+	CZLXTRDV.Octals[2] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 1);
+	CZLXTRDV.Octals[3] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 0);
+	CZLXTRDV.Octals[4] = OrbMech::DoubleToBuffer(DV_EXDV.y / 100.0, 7, 1);
+	CZLXTRDV.Octals[5] = OrbMech::DoubleToBuffer(DV_EXDV.y / 100.0, 7, 0);
+	CZLXTRDV.Octals[6] = OrbMech::DoubleToBuffer(DV_EXDV.z / 100.0, 7, 1);
+	CZLXTRDV.Octals[7] = OrbMech::DoubleToBuffer(DV_EXDV.z / 100.0, 7, 0);
+	CZLXTRDV.Octals[8] = OrbMech::DoubleToBuffer(GETIG*100.0, 28, 1);
+	CZLXTRDV.Octals[9] = OrbMech::DoubleToBuffer(GETIG*100.0, 28, 0);
+
+	CZLXTRDV.GET = GETIG;
+	CZLXTRDV.DV = DV_EXDV / 0.3048;
 }

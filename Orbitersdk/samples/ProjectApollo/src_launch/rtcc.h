@@ -866,7 +866,8 @@ struct LunarLiftoffTimeOpt
 {
 	LunarLiftoffTimeOpt();
 
-	int opt;			// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	int opt = 0;
 
 	//Flag that controls at which time CSI is done
 	//0: CSI is done 90° from insertion
@@ -1996,14 +1997,6 @@ struct PredictedSiteAcquisitionTable
 	NextStationContact Stations[40];
 };
 
-struct StationCharacteristicsBlock
-{
-	double lat;
-	double lng;
-	double alt;
-	double rad;
-};
-
 struct MANTIMESData
 {
 	MANTIMESData() { ManData[0] = 0.0;ManData[1] = 0.0; }
@@ -2041,7 +2034,8 @@ struct Station
 	double lat = 0.0;
 	double lng = 0.0;
 	double alt = 0.0;
-	char code[4];
+	double rad = 0.0;
+	std::string code;
 };
 
 struct StationTable
@@ -2492,7 +2486,7 @@ public:
 	bool LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
-	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, SV &sv_PDI, SV &sv_land, double &dv);
+	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
@@ -2583,6 +2577,8 @@ public:
 	bool GMGMED(char *str);
 	//MED Decoder for G, A and B MEDs
 	int EMGABMED(int med, std::vector<std::string> data);
+	//MED Decoder for C MEDs
+	int CMRMEDIN(int med, std::vector<std::string> data);
 	//'F' MED Module
 	int PMQAFMED(int med);
 	int PMQAFMED(int med, std::vector<std::string> data);
@@ -2676,6 +2672,13 @@ public:
 	double RTCCPresentTimeGMT();
 	OBJHANDLE GetGravref(int body);
 	bool RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, double lmdscmass, int &thruster, double &manmass);
+
+	//Uplink Mission Programs (C-Code)
+
+	//CMC External Delta-V Update Generator
+	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV);
+	//LGC External Delta-V Update Generator
+	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -3008,16 +3011,14 @@ public:
 	{
 		//-1 when empty, 0 = Earth, 1 = Moon
 		int REF;
-		std::string StationName[12];
-		StationCharacteristicsBlock Data[12];
+		Station Data[12];
 	} EZEXSITE;
 
 	struct LandmarkSitesTable
 	{
 		//-1 when empty, 0 = Earth, 1 = Moon
 		int REF;
-		std::string StationName[12];
-		StationCharacteristicsBlock Data[12];
+		Station Data[12];
 	} EZLASITE;
 
 	struct OrbitEphemerisTable
@@ -3581,6 +3582,22 @@ public:
 		int LandmarkRef = 0;
 	} EZETVMED;
 
+	struct ExternalDVMakeupBuffer
+	{
+		int LoadNumber = 0;
+		std::string Site1, Site2;
+		double GenGET = 0.0;
+		int Verb = 71;
+		int CMCCoreAddress = 0;
+		int Octals[012] = { 0,0,0,0,0,0,0,0,0,0 };
+		int VehID = 0;
+		double GET = 0.0;
+		VECTOR3 DV = _V(0, 0, 0);
+		std::string ManeuverCode;
+		std::string GMTID;
+		std::string StationID;
+	} CZAXTRDV, CZLXTRDV;
+
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{
 		double LastUpdateTime = -1.0;
@@ -3637,7 +3654,8 @@ private:
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
-	void AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr = 3404);
+	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
+	void LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
 	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
 	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
@@ -3724,7 +3742,7 @@ private:
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Ground Point Characteristics Block Routine
-	void EMGGPCHR(double lat, double lng, double alt, int body, StationCharacteristicsBlock *stat);
+	void EMGGPCHR(double lat, double lng, double alt, int body, Station *stat);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
 
@@ -4067,6 +4085,11 @@ public:
 	double MDLIEV[16];
 	//Earth orbit insertion constants
 	double MDLEIC[3];
+
+	//CMC address for external DV uplink
+	int MCCCEX;
+	//LGC address for external DV uplink
+	int MCCLEX;
 };
 
 #endif
