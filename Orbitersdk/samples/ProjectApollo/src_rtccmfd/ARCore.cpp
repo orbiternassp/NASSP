@@ -3059,6 +3059,8 @@ int ARCore::subThread()
 				opt.RV_MCC.V = EPHEM.V;
 				opt.RV_MCC.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 				opt.RV_MCC.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+
+				GC->rtcc->PLAWDT(mptveh, GMT, opt.RV_MCC.mass);
 			}
 			else if (REFSMMATopt == 3)
 			{
@@ -3074,9 +3076,10 @@ int ARCore::subThread()
 				}
 
 				opt.RV_MCC.R = tab->mantable.back().R_BO;
-				opt.RV_MCC.V = tab->mantable.back().R_BO;
+				opt.RV_MCC.V = tab->mantable.back().V_BO;
 				opt.RV_MCC.MJD = OrbMech::MJDfromGET(tab->mantable.back().GMT_BO, GC->rtcc->GetGMTBase());
 				opt.RV_MCC.gravref = GC->rtcc->GetGravref(tab->mantable.back().RefBodyInd);
+				GC->rtcc->PLAWDT(mptveh, tab->mantable.back().GMT_BO, opt.RV_MCC.mass);
 			}
 			else
 			{
