@@ -2817,7 +2817,7 @@ public:
 		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for maneuver
 		int AttitudeOpt = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
 		int BurnParamNo = 2; //1 = P1, 2 = P2 etc.
-		int CoordInd = -1; //0 = LVLH, 1 = IMU, 2 = FDAI
+		int CoordInd = 0; //0 = LVLH, 1 = IMU, 2 = FDAI
 		VECTOR3 Att = _V(0, 0, 0);
 		double UllageDT = 0.0;	//Delta T of Ullage
 		bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters

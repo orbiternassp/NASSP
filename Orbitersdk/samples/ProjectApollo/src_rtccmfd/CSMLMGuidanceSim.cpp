@@ -78,7 +78,14 @@ void CSMLMPoweredFlightIntegration::PMMRKJ()
 		DTSPAN[0] = 0.0;
 	}
 	TBI = TBM + DTSPAN[0];
-	Tg = TBI + DTSPAN[5];
+	if (TArr.MANOP <= 2)
+	{
+		Tg = TLARGE;
+	}
+	else
+	{
+		Tg = TBI + DTSPAN[5];
+	}
 
 	RSAVE = R;
 	VSAVE = V;
@@ -337,7 +344,7 @@ PMMRKJ_LABEL_16A:
 	}
 	if (TArr.MANOP == 1)
 	{
-		A_T = TArr.AT;
+		A_T = A_T_in;
 	}
 	if (TArr.DVMAN > 0)
 	{
@@ -523,6 +530,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	Kg = 0;
 	IJ = 0;
 	DTMANE = 0.0;
+	A_T_in = TArr.AT;
 
 	RCSFUELUSED = 0.0;
 	MAINFUELUSED = 0.0;
@@ -942,7 +950,7 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 	}
 	else if (TArr.MANOP == 1)
 	{
-		A_T = TArr.AT;
+		A_T = A_T_in;
 	}
 	else
 	{
@@ -1254,7 +1262,7 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 	VECTOR3 Y_T;
 	double TTT = rtcc->GetOnboardComputerThrust(TArr.ThrusterCode);
 
-	if (AttGiven == false && TArr.MANOP == 4)
+	if (AttGiven == false)
 	{
 		if (TArr.ExtDVCoordInd)
 		{
@@ -1321,5 +1329,22 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 		X_B = TArr.XB;
 		Y_B = TArr.YB;
 		Z_B = TArr.ZB;
+
+		if (length(A_T_in) == 0.0)
+		{
+			if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS4)
+			{
+				A_T_in = X_B;
+			}
+			else if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS4)
+			{
+				A_T_in = -X_B;
+			}
+			else
+			{
+				//Fix this
+				A_T_in = X_B;
+			}
+		}
 	}
 }

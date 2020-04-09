@@ -20344,7 +20344,14 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 
 		inp.BurnParameterNumber = med_m66.BurnParamNo;
-		inp.CoordinateIndicator = med_m66.CoordInd;
+		if (med_m66.BurnParamNo == 1)
+		{
+			inp.CoordinateIndicator = med_m66.CoordInd;
+		}
+		else
+		{
+			inp.CoordinateIndicator = -1;
+		}
 		inp.Pitch = med_m66.Att.x;
 		inp.Yaw = med_m66.Att.y;
 		inp.Roll = med_m66.Att.z;

@@ -1753,10 +1753,6 @@ bool ApolloRTCCMFD::set_MPTDirectInputM40Data(char *str)
 			return false;
 		}
 		GC->rtcc->med_m66.BurnParamNo = parm;
-		if (GC->rtcc->med_m66.BurnParamNo != 1)
-		{
-			GC->rtcc->med_m66.CoordInd = -1;
-		}
 		return true;
 	}
 

@@ -4671,7 +4671,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				sprintf(Buffer2, "MAG");
 			}
-			if (GC->rtcc->PZBURN.P1_DVIND == 1)
+			else if (GC->rtcc->PZBURN.P1_DVIND == 1)
 			{
 				sprintf(Buffer2, "DVC");
 			}

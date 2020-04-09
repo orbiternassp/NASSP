@@ -204,6 +204,8 @@ private:
 	int Kg;
 	//DT of maneuver (no pure ullage or tailoff, =0 if DV is given)
 	double DTMAN = 0.0;
+	//Input thrust unit vector
+	VECTOR3 A_T_in;
 
 	//Thrust and weight loss rate tables
 	//0 = Ullage
