@@ -1907,16 +1907,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu56[] =
 	{
 		{ "CSM or LEM", 0, 'V' },
-		{ "Input option", 0, 'I' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Input option", 0, 'R' },
+		{ "Time of ignition", 0, 'I' },
+		{ "Thruster", 0, 'T' },
+		{ "Attitude mode", 0, 'G' },
 		{ "Input attitude", 0, 'A' },
 
-		{ "Choose thruster", 0, 'T' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Choose thruster", 0, 'C' },
+		{ "Heads up/down", 0, 'H' },
+		{ "DPS DT at 10%", 0, 'P' },
+		{ "DPS thrust", 0, 'F' },
 		{ "Move to MPT", 0, 'M' },
 		{ "Back to menu", 0, 'B' },
 	};
@@ -1924,17 +1924,17 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu56, sizeof(mnu56) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("MPT", OAPI_KEY_V, &ApolloRTCCMFD::menuMPTDirectInputMPTCode);
-	RegisterFunction("REP", OAPI_KEY_C, &ApolloRTCCMFD::menuMPTDirectInputReplaceCode);
+	RegisterFunction("REP", OAPI_KEY_R, &ApolloRTCCMFD::menuMPTDirectInputReplaceCode);
 	RegisterFunction("TIG", OAPI_KEY_I, &ApolloRTCCMFD::menuMPTDirectInputTIG);
 	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleMPTDirectInputThruster);
 	RegisterFunction("ATT", OAPI_KEY_G, &ApolloRTCCMFD::menuMPTDirectInputAttitude);
 	RegisterFunction("BPA", OAPI_KEY_A, &ApolloRTCCMFD::menuMPTDirectInputBurnParameters);
 
-	RegisterFunction("COO", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTDirectInputCoord);
-	RegisterFunction("ULL", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("DOC", OAPI_KEY_P, &ApolloRTCCMFD::menuMPTDirectInputDock);
-	RegisterFunction("CFG", OAPI_KEY_F, &ApolloRTCCMFD::menuMPTDirectInputFinalConfig);
-	RegisterFunction("MPT", OAPI_KEY_M, &ApolloRTCCMFD::menuMPTDirectInputTransfer);
+	RegisterFunction("COO", OAPI_KEY_C, &ApolloRTCCMFD::menuMPTDirectInputCoord);
+	RegisterFunction("HEA", OAPI_KEY_H, &ApolloRTCCMFD::menuMPTDirectInputHeadsUpDown);
+	RegisterFunction("10P", OAPI_KEY_P, &ApolloRTCCMFD::menuMPTDirectInputDPSTenPercentTime);
+	RegisterFunction("THR", OAPI_KEY_F, &ApolloRTCCMFD::menuMPTDirectInputDPSScaleFactor);
+	RegisterFunction("PAG", OAPI_KEY_M, &ApolloRTCCMFD::menuMPTDirectInputSecondPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMPTPage);
 
 
@@ -2853,6 +2853,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("MPT", OAPI_KEY_E, &ApolloRTCCMFD::menuLOITransferPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLOIPage);
+
+
+	static const MFDBUTTONMENU mnu84[] =
+	{
+		{ "Choose ullage DT", 0, 'U' },
+		{ "Choose ullage thrusters", 0, 'T' },
+		{ "REFSMMAT", 0, 'R' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu84, sizeof(mnu84) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("UDT", OAPI_KEY_U, &ApolloRTCCMFD::menuMPTDirectInputUllageDT);
+	RegisterFunction("UTH", OAPI_KEY_T, &ApolloRTCCMFD::menuMPTDirectInputUllageThrusters);
+	RegisterFunction("REF", OAPI_KEY_R, &ApolloRTCCMFD::menuMPTDirectInputREFSMMAT);
+	RegisterFunction("DOC", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTDirectInputDock);
+	RegisterFunction("CFG", OAPI_KEY_C, &ApolloRTCCMFD::menuMPTDirectInputFinalConfig);
+	RegisterFunction("DDA", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTDirectInputDeltaDockingAngle);
+
+	RegisterFunction("TRM", OAPI_KEY_S, &ApolloRTCCMFD::menuMPTDirectInputTrimAngleInd);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuMPTDirectInputTransfer);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("PAG", OAPI_KEY_E, &ApolloRTCCMFD::menuSetMPTDirectInputPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLOIPage);
 }
 

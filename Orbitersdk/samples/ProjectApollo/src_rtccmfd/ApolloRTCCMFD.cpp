@@ -1401,6 +1401,12 @@ void ApolloRTCCMFD::menuSetLOIDisplayPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuMPTDirectInputSecondPage()
+{
+	screen = 84;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -1794,6 +1800,106 @@ void ApolloRTCCMFD::set_MPTDirectInputCoord(VECTOR3 Att, int mode)
 {
 	GC->rtcc->med_m66.Att = Att;
 	GC->rtcc->med_m66.CoordInd = mode;
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputHeadsUpDown()
+{
+	GC->rtcc->med_m66.HeadsUp = !GC->rtcc->med_m66.HeadsUp;
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputDPSTenPercentTime()
+{
+	bool MPTDirectInputDPSTenPercentTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Delta T of 10% thrust for DPS (negative to ignore short burn test):", MPTDirectInputDPSTenPercentTimeInput, 0, 20, (void*)this);
+}
+
+bool MPTDirectInputDPSTenPercentTimeInput(void *id, char *str, void *data)
+{
+	double deltat;
+	if (sscanf(str, "%lf", &deltat) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_MPTDirectInputDPSTenPercentTime(deltat);
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_MPTDirectInputDPSTenPercentTime(double deltat)
+{
+	GC->rtcc->med_m66.TenPercentDT = deltat;
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputDPSScaleFactor()
+{
+	bool MPTDirectInputDPSScaleFactorInput(void *id, char *str, void *data);
+	oapiOpenInputBox("DPS thrust scaling factor (0 to 1):", MPTDirectInputDPSScaleFactorInput, 0, 20, (void*)this);
+}
+
+bool MPTDirectInputDPSScaleFactorInput(void *id, char *str, void *data)
+{
+	double scale;
+	if (sscanf(str, "%lf", &scale) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_MPTDirectInputDPSScaleFactor(scale);
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_MPTDirectInputDPSScaleFactor(double scale)
+{
+	GC->rtcc->med_m66.DPSThrustFactor = scale;
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputUllageDT()
+{
+	bool MPTDirectInputUllageDTInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the ullage duration in seconds:", MPTDirectInputUllageDTInput, 0, 20, (void*)this);
+}
+
+bool MPTDirectInputUllageDTInput(void *id, char *str, void *data)
+{
+	double ss;
+	if (sscanf(str, "%lf", &ss) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_MPTDirectInputUllageDT(ss);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_MPTDirectInputUllageDT(double dt)
+{
+	GC->rtcc->med_m66.UllageDT = dt;
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputUllageThrusters()
+{
+	GC->rtcc->med_m66.UllageQuads = !GC->rtcc->med_m66.UllageQuads;
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputREFSMMAT()
+{
+	//TBD
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputDeltaDockingAngle()
+{
+	//TBD
+}
+
+void ApolloRTCCMFD::menuMPTDirectInputTrimAngleInd()
+{
+	if (GC->rtcc->med_m66.TrimAngleIndicator == 0)
+	{
+		GC->rtcc->med_m66.TrimAngleIndicator = 2;
+	}
+	else
+	{
+		GC->rtcc->med_m66.TrimAngleIndicator = 0;
+	}
 }
 
 void ApolloRTCCMFD::menuCycleGMPManeuverVehicle()

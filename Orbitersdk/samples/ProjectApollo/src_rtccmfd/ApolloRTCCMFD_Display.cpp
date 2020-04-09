@@ -4726,24 +4726,28 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(7 * W / 16, 3 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (GC->rtcc->med_m66.ConfigChangeInd == 0)
+		if (GC->rtcc->med_m66.AttitudeOpt >= 3)
 		{
-			skp->Text(5 * W / 8, 6 * H / 14, "No change", 9);
+			if (GC->rtcc->med_m66.HeadsUp)
+			{
+				skp->Text(10 * W / 16, 4 * H / 14, "Heads Up", 8);
+			}
+			else
+			{
+				skp->Text(10 * W / 16, 4 * H / 14, "Heads Down", 10);
+			}
 		}
-		else
-		{
-			if (GC->rtcc->med_m66.ConfigChangeInd == 1)
-			{
-				skp->Text(5 * W / 8, 6 * H / 14, "Undocking", 9);
-			}
-			else if (GC->rtcc->med_m66.ConfigChangeInd == 2)
-			{
-				skp->Text(5 * W / 8, 6 * H / 14, "Docking", 7);
-			}
 
-			VehicleConfigName(Buffer, GC->rtcc->med_m66.FinalConfig);
-			skp->Text(5 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+		if (GC->rtcc->med_m66.Thruster == RTCC_ENGINETYPE_LMDPS)
+		{
+			sprintf_s(Buffer, "%.1lf s", GC->rtcc->med_m66.TenPercentDT);
+			skp->Text(10 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.3lf", GC->rtcc->med_m66.DPSThrustFactor);
+			skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
+
+		skp->Text(10 * W / 16, 10 * H / 14, "Page 1/2", 8);
 	}
 	else if (screen == 57)
 	{
@@ -6844,6 +6848,70 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+	}
+	else if (screen == 84)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 1 * H / 14, "DIRECT INPUT TO MPT (MED M66)", 29);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		if (GC->rtcc->med_m66.UllageDT < 0)
+		{
+			sprintf_s(Buffer, "Default");
+		}
+		else
+		{
+			sprintf_s(Buffer, "%.0lfs Ullage DT", GC->rtcc->med_m66.UllageDT);
+		}
+		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_m66.UllageQuads)
+		{
+			skp->Text(1 * W / 16, 4 * H / 14, "4 Thrusters", 11);
+		}
+		else
+		{
+			skp->Text(1 * W / 16, 4 * H / 14, "2 Thrusters", 11);
+		}
+		
+		if (GC->rtcc->med_m66.BurnParamNo == 1 && GC->rtcc->med_m66.CoordInd >= 1)
+		{
+			skp->Text(1 * W / 16, 6 * H / 14, "REFSMMAT: CUR", 13);
+		}
+
+		if (GC->rtcc->med_m66.ConfigChangeInd == 0)
+		{
+			skp->Text(1 * W / 16, 8 * H / 14, "No change", 9);
+		}
+		else
+		{
+			if (GC->rtcc->med_m66.ConfigChangeInd == 1)
+			{
+				skp->Text(1 * W / 16, 8 * H / 14, "Undocking", 9);
+			}
+			else if (GC->rtcc->med_m66.ConfigChangeInd == 2)
+			{
+				skp->Text(1 * W / 16, 8 * H / 14, "Docking", 7);
+			}
+
+			VehicleConfigName(Buffer, GC->rtcc->med_m66.FinalConfig);
+			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		sprintf_s(Buffer, "%+.1lf° Delta Docking Angle", GC->rtcc->med_m66.DeltaDA*DEG);
+		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_m66.TrimAngleIndicator == 0)
+		{
+			skp->Text(10 * W / 16, 2 * H / 14, "Compute Trim", 12);
+		}
+		else
+		{
+			skp->Text(10 * W / 16, 2 * H / 14, "System Parameters", 17);
+		}
+
+		skp->Text(10 * W / 16, 4 * H / 14, "Transfer to MPT", 15);
+		skp->Text(10 * W / 16, 10 * H / 14, "Page 2/2", 8);
 	}
 	return true;
 }

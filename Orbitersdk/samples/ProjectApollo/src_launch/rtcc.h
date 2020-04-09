@@ -880,7 +880,7 @@ struct LunarLiftoffTimeOpt
 	int I_TPI;
 	//Flag that controls CDH position
 	//0: CDH is done at the upcoming apsis after CSI
-	//1, 3, 5, etc., CDH is done I_CDP*period/2 after CSIU
+	//1, 3, 5, etc., CDH is done I_CDH*period/2 after CSI
 	int I_CDH;
 	//Time base for CSI if CSM is active vehicle and CSI was done on an apsis
 	double t_BASE;
@@ -2819,7 +2819,7 @@ public:
 		int BurnParamNo = 2; //1 = P1, 2 = P2 etc.
 		int CoordInd = -1; //0 = LVLH, 1 = IMU, 2 = FDAI
 		VECTOR3 Att = _V(0, 0, 0);
-		double UllageDT = -1;	//Delta T of Ullage
+		double UllageDT = 0.0;	//Delta T of Ullage
 		bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
 		bool HeadsUp = true; //false = heads down, true = heads up
 		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
