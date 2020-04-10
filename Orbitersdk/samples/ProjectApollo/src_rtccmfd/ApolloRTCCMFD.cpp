@@ -2463,7 +2463,7 @@ void ApolloRTCCMFD::set_RTEConstraintF86(std::string constr, double value)
 	GC->rtcc->med_f86.Constraint = constr;
 	GC->rtcc->med_f86.Value = value;
 
-	GC->rtcc->PMQAFMED(86);
+	GC->rtcc->PMQAFMED("86");
 }
 
 void ApolloRTCCMFD::menuSetRTEConstraintF87()
@@ -2491,7 +2491,7 @@ void ApolloRTCCMFD::set_RTEConstraintF87(std::string constr, std::string value)
 	GC->rtcc->med_f87.Constraint = constr;
 	GC->rtcc->med_f87.Value = value;
 
-	GC->rtcc->PMQAFMED(87);
+	GC->rtcc->PMQAFMED("87");
 }
 
 void ApolloRTCCMFD::CycleRTECalcMode()
@@ -4408,7 +4408,7 @@ void ApolloRTCCMFD::set_launchdate(int year, int month, int day)
 	GC->rtcc->med_p80.Month = month;
 	GC->rtcc->med_p80.Day = day;
 
-	GC->rtcc->GMSMED(80);
+	GC->rtcc->GMSMED("80");
 }
 
 void ApolloRTCCMFD::menuSetLaunchTime()
@@ -4436,7 +4436,7 @@ void ApolloRTCCMFD::set_LaunchTime(int hours, int minutes, double seconds)
 	GC->rtcc->med_p10.TRAJ = true;
 	GC->rtcc->med_p10.VEH = 2;
 
-	GC->rtcc->GMSMED(10);
+	GC->rtcc->GMSMED("10");
 }
 
 void ApolloRTCCMFD::menuSetAGCEpoch()
@@ -4550,7 +4550,7 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	GC->rtcc->med_p10.TRAJ = false;
 	GC->rtcc->med_p10.VEH = 2;
 
-	GC->rtcc->GMSMED(10);
+	GC->rtcc->GMSMED("10");
 }
 
 void ApolloRTCCMFD::cycleREFSMMATupl()

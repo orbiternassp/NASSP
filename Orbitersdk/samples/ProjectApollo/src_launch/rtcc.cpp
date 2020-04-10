@@ -19210,13 +19210,6 @@ bool RTCC::GMGMED(char *str)
 		}
 	} while (str[i] != '\0' && str[i] != ';');
 
-	int number;
-
-	if (sscanf(code.c_str(), "%d", &number) != 1)
-	{
-		return false;
-	}
-
 	char Buffer[128];
 	sprintf_s(Buffer, "GMGMED: MED %s", str);
 	PMXSPT(Buffer);
@@ -19225,166 +19218,186 @@ bool RTCC::GMGMED(char *str)
 
 	if (medtype == 'A')
 	{
-		err = EMGABMED(number, MEDSequence);
+		err = EMGABMED(1, code, MEDSequence);
 	}
 	else if (medtype == 'B')
 	{
-		err = EMGABMED(number + 100, MEDSequence);
+		err = EMGABMED(2, code, MEDSequence);
 	}
 	else if (medtype == 'C')
 	{
-		err = CMRMEDIN(number, MEDSequence);
+		err = CMRMEDIN(code, MEDSequence);
 	}
 	else if (medtype == 'G')
 	{
-		err = EMGABMED(number + 200, MEDSequence);
+		err = EMGABMED(3, code, MEDSequence);
 	}
 	else if (medtype == 'F')
 	{
-		err = PMQAFMED(number, MEDSequence);
+		err = PMQAFMED(code, MEDSequence);
 	}
 	else if (medtype == 'M')
 	{
-		err = PMMMED(number, MEDSequence);
+		err = PMMMED(code, MEDSequence);
 	}
 	else if (medtype == 'P')
 	{
-		err = GMSMED(number, MEDSequence);
+		err = GMSMED(code, MEDSequence);
 	}
 	else if (medtype == 'U')
 	{
-		err = EMGTVMED(number, MEDSequence);
+		err = EMGTVMED(code, MEDSequence);
+	}
+	else if (medtype == 'X')
+	{
+		err = GMSREMED(code, MEDSequence);
 	}
 	
 	if (err == 0)
 	{
-		sprintf_s(Buffer, "GMGMED: MED %c%02d OK", medtype, number);
+		sprintf_s(Buffer, "GMGMED: MED %c%s OK", medtype, code.c_str());
 		PMXSPT(Buffer);
 	}
 	else
 	{
-		sprintf_s(Buffer, "GMGMED: MED %c%02d ERR %d", medtype, number, err);
+		sprintf_s(Buffer, "GMGMED: MED %c%s ERR %d", medtype, code.c_str(), err);
 		PMXSPT(Buffer);
 	}
 
 	return true;
 }
 
-int RTCC::EMGABMED(int med, std::vector<std::string> data)
+int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 {
-	//Generate Station Contacts
-	if (med == 103)
+	//A MEDs
+	if (type == 1)
 	{
-		if (data.size() < 1)
-		{
-			return 1;
-		}
-		int veh;
-		if (data[0] == "CSM")
-		{
-			veh = 1;
-		}
-		else if (data[0] == "LEM")
-		{
-			veh = 3;
-		}
-		else
-		{
-			return 1;
-		}
-		EMSTAGEN(veh);
+
 	}
-	//CSM/LEM REFSMMAT locker movement
-	else if (med == 200)
+	//B MEDs
+	else if (type == 2)
 	{
-		if (data.size() < 4)
+		//Generate Station Contacts
+		if (med == "03")
 		{
-			return 1;
+			if (data.size() < 1)
+			{
+				return 1;
+			}
+			int veh;
+			if (data[0] == "CSM")
+			{
+				veh = 1;
+			}
+			else if (data[0] == "LEM")
+			{
+				veh = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			EMSTAGEN(veh);
 		}
-		int L1, ID1, L2, ID2;
-		if (data[0] == "CSM")
-		{
-			L1 = 1;
-		}
-		else if (data[0] == "LEM")
-		{
-			L1 = 3;
-		}
-		else
-		{
-			return 1;
-		}
-		ID1 = EMGSTGENCode(data[1].c_str());
-		if (ID1 < 0)
-		{
-			return 1;
-		}
-		if (data[2] == "CSM")
-		{
-			L2 = 1;
-		}
-		else if (data[2] == "LEM")
-		{
-			L2 = 3;
-		}
-		else
-		{
-			return 1;
-		}
-		ID2 = EMGSTGENCode(data[3].c_str());
-		if (ID2 < 0)
-		{
-			return 1;
-		}
-		double gmt, hh, mm, ss;
-		if (data.size() < 5 || data[4] == "")
-		{
-			gmt = RTCCPresentTimeGMT();
-		}
-		else if (sscanf(data[4].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
-		{
-			gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
-		}
-		else
-		{
-			return 1;
-		}
-		EMGSTGEN(2, L1, ID1, L2, ID2, gmt);
 	}
-	else if (med == 203)
+	//G MEDs
+	else if (type == 3)
 	{
-		if (data.size() < 2)
+		//CSM/LEM REFSMMAT locker movement
+		if (med == "00")
 		{
-			return 1;
+			if (data.size() < 4)
+			{
+				return 1;
+			}
+			int L1, ID1, L2, ID2;
+			if (data[0] == "CSM")
+			{
+				L1 = 1;
+			}
+			else if (data[0] == "LEM")
+			{
+				L1 = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			ID1 = EMGSTGENCode(data[1].c_str());
+			if (ID1 < 0)
+			{
+				return 1;
+			}
+			if (data[2] == "CSM")
+			{
+				L2 = 1;
+			}
+			else if (data[2] == "LEM")
+			{
+				L2 = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			ID2 = EMGSTGENCode(data[3].c_str());
+			if (ID2 < 0)
+			{
+				return 1;
+			}
+			double gmt, hh, mm, ss;
+			if (data.size() < 5 || data[4] == "")
+			{
+				gmt = RTCCPresentTimeGMT();
+			}
+			else if (sscanf(data[4].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
+			{
+				gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
+			}
+			else
+			{
+				return 1;
+			}
+			EMGSTGEN(2, L1, ID1, L2, ID2, gmt);
 		}
-		int L;
-		if (data[0] == "CSM")
+		//COMPUTE AND SAVE LOCAL VERTICAL CSM/LM PLATFORM ALIGNMENT
+		else if (med == "03")
 		{
-			L = 1;
+			if (data.size() < 2)
+			{
+				return 1;
+			}
+			int L;
+			if (data[0] == "CSM")
+			{
+				L = 1;
+			}
+			else if (data[0] == "LEM")
+			{
+				L = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			double gmt, hh, mm, ss;
+			if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
+			{
+				gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
+			}
+			//TBD: Earth or Moon
+			EMMGLCVP(L, gmt);
 		}
-		else if (data[0] == "LEM")
-		{
-			L = 3;
-		}
-		else
-		{
-			return 1;
-		}
-		double gmt, hh, mm, ss;
-		if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
-		{
-			gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
-		}
-		//TBD: Earth or Moon
-		EMMGLCVP(L, gmt);
 	}
+	
+	
 	return 0;
 }
 
-int RTCC::CMRMEDIN(int med, std::vector<std::string> data)
+int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 {
 	//Initiate a CMC/LGC external delta-V update
-	if (med == 10)
+	if (med == "10")
 	{
 		if (data.size() != 3)
 		{
@@ -19439,16 +19452,16 @@ int RTCC::CMRMEDIN(int med, std::vector<std::string> data)
 	return 0;
 }
 
-int RTCC::PMQAFMED(int med)
+int RTCC::PMQAFMED(std::string med)
 {
 	std::vector<std::string> data;
 	return PMQAFMED(med, data);
 }
 
-int RTCC::PMQAFMED(int med, std::vector<std::string> data)
+int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 {
 	//Initialize Azimuth Constraints for Midcourse Correction Planning
-	if (med == 22)
+	if (med == "22")
 	{
 		double azmin, azmax;
 		if (data.size() < 1 || data[0]== "")
@@ -19487,7 +19500,7 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 		PZMCCPLN.AZ_max = azmax;
 	}
 	//Initialization of translunar time (minimum and maximum) for midcourse correction planning
-	else if (med == 23)
+	else if (med == "23")
 	{
 		double hh, mm, ss, get;
 		if (data.size() < 1 || data[0] == "")
@@ -19520,7 +19533,7 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Initalize gamma and reentry range for midcourse correction plans
-	else if (med == 24)
+	else if (med == "24")
 	{
 		if (data.size() < 1 || data[0] == "")
 		{
@@ -19550,7 +19563,7 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Delete column of midcourse correction display
-	else if (med == 26)
+	else if (med == "26")
 	{
 		if (data.size() < 1)
 		{
@@ -19578,7 +19591,7 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Specify pericynthion height limits for optimized MCC
-	else if (med == 29)
+	else if (med == "29")
 	{
 	if (data.size() < 1 || data[0] == "")
 	{
@@ -19608,7 +19621,7 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 	}
 	}
 	//Transfer midcourse correction plan to skeleton flight plan table
-	else if (med == 30)
+	else if (med == "30")
 	{
 	if (data.size() < 1)
 	{
@@ -19631,7 +19644,7 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 	PZSFPTAB.blocks[1] = PZMCCSFP.blocks[column - 1];
 	}
 	//Alteration of Skeleton Flight Plan Table
-	else if (med == 32)
+	else if (med == "32")
 	{
 		if (data.size() < 3)
 		{
@@ -19786,7 +19799,7 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Generation of near Earth tradeoff
-	else if (med == 70)
+	else if (med == "70")
 	{
 		bool found = false;
 		//Check and find site
@@ -19849,10 +19862,10 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 		}
 		PZREAP.EntryProfile = med_f70.EntryProfile;
 
-		PMMREAP(med);
+		PMMREAP(70);
 	}
 	//Generation of remote Earth tradeoff
-	else if (med == 71)
+	else if (med == "71")
 	{
 		if (med_f71.Page < 1 || med_f71.Page > 5)
 		{
@@ -19921,15 +19934,15 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 		}
 		PZREAP.EntryProfile = med_f71.EntryProfile;
 
-		PMMREAP(med);
+		PMMREAP(71);
 	}
 	//Update the target table for return to Earth
-	else if (med == 85)
+	else if (med == "85")
 	{
 
 	}
 	//Update return to Earth constraints
-	else if (med == 86)
+	else if (med == "86")
 	{
 		if (med_f86.Constraint == "DVMAX")
 		{
@@ -19965,7 +19978,7 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Update return to Earth constraints
-	else if (med == 87)
+	else if (med == "87")
 	{
 		if (med_f87.Constraint == "TGTLN")
 		{
@@ -19998,14 +20011,14 @@ int RTCC::PMQAFMED(int med, std::vector<std::string> data)
 	return 0;
 }
 
-void RTCC::PMKMED(int med)
+void RTCC::PMKMED(std::string med)
 {
 
 }
 
-int RTCC::PMMMED(int med, std::vector<std::string> data)
+int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 {
-	if (med == 40)
+	if (med == "40")
 	{
 		if (data.size() < 1)
 		{
@@ -20145,7 +20158,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Change vehicle body orientation and trim angles for MPT maneuver
-	else if (med == 58)
+	else if (med == "58")
 	{
 		if (data.size() < 2)
 		{
@@ -20209,7 +20222,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		PMMUDT(veh, man, headsup, trim);
 	}
-	else if (med == 62)
+	else if (med == "62")
 	{
 		int mpt, man, act;
 
@@ -20276,7 +20289,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		PMMFUD(mpt, man, act);
 	}
 	//Transfer a GPM to the MPT
-	else if (med == 65)
+	else if (med == "65")
 	{
 		PMMXFR_Impulsive_Input inp;
 
@@ -20315,7 +20328,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		return PMMXFR(40, vPtr);
 	}
 	//Direct Input to MPT
-	else if (med == 66)
+	else if (med == "66")
 	{
 		PMMXFRDirectInput inp;
 
@@ -20471,7 +20484,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		return PMMXFR(33, vPtr);
 	}
 	//TLI Direct Input
-	else if (med == 68)
+	else if (med == "68")
 	{
 		if (data.size() < 2)
 		{
@@ -20510,7 +20523,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		return PMMXFR(37, vPtr);
 	}
 	//Transfer Descent Plan, DKI or SPQ
-	else if (med == 70)
+	else if (med == "70")
 	{
 		PMMXFR_Impulsive_Input inp;
 
@@ -20549,7 +20562,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		return PMMXFR(41, vPtr);
 	}
 	//Transfer two-impulse plan to MPT
-	else if (med == 72)
+	else if (med == "72")
 	{
 		PMMXFR_Impulsive_Input inp;
 
@@ -20592,7 +20605,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		return PMMXFR(42, vPtr);
 	}
 	//Transfer of planned Earth entry maneuver
-	else if (med == 74)
+	else if (med == "74")
 	{
 		if (data.size() < 3)
 		{
@@ -20670,7 +20683,7 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		return PMMXFR(32, vPtr);
 	}
 	//LOI and MCC Transfer
-	else if (med == 78)
+	else if (med == "78")
 	{
 		PMMXFR_Impulsive_Input inp;
 
@@ -20730,13 +20743,13 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 		return PMMXFR(39, vPtr);
 	}
 	//Transfer ascent maneuver to MPT from lunar targeting
-	else if (med == 85)
+	else if (med == "85")
 	{
 		void *vPtr = NULL;
 		return PMMXFR(44, vPtr);
 	}
 	//Direct input of lunar descent maneuver
-	else if (med == 86)
+	else if (med == "86")
 	{
 		void *vPtr = NULL;
 		return PMMXFR(43, vPtr);
@@ -20744,19 +20757,19 @@ int RTCC::PMMMED(int med, std::vector<std::string> data)
 	return 0;
 }
 
-int RTCC::GMSMED(int med)
+int RTCC::GMSMED(std::string med)
 {
 	std::vector<std::string> data;
 	return GMSMED(med, data);
 }
 
-int RTCC::GMSMED(int med, std::vector<std::string> data)
+int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 {
-	if (med == 7)
+	if (med == "07")
 	{
 		//TBD
 	}
-	else if (med == 10)
+	else if (med == "10")
 	{
 		double gmtlocs = GLHTCS(med_p10.GMTALO);
 		if (med_p10.VEH == 1)
@@ -20770,7 +20783,7 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 			MCGMTL = med_p10.GMTALO;
 		}
 	}
-	else if (med == 12)
+	else if (med == "12")
 	{
 		MCLABN = med_p12.LaunchAzimuth*RAD;
 		MCLSBN = sin(MCLABN);
@@ -20789,7 +20802,7 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Update GMTZS for specified vehicle
-	else if (med == 15)
+	else if (med == "15")
 	{
 		if (med_p15.VEH == 1)
 		{
@@ -20818,7 +20831,7 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Generate an ephemeris for one vehicle using a vector from the other vehicle
-	else if (med == 16)
+	else if (med == "16")
 	{
 		if (data.size() < 3)
 		{
@@ -20925,7 +20938,7 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 		PMSVCT(4, veh2, &sv0);
 	}
 	//Cape crossing table update and limit change
-	else if (med == 17)
+	else if (med == "17")
 	{
 		if (data.size() < 2)
 		{
@@ -21025,7 +21038,7 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 		table->NumRevFirst += delta;
 		table->NumRevLast += delta;
 	}
-	else if (med == 30)
+	else if (med == "30")
 	{
 		if (med_p30.SMA != -1)
 		{
@@ -21036,40 +21049,36 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 			MCGECC = med_p30.ECC;
 		}
 	}
-	else if (med == 31)
+	else if (med == "31")
 	{
 		MCGREF = med_p31.GET;
 	}
-	else if (med == 33)
+	else if (med == "33")
 	{
 		MCTVEN = med_p33.ScaleFactor;
 	}
-	else if (med == 81)
+	else if (med == "81")
 	{
 		//TBD
 	}
-	else if (med == 82)
+	else if (med == "82")
 	{
 		//TBD
 	}
-	else if (med == 16)
+	else if (med == "16")
 	{
 		//TBD: Q EMSCTRL1 (ID = 6)
 	}
-	else if (med == 60)
+	else if (med == "60")
 	{
 		//TBD
 	}
-	else if (med == 92)
-	{
-		//TBD
-	}
-	else if (med == 17)
+	else if (med == "92")
 	{
 		//TBD
 	}
 	//Update Fixed Ground Point Table and Landmark Acquisition Ground Point Table
-	else if (med == 32)
+	else if (med == "32")
 	{
 		if (data.size() < 4)
 		{
@@ -21360,20 +21369,20 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 			}
 		}
 	}
-	else if (med == 13 || med == 14)
+	else if (med == "13" || med == "14")
 	{
 		//TBD
 	}
-	else if (med == 60)
+	else if (med == "60")
 	{
 		//TBD
 	}
-	else if (med == 59)
+	else if (med == "59")
 	{
 		//TBD
 	}
 	//Offsets and elevation angle for two-impulse solution
-	else if (med == 51)
+	else if (med == "51")
 	{
 		double val;
 		if (data.size() > 0 && data[0] != "")
@@ -21406,7 +21415,7 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Two-impulse corrective combination nominals
-	else if (med == 52)
+	else if (med == "52")
 	{
 		double val;
 		if (data.size() > 0 && data[0] != "")
@@ -21433,11 +21442,11 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 			}
 		}
 	}
-	else if (med == 8)
+	else if (med == "08")
 	{
 		MCGHZA = med_p08.PitchAngle*RAD;
 	}
-	else if (med == 80)
+	else if (med == "80")
 	{
 		if (1960 <= med_p80.Year && med_p80.Year <= 1980)
 		{
@@ -21510,10 +21519,52 @@ int RTCC::GMSMED(int med, std::vector<std::string> data)
 	return 0;
 }
 
-int RTCC::EMGTVMED(int med, std::vector<std::string> data)
+int RTCC::GMSREMED(std::string med, std::vector<std::string> data)
+{
+	//Restart Tape
+	if (med == "XX")
+	{
+		if (data.size() != 1)
+		{
+			return 1;
+		}
+		int type;
+		if (data[0] == "B")
+		{
+			type = 1;
+		}
+		else if (data[0] == "R")
+		{
+			type = 2;
+		}
+		else
+		{
+			return 2;
+		}
+
+		GMLRESRT(type);
+	}
+	return 0;
+}
+
+void RTCC::GMLRESRT(int type)
+{
+	//RTCC saving
+	if (type == 1)
+	{
+
+	}
+	//RTCC loading
+	else if (type == 2)
+	{
+
+	}
+}
+
+int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 {
 	//Space Digitals Initialization
-	if (med == 0)
+	if (med == "00")
 	{
 		if (data.size() < 1)
 		{
@@ -21551,7 +21602,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDSPACE(7);
 	}
 	//Space Digitals
-	else if (med == 1)
+	else if (med == "01")
 	{
 		if (data.size() < 3)
 		{
@@ -21638,7 +21689,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDSPACE(queid, opt, val, incl, ascnode);
 	}
 	//Initiate Checkout Monitor Display
-	else if (med == 2)
+	else if (med == "02")
 	{
 		if (data.size() < 3)
 		{
@@ -21797,7 +21848,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDCHECK(tab, opt, param, THTime, ref, feet);
 	}
 	//Moonrise/Moonset Display
-	else if (med == 7)
+	else if (med == "07")
 	{
 		if (data.size() < 1)
 		{
@@ -21851,7 +21902,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDSSMMD(ind, param);
 	}
 	//Sunrise/Sunset Display
-	else if (med == 8)
+	else if (med == "08")
 	{
 		if (data.size() < 1)
 		{
@@ -21908,7 +21959,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDSSEMD(ind, param);
 	}
 	//FDO Orbit Digitals: Predict apogee/perigee
-	else if (med == 12)
+	else if (med == "12")
 	{
 		if (data.size() < 3)
 		{
@@ -21968,7 +22019,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMMDYNMC(L, 3, ind, param);
 	}
 	//FDO Orbit Digitals: Longitude crossing time
-	else if (med == 13)
+	else if (med == "13")
 	{
 		if (data.size() < 3)
 		{
@@ -22002,7 +22053,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMMDYNMC(L, 4, ind, lng*RAD);
 	}
 	//FDO Orbit Digitals: Compute longitude at given time
-	else if (med == 14)
+	else if (med == "14")
 	{
 		if (data.size() < 2)
 		{
@@ -22031,7 +22082,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMMDYNMC(L, 5, 0, param);
 	}
 	//Predicted site acquisition
-	else if (med == 15 || med == 55)
+	else if (med == "15" || med == "55")
 	{
 		if (data.size() < 4)
 		{
@@ -22126,7 +22177,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		
 		int num;
-		if (med == 15)
+		if (med == "15")
 		{
 			num = 1;
 		}
@@ -22140,7 +22191,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDPESAD(num, veh, ind, vala, valb, body);
 	}
 	//Landmark Acquisition Display
-	else if (med == 17)
+	else if (med == "17")
 	{
 		if (data.size() < 3)
 		{
@@ -22184,7 +22235,7 @@ int RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDLANDM(veh, gmt, dt, ref);
 	}
 	//Detailed Maneuver Table
-	else if (med == 20)
+	else if (med == "20")
 	{
 		if (data.size() < 2)
 		{

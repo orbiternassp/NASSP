@@ -2577,21 +2577,25 @@ public:
 	//Central Manual Entry Device Decoder
 	bool GMGMED(char *str);
 	//MED Decoder for G, A and B MEDs
-	int EMGABMED(int med, std::vector<std::string> data);
+	int EMGABMED(int type, std::string med, std::vector<std::string> data);
 	//MED Decoder for C MEDs
-	int CMRMEDIN(int med, std::vector<std::string> data);
+	int CMRMEDIN(std::string med, std::vector<std::string> data);
 	//'F' MED Module
-	int PMQAFMED(int med);
-	int PMQAFMED(int med, std::vector<std::string> data);
+	int PMQAFMED(std::string med);
+	int PMQAFMED(std::string med, std::vector<std::string> data);
 	//K-MED Decoder
-	void PMKMED(int med);
+	void PMKMED(std::string med);
 	//'M' MED Module
-	int PMMMED(int med, std::vector<std::string> data);
+	int PMMMED(std::string med, std::vector<std::string> data);
 	//'P' Code MED Processor
-	int GMSMED(int med);
-	int GMSMED(int med, std::vector<std::string> data);
+	int GMSMED(std::string med);
+	int GMSMED(std::string med, std::vector<std::string> data);
 	//'U' Code MED Processor
-	int EMGTVMED(int med, std::vector<std::string> data);
+	int EMGTVMED(std::string med, std::vector<std::string> data);
+	//Restart MED Decoder
+	int GMSREMED(std::string med, std::vector<std::string> data);
+	//High-Speed Restart MED Processor
+	void GMLRESRT(int type);
 	//Detailed Maneuver Table Math Module
 	void PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux);
 	//Time Queue Control Load Module
@@ -3031,6 +3035,9 @@ public:
 
 	struct TLITargetingParametersTable
 	{
+		int Day;
+		int Month;
+		int Year;
 		double T_LO;
 		double theta_EO;
 		double omega_E;		

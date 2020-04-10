@@ -103,11 +103,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 11;
 		rtcc->med_p80.Month = 10;
 		rtcc->med_p80.Year = 1968;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 15.0 + 2.0 / 60.0 + 45.0 / 3600.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 	}
 	else if (mission == 8)
 	{
@@ -145,22 +145,22 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 21;
 		rtcc->med_p80.Month = 12;
 		rtcc->med_p80.Year = 1968;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 12.0 + 51.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 	}
 	else if (mission == 9)
 	{
 		rtcc->med_p80.Day = 3;
 		rtcc->med_p80.Month = 3;
 		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 16.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 
 		rtcc->MCCLEX = 3431;
 	}
@@ -201,11 +201,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 18;
 		rtcc->med_p80.Month = 5;
 		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 16.0 + 49.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 
 		rtcc->MCLGRA = -80.602087222*RAD;
 		rtcc->MCCLEX = 3431;
@@ -243,11 +243,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 16;
 		rtcc->med_p80.Month = 7;
 		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 13.0 + 32.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 	}
 	/*else if (mission == 11) // July 18th Launch
 	{
@@ -282,11 +282,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 18;
 		rtcc->med_p80.Month = 7;
 		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 15.0 + 32.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 	}
 	else if (mission == 11) // July 21st Launch
 	{
@@ -327,11 +327,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 21;
 		rtcc->med_p80.Month = 7;
 		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 16.0 + 09.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 	}*/
 	else if (mission == 12)
 	{
@@ -372,11 +372,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 14;
 		rtcc->med_p80.Month = 11;
 		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 16.0 + 22.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5551.1299*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -133067.52*0.3048;
@@ -436,11 +436,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 11;
 		rtcc->med_p80.Month = 4;
 		rtcc->med_p80.Year = 1970;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 19.0 + 13.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
@@ -499,11 +499,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 31;
 		rtcc->med_p80.Month = 1;
 		rtcc->med_p80.Year = 1971;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 20.0 + 23.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
@@ -559,11 +559,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 26;
 		rtcc->med_p80.Month = 7;
 		rtcc->med_p80.Year = 1971;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 13.0 + 34.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5548.14101*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -162539.6686*0.3048;
@@ -613,11 +613,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 16;
 		rtcc->med_p80.Month = 4;
 		rtcc->med_p80.Year = 1972;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 17.0 + 54.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5543.4605*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -159548.72*0.3048;
@@ -668,11 +668,11 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_p80.Day = 7;
 		rtcc->med_p80.Month = 12;
 		rtcc->med_p80.Year = 1972;
-		rtcc->GMSMED(80);
+		rtcc->GMSMED("80");
 
 		rtcc->med_p10.VEH = 2;
 		rtcc->med_p10.GMTALO = 2.0 + 53.0 / 60.0;
-		rtcc->GMSMED(10);
+		rtcc->GMSMED("10");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5542.8976*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -156145.03*0.3048;
@@ -4434,7 +4434,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		if (GC->MissionPlanningActive)
 		{
 			std::vector<std::string> str;
-			GC->rtcc->PMMMED(72, str);
+			GC->rtcc->PMMMED("72", str);
 		}
 		else
 		{
@@ -4464,7 +4464,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		if (GC->MissionPlanningActive)
 		{
 			std::vector<std::string> str;
-			GC->rtcc->PMMMED(70, str);
+			GC->rtcc->PMMMED("70", str);
 		}
 		else
 		{
@@ -4493,7 +4493,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		if (GC->MissionPlanningActive)
 		{
 			std::vector<std::string> str;
-			GC->rtcc->PMMMED(70, str);
+			GC->rtcc->PMMMED("70", str);
 		}
 		else
 		{
@@ -4522,7 +4522,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 	{
 		//Dummy data
 		std::vector<std::string> str;
-		GC->rtcc->PMMMED(66, str);
+		GC->rtcc->PMMMED("66", str);
 
 		Result = 0;
 	}
@@ -4532,7 +4532,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		if (GC->MissionPlanningActive)
 		{
 			std::vector<std::string> str;
-			GC->rtcc->PMMMED(70, str);
+			GC->rtcc->PMMMED("70", str);
 		}
 		else
 		{
@@ -4561,7 +4561,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			GC->rtcc->med_m86.Time = GC->t_Land;
 
 			std::vector<std::string> str;
-			GC->rtcc->PMMMED(86, str);
+			GC->rtcc->PMMMED("86", str);
 		}
 
 		Result = 0;
@@ -4572,7 +4572,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		if (GC->MissionPlanningActive)
 		{
 			std::vector<std::string> str;
-			GC->rtcc->PMMMED(85, str);
+			GC->rtcc->PMMMED("85", str);
 		}
 
 		Result = 0;
@@ -4583,7 +4583,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		if (GC->MissionPlanningActive)
 		{
 			std::vector<std::string> str;
-			GC->rtcc->PMMMED(65, str);
+			GC->rtcc->PMMMED("65", str);
 		}
 		else
 		{
@@ -4707,7 +4707,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		if (GC->MissionPlanningActive)
 		{
 			std::vector<std::string> data;
-			GC->rtcc->PMMMED(78, data);
+			GC->rtcc->PMMMED("78", data);
 		}
 		else
 		{
@@ -4774,15 +4774,15 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 	break;
 	case 52: //RTE Tradeoff Display
 	{
-		int mode;
+		std::string mode;
 
 		if (RTETradeoffMode == 0)
 		{
-			mode = 70;
+			mode = "70";
 		}
 		else
 		{
-			mode = 71;
+			mode = "71";
 		}
 
 		GC->rtcc->PMQAFMED(mode);
