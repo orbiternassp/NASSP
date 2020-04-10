@@ -94,7 +94,7 @@ void DrawReticle (HDC hDC, double angle, int dimmer)
 	HGDIOBJ oldObj;
 	int xend,yend;
 	// Set up Dimmer Pen
-	HPEN pen = CreatePen(PS_SOLID,2,RGB(dimmer,64,64));
+	HPEN pen = CreatePen(PS_SOLID,1,RGB(dimmer,64,64));
 	oldObj = SelectObject (hDC, pen);
 	// Draw crosshair vertical member
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle));
