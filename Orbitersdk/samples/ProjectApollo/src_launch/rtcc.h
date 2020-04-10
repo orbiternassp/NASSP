@@ -2499,7 +2499,8 @@ public:
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
-	void ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p);
+	//Apsides Determination Subroutine
+	bool PMMAPD(SV sv0, SV &sv_a, SV &sv_p);
 	VECTOR3 HeightManeuverInteg(SV sv0, double dh);
 	VECTOR3 ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD);
 	VECTOR3 CircularizationManeuverInteg(SV sv0);

@@ -7935,33 +7935,46 @@ SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN)
 CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu)
 {
 	CELEMENTS elem;
-	VECTOR3 H, P;
-	double r, VV, RV, RVVMin1, RVVMins1DivR, Hxy2, Esinw, Ecosw, h, EsinEA, EcosEA, EA;
+	VECTOR3 HH, NN, EE;
+	double r, RV, VV, E;
 
-	V = V / sqrt(mu);
 	r = length(R);
 	VV = dotp(V, V);
 	RV = dotp(R, V);
-	RVVMin1 = r * VV - 1.0;
-	RVVMins1DivR = RVVMin1 / r;
-	elem.a = r / (2.0 - r * VV);
-	H = crossp(R, V);
-	h = length(H);
-	Hxy2 = H.x*H.x + H.y*H.y;
-	P = R*RVVMins1DivR - V*RV;
-	Esinw = (P.z*Hxy2 - H.z*(P.x*H.x + P.y*H.y)) / h;
-	Ecosw = P.y*H.x - P.x*H.y;
-	elem.g = atan2(Esinw, Ecosw);
-	if (elem.g < 0) elem.g += PI2;
-	EcosEA = RVVMin1;
-	EsinEA = RV / sqrt(elem.a);
-	EA = atan2(EsinEA, EcosEA);
-	elem.l = EA - EsinEA;
-	if (elem.l < 0) elem.l += PI2;
-	elem.e = sqrt(EsinEA * EsinEA + EcosEA * EcosEA);
-	elem.h = atan2(H.x, -H.y);
-	if (elem.h < 0) elem.h += PI2;
-	elem.i = acos(H.z/ h);
+
+	HH = crossp(R, V);
+	NN = _V(-HH.y, HH.x, 0);
+	EE = (R*(VV - mu / r) - V * RV)*1.0 / mu;
+
+	E = VV / 2.0 - mu / r;
+	elem.a = -mu / (2.0*E);
+	elem.e = length(EE);
+	elem.i = acos2(HH.z / length(HH));
+	elem.h = acos2(NN.x / length(NN));
+	if (NN.y < 0)
+	{
+		elem.h = PI2 - elem.h;
+	}
+	elem.g = acos2(dotp(unit(NN),unit(EE)));
+	if (EE.z < 0)
+	{
+		elem.g = PI2 - elem.g;
+	}
+
+	if (elem.e < 1.0)
+	{
+		double TA = acos2(dotp(unit(EE),unit(R)));
+		if (RV < 0)
+		{
+			TA = PI2 - TA;
+		}
+		elem.l = TrueToMeanAnomaly(TA, elem.e);
+	}
+	else
+	{
+		elem.l = 0.0;
+	}
+
 	return elem;
 }
 

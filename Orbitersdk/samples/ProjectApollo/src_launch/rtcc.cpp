@@ -4001,7 +4001,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 
 		coe_b = OrbMech::coe_from_sv(sv1.R, sv1.V, mu);
 
-		ApsidesDeterminationSubroutine(sv1, sv_a, sv_p);
+		PMMAPD(sv1, sv_a, sv_p);
 		r_a_b = length(sv_a.R);
 		r_p_b = length(sv_p.R);
 		coe_p = OrbMech::coe_from_sv(sv_p.R, sv_p.V, mu);
@@ -4177,7 +4177,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 			sv2_apo.V += DV;
 			T_P = OrbMech::period(sv2_apo.R, sv2_apo.V, mu);
 
-			ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+			PMMAPD(sv2_apo, sv_a, sv_p);
 			OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_p.gravref, lat_p, lng_p);
 			lng_p += -T_P * w_E*(double)opt->N;
 			lng_p = fmod(lng_p, PI2);
@@ -4379,7 +4379,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 
 		while (abs(ddLOA) > eps && n < nmax)
 		{
-			ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+			PMMAPD(sv2_apo, sv_a, sv_p);
 			OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_p.gravref, lat_p, lng_p);
 
 			ddLOA = OrbMech::calculateDifferenceBetweenAngles(lng_p, opt->long_D);
@@ -4462,7 +4462,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	V2_equ_apo = rhtmul(obl, sv2_apo.V);
 	coe_b = OrbMech::coe_from_sv(R2_equ, V2_equ, mu);
 	coe_a = OrbMech::coe_from_sv(R2_equ, V2_equ_apo, mu);
-	ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+	PMMAPD(sv2_apo, sv_a, sv_p);
 	Q_Xx = OrbMech::LVLH_Matrix(sv2.R, sv2.V);
 	dV_LVLH = mul(Q_Xx, DV);
 
@@ -4497,7 +4497,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	coe_before.param.PeT = (sv_p.MJD - opt->GETbase)*24.0*3600.0;
 	coe_before.param.TrA = coe_b.TA;
 
-	ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+	PMMAPD(sv2_apo, sv_a, sv_p);
 	coe_after.elem.a = coe_a.h*coe_a.h / (mu*(1.0 - coe_a.e*coe_a.e));
 	coe_after.elem.e = coe_a.e;
 	coe_after.elem.i = coe_a.i;
@@ -8867,7 +8867,7 @@ void RTCC::DockingAlignmentProcessor(DockAlignOpt &opt)
 	}
 }
 
-void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
+bool RTCC::PMMAPD(SV sv0, SV &sv_a, SV &sv_p)
 {
 	OELEMENTS coe;
 	double mu;
@@ -8888,7 +8888,15 @@ void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
 	if (lowecclogic == false)
 	{
 		sv_p = OrbMech::PMMAEGS(sv0, 1, 0.0, error2);
+		if (error2)
+		{
+			return true;
+		}
 		sv_a = OrbMech::PMMAEGS(sv0, 1, PI, error2);
+		if (error2)
+		{
+			return true;
+		}
 	}
 	else
 	{
@@ -8899,7 +8907,15 @@ void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
 		ApsidesArgumentofLatitudeDetermination(sv0, u_x, u_y);
 
 		sv1 = OrbMech::PMMAEGS(sv0, 2, u_x, error2);
+		if (error2)
+		{
+			return true;
+		}
 		sv2 = OrbMech::PMMAEGS(sv0, 2, u_y, error2);
+		if (error2)
+		{
+			return true;
+		}
 
 		if (length(sv1.R) > length(sv2.R))
 		{
@@ -8912,6 +8928,7 @@ void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
 			sv_a = sv2;
 		}
 	}
+	return false;
 }
 
 VECTOR3 RTCC::HeightManeuverInteg(SV sv0, double dh)
@@ -8992,7 +9009,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 
 	coe_bef = OrbMech::coe_from_sv(sv0.R, sv0.V, mu);
 	u_b = fmod(coe_bef.TA + coe_bef.w, PI2);
-	ApsidesDeterminationSubroutine(sv0, sv_a, sv_p);
+	PMMAPD(sv0, sv_a, sv_p);
 
 	if (r_AD == r_PD)
 	{
@@ -9073,7 +9090,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 			coe_aft.w += PI2;
 		}
 		OrbMech::sv_from_coe(coe_aft, mu, sv0_apo.R, sv0_apo.V);
-		ApsidesDeterminationSubroutine(sv0_apo, sv_a, sv_p);
+		PMMAPD(sv0_apo, sv_a, sv_p);
 		r_a_a = length(sv_a.R);
 		r_p_a = length(sv_p.R);
 
@@ -10164,6 +10181,15 @@ void RTCC::PMXSPT(int n)
 	case 6:
 		PMXSPT("PMMXFR: INVALID CONFIGURATION CODE OR THRUSTER CODE - MPT UNCHANGED.");
 		break;
+	case 102:
+		PMXSPT("PMMIEV: NOMINAL TIME OF LIFTOFF FOR SPECIFIED LAUNCH DAY UNAVAILABLE.");
+		break;
+	case 120:
+		PMXSPT("PMMIEV: UNABLE TO CONVERT SPHERICAL ELEMENTS TO R AND V VECTORS.");
+		break;
+	case 121:
+		PMXSPT("PMMIEV: DIFFERENCE BETWEEN ACTUAL AND NOMINAL LIFTOFF TIME OUTSIDE LIMITS OF LAUNCH AZIMUTH POLYNOMIAL");
+		break;
 	}
 }
 
@@ -10465,7 +10491,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				sv_A.V = tcontab->sv_present.V;
 				sv_A.MJD = OrbMech::MJDfromGET(tcontab->sv_present.GMT, GMTBASE);
 				sv_A.gravref = GetGravref(tcontab->sv_present.RBI);
-				ApsidesDeterminationSubroutine(sv_A, sv_a, sv_p);
+				PMMAPD(sv_A, sv_a, sv_p);
 
 				EphemerisData sv_apo, sv_true;
 				double lat, lng;
@@ -10514,7 +10540,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				sv_A.V = tcontab->sv_present.V;
 				sv_A.MJD = OrbMech::MJDfromGET(tcontab->sv_present.GMT, GMTBASE);
 				sv_A.gravref = GetGravref(tcontab->sv_present.RBI);
-				ApsidesDeterminationSubroutine(sv_A, sv_a, sv_p);
+				PMMAPD(sv_A, sv_a, sv_p);
 
 				EphemerisData sv_peri, sv_true;
 				double lat, lng;
@@ -10627,7 +10653,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		sv_A.V = sv_pred.V;
 		sv_A.MJD = OrbMech::MJDfromGET(sv_pred.GMT, GMTBASE);
 		sv_A.gravref = GetGravref(sv_pred.RBI);
-		ApsidesDeterminationSubroutine(sv_A, sv_a, sv_p);
+		PMMAPD(sv_A, sv_a, sv_p);
 
 		EphemerisData sv_apo, sv_peri, sv_true;
 		double lat, lng;
@@ -10955,7 +10981,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				sv0.V = sv.V;
 				sv0.MJD = OrbMech::MJDfromGET(sv.GMT, GMTBASE);
 				sv0.gravref = GetGravref(sv.RBI);
-				ApsidesDeterminationSubroutine(sv0, sv_a, sv_p);
+				PMMAPD(sv0, sv_a, sv_p);
 
 				EZSPACE.GETA = OrbMech::GETfromMJD(sv_a.MJD, CalcGETBase());
 				EZSPACE.HA = (length(sv_a.R) - R_E) / 1852.0;
@@ -14403,7 +14429,7 @@ void RTCC::PMMIEV(double T_L)
 	T_D = T_L - PZSTARGP.T_LO;
 	if (T_D < MDVSTP.t_D0 || T_D > MDVSTP.t_D3)
 	{
-		//Error
+		PMXSPT(102);
 		return;
 	}
 	A_Z = 0.0;
@@ -14449,7 +14475,7 @@ void RTCC::PMMIEV(double T_L)
 	double GMT_EOI = T_L + dt_EOI;
 	if (EMMXTR(GMT_EOI, rad_EOI, vel_EOI, lng_EOI, lat_EOI, fpa_EOI, azi_EOI, R, V))
 	{
-		//Error
+		PMXSPT(121);
 		return;
 	}
 	//TBD: Print insertion vector
@@ -15931,7 +15957,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 		sv_in.MJD = OrbMech::MJDfromGET(sv_inert.GMT, GMTBASE);
 		sv_in.gravref = GetGravref(sv_inert.RBI);
 
-		ApsidesDeterminationSubroutine(sv_in, sv_a, sv_p);
+		PMMAPD(sv_in, sv_a, sv_p);
 
 		EZCHECKDIS.h_a = (length(sv_a.R) - R_E) / 1852.0;
 		EZCHECKDIS.h_p = (length(sv_p.R) - R_E) / 1852.0;
@@ -17725,7 +17751,7 @@ void RTCC::PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentP
 		OrbMech::latlong_from_J2000(sv_ig.R, sv_ig.MJD, sv_ig.gravref, lat, lng);
 		table.LIG[i] = lng * DEG;
 		sv_ig.V += tmul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), res.DeltaV_LVLH[i]);
-		ApsidesDeterminationSubroutine(sv_ig, sv_a, sv_p);
+		PMMAPD(sv_ig, sv_a, sv_p);
 		table.AC[i] = (length(sv_a.R) - opt.R_LS) / 1852.0;
 		table.HPC[i] = (length(sv_p.R) - opt.R_LS) / 1852.0;
 	}
@@ -24626,7 +24652,10 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		sv_BO2.MJD = OrbMech::MJDfromGET(aux->GMT_BO, GMTBASE);
 		sv_BO2.gravref = GetGravref(aux->RBI);
 
-		ApsidesDeterminationSubroutine(sv_BO2, sv_a, sv_p);
+		if (PMMAPD(sv_BO2, sv_a, sv_p))
+		{
+			PMXSPT("PMMDMT: ERROR RETURNED FROM PMMAPD - INVALID APOFOCUS/PERIFOCUS");
+		}
 
 		mptman->h_a = length(sv_a.R) - R_E;
 		mptman->GMT_a = OrbMech::GETfromMJD(sv_a.MJD, GMTBASE);
