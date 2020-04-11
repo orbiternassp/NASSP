@@ -22,6 +22,7 @@
 
   **************************************************************************/
 
+#include <vector>
 #include "Orbitersdk.h"
 #include "PadLCCInterface.h"
 #include "LCCPadInterface.h"

@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <vector>
 #include "cautionwarning.h"
 #include "powersource.h"
 #include "nasspdefs.h"
