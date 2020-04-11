@@ -10873,7 +10873,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EZSPACE.ADA = 0.0;
 		}
 
-		EZSPACE.GETR = EZSPACE.GET - MCGREF;
+		EZSPACE.GETR = EZSPACE.GET - MCGREF * 3600.0;
 	}
 	else
 	{
@@ -14349,6 +14349,18 @@ int RTCC::PMSVCTAuxVectorFetch(int L, double T_F, EphemerisData &sv)
 	sv = EPHEM.table[0];
 
 	return 0;
+}
+
+bool RTCC::MEDTimeInputHHMMSS(std::string vec, double &hours)
+{
+	int hh, mm;
+	double ss;
+	if (sscanf_s(vec.c_str(), "%d:%d:%lf", &hh, &mm, &ss) != 3)
+	{
+		return true;
+	}
+	hours = (double)hh + (double)mm / 60.0 + ss / 3600.0;
+	return false;
 }
 
 int RTCC::PLAWDT(int L, double gmt, double &cfg_weight)
@@ -20765,11 +20777,8 @@ int RTCC::GMSMED(std::string med)
 
 int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 {
-	if (med == "07")
-	{
-		//TBD
-	}
-	else if (med == "10")
+	//Enter planned or actual liftoff time
+	if (med == "10")
 	{
 		double gmtlocs = GLHTCS(med_p10.GMTALO);
 		if (med_p10.VEH == 1)
@@ -20783,52 +20792,210 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 			MCGMTL = med_p10.GMTALO;
 		}
 	}
+	//Enter planned or actual guidance reference release time and launch azimuth
 	else if (med == "12")
 	{
-		MCLABN = med_p12.LaunchAzimuth*RAD;
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		int veh;
+		if (data[0] == "CSM")
+		{
+			veh = 0;
+		}
+		else if (data[0] == "IU1")
+		{
+			veh = 1;
+		}
+		else if (data[0] == "IU2")
+		{
+			veh = 2;
+		}
+
+		double GMTGRR;
+		if (sscanf_s(data[1].c_str(), "%lf", &GMTGRR) != 1)
+		{
+			return 2;
+		}
+		if (GMTGRR < 0)
+		{
+			return 2;
+		}
+		double Azi;
+		if (sscanf_s(data[2].c_str(), "%lf", &Azi) != 1)
+		{
+			return 2;
+		}
+		if (Azi<70.0 || Azi>110.0)
+		{
+			return 2;
+		}
+
+		MCLABN = Azi *RAD;
 		MCLSBN = sin(MCLABN);
 		MCLCBN = cos(MCLABN);
-		if (med_p12.VEH == 0)
+		if (veh == 0)
 		{
-			MCGRAG = med_p12.GMTGRR;
+			MCGRAG = GMTGRR;
 		}
-		else if (med_p12.VEH == 1)
+		else if (veh == 1)
 		{
-			MCGRIC = med_p12.GMTGRR;
+			MCGRIC = GMTGRR;
 		}
 		else
 		{
-			MCGRIL = med_p12.GMTGRR;
+			MCGRIL = GMTGRR;
 		}
+	}
+	//Modify A & E used to determine integration limits
+	else if (med == "30")
+	{
+		double val;
+		if (data.size() > 0 && data[0] != "")
+		{
+			if (sscanf_s(data[0].c_str(), "%lf", &val) != 1)
+			{
+				return 2;
+			}
+			if (val < 0)
+			{
+				return 2;
+			}
+			MCGSMA = val / MCCNMC;
+		}
+		if (data.size() > 1 && data[1] != "")
+		{
+			if (sscanf_s(data[1].c_str(), "%lf", &val) != 1)
+			{
+				return 2;
+			}
+			if (val < 0)
+			{
+				return 2;
+			}
+			MCGECC = val;
+		}
+	}
+	//Initialize phase reference time - GET
+	else if (med == "31")
+	{
+		if (data.size() != 1)
+		{
+			return 1;
+		}
+		int hh, mm;
+		double ss;
+		if (sscanf_s(data[0].c_str(), "%d:%d:%lf", &hh, &mm, &ss) != 3)
+		{
+			return 2;
+		}
+		double get = (double)hh + (double)mm / 60.0 + ss / 3600.0;
+		if (get < 0)
+		{
+			return 2;
+		}
+		MCGREF = get;
+	}
+	//Update scaling factor used by venting model
+	else if (med == "33")
+	{
+		if (data.size() != 1)
+		{	
+			return 1;
+		}
+		double val;
+		if (sscanf_s(data[0].c_str(), "%lf", &val) != 1)
+		{
+			return 2;
+		}
+		MCTVEN = val;
+	}
+	//Update coefficients of lift and drag for new center of gravity
+	else if (med == "07")
+	{
+		return 1;
 	}
 	//Update GMTZS for specified vehicle
 	else if (med == "15")
 	{
-		if (med_p15.VEH == 1)
+		if (data.size() < 1)
 		{
-			MCGZSL = med_p15.GMTZS;
+			return 1;
 		}
-		else if (med_p15.VEH == 0)
+		int Veh;
+		if (data[0] == "AGC")
 		{
-			MCGZSA = med_p15.GMTZS;
+			Veh = 1;
+		}
+		if (data[0] == "LGC")
+		{
+			Veh = 2;
+		}
+		if (data[0] == "AGS")
+		{
+			Veh = 3;
 		}
 		else
 		{
-			double ACCUM;
-			if (med_p15.GMTZS == -1)
+			return 2;
+		}
+		double hours;
+		if (Veh == 2)
+		{
+			if (MEDTimeInputHHMMSS(data[1].c_str(), hours))
 			{
-				ACCUM = MCGZSL;
+				return 2;
+			}
+			if (data.size() > 1)
+			{
+				MCGZSL = hours;
+			}
+		}
+		else if (Veh == 1)
+		{
+			if (MEDTimeInputHHMMSS(data[1].c_str(), hours))
+			{
+				return 2;
+			}
+			if (data.size() > 1)
+			{
+				MCGZSA = hours;
+			}
+		}
+		else
+		{
+			if (data.size() > 1 && data[1] != "")
+			{
+				if (MEDTimeInputHHMMSS(data[1].c_str(), hours))
+				{
+					return 2;
+				}
 			}
 			else
 			{
-				ACCUM = med_p15.GMTZS;
+				hours = MCGZSL;
 			}
-			if (med_p15.DT != -1)
+			double dt = 0.0;
+			if (data.size() > 2 && data[2] != "")
 			{
-				ACCUM += med_p15.DT;
+				if (MEDTimeInputHHMMSS(data[2].c_str(), dt))
+				{
+					return 2;
+				}
 			}
-			MCGZSS = ACCUM;
+			MCGZSS = hours + dt;
 		}
+	}
+	//Phase initialization, transition, and recycle
+	else if (med == "81")
+	{
+		//TBD
+	}
+	//Manually EOF and rewind log tape
+	else if (med == "82")
+	{
+		//TBD
 	}
 	//Generate an ephemeris for one vehicle using a vector from the other vehicle
 	else if (med == "16")
@@ -20937,6 +21104,11 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		}
 		PMSVCT(4, veh2, &sv0);
 	}
+	//Condition for Launch (Simulation)
+	else if (med == "92")
+	{
+		//TBD
+	}
 	//Cape crossing table update and limit change
 	else if (med == "17")
 	{
@@ -21037,45 +21209,6 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 
 		table->NumRevFirst += delta;
 		table->NumRevLast += delta;
-	}
-	else if (med == "30")
-	{
-		if (med_p30.SMA != -1)
-		{
-			MCGSMA = med_p30.SMA / MCCNMC;
-		}
-		if (med_p30.ECC != -1)
-		{
-			MCGECC = med_p30.ECC;
-		}
-	}
-	else if (med == "31")
-	{
-		MCGREF = med_p31.GET;
-	}
-	else if (med == "33")
-	{
-		MCTVEN = med_p33.ScaleFactor;
-	}
-	else if (med == "81")
-	{
-		//TBD
-	}
-	else if (med == "82")
-	{
-		//TBD
-	}
-	else if (med == "16")
-	{
-		//TBD: Q EMSCTRL1 (ID = 6)
-	}
-	else if (med == "60")
-	{
-		//TBD
-	}
-	else if (med == "92")
-	{
-		//TBD
 	}
 	//Update Fixed Ground Point Table and Landmark Acquisition Ground Point Table
 	else if (med == "32")
@@ -21369,15 +21502,13 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 			}
 		}
 	}
+	//Enter vector
 	else if (med == "13" || med == "14")
 	{
 		//TBD
 	}
+	//High speed processing control
 	else if (med == "60")
-	{
-		//TBD
-	}
-	else if (med == "59")
 	{
 		//TBD
 	}
@@ -21442,9 +21573,19 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 			}
 		}
 	}
+	//Update pitch angle from horizon
 	else if (med == "08")
 	{
-		MCGHZA = med_p08.PitchAngle*RAD;
+		if (data.size() != 1)
+		{
+			return 1;
+		}
+		double val;
+		if (sscanf_s(data[0].c_str(), "%lf", val) != 1)
+		{
+			return 2;
+		}
+		MCGHZA = val * RAD;
 	}
 	else if (med == "80")
 	{

@@ -2874,11 +2874,6 @@ public:
 		int TrimAngleIndicator = 0; //0 = computed, 2 = system
 	} med_m86;
 
-	struct MED_P08
-	{
-		double PitchAngle;
-	} med_p08;
-
 	struct MED_P10
 	{
 		//1 = LEM, 2 = CSM
@@ -2886,91 +2881,8 @@ public:
 		//Liftoff time in hours
 		double GMTALO;
 		//Traj or no traj
-		bool TRAJ;
+		bool TRAJ = false;
 	} med_p10;
-
-	struct MED_P12
-	{
-		//0 = CSM, 1 = IU1, 2 = IU2
-		int VEH;
-		double GMTGRR;
-		double LaunchAzimuth;
-	} med_p12;
-
-	//Enter vector in Keplerian elements (spherical coordinates)
-	struct MED_P13
-	{
-		//0 = CSM, 1 = LEM
-		int VEH;
-		//Velocity in ft/s
-		double Vel;
-		//Flight path angle in degrees (-90° to 90°)
-		double FPA;
-		//Azimuth in degrees (0° to 360°)
-		double Azi;
-		//Geocentric latitude in degrees (-90° to 90°)
-		double Lat;
-		//Longitude in degrees (-180° to 180°)
-		double Lng;
-		//Height above oblate Earth
-		double Height;
-		//Time in hours
-		double Time;
-		//Ephemeris Indicator
-		int EPHIND = 0;
-		//Coordinate system indicator (0 = ECT, 1 = MCT)
-		int COORDIND;
-	} med_p13;
-
-	//Enter vector in X,Y,Z format
-	struct MED_P14
-	{
-		//0 = CSM, 1 = LEM
-		int VEH;
-		//Position (-60 to 60 Er)
-		double X;
-		double Y;
-		double Z;
-		//Velocity (-60 to 60 Er/hr)
-		double X_dot;
-		double Y_dot;
-		double Z_dot;
-		//Time in hours
-		double Time;
-		//Ephemeris Indicator
-		int EPHIND = 0;
-		//Coordinate system indicator (0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP, 5 = PLUM)
-		int COORDIND;
-	} med_p14;
-
-	//Update GMTZS for specified vehicle
-	struct MED_P15
-	{
-		//0 = AGC, 1 = LGC, 2 = AGS
-		int VEH;
-		double GMTZS;
-		double DT;
-	} med_p15;
-
-	//Modify A and E used to determine integration limits
-	struct MED_P30
-	{
-		//In NM
-		double SMA;
-		double ECC;
-	} med_p30;
-
-	//Initialize phase reference time (GET)
-	struct MED_P31
-	{
-		double GET;
-	} med_p31;
-
-	//Update scaling factor used by venting model
-	struct MED_P33
-	{
-		double ScaleFactor;
-	} med_p33;
 
 	//Initialize number of vehicles, first launch vehicle, mission date
 	struct MED_P80
@@ -3777,6 +3689,7 @@ private:
 	void PMMXFRDeleteOption(int working_man, double GMTI);
 	int PMMMCDCallEMSMISS(EphemerisData sv0, double GMTI, EphemerisData &sv1);
 	int PMSVCTAuxVectorFetch(int L, double T_F, EphemerisData &sv);
+	bool MEDTimeInputHHMMSS(std::string vec, double &hours);
 
 	double GLHTCS(double FLTHRS) { return FLTHRS * 360000.0; }
 	double GLCSTH(double FIXCSC) { return FIXCSC / 360000.0; }
