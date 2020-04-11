@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <vector>
 #include "Orbitersdk.h"
 
 struct EphemerisData

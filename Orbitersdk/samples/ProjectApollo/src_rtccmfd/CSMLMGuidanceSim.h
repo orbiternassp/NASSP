@@ -23,6 +23,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include <vector>
 #include "Orbitersdk.h"
 #include "RTCCTables.h"
 

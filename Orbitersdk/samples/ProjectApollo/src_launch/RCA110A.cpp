@@ -175,7 +175,7 @@ void ATOLLProcessor::DISO()
 	{
 		//Discrete output
 		int chan;
-		if (sscanf(seq.Variable.c_str(), "D%d", &chan) == 1)
+		if (sscanf_s(seq.Variable.c_str(), "D%d", &chan) == 1)
 		{
 			bool on;
 
@@ -215,7 +215,7 @@ void ATOLLProcessor::SSEL()
 {
 	int stage, chan;
 
-	if (sscanf(seq.Variable.c_str(), "%d,%d", &stage, &chan) == 2)
+	if (sscanf_s(seq.Variable.c_str(), "%d,%d", &stage, &chan) == 2)
 	{
 		rca110a->IssueSwitchSelectorCmd(stage, chan);
 	}
