@@ -43,7 +43,8 @@ IU::IU() :
 dcs(this),
 AuxiliaryPowerDistributor1(this),
 AuxiliaryPowerDistributor2(this),
-lvimu(this)
+lvimu(this),
+ControlSignalProcessor(this)
 {
 	State = 0;
 	MissionTime = 0.0;
@@ -233,18 +234,32 @@ bool IU::ESEGetCommandVehicleLiftoffIndicationInhibit()
 	return IuUmb->ESEGetCommandVehicleLiftoffIndicationInhibit();
 }
 
-bool IU::ESEGetAutoAbortInhibit()
+bool IU::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
 {
 	if (!IsUmbilicalConnected()) return false;
 
-	return IuUmb->ESEGetAutoAbortInhibit();
+	return IuUmb->ESEGetExcessiveRollRateAutoAbortInhibit(n);
 }
 
-bool IU::ESEGetGSEOverrateSimulate()
+bool IU::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
 {
 	if (!IsUmbilicalConnected()) return false;
 
-	return IuUmb->ESEGetGSEOverrateSimulate();
+	return IuUmb->ESEGetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool IU::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool IU::ESEGetGSEOverrateSimulate(int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetGSEOverrateSimulate(n);
 }
 
 bool IU::ESEGetEDSPowerInhibit()
@@ -289,13 +304,6 @@ bool IU::ESEEDSLiftoffInhibitB()
 	return IuUmb->ESEEDSLiftoffInhibitB();
 }
 
-bool IU::ESEAutoAbortSimulate()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEAutoAbortSimulate();
-}
-
 bool IU::ESEGetSIBurnModeSubstitute()
 {
 	if (!IsUmbilicalConnected()) return false;
@@ -308,6 +316,27 @@ bool IU::ESEGetGuidanceReferenceRelease()
 	if (!IsUmbilicalConnected()) return false;
 
 	return IuUmb->ESEGetGuidanceReferenceRelease();
+}
+
+bool IU::ESEESEGetQBallSimulateCmd()
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetQBallSimulateCmd();
+}
+
+bool IU::ESEGetEDSAutoAbortSimulate(int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetEDSAutoAbortSimulate(n);
+}
+
+bool IU::ESEGetEDSLVCutoffSimulate(int n)
+{
+	if (!IsUmbilicalConnected()) return false;
+
+	return IuUmb->ESEGetEDSLVCutoffSimulate(n);
 }
 
 IUToCSMCommandConnector::IUToCSMCommandConnector()
@@ -763,6 +792,20 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 			return true;
 		}
 		break;
+	case CSMIU_GET_QBALL_POWER:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetControlDistributor()->GetQBallPower();
+			return true;
+		}
+		break;
+	case CSMIU_GET_QBALL_SIMULATE_CMD:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->ESEESEGetQBallSimulateCmd();
+			return true;
+		}
+		break;
 	}
 
 	return false;
@@ -858,16 +901,6 @@ void IUToLVCommandConnector::SetSIVBThrusterDir(double yaw, double pitch)
 	cm.messageType = IULV_SET_SIVB_THRUSTER_DIR;
 	cm.val1.dValue = yaw;
 	cm.val2.dValue = pitch;
-
-	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::SetQBallPowerOff()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_QBALL_POWER_OFF;
 
 	SendMessage(cm);
 }
@@ -1347,6 +1380,7 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 
 	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
+	ControlSignalProcessor.Timestep();
 	eds.Timestep(simdt);
 	lvdc.TimeStep(simdt);
 	fcc.Timestep(simdt);
@@ -1375,7 +1409,7 @@ void IU1B::SwitchSelector(int item)
 	switch (item)
 	{
 	case 1: //Q-Ball Power Off
-		lvCommandConnector.SetQBallPowerOff();
+		ControlDistributor.SetQBallPower(false);
 		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
 		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(true);
@@ -1489,6 +1523,7 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 
 	EngineCutoffEnableTimer.Timestep(simdt);
 	ControlDistributor.Timestep(simdt);
+	ControlSignalProcessor.Timestep();
 	eds.Timestep(simdt);
 	lvdc.TimeStep(simdt);
 	fcc.Timestep(simdt);
@@ -1536,7 +1571,7 @@ void IUSV::SwitchSelector(int item)
 	switch (item)
 	{
 	case 1: //Q-Ball Power Off
-		lvCommandConnector.SetQBallPowerOff();
+		ControlDistributor.SetQBallPower(false);
 		break;
 	case 2: //Excess Rate (P,Y,R) Auto-Abort Inhibit and Switch Rate Gyro SC Indication "A"
 		ControlDistributor.SetExcessiveRatePYRAutoAbortInhibit(true);

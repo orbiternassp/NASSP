@@ -769,12 +769,24 @@
 #define AID_FORWARD_HATCH								   1054
 #define IDB_CSM_LEFT_317_WINDOW                            1055
 #define IDB_CSM_PRESS_EQUAL_HANDLE                         1056
+#define AID_CSM_PANEL_181								   1057
+#define IDB_CSM_PANEL_181								   1058
+#define AID_CSM_PANEL_277								   1059
+#define IDB_CSM_PANEL_277								   1060
+#define AID_CSM_PANEL_278J								   1061
+#define IDB_CSM_PANEL_278_CSM112						   1062
+#define IDB_CSM_PANEL_278_CSM114						   1063
+#define IDB_INDICATOR90						               1064
+#define IDB_THREEPOSSWITCH90_RIGHT                         1065
+#define IDB_CRYO_SWITCHES_J                                1066
+#define IDB_CRYO_IND_J                                     1067
+#define IDB_SWITCHGUARDS90_RIGHT                           1068
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE                            1053
+#define _APS_NEXT_RESOURCE_VALUE                            1069
 #define _APS_NEXT_COMMAND_VALUE                             40001
 #define _APS_NEXT_CONTROL_VALUE                             1000
 #define _APS_NEXT_SYMED_VALUE                               10001

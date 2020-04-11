@@ -190,6 +190,11 @@ protected:
 #define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
 #define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
 
+namespace mission
+{
+	class Mission;
+};
+
 ///
 /// \ingroup LEM
 ///
@@ -585,6 +590,7 @@ protected:
 	void ResetThrusters();
 	virtual void SeparateStage (UINT stage);
 	void CheckDescentStageSystems();
+	void CreateMissionSpecificSystems();
 	void InitPanel (int panel);
 	void SetSwitches(int panel);
 	void AddRCS_LMH(double TRANY);
@@ -1423,8 +1429,6 @@ protected:
 
 	bool ToggleEva;
 	bool CDREVA_IP;
-	bool HasProgramer;
-	bool NoAEA;
 	bool InvertStageBit;
 
 	int CDRinPLSS;
@@ -1459,7 +1463,6 @@ protected:
 
 	int ApolloNo;
 	int Landed;
-	bool NoLegs;
 
 	//
 	// VAGC Mode settings
@@ -1799,6 +1802,8 @@ protected:
 	SCERA2 scera2;
 
 	bool isMultiThread;
+
+	mission::Mission* pMission;
 
 	// Friend classes
 	friend class ATCA;

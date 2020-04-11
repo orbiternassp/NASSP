@@ -37,8 +37,6 @@ struct PayloadSettings {
 	bool Crewed;
 	bool AutoSlow;
 	char checklistFile[100];
-	bool NoLegs;
-
 };
 
 ///

@@ -138,7 +138,7 @@ ToggleSwitch::ToggleSwitch() {
 
 	Active = true;
 	Held = false;
-	Sideways = false;
+	Sideways = 0;
 	delayTime = 0;
 	resetTime = 0;
 }
@@ -424,7 +424,7 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	// off click.
 	//
 	if (event & PANEL_MOUSE_LBDOWN) {
-		if ((!Sideways && my > (y + (height / 2.0))) || (Sideways && mx < (x + (width / 2.0)))) {
+		if ((Sideways == 0 && my > (y + (height / 2.0))) || (Sideways == 1 && mx < (x + (width / 2.0))) || (Sideways == 2 && mx > (x + (width / 2.0)))) {
 			if (state > 0) {
 				SwitchTo(state - 1, true);
 				Sclick.play();
@@ -4289,4 +4289,20 @@ void DSKYPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	} else {
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + 120, width, height, SURF_PREDEF_CK);
 	}
+}
+
+PanelGroup::~PanelGroup()
+{
+	while (!panels.empty()) {
+		BasicPanel* panel = panels.back();
+		if (panel) delete panel;
+		panels.pop_back();
+	}
+}
+
+bool PanelGroup::AddPanel(BasicPanel* pPanel, PanelSwitchScenarioHandler *PSH)
+{
+	panels.push_back(pPanel);
+	pPanel->Register(PSH);
+	return true;
 }

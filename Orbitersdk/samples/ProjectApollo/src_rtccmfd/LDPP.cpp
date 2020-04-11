@@ -1006,7 +1006,7 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 	if (IGO > 0)
 	{
 		ii = I;
-		OrbMech::CELEMENTS elem_A, elem_P;
+		CELEMENTS elem_A, elem_P;
 
 		do
 		{
@@ -1017,7 +1017,7 @@ void LDPP::CHAPLA(SV sv_L, int IWA, int IGO, int &I, double &t_m, VECTOR3 &DV)
 			elem_P = OrbMech::GIMIKC(sv_P.R, sv_P.V, mu);
 			elem_P.a = elem_A.a;
 			elem_P.e = elem_A.e;
-			sv_P = OrbMech::GIMKIC(elem_P, mu);
+			OrbMech::GIMKIC(elem_P, mu, sv_P.R, sv_P.V);
 			sv_P.MJD = sv_A.MJD;
 			sv_P.gravref = hMoon;
 			if (ii > I_PC)
@@ -1090,7 +1090,7 @@ SV LDPP::APPLY(SV sv0, VECTOR3 dV_LVLH)
 
 SV LDPP::STAP(SV sv0, bool &error)
 {
-	OrbMech::CELEMENTS elem = OrbMech::GIMIKC(sv0.R, sv0.V, mu);
+	CELEMENTS elem = OrbMech::GIMIKC(sv0.R, sv0.V, mu);
 	double DN = 0.0;
 	//Close to apsis
 
@@ -1113,7 +1113,7 @@ SV LDPP::STAP(SV sv0, bool &error)
 
 bool LDPP::STCIR(SV sv0, double h_W, bool ca_flag, SV& sv_out)
 {
-	OrbMech::CELEMENTS coe;
+	CELEMENTS coe;
 	double r_H, f_cir, f_I, g_dot, eta_I, dt, cos_f_cf, f_F, f_cf, eta_F, temp;
 
 	r_H = opt.R_LS + h_W;
@@ -1240,7 +1240,7 @@ SV LDPP::TIMA(SV sv0, double u, bool &error)
 
 void LDPP::CNODE(SV sv_A, SV sv_P, double &t_m, VECTOR3 &dV_LVLH)
 {
-	OrbMech::CELEMENTS coe_M, coe_T;
+	CELEMENTS coe_M, coe_T;
 	VECTOR3 RM_equ, VM_equ, RT_equ, VT_equ;
 	double MJD_CN, U_L, U_U, i_T, i_M, h_T, h_M, cos_dw, DEN, U_CN;
 	int ICT = 0;

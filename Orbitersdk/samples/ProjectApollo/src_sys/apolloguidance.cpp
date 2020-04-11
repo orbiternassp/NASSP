@@ -53,12 +53,6 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	LastCycled = 0;
 	AGCHeat = NULL;
 
-	//
-	// Flight number.
-	//
-
-	ApolloNo = 0;
-
 	OtherVesselName[0] = 0;
 
 	//
@@ -240,17 +234,9 @@ void ApolloGuidance::SystemTimestep(double simdt)
 	}
 }
 
-void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName) 
-
+void ApolloGuidance::SetMissionInfo(std::string ProgramName, char *OtherName)
 {
-	//
-	// Older scenarios saved the mission number in the AGC. For backwards
-	// compatibility we'll only let the new number overwrite the saved value
-	// if it's zero.
-	//
-
-	if (!ApolloNo)
-		ApolloNo = MissionNo; 
+	this->ProgramName = ProgramName; 
 
 	if (OtherName != 0)
 		strncpy(OtherVesselName, OtherName, 64);
@@ -258,8 +244,6 @@ void ApolloGuidance::SetMissionInfo(int MissionNo, char *OtherName)
 
 //
 // Virtual AGC Erasable memory functions.
-//
-// Currenty do nothing.
 //
 
 
@@ -787,16 +771,10 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 		ProcessIMUCDUErrorCount(channel, val);
 		imu.ChannelOutput(channel, val);
 		break;
-
-	// DS20060225 Enable SPS gimbal control
-	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
 	case 0140:
-		ProcessChannel140(val);
 		scdu.ChannelOutput(channel, val);
 		break;
-
 	case 0141:
-		ProcessChannel141(val);
 		tcdu.ChannelOutput(channel, val);
 		break;
 	case 0142:
@@ -837,12 +815,6 @@ void ApolloGuidance::ProcessChannel14(ChannelValue val){
 }
 
 void ApolloGuidance::ProcessChannel34(ChannelValue val) {
-}
-
-void ApolloGuidance::ProcessChannel140(ChannelValue val){
-}
-
-void ApolloGuidance::ProcessChannel141(ChannelValue val){
 }
 
 // Stub for LGC thrust drive

@@ -480,7 +480,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 
 	if (stage <= LAUNCH_STAGE_ONE)
 	{
-		sic->Timestep(simdt, stage >= LAUNCH_STAGE_ONE);
+		sic->Timestep(MissionTime, simdt);
 	}
 	else if (stage == LAUNCH_STAGE_TWO || stage == LAUNCH_STAGE_TWO_ISTG_JET)
 	{
@@ -969,7 +969,7 @@ void SaturnV::SIISwitchSelector(int channel)
 
 void SaturnV::GetSIThrustOK(bool *ok)
 {
-	for (int i = 0;i < 5;i++)
+	for (int i = 0;i < 15;i++)
 	{
 		ok[i] = false;
 	}
@@ -1072,15 +1072,27 @@ void SaturnV::LoadSII(FILEHANDLE scn)
 	sii->LoadState(scn);
 }
 
-void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime)
+void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime, bool fail)
 {
 	if (failstage == 1)
 	{
-		sic->SetEngineFailureParameters(faileng, failtime);
+		sic->SetEngineFailureParameters(faileng, failtime, fail);
 	}
 	else if (failstage == 2)
 	{
-		sii->SetEngineFailureParameters(faileng, failtime);
+		sii->SetEngineFailureParameters(faileng, failtime, fail);
+	}
+}
+
+void SaturnV::GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime)
+{
+	if (failstage == 1 && sic)
+	{
+		sic->GetEngineFailureParameters(faileng, fail, failtime);
+	}
+	else if (failstage == 2 && sii)
+	{
+		sii->GetEngineFailureParameters(faileng, fail, failtime);
 	}
 }
 
@@ -1095,119 +1107,4 @@ double SaturnV::GetSIThrustLevel()
 	}
 
 	return lvl / 5.0;
-}
-
-void SaturnV::SetRandomFailures()
-{
-	Saturn::SetRandomFailures();
-
-	//
-	// Engine failure times
-	//
-
-	if (stage < LAUNCH_STAGE_TWO)
-	{
-		if (!sic->GetFailInit())
-		{
-			//
-			// Engine failure times for first stage.
-			//
-
-			bool EarlySICutoff[5];
-			double FirstStageFailureTime[5];
-
-			for (int i = 0;i < 5;i++)
-			{
-				EarlySICutoff[i] = 0;
-				FirstStageFailureTime[i] = 0.0;
-			}
-
-			for (int i = 0;i < 5;i++)
-			{
-				if (!(random() & (int)(127.0 / FailureMultiplier)))
-				{
-					EarlySICutoff[i] = true;
-					FirstStageFailureTime[i] = 20.0 + ((double)(random() & 1023) / 10.0);
-				}
-			}
-
-			sic->SetEngineFailureParameters(EarlySICutoff, FirstStageFailureTime);
-		}
-	}
-
-	if (stage < LAUNCH_STAGE_SIVB)
-	{
-		if (!sii->GetFailInit())
-		{
-			//
-			// Engine failure times for second stage.
-			//
-
-			bool EarlySIICutoff[5];
-			double SecondStageFailureTime[5];
-
-			for (int i = 0;i < 5;i++)
-			{
-				EarlySIICutoff[i] = 0;
-				SecondStageFailureTime[i] = 0.0;
-			}
-
-			for (int i = 0;i < 5;i++)
-			{
-				if (!(random() & (int)(127.0 / FailureMultiplier)))
-				{
-					EarlySIICutoff[i] = true;
-					SecondStageFailureTime[i] = 10.0 + ((double)(random() & 3071) / 10.0);
-				}
-			}
-			sii->SetEngineFailureParameters(EarlySIICutoff, SecondStageFailureTime);
-
-		}
-	}
-
-	//
-	// Set up launch failures.
-	//
-
-	if (!LaunchFail.Init)
-	{
-		LaunchFail.Init = 1;
-
-		if (!(random() & 127))
-		{
-			LaunchFail.LETAutoJetFail = 1;
-		}
-		if (!(random() & 63))
-		{
-			LaunchFail.SIIAutoSepFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.LESJetMotorFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.LiftoffSignalAFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.LiftoffSignalBFail = 1;
-		}
-		if (!(random() & 255))
-		{
-			LaunchFail.AutoAbortEnableFail = 1;
-		}
-
-		if (stage < CSM_LEM_STAGE)
-		{
-			if (LaunchFail.LiftoffSignalAFail)
-			{
-				iu->GetEDS()->SetLiftoffCircuitAFailure();
-			}
-			if (LaunchFail.LiftoffSignalBFail)
-			{
-				iu->GetEDS()->SetLiftoffCircuitBFailure();
-			}
-		}
-	}
 }

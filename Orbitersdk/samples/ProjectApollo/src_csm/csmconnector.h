@@ -60,6 +60,8 @@ public:
 	bool GetEDSAbort(int n);
 	double GetLVTankPressure(int n);
 	bool GetAbortLight();
+	bool GetQBallPower();
+	bool GetQBallSimulateCmd();
 
 protected:
 	CSMcomputer &agc;

@@ -49,7 +49,7 @@ IUControlDistributor::IUControlDistributor(IU *iu)
 	ExcessiveRateRollAutoAbortInhibitEnable = false;
 	TwoEngOutAutoAbortInhibitEnable = false;
 	IUCommandSystemEnable = false;
-	QBallPowerOn = false;
+	QBallPowerOn = true;
 }
 
 void IUControlDistributor::Timestep(double simdt)

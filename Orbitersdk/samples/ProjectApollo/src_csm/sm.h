@@ -182,8 +182,10 @@ protected:
 	void SetSM();
 	void InitSM();
 	void AddEngines();
+	void AddSMJC();
 	void DefineAnimations();
 	void DefineAnimationsHGA(UINT idx);
+	void AddMissionSpecificSystems();
 
 	///
 	/// \brief Setup variables on first timestep.
@@ -455,6 +457,6 @@ protected:
 	///
 	Sound BreakS;
 
-	SMJC SMJCA;
-	SMJC SMJCB;
+	SMJC *SMJCA;
+	SMJC *SMJCB;
 };

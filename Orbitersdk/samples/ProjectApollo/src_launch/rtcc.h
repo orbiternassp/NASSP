@@ -30,6 +30,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/LDPP.h"
 #include "../src_rtccmfd/EntryCalculations.h"
 #include "../src_rtccmfd/RTCCTables.h"
+#include "../src_rtccmfd/TLMCC.h"
+#include "../src_rtccmfd/LOITargeting.h"
+#include "../src_rtccmfd/LMGuidanceSim.h"
 #include "MCCPADForms.h"
 
 #define RTCC_START_STRING	"RTCC_BEGIN"
@@ -471,6 +474,7 @@ struct TwoImpulseResuls
 
 struct SPQResults
 {
+	double t_CSI;
 	double t_CDH;
 	double t_TPI;
 	double DH;
@@ -594,7 +598,6 @@ struct EarthEntryPADOpt
 
 struct LunarEntryPADOpt
 {
-	VESSEL* vessel; //vessel
 	double GETbase; //usually MJD at launch
 	double P30TIG; //Time of Ignition (MCC)
 	VECTOR3 dV_LVLH; //Delta V in LVLH coordinates (MCC)
@@ -724,19 +727,6 @@ struct LOIMan
 	int impulsive = 0;	//0 = finite burntime, 1 = impulsive
 	int EllipseRotation = 0;	//0 = Choose the lowest DV solution, 1 = solution 1, 2 = solution 2
 	int plan = 1;		//1 = CSM, 3 = LEM
-};
-
-struct LOI2Man
-{
-	VESSEL* vessel;			//vessel
-	double GETbase;			//usually MJD at launch
-	double EarliestGET = 0.0;	//Earliest GET for the LOI-2 maneuver
-	double h_circ;			//altitude of circular orbit
-	SV RV_MCC;				//State vector as input
-	bool csmlmdocked = false; //0 = CSM/LM alone, 1 = CSM/LM docked
-	int vesseltype = 0;			//0 = CSM, 1 = LM
-	double alt = 0.0;		//altitude of the landing site
-	int enginetype = RTCC_ENGINETYPE_CSMSPS;	//Engine type to use for maneuver
 };
 
 struct DOIMan
@@ -876,7 +866,8 @@ struct LunarLiftoffTimeOpt
 {
 	LunarLiftoffTimeOpt();
 
-	int opt;			// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
+	int opt = 0;
 
 	//Flag that controls at which time CSI is done
 	//0: CSI is done 90° from insertion
@@ -885,10 +876,11 @@ struct LunarLiftoffTimeOpt
 	int I_BURN;
 	//Flag that controls at what position TPI is done
 	//1: TPI is done over an input longitude
+	//2: TPI is at an input time
 	int I_TPI;
 	//Flag that controls CDH position
 	//0: CDH is done at the upcoming apsis after CSI
-	//1, 3, 5, etc., CDH is done I_CDP*period/2 after CSIU
+	//1, 3, 5, etc., CDH is done I_CDH*period/2 after CSI
 	int I_CDH;
 	//Time base for CSI if CSM is active vehicle and CSI was done on an apsis
 	double t_BASE;
@@ -916,7 +908,7 @@ struct LunarLiftoffTimeOpt
 	double t_max;
 	//Minimum safe height of an orbiting vehicle
 	double H_S;
-	//Rendezvous DV budge for both vehicles
+	//Rendezvous DV budget for both vehicles
 	double DV_MAX[2];
 	//Input table of coelliptic altitude differences
 	std::vector<double> DH;
@@ -956,6 +948,7 @@ struct LunarLiftoffTimeOpt
 
 	double GETbase;		//usually MJD at launch
 	SV sv_CSM;			//CSM State vector
+	AEGBlock sv_CSM2;
 	
 	double dt_2;		//Fixed time from insertion to TPI for direct profile
 	bool IsInsVelInput;	//0 = calculate insertion velocity, 1 = use input velocity
@@ -1071,6 +1064,7 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int K_CDH;			//Height iteration. 0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int K_TPI = 0;		//-1 = Midpoint of darkness, 0 = on time, 1 = on longitude
 	int ChaserID = 1;
+	bool OptimumCSI = false;
 };
 
 struct PDAPOpt //Powered Descent Abort Program
@@ -1355,6 +1349,8 @@ struct CheckoutMonitor
 	bool LSTBlank; //Lunar stay time blank
 	bool MABlank; //Is mean anomaly blanked
 	bool HOBlank; //Is oblate height blank
+
+	std::string ErrorMessage;
 };
 
 struct DetailedManeuverTable
@@ -1434,6 +1430,7 @@ struct DetailedManeuverTable
 	double CFP_TPI;
 	double CFP_DT;
 	char CFP_OPTION[8];
+	bool isCSMTV;
 };
 
 struct MPTManeuver
@@ -1750,6 +1747,7 @@ struct PMMXFRDirectInput
 
 struct PMMXFR_Impulsive_Input
 {
+	int Table;
 	int Plan;
 	double DeleteGMT;
 	int Thruster[4];
@@ -1761,6 +1759,7 @@ struct PMMXFR_Impulsive_Input
 	double DPSScaleFactor[4];
 	bool TimeFlag[4];
 	unsigned ReplaceCode = 0;
+	int Type;
 };
 
 struct PMMMCDInput
@@ -1843,7 +1842,7 @@ struct PMMSPTInput
 	unsigned ReplaceCode;
 	int InjOpp;
 	//Word 12
-	double T_RP;
+	double T_RP = -1;
 	//Word 13
 	int ThrusterCode;
 	int AttitudeMode;
@@ -1894,10 +1893,70 @@ struct PMMLAIInput
 	double v_LV;
 };
 
+struct PCMATCArray
+{
+	//Words 31-44: State and time of preabort
+	VECTOR3 R0;
+	VECTOR3 V0;
+	double T0;
+	//Word 45: Solution type indicator (0 = AST, 1 = RTED)
+	int IASD;
+	//Word 46: Initial reference
+	int REF;
+	//Word 48: Stopping type (1 = gamma, -1 = time)
+	int ISTP;
+	//Words 49-50: Stopping gamma (for stopping type = 1)
+	double gamma_stop;
+	//Words 51-64: State and time of reentry
+	VECTOR3 R_r;
+	VECTOR3 V_r;
+	double T_r;
+	//Words 65-70: Unit thrust at MEI (RTED), output abort position vector (AST)
+	VECTOR3 Vec1;
+	//Words 71-76: Position at MEI (RTED), output abort velocity vector (AST)
+	VECTOR3 Vec2;
+	//Words 83-84: CSM weight at abort
+	double CSMWeight;
+	//Words 85-86: LM weight at abort
+	double LMWeight;
+	//Words 87-88: Docking angle
+	double DockingAngle;
+	//Words 89-90: DT of ullage
+	double dt_ullage;
+	//Words 91-92: DT of 10% thrust (both input and output)
+	double DT_10PCT;
+	//Words 93-94: DT of tailoff
+	double DT_TO;
+	//Words 95-112: XB, YB, ZB vehicle body axies
+	VECTOR3 X_B, Y_B, Z_B;
+	//Words 113-116: Ry, Rz trim angles at MEI
+	double R_Y, R_Z;
+	//Words 117-118: Velocity counter
+	double DVC;
+	//Word 130: Attitude control (3 Lambert, 4 Ext DV)
+	int AttitudeCode;
+	//Word 131: Thruster code
+	int ThrusterCode;
+	//Word 132: Ullage code
+	bool UllageCode;
+	//Word 133: Configuration code (as defined for MPT)
+	int ConfigCode;
+	//Word 134: Maneuvering vehicle (1 CSM, 3 LM)
+	int TVC;
+	//Word 135: Initial attitude (0-heads down, 1-up)
+	bool HeadsUpDownInd;
+	//Word 136: Trim angles (-1 compute, 1 system parameters)
+	int TrimAngleInd;
+	//Words 137-138: Time of midnight prior to launch
+	double GMTBASE;
+	bool h_pc_on;
+};
+
 struct REFSMMATData
 {
 	MATRIX3 REFSMMAT;
 	int ID = 0;
+	double GMT = 0.0;
 };
 
 struct REFSMMATLocker
@@ -1975,7 +2034,8 @@ struct Station
 	double lat = 0.0;
 	double lng = 0.0;
 	double alt = 0.0;
-	char code[4];
+	double rad = 0.0;
+	std::string code;
 };
 
 struct StationTable
@@ -2140,6 +2200,50 @@ struct GPMPRESULTS
 	double lat_Man;
 };
 
+struct ASTInput
+{
+	double dgamma;
+	double dpsi;
+	double dv;
+	double T_a;
+	double T_r;
+	double h_r_des;
+	double lat_r_des;
+	double lng_r_des;
+	double azi_r_des;
+	double dt_ar;
+	double gamma_des;
+	double gamma_stop;
+	double R_E_equ;
+	double R_E_pole;
+	double RRBIAS;
+	double w_E;
+	double Area;
+	double Weight;
+	double lat_PLA;
+	double lng_PLA;
+	double GLevel;
+	double BankAngle;
+	double GLevelGuidInit;
+	int RollDir;
+	double GMTBASE;
+};
+
+struct ASTSettings
+{
+	//Mode indicator to RMMYNI (1 = zero lift, 2 = max lift, 3 = G&N, 6 = Constant G, then roll, 10 = Constant G) 
+	int ReentryMode;
+	int Ref;
+	//Type of reentry stop (1 = gamma, -1 = T)
+	int ReentryStop;
+	//Target line indicator (1 = Primary, 2 = Secondary)
+	int TargetLine;
+	//Entry profile (1 = G&N, <= 0 Constant G)
+	int EntryProfile;
+	//Miss distance indicator (0 = do not compute, 1 = compute)
+	int MissDistanceInd;
+};
+
 struct ASTData
 {
 	int ASTCode;
@@ -2191,7 +2295,7 @@ struct ASTData
 	//Preabort state and time (Er, Er/hr)
 	VECTOR3 R0;
 	VECTOR3 V0;
-	double MJD0;
+	double T0;
 };
 
 struct EMSMISSAuxOutputTable
@@ -2211,9 +2315,9 @@ struct EMSMISSInputTable
 	EphemerisData AnchorVector;
 	bool landed = false;
 	//Desired value of stopping parameter relative to the Earth
-	double EarthRelStopParam;
+	double EarthRelStopParam = 0.0;
 	//Desired value of stopping parameter relative to the Moon
-	double MoonRelStopParam;
+	double MoonRelStopParam = 0.0;
 	//Maximum time of integration
 	double MaxIntegTime = 10e70;
 	//Storage interval for maneuver ephemeris
@@ -2237,7 +2341,7 @@ struct EMSMISSInputTable
 	bool MCIEphemerisIndicator = false;
 	bool MCTEphemerisIndicator = false;
 	//Ephemeris build indicator
-	bool EphemerisBuildIndicator;
+	bool EphemerisBuildIndicator = false;
 	//Maneuver cut-off indicator (0 = cut at begin of maneuver, 1 = cut at end of maneuver, 2 = don't cut off)
 	int ManCutoffIndicator;
 	//Descent burn indicator
@@ -2266,65 +2370,6 @@ struct EMSMISSInputTable
 	//Maneuver number of last maneuver to be ignored
 	unsigned IgnoreManueverNumber = 10000U;
 	EMSMISSAuxOutputTable NIAuxOutputTable;
-};
-
-struct PMMRKJInputArray
-{
-	//SV at maneuver initiation (first phase)
-	EphemerisData sv0;
-	//Ephemeris output time cycle (sec.)
-	double DTOUT;
-	//Weight loss rate multiplier
-	double WDMULT = 1.0;
-	//Time of LM jettison of descent stage
-	double LMDESCJETT = 1e10;
-	//Density multiplier
-	double DENSMULT = 1.0;
-	//Vehicle Cross Section
-	double A = 0.0;
-	//Weight of specified configuration
-	double CAPWT = 0.0;
-	//Ephemeris output option: -1 for R only, 0 for none, 1 for R and V, 2 for R and V and weights
-	int KEPHOP;
-	//Auxiliary output option (1 for table desired, 0 for table not desired)
-	bool KAUXOP;
-	double CSMWT = 0.0;
-	double LMAWT = 0.0;
-	double LMDWT = 0.0;
-	double SIVBWT = 0.0;
-	//0 = no maneuver, 1 = fixed inertial, 2 = manual holding body orientation, 3 = Lambert Guidance, 4 = External DV (primary), 5 = External DV (LM AGS)
-	int MANOP;
-	int ThrusterCode;
-	//0 = two thrusters, 1 = four thrusters
-	bool UllageOption;
-	//Configuration code at maneuver initiation (0 for CSM, 1 for LM, 2 for CSM and LM)
-	int IC;
-	//DT of ullage (=0 for RCS)
-	double DTU = 0.0;
-	//DT of maneuver (no pure ullage or tailoff, =0 if DV is given)
-	double DTMAN = 0.0;
-	//DV desired (if <0 it is DV along X-body excluding tailoff)
-	double DVMAN = 0.0;
-	//Unit thrust vector at burn initiate
-	VECTOR3 AT;
-	//Body axes vectors
-	VECTOR3 XB, YB, ZB;
-	//DT at 10% thrust level for DPS thruster
-	double DTPS10 = 26.0;
-	//Maneuvering vehicle code (1 = CSM, 2 = S-IVB, 3 = LM)
-	int TVC;
-	//Thruster trim angle indicator (-1 = compute angles, 1 = system parameters)
-	int KTRIMOP;
-	//Docking angle
-	double DOCKANG;
-	//Velocity-to-be-gained for External DV
-	VECTOR3 VG;
-	//DPS scale factor
-	double DPSScale = 0.925;
-	//Heads up/down indicator, false = down, true = up
-	bool HeadsUpDownInd;
-	//false = inertial, true = P30
-	bool ExtDVCoordInd;
 };
 
 struct ELVCTRInputTable
@@ -2377,8 +2422,7 @@ public:
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
-	void TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
-	void TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *res, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut);
+	void TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double LMmass);
 	void TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res);
 	bool TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res);
 	bool TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, TLMCCResults *res);
@@ -2387,8 +2431,6 @@ public:
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node);
 	void LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_node, SV &sv_pre, SV &sv_post);
-	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG);
-	void LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post);
 	void DOITargeting(DOIMan *opt, VECTOR3 &DV, double &P30TIG);
 	void DOITargeting(DOIMan *opt, VECTOR3 &dv, double &P30TIG, double &t_PDI, double &t_L, double &CR);
 	int LunarDescentPlanningProcessor(SV sv, double GETbase, double lat, double lng, double rad, LunarDescentPlanningTable &table);
@@ -2424,7 +2466,6 @@ public:
 	EphemerisData StateVectorCalcEphem(VESSEL *vessel, double SVGMT = 0.0);
 	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	SV ExecuteManeuver(SV sv, double GETbase, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
-	void TLIFirstGuessConic(SV sv_mcc, double lat, double h_peri, double PeriMJD, VECTOR3 &DV, VECTOR3 &var_converged);
 	void TLMCIntegratedXYZT(SV sv_mcc, double lat_node, double lng_node, double h_node, double MJD_node, VECTOR3 DV_guess, VECTOR3 &DV);
 	VECTOR3 TLMCEmpiricalFirstGuess(double r, double dt);
 	void IntegratedTLMC(SV sv_mcc, double lat, double h, double gamma, double MJD, VECTOR3 var_guess, VECTOR3 &DV, VECTOR3 &var_converged, SV &sv_node);
@@ -2445,7 +2486,7 @@ public:
 	bool LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
-	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, SV &sv_PDI, SV &sv_land, double &dv);
+	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
@@ -2458,7 +2499,8 @@ public:
 	VECTOR3 HatchOpenThermalControl(VESSEL *v, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, SV sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
-	void ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p);
+	//Apsides Determination Subroutine
+	bool PMMAPD(SV sv0, SV &sv_a, SV &sv_p);
 	VECTOR3 HeightManeuverInteg(SV sv0, double dh);
 	VECTOR3 ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD);
 	VECTOR3 CircularizationManeuverInteg(SV sv0);
@@ -2478,22 +2520,30 @@ public:
 	void EMSTAGEN(int L);
 	//Next Station Contact Display
 	void EMDSTAC();
-	//Predicted and Experimental Site Acquisition Displays
+	//Predicted Site Acquisition Display
+	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
+	//Landmark Acquisition Display
+	void EMDLANDM(int L, double get, double dt, int ref);
 	//Display Updates
 	void EMSNAP(int L, int ID);
 
 	//Actual RTCC Subroutines
 
-	//Predicted Site Acquisition Display
-	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
+	//AEG Service Routine
+	void PMMAEGS(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out);
+	//Time of Longitude Crossing Determination
+	void PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC);
+	//AEG Day/Night Determination
+	void PMMDAN(AEGBlock aeg, int IND, int &ERR, double &T1, double &T2);
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
 	//External DV Coordinate Transformation Subroutine
 	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
 	//Generalized Coordinate System Conversion Subroutine
-	int ELVCNV(EphemerisData sv, int in, int out, EphemerisData &sv_out);
+	int ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out);
+	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
 	//Checkout Monitor Display
-	int EMDCHECK(CheckoutMonitor &res);
+	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
 	//Detailed Maneuver Table Display
 	int PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, DetailedManeuverTable &res);
 	//Lunar Descent Planning Table Display
@@ -2518,21 +2568,34 @@ public:
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
 	//Return to Earth Abort Planning Supervisor
 	void PMMREAP(int med);
+	//RTE Trajectory Computer
+	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	//Lunar Orbit Insertion Computational Unit
+	void PMMLRBTI(EphemerisData sv);
+	//Lunar Orbit Insertion Display
+	void PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out);
 	//Central Manual Entry Device Decoder
 	bool GMGMED(char *str);
 	//MED Decoder for G, A and B MEDs
-	int EMGABMED(int med, std::vector<std::string> data);
+	int EMGABMED(int type, std::string med, std::vector<std::string> data);
+	//MED Decoder for C MEDs
+	int CMRMEDIN(std::string med, std::vector<std::string> data);
 	//'F' MED Module
-	int PMQAFMED(int med);
+	int PMQAFMED(std::string med);
+	int PMQAFMED(std::string med, std::vector<std::string> data);
 	//K-MED Decoder
-	void PMKMED(int med);
+	void PMKMED(std::string med);
 	//'M' MED Module
-	void PMMMED(int med, std::vector<std::string> data);
+	int PMMMED(std::string med, std::vector<std::string> data);
 	//'P' Code MED Processor
-	void GMSMED(int med);
-	void GMSMED(int med, std::vector<std::string> data);
+	int GMSMED(std::string med);
+	int GMSMED(std::string med, std::vector<std::string> data);
 	//'U' Code MED Processor
-	void EMGTVMED(int med, std::vector<std::string> data);
+	int EMGTVMED(std::string med, std::vector<std::string> data);
+	//Restart MED Decoder
+	int GMSREMED(std::string med, std::vector<std::string> data);
+	//High-Speed Restart MED Processor
+	void GMLRESRT(int type);
 	//Detailed Maneuver Table Math Module
 	void PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux);
 	//Time Queue Control Load Module
@@ -2546,6 +2609,8 @@ public:
 	void SetGMTBase(double gmt) { GMTBASE = gmt; }
 	double GETfromGMT(double GMT);
 	double GMTfromGET(double GET);
+	//Arrival time at selenographic argument of latitude
+	int PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg);
 
 	//Skylark
 	bool SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res);
@@ -2575,9 +2640,14 @@ public:
 	//Vector Routing Load Module
 	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false);
 	//Vector Fetch Load Module
-	int PMSVEC(int L, double GMT, OrbMech::CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
+	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	//Earth Orbit Insertion Processor
 	void PMMIEV(double T_L);
+	//Mission Planning Print Load Module
+	void PMXSPT(int n);
+	void PMXSPT(std::string message);
+	//Mission Control Print Program
+	void GMSPRINT(std::string message);
 	//Trajectory Update Control Module
 	void EMSTRAJ(EphemerisData sv, int L, bool landed = false);
 	//Ephemeris Storage and Control Module
@@ -2585,7 +2655,7 @@ public:
 	//Miscellaneous Numerical Integration Control Module
 	void EMSMISS(EMSMISSInputTable &in);
 	//Encke Integrator
-	EphemerisData EMMENI(EphemerisData sv, double dt);
+	EphemerisData EMMENI(EMSMISSInputTable &in, EphemerisData sv, double dt);
 	//Spherical to inertial conversion
 	int EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V);
 	//Anchor Vector Maintenance Module
@@ -2606,6 +2676,14 @@ public:
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
 	double RTCCPresentTimeGMT();
 	OBJHANDLE GetGravref(int body);
+	bool RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, double lmdscmass, int &thruster, double &manmass);
+
+	//Uplink Mission Programs (C-Code)
+
+	//CMC External Delta-V Update Generator
+	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV);
+	//LGC External Delta-V Update Generator
+	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -2673,9 +2751,22 @@ public:
 	struct MED_K10
 	{
 		int MLDOption = 2; //1 = Angle, 2 = Time, 3 = Delta Time, 4 = Time and Angle
-		double MLDTime = 0.0;
+		double MLDTime = -1.0;
 		double MLDAngle = 0.0;
 	} med_k10;
+
+	//LOI Computation
+	struct MED_K18
+	{
+		double HALOI1 = 170.0;
+		double HPLOI1 = 60.0;
+		double DVMAXp = 10000.0;
+		double DVMAXm = 10000.0;
+		double psi_DS = 270.0;
+		double psi_MX = 271.0;
+		double psi_MN = 269.0;
+		double VectorTime = 0.0;
+	} med_k18;
 
 	//GPM Maneuver Computation
 	struct MED_K20
@@ -2693,6 +2784,19 @@ public:
 		double ChaserVectorTime = 0.0;
 		double TargetVectorTime = 0.0;
 	} med_k30;
+
+	//LOI Initialization (Apollo 14 and later, MED code is not from any documentation!)
+	struct MED_K40
+	{
+		double HA_LLS = 60.0;
+		double HP_LLS = 8.23;
+		double DW = -15.0;
+		double REVS1 = 2.0;
+		int REVS2 = 11;
+		double eta_1 = 0.0;
+		double dh_bias = 0.0;
+		bool PlaneSolnForInterSoln = true;
+	} med_k40;
 
 	//Transfer a GPM to the MPT
 	struct MED_M65
@@ -2718,9 +2822,9 @@ public:
 		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for maneuver
 		int AttitudeOpt = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
 		int BurnParamNo = 2; //1 = P1, 2 = P2 etc.
-		int CoordInd = -1; //0 = LVLH, 1 = IMU, 2 = FDAI
+		int CoordInd = 0; //0 = LVLH, 1 = IMU, 2 = FDAI
 		VECTOR3 Att = _V(0, 0, 0);
-		double UllageDT = -1;	//Delta T of Ullage
+		double UllageDT = 0.0;	//Delta T of Ullage
 		bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
 		bool HeadsUp = true; //false = heads down, true = heads up
 		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
@@ -2738,7 +2842,7 @@ public:
 		int Table = 1; //1 = CSM, 3 = LEM
 		unsigned ReplaceCode = 0; //1-15
 		bool Type = false; //false = MCC, true = LOI
-		unsigned ManeuverNumber = 1; //For MCC options?
+		unsigned ManeuverNumber = 1; //Maneuver number in LOI or MCC table
 		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for maneuver
 		int Attitude = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
 		double UllageDT = 0.0;	//Delta T of Ullage
@@ -2881,18 +2985,6 @@ public:
 		int DeltaDay;
 	} med_p80;
 
-	//Initiate C/O Monitor Display
-	struct MED_U02
-	{
-		int VEH = 1;	//1 = CSM, 3 = LM
-		int IND = 1;	//1 = GMT, 2 = GET, 3 = MVI, 4 = MVE, 5 = RAD, 6 = ALT, 7 = FPA
-		double ThresholdTime = 0.0;
-		int REF = 0;	//0 = ECI, 1 = ECT, 2 = MCI, 3 = MCT, 4 = EMP
-		int FT = 0;		//0 = ER and ER/HR, 1 = ft and ft/s
-		double IND_val = 0.0; //For options 0-1, 4-6
-		unsigned IND_man = 0; //For options 2-3
-	} med_u02;
-
 	MED_B04 med_b04;
 	MED_K16 med_k16;
 	MED_K17 med_k17;
@@ -2920,6 +3012,20 @@ public:
 	NextStationContactsTable NextStationContactsBuffer;
 	PredictedSiteAcquisitionTable EZACQ1, EZACQ3, EZDPSAD1, EZDPSAD3;
 
+	struct ExperimentalSiteGroundPointTable
+	{
+		//-1 when empty, 0 = Earth, 1 = Moon
+		int REF;
+		Station Data[12];
+	} EZEXSITE;
+
+	struct LandmarkSitesTable
+	{
+		//-1 when empty, 0 = Earth, 1 = Moon
+		int REF;
+		Station Data[12];
+	} EZLASITE;
+
 	struct OrbitEphemerisTable
 	{
 		EphemerisDataTable EPHEM;
@@ -2929,6 +3035,9 @@ public:
 
 	struct TLITargetingParametersTable
 	{
+		int Day;
+		int Month;
+		int Year;
 		double T_LO;
 		double theta_EO;
 		double omega_E;		
@@ -3025,16 +3134,51 @@ public:
 
 	struct LOIElementsTable
 	{
-		EphemerisData sv_man_bef;
-		VECTOR3 V_man_after;
-		int plan;
+		EphemerisData sv_man_bef[8];
+		VECTOR3 V_man_after[8];
 	} PZLRBELM;
+
+	struct LOIDisplayTableElement
+	{
+		double GETLOI = 0.0;
+		double DVLOI1 = 0.0;
+		double DVLOI2 = 0.0;
+		double H_ND = 0.0;
+		double f_ND_H = 0.0;
+		double H_PC = 0.0;
+		double Theta = 0.0;
+		double f_ND_E = 0.0;
+	};
+
+	struct LOIDisplayTable
+	{
+		std::string StaID = "STAT000";
+		double VectorGET = 0.0;
+		double lat_lls = 0.0;
+		double lng_lls = 0.0;
+		double R_lls = 0.0;
+		double AZMN_f_ND = 0.0;
+		double AZMX_f_ND = 0.0;
+		double REVS1 = 0.0;
+		int REVS2 = 0;
+		double DHBIAS = 0.0;
+		double AZ_LLS = 0.0;
+		double f_LLS = 0.0;
+		double HALOI1 = 0.0;
+		double HPLOI1 = 0.0;
+		double HALOI2 = 0.0;
+		double HPLOI2 = 0.0;
+		double DVMAXp = 0.0;
+		double DVMAXm = 0.0;
+		double RARPGT = 0.0;
+		bool planesoln = true;
+		LOIDisplayTableElement sol[8];
+	} PZLRBTI;
 
 	struct MCCTransferTable
 	{
-		EphemerisData sv_man_bef;
-		VECTOR3 V_man_after;
-		int plan;
+		EphemerisData sv_man_bef[6];
+		VECTOR3 V_man_after[6];
 	} PZMCCXFR;
 
 	struct LDPPElementsTable
@@ -3282,6 +3426,7 @@ public:
 		int RTEDDockingAngle;
 		int RTEDManeuverOrientation;
 		bool RTEDIterationFlag;
+		char RTEManeuverCode[4];
 
 		//Block 13
 		int RTETradeoffLabelling[5];
@@ -3372,12 +3517,94 @@ public:
 		DKIDataBlock Block[7];
 	} PZDKIT;
 
+	struct SkeletonFlightPlanTable
+	{
+		//Blocks
+		//1: Preflight
+		//2: Nominal nodal targets from options 2-5
+		//3-5: TBD
+		TLMCCDataTable blocks[2];
+		//Block 6
+		int DisplayBlockNum = 1;
+	} PZSFPTAB;
+
+	struct UpdatedSkeletonFlightPlansTable
+	{
+		//One for each MCC tradeoff display columns
+		TLMCCDataTable blocks[6];
+	} PZMCCSFP;
+
+	struct TTLMCCPlanningDisplay
+	{
+		TLMCCDisplayData data[6];
+	} PZMCCDIS;
+
+	struct MidcourseCorrectionPlanTable
+	{
+		//Block 1
+		double VectorGET = 0.0;
+		int Column = 1;
+		int Mode = 1;
+		double MidcourseGET = 0.0;
+		bool Config = true; //false = undocked, true = docked
+		int SFPBlockNum = 1;
+		double h_PC = 60.0*1852.0;
+		double h_PC_mode5 = -1.0;
+		double incl_fr = 0.0;
+		double AZ_min = -110.0*RAD;
+		double AZ_max = -70.0*RAD;
+		//Minimum and maximum time at pericynthion (GET, hours)
+		double TLMIN = 0.0;
+		double TLMAX = 0.0;
+		double gamma_reentry = -6.52*RAD;
+		double Reentry_range = 1350.0;
+		double H_PCYN_MIN = 40.0*1852.0;
+		double H_PCYN_MAX = 5000.0*1852.0;
+		double LATBIAS = 2.0*RAD;
+		double H_A_LPO1 = 170.0*1852.0;
+		double H_P_LPO1 = 60.0*1852.0;
+		double H_A_LPO2 = 60.0*1852.0;
+		double H_P_LPO2 = 8.23*1852.0;
+		double REVS1 = 2.0;
+		int REVS2 = 11;
+		double SITEROT = -15.0*RAD;
+		double ETA1 = 0.0;
+		//Constants (some of these should be RTCC program constants, but we don't know their name)
+		int LOPC_M = 3;
+		int LOPC_N = 8;
+		double TT1_DPS_MIN = 1.0*3600.0;
+		double TT1_DPS_MAX = 120.0*3600.0;
+		//Max inclination of powered return
+		double INCL_PR_MAX = 40.0*RAD;
+	} PZMCCPLN;
+
 	struct UMEDSaveTable
 	{
 		//Block 3
 		int SpaceDigVehID = -1;
 		int SpaceDigCentralBody = -1;
+		//Block 17
+		int LandmarkVehID = 0;
+		double LandmarkGMT = 0.0;
+		double LandmarkDT = 0.0;
+		int LandmarkRef = 0;
 	} EZETVMED;
+
+	struct ExternalDVMakeupBuffer
+	{
+		int LoadNumber = 0;
+		std::string Site1, Site2;
+		double GenGET = 0.0;
+		int Verb = 71;
+		int CMCCoreAddress = 0;
+		int Octals[012] = { 0,0,0,0,0,0,0,0,0,0 };
+		int VehID = 0;
+		double GET = 0.0;
+		VECTOR3 DV = _V(0, 0, 0);
+		std::string ManeuverCode;
+		std::string GMTID;
+		std::string StationID;
+	} CZAXTRDV, CZLXTRDV;
 
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{
@@ -3402,6 +3629,8 @@ public:
 		std::vector<MPTManDisplay> man;
 	} MPTDISPLAY;
 
+	CheckoutMonitor EZCHECKDIS;
+
 	struct VehicleNameTable
 	{
 		VehicleNameTable() {
@@ -3411,10 +3640,18 @@ public:
 		std::vector<std::string> tab;
 	} MHGVNM;
 
+	//System parameters for PDI
+	LGCDescentConstants RTCCDescentTargets;
+	LGCIgnitionConstants RTCCPDIIgnitionTargets;
+
 	//RTCC MED Buffer
 	char RTCCMEDBUFFER[256];
 	//RTCC On-line Monitor Buffer
 	std::deque<std::string> RTCCONLINEMON;
+
+	//AEG
+	PMMAEG pmmaeg;
+	PMMLAEG pmmlaeg;
 
 private:
 	void AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad);
@@ -3425,7 +3662,8 @@ private:
 	double getGETBase();
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
-	void AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr = 3404);
+	void CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
+	void LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH);
 	void LandingSiteUplink(char *str, double lat, double lng, double alt, int RLSAddr);
 	void AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66 = false);
 	void AGCDesiredREFSMMATUpdate(char *list, MATRIX3 REFSMMAT, double AGCEpoch, bool cmc = true, bool AGCCoordSystem = false);
@@ -3477,27 +3715,42 @@ private:
 	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
 	//Base hour Angle
 	double PIGMHA(int E, int Y, int D);
+	//Delta True Anomaly Function
+	double PCDETA(double beta1, double beta2, double r1, double r2);
 	//Orbit Desired REFSMMAT Computation Subroutine
 	MATRIX3 PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K);
 	//Universal Cartesian to Kepler Coordinates
 	void PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &i, double &l, double &g, double &h);
+	//Impulse Analytical Burn
+	void PIBURN(VECTOR3 R, VECTOR3 V, double T, double *B, VECTOR3 &ROUT, VECTOR3 &VOUT, double &TOUT);
+	//Coordinate transformation
+	void PICSSC(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &lat, double &lng, double &gamma, double &azi);
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
 	//PMMMPT Matrix Utility Subroutine
-	void PCMAT(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2);
+	void PCMATO(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2);
 	//PMMMPT Gaussian Elimination Subroutine
 	bool PCGAUS(double **A, double *Y, double *X, int N, double eps);
+	//RTE Abort Scan Table (AST) Subroutine
+	void PMMDAB(VECTOR3 R, VECTOR3 V, double GMT, ASTInput ARIN, ASTSettings IRIN, ASTData &AST, int &IER, int IPRT);
 	//Return-to-Earth Tradeoff Display
 	void PMDTRDFF(int med, unsigned page);
 	//Mission Plan Table Display
 	void PMDMPT();
 	//GOST REFSMMAT Maintenance
-	void EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, MATRIX3 *refs = NULL);
+	void EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs = NULL);
 	void EMGSTGENName(int ID, char *Buffer);
+	int EMGSTGENCode(const char *Buffer);
+	//GOST Matrix Storage and Print
+	void EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt);
+	//GOST CSM/LM LCV Computation
+	void EMMGLCVP(int L, double gmt);
+	//Trajectory Update On-line Print
+	void EMGPRINT(int i, std::string mes = 0);
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
-	//Mission PLanning Print Load Module
-	void PMXSPT(std::string message);
+	//Ground Point Characteristics Block Routine
+	void EMGGPCHR(double lat, double lng, double alt, int body, Station *stat);
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
 
@@ -3516,7 +3769,7 @@ private:
 	MissionPlanTable *GetMPTPointer(int L);
 	MPTSV SVfromRVGMT(VECTOR3 R, VECTOR3 V, double GMT, int body);
 	int PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan);
-	int PMMXFRFormatManeuverCode(int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
+	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
 	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC, int Thruster, int &CC, int &CCMI);
 	int PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv);
 	int PMMXFRFetchAnchorVector(int L, EphemerisData &sv);
@@ -3840,432 +4093,11 @@ public:
 	double MDLIEV[16];
 	//Earth orbit insertion constants
 	double MDLEIC[3];
-};
 
-class CSMLMPoweredFlightIntegration
-{
-public:
-	CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable *E, RTCCNIAuxOutputTable *A);
-	void PMMRKJ();
-private:
-	void PCINIT();
-	void PCRUNG(EphemerisDataTable *E, std::vector<double> &W);
-	void PCRDD();
-	void PCGUID();
-	void CalcBodyAttitude();
-
-	//Current position vector
-	VECTOR3 R;
-	//Current working position vector
-	VECTOR3 RP;
-	//Current velocity vector
-	VECTOR3 V;
-	//Current working velocity vector
-	VECTOR3 VP;
-	//Thruster switch
-	int KTHSWT;
-	//Current weight
-	double WT;
-	//Thrust level
-	double THRUST;
-	//Weight loss rate
-	double WTLRT;
-	double DT, DT2, DT4, DT6, DTPREV;
-	//Maneuver initiation time (first phase, ullage)
-	double TBM = 0.0;
-	//Maneuver initiate time (second phase, maneuver engine on time)
-	double TBI;
-	//Current Time
-	double T;
-	//Time of next ephemeris storage
-	double TNEXT;
-	//Time of last ephemeris or weight storage
-	double TLOP;
-	//Indicator
-	double TLARGE;
-	//Previous time
-	double TPREV;
-	//Time of next event
-	double TI;
-	//End of current integration step
-	double TAU;
-	//End of current step
-	double TE;
-	//Manuever phase
-	//1 = Ullage
-	//2 = Thrust buildup during ullage
-	//3 = Mainstage thrust during ullage
-	//7 = Max thrust phase
-	//8 = Tailoff
-	int MPHASE;
-	//Short maneuver test
-	int KGN;
-	//Current integration step
-	double STEP;
-	int KEND;
-	//0 = guidance started, 1 = before steering started
-	int IATT;
-	//Thrust along x-axis
-	double THX;
-	//Thrust unit vector
-	VECTOR3 A_T;
-	//Code for Runge-Kutta function
-	int KCODE;
-	//Potential acceleration
-	VECTOR3 RDDP;
-	//Calculated acceleration
-	VECTOR3 RDD;
-	//Thrust acceleration
-	VECTOR3 RDDT;
-	//DeltaV to go
-	double DVGO;
-	//Current thrust level
-	double T_c;
-	//Time to begin guidance
-	double Tg;
-	//Accumulated DV
-	double DV;
-	//Accumulated DV alongf X-axis
-	double DVX;
-	//Weight limit
-	double WTLIM;
-	double TEND;
-	double P_G = 0.0;
-	double Y_G = 0.0;
-	double WC, WL, WS;
-	int IA, IJ;
-	double DTUL;
-	double SIGN;
-	//Area over mass ratio
-	double AOM;
-	double CD = 0.0;
-	//Tailoff DV
-	double DVTO = 0.0;
-	//Tailoff DV along x-axis
-	double DVTOX = 0.0;
-	double DTGO;
-	double TCO;
-	VECTOR3 X_B, Y_B, Z_B;
-	bool AttGiven;
-	VECTOR3 A_TR, A_TM, A_TL;
-	VECTOR3 VG;
-	//Previous step through guidance
-	double DTP;
-	//Current step through guidance
-	double DTN;
-	VECTOR3 Vn_apo, g_apo;
-	double Vg_apo;
-	//Steering enabled: 0 = no, 1 = yes
-	int Kg;
-
-	//Thrust and weight loss rate tables
-	//0 = Ullage
-	//1 = phase 2 (buildup + ullage)
-	//2 = phase 3 (main + ullage)
-	//3 = 10% thrust level (DPS only)
-	//4 = buildup to maximum thrust level (DPS only)
-	//5 = ?
-	//6 = thrust level for short maneuver test
-	//7 = tail-off thrust level
-	//8 = ?
-	//9 = full load thrust level
-	double THPS[10];
-	double WDOTPS[10];
-
-	//Thruster specific times
-	//0 = ullage?
-	//1 = phase 2 burn time
-	//2 = phase 3 burn time
-	//3 = burn time for short maneuver test
-	//4 = build-up to maximum burn time (DPS only)
-	//5 = elapsed time from engine on to initial steer
-	//6 = Minimum impulse time, time for ten percent test (DPS)
-	//7 = tail-off burn time
-	//8 = total ullage overlap
-	double DTSPAN[9];
-
-	//Minimum impulse constants
-	//0 = Impulse in one second SPS/APS/DPS burn
-	//1 = Initial value of SPS/APS/DPS minimum impulse curve
-	//2 = Slope of SPS/APS/DPS curve
-	//3 = RCS ullage impulse
-	double XK[4];
-
-	//Stored for Aux Table
-	VECTOR3 A_T_out;
-	double PGBI;
-	double YGBI;
-	double DV_ul;
-	double DTMANE;
-	EphemerisData sv1, sv2, sv_ff;
-	double WTENGON;
-	VECTOR3 VGN;
-	double DTTOC;
-	double RCSFUELUSED;
-	double MAINFUELUSED;
-
-	RTCC *rtcc;
-	PMMRKJInputArray &TArr;
-	int &IERR;
-	RTCCNIAuxOutputTable *Aux;
-	EphemerisDataTable *Eph;
-	std::vector<double> WeightTable;
-	
-};
-
-//Module PMMSIU
-class TLIGuidanceSim
-{
-public:
-	TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable TABLIN, int &IRETN, EphemerisDataTable *EPHEM, RTCCNIAuxOutputTable *AUX, std::vector<double> *WTABL = NULL);
-	void PCMTRL();
-private:
-	//Thrust Subroutine
-	void PCMTH();
-	//Ephemeris Storage Subroutine
-	void PCMEP();
-	//TLI Guidance Subroutine
-	void PCMGN();
-	//Runge Kutta Integration Subroutine
-	void PCMRK();
-	//Second Derivative Subroutine
-	VECTOR3 PCMDC();
-
-	//Current time in hr.
-	double T;
-	//Previous time in hr.
-	double TPR;
-	//Thrust phase indicator (0 = No Thrust, 1 = initial phase, -1 = non-initial phase thrust)
-	int KTHSWT;
-	//Maneuver phase indicator
-	int MPHASE;
-	//Current weight
-	double WT;
-	//Current thrust
-	double THRUST;
-	//Current weight loss rate
-	double WTLRT;
-	//Pitch gimbal
-	double PITCHG;
-	//Yaw gimbal
-	double YAWG;
-	//Error indicator
-	int IERR;
-	int IERRE;
-	//Chilldown phase indicator
-	int IPUTIG;
-	//Full thrust phase indicator
-	int IPHFUL;
-	//Tailoff phase indicator
-	int IPHTOF;
-	//Accumulated DV increment due to pure ullage
-	double DVULL;
-	//Accumulated DV increment along X-body axis excluding tailoff
-	double DVX;
-	//Accumulated DV increment along X-body axis during tailoff
-	double DVXTO;
-	//Accumulated DV increment during tailoff
-	double DVTO;
-	//Accumulate DV increment of maneuver
-	double DVMAG;
-	//Thrust acceleration vector
-	VECTOR3 RDDTH;
-	//Gravity vector
-	VECTOR3 PVEC;
-	//Unit thrust vector
-	VECTOR3 UT;
-	//Some large number
-	double TLARGE;
-	//Some small number
-	double EPS;
-	//Drag factor
-	double CDFACT;
-	//Area over mass
-	double AOM;
-	//IGM initiated flag
-	int IGMSKP;
-	//Time for storing the next ephemeris/weight
-	double TNEXT;
-	//Earth's potential function computation indicator
-	int K3SWT;
-	//Double integration indicator
-	int IDOUBL;
-	//Current integration interval
-	double DT;
-	//Ephemeris position vector
-	VECTOR3 RE;
-	//Ephemeris velocity vector
-	VECTOR3 VE;
-	//Vehicle position vector
-	VECTOR3 RV;
-	//Vehicle velocity vector
-	VECTOR3 VV;
-	//Working position vector
-	VECTOR3 R;
-	//Working velocity vector
-	VECTOR3 V;
-	//Perturbed position vector
-	VECTOR3 RP;
-	//Perturbed velocity vector
-	VECTOR3 VP;
-	//Previous DT
-	double DTPREV;
-	//Previous T
-	double TPREV;
-	//Indicator for double integration
-	int INPASS;
-	//End of current integration step
-	double TAU;
-	//Ephemeris storage counter
-	unsigned IEPHCT;
-	//mu of Earth
-	double EMU;
-	//IGM time to end maneuver
-	double TCO;
-	double TCOF;
-	//Unit thrust vector to be used for middle of the integration step (in integrating system coordinates)
-	VECTOR3 THRSTM;
-	//Unit thrust vector to be used at end of the integration step (in integrating system coordinates)
-	VECTOR3 THRSTR;
-	//Target parameter update (0 = done, 1 = update not done yet)
-	int ITUP;
-	//Next event
-	double TI;
-	//Next time
-	double TE;
-	//MRS indicator (-1 before, 0 = after, 1 = during MRS)
-	int IMRS;
-	//Absolute value of ephemeris storage indicator
-	int KEHOP;
-	//End flag
-	int IEND;
-	double TEND;
-	double TENDF;
-	double VEX3;
-	double WDOT3;
-	double TAU2;
-	//Transition time for SIVB MRS
-	double TB2;
-	//Time from S4B MRS
-	double TB4;
-	//Initial or non-initial pass indicator for IGM (=0, or !=0 respectively)
-	int IFIRST;
-	//Ephemeris storage step length
-	double STEP;
-	//Initial attitude indicator
-	int INITL;
-	//Time of last ephemeris or weight storage
-	double TLOP;
-	//Velocity cutoff storage
-	double VSB0, VSB1, VSB2;
-	//Weight at maneuver initiation
-	double WBM;
-	//Cutoff indicator (1 = cutoff time has been calculated)
-	int ICO;
-	//Last time IGM calculations were done
-	double TLAST;
-	//New pitch angle
-	double PITN;
-	//New yaw angle
-	double YAWN;
-	//Old pitch angle
-	double PITO;
-	//Old yaw angle
-	double YAWO;
-	//Ephemeris storage index
-	int JT;
-	//Weight table storage index
-	int KWT;
-	//Number of items to be stored
-	int NITEMS;
-	//Time to initiate IGM
-	double TIGM;
-	//Time of ignition (TB6 start)
-	double TIG;
-	//MRS timer
-	double PC;
-	//Artificial tau timer
-	double CPR;
-	MATRIX3 G, GG, PLMB, MX_K;
-	//Epsilon to control range angle computation
-	double EPSL1;
-	//Epsilon to terminate computation of K1, K2, K3, and K4
-	double EPSL2;
-	//Epsilon to terminate recomputation of terminal values
-	double EPSL3;
-	//Epsilon to allow cut-off computations to be sensed
-	double EPSL4;
-	VECTOR3 PLPS;
-	//Intermediate variables for cutoff computation
-	double DT1P, DT2P;
-	//Thrust integral values that need to be global
-	double XL2, XK1, XK2, XK3, XK4, XJ2, S2, P2, Q2, U2;
-	double CYP, SYP;
-	double H, H2, H4, H6;
-	double VTEST;
-
-	//Targeting parameters
-
-	//Eccentricity of the desired cut-off ellipse
-	double E;
-	//Desired terminal energy
-	double C3;
-	//True anomaly of descending node of desired cut-off ellipse
-	double ALPHD;
-	//Estimate of true anomaly at cutoff
-	double F;
-	//Semilatus rectum of the desired cut-off ellipse (can also be RN)
-	double P;
-	//Constant sqrt(mu/P)
-	double XK5;
-	//Desired terminal position radius magnitude
-	double RT;
-	//Desired terminal velocity
-	double VT;
-	//Desired terminal flight-path angle
-	double GAMT;
-	//Vehicle pitch and yaw angles at restart preparation
-	double PRP, YRP;
-	//Remaining burn time
-	double TGO;
-	//Maneuver duration before mixture ration shift (MRS) occurs
-	double T2;
-	//Second stage "IGM" exhaust velocity
-	double VEX2;
-	//Second stage "IGM" mass flow rate
-	double WDOT2;
-	//Approximation of maneuver duration after MRS has occured
-	double T3;
-	//Total time required to exhaust vehicle mass after MRS has occured
-	double TAU3;
-	//Cut-off velocity bias
-	double DVBIAS;
-	//Estimated nominal second stage burn to mass depletion
-	double TAU2N;
-	//Nominal radius at ignition 
-	double RN;
-	//Estimate gravitation acceleration at maneuver burnout
-	double GT;
-
-	//Phase 1: Vent and ullage
-	//Phase 2: Chilldown
-	//Phase 3: Buildup
-	//Phase 4: Main Burn
-	//Phase 5: MRS
-	//Phase 6: After MRS
-	//Phase 7: Tailoff
-	double DTPHASE[7];
-	double FORCE[7];
-	double WTFLO[7];
-
-	RTCCNIInputTable TABLIN;
-	int &IRETN;
-	EphemerisDataTable *EPHEM;
-	RTCCNIAuxOutputTable *AUX;
-	std::vector<double> *WTABL;
-	RTCC *rtcc;
-
-	OBJHANDLE hEarth;
+	//CMC address for external DV uplink
+	int MCCCEX;
+	//LGC address for external DV uplink
+	int MCCLEX;
 };
 
 #endif

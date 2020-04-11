@@ -45,6 +45,7 @@
 #include "saturn.h"
 #include "saturn1b.h"
 #include "papi.h"
+#include "RCA110A.h"
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo LC34.log";
@@ -102,6 +103,7 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	sat = 0;
 	state = STATE_PRELAUNCH;
 	Hold = false;
+	bCommit = false;
 
 	mssProc = 0;
 	cmarmProc = 0;
@@ -118,9 +120,10 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	//meshoffsetMSS = _V(0,0,0);
 
 	IuUmb = new IUUmbilical(this);
-	IuESE = new IU_ESE(IuUmb);
+	IuESE = new IU_ESE(IuUmb, this);
 	SCMUmb = new SCMUmbilical(this);
-	SIBESE = new SIB_ESE(SCMUmb);
+	SIBESE = new SIB_ESE(SCMUmb, this);
+	rca110a = new RCA110AM(this);
 }
 
 LC34::~LC34() {
@@ -128,6 +131,7 @@ LC34::~LC34() {
 	delete IuESE;
 	delete SCMUmb;
 	delete SIBESE;
+	delete rca110a;
 }
 
 void LC34::clbkSetClassCaps(FILEHANDLE cfg) {
@@ -361,9 +365,18 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 				sat->AddForce(_V(0, 0, -(sat->GetFirstStageThrust() * PinDragFactor)), _V(0, 0, 0));
 			}
 
-			if (sat->GetMissionTime() >= -0.05)
+			if (bCommit == false && sat->GetMissionTime() >= (-0.05 - simdt))
 			{
 				if (Commit())
+				{
+					bCommit = true;
+				}
+				else
+				{
+					bCommit = false;
+				}
+
+				if (bCommit)
 				{
 					// Disconnect Umbilicals
 					IuUmb->Disconnect();
@@ -371,6 +384,11 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 
 					// Move swingarms
 					swingarmState.action = AnimState::OPENING;
+				}
+				else
+				{
+					Hold = true;
+					SCMUmb->SIGSECutoff(true);
 				}
 			}
 
@@ -405,6 +423,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 	if (sat && state >= STATE_PRELAUNCH)
 	{
 		IuESE->Timestep(sat->GetMissionTime(), simdt);
+		SIBESE->Timestep();
 	}
 }
 
@@ -470,6 +489,7 @@ void LC34::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 	while (oapiReadScenario_nextline (scn, line)) {
 
 		papiReadScenario_bool(line, "HOLD", Hold);
+		papiReadScenario_bool(line, "COMMIT", bCommit);
 		if (!strnicmp (line, "STATE", 5)) {
 			sscanf (line + 5, "%i", &state);
 		} else if (!strnicmp (line, "TOUCHDOWNPOINTHEIGHT", 20)) {
@@ -495,6 +515,7 @@ void LC34::clbkSaveState(FILEHANDLE scn) {
 
 	oapiWriteScenario_int(scn, "STATE", state);
 	papiWriteScenario_bool(scn, "HOLD", Hold);
+	papiWriteScenario_bool(scn, "COMMIT", bCommit);
 	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	papiWriteScenario_double(scn, "MSSPROC", mssProc);
 	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
@@ -648,7 +669,7 @@ int LC34::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 bool LC34::CutoffInterlock()
 {
-	return IuUmb->IsEDSUnsafe() || SCMUmb->SIStageLogicCutoff();
+	return IuUmb->IsEDSUnsafeA() || IuUmb->IsEDSUnsafeB() || SCMUmb->SIStageLogicCutoff();
 }
 
 bool LC34::Commit()
@@ -662,14 +683,24 @@ bool LC34::ESEGetCommandVehicleLiftoffIndicationInhibit()
 	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
 }
 
-bool LC34::ESEGetAutoAbortInhibit()
+bool LC34::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
 {
-	return IuESE->GetAutoAbortInhibit();
+	return IuESE->GetExcessiveRollRateAutoAbortInhibit(n);
 }
 
-bool LC34::ESEGetGSEOverrateSimulate()
+bool LC34::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
 {
-	return IuESE->GetOverrateSimulate();
+	return IuESE->GetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool LC34::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	return IuESE->GetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool LC34::ESEGetGSEOverrateSimulate(int n)
+{
+	return IuESE->GetOverrateSimulate(n);
 }
 
 bool LC34::ESEGetEDSPowerInhibit()
@@ -702,9 +733,14 @@ bool LC34::ESEEDSLiftoffInhibitB()
 	return IuESE->GetEDSLiftoffInhibitB();
 }
 
-bool LC34::ESEAutoAbortSimulate()
+bool LC34::ESEGetEDSAutoAbortSimulate(int n)
 {
-	return IuESE->GetAutoAbortSimulate();
+	return IuESE->GetEDSAutoAbortSimulate(n);
+}
+
+bool LC34::ESEGetEDSLVCutoffSimulate(int n)
+{
+	return IuESE->GetEDSLVCutoffSimulate(n);
 }
 
 bool LC34::ESEGetSIBurnModeSubstitute()
@@ -717,7 +753,34 @@ bool LC34::ESEGetGuidanceReferenceRelease()
 	return IuESE->GetGuidanceReferenceRelease();
 }
 
-bool LC34::ESEGetSIBThrustOKSimulate(int eng)
+bool LC34::ESEGetQBallSimulateCmd()
 {
-	return SIBESE->GetSIBThrustOKSimulate(eng);
+	return IuESE->GetQBallSimulateCmd();
+}
+
+bool LC34::ESEGetSIBThrustOKSimulate(int eng, int n)
+{
+	return SIBESE->GetSIBThrustOKSimulate(eng, n);
+}
+
+void LC34::SLCCCheckDiscreteInput(RCA110A *c)
+{
+	c->SetInput(0, true);
+	c->SetInput(1, false);
+	c->SetInput(861, IuESE->GetFCCPowerIsOn());
+}
+
+bool LC34::SLCCGetOutputSignal(size_t n)
+{
+	return rca110a->GetOutputSignal(n);
+}
+
+void LC34::ConnectGroundComputer(RCA110A *c)
+{
+	rca110a->Connect(c);
+}
+
+void LC34::IssueSwitchSelectorCmd(int stage, int chan)
+{
+	IuUmb->SwitchSelector(stage, chan);
 }

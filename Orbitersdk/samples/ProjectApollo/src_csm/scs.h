@@ -746,12 +746,6 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	void ChangeCMCPitchPosition(double delta);
-	void ChangeCMCYawPosition(double delta);
-	void ZeroCMCPosition() { cmcPitchPosition = 0; cmcYawPosition = 0; }
-	void EnableCMCTVCErrorCounter() { cmcErrorCountersEnabled = true; }
-	void DisableCMCTVCErrorCounter() { cmcErrorCountersEnabled = false; }
-	bool IsCMCErrorCountersEnabled() { return cmcErrorCountersEnabled; }
 	double GetPitchGimbalTrim();
 	double GetYawGimbalTrim();
 	double GetPitchGimbalPosition();
@@ -769,9 +763,6 @@ protected:
 	ServoAmplifierModule pitchServoAmp;
 	ServoAmplifierModule yawServoAmp;
 
-	bool cmcErrorCountersEnabled;
-	double cmcPitchPosition;
-	double cmcYawPosition;
 	double pitchGimbalTrim1;
 	double pitchGimbalTrim2;
 	double yawGimbalTrim1;

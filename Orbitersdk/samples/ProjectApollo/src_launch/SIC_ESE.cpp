@@ -24,15 +24,38 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 #include "TSMUmbilical.h"
+#include "LCCPadInterface.h"
 #include "SIC_ESE.h"
 
-SIC_ESE::SIC_ESE(TSMUmbilical *TSMUmb)
+SIC_ESE::SIC_ESE(TSMUmbilical *TSMUmb, LCCPadInterface *p)
 {
 	Umbilical = TSMUmb;
+	Pad = p;
 
 	for (int i = 0;i < 5;i++)
 	{
-		SICThrustOKSimulate[i] = false;
+		for (int j = 0;j < 3;j++)
+		{
+			SICThrustOKSimulate[i][j] = false;
+		}
+	}
+}
+
+void SIC_ESE::Timestep()
+{
+	for (int i = 0;i < 5;i++)
+	{
+		for (int j = 0;j < 3;j++)
+		{
+			if (Pad->SLCCGetOutputSignal(778 + j + 3 * i))
+			{
+				SICThrustOKSimulate[i][j] = true;
+			}
+			else
+			{
+				SICThrustOKSimulate[i][j] = false;
+			}
+		}
 	}
 }
 

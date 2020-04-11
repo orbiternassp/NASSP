@@ -162,11 +162,16 @@
     <ClCompile Include="..\..\src_launch\RTCC_Mission_D.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_F.cpp" />
     <ClCompile Include="..\..\src_launch\RTCC_Mission_G.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\GeneralizedIterator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LMGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\LOITargeting.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_launch\mcc.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLIGuidanceSim.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -177,11 +182,16 @@
     <ClInclude Include="..\..\src_launch\MCC_Mission_F.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_G.h" />
     <ClInclude Include="..\..\src_launch\rtcc.h" />
+    <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\EntryCalculations.h" />
+    <ClInclude Include="..\..\src_rtccmfd\GeneralizedIterator.h" />
     <ClInclude Include="..\..\src_rtccmfd\LDPP.h" />
     <ClInclude Include="..\..\src_rtccmfd\LMGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\LOITargeting.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_launch\mcc.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_sys\thread.h" />
   </ItemGroup>
   <ItemGroup>

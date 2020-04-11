@@ -76,14 +76,24 @@ bool IUUmbilical::ESEGetSICOutboardEnginesCantSimulate()
 	return IuUmb->ESEGetSICOutboardEnginesCantSimulate();
 }
 
-bool IUUmbilical::ESEGetAutoAbortInhibit()
+bool IUUmbilical::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
 {
-	return IuUmb->ESEGetAutoAbortInhibit();
+	return IuUmb->ESEGetExcessiveRollRateAutoAbortInhibit(n);
 }
 
-bool IUUmbilical::ESEGetGSEOverrateSimulate()
+bool IUUmbilical::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
 {
-	return IuUmb->ESEGetGSEOverrateSimulate();
+	return IuUmb->ESEGetExcessivePitchYawRateAutoAbortInhibit(n);
+}
+
+bool IUUmbilical::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+{
+	return IuUmb->ESEGetTwoEngineOutAutoAbortInhibit(n);
+}
+
+bool IUUmbilical::ESEGetGSEOverrateSimulate(int n)
+{
+	return IuUmb->ESEGetGSEOverrateSimulate(n);
 }
 
 bool IUUmbilical::ESEGetEDSPowerInhibit()
@@ -116,11 +126,6 @@ bool IUUmbilical::ESEEDSLiftoffInhibitB()
 	return IuUmb->ESEEDSLiftoffInhibitB();
 }
 
-bool IUUmbilical::ESEAutoAbortSimulate()
-{
-	return IuUmb->ESEAutoAbortSimulate();
-}
-
 bool IUUmbilical::ESEGetSIBurnModeSubstitute()
 {
 	return IuUmb->ESEGetSIBurnModeSubstitute();
@@ -129,6 +134,21 @@ bool IUUmbilical::ESEGetSIBurnModeSubstitute()
 bool IUUmbilical::ESEGetGuidanceReferenceRelease()
 {
 	return IuUmb->ESEGetGuidanceReferenceRelease();
+}
+
+bool IUUmbilical::ESEGetQBallSimulateCmd()
+{
+	return IuUmb->ESEGetQBallSimulateCmd();
+}
+
+bool IUUmbilical::ESEGetEDSAutoAbortSimulate(int n)
+{
+	return IuUmb->ESEGetEDSAutoAbortSimulate(n);
+}
+
+bool IUUmbilical::ESEGetEDSLVCutoffSimulate(int n)
+{
+	return IuUmb->ESEGetEDSLVCutoffSimulate(n);
 }
 
 void IUUmbilical::SetEDSLiftoffEnableA()
@@ -187,11 +207,18 @@ bool IUUmbilical::AllSIEnginesRunning()
 	return iu->GetEDS()->GetAllSIEnginesRunning();
 }
 
-bool IUUmbilical::IsEDSUnsafe()
+bool IUUmbilical::IsEDSUnsafeA()
 {
 	if (!IUUmbilicalConnected) return false;
 
-	return iu->GetEDS()->IsEDSUnsafe();
+	return iu->GetEDS()->IsEDSUnsafeA();
+}
+
+bool IUUmbilical::IsEDSUnsafeB()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->IsEDSUnsafeB();
 }
 
 bool IUUmbilical::GetEDSSCCutoff1()
@@ -222,11 +249,18 @@ bool IUUmbilical::GetEDSAutoAbortBus()
 	return iu->GetEDS()->GetAutoAbort();
 }
 
-bool IUUmbilical::GetEDSExcessiveRateIndication()
+bool IUUmbilical::GetEDSExcessiveRollRateIndication()
 {
 	if (!IUUmbilicalConnected) return false;
 
-	return iu->GetEDS()->GetExcessiveRateIndication();
+	return iu->GetEDS()->GetExcessiveRollRateIndication();
+}
+
+bool IUUmbilical::GetEDSExcessivePitchYawRateIndication()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetEDS()->GetExcessivePitchYawRateIndication();
 }
 
 bool IUUmbilical::GetLVDCOutputRegisterDiscrete(int bit)
@@ -236,11 +270,32 @@ bool IUUmbilical::GetLVDCOutputRegisterDiscrete(int bit)
 	return iu->GetLVDA()->GetOutputRegisterBit(bit);
 }
 
+bool IUUmbilical::FCCPowerIsOn()
+{
+	if (!IUUmbilicalConnected) return false;
+
+	return iu->GetControlDistributor()->GetFCCPowerOn();
+}
+
 void IUUmbilical::SetControlSignalProcessorPower(bool set)
 {
 	if (!IUUmbilicalConnected) return;
 
 	iu->GetControlDistributor()->SetControlSignalProcessorPowerOn(set);
+}
+
+void IUUmbilical::EDSGroupNo1Reset()
+{
+	if (!IUUmbilicalConnected) return;
+
+	iu->GetControlDistributor()->ResetBus1();
+}
+
+void IUUmbilical::EDSGroupNo2Reset()
+{
+	if (!IUUmbilicalConnected) return;
+
+	iu->GetControlDistributor()->ResetBus2();
 }
 
 void IUUmbilical::SwitchSelector(int stage, int channel)

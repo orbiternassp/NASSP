@@ -37,6 +37,7 @@
 #include "LEM.h"
 #include "ioChannels.h"
 #include "tracer.h"
+#include "Mission.h"
 
 // DS20060326 TELECOM OBJECTS
 
@@ -563,7 +564,7 @@ void HGA::Init(Saturn *vessel){
 bool HGA::IsPowered()
 {
 	// Do we have a HGA?
-	if (sat->NoHGA) return false;
+	if (!sat->pMission->CSMHasHGA()) return false;
 
 	// Fully deployed antenna boom operates micro switch; separated SM deenergized power switch
 	if (sat->GetStage() != CSM_LEM_STAGE) return false;
@@ -638,7 +639,7 @@ void HGA::DeleteAnimations() {
 // Do work
 void HGA::TimeStep(double simt, double simdt)
 {
-	if (sat->NoHGA) return;
+	if (!sat->pMission->CSMHasHGA()) return;
 	if (sat->GetStage() != CSM_LEM_STAGE) return;
 
 	// HGA mesh animation
@@ -918,7 +919,7 @@ bool HGA::ScanLimitWarning()
 
 void HGA::clbkPostCreation()
 {
-	if (sat->NoHGA) return;
+	if (!sat->pMission->CSMHasHGA()) return;
 	if (sat->GetStage() != CSM_LEM_STAGE) return;
 
 	// Get current HGA state for animation
@@ -1252,7 +1253,7 @@ void VHFRangingSystem::SystemTimestep(double simdt)
 bool VHFRangingSystem::IsPowered()
 {
 	// Do we have a VHF Ranging System?
-	if (sat->NoVHFRanging) return false;
+	if (!sat->pMission->CSMHasVHFRanging()) return false;
 
 	if (powerswitch->IsUp() && powercb && powercb->IsPowered())
 	{

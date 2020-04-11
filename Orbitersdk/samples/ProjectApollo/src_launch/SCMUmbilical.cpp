@@ -61,9 +61,9 @@ void SCMUmbilical::AbortDisconnect()
 	UmbilicalConnected = false;
 }
 
-bool SCMUmbilical::ESEGetSIBThrustOKSimulate(int eng)
+bool SCMUmbilical::ESEGetSIBThrustOKSimulate(int eng, int n)
 {
-	return SCMUmb->ESEGetSIBThrustOKSimulate(eng);
+	return SCMUmb->ESEGetSIBThrustOKSimulate(eng, n);
 }
 
 bool SCMUmbilical::SIStageLogicCutoff()
@@ -77,12 +77,12 @@ void SCMUmbilical::SetEngineStart(int eng)
 {
 	if (!UmbilicalConnected) return;
 
-	return sib->SetEngineStart(eng);
+	sib->SetEngineStart(eng);
 }
 
 void SCMUmbilical::SIGSECutoff(bool cut)
 {
 	if (!UmbilicalConnected) return;
 
-	return sib->GSEEnginesCutoff(cut);
+	sib->GSEEnginesCutoff(cut);
 }

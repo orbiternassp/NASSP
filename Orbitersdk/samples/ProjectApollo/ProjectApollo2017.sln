@@ -72,6 +72,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LC37", "Build\VC2017\LC37.v
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sat5Abort3", "Build\VC2017\Sat5Abort3.vcxproj", "{16DA84DA-79DC-4631-B5A6-4D31433433AD}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCC", "Build\VC2017\LCC.vcxproj", "{828862FD-26AA-46FB-9F5B-92C6F522FE4F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -278,6 +280,14 @@ Global
 		{16DA84DA-79DC-4631-B5A6-4D31433433AD}.Release|Win32.ActiveCfg = Release|Win32
 		{16DA84DA-79DC-4631-B5A6-4D31433433AD}.Release|Win32.Build.0 = Release|Win32
 		{16DA84DA-79DC-4631-B5A6-4D31433433AD}.Release|x64.ActiveCfg = Release|Win32
+		{828862FD-26AA-46FB-9F5B-92C6F522FE4F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{828862FD-26AA-46FB-9F5B-92C6F522FE4F}.Debug|Win32.Build.0 = Debug|Win32
+		{828862FD-26AA-46FB-9F5B-92C6F522FE4F}.Debug|x64.ActiveCfg = Debug|x64
+		{828862FD-26AA-46FB-9F5B-92C6F522FE4F}.Debug|x64.Build.0 = Debug|x64
+		{828862FD-26AA-46FB-9F5B-92C6F522FE4F}.Release|Win32.ActiveCfg = Release|Win32
+		{828862FD-26AA-46FB-9F5B-92C6F522FE4F}.Release|Win32.Build.0 = Release|Win32
+		{828862FD-26AA-46FB-9F5B-92C6F522FE4F}.Release|x64.ActiveCfg = Release|x64
+		{828862FD-26AA-46FB-9F5B-92C6F522FE4F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

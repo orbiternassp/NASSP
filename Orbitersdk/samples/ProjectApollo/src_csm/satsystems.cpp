@@ -40,6 +40,7 @@
 #include "saturn.h"
 #include "ioChannels.h"
 #include "tracer.h"
+#include "Mission.h"
 
 //FILE *PanelsdkLogFile;
 
@@ -660,7 +661,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		omnib.TimeStep();
 		omnic.TimeStep();
 		omnid.TimeStep();
-		if (!NoVHFRanging) vhfranging.TimeStep(simdt);
+		if (pMission->CSMHasVHFRanging()) vhfranging.TimeStep(simdt);
 		vhftransceiver.Timestep();
 		sce.Timestep();
 		dataRecorder.TimeStep( MissionTime, simdt );
@@ -922,7 +923,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //h_Pipe* csmtunnelpipe = (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNELUNDOCKED");
 //double *pressequalFlow = (double*)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE:FLOW");
 //sprintf(oapiDebugString(), "CSM Tunnel: %lf LM Tunnel: %lf TunnelFlow %lf EqFlow: %lf", (csmtunnelpipe->in->parent->space.Press)*PSI, (csmtunnelpipe->out->parent->space.Press)*PSI, (csmtunnelpipe->flow)*LBH, *pressequalFlow*LBH);
-
 
 #ifdef _DEBUG
 
@@ -2127,7 +2127,14 @@ void Saturn::JoystickTimestep()
 	}
 
 	//SM Jettison Controller
-	if (secs.SMJCA.GetFireMinusXTranslation() || secs.SMJCB.GetFireMinusXTranslation())
+	bool fire = false;
+	if (secs.SMJCA && secs.SMJCA->GetFireMinusXTranslation())
+		fire = true;
+
+	if (secs.SMJCB && secs.SMJCB->GetFireMinusXTranslation())
+		fire = true;
+
+	if (fire)
 	{
 		SetRCSState(RCS_SM_QUAD_A, 3, true);
 		SetRCSState(RCS_SM_QUAD_B, 3, true);
@@ -2135,7 +2142,15 @@ void Saturn::JoystickTimestep()
 		SetRCSState(RCS_SM_QUAD_D, 4, true);
 	}
 
-	if (secs.SMJCA.GetFirePositiveRoll() || secs.SMJCB.GetFirePositiveRoll())
+	fire = false;
+
+	if (secs.SMJCA && secs.SMJCA->GetFirePositiveRoll())
+		fire = true;
+
+	if (secs.SMJCB && secs.SMJCB->GetFirePositiveRoll())
+		fire = true;
+
+	if (fire)
 	{
 		SetRCSState(RCS_SM_QUAD_A, 1, true);
 		SetRCSState(RCS_SM_QUAD_B, 1, true);
@@ -2330,6 +2345,56 @@ void Saturn::CheckSMSystemsState()
 		PriRadInTempSensor.WireTo(NULL);
 		SecRadInTempSensor.WireTo(NULL);
 		SecRadOutTempSensor.WireTo(NULL);
+
+		if (secs.SMJCA)
+		{
+			delete secs.SMJCA;
+			secs.SMJCA = NULL;
+		}
+		if (secs.SMJCB)
+		{
+			delete secs.SMJCB;
+			secs.SMJCB = NULL;
+		}
+	}
+}
+
+void Saturn::CreateMissionSpecificSystems()
+{
+	if (pMission->IsJMission())
+	{
+		pgPanels100.AddPanel(Panel181 = new SaturnPanel181, &PSH);
+
+		Panel181->SMSector1LogicPowerMNABraker.WireTo(MainBusA);
+		Panel181->SMSector1LogicPowerMNBBraker.WireTo(MainBusB);
+		Panel181->SMSector1AC2ASystemBraker.WireTo(&ACBus2PhaseA);
+		Panel181->SMSector1AC2BSystemBraker.WireTo(&ACBus2PhaseB);
+		Panel181->SMSector1AC2CSystemBraker.WireTo(&ACBus2PhaseC);
+
+		secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
+	}
+
+	if (pMission->GetPanel277Version() == 1)
+	{
+		pgPanels200.AddPanel(Panel277 = new SaturnPanel277, &PSH);
+	}
+
+	if (pMission->GetPanel278Version() == 2 || pMission->GetPanel278Version() == 3)
+	{
+		pgPanels200.AddPanel(Panel278J = new SaturnPanel278J, &PSH);
+	}
+	if (stage < CM_STAGE)
+	{
+		if (pMission->GetSMJCVersion() == 1)
+		{
+			secs.SMJCA = new SMJC();
+			secs.SMJCB = new SMJC();
+		}
+		else
+		{
+			secs.SMJCA = new SMJC_MOD1();
+			secs.SMJCB = new SMJC_MOD1();
+		}
 	}
 }
 

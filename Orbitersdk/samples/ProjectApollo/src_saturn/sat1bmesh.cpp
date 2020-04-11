@@ -48,6 +48,7 @@
 #include "sm.h"
 #include "Saturn1Abort.h"
 #include "Saturn1Abort2.h"
+#include "Mission.h"
 
 //
 // Meshes are loaded globally, once, so we use these global
@@ -777,12 +778,12 @@ void Saturn1b::SeparateStage (int new_stage)
 		SMConfig.MissionTime = MissionTime;
 		SMConfig.VehicleNo = VehicleNo;
 		SMConfig.LowRes = LowRes;
-		SMConfig.showHGA = !NoHGA;
+		SMConfig.showHGA = pMission->CSMHasHGA();
 		SMConfig.A13Exploded = ApolloExploded;
 		SMConfig.SMBusAPowered = MainBusAController.IsSMBusPowered();
 		SMConfig.SMBusBPowered = MainBusBController.IsSMBusPowered();
-		secs.SMJCA.GetState(SMConfig.SMJCAState);
-		secs.SMJCB.GetState(SMConfig.SMJCBState);
+		if (secs.SMJCA) secs.SMJCA->GetState(SMConfig.SMJCAState);
+		if (secs.SMJCB) secs.SMJCB->GetState(SMConfig.SMJCBState);
 
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);

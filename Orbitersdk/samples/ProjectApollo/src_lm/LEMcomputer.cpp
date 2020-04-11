@@ -37,6 +37,7 @@
 #include "papi.h"
 #include "saturn.h"
 #include "LEM.h"
+#include "Mission.h"
 
 #include "lm_channels.h"
 
@@ -63,49 +64,18 @@ LEMcomputer::~LEMcomputer()
 	//
 }
 
-void LEMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
+void LEMcomputer::SetMissionInfo(std::string ProgramName, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
+	ApolloGuidance::SetMissionInfo(ProgramName, OtherVessel);
 	//
 	// Pick the appropriate AGC binary file based on the mission number.
 	//
 
-	char *binfile;
+	char Buffer[100];
+	sprintf(Buffer, "Config/ProjectApollo/%s.bin", ProgramName.c_str());
 
-	if (ApolloNo < 9)	// Sunburst 120
-	{
-		binfile = "Config/ProjectApollo/Sunburst120.bin";
-
-		LEM *lem = (LEM *)OurVessel;
-		lem->InvertStageBit = true;
-	}
-	else if (ApolloNo < 11)	// Luminary 069 Revision 2
-	{
-		binfile = "Config/ProjectApollo/LUM69R2.bin";
-	}
-	else if (ApolloNo < 12)	// Luminary 099
-	{
-		binfile = "Config/ProjectApollo/Luminary099.bin";
-	}
-	else if (ApolloNo < 13)	// Luminary 116
-	{
-		binfile = "Config/ProjectApollo/Luminary116.bin";
-	}
-	else if (ApolloNo < 14 || ApolloNo == 1301)	// Luminary 131
-	{
-		binfile = "Config/ProjectApollo/Luminary131.bin";
-	}
-	else if (ApolloNo < 15)	// Luminary 178
-	{
-		binfile = "Config/ProjectApollo/Luminary178.bin";
-	}
-	else	//Luminary 210
-	{
-		binfile = "Config/ProjectApollo/Luminary210.bin";
-	}
-
-	agc_load_binfile(&vagc, binfile);
+	agc_load_binfile(&vagc, Buffer);
 }
 
 void LEMcomputer::agcTimestep(double simt, double simdt)
@@ -251,7 +221,7 @@ void LEMcomputer::SetInputChannelBit(int channel, int bit, bool val)
 
 void LEMcomputer::ProcessChannel10(ChannelValue val) {
 	dsky.ProcessChannel10(val);
-	if (lem->HasProgramer) lem->lmp.ProcessChannel10(val);
+	if (lem->pMission->HasLMProgramer()) lem->lmp.ProcessChannel10(val);
 }
 
 // DS20060413
@@ -291,41 +261,6 @@ void LEMcomputer::ProcessChannel6(ChannelValue val){
 	// This is now handled inside the ATCA
 	LEM *lem = (LEM *) OurVessel;	
 	lem->atca.ProcessLGC(6,val.to_ulong());
-}
-
-
-void LEMcomputer::ProcessChannel140(ChannelValue val) {
-	
-	/*ChannelValue val12;
-	val12 = GetOutputChannel(012);
-	LEM *lem = (LEM *) OurVessel;
-
-	if (val12[DispayInertialData])
-	{
-		lem->crossPointerLeft.SetForwardVelocity(val.to_ulong(), val12);
-		lem->crossPointerRight.SetForwardVelocity(val.to_ulong(), val12);
-	}
-	else
-	{
-		lem->RR.RRShaftDrive(val.to_ulong(), val12);
-	}*/
-}
-
-void LEMcomputer::ProcessChannel141(ChannelValue val) {
-
-	/*ChannelValue val12;
-	val12 = GetOutputChannel(012);
-	LEM *lem = (LEM *) OurVessel;
-
-	if (val12[DispayInertialData])
-	{
-		lem->crossPointerLeft.SetLateralVelocity(val.to_ulong(), val12);
-		lem->crossPointerRight.SetLateralVelocity(val.to_ulong(), val12);
-	}
-	else
-	{
-		lem->RR.RRTrunionDrive(val.to_ulong(), val12);
-	}*/
 }
 
 void LEMcomputer::ProcessChannel142(ChannelValue val) {

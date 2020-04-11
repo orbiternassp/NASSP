@@ -152,6 +152,7 @@
     <ClCompile Include="..\..\src_aux\CDK.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -177,6 +178,7 @@
     <ClCompile Include="..\..\src_saturn\iu.cpp" />
     <ClCompile Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.cpp" />
     <ClCompile Include="..\..\src_saturn\IUControlDistributor.cpp" />
+    <ClCompile Include="..\..\src_saturn\IUControlSignalProcessor.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDA.cpp" />
     <ClCompile Include="..\..\src_saturn\LVDC.cpp" />
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
@@ -373,6 +375,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_aux\animations.h" />
+    <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_lm\CWEA_FlipFlop.h" />
     <ClInclude Include="..\..\src_lm\lemconnector.h" />
     <ClInclude Include="..\..\src_lm\LEMSaturn.h" />
@@ -399,6 +402,7 @@
     <ClInclude Include="..\..\src_saturn\FCC.h" />
     <ClInclude Include="..\..\src_saturn\IUAuxiliaryPowerDistributor.h" />
     <ClInclude Include="..\..\src_saturn\IUControlDistributor.h" />
+    <ClInclude Include="..\..\src_saturn\IUControlSignalProcessor.h" />
     <ClInclude Include="..\..\src_saturn\LVDA.h" />
     <ClInclude Include="..\..\src_saturn\LVDC.h" />
     <ClInclude Include="..\..\src_saturn\LVIMU.h" />

@@ -885,3 +885,54 @@ public:
 protected:
 	SECS * secs;
 };
+
+class PanelSwitchScenarioHandler;
+
+class SaturnPanel181 : public BasicPanel
+{
+public:
+
+	void Register(PanelSwitchScenarioHandler *PSH);
+
+	SwitchRow SMSector1SwitchesRow;
+	ToggleSwitch SMSector1Cryo3ACPowerSwitch;
+	ToggleSwitch SMSector1SMACPowerSwitch;
+	CircuitBrakerSwitch SMSector1AC2ASystemBraker;
+	CircuitBrakerSwitch SMSector1AC2BSystemBraker;
+	CircuitBrakerSwitch SMSector1AC2CSystemBraker;
+	GuardedToggleSwitch SMSector1DoorJettisonSwitch;
+	ThreePosSwitch SMSector1LogicPower1Switch;
+	ThreePosSwitch SMSector1LogicPower2Switch;
+	CircuitBrakerSwitch SMSector1LogicPowerMNABraker;
+	CircuitBrakerSwitch SMSector1LogicPowerMNBBraker;
+};
+
+class SaturnPanel277 : public BasicPanel
+{
+public:
+
+	void Register(PanelSwitchScenarioHandler *PSH);
+
+	SwitchRow Panel277SwitchesRow;
+	ToggleSwitch SPSPressIndFuelSwitch;
+	ToggleSwitch SPSPressIndOxidSwitch;
+	CircuitBrakerSwitch CSMLMFinalSepABatABraker;
+	CircuitBrakerSwitch CSMLMFinalSepBBatBBraker;
+};
+
+class SaturnPanel278J : public BasicPanel
+{
+public:
+
+	void Register(PanelSwitchScenarioHandler *PSH);
+
+	SwitchRow Panel278JSwitchesRow;
+	ThreePosSwitch ExperimentCovers1Switch;
+	ThreePosSwitch ExperimentCovers2Switch;
+	GuardedThreePosSwitch SMPowerSourceSwitch;
+	ThreePosSwitch O2Tank3IsolSwitch;
+	IndicatorSwitch ExperimentCovers1Indicator;
+	IndicatorSwitch ExperimentCovers2Indicator;
+	IndicatorSwitch O2Tank3IsolIndicator;
+	CircuitBrakerSwitch ExperimentCoversDeployBraker;
+};

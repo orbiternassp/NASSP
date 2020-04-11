@@ -46,7 +46,7 @@ public:
 	void SIGSECutoff(bool cut);
 
 	//From SLV to ML
-	virtual bool ESEGetSICThrustOKSimulate(int eng);
+	virtual bool ESEGetSICThrustOKSimulate(int eng, int n);
 protected:
 	SICSystems* sic;
 	TSMUmbilicalInterface* TSMUmb;

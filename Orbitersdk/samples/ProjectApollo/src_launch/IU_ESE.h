@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 class IUUmbilical;
+class LCCPadInterface;
 
 #define LCC_EDS_MODE_OFF 0
 #define LCC_EDS_MODE_MONITOR 1
@@ -34,50 +35,62 @@ class IUUmbilical;
 class IU_ESE
 {
 public:
-	IU_ESE(IUUmbilical *IuUmb);
+	IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p);
 
 	void Timestep(double MissionTime, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
 	bool GetCommandVehicleLiftoffIndicationInhibit() { return CommandVehicleLiftoffIndicationInhibit; }
-	bool GetAutoAbortInhibit() { return AutoAbortInhibit; }
-	bool GetOverrateSimulate() { return OverrateSimulate; }
+	bool GetExcessiveRollRateAutoAbortInhibit(int n);
+	bool GetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool GetTwoEngineOutAutoAbortInhibit(int n);
+	bool GetOverrateSimulate(int n);
 	bool GetThrustOKIndicateEnableInhibitA() { return ThrustOKIndicateEnableInhibitA; }
 	bool GetThrustOKIndicateEnableInhibitB() { return ThrustOKIndicateEnableInhibitB; }
 	bool GetEDSLiftoffInhibitA() { return EDSLiftoffInhibitA; }
 	bool GetEDSLiftoffInhibitB() { return EDSLiftoffInhibitB; }
 	bool GetEDSPadAbortRequest() { return PadAbortRequest; }
 	bool GetEDSPowerInhibit() { return EDSPowerInhibit; }
-	bool GetAutoAbortSimulate() { return AutoAbortSimulate; }
 	bool GetSIBurnModeSubstitute() { return SIBurnModeSubstitute; }
 	bool GetGuidanceReferenceRelease() { return GuidanceReferenceRelease; }
+	bool GetFCCPowerIsOn() { return FCCPowerIsOn; }
+	bool GetQBallSimulateCmd() { return QBallSimulateCmd; }
+	bool GetEDSAutoAbortSimulate(int n);
+	bool GetEDSLVCutoffSimulate(int n);
 
 	void SetGuidanceReferenceRelease(bool set) { GuidanceReferenceRelease = set; }
 	void SetEDSPowerInhibit(bool set) { EDSPowerInhibit = set; }
 	void SetEDSLiftoffInhibitA(bool set) { EDSLiftoffInhibitA = set; }
 	void SetEDSLiftoffInhibitB(bool set) { EDSLiftoffInhibitB = set; }
-	void SetAutoAbortSimulate(bool set) { AutoAbortSimulate = set; }
 	void SetEDSCutoffFromSC(int n, bool set) { EDSCutoffFromSC[n - 1] = set; }
 	void SetThrustOKIndicateEnableInhibitA(bool set) { ThrustOKIndicateEnableInhibitA = set; }
 	void SetThrustOKIndicateEnableInhibitB(bool set) { ThrustOKIndicateEnableInhibitB = set; }
-	void SetAutoAbortInhibit(bool set) { AutoAbortInhibit = set; }
 protected:
 	void SetEDSMode(int mode);
 
 	bool CommandVehicleLiftoffIndicationInhibit;
-	bool AutoAbortInhibit;
-	bool OverrateSimulate;
+	bool ExcessiveRollRateAutoAbortInhibit[3];
+	bool ExcessivePitchYawRateAutoAbortInhibit[3];
+	bool TwoEngineOutAutoAbortInhibit[3];
+	//Roll 1-3, Pitch 1-3, Yaw 1-3
+	bool OverrateSimulate[9];
 	bool ThrustOKIndicateEnableInhibitA;
 	bool ThrustOKIndicateEnableInhibitB;
 	bool EDSLiftoffInhibitA;
 	bool EDSLiftoffInhibitB;
 	bool PadAbortRequest;
 	bool EDSPowerInhibit;
-	bool AutoAbortSimulate;
 	bool SIBurnModeSubstitute;
 	bool GuidanceReferenceRelease;
 	bool EDSCutoffFromSC[3];
+	bool SwitchFCCPowerOn;
+	bool SwitchFCCPowerOff;
+	bool QBallSimulateCmd;
+	bool EDSAutoAbortSimulate[6];
+
+	//Signals from LV
+	bool FCCPowerIsOn;
 
 	bool EDSNotReady;
 	bool InstrumentUnitReady;
@@ -85,12 +98,13 @@ protected:
 	double LastMissionTime = 0.0;
 
 	IUUmbilical *Umbilical;
+	LCCPadInterface *Pad;
 };
 
 class IUSV_ESE : public IU_ESE
 {
 public:
-	IUSV_ESE(IUUmbilical *IuUmb);
+	IUSV_ESE(IUUmbilical *IuUmb, LCCPadInterface *p);
 
 	bool GetSICOutboardEnginesCantInhibit() { return SICOutboardEnginesCantInhibit; }
 	bool GetSICOutboardEnginesCantSimulate() { return SICOutboardEnginesCantSimulate; }

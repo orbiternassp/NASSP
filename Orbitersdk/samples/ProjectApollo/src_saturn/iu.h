@@ -35,6 +35,7 @@
 #include "DelayTimer.h"
 #include "IUControlDistributor.h"
 #include "IUAuxiliaryPowerDistributor.h"
+#include "IUControlSignalProcessor.h"
 
 class SoundLib;
 class IU;
@@ -74,7 +75,9 @@ enum IUCSMMessageType
 	CSMIU_GET_LIFTOFF_CIRCUIT,
 	CSMIU_GET_EDS_ABORT,					///< Set EDS abort signal.
 	CSMIU_GET_LV_TANK_PRESSURE,
-	CSMIU_GET_ABORT_LIGHT_SIGNAL
+	CSMIU_GET_ABORT_LIGHT_SIGNAL,
+	CSMIU_GET_QBALL_POWER,
+	CSMIU_GET_QBALL_SIMULATE_CMD
 };
 
 ///
@@ -94,7 +97,6 @@ enum IULVMessageType
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
 	IULV_SIVB_SWITCH_SELECTOR,
-	IULV_SET_QBALL_POWER_OFF,
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
 	IULV_NOSECAP_JETTISON,
@@ -193,8 +195,6 @@ public:
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
-
-	void SetQBallPowerOff();
 
 	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
@@ -300,20 +300,25 @@ public:
 	LVIMU* GetLVIMU() { return &lvimu; }
 	DCS* GetDCS() { return &dcs; }
 	IUAuxiliaryPowerDistributor2 *GetAuxPowrDistr() { return &AuxiliaryPowerDistributor2; }
+	IUControlSignalProcessor *GetContSigProc() { return &ControlSignalProcessor; }
 
 	//ESE Functions
 	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
-	bool ESEGetAutoAbortInhibit();
-	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	bool ESEGetGSEOverrateSimulate(int n);
 	bool ESEGetEDSPowerInhibit();
 	bool ESEPadAbortRequest();
 	bool ESEGetEngineThrustIndicationEnableInhibitA();
 	bool ESEGetEngineThrustIndicationEnableInhibitB();
 	bool ESEEDSLiftoffInhibitA();
 	bool ESEEDSLiftoffInhibitB();
-	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
+	bool ESEESEGetQBallSimulateCmd();
+	bool ESEGetEDSAutoAbortSimulate(int n);
+	bool ESEGetEDSLVCutoffSimulate(int n);
 
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }
 	virtual bool ESEGetSICOutboardEnginesCantSimulate() { return false; }
@@ -357,6 +362,8 @@ protected:
 	IUAuxiliaryPowerDistributor1 AuxiliaryPowerDistributor1;
 	//602A34
 	IUAuxiliaryPowerDistributor2 AuxiliaryPowerDistributor2;
+	//601A24
+	IUControlSignalProcessor ControlSignalProcessor;
 
 	IUUmbilical *IuUmb;
 };

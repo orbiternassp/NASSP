@@ -441,11 +441,10 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			if (fcn == 23)
 			{
 				LOIMan opt2;
-				LOI2Man opt3;
 				REFSMMATOpt refsopt;
 				SV sv_node, sv_ig2, sv_cut2;
 				double P30TIG_LOI, P30TIG_LOI2;
-				VECTOR3 dV_LVLH_LOI, dV_LVLH_LOI2;
+				VECTOR3 dV_LVLH_LOI;
 
 				//Step 1: Calculate LOI-1 with MCC-4 burnout vector
 				opt2.csmlmdocked = false;
@@ -463,16 +462,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				LOITargeting(&opt2, dV_LVLH_LOI, P30TIG_LOI, sv_node, sv_ig2, sv_cut2);
 
 				//Step 2: Calculate LOI-2 to get the TIG
-				opt3.alt = LSRad - OrbMech::R_Moon;
-				opt3.csmlmdocked = false;
-				opt3.EarliestGET = P30TIG_LOI + 3.5*3600.0;
-				opt3.GETbase = GETbase;
-				opt3.h_circ = 60.0*1852.0;
-				opt3.RV_MCC = sv_cut2;
-				opt3.vessel = calcParams.src;
-				opt3.vesseltype = 0;
 
-				LOI2Targeting(&opt3, dV_LVLH_LOI2, P30TIG_LOI2);
+				med_k16.Mode = 2;
+				med_k16.Sequence = 3;
+				med_k16.GETTH1 = P30TIG_LOI + 3.5*3600.0;
+				med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
+				med_k16.DesiredHeight = 60.0*1852.0;
+
+				LunarDescentPlanningTable table;
+				LunarDescentPlanningProcessor(sv, GETbase, LSLat, LSLng, LSRad, table);
+				P30TIG_LOI2 = table.GETIG[0];
 
 				//Step 3: Calculate LVLH REFSMMAT at LOI-2 TIG taking into account the trajectory leading up to that point
 				refsopt.GETbase = GETbase;
@@ -507,7 +506,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer3[1000];
 
 				AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
-				AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -523,7 +522,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer2[1000];
 
 				AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
-				AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 				if (upString != NULL) {
@@ -586,7 +585,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			char buffer2[1000];
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -968,7 +967,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 102:	// MISSION CP LOI-2 MANEUVER
 	{
-		LOI2Man opt;
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
@@ -982,14 +980,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		opt.alt = LSRad - OrbMech::R_Moon;
-		opt.csmlmdocked = false;
-		opt.GETbase = GETbase;
-		opt.h_circ = 60.0*1852.0;
-		opt.RV_MCC = sv;
-		opt.vessel = calcParams.src;
+		med_k16.Mode = 2;
+		med_k16.Sequence = 3;
+		med_k16.GETTH1 = calcParams.LOI + 3.5*3600.0;
+		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
+		med_k16.DesiredHeight = 60.0*1852.0;
 
-		LOI2Targeting(&opt, dV_LVLH, P30TIG);
+		LunarDescentPlanningTable table;
+		LunarDescentPlanningProcessor(sv, GETbase, LSLat, LSLng, LSRad, table);
+
+		PoweredFlightProcessor(sv, GETbase, table.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, table.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -1008,7 +1008,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sprintf(form->purpose, "LOI-2");
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -1461,7 +1461,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.P30TIG = TimeofIgnition;
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 		entopt.sv0 = sv;
-		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
@@ -1491,7 +1490,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.lng = SplashLongitude;
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, AGCEpoch);
 		entopt.sv0 = sv;
-		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");

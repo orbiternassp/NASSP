@@ -57,6 +57,7 @@ public:
 	void SetQBallPower(bool set) { QBallPowerOn = set; }
 
 	//For FCC
+	bool GetFCCPowerOn() { return FCCPowerOn; }
 	bool GetSIVBBurnMode();
 	bool GetFCCSwitchPoint1() { return SwitchPoint1to5[0]; }
 	bool GetFCCSwitchPoint2() { return SwitchPoint1to5[1]; }
@@ -83,6 +84,9 @@ public:
 	virtual void ResetBus1();
 	virtual void ResetBus2();
 	bool GetEDSEnableLogicZero();
+
+	//For Spacecraft
+	bool GetQBallPower() { return QBallPowerOn; }
 protected:
 	IU *iu;
 

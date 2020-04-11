@@ -406,14 +406,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SET_QBALL_POWER_OFF:
-		if (OurVessel)
-		{
-			OurVessel->SetQBallPowerOff();
-			return true;
-		}
-		break;
-
 	case IULV_CSM_SEPARATION_SENSED:
 		if (OurVessel)
 		{
@@ -724,6 +716,36 @@ bool CSMToIUConnector::GetAbortLight()
 
 	cm.destination = CSM_IU_COMMAND;
 	cm.messageType = CSMIU_GET_ABORT_LIGHT_SIGNAL;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool CSMToIUConnector::GetQBallPower()
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_QBALL_POWER;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool CSMToIUConnector::GetQBallSimulateCmd()
+{
+	ConnectorMessage cm;
+
+	cm.destination = CSM_IU_COMMAND;
+	cm.messageType = CSMIU_GET_QBALL_SIMULATE_CMD;
 
 	if (SendMessage(cm))
 	{

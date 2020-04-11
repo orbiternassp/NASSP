@@ -50,6 +50,7 @@
 #include "Sat5Abort1.h"
 #include "Sat5Abort2.h"
 #include "Sat5Abort3.h"
+#include "Mission.h"
 
 static PARTICLESTREAMSPEC srb_contrail = {
 	0, 
@@ -1359,15 +1360,15 @@ void SaturnV::SeparateStage (int new_stage)
 		SMConfig.MissionTime = MissionTime;
 		SMConfig.VehicleNo = VehicleNo;
 		SMConfig.LowRes = LowRes;
-		SMConfig.showHGA = !NoHGA;
+		SMConfig.showHGA = pMission->CSMHasHGA();
 		SMConfig.A13Exploded = ApolloExploded;
 		SMConfig.HGAalpha = hga.GetAlpha();
 		SMConfig.HGAbeta = hga.GetBeta();
 		SMConfig.HGAgamma = hga.GetGamma();
 		SMConfig.SMBusAPowered = MainBusAController.IsSMBusPowered();
 		SMConfig.SMBusBPowered = MainBusBController.IsSMBusPowered();
-		secs.SMJCA.GetState(SMConfig.SMJCAState);
-		secs.SMJCB.GetState(SMConfig.SMJCBState);
+		if (secs.SMJCA) secs.SMJCA->GetState(SMConfig.SMJCAState);
+		if (secs.SMJCB) secs.SMJCB->GetState(SMConfig.SMJCBState);
 
 		SM *SMVessel = (SM *) oapiGetVesselInterface(hSMJet);
 		SMVessel->SetState(SMConfig);

@@ -277,7 +277,6 @@ void SIVB::InitS4b()
 	payloadSettings.AscentEmptyKg = 2150.0;
 	payloadSettings.DescentEmptyKg = 2224.0;
 	payloadSettings.MissionNo = 0;
-	payloadSettings.NoLegs = false;
 	Payloaddatatransfer = false;
 
 	//
@@ -1599,7 +1598,6 @@ void SIVB::CreatePayload() {
 	//
 
 	payloadSettings.MissionTime = MissionTime;
-	if (PayloadType == PAYLOAD_LM1) payloadSettings.NoLegs = true;
 
 	//
 	// Initialise the state of the LEM AGC information.

@@ -665,7 +665,7 @@ void LEMSaturn::clbkPreStep(double simt, double simdt, double mjd)
 	if (lemsat_stage <= LAUNCH_STAGE_ONE)
 	{
 		if (sib)
-			sib->Timestep(simdt, lemsat_stage >= LAUNCH_STAGE_ONE);
+			sib->Timestep(MissionTime, simdt);
 	}
 
 	if (lemsat_stage < CSM_LEM_STAGE)

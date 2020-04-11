@@ -79,6 +79,11 @@
 class IU;
 class SICSystems;
 
+namespace mission
+{
+	class Mission;
+};
+
 
 #define RCS_SM_QUAD_A		0
 #define RCS_SM_QUAD_B		1
@@ -524,6 +529,16 @@ public:
 		SRF_EVENT_TIMER_DIGITS90,
 		SRF_DIGITAL90,
 		SRF_CSM_PRESS_EQUAL_HANDLE,
+		SRF_CSM_PANEL_181,
+		SRF_CSM_PANEL_277,
+		SRF_CSM_PANEL_278_CSM112,
+		SRF_CSM_PANEL_278_CSM114,
+		SRF_INDICATOR90,
+		SRF_THREEPOSSWITCH90_RIGHT,
+		SRF_CRYO_SWITCHES_J,
+		SRF_CRYO_IND_J,
+		SRF_SWITCHGUARDS90_RIGHT,
+
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -541,7 +556,6 @@ public:
 	///
 	union LandingFailures {
 		struct {
-			unsigned Init:1;		///< Flags have been initialised.
 			unsigned CoverFail:1;	///< Apex cover will fail to deploy automatically.
 			unsigned DrogueFail:1;	///< Drogue will fail to deploy automatically.
 			unsigned MainFail:1;	///< Main chutes will fail to deploy automatically.
@@ -557,7 +571,6 @@ public:
 	///
 	union LaunchFailures {
 		struct {
-			unsigned Init:1;					///< Flags have been initialised.
 			unsigned LETAutoJetFail:1;			///< The LES auto jettison will fail.
 			unsigned LESJetMotorFail:1;			///< The LET jettison motor will fail.
 			unsigned SIIAutoSepFail:1;			///< Stage two will fail to seperate automatically from stage one.
@@ -578,7 +591,6 @@ public:
 	///
 	union SwitchFailures {
 		struct {
-			unsigned Init:1;				///< Flags have been initialised.
 			unsigned TowerJett1Fail:1;		///< TWR JETT switch 1 will fail.
 			unsigned TowerJett2Fail:1;		///< TWR JETT switch 2 will fail.
 			unsigned SMJett1Fail:1;			///< SM JETT switch 1 will fail.
@@ -651,6 +663,7 @@ public:
 			unsigned CSMAttached:1;			///< Is there a CSM?
 			unsigned NosecapAttached:1;		///< Is there an Apollo 5-style nosecap?
 			unsigned LESLegsCut:1;			///< Are the LES legs attached?
+			unsigned SIMBayPanelJett:1;		///< Has the SIM bay panel been jettisoned?
 		};
 		unsigned long word;
 
@@ -692,13 +705,13 @@ public:
 			unsigned unused:1;						///< Unused bit for backwards compatibility. Can be used for other things.
 			unsigned TLISoundsLoaded:1;				///< Have we loaded the TLI sounds?
 			unsigned CMdocktgt:1;                   ///< CM docking target on
-			unsigned NoVHFRanging:1;				///< Do we have a VHF Ranging System?
+			unsigned unused4:1;						///< Spare
 			unsigned unused5:1;						///< Spare
 			unsigned unused6:2;						///< Spare
 			unsigned SkylabSM:1;					///< Is this a Skylab Service Module?
 			unsigned SkylabCM:1;					///< Is this a Skylab Command Module?
 			unsigned S1bPanel:1;					///< Is this a Command Module with a Saturn 1b panel?
-			unsigned NoHGA:1;						///< Do we have a High-Gain Antenna?
+			unsigned unused7:1;						///< Spare
 			unsigned viewpos:5;						///< Position of the virtual cockpit viewpoint.
 		};
 		unsigned long word;
@@ -966,8 +979,9 @@ public:
 	virtual void SIEDSCutoff(bool cut) = 0;
 	virtual void SIIEDSCutoff(bool cut) {};
 	void SIVBEDSCutoff(bool cut);
-	void SetQBallPowerOff();
 	virtual double GetSIThrustLevel() = 0;
+	bool GetQBallPower();
+	bool GetQBallSimulateCmd();
 
 	virtual void ActivateStagingVent() {}
 
@@ -1068,6 +1082,8 @@ public:
 	virtual void CheckSaturnSystemsState();
 
 	virtual void CreateStageSpecificSystems() = 0;
+
+	void CreateMissionSpecificSystems();
 
 	///
 	/// If the scenario specified AUTOSLOW and time acceleration is enabled, slow it
@@ -1184,6 +1200,8 @@ public:
 	///
 	void SetNosecapMesh();
 
+	void SetSIMBayPanelMesh();
+
 	///
 	/// \brief Set probe visibility flag
 	///
@@ -1273,6 +1291,8 @@ protected:
 
 	void JettisonNosecap();
 
+	void JettisonSIMBayPanel();
+
 	//
 	// State that needs to be saved.
 	//
@@ -1352,6 +1372,8 @@ protected:
 	///
 	bool SLAWillSeparate;
 
+	bool SIMBayPanelJett;
+
 	bool DeleteLaunchSite;
 
 	int buildstatus;
@@ -1390,12 +1412,6 @@ protected:
 	/// \brief Time to next check for stage destruction.
 	///
 	double NextDestroyCheckTime;
-
-	///
-	/// The time in seconds when the next failure will occur.
-	/// \brief Time of next system failure.
-	///
-	double NextFailureTime;
 
 	///
 	/// Mission Timer display on control panel.
@@ -1532,6 +1548,11 @@ protected:
 	int fdaiSmooth;
 
 	HBITMAP hBmpFDAIRollIndicator;
+
+	//Panels
+
+	PanelGroup pgPanels100;
+	PanelGroup pgPanels200;
 
 	SwitchRow MasterAlarmSwitchRow;
 	MasterAlarmSwitch MasterAlarmSwitch; 
@@ -2568,6 +2589,11 @@ protected:
 	SwitchRow SCIUtilPowerSwitchRow;
 	ToggleSwitch SCIUtilPowerSwitch;
 
+	/////////////////////////////////////
+	// Panel 181 (Apollo 15 and later) //
+	/////////////////////////////////////
+	SaturnPanel181 *Panel181;
+
 	///////////////////////
 	// Panel 15 switches //
 	///////////////////////
@@ -2995,6 +3021,14 @@ protected:
 	CircuitBrakerSwitch UprightingSystemCompressor2CircuitBraker;
 	CircuitBrakerSwitch SIVBLMSepPyroACircuitBraker;
 	CircuitBrakerSwitch SIVBLMSepPyroBCircuitBraker;
+
+	// Panel 278 Mission-Specific Additions
+	SaturnPanel278J *Panel278J;
+
+	/////////////////////////////////////
+	// Panel 277 (Apollo 15 and later) //
+	/////////////////////////////////////
+	SaturnPanel277 *Panel277;
 	
 	///////////////////////////////
 	// Panel 300/301/302/303/305 //
@@ -3726,8 +3760,6 @@ protected:
 	bool IUSCContPermanentEnabled;
 	bool TLISoundsLoaded;
 	bool SkylabSM;
-	bool NoHGA;
-	bool NoVHFRanging;
 	bool CMdocktgt;
 	bool SkylabCM;
 	bool S1bPanel;
@@ -3763,6 +3795,7 @@ protected:
 	int cmdocktgtidx;
 	int nosecapidx;
 	int meshLM_1;
+	int simbaypanelidx;
 
 	DEVMESHHANDLE probe;
 
@@ -3770,20 +3803,12 @@ protected:
 
 	double DockAngle;
 
-	double AtempP;
-	double AtempY;
-	double AtempR;
-
-	ELEMENTS elemSaturn1B;
-	double refSaturn1B;
-	ELEMENTS elemPREV;
-	double refPREV;
-	double AltitudePREV;
-
 	double 	Offset1st;
 
 	bool StopRot;
 	bool PayloadDataTransfer;
+
+	mission::Mission* pMission;
 
 	//
 	// Panels
@@ -3840,9 +3865,6 @@ protected:
 	bool FireTJM;
 	bool FirePCM;
 
-	double FailureMultiplier;
-	double PlatFail;
-
 	OBJHANDLE hEVA;
 
 	SoundLib soundlib;
@@ -3890,6 +3912,7 @@ protected:
 	OBJHANDLE hNosecapVessel;
 	OBJHANDLE hLC34;
 	OBJHANDLE hLC37;
+	OBJHANDLE hLCC;
 
 	//
 	// ISP and thrust values, which vary depending on vehicle number.
@@ -3995,7 +4018,6 @@ protected:
 	void DeactivateCMRCS();
 	void FuelCellCoolingBypass(int fuelcell, bool bypassed);
 	bool FuelCellCoolingBypassed(int fuelcell);
-	virtual void SetRandomFailures();
 	void SetPipeMaxFlow(char *pipe, double flow);
 
 	//
@@ -4036,7 +4058,8 @@ protected:
 	virtual void LoadSI(FILEHANDLE scn) = 0;
 	virtual void SaveSII(FILEHANDLE scn) {};
 	virtual void LoadSII(FILEHANDLE scn) {};
-	virtual void SetEngineFailure(int failstage, int faileng, double failtime) = 0;
+	virtual void SetEngineFailure(int failstage, int faileng, double failtime, bool fail) = 0;
+	virtual void GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime) = 0;
 
 	void GetScenarioState (FILEHANDLE scn, void *status);
 	bool ProcessConfigFileLine (FILEHANDLE scn, char *line);

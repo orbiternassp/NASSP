@@ -66,44 +66,20 @@ CSMcomputer::~CSMcomputer()
 	//
 }
 
-void CSMcomputer::SetMissionInfo(int MissionNo, char *OtherVessel)
+void CSMcomputer::SetMissionInfo(std::string AGCVersion, char *OtherVessel)
 
 {
-	ApolloGuidance::SetMissionInfo(MissionNo, OtherVessel);
+	ApolloGuidance::SetMissionInfo(AGCVersion, OtherVessel);
 
 	//
-	// Pick the appropriate AGC binary file based on the mission number.
+	// Pick the appropriate AGC binary file based on name.
 	//
-	// same criterium in CSMcomputer::Timestep because of pad load
+	//
 
-	char *binfile;
+	char Buffer[100];
+	sprintf(Buffer, "Config/ProjectApollo/%s.bin", AGCVersion.c_str());
 
-	if (ApolloNo < 9)	// Colossus 237
-	{
-		binfile = "Config/ProjectApollo/Colossus237.bin";
-	}
-	else if (ApolloNo < 10)	// Colossus 249
-	{
-		binfile = "Config/ProjectApollo/Colossus249.bin";
-	}
-	else if (ApolloNo < 11)	// Comanche 055, modified for Apollo 10
-	{
-		binfile = "Config/ProjectApollo/Comanche055NBY69.bin";
-	}
-	else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
-	{
-		binfile = "Config/ProjectApollo/Comanche055.bin";
-	}
-	else if (ApolloNo < 15)	// Artemis 72, modified for Apollo 14
-	{
-		binfile = "Config/ProjectApollo/Artemis072NBY71.bin";
-	}
-	else	//Artemis 072
-	{
-		binfile = "Config/ProjectApollo/Artemis072.bin";
-	}
-
-	InitVirtualAGC(binfile);
+	InitVirtualAGC(Buffer);
 }
 
 void CSMcomputer::agcTimestep(double simt, double simdt)
@@ -236,7 +212,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			vagc.Erasable[5][2] = ConvertDecimalToAGCOctal(latitude / TWO_PI, true);
 			vagc.Erasable[5][3] = ConvertDecimalToAGCOctal(latitude / TWO_PI, false);
 
-			if (ApolloNo < 11)	//Colossus 237/249, Comanche 055 for Apollo 10
+			if (ProgramName == "Colossus237" || ProgramName == "Colossus249" || ProgramName == "Comanche055NBY69")
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -250,7 +226,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 
 				TEPHEM0 = 40038.;
 			}
-			else if (ApolloNo < 14 || ApolloNo == 1301)	// Comanche 055
+			else if (ProgramName == "Comanche055")	// Comanche 055
 			{
 				// set launch pad longitude
 				if (longitude < 0) { longitude += TWO_PI; }
@@ -264,7 +240,7 @@ void CSMcomputer::Timestep(double simt, double simdt)
 
 				TEPHEM0 = 40403.;
 			}
-			else if (ApolloNo < 15)	//Artemis 072 for Apollo 14
+			else if (ProgramName == "Artemis072NBY71")	//Artemis 072 for Apollo 14
 			{
 				// set launch pad longitude
 				if (longitude < 0) longitude += TWO_PI;
@@ -539,17 +515,6 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 			sat->gdc.fdai_err_ena = 0;
 		}
 
-		// Reset TVC
-		if (val12[TVCEnable]) {
-			if (val12[EnableOpticsCDUErrorCounters]) {
-				if (!sat->tvsa.IsCMCErrorCountersEnabled()) {
-					sat->tvsa.ZeroCMCPosition();
-					sat->tvsa.EnableCMCTVCErrorCounter();
-				}
-			} else {
-				sat->tvsa.DisableCMCTVCErrorCounter();
-			}
-		}
 		break;
 		
 	case 0174: // FDAI ROLL ERROR
@@ -591,66 +556,6 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 	}
 }
 
-// TVC / Optics control
-
-void CSMcomputer::ProcessChannel140(ChannelValue val) {
-	
-	ChannelValue val12;
-	val12 = GetOutputChannel(012);
-	Saturn *sat = (Saturn *) OurVessel;
-	double error = 0;
-	int valx = val.to_ulong();
-
-	// TVC enable controls SPS gimballing.			
-	if (val12[TVCEnable]) {
-		// TVC PITCH
-		int tvc_pitch_pulses = 0;
-		double tvc_pitch_cmd = 0;
-		// One pulse means .023725 degree of rotation.
-		if(valx&077000){ // Negative
-			tvc_pitch_pulses = (~valx)&0777;
-			if(tvc_pitch_pulses == 0){ return; } // HACK
-			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
-			tvc_pitch_cmd = 0 - tvc_pitch_cmd; // Invert
-		}else{
-			tvc_pitch_pulses = valx&0777;
-			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
-		}		
-		sat->tvsa.ChangeCMCPitchPosition(tvc_pitch_cmd);
-
-	} else {
-		sat->optics.CMCShaftDrive(valx,val12.to_ulong());
-	}	
-}
-
-void CSMcomputer::ProcessChannel141(ChannelValue val) {
-
-	ChannelValue val12;
-	val12 = GetOutputChannel(012);
-	Saturn *sat = (Saturn *) OurVessel;
-	double error = 0;
-	int valx = val.to_ulong();
-
-	if (val12[TVCEnable]) {
-		// TVC YAW
-		int tvc_yaw_pulses = 0;
-		double tvc_yaw_cmd = 0;		
-		if(valx&077000){ 
-			tvc_yaw_pulses = (~valx)&0777;
-			if(tvc_yaw_pulses == 0){ return; } 
-			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
-			tvc_yaw_cmd = 0 - tvc_yaw_cmd; 
-		}else{
-			tvc_yaw_pulses = valx&0777;
-			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
-		}				
-		sat->tvsa.ChangeCMCYawPosition(tvc_yaw_cmd);
-
-	} else {
-		sat->optics.CMCTrunionDrive(valx,val12.to_ulong());
-	}	
-}
-
 void CSMcomputer::ProcessChannel14(ChannelValue val){
 	// This entire deal is no longer necessary, but we'll leave the stub here in case it's needed later.
 	/*
@@ -688,8 +593,6 @@ CMOptics::CMOptics() {
 	OpticsShaft = 0.0;
 	SextTrunion = 0.0;
 	TeleTrunion = 0.0;
-	ShaftMoved = 0.0;
-	TrunionMoved = 0.0;
 	dTrunion = 0.0;
 	dShaft = 0.0;
 	OpticsManualMovement = 0;
@@ -698,9 +601,6 @@ CMOptics::CMOptics() {
 	SextDVLOSTog = false;
 	SextDVTimer = 0.0;
 	OpticsCovered = true;
-
-	TargetShaft = 0;
-	TargetTrunion = 0;
 }
 
 void CMOptics::Init(Saturn *vessel) {
@@ -737,50 +637,6 @@ void CMOptics::SystemTimestep(double simdt) {
 			break;
 	}
 
-}
-
-void CMOptics::CMCTrunionDrive(int val,int ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-
-	if (Powered == 0) { return; }
-
-	if (val&040000){ // Negative
-		pulses = -((~val)&07777); 
-	} else {
-		pulses = val&07777; 
-	}
-	if (val12[EnableOpticsCDUErrorCounters]){
-		sat->agc.vagc.Erasable[0][RegOPTY] += pulses;
-		sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-	}
-	SextTrunion += (OCDU_TRUNNION_STEP*pulses); 
-	TrunionMoved = SextTrunion;
-	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
-}
-
-void CMOptics::CMCShaftDrive(int val,int ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-
-	if (Powered == 0) { return; }
-
-	if (val&040000){ // Negative
-		pulses = -((~val)&07777); 
-	} else {
-		pulses = val&07777; 
-	}
-	OpticsShaft += (OCDU_SHAFT_STEP*pulses);
-	ShaftMoved = OpticsShaft;
-	if (val12[EnableOpticsCDUErrorCounters]){
-		sat->agc.vagc.Erasable[0][RegOPTX] += pulses;
-		sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-	}
-	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
 }
 
 // Paint counters. The documentation is not clear if the displayed number is supposed to be decimal degrees or CDU counts.
@@ -862,200 +718,127 @@ void CMOptics::TimeStep(double simdt) {
 
 	if (Powered == 0) { return; }
 
-	// Generate rates for telescope and manual mode
-	switch(sat->ControllerSpeedSwitch.GetState()) {
-		case THREEPOSSWITCH_UP:       // HI
-			ShaftRate = 1775. * simdt;
-			TrunRate  = 3640. * simdt;
-			break;
-		case THREEPOSSWITCH_CENTER:   // MED
-			ShaftRate = 182. * simdt;
-			TrunRate  = 364. * simdt;
-			break;
-		case THREEPOSSWITCH_DOWN:     // LOW
-			ShaftRate = 18. * simdt;
-			TrunRate  = 36. * simdt;
-			break;
-	}
-
+	//Rates
 	if (sat->OpticsZeroSwitch.IsUp())
 	{
-		// Force MANUAL HI rate for zero optics mode.
-		ShaftRate = 1775. * simdt;
-		TrunRate = 3640. * simdt;
-
-		if (OpticsShaft > 0) {
-			if (OpticsShaft > OCDU_SHAFT_STEP*ShaftRate) {
-				OpticsShaft -= OCDU_SHAFT_STEP * ShaftRate;
-				ShaftMoved = OpticsShaft;
-			}
-			else {
-				OpticsShaft = 0;
-				ShaftMoved = 0;
-			}
-		}
-		if (OpticsShaft < 0) {
-			if (OpticsShaft < (-OCDU_SHAFT_STEP * ShaftRate)) {
-				OpticsShaft += OCDU_SHAFT_STEP * ShaftRate;
-				ShaftMoved = OpticsShaft;
-			}
-			else {
-				OpticsShaft = 0;
-				ShaftMoved = 0;
-			}
-		}
-		if (SextTrunion > 0) {
-			if (SextTrunion > OCDU_TRUNNION_STEP*TrunRate) {
-				SextTrunion -= OCDU_TRUNNION_STEP * TrunRate;
-				TrunionMoved = SextTrunion;
-			}
-			else {
-				SextTrunion = 0;
-				TrunionMoved = 0;
-			}
-		}
-		if (SextTrunion < 0) {
-			if (SextTrunion < (-OCDU_TRUNNION_STEP * TrunRate)) {
-				SextTrunion += OCDU_TRUNNION_STEP * TrunRate;
-				TrunionMoved = SextTrunion;
-			}
-			else {
-				SextTrunion = 0;
-				TrunionMoved = 0;
-			}
+		//Optics zero speed is twice the angle, limit to max drive rate
+		ShaftRate = min(abs(2.0*OpticsShaft), 19.5*RAD);
+		TrunRate = min(abs(2.0*SextTrunion), 10.0*RAD);
+	}
+	else
+	{
+		// Generate rates for telescope and manual mode
+		switch (sat->ControllerSpeedSwitch.GetState()) {
+		case THREEPOSSWITCH_UP:       // HI
+			ShaftRate = 19.5*RAD;
+			TrunRate = 10.0*RAD;
+			break;
+		case THREEPOSSWITCH_CENTER:   // MED
+			ShaftRate = 2.0*RAD;
+			TrunRate = 1.0*RAD;
+			break;
+		case THREEPOSSWITCH_DOWN:     // LOW
+			ShaftRate = 0.2*RAD;
+			TrunRate = 0.1*RAD;
+			break;
 		}
 	}
-	else if (sat->OpticsModeSwitch.IsDown())
+
+	dTrunion = 0.0;
+	dShaft = 0.0;
+
+	//ZERO OPTICS
+	if (sat->OpticsZeroSwitch.IsUp())
 	{
-		/* About "SextTrunion < (RAD*59.0)":
-
-			# Page 711
-			# PROGRAM NAME -- PICAPAR   DATE: DEC 20 66
-			# MOD 1            LOG SECTION: P51-P53
-			#            ASSEMBLY:  SUNDISK REV40
-			# BY KEN VINCENT
-			#
-			# FUNCTION
-			#   THIS PROGRAM READS THE IMU-CDUS AND COMPUTES THE VEHICLE ORIENTATION
-			#   WITH RESPECT TO INERTIAL SPACE.  IT THEN COMPUTES THE SHAFT AXIS (SAX)
-			#   WITH RESPECT TO REFERENCE INTERTIAL.  EACH STAR IN THE CATALOG IS TESTED
-			#    TO DETERMINE IF IT IS OCCULTED BY EITHER EARTH, SUN OR MOON.  IF A
-			#    STAR IS NOT OCCULTED THEN IT IS PARIED WITH ALL STARS OF LOWER INDEX.
-			#    THE PAIRED STAR IS TESTED FOR OCCULTATION.  PAIRS OF STARS THAT PASS
-			#   THE OCCULTATION TESTS ARE TESTED FOR GOOD SEPARATION.  A PAIR OF STARS
-			#   HAVE GOOD SEPARATION IF THE ANGLE BETWEEN THEM IS LESS THAN 66 DEGREES
-			#   AND MORE THAN 40 DEGREES.  THOSE PAIRS WITH GOOD SEPARATION
-			#   ARE THEN TESTED TO SEE IF THEY LIE IN CURRENT FIELD OF VIEW.  (WITHIN
-			#   33 DEGREES OF SAX).  THE PAIR WITH MAX SEPARATION IS CHOSEN FROM
-			#   THOSE WITH GOOD SEPARATION, AND IN FIELD OF VIEW.
-
-			As stated above, the angular difference between the 2 stars should be 40°-66°, a rather tight margin.
-			Greater than 66° isn't working at all, but smaller than 40° is at least possible (i.e. no errors) however less precise.
-
-			But the stated max. field of view = max. trunnion angle of 33° seems to be wrong.
-			With trunnion angles greater than 60°, P51 isn't working anymore (as I figured out by testing).
-			But PICAPAR does choose stars with a trunnion angle greater than 33° (current "record" 45°), so restricting the max. trunnion
-			angle to 33° is NO option. AOH 2.2.3.3.1 seems to state a max. trunnion angle of 50°.
-
-			http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2514.msg20287#msg20287
-			*/
-
-		dTrunion = 0.0;
-		dShaft = 0.0;
-
-		switch (sat->ControllerCouplingSwitch.GetState()) {
-		case TOGGLESWITCH_UP: // DIRECT
-
-			if ((OpticsManualMovement & 0x01) != 0 && SextTrunion < (RAD*59.0)) {
-				dTrunion = OCDU_TRUNNION_STEP * TrunRate;
-			}
-			if ((OpticsManualMovement & 0x02) != 0 && SextTrunion > 0) {
-				dTrunion = -OCDU_TRUNNION_STEP * TrunRate;
-			}
-			if ((OpticsManualMovement & 0x04) != 0 && OpticsShaft > -(RAD*270.0)) {
-				dShaft = -OCDU_SHAFT_STEP * ShaftRate;
-			}
-			if ((OpticsManualMovement & 0x08) != 0 && OpticsShaft < (RAD*270.0)) {
-				dShaft = OCDU_SHAFT_STEP * ShaftRate;
-			}
-			break;
-
-		case TOGGLESWITCH_DOWN: // RESOLVED
+		if (OpticsShaft > 0)
+		{
+			dShaft = -ShaftRate * simdt;
+		}
+		else
+		{
+			dShaft = ShaftRate * simdt;
+		}
+		if (SextTrunion > 0)
+		{
+			dTrunion = -TrunRate * simdt;
+		}
+		else
+		{
+			dTrunion = TrunRate * simdt;
+		}
+	}
+	else
+	{
+		// MANUAL
+		if (sat->OpticsModeSwitch.IsDown())
+		{
 			double A_t_dot, A_s_dot;
 			A_t_dot = 0.0;
 			A_s_dot = 0.0;
 
-			if ((OpticsManualMovement & 0x01) != 0) {// && SextTrunion < (RAD*59.0)) {
-				A_t_dot = OCDU_TRUNNION_STEP * TrunRate;
+			if ((OpticsManualMovement & 0x01) != 0) {
+				A_t_dot = TrunRate * simdt;
 			}
-			if ((OpticsManualMovement & 0x02) != 0) {//&& SextTrunion > 0) {
-				A_t_dot = -OCDU_TRUNNION_STEP * TrunRate;
+			if ((OpticsManualMovement & 0x02) != 0) {
+				A_t_dot = -TrunRate * simdt;
 			}
-			if ((OpticsManualMovement & 0x04) != 0) {//&& OpticsShaft > -(RAD*270.0)) {
-				A_s_dot = -OCDU_SHAFT_STEP * ShaftRate;
+			if ((OpticsManualMovement & 0x04) != 0) {
+				A_s_dot = -ShaftRate * simdt;
 			}
-			if ((OpticsManualMovement & 0x08) != 0) {//&& OpticsShaft < (RAD*270.0)) {
-				A_s_dot = OCDU_SHAFT_STEP * ShaftRate;
+			if ((OpticsManualMovement & 0x08) != 0) {
+				A_s_dot = ShaftRate * simdt;
 			}
 
-			dShaft = (A_s_dot*cos(OpticsShaft) - A_t_dot * sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
-			dTrunion = A_s_dot * sin(OpticsShaft) + A_t_dot * cos(OpticsShaft);
-
-			TrunRate = abs(dTrunion) / OCDU_TRUNNION_STEP;	//Just so that the telescope trunnion moves correctly
-
-			break;
+			// DIRECT
+			if (sat->ControllerCouplingSwitch.IsUp())
+			{
+				dShaft += A_s_dot;
+				dTrunion += A_t_dot;
+			}
+			// RESOLVED
+			else
+			{
+				dShaft += (A_s_dot*cos(OpticsShaft) - A_t_dot * sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
+				dTrunion += A_s_dot * sin(OpticsShaft) + A_t_dot * cos(OpticsShaft);
+			}
 		}
 
-		OpticsShaft += dShaft;
-		SextTrunion += dTrunion;
-
-		//Limits
-		if (OpticsShaft > 270.0*RAD)
+		if (sat->agc.GetOutputChannelBit(012, DisengageOpticsDAC) == false)
 		{
-			OpticsShaft = 270.0*RAD;
-		}
-		if (OpticsShaft < -270.0*RAD)
-		{
-			OpticsShaft = -270.0*RAD;
-		}
-		if (SextTrunion < 0.0)
-		{
-			SextTrunion = 0.0;
-		}
-		if (SextTrunion > 59.0*RAD)
-		{
-			SextTrunion = 59.0*RAD;
+			//26mV per bit, 30.8 revolutions per second per volt, 1/3080 gear ratio (Shaft), 2/11780 gear ratio (Trunnion)
+			dShaft += 0.026*30.8*PI2*1.0 / 3080.0*simdt*(double)sat->scdu.GetErrorCounter();
+			dTrunion += 0.026*30.8*PI2*2.0 / 11780.0*simdt*(double)sat->tcdu.GetErrorCounter();
 		}
 
-		if (dTrunion > 0) {
-			while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
-				sat->agc.vagc.Erasable[0][RegOPTY]++;
-				sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-				TrunionMoved += OCDU_TRUNNION_STEP;
-			}
-		}
-		if (dTrunion < 0) {
-			while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
-				sat->agc.vagc.Erasable[0][RegOPTY]--;
-				sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-				TrunionMoved -= OCDU_TRUNNION_STEP;
-			}
-		}
-		if (dShaft < 0) {
-			while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
-				sat->agc.vagc.Erasable[0][RegOPTX]--;
-				sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-				ShaftMoved -= OCDU_SHAFT_STEP;
-			}
-		}
-		if (dShaft > 0) {
-			while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
-				sat->agc.vagc.Erasable[0][RegOPTX]++;
-				sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-				ShaftMoved += OCDU_SHAFT_STEP;
-			}
-		}
+		//sprintf(oapiDebugString(), "Trun Err: %lf Shaft Err: %lf", (double)sat->tcdu.GetErrorCounter()*180.0*pow(2, -14), (double)sat->scdu.GetErrorCounter()*180.0*pow(2, -12));
+		//sprintf(oapiDebugString(), "Trun: %lf %d Shaft: %lf %d", dTrunion / simdt * DEG, sat->tcdu.GetErrorCounter(), dShaft / simdt * DEG, sat->scdu.GetErrorCounter());
 	}
+
+	OpticsShaft += dShaft;
+	SextTrunion += dTrunion;
+
+	//Limits
+	if (OpticsShaft > 270.0*RAD)
+	{
+		OpticsShaft = 270.0*RAD;
+	}
+	if (OpticsShaft < -270.0*RAD)
+	{
+		OpticsShaft = -270.0*RAD;
+	}
+	if (SextTrunion < 0.0)
+	{
+		SextTrunion = 0.0;
+	}
+	if (SextTrunion > 59.0*RAD)
+	{
+		SextTrunion = 59.0*RAD;
+	}
+
+	sat->tcdu.SetReadCounter(SextTrunion * 4.0);
+	sat->scdu.SetReadCounter(OpticsShaft);
+
+	//sprintf(oapiDebugString(), "%d %d", sat->tcdu.GetErrorCounter(), sat->scdu.GetErrorCounter());
 
 	// TELESCOPE TRUNNION MAINTENANCE (happens in all modes)
 	// If the CMC issued pulses, they will have happened before we got here, so the sextant angle will be right.
@@ -1073,20 +856,9 @@ void CMOptics::TimeStep(double simdt) {
 			TeleTrunionTarget = SextTrunion + 0.218166156; // Add 12.5 degrees to sextant angle
 			break;
 	}
-	if(TeleTrunion > TeleTrunionTarget){
-		if(TeleTrunion > TeleTrunionTarget-(OCDU_TRUNNION_STEP*TrunRate)){
-			TeleTrunion -= OCDU_TRUNNION_STEP*TrunRate;				
-		}else{
-			TeleTrunion = TeleTrunionTarget;
-		}				
-	}
-	if(TeleTrunion < TeleTrunionTarget){
-		if(TeleTrunion < TeleTrunionTarget+(-OCDU_TRUNNION_STEP*TrunRate)){
-			TeleTrunion += OCDU_TRUNNION_STEP*TrunRate;
-		}else{
-			TeleTrunion = TeleTrunionTarget;
-		}
-	}
+
+	//Roughly from the transfer function (Apollo 15 Delco manual)
+	TeleTrunion += (TeleTrunionTarget - TeleTrunion)*2.0*simdt;
 
 	//sprintf(oapiDebugString(), "Optics Shaft %.2f, Sext Trunion %.2f, Tele Trunion %.2f", OpticsShaft/RAD, SextTrunion/RAD, TeleTrunion/RAD);
 	//sprintf(oapiDebugString(), "Sext Trunion EMEM %o", sat->agc.vagc.Erasable[0][RegOPTY]);
@@ -1100,10 +872,6 @@ void CMOptics::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "OPTICSSHAFT", OpticsShaft);
 	papiWriteScenario_double(scn, "SEXTTRUNION", SextTrunion);
 	papiWriteScenario_double(scn, "TELETRUNION", TeleTrunion);
-	papiWriteScenario_double(scn, "TARGETSHAFT", TargetShaft);
-	papiWriteScenario_double(scn, "TARGETTRUNION", TargetTrunion);
-	papiWriteScenario_double(scn, "SHAFTMOVED", ShaftMoved);
-	papiWriteScenario_double(scn, "TRUNIONMOVED", TrunionMoved);
 	papiWriteScenario_bool(scn, "OPTICSCOVERED", OpticsCovered); 
 	oapiWriteLine(scn, CMOPTICS_END_STRING);
 }
@@ -1130,18 +898,6 @@ void CMOptics::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "TELETRUNION", 11)) {
 			sscanf (line+11, "%lf", &TeleTrunion);
 		}
-		else if (!strnicmp (line, "TARGETSHAFT", 11)) {
-			sscanf (line+11, "%lf", &TargetShaft);
-		}
-		else if (!strnicmp (line, "TARGETTRUNION", 13)) {
-			sscanf (line+13, "%lf", &TargetTrunion);
-		}
-		else if (!strnicmp (line, "SHAFTMOVED", 10)) {
-			sscanf (line+10, "%lf", &ShaftMoved);
-		}
-		else if (!strnicmp (line, "TRUNIONMOVED", 12)) {
-			sscanf (line+12, "%lf", &TrunionMoved);
-		} 
 		papiReadScenario_bool(line, "OPTICSCOVERED", OpticsCovered); 
 	}
 }

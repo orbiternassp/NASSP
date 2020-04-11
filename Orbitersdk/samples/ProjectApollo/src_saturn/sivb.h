@@ -112,7 +112,7 @@ struct SIVBSettings
 	///
 	char LEMCheck[100];
 
-	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0; };
+	SIVBSettings() { LMPad = 0; LMPadCount = 0; AEAPad = 0; AEAPadCount = 0; LEMCheck[0] = 0;};
 
 	IU *iu_pointer;
 };

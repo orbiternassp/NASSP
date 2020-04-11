@@ -61,7 +61,6 @@ SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	PropellantDepletionSensors = false;
 	OrdnanceArmed = false;
 	SIISIVBOrdnanceArmed = false;
-	FailInit = false;
 	StartPhaseLimiterCutoffArm = false;
 	LH2StepPressurization = false;
 
@@ -88,12 +87,6 @@ void SIISystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
-	if (FailInit)
-	{
-		papiWriteScenario_bool(scn, "FAILINIT", FailInit);
-		papiWriteScenario_boolarr(scn, "EARLYSIICUTOFF", EarlySIICutoff, 5);
-		papiWriteScenario_doublearr(scn, "SECONDSTAGEFAILURETIME", SecondStageFailureTime, 5);
-	}
 
 	j2engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	j2engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -117,11 +110,8 @@ void SIISystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "SIISIVBORDNANCEARMED", SIISIVBOrdnanceArmed);
 		papiReadScenario_bool(line, "STARTPHASELIMITERCUTOFFARM", StartPhaseLimiterCutoffArm);
 		papiReadScenario_bool(line, "LH2STEPPRESSURIZATION", LH2StepPressurization);
-		papiReadScenario_bool(line, "FAILINIT", FailInit);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
-		papiReadScenario_boolarr(line, "EARLYSIICUTOFF", EarlySIICutoff, 5);
-		papiReadScenario_doublearr(line, "SECONDSTAGEFAILURETIME", SecondStageFailureTime, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			j2engine1.LoadState(scn, "ENGINE_END");
@@ -187,14 +177,11 @@ void SIISystems::Timestep(double simdt)
 	//Failure code
 	FailureTimer += simdt;
 
-	if (vessel->GetDamageModel())
+	for (int i = 0;i < 5;i++)
 	{
-		for (int i = 0;i < 5;i++)
+		if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && !j2engines[i]->GetFailed())
 		{
-			if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && !j2engines[i]->GetFailed())
-			{
-				j2engines[i]->SetFailed();
-			}
+			j2engines[i]->SetFailed();
 		}
 	}
 }
@@ -206,18 +193,22 @@ void SIISystems::SetEngineFailureParameters(bool *SIICut, double *SIICutTimes)
 		EarlySIICutoff[i] = SIICut[i];
 		SecondStageFailureTime[i] = SIICutTimes[i];
 	}
-
-	FailInit = true;
 }
 
-void SIISystems::SetEngineFailureParameters(int n, double SIICutTimes)
+void SIISystems::SetEngineFailureParameters(int n, double SIICutTimes, bool fail)
 {
 	if (n < 1 || n > 5) return;
 
-	EarlySIICutoff[n - 1] = true;
+	EarlySIICutoff[n - 1] = fail;
 	SecondStageFailureTime[n - 1] = SIICutTimes;
+}
 
-	FailInit = true;
+void SIISystems::GetEngineFailureParameters(int n, bool &fail, double &failtime)
+{
+	if (n < 1 || n > 5) return;
+
+	fail = EarlySIICutoff[n - 1];
+	failtime = SecondStageFailureTime[n - 1];
 }
 
 #define MR_STATS 5

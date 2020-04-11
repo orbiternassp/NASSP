@@ -36,7 +36,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "sivb.h"
 #include "../src_rtccmfd/OrbMech.h"
 #include "../src_rtccmfd/EntryCalculations.h"
-#include "../src_rtccmfd/LMGuidanceSim.h"
+#include "../src_rtccmfd/TLMCC.h"
+#include "../src_rtccmfd/TLIGuidanceSim.h"
+#include "../src_rtccmfd/CSMLMGuidanceSim.h"
+#include "../src_rtccmfd/GeneralizedIterator.h"
 #include "mcc.h"
 #include "rtcc.h"
 
@@ -327,6 +330,7 @@ DetailedManeuverTable::DetailedManeuverTable()
 	CFP_TPI = 0.0;
 	CFP_DT = 0.0;
 	sprintf_s(CFP_OPTION, "");
+	isCSMTV = true;
 }
 
 TradeoffDataDisplayBuffer::TradeoffDataDisplayBuffer()
@@ -480,6 +484,7 @@ LunarLiftoffTimeOpt::LunarLiftoffTimeOpt()
 	v_LV = 19.5*0.3048;
 	theta_F = 130.0*RAD;
 	E = 26.6*RAD;
+	I_TPI = 1;
 }
 
 LunarDescentPlanningTable::LunarDescentPlanningTable()
@@ -588,6 +593,8 @@ RTCC::RTEConstraintsTable::RTEConstraintsTable()
 	ATPCoordinates[4][5] = 170.0*RAD;
 	ATPCoordinates[4][6] = -40.0*RAD;
 	ATPCoordinates[4][7] = 170.0*RAD;
+
+	sprintf_s(RTEManeuverCode, "CSU");
 }
 
 RTCC::RTCC()
@@ -793,6 +800,9 @@ RTCC::RTCC()
 	MDLEIC[1] = 0.0;
 	//Inertial velocity of EI, fps
 	MDLEIC[2] = 25567.72868;
+
+	MCCCEX = 3404;
+	MCCLEX = 3433;
 
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -3185,12 +3195,10 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 
 		EngineParametersTable(opt->enginetype, f_T, isp);
 
-		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
+		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 		sv_pre = coast(sv_node, t_slip);
 
-		Q_Xx = OrbMech::LVLH_Matrix(sv_pre.R, sv_pre.V);
-
-		dV_LVLH = mul(Q_Xx, Llambda);
+		dV_LVLH = PIEXDV(sv_node.R, sv_node.V, mass, f_T, Llambda, false);
 		P30TIG = GET_node + t_slip;
 
 		sv_post = sv_node;
@@ -3210,296 +3218,88 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		sv_post.R = R_ref[sol];
 		sv_post.V = V_ref[sol];
 
-		PZLRBELM.sv_man_bef.R = sv_node.R;
-		PZLRBELM.sv_man_bef.V = sv_node.V;
-		PZLRBELM.sv_man_bef.GMT = OrbMech::GETfromMJD(sv_node.MJD, GMTBASE);
-		PZLRBELM.sv_man_bef.RBI = BODY_MOON;
-		PZLRBELM.V_man_after = sv_post.V;
-		PZLRBELM.plan = opt->plan;
+		PZLRBELM.sv_man_bef[0].R = sv_node.R;
+		PZLRBELM.sv_man_bef[0].V = sv_node.V;
+		PZLRBELM.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv_node.MJD, GMTBASE);
+		PZLRBELM.sv_man_bef[0].RBI = BODY_MOON;
+		PZLRBELM.V_man_after[0] = sv_post.V;
 	}
 
 }
 
-void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG)
+void RTCC::TranslunarMidcourseCorrectionProcessor(SV sv0, double CSMmass, double LMmass)
 {
-	SV sv_pre, sv_post;
+	TLMCCDataTable datatab;
+	TLMCCMEDQuantities medquant;
+	TLMCCMissionConstants mccconst;
+	TLMCCOutputData out;
 
-	LOI2Targeting(opt, dV_LVLH, P30TIG, sv_pre, sv_post);
-}
+	datatab = PZSFPTAB.blocks[PZMCCPLN.SFPBlockNum - 1];
 
-void RTCC::LOI2Targeting(LOI2Man *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_pre, SV &sv_post)
-{
-	SV sv0, sv1, sv2;
-	double GET, LMmass, mass, EarliestMJD;
-	OBJHANDLE hMoon;
-
-	sv0 = opt->RV_MCC;
-	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
-
-	if (opt->csmlmdocked)
+	medquant.Mode = PZMCCPLN.Mode;
+	medquant.Config = PZMCCPLN.Config;
+	medquant.T_MCC = GMTfromGET(PZMCCPLN.MidcourseGET);
+	medquant.GMTBase = GetGMTBase();
+	medquant.GETBase = CalcGETBase();
+	medquant.sv0 = sv0;
+	medquant.CSMMass = CSMmass;
+	medquant.LMMass = LMmass;
+	medquant.H_pl = PZMCCPLN.h_PC;
+	medquant.H_pl_mode5 = PZMCCPLN.h_PC_mode5;
+	medquant.INCL_fr = PZMCCPLN.incl_fr;
+	medquant.H_pl_min = PZMCCPLN.H_PCYN_MIN;
+	medquant.H_pl_max = PZMCCPLN.H_PCYN_MAX;
+	medquant.AZ_min = PZMCCPLN.AZ_min;
+	medquant.AZ_max = PZMCCPLN.AZ_max;
+	medquant.H_A_LPO1 = PZMCCPLN.H_A_LPO1;
+	medquant.H_P_LPO1 = PZMCCPLN.H_P_LPO1;
+	medquant.H_A_LPO2 = PZMCCPLN.H_A_LPO2;
+	medquant.H_P_LPO2 = PZMCCPLN.H_P_LPO2;
+	medquant.Revs_LPO1 = PZMCCPLN.REVS1;
+	medquant.Revs_LPO2 = PZMCCPLN.REVS2;
+	medquant.TA_LOI = PZMCCPLN.ETA1;
+	medquant.site_rotation_LPO2 = PZMCCPLN.SITEROT;
+	medquant.useSPS = true;
+	medquant.T_min_sea = PZMCCPLN.TLMIN + MCGMTL;
+	if (PZMCCPLN.TLMAX <= 0)
 	{
-		LMmass = GetDockedVesselMass(opt->vessel);
+		medquant.T_max_sea = 1000.0;
 	}
 	else
 	{
-		LMmass = 0.0;
+		medquant.T_max_sea = PZMCCPLN.TLMAX + MCGMTL;
 	}
+	medquant.Revs_circ = 1;
+	medquant.H_T_circ = 60.0*1852.0;
+	medquant.lat_bias = PZMCCPLN.LATBIAS;
 
-	if (opt->EarliestGET == 0.0)
-	{
-		EarliestMJD = sv0.MJD;
-	}
-	else
-	{
-		EarliestMJD = OrbMech::MJDfromGET(opt->EarliestGET, opt->GETbase);
-	}
+	mccconst.V_pcynlo = 5480.0*0.3048;
+	mccconst.H_LPO = 60.0*1852.0;
+	mccconst.lambda_IP = 190.0*RAD;
+	mccconst.dt_bias = 0.332;
+	mccconst.m = PZMCCPLN.LOPC_M;
+	mccconst.n = PZMCCPLN.LOPC_N;
+	mccconst.T_t1_min_dps = PZMCCPLN.TT1_DPS_MIN;
+	mccconst.T_t1_max_dps = PZMCCPLN.TT1_DPS_MAX;
+	mccconst.INCL_PR_MAX = PZMCCPLN.INCL_PR_MAX;
 
-	sv1 = coast(sv0, (EarliestMJD - sv0.MJD)*24.0*3600.0);
+	TLMCCProcessor tlmcc;
+	tlmcc.Init(&pzefem, datatab, medquant, mccconst);
+	tlmcc.Main(out);
 
-	mass = LMmass + sv1.mass;
+	//Update display data
+	PZMCCDIS.data[PZMCCPLN.Column - 1] = out.display;
 
-	hMoon = oapiGetObjectByName("Moon");
+	//Update MPT transfer table
+	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].R = out.R_MCC;
+	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].V = out.V_MCC;
+	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].GMT = out.GMT_MCC;
+	PZMCCXFR.sv_man_bef[PZMCCPLN.Column - 1].RBI = out.RBI;
+	PZMCCXFR.V_man_after[PZMCCPLN.Column - 1] = out.V_MCC_apo;
 
-	double a, dt2, LOIGET, v_circ;
-	VECTOR3 U_H, U_hor, VA2_apo, DVX;
-
-	a = OrbMech::R_Moon + opt->h_circ + opt->alt;
-
-	dt2 = OrbMech::time_radius_integ(sv1.R, sv1.V, sv1.MJD, a, -1, hMoon, hMoon);
-	sv2 = coast(sv1, dt2);
-	LOIGET = OrbMech::GETfromMJD(sv2.MJD, opt->GETbase);
-
-	U_H = unit(crossp(sv2.R, sv2.V));
-	U_hor = unit(crossp(U_H, unit(sv2.R)));
-	v_circ = sqrt(OrbMech::mu_Moon*(2.0 / length(sv2.R) - 1.0 / a));
-	VA2_apo = U_hor*v_circ;
-
-	DVX = VA2_apo - sv2.V;
-
-	PoweredFlightProcessor(sv2, opt->GETbase, LOIGET, opt->enginetype, LMmass, DVX, false, P30TIG, dV_LVLH, sv_pre, sv_post);
-}
-
-void RTCC::TranslunarInjectionProcessorNodal(TLIManNode *opt, VECTOR3 &dV_LVLH, double &P30TIG, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
-{
-	double GET;
-	OBJHANDLE hMoon;
-	SV sv0, sv1;
-
-	hMoon = oapiGetObjectByName("Moon");
-
-	sv0 = opt->RV_MCC;
-	GET = (sv0.MJD - opt->GETbase)*24.0*3600.0;
-
-	double TIGMJD, PeriMJD, dt1, dt2, TIGguess, dTIG;
-	VECTOR3 R_peri, VA1_apo, V_peri, RA2, DVX;
-	MATRIX3 Q_Xx;
-	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
-	int ii;
-
-	PeriMJD = opt->PeriGET / 24.0 / 3600.0 + opt->GETbase;
-
-	TIGguess = opt->TLI_TIG + 6.0*60.0;
-	dTIG = -60.0;
-	ii = 0;
-
-	double TIGvar[3], dv[3];
-	VECTOR3 Llambda, R2_cor, V2_cor, dVLVLH; double t_slip, f_T, isp, boil, m1, m0, TIG, mcut;
-
-	f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	boil = (1.0 - 0.99998193) / 10.0;
-	m0 = opt->vessel->GetEmptyMass();
-
-	while (abs(dTIG) > 1.0)
-	{
-		TIGMJD = TIGguess / 24.0 / 3600.0 + opt->GETbase;
-		dt1 = TIGguess - (sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-		dt2 = (PeriMJD - TIGMJD)*24.0*3600.0;
-
-		sv1 = coast(sv0, dt1);
-
-		double MoonPos[12];
-		CELBODY *cMoon;
-		VECTOR3 R_I_star, delta_I_star, delta_I_star_dot, R_P, R_m, V_m;
-		MATRIX3 Rot2;
-		R_I_star = delta_I_star = delta_I_star_dot = _V(0.0, 0.0, 0.0);
-
-		cMoon = oapiGetCelbodyInterface(hMoon);
-
-		R_P = unit(_V(cos(opt->lng)*cos(opt->lat), sin(opt->lat), sin(opt->lng)*cos(opt->lat)));
-		Rot2 = OrbMech::GetRotationMatrix(BODY_MOON, PeriMJD);
-
-		R_peri = mul(Rot2, R_P);
-		//R_peri = unit(mul(Rot, _V(R_peri.x, R_peri.z, R_peri.y)))*(oapiGetSize(hMoon) + opt->h_peri);
-		R_peri = unit(_V(R_peri.x, R_peri.z, R_peri.y))*(OrbMech::R_Moon + opt->h_peri);
-
-		cMoon->clbkEphemeris(PeriMJD, EPHEM_TRUEPOS | EPHEM_TRUEVEL, MoonPos);
-		//R_m = mul(Rot, _V(MoonPos[0], MoonPos[2], MoonPos[1]));
-		//V_m = mul(Rot, _V(MoonPos[3], MoonPos[5], MoonPos[4]));
-		R_m = _V(MoonPos[0], MoonPos[2], MoonPos[1]);
-		V_m = _V(MoonPos[3], MoonPos[5], MoonPos[4]);
-
-		//Initial trajectory, only accurate to 1000 meters
-		V_peri = OrbMech::ThreeBodyLambert(PeriMJD, TIGMJD, R_peri, V_m, sv1.R, R_m, V_m, 24.0*OrbMech::R_Earth, OrbMech::mu_Earth, OrbMech::mu_Moon, R_I_star, delta_I_star, delta_I_star_dot);
-		//OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, -dt2, RA2, VA1_apo, hMoon, hEarth);
-
-		//Precise backwards targeting
-		V_peri = OrbMech::Vinti(R_peri, V_peri, sv1.R, PeriMJD, -dt2, 0, false, hMoon, hMoon, hEarth, V_peri);
-
-		//Finding the new ignition state
-		OrbMech::oneclickcoast(R_peri, V_peri, PeriMJD, (sv1.MJD - PeriMJD)*24.0*3600.0, RA2, VA1_apo, hMoon, hEarth);
-
-		//Final pass through the targeting, forwards and precise
-		//VA1_apo = OrbMech::Vinti(RA1, VA1, R_peri, TIGMJD, dt2, 0, true, hEarth, hEarth, hMoon, VA1_apo);
-
-		DVX = VA1_apo - sv1.V;
-
-		if (ii < 2)
-		{
-			TIGvar[ii + 1] = (TIGMJD - sv0.MJD)*24.0*3600.0;
-			dv[ii + 1] = length(DVX);
-		}
-		else
-		{
-			dv[0] = dv[1];
-			dv[1] = dv[2];
-			dv[2] = length(DVX);
-			TIGvar[0] = TIGvar[1];
-			TIGvar[1] = TIGvar[2];
-			TIGvar[2] = (TIGMJD - sv0.MJD)*24.0*3600.0;
-
-			dTIG = OrbMech::quadratic(TIGvar, dv) + (sv0.MJD - TIGMJD)*24.0*3600.0;
-
-			if (abs(dTIG) > 10.0*60.0)
-			{
-				dTIG = OrbMech::sign(dTIG)*10.0*60.0;
-			}
-		}
-
-		TIGguess += dTIG;
-		ii++;
-	}
-
-	m1 = (sv0.mass - m0)*exp(-boil*dt1);
-
-	OrbMech::impulsive(sv1.R, sv1.V, TIGMJD, hEarth, f_T, isp, m0 + m1, DVX, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
-
-	OrbMech::oneclickcoast(sv1.R, sv1.V, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
-
-	Q_Xx = OrbMech::LVLH_Matrix(R2_cor, V2_cor);
-
-	dVLVLH = mul(Q_Xx, Llambda);
-	TIG = TIGguess + t_slip;
-
-	P30TIG = TIG;
-	dV_LVLH = dVLVLH;
-}
-
-void RTCC::TranslunarInjectionProcessorFreeReturn(TLIManFR *opt, TLMCCResults *res, VECTOR3 &Rcut, VECTOR3 &Vcut, double &MJDcut)
-{
-	//state vector "now"
-	SV sv0;
-	//state vector at initial guess for ignition
-	SV sv1;
-	//state vector at current ignition time
-	SV sv2;
-	//state vector at periapsis
-	SV sv_peri;
-	//state vector at reentry
-	SV sv_reentry;
-	MATRIX3 Q_Xx;
-	VECTOR3 DV, DV_guess, Llambda, R2_cor, V2_cor, dVLVLH, var_conv;
-	double PeriMJDguess, dTIG, TIGguess, dt0, dt1, TIGMJD, f_T, isp, boil, m0, m1, t_slip, mcut, TIG;
-	double TIGvar[3], dv[3];
-	int ii;
-	OBJHANDLE hEarth;
-
-	sv0 = opt->RV_MCC;
-	dTIG = -60.0;
-	ii = 0;
-	hEarth = oapiGetObjectByName("Earth");
-
-	PeriMJDguess = opt->PeriGET / 24.0 / 3600.0 + opt->GETbase;
-	TIGguess = opt->TLI_TIG + 6.0*60.0;
-	dt0 = TIGguess - (sv0.MJD - opt->GETbase) * 24.0 * 60.0 * 60.0;
-	sv1 = coast(sv0, dt0);
-
-	TLIFirstGuessConic(sv1, opt->lat, opt->h_peri, PeriMJDguess, DV_guess, var_conv);
-	IntegratedTLMC(sv1, opt->lat, opt->h_peri, 0.0, PeriMJDguess, var_conv, DV_guess, var_conv, sv_peri);
-
-	while (abs(dTIG) > 1.0)
-	{
-		TIGMJD = TIGguess / 24.0 / 3600.0 + opt->GETbase;
-		dt1 = (TIGMJD - sv1.MJD) * 24.0 * 60.0 * 60.0;
-		sv2 = coast(sv1, dt1);
-
-		TLIFlyby(sv2, opt->lat, opt->h_peri, sv_peri, DV, sv_peri, sv_reentry);
-
-		if (ii < 2)
-		{
-			TIGvar[ii + 1] = (TIGMJD - sv0.MJD)*24.0*3600.0;
-			dv[ii + 1] = length(DV);
-		}
-		else
-		{
-			dv[0] = dv[1];
-			dv[1] = dv[2];
-			dv[2] = length(DV);
-			TIGvar[0] = TIGvar[1];
-			TIGvar[1] = TIGvar[2];
-			TIGvar[2] = (TIGMJD - sv0.MJD)*24.0*3600.0;
-
-			dTIG = OrbMech::quadratic(TIGvar, dv) + (sv0.MJD - TIGMJD)*24.0*3600.0;
-
-			if (abs(dTIG) > 10.0*60.0)
-			{
-				dTIG = OrbMech::sign(dTIG)*10.0*60.0;
-			}
-		}
-
-		TIGguess += dTIG;
-		ii++;
-	}
-
-	f_T = opt->vessel->GetThrusterMax0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	isp = opt->vessel->GetThrusterIsp0(opt->vessel->GetGroupThruster(THGROUP_MAIN, 0));
-	boil = (1.0 - 0.99998193) / 10.0;
-	m0 = opt->vessel->GetEmptyMass();
-
-	m1 = (sv0.mass - m0)*exp(-boil*dt1);
-
-	OrbMech::impulsive(sv2.R, sv2.V, TIGMJD, hEarth, f_T, isp, m0 + m1, DV, Llambda, t_slip, Rcut, Vcut, MJDcut, mcut); //Calculate the impulsive equivalent of the maneuver
-
-	OrbMech::oneclickcoast(sv2.R, sv2.V, TIGMJD, t_slip, R2_cor, V2_cor, hEarth, hEarth);//Calculate the state vector at the corrected ignition time
-
-	Q_Xx = OrbMech::LVLH_Matrix(R2_cor, V2_cor);
-
-	dVLVLH = mul(Q_Xx, Llambda);
-	TIG = TIGguess + t_slip;
-
-	res->TIG = TIG;
-	res->dV_LVLH_LOI = dVLVLH;
-	res->PericynthionGET = (sv_peri.MJD - opt->GETbase)*24.0*3600.0;
-	res->EntryInterfaceGET = (sv_reentry.MJD - opt->GETbase)*24.0*3600.0;
-
-	//Calculate Reentry Parameters
-	MATRIX3 Rot;
-	VECTOR3 R_geo, V_geo, H_geo;
-
-	Rot = OrbMech::GetRotationMatrix(BODY_EARTH, sv_reentry.MJD);
-	R_geo = rhtmul(Rot, sv_reentry.R);
-	V_geo = rhtmul(Rot, sv_reentry.V);
-	H_geo = crossp(R_geo, V_geo);
-	res->FRInclination = acos(H_geo.z / length(H_geo));
-
-	double rtgo, vio, ret, r_EI, dt_EI;
-	VECTOR3 R_EI, V_EI;
-
-	r_EI = OrbMech::R_Earth + 400000.0*0.3048;
-	dt_EI = OrbMech::time_radius(sv_reentry.R, -sv_reentry.V, r_EI, 1.0, OrbMech::mu_Earth);
-	OrbMech::oneclickcoast(sv_reentry.R, sv_reentry.V, sv_reentry.MJD, -dt_EI, R_EI, V_EI, hEarth, hEarth);
-
-	EntryCalculations::Reentry(R_EI, V_EI, sv_reentry.MJD - dt_EI / 24.0 / 3600.0, true, res->SplashdownLat, res->SplashdownLng, rtgo, vio, ret);
+	//Update skeleton flight plan table
+	PZMCCSFP.blocks[PZMCCPLN.Column - 1] = out.outtab;
+	PZMCCSFP.blocks[PZMCCPLN.Column - 1].GMTTimeFlag = RTCCPresentTimeGMT();
 }
 
 void RTCC::TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCResults &res)
@@ -3549,19 +3349,18 @@ void RTCC::TranslunarMidcourseCorrectionTargetingNodal(MCCNodeMan &opt, TLMCCRes
 	res.dV_LVLH_MCC = mul(OrbMech::LVLH_Matrix(sv1.R, sv1.V), res.DV);
 
 	//TBD
-	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res.DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res.DV;
 }
 
 bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCCResults *res)
@@ -3616,19 +3415,18 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFreeReturn(MCCFRMan *opt, TLMCC
 	res->dV_LVLH_MCC = mul(OrbMech::LVLH_Matrix(sv1.R, sv1.V), res->DV);
 
 	//TBD
-	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res->DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res->DV;
 
 	//Calculate nodal target
 	OrbMech::latlong_from_J2000(sv_node.R, sv_node.MJD, sv_node.gravref, res->NodeLat, res->NodeLng);
@@ -3777,19 +3575,18 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingNonFreeReturn(MCCNFRMan *opt, T
 	res->dV_LVLH_MCC = mul(OrbMech::LVLH_Matrix(sv1.R, sv1.V), res->DV);
 
 	//TBD
-	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res->DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res->DV;
 
 	res->EMPLatitude = lat_nd4;
 
@@ -3835,19 +3632,18 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingFlyby(MCCFlybyMan *opt, TLMCCRe
 	res->dV_LVLH_MCC = mul(OrbMech::LVLH_Matrix(sv1.R, sv1.V), res->DV);
 
 	//TBD
-	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res->DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res->DV;
 
 	//Calculate Reentry Parameters
 	MATRIX3 Rot;
@@ -4009,19 +3805,18 @@ bool RTCC::TranslunarMidcourseCorrectionTargetingSPSLunarFlyby(MCCSPSLunarFlybyM
 	res->DV = DV;
 
 	//TBD
-	PZMCCXFR.plan = 1;
-	PZMCCXFR.sv_man_bef.R = sv1.R;
-	PZMCCXFR.sv_man_bef.V = sv1.V;
-	PZMCCXFR.sv_man_bef.GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
+	PZMCCXFR.sv_man_bef[0].R = sv1.R;
+	PZMCCXFR.sv_man_bef[0].V = sv1.V;
+	PZMCCXFR.sv_man_bef[0].GMT = OrbMech::GETfromMJD(sv1.MJD, GMTBASE);
 	if (sv1.gravref == hEarth)
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_EARTH;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_EARTH;
 	}
 	else
 	{
-		PZMCCXFR.sv_man_bef.RBI = BODY_MOON;
+		PZMCCXFR.sv_man_bef[0].RBI = BODY_MOON;
 	}
-	PZMCCXFR.V_man_after = sv1.V + res->DV;
+	PZMCCXFR.V_man_after[0] = sv1.V + res->DV;
 
 	res->PericynthionGET = (sv_peri.MJD - opt->GETbase)*24.0*3600.0;
 	res->EntryInterfaceGET = (sv_reentry.MJD - opt->GETbase)*24.0*3600.0;
@@ -4206,7 +4001,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 
 		coe_b = OrbMech::coe_from_sv(sv1.R, sv1.V, mu);
 
-		ApsidesDeterminationSubroutine(sv1, sv_a, sv_p);
+		PMMAPD(sv1, sv_a, sv_p);
 		r_a_b = length(sv_a.R);
 		r_p_b = length(sv_p.R);
 		coe_p = OrbMech::coe_from_sv(sv_p.R, sv_p.V, mu);
@@ -4382,7 +4177,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 			sv2_apo.V += DV;
 			T_P = OrbMech::period(sv2_apo.R, sv2_apo.V, mu);
 
-			ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+			PMMAPD(sv2_apo, sv_a, sv_p);
 			OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_p.gravref, lat_p, lng_p);
 			lng_p += -T_P * w_E*(double)opt->N;
 			lng_p = fmod(lng_p, PI2);
@@ -4584,7 +4379,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 
 		while (abs(ddLOA) > eps && n < nmax)
 		{
-			ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+			PMMAPD(sv2_apo, sv_a, sv_p);
 			OrbMech::latlong_from_J2000(sv_p.R, sv_p.MJD, sv_p.gravref, lat_p, lng_p);
 
 			ddLOA = OrbMech::calculateDifferenceBetweenAngles(lng_p, opt->long_D);
@@ -4667,7 +4462,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	V2_equ_apo = rhtmul(obl, sv2_apo.V);
 	coe_b = OrbMech::coe_from_sv(R2_equ, V2_equ, mu);
 	coe_a = OrbMech::coe_from_sv(R2_equ, V2_equ_apo, mu);
-	ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+	PMMAPD(sv2_apo, sv_a, sv_p);
 	Q_Xx = OrbMech::LVLH_Matrix(sv2.R, sv2.V);
 	dV_LVLH = mul(Q_Xx, DV);
 
@@ -4702,7 +4497,7 @@ bool RTCC::GeneralManeuverProcessor(GMPOpt *opt, VECTOR3 &dV_i, double &P30TIG, 
 	coe_before.param.PeT = (sv_p.MJD - opt->GETbase)*24.0*3600.0;
 	coe_before.param.TrA = coe_b.TA;
 
-	ApsidesDeterminationSubroutine(sv2_apo, sv_a, sv_p);
+	PMMAPD(sv2_apo, sv_a, sv_p);
 	coe_after.elem.a = coe_a.h*coe_a.h / (mu*(1.0 - coe_a.e*coe_a.e));
 	coe_after.elem.e = coe_a.e;
 	coe_after.elem.i = coe_a.i;
@@ -4956,23 +4751,16 @@ void RTCC::LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad)
 	pad.DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 14);
 }
 
-void RTCC::AGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH, int DVAddr)
+void RTCC::CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
 {
-	double getign = P30TIG;
-	int emem[24];
+	CMMAXTDV(P30TIG, dV_LVLH);
+	V71Update(str, CZAXTRDV.Octals, 10);
+}
 
-	emem[0] = 12;
-	emem[1] = DVAddr;
-	emem[2] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 1);
-	emem[3] = OrbMech::DoubleToBuffer(dV_LVLH.x / 100.0, 7, 0);
-	emem[4] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 1);
-	emem[5] = OrbMech::DoubleToBuffer(dV_LVLH.y / 100.0, 7, 0);
-	emem[6] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 1);
-	emem[7] = OrbMech::DoubleToBuffer(dV_LVLH.z / 100.0, 7, 0);
-	emem[8] = OrbMech::DoubleToBuffer(getign*100.0, 28, 1);
-	emem[9] = OrbMech::DoubleToBuffer(getign*100.0, 28, 0);
-
-	V71Update(str, emem, 10);
+void RTCC::LGCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
+{
+	CMMLXTDV(P30TIG, dV_LVLH);
+	V71Update(str, CZLXTRDV.Octals, 10);
 }
 
 void RTCC::AGCStateVectorUpdate(char *str, SV sv, bool csm, double AGCEpoch, double GETbase, bool v66)
@@ -6026,9 +5814,24 @@ RTCC_PMMSPT_3_1:
 		//J = abs(Original TLI Ind)
 		//goto RTCC_PMMSPT_4_1;
 	}
+	T_RP = in.T_RP;
+	if (in.QUEID == 34)
+	{
+		//TBD: load data from study aid
+		goto RTCC_PMMSPT_3_2;
+	}
+	if (T_RP > 0)
+	{
+		OrigTLIInd = -in.InjOpp;
+	}
+	else
+	{
+	RTCC_PMMSPT_3_2:
+		OrigTLIInd = in.InjOpp;
+	}
 
-	OrigTLIInd = CurTLIInd = 1;
-	J = OrigTLIInd;
+	CurTLIInd = OrigTLIInd;
+	J = in.InjOpp;
 	int LD = GZGENCSN.DayofLiftoff;
 	T_ST = PZSTARGP.T_ST[J - 1];
 	alpha_TSS = PZSTARGP.alpha_TS[J - 1];
@@ -6049,7 +5852,32 @@ RTCC_PMMSPT_3_1:
 	{
 		goto RTCC_PMMSPT_6_3;
 	}
+	else if (OrigTLIInd == 0)
+	{
+		//goto RTCC_PMMSPT_8_2;
+	}
 
+	emsin.MaxIntegTime = T_RP - in.GMT;
+	if (emsin.MaxIntegTime < 0)
+	{
+		emsin.IsForwardIntegration = false;
+		emsin.MaxIntegTime = abs(emsin.MaxIntegTime);
+		goto RTCC_PMMSPT_6_2;
+	}
+	else if (emsin.MaxIntegTime == 0.0)
+	{
+		//Move Time, R, V into Aux Output Table
+		goto RTCC_PMMSPT_8_2;
+	}
+	else
+	{
+		goto RTCC_PMMSPT_6_1;
+	}
+RTCC_PMMSPT_6_1:
+	emsin.IsForwardIntegration = true;
+RTCC_PMMSPT_6_2:
+	emsin.EphemerisBuildIndicator = false;
+	goto RTCC_PMMSPT_7_2;
 RTCC_PMMSPT_6_3:
 	T_TH = MDVSTP.T4C + GetGMTLO()*3600.0 + T_ST;
 	if (in.QUEID != 37)
@@ -6078,7 +5906,7 @@ RTCC_PMMSPT_7_1:
 	emsin.MCTEphemerisIndicator = false;
 	emsin.EphemerisBuildIndicator = true;
 	emsin.EphemTableIndicator = &ephtab;
-//RTCC_PMMSPT_7_2:
+RTCC_PMMSPT_7_2:
 	emsin.AnchorVector.R = in.R;
 	emsin.AnchorVector.V = in.V;
 	emsin.AnchorVector.GMT = in.GMT;
@@ -6096,7 +5924,7 @@ RTCC_PMMSPT_7_1:
 	{
 		return 72;
 	}
-
+RTCC_PMMSPT_8_2:
 	double lambda = MCLGRA + GetGMTLO()*3600.0*OrbMech::w_Earth;
 	MATRIX3 RMAT = mul(MatrixRH_LH(OrbMech::GetRotationMatrix(BODY_EARTH, GMTBASE)), _M(cos(lambda), -sin(lambda), 0, sin(lambda), cos(lambda), 0, 0, 0, 1));
 	MATRIX3 M = mul(_M(1, 0, 0, 0, 0, -1, 0, 1, 0), OrbMech::tmat(RMAT));
@@ -6643,6 +6471,7 @@ void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, in
 	//t_slip: time in seconds the maneuver has slipped to compensate for finite burntime; should always be negative
 	//sv_out: complete state vector at actual cutoff
 
+	VECTOR3 DV_imp_inert;
 	double f_T, isp, F_average;
 
 	sv_out.gravref = sv.gravref;
@@ -6662,17 +6491,17 @@ void RTCC::FiniteBurntimeCompensation(SV sv, double attachedMass, VECTOR3 DV, in
 		F_average = f_T;
 	}
 
-	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, F_average, isp, sv.mass + attachedMass, DV, DV_imp, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
+	OrbMech::impulsive(sv.R, sv.V, sv.MJD, sv.gravref, F_average, isp, sv.mass + attachedMass, sv.R, sv.V + DV, DV_imp_inert, t_slip, sv_out.R, sv_out.V, sv_out.MJD, sv_out.mass);
 
 	sv_tig = coast(sv, t_slip);
 
 	if (agc)
 	{
-		DV_imp = PIEXDV(sv_tig.R, sv_tig.V, sv.mass + attachedMass, f_T, DV, false);
+		DV_imp = PIEXDV(sv_tig.R, sv_tig.V, sv.mass + attachedMass, f_T, DV_imp_inert, false);
 	}
 	else
 	{
-		DV_imp = PIAEDV(DV, sv_tig.R, sv_tig.V, sv_tig.R, false);
+		DV_imp = PIAEDV(DV_imp_inert, sv_tig.R, sv_tig.V, sv_tig.R, false);
 	}
 
 	sv_out.mass -= attachedMass;
@@ -7379,75 +7208,6 @@ bool RTCC::SkylabRendezvous(SkyRendOpt *opt, SkylabRendezvousResults *res)
 	return true;
 }
 
-void RTCC::TLIFirstGuessConic(SV sv_mcc, double lat_EMP, double h_peri, double MJD_P, VECTOR3 &DV, VECTOR3 &var_converged)
-{
-	SV sv_p;
-	MATRIX3 M_EMP;
-	VECTOR3 R_EMP, V_EMP, var_fg, V_MCC_apo;
-	double r_peri, ddt, R_E, lng_peri, azi_peri, v_peri;
-	OBJHANDLE hMoon, hEarth;
-	OELEMENTS coe;
-	double rtest, lngtest, lattest, fpatest;
-
-	R_E = 6378.137e3;
-
-	hMoon = oapiGetObjectByName("Moon");
-	hEarth = oapiGetObjectByName("Earth");
-
-	r_peri = OrbMech::R_Moon + h_peri;
-	sv_p.MJD = MJD_P;
-	sv_p.gravref = hMoon;
-
-	//Initial guess
-	var_fg = TLMCEmpiricalFirstGuess(r_peri, 0.0);
-	lng_peri = var_fg.z;
-	azi_peri = var_fg.y;
-	v_peri = var_fg.x;
-
-	//Conic first guess seems to break down above 1500NM pericynthion altitude
-	if (r_peri > 4.5e6)
-	{
-		var_converged = var_fg;
-		return;
-	}
-
-	do
-	{
-		//Position vector in EMP Coordinates
-		OrbMech::adbar_from_rv(r_peri, v_peri, lng_peri, lat_EMP, PI05, azi_peri, R_EMP, V_EMP);
-
-		//EMP Matrix
-		M_EMP = OrbMech::EMPMatrix(sv_p.MJD);
-
-		//Convert EMP position to ecliptic
-		sv_p.R = tmul(M_EMP, R_EMP);
-		sv_p.V = tmul(M_EMP, V_EMP);
-
-		//Calculate pericynthion velocity
-		OrbMech::ThirdBodyConic(sv_p.R, hMoon, sv_mcc.R, hEarth, sv_p.MJD, (sv_mcc.MJD - sv_p.MJD)*24.0*3600.0, sv_p.V, sv_p.V, V_MCC_apo, 100.0);
-
-		//save azi and vmag as new initial guess
-		V_EMP = mul(M_EMP, sv_p.V);
-		OrbMech::rv_from_adbar(R_EMP, V_EMP, rtest, v_peri, lngtest, lattest, fpatest, azi_peri);
-
-		coe = OrbMech::coe_from_sv(sv_p.R, sv_p.V, OrbMech::mu_Moon);
-		ddt = OrbMech::timetoperi(sv_p.R, sv_p.V, OrbMech::mu_Moon);
-
-		if (coe.TA > PI)
-		{
-			lng_peri += coe.TA - PI2;
-		}
-		else
-		{
-			lng_peri += coe.TA;
-		}
-	} while (abs(ddt) > 0.01);
-
-	DV = V_MCC_apo - sv_mcc.V;
-
-	var_converged = _V(v_peri, azi_peri, lng_peri);
-}
-
 VECTOR3 RTCC::TLMCEmpiricalFirstGuess(double r, double dt)
 {
 	double lambda, psi, V, R_E;
@@ -8150,22 +7910,55 @@ bool RTCC::TLMCIntegratedFlybyToInclinationSubprocessor(SV sv_mcc, double h_peri
 	return true;
 }
 
+double LLWP_CURVE(double DV1, double DV2, double DV3, double DH1, double DH2, double DH3, double DVMAX)
+{
+	double K1, K2, K3, A, B, C, R1, R2, DH_MAX;
+
+	K1 = DV1 / ((DH1 - DH2)*(DH1 - DH3));
+	K2 = DV2 / ((DH2 - DH1)*(DH2 - DH3));
+	K3 = DV3 / ((DH3 - DH1)*(DH3 - DH2));
+	A = K1 + K2 + K3;
+	B = -(K1*(DH3 + DH2) + K2 * (DH3 + DH1) + K3 * (DH2 + DH1));
+	C = K1 * DH2*DH3 + K2 * DH1*DH3 + K3 * DH1*DH2 - DVMAX;
+	R1 = (-B + sqrt(B*B - 4.0*A*C)) / (2.0*A);
+	R2 = (-B - sqrt(B*B - 4.0*A*C)) / (2.0*A);
+	if (R1 - R2 > 0)
+	{
+		DH_MAX = R1;
+	}
+	else
+	{
+		DH_MAX = R1;
+	}
+	return DH_MAX;
+}
+
 void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res)
 {
 	//0: CSM
 	//1: LM
-	SV sv_tab[2];
+	/*PMMLAEG aeg;
+	AEGHeader header;
+	AEGDataBlock sv_tab[2], out;
 	VECTOR3 R_LS_equ, R_LS, r_LS, R1, V1, r1, v1, H1, h1, Q, C, R_P, r_P, H_D, h_D;
 	double T_hole, theta_ca, S1, S2, theta, P1, dt_B, r_TPI, eta_P, P_m, C7, C8, C9, C10, C11, C12, C13, C14, C15, t_LOR, theta_w, DH_u, t_TPI, MJD_TPI, t_H;
 	std::vector<double> DH, T_TPI, T_R, DH_apo;
 	std::vector<int> N;
-	int L_DH;
+	int L_DH, err;
 
 	DH = opt.DH;
-	sv_tab[0] = opt.sv_CSM;
+	header = opt.sv_CSM2.Header;
+	sv_tab[0] = opt.sv_CSM2.Data;
 	T_hole = opt.t_hole;
 	R_LS_equ = OrbMech::r_from_latlong(opt.lat, opt.lng, opt.R_LLS);
-	P1 = OrbMech::period(opt.sv_CSM.R, opt.sv_CSM.V, OrbMech::mu_Moon);
+
+	aeg.CALL(header, sv_tab[0], out);
+	if (header.ErrorInd)
+	{
+		return;
+	}
+
+	P1 = PI2 / sv_tab[0].l_dot;
 	L_DH = opt.L_DH;
 
 	if (opt.I_TPI > 1)
@@ -8182,8 +7975,13 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLifto
 		}
 	}
 
-	double dt = T_hole - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase);
-	sv_tab[0] = coast(sv_tab[0], dt);
+	sv_tab[0].TE = T_hole;
+	aeg.CALL(header, sv_tab[0], out);
+	sv_tab[0] = out;
+	PMMTLC(header, sv_tab[0], out, opt.lng, err, 0);
+
+
+
 	double MJD_xx = OrbMech::P29TimeOfLongitude(sv_tab[0].R, sv_tab[0].V, sv_tab[0].MJD, sv_tab[0].gravref, opt.lng);
 	sv_tab[0] = coast(sv_tab[0], (MJD_xx - sv_tab[0].MJD)*24.0*3600.0);
 	double eta_1 = OrbMech::GetMeanMotion(sv_tab[0].R, sv_tab[0].V, OrbMech::mu_Moon);
@@ -8434,7 +8232,7 @@ RTCC_LLWP_6_2:
 
 	sv_tab[0] = coast(sv_tab[0], t_INS - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
 	sv_tab[1] = coast(sv_tab[1], t_INS - OrbMech::GETfromMJD(sv_tab[1].MJD, opt.GETbase));
-
+	*/
 }
 
 void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res)
@@ -8450,25 +8248,38 @@ void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLi
 
 	R_LS = OrbMech::r_from_latlong(opt.lat, opt.lng, opt.R_LLS);
 
-	//Initial guess for launch is CSM flying over landing site longitude
-	sv_P = coast(opt.sv_CSM, opt.t_hole - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
-	MJD_guess = OrbMech::P29TimeOfLongitude(sv_P.R, sv_P.V, sv_P.MJD, sv_P.gravref, opt.lng);
-	t_L_guess = OrbMech::GETfromMJD(MJD_guess, opt.GETbase);
+	if (opt.opt == 0 && opt.I_TPI > 1)
+	{
+		//TPI time fixed for concentric profile
+		res.t_TPI = opt.t_hole;
+		t_L_guess = res.t_TPI - 1.5*7200.0;
+		sv_P = coast(opt.sv_CSM, t_L_guess - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
+	}
+	else
+	{
+		//Initial guess for launch is CSM flying over landing site longitude
+		sv_P = coast(opt.sv_CSM, opt.t_hole - OrbMech::GETfromMJD(opt.sv_CSM.MJD, opt.GETbase));
+		MJD_guess = OrbMech::P29TimeOfLongitude(sv_P.R, sv_P.V, sv_P.MJD, sv_P.gravref, opt.lng);
+		t_L_guess = OrbMech::GETfromMJD(MJD_guess, opt.GETbase);
+	}
 
 	if (opt.opt == 0)
 	{
-		SV sv_TPI_guess;
-		double t_TPI_guess, ttoMidnight;
-		OBJHANDLE hSun;
+		if (opt.I_TPI <= 1)
+		{
+			SV sv_TPI_guess;
+			double t_TPI_guess, ttoMidnight;
+			OBJHANDLE hSun;
 
-		hSun = oapiGetObjectByName("Sun");
+			hSun = oapiGetObjectByName("Sun");
 
-		//About 2.5 hours between liftoff and TPI
-		t_TPI_guess = t_L_guess + 2.5*3600.0;
-		sv_TPI_guess = coast(sv_P, t_TPI_guess - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
+			//About 2.5 hours between liftoff and TPI
+			t_TPI_guess = t_L_guess + 2.5*3600.0;
+			sv_TPI_guess = coast(sv_P, t_TPI_guess - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
 
-		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, hMoon, hSun, 1, 1, false);
-		res.t_TPI = t_TPI_guess + ttoMidnight;
+			ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, hMoon, hSun, 1, 1, false);
+			res.t_TPI = t_TPI_guess + ttoMidnight;
+		}
 
 		LunarLiftoffTimePredictionCFP(opt, R_LS, sv_P, hMoon, h_1, theta_Ins, t_L_guess, res.t_TPI, res);
 	}
@@ -8557,7 +8368,6 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 		if (opt.N_PB % 2 != 0) return false;
 	}
 
-	MPTSV sv_temp;
 	SV sv_AP, sv_TPI_guess, sv_TPI, sv_PC;
 	VECTOR3 u, R_AP, V_AP, V_APF, R_AH, V_AH, V_AHF, R_AC, V_AC, R_PC, V_PC, V_ACF, R_PJ, V_PJ, R_AFD, R_AF, V_AF;
 	double mu, dv_P, p_P, dt_PH, c_P, eps_P, dv_H, dt_HC, t_H, t_C, dv_Po, e_Po, e_P, dv_rad_const;
@@ -8656,11 +8466,6 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 				OrbMech::ITER(c_P, s_P, e_P, p_P, dv_H, e_Po, dv_Po);
 			}
 		} while (abs(e_P) >= eps_P);
-
-		sv_temp.gravref = sv_AP.gravref;
-		sv_temp.MJD = OrbMech::MJDfromGET(opt.t_TIG, opt.GETbase);
-		sv_temp.R = R_AP;
-		sv_temp.V = V_AP;
 	}
 	else
 	{
@@ -8790,10 +8595,10 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	res.t_CDH = t_C;
 	res.DV_CDH = V_ACF - V_AC;
 
-	PZDKIELM.Block[0].SV_before[0].R = sv_temp.R;
-	PZDKIELM.Block[0].SV_before[0].V = sv_temp.V;
-	PZDKIELM.Block[0].SV_before[0].GMT = OrbMech::GETfromMJD(sv_temp.MJD, GMTBASE);
-	if (sv_temp.gravref == hEarth)
+	PZDKIELM.Block[0].SV_before[0].R = sv_AP.R;
+	PZDKIELM.Block[0].SV_before[0].V = sv_AP.V;
+	PZDKIELM.Block[0].SV_before[0].GMT = OrbMech::GETfromMJD(sv_AP.MJD, GMTBASE);
+	if (sv_AP.gravref == hEarth)
 	{
 		PZDKIELM.Block[0].SV_before[0].RBI = BODY_EARTH;
 	}
@@ -8802,7 +8607,7 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 		PZDKIELM.Block[0].SV_before[0].RBI = BODY_MOON;
 	}
 	
-	PZDKIELM.Block[0].V_after[0] = V_APF;
+	PZDKIELM.Block[0].V_after[0] = sv_AP.V + (V_APF - V_AP);
 	PZDKIT.Block[0].ManGET[0] = opt.t_TIG;
 	PZDKIT.Block[0].VEH[0] = opt.ChaserID;
 	PZDKIT.Block[0].Man_ID[0] = "NC";
@@ -9062,7 +8867,7 @@ void RTCC::DockingAlignmentProcessor(DockAlignOpt &opt)
 	}
 }
 
-void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
+bool RTCC::PMMAPD(SV sv0, SV &sv_a, SV &sv_p)
 {
 	OELEMENTS coe;
 	double mu;
@@ -9083,7 +8888,15 @@ void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
 	if (lowecclogic == false)
 	{
 		sv_p = OrbMech::PMMAEGS(sv0, 1, 0.0, error2);
+		if (error2)
+		{
+			return true;
+		}
 		sv_a = OrbMech::PMMAEGS(sv0, 1, PI, error2);
+		if (error2)
+		{
+			return true;
+		}
 	}
 	else
 	{
@@ -9094,7 +8907,15 @@ void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
 		ApsidesArgumentofLatitudeDetermination(sv0, u_x, u_y);
 
 		sv1 = OrbMech::PMMAEGS(sv0, 2, u_x, error2);
+		if (error2)
+		{
+			return true;
+		}
 		sv2 = OrbMech::PMMAEGS(sv0, 2, u_y, error2);
+		if (error2)
+		{
+			return true;
+		}
 
 		if (length(sv1.R) > length(sv2.R))
 		{
@@ -9107,6 +8928,7 @@ void RTCC::ApsidesDeterminationSubroutine(SV sv0, SV &sv_a, SV &sv_p)
 			sv_a = sv2;
 		}
 	}
+	return false;
 }
 
 VECTOR3 RTCC::HeightManeuverInteg(SV sv0, double dh)
@@ -9187,7 +9009,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 
 	coe_bef = OrbMech::coe_from_sv(sv0.R, sv0.V, mu);
 	u_b = fmod(coe_bef.TA + coe_bef.w, PI2);
-	ApsidesDeterminationSubroutine(sv0, sv_a, sv_p);
+	PMMAPD(sv0, sv_a, sv_p);
 
 	if (r_AD == r_PD)
 	{
@@ -9268,7 +9090,7 @@ VECTOR3 RTCC::ApoapsisPeriapsisChangeInteg(SV sv0, double r_AD, double r_PD)
 			coe_aft.w += PI2;
 		}
 		OrbMech::sv_from_coe(coe_aft, mu, sv0_apo.R, sv0_apo.V);
-		ApsidesDeterminationSubroutine(sv0_apo, sv_a, sv_p);
+		PMMAPD(sv0_apo, sv_a, sv_p);
 		r_a_a = length(sv_a.R);
 		r_p_a = length(sv_p.R);
 
@@ -9501,7 +9323,7 @@ VECTOR3 RTCC::LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMM
 	return IMUangles;
 }
 
-bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, SV &sv_PDI, SV &sv_land, double &dv)
+bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv)
 {
 	MATRIX3 Rot, REFSMMAT;
 	DescentGuidance descguid;
@@ -9530,7 +9352,7 @@ bool RTCC::PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GET
 	WI = rhmul(Rot, _V(0, 0, 1));
 	W = mul(REFSMMAT, WI)*OrbMech::w_Moon;
 	R_LSP = mul(REFSMMAT, rhmul(Rot, R_LS));
-	descguid.Init(sv_IG.R, sv_IG.V, sv_IG.mass, t_PDI, REFSMMAT, R_LSP, t_PDI, W, t_go);
+	descguid.Init(sv_IG.R, sv_IG.V, sv_IG.mass, t_PDI, REFSMMAT, R_LSP, t_PDI, W, t_go, &RTCCDescentTargets);
 	W_TD = sv_IG.mass;
 	U_FDP_abort = tmul(REFSMMAT, unit(U_FDP));
 
@@ -9625,8 +9447,6 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	double J_TZG, A_TZG, V_TZG, R_TZG;
 	double LEADTIME, w_M, t_2, t_I, PIPTIME, t_pipold, eps, dTTT, TTT_P, TEM, q;
 	int n1, n2, COUNT_TTT;
-	LGCIgnitionConstants ign_const;
-	LGCDescentConstants desc_const;
 
 	GUIDDURN = 664.4;
 	AF_TRIM = 0.350133;
@@ -9641,19 +9461,19 @@ bool RTCC::PDIIgnitionAlgorithm(SV sv, double GETbase, VECTOR3 R_LS, double TLAN
 	dt_I = 1.0;
 	FRAC = 43455.0;
 
-	v_IGG = ign_const.v_IGG;
-	r_IGXG = ign_const.r_IGXG;
-	r_IGZG = ign_const.r_IGZG;
-	K_X = ign_const.K_X;
-	K_Y = ign_const.K_Y;
-	K_V = ign_const.K_V;
-	J_TZG = desc_const.JBRFGZ;
-	A_TZG = desc_const.ABRFG.z;
-	V_TZG = desc_const.VBRFG.z;
-	R_TG = desc_const.RBRFG;
-	R_TZG = desc_const.RBRFG.z;
-	V_TG = desc_const.VBRFG;
-	A_TG = desc_const.ABRFG;
+	v_IGG = RTCCPDIIgnitionTargets.v_IGG;
+	r_IGXG = RTCCPDIIgnitionTargets.r_IGXG;
+	r_IGZG = RTCCPDIIgnitionTargets.r_IGZG;
+	K_X = RTCCPDIIgnitionTargets.K_X;
+	K_Y = RTCCPDIIgnitionTargets.K_Y;
+	K_V = RTCCPDIIgnitionTargets.K_V;
+	J_TZG = RTCCDescentTargets.JBRFGZ;
+	A_TZG = RTCCDescentTargets.ABRFG.z;
+	V_TZG = RTCCDescentTargets.VBRFG.z;
+	R_TG = RTCCDescentTargets.RBRFG;
+	R_TZG = RTCCDescentTargets.RBRFG.z;
+	V_TG = RTCCDescentTargets.VBRFG;
+	A_TG = RTCCDescentTargets.ABRFG;
 	LEADTIME = 2.2;
 	w_M = 2.66169948e-6;
 
@@ -9820,7 +9640,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	WI = rhmul(Rot, _V(0, 0, 1));
 	W = mul(opt.REFSMMAT, WI)*w_M;
 	R_LSP = mul(opt.REFSMMAT, rhmul(Rot, opt.R_LS));
-	descguid.Init(sv_IG.R, sv_IG.V, opt.sv_A.mass, t_PDI, opt.REFSMMAT, R_LSP, t_PDI, W, t_go);
+	descguid.Init(sv_IG.R, sv_IG.V, opt.sv_A.mass, t_PDI, opt.REFSMMAT, R_LSP, t_PDI, W, t_go, &RTCCDescentTargets);
 	W_TD = opt.sv_A.mass;
 	U_FDP_abort = tmul(opt.REFSMMAT, unit(U_FDP));
 
@@ -10339,6 +10159,40 @@ VECTOR3 RTCC::RLS_from_latlng(double lat, double lng, double alt)
 	return OrbMech::r_from_latlong(lat, lng, OrbMech::R_Moon + alt);
 }
 
+void RTCC::PMXSPT(int n)
+{
+	switch (n)
+	{
+	case 1:
+		PMXSPT("PMMXFR: MANEUVER PRIOR TO PRESENT TIME.");
+		break;
+	case 2:
+		PMXSPT("PMMXFR: MANEUVER TO BE REPLACED NOT IN THE MPT.");
+		break;
+	case 3:
+		PMXSPT("PMMXFR: MANEUVER TO BE REPLACED OVERLAPS ANOTHER MANEUVER.");
+		break;
+	case 4:
+		PMXSPT("PMMXFR: MANEUVER PRIOR TO FROZEN MANEUVER.");
+		break;
+	case 5:
+		PMXSPT("PMMXFR: MPT IS FULL - REQUESTED MANEUVER TRANSFER REJECTED.");
+		break;
+	case 6:
+		PMXSPT("PMMXFR: INVALID CONFIGURATION CODE OR THRUSTER CODE - MPT UNCHANGED.");
+		break;
+	case 102:
+		PMXSPT("PMMIEV: NOMINAL TIME OF LIFTOFF FOR SPECIFIED LAUNCH DAY UNAVAILABLE.");
+		break;
+	case 120:
+		PMXSPT("PMMIEV: UNABLE TO CONVERT SPHERICAL ELEMENTS TO R AND V VECTORS.");
+		break;
+	case 121:
+		PMXSPT("PMMIEV: DIFFERENCE BETWEEN ACTUAL AND NOMINAL LIFTOFF TIME OUTSIDE LIMITS OF LAUNCH AZIMUTH POLYNOMIAL");
+		break;
+	}
+}
+
 void RTCC::PMXSPT(std::string message)
 {
 	if (RTCCONLINEMON.size() >= 9)
@@ -10347,6 +10201,31 @@ void RTCC::PMXSPT(std::string message)
 	}
 
 	RTCCONLINEMON.push_back(message);
+}
+
+void RTCC::GMSPRINT(std::string message)
+{
+	if (RTCCONLINEMON.size() >= 9)
+	{
+		RTCCONLINEMON.pop_front();
+	}
+
+	RTCCONLINEMON.push_back(message);
+}
+
+void RTCC::EMGGPCHR(double lat, double lng, double alt, int body, Station *stat)
+{
+	stat->lat = lat;
+	stat->lng = lng;
+	stat->alt = alt;
+	if (body == BODY_EARTH)
+	{
+		stat->rad = alt + OrbMech::R_Earth;
+	}
+	else
+	{
+		stat->rad = alt + OrbMech::R_Moon;
+	}
 }
 
 void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
@@ -10386,7 +10265,7 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 	}
 	tab.azi = azi;
 	tab.e = length(E);
-	tab.gamma = fpa - PI05;
+	tab.gamma = PI05 - fpa;
 	tab.h = h;
 	tab.i = acos(H.z / length(H));
 	tab.l = pow(length(H), 2) / mu;
@@ -10414,6 +10293,16 @@ void RTCC::EMSTIME(int L, int ID)
 	{
 		ELVCTRInputTable in;
 		ELVCTROutputTable out;
+		TimeConstraintsTable *tab;
+
+		if (L == 1)
+		{
+			tab = &EZTSCNS1;
+		}
+		else
+		{
+			tab = &EZTSCNS3;
+		}
 
 		in.GMT = RTCCPresentTimeGMT();
 		in.L = L;
@@ -10422,6 +10311,7 @@ void RTCC::EMSTIME(int L, int ID)
 
 		if (out.ErrorCode)
 		{
+			tab->TUP = 0;
 			return;
 		}
 
@@ -10441,23 +10331,15 @@ void RTCC::EMSTIME(int L, int ID)
 		int err = ELVCNV(out.SV, coor1, coor2, sv_true);
 		if (err)
 		{
+			tab->TUP = 0;
 			return;
-		}
-		
-		TimeConstraintsTable *tab;
-		if (L == 1)
-		{
-			tab = &EZTSCNS1;
-		}
-		else
-		{
-			tab = &EZTSCNS3;
 		}
 
 		EMMDYNEL(sv_true, *tab);
 
 		tab->RevNum = CapeCrossingRev(L, GETfromGMT(sv_true.GMT));
 		PLAWDT(L, sv_true.GMT, tab->WT);
+		tab->TUP = out.TUP;
 	}
 }
 
@@ -10517,6 +10399,12 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		EMSTIME(L, 1);
 	}
 
+	//For now don't even allow processing if time constraints table is invalid
+	if (tcontab->TUP <= 0)
+	{
+		return;
+	}
+
 	if (tcontab->sv_present.RBI == BODY_EARTH)
 	{
 		R_B = OrbMech::R_Earth;
@@ -10560,8 +10448,17 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	if (queid == 2 || (tcontab->lat > 0 && tab->PPP < 0))
 	{
 		double lng;
-		RMMASCND(L, CurGMT, lng);
-		tab->LNPP = lng * DEG;
+		int err = RMMASCND(L, CurGMT, lng);
+		if (err)
+		{
+			std::string message = "EMMDYNMC: RMMASCND CONVERGENCE LIMIT";
+			PMXSPT(message);
+			tab->LNPP = 0.0;
+		}
+		else
+		{
+			tab->LNPP = lng * DEG;
+		}
 	}
 
 	if (queid == 1 || queid == 2)
@@ -10594,7 +10491,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				sv_A.V = tcontab->sv_present.V;
 				sv_A.MJD = OrbMech::MJDfromGET(tcontab->sv_present.GMT, GMTBASE);
 				sv_A.gravref = GetGravref(tcontab->sv_present.RBI);
-				ApsidesDeterminationSubroutine(sv_A, sv_a, sv_p);
+				PMMAPD(sv_A, sv_a, sv_p);
 
 				EphemerisData sv_apo, sv_true;
 				double lat, lng;
@@ -10643,7 +10540,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				sv_A.V = tcontab->sv_present.V;
 				sv_A.MJD = OrbMech::MJDfromGET(tcontab->sv_present.GMT, GMTBASE);
 				sv_A.gravref = GetGravref(tcontab->sv_present.RBI);
-				ApsidesDeterminationSubroutine(sv_A, sv_a, sv_p);
+				PMMAPD(sv_A, sv_a, sv_p);
 
 				EphemerisData sv_peri, sv_true;
 				double lat, lng;
@@ -10756,7 +10653,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		sv_A.V = sv_pred.V;
 		sv_A.MJD = OrbMech::MJDfromGET(sv_pred.GMT, GMTBASE);
 		sv_A.gravref = GetGravref(sv_pred.RBI);
-		ApsidesDeterminationSubroutine(sv_A, sv_a, sv_p);
+		PMMAPD(sv_A, sv_a, sv_p);
 
 		EphemerisData sv_apo, sv_peri, sv_true;
 		double lat, lng;
@@ -10908,7 +10805,14 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 		//TBD: Move this
 		EMSTIME(EZETVMED.SpaceDigVehID, 1);
 
-		EZSPACE.GET = GETfromGMT(tctab->sv_present.GMT);
+		if (tctab->TUP > 0)
+		{
+			EZSPACE.GET = GETfromGMT(tctab->sv_present.GMT);
+		}
+		else
+		{
+			EZSPACE.GET = 0.0;
+		}
 	}
 	else
 	{
@@ -10928,26 +10832,46 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 
 		EZSPACE.TUP = ephtab->EPHEM.Header.TUP;
 		sprintf_s(EZSPACE.VecID, mpt->StationID.c_str());
-		cfg_weight = tctab->WT;
+		if (tctab->TUP > 0)
+		{
+			cfg_weight = tctab->WT;
+		}
+		else
+		{
+			cfg_weight = 0.0;
+		}
 		EZSPACE.WEIGHT = cfg_weight * LBS*1000.0;
 		EZSPACE.GMTV = mpt->GMTAV;
 		EZSPACE.GETV = EZSPACE.GETAxis = GETfromGMT(mpt->GMTAV);
 
-		if (tctab->sv_present.RBI == BODY_EARTH)
+		if (tctab->TUP > 0)
 		{
-			sprintf(EZSPACE.REF, "EARTH");
+			if (tctab->sv_present.RBI == BODY_EARTH)
+			{
+				sprintf(EZSPACE.REF, "EARTH");
+			}
+			else
+			{
+				sprintf(EZSPACE.REF, "MOON");
+			}
+			EZSPACE.V = tctab->V / 0.3048;
+			EZSPACE.GAM = tctab->gamma*DEG;
+			EZSPACE.H = tctab->h / 1852.0;
+			EZSPACE.PHI = tctab->lat*DEG;
+			EZSPACE.LAM = tctab->lng*DEG;
+			EZSPACE.PSI = tctab->azi*DEG;
+			EZSPACE.ADA = tctab->TA*DEG;
 		}
 		else
 		{
-			sprintf(EZSPACE.REF, "MOON");
+			EZSPACE.V = 0.0;
+			EZSPACE.GAM = 0.0;
+			EZSPACE.H = 0.0;
+			EZSPACE.PHI = 0.0;
+			EZSPACE.LAM = 0.0;
+			EZSPACE.PSI = 0.0;
+			EZSPACE.ADA = 0.0;
 		}
-		EZSPACE.V = tctab->V / 0.3048;
-		EZSPACE.GAM = tctab->gamma*DEG;
-		EZSPACE.H = tctab->h / 1852.0;
-		EZSPACE.PHI = tctab->lat*DEG;
-		EZSPACE.LAM = tctab->lng*DEG;
-		EZSPACE.PSI = tctab->azi*DEG;
-		EZSPACE.ADA = tctab->TA*DEG;
 
 		EZSPACE.GETR = EZSPACE.GET - MCGREF;
 	}
@@ -10973,7 +10897,8 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			}
 			if (queid == 3)
 			{
-				sv = EMMENI(sv, GMT - sv.GMT);
+				EMSMISSInputTable emsin;
+				sv = EMMENI(emsin, sv, GMT - sv.GMT);
 			}
 		}
 		//MNV
@@ -11035,9 +10960,11 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EZSPACE.IEMP = newtab.i*DEG;
 
 			EMMDYNEL(sv_true, newtab);
+			EZSPACE.V1 = newtab.V / 0.3048;
 			EZSPACE.PHI1 = EZSPACE.PHIO = newtab.lat * DEG;
 			EZSPACE.LAM1 = newtab.lng*DEG;
 			EZSPACE.GAM1 = newtab.gamma*DEG;
+			EZSPACE.PSI1 = newtab.azi*DEG;
 			EZSPACE.A1 = newtab.a / 1852.0;
 			EZSPACE.L1 = (newtab.TA + newtab.AoP)*DEG;
 			if (EZSPACE.L1 > 360.0)
@@ -11054,17 +10981,21 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				sv0.V = sv.V;
 				sv0.MJD = OrbMech::MJDfromGET(sv.GMT, GMTBASE);
 				sv0.gravref = GetGravref(sv.RBI);
-				ApsidesDeterminationSubroutine(sv0, sv_a, sv_p);
+				PMMAPD(sv0, sv_a, sv_p);
 
 				EZSPACE.GETA = OrbMech::GETfromMJD(sv_a.MJD, CalcGETBase());
 				EZSPACE.HA = (length(sv_a.R) - R_E) / 1852.0;
-				EZSPACE.HP = (length(sv_a.R) - R_E) / 1852.0;
+				EZSPACE.HP = (length(sv_p.R) - R_E) / 1852.0;
 			}
 			else
 			{
 				double peri, apo;
 				OrbMech::periapo(sv.R, sv.V, mu, apo, peri);
 				EZSPACE.HA = (apo - R_E) / 1852.0;
+				if (EZSPACE.HA > 999999.9)
+				{
+					EZSPACE.HA = 999999.9;
+				}
 				EZSPACE.HP = (peri - R_E) / 1852.0;
 				EZSPACE.GETA = 0.0;
 			}
@@ -11072,12 +11003,263 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 		//Column 2
 		else if (queid == 4)
 		{
+			//Null all values
+			EZSPACE.GETSI = 0.0;
+			EZSPACE.GETCA = 0.0;
+			EZSPACE.VCA = 0.0;
+			EZSPACE.HCA = 0.0;
+			EZSPACE.PCA = 0.0;
+			EZSPACE.LCA = 0.0;
+			EZSPACE.PSICA = 0.0;
+			EZSPACE.GETMN = 0.0;
+			EZSPACE.HMN = 0.0;
+			EZSPACE.PMN = 0.0;
+			EZSPACE.LMN = 0.0;
+			EZSPACE.DMN = 0.0;
 
+			EZSPACE.GETVector2 = GETfromGMT(sv.GMT);
+
+			EMSMISSInputTable emsin;
+
+			if (sv.RBI == BODY_EARTH)
+			{
+				//Try to find lunar sphere entry
+				emsin.CutoffIndicator = 1;
+				emsin.StopParamRefFrame = 1;
+				emsin.MoonRelStopParam = 9.0*OrbMech::R_Earth;
+
+				EphemerisData sv_SI = EMMENI(emsin, sv, 10.0*24.0*3600.0);
+				if (emsin.NIAuxOutputTable.TerminationCode == 1)
+				{
+					EZSPACE.GETSI = GETfromGMT(sv_SI.GMT);
+				}
+			}
+
+
+			emsin.CutoffIndicator = 4;
+			emsin.StopParamRefFrame = 1;
+			emsin.MoonRelStopParam = 0.0;
+			EphemerisData sv1 = EMMENI(emsin, sv, 10.0*24.0*3600.0);
+			if (emsin.NIAuxOutputTable.TerminationCode != 4)
+			{
+				return 0;
+			}
+
+			EphemerisData svtempout;
+			TimeConstraintsTable newtab;
+
+			ELVCNV(sv1, 0, 1, svtempout);
+			EMMDYNEL(svtempout, newtab);
+
+			EZSPACE.GETCA = GETfromGMT(sv1.GMT);
+			EZSPACE.VCA = newtab.V / 0.3048;
+			EZSPACE.HCA = newtab.h / 1852.0;
+			EZSPACE.PCA = newtab.lat * DEG;
+			EZSPACE.LCA = newtab.lng * DEG;
+			EZSPACE.PSICA = newtab.azi*DEG;
 		}
 		//Column 3
 		else
 		{
+			//Null all values
+			EZSPACE.GETSE = 0.0;
+			EZSPACE.GETEI = 0.0;
+			EZSPACE.VEI = 0.0;
+			EZSPACE.GEI = 0.0;
+			EZSPACE.PEI = 0.0;
+			EZSPACE.LEI = 0.0;
+			EZSPACE.PSIEI = 0.0;
+			EZSPACE.GETVP = 0.0;
+			EZSPACE.VVP = 0.0;
+			EZSPACE.HVP = 0.0;
+			EZSPACE.PVP = 0.0;
+			EZSPACE.LVP = 0.0;
+			EZSPACE.PSIVP = 0.0;
 
+			double mu;
+			bool HighOrbit;
+
+			EZSPACE.GETVector3 = GETfromGMT(sv.GMT);
+			if (sv.RBI == BODY_EARTH)
+			{
+				mu = OrbMech::mu_Earth;
+			}
+			else
+			{
+				mu = OrbMech::mu_Moon;
+			}
+
+			OELEMENTS coe = OrbMech::coe_from_sv(sv.R, sv.V, mu);
+			double SMA = OrbMech::GetSemiMajorAxis(sv.R, sv.V, mu);
+
+			if (coe.e > MCGECC)
+			{
+				HighOrbit = true;
+			}
+			else
+			{
+				if (SMA < 0 || SMA > MCGSMA*OrbMech::R_Earth)
+				{
+					HighOrbit = true;
+				}
+				else
+				{
+					HighOrbit = false;
+				}
+			}
+
+			if (HighOrbit == false)
+			{
+				return 0;
+			}
+
+			//sv1: "now"
+			//sv2: pericynthion
+			//sv3: lunar sphere exit
+			//sv4: vacuum perigee
+			//sv5: entry interface
+			EphemerisData sv2, sv3, sv4, sv5;
+			PMMCEN_VNI vni;
+			PMMCEN_INI ini;
+			int ITS;
+
+			vni.GMTBASE = GMTBASE;
+
+			if (sv.RBI == BODY_EARTH)
+			{
+				//Integrate to next periapsis
+				vni.R = sv.R;
+				vni.V = sv.V;
+				vni.T = sv.GMT;
+				ini.body = sv.RBI;
+				vni.end_cond = 0.0;
+				ini.stop_ind = 2;
+				vni.dt_min = 0.0;
+				OrbMech::PMMCEN(vni, ini, sv4.R, sv4.V, sv4.GMT, ITS, sv4.RBI);
+
+				if (sv4.RBI == BODY_EARTH)
+				{
+					if (length(sv4.R) > OrbMech::GetSemiMajorAxis(sv4.R, sv4.V, OrbMech::mu_Earth))
+					{
+						//We are at apogee, try again
+						vni.dt_min = 30.0*60.0;
+						vni.R = sv4.R;
+						vni.V = sv4.V;
+						vni.T = sv4.GMT;
+						ini.body = sv4.RBI;
+						OrbMech::PMMCEN(vni, ini, sv4.R, sv4.V, sv4.GMT, ITS, sv4.RBI);
+					}
+					//Found a vacuum perigee
+				}
+				else
+				{
+					//Found a pericynthion
+					sv2 = sv4;
+					vni.R = sv2.R;
+					vni.V = sv2.V;
+					vni.T = sv2.GMT;
+					ini.body = sv2.RBI;
+					vni.end_cond = 9.0*OrbMech::R_Earth;
+					vni.dt_min = 0.0;
+					ini.stop_ind = 3;
+					OrbMech::PMMCEN(vni, ini, sv3.R, sv3.V, sv3.GMT, ITS, sv3.RBI);
+
+					EZSPACE.GETSE = GETfromGMT(sv3.GMT);
+
+					//Find vacuum perigee
+					vni.R = sv3.R;
+					vni.V = sv3.V;
+					vni.T = sv3.GMT;
+					ini.body = sv3.RBI;
+					vni.end_cond = 0.0;
+					vni.dt_min = 0.0;
+					ini.stop_ind = 2;
+					OrbMech::PMMCEN(vni, ini, sv4.R, sv4.V, sv4.GMT, ITS, sv4.RBI);
+
+					if (ITS == 1 || sv4.RBI == BODY_MOON)
+					{
+						//Not found
+						return 0;
+					}
+				}
+			}
+			else
+			{
+				//Try to find lunar sphere exit
+				vni.R = sv.R;
+				vni.V = sv.V;
+				vni.T = sv.GMT;
+				ini.body = sv.RBI;
+				vni.end_cond = 9.0*OrbMech::R_Earth;
+				vni.dt_min = 0.0;
+				ini.stop_ind = 3;
+				OrbMech::PMMCEN(vni, ini, sv3.R, sv3.V, sv3.GMT, ITS, sv3.RBI);
+
+				if (ITS == 1)
+				{
+					//Not found
+					return 0;
+				}
+				else
+				{
+					EZSPACE.GETSE = GETfromGMT(sv3.GMT);
+				}
+				//Find vacuum perigee
+				vni.R = sv3.R;
+				vni.V = sv3.V;
+				vni.T = sv3.GMT;
+				ini.body = sv3.RBI;
+				vni.end_cond = 0.0;
+				vni.dt_min = 0.0;
+				ini.stop_ind = 2;
+				OrbMech::PMMCEN(vni, ini, sv4.R, sv4.V, sv4.GMT, ITS, sv4.RBI);
+
+				if (ITS == 1 || sv4.RBI == BODY_MOON)
+				{
+					//Not found
+					return 0;
+				}
+			}
+			//Calc VP parameters
+			TimeConstraintsTable newtab;
+			EphemerisData svtempout;
+
+			EZSPACE.GETVP = GETfromGMT(sv4.GMT);
+
+			ELVCNV(sv4, 0, 1, svtempout);
+			EMMDYNEL(svtempout, newtab);
+
+			EZSPACE.VVP = newtab.V / 0.3048;
+			EZSPACE.HVP = newtab.h / 1852.0;
+			EZSPACE.PVP = newtab.lat * DEG;
+			EZSPACE.LVP = newtab.lng * DEG;
+			EZSPACE.PSIVP = newtab.azi*DEG;
+			//Do we have a reentry
+			if (length(sv4.R) < OrbMech::R_Earth + 400000.0*0.3048)
+			{
+				//Calc EI parameters
+				vni.R = sv4.R;
+				vni.V = sv4.V;
+				vni.T = sv4.GMT;
+				ini.body = sv4.RBI;
+				vni.end_cond = OrbMech::R_Earth + 400000.0*0.3048;
+				vni.dt_min = 0.0;
+				vni.dt_max = 24.0*3600.0;
+				vni.dir = -1.0;
+				ini.stop_ind = 3;
+				OrbMech::PMMCEN(vni, ini, sv5.R, sv5.V, sv5.GMT, ITS, sv5.RBI);
+
+				EZSPACE.GETEI = GETfromGMT(sv5.GMT);
+
+				ELVCNV(sv5, 0, 1, svtempout);
+				EMMDYNEL(svtempout, newtab);
+
+				EZSPACE.VEI = newtab.V / 0.3048;
+				EZSPACE.GEI = newtab.gamma*DEG;
+				EZSPACE.PEI = newtab.lat * DEG;
+				EZSPACE.LEI = newtab.lng * DEG;
+				EZSPACE.PSIEI = newtab.azi*DEG;
+			}
 		}
 	}
 
@@ -11099,7 +11281,7 @@ void RTCC::EMSTAGEN(int L)
 	{
 		if (med_b04.FUNCTION && !groundstationslunar[i]) continue;
 		station.alt = 0.0;
-		sprintf_s(station.code, gsabbreviations[i]);
+		station.code = gsabbreviations[i];
 		station.lat = groundstations[i][0];
 		station.lng = groundstations[i][1];
 		contact.table.push_back(station);
@@ -11338,6 +11520,10 @@ RTCC_PMMMCD_11_1:
 	{
 		goto RTCC_PMMMCD_11_3;
 	}
+	if (in.BPIND < 3)
+	{
+		goto RTCC_PMMMCD_15_2;
+	}
 RTCC_PMMMCD_11_2:
 	DV_A = X_P * in.BurnParm75 + Y_P * in.BurnParm76 + Z_P * in.BurnParm77;
 	goto RTCC_PMMMCD_11_4;
@@ -11541,7 +11727,7 @@ RTCC_PMMMCD_15_2:
 		d2 = SINR;
 		d3 = COSY;
 		d4 = COSR;
-		goto RTCC_PMMMCD_16_3;
+		goto RTCC_PMMMCD_16_4;
 	}
 	if (in.CoordinateInd == 1)
 	{
@@ -11549,19 +11735,32 @@ RTCC_PMMMCD_15_2:
 		d2 = SINY;
 		d3 = COSR;
 		d4 = COSY;
-		goto RTCC_PMMMCD_16_3;
+		goto RTCC_PMMMCD_16_4;
 	}
 	AL = SINR * SINY;
 	BE = COSR * SINY;
 	a1 = COSR * COSP - AL * SINP;
 	a2 = SINR * COSP;
-	a3 = -COSR*SINP-AL*COSP;
-	b1 = -SINR*COSP - AL * COSP;
+	a3 = -COSR * SINP - AL * COSP;
+	b1 = -SINR * COSP - AL * COSP;
 	b2 = COSR * COSY;
 	b3 = SINR * SINP - BE * COSP;
 	c1 = COSY * SINP;
 	c2 = SINY;
 	c3 = COSY * COSP;
+	goto RTCC_PMMMCD_16_3;
+RTCC_PMMMCD_16_4:
+	AL = COSP * d1;
+	BE = SINP * d1;
+	a1 = COSP * d3;
+	a2 = d1;
+	a3 = -SINP * d3;
+	b1 = SINP * d2 - AL * d4;
+	b2 = d3 * d4;
+	b3 = COSP * d2 + BE * d4;
+	c1 = SINP * d4 + AL * d2;
+	c2 = -d3 * d2;
+	c3 = COSP * d4 - BE * d2;
 RTCC_PMMMCD_16_3:
 	man.X_B = X_P * a1 + Y_P * a2 + Z_P * a3;
 	man.Y_B = X_P * b1 + Y_P * b2 + Z_P * b3;
@@ -11584,9 +11783,11 @@ RTCC_PMMMCD_17_1:
 
 void RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 {
+	EMSMISSInputTable emsin;
+	CELEMENTS ELA;
 	EphemerisData sv_gmti, sv_gmti_other;
 	VECTOR3 DV_LVLH;
-	double WDI[6], TH[6], DELT[6], TIDPS, MASS, DELVB, T, GMTBB, GMTI, WAITA, DT;
+	double WDI[6], TH[6], DELT[6], TIDPS, MASS, DELVB, T, GMTBB, GMTI, WAITA, DT, mu;
 
 	int NPHASE = 1;
 
@@ -11612,12 +11813,22 @@ void RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 	man.IMPT = TIMP;
 	if (in.Thruster == RTCC_ENGINETYPE_LMAPS)
 	{
-		man.TrimAngleInd = 2;
+		man.TrimAngleInd = 1;
 	}
 	else
 	{
-		man.TrimAngleInd = 0;
+		man.TrimAngleInd = -1;
 	}
+
+	if (in.sv_before.RBI == BODY_EARTH)
+	{
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		mu = OrbMech::mu_Moon;
+	}
+	ELA = OrbMech::GIMIKC(in.sv_before.R, in.V_aft, mu);
 	VECTOR3 DV = in.V_aft - in.sv_before.V;
 	double dv = length(DV);
 	if (in.Attitude < 3)
@@ -11840,14 +12051,14 @@ RTCC_PMMMPT_10_A:
 	{
 		goto RTCC_PMMMPT_11_A;
 	}
-	sv_gmti = EMMENI(in.sv_before, GMTI - TIMP);
+	sv_gmti = EMMENI(emsin, in.sv_before, GMTI - TIMP);
 	DV_LVLH = PIEXDV(sv_gmti.R, sv_gmti.V, in.VehicleWeight, GetOnboardComputerThrust(in.Thruster), DV, false);
 	man.dV_LVLH = DV_LVLH;
 	man.Word67i[0] = 1;
 	goto RTCC_PMMMPT_11_B;
 RTCC_PMMMPT_11_A:
-	sv_gmti_other = EMMENI(in.sv_other, GMTBB - TIMP);
-	sv_gmti = EMMENI(in.sv_before, GMTBB - TIMP);
+	sv_gmti_other = EMMENI(emsin, in.sv_other, GMTBB - TIMP);
+	sv_gmti = EMMENI(emsin, in.sv_before, GMTBB - TIMP);
 	DV_LVLH = PIAEDV(DV, sv_gmti_other.R, sv_gmti_other.V, sv_gmti.R, false);
 	man.dV_LVLH = DV_LVLH;
 	man.Word67i[0] = 1;
@@ -11866,8 +12077,313 @@ RTCC_PMMMPT_11_B:
 	}
 	return;
 RTCC_PMMMPT_12_A:
-	//TBD: Iteration
-	double MJD = OrbMech::MJDfromGET(in.sv_before.GMT, GMTBASE);
+	PMMRKJInputArray integin;
+
+	integin.A = 0.0;
+	integin.DENSMULT = 1.0;
+	integin.DOCKANG = man.DockingAngle;
+	integin.DPSScale = man.DPSScaleFactor;
+	integin.DTPS10 = man.DT_10PCT;
+	integin.DTU = man.dt_ullage;
+	integin.HeadsUpDownInd = man.HeadsUpDownInd;
+	integin.IC = man.ConfigCodeAfter;
+	integin.KAUXOP = 1;
+	integin.KEPHOP = 0;
+	integin.KTRIMOP = man.TrimAngleInd;
+	integin.LMDESCJETT = 1e70;
+	integin.MANOP = 4;
+	integin.ThrusterCode = man.Thruster;
+	integin.TVC = man.TVC;
+	integin.UllageOption = man.UllageThrusterOpt;
+	integin.ExtDVCoordInd = false;
+	integin.WDMULT = 1.0;
+	integin.XB = man.X_B;
+	integin.YB = man.Y_B;
+	integin.ZB = man.Z_B;
+	integin.CAPWT = in.VehicleWeight;
+	integin.CSMWT = 0.0;
+	integin.LMAWT = 0.0;
+	integin.LMDWT = 0.0;
+	integin.SIVBWT = 0.0;
+	if (man.TVC == RTCC_MANVEHICLE_CSM)
+	{
+		integin.CSMWT = in.VehicleWeight;
+	}
+	else if (man.TVC == RTCC_MANVEHICLE_LM)
+	{
+		integin.LMDWT = in.VehicleWeight;
+	}
+	else
+	{
+		integin.SIVBWT = in.VehicleWeight;
+	}
+
+	int Ierr;
+	RTCCNIAuxOutputTable aux;
+
+	CSMLMPoweredFlightIntegration numin(this, integin, Ierr, NULL, &aux);
+
+	double SUM;
+	int ITCNT;
+
+	SUM = 1.0e75;
+	ITCNT = 0;
+	VECTOR3 ATV;
+	if (man.AttitudeCode >= 4)
+	{
+		ATV = DV / length(DV);
+	}
+	else
+	{
+		ATV = man.A_T;
+	}
+	EphemerisData sv_BO, sv_impt;
+	VECTOR3 H, YT;
+	double P, Y, PARM[6], SUMN, DA[6], DAS[6], X, LAMI, LAMP, WX[6], WY[6], EPS[6], SAVEX, DP[6], TIG, YV[6], DELP[6], LAML;
+	int ICNT, i, ITMAX, J, IPI, ii, NIP, IPT;
+	bool IP[6], IFLAG, DFLAG, IC[6];
+	CELEMENTS ELPRES, OSCELB;
+
+	double **A, **XP;
+	A = new double*[6];
+	XP = new double*[6];
+	for (i = 0;i < 6;i++)
+	{
+		A[i] = new double[6];
+		XP[i] = new double[6];
+		for (ii = 0;ii < 6;ii++)
+		{
+			A[i][ii] = 0.0;
+			XP[i][ii] = 0.0;
+		}
+	}
+
+	//Constants
+	double WNULL[6] = { 0,0,0,0,0,0 };
+	LAMI = pow(2, -28);
+	LAML = 1.0;
+	EPS[0] = 1.0;
+	EPS[1] = 0.0001;
+	EPS[2] = 0.00001;
+	EPS[3] = 0.00001;
+	EPS[4] = 0.00001;
+	WX[0] = 1.0;
+	WX[1] = 1.0;
+	WX[2] = 0.01;
+	WX[3] = 0.01;
+	WX[4] = 1.0;
+	WX[5] = 1.0;
+	for (i = 0;i < 5;i++)
+	{
+		WY[i] = pow(2, -40) / pow(EPS[i], 2);
+	}
+	ITMAX = 5;
+	DP[0] = 0.001*RAD;
+	DP[1] = 0.001*RAD;
+	DP[2] = 0.1*0.3048;
+	DP[3] = 0.01;
+	IC[0] = IC[1] = IC[2] = IC[3] = IC[4] = true;
+	IC[5] = false;
+
+	PARM[3] = GMTBB;
+	IP[3] = true;
+	TIG = GMTBB;
+	sv_gmti = EMMENI(emsin, in.sv_before, TIG - TIMP);
+	LAMP = LAMI * 10.0;
+	NIP = 6;
+	if (man.AttitudeCode == 3)
+	{
+		goto RTCC_PMMMPT_14_A;
+	}
+	IP[0] = true;
+	IP[1] = true;
+	IP[2] = true;
+	IP[4] = false;
+	IP[5] = false;
+	PARM[0] = P = asin(ATV.z);
+	if (abs(P - PI05) >= 0.0017)
+	{
+		PARM[1] = Y = atan2(ATV.y, ATV.x);
+	}
+	else
+	{
+		H = crossp(ATV, sv_gmti.R / OrbMech::R_Earth);
+		if (length(H) >= 0.001)
+		{
+			YT = unit(H);
+		}
+		else
+		{
+			YT = unit(crossp(sv_gmti.V, sv_gmti.R));
+		}
+		Y = PARM[1] = atan2(YT.y, YT.x);
+	}
+	PARM[2] = dv;
+	NIP = 4;
+	goto RTCC_PMMMPT_14_B;
+RTCC_PMMMPT_14_A:
+	IP[0] = false;
+	IP[1] = false;
+	IP[2] = false;
+	IP[4] = true;
+	IP[5] = true;
+	//TBD: Lambert
+	goto RTCC_PMMMPT_14_B;
+RTCC_PMMMPT_14_C:
+	if (DFLAG)
+	{
+		for (i = 0;i < 6;i++)
+		{
+			DAS[i] = DA[i];
+		}
+	}
+RTCC_PMMMPT_14_B:
+	//Input parameters
+	integin.sv0 = sv_gmti;
+	ATV = _V(cos(PARM[1])*cos(PARM[0]), sin(PARM[1])*cos(PARM[0]), sin(PARM[0]));
+	integin.VG = ATV * PARM[2];
+
+	numin.PMMRKJ();
+	sv_BO.R = aux.R_BO;
+	sv_BO.V = aux.V_BO;
+	sv_BO.GMT = aux.GMT_BO;
+	sv_BO.RBI = aux.RBI;
+	sv_impt = EMMENI(emsin, sv_BO, TIMP - sv_BO.GMT);
+	ELPRES = OrbMech::GIMIKC(sv_impt.R, sv_impt.V, mu);
+	SUMN = 0.0;
+	IFLAG = false;
+	ICNT = 0;
+	for (i = 0;i < 6;i++)
+	{
+		if (IC[i])
+		{
+			DA[ICNT] = X = ELA.data[i] - ELPRES.data[i];
+			ICNT++;
+			SUMN = SUMN + WY[i] * X*X;
+			if (abs(X) > EPS[i])
+			{
+				IFLAG = true;
+			}
+		}
+	}
+	if (IFLAG)
+	{
+		goto RTCC_PMMMPT_16_B;
+	}
+	if (ITCNT != 0)
+	{
+		//Move burn parameters from integrator input table to PMMMPT output area
+		DV = integin.VG;
+		GMTBB = integin.sv0.GMT;
+		GMTI = GMTBB + DT;
+	}
+	goto RTCC_PMMMPT_10_A;
+RTCC_PMMMPT_16_B:
+	if (ITCNT != 0)
+	{
+		//Did fit improve?
+		if (SUMN >= SUM)
+		{
+			//No
+			goto RTCC_PMMMPT_20_A;
+		}
+	}
+	if (LAMP > LAMI)
+	{
+		LAMP = LAMP / 10.0;
+	}
+	//Save burn parameters
+	DFLAG = true;
+	SUM = SUMN;
+	ITCNT++;
+	if (ITCNT > ITMAX)
+	{
+		//Put best burn parameters in PMMMPT output area - print message
+		DV = integin.VG;
+		GMTBB = integin.sv0.GMT;
+		GMTI = GMTBB + DT;
+		PMXSPT("PMMMPT: ITERATION LIMIT, MVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
+		goto RTCC_PMMMPT_10_A;
+	}
+	J = 0;
+RTCC_PMMMPT_17_B:
+	if (IP[J] == false)
+	{
+		goto RTCC_PMMMPT_19_B;
+	}
+	SAVEX = PARM[J];
+	PARM[J] = PARM[J] + DP[J];
+	if (TIG != PARM[3])
+	{
+		TIG = PARM[3];
+		sv_gmti = EMMENI(emsin, in.sv_before, TIG - in.sv_before.GMT);
+	}
+	//Update PMMRKJ input table
+	integin.sv0 = sv_gmti;
+	ATV = _V(cos(PARM[1])*cos(PARM[0]), sin(PARM[1])*cos(PARM[0]), sin(PARM[0]));
+	integin.VG = ATV * PARM[2];
+	numin.PMMRKJ();
+	sv_BO.R = aux.R_BO;
+	sv_BO.V = aux.V_BO;
+	sv_BO.GMT = aux.GMT_BO;
+	sv_BO.RBI = aux.RBI;
+	sv_impt = EMMENI(emsin, sv_BO, TIMP - sv_BO.GMT);
+	OSCELB = OrbMech::GIMIKC(sv_impt.R, sv_impt.V, mu);
+	IPI = 0;
+	for (ii = 0;ii < 6;ii++)
+	{
+		if (IC[ii])
+		{
+			XP[IPI][J] = (OSCELB.data[ii] - ELPRES.data[ii]) / DP[J];
+			IPI++;
+		}
+	}
+	PARM[J] = SAVEX;
+RTCC_PMMMPT_19_B:
+	J++;
+	if (J <= 5)
+	{
+		goto RTCC_PMMMPT_17_B;
+	}	
+	PCMATO(A, YV, XP, DA, 5, NIP, WY, 0.0, WNULL);
+	goto RTCC_PMMMPT_20_B;
+RTCC_PMMMPT_20_A:
+	//Reset independent variables
+	LAMP = LAMP * 10.0;
+	DFLAG = false;
+	for (i = 0;i < 6;i++)
+	{
+		DA[i] = DAS[i];
+	}
+	if (LAMP > LAML)
+	{
+		//Put best burn parameters in PMMMPT output area - print message
+		PMXSPT("PMMMPT: ITERATION FAILURE, MVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
+		goto RTCC_PMMMPT_10_A;
+	}
+RTCC_PMMMPT_20_B:
+	for (i = 0;i < NIP;i++)
+	{
+		A[i][i] = A[i][i] + WX[i] * LAMP;
+	}
+	PCGAUS(A, YV, DELP, NIP, 0.0);
+	IPT = 0;
+	for (i = 0;i < 6;i++)
+	{
+		if (IP[i])
+		{
+			PARM[i] = PARM[i] + DELP[IPT];
+			IPT++;
+		}
+	}
+	TIG = PARM[3];
+	sv_gmti = EMMENI(emsin, in.sv_before, TIG - in.sv_before.GMT);
+	goto RTCC_PMMMPT_14_C;
+
+	delete[] A;
+	delete[] XP;
+
+	/*double MJD = OrbMech::MJDfromGET(in.sv_before.GMT, GMTBASE);
 	OBJHANDLE gravref = GetGravref(in.sv_before.RBI);
 	VECTOR3 R_cut, V_cut;
 	double m_cut, MJD_cut, t_slip;
@@ -11875,13 +12391,13 @@ RTCC_PMMMPT_12_A:
 	OrbMech::impulsive2(in.sv_before.R, in.sv_before.V, MJD, gravref, GetOnboardComputerThrust(in.Thruster), TH[NPHASE - 1], TH[NPHASE - 1] / WDI[NPHASE - 1], in.VehicleWeight, in.sv_before.R, in.V_aft, DV, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 	GMTI = TIMP + t_slip;
 	GMTBB = GMTI - DT;
-	goto RTCC_PMMMPT_10_A;
+	goto RTCC_PMMMPT_10_A;*/
 }
 
 int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E)
 {
 	EphemerisData data;
-	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lat[RTCC_LMPOS_BEST], MCSMLR);
+	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lng[RTCC_LMPOS_BEST], MCSMLR);
 	double theta, dt_asc, dv;
 	SV sv_IG, sv_Ins;
 	LunarAscentProcessor(R_LS, in.m0, in.sv_CSM, GMTBASE, in.t_liftoff, in.v_LH, in.v_LV, theta, dt_asc, dv, sv_IG, sv_Ins);
@@ -11950,7 +12466,7 @@ int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *
 	double dv;
 	VECTOR3 R_LS = OrbMech::r_from_latlong(BZLSDISP.lat[RTCC_LMPOS_BEST], BZLSDISP.lng[RTCC_LMPOS_BEST], MCSMLR);
 
-	PoweredDescentProcessor(R_LS, in.TLAND, in.sv, CalcGETBase(), sv_PDI, sv_land, dv);
+	PoweredDescentProcessor(R_LS, in.TLAND, in.sv, CalcGETBase(), aux, E, sv_PDI, sv_land, dv);
 
 	aux.A_T = _V(1, 0, 0);
 	aux.DT_B = (sv_land.MJD - sv_PDI.MJD)*24.0*3600.0;
@@ -12030,7 +12546,7 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 	man.Thruster = RTCC_ENGINETYPE_LMDPS;
 	man.ConfigCodeBefore = RTCC_CONFIG_LM;
 	man.TVC = RTCC_MANVEHICLE_LM;
-	man.TrimAngleInd = in.TrimAngleInd;
+	man.TrimAngleInd = in.TrimAngleInd - 1;
 	man.HeadsUpDownInd = in.HeadsUpDownInd;
 	if (in.CurrentManeuver > 1U)
 	{
@@ -12264,7 +12780,7 @@ void RTCC::PMMUDT(int L, unsigned man, int headsup, int trim)
 	}
 	if (trim >= 0)
 	{
-		pMan->TrimAngleInd = trim;
+		pMan->TrimAngleInd = trim - 1;
 	}
 	PMSVCT(8, L);
 }
@@ -12296,13 +12812,23 @@ void RTCC::EMSTRAJ(EphemerisData sv, int L, bool landed)
 	gmt = RTCCPresentTimeGMT();
 	get = GETfromGMT(gmt);
 
-	EMGVECSTInput(L, sv);
+	if (!landed)
+	{
+		//TBD: Maybe store a landing site vector
+		EMGVECSTInput(L, sv);
+	}
 
 	//Generate main ephemeris
-	EMSEPH(2, sv, L, gmt);
-	//Generate cape crossing
-	RMMEACC(L, sv.RBI, 0, CapeCrossingRev(L, get));
-
+	EMSEPH(2, sv, L, gmt, landed);
+	if (landed)
+	{
+		cctab->NumRev = 0;
+	}
+	else
+	{
+		//Generate cape crossing
+		RMMEACC(L, sv.RBI, 0, CapeCrossingRev(L, get));
+	}
 	//Generate station contacts
 	EMSTAGEN(L);
 	//Update displays
@@ -12347,33 +12873,42 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 		InTable.EphemerisBuildIndicator = true;
 
 		bool HighOrbit;
-		double mu;
 
-		if (sv0.RBI == BODY_EARTH)
+		if (landed)
 		{
-			mu = OrbMech::mu_Earth;
+			HighOrbit = false;
 		}
 		else
 		{
-			mu = OrbMech::mu_Moon;
-		}
 
-		OELEMENTS coe = OrbMech::coe_from_sv(sv0.R, sv0.V, mu);
-		double SMA = OrbMech::GetSemiMajorAxis(sv0.R, sv0.V, mu);
+			double mu;
 
-		if (coe.e > MCGECC)
-		{
-			HighOrbit = true;
-		}
-		else
-		{
-			if (SMA < 0 || SMA > MCGSMA*OrbMech::R_Earth)
+			if (sv0.RBI == BODY_EARTH)
+			{
+				mu = OrbMech::mu_Earth;
+			}
+			else
+			{
+				mu = OrbMech::mu_Moon;
+			}
+
+			OELEMENTS coe = OrbMech::coe_from_sv(sv0.R, sv0.V, mu);
+			double SMA = OrbMech::GetSemiMajorAxis(sv0.R, sv0.V, mu);
+
+			if (coe.e > MCGECC)
 			{
 				HighOrbit = true;
 			}
 			else
 			{
-				HighOrbit = false;
+				if (SMA < 0 || SMA > MCGSMA*OrbMech::R_Earth)
+				{
+					HighOrbit = true;
+				}
+				else
+				{
+					HighOrbit = false;
+				}
 			}
 		}
 
@@ -12441,6 +12976,17 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 			InTable.EphemerisLeftLimitGMT = InTable.AnchorVector.GMT;
 			InTable.IgnoreManueverNumber = InTable.NIAuxOutputTable.ManeuverNumber;
 		}
+		else
+		{
+			if (InTable.NIAuxOutputTable.LunarStayEndGMT > 0)
+			{
+				table->LUNRSTAY.LunarStayEndGMT = InTable.NIAuxOutputTable.LunarStayEndGMT;
+			}
+			if (InTable.NIAuxOutputTable.LunarStayBeginGMT > 0)
+			{
+				table->LUNRSTAY.LunarStayBeginGMT = InTable.NIAuxOutputTable.LunarStayBeginGMT;
+			}
+		}
 	} while (InTable.NIAuxOutputTable.TerminationCode == 1);
 
 	//Unlock
@@ -12483,20 +13029,28 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 	if (in.EphemerisBuildIndicator)
 	{
-		//if (in.EphemerisLeftLimitGMT < in.AnchorVector.GMT)
-		//{
+		if (in.landed)
+		{
+			sv1.GMT = in.EphemerisLeftLimitGMT;
+		}
+		else
+		{
 			sv1 = coast(in.AnchorVector, in.EphemerisLeftLimitGMT - in.AnchorVector.GMT);
-		//}
-		//else
-		//{
-		//	sv1 = in.AnchorVector;
-		//}
+		}
 
-		if (in.EphemTableIndicator->table.size() == 0)
+		if (!in.landed && in.EphemTableIndicator->table.size() == 0)
 		{
 			in.EphemTableIndicator->table.push_back(sv1);
 		}
-		dt2 = in.EphemerRightLimitGMT - in.EphemTableIndicator->table.back().GMT;
+		if (in.landed)
+		{
+			dt2 = in.EphemerRightLimitGMT - in.EphemerisLeftLimitGMT;
+		}
+		else
+		{
+			dt2 = in.EphemerRightLimitGMT - in.EphemTableIndicator->table.back().GMT;
+		}
+		
 		if (dt2 < dt)
 		{
 			dt = dt2;
@@ -12577,7 +13131,17 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 	if (surfaceflag)
 	{
-		double GMT = sv1.GMT + in.LunarEphemDT;
+		double GMT;
+		
+		if (in.EphemerisBuildIndicator && in.EphemTableIndicator->table.size() == 0)
+		{
+			GMT = sv1.GMT;
+		}
+		else
+		{
+			GMT = sv1.GMT + in.LunarEphemDT;
+		}
+
 		double GMT2 = sv1.GMT + dt;
 		MATRIX3 Rot;
 		VECTOR3 R, V, U_M;
@@ -12598,6 +13162,10 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			{
 				GMT = GMT2;
 				stop = true;
+				if (manflag == false)
+				{
+					in.NIAuxOutputTable.LunarStayEndGMT = GMT;
+				}
 			}
 
 			Rot = OrbMech::GetRotationMatrix(BODY_MOON, OrbMech::MJDfromGET(GMT, GMTBASE));
@@ -12625,22 +13193,14 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 	}
 	else
 	{
-		CoastIntegrator coast(sv1.R, sv1.V, OrbMech::MJDfromGET(sv1.GMT, GMTBASE), dt, GetGravref(sv1.RBI), NULL);
+		CoastIntegrator coast(sv1.R, sv1.V, OrbMech::MJDfromGET(sv1.GMT, GMTBASE), dt, sv1.RBI, -1);
 		bool stop = false;
 
 		while (stop == false)
 		{
 			stop = coast.iteration();
 
-			if (coast.GetGravRef() == hEarth)
-			{
-				svtemp.RBI = BODY_EARTH;
-			}
-			else
-			{
-				svtemp.RBI = BODY_MOON;
-			}
-
+			svtemp.RBI = coast.GetGravRef();
 			svtemp.GMT = OrbMech::GETfromMJD(coast.GetMJD(), GMTBASE);
 			svtemp.R = coast.GetPosition();
 			svtemp.V = coast.GetVelocity();
@@ -13100,9 +13660,149 @@ int RTCC::EMGVECSTOutput(int L, EphemerisData &sv)
 	return 0;
 }
 
-EphemerisData RTCC::EMMENI(EphemerisData sv, double dt)
+EphemerisData RTCC::EMMENI(EMSMISSInputTable &in, EphemerisData sv, double dt)
 {
-	return coast(sv, dt);
+	EphemerisData svtemp;
+	double funct, RCALC, RES1, TIME, TIME_old, t_new;
+	int INITE = 0;
+	int gravref = sv.RBI;
+	bool allow_stop, ephstore;
+	int stopcondition = in.CutoffIndicator;
+
+	CoastIntegrator coast(sv.R, sv.V, OrbMech::MJDfromGET(sv.GMT, GMTBASE), dt, sv.RBI, -1);
+	bool stop = false;
+
+	if (in.CutoffIndicator > 0)
+	{
+		allow_stop = false;
+	}
+	else
+	{
+		allow_stop = true;
+	}
+	ephstore = in.EphemerisBuildIndicator;
+
+	while (stop == false)
+	{
+		if (abs(coast.GetTime() - dt) < 1e-6)
+		{
+			allow_stop = true;
+			stopcondition = 0;
+		}
+
+		stop = coast.iteration(allow_stop);
+
+		svtemp.RBI = coast.GetGravRef();
+		svtemp.GMT = OrbMech::GETfromMJD(coast.GetMJD(), GMTBASE);
+		svtemp.R = coast.GetPosition();
+		svtemp.V = coast.GetVelocity();
+
+		//Additional stop conditions
+		if (stop == false && in.CutoffIndicator > 0 && (in.StopParamRefFrame == 2 || svtemp.RBI == in.StopParamRefFrame))
+		{
+			if (in.CutoffIndicator != 2 && gravref != svtemp.RBI)
+			{
+				gravref = svtemp.RBI;
+				INITE = 0;
+			}
+
+			TIME = coast.GetTime();
+
+			//Calculate stop condition value
+			if (in.CutoffIndicator == 1)
+			{
+				funct = length(svtemp.R);
+			}
+			else if (in.CutoffIndicator == 2)
+			{
+				if (svtemp.RBI == BODY_EARTH)
+				{
+					funct = 1.0;
+				}
+				else
+				{
+					funct = -1.0;
+				}
+			}
+			else if (in.CutoffIndicator == 3)
+			{
+				if (svtemp.RBI == BODY_EARTH)
+				{
+					funct = length(svtemp.R) - OrbMech::R_Earth;
+				}
+				else
+				{
+					funct = length(svtemp.R) - MCSMLR;
+				}
+			}
+			else if (in.CutoffIndicator == 4)
+			{
+				funct = dotp(unit(svtemp.R), unit(svtemp.V));
+			}
+
+			if (svtemp.RBI == BODY_EARTH)
+			{
+				RCALC = funct - in.EarthRelStopParam;
+			}
+			else
+			{
+				RCALC = funct - in.MoonRelStopParam;
+			}
+		
+			//1st pass
+			if (INITE == 0)
+			{
+				INITE = -1;
+			}
+			//Not bounded, not 1st pass
+			else if (INITE < 0)
+			{
+				if (RCALC*RES1 < 0)
+				{
+					//Turn of ephemeris storage
+					ephstore = false;
+
+					if (in.CutoffIndicator == 2)
+					{
+						INITE = 2;
+
+						coast.AdjustTF(TIME);
+						allow_stop = true;
+					}
+					else
+					{
+						INITE = 1;
+
+						t_new = OrbMech::LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
+						coast.AdjustTF(t_new);
+					}
+				}
+			}
+			//Bounded
+			else if (INITE == 1)
+			{
+				t_new = OrbMech::LinearInterpolation(RES1, TIME_old, RCALC, TIME, 0.0);
+				coast.AdjustTF(t_new);
+				if (abs(TIME - t_new) < 1e-6)
+				{
+					allow_stop = true;
+				}
+			}
+
+			RES1 = RCALC;
+			TIME_old = TIME;
+		}
+
+		//Store when allowed, or when desired + iteration stopped
+		if (in.EphemTableIndicator && (ephstore || (stop && in.EphemerisBuildIndicator)))
+		{
+			in.EphemTableIndicator->table.push_back(svtemp);
+		}
+	}
+
+	in.NIAuxOutputTable.TerminationCode = stopcondition;
+
+	return svtemp;
 }
 
 int RTCC::EMMXTR(double GMT, double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
@@ -13381,7 +14081,15 @@ void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed)
 	//New anchor vector
 	if (QUEID == 4)
 	{
-		mpt->GMTAV = sv0->GMT;
+		if (landed)
+		{
+			mpt->GMTAV = RTCCPresentTimeGMT();
+		}
+		else
+		{
+			mpt->GMTAV = sv0->GMT;
+		}
+		
 		//TBD: Station ID to MPT
 		bool tli = false;
 		for (unsigned i = 0;i < mpt->mantable.size();i++)
@@ -13397,55 +14105,84 @@ void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed)
 				}
 			}
 		}
-		EphemerisData sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
+		
+		EphemerisData sv1;
+		
+		if (landed == false)
+		{
+			sv1 = EMSEPH(1, *sv0, L, RTCCPresentTimeGMT());
+		}
 		EMSTRAJ(sv1, L, landed);
 	}
 	//Trajectory update
 	if (QUEID == 8)
 	{
-		double T_P, T_F, T_Left;
+		double T_P;
+		EphemerisData sv;
 
 		T_P = RTCCPresentTimeGMT();
-		if (maineph->EPHEM.table.size() > 0)
-		{
-			T_Left = maineph->EPHEM.table.front().GMT;
-		}
-		else
-		{
-			T_Left = 0.0;
-		}
-		
 
-		if (T_P < T_Left)
+		if (maineph->LUNRSTAY.LunarStayBeginGMT < T_P && T_P < maineph->LUNRSTAY.LunarStayEndGMT)
 		{
-			T_F = T_Left;
+			landed = true;
 		}
 		else
 		{
-			T_F = T_P;
+			landed = false;
 		}
-		EphemerisData sv;
-		if (PMSVCTAuxVectorFetch(L, T_F, sv))
+
+		if (landed)
 		{
-			if (mpt->TUP < 0)
+			
+		}
+		else
+		{
+			double T_F, T_Left;
+
+			if (maineph->EPHEM.table.size() > 0)
 			{
-				mpt->TUP = -mpt->TUP;
+				T_Left = maineph->EPHEM.table.front().GMT;
+			}
+			else
+			{
+				T_Left = 0.0;
 			}
 
-			//Error
-			return;
+
+			if (T_P < T_Left)
+			{
+				T_F = T_Left;
+			}
+			else
+			{
+				T_F = T_P;
+			}
+			
+			if (PMSVCTAuxVectorFetch(L, T_F, sv))
+			{
+				if (mpt->TUP < 0)
+				{
+					mpt->TUP = -mpt->TUP;
+				}
+
+				//Error
+				return;
+			}
 		}
 
 		//TUP should be negative already
+		if (mpt->TUP > 0)
+		{
+			mpt->TUP = -mpt->TUP;
+		}
 		mpt->TUP--;
 
-		EMSTRAJ(sv, L);
+		EMSTRAJ(sv, L, landed);
 	}
 }
 
-int RTCC::PMSVEC(int L, double GMT, OrbMech::CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI)
+int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI)
 {
-	EphemerisDataTable EPHEM;
 	double mu;
 	MissionPlanTable *mpt = GetMPTPointer(L);
 	EphemerisData sv;
@@ -13495,13 +14232,13 @@ int RTCC::PMSVEC(int L, double GMT, OrbMech::CELEMENTS &elem, double &KFactor, d
 
 	if (ELFECH(GMT, L, sv))
 	{
-		//Error: Unable to fetch vector for rendezvous planning request
+		PMXSPT("PMSVEC: UNABLE TO FETCH VECTOR FOR RENDEZVOUS PLANNING REQUEST");
 		return 1;
 	}
 
 PMSVEC_2_2:
 
-	if (EPHEM.table[0].RBI == BODY_EARTH)
+	if (sv.RBI == BODY_EARTH)
 	{
 		mu = OrbMech::mu_Earth;
 	}
@@ -13510,7 +14247,20 @@ PMSVEC_2_2:
 		mu = OrbMech::mu_Moon;
 	}
 
-	elem = OrbMech::GIMIKC(EPHEM.table[0].R, EPHEM.table[0].V, mu);
+	VECTOR3 R, V;
+	if (sv.RBI == BODY_EARTH)
+	{
+		MATRIX3 Rot = OrbMech::GetRotationMatrix(sv.RBI, GMTBASE);
+		R = rhtmul(Rot, sv.R);
+		V = rhtmul(Rot, sv.V);
+	}
+	else
+	{
+		R = sv.R;
+		V = sv.V;
+	}
+
+	elem = OrbMech::GIMIKC(R, V, mu);
 	KFactor = mpt->KFactor;
 	StaID = mpt->StationID;
 
@@ -13679,7 +14429,7 @@ void RTCC::PMMIEV(double T_L)
 	T_D = T_L - PZSTARGP.T_LO;
 	if (T_D < MDVSTP.t_D0 || T_D > MDVSTP.t_D3)
 	{
-		//Error
+		PMXSPT(102);
 		return;
 	}
 	A_Z = 0.0;
@@ -13725,7 +14475,7 @@ void RTCC::PMMIEV(double T_L)
 	double GMT_EOI = T_L + dt_EOI;
 	if (EMMXTR(GMT_EOI, rad_EOI, vel_EOI, lng_EOI, lat_EOI, fpa_EOI, azi_EOI, R, V))
 	{
-		//Error
+		PMXSPT(121);
 		return;
 	}
 	//TBD: Print insertion vector
@@ -14036,7 +14786,7 @@ EMXING_LOOP:
 	current.BestAvailableAOS = BestAvailableAOS;
 	current.BestAvailableLOS = BestAvailableLOS;
 	current.BestAvailableEMAX = BestAvailableEMAX;
-	sprintf_s(current.StationID, station.code);
+	sprintf_s(current.StationID, station.code.c_str());
 
 	acquisitions.push_back(current);
 
@@ -14250,6 +15000,11 @@ void RTCC::EMDSTAC()
 	NextStationContactsBuffer.GET = GET;
 }
 
+void RTCC::EMDLANDM(int L, double get, double dt, int ref)
+{
+
+}
+
 void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int body)
 {
 	NextStationContact empty;
@@ -14315,6 +15070,320 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 	}
 }
 
+void RTCC::PMMAEGS(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
+{
+	if (header.AEGInd == BODY_EARTH)
+	{
+		pmmaeg.CALL(header, in, out);
+	}
+	else
+	{
+		pmmlaeg.CALL(header, in, out);
+	}
+}
+
+void RTCC::PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC)
+{
+	MATRIX3 Rot;
+	double i_CB, g_CB, h_CB, u_CB, g_dot, h_dot, Z, DELTA, lambda_V, lambda_apo, w_CB, dlambda, DELTADOT, dt, u_CB_dot, mu_CB;
+
+	if (HEADER.AEGInd == BODY_EARTH)
+	{
+		w_CB = OrbMech::w_Earth;
+		mu_CB = OrbMech::mu_Earth;
+	}
+	else
+	{
+		w_CB = OrbMech::w_Moon;
+		mu_CB = OrbMech::mu_Moon;
+	}
+	lambda_apo = 0.0;
+	K = 1;
+	AEGOUT = AEGIN;
+	do
+	{
+		if (HEADER.AEGInd == BODY_EARTH)
+		{
+			if (INDVEC < 0)
+			{
+				lambda_apo = 0.0;
+			}
+			else
+			{
+				if (K == 1)
+				{
+					lambda_apo = 0.0;//MCEGMB;
+				}
+			}
+		}
+		else
+		{
+			VECTOR3 P, W, P_apo, W_apo;
+			double i_SG, g_SG, h_SG;
+
+			Rot = OrbMech::GetRotationMatrix(BODY_MOON, AEGOUT.Item7 + AEGOUT.TS / 24.0 / 3600.0);
+			OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
+			P_apo = rhtmul(Rot, P);
+			W_apo = rhtmul(Rot, W);
+			OrbMech::PIVECT(P_apo, W_apo, i_SG, g_SG, h_SG);
+			i_CB = i_SG;
+			g_CB = g_SG;
+			h_CB = h_SG;
+			u_CB = AEGOUT.f + g_CB;
+			if (u_CB >= PI2)
+			{
+				u_CB -= PI2;
+			}
+			g_dot = AEGIN.g_dot;
+			h_dot = AEGIN.h_dot;
+			Z = 0.0;
+		}
+		DELTA = atan2(sin(u_CB)*cos(i_CB), cos(u_CB));
+		if (DELTA < 0)
+		{
+			DELTA += PI2;
+		}
+		lambda_V = h_CB + DELTA - Z * (lambda_apo + w_CB * AEGOUT.TE);
+		lambda_V = fmod(lambda_V, PI2);
+		if (lambda_V < 0)
+		{
+			lambda_V += PI2;
+		}
+		dlambda = DESLAM - lambda_V;
+		if (K <= 1)
+		{
+			DELTADOT = AEGIN.l_dot + g_dot;
+			if (i_CB > PI05)
+			{
+				DELTADOT = -DELTADOT;
+				if (dlambda > 0)
+				{
+					dlambda = dlambda - PI2;
+				}
+			}
+			else
+			{
+				if (dlambda < 0)
+				{
+					dlambda = dlambda + PI2;
+				}
+			}
+		}
+		else
+		{
+			u_CB_dot = sqrt(mu_CB*AEGOUT.coe_osc.a*(1.0 - pow(AEGOUT.coe_osc.e, 2))) / pow(AEGOUT.R, 2) + g_dot;
+			DELTADOT = cos(AEGOUT.coe_osc.i)*u_CB_dot / (pow(cos(u_CB), 2) + pow(sin(u_CB), 2)*pow(cos(AEGOUT.coe_osc.i), 2));
+			if (abs(dlambda) > PI)
+			{
+				if (dlambda > 0)
+				{
+					dlambda = dlambda - PI2;
+				}
+				else
+				{
+					dlambda = dlambda + PI2;
+				}
+			}
+		}
+		dt = dlambda / (h_dot + DELTADOT - w_CB);
+		if (abs(dt) <= 0.01)
+		{
+			K = 0;
+			return;
+		}
+		if (K > 5)
+		{
+			return;
+		}
+		K++;
+		AEGIN.TE = AEGOUT.TE + dt;
+		AEGIN.TIMA = 0;
+		PMMAEGS(HEADER, AEGIN, AEGOUT);
+		if (HEADER.ErrorInd)
+		{
+			K = -1;
+			return;
+		}
+	} while (K < 6);
+}
+
+void RTCC::PMMDAN(AEGBlock aeg, int IND, int &ERR, double &T_c, double &T_c_apo)
+{
+	AEGDataBlock init, out;
+	VECTOR3 R_EM, V_EM, R_ES, R_S, R, V, H, N, N_apo;
+	double MJD, r_S, mu, cos_theta, R_e, r, phi1, phi2, phi3, n, cos_phi1, sin_alpha, h, cos_eta, sin_eta, F, dt, S_T;
+	int J, I_c;
+	bool daylight;
+
+	J = 0;
+	MJD = GMTBASE + aeg.Data.TS / 24.0 / 3600.0;
+	OrbMech::PLEFEM(pzefem, MJD, R_EM, V_EM, R_ES);
+
+	if (aeg.Header.AEGInd == BODY_EARTH)
+	{
+		R_S = R_ES;
+		mu = OrbMech::mu_Earth;
+		R_e = OrbMech::R_Earth;
+	}
+	else
+	{
+		R_S = R_ES - R_EM;
+		mu = OrbMech::mu_Moon;
+		R_e = MCSMLR;
+	}
+	aeg.Data.TIMA = 0;
+	aeg.Data.TE = aeg.Data.TS;
+	PMMAEGS(aeg.Header, aeg.Data, init);
+	if (aeg.Header.ErrorInd != 0)
+	{
+		goto RTCC_PMMDAN_4_3;
+	}
+	
+	OrbMech::GIMKIC(aeg.Data.coe_osc, mu, R, V);
+	r = length(R);
+	r_S = length(R_ES);
+	cos_theta = dotp(R, R_S) / r / r_S;
+	if (cos_theta >= 0)
+	{
+		//Vehicle is in daylight
+		daylight = true;
+	}
+	else if (r*sqrt(1.0 - cos_theta * cos_theta) >= R_e)
+	{
+		//Vehicle is in daylight
+		daylight = true;
+	}
+	else
+	{
+		//Vehicle is in darkness
+		daylight = false;
+	}
+	I_c = 0;
+	T_c = init.TE;
+	out = init;
+RTCC_PMMDAN_2_2:
+	if (I_c > 0)
+	{
+		OrbMech::GIMKIC(out.coe_osc, mu, R, V);
+	}
+	H = crossp(R, V);
+	N = crossp(R_S, H);
+	n = length(N);
+	if (daylight)
+	{
+		n = -n;
+	}
+	N_apo = N / n;
+	cos_phi1 = dotp(R, N_apo) / r;
+	phi1 = acos(cos_phi1);
+	sin_alpha = sqrt(1.0 - pow(R_e / r, 2));
+	h = length(H);
+	cos_eta = dotp(H, R_S) / h / r_S;
+	sin_eta = sqrt(1.0 - cos_eta * cos_eta);
+	if (sin_eta <= sin_alpha)
+	{
+		ERR = 1;
+		goto RTCC_PMMDAN_4_3;
+	}
+	phi2 = asin(sin_alpha / sin_eta);
+	F = R.x*N_apo.y - R.y*N_apo.x;
+	if (aeg.Header.AEGInd == BODY_MOON)
+	{
+		F = -F;
+	}
+	if (daylight)
+	{
+		if (F >= 0)
+		{
+			phi3 = phi1 + phi2;
+		}
+		else
+		{
+			if (cos_phi1 > 0)
+			{
+				phi3 = phi2 - phi1;
+			}
+			else
+			{
+				phi3 = PI2 - phi1 + phi2;
+			}
+		}
+	}
+	else
+	{
+		if (F > 0)
+		{
+			phi3 = phi1 - phi2;
+		}
+		else
+		{
+			phi3 = -phi1 - phi2;
+		}
+	}
+	dt = phi3 / (out.l_dot + out.g_dot);
+	T_c = T_c + dt;
+	if (abs(dt) > 0.00055*3600.0)
+	{
+		if (I_c >= 4)
+		{
+			ERR = 2;
+			goto RTCC_PMMDAN_4_3;
+		}
+		I_c++;
+	RTCC_PMMDAN_2_4:
+		if (aeg.Header.AEGInd == BODY_EARTH)
+		{
+			init.TE = T_c;
+			PMMAEGS(aeg.Header, init, out);
+		}
+		else
+		{
+			aeg.Data.TE = T_c;
+			PMMAEGS(aeg.Header, aeg.Data, out);
+		}
+		if (aeg.Header.ErrorInd != 0)
+		{
+			goto RTCC_PMMDAN_4_3;
+		}
+		goto RTCC_PMMDAN_2_2;
+	}
+	if (daylight)
+	{
+		T_c = -T_c;
+	}
+	if (IND == 1)
+	{
+		T_c_apo = 0.0;
+		return;
+	}
+	if (J <= 0)
+	{
+		S_T = T_c;
+		daylight = !daylight;
+		if (daylight == false)
+		{
+			phi2 = -phi2;
+		}
+		phi3 = PI + 2.0*phi2;
+		dt = phi3 / (out.l_dot + out.g_dot);
+		T_c = abs(T_c) + dt;
+		J = 1;
+		I_c = 1;
+		goto RTCC_PMMDAN_2_4;
+	}
+	else
+	{
+		T_c_apo = T_c;
+		T_c = S_T;
+		return;
+	}
+
+RTCC_PMMDAN_4_3:
+	T_c = 0.0;
+	T_c_apo = 0.0;
+	return;
+}
+
 VECTOR3 RTCC::PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i)
 {
 	//INPUTS:
@@ -14375,7 +15444,32 @@ VECTOR3 RTCC::PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV
 	return DV_out;
 }
 
-int RTCC::ELVCNV(EphemerisData sv, int in, int out, EphemerisData &sv_out)
+int RTCC::ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out)
+{
+	EphemerisData sv, sv_out;
+	svtab_out.table.clear();
+	int err = 0;
+	for (unsigned i = 0;i < svtab.table.size();i++)
+	{
+		sv = svtab.table[i];
+		err = ELVCNV(sv, in, out, sv_out);
+		if (err)
+		{
+			break;
+		}
+		svtab_out.table.push_back(sv_out);
+	}
+	//Store some ephemeris header data
+	svtab_out.Header.CSI = out;
+	svtab_out.Header.NumVec = svtab_out.table.size();
+	svtab_out.Header.TL = svtab_out.table.front().GMT;
+	svtab_out.Header.TR = svtab_out.table.back().GMT;
+	svtab_out.Header.TUP = svtab.Header.TUP;
+	svtab_out.Header.VEH = svtab.Header.VEH;
+	return err;
+}
+
+int RTCC::ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out)
 {
 	int err;
 
@@ -14542,13 +15636,15 @@ int RTCC::ELVCNV(EphemerisData sv, int in, int out, EphemerisData &sv_out)
 	return 0;
 }
 
-int RTCC::EMDCHECK(CheckoutMonitor &res)
+void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet)
 {
 	EphemerisData sv_out, sv_conv, sv_inert;
 	MissionPlanTable *table;
 	OrbitEphemerisTable *ephem;
 
-	if (med_u02.VEH == RTCC_MPT_LM)
+	EZCHECKDIS.ErrorMessage = "";
+
+	if (veh == RTCC_MPT_LM)
 	{
 		table = &PZMPTLEM;
 		ephem = &EZEPH2;
@@ -14559,75 +15655,176 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		ephem = &EZEPH1;
 	}
 
-	if (table->TUP == 0) return 8;
+	if (table->TUP == 0)
+	{
+		EZCHECKDIS.ErrorMessage = "Error 8";
+		return;
+	}
+	else if (table->TUP < 0)
+	{
+		EZCHECKDIS.ErrorMessage = "Error 2";
+		return;
+	}
 
-	res.U_T = _V(-2, 0, 0);
-	res.NV = 0;
+	if (table->TUP != ephem->EPHEM.Header.TUP)
+	{
+		EZCHECKDIS.ErrorMessage = "Error 3";
+		return;
+	}
 
-	if (med_u02.IND == 1 || med_u02.IND == 2)
+	EZCHECKDIS.U_T = _V(-2, 0, 0);
+	EZCHECKDIS.NV = 0;
+	if (THTime > 0)
+	{
+		EZCHECKDIS.THT = THTime;
+	}
+	else
+	{
+		EZCHECKDIS.THT = 0.0;
+	}
+
+	//GMT and GET
+	if (opt == 1 || opt == 2)
 	{
 		double GMT;
 
-		if (med_u02.IND == 1)
+		if (opt == 1)
 		{
-			GMT = med_u02.IND_val;
-			sprintf(res.Option, "GMT");
+			GMT = param;
+			sprintf(EZCHECKDIS.Option, "GMT");
 		}
 		else
 		{
-			GMT = GMTfromGET(med_u02.IND_val);
-			sprintf(res.Option, "GET");
+			GMT = GMTfromGET(param);
+			sprintf(EZCHECKDIS.Option, "GET");
 		}
 
-		ELVCTRInputTable interin;
-		ELVCTROutputTable interout;
-		interin.GMT = GMT;
-		interin.L = med_u02.VEH;
-		ELVCTR(interin, interout);
-		if (interout.ErrorCode > 2)
+		if (THTime > 0)
 		{
-			//Error: Input time is outside of ephemeris range
-			return 4;
+			double THGMT;
+			if (opt == 1)
+			{
+				THGMT = THTime;
+			}
+			else
+			{
+				THGMT = GMTfromGET(THTime);
+			}
+			EphemerisData svtemp;
+			if (ELFECH(THGMT, veh, svtemp))
+			{
+				EZCHECKDIS.ErrorMessage = "Error 4";
+				return;
+			}
+			EMSMISSInputTable emsin;
+
+			emsin.MaxIntegTime = GMT - svtemp.GMT;
+			sv_out = EMMENI(emsin, svtemp, emsin.MaxIntegTime);
 		}
-		sv_out = interout.SV;
-		res.NV = interout.ORER + 1;
-	}
-	else if (med_u02.IND == 3)
-	{
-		if (table->mantable.size() < med_u02.IND_man) return 7;
-		sv_out.R = table->mantable[med_u02.IND_man - 1].R_BI;
-		sv_out.V = table->mantable[med_u02.IND_man - 1].V_BI;
-		sv_out.GMT = table->mantable[med_u02.IND_man - 1].GMT_BI;
-		sv_out.RBI = table->mantable[med_u02.IND_man - 1].RefBodyInd;
-		sprintf(res.Option, "MVI");
+		else
+		{
+			ELVCTRInputTable interin;
+			ELVCTROutputTable interout;
+			interin.GMT = GMT;
+			interin.L = veh;
+			ELVCTR(interin, interout);
+			if (interout.ErrorCode > 2)
+			{
+				//Error: Input time is outside of ephemeris range
+				EZCHECKDIS.ErrorMessage = "Error 4";
+				return;
+			}
+			sv_out = interout.SV;
 
-		res.U_T = table->mantable[med_u02.IND_man - 1].A_T;
+			EZCHECKDIS.NV = interout.ORER + 1;
+		}
 	}
-	else if (med_u02.IND == 4)
+	//Maneuver Initiation
+	else if (opt == 3)
 	{
-		if (table->mantable.size() < med_u02.IND_man) return 7;
-		sv_out.R = table->mantable[med_u02.IND_man - 1].R_BO;
-		sv_out.V = table->mantable[med_u02.IND_man - 1].V_BO;
-		sv_out.GMT = table->mantable[med_u02.IND_man - 1].GMT_BO;
-		sv_out.RBI = table->mantable[med_u02.IND_man - 1].RefBodyInd;
-		sprintf(res.Option, "MVE");
+		unsigned man = (unsigned)param;
+		if (man <= 0 || table->mantable.size() < man)
+		{
+			EZCHECKDIS.ErrorMessage = "Error 7";
+			return;
+		}
+		sv_out.R = table->mantable[man - 1].R_BI;
+		sv_out.V = table->mantable[man - 1].V_BI;
+		sv_out.GMT = table->mantable[man - 1].GMT_BI;
+		sv_out.RBI = table->mantable[man - 1].RefBodyInd;
+		sprintf(EZCHECKDIS.Option, "MVI");
+
+		EZCHECKDIS.U_T = table->mantable[man - 1].A_T;
+	}
+	//Maneuver cutoff
+	else if (opt == 4)
+	{
+		unsigned man = (unsigned)param;
+
+		if (man <= 0 || table->mantable.size() < man)
+		{
+			EZCHECKDIS.ErrorMessage = "Error 7";
+			return;
+		}
+		sv_out.R = table->mantable[man - 1].R_BO;
+		sv_out.V = table->mantable[man - 1].V_BO;
+		sv_out.GMT = table->mantable[man - 1].GMT_BO;
+		sv_out.RBI = table->mantable[man - 1].RefBodyInd;
+		sprintf(EZCHECKDIS.Option, "MVE");
 	}
 	else
 	{
-		//TBD
-		return 1;
+		EphemerisData svtemp;
+		if (ELFECH(GMTfromGET(THTime), veh, svtemp))
+		{
+			EZCHECKDIS.ErrorMessage = "Error 4";
+			return;
+		}
+
+		EMSMISSInputTable emsin;
+
+		if (opt == 5)
+		{
+			emsin.CutoffIndicator = 1;
+		}
+		else if (opt == 6)
+		{
+			emsin.CutoffIndicator = 3;
+		}
+		else
+		{
+			emsin.CutoffIndicator = 4;
+		}
+		if (ref <= 1)
+		{
+			emsin.StopParamRefFrame = 0;
+			emsin.EarthRelStopParam = param;
+		}
+		else
+		{
+			emsin.StopParamRefFrame = 1;
+			emsin.MoonRelStopParam = param;
+		}
+
+		sv_out = EMMENI(emsin, svtemp, 10.0*24.0*3600.0);
+
+		if (emsin.CutoffIndicator != emsin.NIAuxOutputTable.TerminationCode)
+		{
+			EZCHECKDIS.ErrorMessage = "Error 10";
+			return;
+		}
 	}
 
-	if (med_u02.VEH == RTCC_MPT_LM)
+	if (veh == RTCC_MPT_LM)
 	{
-		sprintf_s(res.VEH, "LM");
+		sprintf_s(EZCHECKDIS.VEH, "LM");
 	}
 	else
 	{
-		sprintf_s(res.VEH, "CSM");
+		sprintf_s(EZCHECKDIS.VEH, "CSM");
 	}
-	res.GET = GETfromGMT(sv_out.GMT);
-	res.GMT = sv_out.GMT;
+	EZCHECKDIS.GET = GETfromGMT(sv_out.GMT);
+	EZCHECKDIS.GMT = sv_out.GMT;
 
 	sv_inert = sv_out;
 
@@ -14642,30 +15839,30 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		inref = 2;
 	}
 
-	ELVCNV(sv_inert, inref, med_u02.REF, sv_conv);
+	ELVCNV(sv_inert, inref, ref, sv_conv);
 
-	if (med_u02.REF == 0)
+	if (ref == 0)
 	{
-		sprintf(res.RF, "ECI");
+		sprintf(EZCHECKDIS.RF, "ECI");
 	}
-	else if (med_u02.REF == 1)
+	else if (ref == 1)
 	{
-		sprintf(res.RF, "ECT");
+		sprintf(EZCHECKDIS.RF, "ECT");
 	}
-	else if (med_u02.REF == 2)
+	else if (ref == 2)
 	{
-		sprintf(res.RF, "MCI");
+		sprintf(EZCHECKDIS.RF, "MCI");
 	}
 	else
 	{
-		sprintf(res.RF, "MCT");
+		sprintf(EZCHECKDIS.RF, "MCT");
 	}
 
 	//Display unit
 	double CONVFACR, CONVFACV, R_E, mu;
 
-	res.unit = med_u02.FT;
-	if (med_u02.FT == 1)
+	EZCHECKDIS.unit = feet;
+	if (feet == 1)
 	{
 		CONVFACR = CONVFACV = 0.3048;
 	}
@@ -14675,7 +15872,7 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		CONVFACV = 6.371e6 / 3600.0;
 	}
 
-	if (med_u02.REF < 3)
+	if (ref < 2)
 	{
 		R_E = OrbMech::R_Earth;
 		mu = OrbMech::mu_Earth;
@@ -14686,32 +15883,32 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		mu = OrbMech::mu_Moon;
 	}
 
-	res.Pos = sv_conv.R / CONVFACR;
-	res.Vel = sv_conv.V / CONVFACV;
+	EZCHECKDIS.Pos = sv_conv.R / CONVFACR;
+	EZCHECKDIS.Vel = sv_conv.V / CONVFACV;
 
 	double rmag, vmag, rtasc, decl, fpav, az;
 	OrbMech::rv_from_adbar(sv_conv.R, sv_conv.V, rmag, vmag, rtasc, decl, fpav, az);
 
-	res.V_i = vmag / 0.3048;
-	res.gamma_i = 90.0 - fpav * DEG;
-	res.psi = az*DEG;
-	res.phi_c = 0.0;
-	res.lambda = 0.0;
-	res.h_s = (rmag - R_E) / 1852.0;
-	res.R = rmag / 1852.0;
+	EZCHECKDIS.V_i = vmag / 0.3048;
+	EZCHECKDIS.gamma_i = 90.0 - fpav * DEG;
+	EZCHECKDIS.psi = az*DEG;
+	EZCHECKDIS.phi_c = 0.0;
+	EZCHECKDIS.lambda = 0.0;
+	EZCHECKDIS.h_s = (rmag - R_E) / 1852.0;
+	EZCHECKDIS.R = rmag / 1852.0;
 
-	if (med_u02.REF < 3)
+	if (ref < 2)
 	{
-		res.HOBlank = false;
-		res.h_o_ft = (rmag - OrbMech::R_Earth) / 0.3048;
-		if (res.h_o_ft > 9999999.0) res.h_o_ft = 9999999.0;
-		res.h_o_NM = (rmag - OrbMech::R_Earth) / 1852.0;
-		if (res.h_o_NM > 9999.99) res.h_o_NM = 9999.99;
+		EZCHECKDIS.HOBlank = false;
+		EZCHECKDIS.h_o_ft = (rmag - OrbMech::R_Earth) / 0.3048;
+		if (EZCHECKDIS.h_o_ft > 9999999.0) EZCHECKDIS.h_o_ft = 9999999.0;
+		EZCHECKDIS.h_o_NM = (rmag - OrbMech::R_Earth) / 1852.0;
+		if (EZCHECKDIS.h_o_NM > 9999.99) EZCHECKDIS.h_o_NM = 9999.99;
 	}
 	else
 	{
-		res.HOBlank = true;
-		res.h_o_ft = res.h_o_NM = 0.0;
+		EZCHECKDIS.HOBlank = true;
+		EZCHECKDIS.h_o_ft = EZCHECKDIS.h_o_NM = 0.0;
 	}
 
 	OELEMENTS coe;
@@ -14719,35 +15916,35 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 
 	if (coe.e >= 1)
 	{
-		res.a = 99999.99;
+		EZCHECKDIS.a = 99999.99;
 	}
 	else
 	{
-		res.a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e) / 1852.0;
+		EZCHECKDIS.a = coe.h*coe.h / mu / (1.0 - coe.e*coe.e) / 1852.0;
 	}
-	if (res.a > 99999.99) res.a = 99999.99;
-	res.e = coe.e;
-	res.i = coe.i*DEG;
-	res.omega_p = coe.w*DEG;
-	res.Omega = coe.RA*DEG;
-	res.nu = coe.TA*DEG;
+	if (EZCHECKDIS.a > 99999.99) EZCHECKDIS.a = 99999.99;
+	EZCHECKDIS.e = coe.e;
+	EZCHECKDIS.i = coe.i*DEG;
+	EZCHECKDIS.omega_p = coe.w*DEG;
+	EZCHECKDIS.Omega = coe.RA*DEG;
+	EZCHECKDIS.nu = coe.TA*DEG;
 	if (coe.e < 0.00001)
 	{
-		res.TABlank = true;
+		EZCHECKDIS.TABlank = true;
 	}
 	else
 	{
-		res.TABlank = false;
+		EZCHECKDIS.TABlank = false;
 	}
 	if (coe.e < 1.0)
 	{
-		res.MABlank = false;
-		res.m = OrbMech::TrueToMeanAnomaly(coe.TA, coe.e)*DEG;
+		EZCHECKDIS.MABlank = false;
+		EZCHECKDIS.m = OrbMech::TrueToMeanAnomaly(coe.TA, coe.e)*DEG;
 	}
 	else
 	{
-		res.m = 0.0;
-		res.MABlank = true;
+		EZCHECKDIS.m = 0.0;
+		EZCHECKDIS.MABlank = true;
 	}
 
 	if (coe.e < 0.85)
@@ -14760,138 +15957,138 @@ int RTCC::EMDCHECK(CheckoutMonitor &res)
 		sv_in.MJD = OrbMech::MJDfromGET(sv_inert.GMT, GMTBASE);
 		sv_in.gravref = GetGravref(sv_inert.RBI);
 
-		ApsidesDeterminationSubroutine(sv_in, sv_a, sv_p);
+		PMMAPD(sv_in, sv_a, sv_p);
 
-		res.h_a = (length(sv_a.R) - R_E) / 1852.0;
-		res.h_p = (length(sv_p.R) - R_E) / 1852.0;
+		EZCHECKDIS.h_a = (length(sv_a.R) - R_E) / 1852.0;
+		EZCHECKDIS.h_p = (length(sv_p.R) - R_E) / 1852.0;
 	}
 	else
 	{
-		res.h_p = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 + coe.e)) - R_E;
-		res.h_p = res.h_p / 1852.0;
+		EZCHECKDIS.h_p = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 + coe.e)) - R_E;
+		EZCHECKDIS.h_p = EZCHECKDIS.h_p / 1852.0;
 
 		if (coe.e >= 1)
 		{
-			res.h_a = 9999.99;
+			EZCHECKDIS.h_a = 9999.99;
 		}
 		else
 		{
-			res.h_a = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 - coe.e)) - R_E;
-			res.h_a = res.h_a / 1852.0;
+			EZCHECKDIS.h_a = pow(length(crossp(sv_inert.R, sv_inert.V)), 2) / (mu*(1.0 - coe.e)) - R_E;
+			EZCHECKDIS.h_a = EZCHECKDIS.h_a / 1852.0;
 		}
 	}
 
-	if (res.h_p > 9999.99) res.h_p = 9999.99;
-	if (res.h_a > 9999.99) res.h_a = 9999.99;
+	if (EZCHECKDIS.h_p > 9999.99) EZCHECKDIS.h_p = 9999.99;
+	if (EZCHECKDIS.h_a > 9999.99) EZCHECKDIS.h_a = 9999.99;
 
 	double lat, lng;
 	OrbMech::latlong_from_r(sv_conv.R, lat, lng);
-	res.phi_c = res.phi_D = lat * DEG;
-	res.lambda = res.lambda_D = lng * DEG;
+	EZCHECKDIS.phi_c = EZCHECKDIS.phi_D = lat * DEG;
+	EZCHECKDIS.lambda = EZCHECKDIS.lambda_D = lng * DEG;
 
 	double LunarRightAscension, LunarDeclination, LunarDistance;
 	OrbMech::GetLunarEquatorialCoordinates(OrbMech::MJDfromGET(sv_inert.GMT, GMTBASE), LunarRightAscension, LunarDeclination, LunarDistance);
-	res.deltaL = LunarDeclination * DEG;
+	EZCHECKDIS.deltaL = LunarDeclination * DEG;
 
-	res.UpdateNo = table->TUP;
+	EZCHECKDIS.UpdateNo = table->TUP;
 	if (ephem->EPHEM.table.size() > 0)
 	{
-		res.EPHB = ephem->EPHEM.table.front().GMT;
-		res.EPHE = ephem->EPHEM.table.back().GMT;
+		EZCHECKDIS.EPHB = ephem->EPHEM.table.front().GMT;
+		EZCHECKDIS.EPHE = ephem->EPHEM.table.back().GMT;
 	}
 	else
 	{
-		res.EPHB = 0.0;
-		res.EPHE = 0.0;
+		EZCHECKDIS.EPHB = 0.0;
+		EZCHECKDIS.EPHE = 0.0;
 	}
-	res.LOC = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
-	res.GRRC = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
-	res.ZSC = res.ZSL = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
-	res.GRRS = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase()) - 17.0;
-	res.R_Day[0] = GZGENCSN.DayofLiftoff;
-	res.R_Day[1] = GZGENCSN.MonthofLiftoff;
-	res.R_Day[2] = GZGENCSN.Year;
+	EZCHECKDIS.LOC = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
+	EZCHECKDIS.GRRC = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
+	EZCHECKDIS.ZSC = EZCHECKDIS.ZSL = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase());
+	EZCHECKDIS.GRRS = OrbMech::GETfromMJD(CalcGETBase(), GetGMTBase()) - 17.0;
+	EZCHECKDIS.R_Day[0] = GZGENCSN.DayofLiftoff;
+	EZCHECKDIS.R_Day[1] = GZGENCSN.MonthofLiftoff;
+	EZCHECKDIS.R_Day[2] = GZGENCSN.Year;
 
-	if (med_u02.VEH == RTCC_MPT_LM)
+	if (veh == RTCC_MPT_LM)
 	{
 		if (ephem->LUNRSTAY.LunarStayBeginGMT < 0)
 		{
-			res.LAL = 0.0;
+			EZCHECKDIS.LAL = 0.0;
 		}
 		else
 		{
-			res.LAL = ephem->LUNRSTAY.LunarStayBeginGMT;
+			EZCHECKDIS.LAL = ephem->LUNRSTAY.LunarStayBeginGMT;
 		}
 
 		if (ephem->LUNRSTAY.LunarStayEndGMT > 0 && ephem->LUNRSTAY.LunarStayEndGMT < 10e10)
 		{
-			res.LOL = ephem->LUNRSTAY.LunarStayEndGMT;
+			EZCHECKDIS.LOL = ephem->LUNRSTAY.LunarStayEndGMT;
 		}
 		else
 		{
-			res.LOL = 0.0;
+			EZCHECKDIS.LOL = 0.0;
 		}
 
-		res.LSTBlank = false;
+		EZCHECKDIS.LSTBlank = false;
 	}
 	else
 	{
-		res.LAL = 0.0;
-		res.LOL = 0.0;
-		res.LSTBlank = true;
+		EZCHECKDIS.LAL = 0.0;
+		EZCHECKDIS.LOL = 0.0;
+		EZCHECKDIS.LSTBlank = true;
 	}
 
 	double cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight;
 	int cfg;
 
-	PLAWDT(med_u02.VEH, sv_conv.GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight);
+	PLAWDT(veh, sv_conv.GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight);
 
 	if (cfg == RTCC_CONFIG_CSM)
 	{
-		sprintf(res.CFG, "C");
+		sprintf(EZCHECKDIS.CFG, "C");
 	}
 	else if (cfg == RTCC_CONFIG_LM)
 	{
-		sprintf(res.CFG, "L");
+		sprintf(EZCHECKDIS.CFG, "L");
 	}
 	else if (cfg == RTCC_CONFIG_CSM_LM)
 	{
-		sprintf(res.CFG, "CL");
+		sprintf(EZCHECKDIS.CFG, "CL");
 	}
 	else if (cfg == RTCC_CONFIG_CSM_SIVB)
 	{
-		sprintf(res.CFG, "CS");
+		sprintf(EZCHECKDIS.CFG, "CS");
 	}
 	else if (cfg == RTCC_CONFIG_LM_SIVB)
 	{
-		sprintf(res.CFG, "LS");
+		sprintf(EZCHECKDIS.CFG, "LS");
 	}
 	else if (cfg == RTCC_CONFIG_CSM_LM_SIVB)
 	{
-		sprintf(res.CFG, "CSL");
+		sprintf(EZCHECKDIS.CFG, "CSL");
 	}
 	else if (cfg == RTCC_CONFIG_ASC)
 	{
-		sprintf(res.CFG, "A");
+		sprintf(EZCHECKDIS.CFG, "A");
 	}
 	else if (cfg == RTCC_CONFIG_CSM_ASC)
 	{
-		sprintf(res.CFG, "CA");
+		sprintf(EZCHECKDIS.CFG, "CA");
 	}
 	else if (cfg == RTCC_CONFIG_DSC)
 	{
-		sprintf(res.CFG, "D");
+		sprintf(EZCHECKDIS.CFG, "D");
 	}
 	else if (cfg == RTCC_CONFIG_SIVB)
 	{
-		sprintf(res.CFG, "S");
+		sprintf(EZCHECKDIS.CFG, "S");
 	}
 	
-	res.WT = cfg_weight / 0.45359237;
-	res.WC = csm_weight / 0.45359237;
-	res.WL = (lma_weight + lmd_weight) / 0.45359237;
+	EZCHECKDIS.WT = cfg_weight / 0.45359237;
+	EZCHECKDIS.WC = csm_weight / 0.45359237;
+	EZCHECKDIS.WL = (lma_weight + lmd_weight) / 0.45359237;
 
-	return 0;
+	return;
 }
 
 bool RTCC::MPTConfigIncludesCSM(int config)
@@ -14929,6 +16126,7 @@ bool RTCC::MPTConfigIncludesLMAsc(int config)
 	if (config == RTCC_CONFIG_CSM_LM) return true;
 	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
 	if (config == RTCC_CONFIG_ASC) return true;
+	if (config == RTCC_CONFIG_CSM_ASC) return true;
 
 	return false;
 }
@@ -15115,7 +16313,7 @@ int RTCC::PMMXFR(int id, void *data)
 	//Setup input table for PMSVCT
 	//Move MED inputs to proper location
 	//Initialize flags
-	//Direct inputs (MPT, RTE, TLI)
+	//Direct inputs (RTE, MPT, TLI)
 	if (id == 32 || id == 33 || id == 37)
 	{
 		PMMXFRDirectInput *inp = static_cast<PMMXFRDirectInput*>(data);
@@ -15178,6 +16376,7 @@ int RTCC::PMMXFR(int id, void *data)
 			tliin.QUEID = id;
 			tliin.PresentGMT = RTCCPresentTimeGMT();
 			tliin.ReplaceCode = 0;
+			tliin.InjOpp = inp->BurnParameterNumber;
 
 			PMMSPT(tliin);
 			inp->GMTI = tliin.T_RP;
@@ -15206,7 +16405,7 @@ int RTCC::PMMXFR(int id, void *data)
 			return 1;
 		}
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(inp->ThrusterCode, inp->AttitudeCode, mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(inp->TableCode, inp->ThrusterCode, inp->AttitudeCode, mpt->mantable.size() + 1, purpose, TVC, code);
 		if (err)
 		{
 			return 1;
@@ -15253,7 +16452,7 @@ int RTCC::PMMXFR(int id, void *data)
 			in.CurMan = &man;
 			in.EndTimeLimit = UpperLimit;
 			in.GMT = sv.GMT;
-			in.InjOpp = 1;
+			in.InjOpp = inp->BurnParameterNumber;
 			in.mpt = mpt;
 			in.PresentGMT = RTCCPresentTimeGMT();
 			if (mpt->mantable.size() == 0)
@@ -15308,6 +16507,9 @@ int RTCC::PMMXFR(int id, void *data)
 			in.BurnParm75 = BurnParm75;
 			in.BurnParm76 = BurnParm76;
 			in.BurnParm77 = BurnParm77;
+			in.Pitch = inp->Pitch;
+			in.Yaw = inp->Yaw;
+			in.Roll = inp->Roll;
 
 			err = PMMMCD(in, man);
 		}
@@ -15364,17 +16566,17 @@ int RTCC::PMMXFR(int id, void *data)
 
 		if (id == 39)
 		{
-			if (inp->Plan == 0)
+			if (inp->Type == 0)
 			{
-				GMTI = PZMCCXFR.sv_man_bef.GMT;
+				GMTI = PZMCCXFR.sv_man_bef[inp->Plan - 1].GMT;
 				purpose = "MCC";
-				plan = PZMCCXFR.plan;
+				plan = inp->Table;
 			}
 			else
 			{
-				GMTI = PZLRBELM.sv_man_bef.GMT;
+				GMTI = PZLRBELM.sv_man_bef[inp->Plan - 1].GMT;
 				purpose = "LOI";
-				plan = PZLRBELM.plan;
+				plan = inp->Table;
 			}
 		}
 		else if (id == 40)
@@ -15435,7 +16637,7 @@ int RTCC::PMMXFR(int id, void *data)
 			}
 		}
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(inp->Thruster[0], inp->Attitude[0], mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(plan, inp->Thruster[0], inp->Attitude[0], mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check thruster
 		if (mpt->mantable.size() == 0)
 		{
@@ -15466,15 +16668,15 @@ int RTCC::PMMXFR(int id, void *data)
 		in.mpt = mpt;
 		if (id == 39)
 		{
-			if (inp->Plan == 0)
+			if (inp->Type == 0)
 			{
-				in.sv_before = PZMCCXFR.sv_man_bef;
-				in.V_aft = PZMCCXFR.V_man_after;
+				in.sv_before = PZMCCXFR.sv_man_bef[inp->Plan - 1];
+				in.V_aft = PZMCCXFR.V_man_after[inp->Plan - 1];
 			}
 			else
 			{
-				in.sv_before = PZLRBELM.sv_man_bef;
-				in.V_aft = PZLRBELM.V_man_after;
+				in.sv_before = PZLRBELM.sv_man_bef[inp->Plan - 1];
+				in.V_aft = PZLRBELM.V_man_after[inp->Plan - 1];
 			}
 		}
 		else if (id == 40)
@@ -15589,7 +16791,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Check ground rules
 		err = PMMXFRGroundRules(replace, mpt, man.GMTI, med_m86.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(RTCC_ENGINETYPE_LMDPS, RTCC_ATTITUDE_PGNS_DESCENT, mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(med_m86.Veh, RTCC_ENGINETYPE_LMDPS, RTCC_ATTITUDE_PGNS_DESCENT, mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check configuration and thrust
 		CC = CCP;
 		err = PMMXFRCheckConfigThruster(true, 0, CCP, TVC, RTCC_ENGINETYPE_LMDPS, CC, CCMI);
@@ -15630,7 +16832,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Check ground rules
 		err = PMMXFRGroundRules(replace, mpt, man.GMTI, med_m85.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(RTCC_ENGINETYPE_LMAPS, RTCC_ATTITUDE_PGNS_ASCENT, mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(med_m85.VEH, RTCC_ENGINETYPE_LMAPS, RTCC_ATTITUDE_PGNS_ASCENT, mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check configuration and thrust
 		CC = RTCC_CONFIG_ASC;
 		err = PMMXFRCheckConfigThruster(true, RTCC_CONFIGCHANGE_UNDOCKING, CCP, TVC, RTCC_ENGINETYPE_LMAPS, CC, CCMI);
@@ -15648,7 +16850,7 @@ int RTCC::PMMXFR(int id, void *data)
 		man.Thruster = RTCC_ENGINETYPE_LMAPS;
 		man.AttitudeCode = RTCC_ATTITUDE_PGNS_ASCENT;
 		mpt->mantable.push_back(man);
-		EMSTRAJ(EZANCHR3.AnchorVectors[9], RTCC_MPT_LM);
+		PMSVCT(8, RTCC_MPT_LM);
 	}
 	return 0;
 }
@@ -15669,12 +16871,14 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		//Is maneuver prior to present time?
 		if (GMTI < CurrentGMT)
 		{
+			PMXSPT(1);
 			return 1;
 		}
 		UpperLimit = 1e70;
 		//Does maneuver to be replaced exist?
 		if (ReplaceMan > mpt->mantable.size())
 		{
+			PMXSPT(2);
 			return 2;
 		}
 		//Is this the last maneuver in MPT?
@@ -15683,6 +16887,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 			LastManReplaceFlag = false;
 			if (GMTI > mpt->mantable[ReplaceMan].GMTMAN)
 			{
+				PMXSPT(3);
 				return 3;
 			}
 		}
@@ -15693,6 +16898,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		}
 		if (GMTI < LowerLimit)
 		{
+			PMXSPT(3);
 			return 3;
 		}
 	}
@@ -15701,6 +16907,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		//Is maneuver prior to present time?
 		if (GMTI < CurrentGMT)
 		{
+			PMXSPT(1);
 			return 1;
 		}
 		if (mpt->mantable.size() == 0)
@@ -15728,10 +16935,12 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		CurMan = mpt->mantable.size() + 1;
 		if (CurMan > mpt->MaxManeuverNum)
 		{
+			PMXSPT(5);
 			return 5;
 		}
 		if (CurMan == 1 && DeleteFlag)
 		{
+			PMXSPT(3);
 			return 3;
 		}
 		mpt->ManeuverNum = CurMan;
@@ -15757,12 +16966,23 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 	return 0;
 }
 
-int RTCC::PMMXFRFormatManeuverCode(int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code)
+int RTCC::PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code)
 {
-	char Veh, Thr, Guid;
+	char Veh, Thr, Guid, Tab;
 	char Buffer[20];
 
 	//Format all but purpose of maneuver code
+
+	//Set MPT
+	if (Table == RTCC_MPT_CSM)
+	{
+		Tab = 'C';
+	}
+	else
+	{
+		Tab = 'L';
+	}
+
 	//Set thrusting vehicle ID
 	if (Thruster == RTCC_ENGINETYPE_LOX_DUMP || Thruster == RTCC_ENGINETYPE_SIVB_APS || Thruster == RTCC_ENGINETYPE_SIVB_MAIN)
 	{
@@ -15813,11 +17033,11 @@ int RTCC::PMMXFRFormatManeuverCode(int Thruster, int Attitude, unsigned Maneuver
 	{
 		Guid = 'L';
 	}
-	else if (Attitude == RTCC_ATTITUDE_PGNS_EXDV)
+	else if (Attitude == RTCC_ATTITUDE_PGNS_EXDV || Attitude == RTCC_ATTITUDE_PGNS_DESCENT || Attitude == RTCC_ATTITUDE_PGNS_ASCENT)
 	{
 		Guid = 'X';
 	}
-	else if (Attitude == RTCC_ATTITUDE_AGS_EXDV)
+	else if (Attitude == RTCC_ATTITUDE_AGS_EXDV || Attitude == RTCC_ATTITUDE_AGS_ASCENT)
 	{
 		Guid = 'A';
 	}
@@ -15825,16 +17045,12 @@ int RTCC::PMMXFRFormatManeuverCode(int Thruster, int Attitude, unsigned Maneuver
 	{
 		Guid = 'I';
 	}
-	else if (Attitude == RTCC_ATTITUDE_PGNS_DESCENT)
-	{
-		Guid = 'D';
-	}
 	else
 	{
 		Guid = 'U';
 	}
 
-	sprintf(Buffer, "%c%c%c%02d%s", Veh, Thr, Guid, Maneuver, ID.c_str());
+	sprintf(Buffer, "%c%c%c%c%02d%s", Tab, Veh, Thr, Guid, Maneuver, ID.c_str());
 	code.assign(Buffer);
 	
 	return 0;
@@ -15863,6 +17079,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 	{
 		if (!(MPTConfigIncludesSIVB(CC) && MPTConfigIncludesSIVB(CCP)))
 		{
+			PMXSPT(6);
 			return 6;
 		}
 	}
@@ -15876,10 +17093,12 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 		{
 			if (Thruster == RTCC_ENGINETYPE_LMAPS && !(MPTConfigIncludesLMAsc(CC) && MPTConfigIncludesLMAsc(CCP)))
 			{
+				PMXSPT(6);
 				return 6;
 			}
 			else if (Thruster == RTCC_ENGINETYPE_LMDPS && !(MPTConfigIncludesLMDsc(CC) && MPTConfigIncludesLMDsc(CCP)))
 			{
+				PMXSPT(6);
 				return 6;
 			}
 		}
@@ -15887,6 +17106,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 		{
 			if (!(MPTConfigIncludesCSM(CC) && MPTConfigIncludesCSM(CCP)))
 			{
+				PMXSPT(6);
 				return 6;
 			}
 		}
@@ -15901,10 +17121,12 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 	{
 		if (CCP == CC)
 		{
+			PMXSPT(6);
 			return 6;
 		}
 		else if (!MPTConfigSubset(CCP, CC))
 		{
+			PMXSPT(6);
 			return 6;
 		}
 		else
@@ -16203,48 +17425,70 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 	Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
 	Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
 
-	double A, B, C, R, P, Y;
+	double MG, OG, IG, C;
 
-	A = asin(dotp(X_B, Y_P));
-	C = abs(A);
-	if (A < 0)
-	{
-		A += PI2;
-	}
+	MG = asin(dotp(Y_P, X_B));
+	C = abs(MG);
+
 	if (abs(C - PI05) < 0.0017)
 	{
-		B = 0.0;
-		P = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
+		OG = 0.0;
+		IG = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
 	}
 	else
 	{
-		B = atan2(dotp(-Z_B, Y_P), dotp(Y_B, Y_P));
-		P = atan2(dotp(-X_B, Z_P), dotp(X_B, X_P));
+		OG = atan2(-dotp(Z_B, Y_P), dotp(Y_B, Y_P));
+		IG = atan2(-dotp(X_B, Z_P), dotp(X_B, X_P));
 	}
-
-	if (B < 0)
-	{
-		B += PI2;
-	}
-	if (P < 0)
-	{
-		P += PI2;
-	}
-
-	res.IMUAtt = _V(OrbMech::imulimit(B*DEG), OrbMech::imulimit(P*DEG), OrbMech::imulimit(A*DEG));
 
 	if (man->TVC == 3)
 	{
-		R = A;
-		Y = B;
+		double Y, P, R;
+		Y = asin(-cos(MG)*sin(OG));
+		if (abs(sin(Y)) != 1.0)
+		{
+			R = atan2(sin(MG), cos(OG)*cos(MG));
+			P = atan2(sin(IG)*cos(OG) + sin(MG)*sin(OG)*cos(IG), cos(OG)*cos(IG) - sin(MG)*sin(OG)*sin(IG));
+		}
+		else
+		{
+			P = 0.0;
+			R = 0.0;
+		}
+		res.FDAIAtt = _V(R, P, Y);
+		res.isCSMTV = false;
 	}
 	else
 	{
-		Y = A;
-		R = B;
+		res.FDAIAtt = _V(OG, IG, MG);
+		res.isCSMTV = true;
 	}
 
-	res.FDAIAtt = _V(OrbMech::imulimit(R*DEG), OrbMech::imulimit(P*DEG), OrbMech::imulimit(Y*DEG));
+	for (int i = 0;i < 3;i++)
+	{
+		res.FDAIAtt.data[i] *= DEG;
+		if (res.FDAIAtt.data[i] < 0)
+		{
+			res.FDAIAtt.data[i] += 360.0;
+		}
+		if (res.FDAIAtt.data[i] >= 359.95)
+		{
+			res.FDAIAtt.data[i] = 0.0;
+		}
+	}
+	res.IMUAtt = _V(OG, IG, MG);
+	for (int i = 0;i < 3;i++)
+	{
+		res.IMUAtt.data[i] *= DEG;
+		if (res.IMUAtt.data[i] < 0)
+		{
+			res.IMUAtt.data[i] += 360.0;
+		}
+		if (res.IMUAtt.data[i] >= 359.95)
+		{
+			res.IMUAtt.data[i] = 0.0;
+		}
+	}
 
 	VECTOR3 DV, V_G;
 
@@ -16316,7 +17560,7 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 			}
 
 			EphemerisData sv_dh;
-			OrbMech::CELEMENTS elem_a, elem_m;
+			CELEMENTS elem_a, elem_m;
 			double h1, h2, i1, i2, u1, u2, gamma, Cg, Tg, alpha1, alpha2, beta, theta_R, n, dt, t_R;
 			int i = 0;
 			dt = 1.0;
@@ -16507,7 +17751,7 @@ void RTCC::PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentP
 		OrbMech::latlong_from_J2000(sv_ig.R, sv_ig.MJD, sv_ig.gravref, lat, lng);
 		table.LIG[i] = lng * DEG;
 		sv_ig.V += tmul(OrbMech::LVLH_Matrix(sv_ig.R, sv_ig.V), res.DeltaV_LVLH[i]);
-		ApsidesDeterminationSubroutine(sv_ig, sv_a, sv_p);
+		PMMAPD(sv_ig, sv_a, sv_p);
 		table.AC[i] = (length(sv_a.R) - opt.R_LS) / 1852.0;
 		table.HPC[i] = (length(sv_p.R) - opt.R_LS) / 1852.0;
 	}
@@ -16957,6 +18201,10 @@ int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
 		return 2;
 	}
 	coe = OrbMech::coe_from_sv(sv_true.R, sv_true.V, mu);
+	if (coe.e >= 1.0)
+	{
+		return 4;
+	}
 	u = coe.TA + coe.w;
 	if (u > PI2)
 	{
@@ -16968,7 +18216,11 @@ int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
 	dt = du / n;
 	GMT += dt;
 
-	while (abs(dt) >= 2.0)
+	int i, imax;
+	i = 0;
+	imax = 10;
+
+	while (abs(dt) >= 2.0 && i < imax)
 	{
 		intab.GMT = GMT;
 		ELVCTR(intab, outtab);
@@ -16981,6 +18233,10 @@ int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
 			return 2;
 		}
 		coe = OrbMech::coe_from_sv(sv_true.R, sv_true.V, mu);
+		if (coe.e >= 1.0)
+		{
+			return 4;
+		}
 		u = coe.TA + coe.w;
 		if (u > PI2)
 		{
@@ -17004,11 +18260,17 @@ int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
 		n = coe.h / pow(length(sv_true.R), 2);
 		dt = du / n;
 		GMT += dt;
+		i++;
+	}
+
+	if (i >= imax)
+	{
+		lng_asc = u;
+		return 3;
 	}
 
 	double lat;
 	OrbMech::latlong_from_r(sv_true.R, lat, lng_asc);
-
 	return 0;
 }
 
@@ -17761,6 +19023,144 @@ void RTCC::PMMREAP(int med)
 	}
 }
 
+void RTCC::PMMLRBTI(EphemerisData sv)
+{
+	EMSMISSInputTable in;
+	in.StopParamRefFrame = 1;
+	in.MoonRelStopParam = 0.0;
+	in.CutoffIndicator = 4;
+
+	EphemerisData sv2 = EMMENI(in, sv, 5.0*24.0*3600.0);
+
+	if (in.NIAuxOutputTable.TerminationCode != 4)
+	{
+		PMXSPT("PMMLRBTI: Coast Integrator unable to obtain pericynthion point for LOI request - LOI solutions are unobtainable.");
+		return;
+	}
+
+	rtcc::LOIOptions opt;
+	opt.SPH = sv2;
+	opt.dh_bias = med_k40.dh_bias*1852.0;
+	opt.DV_maxm = med_k18.DVMAXm*0.3048;
+	opt.DV_maxp = med_k18.DVMAXp*0.3048;
+	opt.DW = med_k40.DW*RAD;
+	opt.eta1 = med_k40.eta_1*RAD;
+	opt.GMTBASE = GMTBASE;
+	opt.HA_LLS = med_k40.HA_LLS*1852.0;
+	opt.HP_LLS = med_k40.HP_LLS*1852.0;
+	opt.HA_LPO = med_k18.HALOI1*1852.0;
+	opt.HP_LPO = med_k18.HPLOI1*1852.0;
+	opt.lat_LLS= BZLSDISP.lat[0];
+	opt.lng_LLS = BZLSDISP.lng[0];
+	opt.psi_DS = med_k18.psi_DS*RAD;
+	opt.psi_mn = med_k18.psi_MN*RAD;
+	opt.psi_mx = med_k18.psi_MX*RAD;
+	opt.REVS1 = med_k40.REVS1;
+	opt.REVS2 = med_k40.REVS2;
+	opt.R_LLS = MCSMLR;
+	opt.usePlaneSolnForInterSoln = med_k40.PlaneSolnForInterSoln;
+
+	double h_pc = length(opt.SPH.R) - opt.R_LLS;
+	if (h_pc > opt.HA_LPO)
+	{
+		PMXSPT("PMMLRBTI: Lunar approach hyberbolic pericynthion greater than requested LPO apolune - LOI solutions are unobtainable.");
+		return;
+	}
+	if (h_pc < 0.0)
+	{
+		PMXSPT("PMMLRBTI: Lunar approach hyberbola has impacting trajectory - LOI solutions are unobtainable.");
+		return;
+	}
+
+	rtcc::LOITargeting loi(opt);
+	loi.MAIN();
+
+	//Write message with time at LLS
+	char Buffer[100], Buffer2[100];
+	OrbMech::format_time_HHMMSS(Buffer, GETfromGMT(loi.out.T_LLS));
+	sprintf(Buffer2, "PMMLRBTI: Time above the landing site is %s", Buffer);
+	PMXSPT(Buffer2);
+
+	PMDLRBTI(opt, loi.out);
+
+	for (int i = 0;i < 8;i++)
+	{
+		PZLRBELM.sv_man_bef[i].R = loi.out.data[i].R_LOI;
+		PZLRBELM.sv_man_bef[i].V = loi.out.data[i].V_LOI;
+		PZLRBELM.sv_man_bef[i].GMT = loi.out.data[i].GMT_LOI;
+		PZLRBELM.sv_man_bef[i].RBI = BODY_MOON;
+		PZLRBELM.V_man_after[i] = loi.out.data[i].V_LOI_apo;
+	}
+}
+
+void RTCC::PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out)
+{
+	PZLRBTI.VectorGET = med_k18.VectorTime;
+	PZLRBTI.lat_lls = BZLSDISP.lat[0] * DEG;
+	PZLRBTI.lng_lls = BZLSDISP.lng[0] * DEG;
+	PZLRBTI.R_lls = MCSMLR / 1852.0;
+	PZLRBTI.REVS1 = opt.REVS1;
+	PZLRBTI.REVS2 = opt.REVS2;
+	PZLRBTI.DHBIAS = opt.dh_bias / 1852.0;
+	PZLRBTI.AZ_LLS = opt.psi_DS*DEG;
+	PZLRBTI.f_LLS = opt.DW*DEG;
+	if (PZLRBTI.f_LLS < 0)
+	{
+		PZLRBTI.f_LLS += 360.0;
+	}
+	PZLRBTI.HALOI1 = opt.HA_LPO / 1852.0;
+	PZLRBTI.HPLOI1 = opt.HP_LPO / 1852.0;
+	PZLRBTI.HALOI2 = opt.HA_LLS / 1852.0;
+	PZLRBTI.HPLOI2 = opt.HP_LLS / 1852.0;
+	PZLRBTI.DVMAXp = opt.DV_maxp / 0.3048;
+	PZLRBTI.DVMAXm = opt.DV_maxm / 0.3048;
+	PZLRBTI.planesoln = opt.usePlaneSolnForInterSoln;
+	PZLRBTI.RARPGT = opt.RARPGT / 1852.0;
+	PZLRBTI.AZMN_f_ND = out.eta_MN*DEG;
+	if (PZLRBTI.AZMN_f_ND < 0)
+	{
+		PZLRBTI.AZMN_f_ND += 360.0;
+	}
+	PZLRBTI.AZMX_f_ND = out.eta_MX*DEG;
+	if (PZLRBTI.AZMX_f_ND < 0)
+	{
+		PZLRBTI.AZMX_f_ND += 360.0;
+	}
+	for (int i = 0;i < 8;i++)
+	{
+		if (out.data[i].GMT_LOI == 0.0)
+		{
+			PZLRBTI.sol[i].GETLOI = 0.0;
+			PZLRBTI.sol[i].DVLOI1 = 0.0;
+			PZLRBTI.sol[i].DVLOI2 = 0.0;
+			PZLRBTI.sol[i].H_ND = 0.0;
+			PZLRBTI.sol[i].f_ND_H = 0.0;
+			PZLRBTI.sol[i].H_PC = 0.0;
+			PZLRBTI.sol[i].Theta = 0.0;
+			PZLRBTI.sol[i].f_ND_E = 0.0;
+		}
+		else
+		{
+			PZLRBTI.sol[i].GETLOI = GETfromGMT(out.data[i].GMT_LOI);
+			PZLRBTI.sol[i].DVLOI1 = length(out.data[i].V_LOI_apo - out.data[i].V_LOI) / 0.3048;
+			PZLRBTI.sol[i].DVLOI2 = out.data[i].display.dv_LOI2 / 0.3048;
+			PZLRBTI.sol[i].H_ND = out.data[i].display.H_ND / 1852.0;
+			PZLRBTI.sol[i].f_ND_H = out.data[i].display.eta_N*DEG;
+			if (PZLRBTI.sol[i].f_ND_H < 0)
+			{
+				PZLRBTI.sol[i].f_ND_H += 360.0;
+			}
+			PZLRBTI.sol[i].H_PC = out.data[i].display.h_P / 1852.0;
+			PZLRBTI.sol[i].Theta = out.data[i].display.theta*DEG;
+			PZLRBTI.sol[i].f_ND_E = out.data[i].display.W_P*DEG;
+			if (PZLRBTI.sol[i].f_ND_E < 0)
+			{
+				PZLRBTI.sol[i].f_ND_E += 360.0;
+			}
+		}
+	}
+}
+
 bool RTCC::GMGMED(char *str)
 {
 	int i = 0;
@@ -17804,70 +19204,602 @@ bool RTCC::GMGMED(char *str)
 			word.push_back(str[i]);
 		}
 		i++;
-		if (str[i] == ';')
+		if (str[i] == '\0' || str[i] == ';')
 		{
 			MEDSequence.push_back(word);
 		}
 	} while (str[i] != '\0' && str[i] != ';');
 
-	int number;
+	char Buffer[128];
+	sprintf_s(Buffer, "GMGMED: MED %s", str);
+	PMXSPT(Buffer);
 
-	if (sscanf(code.c_str(), "%d", &number) != 1)
+	int err;
+
+	if (medtype == 'A')
 	{
-		return false;
+		err = EMGABMED(1, code, MEDSequence);
 	}
-
-	if (medtype == 'A' || medtype == 'B' || medtype == 'G')
+	else if (medtype == 'B')
 	{
-		EMGABMED(number, MEDSequence);
+		err = EMGABMED(2, code, MEDSequence);
+	}
+	else if (medtype == 'C')
+	{
+		err = CMRMEDIN(code, MEDSequence);
+	}
+	else if (medtype == 'G')
+	{
+		err = EMGABMED(3, code, MEDSequence);
+	}
+	else if (medtype == 'F')
+	{
+		err = PMQAFMED(code, MEDSequence);
 	}
 	else if (medtype == 'M')
 	{
-		PMMMED(number, MEDSequence);
+		err = PMMMED(code, MEDSequence);
 	}
 	else if (medtype == 'P')
 	{
-		GMSMED(number, MEDSequence);
+		err = GMSMED(code, MEDSequence);
 	}
 	else if (medtype == 'U')
 	{
-		EMGTVMED(number, MEDSequence);
+		err = EMGTVMED(code, MEDSequence);
+	}
+	else if (medtype == 'X')
+	{
+		err = GMSREMED(code, MEDSequence);
+	}
+	
+	if (err == 0)
+	{
+		sprintf_s(Buffer, "GMGMED: MED %c%s OK", medtype, code.c_str());
+		PMXSPT(Buffer);
+	}
+	else
+	{
+		sprintf_s(Buffer, "GMGMED: MED %c%s ERR %d", medtype, code.c_str(), err);
+		PMXSPT(Buffer);
 	}
 
 	return true;
 }
 
-int RTCC::EMGABMED(int med, std::vector<std::string> data)
+int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 {
-	//Generate Station Contacts
-	if (med == 3)
+	//A MEDs
+	if (type == 1)
+	{
+
+	}
+	//B MEDs
+	else if (type == 2)
+	{
+		//Generate Station Contacts
+		if (med == "03")
+		{
+			if (data.size() < 1)
+			{
+				return 1;
+			}
+			int veh;
+			if (data[0] == "CSM")
+			{
+				veh = 1;
+			}
+			else if (data[0] == "LEM")
+			{
+				veh = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			EMSTAGEN(veh);
+		}
+	}
+	//G MEDs
+	else if (type == 3)
+	{
+		//CSM/LEM REFSMMAT locker movement
+		if (med == "00")
+		{
+			if (data.size() < 4)
+			{
+				return 1;
+			}
+			int L1, ID1, L2, ID2;
+			if (data[0] == "CSM")
+			{
+				L1 = 1;
+			}
+			else if (data[0] == "LEM")
+			{
+				L1 = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			ID1 = EMGSTGENCode(data[1].c_str());
+			if (ID1 < 0)
+			{
+				return 1;
+			}
+			if (data[2] == "CSM")
+			{
+				L2 = 1;
+			}
+			else if (data[2] == "LEM")
+			{
+				L2 = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			ID2 = EMGSTGENCode(data[3].c_str());
+			if (ID2 < 0)
+			{
+				return 1;
+			}
+			double gmt, hh, mm, ss;
+			if (data.size() < 5 || data[4] == "")
+			{
+				gmt = RTCCPresentTimeGMT();
+			}
+			else if (sscanf(data[4].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
+			{
+				gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
+			}
+			else
+			{
+				return 1;
+			}
+			EMGSTGEN(2, L1, ID1, L2, ID2, gmt);
+		}
+		//COMPUTE AND SAVE LOCAL VERTICAL CSM/LM PLATFORM ALIGNMENT
+		else if (med == "03")
+		{
+			if (data.size() < 2)
+			{
+				return 1;
+			}
+			int L;
+			if (data[0] == "CSM")
+			{
+				L = 1;
+			}
+			else if (data[0] == "LEM")
+			{
+				L = 3;
+			}
+			else
+			{
+				return 1;
+			}
+			double gmt, hh, mm, ss;
+			if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
+			{
+				gmt = GMTfromGET(hh * 3600.0 + mm * 60.0 + ss);
+			}
+			//TBD: Earth or Moon
+			EMMGLCVP(L, gmt);
+		}
+	}
+	
+	
+	return 0;
+}
+
+int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
+{
+	//Initiate a CMC/LGC external delta-V update
+	if (med == "10")
+	{
+		if (data.size() != 3)
+		{
+			return 1;
+		}
+		int VehicleType;
+		if (data[0] == "CMC")
+		{
+			VehicleType = 1;
+		}
+		else if (data[0] == "LGC")
+		{
+			VehicleType = 2;
+		}
+		else
+		{
+			return 2;
+		}
+		unsigned ManeuverNum;
+		if (sscanf(data[1].c_str(), "%d", &ManeuverNum) != 1)
+		{
+			return 2;
+		}
+		if (ManeuverNum < 1 || ManeuverNum > 15)
+		{
+			return 2;
+		}
+		int L;
+		if (data[2] == "CSM")
+		{
+			L = 1;
+		}
+		else if (data[2] == "LEM")
+		{
+			L = 3;
+		}
+		else
+		{
+			return 2;
+		}
+		MissionPlanTable *tab = GetMPTPointer(L);
+		if (tab->mantable.size() < ManeuverNum)
+		{
+			return 2;
+		}
+		//TBD: This should use CMC liftoff time, not RTCC
+		double TIG = GETfromGMT(tab->mantable[ManeuverNum - 1].GMTI);
+		VECTOR3 DV = tab->mantable[ManeuverNum - 1].dV_LVLH;
+		CMMAXTDV(TIG, DV);
+	}
+
+	return 0;
+}
+
+int RTCC::PMQAFMED(std::string med)
+{
+	std::vector<std::string> data;
+	return PMQAFMED(med, data);
+}
+
+int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
+{
+	//Initialize Azimuth Constraints for Midcourse Correction Planning
+	if (med == "22")
+	{
+		double azmin, azmax;
+		if (data.size() < 1 || data[0]== "")
+		{
+			azmin = -110.0*RAD;
+		}
+		else
+		{
+			if (sscanf(data[0].c_str(), "%lf", &azmin) != 1)
+			{
+				return 1;
+			}
+			if (azmin < -110.0)
+			{
+				return 1;
+			}
+			azmin *= RAD;
+		}
+		PZMCCPLN.AZ_min = azmin;
+		if (data.size() < 2 || data[1] == "")
+		{
+			azmax = -70.0*RAD;
+		}
+		else
+		{
+			if (sscanf(data[1].c_str(), "%lf", &azmax) != 1)
+			{
+				return 1;
+			}
+			if (azmax > -70.0)
+			{
+				return 1;
+			}
+			azmax *= RAD;
+		}
+		PZMCCPLN.AZ_max = azmax;
+	}
+	//Initialization of translunar time (minimum and maximum) for midcourse correction planning
+	else if (med == "23")
+	{
+		double hh, mm, ss, get;
+		if (data.size() < 1 || data[0] == "")
+		{
+			PZMCCPLN.TLMIN = 0.0;
+		}
+		else
+		{
+			if (sscanf(data[0].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return 1;
+			}
+			PZMCCPLN.TLMIN = hh + mm / 60.0 + ss / 3600.0;
+		}
+		if (data.size() < 2 || data[1] == "")
+		{
+			PZMCCPLN.TLMAX = 0.0;
+		}
+		else
+		{
+			if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return 1;
+			}
+			get = hh + mm / 60.0 + ss / 3600.0;
+			if (get > PZMCCPLN.TLMIN)
+			{
+				PZMCCPLN.TLMAX = get;
+			}
+		}
+	}
+	//Initalize gamma and reentry range for midcourse correction plans
+	else if (med == "24")
+	{
+		if (data.size() < 1 || data[0] == "")
+		{
+			PZMCCPLN.gamma_reentry = -6.52*RAD;
+		}
+		else
+		{
+			double gamma;
+			if (sscanf(data[0].c_str(), "%lf", &gamma) != 1)
+			{
+				return 1;
+			}
+			PZMCCPLN.gamma_reentry = gamma * RAD;
+		}
+		if (data.size() < 2 || data[1] == "")
+		{
+			PZMCCPLN.Reentry_range = -6.52*RAD;
+		}
+		else
+		{
+			double range;
+			if (sscanf(data[1].c_str(), "%lf", &range) != 1)
+			{
+				return 1;
+			}
+			PZMCCPLN.Reentry_range = 1350.0;
+		}
+	}
+	//Delete column of midcourse correction display
+	else if (med == "26")
 	{
 		if (data.size() < 1)
 		{
 			return 1;
 		}
-		int veh;
-		if (data[0] == "CSM")
-		{
-			veh = 1;
-		}
-		else if (data[0] == "LEM")
-		{
-			veh = 3;
-		}
-		else
+		int column;
+		if (sscanf(data[0].c_str(), "%d", &column) != 1)
 		{
 			return 1;
 		}
-		EMSTAGEN(veh);
+		if (column < 0 || column>4)
+		{
+			return 1;
+		}
+		if (column == 0)
+		{
+			for (int i = 0;i < 4;i++)
+			{
+				PZMCCDIS.data[i].Mode = 0;
+			}
+		}
+		else
+		{
+			PZMCCDIS.data[column - 1].Mode = 0;
+		}
 	}
-	return 0;
-}
+	//Specify pericynthion height limits for optimized MCC
+	else if (med == "29")
+	{
+	if (data.size() < 1 || data[0] == "")
+	{
+		PZMCCPLN.H_PCYN_MIN = 40.0*1852.0;
+	}
+	else
+	{
+		double ht;
+		if (sscanf(data[0].c_str(), "%lf", &ht) != 1)
+		{
+			return 1;
+		}
+		PZMCCPLN.H_PCYN_MIN = ht * 1852.0;;
+	}
+	if (data.size() < 2 || data[1] == "")
+	{
+		PZMCCPLN.H_PCYN_MAX = 5000.0*1852.0;
+	}
+	else
+	{
+		double ht;
+		if (sscanf(data[1].c_str(), "%lf", &ht) != 1)
+		{
+			return 1;
+		}
+		PZMCCPLN.H_PCYN_MAX = ht * 1852.0;
+	}
+	}
+	//Transfer midcourse correction plan to skeleton flight plan table
+	else if (med == "30")
+	{
+	if (data.size() < 1)
+	{
+		return 1;
+	}
+	int column;
 
-int RTCC::PMQAFMED(int med)
-{
+	if (sscanf(data[0].c_str(), "%d", &column) != 1)
+	{
+		return 1;
+	}
+	if (column < 1 || column > 4)
+	{
+		return 1;
+	}
+	if (PZMCCSFP.blocks[column - 1].mode <= 1 || PZMCCSFP.blocks[column - 1].mode >= 6)
+	{
+		return 1;
+	}
+	PZSFPTAB.blocks[1] = PZMCCSFP.blocks[column - 1];
+	}
+	//Alteration of Skeleton Flight Plan Table
+	else if (med == "32")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		int tab;
+		if (sscanf(data[0].c_str(), "%d", &tab) != 1)
+		{
+			return 1;
+		}
+		if (tab < 1 || tab > 2)
+		{
+			return 1;
+		}
+		int item;
+		if (sscanf(data[1].c_str(), "%d", &item) != 1)
+		{
+			return 1;
+		}
+		if (item < 1 || item > 26)
+		{
+			return 1;
+		}
+		TLMCCDataTable *table = &PZSFPTAB.blocks[tab - 1];
+		double hh, mm, ss, val;
+		int mode;
+		switch (item)
+		{
+		case 1:
+		case 3:
+		case 7:
+		case 11:
+		case 12:
+		case 18:
+		case 19:
+		case 26:
+			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+			{
+				return 1;
+			}
+			val = hh * 3600.0 + mm * 60.0 + ss;
+			switch (item)
+			{
+			case 1:
+				table->GMTTimeFlag = val;
+				break;
+			case 3:
+				table->GMT_pc1 = val;
+				break;
+			case 7:
+				table->GMT_pc2 = val;
+				break;
+			case 11:
+				table->GET_TLI = val;
+				break;
+			case 12:
+				table->GMT_nd = val;
+				break;
+			case 18:
+				table->T_lo = val;
+				break;
+			case 19:
+				table->dt_lls = val;
+				break;
+			case 26:
+				table->T_te = val;
+				break;
+			}
+			break;
+		case 2:
+			if (sscanf(data[2].c_str(), "%d", &mode) != 1)
+			{
+				return 1;
+			}
+			table->mode = mode;
+			break;
+		case 4:
+		case 5:
+		case 8:
+		case 9:
+		case 10:
+		case 13:
+		case 14:
+		case 15:
+		case 16:
+		case 17:
+		case 20:
+		case 21:
+		case 22:
+		case 23:
+		case 24:
+		case 25:
+			if (sscanf(data[2].c_str(), "%lf", &val) != 1)
+			{
+				return 1;
+			}
+			switch (item)
+			{
+			case 4:
+				table->lat_pc1 = val * RAD;
+				break;
+			case 5:
+				table->lng_pc1 = val * RAD;
+				break;
+			case 6:
+				table->h_pc1 = val * 1852.0;
+				break;
+			case 8:
+				table->lat_pc2 = val * RAD;
+				break;
+			case 9:
+				table->lng_pc2 = val * RAD;
+				break;
+			case 10:
+				table->h_pc2 = val * 1852.0;
+				break;
+			case 13:
+				table->lat_nd = val * RAD;
+				break;
+			case 14:
+				table->lng_nd = val * RAD;
+				break;
+			case 15:
+				table->h_nd = val * 1852.0;
+				break;
+			case 16:
+				table->dpsi_loi = val * RAD;
+				break;
+			case 17:
+				table->gamma_loi = val * RAD;
+				break;
+			case 20:
+				table->psi_lls = val * RAD;
+				break;
+			case 21:
+				table->lat_lls = val * RAD;
+				break;
+			case 22:
+				table->lng_lls = val * RAD;
+				break;
+			case 23:
+				table->rad_lls = val * 1852.0;
+				break;
+			case 24:
+				table->dpsi_tei = val * RAD;
+				break;
+			case 25:
+				table->dv_tei = val * 0.3048;
+				break;
+			}
+			break;
+		}
+	}
 	//Generation of near Earth tradeoff
-	if (med == 70)
+	else if (med == "70")
 	{
 		bool found = false;
 		//Check and find site
@@ -17930,10 +19862,10 @@ int RTCC::PMQAFMED(int med)
 		}
 		PZREAP.EntryProfile = med_f70.EntryProfile;
 
-		PMMREAP(med);
+		PMMREAP(70);
 	}
 	//Generation of remote Earth tradeoff
-	else if (med == 71)
+	else if (med == "71")
 	{
 		if (med_f71.Page < 1 || med_f71.Page > 5)
 		{
@@ -18002,15 +19934,15 @@ int RTCC::PMQAFMED(int med)
 		}
 		PZREAP.EntryProfile = med_f71.EntryProfile;
 
-		PMMREAP(med);
+		PMMREAP(71);
 	}
 	//Update the target table for return to Earth
-	else if (med == 85)
+	else if (med == "85")
 	{
 
 	}
 	//Update return to Earth constraints
-	else if (med == 86)
+	else if (med == "86")
 	{
 		if (med_f86.Constraint == "DVMAX")
 		{
@@ -18046,7 +19978,7 @@ int RTCC::PMQAFMED(int med)
 		}
 	}
 	//Update return to Earth constraints
-	else if (med == 87)
+	else if (med == "87")
 	{
 		if (med_f87.Constraint == "TGTLN")
 		{
@@ -18079,32 +20011,37 @@ int RTCC::PMQAFMED(int med)
 	return 0;
 }
 
-void RTCC::PMKMED(int med)
+void RTCC::PMKMED(std::string med)
 {
 
 }
 
-void RTCC::PMMMED(int med, std::vector<std::string> data)
+int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 {
-	if (med == 40)
+	if (med == "40")
 	{
+		if (data.size() < 1)
+		{
+			return 1;
+		}
+
 		if (data[0] == "")
 		{
-			return;
+			return 2;
 		}
 		if (data[0] == "P1")
 		{
 			double dv;
-			if (data[1] == "")
+			if (data.size() < 2 || data[1] == "")
 			{
 				dv = -1;
 			}
 			else if (sscanf(data[1].c_str(), "%lf", &dv) != 1)
 			{
-				return;
+				return 2;
 			}
 			int dvind;
-			if (data[2] == "" || data[2] == "MAG")
+			if (data.size() < 3 || data[2] == "" || data[2] == "MAG")
 			{
 				dvind = 0;
 			}
@@ -18118,21 +20055,21 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			}
 			else
 			{
-				return;
+				return 2;
 			}
 
 			double dt;
-			if (data[3] == "")
+			if (data.size() < 4 || data[3] == "")
 			{
 				dt = 0.0;
 			}
 			else if (sscanf(data[3].c_str(), "%lf", &dt) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (dt < 0)
 			{
-				return;
+				return 2;
 			}
 
 			PZBURN.P1_DV = dv * 0.3048;
@@ -18141,30 +20078,23 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else if (data[0] == "P2")
 		{
+			if (data.size() < 4)
+			{
+				return 1;
+			}
+
 			VECTOR3 dv;
-			if (data[1] == "")
+			if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
 			{
-				dv.x = -99999999.0;
+				return 2;
 			}
-			else if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
+			if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
 			{
-				return;
+				return 2;
 			}
-			if (data[2] == "")
+			if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
 			{
-				dv.x = -99999999.0;
-			}
-			else if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
-			{
-				return;
-			}
-			if (data[3] == "")
-			{
-				dv.z = -99999999.0;
-			}
-			else if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
-			{
-				return;
+				return 2;
 			}
 			PZBURN.P2_DV = dv * 0.3048;
 		}
@@ -18173,27 +20103,27 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			VECTOR3 dv;
 			if (data[1] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[2] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[3] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
 			{
-				return;
+				return 2;
 			}
 			PZBURN.P3_DV = dv * 0.3048;
 		}
@@ -18202,37 +20132,37 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 			VECTOR3 dv;
 			if (data[1] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[1].c_str(), "%lf", &dv.x) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[2] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[2].c_str(), "%lf", &dv.y) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (data[3] == "")
 			{
-				return;
+				return 2;
 			}
 			else if (sscanf(data[3].c_str(), "%lf", &dv.z) != 1)
 			{
-				return;
+				return 2;
 			}
 			PZBURN.P4_DV = dv * 0.3048;
 		}
 	}
 	//Change vehicle body orientation and trim angles for MPT maneuver
-	else if (med == 58)
+	else if (med == "58")
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -18245,16 +20175,16 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		unsigned man;
 		if (sscanf(data[1].c_str(), "%d", &man) != 1)
 		{
-			return;
+			return 2;
 		}
 		if (man < 1 || man>15)
 		{
-			return;
+			return 2;
 		}
 		int headsup;
 		if (data.size() < 3)
@@ -18271,7 +20201,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int trim;
 		if (data.size() < 4)
@@ -18288,22 +20218,22 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		PMMUDT(veh, man, headsup, trim);
 	}
-	else if (med == 62)
+	else if (med == "62")
 	{
 		int mpt, man, act;
 
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 
 		if (data[0] == "")
 		{
-			return;
+			return 2;
 		}
 		else if (data[0] == "CSM")
 		{
@@ -18315,25 +20245,25 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		if (data[1] == "")
 		{
-			return;
+			return 2;
 		}
 		if (sscanf(data[1].c_str(), "%d", &man) != 1)
 		{
-			return;
+			return 2;
 		}
 		if (man < 1 || man > 15)
 		{
-			return;
+			return 2;
 		}
 
 		if (data[2] == "")
 		{
-			return;
+			return 2;
 		}
 		else if (data[2] == "F")
 		{
@@ -18353,13 +20283,13 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		PMMFUD(mpt, man, act);
 	}
 	//Transfer a GPM to the MPT
-	else if (med == 65)
+	else if (med == "65")
 	{
 		PMMXFR_Impulsive_Input inp;
 
@@ -18370,7 +20300,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m65.UllageDT > 0 && med_m65.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m65.UllageDT < 0)
 		{
@@ -18395,72 +20325,79 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.UllageThrusterOption[0] = med_m65.UllageQuads;
 
 		void *vPtr = &inp;
-		PMMXFR(40, vPtr);
+		return PMMXFR(40, vPtr);
 	}
 	//Direct Input to MPT
-	else if (med == 66)
+	else if (med == "66")
 	{
 		PMMXFRDirectInput inp;
 
 		if (med_m66.Table != 1 && med_m66.Table != 3)
 		{
-			return;
+			return 2;
 		}
 		inp.TableCode = med_m66.Table;
 
 		if (med_m66.ReplaceCode < 0 || med_m66.ReplaceCode > 15)
 		{
-			return;
+			return 2;
 		}
 		inp.ReplaceCode = med_m66.ReplaceCode;
 		double GMT = GMTfromGET(med_m66.GETBI);
 		if (GMT < RTCCPresentTimeGMT())
 		{
-			return;
+			return 2;
 		}
 		inp.GMTI = GMT;
 		inp.ThrusterCode = med_m66.Thruster;
 
 		if (med_m66.Thruster == RTCC_ENGINETYPE_LOX_DUMP && med_m66.AttitudeOpt != RTCC_ATTITUDE_INERTIAL)
 		{
-			return;
+			return 2;
 		}
 		if ((med_m66.AttitudeOpt == RTCC_ATTITUDE_PGNS_ASCENT || med_m66.AttitudeOpt == RTCC_ATTITUDE_AGS_ASCENT) && med_m66.Thruster != RTCC_ENGINETYPE_LMAPS)
 		{
-			return;
+			return 2;
 		}
 
 		inp.AttitudeCode = med_m66.AttitudeOpt;
 
 		if (med_m66.BurnParamNo == 1 && !(med_m66.AttitudeOpt == RTCC_ATTITUDE_INERTIAL || med_m66.AttitudeOpt == RTCC_ATTITUDE_MANUAL))
 		{
-			return;
+			return 2;
 		}
 		if (med_m66.BurnParamNo == 2 && !(med_m66.AttitudeOpt == RTCC_ATTITUDE_PGNS_EXDV || med_m66.AttitudeOpt == RTCC_ATTITUDE_AGS_EXDV))
 		{
-			return;
+			return 2;
 		}
 		if (med_m66.BurnParamNo == 3 || med_m66.BurnParamNo == 4)
 		{
 			if (!(med_m66.AttitudeOpt == RTCC_ATTITUDE_INERTIAL || med_m66.AttitudeOpt == RTCC_ATTITUDE_MANUAL || med_m66.AttitudeOpt == RTCC_ATTITUDE_PGNS_EXDV || med_m66.AttitudeOpt == RTCC_ATTITUDE_AGS_EXDV))
 			{
-				return;
+				return 2;
 			}
 		}
 		if (med_m66.BurnParamNo == 6 && !(med_m66.AttitudeOpt == RTCC_ATTITUDE_PGNS_ASCENT || med_m66.AttitudeOpt == RTCC_ATTITUDE_AGS_ASCENT))
 		{
-			return;
+			return 2;
 		}
 
 		inp.BurnParameterNumber = med_m66.BurnParamNo;
-		inp.CoordinateIndicator = med_m66.CoordInd;
-		inp.Pitch = med_m66.Att.x*MCCRPD;
-		inp.Yaw = med_m66.Att.y*MCCRPD;
-		inp.Roll = med_m66.Att.z*MCCRPD;
+		if (med_m66.BurnParamNo == 1)
+		{
+			inp.CoordinateIndicator = med_m66.CoordInd;
+		}
+		else
+		{
+			inp.CoordinateIndicator = -1;
+		}
+		inp.Pitch = med_m66.Att.x;
+		inp.Yaw = med_m66.Att.y;
+		inp.Roll = med_m66.Att.z;
 
 		if (med_m66.UllageDT > 0 && med_m66.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m66.UllageDT < 0)
 		{
@@ -18490,7 +20427,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else if (abs(med_m66.TenPercentDT) < (MCTDD2 + MCTDD3))
 		{
-			return;
+			return 2;
 		}
 		else
 		{
@@ -18530,7 +20467,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else if (med_m66.DPSThrustFactor <= 0 || med_m66.DPSThrustFactor > 1)
 		{
-			return;
+			return 2;
 		}
 
 		if (med_m66.TrimAngleIndicator != 0 && med_m66.TrimAngleIndicator != 2)
@@ -18544,21 +20481,49 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		void *vPtr = &inp;
 
-		PMMXFR(33, vPtr);
+		return PMMXFR(33, vPtr);
 	}
 	//TLI Direct Input
-	else if (med == 68)
+	else if (med == "68")
 	{
+		if (data.size() < 2)
+		{
+			return 1;
+		}
+		int veh;
+		if (data[0] == "CSM")
+		{
+			veh = 1;
+		}
+		else if (data[0] == "LEM")
+		{
+			veh = 3;
+		}
+		else
+		{
+			return 2;
+		}
+		int opp;
+		if (sscanf(data[1].c_str(), "%d", &opp) != 1)
+		{
+			return 2;
+		}
+		if (opp < 1 || opp > 2)
+		{
+			return 2;
+		}
+
 		PMMXFRDirectInput inp;
 
 		inp.ReplaceCode = 0;
-		inp.TableCode = RTCC_MPT_CSM;
+		inp.TableCode = veh;
+		inp.BurnParameterNumber = opp;
 
 		void *vPtr = &inp;
-		PMMXFR(37, vPtr);
+		return PMMXFR(37, vPtr);
 	}
 	//Transfer Descent Plan, DKI or SPQ
-	else if (med == 70)
+	else if (med == "70")
 	{
 		PMMXFR_Impulsive_Input inp;
 
@@ -18569,7 +20534,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m70.UllageDT > 0 && med_m70.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m70.UllageDT < 0)
 		{
@@ -18594,10 +20559,10 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.UllageThrusterOption[0] = med_m70.UllageQuads;
 
 		void *vPtr = &inp;
-		PMMXFR(41, vPtr);
+		return PMMXFR(41, vPtr);
 	}
 	//Transfer two-impulse plan to MPT
-	else if (med == 72)
+	else if (med == "72")
 	{
 		PMMXFR_Impulsive_Input inp;
 
@@ -18608,7 +20573,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m72.UllageDT > 0 && med_m72.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m72.UllageDT < 0)
 		{
@@ -18637,14 +20602,14 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.UllageThrusterOption[0] = med_m72.UllageQuads;
 
 		void *vPtr = &inp;
-		PMMXFR(42, vPtr);
+		return PMMXFR(42, vPtr);
 	}
 	//Transfer of planned Earth entry maneuver
-	else if (med == 74)
+	else if (med == "74")
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -18657,7 +20622,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int ReplaceCode;
 		if (data[1] == "")
@@ -18668,18 +20633,18 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[1].c_str(), "%d", &ReplaceCode) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (ReplaceCode < 1 || ReplaceCode > 15)
 			{
-				return;
+				return 2;
 			}
 		}
 		int type;
 		if (data[2] == "SCS")
 		{
 			//TBD
-			return;
+			return 2;
 		}
 		else if (data[2] == "TTFP")
 		{
@@ -18688,7 +20653,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		else if (data[2] == "TTFM")
 		{
 			//TBD
-			return;
+			return 2;
 		}
 		else if (data[2] == "RTEP")
 		{
@@ -18697,11 +20662,11 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		else if (data[2] == "RTEM")
 		{
 			//TBD
-			return;
+			return 2;
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		PMMXFRDirectInput inp;
@@ -18715,13 +20680,15 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.TableCode = veh;
 
 		void *vPtr = &inp;
-		PMMXFR(32, vPtr);
+		return PMMXFR(32, vPtr);
 	}
 	//LOI and MCC Transfer
-	else if (med == 78)
+	else if (med == "78")
 	{
 		PMMXFR_Impulsive_Input inp;
 
+		inp.Table = med_m78.Table;
+		inp.Plan = med_m78.ManeuverNumber;
 		inp.Attitude[0] = med_m78.Attitude;
 		inp.DeleteGMT = 0.0;
 		inp.DPSScaleFactor[0] = med_m78.DPSThrustFactor;
@@ -18729,7 +20696,7 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 
 		if (med_m78.UllageDT > 0 && med_m78.UllageDT <= 1)
 		{
-			return;
+			return 2;
 		}
 		if (med_m78.UllageDT < 0)
 		{
@@ -18754,46 +20721,55 @@ void RTCC::PMMMED(int med, std::vector<std::string> data)
 		inp.IterationFlag[0] = med_m78.Iteration;
 		if (med_m78.Type)
 		{
-			inp.Plan = 1;
+			inp.Type = 1;
+			if (inp.Plan < 1 || inp.Plan > 8)
+			{
+				return 2;
+			}
 		}
 		else
 		{
-			inp.Plan = 0;
+			inp.Type = 0;
+			if (inp.Plan < 1 || inp.Plan > 4)
+			{
+				return 2;
+			}
 		}
 		inp.Thruster[0] = med_m78.Thruster;
 		inp.TimeFlag[0] = med_m78.TimeFlag;
 		inp.UllageThrusterOption[0] = med_m78.UllageQuads;
 
 		void *vPtr = &inp;
-		PMMXFR(39, vPtr);
+		return PMMXFR(39, vPtr);
 	}
 	//Transfer ascent maneuver to MPT from lunar targeting
-	else if (med == 85)
+	else if (med == "85")
 	{
 		void *vPtr = NULL;
-		PMMXFR(44, vPtr);
+		return PMMXFR(44, vPtr);
 	}
 	//Direct input of lunar descent maneuver
-	else if (med == 86)
+	else if (med == "86")
 	{
 		void *vPtr = NULL;
-		PMMXFR(43, vPtr);
+		return PMMXFR(43, vPtr);
 	}
+	return 0;
 }
 
-void RTCC::GMSMED(int med)
+int RTCC::GMSMED(std::string med)
 {
 	std::vector<std::string> data;
-	GMSMED(med, data);
+	return GMSMED(med, data);
 }
 
-void RTCC::GMSMED(int med, std::vector<std::string> data)
+int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 {
-	if (med == 7)
+	if (med == "07")
 	{
 		//TBD
 	}
-	else if (med == 10)
+	else if (med == "10")
 	{
 		double gmtlocs = GLHTCS(med_p10.GMTALO);
 		if (med_p10.VEH == 1)
@@ -18807,7 +20783,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			MCGMTL = med_p10.GMTALO;
 		}
 	}
-	else if (med == 12)
+	else if (med == "12")
 	{
 		MCLABN = med_p12.LaunchAzimuth*RAD;
 		MCLSBN = sin(MCLABN);
@@ -18826,7 +20802,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Update GMTZS for specified vehicle
-	else if (med == 15)
+	else if (med == "15")
 	{
 		if (med_p15.VEH == 1)
 		{
@@ -18855,11 +20831,11 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Generate an ephemeris for one vehicle using a vector from the other vehicle
-	else if (med == 16)
+	else if (med == "16")
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int veh1, veh2;
 		if (data[0] == "CSM")
@@ -18872,7 +20848,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		if (data[1] == "CSM")
 		{
@@ -18884,7 +20860,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double gmt;
 		unsigned mnv;
@@ -18893,7 +20869,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		//Error: both GMT and maneuver used
 		if (data.size() > 3 && data[2] != "" && data[3] != "")
 		{
-			return;
+			return 2;
 		}
 		
 		//Use maneuver
@@ -18902,11 +20878,11 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			use_mnv = true;
 			if (sscanf(data[3].c_str(), "%d", &mnv) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (mnv <= 0)
 			{
-				return;
+				return 2;
 			}
 		}
 		else
@@ -18921,7 +20897,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 				double hh, mm, ss;
 				if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) == 3)
 				{
-					return;
+					return 2;
 				}
 				gmt = hh * 3600.0 + mm * 60.0 + ss;
 			}
@@ -18940,7 +20916,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			}
 			if (mpt->mantable.size() < mnv)
 			{
-				return;
+				return 2;
 			}
 			sv0.R = mpt->mantable[mnv - 1].R_BO;
 			sv0.V = mpt->mantable[mnv - 1].V_BO;
@@ -18956,17 +20932,17 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 
 			if (ELFECH(gmt, veh1, sv0))
 			{
-				return;
+				return 2;
 			}
 		}
 		PMSVCT(4, veh2, &sv0);
 	}
 	//Cape crossing table update and limit change
-	else if (med == 17)
+	else if (med == "17")
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -18979,7 +20955,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int body;
 		if (data[1] == "E")
@@ -18992,7 +20968,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int rev;
 		if (data.size() < 3 || data[2] == "")
@@ -19003,11 +20979,11 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[2].c_str(), "%d", &rev) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (rev <= 0)
 			{
-				return;
+				return 2;
 			}
 		}
 		double min_get, max_get, hh, mm, ss;
@@ -19019,12 +20995,12 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			min_get = hh * 3600.0 + mm * 60.0 + ss;
 			if (min_get < 0)
 			{
-				return;
+				return 2;
 			}
 		}
 		if (data.size() < 5 || data[4] == "")
@@ -19035,12 +21011,12 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[4].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			max_get = hh * 3600.0 + mm * 60.0 + ss;
 			if (max_get < 0)
 			{
-				return;
+				return 2;
 			}
 		}
 		
@@ -19055,14 +21031,14 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			table = &EZCLEM;
 		}
 
-		if (table->NumRev == 0) return;
+		if (table->NumRev == 0) return 2;
 
 		int delta = rev + 1 - table->NumRevFirst;
 
 		table->NumRevFirst += delta;
 		table->NumRevLast += delta;
 	}
-	else if (med == 30)
+	else if (med == "30")
 	{
 		if (med_p30.SMA != -1)
 		{
@@ -19073,56 +21049,340 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			MCGECC = med_p30.ECC;
 		}
 	}
-	else if (med == 31)
+	else if (med == "31")
 	{
 		MCGREF = med_p31.GET;
 	}
-	else if (med == 33)
+	else if (med == "33")
 	{
 		MCTVEN = med_p33.ScaleFactor;
 	}
-	else if (med == 81)
+	else if (med == "81")
 	{
 		//TBD
 	}
-	else if (med == 82)
+	else if (med == "82")
 	{
 		//TBD
 	}
-	else if (med == 16)
+	else if (med == "16")
 	{
 		//TBD: Q EMSCTRL1 (ID = 6)
 	}
-	else if (med == 60)
+	else if (med == "60")
 	{
 		//TBD
 	}
-	else if (med == 92)
+	else if (med == "92")
 	{
 		//TBD
 	}
-	else if (med == 17)
+	//Update Fixed Ground Point Table and Landmark Acquisition Ground Point Table
+	else if (med == "32")
+	{
+		if (data.size() < 4)
+		{
+			return 1;
+		}
+		int ActionCode;
+		if (data[0] == "ADD")
+		{
+			ActionCode = 0;
+		}
+		else if (data[0] == "MOD")
+		{
+			ActionCode = 1;
+		}
+		else if (data[0] == "DEL")
+		{
+			ActionCode = 2;
+		}
+		else
+		{
+			return 2;
+		}
+		int BodyInd;
+		if (data[1] == "E")
+		{
+			BodyInd = BODY_EARTH;
+		}
+		else if (data[1] == "M")
+		{
+			BodyInd = BODY_MOON;
+		}
+		int DataTableInd;
+		if (data[2] == "EXST")
+		{
+			DataTableInd = 0;
+		}
+		else if (data[2] == "LDMK")
+		{
+			DataTableInd = 1;
+		}
+		else
+		{
+			return 2;
+		}
+		std::string STAID = data[3];
+		if (STAID == "")
+		{
+			return 2;
+		}
+		if (ActionCode == 2)
+		{
+			if (data.size() != 4)
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			if (data.size() != 8)
+			{
+				return 1;
+			}
+		}
+
+		//Read rest of values
+		double lat, lng, height;
+		int HeightUnits;
+		if (ActionCode != 2)
+		{
+			if (sscanf(data[4].c_str(), "%lf", &lat) != 1)
+			{
+				return 2;
+			}
+			lat *= RAD;
+			if (sscanf(data[5].c_str(), "%lf", &lng) != 1)
+			{
+				return 2;
+			}
+			lng *= RAD;
+			if (data[6] == "NM")
+			{
+				HeightUnits = 0;
+			}
+			else if (data[6] == "METR")
+			{
+				HeightUnits = 1;
+			}
+			else
+			{
+				return 2;
+			}
+			if (sscanf(data[7].c_str(), "%lf", &height) != 1)
+			{
+				return 2;
+			}
+			if (HeightUnits == 0)
+			{
+				height /= 1852.0;
+			}
+		}
+
+		//Delete all logic
+		if (ActionCode == 2 && STAID == "ALL")
+		{
+			if (DataTableInd == 0)
+			{
+				EZEXSITE.REF = -1;
+			}
+			else
+			{
+				EZLASITE.REF = -1;
+			}
+
+			for (int i = 0;i < 12;i++)
+			{
+				if (DataTableInd == 0)
+				{
+					EZEXSITE.Data[i].code = "";
+				}
+				else
+				{
+					EZLASITE.Data[i].code = "";
+				}
+			}
+		}
+		else
+		{
+			//Add
+			if (ActionCode == 0)
+			{
+				if (DataTableInd == 0)
+				{
+					if (BodyInd != EZEXSITE.REF)
+					{
+						GMSPRINT("GMSMED: P32 E/M CONFLICT, RELEASE TABLE AND RE-ENTER MED");
+						return 2;
+					}
+				}
+				else
+				{
+					if (BodyInd != EZLASITE.REF)
+					{
+						GMSPRINT("GMSMED: P32 E/M CONFLICT, RELEASE TABLE AND RE-ENTER MED");
+						return 2;
+					}
+				}
+
+				bool tablefull = true;
+				int freeslot = -1;
+				std::string tempname;
+				for (int i = 0;i < 12;i++)
+				{
+					if (DataTableInd == 0)
+					{
+						tempname = EZEXSITE.Data[i].code;
+					}
+					else
+					{
+						tempname = EZLASITE.Data[i].code;
+					}
+
+					if (STAID == tempname)
+					{
+						GMSPRINT("GMSMED: P32, ADD... STA ALREADY IN TABLE");
+						return 2;
+					}
+					if (tempname == "")
+					{
+						tablefull = false;
+						if (freeslot == -1)
+						{
+							freeslot = i;
+						}
+					}
+				}
+				if (tablefull)
+				{
+					GMSPRINT("GMSMED: P32, ADD... SORRY TABLE FULL");
+					return 2;
+				}
+				if (DataTableInd == 0)
+				{
+					EMGGPCHR(lat, lng, height, BodyInd, &EZEXSITE.Data[freeslot]);
+				}
+				else
+				{
+					EMGGPCHR(lat, lng, height, BodyInd, &EZLASITE.Data[freeslot]);
+				}
+			}
+			//MOD
+			else if (ActionCode == 1)
+			{
+				std::string tempname;
+				int found = -1;
+				for (int i = 0;i < 12;i++)
+				{
+					if (DataTableInd == 0)
+					{
+						tempname = EZEXSITE.Data[i].code;
+					}
+					else
+					{
+						tempname = EZLASITE.Data[i].code;
+					}
+					if (STAID == tempname)
+					{
+						found = i;
+						break;
+					}
+				}
+				if (found == -1)
+				{
+					GMSPRINT("GMSMED: P32, MOD... STA NOT IN TABLE");
+					return 2;
+				}
+				if (DataTableInd == 0)
+				{
+					EMGGPCHR(lat, lng, height, BodyInd, &EZEXSITE.Data[found]);
+				}
+				else
+				{
+					EMGGPCHR(lat, lng, height, BodyInd, &EZLASITE.Data[found]);
+				}
+			}
+			//DEL
+			else
+			{
+				std::string tempname;
+				int found = -1;
+				for (int i = 0;i < 12;i++)
+				{
+					if (DataTableInd == 0)
+					{
+						tempname = EZEXSITE.Data[i].code;
+					}
+					else
+					{
+						tempname = EZLASITE.Data[i].code;
+					}
+					if (STAID == tempname)
+					{
+						found = i;
+						break;
+					}
+				}
+				if (found == -1)
+				{
+					GMSPRINT("GMSMED: P32, DEL... STA NOT IN TABLE");
+					return 2;
+				}
+				if (DataTableInd == 0)
+				{
+					EZEXSITE.Data[found].code = "";
+				}
+				else
+				{
+					EZLASITE.Data[found].code = "";
+				}
+				//Is table now empty?
+				bool empty = true;
+				for (int i = 0;i < 12;i++)
+				{
+					if (DataTableInd == 0)
+					{
+						tempname = EZEXSITE.Data[i].code;
+					}
+					else
+					{
+						tempname = EZLASITE.Data[i].code;
+					}
+					if (tempname != "")
+					{
+						empty = false;
+						break;
+					}
+				}
+				if (empty)
+				{
+					if (DataTableInd == 0)
+					{
+						EZEXSITE.REF = -1;
+					}
+					else
+					{
+						EZLASITE.REF = -1;
+					}
+				}
+			}
+		}
+	}
+	else if (med == "13" || med == "14")
 	{
 		//TBD
 	}
-	else if (med == 32)
+	else if (med == "60")
 	{
 		//TBD
 	}
-	else if (med == 13 || med == 14)
-	{
-		//TBD
-	}
-	else if (med == 60)
-	{
-		//TBD
-	}
-	else if (med == 59)
+	else if (med == "59")
 	{
 		//TBD
 	}
 	//Offsets and elevation angle for two-impulse solution
-	else if (med == 51)
+	else if (med == "51")
 	{
 		double val;
 		if (data.size() > 0 && data[0] != "")
@@ -19155,7 +21415,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		}
 	}
 	//Two-impulse corrective combination nominals
-	else if (med == 52)
+	else if (med == "52")
 	{
 		double val;
 		if (data.size() > 0 && data[0] != "")
@@ -19182,11 +21442,11 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			}
 		}
 	}
-	else if (med == 8)
+	else if (med == "08")
 	{
 		MCGHZA = med_p08.PitchAngle*RAD;
 	}
-	else if (med == 80)
+	else if (med == "80")
 	{
 		if (1960 <= med_p80.Year && med_p80.Year <= 1980)
 		{
@@ -19195,7 +21455,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		else
 		{
 			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
-			return;
+			return 2;
 		}
 		if (1 <= med_p80.Month && med_p80.Month <= 12)
 		{
@@ -19204,7 +21464,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		else
 		{
 			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
-			return;
+			return 2;
 		}
 		if (1 <= med_p80.Day && med_p80.Day <= 31)
 		{
@@ -19213,7 +21473,7 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 		else
 		{
 			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
-			return;
+			return 2;
 		}
 
 		int m[] = { 31,28,31,30,31,30,31,31,30,31,30,31 };
@@ -19256,16 +21516,59 @@ void RTCC::GMSMED(int med, std::vector<std::string> data)
 			}
 		}
 	}
+	return 0;
 }
 
-void RTCC::EMGTVMED(int med, std::vector<std::string> data)
+int RTCC::GMSREMED(std::string med, std::vector<std::string> data)
+{
+	//Restart Tape
+	if (med == "XX")
+	{
+		if (data.size() != 1)
+		{
+			return 1;
+		}
+		int type;
+		if (data[0] == "B")
+		{
+			type = 1;
+		}
+		else if (data[0] == "R")
+		{
+			type = 2;
+		}
+		else
+		{
+			return 2;
+		}
+
+		GMLRESRT(type);
+	}
+	return 0;
+}
+
+void RTCC::GMLRESRT(int type)
+{
+	//RTCC saving
+	if (type == 1)
+	{
+
+	}
+	//RTCC loading
+	else if (type == 2)
+	{
+
+	}
+}
+
+int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 {
 	//Space Digitals Initialization
-	if (med == 0)
+	if (med == "00")
 	{
 		if (data.size() < 1)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -19278,7 +21581,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int body;
 		if (data.size() < 2 || data[1] == "" || data[1] == "E")
@@ -19291,7 +21594,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		EZETVMED.SpaceDigVehID = veh;
 		EZETVMED.SpaceDigCentralBody = body;
@@ -19299,20 +21602,20 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDSPACE(7);
 	}
 	//Space Digitals
-	else if (med == 1)
+	else if (med == "01")
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int column;
 		if (sscanf(data[0].c_str(), "%d", &column) != 1)
 		{
-			return;
+			return 2;
 		}
-		if (column < 1 || column>3)
+		if (column < 1 || column > 3)
 		{
-			return;
+			return 2;
 		}
 		int opt;
 		if (data[1] == "GET")
@@ -19325,7 +21628,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double val;
 		if (opt == 0)
@@ -19333,7 +21636,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double hh, mm, ss;
 			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			val = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -19342,7 +21645,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			int man;
 			if (sscanf(data[2].c_str(), "%d", &man) != 1)
 			{
-				return;
+				return 2;
 			}
 			val = (double)man;
 		}
@@ -19352,20 +21655,20 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			if (data.size() < 5)
 			{
-				return;
+				return 1;
 			}
 			if (sscanf(data[3].c_str(), "%lf", &incl) != 1)
 			{
-				return;
+				return 2;
 			}
 			incl *= RAD;
 			if (incl < 0 || incl > PI)
 			{
-				return;
+				return 2;
 			}
 			if (sscanf(data[4].c_str(), "%lf", &ascnode) != 1)
 			{
-				return;
+				return 2;
 			}
 			ascnode *= RAD;
 		}
@@ -19386,11 +21689,11 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMDSPACE(queid, opt, val, incl, ascnode);
 	}
 	//Initiate Checkout Monitor Display
-	else if (med == 2)
+	else if (med == "02")
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int tab;
 		if (data[0] == "CSM")
@@ -19403,7 +21706,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int opt;
 		if (data[1] == "GMT")
@@ -19436,7 +21739,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double param;
 		if (opt == 1 || opt == 2)
@@ -19444,7 +21747,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double hh, mm, ss;
 			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			param = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -19452,11 +21755,19 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			if (sscanf(data[2].c_str(), "%lf", &param) != 1)
 			{
-				return;
+				return 2;
+			}
+			if (opt == 5 || opt == 6)
+			{
+				param *= 1852.0;
+			}
+			else if (opt == 7)
+			{
+				param = sin(param*RAD);
 			}
 		}
 		bool hasTHT;
-		double THTime;
+		double THTime = -1.0;
 		if (data.size() < 4 || data[3] == "")
 		{
 			hasTHT = false;
@@ -19468,19 +21779,19 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		//Illegal for MVI and MVE
 		if (hasTHT && (opt == 3 || opt == 4))
 		{
-			return;
+			return 2;
 		}
 		if (opt >= 5)
 		{
 			//Mandatory for RAD, ALT, FPA
 			if (hasTHT == false)
 			{
-				return;
+				return 2;
 			}
 			double hh, mm, ss;
 			if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			THTime = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -19491,7 +21802,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 				double hh, mm, ss;
 				if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 				{
-					return;
+					return 2;
 				}
 				THTime = hh * 3600.0 + mm * 60.0 + ss;
 			}
@@ -19519,7 +21830,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		bool feet;
 		if (data.size() < 6 || data[5] == "")
@@ -19532,16 +21843,16 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
-		//TBD: Call EMDCHECK
+		EMDCHECK(tab, opt, param, THTime, ref, feet);
 	}
 	//Moonrise/Moonset Display
-	else if (med == 7)
+	else if (med == "07")
 	{
 		if (data.size() < 1)
 		{
-			return;
+			return 1;
 		}
 		int ind;
 
@@ -19555,7 +21866,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double param;
 		if (ind == 1)
@@ -19567,7 +21878,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double hh, mm, ss;
 			if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			param = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -19575,27 +21886,27 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			if (data.size() < 2)
 			{
-				return;
+				return 1;
 			}
 			int rev;
 			if (sscanf(data[1].c_str(), "%d", &rev) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (rev > EZCCSM.NumRevLast)
 			{
-				return;
+				return 2;
 			}
 			param = (double)rev;
 		}
 		EMDSSMMD(ind, param);
 	}
 	//Sunrise/Sunset Display
-	else if (med == 8)
+	else if (med == "08")
 	{
 		if (data.size() < 1)
 		{
-			return;
+			return 1;
 		}
 		int ind;
 
@@ -19609,7 +21920,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double param;
 		if (ind == 1)
@@ -19623,7 +21934,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 				double hh, mm, ss;
 				if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 				{
-					return;
+					return 2;
 				}
 				param = hh * 3600.0 + mm * 60.0 + ss;
 			}
@@ -19632,27 +21943,27 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		{
 			if (data.size() < 2)
 			{
-				return;
+				return 2;
 			}
 			int rev;
 			if (sscanf(data[1].c_str(), "%d", &rev) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (rev > EZCCSM.NumRevLast)
 			{
-				return;
+				return 2;
 			}
 			param = (double)rev;
 		}
 		EMDSSEMD(ind, param);
 	}
 	//FDO Orbit Digitals: Predict apogee/perigee
-	else if (med == 12)
+	else if (med == "12")
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int L;
 		if (data[0] == "CSM")
@@ -19665,7 +21976,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		int ind;
@@ -19683,7 +21994,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double param;
 		if (ind == 1 || ind == 3)
@@ -19691,7 +22002,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			int rev;
 			if (sscanf(data[2].c_str(), "%d", &rev) != 1)
 			{
-				return;
+				return 2;
 			}
 			param = (double)rev;
 		}
@@ -19700,7 +22011,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double hh, mm, ss;
 			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			param = hh * 3600.0 + mm * 60.0 + ss;
 		}
@@ -19708,11 +22019,11 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		EMMDYNMC(L, 3, ind, param);
 	}
 	//FDO Orbit Digitals: Longitude crossing time
-	else if (med == 13)
+	else if (med == "13")
 	{
 		if (data.size() < 3)
 		{
-			return;
+			return 1;
 		}
 		int L;
 		if (data[0] == "CSM")
@@ -19725,28 +22036,28 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		int ind;
 		if (sscanf(data[1].c_str(), "%d", &ind) != 1)
 		{
-			return;
+			return 2;
 		}
 
 		double lng;
 		if (sscanf(data[2].c_str(), "%lf", &lng) != 1)
 		{
-			return;
+			return 2;
 		}
 		EMMDYNMC(L, 4, ind, lng*RAD);
 	}
 	//FDO Orbit Digitals: Compute longitude at given time
-	else if (med == 14)
+	else if (med == "14")
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int L;
 		if (data[0] == "CSM")
@@ -19759,23 +22070,23 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		double hh, mm, ss;
 		if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 		{
-			return;
+			return 2;
 		}
 		double param = hh * 3600.0 + mm * 60.0 + ss;
 		EMMDYNMC(L, 5, 0, param);
 	}
 	//Predicted site acquisition
-	else if (med == 15 || med == 55)
+	else if (med == "15" || med == "55")
 	{
 		if (data.size() < 4)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -19788,7 +22099,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int ind;
 		if (data[1] == "REV")
@@ -19801,7 +22112,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		double vala, valb;
 		if (ind == 0)
@@ -19810,19 +22121,19 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 
 			if (sscanf(data[2].c_str(), "%d", &revb) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (revb <= 0)
 			{
-				return;
+				return 2;
 			}
 			if (sscanf(data[3].c_str(), "%d", &reve) != 1)
 			{
-				return;
+				return 2;
 			}
 			if (reve <= 0)
 			{
-				return;
+				return 2;
 			}
 			vala = (double)revb;
 			valb = (double)reve;
@@ -19833,17 +22144,17 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			double stime, dt;
 			if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			stime = hh * 3600.0 + mm * 60.0 + ss;
 			if (sscanf(data[3].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
 			{
-				return;
+				return 2;
 			}
 			dt = hh * 3600.0 + mm * 60.0 + ss;
 			if (dt < 0 || dt > 24.0*3600.0)
 			{
-				return;
+				return 2;
 			}
 			vala = stime;
 			valb = stime + dt;
@@ -19861,12 +22172,12 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			}
 			else
 			{
-				return;
+				return 2;
 			}
 		}
 		
 		int num;
-		if (med == 15)
+		if (med == "15")
 		{
 			num = 1;
 		}
@@ -19879,12 +22190,56 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 
 		EMDPESAD(num, veh, ind, vala, valb, body);
 	}
+	//Landmark Acquisition Display
+	else if (med == "17")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		if (data[0] != "CSM")
+		{
+			return 2;
+		}
+		int veh = 1;
+		double hh, mm, ss, get, dt;
+		if (sscanf(data[1].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+		{
+			return 2;
+		}
+		get = hh * 3600.0 + mm * 60.0 + ss;
+		if (sscanf(data[2].c_str(), "%lf:%lf:%lf", &hh, &mm, &ss) != 3)
+		{
+			return 2;
+		}
+		dt = hh * 3600.0 + mm * 60.0 + ss;
+		int ref;
+		if (data.size() < 4 || data[3] == "" || data[3] == "E")
+		{
+			ref = 0;
+		}
+		else if (data[3] == "M")
+		{
+			ref = 2;
+		}
+		else
+		{
+			return 2;
+		}
+		double gmt = GMTfromGET(get);
+		EZETVMED.LandmarkVehID = veh;
+		EZETVMED.LandmarkGMT = gmt;
+		EZETVMED.LandmarkDT = dt;
+		EZETVMED.LandmarkRef = ref;
+
+		EMDLANDM(veh, gmt, dt, ref);
+	}
 	//Detailed Maneuver Table
-	else if (med == 20)
+	else if (med == "20")
 	{
 		if (data.size() < 2)
 		{
-			return;
+			return 1;
 		}
 		int veh;
 		if (data[0] == "CSM")
@@ -19897,16 +22252,16 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		int num;
 		if (sscanf(data[1].c_str(), "%d", &num) != 1)
 		{
-			return;
+			return 2;
 		}
 		if (num < 1 || num>15)
 		{
-			return;
+			return 2;
 		}
 
 		DetailedManeuverTable *dmt;
@@ -19920,7 +22275,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 
 		int refscode;
@@ -19966,7 +22321,7 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 		}
 		else
 		{
-			return;
+			return 2;
 		}
 		bool headsupdownind;
 		if (refscode == 6)
@@ -19981,12 +22336,13 @@ void RTCC::EMGTVMED(int med, std::vector<std::string> data)
 			}
 			else
 			{
-				return;
+				return 2;
 			}
 		}
 
 		PMDDMT(veh, num, refscode, headsupdownind, *dmt);
 	}
+	return 0;
 }
 
 double RTCC::PIGMHA(int E, int Y, int D)
@@ -20037,6 +22393,18 @@ double RTCC::TJUDAT(int Y, int M, int D)
 		}
 	}
 	return 2415020.5 + (double)(365 * Y_apo + Z + TMM[M - 1] + D - 1);
+}
+
+double RTCC::PCDETA(double beta1, double beta2, double r1, double r2)
+{
+	double ctn_eta122 = (OrbMech::cot(beta1) + r1 / r2 * OrbMech::cot(beta2)) / (1 - r1 / r2);
+	double cos_eta12 = (pow(ctn_eta122, 2) - 1.0) / (pow(ctn_eta122, 2) + 1.0);
+	double eta12 = atan2((1.0 - cos_eta12)*ctn_eta122, cos_eta12);
+	if (eta12 < 0)
+	{
+		eta12 += PI2;
+	}
+	return eta12;
 }
 
 MATRIX3 RTCC::PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K)
@@ -20114,7 +22482,178 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	}
 }
 
-void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, MATRIX3 *refs)
+void RTCC::PIBURN(VECTOR3 R, VECTOR3 V, double T, double *B, VECTOR3 &ROUT, VECTOR3 &VOUT, double &TOUT)
+{
+	//B[0]: DT
+	//B[1]: DR
+	//B[2]: DV
+	//B[3]: DS (arc length)
+	//B[4]: dgamma
+	//B[5]: dpsi
+	//B[6]: isp
+	//B[7]: characteristic DV
+	//B[8]: mass ratio
+
+	VECTOR3 H, R1, V1, R2, V2, R3, V3;
+	double D;
+
+	TOUT = T + B[0];
+	H = crossp(R, V);
+	D = dotp(R, V);
+	if (B[3] == 0.0)
+	{
+		R1 = R;
+		V1 = V;
+	}
+	else
+	{
+		R1 = R * cos(B[3]) + (V*pow(length(R), 2) - R * D)*sin(B[3]) / length(H);
+		V1 = V * cos(B[3]) + (V*D - R * pow(length(R), 2))*sin(B[3]) / length(H);
+	}
+	if (B[4] == 0.0)
+	{
+		R2 = R1;
+		V2 = V1;
+	}
+	else
+	{
+		R2 = R1;
+		V2 = V1 * cos(-B[4]) + (V1*D - R1 * pow(length(V), 2))*sin(-B[4]) / length(H);
+	}
+	if (B[5] == 0.0)
+	{
+		R3 = R2;
+		V3 = V2;
+	}
+	else
+	{
+		R3 = R2;
+		V3 = R * 2.0*(dotp(R2, V)*pow(sin(-B[5] / 2.0), 2)) / pow(length(R), 2) + V2 * cos(-B[5]) + crossp(R2, V2)*sin(-B[5]) / length(R);
+	}
+	if (B[1] == 0.0)
+	{
+		ROUT = R3;
+	}
+	else
+	{
+		ROUT = R3 * (length(R) + B[1]) / length(R);
+	}
+	if (B[2] == 0.0)
+	{
+		VOUT = V3;
+	}
+	else
+	{
+		VOUT = V3 * (length(V) + B[2]) / length(V);
+	}
+	B[8] = sqrt(B[2] * B[2] + 4.0*length(V)*(length(V) + B[2])*pow(sin(B[4] / 2.0), 2) + cos(asin(dotp(unit(R), unit(V))))*cos(asin(dotp(unit(R), unit(V))) + B[4])*pow(sin(B[5] / 2.0), 2));
+	B[7] = exp(-abs(B[8] / B[6]));
+}
+
+void RTCC::PICSSC(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &lat, double &lng, double &gamma, double &azi)
+{
+	if (vecinp)
+	{
+		r = length(R);
+		lat = asin(R.z / r);
+		lng = atan2(R.y, R.x);
+		if (lng < 0)
+		{
+			lng += PI2;
+		}
+		VECTOR3 TEMP = mul(_M(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat), -sin(lng), cos(lng), 0, -sin(lat)*cos(lng), -sin(lat)*sin(lng), cos(lng)), V);
+		v = length(TEMP);
+		gamma = asin(TEMP.x/ v);
+		azi = atan2(TEMP.y, TEMP.z);
+		if (azi < 0)
+		{
+			azi += PI2;
+		}
+	}
+	else
+	{
+		R = _V(cos(lat)*cos(lng), cos(lat)*sin(lng), sin(lat))*r;
+		V = mul(_M(cos(lat)*cos(lng), -sin(lng), -sin(lat)*cos(lng), cos(lat)*sin(lng), cos(lng), -sin(lat)*sin(lng), sin(lat), 0, cos(lat)), _V(sin(gamma), cos(gamma)*sin(azi), cos(gamma)*cos(azi))*v);
+	}
+}
+
+int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg)
+{
+	PMMLAEG aeg;
+	AEGHeader header;
+	MATRIX3 Rot;
+	VECTOR3 P, W, P_apo, W_apo;
+	double eps_i, eps_t, usg, du, theta_dot, dt;
+	int KE, K;
+
+	eps_i = 1e-4;
+	eps_t = 0.01;
+	header.AEGInd = 1;
+	header.ErrorInd = 0;
+	AEGIN.TIMA = 0;
+
+	AEGOUT = AEGIN;
+	KE = 0;
+	K = 1;
+RTCC_PIATSU_1A:
+	Rot = OrbMech::GetRotationMatrix(BODY_MOON, GMTBASE + AEGOUT.TS / 24.0 / 3600.0);
+	OrbMech::PIVECT(AEGOUT.coe_osc.i, AEGOUT.coe_osc.g, AEGOUT.coe_osc.h, P, W);
+	P_apo = rhtmul(Rot, P);
+	W_apo = rhtmul(Rot, W);
+	OrbMech::PIVECT(P_apo, W_apo, isg, gsg, hsg);
+	if (isg < eps_i || isg > PI - eps_i)
+	{
+		KE = 2;
+		return KE;
+	}
+	usg = AEGOUT.f + gsg;
+	if (usg >= PI2)
+	{
+		usg = usg - PI2;
+	}
+	if (K > 1)
+	{
+		du = AEGIN.Item8 - usg;
+		theta_dot = sqrt(OrbMech::mu_Moon*AEGOUT.coe_osc.a*(1.0 - pow(AEGOUT.coe_osc.e, 2))) / pow(AEGOUT.R, 2) + AEGOUT.g_dot;
+		if (abs(du) > PI)
+		{
+			if (du > 0)
+			{
+				du = du - PI2;
+			}
+			else if (du <= 0)
+			{
+				du = du + PI2;
+			}
+		}
+	}
+	else
+	{
+		du = AEGIN.Item8 - usg + AEGIN.Item10*PI2;
+		theta_dot = sqrt(OrbMech::mu_Moon / pow(AEGIN.coe_osc.a, 3));
+	}
+	dt = du / theta_dot;
+	if (abs(dt) <= eps_t)
+	{
+		return KE;
+	}
+	if (K >= 7)
+	{
+		KE = 1;
+		return KE;
+	}
+	AEGIN.TE = AEGOUT.TS + dt;
+	K++;
+	aeg.CALL(header, AEGIN, AEGOUT);
+	if (header.ErrorInd)
+	{
+		KE = -2;
+		return KE;
+	}
+	goto RTCC_PIATSU_1A;
+}
+
+void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs)
 {
 	//CSM/LEM REFSMMAT locker movement
 	if (QUEID == 2)
@@ -20171,17 +22710,54 @@ void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, MATRIX3 *refs)
 		if (tab1->data[ID1 - 1].ID == 0)
 		{
 			//ERROR: REFSMMAT NOT AVAILABLE
+			EMGPRINT(1);
 			return;
 		}
 
 		if (ID2 == RTCC_REFSMMAT_TYPE_CUR)
 		{
-			tab2->data[1].REFSMMAT = tab2->data[0].REFSMMAT;
-			tab2->data[1].ID++;
+			EMGSTSTM(L2, tab2->data[0].REFSMMAT, RTCC_REFSMMAT_TYPE_PCR, gmt);
 		}
-		tab2->data[ID2 - 1].ID++;
-		tab2->data[ID2 - 1].REFSMMAT = tab1->data[ID1 - 1].REFSMMAT;
+		EMGSTSTM(L2, tab1->data[ID1 - 1].REFSMMAT, ID2, gmt);
 	}
+}
+
+void RTCC::EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt)
+{
+	REFSMMATLocker *tab;
+	if (L == RTCC_MANVEHICLE_CSM)
+	{
+		tab = &EZJGMTX1;
+	}
+	else
+	{
+		tab = &EZJGMTX3;
+	}
+
+	tab->data[id - 1].ID++;
+	tab->data[id - 1].REFSMMAT = tab->data[id - 1].REFSMMAT;
+	tab->data[id - 1].GMT = gmt;
+
+	char Buffer[128];
+	char Buff1[4];
+	char Buff2[32];
+	char Buff3[4];
+
+	EMGSTGENName(id, Buff1);
+	OrbMech::format_time_HHMMSS(Buff2, GETfromGMT(gmt));
+	if (L == 1)
+	{
+		sprintf_s(Buff3, "CSM");
+	}
+	else
+	{
+		sprintf_s(Buff3, "LEM");
+	}
+
+	sprintf_s(Buffer, "EMGSTSTM: NEW IMU MATRIX %s%03d %s GET = %s", Buff1, tab->data[id - 1].ID, Buff3, Buff2);
+	std::string message;
+	message.assign(Buffer);
+	EMGPRINT(2, message);
 }
 
 void RTCC::EMGSTGENName(int ID, char *Buffer)
@@ -20213,7 +22789,7 @@ void RTCC::EMGSTGENName(int ID, char *Buffer)
 		sprintf_s(Buffer, 4, "LCV");
 		break;
 	case RTCC_REFSMMAT_TYPE_AGS:
-		sprintf_s(Buffer, 4, "AHS");
+		sprintf_s(Buffer, 4, "AGS");
 		break;
 	case RTCC_REFSMMAT_TYPE_DOK:
 		sprintf_s(Buffer, 4, "DOK");
@@ -20228,6 +22804,138 @@ void RTCC::EMGSTGENName(int ID, char *Buffer)
 		sprintf_s(Buffer, 4, "");
 		break;
 	}
+}
+
+int RTCC::EMGSTGENCode(const char *Buffer)
+{
+	if (!strcmp(Buffer, "CUR"))
+	{
+		return RTCC_REFSMMAT_TYPE_CUR;
+	}
+	else if (!strcmp(Buffer, "PCR"))
+	{
+		return RTCC_REFSMMAT_TYPE_PCR;
+	}
+	else if (!strcmp(Buffer, "TLM"))
+	{
+		return RTCC_REFSMMAT_TYPE_TLM;
+	}
+	else if (!strcmp(Buffer, "OST"))
+	{
+		return RTCC_REFSMMAT_TYPE_OST;
+	}
+	else if (!strcmp(Buffer, "MED"))
+	{
+		return RTCC_REFSMMAT_TYPE_MED;
+	}
+	else if (!strcmp(Buffer, "DMT"))
+	{
+		return RTCC_REFSMMAT_TYPE_DMT;
+	}
+	else if (!strcmp(Buffer, "DOD"))
+	{
+		return RTCC_REFSMMAT_TYPE_DOD;
+	}
+	else if (!strcmp(Buffer, "LCV"))
+	{
+		return RTCC_REFSMMAT_TYPE_LCV;
+	}
+	else if (!strcmp(Buffer, "AGS"))
+	{
+		return RTCC_REFSMMAT_TYPE_AGS;
+	}
+	else if (!strcmp(Buffer, "DOK"))
+	{
+		return RTCC_REFSMMAT_TYPE_DOK;
+	}
+	else if (!strcmp(Buffer, "LLA"))
+	{
+		return RTCC_REFSMMAT_TYPE_LLA;
+	}
+	else if (!strcmp(Buffer, "LLD"))
+	{
+		return RTCC_REFSMMAT_TYPE_LLD;
+	}
+
+	return -1;
+}
+
+void RTCC::EMGPRINT(int i, std::string mes)
+{
+	std::string message;
+	switch (i)
+	{
+	case 1:
+		message = "EMGSTGEN: REFSMMAT NOT AVAILABLE";
+		break;
+	case 2:
+		message = mes;
+		break;
+	case 3:
+		message = "EMMGLCVP: EPHEMERIS NOT AVAILABLE";
+		break;
+	case 4:
+		message = "EMMGLCVP: RADIAL FLIGHT CONDITIONS";
+		break;
+	}
+
+	if (RTCCONLINEMON.size() >= 9)
+	{
+		RTCCONLINEMON.pop_front();
+	}
+
+	RTCCONLINEMON.push_back(message);
+}
+
+void RTCC::EMMGLCVP(int L, double gmt)
+{
+	EphemerisDataTable EPHEM;
+	ManeuverTimesTable MANTIMES;
+	LunarStayTimesTable LUNSTAY;
+
+	if (ELFECH(gmt, 16, 8, L, EPHEM, MANTIMES, LUNSTAY))
+	{
+		EMGPRINT(3);
+		return;
+	}
+	ELVCTRInputTable in;
+	ELVCTROutputTable out;
+
+	in.GMT = gmt;
+	in.L = L;
+	in.ORER = 8;
+
+	ELVCTR(in, out);
+
+	if (out.ErrorCode)
+	{
+		EMGPRINT(3);
+		return;
+	}
+
+	if (abs(dotp(unit(out.SV.R), unit(out.SV.V))) > 1.0 - 0.0017)
+	{
+		EMGPRINT(4);
+		return;
+	}
+
+	MATRIX3 REFSMMAT;
+	VECTOR3 X_SM, Y_SM, Z_SM;
+	if (L == 1)
+	{
+		Z_SM = unit(-out.SV.R);
+		Y_SM = unit(crossp(out.SV.V, out.SV.R));
+		X_SM = crossp(Y_SM, Z_SM);
+	}
+	else
+	{
+		X_SM = unit(out.SV.R);
+		Y_SM = unit(crossp(out.SV.V, out.SV.R));
+		Z_SM = crossp(X_SM, Y_SM);
+	}
+	REFSMMAT = _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
+
+	EMGSTSTM(L, REFSMMAT, RTCC_REFSMMAT_TYPE_LCV, gmt);
 }
 
 void RTCC::PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA)
@@ -20303,7 +23011,7 @@ RTCC_PCBBT_2_C:
 	WA = WD;
 }
 
-void RTCC::PCMAT(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2)
+void RTCC::PCMATO(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2)
 {
 	double SUM;
 	int I, J, K;
@@ -20320,12 +23028,12 @@ void RTCC::PCMAT(double **A, double *Y, double **B, double *X, int M, int N, dou
 			{
 				SUM = SUM + B[K][I] * B[K][J] * W1[K];
 				K++;
-			} while (K < M - 1);
+			} while (K < M);
 			A[I][J] = SUM;
 			J++;
-		} while (J < I);
+		} while (J <= I);
 		I++;
-	} while (I < N - 1);
+	} while (I < N);
 	I = 0;
 	do
 	{
@@ -20334,9 +23042,9 @@ void RTCC::PCMAT(double **A, double *Y, double **B, double *X, int M, int N, dou
 		{
 			A[I][J] = A[J][I];
 			J++;
-		} while (J < N - 1);
+		} while (J < N);
 		I++;
-	} while (I < N - 2);
+	} while (I < N - 1);
 	I = 0;
 	do
 	{
@@ -20346,31 +23054,45 @@ void RTCC::PCMAT(double **A, double *Y, double **B, double *X, int M, int N, dou
 		{
 			SUM = SUM + B[K][I] * X[K] * W1[K];
 			K++;
-		} while (K < M - 1);
+		} while (K < M);
+		Y[I] = SUM;
 		I++;
-	} while (I < N - 1);
+	} while (I < N);
 	I = 0;
 	do
 	{
 		A[I][I] = A[I][I] + lambda * W2[I];
 		I++;
-	} while (I < N - 1);
+	} while (I < N);
 }
 
 bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 {
-	double AMAX, DUMI;
+	int *PP = new int[N + 1];
+
+	if (OrbMech::LUPDecompose(A, N, 0.0, PP) == 0)
+	{
+		return true;
+	}
+	std::vector<double> dx;
+	dx.resize(N);
+	OrbMech::LUPSolve(A, PP, Y, N, dx);
+	delete[] PP;
+
+	for (int i = 0;i < N;i++)
+	{
+		X[i] = dx[i];
+	}
+
+	/*double AMAX, DUMI;
 	int I, J, K, *IP, IMAX, JMAX, IDUM;
 	IP = new int[N];
 
-	I = 0;
-	do
+	for (I = 0;I < N;I++)
 	{
 		IP[I] = I;
-		I++;
-	} while (I < N - 1);
-	K = 0;
-	do
+	}
+	for (K = 0;K < N;K++)
 	{
 		if (K != N - 1)
 		{
@@ -20380,6 +23102,7 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 			I = 0;
 			do
 			{
+				//Find maximum element
 				J = 0;
 				do
 				{
@@ -20391,11 +23114,12 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 						JMAX = J;
 					}
 					J++;
-				} while (J < N - 1);
+				} while (J < N);
 				I++;
-			} while (I < N - 1);
+			} while (I < N);
 			if (IMAX != K)
 			{
+				//Interchange rows
 				I = K;
 				do
 				{
@@ -20403,21 +23127,22 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 					A[IMAX][I] = A[K][I];
 					A[K][I] = DUMI;
 					I++;
-				} while (I < N - 1);
+				} while (I < N);
 				DUMI = Y[IMAX];
 				Y[IMAX] = Y[K];
 				Y[K] = DUMI;
 			}
 			if (JMAX != K)
 			{
+				//Interchange columns
 				I = 0;
-				DUMI = A[I][K];
-				A[I][K] = A[I][JMAX];
 				do
 				{
+					DUMI = A[I][K];
+					A[I][K] = A[I][JMAX];
 					A[I][JMAX] = DUMI;
 					I++;
-				} while (I < N - 1);
+				} while (I < N);
 				IDUM = IP[K];
 				IP[K] = IP[JMAX];
 				IP[JMAX] = IDUM;
@@ -20428,37 +23153,363 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 			//error
 			return true;
 		}
-		I = K;
-		do
+
+		for (I = K + 1;I < N;I++)
+		{
+			DUMI = A[I][K] / A[K][K];
+			for (J = K + 1;J < N;J++)
+			{
+				A[I][J] = A[I][J] - DUMI * A[K][J];
+			}
+			Y[I] = Y[I] - DUMI * Y[K];
+		}
+
+		
+		//Normalize row
+		for (I = K + 1;I < N;I++)
 		{
 			A[K][I] = A[K][I] / A[K][K];
-			I++;
-		} while (I < N - 1);
+		}
 		Y[K] = Y[K] / A[K][K];
-		I = 0;
-		if (I != K)
+		A[K][K] = 1.0;
+		//Reduce matrix
+		for (I = 0;I < N;I++)
 		{
-			do
+			if (I != K)
 			{
-				J = K;
-				do
+				for (J = K + 1;J < N;J++)
 				{
 					A[I][J] = A[I][J] - A[I][K] * A[K][J];
-					J++;
-				} while (J < N - 1);
+				}
 				Y[I] = Y[I] - A[I][K] * Y[K];
-				I++;
-			} while (I < N - 1);
+			}
 		}
+		
 		K++;
-	} while (K < N - 1);
+	}
 
 	I = 0;
-	X[IP[I]] = Y[I];
+	do
+	{
+		X[IP[I]] = Y[I];
+		I++;
+	} while (I < N);
 
 	delete[] IP;
-
+	*/
 	return false;
+}
+
+void RTCC::PMMDAB(VECTOR3 R, VECTOR3 V, double GMT, ASTInput ARIN, ASTSettings IRIN, ASTData &AST, int &IER, int IPRT)
+{
+	//Set up inputs for forward iterator
+	void *constPtr;
+	PCMATCArray outarray;
+	outarray.R0 = R;
+	outarray.V0 = V;
+	outarray.T0 = GMT;
+	outarray.REF = IRIN.Ref;
+	outarray.IASD = 0;
+	outarray.ISTP = IRIN.ReentryStop;
+	outarray.gamma_stop = ARIN.gamma_stop;
+	if (IRIN.Ref == BODY_EARTH)
+	{
+		outarray.h_pc_on = false;
+	}
+	else
+	{
+		outarray.h_pc_on = true;
+	}
+	
+	constPtr = &outarray;
+
+	bool PCMATCPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
+	bool(*fptr)(void *, std::vector<double>&, void*, std::vector<double>&, bool) = &PCMATCPointer;
+
+	GenIterator::GeneralizedIteratorBlock block;
+
+	block.IndVarSwitch[0] = true;
+	block.IndVarSwitch[1] = true;
+	block.IndVarSwitch[2] = true;
+	block.IndVarSwitch[4] = true;
+	block.IndVarGuess[0] = ARIN.dgamma;
+	block.IndVarGuess[1] = ARIN.dpsi;
+	block.IndVarGuess[2] = ARIN.dv*3600.0 / OrbMech::R_Earth;
+	block.IndVarGuess[3] = ARIN.T_a / 3600.0;
+	block.IndVarGuess[4] = ARIN.T_r / 3600.0;
+	block.IndVarStep[0] = pow(10, -6);
+	block.IndVarStep[1] = pow(10, -6);
+	block.IndVarStep[2] = 2.0*pow(10, -7);
+	block.IndVarWeight[0] = 1.0;
+	block.IndVarWeight[1] = 1.0;
+	block.IndVarWeight[2] = 1.0;
+
+	block.DepVarSwitch[0] = true;
+	block.DepVarSwitch[1] = true;
+	block.DepVarSwitch[2] = true;
+	block.DepVarSwitch[3] = true;
+	block.DepVarSwitch[4] = true;
+	if (IRIN.ReentryStop == -1)
+	{
+		block.DepVarSwitch[5] = true;
+	}
+	block.DepVarLowerLimit[0] = (ARIN.h_r_des - 0.3*1852.0) / OrbMech::R_Earth;
+	block.DepVarLowerLimit[1] = ARIN.lat_r_des - 0.1*RAD;
+	block.DepVarLowerLimit[2] = ARIN.lng_r_des - 0.01*RAD;
+	block.DepVarLowerLimit[3] = ARIN.azi_r_des - 2.0*RAD;
+	block.DepVarLowerLimit[4] = (ARIN.T_r - ARIN.T_a) / 3600.0 - 12.0;
+	block.DepVarLowerLimit[5] = ARIN.gamma_des - 0.001*RAD;
+	block.DepVarUpperLimit[0] = (ARIN.h_r_des + 0.3*1852.0) / OrbMech::R_Earth;
+	block.DepVarUpperLimit[1] = ARIN.lat_r_des + 0.1*RAD;
+	block.DepVarUpperLimit[2] = ARIN.lng_r_des + 0.01*RAD;
+	block.DepVarUpperLimit[3] = ARIN.azi_r_des + 2.0*RAD;
+	block.DepVarUpperLimit[4] = (ARIN.T_r - ARIN.T_a) / 3600.0 + 12.0;
+	block.DepVarUpperLimit[5] = ARIN.gamma_des + 0.001*RAD;
+	block.DepVarClass[0] = 1;
+	block.DepVarClass[1] = 1;
+	block.DepVarClass[2] = 1;
+	block.DepVarClass[3] = 1;
+	block.DepVarClass[4] = 2;
+	block.DepVarClass[5] = 1;
+	block.DepVarWeight[4] = 1.0;
+
+	std::vector<double> result;
+	std::vector<double> y_vals;
+	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+}
+
+bool PCMATCPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
+{
+	return ((RTCC*)data)->PCMATC(var, varPtr, arr, mode);
+}
+
+bool RTCC::PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
+{
+	//Independent variables:
+	//0: dgamma_a, R_tx or DVX
+	//1: dpsi_a, R_ty or DVY
+	//2: dv_a, R_tz or DVZ
+	//3: T of abort
+	//4: T of reentry
+	//Dependent variables:
+	//0: Height at reentry
+	//1: Geodetic latitude at reentry
+	//2: Longitude at reentry
+	//3: Azimuth at reentry
+	//4: Time from abort to reentry
+	//5: Gamma at reentry
+	//6: Height at pericynthion
+	//7: Sigma
+
+	OELEMENTS coe;
+	double gamma_p, T_min, h_p = 0.0;
+
+	PCMATCArray *vars = static_cast<PCMATCArray*>(varPtr);
+
+	PMMCEN_VNI vni;
+	vni.dt_max = var[3] * 3600.0 - vars->T0;
+	vni.GMTBASE = vars->GMTBASE;
+	vni.R = vars->R0;
+	vni.V = vars->V0;
+	vni.T = vars->T0;
+	PMMCEN_INI ini;
+	ini.body = vars->REF;
+	ini.stop_ind = 1;
+
+	VECTOR3 R1, V1;
+	double T1;
+	int stop_ind, body1;
+
+	OrbMech::PMMCEN(vni, ini, R1, V1, T1, stop_ind, body1);
+	if (vars->IASD == 1)
+	{
+		goto PCMATC_5A;
+	}
+	double B[9];
+	B[0] = 0.0;
+	B[1] = 0.0;
+	B[2] = var[2] * OrbMech::R_Earth / 3600.0;
+	B[3] = 0.0;
+	B[4] = var[0];
+	B[5] = var[1];
+	B[6] = 1.0;
+
+	VECTOR3 R2, V2;
+	double T_a;
+	PIBURN(R1, V1, T1, B, R2, V2, T_a);
+PCMATC_1A:
+	if (body1 == BODY_MOON)
+	{
+		goto PCMATC_2B;
+	}
+	double dt_ar;
+	if (vars->ISTP == -1)
+	{
+		dt_ar = var[4]*3600.0 - T_a;
+		goto PCMATC_3A;
+	}
+	coe = OrbMech::coe_from_sv(R2, V2, OrbMech::mu_Earth);
+	double a = OrbMech::GetSemiMajorAxis(R2, V2, OrbMech::mu_Moon);
+	double gamma_min;
+	if (coe.e > 1.0)
+	{
+		gamma_min = -PI05;
+	}
+	else
+	{
+		gamma_min = atan2(-coe.e, sqrt(1.0 - coe.e * coe.e));
+	}
+	if (gamma_min > vars->gamma_stop)
+	{
+		goto PCMATC_4C;
+	}
+	gamma_p = atan2(coe.e*sin(coe.TA), 1.0 + coe.e*cos(coe.TA));
+	if (coe.e >= 1.0 && gamma_p >= 0.0)
+	{
+		goto PCMATC_4C;
+	}
+	double E = OrbMech::TrueToEccentricAnomaly(coe.TA, coe.e);
+	if (E >= 3.0*PI05)
+	{
+		if (gamma_p > vars->gamma_stop)
+		{
+			goto PCMATC_4C;
+		}
+		T_min = 0.0;
+	}
+	else
+	{
+		T_min = 0.0;
+		if (coe.e < 1.0)
+		{
+			T_min = sqrt(pow(a, 3) / OrbMech::mu_Earth)*((3.0*PI05 - E) + coe.e*(1.0 + sin(E)));
+		}
+	}
+	goto PCMATC_3A;
+PCMATC_2B:
+	//Is H_PC switched on as a dependant variable?
+	if (vars->h_pc_on == true)
+	{
+		VECTOR3 R_p, V_p;
+		double T_p;
+		int IRS, ITS;
+
+		gamma_p = asin(dotp(unit(R2), unit(V2)));
+		if (gamma_p >= 0.0)
+		{
+			vni.dir = -1.0;
+		}
+		else
+		{
+			vni.dir = 1.0;
+		}
+		vni.dt_max = 10.0*24.0*3600.0;
+		vni.dt_min = 0.0;
+		vni.end_cond = 0.0;
+		vni.R = R2;
+		vni.V = V2;
+		vni.T = T_a;
+		ini.body = body1;
+		ini.stop_ind = 2;
+		OrbMech::PMMCEN(vni, ini, R_p, V_p, T_p, ITS, IRS);
+		h_p = length(R_p) - MCSMLR;
+	}
+	T_min = 0.0;
+PCMATC_3A:
+	vni.dir = 1.0;
+	vni.dt_max = 10.0*24.0*3600.0;
+	if (vars->ISTP == -1)
+	{
+		vni.end_cond = 0.0;
+		vni.dt_min = 0.0;
+		vni.dt_max = T_a;
+		ini.stop_ind = 1;
+	}
+	else
+	{
+		vni.dt_min = T_min;
+		vni.dt_max = 10.0*24.0*3600.0;
+		vni.end_cond = vars->gamma_stop;
+		ini.stop_ind = 2;
+	}
+	vni.R = R2;
+	vni.V = V2;
+	vni.T = T_a;
+	ini.body = body1;
+	VECTOR3 R_r, V_r;
+	double T_r;
+	int ref_r;
+	OrbMech::PMMCEN(vni, ini, R_r, V_r, T_r, stop_ind, ref_r);
+
+	if (ref_r == BODY_MOON || (vars->ISTP == 1 && stop_ind != 2))
+	{
+		goto PCMATC_4C;
+	}
+	MATRIX3 Rot = OrbMech::GetRotationMatrix(BODY_EARTH, OrbMech::MJDfromGET(T_r, vars->GMTBASE));
+	VECTOR3 R_r_equ = rhtmul(Rot, R_r);
+	VECTOR3 V_r_equ = rhtmul(Rot, V_r);
+	double h_r = length(R_r) - OrbMech::R_Earth;
+	double r_r, v_r, lat_r, lng_r, gamma_r, azi_r;
+	PICSSC(true, R_r, V_r, r_r, v_r, lat_r, lng_r, gamma_r, azi_r);
+	double T_ar = T_r - T_a;
+
+	arr[0] = h_r / OrbMech::R_Earth;
+	arr[1] = lat_r;
+	arr[2] = lng_r;
+	arr[3] = azi_r;
+	arr[4] = T_ar / 3600.0;
+	arr[5] = gamma_r;
+	arr[6] = h_p / OrbMech::R_Earth;
+
+	vars->R_r = R_r;
+	vars->V_r = V_r;
+	vars->T_r = T_r;
+	return true;
+PCMATC_4C:
+	return false;
+PCMATC_5A:
+	PMMRKJInputArray integin;
+
+	integin.A = 0.0;
+	integin.DENSMULT = 1.0;
+	integin.DOCKANG = vars->DockingAngle;
+	integin.DPSScale = MCTDTF;
+	integin.DTOUT = 10.0;
+	integin.DTPS10 = vars->DT_10PCT;
+	integin.DTU = vars->dt_ullage;
+	integin.HeadsUpDownInd = vars->HeadsUpDownInd;
+	integin.IC = vars->ConfigCode;
+	integin.KAUXOP = 1;
+	integin.KEPHOP = 0;
+	integin.KTRIMOP = vars->TrimAngleInd;
+	integin.LMDESCJETT = 1e70;
+	integin.MANOP = vars->AttitudeCode;
+
+	integin.sv0.R = R2;
+	integin.sv0.V = V2;
+	integin.sv0.GMT = T_a;
+	integin.sv0.RBI = body1;
+	integin.ThrusterCode = vars->ThrusterCode;
+	integin.TVC = vars->TVC;
+	integin.UllageOption = vars->UllageCode;
+	integin.ExtDVCoordInd = true;
+	integin.VG = _V(var[0], var[1], var[2])*OrbMech::R_Earth / 3600.0;
+
+	integin.WDMULT = 1.0;
+	integin.CAPWT = vars->CSMWeight + vars->LMWeight;
+	integin.CSMWT = vars->CSMWeight;
+	integin.LMAWT = 0.0;
+	integin.LMDWT = vars->LMWeight;
+
+	int Ierr;
+
+	RTCCNIAuxOutputTable AuxTable;
+	CSMLMPoweredFlightIntegration numin(this, integin, Ierr, NULL, &AuxTable);
+	numin.PMMRKJ();
+	R2 = AuxTable.R_BO;
+	V2 = AuxTable.V_BO;
+	T_a = AuxTable.GMT_BO;
+	goto PCMATC_1A;
 }
 
 void RTCC::FDOLaunchAnalog1(MPTSV sv)
@@ -21017,6 +24068,82 @@ int RTCC::AttitudeNameToCode(std::string attitude)
 	return 0;
 }
 
+bool RTCC::RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, double lmdscmass, int &thruster, double &manmass)
+{
+	if (code[0] == 'C')
+	{
+		if (code[1] == 'S')
+		{
+			thruster = RTCC_ENGINETYPE_CSMSPS;
+		}
+		else if (code[1] == 'R')
+		{
+			thruster = RTCC_ENGINETYPE_CSMRCSPLUS4;
+		}
+		else
+		{
+			return true;
+		}
+		if (code[2] == 'D')
+		{
+			manmass = csmmass + lmascmass + lmdscmass;
+		}
+		else if (code[2] == 'A')
+		{
+			manmass = csmmass + lmascmass;
+		}
+		else if (code[2] == 'U')
+		{
+			manmass = csmmass;
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else if (code[0] == 'L')
+	{
+		if (code[1] == 'D')
+		{
+			thruster = RTCC_ENGINETYPE_LMDPS;
+			if (code[2] == 'D')
+			{
+				manmass = csmmass + lmascmass + lmdscmass;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else if (code[1] == 'R')
+		{
+			thruster = RTCC_ENGINETYPE_LMRCSPLUS4;
+			if (code[2] == 'D')
+			{
+				manmass = csmmass + lmascmass + lmdscmass;
+			}
+			else if (code[2] == 'A')
+			{
+				manmass = csmmass + lmascmass;
+			}
+			else
+			{
+				return true;
+			}
+		}
+		else
+		{
+			return true;
+		}
+	}
+	else
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, int IC, int IA, int IJ, double D)
 {
 	//INPUTS:
@@ -21231,6 +24358,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mptman->LMAscMassAfter = aux->W_LMA;
 	mptman->LMDscMassAfter = aux->W_LMD;
 	mptman->SIVBMassAfter = aux->W_SIVB;
+	mptman->lng_AN = 0.0;
 
 	double W_S_Prior, S_Fuel, WDOT, T, F, isp;
 
@@ -21516,6 +24644,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	EphemerisData sv_true;
 	EphemerisData sv_BI;
 	EphemerisData sv_BO;
+	AEGDataBlock aeg;
 
 	sv_BI.R = aux->R_BI;
 	sv_BI.V = aux->V_BI;
@@ -21525,6 +24654,8 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	int err = ELVCNV(sv_BI, in, out, sv_true);
 	if (err)
 	{
+		PMXSPT("PMMDMT: UNABLE TO CONVERT VECTORS FROM MEAN TO TRUE");
+		sv_true = sv_BI;
 		goto RTCC_PMMDMT_PB2_6;
 	}
 
@@ -21540,10 +24671,6 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		mptman->lat_BI = asin(sv_true.R.z / sv_true.R.x);
 	}
 	mptman->lng_BI = atan2(sv_true.R.y, sv_true.R.x);
-	if (mptman->lng_BI < 0)
-	{
-		mptman->lng_BI += PI2;
-	}
 	double h = length(crossp(sv_true.R, sv_true.V));
 	mptman->eta_BI = atan2(h*dotp(sv_true.R, sv_true.V), h*h - mu * length(sv_true.R));
 	if (mptman->eta_BI < 0)
@@ -21562,13 +24689,12 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		goto RTCC_PMMDMT_PB2_6;
 	}
 
-	AEGDataBlock aeg;
-	PIMCKC(sv_true.R, sv_true.V, body, aeg.a_osc, aeg.e_osc, aeg.i_osc, aeg.l_osc, aeg.g_osc, aeg.h_osc);
-	mptman->e_BO = aeg.e_osc;
-	mptman->i_BO = aeg.i_osc;
-	mptman->g_BO = aeg.g_osc;
+	PIMCKC(sv_true.R, sv_true.V, body, aeg.coe_osc.a, aeg.coe_osc.e, aeg.coe_osc.i, aeg.coe_osc.l, aeg.coe_osc.g, aeg.coe_osc.h);
+	mptman->e_BO = aeg.coe_osc.e;
+	mptman->i_BO = aeg.coe_osc.i;
+	mptman->g_BO = aeg.coe_osc.g;
 
-	if (aeg.e_osc < 0.85)
+	if (aeg.coe_osc.e < 0.85)
 	{
 		SV sv_BO2, sv_a, sv_p;
 
@@ -21577,7 +24703,10 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		sv_BO2.MJD = OrbMech::MJDfromGET(aux->GMT_BO, GMTBASE);
 		sv_BO2.gravref = GetGravref(aux->RBI);
 
-		ApsidesDeterminationSubroutine(sv_BO2, sv_a, sv_p);
+		if (PMMAPD(sv_BO2, sv_a, sv_p))
+		{
+			PMXSPT("PMMDMT: ERROR RETURNED FROM PMMAPD - INVALID APOFOCUS/PERIFOCUS");
+		}
 
 		mptman->h_a = length(sv_a.R) - R_E;
 		mptman->GMT_a = OrbMech::GETfromMJD(sv_a.MJD, GMTBASE);
@@ -21669,2301 +24798,37 @@ RTCC_PMMDMT_PB2_6:;
 
 }
 
-CSMLMPoweredFlightIntegration::CSMLMPoweredFlightIntegration(RTCC *r, PMMRKJInputArray &T, int &I, EphemerisDataTable *E, RTCCNIAuxOutputTable *A) :
-TArr(T),
-IERR(I),
-Eph(E),
-Aux(A)
+//CMC External Delta-V Update Generator
+void RTCC::CMMAXTDV(double GETIG, VECTOR3 DV_EXDV)
 {
-	rtcc = r;
+	CZAXTRDV.Octals[0] = 12;
+	CZAXTRDV.Octals[1] = MCCCEX;
+	CZAXTRDV.Octals[2] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 1);
+	CZAXTRDV.Octals[3] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 0);
+	CZAXTRDV.Octals[4] = OrbMech::DoubleToBuffer(DV_EXDV.y / 100.0, 7, 1);
+	CZAXTRDV.Octals[5] = OrbMech::DoubleToBuffer(DV_EXDV.y / 100.0, 7, 0);
+	CZAXTRDV.Octals[6] = OrbMech::DoubleToBuffer(DV_EXDV.z / 100.0, 7, 1);
+	CZAXTRDV.Octals[7] = OrbMech::DoubleToBuffer(DV_EXDV.z / 100.0, 7, 0);
+	CZAXTRDV.Octals[8] = OrbMech::DoubleToBuffer(GETIG*100.0, 28, 1);
+	CZAXTRDV.Octals[9] = OrbMech::DoubleToBuffer(GETIG*100.0, 28, 0);
 
-	TLARGE = 10e80;
-	KGN = 0;
-	STEP = 2.0;
-	WTLIM = 0.0;
-	DV = 0.0;
-	DVX = 0.0;
-	DVTOX = 0.0;
-	DVTO = 0.0;
-	P_G = 0.0;
-	Y_G = 0.0;
-	PGBI = 0.0;
-	YGBI = 0.0;
-	DV_ul = 0.0;
-	X_B = Y_B = Z_B = _V(0, 0, 0);
-	Kg = 0;
-	IJ = 0;
-
-	RCSFUELUSED = 0.0;
-	MAINFUELUSED = 0.0;
+	CZAXTRDV.GET = GETIG;
+	CZAXTRDV.DV = DV_EXDV / 0.3048;
 }
-
-void CSMLMPoweredFlightIntegration::PMMRKJ()
+//LGC External Delta-V Update Generator
+void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV)
 {
-	VECTOR3 RSAVE, VSAVE;
-	double TSAVE;
-
-	PCINIT();
-
-	//Thruster switch to 0
-	KTHSWT = 0;
-	//Error indicator to 0
-	IERR = 0;
-	//Initialize starting weight
-	WT = TArr.CAPWT;
-	//Initialize starting position vector
-	R = RP = TArr.sv0.R;
-	V = VP = TArr.sv0.V;
-	T = 0.0;
-	TPREV = T;
-	DTPREV = 0.0;
-
-	TLOP = TBM;
-	TI = TBM;
-	MPHASE = 1;
-
-	TCO = 0.0;
-	KEND = 0;
-	TPREV = TBM;
-
-	DVGO = abs(TArr.DVMAN);
-	THRUST = THPS[MPHASE - 1];
-	WTLRT = WDOTPS[MPHASE - 1] * TArr.WDMULT;
-	THX = THRUST;
-
-	//Calculate pure ullage time, total ullage minus overlap
-	DTSPAN[0] = TArr.DTU - DTSPAN[8];
-	if (DTSPAN[0] < 0.0)
-	{
-		DTSPAN[0] = 0.0;
-	}
-	TBI = TBM + DTSPAN[0];
-	Tg = TBI + DTSPAN[5];
-
-	RSAVE = R;
-	VSAVE = V;
-	TSAVE = T;
-
-	TNEXT = TLARGE;
-	DT = DTSPAN[0];
-	TAU = TBI;
-
-	//Integrate to Tau for PCGUID short burn logic
-	PCRUNG(Eph, WeightTable);
-
-	//Save free-flight state vector at ignition
-	sv_ff.R = R;
-	sv_ff.V = V;
-	sv_ff.GMT = TArr.sv0.GMT + T;
-	sv_ff.RBI = TArr.sv0.RBI;
-
-	CalcBodyAttitude();
-
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS || TArr.MANOP > 3)
-	{
-		PCGUID();
-	}
-
-	KTHSWT = 1;
-
-	R = RSAVE;
-	V = VSAVE;
-	T = TSAVE;
-	TNEXT = TArr.DTOUT;
-
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
-	{
-		goto PMMRKJ_LABEL_20A;
-	}
-	else
-	{
-		sv1.R = R;
-		sv1.V = V;
-		sv1.GMT = TArr.sv0.GMT + T;
-		sv1.RBI = TArr.sv0.RBI;
-		TEND = TLARGE;
-		TBI = TBM;
-		if (TArr.DTMAN > 0)
-		{
-			TI = TBM + TArr.DTMAN;
-			TEND = TI;
-			goto PMMRKJ_LABEL_9A;
-		}
-		else
-		{
-			if (TArr.DVMAN != 0)
-			{
-			PMMRKJ_LABEL_8B:
-				TI = TLARGE;
-				goto PMMRKJ_LABEL_9A;
-			}
-			else
-			{
-				if (TArr.MANOP == 4 || TArr.MANOP == 5)
-				{
-					if (KGN == 5)
-					{
-						goto PMMRKJ_LABEL_8C;
-					}
-					else
-					{
-						TArr.DTMAN = TLARGE;
-						goto PMMRKJ_LABEL_8B;
-					}
-				}
-				else
-				{
-				PMMRKJ_LABEL_8E:
-					KGN = 5;
-					goto PMMRKJ_LABEL_8C;
-				}
-			}
-		}
-	}
-
-PMMRKJ_LABEL_8C:
-	TBI = TBM;
-	DT = 0.0;
-	TI = T;
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
-	{
-		DTSPAN[7] = 0.0;
-		goto PMMRKJ_LABEL_15B;
-	}
-	else
-	{
-		goto PMMRKJ_LABEL_12B;
-	}
-
-PMMRKJ_LABEL_9A:
-	TE = T + STEP;
-	if (TE > TNEXT)
-	{
-		TE = TNEXT;
-	}
-	if (T != Tg)
-	{
-		if (TE > Tg)
-		{
-			TE = Tg;
-		}
-	}
-	else
-	{
-		IATT = 0;
-	}
-	if (TE <= TI)
-	{
-		DT = TE - T;
-	}
-	else
-	{
-		DT = TI - T;
-	}
-	if (TArr.DTMAN > 0)
-	{
-		goto PMMRKJ_LABEL_11A;
-	}
-	if (TArr.DVMAN == 0.0)
-	{
-		goto PMMRKJ_LABEL_8E;
-	}
-	if (TArr.DVMAN > 0)
-	{
-		T_c = -abs(THRUST);
-	}
-	else
-	{
-		T_c = -abs(THX);
-	}
-	DTGO = WT / WTLRT * (1.0 - exp(WTLRT*DVGO / T_c)) - DTSPAN[7];
-	goto PMMRKJ_LABEL_11B;
-PMMRKJ_LABEL_11A:
-	if (MPHASE == 7)
-	{
-		goto PMMRKJ_LABEL_11C;
-	}
-	DTGO = TEND - T;
-PMMRKJ_LABEL_11B:
-	if (DTGO > DT)
-	{
-		goto PMMRKJ_LABEL_11C;
-	}
-	DT = DTGO;
-	if (DT < 0)
-	{
-		DT = 0.0;
-	}
-	goto PMMRKJ_LABEL_12A;
-PMMRKJ_LABEL_11C:
-	if (TE < TI)
-	{
-		goto PMMRKJ_LABEL_21A;
-	}
-	else
-	{
-		TAU = TI;
-		goto PMMRKJ_LABEL_12B;
-	}
-
-PMMRKJ_LABEL_12A:
-	TAU = T + DT;
-	TI = TAU;
-	KEND = 1;
-	if (MPHASE == 2 || MPHASE == 3)
-	{
-		DTUL = TAU - TBM;
-	}
-PMMRKJ_LABEL_12B:
-	PCRUNG(Eph, WeightTable);
-	if (KGN == 5 || IERR != 0)
-	{
-		goto PMMRKJ_LABEL_22C;
-	}
-	if (KEND == 0)
-	{
-		goto PMMRKJ_LABEL_15A;
-	}
-	KEND = 0;
-	if (MPHASE == 1 || MPHASE == 8)
-	{
-		goto PMMRKJ_LABEL_22A;
-	}
-	MPHASE = 7;
-PMMRKJ_LABEL_13B:
-	TI = T + DTSPAN[7];
-	THRUST = THRUST / THPS[9] * THPS[7];
-	WTLRT = WTLRT / WDOTPS[9] * WDOTPS[7] * TArr.WDMULT;
-	TEND = TLARGE;
-PMMRKJ_LABEL_14B:
-	MPHASE++;
-PMMRKJ_LABEL_14C:
-	THX = THRUST * cos(P_G)*cos(Y_G);
-	KTHSWT = 1;
-	if (KGN == 5)
-	{
-		goto PMMRKJ_LABEL_12B;
-	}
-	goto PMMRKJ_LABEL_9A;
-PMMRKJ_LABEL_15A:
-	if (MPHASE == 1)
-	{
-		goto PMMRKJ_LABEL_15B;
-	}
-	else if (MPHASE == 2)
-	{
-		goto PMMRKJ_LABEL_18B;
-	}
-	else if (MPHASE == 3)
-	{
-		goto PMMRKJ_LABEL_18D;
-	}
-	else if (MPHASE == 4)
-	{
-		goto PMMRKJ_LABEL_18C;
-	}
-	else if (MPHASE == 5 || MPHASE == 6)
-	{
-		goto PMMRKJ_LABEL_18E;
-	}
-	else if (MPHASE == 7)
-	{
-		goto PMMRKJ_LABEL_13B;
-	}
-	else
-	{
-		goto PMMRKJ_LABEL_22B;
-	}
-PMMRKJ_LABEL_15B:
-	IJ = 0;
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && TArr.IC == 2 && TArr.LMDESCJETT <= TBM)
-	{
-		goto PMMRKJ_LABEL_15C;
-	}
-	goto PMMRKJ_LABEL_16A;
-PMMRKJ_LABEL_15C:
-	IJ = 1;
-PMMRKJ_LABEL_16A:
-	if (TArr.IC == 0)
-	{
-		WC = WT;
-	}
-	else if (TArr.IC == 1)
-	{
-		WL = WT;
-	}
-	if (TArr.MANOP == 1)
-	{
-		A_T = TArr.AT;
-	}
-	if (TArr.DVMAN > 0)
-	{
-		DTTOC = WDOTPS[7] / WDOTPS[9] * DTSPAN[7];
-	}
-	TI = T + DTSPAN[1];
-	sv1.R = R;
-	sv1.V = V;
-	sv1.GMT = TArr.sv0.GMT + T;
-	sv1.RBI = TArr.sv0.RBI;
-	if (TArr.KTRIMOP == -1)
-	{
-		IA = 1;
-		rtcc->GIMGBL(WC, WL, P_G, Y_G, THRUST, WTLRT, TArr.ThrusterCode, TArr.IC, IA, IJ, TArr.DOCKANG);
-		IA = -1;
-	}
-	else
-	{
-		IA = 0;
-		rtcc->GetSystemGimbalAngles(TArr.ThrusterCode, P_G, Y_G);
-	}
-	PGBI = P_G;
-	YGBI = Y_G;
-	goto PMMRKJ_LABEL_18F;
-PMMRKJ_LABEL_18B:
-	TI = T + DTSPAN[2];
-PMMRKJ_LABEL_18F:
-	THRUST = THPS[MPHASE];
-	WTLRT = WDOTPS[MPHASE] * TArr.WDMULT;
-	goto PMMRKJ_LABEL_14B;
-PMMRKJ_LABEL_18D:
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
-	{
-	PMMRKJ_LABEL_18C:
-		TI = T + DTSPAN[MPHASE];
-		goto PMMRKJ_LABEL_18F;
-	}
-	else
-	{
-	PMMRKJ_LABEL_18E:
-		if (TArr.DTMAN <= 0)
-		{
-			TEND = TLARGE;
-		}
-	}
-	TI = TEND;
-	THRUST = THPS[9];
-	WTLRT = WDOTPS[9] * TArr.WDMULT;
-	MPHASE = 7;
-	goto PMMRKJ_LABEL_14C;
-
-PMMRKJ_LABEL_20A:
-	if (KGN == 5)
-	{
-		goto PMMRKJ_LABEL_8C;
-	}
-	if (!(TArr.MANOP == 1 || TArr.MANOP == 2))
-	{
-		if (TArr.DTMAN <= 0)
-		{
-			if (TArr.DVMAN == 0.0)
-			{
-				TArr.DTMAN = TLARGE;
-			}
-		}
-	}
-	TI = TBI;
-	TEND = TBI + TArr.DTMAN;
-	if (DTSPAN[0] != 0.0)
-	{
-		goto PMMRKJ_LABEL_9A;
-	}
-	T = TBI;
-	goto PMMRKJ_LABEL_15B;
-PMMRKJ_LABEL_21A:
-	TAU = TE;
-	PCRUNG(Eph, WeightTable);
-	if (IERR != 0)
-	{
-		goto PMMRKJ_LABEL_22C;
-	}
-	if (MPHASE == 8 || TCO == 0.0)
-	{
-		goto PMMRKJ_LABEL_9A;
-	}
-	TI = TCO;
-	if (TI < T)
-	{
-		TI = T;
-	}
-	TEND = TCO;
-	if (KGN == 4)
-	{
-		KGN = 0;
-	}
-	goto PMMRKJ_LABEL_9A;
-PMMRKJ_LABEL_22A:
-	DTMANE = T - TBI;
-	goto PMMRKJ_LABEL_22C;
-PMMRKJ_LABEL_22B:
-	DTMANE = T - TBI - DTSPAN[7];
-PMMRKJ_LABEL_22C:
-	sv2.R = R;
-	sv2.V = V;
-	sv2.GMT = TArr.sv0.GMT + T;
-	sv2.RBI = TArr.sv0.RBI;
-	if (Aux && TArr.KAUXOP)
-	{
-		Aux->A_T = A_T_out;
-		Aux->DT_B = DTMANE;
-		Aux->DT_TO = DTTOC;
-		Aux->DV = DV;
-		Aux->DV_C = DVX;
-		Aux->DV_cTO = DVTOX;
-		Aux->DV_TO = DVTO;
-		Aux->DV_U = DV_ul;
-		Aux->P_G = PGBI;
-		Aux->Y_G = YGBI;
-
-		if (TArr.sv0.RBI == BODY_EARTH)
-		{
-			Aux->CSI = 0;
-			Aux->RBI = BODY_EARTH;
-		}
-		else
-		{
-			Aux->CSI = 2;
-			Aux->RBI = BODY_MOON;
-		}
-		Aux->R_1 = TArr.sv0.R;
-		Aux->V_1 = TArr.sv0.V;
-		Aux->GMT_1 = TArr.sv0.GMT;
-		Aux->R_BI = sv1.R;
-		Aux->V_BI = sv1.V;
-		Aux->GMT_BI = sv1.GMT;
-		Aux->R_BO = sv2.R;
-		Aux->V_BO = sv2.V;
-		Aux->GMT_BO = sv2.GMT;
-		if (TArr.KEPHOP >= 1)
-		{
-			Eph->table.push_back(sv2);
-		}
-		Aux->sv_FF = sv_ff;
-		Aux->V_G = VGN;
-		Aux->X_B = X_B;
-		Aux->Y_B = Y_B;
-		Aux->Z_B = Z_B;
-		Aux->WTENGON = WTENGON;
-		Aux->WTEND = WT;
-		Aux->MainFuelUsed = MAINFUELUSED;
-		Aux->RCSFuelUsed = RCSFUELUSED;
-		Aux->W_CSM = WC;
-		if (TArr.IC == RTCC_CONFIG_ASC || TArr.IC == RTCC_CONFIG_CSM_ASC)
-		{
-			Aux->W_LMA = WL;
-			Aux->W_LMD = 0.0;
-		}
-		else
-		{
-			Aux->W_LMA = TArr.LMAWT;
-			Aux->W_LMD = WL - TArr.LMAWT;
-		}
-		
-		Aux->W_SIVB = WS;
-	}
-}
-
-void CSMLMPoweredFlightIntegration::PCINIT()
-{
-	for (int i = 0;i < 10;i++)
-	{
-		THPS[i] = 0.0;
-		WDOTPS[i] = 0.0;
-	}
-	for (int i = 0;i < 9;i++)
-	{
-		DTSPAN[i] = 0.0;
-	}
-	for (int i = 0;i < 4;i++)
-	{
-		XK[i] = 0.0;
-	}
-
-	IATT = 0;
-	if (TArr.MANOP == 0)
-	{
-		return;
-	}
-
-	SIGN = 1.0;
-
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS4)
-	{
-		SIGN = -1.0;
-	}
-
-	if (TArr.IC == RTCC_CONFIG_CSM)
-	{
-		WC = TArr.CSMWT;
-		WL = 0.0;
-		WS = 0.0;
-	}
-	else if (TArr.IC == RTCC_CONFIG_LM)
-	{
-		WC = 0.0;
-		WL = TArr.LMAWT + TArr.LMDWT;
-		WS = 0.0;
-	}
-	else if (RTCC_CONFIG_CSM_LM)
-	{
-		WC = TArr.CSMWT;
-		WL = TArr.LMAWT + TArr.LMDWT;
-		WS = 0.0;
-	}
-	else if (RTCC_CONFIG_CSM_SIVB)
-	{
-		WC = TArr.CSMWT;
-		WL = 0.0;
-		WS = TArr.SIVBWT;
-	}
-	else if (RTCC_CONFIG_LM_SIVB)
-	{
-		WC = 0.0;
-		WL = TArr.LMAWT + TArr.LMDWT;
-		WS = TArr.SIVBWT;
-	}
-	else
-	{
-		WC = TArr.CSMWT;
-		WL = TArr.LMAWT + TArr.LMDWT;
-		WS = TArr.SIVBWT;
-	}
-
-	AttGiven = false;
-
-	if (TArr.MANOP < 0)
-	{
-		AttGiven = true;
-		TArr.MANOP = -TArr.MANOP;
-		if (TArr.MANOP != 2)
-		{
-			IATT = 1;
-		}
-	}
-
-	if (TArr.MANOP > 4)
-	{
-		TArr.MANOP = 4;
-	}
-
-	double Thrust, isp;
-	rtcc->EngineParametersTable(TArr.ThrusterCode, Thrust, isp);
-
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS4)
-	{
-		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
-
-		THPS[6] = Thrust;
-		THPS[9] = Thrust;
-
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
-
-		DTSPAN[3] = 6.0;
-		DTSPAN[5] = 4.0;
-	}
-	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS4)
-	{
-		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
-
-		THPS[6] = Thrust;
-		THPS[9] = Thrust;
-
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
-
-		DTSPAN[3] = 6.0;
-		DTSPAN[5] = 4.0;
-	}
-	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LOX_DUMP || TArr.ThrusterCode == RTCC_ENGINETYPE_SIVB_APS)
-	{
-		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
-
-		THPS[6] = Thrust;
-		THPS[9] = Thrust;
-
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[9] = Thrust / isp;
-
-		DTSPAN[3] = TLARGE;
-		DTSPAN[5] = TLARGE;
-	}
-	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS)
-	{
-		THPS[1] = rtcc->MCTST2;
-		THPS[2] = rtcc->MCTST4;
-		THPS[6] = Thrust;
-		THPS[7] = rtcc->MCTST4;
-		THPS[9] = rtcc->MCTST4;
-
-		WDOTPS[1] = rtcc->MCTSW2;
-		WDOTPS[2] = rtcc->MCTSW4;
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[7] = rtcc->MCTSW4;
-		WDOTPS[9] = rtcc->MCTSW4;
-
-		DTSPAN[1] = rtcc->MCTSD2;
-		DTSPAN[2] = rtcc->MCTSD3;
-		DTSPAN[3] = 6.0;
-		DTSPAN[4] = 0.0;
-		DTSPAN[5] = 4.0;
-		DTSPAN[6] = 1.0;
-		DTSPAN[7] = 0.0;
-		DTSPAN[8] = rtcc->MCTSD9;
-
-		XK[0] = Thrust;
-		XK[1] = 0.0;
-		XK[2] = Thrust;
-		XK[3] = 6975.34;
-		if (TArr.UllageOption)
-		{
-			XK[3] *= 2.0;
-		}
-		if (TArr.DTU == 0.0)
-		{
-			XK[3] = 0.0;
-		}
-	}
-	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS)
-	{
-		THPS[1] = rtcc->MCTAT2;
-		THPS[2] = rtcc->MCTAT4;
-		THPS[6] = Thrust;
-		THPS[7] = rtcc->MCTAT4;
-		THPS[9] = rtcc->MCTAT4;
-
-		WDOTPS[1] = rtcc->MCTAW2;
-		WDOTPS[2] = rtcc->MCTAW4;
-		WDOTPS[6] = Thrust / isp;
-		WDOTPS[7] = rtcc->MCTAW4;
-		WDOTPS[9] = rtcc->MCTAW4;
-
-		DTSPAN[1] = rtcc->MCTAD2;
-		DTSPAN[2] = rtcc->MCTAD3;
-		DTSPAN[3] = 6.0;
-		DTSPAN[4] = 0.0;
-		DTSPAN[5] = 4.0;
-		DTSPAN[6] = 1.0;
-		DTSPAN[7] = 0.1765;
-		DTSPAN[8] = 0.5;
-
-		XK[0] = rtcc->MCTAK1;
-		XK[1] = rtcc->MCTAK2;
-		XK[2] = rtcc->MCTAK3;
-		XK[3] = rtcc->MCTAK4;
-
-		if (TArr.DTU == 0.0)
-		{
-			XK[3] = 0.0;
-		}
-	}
-	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
-	{
-		THPS[1] = rtcc->MCTDT2;
-		THPS[2] = rtcc->MCTDT3;
-		THPS[3] = rtcc->MCTDT4;
-		THPS[4] = rtcc->MCTDT5 * TArr.DPSScale;
-		THPS[6] = Thrust;
-		THPS[7] = rtcc->MCTDT6 * TArr.DPSScale;
-		THPS[9] = rtcc->MCTDT6 * TArr.DPSScale;
-
-		WDOTPS[1] = rtcc->MCTDW2;
-		WDOTPS[2] = rtcc->MCTDW3;
-		WDOTPS[3] = rtcc->MCTDW4;
-		WDOTPS[4] = rtcc->MCTDW5 * TArr.DPSScale;
-		WDOTPS[6] = THPS[6] / isp;
-		WDOTPS[7] = rtcc->MCTDW6 * TArr.DPSScale;
-		WDOTPS[9] = rtcc->MCTDW6 * TArr.DPSScale;
-
-		DTSPAN[1] = rtcc->MCTDD2;
-		DTSPAN[2] = rtcc->MCTDD3;
-		DTSPAN[3] = 6.0;//TArr.DTPS10 - DTSPAN[2] - DTSPAN[1];
-		DTSPAN[4] = rtcc->MCTDD5;
-		DTSPAN[5] = 4.0;
-		DTSPAN[6] = rtcc->MCTDD6;
-		DTSPAN[7] = 0.38;
-		DTSPAN[8] = 0.5;
-
-		XK[3] = 6975.34;
-		if (TArr.UllageOption)
-		{
-			XK[3] *= 2.0;
-		}
-		if (TArr.DTU == 0.0)
-		{
-			XK[3] = 0.0;
-		}
-	}
-
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
-	{
-		if (TArr.UllageOption)
-		{
-			rtcc->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS4, Thrust, isp);
-		}
-		else
-		{
-			rtcc->EngineParametersTable(RTCC_ENGINETYPE_LMRCSPLUS2, Thrust, isp);
-		}
-		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
-	}
-	else if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS)
-	{
-		if (TArr.UllageOption)
-		{
-			rtcc->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS4, Thrust, isp);
-		}
-		else
-		{
-			rtcc->EngineParametersTable(RTCC_ENGINETYPE_CSMRCSPLUS2, Thrust, isp);
-		}
-		THPS[0] = Thrust;
-		WDOTPS[0] = Thrust / isp;
-	}
-
-	if (TArr.DTU > 0)
-	{
-		THPS[1] += THPS[0];
-		WDOTPS[1] += WDOTPS[0];
-		if (TArr.ThrusterCode != RTCC_ENGINETYPE_LMDPS)
-		{
-			THPS[2] += THPS[0];
-			WDOTPS[2] += WDOTPS[0];
-		}
-	}
-
-	DTTOC = DTSPAN[7];
-}
-
-void CSMLMPoweredFlightIntegration::PCRUNG(EphemerisDataTable *E, std::vector<double> &W)
-{
-	VECTOR3 RDDP1, RDDP2, RDDP3;
-	if (DT != DTPREV)
-	{
-		DT2 = DT / 2.0;
-		DT4 = DT / 4.0;
-		DT6 = DT / 6.0;
-		DTPREV = DT;
-	}
-
-	KCODE = 1;
-	PCRDD();
-	if (KGN == 4)
-	{
-		return;
-	}
-
-	if (T == TBI)
-	{
-		A_T_out = A_T;
-		DV_ul = DV;
-		WTENGON = WT;
-		if (TArr.MANOP >= 3)
-		{
-			VGN = VG;
-		}
-	}
-	if (DT == 0.0)
-	{
-		goto PCRUNG_LABEL_4B;
-	}
-
-//PCRUNG_LABEL_2B:
-	TPREV = T;
-	//ALTPR = ALT;
-	T = T + DT2;
-
-	RDDP1 = RDD;
-	//RPREV = RP;
-	//VPREV = VP;
-	RP = R + (V + RDDP1 * DT4)*DT2;
-	VP = V + RDDP1 * DT2;
-	KCODE = 2;
-	PCRDD();
-	RDDP2 = RDD;
-	VP = V + RDDP2 * DT2;
-	KCODE = 3;
-	PCRDD();
-	T = TAU;
-	RDDP3 = RDD;
-	RP = R + (V + RDDP3 * DT2)*DT;
-	VP = V + RDDP3 * DT;
-	KCODE = 4;
-	PCRDD();
-
-	R = R + (V + (RDDP1 + RDDP2 + RDDP3)*DT6)*DT;
-	RP = R;
-	V = V + (RDDP1 + (RDDP2 + RDDP3)*2.0 + RDD)*DT6;
-	VP = V;
-
-PCRUNG_LABEL_4B:
-	//Time to store some data
-	if (T == TNEXT)
-	{
-		EphemerisData sv;
-
-		sv.R = R;
-		sv.V = V;
-		sv.RBI = TArr.sv0.RBI;
-		sv.GMT = TArr.sv0.GMT + T;
-		E->table.push_back(sv);
-		TLOP = TNEXT;
-		TNEXT = TNEXT + TArr.DTOUT;
-		if (TArr.KEPHOP == 2)
-		{
-			W.push_back(WT);
-		}
-	}
-
-	if (TArr.MANOP != 0)
-	{
-		if (WT <= WTLIM)
-		{
-			IERR = 2;
-		}
-	}
-}
-
-void CSMLMPoweredFlightIntegration::PCRDD()
-{
-	double TL, WDOT;
-
-	//Compute gravitational acceleration
-	VECTOR3 r_p_ddot = OrbMech::gravityroutine(RP, rtcc->GetGravref(TArr.sv0.RBI), rtcc->GetGMTBase() + (TArr.sv0.GMT+T)/24.0/3600.0);
-	//Compute drag acceleration
-	VECTOR3 r_d_ddot = _V(0, 0, 0);
-	//Sum drag and gravity termins
-	RDDP = r_p_ddot + r_d_ddot;
-	if (KTHSWT == 0)
-	{
-		RDDT = _V(0, 0, 0);
-		RDD = RDDP + RDDT;
-		return;
-	}
-	if (KCODE == 3)
-	{
-		RDD = RDDP + RDDT;
-		return;
-	}
-
-	if (MPHASE == 1)
-	{
-		if (KTHSWT < 0)
-		{
-			goto PCRDD_LABEL_9A;
-		}
-	}
-	else
-	{
-		rtcc->GIMGBL(WC, WL, P_G, Y_G, TL, WDOT, TArr.ThrusterCode, TArr.IC, IA, IJ, TArr.DOCKANG);
-		goto PCRDD_LABEL_6A;
-	}
-
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS)
-	{
-		goto PCRDD_LABEL_3B;
-	}
-	if (TArr.MANOP == 4 || TArr.MANOP == 5)
-	{
-		if (IATT == 1)
-		{
-			goto PCRDD_LABEL_3B;
-		}
-		else
-		{
-			goto PCRDD_LABEL_7B;
-		}
-	}
-	else if (TArr.MANOP == 1)
-	{
-		A_T = TArr.AT;
-	}
-	else
-	{
-	PCRDD_LABEL_3B:
-		A_T = X_B*SIGN;
-	}
-
-PCRDD_LABEL_3C:
-	if (T != TPREV)
-	{
-		double DW = WTLRT * (T - TPREV);
-		double A = log(1.0 - DW / WT) / WTLRT;
-		DV = DV - A * abs(THRUST);
-		WT = WT - DW;
-		if (TArr.TVC == 1)
-		{
-			WC = WC - DW;
-		}
-		else if (TArr.TVC == 2)
-		{
-			WS = WS - DW;
-		}
-		else
-		{
-			WL = WL - DW;
-		}
-		if (MPHASE == 1)
-		{
-			RCSFUELUSED += DW;
-		}
-		else
-		{
-			MAINFUELUSED += DW;
-		}
-		if (MPHASE == 8)
-		{
-			DVTO = DVTO - A * abs(THRUST);
-			DVTOX = DVTOX - A * abs(THX);
-			AOM = CD / WT;
-			TPREV = T;
-		}
-		else
-		{
-			DVX = DVX - A * abs(THX);
-			if (TArr.DTMAN <= 0)
-			{
-				if (TArr.DVMAN > 0)
-				{
-					DVGO = abs(TArr.DVMAN) - DV;
-				}
-				else if (TArr.DVMAN < 0)
-				{
-					DVGO = abs(TArr.DVMAN) - DVX;
-				}
-			}
-			AOM = CD / WT;
-			TPREV = T;
-		}
-	}
-	double a_T = THRUST / WT;
-	RDDT = A_T * a_T;
-	if (KTHSWT > 0)
-	{
-		KTHSWT = -KTHSWT;
-	}
-
-	RDD = RDDP + RDDT;
-	return;
-
-PCRDD_LABEL_6A:
-	if (MPHASE == 7)
-	{
-		//THRUST = TL;
-		//WTLRT = WDOT;
-	}
-	THX = THRUST * cos(P_G)*cos(Y_G);
-	if (AttGiven)
-	{
-		if (MPHASE != 2)
-		{
-			goto PCRDD_LABEL_3C;
-		}
-		if (KTHSWT > 0)
-		{
-			goto PCRDD_LABEL_7A;
-		}
-		goto PCRDD_LABEL_3C;
-	}
-	if (TArr.MANOP == 1)
-	{
-		goto PCRDD_LABEL_3C;
-	}
-	else if (TArr.MANOP == 2)
-	{
-		goto PCRDD_LABEL_7A;
-	}
-	if (MPHASE == 8)
-	{
-		goto PCRDD_LABEL_3C;
-	}
-	goto PCRDD_LABEL_7B;
-PCRDD_LABEL_7A:
-	MATRIX3 MATTEMP = mul(OrbMech::_MRz(Y_G), mul(OrbMech::_MRy(P_G), _M(X_B.x, X_B.y, X_B.z, Y_B.x, Y_B.y, Y_B.z, Z_B.x, Z_B.y, Z_B.z)));
-	A_T = _V(MATTEMP.m11, MATTEMP.m12, MATTEMP.m13);
-	goto PCRDD_LABEL_3C;
-PCRDD_LABEL_7B:
-	if (TCO != 0.0)
-	{
-	PCRDD_LABEL_7C:
-		A_T = A_TR;
-		goto PCRDD_LABEL_3C;
-	}
-	if (KCODE == 2 || KCODE == 3)
-	{
-		A_T = A_TM;
-		goto PCRDD_LABEL_3C;
-	}
-	else if (KCODE == 4)
-	{
-		goto PCRDD_LABEL_7C;
-	}
-	if (Kg == 0)
-	{
-		if (T >= Tg)
-		{
-			Kg = 1;
-			Tg = TLARGE;
-			PCGUID();
-		}
-	}
-	else
-	{
-		PCGUID();
-	}
-	A_T = A_TL;
-	goto PCRDD_LABEL_3C;
-PCRDD_LABEL_9A:
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
-	{
-		goto PCRDD_LABEL_3C;
-	}
-	if (TArr.MANOP == 1 || TArr.MANOP == 2)
-	{
-		goto PCRDD_LABEL_3C;
-	}
-	if (AttGiven)
-	{
-		goto PCRDD_LABEL_3C;
-	}
-	goto PCRDD_LABEL_7B;
-}
-
-void CSMLMPoweredFlightIntegration::PCGUID()
-{
-	double DTCO_apo, F, TGO, A, B, Vg, Vgo, V1, V2;
-
-	if (T != TBI)
-	{
-		goto PCGUID_8_A;
-	}
-
-	double WTIG, TS, FAV, WDOTAV;
-
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
-	{
-		DTCO_apo = WDOTPS[7] * DTSPAN[7] / WDOTPS[9];
-	}
-	else
-	{
-		DTSPAN[6] = 0.0;
-		DTCO_apo = 0.0;
-	}
-	WTIG = WT - DTSPAN[0] * WDOTPS[0];
-
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_LMDPS)
-	{
-		//10% thrust?
-		F = THPS[3];
-	}
-	else
-	{
-		F = THPS[6];
-	}
-	TS = DTSPAN[3];
-	FAV = THPS[6];
-	WDOTAV = WDOTPS[6];
-	if (TArr.ThrusterCode != RTCC_ENGINETYPE_LMDPS || TArr.MANOP > 2)
-	{
-		goto PCGUID_4_A;
-	}
-	if (TArr.DTMAN > 0)
-	{
-		TGO = TArr.DTMAN;
-		goto PCGUID_5_C;
-	}
-	if (DV == 0.0)
-	{
-		return;
-	}
-	Vg = abs(DV);
-	goto PCGUID_4_B;
-PCGUID_3_B:
-	V1 = Vgo - XK[0] / WTIG;
-	if (V1 > 0)
-	{
-		goto PCGUID_3_C;
-	}
-	TGO = (WTIG*Vgo + XK[1]) / XK[2];
-	goto PCGUID_5_E;
-PCGUID_3_C:
-	A = (DTSPAN[3] + DTSPAN[6]) / 2.0;
-	B = DTSPAN[3] - DTSPAN[6];
-	V2 = B * FAV / (WTIG - A * WDOTPS[6]);
-	if (V1 > V2)
-	{
-		goto PCGUID_6_B;
-	}
-	TGO = DTSPAN[6] + B * V1 / V2;
-	goto PCGUID_5_E;
-PCGUID_4_A:
-	Vg = length(VG);
-	if (Vg > 0.0)
-	{
-		A_TR = VG / Vg;
-		A_TM = A_TR;
-		A_TL = A_TR;
-		DTN = Tg - T;
-	}
-PCGUID_4_B:
-	Vgo = Vg - XK[3] / WT;
-	if (Vgo <= 0)
-	{
-		goto PCGUID_7_A;
-	}
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS || TArr.ThrusterCode == RTCC_ENGINETYPE_LMAPS)
-	{
-		goto PCGUID_3_B;
-	}
-	TGO = Vgo * WT / F;
-PCGUID_5_C:
-	if (TGO > TS)
-	{
-		if (TArr.DTPS10 > 0)
-		{
-			goto PCGUID_6_A;
-		}
-	PCGUID_5_B:
-		DTSPAN[3] = abs(TArr.DTPS10) - DTSPAN[2] - DTSPAN[1];
-		goto PCGUID_6_B;
-	}
-PCGUID_5_E:
-	//Short burn logic, no guidance steering
-	Tg = TLARGE;
-	if (TArr.DTMAN > TGO)
-	{
-	PCGUID_5_D:
-		TArr.DTMAN = TGO;
-		goto PCGUID_5_B;
-	}
-	if (TArr.DTMAN > 0)
-	{
-		goto PCGUID_5_B;
-	}
-	goto PCGUID_5_D;
-PCGUID_6_A:
-	if (TGO >= DTSPAN[6])
-	{
-		goto PCGUID_5_B;
-	}
-	DTSPAN[3] = TLARGE;
-
-PCGUID_6_B:
-	Vn_apo = V;
-	g_apo = RDDP;
-	DTP = DTN;
-	Vg_apo = Vg;
-	return;
-PCGUID_7_A:
-	KGN = 5;
-	if (AttGiven == false)
-	{
-		TArr.MANOP = 1;
-	}
-	return;
-PCGUID_8_A:
-	VECTOR3 g_av = (RDDP + g_apo) / 2.0;
-	DTN = DT;
-	VECTOR3 DVV = V - Vn_apo - g_av * DTP;
-	VG = VG - DVV;
-	Vg = length(VG);
-	A = -WTLRT * Vg / THRUST;
-	TGO = WT / WTLRT * (1.0 - exp(A)) - DTSPAN[7];
-	if (TGO > DTSPAN[5])
-	{
-	PCGUID_8_B:
-		A_T = VG / Vg;
-		A_TL = A_TR;
-		A_TM = A_TR + A_T;
-		A_TR = A_T;
-		A_TM = unit(A_TM);
-		goto PCGUID_6_B;
-	}
-	TCO = T + TGO;
-	goto PCGUID_8_B;
-}
-
-void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
-{
-	VECTOR3 Y_T;
-	double TTT = rtcc->GetOnboardComputerThrust(TArr.ThrusterCode);
-
-	if (AttGiven == false && TArr.MANOP == 4)
-	{
-		if (TArr.ExtDVCoordInd)
-		{
-			VG = rtcc->PIEXDV(sv_ff.R, sv_ff.V, TArr.CAPWT, TTT, TArr.VG, true);
-		}
-		else
-		{
-			VG = TArr.VG;
-		}
-		A_T = unit(VG);
-
-		Y_T = unit(crossp(A_T, sv_ff.R));
-
-		if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSPLUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSPLUS4)
-		{
-			X_B = A_T;
-			if (TArr.HeadsUpDownInd)
-			{
-				Y_B = Y_T;
-			}
-			else
-			{
-				Y_B = -Y_T;
-			}
-		}
-		else if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_CSMRCSMINUS4 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS2 || TArr.ThrusterCode == RTCC_ENGINETYPE_LMRCSMINUS4)
-		{
-			X_B = -A_T;
-			if (TArr.HeadsUpDownInd)
-			{
-				Y_B = -Y_T;
-			}
-			else
-			{
-				Y_B = Y_T;
-			}
-		}
-		else
-		{
-			if (TArr.HeadsUpDownInd == false)
-			{
-				Y_T = -Y_T;
-			}
-			VECTOR3 Z_T = crossp(A_T, Y_T);
-
-			double Thr, WDOT;
-			if (TArr.KTRIMOP == -1)
-			{
-				rtcc->GIMGBL(TArr.CSMWT, TArr.LMAWT + TArr.LMDWT, P_G, Y_G, Thr, WDOT, TArr.ThrusterCode, TArr.IC, 1, IJ, TArr.DOCKANG);
-			}
-			else
-			{
-				rtcc->GetSystemGimbalAngles(TArr.ThrusterCode, P_G, Y_G);
-			}
-
-			X_B = A_T * cos(P_G)*cos(Y_G) - Y_T * cos(P_G)*sin(Y_G) + Z_T * sin(P_G);
-			Y_B = A_T * sin(Y_G) + Y_T * cos(Y_G);
-		}
-
-		Z_B = crossp(X_B, Y_B);
-	}
-}
-
-TLIGuidanceSim::TLIGuidanceSim(RTCC *rtcc, RTCCNIInputTable tablin, int &iretn, EphemerisDataTable *ephem, RTCCNIAuxOutputTable *aux, std::vector<double> *wtabl) :
-	TABLIN(tablin), IRETN(iretn), EPHEM(ephem), AUX(aux), WTABL(wtabl)
-{
-	T = 0.0;
-	TPR = 0.0;
-	WT = 0.0;
-	WTLRT = 0.0;
-	PITCHG = 0.0;
-	YAWG = 0.0;
-	MPHASE = 0;
-	DT = 0.0;
-	DTPREV = 0.0;
-	DVMAG = 0.0;
-	DVTO = 0.0;
-	DVX = 0.0;
-	DVXTO = 0.0;
-	for (int i = 0;i < 7;i++)
-	{
-		DTPHASE[i] = 0.0;
-		FORCE[i] = 0.0;
-		WTFLO[i] = 0.0;
-	}
-
-	hEarth = oapiGetObjectByName("Earth");
-	EMU = OrbMech::mu_Earth;
-
-	E = TABLIN.Params[0];
-	C3 = TABLIN.Params[1];
-	ALPHD = TABLIN.Params[2];
-	F = TABLIN.Params[3];
-	P = TABLIN.Params[4];
-	XK5 = TABLIN.Params[5];
-	RT = TABLIN.Params[6];
-	VT = TABLIN.Params[7];
-	GAMT = TABLIN.Params[8];
-	GT = TABLIN.Params[9];
-	PRP = TABLIN.Params[10];
-	YRP = TABLIN.Params[11];
-	T3 = TABLIN.Params[13];
-	TAU3 = TABLIN.Params[14];
-	T2 = TABLIN.Params2[0];
-	VEX2 = TABLIN.Params2[1];
-	WDOT2 = TABLIN.Params2[2];
-	DVBIAS = TABLIN.Params2[3];
-	TAU2N = TABLIN.Params2[4];
-
-	VEX3 = 0.0;
-	WDOT3 = 0.0;
-	TB2 = 0.0;
-
-	this->rtcc = rtcc;
-}
-
-void TLIGuidanceSim::PCMTRL()
-{
-	DTPHASE[0] = rtcc->MCTJD1;
-	DTPHASE[2] = rtcc->MCTJD3;
-
-	FORCE[0] = rtcc->MCTJT1;
-	FORCE[1] = rtcc->MCTJT2;
-	FORCE[2] = rtcc->MCTJT3;
-	FORCE[3] = rtcc->MCTJT4;
-	FORCE[5] = rtcc->MCTJT5;
-	FORCE[6] = rtcc->MCTJT6;
-	WTFLO[0] = rtcc->MCTJW1;
-	WTFLO[1] = rtcc->MCTJW2;
-	WTFLO[2] = rtcc->MCTJW3;
-	WTFLO[3] = rtcc->MCTJW4;
-	WTFLO[5] = rtcc->MCTJW5;
-	WTFLO[6] = rtcc->MCTJW6;
-
-	EPSL1 = rtcc->MCVEP1;
-	EPSL2 = rtcc->MCVEP2;
-	EPSL3 = rtcc->MCVEP3;
-	EPSL4 = rtcc->MCVEP4;
-	VEX3 = rtcc->MCVVX3;
-	WDOT3 = rtcc->MCVWD3;
-	TB2 = rtcc->MCVTB2;
-
-	G = rtcc->PZTLIMAT.G;
-	GG = rtcc->PZTLIMAT.GG;
-	PLMB = rtcc->PZTLIMAT.EPH;
-
-	IGMSKP = 0;
-	IERR = 0;
-	IEND = 0;
-	TENDF = 0.0;
-	IFIRST = 0;
-	INITL = 0;
-	IDOUBL = 0;
-	ITUP = 0;
-	IERRE = 0;
-	TLOP = 0.0;
-	TCOF = 0.0;
-	PC = 0.0;
-	CPR = 0.0;
-	PITO = 0.0;
-	YAWO = 0.0;
-	TGO = 0.0;
-	TCO = 0.0;
-	ICO = 0;
-	VSB1 = 0.0;
-	VSB2 = 0.0;
-	DT2P = 0.0;
-	PITCHG = 0.0;
-	YAWG = 0.0;
-
-	MPHASE = 1;
-	IMRS = -1;
-	INPASS = 1;
-	EPS = 10e-14*3600.0;
-	TE = TABLIN.GMTI;
-	WBM = TABLIN.CAPWT;
-	WT = TABLIN.CAPWT;
-	STEP = TABLIN.DTOUT;
-	KTHSWT = 1;
-	IPUTIG = 2;
-	IPHFUL = 5;
-	IPHTOF = 7;
-	T = TABLIN.GMTI;
-	TPR = TABLIN.GMTI;
-	TLAST = TABLIN.GMTI;
-	CDFACT = 0.0 * TABLIN.DENSMULT *TABLIN.Area;
-	AOM = CDFACT / WT;
-	DTPHASE[1] = TABLIN.Params2[5];
-	DTPHASE[3] = T2 + (rtcc->MCVIGM - (DTPHASE[0] + DTPHASE[1] + DTPHASE[2]));
-	TLARGE = T + 4096.0*3600.0;
-	DTPHASE[4] = rtcc->MCTJDS;
-	DTPHASE[5] = rtcc->MCTJD5;
-	DTPHASE[6] = rtcc->MCTJD6;
-	PITN = PRP;
-	YAWN = YRP;
-	TIG = TABLIN.GMTI + DTPHASE[0] + DTPHASE[1];
-	TI = TABLIN.GMTI + DTPHASE[0];
-	TIGM = TABLIN.GMTI + rtcc->MCVIGM;
-	T = TABLIN.GMTI;
-	KEHOP = abs(TABLIN.IEPHOP);
-	RE = TABLIN.R;
-	VE = TABLIN.V;
-	RV = TABLIN.R_frozen;
-	VV = TABLIN.V_frozen;
-	TEND = TLARGE;
-	if (TABLIN.Word68i[0] != 0)
-	{
-		ITUP = 1;
-	}
-
-	if (TABLIN.MANOP == 1)
-	{
-		//Initialize for the inertial attitude control mode
-		IGMSKP = 1;
-		TCO = TLARGE;
-		//UT=
-	}
-	if (TABLIN.DTINP < 0)
-	{
-		IEND = 1;
-		IGMSKP = 1;
-		TEND = TABLIN.GMTI;
-		TENDF = TABLIN.GMTI;
-		TIG = TABLIN.GMTI;
-	}
-	
-	if (rtcc->MCTIND == 1)
-	{
-		//Low thrust
-		FORCE[4] = rtcc->MCTJTL;
-		WTFLO[4] = rtcc->MCTJWL;
-	}
-	else
-	{
-		//High thrust
-		FORCE[4] = rtcc->MCTJTH;
-		WTFLO[4] = rtcc->MCTJWH;
-	}
-
-	//Ephemeris storage initialization
-	if (KEHOP != 0)
-	{
-		JT = 1;
-		KWT = 1;
-		NITEMS = 7;
-		IEPHCT = 0;
-		TNEXT = TABLIN.GMTI + TABLIN.DTOUT;
-	}
-	//Double integration required
-	if (TABLIN.IFROZN == 1)
-	{
-		IDOUBL = 1;
-	}
-	//Zero out auxiliary table
-	if (TABLIN.KAUXOP != 0)
-	{
-		AUX->R_1 = TABLIN.R;
-		AUX->V_1 = TABLIN.V;
-		AUX->GMT_1 = TABLIN.GMTI;
-		AUX->WTINIT = WBM;
-	}
-	if (TABLIN.DTINP > 0)
-	{
-		TEND = TIG + TABLIN.DTINP;
-	}
-	//Loop
-	do
-	{
-		if (TABLIN.IEPHOP < 0)
-		{
-			if (TNEXT - TE < 0)
-			{
-				TE = TNEXT;
-			}
-		}
-		if (IGMSKP == 0)
-		{
-			if (TIGM - TE <= 0)
-			{
-				TE = TIGM;
-			}
-		}
-		if (TEND - TE <= 0)
-		{
-			if (MPHASE != IPHTOF)
-			{
-				TI = TEND;
-			}
-		}
-		if (TI - TE <= 0)
-		{
-			TE = TI;
-			if (TABLIN.IEPHOP > 0)
-			{
-				TNEXT = TI;
-			}
-		}
-		if (TCO == 0.0)
-		{
-			PCMGN();
-			if (IERR != 0)
-			{
-				goto PMMSIU_999;
-			}
-			if (TCO != 0.0)
-			{
-				goto PMMSIU_XFER1;
-			}
-		}
-		DT = TE - T;
-		TAU = TE;
-		if (WT <= rtcc->MCVWMN)
-		{
-			IERR = 2;
-			goto PMMSIU_999;
-		}
-		if (TABLIN.IEPHOP > 0)
-		{
-			if (T + DT > TNEXT)
-			{
-				if (TNEXT != TLOP)
-				{
-					TNEXT = T;
-					PCMEP();
-				}
-			}
-		}
-		PCMRK();
-		if (KEHOP != 0)
-		{
-			if (TNEXT == TLOP)
-			{
-				TNEXT = TLOP + TABLIN.DTOUT;
-			}
-			else
-			{
-				if (abs(TNEXT - T) <= EPS)
-				{
-					PCMEP();
-				}
-			}
-		}
-		if (abs(TIGM - T) <= EPS)
-		{
-			IGMSKP = 1;
-		}
-		if (TABLIN.KAUXOP != 0)
-		{
-			if (abs(TIG - T) <= EPS)
-			{
-				//Store auxiliary quantities for ignition
-				AUX->R_BI = RE;
-				AUX->V_BI = VE;
-				AUX->GMT_BI = T;
-				AUX->A_T = UT;
-				AUX->X_B = UT;
-				AUX->Y_B = unit(crossp(UT, -RE));
-				AUX->Z_B = unit(crossp(UT, AUX->Y_B));
-				AUX->WTENGON = WT;
-			}
-		}
-		if (IEND != 0)
-		{
-			if (TENDF == T)
-			{
-				break;
-			}
-		}
-		else
-		{
-			/*if (abs(TEND - TI) <= EPS)
-			{
-				goto PMMSIU_XCUT;
-			}*/
-			if (abs(TI - T) <= EPS)
-			{
-				if (abs(TEND - T) <= EPS)
-				{
-					MPHASE = IPHTOF;
-					IEND = 1;
-					TENDF = T + DTPHASE[MPHASE - 1];
-					if (TCO == 0.0)
-					{
-						TCO = 4096.0*3600.0;
-					}
-				}
-				else
-				{
-					MPHASE++;
-				}
-				KTHSWT = 1;
-				TI = T + DTPHASE[MPHASE - 1];
-			}
-		}
-	PMMSIU_XFER1:
-		TE = TE + STEP;
-		continue;
-	} while (1 == 1);
-	if (TABLIN.KAUXOP != 0)
-	{
-		//Store final auxiliary quantities
-		AUX->R_BO = RE;
-		AUX->V_BO = VE;
-		AUX->GMT_BO = T;
-		AUX->DT_TO = DTPHASE[6];
-		double DTU = TIG - TABLIN.GMTI;
-		AUX->DT_B = TCO - TABLIN.GMTI - AUX->DT_TO - DTU;
-		AUX->P_G = PITCHG;
-		AUX->Y_G = YAWG;
-		AUX->DV_TO = DVTO;
-		AUX->DV = DVMAG;
-		AUX->DV_C = DVX;
-		AUX->DV_cTO = DVXTO;
-		AUX->DV_U = DVULL;
-		AUX->W_CSM = TABLIN.CSMWT;
-		AUX->W_LMA = TABLIN.LMAWT;
-		AUX->W_LMD = TABLIN.LMDWT;
-		AUX->W_SIVB = TABLIN.SIVBWT;
-		AUX->WTEND = WT;
-		AUX->MainFuelUsed = AUX->WTINIT - AUX->WTEND;
-		AUX->RBI = BODY_EARTH;
-		AUX->CSI = 0;
-		AUX->Word60 = E;
-		AUX->Word61 = C3;
-		AUX->Word62 = ALPHD;
-		AUX->Word63 = F;
-		AUX->Word64 = P;
-		AUX->Word65 = XK5;
-		AUX->Word66 = RT;
-		AUX->Word67 = VT;
-		AUX->Word68 = GAMT;
-		AUX->Word69 = GT;
-	}
-	if (KEHOP != 0)
-	{
-		//Store ephemeris and header information
-	}
-PMMSIU_999:
-	IRETN = IERR;
-	return;
-	
-}
-
-void TLIGuidanceSim::PCMTH()
-{
-	double DW, ALOGC, AMAG, CPITG, CYAWG;
-
-	if (KTHSWT > 0)
-	{
-		THRUST = FORCE[MPHASE - 1];
-		WTLRT = WTFLO[MPHASE - 1];
-		KTHSWT = -1;
-		WTLRT = WTLRT * TABLIN.WDMULT;
-	}
-	if (T != TPR)
-	{
-		DW = WTLRT * (T - TPR);
-		CPITG = cos(PITCHG);
-		CYAWG = cos(YAWG);
-		ALOGC = log(1.0 - DW / WT) / WTLRT;
-		if (MPHASE >= IPHTOF)
-		{
-			DVTO = DVTO - THRUST * ALOGC;
-			DVXTO = DVXTO - THRUST * CPITG*CYAWG*ALOGC;
-		}
-		else
-		{
-			DVX = DVX - THRUST * CPITG*CYAWG*ALOGC;
-			if (MPHASE <= IPUTIG)
-			{
-				DVULL = DVULL - THRUST * ALOGC;
-			}
-		}
-		DVMAG = DVMAG - THRUST * ALOGC;
-		WT = WT - WTLRT * (T - TPR);
-		AOM = CDFACT / WT;
-		TPR = T;
-	}
-	AMAG = (THRUST / WT);
-	RDDTH = UT * AMAG;
-}
-
-void TLIGuidanceSim::PCMEP()
-{
-	if (IEPHCT > TABLIN.MAXSTO)
-	{
-		IERRE = 4;
-		TNEXT = TNEXT + TLARGE;
-	}
-	else
-	{
-		EphemerisData sv;
-
-		sv.GMT = T;
-		sv.R = RE;
-		sv.V = VE;
-		sv.RBI = BODY_EARTH;
-		EPHEM->table.push_back(sv);
-
-		if (KEHOP >= 2 && WTABL)
-		{
-			WTABL->push_back(T);
-			WTABL->push_back(WT);
-			KWT = KWT + 2;
-		}
-		JT = JT + NITEMS;
-		TLOP = TNEXT;
-		TNEXT = TNEXT + TABLIN.DTOUT;
-		IEPHCT++;
-	}
-}
-
-void TLIGuidanceSim::PCMRK()
-{
-	VECTOR3 RDD1, RDD2, RDD3, RDD4, TEMP1, RDDTH1, RDDTH2, RDDTH4;
-
-	if (DT == 0.0)
-	{
-		return;
-	}
-	if (DT != DTPREV)
-	{
-		H = DT;
-		H2 = 0.5*H;
-		H4 = 0.5*H2;
-		H6 = H / 6.0;
-		DTPREV = DT;
-	}
-	TPREV = T;
-	K3SWT = 0;
-	if (IDOUBL == 1)
-	{
-		R = RV;
-		V = VV;
-	}
-	else
-	{
-	PCMRK_LOOP:
-		R = RE;
-		V = VE;
-	}
-	RP = R;
-	VP = V;
-	RDD1 = PCMDC();
-	if (IDOUBL != 1)
-	{
-		UT = THRSTM;
-	}
-	else
-	{
-		if (INPASS == 1)
-		{
-			RDDTH1 = RDDTH;
-			UT = THRSTM;
-		}
-		else
-		{
-			RDDTH = RDDTH2;
-		}
-	}
-	RP = R + (V + RDD1 * H4)*H2;
-	VP = V + RDD1 * H2;
-	T = T + H2;
-	RDD2 = PCMDC();
-	if (IDOUBL == 1)
-	{
-		if (INPASS == 1)
-		{
-			RDDTH2 = RDDTH;
-		}
-	}
-	K3SWT = 1;
-	VP = V + RDD2 * H2;
-	RDD3 = PCMDC();
-	K3SWT = 0;
-	RP = R + (V + RDD3 * H2)*H;
-	VP = V + RDD3 * H;
-	T = TAU;
-	if (IDOUBL != 1 || INPASS == 1)
-	{
-		UT = THRSTR;
-	}
-	else
-	{
-		RDDTH = RDDTH4;
-	}
-	RDD4 = PCMDC();
-	TEMP1 = RDD2 + RDD3;
-	R = R + (V + (RDD1 + TEMP1)*H6)*H;
-	V = V + (RDD1 + TEMP1 * 2.0 + RDD4)*H6;
-	if (IDOUBL == 1 && INPASS == 1)
-	{
-		RDDTH4 = RDDTH;
-		RV = R;
-		VV = V;
-		INPASS = 2;
-		RDDTH = RDDTH1;
-		T = TPREV;
-		goto PCMRK_LOOP;
-	}
-	RE = R;
-	VE = V;
-	INPASS = 1;
-}
-
-VECTOR3 TLIGuidanceSim::PCMDC()
-{
-	VECTOR3 RDD;
-	if (KTHSWT == 0)
-	{
-		RDDTH = _V(0, 0, 0);
-	}
-	if (K3SWT == 0)
-	{
-		PVEC = OrbMech::gravityroutine(RP, hEarth, TABLIN.GMTBASE + T / 24.0 / 3600.0);
-		if (KTHSWT != 0)
-		{
-			if (IDOUBL != 0 || INPASS == 1)
-			{
-				PCMTH();
-			}
-		}
-	}
-
-	RDD = PVEC;
-	RDD = RDD + RDDTH;
-	return RDD;
-}
-
-void TLIGuidanceSim::PCMGN()
-{
-	MATRIX3 MX_phi_T, MX_EKX;
-	VECTOR3 RINP, VINP, X4, GS0D, GS1D, GS2D, TEMPY, AGS, UTA, THRSTL, AVG;
-	double TEMP1, TEMP2, TEMP4, RMAG, VMAG, FOM, DDLT, CPP, SPP, T3P, TTOTP, XL3P, XJ3P, XLYP, PHIT, SGAMT, CGAMT, DELL2;
-	double SGAM, CGAM, XIT, XITD, ZETATD, ZETATG, PHIDI, PHIDT, XITG, DXIDP, DETADP, DZETDP, DELL3, DELT3, XL3, XJ3, U3, P3, S3, Q3;
-	double DXID, DETAD, DZETD, XLY, XBRY, XBRP, XJY, SY, QY, XKY, DY, DETA, XLP, C2, C4, XJP, QP, XKP, DP, DXI, XPRY, XPRP;
-	double ZCP, ZSP, ZCY, ZSY, TTOT, SP;
-	int IFLOP;
-
-	if (T == TLAST)
-	{
-		if (T != TABLIN.GMTI)
-		{
-			if (T != TIGM)
-			{
-				return;
-			}
-		}
-	}
-	if (IDOUBL == 1)
-	{
-		RINP = RV;
-		VINP = VV;
-	}
-	else
-	{
-		RINP = RE;
-		VINP = VE;
-	}
-	RMAG = length(RINP);
-	VMAG = length(VINP);
-	if (MPHASE != IPHTOF && (abs(T - TIGM) <= EPS || T >= TIGM))
-	{
-		goto PMMSIU_PCMGN_1A;
-	}
-	if (!(T == TIG && ITUP == 1))
-	{
-		goto PMMSIU_PCMGN_20;
-	}
-	RN = P;
-	E = RMAG * (E - 1.0) / RN + 1.0;
-	TEMP1 = E * E;
-	P = EMU * (TEMP1 - 1.0) / C3;
-	XK5 = sqrt(EMU / P);
-	TEMP4 = (1.0 - P / RT) / E;
-	if (TEMP4 > 1.0)
-	{
-		//Error
-	}
-	goto PMMSIU_PCMGN_1B;
-PMMSIU_PCMGN_1A:
-	FOM = THRUST / WT;
-	if (TCOF != 0.0)
-	{
-		return;
-	}
-	if (IFIRST == 0)
-	{
-		IFIRST = 1;
-		TLAST = T;
-	}
-	DDLT = T - TLAST;
-	goto PMMSIU_PCMGN_2A;
-PMMSIU_PCMGN_1B:
-	ALPHD = ALPHD - acos(TEMP4);
-	TEMP2 = E * cos(F);
-	RT = P / (1.0 + TEMP2);
-	VT = XK5 * sqrt(1.0 + 2.0*TEMP2 + TEMP1);
-	GAMT = E * sin(F);
-	ITUP = 0;
-	GT = -EMU / (RT*RT);
-	if (TABLIN.KAUXOP != 0)
-	{
-		//Store target values in auxiliary table
-	}
-PMMSIU_PCMGN_20:
-	PLPS = mul(PLMB, RINP);
-	X4 = mul(GG, PLPS);
-	double R4;
-	R4 = sqrt(X4.x*X4.x + X4.z*X4.z);
-	SPP = (-X4.x*1.0 - X4.z*0.0) / R4;
-	CPP = (-X4.z*1.0 + X4.x*0.0) / R4;
-	SYP = 0.0;
-	CYP = 1.0;
-	DDLT = T - TLAST;
-	TLAST = T;
-	AGS.x = CPP * CYP;
-	AGS.y = SYP;
-	AGS.z = -SPP * CYP;
-	UTA = mul(OrbMech::tmat(GG), AGS);
-	goto PMMSIU_PCMGN_330;
-PMMSIU_PCMGN_2A:
-	if (IMRS == 0)
-	{
-		goto PMMSIU_PCMGN_120;
-	}
-	else if (IMRS == -1)
-	{
-		T2 = T2 - DDLT;
-		if (T2 > 0.0)
-		{
-			if (CPR >= rtcc->MCVCPQ)
-			{
-				TAU2 = VEX2 / FOM;
-			}
-			else
-			{
-				TAU2 = (VEX2 / FOM - DDLT * 0.5 - TAU2N)*pow(CPR / rtcc->MCVCPQ, 4);
-				TAU2 = TAU2N + TAU2;
-				TAU2N = TAU2N - DDLT;
-				CPR = CPR + DDLT;
-			}
-		}
-		else
-		{
-			PC = PC + DT;
-			if (PC > rtcc->MCVKPC)
-			{
-				IMRS = 1;
-				TB4 = 0.0;
-			}
-			TEMP1 = T2 * WDOT2 / WDOT3;
-			T3 = T3 + TEMP1;
-			TAU3 = TAU3 + TEMP1;
-			T2 = 0.0;
-		}
-	}
-	else
-	{
-		T2 = (WDOT2*(TB4 - TB2) - WDOT3 * TB4);
-		TEMP1 = WDOT2 * TB2;
-		T2 = T2 / TEMP1;
-		if (TB2 >= TB4)
-		{
-			TB4 = TB4 + DT;
-			TEMP1 = T2 * WDOT2 / WDOT3;
-			T3 = T3 + TEMP1;
-			TAU3 = TAU3 + TEMP1;
-			T2 = 0.0;
-		}
-		else
-		{
-			IMRS = 0;
-		PMMSIU_PCMGN_120:
-			T3 = T3 - DDLT;
-			TAU3 = VEX3 / FOM;
-			T2 = 0.0;
-		}
-	}
-	T3P = T3;
-	TLAST = T;
-	if (T2 != 0.0)
-	{
-		if (TAU2 < T2)
-		{
-			//Error exit
-			goto PMMSIU_PCMGN_700;
-		}
-		TEMP1 = VEX2 * T2;
-		TEMP2 = 0.5*TEMP1*T2;
-		XL2 = VEX2 * log(TAU2 / (TAU2 - T2));
-		XJ2 = XL2 * TAU2 - TEMP1;
-		S2 = XL2 * T2 - XJ2;
-		Q2 = S2 * TAU2 - TEMP2;
-		P2 = XJ2 * TAU2 - TEMP2;
-		U2 = Q2 * TAU2 - TEMP2 * T2 / 3.0;
-	}
-	else
-	{
-		if (XL2 != 0.0)
-		{
-			XL2 = 0.0;
-			XJ2 = 0.0;
-			S2 = 0.0;
-			Q2 = 0.0;
-			P2 = 0.0;
-			U2 = 0.0;
-		}
-	}
-	if (TAU3 < T3P)
-	{
-		//Error exit
-		goto PMMSIU_PCMGN_700;
-	}
-	TTOTP = T2 + T3P;
-	XL3P = VEX3 * log(TAU3 / (TAU3 - T3P));
-	XJ3P = XL3P * TAU3 - VEX3 * T3P;
-	XLYP = XL2 + XL3P;
-	PLPS = mul(PLMB, RINP);
-	X4 = mul(G, PLPS);
-	CGAMT = cos(GAMT);
-	IFLOP = 230;
-PMMSIU_PCMGN_5A:
-	PHIT = atan2(X4.z, X4.x);
-	if (TTOTP > EPSL1)
-	{
-		DELL2 = (VMAG * TTOTP) - XJ3P + (XLYP * T3P) - (rtcc->MCVRQV / VEX3) *((TAU2 - T2) * XL2 + (TAU3 - T3P) * XL3P)*(XLYP + VMAG - VT);
-		TEMP2 = (S2 + DELL2)*GAMT / RT;
-	}
-	else
-	{
-		SGAM = dotp(RINP, VINP) / (RMAG*VMAG);
-		CGAM = sqrt(1.0 - SGAM * SGAM);
-		PHIDI = VMAG * CGAM / RMAG;
-		PHIDT = VT * CGAMT / RT;
-		TEMP2 = 0.5*(PHIDI + PHIDT)*TTOTP;
-	}
-	PHIT = PHIT + TEMP2;
-	if (TTOTP > EPSL3)
-	{
-		F = PHIT + ALPHD;
-		TEMP1 = E * cos(F);
-		TEMP2 = 1.0 + TEMP1;
-		RT = P / TEMP2;
-		VT = XK5 * sqrt(1.0 + 2.0*TEMP1 + E * E);
-		TEMP1 = E * sin(F);
-		GAMT = atan2(TEMP1, TEMP2);
-		GT = -EMU / (RT*RT);
-	}
-	SGAMT = sin(GAMT);
-	CGAMT = cos(GAMT);
-	if (rtcc->MCVRQT == 1.0)
-	{
-		XIT = RT * CGAMT;
-		ZETATD = VT;
-		XITD = 0.0;
-		ZETATG = GT * SGAMT;
-		XITG = GT * CGAMT;
-		PHIT = PHIT - GAMT;
-	}
-	else
-	{
-		XIT = RT;
-		ZETATD = VT * CGAMT;
-		XITD = VT * SGAMT;
-		ZETATG = 0.0;
-		XITG = GT;
-	}
-	MX_phi_T.m11 = (cos(PHIT));    MX_phi_T.m12 = 0; MX_phi_T.m13 = ((sin(PHIT)));
-	MX_phi_T.m21 = 0;               MX_phi_T.m22 = 1; MX_phi_T.m23 = 0;
-	MX_phi_T.m31 = (-sin(PHIT)); MX_phi_T.m32 = 0; MX_phi_T.m33 = (cos(PHIT));
-	MX_K = mul(MX_phi_T, G);
-	MX_EKX = mul(MX_K, PLMB);
-
-	AVG = OrbMech::gravityroutine(RINP, hEarth, TABLIN.GMTBASE + T / 24.0 / 3600.0);
-
-	GS0D = mul(MX_EKX, RINP);
-	GS1D = mul(MX_EKX, VINP);
-	TEMPY = mul(MX_EKX, AVG);
-	GS2D.x = 0.5*(XITG + TEMPY.x);
-	GS2D.y = 0.5*TEMPY.y;
-	GS2D.z = 0.5*(ZETATG + TEMPY.z);
-	DXIDP = XITD - GS1D.x - (GS2D.x*TTOTP);
-	DETADP = -GS1D.y - GS2D.y*TTOTP;
-	DZETDP = ZETATD - GS1D.z - GS2D.z*TTOTP;
-	DELL3 = 0.5*((DXIDP*DXIDP + DETADP * DETADP + DZETDP * DZETDP) / XLYP - XLYP);
-	DELT3 = DELL3 * (TAU3 - T3P) / VEX3;
-	T3 = T3P + DELT3;
-	TTOT = TTOTP + DELT3;
-
-	if (IFLOP == 230)
-	{
-		T3P = T3;
-		TTOTP = TTOT;
-		XL3P = XL3P + DELL3;
-		XLYP = XLYP + DELL3;
-		XJ3P = XJ3P + DELL3 * T3;
-		IFLOP = 240;
-		goto PMMSIU_PCMGN_5A;
-	}
-	XL3 = XL3P + DELL3;
-	XJ3 = XJ3P + DELL3 * T3;
-	S3 = XL3 * T3 - XJ3;
-	TEMP1 = VEX3 * T3*T3 / 2.0;
-	TEMP2 = TAU3 + 2.0*T2;
-	Q3 = S3 * TAU3 - TEMP1;
-	P3 = XJ3 * TEMP2 - TEMP1;
-	U3 = Q3 * TEMP2 - TEMP1 * T3 / 3.0;
-	DXID = DXIDP - GS2D.x*DELT3;
-	DETAD = DETADP - GS2D.y*DELT3;
-	DZETD = DZETDP - GS2D.z*DELT3;
-	XLY = XL2 + XL3;
-	TEMP1 = DETAD / sqrt(DXID*DXID + DZETD * DZETD);
-	XBRY = atan2(DETAD, sqrt(DXID*DXID + DZETD * DZETD));
-	XBRP = atan2(DXID, DZETD);
-	if (TTOTP <= EPSL2)
-	{
-		goto PMMSIU_PCMGN_2B;
-	}
-	TEMP2 = cos(XBRY);
-	XJY = XJ2 + XJ3 + XL3 * T2;
-	SY = S2 - XJ3 + XLY * T3;
-	QY = Q2 + Q3 + S3 * T2 + XJ2 * T3;
-	XKY = XLY / XJY;
-	DY = SY - XKY * QY;
-	DETA = GS0D.y + GS1D.y*TTOT + GS2D.y*TTOT * TTOT / 2.0 + SY * sin(XBRY);
-	XK3 = DETA / (DY*TEMP2);
-	XK4 = XKY * XK3;
-	XLP = XLY * TEMP2;
-	C2 = TEMP2 + XK3 * TEMP1;
-	C4 = XK4 * TEMP1;
-	TEMP2 = T2 * T2;
-	XJP = XJY * C2 - C4 * (P2 + P3 + TEMP2 * XL3);
-	SP = SY * C2 - C4 * QY;
-	QP = QY * C2 - C4 * (U2 + U3 + TEMP2 * S3 + T3 * P2);
-	XKP = XLP / XJP;
-	DP = SP - XKP * QP;
-	DXI = GS0D.x - XIT + GS1D.x*TTOT + GS2D.x*TTOT*TTOT / 2.0 + SP * sin(XBRP);
-	XK1 = DXI / (DP*cos(XBRP));
-	XK2 = XKP * XK1;
-PMMSIU_PCMGN_300:
-	XPRY = XBRY - XK3 + XK4 * DDLT;
-	XPRP = XBRP - XK1 + XK2 * DDLT;
-	CYP = cos(XPRY);
-	SYP = sin(XPRY);
-	CPP = cos(XPRP);
-	SPP = sin(XPRP);
-//PMMSIU_PCMGN_310:
-	AGS.x = SPP * CYP;
-	AGS.y = SYP;
-	AGS.z = CPP * CYP;
-	UTA = mul(OrbMech::tmat(MX_K), AGS);
-PMMSIU_PCMGN_330:
-	PITN = atan2(-UTA.z, UTA.x);
-	YAWN = asin(UTA.y);
-	if (abs(YAWN) > rtcc->MCVYMX)
-	{
-		YAWN = rtcc->MCVYMX*(YAWN / abs(YAWN));
-	}
-	if (T == TABLIN.GMTI)
-	{
-		PITO = PITN;
-		YAWO = YAWN;
-	}
-	if (DDLT == 0.0 || abs(YAWN - YAWO) / DDLT > rtcc->MCVYDL)
-	{
-		if (YAWN > YAWO)
-		{
-			YAWN = YAWO + rtcc->MCVYDL*DDLT;
-		}
-		else
-		{
-			YAWN = YAWO - rtcc->MCVYDL*DDLT;
-		}
-	}
-	if (DDLT == 0.0 || abs(PITN - PITO) / DDLT > rtcc->MCVPDL)
-	{
-		if (PITN > PITO)
-		{
-			PITN = PITO + rtcc->MCVPDL*DDLT;
-		}
-		else
-		{
-			PITN = PITO - rtcc->MCVPDL*DDLT;
-		}
-	}
-	ZCP = cos(PITN);
-	ZSP = sin(PITN);
-	ZCY = cos(YAWN);
-	ZSY = sin(YAWN);
-	UTA.x = ZCP * ZCY;
-	UTA.y = ZSY;
-	UTA.z = -ZSP * ZCY;
-	PITO = PITN;
-	YAWO = YAWN;
-	THRSTM = unit(mul(OrbMech::tmat(PLMB), UTA));
-	if (INITL == 0)
-	{
-		UT = THRSTL = THRSTR = THRSTM;
-		INITL = 1;
-	}
-	else
-	{
-		THRSTL = THRSTR;
-		THRSTR = THRSTM;
-		THRSTM = THRSTL + THRSTR;
-		THRSTM = unit(THRSTM);
-		UT = THRSTL;
-	}
-	return;
-PMMSIU_PCMGN_2B:
-	if (XK1 != 0.0)
-	{
-		XK1 = 0.0;
-		XK2 = 0.0;
-		XK3 = 0.0;
-		XK4 = 0.0;
-		VTEST = VMAG;
-		STEP = 2.0;
-	}
-	VTEST = 0.5*(VTEST + VMAG * VMAG / VTEST);
-	VSB0 = VSB1;
-	VSB1 = VSB2;
-	VSB2 = VTEST;
-	DT1P = DT2P;
-	DT2P = DDLT;
-
-	if (!(TTOTP <= EPSL4 && (VTEST + rtcc->MCVTGQ) >= VT))
-	{
-		goto PMMSIU_PCMGN_300;
-	}
-	if (TGO == 0.0)
-	{
-		TGO = T3;
-	}
-	else
-	{
-		TGO = TGO - DDLT;
-	}
-	double RTCO, VTCO;
-	RTCO = RMAG + TGO * dotp(RINP, VINP) / RMAG;
-	VTCO = sqrt(C3 + 2.0*EMU / RTCO);
-	TEMP1 = VSB2 - VSB1;
-
-	double A1, A2;
-	A2 = DT2P * DT1P*(DT2P + DT1P);
-	A2 = (TEMP1*DT1P - (VSB1 - VSB0)*DT2P) / A2;
-	A1 = TEMP1 / DT2P + A2 * DT2P;
-	TGO = ((VTCO - DVBIAS) - VSB2) / (A1 + A2 * TGO);
-	UT = THRSTR;
-	THRSTM = THRSTR;
-	if (TGO > STEP)
-	{
-		goto PMMSIU_PCMGN_999;
-	}
-	if (TGO < 0.0)
-	{
-		TCO = T;
-		ICO = 1;
-	}
-	else
-	{
-		TCO = T + TGO;
-		ICO = 1;
-	}
-	if (TEND == TLARGE)
-	{
-		TEND = TCO;
-	}
-	return;
-PMMSIU_PCMGN_700:
-	IERR = 3;
-PMMSIU_PCMGN_999:
-	return;
+	CZLXTRDV.Octals[0] = 12;
+	CZLXTRDV.Octals[1] = MCCLEX;
+	CZLXTRDV.Octals[2] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 1);
+	CZLXTRDV.Octals[3] = OrbMech::DoubleToBuffer(DV_EXDV.x / 100.0, 7, 0);
+	CZLXTRDV.Octals[4] = OrbMech::DoubleToBuffer(DV_EXDV.y / 100.0, 7, 1);
+	CZLXTRDV.Octals[5] = OrbMech::DoubleToBuffer(DV_EXDV.y / 100.0, 7, 0);
+	CZLXTRDV.Octals[6] = OrbMech::DoubleToBuffer(DV_EXDV.z / 100.0, 7, 1);
+	CZLXTRDV.Octals[7] = OrbMech::DoubleToBuffer(DV_EXDV.z / 100.0, 7, 0);
+	CZLXTRDV.Octals[8] = OrbMech::DoubleToBuffer(GETIG*100.0, 28, 1);
+	CZLXTRDV.Octals[9] = OrbMech::DoubleToBuffer(GETIG*100.0, 28, 0);
+
+	CZLXTRDV.GET = GETIG;
+	CZLXTRDV.DV = DV_EXDV / 0.3048;
 }

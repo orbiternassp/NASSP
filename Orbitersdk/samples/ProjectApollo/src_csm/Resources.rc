@@ -245,6 +245,15 @@ IDB_CSM_TUNNEL                              BITMAP  "..\\Bitmaps\\csm_tunnel.bmp
 IDB_CSM_TUNNEL_OPEN                         BITMAP  "..\\Bitmaps\\csm_tunnel_open.bmp"
 IDB_CSM_LEFT_317_WINDOW                     BITMAP  "..\\Bitmaps\\csm_left_317_window.bmp"
 IDB_CSM_PRESS_EQUAL_HANDLE                  BITMAP  "..\\Bitmaps\\csm_press_equal_valve.bmp"
+IDB_CSM_PANEL_181                           BITMAP  "..\\Bitmaps\\csm_panel_181.bmp"
+IDB_CSM_PANEL_277                           BITMAP  "..\\Bitmaps\\csm_panel_277.bmp"
+IDB_CSM_PANEL_278_CSM112                    BITMAP  "..\\Bitmaps\\csm_panel_278_CSM112.bmp"
+IDB_CSM_PANEL_278_CSM114                    BITMAP  "..\\Bitmaps\\csm_panel_278_CSM114.bmp"
+IDB_INDICATOR90                             BITMAP  "..\\Bitmaps\\Indicator90.bmp"
+IDB_THREEPOSSWITCH90_RIGHT                  BITMAP  "..\\Bitmaps\\threeposswitch90_right.bmp"
+IDB_CRYO_SWITCHES_J                         BITMAP  "..\\Bitmaps\\csm_cryo_switches_J.bmp"
+IDB_CRYO_IND_J                              BITMAP  "..\\Bitmaps\\csm_cryo_indicators_J.bmp"
+IDB_SWITCHGUARDS90_RIGHT                    BITMAP  "..\\Bitmaps\\SwitchGuards90_right.bmp"
 
 #endif    // French (France) resources
 /////////////////////////////////////////////////////////////////////////////

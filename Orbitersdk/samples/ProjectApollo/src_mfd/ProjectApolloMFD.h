@@ -60,6 +60,11 @@ public:
 	bool SetImpactBT(char *rstr);
 	bool SetImpactPitch(char *rstr);
 	bool SetImpactYaw(char *rstr);
+	bool SetSaturnSwitchFailure(int n);
+	bool SetIUPlatformFailure(double misst);
+	void SetSIEngineFailure(int n, double misst);
+	void SetSIIEngineFailure(int n, double misst);
+	void SetRandomFailures(double FailureMultiplier);
 
 	void menuVoid();
 	void menuSetMainPage();
@@ -70,6 +75,7 @@ public:
 	void menuSetLGCPage();
 	void menuSetSOCKPage();
 	void menuSetDebugPage();
+	void menuSetFailuresPage();
 
 	void menuKillRot();
 	void menuSaveEMSScroll();
@@ -100,6 +106,12 @@ public:
 	void menuSetImpactBT();
 	void menuSetImpactPitch();
 	void menuSetImpactYaw();
+	void menuCycleFailuresSubpage();
+	void menuSetSaturnSwitchFailure();
+	void menuSetIUPlatformFailure();
+	void menuSetSIEngineFailure();
+	void menuSetSIIEngineFailure();
+	void menuSetRandomFailures();
 
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
@@ -120,6 +132,8 @@ protected:
 	LEM *lem;
 	int screen;
 	bool debug_frozen;
+	bool isSaturnV;
+	int FailureSubpage;
 
 	static struct ScreenData {
 		int screen;

@@ -31,17 +31,20 @@ struct SMJCState
 	bool Z1;
 	bool Z2;
 	bool Z3;
+	bool Z4;
 	bool FireMinusXTrans;
 	bool FirePlusRoll;
 	DelayTimerState TD2State;
 	DelayTimerState TD3State;
+	DelayTimerState TD4State;
 };
 
 class SMJC
 {
 public:
-	SMJC();
-	void Timestep(double simdt, bool smjettbuspowered);
+	SMJC(double td2 = 2.0, double td3 = 5.5);
+	virtual ~SMJC() {}
+	virtual void Timestep(double simdt, bool smjettbuspowered);
 	void SaveState(FILEHANDLE scn, char *start_str);
 	void LoadState(FILEHANDLE scn);
 
@@ -53,8 +56,8 @@ public:
 	bool IsSMJettControllerStarted() { return Z1; }
 
 	//For the SM vessel
-	void SetState(const SMJCState &state);
-	void GetState(SMJCState &state);
+	virtual void SetState(const SMJCState &state);
+	virtual void GetState(SMJCState &state);
 
 protected:
 
@@ -76,6 +79,25 @@ protected:
 	DelayTimer TD2;
 	//Roll Deactivate
 	DelayTimer TD3;
+};
+
+class SMJC_MOD1 : public SMJC
+{
+public:
+	SMJC_MOD1();
+	void Timestep(double simdt, bool smjettbuspowered);
+	void SetState(const SMJCState &state);
+	void GetState(SMJCState &state);
+protected:
+	//RELAYS
+
+	//-X Trans Deactivate
+	bool Z4;
+
+	//TIME DELAY
+
+	//-X Trans Deactivate
+	DelayTimer TD4;
 };
 
 #define SMJCA_START_STRING		"SMJCA_BEGIN"

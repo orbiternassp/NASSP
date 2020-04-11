@@ -38,6 +38,7 @@
 #include "lm_channels.h"
 #include "LEMcomputer.h"
 #include "dsky.h"
+#include "Mission.h"
 
 #include "LEM.h"
  
@@ -93,7 +94,7 @@ void DrawReticle (HDC hDC, double angle, int dimmer)
 	HGDIOBJ oldObj;
 	int xend,yend;
 	// Set up Dimmer Pen
-	HPEN pen = CreatePen(PS_SOLID,2,RGB(dimmer,64,64));
+	HPEN pen = CreatePen(PS_SOLID,1,RGB(dimmer,64,64));
 	oldObj = SelectObject (hDC, pen);
 	// Draw crosshair vertical member
 	xend = RETICLE_X_CENTER - (int)(RETICLE_RADIUS * sin(angle));
@@ -962,7 +963,7 @@ void LEM::InitSwitches() {
 	CabinGasReturnValveSwitch.Register(PSH, "CabinGasReturnValveSwitch", 1);
 
 	CO2CanisterSelectSwitch.Register(PSH, "CO2CanisterSelectSwitch", TOGGLESWITCH_UP);
-	CO2CanisterSelectSwitch.SetSideways(true);
+	CO2CanisterSelectSwitch.SetSideways(1);
 
 	CO2CanisterPrimValve.AddPosition(0, 300);
 	CO2CanisterPrimValve.AddPosition(1, 0);
@@ -980,7 +981,7 @@ void LEM::InitSwitches() {
 	// Upper Hatch
 	UpperHatchReliefValve.Register(PSH, "UpperReliefValve", 0);
 	UpperHatchHandle.Register(PSH, "UpperHandle", TOGGLESWITCH_DOWN);
-	UpperHatchHandle.SetSideways(true);
+	UpperHatchHandle.SetSideways(1);
 
 	UtilityLightSwitchCDR.Register(PSH, "UtilityLightSwitchCDR", THREEPOSSWITCH_UP);
 	UtilityLightSwitchLMP.Register(PSH, "UtilityLightSwitchLMP", THREEPOSSWITCH_UP);
@@ -988,7 +989,7 @@ void LEM::InitSwitches() {
 	// Forward Hatch
 	ForwardHatchHandle.Register(PSH, "ForwardHandle", TOGGLESWITCH_DOWN);
 	ForwardHatchReliefValve.Register(PSH, "ForwardReliefValve", THREEPOSSWITCH_CENTER);
-	ForwardHatchReliefValve.SetSideways(true);
+	ForwardHatchReliefValve.SetSideways(1);
 
 	//
 	// Old stuff.
@@ -3260,11 +3261,11 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_DSKY_LIGHTS:
-		if (ApolloNo >= 15 && ApolloNo != 1301)
+		if (pMission->GetLMDSKYVersion() == 3)
 		{
 			dsky.RenderLights(surf, srf[SRF_DSKY], 0, 0, true, true);
 		}
-		else if (ApolloNo >= 11)
+		else if (pMission->GetLMDSKYVersion() == 2)
 		{
 			dsky.RenderLights(surf, srf[SRF_DSKY]);
 		}

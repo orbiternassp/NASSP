@@ -54,7 +54,7 @@ public:
 
 	void SetInputChannelBit(int channel, int bit, bool val);
 
-	void SetMissionInfo(int MissionNo, char *OtherVessel = 0);
+	void SetMissionInfo(std::string AGCVersion, char *OtherVessel = 0);
 
 	VESSEL *GetCSM();
 protected:
@@ -66,8 +66,6 @@ protected:
 	// DS20090919
 	void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
 	void ProcessIMUCDUReadCount(int channel, int val);
-	void ProcessChannel140(ChannelValue val);
-	void ProcessChannel141(ChannelValue val);
 	void ProcessChannel142(ChannelValue val);
 	void ProcessChannel143(ChannelValue val);
 	void ProcessChannel34(ChannelValue val);

@@ -133,8 +133,7 @@ public:
 	unsigned int GetOutputChannel(int channel);
 	unsigned int GetInputChannel(int channel);
 	bool GetInputChannelBit(int channel, int bit);
-	void SetMissionInfo(int MissionNo);
-	void SetFlightProgram(int FP);
+	void SetMissionInfo(std::string ProgramName);
 	void PadLoad(unsigned int address, unsigned int value);
 	void WriteMemory(unsigned int loc, int val);
 	bool ReadMemory(unsigned int loc, int &val);
@@ -175,7 +174,6 @@ protected:
 
 	unsigned int OutputPorts[MAX_OUTPUT_PORTS];
 
-	int FlightProgram;
 	bool AEAInitialized;
 	double LastCycled;
 	int ASACycleCounter;

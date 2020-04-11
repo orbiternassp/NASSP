@@ -28,30 +28,41 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "cdu.h"
 #include "papi.h"
 
-CDU::CDU(ApolloGuidance &comp, int l, int err, bool isicdu) : agc(comp)
+#define CHECK_BIT(var,pos) ( (((var) & (pos)) > 0 ) ? (1) : (0) )
+
+// The auto optics don't work right with the current logic for some reason. What the CMC wants is a total desired angle change,
+// but what it sends is increments that always make the auto optics overshoot the target. This flag can be used to let the CMC
+// send the total new value of the error counter to the OCDUs instead of an increment. The downside is that the optics drive never
+// reaches the maximum speed, which probably isn't correct either. This logic is only used in the OCDUs and only when the
+// coarse align mode is active.
+#define OCDU_CA_ERROR_INCREMENT true
+
+CDU::CDU(ApolloGuidance &comp, int l, int err, int cdutype) : agc(comp)
 {
 	loc = l;
 	err_channel = err;
-	IsICDU = isicdu;
+	CDUType = cdutype;
 
-	if (IsICDU)
+	if (CDUType == 0)
 	{
 		CDUZeroBit = 4;
 		ErrorCounterBit = 5;
+		AltOutBit = 8;
 	}
 	else
 	{
 		CDUZeroBit = 0;
 		ErrorCounterBit = 1;
+		AltOutBit = 7;
 	}
 
-	ReadCounter = 0.0;
+	ReadCounter = 0;
 	ErrorCounter = 0;
 	NewReadCounter = 0.0;
 	ZeroCDU = false;
 	ErrorCounterEnabled = false;
-	AltOutBit = 5;
 	AltOutput = 0;
+	CA = false;
 }
 
 void CDU::Timestep(double simdt)
@@ -60,29 +71,92 @@ void CDU::Timestep(double simdt)
 
 	val12 = agc.GetOutputChannel(012);
 
+	//Coarse align logic
+	if (CDUType == 0)
+	{
+		CA = (val12[3] == 1);
+	}
+	else if (CDUType == 2)
+	{
+		CA = (val12[ErrorCounterBit] == 1) && (val12[AltOutBit] != 1);
+	}
+	else
+	{
+		CA = false;
+	}
+
 	if (ZeroCDU == false)
 	{
-		double delta;
+		uint16_t NewReadCounterInt = (uint16_t)(NewReadCounter / CDU_STEP);
 
-		delta = NewReadCounter - ReadCounter;
-
-		if (delta < 0) {
-			while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
-				agc.vagc.Erasable[0][loc]--;
-				agc.vagc.Erasable[0][loc] &= 077777;
-				ReadCounter -= CDU_STEP;
+		if (NewReadCounterInt != ReadCounter)
+		{
+			bool dirup;
+			if (NewReadCounterInt > ReadCounter)
+			{
+				if (NewReadCounterInt - ReadCounter > 077777)
+				{
+					dirup = false;
+				}
+				else
+				{
+					dirup = true;
+				}
 			}
-		}
-		if (delta > 0) {
-			while (fabs(fabs(NewReadCounter) - fabs(ReadCounter)) >= CDU_STEP) {
-				agc.vagc.Erasable[0][loc]++;
-				agc.vagc.Erasable[0][loc] &= 077777;
-				ReadCounter += CDU_STEP;
+			else
+			{
+				if (ReadCounter - NewReadCounterInt > 077777)
+				{
+					dirup = true;
+				}
+				else
+				{
+					dirup = false;
+				}
+			}
+
+			uint16_t readcountertemp = ReadCounter;
+
+			if (dirup)
+			{
+				while (NewReadCounterInt != ReadCounter)
+				{
+					ReadCounter++;
+
+					if (CHECK_BIT(ReadCounter, 2) != CHECK_BIT(readcountertemp, 2))
+					{
+						agc.vagc.Erasable[0][loc]++;
+						agc.vagc.Erasable[0][loc] &= 077777;
+					}
+					if (ErrorCounterEnabled && CA && (ErrorCounter > -0600) && (CHECK_BIT(ReadCounter, 8) != CHECK_BIT(readcountertemp, 8)))
+					{
+						ErrorCounter--;
+					}
+					readcountertemp = ReadCounter;
+				}
+			}
+			else
+			{
+				while (NewReadCounterInt != ReadCounter)
+				{
+					ReadCounter--;
+
+					if (CHECK_BIT(ReadCounter, 2) != CHECK_BIT(readcountertemp, 2))
+					{
+						agc.vagc.Erasable[0][loc]--;
+						agc.vagc.Erasable[0][loc] &= 077777;
+					}
+					if (ErrorCounterEnabled && CA && (ErrorCounter < 0600) && (CHECK_BIT(ReadCounter, 8) != CHECK_BIT(readcountertemp, 8)))
+					{
+						ErrorCounter++;
+					}
+					readcountertemp = ReadCounter;
+				}
 			}
 		}
 	}
 
-	if (!IsICDU && val12[AltOutBit] == 1)
+	if (val12[AltOutBit] == 1)
 	{
 		AltOutput = ErrorCounter;
 	}
@@ -92,7 +166,7 @@ void CDU::Timestep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "ReadCounter %f NewReadCounter %f ZeroCDU %d CDUZeroBit %d", ReadCounter*DEG, NewReadCounter*DEG, ZeroCDU, CDUZeroBit);
-	//sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %d ErrorCounterEnabled %d", ReadCounter*DEG, ErrorCounter, ErrorCounterEnabled);
+	//sprintf(oapiDebugString(), "ReadCounter %d ErrorCounter %d ErrorCounterEnabled %d", ReadCounter, ErrorCounter, ErrorCounterEnabled);
 }
 
 void CDU::ChannelOutput(int address, ChannelValue val)
@@ -127,17 +201,41 @@ void CDU::ChannelOutput(int address, ChannelValue val)
 	{
 		if (ErrorCounterEnabled) {
 			int delta = val.to_ulong();
+			int ErrorCounterOld = ErrorCounter;
 
 			if (delta & 040000) { // Negative
-				ErrorCounter += -((~delta) & 077777);
+				if (CDUType == 2 && CA && !OCDU_CA_ERROR_INCREMENT)
+				{
+					ErrorCounter = -((~delta) & 077777);
+				}
+				else
+				{
+					ErrorCounter += -((~delta) & 077777);
+				}
+				if (ErrorCounter < -0600)
+				{
+					ErrorCounter = -0600;
+				}
 			}
 			else {
-				ErrorCounter += delta & 077777;
+				if (CDUType == 2 && CA && !OCDU_CA_ERROR_INCREMENT)
+				{
+					ErrorCounter = delta & 077777;
+				}
+				else
+				{
+					ErrorCounter += delta & 077777;
+				}
+				if (ErrorCounter > 0600)
+				{
+					ErrorCounter = 0600;
+				}
 			}
+			//sprintf(oapiDebugString(), "Channel %d ErrorCounter %d Delta %d", err_channel, ErrorCounter, ErrorCounter - ErrorCounterOld);
 		}
 	}
 
-	//sprintf(oapiDebugString(), "ReadCounter %f ErrorCounter %o Bit %d", ReadCounter*DEG, ErrorCounter, val12[ErrorCounterBit] == 1);
+	//sprintf(oapiDebugString(), "Channel %d ReadCounter %f ErrorCounter %o", err_channel, ReadCounter*DEG, ErrorCounter);
 }
 
 void CDU::DoZeroCDU()
@@ -180,7 +278,7 @@ int CDU::GetAltOutput()
 void CDU::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 
-	papiWriteScenario_double(scn, "READCOUNTER", ReadCounter);
+	oapiWriteScenario_int(scn, "READCOUNTER", ReadCounter);
 	papiWriteScenario_double(scn, "NEWREADCOUNTER", NewReadCounter);
 	oapiWriteScenario_int(scn, "ERRORCOUNTER", ErrorCounter);
 	papiWriteScenario_bool(scn, "ZEROCDU", ZeroCDU);
@@ -198,7 +296,10 @@ void CDU::LoadState(FILEHANDLE scn, char *end_str) {
 		if (!strnicmp(line, end_str, end_len)) {
 			break;
 		}
-		papiReadScenario_double(line, "READCOUNTER", ReadCounter);
+		if (papiReadScenario_int(line, "READCOUNTER", tmp))
+		{
+			ReadCounter = tmp;
+		}
 		papiReadScenario_double(line, "NEWREADCOUNTER", NewReadCounter);
 		papiReadScenario_int(line, "ERRORCOUNTER", ErrorCounter);
 		papiReadScenario_bool(line, "ZEROCDU", ZeroCDU);

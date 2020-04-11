@@ -29,6 +29,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LEM.h"
 #include "lm_programer.h"
 #include "papi.h"
+#include "Mission.h"
 
 LEM_Programer::LEM_Programer()
 {
@@ -47,7 +48,7 @@ void LEM_Programer::Init(LEM *l)
 
 void LEM_Programer::ProcessChannel10(ChannelValue val)
 {
-	if (!lem->HasProgramer) return;
+	if (!lem->pMission->HasLMProgramer()) return;
 
 	ChannelValue10LMP out_val;
 

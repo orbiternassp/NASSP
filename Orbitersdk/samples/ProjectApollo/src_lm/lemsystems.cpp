@@ -45,6 +45,7 @@
 #include "LEM.h"
 
 #include "papi.h"
+#include "Mission.h"
 
 void LEM::ResetThrusters()
 
@@ -1313,7 +1314,7 @@ void LEM::JoystickTimestep(double simdt)
 		}
 
 		//LM Programer
-		if (HasProgramer)
+		if (pMission->HasLMProgramer())
 		{
 			if (lmp.GetPlusXTrans())
 			{
@@ -2202,6 +2203,16 @@ void LEM::CheckDescentStageSystems()
 	}
 }
 
+void LEM::CreateMissionSpecificSystems()
+{
+	//
+	// Pass on the mission number and realism setting to the AGC.
+	//
+
+	agc.SetMissionInfo(pMission->GetLGCVersion());
+	aea.SetMissionInfo(pMission->GetAEAVersion());
+}
+
 // SYSTEMS COMPONENTS
 
 // Landing Radar
@@ -2887,6 +2898,12 @@ void CrossPointer::Timestep(double simdt)
 			{
 				vx = lem->LR.rate[2] * 0.3048;
 				vy = lem->LR.rate[1] * 0.3048;
+
+				//Apollo 15 and later had this inversed
+				if (lem->ApolloNo >= 15)
+				{
+					vy *= -1.0;
+				}
 			}
 			else
 			{
@@ -2901,6 +2918,12 @@ void CrossPointer::Timestep(double simdt)
 
 			vx = lgc_forward*0.3048;
 			vy = lgc_lateral*0.3048;
+
+			//Apollo 15 and later had this inversed
+			if (lem->ApolloNo >= 15)
+			{
+				vy *= -1.0;
+			}
 		}
 		else //AGS
 		{

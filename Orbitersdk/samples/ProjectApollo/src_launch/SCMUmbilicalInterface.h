@@ -27,5 +27,5 @@ See http://nassp.sourceforge.net/license/ for more details.
 class SCMUmbilicalInterface
 {
 public:
-	virtual bool ESEGetSIBThrustOKSimulate(int eng) = 0;
+	virtual bool ESEGetSIBThrustOKSimulate(int eng, int n) = 0;
 };

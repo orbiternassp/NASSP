@@ -28,17 +28,21 @@ class IUUmbilicalInterface
 {
 public:
 	virtual bool ESEGetCommandVehicleLiftoffIndicationInhibit() = 0;
-	virtual bool ESEGetAutoAbortInhibit() = 0;
-	virtual bool ESEGetGSEOverrateSimulate() = 0;
+	virtual bool ESEGetExcessiveRollRateAutoAbortInhibit(int n) = 0;
+	virtual bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n) = 0;
+	virtual bool ESEGetTwoEngineOutAutoAbortInhibit(int n) = 0;
+	virtual bool ESEGetGSEOverrateSimulate(int n) = 0;
 	virtual bool ESEGetEDSPowerInhibit() = 0;
 	virtual bool ESEPadAbortRequest() = 0;
 	virtual bool ESEGetThrustOKIndicateEnableInhibitA() = 0;
 	virtual bool ESEGetThrustOKIndicateEnableInhibitB() = 0;
 	virtual bool ESEEDSLiftoffInhibitA() = 0;
 	virtual bool ESEEDSLiftoffInhibitB() = 0;
-	virtual bool ESEAutoAbortSimulate() = 0;
 	virtual bool ESEGetSIBurnModeSubstitute() = 0;
 	virtual bool ESEGetGuidanceReferenceRelease() = 0;
+	virtual bool ESEGetQBallSimulateCmd() = 0;
+	virtual bool ESEGetEDSAutoAbortSimulate(int n) = 0;
+	virtual bool ESEGetEDSLVCutoffSimulate(int n) = 0;
 
 	//Saturn V only
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }

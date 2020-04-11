@@ -80,11 +80,25 @@ protected:
 	VECTOR3 A_H, A_T;
 };
 
+struct LGCDescentConstants
+{
+	LGCDescentConstants();
+
+	VECTOR3 RBRFG;
+	VECTOR3 VBRFG;
+	VECTOR3 ABRFG;
+	double JBRFGZ;
+	VECTOR3 RARFG;
+	VECTOR3 VARFG;
+	VECTOR3 AARFG;
+	double JARFGZ;
+};
+
 class DescentGuidance
 {
 public:
 	DescentGuidance();
-	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W, double ttgo);
+	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double t_I, MATRIX3 REFS, VECTOR3 R_LSP_init, double t_P, VECTOR3 W, double ttgo, LGCDescentConstants *consts);
 	void Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDI, double &ttgo, double &Thrust, double &isp);
 protected:
 	//Descent phase
@@ -143,7 +157,7 @@ protected:
 	double FC;
 	//Thrust of previous cycle
 	double Thrust_old;
-	LGCDescentConstants desc_const;
+	LGCDescentConstants *desc_const;
 };
 
 class AscDescIntegrator

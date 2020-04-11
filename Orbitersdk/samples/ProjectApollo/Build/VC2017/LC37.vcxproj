@@ -150,6 +150,7 @@
     <ClCompile Include="..\..\src_launch\IUUmbilicalInterface.cpp" />
     <ClCompile Include="..\..\src_launch\IU_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\LC37.cpp" />
+    <ClCompile Include="..\..\src_launch\RCA110A.cpp" />
     <ClCompile Include="..\..\src_launch\SCMUmbilical.cpp" />
     <ClCompile Include="..\..\src_launch\SIB_ESE.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="..\..\src_launch\IUUmbilicalInterface.h" />
     <ClInclude Include="..\..\src_launch\IU_ESE.h" />
     <ClInclude Include="..\..\src_launch\LC37.h" />
+    <ClInclude Include="..\..\src_launch\RCA110A.h" />
     <ClInclude Include="..\..\src_launch\SCMUmbilical.h" />
     <ClInclude Include="..\..\src_launch\SCMUmbilicalInterface.h" />
     <ClInclude Include="..\..\src_launch\SIB_ESE.h" />

@@ -46,7 +46,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	double EMPLat = -4.933294*RAD;
 
 	int LGCREFSAddrOffs = -2;
-	int LGCDeltaVAddr = 3431;
+	MCCLEX = 3431;
 
 	switch (fcn) {
 	case 1: //TLI+90 PAD + State Vector
@@ -397,7 +397,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 				sprintf(form->purpose, manname);
 
 				AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-				AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 				if (upString != NULL) {
@@ -567,7 +567,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->purpose, "MCC-3");
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -686,7 +686,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->purpose, "MCC-4");
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 			AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT, AGCEpoch);
 
 			sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
@@ -824,7 +824,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			char buffer2[1000];
 
 			AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-			AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -837,7 +837,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 22:	// MISSION F LOI-2 MANEUVER
 	{
-		LOI2Man opt;
 		AP11ManPADOpt manopt;
 		double GETbase, P30TIG;
 		VECTOR3 dV_LVLH;
@@ -851,14 +850,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
 
-		opt.alt = R_LLS - OrbMech::R_Moon;
-		opt.csmlmdocked = true;
-		opt.GETbase = GETbase;
-		opt.h_circ = 60.0*1852.0;
-		opt.RV_MCC = sv;
-		opt.vessel = calcParams.src;
+		med_k16.Mode = 2;
+		med_k16.Sequence = 3;
+		med_k16.GETTH1 = calcParams.LOI + 3.5*3600.0;
+		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
+		med_k16.DesiredHeight = 60.0*1852.0;
 
-		LOI2Targeting(&opt, dV_LVLH, P30TIG);
+		LunarDescentPlanningTable table;
+		LunarDescentPlanningProcessor(sv, GETbase, LSLat, LSLng, R_LLS, table);
+
+		PoweredFlightProcessor(sv, GETbase, table.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, table.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
 		manopt.R_LLS = R_LLS;
 		manopt.dV_LVLH = dV_LVLH;
@@ -877,7 +878,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		DeltaV_LVLH = dV_LVLH;
 
 		AGCStateVectorUpdate(buffer1, sv, true, AGCEpoch, GETbase);
-		AGCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -1052,7 +1053,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			DeltaV_LVLH = res.dV_LVLH;
 
 			AGCStateVectorUpdate(buffer1, sv0, true, AGCEpoch, GETbase, true);
-			AGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
+			CMCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
@@ -1557,7 +1558,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->remarks, "%sTPI time: %s, N equal to 1", form->remarks, GETbuffer);
 
 		AGCStateVectorUpdate(buffer1, sv, false, AGCEpoch, GETbase);
-		AGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH, LGCDeltaVAddr);
+		LGCExternalDeltaVUpdate(buffer2, TimeofIgnition, DeltaV_LVLH);
 		TLANDUpdate(TLANDbuffer, calcParams.TLAND, 2400);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, TLANDbuffer);
@@ -2203,7 +2204,6 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.P30TIG = TimeofIgnition;
 		entopt.REFSMMAT = REFSMMAT;
 		entopt.sv0 = sv;
-		entopt.vessel = calcParams.src;
 
 		LunarEntryPAD(&entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");

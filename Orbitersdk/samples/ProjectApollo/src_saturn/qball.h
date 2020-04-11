@@ -32,10 +32,8 @@ public:
 	double GetAOA();
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
-	void SetPowerOn() { IsPowered = true; }
-	void SetPowerOff() { IsPowered = false; }
 protected:
-	bool IsPowered;
+	double aoa;
 
 	Saturn *sat;
 };

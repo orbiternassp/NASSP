@@ -24,14 +24,17 @@
 
 #pragma once
 
+#include "soundlib.h"
 #include "IUUmbilicalInterface.h"
 #include "TSMUmbilicalInterface.h"
+#include "LCCPadInterface.h"
 
 class Saturn;
 class IUUmbilical;
 class TSMUmbilical;
 class IUSV_ESE;
 class SIC_ESE;
+class RCA110AM;
 
 const double ML_SIC_INTERTANK_ARM_CONNECTING_SPEED = 1.0 / 300.0;
 const double ML_SIC_INTERTANK_ARM_RETRACT_SPEED = 1.0 / 13.0;
@@ -45,7 +48,7 @@ const double ML_TAIL_SERVICE_MAST_RETRACT_SPEED = 1.0 / 2.0;
 ///
 /// \ingroup Ground
 ///
-class ML: public VESSEL2, public IUUmbilicalInterface, public TSMUmbilicalInterface {
+class ML: public VESSEL2, public IUUmbilicalInterface, public TSMUmbilicalInterface, public LCCPadInterface {
 
 public:
 	ML(OBJHANDLE hObj, int fmodel);
@@ -70,20 +73,30 @@ public:
 	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
 	bool ESEGetSICOutboardEnginesCantInhibit();
 	bool ESEGetSICOutboardEnginesCantSimulate();
-	bool ESEGetAutoAbortInhibit();
-	bool ESEGetGSEOverrateSimulate();
+	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
+	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
+	bool ESEGetGSEOverrateSimulate(int n);
 	bool ESEGetEDSPowerInhibit();
 	bool ESEPadAbortRequest();
 	bool ESEGetThrustOKIndicateEnableInhibitA();
 	bool ESEGetThrustOKIndicateEnableInhibitB();
 	bool ESEEDSLiftoffInhibitA();
 	bool ESEEDSLiftoffInhibitB();
-	bool ESEAutoAbortSimulate();
 	bool ESEGetSIBurnModeSubstitute();
 	bool ESEGetGuidanceReferenceRelease();
+	bool ESEGetQBallSimulateCmd();
+	bool ESEGetEDSAutoAbortSimulate(int n);
+	bool ESEGetEDSLVCutoffSimulate(int n);
 
 	//ML/S-IC Interface
-	bool ESEGetSICThrustOKSimulate(int eng);
+	bool ESEGetSICThrustOKSimulate(int eng, int n);
+
+	// LCC/ML Interface
+	void SLCCCheckDiscreteInput(RCA110A *c);
+	bool SLCCGetOutputSignal(size_t n);
+	void ConnectGroundComputer(RCA110A *c);
+	void IssueSwitchSelectorCmd(int stage, int chan);
 
 protected:
 	bool firstTimestepDone;
@@ -120,6 +133,7 @@ protected:
 	TSMUmbilical *TSMUmb;
 	IUSV_ESE *IuESE;
 	SIC_ESE *SICESE;
+	RCA110AM *rca110a;
 
 	void DoFirstTimestep();
 	double GetDistanceTo(double lon, double lat);
@@ -135,4 +149,5 @@ protected:
 
 	int TCSSequence;
 	bool Hold;
+	bool bCommit;
 };
