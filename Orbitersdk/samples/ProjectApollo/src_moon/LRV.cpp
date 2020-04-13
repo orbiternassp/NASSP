@@ -33,7 +33,6 @@
 #include "nasspsound.h"
 #include "nasspdefs.h"
 #include "soundlib.h"
-#include "OrbiterMath.h"
 
 #include "toggleswitch.h"
 #include "LEM.h"

@@ -160,7 +160,6 @@
     <ClCompile Include="..\..\src_saturn\iu.cpp" />
     <ClCompile Include="..\..\src_sys\DelayTimer.cpp" />
     <ClCompile Include="..\..\src_sys\powersource.cpp" />
-    <ClCompile Include="..\..\src_aux\Prediction.cpp" />
     <ClCompile Include="..\..\src_saturn\sivb.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>

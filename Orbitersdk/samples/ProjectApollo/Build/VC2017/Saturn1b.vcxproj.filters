@@ -93,9 +93,6 @@
     <ClCompile Include="..\..\src_sys\powersource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\Prediction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src_sys\pyro.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
