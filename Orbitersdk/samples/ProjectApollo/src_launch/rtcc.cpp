@@ -13004,6 +13004,15 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 	//Update mission plan table display
 	PMDMPT();
 	return table->EPHEM.table.back();
+
+	if (L == RTCC_MPT_CSM)
+	{
+		PMXSPT("EMSEPH: CSM EPHEMERIS UPDATE COMPLETED");
+	}
+	else
+	{
+		PMXSPT("EMSEPH: LEM EPHEMERIS UPDATE COMPLETED");
+	}
 }
 
 void RTCC::EMSMISS(EMSMISSInputTable &in)
@@ -20769,27 +20778,66 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 	return 0;
 }
 
-int RTCC::GMSMED(std::string med)
-{
-	std::vector<std::string> data;
-	return GMSMED(med, data);
-}
-
 int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 {
 	//Enter planned or actual liftoff time
 	if (med == "10")
 	{
-		double gmtlocs = GLHTCS(med_p10.GMTALO);
-		if (med_p10.VEH == 1)
+		if (data.size() < 2 || data.size() > 3)
 		{
-			MGGGMT = gmtlocs;
-			MCGMTS = med_p10.GMTALO;
+			return 1;
+		}
+		int Veh;
+		if (data[0] == "CSM")
+		{
+			Veh = 1;
+		}
+		else if (data[0] == "LEM")
+		{
+			Veh = 2;
 		}
 		else
 		{
+			return 2;
+		}
+		double hours;
+		if (MEDTimeInputHHMMSS(data[1], hours))
+		{
+			return 2;
+		}
+		if (hours < 0)
+		{
+			return 2;
+		}
+
+		double gmtlocs = GLHTCS(hours);
+		if (Veh == 1)
+		{
 			MGLGMT = gmtlocs;
-			MCGMTL = med_p10.GMTALO;
+			MCGMTL = hours;
+		}
+		else
+		{
+			MGGGMT = gmtlocs;
+			MCGMTS = hours;
+		}
+		if (data.size() == 3)
+		{
+			if (data[2] == "" || data[2] == "NOTRAJ")
+			{
+				//Nothing
+			}
+			else if (data[2] == "TRAJ")
+			{
+				if (Veh == 1)
+				{
+					PMMIEV(hours*3600.0);
+				}
+			}
+			else
+			{
+				return 2;
+			}
 		}
 	}
 	//Enter planned or actual guidance reference release time and launch azimuth
@@ -21581,35 +21629,77 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 			return 1;
 		}
 		double val;
-		if (sscanf_s(data[0].c_str(), "%lf", val) != 1)
+		if (sscanf_s(data[0].c_str(), "%lf", &val) != 1)
 		{
 			return 2;
 		}
 		MCGHZA = val * RAD;
 	}
+	//Initialize with mission type and day of year
 	else if (med == "80")
 	{
-		if (1960 <= med_p80.Year && med_p80.Year <= 1980)
+		if (data.size() < 5)
 		{
-			GZGENCSN.Year = med_p80.Year;
+			return 1;
+		}
+		int Num;
+		if (sscanf_s(data[0].c_str(), "%d", &Num) != 1)
+		{
+			return 2;
+		}
+		if (Num != 1)
+		{
+			return 2;
+		}
+
+		bool found = false;
+		for (unsigned i = 0;i < MHGVNM.tab.size();i++)
+		{
+			if (data[1] == MHGVNM.tab[i])
+			{
+				MCGPRM = data[1];
+				found = true;
+			}
+		}
+		if (found == false)
+		{
+			return 2;
+		}
+		int Month, Day, Year;
+		if (sscanf_s(data[2].c_str(), "%d", &Month) != 1)
+		{
+			return 2;
+		}
+		if (sscanf_s(data[3].c_str(), "%d", &Day) != 1)
+		{
+			return 2;
+		}
+		if (sscanf_s(data[4].c_str(), "%d", &Year) != 1)
+		{
+			return 2;
+		}
+
+		if (1960 <= Year && Year <= 1980)
+		{
+			GZGENCSN.Year = Year;
 		}
 		else
 		{
 			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
 			return 2;
 		}
-		if (1 <= med_p80.Month && med_p80.Month <= 12)
+		if (1 <= Month && Month <= 12)
 		{
-			GZGENCSN.MonthofLiftoff = med_p80.Month;
+			GZGENCSN.MonthofLiftoff = Month;
 		}
 		else
 		{
 			sprintf(oapiDebugString(), "GMGPMED: P80 HAS INVALID DATE");
 			return 2;
 		}
-		if (1 <= med_p80.Day && med_p80.Day <= 31)
+		if (1 <= Day && Day <= 31)
 		{
-			GZGENCSN.DayofLiftoff = med_p80.Day;
+			GZGENCSN.DayofLiftoff = Day;
 		}
 		else
 		{
@@ -21646,16 +21736,10 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 			}
 		}
 
-		double J_D = TJUDAT(med_p80.Year, med_p80.Month, med_p80.Day);
+		double J_D = TJUDAT(Year, Month, Day);
 		GMTBASE = J_D - 2400000.5;
 
-		for (unsigned i = 0;i < MHGVNM.tab.size();i++)
-		{
-			if (med_p80.FirstVeh == MHGVNM.tab[i])
-			{
-				MCGPRM = med_p80.FirstVeh;
-			}
-		}
+		//PIGBHA();
 	}
 	return 0;
 }

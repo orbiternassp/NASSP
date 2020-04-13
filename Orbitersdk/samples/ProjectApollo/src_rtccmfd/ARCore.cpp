@@ -100,14 +100,8 @@ void AR_GCore::SetMissionSpecificParameters()
 {
 	if (mission == 7)
 	{
-		rtcc->med_p80.Day = 11;
-		rtcc->med_p80.Month = 10;
-		rtcc->med_p80.Year = 1968;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 15.0 + 2.0 / 60.0 + 45.0 / 3600.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,10,11,1968;");
+		rtcc->GMGMED("P10,CSM,15:02:45;");
 	}
 	else if (mission == 8)
 	{
@@ -142,25 +136,13 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(57, 30, 35);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 33.73*RAD;
 
-		rtcc->med_p80.Day = 21;
-		rtcc->med_p80.Month = 12;
-		rtcc->med_p80.Year = 1968;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 12.0 + 51.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,12,21,1968;");
+		rtcc->GMGMED("P10,CSM,12:51:0;");
 	}
 	else if (mission == 9)
 	{
-		rtcc->med_p80.Day = 3;
-		rtcc->med_p80.Month = 3;
-		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 16.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,3,3,1969;");
+		rtcc->GMGMED("P10,CSM,16:00:00;");
 
 		rtcc->MCCLEX = 3431;
 	}
@@ -198,14 +180,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZMCCPLN.LOPC_N = 0;
 		rtcc->PZMCCPLN.REVS2 = rtcc->med_k40.REVS2 = 10;
 
-		rtcc->med_p80.Day = 18;
-		rtcc->med_p80.Month = 5;
-		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 16.0 + 49.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,5,18,1969;");
+		rtcc->GMGMED("P10,CSM,16:49:00;");
 
 		rtcc->MCLGRA = -80.602087222*RAD;
 		rtcc->MCCLEX = 3431;
@@ -240,14 +216,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(63, 30, 0);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
-		rtcc->med_p80.Day = 16;
-		rtcc->med_p80.Month = 7;
-		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 13.0 + 32.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,7,16,1969;");
+		rtcc->GMGMED("P10,CSM,13:32:00;");
 	}
 	/*else if (mission == 11) // July 18th Launch
 	{
@@ -279,14 +249,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(65, 27, 01);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
-		rtcc->med_p80.Day = 18;
-		rtcc->med_p80.Month = 7;
-		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 15.0 + 32.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,7,18,1969;");
+		rtcc->GMGMED("P10,CSM,15:32:00;");
 	}
 	else if (mission == 11) // July 21st Launch
 	{
@@ -324,14 +288,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(65, 52, 02);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
-		rtcc->med_p80.Day = 21;
-		rtcc->med_p80.Month = 7;
-		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 16.0 + 09.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,7,21,1969;");
+		rtcc->GMGMED("P10,CSM,16:09:00;");
 	}*/
 	else if (mission == 12)
 	{
@@ -369,14 +327,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(70, 0, 0);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
-		rtcc->med_p80.Day = 14;
-		rtcc->med_p80.Month = 11;
-		rtcc->med_p80.Year = 1969;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 16.0 + 22.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,11,14,1969;");
+		rtcc->GMGMED("P10,CSM,16:22:00;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5551.1299*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -133067.52*0.3048;
@@ -433,14 +385,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(72, 0, 0);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
-		rtcc->med_p80.Day = 11;
-		rtcc->med_p80.Month = 4;
-		rtcc->med_p80.Year = 1970;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 19.0 + 13.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,4,11,1970;");
+		rtcc->GMGMED("P10,CSM,19:13:00;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
@@ -496,14 +442,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(67, 10, 59);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
-		rtcc->med_p80.Day = 31;
-		rtcc->med_p80.Month = 1;
-		rtcc->med_p80.Year = 1971;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 20.0 + 23.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,1,31,1971;");
+		rtcc->GMGMED("P10,CSM,20:23:00;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
@@ -556,14 +496,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(71, 13, 20);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 75.0*RAD;
 
-		rtcc->med_p80.Day = 26;
-		rtcc->med_p80.Month = 7;
-		rtcc->med_p80.Year = 1971;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 13.0 + 34.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,7,26,1971;");
+		rtcc->GMGMED("P10,CSM,13:34:00;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5548.14101*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -162539.6686*0.3048;
@@ -610,14 +544,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(68, 0, 0);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 40.0*RAD;
 
-		rtcc->med_p80.Day = 16;
-		rtcc->med_p80.Month = 4;
-		rtcc->med_p80.Year = 1972;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 17.0 + 54.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,4,16,1972;");
+		rtcc->GMGMED("P10,CSM,17:54:00;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5543.4605*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -159548.72*0.3048;
@@ -665,14 +593,8 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZSFPTAB.blocks[0].T_te = OrbMech::HHMMSSToSS(67, 37, 2);
 		rtcc->PZSFPTAB.blocks[0].incl_fr = 75.0*RAD;
 
-		rtcc->med_p80.Day = 7;
-		rtcc->med_p80.Month = 12;
-		rtcc->med_p80.Year = 1972;
-		rtcc->GMSMED("80");
-
-		rtcc->med_p10.VEH = 2;
-		rtcc->med_p10.GMTALO = 2.0 + 53.0 / 60.0;
-		rtcc->GMSMED("10");
+		rtcc->GMGMED("P80,1,CSM,12,7,1972;");
+		rtcc->GMGMED("P10,CSM,02:53:00;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5542.8976*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -156145.03*0.3048;

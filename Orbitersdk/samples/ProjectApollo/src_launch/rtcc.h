@@ -2588,7 +2588,6 @@ public:
 	//'M' MED Module
 	int PMMMED(std::string med, std::vector<std::string> data);
 	//'P' Code MED Processor
-	int GMSMED(std::string med);
 	int GMSMED(std::string med, std::vector<std::string> data);
 	//'U' Code MED Processor
 	int EMGTVMED(std::string med, std::vector<std::string> data);
@@ -2873,29 +2872,6 @@ public:
 		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
 		int TrimAngleIndicator = 0; //0 = computed, 2 = system
 	} med_m86;
-
-	struct MED_P10
-	{
-		//1 = LEM, 2 = CSM
-		int VEH;
-		//Liftoff time in hours
-		double GMTALO;
-		//Traj or no traj
-		bool TRAJ = false;
-	} med_p10;
-
-	//Initialize number of vehicles, first launch vehicle, mission date
-	struct MED_P80
-	{
-		//Number of vehicles
-		int NumVeh = 1;
-		//Primary ephemeris (0 = CSM, 1 = LEM)
-		std::string FirstVeh;
-		int Month;
-		int Day;
-		int Year;
-		int DeltaDay;
-	} med_p80;
 
 	MED_B04 med_b04;
 	MED_K16 med_k16;

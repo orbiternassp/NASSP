@@ -4404,11 +4404,9 @@ bool LaunchDateInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_launchdate(int year, int month, int day)
 {
-	GC->rtcc->med_p80.Year = year;
-	GC->rtcc->med_p80.Month = month;
-	GC->rtcc->med_p80.Day = day;
-
-	GC->rtcc->GMSMED("80");
+	char Buff[128];
+	sprintf_s(Buff, "P80,1,CSM,%d,%d,%d;", month, day, year);
+	GC->rtcc->GMGMED(Buff);
 }
 
 void ApolloRTCCMFD::menuSetLaunchTime()
@@ -4432,11 +4430,9 @@ bool LaunchTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LaunchTime(int hours, int minutes, double seconds)
 {
-	GC->rtcc->med_p10.GMTALO = (double)hours + ((double)(minutes)) / 60.0 + seconds / 3600.0;
-	GC->rtcc->med_p10.TRAJ = true;
-	GC->rtcc->med_p10.VEH = 2;
-
-	GC->rtcc->GMSMED("10");
+	char Buff[128];
+	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hours, minutes, seconds);
+	GC->rtcc->GMGMED(Buff);
 }
 
 void ApolloRTCCMFD::menuSetAGCEpoch()
@@ -4546,11 +4542,13 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 
 	double GMTBase = floor(LaunchMJD);
 	LaunchMJD = (LaunchMJD - GMTBase)*24.0;
-	GC->rtcc->med_p10.GMTALO = LaunchMJD;
-	GC->rtcc->med_p10.TRAJ = false;
-	GC->rtcc->med_p10.VEH = 2;
 
-	GC->rtcc->GMSMED("10");
+	int hh, mm;
+	double ss;
+	SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss);
+	char Buff[128];
+	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hh, mm, ss);
+	GC->rtcc->GMGMED(Buff);
 }
 
 void ApolloRTCCMFD::cycleREFSMMATupl()
