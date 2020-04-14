@@ -436,12 +436,11 @@ MPTManDisplay::MPTManDisplay()
 	HP = 0.0;
 }
 
-NextStationContact::NextStationContact()
+StationContact::StationContact()
 {
-	GETAOS = 0.0;
-	GETLOS = 0.0;
+	GMTAOS = 0.0;
+	GMTLOS = 0.0;
 	sprintf_s(StationID, "");
-	DELTAT = 0.0;
 	MAXELEV = 0.0;
 	BestAvailableAOS = false;
 	BestAvailableLOS = false;
@@ -449,14 +448,52 @@ NextStationContact::NextStationContact()
 	REV = 0;
 }
 
-bool NextStationContact::operator<(const NextStationContact& rhs) const
+bool StationContact::operator<(const StationContact& rhs) const
 {
-	if (GETAOS == rhs.GETAOS)
+	if (GMTAOS == rhs.GMTAOS)
 	{
-		return GETLOS < rhs.GETLOS;
+		return GMTLOS < rhs.GMTLOS;
 	}
 
-	return GETAOS < rhs.GETAOS;
+	return GMTAOS < rhs.GMTAOS;
+}
+
+NextStationContactsTable::NextStationContactsTable()
+{
+	GET = 0.0;
+	for (int i = 0;i < 2;i++)
+	{
+		for (int j = 0;j < 6;j++)
+		{
+			GETHCA[i][j] = 0.0;
+			DTKLOS[i][j] = 0.0;
+			EMAX[i][j] = 0.0;
+			DTPASS[i][j] = 0.0;
+			DTKH[i][j] = 0.0;
+			BestAvailableAOS[i][j] = false;
+			BestAvailableEMAX[i][j] = false;
+		}
+	}
+}
+
+PredictedSiteAcquisitionTable::PredictedSiteAcquisitionTable()
+{
+	curpage = 1;
+	pages = 1;
+	for (int i = 0;i < 2;i++)
+	{
+		numcontacts[i] = 0;
+		for (int j = 0;j < 21;j++)
+		{
+			REV[i][j] = 0;
+			GETHCA[i][j] = 0.0;
+			GETHCD[i][j] = 0.0;
+			ELMAX[i][j] = 0.0;
+			BestAvailableAOS[i][j] = false;
+			BestAvailableLOS[i][j] = false;
+			BestAvailableEMAX[i][j] = false;
+		}
+	}
 }
 
 CapeCrossingTable::CapeCrossingTable()
@@ -465,12 +502,12 @@ CapeCrossingTable::CapeCrossingTable()
 	NumRev = 0;
 	NumRevFirst = 0;
 	NumRevLast = 0;
-	GETEphemFirst = 0.0;
-	GETEphemLast = 0.0;
-	GETCrossPrev = 0.0;
+	GMTEphemFirst = 0.0;
+	GMTEphemLast = 0.0;
+	GMTCrossPrev = 0.0;
 	for (int i = 0;i < 30;i++)
 	{
-		GETCross[i] = 0.0;
+		GMTCross[i] = 0.0;
 	}
 }
 
@@ -803,6 +840,7 @@ RTCC::RTCC()
 
 	MCCCEX = 3404;
 	MCCLEX = 3433;
+	MGRTAG = 1;
 
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -10195,22 +10233,22 @@ void RTCC::PMXSPT(int n)
 
 void RTCC::PMXSPT(std::string message)
 {
+	RTCCONLINEMON.push_front(message);
+
 	if (RTCCONLINEMON.size() >= 9)
 	{
-		RTCCONLINEMON.pop_front();
+		RTCCONLINEMON.pop_back();
 	}
-
-	RTCCONLINEMON.push_back(message);
 }
 
 void RTCC::GMSPRINT(std::string message)
 {
+	RTCCONLINEMON.push_front(message);
+
 	if (RTCCONLINEMON.size() >= 9)
 	{
-		RTCCONLINEMON.pop_front();
+		RTCCONLINEMON.pop_back();
 	}
-
-	RTCCONLINEMON.push_back(message);
 }
 
 void RTCC::EMGGPCHR(double lat, double lng, double alt, int body, Station *stat)
@@ -10337,7 +10375,7 @@ void RTCC::EMSTIME(int L, int ID)
 
 		EMMDYNEL(sv_true, *tab);
 
-		tab->RevNum = CapeCrossingRev(L, GETfromGMT(sv_true.GMT));
+		tab->RevNum = CapeCrossingRev(L, sv_true.GMT);
 		PLAWDT(L, sv_true.GMT, tab->WT);
 		tab->TUP = out.TUP;
 	}
@@ -10465,7 +10503,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	{
 		tab->LPP = tcontab->lng*DEG;
 		tab->PPP = tcontab->lat*DEG;
-		tab->GETCC = CapeCrossingGET(L, tcontab->RevNum + 1);
+		tab->GETCC = GETfromGMT(CapeCrossingGMT(L, tcontab->RevNum + 1));
 		tab->TAPP = tcontab->TA*DEG;
 		tab->H = tcontab->h / 1852.0;
 		tab->V = tcontab->V / 0.3048;
@@ -10599,7 +10637,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 			if (ind == 1)
 			{
 				int rev = (int)param;
-				GET = CapeCrossingGET(L, rev);
+				GET = GETfromGMT(CapeCrossingGMT(L, rev));
 				if (GET < 0)
 				{
 					return;
@@ -10644,7 +10682,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 			sprintf_s(tab->REFR, "LUNAR");
 		}
 
-		tab->REVR = CapeCrossingRev(L, GETfromGMT(sv_pred.GMT));
+		tab->REVR = CapeCrossingRev(L, sv_pred.GMT);
 		tab->GETBV = GETfromGMT(sv_pred.GMT);
 
 		SV sv_A, sv_a, sv_p;
@@ -10701,7 +10739,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	{
 		int rev = ind;
 		double lng = param;
-		double GET = CapeCrossingGET(L, rev);
+		double GET = GETfromGMT(CapeCrossingGMT(L, rev));
 		if (GET < 0)
 		{
 			GET = CurGET;
@@ -11272,14 +11310,14 @@ void RTCC::EMSTAGEN(int L)
 	ManeuverTimesTable MANTIMES;
 	LunarStayTimesTable LUNSTAY;
 
-	ELFECH(RTCCPresentTimeGMT(), 300, 0, L, EPHEM, MANTIMES, LUNSTAY);
+	ELFECH(RTCCPresentTimeGMT(), 300, 1, L, EPHEM, MANTIMES, LUNSTAY);
 
 	Station station;
 	StationTable contact;
 
 	for (int i = 0;i < NUMBEROFGROUNDSTATIONS;i++)
 	{
-		if (med_b04.FUNCTION && !groundstationslunar[i]) continue;
+		if (MGRTAG == 0 && !groundstationslunar[i]) continue;
 		station.alt = 0.0;
 		station.code = gsabbreviations[i];
 		station.lat = groundstations[i][0];
@@ -11297,7 +11335,26 @@ void RTCC::EMSTAGEN(int L)
 		tab = &EZSTACT3;
 	}
 
-	EMGENGEN(EPHEM, MANTIMES, contact, *tab);
+	double GMT_start, GMT_end;
+	GMT_start = RTCCPresentTimeGMT();
+	GMT_end = GMT_start + 24.0*3600.0;
+	if (GMT_start < EPHEM.Header.TL)
+	{
+		GMT_start = EPHEM.Header.TL;
+		if (L == 1)
+		{
+			EMGPRINT("EMSTAGEN: ANCHOR TIME ADJUSTED FOR CSM STATION CONTACTS");
+		}
+		else
+		{
+			EMGPRINT("EMSTAGEN: ANCHOR TIME ADJUSTED FOR LEM STATION CONTACTS");
+		}
+	}
+
+	EMGENGEN(EPHEM, MANTIMES, contact, BODY_EARTH, *tab);
+
+	//Reset this, so next station contacts display updates immedately
+	NextStationContactsBuffer.GET = -1;
 
 	CapeCrossingTable *table;
 
@@ -11314,12 +11371,10 @@ void RTCC::EMSTAGEN(int L)
 
 	for (int i = 0;i < 45;i++)
 	{
-		if (tab->Stations[i].GETAOS <= 0.0) break;
+		if (tab->Stations[i].GMTAOS <= 0.0) break;
 
-		tab->Stations[i].REV = CapeCrossingRev(L, tab->Stations[i].GETAOS);
+		tab->Stations[i].REV = CapeCrossingRev(L, tab->Stations[i].GMTAOS);
 	}
-	//Reset this, so next station contacts display updates immedately
-	NextStationContactsBuffer.GET = -1;
 }
 
 int RTCC::PMMMCD(PMMMCDInput in, MPTManeuver &man)
@@ -12792,7 +12847,7 @@ void RTCC::EMSTRAJ(EphemerisData sv, int L, bool landed)
 	HistoryAnchorVectorTable *anchor;
 	CapeCrossingTable *cctab;
 
-	double gmt, get;
+	double gmt;
 
 	if (L == RTCC_MPT_CSM)
 	{
@@ -12810,7 +12865,6 @@ void RTCC::EMSTRAJ(EphemerisData sv, int L, bool landed)
 	}
 
 	gmt = RTCCPresentTimeGMT();
-	get = GETfromGMT(gmt);
 
 	if (!landed)
 	{
@@ -12827,7 +12881,7 @@ void RTCC::EMSTRAJ(EphemerisData sv, int L, bool landed)
 	else
 	{
 		//Generate cape crossing
-		RMMEACC(L, sv.RBI, 0, CapeCrossingRev(L, get));
+		RMMEACC(L, sv.RBI, 0, CapeCrossingRev(L, gmt));
 	}
 	//Generate station contacts
 	EMSTAGEN(L);
@@ -14506,15 +14560,15 @@ void RTCC::PMMIEV(double T_L)
 	//TBD: ETMSCTRL for trajectory update
 }
 
-void RTCC::EMGENGEN(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, OrbitStationContactsTable &res)
+void RTCC::EMGENGEN(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res)
 {
-	std::vector<NextStationContact> acquisitions;
-	NextStationContact current;
-	NextStationContact empty;
+	std::vector<StationContact> acquisitions;
+	StationContact current;
+	StationContact empty;
 
 	for (unsigned i = 0;i < stationlist.table.size();i++)
 	{
-		EMXING(ephemeris, MANTIMES, stationlist.table[i], acquisitions);
+		EMXING(ephemeris, MANTIMES, stationlist.table[i], body, acquisitions);
 	}
 
 	//Sort
@@ -14534,16 +14588,16 @@ void RTCC::EMGENGEN(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES,
 	}
 }
 
-bool RTCC::EMXING(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, std::vector<NextStationContact> &acquisitions)
+bool RTCC::EMXING(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions)
 {
 	if (ephemeris.table.size() == 0) return false;
 
 	ELVCTRInputTable interin;
 	ELVCTROutputTable interout;
 	EphemerisData svtemp, sv_AOS;
-	NextStationContact current;
+	StationContact current;
 	VECTOR3 R_S_equ, R, rho, N, Ntemp, rhotemp, V;
-	double GMT, sinang, GMT_AOS, LastGMT, LastSinang, GMT0, f, last_f, GMT_EMAX, sinangtemp, EMAX, GMT_LOS, GET_AOS, GET_LOS;
+	double GMT, sinang, GMT_AOS, LastGMT, LastSinang, GMT0, f, last_f, GMT_EMAX, sinangtemp, EMAX, GMT_LOS;
 	unsigned iter = 0;
 	int n, nmax;
 	bool BestAvailableAOS, BestAvailableLOS, BestAvailableEMAX;
@@ -14796,14 +14850,14 @@ EMXING_LOOP:
 	if (sv_AOS.RBI == BODY_MOON)
 	{
 		//TBD: Implement this
+
+
 	}
 
-	GET_AOS = GETfromGMT(GMT_AOS);
-	GET_LOS = GETfromGMT(GMT_LOS);
-	current.GETAOS = GET_AOS;
-	current.GETLOS = GET_LOS;
-	current.DELTAT = GET_LOS - GET_AOS;
-	current.MAXELEV = EMAX * DEG;
+	current.GMTAOS = GMT_AOS;
+	current.GMTLOS = GMT_LOS;
+	current.GMTEMAX = GMT_EMAX;
+	current.MAXELEV = EMAX;
 	current.BestAvailableAOS = BestAvailableAOS;
 	current.BestAvailableLOS = BestAvailableLOS;
 	current.BestAvailableEMAX = BestAvailableEMAX;
@@ -14962,22 +15016,20 @@ int RTCC::ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP
 
 void RTCC::EMDSTAC()
 {
-	double GET = GETfromGMT(RTCCPresentTimeGMT());
+	double GMT = RTCCPresentTimeGMT();
+	double GET = GETfromGMT(GMT);
 
 	//Clear table
 	for (unsigned l = 0;l < 2;l++)
 	{
 		for (unsigned k = 0;k < 6;k++)
 		{
-			NextStationContactsBuffer.NextStations[l][k].BestAvailableAOS = false;
-			NextStationContactsBuffer.NextStations[l][k].BestAvailableEMAX = false;
-			NextStationContactsBuffer.NextStations[l][k].BestAvailableLOS = false;
-			NextStationContactsBuffer.NextStations[l][k].DELTAT = 0.0;
-			NextStationContactsBuffer.NextStations[l][k].GETAOS = 0.0;
-			NextStationContactsBuffer.NextStations[l][k].GETLOS = 0.0;
-			NextStationContactsBuffer.NextStations[l][k].MAXELEV = 0.0;
-			NextStationContactsBuffer.NextStations[l][k].REV = 0;
-			sprintf(NextStationContactsBuffer.NextStations[l][k].StationID, "");
+			NextStationContactsBuffer.STA[l][k] = "";
+			NextStationContactsBuffer.GETHCA[l][k] = false;
+			NextStationContactsBuffer.DTKLOS[l][k] = false;
+			NextStationContactsBuffer.EMAX[l][k] = false;
+			NextStationContactsBuffer.DTPASS[l][k] = 0.0;
+			NextStationContactsBuffer.DTKH[l][k] = 0.0;
 		}
 	}
 
@@ -15001,18 +15053,30 @@ void RTCC::EMDSTAC()
 			//If we got 6 contacts we are done
 			if (j >= 6) break;
 			//Skip over contacts from the past
-			if (GET > tab->Stations[i].GETLOS)
+			if (GMT > tab->Stations[i].GMTLOS)
 			{
 				continue;
 			}
 			//Found one
-			NextStationContactsBuffer.NextStations[l][j] = tab->Stations[i];
+			NextStationContactsBuffer.STA[l][j] = tab->Stations[i].StationID;
+			NextStationContactsBuffer.GETHCA[l][j] = GETfromGMT(tab->Stations[i].GMTAOS);
+			NextStationContactsBuffer.DTKLOS[l][j] = 0.0;
+			NextStationContactsBuffer.EMAX[l][j] = tab->Stations[i].MAXELEV*DEG;
+			NextStationContactsBuffer.DTPASS[l][j] = tab->Stations[i].GMTLOS - tab->Stations[i].GMTAOS;
+			NextStationContactsBuffer.DTKH[l][j] = 0.0;
+			NextStationContactsBuffer.BestAvailableAOS[l][j] = tab->Stations[i].BestAvailableAOS;
+			NextStationContactsBuffer.BestAvailableEMAX[l][j] = tab->Stations[i].BestAvailableEMAX;
+
 			//If we are in AOS, modify some numbers accordingly
-			if (GET > NextStationContactsBuffer.NextStations[l][j].GETAOS)
+			if (GMT > tab->Stations[i].GMTAOS)
 			{
-				NextStationContactsBuffer.NextStations[l][j].GETAOS = GET;
-				NextStationContactsBuffer.NextStations[l][j].DELTAT = NextStationContactsBuffer.NextStations[l][j].GETLOS - NextStationContactsBuffer.NextStations[l][j].GETAOS;
-				NextStationContactsBuffer.NextStations[l][j].BestAvailableAOS = true;
+				NextStationContactsBuffer.GETHCA[l][j] = GET;
+				NextStationContactsBuffer.DTPASS[l][j] = tab->Stations[i].GMTLOS - GMT;
+				NextStationContactsBuffer.BestAvailableAOS[l][j] = true;
+			}
+			if (GMT > tab->Stations[i].GMTEMAX)
+			{
+				NextStationContactsBuffer.BestAvailableEMAX[l][j] = true;
 			}
 			j++;
 		}
@@ -15028,66 +15092,146 @@ void RTCC::EMDLANDM(int L, double get, double dt, int ref)
 
 void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int body)
 {
-	NextStationContact empty;
-	double GET_Begin, GET_End;
+	StationContact empty;
+	double GMT_Begin, GMT_End;
 	unsigned i = 0, j = 0;
-
-	OrbitStationContactsTable *stcont;
-	PredictedSiteAcquisitionTable *tab;
-
-	if (veh == 1)
-	{
-		stcont = &EZSTACT1;
-		if (num == 1)
-		{
-			tab = &EZACQ1;
-		}
-		else
-		{
-			tab = &EZDPSAD1;
-		}
-	}
-	else
-	{
-		stcont = &EZSTACT3;
-		if (num == 1)
-		{
-			tab = &EZACQ3;
-		}
-		else
-		{
-			tab = &EZDPSAD3;
-		}
-	}
+	int stat_body;
 
 	if (ind == 1)
 	{
-		GET_Begin = vala;
-		GET_End = valb;
+		GMT_Begin = GMTfromGET(vala);
+		GMT_End = GMTfromGET(valb);
 	}
 	else
 	{
-		GET_Begin = CapeCrossingGET(veh, (int)vala);
-		GET_End = CapeCrossingGET(veh, 1 + (int)valb);
+		GMT_Begin = CapeCrossingGMT(veh, (int)vala);
+		GMT_End = CapeCrossingGMT(veh, 1 + (int)valb);
 	}
 
-	while (GET_Begin > stcont->Stations[i].GETAOS && i < 44)
+	if (GMT_End < 0)
 	{
-		i++;
+		return;
+	}
+	if (GMT_Begin < RTCCPresentTimeGMT())
+	{
+		GMT_Begin = RTCCPresentTimeGMT();
 	}
 
-	while (GET_End >= stcont->Stations[i].GETAOS && i < 44 && j < 39)
+	Station station;
+	StationTable contact;
+
+	//Experimental site
+	if (num == 3)
 	{
-		tab->Stations[j] = stcont->Stations[i];
-		i++;
-		j++;
+		//TBD
+		stat_body = EZEXSITE.REF;
+		if (stat_body < 0)
+		{
+			return;
+		}
+	}
+	//Predicted site
+	else
+	{
+		stat_body = BODY_EARTH;
+		for (int i = 0;i < NUMBEROFGROUNDSTATIONS;i++)
+		{
+			if (MGRTAG == 0 && !groundstationslunar[i]) continue;
+			station.alt = 0.0;
+			station.code = gsabbreviations[i];
+			station.lat = groundstations[i][0];
+			station.lng = groundstations[i][1];
+			contact.table.push_back(station);
+		}
 	}
 
-	//Fill the rest with empty data
-	while (j < 40)
+	int TUP;
+	unsigned NumVec;
+	OrbitEphemerisTable ephem;
+
+	ELNMVC(GMT_Begin, GMT_End, veh, NumVec, TUP);
+	ELFECH(GMT_Begin, NumVec, 1, veh, ephem.EPHEM, ephem.MANTIMES, ephem.LUNRSTAY);
+
+	OrbitStationContactsTable res;
+	EMGENGEN(ephem.EPHEM, ephem.MANTIMES, contact, stat_body, res);
+
+	//Experimental site
+	if (num == 3)
 	{
-		tab->Stations[j] = empty;
-		j++;
+
+	}
+	//Predicted site
+	else
+	{
+		PredictedSiteAcquisitionTable *tab;
+
+		if (veh == 1)
+		{
+			if (num == 1)
+			{
+				tab = &EZACQ1;
+			}
+			else
+			{
+				tab = &EZDPSAD1;
+			}
+		}
+		else
+		{
+			if (num == 1)
+			{
+				tab = &EZACQ3;
+			}
+			else
+			{
+				tab = &EZDPSAD3;
+			}
+		}
+
+		PredictedSiteAcquisitionTable empty;
+		*tab = empty;
+
+		if (veh == 1)
+		{
+			tab->VEHICLE = "CSM";
+		}
+		else
+		{
+			tab->VEHICLE = "LEM";
+		}
+
+		int numcontacts = 0;
+		for (int i = 0;i < 42;i++)
+		{
+			if (res.Stations[i].GMTAOS < GMT_Begin || res.Stations[i].GMTAOS > GMT_End)
+			{
+				continue;
+			}
+			tab->STA[tab->pages - 1][numcontacts] = res.Stations[i].StationID;
+			tab->GETHCA[tab->pages - 1][numcontacts] = GETfromGMT(res.Stations[i].GMTAOS);
+			tab->GETHCD[tab->pages - 1][numcontacts] = GETfromGMT(res.Stations[i].GMTLOS);
+			tab->ELMAX[tab->pages - 1][numcontacts] = res.Stations[i].MAXELEV*DEG;
+			tab->REV[tab->pages - 1][numcontacts] = CapeCrossingRev(veh, res.Stations[i].GMTAOS);
+			tab->BestAvailableAOS[tab->pages - 1][numcontacts] = res.Stations[i].BestAvailableAOS;
+			tab->BestAvailableLOS[tab->pages - 1][numcontacts] = res.Stations[i].BestAvailableLOS;
+			tab->BestAvailableEMAX[tab->pages - 1][numcontacts] = res.Stations[i].BestAvailableEMAX;
+			numcontacts++;
+			if (numcontacts >= 21)
+			{
+				tab->pages = 2;
+				numcontacts = 0;
+			}
+		}
+		if (tab->pages == 1)
+		{
+			tab->numcontacts[0] = numcontacts;
+			tab->numcontacts[1] = 0;
+		}
+		else if (tab->pages == 2)
+		{
+			tab->numcontacts[0] = 21;
+			tab->numcontacts[1] = numcontacts;
+		}
 	}
 }
 
@@ -18099,7 +18243,7 @@ RTCC_ELVCTR_5A:
 int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 {
 	int i, rev, rev_max = 24;
-	double lng_des, GMT_min, GMT_cross, GET_cur;
+	double lng_des, GMT_min, GMT_cross, GMT_cur;
 
 	OrbitEphemerisTable *ephemeris;
 	CapeCrossingTable *cctab;
@@ -18123,12 +18267,12 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 		return 1;
 	}
 
-	GET_cur = OrbMech::GETfromMJD(oapiGetSimMJD(), CalcGETBase());
+	GMT_cur = RTCCPresentTimeGMT();
 
 	//Find current rev
 	for (i = 0;i < cctab->NumRev;i++)
 	{
-		if (GET_cur < cctab->GETCross[i])
+		if (GMT_cur < cctab->GMTCross[i])
 		{
 			rev0 = i + 1;
 			break;
@@ -18137,7 +18281,7 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 
 	for (i = 0;i < 30;i++)
 	{
-		cctab->GETCross[i] = 0.0;
+		cctab->GMTCross[i] = 0.0;
 	}
 
 	if (ephemeris->EPHEM.table.front().RBI == BODY_EARTH)
@@ -18150,8 +18294,8 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 	}
 
 	cctab->TUP = ephemeris->EPHEM.Header.TUP;
-	cctab->GETEphemFirst = GETfromGMT(ephemeris->EPHEM.table.front().GMT);
-	cctab->GETEphemLast = GETfromGMT(ephemeris->EPHEM.table.back().GMT);
+	cctab->GMTEphemFirst = ephemeris->EPHEM.table.front().GMT;
+	cctab->GMTEphemLast = ephemeris->EPHEM.table.back().GMT;
 
 	GMT_min = ephemeris->EPHEM.table.front().GMT;
 
@@ -18162,7 +18306,7 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 			break;
 		}
 
-		cctab->GETCross[rev] = GETfromGMT(GMT_cross);
+		cctab->GMTCross[rev] = GMT_cross;
 
 		GMT_min = GMT_cross + 3600.0;
 	}
@@ -18259,7 +18403,7 @@ int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
 			return 4;
 		}
 		u = coe.TA + coe.w;
-		if (u > PI2)
+		if (u >= PI2)
 		{
 			u = u - PI2;
 		}
@@ -18279,7 +18423,7 @@ int RTCC::RMMASCND(int L, double GMT_min, double &lng_asc)
 			du = u;
 		}
 		n = coe.h / pow(length(sv_true.R), 2);
-		dt = du / n;
+		dt = -du / n;
 		GMT += dt;
 		i++;
 	}
@@ -18304,7 +18448,7 @@ int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, do
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
 	VECTOR3 R_EM, V_EM, R_ES, R_MS, s;
 	double R_E, cos_theta, cos_theta_old, GMT_old, GMT;
-	unsigned iter = 0;
+	unsigned iter = 0, iter_start;
 	bool sight, sight_old, rise;
 	int dataset = 0;
 	int counter = 0;
@@ -18322,6 +18466,7 @@ int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, do
 		iter++;
 	}
 
+	iter_start = iter;
 	table.num = 0;
 
 	//Find environment change
@@ -18353,7 +18498,7 @@ int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, do
 		s = unit(R_MS);
 
 		cos_theta = length(sv_cur.R - s * dotp(sv_cur.R, s)) - R_E;
-		if (iter == 0)
+		if (iter == iter_start)
 		{
 			sight_old = sight;
 		}
@@ -18478,11 +18623,11 @@ int RTCC::EMMENV(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, do
 
 void RTCC::EMDSSEMD(int ind, double param)
 {
-	double GET_begin, get, Pitch, Yaw;
+	double GMT_begin, get, Pitch, Yaw;
 
 	if (ind == 1)
 	{
-		GET_begin = param;
+		GMT_begin = GMTfromGET(param);
 	}
 	else
 	{
@@ -18491,7 +18636,11 @@ void RTCC::EMDSSEMD(int ind, double param)
 		{
 			return;
 		}
-		GET_begin = EZCCSM.GETCross[rev - EZCCSM.NumRevFirst];
+		GMT_begin = CapeCrossingGMT(1, rev);
+		if (GMT_begin < RTCCPresentTimeGMT())
+		{
+			GMT_begin = RTCCPresentTimeGMT();
+		}
 	}
 
 	for (int i = 0;i < 8;i++)
@@ -18507,7 +18656,7 @@ void RTCC::EMDSSEMD(int ind, double param)
 		EZSSTAB.data[i].psi_SS = 0.0;
 	}
 
-	if (EMMENV(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMTfromGET(GET_begin), true, EZSSTAB))
+	if (EMMENV(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMT_begin, true, EZSSTAB))
 	{
 		return;
 	}
@@ -18525,7 +18674,7 @@ void RTCC::EMDSSEMD(int ind, double param)
 			get = EZSSTAB.data[i].GETSR;
 		}
 
-		EZSSTAB.data[i].REV = CapeCrossingRev(1, get);
+		EZSSTAB.data[i].REV = CapeCrossingRev(1, GMTfromGET(get));
 		ECMPAY(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMTfromGET(EZSSTAB.data[i].GETSR), true, Pitch, Yaw);
 		EZSSTAB.data[i].theta_SR = Pitch * DEG;
 		EZSSTAB.data[i].psi_SR = Yaw * DEG;
@@ -18537,11 +18686,11 @@ void RTCC::EMDSSEMD(int ind, double param)
 
 void RTCC::EMDSSMMD(int ind, double param)
 {
-	double GET_begin, get, Pitch, Yaw;
+	double GMT_begin, get, Pitch, Yaw;
 
 	if (ind == 1)
 	{
-		GET_begin = param;
+		GMT_begin = GMTfromGET(param);
 	}
 	else
 	{
@@ -18550,7 +18699,11 @@ void RTCC::EMDSSMMD(int ind, double param)
 		{
 			return;
 		}
-		GET_begin = EZCCSM.GETCross[rev - EZCCSM.NumRevFirst];
+		GMT_begin = CapeCrossingGMT(1, rev);
+		if (GMT_begin < RTCCPresentTimeGMT())
+		{
+			GMT_begin = RTCCPresentTimeGMT();
+		}
 	}
 
 	for (int i = 0;i < 8;i++)
@@ -18566,7 +18719,7 @@ void RTCC::EMDSSMMD(int ind, double param)
 		EZMMTAB.data[i].psi_SS = 0.0;
 	}
 
-	if (EMMENV(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMTfromGET(GET_begin), false, EZMMTAB))
+	if (EMMENV(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMT_begin, false, EZMMTAB))
 	{
 		return;
 	}
@@ -18584,7 +18737,7 @@ void RTCC::EMDSSMMD(int ind, double param)
 			get = EZMMTAB.data[i].GETSR;
 		}
 
-		EZMMTAB.data[i].REV = CapeCrossingRev(1, get);
+		EZMMTAB.data[i].REV = CapeCrossingRev(1, GMTfromGET(get));
 		ECMPAY(EZEPH1.EPHEM, EZEPH1.MANTIMES, GMTfromGET(EZMMTAB.data[i].GETSR), false, Pitch, Yaw);
 		EZMMTAB.data[i].theta_SR = Pitch * DEG;
 		EZMMTAB.data[i].psi_SR = Yaw * DEG;
@@ -18594,7 +18747,7 @@ void RTCC::EMDSSMMD(int ind, double param)
 	}
 }
 
-int RTCC::CapeCrossingRev(int L, double GET)
+int RTCC::CapeCrossingRev(int L, double GMT)
 {
 	CapeCrossingTable *table;
 	if (L == RTCC_MPT_LM)
@@ -18611,18 +18764,18 @@ int RTCC::CapeCrossingRev(int L, double GET)
 		return 1;
 	}
 
-	if (GET < table->GETCross[0])
+	if (GMT < table->GMTCross[0])
 	{
 		return table->NumRevFirst - 1;
 	}
-	else if (GET > table->GETCross[table->NumRev - 1])
+	else if (GMT > table->GMTCross[table->NumRev - 1])
 	{
 		return table->NumRevLast;
 	}
 
 	for (int i = 0;i < table->NumRev;i++)
 	{
-		if (table->GETCross[i] > GET)
+		if (table->GMTCross[i] > GMT)
 		{
 			return i + table->NumRevFirst - 1;
 		}
@@ -18631,7 +18784,7 @@ int RTCC::CapeCrossingRev(int L, double GET)
 	return 1;
 }
 
-double RTCC::CapeCrossingGET(int L, int rev)
+double RTCC::CapeCrossingGMT(int L, int rev)
 {
 	CapeCrossingTable *table;
 	if (L == RTCC_MPT_LM)
@@ -18653,7 +18806,7 @@ double RTCC::CapeCrossingGET(int L, int rev)
 		return -1.0;
 	}
 
-	return table->GETCross[rev - table->NumRevFirst];
+	return table->GMTCross[rev - table->NumRevFirst];
 }
 
 void RTCC::ECMPAY(EphemerisDataTable &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw)
@@ -18762,6 +18915,95 @@ int RTCC::NewMPTTrajectory(int L, SV &sv0)
 	}
 
 	return 0;
+}
+
+int RTCC::ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP)
+{
+	int err;
+	OrbitEphemerisTable *tab;
+	if (L == 1)
+	{
+		tab = &EZEPH1;
+	}
+	else
+	{
+		tab = &EZEPH2;
+	}
+
+	if (tab->EPHEM.table.size() == 0)
+	{
+		err = 32;
+		goto RTCC_ELNMVC_2B;
+	}
+	TUP = abs(tab->EPHEM.Header.TUP);
+	if (TUP == 0)
+	{
+		err = 64;
+		goto RTCC_ELNMVC_2B;
+	}
+
+	tab->EPHEM.Header.TUP = -tab->EPHEM.Header.TUP;
+
+	if (TL < tab->EPHEM.Header.TL)
+	{
+		if (TR < tab->EPHEM.Header.TL)
+		{
+			err = 128;
+			goto RTCC_ELNMVC_2B;
+		}
+		TL = tab->EPHEM.Header.TL;
+		err = 8;
+	}
+	if (TL > tab->EPHEM.Header.TR)
+	{
+		err = 128;
+		goto RTCC_ELNMVC_2B;
+	}
+	double TREQ, T_Mid;
+	unsigned LB, UB, Mid;
+	bool firstpass = true;
+	LB = 0;
+	UB = tab->EPHEM.table.size() - 1;
+	TREQ = TL;
+RTCC_ELNMVC_1B:
+	if (UB - LB <= 1)
+	{
+		goto RTCC_ELNMVC_1D;
+	}
+	Mid = (LB + UB) / 2;
+	T_Mid = tab->EPHEM.table[Mid].GMT;
+	if (TREQ < T_Mid)
+	{
+		UB = Mid;
+		goto RTCC_ELNMVC_1B;
+	}
+	if (TREQ > T_Mid)
+	{
+		LB = Mid;
+		goto RTCC_ELNMVC_1B;
+	}
+	LB = Mid;
+	if (firstpass)
+	{
+		LB++;
+	}
+	goto RTCC_ELNMVC_2A;
+RTCC_ELNMVC_1D:
+	LB++;
+RTCC_ELNMVC_2A:
+	if (firstpass)
+	{
+		NumVec = LB;
+		LB = NumVec;
+		UB = tab->EPHEM.table.size() - 1;
+		TREQ = TR;
+		firstpass = false;
+		goto RTCC_ELNMVC_1B;
+	}
+	NumVec = LB - NumVec + 2;
+RTCC_ELNMVC_2B:
+	tab->EPHEM.Header.TUP = -tab->EPHEM.Header.TUP;
+	return err;
 }
 
 int RTCC::ELFECH(double GMT, int L, EphemerisData &SV)
@@ -19319,6 +19561,28 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 				return 1;
 			}
 			EMSTAGEN(veh);
+		}
+		//Suppress/unsuppress C-band station contacts
+		else if (med == "04")
+		{
+			if (data.size() != 1)
+			{
+				return 1;
+			}
+			if (data[0] == "START")
+			{
+				MGRTAG = 0;
+				EMGPRINT("EMGABMED: C-BAND CONTACT GENERATION SUPPRESSED");
+			}
+			else if (data[0] == "STOP")
+			{
+				MGRTAG = 1;
+				EMGPRINT("EMGABMED: C-BAND CONTACT GENERATION UNSUPPRESSED");
+			}
+			else
+			{
+				return 2;
+			}
 		}
 	}
 	//G MEDs
@@ -22306,8 +22570,8 @@ int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 		double param = hh * 3600.0 + mm * 60.0 + ss;
 		EMMDYNMC(L, 5, 0, param);
 	}
-	//Predicted site acquisition
-	else if (med == "15" || med == "55")
+	//Predicted and experimental site acquisition
+	else if (med == "15" || med == "16" || med == "55")
 	{
 		if (data.size() < 4)
 		{
@@ -22405,6 +22669,10 @@ int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 		if (med == "15")
 		{
 			num = 1;
+		}
+		else if (med == "16")
+		{
+			num = 3;
 		}
 		else
 		{
@@ -22982,7 +23250,7 @@ void RTCC::EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt)
 	sprintf_s(Buffer, "EMGSTSTM: NEW IMU MATRIX %s%03d %s GET = %s", Buff1, tab->data[id - 1].ID, Buff3, Buff2);
 	std::string message;
 	message.assign(Buffer);
-	EMGPRINT(2, message);
+	EMGPRINT(message);
 }
 
 void RTCC::EMGSTGENName(int ID, char *Buffer)
@@ -23085,31 +23353,30 @@ int RTCC::EMGSTGENCode(const char *Buffer)
 	return -1;
 }
 
-void RTCC::EMGPRINT(int i, std::string mes)
+void RTCC::EMGPRINT(int i)
 {
-	std::string message;
 	switch (i)
 	{
 	case 1:
-		message = "EMGSTGEN: REFSMMAT NOT AVAILABLE";
-		break;
-	case 2:
-		message = mes;
+		EMGPRINT("EMGSTGEN: REFSMMAT NOT AVAILABLE");
 		break;
 	case 3:
-		message = "EMMGLCVP: EPHEMERIS NOT AVAILABLE";
+		EMGPRINT("EMMGLCVP: EPHEMERIS NOT AVAILABLE");
 		break;
 	case 4:
-		message = "EMMGLCVP: RADIAL FLIGHT CONDITIONS";
+		EMGPRINT("EMMGLCVP: RADIAL FLIGHT CONDITIONS");
 		break;
 	}
+}
+
+void RTCC::EMGPRINT(std::string message)
+{
+	RTCCONLINEMON.push_front(message);
 
 	if (RTCCONLINEMON.size() >= 9)
 	{
-		RTCCONLINEMON.pop_front();
+		RTCCONLINEMON.pop_back();
 	}
-
-	RTCCONLINEMON.push_back(message);
 }
 
 void RTCC::EMMGLCVP(int L, double gmt)

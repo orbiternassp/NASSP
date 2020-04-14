@@ -3233,7 +3233,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(15 * W / 32, 4 * H / 28, "PPP", 3);
 		skp->Text(15 * W / 32, 5 * H / 28, "GETCC", 5);
 		skp->Text(15 * W / 32, 6 * H / 28, "TAPP", 4);
-		skp->Text(15 * W / 32, 7 * H / 28, "LNPP", 3);
+		skp->Text(15 * W / 32, 7 * H / 28, "LNPP", 4);
 
 		skp->Text(25 * W / 32, 3 * H / 28, "REVL", 4);
 		skp->Text(25 * W / 32, 4 * H / 28, "GETL", 4);
@@ -3856,7 +3856,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		G->CycleNextStationContactsDisplay();
 
-		if (GC->rtcc->med_b04.FUNCTION)
+		if (GC->rtcc->MGRTAG == 0)
 		{
 			skp->Text(1 * W / 16, 2 * H / 14, "Lunar", 5);
 		}
@@ -3904,25 +3904,25 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			for (i = 0;i < 6;i++)
 			{
-				sprintf_s(Buffer, GC->rtcc->NextStationContactsBuffer.NextStations[j][i].StationID);
-				skp->Text((4 + j * 31) * W / 64, (i + 11) * H / 28, Buffer, strlen(Buffer));
+				sprintf_s(Buffer, GC->rtcc->NextStationContactsBuffer.STA[j][i].c_str());
+				skp->Text((4 + j * 31) * W / 64, (2*i + 11) * H / 28, Buffer, strlen(Buffer));
 
-				if (GC->rtcc->NextStationContactsBuffer.NextStations[j][i].BestAvailableAOS)
+				if (GC->rtcc->NextStationContactsBuffer.BestAvailableAOS[j][i])
 				{
-					skp->Text((7 + j * 31) * W / 64, (i + 11) * H / 28, "*", 1);
+					skp->Text((7 + j * 31) * W / 64, (2*i + 11) * H / 28, "*", 1);
 				}
-				GET_Display(Buffer, GC->rtcc->NextStationContactsBuffer.NextStations[j][i].GETAOS, false);
-				skp->Text((12 + j * 31) * W / 64, (i + 11) * H / 28, Buffer, strlen(Buffer));
+				GET_Display(Buffer, GC->rtcc->NextStationContactsBuffer.GETHCA[j][i], false);
+				skp->Text((12 + j * 31) * W / 64, (2*i + 11) * H / 28, Buffer, strlen(Buffer));
 
-				if (GC->rtcc->NextStationContactsBuffer.NextStations[j][i].BestAvailableEMAX)
+				if (GC->rtcc->NextStationContactsBuffer.BestAvailableEMAX[j][i])
 				{
-					skp->Text((19 + j * 31) * W / 64, (i + 11) * H / 28, "*", 1);
+					skp->Text((17 + j * 31) * W / 64, (2*i + 11) * H / 28, "*", 1);
 				}
-				sprintf_s(Buffer, "%.1f", GC->rtcc->NextStationContactsBuffer.NextStations[j][i].MAXELEV);
-				skp->Text((20 + j * 31) * W / 64, (i + 11) * H / 28, Buffer, strlen(Buffer));
+				sprintf_s(Buffer, "%.1f", GC->rtcc->NextStationContactsBuffer.EMAX[j][i]);
+				skp->Text((20 + j * 31) * W / 64, (2*i + 11) * H / 28, Buffer, strlen(Buffer));
 
-				GET_Display4(Buffer, GC->rtcc->NextStationContactsBuffer.NextStations[j][i].DELTAT);
-				skp->Text((27 + j * 31) * W / 64, (i + 11) * H / 28, Buffer, strlen(Buffer));
+				GET_Display4(Buffer, GC->rtcc->NextStationContactsBuffer.DTPASS[j][i]);
+				skp->Text((27 + j * 31) * W / 64, (2*i + 11) * H / 28, Buffer, strlen(Buffer));
 			}
 		}
 	}
@@ -3934,66 +3934,72 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		if (screen == 46)
 		{
-			skp->Text(4 * W / 8, 3 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 1", 37);
+			skp->Text(4 * W / 8, 1 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 1", 37);
 			tab = &GC->rtcc->EZACQ1;
 		}
 		else if (screen == 72)
 		{
-			skp->Text(4 * W / 8, 3 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 1", 37);
+			skp->Text(4 * W / 8, 1 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 1", 37);
 			tab = &GC->rtcc->EZACQ3;
 		}
 		else if (screen == 73)
 		{
-			skp->Text(4 * W / 8, 3 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 2", 37);
+			skp->Text(4 * W / 8, 1 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 2", 37);
 			tab = &GC->rtcc->EZDPSAD1;
 		}
 		else
 		{
-			skp->Text(4 * W / 8, 3 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 2", 37);
+			skp->Text(4 * W / 8, 1 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 2", 37);
 			tab = &GC->rtcc->EZDPSAD3;
 		}
 
 		skp->SetFont(font2);
 
-		skp->Text(4 * W / 32, 15 * H / 56, "REV", 3);
-		skp->Text(10 * W / 32, 15 * H / 56, "STA", 3);
-		skp->Text(16 * W / 32, 7 * H / 28, "AOS", 3);
-		skp->Text(16 * W / 32, 8 * H / 28, "GET", 3);
-		skp->Text(21 * W / 32, 7 * H / 28, "LOS", 3);
-		skp->Text(21 * W / 32, 8 * H / 28, "GET", 3);
-		skp->Text(26 * W / 32, 7 * H / 28, "MAX ELEV", 8);
-		skp->Text(26 * W / 32, 8 * H / 28, "DEG", 3);
+		skp->Text(22 * W / 32, 3 * H / 28, "STA ID", 6);
+		skp->Text(4 * W / 32, 11 * H / 56, "REV", 3);
+		skp->Text(10 * W / 32, 11 * H / 56, "STA", 3);
+		skp->Text(15 * W / 32, 5 * H / 28, "AOS", 3);
+		skp->Text(15 * W / 32, 6 * H / 28, "GET", 3);
+		skp->Text(21 * W / 32, 5 * H / 28, "LOS", 3);
+		skp->Text(21 * W / 32, 6 * H / 28, "GET", 3);
+		skp->Text(26 * W / 32, 5 * H / 28, "MAX ELEV", 8);
+		skp->Text(26 * W / 32, 6 * H / 28, "DEG", 3);
 
-		for (unsigned i = 0;i < 12;i++)
+		sprintf_s(Buffer, "PAGE %02d OF %02d", tab->curpage, tab->pages);
+		skp->Text(6 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "VEHICLE %s", tab->VEHICLE.c_str());
+		skp->Text(14 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
+
+		for (unsigned i = 0;i < tab->numcontacts[tab->curpage - 1];i++)
 		{
-			sprintf_s(Buffer, "%d", tab->Stations[i].REV);
-			skp->Text(4 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%03d", tab->REV[tab->curpage-1][i]);
+			skp->Text(4 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf_s(Buffer, tab->Stations[i].StationID);
-			skp->Text(10 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, tab->STA[tab->curpage - 1][i].c_str());
+			skp->Text(10 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
 
-			if (tab->Stations[i].BestAvailableAOS)
+			if (tab->BestAvailableAOS[tab->curpage - 1][i])
 			{
-				skp->Text(25 * W / 64, (i + 10) * H / 28, "*", 1);
+				skp->Text(25 * W / 64, (i + 7) * H / 28, "*", 1);
 			}
 
-			GET_Display(Buffer, tab->Stations[i].GETAOS, false);
-			skp->Text(16 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+			GET_Display(Buffer, tab->GETHCA[tab->curpage - 1][i], false);
+			skp->Text(15 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
 
-			if (tab->Stations[i].BestAvailableLOS)
+			if (tab->BestAvailableLOS[tab->curpage - 1][i])
 			{
-				skp->Text(37 * W / 64, (i + 10) * H / 28, "*", 1);
+				skp->Text(37 * W / 64, (i + 7) * H / 28, "*", 1);
 			}
 
-			GET_Display(Buffer, tab->Stations[i].GETLOS, false);
-			skp->Text(21 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+			GET_Display(Buffer, tab->GETHCD[tab->curpage - 1][i], false);
+			skp->Text(21 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
 
-			if (tab->Stations[i].BestAvailableEMAX)
+			if (tab->BestAvailableEMAX[tab->curpage - 1][i])
 			{
-				skp->Text(25 * W / 32, (i + 10) * H / 28, "*", 1);
+				skp->Text(24 * W / 32, (i + 7) * H / 28, "*", 1);
 			}
-			sprintf_s(Buffer, "%04.1f", tab->Stations[i].MAXELEV);
-			skp->Text(26 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%04.1f", tab->ELMAX[tab->curpage - 1][i]);
+			skp->Text(26 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
 		}
 	}
 	else if (screen == 47)

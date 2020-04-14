@@ -7144,7 +7144,14 @@ void ApolloRTCCMFD::set_MPTTLIDirectInput(char *str)
 
 void ApolloRTCCMFD::menuNextStationContactLunar()
 {
-	GC->rtcc->med_b04.FUNCTION = !GC->rtcc->med_b04.FUNCTION;
+	if (GC->rtcc->MGRTAG == 1)
+	{
+		GeneralMEDRequest("B04,START;");
+	}
+	else
+	{
+		GeneralMEDRequest("B04,STOP;");
+	}
 }
 
 void ApolloRTCCMFD::menuGenerateStationContacts()
@@ -7205,6 +7212,36 @@ bool PredSiteAcqLM2Input(void* id, char *str, void *data)
 {
 	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
+}
+
+void ApolloRTCCMFD::CyclePredSiteAcqPage()
+{
+	PredictedSiteAcquisitionTable *tab;
+	if (screen == 46)
+	{
+		tab = &GC->rtcc->EZACQ1;
+	}
+	else if (screen == 72)
+	{
+		tab = &GC->rtcc->EZACQ3;
+	}
+	else if (screen == 73)
+	{
+		tab = &GC->rtcc->EZDPSAD1;
+	}
+	else
+	{
+		tab = &GC->rtcc->EZDPSAD3;
+	}
+
+	if (tab->curpage < tab->pages)
+	{
+		tab->curpage++;
+	}
+	else
+	{
+		tab->curpage = 1;
+	}
 }
 
 void ApolloRTCCMFD::menuSetLDPPAzimuth()

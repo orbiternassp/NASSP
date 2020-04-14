@@ -89,7 +89,6 @@ public:
 	void CycleSpaceDigitals();
 	void SpaceDigitalsMSKRequest();
 	void CycleNextStationContactsDisplay();
-	void GenerateStationContacts();
 	void RTETradeoffDisplayCalc();
 	void GeneralMEDRequest();
 	void TransferTIToMPT();

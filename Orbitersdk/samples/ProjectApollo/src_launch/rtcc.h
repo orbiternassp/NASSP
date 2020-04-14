@@ -198,12 +198,6 @@ const double LaunchMJD[11] = {//Launch MJD of Apollo missions
 
 //MANUAL ENTRY DEVICES
 
-//Suppress/Unsuppress C-Band Station Contacts Generation
-struct MED_B04
-{
-	bool FUNCTION = false; //false = unsuppress, true = suppress
-};
-
 //Computation for Lunar Descent Planning
 struct MED_K16
 {
@@ -1964,37 +1958,81 @@ struct REFSMMATLocker
 	REFSMMATData data[12];
 };
 
-struct NextStationContact
+struct StationContact
 {
-	NextStationContact();
-	double GETAOS;
-	double GETLOS;
-	char StationID[4];
-	double DELTAT;
+	StationContact();
+	double GMTAOS;
+	double GMTLOS;
+	double GMTEMAX;
 	double MAXELEV;
+	char StationID[4];
 	bool BestAvailableAOS;
 	bool BestAvailableLOS;
 	bool BestAvailableEMAX;
 	int REV;
 
 	//For sorting
-	bool operator<(const NextStationContact& rhs) const;
+	bool operator<(const StationContact& rhs) const;
 };
 
 struct OrbitStationContactsTable
 {
-	NextStationContact Stations[45];
+	StationContact Stations[45];
 };
 
 struct NextStationContactsTable
 {
-	NextStationContact NextStations[2][6];
+	NextStationContactsTable();
+	//Station ID
+	std::string STA[2][6];
+	//GET of horizon ascent
+	double GETHCA[2][6];
+	//Duration from GETHCA to entrance into keyhole (GETKLOS - GETHCA)
+	double DTKLOS[2][6];
+	//Maximum elevation angle above station
+	double EMAX[2][6];
+	//Duration of contact
+	double DTPASS[2][6];
+	//Duration of time in keyhole
+	double DTKH[2][6];
+	//If true, AOS occured before current GET
+	bool BestAvailableAOS[2][6];
+	//If true, maximum elevation occured before current GET
+	bool BestAvailableEMAX[2][6];
+	//Current GET
 	double GET = 0.0;
 };
 
 struct PredictedSiteAcquisitionTable
 {
-	NextStationContact Stations[40];
+	PredictedSiteAcquisitionTable();
+	
+	//Current page (1 to 2)
+	int curpage;
+	//Total number of pages (1 or 2)
+	int pages;
+	//Total number of contacts
+	unsigned numcontacts[2];
+	//Station ID of anchor vector
+	std::string STAID;
+	//Vehicle (CSM or LEM)
+	std::string VEHICLE;
+	//Revolution number
+	int REV[2][21];
+	//Sites
+	std::string STA[2][21];
+	//If true, AOS occured before current GET
+	bool BestAvailableAOS[2][21];
+	//AOS GET
+	double GETHCA[2][21];
+	//If true, AOS occured before current GET
+	bool BestAvailableLOS[2][21];
+	//LOS GET
+	double GETHCD[2][21];
+	//If true, maximum elevation occured before current GET
+	bool BestAvailableEMAX[2][21];
+	//Max elevation
+	double ELMAX[2][21];
 };
 
 struct MANTIMESData
@@ -2022,11 +2060,11 @@ struct CapeCrossingTable
 	int NumRev;
 	int NumRevFirst;
 	int NumRevLast;
-	double GETEphemFirst;
-	double GETEphemLast;
+	double GMTEphemFirst;
+	double GMTEphemLast;
 	//Time of last known cape crossing before the time of the update vector (zero if unknown)
-	double GETCrossPrev;
-	double GETCross[30];
+	double GMTCrossPrev;
+	double GMTCross[30];
 };
 
 struct Station
@@ -2098,6 +2136,7 @@ struct SunriseSunsetTable
 {
 	int num = 0;
 	SunriseSunsetData data[8];
+	std::string errormessage;
 };
 
 // Parameter block for Calculation(). Expand as needed.
@@ -2563,6 +2602,8 @@ public:
 	//Ephemeris Fetch Routine
 	int ELFECH(double GMT, int L, EphemerisData &SV);
 	int ELFECH(double GMT, unsigned vec_tot, unsigned vec_bef, int L, EphemerisDataTable &EPHEM, ManeuverTimesTable &MANTIMES, LunarStayTimesTable &LUNSTAY);
+	//Vector Count Routine
+	int ELNMVC(double TL, double TR, int L, unsigned &NumVec, int &TUP);
 	int NewMPTTrajectory(int L, SV &sv0);
 	//RTE Tradeoff Display Sort and Order Routine
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
@@ -2873,7 +2914,6 @@ public:
 		int TrimAngleIndicator = 0; //0 = computed, 2 = system
 	} med_m86;
 
-	MED_B04 med_b04;
 	MED_K16 med_k16;
 	MED_K17 med_k17;
 	MED_M50 med_m50;
@@ -3588,16 +3628,16 @@ private:
 	bool CalculationMTP_G(int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
 	//Generalized Contact Generator
-	void EMGENGEN(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, OrbitStationContactsTable &res);
+	void EMGENGEN(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res);
 	//Horizon Crossing Subprogram
-	bool EMXING(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, std::vector<NextStationContact> &acquisitions);
+	bool EMXING(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, const Station & station, int body, std::vector<StationContact> &acquisitions);
 	//Variable Order Interpolation
 	int ELVARY(EphemerisDataTable &EPH, unsigned ORER, double GMT, bool EXTRAP, EphemerisData &sv_out, unsigned &ORER_out);
 	//Extended Interpolation Routine
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out);
 	void ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable &out, EphemerisDataTable &EPH, ManeuverTimesTable &mantimes, LunarStayTimesTable *LUNRSTAY = NULL);
-	int CapeCrossingRev(int L, double GET);
-	double CapeCrossingGET(int L, int rev);
+	int CapeCrossingRev(int L, double GMT);
+	double CapeCrossingGMT(int L, int rev);
 	void ECMPAY(EphemerisDataTable &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw);
 	//Spherical to Inertial Conversion
 	int EMMXTR(double vel, double fpa, double azi, double lat, double lng, double h, VECTOR3 &R, VECTOR3 &V);
@@ -3634,7 +3674,8 @@ private:
 	//GOST CSM/LM LCV Computation
 	void EMMGLCVP(int L, double gmt);
 	//Trajectory Update On-line Print
-	void EMGPRINT(int i, std::string mes = 0);
+	void EMGPRINT(int i);
+	void EMGPRINT(std::string message);
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Ground Point Characteristics Block Routine
@@ -3987,6 +4028,8 @@ public:
 	int MCCCEX;
 	//LGC address for external DV uplink
 	int MCCLEX;
+	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
+	int MGRTAG;
 };
 
 #endif

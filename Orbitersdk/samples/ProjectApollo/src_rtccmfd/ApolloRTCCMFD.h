@@ -478,6 +478,7 @@ public:
 	void PredSiteAcqLM1Calc();
 	void PredSiteAcqCSM2Calc();
 	void PredSiteAcqLM2Calc();
+	void CyclePredSiteAcqPage();
 	void menuSetUplinkMenu();
 	void menuSetStateVectorMenu();
 	void menuSetLSUpdateMenu();

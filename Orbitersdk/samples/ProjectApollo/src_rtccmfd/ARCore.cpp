@@ -1656,11 +1656,6 @@ void ARCore::CycleNextStationContactsDisplay()
 	}
 }
 
-void ARCore::GenerateStationContacts()
-{
-	startSubthread(35);
-}
-
 void ARCore::RTETradeoffDisplayCalc()
 {
 	startSubthread(52);
