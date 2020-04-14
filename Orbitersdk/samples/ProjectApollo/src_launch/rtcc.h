@@ -1965,7 +1965,7 @@ struct StationContact
 	double GMTLOS;
 	double GMTEMAX;
 	double MAXELEV;
-	char StationID[4];
+	std::string StationID;
 	bool BestAvailableAOS;
 	bool BestAvailableLOS;
 	bool BestAvailableEMAX;
@@ -2033,6 +2033,42 @@ struct PredictedSiteAcquisitionTable
 	bool BestAvailableEMAX[2][21];
 	//Max elevation
 	double ELMAX[2][21];
+};
+
+struct ExperimentalSiteAcquisitionTable
+{
+	ExperimentalSiteAcquisitionTable();
+
+	//Current page (1 to 2)
+	int curpage;
+	//Total number of pages (1 or 2)
+	int pages;
+	//Total number of contacts
+	unsigned numcontacts[2];
+	//Station ID of anchor vector
+	std::string STAID;
+	//Revolution number
+	int REV[2][20];
+	//Sites
+	std::string STA[2][20];
+	//If true, AOS occured before current GET
+	bool BestAvailableAOS[2][20];
+	//AOS GET
+	double GETAOS[2][20];
+	//Ground range
+	double GNDRNG[2][20];
+	//Altitude
+	double ALT[2][20];
+	//If true, maximum elevation occured before current GET
+	bool BestAvailableEMAX[2][20];
+	//Max elevation
+	double ELMAX[2][20];
+	//Closest approach GET
+	double GETCA[2][20];
+	//LOS GET
+	double GETLOS[2][20];
+	//If true, AOS occured before current GET
+	bool BestAvailableLOS[2][20];
 };
 
 struct MANTIMESData
@@ -2561,6 +2597,10 @@ public:
 	void EMDSTAC();
 	//Predicted Site Acquisition Display
 	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
+	//Ground Range and Altitude Subprogram
+	void ECMEXP(EphemerisData sv, Station *stat, int statbody, double &range, double &alt);
+	//Subsatellite Position
+	int GLSSAT(EphemerisData sv, double &lat, double &lng, double &alt);
 	//Landmark Acquisition Display
 	void EMDLANDM(int L, double get, double dt, int ref);
 	//Display Updates
@@ -2581,6 +2621,7 @@ public:
 	//Generalized Coordinate System Conversion Subroutine
 	int ELVCNV(EphemerisDataTable &svtab, int in, int out, EphemerisDataTable &svtab_out);
 	int ELVCNV(EphemerisData &sv, int in, int out, EphemerisData &sv_out);
+	int ELVCNV(VECTOR3 vec, double GMT, int in, int out, VECTOR3 &vec_out);
 	//Checkout Monitor Display
 	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
 	//Detailed Maneuver Table Display
@@ -2939,18 +2980,19 @@ public:
 	OrbitStationContactsTable EZSTACT1, EZSTACT3;
 	NextStationContactsTable NextStationContactsBuffer;
 	PredictedSiteAcquisitionTable EZACQ1, EZACQ3, EZDPSAD1, EZDPSAD3;
+	ExperimentalSiteAcquisitionTable EZDPSAD2;
 
 	struct ExperimentalSiteGroundPointTable
 	{
 		//-1 when empty, 0 = Earth, 1 = Moon
-		int REF;
+		int REF = -1;
 		Station Data[12];
 	} EZEXSITE;
 
 	struct LandmarkSitesTable
 	{
 		//-1 when empty, 0 = Earth, 1 = Moon
-		int REF;
+		int REF = -1;
 		Station Data[12];
 	} EZLASITE;
 

@@ -3466,9 +3466,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(8 * W / 16, 4 * H / 28, "1501 Moonrise/Moonset Times", 27);
 		skp->Text(8 * W / 16, 5 * H / 28, "1502 Sunrise/Sunset Times", 25);
 		skp->Text(8 * W / 16, 6 * H / 28, "1503 Next Station Contacts", 26);
-		skp->Text(8 * W / 16, 7 * H / 28, "1597 Skeleton Flight Plan Table", 31);
-		skp->Text(8 * W / 16, 8 * H / 28, "1619 Checkout Monitor", 21);
-		skp->Text(8 * W / 16, 9 * H / 28, "1629 On Line Monitor", 20);
+		skp->Text(8 * W / 16, 7 * H / 28, "1506 Experimental Site Acquisition", 26);
+		skp->Text(8 * W / 16, 8 * H / 28, "1597 Skeleton Flight Plan Table", 31);
+		skp->Text(8 * W / 16, 9 * H / 28, "1619 Checkout Monitor", 21);
+		skp->Text(8 * W / 16, 10 * H / 28, "1629 On Line Monitor", 20);
 	}
 	else if (screen == 43)
 	{
@@ -6918,6 +6919,65 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(10 * W / 16, 4 * H / 14, "Transfer to MPT", 15);
 		skp->Text(10 * W / 16, 10 * H / 14, "Page 2/2", 8);
+	}
+	else if (screen == 85)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 2 * H / 28, "EXPERIMENTAL SITE ACQUISITION (MSK 1506)", 40);
+
+		skp->SetFont(font2);
+
+		skp->Text(22 * W / 32, 4 * H / 28, "STA ID", 6);
+		skp->Text(2 * W / 32, 6 * H / 28, "REV", 3);
+		skp->Text(5 * W / 32, 6 * H / 28, "STA", 3);
+		skp->Text(9 * W / 32, 6 * H / 28, "GETAOS", 6);
+		skp->Text(55 * W / 128, 6 * H / 28, "GNDRNG", 6);
+		skp->Text(17 * W / 32, 6 * H / 28, "ALT", 3);
+		skp->Text(20 * W / 32, 6 * H / 28, "EMAX", 4);
+		skp->Text(24 * W / 32, 6 * H / 28, "GETCA", 5);
+		skp->Text(29 * W / 32, 6 * H / 28, "GETLOS", 8);
+
+		sprintf_s(Buffer, "PAGE %02d OF %02d", GC->rtcc->EZDPSAD2.curpage, GC->rtcc->EZDPSAD2.pages);
+		skp->Text(6 * W / 32, 4 * H / 28, Buffer, strlen(Buffer));
+
+		for (unsigned i = 0;i < GC->rtcc->EZDPSAD2.numcontacts[GC->rtcc->EZDPSAD2.curpage - 1];i++)
+		{
+			sprintf_s(Buffer, "%03d", GC->rtcc->EZDPSAD2.REV[GC->rtcc->EZDPSAD2.curpage - 1][i]);
+			skp->Text(2 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, GC->rtcc->EZDPSAD2.STA[GC->rtcc->EZDPSAD2.curpage - 1][i].c_str());
+			skp->Text(5 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->EZDPSAD2.BestAvailableAOS[GC->rtcc->EZDPSAD2.curpage - 1][i])
+			{
+				skp->Text(8 * W / 32, (i + 8) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, GC->rtcc->EZDPSAD2.GETAOS[GC->rtcc->EZDPSAD2.curpage - 1][i], false);
+			skp->Text(9 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%.1f", GC->rtcc->EZDPSAD2.GNDRNG[GC->rtcc->EZDPSAD2.curpage - 1][i]);
+			skp->Text(14 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			sprintf_s(Buffer, "%04.1f", GC->rtcc->EZDPSAD2.ALT[GC->rtcc->EZDPSAD2.curpage - 1][i]);
+			skp->Text(17 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->EZDPSAD2.BestAvailableEMAX[GC->rtcc->EZDPSAD2.curpage - 1][i])
+			{
+				skp->Text(19 * W / 32, (i + 8) * H / 28, "*", 1);
+			}
+			sprintf_s(Buffer, "%04.1f", GC->rtcc->EZDPSAD2.ELMAX[GC->rtcc->EZDPSAD2.curpage - 1][i]);
+			skp->Text(20 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			GET_Display(Buffer, GC->rtcc->EZDPSAD2.GETCA[GC->rtcc->EZDPSAD2.curpage - 1][i], false);
+			skp->Text(24 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->EZDPSAD2.BestAvailableLOS[GC->rtcc->EZDPSAD2.curpage - 1][i])
+			{
+				skp->Text(27 * W / 32, (i + 8) * H / 28, "*", 1);
+			}
+			GET_Display(Buffer, GC->rtcc->EZDPSAD2.GETLOS[GC->rtcc->EZDPSAD2.curpage - 1][i], false);
+			skp->Text(29 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }

@@ -478,7 +478,11 @@ public:
 	void PredSiteAcqLM1Calc();
 	void PredSiteAcqCSM2Calc();
 	void PredSiteAcqLM2Calc();
+	void ExpSiteAcqLMCalc();
+	void GroundPointTableUpdate();
 	void CyclePredSiteAcqPage();
+	void menuSetExpSiteAcqPage();
+	void CycleExpSiteAcqPage();
 	void menuSetUplinkMenu();
 	void menuSetStateVectorMenu();
 	void menuSetLSUpdateMenu();

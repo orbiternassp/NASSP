@@ -1407,6 +1407,12 @@ void ApolloRTCCMFD::menuMPTDirectInputSecondPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetExpSiteAcqPage()
+{
+	screen = 85;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -7214,6 +7220,30 @@ bool PredSiteAcqLM2Input(void* id, char *str, void *data)
 	return true;
 }
 
+void ApolloRTCCMFD::ExpSiteAcqLMCalc()
+{
+	bool ExpSiteAcqLMCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: U16, CSM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", ExpSiteAcqLMCalcInput, 0, 40, (void*)this);
+}
+
+bool ExpSiteAcqLMCalcInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
+void ApolloRTCCMFD::GroundPointTableUpdate()
+{
+	bool GroundPointTableUpdateInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: P32, Action Code (ADD,MOD,DEL),Earth/Moon Ind (E or M),Data Table Ind (EXST,LDMK),Station ID,Lat,Long,Height units (METR or NM),Height;", GroundPointTableUpdateInput, 0, 40, (void*)this);
+}
+
+bool GroundPointTableUpdateInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::CyclePredSiteAcqPage()
 {
 	PredictedSiteAcquisitionTable *tab;
@@ -7241,6 +7271,18 @@ void ApolloRTCCMFD::CyclePredSiteAcqPage()
 	else
 	{
 		tab->curpage = 1;
+	}
+}
+
+void ApolloRTCCMFD::CycleExpSiteAcqPage()
+{
+	if (GC->rtcc->EZDPSAD2.curpage < GC->rtcc->EZDPSAD2.pages)
+	{
+		GC->rtcc->EZDPSAD2.curpage++;
+	}
+	else
+	{
+		GC->rtcc->EZDPSAD2.curpage = 1;
 	}
 }
 
@@ -7750,6 +7792,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 1503:
 		menuSetNextStationContactsPage();
+		break;
+	case 1506:
+		menuSetExpSiteAcqPage();
 		break;
 	case 1597:
 		menuSetSkeletonFlightPlanPage();
