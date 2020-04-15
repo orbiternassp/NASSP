@@ -2800,6 +2800,16 @@ public:
 		int EntryProfile = 1;
 	} med_f71;
 
+	//Generation of Abort Scan Table for unspecified area
+	struct MED_F75
+	{
+		int Type = 0; //0 = TCUA, 1 = FCUA
+		double T_V = 0.0; //Vector time
+		double T_0 = 0.0; //Time of abort
+		double DVMAX = 0.0;
+		int EntryProfile = 0;
+	} med_f75;
+
 	//Update return to Earth constraints
 	struct MED_F86
 	{

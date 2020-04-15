@@ -17678,6 +17678,11 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 	res.L_LLS = 0.0;
 	res.R_LLS = MCSMLR / 1852.0;
 
+	res.PHASE = 0.0;
+	res.PHASE_DOT = 0.0;
+	res.WEDGE_ANG = 0.0;
+	res.DH = 0.0;
+
 	if (man->AttitudeCode == 5)
 	{
 		res.PGNS_DV = _V(0, 0, 0);
@@ -17867,12 +17872,7 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 
 		ELVCTR(interin, interout);
 
-		if (interout.ErrorCode)
-		{
-			res.PHASE_DOT = 0.0;
-			res.WEDGE_ANG = 0.0;
-		}
-		else
+		if (interout.ErrorCode == 0)
 		{
 			sv_other = interout.SV;
 
@@ -17893,87 +17893,86 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 			double r_m = length(R_m);
 			double a_a = r_a / (2.0 - r_a * v_a_sq / mu);
 			double a_m = r_m / (2.0 - r_m * v_m_sq / mu);
-			double theta_dot = PI2 * (sqrt(pow(a_a, 3) / pow(a_m, 3)) - 1.0);
-			double delta = asin(length(N) / h_m / h_a);
-
-			res.PHASE_DOT = theta_dot * DEG;
-			res.WEDGE_ANG = delta * DEG;
 
 			if (man->AttitudeCode == 4 && man->TVC == 3)
 			{
 				res.AGS_DV = PIAEDV(DV, R_m, V_m, man->R_BI, false) / 0.3048;
 			}
 
-			EphemerisData sv_dh;
-			CELEMENTS elem_a, elem_m;
-			double h1, h2, i1, i2, u1, u2, gamma, Cg, Tg, alpha1, alpha2, beta, theta_R, n, dt, t_R;
-			int i = 0;
-			dt = 1.0;
-			t_R = man->GMT_BO;
-
-			sv_dh.RBI = man->RefBodyInd;
-
-			while (i<10 && abs(dt)>0.01)
+			if (a_a > 0 && a_m > 0)
 			{
-				elem_a = OrbMech::GIMIKC(R_a, V_a, mu);
-				elem_m = OrbMech::GIMIKC(R_m, V_m, mu);
+				double theta_dot = PI2 * (sqrt(pow(a_a, 3) / pow(a_m, 3)) - 1.0);
+				double delta = asin(length(N) / h_m / h_a);
 
-				h1 = elem_m.h;
-				h2 = elem_a.h;
-				i1 = elem_m.i;
-				i2 = elem_a.i;
-				u1 = OrbMech::MeanToTrueAnomaly(elem_m.l, elem_m.e) + elem_m.g;
-				if (u1 > PI2)
-				{
-					u1 -= PI2;
-				}
-				u2 = OrbMech::MeanToTrueAnomaly(elem_a.l, elem_a.e) + elem_a.g;
-				if (u2 > PI2)
-				{
-					u2 -= PI2;
-				}
+				res.PHASE_DOT = theta_dot * DEG;
+				res.WEDGE_ANG = delta * DEG;
 
-				gamma = (h2 - h1) / 2.0;
-				Cg = cos(gamma);
-				Tg = sin(gamma) / Cg;
-				alpha2 = (i2 + i1) / 2.0;
-				alpha1 = alpha2 - i1;
-				beta = 2.0*atan(cos(alpha2) / cos(alpha1)*Tg);
-				theta_R = u1 - u2 + beta;
-				if (theta_R > PI)
-				{
-					theta_R -= PI2;
-				}
-				if (theta_R < -PI)
-				{
-					theta_R += PI2;
-				}
-				if (i == 0)
-				{
-					res.PHASE = theta_R * DEG;
-				}
+				EphemerisData sv_dh;
+				CELEMENTS elem_a, elem_m;
+				double h1, h2, i1, i2, u1, u2, gamma, Cg, Tg, alpha1, alpha2, beta, theta_R, n, dt, t_R;
+				int i = 0;
+				dt = 1.0;
+				t_R = man->GMT_BO;
 
-				n = OrbMech::GetMeanMotion(R_a, V_a, mu);
-				dt = theta_R / n;
+				sv_dh.RBI = man->RefBodyInd;
 
-				sv_dh.R = R_a;
-				sv_dh.V = V_a;
-				sv_dh.GMT = t_R;
-				
-				sv_dh = coast(sv_dh, dt);
-				R_a = sv_dh.R;
-				V_a = sv_dh.V;
-				t_R = sv_dh.GMT;
+				while (i<10 && abs(dt)>0.01)
+				{
+					elem_a = OrbMech::GIMIKC(R_a, V_a, mu);
+					elem_m = OrbMech::GIMIKC(R_m, V_m, mu);
 
-				i++;
+					h1 = elem_m.h;
+					h2 = elem_a.h;
+					i1 = elem_m.i;
+					i2 = elem_a.i;
+					u1 = OrbMech::MeanToTrueAnomaly(elem_m.l, elem_m.e) + elem_m.g;
+					if (u1 > PI2)
+					{
+						u1 -= PI2;
+					}
+					u2 = OrbMech::MeanToTrueAnomaly(elem_a.l, elem_a.e) + elem_a.g;
+					if (u2 > PI2)
+					{
+						u2 -= PI2;
+					}
+
+					gamma = (h2 - h1) / 2.0;
+					Cg = cos(gamma);
+					Tg = sin(gamma) / Cg;
+					alpha2 = (i2 + i1) / 2.0;
+					alpha1 = alpha2 - i1;
+					beta = 2.0*atan(cos(alpha2) / cos(alpha1)*Tg);
+					theta_R = u1 - u2 + beta;
+					if (theta_R > PI)
+					{
+						theta_R -= PI2;
+					}
+					if (theta_R < -PI)
+					{
+						theta_R += PI2;
+					}
+					if (i == 0)
+					{
+						res.PHASE = theta_R * DEG;
+					}
+
+					n = OrbMech::GetMeanMotion(R_a, V_a, mu);
+					dt = theta_R / n;
+
+					sv_dh.R = R_a;
+					sv_dh.V = V_a;
+					sv_dh.GMT = t_R;
+
+					sv_dh = coast(sv_dh, dt);
+					R_a = sv_dh.R;
+					V_a = sv_dh.V;
+					t_R = sv_dh.GMT;
+
+					i++;
+				}
+				res.DH = (length(R_a) - length(R_m)) / 1852.0;
 			}
-			res.DH = (length(R_a) - length(R_m)) / 1852.0;
 		}
-	}
-	else
-	{
-		res.PHASE_DOT = 0.0;
-		res.WEDGE_ANG = 0.0;
 	}
 
 	if (ManNo == 1)
@@ -19426,7 +19425,7 @@ void RTCC::PMMREAP(int med)
 
 		std::vector<TradeoffData>todata;
 
-		ConicRTEEarthNew rteproc(EPHEM.table, pzefem, todata);
+		ConicRTEEarthNew rteproc(EPHEM.table, pzefem);
 		rteproc.READ(mode, GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX);
 		rteproc.Init(PZREAP.DVMAX, PZREAP.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
 
@@ -19460,9 +19459,51 @@ void RTCC::PMMREAP(int med)
 
 		rteproc.ATP(line);
 		rteproc.MAIN();
-
+		todata = rteproc.TOData;
 		PMQREAP(todata);
 		PMDTRDFF(med, PZREAP.RTETradeoffRemotePage);
+	}
+	//Generation of Abort Scan Table for unspecified area	
+	else if (med == 75)
+	{
+		//TBD: Check if any AST slots are available
+		EphemerisData sv0;
+		double GMTV, GMT0, dt;
+		GMTV = GMTfromGET(med_f75.T_V);
+		GMT0 = GMTfromGET(med_f75.T_0);
+		if (ELFECH(GMTV, RTCC_MPT_CSM, sv0))
+		{
+			return;
+		}
+		dt = GMT0 - sv0.GMT;
+		PMMCEN_INI ini;
+		PMMCEN_VNI vni;
+		int ITS;
+		EphemerisData sv_abort;
+		ini.body = sv0.RBI;
+		ini.stop_ind = 1;
+		vni.dir = 1.0;
+		vni.dt_max = dt;
+		vni.dt_min = 0.0;
+		vni.GMTBASE = GetGMTBase();
+		vni.R = sv0.R;
+		vni.V = sv0.V;
+		vni.T = sv0.GMT;
+		OrbMech::PMMCEN(vni, ini, sv_abort.R, sv_abort.V, sv_abort.GMT, ITS, sv_abort.RBI);
+
+		if (sv_abort.RBI == BODY_EARTH)
+		{
+			std::vector<EphemerisData> SVArray;
+			SVArray.push_back(sv_abort);
+			ConicRTEEarthNew rteproc(SVArray, pzefem);
+			rteproc.READ(med_f75.Type, GMTBASE, PZREAP.TZMIN, PZREAP.TZMAX);
+			rteproc.Init(med_f75.DVMAX, med_f75.EntryProfile, PZREAP.IRMAX, PZREAP.VRMAX, PZREAP.RRBIAS, PZREAP.TGTLN);
+			rteproc.MAIN();
+		}
+		else
+		{
+
+		}
 	}
 }
 
@@ -23885,6 +23926,7 @@ bool RTCC::PCGAUS(double **A, double *Y, double *X, int N, double eps)
 void RTCC::PMMDAB(VECTOR3 R, VECTOR3 V, double GMT, ASTInput ARIN, ASTSettings IRIN, ASTData &AST, int &IER, int IPRT)
 {
 	//Set up inputs for forward iterator
+	bool err;
 	void *constPtr;
 	PCMATCArray outarray;
 	outarray.R0 = R;
@@ -23957,7 +23999,12 @@ void RTCC::PMMDAB(VECTOR3 R, VECTOR3 V, double GMT, ASTInput ARIN, ASTSettings I
 
 	std::vector<double> result;
 	std::vector<double> y_vals;
-	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+	err = GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+	if (err)
+	{
+
+	}
+
 }
 
 bool PCMATCPointer(void *data, std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode)
