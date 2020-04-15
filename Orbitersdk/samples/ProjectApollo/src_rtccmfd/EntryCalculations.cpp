@@ -2926,8 +2926,8 @@ OBJHANDLE RTEEarth::AGCGravityRef(VESSEL *vessel)
 	return gravref;
 }
 
-ConicRTEEarthNew::ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris, std::vector<TradeoffData> &todata) :
-	XArray(SVArray), ephem(ephemeris), TOData(todata)
+ConicRTEEarthNew::ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris) :
+	XArray(SVArray), ephem(ephemeris)
 {
 	mu = OrbMech::mu_Earth*pow(SCPHR, 2) / pow(KMPER*1000.0, 3);
 	RR = (OrbMech::R_Earth + 400000.0 * 0.3048) / (KMPER*1000.0);

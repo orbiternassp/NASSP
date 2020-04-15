@@ -239,11 +239,14 @@ struct DiscreteData
 class ConicRTEEarthNew
 {
 public:
-	ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris, std::vector<TradeoffData> &todata);
+	ConicRTEEarthNew(std::vector<EphemerisData> &SVArray, PZEFEM &ephemeris);
 	void MAIN();
 	void Init(double dvm, int icrngg, double irmax, double urmax, double rrbi, int imsfn);
 	void READ(int Mode, double gmtbase, double tzmin, double tzmax);
 	void ATP(std::vector<ATPData> line);
+
+	std::vector<TradeoffData> TOData;
+	DiscreteData SolData;
 protected:
 
 	//SUBROUTINES:
@@ -272,7 +275,6 @@ protected:
 	//State vector array
 	std::vector<EphemerisData> &XArray;
 	PZEFEM &ephem;
-	std::vector<TradeoffData> &TOData;
 	//Maximum DV to be used for the abort manuever
 	double DVMAX;
 	//Time at which maneuver is to be computed
