@@ -3458,10 +3458,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 16, 10 * H / 28, "0054 Detailed Maneuver Table 1", 30);
 		skp->Text(1 * W / 16, 11 * H / 28, "0055 CSM PSAT 1", 15);
 		skp->Text(1 * W / 16, 12 * H / 28, "0056 LM PSAT 1", 14);
-		skp->Text(1 * W / 16, 13 * H / 28, "0069 Detailed Maneuver Table 2", 30);
-		skp->Text(1 * W / 16, 14 * H / 28, "0082 Space Digitals", 19);
-		skp->Text(1 * W / 16, 15 * H / 28, "0087 CSM PSAT 2", 15);
-		skp->Text(1 * W / 16, 16 * H / 28, "0088 LM PSAT 2", 14);
+		skp->Text(1 * W / 16, 13 * H / 28, "0060 Relative Motion Digitals", 29);
+		skp->Text(1 * W / 16, 14 * H / 28, "0069 Detailed Maneuver Table 2", 30);
+		skp->Text(1 * W / 16, 15 * H / 28, "0082 Space Digitals", 19);
+		skp->Text(1 * W / 16, 16 * H / 28, "0087 CSM PSAT 2", 15);
+		skp->Text(1 * W / 16, 17 * H / 28, "0088 LM PSAT 2", 14);
 
 		skp->Text(8 * W / 16, 4 * H / 28, "1501 Moonrise/Moonset Times", 27);
 		skp->Text(8 * W / 16, 5 * H / 28, "1502 Sunrise/Sunset Times", 25);
@@ -6977,6 +6978,151 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			GET_Display(Buffer, GC->rtcc->EZDPSAD2.GETLOS[GC->rtcc->EZDPSAD2.curpage - 1][i], false);
 			skp->Text(29 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+		}
+	}
+	else if (screen == 86)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 2 * H / 32, "RELATIVE MOTION DIGITALS (MSK 0060)", 35);
+		skp->SetFont(font2);
+
+		sprintf_s(Buffer, "%s", GC->rtcc->EZRMDT.error.c_str());
+		skp->Text(16 * W / 32, 31 * H / 32, Buffer, strlen(Buffer));
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text(1 * W / 32, 4 * H / 32, "CSM STAID", 9);
+		skp->Text(1 * W / 32, 5 * H / 32, "GMTV", 4);
+		GET_Display(Buffer, GC->rtcc->EZRMDT.CSMGMTV, false);
+		skp->Text(4 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 32, 6 * H / 32, "GETV", 4);
+		GET_Display(Buffer, GC->rtcc->EZRMDT.CSMGETV, false);
+		skp->Text(4 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 32, 7 * H / 32, "MODE", 4);
+		sprintf_s(Buffer, "%c", GC->rtcc->EZRMDT.Mode);
+		skp->Text(4 * W / 32, 7 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "GET%s", GC->rtcc->EZRMDT.PETorSH.c_str());
+		skp->Text(5 * W / 128, 8 * H / 32, Buffer, strlen(Buffer));
+
+		skp->Text(10 * W / 32, 4 * H / 32, "LM STAID", 8);
+		skp->Text(10 * W / 32, 5 * H / 32, "GMTV", 4);
+		GET_Display(Buffer, GC->rtcc->EZRMDT.LMGMTV, false);
+		skp->Text(13 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(10 * W / 32, 6 * H / 32, "GETV", 4);
+		GET_Display(Buffer, GC->rtcc->EZRMDT.LMGETV, false);
+		skp->Text(13 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
+
+		skp->Text(19 * W / 32, 4 * H / 32, "GETR", 4);
+		GET_Display(Buffer, GC->rtcc->EZRMDT.GETR, false);
+		skp->Text(22 * W / 32, 4 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(19 * W / 32, 5 * H / 32, "VEH", 3);
+		sprintf_s(Buffer, "%s", GC->rtcc->EZRMDT.VEH.c_str());
+		skp->Text(43 * W / 64, 5 * H / 32, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%c", GC->rtcc->EZRMDT.AXIS);
+		skp->Text(25 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(26 * W / 32, 5 * H / 32, "AXIS AT TGT", 11);
+		skp->Text(19 * W / 32, 6 * H / 32, "REFSMMAT NO", 11);
+		sprintf_s(Buffer, "%s", GC->rtcc->EZRMDT.REFSMMAT.c_str());
+		skp->Text(53 * W / 64, 6 * H / 32, Buffer, strlen(Buffer));
+
+		skp->SetPen(pen2);
+		skp->Line(5 * W / 32, 15 * H / 64, W, 15 * H / 64);
+		skp->Line(11 * W / 64, 15 * H / 64, 11 * W / 64, 62 * H / 64);
+		skp->Line(18 * W / 64, 15 * H / 64, 18 * W / 64, 62 * H / 64);
+		skp->Line(26 * W / 64, 15 * H / 64, 26 * W / 64, 62 * H / 64);
+		skp->Line(33 * W / 64, 15 * H / 64, 33 * W / 64, 62 * H / 64);
+		skp->Line(40 * W / 64, 15 * H / 64, 40 * W / 64, 62 * H / 64);
+		skp->Line(48 * W / 64, 15 * H / 64, 48 * W / 64, 62 * H / 64);
+		skp->Line(56 * W / 64, 15 * H / 64, 56 * W / 64, 62 * H / 64);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		sprintf_s(Buffer, "R%s", GC->rtcc->EZRMDT.YDotorT.c_str());
+		skp->Text(29 * W / 128, 8 * H / 32, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZRMDT.Mode == '1')
+		{
+			skp->Text(62 * W / 256, 57 * H / 256, ".", 1);
+		}
+		skp->Text(81 * W / 256, 57 * H / 256, ".", 1);
+		skp->Text(22 * W / 64, 8 * H / 32, "R/PB", 4);
+		skp->Text(59 * W / 128, 8 * H / 32, "AZ/YB", 5);
+		skp->Text(73 * W / 128, 8 * H / 32, "EL/RB", 5);
+		sprintf_s(Buffer, "X/P%c", GC->rtcc->EZRMDT.Pitch);
+		skp->Text(89 * W / 128, 8 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "Z/Y%c", GC->rtcc->EZRMDT.Yaw);
+		skp->Text(26 * W / 32, 8 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "Y/R%c", GC->rtcc->EZRMDT.Roll);
+		skp->Text(30 * W / 32, 8 * H / 32, Buffer, strlen(Buffer));
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		for (int i = 0;i < GC->rtcc->EZRMDT.solns;i++)
+		{
+			GET_Display(Buffer, GC->rtcc->EZRMDT.data[i].GET, false);
+			skp->Text(5 * W / 32, (9 + i * 2) * H / 32, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->EZRMDT.Mode == '1')
+			{
+				GET_Display(Buffer, GC->rtcc->EZRMDT.data[i].PETorShaft, false);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].PETorShaft);
+			}
+			skp->Text(5 * W / 32, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			if (GC->rtcc->EZRMDT.data[i].R <= 9999.9)
+			{
+				sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].R);
+				skp->Text(35 * W / 128, (9 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			}
+			if (GC->rtcc->EZRMDT.Mode == '1')
+			{
+				if (abs(GC->rtcc->EZRMDT.data[i].YdotorTrun) <= 999.9)
+				{
+					sprintf_s(Buffer, "%+.1lf", GC->rtcc->EZRMDT.data[i].YdotorTrun);
+					skp->Text(35 * W / 128, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
+				}
+			}
+			else
+			{
+				sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].YdotorTrun);
+				skp->Text(35 * W / 128, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			}
+			
+			if (abs(GC->rtcc->EZRMDT.data[i].RDOT) <= 999.9)
+			{
+				sprintf_s(Buffer, "%+.1lf", GC->rtcc->EZRMDT.data[i].RDOT);
+				skp->Text(25 * W / 64, (9 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			}
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].PB);
+			skp->Text(25 * W / 64, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].AZH);
+			skp->Text(32 * W / 64, (9 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].YB);
+			skp->Text(32 * W / 64, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].EL);
+			skp->Text(39 * W / 64, (9 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].RB);
+			skp->Text(39 * W / 64, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			if (GC->rtcc->EZRMDT.Mode == '1' && abs(GC->rtcc->EZRMDT.data[i].X) <= 9999.9)
+			{
+				sprintf_s(Buffer, "%.1lf%c", GC->rtcc->EZRMDT.data[i].X, GC->rtcc->EZRMDT.data[i].XInd);
+				skp->Text(95 * W / 128, (9 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			}
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].Pitch);
+			skp->Text(95 * W / 128, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			if (GC->rtcc->EZRMDT.Mode == '1' && abs(GC->rtcc->EZRMDT.data[i].Z) <= 9999.9)
+			{
+				sprintf_s(Buffer, "%.1lf%c", GC->rtcc->EZRMDT.data[i].Z, GC->rtcc->EZRMDT.data[i].ZInd);
+				skp->Text(111 * W / 128, (9 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			}
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].Yaw);
+			skp->Text(111 * W / 128, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			if (GC->rtcc->EZRMDT.Mode == '1' && abs(GC->rtcc->EZRMDT.data[i].Y) <= 999.9)
+			{
+				sprintf_s(Buffer, "%.1lf%c", GC->rtcc->EZRMDT.data[i].Y, GC->rtcc->EZRMDT.data[i].YInd);
+				skp->Text(63 * W / 64, (9 + i * 2) * H / 32, Buffer, strlen(Buffer));
+			}
+			sprintf_s(Buffer, "%.1lf", GC->rtcc->EZRMDT.data[i].Roll);
+			skp->Text(63 * W / 64, (10 + i * 2) * H / 32, Buffer, strlen(Buffer));
 		}
 	}
 	return true;
