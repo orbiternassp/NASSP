@@ -1413,6 +1413,12 @@ void ApolloRTCCMFD::menuSetExpSiteAcqPage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetRelativeMotionDigitalsPage()
+{
+	screen = 86;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -7286,6 +7292,18 @@ void ApolloRTCCMFD::CycleExpSiteAcqPage()
 	}
 }
 
+void ApolloRTCCMFD::RelativeMotionDigitalsCalc()
+{
+	bool RelativeMotionDigitalsCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: U03,Chaser (CSM, LEM),Target (CSM, LEM),GET,Delta Time (1-1800s),REFSMMAT,AXIS (CX if CSM is Chaser, LX or LZ for LEM),Mode (1 or 2),optional: Pitch,Yaw,Roll,PYR GET;", RelativeMotionDigitalsCalcInput, 0, 40, (void*)this);
+}
+
+bool RelativeMotionDigitalsCalcInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::menuSetLDPPAzimuth()
 {
 	bool LDPPAzimuthInput(void* id, char *str, void *data);
@@ -7765,6 +7783,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 56:
 		menuSetPredSiteAcquisitionLM1Page();
+		break;
+	case 60:
+		menuSetRelativeMotionDigitalsPage();
 		break;
 	case 69:
 		menuSetDetailedManeuverTableNo2Page();

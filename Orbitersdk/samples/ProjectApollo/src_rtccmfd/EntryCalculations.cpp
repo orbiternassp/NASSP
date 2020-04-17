@@ -3021,7 +3021,7 @@ void ConicRTEEarthNew::MAIN()
 				V_a = V_a2;
 			}
 			//Store solutions
-			StoreSolution(V_a - U0, delta, T0, T_z);
+			StoreSolution(V_a - U0, delta, T0, T, T_z);
 		}
 		else
 		{
@@ -3056,7 +3056,7 @@ void ConicRTEEarthNew::MAIN()
 						VACOMP(VR_a, VT_a, beta_r, theta_0, DV, T_z, V_a, alpha, delta, lambda);
 						VUP2(X0, V_a, T_ar_stored, beta_r, V_a2);
 						V_a = V_a2;
-						StoreSolution(V_a - U0, delta, T0, T_z);
+						StoreSolution(V_a - U0, delta, T0, T, T_z);
 						STORE = false;
 					}
 				ConicRTEEarth_MAIN_C:
@@ -3093,8 +3093,14 @@ void ConicRTEEarthNew::MAIN()
 	} while (J < J_m);
 }
 
-void ConicRTEEarthNew::StoreSolution(VECTOR3 dv, double lat, double t0, double tz)
+void ConicRTEEarthNew::StoreSolution(VECTOR3 dv, double lat, double t0, double t, double tz)
 {
+	if (Mode <= 1)
+	{
+		SolData.DV = dv * FTPER / SCPHR;
+		SolData.T_r = (t0 + t)*SCPHR;
+		SolData.delta_z = lat * DEG;
+	}
 	if (Mode == 2 || Mode == 4)
 	{
 		TradeoffData data;
@@ -3923,7 +3929,7 @@ void ConicRTEEarthNew::RENTRY(double LD, double U_r, double eta_ar, double theta
 
 	U_r = U_r * FTPER / SCPHR;
 	Z = _V(0, 0, 1);
-	//Vector pointing at reentry position=
+	//Vector pointing at reentry position
 	RR_vec = R0 * cos(eta_ar) + R1 * sin(eta_ar)*sin(theta) + R2 * sin(eta_ar)*cos(theta);
 	//Latitude of above
 	delta_r = asin(dotp(RR_vec, Z));

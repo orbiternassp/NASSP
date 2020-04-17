@@ -483,6 +483,8 @@ public:
 	void CyclePredSiteAcqPage();
 	void menuSetExpSiteAcqPage();
 	void CycleExpSiteAcqPage();
+	void menuSetRelativeMotionDigitalsPage();
+	void RelativeMotionDigitalsCalc();
 	void menuSetUplinkMenu();
 	void menuSetStateVectorMenu();
 	void menuSetLSUpdateMenu();

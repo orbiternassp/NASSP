@@ -2071,6 +2071,39 @@ struct ExperimentalSiteAcquisitionTable
 	bool BestAvailableLOS[2][20];
 };
 
+struct LandmarkAcquisitionTable
+{
+	LandmarkAcquisitionTable();
+	//Current page (1 to 3)
+	int curpage;
+	//Total number of pages (1 or 3)
+	int pages;
+	//Total number of contacts
+	unsigned numcontacts[3];
+	//Station ID of anchor vector
+	std::string STAID;
+	//Trajectory update number of subject vehicle ephemeris
+	int TUN;
+	//GET of acquisition of landmark site by vehicle
+	double GETAOS[3][20];
+	//If true, AOS occured before current GET
+	bool BestAvailableAOS[3][20];
+	//GET of loss of sight of the landmark site by vehicle
+	double GETLOS[3][20];
+	//If true, LOS occurs after end of ephemeris
+	bool BestAvailableLOS[3][20];
+	//GET of closest approach of vehicle to the landmark
+	double GETCA[3][20];
+	//GET of local sunrise
+	double GETSR[3][20];
+	//GET of local sunset
+	double GETSS[3][20];
+	//Viewing angle from the vehicle to the landmark site at GETCA
+	double Lambda[3][20];
+	//Spacecraft altitude at GETCA
+	double h[3][20];
+};
+
 struct MANTIMESData
 {
 	MANTIMESData() { ManData[0] = 0.0;ManData[1] = 0.0; }
@@ -2630,6 +2663,14 @@ public:
 	void PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table);
 	//Time of Longitude Crossing Subroutine
 	double RLMTLC(EphemerisDataTable &ephemeris, ManeuverTimesTable &MANTIMES, double long_des, double GMT_min, double &GMT_cross, LunarStayTimesTable *LUNRSTAY = NULL);
+	//Computes and outputs pitch, yaw, roll
+	void RLMPYR(VECTOR3 X_P,VECTOR3 Y_P,VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll);
+	//LEM gimbal angle + FDAI angle computation routine
+	void EMGLMRAT(VECTOR3 X_P, VECTOR3 Y_P, VECTOR3 Z_P, VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, double &Pitch, double &Yaw, double &Roll, double &PB, double &YB, double &RB);
+	//Vector rotation routine
+	VECTOR3 GLMRTV(VECTOR3 A, double THET1, int K1, double THET2 = 0.0, int K2 = 0.0, double THET3 = 0.0, int K3 = 0);
+	//Matrix rotation routine
+	MATRIX3 GLMRTM(MATRIX3 A, double THET1, int K1, double THET2 = 0.0, int K2 = 0.0, double THET3 = 0.0, int K3 = 0);
 	//Cape Crossing Table Generation
 	int RMMEACC(int L, int ref_frame, int ephem_type, int rev0);
 	//Ascending Node Computation
@@ -2650,6 +2691,8 @@ public:
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
 	//Return to Earth Abort Planning Supervisor
 	void PMMREAP(int med);
+	//Return to Earth Abort Planning Supervisor (Abort Scan Table)
+	void PMMREAST();
 	//RTE Trajectory Computer
 	bool PCMATC(std::vector<double> &var, void *varPtr, std::vector<double>& arr, bool mode);
 	//Lunar Orbit Insertion Computational Unit
@@ -2991,6 +3034,54 @@ public:
 	NextStationContactsTable NextStationContactsBuffer;
 	PredictedSiteAcquisitionTable EZACQ1, EZACQ3, EZDPSAD1, EZDPSAD3;
 	ExperimentalSiteAcquisitionTable EZDPSAD2;
+	LandmarkAcquisitionTable EZLANDU1;
+
+	struct RelativeMotionDigitalsTableEntry
+	{
+		double GET = 0.0;
+		double PETorShaft = 0.0;
+		double R = 0.0;
+		double YdotorTrun = 0.0;
+		double RDOT = 0.0;
+		double AZH = 0.0;
+		double EL = 0.0;
+		double X = 0.0;
+		double Y = 0.0;
+		double Z = 0.0;
+		char XInd = ' ';
+		char YInd = ' ';
+		char ZInd = ' ';
+		double Pitch = 0.0;
+		double Yaw = 0.0;
+		double Roll = 0.0;
+		double PB = 0.0;
+		double YB = 0.0;
+		double RB = 0.0;
+	};
+
+	struct RelativeMotionDigitalsTable
+	{
+		std::string CSMSTAID;
+		std::string LMSTAID;
+		double GETR = 0.0;
+		double CSMGMTV = 0.0;
+		double CSMGETV = 0.0;
+		double LMGMTV = 0.0;
+		double LMGETV = 0.0;
+		std::string REFSMMAT;
+		std::string VEH;
+		char AXIS = ' ';
+		char Mode = ' ';
+		RelativeMotionDigitalsTableEntry data[11];
+		std::string error = "MED OUTDATED";
+
+		int solns = 0;
+		char Pitch = ' ';
+		char Yaw = ' ';
+		char Roll = ' ';
+		std::string PETorSH;
+		std::string YDotorT;
+	} EZRMDT;
 
 	struct ExperimentalSiteGroundPointTable
 	{
@@ -3730,6 +3821,8 @@ private:
 	void EMGPRINT(std::string message);
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
+	//Relative Motion Digital Display
+	void EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis, int mode, VECTOR3 Att = _V(0, 0, 0), double PYRGET = 0.0);
 	//Ground Point Characteristics Block Routine
 	void EMGGPCHR(double lat, double lng, double alt, int body, Station *stat);
 	int ThrusterNameToCode(std::string thruster);

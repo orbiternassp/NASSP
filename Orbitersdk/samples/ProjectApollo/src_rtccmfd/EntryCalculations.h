@@ -265,7 +265,7 @@ protected:
 	void VACOMP(double VR_a, double VT_a, double beta_r, double theta, VECTOR3 &DV, double &T_z, VECTOR3 &V_a, double &alpha, double &delta, double &lambda);
 	void VUP2(VECTOR3 R_a, VECTOR3 V_a, double T_ar, double beta_r, VECTOR3 &V_a2);
 	double TripTime(double v_a, double beta_a);
-	void StoreSolution(VECTOR3 dv, double lat, double t0, double tz);
+	void StoreSolution(VECTOR3 dv, double lat, double t0, double t, double tz);
 
 	//INPUTS:
 
