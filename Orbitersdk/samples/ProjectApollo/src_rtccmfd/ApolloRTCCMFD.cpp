@@ -7295,7 +7295,7 @@ void ApolloRTCCMFD::CycleExpSiteAcqPage()
 void ApolloRTCCMFD::RelativeMotionDigitalsCalc()
 {
 	bool RelativeMotionDigitalsCalcInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U03,Chaser (CSM, LEM),Target (CSM, LEM),GET,Delta Time (1-1800s),REFSMMAT,AXIS (CX if CSM is Chaser, LX or LZ for LEM),Mode (1 or 2),optional: Pitch,Yaw,Roll,PYR GET;", RelativeMotionDigitalsCalcInput, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: U03,Chaser (CSM, LEM),Target (CSM, LEM),GET,Delta Time (1-1800s),REFSMMAT,AXIS (CX if CSM is Chaser, LX or LZ for LEM),optional: Mode (1 or 2),Pitch,Yaw,Roll,PYR GET;", RelativeMotionDigitalsCalcInput, 0, 40, (void*)this);
 }
 
 bool RelativeMotionDigitalsCalcInput(void* id, char *str, void *data)

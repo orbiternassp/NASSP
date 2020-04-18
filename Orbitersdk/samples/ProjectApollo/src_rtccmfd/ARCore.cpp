@@ -2638,6 +2638,10 @@ int ARCore::subThread()
 			//Remove this later
 			GC->rtcc->EZJGMTX3.data[0].REFSMMAT = REFSMMAT;
 		}
+
+		//Queue control
+		GC->rtcc->PMSEXE(RTCC_MPT_CSM, GC->rtcc->RTCCPresentTimeGMT());
+		GC->rtcc->PMSEXE(RTCC_MPT_LM, GC->rtcc->RTCCPresentTimeGMT());
 	}
 
 	if (vesseltype == 1 || vesseltype == 3)

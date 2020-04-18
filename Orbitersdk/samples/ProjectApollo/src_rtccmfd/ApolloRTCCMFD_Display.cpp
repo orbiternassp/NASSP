@@ -5028,26 +5028,47 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.WC);
 		skp->Text(31 * W / 32, 10 * H / 28, Buffer, strlen(Buffer));
 		skp->Text(27 * W / 32, 11 * H / 28, "SPS", 3);
-		sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.SPS);
-		skp->Text(31 * W / 32, 11 * H / 28, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZCHECKDIS.SPS >= 0)
+		{
+			sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.SPS);
+			skp->Text(31 * W / 32, 11 * H / 28, Buffer, strlen(Buffer));
+		}
 		skp->Text(27 * W / 32, 12 * H / 28, "RCSC", 4);
-		sprintf(Buffer, "%04.0f", GC->rtcc->EZCHECKDIS.RCS_C);
-		skp->Text(31 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZCHECKDIS.RCS_C >= 0)
+		{
+			sprintf(Buffer, "%04.0f", GC->rtcc->EZCHECKDIS.RCS_C);
+			skp->Text(31 * W / 32, 12 * H / 28, Buffer, strlen(Buffer));
+		}
 		skp->Text(27 * W / 32, 13 * H / 28, "WL", 2);
-		sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.WL);
-		skp->Text(31 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZCHECKDIS.WL >= 0)
+		{
+			sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.WL);
+			skp->Text(31 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
+		}
 		skp->Text(27 * W / 32, 14 * H / 28, "APS", 3);
-		sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.APS);
-		skp->Text(31 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZCHECKDIS.APS >= 0)
+		{
+			sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.APS);
+			skp->Text(31 * W / 32, 14 * H / 28, Buffer, strlen(Buffer));
+		}
 		skp->Text(27 * W / 32, 15 * H / 28, "DPS", 3);
-		sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.DPS);
-		skp->Text(31 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZCHECKDIS.DPS >= 0)
+		{
+			sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.DPS);
+			skp->Text(31 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
+		}
 		skp->Text(27 * W / 32, 16 * H / 28, "RCSL", 4);
-		sprintf(Buffer, "%04.0f", GC->rtcc->EZCHECKDIS.RCS_L);
-		skp->Text(31 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZCHECKDIS.RCS_L >= 0)
+		{
+			sprintf(Buffer, "%04.0f", GC->rtcc->EZCHECKDIS.RCS_L);
+			skp->Text(31 * W / 32, 16 * H / 28, Buffer, strlen(Buffer));
+		}
 		skp->Text(27 * W / 32, 17 * H / 28, "J2", 2);
-		sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.J2);
-		skp->Text(31 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
+		if (GC->rtcc->EZCHECKDIS.J2 >= 0)
+		{
+			sprintf(Buffer, "%05.0f", GC->rtcc->EZCHECKDIS.J2);
+			skp->Text(31 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
+		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
@@ -6207,10 +6228,17 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		skp->SetFont(font2);
 
-		for (unsigned i = 0;i < GC->rtcc->RTCCONLINEMON.size();i++)
+		unsigned line = 0;
+
+		for (unsigned i = 0;i < GC->rtcc->RTCCONLINEMON.data.size();i++)
 		{
-			sprintf(Buffer, GC->rtcc->RTCCONLINEMON[i].c_str());
-			skp->Text(1 * W / 16, (3 + i) * H / 14, Buffer, strlen(Buffer));
+			for (unsigned j = 0;j < GC->rtcc->RTCCONLINEMON.data[i].message.size();j++)
+			{
+				sprintf(Buffer, GC->rtcc->RTCCONLINEMON.data[i].message[j].c_str());
+				skp->Text(1 * W / 32, (4 + line) * H / 32, Buffer, strlen(Buffer));
+				line++;
+			}		
+			line++;
 		}
 	}
 	else if (screen == 76)
