@@ -644,7 +644,6 @@ public:
 	void menuSetSPQInitializationPage();
 	void menuSetDKIInitializationPage();
 	void menuGenerateDMT();
-	bool set_GenerateDMT(char *buff, int msk);
 	void GMPManeuverTypeName(char *buffer, int typ);
 	void GMPManeuverPointName(char *buffer, int point);
 	void GMPManeuverCodeName(char *buffer, int code);

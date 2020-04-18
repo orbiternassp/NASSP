@@ -21941,25 +21941,25 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 				}
 			}
 		}
-		med_m49.LMDPSFuelRemaining = -1;
+		med_m49.LMRCSFuelRemaining = -1;
 		if (data.size() > 5 && data[5] != "")
 		{
 			if (sscanf_s(data[5].c_str(), "%lf", &temp) == 1)
 			{
 				if (temp > 0)
 				{
-					med_m49.LMDPSFuelRemaining = temp * 0.45359237;
+					med_m49.LMRCSFuelRemaining = temp * 0.45359237;
 				}
 			}
 		}
-		med_m49.LMRCSFuelRemaining = -1;
+		med_m49.LMDPSFuelRemaining = -1;
 		if (data.size() > 6 && data[6] != "")
 		{
 			if (sscanf_s(data[6].c_str(), "%lf", &temp) == 1)
 			{
 				if (temp > 0)
 				{
-					med_m49.LMRCSFuelRemaining = temp * 0.45359237;
+					med_m49.LMDPSFuelRemaining = temp * 0.45359237;
 				}
 			}
 		}

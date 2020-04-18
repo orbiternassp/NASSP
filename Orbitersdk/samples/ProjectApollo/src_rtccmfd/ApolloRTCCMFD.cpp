@@ -3401,17 +3401,13 @@ void ApolloRTCCMFD::menuMPTInitM50M55Vehicle()
 void ApolloRTCCMFD::CheckoutMonitorCalc()
 {
 	bool CheckoutMonitorCalcInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U02, CSM or LEM, Indicator (GMT,GET,MVI,MVE,RAD,ALT,FPA), Parameter, Threshold Time (opt.), Reference (ECI,ECF,MCI,MCT) (opt.), FT (opt.);", CheckoutMonitorCalcInput, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: U02, CSM or LEM, Indicator (GMT,GET,MVI,MVE,RAD,ALT,FPA), Parameter, Threshold Time (opt.), Reference (ECI,ECF,MCI,MCT) (opt.), FT (opt.);", CheckoutMonitorCalcInput, 0, 50, (void*)this);
 }
 
 bool CheckoutMonitorCalcInput(void *id, char *str, void *data)
 {
-	if (strlen(str) < 40)
-	{
-		((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
-		return true;
-	}
-	return false;
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
 }
 
 double ApolloRTCCMFD::timetoperi()
@@ -4086,7 +4082,7 @@ void ApolloRTCCMFD::menuEntryCalc()
 void ApolloRTCCMFD::menuTransferRTEToMPT()
 {
 	bool TransferRTEInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Format: M74,MPT (CSM or LEM), Replace Code (1-15 or missing), Maneuver Type (TTFP for deorbit, otherwise RTEP);", TransferRTEInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: M74,MPT (CSM or LEM), Replace Code (1-15 or missing), Maneuver Type (TTFP for deorbit, otherwise RTEP);", TransferRTEInput, 0, 50, (void*)this);
 }
 
 bool TransferRTEInput(void *id, char *str, void *data)
@@ -4593,12 +4589,12 @@ void ApolloRTCCMFD::offvecdialogue()
 	else if (G->twoimpulsemode == 1)
 	{
 		bool MPTP52Input(void *id, char *str, void *data);
-		oapiOpenInputBox("Format: P52, Nom. Time of NSR, Nom. DH at NSR, Nom. Phase Angle at NSR; (leave open for no update)", MPTP52Input, 0, 30, (void*)this);
+		oapiOpenInputBox("Format: P52, Nom. Time of NSR, Nom. DH at NSR, Nom. Phase Angle at NSR; (leave open for no update)", MPTP52Input, 0, 50, (void*)this);
 	}
 	else
 	{
 		bool MPTP51Input(void *id, char *str, void *data);
-		oapiOpenInputBox("Format: P51, Delta Height, Phase Angle, Elevation Angle, Travel Angle; (leave open for no update)", MPTP51Input, 0, 30, (void*)this);
+		oapiOpenInputBox("Format: P51, Delta Height, Phase Angle, Elevation Angle, Travel Angle; (leave open for no update)", MPTP51Input, 0, 50, (void*)this);
 	}
 }
 
@@ -7037,7 +7033,7 @@ void ApolloRTCCMFD::menuAP11AbortCoefUplink()
 void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsGETL()
 {
 	bool FIDOOrbitDigitalsGETLInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U14,CSM or LEM,Time in hhh:mm:ss;", FIDOOrbitDigitalsGETLInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: U14,CSM or LEM,Time in hhh:mm:ss;", FIDOOrbitDigitalsGETLInput, 0, 50, (void*)this);
 }
 
 bool FIDOOrbitDigitalsGETLInput(void *id, char *str, void *data)
@@ -7049,7 +7045,7 @@ bool FIDOOrbitDigitalsGETLInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsL()
 {
 	bool FIDOOrbitDigitalsLInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U13,CSM or LEM,Revolution,desired longitude;", FIDOOrbitDigitalsLInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: U13,CSM or LEM,Revolution,desired longitude;", FIDOOrbitDigitalsLInput, 0, 50, (void*)this);
 }
 
 bool FIDOOrbitDigitalsLInput(void *id, char *str, void *data)
@@ -7062,7 +7058,7 @@ bool FIDOOrbitDigitalsLInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSetFIDOOrbitDigitalsGETBV()
 {
 	bool FIDOOrbitDigitalsGETBVInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U12, CSM or LEM,REV or GET or MNV,rev no/time or mnv no;", FIDOOrbitDigitalsGETBVInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: U12, CSM or LEM,REV or GET or MNV,rev no/time or mnv no;", FIDOOrbitDigitalsGETBVInput, 0, 50, (void*)this);
 }
 
 bool FIDOOrbitDigitalsGETBVInput(void *id, char *str, void *data)
@@ -7074,7 +7070,7 @@ bool FIDOOrbitDigitalsGETBVInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSpaceDigitalsInit()
 {
 	bool SpaceDigitalsInitInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Initialization, format: U00, CSM or LEM, E or M (optional);", SpaceDigitalsInitInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: U00, CSM or LEM, E or M (optional);", SpaceDigitalsInitInput, 0, 50, (void*)this);
 }
 
 bool SpaceDigitalsInitInput(void *id, char *str, void *data)
@@ -7103,7 +7099,7 @@ void ApolloRTCCMFD::menuMPTCycleActive()
 void ApolloRTCCMFD::menuMPTDeleteManeuver()
 {
 	bool MPTDeleteManeuverInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Freeze/unfreeze/delete maneuver in MPT (Format: M62,Table,Manv No.,Action,Vector;)", MPTDeleteManeuverInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Freeze/unfreeze/delete maneuver in MPT (Format: M62,Table,Manv No.,Action,Vector;)", MPTDeleteManeuverInput, 0, 50, (void*)this);
 }
 
 bool MPTDeleteManeuverInput(void* id, char *str, void *data)
@@ -7115,7 +7111,7 @@ bool MPTDeleteManeuverInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuMPTCopyEphemeris()
 {
 	bool MPTCopyEphemerisInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: P16, OldVeh, NewVeh, GMT, ManNum;", MPTCopyEphemerisInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: P16, OldVeh, NewVeh, GMT, ManNum;", MPTCopyEphemerisInput, 0, 50, (void*)this);
 }
 
 bool MPTCopyEphemerisInput(void* id, char *str, void *data)
@@ -7127,7 +7123,7 @@ bool MPTCopyEphemerisInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuMPTVehicleOrientationChange()
 {
 	bool MPTVehicleOrientationChangeInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: M58, CSM or LEM, maneuver number, U (Up) or D (Down), S or C, system param or trim angle computed (optional);", MPTVehicleOrientationChangeInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: M58, CSM or LEM, maneuver number, U (Up) or D (Down), S or C, system param or trim angle computed (optional);", MPTVehicleOrientationChangeInput, 0, 50, (void*)this);
 }
 
 bool MPTVehicleOrientationChangeInput(void* id, char *str, void *data)
@@ -7139,7 +7135,7 @@ bool MPTVehicleOrientationChangeInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuMPTTLIDirectInput()
 {
 	bool MPTTLIDirectInputInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: M68, CSM or LEM, Opportunity (1 or 2);", MPTTLIDirectInputInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: M68, CSM or LEM, Opportunity (1 or 2);", MPTTLIDirectInputInput, 0, 50, (void*)this);
 }
 
 bool MPTTLIDirectInputInput(void* id, char *str, void *data)
@@ -7181,7 +7177,7 @@ bool GenerateStationContactsInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::PredSiteAcqCSM1Calc()
 {
 	bool PredSiteAcqCSM1Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U15, CSM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", PredSiteAcqCSM1Input, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: U15, CSM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", PredSiteAcqCSM1Input, 0, 50, (void*)this);
 }
 
 bool PredSiteAcqCSM1Input(void* id, char *str, void *data)
@@ -7193,7 +7189,7 @@ bool PredSiteAcqCSM1Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::PredSiteAcqLM1Calc()
 {
 	bool PredSiteAcqLM1Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U15, LEM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", PredSiteAcqLM1Input, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: U15, LEM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", PredSiteAcqLM1Input, 0, 50, (void*)this);
 }
 
 bool PredSiteAcqLM1Input(void* id, char *str, void *data)
@@ -7205,7 +7201,7 @@ bool PredSiteAcqLM1Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::PredSiteAcqCSM2Calc()
 {
 	bool PredSiteAcqCSM2Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U55, CSM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", PredSiteAcqCSM2Input, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: U55, CSM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", PredSiteAcqCSM2Input, 0, 50, (void*)this);
 }
 
 bool PredSiteAcqCSM2Input(void* id, char *str, void *data)
@@ -7217,7 +7213,7 @@ bool PredSiteAcqCSM2Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::PredSiteAcqLM2Calc()
 {
 	bool PredSiteAcqLM2Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U15, LEM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", PredSiteAcqLM2Input, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: U15, LEM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", PredSiteAcqLM2Input, 0, 50, (void*)this);
 }
 
 bool PredSiteAcqLM2Input(void* id, char *str, void *data)
@@ -7229,7 +7225,7 @@ bool PredSiteAcqLM2Input(void* id, char *str, void *data)
 void ApolloRTCCMFD::ExpSiteAcqLMCalc()
 {
 	bool ExpSiteAcqLMCalcInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U16, CSM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", ExpSiteAcqLMCalcInput, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: U16, CSM, REV or GET, Begin GET or rev, Delta Time or end rev, ref body (optional);", ExpSiteAcqLMCalcInput, 0, 50, (void*)this);
 }
 
 bool ExpSiteAcqLMCalcInput(void* id, char *str, void *data)
@@ -7241,7 +7237,7 @@ bool ExpSiteAcqLMCalcInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::GroundPointTableUpdate()
 {
 	bool GroundPointTableUpdateInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: P32, Action Code (ADD,MOD,DEL),Earth/Moon Ind (E or M),Data Table Ind (EXST,LDMK),Station ID,Lat,Long,Height units (METR or NM),Height;", GroundPointTableUpdateInput, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: P32, Action Code (ADD,MOD,DEL),Earth/Moon Ind (E or M),Data Table Ind (EXST,LDMK),Station ID,Lat,Long,Height units (METR or NM),Height;", GroundPointTableUpdateInput, 0, 50, (void*)this);
 }
 
 bool GroundPointTableUpdateInput(void* id, char *str, void *data)
@@ -7295,7 +7291,7 @@ void ApolloRTCCMFD::CycleExpSiteAcqPage()
 void ApolloRTCCMFD::RelativeMotionDigitalsCalc()
 {
 	bool RelativeMotionDigitalsCalcInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U03,Chaser (CSM, LEM),Target (CSM, LEM),GET,Delta Time (1-1800s),REFSMMAT,AXIS (CX if CSM is Chaser, LX or LZ for LEM),optional: Mode (1 or 2),Pitch,Yaw,Roll,PYR GET;", RelativeMotionDigitalsCalcInput, 0, 40, (void*)this);
+	oapiOpenInputBox("Format: U03,Chaser (CSM, LEM),Target (CSM, LEM),GET,Delta Time (1-1800s),REFSMMAT,AXIS (CX if CSM is Chaser, LX or LZ for LEM),optional: Mode (1 or 2),Pitch,Yaw,Roll,PYR GET;", RelativeMotionDigitalsCalcInput, 0, 50, (void*)this);
 }
 
 bool RelativeMotionDigitalsCalcInput(void* id, char *str, void *data)
@@ -7527,7 +7523,7 @@ void ApolloRTCCMFD::set_LDPPDesiredHeight(double alt)
 void ApolloRTCCMFD::menuSunriseSunsetTimesCalc()
 {
 	bool SunriseSunsetTimesCalcInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U08,GET or REV,Time or Rev number;", SunriseSunsetTimesCalcInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: U08,GET or REV,Time or Rev number;", SunriseSunsetTimesCalcInput, 0, 50, (void*)this);
 }
 
 bool SunriseSunsetTimesCalcInput(void* id, char *str, void *data)
@@ -7539,7 +7535,7 @@ bool SunriseSunsetTimesCalcInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuMoonriseMoonsetTimesCalc()
 {
 	bool MoonriseMoonsetTimesCalcInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U07,GET or REV,Time or Rev number;", MoonriseMoonsetTimesCalcInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: U07,GET or REV,Time or Rev number;", MoonriseMoonsetTimesCalcInput, 0, 50, (void*)this);
 }
 
 bool MoonriseMoonsetTimesCalcInput(void* id, char *str, void *data)
@@ -7551,7 +7547,7 @@ bool MoonriseMoonsetTimesCalcInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuCapeCrossingInit()
 {
 	bool CapeCrossingInitInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: P17,Vehicle (CSM or LEM), E or M,Revolution;", CapeCrossingInitInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: P17,Vehicle (CSM or LEM), E or M,Revolution;", CapeCrossingInitInput, 0, 50, (void*)this);
 }
 
 bool CapeCrossingInitInput(void* id, char *str, void *data)
@@ -7563,18 +7559,12 @@ bool CapeCrossingInitInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuGenerateDMT()
 {
 	bool GenerateDMTInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: U20,MPT ID,Maneuver No,MSK No (54 or 69),REFSMMAT,Heads Up/Down;", GenerateDMTInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: U20,MPT ID,Maneuver No,MSK No (54 or 69),REFSMMAT,Heads Up/Down;", GenerateDMTInput, 0, 50, (void*)this);
 }
 
 bool GenerateDMTInput(void* id, char *str, void *data)
 {
-	return ((ApolloRTCCMFD*)data)->set_GenerateDMT(str, 54);
-}
-
-bool ApolloRTCCMFD::set_GenerateDMT(char *buff, int msk)
-{
-	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, buff);
-	G->GeneralMEDRequest();
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;
 }
 
@@ -7593,7 +7583,7 @@ void ApolloRTCCMFD::menuCycleSFPDisplay()
 void ApolloRTCCMFD::menuAlterationSFPData()
 {
 	bool AlterationSFPDataInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: F32, Block (1-2), Item (1-26), Value;", AlterationSFPDataInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Format: F32, Block (1-2), Item (1-26), Value;", AlterationSFPDataInput, 0, 50, (void*)this);
 }
 
 bool AlterationSFPDataInput(void* id, char *str, void *data)
@@ -7605,7 +7595,7 @@ bool AlterationSFPDataInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuTransferMCCPlanToSFP()
 {
 	bool TransferMCCPlanToSFPInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Column to move to SFP Block 2. Format: F30,Column Number;", TransferMCCPlanToSFPInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Column to move to SFP Block 2. Format: F30,Column Number;", TransferMCCPlanToSFPInput, 0, 50, (void*)this);
 }
 
 bool TransferMCCPlanToSFPInput(void* id, char *str, void *data)
@@ -7617,7 +7607,7 @@ bool TransferMCCPlanToSFPInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuDeleteMidcourseColumn()
 {
 	bool DeleteMidcourseColumnInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Delete midcourse tradeoff column. Format: F26,Column; (0 for all)", DeleteMidcourseColumnInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Delete midcourse tradeoff column. Format: F26,Column; (0 for all)", DeleteMidcourseColumnInput, 0, 50, (void*)this);
 }
 
 bool DeleteMidcourseColumnInput(void* id, char *str, void *data)
