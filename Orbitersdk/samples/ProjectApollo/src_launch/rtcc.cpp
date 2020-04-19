@@ -14732,6 +14732,10 @@ int RTCC::PMMWTC(int med)
 	RTCC_PMMWTC_16:
 		W = W + WTV[2];
 	RTCC_PMMWTC_17:
+		CommonBlock.CSMMass = WTV[0];
+		CommonBlock.SIVBMass = WTV[1];
+		CommonBlock.LMAscentMass = WTV[2];
+		CommonBlock.LMDescentMass = WTV[3];
 		if (IBLK > 1)
 		{
 		RTCC_PMMWTC_17A:
