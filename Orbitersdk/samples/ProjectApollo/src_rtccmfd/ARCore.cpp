@@ -3104,7 +3104,7 @@ int ARCore::subThread()
 				Result = 0;
 				break;
 			}
-			if (GC->rtcc->PLAWDT(RTCC_MPT_CSM, EntryTIG, cfg, cfg_weight, csmmass, lmascmass, lmdscmass, sivbmass))
+			if (GC->rtcc->PLAWDT(RTCC_MPT_CSM, GC->rtcc->GMTfromGET(EntryTIG), cfg, cfg_weight, csmmass, lmascmass, lmdscmass, sivbmass))
 			{
 				Result = 0;
 				break;
@@ -3292,7 +3292,7 @@ int ARCore::subThread()
 			int cfg;
 			double cfg_weight, csm_weight, sivb_weight, lma_weight, lmd_weight;
 
-			if (GC->rtcc->PLAWDT(mptveh, sv_A.MJD, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight))
+			if (GC->rtcc->PLAWDT(mptveh, GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight))
 			{
 				Result = 0;
 				break;
@@ -3408,12 +3408,12 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->NewMPTTrajectory(mptveh, opt.RV_MCC))
+			if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, opt.RV_MCC))
 			{
 				Result = 0;
 				break;
 			}
-			if (GC->rtcc->PLAWDT(RTCC_MPT_CSM, EntryTIG, cfg, cfg_weight, csmmass, lmascmass, lmdscmass, sivbmass))
+			if (GC->rtcc->PLAWDT(RTCC_MPT_CSM, GC->rtcc->GMTfromGET(EntryTIG), cfg, cfg_weight, csmmass, lmascmass, lmdscmass, sivbmass))
 			{
 				Result = 0;
 				break;

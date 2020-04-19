@@ -11370,9 +11370,12 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 	//6 = MSK request
 	//7 = Reinitialization
 
+	EZSPACE.errormessage = "";
+
 	if (EZETVMED.SpaceDigVehID < 0)
 	{
 		//Error: The display has not been initialized via MED U00
+		EZSPACE.errormessage = "Error 1";
 		return 1;
 	}
 
@@ -11396,16 +11399,19 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 	if (ephtab->EPHEM.Header.TUP == 0)
 	{
 		//Error: The trajectory for subject vehicle is not generated
+		EZSPACE.errormessage = "Error 2";
 		return 2;
 	}
 	if (ephtab->EPHEM.Header.TUP < 0)
 	{
 		//Error: The main ephemeris is in an update status
+		EZSPACE.errormessage = "Error 5";
 		return 5;
 	}
 	if (mpt->CommonBlock.TUP < 0 || mpt->CommonBlock.TUP != ephtab->EPHEM.Header.TUP)
 	{
 		//Error: The MPT is either in an update state or is inconsistent with the trajectory update number
+		EZSPACE.errormessage = "Error 6";
 		return 6;
 	}
 
@@ -11496,11 +11502,13 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				if (GMT > ephtab->EPHEM.Header.TR)
 				{
 					//Error: The time on the U01 exceeds the start of the ephemeris
+					EZSPACE.errormessage = "Error 3";
 					return 3;
 				}
 				else
 				{
 					//Error: The time on the U01 precedes the start of the ephemeris
+					EZSPACE.errormessage = "Error 4";
 					return 4;
 				}
 			}
@@ -14603,6 +14611,12 @@ int RTCC::PMMWTC(int med)
 			i++;
 			goto RTCC_PMMWTC_6;
 		}
+		CommonBlock.CSMRCSFuelRemaining = FuelR[0];
+		CommonBlock.SPSFuelRemaining = FuelR[1];
+		CommonBlock.SIVBFuelRemaining = FuelR[2];
+		CommonBlock.LMRCSFuelRemaining = FuelR[3];
+		CommonBlock.LMAPSFuelRemaining = FuelR[4];
+		CommonBlock.LMDPSFuelRemaining = FuelR[5];
 		if (IBLK == 1)
 		{
 			table->CommonBlock = CommonBlock;
@@ -22555,11 +22569,13 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 
 		inp.AttitudeCode = RTCC_ATTITUDE_PGNS_EXDV;
 		inp.BurnParameterNumber = type;
-		inp.ConfigurationChangeIndicator = RTCC_CONFIGCHANGE_NONE;
+		inp.ConfigurationChangeIndicator = RTCC_CONFIGCHANGE_NONE; //TBD
 		inp.CoordinateIndicator = -1;
 		inp.DPSScaleFactor = MCTDTF;
 		inp.ReplaceCode = ReplaceCode;
 		inp.TableCode = veh;
+		inp.EndConfiguration = 0; //TBD
+		inp.dt_ullage = 0.0;
 
 		void *vPtr = &inp;
 		return PMMXFR(32, vPtr);

@@ -1271,6 +1271,7 @@ struct SpaceDigitals
 	double IE;			//Inclination angle at vacuum perigee
 	double LN;			//Geographic longitude of the earth return ascending node
 	int TUN1, TUN2, TUN3;
+	std::string errormessage;
 };
 
 struct SpaceDigitalsOpt

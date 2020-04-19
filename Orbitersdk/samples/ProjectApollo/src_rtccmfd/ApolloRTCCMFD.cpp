@@ -3201,6 +3201,18 @@ void ApolloRTCCMFD::menuTransferPoweredDescentToMPT()
 	G->TransferPoweredDescentToMPT();
 }
 
+void ApolloRTCCMFD::menuMPTMEDM49()
+{
+	bool menuMPTMEDM49Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Change fuel remaining. Format: M49,MPT code (CSM or LEM),SPS fuel, CSM RCS fuel, S4B fuel, LM APS fuel,LM RCS fuel,LM DPS fuel; (Negative will be ignored)", menuMPTMEDM49Input, "M49,CSM,-1,-1,-1,-1,-1,-1;", 50, (void*)this);
+}
+
+bool menuMPTMEDM49Input(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::menuMPTInitM50M55Table()
 {
 	if (GC->rtcc->med_m50.Table == RTCC_MPT_CSM)

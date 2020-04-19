@@ -588,6 +588,7 @@ public:
 	void menuMPTDirectInputTrimAngleInd();
 	void menuTransferPoweredAscentToMPT();
 	void menuTransferPoweredDescentToMPT();
+	void menuMPTMEDM49();
 	void CheckoutMonitorCalc();
 	void menuMPTInitM50M55Table();
 	void menuMPTInitM50CSMWT();

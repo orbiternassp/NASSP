@@ -3561,6 +3561,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(15 * W / 32, 6 * H / 28, "LAM", 3);
 		skp->Text(23 * W / 32, 6 * H / 28, "PSI", 3);
 
+		sprintf_s(Buffer, "%s", GC->rtcc->EZSPACE.errormessage.c_str());
+		skp->Text(14 * W / 32, 27 * H / 28, Buffer, strlen(Buffer));
+
 		GET_Display(Buffer, GC->rtcc->EZSPACE.GMTV, false);
 		skp->Text(4 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
 		GET_Display(Buffer, GC->rtcc->EZSPACE.GET, false);
