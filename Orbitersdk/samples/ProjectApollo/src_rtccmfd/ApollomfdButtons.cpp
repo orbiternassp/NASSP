@@ -1509,7 +1509,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Add TLI to MPT", 0, 'T' },
 		{ "Add PDI to MPT", 0, 'P' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Fuel remaining", 0, 'F' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -1526,7 +1526,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TLI", OAPI_KEY_T, &ApolloRTCCMFD::menuMPTTLIDirectInput);
 	RegisterFunction("PDI", OAPI_KEY_P, &ApolloRTCCMFD::menuTransferPoweredDescentToMPT);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("M49", OAPI_KEY_F, &ApolloRTCCMFD::menuMPTMEDM49);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMenu);
 
 
@@ -2012,11 +2012,11 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Choose vessel", 0, 'V' },
 		{ "CSM weight", 0, 'C' },
 		{ "S-IVB weight", 0, 'S' },
-		{ "LM weight", 0, 'L' },
-		{ "Get masses and cfg", 0, 'U' },
+		{ "LM total weight", 0, 'L' },
+		{ "LM ascent weight", 0, 'F' },
 
 		{ "Choose config", 0, 'D' },
-		{ "", 0, ' ' },
+		{ "Auto update of parameters", 0, 'U' },
 		{ "Config update", 0, 'M' },
 		{ "Mass update", 0, 'N' },
 		{ "Trajectory update", 0, 'P' },

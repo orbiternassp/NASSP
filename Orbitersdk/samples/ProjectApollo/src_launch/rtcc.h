@@ -232,6 +232,18 @@ struct MED_M50
 	double SIVBWT = -1.0;
 	double LMWT = -1.0;
 	double LMASCWT = -1.0;
+	double WeightGET = 0.0;
+};
+
+//Change Vehicle Area or K-Factor
+struct MED_M51
+{
+	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
+	double CSMArea = 0.0;
+	double SIVBArea = 0.0;
+	double LMAscentArea = 0.0;
+	double LMDescentArea = 0.0;
+	double KFactor = 0.0;
 };
 
 //Input initial configuration for Mission Plan Table
@@ -1259,6 +1271,7 @@ struct SpaceDigitals
 	double IE;			//Inclination angle at vacuum perigee
 	double LN;			//Geographic longitude of the earth return ascending node
 	int TUN1, TUN2, TUN3;
+	std::string errormessage;
 };
 
 struct SpaceDigitalsOpt
@@ -1427,18 +1440,52 @@ struct DetailedManeuverTable
 	bool isCSMTV;
 };
 
+struct MPTVehicleDataBlock
+{
+	//Word 12 (Bytes 1, 2)
+	int ConfigCode = 0;
+	//Word 12 (Bytes 3, 4)
+	int ConfigChangeInd = 0;
+	//Word 12 (Bytes 5, 6)
+	int TUP = 0;
+	//Word 13
+	double CSMArea = 0.0;
+	//Word 14
+	double SIVBArea = 0.0;
+	//Word 15
+	double LMAscentArea = 0.0;
+	//Word 16
+	double LMDescentArea = 0.0;
+	//Word 17
+	double CSMMass = 0.0;
+	//Word 18
+	double SIVBMass = 0.0;
+	//Word 19
+	double LMAscentMass = 0.0;
+	//Word 20
+	double LMDescentMass = 0.0;
+	//Word 21
+	double CSMRCSFuelRemaining = 0.0;
+	//Word 22
+	double SPSFuelRemaining = 0.0;
+	//Word 23
+	double SIVBFuelRemaining = 0.0;
+	//Word 24
+	double LMRCSFuelRemaining = 0.0;
+	//Word 25
+	double LMAPSFuelRemaining = 0.0;
+	//Word 26
+	double LMDPSFuelRemaining = 0.0;
+};
+
 struct MPTManeuver
 {
 	MPTManeuver();
 
 	//Word 1
 	std::string code;
-	//Word 12 (Bytes 1, 2)
-	int ConfigCodeAfter;
-	//Word 12 (Bytes 3, 4)
-	int ConfigChangeInd;
-	//Word 12 (Bytes 5, 6)
-	int TUP;
+	//Words 12-26
+	MPTVehicleDataBlock CommonBlock;
 	//Word 27
 	std::string StationIDFrozen;
 	//Word 28, GMT of frozen anchor vector
@@ -1542,22 +1589,10 @@ struct MPTManeuver
 	VECTOR3 V_1;
 	double GMT_1;
 	
-	double CSMMassAfter;
-	double SIVBMassAfter;
-	double LMAscMassAfter;
-	double LMDscMassAfter;
 	double TotalMassAfter;
 	double TotalAreaAfter;
-	double CSMAreaAfter;
-	double SIVBAreaAfter;
-	double AscentAreaAfter;
-	double DescentAreaAfter;
-	double SPSFuelAfter;
-	double CSMRCSFuelAfter;
-	double SIVBJ2FuelAfter;
-	double APSFuelAfter;
-	double LMRCSFuelAfter;
-	double DPSFuelAfter;
+	double MainEngineFuelUsed;
+	double RCSFuelUsed;
 	double DVREM;
 	double DVC;
 	double DVXBT;
@@ -1617,9 +1652,6 @@ struct MPTManDisplay
 
 struct MissionPlanTable
 {
-	//Word 1 (Byte 1,2)
-	//Trajectory Update No. (- if in process)
-	int TUP = 0;
 	//Word 1 (Byte 3,4)
 	//Number of maneuvers in table
 	unsigned ManeuverNum = 0;
@@ -1640,30 +1672,8 @@ struct MissionPlanTable
 	double UpcomingManeuverGMT = 1e70;
 	//Word 11
 	double SIVBVentingBeginGET = 0.0;
-	//Word 12
-	int InitConfigCode = -1;
-	//Word 13
-	double CSMInitArea = 0.0;
-	//Word 14
-	double SIVBInitArea = 0.0;
-	//Word 15
-	double LMInitAscentArea = 0.0;
-	//Word 16
-	double LMInitDescentArea = 0.0;
-	//Word 17
-	double CSMInitMass = 0.0;
-	//Word 18
-	double SIVBInitMass = 0.0;
-	//Word 19
-	double LMInitAscentMass = 0.0;
-	//Word 20
-	double LMInitDescentMass = 0.0;
-	double SPSFuelRemaining = -1.0;
-	double CSMRCSFuelRemaining = -1.0;
-	double SIVBJ2FuelRemaining = -1.0;
-	double APSFuelRemaining = -1.0;
-	double LMRCSFuelRemaining = -1.0;
-	double DPSFuelRemaining = -1.0;
+	//Words 12-26
+	MPTVehicleDataBlock CommonBlock;
 	double TotalInitMass = 0.0;
 	double ConfigurationArea = 0.0;
 	//Word 34
@@ -2658,7 +2668,7 @@ public:
 	//Checkout Monitor Display
 	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
 	//Detailed Maneuver Table Display
-	int PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, DetailedManeuverTable &res);
+	void PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, DetailedManeuverTable &res);
 	//Lunar Descent Planning Table Display
 	void PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table);
 	//Time of Longitude Crossing Subroutine
@@ -2750,7 +2760,7 @@ public:
 	//Maneuver direct input and confirmation math module
 	int PMMMCD(PMMMCDInput in, MPTManeuver &man);
 	//Impulsive Maneuver Transfer Math Module
-	void PMMMPT(PMMMPTInput in, MPTManeuver &man);
+	int PMMMPT(PMMMPTInput in, MPTManeuver &man);
 	//Lunar Ascent Integrator
 	int PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E = NULL);
 	//LM Lunar Descent Numerical Integration Module
@@ -2765,13 +2775,18 @@ public:
 	void PMSVCT(int QUEID, int L, EphemerisData* sv0 = NULL, bool landed = false);
 	//Vector Fetch Load Module
 	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
+	//Maneuver Execution Program
+	void PMSEXE(int L, double gmt);
 	//Earth Orbit Insertion Processor
 	void PMMIEV(double T_L);
 	//Mission Planning Print Load Module
-	void PMXSPT(int n);
-	void PMXSPT(std::string message);
+	void PMXSPT(std::string source, int n);
+	void PMXSPT(std::string source, std::vector<std::string> message);
+	void OnlinePrintTime(double TIME_SEC, std::string &time);
+	void OnlinePrint(const std::string &source, const std::vector<std::string> &message);
 	//Mission Control Print Program
-	void GMSPRINT(std::string message);
+	void GMSPRINT(std::string source, int n);
+	void GMSPRINT(std::string source, std::vector<std::string> message);
 	//Trajectory Update Control Module
 	void EMSTRAJ(EphemerisData sv, int L, bool landed = false);
 	//Ephemeris Storage and Control Module
@@ -2787,7 +2802,6 @@ public:
 	int EMGVECSTOutput(int L, EphemerisData &sv);
 
 	bool MPTHasManeuvers(int L);
-	int MPTConfirmManeuver(int L);
 	//Weight Change Module
 	int PMMWTC(int med);
 	//Weight Determination at a Time
@@ -3010,7 +3024,20 @@ public:
 
 	MED_K16 med_k16;
 	MED_K17 med_k17;
+
+	struct MED_M49
+	{
+		int Table = 1;
+		double SPSFuelRemaining = -1;
+		double CSMRCSFuelRemaining = -1;
+		double SIVBFuelRemaining = -1;
+		double LMAPSFuelRemaining = -1;
+		double LMRCSFuelRemaining = -1;
+		double LMDPSFuelRemaining = -1;
+	} med_m49;
+
 	MED_M50 med_m50;
+	MED_M51 med_m51;
 	MED_M55 med_m55;
 	MED_M68 med_m68;
 	MED_M70 med_m70;
@@ -3659,6 +3686,15 @@ public:
 		double LandmarkGMT = 0.0;
 		double LandmarkDT = 0.0;
 		int LandmarkRef = 0;
+
+		int DMT1Vehicle = 0;
+		int DMT1Number = 0;
+		int DMT1REFSMMATCode = 0;
+		bool DMT1HeadsUpDownIndicator = false;
+		int DMT2Vehicle = 0;
+		int DMT2Number = 0;
+		int DMT2REFSMMATCode = 0;
+		bool DMT2HeadsUpDownIndicator = false;
 	} EZETVMED;
 
 	struct ExternalDVMakeupBuffer
@@ -3718,7 +3754,20 @@ public:
 	//RTCC MED Buffer
 	char RTCCMEDBUFFER[256];
 	//RTCC On-line Monitor Buffer
-	std::deque<std::string> RTCCONLINEMON;
+	struct OnlineMonitorMessage
+	{
+		std::vector<std::string> message;
+	};
+
+	struct OnlineMonitorBuffer
+	{
+		std::deque<OnlineMonitorMessage> data;
+		std::string TextBuffer[3];
+		double DoubleBuffer[2];
+		int IntBuffer[2];
+		VECTOR3 VectorBuffer[2];
+		MATRIX3 MatrixBuffer;
+	} RTCCONLINEMON;
 
 	//AEG
 	PMMAEG pmmaeg;
@@ -3817,8 +3866,8 @@ private:
 	//GOST CSM/LM LCV Computation
 	void EMMGLCVP(int L, double gmt);
 	//Trajectory Update On-line Print
-	void EMGPRINT(int i);
-	void EMGPRINT(std::string message);
+	void EMGPRINT(std::string source, int i);
+	void EMGPRINT(std::string source, std::vector<std::string> message);
 	//Orbital Elements Computations
 	void EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab);
 	//Relative Motion Digital Display
@@ -3828,27 +3877,31 @@ private:
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
 
+	//MPT utility functions
 	bool MPTConfigIncludesCSM(int config);
 	bool MPTConfigIncludesLM(int config);
 	bool MPTConfigIncludesSIVB(int config);
 	bool MPTConfigIncludesLMAsc(int config);
 	bool MPTConfigIncludesLMDsc(int config);
-	bool MPTConfigIncludesVeh(int config, int veh);
 	bool MPTConfigSubset(int CfgOld, int CfgNew);
 	bool MPTIsRCSThruster(int thruster);
+	bool MPTIsPrimaryThruster(int thruster, int i);
+	bool MPTIsUllageThruster(int thruster, int i);
+	int MPTGetPrimaryThruster(int thruster);
+	bool MPTConfigIncludesVehicle(int config, int i);
 
 	double MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass);
 
 	//Auxiliary subroutines
 	MissionPlanTable *GetMPTPointer(int L);
 	MPTSV SVfromRVGMT(VECTOR3 R, VECTOR3 V, double GMT, int body);
-	int PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan);
+	int PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan);
 	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
 	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC, int Thruster, int &CC, int &CCMI);
 	int PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv);
 	int PMMXFRFetchAnchorVector(int L, EphemerisData &sv);
 	void PMMXFRWeightAtInitiation(int CCI, int CCMI, double &weight);
-	void PMMXFRDeleteOption(int working_man, double GMTI);
+	bool PMMXFRDeleteOption(int L, double GMTI);
 	int PMMMCDCallEMSMISS(EphemerisData sv0, double GMTI, EphemerisData &sv1);
 	int PMSVCTAuxVectorFetch(int L, double T_F, EphemerisData &sv);
 	bool MEDTimeInputHHMMSS(std::string vec, double &hours);

@@ -697,7 +697,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			//IOL
 			entopt.entrylongmanual = false;
-			entopt.EntryLng = 3.0;
+			entopt.ATPLine = 3;
 			entopt.returnspeed = 2;
 			sprintf(manname, "PC+2 fast return");
 			PZREAP.VRMAX = 37500.0;

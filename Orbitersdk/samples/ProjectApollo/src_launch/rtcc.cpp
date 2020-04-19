@@ -358,9 +358,6 @@ TradeoffDataDisplayBuffer::TradeoffDataDisplayBuffer()
 
 MPTManeuver::MPTManeuver()
 {
-	ConfigCodeAfter = 0;
-	ConfigChangeInd = 0;
-	TUP = 0;
 	GMTFrozen = 0.0;
 	AttitudeCode = 0;
 	Thruster = 0;
@@ -414,18 +411,8 @@ MPTManeuver::MPTManeuver()
 	V_BO = _V(0, 0, 0);
 	GMT_BO = 0.0;
 
-	CSMMassAfter = 0.0;
-	SIVBMassAfter = 0.0;
-	LMAscMassAfter = 0.0;
-	LMDscMassAfter = 0.0;
 	TotalMassAfter = 0.0;
 	TotalAreaAfter = 0.0;
-	SPSFuelAfter = 0.0;
-	CSMRCSFuelAfter = 0.0;
-	SIVBJ2FuelAfter = 0.0;
-	APSFuelAfter = 0.0;
-	LMRCSFuelAfter = 0.0;
-	DPSFuelAfter = 0.0;
 }
 
 MPTManDisplay::MPTManDisplay()
@@ -3282,7 +3269,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 		sv_pre = coast(sv_node, t_slip);
 
-		dV_LVLH = PIEXDV(sv_node.R, sv_node.V, mass, f_T, Llambda, false);
+		dV_LVLH = PIEXDV(sv_pre.R, sv_pre.V, mass, f_T, Llambda, false);
 		P30TIG = GET_node + t_slip;
 
 		sv_post = sv_node;
@@ -6212,8 +6199,8 @@ RTCC_PMMSPT_15_2:
 		return 79;
 	}
 	in.mpt->TimeToBeginManeuver[0] = in.mpt->TimeToEndManeuver[0] = T_RP;
-	in.CurMan->ConfigCodeAfter = in.CC;
-	in.CurMan->ConfigChangeInd = in.CCI;
+	in.CurMan->CommonBlock.ConfigCode = in.CC;
+	in.CurMan->CommonBlock.ConfigChangeInd = in.CCI;
 	in.CurMan->AttitudeCode = in.AttitudeMode;
 	in.CurMan->Thruster = in.ThrusterCode;
 	in.CurMan->ConfigCodeBefore = in.CCMI;
@@ -10243,58 +10230,254 @@ VECTOR3 RTCC::RLS_from_latlng(double lat, double lng, double alt)
 	return OrbMech::r_from_latlong(lat, lng, OrbMech::R_Moon + alt);
 }
 
-void RTCC::PMXSPT(int n)
+void RTCC::PMXSPT(std::string source, int n)
 {
+	std::vector<std::string> message;
+
 	switch (n)
 	{
 	case 1:
-		PMXSPT("PMMXFR: MANEUVER PRIOR TO PRESENT TIME.");
+		message.push_back("MANEUVER PRIOR TO PRESENT TIME.");
 		break;
 	case 2:
-		PMXSPT("PMMXFR: MANEUVER TO BE REPLACED NOT IN THE MPT.");
+		message.push_back("MANEUVER TO BE REPLACED NOT IN THE MPT.");
 		break;
 	case 3:
-		PMXSPT("PMMXFR: MANEUVER TO BE REPLACED OVERLAPS ANOTHER MANEUVER.");
+		message.push_back("MANEUVER TO BE REPLACED OVERLAPS ANOTHER MANEUVER.");
 		break;
 	case 4:
-		PMXSPT("PMMXFR: MANEUVER PRIOR TO FROZEN MANEUVER.");
+		message.push_back("MANEUVER PRIOR TO FROZEN MANEUVER.");
 		break;
 	case 5:
-		PMXSPT("PMMXFR: MPT IS FULL - REQUESTED MANEUVER TRANSFER REJECTED.");
+		message.push_back("MPT IS FULL - REQUESTED MANEUVER TRANSFER REJECTED.");
 		break;
 	case 6:
-		PMXSPT("PMMXFR: INVALID CONFIGURATION CODE OR THRUSTER CODE - MPT UNCHANGED.");
+		message.push_back("INVALID CONFIGURATION CODE OR THRUSTER CODE - MPT UNCHANGED.");
+		break;
+	case 10:
+		message.push_back("MANEUVER EXECUTED - CANNOT FREEZE");
+		break;
+	case 23:
+		message.push_back("TIME ON M50 MED PRIOR TO END OF LAST EXECUTED");
+		message.push_back("MANEUVER - MPT UNCHANGED");
+		break;
+	case 36:
+		message.push_back("EXECUTION VECTOR FOR MANEUVER " + RTCCONLINEMON.TextBuffer[0]);
+		break;
+	case 37:
+		message.push_back("DELETION TIME IS PRIOR TO A FROZEN MANEUVER - MPT UNCHANGED.");
+		break;
+	case 38:
+		message.push_back("UNUSABLE MANEUVER FOR TRANSFER");
+		break;
+	case 39:
+		message.push_back("UNABLE TO FETCH VECTOR FOR " + RTCCONLINEMON.TextBuffer[0] + " - MPT UNCHANGED");
+		break;
+	case 40:
+		message.push_back("MANEUVER DOES NOT EXIST");
+		break;
+	case 41:
+		message.push_back("INVALID VECTOR ID - CANNOT FREEZE");
+		break;
+	case 42:
+		message.push_back("MANEUVER NOT EXECUTED - CANNOT DELETE AS HISTORY");
+		break;
+	case 43:
+		message.push_back("MANEUVER EXECUTED - CANNOT DELETE AS FUTURE");
+		break;
+	case 44:
+		message.push_back("MANEUVER PRIOR TO FROZEN VECTOR TIME - CANNOT FREEZE ON THIS VECTOR");
+		break;
+	case 45:
+		message.push_back("MANEUVER NOT FROZEN - CANNOT UNFREEZE");
+		break;
+	case 46:
+		message.push_back("MANEUVER EXECUTED - CANNOT UNFREEZE");
+		break;
+	case 47:
+		message.push_back("MANEUVER FROZEN - CANNOT DELETE");
+		break;
+	case 48:
+		message.push_back("ILLEGAL ENTRY");
+		break;
+	case 49:
+		message.push_back("UNABLE TO FETCH VECTOR FOR RENDEZVOUS PLANNING REQUEST");
+		break;
+	case 50:
+		char Buffer[128];
+		sprintf_s(Buffer, "ERROR CODE %d FROM POWERED FLIGHT ITERATOR", RTCCONLINEMON.IntBuffer[0]);
+		message.push_back(Buffer);
+		message.push_back("MNVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
+		break;
+	case 51:
+		message.push_back("UNRECOVERABLE ERROR FROM EMMENI - MPT UNCHANGED");
+		break;
+	case 52:
+		message.push_back("FINITE BURN OF MNVR IS PRIOR TO PRESENT TIME OR");
+		message.push_back("OVERLAPS ANOTHER MNVR - MPT UNCHANGED");
+		break;
+	case 53:
+		message.push_back("REQUESTED MANEUVER IS NOT IN MPT - M58 MED IGNORE");
+		break;
+	case 54:
+		message.push_back("REQUESTED MANEUVER IS EXECUTED - M58 MED IGNORE");
+		break;
+	case 55:
+		message.push_back("REQUEST IS FOR TLI/ASC MANEUVER - M58 MED IGNORE");
+		break;
+	case 56:
+		message.push_back("REQUESTED MANEUVER IS FROZEN - M58 MED IGNORE");
+		break;
+	case 70:
+		message.push_back("UNABLE TO CONVERT VECTORS FROM MEAN TO TRUE");
+		break;
+	case 72:
+		message.push_back("DELETE MPT MANEUVERS PRIOR TO ENTERING M55 MED");
 		break;
 	case 102:
-		PMXSPT("PMMIEV: NOMINAL TIME OF LIFTOFF FOR SPECIFIED LAUNCH DAY UNAVAILABLE.");
+		message.push_back("NOMINAL TIME OF LIFTOFF FOR SPECIFIED LAUNCH DAY UNAVAILABLE.");
+		break;
+	case 108:
+		message.push_back("ERROR RETURNED FROM PMMAPD - INVALID APOFOCUS / PERIFOCUS");
 		break;
 	case 120:
-		PMXSPT("PMMIEV: UNABLE TO CONVERT SPHERICAL ELEMENTS TO R AND V VECTORS.");
+		message.push_back("UNABLE TO CONVERT SPHERICAL ELEMENTS TO R AND V VECTORS.");
 		break;
 	case 121:
-		PMXSPT("PMMIEV: DIFFERENCE BETWEEN ACTUAL AND NOMINAL LIFTOFF TIME OUTSIDE LIMITS OF LAUNCH AZIMUTH POLYNOMIAL");
+		message.push_back("DIFFERENCE BETWEEN ACTUAL AND NOMINAL");
+		message.push_back("LIFTOFF TIME OUTSIDE LIMITS OF LAUNCH AZIMUTH POLYNOMIAL");
 		break;
+	case 124:
+		message.push_back("COAST INTEGRATOR UNABLE TO OBTAIN PERICYNTHION POINT");
+		message.push_back("FOR LOI REQUEST - LOI SOLUTIONS ARE UNOBTAINABLE");
+		break;
+	case 125:
+		message.push_back("LUNAR APPROACH HYPERBOLA HAS");
+		message.push_back("IMPACTING TRAJECTORY - LOI SOLUTIONS ARE UNOBTAINABLE");
+		break;
+	case 126:
+		message.push_back("LUNAR APPROACH HYPERBOLIC PERICYNTHION GREATER THAN");
+		message.push_back("REQUESTED LPO APOLUNE - LOI SOLUTIONS ARE UNOBTAINABLE");
+		break;
+	case 200:
+		message.push_back("ITERATION FAILURE, MVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
+		break;
+	case 201:
+		message.push_back(RTCCONLINEMON.TextBuffer[0]);
+		break;
+	default:
+		return;
+	}
+	PMXSPT(source, message);
+}
+
+void RTCC::PMXSPT(std::string source, std::vector<std::string> message)
+{
+	OnlinePrint(source, message);
+}
+
+void RTCC::OnlinePrint(const std::string &source, const std::vector<std::string> &message)
+{
+	if (message.size() == 0)
+	{
+		return;
+	}
+
+	OnlineMonitorMessage data;
+	std::string temp, temp2;
+
+	double gmt;
+	if (GMTBASE == 0.0)
+	{
+		gmt = 0.0;
+	}
+	else
+	{
+		gmt = RTCCPresentTimeGMT();
+	}
+	OnlinePrintTime(gmt, temp);
+	data.message.push_back(temp + " )" + source + "( " + message[0]);
+	for (unsigned i = 1;i < message.size();i++)
+	{
+		data.message.push_back(message[i]);
+	}
+
+	RTCCONLINEMON.data.push_front(data);
+
+	if (RTCCONLINEMON.data.size() >= 9)
+	{
+		RTCCONLINEMON.data.pop_back();
 	}
 }
 
-void RTCC::PMXSPT(std::string message)
+void RTCC::GMSPRINT(std::string source, int n)
 {
-	RTCCONLINEMON.push_front(message);
+	std::vector<std::string> message;
 
-	if (RTCCONLINEMON.size() >= 9)
+	switch (n)
 	{
-		RTCCONLINEMON.pop_back();
+	case 1:
+		message.push_back("RECYCLE TO ORBIT L.S.");
+		break;
+	case 23:
+		message.push_back("P32, ADD...STA ALREADY IN TABLE");
+		break;
+	case 24:
+		message.push_back("P32, ADD...SORRY TABLE FULL");
+		break;
+	case 25:
+		message.push_back("P32, MOD/DEL...STA NOT IN TABLE");
+		break;
+	case 26:
+		message.push_back("LATE Q FROM HIGH-SPEED");
+		break;
+	case 27:
+		message.push_back("INVALID P60 - IGNORED");
+		break;
+	case 28:
+		message.push_back("INVALID ID - IGNORED");
+		break;
+	case 29:
+		message.push_back("INVALID P81 - IGNORED");
+		break;
+	case 30:
+		message.push_back("NO/GO GMSMED - S RTCHNGE");
+		break;
+	case 31:
+		message.push_back("P13 CANNOT BE ROTATED TO ECI -- IGNORE");
+		break;
+	case 32:
+		message.push_back("P32 E/M CONFLICT, RELEASE TABLE AND RE-ENTER MED");
+		break;
+	case 51:
+		message.push_back("MED " + RTCCONLINEMON.TextBuffer[0]);
+		break;
+	default:
+		return;
 	}
+	GMSPRINT(source, message);
 }
 
-void RTCC::GMSPRINT(std::string message)
+void RTCC::GMSPRINT(std::string source, std::vector<std::string> message)
 {
-	RTCCONLINEMON.push_front(message);
+	OnlinePrint(source, message);
+}
 
-	if (RTCCONLINEMON.size() >= 9)
+void RTCC::OnlinePrintTime(double TIME_SEC, std::string &time)
+{
+	char Buffer[128];
+	double days, hours, minutes, seconds;
+	if (TIME_SEC < 0)
 	{
-		RTCCONLINEMON.pop_back();
+		TIME_SEC = 0.0;
 	}
+	days = trunc(TIME_SEC / 86400.0);
+	hours = trunc((TIME_SEC - 86400.0*days) / 3600.0);
+	minutes = trunc((TIME_SEC - 86400.0 * days - 3600.0 * hours) / 60.0);
+	seconds = TIME_SEC - 86400.0*days - 3600.0*hours - 60.0*minutes;
+
+	sprintf(Buffer, "%02.0lf/%02.0lf/%02.0lf/%05.2lf", days, hours, minutes, seconds);
+	time.assign(Buffer);
 }
 
 void RTCC::EMGGPCHR(double lat, double lng, double alt, int body, Station *stat)
@@ -10428,12 +10611,12 @@ void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis,
 		EZRMDT.error = "UPDATE IN PROCESS";
 		return;
 	}
-	if (ChaTab->EPHEM.Header.TUP != ChaMPT->TUP)
+	if (ChaTab->EPHEM.Header.TUP != ChaMPT->CommonBlock.TUP)
 	{
 		EZRMDT.error = "INCONSISTENT TABLES";
 		return;
 	}
-	if (TgtTab->EPHEM.Header.TUP != TgtMPT->TUP)
+	if (TgtTab->EPHEM.Header.TUP != TgtMPT->CommonBlock.TUP)
 	{
 		EZRMDT.error = "INCONSISTENT TABLES";
 		return;
@@ -10775,6 +10958,13 @@ void RTCC::EMSNAP(int L, int ID)
 	{
 		PMDMPT();
 	}
+	//Update MPT and DMT displays as a result of a fuel change
+	else if (ID == 7)
+	{
+		PMDMPT();
+		PMDDMT(EZETVMED.DMT1Vehicle, EZETVMED.DMT1Number, EZETVMED.DMT1REFSMMATCode, EZETVMED.DMT1HeadsUpDownIndicator, DMTBuffer[0]);
+		PMDDMT(EZETVMED.DMT2Vehicle, EZETVMED.DMT2Number, EZETVMED.DMT2REFSMMATCode, EZETVMED.DMT2HeadsUpDownIndicator, DMTBuffer[1]);
+	}
 }
 
 void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
@@ -10871,8 +11061,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		int err = RMMASCND(L, CurGMT, lng);
 		if (err)
 		{
-			std::string message = "EMMDYNMC: RMMASCND CONVERGENCE LIMIT";
-			PMXSPT(message);
+			EMGPRINT("EMMDYNMC", 29);
 			tab->LNPP = 0.0;
 		}
 		else
@@ -11181,9 +11370,12 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 	//6 = MSK request
 	//7 = Reinitialization
 
+	EZSPACE.errormessage = "";
+
 	if (EZETVMED.SpaceDigVehID < 0)
 	{
 		//Error: The display has not been initialized via MED U00
+		EZSPACE.errormessage = "Error 1";
 		return 1;
 	}
 
@@ -11207,16 +11399,19 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 	if (ephtab->EPHEM.Header.TUP == 0)
 	{
 		//Error: The trajectory for subject vehicle is not generated
+		EZSPACE.errormessage = "Error 2";
 		return 2;
 	}
 	if (ephtab->EPHEM.Header.TUP < 0)
 	{
 		//Error: The main ephemeris is in an update status
+		EZSPACE.errormessage = "Error 5";
 		return 5;
 	}
-	if (mpt->TUP < 0 || mpt->TUP != ephtab->EPHEM.Header.TUP)
+	if (mpt->CommonBlock.TUP < 0 || mpt->CommonBlock.TUP != ephtab->EPHEM.Header.TUP)
 	{
 		//Error: The MPT is either in an update state or is inconsistent with the trajectory update number
+		EZSPACE.errormessage = "Error 6";
 		return 6;
 	}
 
@@ -11307,11 +11502,13 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				if (GMT > ephtab->EPHEM.Header.TR)
 				{
 					//Error: The time on the U01 exceeds the start of the ephemeris
+					EZSPACE.errormessage = "Error 3";
 					return 3;
 				}
 				else
 				{
 					//Error: The time on the U01 precedes the start of the ephemeris
+					EZSPACE.errormessage = "Error 4";
 					return 4;
 				}
 			}
@@ -11725,11 +11922,13 @@ void RTCC::EMSTAGEN(int L)
 		GMT_start = EPHEM.Header.TL;
 		if (L == 1)
 		{
-			EMGPRINT("EMSTAGEN: ANCHOR TIME ADJUSTED FOR CSM STATION CONTACTS");
+			RTCCONLINEMON.TextBuffer[0] = "CSM";
+			EMGPRINT("EMSTAGEN", 36);
 		}
 		else
 		{
-			EMGPRINT("EMSTAGEN: ANCHOR TIME ADJUSTED FOR LEM STATION CONTACTS");
+			RTCCONLINEMON.TextBuffer[0] = "LEM";
+			EMGPRINT("EMSTAGEN", 36);
 		}
 	}
 
@@ -11813,8 +12012,8 @@ int RTCC::PMMMCD(PMMMCDInput in, MPTManeuver &man)
 	man.TrajDet[2] = 1;
 
 	man.AttitudeCode = in.Attitude;
-	man.ConfigChangeInd = in.ConfigChangeInd;
-	man.ConfigCodeAfter = in.ConfigCodeAfter;
+	man.CommonBlock.ConfigChangeInd = in.ConfigChangeInd;
+	man.CommonBlock.ConfigCode = in.ConfigCodeAfter;
 	man.TVC = in.TVC;
 	man.DockingAngle = in.DockingAngle;
 	man.ConfigCodeBefore = in.CCMI;
@@ -12065,11 +12264,11 @@ RTCC_PMMMCD_12_1:
 						IJ = 0;
 						if (in.mpt->mantable.size() == 0)
 						{
-							WTLXX = in.mpt->LMInitAscentMass + in.mpt->LMInitDescentMass;
+							WTLXX = in.mpt->CommonBlock.LMAscentMass + in.mpt->CommonBlock.LMDescentMass;
 						}
 						else
 						{
-							WTLXX = in.mpt->mantable.back().LMAscMassAfter + in.mpt->mantable.back().LMDscMassAfter;
+							WTLXX = in.mpt->mantable.back().CommonBlock.LMAscentMass + in.mpt->mantable.back().CommonBlock.LMDescentMass;
 						}
 					}
 					else
@@ -12077,20 +12276,20 @@ RTCC_PMMMCD_12_1:
 						IJ = 1;
 						if (in.mpt->mantable.size() == 0)
 						{
-							WTLXX = in.mpt->LMInitAscentMass;
+							WTLXX = in.mpt->CommonBlock.LMAscentMass;
 						}
 						else
 						{
-							WTLXX = in.mpt->mantable.back().LMAscMassAfter;
+							WTLXX = in.mpt->mantable.back().CommonBlock.LMAscentMass;
 						}
 					}
 					if (in.mpt->mantable.size() == 0)
 					{
-						WTCXX = in.mpt->CSMInitMass;
+						WTCXX = in.mpt->CommonBlock.CSMMass;
 					}
 					else
 					{
-						WTCXX = in.mpt->mantable.back().CSMMassAfter;
+						WTCXX = in.mpt->mantable.back().CommonBlock.CSMMass;
 					}
 					GIMGBL(WTCXX, WTLXX, P_G, Y_G, Thr, WDOT, in.Thruster, in.CCMI, IA, IJ, in.DockingAngle);
 				}
@@ -12218,13 +12417,14 @@ RTCC_PMMMCD_17_1:
 	return 0;
 }
 
-void RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
+int RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 {
 	EMSMISSInputTable emsin;
 	CELEMENTS ELA;
 	EphemerisData sv_gmti, sv_gmti_other;
 	VECTOR3 DV_LVLH;
 	double WDI[6], TH[6], DELT[6], TIDPS, MASS, DELVB, T, GMTBB, GMTI, WAITA, DT, mu;
+	int err = 0;
 
 	int NPHASE = 1;
 
@@ -12245,7 +12445,7 @@ void RTCC::PMMMPT(PMMMPTInput in, MPTManeuver &man)
 	man.AttitudeCode = in.Attitude;
 	man.UllageThrusterOpt = in.UT;
 	man.dt_ullage = in.DETU;
-	man.ConfigCodeBefore = man.ConfigCodeAfter = in.CONFIG;
+	man.ConfigCodeBefore = man.CommonBlock.ConfigCode = in.CONFIG;
 	man.TVC = in.VC;
 	man.IMPT = TIMP;
 	if (in.Thruster == RTCC_ENGINETYPE_LMAPS)
@@ -12478,7 +12678,7 @@ RTCC_PMMMPT_10_A:
 	man.FrozenManeuverInd = false;
 	if (GMTBB < in.LowerTimeLimit)
 	{
-		//Error exit
+		return true;
 	}
 	if (in.Attitude <= 3)
 	{
@@ -12512,7 +12712,7 @@ RTCC_PMMMPT_11_B:
 	{
 		//Update LM weight
 	}
-	return;
+	return false;
 RTCC_PMMMPT_12_A:
 	PMMRKJInputArray integin;
 
@@ -12523,7 +12723,7 @@ RTCC_PMMMPT_12_A:
 	integin.DTPS10 = man.DT_10PCT;
 	integin.DTU = man.dt_ullage;
 	integin.HeadsUpDownInd = man.HeadsUpDownInd;
-	integin.IC = man.ConfigCodeAfter;
+	integin.IC = man.CommonBlock.ConfigCode;
 	integin.KAUXOP = 1;
 	integin.KEPHOP = 0;
 	integin.KTRIMOP = man.TrimAngleInd;
@@ -12739,7 +12939,7 @@ RTCC_PMMMPT_16_B:
 		DV = integin.VG;
 		GMTBB = integin.sv0.GMT;
 		GMTI = GMTBB + DT;
-		PMXSPT("PMMMPT: ITERATION LIMIT, MVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
+		PMXSPT("PMMMPT", 200);
 		goto RTCC_PMMMPT_10_A;
 	}
 	J = 0;
@@ -12795,7 +12995,7 @@ RTCC_PMMMPT_20_A:
 	if (LAMP > LAML)
 	{
 		//Put best burn parameters in PMMMPT output area - print message
-		PMXSPT("PMMMPT: ITERATION FAILURE, MVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
+		PMXSPT("PMMMPT", 200);
 		goto RTCC_PMMMPT_10_A;
 	}
 RTCC_PMMMPT_20_B:
@@ -12978,7 +13178,7 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 
 	GMTBB = OrbMech::GETfromMJD(sv_IG.MJD, GMTBASE);
 
-	man.ConfigCodeAfter = RTCC_CONFIG_LM;
+	man.CommonBlock.ConfigCode = RTCC_CONFIG_LM;
 	man.AttitudeCode = RTCC_ATTITUDE_PGNS_DESCENT;
 	man.Thruster = RTCC_ENGINETYPE_LMDPS;
 	man.ConfigCodeBefore = RTCC_CONFIG_LM;
@@ -13007,7 +13207,7 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 	if (man > mpt->mantable.size())
 	{
 		//Error 40
-		PMXSPT("PMMFUD: Maneuver does not exist");
+		PMXSPT("PMMFUD", 40);
 		return;
 	}
 
@@ -13015,17 +13215,17 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 	if (action == 0)
 	{
 		//Maneuver executed?
-		if (RTCCPresentTimeGMT() > mpt->mantable[man - 1].GMTMAN)
+		if (man <= mpt->LastExecutedManeuver)
 		{
 			//Error 43
-			PMXSPT("PMMFUD: Maneuver executed - cannot delete as future");
+			PMXSPT("PMMFUD", 43);
 			return;
 		}
 		//Maneuver frozen?
 		if (mpt->mantable[man - 1].FrozenManeuverInd)
 		{
 			//Error 47
-			PMXSPT("PMMFUD: Maneuver frozen - cannot delete");
+			PMXSPT("PMMFUD", 47);
 			return;
 		}
 
@@ -13037,8 +13237,12 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 		mpt->ManeuverNum = mpt->mantable.size();
 		//TBD: Is TLI maneuver being deleted?
 		//TBD: Is deorbit maneuver being deleted?
-		//TBD: Is the next upcoming maneuver being deleted?
-		mpt->TUP = -mpt->TUP;
+		//Is the next upcoming maneuver being deleted?
+		if (man == mpt->LastExecutedManeuver + 1)
+		{
+			mpt->UpcomingManeuverGMT = 1e70;
+		}
+		mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
 		PMSVCT(8, veh);
 	}
 	//History Delete
@@ -13048,7 +13252,7 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 		if (RTCCPresentTimeGMT() <= mpt->mantable[man - 1].GMTMAN)
 		{
 			//Error 42
-			PMXSPT("PMMFUD: Maneuver not executed - cannot delete as history");
+			PMXSPT("PMMFUD", 42);
 			return;
 		}
 
@@ -13060,23 +13264,10 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 			mpt->WeightAfterManeuver[i] = mpt->WeightAfterManeuver[man + i];
 		}
 
-		mpt->InitConfigCode = mpt->mantable[man - 1].ConfigCodeAfter;
+		mpt->CommonBlock.ConfigCode = mpt->mantable[man - 1].CommonBlock.ConfigCode;
 		mpt->DeltaDockingAngle = mpt->mantable[man - 1].DockingAngle;
 		mpt->ConfigurationArea = mpt->mantable[man - 1].TotalAreaAfter;
-		mpt->CSMInitArea = mpt->mantable[man - 1].CSMAreaAfter;
-		mpt->SIVBInitArea = mpt->mantable[man - 1].SIVBAreaAfter;
-		mpt->LMInitAscentArea = mpt->mantable[man - 1].AscentAreaAfter;
-		mpt->LMInitDescentArea = mpt->mantable[man - 1].DescentAreaAfter;
-		mpt->CSMInitMass = mpt->mantable[man - 1].CSMMassAfter;
-		mpt->SIVBInitMass = mpt->mantable[man - 1].SIVBMassAfter;
-		mpt->LMInitAscentMass = mpt->mantable[man - 1].LMAscMassAfter;
-		mpt->LMInitDescentMass = mpt->mantable[man - 1].LMDscMassAfter;
-		mpt->APSFuelRemaining = mpt->mantable[man - 1].APSFuelAfter;
-		mpt->CSMRCSFuelRemaining = mpt->mantable[man - 1].CSMRCSFuelAfter;
-		mpt->DPSFuelRemaining = mpt->mantable[man - 1].DPSFuelAfter;
-		mpt->LMRCSFuelRemaining = mpt->mantable[man - 1].LMRCSFuelAfter;
-		mpt->SIVBJ2FuelRemaining = mpt->mantable[man - 1].SIVBJ2FuelAfter;
-		mpt->SPSFuelRemaining = mpt->mantable[man - 1].SPSFuelAfter;
+		mpt->CommonBlock = mpt->mantable[man - 1].CommonBlock;
 
 		//TBD: Compute and store new GET to begin venting
 
@@ -13088,15 +13279,15 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 		mpt->ManeuverNum = mpt->mantable.size();
 		if (mpt->ManeuverNum > 0)
 		{
-			if (mpt->TUP > 0)
+			if (mpt->CommonBlock.TUP > 0)
 			{
-				mpt->TUP = -mpt->TUP;
+				mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
 			}
 			//Here it would move up the maneuvers
 		}
-		if (mpt->TUP < 0)
+		if (mpt->CommonBlock.TUP < 0)
 		{
-			mpt->TUP = -mpt->TUP;
+			mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
 		}
 		EMSNAP(veh, 2);
 	}
@@ -13104,10 +13295,10 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 	else if (action == 2)
 	{
 		//Maneuver executed?
-		if (RTCCPresentTimeGMT() > mpt->mantable[man - 1].GMTMAN)
+		if (man <= mpt->LastExecutedManeuver)
 		{
 			//Error 10
-			PMXSPT("PMMFUD: Maneuver executed - cannot freeze");
+			PMXSPT("PMMFUD", 10);
 			return;
 		}
 		//Determine 1st maneuver to be frozen
@@ -13121,9 +13312,9 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 				break;
 			}
 		}
-		if (mpt->TUP > 0)
+		if (mpt->CommonBlock.TUP > 0)
 		{
-			mpt->TUP = -mpt->TUP;
+			mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
 		}
 
 		do
@@ -13151,17 +13342,17 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 	else
 	{
 		//Maneuver executed?
-		if (RTCCPresentTimeGMT() > mpt->mantable[man - 1].GMTMAN)
+		if (man <= mpt->LastExecutedManeuver)
 		{
 			//Error 46
-			PMXSPT("PMMFUD: Maneuver executed - cannot unfreeze");
+			PMXSPT("PMMFUD", 46);
 			return;
 		}
 		//Maneuver frozen?
 		if (mpt->mantable[man - 1].FrozenManeuverInd)
 		{
 			//Error 45
-			PMXSPT("PMMFUD: Maneuver frozen - cannot unfreeze");
+			PMXSPT("PMMFUD", 45);
 			return;
 		}
 	}
@@ -13178,29 +13369,32 @@ void RTCC::PMMUDT(int L, unsigned man, int headsup, int trim)
 	{
 		tab = &PZMPTLEM;
 	}
+	//Is requested maneuver in MPT?
 	if (tab->mantable.size() < man)
 	{
 		//Error 53
-		PMXSPT("PMMUDT: Requested maneuver not in MPT - M58 MED ignored");
+		PMXSPT("PMMUDT", 53);
 		return;
 	}
 	MPTManeuver *pMan = &tab->mantable[man - 1];
-	if (RTCCPresentTimeGMT() > pMan->GMTMAN)
+	//Has requested maneuver been executed?
+	if (man <= tab->LastExecutedManeuver)
 	{
 		//Error 54
-		PMXSPT("PMMUDT: Requested maneuver is executed - M58 MED ignored");
+		PMXSPT("PMMUDT", 54);
 		return;
 	}
+	//Is requested maneuver frozen?
 	if (pMan->FrozenManeuverInd)
 	{
-		//Error 55
-		PMXSPT("PMMUDT: Requested maneuver frozen - M58 MED ignored");
+		//Error 56
+		PMXSPT("PMMUDT", 56);
 		return;
 	}
 	if (pMan->AttitudeCode == RTCC_ATTITUDE_SIVB_IGM || pMan->AttitudeCode == RTCC_ATTITUDE_AGS_ASCENT || pMan->AttitudeCode == RTCC_ATTITUDE_PGNS_ASCENT)
 	{
-		//Error 56
-		PMXSPT("PMMUDT: Request is for TLI/ASC maneuver - M58 MED ignored");
+		//Error 55
+		PMXSPT("PMMUDT", 55);
 		return;
 	}
 	if (headsup >= 0)
@@ -13435,20 +13629,21 @@ EphemerisData RTCC::EMSEPH(int QUEID, EphemerisData sv0, int L, double PresentGM
 	table->EPHEM.Header.TL = table->EPHEM.table.front().GMT;
 	table->EPHEM.Header.TR = table->EPHEM.table.back().GMT;
 
-	mpt->TUP = table->EPHEM.Header.TUP;
+	mpt->CommonBlock.TUP = table->EPHEM.Header.TUP;
+
+	if (L == RTCC_MPT_CSM)
+	{
+		RTCCONLINEMON.TextBuffer[0] = "CSM";
+	}
+	else
+	{
+		RTCCONLINEMON.TextBuffer[0] = "LEM";
+	}
+	EMGPRINT("EMSEPH", 12);
 
 	//Update mission plan table display
 	PMDMPT();
 	return table->EPHEM.table.back();
-
-	if (L == RTCC_MPT_CSM)
-	{
-		PMXSPT("EMSEPH: CSM EPHEMERIS UPDATE COMPLETED");
-	}
-	else
-	{
-		PMXSPT("EMSEPH: LEM EPHEMERIS UPDATE COMPLETED");
-	}
 }
 
 void RTCC::EMSMISS(EMSMISSInputTable &in)
@@ -13742,7 +13937,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.DTU = mpt->mantable[i].dt_ullage;
 		integin.DVMAN = mpt->mantable[i].dv;
 		integin.HeadsUpDownInd = mpt->mantable[i].HeadsUpDownInd;
-		integin.IC = mpt->mantable[i].ConfigCodeAfter;
+		integin.IC = mpt->mantable[i].CommonBlock.ConfigCode;
 		integin.KAUXOP = 1;
 		if (in.EphemerisBuildIndicator)
 		{
@@ -13787,11 +13982,11 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		{
 			if (i == 0)
 			{
-				integin.CSMWT = mpt->CSMInitMass;
+				integin.CSMWT = mpt->CommonBlock.CSMMass;
 			}
 			else
 			{
-				integin.CSMWT = mpt->mantable[i - 1].CSMMassAfter;
+				integin.CSMWT = mpt->mantable[i - 1].CommonBlock.CSMMass;
 			}
 			integin.CAPWT += integin.CSMWT;
 		}
@@ -13800,11 +13995,11 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		{
 			if (i == 0)
 			{
-				integin.SIVBWT = mpt->SIVBInitMass;
+				integin.SIVBWT = mpt->CommonBlock.SIVBMass;
 			}
 			else
 			{
-				integin.SIVBWT = mpt->mantable[i - 1].SIVBMassAfter;
+				integin.SIVBWT = mpt->mantable[i - 1].CommonBlock.SIVBMass;
 			}
 			integin.CAPWT += integin.SIVBWT;
 		}
@@ -13813,11 +14008,11 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		{
 			if (i == 0)
 			{
-				integin.LMAWT = mpt->LMInitAscentMass;
+				integin.LMAWT = mpt->CommonBlock.LMAscentMass;
 			}
 			else
 			{
-				integin.LMAWT = mpt->mantable[i - 1].LMAscMassAfter;
+				integin.LMAWT = mpt->mantable[i - 1].CommonBlock.LMAscentMass;
 			}
 			integin.CAPWT += integin.LMAWT;
 		}
@@ -13826,11 +14021,11 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		{
 			if (i == 0)
 			{
-				integin.LMDWT = mpt->LMInitDescentMass;
+				integin.LMDWT = mpt->CommonBlock.LMDescentMass;
 			}
 			else
 			{
-				integin.LMDWT = mpt->mantable[i - 1].LMDscMassAfter;
+				integin.LMDWT = mpt->mantable[i - 1].CommonBlock.LMDescentMass;
 			}
 			integin.CAPWT += integin.LMDWT;
 		}
@@ -13859,19 +14054,19 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		if (i == 0)
 		{
 			integin.Area = mpt->ConfigurationArea;
-			integin.CSMWT = mpt->CSMInitMass;
-			integin.LMAWT = mpt->LMInitAscentMass;
-			integin.LMDWT = mpt->LMInitDescentMass;
-			integin.SIVBWT = mpt->SIVBInitMass;
+			integin.CSMWT = mpt->CommonBlock.CSMMass;
+			integin.LMAWT = mpt->CommonBlock.LMAscentMass;
+			integin.LMDWT = mpt->CommonBlock.LMDescentMass;
+			integin.SIVBWT = mpt->CommonBlock.SIVBMass;
 			integin.CAPWT = mpt->TotalInitMass;
 		}
 		else
 		{
 			integin.Area = mpt->mantable[i - 1].TotalAreaAfter;
-			integin.CSMWT = mpt->mantable[i - 1].CSMMassAfter;
-			integin.LMAWT = mpt->mantable[i - 1].LMAscMassAfter;
-			integin.LMDWT = mpt->mantable[i - 1].LMDscMassAfter;
-			integin.SIVBWT = mpt->mantable[i - 1].SIVBMassAfter;
+			integin.CSMWT = mpt->mantable[i - 1].CommonBlock.CSMMass;
+			integin.LMAWT = mpt->mantable[i - 1].CommonBlock.LMAscentMass;
+			integin.LMDWT = mpt->mantable[i - 1].CommonBlock.LMDescentMass;
+			integin.SIVBWT = mpt->mantable[i - 1].CommonBlock.SIVBMass;
 			integin.CAPWT = mpt->mantable[i - 1].TotalMassAfter;
 		}
 		integin.MANOP = mpt->mantable[i].AttitudeCode;
@@ -13949,15 +14144,15 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 		if (i == 0)
 		{
-			integin.sv.mass = mpt->LMInitAscentMass + mpt->LMInitDescentMass;
-			integin.W_LMA = mpt->LMInitAscentMass;
-			integin.W_LMD = mpt->LMInitDescentMass;
+			integin.sv.mass = mpt->CommonBlock.LMAscentMass + mpt->CommonBlock.LMDescentMass;
+			integin.W_LMA = mpt->CommonBlock.LMAscentMass;
+			integin.W_LMD = mpt->CommonBlock.LMDescentMass;
 		}
 		else
 		{
-			integin.sv.mass = mpt->mantable[i - 1].LMAscMassAfter + mpt->mantable[i - 1].LMDscMassAfter;
-			integin.W_LMA = mpt->mantable[i - 1].LMAscMassAfter;
-			integin.W_LMD = mpt->mantable[i - 1].LMDscMassAfter;
+			integin.sv.mass = mpt->mantable[i - 1].CommonBlock.LMAscentMass + mpt->mantable[i - 1].CommonBlock.LMDescentMass;
+			integin.W_LMA = mpt->mantable[i - 1].CommonBlock.LMAscentMass;
+			integin.W_LMD = mpt->mantable[i - 1].CommonBlock.LMDescentMass;
 		}
 
 		if (in.EphemerisBuildIndicator)
@@ -13993,11 +14188,11 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 
 		if (i == 0)
 		{
-			integin.m0 = mpt->LMInitAscentMass;
+			integin.m0 = mpt->CommonBlock.LMAscentMass;
 		}
 		else
 		{
-			integin.m0 = mpt->mantable[i - 1].LMAscMassAfter;
+			integin.m0 = mpt->mantable[i - 1].CommonBlock.LMAscentMass;
 		}
 
 		if (mpt->mantable[i].FrozenManeuverInd)
@@ -14281,151 +14476,378 @@ bool RTCC::MPTHasManeuvers(int L)
 	return false;
 }
 
-int RTCC::MPTConfirmManeuver(int L)
-{
-	MissionPlanTable *table, *othertable;
-	if (L == RTCC_MPT_LM)
-	{
-		table = &PZMPTLEM;
-		othertable = &PZMPTCSM;
-	}
-	else
-	{
-		table = &PZMPTCSM;
-		othertable = &PZMPTLEM;
-	}
-
-	if (table->mantable.size() == 0)
-	{
-		//Error: MPT is empty
-		return 1;
-	}
-
-	//if (table->mantable.front().ID != mptable.fulltable.front().ID)
-	//{
-		//Error: Maneuver has to be very first of all maneuvers
-	//	return 2;
-	//}
-
-	if (table->mantable.front().code == "ASC")
-	{
-		//table->LunarStayTimes[0] = -1;
-		//table->LunarStayTimes[1] = -1;
-	}
-	else if (table->mantable.front().code == "DES")
-	{
-		//table->LunarStayTimes[0] = -1;
-	}
-
-	table->CSMInitMass = table->mantable.front().CSMMassAfter;
-	table->LMInitAscentMass = table->mantable.front().LMAscMassAfter;
-	table->LMInitDescentMass = table->mantable.front().LMDscMassAfter;
-	table->SIVBInitMass = table->mantable.front().SIVBMassAfter;
-	table->InitConfigCode = table->mantable.front().ConfigCodeAfter;
-	//table->AnchorVector = table->mantable.front().sv_after;
-
-	table->mantable.pop_front();
-
-	return 0;
-}
-
 int RTCC::PMMWTC(int med)
 {
+	MPTVehicleDataBlock CommonBlock;
 	MissionPlanTable *table;
-	double W;
+	double W, WDOT[6], TL[6], DVREM, FuelR[6];
+	unsigned IBLK;
+	int Thruster;
 
+	WDOT[0] = MCTCW1;
+	WDOT[1] = MCTSW1;
+	WDOT[2] = MCTWAV;
+	WDOT[3] = MCTLW1;
+	WDOT[4] = MCTAW1;
+	WDOT[5] = MCTDW1;
+	TL[0] = MCTCT1;
+	TL[1] = MCTST1;
+	TL[2] = MCTSAV;
+	TL[3] = MCTLT1;
+	TL[4] = MCTAT1;
+	TL[5] = MCTDT1;
+
+	//M49: Thruster Fuel Remaining
 	if (med == 49)
 	{
+		double RCSFuelUsed, MainEngineFuelUsed, TotalMassAfter;
 
-	}
-	if (med == 50)
-	{
-		table = GetMPTPointer(med_m50.Table);
+		table = GetMPTPointer(med_m49.Table);
+		IBLK = table->LastExecutedManeuver + 1;
+		double FuelC[6];
 
-		if (MPTConfigIncludesCSM(table->InitConfigCode))
+		FuelC[0] = med_m49.CSMRCSFuelRemaining;
+		FuelC[1] = med_m49.SPSFuelRemaining;
+		FuelC[2] = med_m49.SIVBFuelRemaining;
+		FuelC[3] = med_m49.LMRCSFuelRemaining;
+		FuelC[4] = med_m49.LMAPSFuelRemaining;
+		FuelC[5] = med_m49.LMDPSFuelRemaining;
+		int N = 0;
+		int i;
+	RTCC_PMMWTC_2:
+		//Read IBLK of MPT
+		if (IBLK == 1)
 		{
-			if (med_m50.CSMWT >= 0)
-			{
-				table->CSMInitMass = med_m50.CSMWT;
-			}
-		}
-
-		if(MPTConfigIncludesSIVB(table->InitConfigCode))
-		{
-			if (med_m50.SIVBWT >= 0)
-			{
-				table->SIVBInitMass = med_m50.SIVBWT;
-			}
-		}
-
-		//Do we have an ascent stage?
-		if (MPTConfigIncludesLMAsc(table->InitConfigCode))
-		{
-			//Ascent stage weight input?
-			if (med_m50.LMASCWT >= 0)
-			{
-				//Set initial ascent stage weight
-				table->LMInitAscentMass = med_m50.LMASCWT;
-			}
-
-			//Total stage weight input?
-			if (med_m50.LMWT >= 0)
-			{
-				//Do we have also have a descent stage?
-				if (MPTConfigIncludesLMDsc(table->InitConfigCode))
-				{
-					//Yes, calculate descent stage weight from total weight, minus ascent stage weight
-					table->LMInitDescentMass = med_m50.LMWT - table->LMInitAscentMass;
-				}
-				else
-				{
-					//No, total weight equals ascent stage weight (can override input from LMASCWT earlier)
-					table->LMInitAscentMass = med_m50.LMWT;
-				}
-			}
+			CommonBlock = table->CommonBlock;
 		}
 		else
 		{
-			if (MPTConfigIncludesLMDsc(table->InitConfigCode))
+			CommonBlock = table->mantable[IBLK - 2].CommonBlock;
+			Thruster = table->mantable[IBLK - 2].Thruster;
+			RCSFuelUsed = table->mantable[IBLK - 2].RCSFuelUsed;
+			MainEngineFuelUsed = table->mantable[IBLK - 2].MainEngineFuelUsed;
+			TotalMassAfter = table->mantable[IBLK - 2].TotalMassAfter;
+		}
+		FuelR[0] = CommonBlock.CSMRCSFuelRemaining;
+		FuelR[1] = CommonBlock.SPSFuelRemaining;
+		FuelR[2] = CommonBlock.SIVBFuelRemaining;
+		FuelR[3] = CommonBlock.LMRCSFuelRemaining;
+		FuelR[4] = CommonBlock.LMAPSFuelRemaining;
+		FuelR[5] = CommonBlock.LMDPSFuelRemaining;
+		if (N == 0)
+		{
+			goto RTCC_PMMWTC_3;
+		}
+		if (CommonBlock.ConfigChangeInd == 0)
+		{
+			goto RTCC_PMMWTC_5;
+		}
+	RTCC_PMMWTC_3:
+		if (MPTConfigIncludesCSM(CommonBlock.ConfigCode) == false)
+		{
+			FuelC[0] = -1;
+			FuelC[1] = -1;
+		}
+		if (MPTConfigIncludesSIVB(CommonBlock.ConfigCode) == false)
+		{
+			FuelC[2] = -1;
+		}
+		if (MPTConfigIncludesLMAsc(CommonBlock.ConfigCode) == false)
+		{
+			FuelC[3] = -1;
+			FuelC[4] = -1;
+		}
+		if (MPTConfigIncludesLMDsc(CommonBlock.ConfigCode) == false)
+		{
+			FuelC[5] = -1;
+		}
+	RTCC_PMMWTC_5:
+		i = 0;
+	RTCC_PMMWTC_6:
+		if (FuelC[i] < 0)
+		{
+			goto RTCC_PMMWTC_11;
+		}
+		FuelR[i] = FuelC[i];
+		if (IBLK <= 1)
+		{
+			goto RTCC_PMMWTC_11;
+		}
+		if (N > 0)
+		{
+			goto RTCC_PMMWTC_7;
+		}
+		if (MPTIsPrimaryThruster(Thruster, i) == false)
+		{
+			goto RTCC_PMMWTC_11;
+		}
+		goto RTCC_PMMWTC_8;
+	RTCC_PMMWTC_7:
+		if (MPTIsPrimaryThruster(Thruster, i) == false)
+		{
+			goto RTCC_PMMWTC_9;
+		}
+		if (MPTIsRCSThruster(Thruster))
+		{
+			FuelR[i] = FuelR[i] - RCSFuelUsed;
+		}
+		else
+		{
+			FuelR[i] = FuelR[i] - MainEngineFuelUsed;
+		}
+	RTCC_PMMWTC_8:
+		DVREM = TL[i] / WDOT[i] * log(TotalMassAfter/(TotalMassAfter - FuelR[i]));
+		goto RTCC_PMMWTC_10;
+	RTCC_PMMWTC_9:
+		if (MPTIsUllageThruster(Thruster, i))
+		{
+			FuelR[i] = FuelR[i] - RCSFuelUsed;
+		}
+	RTCC_PMMWTC_10:
+		FuelC[i] = FuelR[i];
+	RTCC_PMMWTC_11:
+		if (i < 5)
+		{
+			i++;
+			goto RTCC_PMMWTC_6;
+		}
+		CommonBlock.CSMRCSFuelRemaining = FuelR[0];
+		CommonBlock.SPSFuelRemaining = FuelR[1];
+		CommonBlock.SIVBFuelRemaining = FuelR[2];
+		CommonBlock.LMRCSFuelRemaining = FuelR[3];
+		CommonBlock.LMAPSFuelRemaining = FuelR[4];
+		CommonBlock.LMDPSFuelRemaining = FuelR[5];
+		if (IBLK == 1)
+		{
+			table->CommonBlock = CommonBlock;
+		}
+		else
+		{
+			table->mantable[IBLK - 2].CommonBlock = CommonBlock;
+			table->mantable[IBLK - 2].DVREM = DVREM;
+		}
+		if (IBLK - 1 < table->ManeuverNum)
+		{
+			N = 1;
+			IBLK++;
+			goto RTCC_PMMWTC_2;
+		}
+		//Update MPT and DMT displays
+		EMSNAP(0, 7);
+	}
+	//M50: Vehicle Weight
+	if (med == 50)
+	{
+		double WeightGMT, W, WTV[4];
+
+		table = GetMPTPointer(med_m50.Table);
+		IBLK = table->LastExecutedManeuver + 1;
+		WeightGMT = GMTfromGET(med_m50.WeightGET);
+
+		if (IBLK == 1)
+		{
+			CommonBlock = table->CommonBlock;
+		}
+		else
+		{
+			if (WeightGMT < table->mantable[IBLK - 2].GMT_BO)
 			{
-				if (med_m50.LMWT >= 0)
-				{
-					table->LMInitDescentMass = med_m50.LMWT;
-				}
+				PMXSPT("PMMWTC", 23);
+				return 23;
 			}
-		}	
+			CommonBlock = table->mantable[IBLK - 2].CommonBlock;
+		}
+		WTV[0] = CommonBlock.CSMMass;
+		WTV[1] = CommonBlock.SIVBMass;
+		WTV[2] = CommonBlock.LMAscentMass;
+		WTV[3] = CommonBlock.LMDescentMass;
 
 		W = 0.0;
 
-		if (MPTConfigIncludesCSM(table->InitConfigCode))
+		if (MPTConfigIncludesCSM(CommonBlock.ConfigCode))
 		{
-			W += table->CSMInitMass;
+			if (med_m50.CSMWT >= 0)
+			{
+				WTV[0] = med_m50.CSMWT;
+			}
+			W = W + WTV[0];
 		}
 
-		if (MPTConfigIncludesLMAsc(table->InitConfigCode))
+		if(MPTConfigIncludesSIVB(CommonBlock.ConfigCode))
 		{
-			W += table->LMInitAscentMass;
+			if (med_m50.SIVBWT >= 0)
+			{
+				WTV[1] = med_m50.SIVBWT;
+			}
+			W = W + WTV[1];
 		}
 
-		if (MPTConfigIncludesLMDsc(table->InitConfigCode))
+		//Do we have an ascent stage?
+		if (MPTConfigIncludesLMAsc(CommonBlock.ConfigCode))
 		{
-			W += table->LMInitDescentMass;
+			goto RTCC_PMMWTC_15;
 		}
-
-		if (MPTConfigIncludesSIVB(table->InitConfigCode))
+		if (MPTConfigIncludesLMDsc(CommonBlock.ConfigCode))
 		{
-			W += table->SIVBInitMass;
+			if (med_m50.LMWT >= 0)
+			{
+				WTV[3] = med_m50.LMWT;
+			}
+			W = W + WTV[3];
 		}
-		table->TotalInitMass = W;
-
-		table->TUP = -table->TUP;
+		goto RTCC_PMMWTC_17;
+	RTCC_PMMWTC_15:
+		//Ascent stage weight input?
+		if (med_m50.LMASCWT >= 0)
+		{
+			//Set initial ascent stage weight
+			WTV[2] = med_m50.LMASCWT;
+		}
+		//Total stage weight input?
+		if (med_m50.LMWT < 0)
+		{
+			//Do we have also have a descent stage?
+			if (MPTConfigIncludesLMDsc(CommonBlock.ConfigCode))
+			{
+				goto RTCC_PMMWTC_15A;
+			}
+			else
+			{
+				goto RTCC_PMMWTC_16;
+			}
+		}
+		//Do we have also have a descent stage?
+		if (MPTConfigIncludesLMDsc(CommonBlock.ConfigCode))
+		{
+			//Yes, calculate descent stage weight from total weight, minus ascent stage weight
+			WTV[3] = med_m50.LMWT - WTV[2];
+		RTCC_PMMWTC_15A:
+			W = W + WTV[3];
+		}
+		else
+		{
+			//No, total weight equals ascent stage weight (can override input from LMASCWT earlier)
+			WTV[3] = med_m50.LMWT;
+		}
+	RTCC_PMMWTC_16:
+		W = W + WTV[2];
+	RTCC_PMMWTC_17:
+		if (IBLK > 1)
+		{
+		RTCC_PMMWTC_17A:
+			goto RTCC_PMMWTC_17B;
+		}
+		double t_aw = table->SIVBVentingBeginGET;
+		if (t_aw >= med_m50.WeightGET)
+		{
+			goto RTCC_PMMWTC_19;
+		}
+		else
+		{
+			goto RTCC_PMMWTC_17A;
+		}
+	RTCC_PMMWTC_17B:
+		//TBD: Call PLAWDT
+		//TBD: Adjust total and vehicle weights for expendables
+		if (IBLK <= 1)
+		{
+			goto RTCC_PMMWTC_19;
+		}
+		int I = MPTGetPrimaryThruster(table->mantable[IBLK - 2].Thruster);
+		FuelR[0] = CommonBlock.CSMRCSFuelRemaining;
+		FuelR[1] = CommonBlock.SPSFuelRemaining;
+		FuelR[2] = CommonBlock.SIVBFuelRemaining;
+		FuelR[3] = CommonBlock.LMRCSFuelRemaining;
+		FuelR[4] = CommonBlock.LMAPSFuelRemaining;
+		FuelR[5] = CommonBlock.LMDPSFuelRemaining;
+		DVREM = TL[I] / WDOT[I] * log(table->mantable[IBLK - 2].TotalMassAfter/(table->mantable[IBLK - 2].TotalMassAfter- FuelR[I]));
+		//DTWRITE: IBLK of MPT
+		table->mantable[IBLK - 2].CommonBlock = CommonBlock;
+		table->mantable[IBLK - 2].DVREM = DVREM;
+		//DTREAD: MPT Header
+		CommonBlock = table->CommonBlock;
+	RTCC_PMMWTC_19:
+		if (IBLK == 1)
+		{
+			table->TotalInitMass = W;
+		}
+		else
+		{
+			table->WeightAfterManeuver[IBLK - 2] = W;
+		}
+	RTCC_PMMWTC_20:
+		CommonBlock.TUP = -CommonBlock.TUP;
+		//DTWRITE: MPT Header
+		table->CommonBlock = CommonBlock;
 
 		//Set up input for PMSVCT
 		PMSVCT(8, med_m50.Table);
 	}
+	//Change Vehicle Area or K-Factor
 	if (med == 51)
 	{
+		double Area, ARI[4], ARV[4];
+		int I;
 
+		table = GetMPTPointer(med_m51.Table);
+		ARI[0] = med_m51.CSMArea;
+		ARI[1] = med_m51.SIVBArea;
+		ARI[2] = med_m51.LMAscentArea;
+		ARI[3] = med_m51.LMDescentArea;
+		IBLK = table->LastExecutedManeuver + 1;
+		if (IBLK == 1)
+		{
+			CommonBlock = table->CommonBlock;
+		}
+		else
+		{
+			CommonBlock = table->mantable[IBLK - 2].CommonBlock;
+		}
+		ARV[0] = CommonBlock.CSMArea;
+		ARV[1] = CommonBlock.SIVBArea;
+		ARV[2] = CommonBlock.LMAscentArea;
+		ARV[3] = CommonBlock.LMDescentArea;
+		Area = 0;
+		I = 1;
+	RTCC_PMMWTC_22:
+		if (MPTConfigIncludesVehicle(CommonBlock.ConfigCode, I))
+		{
+			if (ARI[I - 1] >= 0)
+			{
+				ARV[I - 1] = ARI[I - 1];
+			}
+			if (Area < ARV[I - 1])
+			{
+				Area = ARV[I - 1];
+			}
+		}
+		if (I < 4)
+		{
+			I++;
+			goto RTCC_PMMWTC_22;
+		}
+		CommonBlock.CSMArea = ARV[0];
+		CommonBlock.SIVBArea = ARV[1];
+		CommonBlock.LMAscentArea = ARV[2];
+		CommonBlock.LMDescentArea = ARV[3];
+		if (IBLK > 1)
+		{
+			table->mantable[IBLK - 2].CommonBlock = CommonBlock;
+			CommonBlock = table->CommonBlock;
+		}
+		if (med_m51.KFactor >= -30)
+		{
+			table->KFactor = med_m51.KFactor;
+		}
+		if (IBLK > 1)
+		{
+			table->AreaAfterManeuver[IBLK - 2] = Area;
+		}
+		else
+		{
+			table->ConfigurationArea = Area;
+		}
+		goto RTCC_PMMWTC_20;
 	}
 	//Input initialization parameters
 	if (med == 55)
@@ -14434,10 +14856,11 @@ int RTCC::PMMWTC(int med)
 
 		if (table->mantable.size() > 0)
 		{
+			PMXSPT("PMMWTC", 72);
 			return 2;
 		}
 
-		if (med_m55.DeltaDockingAngle >= 0)
+		if (med_m55.DeltaDockingAngle >= -360.0)
 		{
 			table->DeltaDockingAngle = med_m55.DeltaDockingAngle;
 		}
@@ -14445,33 +14868,33 @@ int RTCC::PMMWTC(int med)
 		if (med_m55.ConfigCode >= 0)
 		{
 			double arv[4], wtv[4], AREA;
-			arv[0] = table->CSMInitArea;
-			arv[1] = table->SIVBInitArea;
-			arv[2] = table->LMInitAscentArea;
-			arv[3] = table->LMInitDescentArea;
-			wtv[0] = table->CSMInitMass;
-			wtv[1] = table->SIVBInitMass;
-			wtv[2] = table->LMInitAscentMass;
-			wtv[3] = table->LMInitDescentMass;
+			arv[0] = table->CommonBlock.CSMArea;
+			arv[1] = table->CommonBlock.SIVBArea;
+			arv[2] = table->CommonBlock.LMAscentArea;
+			arv[3] = table->CommonBlock.LMDescentArea;
+			wtv[0] = table->CommonBlock.CSMMass;
+			wtv[1] = table->CommonBlock.SIVBMass;
+			wtv[2] = table->CommonBlock.LMAscentMass;
+			wtv[3] = table->CommonBlock.LMDescentMass;
 
 			double arvs[4], wtvs[4];
 			
 			for (int i = 0;i < 4;i++)
 			{
 				arvs[i] = wtvs[i] = 0.0;
-				if (MPTConfigIncludesVeh(table->InitConfigCode, i + 1))
+				if (MPTConfigIncludesVehicle(table->CommonBlock.ConfigCode, i + 1))
 				{
 					wtvs[i] = wtv[i];
 					arvs[i] = arv[i];
 				}
 			}
 
-			table->InitConfigCode = med_m55.ConfigCode;
+			table->CommonBlock.ConfigCode = med_m55.ConfigCode;
 			AREA = 0.0;
 			W = 0.0;
 			for (int i = 0;i < 4;i++)
 			{
-				if (MPTConfigIncludesVeh(table->InitConfigCode, i + 1))
+				if (MPTConfigIncludesVehicle(table->CommonBlock.ConfigCode, i + 1))
 				{
 					if (AREA < arvs[i])
 					{
@@ -14485,18 +14908,18 @@ int RTCC::PMMWTC(int med)
 					wtvs[i] = 0.0;
 				}
 			}
-			table->CSMInitArea = arvs[0];
-			table->CSMInitMass = wtvs[0];
-			table->SIVBInitArea = arvs[1];
-			table->SIVBInitMass = wtvs[1];
-			table->LMInitAscentArea = arvs[2];
-			table->LMInitAscentMass = wtvs[2];
-			table->LMInitDescentArea = arvs[3];
-			table->LMInitDescentMass = wtvs[3];
+			table->CommonBlock.CSMArea = arvs[0];
+			table->CommonBlock.CSMMass = wtvs[0];
+			table->CommonBlock.SIVBArea = arvs[1];
+			table->CommonBlock.SIVBMass = wtvs[1];
+			table->CommonBlock.LMAscentArea = arvs[2];
+			table->CommonBlock.LMAscentMass = wtvs[2];
+			table->CommonBlock.LMDescentArea = arvs[3];
+			table->CommonBlock.LMDescentMass = wtvs[3];
 			table->TotalInitMass = W;
 			table->ConfigurationArea = AREA;
 
-			table->TUP = -table->TUP;
+			table->CommonBlock.TUP = -table->CommonBlock.TUP;
 
 			//Set up input for PMSVCT
 			PMSVCT(8, med_m55.Table);
@@ -14605,9 +15028,9 @@ void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed)
 			
 			if (PMSVCTAuxVectorFetch(L, T_F, sv))
 			{
-				if (mpt->TUP < 0)
+				if (mpt->CommonBlock.TUP < 0)
 				{
-					mpt->TUP = -mpt->TUP;
+					mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
 				}
 
 				//Error
@@ -14616,11 +15039,11 @@ void RTCC::PMSVCT(int QUEID, int L, EphemerisData *sv0, bool landed)
 		}
 
 		//TUP should be negative already
-		if (mpt->TUP > 0)
+		if (mpt->CommonBlock.TUP > 0)
 		{
-			mpt->TUP = -mpt->TUP;
+			mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
 		}
-		mpt->TUP--;
+		mpt->CommonBlock.TUP--;
 
 		EMSTRAJ(sv, L, landed);
 	}
@@ -14677,7 +15100,7 @@ int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Ar
 
 	if (ELFECH(GMT, L, sv))
 	{
-		PMXSPT("PMSVEC: UNABLE TO FETCH VECTOR FOR RENDEZVOUS PLANNING REQUEST");
+		PMXSPT("PMSVEC", 49);
 		return 1;
 	}
 
@@ -14796,6 +15219,59 @@ int RTCC::PMSVCTAuxVectorFetch(int L, double T_F, EphemerisData &sv)
 	return 0;
 }
 
+void RTCC::PMSEXE(int L, double gmt)
+{
+	double TMNVR, TMANVR;
+	bool print = false;
+	TMNVR = gmt;
+	MissionPlanTable *tab = GetMPTPointer(L);
+	unsigned i, j, k;
+	i = tab->ManeuverNum;
+	if (i == 0)
+	{
+		tab->LastExecutedManeuver = 0;
+		tab->LastFrozenManeuver = 0;
+		goto RTCC_PMSEXE_2_3;
+	}
+	j = 1;
+RTCC_PMSEXE_A:
+	if (TMNVR < tab->TimeToBeginManeuver[j - 1])
+	{
+		goto RTCC_PMSEXE_B;
+	}
+	j++;
+	if (j <= i)
+	{
+		goto RTCC_PMSEXE_A;
+	}
+RTCC_PMSEXE_B:
+	k = j - 1;
+	if (k > tab->LastExecutedManeuver)
+	{
+		tab->LastExecutedManeuver = k;
+		print = true;
+	}
+	if (k + 1 > i)
+	{
+	RTCC_PMSEXE_2_3:
+		TMANVR = 1e70;
+	}
+	else
+	{
+		TMANVR = tab->TimeToBeginManeuver[k];
+	}
+	tab->UpcomingManeuverGMT = TMANVR;
+	if (print == false)
+	{
+		return;
+	}
+	RTCCONLINEMON.TextBuffer[0] = tab->mantable[k - 1].code;
+	RTCCONLINEMON.DoubleBuffer[0] = tab->mantable[k - 1].GMTMAN;
+	RTCCONLINEMON.VectorBuffer[0] = tab->mantable[k - 1].R_BO;
+	RTCCONLINEMON.VectorBuffer[1] = tab->mantable[k - 1].V_BO;
+	PMXSPT("PMSEXE", 36);
+}
+
 bool RTCC::MEDTimeInputHHMMSS(std::string vec, double &hours)
 {
 	int hh, mm;
@@ -14824,11 +15300,11 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 	//No maneuver in MPT or time is before first maneuver. Use initial values
 	if (table->mantable.size() == 0 || gmt <= table->mantable[0].GMT_BI)
 	{
-		cfg = table->InitConfigCode;
+		cfg = table->CommonBlock.ConfigCode;
 		cfg_weight = table->TotalInitMass;
 		if (MPTConfigIncludesCSM(cfg))
 		{
-			csm_weight = table->CSMInitMass;
+			csm_weight = table->CommonBlock.CSMMass;
 		}
 		else
 		{
@@ -14836,7 +15312,7 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 		}
 		if (MPTConfigIncludesLMAsc(cfg))
 		{
-			lm_asc_weight = table->LMInitAscentMass;
+			lm_asc_weight = table->CommonBlock.LMAscentMass;
 		}
 		else
 		{
@@ -14844,7 +15320,7 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 		}
 		if (MPTConfigIncludesLMDsc(cfg))
 		{
-			lm_dsc_weight = table->LMInitDescentMass;
+			lm_dsc_weight = table->CommonBlock.LMDescentMass;
 		}
 		else
 		{
@@ -14852,7 +15328,7 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 		}
 		if (MPTConfigIncludesSIVB(cfg))
 		{
-			sivb_weight = table->SIVBInitMass;
+			sivb_weight = table->CommonBlock.SIVBMass;
 		}
 		else
 		{
@@ -14867,12 +15343,12 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 		i++;
 	}
 
-	cfg = table->mantable[i].ConfigCodeAfter;
+	cfg = table->mantable[i].CommonBlock.ConfigCode;
 	cfg_weight = table->mantable[i].TotalMassAfter;
-	csm_weight = table->mantable[i].CSMMassAfter;
-	lm_asc_weight = table->mantable[i].LMAscMassAfter;
-	lm_dsc_weight = table->mantable[i].LMDscMassAfter;
-	sivb_weight = table->mantable[i].SIVBMassAfter;
+	csm_weight = table->mantable[i].CommonBlock.CSMMass;
+	lm_asc_weight = table->mantable[i].CommonBlock.LMAscentMass;
+	lm_dsc_weight = table->mantable[i].CommonBlock.LMDescentMass;
+	sivb_weight = table->mantable[i].CommonBlock.SIVBMass;
 
 	return 0;
 }
@@ -14886,7 +15362,7 @@ void RTCC::PMMIEV(double T_L)
 	T_D = T_L - PZSTARGP.T_LO;
 	if (T_D < MDVSTP.t_D0 || T_D > MDVSTP.t_D3)
 	{
-		PMXSPT(102);
+		PMXSPT("PMMIEV", 102);
 		return;
 	}
 	A_Z = 0.0;
@@ -14932,7 +15408,7 @@ void RTCC::PMMIEV(double T_L)
 	double GMT_EOI = T_L + dt_EOI;
 	if (EMMXTR(GMT_EOI, rad_EOI, vel_EOI, lng_EOI, lat_EOI, fpa_EOI, azi_EOI, R, V))
 	{
-		PMXSPT(121);
+		PMXSPT("PMMIEV", 121);
 		return;
 	}
 	//TBD: Print insertion vector
@@ -16392,18 +16868,18 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 		ephem = &EZEPH1;
 	}
 
-	if (table->TUP == 0)
+	if (table->CommonBlock.TUP == 0)
 	{
 		EZCHECKDIS.ErrorMessage = "Error 8";
 		return;
 	}
-	else if (table->TUP < 0)
+	else if (table->CommonBlock.TUP < 0)
 	{
 		EZCHECKDIS.ErrorMessage = "Error 2";
 		return;
 	}
 
-	if (table->TUP != ephem->EPHEM.Header.TUP)
+	if (table->CommonBlock.TUP != ephem->EPHEM.Header.TUP)
 	{
 		EZCHECKDIS.ErrorMessage = "Error 3";
 		return;
@@ -16628,7 +17104,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 
 	EZCHECKDIS.V_i = vmag / 0.3048;
 	EZCHECKDIS.gamma_i = 90.0 - fpav * DEG;
-	EZCHECKDIS.psi = az*DEG;
+	EZCHECKDIS.psi = az * DEG;
 	EZCHECKDIS.phi_c = 0.0;
 	EZCHECKDIS.lambda = 0.0;
 	EZCHECKDIS.h_s = (rmag - R_E) / 1852.0;
@@ -16727,7 +17203,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	OrbMech::GetLunarEquatorialCoordinates(OrbMech::MJDfromGET(sv_inert.GMT, GMTBASE), LunarRightAscension, LunarDeclination, LunarDistance);
 	EZCHECKDIS.deltaL = LunarDeclination * DEG;
 
-	EZCHECKDIS.UpdateNo = table->TUP;
+	EZCHECKDIS.UpdateNo = table->CommonBlock.TUP;
 	if (ephem->EPHEM.table.size() > 0)
 	{
 		EZCHECKDIS.EPHB = ephem->EPHEM.table.front().GMT;
@@ -16820,10 +17296,34 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	{
 		sprintf(EZCHECKDIS.CFG, "S");
 	}
-	
+
 	EZCHECKDIS.WT = cfg_weight / 0.45359237;
 	EZCHECKDIS.WC = csm_weight / 0.45359237;
 	EZCHECKDIS.WL = (lma_weight + lmd_weight) / 0.45359237;
+
+	unsigned ii = 0;
+
+	while (ii < table->ManeuverNum && sv_inert.GMT > table->mantable[ii].GMT_BO)
+	{
+		ii++;
+	}
+
+	MPTVehicleDataBlock CommonBlock;
+	if (ii == 0)
+	{
+		CommonBlock = table->CommonBlock;
+	}
+	else
+	{
+		CommonBlock = table->mantable[ii - 1].CommonBlock;
+	}
+
+	EZCHECKDIS.SPS = CommonBlock.SPSFuelRemaining / 0.45359237;
+	EZCHECKDIS.DPS = CommonBlock.LMDPSFuelRemaining / 0.45359237;
+	EZCHECKDIS.APS = CommonBlock.LMAPSFuelRemaining / 0.45359237;
+	EZCHECKDIS.RCS_C = CommonBlock.CSMRCSFuelRemaining / 0.45359237;
+	EZCHECKDIS.RCS_L = CommonBlock.LMRCSFuelRemaining / 0.45359237;
+	EZCHECKDIS.J2 = CommonBlock.SIVBFuelRemaining / 0.45359237;
 
 	return;
 }
@@ -16874,28 +17374,6 @@ bool RTCC::MPTConfigIncludesLMDsc(int config)
 	if (config == RTCC_CONFIG_CSM_LM) return true;
 	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
 	if (config == RTCC_CONFIG_DSC) return true;
-
-	return false;
-}
-
-bool RTCC::MPTConfigIncludesVeh(int config, int veh)
-{
-	if (veh == 1)
-	{
-		return MPTConfigIncludesCSM(config);
-	}
-	else if (veh == 2)
-	{
-		return MPTConfigIncludesSIVB(config);
-	}
-	else if (veh == 3)
-	{
-		return MPTConfigIncludesLMAsc(config);
-	}
-	else if (veh == 4)
-	{
-		return MPTConfigIncludesLMDsc(config);
-	}
 
 	return false;
 }
@@ -16982,6 +17460,122 @@ bool RTCC::MPTIsRCSThruster(int thruster)
 	return false;
 }
 
+bool RTCC::MPTIsUllageThruster(int thruster, int i)
+{
+	switch (thruster)
+	{
+	case RTCC_ENGINETYPE_CSMSPS:
+		if (i == 0)
+		{
+			return true;
+		}
+		break;
+	case RTCC_ENGINETYPE_LMAPS:
+		if (i == 3)
+		{
+			return true;
+		}
+		break;
+	case RTCC_ENGINETYPE_LMDPS:
+		if (i == 3)
+		{
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
+int RTCC::MPTGetPrimaryThruster(int thruster)
+{
+	switch (thruster)
+	{
+	case RTCC_ENGINETYPE_CSMSPS:
+		return 1;
+	case RTCC_ENGINETYPE_SIVB_MAIN:
+		return 2;
+	case RTCC_ENGINETYPE_LMRCSPLUS2:
+	case RTCC_ENGINETYPE_LMRCSPLUS4:
+	case RTCC_ENGINETYPE_LMRCSMINUS2:
+	case RTCC_ENGINETYPE_LMRCSMINUS4:
+		return 3;
+	case RTCC_ENGINETYPE_LMAPS:
+		return 4;
+	case RTCC_ENGINETYPE_LMDPS:
+		return 5;
+	}
+
+	return 0;
+}
+
+bool RTCC::MPTIsPrimaryThruster(int thruster, int i)
+{
+	switch (thruster)
+	{
+	case RTCC_ENGINETYPE_CSMRCSPLUS2:
+	case RTCC_ENGINETYPE_CSMRCSPLUS4:
+	case RTCC_ENGINETYPE_CSMRCSMINUS2:
+	case RTCC_ENGINETYPE_CSMRCSMINUS4:
+		if (i == 0)
+		{
+			return true;
+		}
+		break;
+	case RTCC_ENGINETYPE_CSMSPS:
+		if (i == 1)
+		{
+			return true;
+		}
+		break;
+	case RTCC_ENGINETYPE_SIVB_MAIN:
+		if (i == 2)
+		{
+			return true;
+		}
+		break;
+	case RTCC_ENGINETYPE_LMRCSPLUS2:
+	case RTCC_ENGINETYPE_LMRCSPLUS4:
+	case RTCC_ENGINETYPE_LMRCSMINUS2:
+	case RTCC_ENGINETYPE_LMRCSMINUS4:
+		if (i == 3)
+		{
+			return true;
+		}
+		break;
+	case RTCC_ENGINETYPE_LMAPS:
+		if (i == 4)
+		{
+			return true;
+		}
+		break;
+	case RTCC_ENGINETYPE_LMDPS:
+		if (i == 5)
+		{
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
+bool RTCC::MPTConfigIncludesVehicle(int config, int i)
+{
+	switch (i)
+	{
+	case 1:
+		return MPTConfigIncludesCSM(config);
+	case 2:
+		return MPTConfigIncludesSIVB(config);
+	case 3:
+		return MPTConfigIncludesLMAsc(config);
+	case 4:
+		return MPTConfigIncludesLMDsc(config);
+	}
+	return false;
+}
+
 double RTCC::MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass)
 {
 	double ConfigMass = 0.0;
@@ -17043,7 +17637,7 @@ int RTCC::PMMXFR(int id, void *data)
 	int err, working_man, CCP, TVC, CC, CCMI;
 	unsigned CurMan;
 	bool LastManReplaceFlag;
-	bool replace;
+	bool replace, dodelete;
 	std::string code;
 
 	//Save Logic
@@ -17136,7 +17730,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//MPT header
 		mpt = GetMPTPointer(inp->TableCode);
 		//Check ground rules
-		err = PMMXFRGroundRules(false, mpt, inp->GMTI, inp->ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
+		err = PMMXFRGroundRules(mpt, inp->GMTI, inp->ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
 		if (err)
 		{
 			return 1;
@@ -17150,11 +17744,11 @@ int RTCC::PMMXFR(int id, void *data)
 		//Check configuration and thrust
 		if (mpt->mantable.size() == 0)
 		{
-			CCP = mpt->InitConfigCode;
+			CCP = mpt->CommonBlock.ConfigCode;
 		}
 		else
 		{
-			CCP = mpt->mantable.back().ConfigCodeAfter;
+			CCP = mpt->mantable.back().CommonBlock.ConfigCode;
 		}
 		CC = inp->EndConfiguration;
 		err = PMMXFRCheckConfigThruster(true, inp->ConfigurationChangeIndicator, CCP, TVC, inp->ThrusterCode, CC, CCMI);
@@ -17256,7 +17850,15 @@ int RTCC::PMMXFR(int id, void *data)
 		EphemerisData sv_anchor;
 		if (PMMXFRFetchAnchorVector(inp->TableCode, sv_anchor))
 		{
-			//Error code 39: Unable to fetch vector
+			if (inp->TableCode == RTCC_MPT_CSM)
+			{
+				RTCCONLINEMON.TextBuffer[0] = "CSM";
+			}
+			else
+			{
+				RTCCONLINEMON.TextBuffer[0] = "LEM";
+			}
+			PMXSPT("PMMXFR", 39);
 			return 39;
 		}
 
@@ -17272,8 +17874,25 @@ int RTCC::PMMXFR(int id, void *data)
 		int num_man, plan;
 		bool update_csm_eph = false, update_lm_eph = false;
 
-		replace = false;
+		//Logic in MED decoder should prevent that both of these are true
+		if (inp->ReplaceCode > 0)
+		{
+			replace = true;
+		}
+		else
+		{
+			replace = false;
+		}
+		if (inp->DeleteGMT > 0)
+		{
+			dodelete = true;
+		}
+		else
+		{
+			dodelete = false;
+		}
 
+		//DKI, SPQ and LDPP
 		if (id == 41)
 		{
 			if (inp->Plan < 0)
@@ -17296,6 +17915,7 @@ int RTCC::PMMXFR(int id, void *data)
 
 		if (num_man < 1)
 		{
+			PMXSPT("PMMXFR", 38);
 			return 38;
 		}
 
@@ -17349,10 +17969,14 @@ int RTCC::PMMXFR(int id, void *data)
 		if (inp->DeleteGMT > 0 && working_man == 1)
 		{
 			//Delete all unfrozen maneuvers in this table after input time
-			PMMXFRDeleteOption(working_man, GMTI);
+			PMMXFRDeleteOption(plan, GMTI);
 		}
 		//Check ground rules
-		err = PMMXFRGroundRules(false, mpt, GMTI, 0, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
+		err = PMMXFRGroundRules(mpt, GMTI, inp->ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
+		if (err)
+		{
+			return 1;
+		}
 		if (working_man == 1)
 		{
 			in.DockingAngle = mpt->DeltaDockingAngle;
@@ -17378,19 +18002,22 @@ int RTCC::PMMXFR(int id, void *data)
 		//Check thruster
 		if (mpt->mantable.size() == 0)
 		{
-			CCP = mpt->InitConfigCode;
+			CCP = mpt->CommonBlock.ConfigCode;
 		}
 		else
 		{
-			CCP = mpt->mantable.back().ConfigCodeAfter;
+			CCP = mpt->mantable.back().CommonBlock.ConfigCode;
 		}
 		CC = CCMI = CCP;
 		err = PMMXFRCheckConfigThruster(false, 0, CCP, TVC, inp->Thruster[0], CC, CCMI);
 		//Is attitude mode an AGS?
 		if (inp->Attitude[0] == 5)
 		{
-			//TBD: Fetch a CSM vector for AGS logic
-			//in.sv_other = ;
+			if (ELFECH(GMTI, 4 - plan, in.sv_other))
+			{
+				//TBD: Error message?
+				return 1;
+			}
 		}
 
 		in.Attitude = inp->Attitude[0];
@@ -17447,7 +18074,17 @@ int RTCC::PMMXFR(int id, void *data)
 		MPTManeuver man;
 
 		man.code = code;
-		PMMMPT(in, man);
+		if (PMMMPT(in, man))
+		{
+			return 1;
+		}
+		if (working_man == 1)
+		{
+			if (GMTI < mpt->UpcomingManeuverGMT)
+			{
+				mpt->UpcomingManeuverGMT = GMTI;
+			}
+		}
 		mpt->mantable.push_back(man);
 
 		if (plan == RTCC_MPT_CSM)
@@ -17489,11 +18126,11 @@ int RTCC::PMMXFR(int id, void *data)
 
 		if (mpt->mantable.size() == 0)
 		{
-			CCP = mpt->InitConfigCode;
+			CCP = mpt->CommonBlock.ConfigCode;
 		}
 		else
 		{
-			CCP = mpt->mantable.back().ConfigCodeAfter;
+			CCP = mpt->mantable.back().CommonBlock.ConfigCode;
 		}
 		if (CCP != RTCC_CONFIG_LM)
 		{
@@ -17526,7 +18163,7 @@ int RTCC::PMMXFR(int id, void *data)
 		PMMLDP(in, man);
 
 		//Check ground rules
-		err = PMMXFRGroundRules(replace, mpt, man.GMTI, med_m86.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
+		err = PMMXFRGroundRules(mpt, man.GMTI, med_m86.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
 		//Format maneuver code
 		err = PMMXFRFormatManeuverCode(med_m86.Veh, RTCC_ENGINETYPE_LMDPS, RTCC_ATTITUDE_PGNS_DESCENT, mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check configuration and thrust
@@ -17557,17 +18194,17 @@ int RTCC::PMMXFR(int id, void *data)
 
 		if (mpt->mantable.size() == 0)
 		{
-			CCP = mpt->InitConfigCode;
+			CCP = mpt->CommonBlock.ConfigCode;
 		}
 		else
 		{
-			CCP = mpt->mantable.back().ConfigCodeAfter;
+			CCP = mpt->mantable.back().CommonBlock.ConfigCode;
 		}
 
 		man.GMTI = GMTfromGET(JZLAI.t_launch);
 
 		//Check ground rules
-		err = PMMXFRGroundRules(replace, mpt, man.GMTI, med_m85.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
+		err = PMMXFRGroundRules(mpt, man.GMTI, med_m85.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan);
 		//Format maneuver code
 		err = PMMXFRFormatManeuverCode(med_m85.VEH, RTCC_ENGINETYPE_LMAPS, RTCC_ATTITUDE_PGNS_ASCENT, mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check configuration and thrust
@@ -17581,9 +18218,9 @@ int RTCC::PMMXFR(int id, void *data)
 		man.dV_LVLH.x = JZLAI.R_D_dot;
 		man.dV_LVLH.y = JZLAI.Y_D_dot;
 		man.dV_LVLH.z = JZLAI.Z_D_dot;
-		man.ConfigChangeInd = RTCC_CONFIGCHANGE_UNDOCKING;
+		man.CommonBlock.ConfigChangeInd = RTCC_CONFIGCHANGE_UNDOCKING;
 		man.ConfigCodeBefore = RTCC_CONFIG_LM;
-		man.ConfigCodeAfter = RTCC_CONFIG_ASC;
+		man.CommonBlock.ConfigCode = RTCC_CONFIG_ASC;
 		man.Thruster = RTCC_ENGINETYPE_LMAPS;
 		man.AttitudeCode = RTCC_ATTITUDE_PGNS_ASCENT;
 		mpt->mantable.push_back(man);
@@ -17592,7 +18229,7 @@ int RTCC::PMMXFR(int id, void *data)
 	return 0;
 }
 
-int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan)
+int RTCC::PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan)
 {
 	double CurrentGMT;
 	bool DeleteFlag = false;
@@ -17600,7 +18237,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 
 	CurrentGMT = RTCCPresentTimeGMT();
 
-	if (replace)
+	if (ReplaceMan > 0)
 	{
 		CurMan = ReplaceMan;
 		LastManReplaceFlag = true;
@@ -17608,14 +18245,15 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		//Is maneuver prior to present time?
 		if (GMTI < CurrentGMT)
 		{
-			PMXSPT(1);
+			PMXSPT("PMMXFR", 1);
 			return 1;
 		}
 		UpperLimit = 1e70;
 		//Does maneuver to be replaced exist?
 		if (ReplaceMan > mpt->mantable.size())
 		{
-			PMXSPT(2);
+			RTCCONLINEMON.IntBuffer[0] = (int)ReplaceMan;
+			PMXSPT("PMMXFR", 2);
 			return 2;
 		}
 		//Is this the last maneuver in MPT?
@@ -17624,7 +18262,8 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 			LastManReplaceFlag = false;
 			if (GMTI > mpt->mantable[ReplaceMan].GMTMAN)
 			{
-				PMXSPT(3);
+				RTCCONLINEMON.IntBuffer[0] = (int)ReplaceMan;
+				PMXSPT("PMMXFR", 3);
 				return 3;
 			}
 		}
@@ -17635,7 +18274,8 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		}
 		if (GMTI < LowerLimit)
 		{
-			PMXSPT(3);
+			RTCCONLINEMON.IntBuffer[0] = (int)ReplaceMan;
+			PMXSPT("PMMXFR", 3);
 			return 3;
 		}
 	}
@@ -17644,7 +18284,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 		//Is maneuver prior to present time?
 		if (GMTI < CurrentGMT)
 		{
-			PMXSPT(1);
+			PMXSPT("PMMXFR", 1);
 			return 1;
 		}
 		if (mpt->mantable.size() == 0)
@@ -17670,14 +18310,15 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 			} while (mpt->mantable.size() > 0);
 		}
 		CurMan = mpt->mantable.size() + 1;
-		if (CurMan > mpt->MaxManeuverNum)
+		if (CurMan >= mpt->MaxManeuverNum)
 		{
-			PMXSPT(5);
+			PMXSPT("PMMXFR", 5);
 			return 5;
 		}
 		if (CurMan == 1 && DeleteFlag)
 		{
-			PMXSPT(3);
+			RTCCONLINEMON.IntBuffer[0] = (int)ReplaceMan;
+			PMXSPT("PMMXFR", 3);
 			return 3;
 		}
 		mpt->ManeuverNum = CurMan;
@@ -17685,7 +18326,7 @@ int RTCC::PMMXFRGroundRules(bool replace, MissionPlanTable * mpt, double GMTI, u
 	}
 
 	//Store pointers and compute pointers to previous descriptive block
-	if (replace)
+	if (ReplaceMan > 0)
 	{
 		if (mpt->mantable[ReplaceMan - 1].GMTMAN < GMTI)
 		{
@@ -17816,7 +18457,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 	{
 		if (!(MPTConfigIncludesSIVB(CC) && MPTConfigIncludesSIVB(CCP)))
 		{
-			PMXSPT(6);
+			PMXSPT("PMMXFR", 6);
 			return 6;
 		}
 	}
@@ -17830,12 +18471,12 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 		{
 			if (Thruster == RTCC_ENGINETYPE_LMAPS && !(MPTConfigIncludesLMAsc(CC) && MPTConfigIncludesLMAsc(CCP)))
 			{
-				PMXSPT(6);
+				PMXSPT("PMMXFR", 6);
 				return 6;
 			}
 			else if (Thruster == RTCC_ENGINETYPE_LMDPS && !(MPTConfigIncludesLMDsc(CC) && MPTConfigIncludesLMDsc(CCP)))
 			{
-				PMXSPT(6);
+				PMXSPT("PMMXFR", 6);
 				return 6;
 			}
 		}
@@ -17843,7 +18484,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 		{
 			if (!(MPTConfigIncludesCSM(CC) && MPTConfigIncludesCSM(CCP)))
 			{
-				PMXSPT(6);
+				PMXSPT("PMMXFR", 6);
 				return 6;
 			}
 		}
@@ -17858,12 +18499,12 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 	{
 		if (CCP == CC)
 		{
-			PMXSPT(6);
+			PMXSPT("PMMXFR", 6);
 			return 6;
 		}
 		else if (!MPTConfigSubset(CCP, CC))
 		{
-			PMXSPT(6);
+			PMXSPT("PMMXFR", 6);
 			return 6;
 		}
 		else
@@ -17903,25 +18544,34 @@ void RTCC::PMMXFRWeightAtInitiation(int CCI, int CCMI, double &weight)
 	//If undocking, determine weight
 }
 
-void RTCC::PMMXFRDeleteOption(int working_man, double GMTI)
+bool RTCC::PMMXFRDeleteOption(int L, double GMTI)
 {
-	//Link to designated load module
-	//Was an error encountered?
-	if (working_man != 1)
-	{
-		return;
-	}
+	MissionPlanTable *mpt = GetMPTPointer(L);
 
-	MissionPlanTable *mpt = GetMPTPointer(RTCC_MPT_CSM);
-	while (mpt->mantable.size() > 0 && mpt->mantable.back().FrozenManeuverInd == false && GMTI < mpt->mantable.back().GMT_BO)
+	if (mpt->ManeuverNum == 0)
 	{
-		mpt->mantable.pop_back();
+		return false;
 	}
-	mpt = GetMPTPointer(RTCC_MPT_LM);
-	while (mpt->mantable.size() > 0 && mpt->mantable.back().FrozenManeuverInd == false && GMTI < mpt->mantable.back().GMT_BO)
+	do
 	{
-		mpt->mantable.pop_back();
-	}
+		if (GMTI <= mpt->TimeToEndManeuver[mpt->ManeuverNum - 1])
+		{
+			if (mpt->mantable[mpt->ManeuverNum - 1].FrozenManeuverInd)
+			{
+				PMXSPT("PMMXFR", 37);
+				return true;
+			}
+
+			mpt->mantable.pop_back();
+			mpt->ManeuverNum--;
+		}
+		else
+		{
+			break;
+		}
+	} while (mpt->ManeuverNum > 0);
+
+	return false;
 }
 
 int RTCC::PMMMCDCallEMSMISS(EphemerisData sv0, double GMTI, EphemerisData &sv1)
@@ -17994,8 +18644,10 @@ void RTCC::GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const
 	}
 }
 
-int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, DetailedManeuverTable &res)
+void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, DetailedManeuverTable &res)
 {
+	if (MPT_ID == 0) return;
+
 	MissionPlanTable *table, *othertable;
 	MPTManeuver *man;
 	int otherID;
@@ -18016,7 +18668,7 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 	if (ManNo > table->mantable.size())
 	{
 		//Maneuver not in table
-		return 1;
+		return;
 	}
 
 	double mu;
@@ -18130,7 +18782,7 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 
 	bool UseOtherMPT;
 
-	if (othertable->TUP > 0)
+	if (othertable->CommonBlock.TUP > 0)
 	{
 		UseOtherMPT = true;
 	}
@@ -18370,19 +19022,76 @@ int RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Deta
 	if (ManNo == 1)
 	{
 		res.WT = table->TotalInitMass / 0.45359237;
-		res.WC = table->CSMInitMass / 0.45359237;
-		res.WL = (table->LMInitAscentMass + table->LMInitDescentMass) / 0.45359237;
-		res.WF = 0.0;
+		res.WC = table->CommonBlock.CSMMass / 0.45359237;
+		res.WL = (table->CommonBlock.LMAscentMass + table->CommonBlock.LMDescentMass) / 0.45359237;
+
+		switch (man->Thruster)
+		{
+		case RTCC_ENGINETYPE_CSMSPS:
+			res.WF = table->CommonBlock.SPSFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_LMDPS:
+			res.WF = table->CommonBlock.LMDPSFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_LMAPS:
+			res.WF = table->CommonBlock.LMAPSFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_SIVB_MAIN:
+			res.WF = table->CommonBlock.SIVBFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_CSMRCSMINUS2:
+		case RTCC_ENGINETYPE_CSMRCSMINUS4:
+		case RTCC_ENGINETYPE_CSMRCSPLUS2:
+		case RTCC_ENGINETYPE_CSMRCSPLUS4:
+			res.WF = table->CommonBlock.CSMRCSFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_LMRCSMINUS2:
+		case RTCC_ENGINETYPE_LMRCSMINUS4:
+		case RTCC_ENGINETYPE_LMRCSPLUS2:
+		case RTCC_ENGINETYPE_LMRCSPLUS4:
+			res.WF = table->CommonBlock.LMRCSFuelRemaining / 0.45359237;
+			break;
+		default:
+			res.WF = 0.0;
+			break;
+		}
 	}
 	else
 	{
 		res.WT = table->mantable[ManNo - 2].TotalMassAfter / 0.45359237;
-		res.WC = table->mantable[ManNo - 2].CSMMassAfter / 0.45359237;
-		res.WL = (table->mantable[ManNo - 2].LMAscMassAfter + table->mantable[ManNo - 2].LMDscMassAfter) / 0.45359237;
-		res.WF = 0.0;
+		res.WC = table->mantable[ManNo - 2].CommonBlock.CSMMass / 0.45359237;
+		res.WL = (table->mantable[ManNo - 2].CommonBlock.LMAscentMass + table->mantable[ManNo - 2].CommonBlock.LMDescentMass) / 0.45359237;
+		switch (man->Thruster)
+		{
+		case RTCC_ENGINETYPE_CSMSPS:
+			res.WF = table->mantable[ManNo - 2].CommonBlock.SPSFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_LMDPS:
+			res.WF = table->mantable[ManNo - 2].CommonBlock.LMDPSFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_LMAPS:
+			res.WF = table->mantable[ManNo - 2].CommonBlock.LMAPSFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_SIVB_MAIN:
+			res.WF = table->mantable[ManNo - 2].CommonBlock.SIVBFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_CSMRCSMINUS2:
+		case RTCC_ENGINETYPE_CSMRCSMINUS4:
+		case RTCC_ENGINETYPE_CSMRCSPLUS2:
+		case RTCC_ENGINETYPE_CSMRCSPLUS4:
+			res.WF = table->mantable[ManNo - 2].CommonBlock.CSMRCSFuelRemaining / 0.45359237;
+			break;
+		case RTCC_ENGINETYPE_LMRCSMINUS2:
+		case RTCC_ENGINETYPE_LMRCSMINUS4:
+		case RTCC_ENGINETYPE_LMRCSPLUS2:
+		case RTCC_ENGINETYPE_LMRCSPLUS4:
+			res.WF = table->mantable[ManNo - 2].CommonBlock.LMRCSFuelRemaining / 0.45359237;
+			break;
+		default:
+			res.WF = 0.0;
+			break;
+		}
 	}
-
-	return 0;
 }
 
 void RTCC::PMDLDPP(const LDPPOptions &opt, const LDPPResults &res, LunarDescentPlanningTable &table)
@@ -20089,7 +20798,7 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 
 	if (in.NIAuxOutputTable.TerminationCode != 4)
 	{
-		PMXSPT("PMMLRBTI: Coast Integrator unable to obtain pericynthion point for LOI request - LOI solutions are unobtainable.");
+		PMXSPT("PMMLRBTI", 124);
 		return;
 	}
 
@@ -20118,12 +20827,12 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 	double h_pc = length(opt.SPH.R) - opt.R_LLS;
 	if (h_pc > opt.HA_LPO)
 	{
-		PMXSPT("PMMLRBTI: Lunar approach hyberbolic pericynthion greater than requested LPO apolune - LOI solutions are unobtainable.");
+		PMXSPT("PMMLRBTI", 126);
 		return;
 	}
 	if (h_pc < 0.0)
 	{
-		PMXSPT("PMMLRBTI: Lunar approach hyberbola has impacting trajectory - LOI solutions are unobtainable.");
+		PMXSPT("PMMLRBTI", 125);
 		return;
 	}
 
@@ -20133,8 +20842,9 @@ void RTCC::PMMLRBTI(EphemerisData sv)
 	//Write message with time at LLS
 	char Buffer[100], Buffer2[100];
 	OrbMech::format_time_HHMMSS(Buffer, GETfromGMT(loi.out.T_LLS));
-	sprintf(Buffer2, "PMMLRBTI: Time above the landing site is %s", Buffer);
-	PMXSPT(Buffer2);
+	sprintf(Buffer2, "Time above the landing site is %s", Buffer);
+	RTCCONLINEMON.TextBuffer[0].assign(Buffer2);
+	PMXSPT("PMMLRBTI", 201);
 
 	PMDLRBTI(opt, loi.out);
 
@@ -20265,12 +20975,10 @@ bool RTCC::GMGMED(char *str)
 		}
 	} while (str[i] != '\0' && str[i] != ';');
 
-	char Buffer[128];
-	sprintf_s(Buffer, "GMGMED: MED %s", str);
-	PMXSPT(Buffer);
+	RTCCONLINEMON.TextBuffer[0].assign(str);
+	GMSPRINT("GMGMED", 51);
 
 	int err;
-
 	if (medtype == 'A')
 	{
 		err = EMGABMED(1, code, MEDSequence);
@@ -20308,15 +21016,18 @@ bool RTCC::GMGMED(char *str)
 		err = GMSREMED(code, MEDSequence);
 	}
 	
+	char Buffer[128];
 	if (err == 0)
 	{
-		sprintf_s(Buffer, "GMGMED: MED %c%s OK", medtype, code.c_str());
-		PMXSPT(Buffer);
+		sprintf_s(Buffer, "%c%s OK", medtype, code.c_str());
+		RTCCONLINEMON.TextBuffer[0].assign(Buffer);
+		GMSPRINT("GMGMED", 51);
 	}
 	else
 	{
-		sprintf_s(Buffer, "GMGMED: MED %c%s ERR %d", medtype, code.c_str(), err);
-		PMXSPT(Buffer);
+		sprintf_s(Buffer, "%c%s ERR %d", medtype, code.c_str(), err);
+		RTCCONLINEMON.TextBuffer[0].assign(Buffer);
+		GMSPRINT("GMGMED", 51);
 	}
 
 	return true;
@@ -20364,17 +21075,18 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			if (data[0] == "START")
 			{
 				MGRTAG = 0;
-				EMGPRINT("EMGABMED: C-BAND CONTACT GENERATION SUPPRESSED");
+				RTCCONLINEMON.TextBuffer[0] = "SUPPRESSED";
 			}
 			else if (data[0] == "STOP")
 			{
 				MGRTAG = 1;
-				EMGPRINT("EMGABMED: C-BAND CONTACT GENERATION UNSUPPRESSED");
+				RTCCONLINEMON.TextBuffer[0] = "UNSUPPRESSED";
 			}
 			else
 			{
 				return 2;
 			}
+			EMGPRINT("EMGABMED", 35);
 		}
 	}
 	//G MEDs
@@ -21234,6 +21946,96 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 			PZBURN.P4_DV = dv * 0.3048;
 		}
 	}
+	//Change fuel remaining for specified thruster
+	else if (med == "49")
+	{
+		if (data.size() < 1)
+		{
+			return 1;
+		}
+
+		if (data[0] == "CSM")
+		{
+			med_m49.Table = RTCC_MPT_CSM;
+		}
+		else if (data[0] == "LEM")
+		{
+			med_m49.Table = RTCC_MPT_LM;
+		}
+		else
+		{
+			return 2;
+		}
+
+		double temp;
+		med_m49.SPSFuelRemaining = -1;
+		if (data.size() > 1 && data[1] != "")
+		{
+			if (sscanf_s(data[1].c_str(), "%lf", &temp) == 1)
+			{
+				if (temp > 0)
+				{
+					med_m49.SPSFuelRemaining = temp * 0.45359237;
+				}
+			}
+		}
+		med_m49.CSMRCSFuelRemaining = -1;
+		if (data.size() > 2 && data[2] != "")
+		{
+			if (sscanf_s(data[2].c_str(), "%lf", &temp) == 1)
+			{
+				if (temp > 0)
+				{
+					med_m49.CSMRCSFuelRemaining = temp * 0.45359237;
+				}
+			}
+		}
+		med_m49.SIVBFuelRemaining = -1;
+		if (data.size() > 3 && data[3] != "")
+		{
+			if (sscanf_s(data[3].c_str(), "%lf", &temp) == 1)
+			{
+				if (temp > 0)
+				{
+					med_m49.SIVBFuelRemaining = temp * 0.45359237;
+				}
+			}
+		}
+		med_m49.LMAPSFuelRemaining = -1;
+		if (data.size() > 4 && data[4] != "")
+		{
+			if (sscanf_s(data[4].c_str(), "%lf", &temp) == 1)
+			{
+				if (temp > 0)
+				{
+					med_m49.LMAPSFuelRemaining = temp * 0.45359237;
+				}
+			}
+		}
+		med_m49.LMRCSFuelRemaining = -1;
+		if (data.size() > 5 && data[5] != "")
+		{
+			if (sscanf_s(data[5].c_str(), "%lf", &temp) == 1)
+			{
+				if (temp > 0)
+				{
+					med_m49.LMRCSFuelRemaining = temp * 0.45359237;
+				}
+			}
+		}
+		med_m49.LMDPSFuelRemaining = -1;
+		if (data.size() > 6 && data[6] != "")
+		{
+			if (sscanf_s(data[6].c_str(), "%lf", &temp) == 1)
+			{
+				if (temp > 0)
+				{
+					med_m49.LMDPSFuelRemaining = temp * 0.45359237;
+				}
+			}
+		}
+		PMMWTC(49);
+	}
 	//Change vehicle body orientation and trim angles for MPT maneuver
 	else if (med == "58")
 	{
@@ -21397,6 +22199,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 
 		inp.IterationFlag[0] = med_m65.Iteration;
 		inp.Plan = med_m65.Table;
+		inp.ReplaceCode = med_m65.ReplaceCode;
 		inp.Thruster[0] = med_m65.Thruster;
 		inp.TimeFlag[0] = med_m65.TimeFlag;
 		inp.UllageThrusterOption[0] = med_m65.UllageQuads;
@@ -21605,7 +22408,14 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		PMMXFR_Impulsive_Input inp;
 
 		inp.Attitude[0] = med_m70.Attitude;
-		inp.DeleteGMT = med_m70.DeleteGET;
+		if (med_m70.DeleteGET <= 0)
+		{
+			inp.DeleteGMT = 0.0;
+		}
+		else
+		{
+			inp.DeleteGMT = GMTfromGET(med_m70.DeleteGET);
+		}
 		inp.DPSScaleFactor[0] = med_m70.DPSThrustFactor;
 		inp.DT10P[0] = med_m70.TenPercentDT;
 
@@ -21631,6 +22441,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 
 		inp.IterationFlag[0] = med_m70.Iteration;
 		inp.Plan = med_m70.Plan;
+		inp.ReplaceCode = 0;
 		inp.Thruster[0] = med_m70.Thruster;
 		inp.TimeFlag[0] = med_m70.TimeFlag;
 		inp.UllageThrusterOption[0] = med_m70.UllageQuads;
@@ -21644,7 +22455,14 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		PMMXFR_Impulsive_Input inp;
 
 		inp.Attitude[0] = med_m72.Attitude;
-		inp.DeleteGMT = med_m72.DeleteGET;
+		if (med_m72.DeleteGET <= 0)
+		{
+			inp.DeleteGMT = 0.0;
+		}
+		else
+		{
+			inp.DeleteGMT = GMTfromGET(med_m72.DeleteGET);
+		}
 		inp.DPSScaleFactor[0] = med_m72.DPSThrustFactor;
 		inp.DT10P[0] = med_m72.TenPercentDT;
 
@@ -21674,6 +22492,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 
 		inp.IterationFlag[0] = med_m72.Iteration;
 		inp.Plan = med_m72.Plan;
+		inp.ReplaceCode = 0;
 		inp.Thruster[0] = med_m72.Thruster;
 		inp.TimeFlag[0] = med_m72.TimeFlag;
 		inp.UllageThrusterOption[0] = med_m72.UllageQuads;
@@ -21750,11 +22569,13 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 
 		inp.AttitudeCode = RTCC_ATTITUDE_PGNS_EXDV;
 		inp.BurnParameterNumber = type;
-		inp.ConfigurationChangeIndicator = RTCC_CONFIGCHANGE_NONE;
+		inp.ConfigurationChangeIndicator = RTCC_CONFIGCHANGE_NONE; //TBD
 		inp.CoordinateIndicator = -1;
 		inp.DPSScaleFactor = MCTDTF;
 		inp.ReplaceCode = ReplaceCode;
 		inp.TableCode = veh;
+		inp.EndConfiguration = 0; //TBD
+		inp.dt_ullage = 0.0;
 
 		void *vPtr = &inp;
 		return PMMXFR(32, vPtr);
@@ -21796,6 +22617,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 
 		inp.IterationFlag[0] = med_m78.Iteration;
+		inp.ReplaceCode = med_m78.ReplaceCode;
 		if (med_m78.Type)
 		{
 			inp.Type = 1;
@@ -22450,7 +23272,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				{
 					if (EZEXSITE.REF >= 0 && BodyInd != EZEXSITE.REF)
 					{
-						GMSPRINT("GMSMED: P32 E/M CONFLICT, RELEASE TABLE AND RE-ENTER MED");
+						GMSPRINT("GMSMED", 32);
 						return 2;
 					}
 				}
@@ -22458,7 +23280,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				{
 					if (EZLASITE.REF >= 0 && BodyInd != EZLASITE.REF)
 					{
-						GMSPRINT("GMSMED: P32 E/M CONFLICT, RELEASE TABLE AND RE-ENTER MED");
+						GMSPRINT("GMSMED", 32);
 						return 2;
 					}
 				}
@@ -22479,7 +23301,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 
 					if (STAID == tempname)
 					{
-						GMSPRINT("GMSMED: P32, ADD... STA ALREADY IN TABLE");
+						GMSPRINT("GMSMED", 23);
 						return 2;
 					}
 					if (tempname == "")
@@ -22493,7 +23315,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				}
 				if (tablefull)
 				{
-					GMSPRINT("GMSMED: P32, ADD... SORRY TABLE FULL");
+					GMSPRINT("GMSMED", 24);
 					return 2;
 				}
 				if (DataTableInd == 0)
@@ -22538,7 +23360,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				}
 				if (found == -1)
 				{
-					GMSPRINT("GMSMED: P32, MOD... STA NOT IN TABLE");
+					GMSPRINT("GMSMED", 25);
 					return 2;
 				}
 				if (DataTableInd == 0)
@@ -22573,7 +23395,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				}
 				if (found == -1)
 				{
-					GMSPRINT("GMSMED: P32, DEL... STA NOT IN TABLE");
+					GMSPRINT("GMSMED", 25);
 					return 2;
 				}
 				if (DataTableInd == 0)
@@ -23674,13 +24496,16 @@ int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 		}
 
 		DetailedManeuverTable *dmt;
+		int dmtnum;
 		if (data.size() < 3 || data[2] == "" || data[2] == "54")
 		{
 			dmt = &DMTBuffer[0];
+			dmtnum = 1;
 		}
 		else if (data[2] == "69")
 		{
 			dmt = &DMTBuffer[1];
+			dmtnum = 2;
 		}
 		else
 		{
@@ -23747,6 +24572,22 @@ int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 			{
 				return 2;
 			}
+		}
+
+		//Save inputs
+		if (dmtnum == 1)
+		{
+			EZETVMED.DMT1Vehicle = veh;
+			EZETVMED.DMT1Number = num;
+			EZETVMED.DMT1REFSMMATCode = refscode;
+			EZETVMED.DMT1HeadsUpDownIndicator = headsupdownind;
+		}
+		else
+		{
+			EZETVMED.DMT2Vehicle = veh;
+			EZETVMED.DMT2Number = num;
+			EZETVMED.DMT2REFSMMATCode = refscode;
+			EZETVMED.DMT2HeadsUpDownIndicator = headsupdownind;
 		}
 
 		PMDDMT(veh, num, refscode, headsupdownind, *dmt);
@@ -24119,7 +24960,7 @@ void RTCC::EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MAT
 		if (tab1->data[ID1 - 1].ID == 0)
 		{
 			//ERROR: REFSMMAT NOT AVAILABLE
-			EMGPRINT(1);
+			EMGPRINT("EMGSTGEN", 1);
 			return;
 		}
 
@@ -24164,9 +25005,9 @@ void RTCC::EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt)
 	}
 
 	sprintf_s(Buffer, "EMGSTSTM: NEW IMU MATRIX %s%03d %s GET = %s", Buff1, tab->data[id - 1].ID, Buff3, Buff2);
-	std::string message;
-	message.assign(Buffer);
-	EMGPRINT(message);
+	RTCCONLINEMON.TextBuffer[0].assign(Buffer);
+	RTCCONLINEMON.MatrixBuffer = tab->data[id - 1].REFSMMAT;
+	EMGPRINT("EMGSTSTM", 19);
 }
 
 void RTCC::EMGSTGENName(int ID, char *Buffer)
@@ -24269,30 +25110,54 @@ int RTCC::EMGSTGENCode(const char *Buffer)
 	return -1;
 }
 
-void RTCC::EMGPRINT(int i)
+void RTCC::EMGPRINT(std::string source, int i)
 {
+	std::vector<std::string> message;
 	switch (i)
 	{
 	case 1:
-		EMGPRINT("EMGSTGEN: REFSMMAT NOT AVAILABLE");
+		message.push_back("REFSMMAT NOT AVAILABLE");
 		break;
-	case 3:
-		EMGPRINT("EMMGLCVP: EPHEMERIS NOT AVAILABLE");
+	case 12:
+		message.push_back(RTCCONLINEMON.TextBuffer[0] + " EPHEMERIS UPDATE COMPLETED");
 		break;
-	case 4:
-		EMGPRINT("EMMGLCVP: RADIAL FLIGHT CONDITIONS");
+	case 13:
+		message.push_back(RTCCONLINEMON.TextBuffer[0] + " MINIMUM EPHEMERIS WAS NOT GENERATED");
 		break;
+	case 19:
+		char Buffer[128];
+		message.push_back(RTCCONLINEMON.TextBuffer[0]);
+		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m11, RTCCONLINEMON.MatrixBuffer.m12, RTCCONLINEMON.MatrixBuffer.m13);
+		message.push_back(Buffer);
+		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m21, RTCCONLINEMON.MatrixBuffer.m22, RTCCONLINEMON.MatrixBuffer.m23);
+		message.push_back(Buffer);
+		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m31, RTCCONLINEMON.MatrixBuffer.m32, RTCCONLINEMON.MatrixBuffer.m33);
+		message.push_back(Buffer);
+		break;
+	case 26:
+		message.push_back("EPHEMERIS NOT AVAILABLE");
+		break;
+	case 25:
+		message.push_back("RADIAL FLIGHT CONDITIONS");
+		break;
+	case 29:
+		message.push_back("RMMASCND CONVERGENCE LIMIT");
+		break;
+	case 35:
+		message.push_back("C-BAND CONTACT GENERATION " + RTCCONLINEMON.TextBuffer[0]);
+		break;
+	case 36:
+		message.push_back("ANCHOR TIME ADJUSTED FOR" + RTCCONLINEMON.TextBuffer[0] + "STATION CONTACTS");
+		break;
+	default:
+		return;
 	}
+	EMGPRINT(source, message);
 }
 
-void RTCC::EMGPRINT(std::string message)
+void RTCC::EMGPRINT(std::string source, std::vector<std::string> message)
 {
-	RTCCONLINEMON.push_front(message);
-
-	if (RTCCONLINEMON.size() >= 9)
-	{
-		RTCCONLINEMON.pop_back();
-	}
+	OnlinePrint(source, message);
 }
 
 void RTCC::EMMGLCVP(int L, double gmt)
@@ -24303,7 +25168,7 @@ void RTCC::EMMGLCVP(int L, double gmt)
 
 	if (ELFECH(gmt, 16, 8, L, EPHEM, MANTIMES, LUNSTAY))
 	{
-		EMGPRINT(3);
+		EMGPRINT("EMMGLCVP", 25);
 		return;
 	}
 	ELVCTRInputTable in;
@@ -24317,13 +25182,13 @@ void RTCC::EMMGLCVP(int L, double gmt)
 
 	if (out.ErrorCode)
 	{
-		EMGPRINT(3);
+		EMGPRINT("EMMGLCVP", 25);
 		return;
 	}
 
 	if (abs(dotp(unit(out.SV.R), unit(out.SV.V))) > 1.0 - 0.0017)
 	{
-		EMGPRINT(4);
+		EMGPRINT("EMMGLCVP", 26);
 		return;
 	}
 
@@ -25768,23 +26633,25 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	mptman->Z_B = aux->Z_B;
 	mptman->dt_TO = aux->DT_TO;
 	mptman->dv_TO = aux->DV_TO;
-	mptman->CSMMassAfter = aux->W_CSM;
-	mptman->LMAscMassAfter = aux->W_LMA;
-	mptman->LMDscMassAfter = aux->W_LMD;
-	mptman->SIVBMassAfter = aux->W_SIVB;
+	mptman->CommonBlock.CSMMass = aux->W_CSM;
+	mptman->CommonBlock.LMAscentMass = aux->W_LMA;
+	mptman->CommonBlock.LMDescentMass = aux->W_LMD;
+	mptman->CommonBlock.SIVBMass = aux->W_SIVB;
+	mptman->MainEngineFuelUsed = aux->MainFuelUsed;
+	mptman->RCSFuelUsed = aux->RCSFuelUsed;
 	mptman->lng_AN = 0.0;
 
 	double W_S_Prior, S_Fuel, WDOT, T, F, isp;
 
 	if (man == 1)
 	{
-		W_S_Prior = mpt->SIVBInitMass;
-		S_Fuel = mpt->SIVBJ2FuelRemaining;
+		W_S_Prior = mpt->CommonBlock.SIVBMass;
+		S_Fuel = mpt->CommonBlock.SIVBFuelRemaining;
 	}
 	else
 	{
-		W_S_Prior = mpt->mantable[man - 2].SIVBMassAfter;
-		S_Fuel = mpt->mantable[man - 2].SIVBJ2FuelAfter;
+		W_S_Prior = mpt->mantable[man - 2].CommonBlock.SIVBMass;
+		S_Fuel = mpt->mantable[man - 2].CommonBlock.SIVBFuelRemaining;
 	} 
 
 	if (MPTConfigIncludesSIVB(mptman->ConfigCodeBefore))
@@ -25793,26 +26660,26 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		S_Fuel = S_Fuel - DW;
 		if (mptman->TVC == 2)
 		{
-			mptman->SIVBJ2FuelAfter = S_Fuel - aux->MainFuelUsed;
+			mptman->CommonBlock.SIVBFuelRemaining = S_Fuel - aux->MainFuelUsed;
 
 			T = MCTSAV;
 			WDOT = MCTWAV;
-			F = mptman->SIVBJ2FuelAfter;
+			F = mptman->CommonBlock.SIVBFuelRemaining;
 			if (man == 1)
 			{
-				mptman->SPSFuelAfter = mpt->SPSFuelRemaining;
-				mptman->CSMRCSFuelAfter = mpt->CSMRCSFuelRemaining;
-				mptman->LMRCSFuelAfter = mpt->LMRCSFuelRemaining;
-				mptman->APSFuelAfter = mpt->APSFuelRemaining;
-				mptman->DPSFuelAfter = mpt->DPSFuelRemaining;
+				mptman->CommonBlock.SPSFuelRemaining = mpt->CommonBlock.SPSFuelRemaining;
+				mptman->CommonBlock.CSMRCSFuelRemaining = mpt->CommonBlock.CSMRCSFuelRemaining;
+				mptman->CommonBlock.LMRCSFuelRemaining = mpt->CommonBlock.LMRCSFuelRemaining;
+				mptman->CommonBlock.LMAPSFuelRemaining = mpt->CommonBlock.LMAPSFuelRemaining;
+				mptman->CommonBlock.LMDPSFuelRemaining = mpt->CommonBlock.LMDPSFuelRemaining;
 			}
 			else
 			{
-				mptman->SPSFuelAfter = mpt->mantable[man - 2].SPSFuelAfter;
-				mptman->CSMRCSFuelAfter = mpt->mantable[man - 2].CSMRCSFuelAfter;
-				mptman->LMRCSFuelAfter = mpt->mantable[man - 2].LMRCSFuelAfter;
-				mptman->APSFuelAfter = mpt->mantable[man - 2].APSFuelAfter;
-				mptman->DPSFuelAfter = mpt->mantable[man - 2].DPSFuelAfter;
+				mptman->CommonBlock.SPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.SPSFuelRemaining;
+				mptman->CommonBlock.CSMRCSFuelRemaining = mpt->mantable[man - 2].CommonBlock.CSMRCSFuelRemaining;
+				mptman->CommonBlock.LMRCSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMRCSFuelRemaining;
+				mptman->CommonBlock.LMAPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMAPSFuelRemaining;
+				mptman->CommonBlock.LMDPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMDPSFuelRemaining;
 			}
 		}
 	}
@@ -25823,31 +26690,31 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		{
 			if (mptman->TVC == 1)
 			{
-				mptman->SPSFuelAfter = mpt->SPSFuelRemaining - aux->MainFuelUsed;
-				mptman->CSMRCSFuelAfter = mpt->CSMRCSFuelRemaining - aux->RCSFuelUsed;
-				mptman->LMRCSFuelAfter = mpt->LMRCSFuelRemaining;
-				mptman->APSFuelAfter = mpt->APSFuelRemaining;
-				mptman->DPSFuelAfter = mpt->DPSFuelRemaining;
+				mptman->CommonBlock.SPSFuelRemaining = mpt->CommonBlock.SPSFuelRemaining - aux->MainFuelUsed;
+				mptman->CommonBlock.CSMRCSFuelRemaining = mpt->CommonBlock.CSMRCSFuelRemaining - aux->RCSFuelUsed;
+				mptman->CommonBlock.LMRCSFuelRemaining = mpt->CommonBlock.LMRCSFuelRemaining;
+				mptman->CommonBlock.LMAPSFuelRemaining = mpt->CommonBlock.LMAPSFuelRemaining;
+				mptman->CommonBlock.LMDPSFuelRemaining = mpt->CommonBlock.LMDPSFuelRemaining;
 			}
 			else
 			{
-				mptman->SPSFuelAfter = mpt->SPSFuelRemaining;
-				mptman->CSMRCSFuelAfter = mpt->CSMRCSFuelRemaining;
-				mptman->LMRCSFuelAfter = mpt->LMRCSFuelRemaining - aux->RCSFuelUsed;
+				mptman->CommonBlock.SPSFuelRemaining = mpt->CommonBlock.SPSFuelRemaining;
+				mptman->CommonBlock.CSMRCSFuelRemaining = mpt->CommonBlock.CSMRCSFuelRemaining;
+				mptman->CommonBlock.LMRCSFuelRemaining = mpt->CommonBlock.LMRCSFuelRemaining - aux->RCSFuelUsed;
 				if (mptman->Thruster == RTCC_ENGINETYPE_LMAPS)
 				{
-					mptman->APSFuelAfter = mpt->APSFuelRemaining - aux->MainFuelUsed;
-					mptman->DPSFuelAfter = 0.0;
+					mptman->CommonBlock.LMAPSFuelRemaining = mpt->CommonBlock.LMAPSFuelRemaining - aux->MainFuelUsed;
+					mptman->CommonBlock.LMDPSFuelRemaining = 0.0;
 				}
 				else if (mptman->Thruster == RTCC_ENGINETYPE_LMDPS)
 				{
-					mptman->DPSFuelAfter = mpt->DPSFuelRemaining - aux->MainFuelUsed;
-					mptman->APSFuelAfter = mpt->APSFuelRemaining;
+					mptman->CommonBlock.LMDPSFuelRemaining = mpt->CommonBlock.LMDPSFuelRemaining - aux->MainFuelUsed;
+					mptman->CommonBlock.LMAPSFuelRemaining = mpt->CommonBlock.LMAPSFuelRemaining;
 				}
 				else
 				{
-					mptman->DPSFuelAfter = mpt->DPSFuelRemaining;
-					mptman->APSFuelAfter = mpt->APSFuelRemaining;
+					mptman->CommonBlock.LMDPSFuelRemaining = mpt->CommonBlock.LMDPSFuelRemaining;
+					mptman->CommonBlock.LMAPSFuelRemaining = mpt->CommonBlock.LMAPSFuelRemaining;
 				}
 			}
 		}
@@ -25855,30 +26722,30 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		{
 			if (mptman->TVC == 1)
 			{
-				mptman->SPSFuelAfter = mpt->mantable[man - 2].SPSFuelAfter - aux->MainFuelUsed;
-				mptman->CSMRCSFuelAfter = mpt->mantable[man - 2].CSMRCSFuelAfter - aux->RCSFuelUsed;
-				mptman->LMRCSFuelAfter = mpt->mantable[man - 2].LMRCSFuelAfter;
-				mptman->APSFuelAfter = mpt->mantable[man - 2].APSFuelAfter;
-				mptman->DPSFuelAfter = mpt->mantable[man - 2].DPSFuelAfter;
+				mptman->CommonBlock.SPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.SPSFuelRemaining - aux->MainFuelUsed;
+				mptman->CommonBlock.CSMRCSFuelRemaining = mpt->mantable[man - 2].CommonBlock.CSMRCSFuelRemaining - aux->RCSFuelUsed;
+				mptman->CommonBlock.LMRCSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMRCSFuelRemaining;
+				mptman->CommonBlock.LMAPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMAPSFuelRemaining;
+				mptman->CommonBlock.LMDPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMDPSFuelRemaining;
 			}
 			else
 			{
-				mptman->SPSFuelAfter = mpt->SPSFuelRemaining;
-				mptman->CSMRCSFuelAfter = mpt->CSMRCSFuelRemaining;
+				mptman->CommonBlock.SPSFuelRemaining = mpt->CommonBlock.SPSFuelRemaining;
+				mptman->CommonBlock.CSMRCSFuelRemaining = mpt->CommonBlock.CSMRCSFuelRemaining;
 				if (mptman->Thruster == RTCC_ENGINETYPE_LMAPS)
 				{
-					mptman->APSFuelAfter = mpt->mantable[man - 2].APSFuelAfter - aux->MainFuelUsed;
-					mptman->DPSFuelAfter = 0.0;
+					mptman->CommonBlock.LMAPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMAPSFuelRemaining - aux->MainFuelUsed;
+					mptman->CommonBlock.LMDPSFuelRemaining = 0.0;
 				}
 				else if (mptman->Thruster == RTCC_ENGINETYPE_LMDPS)
 				{
-					mptman->DPSFuelAfter = mpt->mantable[man - 2].DPSFuelAfter - aux->MainFuelUsed;
-					mptman->APSFuelAfter = mpt->mantable[man - 2].APSFuelAfter;
+					mptman->CommonBlock.LMDPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMDPSFuelRemaining - aux->MainFuelUsed;
+					mptman->CommonBlock.LMAPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMAPSFuelRemaining;
 				}
 				else
 				{
-					mptman->DPSFuelAfter = mpt->mantable[man - 2].DPSFuelAfter;
-					mptman->APSFuelAfter = mpt->mantable[man - 2].APSFuelAfter;
+					mptman->CommonBlock.LMDPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMDPSFuelRemaining;
+					mptman->CommonBlock.LMAPSFuelRemaining = mpt->mantable[man - 2].CommonBlock.LMAPSFuelRemaining;
 				}
 			}
 		}
@@ -25890,62 +26757,62 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		{
 			T = MCTCT1;
 			WDOT = MCTCW1;
-			F = mptman->CSMRCSFuelAfter;
+			F = mptman->CommonBlock.CSMRCSFuelRemaining;
 		}
 		else if (mptman->Thruster == RTCC_ENGINETYPE_CSMRCSPLUS4 || mptman->Thruster == RTCC_ENGINETYPE_CSMRCSMINUS4)
 		{
 			T = 2.0*MCTCT1;
 			WDOT = 2.0*MCTCW1;
-			F = mptman->CSMRCSFuelAfter;
+			F = mptman->CommonBlock.CSMRCSFuelRemaining;
 		}
 		else if (mptman->Thruster == RTCC_ENGINETYPE_LMRCSPLUS4 || mptman->Thruster == RTCC_ENGINETYPE_LMRCSMINUS4)
 		{
 			T = MCTLT1;
 			WDOT = MCTLW1;
-			F = mptman->LMRCSFuelAfter;
+			F = mptman->CommonBlock.LMRCSFuelRemaining;
 		}
 		else if (mptman->Thruster == RTCC_ENGINETYPE_LMRCSPLUS4 || mptman->Thruster == RTCC_ENGINETYPE_LMRCSMINUS4)
 		{
 			T = 2.0*MCTLT1;
 			WDOT = 2.0*MCTLW1;
-			F = mptman->LMRCSFuelAfter;
+			F = mptman->CommonBlock.LMRCSFuelRemaining;
 		}
 		else if (mptman->Thruster == RTCC_ENGINETYPE_CSMSPS)
 		{
 			T = MCTST1;
 			WDOT = MCTSW1;
-			F = mptman->SPSFuelAfter;
+			F = mptman->CommonBlock.SPSFuelRemaining;
 		}
 		else if (mptman->Thruster == RTCC_ENGINETYPE_LMAPS)
 		{
 			T = MCTAT1;
 			WDOT = MCTAW1;
-			F = mptman->APSFuelAfter;
+			F = mptman->CommonBlock.LMAPSFuelRemaining;
 		}
 		else
 		{
 			T = MCTDT1;
 			WDOT = MCTDW1;
-			F = mptman->DPSFuelAfter;
+			F = mptman->CommonBlock.LMDPSFuelRemaining;
 		}
 	}
 
 	//TBD: Docking maneuver
 
 	mptman->TotalMassAfter = 0.0;
-	if (MPTConfigIncludesCSM(mptman->ConfigCodeAfter))
+	if (MPTConfigIncludesCSM(mptman->CommonBlock.ConfigCode))
 	{
 		mptman->TotalMassAfter += aux->W_CSM;
 	}
-	if (MPTConfigIncludesLMAsc(mptman->ConfigCodeAfter))
+	if (MPTConfigIncludesLMAsc(mptman->CommonBlock.ConfigCode))
 	{
 		mptman->TotalMassAfter += aux->W_LMA;
 	}
-	if (MPTConfigIncludesLMDsc(mptman->ConfigCodeAfter))
+	if (MPTConfigIncludesLMDsc(mptman->CommonBlock.ConfigCode))
 	{
 		mptman->TotalMassAfter += aux->W_LMD;
 	}
-	if (MPTConfigIncludesSIVB(mptman->ConfigCodeAfter))
+	if (MPTConfigIncludesSIVB(mptman->CommonBlock.ConfigCode))
 	{
 		mptman->TotalMassAfter += aux->W_SIVB;
 	}
@@ -26068,7 +26935,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	int err = ELVCNV(sv_BI, in, out, sv_true);
 	if (err)
 	{
-		PMXSPT("PMMDMT: UNABLE TO CONVERT VECTORS FROM MEAN TO TRUE");
+		PMXSPT("PMMDMT", 70);
 		sv_true = sv_BI;
 		goto RTCC_PMMDMT_PB2_6;
 	}
@@ -26119,7 +26986,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 
 		if (PMMAPD(sv_BO2, sv_a, sv_p))
 		{
-			PMXSPT("PMMDMT: ERROR RETURNED FROM PMMAPD - INVALID APOFOCUS/PERIFOCUS");
+			PMXSPT("PMMDMT", 108);
 		}
 
 		mptman->h_a = length(sv_a.R) - R_E;
