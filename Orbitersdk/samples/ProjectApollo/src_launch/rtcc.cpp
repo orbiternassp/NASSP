@@ -3269,7 +3269,7 @@ void RTCC::LOITargeting(LOIMan *opt, VECTOR3 &dV_LVLH, double &P30TIG, SV &sv_no
 		OrbMech::impulsive(sv_node.R, sv_node.V, sv_node.MJD, hMoon, f_T, isp, mass, R_ref[sol], V_ref[sol], Llambda, t_slip, R_cut, V_cut, MJD_cut, m_cut);
 		sv_pre = coast(sv_node, t_slip);
 
-		dV_LVLH = PIEXDV(sv_node.R, sv_node.V, mass, f_T, Llambda, false);
+		dV_LVLH = PIEXDV(sv_pre.R, sv_pre.V, mass, f_T, Llambda, false);
 		P30TIG = GET_node + t_slip;
 
 		sv_post = sv_node;
