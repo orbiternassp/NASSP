@@ -1234,6 +1234,27 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	dkiresult.dv_Boost = 0.0;
 	dkiresult.t_HAM = 0.0;
 
+	PDAPEngine = 0;
+	PDAPTwoSegment = false;
+	PDAPABTCOF[0] = 0.0;
+	PDAPABTCOF[1] = 0.0;
+	PDAPABTCOF[2] = 0.0;
+	PDAPABTCOF[3] = 0.0;
+	PDAPABTCOF[4] = 0.0;
+	PDAPABTCOF[5] = 0.0;
+	PDAPABTCOF[6] = 0.0;
+	PDAPABTCOF[7] = 0.0;
+	DEDA224 = 0.0;
+	DEDA225 = 0.0;
+	DEDA226 = 0.0;
+	DEDA227 = 0;
+	PDAP_J1 = 0.0;
+	PDAP_J2 = 0.0;
+	PDAP_K1 = 0.0;
+	PDAP_K2 = 0.0;
+	PDAP_Theta_LIM = 0.0;
+	PDAP_R_amin = 0.0;
+
 	if (GC->mission == 9)
 	{
 		AGSKFactor = 40.0*3600.0;
@@ -1243,6 +1264,13 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		AGSKFactor = 100.0*3600.0;
 		//For PTC REFSMMAT
 		REFSMMATTime = OrbMech::HHMMSSToSS(183, 0, 30);
+
+		PDAP_J1 = 6.0325675e6*0.3048;
+		PDAP_K1 = -6.2726125e5*0.3048;
+		PDAP_J2 = 6.03047e6*0.3048;
+		PDAP_K2 = -3.1835146e5*0.3048;
+		PDAP_Theta_LIM = 8.384852304*RAD;
+		PDAP_R_amin = 5.8768997e6*0.3048;
 	}
 	else if (GC->mission == 13)
 	{
@@ -1404,27 +1432,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	lmascentpad.TIG = 0.0;
 	lmascentpad.V_hor = 0.0;
 	lmascentpad.V_vert = 0.0;
-
-	PDAPEngine = 0;
-	PDAPTwoSegment = false;
-	PDAPABTCOF[0] = 0.0;
-	PDAPABTCOF[1] = 0.0;
-	PDAPABTCOF[2] = 0.0;
-	PDAPABTCOF[3] = 0.0;
-	PDAPABTCOF[4] = 0.0;
-	PDAPABTCOF[5] = 0.0;
-	PDAPABTCOF[6] = 0.0;
-	PDAPABTCOF[7] = 0.0;
-	DEDA224 = 0.0;
-	DEDA225 = 0.0;
-	DEDA226 = 0.0;
-	DEDA227 = 0;
-	PDAP_J1 = 0.0;
-	PDAP_J2 = 0.0;
-	PDAP_K1 = 0.0;
-	PDAP_K2 = 0.0;
-	PDAP_Theta_LIM = 0.0;
-	PDAP_R_amin = 0.0;
 
 	NodeConvOpt = true;
 	NodeConvLat = 0.0;
@@ -2314,6 +2321,33 @@ void ARCore::AP11AbortCoefUplink()
 	g_Data.emem[15] = OrbMech::DoubleToBuffer(PDAPABTCOF[6] * pow(100.0, -2)*pow(2, 10), 0, 0);
 	g_Data.emem[16] = OrbMech::DoubleToBuffer(PDAPABTCOF[7] * pow(100.0, -1), 7, 1);
 	g_Data.emem[17] = OrbMech::DoubleToBuffer(PDAPABTCOF[7] * pow(100.0, -1), 7, 0);
+
+	UplinkData(); // Go for uplink
+}
+
+void ARCore::AP12AbortCoefUplink()
+{
+	g_Data.emem[0] = 16;
+	if (GC->mission <= 13)
+	{
+		g_Data.emem[1] = 2550;
+	}
+	else
+	{
+		g_Data.emem[1] = 2545;
+	}
+	g_Data.emem[2] = OrbMech::DoubleToBuffer(PDAP_J1, 23, 1);
+	g_Data.emem[3] = OrbMech::DoubleToBuffer(PDAP_J1, 23, 0);
+	g_Data.emem[4] = OrbMech::DoubleToBuffer(PDAP_K1*PI2, 23, 1);
+	g_Data.emem[5] = OrbMech::DoubleToBuffer(PDAP_K1*PI2, 23, 0);
+	g_Data.emem[6] = OrbMech::DoubleToBuffer(PDAP_J2, 23, 1);
+	g_Data.emem[7] = OrbMech::DoubleToBuffer(PDAP_J2, 23, 0);
+	g_Data.emem[8] = OrbMech::DoubleToBuffer(PDAP_K2*PI2, 23, 1);
+	g_Data.emem[9] = OrbMech::DoubleToBuffer(PDAP_K2*PI2, 23, 0);
+	g_Data.emem[10] = OrbMech::DoubleToBuffer(PDAP_Theta_LIM / PI2, 0, 1);
+	g_Data.emem[11] = OrbMech::DoubleToBuffer(PDAP_Theta_LIM / PI2, 0, 0);
+	g_Data.emem[12] = OrbMech::DoubleToBuffer(PDAP_R_amin, 24, 1);
+	g_Data.emem[13] = OrbMech::DoubleToBuffer(PDAP_R_amin, 24, 0);
 
 	UplinkData(); // Go for uplink
 }

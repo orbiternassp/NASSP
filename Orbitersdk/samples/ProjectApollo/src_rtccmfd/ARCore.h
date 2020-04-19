@@ -128,6 +128,7 @@ public:
 	void MapUpdate();
 	void NavCheckPAD();
 	void AP11AbortCoefUplink();
+	void AP12AbortCoefUplink();
 	int REFSMMATOctalAddress();
 	int REFSMMATUplinkAddress();
 	void DetermineGMPCode();
