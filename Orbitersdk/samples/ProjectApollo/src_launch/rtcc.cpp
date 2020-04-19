@@ -14732,6 +14732,10 @@ int RTCC::PMMWTC(int med)
 	RTCC_PMMWTC_16:
 		W = W + WTV[2];
 	RTCC_PMMWTC_17:
+		CommonBlock.CSMMass = WTV[0];
+		CommonBlock.SIVBMass = WTV[1];
+		CommonBlock.LMAscentMass = WTV[2];
+		CommonBlock.LMDescentMass = WTV[3];
 		if (IBLK > 1)
 		{
 		RTCC_PMMWTC_17A:
@@ -21235,7 +21239,14 @@ int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 		//TBD: This should use CMC liftoff time, not RTCC
 		double TIG = GETfromGMT(tab->mantable[ManeuverNum - 1].GMTI);
 		VECTOR3 DV = tab->mantable[ManeuverNum - 1].dV_LVLH;
-		CMMAXTDV(TIG, DV);
+		if (VehicleType == 1)
+		{
+			CMMAXTDV(TIG, DV);
+		}
+		else
+		{
+			CMMLXTDV(TIG, DV);
+		}
 	}
 
 	return 0;

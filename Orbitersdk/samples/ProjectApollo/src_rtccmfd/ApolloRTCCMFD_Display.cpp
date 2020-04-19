@@ -3180,7 +3180,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(5 * W / 8, 15 * H / 21, "Landing Site:", 13);
 		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(5 * W / 8, 16 * H / 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] * DEG);
+		sprintf(Buffer, "%.3f°", GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] * DEG);
 		skp->Text(5 * W / 8, 17 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.2f NM", GC->rtcc->MCSMLR / 1852.0);
 		skp->Text(5 * W / 8, 18 * H / 21, Buffer, strlen(Buffer));

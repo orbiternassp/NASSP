@@ -7037,9 +7037,16 @@ void ApolloRTCCMFD::menuCyclePDAPEngine()
 
 void ApolloRTCCMFD::menuAP11AbortCoefUplink()
 {
-	if (G->vesseltype > 1 && GC->mission == 11)
+	if (G->vesseltype > 1)
 	{
-		G->AP11AbortCoefUplink();
+		if (GC->mission == 11)
+		{
+			G->AP11AbortCoefUplink();
+		}
+		else if(GC->mission >= 12)
+		{
+			G->AP12AbortCoefUplink();
+		}
 	}
 }
 
