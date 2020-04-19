@@ -232,6 +232,18 @@ struct MED_M50
 	double SIVBWT = -1.0;
 	double LMWT = -1.0;
 	double LMASCWT = -1.0;
+	double WeightGET = 0.0;
+};
+
+//Change Vehicle Area or K-Factor
+struct MED_M51
+{
+	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
+	double CSMArea = 0.0;
+	double SIVBArea = 0.0;
+	double LMAscentArea = 0.0;
+	double LMDescentArea = 0.0;
+	double KFactor = 0.0;
 };
 
 //Input initial configuration for Mission Plan Table
@@ -1427,18 +1439,52 @@ struct DetailedManeuverTable
 	bool isCSMTV;
 };
 
+struct MPTVehicleDataBlock
+{
+	//Word 12 (Bytes 1, 2)
+	int ConfigCode = 0;
+	//Word 12 (Bytes 3, 4)
+	int ConfigChangeInd = 0;
+	//Word 12 (Bytes 5, 6)
+	int TUP = 0;
+	//Word 13
+	double CSMArea = 0.0;
+	//Word 14
+	double SIVBArea = 0.0;
+	//Word 15
+	double LMAscentArea = 0.0;
+	//Word 16
+	double LMDescentArea = 0.0;
+	//Word 17
+	double CSMMass = 0.0;
+	//Word 18
+	double SIVBMass = 0.0;
+	//Word 19
+	double LMAscentMass = 0.0;
+	//Word 20
+	double LMDescentMass = 0.0;
+	//Word 21
+	double CSMRCSFuelRemaining = 0.0;
+	//Word 22
+	double SPSFuelRemaining = 0.0;
+	//Word 23
+	double SIVBFuelRemaining = 0.0;
+	//Word 24
+	double LMRCSFuelRemaining = 0.0;
+	//Word 25
+	double LMAPSFuelRemaining = 0.0;
+	//Word 26
+	double LMDPSFuelRemaining = 0.0;
+};
+
 struct MPTManeuver
 {
 	MPTManeuver();
 
 	//Word 1
 	std::string code;
-	//Word 12 (Bytes 1, 2)
-	int ConfigCodeAfter;
-	//Word 12 (Bytes 3, 4)
-	int ConfigChangeInd;
-	//Word 12 (Bytes 5, 6)
-	int TUP;
+	//Words 12-26
+	MPTVehicleDataBlock CommonBlock;
 	//Word 27
 	std::string StationIDFrozen;
 	//Word 28, GMT of frozen anchor vector
@@ -1542,22 +1588,8 @@ struct MPTManeuver
 	VECTOR3 V_1;
 	double GMT_1;
 	
-	double CSMMassAfter;
-	double SIVBMassAfter;
-	double LMAscMassAfter;
-	double LMDscMassAfter;
 	double TotalMassAfter;
 	double TotalAreaAfter;
-	double CSMAreaAfter;
-	double SIVBAreaAfter;
-	double AscentAreaAfter;
-	double DescentAreaAfter;
-	double SPSFuelAfter;
-	double CSMRCSFuelAfter;
-	double SIVBJ2FuelAfter;
-	double APSFuelAfter;
-	double LMRCSFuelAfter;
-	double DPSFuelAfter;
 	double MainEngineFuelUsed;
 	double RCSFuelUsed;
 	double DVREM;
@@ -1619,9 +1651,6 @@ struct MPTManDisplay
 
 struct MissionPlanTable
 {
-	//Word 1 (Byte 1,2)
-	//Trajectory Update No. (- if in process)
-	int TUP = 0;
 	//Word 1 (Byte 3,4)
 	//Number of maneuvers in table
 	unsigned ManeuverNum = 0;
@@ -1642,30 +1671,8 @@ struct MissionPlanTable
 	double UpcomingManeuverGMT = 1e70;
 	//Word 11
 	double SIVBVentingBeginGET = 0.0;
-	//Word 12
-	int InitConfigCode = -1;
-	//Word 13
-	double CSMInitArea = 0.0;
-	//Word 14
-	double SIVBInitArea = 0.0;
-	//Word 15
-	double LMInitAscentArea = 0.0;
-	//Word 16
-	double LMInitDescentArea = 0.0;
-	//Word 17
-	double CSMInitMass = 0.0;
-	//Word 18
-	double SIVBInitMass = 0.0;
-	//Word 19
-	double LMInitAscentMass = 0.0;
-	//Word 20
-	double LMInitDescentMass = 0.0;
-	double SPSFuelRemaining = 0.0;
-	double CSMRCSFuelRemaining = 0.0;
-	double SIVBJ2FuelRemaining = 0.0;
-	double APSFuelRemaining = 0.0;
-	double LMRCSFuelRemaining = 0.0;
-	double DPSFuelRemaining = 0.0;
+	//Words 12-26
+	MPTVehicleDataBlock CommonBlock;
 	double TotalInitMass = 0.0;
 	double ConfigurationArea = 0.0;
 	//Word 34
@@ -2794,7 +2801,6 @@ public:
 	int EMGVECSTOutput(int L, EphemerisData &sv);
 
 	bool MPTHasManeuvers(int L);
-	int MPTConfirmManeuver(int L);
 	//Weight Change Module
 	int PMMWTC(int med);
 	//Weight Determination at a Time
@@ -3030,6 +3036,7 @@ public:
 	} med_m49;
 
 	MED_M50 med_m50;
+	MED_M51 med_m51;
 	MED_M55 med_m55;
 	MED_M68 med_m68;
 	MED_M70 med_m70;
@@ -3869,16 +3876,18 @@ private:
 	int ThrusterNameToCode(std::string thruster);
 	int AttitudeNameToCode(std::string attitude);
 
+	//MPT utility functions
 	bool MPTConfigIncludesCSM(int config);
 	bool MPTConfigIncludesLM(int config);
 	bool MPTConfigIncludesSIVB(int config);
 	bool MPTConfigIncludesLMAsc(int config);
 	bool MPTConfigIncludesLMDsc(int config);
-	bool MPTConfigIncludesVeh(int config, int veh);
 	bool MPTConfigSubset(int CfgOld, int CfgNew);
 	bool MPTIsRCSThruster(int thruster);
 	bool MPTIsPrimaryThruster(int thruster, int i);
 	bool MPTIsUllageThruster(int thruster, int i);
+	int MPTGetPrimaryThruster(int thruster);
+	bool MPTConfigIncludesVehicle(int config, int i);
 
 	double MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass);
 

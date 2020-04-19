@@ -281,23 +281,23 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
 
 	papiWriteScenario_bool(scn, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
-	oapiWriteScenario_int(scn, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.InitConfigCode);
-	papiWriteScenario_double(scn, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CSMInitMass);
-	papiWriteScenario_double(scn, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.LMInitAscentMass);
-	papiWriteScenario_double(scn, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.LMInitDescentMass);
-	papiWriteScenario_double(scn, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.SIVBInitMass);
+	oapiWriteScenario_int(scn, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.CommonBlock.ConfigCode);
+	papiWriteScenario_double(scn, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CommonBlock.CSMMass);
+	papiWriteScenario_double(scn, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMAscentMass);
+	papiWriteScenario_double(scn, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMDescentMass);
+	papiWriteScenario_double(scn, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.CommonBlock.SIVBMass);
 	papiWriteScenario_double(scn, "MPTCM_TotalInitMass", GC->rtcc->PZMPTCSM.TotalInitMass);
 	oapiWriteScenario_int(scn, "MPTCM_number", GC->pCSMnumber);
-	oapiWriteScenario_int(scn, "MPTCM_TUP", GC->rtcc->PZMPTCSM.TUP);
+	oapiWriteScenario_int(scn, "MPTCM_TUP", GC->rtcc->PZMPTCSM.CommonBlock.TUP);
 	papiWriteScenario_SV(scn, "MPTCM_ANCHOR", GC->rtcc->EZANCHR1.AnchorVectors[9]);
-	oapiWriteScenario_int(scn, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.InitConfigCode);
-	papiWriteScenario_double(scn, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CSMInitMass);
-	papiWriteScenario_double(scn, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.LMInitAscentMass);
-	papiWriteScenario_double(scn, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.LMInitDescentMass);
-	papiWriteScenario_double(scn, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.SIVBInitMass);
+	oapiWriteScenario_int(scn, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.CommonBlock.ConfigCode);
+	papiWriteScenario_double(scn, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CommonBlock.CSMMass);
+	papiWriteScenario_double(scn, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMAscentMass);
+	papiWriteScenario_double(scn, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMDescentMass);
+	papiWriteScenario_double(scn, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.CommonBlock.SIVBMass);
 	papiWriteScenario_double(scn, "MPTLM_TotalInitMass", GC->rtcc->PZMPTLEM.TotalInitMass);
 	oapiWriteScenario_int(scn, "MPTLM_number", GC->pLMnumber);
-	oapiWriteScenario_int(scn, "MPTLM_TUP", GC->rtcc->PZMPTLEM.TUP);
+	oapiWriteScenario_int(scn, "MPTLM_TUP", GC->rtcc->PZMPTLEM.CommonBlock.TUP);
 	papiWriteScenario_SV(scn, "MPTLM_ANCHOR", GC->rtcc->EZANCHR3.AnchorVectors[9]);
 }
 
@@ -491,23 +491,23 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
 		papiReadScenario_bool(line, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
-		papiReadScenario_int(line, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.InitConfigCode);
-		papiReadScenario_double(line, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CSMInitMass);
-		papiReadScenario_double(line, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.LMInitAscentMass);
-		papiReadScenario_double(line, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.LMInitDescentMass);
-		papiReadScenario_double(line, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.SIVBInitMass);
+		papiReadScenario_int(line, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.CommonBlock.ConfigCode);
+		papiReadScenario_double(line, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CommonBlock.CSMMass);
+		papiReadScenario_double(line, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMAscentMass);
+		papiReadScenario_double(line, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMDescentMass);
+		papiReadScenario_double(line, "MPTCM_SIVBInitMass", GC->rtcc->PZMPTCSM.CommonBlock.SIVBMass);
 		papiReadScenario_double(line, "MPTCM_TotalInitMass", GC->rtcc->PZMPTCSM.TotalInitMass);
 		papiReadScenario_int(line, "MPTCM_number", GC->pCSMnumber);
-		papiReadScenario_int(line, "MPTCM_TUP", GC->rtcc->PZMPTCSM.TUP);
+		papiReadScenario_int(line, "MPTCM_TUP", GC->rtcc->PZMPTCSM.CommonBlock.TUP);
 		papiReadScenario_SV(line, "MPTCM_ANCHOR", GC->rtcc->EZANCHR1.AnchorVectors[9]);
-		papiReadScenario_int(line, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.InitConfigCode);
-		papiReadScenario_double(line, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CSMInitMass);
-		papiReadScenario_double(line, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.LMInitAscentMass);
-		papiReadScenario_double(line, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.LMInitDescentMass);
-		papiReadScenario_double(line, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.SIVBInitMass);
+		papiReadScenario_int(line, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.CommonBlock.ConfigCode);
+		papiReadScenario_double(line, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CommonBlock.CSMMass);
+		papiReadScenario_double(line, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMAscentMass);
+		papiReadScenario_double(line, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMDescentMass);
+		papiReadScenario_double(line, "MPTLM_SIVBInitMass", GC->rtcc->PZMPTLEM.CommonBlock.SIVBMass);
 		papiReadScenario_double(line, "MPTLM_TotalInitMass", GC->rtcc->PZMPTLEM.TotalInitMass);
 		papiReadScenario_int(line, "MPTLM_number", GC->pLMnumber);
-		papiReadScenario_int(line, "MPTLM_TUP", GC->rtcc->PZMPTLEM.TUP);
+		papiReadScenario_int(line, "MPTLM_TUP", GC->rtcc->PZMPTLEM.CommonBlock.TUP);
 		papiReadScenario_SV(line, "MPTLM_ANCHOR", GC->rtcc->EZANCHR3.AnchorVectors[9]);
 
 		//G->coreButtons.SelectPage(this, G->screen);
@@ -3325,6 +3325,7 @@ void ApolloRTCCMFD::menuMPTInitM55Config()
 
 void ApolloRTCCMFD::menuMPTM50Update()
 {
+	GC->rtcc->med_m50.WeightGET = GC->rtcc->GETfromGMT(GC->rtcc->RTCCPresentTimeGMT());
 	if (GC->rtcc->PMMWTC(50))
 	{
 		GC->mptInitError = 2;
