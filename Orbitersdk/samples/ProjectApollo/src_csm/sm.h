@@ -74,6 +74,7 @@ typedef struct {
 	bool LowRes;						///< Using low-res meshes?
 	bool showHGA;						///< Do we have an HGA?
 	bool A13Exploded;					///< Did the SM explode on Apollo 13 mission?
+	bool SIMBayPanelJett;				///< Was the SIM bay panel jettisoned?
 
 	bool SMBusAPowered;
 	bool SMBusBPowered;
@@ -308,6 +309,12 @@ protected:
 	/// \brief Show the interior cryogenics tanks.
 	///
 	bool showCRYO;
+
+	///
+	/// \brief Show the SIM bay equipment.
+	///
+
+	bool showSIMBay;
 
 	///
 	/// \brief This is an Apollo 13 SM which exploded in flight.

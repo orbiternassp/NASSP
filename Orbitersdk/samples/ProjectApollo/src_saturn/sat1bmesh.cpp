@@ -780,6 +780,10 @@ void Saturn1b::SeparateStage (int new_stage)
 		SMConfig.LowRes = LowRes;
 		SMConfig.showHGA = pMission->CSMHasHGA();
 		SMConfig.A13Exploded = ApolloExploded;
+		SMConfig.SIMBayPanelJett = SIMBayPanelJett;
+		SMConfig.HGAalpha = hga.GetAlpha();
+		SMConfig.HGAbeta = hga.GetBeta();
+		SMConfig.HGAgamma = hga.GetGamma();
 		SMConfig.SMBusAPowered = MainBusAController.IsSMBusPowered();
 		SMConfig.SMBusBPowered = MainBusBController.IsSMBusPowered();
 		if (secs.SMJCA) secs.SMJCA->GetState(SMConfig.SMJCAState);
