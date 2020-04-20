@@ -10233,6 +10233,8 @@ VECTOR3 RTCC::RLS_from_latlng(double lat, double lng, double alt)
 void RTCC::PMXSPT(std::string source, int n)
 {
 	std::vector<std::string> message;
+	std::string temp1, temp2, temp3;
+	char Buffer[128];
 
 	switch (n)
 	{
@@ -10262,7 +10264,21 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("MANEUVER - MPT UNCHANGED");
 		break;
 	case 36:
-		message.push_back("EXECUTION VECTOR FOR MANEUVER " + RTCCONLINEMON.TextBuffer[0]);
+		message.push_back("EXECUTION VECTOR FOR MANEUVER");
+		OnlinePrintTime(RTCCONLINEMON.DoubleBuffer[0], temp1);
+		message.push_back(RTCCONLINEMON.TextBuffer[0] + ", BEGIN TIME = " + temp1);
+		OnlinePrintTime(RTCCONLINEMON.DoubleBuffer[1], temp1);
+		sprintf_s(Buffer, "%.1lf", RTCCONLINEMON.DoubleBuffer[2]);
+		temp2.assign(Buffer);
+		sprintf_s(Buffer, "%.1lf", RTCCONLINEMON.DoubleBuffer[3]);
+		temp3.assign(Buffer);
+		message.push_back("T = " + temp1 + " AREA = " + temp2 + " WEIGHT = " + temp3);
+		sprintf_s(Buffer, "R = %.8lf %.8lf %.8lf", RTCCONLINEMON.VectorBuffer[0].x, RTCCONLINEMON.VectorBuffer[0].y, RTCCONLINEMON.VectorBuffer[0].z);
+		temp1.assign(Buffer);
+		message.push_back(temp1);
+		sprintf_s(Buffer, "V = %.8lf %.8lf %.8lf", RTCCONLINEMON.VectorBuffer[1].x, RTCCONLINEMON.VectorBuffer[1].y, RTCCONLINEMON.VectorBuffer[1].z);
+		temp1.assign(Buffer);
+		message.push_back(temp1);
 		break;
 	case 37:
 		message.push_back("DELETION TIME IS PRIOR TO A FROZEN MANEUVER - MPT UNCHANGED.");
@@ -10304,7 +10320,6 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("UNABLE TO FETCH VECTOR FOR RENDEZVOUS PLANNING REQUEST");
 		break;
 	case 50:
-		char Buffer[128];
 		sprintf_s(Buffer, "ERROR CODE %d FROM POWERED FLIGHT ITERATOR", RTCCONLINEMON.IntBuffer[0]);
 		message.push_back(Buffer);
 		message.push_back("MNVR TRANSFERRED USING BEST PARAMETERS AVAILABLE");
@@ -10958,7 +10973,7 @@ void RTCC::EMSNAP(int L, int ID)
 	{
 		PMDMPT();
 	}
-	//Update MPT and DMT displays as a result of a fuel change
+	//Update MPT and DMT displays as a result of a fuel change or maneuver execution
 	else if (ID == 7)
 	{
 		PMDMPT();
@@ -13202,9 +13217,10 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 
 void RTCC::PMMFUD(int veh, unsigned man, int action)
 {
+	bool tupind = false;
 	MissionPlanTable *mpt = GetMPTPointer(veh);
 
-	if (man > mpt->mantable.size())
+	if (man > mpt->ManeuverNum)
 	{
 		//Error 40
 		PMXSPT("PMMFUD", 40);
@@ -13248,27 +13264,30 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 	//History Delete
 	else if (action == 1)
 	{
-		//Maneuver not executed?
-		if (RTCCPresentTimeGMT() <= mpt->mantable[man - 1].GMTMAN)
+		//Are all maneuvers to be deleted executed?
+		if (man > mpt->LastExecutedManeuver)
 		{
 			//Error 42
 			PMXSPT("PMMFUD", 42);
 			return;
 		}
 
-		for (unsigned i = 0;i < 15 - man;i++)
+		mpt->LastExecutedManeuver -= man;
+		mpt->LastFrozenManeuver -= man;
+
+		for (unsigned i = man;i < mpt->ManeuverNum;i++)
 		{
-			mpt->TimeToBeginManeuver[i] = mpt->TimeToBeginManeuver[man + i];
-			mpt->TimeToEndManeuver[i] = mpt->TimeToEndManeuver[man + i];
-			mpt->AreaAfterManeuver[i] = mpt->AreaAfterManeuver[man + i];
-			mpt->WeightAfterManeuver[i] = mpt->WeightAfterManeuver[man + i];
+			mpt->TimeToBeginManeuver[i - man] = mpt->TimeToBeginManeuver[i];
+			mpt->TimeToEndManeuver[i - man] = mpt->TimeToEndManeuver[i];
+			mpt->AreaAfterManeuver[i - man] = mpt->AreaAfterManeuver[i];
+			mpt->WeightAfterManeuver[i - man] = mpt->WeightAfterManeuver[i];
 		}
 
+		mpt->ManeuverNum -= man;
 		mpt->CommonBlock.ConfigCode = mpt->mantable[man - 1].CommonBlock.ConfigCode;
 		mpt->DeltaDockingAngle = mpt->mantable[man - 1].DockingAngle;
 		mpt->ConfigurationArea = mpt->mantable[man - 1].TotalAreaAfter;
 		mpt->CommonBlock = mpt->mantable[man - 1].CommonBlock;
-
 		//TBD: Compute and store new GET to begin venting
 
 		for (unsigned i = 0;i < man;i++)
@@ -13276,18 +13295,15 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 			mpt->mantable.pop_front();
 		}
 
-		mpt->ManeuverNum = mpt->mantable.size();
+		//Any remaining maneuvers?
 		if (mpt->ManeuverNum > 0)
 		{
-			if (mpt->CommonBlock.TUP > 0)
-			{
-				mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
-			}
-			//Here it would move up the maneuvers
+			mpt->CommonBlock.TUP = -abs(mpt->CommonBlock.TUP);
 		}
+		//TBD: Move maneuvers up in the table here
 		if (mpt->CommonBlock.TUP < 0)
 		{
-			mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
+			mpt->CommonBlock.TUP = abs(mpt->CommonBlock.TUP);
 		}
 		EMSNAP(veh, 2);
 	}
@@ -13302,26 +13318,19 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 			return;
 		}
 		//Determine 1st maneuver to be frozen
-		unsigned i = man;
-
-		while (RTCCPresentTimeGMT() > mpt->mantable[i - 1].GMTMAN && mpt->mantable[i - 1].FrozenManeuverInd == false)
-		{
-			i--;
-			if (i == 0)
-			{
-				break;
-			}
-		}
-		if (mpt->CommonBlock.TUP > 0)
-		{
-			mpt->CommonBlock.TUP = -mpt->CommonBlock.TUP;
-		}
+		unsigned i = mpt->LastExecutedManeuver + 1;
+		//Set trajectory number negative
+		mpt->CommonBlock.TUP = -abs(mpt->CommonBlock.TUP);
 
 		do
 		{
 			if (mpt->mantable[i - 1].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
 			{
+				//Is this a re-freeze?
+				if (mpt->mantable[i - 1].FrozenManeuverInd)
+				{
 
+				}
 			}
 			else
 			{
@@ -13331,12 +13340,15 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 				mpt->mantable[i - 1].FrozenManeuverVector.RBI = mpt->mantable[i - 1].RefBodyInd;
 			}
 			//External DV
-			if (mpt->mantable[i - 1].AttitudeCode < 3 && mpt->mantable[i - 1].AttitudeCode <= 5)
+			if (mpt->mantable[i - 1].AttitudeCode >= 4 && mpt->mantable[i - 1].AttitudeCode <= 5)
 			{
 				mpt->mantable[i - 1].Word67i[0] = 0;
 			}
+			mpt->mantable[i - 1].FrozenManeuverInd = true;
 			i++;
-		} while (i < man);
+		} while (i <= man);
+
+		PMSVCT(8, veh);
 	}
 	//Unfreeze
 	else
@@ -13349,11 +13361,50 @@ void RTCC::PMMFUD(int veh, unsigned man, int action)
 			return;
 		}
 		//Maneuver frozen?
-		if (mpt->mantable[man - 1].FrozenManeuverInd)
+		if (mpt->mantable[man - 1].FrozenManeuverInd == false)
 		{
 			//Error 45
 			PMXSPT("PMMFUD", 45);
 			return;
+		}
+		//Decrement input number by 1 and store as number of last frozen maneuver in MPT
+		mpt->LastFrozenManeuver = man - 1;
+		
+		mpt->CommonBlock.TUP = -abs(mpt->CommonBlock.TUP);
+		unsigned curman = man;
+		while (curman <= mpt->ManeuverNum)
+		{
+			//Is this the TLI maneuver?
+			if (mpt->mantable[curman - 1].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+			{
+				mpt->mantable[curman - 1].Word78i[0] = mpt->mantable[curman - 1].Word78i[1];
+				tupind = true;
+			}
+			else if (mpt->mantable[curman - 1].AttitudeCode == RTCC_ATTITUDE_LAMBERT)
+			{
+				tupind = true;
+			}
+			//External DV
+			else if (mpt->mantable[curman - 1].AttitudeCode > 3 && mpt->mantable[curman - 1].AttitudeCode < 6)
+			{
+				mpt->mantable[curman - 1].Word67i[0] = 1;
+				tupind = true;
+			}
+			//IGM again??
+			else if (mpt->mantable[curman - 1].AttitudeCode >= 6)
+			{
+				tupind = true;
+			}
+			mpt->mantable[curman - 1].FrozenManeuverInd = false;
+			curman++;
+		}
+		if (tupind)
+		{
+			PMSVCT(8, veh);
+		}
+		else
+		{
+			mpt->CommonBlock.TUP = abs(mpt->CommonBlock.TUP);
 		}
 	}
 }
@@ -14527,6 +14578,7 @@ int RTCC::PMMWTC(int med)
 			RCSFuelUsed = table->mantable[IBLK - 2].RCSFuelUsed;
 			MainEngineFuelUsed = table->mantable[IBLK - 2].MainEngineFuelUsed;
 			TotalMassAfter = table->mantable[IBLK - 2].TotalMassAfter;
+			DVREM = table->mantable[IBLK - 2].DVREM;
 		}
 		FuelR[0] = CommonBlock.CSMRCSFuelRemaining;
 		FuelR[1] = CommonBlock.SPSFuelRemaining;
@@ -15271,9 +15323,13 @@ RTCC_PMSEXE_B:
 	}
 	RTCCONLINEMON.TextBuffer[0] = tab->mantable[k - 1].code;
 	RTCCONLINEMON.DoubleBuffer[0] = tab->mantable[k - 1].GMTMAN;
-	RTCCONLINEMON.VectorBuffer[0] = tab->mantable[k - 1].R_BO;
-	RTCCONLINEMON.VectorBuffer[1] = tab->mantable[k - 1].V_BO;
+	RTCCONLINEMON.DoubleBuffer[1] = tab->mantable[k - 1].GMT_BO;
+	RTCCONLINEMON.DoubleBuffer[2] = tab->mantable[k - 1].TotalAreaAfter;
+	RTCCONLINEMON.DoubleBuffer[3] = tab->mantable[k - 1].TotalMassAfter*LBS*1000.0;
+	RTCCONLINEMON.VectorBuffer[0] = tab->mantable[k - 1].R_BO / OrbMech::R_Earth;
+	RTCCONLINEMON.VectorBuffer[1] = tab->mantable[k - 1].V_BO*3600.0 / OrbMech::R_Earth;
 	PMXSPT("PMSEXE", 36);
+	EMSNAP(L, 7);
 }
 
 bool RTCC::MEDTimeInputHHMMSS(std::string vec, double &hours)
@@ -26269,19 +26325,20 @@ void RTCC::PMDMPT()
 	MPTManDisplay man;
 	MPTManeuver *mptman;
 	double mu, r, dt;
+	bool isManeuverExecuted;
 
 	while (i < csmnum || j < lemnum)
 	{
 		if (j >= lemnum || (i < csmnum && PZMPTCSM.mantable[i].GMT_BI < PZMPTLEM.mantable[j].GMT_BI))
 		{
 			mptman = &PZMPTCSM.mantable[i];
-
+			isManeuverExecuted = (i + 1 <= PZMPTCSM.LastExecutedManeuver);
 			i++;
 		}
 		else
 		{
 			mptman = &PZMPTLEM.mantable[j];
-
+			isManeuverExecuted = (j + 1 <= PZMPTLEM.LastExecutedManeuver);
 			j++;
 		}
 
@@ -26299,11 +26356,15 @@ void RTCC::PMDMPT()
 		}
 
 		man.HA = mptman->h_a / 1852.0;
-		if (man.HA > 99999.9)
+		if (man.HA > 9999.9)
 		{
-			man.HA = 99999.9;
+			man.HA = 9999.9;
 		}
 		man.HP = mptman->h_p / 1852.0;
+		if (man.HP > 9999.9)
+		{
+			man.HP = 9999.9;
+		}
 
 		if (MPTDISPLAY.man.size() > 0)
 		{
@@ -26318,7 +26379,20 @@ void RTCC::PMDMPT()
 		OrbMech::format_time_HHMMSS(Buffer, round(GETfromGMT(mptman->GMT_BI)));
 		std::string strtemp4(Buffer);
 		man.GETBI = strtemp4;
-		man.code = mptman->code;
+		//Maneuver executed?
+		if (isManeuverExecuted)
+		{
+			man.code = "E" + mptman->code;
+		}
+		//Maneuver frozen?
+		else if (mptman->FrozenManeuverInd)
+		{
+			man.code = "F" + mptman->code;
+		}
+		else
+		{
+			man.code = mptman->code;
+		}
 		man.DVREM = mptman->DVREM / 0.3048;
 
 		MPTDISPLAY.man.push_back(man);
