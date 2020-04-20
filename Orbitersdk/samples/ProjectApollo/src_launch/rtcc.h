@@ -3763,7 +3763,7 @@ public:
 	{
 		std::deque<OnlineMonitorMessage> data;
 		std::string TextBuffer[3];
-		double DoubleBuffer[2];
+		double DoubleBuffer[4];
 		int IntBuffer[2];
 		VECTOR3 VectorBuffer[2];
 		MATRIX3 MatrixBuffer;

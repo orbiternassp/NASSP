@@ -3804,56 +3804,66 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 44)
 	{
-		skp->Text(3 * W / 8, 1 * H / 14, "FIDO MISSION PLAN TABLE", 23);
-
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 1 * H / 14, "MISSION PLAN TABLE (MSK 0047)", 29);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		if (GC->MissionPlanningActive)
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Active", 6);
+			skp->Text(1 * W / 32, 2 * H / 14, "Active", 6);
 		}
 		else
 		{
-			skp->Text(1 * W / 8, 2 * H / 14, "Inactive", 8);
+			skp->Text(1 * W / 32, 2 * H / 14, "Inactive", 8);
 		}
 
 		skp->SetFont(font2);
-
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(3 * W / 32, 8 * H / 28, "GETBI", 5);
+		skp->Text(8 * W / 32, 8 * H / 28, "DT", 2);
+		skp->Text(12 * W / 32, 8 * H / 28, "DELTAV", 6);
+		skp->Text(16 * W / 32, 8 * H / 28, "DVREM", 5);
+		skp->Text(20 * W / 32, 8 * H / 28, "HA", 2);
+		skp->Text(47 * W / 64, 8 * H / 28, "HP", 2);
+		skp->Text(29 * W / 32, 8 * H / 28, "CODE", 4);
 
-		skp->Text(3 * W / 32, 6 * H / 28, "GETBI", 5);
-		skp->Text(8 * W / 32, 6 * H / 28, "DT", 2);
-		skp->Text(12 * W / 32, 6 * H / 28, "DELTAV", 6);
-		skp->Text(16 * W / 32, 6 * H / 28, "DVREM", 5);
-		skp->Text(20 * W / 32, 6 * H / 28, "HA", 2);
-		skp->Text(24 * W / 32, 6 * H / 28, "HP", 2);
-		skp->Text(29 * W / 32, 6 * H / 28, "CODE", 4);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(6 * W / 32, 5 * H / 28, "CSM STA ID", 10);
+		skp->Text(6 * W / 32, 6 * H / 28, "GETAV", 5);
+		sprintf_s(Buffer, GC->rtcc->MPTDISPLAY.CSMGETAV.c_str());
+		skp->Text(10 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(18 * W / 32, 5 * H / 28, "LEM STA ID", 10);
+		skp->Text(18 * W / 32, 6 * H / 28, "GETAV", 5);
+		sprintf_s(Buffer, GC->rtcc->MPTDISPLAY.LEMGETAV.c_str());
+		skp->Text(22 * W / 32, 6 * H / 28, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
 		for (unsigned i = 0;i < GC->rtcc->MPTDISPLAY.man.size();i++)
 		{
 			sprintf(Buffer, GC->rtcc->MPTDISPLAY.man[i].GETBI.c_str());
-			skp->Text(5 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 32, (i * 2 + 9) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].DELTAV);
-			skp->Text(14 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(14 * W / 32, (i * 2 + 9) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, "%.1f", GC->rtcc->MPTDISPLAY.man[i].DVREM);
-			skp->Text(18 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(18 * W / 32, (i * 2 + 9) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].HA);
-			skp->Text(22 * W / 32, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%06.1f", GC->rtcc->MPTDISPLAY.man[i].HA);
+			skp->Text(43 * W / 64, (i * 2 + 9) * H / 28, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%07.1f", GC->rtcc->MPTDISPLAY.man[i].HP);
-			skp->Text(51 * W / 64, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%06.1f", GC->rtcc->MPTDISPLAY.man[i].HP);
+			skp->Text(50 * W / 64, (i * 2 + 9) * H / 28, Buffer, strlen(Buffer));
 
 			sprintf(Buffer, GC->rtcc->MPTDISPLAY.man[i].code.c_str());
-			skp->Text(63 * W / 64, (i * 2 + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(63 * W / 64, (i * 2 + 9) * H / 28, Buffer, strlen(Buffer));
 		}
 
 		for (unsigned i = 1;i < GC->rtcc->MPTDISPLAY.man.size();i++)
 		{
 			sprintf(Buffer, GC->rtcc->MPTDISPLAY.man[i].DT.c_str());
-			skp->Text(10 * W / 32, (i * 2 + 6) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(10 * W / 32, (i * 2 + 8) * H / 28, Buffer, strlen(Buffer));
 		}
 
 	}

@@ -1362,6 +1362,7 @@ void SaturnV::SeparateStage (int new_stage)
 		SMConfig.LowRes = LowRes;
 		SMConfig.showHGA = pMission->CSMHasHGA();
 		SMConfig.A13Exploded = ApolloExploded;
+		SMConfig.SIMBayPanelJett = SIMBayPanelJett;
 		SMConfig.HGAalpha = hga.GetAlpha();
 		SMConfig.HGAbeta = hga.GetBeta();
 		SMConfig.HGAgamma = hga.GetGamma();
