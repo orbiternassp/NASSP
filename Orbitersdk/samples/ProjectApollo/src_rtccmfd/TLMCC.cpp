@@ -42,6 +42,7 @@ void TLMCCProcessor::Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities
 {
 	ephemeris = ephem;
 	
+	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
 
 	DataTable = data;
@@ -57,6 +58,39 @@ void TLMCCProcessor::Init(PZEFEM *ephem, TLMCCDataTable data, TLMCCMEDQuantities
 void TLMCCProcessor::Main(TLMCCOutputData &out)
 {
 	sv_MCC = OrbMech::coast(MEDQuantities.sv0, MEDQuantities.T_MCC - OrbMech::GETfromMJD(MEDQuantities.sv0.MJD, MEDQuantities.GMTBase));
+
+	//SOI check
+	VECTOR3 R_EM, V_EM, R_ES, R2;
+	double r1, r2, Ratio;
+	EPHEM(sv_MCC.MJD, R_EM, V_EM, R_ES);
+	if (sv_MCC.gravref == hEarth)
+	{
+		R2 = sv_MCC.R - R_EM;
+	}
+	else
+	{
+		R2 = sv_MCC.R + R_EM;
+	}
+	r1 = length(sv_MCC.R);
+	r2 = length(R2);
+	Ratio = r2 / r1;
+	if (sv_MCC.gravref == hEarth)
+	{
+		if (Ratio < 0.275)
+		{
+			OrbMech::oneclickcoast(sv_MCC.R, sv_MCC.V, sv_MCC.MJD, 0.0, sv_MCC.R, sv_MCC.V, sv_MCC.gravref, hMoon);
+			sv_MCC.gravref = hMoon;
+		}
+	}
+	else
+	{
+		if (Ratio < 1.0 / 0.275)
+		{
+			OrbMech::oneclickcoast(sv_MCC.R, sv_MCC.V, sv_MCC.MJD, 0.0, sv_MCC.R, sv_MCC.V, sv_MCC.gravref, hEarth);
+			sv_MCC.gravref = hEarth;
+		}
+	}
+
 	if (sv_MCC.gravref == oapiGetObjectByName("Earth"))
 	{
 		KREF_MCC = 1;
@@ -484,10 +518,10 @@ TLMCC_Option_2_E:
 	RVIO(true, S1.R, S1.V + DV_temp, r, v2, theta, phi, gamma2, psi2);
 	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
-	outtab.GMT_pc2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase);
-	outtab.h_pc2 = outarray.h_pl;
-	outtab.lat_pc2 = outarray.lat_pl;
-	outtab.lng_pc2 = outarray.lng_pl;
+	outtab.GMT_pc1 = outtab.GMT_pc2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase);
+	outtab.h_pc1 = outtab.h_pc2 = outarray.h_pl;
+	outtab.lat_pc1 = outtab.lat_pc2 = outarray.lat_pl;
+	outtab.lng_pc1 = outtab.lng_pc2 = outarray.lng_pl;
 	outtab.gamma_loi = outarray.gamma_nd;
 	outtab.dpsi_loi = outarray.dpsi_loi;
 	outtab.dt_lls = outarray.dt_lls;
@@ -674,10 +708,10 @@ TLMCC_Option_3_E:
 	RVIO(true, S1.R, S1.V + DV_temp, r, v2, theta, phi, gamma2, psi2);
 	NewGuess = _V((v2 - v1)*3600.0 / R_E, gamma2 - gamma1, psi2 - psi1);
 
-	outtab.GMT_pc2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase);
-	outtab.h_pc2 = outarray.h_pl;
-	outtab.lat_pc2 = outarray.lat_pl;
-	outtab.lng_pc2 = outarray.lng_pl;
+	outtab.GMT_pc1 = outtab.GMT_pc2 = OrbMech::GETfromMJD(outarray.MJD_pl, MEDQuantities.GMTBase);
+	outtab.h_pc1 = outtab.h_pc2 = outarray.h_pl;
+	outtab.lat_pc1 = outtab.lat_pc2 = outarray.lat_pl;
+	outtab.lng_pc1 = outtab.lng_pc2 = outarray.lng_pl;
 	outtab.gamma_loi = outarray.gamma_nd;
 	outtab.dpsi_loi = outarray.dpsi_loi;
 	outtab.dt_lls = outarray.dt_lls;
@@ -952,14 +986,14 @@ TLMCC_Option_4_D:
 	beta = EBETA(outarray.sv_loi.R, outarray.sv_loi.V, mu_M, ainv);
 	XBETA(outarray.sv_loi.R, outarray.sv_loi.V, outarray.sv_loi.MJD, beta, 2, R_pl, V_pl, MJD_pl);
 	outarray.AZ_act = DataTable.psi_lls;
-	outtab.GMT_pc2 = OrbMech::GETfromMJD(MJD_pl, MEDQuantities.GMTBase);
+	outtab.GMT_pc1 = outtab.GMT_pc2 = OrbMech::GETfromMJD(MJD_pl, MEDQuantities.GMTBase);
 	outtab.GMT_nd = GMT_nd;
 	outtab.h_nd = outarray.h_nd;
 	outtab.lat_nd = outarray.lat_nd;
 	outtab.lng_nd = outarray.lng_nd;
-	outtab.h_pc2 = outarray.h_pl;
-	outtab.lat_pc2 = outarray.lat_pl;
-	outtab.lng_pc2 = outarray.lng_pl;
+	outtab.h_pc1 = outtab.h_pc2 = outarray.h_pl;
+	outtab.lat_pc1 = outtab.lat_pc2 = outarray.lat_pl;
+	outtab.lng_pc1 = outtab.lng_pc2 = outarray.lng_pl;
 	outtab.gamma_loi = outarray.gamma_nd;
 	outtab.dpsi_loi = outarray.dpsi_loi;
 	outtab.dt_lls = outarray.dt_lls;
@@ -1174,14 +1208,14 @@ TLMCC_Option_5_D:
 	double beta, ainv, MJD_pl;
 	beta = EBETA(outarray.sv_loi.R, outarray.sv_loi.V, mu_M, ainv);
 	XBETA(outarray.sv_loi.R, outarray.sv_loi.V, outarray.sv_loi.MJD, beta, 2, R_pl, V_pl, MJD_pl);
-	outtab.GMT_pc2 = OrbMech::GETfromMJD(MJD_pl, MEDQuantities.GMTBase);
+	outtab.GMT_pc1 = outtab.GMT_pc2 = OrbMech::GETfromMJD(MJD_pl, MEDQuantities.GMTBase);
 	outtab.GMT_nd = GMT_nd;
 	outtab.h_nd = outarray.h_nd;
 	outtab.lat_nd = outarray.lat_nd;
 	outtab.lng_nd = outarray.lng_nd;
-	outtab.h_pc2 = outarray.h_pl;
-	outtab.lat_pc2 = outarray.lat_pl;
-	outtab.lng_pc2 = outarray.lng_pl;
+	outtab.h_pc1 = outtab.h_pc2 = outarray.h_pl;
+	outtab.lat_pc1 = outtab.lat_pc2 = outarray.lat_pl;
+	outtab.lng_pc1 = outtab.lng_pc2 = outarray.lng_pl;
 	outtab.gamma_loi = outarray.gamma_nd;
 	outtab.dpsi_loi = outarray.dpsi_loi;
 	outtab.dt_lls = outarray.dt_lls;
@@ -1351,6 +1385,7 @@ void TLMCCProcessor::Option9A()
 	bool recycle = false;
 
 	double V, R, lng, lat, psi, T, h_pl;
+	bool err;
 
 	//Empirical first guess
 	R = (MEDQuantities.H_pl + DataTable.rad_lls) / R_E;
@@ -1370,7 +1405,7 @@ void TLMCCProcessor::Option9A()
 	h_pl = R * R_E - DataTable.rad_lls;
 
 	//Step 1
-	ConvergeTLMC(V, psi, lng, lat, R, T, false);
+	err = ConvergeTLMC(V, psi, lng, lat, R, T, false);
 
 	//Step 2
 	VECTOR3 R_EM, V_EM, R_ES;
@@ -1586,7 +1621,7 @@ TLMCC_Option_9B_C:
 	DV_MCC = VF - sv_MCC.V;
 }
 
-void TLMCCProcessor::ConvergeTLMC(double V, double azi, double lng, double lat, double r, double GMT_pl, bool integrating)
+bool TLMCCProcessor::ConvergeTLMC(double V, double azi, double lng, double lat, double r, double GMT_pl, bool integrating)
 {
 	void *constPtr;
 	outarray.TLMCIntegrating = integrating;
@@ -1638,7 +1673,7 @@ void TLMCCProcessor::ConvergeTLMC(double V, double azi, double lng, double lat, 
 
 	std::vector<double> result;
 	std::vector<double> y_vals;
-	GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
+	return GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
 void TLMCCProcessor::IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double R_nd, double lat_nd, double lng_nd, double GMT_node)
@@ -3263,9 +3298,16 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF)
 
 	if (KREF == 1)
 	{
-		if (RBETA(R, V, 40.0*R_E, Q, mu_E, beta))
+		if (length(R) > 40.0*R_E)
 		{
 			return true;
+		}
+		else
+		{
+			if (RBETA(R, V, 40.0*R_E, Q, mu_E, beta))
+			{
+				return true;
+			}
 		}
 		Ratio_desired = 0.275;
 		mu1 = mu_E;
@@ -3273,9 +3315,16 @@ bool TLMCCProcessor::PATCH(VECTOR3 &R, VECTOR3 &V, double &MJD, int Q, int KREF)
 	}
 	else
 	{
-		if (RBETA(R, V, 10.0*R_E, Q, mu_M, beta))
+		if (length(R) > 10.0*R_E)
 		{
 			return true;
+		}
+		else
+		{
+			if (RBETA(R, V, 10.0*R_E, Q, mu_M, beta))
+			{
+				return true;
+			}
 		}
 		Ratio_desired = 1.0 / 0.275;
 		mu1 = mu_M;

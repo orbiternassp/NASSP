@@ -364,7 +364,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->PZMCCPLN.ETA1 = 14.4*RAD;
 
 		rtcc->PZSFPTAB.blocks[0].GMT_pc1 = OrbMech::HHMMSSToSS(96, 53, 22);
-		rtcc->PZSFPTAB.blocks[0].lat_pc1 = -0.058;
+		rtcc->PZSFPTAB.blocks[0].lat_pc1 = -0.058*RAD;
 		rtcc->PZSFPTAB.blocks[0].lng_pc1 = 180.155*RAD;
 		rtcc->PZSFPTAB.blocks[0].h_pc1 = 211.7*1852.0;
 		rtcc->PZSFPTAB.blocks[0].GMT_pc2 = rtcc->PZSFPTAB.blocks[0].GMT_nd = OrbMech::HHMMSSToSS(96, 41, 39);
@@ -2865,13 +2865,15 @@ int ARCore::subThread()
 		if (SPQMode != 1)
 		{
 			opt.t_CSI = CSItime;
-			opt.K_CDH = CDHtimemode;
+			
 			if (SPQMode == 2)
 			{
+				opt.K_CDH = 1;
 				opt.OptimumCSI = true;
 			}
 			else
 			{
+				opt.K_CDH = CDHtimemode;
 				opt.OptimumCSI = false;
 			}
 		}
@@ -2889,16 +2891,16 @@ int ARCore::subThread()
 		}
 		opt.t_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue;
 
-		GC->rtcc->ConcentricRendezvousProcessor(opt, res);
+		GC->rtcc->PMMDKI(opt, res);
 		spqresults = res;
 
 		if (SPQMode != 1)
 		{
-			SPQTIG = opt.t_CSI;
+			SPQTIG = res.t_CSI;
 		}
 		else
 		{
-			SPQTIG = opt.t_CDH;
+			SPQTIG = res.t_CDH;
 		}
 
 		if (SPQMode != 1)

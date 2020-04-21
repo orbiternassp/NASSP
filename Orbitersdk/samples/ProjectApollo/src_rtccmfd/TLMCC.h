@@ -307,7 +307,7 @@ protected:
 	void Option9B();
 
 	//These appear as the boxes in the main program flow
-	void ConvergeTLMC(double V, double azi, double lng, double lat, double r, double GMT_pl, bool integrating);
+	bool ConvergeTLMC(double V, double azi, double lng, double lat, double r, double GMT_pl, bool integrating);
 	void IntegratedXYZTTrajectory(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double R_nd, double lat_nd, double lng_nd, double GMT_node);
 	void ConicFreeReturnFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double lat_pl);
 	void ConicFreeReturnInclinationFlyby(MPTSV sv0, double dv_guess, double dgamma_guess, double dpsi_guess, double H_pl, double inc_pg, double lat_pl_min = 0, double lat_pl_max = 0);
@@ -357,7 +357,7 @@ protected:
 	MPTSV sv_MCC;
 	double isp_SPS, isp_DPS, isp_MCC, Wdot;
 	int KREF_MCC;
-	OBJHANDLE hMoon;
+	OBJHANDLE hMoon, hEarth;
 	VECTOR3 DV_MCC;
 
 	double gamma_reentry;

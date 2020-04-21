@@ -2606,6 +2606,7 @@ public:
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
+	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
@@ -3399,7 +3400,7 @@ public:
 		//Block 45
 		double LDPPDescentFlightArc;
 		//Block 46
-		double SPQDeltaH = 0.0;
+		double SPQDeltaH = 15.0*1852.0;
 		//Block 47
 		double SPQElevationAngle = 26.6*RAD;
 		//Block 48

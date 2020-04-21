@@ -113,7 +113,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Time Mode", 0, 'T' },
 
 		{ "Maneuver Time", 0, 'M' },
-		{ "", 0, ' ' },
+		{ "Target vehicle", 0, 'O' },
 		{ "", 0, ' ' },
 		{ "Calculate burn", 0, 'C' },
 		{ "Transfer to MPT", 0, 'L' },
@@ -124,13 +124,13 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("INI", OAPI_KEY_I, &ApolloRTCCMFD::menuSetSPQInitializationPage);
 	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleSPQChaser);
-	RegisterFunction("CHA", OAPI_KEY_F, &ApolloRTCCMFD::menuSetSPQChaserThresholdTime);
-	RegisterFunction("TGT", OAPI_KEY_G, &ApolloRTCCMFD::menuSetSPQTargetThresholdTime);
+	RegisterFunction("CTH", OAPI_KEY_F, &ApolloRTCCMFD::menuSetSPQChaserThresholdTime);
+	RegisterFunction("TTH", OAPI_KEY_G, &ApolloRTCCMFD::menuSetSPQTargetThresholdTime);
 	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuCycleSPQMode);
 	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::set_CDHtimemode);
 
 	RegisterFunction("TIG", OAPI_KEY_N, &ApolloRTCCMFD::SPQtimedialogue);
-	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TGT", OAPI_KEY_O, &ApolloRTCCMFD::set_target);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::SPQcalc);
 	RegisterFunction("MPT", OAPI_KEY_L, &ApolloRTCCMFD::menuSetSPQorDKIRTransferPage);

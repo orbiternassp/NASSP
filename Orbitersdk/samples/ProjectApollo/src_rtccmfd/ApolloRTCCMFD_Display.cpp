@@ -228,6 +228,25 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				skp->Text(1 * W / 16, 4 * H / 14, "Chaser: LEM", 11);
 				skp->Text(1 * W / 16, 5 * H / 14, "Target: CSM", 11);
 			}
+
+			if (GC->rtcc->med_k01.ChaserThresholdGET < 0)
+			{
+				sprintf_s(Buffer, "Present Time");
+			}
+			else
+			{
+				GET_Display(Buffer, GC->rtcc->med_k01.ChaserThresholdGET);
+			}
+			skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+			if (GC->rtcc->med_k01.TargetThresholdGET < 0)
+			{
+				sprintf_s(Buffer, "Present Time");
+			}
+			else
+			{
+				GET_Display(Buffer, GC->rtcc->med_k01.TargetThresholdGET);
+			}
+			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
@@ -244,36 +263,24 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 5 * H / 14, Buffer, strlen(Buffer));
 		}
 
-		if (GC->rtcc->med_k01.ChaserThresholdGET < 0)
+		if (G->SPQMode != 1)
 		{
-			sprintf_s(Buffer, "Present Time");
-		}
-		else
-		{
-			GET_Display(Buffer, GC->rtcc->med_k01.ChaserThresholdGET);
-		}
-		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-		if (GC->rtcc->med_k01.TargetThresholdGET < 0)
-		{
-			sprintf_s(Buffer, "Present Time");
-		}
-		else
-		{
-			GET_Display(Buffer, GC->rtcc->med_k01.TargetThresholdGET);
-		}
-		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
-
-		if (G->SPQMode == 0)
-		{
-			skp->Text(1 * W / 16, 10 * H / 14, "CSI", 3);
-
-			if (G->CDHtimemode == 0)
+			if (G->SPQMode == 2)
 			{
-				skp->Text(1 * W / 16, 12 * H / 14, "Fixed TPI time", 14);
+				skp->Text(1 * W / 16, 10 * H / 14, "Optimum CSI", 11);
 			}
-			else if (G->CDHtimemode == 1)
+			else
 			{
-				skp->Text(1 * W / 16, 12 * H / 14, "Fixed DH", 8);
+				skp->Text(1 * W / 16, 10 * H / 14, "CSI", 3);
+
+				if (G->CDHtimemode == 0)
+				{
+					skp->Text(1 * W / 16, 12 * H / 14, "Fixed TPI time", 14);
+				}
+				else if (G->CDHtimemode == 1)
+				{
+					skp->Text(1 * W / 16, 12 * H / 14, "Fixed DH", 8);
+				}
 			}
 
 			GET_Display(Buffer, G->CSItime);
@@ -5880,7 +5887,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(18 * W / 64, 5 * H / 32, "L STA ID", 8);
 		skp->Text(18 * W / 64, 6 * H / 32, "GMTV", 4);
 		skp->Text(18 * W / 64, 7 * H / 32, "GETV", 4);
-		skp->Text(18 * W / 64, 8 * H / 32, "REF", 3);
+		skp->Text(19 * W / 64, 8 * H / 32, "REF", 3);
 
 		skp->Text(35 * W / 64, 5 * H / 32, "C STA ID", 8);
 		skp->Text(35 * W / 64, 6 * H / 32, "GMTV", 4);
@@ -5985,7 +5992,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display3(Buffer, tab->C_GETV);
 		skp->Text(17 * W / 64, 7 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%s", tab->CODE);
-		skp->Text(17 * W / 64, 8 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(18 * W / 64, 8 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%s", tab->L_STA_ID);
 		skp->Text(34 * W / 64, 5 * H / 32, Buffer, strlen(Buffer));

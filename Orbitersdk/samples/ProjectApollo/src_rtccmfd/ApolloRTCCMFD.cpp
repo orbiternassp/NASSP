@@ -2299,13 +2299,13 @@ bool SPQGETInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_SPQtime(double tig)
 {
-	if (G->SPQMode == 0)
+	if (G->SPQMode == 1)
 	{
-		this->G->CSItime = tig;
+		this->G->CDHtime = tig;
 	}
 	else
 	{
-		this->G->CDHtime = tig;
+		this->G->CSItime = tig;
 	}
 }
 
@@ -4376,7 +4376,7 @@ void ApolloRTCCMFD::menuSwitchUplinkInhibit()
 
 void ApolloRTCCMFD::menuCycleSPQMode()
 {
-	if (G->SPQMode < 1)
+	if (G->SPQMode < 2)
 	{
 		G->SPQMode++;
 	}
@@ -5017,7 +5017,7 @@ bool TLMCCAzimuthConstraintsInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSetTLMCCTLCTimesConstraints()
 {
 	bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint)", TLMCCTLCTimesConstraintsInput, 0, 30, (void*)this);
+	oapiOpenInputBox("Input Format: F23,TLMIN,TLMAX; (GET in HH:MM:SS, 0 in max for no constraint)", TLMCCTLCTimesConstraintsInput, 0, 40, (void*)this);
 }
 
 bool TLMCCTLCTimesConstraintsInput(void *id, char *str, void *data)
@@ -5041,7 +5041,7 @@ bool TLMCCReentryContraintsInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::menuSetTLMCCPericynthionHeightLimits()
 {
 	bool TLMCCPericynthionHeightLimitsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Input Format: F29,height minimum,height maximum;", TLMCCPericynthionHeightLimitsInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Input Format: F29,height minimum,height maximum;", TLMCCPericynthionHeightLimitsInput, "F29,40,5000;", 40, (void*)this);
 }
 
 bool TLMCCPericynthionHeightLimitsInput(void *id, char *str, void *data)

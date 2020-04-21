@@ -8689,6 +8689,48 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
 	return true;
 }
 
+void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
+{
+	if (!(opt.OptimumCSI && opt.K_CDH == 1 && opt.t_CSI > 0))
+	{
+		ConcentricRendezvousProcessor(opt, res);
+		return;
+	}
+	double t_CSI0, e_TPI, t_CSI, eps_TPI, c_TPI, e_TPIo, t_CSIo, p_TPI;
+	int s_TPI;
+
+	p_TPI = c_TPI = 0.0;
+	eps_TPI = 1.0;
+	t_CSI = t_CSI0 = opt.t_CSI;
+
+	do
+	{
+		opt.t_CSI = t_CSI;
+		ConcentricRendezvousProcessor(opt, res);
+		e_TPI = res.t_TPI - opt.t_TPI;
+
+		if (p_TPI == 0 || abs(e_TPI) >= eps_TPI)
+		{
+			OrbMech::ITER(c_TPI, s_TPI, e_TPI, p_TPI, t_CSI, e_TPIo, t_CSIo, 60.0);
+		}
+		if (t_CSI > opt.t_CSI + 15.0*60.0)
+		{
+			t_CSI = opt.t_CSI + 15.0*60.0;
+			break;
+		}
+		if (t_CSI < opt.t_CSI - 15.0*60.0)
+		{
+			t_CSI = opt.t_CSI - 15.0*60.0;
+			break;
+		}
+		if (s_TPI == 1)
+		{
+			break;
+		}
+	} while (abs(e_TPI) >= eps_TPI);
+	opt.t_CSI = t_CSI0;
+}
+
 void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 {
 	SV sv_A1, sv_P1, sv_temp;
@@ -8761,6 +8803,8 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 		PZDKIT.NumSolutions = 1;
 		return;
 	}
+
+	res.t_CSI = opt.t_CSI;
 
 	if (opt.K_CDH <= 0)
 	{
