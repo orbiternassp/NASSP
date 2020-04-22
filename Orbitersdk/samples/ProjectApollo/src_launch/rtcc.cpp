@@ -18276,6 +18276,7 @@ int RTCC::PMMXFR(int id, void *data)
 
 		man.code = code;
 		mpt->mantable.push_back(man);
+		mpt->TimeToBeginManeuver[CurMan - 1] = mpt->TimeToEndManeuver[CurMan - 1] = man.GMTMAN;
 		EMSTRAJ(EZANCHR3.AnchorVectors[9], RTCC_MPT_LM);
 	}
 	//Ascent
@@ -18328,6 +18329,7 @@ int RTCC::PMMXFR(int id, void *data)
 		man.Thruster = RTCC_ENGINETYPE_LMAPS;
 		man.AttitudeCode = RTCC_ATTITUDE_PGNS_ASCENT;
 		mpt->mantable.push_back(man);
+		mpt->TimeToBeginManeuver[CurMan - 1] = mpt->TimeToEndManeuver[CurMan - 1] = man.GMTMAN;
 		PMSVCT(8, RTCC_MPT_LM);
 	}
 	return 0;
