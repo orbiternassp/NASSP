@@ -8731,15 +8731,204 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 	opt.t_CSI = t_CSI0;
 }
 
+int RTCC::PCTETR(SV sv_C, SV sv_T, double GETBase, double WT, double ESP, double &TESP, double &TR)
+{
+	SV sv_C1, sv_T1;
+	double QL, DU, mu, C1, C2, C3, C4, r_T, r_C, QLI, DT, eps_dt, L_C_dot, L_T_dot;
+	int I;
+	bool err;
+
+	eps_dt = 0.1;
+	I = 1;
+	sv_C1 = sv_C;
+	sv_T1 = sv_T;
+	if (sv_C1.gravref = hEarth)
+	{
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		mu = OrbMech::mu_Moon;
+	}
+	do
+	{
+		sv_T1 = OrbMech::PMMAEGS(sv_T1, 0, sv_C1.MJD, err);
+		if (err)
+		{
+			return -1;
+		}
+		QL = OrbMech::PHSANG(sv_T1.R, sv_T1.V, sv_C1.R);
+		if (I == 1)
+		{
+			L_C_dot = OrbMech::GetMeanMotion(sv_C1.R, sv_C1.V, mu);
+			L_T_dot = OrbMech::GetMeanMotion(sv_T1.R, sv_T1.V, mu);
+			DU = L_C_dot - L_T_dot;
+			if (DU*QL < 0)
+			{
+				QL += PI2;
+			}
+		}
+		r_C = length(sv_C1.R);
+		r_T = length(sv_T1.R);
+		C1 = -pow(r_T / cos(ESP), 2);
+		C2 = 2.0*r_T*r_C;
+		C3 = -C2 - r_T * r_T - r_C * r_C;
+		C4 = C2 * C2 - 4.0*C1*C3;
+		if (C4 < 0)
+		{
+			return -1;
+		}
+		QLI = acos(-C2 - sqrt(C4) / (2.0*C1));
+		if (r_C > r_T)
+		{
+			QLI = -QLI;
+		}
+		DT = (QL - QLI) / DU;
+		if (abs(DT) < eps_dt)
+		{
+			TESP = sv_C1.MJD;
+			TR = TESP + WT / L_T_dot / 24.0 / 3600.0;
+			return 0;
+		}
+		sv_C1 = coast(sv_C1, DT);
+		I++;
+	} while (I <= 10);
+	return -1;
+}
+
 void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 {
+	CELEMENTS elem;
+	SV sv_C_CSI, sv_T_CSI, sv_C_CSI_apo;
+	VECTOR3 R_equ, V_equ;
+	double DV_X, DU_Test, dt, mu, T_TPI, r_C, r_C_dot, P, V_X, a_test, VV_esc, VV, t_CSI, t_CDH, Min_DT1, dt_test, u_c, f_c;
+	int I;
+
+	I = 0;
+	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
+	t_CSI = opt.t_CSI;
+	t_CDH = opt.t_CDH;
+	Min_DT1 = 10.0*60.0;
+
+	if (opt.K_CDH == 0)
+	{
+		//TBD: Environment change and longitude crossing logic
+		T_TPI = opt.t_TPI;
+	}
+	//TBD: Plane change
+RTCC_PMMSPQ_3_2:
+	if (opt.t_CSI > 0)
+	{
+		goto RTCC_PMMSPQ_5_1;
+	}
+	if (opt.CDH)
+	{
+		goto RTCC_PMMSPQ_9_3;
+	}
+	goto RTCC_PMMSPQ_14_3;
+RTCC_PMMSPQ_4_1:
+	//TBD: Plane change
+	goto RTCC_PMMSPQ_3_2;
+	RTCC_PMMSPQ_5_1:
+	if (I < 1)
+	{
+		DV_X = 0.0;
+		DU_Test = 0.0;
+	}
+	//Update to T_CSI
+	dt = opt.t_CSI - OrbMech::GETfromMJD(opt.sv_A.MJD, opt.GETbase);
+	sv_C_CSI = coast(opt.sv_A, dt);
+	dt = opt.t_CSI - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase);
+	sv_T_CSI = coast(opt.sv_P, dt);
+	elem = OrbMech::GIMIKC(sv_C_CSI.R, sv_C_CSI.V, mu);
+	r_C = length(sv_C_CSI.R);
+	r_C_dot = dotp(sv_C_CSI.R, sv_C_CSI.V) / r_C;
+	P = elem.a*(1.0 - elem.e*elem.e);
+	V_X = sqrt(mu*P) / r_C;
+	VV = V_X * V_X + r_C_dot * r_C_dot;
+	a_test = mu * r_C / (2.0*mu - VV * r_C);
+	VV_esc = 2.0*mu / r_C;
+	if (V_X > 0 && VV_esc > VV && a_test > 3.0 / 5.0*r_C)
+	{
+		goto RTCC_PMMSPQ_6_2;
+	}
+	if (opt.I_CDH > 0)
+	{
+		goto RTCC_PMMSPQ_6_3;
+	}
+	dt_test = t_CDH - t_CSI - Min_DT1;
+	if (dt_test < 0)
+	{
+		N_CDH++;
+		I = 0;
+		goto RTCC_PMMSPQ_4_1;
+	}
+RTCC_PMMSPQ_6_3:
+	//Error
+	goto RTCC_PMMSPQ_20_1;
+RTCC_PMMSPQ_6_2:
+	sv_C_CSI_apo = sv_C_CSI;
+	sv_C_CSI_apo.V = sv_C_CSI.V + unit(crossp(unit(crossp(sv_C_CSI.R, sv_C_CSI.V)), sv_C_CSI.R))*DV_X;
+
+	OrbMech::EclipticToECI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+	elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
+	r_C = length(sv_C_CSI.R);
+	r_C_dot = dotp(sv_C_CSI.R, sv_C_CSI.V) / r_C;
+	P = elem.a*(1.0 - elem.e*elem.e);
+	f_c = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
+	u_c = fmod(u_c, PI2);
+	if (u_c < 0)
+		u_c += PI2;
+	u_CSI = u_c;
+	if (I > 0)
+	{
+		goto RTCC_PMMSPQ_8_3;
+	}
+	K_a = 2.0*elem.a*elem.a*V_X / mu;
+	K_p = 2.0*r_C*V_X / mu;
+	DN = N_C - N_T;
+	K_N = -3.0 / 2.0*K_a*sqrt(mu / pow(elem.a, 5));
+	K_DN = K_N;
+	E_CSI = elem.e;
+	if (elem.e >= e_tol)
+	{
+		K_e = r_C * r_C*V_X*(K_a*V_X - 2.0*elem.a) / (2.0*mu*elem.a*elem.a*elem.e);
+		sinE = r_C / (elem.a*sqrt(1.0 - elem.e*elem.e));
+		cosE = (elem.a - r_C) / (elem.a*elem.e);
+		E = atan2(sinE, cosE);
+		if (E < 0)
+		{
+			E += PI2;
+		}
+		if (abs(f_c) <= PI05 / 2.0 || abs(f_c) >= 3.0*PI / 4.0)
+		{
+			K_f = (elem.e*K_p - 2.0*P*K_e)*tan(f_c) / (2.0*elem.e*P);
+		}
+		else
+		{
+			K_f = (r_C*(P - r_C)*K_e - elem.e*r_C*K_P) / (elem.e*elem.e*r_C*r_C*sin(f_c));
+		}
+	}
+	else
+	{
+		K_e = K_P / r_C;
+		K_f = 0.0;
+		K_E = 0.0;
+		K_M = 0.0;
+		if (opt.I_CDH <= 0)
+		{
+			I_CDH = 3;
+			DU_D = N_CDH * PI;
+		}
+	}
+
 	SV sv_A1, sv_P1, sv_temp;
 	MATRIX3 Q_Xx;
 	VECTOR3 V_A1F, R_A2, V_A2, V_A2F, u;
 	double dv_CSI, mu, dt_1, t_CDH, dt_TPI, T_TPI;
 
 	dv_CSI = 0.0;
-	mu = GGRAV * oapiGetMass(opt.sv_A.gravref);
+	
 
 	if (opt.K_CDH == 0)
 	{

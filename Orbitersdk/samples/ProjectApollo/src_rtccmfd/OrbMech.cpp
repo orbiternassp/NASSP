@@ -8061,6 +8061,25 @@ double THETR(double u1, double u2, double i1, double i2, double h1, double h2)
 	return u1 - u2 - 2.0*atan(tan((h1 - h2) / 2.0)*(sin(0.5*(i1 + i2 - PI)) / sin(0.5*(i1 - i2 + PI))));
 }
 
+double PHSANG(VECTOR3 R, VECTOR3 V, VECTOR3 R_D)
+{
+	VECTOR3 H1, H2, R_PROJ;
+	double theta;
+
+	H1 = crossp(R, V);
+	H2 = crossp(R_D, R);
+	R_PROJ = PROJCT(R, V, R_D);
+	theta = acos2(dotp(unit(R), unit(R_PROJ)));
+	return theta * sign(dotp(H1, H2));
+}
+
+VECTOR3 PROJCT(VECTOR3 U1, VECTOR3 U2, VECTOR3 X)
+{
+	VECTOR3 N = unit(crossp(U1, U2));
+	VECTOR3 X1 = X - N * dotp(X, N);
+	return unit(X1)*length(X);
+}
+
 void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I)
 {
 	double eps, a, b, delta;

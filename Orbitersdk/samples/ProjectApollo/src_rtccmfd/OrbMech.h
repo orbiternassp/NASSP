@@ -646,6 +646,8 @@ namespace OrbMech {
 	SV PositionMatch(SV sv_A, SV sv_P, double mu);
 	//Phase angle determination
 	double THETR(double u1, double u2, double i1, double i2, double h1, double h2);
+	double PHSANG(VECTOR3 R, VECTOR3 V, VECTOR3 R_D);
+	VECTOR3 PROJCT(VECTOR3 U1, VECTOR3 U2, VECTOR3 X);
 
 	double fraction_an(int n);
 	double fraction_ad(int n);

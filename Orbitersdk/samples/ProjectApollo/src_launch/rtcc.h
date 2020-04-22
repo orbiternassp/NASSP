@@ -1060,7 +1060,9 @@ struct SPQOpt //Coelliptic Sequence Processor
 	SV sv_A;
 	SV sv_P;
 	double GETbase;
+	//Time of CSI maneuver (<= 0 if not scheduled)
 	double t_CSI;
+	//Time of CDH maneuver
 	double t_CDH;
 	double t_TPI;				// Only for calculation type = 0
 	double DH = 15.0*1852.0;	// Only for calculation type = 1
@@ -1070,7 +1072,16 @@ struct SPQOpt //Coelliptic Sequence Processor
 	int K_CDH;			//Height iteration. 0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int K_TPI = 0;		//-1 = Midpoint of darkness, 0 = on time, 1 = on longitude
 	int ChaserID = 1;
-	bool OptimumCSI = false;
+	//0 = Plane change not requested, 1 = plane change requested
+	bool N_PC = false;
+	//Plane change threshold
+	double T_BNPC = 0.0;
+	//Initial phase angle (0 = -180° to 180°, 1 = 0 to 180°, 2 = -180° to 0)
+	int I_Theta = 0;
+	//0 = CDH not scheduled, 1 = CDH scheduled
+	bool CDH = true;
+	//0 = CDH at an apsis, 1,3,5 etc: CDH N/2 orbits from CSI
+	int I_CDH = 1;
 };
 
 struct PDAPOpt //Powered Descent Abort Program
@@ -2607,6 +2618,8 @@ public:
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
+	//Elevation angle search subroutine
+	int PCTETR(SV sv_C, SV sv_T, double GETBase, double WT, double ESP, double &TESP, double &TR);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	void ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
