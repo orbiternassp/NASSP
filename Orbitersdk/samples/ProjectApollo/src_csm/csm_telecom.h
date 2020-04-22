@@ -407,11 +407,15 @@ private:
 	double Alpha;								// Antenna alpha
 	double Beta;								// Antenna beta
 	double Gamma;								// Antenna gamma
+	double AAxisCmd;
+	double BAxisCmd;
+	double CAxisCmd;
 	double PitchRes;
 	double YawRes;
 	bool scanlimit;
 	bool scanlimitwarn;
 	double HornSignalStrength[4];
+
 
 	VECTOR3 U_Horn[4];
 

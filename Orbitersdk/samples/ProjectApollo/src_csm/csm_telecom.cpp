@@ -515,6 +515,7 @@ void USB::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
 }
 
+
 // High Gain Antenna
 // Unifed S-Band System
 HGA::HGA(){
@@ -522,6 +523,9 @@ HGA::HGA(){
 	Alpha = 0;
 	Beta = 0;
 	Gamma = 0;
+	AAxisCmd = 0;
+	BAxisCmd = 0;
+	CAxisCmd = 0;
 	SignalStrength = 0;
 	PitchRes = 0;
 	YawRes = 0;
@@ -533,12 +537,13 @@ HGA::HGA(){
 		HornSignalStrength[i] = 0.0;
 	}
 
-	double angdiff = 1.0*RAD;
+	double angdiff = 1.0*RAD; 
 
-	U_Horn[0] = _V(cos(angdiff), 0.0, -sin(angdiff));
-	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));
-	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);
-	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);
+	//looking along the antennas pointing vector(x3) with z3 to your left and y3 pointing down
+	U_Horn[0] = _V(cos(angdiff), 0.0, -sin(angdiff));//left
+	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));//right
+	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);//up
+	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);//down
 
 	anim_HGAalpha = -1;
 	anim_HGAbeta = -1;
@@ -636,6 +641,7 @@ void HGA::DeleteAnimations() {
 	anim_HGAgamma = -1;
 }
 
+
 // Do work
 void HGA::TimeStep(double simt, double simdt)
 {
@@ -667,13 +673,36 @@ void HGA::TimeStep(double simt, double simdt)
 	}
 
 	double gain;
-	double AAxisCmd, BAxisCmd, CAxisCmd;
+	double AzimuthErrorSignal, ElevationErrorSignal;
+	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
+	double AzmuthTrackErrorDeg;
+	bool WhiparoundIsSet = false;
 
-	//Only manual acquisition active
-	if (sat->GHATrackSwitch.IsCenter())
+	//actual Azimuth and Elevation error signals came from phase differences not signal strength
+	//both are be a function of tracking error though so this works
+	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
+	ElevationErrorSignal = (HornSignalStrength[2] - HornSignalStrength[3])*0.25;
+	const double TrkngCtrlGain = 2.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
+	const double ServoFeedbackGain = 1.2;
+
+	//normalize Azimuth and Elevation error signals
+	if (SignalStrength > 0.0)
+	{
+		AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
+		ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
+		AzmuthTrackErrorDeg = acos(1 - abs(AzimuthErrorSignalNorm))*DEG;
+	}
+	else //prevent division by zero
+	{
+		AzimuthErrorSignalNorm = 0;
+		ElevationErrorSignalNorm = 0;
+		AzmuthTrackErrorDeg = 90 * DEG;
+	}
+
+	//select control mode for high gain antenna 
+	if ((sat->GHATrackSwitch.IsCenter())||((scanlimit == true)&&(sat->GHATrackSwitch.IsUp()))) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
 	{
 		double PitchCmd, YawCmd;
-
 		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*30.0 + 90.0;
 		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*30.0;
 
@@ -685,17 +714,78 @@ void HGA::TimeStep(double simt, double simdt)
 
 		//sprintf(oapiDebugString(), "PitchCmd: %lf° YawCmd: %lf° AAxisCmd: %lf° CAxisCmd: %lf°", PitchCmd, YawCmd, AAxisCmd*DEG, CAxisCmd*DEG);
 	}
+	else if ((sat->GHATrackSwitch.IsUp()&&(scanlimit == false))|| ((scanlimit == false) && (sat->GHATrackSwitch.IsDown())))
+	{ 
+		//auto control, added by n72.75 204020
+		if (Gamma > 45 * RAD)	//mode select A-C servo control
+		{
+			if (AzmuthTrackErrorDeg > 3.0)
+			{
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+			}
+			else
+			{
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+			}
+		}
+		else					//mode select B-C servo control
+		{
+			double GammaLast = Gamma;
+			if (Gamma <= 1.0 * RAD)
+			{
+				if ((GammaLast > -1.0 * RAD)&&(Gamma < -1.0)) //falling edge detection for gamma dropping below -1.0°
+				{
+					WhiparoundIsSet = true; //set whiparound flag on falling edge below -1.0
+				}
+				else
+				{
+					WhiparoundIsSet = false; //clear whiparound flag
+				}
+				BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt / 10);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+
+				if (WhiparoundIsSet == true)
+				{
+					if (Alpha > 0.0)
+					{
+						AAxisCmd = Alpha - 180 * RAD;
+					}
+					else
+					{
+						AAxisCmd = Alpha + 180 * RAD;
+					}
+					WhiparoundIsSet = false; //clear whiparound flag
+				}
+			}
+			else
+			{
+				if (AzmuthTrackErrorDeg > 3.0)
+				{
+					AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+					BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt/10);
+					CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				}
+				else
+				{
+					AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+					BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
+					CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				}
+			}
+		}
+	}
 	else
 	{
-		double AzimuthErrorSignal, ElevationErrorSignal;
-
-		AzimuthErrorSignal = (HornSignalStrength[0] - HornSignalStrength[1])*0.25;
-		ElevationErrorSignal = (HornSignalStrength[2] - HornSignalStrength[3])*0.25;
-
-		AAxisCmd = 180.0*RAD;
-		BAxisCmd = 0.0;
-		CAxisCmd = 90.0*RAD;
+		AAxisCmd = Alpha;
+		BAxisCmd = Beta;
+		CAxisCmd = Gamma;
 	}
+
+	//sprintf(oapiDebugString(), "AzimuthErrorSigNorm: %lf ElevationErrorSigNorm: %lf A_CMD: %lf B_CMD: %lf C_CMD: %lf SignalStrength %lf AzmuthTrackErrorDeg %lf°", AzimuthErrorSignalNorm, ElevationErrorSignalNorm, AAxisCmd, BAxisCmd, CAxisCmd, SignalStrength, AzmuthTrackErrorDeg);
 
 	//SERVO DRIVE
 
@@ -741,7 +831,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	VECTOR3 U_RP, pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
-	double relang, beamwidth, Moonrelang;
+	double relang, beamwidth, Moonrelang, EarthSignalDist;
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
@@ -751,22 +841,25 @@ void HGA::TimeStep(double simt, double simdt)
 	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
+	
+	//gain values from NASA Technical Note TN D-6723
+	//need to change to a power based system
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	//Not based on reality and just for testing: relative angle greater beamwidth no signal strength, uses cosine function to get increase of signal strength from 0 to 100
 	if (sat->GHABeamSwitch.IsUp())		//Wide
 	{
 		beamwidth = 40.0*RAD;
-		gain = 75.625;
+		gain = 75.625;					//3.1 dB
 	}
 	else if (sat->GHABeamSwitch.IsCenter())	//Medium
 	{
-		beamwidth = 3.9*RAD;
-		gain = 99.375;
+		beamwidth = 4.5*RAD;	
+		gain = 99.375;					//22.5 dB
 	}
 	else								//Narrow
 	{
-		beamwidth = 3.9*RAD;
-		gain = 100.0;
+		beamwidth = 4.5*RAD;
+		gain = 100.0;					//23.0 dB
 	}
 
 	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
@@ -835,7 +928,7 @@ void HGA::TimeStep(double simt, double simdt)
 		scanlimitwarn = false;
 	}
 
-	//sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
+	sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
 }
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
@@ -939,14 +1032,14 @@ void HGA::clbkPostCreation()
 
 // Load
 void HGA::LoadState(char *line) {
-	sscanf(line + 15, "%lf %lf %lf", &Alpha, &Beta, &Gamma);
+	sscanf(line + 15, "%lf %lf %lf %lf %lf %lf", &Alpha, &Beta, &Gamma, &AAxisCmd, &BAxisCmd, &CAxisCmd);
 }
 
 // Save
 void HGA::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf", Alpha, Beta, Gamma);
+	sprintf(buffer, "%lf %lf %lf %lf %lf %lf", Alpha, Beta, Gamma, AAxisCmd, BAxisCmd, CAxisCmd);
 
 	oapiWriteScenario_string(scn, "HIGHGAINANTENNA", buffer);
 }
