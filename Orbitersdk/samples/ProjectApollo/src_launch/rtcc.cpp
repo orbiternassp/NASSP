@@ -8735,7 +8735,7 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 {
 	SV sv_A1, sv_P1, sv_temp;
 	MATRIX3 Q_Xx;
-	VECTOR3 u, R_A1, V_A1, V_A1F, R_A2, V_A2, R_P2, V_P2, R_PC, V_PC, V_A2F;
+	VECTOR3 V_A1F, R_A2, V_A2, V_A2F, u;
 	double dv_CSI, mu, dt_1, t_CDH, dt_TPI, T_TPI;
 
 	dv_CSI = 0.0;
@@ -8759,31 +8759,26 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 		sv_P1 = coast(opt.sv_P, opt.t_CDH - OrbMech::GETfromMJD(opt.sv_P.MJD, opt.GETbase));
 	}
 
-	u = unit(crossp(sv_P1.R, sv_P1.V));
-
-	R_A1 = unit(sv_A1.R - u * dotp(sv_A1.R, u))*length(sv_A1.R);
-	V_A1 = unit(sv_A1.V - u * dotp(sv_A1.V, u))*length(sv_A1.V);
-
 	//CDH calculation
 	if (opt.t_CSI <= 0)
 	{
-		VECTOR3 u2;
-		double Y_c_dot;
+		SV sv_PC;
+		VECTOR3 u;
+		sv_PC = OrbMech::PositionMatch(sv_P1, sv_A1, mu);
+		res.DH = length(sv_PC.R) - length(sv_A1.R);
+		u = unit(crossp(sv_PC.R, sv_PC.V));
+		R_A2 = unit(sv_A1.R - u * dotp(sv_A1.R, u))*length(sv_A1.R);
+		V_A2 = unit(sv_A1.V - u * dotp(sv_A1.V, u))*length(sv_A1.V);
+		V_A2F = OrbMech::CoellipticDV(R_A2, sv_PC.R, sv_PC.V, mu);
+		Q_Xx = OrbMech::LVLH_Matrix(R_A2, V_A2);
 
-		u2 = unit(crossp(sv_P1.V, sv_P1.R));
-		Y_c_dot = dotp(sv_A1.V, u2);
-		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A1, mu, R_PC, V_PC);
-		V_A1F = OrbMech::CoellipticDV(R_A1, R_PC, V_PC, mu);
-		Q_Xx = OrbMech::LVLH_Matrix(R_A1, V_A1);
-
-		res.DH = length(R_PC) - length(R_A1);
-		res.dV_CDH = mul(Q_Xx, V_A1F - V_A1) + _V(0.0, -Y_c_dot, 0.0);
+		res.dV_CDH = mul(Q_Xx, V_A2F - V_A2);
 		res.t_CDH = opt.t_CDH;
 		res.t_TPI = 0.0;
 
 		PZDKIT.Block[0].NumMan = 1;
-		sv_temp.R = R_A1;
-		sv_temp.V = V_A1;
+		sv_temp.R = sv_A1.R;
+		sv_temp.V = sv_A1.V;
 		sv_temp.MJD = sv_A1.MJD;
 		sv_temp.gravref = sv_A1.gravref;
 		PZDKIELM.Block[0].SV_before[0].R = sv_temp.R;
@@ -8797,7 +8792,7 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 		{
 			PZDKIELM.Block[0].SV_before[0].RBI = BODY_MOON;
 		}
-		PZDKIELM.Block[0].V_after[0] = V_A1F;
+		PZDKIELM.Block[0].V_after[0] = V_A2F;
 		PZDKIT.Block[0].Man_ID[0] = "CDH";
 		PZDKIT.Block[0].VEH[0] = opt.ChaserID;
 		PZDKIT.NumSolutions = 1;
@@ -8806,30 +8801,45 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 
 	res.t_CSI = opt.t_CSI;
 
+	SV sv_A2, sv_PC, sv_A3;
+	double t_P, DH, p_C, c_C, eps_C, e_C, e_Co, dv_CSIo;
+	int s_C;
+
+	p_C = c_C = 0.0;
+	s_C = 0;
+	dv_CSI = 10.0*0.3048;
+
 	if (opt.K_CDH <= 0)
 	{
 		VECTOR3 R_P3, V_P3, R_PJ, V_PJ, R_AF, V_AF, R_AFD;
-		double p_C, c_C, eps_C, e_C, e_Co, dv_CSIo, DH;
-		int s_C;
 
 		eps_C = 0.000004;	//radians
-		p_C = c_C = 0.0;
-		s_C = 0;
-		dv_CSI = 10.0*0.3048;
 
-		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, opt.t_TPI - opt.t_CSI, R_P3, V_P3, mu);
+		OrbMech::oneclickcoast(sv_P1.R, sv_P1.V, sv_P1.MJD, opt.t_TPI - opt.t_CSI, R_P3, V_P3, sv_P1.gravref, sv_P1.gravref);
+		u = unit(crossp(sv_P1.R, sv_P1.V));
+		sv_A2.gravref = sv_A1.gravref;
 
 		do
 		{
-			V_A1F = V_A1 + unit(crossp(u, R_A1))*dv_CSI;
-			OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
+			V_A1F = sv_A1.V + unit(crossp(u, sv_A1.R))*dv_CSI;
+			t_P = OrbMech::period(sv_A1.R, V_A1F, mu);
+			dt_1 = t_P / 2.0;
+			OrbMech::oneclickcoast(sv_A1.R, V_A1F, sv_A1.MJD, dt_1, sv_A2.R, sv_A2.V, sv_A1.gravref, sv_A1.gravref);
 			t_CDH = opt.t_CSI + dt_1;
-			OrbMech::RADUP(R_P3, V_P3, R_A2, mu, R_PC, V_PC);
-			DH = length(R_PC) - length(R_A2);
-			V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
-			OrbMech::rv_from_r0v0(R_A2, V_A2F, opt.t_TPI - t_CDH, R_AF, V_AF, mu);
+			sv_A2.MJD = OrbMech::MJDfromGET(t_CDH, opt.GETbase);
+			sv_PC = OrbMech::PositionMatch(sv_P1, sv_A2, mu);
+			DH = length(sv_PC.R) - length(sv_A2.R);
+			u = unit(crossp(sv_PC.R, sv_PC.V));
+			R_A2 = unit(sv_A2.R - u * dotp(sv_A2.R, u))*length(sv_A2.R);
+			V_A2 = unit(sv_A2.V - u * dotp(sv_A2.V, u))*length(sv_A2.V);
+			V_A2F = OrbMech::CoellipticDV(R_A2, sv_PC.R, sv_PC.V, mu);
 
-			OrbMech::QDRTPI(R_P3, V_P3, opt.GETbase + opt.t_TPI / 24.0 / 3600.0, sv_P1.gravref, mu, DH, opt.E, 0, R_PJ, V_PJ);
+			OrbMech::oneclickcoast(sv_A2.R, V_A2F, sv_A2.MJD, opt.t_TPI - t_CDH, sv_A3.R, sv_A3.V, sv_A1.gravref, sv_A1.gravref);
+			u = unit(crossp(R_P3, V_P3));
+			R_AF = unit(sv_A3.R - u * dotp(sv_A3.R, u))*length(sv_A3.R);
+			V_AF = unit(sv_A3.V - u * dotp(sv_A3.V, u))*length(sv_A3.V);
+
+			OrbMech::QDRTPI(R_P3, V_P3, opt.GETbase + opt.t_TPI / 24.0 / 3600.0, sv_P1.gravref, mu, DH, opt.E, 1, R_PJ, V_PJ);
 			R_AFD = R_PJ - unit(R_PJ)*DH;
 
 			e_C = OrbMech::sign(dotp(crossp(R_AF, R_AFD), u))*acos(dotp(R_AFD / length(R_AFD), R_AF / length(R_AF)));
@@ -8849,27 +8859,50 @@ void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	}
 	else
 	{
-		OrbMech::CSIToDH(R_A1, V_A1, sv_P1.R, sv_P1.V, opt.DH, mu, dv_CSI);
-		V_A1F = V_A1 + unit(crossp(u, R_A1))*dv_CSI;
-		OrbMech::REVUP(R_A1, V_A1F, 0.5, mu, R_A2, V_A2, dt_1);
-		t_CDH = opt.t_CSI + dt_1;
-		OrbMech::RADUP(sv_P1.R, sv_P1.V, R_A2, mu, R_PC, V_PC);
-		V_A2F = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu);
-		OrbMech::rv_from_r0v0(sv_P1.R, sv_P1.V, t_CDH - opt.t_CSI, R_P2, V_P2, mu);
+		SV sv_P2;
+
+		eps_C = 1.0;	//meters
+
+		u = unit(crossp(sv_P1.R, sv_P1.V));
+		sv_A2.gravref = sv_A1.gravref;
+
+		do
+		{
+			V_A1F = sv_A1.V + unit(crossp(u, sv_A1.R))*dv_CSI;
+			t_P = OrbMech::period(sv_A1.R, V_A1F, mu);
+			dt_1 = t_P / 2.0;
+			OrbMech::oneclickcoast(sv_A1.R, V_A1F, sv_A1.MJD, dt_1, sv_A2.R, sv_A2.V, sv_A1.gravref, sv_A1.gravref);
+			t_CDH = opt.t_CSI + dt_1;
+			sv_A2.MJD = OrbMech::MJDfromGET(t_CDH, opt.GETbase);
+			sv_P2 = coast(sv_P1, t_CDH - opt.t_CSI);
+			sv_PC = OrbMech::PositionMatch(sv_P2, sv_A2, mu);
+			DH = length(sv_PC.R) - length(sv_A2.R);
+			e_C = DH - opt.DH;
+			if (p_C == 0 || abs(e_C) >= eps_C)
+			{
+				OrbMech::ITER(c_C, s_C, e_C, p_C, dv_CSI, e_Co, dv_CSIo);
+			}
+		} while (abs(e_C) >= eps_C);
+
+		u = unit(crossp(sv_PC.R, sv_PC.V));
+		R_A2 = unit(sv_A2.R - u * dotp(sv_A2.R, u))*length(sv_A2.R);
+		V_A2 = unit(sv_A2.V - u * dotp(sv_A2.V, u))*length(sv_A2.V);
+		V_A2F = OrbMech::CoellipticDV(R_A2, sv_PC.R, sv_PC.V, mu);
+		//Propagate passive vehicle to CDH time
+		OrbMech::oneclickcoast(sv_P1.R, sv_P1.V, sv_P1.MJD, t_CDH - opt.t_CSI, sv_P2.R, sv_P2.V, sv_A1.gravref, sv_A1.gravref);
+		dt_TPI = OrbMech::findelev(sv_A2.R, V_A2F, sv_P2.R, sv_P2.V, sv_A2.MJD, opt.E, sv_A1.gravref);
 
 		res.dV_CSI = _V(dv_CSI, 0, 0);
 		res.t_CDH = t_CDH;
 		Q_Xx = OrbMech::LVLH_Matrix(R_A2, V_A2);
 		res.dV_CDH = mul(Q_Xx, V_A2F - V_A2);
-		res.DH = opt.DH;
-
-		dt_TPI = OrbMech::findelev_conic(R_A2, V_A2F, R_P2, V_P2, opt.E, mu);
+		res.DH = DH;
 		res.t_TPI = t_CDH + dt_TPI;
 	}
 
 	PZDKIT.Block[0].NumMan = 1;
-	sv_temp.R = R_A1;
-	sv_temp.V = V_A1;
+	sv_temp.R = sv_A1.R;
+	sv_temp.V = sv_A1.V;
 	sv_temp.MJD = sv_A1.MJD;
 	sv_temp.gravref = sv_A1.gravref;
 
