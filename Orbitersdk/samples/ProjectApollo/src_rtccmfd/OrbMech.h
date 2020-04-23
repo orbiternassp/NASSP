@@ -529,6 +529,8 @@ namespace OrbMech {
 	bool CSIToDH(VECTOR3 R_A1, VECTOR3 V_A1, VECTOR3 R_P2, VECTOR3 V_P2, double DH, double mu, double &dv);
 	VECTOR3 CoellipticDV(VECTOR3 R_A2, VECTOR3 R_PC, VECTOR3 V_PC, double mu);
 	VECTOR3 ApplyHorizontalDV(VECTOR3 R, VECTOR3 V, double dv);
+	VECTOR3 PARDV(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DV_H, double DV_R);
+	VECTOR3 EXMAN(VECTOR3 R_C, VECTOR3 V_C, double DV_H, double DV_R, double DV_Z);
 	double QuadraticIterator(int &c, int &s, double &varguess, double *var, double *obj, double obj0, double initstep, double maxstep);
 	bool SolveSystem(int n, double *A, double *b, double *x, double *det);
 	bool SolveSeries(double *x, double *y, int ndata, double *out, int m);
