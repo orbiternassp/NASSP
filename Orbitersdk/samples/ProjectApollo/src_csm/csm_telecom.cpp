@@ -708,8 +708,8 @@ void HGA::TimeStep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
 
 	const double TrkngCtrlGain = 2.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
-	const double ServoFeedbackGain = 1.2;
-	const double BeamSwitchingTrkErThreshhold = 0.001;
+	const double ServoFeedbackGain = 1.2; //this works too...
+	const double BeamSwitchingTrkErThreshhold = 0.001; 
 
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
@@ -723,11 +723,11 @@ void HGA::TimeStep(double simt, double simdt)
 	else if (sat->GHATrackSwitch.IsUp()) // auto mode selected
 	{
 		AutoTrackingMode = true;
-		if (ModeSwitchTimer < simt)
+		if (ModeSwitchTimer < simt) //timer prevents getting caught oscilating between narrow/wide or auto/manual which can happen if checked every timestep or with very small[ish] timesteps
 		{
 			if (SignalStrength > 0)
 			{
-				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold*392) //acquire mode in auto
+				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold*392) //acquire mode in auto (392 = PI/8*1000 which is a good place to switch between narrow and wide)
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
@@ -749,9 +749,8 @@ void HGA::TimeStep(double simt, double simdt)
 					XmtBeamWidthSelect = 3;
 				}
 			}
-			else
+			else //switch back to wide beamwidth if signal lost
 			{
-
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
 			}
@@ -763,7 +762,7 @@ void HGA::TimeStep(double simt, double simdt)
 		AutoTrackingMode = true;
 		if (ModeSwitchTimer < simt)
 		{
-			if ((SignalStrength > 0) && (scanlimit == false))
+			if ((SignalStrength > 0) && (scanlimitwarn == false) && (scanlimit == false))
 			{
 				AutoTrackingMode = true;
 				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392)) //acquire mode in auto
@@ -772,30 +771,32 @@ void HGA::TimeStep(double simt, double simdt)
 					XmtBeamWidthSelect = 1;
 				}
 
-				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto
+				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto wide
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
 				}
-				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsCenter())
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsCenter()) //tracking modes in auto med
 				{
 					RcvBeamWidthSelect = 3;
 					XmtBeamWidthSelect = 2;
 				}
-				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsDown())
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsDown()) //tracking modes in auto fine
 				{
 					RcvBeamWidthSelect = 3;
 					XmtBeamWidthSelect = 3;
 				}
 				ModeSwitchTimer = simt + 1;
+
 			}
-			else if(scanlimitwarn == true)
+			else if ((scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
 			{
 				AutoTrackingMode = true;
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
+				ModeSwitchTimer = simt + 1;
 			}
-			else
+			else // switch to manual mode if loss of signal or scanlimit
 			{
 				AutoTrackingMode = false;
 				RcvBeamWidthSelect = 1;
