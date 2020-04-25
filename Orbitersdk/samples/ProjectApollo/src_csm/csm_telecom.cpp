@@ -763,10 +763,10 @@ void HGA::TimeStep(double simt, double simdt)
 		AutoTrackingMode = true;
 		if (ModeSwitchTimer < simt)
 		{
-			if (SignalStrength > 0)
+			if ((SignalStrength > 0) && (scanlimit == false))
 			{
 				AutoTrackingMode = true;
-				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392) //acquire mode in auto
+				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392)) //acquire mode in auto
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
@@ -788,6 +788,12 @@ void HGA::TimeStep(double simt, double simdt)
 					XmtBeamWidthSelect = 3;
 				}
 				ModeSwitchTimer = simt + 1;
+			}
+			else if(scanlimitwarn == true)
+			{
+				AutoTrackingMode = true;
+				RcvBeamWidthSelect = 1;
+				XmtBeamWidthSelect = 1;
 			}
 			else
 			{
@@ -885,7 +891,7 @@ void HGA::TimeStep(double simt, double simdt)
 		CAxisCmd = Gamma;
 	}
 
-	sprintf(oapiDebugString(), "AzimuthErrorSigNorm: %lf ElevationErrorSigNorm: %lf A_CMD: %lf B_CMD: %lf C_CMD: %lf SignalStrength %lf AzmuthTrackErrorDeg %lf°", AzimuthErrorSignalNorm, ElevationErrorSignalNorm, AAxisCmd, BAxisCmd, CAxisCmd, SignalStrength, AzmuthTrackErrorDeg);
+	//sprintf(oapiDebugString(), "AzimuthErrorSigNorm: %lf ElevationErrorSigNorm: %lf A_CMD: %lf B_CMD: %lf C_CMD: %lf SignalStrength %lf AzmuthTrackErrorDeg %lf°", AzimuthErrorSignalNorm, ElevationErrorSignalNorm, AAxisCmd, BAxisCmd, CAxisCmd, SignalStrength, AzmuthTrackErrorDeg);
 
 	//SERVO DRIVE
 
@@ -1063,7 +1069,7 @@ void HGA::TimeStep(double simt, double simdt)
 		scanlimitwarn = false;
 	}
 
-	//sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
+	sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
 }
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
