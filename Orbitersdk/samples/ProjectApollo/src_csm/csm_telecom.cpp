@@ -567,6 +567,9 @@ void HGA::Init(Saturn *vessel){
 	scanlimit = false;
 	scanlimitwarn = false;
 	ModeSwitchTimer = 0;
+	AutoTrackingMode = false;
+	RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
+	XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 }
 
 bool HGA::IsPowered()
@@ -706,10 +709,8 @@ void HGA::TimeStep(double simt, double simdt)
 
 	const double TrkngCtrlGain = 2.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
 	const double ServoFeedbackGain = 1.2;
-	const double BeamSwitchingTrkErThreshhold = 0.01;
-	bool AutoTrackingMode;
-	int RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
-	int XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
+	const double BeamSwitchingTrkErThreshhold = 0.001;
+
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
 
@@ -722,65 +723,48 @@ void HGA::TimeStep(double simt, double simdt)
 	else if (sat->GHATrackSwitch.IsUp()) // auto mode selected
 	{
 		AutoTrackingMode = true;
-
-		if (SignalStrength > 0)
+		if (ModeSwitchTimer < simt)
 		{
-			if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold) //acquire mode in auto
+			if (SignalStrength > 0)
 			{
-				if(ModeSwitchTimer < simt)
+				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold*392) //acquire mode in auto
+				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
-					ModeSwitchTimer = simt + 0.5;
-					else
+				}
+
+				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto
+				{
+					RcvBeamWidthSelect = 1;
+					XmtBeamWidthSelect = 1;
+				}
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsCenter())
+				{
+					RcvBeamWidthSelect = 3;
+					XmtBeamWidthSelect = 2;
+				}
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsDown())
+				{
+					RcvBeamWidthSelect = 3;
+					XmtBeamWidthSelect = 3;
+				}
 			}
-			else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold/10) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto
+			else
 			{
+
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
 			}
-			else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold/10) && sat->GHABeamSwitch.IsCenter())
-			{
-				RcvBeamWidthSelect = 3;
-				XmtBeamWidthSelect = 2;
-			}
-			else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold/10) && sat->GHABeamSwitch.IsDown())
-			{
-				RcvBeamWidthSelect = 3;
-				XmtBeamWidthSelect = 3;
-			}
-		}
-		else
-		{
-			RcvBeamWidthSelect = 1;
-			XmtBeamWidthSelect = 1;
+			ModeSwitchTimer = simt + 1;
 		}
 	}
 	else
 	{
+
+
 		if (SignalStrength > 0)
 		{
-			AutoTrackingMode = true;
 
-			if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold) //acquire mode in auto
-			{
-				RcvBeamWidthSelect = 1;
-				XmtBeamWidthSelect = 1;
-			}
-			else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold/10) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto
-			{
-				RcvBeamWidthSelect = 1;
-				XmtBeamWidthSelect = 1;
-			}
-			else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold/10) && sat->GHABeamSwitch.IsCenter())
-			{
-				RcvBeamWidthSelect = 3;
-				XmtBeamWidthSelect = 2;
-			}
-			else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold/10) && sat->GHABeamSwitch.IsDown())
-			{
-				RcvBeamWidthSelect = 3;
-				XmtBeamWidthSelect = 3;
-			}
 		}
 		else
 		{
