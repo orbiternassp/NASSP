@@ -760,18 +760,43 @@ void HGA::TimeStep(double simt, double simdt)
 	}
 	else
 	{
-
-
-		if (SignalStrength > 0)
+		AutoTrackingMode = true;
+		if (ModeSwitchTimer < simt)
 		{
+			if (SignalStrength > 0)
+			{
+				AutoTrackingMode = true;
+				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392) //acquire mode in auto
+				{
+					RcvBeamWidthSelect = 1;
+					XmtBeamWidthSelect = 1;
+				}
 
+				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto
+				{
+					RcvBeamWidthSelect = 1;
+					XmtBeamWidthSelect = 1;
+				}
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsCenter())
+				{
+					RcvBeamWidthSelect = 3;
+					XmtBeamWidthSelect = 2;
+				}
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsDown())
+				{
+					RcvBeamWidthSelect = 3;
+					XmtBeamWidthSelect = 3;
+				}
+				ModeSwitchTimer = simt + 1;
+			}
+			else
+			{
+				AutoTrackingMode = false;
+				RcvBeamWidthSelect = 1;
+				XmtBeamWidthSelect = 1;
+			}
 		}
-		else
-		{
-			AutoTrackingMode = false;
-			RcvBeamWidthSelect = 1;
-			XmtBeamWidthSelect = 1;
-		}
+		
 	}
 
 	//select control mode for high gain antenna 
