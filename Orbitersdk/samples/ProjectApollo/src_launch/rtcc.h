@@ -306,6 +306,7 @@ struct LambertMan //Data for Lambert targeting
 	SV sv_A;		//Chaser state vector
 	SV sv_P;		//Target state vector
 	int ChaserVehicle = 1;	//1 = CSM, 3 = LEM
+	bool storesolns = false;
 
 	//For mode 1 and 2
 	double PhaseAngle = 0.0;
@@ -486,6 +487,9 @@ struct SPQResults
 	double DH;
 	VECTOR3 dV_CSI;
 	VECTOR3 dV_CDH;
+	SV sv_C[5];
+	SV sv_C_apo[5];
+	SV sv_T[5];
 };
 
 struct RTEMoonOpt
@@ -1067,6 +1071,7 @@ struct SPQOpt //Coelliptic Sequence Processor
 	double t_TPI;				// Only for calculation type = 0
 	double DH = 15.0*1852.0;	// Only for calculation type = 1
 	double E = 26.6*RAD;
+	double WT = 130.0*RAD;
 	//Height iteration. 0 = fixed TIG at TPI, 1 = fixed DH at CDH
 	int K_CDH;
 	int K_TPI = 0;		//-1 = Midpoint of darkness, 0 = on time, 1 = on longitude
@@ -2624,6 +2629,8 @@ public:
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
+	//Velocity maneuver performer
+	void PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DELVX, double DELVY, double DELVZ, int I, VECTOR3 &V_C_apo, double &Pitch, double &Yaw);
 	//Elevation angle search subroutine
 	int PCTETR(SV sv_C, SV sv_T, double GETBase, double WT, double ESP, double &TESP, double &TR);
 	//Apogee, perigee, and offset determination
@@ -2977,7 +2984,7 @@ public:
 		int ReplaceCode = 0; //1-15
 		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for the maneuver
 		int Attitude = RTCC_ATTITUDE_PGNS_EXDV;		//Attitude option
-		double UllageDT = 0.0;	//Delta T of Ullage
+		double UllageDT = -1;	//Delta T of Ullage
 		bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
 		bool Iteration = false; //false = do not iterate, true = iterate
 		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
@@ -3613,7 +3620,7 @@ public:
 
 	struct DKIDisplayBlock
 	{
-		double ManGET = 0.0;
+		double ManGMT = 0.0;
 		double dt = 0.0;
 		double dv = 0.0;
 		//Vehicle performing the maneuver
@@ -3625,21 +3632,25 @@ public:
 		double HA = 0.0;
 		double HP = 0.0;
 		double ManLine = 0.0;
+		VECTOR3 DV_LVLH = _V(0, 0, 0);
+		double Pitch = 0.0;
+		double Yaw = 0.0;
 	};
 
 	struct DKIDataBlock
 	{
-		int Plan_ID = 0;
 		int Plan_M = 0;
 		DKIDisplayBlock Display[5];
 		int NumMan = 0;
-		bool isDKI = false;
+		//0 = No plan, 1 = DKI, 2 = SPQ
+		int PlanStatus = 0;
 	};
 
 	struct DKIDataTable
 	{
 		//Block 1
 		bool UpdatingIndicator = false;
+		//Number of plans that were generated (SPQ always 1)
 		int NumSolutions = 0;
 		//Block 2 (Information Block)
 		DKIDataBlock Block[7];
@@ -3647,7 +3658,10 @@ public:
 
 	struct RendezvousEvaluationDisplay
 	{
-		int NumMans = 0;
+		RendezvousEvaluationDisplay();
+		int ID;
+		int M;
+		int NumMans;
 		double GET[5];
 		double DT[4];
 		double DV[5];
@@ -3660,7 +3674,9 @@ public:
 		double HP[5];
 		double Pitch[5], Yaw[5];
 		VECTOR3 DVVector[5];
-	};
+		bool isDKI;
+		std::string ErrorMessage;
+	} PZREDT;
 
 	struct SkeletonFlightPlanTable
 	{
@@ -3962,6 +3978,8 @@ private:
 	double GLHTCS(double FLTHRS) { return FLTHRS * 360000.0; }
 	double GLCSTH(double FIXCSC) { return FIXCSC / 360000.0; }
 	double TJUDAT(int Y, int M, int D);
+	EphemerisData ConvertSVtoEphemData(SV sv);
+	SV ConvertEphemDatatoSV(EphemerisData sv);
 
 protected:
 	double TimeofIgnition;

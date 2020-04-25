@@ -996,6 +996,24 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 	}
 }
 
+bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout)
+{
+	bool stop, soichange;
+	CoastIntegrator* coast;
+	coast = new CoastIntegrator(R0, V0, mjd0, dt, gravref, gravout);
+	stop = false;
+	while (stop == false)
+	{
+		stop = coast->iteration();
+	}
+	R1 = coast->R2;
+	V1 = coast->V2;
+	gravout = coast->outplanet;
+	soichange = coast->soichange;
+	delete coast;
+	return soichange;
+}
+
 bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout)
 {
 	//Temporary
@@ -1020,18 +1038,9 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 	{
 		go = BODY_MOON;
 	}
-	
-	bool stop, soichange;
-	CoastIntegrator* coast;
-	coast = new CoastIntegrator(R0, V0, mjd0, dt, gr, go);
-	stop = false;
-	while (stop == false)
-	{
-		stop = coast->iteration();
-	}
-	R1 = coast->R2;
-	V1 = coast->V2;
-	if (coast->outplanet == BODY_EARTH)
+
+	bool soichange = oneclickcoast(R0, V0, mjd0, dt, R1, V1, gr, go);
+	if (go == BODY_EARTH)
 	{
 		gravout = oapiGetObjectByName("Earth");
 	}
@@ -1040,9 +1049,6 @@ bool oneclickcoast(VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, 
 		gravout = oapiGetObjectByName("Moon");
 	}
 	
-	soichange = coast->soichange;
-	delete coast;
-	stop = false;
 	return soichange;
 }
 
@@ -5694,32 +5700,6 @@ VECTOR3 CoellipticDV(VECTOR3 R_A2, VECTOR3 R_PC, VECTOR3 V_PC, double mu)
 VECTOR3 ApplyHorizontalDV(VECTOR3 R, VECTOR3 V, double dv)
 {
 	return unit(crossp(unit(crossp(R, V)), R))*dv;
-}
-
-VECTOR3 PARDV(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DV_H, double DV_R)
-{
-	VECTOR3 H_C, K_C, J_C, H_T, K_T;
-	double S, ABP, DV_Z;
-
-	H_C = unit(crossp(R_C, V_C));
-	K_C = unit(crossp(H_C, R_C));
-	J_C = unit(crossp(K_C, H_C));
-	H_T = unit(crossp(R_T, V_T));
-	K_T = unit(crossp(H_T, R_C));
-	S = dotp(H_C, K_T);
-	ABP = S / abs(S)*acos(dotp(unit(K_C), unit(K_T)));
-	DV_Z = DV_H * tan(ABP);
-	return EXMAN(R_C, V_C, DV_H, DV_R, DV_Z);
-}
-
-VECTOR3 EXMAN(VECTOR3 R_C, VECTOR3 V_C, double DV_H, double DV_R, double DV_Z)
-{
-	VECTOR3 J, H, K;
-
-	J = unit(R_C);
-	H = unit(crossp(R_C, V_C));
-	K = unit(crossp(H, J));
-	return V_C + K * DV_H + J * DV_R + H * DV_Z;
 }
 
 MATRIX3 LVLH_Matrix(VECTOR3 R, VECTOR3 V)

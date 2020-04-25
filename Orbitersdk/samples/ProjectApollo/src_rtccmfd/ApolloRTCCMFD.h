@@ -398,6 +398,8 @@ public:
 	void menuCycleDKITPIMode();
 	void menuSetSPQElevation();
 	void set_SPQElevation(double elev);
+	void menuSetSPQTerminalPhaseAngle();
+	void set_SPQTerminalPhaseAngle(double wt);
 	void menuSetSPQTPIDefinitionValue();
 	void set_SPQTPIDefinitionValue(double get);
 	void menuSetDKIElevation();
@@ -485,6 +487,7 @@ public:
 	void CycleExpSiteAcqPage();
 	void menuSetRelativeMotionDigitalsPage();
 	void RelativeMotionDigitalsCalc();
+	void menuChooseRETPlan();
 	void menuSetUplinkMenu();
 	void menuSetStateVectorMenu();
 	void menuSetLSUpdateMenu();
@@ -670,6 +673,7 @@ public:
 	void set_NodeConvLng(double lng);
 	void menuSetNodeConvHeight();
 	void set_NodeConvHeight(double height);
+	void menuSetRendezvousEvaluationDisplayPage();
 
 protected:
 	oapi::Font *font;

@@ -529,11 +529,11 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 			GC->pLM = oapiGetVesselInterface(hVes);
 		}
 	}
-	if (GC->rtcc->EZANCHR1.AnchorVectors[9].GMT != 0)
+	if (GC->rtcc->EZANCHR1.AnchorVectors[9].GMT != 0 && GC->rtcc->EZEPH1.EPHEM.Header.TUP == 0)
 	{
 		GC->rtcc->PMSVCT(4, RTCC_MPT_CSM, &GC->rtcc->EZANCHR1.AnchorVectors[9]);
 	}
-	if (GC->rtcc->EZANCHR3.AnchorVectors[9].GMT != 0)
+	if (GC->rtcc->EZANCHR3.AnchorVectors[9].GMT != 0 && GC->rtcc->EZEPH2.EPHEM.Header.TUP == 0)
 	{
 		GC->rtcc->PMSVCT(4, RTCC_MPT_LM, &GC->rtcc->EZANCHR3.AnchorVectors[9]);
 	}
@@ -1416,6 +1416,12 @@ void ApolloRTCCMFD::menuSetExpSiteAcqPage()
 void ApolloRTCCMFD::menuSetRelativeMotionDigitalsPage()
 {
 	screen = 86;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetRendezvousEvaluationDisplayPage()
+{
+	screen = 87;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -2890,7 +2896,7 @@ void ApolloRTCCMFD::menuCycleGPMAttitude()
 void ApolloRTCCMFD::menuGPMUllageDT()
 {
 	bool GPMUllageDTInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the ullage duration in seconds:", GPMUllageDTInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the ullage duration in seconds (negative value for nominal):", GPMUllageDTInput, 0, 20, (void*)this);
 }
 
 bool GPMUllageDTInput(void *id, char *str, void *data)
@@ -6619,6 +6625,27 @@ void ApolloRTCCMFD::set_SPQElevation(double elev)
 	this->GC->rtcc->GZGENCSN.SPQElevationAngle = elev * RAD;
 }
 
+void ApolloRTCCMFD::menuSetSPQTerminalPhaseAngle()
+{
+	bool SPQTerminalPhaseAngleInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Terminal phase angle in degrees:", SPQTerminalPhaseAngleInput, 0, 20, (void*)this);
+}
+
+bool SPQTerminalPhaseAngleInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_SPQTerminalPhaseAngle(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_SPQTerminalPhaseAngle(double wt)
+{
+	this->GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle = wt * RAD;
+}
+
 void ApolloRTCCMFD::menuSetSPQTPIDefinitionValue()
 {
 	bool SPQTPIDefinitionValueInput(void *id, char *str, void *data);
@@ -7320,6 +7347,18 @@ bool RelativeMotionDigitalsCalcInput(void* id, char *str, void *data)
 	return true;
 }
 
+void ApolloRTCCMFD::menuChooseRETPlan()
+{
+	bool ChooseRETPlanInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Format: U06,Plan Number (1-7);", ChooseRETPlanInput, 0, 50, (void*)this);
+}
+
+bool ChooseRETPlanInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::menuSetLDPPAzimuth()
 {
 	bool LDPPAzimuthInput(void* id, char *str, void *data);
@@ -7793,6 +7832,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 56:
 		menuSetPredSiteAcquisitionLM1Page();
+		break;
+	case 58:
+		menuSetRendezvousEvaluationDisplayPage();
 		break;
 	case 60:
 		menuSetRelativeMotionDigitalsPage();

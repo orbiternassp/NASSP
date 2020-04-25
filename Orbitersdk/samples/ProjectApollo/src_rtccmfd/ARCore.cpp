@@ -2776,6 +2776,7 @@ int ARCore::subThread()
 			opt.DH = GC->rtcc->GZGENCSN.TIDeltaH;
 			opt.PhaseAngle = GC->rtcc->GZGENCSN.TIPhaseAngle;
 		}
+		opt.storesolns = true;
 
 		GC->rtcc->LambertTargeting(&opt, res);
 
@@ -2861,7 +2862,22 @@ int ARCore::subThread()
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
-		opt.ChaserID = GC->rtcc->med_k01.ChaserVehicle;
+		opt.WT = GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle;
+		if (GC->MissionPlanningActive)
+		{
+			opt.ChaserID = GC->rtcc->med_k01.ChaserVehicle;
+		}
+		else
+		{
+			if (vesseltype < 2)
+			{
+				opt.ChaserID = 1;
+			}
+			else
+			{
+				opt.ChaserID = 3;
+			}
+		}
 		if (SPQMode != 1)
 		{
 			opt.t_CSI = CSItime;
