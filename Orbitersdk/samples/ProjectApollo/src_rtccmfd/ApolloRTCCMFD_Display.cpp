@@ -1234,11 +1234,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 					skp->Text((int)(0.5 * W / 8), 6 * H / 14, "Heads Down", 10);
 				}
 
-				if (G->REFSMMATcur != 5 && G->REFSMMATcur != 8)
-				{
-					skp->Text((int)(0.5 * W / 8), 2 * H / 14, "No LS REFSMMAT!", 15);
-				}
-
 				skp->Text(4 * W / 8, 15 * H / 20, "T_L:", 4);
 				GET_Display(Buffer, GC->t_Land);
 				skp->Text(5 * W / 8, 15 * H / 20, Buffer, strlen(Buffer));
@@ -2781,6 +2776,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				skp->Text(1 * W / 16, 6 * H / 14, "Chaser: LEM", 11);
 				skp->Text(1 * W / 16, 7 * H / 14, "Target: CSM", 11);
 			}
+
+			if (GC->rtcc->med_k10.MLDTime < 0)
+			{
+				sprintf_s(Buffer, "Present Time");
+			}
+			else
+			{
+				GET_Display(Buffer, GC->rtcc->med_k10.MLDTime);
+			}
+			skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
@@ -2796,16 +2801,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			skp->Text(1 * W / 16, 7 * H / 14, Buffer, strlen(Buffer));
 		}
-
-		if (GC->rtcc->med_k10.MLDTime < 0)
-		{
-			sprintf_s(Buffer, "Present Time");
-		}
-		else
-		{
-			GET_Display(Buffer, GC->rtcc->med_k10.MLDTime);
-		}
-		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 
 		if (G->DKI_Profile != 3)
 		{
@@ -3159,11 +3154,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, G->target->GetName());
 			skp->Text((int)(5.5 * W / 8), 4 * H / 14, Buffer, strlen(Buffer));
-		}
-
-		if (G->REFSMMATcur != 5 && G->REFSMMATcur != 8)
-		{
-			skp->Text(5 * W / 8, 6 * H / 14, "No LS REFSMMAT!", 15);
 		}
 
 		skp->Text(5 * W / 8, 15 * H / 21, "Landing Site:", 13);
