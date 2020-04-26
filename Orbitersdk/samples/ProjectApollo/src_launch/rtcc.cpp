@@ -8943,14 +8943,15 @@ void RTCC::PCHAPE(double R1, double R2, double R3, double U1, double U2, double 
 	RPE = RR - XR;
 }
 
-void RTCC::PMMPNE(AEGBlock sv_C, AEGBlock sv_T, double TREF, double FNPC, int KPC)
+void RTCC::PMMPNE(AEGBlock sv_C, AEGBlock sv_T, double TREF, double FNPC, int KPC, int IPC, AEGBlock &SAVE, double &DI1, double &DH1)
 {
-	double TB;
+	/*AEGBlock *sv_PC, *sv_NOPC;
+	double TA, TB, U_L, U_U;
 	int ICT;
 
 	if (abs(KPC) == 2)
 	{
-		//goto RTCC_PMMPNE_2_1;
+		goto RTCC_PMMPNE_2_1;
 	}
 
 	ICT = 0;
@@ -8964,12 +8965,167 @@ void RTCC::PMMPNE(AEGBlock sv_C, AEGBlock sv_T, double TREF, double FNPC, int KP
 		PMMAEGS(sv_C.Header, sv_C.Data, sv_C.Data);
 		sv_T.Data.TIMA = 6;
 		PMMAEGS(sv_T.Header, sv_T.Data, sv_T.Data);
+		TA = sv_T.Data.TE - sv_C.Data.TE;
 	}
 	//DKI
 	else
 	{
 		//TBD
 	}
+	//Target does PC
+	if (IPC < 0)
+	{
+		SAVE = sv_C;
+		U_L = sv_C.Data.U;
+		sv_PC = &sv_T;
+		sv_NOPC = &sv_C;
+	}
+	else
+	{
+		SAVE = sv_T;
+		U_L = sv_T.Data.U;
+		sv_PC = &sv_C;
+		sv_NOPC = &sv_T;
+	}
+	U_U = U_L + PI;
+	if (U_U >= PI2)
+	{
+		U_U -= PI2;
+	}
+RTCC_PMMPNE_2_1:
+	if (abs(KPC) == 3)
+	{
+		goto RTCC_PMMPNE_3_1;
+	}
+	double DP, DI, DH;
+	DP = PI / sv_NOPC->Data.l_dot - PI2 / sv_PC->Data.l_dot;
+	DI = sv_NOPC->Data.coe_mean.i - sv_PC->Data.coe_mean.i;
+	DH = sv_NOPC->Data.coe_mean.h - sv_PC->Data.coe_mean.h;
+	if (abs(DP) >= 1.0)
+	{
+		DH += PI2 / sv_NOPC->Data.l_dot*TA*(sv_NOPC->Data.h_dot - sv_PC->Data.h_dot) / DP;
+	}
+	if (abs(KPC) == 2)
+	{
+		DI1 += DI;
+		DH1 += DH;
+		return;
+	}
+	DI1 = DI;
+	DH1 = DH;
+RTCC_PMMPNE_3_1:
+	double i_apo, h_apo, g_apo;
+	if (IPC < 0)
+	{
+		i_apo = sv_T.Data.coe_osc.i;
+		h_apo = sv_T.Data.coe_osc.h;
+		g_apo = sv_T.Data.coe_osc.g;
+		sv_C = sv_T;
+	}
+	else
+	{
+		i_apo = sv_C.Data.coe_osc.i;
+		h_apo = sv_C.Data.coe_osc.h;
+		g_apo = sv_C.Data.coe_osc.g;
+		sv_T = sv_C;
+	}
+	double i_PH, g_PH, h_PH;
+	i_PH = i_apo + DI;
+	h_PH = h_apo + DH;
+	if (h_PH >= PI2)
+	{
+		h_PH -= PI2;
+	}
+	g_PH = g_apo - 2.0*atan(tan(0.5*DH*sin((PI - i_PH + i_apo) / 2.0)) / sin(PI - i_PH + i_apo) / 2.0);
+	if (g_PH >= PI2)
+	{
+		g_PH -= PI2;
+	}
+	else if (g_PH < 0)
+	{
+		g_PH += PI2;
+	}
+	double cos_dw, DEN, U_CN, U_CN_apo, dw, DV_PC;
+RTCC_PMMPNE_3_2:
+	cos_dw = cos(i_PH)*cos(sv_PC->Data.coe_osc.i) + sin(i_PH)*sin(sv_PC->Data.coe_osc.i)*cos(sv_PC->Data.coe_osc.h - h_PH);
+	DEN = cos_dw * cos(sv_PC->Data.coe_osc.i) - cos(i_PH);
+	if (h_PH < sv_PC->Data.coe_osc.h)
+	{
+		DEN = -DEN;
+	}
+	U_CN = atan2(sin(i_PH)*sin(sv_PC->Data.coe_osc.i)*sin(abs(sv_PC->Data.coe_osc.h - h_PH)), DEN);
+	if ((U_L > PI && U_U <= U_CN) || (U_L <= PI && U_U > U_CN))
+	{
+		U_CN += PI;
+	}
+	if (ICT != 0)
+	{
+		goto RTCC_PMMPNE_5_2;
+	}
+RTCC_PMMPNE_4_2:
+	ICT++;
+	if (ICT > 3)
+	{
+		goto RTCC_PMMPNE_6_1;
+	}
+	U_CN_apo = U_CN;
+	sv_PC->Data.TIMA = 2;
+	sv_PC->Data.Item8 = U_CN;
+	PMMAEGS(sv_PC->Header, sv_PC->Data, sv_PC->Data);
+	//TBD
+	goto RTCC_PMMPNE_3_2;
+RTCC_PMMPNE_5_1:
+	if (abs(U_CN - U_CN_apo) > PI05)
+	{
+		if (abs(U_CN - U_CN_apo) <= PI)
+		{
+			if (abs(U_CN - U_C) <= PI)
+			{
+				if (abs(U_CN - U_C) >= PI05)
+				{
+					U_CN += PI;
+					if (U_CN >= PI2)
+					{
+						U_CN -= PI2;
+					}
+				}
+			}
+		}
+	}
+	goto RTCC_PMMPNE_4_2;
+RTCC_PMMPNE_5_2:
+	dw = acos(cos_dw);
+	DV_PC = 2.0*sqrt(mu)*sin(dw / 2.0)*sqrt(2.0/sv_C.Data.R-1.0/ sv_C.Data.coe_osc.a);
+	if (ICT != 1)
+	{
+		goto RTCC_PMMPNE_5_1;
+	}
+	if (DV_PC > 5.0*0.3048)
+	{
+		goto RTCC_PMMPNE_5_1;
+	}
+RTCC_PMMPNE_6_1:
+	if (KPC > 0)
+	{
+		goto RTCC_PMMPNE_8_1;
+	}
+	double T_NPC, S, DV_Z, DV_H;
+	T_NPC = sv_C.Data.TE;
+	VECTOR3 R_C, V_C, R_P, V_P, H_P, H_C, K;
+	OrbMech::GIMKIC(sv_C.Data.coe_osc, mu, R_C, V_C);
+	OrbMech::GIMKIC(sv_PH.Data.coe_osc, mu, R_P, V_P);
+	H_P = unit(crossp(R_P, V_P));
+	H_C = unit(crossp(R_C, V_C));
+	K = unit(crossp(H_P, R_C));
+	S = dotp(H_C, K);
+	DV_Z = S * DV_PC*cos(0.5*dw) / abs(S);
+	DV_H = -DV_PC * sin(0.5*dw);
+	//TBD: Output
+	sv_T = SAVE;
+	return;
+RTCC_PMMPNE_8_1:
+	//TBD
+	return;*/
 }
 
 void RTCC::PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DELVX, double DELVY, double DELVZ, int I, VECTOR3 &V_C_apo, double &Pitch, double &Yaw)

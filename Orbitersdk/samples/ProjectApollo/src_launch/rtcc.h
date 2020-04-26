@@ -2638,7 +2638,7 @@ public:
 	//Apogee and perigee radius magnitude
 	void PCHAPE(double R1, double R2, double R3, double U1, double U2, double U3, double &RAP, double &RPE);
 	//Plane change time and velocity increments computations
-	void PMMPNE(AEGBlock sv_C, AEGBlock sv_T, double TREF, double FNPC, int KPC);
+	void PMMPNE(AEGBlock sv_C, AEGBlock sv_T, double TREF, double FNPC, int KPC, int IPC, AEGBlock &SAVE, double &DI1, double &DH1);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	int ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
