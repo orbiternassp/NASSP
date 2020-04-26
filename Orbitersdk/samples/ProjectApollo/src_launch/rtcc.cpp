@@ -8720,6 +8720,16 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 	{
 		opt.t_CSI = t_CSI;
 		err = ConcentricRendezvousProcessor(opt, res);
+		if (err)
+		{
+			//Time violation
+			if (err == 3)
+			{
+				RTCCONLINEMON.TextBuffer[0] = "TIME";
+				PMXSPT("PMMDKI", 92);
+			}
+			return;
+		}
 
 		if (!(opt.OptimumCSI && opt.K_CDH == 1 && opt.t_CSI > 0))
 		{
@@ -8732,29 +8742,39 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 		{
 			OrbMech::ITER(c_TPI, s_TPI, e_TPI, p_TPI, t_CSI, e_TPIo, t_CSIo, 60.0);
 		}
+		//Iteration checking
 		if (t_CSI > opt.t_CSI + 15.0*60.0)
 		{
+			//Warning message
+			PMXSPT("PMMDKI", 101);
 			t_CSI = opt.t_CSI + 15.0*60.0;
 			break;
 		}
 		if (t_CSI < opt.t_CSI - 15.0*60.0)
 		{
+			//Warning message
+			PMXSPT("PMMDKI", 101);
 			t_CSI = opt.t_CSI - 15.0*60.0;
 			break;
 		}
 		if (s_TPI == 1)
 		{
+			//Warning message
+			PMXSPT("PMMDKI", 101);
 			break;
 		}
 	} while (abs(e_TPI) >= eps_TPI);
+
+	//Reset input CSI time
 	opt.t_CSI = t_CSI0;
 
-	PZDKIT.UpdatingIndicator = false;
+	//Plan is a SPQ
+	PZDKIT.Block[0].PlanStatus = 2;
 
-	if (err) return;
-
+	//Save state vector and display data
 	if (opt.t_CSI <= 0)
 	{
+		//Save CDH data
 		PZDKIT.NumSolutions = 1;
 		PZDKIT.Block[0].NumMan = 1;
 		PZDKIELM.Block[0].SV_before[0] = ConvertSVtoEphemData(res.sv_C[0]);
@@ -8764,6 +8784,7 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 	}
 	else
 	{
+		//Save CSI and CDH data
 		PZDKIT.NumSolutions = 1;
 		PZDKIT.Block[0].NumMan = 2;
 
@@ -8777,14 +8798,17 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 		PZDKIT.Block[0].Display[1].Man_ID = "CDH";
 		PZDKIT.Block[0].Display[1].VEH = opt.ChaserID;
 
+		//Calculate TPI and TPF maneuvers
 		double t_TPI, t_TPF;
 		err = PCTETR(res.sv_C_apo[1], res.sv_T[1], opt.GETbase, opt.WT, opt.E, t_TPI, t_TPF);
 
 		if (err == 0)
 		{
+			//Coast to TPI
 			res.sv_C[2] = coast(res.sv_C_apo[1], t_TPI - OrbMech::GETfromMJD(res.sv_C_apo[1].MJD, opt.GETbase));
 			res.sv_T[2] = coast(res.sv_T[1], t_TPI - OrbMech::GETfromMJD(res.sv_T[1].MJD, opt.GETbase));
 
+			//Call two-impulse processor
 			LambertMan lam;
 			TwoImpulseResuls lamres;
 
@@ -8801,21 +8825,26 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 
 			LambertTargeting(&lam, lamres);
 
+			//Save post TPI state vector
 			res.sv_C_apo[2] = res.sv_C[2];
 			res.sv_C_apo[2].V = res.sv_C[2].V + lamres.dV;
 
+			//Save TPI data
 			PZDKIELM.Block[0].SV_before[2] = ConvertSVtoEphemData(res.sv_C[2]);
 			PZDKIELM.Block[0].V_after[2] = res.sv_C_apo[2].V;
 			PZDKIT.Block[0].Display[2].Man_ID = "TPI";
 			PZDKIT.Block[0].Display[2].VEH = opt.ChaserID;
 			PZDKIT.Block[0].NumMan++;
 
+			//Coast to TPF
 			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.T2 - OrbMech::GETfromMJD(res.sv_C_apo[2].MJD, opt.GETbase));
 			res.sv_T[3] = coast(res.sv_T[2], lamres.T2 - OrbMech::GETfromMJD(res.sv_T[2].MJD, opt.GETbase));
 
+			//Save post TPF state vector
 			res.sv_C_apo[3] = res.sv_C[3];
 			res.sv_C_apo[3].V = res.sv_C[3].V + lamres.dV2;
 
+			//Save TPF data
 			PZDKIELM.Block[0].SV_before[3] = ConvertSVtoEphemData(res.sv_C[3]);
 			PZDKIELM.Block[0].V_after[3] = res.sv_C_apo[3].V;
 			PZDKIT.Block[0].Display[3].Man_ID = "TPF";
@@ -8824,8 +8853,7 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 		}
 	}
 
-	PZDKIT.Block[0].PlanStatus = 2;
-
+	//Calculate more display data
 	SV sv_C, sv_T;
 	MATRIX3 Q_Xx;
 	double DH, Phase, HA, HP;
@@ -8849,6 +8877,10 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 		PZDKIT.Block[0].Display[i].Pitch = atan2(-PZDKIT.Block[0].Display[i].DV_LVLH.z, sqrt(pow(PZDKIT.Block[0].Display[i].DV_LVLH.x, 2) + pow(PZDKIT.Block[0].Display[i].DV_LVLH.y, 2)));
 	}
 
+	//We are done updating
+	PZDKIT.UpdatingIndicator = false;
+
+	//Recalculate display
 	PMDRET();
 }
 
@@ -9189,6 +9221,15 @@ RTCC_PMMSPQ_A:
 		{
 			return 94;
 		}
+	}
+
+	if (t_CDH - opt.t_CSI < 10.0*60.0)
+	{
+		return 3;
+	}
+	if (t_TPI - t_CDH < 10.0*60.0)
+	{
+		return 3;
 	}
 
 	res.t_CSI = opt.t_CSI;
@@ -10692,8 +10733,16 @@ void RTCC::PMXSPT(std::string source, int n)
 	case 72:
 		message.push_back("DELETE MPT MANEUVERS PRIOR TO ENTERING M55 MED");
 		break;
+	case 92:
+		message.push_back("CONSTRAINT " + RTCCONLINEMON.TextBuffer[0] + " VIOLATED IN COELLIPTIC SEQUENCE.");
+		break;
+	case 101:
+		message.push_back("SPQ PLAN FAILED TO CONVERGE ON OPTIMUM");
+		message.push_back("CSI - PLAN RETAINED");
+		break;
 	case 102:
-		message.push_back("NOMINAL TIME OF LIFTOFF FOR SPECIFIED LAUNCH DAY UNAVAILABLE.");
+		message.push_back("NOMINAL TIME OF LIFTOFF FOR SPECIFIED LAUNCH DAY");
+		message.push_back("UNAVAILABLE - PROCESSING TERMINATED.");
 		break;
 	case 108:
 		message.push_back("ERROR RETURNED FROM PMMAPD - INVALID APOFOCUS / PERIFOCUS");
