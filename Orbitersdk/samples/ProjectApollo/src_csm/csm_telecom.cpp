@@ -955,7 +955,7 @@ void HGA::TimeStep(double simt, double simdt)
 	double HGAWavelength, HGAFrequency, Gain85ft, Power85ft, RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
 	
-	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth)/2; //distance from earth's surface in meters
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 	
 	HGAFrequency = 2119; //MHz. Should this get set somewhere else?
 	HGAWavelength = C0/(HGAFrequency*1000000); //meters
