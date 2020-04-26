@@ -714,6 +714,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
 
+	//this block handels mode selection based on combinations of mode and beam width switches and the signal strength scanlimit
 	if(sat->GHATrackSwitch.IsCenter()) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
 	{
 		AutoTrackingMode = false;
@@ -733,12 +734,12 @@ void HGA::TimeStep(double simt, double simdt)
 					XmtBeamWidthSelect = 1;
 				}
 
-				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto
+				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto, limits to wide with switch up
 				{
 					RcvBeamWidthSelect = 1;
 					XmtBeamWidthSelect = 1;
 				}
-				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsCenter())
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsCenter()) //tracking modes in auto, limits to wide with switch up
 				{
 					RcvBeamWidthSelect = 3;
 					XmtBeamWidthSelect = 2;
@@ -754,17 +755,19 @@ void HGA::TimeStep(double simt, double simdt)
 				RcvBeamWidthSelect = 1;
 				XmtBeamWidthSelect = 1;
 			}
-			ModeSwitchTimer = simt + 1;
+			ModeSwitchTimer = simt + 1; 
 		}
 	}
 	else
 	{
-		AutoTrackingMode = true;
+		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscimates between manual and auto and won't acquire. 
+									//It get's set to manual later if we actually have no signal
+
 		if (ModeSwitchTimer < simt)
 		{
-			if ((SignalStrength > 0) && (scanlimitwarn == false) && (scanlimit == false))
+			if ((SignalStrength > 0) && (scanlimitwarn == false) && (scanlimit == false)) //
 			{
-				AutoTrackingMode = true;
+				AutoTrackingMode = true; //if it somehow wasn't on...
 				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392)) //acquire mode in auto
 				{
 					RcvBeamWidthSelect = 1;
@@ -786,7 +789,7 @@ void HGA::TimeStep(double simt, double simdt)
 					RcvBeamWidthSelect = 3;
 					XmtBeamWidthSelect = 3;
 				}
-				ModeSwitchTimer = simt + 1;
+				ModeSwitchTimer = simt + 1; 
 
 			}
 			else if ((scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
@@ -796,7 +799,7 @@ void HGA::TimeStep(double simt, double simdt)
 				XmtBeamWidthSelect = 1;
 				ModeSwitchTimer = simt + 1;
 			}
-			else // switch to manual mode if loss of signal or scanlimit
+			else // switch to manual mode if loss of signal or scanlimit (this will enable the manual controls and drive the servos to the selecter position)
 			{
 				AutoTrackingMode = false;
 				RcvBeamWidthSelect = 1;
@@ -821,7 +824,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 		//sprintf(oapiDebugString(), "PitchCmd: %lf° YawCmd: %lf° AAxisCmd: %lf° CAxisCmd: %lf°", PitchCmd, YawCmd, AAxisCmd*DEG, CAxisCmd*DEG);
 	}
-	else if (AutoTrackingMode == true)
+	else if (AutoTrackingMode == true) //this auto-tracking is used in both the AUTO and the REAQC modes. Beamwidth switching, LOS/AOS logic and scanlimit(warn) log are handled in a seperate block of code 
 	{ 
 		//auto control, added by n72.75 204020
 		if (Gamma > 45 * RAD)	//mode select A-C servo control
@@ -1070,7 +1073,7 @@ void HGA::TimeStep(double simt, double simdt)
 		scanlimitwarn = false;
 	}
 
-	sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
+	//sprintf(oapiDebugString(), "A: %lf° B: %lf° C: %lf° PitchRes: %lf° YawRes: %lf° SignalStrength %lf RelAng %lf Warn: %d Limit: %d", Alpha*DEG, Beta*DEG, Gamma*DEG, PitchRes*DEG, YawRes*DEG, SignalStrength, relang*DEG, scanlimitwarn, scanlimit);
 }
 
 void HGA::ServoDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
