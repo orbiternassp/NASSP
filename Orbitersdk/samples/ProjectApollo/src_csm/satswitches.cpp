@@ -498,7 +498,7 @@ void SaturnCabinMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s)
 
 double SaturnSuitTempMeter::QueryValue()
 {
-	return Sat->CabinTempSensor.Voltage()*15.0 + 20.0;
+	return Sat->SuitTempSensor.Voltage()*15.0 + 20.0;
 }
 
 void SaturnSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)

@@ -497,6 +497,7 @@ void USB::TimeStep(double simt) {
 	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
 }
 
+
 void USB::LoadState(char *line) {
 	int i;
 
@@ -515,6 +516,7 @@ void USB::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
 }
 
+
 // High Gain Antenna
 // Unifed S-Band System
 HGA::HGA(){
@@ -522,9 +524,13 @@ HGA::HGA(){
 	Alpha = 0;
 	Beta = 0;
 	Gamma = 0;
+	AAxisCmd = 0;
+	BAxisCmd = 0;
+	CAxisCmd = 0;
 	SignalStrength = 0;
 	PitchRes = 0;
 	YawRes = 0;
+	
 	scanlimit = false;
 	scanlimitwarn = false;
 
@@ -533,12 +539,13 @@ HGA::HGA(){
 		HornSignalStrength[i] = 0.0;
 	}
 
-	double angdiff = 1.0*RAD;
+	double angdiff = 1.0*RAD; 
 
-	U_Horn[0] = _V(cos(angdiff), 0.0, -sin(angdiff));
-	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));
-	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);
-	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);
+	//looking along the antennas pointing vector(x3) with z3 to your left and y3 pointing down
+	U_Horn[0] = _V(cos(angdiff), 0.0, -sin(angdiff));//left
+	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));//right
+	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);//up
+	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);//down
 
 	anim_HGAalpha = -1;
 	anim_HGAbeta = -1;
@@ -559,6 +566,10 @@ void HGA::Init(Saturn *vessel){
 	SignalStrength = 0;
 	scanlimit = false;
 	scanlimitwarn = false;
+	ModeSwitchTimer = 0;
+	AutoTrackingMode = false;
+	RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
+	XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 }
 
 bool HGA::IsPowered()
@@ -636,6 +647,7 @@ void HGA::DeleteAnimations() {
 	anim_HGAgamma = -1;
 }
 
+
 // Do work
 void HGA::TimeStep(double simt, double simdt)
 {
@@ -665,17 +677,144 @@ void HGA::TimeStep(double simt, double simdt)
 
 		return;
 	}
-
+	
 	double gain;
-	double AAxisCmd, BAxisCmd, CAxisCmd;
+	double AzimuthErrorSignal, ElevationErrorSignal;
+	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
+	double AzmuthTrackErrorDeg, TrackErrorSumNorm;
+	bool WhiparoundIsSet = false;
 
-	//Only manual acquisition active
-	if (sat->GHATrackSwitch.IsCenter())
+	//actual Azimuth and Elevation error signals came from phase differences not signal strength
+	//both are be a function of tracking error though so this works
+	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
+	ElevationErrorSignal = (HornSignalStrength[2] - HornSignalStrength[3])*0.25;
+
+	//normalize Azimuth and Elevation error signals
+	if (SignalStrength > 0.0)
+	{
+		AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
+		ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
+		AzmuthTrackErrorDeg = acos(1 - abs(AzimuthErrorSignalNorm))*DEG;
+	}
+	else //prevent division by zero
+	{
+		AzimuthErrorSignalNorm = 0;
+		ElevationErrorSignalNorm = 0;
+		AzmuthTrackErrorDeg = 90 * DEG;
+	}
+
+	TrackErrorSumNorm = abs(AzimuthErrorSignalNorm + ElevationErrorSignalNorm);
+
+	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
+
+	const double TrkngCtrlGain = 2.9; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
+	const double ServoFeedbackGain = 1.2; //this works too...
+	const double BeamSwitchingTrkErThreshhold = 0.001; 
+
+
+	//There are different behavoirs for recv vs xmit beamwidth, right now this just looks at recv mode, we can add the xmit vs recv modes later
+
+	//this block handels mode selection based on combinations of mode and beam width switches and the signal strength scanlimit
+	if(sat->GHATrackSwitch.IsCenter()) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
+	{
+		AutoTrackingMode = false;
+		RcvBeamWidthSelect = 0;
+		XmtBeamWidthSelect = 0;
+	}
+	else if (sat->GHATrackSwitch.IsUp()) // auto mode selected
+	{
+		AutoTrackingMode = true;
+		if (ModeSwitchTimer < simt) //timer prevents getting caught oscilating between narrow/wide or auto/manual which can happen if checked every timestep or with very small[ish] timesteps
+		{
+			if (SignalStrength > 0)
+			{
+				if (TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold*392) //acquire mode in auto (392 = PI/8*1000 which is a good place to switch between narrow and wide)
+				{
+					RcvBeamWidthSelect = 1;
+					XmtBeamWidthSelect = 1;
+				}
+
+				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto, limits to wide with switch up
+				{
+					RcvBeamWidthSelect = 1;
+					XmtBeamWidthSelect = 1;
+				}
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsCenter()) //tracking modes in auto, limits to wide with switch up
+				{
+					RcvBeamWidthSelect = 3;
+					XmtBeamWidthSelect = 2;
+				}
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsDown())
+				{
+					RcvBeamWidthSelect = 3;
+					XmtBeamWidthSelect = 3;
+				}
+			}
+			else //switch back to wide beamwidth if signal lost
+			{
+				RcvBeamWidthSelect = 1;
+				XmtBeamWidthSelect = 1;
+			}
+			ModeSwitchTimer = simt + 1; 
+		}
+	}
+	else
+	{
+		AutoTrackingMode = true;	//enable the auto track flag. this might not need to be here, but it also might be fixing a rare condition where the state oscimates between manual and auto and won't acquire. 
+									//It get's set to manual later if we actually have no signal
+
+		if (ModeSwitchTimer < simt)
+		{
+			if ((SignalStrength > 0) && (scanlimitwarn == false) && (scanlimit == false)) //
+			{
+				AutoTrackingMode = true; //if it somehow wasn't on...
+				if ((TrackErrorSumNorm >= BeamSwitchingTrkErThreshhold * 392)) //acquire mode in auto
+				{
+					RcvBeamWidthSelect = 1;
+					XmtBeamWidthSelect = 1;
+				}
+
+				if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && (sat->GHABeamSwitch.IsUp())) //tracking modes in auto wide
+				{
+					RcvBeamWidthSelect = 1;
+					XmtBeamWidthSelect = 1;
+				}
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsCenter()) //tracking modes in auto med
+				{
+					RcvBeamWidthSelect = 3;
+					XmtBeamWidthSelect = 2;
+				}
+				else if ((TrackErrorSumNorm < BeamSwitchingTrkErThreshhold) && sat->GHABeamSwitch.IsDown()) //tracking modes in auto fine
+				{
+					RcvBeamWidthSelect = 3;
+					XmtBeamWidthSelect = 3;
+				}
+				ModeSwitchTimer = simt + 1; 
+
+			}
+			else if ((scanlimitwarn == true) && (scanlimit == false)) //switch to wide mode, but stay in auto tracking if scanlimit warn is set, but not scanlimit
+			{
+				AutoTrackingMode = true;
+				RcvBeamWidthSelect = 1;
+				XmtBeamWidthSelect = 1;
+				ModeSwitchTimer = simt + 1;
+			}
+			else // switch to manual mode if loss of signal or scanlimit (this will enable the manual controls and drive the servos to the selecter position)
+			{
+				AutoTrackingMode = false;
+				RcvBeamWidthSelect = 1;
+				XmtBeamWidthSelect = 1;
+			}
+		}
+		
+	}
+
+	//select control mode for high gain antenna 
+	if (AutoTrackingMode == false) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
 	{
 		double PitchCmd, YawCmd;
-
-		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*30.0 + 90.0;
-		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*30.0;
+		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*15.0 + 90.0;
+		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*15.0;
 
 		//Command Resolver
 		VECTOR3 U_RB;
@@ -685,17 +824,78 @@ void HGA::TimeStep(double simt, double simdt)
 
 		//sprintf(oapiDebugString(), "PitchCmd: %lf° YawCmd: %lf° AAxisCmd: %lf° CAxisCmd: %lf°", PitchCmd, YawCmd, AAxisCmd*DEG, CAxisCmd*DEG);
 	}
+	else if (AutoTrackingMode == true) //this auto-tracking is used in both the AUTO and the REAQC modes. Beamwidth switching, LOS/AOS logic and scanlimit(warn) log are handled in a seperate block of code 
+	{ 
+		//auto control, added by n72.75 204020
+		if (Gamma > 45 * RAD)	//mode select A-C servo control
+		{
+			if (AzmuthTrackErrorDeg > 3.0)
+			{
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+			}
+			else
+			{
+				AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt);
+				BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+			}
+		}
+		else					//mode select B-C servo control
+		{
+			double GammaLast = Gamma;
+			if (Gamma <= -1.0 * RAD)
+			{
+				if ((GammaLast > -1.0 * RAD)&&(Gamma < -1.0)) //falling edge detection for gamma dropping below -1.0°
+				{
+					WhiparoundIsSet = true; //set whiparound flag on falling edge below -1.0
+				}
+				else
+				{
+					WhiparoundIsSet = false; //clear whiparound flag
+				}
+				BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt / 10);
+				CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+
+				if (WhiparoundIsSet == true)
+				{
+					if (Alpha > 0.0)
+					{
+						AAxisCmd = Alpha - 180 * RAD;
+					}
+					else
+					{
+						AAxisCmd = Alpha + 180 * RAD;
+					}
+					WhiparoundIsSet = false; //clear whiparound flag
+				}
+			}
+			else
+			{
+				if (AzmuthTrackErrorDeg > 3.0)
+				{
+					AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+					BAxisCmd = Beta - (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt) - (Beta*ServoFeedbackGain*simdt/10);
+					CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				}
+				else
+				{
+					AAxisCmd = Alpha + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+					BAxisCmd = Beta - (Beta*ServoFeedbackGain*simdt);
+					CAxisCmd = Gamma + (TrkngCtrlGain*ElevationErrorSignalNorm*simdt);
+				}
+			}
+		}
+	}
 	else
 	{
-		double AzimuthErrorSignal, ElevationErrorSignal;
-
-		AzimuthErrorSignal = (HornSignalStrength[0] - HornSignalStrength[1])*0.25;
-		ElevationErrorSignal = (HornSignalStrength[2] - HornSignalStrength[3])*0.25;
-
-		AAxisCmd = 180.0*RAD;
-		BAxisCmd = 0.0;
-		CAxisCmd = 90.0*RAD;
+		AAxisCmd = Alpha;
+		BAxisCmd = Beta;
+		CAxisCmd = Gamma;
 	}
+
+	//sprintf(oapiDebugString(), "AzimuthErrorSigNorm: %lf ElevationErrorSigNorm: %lf A_CMD: %lf B_CMD: %lf C_CMD: %lf SignalStrength %lf AzmuthTrackErrorDeg %lf°", AzimuthErrorSignalNorm, ElevationErrorSignalNorm, AAxisCmd, BAxisCmd, CAxisCmd, SignalStrength, AzmuthTrackErrorDeg);
 
 	//SERVO DRIVE
 
@@ -741,7 +941,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	VECTOR3 U_RP, pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
-	double relang, beamwidth, Moonrelang;
+	double relang, beamwidth, Moonrelang, EarthSignalDist;
 
 	OBJHANDLE hMoon = oapiGetObjectByName("Moon");
 	OBJHANDLE hEarth = oapiGetObjectByName("Earth");
@@ -751,23 +951,60 @@ void HGA::TimeStep(double simt, double simdt)
 	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
+	
+	double HGAWavelength, HGAFrequency, Gain85ft, Power85ft, RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
+	//gain values from NASA Technical Note TN D-6723
+	
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+	
+	HGAFrequency = 2119; //MHz. Should this get set somewhere else?
+	HGAWavelength = C0/(HGAFrequency*1000000); //meters
+	Gain85ft = pow(50 / 10, 10); //this is the gain, dB converted to ratio of the 85ft antennas on earth
+	Power85ft = 2000; //watts
+	
+	
+	int RcvBeamWidthMode = 1;
 
-	//Not based on reality and just for testing: relative angle greater beamwidth no signal strength, uses cosine function to get increase of signal strength from 0 to 100
-	if (sat->GHABeamSwitch.IsUp())		//Wide
+	if(RcvBeamWidthSelect == 0)
+		if (sat->GHABeamSwitch.IsUp())
+		{
+			RcvBeamWidthMode = 1;
+		}
+		else if (sat->GHABeamSwitch.IsCenter())
+		{
+			RcvBeamWidthMode = 2;
+		}
+		else
+		{
+			RcvBeamWidthMode = 3;
+		}
+	else
+	{
+		RcvBeamWidthMode = RcvBeamWidthSelect;
+	}
+
+	if (RcvBeamWidthMode == 1)		//Wide 3.1 dB
 	{
 		beamwidth = 40.0*RAD;
-		gain = 75.625;
+		gain = pow(3.1 / 10, 10); //dB to ratio
 	}
-	else if (sat->GHABeamSwitch.IsCenter())	//Medium
+	else if (RcvBeamWidthMode == 2)	//Medium 22.5 dB
 	{
-		beamwidth = 3.9*RAD;
-		gain = 99.375;
+		beamwidth = 4.5*RAD;
+		gain = pow(22.5 / 10, 10); //dB to ratio
 	}
-	else								//Narrow
+	else						//Narrow 23.0 dB
 	{
-		beamwidth = 3.9*RAD;
-		gain = 100.0;
+		beamwidth = 4.5*RAD;
+		gain = pow(23 / 10, 10); //dB to ratio
 	}
+
+
+	RecvdHGAPower = Power85ft*Gain85ft*gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
+	RecvdHGAPower_dBm = 10*log10(1000*RecvdHGAPower);
+	SignalStrengthScaleFactor = HGA::dBm2SignalStrength(RecvdHGAPower_dBm);
+
+	//sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
 
 	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
 
@@ -798,7 +1035,8 @@ void HGA::TimeStep(double simt, double simdt)
 
 			if (relang < PI05 / a)
 			{
-				HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*gain;
+				//HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*gain;
+				HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*SignalStrengthScaleFactor;
 			}
 			else
 			{
@@ -937,16 +1175,36 @@ void HGA::clbkPostCreation()
 	hga_proc_last[2] = hga_proc[2];
 }
 
+double HGA::dBm2SignalStrength(double dBm)
+{
+	double SignalStrength;
+
+	if (dBm >= -50)
+	{
+		SignalStrength = 100.0;
+	}
+	else if (dBm <= -130)
+	{
+		SignalStrength = 0.0;
+	}
+	else
+	{
+		SignalStrength = (130.0 + dBm)*1.25; //convert from dBm to the 0-100% signal strength used in NASSP
+	}
+
+	return SignalStrength;
+}
+
 // Load
 void HGA::LoadState(char *line) {
-	sscanf(line + 15, "%lf %lf %lf", &Alpha, &Beta, &Gamma);
+	sscanf(line + 15, "%lf %lf %lf %lf %lf %lf", &Alpha, &Beta, &Gamma, &AAxisCmd, &BAxisCmd, &CAxisCmd);
 }
 
 // Save
 void HGA::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf", Alpha, Beta, Gamma);
+	sprintf(buffer, "%lf %lf %lf %lf %lf %lf", Alpha, Beta, Gamma, AAxisCmd, BAxisCmd, CAxisCmd);
 
 	oapiWriteScenario_string(scn, "HIGHGAINANTENNA", buffer);
 }
