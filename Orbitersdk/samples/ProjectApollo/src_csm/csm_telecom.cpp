@@ -813,8 +813,8 @@ void HGA::TimeStep(double simt, double simdt)
 	if (AutoTrackingMode == false) //manual control if switch is set to manual or scanlimit has been hit in reacq mode
 	{
 		double PitchCmd, YawCmd;
-		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*30.0 + 90.0;
-		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*30.0;
+		PitchCmd = -(double)sat->HighGainAntennaPitchPositionSwitch.GetState()*15.0 + 90.0;
+		YawCmd = (double)sat->HighGainAntennaYawPositionSwitch.GetState()*15.0;
 
 		//Command Resolver
 		VECTOR3 U_RB;
