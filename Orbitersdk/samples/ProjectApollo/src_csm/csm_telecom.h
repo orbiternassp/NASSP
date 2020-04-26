@@ -369,7 +369,7 @@ public:
 	bool fm_opr;                       // FM transmitter operating
 	int pa_mode_1, pa_mode_2;          // Power amplifier mode
 	double pa_timer_1, pa_timer_2;	   // Tube heater timer
-	int pa_ovr_1, pa_ovr_2;			   // PA mode override for uptelemetry channel
+	int pa_ovr_1, pa_ovr_2;				// PA mode override for uptelemetry channel
 	double rcvr_agc_voltage;			//Receiver AGC Voltage
 	SBandAntenna *ant;
 };
@@ -389,6 +389,11 @@ public:
 	bool ScanLimitWarning();
 	bool IsPowered();
 	void clbkPostCreation();
+	double dBm2SignalStrength(double dBm);
+	double ModeSwitchTimer;
+	int RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
+	int XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
+	bool AutoTrackingMode;
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }
@@ -407,6 +412,9 @@ private:
 	double Alpha;								// Antenna alpha
 	double Beta;								// Antenna beta
 	double Gamma;								// Antenna gamma
+	double AAxisCmd;
+	double BAxisCmd;
+	double CAxisCmd;
 	double PitchRes;
 	double YawRes;
 	bool scanlimit;
