@@ -8943,6 +8943,35 @@ void RTCC::PCHAPE(double R1, double R2, double R3, double U1, double U2, double 
 	RPE = RR - XR;
 }
 
+void RTCC::PMMPNE(AEGBlock sv_C, AEGBlock sv_T, double TREF, double FNPC, int KPC)
+{
+	double TB;
+	int ICT;
+
+	if (abs(KPC) == 2)
+	{
+		//goto RTCC_PMMPNE_2_1;
+	}
+
+	ICT = 0;
+
+	//SPQ
+	if (KPC < 1)
+	{
+		TB = TREF + (FNPC - 1.0)*PI / sv_C.Data.l_dot;
+		sv_C.Data.TIMA = 0;
+		sv_C.Data.TE = TB;
+		PMMAEGS(sv_C.Header, sv_C.Data, sv_C.Data);
+		sv_T.Data.TIMA = 6;
+		PMMAEGS(sv_T.Header, sv_T.Data, sv_T.Data);
+	}
+	//DKI
+	else
+	{
+		//TBD
+	}
+}
+
 void RTCC::PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DELVX, double DELVY, double DELVZ, int I, VECTOR3 &V_C_apo, double &Pitch, double &Yaw)
 {
 	//I = 0: Pitch and yaw parallel to target, -1 = apply DV in-plane, 1 = apply DV parallel

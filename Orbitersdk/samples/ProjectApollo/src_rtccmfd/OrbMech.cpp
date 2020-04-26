@@ -8566,17 +8566,21 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 	double dt;
 
-	if (in.TIMA == 0 || in.TIMA == 4)
+	if (in.TIMA == 0 || in.TIMA >= 4)
 	{
 		if (in.TIMA == 0)
 		{
 			dt = in.TE - in.TS;
 		}
-		else
+		else if (in.TIMA == 4)
 		{
 			dt = tempblock.TE - in.TS;
 		}
-
+		else
+		{
+			dt = 0.0;
+		}
+	NewPMMLAEG_V1000:
 		coe_mean1.l = CurrentBlock.l_dot*dt + in.coe_mean.l;
 		coe_mean1.g = CurrentBlock.g_dot*dt + in.coe_mean.g;
 		coe_mean1.h = CurrentBlock.h_dot*dt + in.coe_mean.h;
@@ -8734,6 +8738,12 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 		{
 			CurrentBlock.Item10 -= PI2;
 		}
+	}
+
+	if (in.TIMA >= 5)
+	{
+		dt = -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
+		goto NewPMMLAEG_V1000;
 	}
 
 NewPMMLAEG_V1030:
