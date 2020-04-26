@@ -707,7 +707,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	//sprintf(oapiDebugString(), "TrackErrorSumNorm %lf", TrackErrorSumNorm);
 
-	const double TrkngCtrlGain = 2.7; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
+	const double TrkngCtrlGain = 2.9; //determined empericially, is actually the combination of many gains that are applied to everything from gear backlash to servo RPM
 	const double ServoFeedbackGain = 1.2; //this works too...
 	const double BeamSwitchingTrkErThreshhold = 0.001; 
 
