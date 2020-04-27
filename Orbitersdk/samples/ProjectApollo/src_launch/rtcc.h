@@ -958,7 +958,6 @@ struct LunarLiftoffTimeOpt
 
 	double GETbase;		//usually MJD at launch
 	SV sv_CSM;			//CSM State vector
-	AEGBlock sv_CSM2;
 	
 	double dt_2;		//Fixed time from insertion to TPI for direct profile
 	bool IsInsVelInput;	//0 = calculate insertion velocity, 1 = use input velocity
@@ -2620,6 +2619,7 @@ public:
 	bool TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, SV &sv_reentry, double &lat_EMPcor);
 	bool TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
+	void LLWP_PERHAP(AEGHeader Header, AEGDataBlock sv, double &RAP, double &RPE);
 	void LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
 	void LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res);

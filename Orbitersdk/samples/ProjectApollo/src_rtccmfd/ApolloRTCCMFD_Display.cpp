@@ -14,6 +14,29 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	// Add MFD display routines here.
 	// Use the device context (hDC) for Windows GDI paint functions.
 
+	LunarLiftoffTimeOpt opt;
+	LunarLiftoffResults res;
+
+	opt.sv_CSM = GC->rtcc->StateVectorCalc(G->vessel);
+	opt.t_hole = GC->rtcc->GMTfromGET(127.0*3600.0);
+	opt.M = 2;
+	opt.P = 1;
+	opt.DT_B = 0.0;
+	opt.I_TPI = 2;
+	opt.I_CDH = 1;
+	opt.I_BURN = 2;
+	opt.lat = GC->rtcc->BZLSDISP.lat[0];
+	opt.lng = GC->rtcc->BZLSDISP.lng[0];
+	opt.R_LLS = GC->rtcc->MCSMLR;
+	opt.dt_1 = 7.0*60.0 + 15.0;
+	opt.Y_S = 0.5*RAD;
+	opt.theta_1 = 10.0*RAD;
+	opt.h_BO = 60000.0*0.3048;
+	opt.v_LH = 5534.9 * 0.3048;
+	opt.v_LV = 32.2*0.3048;
+
+	GC->rtcc->LunarLaunchWindowProcessor(opt, res);
+
 	//sprintf(Buffer, "%d", G->screen);
 	//skp->Text(7.5 * W / 8,(int)(0.5 * H / 14), Buffer, strlen(Buffer));
 

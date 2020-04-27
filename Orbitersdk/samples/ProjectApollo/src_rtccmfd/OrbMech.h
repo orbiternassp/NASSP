@@ -296,8 +296,8 @@ struct AEGDataBlock
 	double Item7;
 	//Item 8, Input: Mean anomaly (option 1), argument of latitude (option 2), Output: DH (options 5-6) otherwise same as input
 	double Item8;
-	//Item 9, crossing time of the reference counter line
-	double t_oc;
+	//Item 9, crossing time of the reference counter line (input), time lag (options 5-6), otherwise same as input (output)
+	double Item9;
 	//Item 10, number of times the AEG will cross the reference line (input), phase angle for options 4-6 (output)
 	double Item10;
 	CELEMENTS coe_osc;

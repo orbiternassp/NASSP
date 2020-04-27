@@ -8523,7 +8523,6 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	}
 
 	CurrentBlock = in;
-	CurrentBlock.ENTRY = 0;
 
 	//Matrix to rotate to selenographic inertial
 	Rot = OrbMech::GetObliquityMatrix(BODY_MOON, in.Item7 + in.TS / 24.0 / 3600.0);
@@ -8742,13 +8741,17 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 	if (in.TIMA >= 5)
 	{
+		out.Item9 = tempblock.TE - CurrentBlock.TE;
 		dt = -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
 		goto NewPMMLAEG_V1000;
 	}
 
 NewPMMLAEG_V1030:
 	//Move output into area supplied by the calling program
+	out.ENTRY = 0;
+	out.Item7 = CurrentBlock.Item7;
 	out.Item8 = CurrentBlock.Item8;
+	out.Item9 = CurrentBlock.Item9;
 	out.Item10 = CurrentBlock.Item10;
 	out.coe_osc = CurrentBlock.coe_osc;
 	out.f = CurrentBlock.f;
