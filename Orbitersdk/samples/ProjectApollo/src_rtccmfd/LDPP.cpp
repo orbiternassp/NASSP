@@ -846,12 +846,12 @@ void LDPP::LLTPR(double T_H, SV sv_L, double &t_DOI, double &t_IGN, double &t_TD
 		c = unit(C);
 		V_H = c * sqrt(2.0*mu*R_p / (R_a*(R_p + R_a)));
 		sv_L.V = V_H;
+
 		OrbMech::oneclickcoast(sv_L.R, sv_L.V, sv_L.MJD, t_H, R_PP, V_PP, hMoon, hMoon);
 
 		//Not in LDPP document
 		double dt_peri = OrbMech::timetoperi(R_PP, V_PP, mu);
-
-		t_x = t + t_H;
+		OrbMech::oneclickcoast(R_PP, V_PP, sv_L.MJD + t_H / 24.0 / 3600.0, dt_peri, R_PP, V_PP, hMoon, hMoon);
 
 		if (S <= 0)
 		{
@@ -860,10 +860,13 @@ void LDPP::LLTPR(double T_H, SV sv_L, double &t_DOI, double &t_IGN, double &t_TD
 			goto LDPP_LLTPR_2_2;
 		}
 
+		t_H += dt_peri;
+		t_x = t + t_H;
+
 		//Not in LDPP document
 		h_c2 = unit(crossp(R_PP, V_PP));
 
-		t_L = t + t_H + opt.t_D;
+		t_L = t_x + opt.t_D;
 		R_ppu = unit(R_PP);
 		d = unit(crossp(h_c2, R_ppu));
 		D_L = R_ppu * cos(opt.theta_D) + d * sin(opt.theta_D);
