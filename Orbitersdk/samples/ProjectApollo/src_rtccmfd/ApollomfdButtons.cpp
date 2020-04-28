@@ -1858,7 +1858,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_B, &ApolloRTCCMFD::menuCycleTITable);
 	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleTIPlanNumber);
 	RegisterFunction("DEL", OAPI_KEY_D, &ApolloRTCCMFD::menuTIDeleteGET);
-	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleTIThruster);
+	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuChooseTIThruster);
 	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleTIAttitude);
 	RegisterFunction("ULL", OAPI_KEY_U, &ApolloRTCCMFD::menuTIUllageOption);
 
@@ -1890,7 +1890,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu55, sizeof(mnu55) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("DEL", OAPI_KEY_D, &ApolloRTCCMFD::menuM70DeleteGET);
-	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleSPQDKIThruster);
+	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuChooseSPQDKIThruster);
 	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuM70CycleAttitude);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("ITE", OAPI_KEY_I, &ApolloRTCCMFD::menuM70CycleIterationFlag);
@@ -1926,7 +1926,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("MPT", OAPI_KEY_V, &ApolloRTCCMFD::menuMPTDirectInputMPTCode);
 	RegisterFunction("REP", OAPI_KEY_R, &ApolloRTCCMFD::menuMPTDirectInputReplaceCode);
 	RegisterFunction("TIG", OAPI_KEY_I, &ApolloRTCCMFD::menuMPTDirectInputTIG);
-	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleMPTDirectInputThruster);
+	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuChooseMPTDirectInputThruster);
 	RegisterFunction("ATT", OAPI_KEY_G, &ApolloRTCCMFD::menuMPTDirectInputAttitude);
 	RegisterFunction("BPA", OAPI_KEY_A, &ApolloRTCCMFD::menuMPTDirectInputBurnParameters);
 
@@ -1959,7 +1959,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("TAB", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleGPMTable);
 	RegisterFunction("REP", OAPI_KEY_R, &ApolloRTCCMFD::menuGPMReplaceCode);
-	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleGPMThruster);
+	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuChooseGPMThruster);
 	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleGPMAttitude);
 	RegisterFunction("UDT", OAPI_KEY_U, &ApolloRTCCMFD::menuGPMUllageDT);
 	RegisterFunction("UTH", OAPI_KEY_W, &ApolloRTCCMFD::menuGPMUllageThrusters);
@@ -2606,7 +2606,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TAB", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleLOIMCCTable);
 	RegisterFunction("REP", OAPI_KEY_R, &ApolloRTCCMFD::menuLOIMCCReplaceCode);
 	RegisterFunction("NUM", OAPI_KEY_N, &ApolloRTCCMFD::menuLOIMCCManeuverNumber);
-	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleLOIMCCThruster);
+	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuChooseLOIMCCThruster);
 	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleLOIMCCAttitude);
 	RegisterFunction("UDT", OAPI_KEY_U, &ApolloRTCCMFD::menuLOIMCCUllageThrustersDT);
 

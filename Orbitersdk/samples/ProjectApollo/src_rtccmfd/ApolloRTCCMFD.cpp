@@ -735,6 +735,17 @@ void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 	}
 }
 
+bool ApolloRTCCMFD::ThrusterType(std::string name, int &id)
+{
+	int temp = GC->rtcc->ThrusterNameToCode(name);
+	if (temp > 0)
+	{
+		id = temp;
+		return true;
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::MPTAttitudeName(char *Buff, int n)
 {
 	if (n == RTCC_ATTITUDE_INERTIAL)
@@ -2116,15 +2127,16 @@ void ApolloRTCCMFD::menuTIVectorTimes()
 	if (GC->MissionPlanningActive)
 	{
 		bool TIVectorTimesInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the chaser and target vector GET (Format: hhh:mm:ss, hh:mm:ss), 0 or smaller for present time", TIVectorTimesInput, 0, 25, (void*)this);
+		oapiOpenInputBox("Choose the chaser and target vector GET (Format: hhh:mm:ss hh:mm:ss), 0 or smaller for present time", TIVectorTimesInput, 0, 25, (void*)this);
 	}
 }
 
 bool TIVectorTimesInput(void *id, char *str, void *data)
 {
-	int hh1, mm1, ss1, hh2, mm2, ss2;
+	int hh1, mm1, hh2, mm2;
+	double ss1, ss2;
 	double chaser_time, target_time;
-	if (sscanf(str, "%d:%d:%d, %d:%d:%d", &hh1, &mm1, &ss1, &hh2, &mm2, &ss2) == 6)
+	if (sscanf(str, "%d:%d:%lf %d:%d:%lf", &hh1, &mm1, &ss1, &hh2, &mm2, &ss2) == 6)
 	{
 		chaser_time = ss1 + 60 * (mm1 + 60 * hh1);
 		target_time = ss2 + 60 * (mm2 + 60 * hh2);
@@ -2628,9 +2640,21 @@ void ApolloRTCCMFD::set_TIDeleteGET(double get)
 	GC->rtcc->med_m72.DeleteGET = get;
 }
 
-void ApolloRTCCMFD::menuCycleTIThruster()
+void ApolloRTCCMFD::menuChooseTIThruster()
 {
-	CycleThrusterOption(GC->rtcc->med_m72.Thruster);
+	bool ChooseTIThrusterInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Thruster for the maneuver (Options: S, A, D, L1-L4, C1-C4)", ChooseTIThrusterInput, 0, 20, (void*)this);
+}
+
+bool ChooseTIThrusterInput(void *id, char *str, void *data)
+{
+	std::string th(str);
+	return ((ApolloRTCCMFD*)data)->set_ChooseTIThruster(th);
+}
+
+bool ApolloRTCCMFD::set_ChooseTIThruster(std::string th)
+{
+	return ThrusterType(th, GC->rtcc->med_m72.Thruster);
 }
 
 void ApolloRTCCMFD::menuCycleTIAttitude()
@@ -2738,9 +2762,21 @@ void ApolloRTCCMFD::set_TIDPSScaleFactor(double scale)
 	GC->rtcc->med_m72.DPSThrustFactor = scale;
 }
 
-void ApolloRTCCMFD::menuCycleSPQDKIThruster()
+void ApolloRTCCMFD::menuChooseSPQDKIThruster()
 {
-	CycleThrusterOption(GC->rtcc->med_m70.Thruster);
+	bool ChooseSPQDKIThrusterInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Thruster for the maneuver (Options: S, A, D, L1-L4, C1-C4)", ChooseSPQDKIThrusterInput, 0, 20, (void*)this);
+}
+
+bool ChooseSPQDKIThrusterInput(void *id, char *str, void *data)
+{
+	std::string th(str);
+	return ((ApolloRTCCMFD*)data)->set_ChooseSPQDKIThruster(th);
+}
+
+bool ApolloRTCCMFD::set_ChooseSPQDKIThruster(std::string th)
+{
+	return ThrusterType(th, GC->rtcc->med_m70.Thruster);
 }
 
 void ApolloRTCCMFD::menuM70DeleteGET()
@@ -2842,9 +2878,21 @@ void ApolloRTCCMFD::set_M70DPSScaleFactor(double scale)
 	GC->rtcc->med_m70.DPSThrustFactor = scale;
 }
 
-void ApolloRTCCMFD::menuCycleMPTDirectInputThruster()
+void ApolloRTCCMFD::menuChooseMPTDirectInputThruster()
 {
-	CycleThrusterOption(GC->rtcc->med_m66.Thruster);
+	bool ChooseMPTDirectInputThrusterInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Thruster for the maneuver (Options: S, A, D, L1-L4, C1-C4, BV)", ChooseMPTDirectInputThrusterInput, 0, 20, (void*)this);
+}
+
+bool ChooseMPTDirectInputThrusterInput(void *id, char *str, void *data)
+{
+	std::string th(str);
+	return ((ApolloRTCCMFD*)data)->set_ChooseMPTDirectInputThruster(th);
+}
+
+bool ApolloRTCCMFD::set_ChooseMPTDirectInputThruster(std::string th)
+{
+	return ThrusterType(th, GC->rtcc->med_m66.Thruster);
 }
 
 void ApolloRTCCMFD::menuCycleGPMTable()
@@ -2876,9 +2924,21 @@ void ApolloRTCCMFD::set_GPMReplaceCode(unsigned n)
 	GC->rtcc->med_m65.ReplaceCode = n;
 }
 
-void ApolloRTCCMFD::menuCycleGPMThruster()
+void ApolloRTCCMFD::menuChooseGPMThruster()
 {
-	CycleThrusterOption(GC->rtcc->med_m65.Thruster);
+	bool ChooseGPMThrusterInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Thruster for the maneuver (Options: S, A, D, L1-L4, C1-C4)", ChooseGPMThrusterInput, 0, 20, (void*)this);
+}
+
+bool ChooseGPMThrusterInput(void *id, char *str, void *data)
+{
+	std::string th(str);
+	return ((ApolloRTCCMFD*)data)->set_ChooseGPMThruster(th);
+}
+
+bool ApolloRTCCMFD::set_ChooseGPMThruster(std::string th)
+{
+	return ThrusterType(th, GC->rtcc->med_m65.Thruster);
 }
 
 void ApolloRTCCMFD::menuCycleGPMAttitude()
@@ -3010,9 +3070,21 @@ void ApolloRTCCMFD::set_LOIMCCReplaceCode(unsigned n)
 	GC->rtcc->med_m78.ReplaceCode = n;
 }
 
-void ApolloRTCCMFD::menuCycleLOIMCCThruster()
+void ApolloRTCCMFD::menuChooseLOIMCCThruster()
 {
-	CycleThrusterOption(GC->rtcc->med_m78.Thruster);
+	bool ChooseLOIMCCThrusterInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Thruster for the maneuver (Options: S, A, D, L1-L4, C1-C4)", ChooseLOIMCCThrusterInput, 0, 20, (void*)this);
+}
+
+bool ChooseLOIMCCThrusterInput(void *id, char *str, void *data)
+{
+	std::string th(str);
+	return ((ApolloRTCCMFD*)data)->set_ChooseLOIMCCThruster(th);
+}
+
+bool ApolloRTCCMFD::set_ChooseLOIMCCThruster(std::string th)
+{
+	return ThrusterType(th, GC->rtcc->med_m78.Thruster);
 }
 
 void ApolloRTCCMFD::menuCycleLOIMCCAttitude()

@@ -285,7 +285,7 @@ struct MED_M72
 	double DeleteGET = 0.0; //Deletes all maneuvers in both tables occurring after the input GET (no delete if 0)
 	int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4; //Thruster for the maneuver
 	int Attitude = RTCC_ATTITUDE_PGNS_EXDV;		//Attitude option
-	double UllageDT = 0.0;	//Delta T of Ullage
+	double UllageDT = -1;	//Delta T of Ullage
 	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
 	bool Iteration = false; //false = do not iterate, true = iterate
 	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
@@ -2833,6 +2833,8 @@ public:
 	//Anchor Vector Maintenance Module
 	void EMGVECSTInput(int L, EphemerisData sv);
 	int EMGVECSTOutput(int L, EphemerisData &sv);
+	int ThrusterNameToCode(std::string thruster);
+	int AttitudeNameToCode(std::string attitude);
 
 	bool MPTHasManeuvers(int L);
 	//Weight Change Module
@@ -3026,7 +3028,7 @@ public:
 		unsigned ManeuverNumber = 1; //Maneuver number in LOI or MCC table
 		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for maneuver
 		int Attitude = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
-		double UllageDT = 0.0;	//Delta T of Ullage
+		double UllageDT = -1;	//Delta T of Ullage
 		bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
 		bool Iteration = false; //false = do not iterate, true = iterate
 		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
@@ -3945,8 +3947,6 @@ private:
 	void EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis, int mode, VECTOR3 Att = _V(0, 0, 0), double PYRGET = 0.0);
 	//Ground Point Characteristics Block Routine
 	void EMGGPCHR(double lat, double lng, double alt, int body, Station *stat);
-	int ThrusterNameToCode(std::string thruster);
-	int AttitudeNameToCode(std::string attitude);
 
 	//MPT utility functions
 	bool MPTConfigIncludesCSM(int config);

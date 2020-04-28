@@ -115,6 +115,7 @@ public:
 	void AGC_Display(char * Buff, double time);
 	void REFSMMATName(char* Buff, int n);
 	void ThrusterName(char *Buff, int n);
+	bool ThrusterType(std::string name, int &id);
 	void MPTAttitudeName(char *Buff, int n);
 	void VehicleConfigName(char *Buffer, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
@@ -502,7 +503,8 @@ public:
 	void menuCycleTIPlanNumber();
 	void menuTIDeleteGET();
 	void set_TIDeleteGET(double get);
-	void menuCycleTIThruster();
+	void menuChooseTIThruster();
+	bool set_ChooseTIThruster(std::string th);
 	void menuCycleTIAttitude();
 	void menuTIUllageOption();
 	bool set_TIUllageOption(int num, double dt);
@@ -516,7 +518,8 @@ public:
 	void menuSetSPQorDKIRTransferPage();
 	void menuTransferSPQorDKIToMPT();
 	void menuBackToSPQorDKIPage();
-	void menuCycleSPQDKIThruster();
+	void menuChooseSPQDKIThruster();
+	bool set_ChooseSPQDKIThruster(std::string th);
 	void menuM70DeleteGET();
 	void set_MPTM70DeleteGET(double get);
 	void menuM70CycleAttitude();
@@ -531,7 +534,8 @@ public:
 	void menuCycleGPMTable();
 	void menuGPMReplaceCode();
 	void set_GPMReplaceCode(unsigned man);
-	void menuCycleGPMThruster();
+	void menuChooseGPMThruster();
+	bool set_ChooseGPMThruster(std::string th);
 	void menuCycleGPMAttitude();
 	void menuGPMUllageDT();
 	void set_GPMUllageDT(double dt);
@@ -548,7 +552,8 @@ public:
 	void menuCycleLOIMCCTable();
 	void menuLOIMCCReplaceCode();
 	void set_LOIMCCReplaceCode(unsigned man);
-	void menuCycleLOIMCCThruster();
+	void menuChooseLOIMCCThruster();
+	bool set_ChooseLOIMCCThruster(std::string th);
 	void menuCycleLOIMCCAttitude();
 	void menuLOIMCCUllageThrustersDT();
 	bool set_LOIMCCUllageThrustersDT(int num, double dt);
@@ -577,7 +582,8 @@ public:
 	void set_MPTDirectInputDPSTenPercentTime(double deltat);
 	void menuMPTDirectInputDPSScaleFactor();
 	void set_MPTDirectInputDPSScaleFactor(double scale);
-	void menuCycleMPTDirectInputThruster();
+	void menuChooseMPTDirectInputThruster();
+	bool set_ChooseMPTDirectInputThruster(std::string th);
 	void menuMPTDirectInputTransfer();
 	void menuMPTDirectInputTIG();
 	void set_MPTDirectInputTIG(double tig);

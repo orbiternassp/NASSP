@@ -1174,35 +1174,40 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 		OrbMech::rv_from_r0v0(lambert->sv_P.R, lambert->sv_P.V, dt1_apo + dt2, sv_P2.R, sv_P2.V, mu);
 	}
 
-	VECTOR3 RP2off, VP2off;
-	double angle;
+	MATRIX3 Q_Xx;
+	VECTOR3 RP2off, VP2off, VA1_apo;
 
 	if (lambert->mode == 0)
 	{
+		double angle;
 		angle = lambert->Offset.x / length(sv_P2.R);
-	}
-	else
-	{
-		angle = lambert->PhaseAngle;
-	}
 
-	OrbMech::rv_from_r0v0_ta(sv_P2.R, sv_P2.V, angle, RP2off, VP2off, mu);
+		OrbMech::rv_from_r0v0_ta(sv_P2.R, sv_P2.V, angle, RP2off, VP2off, mu);
 
-	VECTOR3 i, j, k, VA1_apo;
-	MATRIX3 Q_Xx2, Q_Xx;
+		VECTOR3 i, j, k;
+		MATRIX3 Q_Xx2;
 
-	k = -unit(RP2off);
-	j = unit(crossp(VP2off, RP2off));
-	i = crossp(j, k);
-	Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+		k = -unit(RP2off);
+		j = unit(crossp(VP2off, RP2off));
+		i = crossp(j, k);
+		Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
 
-	if (lambert->mode == 0)
-	{
 		RP2off = RP2off + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
 	}
 	else
 	{
-		RP2off = RP2off + tmul(Q_Xx2, _V(0.0, 0.0, lambert->DH));
+		CELEMENTS elem_T, elem_CE;
+		double f_T, f_CE;
+		elem_T  = OrbMech::GIMIKC(sv_P2.R, sv_P2.V, mu);
+		f_T = OrbMech::MeanToTrueAnomaly(elem_T.l, elem_T.e);
+		elem_CE.a = elem_T.a - lambert->DH;
+		elem_CE.e = elem_T.e*elem_T.a / elem_CE.a;
+		f_CE = f_T + lambert->PhaseAngle; //Should be minus???
+		elem_CE.l = OrbMech::TrueToMeanAnomaly(f_CE, elem_CE.e);
+		elem_CE.i = elem_T.i;
+		elem_CE.g = elem_T.g;
+		elem_CE.h = elem_T.h;
+		OrbMech::GIMKIC(elem_CE, mu, RP2off, VP2off);
 	}
 
 	if (lambert->Perturbation == RTCC_LAMBERT_PERTURBED)
@@ -1279,6 +1284,22 @@ void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
 	else
 	{
 		PZMYSAVE.code[0] = "TPI";
+	}
+
+	PZMYSAVE.SV_before[1] = ConvertSVtoEphemData(sv_A2);
+	PZMYSAVE.V_after[1] = VP2off;
+	PZMYSAVE.plan[1] = lambert->ChaserVehicle;
+	if (lambert->mode == 0)
+	{
+		PZMYSAVE.code[1] = "TAR";
+	}
+	else if (lambert->mode == 1)
+	{
+		PZMYSAVE.code[1] = "NSR";
+	}
+	else
+	{
+		PZMYSAVE.code[1] = "TPF";
 	}
 }
 
@@ -18549,6 +18570,10 @@ int RTCC::PMMXFR(int id, void *data)
 				num_man = 1;//PZDKIT.Block[inp->Plan - 1].NumMan;
 			}
 		}
+		else if (id == 42)
+		{
+			num_man = 2;
+		}
 		else
 		{
 			num_man = 1;
@@ -18561,7 +18586,7 @@ int RTCC::PMMXFR(int id, void *data)
 		}
 
 		working_man = 1;
-
+	RTCC_PMMXFR_1:
 		if (id == 39)
 		{
 			if (inp->Type == 0)
@@ -18600,9 +18625,9 @@ int RTCC::PMMXFR(int id, void *data)
 		}
 		else if (id == 42)
 		{
-			GMTI = PZMYSAVE.SV_before[0].GMT;
-			purpose = PZMYSAVE.code[0];
-			plan = PZMYSAVE.plan[0];
+			GMTI = PZMYSAVE.SV_before[working_man - 1].GMT;
+			purpose = PZMYSAVE.code[working_man - 1];
+			plan = PZMYSAVE.plan[working_man - 1];
 		}
 
 		mpt = GetMPTPointer(plan);
@@ -18639,7 +18664,7 @@ int RTCC::PMMXFR(int id, void *data)
 			}
 		}
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(plan, inp->Thruster[0], inp->Attitude[0], mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(plan, inp->Thruster[working_man - 1], inp->Attitude[working_man - 1], mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check thruster
 		if (mpt->mantable.size() == 0)
 		{
@@ -18650,9 +18675,9 @@ int RTCC::PMMXFR(int id, void *data)
 			CCP = mpt->mantable.back().CommonBlock.ConfigCode;
 		}
 		CC = CCMI = CCP;
-		err = PMMXFRCheckConfigThruster(false, 0, CCP, TVC, inp->Thruster[0], CC, CCMI);
+		err = PMMXFRCheckConfigThruster(false, 0, CCP, TVC, inp->Thruster[working_man - 1], CC, CCMI);
 		//Is attitude mode an AGS?
-		if (inp->Attitude[0] == 5)
+		if (inp->Attitude[working_man - 1] == 5)
 		{
 			if (ELFECH(GMTI, 4 - plan, in.sv_other))
 			{
@@ -18661,14 +18686,14 @@ int RTCC::PMMXFR(int id, void *data)
 			}
 		}
 
-		in.Attitude = inp->Attitude[0];
+		in.Attitude = inp->Attitude[working_man - 1];
 		in.CONFIG = CC;
 		in.CurrentManeuver = CurMan;
-		in.DETU = inp->dt_ullage[0];
-		in.DPSScaleFactor = inp->DPSScaleFactor[0];
-		in.DT_10PCT = inp->DT10P[0];
-		in.IgnitionTimeOption = inp->TimeFlag[0];
-		in.IterationFlag = inp->IterationFlag[0];
+		in.DETU = inp->dt_ullage[working_man - 1];
+		in.DPSScaleFactor = inp->DPSScaleFactor[working_man - 1];
+		in.DT_10PCT = inp->DT10P[working_man - 1];
+		in.IgnitionTimeOption = inp->TimeFlag[working_man - 1];
+		in.IterationFlag = inp->IterationFlag[working_man - 1];
 		in.LowerTimeLimit = LowerLimit;
 		in.mpt = mpt;
 		if (id == 39)
@@ -18704,12 +18729,12 @@ int RTCC::PMMXFR(int id, void *data)
 		}
 		else
 		{
-			in.sv_before = PZMYSAVE.SV_before[0];
-			in.V_aft = PZMYSAVE.V_after[0];
+			in.sv_before = PZMYSAVE.SV_before[working_man - 1];
+			in.V_aft = PZMYSAVE.V_after[working_man - 1];
 		}
-		in.Thruster = inp->Thruster[0];
+		in.Thruster = inp->Thruster[working_man - 1];
 		in.UpperTimeLimit = UpperLimit;
-		in.UT = inp->UllageThrusterOption[0];
+		in.UT = inp->UllageThrusterOption[working_man - 1];
 		in.VC = TVC;
 
 		MPTManeuver man;
@@ -18743,6 +18768,12 @@ int RTCC::PMMXFR(int id, void *data)
 		else
 		{
 			update_lm_eph = true;
+		}
+
+		if (num_man > working_man)
+		{
+			working_man++;
+			goto RTCC_PMMXFR_1;
 		}
 
 		if (update_csm_eph)
@@ -23115,7 +23146,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 	{
 		PMMXFR_Impulsive_Input inp;
 
-		inp.Attitude[0] = med_m72.Attitude;
+		inp.Attitude[0] = inp.Attitude[1] = med_m72.Attitude;
 		if (med_m72.DeleteGET <= 0)
 		{
 			inp.DeleteGMT = 0.0;
@@ -23124,8 +23155,8 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		{
 			inp.DeleteGMT = GMTfromGET(med_m72.DeleteGET);
 		}
-		inp.DPSScaleFactor[0] = med_m72.DPSThrustFactor;
-		inp.DT10P[0] = med_m72.TenPercentDT;
+		inp.DPSScaleFactor[0] = inp.DPSScaleFactor[1] = med_m72.DPSThrustFactor;
+		inp.DT10P[0] = inp.DT10P[1] = med_m72.TenPercentDT;
 
 		if (med_m72.UllageDT > 0 && med_m72.UllageDT <= 1)
 		{
@@ -23150,13 +23181,14 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		{
 			inp.dt_ullage[0] = med_m72.UllageDT;
 		}
+		inp.dt_ullage[1] = inp.dt_ullage[0];
 
-		inp.IterationFlag[0] = med_m72.Iteration;
+		inp.IterationFlag[0] = inp.IterationFlag[1] = med_m72.Iteration;
 		inp.Plan = med_m72.Plan;
 		inp.ReplaceCode = 0;
-		inp.Thruster[0] = med_m72.Thruster;
-		inp.TimeFlag[0] = med_m72.TimeFlag;
-		inp.UllageThrusterOption[0] = med_m72.UllageQuads;
+		inp.Thruster[0] = inp.Thruster[1] = med_m72.Thruster;
+		inp.TimeFlag[0] = inp.TimeFlag[1] = med_m72.TimeFlag;
+		inp.UllageThrusterOption[0] = inp.UllageThrusterOption[1] = med_m72.UllageQuads;
 
 		void *vPtr = &inp;
 		return PMMXFR(42, vPtr);

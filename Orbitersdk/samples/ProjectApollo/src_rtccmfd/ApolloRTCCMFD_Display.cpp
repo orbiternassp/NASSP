@@ -6288,13 +6288,20 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			MPTAttitudeName(Buffer, GC->rtcc->med_m78.Attitude);
 			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 
-			if (GC->rtcc->med_m78.UllageQuads)
+			if (GC->rtcc->med_m78.UllageDT < 0)
 			{
-				sprintf_s(Buffer, "4 quads, %lf s", GC->rtcc->med_m78.UllageDT);
+				sprintf_s(Buffer, "Nominal ullage");
 			}
 			else
 			{
-				sprintf_s(Buffer, "2 quads, %lf s", GC->rtcc->med_m78.UllageDT);
+				if (GC->rtcc->med_m78.UllageQuads)
+				{
+					sprintf_s(Buffer, "4 quads, %.1f s", GC->rtcc->med_m78.UllageDT);
+				}
+				else
+				{
+					sprintf_s(Buffer, "2 quads, %.1f s", GC->rtcc->med_m78.UllageDT);
+				}
 			}
 			skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
 
