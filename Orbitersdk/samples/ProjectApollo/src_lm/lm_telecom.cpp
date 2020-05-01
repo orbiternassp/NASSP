@@ -2557,6 +2557,20 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	}
 
 	//TBD: Auto Tracking
+	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
+	{
+
+
+	}
+	
+	else
+	{
+		pitchrate = 0;
+		yawrate = 0;
+	}
+
+
+
 
 	//Drive Antenna
 	pitch += pitchrate*simdt;
