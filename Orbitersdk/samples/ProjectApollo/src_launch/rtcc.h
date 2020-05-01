@@ -56,6 +56,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define RTCC_MPT_SIVB 2
 #define RTCC_MPT_LM 3
 
+//CSM present
+#define RTCC_CONFIG_C 0
+//S-IVB present
+#define RTCC_CONFIG_S 1
+//LM ascent stage present
+#define RTCC_CONFIG_A 2
+//LM descent stage present
+#define RTCC_CONFIG_D 3
+
 #define RTCC_CONFIG_CSM 0
 #define RTCC_CONFIG_LM 1
 #define RTCC_CONFIG_CSM_LM 2
@@ -280,8 +289,8 @@ struct MED_M70
 //Transfer a Two Impulse Maneuver to the MPT
 struct MED_M72
 {
-	bool Table = false; //false = corrective solution, M = multiple solution
-	int Plan = 0; // Plan number to be transferred
+	int Table = 1; //1 = multiple solution, 2 = corrective solution
+	int Plan = 1; // Plan number to be transferred
 	double DeleteGET = 0.0; //Deletes all maneuvers in both tables occurring after the input GET (no delete if 0)
 	int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4; //Thruster for the maneuver
 	int Attitude = RTCC_ATTITUDE_PGNS_EXDV;		//Attitude option
@@ -291,6 +300,36 @@ struct MED_M72
 	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
 	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
 	bool TimeFlag = false;	//false = use optimum time, true = start at impulsive time
+};
+
+struct TwoImpulseOpt
+{
+	int mode;		//1 = Corrective Combination (NCC), 2 = Multiple Solution/Two-Impulse Computation (TPI), 3 = Single Solution, 4 = Transfer Plan, 5 = DKI/SPQ
+	double T1;	//GET of the maneuver
+	double T2;	// GET of the arrival
+	EphemerisData sv_A;		//Chaser state vector
+	EphemerisData sv_P;		//Target state vector
+	int ChaserVehicle = 1;	//1 = CSM, 3 = LEM
+	//0 = Time of both maneuvers fixed, 1 = time of first maneuver fixed, 2 = time of second maneuver fixed
+	int IVFLAG = 0;
+	double TimeStep = 10.0;
+	double TimeRange = 0.0;
+
+	//Single solution options
+	//1 = Multiple, 2 = Corrective Combination
+	int SingSolTable = 1;
+	//1 to 13
+	int SingSolNum = 1;
+	//false = 2 quads, true = 4 quads
+	bool UllageQuads = true;
+	//false = Target, true = Horizon
+	bool LOSMode = false;
+	double DeltaPitch = 0.0;
+	double RelMoTimeStep = 0.0;
+
+	//External request
+	double DH = 0.0;
+	double PhaseAngle = 0.0;
 };
 
 struct LambertMan //Data for Lambert targeting
@@ -2556,6 +2595,13 @@ public:
 	void LunarAscentPAD(ASCPADOpt opt, AP11LMASCPAD &pad);
 	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
 	void LunarEntryPAD(LunarEntryPADOpt *opt, AP11ENT &pad);
+	//Conic Fit
+	int PCZYCF(double R1, double R2, double PHIT, double DELT, double VXI2, double VYI2, double VXF1, double VYF1, double SQRMU, int NREVS, int body, double &a, double &e, double &f_T, double &t_PT);
+	int PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH, double theta, EphemerisData &sv_A1_apo, EphemerisData &sv_A2, EphemerisData &sv_A2_apo);
+	int PMSTICN_ELEV(EphemerisData sv_A1, EphemerisData sv_P1, double phi_req, double mu, double &T_ELEV);
+	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
+	//Two-Impulse Single Solution
+	void PMMTISS();
 	void LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res);
 	double TPISearch(SV sv_A, SV sv_P, double GETbase, double elev);
 	double FindDH(MPTSV sv_A, MPTSV sv_P, double GETbase, double TIGguess, double DH);
@@ -2966,6 +3012,10 @@ public:
 		int IVFlag = 0; //0 = Time of both maneuvers fixed, 1 = Time of first maneuver fixed, 2 = time of second maneuver fixed
 		double ChaserVectorTime = 0.0;
 		double TargetVectorTime = 0.0;
+		double StartTime = 0.0;
+		double EndTime = 0.0;
+		double TimeStep = 60.0;
+		double TimeRange = 600.0;
 	} med_k30;
 
 	//LOI Initialization (Apollo 14 and later, MED code is not from any documentation!)
@@ -3444,6 +3494,64 @@ public:
 
 	} GZGENCSN;
 
+	struct TwoImpulseMultipleSolutionTableEntry
+	{
+		double Time1 = 0.0;
+		double DELV1 = 0.0;
+		double YAW1 = 0.0;
+		double PITCH1 = 0.0;
+		double Time2 = 0.0;
+		double DELV2 = 0.0;
+		double YAW2 = 0.0;
+		double PITCH2 = 0.0;
+		char L = ' ';
+		int C = 0;
+	};
+
+	struct TwoImpulseMultipleSolutionTable
+	{
+		bool Updating = false;
+		int Solutions = 0;
+		int IVFLAG = 0;
+		int MAN_VEH = 0;
+		std::string CSMSTAID, LMSTAID;
+		TwoImpulseMultipleSolutionTableEntry data[13];
+	} PZTIPREG;
+
+	struct TwoImpulseMultipleSolutionDisplay
+	{
+		std::string ErrorMessage;
+		std::string CSMSTAID;
+		std::string LMSTAID;
+		double GETTH_CSM = 0.0;
+		double GETTH_LM = 0.0;
+		std::string MAN_VEH;
+		std::string GETFRZ;
+		std::string GMTFRZ;
+		std::string GETVAR;
+		std::string OPTION;
+		double WT = 0.0;
+		double PHASE = 0.0;
+		double DH = 0.0;
+		double GET1 = 0.0;
+		double GMT1 = 0.0;
+		std::string MinutesUntil;
+		int Solutions = 0;
+		TwoImpulseMultipleSolutionTableEntry data[13];
+	} TwoImpMultDispBuffer;
+
+	struct TwoImpulseSingleSolutionTable
+	{
+		std::string CSMSTAID, LMSTAID;
+	} PZTIPSS;
+
+	struct CorrectiveCombinationSolutionTable
+	{
+		bool Updating = false;
+		int Solutions = 0;
+		int MAN_VEH = 0;
+	} PZTIPCCD;
+
 	struct LaunchInterfaceTable
 	{
 		//Block 1-9
@@ -3598,6 +3706,11 @@ public:
 
 	struct AEGBlockSaveTable
 	{
+		//Block 1: Multiple Solution
+		EphemerisData SV_mult[2];
+		//Block 2: Corrective Combination
+		EphemerisData SV_CC[2];
+		//Block 3: Transfer Data
 		EphemerisData SV_before[2];
 		VECTOR3 V_after[2];
 		int plan[2];
@@ -3916,6 +4029,8 @@ private:
 	void PIBURN(VECTOR3 R, VECTOR3 V, double T, double *B, VECTOR3 &ROUT, VECTOR3 &VOUT, double &TOUT);
 	//Coordinate transformation
 	void PICSSC(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, double &lat, double &lng, double &gamma, double &azi);
+	//Apogee/perigee magnitude determination
+	void PIFAAP(double a, double e, double i, double f, double u, double r, double &r_apo, double &r_peri);
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
 	//PMMMPT Matrix Utility Subroutine
@@ -3930,6 +4045,8 @@ private:
 	void PMDMPT();
 	//Rendezvous Evaluation Display Load Module
 	void PMDRET();
+	//Two-Impulse Multiple Solution Display
+	void PMDTIMP();
 	//GOST REFSMMAT Maintenance
 	void EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs = NULL);
 	void EMGSTGENName(int ID, char *Buffer);
@@ -3966,7 +4083,7 @@ private:
 	//Auxiliary subroutines
 	MissionPlanTable *GetMPTPointer(int L);
 	MPTSV SVfromRVGMT(VECTOR3 R, VECTOR3 V, double GMT, int body);
-	int PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan);
+	int PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan, double &VectorFetchTime);
 	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
 	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC, int Thruster, int &CC, int &CCMI);
 	int PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv);

@@ -269,7 +269,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lambert.GETbase = GETBase;
 		lambert.N = 1;
 		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lambert.PhaseAngle = -1.32*RAD;
+		lambert.PhaseAngle = 1.32*RAD;
 		lambert.sv_A = sv_A;
 		lambert.sv_P = sv_P;
 		lambert.T1 = GET_TIG_imp;
@@ -344,7 +344,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lambert.GETbase = GETBase;
 		lambert.N = 0;
 		lambert.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lambert.PhaseAngle = -1.32*RAD;
+		lambert.PhaseAngle = 1.32*RAD;
 		lambert.sv_A = sv_A;
 		lambert.sv_P = sv_P;
 		lambert.T1 = GET_TIG_imp;
@@ -465,6 +465,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GZGENCSN.TIElevationAngle= 27.45*RAD;
 		GZGENCSN.TITravelAngle = 140.0*RAD;
 
+		lambert.mode = 2;
 		lambert.axis = RTCC_LAMBERT_MULTIAXIS;
 		lambert.GETbase = GETbase;
 		lambert.N = 0;

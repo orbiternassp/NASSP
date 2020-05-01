@@ -817,14 +817,11 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 {
 	GC = gcin;
 
-	T1 = 0;
-	T2 = 0;
 	SPQMode = 0;
 	CSItime = 0.0;
 	CDHtime = 0.0;
 	SPQTIG = 0.0;
 	CDHtimemode = 0;
-	N = 0;
 	this->vessel = v;
 	t_TPI = 0.0;
 
@@ -834,17 +831,9 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	spqresults.t_CDH = 0.0;
 	spqresults.t_TPI = 0.0;
 
-	TwoImpulse_TIG = 0.0;
-	LambertdeltaV = _V(0, 0, 0);
-	lambertopt = 0;
-	twoimpulsemode = 0;
-	TwoImpulse_TPI = 0.0;
-
 	SPQDeltaV = _V(0, 0, 0);
 	target = NULL;
-	offvec = _V(0, 0, 0);
 	//screen = 0;
-	angdeg = 0;
 	targetnumber = -1;
 	AGCEpoch = 40221.525;
 	AGCEphemTEphemZero = 40038.0;
@@ -1165,7 +1154,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		TLANDOctals[i] = 0;
 	}
 
-	lambertmultiaxis = 1;
 	entrylongmanual = true;
 	landingzone = 0;
 	entryprecision = -1;
@@ -2698,9 +2686,9 @@ int ARCore::subThread()
 		break;
 	case 1: //Lambert Targeting
 	{
-		LambertMan opt;
+		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
-		SV sv_A, sv_P, sv_pre, sv_post;
+		EphemerisData sv_A, sv_P;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -2723,10 +2711,7 @@ int ARCore::subThread()
 				break;
 			}
 
-			sv_A.R = EPHEM.R;
-			sv_A.V = EPHEM.V;
-			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+			sv_A = EPHEM;
 
 			if (GC->rtcc->med_k30.TargetVectorTime > 0)
 			{
@@ -2742,54 +2727,41 @@ int ARCore::subThread()
 				Result = 0;
 				break;
 			}
-			sv_P.R = EPHEM.R;
-			sv_P.V = EPHEM.V;
-			sv_P.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_P.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
+			sv_P = EPHEM;
 		}
 		else
 		{
-			sv_A = GC->rtcc->StateVectorCalc(vessel);
-			sv_P = GC->rtcc->StateVectorCalc(target);
+			sv_A = GC->rtcc->StateVectorCalcEphem(vessel);
+			sv_P = GC->rtcc->StateVectorCalcEphem(target);
 		}
 
-		opt.axis = !lambertmultiaxis;
-		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.N = N;
-		opt.Offset = offvec;
-		opt.Perturbation = lambertopt;
+		opt.mode = 2;
+
+		if (GC->rtcc->med_k30.StartTime < 0)
+		{
+			opt.T1 = -1;
+		}
+		else
+		{
+			opt.T1 = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.StartTime);
+		}
+		if (GC->rtcc->med_k30.EndTime < 0)
+		{
+			opt.T2 = -1;
+		}
+		else
+		{
+			opt.T2 = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.EndTime);
+		}
+		
+		opt.TimeStep = GC->rtcc->med_k30.TimeStep;
+		opt.TimeRange = GC->rtcc->med_k30.TimeRange;
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
-		opt.T1 = T1;
-		opt.T2 = T2;	
+		opt.IVFLAG = GC->rtcc->med_k30.IVFlag;
 		opt.ChaserVehicle = GC->rtcc->med_k30.Vehicle;
-		opt.mode = twoimpulsemode;
-		opt.ElevationAngle = GC->rtcc->GZGENCSN.TIElevationAngle;
-		opt.TravelAngle = GC->rtcc->GZGENCSN.TITravelAngle;
-		if (twoimpulsemode == 1)
-		{
-			opt.DH = GC->rtcc->GZGENCSN.TINSRNominalDeltaH;
-			opt.PhaseAngle = GC->rtcc->GZGENCSN.TINSRNominalPhaseAngle;
-		}
-		else if (twoimpulsemode == 2)
-		{
-			opt.DH = GC->rtcc->GZGENCSN.TIDeltaH;
-			opt.PhaseAngle = GC->rtcc->GZGENCSN.TIPhaseAngle;
-		}
-		opt.storesolns = true;
 
-		GC->rtcc->LambertTargeting(&opt, res);
-
-		TwoImpulse_TIG = res.T1;
-		LambertdeltaV = res.dV_LVLH;
-
-		if (twoimpulsemode == 1)
-		{
-			TwoImpulse_TPI = res.t_TPI;
-		}
-
-		T1 = res.T1;
-		T2 = res.T2;
+		GC->rtcc->PMSTICN(opt, res);
 
 		Result = 0;
 	}
@@ -4404,18 +4376,44 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 	break;
 	case 38: //Transfer Two-Impulse Solution to MPT
 	{
+		TwoImpulseOpt opt;
+		TwoImpulseResuls res;
+
 		if (GC->MissionPlanningActive)
 		{
-			std::vector<std::string> str;
-			GC->rtcc->PMMMED("72", str);
+			opt.mode = 4;
+			opt.SingSolNum = GC->rtcc->med_m72.Plan;
+			opt.SingSolTable = GC->rtcc->med_m72.Table;
+			GC->rtcc->PMSTICN(opt, res);
 		}
 		else
 		{
-			SV sv_pre, sv_post, sv_tig;
-			double attachedMass = 0.0;
+			if (GC->rtcc->med_m72.Table == 1)
+			{
+				if (GC->rtcc->med_m72.Plan > GC->rtcc->PZTIPREG.Solutions)
+				{
+					Result = 0;
+					break;
+				}
+				opt.sv_A = GC->rtcc->PZMYSAVE.SV_mult[0];
+				opt.sv_P = GC->rtcc->PZMYSAVE.SV_mult[1];
+				opt.DH = GC->rtcc->GZGENCSN.TIDeltaH;
+				opt.PhaseAngle = GC->rtcc->GZGENCSN.TIPhaseAngle;
+				opt.T1 = GC->rtcc->PZTIPREG.data[GC->rtcc->med_m72.Plan - 1].Time1;
+				opt.T2 = GC->rtcc->PZTIPREG.data[GC->rtcc->med_m72.Plan - 1].Time2;
+			}
+			else
+			{
+				//TBD
+				Result = 0;
+				break;
+			}
 
+			opt.mode = 5;
+			GC->rtcc->PMSTICN(opt, res);
+
+			double attachedMass = 0.0;
 			SV sv_now = GC->rtcc->StateVectorCalc(vessel);
-			sv_tig = GC->rtcc->coast(sv_now, TwoImpulse_TIG - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
 
 			if (docked)
 			{
@@ -4426,7 +4424,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 				attachedMass = 0.0;
 			}
 
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->CalcGETBase(), TwoImpulse_TIG, GC->rtcc->med_m72.Thruster, 0.0, LambertdeltaV, true, P30TIG, dV_LVLH, sv_pre, sv_post, GC->rtcc->med_m72.Attitude == 1);
+			GC->rtcc->PoweredFlightProcessor(sv_now, GC->rtcc->CalcGETBase(), res.T1, GC->rtcc->med_m72.Thruster, 0.0, res.dV, false, P30TIG, dV_LVLH);
 		}
 
 		Result = 0;

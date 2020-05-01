@@ -1599,6 +1599,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
 		lamopt.GETbase = GETbase;
+		lamopt.mode = 0;
 		lamopt.N = 0;
 		lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);
 		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
@@ -1710,6 +1711,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
 		lamopt.GETbase = GETbase;
+		lamopt.mode = 0;
 		lamopt.N = 0;
 		lamopt.Offset = -_V(-110.0*1852.0, 0.0, 14.7*1852.0);
 		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
@@ -1791,6 +1793,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
 		lamopt.GETbase = GETbase;
+		lamopt.mode = 0;
 		lamopt.N = 0;
 		lamopt.Offset = _V(-147.0*1852.0, 0.0, 14.7*1852.0);
 		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
@@ -2322,6 +2325,7 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 	sv_P0 = StateVectorCalc(target);
 
 	lamopt.GETbase = GETbase;
+	lamopt.mode = 0;
 	lamopt.N = 0;
 	lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);
 	lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;

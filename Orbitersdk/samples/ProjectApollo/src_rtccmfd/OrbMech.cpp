@@ -881,7 +881,7 @@ MATRIX3 MEGMatrix(double theta_E)
 
 VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bool prog, double mu)
 {
-	double tol, ratio, r1, r2, c, s, theta, lambda, T, l, m, x, h1, h2, B, y, z, x_new, A, root;
+	double tol, ratio, r1, r2, c, s, theta, lambda, T, l, m, x, h1, h2, B, y, z, x_new, A;
 	int nMax, n;
 	VECTOR3 c12, Vt1, Vt2;
 
@@ -949,15 +949,8 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 	}
 
 	//High Energy
-	root = OrbMech::power((OrbMech::power((2.0 * m) / (OrbMech::power(N, 2.0)*OrbMech::power(PI, 2.0)), 1.0 / 3.0) - (1.0 + l) / 2.0), 2.0) - 4.0 * l;
-	if (root >= 0)
-	{
-		x = (OrbMech::power(2.0 * m / (OrbMech::power(N, 2.0)*OrbMech::power(PI, 2.0)), 1.0 / 3.0) - (1.0 + l) / 2.0) - sqrt(root);
-	}
-	else
-	{
-		x = 0.0001;
-	}
+	y = OrbMech::power((double)(N)*m*PI / 4.0, 1.0 / 3.0);
+	x = 0.5*((m / y / y - (1.0 + l)) - sqrt(power(m / y / y - (1 + l), 2.0) - 4.0*l));
 
 	ratio = 1;
 	n = 0;
@@ -965,8 +958,12 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 	{
 		n = n + 1;
 		h1 = (l + x)*(1.0 + 2.0 * x + l) / (2.0 * (l - OrbMech::power(x, 2.0)));
-		h2 = m*sqrt(x) / (2.0 * (l - OrbMech::power(x, 2)))*((l - OrbMech::power(x, 2.0))*(N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) - (l + x));
+		h2 = m*sqrt(x) / (2.0 * (l - OrbMech::power(x, 2)))*((l - OrbMech::power(x, 2.0))*((double)(N)*PI05 + atan(sqrt(x))) / sqrt(x) - (l + x));
 		B = 27.0 * h2 / (4.0 * OrbMech::power(sqrt(x)*(1 + h1), 3));
+		if (B < -1.0)
+		{
+			B = -1.0;
+		}
 		if (B >= 0)
 		{
 			z = 2.0 * cosh(1.0 / 3.0 * acosh(sqrt(B + 1.0)));
@@ -975,10 +972,21 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 		{
 			z = 2.0 * cos(1.0 / 3.0 * acos(sqrt(B + 1.0)));
 		}
-		A = OrbMech::power((sqrt(B) + sqrt(B + 1.0)), 1.0 / 3.0);
-		y = 2.0 / 3.0 * sqrt(x)*(1.0 + h1)*(sqrt(B + 1.0) / (A + 1.0 / A) + 1.0);
-		//y = 2 / 3 * (1 + h1)*(sqrt(B + 1) / z + 1);
+		if (B >= 0)
+		{
+			A = OrbMech::power((sqrt(B) + sqrt(B + 1.0)), 1.0 / 3.0);
+			y = 2.0 / 3.0 * sqrt(x)*(1.0 + h1)*(sqrt(B + 1.0) / (A + 1.0 / A) + 1.0);
+		}
+		else
+		{
+			y = 2.0 / 3.0 * (1.0 + h1)*(B / z + 1.0);
+		}
+		//y = 2.0 / 3.0 * (1.0 + h1)*(sqrt(B + 1.0) / z + 1.0);
 		x_new = 0.5*((m / y / y - (1.0 + l)) - sqrt(OrbMech::power(m / y / y - (1.0 + l), 2) - 4.0 * l));
+		if (x_new < 0)
+		{
+			x_new = 0.5*((m / y / y - (1.0 + l)) + sqrt(OrbMech::power(m / y / y - (1.0 + l), 2) - 4.0 * l));
+		}
 
 		ratio = x - x_new;
 		x = x_new;
@@ -2089,7 +2097,7 @@ double findpatchpoint(VECTOR3 R1, VECTOR3 V1, double mjd1, double mu_E, double m
 	return dt1;
 }
 
-VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, OBJHANDLE gravref, OBJHANDLE gravin, OBJHANDLE gravout, VECTOR3 V_guess, double tol)
+VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, int gravref, int gravin, int gravout, VECTOR3 V_guess, double tol)
 {
 	double h, rho, error3, mu, max_dr;
 	int nMax, nMax2, n;
@@ -2099,9 +2107,6 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 	VECTOR3 V2l[3][4];
 	VECTOR3 T[3];
 	MATRIX3 T2;
-	OBJHANDLE hEarth;
-
-	hEarth = oapiGetObjectByName("Earth");
 
 	h = 10e-3;
 	rho = 0.5;
@@ -2111,7 +2116,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 	nMax = 100;
 	nMax2 = 10;
 
-	if (gravref == hEarth)
+	if (gravref == BODY_EARTH)
 	{
 		mu = mu_Earth;
 	}
@@ -2163,7 +2168,7 @@ VECTOR3 Vinti(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N,
 		V1_star = V_guess;
 	}
 
-	if (gravref == hEarth && gravin == gravout && dt>0)
+	if (gravref == BODY_EARTH && gravin == gravout && dt>0)
 	{
 		rv_from_r0v0_obla(R1, V1_star, mjd0, dt, J2_Earth, mu_Earth, R_Earth, BODY_EARTH, R2_star, V2_star);
 		dr2 = R2 - R2_star;

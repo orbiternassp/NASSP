@@ -57,24 +57,24 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu1, sizeof(mnu1) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("OPT", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleTwoImpulseOption);
-	RegisterFunction("VTI", OAPI_KEY_P, &ApolloRTCCMFD::menuTIVectorTimes);
-	RegisterFunction("T1", OAPI_KEY_M, &ApolloRTCCMFD::t1dialogue);
-	RegisterFunction("T2", OAPI_KEY_A, &ApolloRTCCMFD::t2dialogue);
-	RegisterFunction("N", OAPI_KEY_N, &ApolloRTCCMFD::revdialogue);
-	RegisterFunction("SPH", OAPI_KEY_G, &ApolloRTCCMFD::set_spherical);
+	RegisterFunction("TGT", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleK30Vehicle);
+	RegisterFunction("CVT", OAPI_KEY_M, &ApolloRTCCMFD::menuTIChaserVectorTime);
+	RegisterFunction("TVT", OAPI_KEY_A, &ApolloRTCCMFD::menuTITargetVectorTime);
+	RegisterFunction("T1", OAPI_KEY_N, &ApolloRTCCMFD::t1dialogue);
+	RegisterFunction("T2", OAPI_KEY_G, &ApolloRTCCMFD::t2dialogue);
 
-	RegisterFunction("TGT", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleK30Vehicle);
-	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::lambertcalc);
-	RegisterFunction("OFF", OAPI_KEY_O, &ApolloRTCCMFD::offvecdialogue);
-	RegisterFunction("AXI", OAPI_KEY_U, &ApolloRTCCMFD::set_lambertaxis);
-	RegisterFunction("MPT", OAPI_KEY_L, &ApolloRTCCMFD::menuSetTITransferPage);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("OFF", OAPI_KEY_O, &ApolloRTCCMFD::TwoImpulseOffset);
+	RegisterFunction("DIS", OAPI_KEY_C, &ApolloRTCCMFD::menuSetTIMultipleSolutionPage);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRendezvousPage);
 
 	static const MFDBUTTONMENU mnu2[] =
 	{
-		{ "Choose the X offset:", 0, 'X' },
-		{ "Choose the Y offset:", 0, 'Y' },
-		{ "Choose the Z offset:", 0, 'Z' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -89,18 +89,18 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu2, sizeof(mnu2) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("XOF", OAPI_KEY_X, &ApolloRTCCMFD::xdialogue);
-	RegisterFunction("YOF", OAPI_KEY_Y, &ApolloRTCCMFD::ydialogue);
-	RegisterFunction("ZOF", OAPI_KEY_Z, &ApolloRTCCMFD::zdialogue);
+	RegisterFunction("", OAPI_KEY_X, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Y, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Z, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_B, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::lambertcalc);
 	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("MPT", OAPI_KEY_L, &ApolloRTCCMFD::menuSetTITransferPage);
 	RegisterFunction("BCK", OAPI_KEY_F, &ApolloRTCCMFD::menuSetLambertPage);
 
 	static const MFDBUTTONMENU mnu3[] =
@@ -1838,8 +1838,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu54[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Maneuver table", 0, 'E' },
+		{ "Plan number", 0, 'N' },
 		{ "GET for deletion", 0, 'D' },
 		{ "Select Thruster", 0, 'T' },
 		{ "Attitude mode", 0, 'A' },
@@ -1855,8 +1855,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu54, sizeof(mnu54) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("", OAPI_KEY_B, &ApolloRTCCMFD::menuCycleTITable);
-	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleTIPlanNumber);
+	RegisterFunction("TAB", OAPI_KEY_E, &ApolloRTCCMFD::menuCycleTITable);
+	RegisterFunction("PLN", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleTIPlanNumber);
 	RegisterFunction("DEL", OAPI_KEY_D, &ApolloRTCCMFD::menuTIDeleteGET);
 	RegisterFunction("THR", OAPI_KEY_T, &ApolloRTCCMFD::menuChooseTIThruster);
 	RegisterFunction("ATT", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleTIAttitude);

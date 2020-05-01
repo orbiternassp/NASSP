@@ -38,10 +38,10 @@ public:
 	void StoreStatus(void) const;
 	void RecallStatus(void);
 
+	void menuTIChaserVectorTime();
 	void set_TIChaserVectorTime(double get);
+	void menuTITargetVectorTime();
 	void set_TITargetVectorTime(double get);
-	void menuTIVectorTimes();
-	void set_TIVectorTimes(double chaser_time, double target_time);
 	void t1dialogue();
 	void set_t1(double t1);
 	void t2dialogue();
@@ -57,20 +57,11 @@ public:
 	void set_DKIDH(double DH);
 	void SPQDHdialogue();
 	void set_SPQDH(double DH);
-	void revdialogue();
-	void set_rev(int rev);
 	void set_target();
-	//void set_offset();
-	void xdialogue();
-	void ydialogue();
-	void zdialogue();
-	void set_Xoff(double x);
-	void set_Yoff(double y);
-	void set_Zoff(double z);
 	void menuVoid();
 	void menuSetLambertPage();
 	void menuSetSPQPage();
-	void menuSetOffsetPage();
+	void menuSetTIMultipleSolutionPage();
 	void menuSetREFSMMATPage();
 	void menuSetEntryPage();
 	void menuSetAGSSVPage();
@@ -160,7 +151,6 @@ public:
 	void menuLSUpload();
 	void menuAGSSVCalc();
 	void menuEntryUpdateUpload();
-	void set_spherical();
 	void menuCycleTwoImpulseOption();
 	void menuSwitchHeadsUp();
 	void menuCalcManPAD();
@@ -206,11 +196,9 @@ public:
 	void menuUpdateLiftoffTime();
 	void cycleREFSMMATupl();
 	void set_svtarget();
-	void offvecdialogue();
-	void set_offvec(VECTOR3 off);
+	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
 	void GetEntryTargetfromAGC();
-	void set_lambertaxis();
 	void menuSwitchEntryNominal();
 	void menuSwitchDeorbitEngineOption();
 	void menuSetRTEReentryTime();
