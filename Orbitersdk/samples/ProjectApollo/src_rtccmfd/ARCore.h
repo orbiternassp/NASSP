@@ -172,19 +172,6 @@ public:
 	double t_TPI;				// Generally used TPI time
 	int RetrofireEXDVOctals[016];
 
-	//LAMBERT PAGE
-	double T1;				//Time of the Lambert targeted maneuver
-	double T2;				//Arrival time for Lambert Targeting
-	int N;					//Number of revolutions for Lambert Targeting
-	double TwoImpulse_TIG;	//Impulsive time of ignition for two-impulse maneuver
-	VECTOR3 LambertdeltaV;	//LVLH maneuver vector
-	int lambertopt;			//0 = spherical, 1 = non-spherical
-	VECTOR3 offvec;			//Lambert offset vector
-	double angdeg;			//Phase angle for target offset
-	bool lambertmultiaxis; //0 = x-axis only, 1 = multi-axis maneuver
-	int twoimpulsemode;		//0 = General, 1 = NCC/NSR, 2 = TPI/TPF
-	double TwoImpulse_TPI;	//TPI time calculated by the NCC/NSR option
-
 	//DOCKING INITIATION
 	double DKI_TIG;		//Impulsive time of ignition
 	int DKI_Profile;	//0 = Four-impulse: Phasing/CSI/CDH/TPI, 1 = Six-Impulse: Phasing/Boost/HAM/CSI/CDH/TPI, 2 = Four-impulse rescue: Height/CSI/CDH/TPI, 3 = Calculate TPI time only

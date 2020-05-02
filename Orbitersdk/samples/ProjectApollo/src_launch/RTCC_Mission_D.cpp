@@ -933,6 +933,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GETbase = getGETBase();
 
 		opt.GETbase = GETbase;
+		opt.mode = 0;
 		opt.N = 0;
 		opt.Offset = _V(0, 0, 0);
 		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
@@ -1089,6 +1090,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.TPI += dt;
 
 		opt.GETbase = GETbase;
+		opt.mode = 0;
 		opt.N = 0;
 		opt.Offset = _V(0, 0, 0);
 		opt.Perturbation = RTCC_LAMBERT_PERTURBED;
