@@ -65,21 +65,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 //LM descent stage present
 #define RTCC_CONFIG_D 3
 
-#define RTCC_CONFIG_CSM 0
-#define RTCC_CONFIG_LM 1
-#define RTCC_CONFIG_CSM_LM 2
-#define RTCC_CONFIG_CSM_SIVB 3
-#define RTCC_CONFIG_LM_SIVB 4
-#define RTCC_CONFIG_CSM_LM_SIVB 5
-#define RTCC_CONFIG_ASC 6
-#define RTCC_CONFIG_CSM_ASC 7
-#define RTCC_CONFIG_DSC 8
-#define RTCC_CONFIG_SIVB 9
-
 #define RTCC_CONFIGCHANGE_NONE 0
 #define RTCC_CONFIGCHANGE_UNDOCKING 1
 #define RTCC_CONFIGCHANGE_DOCKING 2
-#define RTCC_CONFIGCHANGE_LM_STAGING 3
 
 #define RTCC_ENGINETYPE_CSMRCSPLUS2 1
 #define RTCC_ENGINETYPE_CSMRCSPLUS4 2
@@ -259,7 +247,7 @@ struct MED_M51
 struct MED_M55
 {
 	int Table = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
-	int ConfigCode = 0;
+	std::string ConfigCode;
 	double VentingGET = 0.0;
 	double DeltaDockingAngle = 0.0;
 };
@@ -1504,7 +1492,7 @@ struct DetailedManeuverTable
 struct MPTVehicleDataBlock
 {
 	//Word 12 (Bytes 1, 2)
-	int ConfigCode = 0;
+	std::bitset<4> ConfigCode;
 	//Word 12 (Bytes 3, 4)
 	int ConfigChangeInd = 0;
 	//Word 12 (Bytes 5, 6)
@@ -1560,7 +1548,7 @@ struct MPTManeuver
 	//Word 31 (Bytes 7,8)
 	bool AttitudesInput;
 	//Word 32 (Bytes 1, 2)
-	int ConfigCodeBefore;
+	std::bitset<4> ConfigCodeBefore;
 	//Word 32 (Bytes 3, 4), Maneuvering vehicle: 1 = CSM, 2 = S-IVB, 3 = LM
 	int TVC;
 	//Word 32 (Bytes 5,6)
@@ -1804,7 +1792,7 @@ struct PMMXFRDirectInput
 	double DT10P;
 	int REFSMMATIndicator;
 	int ConfigurationChangeIndicator;
-	int EndConfiguration;
+	std::bitset<4> EndConfiguration;
 	double DockingAngle;
 	double DPSScaleFactor;
 	int TrimAngleIndicator;
@@ -1837,7 +1825,7 @@ struct PMMMCDInput
 	int ConfigCodeAfter;
 	int TVC;
 	double DockingAngle;
-	int CCMI;
+	std::bitset<4> CCMI;
 	int BPIND;
 	int ID;
 	bool UllageThrusterOpt;
@@ -2887,9 +2875,9 @@ public:
 	int PMMWTC(int med);
 	//Weight Determination at a Time
 	int PLAWDT(int L, double gmt, double &cfg_weight);
-	int PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
+	int PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
 	//Gimbal, Thrust and Weight Loss Rate Subroutine
-	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, int IC, int IA, int IJ, double D);
+	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, const std::bitset<4> &IC, int IA, int IJ, double D);
 	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
 	double GetOnboardComputerThrust(int thruster);
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
@@ -3063,7 +3051,7 @@ public:
 		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
 		int REFSMMATInd = RTCC_REFSMMAT_TYPE_CUR;	//Used for IMU and inertial coordinate options
 		int ConfigChangeInd = 0; //0 = No change, 1 = Undocking, 2 = Docking
-		int FinalConfig = 0;
+		std::string FinalConfig;
 		double DeltaDA = 0.0; //Delta docking angle
 		double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
 		int TrimAngleIndicator = 0; //0 = computed, 2 = system
@@ -4066,26 +4054,19 @@ private:
 	void EMGGPCHR(double lat, double lng, double alt, int body, Station *stat);
 
 	//MPT utility functions
-	bool MPTConfigIncludesCSM(int config);
-	bool MPTConfigIncludesLM(int config);
-	bool MPTConfigIncludesSIVB(int config);
-	bool MPTConfigIncludesLMAsc(int config);
-	bool MPTConfigIncludesLMDsc(int config);
-	bool MPTConfigSubset(int CfgOld, int CfgNew);
+	bool MPTConfigSubset(const std::bitset<4> &CfgOld, const std::bitset<4> &CfgNew);
 	bool MPTIsRCSThruster(int thruster);
 	bool MPTIsPrimaryThruster(int thruster, int i);
 	bool MPTIsUllageThruster(int thruster, int i);
 	int MPTGetPrimaryThruster(int thruster);
-	bool MPTConfigIncludesVehicle(int config, int i);
-
-	double MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass);
+	void MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg);
 
 	//Auxiliary subroutines
 	MissionPlanTable *GetMPTPointer(int L);
 	MPTSV SVfromRVGMT(VECTOR3 R, VECTOR3 V, double GMT, int body);
 	int PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan, double &VectorFetchTime);
 	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
-	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC, int Thruster, int &CC, int &CCMI);
+	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI);
 	int PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv);
 	int PMMXFRFetchAnchorVector(int L, EphemerisData &sv);
 	void PMMXFRWeightAtInitiation(int CCI, int CCMI, double &weight);

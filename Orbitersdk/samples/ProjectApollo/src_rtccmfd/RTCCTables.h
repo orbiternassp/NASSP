@@ -92,7 +92,7 @@ struct RTCCNIInputTable
 	//Word 21 (Bytes 3,4), thruster code (36 = S-IVB main thruster)
 	int ThrusterCode;
 	//Word 22 (Bytes 1,2), configuration at maneuver initiation (3 = CSM/S-IVB, 14 = LM/S-IVB, 15 = CSM/LM/S-IVB)
-	int IC;
+	unsigned IC;
 	//Word 22 (Bytes 3,4), maneuvering vehicle code (2 = S-IVB)
 	int MVC;
 	//Word 22 (Bytes 7,8), frozen maneuver indicator (true = frozen)

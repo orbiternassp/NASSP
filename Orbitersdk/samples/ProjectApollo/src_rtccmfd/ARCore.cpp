@@ -670,7 +670,8 @@ void AR_GCore::MPTMassUpdate()
 {
 	//Mass Update
 	VESSEL *vessel = NULL;
-	int cfg, vesseltype = 0;
+	int vesseltype = 0;
+	std::string cfg;
 	double cmmass, lmmass, sivb_mass, lm_ascent_mass;
 	cmmass = lmmass = sivb_mass = lm_ascent_mass = 0.0;
 
@@ -725,14 +726,14 @@ void AR_GCore::MPTMassUpdate()
 			cmmass = sat->SM_FuelMass + sat->SM_EmptyMass + sat->CM_FuelMass + sat->CM_EmptyMass + 4.0*152.5 + 2.0*55.5;
 			if (sat->SIVBPayload == PAYLOAD_LEM)
 			{
-				cfg = RTCC_CONFIG_CSM_LM_SIVB;
+				cfg = "CSL";
 				lmmass = sat->LMDescentFuelMassKg + sat->LMAscentFuelMassKg + sat->LMDescentEmptyMassKg + sat->LMAscentEmptyMassKg + 2.0*133.084001;
 				lm_ascent_mass = sat->LMAscentFuelMassKg + sat->LMAscentEmptyMassKg + 2.0*133.084001;
 
 			}
 			else
 			{
-				cfg = RTCC_CONFIG_CSM_SIVB;
+				cfg = "CS";
 			}
 			sivb_mass = vessel->GetMass() - cmmass - lmmass;
 		}
@@ -754,18 +755,18 @@ void AR_GCore::MPTMassUpdate()
 				//TBD: Make this better
 				if (lem->GetStage() < 2)
 				{
-					cfg = RTCC_CONFIG_CSM_LM;
+					cfg = "CL";
 				}
 				else
 				{
-					cfg = RTCC_CONFIG_CSM_ASC;
+					cfg = "CA";
 				}
 
 				
 			}
 			else
 			{
-				cfg = RTCC_CONFIG_CSM;
+				cfg = "C";
 			}
 		}
 	}
@@ -780,28 +781,28 @@ void AR_GCore::MPTMassUpdate()
 		{
 			if (cmmass = rtcc->GetDockedVesselMass(vessel))
 			{
-				cfg = RTCC_CONFIG_CSM_LM;
+				cfg = "CL";
 			}
 			else
 			{
-				cfg = RTCC_CONFIG_LM;
+				cfg = "L";
 			}
 		}
 		else
 		{
 			if (cmmass = rtcc->GetDockedVesselMass(vessel))
 			{
-				cfg = RTCC_CONFIG_CSM_ASC;
+				cfg = "CA";
 			}
 			else
 			{
-				cfg = RTCC_CONFIG_ASC;
+				cfg = "A";
 			}
 		}
 	}
 	else
 	{
-		cfg = RTCC_CONFIG_SIVB;
+		cfg = "S";
 		sivb_mass = vessel->GetMass();
 	}
 
@@ -3119,7 +3120,7 @@ int ARCore::subThread()
 		EntryResults res;
 		EntryOpt opt;
 		double csmmass, lmascmass, lmdscmass, cfg_weight, sivbmass;
-		int cfg;
+		std::bitset<4> cfg;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -3313,7 +3314,7 @@ int ARCore::subThread()
 			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			int cfg;
+			std::bitset<4> cfg;
 			double cfg_weight, csm_weight, sivb_weight, lma_weight, lmd_weight;
 
 			if (GC->rtcc->PLAWDT(mptveh, GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight))
@@ -3428,7 +3429,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		RTEMoonOpt opt;
 		EntryResults res;
 		double csmmass, lmascmass, lmdscmass, cfg_weight, sivbmass;
-		int cfg;
+		std::bitset<4> cfg;
 
 		if (GC->MissionPlanningActive)
 		{
@@ -3663,7 +3664,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 
 		if (GC->MissionPlanningActive)
 		{
-			int cfg;
+			std::bitset<4> cfg;
 			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZMCCPLN.VectorGET);
 			EphemerisData EPHEM;
 			if (GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM))
@@ -3961,7 +3962,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			sv_CSM.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
 			sv_CSM.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 
-			int cfg;
+			std::bitset<4> cfg;
 			double cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight;
 			if (GC->rtcc->PLAWDT(RTCC_MPT_LM, GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight))
 			{

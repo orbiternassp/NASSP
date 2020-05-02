@@ -108,7 +108,6 @@ public:
 	void ThrusterName(char *Buff, int n);
 	bool ThrusterType(std::string name, int &id);
 	void MPTAttitudeName(char *Buff, int n);
-	void VehicleConfigName(char *Buffer, int n);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds);
 	double timetoperi();
 	double timetoapo();
@@ -577,6 +576,7 @@ public:
 	void set_MPTDirectInputTIG(double tig);
 	void menuMPTDirectInputDock();
 	void menuMPTDirectInputFinalConfig();
+	void set_MPTDirectInputFinalConfig(char *cfg);
 	void menuMPTDirectInputUllageDT();
 	void set_MPTDirectInputUllageDT(double dt);
 	void menuMPTDirectInputUllageThrusters();
@@ -597,6 +597,7 @@ public:
 	void set_MPTInitM50LMAscentWT(double mass);
 	void set_MPTInitM50SIVBWT(double mass);
 	void menuMPTInitM55Config();
+	void set_MPTInitM55Config(char *cfg);
 	void menuMPTM50Update();
 	void menuMPTM55Update();
 	void menuMPTInitAutoUpdate();

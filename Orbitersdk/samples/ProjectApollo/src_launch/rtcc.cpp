@@ -13681,7 +13681,8 @@ RTCC_PMMMCD_6_1:
 RTCC_PMMMCD_6_2:
 	PMMMCDCallEMSMISS(in.sv_anchor, GMT_begin, sv_GMTI);
 RTCC_PMMMCD_D:
-	if (in.CCMI == RTCC_CONFIG_CSM_LM || in.CCMI == RTCC_CONFIG_CSM_ASC)
+	//Are CSM and LM docked?
+	if (in.CCMI.to_ulong() == 13 || in.CCMI.to_ulong() == 5)
 	{
 		goto RTCC_PMMMCD_C;
 	}
@@ -13843,7 +13844,7 @@ RTCC_PMMMCD_12_1:
 				{
 					int IA = 1, IJ;
 					double WTCXX, WTLXX, Thr, WDOT;
-					if (MPTConfigIncludesLMDsc(in.CCMI))
+					if (in.CCMI[RTCC_CONFIG_D])
 					{
 						IJ = 0;
 						if (in.mpt->mantable.size() == 0)
@@ -14308,7 +14309,7 @@ RTCC_PMMMPT_12_A:
 	integin.DTPS10 = man.DT_10PCT;
 	integin.DTU = man.dt_ullage;
 	integin.HeadsUpDownInd = man.HeadsUpDownInd;
-	integin.IC = man.CommonBlock.ConfigCode;
+	integin.IC = man.CommonBlock.ConfigCode.to_ulong();
 	integin.KAUXOP = 1;
 	integin.KEPHOP = 0;
 	integin.KTRIMOP = man.TrimAngleInd;
@@ -14765,10 +14766,13 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 
 	GMTBB = OrbMech::GETfromMJD(sv_IG.MJD, GMTBASE);
 
-	man.CommonBlock.ConfigCode = RTCC_CONFIG_LM;
+	man.CommonBlock.ConfigCode[RTCC_CONFIG_C] = false;
+	man.CommonBlock.ConfigCode[RTCC_CONFIG_S] = false;
+	man.CommonBlock.ConfigCode[RTCC_CONFIG_A] = true;
+	man.CommonBlock.ConfigCode[RTCC_CONFIG_D] = true;
 	man.AttitudeCode = RTCC_ATTITUDE_PGNS_DESCENT;
 	man.Thruster = RTCC_ENGINETYPE_LMDPS;
-	man.ConfigCodeBefore = RTCC_CONFIG_LM;
+	man.ConfigCodeBefore = man.CommonBlock.ConfigCode;
 	man.TVC = RTCC_MANVEHICLE_LM;
 	man.TrimAngleInd = in.TrimAngleInd - 1;
 	man.HeadsUpDownInd = in.HeadsUpDownInd;
@@ -15560,7 +15564,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.DTU = mpt->mantable[i].dt_ullage;
 		integin.DVMAN = mpt->mantable[i].dv;
 		integin.HeadsUpDownInd = mpt->mantable[i].HeadsUpDownInd;
-		integin.IC = mpt->mantable[i].CommonBlock.ConfigCode;
+		integin.IC = mpt->mantable[i].CommonBlock.ConfigCode.to_ulong();
 		integin.KAUXOP = 1;
 		if (in.EphemerisBuildIndicator)
 		{
@@ -15601,7 +15605,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		integin.ZB = mpt->mantable[i].Z_B;
 		integin.CAPWT = 0.0;
 
-		if (MPTConfigIncludesCSM(mpt->mantable[i].ConfigCodeBefore))
+		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_C])
 		{
 			if (i == 0)
 			{
@@ -15614,7 +15618,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			integin.CAPWT += integin.CSMWT;
 		}
 
-		if (MPTConfigIncludesSIVB(mpt->mantable[i].ConfigCodeBefore))
+		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_S])
 		{
 			if (i == 0)
 			{
@@ -15627,7 +15631,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			integin.CAPWT += integin.SIVBWT;
 		}
 
-		if (MPTConfigIncludesLMAsc(mpt->mantable[i].ConfigCodeBefore))
+		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_A])
 		{
 			if (i == 0)
 			{
@@ -15640,7 +15644,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 			integin.CAPWT += integin.LMAWT;
 		}
 
-		if (MPTConfigIncludesLMDsc(mpt->mantable[i].ConfigCodeBefore))
+		if (mpt->mantable[i].ConfigCodeBefore[RTCC_CONFIG_D])
 		{
 			if (i == 0)
 			{
@@ -15694,7 +15698,7 @@ void RTCC::EMSMISS(EMSMISSInputTable &in)
 		}
 		integin.MANOP = mpt->mantable[i].AttitudeCode;
 		integin.ThrusterCode = mpt->mantable[i].Thruster;
-		integin.IC = mpt->mantable[i].ConfigCodeBefore;
+		integin.IC = mpt->mantable[i].ConfigCodeBefore.to_ulong();
 		integin.MVC = mpt->mantable[i].TVC;
 		integin.IFROZN = mpt->mantable[i].FrozenManeuverInd;
 		integin.IREF = mpt->mantable[i].RefBodyInd;
@@ -16167,21 +16171,21 @@ int RTCC::PMMWTC(int med)
 			goto RTCC_PMMWTC_5;
 		}
 	RTCC_PMMWTC_3:
-		if (MPTConfigIncludesCSM(CommonBlock.ConfigCode) == false)
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_C] == false)
 		{
 			FuelC[0] = -1;
 			FuelC[1] = -1;
 		}
-		if (MPTConfigIncludesSIVB(CommonBlock.ConfigCode) == false)
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_S] == false)
 		{
 			FuelC[2] = -1;
 		}
-		if (MPTConfigIncludesLMAsc(CommonBlock.ConfigCode) == false)
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_A] == false)
 		{
 			FuelC[3] = -1;
 			FuelC[4] = -1;
 		}
-		if (MPTConfigIncludesLMDsc(CommonBlock.ConfigCode) == false)
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_D] == false)
 		{
 			FuelC[5] = -1;
 		}
@@ -16288,7 +16292,7 @@ int RTCC::PMMWTC(int med)
 
 		W = 0.0;
 
-		if (MPTConfigIncludesCSM(CommonBlock.ConfigCode))
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_C])
 		{
 			if (med_m50.CSMWT >= 0)
 			{
@@ -16297,7 +16301,7 @@ int RTCC::PMMWTC(int med)
 			W = W + WTV[0];
 		}
 
-		if(MPTConfigIncludesSIVB(CommonBlock.ConfigCode))
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_S])
 		{
 			if (med_m50.SIVBWT >= 0)
 			{
@@ -16307,11 +16311,11 @@ int RTCC::PMMWTC(int med)
 		}
 
 		//Do we have an ascent stage?
-		if (MPTConfigIncludesLMAsc(CommonBlock.ConfigCode))
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_A])
 		{
 			goto RTCC_PMMWTC_15;
 		}
-		if (MPTConfigIncludesLMDsc(CommonBlock.ConfigCode))
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_D])
 		{
 			if (med_m50.LMWT >= 0)
 			{
@@ -16331,7 +16335,7 @@ int RTCC::PMMWTC(int med)
 		if (med_m50.LMWT < 0)
 		{
 			//Do we have also have a descent stage?
-			if (MPTConfigIncludesLMDsc(CommonBlock.ConfigCode))
+			if (CommonBlock.ConfigCode[RTCC_CONFIG_D])
 			{
 				goto RTCC_PMMWTC_15A;
 			}
@@ -16341,7 +16345,7 @@ int RTCC::PMMWTC(int med)
 			}
 		}
 		//Do we have also have a descent stage?
-		if (MPTConfigIncludesLMDsc(CommonBlock.ConfigCode))
+		if (CommonBlock.ConfigCode[RTCC_CONFIG_D])
 		{
 			//Yes, calculate descent stage weight from total weight, minus ascent stage weight
 			WTV[3] = med_m50.LMWT - WTV[2];
@@ -16438,7 +16442,7 @@ int RTCC::PMMWTC(int med)
 		Area = 0;
 		I = 1;
 	RTCC_PMMWTC_22:
-		if (MPTConfigIncludesVehicle(CommonBlock.ConfigCode, I))
+		if (CommonBlock.ConfigCode[I - 1])
 		{
 			if (ARI[I - 1] >= 0)
 			{
@@ -16493,7 +16497,10 @@ int RTCC::PMMWTC(int med)
 			table->DeltaDockingAngle = med_m55.DeltaDockingAngle;
 		}
 
-		if (med_m55.ConfigCode >= 0)
+		std::bitset<4> cfg;
+		MPTGetConfigFromString(med_m55.ConfigCode, cfg);
+
+		if (cfg.to_ulong() > 0)
 		{
 			double arv[4], wtv[4], AREA;
 			arv[0] = table->CommonBlock.CSMArea;
@@ -16510,19 +16517,19 @@ int RTCC::PMMWTC(int med)
 			for (int i = 0;i < 4;i++)
 			{
 				arvs[i] = wtvs[i] = 0.0;
-				if (MPTConfigIncludesVehicle(table->CommonBlock.ConfigCode, i + 1))
+				if (CommonBlock.ConfigCode[i])
 				{
 					wtvs[i] = wtv[i];
 					arvs[i] = arv[i];
 				}
 			}
 
-			table->CommonBlock.ConfigCode = med_m55.ConfigCode;
+			table->CommonBlock.ConfigCode = cfg;
 			AREA = 0.0;
 			W = 0.0;
 			for (int i = 0;i < 4;i++)
 			{
-				if (MPTConfigIncludesVehicle(table->CommonBlock.ConfigCode, i + 1))
+				if (CommonBlock.ConfigCode[i])
 				{
 					if (AREA < arvs[i])
 					{
@@ -16919,12 +16926,12 @@ bool RTCC::MEDTimeInputHHMMSS(std::string vec, double &hours)
 int RTCC::PLAWDT(int L, double gmt, double &cfg_weight)
 {
 	double csm_weight, lma_weight, lmd_weight, sivb_weight;
-	int cfg;
+	std::bitset<4> cfg;
 
 	return PLAWDT(L, gmt, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight);
 }
 
-int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight)
+int RTCC::PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight)
 {
 	MissionPlanTable *table = GetMPTPointer(L);
 	unsigned i = 0;
@@ -16934,7 +16941,7 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 	{
 		cfg = table->CommonBlock.ConfigCode;
 		cfg_weight = table->TotalInitMass;
-		if (MPTConfigIncludesCSM(cfg))
+		if (cfg[RTCC_CONFIG_C])
 		{
 			csm_weight = table->CommonBlock.CSMMass;
 		}
@@ -16942,7 +16949,7 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 		{
 			csm_weight = 0.0;
 		}
-		if (MPTConfigIncludesLMAsc(cfg))
+		if (cfg[RTCC_CONFIG_A])
 		{
 			lm_asc_weight = table->CommonBlock.LMAscentMass;
 		}
@@ -16950,7 +16957,7 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 		{
 			lm_asc_weight = 0.0;
 		}
-		if (MPTConfigIncludesLMDsc(cfg))
+		if (cfg[RTCC_CONFIG_D])
 		{
 			lm_dsc_weight = table->CommonBlock.LMDescentMass;
 		}
@@ -16958,7 +16965,7 @@ int RTCC::PLAWDT(int L, double gmt, int &cfg, double &cfg_weight, double &csm_we
 		{
 			lm_dsc_weight = 0.0;
 		}
-		if (MPTConfigIncludesSIVB(cfg))
+		if (cfg[RTCC_CONFIG_S])
 		{
 			sivb_weight = table->CommonBlock.SIVBMass;
 		}
@@ -18884,49 +18891,61 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	}
 
 	double cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight;
-	int cfg;
+	std::bitset<4> cfg;
 
 	PLAWDT(veh, sv_conv.GMT, cfg, cfg_weight, csm_weight, lma_weight, lmd_weight, sivb_weight);
+	unsigned cfgint = cfg.to_ulong();
 
-	if (cfg == RTCC_CONFIG_CSM)
+	switch (cfgint)
 	{
+	case 1:
 		sprintf(EZCHECKDIS.CFG, "C");
-	}
-	else if (cfg == RTCC_CONFIG_LM)
-	{
-		sprintf(EZCHECKDIS.CFG, "L");
-	}
-	else if (cfg == RTCC_CONFIG_CSM_LM)
-	{
-		sprintf(EZCHECKDIS.CFG, "CL");
-	}
-	else if (cfg == RTCC_CONFIG_CSM_SIVB)
-	{
-		sprintf(EZCHECKDIS.CFG, "CS");
-	}
-	else if (cfg == RTCC_CONFIG_LM_SIVB)
-	{
-		sprintf(EZCHECKDIS.CFG, "LS");
-	}
-	else if (cfg == RTCC_CONFIG_CSM_LM_SIVB)
-	{
-		sprintf(EZCHECKDIS.CFG, "CSL");
-	}
-	else if (cfg == RTCC_CONFIG_ASC)
-	{
-		sprintf(EZCHECKDIS.CFG, "A");
-	}
-	else if (cfg == RTCC_CONFIG_CSM_ASC)
-	{
-		sprintf(EZCHECKDIS.CFG, "CA");
-	}
-	else if (cfg == RTCC_CONFIG_DSC)
-	{
-		sprintf(EZCHECKDIS.CFG, "D");
-	}
-	else if (cfg == RTCC_CONFIG_SIVB)
-	{
+		break;
+	case 2:
 		sprintf(EZCHECKDIS.CFG, "S");
+		break;
+	case 3:
+		sprintf(EZCHECKDIS.CFG, "CS");
+		break;
+	case 4:
+		sprintf(EZCHECKDIS.CFG, "A");
+		break;
+	case 5:
+		sprintf(EZCHECKDIS.CFG, "CA");
+		break;
+	case 6:
+		sprintf(EZCHECKDIS.CFG, "SA");
+		break;
+	case 7:
+		sprintf(EZCHECKDIS.CFG, "CSA");
+		break;
+	case 8:
+		sprintf(EZCHECKDIS.CFG, "D");
+		break;
+	case 9:
+		sprintf(EZCHECKDIS.CFG, "CD");
+		break;
+	case 10:
+		sprintf(EZCHECKDIS.CFG, "SD");
+		break;
+	case 11:
+		sprintf(EZCHECKDIS.CFG, "CSD");
+		break;
+	case 12:
+		sprintf(EZCHECKDIS.CFG, "L");
+		break;
+	case 13:
+		sprintf(EZCHECKDIS.CFG, "CL");
+		break;
+	case 14:
+		sprintf(EZCHECKDIS.CFG, "SL");
+		break;
+	case 15:
+		sprintf(EZCHECKDIS.CFG, "CSL");
+		break;
+	default:
+		sprintf(EZCHECKDIS.CFG, " ");
+		break;
 	}
 
 	EZCHECKDIS.WT = cfg_weight / 0.45359237;
@@ -18960,122 +18979,59 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	return;
 }
 
-bool RTCC::MPTConfigIncludesCSM(int config)
+bool RTCC::MPTConfigSubset(const std::bitset<4> &CfgOld, const std::bitset<4> &CfgNew)
 {
-	if (config == RTCC_CONFIG_CSM) return true;
-	if (config == RTCC_CONFIG_CSM_LM) return true;
-	if (config == RTCC_CONFIG_CSM_SIVB) return true;
-	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
+	//Can't be identical
+	if (CfgOld == CfgNew)
+	{
+		return false;
+	}
+	//Can't be empty
+	if (CfgNew.to_ulong() == 0)
+	{
+		return false;
+	}
+	for (unsigned i = 0;i < 4;i++)
+	{
+		//Does CfgNew have something that CfgOld didn't?
+		if (CfgNew[i] == true && CfgOld[i] == false)
+		{
+			//Can't have that
+			return false;
+		}
+	}
 
-	return false;
+	//Otherwise ok
+	return true;
 }
 
-bool RTCC::MPTConfigIncludesLM(int config)
+void RTCC::MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg)
 {
-	if (config == RTCC_CONFIG_LM) return true;
-	if (config == RTCC_CONFIG_CSM_LM) return true;
-	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
-
-	return false;
-}
-
-bool RTCC::MPTConfigIncludesSIVB(int config)
-{
-	if (config == RTCC_CONFIG_CSM_SIVB) return true;
-	if (config == RTCC_CONFIG_LM_SIVB) return true;
-	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
-	if (config == RTCC_CONFIG_SIVB) return true;
-
-	return false;
-}
-
-bool RTCC::MPTConfigIncludesLMAsc(int config)
-{
-	if (config == RTCC_CONFIG_LM) return true;
-	if (config == RTCC_CONFIG_CSM_LM) return true;
-	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
-	if (config == RTCC_CONFIG_ASC) return true;
-	if (config == RTCC_CONFIG_CSM_ASC) return true;
-
-	return false;
-}
-
-bool RTCC::MPTConfigIncludesLMDsc(int config)
-{
-	if (config == RTCC_CONFIG_LM) return true;
-	if (config == RTCC_CONFIG_CSM_LM) return true;
-	if (config == RTCC_CONFIG_CSM_LM_SIVB) return true;
-	if (config == RTCC_CONFIG_DSC) return true;
-
-	return false;
-}
-
-bool RTCC::MPTConfigSubset(int CfgOld, int CfgNew)
-{
-	if (CfgOld == RTCC_CONFIG_LM)
+	cfg.reset();
+	for (unsigned i = 0;i < str.length();i++)
 	{
-		if (CfgNew == RTCC_CONFIG_ASC)
+		if (str[i] == 'C')
 		{
-			return true;
+			cfg[RTCC_CONFIG_C] = true;
 		}
-		if (CfgNew == RTCC_CONFIG_DSC)
+		else if (str[i] == 'S')
 		{
-			return true;
+			cfg[RTCC_CONFIG_S] = true;
+		}
+		else if (str[i] == 'A')
+		{
+			cfg[RTCC_CONFIG_A] = true;
+		}
+		else if (str[i] == 'D')
+		{
+			cfg[RTCC_CONFIG_D] = true;
+		}
+		else if (str[i] == 'L')
+		{
+			cfg[RTCC_CONFIG_A] = true;
+			cfg[RTCC_CONFIG_D] = true;
 		}
 	}
-	else if (CfgOld == RTCC_CONFIG_CSM_LM)
-	{
-		if (CfgNew == RTCC_CONFIG_CSM)
-		{
-			return true;
-		}
-		if (CfgNew == RTCC_CONFIG_LM)
-		{
-			return true;
-		}
-		if (CfgNew == RTCC_CONFIG_CSM_ASC)
-		{
-			return true;
-		}
-	}
-	else if (CfgOld == RTCC_CONFIG_CSM_SIVB)
-	{
-		if (CfgNew == RTCC_CONFIG_CSM)
-		{
-			return true;
-		}
-	}
-	else if (CfgOld == RTCC_CONFIG_LM_SIVB)
-	{
-		if (CfgNew == RTCC_CONFIG_LM)
-		{
-			return true;
-		}
-	}
-	else if (CfgOld == RTCC_CONFIG_CSM_LM_SIVB)
-	{
-		if (CfgNew == RTCC_CONFIG_CSM)
-		{
-			return true;
-		}
-		if (CfgNew == RTCC_CONFIG_CSM_LM)
-		{
-			return true;
-		}
-	}
-	else if (CfgOld == RTCC_CONFIG_CSM_ASC)
-	{
-		if (CfgNew == RTCC_CONFIG_CSM)
-		{
-			return true;
-		}
-		if (CfgNew == RTCC_CONFIG_ASC)
-		{
-			return true;
-		}
-	}
-
-	return false;
 }
 
 bool RTCC::MPTIsRCSThruster(int thruster)
@@ -19192,42 +19148,6 @@ bool RTCC::MPTIsPrimaryThruster(int thruster, int i)
 	return false;
 }
 
-bool RTCC::MPTConfigIncludesVehicle(int config, int i)
-{
-	switch (i)
-	{
-	case 1:
-		return MPTConfigIncludesCSM(config);
-	case 2:
-		return MPTConfigIncludesSIVB(config);
-	case 3:
-		return MPTConfigIncludesLMAsc(config);
-	case 4:
-		return MPTConfigIncludesLMDsc(config);
-	}
-	return false;
-}
-
-double RTCC::MPTConfigMass(int config, double CSMMass, double LMMass, double SIVBMass)
-{
-	double ConfigMass = 0.0;
-
-	if (MPTConfigIncludesCSM(config))
-	{
-		ConfigMass += CSMMass;
-	}
-	if (MPTConfigIncludesLM(config))
-	{
-		ConfigMass += LMMass;
-	}
-	if (MPTConfigIncludesSIVB(config))
-	{
-		ConfigMass += SIVBMass;
-	}
-
-	return ConfigMass;
-}
-
 MissionPlanTable* RTCC::GetMPTPointer(int L)
 {
 	if (L == RTCC_MPT_CSM)
@@ -19266,7 +19186,8 @@ int RTCC::PMMXFR(int id, void *data)
 	MissionPlanTable *mpt;
 	//MPTManeuver *maneuver;
 	double LowerLimit, UpperLimit, VectorFetchTime;
-	int err, working_man, CCP, TVC, CC, CCMI;
+	int err, working_man, TVC;
+	std::bitset<4> CCP, CC, CCMI;
 	unsigned CurMan;
 	bool LastManReplaceFlag;
 	bool replace, dodelete;
@@ -19410,9 +19331,9 @@ int RTCC::PMMXFR(int id, void *data)
 			PMMSPTInput in;
 			
 			in.AttitudeMode = RTCC_ATTITUDE_SIVB_IGM;
-			in.CC = CC;
+			in.CC = CC.to_ulong();
 			in.CCI = RTCC_CONFIGCHANGE_NONE;
-			in.CCMI = CCMI;
+			in.CCMI = CCMI.to_ulong();
 			in.CurMan = &man;
 			in.EndTimeLimit = UpperLimit;
 			in.GMT = sv.GMT;
@@ -19448,7 +19369,7 @@ int RTCC::PMMXFR(int id, void *data)
 			in.dt_ullage = inp->dt_ullage;
 			in.Attitude = inp->AttitudeCode;
 			in.ConfigChangeInd = inp->ConfigurationChangeIndicator;
-			in.ConfigCodeAfter = CC;
+			in.ConfigCodeAfter = CC.to_ulong();
 			in.TVC = TVC;
 			in.DockingAngle = inp->DockingAngle;
 			in.CCMI = CCMI;
@@ -19666,7 +19587,7 @@ int RTCC::PMMXFR(int id, void *data)
 		}
 
 		in.Attitude = inp->Attitude[working_man - 1];
-		in.CONFIG = CC;
+		in.CONFIG = CC.to_ulong();
 		in.CurrentManeuver = CurMan;
 		in.DETU = inp->dt_ullage[working_man - 1];
 		in.DPSScaleFactor = inp->DPSScaleFactor[working_man - 1];
@@ -19791,7 +19712,8 @@ int RTCC::PMMXFR(int id, void *data)
 		{
 			CCP = mpt->mantable.back().CommonBlock.ConfigCode;
 		}
-		if (CCP != RTCC_CONFIG_LM)
+		//Do we have a full LM?
+		if (!(CCP[RTCC_CONFIG_A] && CCP[RTCC_CONFIG_D]))
 		{
 			return 1;
 		}
@@ -19868,7 +19790,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Format maneuver code
 		err = PMMXFRFormatManeuverCode(med_m85.VEH, RTCC_ENGINETYPE_LMAPS, RTCC_ATTITUDE_PGNS_ASCENT, mpt->mantable.size() + 1, purpose, TVC, code);
 		//Check configuration and thrust
-		CC = RTCC_CONFIG_ASC;
+		CC[RTCC_CONFIG_A] = true;
 		err = PMMXFRCheckConfigThruster(true, RTCC_CONFIGCHANGE_UNDOCKING, CCP, TVC, RTCC_ENGINETYPE_LMAPS, CC, CCMI);
 
 		man.code = code;
@@ -19879,8 +19801,9 @@ int RTCC::PMMXFR(int id, void *data)
 		man.dV_LVLH.y = JZLAI.Y_D_dot;
 		man.dV_LVLH.z = JZLAI.Z_D_dot;
 		man.CommonBlock.ConfigChangeInd = RTCC_CONFIGCHANGE_UNDOCKING;
-		man.ConfigCodeBefore = RTCC_CONFIG_LM;
-		man.CommonBlock.ConfigCode = RTCC_CONFIG_ASC;
+		man.ConfigCodeBefore[RTCC_CONFIG_A] = true;
+		man.ConfigCodeBefore[RTCC_CONFIG_D] = true;
+		man.CommonBlock.ConfigCode = CC;
 		man.Thruster = RTCC_ENGINETYPE_LMAPS;
 		man.AttitudeCode = RTCC_ATTITUDE_PGNS_ASCENT;
 		mpt->mantable.push_back(man);
@@ -20099,7 +20022,7 @@ int RTCC::PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsign
 	return 0;
 }
 
-int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC, int Thruster, int &CC, int &CCMI)
+int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI)
 {
 	if (CheckConfig)
 	{
@@ -20120,7 +20043,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 	}
 	if (TVC == 2)
 	{
-		if (!(MPTConfigIncludesSIVB(CC) && MPTConfigIncludesSIVB(CCP)))
+		if (!(CC[RTCC_CONFIG_S] && CCP[RTCC_CONFIG_S]))
 		{
 			PMXSPT("PMMXFR", 6);
 			return 6;
@@ -20128,18 +20051,18 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 	}
 	else
 	{
-		if (MPTConfigIncludesSIVB(CCMI) && (Thruster == RTCC_ENGINETYPE_LMAPS || Thruster == RTCC_ENGINETYPE_LMDPS || Thruster == RTCC_ENGINETYPE_CSMSPS))
+		if (CCMI[RTCC_CONFIG_S] && (Thruster == RTCC_ENGINETYPE_LMAPS || Thruster == RTCC_ENGINETYPE_LMDPS || Thruster == RTCC_ENGINETYPE_CSMSPS))
 		{
 			return 6;
 		}
 		if (TVC > 2)
 		{
-			if (Thruster == RTCC_ENGINETYPE_LMAPS && !(MPTConfigIncludesLMAsc(CC) && MPTConfigIncludesLMAsc(CCP)))
+			if (Thruster == RTCC_ENGINETYPE_LMAPS && !(CC[RTCC_CONFIG_A] && CCP[RTCC_CONFIG_A]))
 			{
 				PMXSPT("PMMXFR", 6);
 				return 6;
 			}
-			else if (Thruster == RTCC_ENGINETYPE_LMDPS && !(MPTConfigIncludesLMDsc(CC) && MPTConfigIncludesLMDsc(CCP)))
+			else if (Thruster == RTCC_ENGINETYPE_LMDPS && !(CC[RTCC_CONFIG_D] && CCP[RTCC_CONFIG_D]))
 			{
 				PMXSPT("PMMXFR", 6);
 				return 6;
@@ -20147,7 +20070,7 @@ int RTCC::PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, int CCP, int TVC,
 		}
 		else
 		{
-			if (!(MPTConfigIncludesCSM(CC) && MPTConfigIncludesCSM(CCP)))
+			if (!(CC[RTCC_CONFIG_C] && CCP[RTCC_CONFIG_C]))
 			{
 				PMXSPT("PMMXFR", 6);
 				return 6;
@@ -23995,7 +23918,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 			inp.REFSMMATIndicator = med_m66.REFSMMATInd;
 		}
 
-		if (med_m66.ConfigChangeInd < 0 || med_m66.ConfigChangeInd>2)
+		if (med_m66.ConfigChangeInd < 0 || med_m66.ConfigChangeInd > 2)
 		{
 			inp.ConfigurationChangeIndicator = RTCC_CONFIGCHANGE_NONE;
 		}
@@ -24004,14 +23927,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 			inp.ConfigurationChangeIndicator = med_m66.ConfigChangeInd;
 		}
 
-		if (med_m66.FinalConfig < RTCC_CONFIG_CSM || med_m66.FinalConfig > RTCC_CONFIG_DSC)
-		{
-			inp.EndConfiguration = RTCC_CONFIG_CSM;
-		}
-		else
-		{
-			inp.EndConfiguration = med_m66.FinalConfig;
-		}
+		MPTGetConfigFromString(med_m66.FinalConfig, inp.EndConfiguration);
 		inp.DockingAngle = med_m66.DeltaDA*MCCRPD;
 		if (med_m66.DPSThrustFactor == -1)
 		{
@@ -28350,12 +28266,12 @@ bool RTCC::RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, do
 	return false;
 }
 
-void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, int IC, int IA, int IJ, double D)
+void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, const std::bitset<4> &IC, int IA, int IJ, double D)
 {
 	//INPUTS:
 	//CSMWT and LMWT, CSM and LM weights
 	//ITC: 33 = SPS, 34 = APS, 35 = DPS, 36 = J2
-	//IC: 0 = CSM, 1 = LM, 2 = CSM and LM (docked)
+	//IC: 1 = CSM, 12 = LM, 13 = CSM and LM (docked)
 	//IA: -1: trim angles, thrust and weight loss rate desired outputs, 0: thrust and weight loss rate desired outputs, 1: trim angles desired outputs
 	//IJ: LM descent stage included in configuration at beginning of this maneuver (only applicable if ITC=33 and IC=2). 0 = included, 1 = not included
 
@@ -28385,16 +28301,19 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	double R, W[3];
 	VECTOR3 XCG[2], XI, K;
 
-	if (IC == 0)
+	//CSM only
+	if (IC.to_ulong() == 1)
 	{
 		W[0] = CSMWT;
 		W[1] = 0.0;
 	}
-	else if (IC == 1)
+	//LM only
+	else if (IC.to_ulong() == 12)
 	{
 		W[0] = 0.0;
 		W[1] = LMWT;
 	}
+	//Both
 	else
 	{
 		W[0] = CSMWT;
@@ -28425,7 +28344,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		{
 			goto RTCC_GIMGBL_LABEL_3_4;
 		}
-		if (IC < 1)
+		if (IC.to_ulong() == 1)
 		{
 			IND = 2;
 		}
@@ -28441,7 +28360,8 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 
 	XCG[IND - 1] = XI - K;
 
-	if (IC <= 1)
+	//CSM or LM, but not docked?
+	if (IC.to_ulong() <= 12)
 	{
 		goto RTCC_GIMGBL_LABEL_3_2;
 	}
@@ -28581,7 +28501,7 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		S_Fuel = mpt->mantable[man - 2].CommonBlock.SIVBFuelRemaining;
 	} 
 
-	if (MPTConfigIncludesSIVB(mptman->ConfigCodeBefore))
+	if (mptman->ConfigCodeBefore[RTCC_CONFIG_S])
 	{
 		double DW = W_S_Prior - S_Fuel;
 		S_Fuel = S_Fuel - DW;
@@ -28727,19 +28647,19 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	//TBD: Docking maneuver
 
 	mptman->TotalMassAfter = 0.0;
-	if (MPTConfigIncludesCSM(mptman->CommonBlock.ConfigCode))
+	if (mptman->CommonBlock.ConfigCode[RTCC_CONFIG_C])
 	{
 		mptman->TotalMassAfter += aux->W_CSM;
 	}
-	if (MPTConfigIncludesLMAsc(mptman->CommonBlock.ConfigCode))
+	if(mptman->CommonBlock.ConfigCode[RTCC_CONFIG_A])
 	{
 		mptman->TotalMassAfter += aux->W_LMA;
 	}
-	if (MPTConfigIncludesLMDsc(mptman->CommonBlock.ConfigCode))
+	if (mptman->CommonBlock.ConfigCode[RTCC_CONFIG_D])
 	{
 		mptman->TotalMassAfter += aux->W_LMD;
 	}
-	if (MPTConfigIncludesSIVB(mptman->CommonBlock.ConfigCode))
+	if (mptman->CommonBlock.ConfigCode[RTCC_CONFIG_S])
 	{
 		mptman->TotalMassAfter += aux->W_SIVB;
 	}

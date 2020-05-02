@@ -58,7 +58,7 @@ struct PMMRKJInputArray
 	int ThrusterCode;
 	//0 = two thrusters, 1 = four thrusters
 	bool UllageOption;
-	//Configuration code at maneuver initiation (0 for CSM, 1 for LM, 2 for CSM and LM)
+	//Configuration code at maneuver initiation (1 for CSM, 12 for LM, 13 for CSM and LM)
 	int IC;
 	//DT of ullage (=0 for RCS)
 	double DTU = 0.0;

@@ -5206,8 +5206,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(1 * W / 16, 12 * H / 14, "No Update", 9);
 		}
 
-		VehicleConfigName(Buffer, GC->rtcc->med_m55.ConfigCode);
-		skp->Text(10 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, GC->rtcc->med_m55.ConfigCode.c_str());
+		skp->Text(6 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		if (GC->mptInitError == 1)
 		{
@@ -6949,7 +6949,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				skp->Text(1 * W / 16, 8 * H / 14, "Docking", 7);
 			}
 
-			VehicleConfigName(Buffer, GC->rtcc->med_m66.FinalConfig);
+			sprintf_s(Buffer, GC->rtcc->med_m66.FinalConfig.c_str());
 			skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
 		}
 

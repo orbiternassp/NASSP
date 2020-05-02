@@ -326,7 +326,7 @@ PMMRKJ_LABEL_15A:
 	}
 PMMRKJ_LABEL_15B:
 	IJ = 0;
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && TArr.IC == 2 && TArr.LMDESCJETT <= TBM)
+	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && TArr.IC == 13 && TArr.LMDESCJETT <= TBM)
 	{
 		goto PMMRKJ_LABEL_15C;
 	}
@@ -334,11 +334,11 @@ PMMRKJ_LABEL_15B:
 PMMRKJ_LABEL_15C:
 	IJ = 1;
 PMMRKJ_LABEL_16A:
-	if (TArr.IC == 0)
+	if (TArr.IC == 1)
 	{
 		WC = WT;
 	}
-	else if (TArr.IC == 1)
+	else if (TArr.IC == 4 || TArr.IC == 12)
 	{
 		WL = WT;
 	}
@@ -497,7 +497,7 @@ PMMRKJ_LABEL_22C:
 		Aux->MainFuelUsed = MAINFUELUSED;
 		Aux->RCSFuelUsed = RCSFUELUSED;
 		Aux->W_CSM = WC;
-		if (TArr.IC == RTCC_CONFIG_ASC || TArr.IC == RTCC_CONFIG_CSM_ASC)
+		if (TArr.IC == 4 || TArr.IC == 5)
 		{
 			Aux->W_LMA = WL;
 			Aux->W_LMD = 0.0;
@@ -562,31 +562,31 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 		SIGN = -1.0;
 	}
 
-	if (TArr.IC == RTCC_CONFIG_CSM)
+	if (TArr.IC == 1)
 	{
 		WC = TArr.CSMWT;
 		WL = 0.0;
 		WS = 0.0;
 	}
-	else if (TArr.IC == RTCC_CONFIG_LM)
+	else if (TArr.IC == 12)
 	{
 		WC = 0.0;
 		WL = TArr.LMAWT + TArr.LMDWT;
 		WS = 0.0;
 	}
-	else if (RTCC_CONFIG_CSM_LM)
+	else if (TArr.IC == 13)
 	{
 		WC = TArr.CSMWT;
 		WL = TArr.LMAWT + TArr.LMDWT;
 		WS = 0.0;
 	}
-	else if (RTCC_CONFIG_CSM_SIVB)
+	else if (TArr.IC == 3)
 	{
 		WC = TArr.CSMWT;
 		WL = 0.0;
 		WS = TArr.SIVBWT;
 	}
-	else if (RTCC_CONFIG_LM_SIVB)
+	else if (TArr.IC == 14)
 	{
 		WC = 0.0;
 		WL = TArr.LMAWT + TArr.LMDWT;

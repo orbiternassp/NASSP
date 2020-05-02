@@ -275,7 +275,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "AGSKFACTOR", G->AGSKFactor);
 
 	papiWriteScenario_bool(scn, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
-	oapiWriteScenario_int(scn, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.CommonBlock.ConfigCode);
+	oapiWriteScenario_int(scn, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.CommonBlock.ConfigCode.to_ulong());
 	papiWriteScenario_double(scn, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CommonBlock.CSMMass);
 	papiWriteScenario_double(scn, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMAscentMass);
 	papiWriteScenario_double(scn, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMDescentMass);
@@ -284,7 +284,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "MPTCM_number", GC->pCSMnumber);
 	oapiWriteScenario_int(scn, "MPTCM_TUP", GC->rtcc->PZMPTCSM.CommonBlock.TUP);
 	papiWriteScenario_SV(scn, "MPTCM_ANCHOR", GC->rtcc->EZANCHR1.AnchorVectors[9]);
-	oapiWriteScenario_int(scn, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.CommonBlock.ConfigCode);
+	oapiWriteScenario_int(scn, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.CommonBlock.ConfigCode.to_ulong());
 	papiWriteScenario_double(scn, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CommonBlock.CSMMass);
 	papiWriteScenario_double(scn, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMAscentMass);
 	papiWriteScenario_double(scn, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMDescentMass);
@@ -301,6 +301,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 	char Buffer2[100];
 	bool istarget = false;
 	double temp;
+	int inttemp;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, "END_MFD", 7))
@@ -479,7 +480,10 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "AGSKFACTOR", G->AGSKFactor);
 
 		papiReadScenario_bool(line, "MISSIONPLANNINGACTIVE", GC->MissionPlanningActive);
-		papiReadScenario_int(line, "MPTCM_InitConfigCode", GC->rtcc->PZMPTCSM.CommonBlock.ConfigCode);
+		if (papiReadScenario_int(line, "MPTCM_InitConfigCode", inttemp))
+		{
+			GC->rtcc->PZMPTCSM.CommonBlock.ConfigCode = inttemp;
+		}
 		papiReadScenario_double(line, "MPTCM_CSMInitMass", GC->rtcc->PZMPTCSM.CommonBlock.CSMMass);
 		papiReadScenario_double(line, "MPTCM_LMInitAscentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMAscentMass);
 		papiReadScenario_double(line, "MPTCM_LMInitDescentMass", GC->rtcc->PZMPTCSM.CommonBlock.LMDescentMass);
@@ -488,7 +492,10 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "MPTCM_number", GC->pCSMnumber);
 		papiReadScenario_int(line, "MPTCM_TUP", GC->rtcc->PZMPTCSM.CommonBlock.TUP);
 		papiReadScenario_SV(line, "MPTCM_ANCHOR", GC->rtcc->EZANCHR1.AnchorVectors[9]);
-		papiReadScenario_int(line, "MPTLM_InitConfigCode", GC->rtcc->PZMPTLEM.CommonBlock.ConfigCode);
+		if (papiReadScenario_int(line, "MPTLM_InitConfigCode", inttemp))
+		{
+			GC->rtcc->PZMPTLEM.CommonBlock.ConfigCode = inttemp;
+		}
 		papiReadScenario_double(line, "MPTLM_CSMInitMass", GC->rtcc->PZMPTLEM.CommonBlock.CSMMass);
 		papiReadScenario_double(line, "MPTLM_LMInitAscentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMAscentMass);
 		papiReadScenario_double(line, "MPTLM_LMInitDescentMass", GC->rtcc->PZMPTLEM.CommonBlock.LMDescentMass);
@@ -759,54 +766,6 @@ void ApolloRTCCMFD::MPTAttitudeName(char *Buff, int n)
 	else
 	{
 		sprintf_s(Buff, 100, "");
-	}
-}
-
-void ApolloRTCCMFD::VehicleConfigName(char *Buff, int n)
-{
-	if (n == RTCC_CONFIG_CSM)
-	{
-		sprintf(Buff, "CSM");
-	}
-	else if (n == RTCC_CONFIG_LM)
-	{
-		sprintf(Buff, "LM");
-	}
-	else if (n == RTCC_CONFIG_CSM_LM)
-	{
-		sprintf(Buff, "CSM+LM");
-	}
-	else if (n == RTCC_CONFIG_CSM_SIVB)
-	{
-		sprintf(Buff, "CSM+SIVB");
-	}
-	else if (n == RTCC_CONFIG_LM_SIVB)
-	{
-		sprintf(Buff, "LM+SIVB");
-	}
-	else if (n == RTCC_CONFIG_CSM_LM_SIVB)
-	{
-		sprintf(Buff, "CSM+LM+SIVB");
-	}
-	else if (n == RTCC_CONFIG_ASC)
-	{
-		sprintf(Buff, "LM Asc");
-	}
-	else if (n == RTCC_CONFIG_CSM_ASC)
-	{
-		sprintf(Buff, "CSM+Asc");
-	}
-	else if (n == RTCC_CONFIG_DSC)
-	{
-		sprintf(Buff, "LM Dsc");
-	}
-	else if (n == RTCC_CONFIG_SIVB)
-	{
-		sprintf(Buff, "SIVB");
-	}
-	else
-	{
-		sprintf(Buff, "");
 	}
 }
 
@@ -3261,14 +3220,19 @@ void ApolloRTCCMFD::menuMPTDirectInputDock()
 
 void ApolloRTCCMFD::menuMPTDirectInputFinalConfig()
 {
-	if (GC->rtcc->med_m66.FinalConfig < RTCC_CONFIG_SIVB)
-	{
-		GC->rtcc->med_m66.FinalConfig++;
-	}
-	else
-	{
-		GC->rtcc->med_m66.FinalConfig = 0;
-	}
+	bool MPTDirectInputFinalConfigInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Any combination of C (CSM), S (SIVB), L (Ascent+Descent), A (Ascent Only), D (Descent Only)", MPTDirectInputFinalConfigInput, 0, 20, (void*)this);
+}
+
+bool MPTDirectInputFinalConfigInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_MPTDirectInputFinalConfig(str);
+	return true;
+}
+
+void ApolloRTCCMFD::set_MPTDirectInputFinalConfig(char *cfg)
+{
+	GC->rtcc->med_m66.FinalConfig.assign(cfg);
 }
 
 void ApolloRTCCMFD::menuTransferPoweredAscentToMPT()
@@ -3405,14 +3369,19 @@ void ApolloRTCCMFD::set_MPTInitM50SIVBWT(double mass)
 
 void ApolloRTCCMFD::menuMPTInitM55Config()
 {
-	if (GC->rtcc->med_m55.ConfigCode < RTCC_CONFIG_SIVB)
-	{
-		GC->rtcc->med_m55.ConfigCode++;
-	}
-	else
-	{
-		GC->rtcc->med_m55.ConfigCode = 0;
-	}
+	bool MPTInitM55ConfigInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Any combination of C (CSM), S (SIVB), L (Ascent+Descent), A (Ascent Only), D (Descent Only)", MPTInitM55ConfigInput, 0, 20, (void*)this);
+}
+
+bool MPTInitM55ConfigInput(void* id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->set_MPTInitM55Config(str);
+	return true;
+}
+
+void ApolloRTCCMFD::set_MPTInitM55Config(char *cfg)
+{
+	GC->rtcc->med_m55.ConfigCode.assign(cfg);
 }
 
 void ApolloRTCCMFD::menuMPTM50Update()
