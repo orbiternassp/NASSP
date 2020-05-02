@@ -303,6 +303,22 @@ struct TwoImpulseOpt
 	double TimeStep = 10.0;
 	double TimeRange = 0.0;
 
+	//Corrective combination options
+	//Minimum height difference
+	double DH_min;
+	//Maximum height difference
+	double DH_max;
+	double T2_min;
+	double T2_max;
+	//0 = use item 11 as time increment of second maneuver
+	//1 = use item 11 as terminal phase slip time increment
+	int CCReqInd;
+	//Item 11: Time increment of second maneuver
+	double dt_inc;
+	double TPILimit;
+	//Height increment
+	double dh_inc;
+
 	//Single solution options
 	//1 = Multiple, 2 = Corrective Combination
 	int SingSolTable = 1;

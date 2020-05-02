@@ -1733,7 +1733,8 @@ void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
 {
 	TwoImpulseMultipleSolutionTableEntry entry[13];
 	EphemerisData sv_A1, sv_P1, sv_A1_apo, sv_A2, sv_A2_apo;
-	double DH, PhaseAngle, Elev, WT, T1, T2, mu, DVMIN, DVT, NSRTime, TMAX;
+	double DH, PhaseAngle, Elev, WT, T1, T2, mu, DV_opt, DVT, T_WSR, DH_WSR, theta_WSR, TMAX, theta_T_min, HthetaR, theta_max, theta_min, du_dot, DV_TP, T_slip;
+	double DV_OPTH, DH_OPTH, theta_OPTH, TIME_OPTH, K, D[4];
 	int err, soln = 0, OPCASE, display;
 	std::vector<std::string> str;
 
@@ -1741,12 +1742,21 @@ void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
 	if (opt.sv_A.RBI == BODY_EARTH)
 	{
 		mu = OrbMech::mu_Earth;
+		//ratio of catch-up rate to height difference (roughly at 160NM altitude)
+		K = 5.9853114 / 3600.0 / OrbMech::R_Earth;
 	}
 	else
 	{
 		mu = OrbMech::mu_Moon;
+		//ratio of catch-up rate to height difference (roughly at 60NM altitude)
+		K = 16.38140036 / 3600.0 / OrbMech::R_Earth;
 	}
-	DVMIN = 10000000.0;
+	DV_opt = 10000000.0;
+	//TPI velocity as a function of travel angle
+	D[0] = 0.0;
+	D[1] = 0.0;
+	D[2] = 0.0;
+	D[3] = 0.0;
 
 	//What type of request?
 	if (opt.mode == 3 || opt.mode == 4)
@@ -1875,10 +1885,10 @@ RTCC_PMSTICN_7_1:
 		goto RTCC_PMSTICN_8_2;
 	}
 	//Did the last solution have the lowest fuel expenditure so far?
-	if (DVT < DVMIN)
+	if (DVT < DV_opt)
 	{
 		OPCASE = soln;
-		DVMIN = DVT;
+		DV_opt = DVT;
 	}
 	if (soln >= 13)
 	{
@@ -2028,14 +2038,117 @@ RTCC_PMSTICN_12_2:
 	return;
 RTCC_PMSTICN_13_1:
 	//Corrective Combination
+	//Load MED request quantities
+	T1 = opt.T1;
+	//Set C.C. Table to updating condition
+	PZTIPCCD.Updating = true;
 	//DTREAD: GZGENCSN Blks. 12-15
 	WT = GZGENCSN.TITravelAngle;
-	NSRTime = GZGENCSN.TINSRNominalTime;
-	DH = GZGENCSN.TINSRNominalDeltaH;
-	PhaseAngle = GZGENCSN.TINSRNominalPhaseAngle;
-	PZTIPCCD.Updating = true;
-	//Load T-I Table area with necessary MED quantities
-RTCC_PMSTICN_18_1:;
+	T_WSR = GZGENCSN.TINSRNominalTime;
+	DH_WSR = GZGENCSN.TINSRNominalDeltaH;
+	theta_WSR = GZGENCSN.TINSRNominalPhaseAngle;
+	//Build first block of corrective combination table (Station IDs, threshold times, time of 1st maneuver)
+	//Advance chaser and target to the time of the NCC maneuver
+	sv_A1 = coast(opt.sv_A, T1 - opt.sv_A.GMT);
+	sv_P1 = coast(opt.sv_P, T1 - opt.sv_P.GMT);
+	//TBD: AEG error?
+	//Save initial elements for regeneration
+	PZMYSAVE.SV_CC[0] = sv_A1;
+	PZMYSAVE.SV_CC[1] = sv_P1;
+	//Initialize optimum DV to max, height offset and time of NSR maneuver to MED request minimum
+	DV_opt = 10000000.0;
+	DH = opt.DH_min;
+	T2 = opt.T2_min;
+	theta_T_min = theta_WSR - (opt.T2_min - T_WSR)*K*DH_WSR;
+	if (theta_T_min == 0.0 || DH_WSR == 0.0)
+	{
+		//Error
+		goto RTCC_PMSTICN_18_1;
+	}
+	//Compute phase angle for 1st case
+	HthetaR = DH_WSR / theta_T_min;
+	PhaseAngle = opt.DH_min / HthetaR;
+RTCC_PMSTICN_15_1:
+	du_dot = DH * K;
+	DV_TP = abs((D[0] + WT * (D[1] + WT * (D[2] + WT * D[3])))*DH);//*CTERMV;
+	//Is this a slip time option request?
+	if (opt.CCReqInd == 1)
+	{
+		theta_max = PhaseAngle - opt.TPILimit * du_dot;
+		theta_min = PhaseAngle + opt.TPILimit * du_dot;
+		PhaseAngle = theta_min;
+	}
+	else
+	{
+		T2 = opt.T2_min;
+	}
+RTCC_PMSTICN_15_2:
+	err = PMMTIS(sv_A1, sv_P1, T2 - T1, DH, PhaseAngle, sv_A1_apo, sv_A2, sv_A2_apo);
+	if (err == 0)
+	{
+		DVT = length(sv_A2_apo.V - sv_A2.V) + length(sv_A1_apo.V - sv_A1.V) + DV_TP;
+		if (DVT < DV_opt)
+		{
+			DV_OPTH = DVT;
+			DH_OPTH = DH;
+			TIME_OPTH = T2;
+			theta_OPTH = PhaseAngle;
+		}
+	}
+	//Restore original chaser and target elements for next case
+	sv_A1 = PZMYSAVE.SV_CC[0];
+	sv_P1 = PZMYSAVE.SV_CC[1];
+	//Compute phase angle for next solution
+	PhaseAngle = PhaseAngle - du_dot * opt.dt_inc;
+	//Is this a slip time option request?
+	if (opt.CCReqInd == 1)
+	{
+		goto RTCC_PMSTICN_17_1;
+	}
+	//Compute next NSR time at this height
+	T2 = T2 + opt.dt_inc;
+	//Is the new NSR time past the MED maximum?
+	if (T2 >= opt.T2_max)
+	{
+		goto RTCC_PMSTICN_17_2;
+	}
+	goto RTCC_PMSTICN_15_2;
+RTCC_PMSTICN_17_1:
+	//Have all phase angles been tried at this height?
+	if (PhaseAngle > theta_max)
+	{
+		goto RTCC_PMSTICN_15_2;
+	}
+RTCC_PMSTICN_17_2:
+	if (err == 0)
+	{
+		//Reset optimum to maximum
+		DV_opt = 100000000.0;
+		if (opt.CCReqInd == 1)
+		{
+			T_slip = (theta_min - opt.TPILimit*du_dot - theta_OPTH) / du_dot;
+		}
+		else
+		{
+			T_slip = 0.0;
+		}
+		if (soln >= 13)
+		{
+			goto RTCC_PMSTICN_18_1;
+		}
+	}
+	DH = DH + opt.dh_inc;
+	if (DH > opt.DH_max)
+	{
+		goto RTCC_PMSTICN_18_1;
+	}
+	PhaseAngle = DH / HthetaR;
+	goto RTCC_PMSTICN_15_1;
+RTCC_PMSTICN_18_1:
+	//Write solutions
+	//Set up display
+	display = 0;
+	goto RTCC_PMSTICN_24_2;
 RTCC_PMSTICN_24_1:
 	PMXSPT("PMSTICN", 29);
 	if (opt.mode == 1)
