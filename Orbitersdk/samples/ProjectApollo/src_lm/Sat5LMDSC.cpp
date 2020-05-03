@@ -116,7 +116,7 @@ void Sat5LMDSC::Setup()
 	
 	if (state == 0) {
 		
-		double tdph = -2.7;
+		double tdph = -2.38;
 		double Mass = 4570.0;
 		double ro = 1;
 		double ro1 = 3;
@@ -159,7 +159,7 @@ void Sat5LMDSC::Setup()
 	
 	if (state == 1 || state == 11) {
 		
-		double tdph = -2.7;
+		double tdph = -2.38;
 		double Mass = 4570.0;
 		double ro = 4;
 		double ro1 = 3;

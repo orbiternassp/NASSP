@@ -142,7 +142,7 @@ void LEM::SetLmVesselDockStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	double tdph = -3.86;
+	double tdph = -3.60;
 	double Mass = 7137.75;
 	double ro = 1;
 	double ro1 = 4;
@@ -336,7 +336,7 @@ void LEM::SetLmAscentHoverStage()
 	eds.DeleteAnimations();
 	DPS.DeleteAnimations();
 
-	double tdph = -5.8;
+	double tdph = -5.42;
     double Mass = 4495.0;
 	double ro = 3;
 	TOUCHDOWNVTX td[4];
@@ -469,7 +469,7 @@ void LEM::SeparateStage (UINT stage)
 		GetStatusEx(&vs2);
 		
 		if (vs2.status == 1) {
-			vs2.vrot.x = 2.7;
+			vs2.vrot.x = 2.32;
 			char VName[256];
 			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
@@ -488,7 +488,7 @@ void LEM::SeparateStage (UINT stage)
 				dscstage->SetState(11);
 			}
 			
-			vs2.vrot.x = 5.8;
+			vs2.vrot.x = 5.32;
 			DefSetStateEx(&vs2);
 			SetLmAscentHoverStage();
 		}
@@ -695,8 +695,8 @@ void LEM::SetDockingLights() {
 
 void LEM::HoverStageTouchdownPoints(double mass) {
 
-	double tdph = -3.86;
-	double probeh = -5.57;
+	double tdph = -3.60;
+	double probeh = -5.31;
 	double Mass = mass;
 	double ro = 4.25;
 	TOUCHDOWNVTX td[8];
@@ -709,8 +709,8 @@ void LEM::HoverStageTouchdownPoints(double mass) {
 			td[i].stiffness = stiffness;
 		}
 		else {
-			td[i].damping = damping / 100;
-			td[i].stiffness = stiffness / 100;
+			td[i].damping = damping / 200;
+			td[i].stiffness = stiffness / 200;
 		}
 		td[i].mu = 3;
 		td[i].mu_lng = 3;
