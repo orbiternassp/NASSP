@@ -70,6 +70,8 @@ void Sat5LMDSC::init()
 
 {
 	state = 0;
+	ro1 = 0;
+	ro2 = 0;
 }
 
 void Sat5LMDSC::Setup()
@@ -113,90 +115,20 @@ void Sat5LMDSC::Setup()
 	thg_sep = CreateThrusterGroup(th_sep, 4, THGROUP_USER);
 
 	SetThrusterGroupLevel(thg_sep, 1);
-	
-	if (state == 0) {
-		
-		double tdph = -2.38;
-		double Mass = 4570.0;
-		double ro = 1;
-		double ro1 = 3;
-		TOUCHDOWNVTX td[7];
-		double x_target = -0.25;
-		double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-		double damping = 0.9*(2 * sqrt(Mass*stiffness));
-		for (int i = 0; i < 7; i++) {
-			td[i].damping = damping;
-			td[i].mu = 3;
-			td[i].mu_lng = 3;
-			td[i].stiffness = stiffness;
-		}
-		td[0].pos.x = 0;
-		td[0].pos.y = tdph;
-		td[0].pos.z = 1 * ro;
-		td[1].pos.x = -cos(30 * RAD)*ro;
-		td[1].pos.y = tdph;
-		td[1].pos.z = -sin(30 * RAD)*ro;
-		td[2].pos.x = cos(30 * RAD)*ro;
-		td[2].pos.y = tdph;
-		td[2].pos.z = -sin(30 * RAD)*ro;
-		td[3].pos.x = cos(30 * RAD)*ro1;
-		td[3].pos.y = 0;
-		td[3].pos.z = sin(30 * RAD)*ro1;
-		td[4].pos.x = -cos(30 * RAD)*ro1;
-		td[4].pos.y = 0;
-		td[4].pos.z = sin(30 * RAD)*ro1;
-		td[5].pos.x = 0;
-		td[5].pos.y = 0;
-		td[5].pos.z = -1 * ro1;
-		td[6].pos.x = 0;
-		td[6].pos.y = tdph + 3.5;
-		td[6].pos.z = 0;
 
-		SetTouchdownPoints(td, 7);
+	if (state == 0) {
+
+		ro1 = 3;
+		ro2 = 1;
 
 		AddMesh(LM_DescentGearRet);
 	}
-	
-	if (state == 1 || state == 11) {
-		
-		double tdph = -2.38;
-		double Mass = 4570.0;
-		double ro = 4;
-		double ro1 = 3;
-		TOUCHDOWNVTX td[7];
-		double x_target = -0.25;
-		double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-		double damping = 0.9*(2 * sqrt(Mass*stiffness));
-		for (int i = 0; i < 7; i++) {
-			td[i].damping = damping;
-			td[i].mu = 3;
-			td[i].mu_lng = 3;
-			td[i].stiffness = stiffness;
-		}
-		td[0].pos.x = 0;
-		td[0].pos.y = tdph;
-		td[0].pos.z = 1 * ro;
-		td[1].pos.x = -cos(30 * RAD)*ro;
-		td[1].pos.y = tdph;
-		td[1].pos.z = -sin(30 * RAD)*ro;
-		td[2].pos.x = cos(30 * RAD)*ro;
-		td[2].pos.y = tdph;
-		td[2].pos.z = -sin(30 * RAD)*ro;
-		td[3].pos.x = cos(30 * RAD)*ro1;
-		td[3].pos.y = 0;
-		td[3].pos.z = sin(30 * RAD)*ro1;
-		td[4].pos.x = -cos(30 * RAD)*ro1;
-		td[4].pos.y = 0;
-		td[4].pos.z = sin(30 * RAD)*ro1;
-		td[5].pos.x = 0;
-		td[5].pos.y = 0;
-		td[5].pos.z = -1 * ro1;
-		td[6].pos.x = 0;
-		td[6].pos.y = tdph + 3.5;
-		td[6].pos.z = 0;
 
-		SetTouchdownPoints(td, 7);
-		
+	if (state == 1 || state == 11) {
+
+		ro1 = 3;
+		ro2 = 4;
+
 		if (state == 11) {
 			AddMesh(LM_Descent);
 		}
@@ -209,6 +141,42 @@ void Sat5LMDSC::Setup()
 	if (state == 10) {
 		AddMesh(LM_DescentNoLeg);
 	}
+
+	double tdph = -2.38;
+	double Mass = 4570.0;
+	TOUCHDOWNVTX td[7];
+	double x_target = -0.25;
+	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(Mass*stiffness));
+	for (int i = 0; i < 7; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = 0;
+	td[0].pos.y = tdph;
+	td[0].pos.z = 1 * ro2;
+	td[1].pos.x = -cos(30 * RAD)*ro2;
+	td[1].pos.y = tdph;
+	td[1].pos.z = -sin(30 * RAD)*ro2;
+	td[2].pos.x = cos(30 * RAD)*ro2;
+	td[2].pos.y = tdph;
+	td[2].pos.z = -sin(30 * RAD)*ro2;
+	td[3].pos.x = cos(30 * RAD)*ro1;
+	td[3].pos.y = 0;
+	td[3].pos.z = sin(30 * RAD)*ro1;
+	td[4].pos.x = -cos(30 * RAD)*ro1;
+	td[4].pos.y = 0;
+	td[4].pos.z = sin(30 * RAD)*ro1;
+	td[5].pos.x = 0;
+	td[5].pos.y = 0;
+	td[5].pos.z = -1 * ro1;
+	td[6].pos.x = 0;
+	td[6].pos.y = tdph + 3.5;
+	td[6].pos.z = 0;
+
+	SetTouchdownPoints(td, 7);
 }
 
 void Sat5LMDSC::SetState(int stage)
