@@ -8576,13 +8576,9 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 		{
 			dt = in.TE - in.TS;
 		}
-		else if (in.TIMA == 4)
-		{
-			dt = tempblock.TE - in.TS;
-		}
 		else
 		{
-			dt = 0.0;
+			dt = tempblock.TE - in.TS;
 		}
 	NewPMMLAEG_V1000:
 		coe_mean1.l = CurrentBlock.l_dot*dt + in.coe_mean.l;
@@ -8593,7 +8589,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 		OrbMech::normalizeAngle(coe_mean1.g);
 		OrbMech::normalizeAngle(coe_mean1.h);
 
-		CurrentBlock.TE = CurrentBlock.TS = in.TE;
+		CurrentBlock.TE = CurrentBlock.TS = in.TS + dt;
 		coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
 
 		//Selenographic to selenocentric
@@ -8747,8 +8743,11 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	if (in.TIMA >= 5)
 	{
 		out.Item9 = tempblock.TE - CurrentBlock.TE;
-		dt = -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
-		goto NewPMMLAEG_V1000;
+		dt += -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
+		if (abs(CurrentBlock.Item10) > 0.0001)
+		{
+			goto NewPMMLAEG_V1000;
+		}
 	}
 
 NewPMMLAEG_V1030:
