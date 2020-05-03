@@ -39,5 +39,7 @@ protected:
 
 	int state;
 	THGROUP_HANDLE thg_sep;
+	double ro1; // Distance from center of middle touchdown points
+	double ro2; // Distance from center of lower (footpad) touchdown points
 
 };
