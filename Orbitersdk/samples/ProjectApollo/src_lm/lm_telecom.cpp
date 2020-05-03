@@ -2470,6 +2470,13 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
 
+	double angdiff = 1.0*RAD;
+
+	U_Horn[0] = _V(cos(angdiff), 0.0, -sin(angdiff));//left
+	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));//right
+	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);//up
+	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);//down
+
 	anim_SBandPitch = -1;
 	anim_SBandYaw = -1;
 
@@ -2523,6 +2530,26 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		return;
 	}
 
+	double AzimuthErrorSignal, ElevationErrorSignal;
+	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
+
+	//actual Azimuth and Elevation error signals came from phase differences not signal strength
+	//both are be a function of tracking error though so this works
+	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
+	ElevationErrorSignal = (HornSignalStrength[2] - HornSignalStrength[3])*0.25;
+
+	//normalize Azimuth and Elevation error signals
+	if (SignalStrength > 0.0)
+	{
+		AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
+		ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
+	}
+	else //prevent division by zero
+	{
+		AzimuthErrorSignalNorm = 0;
+		ElevationErrorSignalNorm = 0;
+	}
+
 	double pitchrate = 0.0;
 	double yawrate = 0.0;
 
@@ -2556,7 +2583,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		}
 	}
 
-	//TBD: Auto Tracking
+	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
 	{
 
@@ -2599,7 +2626,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	//Signal Strength
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
+	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_R_Element;
 	MATRIX3 Rot, RX, RY;
 	double relang, Moonrelang;
 
@@ -2620,14 +2647,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
 
-	if (relang < PI05 / hpbw_factor)
-	{
-		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*75.625;
-	}
-	else
-	{
-		SignalStrength = 0.0;
-	}
+	double SignalStrengthScaleFactor = 1; // NEED TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
@@ -2636,9 +2657,33 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	{
 		SignalStrength = 0.0;
 	}
+	else
+	{
+		for (int i = 0; i < 4; i++)
+		{
+
+			//relative angle between antenna pointing vector and direction of Earth
+			relang = acos(dotp(U_R, unit(R_E - pos)));
+
+			if (relang < PI05 / a)
+			{
+				//HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*gain;
+				HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*SignalStrengthScaleFactor;
+			}
+			else
+			{
+				HornSignalStrength[i] = 0.0;
+			}
+		}
+	}
 
 	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", relang*DEG, SignalStrength);
 	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
+
+	if (relang > PI05 / hpbw_factor)
+	{
+		SignalStrength = 0;
+	}
 }
 
 void LEM_SteerableAnt::SystemTimestep(double simdt)
