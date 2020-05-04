@@ -8730,11 +8730,11 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	if (in.TIMA >= 4)
 	{
 		CurrentBlock.Item10 = CurrentBlock.U - tempblock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - tempblock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + tempblock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - tempblock.coe_osc.i + PI))));
-		if (CurrentBlock.Item10 < 0)
+		if (CurrentBlock.Item10 < -PI)
 		{
 			CurrentBlock.Item10 += PI2;
 		}
-		else if (CurrentBlock.Item10 >= PI2)
+		else if (CurrentBlock.Item10 >= PI)
 		{
 			CurrentBlock.Item10 -= PI2;
 		}

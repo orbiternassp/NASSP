@@ -18,7 +18,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	LunarLiftoffResults res;
 
 	opt.sv_CSM = GC->rtcc->StateVectorCalc(G->vessel);
-	opt.t_hole = GC->rtcc->GMTfromGET(124.0*3600.0);
+	opt.t_hole = GC->rtcc->GMTfromGET(127.0*3600.0);
 	opt.M = 2;
 	opt.P = 1;
 	opt.DT_B = 0.0;

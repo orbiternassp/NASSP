@@ -9135,7 +9135,7 @@ void RTCC::LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp
 {
 	VECTOR3 H, J, K, L, R_m, V_m, V_m_apo;
 	double Pgamma, u_apo, P_v, dgamma, DV_K_apo, t_CSI, theta_k_apo, mu, R_apo, R_dot_apo, gamma_m, p_p, V_H, PP, V, R_p_dot, G_s, G_c, theta_k, g_apo, R_TK, R_R, DV_K;
-	double f, R_CDH, DV_CSI, U_CSI, DH_G;
+	double R_CDH, U_CSI, DH_G, du;
 	int K_orp, m, p;
 
 	mu = OrbMech::mu_Moon;
@@ -9208,19 +9208,14 @@ void RTCC::LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp
 		DV_K_apo = DV_K;
 	} while (abs(DV_K_apo - DV_K) > 1.0*0.3048);
 	R_CDH = R_R;
-	DV_CSI = DV_K;
+	dv_CSI = DV_K;
 RTCC_LLWP_HMALIT_5_2:
-	V_m = V_m_apo - J * DV_CSI;
+	V_m = V_m_apo - J * dv_CSI;
 	//Initialize
 	sv[m].coe_osc = OrbMech::GIMIKC(R_m, V_m, mu);
 	sv[m].ENTRY = 0;
+	sv[m].TIMA = 0;
 	sv[m].TS = sv[m].TE = t_CSI;
-	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
-	f = u_apo - sv[m].coe_osc.g;
-	sv[m].coe_osc.l = OrbMech::TrueToMeanAnomaly(f, sv[m].coe_osc.e);
-	//Initialize
-	sv[m].coe_osc = OrbMech::GIMIKC(R_m, V_m, mu);
-	sv[m].ENTRY = 0;
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
 	U_CSI = sv_temp[m].U;
 	if (I_CDH > 0)
@@ -9229,9 +9224,40 @@ RTCC_LLWP_HMALIT_5_2:
 	}
 	else
 	{
-		//TBD
+		sv[m].TIMA = 1;
+		if (sv[m].coe_osc.l > PI)
+		{
+			sv[m].Item8 = 0.0;
+			sv[m].Item10 = 1.0;
+		}
+		else
+		{
+			sv[m].Item8 = PI;
+			sv[m].Item10 = 0.0;
+		}
+		
+		pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+		du = sv_temp[m].U - U_CSI;
+		if (K_orp <= 0 && du <= PI/6.0)
+		{
+			if (sv[m].coe_osc.l > PI)
+			{
+				sv[m].Item8 = PI;
+				sv[m].Item10 = 1.0;
+			}
+			else
+			{
+				sv[m].Item8 = 0.0;
+				sv[m].Item10 = 1.0;
+			}
+			K_orp = 1;
+			pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+		}
+		sv[m].Item10 = 0.0;
+		t_CDH = sv_temp[m].TE;
 	}
 	sv[m].ENTRY = 0;
+	sv[m].TIMA = 0;
 	sv[m].TE = t_CDH;
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
 	sv[p].TIMA = 6;
@@ -9242,25 +9268,35 @@ RTCC_LLWP_HMALIT_5_2:
 	{
 		goto RTCC_LLWP_HMALIT_8_1;
 	}
-	DV_CSI = sqrt(2.0*mu / (R_apo*(1.0 + R_apo / R_CDH))) - V_H;
+	dv_CSI = sqrt(2.0*mu / (R_apo*(1.0 + R_apo / R_CDH))) - V_H;
 	goto RTCC_LLWP_HMALIT_5_2;
 RTCC_LLWP_HMALIT_8_1:
-	double a_a, V_a, l_dot_a, V_R_a, gamma_a, V_H_a, DV_R, DV_H, Pitch, Yaw;
+
+	VECTOR3 R_m_b, V_m_b, R_p, V_p;
+	OrbMech::GIMKIC(sv_temp[m].coe_osc, mu, R_m_b, V_m_b);
+	OrbMech::GIMKIC(sv_temp[p].coe_osc, mu, R_p, V_p);
+
+	V_m_apo = OrbMech::CoellipticDV(R_m_b, R_p, V_p, mu);
+	dv_CDH = length(V_m_apo - V_m_b);
+
+	/*double a_a, V_a, l_dot_a, V_R_a, gamma_a, V_H_a, DV_R, DV_H, Pitch, Yaw, V_H_b;
 	a_a = sv_temp[p].coe_osc.a - DH;
-	V_a = sqrt(mu*(2.0 / sv_temp[m].R - 1.0 / sv_temp[m].coe_osc.a));
+	V_a = sqrt(mu*(2.0 / sv_temp[m].R - 1.0 / a_a));
 	l_dot_a = sqrt(mu / pow(a_a, 3));
 	p_p = sv_temp[p].coe_osc.a*(1.0 - sv_temp[p].coe_osc.e*sv_temp[p].coe_osc.e);
 	R_p_dot = sqrt(mu / p_p)*(sv_temp[p].coe_osc.e*cos(sv_temp[p].coe_osc.g)*sin(sv_temp[p].U) - sv_temp[p].coe_osc.e*sin(sv_temp[p].coe_osc.g)*cos(sv_temp[p].U));
 	V_R_a = R_p_dot * l_dot_a / sv_temp[p].l_dot;
 	gamma_a = asin(V_R_a / V_a);
+	gamma_b = atan((V_R_b / length(V_m)) / sqrt(1.0 - pow(R_dot_apo / length(V_m), 2)));
+	V_H_b = V_b * cos(gamma_b);
 	V_H_a = V_a * cos(gamma_a);
-	DV_H = V_H_a - V_H;
+	DV_H = V_H_a - V_H_b;
 	DV_R = R_dot_apo - V_R_a;
 	dv_CDH = sqrt(DV_H*DV_H + DV_R * DV_R);
 	OrbMech::GIMKIC(sv_temp[m].coe_osc, mu, R_m, V_m);
-	PCMVMR(R_m, V_m, R_m, V_m_apo, DV_H, DV_R, 0.0, -1, V_m_apo, Pitch, Yaw);
+	PCMVMR(R_m, V_m, R_m, V_m_apo, DV_H, DV_R, 0.0, -1, V_m_apo, Pitch, Yaw);*/
 	//Initialize
-	sv[m].coe_osc = OrbMech::GIMIKC(R_m, V_m_apo, mu);
+	sv[m].coe_osc = OrbMech::GIMIKC(R_m_b, V_m_apo, mu);
 	sv[m].ENTRY = 0;
 	sv[m].TIMA = 0;
 	sv[m].TS = sv[m].TE = t_CDH;
@@ -9272,12 +9308,19 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLifto
 	//0 = CSM, 1 = LM
 	AEGHeader Header;
 	AEGDataBlock sv[2], sv_temp[2], sv_xx;
-	VECTOR3 R_LS, R_LS_sg, r_LS, R1, V1, r1, Q, h1, H1, v1, C, R_P, r_P, H_D, h_D, R_BO, V_BO, R_TPI, V_TPI, R_XX, V_XX;
+	VECTOR3 R_LS, R_LS_sg, r_LS, R1, V1, r1, Q, h1, H1, v1, C, R_P, r_P, H_D, h_D, R_BO, V_BO, R_TPI, V_TPI, R_XX, V_XX, R_TI_C, V_TI_C, R_TI_T, V_TI_T;
 	double mu, T_TPI, T_hole, t_ca, theta_CA, theta, dt, S1, S2, t_xx, MJD_BO, T_INS, dt_B, t_CSI, t_D, U_R, t_R, r_apo, r_peri, H_S_apo, DH_MIN, DH_CRIT;
-	double C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, P_mm, DH_u, theta_w, t_LOR, t_H, dv_CSI, dv_CDH, t_CDH, theta_TPI, dt_NSR;
-	int K, m, p, I_SRCH, L_DH, I, J, K_T, i, I_STOP2;
+	double C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, P_mm, DH_u, theta_w, t_LOR, t_H, dv_CSI, dv_CDH, dv_TPI, dv_TPF, t_CDH, theta_TPI, dt_NSR, P_O, P_Q;
+	double dt_max, B1, B2, B3, B4, DP, P_mm_apo;
+	int K, m, p, I_SRCH, L_DH, I, J, K_T, i, I_STOP2, M_stop;
 	int N_arr[10];
-	double T_TPI_arr[10], T_R_arr[10];
+	double T_TPI_arr[10], T_R_arr[10], DV_CSI_arr[10], DV_CDH_arr[10], T_CDH_arr[10], DV_TPI_arr[10], DV_TPF_arr[10], DV_T_arr[10], T_LO_arr[10], T_CSI_arr[10];
+	TwoImpulseOpt tiopt;
+	TwoImpulseResuls tires;
+
+	tiopt.mode = 5;
+	tiopt.sv_A.RBI = BODY_MOON;
+	tiopt.sv_P.RBI = BODY_MOON;
 
 	mu = OrbMech::mu_Moon;
 	T_TPI = opt.t_TPI;
@@ -9427,6 +9470,17 @@ RTCC_PMMLWP_2:
 	}
 	OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R_TPI, V_TPI);
 	U_R = sv_temp[0].U + opt.theta_F;
+	sv[0].Item10 = 0.0;
+	if (U_R >= PI2)
+	{
+		U_R -= PI2;
+		sv[0].Item10 += 1.0;
+	}
+	sv[0].Item10 += trunc((sv_temp[0].TE - sv[0].TS) / (PI2 / sv[0].l_dot));
+	if (sv[0].U > sv_temp[0].U)
+	{
+		sv[0].Item10 += 1.0;
+	}
 	sv[0].TIMA = 2;
 	sv[0].Item8 = U_R;
 	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
@@ -9510,7 +9564,7 @@ RTCC_PMMLLWP_6_2:
 	C5 = (opt.dt_1*sv[p].l_dot - opt.theta_1) / sv[p].l_dot;
 	C6 = (C3 - PI2 / sv[m].l_dot)*dt_B / C3;
 	DH_u = DH[I_SELECT - 1];
-RTCC_PMMLLWP_7:
+RTCC_PMMLLWP_7_7:
 	theta_w = PI05 - opt.E - asin((length(R_TPI) - DH_u)*cos(opt.E) / length(R_TPI));
 	C7 = (C2 + C1 - DH_u) / 2.0;
 	C8 = 1.0 / C7 * sqrt(mu / C7);
@@ -9532,6 +9586,8 @@ RTCC_PMMLLWP_8_8:
 
 	sv[1].coe_osc = OrbMech::GIMIKC(R_BO, V_BO, mu);
 	sv[1].TE = sv[1].TS = T_INS;
+	sv[1].ENTRY = 0;
+	sv[1].TIMA = 0;
 	//Initialize
 	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
 	if (opt.M <= 1)
@@ -9618,13 +9674,131 @@ RTCC_PMMLLWP_8_8:
 	dt_NSR = (theta_TPI - theta_w) / sv[m].l_dot;
 	if (abs(dt_NSR) > 1.0)
 	{
-		if (opt.M <= 1)
+		if (opt.M > 1)
 		{
 			dt_NSR = -dt_NSR;
 		}
 		t_LOR = t_LOR + dt_NSR;
 		goto RTCC_PMMLLWP_8_8;
 	}
+	P_O = PI2 / sv[p].l_dot;
+	P_Q = PI2 / sv[m].l_dot;
+	DV_CSI_arr[I_SELECT - 1] = dv_CSI;
+	DV_CDH_arr[I_SELECT - 1] = dv_CDH;
+	T_CDH_arr[I_LOOP - 1] = t_CDH;
+	dv_TPI = 0.0;
+	dv_TPF = 0.0;
+	if (abs(DH_u) != 0.0)
+	{
+		//Call two impulse
+		tiopt.T1 = T_TPI;
+		tiopt.T2 = t_R;
+		OrbMech::GIMKIC(sv_temp[m].coe_osc, mu, R_TI_C, V_TI_C);
+		OrbMech::GIMKIC(sv_temp[p].coe_osc, mu, R_TI_T, V_TI_T);
+		tiopt.sv_A.R = R_TI_C;
+		tiopt.sv_A.V = V_TI_C;
+		tiopt.sv_A.GMT = sv_temp[m].TE;
+		tiopt.sv_P.R = R_TI_T;
+		tiopt.sv_P.V = V_TI_T;
+		tiopt.sv_P.GMT = sv_temp[p].TE;
+		PMSTICN(tiopt, tires);
+		dv_TPI = length(tires.dV);
+		dv_TPF = length(tires.dV2);
+	}
+	DV_TPI_arr[I_SELECT - 1] = dv_TPI;
+	DV_TPF_arr[I_SELECT - 1] = dv_TPF;
+	DV_T_arr[I_SELECT - 1] = dv_CSI + dv_CDH + dv_TPI + dv_TPF;
+	if (J_MOV > 0)
+	{
+		goto RTCC_PMMLLWP_20_16;
+	}
+	T_LO_arr[I_LOOP - 1] = t_LOR;
+	T_CSI_arr[I_LOOP - 1] = t_CSI;
+	dt_max = t_R - t_LOR;
+	B1 = T_CSI_arr[I_LOOP - 1];
+	B2 = T_CDH_arr[I_LOOP - 1];
+	B3 = T_TPI_arr[I_LOOP - 1];
+	B4 = T_R_arr[I_LOOP - 1];
+	if (I_LAST > 0)
+	{
+		goto RTCC_PMMLLWP_18_17;
+	}
+	if (I_SELECT <= I_STOP1)
+	{
+		goto RTCC_PMMLLWP_17_18;
+	}
+	if (I_SELECT < I_STOP2 - 1)
+	{
+		goto RTCC_PMMLLWP_19_20;
+	}
+	else if (I_SELECT > I_STOP2 - 1)
+	{
+		goto RTCC_PMMLLWP_22_19;
+	}
+	if (I_SRCH > 0)
+	{
+		goto RTCC_PMMLLWP_20_22;
+	}
+	else
+	{
+		goto RTCC_PMMLLWP_19_20;
+	}
+RTCC_PMMLLWP_17_18:
+	if (I_SRCH <= 0)
+	{
+		goto RTCC_PMMLLWP_19_20;
+	}
+	DP = P_O - P_mm;
+	P_mm_apo = P_mm;
+	M_stop = MM + (int)((opt.t_max - dt_max) / P_mm_apo);
+RTCC_PMMLLWP_17_24:
+	T_CSI_arr[I_LOOP - 1] = B1 + P_mm_apo * (double)(M_stop - 2);
+	T_CDH_arr[I_LOOP - 1] = B2 + P_mm_apo * (double)(M_stop - 2);
+	goto RTCC_PMMLLWP_18_25;
+RTCC_PMMLLWP_18_17:
+	if (DH_u > 0)
+	{
+		goto RTCC_PMMLLWP_22_19;
+	}
+	P_mm_apo = P_Q;
+	DP = -(P_O - P_mm_apo);
+	M_stop = MM + (int)((opt.t_max - dt_max) / P_mm_apo);
+RTCC_PMMLLWP_18_26:
+	T_CSI_arr[I_LOOP - 1] = B1 + DP * (double)(M_stop - 2);
+	T_CDH_arr[I_LOOP - 1] = B2 + DP * (double)(M_stop - 2);
+RTCC_PMMLLWP_18_25:
+	T_LO_arr[I_LOOP - 1] = t_LOR + DP * (double)(M_stop - 2);
+	T_TPI_arr[I_LOOP - 1] = B1 + P_mm_apo * (double)(M_stop - 2);
+	T_R_arr[I_LOOP - 1] = B4 + P_mm_apo * (double)(M_stop - 2);
+	N_arr[I_LOOP - 1] = M_stop;
+	if (MM - M_stop != 0)
+	{
+		M_stop = 2;
+		I_LOOP++;
+		if (I_SELECT <= 1)
+		{
+			goto RTCC_PMMLLWP_17_24;
+		}
+		goto RTCC_PMMLLWP_18_26;
+	}
+RTCC_PMMLLWP_19_20:
+	MM = 2;
+	if (I_LAST > 0)
+	{
+		goto RTCC_PMMLLWP_22_19;
+	}
+	I_LOOP++;
+	I_SELECT++;
+	DH_u = DH[I_SELECT - 1];
+	goto RTCC_PMMLLWP_7_7;
+RTCC_PMMLLWP_20_22:
+	J_MOV = 1;
+	I_SELECT++;
+	I_LOOP++;
+	DH_u = DH[I_SELECT - 1];
+	goto RTCC_PMMLLWP_7_7;
+RTCC_PMMLLWP_20_16:;
+RTCC_PMMLLWP_22_19:
 	delete[] DH_apo;
 }
 
