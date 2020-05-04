@@ -1605,9 +1605,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->t_TPI = round(t_TPI);
 	}
 	break;
-	case 73: //T2 ABORT PAD
+	case 73: //LUNAR SURFACE DATA CARD
 	{
-		AP11T2ABORTPAD * form = (AP11T2ABORTPAD*)pad;
+		AP11LunarSurfaceDataCard * form = (AP11LunarSurfaceDataCard*)pad;
 
 		SV sv_CSM, sv_Ins, sv_CSM_upl, sv_IG;
 		VECTOR3 R_LS, R_C1, V_C1, u, V_C1F, R_CSI1, V_CSI1;
@@ -1638,38 +1638,15 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_sunrise = calcParams.PDI + 7.0*3600.0;
 		t_TPI = FindOrbitalSunrise(sv_CSM, GETbase, t_sunrise) - 23.0*60.0;
 
-		form->TIG = T2;
-		form->t_CSI1 = round(t_CSI1);
-		form->t_Phasing = round(t_C1);
-		form->t_TPI = round(t_TPI);
-
-		//CSM state vector, time tagged PDI+25 minutes
-		sv_CSM_upl = StateVectorCalc(calcParams.src, OrbMech::MJDfromGET(calcParams.PDI + 25.0*60.0, GETbase));
-		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true, AGCEpoch, GETbase);
-
-		sprintf(uplinkdata, "%s", buffer1);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector");
-		}
-	}
-	break;
-	case 74: //T3 ABORT PAD
-	{
-		AP11T3ABORTPAD * form = (AP11T3ABORTPAD*)pad;
+		form->T2_TIG = T2;
+		form->T2_t_CSI1 = round(t_CSI1);
+		form->T2_t_Phasing = round(t_C1);
+		form->T2_t_TPI = round(t_TPI);
 
 		LunarLiftoffTimeOpt opt;
 		LunarLiftoffResults res;
-		SV sv_CSM, sv_CSM2, sv_CSM_over, sv_Ins, sv_IG;
-		VECTOR3 R_LS;
-		double GETbase, m0, MJD_over, t_P, t_PPlusDT, theta_1, dt_1, dv;
-
-		GETbase = calcParams.TEPHEM;
-		sv_CSM = StateVectorCalc(calcParams.src);
-
-		LEM *l = (LEM*)calcParams.tgt;
-		m0 = l->GetAscentStageMass();
+		SV sv_CSM2, sv_CSM_over;
+		double MJD_over, t_P, t_PPlusDT, theta_1, dt_1;
 
 		opt.R_LLS = R_LLS;
 		opt.GETbase = GETbase;
@@ -1677,8 +1654,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.lng = calcParams.LSLng;
 		opt.sv_CSM = sv_CSM;
 		opt.t_hole = calcParams.PDI + 1.5*3600.0;
-
-		R_LS = OrbMech::r_from_latlong(calcParams.LSLat, calcParams.LSLng, OrbMech::R_Moon + calcParams.LSAlt);
 
 		//Initial pass through the processor
 		LaunchTimePredictionProcessor(opt, res);
@@ -1696,11 +1671,22 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_P = OrbMech::period(sv_CSM_over.R, sv_CSM_over.V, OrbMech::mu_Moon);
 		t_PPlusDT = res.t_L - OrbMech::GETfromMJD(sv_CSM_over.MJD, GETbase);
 
-		form->TIG = round(res.t_L);
-		form->t_CSI = round(res.t_CSI);
-		form->t_Period = t_P;
-		form->t_PPlusDT = t_PPlusDT;
-		form->t_TPI = round(res.t_TPI);
+		form->T3_TIG = round(res.t_L);
+		form->T3_t_CSI = round(res.t_CSI);
+		form->T3_t_Period = t_P;
+		form->T3_t_PPlusDT = t_PPlusDT;
+		form->T3_t_TPI = round(res.t_TPI);
+
+		//CSM state vector, time tagged PDI+25 minutes
+		sv_CSM_upl = StateVectorCalc(calcParams.src, OrbMech::MJDfromGET(calcParams.PDI + 25.0*60.0, GETbase));
+		AGCStateVectorUpdate(buffer1, sv_CSM_upl, true, AGCEpoch, GETbase);
+
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
 	}
 	break;
 	case 76: //P76 PAD for DOI AND NO PDI+12
