@@ -142,43 +142,7 @@ void LEM::SetLmVesselDockStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	double tdph = -3.86;
-	double Mass = 7137.75;
-	double ro = 1;
-	double ro1 = 4;
-	TOUCHDOWNVTX td[7];
-	double x_target = -0.25;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<7; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = 0;
-	td[0].pos.y = tdph;
-	td[0].pos.z = 1 * ro;
-	td[1].pos.x = -cos(30 * RAD)*ro;
-	td[1].pos.y = tdph;
-	td[1].pos.z = -sin(30 * RAD)*ro;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = tdph;
-	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = cos(30 * RAD)*ro1;
-	td[3].pos.y = 0;
-	td[3].pos.z = sin(30 * RAD)*ro1;
-	td[4].pos.x = -cos(30 * RAD)*ro1;
-	td[4].pos.y = 0;
-	td[4].pos.z = sin(30 * RAD)*ro1;
-	td[5].pos.x = 0;
-	td[5].pos.y = 0;
-	td[5].pos.z = -1 * ro1;
-	td[6].pos.x = 0;
-	td[6].pos.y = 3.86;
-	td[6].pos.z = 0;
-
-	SetTouchdownPoints(td, 7);
+	ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86, -0.25); // landing gear retracted
 
 	// Configure meshes if needed
 	if (!pMission->LMHasLegs()) InsertMesh(hLMDescentNoLeg, dscidx, &mesh_dsc);
@@ -256,9 +220,7 @@ void LEM::SetLmVesselHoverStage()
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 
-	double td_mass = 7137.75;
-
-	if (pMission->LMHasLegs()) HoverStageTouchdownPoints(td_mass);
+	if (pMission->LMHasLegs()) ConfigTouchdownPoints(7137.75, 3.5, 4.25, -3.60, -5.31, 3.86, -0.25); // landing gear extended
 
 	if (!ph_Dsc){  
 		ph_Dsc  = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
@@ -336,33 +298,7 @@ void LEM::SetLmAscentHoverStage()
 	eds.DeleteAnimations();
 	DPS.DeleteAnimations();
 
-	double tdph = -5.8;
-    double Mass = 4495.0;
-	double ro = 3;
-	TOUCHDOWNVTX td[4];
-	double x_target = -0.5;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i<4; i++) {
-		td[i].damping = damping;
-		td[i].mu = 3;
-		td[i].mu_lng = 3;
-		td[i].stiffness = stiffness;
-	}
-	td[0].pos.x = 0;
-	td[0].pos.y = tdph;
-	td[0].pos.z = 1 * ro;
-	td[1].pos.x = -cos(30 * RAD)*ro;
-	td[1].pos.y = tdph;
-	td[1].pos.z = -sin(30 * RAD)*ro;
-	td[2].pos.x = cos(30 * RAD)*ro;
-	td[2].pos.y = tdph;
-	td[2].pos.z = -sin(30 * RAD)*ro;
-	td[3].pos.x = 0;
-	td[3].pos.y = 2.8;
-	td[3].pos.z = 0;
-
-	SetTouchdownPoints(td, 4);
+	ConfigTouchdownPoints(4495.0, 3, 3, -5.42, 0, 2.8, -0.5);
 
 	// Configure meshes if needed
 	VECTOR3 mesh_shift = _V(0.00, -1.75, 0.00);
@@ -469,7 +405,7 @@ void LEM::SeparateStage (UINT stage)
 		GetStatusEx(&vs2);
 		
 		if (vs2.status == 1) {
-			vs2.vrot.x = 2.7;
+			vs2.vrot.x = 2.32;
 			char VName[256];
 			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
@@ -488,7 +424,7 @@ void LEM::SeparateStage (UINT stage)
 				dscstage->SetState(11);
 			}
 			
-			vs2.vrot.x = 5.8;
+			vs2.vrot.x = 5.32;
 			DefSetStateEx(&vs2);
 			SetLmAscentHoverStage();
 		}
@@ -693,24 +629,20 @@ void LEM::SetDockingLights() {
 	}
 }
 
-void LEM::HoverStageTouchdownPoints(double mass) {
+void LEM::ConfigTouchdownPoints(double mass, double ro1, double ro2, double tdph, double probeh, double height, double x_target) {
 
-	double tdph = -3.86;
-	double probeh = -5.57;
-	double Mass = mass;
-	double ro = 4.25;
-	TOUCHDOWNVTX td[8];
-	double x_target = -0.25;
-	double stiffness = (-1)*(Mass*9.80655) / (3 * x_target);
-	double damping = 0.9*(2 * sqrt(Mass*stiffness));
-	for (int i = 0; i < 8; i++) {
-		if (i < 5) {
+	TOUCHDOWNVTX td[12];
+
+	double stiffness = (-1)*(mass*9.80655) / (3 * x_target);
+	double damping = 0.9*(2 * sqrt(mass*stiffness));
+	for (int i = 0; i < 12; i++) {
+		if (i < 9) {
 			td[i].damping = damping;
 			td[i].stiffness = stiffness;
 		}
 		else {
-			td[i].damping = damping / 100;
-			td[i].stiffness = stiffness / 100;
+			td[i].damping = damping / 200;
+			td[i].stiffness = stiffness / 200;
 		}
 		td[i].mu = 3;
 		td[i].mu_lng = 3;
@@ -718,30 +650,42 @@ void LEM::HoverStageTouchdownPoints(double mass) {
 
 	td[0].pos.x = 0;
 	td[0].pos.y = tdph;
-	td[0].pos.z = ro;
-	td[1].pos.x = -ro;
+	td[0].pos.z = ro2;
+	td[1].pos.x = -ro2;
 	td[1].pos.y = tdph;
 	td[1].pos.z = 0;
 	td[2].pos.x = 0;
 	td[2].pos.y = tdph;
-	td[2].pos.z = -ro;
-	td[3].pos.x = ro;
+	td[2].pos.z = -ro2;
+	td[3].pos.x = ro2;
 	td[3].pos.y = tdph;
 	td[3].pos.z = 0;
 	td[4].pos.x = 0;
-	td[4].pos.y = 3.86;
-	td[4].pos.z = 0;
-	td[5].pos.x = -ro;
-	td[5].pos.y = probeh;
+	td[4].pos.y = 0;
+	td[4].pos.z = ro1;
+	td[5].pos.x = -ro1;
+	td[5].pos.y = 0;
 	td[5].pos.z = 0;
 	td[6].pos.x = 0;
-	td[6].pos.y = probeh;
-	td[6].pos.z = -ro;
-	td[7].pos.x = ro;
-	td[7].pos.y = probeh;
+	td[6].pos.y = 0;
+	td[6].pos.z = -ro1;
+	td[7].pos.x = ro1;
+	td[7].pos.y = 0;
 	td[7].pos.z = 0;
+	td[8].pos.x = 0;
+	td[8].pos.y = height;
+	td[8].pos.z = 0;
+	td[9].pos.x = -ro2;
+	td[9].pos.y = probeh;
+	td[9].pos.z = 0;
+	td[10].pos.x = 0;
+	td[10].pos.y = probeh;
+	td[10].pos.z = -ro2;
+	td[11].pos.x = ro2;
+	td[11].pos.y = probeh;
+	td[11].pos.z = 0;
 
-	SetTouchdownPoints(td, 8);
+	SetTouchdownPoints(td, 12);
 }
 
 void LEM::AddDust() {

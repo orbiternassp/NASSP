@@ -1820,24 +1820,19 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_PDIABORTPAD_T_TPI_Pre10Min", form->T_TPI_Pre10Min);
 			SAVE_INT("MCC_PDIABORTPAD_type", form->type);
 		}
-		else if (padNumber == PT_AP11T2ABORTPAD)
+		else if (padNumber == PT_AP11LUNSURFPAD)
 		{
-			AP11T2ABORTPAD *form = (AP11T2ABORTPAD*)padForm;
+			AP11LunarSurfaceDataCard *form = (AP11LunarSurfaceDataCard*)padForm;
 
-			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_TIG", form->TIG);
-			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_CSI1", form->t_CSI1);
-			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_Phasing", form->t_Phasing);
-			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_TPI", form->t_TPI);
-		}
-		else if (padNumber == PT_AP11T3ABORTPAD)
-		{
-			AP11T3ABORTPAD *form = (AP11T3ABORTPAD*)padForm;
-
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_TIG", form->TIG);
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_CSI", form->t_CSI);
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->t_Period);
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->t_PPlusDT);
-			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->t_TPI);
+			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_TIG", form->T2_TIG);
+			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_CSI1", form->T2_t_CSI1);
+			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_Phasing", form->T2_t_Phasing);
+			SAVE_DOUBLE("MCC_AP11T2ABORTPAD_t_TPI", form->T3_t_TPI);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_TIG", form->T3_TIG);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_CSI", form->T3_t_CSI);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->T3_t_Period);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->T3_t_PPlusDT);
+			SAVE_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->T3_t_TPI);
 		}
 		else if (padNumber == PT_AP11P76PAD)
 		{
@@ -2346,24 +2341,19 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_PDIABORTPAD_T_TPI_Pre10Min", form->T_TPI_Pre10Min);
 			LOAD_INT("MCC_PDIABORTPAD_type", form->type);
 		}
-		else if (padNumber == PT_AP11T2ABORTPAD)
+		else if (padNumber == PT_AP11LUNSURFPAD)
 		{
-			AP11T2ABORTPAD *form = (AP11T2ABORTPAD*)padForm;
+		AP11LunarSurfaceDataCard *form = (AP11LunarSurfaceDataCard*)padForm;
 
-			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_TIG", form->TIG);
-			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_CSI1", form->t_CSI1);
-			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_Phasing", form->t_Phasing);
-			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_TPI", form->t_TPI);
-		}
-		else if (padNumber == PT_AP11T3ABORTPAD)
-		{
-			AP11T3ABORTPAD *form = (AP11T3ABORTPAD*)padForm;
-
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_TIG", form->TIG);
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_CSI", form->t_CSI);
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->t_Period);
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->t_PPlusDT);
-			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->t_TPI);
+			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_TIG", form->T2_TIG);
+			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_CSI1", form->T2_t_CSI1);
+			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_Phasing", form->T2_t_Phasing);
+			LOAD_DOUBLE("MCC_AP11T2ABORTPAD_t_TPI", form->T2_t_TPI);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_TIG", form->T3_TIG);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_CSI", form->T3_t_CSI);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_Period", form->T3_t_Period);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_PPlusDT", form->T3_t_PPlusDT);
+			LOAD_DOUBLE("MCC_AP11T3ABORTPAD_t_TPI", form->T3_t_TPI);
 		}
 		else if (padNumber == PT_AP11P76PAD)
 		{
@@ -2981,41 +2971,29 @@ void MCC::drawPad(){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
-	case PT_AP11T2ABORTPAD:
+	case PT_AP11LUNSURFPAD:
 	{
-		AP11T2ABORTPAD *form = (AP11T2ABORTPAD*)padForm;
+		AP11LunarSurfaceDataCard *form = (AP11LunarSurfaceDataCard*)padForm;
 
-		int hh[4], mm[4];
-		double ss[4];
+		int hh[9], mm[9];
+		double ss[9];
 
-		SStoHHMMSS(form->TIG, hh[0], mm[0], ss[0]);
-		SStoHHMMSS(form->t_Phasing, hh[1], mm[1], ss[1]);
-		SStoHHMMSS(form->t_CSI1, hh[2], mm[2], ss[2]);
-		SStoHHMMSS(form->t_TPI, hh[3], mm[3], ss[3]);
+		SStoHHMMSS(form->T2_TIG, hh[0], mm[0], ss[0]);
+		SStoHHMMSS(form->T2_t_Phasing, hh[1], mm[1], ss[1]);
+		SStoHHMMSS(form->T2_t_CSI1, hh[2], mm[2], ss[2]);
+		SStoHHMMSS(form->T2_t_TPI, hh[3], mm[3], ss[3]);
+		SStoHHMMSS(form->T3_TIG, hh[4], mm[4], ss[4]);
+		SStoHHMMSS(form->T3_t_Period, hh[5], mm[5], ss[5]);
+		SStoHHMMSS(form->T3_t_PPlusDT, hh[6], mm[6], ss[6]);
+		SStoHHMMSS(form->T3_t_CSI, hh[7], mm[7], ss[7]);
+		SStoHHMMSS(form->T3_t_TPI, hh[8], mm[8], ss[8]);
 
 		sprintf(buffer, "T2 ABORT\n%+06d HRS T2\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS N33\n%+06d MIN PHASING\n%+07.2f SEC TIG\n"
-			"%+06d HRS N11\n%+06d MIN CSI1\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC", 
-			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2], hh[3], mm[3], ss[3]);
-
-		oapiAnnotationSetText(NHpad, buffer);
-	}
-	break;
-	case PT_AP11T3ABORTPAD:
-	{
-		AP11T3ABORTPAD *form = (AP11T3ABORTPAD*)padForm;
-
-		int hh[5], mm[5];
-		double ss[5];
-
-		SStoHHMMSS(form->TIG, hh[0], mm[0], ss[0]);
-		SStoHHMMSS(form->t_Period, hh[1], mm[1], ss[1]);
-		SStoHHMMSS(form->t_PPlusDT, hh[2], mm[2], ss[2]);
-		SStoHHMMSS(form->t_CSI, hh[3], mm[3], ss[3]);
-		SStoHHMMSS(form->t_TPI, hh[4], mm[4], ss[4]);
-
-		sprintf(buffer, "T3 ABORT\n%+06d HRS T3\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS CSM\n%+06d MIN PERIOD\n%+07.2f SEC\n"
+			"%+06d HRS N11\n%+06d MIN CSI1\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC\n"
+			"T3 ABORT\n%+06d HRS T3\n%+06d MIN TIG\n%+07.2f SEC\n%+06d HRS CSM\n%+06d MIN PERIOD\n%+07.2f SEC\n"
 			"%+06d HRS\n%+06d MIN P+DT\n%+07.2f SEC\n%+06d HRS N11\n%+06d MIN CSI TIG\n%+07.2f SEC\n%+06d HRS N37\n%+06d MIN TPI\n%+07.2f SEC",
-			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2], hh[3], mm[3], ss[3], hh[4], mm[4], ss[4]);
+			hh[0], mm[0], ss[0], hh[1], mm[1], ss[1], hh[2], mm[2], ss[2], hh[3], mm[3], ss[3], hh[4], mm[4], ss[4], hh[5], mm[5], ss[5],
+			hh[6], mm[6], ss[6], hh[7], mm[7], ss[7], hh[8], mm[8], ss[8]);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3182,11 +3160,8 @@ void MCC::allocPad(int Number){
 	case PT_PDIABORTPAD: // PDIABORTPAD
 		padForm = calloc(1, sizeof(PDIABORTPAD));
 		break;
-	case PT_AP11T2ABORTPAD: // AP11T2ABORTPAD
-		padForm = calloc(1, sizeof(AP11T2ABORTPAD));
-		break;
-	case PT_AP11T3ABORTPAD: // AP11T3ABORTPAD
-		padForm = calloc(1, sizeof(AP11T3ABORTPAD));
+	case PT_AP11LUNSURFPAD: // AP11T2ABORTPAD
+		padForm = calloc(1, sizeof(AP11LunarSurfaceDataCard));
 		break;
 	case PT_AP11P76PAD: // AP11P76PAD
 		padForm = calloc(1, sizeof(AP11P76PAD));

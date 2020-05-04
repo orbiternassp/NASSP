@@ -437,25 +437,20 @@ struct PDIABORTPAD
 	int type;				//0 = PDI Abort PAD for LM, 1 = CSM Rescue PAD
 };
 
-//APOLLO 11 T2 ABORT PAD
+//APOLLO 11 LUNAR SURFACE DATA CARD
 
-struct AP11T2ABORTPAD
+struct AP11LunarSurfaceDataCard
 {
-	double TIG;
-	double t_Phasing;
-	double t_CSI1;
-	double t_TPI;
-};
+	double T2_TIG;
+	double T2_t_Phasing;
+	double T2_t_CSI1;
+	double T2_t_TPI;
 
-//APOLLO 11 T3 ABORT PAD
-
-struct AP11T3ABORTPAD
-{
-	double TIG;
-	double t_Period;
-	double t_PPlusDT;
-	double t_CSI;
-	double t_TPI;
+	double T3_TIG;
+	double T3_t_Period;
+	double T3_t_PPlusDT;
+	double T3_t_CSI;
+	double T3_t_TPI;
 };
 
 //APOLLO 11 P76 UPDATE PAD
