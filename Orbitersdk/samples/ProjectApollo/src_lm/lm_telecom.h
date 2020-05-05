@@ -281,6 +281,7 @@ public:
 	double GetAntennaTempF();
 	double GetPitch() { return pitch*DEG; }
 	double GetYaw() { return yaw*DEG; }
+	VECTOR3 pitchYaw2GlobalVector(double pitch, double yaw, MATRIX3 NBSA);
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)

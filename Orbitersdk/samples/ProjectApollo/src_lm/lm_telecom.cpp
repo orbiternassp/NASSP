@@ -2626,17 +2626,17 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	//Signal Strength
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R, U_R_Element;
-	MATRIX3 Rot, RX, RY;
-	double relang, Moonrelang;
+	double relang[4], Moonrelang;
 
-	//U_RP = pitchYaw2GlobalVector(pitch, yaw, NBSA);
+	VECTOR3 U_RP[4], pos, R_E, R_M, U_R[4];
+	MATRIX3 Rot;
 
-	//Unit vector of antenna in vessel's local frame
-	RY = _M(cos(pitch), 0.0, sin(pitch), 0.0, 1.0, 0.0, -sin(pitch), 0.0, cos(pitch));
-	RX = _M(1.0, 0.0, 0.0, 0.0, cos(yaw), sin(yaw), 0.0, -sin(yaw), cos(yaw));
-	U_RP = mul(NBSA, mul(RY, mul(RX, _V(0.0, 0.0, 1.0))));
-	U_RP = _V(U_RP.y, U_RP.x, U_RP.z);
+
+
+	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (1 * RAD), yaw, NBSA);
+	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (1 * RAD), yaw, NBSA);
+	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (1 * RAD), NBSA);
+	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (1 * RAD), NBSA);
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	lem->GetGlobalPos(pos);
@@ -2644,12 +2644,13 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
 
-	//Calculate antenna pointing vector in global frame
-	U_R = mul(Rot, U_RP);
-	//relative angle between antenna pointing vector and direction of Earth
-	relang = acos(dotp(U_R, unit(R_E - pos)));
+	for (int i = 0; i < 4; i++)
+	{
+
+	}
 
 	double SignalStrengthScaleFactor = 1; // NEED TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 
 	//Moon in the way
@@ -2663,13 +2664,14 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	{
 		for (int i = 0; i < 4; i++)
 		{
-
+			//Calculate antenna pointing vector in global frame
+			U_R[i] = mul(Rot, U_RP[i]);
 			//relative angle between antenna pointing vector and direction of Earth
-			relang = acos(dotp(U_R, unit(R_E - pos)));
+			relang[i] = acos(dotp(U_R[0], unit(R_E - pos)));
 
-			if (relang < PI05 / hpbw_factor)
+			if (relang[i] < PI05 / hpbw_factor)
 			{
-				HornSignalStrength[i] = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*SignalStrengthScaleFactor;
+				HornSignalStrength[i] = cos(hpbw_factor*relang[i])*cos(hpbw_factor*relang[i])*SignalStrengthScaleFactor;
 			}
 			else
 			{
@@ -2678,13 +2680,10 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		}
 	}
 
-	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", relang*DEG, SignalStrength);
+	sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", (relang[0]+ relang[1]+ relang[2]+ relang[3])/4*DEG, SignalStrength);
 	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
 
-	if (relang > PI05 / hpbw_factor)
-	{
-		SignalStrength = 0;
-	}
+
 }
 
 void LEM_SteerableAnt::SystemTimestep(double simdt)
@@ -2735,6 +2734,22 @@ void LEM_SteerableAnt::DefineAnimations(UINT idx) {
 	sband_proc[1] = -yaw / PI2;
 	if (sband_proc[1] < 0) sband_proc[1] += 1.0;
 	lem->SetAnimation(anim_SBandPitch, sband_proc[0]); lem->SetAnimation(anim_SBandYaw, sband_proc[1]);
+}
+
+VECTOR3 LEM_SteerableAnt::pitchYaw2GlobalVector(double pitch, double yaw, MATRIX3 NBSA)
+{
+	VECTOR3 U_RP;
+	MATRIX3 RX, RY;
+
+	//U_RP = pitchYaw2GlobalVector(pitch, yaw, NBSA);
+
+	//Unit vector of antenna in vessel's local frame
+	RY = _M(cos(pitch), 0.0, sin(pitch), 0.0, 1.0, 0.0, -sin(pitch), 0.0, cos(pitch));
+	RX = _M(1.0, 0.0, 0.0, 0.0, cos(yaw), sin(yaw), 0.0, -sin(yaw), cos(yaw));
+	U_RP = mul(NBSA, mul(RY, mul(RX, _V(0.0, 0.0, 1.0))));
+	U_RP = _V(U_RP.y, U_RP.x, U_RP.z);
+
+	return U_RP;
 }
 
 // Load
