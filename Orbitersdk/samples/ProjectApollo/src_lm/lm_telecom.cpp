@@ -2630,6 +2630,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	MATRIX3 Rot, RX, RY;
 	double relang, Moonrelang;
 
+	//U_RP = pitchYaw2GlobalVector(pitch, yaw, NBSA);
+
 	//Unit vector of antenna in vessel's local frame
 	RY = _M(cos(pitch), 0.0, sin(pitch), 0.0, 1.0, 0.0, -sin(pitch), 0.0, cos(pitch));
 	RX = _M(1.0, 0.0, 0.0, 0.0, cos(yaw), sin(yaw), 0.0, -sin(yaw), cos(yaw));
@@ -2665,10 +2667,9 @@ void LEM_SteerableAnt::Timestep(double simdt){
 			//relative angle between antenna pointing vector and direction of Earth
 			relang = acos(dotp(U_R, unit(R_E - pos)));
 
-			if (relang < PI05 / a)
+			if (relang < PI05 / hpbw_factor)
 			{
-				//HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*gain;
-				HornSignalStrength[i] = cos(a*relang)*cos(a*relang)*SignalStrengthScaleFactor;
+				HornSignalStrength[i] = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*SignalStrengthScaleFactor;
 			}
 			else
 			{
