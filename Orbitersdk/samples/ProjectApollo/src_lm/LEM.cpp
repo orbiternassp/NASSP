@@ -965,7 +965,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Debug string for displaying descent flight info from VC view
-	if (GetAltitude(ALTMODE_GROUND) < 21336.0 && oapiCockpitMode() == COCKPIT_VIRTUAL) {
+	if (!Landed && GetAltitude(ALTMODE_GROUND) < 21336.0 && oapiCockpitMode() == COCKPIT_VIRTUAL) {
 
 		char pgnssw[256];
 		char thrsw[256];
