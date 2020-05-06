@@ -960,7 +960,7 @@ void HGA::TimeStep(double simt, double simdt)
 	HGAFrequency = 2119; //MHz. Should this get set somewhere else?
 	HGAWavelength = C0/(HGAFrequency*1000000); //meters
 	Gain85ft = pow(50 / 10, 10); //this is the gain, dB converted to ratio of the 85ft antennas on earth
-	Power85ft = 2000; //watts
+	Power85ft = 20000; //watts
 	
 	
 	int RcvBeamWidthMode = 1;
