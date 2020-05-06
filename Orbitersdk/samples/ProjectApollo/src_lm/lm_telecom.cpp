@@ -2550,7 +2550,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	double PitchSlew, YawSlew;
 
-	const double TrkngCtrlGain = 2.9;
+	const double TrkngCtrlGain = 2.9; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
 
 	//sprintf(oapiDebugString(), "%PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
 
@@ -2563,8 +2563,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
 	{
-
-
+		PitchSlew = pitch + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
 	}
 	else
 	{
