@@ -2640,7 +2640,22 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
 
-	double SignalStrengthScaleFactor = 1; // NEED TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	double EarthSignalDist, LEM_SteerableAntFrequency, LEM_SteerableAntWavelength, Gain85ft, Power85ft;
+	double RecvdLEM_SteerableAntPower, RecvdLEM_SteerableAntPower_dBm;
+
+	double LEM_SteerableAntGain = pow(16.5 / 10, 10);
+
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+
+	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
+	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
+	Gain85ft = pow(50 / 10, 10); //this is the gain, dB converted to ratio of the 85ft antennas on earth
+	Power85ft = 20000; //watts
+
+	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft*LEM_SteerableAntGain*pow(LEM_SteerableAntWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
+
+	double SignalStrengthScaleFactor = dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
 
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
@@ -2666,10 +2681,13 @@ void LEM_SteerableAnt::Timestep(double simdt){
 			{
 				HornSignalStrength[i] = 0.0;
 			}
+
+			SignalStrength = (HornSignalStrength[0] + HornSignalStrength[1] + HornSignalStrength[2] + HornSignalStrength[3]) / 4.0;
+
 		}
 	}
 
-	sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", (relang[0]+ relang[1]+ relang[2]+ relang[3])/4*DEG, SignalStrength);
+	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", (relang[0]+ relang[1]+ relang[2]+ relang[3])/4*DEG, SignalStrength);
 	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
 
 
@@ -2739,6 +2757,26 @@ VECTOR3 LEM_SteerableAnt::pitchYaw2GlobalVector(double pitch, double yaw, MATRIX
 	U_RP = _V(U_RP.y, U_RP.x, U_RP.z);
 
 	return U_RP;
+}
+
+double LEM_SteerableAnt::dBm2SignalStrength(double dBm)
+{
+	double SignalStrength;
+
+	if (dBm >= -50)
+	{
+		SignalStrength = 100.0;
+	}
+	else if (dBm <= -135)
+	{
+		SignalStrength = 0.0;
+	}
+	else
+	{
+		SignalStrength = (135.0 + dBm)*1.1764706; //convert from dBm to the 0-100% signal strength used in NASSP
+	}
+
+	return SignalStrength;
 }
 
 // Load
