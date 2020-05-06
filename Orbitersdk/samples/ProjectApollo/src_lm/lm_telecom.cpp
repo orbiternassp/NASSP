@@ -2472,11 +2472,6 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 
 	double angdiff = 1.0*RAD;
 
-	U_Horn[0] = _V(cos(angdiff), 0.0, -sin(angdiff));//left
-	U_Horn[1] = _V(cos(-angdiff), 0.0, -sin(-angdiff));//right
-	U_Horn[2] = _V(cos(angdiff), sin(angdiff), 0.0);//up
-	U_Horn[3] = _V(cos(-angdiff), sin(-angdiff), 0.0);//down
-
 	anim_SBandPitch = -1;
 	anim_SBandYaw = -1;
 
@@ -2553,34 +2548,17 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	double pitchrate = 0.0;
 	double yawrate = 0.0;
 
-	double PitchSlew = (lem->Panel12AntPitchKnob.GetState()*15.0 - 75.0)*RAD;
-	double YawSlew = (lem->Panel12AntYawKnob.GetState()*15.0 - 90.0)*RAD;
+	double PitchSlew, YawSlew;
+
+	const double TrkngCtrlGain = 2.9;
 
 	//sprintf(oapiDebugString(), "%PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
 
 	//Slew Mode
-
 	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
 	{
-		if (abs(PitchSlew - pitch) > 0.01*RAD)
-		{
-			pitchrate = (PitchSlew - pitch)*2.0;
-			if (abs(pitchrate) > 5.0*RAD)
-			{
-				pitchrate = 5.0*RAD*pitchrate / abs(pitchrate);
-			}
-			moving = true;
-		}
-
-		if (abs(YawSlew - yaw) > 0.01*RAD)
-		{
-			yawrate = (YawSlew - yaw)*2.0;
-			if (abs(yawrate) > 5.0*RAD)
-			{
-				yawrate = 5.0*RAD*yawrate / abs(yawrate);
-			}
-			moving = true;
-		}
+		PitchSlew = (lem->Panel12AntPitchKnob.GetState()*15.0 - 75.0)*RAD;
+		YawSlew = (lem->Panel12AntYawKnob.GetState()*15.0 - 90.0)*RAD;
 	}
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
@@ -2594,6 +2572,26 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		yawrate = 0;
 	}
 
+	//set antenna slew-rates
+	if (abs(PitchSlew - pitch) > 0.01*RAD)
+	{
+		pitchrate = (PitchSlew - pitch)*2.0;
+		if (abs(pitchrate) > 5.0*RAD)
+		{
+			pitchrate = 5.0*RAD*pitchrate / abs(pitchrate);
+		}
+		moving = true;
+	}
+
+	if (abs(YawSlew - yaw) > 0.01*RAD)
+	{
+		yawrate = (YawSlew - yaw)*2.0;
+		if (abs(yawrate) > 5.0*RAD)
+		{
+			yawrate = 5.0*RAD*yawrate / abs(yawrate);
+		}
+		moving = true;
+	}
 
 
 

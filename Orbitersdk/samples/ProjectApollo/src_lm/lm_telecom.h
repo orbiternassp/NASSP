@@ -290,7 +290,6 @@ protected:
 	double pitch;
 	double yaw;
 	double HornSignalStrength[4];
-	VECTOR3 U_Horn[4];
 
 
 	// Animations
