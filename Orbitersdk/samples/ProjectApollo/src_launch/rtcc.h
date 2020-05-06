@@ -2669,9 +2669,10 @@ public:
 	bool TLMC_BAP_FR_LPO(MCCFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, SV &sv_reentry, double &lat_EMPcor);
 	bool TLMCConic_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
 	bool TLMC_BAP_NFR_LPO(MCCNFRMan *opt, SV sv_mcc, double lat_EMP, double h_peri, double MJD_peri, VECTOR3 DV_guess, VECTOR3 &DV, SV &sv_peri, SV &sv_node, double &lat_EMPcor);
+	void PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP);
 	void LLWP_PERHAP(AEGHeader Header, AEGDataBlock sv, double &RAP, double &RPE);
 	void LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp, int M, int P, int I_CDH, double DH, double &dv_CSI, double &dv_CDH, double &t_CDH);
-	void LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
+	void LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt);
 	void LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
@@ -2989,6 +2990,27 @@ public:
 		double MLDAngle = 0.0;
 	} med_k10;
 
+	//Generate Launch Window
+	struct MED_K15
+	{
+		//1 = CSM, 3 = LEM
+		int Chaser = 3;
+		double CSMVectorTime = 0.0;
+		double ThresholdTime = 0.0;
+		//CSI Flag: 0 = CSI done 90° from insertion, negative: CSI at LM apocynthion, positive: CSI done at a delta time from insertion
+		double CSI_Flag = -1.0;
+		//CDH Flag: 0 = CDH done at upcoming apsis after CSI, positive: CDH is done at N/2 after CSI, must be odd number
+		int CDH_Flag = 1;
+		//1 = TPI at longitude, 2 = TPI at time
+		int TPIDefinition = 2;
+		double TPIValue = 0.0;
+		//Positive: request for complete launch window and the number of delta hts, negative: request for the input delta hts only
+		int DeltaHTFlag = -1;
+		double DH1 = 10.0*1852.0;
+		double DH2 = 15.0*1852.0;
+		double DH3 = 20.0*1852.0;
+	} med_k15;
+
 	//LOI Computation
 	struct MED_K18
 	{
@@ -3068,7 +3090,7 @@ public:
 		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
 		int REFSMMATInd = RTCC_REFSMMAT_TYPE_CUR;	//Used for IMU and inertial coordinate options
 		int ConfigChangeInd = 0; //0 = No change, 1 = Undocking, 2 = Docking
-		std::string FinalConfig;
+		std::string FinalConfig = "C";
 		double DeltaDA = 0.0; //Delta docking angle
 		double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
 		int TrimAngleIndicator = 0; //0 = computed, 2 = system
@@ -3688,16 +3710,26 @@ public:
 
 	struct LMLaunchTargetTable
 	{
+		//K13
 		double PoweredFlightArc = 10.0*RAD;
 		double PoweredFlightTime = 7.0*60.0 + 15.0;
 		double InsertionHeight = 60000.0*0.3048;
-		double InsertionVelocity = 1650.0;
-		double InsertionFPA = 0.01*RAD;
-		double YawSteerCap = 0.1*RAD;
-		double MaxAscLifetime = 4.0*3600.0;
+		double InsertionHorizontalVelocity = 5515.2*0.3048;
+		double InsertionRadialVelocity = 19.5*0.3048;
+		double YawSteerCap = 0.5*RAD;
+		double MaxAscLifetime = 9.0*3600.0;
 		double MinSafeHeight = 5.0*1852.0;
 		double LMMaxDeltaV = 0.0;
 		double CSMMaxDeltaV = 0.0;
+		//K14
+		//If CSI scheduled at apsis and CSM is chaser, then CSI will be done at LM apsis plus input time bias
+		double dt_bias = 0.0;
+		double ElevationAngle = 26.6*RAD;
+		double TerminalPhaseTravelAngle = 130.0*RAD;
+		double TPF_Height_Offset = 0.0;
+		double TPF_Phase_Offset = 0.0;
+		double Height_Diff_Begin = 20.0*1852.0;
+		double Height_Diff_Incr = 5.0*1852.0;
 	} PZLTRT;
 
 	struct LAIInputOutput
@@ -3799,6 +3831,45 @@ public:
 		bool isDKI;
 		std::string ErrorMessage;
 	} PZREDT;
+
+	struct RendezvousPlanningDisplayData
+	{
+		int ID = 0;
+		int N = 0;
+		double GETLO = 0.0;
+		double DH = 0.0;
+		double T_INS = 0.0;
+		double T_CSI = 0.0;
+		double T_CDH = 0.0;
+		double T_TPI = 0.0;
+		double T_TPF = 0.0;
+		double DVCSI = 0.0;
+		double DVCDH = 0.0;
+		double DVTPI = 0.0;
+		double DVTPF = 0.0;
+		double DVT = 0.0;
+	};
+
+	struct RendezvousPlanningDisplay
+	{
+		std::string CSMSTAID;
+		double CSM_GMTV = 0.0;
+		double CSM_GETV = 0.0;
+		std::string ManVeh;
+		double LSLat = 0.0;
+		double LSLng = 0.0;
+		double THT = 0.0;
+		std::string LMSTAID;
+		double LM_GMTV = 0.0;
+		double LM_GETV = 0.0;
+		double DT_CSI = 0.0;
+		double DV_MAX = 0.0;
+		double MINH = 0.0;
+		double WT = 0.0;
+		int plans = 0;
+		std::string ErrorMessage;
+		RendezvousPlanningDisplayData data[7];
+	} PZLRPT;
 
 	struct SkeletonFlightPlanTable
 	{
@@ -4050,6 +4121,8 @@ private:
 	void PMDMPT();
 	//Rendezvous Evaluation Display Load Module
 	void PMDRET();
+	//Rendezvous Planning Table
+	void PMDRPT();
 	//Two-Impulse Multiple Solution Display
 	void PMDTIMP();
 	//GOST REFSMMAT Maintenance

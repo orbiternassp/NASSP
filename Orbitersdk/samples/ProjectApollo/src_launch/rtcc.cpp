@@ -2019,17 +2019,15 @@ RTCC_PMSTICN_12_2:
 	PZMYSAVE.V_after[0] = sv_A1_apo.V;
 	PZMYSAVE.SV_before[1] = sv_A2;
 	PZMYSAVE.V_after[1] = sv_A2_apo.V;
+	PZMYSAVE.code[0] = "NC1";
+	PZMYSAVE.code[1] = "NC2";
 	if (opt.SingSolTable == 1)
 	{
-		PZMYSAVE.code[0] = "TPI";
-		PZMYSAVE.code[1] = "TPF";
 		PZMYSAVE.plan[0] = PZTIPREG.MAN_VEH;
 		PZMYSAVE.plan[1] = PZTIPREG.MAN_VEH;
 	}
 	else
 	{
-		PZMYSAVE.code[0] = "NCC";
-		PZMYSAVE.code[1] = "NSR";
 		PZMYSAVE.plan[0] = PZTIPCCD.MAN_VEH;
 		PZMYSAVE.plan[1] = PZTIPCCD.MAN_VEH;
 	}
@@ -9118,6 +9116,8 @@ void RTCC::LLWP_PERHAP(AEGHeader Header, AEGDataBlock sv, double &RAP, double &R
 	double t0 = sv.TE;
 	double dt = 20.0*60.0;
 	double R[3], U[3];
+
+	sv.TIMA = 0;
 	R[0] = sv.R;
 	U[0] = sv.U;
 	sv.TE += 20.0*60.0;
@@ -9303,7 +9303,97 @@ RTCC_LLWP_HMALIT_8_1:
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
 }
 
-void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res)
+void RTCC::PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP)
+{
+	AEGDataBlock sv_temp, sv_L;
+	VECTOR3 R_LS_sg, R_LSV, R_C, V_C, H_C, r_C, v_C, h_C, r_LSV, Q, c, R_LSP, r_LSP, R_BO, V_BO;
+	double YSS, MJD_BO, DH, CXX, CYY, TRS, TS, phi_star, theta, DN, h_CA, h_CA_dot;
+	int N, M;
+
+	N = 1;
+	M = 0;
+	YSS = Y_S;
+	Y_S = 0.0;
+
+	sv_CSM.Data.TIMA = 0;
+	sv_CSM.Data.TE = T_LO;
+	pmmlaeg.CALL(sv_CSM.Header, sv_CSM.Data, sv_temp);
+	if (N > 0)
+	{
+		goto RTCC_PMMLTR_3;
+	}
+	R_LS_sg = OrbMech::r_from_latlong(lat_LS, lng_LS, r_LS);
+RTCC_PMMLTR_1:
+	R_LSV = rhmul(OrbMech::GetRotationMatrix(BODY_MOON, GMTBASE + T_LO / 24.0 / 3600.0), R_LS_sg);
+	OrbMech::GIMKIC(sv_temp.coe_osc, OrbMech::mu_Moon, R_C, V_C);
+	r_C = unit(R_C);
+	v_C = unit(V_C);
+	H_C = crossp(r_C, v_C);
+	h_C = unit(H_C);
+RTCC_PMMLTR_2:
+	r_LSV = unit(R_LSV);
+	Q = crossp(r_LSV, h_C);
+	c = unit(Q);
+	R_LSP = crossp(h_C, c);
+	r_LSP = unit(R_LSP);
+	//Compute angle between landing site vector and its projection in CSM orbit plane
+	theta = acos(dotp(r_LSP, r_LSV));
+	if (M > 0)
+	{
+		Yd = r_LS * tan(theta);
+		goto RTCC_PMMLTR_4;
+	}
+	DR = r_LS * tan(theta);
+	M = 1;
+RTCC_PMMLTR_3:
+	sv_CSM.Data.TE = T_LO + t_PF;
+	pmmlaeg.CALL(sv_CSM.Header, sv_CSM.Data, sv_temp);
+	//Work on this
+	h_CA = sv_temp.coe_mean.h;
+	h_CA_dot = 0.0;
+	OrbMech::ENSERT(R_C, V_C, t_PF, Y_S, P_FA, h_BO, V_H, V_R, GMTBASE + T_LO / 24 / 3600.0, R_LS_sg, R_BO, V_BO, MJD_BO);
+	sv_L.coe_osc = OrbMech::GIMIKC(R_BO, V_BO, OrbMech::mu_Moon);
+	sv_L.Item7 = GMTBASE;
+	sv_L.TS = sv_L.TE = OrbMech::GETfromMJD(MJD_BO, GMTBASE);
+	pmmlaeg.CALL(sv_CSM.Header, sv_L, sv_temp);
+	if (N <= 0)
+	{
+		R_LSV = R_BO;
+		goto RTCC_PMMLTR_2;
+	}
+RTCC_PMMLTR_4:
+	DH = sv_L.coe_mean.h - sv_CSM.Data.coe_mean.h;
+	CXX = cos(sv_L.coe_mean.i)*cos(sv_CSM.Data.coe_mean.i) + sin(sv_L.coe_mean.i)*sin(sv_CSM.Data.coe_mean.i)*cos(DH);
+	CYY = sqrt(1.0 - CXX * CXX);
+	if (N > 0)
+	{
+		Y_S = YSS;
+		N = 0;
+		goto RTCC_PMMLTR_1;
+	}
+	deltaw = atan2(CXX, CYY);
+	DN = h_CA;
+	if (DN <= 0)
+	{
+		DN = DN + PI2;
+	}
+	DN = DN - PI;
+	if (DN < 0)
+	{
+		DN = DN + PI;
+	}
+	TRS = DN / (OrbMech::w_Moon + h_CA_dot) + T_LO + t_PF;
+	//TBD: TRS is in days and gets rounded to full second?
+	TS = T_LO - TRS;
+	phi_star = lng_LS - OrbMech::w_Moon*TS;
+	AZP = atan2(-cos(sv_L.coe_mean.i)*cos(lat_LS) + sin(sv_CSM.Data.coe_mean.i)*sin(phi_star)*sin(lat_LS), sin(sv_CSM.Data.coe_mean.i)*cos(phi_star));
+	if (AZP < 0)
+	{
+		AZP += PI2;
+	}
+}
+
+void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
 {
 	//0 = CSM, 1 = LM
 	AEGHeader Header;
@@ -9314,7 +9404,7 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLifto
 	double dt_max, B1, B2, B3, B4, DP, P_mm_apo;
 	int K, m, p, I_SRCH, L_DH, I, J, K_T, i, I_STOP2, M_stop;
 	int N_arr[10];
-	double T_TPI_arr[10], T_R_arr[10], DV_CSI_arr[10], DV_CDH_arr[10], T_CDH_arr[10], DV_TPI_arr[10], DV_TPF_arr[10], DV_T_arr[10], T_LO_arr[10], T_CSI_arr[10];
+	double T_TPI_arr[10], T_R_arr[10], DV_CSI_arr[10], DV_CDH_arr[10], T_CDH_arr[10], DV_TPI_arr[10], DV_TPF_arr[10], DV_T_arr[10], T_LO_arr[10], T_CSI_arr[10], T_INS_arr[10];
 	TwoImpulseOpt tiopt;
 	TwoImpulseResuls tires;
 
@@ -9323,7 +9413,6 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLifto
 	tiopt.sv_P.RBI = BODY_MOON;
 
 	mu = OrbMech::mu_Moon;
-	T_TPI = opt.t_TPI;
 	T_hole = opt.t_hole;
 	m = opt.M - 1;
 	p = opt.P - 1;
@@ -9671,6 +9760,14 @@ RTCC_PMMLLWP_8_8:
 	pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
 	//Phase angle at TPI
 	theta_TPI = OrbMech::THETR(sv_temp[p].U, sv_temp[m].U, sv_temp[p].coe_osc.i, sv_temp[m].coe_osc.i, sv_temp[p].coe_osc.h, sv_temp[m].coe_osc.h);
+	if (theta_TPI > PI)
+	{
+		theta_TPI -= PI2;
+	}
+	else if (theta_TPI < -PI)
+	{
+		theta_TPI += PI2;
+	}
 	dt_NSR = (theta_TPI - theta_w) / sv[m].l_dot;
 	if (abs(dt_NSR) > 1.0)
 	{
@@ -9713,6 +9810,7 @@ RTCC_PMMLLWP_8_8:
 		goto RTCC_PMMLLWP_20_16;
 	}
 	T_LO_arr[I_LOOP - 1] = t_LOR;
+	T_INS_arr[I_LOOP - 1] = T_INS;
 	T_CSI_arr[I_LOOP - 1] = t_CSI;
 	dt_max = t_R - t_LOR;
 	B1 = T_CSI_arr[I_LOOP - 1];
@@ -9799,6 +9897,47 @@ RTCC_PMMLLWP_20_22:
 	goto RTCC_PMMLLWP_7_7;
 RTCC_PMMLLWP_20_16:;
 RTCC_PMMLLWP_22_19:
+
+	//Set up RET and RPT
+	PZLRPT.plans = I_LOOP;
+	PZLRPT.CSMSTAID = "";
+	PZLRPT.CSM_GMTV = OrbMech::GETfromMJD(opt.sv_CSM.MJD, GMTBASE);
+	PZLRPT.CSM_GETV = GETfromGMT(PZLRPT.CSM_GMTV);
+	if (opt.M == 2)
+	{
+		PZLRPT.ManVeh = "LM";
+	}
+	else
+	{
+		PZLRPT.ManVeh = "CSM";
+	}
+	PZLRPT.LSLat = opt.lat*DEG;
+	PZLRPT.LSLng = opt.lng*DEG;
+	PZLRPT.THT = GETfromGMT(opt.t_hole);
+	PZLRPT.LMSTAID = "";
+	PZLRPT.LM_GMTV = 0.0;
+	PZLRPT.LM_GETV = 0.0;
+	PZLRPT.DT_CSI = dt_B;
+	PZLRPT.DV_MAX = opt.DV_MAX[m] / 0.3048;
+	PZLRPT.WT = opt.theta_F*DEG;
+	for (int i = 0;i < I_LOOP;i++)
+	{
+		PZLRPT.data[i].ID = i + 1;
+		PZLRPT.data[i].N = N_arr[i];
+		PZLRPT.data[i].DH = DH[i] / 1852.0;
+		PZLRPT.data[i].GETLO = GETfromGMT(T_LO_arr[i]);
+		PZLRPT.data[i].T_INS = GETfromGMT(T_INS_arr[i]);
+		PZLRPT.data[i].T_CSI = GETfromGMT(T_CSI_arr[i]);
+		PZLRPT.data[i].T_CDH = GETfromGMT(T_CDH_arr[i]);
+		PZLRPT.data[i].T_TPI = GETfromGMT(T_TPI_arr[i]);
+		PZLRPT.data[i].T_TPF = GETfromGMT(T_R_arr[i]);
+		PZLRPT.data[i].DVCSI = DV_CSI_arr[i] / 0.3048;
+		PZLRPT.data[i].DVCDH = DV_CDH_arr[i] / 0.3048;
+		PZLRPT.data[i].DVTPI = DV_TPI_arr[i] / 0.3048;
+		PZLRPT.data[i].DVTPF = DV_TPF_arr[i] / 0.3048;
+		PZLRPT.data[i].DVT = DV_T_arr[i] / 0.3048;
+	}
+
 	delete[] DH_apo;
 }
 
@@ -24429,6 +24568,10 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 
 		MPTGetConfigFromString(med_m66.FinalConfig, inp.EndConfiguration);
+		if (inp.EndConfiguration.to_ulong() == 0)
+		{
+			return 2;
+		}
 		inp.DockingAngle = med_m66.DeltaDA*MCCRPD;
 		if (med_m66.DPSThrustFactor == -1)
 		{
@@ -28656,6 +28799,11 @@ void RTCC::PMDRET()
 		PZREDT.Yaw[i] = block->Display[i].Yaw*DEG;
 		PZREDT.DVVector[i] = block->Display[i].DV_LVLH / 0.3048;
 	}
+}
+
+void RTCC::PMDRPT()
+{
+
 }
 
 int RTCC::ThrusterNameToCode(std::string thruster)

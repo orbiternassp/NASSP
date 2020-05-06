@@ -784,35 +784,35 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu23[] =
 	{
-		{ "Earliest liftoff time", 0, 'T' },
-		{ "Input or calc. insertion", 0, 'A' },
-		{ "Horizontal velocity", 0, 'H' },
-		{ "Vertical velocity", 0, 'V' },
-		{ "TPI time option", 0, 'E' },
-		{ "", 0, ' ' },
+		{ "LLWP Init", 0, 'I' },
+		{ "Chaser vehicle", 0, 'C' },
+		{ "Vector time", 0, 'V' },
+		{ "Threshold time", 0, 'H' },
+		{ "CSI option", 0, 'S' },
+		{ "CDH option", 0, 'D' },
 
-		{ "Liftoff Time Option", 0, 'O' },
-		{ "Target Vessel", 0, 'V' },
-		{ "Calculate liftoff times", 0, 'C' },
-		{ "Time between Ins and TPI", 0, 'D' },
-		{ "Input for VHOR/VERT", 0, 'V' },
+		{ "Target Vessel", 0, 'T' },
+		{ "TPI option", 0, 'P' },
+		{ "DH option", 0, 'A' },
+		{ "Delta heights", 0, 'E' },
+		{ "LLWP Display", 0, 'F' },
 		{ "Back to menu", 0, 'B' }
 	};
 
 	RegisterPage(mnu23, sizeof(mnu23) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::menuSetLiftoffguess);
-	RegisterFunction("VOP", OAPI_KEY_A, &ApolloRTCCMFD::menuCycleLunarLiftoffInsVelOption);
-	RegisterFunction("VLH", OAPI_KEY_H, &ApolloRTCCMFD::menuLunarLiftoffVHorInput);
-	RegisterFunction("VLV", OAPI_KEY_V, &ApolloRTCCMFD::menuLunarLiftoffVVertInput);
-	RegisterFunction("TPI", OAPI_KEY_E, &ApolloRTCCMFD::menuCycleLunarLiftoffTPIOption);
-	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("INI", OAPI_KEY_I, &ApolloRTCCMFD::menuSetLLWPInitPage);
+	RegisterFunction("CHA", OAPI_KEY_C, &ApolloRTCCMFD::menuCycleLLWPChaserOption);
+	RegisterFunction("VTI", OAPI_KEY_V, &ApolloRTCCMFD::menuLLWPVectorTime);
+	RegisterFunction("THT", OAPI_KEY_H, &ApolloRTCCMFD::menuSetLiftoffguess);
+	RegisterFunction("CSI", OAPI_KEY_S, &ApolloRTCCMFD::menuSetLLWPCSIFlag);
+	RegisterFunction("CDH", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLLWPCDHFlag);
 
-	RegisterFunction("OPT", OAPI_KEY_O, &ApolloRTCCMFD::menuLunarLiftoffTimeOption);
-	RegisterFunction("TGT", OAPI_KEY_V, &ApolloRTCCMFD::set_target);
-	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLunarLiftoffCalc);
-	RegisterFunction("DT", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLiftoffDT);
-	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_target);
+	RegisterFunction("TPI", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("LLW", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("DH", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("DIS", OAPI_KEY_F, &ApolloRTCCMFD::menuSetLLWPDisplayPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
 
@@ -1312,8 +1312,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu38, sizeof(mnu38) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("LTO", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLAPLiftoffTime);
-	RegisterFunction("HOR", OAPI_KEY_H, &ApolloRTCCMFD::menuSetLAPHorVelocity);
-	RegisterFunction("VER", OAPI_KEY_V, &ApolloRTCCMFD::menuSetLAPVerVelocity);
+	RegisterFunction("HOR", OAPI_KEY_H, &ApolloRTCCMFD::menuLunarLiftoffVHorInput);
+	RegisterFunction("VER", OAPI_KEY_V, &ApolloRTCCMFD::menuLunarLiftoffVVertInput);
 	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
@@ -2990,6 +2990,108 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetSPQPage);
+
+
+	static const MFDBUTTONMENU mnu88[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "ZDOT", 0, 'L' },
+		{ "RDOT", 0, 'h' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu88, sizeof(mnu88) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("VLH", OAPI_KEY_L, &ApolloRTCCMFD::menuLunarLiftoffVHorInput);
+	RegisterFunction("VLV", OAPI_KEY_H, &ApolloRTCCMFD::menuLunarLiftoffVVertInput);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLLWPInitPage);
+
+
+	static const MFDBUTTONMENU mnu89[] =
+	{
+		{ "Targeting parameters", 0, 'P' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu89, sizeof(mnu89) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("TAR", OAPI_KEY_P, &ApolloRTCCMFD::menuSetLaunchTargetingInitPage);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLunarLiftoffPage);
+
+
+	static const MFDBUTTONMENU mnu90[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu90, sizeof(mnu90) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLunarLiftoffCalc);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLunarLiftoffPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

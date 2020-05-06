@@ -358,15 +358,9 @@ public:
 	//Terrain Model
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
 
-	//Lunar Liftoff Time Prediction
-	LunarLiftoffResults LunarLiftoffRes;
-	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
-	double t_Liftoff_guess;		//Threshold time for lunar liftoff
-	bool LunarLiftoffInsVelInput;	//0 = Calculate velocity internally, 1 = use input velocity
-	bool LunarLiftoffTPITimeOption; //false = on time, true = at orbital midnight
-
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
+	double t_LunarLiftoff;
 
 	//Powered Descent Abort Program
 	int PDAPEngine;	//0 = DPS/APS, 1 = APS
