@@ -2536,7 +2536,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//actual Azimuth and Elevation error signals came from phase differences not signal strength
 	//both are be a function of tracking error though so this works
 	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
-	ElevationErrorSignal = (HornSignalStrength[2] - HornSignalStrength[3])*0.25;
+	ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2])*0.25;
 
 	//normalize Azimuth and Elevation error signals
 	if (SignalStrength > 0.0)
@@ -2582,14 +2582,12 @@ void LEM_SteerableAnt::Timestep(double simdt){
 			moving = true;
 		}
 	}
-
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
 	{
 
 
 	}
-	
 	else
 	{
 		pitchrate = 0;
@@ -2632,11 +2630,11 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	MATRIX3 Rot;
 
 
-
-	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (1 * RAD), yaw, NBSA);
-	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (1 * RAD), yaw, NBSA);
-	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (1 * RAD), NBSA);
-	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (1 * RAD), NBSA);
+	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (1 * RAD), NBSA);
+	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (1 * RAD), NBSA);
+	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (1 * RAD), yaw, NBSA);
+	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (1 * RAD), yaw, NBSA);
+	
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	lem->GetGlobalPos(pos);
@@ -2644,14 +2642,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
 
-	for (int i = 0; i < 4; i++)
-	{
-
-	}
-
 	double SignalStrengthScaleFactor = 1; // NEED TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
 
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
