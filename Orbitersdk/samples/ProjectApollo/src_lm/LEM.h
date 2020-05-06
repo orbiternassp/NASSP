@@ -150,6 +150,9 @@ public:
 	void SetLGCAltitude(int val);
 	void SetLGCAltitudeRate(int val);
 
+	double GetLGCAltitude() { return lgc_alt; };
+	double GetLGCAltitudeRate() { return lgc_altrate; };
+
 	bool IsPowered();
 private:
 	LEM *lem;					// Pointer at LEM
@@ -1568,6 +1571,7 @@ protected:
 	double SaveFOV;
 	bool CheckPanelIdInTimestep;
 	bool RefreshPanelIdInTimestep;
+	bool VcInfoActive;
 
 	//
 	// Random motion.
