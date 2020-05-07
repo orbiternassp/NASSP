@@ -303,6 +303,7 @@ void LEM::Init()
 	RefreshPanelIdInTimestep = false;
 	InFOV = true;
 	SaveFOV = 0;
+	VcInfoActive = false;
 
 	Crewed = true;
 	AutoSlow = false;
@@ -573,6 +574,9 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				case OAPI_KEY_NUMPAD0:
 					dsky.NumberPressed(0);
 					break;
+				case OAPI_KEY_A:
+					AbortStageSwitch.SetState(0);
+					break;
 				case OAPI_KEY_K:
 					//kill rotation
 					SetAngularVel(_V(0, 0, 0));
@@ -729,6 +733,24 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_DECIMAL:
 				//TTCA Throttle down
 				ttca_throttle_vel = -1;
+				break;
+
+			case OAPI_KEY_K:
+				//Mode Control PGNS - cycle between Auto & Att Hold
+				if (ModeControlPGNSSwitch.GetState() < 2) {
+					ModeControlPGNSSwitch.SetState(2);
+				} else {
+					ModeControlPGNSSwitch.SetState(1);
+				}
+				break;
+
+			case OAPI_KEY_M:
+				//Throttle Control - cycle between Auto & Man
+				if (THRContSwitch.GetState() < 1) {
+					THRContSwitch.SetState(1);
+				} else {
+					THRContSwitch.SetState(0);
+				}
 				break;
 
 		}
@@ -940,6 +962,35 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	if (docksla && !DockingStatus(1)) {
 		DelDock(docksla);
 		docksla = NULL;
+	}
+
+	// Debug string for displaying descent flight info from VC view
+	if (!Landed && GetAltitude(ALTMODE_GROUND) < 12192.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL) {
+
+		char pgnssw[256];
+		char thrsw[256];
+
+		if (ModeControlPGNSSwitch.GetState() == 2) {
+			sprintf(pgnssw, "AUTO");
+		} else if (ModeControlPGNSSwitch.GetState() == 1) {
+			sprintf(pgnssw, "ATT HOLD");
+		} else {
+			sprintf(pgnssw, "OFF");
+		}
+
+		if (THRContSwitch.GetState() == 1) {
+			sprintf(thrsw, "AUTO");
+		} else {
+			sprintf(thrsw, "MAN");
+		}
+
+		sprintf(oapiDebugString(), "PROG %s | Alt: %.0lf ft | Alt Rate: %.1lf ft/s | PGNS Mode Control: %s | Throttle: %s | Fuel: %.0lf %%", dsky.GetProg(), RadarTape.GetLGCAltitude() * 3.2808399, RadarTape.GetLGCAltitudeRate() * 3.2808399, pgnssw, thrsw, DPSFuelPercentMeter.QueryValue() * 100);
+		if (!VcInfoActive) VcInfoActive = true;
+
+	} else {
+		if (!VcInfoActive) return;
+		sprintf(oapiDebugString(), "");
+		VcInfoActive = false;
 	}
 }
 
