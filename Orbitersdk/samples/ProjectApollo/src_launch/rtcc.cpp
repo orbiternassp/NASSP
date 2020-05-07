@@ -9397,12 +9397,12 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
 {
 	//0 = CSM, 1 = LM
 	AEGHeader Header;
-	AEGDataBlock sv[2], sv_temp[2], sv_xx;
+	AEGDataBlock sv[2], sv_temp[2], sv_xx, elem_TPI;
 	VECTOR3 R_LS, R_LS_sg, r_LS, R1, V1, r1, Q, h1, H1, v1, C, R_P, r_P, H_D, h_D, R_BO, V_BO, R_TPI, V_TPI, R_XX, V_XX, R_TI_C, V_TI_C, R_TI_T, V_TI_T;
 	double mu, T_TPI, T_hole, t_ca, theta_CA, theta, dt, S1, S2, t_xx, MJD_BO, T_INS, dt_B, t_CSI, t_D, U_R, t_R, r_apo, r_peri, H_S_apo, DH_MIN, DH_CRIT;
 	double C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, P_mm, DH_u, theta_w, t_LOR, t_H, dv_CSI, dv_CDH, dv_TPI, dv_TPF, t_CDH, theta_TPI, dt_NSR, P_O, P_Q;
-	double dt_max, B1, B2, B3, B4, DP, P_mm_apo;
-	int K, m, p, I_SRCH, L_DH, I, J, K_T, i, I_STOP2, M_stop;
+	double dt_max, B1, B2, B3, B4, DP, P_mm_apo, r_TPM, theta_s, f_TPI, C_R[3], C_V[3], DH_MAX, ddH_c;
+	int K, m, p, I_SRCH, L_DH, I, J, K_T, i, I_STOP2, M_stop, IPHAS;
 	int N_arr[10];
 	double T_TPI_arr[10], T_R_arr[10], DV_CSI_arr[10], DV_CDH_arr[10], T_CDH_arr[10], DV_TPI_arr[10], DV_TPF_arr[10], DV_T_arr[10], T_LO_arr[10], T_CSI_arr[10], T_INS_arr[10];
 	TwoImpulseOpt tiopt;
@@ -9458,6 +9458,8 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
 	PMMTLC(Header, sv[0], sv_temp[0], opt.lng, K, 0);
 	t_xx = sv_temp[0].TE;
 	sv_xx = sv_temp[0];
+	//Initialize
+	pmmlaeg.CALL(Header, sv_xx, sv_temp[0]);
 	OrbMech::GIMKIC(sv_xx.coe_osc, mu, R_XX, V_XX);
 	t_ca = t_xx;
 	R_LS_sg = OrbMech::r_from_latlong(opt.lat, opt.lng, opt.R_LLS);
@@ -9535,6 +9537,7 @@ RTCC_PMMLWP_2:
 	if (opt.M < 2)
 	{
 		OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R_TPI, V_TPI);
+		elem_TPI = sv_temp[0];
 		I_SRCH = 0;
 		goto RTCC_PMMLLWP_6_2;
 	}
@@ -9558,6 +9561,7 @@ RTCC_PMMLWP_2:
 		T_TPI = sv_temp[0].TE;
 	}
 	OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R_TPI, V_TPI);
+	elem_TPI = sv_temp[0];
 	U_R = sv_temp[0].U + opt.theta_F;
 	sv[0].Item10 = 0.0;
 	if (U_R >= PI2)
@@ -9654,7 +9658,17 @@ RTCC_PMMLLWP_6_2:
 	C6 = (C3 - PI2 / sv[m].l_dot)*dt_B / C3;
 	DH_u = DH[I_SELECT - 1];
 RTCC_PMMLLWP_7_7:
-	theta_w = PI05 - opt.E - asin((length(R_TPI) - DH_u)*cos(opt.E) / length(R_TPI));
+	IPHAS = 0;
+	theta_w = PI05 - opt.E - asin((elem_TPI.R - DH_u)*cos(opt.E) / elem_TPI.R);
+	do
+	{
+		theta_s = theta_w;
+		IPHAS++;
+		f_TPI = elem_TPI.U - elem_TPI.coe_osc.g - theta_w;
+		r_TPM = elem_TPI.coe_osc.a*(1.0 - elem_TPI.coe_osc.e*elem_TPI.coe_osc.e) / (1.0 + elem_TPI.coe_osc.e*cos(f_TPI));
+		theta_w = PI05 - opt.E - asin((elem_TPI.R - DH_u)*cos(opt.E) / elem_TPI.R);
+	} while (abs(theta_w - theta_s) > 0.01*RAD && IPHAS < 10);
+
 	C7 = (C2 + C1 - DH_u) / 2.0;
 	C8 = 1.0 / C7 * sqrt(mu / C7);
 	C9 = PI / C8;
@@ -9668,6 +9682,7 @@ RTCC_PMMLLWP_7_7:
 RTCC_PMMLLWP_8_8:
 	sv[0] = sv_xx;
 	sv[0].TE = t_LOR;
+	sv[0].TIMA = 0;
 	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
 	OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R1, V1);
 	OrbMech::ENSERT(R1, V1, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV, GMTBASE + t_LOR / 24.0 / 3600.0, R_LS_sg, R_BO, V_BO, MJD_BO);
@@ -9679,36 +9694,37 @@ RTCC_PMMLLWP_8_8:
 	sv[1].TIMA = 0;
 	//Initialize
 	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
+
 	if (opt.M <= 1)
 	{
-		t_H = t_CSI + PI2 / sv[0].l_dot / 2.0;
+		t_H = t_CSI + PI2 / sv[m].l_dot / 2.0;
 		if (opt.I_CDH > 0)
 		{
-			t_H = t_H + PI2 / sv[0].l_dot / 2.0*(double)(opt.I_CDH - 1);
+			t_H = t_H + PI2 / sv[m].l_dot / 2.0*(double)(opt.I_CDH - 1);
 		}
 		if (opt.I_TPI > 1)
 		{
-			sv[0].TE = T_TPI;
-			pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+			sv[p].TE = T_TPI;
+			pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
 		}
 		else
 		{
 			//Advance to t_H
-			sv[0].TE = t_H;
-			pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+			sv[p].TE = t_H;
+			pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
 			//Initialize at t_H
-			sv[0] = sv_temp[0];
-			pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+			sv[p] = sv_temp[p];
+			pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
 			//Find time of arrival at TPI
-			PMMTLC(Header, sv[0], sv_temp[0], opt.lng_TPI, K, 0);
-			T_TPI = sv_temp[0].TE;
+			PMMTLC(Header, sv[p], sv_temp[p], opt.lng_TPI, K, 0);
+			T_TPI = sv_temp[p].TE;
 		}
-		OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R_TPI, V_TPI);
-		U_R = sv_temp[1].U + opt.theta_F;
-		sv[0].TIMA = 2;
-		sv[0].Item8 = U_R;
-		pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
-		t_R = sv_temp[0].TE;
+		OrbMech::GIMKIC(sv_temp[p].coe_osc, mu, R_TPI, V_TPI);
+		U_R = sv_temp[p].U + opt.theta_F;
+		sv[p].TIMA = 2;
+		sv[p].Item8 = U_R;
+		pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
+		t_R = sv_temp[p].TE;
 		theta_w = PI05 - opt.E - asin((length(R_TPI) - DH_u)*cos(opt.E) / length(R_TPI));
 	}
 	if (DH_u == 0)
@@ -9750,6 +9766,7 @@ RTCC_PMMLLWP_8_8:
 	sv[m].TE = sv[p].TE = t_CSI;
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
 	pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
+
 	LLWP_HMALIT(Header, sv, sv_temp, opt.M, opt.P, opt.I_CDH, DH_u, dv_CSI, dv_CDH, t_CDH);
 	//Advance both vehicles to TPI maneuver point
 	sv[m].TE = T_TPI;
@@ -9768,6 +9785,7 @@ RTCC_PMMLLWP_8_8:
 	{
 		theta_TPI += PI2;
 	}
+
 	dt_NSR = (theta_TPI - theta_w) / sv[m].l_dot;
 	if (abs(dt_NSR) > 1.0)
 	{
@@ -9817,6 +9835,7 @@ RTCC_PMMLLWP_8_8:
 	B2 = T_CDH_arr[I_LOOP - 1];
 	B3 = T_TPI_arr[I_LOOP - 1];
 	B4 = T_R_arr[I_LOOP - 1];
+
 	if (I_LAST > 0)
 	{
 		goto RTCC_PMMLLWP_18_17;
@@ -9895,9 +9914,27 @@ RTCC_PMMLLWP_20_22:
 	I_LOOP++;
 	DH_u = DH[I_SELECT - 1];
 	goto RTCC_PMMLLWP_7_7;
-RTCC_PMMLLWP_20_16:;
+RTCC_PMMLLWP_20_16:
+	C_R[I_CURVE - 1] = DH_u;
+	C_V[I_CURVE - 1] = DV_T_arr[I_SELECT - 1];
+	if (I_CURVE < opt.N_CURV)
+	{
+		I_CURVE++;
+		DH_u = DH_u - opt.DH_SRCH;
+		goto RTCC_PMMLLWP_7_7;
+	}
+	DH_MAX = LLWP_CURVE(C_V[0], C_V[1], C_V[2], C_R[0], C_R[1], C_R[2], opt.DV_MAX[m]);
+	ddH_c = DH_MAX - DH_CRIT;
+	DH[I_SELECT - 1] = DH_MAX;
+	if (ddH_c < 0)
+	{
+		DH[I_SELECT - 1] = DH_CRIT;
+	}
+	DH_u = DH[I_SELECT - 1];
+	I_LAST = 1;
+	J_MOV = 0;
+	goto RTCC_PMMLLWP_7_7;
 RTCC_PMMLLWP_22_19:
-
 	//Set up RET and RPT
 	PZLRPT.plans = I_LOOP;
 	PZLRPT.CSMSTAID = "";
@@ -10532,7 +10569,14 @@ void RTCC::PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, doubl
 	for (int i = 0;i < 3;i++)
 	{
 		R[i] = length(sv_CC[i].R);
-		OrbMech::EclipticToECI(sv_CC[i].R, sv_CC[i].V, sv_CC[i].MJD, R_equ, V_equ);
+		if (sv_C.gravref == hEarth)
+		{
+			OrbMech::EclipticToECI(sv_CC[i].R, sv_CC[i].V, sv_CC[i].MJD, R_equ, V_equ);
+		}
+		else
+		{
+			OrbMech::EclipticToMCI(sv_CC[i].R, sv_CC[i].V, sv_CC[i].MJD, R_equ, V_equ);
+		}
 		elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
 		U[i] = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
 		U[i] = fmod(U[i], PI2);
@@ -10926,7 +10970,14 @@ RTCC_PMMSPQ_A:
 		{
 			double u_CSI, u_CDH, DN = 0;
 			//Calculate argument of latitude at CSI
-			OrbMech::EclipticToECI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+			if (opt.sv_A.gravref == hEarth)
+			{
+				OrbMech::EclipticToECI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+			}
+			else
+			{
+				OrbMech::EclipticToMCI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+			}
 			elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
 			u_CSI = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
 			u_CSI = fmod(u_CSI, PI2);
