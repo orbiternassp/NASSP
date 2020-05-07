@@ -2550,9 +2550,9 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	double PitchSlew, YawSlew;
 
-	const double TrkngCtrlGain = 2.9; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
+	const double TrkngCtrlGain = 500; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
 
-	//sprintf(oapiDebugString(), "%PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+	//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
 
 	//Slew Mode
 	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
@@ -2563,17 +2563,20 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
 	{
-		PitchSlew = pitch + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
-		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*simdt);
+		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm);
+		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm);
 	}
 	else
 	{
-		pitchrate = 0;
-		yawrate = 0;
+		PitchSlew = pitch;
+		YawSlew = yaw;
 	}
 
+	
+	//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+
 	//set antenna slew-rates
-	if (abs(PitchSlew - pitch) > 0.01*RAD)
+	if (abs(PitchSlew - pitch) > 0.0001)
 	{
 		pitchrate = (PitchSlew - pitch)*2.0;
 		if (abs(pitchrate) > 5.0*RAD)
@@ -2583,7 +2586,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		moving = true;
 	}
 
-	if (abs(YawSlew - yaw) > 0.01*RAD)
+	if (abs(YawSlew - yaw) > 0.0001)
 	{
 		yawrate = (YawSlew - yaw)*2.0;
 		if (abs(yawrate) > 5.0*RAD)
@@ -2593,7 +2596,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		moving = true;
 	}
 
-
+	//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
 
 	//Drive Antenna
 	pitch += pitchrate*simdt;
@@ -2628,10 +2631,10 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	MATRIX3 Rot;
 
 
-	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (1 * RAD), NBSA);
-	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (1 * RAD), NBSA);
-	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (1 * RAD), yaw, NBSA);
-	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (1 * RAD), yaw, NBSA);
+	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (0.1 * RAD), NBSA);
+	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (0.1 * RAD), NBSA);
+	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (0.1 * RAD), yaw, NBSA);
+	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (0.1 * RAD), yaw, NBSA);
 	
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
@@ -2655,7 +2658,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft*LEM_SteerableAntGain*pow(LEM_SteerableAntWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
 	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
 
-	double SignalStrengthScaleFactor = dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
+	double SignalStrengthScaleFactor = LEM_SteerableAnt::dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
 
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
@@ -2671,7 +2674,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 			//Calculate antenna pointing vector in global frame
 			U_R[i] = mul(Rot, U_RP[i]);
 			//relative angle between antenna pointing vector and direction of Earth
-			relang[i] = acos(dotp(U_R[0], unit(R_E - pos)));
+			relang[i] = acos(dotp(U_R[i], unit(R_E - pos)));
 
 			if (relang[i] < PI05 / hpbw_factor)
 			{
@@ -2686,6 +2689,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 		}
 	}
+
+	//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
 
 	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", (relang[0]+ relang[1]+ relang[2]+ relang[3])/4*DEG, SignalStrength);
 	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
