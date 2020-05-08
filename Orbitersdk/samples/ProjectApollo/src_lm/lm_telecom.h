@@ -281,8 +281,13 @@ public:
 	double GetAntennaTempF();
 	double GetPitch() { return pitch*DEG; }
 	double GetYaw() { return yaw*DEG; }
-	VECTOR3 pitchYaw2GlobalVector(double pitch, double yaw, MATRIX3 NBSA);
+	VECTOR3 pitchYaw2GlobalVector(double pitch, double yaw);
 	double dBm2SignalStrength(double dBm);
+	double LEM_SteerableAntGain;
+	double LEM_SteerableAntFrequency;
+	double LEM_SteerableAntWavelength;
+	double Gain85ft;
+	double Power85ft;
 
 	LEM *lem;					// Pointer at LEM
 	h_Radiator *antenna;			// Antenna (loses heat into space)

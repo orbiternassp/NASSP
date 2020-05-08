@@ -2470,8 +2470,6 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
 
-	double angdiff = 1.0*RAD;
-
 	anim_SBandPitch = -1;
 	anim_SBandYaw = -1;
 
@@ -2498,6 +2496,12 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 
 	double beamwidth = 12.5*RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
+
+	LEM_SteerableAntGain = pow(16.5 / 10, 10);
+	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
+	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
+	Gain85ft = pow(50 / 10, 10); //this is the gain, dB converted to ratio of the 85ft antennas on earth
+	Power85ft = 20000; //watts
 }
 
 void LEM_SteerableAnt::Timestep(double simdt){
@@ -2631,10 +2635,10 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	MATRIX3 Rot;
 
 
-	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (0.1 * RAD), NBSA);
-	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (0.1 * RAD), NBSA);
-	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (0.1 * RAD), yaw, NBSA);
-	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (0.1 * RAD), yaw, NBSA);
+	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (0.1 * RAD));
+	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (0.1 * RAD));
+	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (0.1 * RAD), yaw);
+	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (0.1 * RAD), yaw);
 	
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
@@ -2642,18 +2646,11 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
-
-	double EarthSignalDist, LEM_SteerableAntFrequency, LEM_SteerableAntWavelength, Gain85ft, Power85ft;
+	
+	double EarthSignalDist;
 	double RecvdLEM_SteerableAntPower, RecvdLEM_SteerableAntPower_dBm;
 
-	double LEM_SteerableAntGain = pow(16.5 / 10, 10);
-
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
-
-	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
-	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
-	Gain85ft = pow(50 / 10, 10); //this is the gain, dB converted to ratio of the 85ft antennas on earth
-	Power85ft = 20000; //watts
 
 	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft*LEM_SteerableAntGain*pow(LEM_SteerableAntWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
 	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
@@ -2748,7 +2745,7 @@ void LEM_SteerableAnt::DefineAnimations(UINT idx) {
 	lem->SetAnimation(anim_SBandPitch, sband_proc[0]); lem->SetAnimation(anim_SBandYaw, sband_proc[1]);
 }
 
-VECTOR3 LEM_SteerableAnt::pitchYaw2GlobalVector(double pitch, double yaw, MATRIX3 NBSA)
+VECTOR3 LEM_SteerableAnt::pitchYaw2GlobalVector(double pitch, double yaw)
 {
 	VECTOR3 U_RP;
 	MATRIX3 RX, RY;
