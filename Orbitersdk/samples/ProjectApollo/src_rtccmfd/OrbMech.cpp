@@ -7754,7 +7754,7 @@ SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 			L_D = u;
 		}
 		DX_L = 1.0;
-		DH = abs(DN) > 0.0;
+		DH = true;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;
@@ -7903,7 +7903,7 @@ SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN)
 			L_D = u;
 		}
 		DX_L = 1.0;
-		DH = abs(DN) > 0.0;
+		DH = true;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;
@@ -8614,7 +8614,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 			L_D = in.U;
 		}
 		DX_L = 1.0;
-		DH = abs(in.Item10) > 0.0;
+		DH = true;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;

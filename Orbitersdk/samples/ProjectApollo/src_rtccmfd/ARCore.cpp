@@ -644,6 +644,7 @@ int AR_GCore::MPTTrajectoryUpdate()
 
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = lat;
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = lng;
+		rtcc->MCSMLR = rad;
 	}
 	else
 	{
