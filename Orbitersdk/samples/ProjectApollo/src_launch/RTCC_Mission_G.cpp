@@ -2055,7 +2055,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
 
-		opt.opt = 0;
 		opt.R_LLS = R_LLS;
 		opt.GETbase = GETbase;
 		opt.lat = calcParams.LSLat;

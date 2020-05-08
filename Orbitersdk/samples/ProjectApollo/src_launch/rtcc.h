@@ -517,9 +517,11 @@ struct TwoImpulseResuls
 	VECTOR3 dV;
 	VECTOR3 dV2;
 	VECTOR3 dV_LVLH;
+	VECTOR3 dV_LVLH2;
 	double t_TPI;
 	double T1;
 	double T2;
+	bool SolutionFound;
 };
 
 struct SPQResults
@@ -919,9 +921,6 @@ struct LunarLiftoffTimeOpt
 {
 	LunarLiftoffTimeOpt();
 
-	// 0 = Concentric Profile, 1 = Direct Profile, 2 = time critical direct profile
-	int opt = 0;
-
 	//Flag that controls at which time CSI is done
 	//0: CSI is done 90° from insertion
 	//1: CSI is done at an input elapsed time from insertion
@@ -1004,6 +1003,32 @@ struct LunarLiftoffTimeOpt
 	
 	double dt_2;		//Fixed time from insertion to TPI for direct profile
 	bool IsInsVelInput;	//0 = calculate insertion velocity, 1 = use input velocity
+};
+
+struct LLTPOpt
+{
+	EphemerisData sv_CSM;
+	double Y_S;
+	double V_Z_NOM;
+	double T_TH;
+	double R_LS, lat_LS, lng_LS;
+	double alpha_PF, dt_PF;
+	double dt_INS_TPI;
+	double h_INS;
+	double DH_TPI, dTheta_TPI;
+	double WT;
+};
+
+struct LunarLaunchTargetingTable
+{
+	double GETLOR = 0.0;
+	double VH = 0.0;
+	double GET_TPI = 0.0, GET_TPF = 0.0;
+	double DV_TPI = 0.0, DV_TPF = 0.0;
+	VECTOR3 DV_TPI_LVLH = _V(0, 0, 0), DV_TPF_LVLH = _V(0, 0, 0);
+	double HA_TPI = 0.0, HP_TPI = 0.0;
+	double HA_TPF = 0.0, HP_TPF = 0.0;
+	double HA_T = 0.0, HP_T = 0.0;
 };
 
 struct LunarLiftoffResults
@@ -2675,8 +2700,7 @@ public:
 	void LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt);
 	void LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res);
 	bool LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double theta_Ins, double t_L_guess, double t_TPI, LunarLiftoffResults &res);
-	bool LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
-	bool LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res);
+	bool LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargetingTable &res);
 	void LunarAscentProcessor(VECTOR3 R_LS, double m0, SV sv_CSM, double GETbase, double t_liftoff, double v_LH, double v_LV, double &theta, double &dt_asc, double &dv, SV &sv_IG, SV &sv_Ins);
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, double GETbase, RTCCNIAuxOutputTable &aux, EphemerisDataTable *E, SV &sv_PDI, SV &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res);
@@ -3058,6 +3082,13 @@ public:
 		bool PlaneSolnForInterSoln = true;
 	} med_k40;
 
+	//Lunar Launch Targeting Processor (Apollo 14 and later, MED code is not from any documentation!)
+	struct MED_K50
+	{
+		double GETTH = 0.0;
+		double GETV = 0.0;
+	} med_k50;
+
 	//Transfer a GPM to the MPT
 	struct MED_M65
 	{
@@ -3174,6 +3205,7 @@ public:
 	PredictedSiteAcquisitionTable EZACQ1, EZACQ3, EZDPSAD1, EZDPSAD3;
 	ExperimentalSiteAcquisitionTable EZDPSAD2;
 	LandmarkAcquisitionTable EZLANDU1;
+	LunarLaunchTargetingTable PZLLTT;
 
 	struct RelativeMotionDigitalsTableEntry
 	{
@@ -3730,6 +3762,12 @@ public:
 		double TPF_Phase_Offset = 0.0;
 		double Height_Diff_Begin = 20.0*1852.0;
 		double Height_Diff_Incr = 5.0*1852.0;
+
+		//Short profile
+		double DT_DH = 15.0*1852.0;
+		double DT_Theta_i = 1.69*RAD;
+		double DT_Ins_TPI;			//Fixed time from insertion to TPI
+		double DT_Ins_TPI_NOM;		//Nominal time from insertion to TPI
 	} PZLTRT;
 
 	struct LAIInputOutput

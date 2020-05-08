@@ -40,7 +40,6 @@ public:
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 	double t_Land;				//Time of landing
-	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 
 	VESSEL *pCSM;
 	VESSEL *pLM;
@@ -63,6 +62,7 @@ public:
 	void GPMPCalc();
 	void REFSMMATCalc();
 	void SkylabCalc();
+	void LunarLaunchTargetingCalc();
 	void LDPPalc();
 	void LunarLiftoffCalc();
 	void LOICalc();
@@ -195,7 +195,6 @@ public:
 	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
 	VECTOR3 SPQDeltaV;
-	SPQResults spqresults;
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code

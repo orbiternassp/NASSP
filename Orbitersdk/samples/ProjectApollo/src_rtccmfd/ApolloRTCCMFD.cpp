@@ -264,7 +264,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
 	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_LunarLiftoff);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
-	papiWriteScenario_double(scn, "DT_Ins_TPI", GC->DT_Ins_TPI);
+	papiWriteScenario_double(scn, "DT_Ins_TPI", GC->rtcc->PZLTRT.DT_Ins_TPI);
 	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
 	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -469,7 +469,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
 		papiReadScenario_double(line, "t_Liftoff_guess", G->t_LunarLiftoff);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
-		papiReadScenario_double(line, "DT_Ins_TPI", GC->DT_Ins_TPI);
+		papiReadScenario_double(line, "DT_Ins_TPI", GC->rtcc->PZLTRT.DT_Ins_TPI);
 		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
 		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -1398,6 +1398,12 @@ void ApolloRTCCMFD::menuSetLLWPInitPage()
 void ApolloRTCCMFD::menuSetLLWPDisplayPage()
 {
 	screen = 90;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLunarLaunchTargetingPage()
+{
+	screen = 91;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6206,6 +6212,14 @@ void ApolloRTCCMFD::menuLunarLiftoffCalc()
 	}
 }
 
+void ApolloRTCCMFD::menuLLTPCalc()
+{
+	if (GC->MissionPlanningActive || (G->target != NULL && G->vesseltype > 1))
+	{
+		G->LunarLaunchTargetingCalc();
+	}
+}
+
 void ApolloRTCCMFD::menuSetLiftoffDT()
 {
 	bool LiftoffDTInput(void* id, char *str, void *data);
@@ -6224,7 +6238,30 @@ bool LiftoffDTInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LiftoffDT(double dt)
 {
-	GC->DT_Ins_TPI = dt * 60.0;
+	GC->rtcc->PZLTRT.DT_Ins_TPI = dt * 60.0;
+}
+
+void ApolloRTCCMFD::menuLLTPThresholdTime()
+{
+	bool LLTPThresholdTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the threshold time for liftoff (Format: hhh:mm:ss)", LLTPThresholdTimeInput, 0, 20, (void*)this);
+}
+
+bool LLTPThresholdTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, get;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_LLTPThresholdTime(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LLTPThresholdTime(double get)
+{
+	GC->rtcc->med_k50.GETTH = get;
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffVHorInput()
