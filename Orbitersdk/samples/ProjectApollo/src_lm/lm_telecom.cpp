@@ -2496,6 +2496,12 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 
 	double beamwidth = 12.5*RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
+
+	LEM_SteerableAntGain = pow(16.5 / 10, 10);
+	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
+	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
+	Gain85ft = pow(50 / 10, 10); //this is the gain, dB converted to ratio of the 85ft antennas on earth
+	Power85ft = 20000; //watts
 }
 
 void LEM_SteerableAnt::Timestep(double simdt){
@@ -2523,40 +2529,78 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		return;
 	}
 
+	double AzimuthErrorSignal, ElevationErrorSignal;
+	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
+
+	//actual Azimuth and Elevation error signals came from phase differences not signal strength
+	//both are be a function of tracking error though so this works
+	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
+	ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2])*0.25;
+
+	//normalize Azimuth and Elevation error signals
+	if (SignalStrength > 0.0)
+	{
+		AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
+		ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
+	}
+	else //prevent division by zero
+	{
+		AzimuthErrorSignalNorm = 0;
+		ElevationErrorSignalNorm = 0;
+	}
+
 	double pitchrate = 0.0;
 	double yawrate = 0.0;
 
-	double PitchSlew = (lem->Panel12AntPitchKnob.GetState()*15.0 - 75.0)*RAD;
-	double YawSlew = (lem->Panel12AntYawKnob.GetState()*15.0 - 90.0)*RAD;
+	double PitchSlew, YawSlew;
 
-	//sprintf(oapiDebugString(), "%PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+	const double TrkngCtrlGain = 500; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
+
+	//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
 
 	//Slew Mode
-
 	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
 	{
-		if (abs(PitchSlew - pitch) > 0.01*RAD)
-		{
-			pitchrate = (PitchSlew - pitch)*2.0;
-			if (abs(pitchrate) > 5.0*RAD)
-			{
-				pitchrate = 5.0*RAD*pitchrate / abs(pitchrate);
-			}
-			moving = true;
-		}
-
-		if (abs(YawSlew - yaw) > 0.01*RAD)
-		{
-			yawrate = (YawSlew - yaw)*2.0;
-			if (abs(yawrate) > 5.0*RAD)
-			{
-				yawrate = 5.0*RAD*yawrate / abs(yawrate);
-			}
-			moving = true;
-		}
+		PitchSlew = (lem->Panel12AntPitchKnob.GetState()*15.0 - 75.0)*RAD;
+		YawSlew = (lem->Panel12AntYawKnob.GetState()*15.0 - 90.0)*RAD;
+	}
+	//Auto Tracking
+	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
+	{
+		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm);
+		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm);
+	}
+	else
+	{
+		PitchSlew = pitch;
+		YawSlew = yaw;
 	}
 
-	//TBD: Auto Tracking
+	
+	//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+
+	//set antenna slew-rates
+	if (abs(PitchSlew - pitch) > 0.0001)
+	{
+		pitchrate = (PitchSlew - pitch)*2.0;
+		if (abs(pitchrate) > 5.0*RAD)
+		{
+			pitchrate = 5.0*RAD*pitchrate / abs(pitchrate);
+		}
+		moving = true;
+	}
+
+	if (abs(YawSlew - yaw) > 0.0001)
+	{
+		yawrate = (YawSlew - yaw)*2.0;
+		if (abs(yawrate) > 5.0*RAD)
+		{
+			yawrate = 5.0*RAD*yawrate / abs(yawrate);
+		}
+		moving = true;
+	}
+
+	//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
 
 	//Drive Antenna
 	pitch += pitchrate*simdt;
@@ -2585,35 +2629,33 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	//Signal Strength
 
-	VECTOR3 U_RP, pos, R_E, R_M, U_R;
-	MATRIX3 Rot, RX, RY;
-	double relang, Moonrelang;
+	double relang[4], Moonrelang;
 
-	//Unit vector of antenna in vessel's local frame
-	RY = _M(cos(pitch), 0.0, sin(pitch), 0.0, 1.0, 0.0, -sin(pitch), 0.0, cos(pitch));
-	RX = _M(1.0, 0.0, 0.0, 0.0, cos(yaw), sin(yaw), 0.0, -sin(yaw), cos(yaw));
-	U_RP = mul(NBSA, mul(RY, mul(RX, _V(0.0, 0.0, 1.0))));
-	U_RP = _V(U_RP.y, U_RP.x, U_RP.z);
+	VECTOR3 U_RP[4], pos, R_E, R_M, U_R[4];
+	MATRIX3 Rot;
+
+
+	U_RP[0] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw - (0.1 * RAD));
+	U_RP[1] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch, yaw + (0.1 * RAD));
+	U_RP[2] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch - (0.1 * RAD), yaw);
+	U_RP[3] = LEM_SteerableAnt::pitchYaw2GlobalVector(pitch + (0.1 * RAD), yaw);
+	
 
 	//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 	lem->GetGlobalPos(pos);
 	oapiGetGlobalPos(hEarth, &R_E);
 	oapiGetGlobalPos(hMoon, &R_M);
 	lem->GetRotationMatrix(Rot);
+	
+	double EarthSignalDist;
+	double RecvdLEM_SteerableAntPower, RecvdLEM_SteerableAntPower_dBm;
 
-	//Calculate antenna pointing vector in global frame
-	U_R = mul(Rot, U_RP);
-	//relative angle between antenna pointing vector and direction of Earth
-	relang = acos(dotp(U_R, unit(R_E - pos)));
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	if (relang < PI05 / hpbw_factor)
-	{
-		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*75.625;
-	}
-	else
-	{
-		SignalStrength = 0.0;
-	}
+	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft*LEM_SteerableAntGain*pow(LEM_SteerableAntWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
+
+	double SignalStrengthScaleFactor = LEM_SteerableAnt::dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
 
 	//Moon in the way
 	Moonrelang = dotp(unit(R_M - pos), unit(R_E - pos));
@@ -2622,9 +2664,35 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	{
 		SignalStrength = 0.0;
 	}
+	else
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			//Calculate antenna pointing vector in global frame
+			U_R[i] = mul(Rot, U_RP[i]);
+			//relative angle between antenna pointing vector and direction of Earth
+			relang[i] = acos(dotp(U_R[i], unit(R_E - pos)));
 
-	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", relang*DEG, SignalStrength);
+			if (relang[i] < PI05 / hpbw_factor)
+			{
+				HornSignalStrength[i] = cos(hpbw_factor*relang[i])*cos(hpbw_factor*relang[i])*SignalStrengthScaleFactor;
+			}
+			else
+			{
+				HornSignalStrength[i] = 0.0;
+			}
+
+			SignalStrength = (HornSignalStrength[0] + HornSignalStrength[1] + HornSignalStrength[2] + HornSignalStrength[3]) / 4.0;
+
+		}
+	}
+
+	//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
+
+	//sprintf(oapiDebugString(), "Relative Angle: %f°, SignalStrength: %f", (relang[0]+ relang[1]+ relang[2]+ relang[3])/4*DEG, SignalStrength);
 	// sprintf(oapiDebugString(),"SBand Antenna Temp: %f AH %f",antenna.Temp,antheater.pumping);
+
+
 }
 
 void LEM_SteerableAnt::SystemTimestep(double simdt)
@@ -2675,6 +2743,42 @@ void LEM_SteerableAnt::DefineAnimations(UINT idx) {
 	sband_proc[1] = -yaw / PI2;
 	if (sband_proc[1] < 0) sband_proc[1] += 1.0;
 	lem->SetAnimation(anim_SBandPitch, sband_proc[0]); lem->SetAnimation(anim_SBandYaw, sband_proc[1]);
+}
+
+VECTOR3 LEM_SteerableAnt::pitchYaw2GlobalVector(double pitch, double yaw)
+{
+	VECTOR3 U_RP;
+	MATRIX3 RX, RY;
+
+	//U_RP = pitchYaw2GlobalVector(pitch, yaw, NBSA);
+
+	//Unit vector of antenna in vessel's local frame
+	RY = _M(cos(pitch), 0.0, sin(pitch), 0.0, 1.0, 0.0, -sin(pitch), 0.0, cos(pitch));
+	RX = _M(1.0, 0.0, 0.0, 0.0, cos(yaw), sin(yaw), 0.0, -sin(yaw), cos(yaw));
+	U_RP = mul(NBSA, mul(RY, mul(RX, _V(0.0, 0.0, 1.0))));
+	U_RP = _V(U_RP.y, U_RP.x, U_RP.z);
+
+	return U_RP;
+}
+
+double LEM_SteerableAnt::dBm2SignalStrength(double dBm)
+{
+	double SignalStrength;
+
+	if (dBm >= -50)
+	{
+		SignalStrength = 100.0;
+	}
+	else if (dBm <= -135)
+	{
+		SignalStrength = 0.0;
+	}
+	else
+	{
+		SignalStrength = (135.0 + dBm)*1.1764706; //convert from dBm to the 0-100% signal strength used in NASSP
+	}
+
+	return SignalStrength;
 }
 
 // Load
