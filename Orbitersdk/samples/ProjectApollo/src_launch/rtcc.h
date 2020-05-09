@@ -334,6 +334,7 @@ struct TwoImpulseOpt
 	//External request
 	double DH = 0.0;
 	double PhaseAngle = 0.0;
+	double WT = 0.0;
 };
 
 struct LambertMan //Data for Lambert targeting
@@ -3746,8 +3747,8 @@ public:
 		double PoweredFlightArc = 10.0*RAD;
 		double PoweredFlightTime = 7.0*60.0 + 15.0;
 		double InsertionHeight = 60000.0*0.3048;
-		double InsertionHorizontalVelocity = 5515.2*0.3048;
-		double InsertionRadialVelocity = 19.5*0.3048;
+		double InsertionHorizontalVelocity = 5535.6*0.3048;
+		double InsertionRadialVelocity = 32.0*0.3048;
 		double YawSteerCap = 0.5*RAD;
 		double MaxAscLifetime = 9.0*3600.0;
 		double MinSafeHeight = 5.0*1852.0;

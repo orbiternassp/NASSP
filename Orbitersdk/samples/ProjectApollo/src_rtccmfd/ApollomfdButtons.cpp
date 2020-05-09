@@ -811,7 +811,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_target);
 	RegisterFunction("TPI", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("LLW", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("DH", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("DH", OAPI_KEY_E, &ApolloRTCCMFD::menuSetLLWPDeltaHeights);
 	RegisterFunction("DIS", OAPI_KEY_F, &ApolloRTCCMFD::menuSetLLWPDisplayPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
@@ -1294,7 +1294,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu38[] =
 	{
-		{ "Liftoff time", 0, 'T' },
+		{ "Liftoff time", 0, 'L' },
 		{ "Horizontal velocity", 0, 'H' },
 		{ "Vertical velocity", 0, 'V' },
 		{ "", 0, ' ' },
@@ -1328,7 +1328,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu39[] =
 	{
-		{ "", 0, ' ' },
+		{ "Liftoff time", 0, 'L' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -1345,7 +1345,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu39, sizeof(mnu39) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("LTO", OAPI_KEY_L, &ApolloRTCCMFD::menuSetLAPLiftoffTime);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
@@ -2994,17 +2994,17 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu88[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "ZDOT", 0, 'L' },
-		{ "RDOT", 0, 'h' },
-		{ "", 0, ' ' },
+		{ "Powered flight arc", 0, ' ' },
+		{ "Powered flight time", 0, ' ' },
+		{ "Insertion height", 0, ' ' },
+		{ "Insertion Zdot", 0, 'L' },
+		{ "Insertion Rdot", 0, 'h' },
+		{ "Yaw steer capability", 0, ' ' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Max asc stage life", 0, ' ' },
+		{ "Min safe height", 0, ' ' },
+		{ "LM Max DV", 0, ' ' },
+		{ "CSM Max DV", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
 	};
@@ -3029,14 +3029,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu89[] =
 	{
 		{ "Targeting parameters", 0, 'P' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "CSM CSI time bias", 0, ' ' },
+		{ "Elevation Angle", 0, 'E' },
+		{ "TP transfer angle", 0, ' ' },
+		{ "TPF height offset", 0, ' ' },
+		{ "TPF phase offset", 0, ' ' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "LW scan begin", 0, ' ' },
+		{ "LW scan increment", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -3047,8 +3047,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("TAR", OAPI_KEY_P, &ApolloRTCCMFD::menuSetLaunchTargetingInitPage);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("E", OAPI_KEY_E, &ApolloRTCCMFD::menuSetLLWPElevation);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
@@ -3056,7 +3056,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetLunarLiftoffPage);
 
 
@@ -3096,15 +3096,15 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu91[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Threshold time", 0, 'H' },
+		{ "Vector time", 0, 'V' },
+		{ "Radial velocity", 0, 'R' },
+		{ "DT Ins. to TPI", 0, 'D' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
 		{ "Calculate solution", 0, 'C' },
-		{ "", 0, ' ' },
+		{ "Select target", 0, 'T' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -3115,8 +3115,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("TTH", OAPI_KEY_H, &ApolloRTCCMFD::menuLLTPThresholdTime);
 	RegisterFunction("TV", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("RDO", OAPI_KEY_R, &ApolloRTCCMFD::menuLunarLiftoffVVertInput);
+	RegisterFunction("DT", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLiftoffDT);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 

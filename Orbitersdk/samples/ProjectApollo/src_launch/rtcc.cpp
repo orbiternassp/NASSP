@@ -1785,7 +1785,7 @@ void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
 	//DTWRITE: PZTIPREG (Set T-I Table to updating condition)
 	PZTIPREG.Updating = true;
 	//Load T-I Table area with necessary MED quantities
-
+RTCC_PMSTICN_3_1:
 	if (T1 < 0)
 	{
 		err = PMSTICN_ELEV(opt.sv_A, opt.sv_P, Elev, mu, T1);
@@ -1810,7 +1810,7 @@ RTCC_PMSTICN_3_3:
 	sv_A1 = coast(opt.sv_A, T1 - opt.sv_A.GMT);
 	sv_P1 = coast(opt.sv_P, T1 - opt.sv_P.GMT);
 	//TBD: Error?
-	if (!(opt.mode == 3 || opt.mode == 4))
+	if (!(opt.mode == 3 || opt.mode == 4 || opt.mode == 5))
 	{
 		if (soln == 0)
 		{
@@ -1922,18 +1922,20 @@ RTCC_PMSTICN_8_3:
 		PZTIPREG.data[i] = entry[i];
 	}
 	PZTIPREG.Solutions = soln;
+	PZTIPREG.IVFLAG = opt.IVFLAG;
 	PZTIPREG.MAN_VEH = opt.ChaserVehicle;
 	PZTIPREG.Updating = false;
 	display = 63;
 	goto RTCC_PMSTICN_24_2;
 RTCC_PMSTICN_9_1:
-	sv_A1 = opt.sv_A;
-	sv_P1 = opt.sv_P;
 	DH = opt.DH;
 	PhaseAngle = opt.PhaseAngle;
+	WT = opt.WT;
 	T1 = opt.T1;
 	T2 = opt.T2;
-	goto RTCC_PMSTICN_4_2;
+	//Let the external request go through the full logic
+	goto RTCC_PMSTICN_3_1;
+	//goto RTCC_PMSTICN_4_2;
 RTCC_PMSTICN_9_2:
 	if (err)
 	{
@@ -1955,7 +1957,7 @@ RTCC_PMSTICN_9_2:
 RTCC_PMSTICN_10_1:
 	if (opt.SingSolTable == 1)
 	{
-		if (opt.SingSolNum < PZTIPREG.Solutions)
+		if (opt.SingSolNum > PZTIPREG.Solutions)
 		{
 			PMXSPT("PMSTICN", 29);
 			goto RTCC_PMSTICN_24_3;
@@ -1965,7 +1967,7 @@ RTCC_PMSTICN_10_1:
 	}
 	else
 	{
-		if (opt.SingSolNum < PZTIPCCD.Solutions)
+		if (opt.SingSolNum > PZTIPCCD.Solutions)
 		{
 			PMXSPT("PMSTICN", 29);
 			goto RTCC_PMSTICN_24_3;
@@ -9168,10 +9170,11 @@ void RTCC::LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp
 
 		}
 	}
-
+	sv[m].TIMA = 0;
 	sv[m].TE = t_CDH;
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
 	theta_k_apo = OrbMech::THETR(sv_temp[m].U, sv_temp[p].U, sv_temp[m].coe_osc.i, sv_temp[p].coe_osc.i, sv_temp[m].coe_osc.h, sv_temp[p].coe_osc.h);
+	sv[m].TIMA = 0;
 	sv[m].TE = t_CSI;
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
 	OrbMech::GIMKIC(sv_temp[m].coe_osc, mu, R_m, V_m);
@@ -9263,6 +9266,7 @@ RTCC_LLWP_HMALIT_5_2:
 	sv[m].TIMA = 0;
 	sv[m].TE = t_CDH;
 	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+	//Bring passive vehicle to phase match
 	sv[p].TIMA = 6;
 	pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
 	DH_G = sv_temp[p].R - sv_temp[m].R;
@@ -9525,7 +9529,7 @@ RTCC_PMMLWP_2:
 	sv[0].TIMA = sv[1].TIMA = 0;
 	sv[0].TE = sv[1].TE = t_CSI;
 	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
-	//pmmlaeg.CALL(Header, sv[1], sv[1]);
+	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
 	int MM, I_LOOP, I_SELECT, I_STOP1, J_MOV, I_LAST, I_SAVE, I_CURVE;
 
 	MM = 2;
@@ -9653,10 +9657,10 @@ RTCC_PMMLLWP_4:
 	}
 	P_mm = PI2 / sv[m].l_dot;
 RTCC_PMMLLWP_6_2:
-	C1 = sv[p].R;
-	C2 = sv[m].R;
+	C1 = sv_temp[p].R;
+	C2 = sv_temp[m].R;
 	C3 = PI2 / sv[p].l_dot;
-	C4 = sv[p].coe_osc.a;
+	C4 = sv_temp[p].coe_osc.a;
 	C5 = (opt.dt_1*sv[p].l_dot - opt.theta_1) / sv[p].l_dot;
 	C6 = (C3 - PI2 / sv[m].l_dot)*dt_B / C3;
 	DH_u = DH[I_SELECT - 1];
@@ -9723,12 +9727,36 @@ RTCC_PMMLLWP_8_8:
 			T_TPI = sv_temp[p].TE;
 		}
 		OrbMech::GIMKIC(sv_temp[p].coe_osc, mu, R_TPI, V_TPI);
+		elem_TPI = sv_temp[p];
+		//Find LM time of arrival at U_R
 		U_R = sv_temp[p].U + opt.theta_F;
+		sv[p].Item10 = 0.0;
+		if (U_R >= PI2)
+		{
+			U_R -= PI2;
+			sv[p].Item10 += 1.0;
+		}
+		sv[p].Item10 += trunc((sv_temp[p].TE - sv[p].TS) / (PI2 / sv[p].l_dot));
+		if (sv[p].U > sv_temp[p].U)
+		{
+			sv[p].Item10 += 1.0;
+		}
 		sv[p].TIMA = 2;
 		sv[p].Item8 = U_R;
 		pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
 		t_R = sv_temp[p].TE;
+
+		IPHAS = 0;
 		theta_w = PI05 - opt.E - asin((length(R_TPI) - DH_u)*cos(opt.E) / length(R_TPI));
+		do
+		{
+			theta_s = theta_w;
+			IPHAS++;
+			f_TPI = elem_TPI.U - elem_TPI.coe_osc.g - theta_w;
+			r_TPM = elem_TPI.coe_osc.a*(1.0 - elem_TPI.coe_osc.e*elem_TPI.coe_osc.e) / (1.0 + elem_TPI.coe_osc.e*cos(f_TPI));
+			theta_w = PI05 - opt.E - asin((elem_TPI.R - DH_u)*cos(opt.E) / elem_TPI.R);
+		} while (abs(theta_w - theta_s) > 0.01*RAD && IPHAS < 10);
+
 	}
 	if (DH_u == 0)
 	{
@@ -9739,7 +9767,7 @@ RTCC_PMMLLWP_8_8:
 	T_TPI_arr[I_LOOP - 1] = T_TPI;
 	T_R_arr[I_LOOP - 1] = t_R;
 	//Move both vehicles to time of insertion
-	sv[0].TIMA = sv[1].TIMA  = 0;
+	sv[0].TIMA = sv[1].TIMA = 0;
 	sv[0].TE = sv[1].TE  = T_INS;
 	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
 	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
@@ -9757,6 +9785,7 @@ RTCC_PMMLLWP_8_8:
 	{
 		sv[1].TIMA = 1;
 		sv[1].Item8 = PI;
+		sv[1].Item10 = 0.0;
 		pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
 		t_CSI = sv_temp[1].TE;
 		if (opt.M <= 1)
@@ -9790,7 +9819,7 @@ RTCC_PMMLLWP_8_8:
 	}
 
 	dt_NSR = (theta_TPI - theta_w) / sv[m].l_dot;
-	if (abs(dt_NSR) > 1.0)
+	if (abs(dt_NSR) > 0.1)
 	{
 		if (opt.M > 1)
 		{
@@ -9825,7 +9854,7 @@ RTCC_PMMLLWP_8_8:
 	}
 	DV_TPI_arr[I_SELECT - 1] = dv_TPI;
 	DV_TPF_arr[I_SELECT - 1] = dv_TPF;
-	DV_T_arr[I_SELECT - 1] = dv_CSI + dv_CDH + dv_TPI + dv_TPF;
+	DV_T_arr[I_SELECT - 1] = abs(dv_CSI) + dv_CDH + dv_TPI + dv_TPF;
 	if (J_MOV > 0)
 	{
 		goto RTCC_PMMLLWP_20_16;
@@ -11014,9 +11043,9 @@ RTCC_PMMSPQ_A:
 	V_CRb = dotp(sv_C_CDH.R, sv_C_CDH.V) / length(sv_C_CDH.R);
 	gamma_C = asin(V_CRb / V_Cb);
 	V_CHb = V_Cb * cos(gamma_C);
-	a_T = 1.0 / (2.0 / length(sv_T_CDH.R) - dotp(sv_T_CDH.V, sv_T_CDH.V) / mu);
+	a_T = 1.0 / (2.0 / length(sv_PC.R) - dotp(sv_PC.V, sv_PC.V) / mu);
 	a_C = a_T - DH;
-	r_T_dot = dotp(sv_T_CDH.R, sv_T_CDH.V) / length(sv_T_CDH.R);
+	r_T_dot = dotp(sv_PC.R, sv_PC.V) / length(sv_PC.R);
 	r_C_dot = r_T_dot * pow(a_T / a_C, 1.5);
 	//Velocity after the maneuver
 	V_C_apo = sqrt(mu*(2.0 / length(sv_C_CDH.R) - 1.0 / a_C));
@@ -11064,7 +11093,7 @@ RTCC_PMMSPQ_A:
 	else
 	{
 		//If iteration on DH was used, get TPI time now
-		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, opt.GETbase, 130.0*RAD, opt.E, t_TPI, T_TPF))
+		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, opt.GETbase, opt.WT, opt.E, t_TPI, T_TPF))
 		{
 			return 94;
 		}
@@ -12296,13 +12325,13 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 		{
 			lamman.T1 = T_TPI;
 			lamman.T2 = -1.0;
-			GZGENCSN.TITravelAngle = opt.WT;
+			lamman.WT = opt.WT;
 			lamman.PhaseAngle = 0.0;
 			lamman.DH = 0.0;
 		}
 		
-		lamman.sv_A = sv_INS;
-		lamman.sv_P = sv_LS;
+		lamman.sv_A = coast(sv_INS, lamman.T1 - sv_INS.GMT);
+		lamman.sv_P = coast(sv_LS, lamman.T1 - sv_LS.GMT);
 
 		PMSTICN(lamman, lamres);
 		if (lamres.SolutionFound == false)
@@ -12339,7 +12368,7 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 
 	res.GETLOR = GETfromGMT(T_LO);
 	res.GET_TPI = GETfromGMT(T_TPI);
-	res.GET_TPF = GETfromGMT(lamres.T2);
+	res.GET_TPF = lamres.T2;
 	res.DV_TPI = length(lamres.dV);
 	res.DV_TPF = length(lamres.dV2);
 	res.DV_TPI_LVLH = lamres.dV_LVLH;
@@ -12348,7 +12377,7 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 
 	sv_TPI = coast(sv_INS, T_TPI - sv_INS.GMT);
 	sv_TPI.V = sv_TPI.V + lamres.dV;
-	sv_TPF = coast(sv_INS, lamres.T2 - sv_TPI.GMT);
+	sv_TPF = coast(sv_TPI, GMTfromGET(lamres.T2) - sv_TPI.GMT);
 	sv_TPF.V = sv_TPF.V + lamres.dV2;
 	
 	double RA_TPI, RP_TPI, RA_TPF, RP_TPF, RA_T, RP_T;
@@ -12448,7 +12477,8 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("MANEUVER - MPT UNCHANGED");
 		break;
 	case 29:
-		message.push_back("REQUESTED TWO-IMPULSE SOLUTION NUMBER NOT AVAILABLE");
+		message.push_back("REQUESTED TWO-IMPULSE SOLUTION");
+		message.push_back("NUMBER NOT AVAILABLE");
 		break;
 	case 30:
 		message.push_back("FAILED TO CONVERGE ON ELEVATION ANGLE -");

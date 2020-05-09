@@ -348,6 +348,10 @@ public:
 	void menuSetLLWPCSIFlag();
 	void set_LLWPCSIFlag(double val);
 	void menuSetLLWPCDHFlag();
+	void menuSetLLWPDeltaHeights();
+	void set_LLWPDeltaHeights(double dh1, double dh2, double dh3);
+	void menuSetLLWPElevation();
+	void set_LLWPElevation(double elev);
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLLTPCalc();
@@ -414,7 +418,6 @@ public:
 	void set_DKIDT3(double dt);
 	void menuSetLAPLiftoffTime();
 	void set_LAPLiftoffTime(double time);
-	void set_LAPLiftoffTime_DT_PDI(double dt);
 	void menuSetDAPPADPage();
 	void menuDAPPADCalc();
 	void menuSetLVDCPage();

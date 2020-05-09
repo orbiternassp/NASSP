@@ -8742,7 +8742,8 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 	if (in.TIMA >= 5)
 	{
-		out.Item9 = tempblock.TE - CurrentBlock.TE;
+		CurrentBlock.Item8 = tempblock.R - CurrentBlock.R;
+		CurrentBlock.Item9 = tempblock.TE - CurrentBlock.TE;
 		dt += -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
 		if (abs(CurrentBlock.Item10) > 0.0001)
 		{

@@ -3668,7 +3668,11 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.dTheta_TPI = GC->rtcc->PZLTRT.DT_Theta_i;
 		opt.WT = GC->rtcc->PZLTRT.TerminalPhaseTravelAngle;
 
-		GC->rtcc->LunarLiftoffTimePredictionDT(opt, GC->rtcc->PZLLTT);
+		if (GC->rtcc->LunarLiftoffTimePredictionDT(opt, GC->rtcc->PZLLTT))
+		{
+			t_LunarLiftoff = GC->rtcc->PZLLTT.GETLOR;
+			GC->rtcc->PZLTRT.InsertionHorizontalVelocity = GC->rtcc->PZLLTT.VH;
+		}
 
 		Result = 0;
 	}
@@ -3719,7 +3723,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		Result = 0;
 	}
 	break;
-	case 15:	//Lunar Liftoff Time Prediction
+	case 15:	//Lunar Launch Window Processor
 	{
 		LunarLiftoffTimeOpt opt;
 		SV sv_CSM;

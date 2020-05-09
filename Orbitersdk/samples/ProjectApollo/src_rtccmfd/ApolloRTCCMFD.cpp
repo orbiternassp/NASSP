@@ -6088,6 +6088,52 @@ void ApolloRTCCMFD::menuSetLLWPCDHFlag()
 
 }
 
+void ApolloRTCCMFD::menuSetLLWPDeltaHeights()
+{
+	bool LLWPDeltaHeightsInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input the three DHs to be calculated:", LLWPDeltaHeightsInput, 0, 20, (void*)this);
+}
+
+bool LLWPDeltaHeightsInput(void *id, char *str, void *data)
+{
+	double dh1, dh2, dh3;
+
+	if (sscanf(str, "%lf %lf %lf", &dh1, &dh2, &dh3) == 3)
+	{
+		((ApolloRTCCMFD*)data)->set_LLWPDeltaHeights(dh1, dh2, dh3);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LLWPDeltaHeights(double dh1, double dh2, double dh3)
+{
+	GC->rtcc->med_k15.DH1 = dh1 * 1852.0;
+	GC->rtcc->med_k15.DH2 = dh2 * 1852.0;
+	GC->rtcc->med_k15.DH3 = dh3 * 1852.0;
+}
+
+void ApolloRTCCMFD::menuSetLLWPElevation()
+{
+	bool LLWPElevInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Elevation in degrees:", LLWPElevInput, 0, 20, (void*)this);
+}
+
+bool LLWPElevInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_LLWPElevation(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LLWPElevation(double elev)
+{
+	this->GC->rtcc->PZLTRT.ElevationAngle = elev * RAD;
+}
+
 void ApolloRTCCMFD::menuTMLat()
 {
 	bool TMLatInput(void* id, char *str, void *data);
@@ -6432,13 +6478,9 @@ void ApolloRTCCMFD::menuSetLAPLiftoffTime()
 
 bool LAPLiftoffTimeInput(void *id, char *str, void *data)
 {
-	int hh, mm, ss, t1time;
-	if (sscanf(str, "PDI+%d:%d", &mm, &ss) == 2)
-	{
-		((ApolloRTCCMFD*)data)->set_LAPLiftoffTime_DT_PDI((double)mm * 60.0 + (double)ss);
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	int hh, mm;
+	double ss, t1time;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
 		t1time = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_LAPLiftoffTime(t1time);
@@ -6450,11 +6492,6 @@ bool LAPLiftoffTimeInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_LAPLiftoffTime(double time)
 {
 	G->t_LunarLiftoff = time;
-}
-
-void ApolloRTCCMFD::set_LAPLiftoffTime_DT_PDI(double dt)
-{
-	G->t_LunarLiftoff = G->pdipad.GETI + dt;
 }
 
 void ApolloRTCCMFD::DKITIGDialogue()

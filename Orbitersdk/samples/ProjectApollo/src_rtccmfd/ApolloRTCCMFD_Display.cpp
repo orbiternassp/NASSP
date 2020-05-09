@@ -3064,7 +3064,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	{
 		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Lunar Ascent Processor", 22);
 
-		GET_Display(Buffer, G->t_LunarLiftoff);
+		GET_Display2(Buffer, G->t_LunarLiftoff);
 		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%+07.1f ft/s", GC->rtcc->PZLTRT.InsertionHorizontalVelocity / 0.3048);
@@ -7445,47 +7445,47 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->TextW(24 * W / 32, 5 * H / 32, L"\u03BBLLS", 4);
 		skp->Text(24 * W / 32, 6 * H / 32, "RLLS", 4);
 
-		skp->Line(1 * W / 64, 8 * H / 32, 63 * W / 63, 8 * H / 32);
+		skp->Line(1 * W / 64, 15 * H / 64, 63 * W / 64, 15 * H / 64);
 
-		skp->TextW(1 * W / 32, 10 * H / 32, L"PF\u2222", 3);
-		skp->TextW(1 * W / 32, 11 * H / 32, L"PF\u0394T", 4);
-		skp->Text(1 * W / 32, 12 * H / 32, "HINS", 4);
-		skp->TextW(1 * W / 32, 13 * H / 32, L"\u1E58INS", 4);
-		skp->Text(1 * W / 32, 14 * H / 32, "YSTEER", 6);
+		skp->TextW(1 * W / 32, 9 * H / 32, L"PF\u2222", 3);
+		skp->TextW(1 * W / 32, 10 * H / 32, L"PF\u0394T", 4);
+		skp->Text(1 * W / 32, 11 * H / 32, "HINS", 4);
+		skp->TextW(1 * W / 32, 12 * H / 32, L"\u1E58INS", 4);
+		skp->Text(1 * W / 32, 13 * H / 32, "YSTEER", 6);
 
-		skp->TextW(10 * W / 32, 10 * H / 32, L"\u0394T(INS-TPI)", 11);
-		skp->TextW(10 * W / 32, 11 * H / 32, L"\u0394TNOM", 5);
+		skp->TextW(11 * W / 32, 9 * H / 32, L"\u0394T(INS-TPI)", 11);
+		skp->TextW(11 * W / 32, 10 * H / 32, L"\u0394TNOM", 5);
 
-		skp->TextW(22 * W / 32, 10 * H / 32, L"\u0394HTPI", 5);
-		skp->TextW(22 * W / 32, 11 * H / 32, L"\u0394\u03B8TPI", 5);
-		skp->TextW(22 * W / 32, 12 * H / 32, L"\u03C9T", 2);
-		skp->Text(22 * W / 32, 13 * H / 32, "HPMIN", 5);
-		skp->TextW(22 * W / 32, 14 * H / 32, L"EL \u2222", 4);
+		skp->TextW(23 * W / 32, 9 * H / 32, L"\u0394HTPI", 5);
+		skp->TextW(23 * W / 32, 10 * H / 32, L"\u0394\u03B8TPI", 5);
+		skp->TextW(23 * W / 32, 11 * H / 32, L"\u03C9T", 2);
+		skp->Text(23 * W / 32, 12 * H / 32, "HPMIN", 5);
+		skp->TextW(23 * W / 32, 13 * H / 32, L"EL \u2222", 4);
 
-		skp->Line(1 * W / 64, 17 * H / 32, 63 * W / 63, 17 * H / 32);
+		skp->Line(1 * W / 64, 16 * H / 32, 63 * W / 64, 16 * H / 32);
 
-		skp->Text(1 * W / 32, 18 * H / 32, "GETLOR", 6);
-		skp->Text(16 * W / 32, 18 * H / 32, "VH", 2);
+		skp->Text(1 * W / 32, 17 * H / 32, "GETLOR", 6);
+		skp->Text(16 * W / 32, 17 * H / 32, "VH", 2);
 
-		skp->Line(1 * W / 64, 20 * H / 32, 63 * W / 63, 20 * H / 32);
+		skp->Line(1 * W / 64, 19 * H / 32, 63 * W / 64, 19 * H / 32);
 
-		skp->Text(1 * W / 32, 20 * H / 32, "CODE", 4);
-		skp->Text(5 * W / 32, 20 * H / 32, "GET", 3);
-		skp->TextW(11 * W / 32, 20 * H / 32, L"\u0394V", 2);
-		skp->TextW(15 * W / 32, 20 * H / 32, L"\u0394VX", 3);
-		skp->TextW(20 * W / 32, 20 * H / 32, L"\u0394VY", 3);
-		skp->TextW(25 * W / 32, 20 * H / 32, L"\u0394VZ", 3);
-		skp->Text(29 * W / 32, 20 * H / 32, "HA/HP", 5);
+		skp->Text(1 * W / 32, 19 * H / 32, "CODE", 4);
+		skp->Text(5 * W / 32, 19 * H / 32, "GET", 3);
+		skp->TextW(11 * W / 32, 19 * H / 32, L"\u0394V", 2);
+		skp->TextW(15 * W / 32, 19 * H / 32, L"\u0394VX", 3);
+		skp->TextW(20 * W / 32, 19 * H / 32, L"\u0394VY", 3);
+		skp->TextW(25 * W / 32, 19 * H / 32, L"\u0394VZ", 3);
+		skp->Text(28 * W / 32, 19 * H / 32, "HA/HP", 5);
 
-		skp->Line(1 * W / 64, 43 * H / 64, 63 * W / 63, 43 * H / 64);
+		skp->Line(1 * W / 64, 41 * H / 64, 63 * W / 64, 41 * H / 64);
 
-		skp->Text(1 * W / 32, 22 * H / 32, "TPI", 3);
-		skp->Text(1 * W / 32, 24 * H / 32, "TPF", 3);
+		skp->Text(1 * W / 32, 21 * H / 32, "TPI", 3);
+		skp->Text(1 * W / 32, 23 * H / 32, "TPF", 3);
 
-		skp->Line(1 * W / 64, 26 * H / 32, 63 * W / 63, 26 * H / 32);
+		skp->Line(1 * W / 64, 25 * H / 32, 63 * W / 64, 25 * H / 32);
 
-		skp->TextW(20 * W / 32, 28 * H / 32, L"H\u2090T", 3);
-		skp->TextW(20 * W / 32, 29 * H / 32, L"H\u209AT", 3);
+		skp->TextW(25 * W / 32, 27 * H / 32, L"H\u2090T", 3);
+		skp->TextW(25 * W / 32, 28 * H / 32, L"H\u209AT", 3);
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
@@ -7520,71 +7520,71 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(31 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.3lf", GC->rtcc->PZLTRT.PoweredFlightArc*DEG);
-		skp->Text(8 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 32, 9 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.2lf", GC->rtcc->PZLTRT.PoweredFlightTime);
-		skp->Text(8 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.0lf", GC->rtcc->PZLTRT.InsertionHeight / 0.3048);
-		skp->Text(8 * W / 32, 12 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLTRT.InsertionRadialVelocity / 0.3048);
-		skp->Text(8 * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 32, 12 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.2lf", GC->rtcc->PZLTRT.YawSteerCap*DEG);
-		skp->Text(8 * W / 32, 14 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.2lf", GC->rtcc->PZLTRT.DT_Ins_TPI / 60.0);
-		skp->Text(21 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(20 * W / 32, 9 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.2lf", GC->rtcc->PZLTRT.DT_Ins_TPI_NOM / 60.0);
-		skp->Text(21 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(20 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%+.2lf", GC->rtcc->PZLTRT.DT_DH / 1852.0);
-		skp->Text(31 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 9 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.2lf", GC->rtcc->PZLTRT.DT_Theta_i*DEG);
-		skp->Text(31 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 10 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLTRT.TerminalPhaseTravelAngle*DEG);
-		skp->Text(31 * W / 32, 12 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 11 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLTRT.MinSafeHeight / 1852.0);
-		skp->Text(31 * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 12 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLTRT.ElevationAngle*DEG);
-		skp->Text(31 * W / 32, 14 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 13 * H / 32, Buffer, strlen(Buffer));
 
-		GET_Display3(Buffer, GC->rtcc->PZLLTT.GETLOR);
-		skp->Text(12 * W / 32, 18 * H / 32, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->PZLLTT.GETLOR);
+		skp->Text(11 * W / 32, 17 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLLTT.VH / 0.3048);
-		skp->Text(22 * W / 32, 18 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(21 * W / 32, 17 * H / 32, Buffer, strlen(Buffer));
 
 		GET_Display(Buffer, GC->rtcc->PZLLTT.GET_TPI, false);
-		skp->Text(8 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 32, 21 * H / 32, Buffer, strlen(Buffer));
 		GET_Display(Buffer, GC->rtcc->PZLLTT.GET_TPF, false);
-		skp->Text(8 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(8 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLLTT.DV_TPI / 0.3048);
-		skp->Text(12 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLLTT.DV_TPI / 0.3048);
-		skp->Text(12 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(12 * W / 32, 21 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLLTT.DV_TPF / 0.3048);
+		skp->Text(12 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.DV_TPI_LVLH.x / 0.3048);
-		skp->Text(17 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(17 * W / 32, 21 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.DV_TPF_LVLH.x / 0.3048);
-		skp->Text(17 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(17 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.DV_TPI_LVLH.y / 0.3048);
-		skp->Text(22 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(22 * W / 32, 21 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.DV_TPF_LVLH.y / 0.3048);
-		skp->Text(22 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(22 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.DV_TPI_LVLH.z / 0.3048);
-		skp->Text(27 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(27 * W / 32, 21 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.DV_TPF_LVLH.z / 0.3048);
-		skp->Text(27 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(27 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLLTT.HA_TPI / 1852.0);
-		skp->Text(31 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 21 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.HP_TPI / 1852.0);
-		skp->Text(31 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 22 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLLTT.HA_TPF / 1852.0);
-		skp->Text(31 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 23 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.HP_TPF / 1852.0);
-		skp->Text(31 * W / 32, 25 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 24 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLLTT.HA_T / 1852.0);
-		skp->Text(31 * W / 32, 28 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 27 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.HP_T / 1852.0);
-		skp->Text(31 * W / 32, 29 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(31 * W / 32, 28 * H / 32, Buffer, strlen(Buffer));
 	}
 	return true;
 }
