@@ -7754,7 +7754,7 @@ SV PMMAEG(SV sv0, int opt, double param, bool &error, double DN)
 			L_D = u;
 		}
 		DX_L = 1.0;
-		DH = abs(DN) > 0.0;
+		DH = true;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;
@@ -7903,7 +7903,7 @@ SV PMMLAEG(SV sv0, int opt, double param, bool &error, double DN)
 			L_D = u;
 		}
 		DX_L = 1.0;
-		DH = abs(DN) > 0.0;
+		DH = true;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;
@@ -8528,7 +8528,6 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	}
 
 	CurrentBlock = in;
-	CurrentBlock.ENTRY = 0;
 
 	//Matrix to rotate to selenographic inertial
 	Rot = OrbMech::GetObliquityMatrix(BODY_MOON, in.Item7 + in.TS / 24.0 / 3600.0);
@@ -8577,13 +8576,9 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 		{
 			dt = in.TE - in.TS;
 		}
-		else if (in.TIMA == 4)
-		{
-			dt = tempblock.TE - in.TS;
-		}
 		else
 		{
-			dt = 0.0;
+			dt = tempblock.TE - in.TS;
 		}
 	NewPMMLAEG_V1000:
 		coe_mean1.l = CurrentBlock.l_dot*dt + in.coe_mean.l;
@@ -8594,7 +8589,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 		OrbMech::normalizeAngle(coe_mean1.g);
 		OrbMech::normalizeAngle(coe_mean1.h);
 
-		CurrentBlock.TE = CurrentBlock.TS = in.TE;
+		CurrentBlock.TE = CurrentBlock.TS = in.TS + dt;
 		coe_osc1 = OrbMech::LyddaneMeanToOsculating(coe_mean1, BODY_MOON);
 
 		//Selenographic to selenocentric
@@ -8619,7 +8614,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 			L_D = in.U;
 		}
 		DX_L = 1.0;
-		DH = abs(in.Item10) > 0.0;
+		DH = true;
 		dt = 0.0;
 		LINE = 0;
 		COUNT = 24;
@@ -8735,11 +8730,11 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	if (in.TIMA >= 4)
 	{
 		CurrentBlock.Item10 = CurrentBlock.U - tempblock.U - 2.0*atan(tan((CurrentBlock.coe_osc.h - tempblock.coe_osc.h) / 2.0)*(sin(0.5*(CurrentBlock.coe_osc.i + tempblock.coe_osc.i - PI)) / sin(0.5*(CurrentBlock.coe_osc.i - tempblock.coe_osc.i + PI))));
-		if (CurrentBlock.Item10 < 0)
+		if (CurrentBlock.Item10 < -PI)
 		{
 			CurrentBlock.Item10 += PI2;
 		}
-		else if (CurrentBlock.Item10 >= PI2)
+		else if (CurrentBlock.Item10 >= PI)
 		{
 			CurrentBlock.Item10 -= PI2;
 		}
@@ -8747,13 +8742,21 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 	if (in.TIMA >= 5)
 	{
-		dt = -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
-		goto NewPMMLAEG_V1000;
+		CurrentBlock.Item8 = tempblock.R - CurrentBlock.R;
+		CurrentBlock.Item9 = tempblock.TE - CurrentBlock.TE;
+		dt += -CurrentBlock.Item10 / (CurrentBlock.l_dot + CurrentBlock.g_dot);
+		if (abs(CurrentBlock.Item10) > 0.0001)
+		{
+			goto NewPMMLAEG_V1000;
+		}
 	}
 
 NewPMMLAEG_V1030:
 	//Move output into area supplied by the calling program
+	out.ENTRY = 0;
+	out.Item7 = CurrentBlock.Item7;
 	out.Item8 = CurrentBlock.Item8;
+	out.Item9 = CurrentBlock.Item9;
 	out.Item10 = CurrentBlock.Item10;
 	out.coe_osc = CurrentBlock.coe_osc;
 	out.f = CurrentBlock.f;

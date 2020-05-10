@@ -262,9 +262,9 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "DOI_alt", GC->rtcc->med_k17.DescIgnHeight);
 
 	papiWriteScenario_double(scn, "DKI_TIG", G->DKI_TIG);
-	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_Liftoff_guess);
+	papiWriteScenario_double(scn, "t_Liftoff_guess", G->t_LunarLiftoff);
 	papiWriteScenario_double(scn, "t_TPIguess", G->t_TPIguess);
-	papiWriteScenario_double(scn, "DT_Ins_TPI", GC->DT_Ins_TPI);
+	papiWriteScenario_double(scn, "DT_Ins_TPI", GC->rtcc->PZLTRT.DT_Ins_TPI);
 	oapiWriteScenario_int(scn, "DKI_Profile", G->DKI_Profile);
 	oapiWriteScenario_int(scn, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 	papiWriteScenario_bool(scn, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -467,9 +467,9 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "DOI_alt", GC->rtcc->med_k17.DescIgnHeight);
 
 		papiReadScenario_double(line, "DKI_TIG", G->DKI_TIG);
-		papiReadScenario_double(line, "t_Liftoff_guess", G->t_Liftoff_guess);
+		papiReadScenario_double(line, "t_Liftoff_guess", G->t_LunarLiftoff);
 		papiReadScenario_double(line, "t_TPIguess", G->t_TPIguess);
-		papiReadScenario_double(line, "DT_Ins_TPI", GC->DT_Ins_TPI);
+		papiReadScenario_double(line, "DT_Ins_TPI", GC->rtcc->PZLTRT.DT_Ins_TPI);
 		papiReadScenario_int(line, "DKI_Profile", G->DKI_Profile);
 		papiReadScenario_int(line, "DKI_TPI_Mode", G->DKI_TPI_Mode);
 		papiReadScenario_bool(line, "DKI_Maneuver_Line", G->DKI_Maneuver_Line);
@@ -620,11 +620,11 @@ void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display
 	double time2 = round(time);
 	if (DispGET)
 	{
-		sprintf(Buff, "%03.0f:%02.0f:%02.0f GET", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
+		sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f GET", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
 	}
 	else
 	{
-		sprintf(Buff, "%03.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
+		sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
 	}
 	//sprintf(Buff, "%03d:%02d:%02d", hh, mm, ss);
 }
@@ -1380,6 +1380,36 @@ void ApolloRTCCMFD::menuSetRelativeMotionDigitalsPage()
 void ApolloRTCCMFD::menuSetRendezvousEvaluationDisplayPage()
 {
 	screen = 87;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLaunchTargetingInitPage()
+{
+	screen = 88;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLLWPInitPage()
+{
+	screen = 89;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLLWPDisplayPage()
+{
+	screen = 90;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetLunarLaunchTargetingPage()
+{
+	screen = 91;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetTPITimesPage()
+{
+	screen = 92;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -5978,10 +6008,22 @@ void ApolloRTCCMFD::set_TPIguess(double time)
 	G->t_TPIguess = time;
 }
 
+void ApolloRTCCMFD::menuCycleLLWPChaserOption()
+{
+	if (GC->rtcc->med_k15.Chaser == 1)
+	{
+		GC->rtcc->med_k15.Chaser = 3;
+	}
+	else
+	{
+		GC->rtcc->med_k15.Chaser = 1;
+	}
+}
+
 void ApolloRTCCMFD::menuSetLiftoffguess()
 {
 	bool LiftoffGuessInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for liftoff (Format: hhh:mm:ss)", LiftoffGuessInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Choose the threshold time (Format: hhh:mm:ss)", LiftoffGuessInput, 0, 20, (void*)this);
 }
 
 bool LiftoffGuessInput(void *id, char *str, void *data)
@@ -5996,19 +6038,106 @@ bool LiftoffGuessInput(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::menuCycleLunarLiftoffInsVelOption()
-{
-	G->LunarLiftoffInsVelInput = !G->LunarLiftoffInsVelInput;
-}
-
-void ApolloRTCCMFD::menuCycleLunarLiftoffTPIOption()
-{
-	G->LunarLiftoffTPITimeOption = !G->LunarLiftoffTPITimeOption;
-}
-
 void ApolloRTCCMFD::set_Liftoffguess(double time)
 {
-	G->t_Liftoff_guess = time;
+	GC->rtcc->med_k15.ThresholdTime = time;
+}
+
+void ApolloRTCCMFD::menuLLWPVectorTime()
+{
+	bool LLWPVectorTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the CSM vector time (Format: hhh:mm:ss)", LLWPVectorTimeInput, 0, 20, (void*)this);
+}
+
+bool LLWPVectorTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, get;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_LLWPVectorTime(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LLWPVectorTime(double time)
+{
+	GC->rtcc->med_k15.CSMVectorTime = time;
+}
+
+void ApolloRTCCMFD::menuSetLLWPCSIFlag()
+{
+	bool LLWPCSIFlagInput(void *id, char *str, void *data);
+	oapiOpenInputBox("CSI Flag: 0: CSI done 90° from insertion, negative value: CSI done at LM apolune, positive value: CSI done at X mins after insertion", LLWPCSIFlagInput, 0, 20, (void*)this);
+}
+
+bool LLWPCSIFlagInput(void *id, char *str, void *data)
+{
+	double val;
+	if (sscanf(str, "%lf", &val) == 1)
+	{
+		((ApolloRTCCMFD*)data)->set_LLWPCSIFlag(val);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LLWPCSIFlag(double val)
+{
+	GC->rtcc->med_k15.CSI_Flag = val * 60.0;
+}
+
+void ApolloRTCCMFD::menuSetLLWPCDHFlag()
+{
+
+}
+
+void ApolloRTCCMFD::menuSetLLWPDeltaHeights()
+{
+	bool LLWPDeltaHeightsInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input the three DHs to be calculated:", LLWPDeltaHeightsInput, 0, 20, (void*)this);
+}
+
+bool LLWPDeltaHeightsInput(void *id, char *str, void *data)
+{
+	double dh1, dh2, dh3;
+
+	if (sscanf(str, "%lf %lf %lf", &dh1, &dh2, &dh3) == 3)
+	{
+		((ApolloRTCCMFD*)data)->set_LLWPDeltaHeights(dh1, dh2, dh3);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LLWPDeltaHeights(double dh1, double dh2, double dh3)
+{
+	GC->rtcc->med_k15.DH1 = dh1 * 1852.0;
+	GC->rtcc->med_k15.DH2 = dh2 * 1852.0;
+	GC->rtcc->med_k15.DH3 = dh3 * 1852.0;
+}
+
+void ApolloRTCCMFD::menuSetLLWPElevation()
+{
+	bool LLWPElevInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Elevation in degrees:", LLWPElevInput, 0, 20, (void*)this);
+}
+
+bool LLWPElevInput(void *id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		((ApolloRTCCMFD*)data)->set_LLWPElevation(atof(str));
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LLWPElevation(double elev)
+{
+	this->GC->rtcc->PZLTRT.ElevationAngle = elev * RAD;
 }
 
 void ApolloRTCCMFD::menuTMLat()
@@ -6135,25 +6264,18 @@ void ApolloRTCCMFD::menuLunarLiftoffCalc()
 	}
 }
 
-void ApolloRTCCMFD::menuLunarLiftoffTimeOption()
+void ApolloRTCCMFD::menuLLTPCalc()
 {
-	if (G->LunarLiftoffTimeOption < 2)
+	if (GC->MissionPlanningActive || (G->target != NULL && G->vesseltype > 1))
 	{
-		G->LunarLiftoffTimeOption++;
-	}
-	else
-	{
-		G->LunarLiftoffTimeOption = 0;
+		G->LunarLaunchTargetingCalc();
 	}
 }
 
 void ApolloRTCCMFD::menuSetLiftoffDT()
 {
-	if (G->LunarLiftoffTimeOption == 1)
-	{
-		bool LiftoffDTInput(void* id, char *str, void *data);
-		oapiOpenInputBox("DT between insertion and TPI:", LiftoffDTInput, 0, 20, (void*)this);
-	}
+	bool LiftoffDTInput(void* id, char *str, void *data);
+	oapiOpenInputBox("DT between insertion and TPI:", LiftoffDTInput, 0, 20, (void*)this);
 }
 
 bool LiftoffDTInput(void *id, char *str, void *data)
@@ -6168,16 +6290,36 @@ bool LiftoffDTInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LiftoffDT(double dt)
 {
-	GC->DT_Ins_TPI = dt * 60.0;
+	GC->rtcc->PZLTRT.DT_Ins_TPI = dt * 60.0;
+}
+
+void ApolloRTCCMFD::menuLLTPThresholdTime()
+{
+	bool LLTPThresholdTimeInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose the threshold time for liftoff (Format: hhh:mm:ss)", LLTPThresholdTimeInput, 0, 20, (void*)this);
+}
+
+bool LLTPThresholdTimeInput(void *id, char *str, void *data)
+{
+	int hh, mm, ss, get;
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	{
+		get = ss + 60 * (mm + 60 * hh);
+		((ApolloRTCCMFD*)data)->set_LLTPThresholdTime(get);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_LLTPThresholdTime(double get)
+{
+	GC->rtcc->med_k50.GETTH = get;
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffVHorInput()
 {
-	if (G->LunarLiftoffInsVelInput && G->LunarLiftoffTimeOption == 0)
-	{
-		bool LunarLiftoffVHorInput(void* id, char *str, void *data);
-		oapiOpenInputBox("Input horizontal velocity in ft/s:", LunarLiftoffVHorInput, 0, 20, (void*)this);
-	}
+	bool LunarLiftoffVHorInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input horizontal velocity in ft/s (LGC default is 5509.5):", LunarLiftoffVHorInput, 0, 20, (void*)this);
 }
 
 bool LunarLiftoffVHorInput(void *id, char *str, void *data)
@@ -6192,16 +6334,13 @@ bool LunarLiftoffVHorInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LunarLiftoffVHorInput(double v_lh)
 {
-	G->LunarLiftoffRes.v_LH = v_lh * 0.3048;
+	GC->rtcc->PZLTRT.InsertionHorizontalVelocity = v_lh * 0.3048;
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffVVertInput()
 {
-	if (G->LunarLiftoffInsVelInput && G->LunarLiftoffTimeOption == 0)
-	{
-		bool LunarLiftoffVVertInput(void* id, char *str, void *data);
-		oapiOpenInputBox("Input vertical velocity in ft/s:", LunarLiftoffVVertInput, 0, 20, (void*)this);
-	}
+	bool LunarLiftoffVVertInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Input vertical velocity in ft/s (LGC default is 19.5):", LunarLiftoffVVertInput, 0, 20, (void*)this);
 }
 
 bool LunarLiftoffVVertInput(void *id, char *str, void *data)
@@ -6216,7 +6355,7 @@ bool LunarLiftoffVVertInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LunarLiftoffVVertInput(double v_lv)
 {
-	G->LunarLiftoffRes.v_LV = v_lv * 0.3048;
+	GC->rtcc->PZLTRT.InsertionRadialVelocity = v_lv * 0.3048;
 }
 
 void ApolloRTCCMFD::menuSetEMPUplinkP99()
@@ -6345,13 +6484,9 @@ void ApolloRTCCMFD::menuSetLAPLiftoffTime()
 
 bool LAPLiftoffTimeInput(void *id, char *str, void *data)
 {
-	int hh, mm, ss, t1time;
-	if (sscanf(str, "PDI+%d:%d", &mm, &ss) == 2)
-	{
-		((ApolloRTCCMFD*)data)->set_LAPLiftoffTime_DT_PDI((double)mm * 60.0 + (double)ss);
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	int hh, mm;
+	double ss, t1time;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
 		t1time = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_LAPLiftoffTime(t1time);
@@ -6362,54 +6497,7 @@ bool LAPLiftoffTimeInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LAPLiftoffTime(double time)
 {
-	G->LunarLiftoffRes.t_L = time;
-}
-
-void ApolloRTCCMFD::set_LAPLiftoffTime_DT_PDI(double dt)
-{
-	G->LunarLiftoffRes.t_L = G->pdipad.GETI + dt;
-}
-
-void ApolloRTCCMFD::menuSetLAPHorVelocity()
-{
-	bool LAPHorVelocityInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Horizontal velocity in ft/s:", LAPHorVelocityInput, 0, 20, (void*)this);
-}
-
-bool LAPHorVelocityInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_LAPHorVelocity(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LAPHorVelocity(double vel)
-{
-	this->G->LunarLiftoffRes.v_LH = vel * 0.3048;
-}
-
-void ApolloRTCCMFD::menuSetLAPVerVelocity()
-{
-	bool LAPVerVelocityInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Vertical velocity in ft/s:", LAPVerVelocityInput, 0, 20, (void*)this);
-}
-
-bool LAPVerVelocityInput(void *id, char *str, void *data)
-{
-	if (strlen(str)<20)
-	{
-		((ApolloRTCCMFD*)data)->set_LAPVerVelocity(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LAPVerVelocity(double vel)
-{
-	this->G->LunarLiftoffRes.v_LV = vel * 0.3048;
+	G->t_LunarLiftoff = time;
 }
 
 void ApolloRTCCMFD::DKITIGDialogue()
@@ -7667,6 +7755,11 @@ bool NodeConvHeightInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::set_NodeConvHeight(double height)
 {
 	G->NodeConvHeight = height * 1852.0;
+}
+
+void ApolloRTCCMFD::menuCalculateTPITime()
+{
+	G->CalculateTPITime();
 }
 
 void ApolloRTCCMFD::menuMSKRequest()

@@ -40,7 +40,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 0.0;
 	rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 0.0;
 	t_Land = 0.0;
-	DT_Ins_TPI = 40.0*60.0;
+	rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 40.0*60.0;
 	rtcc->GZGENCSN.TIPhaseAngle = 0.0;
 
 	if (strcmp(v->GetName(), "AS-205") == 0)
@@ -416,7 +416,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_k40.REVS1 = rtcc->PZMCCPLN.REVS1 = 1.94;
 		rtcc->med_k40.eta_1 = 21.6;
 		rtcc->PZREAP.RRBIAS = 1250.0;
-		DT_Ins_TPI = 38.0*60.0;
+		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 38.0*60.0;
 
 		rtcc->PZMCCPLN.ETA1 = 21.6*RAD;
 
@@ -474,7 +474,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_k40.eta_1 = 36.0;
 		rtcc->PZREAP.IRMAX = 40.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
-		DT_Ins_TPI = 45.0*60.0;
+		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 45.0*60.0;
 
 		rtcc->PZMCCPLN.ETA1 = 36.0*RAD;
 
@@ -521,7 +521,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_k40.eta_1 = 46.8;
 		rtcc->PZREAP.IRMAX = 80.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
-		DT_Ins_TPI = 47.0*60.0;
+		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 47.0*60.0;
 
 		rtcc->PZMCCPLN.SITEROT = -16.0*RAD;
 		rtcc->PZMCCPLN.ETA1 = 46.8*RAD;
@@ -569,7 +569,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->med_k17.DescIgnHeight = 40000.0*0.3048;
 		rtcc->PZREAP.IRMAX = 80.0;
 		rtcc->PZREAP.RRBIAS = 1190.0;
-		DT_Ins_TPI = 47.0*60.0;
+		rtcc->PZLTRT.DT_Ins_TPI = rtcc->PZLTRT.DT_Ins_TPI_NOM = 47.0*60.0;
 
 		rtcc->PZMCCPLN.SITEROT = 20.0*RAD;
 		rtcc->PZMCCPLN.H_P_LPO1 = 51.3*1852.0;
@@ -644,6 +644,7 @@ int AR_GCore::MPTTrajectoryUpdate()
 
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = lat;
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = lng;
+		rtcc->MCSMLR = rad;
 	}
 	else
 	{
@@ -825,12 +826,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	CDHtimemode = 0;
 	this->vessel = v;
 	t_TPI = 0.0;
-
-	spqresults.DH = 0.0;
-	spqresults.dV_CDH = _V(0.0, 0.0, 0.0);
-	spqresults.dV_CSI = _V(0.0, 0.0, 0.0);
-	spqresults.t_CDH = 0.0;
-	spqresults.t_TPI = 0.0;
 
 	SPQDeltaV = _V(0, 0, 0);
 	target = NULL;
@@ -1308,24 +1303,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	TMStepSize = 100.0*0.3048;
 	TMAlt = 0.0;
 
-	LunarLiftoffTimeOption = 0;
+	t_LunarLiftoff = 0.0;
 	t_TPIguess = 0.0;
-	t_Liftoff_guess = 0.0;
-	LunarLiftoffInsVelInput = false;
-	LunarLiftoffTPITimeOption = true;
-	LunarLiftoffRes.t_CDH = 0.0;
-	LunarLiftoffRes.t_CSI = 0.0;
-	LunarLiftoffRes.t_Ins = 0.0;
-	LunarLiftoffRes.t_L = 0.0;
-	LunarLiftoffRes.t_TPI = 0.0;
-	LunarLiftoffRes.t_TPF = 0.0;
-	LunarLiftoffRes.v_LH = 5509.5*0.3048;
-	LunarLiftoffRes.v_LV = 19.5*0.3048;
-	LunarLiftoffRes.DV_CDH = 0.0;
-	LunarLiftoffRes.DV_CSI = 0.0;
-	LunarLiftoffRes.DV_T = 0.0;
-	LunarLiftoffRes.DV_TPF = 0.0;
-	LunarLiftoffRes.DV_TPI = 0.0;
 
 	EMPUplinkType = 0;
 	EMPUplinkNumber = 0;
@@ -1506,6 +1485,11 @@ void ARCore::LDPPalc()
 void ARCore::SkylabCalc()
 {
 	startSubthread(12);
+}
+
+void ARCore::LunarLaunchTargetingCalc()
+{
+	startSubthread(13);
 }
 
 void ARCore::LunarLiftoffCalc()
@@ -1757,6 +1741,11 @@ void ARCore::TPIPAD()
 void ARCore::MapUpdate()
 {
 	startSubthread(32);
+}
+
+void ARCore::CalculateTPITime()
+{
+	startSubthread(23);
 }
 
 void ARCore::NavCheckPAD()
@@ -2881,7 +2870,6 @@ int ARCore::subThread()
 		opt.t_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue;
 
 		GC->rtcc->PMMDKI(opt, res);
-		spqresults = res;
 
 		if (SPQMode != 1)
 		{
@@ -3652,8 +3640,45 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		Result = 0;
 	}
 	break;
-	case 13: //Spare
+	case 13: //Lunar Launch Targeting Processor (Short Rendezvous Profile)
 	{
+		LLTPOpt opt;
+		EphemerisData sv_CSM;
+
+		if (GC->MissionPlanningActive)
+		{
+			if (GC->rtcc->ELFECH(GC->rtcc->GMTfromGET(GC->rtcc->med_k50.GETV), RTCC_MPT_CSM, sv_CSM))
+			{
+				Result = 0;
+				break;
+			}
+		}
+		else
+		{
+			sv_CSM = GC->rtcc->StateVectorCalcEphem(target);
+		}
+
+		opt.sv_CSM = sv_CSM;
+		opt.Y_S = GC->rtcc->PZLTRT.YawSteerCap;
+		opt.V_Z_NOM = 32.0*0.3048;
+		opt.T_TH = GC->rtcc->GMTfromGET(GC->rtcc->med_k50.GETTH);
+		opt.R_LS = GC->rtcc->MCSMLR;
+		opt.lat_LS = GC->rtcc->BZLSDISP.lat[0];
+		opt.lng_LS = GC->rtcc->BZLSDISP.lng[0];
+		opt.alpha_PF = GC->rtcc->PZLTRT.PoweredFlightArc;
+		opt.dt_PF = GC->rtcc->PZLTRT.PoweredFlightTime;
+		opt.dt_INS_TPI = GC->rtcc->PZLTRT.DT_Ins_TPI;
+		opt.h_INS = GC->rtcc->PZLTRT.InsertionHeight;
+		opt.DH_TPI = GC->rtcc->PZLTRT.DT_DH;
+		opt.dTheta_TPI = GC->rtcc->PZLTRT.DT_Theta_i;
+		opt.WT = GC->rtcc->PZLTRT.TerminalPhaseTravelAngle;
+
+		if (GC->rtcc->LunarLiftoffTimePredictionDT(opt, GC->rtcc->PZLLTT))
+		{
+			t_LunarLiftoff = GC->rtcc->PZLLTT.GETLOR;
+			GC->rtcc->PZLTRT.InsertionHorizontalVelocity = GC->rtcc->PZLLTT.VH;
+		}
+
 		Result = 0;
 	}
 	break;
@@ -3703,14 +3728,14 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		Result = 0;
 	}
 	break;
-	case 15:	//Lunar Liftoff Time Prediction
+	case 15:	//Lunar Launch Window Processor
 	{
 		LunarLiftoffTimeOpt opt;
 		SV sv_CSM;
 
 		if (GC->MissionPlanningActive)
 		{
-			double GMT = GC->rtcc->GMTfromGET(t_Liftoff_guess);
+			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k15.CSMVectorTime);
 			EphemerisData EPHEM;
 			if (GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM))
 			{
@@ -3727,44 +3752,69 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			sv_CSM = GC->rtcc->StateVectorCalc(target);
 		}
 
-		opt.GETbase = GC->rtcc->CalcGETBase();
-		opt.opt = LunarLiftoffTimeOption;
-		opt.t_hole = t_Liftoff_guess;
-		opt.dt_2 = GC->DT_Ins_TPI;
-		opt.sv_CSM = sv_CSM;
-		opt.dt_1 = GC->rtcc->PZLTRT.PoweredFlightTime;
+		if (GC->rtcc->med_k15.CSI_Flag == 0)
+		{
+			opt.I_BURN = 0;
+		}
+		else if (GC->rtcc->med_k15.CSI_Flag < 0)
+		{
+			opt.I_BURN = 2;
+		}
+		else
+		{
+			opt.I_BURN = 1;
+			opt.DT_B = GC->rtcc->med_k15.CSI_Flag;
+		}
+		opt.I_TPI = GC->rtcc->med_k15.TPIDefinition;
+		opt.I_CDH = GC->rtcc->med_k15.CDH_Flag;
+		opt.t_BASE = GC->rtcc->PZLTRT.dt_bias;
+		if (GC->rtcc->med_k15.DeltaHTFlag < 0)
+		{
+			opt.I_SRCH = 0;
+		}
+		else
+		{
+			opt.I_SRCH = 1;
+			opt.N_CURV = GC->rtcc->med_k15.DeltaHTFlag;
+		}
+		opt.L_DH = 3;
+		opt.t_max = GC->rtcc->PZLTRT.MaxAscLifetime;
+		opt.H_S = GC->rtcc->PZLTRT.MinSafeHeight;
+		opt.DV_MAX[0] = GC->rtcc->PZLTRT.CSMMaxDeltaV;
+		opt.DV_MAX[1] = GC->rtcc->PZLTRT.LMMaxDeltaV;
+		opt.DH[0] = GC->rtcc->med_k15.DH1;
+		opt.DH[1] = GC->rtcc->med_k15.DH2;
+		opt.DH[2] = GC->rtcc->med_k15.DH3;
 		opt.theta_1 = GC->rtcc->PZLTRT.PoweredFlightArc;
-		opt.IsInsVelInput = LunarLiftoffInsVelInput;
-		if (LunarLiftoffTPITimeOption)
+		opt.dt_1 = GC->rtcc->PZLTRT.PoweredFlightTime;
+		opt.v_LH = GC->rtcc->PZLTRT.InsertionHorizontalVelocity;
+		opt.v_LV = GC->rtcc->PZLTRT.InsertionRadialVelocity;
+		opt.h_BO = GC->rtcc->PZLTRT.InsertionHeight;
+		opt.Y_S = GC->rtcc->PZLTRT.YawSteerCap;
+		opt.DH_SRCH = GC->rtcc->PZLTRT.Height_Diff_Begin;
+		opt.DH_STEP = GC->rtcc->PZLTRT.Height_Diff_Incr;
+		opt.theta_F = GC->rtcc->PZLTRT.TerminalPhaseTravelAngle;
+		opt.E = GC->rtcc->PZLTRT.ElevationAngle;
+		opt.DH_OFF = GC->rtcc->PZLTRT.TPF_Height_Offset;
+		opt.dTheta_OFF = GC->rtcc->PZLTRT.TPF_Phase_Offset;
+		opt.t_hole = GC->rtcc->GMTfromGET(GC->rtcc->med_k15.ThresholdTime);
+		opt.lat = GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST];
+		opt.lng = GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST];
+		opt.R_LLS = GC->rtcc->MCSMLR;
+		opt.lng_TPI = GC->rtcc->med_k15.TPIValue;
+		opt.sv_CSM = sv_CSM;
+		if (GC->rtcc->med_k15.Chaser == 1)
 		{
-			opt.I_TPI = 1;
+			opt.M = 1;
+			opt.P = 2;
 		}
 		else
 		{
-			opt.I_TPI = 2;
-		}
-		opt.v_LH = LunarLiftoffRes.v_LH;
-		opt.v_LV = LunarLiftoffRes.v_LV;
-
-		if (GC->MissionPlanningActive == false && vessel->GroundContact())
-		{
-			double lng, lat, rad;
-			vessel->GetEquPos(lng, lat, rad);
-
-			opt.R_LLS = GC->rtcc->MCSMLR;
-			opt.lat = lat;
-			opt.lng = lng;
-
-		}
-		else
-		{
-			opt.R_LLS = GC->rtcc->MCSMLR;
-			opt.lat = GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST];
-			opt.lng = GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST];
+			opt.M = 2;
+			opt.P = 1;
 		}
 
-		GC->rtcc->LaunchTimePredictionProcessor(opt, LunarLiftoffRes);
-		t_TPI = LunarLiftoffRes.t_TPI;
+		GC->rtcc->LunarLaunchWindowProcessor(opt);
 
 		Result = 0;
 	}
@@ -3949,7 +3999,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 
 		if (GC->MissionPlanningActive)
 		{
-			double GMT = GC->rtcc->GMTfromGET(LunarLiftoffRes.t_L);
+			double GMT = GC->rtcc->GMTfromGET(t_LunarLiftoff);
 			EphemerisData EPHEM;
 			if (GC->rtcc->ELFECH(GMT, RTCC_MPT_CSM, EPHEM))
 			{
@@ -3985,17 +4035,17 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 
 		R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
 
-		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GC->rtcc->CalcGETBase(), LunarLiftoffRes.t_L, LunarLiftoffRes.v_LH, LunarLiftoffRes.v_LV, theta, dt, dv, sv_IG, sv_Ins);
+		GC->rtcc->LunarAscentProcessor(R_LS, m0, sv_CSM, GC->rtcc->CalcGETBase(), t_LunarLiftoff, GC->rtcc->PZLTRT.InsertionHorizontalVelocity, GC->rtcc->PZLTRT.InsertionRadialVelocity, theta, dt, dv, sv_IG, sv_Ins);
 
 		GC->rtcc->PZLTRT.PoweredFlightArc = theta;
 		GC->rtcc->PZLTRT.PoweredFlightTime = dt;
 
-		GC->rtcc->JZLAI.t_launch = LunarLiftoffRes.t_L;
+		GC->rtcc->JZLAI.t_launch = t_LunarLiftoff;
 		GC->rtcc->JZLAI.R_D = 60000.0*0.3048;
 		GC->rtcc->JZLAI.Y_D = 0.0;
-		GC->rtcc->JZLAI.R_D_dot = LunarLiftoffRes.v_LV;
+		GC->rtcc->JZLAI.R_D_dot = GC->rtcc->PZLTRT.InsertionRadialVelocity;
 		GC->rtcc->JZLAI.Y_D_dot = 0.0;
-		GC->rtcc->JZLAI.Z_D_dot = LunarLiftoffRes.v_LH;
+		GC->rtcc->JZLAI.Z_D_dot = GC->rtcc->PZLTRT.InsertionHorizontalVelocity;
 		GC->rtcc->JZLAI.sv_CSM = sv_CSM;
 		GC->rtcc->JZLAI.sv_Insertion = sv_Ins;
 
@@ -4016,9 +4066,9 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.Rot_VL = OrbMech::GetVesselToLocalRotMatrix(Rot, Rot2);
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
 		opt.sv_CSM = sv_CSM;
-		opt.TIG = LunarLiftoffRes.t_L;
-		opt.v_LH = LunarLiftoffRes.v_LH;
-		opt.v_LV = LunarLiftoffRes.v_LV;
+		opt.TIG = t_LunarLiftoff;
+		opt.v_LH = GC->rtcc->PZLTRT.InsertionHorizontalVelocity;
+		opt.v_LV = GC->rtcc->PZLTRT.InsertionRadialVelocity;
 
 		GC->rtcc->LunarAscentPAD(opt, lmascentpad);
 
@@ -4130,8 +4180,11 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		Result = 0;
 	}
 	break;
-	case 23: //Spare
+	case 23: //Calculate TPI times
 	{
+		SV sv0 = GC->rtcc->StateVectorCalc(target);
+		t_TPI = GC->rtcc->CalculateTPITimes(sv0, DKI_TPI_Mode, t_TPIguess, DKI_dt_TPI_sunrise);
+
 		Result = 0;
 	}
 	break;

@@ -340,15 +340,25 @@ public:
 	void menuCyclePCManeuver();
 	void set_SkylabDTTPM(double dt);
 	void menuSetDescPlanInitPage();
+	void menuCycleLLWPChaserOption();
 	void menuSetLiftoffguess();
 	void set_Liftoffguess(double time);
-	void menuCycleLunarLiftoffInsVelOption();
-	void menuCycleLunarLiftoffTPIOption();
+	void menuLLWPVectorTime();
+	void set_LLWPVectorTime(double get);
+	void menuSetLLWPCSIFlag();
+	void set_LLWPCSIFlag(double val);
+	void menuSetLLWPCDHFlag();
+	void menuSetLLWPDeltaHeights();
+	void set_LLWPDeltaHeights(double dh1, double dh2, double dh3);
+	void menuSetLLWPElevation();
+	void set_LLWPElevation(double elev);
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
-	void menuLunarLiftoffTimeOption();
+	void menuLLTPCalc();
 	void menuSetLiftoffDT();
 	void set_LiftoffDT(double dt);
+	void menuLLTPThresholdTime();
+	void set_LLTPThresholdTime(double get);
 	void set_TPIguess(double time);
 	void menuLunarLiftoffVHorInput();
 	void set_LunarLiftoffVHorInput(double v_lh);
@@ -408,11 +418,6 @@ public:
 	void set_DKIDT3(double dt);
 	void menuSetLAPLiftoffTime();
 	void set_LAPLiftoffTime(double time);
-	void set_LAPLiftoffTime_DT_PDI(double dt);
-	void menuSetLAPHorVelocity();
-	void set_LAPHorVelocity(double vel);
-	void menuSetLAPVerVelocity();
-	void set_LAPVerVelocity(double vel);
 	void menuSetDAPPADPage();
 	void menuDAPPADCalc();
 	void menuSetLVDCPage();
@@ -669,6 +674,12 @@ public:
 	void menuSetNodeConvHeight();
 	void set_NodeConvHeight(double height);
 	void menuSetRendezvousEvaluationDisplayPage();
+	void menuSetLLWPInitPage();
+	void menuSetLaunchTargetingInitPage();
+	void menuSetLLWPDisplayPage();
+	void menuSetLunarLaunchTargetingPage();
+	void menuSetTPITimesPage();
+	void menuCalculateTPITime();
 
 protected:
 	oapi::Font *font;

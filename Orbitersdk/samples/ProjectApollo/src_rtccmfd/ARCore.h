@@ -40,7 +40,6 @@ public:
 	bool MissionPlanningActive;
 	int mission;				//0=manual, 7 = Apollo 7, 8 = Apollo 8, 9 = Apollo 9, etc.
 	double t_Land;				//Time of landing
-	double DT_Ins_TPI;			//Fixed time from insertion to TPI for direct profile
 
 	VESSEL *pCSM;
 	VESSEL *pLM;
@@ -63,6 +62,7 @@ public:
 	void GPMPCalc();
 	void REFSMMATCalc();
 	void SkylabCalc();
+	void LunarLaunchTargetingCalc();
 	void LDPPalc();
 	void LunarLiftoffCalc();
 	void LOICalc();
@@ -134,6 +134,7 @@ public:
 	void DetermineGMPCode();
 	void NodeConvCalc();
 	void SendNodeToSFP();
+	void CalculateTPITime();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -195,7 +196,6 @@ public:
 	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
 	VECTOR3 SPQDeltaV;
-	SPQResults spqresults;
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
@@ -358,15 +358,9 @@ public:
 	//Terrain Model
 	double TMLat, TMLng, TMAzi, TMDistance, TMStepSize, TMAlt;
 
-	//Lunar Liftoff Time Prediction
-	LunarLiftoffResults LunarLiftoffRes;
-	int LunarLiftoffTimeOption;	//0 = Concentric Profile, 1 = Direct Profile, 2 = Time Critical Direct Profile
-	double t_Liftoff_guess;		//Threshold time for lunar liftoff
-	bool LunarLiftoffInsVelInput;	//0 = Calculate velocity internally, 1 = use input velocity
-	bool LunarLiftoffTPITimeOption; //false = on time, true = at orbital midnight
-
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
+	double t_LunarLiftoff;
 
 	//Powered Descent Abort Program
 	int PDAPEngine;	//0 = DPS/APS, 1 = APS

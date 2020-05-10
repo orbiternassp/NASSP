@@ -1785,7 +1785,7 @@ void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
 	//DTWRITE: PZTIPREG (Set T-I Table to updating condition)
 	PZTIPREG.Updating = true;
 	//Load T-I Table area with necessary MED quantities
-
+RTCC_PMSTICN_3_1:
 	if (T1 < 0)
 	{
 		err = PMSTICN_ELEV(opt.sv_A, opt.sv_P, Elev, mu, T1);
@@ -1810,7 +1810,7 @@ RTCC_PMSTICN_3_3:
 	sv_A1 = coast(opt.sv_A, T1 - opt.sv_A.GMT);
 	sv_P1 = coast(opt.sv_P, T1 - opt.sv_P.GMT);
 	//TBD: Error?
-	if (!(opt.mode == 3 || opt.mode == 4))
+	if (!(opt.mode == 3 || opt.mode == 4 || opt.mode == 5))
 	{
 		if (soln == 0)
 		{
@@ -1922,22 +1922,25 @@ RTCC_PMSTICN_8_3:
 		PZTIPREG.data[i] = entry[i];
 	}
 	PZTIPREG.Solutions = soln;
+	PZTIPREG.IVFLAG = opt.IVFLAG;
 	PZTIPREG.MAN_VEH = opt.ChaserVehicle;
 	PZTIPREG.Updating = false;
 	display = 63;
 	goto RTCC_PMSTICN_24_2;
 RTCC_PMSTICN_9_1:
-	sv_A1 = opt.sv_A;
-	sv_P1 = opt.sv_P;
 	DH = opt.DH;
 	PhaseAngle = opt.PhaseAngle;
+	WT = opt.WT;
 	T1 = opt.T1;
 	T2 = opt.T2;
-	goto RTCC_PMSTICN_4_2;
+	//Let the external request go through the full logic
+	goto RTCC_PMSTICN_3_1;
+	//goto RTCC_PMSTICN_4_2;
 RTCC_PMSTICN_9_2:
 	if (err)
 	{
 		//DKI error return
+		res.SolutionFound = false;
 	}
 	else
 	{
@@ -1945,14 +1948,16 @@ RTCC_PMSTICN_9_2:
 		res.dV = sv_A1_apo.V - sv_A1.V;
 		res.dV2 = sv_A2_apo.V - sv_A2.V;
 		res.dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V), res.dV);
+		res.dV_LVLH2 = mul(OrbMech::LVLH_Matrix(sv_A2.R, sv_A2.V), res.dV2);
 		res.T1 = GETfromGMT(T1);
 		res.T2 = GETfromGMT(T2);
+		res.SolutionFound = true;
 	}
 	goto RTCC_PMSTICN_24_3;
 RTCC_PMSTICN_10_1:
 	if (opt.SingSolTable == 1)
 	{
-		if (opt.SingSolNum < PZTIPREG.Solutions)
+		if (opt.SingSolNum > PZTIPREG.Solutions)
 		{
 			PMXSPT("PMSTICN", 29);
 			goto RTCC_PMSTICN_24_3;
@@ -1962,7 +1967,7 @@ RTCC_PMSTICN_10_1:
 	}
 	else
 	{
-		if (opt.SingSolNum < PZTIPCCD.Solutions)
+		if (opt.SingSolNum > PZTIPCCD.Solutions)
 		{
 			PMXSPT("PMSTICN", 29);
 			goto RTCC_PMSTICN_24_3;
@@ -2019,17 +2024,15 @@ RTCC_PMSTICN_12_2:
 	PZMYSAVE.V_after[0] = sv_A1_apo.V;
 	PZMYSAVE.SV_before[1] = sv_A2;
 	PZMYSAVE.V_after[1] = sv_A2_apo.V;
+	PZMYSAVE.code[0] = "NC1";
+	PZMYSAVE.code[1] = "NC2";
 	if (opt.SingSolTable == 1)
 	{
-		PZMYSAVE.code[0] = "TPI";
-		PZMYSAVE.code[1] = "TPF";
 		PZMYSAVE.plan[0] = PZTIPREG.MAN_VEH;
 		PZMYSAVE.plan[1] = PZTIPREG.MAN_VEH;
 	}
 	else
 	{
-		PZMYSAVE.code[0] = "NCC";
-		PZMYSAVE.code[1] = "NSR";
 		PZMYSAVE.plan[0] = PZTIPCCD.MAN_VEH;
 		PZMYSAVE.plan[1] = PZTIPCCD.MAN_VEH;
 	}
@@ -9112,192 +9115,504 @@ double LLWP_CURVE(double DV1, double DV2, double DV3, double DH1, double DH2, do
 	return DH_MAX;
 }
 
-void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res)
+void RTCC::LLWP_PERHAP(AEGHeader Header, AEGDataBlock sv, double &RAP, double &RPE)
 {
-	//0: CSM
-	//1: LM
-	/*PMMLAEG aeg;
-	AEGHeader header;
-	AEGDataBlock sv_tab[2], out;
-	VECTOR3 R_LS_equ, R_LS, r_LS, R1, V1, r1, v1, H1, h1, Q, C, R_P, r_P, H_D, h_D;
-	double T_hole, theta_ca, S1, S2, theta, P1, dt_B, r_TPI, eta_P, P_m, C7, C8, C9, C10, C11, C12, C13, C14, C15, t_LOR, theta_w, DH_u, t_TPI, MJD_TPI, t_H;
-	std::vector<double> DH, T_TPI, T_R, DH_apo;
-	std::vector<int> N;
-	int L_DH, err;
+	AEGDataBlock sv_temp;
+	double t0 = sv.TE;
+	double dt = 20.0*60.0;
+	double R[3], U[3];
 
-	DH = opt.DH;
-	header = opt.sv_CSM2.Header;
-	sv_tab[0] = opt.sv_CSM2.Data;
-	T_hole = opt.t_hole;
-	R_LS_equ = OrbMech::r_from_latlong(opt.lat, opt.lng, opt.R_LLS);
+	sv.TIMA = 0;
+	R[0] = sv.R;
+	U[0] = sv.U;
+	sv.TE += 20.0*60.0;
+	pmmlaeg.CALL(Header, sv, sv_temp);
+	R[1] = sv_temp.R;
+	U[1] = sv_temp.U;
+	sv.TE += 20.0*60.0;
+	pmmlaeg.CALL(Header, sv, sv_temp);
+	R[2] = sv_temp.R;
+	U[2] = sv_temp.U;
+	PCHAPE(R[0], R[1], R[2], U[0], U[1], U[2], RAP, RPE);
+}
 
-	aeg.CALL(header, sv_tab[0], out);
-	if (header.ErrorInd)
+void RTCC::LLWP_HMALIT(AEGHeader Header, AEGDataBlock *sv, AEGDataBlock *sv_temp, int M, int P, int I_CDH, double DH, double &dv_CSI, double &dv_CDH, double &t_CDH)
+{
+	VECTOR3 H, J, K, L, R_m, V_m, V_m_apo;
+	double Pgamma, u_apo, P_v, dgamma, DV_K_apo, t_CSI, theta_k_apo, mu, R_apo, R_dot_apo, gamma_m, p_p, V_H, PP, V, R_p_dot, G_s, G_c, theta_k, g_apo, R_TK, R_R, DV_K;
+	double R_CDH, U_CSI, DH_G, du;
+	int K_orp, m, p;
+
+	mu = OrbMech::mu_Moon;
+	t_CSI = sv[0].TE;
+	m = M - 1;
+	p = P - 1;
+
+	Pgamma = 0.0;
+	u_apo = sv_temp[m].U;
+	P_v = 0.0;
+	dgamma = 0.0;
+	DV_K_apo = 0.0;
+	K_orp = 0;
+
+	if (I_CDH > 0)
 	{
-		return;
+		t_CDH = t_CSI + PI2 / sv[m].l_dot / 2.0*(double)(I_CDH);
+	}
+	else
+	{
+		if (sv[m].coe_osc.l - PI < 0)
+		{
+
+		}
+		else
+		{
+
+		}
+	}
+	sv[m].TIMA = 0;
+	sv[m].TE = t_CDH;
+	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+	theta_k_apo = OrbMech::THETR(sv_temp[m].U, sv_temp[p].U, sv_temp[m].coe_osc.i, sv_temp[p].coe_osc.i, sv_temp[m].coe_osc.h, sv_temp[p].coe_osc.h);
+	sv[m].TIMA = 0;
+	sv[m].TE = t_CSI;
+	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+	OrbMech::GIMKIC(sv_temp[m].coe_osc, mu, R_m, V_m);
+	V_m_apo = V_m;
+	K = unit(R_m);
+	L = unit(V_m);
+	H = unit(crossp(K, L));
+	J = unit(crossp(K, H));
+	R_apo = length(R_m);
+	R_dot_apo = dotp(R_m, V_m) / R_apo;
+	gamma_m = atan((R_dot_apo / length(V_m)) / sqrt(1.0 - pow(R_dot_apo / length(V_m), 2)));
+	p_p = sv_temp[p].coe_osc.a*(1.0 - sv_temp[p].coe_osc.e*sv_temp[p].coe_osc.e);
+	R_p_dot = sqrt(mu / p_p)*(sv_temp[p].coe_osc.e*cos(sv_temp[p].coe_osc.g)*sin(sv_temp[p].U) - sv_temp[p].coe_osc.e*sin(sv_temp[p].coe_osc.g)*cos(sv_temp[p].U));
+	V_H = length(V_m)*cos(gamma_m);
+	//RTCC Requirements had e_m instead of e_p
+	PP = sv_temp[p].coe_osc.a*(1.0 - sv_temp[p].coe_osc.e*sv_temp[p].coe_osc.e);
+	V = sqrt(mu*(2.0 / sv_temp[p].R - 1.0 / sv_temp[p].coe_osc.a));
+	G_s = R_p_dot / V;
+	G_c = sqrt(1.0 - G_s * G_s);
+	theta_k = atan2(PP*G_s / G_c, P - sv_temp[p].R);
+	g_apo = sv_temp[m].coe_osc.g;
+	do
+	{
+		R_TK = PP / (1.0 + sv_temp[p].coe_osc.e*cos(theta_k_apo + theta_k + dgamma));
+		R_R = R_TK - DH;
+		DV_K = sqrt(2.0*mu / R_apo *(1.0 / (1.0 + R_apo / R_R))) - V_H;
+		V_m = V_m_apo - J * DV_K;
+		//Initialize
+		sv[m].coe_osc = OrbMech::GIMIKC(R_m, V_m, mu);
+		sv[m].ENTRY = 0;
+		sv[m].TS = sv[m].TE = t_CSI;
+		pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+		if (I_CDH > 0 || abs(DV_K_apo - DV_K) <= 1.0*0.3048)
+		{
+			break;
+		}
+		DV_K_apo = DV_K;
+	} while (abs(DV_K_apo - DV_K) > 1.0*0.3048);
+	R_CDH = R_R;
+	dv_CSI = DV_K;
+RTCC_LLWP_HMALIT_5_2:
+	V_m = V_m_apo - J * dv_CSI;
+	//Initialize
+	sv[m].coe_osc = OrbMech::GIMIKC(R_m, V_m, mu);
+	sv[m].ENTRY = 0;
+	sv[m].TIMA = 0;
+	sv[m].TS = sv[m].TE = t_CSI;
+	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+	U_CSI = sv_temp[m].U;
+	if (I_CDH > 0)
+	{
+		t_CDH = t_CSI + PI2 / sv[m].l_dot / 2.0*(double)(I_CDH);
+	}
+	else
+	{
+		sv[m].TIMA = 1;
+		if (sv[m].coe_osc.l > PI)
+		{
+			sv[m].Item8 = 0.0;
+			sv[m].Item10 = 1.0;
+		}
+		else
+		{
+			sv[m].Item8 = PI;
+			sv[m].Item10 = 0.0;
+		}
+		
+		pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+		du = sv_temp[m].U - U_CSI;
+		if (K_orp <= 0 && du <= PI/6.0)
+		{
+			if (sv[m].coe_osc.l > PI)
+			{
+				sv[m].Item8 = PI;
+				sv[m].Item10 = 1.0;
+			}
+			else
+			{
+				sv[m].Item8 = 0.0;
+				sv[m].Item10 = 1.0;
+			}
+			K_orp = 1;
+			pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+		}
+		sv[m].Item10 = 0.0;
+		t_CDH = sv_temp[m].TE;
+	}
+	sv[m].ENTRY = 0;
+	sv[m].TIMA = 0;
+	sv[m].TE = t_CDH;
+	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+	//Bring passive vehicle to phase match
+	sv[p].TIMA = 6;
+	pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
+	DH_G = sv_temp[p].R - sv_temp[m].R;
+	R_CDH = R_CDH + DH_G - DH;
+	if (abs(DH_G - DH) <= 1.0)
+	{
+		goto RTCC_LLWP_HMALIT_8_1;
+	}
+	dv_CSI = sqrt(2.0*mu / (R_apo*(1.0 + R_apo / R_CDH))) - V_H;
+	goto RTCC_LLWP_HMALIT_5_2;
+RTCC_LLWP_HMALIT_8_1:
+
+	VECTOR3 R_m_b, V_m_b, R_p, V_p;
+	OrbMech::GIMKIC(sv_temp[m].coe_osc, mu, R_m_b, V_m_b);
+	OrbMech::GIMKIC(sv_temp[p].coe_osc, mu, R_p, V_p);
+
+	V_m_apo = OrbMech::CoellipticDV(R_m_b, R_p, V_p, mu);
+	dv_CDH = length(V_m_apo - V_m_b);
+
+	/*double a_a, V_a, l_dot_a, V_R_a, gamma_a, V_H_a, DV_R, DV_H, Pitch, Yaw, V_H_b;
+	a_a = sv_temp[p].coe_osc.a - DH;
+	V_a = sqrt(mu*(2.0 / sv_temp[m].R - 1.0 / a_a));
+	l_dot_a = sqrt(mu / pow(a_a, 3));
+	p_p = sv_temp[p].coe_osc.a*(1.0 - sv_temp[p].coe_osc.e*sv_temp[p].coe_osc.e);
+	R_p_dot = sqrt(mu / p_p)*(sv_temp[p].coe_osc.e*cos(sv_temp[p].coe_osc.g)*sin(sv_temp[p].U) - sv_temp[p].coe_osc.e*sin(sv_temp[p].coe_osc.g)*cos(sv_temp[p].U));
+	V_R_a = R_p_dot * l_dot_a / sv_temp[p].l_dot;
+	gamma_a = asin(V_R_a / V_a);
+	gamma_b = atan((V_R_b / length(V_m)) / sqrt(1.0 - pow(R_dot_apo / length(V_m), 2)));
+	V_H_b = V_b * cos(gamma_b);
+	V_H_a = V_a * cos(gamma_a);
+	DV_H = V_H_a - V_H_b;
+	DV_R = R_dot_apo - V_R_a;
+	dv_CDH = sqrt(DV_H*DV_H + DV_R * DV_R);
+	OrbMech::GIMKIC(sv_temp[m].coe_osc, mu, R_m, V_m);
+	PCMVMR(R_m, V_m, R_m, V_m_apo, DV_H, DV_R, 0.0, -1, V_m_apo, Pitch, Yaw);*/
+	//Initialize
+	sv[m].coe_osc = OrbMech::GIMIKC(R_m_b, V_m_apo, mu);
+	sv[m].ENTRY = 0;
+	sv[m].TIMA = 0;
+	sv[m].TS = sv[m].TE = t_CDH;
+	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+}
+
+void RTCC::PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP)
+{
+	AEGDataBlock sv_temp, sv_L;
+	VECTOR3 R_LS_sg, R_LSV, R_C, V_C, H_C, r_C, v_C, h_C, r_LSV, Q, c, R_LSP, r_LSP, R_BO, V_BO;
+	double YSS, MJD_BO, DH, CXX, CYY, TRS, TS, phi_star, theta, DN, h_CA, h_CA_dot;
+	int N, M;
+
+	N = 1;
+	M = 0;
+	YSS = Y_S;
+	Y_S = 0.0;
+
+	sv_CSM.Data.TIMA = 0;
+	sv_CSM.Data.TE = T_LO;
+	pmmlaeg.CALL(sv_CSM.Header, sv_CSM.Data, sv_temp);
+	if (N > 0)
+	{
+		goto RTCC_PMMLTR_3;
+	}
+	R_LS_sg = OrbMech::r_from_latlong(lat_LS, lng_LS, r_LS);
+RTCC_PMMLTR_1:
+	R_LSV = rhmul(OrbMech::GetRotationMatrix(BODY_MOON, GMTBASE + T_LO / 24.0 / 3600.0), R_LS_sg);
+	OrbMech::GIMKIC(sv_temp.coe_osc, OrbMech::mu_Moon, R_C, V_C);
+	r_C = unit(R_C);
+	v_C = unit(V_C);
+	H_C = crossp(r_C, v_C);
+	h_C = unit(H_C);
+RTCC_PMMLTR_2:
+	r_LSV = unit(R_LSV);
+	Q = crossp(r_LSV, h_C);
+	c = unit(Q);
+	R_LSP = crossp(h_C, c);
+	r_LSP = unit(R_LSP);
+	//Compute angle between landing site vector and its projection in CSM orbit plane
+	theta = acos(dotp(r_LSP, r_LSV));
+	if (M > 0)
+	{
+		Yd = r_LS * tan(theta);
+		goto RTCC_PMMLTR_4;
+	}
+	DR = r_LS * tan(theta);
+	M = 1;
+RTCC_PMMLTR_3:
+	sv_CSM.Data.TE = T_LO + t_PF;
+	pmmlaeg.CALL(sv_CSM.Header, sv_CSM.Data, sv_temp);
+	//Work on this
+	h_CA = sv_temp.coe_mean.h;
+	h_CA_dot = 0.0;
+	OrbMech::ENSERT(R_C, V_C, t_PF, Y_S, P_FA, h_BO, V_H, V_R, GMTBASE + T_LO / 24 / 3600.0, R_LS_sg, R_BO, V_BO, MJD_BO);
+	sv_L.coe_osc = OrbMech::GIMIKC(R_BO, V_BO, OrbMech::mu_Moon);
+	sv_L.Item7 = GMTBASE;
+	sv_L.TS = sv_L.TE = OrbMech::GETfromMJD(MJD_BO, GMTBASE);
+	pmmlaeg.CALL(sv_CSM.Header, sv_L, sv_temp);
+	if (N <= 0)
+	{
+		R_LSV = R_BO;
+		goto RTCC_PMMLTR_2;
+	}
+RTCC_PMMLTR_4:
+	DH = sv_L.coe_mean.h - sv_CSM.Data.coe_mean.h;
+	CXX = cos(sv_L.coe_mean.i)*cos(sv_CSM.Data.coe_mean.i) + sin(sv_L.coe_mean.i)*sin(sv_CSM.Data.coe_mean.i)*cos(DH);
+	CYY = sqrt(1.0 - CXX * CXX);
+	if (N > 0)
+	{
+		Y_S = YSS;
+		N = 0;
+		goto RTCC_PMMLTR_1;
+	}
+	deltaw = atan2(CXX, CYY);
+	DN = h_CA;
+	if (DN <= 0)
+	{
+		DN = DN + PI2;
+	}
+	DN = DN - PI;
+	if (DN < 0)
+	{
+		DN = DN + PI;
+	}
+	TRS = DN / (OrbMech::w_Moon + h_CA_dot) + T_LO + t_PF;
+	//TBD: TRS is in days and gets rounded to full second?
+	TS = T_LO - TRS;
+	phi_star = lng_LS - OrbMech::w_Moon*TS;
+	AZP = atan2(-cos(sv_L.coe_mean.i)*cos(lat_LS) + sin(sv_CSM.Data.coe_mean.i)*sin(phi_star)*sin(lat_LS), sin(sv_CSM.Data.coe_mean.i)*cos(phi_star));
+	if (AZP < 0)
+	{
+		AZP += PI2;
+	}
+}
+
+void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
+{
+	//0 = CSM, 1 = LM
+	AEGHeader Header;
+	AEGDataBlock sv[2], sv_temp[2], sv_xx, elem_TPI;
+	VECTOR3 R_LS, R_LS_sg, r_LS, R1, V1, r1, Q, h1, H1, v1, C, R_P, r_P, H_D, h_D, R_BO, V_BO, R_TPI, V_TPI, R_XX, V_XX, R_TI_C, V_TI_C, R_TI_T, V_TI_T;
+	double mu, T_TPI, T_hole, t_ca, theta_CA, theta, dt, S1, S2, t_xx, MJD_BO, T_INS, dt_B, t_CSI, t_D, U_R, t_R, r_apo, r_peri, H_S_apo, DH_MIN, DH_CRIT;
+	double C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, P_mm, DH_u, theta_w, t_LOR, t_H, dv_CSI, dv_CDH, dv_TPI, dv_TPF, t_CDH, theta_TPI, dt_NSR, P_O, P_Q;
+	double dt_max, B1, B2, B3, B4, DP, P_mm_apo, r_TPM, theta_s, f_TPI, C_R[3], C_V[3], DH_MAX, ddH_c;
+	int K, m, p, I_SRCH, L_DH, I, J, K_T, i, I_STOP2, M_stop, IPHAS;
+	int N_arr[10];
+	double T_TPI_arr[10], T_R_arr[10], DV_CSI_arr[10], DV_CDH_arr[10], T_CDH_arr[10], DV_TPI_arr[10], DV_TPF_arr[10], DV_T_arr[10], T_LO_arr[10], T_CSI_arr[10], T_INS_arr[10];
+	TwoImpulseOpt tiopt;
+	TwoImpulseResuls tires;
+
+	//Reset number of solutions
+	PZLRPT.plans = 0;
+
+	tiopt.mode = 5;
+	tiopt.sv_A.RBI = BODY_MOON;
+	tiopt.sv_P.RBI = BODY_MOON;
+
+	mu = OrbMech::mu_Moon;
+	T_hole = opt.t_hole;
+	m = opt.M - 1;
+	p = opt.P - 1;
+	dt_B = opt.DT_B;
+	I_SRCH = opt.I_SRCH;
+	L_DH = opt.L_DH;
+	double *DH = new double[L_DH];
+	double *DH_apo = new double[L_DH];
+	for (int ii = 0;ii < L_DH;ii++)
+	{
+		DH[ii] = opt.DH[ii];
 	}
 
-	P1 = PI2 / sv_tab[0].l_dot;
-	L_DH = opt.L_DH;
+	Header.AEGInd = 1;
+	Header.ErrorInd = 0;
+	Header.NumBlocks = 1;
+	sv[0].coe_osc = OrbMech::GIMIKC(opt.sv_CSM.R, opt.sv_CSM.V, mu);
+	sv[0].Item7 = GMTBASE;
+	sv[0].TE = sv[0].TS = OrbMech::GETfromMJD(opt.sv_CSM.MJD, GMTBASE);
+	//Initialize
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
 
 	if (opt.I_TPI > 1)
 	{
-		t_TPI = T_hole;
-		T_hole = t_TPI - 1.5*P1;
+		T_TPI = opt.t_hole;
+		T_hole = T_TPI - 1.5*PI2 / sv[0].l_dot;
 		if (opt.I_CDH > 0)
 		{
-			T_hole = T_hole - P1 / 2.0*(double)(opt.I_CDH - 1);
+			T_hole = T_hole - PI2 / sv[0].l_dot*(double)(opt.I_CDH - 1);
 		}
 		if (opt.I_BURN == 1)
 		{
 			T_hole = T_hole - opt.DT_B;
 		}
 	}
-
-	sv_tab[0].TE = T_hole;
-	aeg.CALL(header, sv_tab[0], out);
-	sv_tab[0] = out;
-	PMMTLC(header, sv_tab[0], out, opt.lng, err, 0);
-
-
-
-	double MJD_xx = OrbMech::P29TimeOfLongitude(sv_tab[0].R, sv_tab[0].V, sv_tab[0].MJD, sv_tab[0].gravref, opt.lng);
-	sv_tab[0] = coast(sv_tab[0], (MJD_xx - sv_tab[0].MJD)*24.0*3600.0);
-	double eta_1 = OrbMech::GetMeanMotion(sv_tab[0].R, sv_tab[0].V, OrbMech::mu_Moon);
-	double t_xx = OrbMech::GETfromMJD(MJD_xx, opt.GETbase);
-	SV sv_xx = sv_tab[0];
-	double t_ca = t_xx;
-	do
+	//Move to T_hole
+	sv[0].TE = T_hole;
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+	//Initialize at T_hole
+	sv[0] = sv_temp[0];
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+	//Move to LS longitude
+	PMMTLC(Header, sv[0], sv_temp[0], opt.lng, K, 0);
+	t_xx = sv_temp[0].TE;
+	sv_xx = sv_temp[0];
+	//Initialize
+	pmmlaeg.CALL(Header, sv_xx, sv_temp[0]);
+	OrbMech::GIMKIC(sv_xx.coe_osc, mu, R_XX, V_XX);
+	t_ca = t_xx;
+	R_LS_sg = OrbMech::r_from_latlong(opt.lat, opt.lng, opt.R_LLS);
+RTCC_PMMLWP_2:
+	ELVCNV(R_LS_sg, t_ca, 3, 2, R_LS);
+	r_LS = unit(R_LS);
+	OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R1, V1);
+	r1 = unit(R1);
+	v1 = unit(V1);
+	H1 = crossp(r1, v1);
+	h1 = unit(H1);
+	Q = crossp(r_LS, h1);
+	C = unit(Q);
+	R_P = crossp(h1, C);
+	r_P = unit(R_P);
+	theta_CA = acos(dotp(r_P, r1));
+	H_D = crossp(r1, r_P);
+	h_D = unit(H_D);
+	S1 = h_D.z / abs(h_D.z);
+	S2 = h1.z / abs(h1.z);
+	theta = theta_CA * S1 / S2;
+	dt = theta / sv[0].l_dot;
+	if (abs(dt) > 0.1)
 	{
-		R_LS = rhmul(OrbMech::GetRotationMatrix(BODY_MOON, opt.GETbase + t_ca / 24.0 / 3600.0), R_LS_equ);
-		r_LS = unit(R_LS);
-		R1 = sv_tab[0].R;
-		V1 = sv_tab[0].V;
-		r1 = unit(R1);
-		v1 = unit(V1);
-		H1 = crossp(r1, v1);
-		h1 = unit(H1);
-		Q = crossp(r_LS, h1);
-		C = unit(Q);
-		R_P = crossp(h1, C);
-		r_P = unit(R_P);
-		theta_ca = acos(dotp(r_P, r1));
-		H_D = crossp(r1, r_P);
-		h_D = unit(H_D);
-		S1 = h_D.z / abs(h_D.z);
-		S2 = h1.z / abs(h1.z);
-		theta = theta_ca * S1 / S2;
-		dt = theta / eta_1;
-		if (abs(dt) < 0.1)
-		{
-			sv_tab[0] = coast(sv_tab[0], t_xx - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
-			break;
-		}
-		else
-		{
-			t_ca = t_ca + dt;
-			sv_tab[0] = coast(sv_tab[0], t_ca - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
-		}
-	} while (abs(dt) >= 0.1);
-
-	VECTOR3 R_BO, V_BO;
-	double MJD_BO;
-
-	OrbMech::ENSERT(sv_xx.R, sv_xx.V, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV, opt.GETbase + t_xx / 24.0 / 3600.0, R_LS_equ, R_BO, V_BO, MJD_BO);
-	double t_INS = OrbMech::GETfromMJD(MJD_BO, opt.GETbase);
-	//Initialize LM vector at t_INS
-	sv_tab[1].R = R_BO;
-	sv_tab[1].V = V_BO;
-	sv_tab[1].MJD = MJD_BO;
-	sv_tab[1].gravref = hMoon;
-	double t_CSI;
-	if (opt.I_BURN < 1)
-	{
-		dt_B = OrbMech::period(sv_tab[opt.M - 1].R, sv_tab[opt.M - 1].V, OrbMech::mu_Moon) / 4.0;
-		t_CSI = t_INS + dt_B;
+		t_ca = t_ca + dt;
+		sv[0].TE = t_ca;
+		pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+		goto RTCC_PMMLWP_2;
 	}
-	else if (opt.I_BURN == 1)
+	//sv[0].TE = t_xx;
+	//pmmlaeg.CALL(Header, sv[0], sv_temp);
+	OrbMech::ENSERT(R_XX, V_XX, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV, OrbMech::MJDfromGET(t_xx, GMTBASE), R_LS_sg, R_BO, V_BO, MJD_BO);
+	T_INS = OrbMech::GETfromMJD(MJD_BO, GMTBASE);
+	
+	sv[1].coe_osc = OrbMech::GIMIKC(R_BO, V_BO, mu);
+	sv[1].Item7 = GMTBASE;
+	sv[1].TE = sv[1].TS = T_INS;
+	//Initialize
+	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
+	if (opt.I_BURN <= 1)
 	{
-		dt_B = opt.DT_B;
-		t_CSI = t_INS + opt.DT_B;
+		if (opt.I_BURN < 1)
+		{
+			dt_B = 1.0 / sv[m].l_dot*acos(sv[m].coe_mean.e - sv[m].coe_mean.e*sqrt(1.0 - pow(sv[m].coe_mean.e, 2)));
+		}
+		t_CSI = T_INS + dt_B;
 	}
 	else
 	{
-		dt = OrbMech::timetoapo(R_BO, V_BO, OrbMech::mu_Moon, 1);
-		t_CSI = t_INS + dt;
-		sv_tab[1] = coast(sv_tab[1], dt);
+		sv[1].TIMA = 1;
+		sv[1].Item8 = PI;
+		pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
+		t_CSI = sv_temp[1].TE;
 		if (opt.M <= 1)
 		{
 			t_CSI = t_CSI + opt.t_BASE;
 		}
-		dt_B = t_CSI - t_INS;
+		dt_B = t_CSI - T_INS;
 	}
-	sv_tab[0] = coast(sv_tab[0], t_CSI - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
-	sv_tab[1] = coast(sv_tab[1], t_CSI - OrbMech::GETfromMJD(sv_tab[1].MJD, opt.GETbase));
-	int MM = 2;
-	int I_LOOP = 1;
-	int I_SELECT = 1;
-	int I_STOP1 = 1;
-	int J_MOV = 0;
-	int I_LAST = 0;
-	int I_SAVE = 1;
-	int I_CURVE = 1;
-	int I_SRCH = opt.I_SRCH;
+	sv[0].TIMA = sv[1].TIMA = 0;
+	sv[0].TE = sv[1].TE = t_CSI;
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
+	int MM, I_LOOP, I_SELECT, I_STOP1, J_MOV, I_LAST, I_SAVE, I_CURVE;
+
+	MM = 2;
+	I_LOOP = 1;
+	I_SELECT = 1;
+	I_STOP1 = 1;
+	J_MOV = 0;
+	I_LAST = 0;
+	I_SAVE = 1;
+	I_CURVE = 1;
+
 	if (opt.M < 2)
 	{
-		r_TPI = length(sv_tab[0].R);
+		OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R_TPI, V_TPI);
+		elem_TPI = sv_temp[0];
 		I_SRCH = 0;
-		goto RTCC_LLWP_6_2;
+		goto RTCC_PMMLLWP_6_2;
 	}
-	double t_D = t_CSI + P1 / 2.0;
+	t_D = t_CSI + PI2 / sv[1].l_dot / 2.0;
 	if (opt.I_CDH > 0)
 	{
-		t_D = t_D + P1 / 2.0*(double)(opt.I_CDH - 1);
+		t_D = t_D + PI2 / sv[1].l_dot / 2.0*(double)(opt.I_CDH - 1);
 	}
-	sv_tab[0] = coast(sv_tab[0], t_D - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
+	sv[0].TE = t_D;
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+	sv[0] = sv_temp[0];
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
 	if (opt.I_TPI > 1)
 	{
-		t_TPI = opt.t_TPI;
-		sv_tab[0] = coast(sv_tab[0], opt.t_TPI - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
+		sv[0].TE = T_TPI;
+		pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
 	}
 	else
 	{
-		double MJD_TPI = OrbMech::P29TimeOfLongitude(sv_tab[0].R, sv_tab[0].V, sv_tab[0].MJD, sv_tab[0].gravref, opt.lng_TPI);
-		sv_tab[0] = coast(sv_tab[0], (MJD_TPI - sv_tab[0].MJD)*24.0*3600.0);
-		t_TPI = OrbMech::GETfromMJD(MJD_TPI, opt.GETbase);
+		PMMTLC(Header, sv[0], sv_temp[0], opt.lng_TPI, K, 0);
+		T_TPI = sv_temp[0].TE;
 	}
-	VECTOR3 R_TPI = sv_tab[0].R;
-	r_TPI = length(R_TPI);
-	dt = OrbMech::time_theta(sv_tab[0].R, sv_tab[0].V, opt.theta_F, OrbMech::mu_Moon);
-	sv_tab[0] = coast(sv_tab[0], dt);
-	double t_R = t_TPI + dt;
-	double apo, peri;
-	OrbMech::periapo(sv_tab[opt.P - 1].R, sv_tab[opt.P - 1].V, OrbMech::mu_Moon, apo, peri);
-	double H_S_apo = peri - OrbMech::R_Moon;
-	double DH_min = H_S_apo - opt.H_S;
-	double DH_crit = length(sv_tab[opt.P - 1].R) * (1.0 - 1.0 / cos(opt.E));
-	int K_T = 0;
-	int I = 1;
-	int J = 1;
-	DH_apo.reserve(L_DH);
+	OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R_TPI, V_TPI);
+	elem_TPI = sv_temp[0];
+	U_R = sv_temp[0].U + opt.theta_F;
+	sv[0].Item10 = 0.0;
+	if (U_R >= PI2)
+	{
+		U_R -= PI2;
+		sv[0].Item10 += 1.0;
+	}
+	sv[0].Item10 += trunc((sv_temp[0].TE - sv[0].TS) / (PI2 / sv[0].l_dot));
+	if (sv[0].U > sv_temp[0].U)
+	{
+		sv[0].Item10 += 1.0;
+	}
+	sv[0].TIMA = 2;
+	sv[0].Item8 = U_R;
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+	t_R = sv_temp[0].TE;
+	LLWP_PERHAP(Header, sv[p], r_apo, r_peri);
+	H_S_apo = r_peri - opt.R_LLS;
+	DH_MIN = H_S_apo - opt.H_S;
+	DH_CRIT = sv_temp[0].R * (1.0 - 1.0 / cos(opt.E));
+	K_T = 0;
+	I = 1;
+	J = 1;
 	if (I_SRCH > 0)
 	{
-		DH_apo[J - 1] = DH_min;
+		DH_apo[J - 1] = DH_MIN;
 		J = 2;
 	}
-RTCC_LLWP_4:
-	if (DH[I - 1] >= DH_min || DH[I-1]<=DH_crit)
+
+RTCC_PMMLLWP_4:
+	if (opt.DH[I - 1] >= DH_MIN || opt.DH[I-1]<=DH_CRIT)
 	{
 		if (I < L_DH)
 		{
-			I++;
-			goto RTCC_LLWP_4;
+			goto RTCC_PMMLLWP_4;
 		}
 		if (K_T <= 0)
 		{
 			if (I_SRCH <= 0)
 			{
-				//Error
+				//error
 				return;
 			}
 			L_DH = J;
@@ -9305,113 +9620,397 @@ RTCC_LLWP_4:
 		}
 		else
 		{
-			if (I_SRCH > 0)
+			if (I_SRCH <= 0)
 			{
-				L_DH = J + 1;
+				L_DH = J;
 			}
 			else
 			{
-				L_DH = J;
+				L_DH = J + 1;
+				DH_apo[J - 1] = opt.DH_SRCH;
 			}
 		}
 	}
 	else
 	{
-		DH_apo[J - 1] = DH[I - 1];
+		DH_apo[J - 1] = opt.DH[I - 1];
 		if (I < L_DH)
 		{
 			K_T = 1;
 			I++;
 			J++;
-			goto RTCC_LLWP_4;
+			goto RTCC_PMMLLWP_4;
 		}
-		if (I_SRCH > 0)
-		{
-			L_DH = J + 1;
-		}
-		else
+		if (I_SRCH <= 0)
 		{
 			L_DH = J;
 		}
+		else
+		{
+			L_DH = J + 1;
+			DH_apo[J - 1] = opt.DH_SRCH;
+		}
 	}
-	int i = 1;
-	int I_STOP2 = L_DH;
-	do
+	i = 1;
+	I_STOP2 = L_DH;
+	while (i < L_DH)
 	{
 		DH[i - 1] = DH_apo[i - 1];
 		i++;
-	} while (i < L_DH);
-	double P_MM = OrbMech::period(sv_tab[opt.M - 1].R, sv_tab[opt.M - 1].V, OrbMech::mu_Moon);
-RTCC_LLWP_6_2:
-	double C1, C2, C3, C4, C5, C6;
-
-	eta_P = OrbMech::GetMeanMotion(sv_tab[opt.P - 1].R, sv_tab[opt.P - 1].V, OrbMech::mu_Moon);
-	P_m = OrbMech::period(sv_tab[opt.M - 1].R, sv_tab[opt.M - 1].V, OrbMech::mu_Moon);
-
-	C1 = length(sv_tab[opt.P - 1].R);
-	C2 = length(sv_tab[opt.M - 1].R);
-	C3 = OrbMech::period(sv_tab[opt.P - 1].R, sv_tab[opt.P - 1].V, OrbMech::mu_Moon);
-	C4 = OrbMech::GetSemiMajorAxis(sv_tab[opt.P - 1].R, sv_tab[opt.P - 1].V, OrbMech::mu_Moon);
-	C5 = (opt.dt_1*eta_P - opt.theta_1) / eta_P;
-	C6 = (C3 - P_m)*dt_B / C3;
-
+	}
+	P_mm = PI2 / sv[m].l_dot;
+RTCC_PMMLLWP_6_2:
+	C1 = sv_temp[p].R;
+	C2 = sv_temp[m].R;
+	C3 = PI2 / sv[p].l_dot;
+	C4 = sv_temp[p].coe_osc.a;
+	C5 = (opt.dt_1*sv[p].l_dot - opt.theta_1) / sv[p].l_dot;
+	C6 = (C3 - PI2 / sv[m].l_dot)*dt_B / C3;
 	DH_u = DH[I_SELECT - 1];
-//RTCC_LLWP_7:
-	theta_w = PI05 - opt.E - asin((r_TPI - DH_u)*cos(opt.E) / r_TPI);
+RTCC_PMMLLWP_7_7:
+	IPHAS = 0;
+	theta_w = PI05 - opt.E - asin((elem_TPI.R - DH_u)*cos(opt.E) / elem_TPI.R);
+	do
+	{
+		theta_s = theta_w;
+		IPHAS++;
+		f_TPI = elem_TPI.U - elem_TPI.coe_osc.g - theta_w;
+		r_TPM = elem_TPI.coe_osc.a*(1.0 - elem_TPI.coe_osc.e*elem_TPI.coe_osc.e) / (1.0 + elem_TPI.coe_osc.e*cos(f_TPI));
+		theta_w = PI05 - opt.E - asin((elem_TPI.R - DH_u)*cos(opt.E) / elem_TPI.R);
+	} while (abs(theta_w - theta_s) > 0.01*RAD && IPHAS < 10);
+
 	C7 = (C2 + C1 - DH_u) / 2.0;
-	C8 = 1.0 / C7 * sqrt(OrbMech::mu_Moon / C7);
+	C8 = 1.0 / C7 * sqrt(mu / C7);
 	C9 = PI / C8;
-	C10 = (C3 - 2.0*C9)*C1 / C3;
-	C11 = theta_w / eta_P;
+	C10 = (C3 - 2.0*C9)*C9 / C3;
+	C11 = theta_w / sv[p].l_dot;
 	C12 = C4 - DH_u;
-	C13 = 1.0 / C12 * sqrt(OrbMech::mu_Moon / C12);
+	C13 = 1.0 / C12 * sqrt(mu / C12);
 	C14 = PI2 / C13;
 	C15 = (C3 - C14)*C14 / (4.0*C3);
 	t_LOR = t_xx - C5 + abs(C6) + abs(C10) + C15 - C11;
-	sv_tab[0] = sv_xx;
-	sv_tab[0] = coast(sv_tab[0], t_LOR - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
+RTCC_PMMLLWP_8_8:
+	sv[0] = sv_xx;
+	sv[0].TE = t_LOR;
+	sv[0].TIMA = 0;
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+	OrbMech::GIMKIC(sv_temp[0].coe_osc, mu, R1, V1);
+	OrbMech::ENSERT(R1, V1, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV, GMTBASE + t_LOR / 24.0 / 3600.0, R_LS_sg, R_BO, V_BO, MJD_BO);
+	T_INS = OrbMech::GETfromMJD(MJD_BO, GMTBASE);
 
-	OrbMech::ENSERT(sv_tab[0].R, sv_tab[0].V, opt.dt_1, opt.Y_S, opt.theta_1, opt.h_BO, opt.v_LH, opt.v_LV, opt.GETbase + t_LOR / 24.0 / 3600.0, R_LS_equ, R_BO, V_BO, MJD_BO);
-	t_INS = OrbMech::GETfromMJD(MJD_BO, opt.GETbase);
-	//Initialize LM vector at t_INS
-	sv_tab[1].R = R_BO;
-	sv_tab[1].V = V_BO;
-	sv_tab[1].MJD = MJD_BO;
+	sv[1].coe_osc = OrbMech::GIMIKC(R_BO, V_BO, mu);
+	sv[1].TE = sv[1].TS = T_INS;
+	sv[1].ENTRY = 0;
+	sv[1].TIMA = 0;
+	//Initialize
+	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
+
 	if (opt.M <= 1)
 	{
-		P_m = OrbMech::period(sv_tab[opt.M - 1].R, sv_tab[opt.M - 1].V, OrbMech::mu_Moon);
-		t_H = t_CSI + P_m / 2.0;
+		t_H = t_CSI + PI2 / sv[m].l_dot / 2.0;
 		if (opt.I_CDH > 0)
 		{
-			t_H = t_H + P_m / 2.0*(double)(opt.I_CDH - 1);
+			t_H = t_H + PI2 / sv[m].l_dot / 2.0*(double)(opt.I_CDH - 1);
 		}
 		if (opt.I_TPI > 1)
 		{
-			sv_tab[1] = coast(sv_tab[1], t_TPI - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
+			sv[p].TE = T_TPI;
+			pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
 		}
 		else
 		{
-			sv_tab[1] = coast(sv_tab[1], t_H - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
-			MJD_TPI = OrbMech::P29TimeOfLongitude(sv_tab[1].R, sv_tab[1].V, sv_tab[1].MJD, sv_tab[1].gravref, opt.lng_TPI);
-			t_TPI = OrbMech::GETfromMJD(MJD_TPI, opt.GETbase);
-			sv_tab[1] = coast(sv_tab[1], t_TPI - OrbMech::GETfromMJD(sv_tab[1].MJD, opt.GETbase));
+			//Advance to t_H
+			sv[p].TE = t_H;
+			pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
+			//Initialize at t_H
+			sv[p] = sv_temp[p];
+			pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
+			//Find time of arrival at TPI
+			PMMTLC(Header, sv[p], sv_temp[p], opt.lng_TPI, K, 0);
+			T_TPI = sv_temp[p].TE;
 		}
-		r_TPI = length(sv_tab[1].R);
-		dt = OrbMech::time_theta(sv_tab[1].R, sv_tab[1].V, opt.theta_F, OrbMech::mu_Moon);
-		sv_tab[1] = coast(sv_tab[1], dt);
-		theta_w = PI05 - opt.E - asin((r_TPI - DH_u)*cos(opt.E) / r_TPI);
-	}
-	if (abs(DH_u) == 0.0)
-	{
-		theta_w = theta_w + opt.dTheta_OFF;
-	}
-	N.push_back(2);
-	T_TPI.push_back(t_TPI);
-	T_R.push_back(t_R);
+		OrbMech::GIMKIC(sv_temp[p].coe_osc, mu, R_TPI, V_TPI);
+		elem_TPI = sv_temp[p];
+		//Find LM time of arrival at U_R
+		U_R = sv_temp[p].U + opt.theta_F;
+		sv[p].Item10 = 0.0;
+		if (U_R >= PI2)
+		{
+			U_R -= PI2;
+			sv[p].Item10 += 1.0;
+		}
+		sv[p].Item10 += trunc((sv_temp[p].TE - sv[p].TS) / (PI2 / sv[p].l_dot));
+		if (sv[p].U > sv_temp[p].U)
+		{
+			sv[p].Item10 += 1.0;
+		}
+		sv[p].TIMA = 2;
+		sv[p].Item8 = U_R;
+		pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
+		t_R = sv_temp[p].TE;
 
-	sv_tab[0] = coast(sv_tab[0], t_INS - OrbMech::GETfromMJD(sv_tab[0].MJD, opt.GETbase));
-	sv_tab[1] = coast(sv_tab[1], t_INS - OrbMech::GETfromMJD(sv_tab[1].MJD, opt.GETbase));
-	*/
+		IPHAS = 0;
+		theta_w = PI05 - opt.E - asin((length(R_TPI) - DH_u)*cos(opt.E) / length(R_TPI));
+		do
+		{
+			theta_s = theta_w;
+			IPHAS++;
+			f_TPI = elem_TPI.U - elem_TPI.coe_osc.g - theta_w;
+			r_TPM = elem_TPI.coe_osc.a*(1.0 - elem_TPI.coe_osc.e*elem_TPI.coe_osc.e) / (1.0 + elem_TPI.coe_osc.e*cos(f_TPI));
+			theta_w = PI05 - opt.E - asin((elem_TPI.R - DH_u)*cos(opt.E) / elem_TPI.R);
+		} while (abs(theta_w - theta_s) > 0.01*RAD && IPHAS < 10);
+
+	}
+	if (DH_u == 0)
+	{
+		theta_w += opt.dTheta_OFF;
+	}
+	//Save output quantities
+	N_arr[I_LOOP - 1] = 2;
+	T_TPI_arr[I_LOOP - 1] = T_TPI;
+	T_R_arr[I_LOOP - 1] = t_R;
+	//Move both vehicles to time of insertion
+	sv[0].TIMA = sv[1].TIMA = 0;
+	sv[0].TE = sv[1].TE  = T_INS;
+	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
+	pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
+	theta = OrbMech::THETR(sv[p].U, sv[m].U, sv[p].coe_osc.i, sv[m].coe_osc.i, sv[p].coe_osc.h, sv[m].coe_osc.h);
+	//TBD: Adjust mean anomaly
+	if (opt.I_BURN <= 1)
+	{
+		if (opt.I_BURN < 1)
+		{
+			dt_B = 1.0 / sv[m].l_dot*acos(sv[m].coe_mean.e - sv[m].coe_mean.e*sqrt(1.0 - pow(sv[m].coe_mean.e, 2)));
+		}
+		t_CSI = T_INS + dt_B;
+	}
+	else
+	{
+		sv[1].TIMA = 1;
+		sv[1].Item8 = PI;
+		sv[1].Item10 = 0.0;
+		pmmlaeg.CALL(Header, sv[1], sv_temp[1]);
+		t_CSI = sv_temp[1].TE;
+		if (opt.M <= 1)
+		{
+			t_CSI = t_CSI + opt.t_BASE;
+		}
+	}
+	//Advance both to CSI
+	sv[m].TIMA = sv[p].TIMA = 0;
+	sv[m].TE = sv[p].TE = t_CSI;
+	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+	pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
+
+	LLWP_HMALIT(Header, sv, sv_temp, opt.M, opt.P, opt.I_CDH, DH_u, dv_CSI, dv_CDH, t_CDH);
+	//Advance both vehicles to TPI maneuver point
+	sv[m].TE = T_TPI;
+	sv[m].TIMA = 0;
+	pmmlaeg.CALL(Header, sv[m], sv_temp[m]);
+	sv[p].TE = T_TPI;
+	sv[p].TIMA = 0;
+	pmmlaeg.CALL(Header, sv[p], sv_temp[p]);
+	//Phase angle at TPI
+	theta_TPI = OrbMech::THETR(sv_temp[p].U, sv_temp[m].U, sv_temp[p].coe_osc.i, sv_temp[m].coe_osc.i, sv_temp[p].coe_osc.h, sv_temp[m].coe_osc.h);
+	if (theta_TPI > PI)
+	{
+		theta_TPI -= PI2;
+	}
+	else if (theta_TPI < -PI)
+	{
+		theta_TPI += PI2;
+	}
+
+	dt_NSR = (theta_TPI - theta_w) / sv[m].l_dot;
+	if (abs(dt_NSR) > 0.1)
+	{
+		if (opt.M > 1)
+		{
+			dt_NSR = -dt_NSR;
+		}
+		t_LOR = t_LOR + dt_NSR;
+		goto RTCC_PMMLLWP_8_8;
+	}
+	P_O = PI2 / sv[p].l_dot;
+	P_Q = PI2 / sv[m].l_dot;
+	DV_CSI_arr[I_SELECT - 1] = dv_CSI;
+	DV_CDH_arr[I_SELECT - 1] = dv_CDH;
+	T_CDH_arr[I_LOOP - 1] = t_CDH;
+	dv_TPI = 0.0;
+	dv_TPF = 0.0;
+	if (abs(DH_u) != 0.0)
+	{
+		//Call two impulse
+		tiopt.T1 = T_TPI;
+		tiopt.T2 = t_R;
+		OrbMech::GIMKIC(sv_temp[m].coe_osc, mu, R_TI_C, V_TI_C);
+		OrbMech::GIMKIC(sv_temp[p].coe_osc, mu, R_TI_T, V_TI_T);
+		tiopt.sv_A.R = R_TI_C;
+		tiopt.sv_A.V = V_TI_C;
+		tiopt.sv_A.GMT = sv_temp[m].TE;
+		tiopt.sv_P.R = R_TI_T;
+		tiopt.sv_P.V = V_TI_T;
+		tiopt.sv_P.GMT = sv_temp[p].TE;
+		PMSTICN(tiopt, tires);
+		dv_TPI = length(tires.dV);
+		dv_TPF = length(tires.dV2);
+	}
+	DV_TPI_arr[I_SELECT - 1] = dv_TPI;
+	DV_TPF_arr[I_SELECT - 1] = dv_TPF;
+	DV_T_arr[I_SELECT - 1] = abs(dv_CSI) + dv_CDH + dv_TPI + dv_TPF;
+	if (J_MOV > 0)
+	{
+		goto RTCC_PMMLLWP_20_16;
+	}
+	T_LO_arr[I_LOOP - 1] = t_LOR;
+	T_INS_arr[I_LOOP - 1] = T_INS;
+	T_CSI_arr[I_LOOP - 1] = t_CSI;
+	dt_max = t_R - t_LOR;
+	B1 = T_CSI_arr[I_LOOP - 1];
+	B2 = T_CDH_arr[I_LOOP - 1];
+	B3 = T_TPI_arr[I_LOOP - 1];
+	B4 = T_R_arr[I_LOOP - 1];
+
+	if (I_LAST > 0)
+	{
+		goto RTCC_PMMLLWP_18_17;
+	}
+	if (I_SELECT <= I_STOP1)
+	{
+		goto RTCC_PMMLLWP_17_18;
+	}
+	if (I_SELECT < I_STOP2 - 1)
+	{
+		goto RTCC_PMMLLWP_19_20;
+	}
+	else if (I_SELECT > I_STOP2 - 1)
+	{
+		goto RTCC_PMMLLWP_22_19;
+	}
+	if (I_SRCH > 0)
+	{
+		goto RTCC_PMMLLWP_20_22;
+	}
+	else
+	{
+		goto RTCC_PMMLLWP_19_20;
+	}
+RTCC_PMMLLWP_17_18:
+	if (I_SRCH <= 0)
+	{
+		goto RTCC_PMMLLWP_19_20;
+	}
+	DP = P_O - P_mm;
+	P_mm_apo = P_mm;
+	M_stop = MM + (int)((opt.t_max - dt_max) / P_mm_apo);
+RTCC_PMMLLWP_17_24:
+	T_CSI_arr[I_LOOP - 1] = B1 + P_mm_apo * (double)(M_stop - 2);
+	T_CDH_arr[I_LOOP - 1] = B2 + P_mm_apo * (double)(M_stop - 2);
+	goto RTCC_PMMLLWP_18_25;
+RTCC_PMMLLWP_18_17:
+	if (DH_u > 0)
+	{
+		goto RTCC_PMMLLWP_22_19;
+	}
+	P_mm_apo = P_Q;
+	DP = -(P_O - P_mm_apo);
+	M_stop = MM + (int)((opt.t_max - dt_max) / P_mm_apo);
+RTCC_PMMLLWP_18_26:
+	T_CSI_arr[I_LOOP - 1] = B1 + DP * (double)(M_stop - 2);
+	T_CDH_arr[I_LOOP - 1] = B2 + DP * (double)(M_stop - 2);
+RTCC_PMMLLWP_18_25:
+	T_LO_arr[I_LOOP - 1] = t_LOR + DP * (double)(M_stop - 2);
+	T_TPI_arr[I_LOOP - 1] = B1 + P_mm_apo * (double)(M_stop - 2);
+	T_R_arr[I_LOOP - 1] = B4 + P_mm_apo * (double)(M_stop - 2);
+	N_arr[I_LOOP - 1] = M_stop;
+	if (MM - M_stop != 0)
+	{
+		M_stop = 2;
+		I_LOOP++;
+		if (I_SELECT <= 1)
+		{
+			goto RTCC_PMMLLWP_17_24;
+		}
+		goto RTCC_PMMLLWP_18_26;
+	}
+RTCC_PMMLLWP_19_20:
+	MM = 2;
+	if (I_LAST > 0)
+	{
+		goto RTCC_PMMLLWP_22_19;
+	}
+	I_LOOP++;
+	I_SELECT++;
+	DH_u = DH[I_SELECT - 1];
+	goto RTCC_PMMLLWP_7_7;
+RTCC_PMMLLWP_20_22:
+	J_MOV = 1;
+	I_SELECT++;
+	I_LOOP++;
+	DH_u = DH[I_SELECT - 1];
+	goto RTCC_PMMLLWP_7_7;
+RTCC_PMMLLWP_20_16:
+	C_R[I_CURVE - 1] = DH_u;
+	C_V[I_CURVE - 1] = DV_T_arr[I_SELECT - 1];
+	if (I_CURVE < opt.N_CURV)
+	{
+		I_CURVE++;
+		DH_u = DH_u - opt.DH_SRCH;
+		goto RTCC_PMMLLWP_7_7;
+	}
+	DH_MAX = LLWP_CURVE(C_V[0], C_V[1], C_V[2], C_R[0], C_R[1], C_R[2], opt.DV_MAX[m]);
+	ddH_c = DH_MAX - DH_CRIT;
+	DH[I_SELECT - 1] = DH_MAX;
+	if (ddH_c < 0)
+	{
+		DH[I_SELECT - 1] = DH_CRIT;
+	}
+	DH_u = DH[I_SELECT - 1];
+	I_LAST = 1;
+	J_MOV = 0;
+	goto RTCC_PMMLLWP_7_7;
+RTCC_PMMLLWP_22_19:
+	//Set up RET and RPT
+	PZLRPT.plans = I_LOOP;
+	PZLRPT.CSMSTAID = "";
+	PZLRPT.CSM_GMTV = OrbMech::GETfromMJD(opt.sv_CSM.MJD, GMTBASE);
+	PZLRPT.CSM_GETV = GETfromGMT(PZLRPT.CSM_GMTV);
+	if (opt.M == 2)
+	{
+		PZLRPT.ManVeh = "LM";
+	}
+	else
+	{
+		PZLRPT.ManVeh = "CSM";
+	}
+	PZLRPT.LSLat = opt.lat*DEG;
+	PZLRPT.LSLng = opt.lng*DEG;
+	PZLRPT.THT = GETfromGMT(opt.t_hole);
+	PZLRPT.LMSTAID = "";
+	PZLRPT.LM_GMTV = 0.0;
+	PZLRPT.LM_GETV = 0.0;
+	PZLRPT.DT_CSI = dt_B;
+	PZLRPT.DV_MAX = opt.DV_MAX[m] / 0.3048;
+	PZLRPT.WT = opt.theta_F*DEG;
+	for (int i = 0;i < I_LOOP;i++)
+	{
+		PZLRPT.data[i].ID = i + 1;
+		PZLRPT.data[i].N = N_arr[i];
+		PZLRPT.data[i].DH = DH[i] / 1852.0;
+		PZLRPT.data[i].GETLO = GETfromGMT(T_LO_arr[i]);
+		PZLRPT.data[i].T_INS = GETfromGMT(T_INS_arr[i]);
+		PZLRPT.data[i].T_CSI = GETfromGMT(T_CSI_arr[i]);
+		PZLRPT.data[i].T_CDH = GETfromGMT(T_CDH_arr[i]);
+		PZLRPT.data[i].T_TPI = GETfromGMT(T_TPI_arr[i]);
+		PZLRPT.data[i].T_TPF = GETfromGMT(T_R_arr[i]);
+		PZLRPT.data[i].DVCSI = DV_CSI_arr[i] / 0.3048;
+		PZLRPT.data[i].DVCDH = DV_CDH_arr[i] / 0.3048;
+		PZLRPT.data[i].DVTPI = DV_TPI_arr[i] / 0.3048;
+		PZLRPT.data[i].DVTPF = DV_TPF_arr[i] / 0.3048;
+		PZLRPT.data[i].DVT = DV_T_arr[i] / 0.3048;
+	}
+
+	delete[] DH_apo;
 }
 
 void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLiftoffResults &res)
@@ -9427,7 +10026,7 @@ void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLi
 
 	R_LS = OrbMech::r_from_latlong(opt.lat, opt.lng, opt.R_LLS);
 
-	if (opt.opt == 0 && opt.I_TPI > 1)
+	if (opt.I_TPI > 1)
 	{
 		//TPI time fixed for concentric profile
 		res.t_TPI = opt.t_hole;
@@ -9442,34 +10041,23 @@ void RTCC::LaunchTimePredictionProcessor(const LunarLiftoffTimeOpt &opt, LunarLi
 		t_L_guess = OrbMech::GETfromMJD(MJD_guess, opt.GETbase);
 	}
 
-	if (opt.opt == 0)
+	if (opt.I_TPI <= 1)
 	{
-		if (opt.I_TPI <= 1)
-		{
-			SV sv_TPI_guess;
-			double t_TPI_guess, ttoMidnight;
-			OBJHANDLE hSun;
+		SV sv_TPI_guess;
+		double t_TPI_guess, ttoMidnight;
+		OBJHANDLE hSun;
 
-			hSun = oapiGetObjectByName("Sun");
+		hSun = oapiGetObjectByName("Sun");
 
-			//About 2.5 hours between liftoff and TPI
-			t_TPI_guess = t_L_guess + 2.5*3600.0;
-			sv_TPI_guess = coast(sv_P, t_TPI_guess - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
+		//About 2.5 hours between liftoff and TPI
+		t_TPI_guess = t_L_guess + 2.5*3600.0;
+		sv_TPI_guess = coast(sv_P, t_TPI_guess - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
 
-			ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, hMoon, hSun, 1, 1, false);
-			res.t_TPI = t_TPI_guess + ttoMidnight;
-		}
-
-		LunarLiftoffTimePredictionCFP(opt, R_LS, sv_P, hMoon, h_1, theta_Ins, t_L_guess, res.t_TPI, res);
+		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, hMoon, hSun, 1, 1, false);
+		res.t_TPI = t_TPI_guess + ttoMidnight;
 	}
-	else if (opt.opt == 1)
-	{
-		LunarLiftoffTimePredictionDT(opt, R_LS, sv_P, hMoon, h_1, t_L_guess, res);
-	}
-	else if (opt.opt == 2)
-	{
-		LunarLiftoffTimePredictionTCDT(opt, R_LS, sv_P, hMoon, h_1, t_L_guess, res);
-	}
+
+	LunarLiftoffTimePredictionCFP(opt, R_LS, sv_P, hMoon, h_1, theta_Ins, t_L_guess, res.t_TPI, res);
 }
 
 void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highspeed, EntryResults *res)
@@ -9521,6 +10109,39 @@ void RTCC::CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &p_T, d
 	x1 = LMmass / (CSMmass + LMmass)*6.2;
 	p_T = atan2(-2.15 * RAD * 5.0, 5.0 + x1);
 	y_T = atan2(0.95 * RAD * 5.0, 5.0 + x1);
+}
+
+double RTCC::CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise)
+{
+	//tpimode: 0 = TPI on time, 1 = TPI at orbital midnight, 2 = TPI at X minutes before sunrise
+	SV sv_TPI_guess;
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+	double t_TPI;
+
+	
+	if (tpimode == 0)
+	{
+		t_TPI = t_TPI_guess;
+	}
+	else if (tpimode == 1)
+	{
+		sv_TPI_guess = coast(sv0, t_TPI_guess - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase()));
+		double ttoMidnight;
+		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, sv_TPI_guess.gravref, hSun, 1, 1, false);
+		t_TPI = t_TPI_guess + ttoMidnight;
+	}
+	else
+	{
+		SV sv_sunrise_guess;
+		double ttoSunrise;
+
+		sv_TPI_guess = coast(sv0, t_TPI_guess - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase()));
+		sv_sunrise_guess = coast(sv_TPI_guess, dt_TPI_sunrise);
+		ttoSunrise = OrbMech::sunrise(sv_sunrise_guess.R, sv_sunrise_guess.V, sv_sunrise_guess.MJD, sv_sunrise_guess.gravref, hSun, 1, 0, false);
+		t_TPI = t_TPI_guess + ttoSunrise;
+	}
+
+	return t_TPI;
 }
 
 bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)
@@ -10005,7 +10626,14 @@ void RTCC::PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, doubl
 	for (int i = 0;i < 3;i++)
 	{
 		R[i] = length(sv_CC[i].R);
-		OrbMech::EclipticToECI(sv_CC[i].R, sv_CC[i].V, sv_CC[i].MJD, R_equ, V_equ);
+		if (sv_C.gravref == hEarth)
+		{
+			OrbMech::EclipticToECI(sv_CC[i].R, sv_CC[i].V, sv_CC[i].MJD, R_equ, V_equ);
+		}
+		else
+		{
+			OrbMech::EclipticToMCI(sv_CC[i].R, sv_CC[i].V, sv_CC[i].MJD, R_equ, V_equ);
+		}
 		elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
 		U[i] = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
 		U[i] = fmod(U[i], PI2);
@@ -10399,7 +11027,14 @@ RTCC_PMMSPQ_A:
 		{
 			double u_CSI, u_CDH, DN = 0;
 			//Calculate argument of latitude at CSI
-			OrbMech::EclipticToECI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+			if (opt.sv_A.gravref == hEarth)
+			{
+				OrbMech::EclipticToECI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+			}
+			else
+			{
+				OrbMech::EclipticToMCI(sv_C_CSI_apo.R, sv_C_CSI_apo.V, sv_C_CSI_apo.MJD, R_equ, V_equ);
+			}
 			elem = OrbMech::GIMIKC(R_equ, V_equ, mu);
 			u_CSI = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
 			u_CSI = fmod(u_CSI, PI2);
@@ -10444,9 +11079,9 @@ RTCC_PMMSPQ_A:
 	V_CRb = dotp(sv_C_CDH.R, sv_C_CDH.V) / length(sv_C_CDH.R);
 	gamma_C = asin(V_CRb / V_Cb);
 	V_CHb = V_Cb * cos(gamma_C);
-	a_T = 1.0 / (2.0 / length(sv_T_CDH.R) - dotp(sv_T_CDH.V, sv_T_CDH.V) / mu);
+	a_T = 1.0 / (2.0 / length(sv_PC.R) - dotp(sv_PC.V, sv_PC.V) / mu);
 	a_C = a_T - DH;
-	r_T_dot = dotp(sv_T_CDH.R, sv_T_CDH.V) / length(sv_T_CDH.R);
+	r_T_dot = dotp(sv_PC.R, sv_PC.V) / length(sv_PC.R);
 	r_C_dot = r_T_dot * pow(a_T / a_C, 1.5);
 	//Velocity after the maneuver
 	V_C_apo = sqrt(mu*(2.0 / length(sv_C_CDH.R) - 1.0 / a_C));
@@ -10494,7 +11129,7 @@ RTCC_PMMSPQ_A:
 	else
 	{
 		//If iteration on DH was used, get TPI time now
-		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, opt.GETbase, 130.0*RAD, opt.E, t_TPI, T_TPF))
+		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, opt.GETbase, opt.WT, opt.E, t_TPI, T_TPF))
 		{
 			return 94;
 		}
@@ -11679,137 +12314,73 @@ bool RTCC::LunarLiftoffTimePredictionCFP(const LunarLiftoffTimeOpt &opt, VECTOR3
 	return true;
 }
 
-bool RTCC::LunarLiftoffTimePredictionTCDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res)
+bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargetingTable &res)
 {
-	SV sv_PLI;
-	MATRIX3 Rot;
-	VECTOR3 R_1, V_1, R_PF, V_PF, U_L, R_L, R_AF, u, V_AF;
-	double t_L, r_M, r_Ins, r_A, dt, e_Ins, h_Ins, MJD_L, dt_2, t_1, c_F, p_C, eps, eo_P, to_L, e_P, t_2;
-	int n, s_F;
+	if (opt.sv_CSM.RBI != BODY_MOON) return false;
 
-	r_M = length(R_LS);
-	t_L = t_L_guess;
-
-	sv_PLI = coast(sv_P, t_L - OrbMech::GETfromMJD(sv_P.MJD, opt.GETbase));
-
-	r_Ins = r_M + h_1;
-	r_A = r_M + 60.0*1852.0;
-	e_Ins = (r_A - r_Ins) / (r_A + r_Ins);
-	h_Ins = sqrt(r_A* OrbMech::mu_Moon*(1.0 - e_Ins));
-	res.v_LH = OrbMech::mu_Moon / h_Ins * (1.0 + e_Ins);
-	res.v_LV = 0.0;
-	u = unit(crossp(sv_PLI.R, sv_PLI.V));
-
-	s_F = 0;
-	c_F = p_C = 0.0;
-	eps = 0.002*RAD;
-	dt = 100.0;
-	n = 0;
-
-	do
-	{
-		//Launch to Insertion
-		MJD_L = opt.GETbase + t_L / 24.0 / 3600.0;
-		Rot = OrbMech::GetRotationMatrix(BODY_MOON, MJD_L);
-		R_L = rhmul(Rot, R_LS);
-		U_L = unit(R_L - u * dotp(u, R_L));
-		R_1 = (U_L*cos(opt.theta_1) + crossp(u, U_L)*sin(opt.theta_1))*r_Ins;
-		V_1 = unit(crossp(u, unit(R_1)))*res.v_LH;
-		t_1 = t_L + opt.dt_1;
-		//Insertion to TPF
-		OrbMech::REVUP(R_1, V_1, 0.5, OrbMech::mu_Moon, R_AF, V_AF, dt_2);
-		t_2 = t_1 + dt_2;
-		OrbMech::rv_from_r0v0(sv_PLI.R, sv_PLI.V, (t_L - t_L_guess) + opt.dt_1 + dt_2, R_PF, V_PF, OrbMech::mu_Moon);
-
-		e_P = OrbMech::sign(dotp(crossp(R_AF, R_PF), u))*acos(dotp(unit(R_PF), unit(R_AF)));
-		if (abs(e_P) >= eps)
-		{
-			OrbMech::ITER(c_F, s_F, e_P, p_C, t_L, eo_P, to_L);
-			if (s_F == 1)
-			{
-				return false;
-			}
-		}
-	} while (abs(e_P) >= eps);
-
-	res.t_L = t_L;
-	res.t_Ins = t_L + opt.dt_1;
-	res.t_TPF = t_L + opt.dt_1 + dt_2;
-	res.DV_CSI = 0.0;
-	res.DV_CDH = 0.0;
-	res.DV_TPI = 0.0;
-	res.DV_TPF = length(V_PF - V_AF);
-	res.DV_T = res.DV_TPF;
-
-	return true;
-}
-
-bool RTCC::LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 R_LS, SV sv_P, OBJHANDLE hMoon, double h_1, double t_L_guess, LunarLiftoffResults &res)
-{
-	LambertMan lamman;
+	TwoImpulseOpt lamman;
 	TwoImpulseResuls lamres;
-	SV sv_INS;
-	VECTOR3 R_BO, V_BO;
-	double t_L, MJD_L, MJD_BO, DTheta_i, S, DV_Z0, DV_Z, t_L0;
+	EphemerisData sv_TH, sv_LS, sv_INS, sv_TPI, sv_TPF;
+	VECTOR3 R_BO, V_BO, R_LS;
+	double T_LO, T_LO_0, MJD_L, MJD_BO, S, DV_Z0, DV_Z, MJD_LS, T_TPI, T_INS, V_H;
 	int i, k, I_max;
 
-	//From LM Launch Targeting Display in the restored MOCR
-	DTheta_i = 1.69*RAD;
+	lamman.mode = 5;
+	sv_INS.RBI = sv_LS.RBI = BODY_MOON;
 
-	lamman.Perturbation = 1;
-	lamman.GETbase = opt.GETbase;
-	lamman.N = 0;
-	lamman.axis = RTCC_LAMBERT_MULTIAXIS;
-	lamman.mode = 2;
-
-	sv_INS.gravref = sv_P.gravref;
+	sv_TH = coast(opt.sv_CSM, opt.T_TH - opt.sv_CSM.GMT);
+	MJD_LS = OrbMech::P29TimeOfLongitude(sv_TH.R, sv_TH.V, GMTBASE + sv_TH.GMT / 24.0 / 3600.0, hMoon, opt.lng_LS);
 	//Bias by 1 minute from CSM over LS
-	t_L = t_L_guess - 60.0;
+	T_LO = OrbMech::GETfromMJD(MJD_LS, GMTBASE) - 60.0;
+	sv_LS = coast(sv_TH, T_LO - sv_TH.GMT);
 
 	i = 0;
 	k = 0;
-	res.v_LV = 32.0*0.3048;
-	res.v_LH = 5540.0*0.3048;
+	V_H = 5540.0*0.3048;
 	I_max = 10;
+	R_LS = OrbMech::r_from_latlong(opt.lat_LS, opt.lng_LS, opt.R_LS);
 
-	res.t_TPI = t_L + opt.dt_1 + opt.dt_2;
+	T_TPI = T_LO + opt.dt_PF + opt.dt_INS_TPI;
 
 	do
 	{
-		MJD_L = opt.GETbase + t_L / 24.0 / 3600.0;
-		OrbMech::ENSERT(sv_P.R, sv_P.V, opt.dt_1, 0.74*RAD, opt.theta_1, h_1, res.v_LH, res.v_LV, MJD_L, R_LS, R_BO, V_BO, MJD_BO);
-		res.t_Ins = t_L + opt.dt_1;
+		MJD_L = GMTBASE + T_LO / 24.0 / 3600.0;
+		OrbMech::ENSERT(sv_LS.R, sv_LS.V, opt.dt_PF, opt.Y_S, opt.alpha_PF, opt.h_INS, V_H, opt.V_Z_NOM, MJD_L, R_LS, R_BO, V_BO, MJD_BO);
+		T_INS = T_LO + opt.dt_PF;
 		sv_INS.R = R_BO;
 		sv_INS.V = V_BO;
-		sv_INS.MJD = MJD_BO;
+		sv_INS.GMT = T_INS;
 		if (k < 1)
 		{
-			lamman.T1 = res.t_Ins;
-			lamman.T2 = res.t_TPI;
-			lamman.PhaseAngle = DTheta_i;
-			lamman.DH = opt.DH_SRCH;
+			lamman.T1 = T_INS;
+			lamman.T2 = T_TPI;
+			lamman.PhaseAngle = opt.dTheta_TPI;
+			lamman.DH = opt.DH_TPI;
 		}
 		else
 		{
-			lamman.T1 = res.t_TPI;
+			lamman.T1 = T_TPI;
 			lamman.T2 = -1.0;
-			GZGENCSN.TITravelAngle = opt.theta_F;
+			lamman.WT = opt.WT;
 			lamman.PhaseAngle = 0.0;
 			lamman.DH = 0.0;
 		}
 		
-		lamman.sv_A = sv_INS;
-		lamman.sv_P = sv_P;
+		lamman.sv_A = coast(sv_INS, lamman.T1 - sv_INS.GMT);
+		lamman.sv_P = coast(sv_LS, lamman.T1 - sv_LS.GMT);
 
-		LambertTargeting(&lamman, lamres);
+		PMSTICN(lamman, lamres);
+		if (lamres.SolutionFound == false)
+		{
+			return false;
+		}
 		DV_Z = lamres.dV_LVLH.z;
 
 		if (k >= 1) break;
 		if (abs(DV_Z) <= 0.1*0.3048)
 		{
 			k = 1;
-			res.v_LH = res.v_LH + lamres.dV_LVLH.x;
-			res.t_L = t_L;
+			V_H = V_H + lamres.dV_LVLH.x;
 			continue;
 		}
 		if (i > I_max)
@@ -11823,22 +12394,39 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LunarLiftoffTimeOpt &opt, VECTOR3 
 		}
 		else
 		{
-			S = (t_L - t_L0) / (DV_Z - DV_Z0);
+			S = (T_LO - T_LO_0) / (DV_Z - DV_Z0);
 		}
 		DV_Z0 = DV_Z;
-		t_L0 = t_L;
-		t_L = t_L - S * DV_Z;
-		res.t_TPI = res.t_TPI - S * DV_Z;
+		T_LO_0 = T_LO;
+		T_LO = T_LO - S * DV_Z;
+		T_TPI = T_TPI - S * DV_Z;
 	} while (i <= I_max);
 
-	res.t_Ins = t_L + opt.dt_1;
-	res.t_TPI = t_L + opt.dt_1 + opt.dt_2;
-	res.t_TPF = lamres.T2;
-	res.DV_CDH = 0.0;
-	res.DV_CSI = 0.0;
+	res.GETLOR = GETfromGMT(T_LO);
+	res.GET_TPI = GETfromGMT(T_TPI);
+	res.GET_TPF = lamres.T2;
 	res.DV_TPI = length(lamres.dV);
 	res.DV_TPF = length(lamres.dV2);
-	res.DV_T = res.DV_TPI + res.DV_TPF;
+	res.DV_TPI_LVLH = lamres.dV_LVLH;
+	res.DV_TPF_LVLH = lamres.dV_LVLH2;
+	res.VH = V_H;
+
+	sv_TPI = coast(sv_INS, T_TPI - sv_INS.GMT);
+	sv_TPI.V = sv_TPI.V + lamres.dV;
+	sv_TPF = coast(sv_TPI, GMTfromGET(lamres.T2) - sv_TPI.GMT);
+	sv_TPF.V = sv_TPF.V + lamres.dV2;
+	
+	double RA_TPI, RP_TPI, RA_TPF, RP_TPF, RA_T, RP_T;
+	OrbMech::periapo(sv_TPI.R, sv_TPI.V, OrbMech::mu_Moon, RA_TPI, RP_TPI);
+	OrbMech::periapo(sv_TPF.R, sv_TPF.V, OrbMech::mu_Moon, RA_TPF, RP_TPF);
+	OrbMech::periapo(sv_LS.R, sv_LS.V, OrbMech::mu_Moon, RA_T, RP_T);
+
+	res.HA_TPI = RA_TPI - MCSMLR;
+	res.HP_TPI = RP_TPI - MCSMLR;
+	res.HA_TPF = RA_TPF - MCSMLR;
+	res.HP_TPF = RP_TPF - MCSMLR;
+	res.HA_T = RA_T - MCSMLR;
+	res.HP_T = RP_T - MCSMLR;
 
 	return true;
 }
@@ -11925,7 +12513,8 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("MANEUVER - MPT UNCHANGED");
 		break;
 	case 29:
-		message.push_back("REQUESTED TWO-IMPULSE SOLUTION NUMBER NOT AVAILABLE");
+		message.push_back("REQUESTED TWO-IMPULSE SOLUTION");
+		message.push_back("NUMBER NOT AVAILABLE");
 		break;
 	case 30:
 		message.push_back("FAILED TO CONVERGE ON ELEVATION ANGLE -");
@@ -12018,7 +12607,8 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("DELETE MPT MANEUVERS PRIOR TO ENTERING M55 MED");
 		break;
 	case 92:
-		message.push_back("CONSTRAINT " + RTCCONLINEMON.TextBuffer[0] + " VIOLATED IN COELLIPTIC SEQUENCE.");
+		message.push_back("CONSTRAINT " + RTCCONLINEMON.TextBuffer[0] + " VIOLATED IN");
+		message.push_back("COELLIPTIC SEQUENCE.");
 		break;
 	case 101:
 		message.push_back("SPQ PLAN FAILED TO CONVERGE ON OPTIMUM");
@@ -24041,6 +24631,10 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 
 		MPTGetConfigFromString(med_m66.FinalConfig, inp.EndConfiguration);
+		if (inp.EndConfiguration.to_ulong() == 0)
+		{
+			return 2;
+		}
 		inp.DockingAngle = med_m66.DeltaDA*MCCRPD;
 		if (med_m66.DPSThrustFactor == -1)
 		{
@@ -28268,6 +28862,11 @@ void RTCC::PMDRET()
 		PZREDT.Yaw[i] = block->Display[i].Yaw*DEG;
 		PZREDT.DVVector[i] = block->Display[i].DV_LVLH / 0.3048;
 	}
+}
+
+void RTCC::PMDRPT()
+{
+
 }
 
 int RTCC::ThrusterNameToCode(std::string thruster)
