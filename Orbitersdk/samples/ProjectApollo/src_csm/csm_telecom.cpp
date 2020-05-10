@@ -570,6 +570,11 @@ void HGA::Init(Saturn *vessel){
 	AutoTrackingMode = false;
 	RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
+
+	HGAFrequency = 2119; //MHz. Should this get set somewhere else?
+	HGAWavelength = C0 / (HGAFrequency * 1000000); //meters
+	Gain85ft = pow(10,(50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
+	Power85ft = 20000; //watts
 }
 
 bool HGA::IsPowered()
@@ -952,16 +957,10 @@ void HGA::TimeStep(double simt, double simdt)
 	oapiGetGlobalPos(hMoon, &R_M);
 	sat->GetRotationMatrix(Rot);
 	
-	double HGAWavelength, HGAFrequency, Gain85ft, Power85ft, RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
+	double RecvdHGAPower, RecvdHGAPower_dBm, SignalStrengthScaleFactor;
 	//gain values from NASA Technical Note TN D-6723
 	
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
-	
-	HGAFrequency = 2119; //MHz. Should this get set somewhere else?
-	HGAWavelength = C0/(HGAFrequency*1000000); //meters
-	Gain85ft = pow(50 / 10, 10); //this is the gain, dB converted to ratio of the 85ft antennas on earth
-	Power85ft = 20000; //watts
-	
 	
 	int RcvBeamWidthMode = 1;
 
@@ -986,25 +985,24 @@ void HGA::TimeStep(double simt, double simdt)
 	if (RcvBeamWidthMode == 1)		//Wide 3.1 dB
 	{
 		beamwidth = 40.0*RAD;
-		gain = pow(3.1 / 10, 10); //dB to ratio
+		gain = pow(10, (3.1 / 10)); //dB to ratio
 	}
 	else if (RcvBeamWidthMode == 2)	//Medium 22.5 dB
 	{
 		beamwidth = 4.5*RAD;
-		gain = pow(22.5 / 10, 10); //dB to ratio
+		gain = pow(10, (22.5 / 10)); //dB to ratio
 	}
 	else						//Narrow 23.0 dB
 	{
 		beamwidth = 4.5*RAD;
-		gain = pow(23 / 10, 10); //dB to ratio
+		gain = pow(10, (23.0 / 10)); //dB to ratio
 	}
-
 
 	RecvdHGAPower = Power85ft*Gain85ft*gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
 	RecvdHGAPower_dBm = 10*log10(1000*RecvdHGAPower);
 	SignalStrengthScaleFactor = HGA::dBm2SignalStrength(RecvdHGAPower_dBm);
 
-	//sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
+	sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
 
 	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
 
