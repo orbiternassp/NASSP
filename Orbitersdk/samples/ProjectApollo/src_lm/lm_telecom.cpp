@@ -2687,7 +2687,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		}
 	}
 
-	sprintf(oapiDebugString(), "RecvdLEM_SteerableAntPower_dBm = %lf dBm, Power85ft = %lfW, Gain85ft = %lf, LEM_SteerableAntGain = %lf, LEM_SteerableAntWavelength = %lfM, EarthSignalDist = %lfM", RecvdLEM_SteerableAntPower_dBm, Power85ft, Gain85ft, LEM_SteerableAntGain, LEM_SteerableAntWavelength, EarthSignalDist);
+	//sprintf(oapiDebugString(), "RecvdLEM_SteerableAntPower_dBm = %lf dBm, Power85ft = %lfW, Gain85ft = %lf, LEM_SteerableAntGain = %lf, LEM_SteerableAntWavelength = %lfM, EarthSignalDist = %lfM", RecvdLEM_SteerableAntPower_dBm, Power85ft, Gain85ft, LEM_SteerableAntGain, LEM_SteerableAntWavelength, EarthSignalDist);
 
 	//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
 
