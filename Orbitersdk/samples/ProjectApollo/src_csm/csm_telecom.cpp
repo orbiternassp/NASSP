@@ -1002,7 +1002,7 @@ void HGA::TimeStep(double simt, double simdt)
 	RecvdHGAPower_dBm = 10*log10(1000*RecvdHGAPower);
 	SignalStrengthScaleFactor = HGA::dBm2SignalStrength(RecvdHGAPower_dBm);
 
-	sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
+	//sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
 
 	double a = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth... I think; now with actual half-POWER beamwidth
 
