@@ -394,6 +394,10 @@ public:
 	int RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	int XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	bool AutoTrackingMode;
+	double HGAWavelength;
+	double HGAFrequency;
+	double Gain85ft;
+	double Power85ft;
 
 	double GetResolvedPitch() { return PitchRes * DEG; }
 	double GetResolvedYaw() { return YawRes * DEG; }

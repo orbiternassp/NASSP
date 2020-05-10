@@ -2497,10 +2497,10 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat){
 	double beamwidth = 12.5*RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
 
-	LEM_SteerableAntGain = pow(16.5 / 10, 10);
+	LEM_SteerableAntGain = pow(10, (16.5 / 10));
 	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
 	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
-	Gain85ft = pow(50 / 10, 10); //this is the gain, dB converted to ratio of the 85ft antennas on earth
+	Gain85ft = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 85ft antennas on earth
 	Power85ft = 20000; //watts
 }
 
@@ -2652,7 +2652,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft*LEM_SteerableAntGain*pow(LEM_SteerableAntWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdLEM_SteerableAntPower = Power85ft * Gain85ft * LEM_SteerableAntGain * pow((LEM_SteerableAntWavelength /(4 * PI*EarthSignalDist)), 2); //maximum recieved power to the HGA on axis in watts
 	RecvdLEM_SteerableAntPower_dBm = 10 * log10(1000 * RecvdLEM_SteerableAntPower);
 
 	double SignalStrengthScaleFactor = LEM_SteerableAnt::dBm2SignalStrength(RecvdLEM_SteerableAntPower_dBm);
@@ -2686,6 +2686,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 		}
 	}
+
+	//sprintf(oapiDebugString(), "RecvdLEM_SteerableAntPower_dBm = %lf dBm, Power85ft = %lfW, Gain85ft = %lf, LEM_SteerableAntGain = %lf, LEM_SteerableAntWavelength = %lfM, EarthSignalDist = %lfM", RecvdLEM_SteerableAntPower_dBm, Power85ft, Gain85ft, LEM_SteerableAntGain, LEM_SteerableAntWavelength, EarthSignalDist);
 
 	//sprintf(oapiDebugString(), "%f %f %f %f", HornSignalStrength[0], HornSignalStrength[1], HornSignalStrength[2], HornSignalStrength[3]);
 
