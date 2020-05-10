@@ -134,6 +134,7 @@ public:
 	void DetermineGMPCode();
 	void NodeConvCalc();
 	void SendNodeToSFP();
+	void CalculateTPITime();
 
 	int startSubthread(int fcn);
 	int subThread();

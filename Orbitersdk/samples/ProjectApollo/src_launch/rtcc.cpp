@@ -9415,6 +9415,9 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
 	TwoImpulseOpt tiopt;
 	TwoImpulseResuls tires;
 
+	//Reset number of solutions
+	PZLRPT.plans = 0;
+
 	tiopt.mode = 5;
 	tiopt.sv_A.RBI = BODY_MOON;
 	tiopt.sv_P.RBI = BODY_MOON;
@@ -10106,6 +10109,39 @@ void RTCC::CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &p_T, d
 	x1 = LMmass / (CSMmass + LMmass)*6.2;
 	p_T = atan2(-2.15 * RAD * 5.0, 5.0 + x1);
 	y_T = atan2(0.95 * RAD * 5.0, 5.0 + x1);
+}
+
+double RTCC::CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise)
+{
+	//tpimode: 0 = TPI on time, 1 = TPI at orbital midnight, 2 = TPI at X minutes before sunrise
+	SV sv_TPI_guess;
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+	double t_TPI;
+
+	
+	if (tpimode == 0)
+	{
+		t_TPI = t_TPI_guess;
+	}
+	else if (tpimode == 1)
+	{
+		sv_TPI_guess = coast(sv0, t_TPI_guess - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase()));
+		double ttoMidnight;
+		ttoMidnight = OrbMech::sunrise(sv_TPI_guess.R, sv_TPI_guess.V, sv_TPI_guess.MJD, sv_TPI_guess.gravref, hSun, 1, 1, false);
+		t_TPI = t_TPI_guess + ttoMidnight;
+	}
+	else
+	{
+		SV sv_sunrise_guess;
+		double ttoSunrise;
+
+		sv_TPI_guess = coast(sv0, t_TPI_guess - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase()));
+		sv_sunrise_guess = coast(sv_TPI_guess, dt_TPI_sunrise);
+		ttoSunrise = OrbMech::sunrise(sv_sunrise_guess.R, sv_sunrise_guess.V, sv_sunrise_guess.MJD, sv_sunrise_guess.gravref, hSun, 1, 0, false);
+		t_TPI = t_TPI_guess + ttoSunrise;
+	}
+
+	return t_TPI;
 }
 
 bool RTCC::DockingInitiationProcessor(DKIOpt opt, DKIResults &res)

@@ -1743,6 +1743,11 @@ void ARCore::MapUpdate()
 	startSubthread(32);
 }
 
+void ARCore::CalculateTPITime()
+{
+	startSubthread(23);
+}
+
 void ARCore::NavCheckPAD()
 {
 	SV sv;
@@ -4175,8 +4180,11 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		Result = 0;
 	}
 	break;
-	case 23: //Spare
+	case 23: //Calculate TPI times
 	{
+		SV sv0 = GC->rtcc->StateVectorCalc(target);
+		t_TPI = GC->rtcc->CalculateTPITimes(sv0, DKI_TPI_Mode, t_TPIguess, DKI_dt_TPI_sunrise);
+
 		Result = 0;
 	}
 	break;

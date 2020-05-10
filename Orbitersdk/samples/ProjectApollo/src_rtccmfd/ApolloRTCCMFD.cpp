@@ -620,11 +620,11 @@ void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display
 	double time2 = round(time);
 	if (DispGET)
 	{
-		sprintf(Buff, "%03.0f:%02.0f:%02.0f GET", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
+		sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f GET", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
 	}
 	else
 	{
-		sprintf(Buff, "%03.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
+		sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(time2 / 3600.0), floor(fmod(time2, 3600.0) / 60.0), fmod(time2, 60.0));
 	}
 	//sprintf(Buff, "%03d:%02d:%02d", hh, mm, ss);
 }
@@ -1404,6 +1404,12 @@ void ApolloRTCCMFD::menuSetLLWPDisplayPage()
 void ApolloRTCCMFD::menuSetLunarLaunchTargetingPage()
 {
 	screen = 91;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetTPITimesPage()
+{
+	screen = 92;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -6313,7 +6319,7 @@ void ApolloRTCCMFD::set_LLTPThresholdTime(double get)
 void ApolloRTCCMFD::menuLunarLiftoffVHorInput()
 {
 	bool LunarLiftoffVHorInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Input horizontal velocity in ft/s:", LunarLiftoffVHorInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Input horizontal velocity in ft/s (LGC default is 5509.5):", LunarLiftoffVHorInput, 0, 20, (void*)this);
 }
 
 bool LunarLiftoffVHorInput(void *id, char *str, void *data)
@@ -6334,7 +6340,7 @@ void ApolloRTCCMFD::set_LunarLiftoffVHorInput(double v_lh)
 void ApolloRTCCMFD::menuLunarLiftoffVVertInput()
 {
 	bool LunarLiftoffVVertInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Input vertical velocity in ft/s:", LunarLiftoffVVertInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Input vertical velocity in ft/s (LGC default is 19.5):", LunarLiftoffVVertInput, 0, 20, (void*)this);
 }
 
 bool LunarLiftoffVVertInput(void *id, char *str, void *data)
@@ -7749,6 +7755,11 @@ bool NodeConvHeightInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::set_NodeConvHeight(double height)
 {
 	G->NodeConvHeight = height * 1852.0;
+}
+
+void ApolloRTCCMFD::menuCalculateTPITime()
+{
+	G->CalculateTPITime();
 }
 
 void ApolloRTCCMFD::menuMSKRequest()

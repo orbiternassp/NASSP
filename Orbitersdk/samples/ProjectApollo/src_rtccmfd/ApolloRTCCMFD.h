@@ -678,6 +678,8 @@ public:
 	void menuSetLaunchTargetingInitPage();
 	void menuSetLLWPDisplayPage();
 	void menuSetLunarLaunchTargetingPage();
+	void menuSetTPITimesPage();
+	void menuCalculateTPITime();
 
 protected:
 	oapi::Font *font;

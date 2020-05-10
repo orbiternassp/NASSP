@@ -2138,7 +2138,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 23)
 	{
-		skp->Text(5 * W / 8, (int)(0.5 * H / 14), "Lunar Liftoff", 13);
+		skp->Text(4 * W / 8, 1 * H / 28, "Lunar Launch Window", 19);
 
 		skp->Text(1 * W / 16, 2 * H / 14, "Initialization", 14);
 
@@ -2810,10 +2810,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 32)
 	{
-		skp->Text(1 * W / 8, 2 * H / 14, "Lambert Targeting", 17);
-		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic", 10);
+		skp->Text(1 * W / 8, 2 * H / 14, "Two Impulse Processor", 21);
+		skp->Text(1 * W / 8, 4 * H / 14, "Coelliptic Sequence Processor", 29);
 		skp->Text(1 * W / 8, 6 * H / 14, "Docking Initiation Processor", 28);
 		skp->Text(1 * W / 8, 8 * H / 14, "Skylab Rendezvous", 17);
+		skp->Text(1 * W / 8, 10 * H / 14, "TPI Times", 9);
 	}
 	else if (screen == 33)
 	{
@@ -3073,11 +3074,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+07.1f ft/s", GC->rtcc->PZLTRT.InsertionRadialVelocity / 0.3048);
 		skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
+		skp->Text(1 * W / 8, 9 * H / 14, "Powered Flight Arc:", 19);
 		sprintf(Buffer, "%.3f°", GC->rtcc->PZLTRT.PoweredFlightArc*DEG);
-		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
-
-		sprintf(Buffer, "%.1f s", GC->rtcc->PZLTRT.PoweredFlightTime);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 8, 11 * H / 14, "Powered Flight Time:", 20);
+		sprintf(Buffer, "%.1f s", GC->rtcc->PZLTRT.PoweredFlightTime);
+		skp->Text(1 * W / 8, 12 * H / 14, Buffer, strlen(Buffer));
 
 		if (!GC->MissionPlanningActive)
 		{
@@ -7383,6 +7385,29 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(4 * W / 8, 2 * H / 32, "LUNAR RENDEZVOUS PLAN TABLE", 27);
 		skp->SetFont(font2);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		skp->Text(1 * W / 32, 4 * H / 32, "CSM STA", 7);
+		skp->Text(1 * W / 32, 5 * H / 32, "GMTV", 4);
+		skp->Text(1 * W / 32, 6 * H / 32, "GETV", 4);
+		skp->Text(1 * W / 32, 7 * H / 32, "MVR VEH", 7);
+
+		skp->Text(9 * W / 32, 4 * H / 32, "LM POSITION", 11);
+		skp->TextW(9 * W / 32, 5 * H / 32, L"\u03C6LLS", 4);
+		skp->TextW(9 * W / 32, 6 * H / 32, L"\u03BBLLS", 4);
+		skp->Text(9 * W / 32, 7 * H / 32, "THT", 3);
+
+		skp->Text(33 * W / 64, 4 * H / 32, "LM STA", 6);
+		skp->Text(33 * W / 64, 5 * H / 32, "GMTV", 4);
+		skp->Text(33 * W / 64, 6 * H / 32, "GETV", 4);
+		skp->Text(33 * W / 64, 7 * H / 32, "DTCSI", 5);
+
+		skp->Text(49 * W / 64, 4 * H / 32, "LM LIFE", 11);
+		skp->Text(49 * W / 64, 5 * H / 32, "DV MAX", 6);
+		skp->Text(49 * W / 64, 6 * H / 32, "MIN H", 5);
+		skp->Text(49 * W / 64, 7 * H / 32, "WT", 2);
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
 		skp->Text(2 * W / 32, 9 * H / 32, "ID", 2);
 		skp->Text(4 * W / 32, 9 * H / 32, "M", 1);
@@ -7397,6 +7422,54 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(25 * W / 32, 10 * H / 32, "DVTPI", 5);
 		skp->Text(30 * W / 32, 9 * H / 32, "DVTPF", 5);
 		skp->Text(30 * W / 32, 10 * H / 32, "DVT", 3);
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		if (GC->MissionPlanningActive)
+		{
+			GET_Display(Buffer, GC->rtcc->GMTfromGET(GC->rtcc->med_k15.CSMVectorTime), false);
+			skp->Text(8 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+			GET_Display(Buffer, GC->rtcc->med_k15.CSMVectorTime, false);
+			skp->Text(8 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
+		}
+
+		if (GC->rtcc->med_k15.Chaser == 1)
+		{
+			skp->Text(8 * W / 32, 7 * H / 32, "CSM", 3);
+		}
+		else
+		{
+			skp->Text(8 * W / 32, 7 * H / 32, "LEM", 3);
+		}
+
+		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLSDISP.lat[0] * DEG);
+		skp->Text(31 * W / 64, 5 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.4lf", GC->rtcc->BZLSDISP.lng[0] * DEG);
+		skp->Text(31 * W / 64, 6 * H / 32, Buffer, strlen(Buffer));
+		GET_Display(Buffer, GC->rtcc->med_k15.ThresholdTime, false);
+		skp->Text(31 * W / 64, 7 * H / 32, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_k15.CSI_Flag > 0)
+		{
+			GET_Display(Buffer, GC->rtcc->med_k15.CSI_Flag, false);
+			skp->Text(24 * W / 32, 7 * H / 32, Buffer, strlen(Buffer));
+		}
+
+		sprintf_s(Buffer, "%.1lf h", GC->rtcc->PZLTRT.MaxAscLifetime / 3600.0);
+		skp->Text(31 * W / 32, 4 * H / 32, Buffer, strlen(Buffer));
+		if (GC->rtcc->med_k15.Chaser == 1)
+		{
+			sprintf_s(Buffer, "%.0lf", GC->rtcc->PZLTRT.CSMMaxDeltaV / 0.3048);
+		}
+		else
+		{
+			sprintf_s(Buffer, "%.0lf", GC->rtcc->PZLTRT.LMMaxDeltaV / 0.3048);
+		}
+		skp->Text(31 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.1lf", GC->rtcc->PZLTRT.MinSafeHeight / 1852.0);
+		skp->Text(31 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		
 		for (int i = 0;i < GC->rtcc->PZLRPT.plans;i++)
 		{
@@ -7585,6 +7658,48 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(31 * W / 32, 27 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%+.1lf", GC->rtcc->PZLLTT.HP_T / 1852.0);
 		skp->Text(31 * W / 32, 28 * H / 32, Buffer, strlen(Buffer));
+	}
+	else if (screen == 92)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 2 * H / 32, "TPI TIMES", 9);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		if (G->target != NULL)
+		{
+			sprintf_s(Buffer, G->target->GetName());
+		}
+		else
+		{
+			sprintf_s(Buffer, "No Target!");
+		}
+		skp->Text(1 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+
+		if (G->DKI_TPI_Mode == 0)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "TPI on time", 11);
+		}
+		else if (G->DKI_TPI_Mode == 1)
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "TPI at orbital midnight", 23);
+		}
+		else
+		{
+			skp->Text(1 * W / 8, 4 * H / 14, "TPI at X min before sunrise:", 28);
+		}
+
+		if (G->DKI_TPI_Mode == 2)
+		{
+			sprintf_s(Buffer, "%.1f min", G->DKI_dt_TPI_sunrise / 60.0);
+			skp->Text(1 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
+		}
+
+		GET_Display(Buffer, G->t_TPIguess, false);
+		skp->Text(1 * W / 8, 8 * H / 14, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer, G->t_TPI, false);
+		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
+
 	}
 	return true;
 }

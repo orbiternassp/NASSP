@@ -2718,6 +2718,7 @@ public:
 	void PMMPNE(AEGBlock sv_C, AEGBlock sv_T, double TREF, double FNPC, int KPC, int IPC, AEGBlock &SAVE, double &DI1, double &DH1);
 	bool DockingInitiationProcessor(DKIOpt opt, DKIResults &res);
 	int ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
+	double CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise);
 	void AGOPCislunarNavigation(SV sv, MATRIX3 REFSMMAT, int star, double yaw, VECTOR3 &IMUAngles, double &TA, double &SA);
 	VECTOR3 LOICrewChartUpdateProcessor(SV sv0, double GETbase, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
@@ -3752,8 +3753,8 @@ public:
 		double YawSteerCap = 0.5*RAD;
 		double MaxAscLifetime = 9.0*3600.0;
 		double MinSafeHeight = 5.0*1852.0;
-		double LMMaxDeltaV = 0.0;
-		double CSMMaxDeltaV = 0.0;
+		double LMMaxDeltaV = 430.0*0.3048;
+		double CSMMaxDeltaV = 430.0*0.3048;
 		//K14
 		//If CSI scheduled at apsis and CSM is chaser, then CSI will be done at LM apsis plus input time bias
 		double dt_bias = 0.0;
