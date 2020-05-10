@@ -492,7 +492,8 @@ public:
 	void menuSetREFSMMATUplinkPage();
 	void menuSetTITransferPage();
 	void menuCycleTITable();
-	void menuCycleTIPlanNumber();
+	void menuSetTIPlanNumber();
+	void set_TIPlanNumber(int plan);
 	void menuTIDeleteGET();
 	void set_TIDeleteGET(double get);
 	void menuChooseTIThruster();

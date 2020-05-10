@@ -3565,6 +3565,7 @@ public:
 		double DELV2 = 0.0;
 		double YAW2 = 0.0;
 		double PITCH2 = 0.0;
+		double T_TPI = 0.0;
 		char L = ' ';
 		int C = 0;
 	};
@@ -3573,6 +3574,7 @@ public:
 	{
 		bool Updating = false;
 		int Solutions = 0;
+		bool showTPI = false;
 		int IVFLAG = 0;
 		int MAN_VEH = 0;
 		std::string CSMSTAID, LMSTAID;
@@ -3598,6 +3600,7 @@ public:
 		double GMT1 = 0.0;
 		std::string MinutesUntil;
 		int Solutions = 0;
+		bool showTPI = false;
 		TwoImpulseMultipleSolutionTableEntry data[13];
 	} TwoImpMultDispBuffer;
 

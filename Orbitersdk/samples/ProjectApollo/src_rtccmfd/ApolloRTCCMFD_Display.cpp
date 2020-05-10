@@ -94,8 +94,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			if (G->target != NULL)
 			{
 				sprintf(Buffer, G->target->GetName());
-				skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 			}
+			else
+			{
+				sprintf_s(Buffer, "No Target!");
+			}
+			skp->Text(1 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 
 		if (GC->rtcc->med_k30.StartTime >= 0)
@@ -120,10 +124,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		skp->Text(9 * W / 16, 8 * H / 21, "PHASE", 5);
 		skp->Text(9 * W / 16, 9 * H / 21, "DEL H", 5);
+		skp->Text(9 * W / 16, 10 * H / 21, "ELEV", 4);
+		skp->Text(9 * W / 16, 11 * H / 21, "WT", 2);
 		sprintf(Buffer, "%.3f°", GC->rtcc->GZGENCSN.TIPhaseAngle*DEG);
 		skp->Text(6 * W / 8, 8 * H / 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f NM", GC->rtcc->GZGENCSN.TIDeltaH / 1852.0);
 		skp->Text(6 * W / 8, 9 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3f°", GC->rtcc->GZGENCSN.TIElevationAngle*DEG);
+		skp->Text(6 * W / 8, 10 * H / 21, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.3f°", GC->rtcc->GZGENCSN.TITravelAngle*DEG);
+		skp->Text(6 * W / 8, 11 * H / 21, Buffer, strlen(Buffer));
 
 		if (GC->rtcc->med_k30.IVFlag != 0)
 		{
@@ -183,8 +193,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(27 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		skp->Text(43 * W / 64, 11 * H / 32, "DEL V2", 6);
-		skp->Text(49 * W / 64, 11 * H / 32, "YAW", 3);
-		skp->Text(28 * W / 32, 11 * H / 32, "PITCH", 5);
+		if (GC->rtcc->TwoImpMultDispBuffer.showTPI)
+		{
+			skp->Text(52 * W / 64, 11 * H / 32, "TTPI", 4);
+		}
+		else
+		{
+			skp->Text(49 * W / 64, 11 * H / 32, "YAW", 3);
+			skp->Text(28 * W / 32, 11 * H / 32, "PITCH", 5);
+		}
+		
 		skp->Text(60 * W / 64, 11 * H / 32, "L", 1);
 		skp->Text(63 * W / 64, 11 * H / 32, "C", 1);
 		
@@ -200,10 +218,19 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(35 * W / 64, (12 + i) * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%.2lf", GC->rtcc->TwoImpMultDispBuffer.data[i].DELV2);
 			skp->Text(43 * W / 64, (12 + i) * H / 32, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.2lf", GC->rtcc->TwoImpMultDispBuffer.data[i].YAW2);
-			skp->Text(50 * W / 64, (12 + i) * H / 32, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%.2lf", GC->rtcc->TwoImpMultDispBuffer.data[i].PITCH2);
-			skp->Text(57 * W / 64, (12 + i) * H / 32, Buffer, strlen(Buffer));
+			if (GC->rtcc->TwoImpMultDispBuffer.showTPI)
+			{
+				GET_Display(Buffer, GC->rtcc->TwoImpMultDispBuffer.data[i].T_TPI, false);
+				skp->Text(55 * W / 64, (12 + i) * H / 32, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				sprintf(Buffer, "%.2lf", GC->rtcc->TwoImpMultDispBuffer.data[i].YAW2);
+				skp->Text(50 * W / 64, (12 + i) * H / 32, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%.2lf", GC->rtcc->TwoImpMultDispBuffer.data[i].PITCH2);
+				skp->Text(57 * W / 64, (12 + i) * H / 32, Buffer, strlen(Buffer));
+			}
+			
 			sprintf(Buffer, "%c", GC->rtcc->TwoImpMultDispBuffer.data[i].L);
 			skp->Text(60 * W / 64, (12 + i) * H / 32, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%d", GC->rtcc->TwoImpMultDispBuffer.data[i].C);

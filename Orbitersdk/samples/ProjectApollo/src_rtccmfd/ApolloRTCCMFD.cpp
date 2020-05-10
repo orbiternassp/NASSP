@@ -2600,9 +2600,32 @@ void ApolloRTCCMFD::menuCycleTITable()
 
 }
 
-void ApolloRTCCMFD::menuCycleTIPlanNumber()
+void ApolloRTCCMFD::menuSetTIPlanNumber()
 {
+	bool TIPlanNumberInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Choose plan from multiple solution table (1-13):", TIPlanNumberInput, 0, 20, (void*)this);
+}
 
+bool TIPlanNumberInput(void *id, char *str, void *data)
+{
+	int num;
+
+	if (sscanf(str, "%d", &num) == 1)
+	{
+		if (num < 1 || num > 13)
+		{
+			return false;
+		}
+
+		((ApolloRTCCMFD*)data)->set_TIPlanNumber(num);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::set_TIPlanNumber(int plan)
+{
+	GC->rtcc->med_m72.Plan = plan;
 }
 
 void ApolloRTCCMFD::menuTIDeleteGET()

@@ -1632,7 +1632,7 @@ int RTCC::PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH,
 
 int RTCC::PMSTICN_ELEV(EphemerisData sv_A1, EphemerisData sv_P1, double phi_req, double mu, double &T_ELEV)
 {
-	EphemerisData sv_A, sv_P;
+	EphemerisData sv_A, sv_P, SV_store[2];
 	CELEMENTS elem_C;
 	double T_S, T, u, X_R_L, Y_R_L, R_C, eps_phi, phi, X_S, Y_S, A, B, C, D;
 	int IC;
@@ -1644,11 +1644,11 @@ int RTCC::PMSTICN_ELEV(EphemerisData sv_A1, EphemerisData sv_P1, double phi_req,
 	sv_A = sv_A1;
 	sv_P = sv_P1;
 PMSTICN_ELEV_18_3:
-	PZMYSAVE.SV_mult[0] = sv_A;
-	PZMYSAVE.SV_mult[1] = sv_P;
+	SV_store[0] = sv_A;
+	SV_store[1] = sv_P;
 PMSTICN_ELEV_18_4:
-	sv_A = coast(PZMYSAVE.SV_mult[0], T - PZMYSAVE.SV_mult[0].GMT);
-	sv_P = coast(PZMYSAVE.SV_mult[1], T - PZMYSAVE.SV_mult[1].GMT);
+	sv_A = coast(SV_store[0], T - SV_store[0].GMT);
+	sv_P = coast(SV_store[1], T - SV_store[1].GMT);
 	//TBD: Error
 	elem_C = OrbMech::GIMIKC(sv_A.R, sv_A.V, mu);
 	u = elem_C.g + OrbMech::MeanToTrueAnomaly(elem_C.l, elem_C.e);
@@ -1681,7 +1681,6 @@ PMSTICN_ELEV_18_4:
 		IC++;
 		if (IC > 10)
 		{
-			PMXSPT("PMSTICN", 30);
 			T_ELEV = sv_A1.GMT;
 			return 1;
 		}
@@ -1785,12 +1784,21 @@ void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
 	//DTWRITE: PZTIPREG (Set T-I Table to updating condition)
 	PZTIPREG.Updating = true;
 	//Load T-I Table area with necessary MED quantities
+	if (DH != 0.0 && PhaseAngle != 0.0 && Elev != 0.0 && WT != 0.0 && T1 > 0 && T2 > 0)
+	{
+		PZTIPREG.showTPI = true;
+	}
+	else
+	{
+		PZTIPREG.showTPI = false;
+	}
 RTCC_PMSTICN_3_1:
 	if (T1 < 0)
 	{
 		err = PMSTICN_ELEV(opt.sv_A, opt.sv_P, Elev, mu, T1);
 		if (err)
 		{
+			PMXSPT("PMSTICN", 30);
 			goto RTCC_PMSTICN_7_1;
 		}
 	}
@@ -1850,6 +1858,19 @@ RTCC_PMSTICN_4_2:
 		//TBD: Compute next environment change following frozen maneuver of first plan
 	}
 	//TBD: Compute next environment change following variable maneuver of this plan
+	
+	//Compute TPI time under special conditions
+	entry[soln].T_TPI = 0.0;
+	if (PZTIPREG.showTPI)
+	{
+		double T3;
+
+		err = PMSTICN_ELEV(sv_A2_apo, sv_P1, Elev, mu, T3);
+		if (err == 0)
+		{
+			entry[soln].T_TPI = T3;
+		}
+	}
 	soln++;
 RTCC_PMSTICN_7_1:
 	if (opt.IVFLAG < 1)
@@ -28773,6 +28794,7 @@ void RTCC::PMDTIMP()
 	TwoImpMultDispBuffer.DH = GZGENCSN.TIDeltaH / 1852.0;
 
 	TwoImpMultDispBuffer.Solutions = PZTIPREG.Solutions;
+	TwoImpMultDispBuffer.showTPI = PZTIPREG.showTPI;
 	for (int i = 0;i < PZTIPREG.Solutions;i++)
 	{
 		TwoImpMultDispBuffer.data[i].DELV1 = PZTIPREG.data[i].DELV1 / 0.3048;
@@ -28789,6 +28811,10 @@ void RTCC::PMDTIMP()
 		TwoImpMultDispBuffer.data[i].DELV2 = PZTIPREG.data[i].DELV2 / 0.3048;
 		TwoImpMultDispBuffer.data[i].YAW2 = PZTIPREG.data[i].YAW2*DEG;
 		TwoImpMultDispBuffer.data[i].PITCH2 = PZTIPREG.data[i].PITCH2*DEG;
+		if (TwoImpMultDispBuffer.showTPI)
+		{
+			TwoImpMultDispBuffer.data[i].T_TPI = GETfromGMT(PZTIPREG.data[i].T_TPI);
+		}
 		TwoImpMultDispBuffer.data[i].L = 'N';
 		TwoImpMultDispBuffer.data[i].C = i + 1;
 	}
