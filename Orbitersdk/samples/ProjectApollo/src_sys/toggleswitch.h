@@ -293,6 +293,8 @@ public:
 	void SetSideways(int s) { Sideways = s; }
 	void SetDelayTime(double t) { delayTime = t; };
 
+	bool ProcessMouseVC(int event, VECTOR3 &p);
+
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
 	

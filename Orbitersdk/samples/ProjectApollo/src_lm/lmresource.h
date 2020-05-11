@@ -844,6 +844,49 @@
 #define IDB_BORDER_104x106              2021
 #define IDB_BORDER_286x197              2022
 
+// VC Active Areas (Panel 1)
+//#define AID_PANEL_1				((id >= 0100) && (id <= 0124))
+
+// VC Active Areas (Panel 2)
+
+// VC Active Areas (Panel 3)
+#define AID_PANEL_3				((id >= 3300) && (id <= 3337))
+#define AID_SWITCH_P3_01		3301	// Engine gimbal
+#define AID_SWITCH_P3_02		3302	// Command overide
+/*#define AID_SWITCH_P3_03		0303
+#define AID_SWITCH_P3_04		0304
+#define AID_SWITCH_P3_05		0305
+#define AID_SWITCH_P3_06		0306	// Dead band select
+#define AID_SWITCH_P3_07		0307	// Pitch control mode
+#define AID_SWITCH_P3_09		0310
+#define AID_SWITCH_P3_10		0311	// Roll control mode
+#define AID_SWITCH_P3_12		0312	// Event timer start
+#define AID_SWITCH_P3_13		0313	// Yaw control mode
+#define AID_SWITCH_P3_14		0314
+#define AID_SWITCH_P3_15		0315	// Event timer mode
+#define AID_SWITCH_P3_16		0316
+#define AID_SWITCH_P3_17		0317	// Quad 1 heater
+#define AID_SWITCH_P3_18		0320	// Quad 2 heater
+#define AID_SWITCH_P3_19		0321	// Event timer slew (min)
+#define AID_SWITCH_P3_20		0322	// Quad 4 heater
+#define AID_SWITCH_P3_21		0323	// Quad 3 heater
+#define AID_SWITCH_P3_22		0324	// Event timer slew (sec)
+#define AID_SWITCH_P3_23		0325
+#define AID_SWITCH_P3_24		0326
+#define AID_SWITCH_P3_25		0327*/
+
+// VC Active Areas (Panel 4)
+
+// VC Active Areas (Panel 5)
+
+// VC Active Areas (Panel 6)
+
+// VC Active Areas (Panel 8)
+
+// VC Active Areas (Panel 12)
+
+// VC Active Areas (Panel 14)
+
 #define IDB_LEM_FDAI_ROLL               10006
 
 // Next default values for new objects

@@ -392,6 +392,43 @@ void ToggleSwitch::timestep(double missionTime)
 	SwitchTo(state);
 }
 
+bool ToggleSwitch::ProcessMouseVC(int event, VECTOR3 &p)
+{
+	int OldState = state;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+
+	if (event & PANEL_MOUSE_LBDOWN) {
+		//if (p.y < 0.5) {
+			if (state != TOGGLESWITCH_DOWN) {
+				SwitchTo(TOGGLESWITCH_DOWN, true);
+				Sclick.play();
+			}
+		//}
+		else {
+			if (state != TOGGLESWITCH_UP) {
+				SwitchTo(TOGGLESWITCH_UP, true);
+				Sclick.play();
+			}
+		}
+	}
+	else if (IsSpringLoaded() && ((event & PANEL_MOUSE_LBUP) != 0) && !IsHeld()) {
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
+	}
+	return true;
+}
 
 //
 // Three pos switch.

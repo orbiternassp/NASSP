@@ -263,10 +263,57 @@ bool LEM::clbkLoadVC (int id)
 		InPanel = false;
 		SetView();
 		SetLMMeshVis();
+
+		oapiVCRegisterArea(AID_SWITCH_P3_02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_SWITCH_P3_02, _V(-0.36504, 0.25268, 1.58355), 1.0);
+
 		return true;
 
 	default:
 		return false;
+	}
+}
+
+bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
+{
+	switch (id) {
+	case AID_SWITCH_P3_02:
+		EngineDescentCommandOverrideSwitch.ProcessMouseVC(event, p);
+		return true;
+		//case ... // place response to other areas here
+	}
+	return false;
+}
+
+bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
+{
+	switch (id) {
+	case AID_SWITCH_P3_02:
+		if (EngineDescentCommandOverrideSwitch.IsUp()) {
+			SetAnimation(anim_P3switch[0], 1.0);
+		}
+		else {
+			SetAnimation(anim_P3switch[0], 0.0);
+		}
+		return true;
+		//case ... // place response to other areas here
+	}
+	return false;
+}
+
+void LEM::InitVC() {
+
+	UINT mesh = vcidx;
+
+	// Define panel 3 animations
+	static UINT meshgroup_P3switches[P3_SWITCHCOUNT];
+	for (int i = 0; i < P3_SWITCHCOUNT; i++)
+	{
+		meshgroup_P3switches[i] = 21 + i;
+
+		mgt_P3switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P3switches[i], 1, P3_TOGGLE_POS[i], _V(1, 0, 0), (float)PI / 4);
+		anim_P3switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P3switch[i], 0.0f, 1.0f, mgt_P3switch[i]);
 	}
 }
 

@@ -92,6 +92,54 @@ enum LMRCSThrusters
 #define LM_RCS_QUAD_3		2
 #define LM_RCS_QUAD_4		3
 
+// ==============================================================
+// VC Constants
+// ==============================================================
+
+const double P1_TILT = 8 * RAD;
+const double P2_TILT = 8 * RAD;
+const double P3_TILT = 35 * RAD;
+const double P4_TILT = 45 * RAD;
+const double P6_TILT = 10 * RAD;
+const double P12_TILT = 20 * RAD;
+const double P14_TILT = 25 * RAD;
+
+// Number of switches on each panel
+const int	P1_SWITCHCOUNT = 20;
+const int	P2_SWITCHCOUNT = 18;
+const int	P3_SWITCHCOUNT = 1; //23
+const int	P4_SWITCHCOUNT = 4;
+const int	P5_SWITCHCOUNT = 8;
+const int	P6_SWITCHCOUNT = 12;
+const int	P8_SWITCHCOUNT = 22;
+const int	P12_SWITCHCOUNT = 22;
+const int	P14_SWITCHCOUNT = 16;
+const int	LM_VC_NEEDLECOUNT = 19;
+
+// Number of dials/thumbwheels
+const int	 P1_DIALCOUNT = 1;
+const int	 P2_DIALCOUNT = 4;
+const int	 P3_DIALCOUNT = 6;
+const int	 P4_DIALCOUNT = 0;
+const int	 P5_DIALCOUNT = 1;
+const int	 P6_DIALCOUNT = 4;
+const int	 P8_DIALCOUNT = 0;
+const int	 P12_DIALCOUNT = 4;
+const int	 P14_DIALCOUNT = 1;
+
+// Dial rotation axises
+const VECTOR3	P1_DIAL_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
+const VECTOR3	P2_DIAL_AXIS = { 0.00, sin(P2_TILT),-cos(P2_TILT) };
+const VECTOR3	P3_DIAL_AXIS = { 0.00, cos(P3_TILT),-cos(P3_TILT) };
+const VECTOR3	P6_DIAL_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
+const VECTOR3	P12_DIAL_AXIS = { -sin(P12_TILT), cos(P12_TILT), 0.00 };
+const VECTOR3	P14_DIAL_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };
+
+// Panel 3 Toggle-switchs
+const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
+	{-0.36504, 0.24668, 1.59255}
+};
+
 // LM ECS status
 
 typedef struct {
@@ -418,6 +466,10 @@ public:
 	bool clbkLoadVC(int id);
 	bool clbkPanelMouseEvent (int id, int event, int mx, int my);
 	bool clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf);
+
+	bool clbkVCMouseEvent(int id, int event, VECTOR3 &p);
+	bool clbkVCRedrawEvent(int id, int event, SURFHANDLE surf);
+
 	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
@@ -608,6 +660,7 @@ protected:
 	void GuardClick();
 	void AbortFire();
 	void InitSwitches();
+	void InitVC();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
@@ -1539,6 +1592,11 @@ protected:
 	DEVMESHHANDLE drogue;
 	DEVMESHHANDLE cdrmesh;
 	DEVMESHHANDLE lmpmesh;
+
+	// VC animations
+
+	MGROUP_TRANSFORM			*mgt_P3switch[P3_SWITCHCOUNT];
+	UINT						anim_P3switch[P3_SWITCHCOUNT];
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
