@@ -453,6 +453,7 @@ void LEM::SeparateStage (UINT stage)
 	}
 
 	CheckDescentStageSystems();
+	LoadVC();
 }
 
 void LEM::SetLmLandedMesh() {

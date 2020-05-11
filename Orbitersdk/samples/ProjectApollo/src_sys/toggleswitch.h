@@ -293,6 +293,7 @@ public:
 	void SetSideways(int s) { Sideways = s; }
 	void SetDelayTime(double t) { delayTime = t; };
 
+	void RedrawVC(UINT anim);
 	bool ProcessMouseVC(int event, VECTOR3 &p);
 
 	bool Toggled() { return SwitchToggled; };
@@ -421,6 +422,8 @@ public:
 	bool IsDown() { return (GetState() == THREEPOSSWITCH_DOWN); };
 	bool IsCenter() { return (GetState() == THREEPOSSWITCH_CENTER); };
 	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
+
+	bool ProcessMouseVC(int event, VECTOR3 &p);
 };
 
 ///
@@ -1088,6 +1091,9 @@ public:
 	void SoundEnabled(bool on) { soundEnabled = on; };
 	void SetWraparound(bool w) { Wraparound = w; };
 
+	void RedrawVC(UINT anim);
+	bool ProcessMouseVC(int event, VECTOR3 &p);
+
 protected:
 	int	x;
 	int y;
@@ -1101,6 +1107,7 @@ protected:
 	SURFHANDLE switchSurface;
 	SURFHANDLE switchBorder;
 
+	VESSEL *OurVessel;
 	Sound sclick;
 	bool soundEnabled;
 	RotationalSwitchBitmap bitmaps[RotationalSwitchBitmapCount];

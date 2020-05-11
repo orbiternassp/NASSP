@@ -1584,7 +1584,7 @@ void LEM::clbkPostCreation()
 		docksla = NULL;
 	}
 
-	InitVC();
+	InitVCAnimations();
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)

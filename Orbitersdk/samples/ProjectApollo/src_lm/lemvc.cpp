@@ -254,11 +254,8 @@ void LEM::SetView() {
 }
 
 bool LEM::clbkLoadVC (int id)
-
 {
-	VECTOR3 ofs = _V(0, 0, 0); // todo: ascent stage offset
-
-	RegisterActiveAreas(ofs);
+	LoadVC();
 
 	switch (id) {
 	case 0:
@@ -274,18 +271,42 @@ bool LEM::clbkLoadVC (int id)
 		return false;
 	}
 }
+void LEM::LoadVC()
+{
+	VECTOR3 ofs;
+	if (stage > 1) { ofs = _V(0.00, -0.76, 0.00); }
+	else { ofs = _V(0.00, 0.99, 0.00); }
+
+	RegisterActiveAreas(ofs);
+}
 
 void LEM::RegisterActiveAreas(VECTOR3 ofs)
 {
-	oapiVCRegisterArea(AID_SWITCH_P3_02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_SWITCH_P3_02, _V(-0.36504, 0.25268, 1.58355), 1.0);
+	int i = 0;
+
+	// Panel 3 switches
+	for (i = 0; i < P3_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + ofs, 0.012);
+	}
+
+	for (i = 0; i < P3_DIALCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_DIAL_P3_00 + i, PANEL_REDRAW_MOUSE, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_DIAL_P3_00 + i, P3_DIAL_POS[i] + ofs, 0.02);
+	}
 }
 
 bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 {
 	switch (id) {
-	case AID_SWITCH_P3_02:
-		EngineDescentCommandOverrideSwitch.ProcessMouseVC(event, p);
+	case AID_SWITCH_P3_01:
+		EngGimbalEnableSwitch.ProcessMouseVC(event, p);
+		return true;
+
+	case AID_DIAL_P3_00:
+		TestMonitorRotary.ProcessMouseVC(event, p);
 		return true;
 		//case ... // place response to other areas here
 	}
@@ -295,13 +316,12 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 {
 	switch (id) {
-	case AID_SWITCH_P3_02:
-		if (EngineDescentCommandOverrideSwitch.IsUp()) {
-			SetAnimation(anim_P3switch[0], 1.0);
-		}
-		else {
-			SetAnimation(anim_P3switch[0], 0.0);
-		}
+	case AID_SWITCH_P3_01:
+		EngGimbalEnableSwitch.RedrawVC(anim_P3switch[0]);
+		return true;
+
+	case AID_DIAL_P3_00:
+		TestMonitorRotary.RedrawVC(anim_P3_Dial[0]);
 		return true;
 		//case ... // place response to other areas here
 	}
@@ -310,9 +330,16 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 void LEM::InitSwitchesVC()
 {
-	for (int i = 0; i < P3_SWITCHCOUNT; i++)
+	int i = 0;
+
+	for (i = 0; i < P3_SWITCHCOUNT; i++)
 	{
 		anim_P3switch[P3_SWITCHCOUNT] = -1;
+	}
+
+	for (i = 0; i < P3_DIALCOUNT; i++)
+	{
+		anim_P3_Dial[P3_DIALCOUNT] = -1;
 	}
 }
 
@@ -321,14 +348,17 @@ void LEM::DeleteSwitchesVC()
 	int i = 0;
 
 	for (i = 0; i < P3_SWITCHCOUNT; i++) delete mgt_P3switch[i];
+
+	for (i = 0; i < P3_DIALCOUNT; i++) delete mgt_P3Dial[i];
 }
 
-void LEM::InitVC()
+void LEM::InitVCAnimations()
 {
 	UINT mesh = vcidx;
+	int i = 0;
 
 	// Define panel 3 animations
-	static UINT meshgroup_P3switches[P3_SWITCHCOUNT];
+	static UINT meshgroup_P3switches[P3_SWITCHCOUNT], meshgroup_P3dials[P3_DIALCOUNT];
 	for (int i = 0; i < P3_SWITCHCOUNT; i++)
 	{
 		meshgroup_P3switches[i] = 21 + i;
@@ -336,6 +366,15 @@ void LEM::InitVC()
 		mgt_P3switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P3switches[i], 1, P3_TOGGLE_POS[i], _V(1, 0, 0), (float)PI / 4);
 		anim_P3switch[i] = CreateAnimation(0.5);
 		AddAnimationComponent(anim_P3switch[i], 0.0f, 1.0f, mgt_P3switch[i]);
+	}
+
+	for (i = 0; i < P3_DIALCOUNT; i++)
+	{
+		meshgroup_P3dials[i] = 22 + i;
+
+		mgt_P3Dial[i] = new MGROUP_ROTATE(mesh, &meshgroup_P3dials[i], 1, P3_DIAL_POS[i], P3_DIAL_AXIS, (float)(RAD * 360));
+		anim_P3_Dial[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P3_Dial[i], 0.0f, 1.0f, mgt_P3Dial[i]);
 	}
 }
 

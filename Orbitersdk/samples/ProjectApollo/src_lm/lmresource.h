@@ -875,6 +875,13 @@
 #define AID_SWITCH_P3_24		0326
 #define AID_SWITCH_P3_25		0327*/
 
+#define AID_DIAL_P3_00			3332
+#define AID_DIAL_P3_01			3333
+#define AID_DIAL_P3_02			3334	// Attitude control mode
+#define AID_DIAL_P3_03			3335
+#define AID_DIAL_P3_04			3336
+#define AID_DIAL_P3_05			3337
+
 // VC Active Areas (Panel 4)
 
 // VC Active Areas (Panel 5)

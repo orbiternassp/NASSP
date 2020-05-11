@@ -119,7 +119,7 @@ const int	LM_VC_NEEDLECOUNT = 19;
 // Number of dials/thumbwheels
 const int	 P1_DIALCOUNT = 1;
 const int	 P2_DIALCOUNT = 4;
-const int	 P3_DIALCOUNT = 6;
+const int	 P3_DIALCOUNT = 1; //6
 const int	 P4_DIALCOUNT = 0;
 const int	 P5_DIALCOUNT = 1;
 const int	 P6_DIALCOUNT = 4;
@@ -130,14 +130,19 @@ const int	 P14_DIALCOUNT = 1;
 // Dial rotation axises
 const VECTOR3	P1_DIAL_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
 const VECTOR3	P2_DIAL_AXIS = { 0.00, sin(P2_TILT),-cos(P2_TILT) };
-const VECTOR3	P3_DIAL_AXIS = { 0.00, cos(P3_TILT),-cos(P3_TILT) };
+const VECTOR3	P3_DIAL_AXIS = { 0.00, sin(P3_TILT),-cos(P3_TILT) };
 const VECTOR3	P6_DIAL_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
 const VECTOR3	P12_DIAL_AXIS = { -sin(P12_TILT), cos(P12_TILT), 0.00 };
 const VECTOR3	P14_DIAL_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };
 
-// Panel 3 Toggle-switchs
+// Panel 3 Toggle-switches
 const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
 	{-0.36504, 0.24668, 1.59255}
+};
+
+// Panel 3 Dials
+const VECTOR3 P3_DIAL_POS[P3_DIALCOUNT] = {
+	{-0.34068, 0.15311, 1.51197}
 };
 
 // LM ECS status
@@ -488,6 +493,7 @@ public:
 	void PostLoadSetup(bool define_anims = true);
 	void DefineAnimations();
 	void SetMeshes();
+	void LoadVC();
 	void RegisterActiveAreas(VECTOR3 ofs);
 
 	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
@@ -663,7 +669,7 @@ protected:
 	void InitSwitches();
 	void InitSwitchesVC();
 	void DeleteSwitchesVC();
-	void InitVC();
+	void InitVCAnimations();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
@@ -1598,8 +1604,8 @@ protected:
 
 	// VC animations
 
-	MGROUP_TRANSFORM			*mgt_P3switch[P3_SWITCHCOUNT];
-	UINT						anim_P3switch[P3_SWITCHCOUNT];
+	MGROUP_TRANSFORM			*mgt_P3switch[P3_SWITCHCOUNT], *mgt_P3Dial[P3_DIALCOUNT];
+	UINT						anim_P3switch[P3_SWITCHCOUNT], anim_P3_Dial[P3_DIALCOUNT];
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
