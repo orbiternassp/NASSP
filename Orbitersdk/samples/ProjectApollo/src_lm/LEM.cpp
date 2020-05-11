@@ -279,6 +279,8 @@ LEM::~LEM()
 		dx8ppv->Release();
 		dx8ppv = NULL;
 	}
+
+	DeleteSwitchesVC();
 }
 
 void LEM::Init()
@@ -430,6 +432,7 @@ void LEM::Init()
 
 		PanelId = LMPANEL_MAIN;	// default panel
 		InitSwitches();
+		InitSwitchesVC();
 		// "dummy" SetSwitches to enable the panel event handling
 		SetSwitches(PanelId);
 

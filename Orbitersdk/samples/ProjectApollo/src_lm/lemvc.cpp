@@ -256,6 +256,10 @@ void LEM::SetView() {
 bool LEM::clbkLoadVC (int id)
 
 {
+	VECTOR3 ofs = _V(0, 0, 0); // todo: ascent stage offset
+
+	RegisterActiveAreas(ofs);
+
 	switch (id) {
 	case 0:
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
@@ -264,14 +268,17 @@ bool LEM::clbkLoadVC (int id)
 		SetView();
 		SetLMMeshVis();
 
-		oapiVCRegisterArea(AID_SWITCH_P3_02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_SWITCH_P3_02, _V(-0.36504, 0.25268, 1.58355), 1.0);
-
 		return true;
 
 	default:
 		return false;
 	}
+}
+
+void LEM::RegisterActiveAreas(VECTOR3 ofs)
+{
+	oapiVCRegisterArea(AID_SWITCH_P3_02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_SWITCH_P3_02, _V(-0.36504, 0.25268, 1.58355), 1.0);
 }
 
 bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
@@ -301,8 +308,23 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	return false;
 }
 
-void LEM::InitVC() {
+void LEM::InitSwitchesVC()
+{
+	for (int i = 0; i < P3_SWITCHCOUNT; i++)
+	{
+		anim_P3switch[P3_SWITCHCOUNT] = -1;
+	}
+}
 
+void LEM::DeleteSwitchesVC()
+{
+	int i = 0;
+
+	for (i = 0; i < P3_SWITCHCOUNT; i++) delete mgt_P3switch[i];
+}
+
+void LEM::InitVC()
+{
 	UINT mesh = vcidx;
 
 	// Define panel 3 animations

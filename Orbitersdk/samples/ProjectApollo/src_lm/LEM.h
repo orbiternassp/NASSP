@@ -488,6 +488,7 @@ public:
 	void PostLoadSetup(bool define_anims = true);
 	void DefineAnimations();
 	void SetMeshes();
+	void RegisterActiveAreas(VECTOR3 ofs);
 
 	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void PanelSwitchToggled(ToggleSwitch *s);
@@ -660,6 +661,8 @@ protected:
 	void GuardClick();
 	void AbortFire();
 	void InitSwitches();
+	void InitSwitchesVC();
+	void DeleteSwitchesVC();
 	void InitVC();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
