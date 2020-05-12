@@ -1373,6 +1373,7 @@ public:
 	bool VCMouseEvent(int id, int event, VECTOR3 &p);
 	bool VCRedrawEvent(int id, int event, SURFHANDLE surf);
 	void AddSwitch(PanelSwitchItem *s, int area, UINT * anim);
+	void ClearSwitches();
 protected:
 	std::vector<PanelSwitchItem*>SwitchList;
 	std::vector<int> SwitchArea;
