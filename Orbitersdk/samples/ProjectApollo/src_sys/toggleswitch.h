@@ -210,6 +210,9 @@ public:
 	virtual void Guard() {};
 
 	virtual	void SetHeld(bool s) {};
+
+	virtual void RedrawVC(UINT anim) {}
+	virtual bool ProcessMouseVC(int event, VECTOR3 &p) { return false; }
 	
 protected:
 	///
@@ -1361,6 +1364,19 @@ public:
 	virtual void PanelSwitchToggled(ToggleSwitch *s) = 0;
 	virtual void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) = 0;
 	virtual void PanelRotationalSwitchChanged(RotationalSwitch *s) = 0;
+};
+
+class PanelSwitchesVC
+{
+public:
+	PanelSwitchesVC() {}
+	bool VCMouseEvent(int id, int event, VECTOR3 &p);
+	bool VCRedrawEvent(int id, int event, SURFHANDLE surf);
+	void AddSwitch(PanelSwitchItem *s, int area, UINT * anim);
+protected:
+	std::vector<PanelSwitchItem*>SwitchList;
+	std::vector<int> SwitchArea;
+	std::vector<UINT *> SwitchAnim;
 };
 
 class PanelSwitches {

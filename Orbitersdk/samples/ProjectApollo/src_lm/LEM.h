@@ -702,6 +702,7 @@ protected:
 
 	// Panel components
 	PanelSwitches MainPanel;
+	PanelSwitchesVC MainPanelVC;
 	PanelSwitchScenarioHandler PSH;
 
 	SwitchRow AbortSwitchesRow;

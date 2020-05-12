@@ -297,66 +297,23 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 		oapiVCRegisterArea(AID_DIAL_P3_00 + i, PANEL_REDRAW_MOUSE, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_DIAL_P3_00 + i, P3_DIAL_POS[i] + ofs, 0.02);
 	}
+
+	MainPanelVC.AddSwitch(&EngGimbalEnableSwitch, AID_SWITCH_P3_01, &anim_P3switch[0]);
+	MainPanelVC.AddSwitch(&TestMonitorRotary, AID_DIAL_P3_00, &anim_P3_Dial[0]);
+	MainPanelVC.AddSwitch(&RendezvousRadarRotary, AID_DIAL_P3_01, &anim_P3_Dial[1]);
+	MainPanelVC.AddSwitch(&TempMonitorRotary, AID_DIAL_P3_02, &anim_P3_Dial[2]);
+	MainPanelVC.AddSwitch(&LampToneTestRotary, AID_DIAL_P3_03, &anim_P3_Dial[3]);
+	MainPanelVC.AddSwitch(&FloodRotary, AID_DIAL_P3_04, &anim_P3_Dial[4]);
 }
 
 bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 {
-	switch (id) {
-	case AID_SWITCH_P3_01:
-		EDLGDeploy.ProcessMouseVC(event, p);
-		return true;
-
-	case AID_DIAL_P3_00:
-		TestMonitorRotary.ProcessMouseVC(event, p);
-		return true;
-
-	case AID_DIAL_P3_01:
-		RendezvousRadarRotary.ProcessMouseVC(event, p);
-		return true;
-
-	case AID_DIAL_P3_02:
-		TempMonitorRotary.ProcessMouseVC(event, p);
-		return true;
-
-	case AID_DIAL_P3_03:
-		LampToneTestRotary.ProcessMouseVC(event, p);
-		return true;
-
-	case AID_DIAL_P3_04:
-		FloodRotary.ProcessMouseVC(event, p);
-		return true;
-	}
-	return false;
+	return MainPanelVC.VCMouseEvent(id, event, p);
 }
 
 bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 {
-	switch (id) {
-	case AID_SWITCH_P3_01:
-		EDLGDeploy.RedrawVC(anim_P3switch[0]);
-		return true;
-
-	case AID_DIAL_P3_00:
-		TestMonitorRotary.RedrawVC(anim_P3_Dial[0]);
-		return true;
-
-	case AID_DIAL_P3_01:
-		RendezvousRadarRotary.RedrawVC(anim_P3_Dial[1]);
-		return true;
-
-	case AID_DIAL_P3_02:
-		TempMonitorRotary.RedrawVC(anim_P3_Dial[2]);
-		return true;
-
-	case AID_DIAL_P3_03:
-		LampToneTestRotary.RedrawVC(anim_P3_Dial[3]);
-		return true;
-
-	case AID_DIAL_P3_04:
-		FloodRotary.RedrawVC(anim_P3_Dial[4]);
-		return true;
-	}
-	return false;
+	return MainPanelVC.VCRedrawEvent(id, event, surf);
 }
 
 void LEM::InitSwitchesVC()
