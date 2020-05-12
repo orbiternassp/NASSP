@@ -119,7 +119,7 @@ const int	LM_VC_NEEDLECOUNT = 19;
 // Number of dials/thumbwheels
 const int	 P1_DIALCOUNT = 1;
 const int	 P2_DIALCOUNT = 4;
-const int	 P3_DIALCOUNT = 1; //6
+const int	 P3_DIALCOUNT = 5; //6
 const int	 P4_DIALCOUNT = 0;
 const int	 P5_DIALCOUNT = 1;
 const int	 P6_DIALCOUNT = 4;
@@ -142,7 +142,7 @@ const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
 
 // Panel 3 Dials
 const VECTOR3 P3_DIAL_POS[P3_DIALCOUNT] = {
-	{-0.34068, 0.15311, 1.51197}
+	{-0.34068, 0.15311, 1.51197}, {-0.19343, 0.163151, 1.52026}, {0.063658, 0.163679, 1.52046}, {0.27805, 0.151635, 1.51925}, {0.31772, 0.220734, 1.56811}
 };
 
 // LM ECS status

@@ -1,16 +1,16 @@
 // ========================================================
 // Mesh resource file for LM_VC.msh
-// Generated with meshc on Wed May 06 17:07:52 2020
+// Generated with meshc on Mon May 11 19:54:12 2020
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 21
+#define VC_NGRP 24
 
 // Number of materials:
-#define VC_NMAT 8
+#define VC_NMAT 6
 
 // Number of textures:
-#define VC_NTEX 4
+#define VC_NTEX 3
 
 // Named mesh groups:
 #define VC_GRP_Drogue 0
@@ -28,9 +28,12 @@
 #define VC_GRP_Panel4 12
 #define VC_GRP_RCSMounts 13
 #define VC_GRP_RCSMounts2 14
-#define VC_GRP_RCSMounts3 15
-#define VC_GRP_RCSnozzles 16
-#define VC_GRP_RCSnozzles2 17
-#define VC_GRP_Tunnel 18
-#define VC_GRP_UpperHatch 19
-#define VC_GRP_Windows 20
+#define VC_GRP_Rot_P3_01 15
+#define VC_GRP_Rot_P3_02 16
+#define VC_GRP_Rot_P3_03 17
+#define VC_GRP_Rot_P3_04 18
+#define VC_GRP_Rot_P3_05 19
+#define VC_GRP_Tunnel 20
+#define VC_GRP_UpperHatch 21
+#define VC_GRP_Windows 22
+#define VC_GRP_zSwitch 23

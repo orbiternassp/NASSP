@@ -36,6 +36,7 @@
 #include "toggleswitch.h"
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
+#include "LM_VC_Resource.h"
 
 #include "LEM.h"
 
@@ -302,13 +303,28 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 {
 	switch (id) {
 	case AID_SWITCH_P3_01:
-		EngGimbalEnableSwitch.ProcessMouseVC(event, p);
+		EDLGDeploy.ProcessMouseVC(event, p);
 		return true;
 
 	case AID_DIAL_P3_00:
 		TestMonitorRotary.ProcessMouseVC(event, p);
 		return true;
-		//case ... // place response to other areas here
+
+	case AID_DIAL_P3_01:
+		RendezvousRadarRotary.ProcessMouseVC(event, p);
+		return true;
+
+	case AID_DIAL_P3_02:
+		TempMonitorRotary.ProcessMouseVC(event, p);
+		return true;
+
+	case AID_DIAL_P3_03:
+		LampToneTestRotary.ProcessMouseVC(event, p);
+		return true;
+
+	case AID_DIAL_P3_04:
+		FloodRotary.ProcessMouseVC(event, p);
+		return true;
 	}
 	return false;
 }
@@ -317,13 +333,28 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 {
 	switch (id) {
 	case AID_SWITCH_P3_01:
-		EngGimbalEnableSwitch.RedrawVC(anim_P3switch[0]);
+		EDLGDeploy.RedrawVC(anim_P3switch[0]);
 		return true;
 
 	case AID_DIAL_P3_00:
 		TestMonitorRotary.RedrawVC(anim_P3_Dial[0]);
 		return true;
-		//case ... // place response to other areas here
+
+	case AID_DIAL_P3_01:
+		RendezvousRadarRotary.RedrawVC(anim_P3_Dial[1]);
+		return true;
+
+	case AID_DIAL_P3_02:
+		TempMonitorRotary.RedrawVC(anim_P3_Dial[2]);
+		return true;
+
+	case AID_DIAL_P3_03:
+		LampToneTestRotary.RedrawVC(anim_P3_Dial[3]);
+		return true;
+
+	case AID_DIAL_P3_04:
+		FloodRotary.RedrawVC(anim_P3_Dial[4]);
+		return true;
 	}
 	return false;
 }
@@ -361,7 +392,7 @@ void LEM::InitVCAnimations()
 	static UINT meshgroup_P3switches[P3_SWITCHCOUNT], meshgroup_P3dials[P3_DIALCOUNT];
 	for (int i = 0; i < P3_SWITCHCOUNT; i++)
 	{
-		meshgroup_P3switches[i] = 21 + i;
+		meshgroup_P3switches[i] = VC_GRP_zSwitch + i;
 
 		mgt_P3switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P3switches[i], 1, P3_TOGGLE_POS[i], _V(1, 0, 0), (float)PI / 4);
 		anim_P3switch[i] = CreateAnimation(0.5);
@@ -370,7 +401,7 @@ void LEM::InitVCAnimations()
 
 	for (i = 0; i < P3_DIALCOUNT; i++)
 	{
-		meshgroup_P3dials[i] = 22 + i;
+		meshgroup_P3dials[i] = VC_GRP_Rot_P3_01 + i;
 
 		mgt_P3Dial[i] = new MGROUP_ROTATE(mesh, &meshgroup_P3dials[i], 1, P3_DIAL_POS[i], P3_DIAL_AXIS, (float)(RAD * 360));
 		anim_P3_Dial[i] = CreateAnimation(0.0);
