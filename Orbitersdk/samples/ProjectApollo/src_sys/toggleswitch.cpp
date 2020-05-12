@@ -1169,6 +1169,39 @@ bool SwitchRow::DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn) {
 	return true;
 }
 
+bool PanelSwitchesVC::VCMouseEvent(int id, int event, VECTOR3 &p)
+{
+	for (unsigned i = 0;i < SwitchList.size();i++)
+	{
+		if (id == SwitchArea[i])
+		{
+			SwitchList[i]->ProcessMouseVC(event, p);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool PanelSwitchesVC::VCRedrawEvent(int id, int event, SURFHANDLE surf)
+{
+	for (unsigned i = 0;i < SwitchList.size();i++)
+	{
+		if (id == SwitchArea[i])
+		{
+			SwitchList[i]->RedrawVC(*SwitchAnim[i]);
+			return true;
+		}
+	}
+	return false;
+}
+
+void PanelSwitchesVC::AddSwitch(PanelSwitchItem *s, int area, UINT * anim)
+{
+	SwitchList.push_back(s);
+	SwitchArea.push_back(area);
+	SwitchAnim.push_back(anim);
+}
+
 //
 // Panel of switches. This code wraps up a whole panel with multiple
 // rows of switches, and passes redraw and mouse events to the appropriate
