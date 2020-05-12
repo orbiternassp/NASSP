@@ -2602,7 +2602,7 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		moving = true;
 	}
 
-	sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
+	//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
 
 	//Drive Antenna
 	pitch += pitchrate*simdt;
