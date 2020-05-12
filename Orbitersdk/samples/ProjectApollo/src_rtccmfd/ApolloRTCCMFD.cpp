@@ -6671,6 +6671,70 @@ void ApolloRTCCMFD::set_SPQTPIDefinitionValue(double get)
 	GC->rtcc->GZGENCSN.TPIDefinitionValue = get;
 }
 
+void ApolloRTCCMFD::menuCycleSPQCDHPoint()
+{
+
+}
+
+void ApolloRTCCMFD::menuSPQCDHValue()
+{
+	bool SPQCDHValueInput(void* id, char *str, void *data);
+	if (GC->rtcc->med_k01.I_CDH == 1)
+	{
+		oapiOpenInputBox("No. of apsis since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
+	}
+	else if (GC->rtcc->med_k01.I_CDH == 2)
+	{
+		oapiOpenInputBox("GET of CDH:", SPQCDHValueInput, 0, 20, (void*)this);
+	}
+	else
+	{
+		oapiOpenInputBox("Angle from CSI to CDH:", SPQCDHValueInput, 0, 20, (void*)this);
+	}
+}
+
+bool SPQCDHValueInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		return ((ApolloRTCCMFD*)data)->set_SPQCDHValue(str);
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
+{
+	if (GC->rtcc->med_k01.I_CDH == 1)
+	{
+		int n;
+		if (sscanf(val, "%d", &n) == 1)
+		{
+			GC->rtcc->med_k01.CDH_Apsis = n;
+			return true;
+		}
+	}
+	else if (GC->rtcc->med_k01.I_CDH == 2)
+	{
+		int hh, mm;
+		double ss;
+		if (sscanf(val, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+		{
+			GC->rtcc->med_k01.CDH_Time = ss + 60 * (mm + 60 * hh);
+			return true;
+		}
+	}
+	else
+	{
+		double angle;
+		if (sscanf(val, "%lf", &angle) == 1)
+		{
+			GC->rtcc->med_k01.CDH_Angle = angle * RAD;
+			return true;
+		}
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuSetDKIElevation()
 {
 	bool DKIElevInput(void* id, char *str, void *data);

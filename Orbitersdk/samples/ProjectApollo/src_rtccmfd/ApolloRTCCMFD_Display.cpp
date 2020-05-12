@@ -6010,7 +6010,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(29 * W / 64, 10 * H / 32, "DT TO", 5);
 		skp->Text(29 * W / 64, 11 * H / 32, "DV TO", 5);
 
-		skp->Text(40 * W / 64, 10 * H / 32, "REFSMMAT", 8);
+		skp->Text(41 * W / 64, 10 * H / 32, "REFSMMAT", 8);
 
 		skp->Text(52 * W / 64, 10 * H / 32, "DEL P", 5);
 		skp->Text(52 * W / 64, 11 * H / 32, "DEL Y", 5);
@@ -6032,9 +6032,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(29 * W / 64, 14 * H / 32, "MR", 2);
 		}
 
-		skp->Text(39 * W / 64, 12 * H / 32, "YB", 2);
-		skp->Text(39 * W / 64, 13 * H / 32, "PB", 2);
-		skp->Text(39 * W / 64, 14 * H / 32, "RB", 2);
+		skp->Text(40 * W / 64, 12 * H / 32, "YB", 2);
+		skp->Text(40 * W / 64, 13 * H / 32, "PB", 2);
+		skp->Text(40 * W / 64, 14 * H / 32, "RB", 2);
 
 		skp->Text(52 * W / 64, 12 * H / 32, "YH", 2);
 		skp->Text(52 * W / 64, 13 * H / 32, "PH", 2);
@@ -6146,7 +6146,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(28 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.2f", tab->DT_TO);
-		skp->Text(39 * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(40 * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
 		if (tab->DV_TO >= 10.0)
 		{
 			sprintf_s(Buffer, "%.1f", tab->DV_TO);
@@ -6155,13 +6155,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			sprintf_s(Buffer, "%.2f", tab->DV_TO);
 		}
-		skp->Text(39 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(40 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->IMUAtt.x);
-		skp->Text(37 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(39 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->IMUAtt.y);
-		skp->Text(37 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(39 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->IMUAtt.z);
-		skp->Text(37 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(39 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.1f", tab->FDAIAtt.x);
 		skp->Text(51 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
@@ -6175,11 +6175,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%5.2f", tab->DEL_Y);
 		skp->Text(63 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->LVLHAtt.x);
-		skp->Text(62 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(63 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->LVLHAtt.y);
-		skp->Text(62 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(63 * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->LVLHAtt.z);
-		skp->Text(62 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
+		skp->Text(63 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
 
 		sprintf_s(Buffer, "%.2f", tab->VF);
 		skp->Text(15 * W / 64, 16 * H / 32, Buffer, strlen(Buffer));
@@ -6325,6 +6325,24 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf_s(Buffer, "%.1f°", GC->rtcc->GZGENCSN.TPIDefinitionValue*DEG);
 		}
 		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+
+		if (GC->rtcc->med_k01.I_CDH == 1)
+		{
+			skp->Text(8 * W / 16, 2 * H / 14, "CDH at upcoming apsis:", 21);
+			sprintf_s(Buffer, "%d", GC->rtcc->med_k01.CDH_Apsis);
+		}
+		else if (GC->rtcc->med_k01.I_CDH == 2)
+		{
+			skp->Text(8 * W / 16, 2 * H / 14, "CDH on time:", 12);
+			GET_Display3(Buffer, GC->rtcc->med_k01.CDH_Time);
+		}
+		else
+		{
+			skp->Text(8 * W / 16, 2 * H / 14, "Angle from CSI to CDH:", 22);
+			sprintf_s(Buffer, "%.1lf°", GC->rtcc->med_k01.CDH_Angle*DEG);
+		}
+
+		skp->Text(8 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 70)
 	{

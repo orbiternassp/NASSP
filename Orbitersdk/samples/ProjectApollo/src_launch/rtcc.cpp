@@ -12515,7 +12515,8 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("MANEUVER TO BE REPLACED NOT IN THE MPT.");
 		break;
 	case 3:
-		message.push_back("MANEUVER TO BE REPLACED OVERLAPS ANOTHER MANEUVER.");
+		message.push_back("MANEUVER TO BE REPLACED OVERLAPS");
+		message.push_back("ANOTHER MANEUVER.");
 		break;
 	case 4:
 		message.push_back("MANEUVER PRIOR TO FROZEN MANEUVER.");
@@ -12565,7 +12566,8 @@ void RTCC::PMXSPT(std::string source, int n)
 		message.push_back("UNUSABLE MANEUVER FOR TRANSFER");
 		break;
 	case 39:
-		message.push_back("UNABLE TO FETCH VECTOR FOR " + RTCCONLINEMON.TextBuffer[0] + " - MPT UNCHANGED");
+		message.push_back("UNABLE TO FETCH VECTOR FOR " + RTCCONLINEMON.TextBuffer[0]);
+		message.push_back("MPT UNCHANGED");
 		break;
 	case 40:
 		message.push_back("MANEUVER DOES NOT EXIST");
@@ -20134,7 +20136,8 @@ int RTCC::PMMXFR(int id, void *data)
 		}
 
 		EphemerisData sv_anchor;
-		if (PMMXFRFetchAnchorVector(inp->TableCode, sv_anchor))
+		bool landed;
+		if (PMMXFRFetchAnchorVector(inp->TableCode, sv_anchor, landed))
 		{
 			if (inp->TableCode == RTCC_MPT_CSM)
 			{
@@ -20147,8 +20150,7 @@ int RTCC::PMMXFR(int id, void *data)
 			PMXSPT("PMMXFR", 39);
 			return 39;
 		}
-
-		PMSVCT(8, inp->TableCode, &sv_anchor);
+		PMSVCT(8, inp->TableCode, &sv_anchor, landed);
 	}
 	//LOI/MCC, GPM, DKI, SPQ, Two-Impulse
 	else if (id == 39 || id == 40 || id == 41 || id == 42)
@@ -20288,7 +20290,7 @@ int RTCC::PMMXFR(int id, void *data)
 			}
 		}
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(plan, inp->Thruster[working_man - 1], inp->Attitude[working_man - 1], mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(plan, inp->Thruster[working_man - 1], inp->Attitude[working_man - 1], CurMan, purpose, TVC, code);
 		//Check thruster
 		if (mpt->mantable.size() == 0)
 		{
@@ -20470,7 +20472,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Check ground rules
 		err = PMMXFRGroundRules(mpt, man.GMTI, med_m86.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan, VectorFetchTime);
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(med_m86.Veh, RTCC_ENGINETYPE_LMDPS, RTCC_ATTITUDE_PGNS_DESCENT, mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(med_m86.Veh, RTCC_ENGINETYPE_LMDPS, RTCC_ATTITUDE_PGNS_DESCENT, CurMan, purpose, TVC, code);
 		//Check configuration and thrust
 		CC = CCP;
 		err = PMMXFRCheckConfigThruster(true, 0, CCP, TVC, RTCC_ENGINETYPE_LMDPS, CC, CCMI);
@@ -20512,7 +20514,7 @@ int RTCC::PMMXFR(int id, void *data)
 		//Check ground rules
 		err = PMMXFRGroundRules(mpt, man.GMTI, med_m85.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan, VectorFetchTime);
 		//Format maneuver code
-		err = PMMXFRFormatManeuverCode(med_m85.VEH, RTCC_ENGINETYPE_LMAPS, RTCC_ATTITUDE_PGNS_ASCENT, mpt->mantable.size() + 1, purpose, TVC, code);
+		err = PMMXFRFormatManeuverCode(med_m85.VEH, RTCC_ENGINETYPE_LMAPS, RTCC_ATTITUDE_PGNS_ASCENT, CurMan, purpose, TVC, code);
 		//Check configuration and thrust
 		CC[RTCC_CONFIG_A] = true;
 		err = PMMXFRCheckConfigThruster(true, RTCC_CONFIGCHANGE_UNDOCKING, CCP, TVC, RTCC_ENGINETYPE_LMAPS, CC, CCMI);
@@ -20575,10 +20577,12 @@ int RTCC::PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned Replac
 				return 3;
 			}
 		}
+		//Set lower limit to end time of previous maneuver
 		if (ReplaceMan > 1)
 		{
-			LowerLimit = mpt->mantable[ReplaceMan - 1].GMT_BO;
+			LowerLimit = mpt->mantable[ReplaceMan - 2].GMT_BO;
 		}
+		//Is this first maneuver in MPT?
 		if (ReplaceMan == 1)
 		{
 			LowerLimit = CurrentGMT;
@@ -20841,8 +20845,20 @@ int RTCC::PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv)
 	return 0;
 }
 
-int RTCC::PMMXFRFetchAnchorVector(int L, EphemerisData &sv)
+int RTCC::PMMXFRFetchAnchorVector(int L, EphemerisData &sv, bool &landed)
 {
+	landed = false;
+	if (L == RTCC_MPT_LM)
+	{
+		double gmt = RTCCPresentTimeGMT();
+
+		if (gmt >= EZEPH2.LUNRSTAY.LunarStayBeginGMT && gmt <= EZEPH2.LUNRSTAY.LunarStayEndGMT)
+		{
+			landed = true;
+			return 0;
+		}
+	}
+
 	return EMGVECSTOutput(L, sv);
 }
 

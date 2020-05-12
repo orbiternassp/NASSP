@@ -400,6 +400,9 @@ public:
 	void set_SPQTerminalPhaseAngle(double wt);
 	void menuSetSPQTPIDefinitionValue();
 	void set_SPQTPIDefinitionValue(double get);
+	void menuCycleSPQCDHPoint();
+	void menuSPQCDHValue();
+	bool set_SPQCDHValue(char* val);
 	void menuSetDKIElevation();
 	void set_DKIElevation(double elev);
 	void menuCycleDKIManeuverLine();

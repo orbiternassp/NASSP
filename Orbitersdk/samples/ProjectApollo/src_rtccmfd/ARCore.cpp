@@ -2868,6 +2868,8 @@ int ARCore::subThread()
 			}
 		}
 		opt.t_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue;
+		opt.I_CDH = GC->rtcc->med_k01.I_CDH;
+		opt.DU_D = GC->rtcc->med_k01.CDH_Angle;
 
 		GC->rtcc->PMMDKI(opt, res);
 

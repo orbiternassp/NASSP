@@ -1002,7 +1002,6 @@ struct LunarLiftoffTimeOpt
 	double GETbase;		//usually MJD at launch
 	SV sv_CSM;			//CSM State vector
 	
-	double dt_2;		//Fixed time from insertion to TPI for direct profile
 	bool IsInsVelInput;	//0 = calculate insertion velocity, 1 = use input velocity
 };
 
@@ -3006,6 +3005,14 @@ public:
 		int ChaserVehicle = 1; //1 = CSM, 3 = LEM
 		double ChaserThresholdGET = -1.0;
 		double TargetThresholdGET = -1.0;
+		//1 = CDH at next apsis, 2 = CDH on time, 3 = angle from CSI
+		int I_CDH = 3;
+		//For option 1
+		int CDH_Apsis = 1;
+		//For option 2
+		double CDH_Time = 0.0;
+		//For option 3
+		double CDH_Angle = PI;
 	} med_k01;
 
 	//Maneuver Line Definition Initialization
@@ -4201,7 +4208,7 @@ private:
 	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
 	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI);
 	int PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv);
-	int PMMXFRFetchAnchorVector(int L, EphemerisData &sv);
+	int PMMXFRFetchAnchorVector(int L, EphemerisData &sv, bool &landed);
 	void PMMXFRWeightAtInitiation(int CCI, int CCMI, double &weight);
 	bool PMMXFRDeleteOption(int L, double GMTI);
 	int PMMMCDCallEMSMISS(EphemerisData sv0, double GMTI, EphemerisData &sv1);
