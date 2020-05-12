@@ -1202,6 +1202,13 @@ void PanelSwitchesVC::AddSwitch(PanelSwitchItem *s, int area, UINT * anim)
 	SwitchAnim.push_back(anim);
 }
 
+void PanelSwitchesVC::ClearSwitches()
+{
+	SwitchList.clear();
+	SwitchArea.clear();
+	SwitchAnim.clear();
+}
+
 //
 // Panel of switches. This code wraps up a whole panel with multiple
 // rows of switches, and passes redraw and mouse events to the appropriate

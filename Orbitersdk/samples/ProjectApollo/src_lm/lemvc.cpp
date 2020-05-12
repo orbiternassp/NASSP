@@ -298,6 +298,7 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 		oapiVCSetAreaClickmode_Spherical(AID_DIAL_P3_00 + i, P3_DIAL_POS[i] + ofs, 0.02);
 	}
 
+	MainPanelVC.ClearSwitches();
 	MainPanelVC.AddSwitch(&EngGimbalEnableSwitch, AID_SWITCH_P3_01, &anim_P3switch[0]);
 	MainPanelVC.AddSwitch(&TestMonitorRotary, AID_DIAL_P3_00, &anim_P3_Dial[0]);
 	MainPanelVC.AddSwitch(&RendezvousRadarRotary, AID_DIAL_P3_01, &anim_P3_Dial[1]);
