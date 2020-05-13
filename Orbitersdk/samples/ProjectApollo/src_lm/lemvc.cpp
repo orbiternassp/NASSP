@@ -288,23 +288,49 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	// Panel 3 switches
 	for (i = 0; i < P3_SWITCHCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+		oapiVCRegisterArea(AID_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + ofs, 0.012);
 	}
 
-	for (i = 0; i < P3_DIALCOUNT; i++)
+	for (i = 0; i < P3_ROTCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_DIAL_P3_00 + i, PANEL_REDRAW_MOUSE, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_DIAL_P3_00 + i, P3_DIAL_POS[i] + ofs, 0.02);
+		oapiVCRegisterArea(AID_ROT_P3_01 + i, PANEL_REDRAW_MOUSE, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_ROT_P3_01 + i, P3_ROT_POS[i] + ofs, 0.02);
 	}
 
 	MainPanelVC.ClearSwitches();
 	MainPanelVC.AddSwitch(&EngGimbalEnableSwitch, AID_SWITCH_P3_01, &anim_P3switch[0]);
-	MainPanelVC.AddSwitch(&TestMonitorRotary, AID_DIAL_P3_00, &anim_P3_Dial[0]);
-	MainPanelVC.AddSwitch(&RendezvousRadarRotary, AID_DIAL_P3_01, &anim_P3_Dial[1]);
-	MainPanelVC.AddSwitch(&TempMonitorRotary, AID_DIAL_P3_02, &anim_P3_Dial[2]);
-	MainPanelVC.AddSwitch(&LampToneTestRotary, AID_DIAL_P3_03, &anim_P3_Dial[3]);
-	MainPanelVC.AddSwitch(&FloodRotary, AID_DIAL_P3_04, &anim_P3_Dial[4]);
+	MainPanelVC.AddSwitch(&EngineDescentCommandOverrideSwitch, AID_SWITCH_P3_02, &anim_P3switch[1]);
+	MainPanelVC.AddSwitch(&LandingAntSwitch, AID_SWITCH_P3_03, &anim_P3switch[2]);
+	MainPanelVC.AddSwitch(&RadarTestSwitch, AID_SWITCH_P3_04, &anim_P3switch[3]);
+	MainPanelVC.AddSwitch(&SlewRateSwitch, AID_SWITCH_P3_05, &anim_P3switch[4]);
+	MainPanelVC.AddSwitch(&DeadBandSwitch, AID_SWITCH_P3_06, &anim_P3switch[5]);
+	MainPanelVC.AddSwitch(&GyroTestLeftSwitch, AID_SWITCH_P3_07, &anim_P3switch[6]);
+	MainPanelVC.AddSwitch(&GyroTestRightSwitch, AID_SWITCH_P3_08, &anim_P3switch[7]);
+	MainPanelVC.AddSwitch(&RollSwitch, AID_SWITCH_P3_09, &anim_P3switch[8]);
+	MainPanelVC.AddSwitch(&PitchSwitch, AID_SWITCH_P3_10, &anim_P3switch[9]);
+	MainPanelVC.AddSwitch(&YawSwitch, AID_SWITCH_P3_11, &anim_P3switch[10]);
+	MainPanelVC.AddSwitch(&ModeControlPGNSSwitch, AID_SWITCH_P3_12, &anim_P3switch[11]);
+	MainPanelVC.AddSwitch(&ModeControlAGSSwitch, AID_SWITCH_P3_13, &anim_P3switch[12]);
+	MainPanelVC.AddSwitch(&IMUCageSwitch, AID_SWITCH_P3_14, &anim_P3switch[13]);
+	MainPanelVC.AddSwitch(&EventTimerCtlSwitch, AID_SWITCH_P3_15, &anim_P3switch[14]);
+	MainPanelVC.AddSwitch(&EventTimerStartSwitch, AID_SWITCH_P3_16, &anim_P3switch[15]);
+	MainPanelVC.AddSwitch(&EventTimerMinuteSwitch, AID_SWITCH_P3_17, &anim_P3switch[16]);
+	MainPanelVC.AddSwitch(&EventTimerSecondSwitch, AID_SWITCH_P3_18, &anim_P3switch[17]);
+	MainPanelVC.AddSwitch(&RCSSysQuad1Switch, AID_SWITCH_P3_19, &anim_P3switch[18]);
+	MainPanelVC.AddSwitch(&RCSSysQuad4Switch, AID_SWITCH_P3_20, &anim_P3switch[19]);
+	MainPanelVC.AddSwitch(&RCSSysQuad2Switch, AID_SWITCH_P3_21, &anim_P3switch[20]);
+	MainPanelVC.AddSwitch(&RCSSysQuad3Switch, AID_SWITCH_P3_22, &anim_P3switch[21]);
+	MainPanelVC.AddSwitch(&SidePanelsSwitch, AID_SWITCH_P3_23, &anim_P3switch[22]);
+	MainPanelVC.AddSwitch(&FloodSwitch, AID_SWITCH_P3_24, &anim_P3switch[23]);
+	MainPanelVC.AddSwitch(&RightXPointerSwitch, AID_SWITCH_P3_25, &anim_P3switch[24]);
+	MainPanelVC.AddSwitch(&ExteriorLTGSwitch, AID_SWITCH_P3_26, &anim_P3switch[25]);
+
+	MainPanelVC.AddSwitch(&TestMonitorRotary, AID_ROT_P3_01, &anim_P3_Rot[0]);
+	MainPanelVC.AddSwitch(&RendezvousRadarRotary, AID_ROT_P3_02, &anim_P3_Rot[1]);
+	MainPanelVC.AddSwitch(&TempMonitorRotary, AID_ROT_P3_03, &anim_P3_Rot[2]);
+	MainPanelVC.AddSwitch(&LampToneTestRotary, AID_ROT_P3_04, &anim_P3_Rot[3]);
+	MainPanelVC.AddSwitch(&FloodRotary, AID_ROT_P3_05, &anim_P3_Rot[4]);
 }
 
 bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
@@ -326,9 +352,9 @@ void LEM::InitSwitchesVC()
 		anim_P3switch[P3_SWITCHCOUNT] = -1;
 	}
 
-	for (i = 0; i < P3_DIALCOUNT; i++)
+	for (i = 0; i < P3_ROTCOUNT; i++)
 	{
-		anim_P3_Dial[P3_DIALCOUNT] = -1;
+		anim_P3_Rot[P3_ROTCOUNT] = -1;
 	}
 }
 
@@ -338,7 +364,7 @@ void LEM::DeleteSwitchesVC()
 
 	for (i = 0; i < P3_SWITCHCOUNT; i++) delete mgt_P3switch[i];
 
-	for (i = 0; i < P3_DIALCOUNT; i++) delete mgt_P3Dial[i];
+	for (i = 0; i < P3_ROTCOUNT; i++) delete mgt_P3Rot[i];
 }
 
 void LEM::InitVCAnimations()
@@ -347,23 +373,23 @@ void LEM::InitVCAnimations()
 	int i = 0;
 
 	// Define panel 3 animations
-	static UINT meshgroup_P3switches[P3_SWITCHCOUNT], meshgroup_P3dials[P3_DIALCOUNT];
+	static UINT meshgroup_P3switches[P3_SWITCHCOUNT], meshgroup_P3Rots[P3_ROTCOUNT];
 	for (int i = 0; i < P3_SWITCHCOUNT; i++)
 	{
-		meshgroup_P3switches[i] = VC_GRP_zSwitch + i;
+		meshgroup_P3switches[i] = VC_GRP_Sw_P3_01 + i;
 
 		mgt_P3switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P3switches[i], 1, P3_TOGGLE_POS[i], _V(1, 0, 0), (float)PI / 4);
 		anim_P3switch[i] = CreateAnimation(0.5);
 		AddAnimationComponent(anim_P3switch[i], 0.0f, 1.0f, mgt_P3switch[i]);
 	}
 
-	for (i = 0; i < P3_DIALCOUNT; i++)
+	for (i = 0; i < P3_ROTCOUNT; i++)
 	{
-		meshgroup_P3dials[i] = VC_GRP_Rot_P3_01 + i;
+		meshgroup_P3Rots[i] = VC_GRP_Rot_P3_01 + i;
 
-		mgt_P3Dial[i] = new MGROUP_ROTATE(mesh, &meshgroup_P3dials[i], 1, P3_DIAL_POS[i], P3_DIAL_AXIS, (float)(RAD * 360));
-		anim_P3_Dial[i] = CreateAnimation(0.0);
-		AddAnimationComponent(anim_P3_Dial[i], 0.0f, 1.0f, mgt_P3Dial[i]);
+		mgt_P3Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P3Rots[i], 1, P3_ROT_POS[i], P3_ROT_AXIS, (float)(RAD * 360));
+		anim_P3_Rot[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P3_Rot[i], 0.0f, 1.0f, mgt_P3Rot[i]);
 	}
 }
 

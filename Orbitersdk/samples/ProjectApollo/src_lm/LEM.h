@@ -107,7 +107,7 @@ const double P14_TILT = 25 * RAD;
 // Number of switches on each panel
 const int	P1_SWITCHCOUNT = 20;
 const int	P2_SWITCHCOUNT = 18;
-const int	P3_SWITCHCOUNT = 1; //23
+const int	P3_SWITCHCOUNT = 26;
 const int	P4_SWITCHCOUNT = 4;
 const int	P5_SWITCHCOUNT = 8;
 const int	P6_SWITCHCOUNT = 12;
@@ -116,32 +116,37 @@ const int	P12_SWITCHCOUNT = 22;
 const int	P14_SWITCHCOUNT = 16;
 const int	LM_VC_NEEDLECOUNT = 19;
 
-// Number of dials/thumbwheels
-const int	 P1_DIALCOUNT = 1;
-const int	 P2_DIALCOUNT = 4;
-const int	 P3_DIALCOUNT = 5; //6
-const int	 P4_DIALCOUNT = 0;
-const int	 P5_DIALCOUNT = 1;
-const int	 P6_DIALCOUNT = 4;
-const int	 P8_DIALCOUNT = 0;
-const int	 P12_DIALCOUNT = 4;
-const int	 P14_DIALCOUNT = 1;
+// Number of Rotaries
+const int	 P1_ROTCOUNT = 1;
+const int	 P2_ROTCOUNT = 4;
+const int	 P3_ROTCOUNT = 5;
+const int	 P4_ROTCOUNT = 0;
+const int	 P5_ROTCOUNT = 1;
+const int	 P6_ROTCOUNT = 4;
+const int	 P8_ROTCOUNT = 0;
+const int	 P12_ROTCOUNT = 4;
+const int	 P14_ROTCOUNT = 1;
 
-// Dial rotation axises
-const VECTOR3	P1_DIAL_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
-const VECTOR3	P2_DIAL_AXIS = { 0.00, sin(P2_TILT),-cos(P2_TILT) };
-const VECTOR3	P3_DIAL_AXIS = { 0.00, sin(P3_TILT),-cos(P3_TILT) };
-const VECTOR3	P6_DIAL_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
-const VECTOR3	P12_DIAL_AXIS = { -sin(P12_TILT), cos(P12_TILT), 0.00 };
-const VECTOR3	P14_DIAL_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };
+// Rotary rotation axises
+const VECTOR3	P1_ROT_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
+const VECTOR3	P2_ROT_AXIS = { 0.00, sin(P2_TILT),-cos(P2_TILT) };
+const VECTOR3	P3_ROT_AXIS = { 0.00, sin(P3_TILT),-cos(P3_TILT) };
+const VECTOR3	P6_ROT_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
+const VECTOR3	P12_ROT_AXIS = { -sin(P12_TILT), cos(P12_TILT), 0.00 };
+const VECTOR3	P14_ROT_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };
 
-// Panel 3 Toggle-switches
+// Panel 3 switches
 const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
-	{-0.36504, 0.24668, 1.59255}
+	{-0.364743, 0.249154, 1.588}, {-0.371207, 0.202654, 1.55513}, {-0.323886, 0.249078, 1.58795}, {-0.322623, 0.202607, 1.5551}, {-0.263987, 0.184704, 1.54245},
+	{-0.113911, 0.251605, 1.58973}, {-0.059532, 0.251537, 1.58968}, {-0.002303, 0.251443, 1.58961}, {-0.113839, 0.204921, 1.55674}, {-0.059438, 0.204979, 1.55678},
+	{-0.002292, 0.204943, 1.55675}, {-0.113877, 0.152865, 1.51994}, {-0.05957, 0.152744, 1.51986}, {-0.002788, 0.153104, 1.52011}, {0.111952, 0.248089, 1.58724},
+	{0.143863, 0.248164, 1.5873}, {0.176712, 0.248192, 1.58732}, {0.210488, 0.248188, 1.58731}, {0.144625, 0.200656, 1.55372}, {0.178421, 0.200655, 1.55372},
+	{0.144484, 0.154658, 1.52121}, {0.178357, 0.154589, 1.52116}, {0.250217, 0.253498, 1.59107}, {0.25025, 0.220473, 1.56772}, {0.381213, 0.206949, 1.55817},
+	{0.369014, 0.151772, 1.51917}
 };
 
-// Panel 3 Dials
-const VECTOR3 P3_DIAL_POS[P3_DIALCOUNT] = {
+// Panel 3 Rotaries
+const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
 	{-0.34068, 0.15311, 1.51197}, {-0.19343, 0.163151, 1.52026}, {0.063658, 0.163679, 1.52046}, {0.27805, 0.151635, 1.51925}, {0.31772, 0.220734, 1.56811}
 };
 
@@ -1605,8 +1610,8 @@ protected:
 
 	// VC animations
 
-	MGROUP_TRANSFORM			*mgt_P3switch[P3_SWITCHCOUNT], *mgt_P3Dial[P3_DIALCOUNT];
-	UINT						anim_P3switch[P3_SWITCHCOUNT], anim_P3_Dial[P3_DIALCOUNT];
+	MGROUP_TRANSFORM			*mgt_P3switch[P3_SWITCHCOUNT], *mgt_P3Rot[P3_ROTCOUNT];
+	UINT						anim_P3switch[P3_SWITCHCOUNT], anim_P3_Rot[P3_ROTCOUNT];
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

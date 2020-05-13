@@ -520,20 +520,31 @@ bool ThreePosSwitch::ProcessMouseVC(int event, VECTOR3 &p)
 	// off click.
 	//
 	if (event & PANEL_MOUSE_LBDOWN) {
-		if ((Sideways == 0 && p.x < 0.5) || (Sideways == 1 && p.y < 0.5) || (Sideways == 2 && p.y > 0.5)) {
+		if (Sideways == 0 || Sideways == 2 ) {
+			if (state < 2) {
+				SwitchTo(state + 1, true);
+				Sclick.play();
+			}
+		} else {
 			if (state > 0) {
 				SwitchTo(state - 1, true);
 				Sclick.play();
 			}
 		}
-		else {
+	} else if (event & PANEL_MOUSE_RBDOWN) {
+		if (Sideways == 1) {
 			if (state < 2) {
 				SwitchTo(state + 1, true);
 				Sclick.play();
 			}
+		} else {
+			if (state > 0) {
+				SwitchTo(state - 1, true);
+				Sclick.play();
+			}
 		}
-
 	}
+
 	else if (IsSpringLoaded() && ((event & PANEL_MOUSE_LBUP) != 0) && !IsHeld()) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN, true);
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER, true);
