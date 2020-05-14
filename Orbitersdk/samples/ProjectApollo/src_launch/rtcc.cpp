@@ -27200,7 +27200,7 @@ void RTCC::PICSSC(bool vecinp, VECTOR3 &R, VECTOR3 &V, double &r, double &v, dou
 		{
 			lng += PI2;
 		}
-		VECTOR3 TEMP = mul(_M(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat), -sin(lng), cos(lng), 0, -sin(lat)*cos(lng), -sin(lat)*sin(lng), cos(lng)), V);
+		VECTOR3 TEMP = mul(_M(cos(lng)*cos(lat), sin(lng)*cos(lat), sin(lat), -sin(lng), cos(lng), 0, -sin(lat)*cos(lng), -sin(lat)*sin(lng), cos(lat)), V);
 		v = length(TEMP);
 		gamma = asin(TEMP.x/ v);
 		azi = atan2(TEMP.y, TEMP.z);
@@ -29713,4 +29713,316 @@ void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV)
 
 	CZLXTRDV.GET = GETIG;
 	CZLXTRDV.DV = DV_EXDV / 0.3048;
+}
+
+void RTCC::BMSVEC(double AGCEpoch)
+{
+	//If time is missing the time of the first vector is the assumed GMT and the first vector ID cannot be "EPHO" or "EPHR"
+	if (med_s80.time == 0.0 && (med_s80.VID[0] == "EPHO" || med_s80.VID[0] == "EPHR"))
+	{
+		return;
+	}
+
+	OELEMENTS coe;
+	double mu, r_apo, r_peri, R_E, r, v, lat, lng, gamma, azi, gmt;
+	int numvec = 0, lemoffset;
+
+	EphemerisData sv_comp[4];
+	EphemerisData sv_final[4];
+	EphemerisData sv_w;
+	MATRIX3 Rot;
+
+	//Reset
+	BZCCANOE = VectorCompareTable();
+	//Get transformation matrix
+	Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+
+	ELVCTRInputTable intab;
+	ELVCTROutputTable outtab;
+
+	//Offset in the evaluation vector table
+	if (med_s80.VEH == 1)
+	{
+		lemoffset = 0;
+	}
+	else
+	{
+		lemoffset = 6;
+	}
+
+	//Get GMT for comparison
+	if (med_s80.time > 0)
+	{
+		gmt = med_s80.time;
+	}
+	else if (med_s80.time < 0)
+	{
+		gmt = GMTfromGET(-med_s80.time);
+	}
+	else
+	{
+		//gmt gets set later
+		gmt = 0.0;
+	}
+
+	for (int i = 0;i < 4;i++)
+	{
+		//Are we requesting an ephemeris vector? 
+		if (med_s80.VID[i] == "EPHO")
+		{
+			intab.EphemerisType = 0;
+			intab.GMT = gmt;
+			intab.L = med_s80.VEH;
+
+			ELVCTR(intab, outtab);
+
+			if (outtab.ErrorCode)
+			{
+				BMGPRIME("BMSVEC", 10);
+				BZCCANOE.error = true;
+				goto RTCC_BMSVEC_1;
+			}
+			sv_comp[i] = outtab.SV;
+			//J2000 to BRCS
+			sv_comp[i].R = mul(Rot, sv_comp[i].R);
+			sv_comp[i].V = mul(Rot, sv_comp[i].V);
+			numvec++;
+		}
+		else if (med_s80.VID[i] == "CMC")
+		{
+			if (BZEVLVEC.ID[lemoffset + 0] < 0)
+			{
+				RTCCONLINEMON.TextBuffer[0] = "CMC";
+				BMGPRIME("BMSVEC", 43);
+				BZCCANOE.error = true;
+				goto RTCC_BMSVEC_1;
+			}
+			sv_comp[i] = BZEVLVEC.Vectors[lemoffset + 0];
+			numvec++;
+		}
+		else if (med_s80.VID[i] == "LGC")
+		{
+			if (BZEVLVEC.ID[lemoffset + 1] < 0)
+			{
+				RTCCONLINEMON.TextBuffer[0] = "LGC";
+				BMGPRIME("BMSVEC", 43);
+				BZCCANOE.error = true;
+				goto RTCC_BMSVEC_1;
+			}
+			sv_comp[i] = BZEVLVEC.Vectors[lemoffset + 1];
+			numvec++;
+		}
+		else if (med_s80.VID[i] == "HSR")
+		{
+			if (BZEVLVEC.ID[lemoffset + 4] < 0)
+			{
+				RTCCONLINEMON.TextBuffer[0] = "HSR";
+				BMGPRIME("BMSVEC", 43);
+				BZCCANOE.error = true;
+				goto RTCC_BMSVEC_1;
+			}
+			sv_comp[i] = BZEVLVEC.Vectors[lemoffset + 4];
+			sv_comp[i].R = mul(Rot, sv_comp[i].R);
+			sv_comp[i].V = mul(Rot, sv_comp[i].V);
+			numvec++;
+		}
+		else if (med_s80.VID[i] == "")
+		{
+			break;
+		}
+		else
+		{
+			BZCCANOE.error = true;
+			goto RTCC_BMSVEC_1;
+		}
+		if (i == 0)
+		{
+			gmt = sv_comp[i].GMT;
+		}
+	}
+
+	BZCCANOE.NumVec = numvec;
+
+	if (med_s80.REF == BODY_EARTH)
+	{
+		mu = OrbMech::mu_Earth;
+		R_E = OrbMech::R_Earth;
+	}
+	else
+	{
+		mu = OrbMech::mu_Moon;
+		R_E = MCSMLR;
+	}
+
+	VECTOR3 U, V, W;
+
+	for (int i = 0;i < numvec;i++)
+	{
+		//BRCS to ecliptic
+		sv_comp[i].R = tmul(Rot, sv_comp[i].R);
+		sv_comp[i].V = tmul(Rot, sv_comp[i].V);
+		//Coast
+		OrbMech::oneclickcoast(sv_comp[i].R, sv_comp[i].V, GMTBASE + sv_comp[i].GMT / 24.0 / 3600.0, gmt - sv_comp[i].GMT, sv_final[i].R, sv_final[i].V, sv_comp[i].RBI, med_s80.REF);
+		sv_final[i].GMT = gmt;
+		sv_final[i].RBI = med_s80.REF;
+
+		//ecliptic to BRCS
+		sv_final[i].R = mul(Rot, sv_final[i].R);
+		sv_final[i].V = mul(Rot, sv_final[i].V);
+
+		if (i == 0)
+		{
+			U = unit(sv_final[i].R);
+			W = unit(crossp(sv_final[i].R, sv_final[i].V));
+			V = unit(crossp(-U, W));
+		}
+
+		BZCCANOE.data[i].GMT = sv_final[i].GMT;
+		OrbMech::periapo(sv_final[i].R, sv_final[i].V, mu, r_apo, r_peri);
+		coe = OrbMech::coe_from_sv(sv_final[i].R, sv_final[i].V, mu);
+		PICSSC(true, sv_final[i].R, sv_final[i].V, r, v, lat, lng, gamma, azi);
+		if (lng > PI)
+		{
+			lng -= PI2;
+		}
+
+		BZCCANOE.data[i].HA = (r_apo - R_E);
+		BZCCANOE.data[i].HP = (r_peri - R_E);
+		BZCCANOE.data[i].v = v;
+		BZCCANOE.data[i].gamma = gamma;
+		BZCCANOE.data[i].psi = azi;
+		BZCCANOE.data[i].phi = lat;
+		BZCCANOE.data[i].lambda = lng;
+		BZCCANOE.data[i].h = (r - R_E);
+		BZCCANOE.data[i].a = 1.0 / (2.0 / r - v * v / mu);
+		BZCCANOE.data[i].e = coe.e;
+		BZCCANOE.data[i].i = coe.i;
+		BZCCANOE.data[i].theta_p = coe.w;
+		BZCCANOE.data[i].Omega = coe.RA;
+		BZCCANOE.data[i].nu = coe.TA;
+		BZCCANOE.data[i].U = dotp(sv_final[i].R, U);
+		BZCCANOE.data[i].V = dotp(sv_final[i].R, V);
+		BZCCANOE.data[i].W = dotp(sv_final[i].R, W);
+		BZCCANOE.data[i].U_dot = dotp(sv_final[i].V, U);
+		BZCCANOE.data[i].V_dot = dotp(sv_final[i].V, V);
+		BZCCANOE.data[i].W_dot = dotp(sv_final[i].V, W);
+	}
+
+RTCC_BMSVEC_1:
+	BMDVEC();
+}
+
+void RTCC::BMDVEC()
+{
+	VectorCompareDisplayBuffer = VectorCompareDisplay();
+	VectorCompareDisplayBuffer.error = "";
+
+	if (BZCCANOE.error)
+	{
+		VectorCompareDisplayBuffer.error = "ERROR - REFER TO ONLINE";
+		return;
+	}
+
+	VectorCompareDisplayBuffer.GMT = BZCCANOE.data[0].GMT;
+	VectorCompareDisplayBuffer.GMTR = GMTfromGET(MCGREF);
+	VectorCompareDisplayBuffer.PET = VectorCompareDisplayBuffer.GMT - VectorCompareDisplayBuffer.GMTR;
+	VectorCompareDisplayBuffer.NumVec = BZCCANOE.NumVec;
+
+	for (int i = 0;i < BZCCANOE.NumVec;i++)
+	{
+		VectorCompareDisplayBuffer.data[i].GMT = BZCCANOE.data[i].GMT;
+
+		if (BZCCANOE.data[i].e < 1.0)
+		{
+			VectorCompareDisplayBuffer.data[i].HA = BZCCANOE.data[i].HA / 1852.0;
+			VectorCompareDisplayBuffer.showHA[i] = true;
+		}
+		else
+		{
+			VectorCompareDisplayBuffer.showHA[i] = false;
+		}
+		VectorCompareDisplayBuffer.data[i].HP = BZCCANOE.data[i].HP / 1852.0;
+		VectorCompareDisplayBuffer.data[i].v = BZCCANOE.data[i].v / 0.3048;
+		VectorCompareDisplayBuffer.data[i].gamma = BZCCANOE.data[i].gamma*DEG;
+		VectorCompareDisplayBuffer.data[i].psi = BZCCANOE.data[i].psi*DEG;
+		VectorCompareDisplayBuffer.data[i].phi = BZCCANOE.data[i].phi*DEG;
+		VectorCompareDisplayBuffer.data[i].lambda = BZCCANOE.data[i].lambda*DEG;
+		VectorCompareDisplayBuffer.data[i].h = BZCCANOE.data[i].h / 1852.0;
+		VectorCompareDisplayBuffer.data[i].a = BZCCANOE.data[i].a / 1852.0;
+		VectorCompareDisplayBuffer.data[i].e = BZCCANOE.data[i].e;
+		VectorCompareDisplayBuffer.data[i].i = BZCCANOE.data[i].i*DEG;
+		if (BZCCANOE.data[i].e >= 0.001)
+		{
+			VectorCompareDisplayBuffer.showWPAndTA[i] = true;
+			VectorCompareDisplayBuffer.data[i].theta_p = BZCCANOE.data[i].theta_p*DEG;
+			VectorCompareDisplayBuffer.data[i].nu = BZCCANOE.data[i].nu*DEG;
+		}
+		else
+		{
+			VectorCompareDisplayBuffer.showWPAndTA[i] = false;
+		}
+		VectorCompareDisplayBuffer.data[i].Omega = BZCCANOE.data[i].Omega*DEG;
+		VectorCompareDisplayBuffer.data[i].U = BZCCANOE.data[i].U / 1852.0;
+		VectorCompareDisplayBuffer.data[i].V = BZCCANOE.data[i].V / 1852.0;
+		VectorCompareDisplayBuffer.data[i].W = BZCCANOE.data[i].W / 1852.0;
+		VectorCompareDisplayBuffer.data[i].U_dot = BZCCANOE.data[i].U_dot / 0.3048;
+		VectorCompareDisplayBuffer.data[i].V_dot = BZCCANOE.data[i].V_dot / 0.3048;
+		VectorCompareDisplayBuffer.data[i].W_dot = BZCCANOE.data[i].W_dot / 0.3048;
+
+		//Relative values
+		if (i > 0)
+		{
+			if (VectorCompareDisplayBuffer.showHA[i])
+			{
+				VectorCompareDisplayBuffer.data[i].HA -= VectorCompareDisplayBuffer.data[0].HA;
+			}
+			VectorCompareDisplayBuffer.data[i].HP -= VectorCompareDisplayBuffer.data[0].HP;
+			VectorCompareDisplayBuffer.data[i].v -= VectorCompareDisplayBuffer.data[0].v;
+			VectorCompareDisplayBuffer.data[i].gamma -= VectorCompareDisplayBuffer.data[0].gamma;
+			VectorCompareDisplayBuffer.data[i].psi -= VectorCompareDisplayBuffer.data[0].psi;
+			VectorCompareDisplayBuffer.data[i].phi -= VectorCompareDisplayBuffer.data[0].phi;
+			VectorCompareDisplayBuffer.data[i].lambda -= VectorCompareDisplayBuffer.data[0].lambda;
+			VectorCompareDisplayBuffer.data[i].h -= VectorCompareDisplayBuffer.data[0].h;
+			VectorCompareDisplayBuffer.data[i].a -= VectorCompareDisplayBuffer.data[0].a;
+			VectorCompareDisplayBuffer.data[i].e -= VectorCompareDisplayBuffer.data[0].e;
+			VectorCompareDisplayBuffer.data[i].i -= VectorCompareDisplayBuffer.data[0].i;
+			if (VectorCompareDisplayBuffer.showWPAndTA[i])
+			{
+				VectorCompareDisplayBuffer.data[i].theta_p -= VectorCompareDisplayBuffer.data[0].theta_p;
+				VectorCompareDisplayBuffer.data[i].nu -= VectorCompareDisplayBuffer.data[0].nu;
+			}
+			VectorCompareDisplayBuffer.data[i].Omega -= VectorCompareDisplayBuffer.data[0].Omega;
+			VectorCompareDisplayBuffer.data[i].U -= VectorCompareDisplayBuffer.data[0].U;
+			VectorCompareDisplayBuffer.data[i].V -= VectorCompareDisplayBuffer.data[0].V;
+			VectorCompareDisplayBuffer.data[i].W -= VectorCompareDisplayBuffer.data[0].W;
+			VectorCompareDisplayBuffer.data[i].U_dot -= VectorCompareDisplayBuffer.data[0].U_dot;
+			VectorCompareDisplayBuffer.data[i].V_dot -= VectorCompareDisplayBuffer.data[0].V_dot;
+			VectorCompareDisplayBuffer.data[i].W_dot -= VectorCompareDisplayBuffer.data[0].W_dot;
+		}
+		//Limits
+	}
+}
+
+void RTCC::BMGPRIME(std::string source, int n)
+{
+	std::vector<std::string> message;
+
+	switch (n)
+	{
+	case 1:
+		message.push_back("SPACECRAFT BELOW EI");
+		break;
+	case 10:
+		message.push_back("INTERPOLATION ERROR");
+		break;
+	case 43:
+		message.push_back("CANNOT FIND VECTOR " + RTCCONLINEMON.TextBuffer[0]);
+		break;
+	}
+	PMXSPT(source, message);
+}
+
+void RTCC::BMGPRIME(std::string source, std::vector<std::string> message)
+{
+	OnlinePrint(source, message);
 }

@@ -1901,6 +1901,7 @@ protected:
 	friend class LEMCrewStatus;
 
 	friend class ApolloRTCCMFD;
+	friend class ARCore;
 	friend class ProjectApolloMFD;
 	friend class MCC;
 	friend class RTCC;

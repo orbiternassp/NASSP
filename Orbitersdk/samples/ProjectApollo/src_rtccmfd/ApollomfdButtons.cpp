@@ -3160,6 +3160,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRendezvousPage);
+
+
+	static const MFDBUTTONMENU mnu93[] =
+	{
+		{ "Column 1", 0, ' ' },
+		{ "Column 2", 0, ' ' },
+		{ "Column 3", 0, ' ' },
+		{ "Column 4", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu90, sizeof(mnu90) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("VEH", OAPI_KEY_H, &ApolloRTCCMFD::menuVectorCompareVehicle);
+	RegisterFunction("TIM", OAPI_KEY_Q, &ApolloRTCCMFD::menuVectorCompareTime);
+	RegisterFunction("V1", OAPI_KEY_T, &ApolloRTCCMFD::menuVectorCompareColumn1);
+	RegisterFunction("V2", OAPI_KEY_Q, &ApolloRTCCMFD::menuVectorCompareColumn2);
+	RegisterFunction("V3", OAPI_KEY_V, &ApolloRTCCMFD::menuVectorCompareColumn3);
+	RegisterFunction("V4", OAPI_KEY_L, &ApolloRTCCMFD::menuVectorCompareColumn4);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuVectorCompareDisplayCalc);
+	RegisterFunction("REF", OAPI_KEY_A, &ApolloRTCCMFD::menuVectorCompareReference);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

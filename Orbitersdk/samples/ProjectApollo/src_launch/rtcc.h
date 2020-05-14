@@ -2935,6 +2935,15 @@ public:
 	//LGC External Delta-V Update Generator
 	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV);
 
+	//Trajectory Determination
+	//Vector Comparison Control
+	void BMSVEC(double AGCEpoch);
+	//Vector Comparison Display
+	void BMDVEC();
+	//Online print of trajectory determination
+	void BMGPRIME(std::string source, int n);
+	void BMGPRIME(std::string source, std::vector<std::string> message);
+
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
 
@@ -3195,6 +3204,16 @@ public:
 	MED_M70 med_m70;
 	MED_M72 med_m72;
 
+	struct MED_S80
+	{
+		//1 = CSM, 3 = LEM
+		int VEH = 1;
+		//GMT if positive, GET if negative, time of base vector if 0
+		double time = 0.0;
+		int REF = BODY_EARTH;
+		std::string VID[4];
+	} med_s80;
+
 	//Data Tables
 	PZEFEM pzefem;
 	CapeCrossingTable EZCCSM;
@@ -3215,6 +3234,68 @@ public:
 	ExperimentalSiteAcquisitionTable EZDPSAD2;
 	LandmarkAcquisitionTable EZLANDU1;
 	LunarLaunchTargetingTable PZLLTT;
+
+	struct EvaluationVectorTable
+	{
+		//0 = CSM, CMC
+		//1 = CSM, LGC
+		//2 = CSM, AGS
+		//3 = CSM, IU
+		//4 = CSM, HSR
+		//5 = CSM, DC
+		//6 = LM, CMC
+		//7 = LM, LGC
+		//8 = LM, AGS
+		//9 = LM, IU
+		//10 = LM, HSR
+		//11 = LM, DC
+		EphemerisData Vectors[12];
+		int ID[12] = { -1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1 };
+	} BZEVLVEC;
+
+	struct VectorCompareTableData
+	{
+		double GMT = 0.0;
+		double HA = 0.0;
+		double HP = 0.0;
+		double v = 0.0;
+		double gamma = 0.0;
+		double psi = 0.0;
+		double phi = 0.0;
+		double lambda = 0.0;
+		double h = 0.0;
+		double a = 0.0;
+		double e = 0.0;
+		double i = 0.0;
+		double theta_p = 0.0;
+		double Omega = 0.0;
+		double nu = 0.0;
+		double U = 0.0;
+		double V = 0.0;
+		double W = 0.0;
+		double U_dot = 0.0;
+		double V_dot = 0.0;
+		double W_dot = 0.0;
+	};
+
+	struct VectorCompareTable
+	{
+		bool error = false;
+		int NumVec = 0;
+		VectorCompareTableData data[4];
+	} BZCCANOE;
+
+	struct VectorCompareDisplay
+	{
+		bool showWPAndTA[4] = { false,false,false,false };
+		bool showHA[4] = { false,false,false,false };
+		int NumVec = 0;
+		VectorCompareTableData data[4];
+		double GMT = 0.0;
+		double PET = 0.0;
+		double GMTR = 0.0;
+		std::string error = "TABLE NOT INITIALIZED";
+	} VectorCompareDisplayBuffer;
 
 	struct RelativeMotionDigitalsTableEntry
 	{

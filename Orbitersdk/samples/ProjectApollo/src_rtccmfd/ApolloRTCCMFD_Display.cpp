@@ -3555,9 +3555,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(8 * W / 16, 5 * H / 28, "1502 Sunrise/Sunset Times", 25);
 		skp->Text(8 * W / 16, 6 * H / 28, "1503 Next Station Contacts", 26);
 		skp->Text(8 * W / 16, 7 * H / 28, "1506 Experimental Site Acquisition", 26);
-		skp->Text(8 * W / 16, 8 * H / 28, "1597 Skeleton Flight Plan Table", 31);
-		skp->Text(8 * W / 16, 9 * H / 28, "1619 Checkout Monitor", 21);
-		skp->Text(8 * W / 16, 10 * H / 28, "1629 On Line Monitor", 20);
+		skp->Text(8 * W / 16, 8 * H / 28, "1590 Vector Compare Display", 27);
+		skp->Text(8 * W / 16, 9 * H / 28, "1597 Skeleton Flight Plan Table", 31);
+		skp->Text(8 * W / 16, 10 * H / 28, "1619 Checkout Monitor", 21);
+		skp->Text(8 * W / 16, 11 * H / 28, "1629 On Line Monitor", 20);
 	}
 	else if (screen == 43)
 	{
@@ -7745,6 +7746,284 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display(Buffer, G->t_TPI, false);
 		skp->Text(1 * W / 8, 10 * H / 14, Buffer, strlen(Buffer));
 
+	}
+	else if (screen == 93)
+	{
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->SetFont(fonttest);
+		skp->SetPen(pen2);
+		skp->Text(4 * W / 8, 2 * H / 32, "VECTOR COMPARE DISPLAY", 39);
+		skp->Text(30 * W / 32, 2 * H / 32, "1590", 4);
+
+		sprintf_s(Buffer, GC->rtcc->VectorCompareDisplayBuffer.error.c_str());
+		skp->Text(16 * W / 32, 31 * H / 32, Buffer, strlen(Buffer));
+
+		skp->Text(15 * W / 64, 7 * H / 32, "V1", 2);
+		skp->Text(29 * W / 64, 7 * H / 32, "V2", 2);
+		skp->Text(43 * W / 64, 7 * H / 32, "V3", 2);
+		skp->Text(57 * W / 64, 7 * H / 32, "V4", 2);
+
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text(1 * W / 32, 4 * H / 32, "GMT", 3);
+		skp->Text(1 * W / 32, 5 * H / 32, "VEH", 3);
+		skp->Text(6 * W / 32, 5 * H / 32, "REF", 3);
+		skp->Text(21 * W / 32, 4 * H / 32, "PET", 3);
+		skp->Text(21 * W / 32, 5 * H / 32, "GMTR", 4);
+		skp->TextW(1 * W / 32, 10 * H / 32, L"H\u2090", 2);
+		skp->TextW(1 * W / 32, 11 * H / 32, L"H\u209A", 2);
+		skp->Text(1 * W / 32, 12 * H / 32, "V", 1);
+		skp->TextW(1 * W / 32, 13 * H / 32, L"\u03B3", 1);
+		skp->TextW(1 * W / 32, 14 * H / 32, L"\u03C8", 1);
+		skp->TextW(1 * W / 32, 15 * H / 32, L"\u03C6", 1);
+		skp->TextW(1 * W / 32, 16 * H / 32, L"\u03BB", 1);
+		skp->Text(1 * W / 32, 17 * H / 32, "h", 1);
+		skp->Text(1 * W / 32, 18 * H / 32, "a", 1);
+		skp->Text(1 * W / 32, 19 * H / 32, "e", 1);
+		skp->Text(1 * W / 32, 20 * H / 32, "i", 1);
+		skp->TextW(1 * W / 32, 21 * H / 32, L"\u0398\u209A", 2);
+		skp->TextW(1 * W / 32, 22 * H / 32, L"\u03A9", 1);
+		skp->TextW(1 * W / 32, 23 * H / 32, L"\u03BD", 1);
+		skp->Text(1 * W / 32, 24 * H / 32, "U", 1);
+		skp->Text(1 * W / 32, 25 * H / 32, "V", 1);
+		skp->Text(1 * W / 32, 26 * H / 32, "W", 1);
+		skp->TextW(1 * W / 32, 27 * H / 32, L"\u0307U", 2);
+		skp->TextW(1 * W / 32, 28 * H / 32, L"\u0307V", 2);
+		skp->TextW(1 * W / 32, 29 * H / 32, L"\u0307W", 2);
+
+		skp->Line(11 * W / 32, 8 * H / 32, 11 * W / 32, 31 * H / 32);
+		skp->Line(18 * W / 32, 8 * H / 32, 18 * W / 32, 31 * H / 32);
+		skp->Line(25 * W / 32, 8 * H / 32, 25 * W / 32, 31 * H / 32);
+
+		skp->Line(0, 18 * H / 32, W, 18 * H / 32);
+		skp->Line(0, 24 * H / 32, W, 24 * H / 32);
+
+		GET_Display2(Buffer, GC->rtcc->VectorCompareDisplayBuffer.GMT);
+		skp->Text(4 * W / 32, 4 * H / 32, Buffer, strlen(Buffer));
+		if (GC->rtcc->med_s80.VEH == 1)
+		{
+			skp->Text(3 * W / 32, 5 * H / 32, "CSM", 3);
+		}
+		else
+		{
+			skp->Text(3 * W / 32, 5 * H / 32, "LEM", 3);
+		}
+
+		if (GC->rtcc->med_s80.REF == BODY_EARTH)
+		{
+			skp->Text(8 * W / 32, 5 * H / 32, "E", 1);
+		}
+		else
+		{
+			skp->Text(8 * W / 32, 5 * H / 32, "M", 1);
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		GET_Display2(Buffer, GC->rtcc->VectorCompareDisplayBuffer.PET);
+		skp->Text(31 * W / 32, 4 * H / 32, Buffer, strlen(Buffer));
+		GET_Display2(Buffer, GC->rtcc->VectorCompareDisplayBuffer.GMTR);
+		skp->Text(31 * W / 32, 5 * H / 32, Buffer, strlen(Buffer));
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		for (int i = 0;i < 4;i++)
+		{
+			sprintf_s(Buffer, GC->rtcc->med_s80.VID[i].c_str());
+			skp->Text((15 + 14 * i) * W / 64, 9 * H / 32, Buffer, strlen(Buffer));
+		}
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		for (int i = 0;i < GC->rtcc->VectorCompareDisplayBuffer.NumVec;i++)
+		{
+			GET_Display2(Buffer, GC->rtcc->VectorCompareDisplayBuffer.data[i].GMT);
+			skp->Text((21 + 14 * i) * W / 64, 8 * H / 32, Buffer, strlen(Buffer));
+			
+			if (GC->rtcc->VectorCompareDisplayBuffer.showHA[i])
+			{
+				if (i == 0)
+				{
+					sprintf_s(Buffer, "%.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].HA);
+				}
+				else
+				{
+					sprintf_s(Buffer, "%+.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].HA);
+				}
+				skp->Text((21 + 14 * i) * W / 64, 10 * H / 32, Buffer, strlen(Buffer));
+			}
+			sprintf_s(Buffer, "%+.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].HP);
+			skp->Text((21 + 14 * i) * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].v);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].v);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
+			sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].gamma);
+			skp->Text((21 + 14 * i) * W / 64, 13 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].psi);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].psi);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				if (GC->rtcc->VectorCompareDisplayBuffer.data[i].phi > 0)
+				{
+					sprintf_s(Buffer, "%.5lfN", GC->rtcc->VectorCompareDisplayBuffer.data[i].phi);
+				}
+				else
+				{
+					sprintf_s(Buffer, "%.5lfS", abs(GC->rtcc->VectorCompareDisplayBuffer.data[i].phi));
+				}
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].phi);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 15 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				if (GC->rtcc->VectorCompareDisplayBuffer.data[i].lambda > 0)
+				{
+					sprintf_s(Buffer, "%.5lfE", GC->rtcc->VectorCompareDisplayBuffer.data[i].lambda);
+				}
+				else
+				{
+					sprintf_s(Buffer, "%.5lfW", abs(GC->rtcc->VectorCompareDisplayBuffer.data[i].lambda));
+				}
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].lambda);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 16 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].h);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].h);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 17 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].a);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.3lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].a);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 18 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].e);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].e);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 19 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].i);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].i);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 20 * H / 32, Buffer, strlen(Buffer));
+			if (GC->rtcc->VectorCompareDisplayBuffer.showWPAndTA[i])
+			{
+				if (i == 0)
+				{
+					sprintf_s(Buffer, "%.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].theta_p);
+				}
+				else
+				{
+					sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].theta_p);
+				}
+				skp->Text((21 + 14 * i) * W / 64, 21 * H / 32, Buffer, strlen(Buffer));
+				if (i == 0)
+				{
+					sprintf_s(Buffer, "%.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].nu);
+				}
+				else
+				{
+					sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].nu);
+				}
+				skp->Text((21 + 14 * i) * W / 64, 23 * H / 32, Buffer, strlen(Buffer));
+			}
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].Omega);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.5lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].Omega);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 22 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].U);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].U);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 24 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].V);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].V);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 25 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].W);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].W);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 26 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].U_dot);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].U_dot);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 27 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].V_dot);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].V_dot);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 28 * H / 32, Buffer, strlen(Buffer));
+			if (i == 0)
+			{
+				sprintf_s(Buffer, "%.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].W_dot);
+			}
+			else
+			{
+				sprintf_s(Buffer, "%+.2lf", GC->rtcc->VectorCompareDisplayBuffer.data[i].W_dot);
+			}
+			skp->Text((21 + 14 * i) * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
+		}
 	}
 	return true;
 }

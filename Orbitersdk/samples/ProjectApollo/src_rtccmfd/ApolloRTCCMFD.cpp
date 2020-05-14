@@ -51,6 +51,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
 	font2 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
 	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
+	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
 	bool found = false;
@@ -83,6 +84,7 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font);
 	oapiReleaseFont(font2);
 	oapiReleaseFont(font2vert);
+	oapiReleaseFont(fonttest);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 }
@@ -1410,6 +1412,12 @@ void ApolloRTCCMFD::menuSetLunarLaunchTargetingPage()
 void ApolloRTCCMFD::menuSetTPITimesPage()
 {
 	screen = 92;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetVectorCompareDisplay()
+{
+	screen = 93;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -7849,6 +7857,121 @@ void ApolloRTCCMFD::menuCalculateTPITime()
 	G->CalculateTPITime();
 }
 
+void ApolloRTCCMFD::menuVectorCompareDisplayCalc()
+{
+	G->VectorCompareDisplayCalc();
+}
+
+void ApolloRTCCMFD::menuVectorCompareColumn1()
+{
+	bool VectorCompareColumn1Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Select vector for column 1. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn1Input, 0, 20, (void*)this);
+}
+
+bool VectorCompareColumn1Input(void* id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_VectorCompareColumn(buf, 1);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::menuVectorCompareColumn2()
+{
+	bool VectorCompareColumn2Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Select vector for column 2. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn2Input, 0, 20, (void*)this);
+}
+
+bool VectorCompareColumn2Input(void* id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_VectorCompareColumn(buf, 2);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::menuVectorCompareColumn3()
+{
+	bool VectorCompareColumn3Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Select vector for column 3. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn3Input, 0, 20, (void*)this);
+}
+
+bool VectorCompareColumn3Input(void* id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_VectorCompareColumn(buf, 3);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::menuVectorCompareColumn4()
+{
+	bool VectorCompareColumn4Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Select vector for column 4. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn4Input, 0, 20, (void*)this);
+}
+
+bool VectorCompareColumn4Input(void* id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_VectorCompareColumn(buf, 4);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_VectorCompareColumn(std::string vec, int col)
+{
+	GC->rtcc->med_s80.VID[col - 1] = vec;
+}
+
+void ApolloRTCCMFD::menuVectorCompareVehicle()
+{
+	if (GC->rtcc->med_s80.VEH == 1)
+	{
+		GC->rtcc->med_s80.VEH = 3;
+	}
+	else
+	{
+		GC->rtcc->med_s80.VEH = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuVectorCompareReference()
+{
+	if (GC->rtcc->med_s80.REF < 1)
+	{
+		GC->rtcc->med_s80.REF++;
+	}
+	else
+	{
+		GC->rtcc->med_s80.REF = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuVectorCompareTime()
+{
+
+}
+
 void ApolloRTCCMFD::menuMSKRequest()
 {
 	bool MSKRequestInput(void* id, char *str, void *data);
@@ -7938,6 +8061,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 1506:
 		menuSetExpSiteAcqPage();
+		break;
+	case 1590:
+		menuSetVectorCompareDisplay();
 		break;
 	case 1597:
 		menuSetSkeletonFlightPlanPage();

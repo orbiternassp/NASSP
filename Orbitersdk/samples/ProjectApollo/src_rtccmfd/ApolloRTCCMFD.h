@@ -684,11 +684,22 @@ public:
 	void menuSetLunarLaunchTargetingPage();
 	void menuSetTPITimesPage();
 	void menuCalculateTPITime();
+	void menuSetVectorCompareDisplay();
+	void menuVectorCompareDisplayCalc();
+	void menuVectorCompareColumn1();
+	void menuVectorCompareColumn2();
+	void menuVectorCompareColumn3();
+	void menuVectorCompareColumn4();
+	void set_VectorCompareColumn(std::string vec, int col);
+	void menuVectorCompareVehicle();
+	void menuVectorCompareTime();
+	void menuVectorCompareReference();
 
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;
 	oapi::Font *font2vert;
+	oapi::Font *fonttest;
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
 	Saturn *saturn;

@@ -1748,6 +1748,124 @@ void ARCore::CalculateTPITime()
 	startSubthread(23);
 }
 
+void ARCore::VectorCompareDisplayCalc()
+{
+	startSubthread(25);
+}
+
+void ARCore::GetStateVectorFromAGC(bool csm)
+{
+	agc_t* vagc;
+
+	if (vesseltype < 2)
+	{
+		Saturn *saturn = (Saturn *)vessel;
+
+		vagc = &saturn->agc.vagc;
+	}
+	else
+	{
+		LEM *lem = (LEM *)vessel;
+
+		vagc = &lem->agc.vagc;
+	}
+
+	unsigned short SVoct[16];
+	int SVadd, MoonBit;
+	
+	if (csm)
+	{
+		SVadd = 01554;
+		MoonBit = 11;
+	}
+	else
+	{
+		SVadd = 01626;
+		MoonBit = 10;
+	}
+	
+	bool MoonFlag;
+
+	for (int i = 0;i < 14;i++)
+	{
+		SVoct[i] = vagc->Erasable[0][SVadd + i];
+	}
+	SVoct[14] = vagc->Erasable[0][SVadd + 38];
+	SVoct[15] = vagc->Erasable[0][SVadd + 39];
+
+	MoonFlag = (vagc->Erasable[0][0104] & (1 << MoonBit));
+
+	VECTOR3 R, V;
+	double GET;
+
+	R.x = OrbMech::DecToDouble(SVoct[0], SVoct[1]);
+	R.y = OrbMech::DecToDouble(SVoct[2], SVoct[3]);
+	R.z = OrbMech::DecToDouble(SVoct[4], SVoct[5]);
+	V.x = OrbMech::DecToDouble(SVoct[6], SVoct[7])*100.0;
+	V.y = OrbMech::DecToDouble(SVoct[8], SVoct[9])*100.0;
+	V.z = OrbMech::DecToDouble(SVoct[10], SVoct[11])*100.0;
+	GET = (OrbMech::DecToDouble(SVoct[12], SVoct[13]) - OrbMech::DecToDouble(SVoct[14], SVoct[15])) / 100.0*pow(2, 28);
+
+	if (MoonFlag)
+	{
+		R.x *= pow(2, 27);
+		R.y *= pow(2, 27);
+		R.z *= pow(2, 27);
+		V.x *= pow(2, 5);
+		V.y *= pow(2, 5);
+		V.z *= pow(2, 5);
+	}
+	else
+	{
+		R.x *= pow(2, 29);
+		R.y *= pow(2, 29);
+		R.z *= pow(2, 29);
+		V.x *= pow(2, 7);
+		V.y *= pow(2, 7);
+		V.z *= pow(2, 7);
+	}
+
+	EphemerisData sv;
+	sv.R = R;
+	sv.V = V;
+	sv.GMT = GC->rtcc->GMTfromGET(GET);
+	if (MoonFlag)
+	{
+		sv.RBI = BODY_MOON;
+	}
+	else
+	{
+		sv.RBI = BODY_EARTH;
+	}
+
+	if (csm)
+	{
+		if (vesseltype < 2)
+		{
+			GC->rtcc->BZEVLVEC.Vectors[0] = sv;
+			GC->rtcc->BZEVLVEC.ID[0] = 1;
+		}
+		else
+		{
+			GC->rtcc->BZEVLVEC.Vectors[1] = sv;
+			GC->rtcc->BZEVLVEC.ID[1] = 1;
+		}
+	}
+	else
+	{
+		if (vesseltype < 2)
+		{
+			GC->rtcc->BZEVLVEC.Vectors[6] = sv;
+			GC->rtcc->BZEVLVEC.ID[6] = 1;
+		}
+		else
+		{
+			GC->rtcc->BZEVLVEC.Vectors[7] = sv;
+			GC->rtcc->BZEVLVEC.ID[7] = 1;
+		}
+	}
+}
+
 void ARCore::NavCheckPAD()
 {
 	SV sv;
@@ -4196,8 +4314,23 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		Result = 0;
 	}
 	break;
-	case 25: //Spare
+	case 25: //Vector Compare Display
 	{
+		GetStateVectorFromAGC(true);
+		GetStateVectorFromAGC(false);
+
+		if (vesseltype < 2)
+		{
+			GC->rtcc->BZEVLVEC.Vectors[4] = GC->rtcc->StateVectorCalcEphem(vessel);
+			GC->rtcc->BZEVLVEC.ID[4] = 1;
+		}
+		else
+		{
+			GC->rtcc->BZEVLVEC.Vectors[10] = GC->rtcc->StateVectorCalcEphem(vessel);
+			GC->rtcc->BZEVLVEC.ID[10] = 1;
+		}
+
+		GC->rtcc->BMSVEC(AGCEpoch);
 		Result = 0;
 	}
 	break;
