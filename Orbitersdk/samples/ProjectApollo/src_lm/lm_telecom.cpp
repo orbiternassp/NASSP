@@ -2554,7 +2554,9 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	double PitchSlew, YawSlew;
 
-	const double TrkngCtrlGain = 500; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
+	const double TrkngCtrlGain = 270; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
+	const double TrkngRatelGain = 4.0; //
+	const double MaxServoRate = 20 * RAD;
 
 	//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
 
@@ -2582,20 +2584,20 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//set antenna slew-rates
 	if (abs(PitchSlew - pitch) > 0.0001)
 	{
-		pitchrate = (PitchSlew - pitch)*2.0;
-		if (abs(pitchrate) > 5.0*RAD)
+		pitchrate = (PitchSlew - pitch)*TrkngRatelGain;
+		if (abs(pitchrate) > MaxServoRate)
 		{
-			pitchrate = 5.0*RAD*pitchrate / abs(pitchrate);
+			pitchrate = MaxServoRate *pitchrate / abs(pitchrate);
 		}
 		moving = true;
 	}
 
 	if (abs(YawSlew - yaw) > 0.0001)
 	{
-		yawrate = (YawSlew - yaw)*2.0;
-		if (abs(yawrate) > 5.0*RAD)
+		yawrate = (YawSlew - yaw)*TrkngRatelGain;
+		if (abs(yawrate) > MaxServoRate)
 		{
-			yawrate = 5.0*RAD*yawrate / abs(yawrate);
+			yawrate = MaxServoRate *yawrate / abs(yawrate);
 		}
 		moving = true;
 	}
