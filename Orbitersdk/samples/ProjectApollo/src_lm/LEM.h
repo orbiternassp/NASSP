@@ -96,10 +96,10 @@ enum LMRCSThrusters
 // VC Constants
 // ==============================================================
 
-const double P1_TILT = 8 * RAD;
-const double P2_TILT = 8 * RAD;
-const double P3_TILT = 35 * RAD;
-const double P4_TILT = 45 * RAD;
+const double P1_TILT = 7.95581 * RAD;
+const double P2_TILT = 7.95581 * RAD;
+const double P3_TILT = 35.2509 * RAD;
+const double P4_TILT = 45.0663 * RAD;
 const double P6_TILT = 10 * RAD;
 const double P12_TILT = 20 * RAD;
 const double P14_TILT = 25 * RAD;
@@ -116,7 +116,11 @@ const int	P12_SWITCHCOUNT = 22;
 const int	P14_SWITCHCOUNT = 16;
 const int	LM_VC_NEEDLECOUNT = 19;
 
-// Number of Rotaries
+// Number of push buttons
+
+const int   P4_PUSHBCOUNT = 19;
+
+// Number of rotaries
 const int	 P1_ROTCOUNT = 1;
 const int	 P2_ROTCOUNT = 4;
 const int	 P3_ROTCOUNT = 5;
@@ -145,9 +149,17 @@ const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
 	{0.369014, 0.151772, 1.51917}
 };
 
-// Panel 3 Rotaries
+// Panel 3 rotaries
 const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
 	{-0.34068, 0.15311, 1.51197}, {-0.19343, 0.163151, 1.52026}, {0.063658, 0.163679, 1.52046}, {0.27805, 0.151635, 1.51925}, {0.31772, 0.220734, 1.56811}
+};
+
+// Panel 4 push-buttons
+const VECTOR3 P4_PUSHB_POS[P4_PUSHBCOUNT] = {
+	{-0.068631, 0.008015, 1.3869}, {-0.068537, -0.007544, 1.37132}, {-0.045774, 0.015927, 1.39483}, {-0.045737, 0.000295, 1.3791}, {-0.045635, -0.01525, 1.36354},
+	{-0.023046, -0.015110, 1.363551}, {-0.000177, -0.015110, 1.363551}, {0.022441,-0.015110,1.363551}, {-0.022966, 0.000311, 1.379174}, {-0.000208, 0.000311, 1.379174},
+	{0.022667, 0.000311, 1.379174}, {-0.023022, 0.015839, 1.394753}, {-0.000197, 0.015839, 1.394753}, {0.022350, 0.015839, 1.394753}, {0.045282, 0.015839, 1.394753},
+	{0.045019, 0.000180, 1.378975}, {0.045087, -0.015076, 1.363737}, {0.067903, 0.007901, 1.386722}, {0.067771, -0.007522, 1.371295}
 };
 
 // LM ECS status
@@ -205,6 +217,8 @@ public:
 	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf);
 	void RenderRate(SURFHANDLE surf);
+	void RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1, SURFHANDLE surf2);
+	void RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1);
 	void SetLGCAltitude(int val);
 	void SetLGCAltitudeRate(int val);
 
@@ -444,6 +458,28 @@ public:
 		nsurf	///< nsurf gives the count of surfaces for the array size calculation.
 	};
 
+	enum SurfaceID_VC
+	{
+		//
+		// First value in the enum must be set to one. Entry zero is not
+		// used.
+		//
+
+		// VC Sutfaces
+		SRF_VC_DSKYDISP,
+		SRF_VC_DSKY_LIGHTS,
+		SRF_VC_DIGITALDISP,
+		SRF_VC_DIGITALDISP2,
+		SRF_VC_RADAR_TAPE,
+		SRF_VC_RADAR_TAPE2,
+		SFR_VC_CW_LIGHTS,
+
+		//
+		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
+		//
+		nsurfvc	///< nsurfvc gives the count of surfaces for the array size calculation.
+	};
+
 	LEM(OBJHANDLE hObj, int fmodel);
 	virtual ~LEM();
 
@@ -651,14 +687,17 @@ protected:
 
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf);
+	void RedrawPanel_XPointerVC(CrossPointer *cp, UINT animx, UINT animy);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
+	void ReleaseSurfacesVC();
 	void ResetThrusters();
 	virtual void SeparateStage (UINT stage);
 	void CheckDescentStageSystems();
 	void CreateMissionSpecificSystems();
 	void InitPanel (int panel);
+	void InitPanelVC();
 	void SetSwitches(int panel);
 	void AddRCS_LMH(double TRANY);
 	void ToggleEVA();
@@ -672,8 +711,7 @@ protected:
 	void GuardClick();
 	void AbortFire();
 	void InitSwitches();
-	void InitSwitchesVC();
-	void DeleteSwitchesVC();
+	void DeleteVCAnimations();
 	void InitVCAnimations();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
@@ -1609,9 +1647,15 @@ protected:
 	DEVMESHHANDLE lmpmesh;
 
 	// VC animations
-
-	MGROUP_TRANSFORM			*mgt_P3switch[P3_SWITCHCOUNT], *mgt_P3Rot[P3_ROTCOUNT];
-	UINT						anim_P3switch[P3_SWITCHCOUNT], anim_P3_Rot[P3_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P3switch[P3_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P3Rot[P3_ROTCOUNT];
+	UINT anim_P3switch[P3_SWITCHCOUNT];
+	UINT anim_P3_Rot[P3_ROTCOUNT];
+	UINT anim_Needle_Radar;
+	UINT anim_xpointerx_cdr;
+	UINT anim_xpointery_cdr;
+	UINT anim_xpointerx_lmp;
+	UINT anim_xpointery_lmp;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
@@ -1978,6 +2022,12 @@ protected:
 	friend class MCC;
 	friend class RTCC;
 };
+
+extern MESHHANDLE hLMDescent;
+extern MESHHANDLE hLMDescentNoLeg;
+extern MESHHANDLE hLMAscent;
+extern MESHHANDLE hAstro1;
+extern MESHHANDLE hLMVC;
 
 extern void LEMLoadMeshes();
 extern void InitGParam(HINSTANCE hModule);

@@ -682,6 +682,7 @@ class PushSwitch: public ToggleSwitch {
 public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool ProcessMouseVC(int event, VECTOR3 &p);
 
 protected:
 	virtual void InitSound(SoundLib *s);

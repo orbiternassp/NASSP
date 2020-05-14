@@ -845,46 +845,86 @@
 #define IDB_BORDER_286x197              2022
 
 // VC Active Areas (Panel 1)
-//#define AID_PANEL_1				((id >= 0100) && (id <= 0124))
+#define AID_PANEL_1				((id >= 3100) && (id <= 3124))
+#define AID_VC_RANGE_TAPE               3101
+#define AID_VC_RATE_TAPE                3102
+#define AID_VC_LM_CWS_LEFT              3103
+#define AID_VC_LM_CWS_RIGHT             3104
+#define AID_VC_MISSION_CLOCK            3105
+#define AID_VC_EVENT_TIMER              3106
+#define AID_VC_XPOINTERCDR              3107
+#define AID_VC_XPOINTERLMP              3108
+
 
 // VC Active Areas (Panel 2)
 
 // VC Active Areas (Panel 3)
-#define AID_PANEL_3				((id >= 3300) && (id <= 3336))
-#define AID_SWITCH_P3_01		3301	// Engine gimbal switch
-#define AID_SWITCH_P3_02		3302	// Command overide switch
-#define AID_SWITCH_P3_03		3303	// LR antenna switch
-#define AID_SWITCH_P3_04		3304	// Radar test switch
-#define AID_SWITCH_P3_05		3305	// Slew rate switch
-#define AID_SWITCH_P3_06		3306	// Deadband switch
-#define AID_SWITCH_P3_07		3307	// Gyro test RPY switch
-#define AID_SWITCH_P3_08		3308	// Gyro test rate switch
-#define AID_SWITCH_P3_09		3309	// Att control roll switch
-#define AID_SWITCH_P3_10		3310	// Att control pitch switch
-#define AID_SWITCH_P3_11		3311	// Att control yaw switch
-#define AID_SWITCH_P3_12		3312	// Mode control PGNS switch
-#define AID_SWITCH_P3_13		3313	// Mode control AGS switch
-#define AID_SWITCH_P3_14		3314	// IMU cage switch
-#define AID_SWITCH_P3_15		3315	// Event timer reset switch
-#define AID_SWITCH_P3_16		3316	// Event timer control switch
-#define AID_SWITCH_P3_17		3317	// Event timer slew min switch
-#define AID_SWITCH_P3_18		3318	// Event timer slew sec switch
-#define AID_SWITCH_P3_19		3319	// Quad 1 heater switch
-#define AID_SWITCH_P3_20		3320	// Quad 4 heater switch
-#define AID_SWITCH_P3_21		3321	// Quad 2 heater switch
-#define AID_SWITCH_P3_22		3322	// Quad 3 heater switch
-#define AID_SWITCH_P3_23		3323	// Side panels light switch
-#define AID_SWITCH_P3_24		3324	// Flood light switch
-#define AID_SWITCH_P3_25		3325	// LMP x-pointer scale switch
-#define AID_SWITCH_P3_26		3326	// Exterior lighting switch
+#define AID_VC_PANEL_3			((id >= 3300) && (id <= 3346))
+#define AID_VC_SWITCH_P3_01		3301	// Engine gimbal switch
+#define AID_VC_SWITCH_P3_02		3302	// Command overide switch
+#define AID_VC_SWITCH_P3_03		3303	// LR antenna switch
+#define AID_VC_SWITCH_P3_04		3304	// Radar test switch
+#define AID_VC_SWITCH_P3_05		3305	// Slew rate switch
+#define AID_VC_SWITCH_P3_06		3306	// Deadband switch
+#define AID_VC_SWITCH_P3_07		3307	// Gyro test RPY switch
+#define AID_VC_SWITCH_P3_08		3308	// Gyro test rate switch
+#define AID_VC_SWITCH_P3_09		3309	// Att control roll switch
+#define AID_VC_SWITCH_P3_10		3310	// Att control pitch switch
+#define AID_VC_SWITCH_P3_11		3311	// Att control yaw switch
+#define AID_VC_SWITCH_P3_12		3312	// Mode control PGNS switch
+#define AID_VC_SWITCH_P3_13		3313	// Mode control AGS switch
+#define AID_VC_SWITCH_P3_14		3314	// IMU cage switch
+#define AID_VC_SWITCH_P3_15		3315	// Event timer reset switch
+#define AID_VC_SWITCH_P3_16		3316	// Event timer control switch
+#define AID_VC_SWITCH_P3_17		3317	// Event timer slew min switch
+#define AID_VC_SWITCH_P3_18		3318	// Event timer slew sec switch
+#define AID_VC_SWITCH_P3_19		3319	// Quad 1 heater switch
+#define AID_VC_SWITCH_P3_20		3320	// Quad 4 heater switch
+#define AID_VC_SWITCH_P3_21		3321	// Quad 2 heater switch
+#define AID_VC_SWITCH_P3_22		3322	// Quad 3 heater switch
+#define AID_VC_SWITCH_P3_23		3323	// Side panels light switch
+#define AID_VC_SWITCH_P3_24		3324	// Flood light switch
+#define AID_VC_SWITCH_P3_25		3325	// LMP x-pointer scale switch
+#define AID_VC_SWITCH_P3_26		3326	// Exterior lighting switch
 
-#define AID_ROT_P3_01			3332    // Test monitor rotary
-#define AID_ROT_P3_02			3333    // Rendezvous radar rotary
-#define AID_ROT_P3_03			3334	// Temp monitor rotary
-#define AID_ROT_P3_04			3335    // Lamp/tone test rotary
-#define AID_ROT_P3_05			3336    // Flood lights rotary
+#define AID_VC_ROT_P3_01		3332    // Test monitor rotary
+#define AID_VC_ROT_P3_02		3333    // Rendezvous radar rotary
+#define AID_VC_ROT_P3_03		3334	// Temp monitor rotary
+#define AID_VC_ROT_P3_04		3335    // Lamp/tone test rotary
+#define AID_VC_ROT_P3_05		3336    // Flood lights rotary
+
+#define AID_VC_RDR_SIG_STR      3337    // Radar signal strength
 
 // VC Active Areas (Panel 4)
+#define AID_VC_PANEL_4			((id >= 3400) && (id <= 3425))
+#define AID_VC_PUSHB_P4_01      3401    // Push Button 1
+#define AID_VC_PUSHB_P4_02      3402    // Push Button 1
+#define AID_VC_PUSHB_P4_03      3403    // Push Button 1
+#define AID_VC_PUSHB_P4_04      3404    // Push Button 1
+#define AID_VC_PUSHB_P4_05      3405    // Push Button 1
+#define AID_VC_PUSHB_P4_06      3406    // Push Button 1
+#define AID_VC_PUSHB_P4_07      3407    // Push Button 1
+#define AID_VC_PUSHB_P4_08      3408    // Push Button 1
+#define AID_VC_PUSHB_P4_09      3409    // Push Button 1
+#define AID_VC_PUSHB_P4_10      3410    // Push Button 1
+#define AID_VC_PUSHB_P4_11      3411    // Push Button 1
+#define AID_VC_PUSHB_P4_12      3412    // Push Button 1
+#define AID_VC_PUSHB_P4_13      3413    // Push Button 1
+#define AID_VC_PUSHB_P4_14      3414    // Push Button 1
+#define AID_VC_PUSHB_P4_15      3415    // Push Button 1
+#define AID_VC_PUSHB_P4_16      3416    // Push Button 1
+#define AID_VC_PUSHB_P4_17      3417    // Push Button 1
+#define AID_VC_PUSHB_P4_18      3418    // Push Button 1
+#define AID_VC_PUSHB_P4_19      3419    // Push Button 1
+
+#define AID_VC_SWITCH_P4_01		3420	//
+#define AID_VC_SWITCH_P4_02		3421	//
+#define AID_VC_SWITCH_P4_03		3422	//
+#define AID_VC_SWITCH_P4_04		3423	//
+
+#define AID_VC_DSKY_LIGHTS      3424
+#define AID_VC_DSKY_DISPLAY     3425
+
 
 // VC Active Areas (Panel 5)
 

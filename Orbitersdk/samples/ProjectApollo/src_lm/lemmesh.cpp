@@ -45,11 +45,11 @@
 #include "LM_DescentStageResource.h"
 #include "Mission.h"
 
-static MESHHANDLE hLMDescent;
-static MESHHANDLE hLMDescentNoLeg;
-static MESHHANDLE hLMAscent ;
-static MESHHANDLE hAstro1 ;
-static MESHHANDLE hLMVC;
+MESHHANDLE hLMDescent;
+MESHHANDLE hLMDescentNoLeg;
+MESHHANDLE hLMAscent;
+MESHHANDLE hAstro1;
+MESHHANDLE hLMVC;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag

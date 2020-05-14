@@ -37,6 +37,7 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "LM_VC_Resource.h"
+#include "Mission.h"
 
 #include "LEM.h"
 
@@ -285,52 +286,112 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 {
 	int i = 0;
 
-	// Panel 3 switches
+	//
+	// Release all surfaces
+	//
+	ReleaseSurfacesVC();
+
+	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 3);
+
+	// Panel 1
+	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238, 27, 559, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_LM_CWS_RIGHT, _R(1075, 27, 1375, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60, 259, 202, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(276, 259, 357, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+
+	oapiVCRegisterArea(AID_VC_RANGE_TAPE, _R(431, 633, 475, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_RATE_TAPE, _R(482, 633, 517, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+
+	oapiVCRegisterArea(AID_VC_XPOINTERCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_XPOINTERLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Panel 3
 	for (i = 0; i < P3_SWITCHCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + ofs, 0.012);
+		oapiVCRegisterArea(AID_VC_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + ofs, 0.012);
 	}
 
 	for (i = 0; i < P3_ROTCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_ROT_P3_01 + i, PANEL_REDRAW_MOUSE, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_ROT_P3_01 + i, P3_ROT_POS[i] + ofs, 0.02);
+		oapiVCRegisterArea(AID_VC_ROT_P3_01 + i, PANEL_REDRAW_MOUSE, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P3_01 + i, P3_ROT_POS[i] + ofs, 0.02);
 	}
 
-	MainPanelVC.ClearSwitches();
-	MainPanelVC.AddSwitch(&EngGimbalEnableSwitch, AID_SWITCH_P3_01, &anim_P3switch[0]);
-	MainPanelVC.AddSwitch(&EngineDescentCommandOverrideSwitch, AID_SWITCH_P3_02, &anim_P3switch[1]);
-	MainPanelVC.AddSwitch(&LandingAntSwitch, AID_SWITCH_P3_03, &anim_P3switch[2]);
-	MainPanelVC.AddSwitch(&RadarTestSwitch, AID_SWITCH_P3_04, &anim_P3switch[3]);
-	MainPanelVC.AddSwitch(&SlewRateSwitch, AID_SWITCH_P3_05, &anim_P3switch[4]);
-	MainPanelVC.AddSwitch(&DeadBandSwitch, AID_SWITCH_P3_06, &anim_P3switch[5]);
-	MainPanelVC.AddSwitch(&GyroTestLeftSwitch, AID_SWITCH_P3_07, &anim_P3switch[6]);
-	MainPanelVC.AddSwitch(&GyroTestRightSwitch, AID_SWITCH_P3_08, &anim_P3switch[7]);
-	MainPanelVC.AddSwitch(&RollSwitch, AID_SWITCH_P3_09, &anim_P3switch[8]);
-	MainPanelVC.AddSwitch(&PitchSwitch, AID_SWITCH_P3_10, &anim_P3switch[9]);
-	MainPanelVC.AddSwitch(&YawSwitch, AID_SWITCH_P3_11, &anim_P3switch[10]);
-	MainPanelVC.AddSwitch(&ModeControlPGNSSwitch, AID_SWITCH_P3_12, &anim_P3switch[11]);
-	MainPanelVC.AddSwitch(&ModeControlAGSSwitch, AID_SWITCH_P3_13, &anim_P3switch[12]);
-	MainPanelVC.AddSwitch(&IMUCageSwitch, AID_SWITCH_P3_14, &anim_P3switch[13]);
-	MainPanelVC.AddSwitch(&EventTimerCtlSwitch, AID_SWITCH_P3_15, &anim_P3switch[14]);
-	MainPanelVC.AddSwitch(&EventTimerStartSwitch, AID_SWITCH_P3_16, &anim_P3switch[15]);
-	MainPanelVC.AddSwitch(&EventTimerMinuteSwitch, AID_SWITCH_P3_17, &anim_P3switch[16]);
-	MainPanelVC.AddSwitch(&EventTimerSecondSwitch, AID_SWITCH_P3_18, &anim_P3switch[17]);
-	MainPanelVC.AddSwitch(&RCSSysQuad1Switch, AID_SWITCH_P3_19, &anim_P3switch[18]);
-	MainPanelVC.AddSwitch(&RCSSysQuad4Switch, AID_SWITCH_P3_20, &anim_P3switch[19]);
-	MainPanelVC.AddSwitch(&RCSSysQuad2Switch, AID_SWITCH_P3_21, &anim_P3switch[20]);
-	MainPanelVC.AddSwitch(&RCSSysQuad3Switch, AID_SWITCH_P3_22, &anim_P3switch[21]);
-	MainPanelVC.AddSwitch(&SidePanelsSwitch, AID_SWITCH_P3_23, &anim_P3switch[22]);
-	MainPanelVC.AddSwitch(&FloodSwitch, AID_SWITCH_P3_24, &anim_P3switch[23]);
-	MainPanelVC.AddSwitch(&RightXPointerSwitch, AID_SWITCH_P3_25, &anim_P3switch[24]);
-	MainPanelVC.AddSwitch(&ExteriorLTGSwitch, AID_SWITCH_P3_26, &anim_P3switch[25]);
+	oapiVCRegisterArea(AID_VC_RDR_SIG_STR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
-	MainPanelVC.AddSwitch(&TestMonitorRotary, AID_ROT_P3_01, &anim_P3_Rot[0]);
-	MainPanelVC.AddSwitch(&RendezvousRadarRotary, AID_ROT_P3_02, &anim_P3_Rot[1]);
-	MainPanelVC.AddSwitch(&TempMonitorRotary, AID_ROT_P3_03, &anim_P3_Rot[2]);
-	MainPanelVC.AddSwitch(&LampToneTestRotary, AID_ROT_P3_04, &anim_P3_Rot[3]);
-	MainPanelVC.AddSwitch(&FloodRotary, AID_ROT_P3_05, &anim_P3_Rot[4]);
+	// Panel 4
+
+	for (i = 0; i < P4_PUSHBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_PUSHB_P4_01 + i, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P4_01 + i, P4_PUSHB_POS[i] + ofs, 0.008);
+	}
+
+	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(309, 1520, 414, 1696), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS,  _R(165, 1525, 267, 1694), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+
+	MainPanelVC.ClearSwitches();
+	// Panel 3
+	MainPanelVC.AddSwitch(&EngGimbalEnableSwitch, AID_VC_SWITCH_P3_01, &anim_P3switch[0]);
+	MainPanelVC.AddSwitch(&EngineDescentCommandOverrideSwitch, AID_VC_SWITCH_P3_02, &anim_P3switch[1]);
+	MainPanelVC.AddSwitch(&LandingAntSwitch, AID_VC_SWITCH_P3_03, &anim_P3switch[2]);
+	MainPanelVC.AddSwitch(&RadarTestSwitch, AID_VC_SWITCH_P3_04, &anim_P3switch[3]);
+	MainPanelVC.AddSwitch(&SlewRateSwitch, AID_VC_SWITCH_P3_05, &anim_P3switch[4]);
+	MainPanelVC.AddSwitch(&DeadBandSwitch, AID_VC_SWITCH_P3_06, &anim_P3switch[5]);
+	MainPanelVC.AddSwitch(&GyroTestLeftSwitch, AID_VC_SWITCH_P3_07, &anim_P3switch[6]);
+	MainPanelVC.AddSwitch(&GyroTestRightSwitch, AID_VC_SWITCH_P3_08, &anim_P3switch[7]);
+	MainPanelVC.AddSwitch(&RollSwitch, AID_VC_SWITCH_P3_09, &anim_P3switch[8]);
+	MainPanelVC.AddSwitch(&PitchSwitch, AID_VC_SWITCH_P3_10, &anim_P3switch[9]);
+	MainPanelVC.AddSwitch(&YawSwitch, AID_VC_SWITCH_P3_11, &anim_P3switch[10]);
+	MainPanelVC.AddSwitch(&ModeControlPGNSSwitch, AID_VC_SWITCH_P3_12, &anim_P3switch[11]);
+	MainPanelVC.AddSwitch(&ModeControlAGSSwitch, AID_VC_SWITCH_P3_13, &anim_P3switch[12]);
+	MainPanelVC.AddSwitch(&IMUCageSwitch, AID_VC_SWITCH_P3_14, &anim_P3switch[13]);
+	MainPanelVC.AddSwitch(&EventTimerCtlSwitch, AID_VC_SWITCH_P3_15, &anim_P3switch[14]);
+	MainPanelVC.AddSwitch(&EventTimerStartSwitch, AID_VC_SWITCH_P3_16, &anim_P3switch[15]);
+	MainPanelVC.AddSwitch(&EventTimerMinuteSwitch, AID_VC_SWITCH_P3_17, &anim_P3switch[16]);
+	MainPanelVC.AddSwitch(&EventTimerSecondSwitch, AID_VC_SWITCH_P3_18, &anim_P3switch[17]);
+	MainPanelVC.AddSwitch(&RCSSysQuad1Switch, AID_VC_SWITCH_P3_19, &anim_P3switch[18]);
+	MainPanelVC.AddSwitch(&RCSSysQuad4Switch, AID_VC_SWITCH_P3_20, &anim_P3switch[19]);
+	MainPanelVC.AddSwitch(&RCSSysQuad2Switch, AID_VC_SWITCH_P3_21, &anim_P3switch[20]);
+	MainPanelVC.AddSwitch(&RCSSysQuad3Switch, AID_VC_SWITCH_P3_22, &anim_P3switch[21]);
+	MainPanelVC.AddSwitch(&SidePanelsSwitch, AID_VC_SWITCH_P3_23, &anim_P3switch[22]);
+	MainPanelVC.AddSwitch(&FloodSwitch, AID_VC_SWITCH_P3_24, &anim_P3switch[23]);
+	MainPanelVC.AddSwitch(&RightXPointerSwitch, AID_VC_SWITCH_P3_25, &anim_P3switch[24]);
+	MainPanelVC.AddSwitch(&ExteriorLTGSwitch, AID_VC_SWITCH_P3_26, &anim_P3switch[25]);
+
+	MainPanelVC.AddSwitch(&TestMonitorRotary, AID_VC_ROT_P3_01, &anim_P3_Rot[0]);
+	MainPanelVC.AddSwitch(&RendezvousRadarRotary, AID_VC_ROT_P3_02, &anim_P3_Rot[1]);
+	MainPanelVC.AddSwitch(&TempMonitorRotary, AID_VC_ROT_P3_03, &anim_P3_Rot[2]);
+	MainPanelVC.AddSwitch(&LampToneTestRotary, AID_VC_ROT_P3_04, &anim_P3_Rot[3]);
+	MainPanelVC.AddSwitch(&FloodRotary, AID_VC_ROT_P3_05, &anim_P3_Rot[4]);
+
+	//Panel 4
+	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P4_01, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P4_02, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchPlus, AID_VC_PUSHB_P4_03, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchMinus, AID_VC_PUSHB_P4_04, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchZero, AID_VC_PUSHB_P4_05, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchOne, AID_VC_PUSHB_P4_06, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchTwo, AID_VC_PUSHB_P4_07, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchThree, AID_VC_PUSHB_P4_08, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchFour, AID_VC_PUSHB_P4_09, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchFive, AID_VC_PUSHB_P4_10, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchSix, AID_VC_PUSHB_P4_11, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchSeven, AID_VC_PUSHB_P4_12, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchEight, AID_VC_PUSHB_P4_13, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchNine, AID_VC_PUSHB_P4_14, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchClear, AID_VC_PUSHB_P4_15, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P4_16, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P4_17, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P4_18, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P4_19, NULL);
+
+	//
+	// Initialize surfaces and switches
+	//
+	InitPanelVC();
 }
 
 bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
@@ -340,25 +401,68 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 
 bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 {
+	switch (id) {
+
+	case AID_VC_LM_CWS_LEFT:
+		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS]);
+		return true;
+
+	case AID_VC_LM_CWS_RIGHT:
+		CWEA.RedrawRight(surf, srf[SFR_VC_CW_LIGHTS]);
+		return true;
+
+	case AID_VC_MISSION_CLOCK:
+		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2]);
+		return true;
+
+	case AID_VC_EVENT_TIMER:
+		EventTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2]);
+		return true;
+
+	case AID_VC_DSKY_DISPLAY:
+		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP]);
+		return true;
+
+	case AID_VC_DSKY_LIGHTS:
+		if (pMission->GetLMDSKYVersion() == 3)
+		{
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, true, true);
+		}
+		else if (pMission->GetLMDSKYVersion() == 2)
+		{
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS]);
+		}
+		else
+		{
+			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, false);
+		}
+		return true;
+
+	case AID_VC_RDR_SIG_STR:
+		SetAnimation(anim_Needle_Radar, (RadarSignalStrengthMeter.GetDisplayValue() / 6.67) + 0.125);
+		return true;
+
+	case AID_VC_RANGE_TAPE:
+		RadarTape.RenderRangeVC(surf, srf[SRF_VC_RADAR_TAPE], srf[SRF_VC_RADAR_TAPE2]);
+		return true;
+
+	case AID_VC_RATE_TAPE:
+		RadarTape.RenderRateVC(surf, srf[SRF_VC_RADAR_TAPE]);
+		return true;
+
+	case AID_VC_XPOINTERCDR:
+		RedrawPanel_XPointerVC(&crossPointerLeft, anim_xpointerx_cdr, anim_xpointery_cdr);
+		return true;
+
+	case AID_VC_XPOINTERLMP:
+		RedrawPanel_XPointerVC(&crossPointerRight, anim_xpointerx_lmp, anim_xpointery_lmp);
+		return true;
+	}
+
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
 }
 
-void LEM::InitSwitchesVC()
-{
-	int i = 0;
-
-	for (i = 0; i < P3_SWITCHCOUNT; i++)
-	{
-		anim_P3switch[P3_SWITCHCOUNT] = -1;
-	}
-
-	for (i = 0; i < P3_ROTCOUNT; i++)
-	{
-		anim_P3_Rot[P3_ROTCOUNT] = -1;
-	}
-}
-
-void LEM::DeleteSwitchesVC()
+void LEM::DeleteVCAnimations()
 {
 	int i = 0;
 
@@ -391,5 +495,26 @@ void LEM::InitVCAnimations()
 		anim_P3_Rot[i] = CreateAnimation(0.0);
 		AddAnimationComponent(anim_P3_Rot[i], 0.0f, 1.0f, mgt_P3Rot[i]);
 	}
+
+	// Radar strength meter
+	static UINT meshgroup_Needle_Radar = VC_GRP_Needle_Radar;
+	static MGROUP_ROTATE mgt_Needle_Radar(mesh, &meshgroup_Needle_Radar, 1, _V(-0.264142, 0.235721, 1.57832), P3_ROT_AXIS, (float)(RAD * 360));
+	anim_Needle_Radar = CreateAnimation(0.5);
+	AddAnimationComponent(anim_Needle_Radar, 0.0f, 1.0f, &mgt_Needle_Radar);
+
+	// CDR & LMP X-pointer
+	const VECTOR3 xpointervector = { 0.00, 0.075*cos(P1_TILT), 0.075*sin(P1_TILT) };
+	const VECTOR3 ypointervector = { 0.075, 0, 0 };
+	static UINT meshgroup_XpointerX_cdr = VC_GRP_XpointerX_cdr, meshgroup_XpointerX_lmp = VC_GRP_XpointerX_lmp;
+	static UINT meshgroup_XpointerY_cdr = VC_GRP_XpointerY_cdr, meshgroup_XpointerY_lmp = VC_GRP_XpointerY_lmp;
+	static MGROUP_TRANSLATE mgt_xpointerx_cdr(mesh, &meshgroup_XpointerX_cdr, 1, xpointervector);
+	static MGROUP_TRANSLATE mgt_xpointery_cdr(mesh, &meshgroup_XpointerY_cdr, 1, ypointervector);
+	static MGROUP_TRANSLATE mgt_xpointerx_lmp(mesh, &meshgroup_XpointerX_lmp, 1, xpointervector);
+	static MGROUP_TRANSLATE mgt_xpointery_lmp(mesh, &meshgroup_XpointerY_lmp, 1, ypointervector);
+	anim_xpointerx_cdr = anim_xpointery_cdr = anim_xpointerx_lmp = anim_xpointery_lmp = CreateAnimation(0.5);
+	AddAnimationComponent(anim_xpointerx_cdr, 0.0f, 1.0f, &mgt_xpointerx_cdr);
+	AddAnimationComponent(anim_xpointery_cdr, 0.0f, 1.0f, &mgt_xpointery_cdr);
+	AddAnimationComponent(anim_xpointerx_lmp, 0.0f, 1.0f, &mgt_xpointerx_lmp);
+	AddAnimationComponent(anim_xpointery_lmp, 0.0f, 1.0f, &mgt_xpointery_lmp);
 }
 

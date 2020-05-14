@@ -774,6 +774,28 @@ bool PushSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+bool PushSwitch::ProcessMouseVC(int event, VECTOR3 &p) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+	SetHeld((ctrlState & 0x8000) != 0);
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		SwitchTo(1, true);
+		Sclick.play();
+	}
+	else if (event == PANEL_MOUSE_LBUP && !IsHeld()) {
+		SwitchTo(0, true);
+	}
+	return true;
+}
+
 void PushSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
