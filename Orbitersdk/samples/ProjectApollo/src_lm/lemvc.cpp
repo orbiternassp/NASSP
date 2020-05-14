@@ -511,7 +511,10 @@ void LEM::InitVCAnimations()
 	static MGROUP_TRANSLATE mgt_xpointery_cdr(mesh, &meshgroup_XpointerY_cdr, 1, ypointervector);
 	static MGROUP_TRANSLATE mgt_xpointerx_lmp(mesh, &meshgroup_XpointerX_lmp, 1, xpointervector);
 	static MGROUP_TRANSLATE mgt_xpointery_lmp(mesh, &meshgroup_XpointerY_lmp, 1, ypointervector);
-	anim_xpointerx_cdr = anim_xpointery_cdr = anim_xpointerx_lmp = anim_xpointery_lmp = CreateAnimation(0.5);
+	anim_xpointerx_cdr = CreateAnimation(0.5);
+	anim_xpointery_cdr = CreateAnimation(0.5);
+	anim_xpointerx_lmp = CreateAnimation(0.5);
+	anim_xpointery_lmp = CreateAnimation(0.5);
 	AddAnimationComponent(anim_xpointerx_cdr, 0.0f, 1.0f, &mgt_xpointerx_cdr);
 	AddAnimationComponent(anim_xpointery_cdr, 0.0f, 1.0f, &mgt_xpointery_cdr);
 	AddAnimationComponent(anim_xpointerx_lmp, 0.0f, 1.0f, &mgt_xpointerx_lmp);
