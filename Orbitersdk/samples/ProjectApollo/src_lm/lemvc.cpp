@@ -291,7 +291,7 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	//
 	ReleaseSurfacesVC();
 
-	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 3);
+	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 4);
 
 	// Panel 1
 	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238, 27, 559, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
@@ -305,6 +305,8 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 
 	oapiVCRegisterArea(AID_VC_XPOINTERCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_XPOINTERLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Panel 3
 	for (i = 0; i < P3_SWITCHCOUNT; i++)
@@ -320,6 +322,7 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	}
 
 	oapiVCRegisterArea(AID_VC_RDR_SIG_STR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_RR_NOTRACK, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Panel 4
 
@@ -457,6 +460,128 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_VC_XPOINTERLMP:
 		RedrawPanel_XPointerVC(&crossPointerRight, anim_xpointerx_lmp, anim_xpointery_lmp);
 		return true;
+
+	case AID_VC_FDAI_LEFT:
+		//if (!fdaiDisabled) {
+			VECTOR3 attitude;
+			//VECTOR3 errors;
+			//VECTOR3 rates;
+			int no_att = 0;
+
+			if (AttitudeMonSwitch.IsUp())	//PGNS
+			{
+				attitude = gasta.GetTotalAttitude();
+			}
+			else							//AGS
+			{
+				attitude = aea.GetTotalAttitude();
+			}
+
+			if (RateErrorMonSwitch.GetState() == 1)
+			{
+				if (RR.IsPowered()) {
+					if (ShiftTruSwitch.IsUp())
+					{
+						//errors.z = RR.GetRadarTrunnionPos() * 41 / (50 * RAD);
+						//errors.y = RR.GetRadarShaftPos() * 41 / (50 * RAD);
+						//errors.x = 0.0;
+					}
+					else
+					{
+						//errors.z = RR.GetRadarTrunnionPos() * 41 / (5 * RAD);
+						//errors.y = RR.GetRadarShaftPos() * 41 / (5 * RAD);
+						//errors.x = 0.0;
+					}
+				}
+				else
+				{
+					//errors = _V(0, 0, 0);
+				}
+			}
+			else
+			{
+				if (AttitudeMonSwitch.IsUp())	//PGNS
+				{
+					//errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
+				}
+				else							//AGS
+				{
+					VECTOR3 aeaerror = aea.GetAttitudeError();
+					//errors = _V(aeaerror.x, -aeaerror.y, -aeaerror.z)*DEG*41.0 / 15.0;
+
+					if (DeadBandSwitch.IsUp())
+					{
+						//errors *= 15.0 / 14.4;
+					}
+					else
+					{
+						//errors *= 15.0 / 1.7;
+					}
+				}
+			}
+
+			// ORDEAL
+			if (!no_att) {
+				attitude.y += ordeal.GetFDAI1PitchAngle();
+				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+			}
+
+			if (RateScaleSwitch.IsUp())
+			{
+				//rates = rga.GetRates() / (25.0*RAD);
+			}
+			else
+			{
+				//rates = rga.GetRates() / (5.0*RAD);
+			}
+
+			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
+			/*if (errors.x > 41) { errors.x = 41; }
+			else { if (errors.x < -41) { errors.x = -41; } }
+			if (errors.y > 41) { errors.y = 41; }
+			else { if (errors.y < -41) { errors.y = -41; } }
+			if (errors.z > 41) { errors.z = 41; }
+			else { if (errors.z < -41) { errors.z = -41; } }*/
+
+			fdai_proc[0] = attitude.x / PI2;
+			if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
+			fdai_proc[1] = attitude.y / PI2;
+			if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
+			fdai_proc[2] = attitude.z / PI2;
+			if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
+			if (fdai_proc[0] - fdai_proc_last[0] != 0.0) SetAnimation(anim_fdai_yaw, fdai_proc[2]);
+			if (fdai_proc[1] - fdai_proc_last[1] != 0.0) SetAnimation(anim_fdai_roll, fdai_proc[0]);
+			if (fdai_proc[2] - fdai_proc_last[2] != 0.0) SetAnimation(anim_fdai_pitch, fdai_proc[1]);
+			fdai_proc_last[0] = fdai_proc[0];
+			fdai_proc_last[1] = fdai_proc[1];
+			fdai_proc_last[2] = fdai_proc[2];
+
+			/*SetAnimation(anim_fdai_roll, attitude.x / PI2);
+			SetAnimation(anim_fdai_pitch, attitude.y / PI2);
+			SetAnimation(anim_fdai_yaw, attitude.z / PI2);*/
+
+			/*double animx = GetAnimation(anim_fdai_roll);
+			double animy = GetAnimation(anim_fdai_pitch);
+			double animz = GetAnimation(anim_fdai_yaw);
+
+			sprintf(oapiDebugString(), "AnimX: %f,AnimY: %f, AnimZ: %f, Roll: %f, Pitch: %f, Yaw: %f", animx, animy, animz, attitude.x*DEG, attitude.y*DEG, attitude.z*DEG);*/
+
+			//ttca_throttle_pos_dig
+
+			/*SetAnimation(anim_fdai_roll, ttca_throttle_pos_dig);
+			SetAnimation(anim_fdai_pitch, 0.25);
+			SetAnimation(anim_fdai_yaw, 0.25);*/
+
+		//}
+		return true;
+
+	/*case AID_VC_RR_NOTRACK:
+		if (lca.GetAnnunVoltage() > 2.25 && (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6)) { // The AC side is only needed for the transmitter
+			SetCompLight(LM_COMPLIGHT_1, true); // Light On
+		} else {
+			SetCompLight(LM_COMPLIGHT_1, false); // Light Off
+		}
+		return true;*/
 	}
 
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
@@ -503,14 +628,14 @@ void LEM::InitVCAnimations()
 	AddAnimationComponent(anim_Needle_Radar, 0.0f, 1.0f, &mgt_Needle_Radar);
 
 	// CDR & LMP X-pointer
-	const VECTOR3 xpointervector = { 0.00, 0.075*cos(P1_TILT), 0.075*sin(P1_TILT) };
-	const VECTOR3 ypointervector = { 0.075, 0, 0 };
+	const VECTOR3 xvector = { 0.00, 0.075*cos(P1_TILT), 0.075*sin(P1_TILT) };
+	const VECTOR3 yvector = { 0.075, 0, 0 };
 	static UINT meshgroup_XpointerX_cdr = VC_GRP_XpointerX_cdr, meshgroup_XpointerX_lmp = VC_GRP_XpointerX_lmp;
 	static UINT meshgroup_XpointerY_cdr = VC_GRP_XpointerY_cdr, meshgroup_XpointerY_lmp = VC_GRP_XpointerY_lmp;
-	static MGROUP_TRANSLATE mgt_xpointerx_cdr(mesh, &meshgroup_XpointerX_cdr, 1, xpointervector);
-	static MGROUP_TRANSLATE mgt_xpointery_cdr(mesh, &meshgroup_XpointerY_cdr, 1, ypointervector);
-	static MGROUP_TRANSLATE mgt_xpointerx_lmp(mesh, &meshgroup_XpointerX_lmp, 1, xpointervector);
-	static MGROUP_TRANSLATE mgt_xpointery_lmp(mesh, &meshgroup_XpointerY_lmp, 1, ypointervector);
+	static MGROUP_TRANSLATE mgt_xpointerx_cdr(mesh, &meshgroup_XpointerX_cdr, 1, xvector);
+	static MGROUP_TRANSLATE mgt_xpointery_cdr(mesh, &meshgroup_XpointerY_cdr, 1, yvector);
+	static MGROUP_TRANSLATE mgt_xpointerx_lmp(mesh, &meshgroup_XpointerX_lmp, 1, xvector);
+	static MGROUP_TRANSLATE mgt_xpointery_lmp(mesh, &meshgroup_XpointerY_lmp, 1, yvector);
 	anim_xpointerx_cdr = CreateAnimation(0.5);
 	anim_xpointery_cdr = CreateAnimation(0.5);
 	anim_xpointerx_lmp = CreateAnimation(0.5);
@@ -519,5 +644,58 @@ void LEM::InitVCAnimations()
 	AddAnimationComponent(anim_xpointery_cdr, 0.0f, 1.0f, &mgt_xpointery_cdr);
 	AddAnimationComponent(anim_xpointerx_lmp, 0.0f, 1.0f, &mgt_xpointerx_lmp);
 	AddAnimationComponent(anim_xpointery_lmp, 0.0f, 1.0f, &mgt_xpointery_lmp);
+
+	//FDAI
+
+	ANIMATIONCOMPONENT_HANDLE	ach_FDAI_roll, ach_FDAI_pitch, ach_FDAI_yaw;
+	const VECTOR3	FDAI_PIVOT = { -0.297851, 0.527622, 1.7026 }; // Pivot Point
+
+	static UINT meshgroup_Fdai1 = { VC_GRP_FDAIBall1 };
+	static UINT meshgroup_Fdai2 = { VC_GRP_FDAIBall };
+	static UINT meshgroup_Fdai3 = { VC_GRP_FDAIBall2 };
+
+	const VECTOR3 rollaxis = { -0.00, sin(7.95581 * RAD), cos(7.95581 * RAD) };
+	const VECTOR3 yawvaxis = { -0.00, sin(97.95581 * RAD), cos(97.95581 * RAD) };
+
+	static MGROUP_ROTATE mgt_FDAI_Roll(mesh, &meshgroup_Fdai1, 1, FDAI_PIVOT, rollaxis, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAI_Pitch(mesh, &meshgroup_Fdai2, 1, FDAI_PIVOT, _V(-1,0,0), (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAI_Yaw(mesh, &meshgroup_Fdai3, 1, FDAI_PIVOT, yawvaxis, (float)(RAD * 360));
+	anim_fdai_roll = CreateAnimation(0.0);
+	anim_fdai_pitch = CreateAnimation(0.0);
+	anim_fdai_yaw = CreateAnimation(0.0);
+	ach_FDAI_yaw = AddAnimationComponent(anim_fdai_yaw, 0.0f, 1.0f, &mgt_FDAI_Yaw);
+	ach_FDAI_roll = AddAnimationComponent(anim_fdai_roll, 0.0f, 1.0f, &mgt_FDAI_Roll, ach_FDAI_yaw);
+	ach_FDAI_pitch = AddAnimationComponent(anim_fdai_pitch, 0.0f, 1.0f, &mgt_FDAI_Pitch, ach_FDAI_roll);
+	//Anything but 0.0-1.0 will do
+	fdai_proc_last[0] = 2.0;
+	fdai_proc_last[1] = 2.0;
+	fdai_proc_last[2] = 2.0;
+}
+
+void LEM::SetCompLight(int m, bool state) {
+
+	if (!vcmesh)
+		return;
+
+	int complightmat = VC_NMAT - 9;
+
+	MATERIAL *mat = oapiMeshMaterial(hLMVC, complightmat + m);
+
+	if (state == true)
+	{   // ON
+		mat->emissive.r = 1;
+		mat->emissive.g = 0.878f;
+		mat->emissive.b = 0.506f;
+		mat->emissive.a = 1;
+	}
+	else
+	{   // OFF
+		mat->emissive.r = 0;
+		mat->emissive.g = 0;
+		mat->emissive.b = 0;
+		mat->emissive.a = 1;
+	}
+
+	oapiSetMaterial(vcmesh, complightmat + m, mat);
 }
 

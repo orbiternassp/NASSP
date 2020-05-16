@@ -96,6 +96,10 @@ enum LMRCSThrusters
 // VC Constants
 // ==============================================================
 
+// LM Comp light material indexes
+#define LM_COMPLIGHT_1		0   // RR No track light
+
+// Panel tilt
 const double P1_TILT = 7.95581 * RAD;
 const double P2_TILT = 7.95581 * RAD;
 const double P3_TILT = 35.2509 * RAD;
@@ -545,6 +549,7 @@ public:
 
 	void PanelRefreshForwardHatch();
 	void PanelRefreshOverheadHatch();
+	void SetCompLight(int m, bool state);
 
 	// Panel SDK
 	void SetPipeMaxFlow(char *pipe, double flow);
@@ -1645,6 +1650,7 @@ protected:
 	DEVMESHHANDLE drogue;
 	DEVMESHHANDLE cdrmesh;
 	DEVMESHHANDLE lmpmesh;
+	DEVMESHHANDLE vcmesh;
 
 	// VC animations
 	MGROUP_TRANSFORM *mgt_P3switch[P3_SWITCHCOUNT];
@@ -1656,6 +1662,13 @@ protected:
 	UINT anim_xpointery_cdr;
 	UINT anim_xpointerx_lmp;
 	UINT anim_xpointery_lmp;
+
+	double fdai_proc[3];
+	double fdai_proc_last[3];
+
+	UINT anim_fdai_roll;
+	UINT anim_fdai_pitch;
+	UINT anim_fdai_yaw;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

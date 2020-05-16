@@ -854,6 +854,7 @@
 #define AID_VC_EVENT_TIMER              3106
 #define AID_VC_XPOINTERCDR              3107
 #define AID_VC_XPOINTERLMP              3108
+#define AID_VC_FDAI_LEFT                3109
 
 
 // VC Active Areas (Panel 2)
@@ -894,6 +895,8 @@
 #define AID_VC_ROT_P3_05		3336    // Flood lights rotary
 
 #define AID_VC_RDR_SIG_STR      3337    // Radar signal strength
+#define AID_VC_RR_NOTRACK       3338    // RR No track light
+
 
 // VC Active Areas (Panel 4)
 #define AID_VC_PANEL_4			((id >= 3400) && (id <= 3425))

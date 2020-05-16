@@ -363,6 +363,7 @@ void LEM::Init()
 	probes = NULL;
 	cdrmesh = NULL;
 	lmpmesh = NULL;
+	vcmesh = NULL;
 
 	pMCC = NULL;
 
@@ -1600,6 +1601,8 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 		probes = GetDevMesh(vis, dscidx);
 		HideProbes();
 	}
+
+	if (vcidx != -1) vcmesh = GetDevMesh(vis, vcidx);
 }
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
@@ -1608,6 +1611,7 @@ void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 	probes = NULL;
 	cdrmesh = NULL;
 	lmpmesh = NULL;
+	vcmesh = NULL;
 }
 
 void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
