@@ -462,117 +462,107 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_FDAI_LEFT:
-		//if (!fdaiDisabled) {
-			VECTOR3 attitude;
-			//VECTOR3 errors;
-			//VECTOR3 rates;
-			int no_att = 0;
 
-			if (AttitudeMonSwitch.IsUp())	//PGNS
-			{
-				attitude = gasta.GetTotalAttitude();
-			}
-			else							//AGS
-			{
-				attitude = aea.GetTotalAttitude();
-			}
+		VECTOR3 attitude;
+		VECTOR3 errors;
+		//VECTOR3 rates;
+		int no_att = 0;
 
-			if (RateErrorMonSwitch.GetState() == 1)
-			{
-				if (RR.IsPowered()) {
-					if (ShiftTruSwitch.IsUp())
-					{
-						//errors.z = RR.GetRadarTrunnionPos() * 41 / (50 * RAD);
-						//errors.y = RR.GetRadarShaftPos() * 41 / (50 * RAD);
-						//errors.x = 0.0;
-					}
-					else
-					{
-						//errors.z = RR.GetRadarTrunnionPos() * 41 / (5 * RAD);
-						//errors.y = RR.GetRadarShaftPos() * 41 / (5 * RAD);
-						//errors.x = 0.0;
-					}
+		if (AttitudeMonSwitch.IsUp())	//PGNS
+		{
+			attitude = gasta.GetTotalAttitude();
+		}
+		else							//AGS
+		{
+			attitude = aea.GetTotalAttitude();
+		}
+
+		if (RateErrorMonSwitch.GetState() == 1)
+		{
+			if (RR.IsPowered()) {
+				if (ShiftTruSwitch.IsUp())
+				{
+					errors.z = RR.GetRadarTrunnionPos() * 41 / (50 * RAD);
+					errors.y = RR.GetRadarShaftPos() * 41 / (50 * RAD);
+					errors.x = 0.0;
 				}
 				else
 				{
-					//errors = _V(0, 0, 0);
+					errors.z = RR.GetRadarTrunnionPos() * 41 / (5 * RAD);
+					errors.y = RR.GetRadarShaftPos() * 41 / (5 * RAD);
+					errors.x = 0.0;
 				}
 			}
 			else
 			{
-				if (AttitudeMonSwitch.IsUp())	//PGNS
-				{
-					//errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
-				}
-				else							//AGS
-				{
-					VECTOR3 aeaerror = aea.GetAttitudeError();
-					//errors = _V(aeaerror.x, -aeaerror.y, -aeaerror.z)*DEG*41.0 / 15.0;
-
-					if (DeadBandSwitch.IsUp())
-					{
-						//errors *= 15.0 / 14.4;
-					}
-					else
-					{
-						//errors *= 15.0 / 1.7;
-					}
-				}
+				errors = _V(0, 0, 0);
 			}
-
-			// ORDEAL
-			if (!no_att) {
-				attitude.y += ordeal.GetFDAI1PitchAngle();
-				if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
-			}
-
-			if (RateScaleSwitch.IsUp())
+		}
+		else
+		{
+			if (AttitudeMonSwitch.IsUp())	//PGNS
 			{
-				//rates = rga.GetRates() / (25.0*RAD);
+				errors = _V(atca.lgc_err_x, atca.lgc_err_y, atca.lgc_err_z);
 			}
-			else
+			else							//AGS
 			{
-				//rates = rga.GetRates() / (5.0*RAD);
+				VECTOR3 aeaerror = aea.GetAttitudeError();
+				errors = _V(aeaerror.x, -aeaerror.y, -aeaerror.z)*DEG*41.0 / 15.0;
+
+				if (DeadBandSwitch.IsUp())
+				{
+					errors *= 15.0 / 14.4;
+				}
+				else
+				{
+					errors *= 15.0 / 1.7;
+				}
 			}
+		}
 
-			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
-			/*if (errors.x > 41) { errors.x = 41; }
-			else { if (errors.x < -41) { errors.x = -41; } }
-			if (errors.y > 41) { errors.y = 41; }
-			else { if (errors.y < -41) { errors.y = -41; } }
-			if (errors.z > 41) { errors.z = 41; }
-			else { if (errors.z < -41) { errors.z = -41; } }*/
+		// ORDEAL
+		if (!no_att) {
+			attitude.y += ordeal.GetFDAI1PitchAngle();
+			if (attitude.y >= TWO_PI) attitude.y -= TWO_PI;
+		}
 
-			fdai_proc[0] = attitude.x / PI2;
-			if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
+		if (RateScaleSwitch.IsUp())
+		{
+			//rates = rga.GetRates() / (25.0*RAD);
+		}
+		else
+		{
+			//rates = rga.GetRates() / (5.0*RAD);
+		}
+
+		if (AttitudeMonSwitch.IsUp())	//PGNS
+		{
+			fdai_proc[0] = 1.0 - attitude.x / PI2;
 			fdai_proc[1] = attitude.y / PI2;
-			if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
 			fdai_proc[2] = attitude.z / PI2;
-			if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
-			if (fdai_proc[0] - fdai_proc_last[0] != 0.0) SetAnimation(anim_fdai_yaw, fdai_proc[2]);
-			if (fdai_proc[1] - fdai_proc_last[1] != 0.0) SetAnimation(anim_fdai_roll, fdai_proc[0]);
-			if (fdai_proc[2] - fdai_proc_last[2] != 0.0) SetAnimation(anim_fdai_pitch, fdai_proc[1]);
-			fdai_proc_last[0] = fdai_proc[0];
-			fdai_proc_last[1] = fdai_proc[1];
-			fdai_proc_last[2] = fdai_proc[2];
+		}
+		else							//AGS
+		{
+			fdai_proc[0] = -attitude.x / PI2;
+			fdai_proc[1] = attitude.y / PI2;
+			fdai_proc[2] = attitude.z / PI2;
+		}
+		if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
+		if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
+		if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
+		if (fdai_proc[0] - fdai_proc_last[0] != 0.0) SetAnimation(anim_fdai_yaw, fdai_proc[2]);
+		if (fdai_proc[1] - fdai_proc_last[1] != 0.0) SetAnimation(anim_fdai_roll, fdai_proc[0]);
+		if (fdai_proc[2] - fdai_proc_last[2] != 0.0) SetAnimation(anim_fdai_pitch, fdai_proc[1]);
+		fdai_proc_last[0] = fdai_proc[0];
+		fdai_proc_last[1] = fdai_proc[1];
+		fdai_proc_last[2] = fdai_proc[2];
 
-			/*SetAnimation(anim_fdai_roll, attitude.x / PI2);
-			SetAnimation(anim_fdai_pitch, attitude.y / PI2);
-			SetAnimation(anim_fdai_yaw, attitude.z / PI2);*/
+		sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",atca.lgc_err_x,atca.lgc_err_y,atca.lgc_err_z);
 
-			/*double animx = GetAnimation(anim_fdai_roll);
-			double animy = GetAnimation(anim_fdai_pitch);
-			double animz = GetAnimation(anim_fdai_yaw);
+		SetAnimation(anim_fdai_rollerror, (errors.x + 384) / 768);
+		SetAnimation(anim_fdai_pitcherror, (-errors.y + 384) / 768);
+		SetAnimation(anim_fdai_yawerror, (errors.z + 384) / 768);
 
-			sprintf(oapiDebugString(), "AnimX: %f,AnimY: %f, AnimZ: %f, Roll: %f, Pitch: %f, Yaw: %f", animx, animy, animz, attitude.x*DEG, attitude.y*DEG, attitude.z*DEG);*/
-
-			//ttca_throttle_pos_dig
-
-			/*SetAnimation(anim_fdai_roll, ttca_throttle_pos_dig);
-			SetAnimation(anim_fdai_pitch, 0.25);
-			SetAnimation(anim_fdai_yaw, 0.25);*/
-
-		//}
 		return true;
 
 	/*case AID_VC_RR_NOTRACK:
@@ -648,14 +638,14 @@ void LEM::InitVCAnimations()
 	//FDAI
 
 	ANIMATIONCOMPONENT_HANDLE	ach_FDAI_roll, ach_FDAI_pitch, ach_FDAI_yaw;
-	const VECTOR3	FDAI_PIVOT = { -0.297851, 0.527622, 1.7026 }; // Pivot Point
+	const VECTOR3	FDAI_PIVOT = { -0.297851, 0.525802, 1.70639 }; // Pivot Point
 
 	static UINT meshgroup_Fdai1 = { VC_GRP_FDAIBall1 };
 	static UINT meshgroup_Fdai2 = { VC_GRP_FDAIBall };
 	static UINT meshgroup_Fdai3 = { VC_GRP_FDAIBall2 };
 
-	const VECTOR3 rollaxis = { -0.00, sin(7.95581 * RAD), cos(7.95581 * RAD) };
-	const VECTOR3 yawvaxis = { -0.00, sin(97.95581 * RAD), cos(97.95581 * RAD) };
+	const VECTOR3 rollaxis = { -0.00, sin(7.95581 * RAD), -cos(7.95581 * RAD) };
+	const VECTOR3 yawvaxis = { -0.00, sin(97.95581 * RAD), -cos(97.95581 * RAD) };
 
 	static MGROUP_ROTATE mgt_FDAI_Roll(mesh, &meshgroup_Fdai1, 1, FDAI_PIVOT, rollaxis, (float)(RAD * 360));
 	static MGROUP_ROTATE mgt_FDAI_Pitch(mesh, &meshgroup_Fdai2, 1, FDAI_PIVOT, _V(-1,0,0), (float)(RAD * 360));
@@ -663,13 +653,31 @@ void LEM::InitVCAnimations()
 	anim_fdai_roll = CreateAnimation(0.0);
 	anim_fdai_pitch = CreateAnimation(0.0);
 	anim_fdai_yaw = CreateAnimation(0.0);
-	ach_FDAI_yaw = AddAnimationComponent(anim_fdai_yaw, 0.0f, 1.0f, &mgt_FDAI_Yaw);
-	ach_FDAI_roll = AddAnimationComponent(anim_fdai_roll, 0.0f, 1.0f, &mgt_FDAI_Roll, ach_FDAI_yaw);
-	ach_FDAI_pitch = AddAnimationComponent(anim_fdai_pitch, 0.0f, 1.0f, &mgt_FDAI_Pitch, ach_FDAI_roll);
+	ach_FDAI_roll = AddAnimationComponent(anim_fdai_roll, 0.0f, 1.0f, &mgt_FDAI_Roll);
+	ach_FDAI_yaw = AddAnimationComponent(anim_fdai_yaw, 0.0f, 1.0f, &mgt_FDAI_Yaw, ach_FDAI_roll);
+	ach_FDAI_pitch = AddAnimationComponent(anim_fdai_pitch, 0.0f, 1.0f, &mgt_FDAI_Pitch, ach_FDAI_yaw);
 	//Anything but 0.0-1.0 will do
 	fdai_proc_last[0] = 2.0;
 	fdai_proc_last[1] = 2.0;
 	fdai_proc_last[2] = 2.0;
+
+	// FDAI error needles
+	const VECTOR3 needlexvector = { 0.00, 0.05*cos(P1_TILT), 0.05*sin(P1_TILT) };
+	const VECTOR3 needleyvector = { 0.05, 0, 0 };
+
+	static UINT meshgroup_RollError = VC_GRP_FDAI_rollerror;
+	static UINT meshgroup_PitchError = VC_GRP_FDAI_pitcherror;
+	static UINT meshgroup_YawError = VC_GRP_FDAI_yawerror;
+
+	static MGROUP_TRANSLATE mgt_rollerror(mesh, &meshgroup_RollError, 1, needleyvector);
+	static MGROUP_TRANSLATE mgt_pitcherror(mesh, &meshgroup_PitchError, 1, needlexvector);
+	static MGROUP_TRANSLATE mgt_yawerror(mesh, &meshgroup_YawError, 1, needleyvector);
+	anim_fdai_rollerror = CreateAnimation(0.5);
+	anim_fdai_pitcherror = CreateAnimation(0.5);
+	anim_fdai_yawerror = CreateAnimation(0.5);
+	AddAnimationComponent(anim_fdai_rollerror, 0.0f, 1.0f, &mgt_rollerror);
+	AddAnimationComponent(anim_fdai_pitcherror, 0.0f, 1.0f, &mgt_pitcherror);
+	AddAnimationComponent(anim_fdai_yawerror, 0.0f, 1.0f, &mgt_yawerror);
 }
 
 void LEM::SetCompLight(int m, bool state) {

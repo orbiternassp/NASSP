@@ -1669,6 +1669,9 @@ protected:
 	UINT anim_fdai_roll;
 	UINT anim_fdai_pitch;
 	UINT anim_fdai_yaw;
+	UINT anim_fdai_rollerror;
+	UINT anim_fdai_pitcherror;
+	UINT anim_fdai_yawerror;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
