@@ -98,10 +98,16 @@ AR_GCore::~AR_GCore()
 
 void AR_GCore::SetMissionSpecificParameters()
 {
+	rtcc->AGCEpoch = 40221.525;
 	if (mission == 7)
 	{
+		rtcc->MCLSDA = sin(28.5217969*RAD);
+		rtcc->MCLCDA = cos(28.5217969*RAD);
+		rtcc->MCLGRA = -80.5612465*RAD;
+
 		rtcc->GMGMED("P80,1,CSM,10,11,1968;");
 		rtcc->GMGMED("P10,CSM,15:02:45;");
+		rtcc->GMGMED("P12,CSM,15:02:45,72.0;");
 	}
 	else if (mission == 8)
 	{
@@ -138,11 +144,13 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,12,21,1968;");
 		rtcc->GMGMED("P10,CSM,12:51:0;");
+		rtcc->GMGMED("P12,CSM,12:51:0,72.0;");
 	}
 	else if (mission == 9)
 	{
 		rtcc->GMGMED("P80,1,CSM,3,3,1969;");
 		rtcc->GMGMED("P10,CSM,16:00:00;");
+		rtcc->GMGMED("P12,CSM,16:00:00,72.0;");
 
 		rtcc->MCCLEX = 3431;
 	}
@@ -182,12 +190,17 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,5,18,1969;");
 		rtcc->GMGMED("P10,CSM,16:49:00;");
+		rtcc->GMGMED("P12,CSM,16:49:00,72.0;");
 
+		rtcc->MCLSDA = sin(28.608202*RAD);
+		rtcc->MCLCDA = cos(28.608202*RAD);
 		rtcc->MCLGRA = -80.602087222*RAD;
 		rtcc->MCCLEX = 3431;
 	}
 	else if (mission == 11) // July 16th Launch
 	{
+		rtcc->AGCEpoch = 40586.767239;
+
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 0.71388888*RAD;
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = 23.7077777*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon -3073.263;
@@ -218,9 +231,11 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,7,16,1969;");
 		rtcc->GMGMED("P10,CSM,13:32:00;");
+		rtcc->GMGMED("P12,CSM,13:32:00,72.0;");
 	}
 	/*else if (mission == 11) // July 18th Launch
 	{
+		rtcc->AGCEpoch = 40586.767239;
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 0.35277778*RAD;
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -01.29916667*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon - 1.01*1852.0;
@@ -254,6 +269,7 @@ void AR_GCore::SetMissionSpecificParameters()
 	}
 	else if (mission == 11) // July 21st Launch
 	{
+		rtcc->AGCEpoch = 40586.767239;
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = 1.67805556*RAD;
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -41.89916667*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon - 1.25*1852.0;
@@ -293,6 +309,8 @@ void AR_GCore::SetMissionSpecificParameters()
 	}*/
 	else if (mission == 12)
 	{
+		rtcc->AGCEpoch = 40586.767239;
+
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = -2.9425*RAD;
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -23.44333*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon -1.19*1852.0;
@@ -329,6 +347,7 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,11,14,1969;");
 		rtcc->GMGMED("P10,CSM,16:22:00;");
+		rtcc->GMGMED("P12,CSM,16:22:00,72.0;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5551.1299*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -133067.52*0.3048;
@@ -348,6 +367,8 @@ void AR_GCore::SetMissionSpecificParameters()
 	}
 	else if (mission == 13)
 	{
+		rtcc->AGCEpoch = 40586.767239;
+
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = -3.6686*RAD;
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -17.4842*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon -0.76*1852.0;
@@ -387,6 +408,7 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,4,11,1970;");
 		rtcc->GMGMED("P10,CSM,19:13:00;");
+		rtcc->GMGMED("P12,CSM,19:13:00,72.0;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
@@ -406,6 +428,13 @@ void AR_GCore::SetMissionSpecificParameters()
 	}
 	else if (mission == 14)
 	{
+		rtcc->AGCEpoch = 40952.009432;
+
+		rtcc->MCCCRF = 1733;
+		rtcc->MCCCXS = 306;
+		rtcc->MCCLRF = 1731;
+		rtcc->MCCLXS = 3606;
+
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = -3.672*RAD;
 		rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST] = -17.463*RAD;
 		rtcc->MCSMLR = OrbMech::R_Moon -0.76*1852.0;
@@ -444,6 +473,7 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,1,31,1971;");
 		rtcc->GMGMED("P10,CSM,20:23:00;");
+		rtcc->GMGMED("P12,CSM,20:23:00,72.0;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5546.4472*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -140345.73*0.3048;
@@ -498,6 +528,7 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,7,26,1971;");
 		rtcc->GMGMED("P10,CSM,13:34:00;");
+		rtcc->GMGMED("P12,CSM,13:34:00,80.088;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5548.14101*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -162539.6686*0.3048;
@@ -546,6 +577,7 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,4,16,1972;");
 		rtcc->GMGMED("P10,CSM,17:54:00;");
+		rtcc->GMGMED("P12,CSM,17:54:00,72.0;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5543.4605*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -159548.72*0.3048;
@@ -595,6 +627,7 @@ void AR_GCore::SetMissionSpecificParameters()
 
 		rtcc->GMGMED("P80,1,CSM,12,7,1972;");
 		rtcc->GMGMED("P10,CSM,02:53:00;");
+		rtcc->GMGMED("P12,CSM,02:53:00,72.0;");
 
 		rtcc->RTCCPDIIgnitionTargets.v_IGG = 5542.8976*0.3048;
 		rtcc->RTCCPDIIgnitionTargets.r_IGXG = -156145.03*0.3048;
@@ -606,6 +639,11 @@ void AR_GCore::SetMissionSpecificParameters()
 
 	if (mission == 15 || mission == 16 || mission == 17)
 	{
+		rtcc->AGCEpoch = 41317.251625;
+		rtcc->MCCCRF = 1733;
+		rtcc->MCCCXS = 306;
+		rtcc->MCCLRF = 1731;
+		rtcc->MCCLXS = 3606;
 		rtcc->RTCCDescentTargets.RBRFG = _V(-3.1183588e3, 0.0, -1.1741441e4)*0.3048;
 		rtcc->RTCCDescentTargets.VBRFG = _V(-1.9646916e2, 0.0, -1.6675997e2)*0.3048;
 		rtcc->RTCCDescentTargets.ABRFG = _V(-7.1824814e-1, 0.0, -8.3024503)*0.3048;
@@ -831,41 +869,17 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	target = NULL;
 	//screen = 0;
 	targetnumber = -1;
-	AGCEpoch = 40221.525;
 	AGCEphemTEphemZero = 40038.0;
-	REFSMMAT = REFSMMAT_BRCS = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	REFSMMATTime = 0.0;
 	REFSMMATopt = 4;
 	REFSMMATcur = 4;
-	REFSMMATupl = 0;
 	manpadopt = 0;
 	vesseltype = 0;
 	lemdescentstage = true;
 
-	for (int i = 0; i < 20; i++)
-	{
-		REFSMMAToct[i] = 0;
-	}
-
-	if (strcmp(v->GetName(), "AS-205") == 0)
-	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.5217969*RAD, -80.5612465*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
-	}
-	else if (strcmp(v->GetName(), "AS-503") == 0)
-	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.124*RAD);
-	}
-	else if (strcmp(v->GetName(), "AS-504") == 0)
-	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
-	}
-	else if (strcmp(v->GetName(), "Spider") == 0)
+	if (strcmp(v->GetName(), "Spider") == 0)
 	{
 		vesseltype = 2;
-	}
-	else if (strcmp(v->GetName(), "AS-505") == 0 || strcmp(v->GetName(), "Charlie-Brown") == 0)
-	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.626530*RAD, -80.620629*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
 	}
 	else if (strcmp(v->GetName(), "Snoopy") == 0)
 	{
@@ -873,86 +887,65 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	else if (strcmp(v->GetName(), "AS-506") == 0 || strcmp(v->GetName(), "Columbia") == 0)
 	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
-		AGCEpoch = 40586.767239;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Eagle") == 0)
 	{
 		vesseltype = 2;
-		AGCEpoch = 40586.767239;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Yankee-Clipper") == 0)
 	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
-		AGCEpoch = 40586.767239;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Intrepid") == 0)
 	{
 		vesseltype = 2;
-		AGCEpoch = 40586.767239;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Odyssey") == 0)
 	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
-		AGCEpoch = 40586.767239;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Aquarius") == 0)
 	{
 		vesseltype = 2;
-		AGCEpoch = 40586.767239;
 		AGCEphemTEphemZero = 40403.0;
 	}
 	else if (strcmp(v->GetName(), "Kitty-Hawk") == 0)
 	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.067*RAD);
-		AGCEpoch = 40952.009432;
 		AGCEphemTEphemZero = 40768.0;
 	}
 	else if (strcmp(v->GetName(), "Antares") == 0)
 	{
 		vesseltype = 2;
-		AGCEpoch = 40952.009432;
 		AGCEphemTEphemZero = 40768.0;
 	}
 	else if (strcmp(v->GetName(), "Endeavour") == 0)
 	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 80.088*RAD);
-		AGCEpoch = 41317.251625;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Falcon") == 0)
 	{
 		vesseltype = 2;
-		AGCEpoch = 41317.251625;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Casper") == 0)
 	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
-		AGCEpoch = 41317.251625;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Orion") == 0)
 	{
 		vesseltype = 2;
-		AGCEpoch = 41317.251625;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "America") == 0)
 	{
-		REFSMMAT = OrbMech::LaunchREFSMMAT(28.608202*RAD, -80.604064*RAD, LaunchMJD[GC->mission - 7], 72.0*RAD);
-		AGCEpoch = 41317.251625;
 		AGCEphemTEphemZero = 41133.0;
 	}
 	else if (strcmp(v->GetName(), "Challenger") == 0)
 	{
 		vesseltype = 2;
-		AGCEpoch = 41317.251625;
 		AGCEphemTEphemZero = 41133.0;
 	}
 
@@ -1312,7 +1305,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	LVDCLaunchAzimuth = 0.0;
 
 	AGCEphemOption = 0;
-	AGCEphemBRCSEpoch = AGCEpoch;
+	AGCEphemBRCSEpoch = GC->rtcc->AGCEpoch;
 	AGCEphemTIMEM0 = floor(GC->rtcc->CalcGETBase()) + 6.75;
 	AGCEphemTEPHEM = GC->rtcc->CalcGETBase();
 	AGCEphemTLAND = GC->t_Land;
@@ -1970,7 +1963,7 @@ void ARCore::StateVectorCalc()
 
 	UplinkSV = sv1;
 
-	Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+	Rot = OrbMech::J2000EclToBRCS(GC->rtcc->AGCEpoch);
 
 	UplinkSV.R = mul(Rot, UplinkSV.R);
 	UplinkSV.V = mul(Rot, UplinkSV.V);
@@ -2050,7 +2043,7 @@ void ARCore::AGSStateVectorCalc()
 	opt.AGSbase = AGSKFactor;
 	opt.csm = SVSlot;
 	opt.GETbase = GC->rtcc->CalcGETBase();
-	opt.REFSMMAT = REFSMMAT;
+	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 	opt.sv = sv;
 
 	GC->rtcc->AGSStateVectorPAD(&opt, agssvpad);
@@ -2170,38 +2163,16 @@ void ARCore::REFSMMATUplink(void)
 {
 	for (int i = 0; i < 20; i++)
 	{
-		g_Data.emem[i] = REFSMMAToct[i];
+		if (vesseltype < 2)
+		{
+			g_Data.emem[i] = GC->rtcc->CZREFMAT.Block[0].Octals[i];
+		}
+		else
+		{
+			g_Data.emem[i] = GC->rtcc->CZREFMAT.Block[1].Octals[i];
+		}
 	}
 	UplinkData();
-}
-
-void ARCore::REFSMMATUplinkCalc()
-{
-	MATRIX3 a = mul(REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
-	REFSMMAT_BRCS = a;
-
-	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
-
-	REFSMMAToct[0] = 24;
-	REFSMMAToct[1] = REFSMMATUplinkAddress();
-	REFSMMAToct[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
-	REFSMMAToct[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
-	REFSMMAToct[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
-	REFSMMAToct[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
-	REFSMMAToct[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
-	REFSMMAToct[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
-	REFSMMAToct[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
-	REFSMMAToct[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
-	REFSMMAToct[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
-	REFSMMAToct[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
-	REFSMMAToct[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
-	REFSMMAToct[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
-	REFSMMAToct[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
-	REFSMMAToct[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
-	REFSMMAToct[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
-	REFSMMAToct[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
-	REFSMMAToct[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
-	REFSMMAToct[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
 }
 
 void ARCore::P30UplinkCalc()
@@ -2625,17 +2596,17 @@ void ARCore::VecPointCalc()
 		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
 		M = _M(cos(y_T)*cos(p_T), sin(y_T), -cos(y_T)*sin(p_T), -sin(y_T)*cos(p_T), cos(y_T), sin(y_T)*sin(p_T), sin(p_T), 0.0, cos(p_T));
 
-		VECangles = OrbMech::CALCGAR(REFSMMAT, mul(OrbMech::tmat(M), M_R));
+		VECangles = OrbMech::CALCGAR(GC->rtcc->EZJGMTX1.data[0].REFSMMAT, mul(OrbMech::tmat(M), M_R));
 	}
 	else if (VECoption == 1)
 	{
-		VECangles = GC->rtcc->HatchOpenThermalControl(vessel, REFSMMAT);
+		VECangles = GC->rtcc->HatchOpenThermalControl(vessel, GC->rtcc->EZJGMTX1.data[0].REFSMMAT);
 	}
 	else
 	{
 		SV sv;
 
-		GC->rtcc->PointAOTWithCSM(REFSMMAT, sv, 2, 1, 0.0);
+		GC->rtcc->PointAOTWithCSM(GC->rtcc->EZJGMTX1.data[0].REFSMMAT, sv, 2, 1, 0.0);
 	}
 }
 
@@ -2758,15 +2729,11 @@ int ARCore::subThread()
 		{
 			mptveh = RTCC_MPT_CSM;
 			mptotherveh = RTCC_MPT_LM;
-			//Remove this later
-			GC->rtcc->EZJGMTX1.data[0].REFSMMAT = REFSMMAT;
 		}
 		else
 		{
 			mptveh = RTCC_MPT_LM;
 			mptotherveh = RTCC_MPT_CSM;
-			//Remove this later
-			GC->rtcc->EZJGMTX3.data[0].REFSMMAT = REFSMMAT;
 		}
 
 		//Queue control
@@ -3091,7 +3058,15 @@ int ARCore::subThread()
 		opt.vessel = vessel;
 		opt.vesseltype = vesseltype;
 		opt.HeadsUp = REFSMMATHeadsUp;
-		opt.PresentREFSMMAT = REFSMMAT;
+		if (vesseltype < 2)
+		{
+			opt.PresentREFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
+		}
+		else
+		{
+			opt.PresentREFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
+		}
+
 		opt.IMUAngles = VECangles;
 		opt.csmlmdocked = !GC->MissionPlanningActive && docked;
 
@@ -3145,7 +3120,15 @@ int ARCore::subThread()
 			opt.useSV = false;
 		}
 
-		REFSMMAT = GC->rtcc->REFSMMATCalc(&opt);
+		MATRIX3 REFSMMAT = GC->rtcc->REFSMMATCalc(&opt);
+		if (vesseltype < 2)
+		{
+			GC->rtcc->EMGSTSTM(1, REFSMMAT, RTCC_REFSMMAT_TYPE_CUR, GC->rtcc->RTCCPresentTimeGMT());
+		}
+		else
+		{
+			GC->rtcc->EMGSTSTM(3, REFSMMAT, RTCC_REFSMMAT_TYPE_CUR, GC->rtcc->RTCCPresentTimeGMT());
+		}
 
 		//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13, REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23, REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
 
@@ -3345,7 +3328,7 @@ int ARCore::subThread()
 		{
 			opt.dV_LVLH = dV_LVLH;
 			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.REFSMMAT = REFSMMAT;
+			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.uselvdc = false;
@@ -3387,7 +3370,7 @@ int ARCore::subThread()
 
 			opt.dV_LVLH = dV_LVLH;
 			opt.GETbase = GC->rtcc->CalcGETBase();
-			opt.REFSMMAT = REFSMMAT;
+			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
 			opt.SeparationAttitude = lvdc->XLunarAttitude;
@@ -3453,7 +3436,7 @@ int ARCore::subThread()
 			opt.enginetype = manpadenginetype;
 			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.HeadsUp = HeadsUp;
-			opt.REFSMMAT = REFSMMAT;
+			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
@@ -3472,7 +3455,7 @@ int ARCore::subThread()
 			opt.enginetype = manpadenginetype;
 			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.HeadsUp = HeadsUp;
-			opt.REFSMMAT = REFSMMAT;
+			opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 			opt.sxtstardtime = sxtstardtime;
 			opt.TIG = P30TIG;
 			opt.vessel = vessel;
@@ -3960,7 +3943,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		opt.direct = true;
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.HeadsUp = HeadsUp;
-		opt.REFSMMAT = REFSMMAT;
+		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
 		opt.t_land = GC->t_Land;
 		opt.vessel = vessel;
@@ -4247,7 +4230,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 
 		opt.GETbase = GC->rtcc->CalcGETBase();
 		opt.IsTwoSegment = GC->mission > 11;
-		opt.REFSMMAT = REFSMMAT;
+		opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLSDISP.lng[RTCC_LMPOS_BEST], GC->rtcc->MCSMLR);
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
@@ -4330,7 +4313,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			GC->rtcc->BZEVLVEC.ID[10] = 1;
 		}
 
-		GC->rtcc->BMSVEC(AGCEpoch);
+		GC->rtcc->BMSVEC();
 		Result = 0;
 	}
 	break;
@@ -4377,7 +4360,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 			opt.dV_LVLH = Entry_DV;
 			opt.GETbase = GC->rtcc->CalcGETBase();
 			opt.P30TIG = EntryTIGcor;
-			opt.REFSMMAT = REFSMMAT;
+			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 			opt.sv0 = GC->rtcc->StateVectorCalc(vessel);
 
 			if (EntryLatcor == 0)
@@ -4439,7 +4422,7 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 				opt.lat = EntryLatcor;
 				opt.lng = EntryLngcor;
 				opt.P30TIG = P30TIG;
-				opt.REFSMMAT = REFSMMAT;
+				opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
 
 				GC->rtcc->LunarEntryPAD(&opt, lunarentrypad);
 			}
@@ -4991,45 +4974,10 @@ int ARCore::REFSMMATOctalAddress()
 		addr = 01733;
 	}
 	
-	if (AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
+	if (GC->rtcc->AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
 	{
 		addr -= 02;
 	}
-	return addr;
-}
-
-int ARCore::REFSMMATUplinkAddress()
-{
-	int addr;
-
-	if (REFSMMATupl == 0)
-	{
-		if (vesseltype < 2)
-		{
-			addr = 306;
-		}
-		else
-		{
-			addr = 3606;
-		}
-	}
-	else
-	{
-		if (vesseltype < 2)
-		{
-			addr = 1735;
-		}
-		else
-		{
-			addr = 1733;
-		}
-
-		if (GC->mission >= 14)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
-		{
-			addr -= 2;
-		}
-	}
-
 	return addr;
 }
 

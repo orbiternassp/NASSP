@@ -699,7 +699,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 		for (int i = 0; i < 9; i++)
 		{
-			sprintf(Buffer, "%f", G->REFSMMAT.data[i]);
+			if (G->vesseltype < 2)
+			{
+				sprintf(Buffer, "%f", GC->rtcc->EZJGMTX1.data[0].REFSMMAT.data[i]);
+			}
+			else
+			{
+				sprintf(Buffer, "%f", GC->rtcc->EZJGMTX3.data[0].REFSMMAT.data[i]);
+			}
+			
 			skp->Text(7 * W / 16, (4 + i) * H / 14, Buffer, strlen(Buffer));
 		}
 	}
@@ -820,7 +828,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display2(Buffer, GC->rtcc->GetGMTLO()*3600.0);
 		skp->Text(4 * W / 8, 4 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "AGC Epoch: %f", G->AGCEpoch);
+		sprintf(Buffer, "AGC Epoch: %f", GC->rtcc->AGCEpoch);
 		skp->Text(4 * W / 8, 6 * H / 14, Buffer, strlen(Buffer));
 
 		skp->Text(4 * W / 8, 8 * H / 14, "Update Liftoff Time", 19);
@@ -4469,84 +4477,106 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(27 * W / 32, 22 * H / 28, Buffer, strlen(Buffer));
 
 	}
-	else if (screen == 53)
+	else if (screen == 53 || screen == 94)
 	{
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->SetFont(font2);
 
-		if (G->vesseltype < 2)
+		RTCC::REFSMMATUpdateMakeupTableBlock *block;
+
+		if (screen == 53)
 		{
-			if (G->REFSMMATupl == 0)
+			block = &GC->rtcc->CZREFMAT.Block[0];
+		}
+		else
+		{
+			block = &GC->rtcc->CZREFMAT.Block[1];
+		}
+
+		if (screen == 53)
+		{
+			skp->Text(15 * W / 16, 1 * H / 14, "266", 3);
+			if (block->MatrixType == 2)
 			{
-				skp->Text(4 * W / 8, 1 * H / 14, "CMC DESIRED REFSMMAT UPDATE (266)", 33);
+				skp->Text(4 * W / 8, 1 * H / 14, "CMC DESIRED REFSMMAT UPDATE", 27);
 			}
 			else
 			{
-				skp->Text(4 * W / 8, 1 * H / 14, "CMC REFSMMAT UPDATE (266)", 25);
+				skp->Text(4 * W / 8, 1 * H / 14, "CMC REFSMMAT UPDATE", 19);
 			}
 
 		}
 		else
 		{
-			if (G->REFSMMATupl == 0)
+			skp->Text(15 * W / 16, 1 * H / 14, "265", 3);
+			if (block->MatrixType == 2)
 			{
-				skp->Text(4 * W / 8, 1 * H / 14, "LGC DESIRED REFSMMAT UPDATE (265)", 33);
+				skp->Text(4 * W / 8, 1 * H / 14, "LGC DESIRED REFSMMAT UPDATE", 27);
 			}
 			else
 			{
-				skp->Text(4 * W / 8, 1 * H / 14, "LGC REFSMMAT UPDATE (265)", 25);
+				skp->Text(4 * W / 8, 1 * H / 14, "LGC REFSMMAT UPDATE", 19);
 			}
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-		skp->Text(5 * W / 32, 4 * H / 28, "ID:", 3);
-		REFSMMATName(Buffer, G->REFSMMATcur);
-		skp->Text(7 * W / 32, 4 * H / 28, Buffer, strlen(Buffer));
+		skp->Text(5 * W / 32, 6 * H / 32, "ID:", 3);
+		sprintf(Buffer, "%s", block->MatrixID.c_str());
+		skp->Text(7 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
 
-		skp->Text(5 * W / 32, 6 * H / 28, "OID", 3);
-		skp->Text(10 * W / 32, 6 * H / 28, "FCT", 3);
-		skp->Text(15 * W / 32, 6 * H / 28, "DSKY V71", 8);
+		skp->Text(12 * W / 32, 6 * H / 32, "LOAD:", 5);
+		sprintf(Buffer, "%d", block->UpdateNo);
+		skp->Text(16 * W / 32, 6 * H / 32, Buffer, strlen(Buffer));
+
+		skp->Text(5 * W / 32, 8 * H / 32, "OID", 3);
+		skp->Text(10 * W / 32, 8 * H / 32, "FCT", 3);
+		skp->Text(15 * W / 32, 8 * H / 32, "DSKY V71", 8);
 
 		for (int i = 1;i <= 024;i++)
 		{
 			sprintf(Buffer, "%o", i);
-			skp->Text(5 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
+			skp->Text(5 * W / 32, (i + 9) * H / 32, Buffer, strlen(Buffer));
 		}
 
-		skp->Text(10 * W / 32, 8 * H / 28, "INDEX", 5);
-		skp->Text(10 * W / 32, 9 * H / 28, "ADD", 3);
-		skp->Text(10 * W / 32, 10 * H / 28, "XIXE", 4);
-		skp->Text(10 * W / 32, 11 * H / 28, "XIXE", 4);
-		skp->Text(10 * W / 32, 12 * H / 28, "XIYE", 4);
-		skp->Text(10 * W / 32, 13 * H / 28, "XIYE", 4);
-		skp->Text(10 * W / 32, 14 * H / 28, "XIZE", 4);
-		skp->Text(10 * W / 32, 15 * H / 28, "XIZE", 4);
-		skp->Text(10 * W / 32, 16 * H / 28, "YIXE", 4);
-		skp->Text(10 * W / 32, 17 * H / 28, "YIXE", 4);
-		skp->Text(10 * W / 32, 18 * H / 28, "YIYE", 4);
-		skp->Text(10 * W / 32, 19 * H / 28, "YIYE", 4);
-		skp->Text(10 * W / 32, 20 * H / 28, "YIZE", 4);
-		skp->Text(10 * W / 32, 21 * H / 28, "YIZE", 4);
-		skp->Text(10 * W / 32, 22 * H / 28, "ZIXE", 4);
-		skp->Text(10 * W / 32, 23 * H / 28, "ZIXE", 4);
-		skp->Text(10 * W / 32, 24 * H / 28, "ZIYE", 4);
-		skp->Text(10 * W / 32, 25 * H / 28, "ZIYE", 4);
-		skp->Text(10 * W / 32, 26 * H / 28, "ZIZE", 4);
-		skp->Text(10 * W / 32, 27 * H / 28, "ZIZE", 4);
+		skp->Text(10 * W / 32, 10 * H / 32, "INDEX", 5);
+		skp->Text(10 * W / 32, 11 * H / 32, "ADD", 3);
+		skp->Text(10 * W / 32, 12 * H / 32, "XIXE", 4);
+		skp->Text(10 * W / 32, 13 * H / 32, "XIXE", 4);
+		skp->Text(10 * W / 32, 14 * H / 32, "XIYE", 4);
+		skp->Text(10 * W / 32, 15 * H / 32, "XIYE", 4);
+		skp->Text(10 * W / 32, 16 * H / 32, "XIZE", 4);
+		skp->Text(10 * W / 32, 17 * H / 32, "XIZE", 4);
+		skp->Text(10 * W / 32, 18 * H / 32, "YIXE", 4);
+		skp->Text(10 * W / 32, 19 * H / 32, "YIXE", 4);
+		skp->Text(10 * W / 32, 20 * H / 32, "YIYE", 4);
+		skp->Text(10 * W / 32, 21 * H / 32, "YIYE", 4);
+		skp->Text(10 * W / 32, 22 * H / 32, "YIZE", 4);
+		skp->Text(10 * W / 32, 23 * H / 32, "YIZE", 4);
+		skp->Text(10 * W / 32, 24 * H / 32, "ZIXE", 4);
+		skp->Text(10 * W / 32, 25 * H / 32, "ZIXE", 4);
+		skp->Text(10 * W / 32, 26 * H / 32, "ZIYE", 4);
+		skp->Text(10 * W / 32, 27 * H / 32, "ZIYE", 4);
+		skp->Text(10 * W / 32, 28 * H / 32, "ZIZE", 4);
+		skp->Text(10 * W / 32, 29 * H / 32, "ZIZE", 4);
 
 		for (int i = 0;i < 024;i++)
 		{
-			sprintf(Buffer, "%05d", G->REFSMMAToct[i]);
-			skp->Text(15 * W / 32, (i + 8) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%05d", block->Octals[i]);
+			skp->Text(15 * W / 32, (i + 10) * H / 32, Buffer, strlen(Buffer));
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
 		for (int i = 0;i < 9;i++)
 		{
-			sprintf(Buffer, "%f", G->REFSMMAT_BRCS.data[i]);
-			skp->Text(27 * W / 32, (i * 2 + 10) * H / 28, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%f", block->REFSMMAT.data[i]);
+			skp->Text(27 * W / 32, (i * 2 + 12) * H / 32, Buffer, strlen(Buffer));
 		}
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		sprintf(Buffer, "%s", block->error.c_str());
+		skp->Text(16 * W / 32, 31 * H / 32, Buffer, strlen(Buffer));
 	}
 	else if (screen == 54)
 	{
@@ -6164,6 +6194,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "%.1f", tab->IMUAtt.z);
 		skp->Text(39 * W / 64, 14 * H / 32, Buffer, strlen(Buffer));
 
+		sprintf_s(Buffer, "%s", tab->REFSMMAT_Code);
+		skp->Text(50 * W / 64, 11 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->FDAIAtt.x);
 		skp->Text(51 * W / 64, 12 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.1f", tab->FDAIAtt.y);
@@ -6286,6 +6318,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(34 * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, "%.4f", tab->AGS_DV.z);
 		skp->Text(34 * W / 64, 30 * H / 32, Buffer, strlen(Buffer));
+
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		sprintf_s(Buffer, "%s", tab->error.c_str());
+		skp->Text(32 * W / 64, 31 * H / 32, Buffer, strlen(Buffer));
 	}
 	else if (screen == 69)
 	{
@@ -6375,8 +6411,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				sprintf(Buffer, GC->rtcc->RTCCONLINEMON.data[i].message[j].c_str());
 				skp->Text(1 * W / 32, (4 + line) * H / 32, Buffer, strlen(Buffer));
 				line++;
+				if (line >= 28)
+				{
+					break;
+				}
 			}		
 			line++;
+			if (line >= 28)
+			{
+				break;
+			}
 		}
 	}
 	else if (screen == 76)

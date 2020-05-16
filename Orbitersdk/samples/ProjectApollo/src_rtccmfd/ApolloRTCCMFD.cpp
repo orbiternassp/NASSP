@@ -116,15 +116,30 @@ bool ApolloRTCCMFD::ConsumeKeyBuffered(DWORD key)
 void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 {
 	char Buffer2[100];
+	int i;
 
 	//oapiWriteScenario_int(scn, "SCREEN", G->screen);
 	oapiWriteScenario_int(scn, "VESSELTYPE", G->vesseltype);
 	papiWriteScenario_double(scn, "SXTSTARDTIME", G->sxtstardtime);
-	papiWriteScenario_mx(scn, "REFSMMAT", G->REFSMMAT);
+
+	for (i = 0;i < 12;i++)
+	{
+		if (GC->rtcc->EZJGMTX1.data[i].ID > 0)
+		{
+			papiWriteScenario_REFS(scn, "REFSMMAT", 1, i, GC->rtcc->EZJGMTX1.data[i]);
+		}
+	}
+	for (i = 0;i < 12;i++)
+	{
+		if (GC->rtcc->EZJGMTX3.data[i].ID > 0)
+		{
+			papiWriteScenario_REFS(scn, "REFSMMAT", 3, i, GC->rtcc->EZJGMTX3.data[i]);
+		}
+	}
+
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
-	oapiWriteScenario_int(scn, "REFSMMATupl", G->REFSMMATupl);
 	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 	papiWriteScenario_double(scn, "T1", GC->rtcc->med_k30.StartTime);
 	papiWriteScenario_double(scn, "T2", GC->rtcc->med_k30.EndTime);
@@ -303,7 +318,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 	char Buffer2[100];
 	bool istarget = false;
 	double temp;
-	int inttemp;
+	int inttemp, inttemp2;
+	REFSMMATData refs;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, "END_MFD", 7))
@@ -312,11 +328,22 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		//papiReadScenario_int(line, "SCREEN", G->screen);
 		papiReadScenario_int(line, "VESSELTYPE", G->vesseltype);
 		papiReadScenario_double(line, "SXTSTARDTIME", G->sxtstardtime);
-		papiReadScenario_mat(line, "REFSMMAT", G->REFSMMAT);
+		
+		if (papiReadScenario_REFS(line, "REFSMMAT", inttemp, inttemp2, refs))
+		{
+			if (inttemp == 1)
+			{
+				GC->rtcc->EZJGMTX1.data[inttemp2] = refs;
+			}
+			else
+			{
+				GC->rtcc->EZJGMTX3.data[inttemp2] = refs;
+			}
+		}
+
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
-		papiReadScenario_int(line, "REFSMMATupl", G->REFSMMATupl);
 		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 		papiReadScenario_double(line, "T1", GC->rtcc->med_k30.StartTime);
 		papiReadScenario_double(line, "T2", GC->rtcc->med_k30.EndTime);
@@ -1160,7 +1187,14 @@ void ApolloRTCCMFD::menuSetRetrofireEXDVUplinkPage()
 
 void ApolloRTCCMFD::menuSetREFSMMATUplinkPage()
 {
-	screen = 53;
+	if (G->vesseltype < 2)
+	{
+		screen = 53;
+	}
+	else
+	{
+		screen = 94;
+	}
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -2603,6 +2637,18 @@ void ApolloRTCCMFD::set_REFSMMATTime(double time)
 	this->G->REFSMMATTime = time;
 }
 
+void ApolloRTCCMFD::menuREFSMMATLockerMovement()
+{
+	bool REFSMMATLockerMovementInput(void *id, char *str, void *data);
+	oapiOpenInputBox("CSM/LEM REFSMMAT Locker Movement. Format: G00,Vehicle1,Matrix1,Vehicle2,Matrix2; (Codes: CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD)", REFSMMATLockerMovementInput, 0, 30, (void*)this);
+}
+
+bool REFSMMATLockerMovementInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::menuCycleTITable()
 {
 
@@ -3591,38 +3637,6 @@ void ApolloRTCCMFD::calcREFSMMAT()
 	G->REFSMMATCalc();
 }
 
-void ApolloRTCCMFD::menuSendREFSMMATToOtherVessel()
-{
-	if (G->target != NULL)
-	{
-		OBJHANDLE itertarget;
-		ARCore *core;
-
-		for (int i = 0;i < nGutsUsed;i++)
-		{
-			itertarget = GCoreVessel[i];
-
-			if (G->target == itertarget)
-			{
-				core = GCoreData[i];
-
-				core->REFSMMAT = G->REFSMMAT;
-				core->REFSMMATcur = G->REFSMMATcur;
-				core->REFSMMATopt = G->REFSMMATopt;
-
-				for (int i = 0;i < 20;i++)
-				{
-					core->REFSMMAToct[i] = G->REFSMMAToct[i];
-				}
-
-				core->REFSMMAToct[1] = core->REFSMMATUplinkAddress();
-
-				return;
-			}
-		}
-	}
-}
-
 void ApolloRTCCMFD::menuLSLat()
 {
 	bool LSLatInput(void* id, char *str, void *data);
@@ -4127,6 +4141,18 @@ bool TransferRTEInput(void *id, char *str, void *data)
 	return true;
 }
 
+void ApolloRTCCMFD::menuGeneralMEDRequest()
+{
+	bool GeneralMEDRequestInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Manual Entry Device Input:", GeneralMEDRequestInput, 0, 50, (void*)this);
+}
+
+bool GeneralMEDRequestInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::GeneralMEDRequest(char *str)
 {
 	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, str);
@@ -4207,7 +4233,14 @@ void ApolloRTCCMFD::menuLSUpload()
 
 void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
 {
-	G->REFSMMATUplinkCalc();
+	bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Format: C12,VEH. COMPUTER,REFSMMAT,ADDRESS; VEH. COMPUTER = CMC, LGC. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
+}
+
+bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
 }
 
 void ApolloRTCCMFD::menuCycleTwoImpulseOption()
@@ -4486,7 +4519,7 @@ bool AGCEpochInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_AGCEpoch(double mjd)
 {
-	this->G->AGCEpoch = mjd;
+	this->GC->rtcc->AGCEpoch = mjd;
 }
 
 void ApolloRTCCMFD::menuChangeVesselType()
@@ -4579,18 +4612,6 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	char Buff[128];
 	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
-}
-
-void ApolloRTCCMFD::cycleREFSMMATupl()
-{
-	if (G->REFSMMATupl < 1)
-	{
-		G->REFSMMATupl++;
-	}
-	else
-	{
-		G->REFSMMATupl = 0;
-	}
 }
 
 void ApolloRTCCMFD::cycleREFSMMATHeadsUp()
@@ -4686,7 +4707,6 @@ ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
-	char buff[100];
 	agc_t* vagc;
 
 	if (G->vesseltype < 2)
@@ -4726,25 +4746,34 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 	REFSoct[18] = vagc->Erasable[0][REFSMMATaddress + 16];
 	REFSoct[19] = vagc->Erasable[0][REFSMMATaddress + 17];
 
-	for (int i = 2; i < 20; i++)
-	{
-		sprintf(buff, "%05o", REFSoct[i]);
-		G->REFSMMAToct[i] = atoi(buff);
-	}
+	MATRIX3 REFSMMAT;
 
-	G->REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
-	G->REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
-	G->REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
-	G->REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
-	G->REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
-	G->REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
-	G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
-	G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
-	G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
+	REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
+	REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
+	REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
+	REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
+	REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
+	REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
+	REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
+	REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
+	REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
 
-	G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
+	REFSMMAT = mul(REFSMMAT, OrbMech::J2000EclToBRCS(GC->rtcc->AGCEpoch));
+	if (G->vesseltype < 2)
+	{
+		GC->rtcc->BZSTLM.CMC_REFSMMAT = REFSMMAT;
+		GC->rtcc->BZSTLM.CMCRefsPresent = true;
+		GC->rtcc->EMSGSUPP(1, 1);
+	}
+	else
+	{
+		GC->rtcc->BZSTLM.LGC_REFSMMAT = REFSMMAT;
+		GC->rtcc->BZSTLM.LGCRefsPresent = true;
+		GC->rtcc->EMSLSUPP(1, 1);
+	}
+
 	G->REFSMMATcur = G->REFSMMATopt;
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
@@ -8361,6 +8390,32 @@ bool ApolloRTCCMFD::papiReadScenario_SV(char *line, char *item, EphemerisData &s
 			EphemerisData v;
 			if (sscanf(line, "%s %d %lf %lf %lf %lf %lf %lf %lf", buffer, &v.RBI, &v.GMT, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 9) {
 				sv = v;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in)
+{
+	char buffer[256];
+
+	sprintf(buffer, "  %s %d %d %d %lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, tab, i, in.ID, in.GMT, in.REFSMMAT.m11, in.REFSMMAT.m12, in.REFSMMAT.m13, in.REFSMMAT.m21, in.REFSMMAT.m22,
+		in.REFSMMAT.m23, in.REFSMMAT.m31, in.REFSMMAT.m32, in.REFSMMAT.m33);
+	oapiWriteLine(scn, buffer);
+}
+
+bool ApolloRTCCMFD::papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			REFSMMATData v;
+			if (sscanf(line, "%s %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", buffer, &tab, &i, &v.ID, &v.GMT, &v.REFSMMAT.m11, &v.REFSMMAT.m12, &v.REFSMMAT.m13, &v.REFSMMAT.m21, &v.REFSMMAT.m22,
+				&v.REFSMMAT.m23, &v.REFSMMAT.m31, &v.REFSMMAT.m32, &v.REFSMMAT.m33) == 14) {
+				out = v;
 				return true;
 			}
 		}

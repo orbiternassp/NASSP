@@ -70,10 +70,10 @@ public:
 	void menuSetOrbAdjPage();
 	void menuSetMapUpdatePage();
 	void REFSMMATTimeDialogue();
-	void cycleREFSMMATHeadsUp();
 	void set_REFSMMATTime(double time);
+	void menuREFSMMATLockerMovement();
+	void cycleREFSMMATHeadsUp();
 	void calcREFSMMAT();
-	void menuSendREFSMMATToOtherVessel();
 	void GMPInput1Dialogue();
 	void set_GMPInput1(double val);
 	void GMPInput2Dialogue();
@@ -140,6 +140,7 @@ public:
 	void menuDeorbitCalc();
 	void menuMoonRTECalc();
 	void menuTransferRTEToMPT();
+	void menuGeneralMEDRequest();
 	void GeneralMEDRequest(char *str);
 	void set_entryrange(double range);
 	void EntryRangeDialogue();
@@ -193,7 +194,6 @@ public:
 	void menuChangeVesselType();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
-	void cycleREFSMMATupl();
 	void set_svtarget();
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
@@ -715,6 +715,8 @@ private:
 
 	static void papiWriteScenario_SV(FILEHANDLE scn, char *item, EphemerisData sv);
 	static bool papiReadScenario_SV(char *line, char *item, EphemerisData &sv);
+	static void papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in);
+	static bool papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out);
 
 	ARCore* G;
 	AR_GCore* GC;

@@ -6041,11 +6041,23 @@ double MJDfromGET(double GET, double GETBase)
 void format_time_HHMMSS(char *buf, double time) {
 	buf[0] = 0; // Clobber
 	int hours, minutes, seconds;
-	if (time < 0) { return; } // don't do that
+	bool neg = false;
+	if (time < 0)
+	{
+		time = abs(time);
+		neg = true;
+	}
 	hours = (int)(time / 3600);
 	minutes = (int)((time / 60) - (hours * 60));
 	seconds = (int)((time - (hours * 3600)) - (minutes * 60));
-	sprintf(buf, "%03d:%02d:%02d", hours, minutes, seconds);
+	if (neg)
+	{
+		sprintf(buf, "-%03d:%02d:%02d", hours, minutes, seconds);
+	}
+	else
+	{
+		sprintf(buf, "%03d:%02d:%02d", hours, minutes, seconds);
+	}
 }
 
 void format_time_MMSS(char *buf, double time) {

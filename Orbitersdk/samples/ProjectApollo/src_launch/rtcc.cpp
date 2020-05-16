@@ -281,7 +281,7 @@ DetailedManeuverTable::DetailedManeuverTable()
 	DT_U = 0.0;
 	DT_TO = 0.0;
 	DV_TO = 0.0;
-	REFSMMAT_ID = 0;
+	sprintf_s(REFSMMAT_Code, "");
 	DEL_P = 0.0;
 	DEL_Y = 0.0;
 	VG = _V(0, 0, 0);
@@ -868,6 +868,8 @@ RTCC::RTCC()
 	MCEBSQ = 4.0619437e13;
 	MCSMLR = OrbMech::R_Moon;
 	//LC-39A
+	MCLSDA = sin(28.608202*RAD);
+	MCLCDA = cos(28.608202*RAD);
 	MCLGRA = -80.604133*RAD;
 	//Time from launch to EOI, seconds
 	MDLIEV[0] = 0.76673814e3;
@@ -898,6 +900,11 @@ RTCC::RTCC()
 
 	MCCCEX = 3404;
 	MCCLEX = 3433;
+	MCCCRF = 1735;
+	MCCCXS = 306;
+	MCCLRF = 1733;
+	MCCLXS = 3606;
+
 	MGRTAG = 1;
 
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -906,6 +913,10 @@ RTCC::RTCC()
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
+}
+
+RTCC::~RTCC()
+{
 }
 
 void RTCC::Init(MCC *ptr)
@@ -12707,7 +12718,23 @@ void RTCC::OnlinePrint(const std::string &source, const std::vector<std::string>
 		data.message.push_back(message[i]);
 	}
 
+	//Also write to text file
+	if (RTCCONLINEMON.data.size() == 0)
+	{
+		rtccdebug.open("RTCCDebug.txt", std::ofstream::trunc);
+	}
+	else
+	{
+		rtccdebug.open("RTCCDebug.txt", std::ofstream::app);
+	}
+
 	RTCCONLINEMON.data.push_front(data);
+	
+	for (unsigned i = 0;i < message.size();i++)
+	{
+		rtccdebug << message[i] << endl;
+	}
+	rtccdebug.close();
 
 	if (RTCCONLINEMON.data.size() >= 9)
 	{
@@ -12862,7 +12889,6 @@ void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis,
 {
 	double gmt_cur = RTCCPresentTimeGMT();
 	double get_cur = GETfromGMT(gmt_cur);
-	int REFSID;
 	EZRMDT.error = "";
 	if (get < get_cur)
 	{
@@ -12872,7 +12898,7 @@ void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis,
 	double gmt = GMTfromGET(get);
 	OrbitEphemerisTable *ChaTab, *TgtTab;
 	MissionPlanTable *ChaMPT, *TgtMPT, *CSMMPT, *LMMPT;
-	MATRIX3 REFSMMAT;
+	REFSMMATData refsdata;
 	VECTOR3 X_P, Y_P, Z_P, X_B, Y_B, Z_B, X_B_selen, Y_B_selen, Z_B_selen;
 
 	CSMMPT = &PZMPTCSM;
@@ -12881,15 +12907,13 @@ void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis,
 	{
 		ChaTab = &EZEPH1;
 		ChaMPT = &PZMPTCSM;
-		REFSMMAT = EZJGMTX1.data[refs - 1].REFSMMAT;
-		REFSID = EZJGMTX1.data[refs - 1].ID;
+		refsdata = EZJGMTX1.data[refs - 1];
 	}
 	else
 	{
 		ChaTab = &EZEPH2;
 		ChaMPT = &PZMPTLEM;
-		REFSMMAT = EZJGMTX3.data[refs - 1].REFSMMAT;
-		REFSID = EZJGMTX3.data[refs - 1].ID;
+		refsdata = EZJGMTX3.data[refs - 1];
 	}
 	if (Veh2 == 1)
 	{
@@ -12961,16 +12985,15 @@ void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis,
 		double PYRGMT;
 
 		PYRGMT = GMTfromGET(PYRGET);
-		M_B = GLMRTM(REFSMMAT, Att.x, 2, Att.z, 3, Att.y, 1);
+		M_B = GLMRTM(refsdata.REFSMMAT, Att.x, 2, Att.z, 3, Att.y, 1);
 		ELVCNV(_V(M_B.m11, M_B.m12, M_B.m13), PYRGMT, 2, 3, X_B_selen);
 		ELVCNV(_V(M_B.m21, M_B.m22, M_B.m23), PYRGMT, 2, 3, Y_B_selen);
 		ELVCNV(_V(M_B.m31, M_B.m32, M_B.m33), PYRGMT, 2, 3, Z_B_selen);
 	}
-	char Buffer[4];
-	EMGSTGENName(refs, Buffer);
+	char Buffer[7];
+
+	FormatREFSMMATCode(refs, refsdata.ID, Buffer);
 	EZRMDT.REFSMMAT.assign(Buffer);
-	sprintf_s(Buffer, "%03d", REFSID);
-	EZRMDT.REFSMMAT.append(Buffer);
 
 	if (axis == 1)
 	{
@@ -12995,9 +13018,9 @@ void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis,
 		EZRMDT.VEH = "LM";
 	}
 	EZRMDT.GETR = MCGREF * 3600.0;
-	X_P = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
-	Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
-	Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
+	X_P = _V(refsdata.REFSMMAT.m11, refsdata.REFSMMAT.m12, refsdata.REFSMMAT.m13);
+	Y_P = _V(refsdata.REFSMMAT.m21, refsdata.REFSMMAT.m22, refsdata.REFSMMAT.m23);
+	Z_P = _V(refsdata.REFSMMAT.m31, refsdata.REFSMMAT.m32, refsdata.REFSMMAT.m33);
 	EZRMDT.solns = 0;
 	ELVCTRInputTable intab;
 	ELVCTROutputTable outtab;
@@ -20976,6 +20999,8 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 {
 	if (MPT_ID == 0) return;
 
+	res.error = "";
+
 	MissionPlanTable *table, *othertable;
 	MPTManeuver *man;
 	int otherID;
@@ -20995,7 +21020,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 
 	if (ManNo > table->mantable.size())
 	{
-		//Maneuver not in table
+		res.error = "MANEUVER NOT AVAILABLE";
 		return;
 	}
 
@@ -21016,7 +21041,6 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	res.DT_U = man->dt_ullage;
 	res.DT_TO = man->dt_TO;
 	res.DV_TO = man->dv_TO / 0.3048;
-	res.REFSMMAT_ID = REFSMMAT_ID;
 	if (man->Thruster == RTCC_ENGINETYPE_CSMSPS)
 	{
 		res.DEL_P = man->P_G*DEG + 2.15;
@@ -21126,90 +21150,121 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	Z_B = man->Z_B;
 
 	MATRIX3 REFSMMAT;
+	bool RefsAvailable = true;
 
 	if (REFSMMAT_ID == 6)
 	{
 		REFSMMAT = PIDREF(man->A_T, man->R_BI, man->V_BI, man->P_G, man->Y_G, HeadsUp);
+		sprintf_s(res.REFSMMAT_Code, "DES");
 	}
 	else
 	{
+		REFSMMATData refdata;
+
 		if (man->TVC == 3)
 		{
-			REFSMMAT = EZJGMTX3.data[REFSMMAT_ID - 1].REFSMMAT;
+			refdata = EZJGMTX3.data[REFSMMAT_ID - 1];
 		}
 		else
 		{
-			REFSMMAT = EZJGMTX1.data[REFSMMAT_ID - 1].REFSMMAT;
+			refdata = EZJGMTX1.data[REFSMMAT_ID - 1];
 		}
-	}
 
-	X_P = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
-	Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
-	Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
-
-	double MG, OG, IG, C;
-
-	MG = asin(dotp(Y_P, X_B));
-	C = abs(MG);
-
-	if (abs(C - PI05) < 0.0017)
-	{
-		OG = 0.0;
-		IG = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
-	}
-	else
-	{
-		OG = atan2(-dotp(Z_B, Y_P), dotp(Y_B, Y_P));
-		IG = atan2(-dotp(X_B, Z_P), dotp(X_B, X_P));
+		if (refdata.ID == 0)
+		{
+			RefsAvailable = false;
+			res.error = "REFSMMAT NOT AVAILABLE";
+			sprintf(res.REFSMMAT_Code, "");
+		}
+		else
+		{
+			REFSMMAT = refdata.REFSMMAT;
+			FormatREFSMMATCode(REFSMMAT_ID, refdata.ID, res.REFSMMAT_Code);
+		}
 	}
 
 	if (man->TVC == 3)
 	{
-		double Y, P, R;
-		Y = asin(-cos(MG)*sin(OG));
-		if (abs(sin(Y)) != 1.0)
-		{
-			R = atan2(sin(MG), cos(OG)*cos(MG));
-			P = atan2(sin(IG)*cos(OG) + sin(MG)*sin(OG)*cos(IG), cos(OG)*cos(IG) - sin(MG)*sin(OG)*sin(IG));
-		}
-		else
-		{
-			P = 0.0;
-			R = 0.0;
-		}
-		res.FDAIAtt = _V(R, P, Y);
 		res.isCSMTV = false;
 	}
 	else
 	{
-		res.FDAIAtt = _V(OG, IG, MG);
 		res.isCSMTV = true;
 	}
 
-	for (int i = 0;i < 3;i++)
+	if (RefsAvailable)
 	{
-		res.FDAIAtt.data[i] *= DEG;
-		if (res.FDAIAtt.data[i] < 0)
+		X_P = _V(REFSMMAT.m11, REFSMMAT.m12, REFSMMAT.m13);
+		Y_P = _V(REFSMMAT.m21, REFSMMAT.m22, REFSMMAT.m23);
+		Z_P = _V(REFSMMAT.m31, REFSMMAT.m32, REFSMMAT.m33);
+
+		double MG, OG, IG, C;
+
+		MG = asin(dotp(Y_P, X_B));
+		C = abs(MG);
+
+		if (abs(C - PI05) < 0.0017)
 		{
-			res.FDAIAtt.data[i] += 360.0;
+			OG = 0.0;
+			IG = atan2(dotp(X_P, Z_B), dotp(Z_P, Z_B));
 		}
-		if (res.FDAIAtt.data[i] >= 359.95)
+		else
 		{
-			res.FDAIAtt.data[i] = 0.0;
+			OG = atan2(-dotp(Z_B, Y_P), dotp(Y_B, Y_P));
+			IG = atan2(-dotp(X_B, Z_P), dotp(X_B, X_P));
+		}
+
+		if (man->TVC == 3)
+		{
+			double Y, P, R;
+			Y = asin(-cos(MG)*sin(OG));
+			if (abs(sin(Y)) != 1.0)
+			{
+				R = atan2(sin(MG), cos(OG)*cos(MG));
+				P = atan2(sin(IG)*cos(OG) + sin(MG)*sin(OG)*cos(IG), cos(OG)*cos(IG) - sin(MG)*sin(OG)*sin(IG));
+			}
+			else
+			{
+				P = 0.0;
+				R = 0.0;
+			}
+			res.FDAIAtt = _V(R, P, Y);
+		}
+		else
+		{
+			res.FDAIAtt = _V(OG, IG, MG);
+		}
+
+		for (int i = 0;i < 3;i++)
+		{
+			res.FDAIAtt.data[i] *= DEG;
+			if (res.FDAIAtt.data[i] < 0)
+			{
+				res.FDAIAtt.data[i] += 360.0;
+			}
+			if (res.FDAIAtt.data[i] >= 359.95)
+			{
+				res.FDAIAtt.data[i] = 0.0;
+			}
+		}
+		res.IMUAtt = _V(OG, IG, MG);
+		for (int i = 0;i < 3;i++)
+		{
+			res.IMUAtt.data[i] *= DEG;
+			if (res.IMUAtt.data[i] < 0)
+			{
+				res.IMUAtt.data[i] += 360.0;
+			}
+			if (res.IMUAtt.data[i] >= 359.95)
+			{
+				res.IMUAtt.data[i] = 0.0;
+			}
 		}
 	}
-	res.IMUAtt = _V(OG, IG, MG);
-	for (int i = 0;i < 3;i++)
+	else
 	{
-		res.IMUAtt.data[i] *= DEG;
-		if (res.IMUAtt.data[i] < 0)
-		{
-			res.IMUAtt.data[i] += 360.0;
-		}
-		if (res.IMUAtt.data[i] >= 359.95)
-		{
-			res.IMUAtt.data[i] = 0.0;
-		}
+		res.FDAIAtt = _V(0, 0, 0);
+		res.IMUAtt = _V(0, 0, 0);
 	}
 
 	VECTOR3 DV, V_G;
@@ -21223,11 +21278,18 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 		DV = man->dV_inertial;
 	}
 
-	V_G.x = dotp(DV, X_P);
-	V_G.y = dotp(DV, Y_P);
-	V_G.z = dotp(DV, Z_P);
+	if (RefsAvailable)
+	{
+		V_G.x = dotp(DV, X_P);
+		V_G.y = dotp(DV, Y_P);
+		V_G.z = dotp(DV, Z_P);
 
-	res.VG = V_G / 0.3048;
+		res.VG = V_G / 0.3048;
+	}
+	else
+	{
+		res.VG = _V(0, 0, 0);
+	}
 
 	res.LVLHAtt.x = man->Y_H * DEG;
 	res.LVLHAtt.y = man->P_H * DEG;
@@ -23505,6 +23567,22 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			//TBD: Earth or Moon
 			EMMGLCVP(L, gmt);
 		}
+		//Acquire and save LEM IMU matrix/optics
+		else if (med == "21")
+		{
+			if (data.size() < 2)
+			{
+				return 1;
+			}
+			if (data[0] != "LEM")
+			{
+				return 2;
+			}
+			if (data[1] == "LLD")
+			{
+				EMSLSUPP(1, 15);
+			}
+		}
 	}
 	
 	
@@ -23571,6 +23649,46 @@ int RTCC::CMRMEDIN(std::string med, std::vector<std::string> data)
 		{
 			CMMLXTDV(TIG, DV);
 		}
+	}
+	//Initiate a CMC/LGC REFSMMAT update
+	else if (med == "12")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+		int Veh;
+		if (data[0] == "CMC")
+		{
+			Veh = 1;
+		}
+		else if (data[0] == "LGC")
+		{
+			Veh = 3;
+		}
+		else
+		{
+			return 2;
+		}
+		int id = EMGSTGENCode(data[1].c_str());
+		if (id < 0)
+		{
+			return 2;
+		}
+		int type;
+		if (data[2] == "1")
+		{
+			type = 1;
+		}
+		else if (data[2] == "2")
+		{
+			type = 2;
+		}
+		else
+		{
+			return 2;
+		}
+		CMMRFMAT(Veh, id, type);
 	}
 
 	return 0;
@@ -25073,7 +25191,7 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		}
 
 		double GMTGRR;
-		if (sscanf_s(data[1].c_str(), "%lf", &GMTGRR) != 1)
+		if (MEDTimeInputHHMMSS(data[1], GMTGRR))
 		{
 			return 2;
 		}
@@ -25097,6 +25215,10 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		if (veh == 0)
 		{
 			MCGRAG = GMTGRR;
+			if (EZJGMTX1.data[0].ID == 0)
+			{
+				LMMGRP(GMTGRR*3600.0, MCLABN);
+			}
 		}
 		else if (veh == 1)
 		{
@@ -27399,7 +27521,7 @@ void RTCC::EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt)
 	}
 
 	tab->data[id - 1].ID++;
-	tab->data[id - 1].REFSMMAT = tab->data[id - 1].REFSMMAT;
+	tab->data[id - 1].REFSMMAT = REFS;
 	tab->data[id - 1].GMT = gmt;
 
 	char Buffer[128];
@@ -27418,10 +27540,19 @@ void RTCC::EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt)
 		sprintf_s(Buff3, "LEM");
 	}
 
-	sprintf_s(Buffer, "EMGSTSTM: NEW IMU MATRIX %s%03d %s GET = %s", Buff1, tab->data[id - 1].ID, Buff3, Buff2);
+	sprintf_s(Buffer, "NEW IMU MATRIX %s%03d %s", Buff1, tab->data[id - 1].ID, Buff3);
 	RTCCONLINEMON.TextBuffer[0].assign(Buffer);
+	sprintf_s(Buffer, "GET = %s", Buff2);
+	RTCCONLINEMON.TextBuffer[1].assign(Buffer);
 	RTCCONLINEMON.MatrixBuffer = tab->data[id - 1].REFSMMAT;
 	EMGPRINT("EMGSTSTM", 19);
+}
+
+void RTCC::FormatREFSMMATCode(int ID, int num, char *buff)
+{
+	char buff2[4];
+	EMGSTGENName(ID, buff2);
+	sprintf_s(buff, 7, "%s%03d", buff2, num);
 }
 
 void RTCC::EMGSTGENName(int ID, char *Buffer)
@@ -27541,6 +27672,7 @@ void RTCC::EMGPRINT(std::string source, int i)
 	case 19:
 		char Buffer[128];
 		message.push_back(RTCCONLINEMON.TextBuffer[0]);
+		message.push_back(RTCCONLINEMON.TextBuffer[1]);
 		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m11, RTCCONLINEMON.MatrixBuffer.m12, RTCCONLINEMON.MatrixBuffer.m13);
 		message.push_back(Buffer);
 		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m21, RTCCONLINEMON.MatrixBuffer.m22, RTCCONLINEMON.MatrixBuffer.m23);
@@ -28657,15 +28789,29 @@ void RTCC::PMDMPT()
 	MPTDISPLAY.CSMSTAID = PZMPTCSM.StationID;
 	MPTDISPLAY.LEMSTAID = PZMPTLEM.StationID;
 
-	temp = GETfromGMT(EZANCHR1.AnchorVectors[9].GMT);
-	OrbMech::format_time_HHMMSS(Buffer, temp);
-	std::string strtemp1(Buffer);
-	MPTDISPLAY.CSMGETAV = strtemp1;
+	if (EZANCHR1.AnchorVectors[9].GMT == 0.0)
+	{
+		MPTDISPLAY.CSMGETAV = "";
+	}
+	else
+	{
+		temp = GETfromGMT(EZANCHR1.AnchorVectors[9].GMT);
+		OrbMech::format_time_HHMMSS(Buffer, temp);
+		std::string strtemp(Buffer);
+		MPTDISPLAY.CSMGETAV = strtemp;
+	}
 
-	temp = GETfromGMT(EZANCHR3.AnchorVectors[9].GMT);
-	OrbMech::format_time_HHMMSS(Buffer, temp);
-	std::string strtemp2(Buffer);
-	MPTDISPLAY.LEMGETAV = strtemp2;
+	if (EZANCHR3.AnchorVectors[9].GMT == 0.0)
+	{
+		MPTDISPLAY.LEMGETAV = "";
+	}
+	else
+	{
+		temp = GETfromGMT(EZANCHR3.AnchorVectors[9].GMT);
+		OrbMech::format_time_HHMMSS(Buffer, temp);
+		std::string strtemp(Buffer);
+		MPTDISPLAY.LEMGETAV = strtemp;
+	}
 
 	if (csmnum == 0 && lemnum == 0) return;
 
@@ -29715,7 +29861,92 @@ void RTCC::CMMLXTDV(double GETIG, VECTOR3 DV_EXDV)
 	CZLXTRDV.DV = DV_EXDV / 0.3048;
 }
 
-void RTCC::BMSVEC(double AGCEpoch)
+void RTCC::CMMRFMAT(int L, int id, int addr)
+{
+	REFSMMATUpdateMakeupTableBlock *block;
+	if (L == 1)
+	{
+		block = &CZREFMAT.Block[0];
+	}
+	else
+	{
+		block = &CZREFMAT.Block[1];
+	}
+
+	block->error = "";
+
+	REFSMMATData refs;
+	if (L == 1)
+	{
+		refs = EZJGMTX1.data[id - 1];
+	}
+	else
+	{
+		refs = EZJGMTX3.data[id - 1];
+	}
+	if (refs.ID <= 0)
+	{
+		block->error = "REFSMMAT NOT AVAILABLE";
+		return;
+	}
+
+	char buff[7];
+	FormatREFSMMATCode(id, refs.ID, buff);
+	block->MatrixID.assign(buff);
+
+	MATRIX3 a = mul(refs.REFSMMAT, OrbMech::tmat(OrbMech::J2000EclToBRCS(AGCEpoch)));
+	block->REFSMMAT = a;
+
+	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
+
+	block->Octals[0] = 24;
+	if (addr == 1)
+	{
+		block->MatrixType = 1;
+		if (L == 1)
+		{
+			block->Octals[1] = MCCCRF;
+		}
+		else
+		{
+			block->Octals[1] = MCCLRF;
+		}
+	}
+	else
+	{
+		block->MatrixType = 2;
+		if (L == 1)
+		{
+			block->Octals[1] = MCCCXS;
+		}
+		else
+		{
+			block->Octals[1] = MCCLXS;
+		}
+	}
+	block->Octals[2] = OrbMech::DoubleToBuffer(a.m11, 1, 1);
+	block->Octals[3] = OrbMech::DoubleToBuffer(a.m11, 1, 0);
+	block->Octals[4] = OrbMech::DoubleToBuffer(a.m12, 1, 1);
+	block->Octals[5] = OrbMech::DoubleToBuffer(a.m12, 1, 0);
+	block->Octals[6] = OrbMech::DoubleToBuffer(a.m13, 1, 1);
+	block->Octals[7] = OrbMech::DoubleToBuffer(a.m13, 1, 0);
+	block->Octals[8] = OrbMech::DoubleToBuffer(a.m21, 1, 1);
+	block->Octals[9] = OrbMech::DoubleToBuffer(a.m21, 1, 0);
+	block->Octals[10] = OrbMech::DoubleToBuffer(a.m22, 1, 1);
+	block->Octals[11] = OrbMech::DoubleToBuffer(a.m22, 1, 0);
+	block->Octals[12] = OrbMech::DoubleToBuffer(a.m23, 1, 1);
+	block->Octals[13] = OrbMech::DoubleToBuffer(a.m23, 1, 0);
+	block->Octals[14] = OrbMech::DoubleToBuffer(a.m31, 1, 1);
+	block->Octals[15] = OrbMech::DoubleToBuffer(a.m31, 1, 0);
+	block->Octals[16] = OrbMech::DoubleToBuffer(a.m32, 1, 1);
+	block->Octals[17] = OrbMech::DoubleToBuffer(a.m32, 1, 0);
+	block->Octals[18] = OrbMech::DoubleToBuffer(a.m33, 1, 1);
+	block->Octals[19] = OrbMech::DoubleToBuffer(a.m33, 1, 0);
+
+	block->UpdateNo++;
+}
+
+void RTCC::BMSVEC()
 {
 	//If time is missing the time of the first vector is the assumed GMT and the first vector ID cannot be "EPHO" or "EPHR"
 	if (med_s80.time == 0.0 && (med_s80.VID[0] == "EPHO" || med_s80.VID[0] == "EPHR"))
@@ -30025,4 +30256,57 @@ void RTCC::BMGPRIME(std::string source, int n)
 void RTCC::BMGPRIME(std::string source, std::vector<std::string> message)
 {
 	OnlinePrint(source, message);
+}
+
+void RTCC::LMMGRP(double gmt, double A_Z)
+{
+	double mjd = OrbMech::MJDfromGET(gmt, GMTBASE);
+	MATRIX3 R = OrbMech::LaunchREFSMMAT(atan2(MCLSDA, MCLCDA), MCLGRA, mjd, A_Z);
+	EMGSTSTM(1, R, RTCC_REFSMMAT_TYPE_CUR, gmt);
+}
+
+void RTCC::EMSGSUPP(int QUEID, int refs)
+{
+	//Acquire and save CSM IMU matrix/optics
+	if (QUEID == 1)
+	{
+		//Telemetry (high-speed)
+		if (refs == 1)
+		{
+			if (BZSTLM.CMCRefsPresent == false)
+			{
+				EMGPRINT("EMSGSUPP", 1);
+				return;
+			}
+			EMGSTSTM(1, BZSTLM.CMC_REFSMMAT, RTCC_REFSMMAT_TYPE_TLM, RTCCPresentTimeGMT());
+		}
+	}
+}
+
+void RTCC::EMSLSUPP(int QUEID, int refs)
+{
+	//Acquire and save LEM IMU matrix/optics
+	if (QUEID == 1)
+	{
+		//Telemetry (high-speed)
+		if (refs == 1)
+		{
+			if (BZSTLM.LGCRefsPresent == false)
+			{
+				EMGPRINT("EMSLSUPP", 1);
+				return;
+			}
+			EMGSTSTM(3, BZSTLM.LGC_REFSMMAT, RTCC_REFSMMAT_TYPE_TLM, RTCCPresentTimeGMT());
+		}
+		//Lunar Launch Desired
+		else if (refs == 15)
+		{
+			if (EZJGLSAD.LLDRefsPresent == false)
+			{
+				EMGPRINT("EMSLSUPP", 1);
+				return;
+			}
+			EMGSTSTM(3, EZJGLSAD.LLD_REFSMMAT, RTCC_REFSMMAT_TYPE_LLD, RTCCPresentTimeGMT());
+		}
+	}
 }

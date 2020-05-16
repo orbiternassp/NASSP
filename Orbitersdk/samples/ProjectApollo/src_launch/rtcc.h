@@ -1477,7 +1477,7 @@ struct DetailedManeuverTable
 	double DT_U;
 	double DT_TO;
 	double DV_TO;
-	int REFSMMAT_ID;
+	char REFSMMAT_Code[7];
 	double DEL_P;
 	double DEL_Y;
 	VECTOR3 VG;
@@ -1527,6 +1527,7 @@ struct DetailedManeuverTable
 	double CFP_DT;
 	char CFP_OPTION[8];
 	bool isCSMTV;
+	std::string error;
 };
 
 struct MPTVehicleDataBlock
@@ -2609,6 +2610,7 @@ class RTCC {
 
 public:
 	RTCC();
+	~RTCC();
 	void Init(MCC *ptr);
 	bool Calculation(int mission, int fcn, LPVOID &pad, char * upString = NULL, char * upDesc = NULL, char * upMessage = NULL);
 
@@ -2934,15 +2936,33 @@ public:
 	void CMMAXTDV(double GETIG, VECTOR3 DV_EXDV);
 	//LGC External Delta-V Update Generator
 	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV);
+	//CMC and LGC REFSMMAT Update Generator
+	void CMMRFMAT(int L, int id, int addr);
 
 	//Trajectory Determination
 	//Vector Comparison Control
-	void BMSVEC(double AGCEpoch);
+	void BMSVEC();
 	//Vector Comparison Display
 	void BMDVEC();
 	//Online print of trajectory determination
 	void BMGPRIME(std::string source, int n);
 	void BMGPRIME(std::string source, std::vector<std::string> message);
+
+	//Launch 
+	void LMMGRP(double gmt, double A_Z);
+
+	//Guidance
+
+	//Guidance Optics Display Supervisor
+	void EMSGSUPP(int QUEID, int refs);
+	//LEM Optics Supervisor
+	void EMSLSUPP(int QUEID, int refs);
+	//GOST REFSMMAT Maintenance
+	void EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs = NULL);
+	//GOST Matrix Storage and Print
+	void EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt);
+	void EMGSTGENName(int ID, char *Buffer);
+	int EMGSTGENCode(const char *Buffer);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -3225,6 +3245,13 @@ public:
 	MissionPlanTable PZMPTCSM, PZMPTLEM;
 	DetailedManeuverTable DMTBuffer[2];
 	BurnParameterTable PZBURN;
+
+	struct LunarSurfaceAlignmentTable
+	{
+		MATRIX3 LLD_REFSMMAT;
+		bool LLDRefsPresent = false;
+	} EZJGLSAD;
+
 	REFSMMATLocker EZJGMTX1, EZJGMTX3;
 	FIDOOrbitDigitals EZSAVCSM, EZSAVLEM;
 	SpaceDigitals EZSPACE;
@@ -3296,6 +3323,14 @@ public:
 		double GMTR = 0.0;
 		std::string error = "TABLE NOT INITIALIZED";
 	} VectorCompareDisplayBuffer;
+
+	struct TelemetryTrajectoryInterfaceTable
+	{
+		MATRIX3 LGC_REFSMMAT;
+		bool LGCRefsPresent = false;
+		MATRIX3 CMC_REFSMMAT;
+		bool CMCRefsPresent = false;
+	} BZSTLM;
 
 	struct RelativeMotionDigitalsTableEntry
 	{
@@ -4088,6 +4123,11 @@ public:
 		int RETPlan = 1;
 	} EZETVMED;
 
+	struct GMEDSaveTable
+	{
+
+	} EZGSTMED;
+
 	struct ExternalDVMakeupBuffer
 	{
 		int LoadNumber = 0;
@@ -4103,6 +4143,27 @@ public:
 		std::string GMTID;
 		std::string StationID;
 	} CZAXTRDV, CZLXTRDV;
+
+	struct REFSMMATUpdateMakeupTableBlock
+	{
+		int UpdateNo = 0;
+		int SequenceNo = 0;
+		std::string Site1, Site2;
+		double GET = 0.0;
+		int Verb = 71;
+		int Octals[20] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
+		int VehID = 0;
+		MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+		std::string error;
+		//1 = Actual REFSMMAT; 2 = Desired REFSMMAT
+		int MatrixType = 2;
+		std::string MatrixID;
+	};
+
+	struct REFSMMATUpdateMakeupTable
+	{
+		REFSMMATUpdateMakeupTableBlock Block[2];
+	} CZREFMAT;
 
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{
@@ -4257,11 +4318,7 @@ private:
 	//Two-Impulse Multiple Solution Display
 	void PMDTIMP();
 	//GOST REFSMMAT Maintenance
-	void EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs = NULL);
-	void EMGSTGENName(int ID, char *Buffer);
-	int EMGSTGENCode(const char *Buffer);
-	//GOST Matrix Storage and Print
-	void EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt);
+	void FormatREFSMMATCode(int ID, int num, char *buff);
 	//GOST CSM/LM LCV Computation
 	void EMMGLCVP(int L, double gmt);
 	//Trajectory Update On-line Print
@@ -4308,6 +4365,7 @@ protected:
 	VECTOR3 DeltaV_LVLH;
 	int REFSMMATType;
 	OBJHANDLE hEarth, hMoon;
+	std::ofstream rtccdebug;
 
 	//RTCC System Parameters
 
@@ -4363,14 +4421,19 @@ protected:
 	//MJD of launch day (days)
 	double GMTBASE;
 
-
 	//CONSTANTS
 	//Nautical miles per Earth radii
 	const double MCCNMC = 3443.93359;
 
 public:
+	//MJD of epoch
+	double AGCEpoch;
 	//Radius of lunar landing site
 	double MCSMLR;
+	//Sine of the geodetic latitude of the launch pad
+	double MCLSDA;
+	//Cosine of the geodetic latitude of the launch pad
+	double MCLCDA;
 	//Longitude of launch pad
 	double MCLGRA;
 	//Nominal LM cross-product steering constant
@@ -4618,6 +4681,14 @@ public:
 	int MCCCEX;
 	//LGC address for external DV uplink
 	int MCCLEX;
+	//CMC address for REFSMMAT uplink
+	int MCCCRF;
+	//CMC address for desired REFSMMAT uplink
+	int MCCCXS;
+	//LGC address for REFSMMAT uplink
+	int MCCLRF;
+	//LGC address for desired REFSMMAT uplink
+	int MCCLXS;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
 	int MGRTAG;
 };
