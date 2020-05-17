@@ -1583,8 +1583,6 @@ void LEM::clbkPostCreation()
 		DelDock(docksla);
 		docksla = NULL;
 	}
-
-	InitVCAnimations();
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
@@ -1641,6 +1639,7 @@ void LEM::DefineAnimations()
 	ForwardHatch.DefineAnimationsVC(vcidx);
 	if (stage < 2) DPS.DefineAnimations(dscidx);
 	if (stage < 1 && pMission->LMHasLegs()) eds.DefineAnimations(dscidx);
+	InitVCAnimations();
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

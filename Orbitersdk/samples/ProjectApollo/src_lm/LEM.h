@@ -725,7 +725,7 @@ protected:
 	void AddDust();
 	void SetCompLight(int m, bool state);
 	void InitFDAI(UINT mesh);
-	void AnimateFDAI(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
+	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	// LM touchdown points
 	// mass in kg, ro1 (distance from center of the middle points), ro2 (distance from center of footpad points), tdph (height of footpad points),
@@ -1655,8 +1655,6 @@ protected:
 	DEVMESHHANDLE vcmesh;
 
 	// VC animations
-	double fdai_proc[3];
-	double fdai_proc_last[3];
 	MGROUP_TRANSFORM *mgt_P3switch[P3_SWITCHCOUNT];
 	MGROUP_TRANSFORM *mgt_P3Rot[P3_ROTCOUNT];
 	UINT anim_P3switch[P3_SWITCHCOUNT];
@@ -1666,15 +1664,16 @@ protected:
 	UINT anim_xpointery_cdr;
 	UINT anim_xpointerx_lmp;
 	UINT anim_xpointery_lmp;
-	UINT anim_fdaiR_cdr/*, anim_fdaiR_lmp*/;
-	UINT anim_fdaiP_cdr/*, anim_fdaiP_lmp*/;
-	UINT anim_fdaiY_cdr/*, anim_fdaiY_lmp*/;
-	UINT anim_fdaiRerror_cdr/*, anim_fdaiRerror_lmp*/;
-	UINT anim_fdaiPerror_cdr/*, anim_fdaiPerror_lmp*/;
-	UINT anim_fdaiYerror_cdr/*, anim_fdaiYerror_lmp*/;
-	UINT anim_fdaiRrate_cdr/*, anim_fdaiRrate_lmp*/;
-	UINT anim_fdaiPrate_cdr/*, anim_fdaiPrate_lmp*/;
-	UINT anim_fdaiYrate_cdr/*, anim_fdaiYrate_lmp*/;
+	UINT anim_fdaiR_cdr, anim_fdaiR_lmp;
+	UINT anim_fdaiP_cdr, anim_fdaiP_lmp;
+	UINT anim_fdaiY_cdr, anim_fdaiY_lmp;
+	UINT anim_fdaiRerror_cdr, anim_fdaiRerror_lmp;
+	UINT anim_fdaiPerror_cdr, anim_fdaiPerror_lmp;
+	UINT anim_fdaiYerror_cdr, anim_fdaiYerror_lmp;
+	UINT anim_fdaiRrate_cdr, anim_fdaiRrate_lmp;
+	UINT anim_fdaiPrate_cdr, anim_fdaiPrate_lmp;
+	UINT anim_fdaiYrate_cdr, anim_fdaiYrate_lmp;
+	UINT anim_attflag_cdr, anim_attflag_lmp;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];

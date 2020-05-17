@@ -855,6 +855,7 @@
 #define AID_VC_XPOINTERCDR              3107
 #define AID_VC_XPOINTERLMP              3108
 #define AID_VC_FDAI_LEFT                3109
+#define AID_VC_FDAI_RIGHT               3110
 
 
 // VC Active Areas (Panel 2)
