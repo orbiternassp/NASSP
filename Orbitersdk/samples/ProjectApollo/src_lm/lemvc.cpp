@@ -535,40 +535,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			rates = rga.GetRates() / (5.0*RAD);
 		}
 
-		if (AttitudeMonSwitch.IsUp())	//PGNS
-		{
-			fdai_proc[0] = 1.0 - attitude.x / PI2;
-			fdai_proc[1] = attitude.y / PI2;
-			fdai_proc[2] = attitude.z / PI2;
-		}
-		else							//AGS
-		{
-			fdai_proc[0] = -attitude.x / PI2;
-			fdai_proc[1] = attitude.y / PI2;
-			fdai_proc[2] = attitude.z / PI2;
-		}
-		if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
-		if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
-		if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
-		if (fdai_proc[0] - fdai_proc_last[0] != 0.0) SetAnimation(anim_fdai_yaw, fdai_proc[2]);
-		if (fdai_proc[1] - fdai_proc_last[1] != 0.0) SetAnimation(anim_fdai_roll, fdai_proc[0]);
-		if (fdai_proc[2] - fdai_proc_last[2] != 0.0) SetAnimation(anim_fdai_pitch, fdai_proc[1]);
-		fdai_proc_last[0] = fdai_proc[0];
-		fdai_proc_last[1] = fdai_proc[1];
-		fdai_proc_last[2] = fdai_proc[2];
-
-		//sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",atca.lgc_err_x,atca.lgc_err_y,atca.lgc_err_z);
-
-		SetAnimation(anim_fdai_rollerror, (errors.x + 384) / 768);
-		SetAnimation(anim_fdai_pitcherror, (-errors.y + 384) / 768);
-		SetAnimation(anim_fdai_yawerror, (errors.z + 384) / 768);
-
-		// ttca_throttle_pos_dig
-		//sprintf(oapiDebugString(), "Roll: %f, Pitch: %f, Yaw: %f", rates.x, rates.y, rates.z);
-
-		SetAnimation(anim_fdai_rollrate, (rates.z + 1) / 2);
-		SetAnimation(anim_fdai_pitchrate, (rates.x + 1) / 2);
-		SetAnimation(anim_fdai_yawrate, (-rates.y + 1) / 2);
+		AnimateFDAI(attitude, no_att, rates, errors, anim_fdaiR_cdr, anim_fdaiP_cdr, anim_fdaiY_cdr, anim_fdaiRerror_cdr, anim_fdaiPerror_cdr, anim_fdaiYerror_cdr, anim_fdaiRrate_cdr, anim_fdaiPrate_cdr, anim_fdaiYrate_cdr);
 
 		return true;
 
@@ -642,68 +609,7 @@ void LEM::InitVCAnimations()
 	AddAnimationComponent(anim_xpointerx_lmp, 0.0f, 1.0f, &mgt_xpointerx_lmp);
 	AddAnimationComponent(anim_xpointery_lmp, 0.0f, 1.0f, &mgt_xpointery_lmp);
 
-	//FDAI
-
-	ANIMATIONCOMPONENT_HANDLE	ach_FDAI_roll, ach_FDAI_pitch, ach_FDAI_yaw;
-	const VECTOR3	FDAI_PIVOT = { -0.297851, 0.525802, 1.70639 }; // Pivot Point
-
-	static UINT meshgroup_Fdai1 = { VC_GRP_FDAIBall1 }; // Roll gimbal meshgroup (includes roll incicator)
-	static UINT meshgroup_Fdai2 = { VC_GRP_FDAIBall };  // Pitch gimbal meshgroup (visible ball)
-	static UINT meshgroup_Fdai3 = { VC_GRP_FDAIBall2 }; // Yaw gimbal meshgroup
-
-	const VECTOR3 rollaxis = { -0.00, sin(7.95581 * RAD), -cos(7.95581 * RAD) };
-	const VECTOR3 yawvaxis = { -0.00, sin(97.95581 * RAD), -cos(97.95581 * RAD) };
-
-	static MGROUP_ROTATE mgt_FDAI_Roll(mesh, &meshgroup_Fdai1, 1, FDAI_PIVOT, rollaxis, (float)(RAD * 360));
-	static MGROUP_ROTATE mgt_FDAI_Pitch(mesh, &meshgroup_Fdai2, 1, FDAI_PIVOT, _V(-1,0,0), (float)(RAD * 360));
-	static MGROUP_ROTATE mgt_FDAI_Yaw(mesh, &meshgroup_Fdai3, 1, FDAI_PIVOT, yawvaxis, (float)(RAD * 360));
-	anim_fdai_roll = CreateAnimation(0.0);
-	anim_fdai_pitch = CreateAnimation(0.0);
-	anim_fdai_yaw = CreateAnimation(0.0);
-	ach_FDAI_roll = AddAnimationComponent(anim_fdai_roll, 0.0f, 1.0f, &mgt_FDAI_Roll);
-	ach_FDAI_yaw = AddAnimationComponent(anim_fdai_yaw, 0.0f, 1.0f, &mgt_FDAI_Yaw, ach_FDAI_roll);
-	ach_FDAI_pitch = AddAnimationComponent(anim_fdai_pitch, 0.0f, 1.0f, &mgt_FDAI_Pitch, ach_FDAI_yaw);
-	//Anything but 0.0-1.0 will do
-	fdai_proc_last[0] = 2.0;
-	fdai_proc_last[1] = 2.0;
-	fdai_proc_last[2] = 2.0;
-
-	// FDAI error needles
-	const VECTOR3 needlexvector = { 0.00, 0.05*cos(P1_TILT), 0.05*sin(P1_TILT) };
-	const VECTOR3 needleyvector = { 0.05, 0, 0 };
-
-	static UINT meshgroup_RollError = VC_GRP_FDAI_rollerror;
-	static UINT meshgroup_PitchError = VC_GRP_FDAI_pitcherror;
-	static UINT meshgroup_YawError = VC_GRP_FDAI_yawerror;
-
-	static MGROUP_TRANSLATE mgt_rollerror(mesh, &meshgroup_RollError, 1, needleyvector);
-	static MGROUP_TRANSLATE mgt_pitcherror(mesh, &meshgroup_PitchError, 1, needlexvector);
-	static MGROUP_TRANSLATE mgt_yawerror(mesh, &meshgroup_YawError, 1, needleyvector);
-	anim_fdai_rollerror = CreateAnimation(0.5);
-	anim_fdai_pitcherror = CreateAnimation(0.5);
-	anim_fdai_yawerror = CreateAnimation(0.5);
-	AddAnimationComponent(anim_fdai_rollerror, 0.0f, 1.0f, &mgt_rollerror);
-	AddAnimationComponent(anim_fdai_pitcherror, 0.0f, 1.0f, &mgt_pitcherror);
-	AddAnimationComponent(anim_fdai_yawerror, 0.0f, 1.0f, &mgt_yawerror);
-
-	// FDAI rate needles
-
-	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_TILT), 0.062*sin(P1_TILT) };
-	const VECTOR3 rateyvector = { 0.062, 0, 0 };
-
-	static UINT meshgroup_RollRate = VC_GRP_FDAI_rateR;
-	static UINT meshgroup_PitchRate = VC_GRP_FDAI_rateP;
-	static UINT meshgroup_YawRate = VC_GRP_FDAI_rateY;
-
-	static MGROUP_TRANSLATE mgt_rollrate(mesh, &meshgroup_RollRate, 1, rateyvector);
-	static MGROUP_TRANSLATE mgt_pitchrate(mesh, &meshgroup_PitchRate, 1, ratexvector);
-	static MGROUP_TRANSLATE mgt_yawrate(mesh, &meshgroup_YawRate, 1, rateyvector);
-	anim_fdai_rollrate = CreateAnimation(0.5);
-	anim_fdai_pitchrate = CreateAnimation(0.5);
-	anim_fdai_yawrate = CreateAnimation(0.5);
-	AddAnimationComponent(anim_fdai_rollrate, 0.0f, 1.0f, &mgt_rollrate);
-	AddAnimationComponent(anim_fdai_pitchrate, 0.0f, 1.0f, &mgt_pitchrate);
-	AddAnimationComponent(anim_fdai_yawrate, 0.0f, 1.0f, &mgt_yawrate);
+	InitFDAI(mesh);
 }
 
 void LEM::SetCompLight(int m, bool state) {
@@ -731,5 +637,150 @@ void LEM::SetCompLight(int m, bool state) {
 	}
 
 	oapiSetMaterial(vcmesh, complightmat + m, mat);
+}
+
+void LEM::InitFDAI(UINT mesh) {
+
+	//FDAI
+
+	// Constants
+	const VECTOR3 fdairollaxis = { -0.00, sin(7.95581 * RAD), -cos(7.95581 * RAD) };
+	const VECTOR3 fdaiyawvaxis = { -0.00, sin(97.95581 * RAD), -cos(97.95581 * RAD) };
+	const VECTOR3 needlexvector = { 0.00, 0.05*cos(P1_TILT), 0.05*sin(P1_TILT) };
+	const VECTOR3 needleyvector = { 0.05, 0, 0 };
+	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_TILT), 0.062*sin(P1_TILT) };
+	const VECTOR3 rateyvector = { 0.062, 0, 0 };
+	const VECTOR3 FDAI_PIVOTCDR = { -0.297851, 0.525802, 1.70639 }; // CDR FDAI Pivot Point
+	const VECTOR3 FDAI_PIVOTLMP = { -0.297851, 0.525802, 1.70639 }; // LMP FDAI Pivot Point
+
+	// Anything but 0.0-1.0 will do
+	fdai_proc_last[0] = 2.0;
+	fdai_proc_last[1] = 2.0;
+	fdai_proc_last[2] = 2.0;
+
+	// CDR FDAI Ball
+	ANIMATIONCOMPONENT_HANDLE	ach_FDAIroll_cdr, ach_FDAIpitch_cdr, ach_FDAIyaw_cdr;
+	static UINT meshgroup_Fdai1_cdr = { VC_GRP_FDAIBall1 }; // Roll gimbal meshgroup (includes roll incicator)
+	static UINT meshgroup_Fdai2_cdr = { VC_GRP_FDAIBall };  // Pitch gimbal meshgroup (visible ball)
+	static UINT meshgroup_Fdai3_cdr = { VC_GRP_FDAIBall2 }; // Yaw gimbal meshgroup
+	static MGROUP_ROTATE mgt_FDAIRoll_cdr(mesh, &meshgroup_Fdai1_cdr, 1, FDAI_PIVOTCDR, fdairollaxis, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIPitch_cdr(mesh, &meshgroup_Fdai2_cdr, 1, FDAI_PIVOTCDR, _V(-1, 0, 0), (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIYaw_cdr(mesh, &meshgroup_Fdai3_cdr, 1, FDAI_PIVOTCDR, fdaiyawvaxis, (float)(RAD * 360));
+	anim_fdaiR_cdr = CreateAnimation(0.0);
+	anim_fdaiP_cdr = CreateAnimation(0.0);
+	anim_fdaiY_cdr = CreateAnimation(0.0);
+	ach_FDAIroll_cdr = AddAnimationComponent(anim_fdaiR_cdr, 0.0f, 1.0f, &mgt_FDAIRoll_cdr);
+	ach_FDAIyaw_cdr = AddAnimationComponent(anim_fdaiY_cdr, 0.0f, 1.0f, &mgt_FDAIYaw_cdr, ach_FDAIroll_cdr);
+	ach_FDAIpitch_cdr = AddAnimationComponent(anim_fdaiP_cdr, 0.0f, 1.0f, &mgt_FDAIPitch_cdr, ach_FDAIyaw_cdr);
+
+	// CDR FDAI error needles
+	static UINT meshgroup_RollError_cdr = VC_GRP_FDAI_rollerror;
+	static UINT meshgroup_PitchError_cdr = VC_GRP_FDAI_pitcherror;
+	static UINT meshgroup_YawError_cdr = VC_GRP_FDAI_yawerror;
+	static MGROUP_TRANSLATE mgt_rollerror_cdr(mesh, &meshgroup_RollError_cdr, 1, needleyvector);
+	static MGROUP_TRANSLATE mgt_pitcherror_cdr(mesh, &meshgroup_PitchError_cdr, 1, needlexvector);
+	static MGROUP_TRANSLATE mgt_yawerror_cdr(mesh, &meshgroup_YawError_cdr, 1, needleyvector);
+	anim_fdaiRerror_cdr = CreateAnimation(0.5);
+	anim_fdaiPerror_cdr = CreateAnimation(0.5);
+	anim_fdaiYerror_cdr = CreateAnimation(0.5);
+	AddAnimationComponent(anim_fdaiRerror_cdr, 0.0f, 1.0f, &mgt_rollerror_cdr);
+	AddAnimationComponent(anim_fdaiPerror_cdr, 0.0f, 1.0f, &mgt_pitcherror_cdr);
+	AddAnimationComponent(anim_fdaiYerror_cdr, 0.0f, 1.0f, &mgt_yawerror_cdr);
+
+	// CDR FDAI rate needles
+	static UINT meshgroup_RollRate_cdr = VC_GRP_FDAI_rateR;
+	static UINT meshgroup_PitchRate_cdr = VC_GRP_FDAI_rateP;
+	static UINT meshgroup_YawRate_cdr = VC_GRP_FDAI_rateY;
+	static MGROUP_TRANSLATE mgt_rollrate_cdr(mesh, &meshgroup_RollRate_cdr, 1, rateyvector);
+	static MGROUP_TRANSLATE mgt_pitchrate_cdr(mesh, &meshgroup_PitchRate_cdr, 1, ratexvector);
+	static MGROUP_TRANSLATE mgt_yawrate_cdr(mesh, &meshgroup_YawRate_cdr, 1, rateyvector);
+	anim_fdaiRrate_cdr = CreateAnimation(0.5);
+	anim_fdaiPrate_cdr = CreateAnimation(0.5);
+	anim_fdaiYrate_cdr = CreateAnimation(0.5);
+	AddAnimationComponent(anim_fdaiRrate_cdr, 0.0f, 1.0f, &mgt_rollrate_cdr);
+	AddAnimationComponent(anim_fdaiPrate_cdr, 0.0f, 1.0f, &mgt_pitchrate_cdr);
+	AddAnimationComponent(anim_fdaiYrate_cdr, 0.0f, 1.0f, &mgt_yawrate_cdr);
+
+	// LMP FDAI Ball
+	/*ANIMATIONCOMPONENT_HANDLE	ach_FDAIroll_lmp, ach_FDAIpitch_lmp, ach_FDAIyaw_lmp;
+	static UINT meshgroup_Fdai1_lmp = { VC_GRP_FDAIBall1 }; // Roll gimbal meshgroup (includes roll incicator)
+	static UINT meshgroup_Fdai2_lmp = { VC_GRP_FDAIBall };  // Pitch gimbal meshgroup (visible ball)
+	static UINT meshgroup_Fdai3_lmp = { VC_GRP_FDAIBall2 }; // Yaw gimbal meshgroup
+	static MGROUP_ROTATE mgt_FDAIRoll_lmp(mesh, &meshgroup_Fdai1_lmp, 1, FDAI_PIVOTLMP, fdairollaxis, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIPitch_lmp(mesh, &meshgroup_Fdai2_lmp, 1, FDAI_PIVOTLMP, _V(-1, 0, 0), (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIYaw_lmp(mesh, &meshgroup_Fdai3_lmp, 1, FDAI_PIVOTLMP, fdaiyawvaxis, (float)(RAD * 360));
+	anim_fdaiR_lmp = CreateAnimation(0.0);
+	anim_fdaiP_lmp = CreateAnimation(0.0);
+	anim_fdaiY_lmp = CreateAnimation(0.0);
+	ach_FDAIroll_lmp = AddAnimationComponent(anim_fdaiR_lmp, 0.0f, 1.0f, &mgt_FDAIRoll_lmp);
+	ach_FDAIyaw_lmp = AddAnimationComponent(anim_fdaiY_lmp, 0.0f, 1.0f, &mgt_FDAIYaw_lmp, ach_FDAIroll_lmp);
+	ach_FDAIpitch_lmp = AddAnimationComponent(anim_fdaiP_lmp, 0.0f, 1.0f, &mgt_FDAIPitch_lmp, ach_FDAIyaw_lmp);
+
+	// LMP FDAI error needles
+	static UINT meshgroup_RollError_lmp = VC_GRP_FDAI_rollerror;
+	static UINT meshgroup_PitchError_lmp = VC_GRP_FDAI_pitcherror;
+	static UINT meshgroup_YawError_lmp = VC_GRP_FDAI_yawerror;
+	static MGROUP_TRANSLATE mgt_rollerror_lmp(mesh, &meshgroup_RollError_lmp, 1, needleyvector);
+	static MGROUP_TRANSLATE mgt_pitcherror_lmp(mesh, &meshgroup_PitchError_lmp, 1, needlexvector);
+	static MGROUP_TRANSLATE mgt_yawerror_lmp(mesh, &meshgroup_YawError_lmp, 1, needleyvector);
+	anim_fdaiRerror_lmp = CreateAnimation(0.5);
+	anim_fdaiPerror_lmp = CreateAnimation(0.5);
+	anim_fdaiYerror_lmp = CreateAnimation(0.5);
+	AddAnimationComponent(anim_fdaiRerror_lmp, 0.0f, 1.0f, &mgt_rollerror_lmp);
+	AddAnimationComponent(anim_fdaiPerror_lmp, 0.0f, 1.0f, &mgt_pitcherror_lmp);
+	AddAnimationComponent(anim_fdaiYerror_lmp, 0.0f, 1.0f, &mgt_yawerror_lmp);
+
+	// LMP FDAI rate needles
+	static UINT meshgroup_RollRate_lmp = VC_GRP_FDAI_rateR;
+	static UINT meshgroup_PitchRate_lmp = VC_GRP_FDAI_rateP;
+	static UINT meshgroup_YawRate_lmp = VC_GRP_FDAI_rateY;
+	static MGROUP_TRANSLATE mgt_rollrate_lmp(mesh, &meshgroup_RollRate_lmp, 1, rateyvector);
+	static MGROUP_TRANSLATE mgt_pitchrate_lmp(mesh, &meshgroup_PitchRate_lmp, 1, ratexvector);
+	static MGROUP_TRANSLATE mgt_yawrate_lmp(mesh, &meshgroup_YawRate_lmp, 1, rateyvector);
+	anim_fdaiRrate_lmp = CreateAnimation(0.5);
+	anim_fdaiPrate_lmp = CreateAnimation(0.5);
+	anim_fdaiYrate_lmp = CreateAnimation(0.5);
+	AddAnimationComponent(anim_fdaiRrate_lmp, 0.0f, 1.0f, &mgt_rollrate_lmp);
+	AddAnimationComponent(anim_fdaiPrate_lmp, 0.0f, 1.0f, &mgt_pitchrate_lmp);
+	AddAnimationComponent(anim_fdaiYrate_lmp, 0.0f, 1.0f, &mgt_yawrate_lmp);*/
+}
+
+void LEM::AnimateFDAI(VECTOR3 attitude, int no_att, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY) {
+
+	if (AttitudeMonSwitch.IsUp())	//PGNS
+	{
+		fdai_proc[0] = 1.0 - attitude.x / PI2;
+		fdai_proc[1] = attitude.y / PI2;
+		fdai_proc[2] = attitude.z / PI2;
+	}
+	else							//AGS
+	{
+		fdai_proc[0] = -attitude.x / PI2;
+		fdai_proc[1] = attitude.y / PI2;
+		fdai_proc[2] = attitude.z / PI2;
+	}
+	if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
+	if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
+	if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
+	if (fdai_proc[0] - fdai_proc_last[0] != 0.0) SetAnimation(animY, fdai_proc[2]);
+	if (fdai_proc[1] - fdai_proc_last[1] != 0.0) SetAnimation(animR, fdai_proc[0]);
+	if (fdai_proc[2] - fdai_proc_last[2] != 0.0) SetAnimation(animP, fdai_proc[1]);
+	fdai_proc_last[0] = fdai_proc[0];
+	fdai_proc_last[1] = fdai_proc[1];
+	fdai_proc_last[2] = fdai_proc[2];
+
+	//sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",atca.lgc_err_x,atca.lgc_err_y,atca.lgc_err_z);
+
+	SetAnimation(errorR, (errors.x + 46) / 92);
+	SetAnimation(errorP, (-errors.y + 46) / 92);
+	SetAnimation(errorY, (errors.z + 46) / 92);
+
+	// ttca_throttle_pos_dig
+	//sprintf(oapiDebugString(), "Roll: %f, Pitch: %f, Yaw: %f", rates.x, rates.y, rates.z);
+
+	SetAnimation(rateR, (rates.z + 1) / 2);
+	SetAnimation(rateP, (rates.x + 1) / 2);
+	SetAnimation(rateY, (-rates.y + 1) / 2);
+
 }
 
