@@ -131,6 +131,7 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	s1cforwardarmState.Set(AnimState::CLOSED, 0.0);
 	swingarmState.Set(AnimState::CLOSED, 0.0);
 	mastState.Set(AnimState::CLOSED, 0.0);
+	mastcoversState.Set(AnimState::CLOSED, 0.0);
 
 	int i;
 	for (i = 0; i < 2; i++) {
@@ -207,6 +208,8 @@ void ML::clbkPostCreation()
 	SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
 	SetAnimation(swingarmAnim, swingarmState.pos);
 	SetAnimation(mastAnim, mastState.pos);
+	SetAnimation(mastcoversAnim, mastcoversState.pos);
+
 }
 
 void ML::clbkPreStep(double simt, double simdt, double mjd) {
@@ -264,6 +267,19 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		mastState.Move(dp);
 		SetAnimation(mastAnim, mastState.pos);
 	}
+	if (mastcoversState.Moving()) {
+		double dp;
+		if (mastcoversState.Closing())
+		{
+			dp = simdt * ML_TAIL_SERVICE_MAST_COVERS_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_TAIL_SERVICE_MAST_COVERS_RETRACT_SPEED;
+		}
+		mastcoversState.Move(dp);
+		SetAnimation(mastcoversAnim, mastcoversState.pos);
+	}
 
 	ATTACHMENTHANDLE ah;
 
@@ -284,6 +300,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (s1cintertankarmState.action != AnimState::OPEN) s1cintertankarmState.action = AnimState::OPENING;
 		if (s1cforwardarmState.action != AnimState::OPEN) s1cforwardarmState.action = AnimState::OPENING;
 		if (mastState.action != AnimState::OPEN) mastState.action = AnimState::OPENING;
+		if (mastcoversState.action != AnimState::OPEN) mastcoversState.action = AnimState::OPENING;
 		break;
 
 	case STATE_VABREADY:
@@ -302,6 +319,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (s1cintertankarmState.action != AnimState::CLOSED) s1cintertankarmState.action = AnimState::CLOSING;
 		if (s1cforwardarmState.action != AnimState::CLOSED) s1cforwardarmState.action = AnimState::CLOSING;
 		if (mastState.action != AnimState::CLOSED) mastState.action = AnimState::CLOSING;
+		if (mastcoversState.action != AnimState::CLOSED) mastcoversState.action = AnimState::CLOSING;
 
 		if (state == STATE_VABREADY) break;
 
@@ -598,7 +616,13 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 					TSMUmb->SIGSECutoff(true);
 				}
 			}
-			
+
+			// T+0.1s or later?
+			if (sat->GetMissionTime() > 1.8) {
+				// Close Covers
+				mastcoversState.action = AnimState::OPENING;
+			}
+
 			// T+8s or later?
 			if (sat->GetMissionTime() > 8) {
 				state = STATE_POSTLIFTOFF;
@@ -811,45 +835,63 @@ void ML::SetTouchdownPointHeight(double height) {
 void ML::DefineAnimations() {
 
 	// Hammerhead crane
-	static UINT crane_groups[2] = {21, 22};
-	static MGROUP_ROTATE crane(meshindexML, crane_groups, 2, _V(0, 0, 13.7), _V( 0, 1, 0), (float)(0.5 * PI));
+	static UINT crane_groups[3] = { 21, 22, 50 };
+	static UINT damper_arm[1] = { 30 };
+	static MGROUP_ROTATE crane(meshindexML, crane_groups, 3, _V(0.0874, 57.8447, 14.0843), _V(0, 1, 0), (float)(0.5 * PI));
+	static MGROUP_ROTATE damperarm(meshindexML, damper_arm, 1, _V(0.2221, 42.1020, 6.8092), _V(1, 0, 0), (float)(90.0 / 180.0 * PI));
 	craneAnim = CreateAnimation(0.0);
 	AddAnimationComponent(craneAnim, 0, 1, &crane);
+	AddAnimationComponent(craneAnim, 0, 1, &damperarm);
 
 	// CM access arm
-	static UINT cmarm_groups[2] = {11, 12};
-	static MGROUP_ROTATE cmarm1(meshindexML, cmarm_groups, 2, _V(8.6, 0, 8.6), _V( 0, 1, 0), (float)(3.0 / 180.0 * PI));
-	static MGROUP_ROTATE cmarm2(meshindexML, cmarm_groups, 2, _V(8.6, 0, 8.6), _V( 0, 1, 0), (float)(-1.0 * PI));
+	static UINT cmarm_groups[3] = { 11, 12, 51 };
+	static MGROUP_ROTATE cmarm1(meshindexML, cmarm_groups, 3, _V(8.7432, 39.8173, 8.9631), _V(0, 1, 0), (float)(3.0 / 180.0 * PI));
+	static MGROUP_ROTATE cmarm2(meshindexML, cmarm_groups, 3, _V(8.7432, 39.8173, 8.9631), _V(0, 1, 0), (float)(-195.0 / 180.0 * PI));
 	cmarmAnim = CreateAnimation(0.0);
-	AddAnimationComponent(cmarmAnim, 0,       0.00001, &cmarm1);
-	AddAnimationComponent(cmarmAnim, 0.00001, 1,       &cmarm2);
+	AddAnimationComponent(cmarmAnim, 0, 0.00001, &cmarm1);
+	AddAnimationComponent(cmarmAnim, 0.00001, 1, &cmarm2);
 
 	// SIC intertank arm
-	static UINT s1cintertankarm_groups[1] = {13};
-	static MGROUP_ROTATE s1cintertankarm(meshindexML, s1cintertankarm_groups, 1, _V(5.2, 0, 5.0), _V( 0, 1, 0), (float)(71.0 / 180.0 * PI));
+	static UINT s1cintertankarm_groups[2] = { 13, 49 };
+	static MGROUP_ROTATE s1cintertankarm(meshindexML, s1cintertankarm_groups, 2, _V(5.5646, -39.9844, 5.2651), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
 	s1cintertankarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(s1cintertankarmAnim, 0, 1, &s1cintertankarm);
 
 	// SIC forward arm
-	static UINT s1cforwardarm_groups[1] = {14};
-	static MGROUP_ROTATE s1cforwardarm(meshindexML, s1cforwardarm_groups, 1, _V(5.3, 0, 6.5), _V( 0, 1, 0), (float)(71.0 / 180.0 * PI));
+	static UINT s1cforwardarm_groups[2] = { 14, 52 };
+	static MGROUP_ROTATE s1cforwardarm(meshindexML, s1cforwardarm_groups, 2, _V(5.5716, -21.0929, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
 	s1cforwardarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(s1cforwardarmAnim, 0, 1, &s1cforwardarm);
 
 	// Swingarms
-	static UINT swingarm_groups[6] = {15, 16, 17, 18, 19, 20};
-	static MGROUP_ROTATE swingarm(meshindexML, swingarm_groups, 6, _V(5.3, 0, 6.5), _V( 0, 1, 0), (float)(71.0 / 180.0 * PI));
+	static UINT swingarm_groups[12] = { 15, 16, 17, 18, 19, 20, 53, 54, 55, 56, 57, 58 };
+	static MGROUP_ROTATE swingarm(meshindexML, swingarm_groups, 12, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
 	swingarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(swingarmAnim, 0, 1, &swingarm);
 
 	// Masts
-	static UINT mast_groups1[1] = {3};
-	static UINT mast_groups2[2] = {5, 6};
-	static MGROUP_ROTATE mast1(meshindexML, mast_groups1, 1, _V( 9.2, -53.1, 0), _V( 0, 0, 1), (float)(-42.0 / 180.0 * PI));
-	static MGROUP_ROTATE mast2(meshindexML, mast_groups2, 2, _V(-9.2, -53.1, 0), _V( 0, 0, 1), (float)(42.0 / 180.0 * PI));
+	static UINT mast_groups1[1] = { 3 };
+	static UINT mast_groups2[1] = { 5 };
+	static UINT mast_groups3[1] = { 6 };
+	static MGROUP_ROTATE mast1(meshindexML, mast_groups1, 1, _V(8.6640, -54.1755, -6.2681), _V(0.2543, -0.0000, -0.9671), (float)(72.0 / 180.0 * PI));
+	static MGROUP_ROTATE mast2(meshindexML, mast_groups2, 1, _V(-8.7285, -54.1755, -7.1316), _V(0.2819, -0.0000, 0.9594), (float)(72.0 / 180.0 * PI));
+	static MGROUP_ROTATE mast3(meshindexML, mast_groups3, 1, _V(-8.3939, -54.1755, -12.3403), _V(-0.2664, -0.0000, 0.9639), (float)(72.0 / 180.0 * PI));
 	mastAnim = CreateAnimation(0.0);
 	AddAnimationComponent(mastAnim, 0, 1, &mast1);
 	AddAnimationComponent(mastAnim, 0, 1, &mast2);
+	AddAnimationComponent(mastAnim, 0, 1, &mast3);
+
+	// MastCovers
+	static UINT mast_cover1[1] = { 39 }; 
+	static UINT mast_cover2[1] = { 38 };
+	static UINT mast_cover3[1] = { 37 };
+	static MGROUP_ROTATE mastCover1(meshindexML, mast_cover1, 1, _V(8.5142, -50.4372, -6.1115), _V(0.2509, 0.0000, -0.9680), (float)(-75.0 / 180.0 * PI));
+	static MGROUP_ROTATE mastCover2(meshindexML, mast_cover2, 1, _V(-8.6822, -50.4372, -7.3419), _V(0.2864, 0.0000, 0.9581), (float)(-75.0 / 180.0 * PI));
+	static MGROUP_ROTATE mastCover3(meshindexML, mast_cover3, 1, _V(-8.2421, -50.4372, -12.4947), _V(-0.2630, 0.0000, 0.9648), (float)(-75.0 / 180.0 * PI));
+	mastcoversAnim = CreateAnimation(0.0);
+	AddAnimationComponent(mastcoversAnim, 0, 1, &mastCover1);
+	AddAnimationComponent(mastcoversAnim, 0, 1, &mastCover2);
+	AddAnimationComponent(mastcoversAnim, 0, 1, &mastCover3);
 }
 
 void ML::clbkLoadStateEx(FILEHANDLE scn, void *status) {
@@ -877,6 +919,8 @@ void ML::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 			sscan_state(line + 12, swingarmState);
 		} else if (!strnicmp (line, "MASTPROC", 8)) {
 			sscan_state(line + 8, mastState);
+		} else if (!strnicmp(line, "MASTCOVERSPROC", 14)) {
+			sscan_state(line + 14, mastcoversState);
 		} else if (!strnicmp (line, "LVNAME", 6)) {
 			strncpy (LVName, line + 7, 64);
 		} else {
@@ -900,6 +944,7 @@ void ML::clbkSaveState(FILEHANDLE scn) {
 	WriteScenario_state(scn, "S1CFORWARDARMPROC", s1cforwardarmState);
 	WriteScenario_state(scn, "SWINGARMPROC", swingarmState);
 	WriteScenario_state(scn, "MASTPROC", mastState);
+	WriteScenario_state(scn, "MASTCOVERSPROC", mastcoversState);
 	if (LVName[0])
 		oapiWriteScenario_string(scn, "LVNAME", LVName);
 }
