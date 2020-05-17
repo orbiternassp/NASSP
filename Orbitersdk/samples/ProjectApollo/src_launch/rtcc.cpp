@@ -21152,7 +21152,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	MATRIX3 REFSMMAT;
 	bool RefsAvailable = true;
 
-	if (REFSMMAT_ID == 6)
+	if (REFSMMAT_ID == 100)
 	{
 		REFSMMAT = PIDREF(man->A_T, man->R_BI, man->V_BI, man->P_G, man->Y_G, HeadsUp);
 		sprintf_s(res.REFSMMAT_Code, "DES");
@@ -23567,6 +23567,62 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			//TBD: Earth or Moon
 			EMMGLCVP(L, gmt);
 		}
+		//Acquire and save CSM IMU matrix/optics
+		else if (med == "11")
+		{
+			if (data.size() < 2)
+			{
+				return 1;
+			}
+			if (data[0] != "CSM")
+			{
+				return 2;
+			}
+			if (data[1] == "DMT")
+			{
+				if (data.size() < 5)
+				{
+					return 1;
+				}
+				unsigned man;
+				if (sscanf(data[2].c_str(), "%d", &man) != 1)
+				{
+					return 2;
+				}
+				if (man < 1 || man > 15)
+				{
+					return 2;
+				}
+				int refs;
+
+				if (data[3] == "DES")
+				{
+					refs = 100;
+				}
+				else
+				{
+					refs = EMGSTGENCode(data[3].c_str());
+					if (refs < 0 || refs > 10)
+					{
+						return 2;
+					}
+				}
+				bool headsup;
+				if (data[4] == "U")
+				{
+					headsup = true;
+				}
+				else if (data[4] == "D")
+				{
+					headsup = false;
+				}
+				else
+				{
+					return 2;
+				}
+				EMSGSUPP(1, 5, refs, man, headsup);
+			}
+		}
 		//Acquire and save LEM IMU matrix/optics
 		else if (med == "21")
 		{
@@ -23581,6 +23637,50 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			if (data[1] == "LLD")
 			{
 				EMSLSUPP(1, 15);
+			}
+			else if (data[1] == "DMT")
+			{
+				if (data.size() < 5)
+				{
+					return 1;
+				}
+				unsigned man;
+				if (sscanf(data[2].c_str(), "%d", &man) != 1)
+				{
+					return 2;
+				}
+				if (man < 1 || man > 15)
+				{
+					return 2;
+				}
+				int refs;
+				
+				if (data[3] == "DES")
+				{
+					refs = 100;
+				}
+				else
+				{
+					refs = EMGSTGENCode(data[3].c_str());
+					if (refs < 0 || refs > 10)
+					{
+						return 2;
+					}
+				}
+				bool headsup;
+				if (data[4] == "U")
+				{
+					headsup = true;
+				}
+				else if (data[4] == "D")
+				{
+					headsup = false;
+				}
+				else
+				{
+					return 2;
+				}
+				EMSLSUPP(1, 5, refs, man, headsup);
 			}
 		}
 	}
@@ -26987,52 +27087,25 @@ int RTCC::EMGTVMED(std::string med, std::vector<std::string> data)
 		}
 
 		int refscode;
-		if (data.size() < 4 || data[3] == "" || data[3] == "CUR")
+		if (data.size() < 4 || data[3] == "")
 		{
 			refscode = 1;
 		}
-		else if (data[3] == "PCR")
+		else if (data[3] == "DES")
 		{
-			refscode = 2;
-		}
-		else if (data[3] == "TLM")
-		{
-			refscode = 3;
-		}
-		else if (data[3] == "OST")
-		{
-			refscode = 4;
-		}
-		else if (data[3] == "MED")
-		{
-			refscode = 5;
-		}
-		else if (data[3] == "DMT")
-		{
-			refscode = 6;
-		}
-		else if (data[3] == "DOD")
-		{
-			refscode = 7;
-		}
-		else if (data[3] == "LCV")
-		{
-			refscode = 8;
-		}
-		else if (data[3] == "AGS")
-		{
-			refscode = 9;
-		}
-		else if (data[3] == "DOK")
-		{
-			refscode = 10;
+			refscode = 100;
 		}
 		else
 		{
-			return 2;
+			refscode = EMGSTGENCode(data[3].c_str());
+			if (refscode < 0)
+			{
+				return 2;
+			}
 		}
+
 		bool headsupdownind;
-		if (refscode == 6)
+		if (refscode == 100)
 		{
 			if (data.size() < 5 || data[4] == "" || data[4] == "U")
 			{
@@ -27170,6 +27243,7 @@ double RTCC::PCDETA(double beta1, double beta2, double r1, double r2)
 
 MATRIX3 RTCC::PIDREF(VECTOR3 AT, VECTOR3 R, VECTOR3 V, double PG, double YG, bool K)
 {
+	//K: 0 for heads-down, 1 for heads-up
 	VECTOR3 X_T, Y_T, Z_T, X_P, Y_P, Z_P;
 	double r, y_T;
 
@@ -27679,6 +27753,9 @@ void RTCC::EMGPRINT(std::string source, int i)
 		message.push_back(Buffer);
 		sprintf_s(Buffer, "%+.7lf %+.7lf %+.7lf", RTCCONLINEMON.MatrixBuffer.m31, RTCCONLINEMON.MatrixBuffer.m32, RTCCONLINEMON.MatrixBuffer.m33);
 		message.push_back(Buffer);
+		break;
+	case 21:
+		message.push_back("MANEUVER NOT IN PLAN");
 		break;
 	case 26:
 		message.push_back("EPHEMERIS NOT AVAILABLE");
@@ -30265,7 +30342,7 @@ void RTCC::LMMGRP(double gmt, double A_Z)
 	EMGSTSTM(1, R, RTCC_REFSMMAT_TYPE_CUR, gmt);
 }
 
-void RTCC::EMSGSUPP(int QUEID, int refs)
+void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 {
 	//Acquire and save CSM IMU matrix/optics
 	if (QUEID == 1)
@@ -30280,10 +30357,45 @@ void RTCC::EMSGSUPP(int QUEID, int refs)
 			}
 			EMGSTSTM(1, BZSTLM.CMC_REFSMMAT, RTCC_REFSMMAT_TYPE_TLM, RTCCPresentTimeGMT());
 		}
+		//DMT
+		else if (refs == 5)
+		{
+			if (refs2 < 0)
+			{
+				EMGPRINT("EMSGSUPP", 1);
+				return;
+			}
+			MATRIX3 REFSMMAT;
+			if (refs2 == 100)
+			{
+				//Desired REFSMMAT
+				if (man < 0 || PZMPTCSM.ManeuverNum < man)
+				{
+					EMGPRINT("EMSGSUPP", 21);
+					return;
+				}
+
+				MPTManeuver *mpt = &PZMPTCSM.mantable[man - 1];
+
+				REFSMMAT = PIDREF(mpt->A_T, mpt->R_BI, mpt->V_BI, mpt->P_G, mpt->Y_G, headsup);
+			}
+			else
+			{
+				REFSMMATData data;
+				data = EZJGMTX1.data[refs2 - 1];
+				if (data.ID <= 0)
+				{
+					EMGPRINT("EMSGSUPP", 1);
+					return;
+				}
+				REFSMMAT = data.REFSMMAT;
+			}
+			EMGSTSTM(1, REFSMMAT, RTCC_REFSMMAT_TYPE_DMT, RTCCPresentTimeGMT());
+		}
 	}
 }
 
-void RTCC::EMSLSUPP(int QUEID, int refs)
+void RTCC::EMSLSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 {
 	//Acquire and save LEM IMU matrix/optics
 	if (QUEID == 1)
@@ -30297,6 +30409,41 @@ void RTCC::EMSLSUPP(int QUEID, int refs)
 				return;
 			}
 			EMGSTSTM(3, BZSTLM.LGC_REFSMMAT, RTCC_REFSMMAT_TYPE_TLM, RTCCPresentTimeGMT());
+		}
+		//DMT
+		else if (refs == 5)
+		{
+			if (refs2 < 0)
+			{
+				EMGPRINT("EMSLSUPP", 1);
+				return;
+			}
+			MATRIX3 REFSMMAT;
+			if (refs2 == 100)
+			{
+				//Desired REFSMMAT
+				if (man < 0 || PZMPTLEM.ManeuverNum < man)
+				{
+					EMGPRINT("EMSLSUPP", 21);
+					return;
+				}
+
+				MPTManeuver *mpt = &PZMPTLEM.mantable[man - 1];
+
+				REFSMMAT = PIDREF(mpt->A_T, mpt->R_BI, mpt->V_BI, mpt->P_G, mpt->Y_G, headsup);
+			}
+			else
+			{
+				REFSMMATData data;
+				data = EZJGMTX3.data[refs2 - 1];
+				if (data.ID <= 0)
+				{
+					EMGPRINT("EMSLSUPP", 1);
+					return;
+				}
+				REFSMMAT = data.REFSMMAT;
+			}
+			EMGSTSTM(3, REFSMMAT, RTCC_REFSMMAT_TYPE_DMT, RTCCPresentTimeGMT());
 		}
 		//Lunar Launch Desired
 		else if (refs == 15)

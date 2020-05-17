@@ -2954,9 +2954,9 @@ public:
 	//Guidance
 
 	//Guidance Optics Display Supervisor
-	void EMSGSUPP(int QUEID, int refs);
+	void EMSGSUPP(int QUEID, int refs, int refs2 = -1, unsigned man = -1, bool headsup = true);
 	//LEM Optics Supervisor
-	void EMSLSUPP(int QUEID, int refs);
+	void EMSLSUPP(int QUEID, int refs, int refs2 = -1, unsigned man = -1, bool headsup = true);
 	//GOST REFSMMAT Maintenance
 	void EMGSTGEN(int QUEID, int L1, int ID1, int L2, int ID2, double gmt, MATRIX3 *refs = NULL);
 	//GOST Matrix Storage and Print

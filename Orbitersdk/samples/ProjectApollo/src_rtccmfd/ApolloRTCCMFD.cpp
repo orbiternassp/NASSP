@@ -4766,12 +4766,14 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 		GC->rtcc->BZSTLM.CMC_REFSMMAT = REFSMMAT;
 		GC->rtcc->BZSTLM.CMCRefsPresent = true;
 		GC->rtcc->EMSGSUPP(1, 1);
+		GeneralMEDRequest("G00,CSM,TLM,CSM,CUR;");
 	}
 	else
 	{
 		GC->rtcc->BZSTLM.LGC_REFSMMAT = REFSMMAT;
 		GC->rtcc->BZSTLM.LGCRefsPresent = true;
 		GC->rtcc->EMSLSUPP(1, 1);
+		GeneralMEDRequest("G00,LEM,TLM,LEM,CUR;");
 	}
 
 	G->REFSMMATcur = G->REFSMMATopt;
