@@ -291,7 +291,7 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	//
 	ReleaseSurfacesVC();
 
-	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 4);
+	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 3);
 
 	// Panel 1
 	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238, 27, 559, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
@@ -465,7 +465,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		VECTOR3 attitude;
 		VECTOR3 errors;
-		//VECTOR3 rates;
+		VECTOR3 rates;
 		int no_att = 0;
 
 		if (AttitudeMonSwitch.IsUp())	//PGNS
@@ -528,11 +528,11 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		if (RateScaleSwitch.IsUp())
 		{
-			//rates = rga.GetRates() / (25.0*RAD);
+			rates = rga.GetRates() / (25.0*RAD);
 		}
 		else
 		{
-			//rates = rga.GetRates() / (5.0*RAD);
+			rates = rga.GetRates() / (5.0*RAD);
 		}
 
 		if (AttitudeMonSwitch.IsUp())	//PGNS
@@ -557,11 +557,18 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		fdai_proc_last[1] = fdai_proc[1];
 		fdai_proc_last[2] = fdai_proc[2];
 
-		sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",atca.lgc_err_x,atca.lgc_err_y,atca.lgc_err_z);
+		//sprintf(oapiDebugString(),"LEM: LGC-ERR: %d %d %d",atca.lgc_err_x,atca.lgc_err_y,atca.lgc_err_z);
 
 		SetAnimation(anim_fdai_rollerror, (errors.x + 384) / 768);
 		SetAnimation(anim_fdai_pitcherror, (-errors.y + 384) / 768);
 		SetAnimation(anim_fdai_yawerror, (errors.z + 384) / 768);
+
+		// ttca_throttle_pos_dig
+		//sprintf(oapiDebugString(), "Roll: %f, Pitch: %f, Yaw: %f", rates.x, rates.y, rates.z);
+
+		SetAnimation(anim_fdai_rollrate, (rates.z + 1) / 2);
+		SetAnimation(anim_fdai_pitchrate, (rates.x + 1) / 2);
+		SetAnimation(anim_fdai_yawrate, (-rates.y + 1) / 2);
 
 		return true;
 
@@ -640,9 +647,9 @@ void LEM::InitVCAnimations()
 	ANIMATIONCOMPONENT_HANDLE	ach_FDAI_roll, ach_FDAI_pitch, ach_FDAI_yaw;
 	const VECTOR3	FDAI_PIVOT = { -0.297851, 0.525802, 1.70639 }; // Pivot Point
 
-	static UINT meshgroup_Fdai1 = { VC_GRP_FDAIBall1 };
-	static UINT meshgroup_Fdai2 = { VC_GRP_FDAIBall };
-	static UINT meshgroup_Fdai3 = { VC_GRP_FDAIBall2 };
+	static UINT meshgroup_Fdai1 = { VC_GRP_FDAIBall1 }; // Roll gimbal meshgroup (includes roll incicator)
+	static UINT meshgroup_Fdai2 = { VC_GRP_FDAIBall };  // Pitch gimbal meshgroup (visible ball)
+	static UINT meshgroup_Fdai3 = { VC_GRP_FDAIBall2 }; // Yaw gimbal meshgroup
 
 	const VECTOR3 rollaxis = { -0.00, sin(7.95581 * RAD), -cos(7.95581 * RAD) };
 	const VECTOR3 yawvaxis = { -0.00, sin(97.95581 * RAD), -cos(97.95581 * RAD) };
@@ -678,6 +685,25 @@ void LEM::InitVCAnimations()
 	AddAnimationComponent(anim_fdai_rollerror, 0.0f, 1.0f, &mgt_rollerror);
 	AddAnimationComponent(anim_fdai_pitcherror, 0.0f, 1.0f, &mgt_pitcherror);
 	AddAnimationComponent(anim_fdai_yawerror, 0.0f, 1.0f, &mgt_yawerror);
+
+	// FDAI rate needles
+
+	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_TILT), 0.062*sin(P1_TILT) };
+	const VECTOR3 rateyvector = { 0.062, 0, 0 };
+
+	static UINT meshgroup_RollRate = VC_GRP_FDAI_rateR;
+	static UINT meshgroup_PitchRate = VC_GRP_FDAI_rateP;
+	static UINT meshgroup_YawRate = VC_GRP_FDAI_rateY;
+
+	static MGROUP_TRANSLATE mgt_rollrate(mesh, &meshgroup_RollRate, 1, rateyvector);
+	static MGROUP_TRANSLATE mgt_pitchrate(mesh, &meshgroup_PitchRate, 1, ratexvector);
+	static MGROUP_TRANSLATE mgt_yawrate(mesh, &meshgroup_YawRate, 1, rateyvector);
+	anim_fdai_rollrate = CreateAnimation(0.5);
+	anim_fdai_pitchrate = CreateAnimation(0.5);
+	anim_fdai_yawrate = CreateAnimation(0.5);
+	AddAnimationComponent(anim_fdai_rollrate, 0.0f, 1.0f, &mgt_rollrate);
+	AddAnimationComponent(anim_fdai_pitchrate, 0.0f, 1.0f, &mgt_pitchrate);
+	AddAnimationComponent(anim_fdai_yawrate, 0.0f, 1.0f, &mgt_yawrate);
 }
 
 void LEM::SetCompLight(int m, bool state) {
