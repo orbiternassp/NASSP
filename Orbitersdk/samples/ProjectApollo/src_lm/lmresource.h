@@ -849,16 +849,24 @@
 #define AID_VC_RANGE_TAPE               3101
 #define AID_VC_RATE_TAPE                3102
 #define AID_VC_LM_CWS_LEFT              3103
-#define AID_VC_LM_CWS_RIGHT             3104
 #define AID_VC_MISSION_CLOCK            3105
 #define AID_VC_EVENT_TIMER              3106
 #define AID_VC_XPOINTERCDR              3107
-#define AID_VC_XPOINTERLMP              3108
 #define AID_VC_FDAI_LEFT                3109
-#define AID_VC_FDAI_RIGHT               3110
-
+#define AID_VC_MPS_REG_CONTROLS_LEFT    3116
+#define AID_VC_MPS_REG_CONTROLS_RIGHT   3117
 
 // VC Active Areas (Panel 2)
+#define AID_PANEL_2				((id >= 3200) && (id <= 3224))
+#define AID_VC_LM_CWS_RIGHT             3201
+#define AID_VC_XPOINTERLMP              3202
+#define AID_VC_FDAI_RIGHT               3203
+#define AID_VC_RCS_ASC_FEED_TALKBACKS   3204
+#define AID_VC_LGC_CMD_ENABLE_14_TALKBACKS   3205
+#define AID_VC_LGC_CMD_ENABLE_23_TALKBACKS   3206
+#define AID_VC_RCS_XFEED_TALKBACK       3207
+#define AID_VC_MAIN_SOV_TALKBACKS       3208
+#define AID_VC_PANEL2_COMPLIGHTS        3209    // Panel 2 comp lights
 
 // VC Active Areas (Panel 3)
 #define AID_VC_PANEL_3			((id >= 3300) && (id <= 3346))
@@ -897,6 +905,7 @@
 
 #define AID_VC_RDR_SIG_STR      3337    // Radar signal strength
 #define AID_VC_RR_NOTRACK       3338    // RR No track light
+
 
 
 // VC Active Areas (Panel 4)

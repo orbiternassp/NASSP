@@ -422,7 +422,7 @@ bool ToggleSwitch::ProcessMouseVC(int event, VECTOR3 &p)
 			}
 		}
 	}
-	else if (IsSpringLoaded() && ((event & PANEL_MOUSE_LBUP) != 0) && !IsHeld()) {
+	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
 	}
@@ -545,7 +545,7 @@ bool ThreePosSwitch::ProcessMouseVC(int event, VECTOR3 &p)
 		}
 	}
 
-	else if (IsSpringLoaded() && ((event & PANEL_MOUSE_LBUP) != 0) && !IsHeld()) {
+	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
 		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN, true);
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER, true);
 		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP, true);
@@ -2815,6 +2815,40 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 	}
 
 	oapiBlt(drawSurface, switchSurface, x, y, width * (int) displayState, 0, width, height);
+}
+
+void IndicatorSwitch::DrawSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc) {
+
+	int drawState = 0;
+
+	// Require power if wired
+	if (SRC != NULL) {
+		if (SRC->Voltage() > SP_MIN_DCVOLTAGE) {
+			drawState = GetState();
+		}
+		else {
+			drawState = (failOpen ? 1 : 0);
+		}
+	}
+	else {
+		drawState = GetState();
+	}
+
+	if (drawState && displayState < 3.0)
+		displayState += oapiGetSimStep() * 4.0;
+
+	if (!drawState && displayState > 0.0)
+		displayState -= oapiGetSimStep() * 4.0;
+
+	if (displayState > 3.0) displayState = 3.0;
+	if (displayState < 0.0) displayState = 0.0;
+
+	// Cheating beyond normal saves switch subclasses and associated etcetera
+	if (displayState == 3.0 && drawState > 1) {
+		displayState += (drawState - 1);
+	}
+
+	oapiBlt(drawSurface, switchsurfacevc, x, y, width * (int)displayState, 0, width, height);
 }
 
 void IndicatorSwitch::SaveState(FILEHANDLE scn) {

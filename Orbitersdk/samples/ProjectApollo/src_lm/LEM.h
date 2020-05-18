@@ -98,6 +98,10 @@ enum LMRCSThrusters
 
 // LM Comp light material indexes
 #define LM_COMPLIGHT_1		0   // RR No track light
+#define LM_COMPLIGHT_2		1   // Glycol light
+#define LM_COMPLIGHT_3		2   // Suit fan light
+#define LM_COMPLIGHT_4		3   // CO2 light
+#define LM_COMPLIGHT_5		4   // H2O sep light
 
 // Panel tilt
 const double P1_TILT = 7.95581 * RAD;
@@ -477,6 +481,8 @@ public:
 		SRF_VC_RADAR_TAPE,
 		SRF_VC_RADAR_TAPE2,
 		SFR_VC_CW_LIGHTS,
+		SRF_INDICATORVC,
+		SRF_INDICATORREDVC,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -724,6 +730,7 @@ protected:
 	void JostleViewpoint(double amount);
 	void AddDust();
 	void SetCompLight(int m, bool state);
+	void SetContactLight(int m, bool state);
 	void InitFDAI(UINT mesh);
 	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 

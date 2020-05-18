@@ -295,25 +295,31 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 
 	// Panel 1
 	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238, 27, 559, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_LM_CWS_RIGHT, _R(1075, 27, 1375, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60, 259, 202, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(276, 259, 357, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-
 	oapiVCRegisterArea(AID_VC_RANGE_TAPE, _R(431, 633, 475, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_RATE_TAPE, _R(482, 633, 517, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-
 	oapiVCRegisterArea(AID_VC_XPOINTERCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_XPOINTERLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_LEFT, _R(341, 891, 377, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_RIGHT, _R(415, 891, 451, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+
+	// Panel 2
+	oapiVCRegisterArea(AID_VC_LM_CWS_RIGHT, _R(1075, 27, 1375, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_XPOINTERLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_RCS_ASC_FEED_TALKBACKS, _R(794, 413, 1031, 436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_14_TALKBACKS, _R(794, 562, 1031, 585), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_23_TALKBACKS, _R(794, 688, 1031, 711), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_RCS_XFEED_TALKBACK, _R(795, 844, 818, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_MAIN_SOV_TALKBACKS, _R(934, 844, 1027, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_PANEL2_COMPLIGHTS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Panel 3
 	for (i = 0; i < P3_SWITCHCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + ofs, 0.012);
+		oapiVCRegisterArea(AID_VC_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + ofs, 0.006);
 	}
 
 	for (i = 0; i < P3_ROTCOUNT; i++)
@@ -630,13 +636,89 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		return true;
 
-	/*case AID_VC_RR_NOTRACK:
+	case AID_VC_RR_NOTRACK:
 		if (lca.GetAnnunVoltage() > 2.25 && (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6)) { // The AC side is only needed for the transmitter
 			SetCompLight(LM_COMPLIGHT_1, true); // Light On
 		} else {
 			SetCompLight(LM_COMPLIGHT_1, false); // Light Off
 		}
-		return true;*/
+		return true;
+
+	case AID_VC_PANEL2_COMPLIGHTS:
+		if (lca.GetAnnunVoltage() > 2.25 && (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6)) {
+			SetCompLight(LM_COMPLIGHT_2, true); // Light On
+		}
+		else {
+			SetCompLight(LM_COMPLIGHT_2, false); // Light Off
+		}
+
+		if (lca.GetAnnunVoltage() > 2.25 && (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6)) {
+			SetCompLight(LM_COMPLIGHT_3, true); // Light On
+		}
+		else {
+			SetCompLight(LM_COMPLIGHT_3, false); // Light Off
+		}
+
+		if (lca.GetAnnunVoltage() > 2.25) {
+			if (INST_CWEA_CB.IsPowered() && ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6))) {
+				SetCompLight(LM_COMPLIGHT_4, true); // Light On
+			}
+			else if (CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
+				SetCompLight(LM_COMPLIGHT_4, true); // Light On
+			} else {
+				SetCompLight(LM_COMPLIGHT_4, false); // Light Off
+			}
+		} else {
+			SetCompLight(LM_COMPLIGHT_4, false); // Light Off
+		}
+
+		if (lca.GetAnnunVoltage() > 2.25 && INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
+			SetCompLight(LM_COMPLIGHT_5, true); // Light On
+		}
+		else {
+			SetCompLight(LM_COMPLIGHT_5, false); // Light Off
+		}
+		return true;
+
+	case AID_VC_RCS_ASC_FEED_TALKBACKS:
+		RCSAscFeed1ATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		RCSAscFeed2ATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		RCSAscFeed1BTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		RCSAscFeed2BTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		return true;
+
+	case AID_VC_LGC_CMD_ENABLE_14_TALKBACKS:
+		RCSQuad1ACmdEnableTB.DrawSwitchVC(surf, srf[SRF_INDICATORREDVC]);
+		RCSQuad4ACmdEnableTB.DrawSwitchVC(surf, srf[SRF_INDICATORREDVC]);
+		RCSQuad1BCmdEnableTB.DrawSwitchVC(surf, srf[SRF_INDICATORREDVC]);
+		RCSQuad4BCmdEnableTB.DrawSwitchVC(surf, srf[SRF_INDICATORREDVC]);
+		return true;
+
+	case AID_VC_LGC_CMD_ENABLE_23_TALKBACKS:
+		RCSQuad2ACmdEnableTB.DrawSwitchVC(surf, srf[SRF_INDICATORREDVC]);
+		RCSQuad3ACmdEnableTB.DrawSwitchVC(surf, srf[SRF_INDICATORREDVC]);
+		RCSQuad2BCmdEnableTB.DrawSwitchVC(surf, srf[SRF_INDICATORREDVC]);
+		RCSQuad3BCmdEnableTB.DrawSwitchVC(surf, srf[SRF_INDICATORREDVC]);
+		return true;
+
+	case AID_VC_RCS_XFEED_TALKBACK:
+		RCSXFeedTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		return true;
+
+	case AID_VC_MAIN_SOV_TALKBACKS:
+		RCSMainSovATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		RCSMainSovBTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		return true;
+
+	case AID_VC_MPS_REG_CONTROLS_LEFT:
+		ASCHeReg1TB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		DESHeReg1TB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		return true;
+
+	case AID_VC_MPS_REG_CONTROLS_RIGHT:
+		ASCHeReg2TB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		DESHeReg2TB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		return true;
 	}
 
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
@@ -708,8 +790,8 @@ void LEM::InitFDAI(UINT mesh) {
 	// 3D FDAI initialization
 
 	// Constants
-	const VECTOR3 fdairollaxis = { -0.00, sin(7.95581 * RAD), -cos(7.95581 * RAD) };
-	const VECTOR3 fdaiyawvaxis = { -0.00, sin(97.95581 * RAD), -cos(97.95581 * RAD) };
+	const VECTOR3 fdairollaxis = { -0.00, sin(P1_TILT * RAD), -cos(P1_TILT * RAD) };
+	const VECTOR3 fdaiyawvaxis = { -0.00, sin((P1_TILT + 90.0) * RAD), -cos((P1_TILT + 90.0) * RAD) };
 	const VECTOR3 needlexvector = { 0.00, 0.05*cos(P1_TILT), 0.05*sin(P1_TILT) };
 	const VECTOR3 needleyvector = { 0.05, 0, 0 };
 	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_TILT), 0.062*sin(P1_TILT) };
@@ -822,9 +904,9 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int complightmat = VC_NMAT - 9;
+	int lightmat = VC_NMAT - 15;
 
-	MATERIAL *mat = oapiMeshMaterial(hLMVC, complightmat + m);
+	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
 	if (state == true)
 	{   // ON
@@ -841,7 +923,34 @@ void LEM::SetCompLight(int m, bool state) {
 		mat->emissive.a = 1;
 	}
 
-	oapiSetMaterial(vcmesh, complightmat + m, mat);
+	oapiSetMaterial(vcmesh, lightmat + m, mat);
+}
+
+void LEM::SetContactLight(int m, bool state) {
+
+	if (!vcmesh)
+		return;
+
+	int lightmat = VC_NMAT - 15;
+
+	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
+
+	if (state == true)
+	{   // ON
+		mat->emissive.r = 0.149f;
+		mat->emissive.g = 0.831f;
+		mat->emissive.b = 1;
+		mat->emissive.a = 1;
+	}
+	else
+	{   // OFF
+		mat->emissive.r = 0;
+		mat->emissive.g = 0;
+		mat->emissive.b = 0;
+		mat->emissive.a = 1;
+	}
+
+	oapiSetMaterial(vcmesh, lightmat + m, mat);
 }
 
 void LEM::AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY) {
@@ -849,7 +958,7 @@ void LEM::AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT anim
 	double fdai_proc[3];
 
 	// Drive FDAI ball
-	fdai_proc[0] = -attitude.x / PI2;
+	fdai_proc[0] = -attitude.x / PI2; // 1.0 - attitude.x / PI2;
 	fdai_proc[1] = attitude.y / PI2;
 	fdai_proc[2] = attitude.z / PI2;
 	if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;

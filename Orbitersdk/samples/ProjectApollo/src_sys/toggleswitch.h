@@ -1163,6 +1163,7 @@ public:
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, bool failopen = false);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void DrawSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
