@@ -514,6 +514,7 @@ void USB::TimeStep(double simt) {
 		}
 	}
 
+	sprintf(oapiDebugString(), "rcvr_agc_voltage %lf", rcvr_agc_voltage);
 	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
 }
 
@@ -1218,6 +1219,8 @@ OMNI::OMNI(VECTOR3 dir)
 
 void OMNI::Init(Saturn *vessel) {
 	sat = vessel;
+
+	SignalStrength = 0;
 
 	double beamwidth = 170*RAD;
 	OMNI_Gain = pow(10, (-3 / 10));
