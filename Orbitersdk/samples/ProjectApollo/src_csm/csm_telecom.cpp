@@ -1260,13 +1260,13 @@ void OMNI::TimeStep()
 
 	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	RecvdOMNIPower = Power30ft * Gain30ft*OMNI_Gain*pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower = Power30ft * Gain30ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
 	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
 	if (relang < PI05 / hpbw_factor)
 	{
-		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*50.0;
+		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*SignalStrengthScaleFactor;
 	}
 	else
 	{
