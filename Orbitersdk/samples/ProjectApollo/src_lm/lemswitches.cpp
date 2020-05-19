@@ -305,7 +305,7 @@ void LMCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void LMCabinPressMeter::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.99) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
@@ -371,7 +371,7 @@ void LMCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 void LMCO2Meter::DoDrawSwitchVC(UINT anim)
 
 {
-	double v = ((GetDisplayValue() * 0.98) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.98) / (maxValue - minValue);
 	// Still needs scale factor, right now its wrongly 1:1 for entire range
 
 	lem->SetAnimation(anim, v);
@@ -407,7 +407,7 @@ void LMGlycolTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void LMGlycolTempMeter::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.94) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.94) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
@@ -441,7 +441,7 @@ void LMGlycolPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void LMGlycolPressMeter::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.94) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) - minValue) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
@@ -489,7 +489,7 @@ void LMOxygenQtyMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void LMOxygenQtyMeter::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.99) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
@@ -534,7 +534,7 @@ void LMWaterQtyMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void LMWaterQtyMeter::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.99) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
@@ -571,7 +571,7 @@ void LMRCSATempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void LMRCSATempInd::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.99) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
@@ -608,7 +608,7 @@ void LMRCSBTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void LMRCSBTempInd::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.99) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
@@ -847,7 +847,7 @@ void EngineThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void EngineThrustInd::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.99) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
@@ -884,7 +884,7 @@ void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 void CommandedThrustInd::DoDrawSwitchVC(UINT anim) {
 
-	double v = ((GetDisplayValue() * 0.99) - minValue) / (maxValue - minValue);
+	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
 	lem->SetAnimation(anim, v);
 }
