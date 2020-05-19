@@ -311,6 +311,8 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_CONTACTLIGHT1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_PWRFAIL_LIGHTS_P1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_PANEL1_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_THRUST_WEIGHT_IND, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	/*for (i = 0; i < P1_SWITCHCOUNT; i++)
 	{
@@ -333,6 +335,7 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	oapiVCRegisterArea(AID_VC_PWRFAIL_LIGHTS_P2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_XPOINTERLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_PANEL2_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	/*for (i = 0; i < P2_SWITCHCOUNT; i++)
 	{
@@ -855,6 +858,37 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_VC_MPS_HELIUM_PRESS_INDICATOR:
 		MainHeliumPressureMeter.DoDrawSwitchVC(surf, srf[SRF_VC_DIGITALDISP2]);
 		return true;
+
+	case AID_VC_PANEL2_NEEDLES:
+		LMRCSATempInd.DoDrawSwitchVC(anim_P2needles[0]);
+		LMRCSBTempInd.DoDrawSwitchVC(anim_P2needles[1]);
+		LMRCSAPressInd.DoDrawSwitchVC(anim_P2needles[2]);
+		LMRCSBPressInd.DoDrawSwitchVC(anim_P2needles[3]);
+		LMRCSAQtyInd.DoDrawSwitchVC(anim_P2needles[4]);
+		LMRCSBQtyInd.DoDrawSwitchVC(anim_P2needles[5]);
+		LMSuitTempMeter.DoDrawSwitchVC(anim_P2needles[6]);
+		LMCabinTempMeter.DoDrawSwitchVC(anim_P2needles[7]);
+		LMSuitPressMeter.DoDrawSwitchVC(anim_P2needles[8]);
+		LMCabinPressMeter.DoDrawSwitchVC(anim_P2needles[9]);
+		LMGlycolTempMeter.DoDrawSwitchVC(anim_P2needles[10]);
+		LMGlycolPressMeter.DoDrawSwitchVC(anim_P2needles[11]);
+		LMOxygenQtyMeter.DoDrawSwitchVC(anim_P2needles[12]);
+		LMWaterQtyMeter.DoDrawSwitchVC(anim_P2needles[13]);
+		LMCO2Meter.DoDrawSwitchVC(anim_P2needles[14]);
+		return true;
+
+	case AID_VC_PANEL1_NEEDLES:
+		EngineThrustInd.DoDrawSwitchVC(anim_P1needles[0]);
+		CommandedThrustInd.DoDrawSwitchVC(anim_P1needles[1]);
+		MainFuelTempInd.DoDrawSwitchVC(anim_P1needles[2]);
+		MainOxidizerTempInd.DoDrawSwitchVC(anim_P1needles[3]);
+		MainFuelPressInd.DoDrawSwitchVC(anim_P1needles[4]);
+		MainOxidizerPressInd.DoDrawSwitchVC(anim_P1needles[5]);
+		return true;
+
+	case AID_VC_THRUST_WEIGHT_IND:
+		ThrustWeightInd.DoDrawSwitchVC(anim_TW_indicator);
+		return true;
 	}
 
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
@@ -863,6 +897,10 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 void LEM::DeleteVCAnimations()
 {
 	int i = 0;
+
+	for (i = 0; i < P1_NEEDLECOUNT; i++) delete mgt_P1needles[i];
+
+	for (i = 0; i < P2_NEEDLECOUNT; i++) delete mgt_P2needles[i];
 
 	for (i = 0; i < P3_SWITCHCOUNT; i++) delete mgt_P3switch[i];
 
@@ -874,7 +912,29 @@ void LEM::InitVCAnimations()
 	UINT mesh = vcidx;
 	int i = 0;
 
-	// Define panel 3 animations
+	// Panel 1 switches/rotaries/needles
+	static UINT meshgroup_P1needles[P1_NEEDLECOUNT]/*meshgroup_P1switches[P1_SWITCHCOUNT], meshgroup_P1Rots[P1_ROTCOUNT]*/;
+	for (int i = 0; i < P1_NEEDLECOUNT; i++)
+	{
+		const VECTOR3 xvector = { 0.00, 0.0625*cos(P1_TILT), 0.0625*sin(P1_TILT) };
+		meshgroup_P1needles[i] = VC_GRP_Needle_P1_01 + i;
+		mgt_P1needles[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P1needles[i], 1, xvector);
+		anim_P1needles[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P1needles[i], 0.0f, 1.0f, mgt_P1needles[i]);
+	}
+
+	// Panel 2 switches/rotaries/needles
+	static UINT meshgroup_P2needles[P2_NEEDLECOUNT]/*meshgroup_P2switches[P2_SWITCHCOUNT], meshgroup_P2Rots[P2_ROTCOUNT]*/;
+	for (int i = 0; i < P2_NEEDLECOUNT; i++)
+	{
+		const VECTOR3 xvector = { 0.00, 0.0625*cos(P1_TILT), 0.0625*sin(P1_TILT) };
+		meshgroup_P2needles[i] = VC_GRP_Needle_P2_01 + i;
+		mgt_P2needles[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P2needles[i], 1, xvector);
+		anim_P2needles[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P2needles[i], 0.0f, 1.0f, mgt_P2needles[i]);
+	}
+
+	// Panel 3 switches/rotaries/needles
 	static UINT meshgroup_P3switches[P3_SWITCHCOUNT], meshgroup_P3Rots[P3_ROTCOUNT];
 	for (int i = 0; i < P3_SWITCHCOUNT; i++)
 	{
@@ -893,6 +953,13 @@ void LEM::InitVCAnimations()
 		anim_P3_Rot[i] = CreateAnimation(0.0);
 		AddAnimationComponent(anim_P3_Rot[i], 0.0f, 1.0f, mgt_P3Rot[i]);
 	}
+
+	// Thrust-weight indicator
+	const VECTOR3 tw_xvector = { 0.00, 0.0925*cos(P1_TILT), 0.0925*sin(P1_TILT) };
+	static UINT meshgroup_TW_indicator = VC_GRP_Needle_P1_07;
+	static MGROUP_TRANSLATE mgt_TW_indicator(mesh, &meshgroup_TW_indicator, 1, tw_xvector);
+	anim_TW_indicator = CreateAnimation(0.0);
+	AddAnimationComponent(anim_TW_indicator, 0.0f, 1.0f, &mgt_TW_indicator);
 
 	// Radar strength meter
 	static UINT meshgroup_Needle_Radar = VC_GRP_Needle_Radar;
@@ -926,8 +993,8 @@ void LEM::InitFDAI(UINT mesh) {
 	// 3D FDAI initialization
 
 	// Constants
-	const VECTOR3 fdairollaxis = { -0.00, sin(P1_TILT * RAD), -cos(P1_TILT * RAD) };
-	const VECTOR3 fdaiyawvaxis = { -0.00, sin((P1_TILT + 90.0) * RAD), -cos((P1_TILT + 90.0) * RAD) };
+	const VECTOR3 fdairollaxis = { -0.00, sin(P1_TILT), -cos(P1_TILT) };
+	const VECTOR3 fdaiyawvaxis = { -0.00, sin(P1_TILT + (90.0 * RAD)), -cos(P1_TILT + (90.0 * RAD)) };
 	const VECTOR3 needlexvector = { 0.00, 0.05*cos(P1_TILT), 0.05*sin(P1_TILT) };
 	const VECTOR3 needleyvector = { 0.05, 0, 0 };
 	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_TILT), 0.062*sin(P1_TILT) };
@@ -1053,9 +1120,9 @@ void LEM::SetCompLight(int m, bool state) {
 	}
 	else
 	{   // OFF
-		mat->emissive.r = 0;
-		mat->emissive.g = 0;
-		mat->emissive.b = 0;
+		mat->emissive.r = 0.25f;
+		mat->emissive.g = 0.22f;
+		mat->emissive.b = 0.127f;
 		mat->emissive.a = 1;
 	}
 
@@ -1081,8 +1148,8 @@ void LEM::SetContactLight(int m, bool state) {
 	else
 	{   // OFF
 		mat->emissive.r = 0;
-		mat->emissive.g = 0;
-		mat->emissive.b = 0;
+		mat->emissive.g = 0.135f;
+		mat->emissive.b = 0.25f;
 		mat->emissive.a = 1;
 	}
 
@@ -1107,7 +1174,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	}
 	else
 	{   // OFF
-		mat->emissive.r = 0;
+		mat->emissive.r = 0.25f;
 		mat->emissive.g = 0;
 		mat->emissive.b = 0;
 		mat->emissive.a = 1;

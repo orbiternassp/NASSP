@@ -861,8 +861,11 @@
 #define AID_VC_MPS_OXID_QUANTITY_INDICATOR   3121
 #define AID_VC_MPS_FUEL_QUANTITY_INDICATOR   3122
 #define AID_VC_MPS_HELIUM_PRESS_INDICATOR   3123
+#define AID_VC_PANEL1_NEEDLES           3124
+#define AID_VC_THRUST_WEIGHT_IND        3125
 
 //#define AID_VC_SWITCH_P1_01             3130   //
+
 
 // VC Active Areas (Panel 2)
 #define AID_PANEL_2				((id >= 3200) && (id <= 3240))
@@ -877,6 +880,8 @@
 #define AID_VC_PANEL2_COMPLIGHTS        3209
 #define AID_VC_PWRFAIL_LIGHTS_P2        3210
 #define AID_VC_LEM_MA_RIGHT             3211
+#define AID_VC_PANEL2_NEEDLES           3212
+
 
 //#define AID_VC_SWITCH_P2_01             3230  //
 

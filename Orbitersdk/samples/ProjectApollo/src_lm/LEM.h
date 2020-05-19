@@ -119,44 +119,47 @@ const double P1_TILT = 7.95581 * RAD;
 const double P2_TILT = 7.95581 * RAD;
 const double P3_TILT = 35.2509 * RAD;
 const double P4_TILT = 45.0663 * RAD;
-const double P6_TILT = 10 * RAD;
+/*const double P6_TILT = 10 * RAD;
 const double P12_TILT = 20 * RAD;
-const double P14_TILT = 25 * RAD;
+const double P14_TILT = 25 * RAD;*/
 
 // Number of switches on each panel
 const int	P1_SWITCHCOUNT = 1;
 const int	P2_SWITCHCOUNT = 1;
 const int	P3_SWITCHCOUNT = 26;
 const int	P4_SWITCHCOUNT = 4;
-const int	P5_SWITCHCOUNT = 8;
+/*const int	P5_SWITCHCOUNT = 8;
 const int	P6_SWITCHCOUNT = 12;
 const int	P8_SWITCHCOUNT = 22;
 const int	P12_SWITCHCOUNT = 22;
 const int	P14_SWITCHCOUNT = 16;
-const int	LM_VC_NEEDLECOUNT = 19;
+const int	LM_VC_NEEDLECOUNT = 19;*/
 
 // Number of push buttons
 
 const int   P4_PUSHBCOUNT = 19;
 
+// Number of indicator needles
+const int P1_NEEDLECOUNT = 6;
+const int P2_NEEDLECOUNT = 15;
+
 // Number of rotaries
 const int	 P1_ROTCOUNT = 1;
 const int	 P2_ROTCOUNT = 4;
 const int	 P3_ROTCOUNT = 5;
-const int	 P4_ROTCOUNT = 0;
-const int	 P5_ROTCOUNT = 1;
+/*const int	 P5_ROTCOUNT = 1;
 const int	 P6_ROTCOUNT = 4;
 const int	 P8_ROTCOUNT = 0;
 const int	 P12_ROTCOUNT = 4;
-const int	 P14_ROTCOUNT = 1;
+const int	 P14_ROTCOUNT = 1;*/
 
 // Rotary rotation axises
 const VECTOR3	P1_ROT_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
 const VECTOR3	P2_ROT_AXIS = { 0.00, sin(P2_TILT),-cos(P2_TILT) };
 const VECTOR3	P3_ROT_AXIS = { 0.00, sin(P3_TILT),-cos(P3_TILT) };
-const VECTOR3	P6_ROT_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
+/*const VECTOR3	P6_ROT_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
 const VECTOR3	P12_ROT_AXIS = { -sin(P12_TILT), cos(P12_TILT), 0.00 };
-const VECTOR3	P14_ROT_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };
+const VECTOR3	P14_ROT_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };*/
 
 // Panel 1 switches
 /*const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
@@ -1683,10 +1686,15 @@ protected:
 	DEVMESHHANDLE vcmesh;
 
 	// VC animations
+	MGROUP_TRANSFORM *mgt_P1needles[P1_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P2needles[P2_NEEDLECOUNT];
 	MGROUP_TRANSFORM *mgt_P3switch[P3_SWITCHCOUNT];
 	MGROUP_TRANSFORM *mgt_P3Rot[P3_ROTCOUNT];
+	UINT anim_P1needles[P1_NEEDLECOUNT];
+	UINT anim_P2needles[P2_NEEDLECOUNT];
 	UINT anim_P3switch[P3_SWITCHCOUNT];
 	UINT anim_P3_Rot[P3_ROTCOUNT];
+	UINT anim_TW_indicator;
 	UINT anim_Needle_Radar;
 	UINT anim_xpointerx_cdr;
 	UINT anim_xpointery_cdr;
