@@ -135,6 +135,8 @@ public:
 	void NodeConvCalc();
 	void SendNodeToSFP();
 	void CalculateTPITime();
+	void GetStateVectorFromAGC(bool csm);
+	void VectorCompareDisplayCalc();
 
 	int startSubthread(int fcn);
 	int subThread();
