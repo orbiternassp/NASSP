@@ -2963,6 +2963,10 @@ public:
 	void EMGSTSTM(int L, MATRIX3 REFS, int id, double gmt);
 	void EMGSTGENName(int ID, char *Buffer);
 	int EMGSTGENCode(const char *Buffer);
+	//Guidance Optics Support Table
+	void EMMGSTMP();
+	//Guidance Optics Display
+	void EMDGSUPP(int err);
 
 	void SaveState(FILEHANDLE scn);							// Save state
 	void LoadState(FILEHANDLE scn);							// Load state
@@ -3246,11 +3250,66 @@ public:
 	DetailedManeuverTable DMTBuffer[2];
 	BurnParameterTable PZBURN;
 
+	std::vector<VECTOR3> EZJGSTAR;
+
 	struct LunarSurfaceAlignmentTable
 	{
 		MATRIX3 LLD_REFSMMAT;
 		bool LLDRefsPresent = false;
 	} EZJGLSAD;
+
+	struct GuidanceOpticsSupportTable
+	{
+		std::string CODE = "ZZZZZZZZ";
+		VECTOR3 Att_H = _V(0, 0, 0);
+		double GETAC = 0.0;
+		double IGA = 0.0;
+		std::string IRA = "ZZZZZZ";
+		unsigned SXT_STAR[2] = { 0,0 };
+		double SXT_SFT_INP[2] = { 0.0, 0.0 };
+		double SXT_TRN_INP[2] = { 0.0, 0.0 };
+		double SXT_SFT_RTCC[2] = { 0.0, 0.0 };
+		double SXT_TRN_RTCC[2] = { 0.0, 0.0 };
+		unsigned SCT_S[2] = { 0,0 };
+		double SCT_SF = 0.0;
+		double SCT_TR = 0.0;
+		double SCT_M[2] = { 0.0, 0.0 };
+		double SCT_R[2] = { 0.0, 0.0 };
+		double SCT_RTASC[2] = { 0.0, 0.0 };
+		double SCT_DEC[2] = { 0.0, 0.0 };
+		unsigned BS_S[2] = { 0,0 };
+		double BS_SPA[2] = { 0.0, 0.0 };
+		double BS_SXP[2] = { 0.0, 0.0 };
+		double BS_RTASC[2] = { 0.0, 0.0 };
+		double BS_DEC[2] = { 0.0, 0.0 };
+		VECTOR3 Landmark_LOS = _V(0, 0, 0);
+		double Landmark_GET = 0.0;
+		std::string Landmark_SC = "ZZZ";
+		double Landmark_RA = 0.0;
+		double Landmark_DEC = 0.0;
+		VECTOR3 Att[2] = { _V(0, 0, 0), _V(0, 0, 0) };
+		std::string MAT = "ZZZZZZ";
+		MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	} EZJGSTTB;
+
+	struct GOSTDisplay
+	{
+		GuidanceOpticsSupportTable data;
+		std::string err;
+	} GOSTDisplayBuffer;
+
+	struct LunarOpticsSupportTable
+	{
+		std::string MAT;
+		MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	} EZJGSTBL;
+
+	struct LOSTDisplay
+	{
+		std::string MAT;
+		MATRIX3 REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+		std::string err;
+	} LOSTDisplayBuffer;
 
 	REFSMMATLocker EZJGMTX1, EZJGMTX3;
 	FIDOOrbitDigitals EZSAVCSM, EZSAVLEM;
@@ -4125,7 +4184,9 @@ public:
 
 	struct GMEDSaveTable
 	{
-
+		double GMT = 0.0;
+		unsigned StartingStar = 0;
+		int MTX1 = -1, MTX2 = -1, MTX3 = -1;
 	} EZGSTMED;
 
 	struct ExternalDVMakeupBuffer

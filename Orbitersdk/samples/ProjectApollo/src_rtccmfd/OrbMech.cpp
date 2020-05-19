@@ -5231,6 +5231,8 @@ double atan3(double x, double y)
 
 VECTOR3 CALCGAR(MATRIX3 REFSM, MATRIX3 SMNB)
 {
+	//Input: REFSMMAT and stable member orientation
+	//Output: Gimbal Angles
 	VECTOR3 X_NB, Y_NB, Z_NB, X_SM, Y_SM, Z_SM, A_MG;
 	double sinOGA, cosOGA, sinMGA, cosMGA, sinIGA, cosIGA, OGA, IGA, MGA;
 
@@ -5257,6 +5259,8 @@ VECTOR3 CALCGAR(MATRIX3 REFSM, MATRIX3 SMNB)
 
 MATRIX3 CALCSMSC(VECTOR3 GA)
 {
+	//Input: Gimbal angles
+	//Output: Stable member coordinates
 	double IGA, OGA, MGA;
 	VECTOR3 X_NB, Y_NB, Z_NB;
 
@@ -5272,6 +5276,8 @@ MATRIX3 CALCSMSC(VECTOR3 GA)
 
 VECTOR3 CALCGTA(MATRIX3 des)
 {
+	//Input: Desired stable member axes referred to present stable member orientation
+	//Output: Gyro torquing angles
 	VECTOR3 X_D, Y_D, Z_D, Z_D_apo;
 	double tx, ty, tz, sintx, sinty, sintz, costx, costy, costz;
 
@@ -5297,6 +5303,8 @@ VECTOR3 CALCGTA(MATRIX3 des)
 
 void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA)
 {
+	//Input: Stable member/navigation base matrix, unit star vector
+	//Output: Trunnion and shaft angles
 	MATRIX3 SBNB, NBSB;
 	VECTOR3 X_SB, Y_SB, Z_SB, S_SB, U_TPA;
 	double a, sinSA, cosSA;
@@ -5319,6 +5327,8 @@ void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA)
 
 void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP) 
 {
+	//Input: Stable member/navigation base matrix, unit star vector
+	//Output: Star pitch angle and star X position
 	MATRIX3 SBNB, NBSB;
 	VECTOR3 X_SB, Y_SB, Z_SB, S_SB;
 	double a;

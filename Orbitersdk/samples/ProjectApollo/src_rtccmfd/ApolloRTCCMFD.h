@@ -98,6 +98,7 @@ public:
 	void set_MissionNumber(int mission);
 	void SPQcalc();
 	void lambertcalc();
+	void Angle_Display(char *Buff, double angle, bool DispPlus = true);
 	void GET_Display(char * Buff, double time, bool DispGET = true);
 	void GET_Display2(char * Buff, double time);
 	void GET_Display3(char* Buff, double time);
@@ -694,12 +695,18 @@ public:
 	void menuVectorCompareVehicle();
 	void menuVectorCompareTime();
 	void menuVectorCompareReference();
+	void menuSetGuidanceOpticsSupportTablePage();
+	void menuGOSTDisplayREFSMMAT();
+	void menuGOSTEnterAttitude();
+	void menuGOSTBoresightSCTCalc();
+	void menuGOSTSXTCalc();
 
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;
 	oapi::Font *font2vert;
 	oapi::Font *fonttest;
+	oapi::Font *font3;
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
 	Saturn *saturn;

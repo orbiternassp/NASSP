@@ -3558,6 +3558,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(1 * W / 16, 16 * H / 28, "0082 Space Digitals", 19);
 		skp->Text(1 * W / 16, 17 * H / 28, "0087 CSM PSAT 2", 15);
 		skp->Text(1 * W / 16, 18 * H / 28, "0088 LM PSAT 2", 14);
+		skp->Text(1 * W / 16, 19 * H / 28, "0229 GOST", 9);
 
 		skp->Text(8 * W / 16, 4 * H / 28, "1501 Moonrise/Moonset Times", 27);
 		skp->Text(8 * W / 16, 5 * H / 28, "1502 Sunrise/Sunset Times", 25);
@@ -8068,6 +8069,231 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			skp->Text((21 + 14 * i) * W / 64, 29 * H / 32, Buffer, strlen(Buffer));
 		}
+	}
+	else if (screen == 95)
+	{
+		skp->SetFont(font3);
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(4 * W / 8, 3 * H / 26, "GUIDANCE OPTICS SUPPORT TABLE", 29);
+		sprintf_s(Buffer, "%s", GC->rtcc->GOSTDisplayBuffer.err.c_str());
+		skp->Text(1 * W / 2, 25 * H / 26, Buffer, strlen(Buffer));
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text(38 * W / 43, 3 * H / 26, "0229", 4);
+
+		skp->Text(3 * W / 43, 5 * H / 26, "CODE", 4);
+		skp->TextW(17 * W / 43, 5 * H / 26, L"\u03B8\u2095", 2);
+		skp->TextW(25 * W / 43, 5 * H / 26, L"\u03C8\u2095", 2);
+		skp->TextW(33 * W / 43, 5 * H / 26, L"\u03C6\u2095", 2);
+
+		skp->Text(2 * W / 43, 6 * H / 26, "GETAC", 5);
+		skp->Text(20 * W / 43, 6 * H / 26, "IGA", 3);
+		skp->Text(31 * W / 43, 6 * H / 26, "IRA", 3);
+
+		skp->Text(2 * W / 43, 7 * H / 26, "SXT", 3);
+		skp->Text(13 * W / 43, 7 * H / 26, "SFT", 3);
+		skp->Text(20 * W / 43, 7 * H / 26, "TRN", 3);
+		skp->Text(30 * W / 43, 7 * H / 26, "SFT", 3);
+		skp->Text(38 * W / 43, 7 * H / 26, "TRN", 3);
+
+		skp->Text(2 * W / 43, 8 * H / 26, "S1", 2);
+		skp->Text(9 * W / 43, 8 * H / 26, "INP", 3);
+		skp->Text(25 * W / 43, 8 * H / 26, "RTCC", 4);
+
+		skp->Text(2 * W / 43, 9 * H / 26, "S2", 2);
+		skp->Text(9 * W / 43, 9 * H / 26, "INP", 3);
+		skp->Text(25 * W / 43, 9 * H / 26, "RTCC", 4);
+
+		skp->Text(2 * W / 43, 10 * H / 26, "SCT", 3);
+
+		skp->Text(1 * W / 43, 11 * H / 26, "S", 1);
+		skp->Text(15 * W / 43, 11 * H / 26, "M", 1);
+		skp->Text(21 * W / 43, 11 * H / 26, "R", 1);
+		skp->Text(26 * W / 43, 11 * H / 26, "RT ASC", 6);
+		skp->Text(37 * W / 43, 11 * H / 26, "DEC", 3);
+
+		skp->Text(1 * W / 43, 12 * H / 26, "1", 1);
+		skp->Text(6 * W / 43, 12 * H / 26, "SF", 2);
+
+		skp->Text(1 * W / 43, 13 * H / 26, "2", 1);
+		skp->Text(6 * W / 43, 13 * H / 26, "TR", 2);
+
+		skp->Text(1 * W / 43, 15 * H / 26, "BORESIGHT", 9);
+		skp->Text(11 * W / 43, 15 * H / 26, "SPA", 3);
+		skp->Text(18 * W / 43, 15 * H / 26, "SPX", 3);
+		skp->Text(24 * W / 43, 15 * H / 26, "RT ASC", 6);
+		skp->Text(36 * W / 43, 15 * H / 26, "DEC", 3);
+
+		skp->Text(2 * W / 43, 16 * H / 26, "S1", 2);
+		skp->Text(2 * W / 43, 17 * H / 26, "S2", 2);
+
+		skp->Text(1 * W / 43, 18 * H / 26, "LOS", 3);
+		skp->Text(6 * W / 43, 18 * H / 26, "IX", 2);
+		skp->Text(18 * W / 43, 18 * H / 26, "IY", 2);
+		skp->Text(30 * W / 43, 18 * H / 26, "IZ", 2);
+
+		skp->Text(1 * W / 43, 19 * H / 26, "GET", 3);
+		skp->Text(14 * W / 43, 19 * H / 26, "SC", 2);
+		skp->Text(20 * W / 43, 19 * H / 26, "RA", 2);
+		skp->Text(31 * W / 43, 19 * H / 26, "DEC", 3);
+
+		skp->Text(18 * W / 43, 20 * H / 26, "P", 1);
+		skp->Text(27 * W / 43, 20 * H / 26, "Y", 1);
+		skp->Text(36 * W / 43, 20 * H / 26, "R", 1);
+		skp->Text(2 * W / 43, 21 * H / 26, "MAT", 3);
+		skp->Text(18 * W / 43, 21 * H / 26, "P", 1);
+		skp->Text(27 * W / 43, 21 * H / 26, "Y", 1);
+		skp->Text(36 * W / 43, 21 * H / 26, "R", 1);
+
+		skp->Text(1 * W / 43, 22 * H / 26, "X/XE", 4);
+		skp->Text(1 * W / 43, 23 * H / 26, "Y/XE", 4);
+		skp->Text(1 * W / 43, 24 * H / 26, "Z/XE", 4);
+
+		skp->Text(15 * W / 43, 22 * H / 26, "X/YE", 4);
+		skp->Text(15 * W / 43, 23 * H / 26, "Y/YE", 4);
+		skp->Text(15 * W / 43, 24 * H / 26, "Z/YE", 4);
+		
+		skp->Text(29 * W / 43, 22 * H / 26, "X/ZE", 4);
+		skp->Text(29 * W / 43, 23 * H / 26, "Y/ZE", 4);
+		skp->Text(29 * W / 43, 24 * H / 26, "Z/ZE", 4);
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+
+		sprintf_s(Buffer, "%s", GC->rtcc->GOSTDisplayBuffer.data.CODE.c_str());
+		skp->Text(15 * W / 43, 5 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att_H.x);
+		skp->Text(23 * W / 43, 5 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att_H.y);
+		skp->Text(31 * W / 43, 5 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att_H.z);
+		skp->Text(40 * W / 43, 5 * H / 26, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.GETAC, false);
+		skp->Text(16 * W / 43, 6 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.IGA);
+		skp->Text(28 * W / 43, 6 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%s", GC->rtcc->GOSTDisplayBuffer.data.IRA.c_str());
+		skp->Text(40 * W / 43, 6 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.SXT_STAR[0]);
+		skp->Text(7 * W / 43, 8 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_SFT_INP[0]);
+		skp->Text(16 * W / 43, 8 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_TRN_INP[0]);
+		skp->Text(23 * W / 43, 8 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_SFT_RTCC[0]);
+		skp->Text(33 * W / 43, 8 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_TRN_RTCC[0]);
+		skp->Text(40 * W / 43, 8 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.SXT_STAR[1]);
+		skp->Text(7 * W / 43, 9 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_SFT_INP[1]);
+		skp->Text(16 * W / 43, 9 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_TRN_INP[1]);
+		skp->Text(23 * W / 43, 9 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_SFT_RTCC[1]);
+		skp->Text(33 * W / 43, 9 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SXT_TRN_RTCC[1]);
+		skp->Text(40 * W / 43, 9 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.SCT_S[0]);
+		skp->Text(5 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SCT_SF);
+		skp->Text(12 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SCT_M[0]);
+		skp->Text(17 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SCT_R[0]);
+		skp->Text(23 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.SCT_RTASC[0], false);
+		skp->Text(32 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.SCT_DEC[0]);
+		skp->Text(42 * W / 43, 12 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.SCT_S[1]);
+		skp->Text(5 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%04.1lf", GC->rtcc->GOSTDisplayBuffer.data.SCT_TR);
+		skp->Text(12 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SCT_M[1]);
+		skp->Text(17 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.SCT_R[1]);
+		skp->Text(23 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.SCT_RTASC[1], false);
+		skp->Text(32 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.SCT_DEC[1]);
+		skp->Text(42 * W / 43, 13 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.BS_S[0]);
+		skp->Text(7 * W / 43, 16 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.BS_SPA[0]);
+		skp->Text(14 * W / 43, 16 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.BS_SXP[0]);
+		skp->Text(21 * W / 43, 16 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.BS_RTASC[0], false);
+		skp->Text(31 * W / 43, 16 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.BS_DEC[0]);
+		skp->Text(41 * W / 43, 16 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%03o", GC->rtcc->GOSTDisplayBuffer.data.BS_S[1]);
+		skp->Text(7 * W / 43, 17 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.BS_SPA[1]);
+		skp->Text(14 * W / 43, 17 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+05.1lf", GC->rtcc->GOSTDisplayBuffer.data.BS_SXP[1]);
+		skp->Text(21 * W / 43, 17 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.BS_RTASC[1], false);
+		skp->Text(31 * W / 43, 17 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.BS_DEC[1]);
+		skp->Text(41 * W / 43, 17 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%.6lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.x);
+		skp->Text(15 * W / 43, 18 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.6lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.y);
+		skp->Text(27 * W / 43, 18 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%.6lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.z);
+		skp->Text(39 * W / 43, 18 * H / 26, Buffer, strlen(Buffer));
+
+		GET_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.Landmark_GET, false);
+		skp->Text(12 * W / 43, 19 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%s", GC->rtcc->GOSTDisplayBuffer.data.Landmark_SC.c_str());
+		skp->Text(19 * W / 43, 19 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.Landmark_RA, false);
+		skp->Text(29 * W / 43, 19 * H / 26, Buffer, strlen(Buffer));
+		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.Landmark_DEC);
+		skp->Text(42 * W / 43, 19 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att[0].x);
+		skp->Text(24 * W / 43, 20 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att[0].y);
+		skp->Text(33 * W / 43, 20 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att[0].z);
+		skp->Text(42 * W / 43, 20 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att[1].x);
+		skp->Text(24 * W / 43, 21 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att[1].y);
+		skp->Text(33 * W / 43, 21 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%05.1lf", GC->rtcc->GOSTDisplayBuffer.data.Att[1].z);
+		skp->Text(42 * W / 43, 21 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%s", GC->rtcc->GOSTDisplayBuffer.data.MAT.c_str());
+		skp->Text(12 * W / 43, 21 * H / 26, Buffer, strlen(Buffer));
+
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m11);
+		skp->Text(13 * W / 43, 22 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m21);
+		skp->Text(13 * W / 43, 23 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m31);
+		skp->Text(13 * W / 43, 24 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m12);
+		skp->Text(27 * W / 43, 22 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m22);
+		skp->Text(27 * W / 43, 23 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m32);
+		skp->Text(27 * W / 43, 24 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m13);
+		skp->Text(42 * W / 43, 22 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m23);
+		skp->Text(42 * W / 43, 23 * H / 26, Buffer, strlen(Buffer));
+		sprintf_s(Buffer, "%+.7lf", GC->rtcc->GOSTDisplayBuffer.data.REFSMMAT.m33);
+		skp->Text(42 * W / 43, 24 * H / 26, Buffer, strlen(Buffer));
 	}
 	return true;
 }

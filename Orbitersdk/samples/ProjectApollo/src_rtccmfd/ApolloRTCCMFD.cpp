@@ -52,6 +52,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font2 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
 	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
 	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
+	font3 = oapiCreateFont(w / 22, true, "Courier", FONT_NORMAL, 0);
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
 	bool found = false;
@@ -85,6 +86,7 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font2);
 	oapiReleaseFont(font2vert);
 	oapiReleaseFont(fonttest);
+	oapiReleaseFont(font3);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 }
@@ -642,6 +644,26 @@ void ApolloRTCCMFD::menuTLANDUplinkCalc()
 void ApolloRTCCMFD::menuTLANDUpload()
 {
 	G->TLANDUplink();
+}
+
+void ApolloRTCCMFD::Angle_Display(char *Buff, double angle, bool DispPlus)
+{
+	double angle2 = abs(round(angle));
+	if (time >= 0)
+	{
+		if (DispPlus)
+		{
+			sprintf_s(Buff, 32, "+%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+		}
+		else
+		{
+			sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+		}
+	}
+	else
+	{
+		sprintf_s(Buff, 32, "-%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+	}
 }
 
 void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display a time in the format hhh:mm:ss
@@ -1452,6 +1474,12 @@ void ApolloRTCCMFD::menuSetTPITimesPage()
 void ApolloRTCCMFD::menuSetVectorCompareDisplay()
 {
 	screen = 93;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
+{
+	screen = 95;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -8003,6 +8031,108 @@ void ApolloRTCCMFD::menuVectorCompareTime()
 
 }
 
+void ApolloRTCCMFD::menuGOSTDisplayREFSMMAT()
+{
+	bool GOSTDisplayREFSMMATInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Select REFSMMAT to display (CUR, PCR, TLM, OST, MED, DMT, DOD or LCV):", GOSTDisplayREFSMMATInput, 0, 20, (void*)this);
+}
+
+bool GOSTDisplayREFSMMATInput(void* id, char *str, void *data)
+{
+	std::string mat, med;
+
+	mat.assign(str);
+	med = "G10,CSM,,,,," + mat + ";";
+	char Buff[64];
+	sprintf_s(Buff, 64, med.c_str());
+
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+	return true;
+}
+
+void ApolloRTCCMFD::menuGOSTBoresightSCTCalc()
+{
+	bool GOSTBoresightSCTCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Boresight/SCT Data. Format: HHH:MM:SS NNN XXX (GET, Starting Star, REFSMMAT type)", GOSTBoresightSCTCalcInput, 0, 20, (void*)this);
+}
+
+bool GOSTBoresightSCTCalcInput(void* id, char *str, void *data)
+{
+	double ss;
+	int hh, mm, ref, star;
+
+	if (sscanf(str, "%d:%d:%lf %d %d", &hh, &mm, &ss, &star, &ref) == 5)
+	{
+		std::string med;
+
+		med = "G10,CSM," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + std::to_string(star) + "," + std::to_string(ref) + ",,;";
+		char Buff[64];
+		sprintf_s(Buff, 64, med.c_str());
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTSXTCalc()
+{
+	bool GOSTSXTCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Sextant Data. Format: HHH:MM:SS NNN XXX (GET, Starting Star, REFSMMAT type)", GOSTSXTCalcInput, 0, 20, (void*)this);
+}
+
+bool GOSTSXTCalcInput(void* id, char *str, void *data)
+{
+	double ss;
+	int hh, mm, ref, star;
+
+	if (sscanf(str, "%d:%d:%lf %d %d", &hh, &mm, &ss, &star, &ref) == 5)
+	{
+		std::string med;
+
+		med = "G10,CSM," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + std::to_string(star) + ",," + std::to_string(ref) + ",;";
+		char Buff[64];
+		sprintf_s(Buff, 64, med.c_str());
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTEnterAttitude()
+{
+	bool GOSTEnterAttitudeInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter attitude 1 or 2. Format: 1 or 2 P Y R", GOSTEnterAttitudeInput, 0, 20, (void*)this);
+}
+
+bool GOSTEnterAttitudeInput(void* id, char *str, void *data)
+{
+	int num;
+	VECTOR3 Att;
+	if (sscanf(str, "%d %lf %lf %lf", &num, &Att.x, &Att.y, &Att.z) == 4)
+	{
+		std::string med;
+
+		med = "G12,CSM,,,,,,,";
+		if (num == 2)
+		{
+			med += ",,,";
+		}
+		med += std::to_string(Att.x);
+		med += ",";
+		med += std::to_string(Att.y);
+		med += ",";
+		med += std::to_string(Att.z);
+		med += ";";
+
+		char Buff[64];
+		sprintf_s(Buff, 64, med.c_str());
+
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuMSKRequest()
 {
 	bool MSKRequestInput(void* id, char *str, void *data);
@@ -8080,6 +8210,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 88:
 		menuSetPredSiteAcquisitionLM2Page();
+		break;
+	case 229:
+		menuSetGuidanceOpticsSupportTablePage();
 		break;
 	case 1501:
 		menuSetMoonriseMoonsetTablePage();

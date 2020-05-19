@@ -23567,6 +23567,83 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			//TBD: Earth or Moon
 			EMMGLCVP(L, gmt);
 		}
+		//Generate Guidance Optics Support Table
+		else if (med == "10")
+		{
+			if (data.size() < 4)
+			{
+				return 1;
+			}
+			if (data[0] != "CSM")
+			{
+				return 2;
+			}
+			
+			double get;
+			if (data[1] == "")
+			{
+				get = 0.0;
+			}
+			else if (MEDTimeInputHHMMSS(data[1], get))
+			{
+				return 2;
+			}
+			unsigned star;
+			if (data[2] == "")
+			{
+				star = 1;
+			}
+			else
+			{
+				if (sscanf(data[2].c_str(), "%o", &star) != 1)
+				{
+					return 2;
+				}
+			}
+			int mtx1, mtx2, mtx3;
+			if (data[3] == "")
+			{
+				mtx1 = 0;
+			}
+			else
+			{
+				mtx1 = EMGSTGENCode(data[3].c_str());
+				if (mtx1 <= 0)
+				{
+					return 2;
+				}
+			}
+			if (data.size() < 5 || data[4] == "")
+			{
+				mtx2 = 0;
+			}
+			else
+			{
+				mtx2 = EMGSTGENCode(data[4].c_str());
+				if (mtx2 <= 0)
+				{
+					return 2;
+				}
+			}
+			if (data.size() < 6 || data[5] == "")
+			{
+				mtx3 = 0;
+			}
+			else
+			{
+				mtx3 = EMGSTGENCode(data[5].c_str());
+				if (mtx3 <= 0)
+				{
+					return 2;
+				}
+			}
+			EZGSTMED.GMT = GMTfromGET(get*3600.0);
+			EZGSTMED.StartingStar = star;
+			EZGSTMED.MTX1 = mtx1;
+			EZGSTMED.MTX2 = mtx2;
+			EZGSTMED.MTX3 = mtx3;
+			EMMGSTMP();
+		}
 		//Acquire and save CSM IMU matrix/optics
 		else if (med == "11")
 		{
@@ -23622,6 +23699,103 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 				}
 				EMSGSUPP(1, 5, refs, man, headsup);
 			}
+		}
+		//Enter CSM sextant optics and IMU attitudes
+		else if (med == "12")
+		{
+			if (data.size() < 1)
+			{
+				return 1;
+			}
+			if (data[0] != "CSM")
+			{
+				return 2;
+			}
+			unsigned star, i, j;
+			double shaft, trun;
+			for (i = 0;i < 2;i++)
+			{
+				if (data.size() <= i * 3 + 1)
+				{
+					EMDGSUPP(0);
+					return 0;
+				}
+				if (data[i * 3 + 1] != "")
+				{
+					if (sscanf(data[i * 3 + 1].c_str(), "%d", &star) == 1)
+					{
+						EZJGSTTB.SXT_STAR[i] = star;
+					}
+				}
+				if (data.size() <= i * 3 + 2)
+				{
+					EMDGSUPP(0);
+					return 0;
+				}
+				if (data[i * 3 + 2] != "")
+				{
+					if (sscanf(data[i * 3 + 2].c_str(), "%lf", &shaft) == 1)
+					{
+						shaft *= RAD;
+						if (shaft >= 0.0 && shaft <= PI2)
+						{
+							EZJGSTTB.SXT_SFT_INP[i] = shaft;
+						}
+						else
+						{
+							return 2;
+						}
+					}
+				}
+				if (data.size() <= i * 3 + 3)
+				{
+					EMDGSUPP(0);
+					return 0;
+				}
+				if (data[i * 3 + 3] != "")
+				{
+					if (sscanf(data[i * 3 + 3].c_str(), "%lf", &trun) == 1)
+					{
+						trun *= RAD;
+						if (trun >= 0.0 && trun <= PI2)
+						{
+							EZJGSTTB.SXT_TRN_INP[i] = trun;
+						}
+						else
+						{
+							return 2;
+						}
+					}
+				}
+			}
+			double att;
+			for (i = 0;i < 2;i++)
+			{
+				for (j = 0;j < 3;j++)
+				{
+					if (data.size() <= i * 3 + j + 7)
+					{
+						EMDGSUPP(0);
+						return 0;
+					}
+					if (data[i * 3 + j + 7] != "")
+					{
+						if (sscanf(data[i * 3 + j + 7].c_str(), "%lf", &att) == 1)
+						{
+							att *= RAD;
+							if (att >= 0.0 && att <= PI2)
+							{
+								EZJGSTTB.Att[i].data[j] = att;
+							}
+							else
+							{
+								return 2;
+							}
+						}
+					}
+				}
+			}
+			EMDGSUPP(0);
 		}
 		//Acquire and save LEM IMU matrix/optics
 		else if (med == "21")
@@ -26183,6 +26357,8 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		GMTBASE = J_D - 2400000.5;
 
 		//PIGBHA();
+
+		EMSGSUPP(0, 0);
 	}
 	return 0;
 }
@@ -30344,6 +30520,23 @@ void RTCC::LMMGRP(double gmt, double A_Z)
 
 void RTCC::EMSGSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 {
+	//Initialize star table
+	if (QUEID == 0)
+	{
+		if (EZJGSTAR.size() == 0)
+		{
+			ifstream startable(".\\Config\\ProjectApollo\\RTCC Star Table.txt");
+			std::string line;
+			VECTOR3 temp;
+
+			while (getline(startable, line))
+			{
+				sscanf(line.c_str(), "%lf %lf %lf", &temp.x, &temp.y, &temp.z);
+				EZJGSTAR.push_back(temp);
+			}
+			startable.close();
+		}
+	}
 	//Acquire and save CSM IMU matrix/optics
 	if (QUEID == 1)
 	{
@@ -30455,5 +30648,264 @@ void RTCC::EMSLSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 			}
 			EMGSTSTM(3, EZJGLSAD.LLD_REFSMMAT, RTCC_REFSMMAT_TYPE_LLD, RTCCPresentTimeGMT());
 		}
+	}
+}
+
+void RTCC::EMMGSTMP()
+{
+	int err = 0;
+
+	//Boresight/Scanning Telescope Data
+	if (EZGSTMED.MTX1 > 0)
+	{
+		//Stars not initialized, error?
+		if (EZJGSTAR.size() == 0) return;
+
+		REFSMMATData refs = EZJGMTX1.data[EZGSTMED.MTX1 - 1];
+		if (refs.ID <= 0)
+		{
+			err = 4;
+			EZJGSTTB.IRA = "ZZZZZZ";
+		}
+		else
+		{
+			char Buff[7];
+
+			FormatREFSMMATCode(EZGSTMED.MTX1, refs.ID, Buff);
+			EZJGSTTB.IRA.assign(Buff);
+
+			//Null stars
+			unsigned i;
+
+			for (i = 0;i < 2;i++)
+			{
+				EZJGSTTB.BS_S[i] = 0;
+				EZJGSTTB.BS_DEC[i] = 0.0;
+				EZJGSTTB.BS_RTASC[i] = 0.0;
+				EZJGSTTB.BS_SPA[i] = 0.0;
+				EZJGSTTB.BS_SXP[i] = 0.0;
+			}
+
+			MATRIX3 M_SMNB, RM;
+			VECTOR3 u_SM, u_NB;
+			double XSC, YSC, ZSC, SPA, SPX;
+
+			RM = refs.REFSMMAT;
+			M_SMNB = OrbMech::CALCSMSC(_V(EZJGSTTB.Att[0].z, EZJGSTTB.Att[0].x, EZJGSTTB.Att[0].y));
+
+			VECTOR3 u;
+			int num = 0;
+			unsigned endstar;
+
+			if (EZGSTMED.StartingStar <= EZJGSTAR.size())
+			{
+				i = EZGSTMED.StartingStar - 1;
+			}
+			else
+			{
+				i = 0;
+			}
+			endstar = i;
+
+			do
+			{
+				u = EZJGSTAR[i];
+
+				//TBD: Occultation check
+				u_SM = mul(RM, u);
+				u_NB = mul(M_SMNB, u_SM);
+
+				XSC = u_NB.x;
+				YSC = u_NB.y;
+				ZSC = u_NB.z;
+
+				SPA = atan2(ZSC, XSC);
+				SPX = asin(YSC);
+
+				if (abs(SPX) <= 5.0*RAD)
+				{
+					if (SPA <= 31.5*RAD && SPA >= -10.0*RAD)
+					{
+						//Found one
+						EZJGSTTB.BS_S[num] = i + 1;
+						EZJGSTTB.BS_DEC[num] = acos(u.z);
+						EZJGSTTB.BS_RTASC[num] = atan2(u.y, u.x);
+						if (EZJGSTTB.BS_RTASC[num] < 0)
+						{
+							EZJGSTTB.BS_RTASC[num] += PI2;
+						}
+						EZJGSTTB.BS_SPA[num] = SPA;
+						EZJGSTTB.BS_SXP[num] = SPX;
+						num++;
+						if (num >= 2)
+						{
+							break;
+						}
+					}
+				}
+				i++;
+				if (i >= EZJGSTAR.size())
+				{
+					i = 0;
+				}
+			} while (i != endstar);
+
+			if (num < 2)
+			{
+				err = 3;
+			}
+		}
+	}
+	//Sextant Data
+	if (EZGSTMED.MTX2 > 0)
+	{
+		//Stars not initialized, error?
+		if (EZJGSTAR.size() == 0) return;
+
+		REFSMMATData refs = EZJGMTX1.data[EZGSTMED.MTX2 - 1];
+		if (refs.ID <= 0)
+		{
+			err = 4;
+		}
+		else
+		{
+			//Null stars
+			unsigned i;
+
+			for (i = 0;i < 2;i++)
+			{
+				EZJGSTTB.SXT_STAR[0] = 0;
+				EZJGSTTB.SXT_SFT_INP[i] = 0.0;
+				EZJGSTTB.SXT_SFT_RTCC[i] = 0.0;
+				EZJGSTTB.SXT_TRN_INP[i] = 0.0;
+				EZJGSTTB.SXT_TRN_RTCC[i] = 0.0;
+			}
+
+			MATRIX3 SMNB, RM, SBNB;
+			VECTOR3 S_SM;
+			double TA, SA, a;
+
+			RM = refs.REFSMMAT;
+			SMNB = OrbMech::CALCSMSC(_V(EZJGSTTB.Att[0].z, EZJGSTTB.Att[0].x, EZJGSTTB.Att[0].y));
+			a = -0.5676353234;
+			SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
+
+			VECTOR3 u;
+			int num = 0;
+			unsigned endstar;
+
+			if (EZGSTMED.StartingStar <= EZJGSTAR.size())
+			{
+				i = EZGSTMED.StartingStar - 1;
+			}
+			else
+			{
+				i = 0;
+			}
+			endstar = i;
+
+			do
+			{
+				u = EZJGSTAR[i];
+
+				//TBD: Occultation check
+				S_SM = mul(RM, u);
+				OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
+
+				if (TA <= 50.0*RAD)
+				{
+					//Found one
+					EZJGSTTB.SXT_STAR[num] = i + 1;
+					EZJGSTTB.SXT_SFT_RTCC[num] = SA;
+					EZJGSTTB.SXT_TRN_RTCC[num] = TA;
+					num++;
+					if (num >= 2)
+					{
+						break;
+					}
+				}
+				i++;
+				if (i >= EZJGSTAR.size())
+				{
+					i = 0;
+				}
+			} while (i != endstar);
+
+			if (num < 2)
+			{
+				err = 3;
+			}
+		}
+	}
+	//Matrix display
+	if (EZGSTMED.MTX3 > 0)
+	{
+		REFSMMATData refs = EZJGMTX1.data[EZGSTMED.MTX3 - 1];
+		if (refs.ID <= 0)
+		{
+			err = 4;
+			EZJGSTTB.REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+			EZJGSTTB.MAT = "";
+		}
+		else
+		{
+			char Buff[7];
+
+			FormatREFSMMATCode(EZGSTMED.MTX3, refs.ID, Buff);
+			EZJGSTTB.MAT.assign(Buff);
+			EZJGSTTB.REFSMMAT = refs.REFSMMAT;
+		}
+	}
+	EMDGSUPP(err);
+}
+
+void RTCC::EMDGSUPP(int err)
+{
+	GOSTDisplayBuffer.err = "";
+
+	if (err)
+	{
+		switch (err)
+		{
+		case 1:
+			GOSTDisplayBuffer.err = "NO OPTICS THIS VEHICLE";
+			break;
+		case 2:
+			GOSTDisplayBuffer.err = "EPHEMERIS NOT AVAILABLE";
+			break;
+		case 3:
+			GOSTDisplayBuffer.err = "TWO STARS NOT AVAILABLE";
+			break;
+		case 4:
+			GOSTDisplayBuffer.err = "MATRIX NOT AVAILABLE";
+			break;
+		case 5:
+			GOSTDisplayBuffer.err = "MED INPUT REQUIRED";
+			break;
+		case 6:
+			GOSTDisplayBuffer.err = "ATTITUDES NOT AVAILABLE";
+			break;
+		case 7:
+			GOSTDisplayBuffer.err = "OPTICS NOT AVAILABLE";
+			break;
+		}
+	}
+
+	GOSTDisplayBuffer.data.MAT = EZJGSTTB.MAT;
+	GOSTDisplayBuffer.data.REFSMMAT = EZJGSTTB.REFSMMAT;
+
+	for (int i = 0;i < 2;i++)
+	{
+		GOSTDisplayBuffer.data.Att[i] = EZJGSTTB.Att[i] * DEG;
+		GOSTDisplayBuffer.data.BS_S[i] = EZJGSTTB.BS_S[i];
+		GOSTDisplayBuffer.data.BS_DEC[i] = EZJGSTTB.BS_DEC[i] * DEG*3600.0;
+		GOSTDisplayBuffer.data.BS_RTASC[i] = EZJGSTTB.BS_RTASC[i] * DEG*3600.0;
+		GOSTDisplayBuffer.data.BS_SPA[i] = EZJGSTTB.BS_SPA[i] * DEG;
+		GOSTDisplayBuffer.data.BS_SXP[i] = EZJGSTTB.BS_SXP[i] * DEG;
+		GOSTDisplayBuffer.data.SXT_STAR[i] = EZJGSTTB.SXT_STAR[i];
+		GOSTDisplayBuffer.data.SXT_SFT_INP[i] = EZJGSTTB.SXT_SFT_INP[i] * DEG;
+		GOSTDisplayBuffer.data.SXT_SFT_RTCC[i] = EZJGSTTB.SXT_SFT_RTCC[i] * DEG;
+		GOSTDisplayBuffer.data.SXT_TRN_INP[i] = EZJGSTTB.SXT_TRN_INP[i] * DEG;
+		GOSTDisplayBuffer.data.SXT_TRN_RTCC[i] = EZJGSTTB.SXT_TRN_RTCC[i] * DEG;
 	}
 }

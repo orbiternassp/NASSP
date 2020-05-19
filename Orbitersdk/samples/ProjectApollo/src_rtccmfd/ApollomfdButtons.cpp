@@ -3228,6 +3228,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPL", OAPI_KEY_U, &ApolloRTCCMFD::UploadREFSMMAT);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUplinkMenu);
+
+
+	static const MFDBUTTONMENU mnu95[] =
+	{
+		{ "Display REFSMMAT", 0, 'T' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu95, sizeof(mnu95) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("MAT", OAPI_KEY_T, &ApolloRTCCMFD::menuGOSTDisplayREFSMMAT);
+	RegisterFunction("ATT", OAPI_KEY_D, &ApolloRTCCMFD::menuGOSTEnterAttitude);
+	RegisterFunction("ANG", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BST", OAPI_KEY_E, &ApolloRTCCMFD::menuGOSTBoresightSCTCalc);
+	RegisterFunction("SXT", OAPI_KEY_V, &ApolloRTCCMFD::menuGOSTSXTCalc);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
