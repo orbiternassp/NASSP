@@ -556,6 +556,7 @@ class LEMDPSDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };
@@ -580,6 +581,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l);
 	double QueryValue();
 	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	virtual void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };

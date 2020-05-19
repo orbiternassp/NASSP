@@ -845,7 +845,7 @@
 #define IDB_BORDER_286x197              2022
 
 // VC Active Areas (Panel 1)
-#define AID_PANEL_1				((id >= 3100) && (id <= 3124))
+#define AID_PANEL_1				((id >= 3100) && (id <= 3140))
 #define AID_VC_RANGE_TAPE               3101
 #define AID_VC_RATE_TAPE                3102
 #define AID_VC_LM_CWS_LEFT              3103
@@ -855,9 +855,17 @@
 #define AID_VC_FDAI_LEFT                3109
 #define AID_VC_MPS_REG_CONTROLS_LEFT    3116
 #define AID_VC_MPS_REG_CONTROLS_RIGHT   3117
+#define AID_VC_CONTACTLIGHT1            3118
+#define AID_VC_PWRFAIL_LIGHTS_P1        3119
+#define AID_VC_LEM_MA_LEFT              3120
+#define AID_VC_MPS_OXID_QUANTITY_INDICATOR   3121
+#define AID_VC_MPS_FUEL_QUANTITY_INDICATOR   3122
+#define AID_VC_MPS_HELIUM_PRESS_INDICATOR   3123
+
+//#define AID_VC_SWITCH_P1_01             3130   //
 
 // VC Active Areas (Panel 2)
-#define AID_PANEL_2				((id >= 3200) && (id <= 3224))
+#define AID_PANEL_2				((id >= 3200) && (id <= 3240))
 #define AID_VC_LM_CWS_RIGHT             3201
 #define AID_VC_XPOINTERLMP              3202
 #define AID_VC_FDAI_RIGHT               3203
@@ -866,7 +874,11 @@
 #define AID_VC_LGC_CMD_ENABLE_23_TALKBACKS   3206
 #define AID_VC_RCS_XFEED_TALKBACK       3207
 #define AID_VC_MAIN_SOV_TALKBACKS       3208
-#define AID_VC_PANEL2_COMPLIGHTS        3209    // Panel 2 comp lights
+#define AID_VC_PANEL2_COMPLIGHTS        3209
+#define AID_VC_PWRFAIL_LIGHTS_P2        3210
+#define AID_VC_LEM_MA_RIGHT             3211
+
+//#define AID_VC_SWITCH_P2_01             3230  //
 
 // VC Active Areas (Panel 3)
 #define AID_VC_PANEL_3			((id >= 3300) && (id <= 3346))
@@ -905,6 +917,7 @@
 
 #define AID_VC_RDR_SIG_STR      3337    // Radar signal strength
 #define AID_VC_RR_NOTRACK       3338    // RR No track light
+#define AID_VC_CONTACTLIGHT2    3339
 
 
 

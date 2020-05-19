@@ -1810,6 +1810,20 @@ void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
 }
 
+void LEMDPSDigitalMeter::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits)
+{
+	if (lem->stage > 1) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.GetNumericVoltage() < 25.0) return;
+
+	double percent = GetDisplayValue() * 100.0;
+
+	int Curdigit2 = (int)percent;
+	int Curdigit = (int)percent / 10;
+
+	oapiBlt(surf, digits, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(surf, digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+}
+
 double LEMDPSOxidPercentMeter::QueryValue()
 {
 	return lem->GetDPSPropellant()->GetOxidPercent();
@@ -1879,6 +1893,23 @@ void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
 	oapiBlt(drawSurface, Digits, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
 	oapiBlt(drawSurface, Digits, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
+}
+
+void LEMDigitalHeliumPressureMeter::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits)
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.GetNumericVoltage() < 25.0) return;
+
+	double v = GetDisplayValue();
+
+	int Curdigit4 = (int)v;
+	int Curdigit3 = (int)v / 10;
+	int Curdigit2 = (int)v / 100;
+	int Curdigit = (int)v / 1000;
+
+	oapiBlt(surf, digits, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(surf, digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+	oapiBlt(surf, digits, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
+	oapiBlt(surf, digits, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
 }
 
 void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {

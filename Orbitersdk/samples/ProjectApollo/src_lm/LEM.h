@@ -96,12 +96,23 @@ enum LMRCSThrusters
 // VC Constants
 // ==============================================================
 
-// LM Comp light material indexes
-#define LM_COMPLIGHT_1		0   // RR No track light
-#define LM_COMPLIGHT_2		1   // Glycol light
-#define LM_COMPLIGHT_3		2   // Suit fan light
-#define LM_COMPLIGHT_4		3   // CO2 light
-#define LM_COMPLIGHT_5		4   // H2O sep light
+// VC Comp light index
+#define LM_VC_COMP_LIGHT_1		0   // RR No track light
+#define LM_VC_COMP_LIGHT_2		1   // Glycol light
+#define LM_VC_COMP_LIGHT_3		2   // Suit fan light
+#define LM_VC_COMP_LIGHT_4		3   // CO2 light
+#define LM_VC_COMP_LIGHT_5		4   // H2O sep light
+
+// VC power failure light index
+#define LM_VC_PWRFAIL_LIGHT_1		0   // X-pointer left
+#define LM_VC_PWRFAIL_LIGHT_2  	    1   // Thrust
+#define LM_VC_PWRFAIL_LIGHT_3		2   // DPS press
+#define LM_VC_PWRFAIL_LIGHT_4		3   // RCS press
+#define LM_VC_PWRFAIL_LIGHT_5		4   // RCS quantity
+#define LM_VC_PWRFAIL_LIGHT_6		5   // ECS press
+#define LM_VC_PWRFAIL_LIGHT_7		6   // Glycol
+#define LM_VC_PWRFAIL_LIGHT_8		7   // ECS quantity
+#define LM_VC_PWRFAIL_LIGHT_9		8   // X-pointer right
 
 // Panel tilt
 const double P1_TILT = 7.95581 * RAD;
@@ -113,8 +124,8 @@ const double P12_TILT = 20 * RAD;
 const double P14_TILT = 25 * RAD;
 
 // Number of switches on each panel
-const int	P1_SWITCHCOUNT = 20;
-const int	P2_SWITCHCOUNT = 18;
+const int	P1_SWITCHCOUNT = 1;
+const int	P2_SWITCHCOUNT = 1;
 const int	P3_SWITCHCOUNT = 26;
 const int	P4_SWITCHCOUNT = 4;
 const int	P5_SWITCHCOUNT = 8;
@@ -146,6 +157,14 @@ const VECTOR3	P3_ROT_AXIS = { 0.00, sin(P3_TILT),-cos(P3_TILT) };
 const VECTOR3	P6_ROT_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
 const VECTOR3	P12_ROT_AXIS = { -sin(P12_TILT), cos(P12_TILT), 0.00 };
 const VECTOR3	P14_ROT_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };
+
+// Panel 1 switches
+/*const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
+};
+
+// Panel 2 switches
+const VECTOR3 P2_TOGGLE_POS[P2_SWITCHCOUNT] = {
+};*/
 
 // Panel 3 switches
 const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
@@ -483,6 +502,7 @@ public:
 		SFR_VC_CW_LIGHTS,
 		SRF_INDICATORVC,
 		SRF_INDICATORREDVC,
+		SRF_LEM_MASTERALARMVC,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -731,6 +751,7 @@ protected:
 	void AddDust();
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
+	void SetPowerFailureLight(int m, bool state);
 	void InitFDAI(UINT mesh);
 	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
