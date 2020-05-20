@@ -845,7 +845,7 @@
 #define IDB_BORDER_286x197              2022
 
 // VC Active Areas (Panel 1)
-#define AID_PANEL_1				        ((id >= 3100) && (id <= 3138))
+#define AID_PANEL_1				        ((id >= 3100) && (id <= 3140))
 #define AID_VC_SWITCH_P1_01		        3101	// Rate/error monitor CDR
 #define AID_VC_SWITCH_P1_02		        3102	// Attitude monitor CDR
 #define AID_VC_SWITCH_P1_03		        3103	// X-pointer scale CDR
@@ -884,6 +884,8 @@
 #define AID_VC_MPS_HELIUM_PRESS_INDICATOR   3136
 #define AID_VC_PANEL1_NEEDLES           3137
 #define AID_VC_THRUST_WEIGHT_IND        3138
+#define AID_VC_ABORT_BUTTON             3139
+#define AID_VC_ABORTSTAGE_BUTTON        3140
 
 // VC Active Areas (Panel 2)
 #define AID_PANEL_2				        ((id >= 3200) && (id <= 3234))

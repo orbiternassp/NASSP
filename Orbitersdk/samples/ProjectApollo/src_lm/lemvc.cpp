@@ -291,13 +291,13 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	//
 	ReleaseSurfacesVC();
 
-	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 2);
+	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 1);
 
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS[i] + ofs, 0.006);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS[i] + P1_CLICK + ofs, 0.006);
 	}
 
 	for (i = 0; i < P1_ROTCOUNT; i++)
@@ -326,11 +326,16 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	oapiVCRegisterArea(AID_VC_PANEL1_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_THRUST_WEIGHT_IND, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
+	oapiVCRegisterArea(AID_VC_ABORT_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORT_BUTTON, _V(-0.10018, 0.436067, 1.63518) + ofs, 0.008);
+	oapiVCRegisterArea(AID_VC_ABORTSTAGE_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORTSTAGE_BUTTON, _V(-0.047192, 0.437682, 1.63536) + ofs, 0.008);
+
 	// Panel 2
 	for (i = 0; i < P2_SWITCHCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS[i] + ofs, 0.006);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS[i] + P2_CLICK + ofs, 0.006);
 	}
 
 	for (i = 0; i < P2_ROTCOUNT; i++)
@@ -358,7 +363,7 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	for (i = 0; i < P3_SWITCHCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + ofs, 0.006);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + P3_CLICK + ofs, 0.006);
 	}
 
 	for (i = 0; i < P3_ROTCOUNT; i++)
@@ -497,6 +502,14 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 		case AID_VC_LEM_MA_LEFT:
 		case AID_VC_LEM_MA_RIGHT:
 			return CWEA.CheckMasterAlarmMouseClick(event);
+
+		case AID_VC_ABORT_BUTTON:
+			AbortSwitch.CheckMouseClickVC(event);
+			return true;
+
+		case AID_VC_ABORTSTAGE_BUTTON:
+			AbortStageSwitch.CheckMouseClickVC(event);
+			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
 }
@@ -943,6 +956,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_VC_THRUST_WEIGHT_IND:
 		ThrustWeightInd.DoDrawSwitchVC(anim_TW_indicator);
 		return true;
+
+	case AID_VC_ABORT_BUTTON:
+		AbortSwitch.RedrawVC(anim_abortbutton);
+		return true;
+
+	case AID_VC_ABORTSTAGE_BUTTON:
+		AbortStageSwitch.DrawSwitchVC(anim_abortstagebutton, anim_abortstagecover);
+		return true;
 	}
 
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
@@ -1076,6 +1097,25 @@ void LEM::InitVCAnimations()
 	AddAnimationComponent(anim_xpointery_cdr, 0.0f, 1.0f, &mgt_xpointery_cdr);
 	AddAnimationComponent(anim_xpointerx_lmp, 0.0f, 1.0f, &mgt_xpointerx_lmp);
 	AddAnimationComponent(anim_xpointery_lmp, 0.0f, 1.0f, &mgt_xpointery_lmp);
+
+	// Abort button
+	const VECTOR3 abortbuttonvector = { 0.00, 0.004*cos(P1_TILT - (90.0 * RAD)), 0.004*sin(P1_TILT - (90.0 * RAD)) };
+	static UINT meshgroup_Abort_Button = VC_GRP_AbortButton;
+	static MGROUP_TRANSLATE mgt_Abort_Button(mesh, &meshgroup_Abort_Button, 1, abortbuttonvector);
+	anim_abortbutton = CreateAnimation(1.0);
+	AddAnimationComponent(anim_abortbutton, 0.0f, 1.0f, &mgt_Abort_Button);
+
+	// Abort stage button
+	static UINT  meshgroup_Abortstage_Button = VC_GRP_AbortStageButton;
+	static MGROUP_TRANSLATE mgt_Abortstage_Button(mesh, &meshgroup_Abortstage_Button, 1, abortbuttonvector);
+	anim_abortstagebutton = CreateAnimation(1.0);
+	AddAnimationComponent(anim_abortstagebutton, 0.0f, 1.0f, &mgt_Abortstage_Button);
+
+	// Abort stage cover
+	static UINT meshgroup_Abortstage_Cover = VC_GRP_AbortStageCover;
+	static MGROUP_ROTATE mgt_Abortstage_Cover(mesh, &meshgroup_Abortstage_Cover, 1, _V(-0.045187, 0.468451, 1.63831), _V(1, 0, 0), (float)(RAD * 100));
+	anim_abortstagecover = CreateAnimation(0.0);
+	AddAnimationComponent(anim_abortstagecover, 0.0f, 1.0f, &mgt_Abortstage_Cover);
 
 	InitFDAI(mesh);
 }
@@ -1212,9 +1252,9 @@ void LEM::SetCompLight(int m, bool state) {
 	}
 	else
 	{   // OFF
-		mat->emissive.r = 0.25f;
-		mat->emissive.g = 0.22f;
-		mat->emissive.b = 0.127f;
+		mat->emissive.r = 0.125f;
+		mat->emissive.g = 0.11f;
+		mat->emissive.b = 0.064f;
 		mat->emissive.a = 1;
 	}
 
@@ -1240,8 +1280,8 @@ void LEM::SetContactLight(int m, bool state) {
 	else
 	{   // OFF
 		mat->emissive.r = 0;
-		mat->emissive.g = 0.135f;
-		mat->emissive.b = 0.25f;
+		mat->emissive.g = 0.068f;
+		mat->emissive.b = 0.125f;
 		mat->emissive.a = 1;
 	}
 
@@ -1266,7 +1306,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	}
 	else
 	{   // OFF
-		mat->emissive.r = 0.25f;
+		mat->emissive.r = 0.125f;
 		mat->emissive.g = 0;
 		mat->emissive.b = 0;
 		mat->emissive.a = 1;

@@ -123,6 +123,11 @@ const double P4_TILT = 45.0663 * RAD;
 const double P12_TILT = 20 * RAD;
 const double P14_TILT = 25 * RAD;*/
 
+// Switch clickspot offset
+const VECTOR3	P1_CLICK = { 0, 0.0011, -0.0078 };
+const VECTOR3	P2_CLICK = { 0, 0.0011, -0.0078 };
+const VECTOR3	P3_CLICK = { 0, 0.0045, -0.0065 };
+
 // Number of switches on each panel
 const int	P1_SWITCHCOUNT = 20;
 const int	P2_SWITCHCOUNT = 18;
@@ -1726,6 +1731,9 @@ protected:
 	UINT anim_xpointery_cdr;
 	UINT anim_xpointerx_lmp;
 	UINT anim_xpointery_lmp;
+	UINT anim_abortbutton;
+	UINT anim_abortstagebutton;
+	UINT anim_abortstagecover;
 	UINT anim_fdaiR_cdr, anim_fdaiR_lmp;
 	UINT anim_fdaiP_cdr, anim_fdaiP_lmp;
 	UINT anim_fdaiY_cdr, anim_fdaiY_lmp;

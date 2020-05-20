@@ -1655,6 +1655,28 @@ bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+bool LMAbortButton::CheckMouseClickVC(int event) {
+
+	int OldState = state;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		if (state == 0) {
+			SwitchTo(1, true);
+			Sclick.play();
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, false);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, true);
+		}
+		else if (state == 1) {
+			SwitchTo(0, true);
+			Sclick.play();
+			lem->agc.SetInputChannelBit(030, AbortWithDescentStage, true);
+			lem->aea.SetInputPortBit(IO_2020, AGSAbortDiscrete, false);
+		}
+	}
+	return true;
+}
+
 void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
 
 {
@@ -1686,6 +1708,18 @@ void LMAbortStageButton::DrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
+void LMAbortStageButton::DrawSwitchVC(UINT anim, UINT animguard) {
+
+	RedrawVC(anim);
+
+	if (guardState) {
+		lem->SetAnimation(animguard, 1.0);
+	}
+	else {
+		lem->SetAnimation(animguard, 0.0);
+	}
+}
+
 bool LMAbortStageButton::CheckMouseClick(int event, int mx, int my) {
 
 	if (!visible) return false;
@@ -1710,6 +1744,37 @@ bool LMAbortStageButton::CheckMouseClick(int event, int mx, int my) {
 			if (!visible) return false;
 			if (mx < x || my < y) return false;
 			if (mx >(x + width) || my >(y + height)) return false;
+
+			if (state == 0) {
+				SwitchTo(1);
+				Sclick.play();
+			}
+			else if (state == 1) {
+				SwitchTo(0);
+				Sclick.play();
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
+bool LMAbortStageButton::CheckMouseClickVC(int event) {
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+
+		if (guardState) {
+			Guard();
+		}
+		else {
+			guardState = 1;
+		}
+		guardClick.play();
+		return true;
+
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN)) {
+		if (guardState) {
 
 			if (state == 0) {
 				SwitchTo(1);

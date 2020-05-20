@@ -467,6 +467,7 @@ class LMAbortButton : public ToggleSwitch {
 public:
 	LMAbortButton() {};
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 protected:
 	LEM *lem;
@@ -478,7 +479,9 @@ public:
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(UINT anim, UINT animguard);
 protected:
 	LEM *lem;
 };
