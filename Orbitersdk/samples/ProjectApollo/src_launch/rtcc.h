@@ -4187,6 +4187,11 @@ public:
 		double GMT = 0.0;
 		unsigned StartingStar = 0;
 		int MTX1 = -1, MTX2 = -1, MTX3 = -1;
+		int G14_Vehicle = 1;
+		unsigned G14_Star = 0;
+		int G14_RB = 0;
+		double G14_lat = 0.0, G14_lng = 0.0, G14_height = 0.0;
+		double G14_GMT = 0.0;
 	} EZGSTMED;
 
 	struct ExternalDVMakeupBuffer

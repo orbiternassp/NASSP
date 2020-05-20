@@ -8059,13 +8059,15 @@ void ApolloRTCCMFD::menuGOSTBoresightSCTCalc()
 bool GOSTBoresightSCTCalcInput(void* id, char *str, void *data)
 {
 	double ss;
-	int hh, mm, ref, star;
+	int hh, mm, star;
+	char ref[16];
 
-	if (sscanf(str, "%d:%d:%lf %d %d", &hh, &mm, &ss, &star, &ref) == 5)
+	if (sscanf_s(str, "%d:%d:%lf %d %s", &hh, &mm, &ss, &star, &ref, _countof(ref)) == 5)
 	{
-		std::string med;
+		std::string med, med2;
+		med2.assign(ref);
 
-		med = "G10,CSM," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + std::to_string(star) + "," + std::to_string(ref) + ",,;";
+		med = "G10,CSM," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + std::to_string(star) + "," + med2 + ",,;";
 		char Buff[64];
 		sprintf_s(Buff, 64, med.c_str());
 		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
@@ -8083,13 +8085,15 @@ void ApolloRTCCMFD::menuGOSTSXTCalc()
 bool GOSTSXTCalcInput(void* id, char *str, void *data)
 {
 	double ss;
-	int hh, mm, ref, star;
+	int hh, mm, star;
+	char ref[16];
 
-	if (sscanf(str, "%d:%d:%lf %d %d", &hh, &mm, &ss, &star, &ref) == 5)
+	if (sscanf_s(str, "%d:%d:%lf %d %s", &hh, &mm, &ss, &star, &ref, _countof(ref)) == 5)
 	{
-		std::string med;
+		std::string med, med2;
+		med2.assign(ref);
 
-		med = "G10,CSM," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + std::to_string(star) + ",," + std::to_string(ref) + ",;";
+		med = "G10,CSM," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + std::to_string(star) + ",," + med2 + ",;";
 		char Buff[64];
 		sprintf_s(Buff, 64, med.c_str());
 		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
@@ -8128,6 +8132,53 @@ bool GOSTEnterAttitudeInput(void* id, char *str, void *data)
 		sprintf_s(Buff, 64, med.c_str());
 
 		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTShowStarVector()
+{
+	bool GOSTShowStarVectorInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter number of star to display:", GOSTShowStarVectorInput, 0, 20, (void*)this);
+}
+
+bool GOSTShowStarVectorInput(void* id, char *str, void *data)
+{
+	unsigned star;
+	if (sscanf(str, "%d", &star) == 1)
+	{
+		std::string med;
+		med = "G14,CSM," + std::to_string(star) + ";";
+		char Buff[64];
+		sprintf_s(Buff, "%s", med.c_str());
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTShowLandmarkVector()
+{
+	bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Landmark vector. Format: VEHICLE (CSM or LEM) GET BODY (S, M or E) LAT LONG HEIGHT (in feet)", GOSTShowLandmarkVectorInput, 0, 40, (void*)this);
+}
+
+bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, lat = 0.0, lng = 0.0, height = 0.0;
+	char buff[16], body;
+	if (sscanf_s(str, "%s %d:%d:%lf %c %lf %lf %lf", buff, (unsigned)_countof(buff), &hh, &mm, &ss, &body, 1, &lat, &lng, &height) >= 3)
+	{
+		std::string med, med2;
+		med2.assign(buff);
+
+		med = "G14," + med2 + ",," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + body + "," + std::to_string(lat) + "," + std::to_string(lng) + "," + std::to_string(height) + ";";
+		char Buff[64];
+		sprintf_s(Buff, "%s", med.c_str());
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+
 		return true;
 	}
 	return false;

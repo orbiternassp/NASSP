@@ -700,6 +700,8 @@ public:
 	void menuGOSTEnterAttitude();
 	void menuGOSTBoresightSCTCalc();
 	void menuGOSTSXTCalc();
+	void menuGOSTShowStarVector();
+	void menuGOSTShowLandmarkVector();
 
 protected:
 	oapi::Font *font;

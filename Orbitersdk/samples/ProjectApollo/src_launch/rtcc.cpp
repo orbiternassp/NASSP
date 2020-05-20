@@ -23797,6 +23797,117 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 			}
 			EMDGSUPP(0);
 		}
+		//Initialize MSK 229 display of special targets
+		else if (med == "14")
+		{
+			if (data.size() < 2)
+			{
+				return 1;
+			}
+			int veh;
+			if (data[0] == "CSM")
+			{
+				veh = 1;
+			}
+			else if (data[0] == "LEM")
+			{
+				veh = 3;
+			}
+			else
+			{
+				return 2;
+			}
+			unsigned star;
+			if (data[1] == "")
+			{
+				star = 0;
+			}
+			else
+			{
+				if (sscanf(data[1].c_str(), "%o", &star) != 1)
+				{
+					return 2;
+				}
+				if (star < 1 || star > EZJGSTAR.size())
+				{
+					return 2;
+				}
+			}
+			int rb = 0;
+			double lat = 0.0, lng = 0.0, height = 0.0, GMT = 0.0;
+			if (star == 0)
+			{
+				if (data.size() < 4)
+				{
+					return 2;
+				}
+				double hours;
+				if (MEDTimeInputHHMMSS(data[2], hours))
+				{
+					return 2;
+				}
+				GMT = GMTfromGET(hours*3600.0);
+				if (data[3] == "S")
+				{
+					rb = 1;
+				}
+				else if (data[3] == "M")
+				{
+					rb = 2;
+				}
+				else if (data[3] == "E")
+				{
+					rb = 3;
+				}
+				else
+				{
+					return 2;
+				}
+				if (rb != 1)
+				{
+					if (data.size() < 7)
+					{
+						return 2;
+					}
+					if (sscanf(data[4].c_str(), "%lf", &lat) != 1)
+					{
+						return 2;
+					}
+					lat *= RAD;
+					if (lat < -PI05 || lat > PI05)
+					{
+						return 2;
+					}
+					if (sscanf(data[5].c_str(), "%lf", &lng) != 1)
+					{
+						return 2;
+					}
+					lng *= RAD;
+					if (lng < 0 || lng > PI2)
+					{
+						return 2;
+					}
+					if (sscanf(data[6].c_str(), "%lf", &height) != 1)
+					{
+						return 2;
+					}
+					height /= 0.3048;
+				}
+			}
+
+			EZGSTMED.G14_Star = star;
+			EZGSTMED.G14_Vehicle = veh;
+			EZGSTMED.G14_height = height;
+			EZGSTMED.G14_lat = lat;
+			EZGSTMED.G14_lng = lng;
+			EZGSTMED.G14_RB = rb;
+			EZGSTMED.G14_GMT = GMT;
+			EZGSTMED.MTX1 = 0;
+			EZGSTMED.MTX2 = 0;
+			EZGSTMED.MTX3 = 0;
+
+			EMMGSTMP();
+		}
 		//Acquire and save LEM IMU matrix/optics
 		else if (med == "21")
 		{
@@ -30856,6 +30967,154 @@ void RTCC::EMMGSTMP()
 			EZJGSTTB.REFSMMAT = refs.REFSMMAT;
 		}
 	}
+	//Unit vector
+	if (EZGSTMED.G14_Star > 0)
+	{
+		EZJGSTTB.Landmark_GET = 0.0;
+		VECTOR3 u = EZJGSTAR[EZGSTMED.G14_Star - 1];
+		MATRIX3 Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+		u = mul(Rot, u);
+		char buff[4];
+		sprintf_s(buff, "%03o", EZGSTMED.G14_Star);
+		EZJGSTTB.Landmark_SC.assign(buff);
+		EZJGSTTB.Landmark_LOS = u;
+		EZJGSTTB.Landmark_DEC = acos(u.z);
+		EZJGSTTB.Landmark_RA = atan2(u.y, u.x);
+		if (EZJGSTTB.Landmark_RA < 0)
+		{
+			EZJGSTTB.Landmark_RA += PI2;
+		}
+	}
+	//Landmark unit vector
+	if (EZGSTMED.G14_RB > 0)
+	{
+		EZJGSTTB.Landmark_SC = "";
+		EZJGSTTB.Landmark_LOS = _V(0, 0, 0);
+		EZJGSTTB.Landmark_DEC = 0.0;
+		EZJGSTTB.Landmark_RA = 0.0;
+
+		VECTOR3 R_EM, V_EM, R_ES, R_BL, R_BV, R_VL, R_BL_equ;
+		if (OrbMech::PLEFEM(pzefem, OrbMech::MJDfromGET(EZGSTMED.G14_GMT, GMTBASE), R_EM, V_EM, R_ES) == false)
+		{
+			err = 2;
+		}
+		else
+		{
+			if (EZGSTMED.G14_RB == 1)
+			{
+				//Point to center of sun
+				R_BL = _V(0, 0, 0);
+			}
+			else
+			{
+				double r;
+				int in, out;
+				if (EZGSTMED.G14_RB == 2)
+				{
+					r = EZGSTMED.G14_height + MCSMLR;
+					in = 3;
+					out = 2;
+				}
+				else
+				{
+					r = EZGSTMED.G14_height + OrbMech::R_Earth;
+					in = 1;
+					out = 0;
+				}
+				R_BL_equ = OrbMech::r_from_latlong(EZGSTMED.G14_lat, EZGSTMED.G14_lng, r);
+				if (ELVCNV(R_BL_equ, EZGSTMED.G14_GMT, in, out, R_BL))
+				{
+					err = 2;
+				}
+			}
+			ELVCTRInputTable intab;
+			ELVCTROutputTable outtab;
+
+			intab.GMT = EZGSTMED.G14_GMT;
+			intab.L = EZGSTMED.G14_Vehicle;
+
+			ELVCTR(intab, outtab);
+			if (outtab.ErrorCode)
+			{
+				err = 2;
+			}
+			else
+			{
+				if (outtab.SV.RBI == BODY_EARTH)
+				{
+					//Sun
+					if (EZGSTMED.G14_RB == 1)
+					{
+						R_BV = outtab.SV.R - R_ES;
+					}
+					//Moon
+					else if (EZGSTMED.G14_RB == 2)
+					{
+						R_BV = (outtab.SV.R) - R_EM;
+					}
+					//Earth
+					else
+					{
+						R_BV = outtab.SV.R;
+					}
+				}
+				else
+				{
+					//Sun
+					if (EZGSTMED.G14_RB == 1)
+					{
+						R_BV = (outtab.SV.R + R_EM) - R_ES;
+					}
+					//Moon
+					else if (EZGSTMED.G14_RB == 2)
+					{
+						R_BV = outtab.SV.R;
+					}
+					//Earth
+					else
+					{
+						R_BV = outtab.SV.R + R_EM;
+					}
+				}
+				R_VL = R_BL - R_BV;
+
+				MATRIX3 Rot = OrbMech::J2000EclToBRCS(AGCEpoch);
+				VECTOR3 u = mul(Rot, unit(R_VL));
+				EZJGSTTB.Landmark_SC = "";
+				if (EZGSTMED.G14_Vehicle == 1)
+				{
+					EZJGSTTB.Landmark_SC += "C";
+				}
+				else
+				{
+					EZJGSTTB.Landmark_SC += "L";
+				}
+				//TBD
+				EZJGSTTB.Landmark_SC += "1";
+				if (EZGSTMED.G14_RB == 1)
+				{
+					EZJGSTTB.Landmark_SC += "S";
+				}
+				else if (EZGSTMED.G14_RB == 2)
+				{
+					EZJGSTTB.Landmark_SC += "M";
+				}
+				else
+				{
+					EZJGSTTB.Landmark_SC += "E";
+				}
+				EZJGSTTB.Landmark_GET = GETfromGMT(EZGSTMED.G14_GMT);
+				EZJGSTTB.Landmark_LOS = u;
+				EZJGSTTB.Landmark_DEC = acos(u.z);
+				EZJGSTTB.Landmark_RA = atan2(u.y, u.x);
+				if (EZJGSTTB.Landmark_RA < 0)
+				{
+					EZJGSTTB.Landmark_RA += PI2;
+				}
+			}
+		}
+	}
+
 	EMDGSUPP(err);
 }
 
@@ -30893,6 +31152,11 @@ void RTCC::EMDGSUPP(int err)
 
 	GOSTDisplayBuffer.data.MAT = EZJGSTTB.MAT;
 	GOSTDisplayBuffer.data.REFSMMAT = EZJGSTTB.REFSMMAT;
+	GOSTDisplayBuffer.data.Landmark_DEC = EZJGSTTB.Landmark_DEC * DEG*3600.0;
+	GOSTDisplayBuffer.data.Landmark_RA = EZJGSTTB.Landmark_RA * DEG*3600.0;
+	GOSTDisplayBuffer.data.Landmark_SC = EZJGSTTB.Landmark_SC;
+	GOSTDisplayBuffer.data.Landmark_GET = EZJGSTTB.Landmark_GET;
+	GOSTDisplayBuffer.data.Landmark_LOS = EZJGSTTB.Landmark_LOS;
 
 	for (int i = 0;i < 2;i++)
 	{

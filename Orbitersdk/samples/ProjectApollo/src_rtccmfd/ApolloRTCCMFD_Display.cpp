@@ -8244,11 +8244,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Angle_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.BS_DEC[1]);
 		skp->Text(41 * W / 43, 17 * H / 26, Buffer, strlen(Buffer));
 
-		sprintf_s(Buffer, "%.6lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.x);
+		sprintf_s(Buffer, "%+.5lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.x);
 		skp->Text(15 * W / 43, 18 * H / 26, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.6lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.y);
+		sprintf_s(Buffer, "%+.5lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.y);
 		skp->Text(27 * W / 43, 18 * H / 26, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "%.6lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.z);
+		sprintf_s(Buffer, "%+.5lf", GC->rtcc->GOSTDisplayBuffer.data.Landmark_LOS.z);
 		skp->Text(39 * W / 43, 18 * H / 26, Buffer, strlen(Buffer));
 
 		GET_Display(Buffer, GC->rtcc->GOSTDisplayBuffer.data.Landmark_GET, false);
