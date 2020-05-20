@@ -845,86 +845,120 @@
 #define IDB_BORDER_286x197              2022
 
 // VC Active Areas (Panel 1)
-#define AID_PANEL_1				((id >= 3100) && (id <= 3140))
-#define AID_VC_RANGE_TAPE               3101
-#define AID_VC_RATE_TAPE                3102
-#define AID_VC_LM_CWS_LEFT              3103
-#define AID_VC_MISSION_CLOCK            3105
-#define AID_VC_EVENT_TIMER              3106
-#define AID_VC_XPOINTERCDR              3107
-#define AID_VC_FDAI_LEFT                3109
-#define AID_VC_MPS_REG_CONTROLS_LEFT    3116
-#define AID_VC_MPS_REG_CONTROLS_RIGHT   3117
-#define AID_VC_CONTACTLIGHT1            3118
-#define AID_VC_PWRFAIL_LIGHTS_P1        3119
-#define AID_VC_LEM_MA_LEFT              3120
-#define AID_VC_MPS_OXID_QUANTITY_INDICATOR   3121
-#define AID_VC_MPS_FUEL_QUANTITY_INDICATOR   3122
-#define AID_VC_MPS_HELIUM_PRESS_INDICATOR   3123
-#define AID_VC_PANEL1_NEEDLES           3124
-#define AID_VC_THRUST_WEIGHT_IND        3125
-
-//#define AID_VC_SWITCH_P1_01             3130   //
-
+#define AID_PANEL_1				        ((id >= 3100) && (id <= 3138))
+#define AID_VC_SWITCH_P1_01		        3101	// Rate/error monitor CDR
+#define AID_VC_SWITCH_P1_02		        3102	// Attitude monitor CDR
+#define AID_VC_SWITCH_P1_03		        3103	// X-pointer scale CDR
+#define AID_VC_SWITCH_P1_04		        3104	// Guidance control
+#define AID_VC_SWITCH_P1_05		        3105	// Mode select
+#define AID_VC_SWITCH_P1_06		        3106	// Alt/range mon
+#define AID_VC_SWITCH_P1_07		        3107	// Saft/trun
+#define AID_VC_SWITCH_P1_08		        3108	// Rate scale
+#define AID_VC_SWITCH_P1_09		        3109	// ACA prop CDR
+#define AID_VC_SWITCH_P1_10		        3110	// Throttle control
+#define AID_VC_SWITCH_P1_11		        3111	// Man throttle
+#define AID_VC_SWITCH_P1_12		        3112	// Engine arm
+#define AID_VC_SWITCH_P1_13		        3113	// Att/transl
+#define AID_VC_SWITCH_P1_14		        3114	// Bal cpl
+#define AID_VC_SWITCH_P1_15		        3115	// Asc He Reg 1
+#define AID_VC_SWITCH_P1_16		        3116	// Asc He Reg 2
+#define AID_VC_SWITCH_P1_17		        3117	// Dsc He Reg 1
+#define AID_VC_SWITCH_P1_18		        3118	// Dsc He Reg 2
+#define AID_VC_SWITCH_P1_19		        3119	// Prop qty mon
+#define AID_VC_SWITCH_P1_20		        3120	// Prop temp/press mon
+#define AID_VC_ROT_P1_01		        3121	// Helium mon
+#define AID_VC_RANGE_TAPE               3122
+#define AID_VC_RATE_TAPE                3123
+#define AID_VC_LM_CWS_LEFT              3124
+#define AID_VC_MISSION_CLOCK            3125
+#define AID_VC_EVENT_TIMER              3126
+#define AID_VC_XPOINTERCDR              3127
+#define AID_VC_FDAI_LEFT                3128
+#define AID_VC_MPS_REG_CONTROLS_LEFT    3129
+#define AID_VC_MPS_REG_CONTROLS_RIGHT   3130
+#define AID_VC_CONTACTLIGHT1            3131
+#define AID_VC_PWRFAIL_LIGHTS_P1        3132
+#define AID_VC_LEM_MA_LEFT              3133
+#define AID_VC_MPS_OXID_QUANTITY_INDICATOR   3134
+#define AID_VC_MPS_FUEL_QUANTITY_INDICATOR   3135
+#define AID_VC_MPS_HELIUM_PRESS_INDICATOR   3136
+#define AID_VC_PANEL1_NEEDLES           3137
+#define AID_VC_THRUST_WEIGHT_IND        3138
 
 // VC Active Areas (Panel 2)
-#define AID_PANEL_2				((id >= 3200) && (id <= 3240))
-#define AID_VC_LM_CWS_RIGHT             3201
-#define AID_VC_XPOINTERLMP              3202
-#define AID_VC_FDAI_RIGHT               3203
-#define AID_VC_RCS_ASC_FEED_TALKBACKS   3204
-#define AID_VC_LGC_CMD_ENABLE_14_TALKBACKS   3205
-#define AID_VC_LGC_CMD_ENABLE_23_TALKBACKS   3206
-#define AID_VC_RCS_XFEED_TALKBACK       3207
-#define AID_VC_MAIN_SOV_TALKBACKS       3208
-#define AID_VC_PANEL2_COMPLIGHTS        3209
-#define AID_VC_PWRFAIL_LIGHTS_P2        3210
-#define AID_VC_LEM_MA_RIGHT             3211
-#define AID_VC_PANEL2_NEEDLES           3212
-
-
-//#define AID_VC_SWITCH_P2_01             3230  //
+#define AID_PANEL_2				        ((id >= 3200) && (id <= 3234))
+#define AID_VC_SWITCH_P2_01		        3201	// Sys A Asc fuel
+#define AID_VC_SWITCH_P2_02		        3202	// Sys A Asc oxid
+#define AID_VC_SWITCH_P2_03		        3203	// Sys B Asc fuel
+#define AID_VC_SWITCH_P2_04		        3204	// Sys B Asc oxid
+#define AID_VC_SWITCH_P2_05		        3205	// LGC thrust pair cmd quad 1 (A)
+#define AID_VC_SWITCH_P2_06		        3206	// LGC thrust pair cmd quad 4 (A)
+#define AID_VC_SWITCH_P2_07		        3207	// LGC thrust pair cmd quad 1 (B)
+#define AID_VC_SWITCH_P2_08		        3208	// LGC thrust pair cmd quad 4 (B)
+#define AID_VC_SWITCH_P2_09		        3209	// LGC thrust pair cmd quad 2 (A)
+#define AID_VC_SWITCH_P2_10		        3210	// LGC thrust pair cmd quad 3 (A)
+#define AID_VC_SWITCH_P2_11		        3211	// LGC thrust pair cmd quad 2 (B)
+#define AID_VC_SWITCH_P2_12		        3212	// LGC thrust pair cmd quad 3 (B)
+#define AID_VC_SWITCH_P2_13		        3213	// Crossfeed valve
+#define AID_VC_SWITCH_P2_14		        3214	// Main SOV sys A
+#define AID_VC_SWITCH_P2_15		        3215	// Main SOV sys B
+#define AID_VC_SWITCH_P2_16		        3216	// ACA prop LMP
+#define AID_VC_SWITCH_P2_17		        3217	// Rate/error monitor LMP
+#define AID_VC_SWITCH_P2_18		        3218	// Attitude monitor LMP
+#define AID_VC_ROT_P2_01		        3219    // Temp/press mon
+#define AID_VC_ROT_P2_02		        3220    // Glycol pump
+#define AID_VC_ROT_P2_03		        3221    // Suit fan
+#define AID_VC_ROT_P2_04		        3222    // O2/H2O qty mon
+#define AID_VC_LM_CWS_RIGHT             3223
+#define AID_VC_XPOINTERLMP              3224
+#define AID_VC_FDAI_RIGHT               3225
+#define AID_VC_RCS_ASC_FEED_TALKBACKS   3226
+#define AID_VC_LGC_CMD_ENABLE_14_TALKBACKS   3227
+#define AID_VC_LGC_CMD_ENABLE_23_TALKBACKS   3228
+#define AID_VC_RCS_XFEED_TALKBACK       3229
+#define AID_VC_MAIN_SOV_TALKBACKS       3230
+#define AID_VC_PANEL2_COMPLIGHTS        3231
+#define AID_VC_PWRFAIL_LIGHTS_P2        3232
+#define AID_VC_LEM_MA_RIGHT             3233
+#define AID_VC_PANEL2_NEEDLES           3234
 
 // VC Active Areas (Panel 3)
 #define AID_VC_PANEL_3			((id >= 3300) && (id <= 3346))
-#define AID_VC_SWITCH_P3_01		3301	// Engine gimbal switch
-#define AID_VC_SWITCH_P3_02		3302	// Command overide switch
-#define AID_VC_SWITCH_P3_03		3303	// LR antenna switch
-#define AID_VC_SWITCH_P3_04		3304	// Radar test switch
-#define AID_VC_SWITCH_P3_05		3305	// Slew rate switch
-#define AID_VC_SWITCH_P3_06		3306	// Deadband switch
-#define AID_VC_SWITCH_P3_07		3307	// Gyro test RPY switch
-#define AID_VC_SWITCH_P3_08		3308	// Gyro test rate switch
-#define AID_VC_SWITCH_P3_09		3309	// Att control roll switch
-#define AID_VC_SWITCH_P3_10		3310	// Att control pitch switch
-#define AID_VC_SWITCH_P3_11		3311	// Att control yaw switch
-#define AID_VC_SWITCH_P3_12		3312	// Mode control PGNS switch
-#define AID_VC_SWITCH_P3_13		3313	// Mode control AGS switch
-#define AID_VC_SWITCH_P3_14		3314	// IMU cage switch
-#define AID_VC_SWITCH_P3_15		3315	// Event timer reset switch
-#define AID_VC_SWITCH_P3_16		3316	// Event timer control switch
-#define AID_VC_SWITCH_P3_17		3317	// Event timer slew min switch
-#define AID_VC_SWITCH_P3_18		3318	// Event timer slew sec switch
-#define AID_VC_SWITCH_P3_19		3319	// Quad 1 heater switch
-#define AID_VC_SWITCH_P3_20		3320	// Quad 4 heater switch
-#define AID_VC_SWITCH_P3_21		3321	// Quad 2 heater switch
-#define AID_VC_SWITCH_P3_22		3322	// Quad 3 heater switch
-#define AID_VC_SWITCH_P3_23		3323	// Side panels light switch
-#define AID_VC_SWITCH_P3_24		3324	// Flood light switch
-#define AID_VC_SWITCH_P3_25		3325	// LMP x-pointer scale switch
-#define AID_VC_SWITCH_P3_26		3326	// Exterior lighting switch
+#define AID_VC_SWITCH_P3_01		3301	// Engine gimbal
+#define AID_VC_SWITCH_P3_02		3302	// Des eng command overide
+#define AID_VC_SWITCH_P3_03		3303	// LR antenna
+#define AID_VC_SWITCH_P3_04		3304	// Radar test
+#define AID_VC_SWITCH_P3_05		3305	// Slew rate
+#define AID_VC_SWITCH_P3_06		3306	// Deadband
+#define AID_VC_SWITCH_P3_07		3307	// Gyro test RPY
+#define AID_VC_SWITCH_P3_08		3308	// Gyro test rate
+#define AID_VC_SWITCH_P3_09		3309	// Att control roll
+#define AID_VC_SWITCH_P3_10		3310	// Att control pitch
+#define AID_VC_SWITCH_P3_11		3311	// Att control yaw
+#define AID_VC_SWITCH_P3_12		3312	// Mode control PGNS
+#define AID_VC_SWITCH_P3_13		3313	// Mode control AGS
+#define AID_VC_SWITCH_P3_14		3314	// IMU cage
+#define AID_VC_SWITCH_P3_15		3315	// Event timer reset
+#define AID_VC_SWITCH_P3_16		3316	// Event timer control
+#define AID_VC_SWITCH_P3_17		3317	// Event timer slew min
+#define AID_VC_SWITCH_P3_18		3318	// Event timer slew sec
+#define AID_VC_SWITCH_P3_19		3319	// Quad 1 heater
+#define AID_VC_SWITCH_P3_20		3320	// Quad 4 heater
+#define AID_VC_SWITCH_P3_21		3321	// Quad 2 heater
+#define AID_VC_SWITCH_P3_22		3322	// Quad 3 heater
+#define AID_VC_SWITCH_P3_23		3323	// Side panels light
+#define AID_VC_SWITCH_P3_24		3324	// Flood light
+#define AID_VC_SWITCH_P3_25		3325	// X-pointer scale LMP
+#define AID_VC_SWITCH_P3_26		3326	// Exterior lighting
 
-#define AID_VC_ROT_P3_01		3332    // Test monitor rotary
-#define AID_VC_ROT_P3_02		3333    // Rendezvous radar rotary
-#define AID_VC_ROT_P3_03		3334	// Temp monitor rotary
-#define AID_VC_ROT_P3_04		3335    // Lamp/tone test rotary
-#define AID_VC_ROT_P3_05		3336    // Flood lights rotary
-
+#define AID_VC_ROT_P3_01		3332    // Test monitor
+#define AID_VC_ROT_P3_02		3333    // Rendezvous radar
+#define AID_VC_ROT_P3_03		3334	// Temp monitor
+#define AID_VC_ROT_P3_04		3335    // Lamp/tone test
+#define AID_VC_ROT_P3_05		3336    // Flood lights
 #define AID_VC_RDR_SIG_STR      3337    // Radar signal strength
 #define AID_VC_RR_NOTRACK       3338    // RR No track light
 #define AID_VC_CONTACTLIGHT2    3339
-
-
 
 // VC Active Areas (Panel 4)
 #define AID_VC_PANEL_4			((id >= 3400) && (id <= 3425))
@@ -947,15 +981,12 @@
 #define AID_VC_PUSHB_P4_17      3417    // Push Button 1
 #define AID_VC_PUSHB_P4_18      3418    // Push Button 1
 #define AID_VC_PUSHB_P4_19      3419    // Push Button 1
-
 #define AID_VC_SWITCH_P4_01		3420	//
 #define AID_VC_SWITCH_P4_02		3421	//
 #define AID_VC_SWITCH_P4_03		3422	//
 #define AID_VC_SWITCH_P4_04		3423	//
-
 #define AID_VC_DSKY_LIGHTS      3424
 #define AID_VC_DSKY_DISPLAY     3425
-
 
 // VC Active Areas (Panel 5)
 
