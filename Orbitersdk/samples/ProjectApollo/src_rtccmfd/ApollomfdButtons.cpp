@@ -3251,7 +3251,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("MAT", OAPI_KEY_T, &ApolloRTCCMFD::menuGOSTDisplayREFSMMAT);
 	RegisterFunction("ATT", OAPI_KEY_D, &ApolloRTCCMFD::menuGOSTEnterAttitude);
-	RegisterFunction("ANG", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ANG", OAPI_KEY_G, &ApolloRTCCMFD::menuGOSTEnterSXTData);
 	RegisterFunction("BST", OAPI_KEY_E, &ApolloRTCCMFD::menuGOSTBoresightSCTCalc);
 	RegisterFunction("SXT", OAPI_KEY_V, &ApolloRTCCMFD::menuGOSTSXTCalc);
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);

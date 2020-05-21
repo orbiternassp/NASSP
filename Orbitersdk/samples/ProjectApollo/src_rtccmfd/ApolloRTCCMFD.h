@@ -698,6 +698,7 @@ public:
 	void menuSetGuidanceOpticsSupportTablePage();
 	void menuGOSTDisplayREFSMMAT();
 	void menuGOSTEnterAttitude();
+	void menuGOSTEnterSXTData();
 	void menuGOSTBoresightSCTCalc();
 	void menuGOSTSXTCalc();
 	void menuGOSTShowStarVector();

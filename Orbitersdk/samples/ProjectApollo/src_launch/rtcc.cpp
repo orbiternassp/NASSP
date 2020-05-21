@@ -23722,7 +23722,7 @@ int RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data)
 				}
 				if (data[i * 3 + 1] != "")
 				{
-					if (sscanf(data[i * 3 + 1].c_str(), "%d", &star) == 1)
+					if (sscanf(data[i * 3 + 1].c_str(), "%o", &star) == 1)
 					{
 						EZJGSTTB.SXT_STAR[i] = star;
 					}

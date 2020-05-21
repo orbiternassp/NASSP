@@ -8137,6 +8137,42 @@ bool GOSTEnterAttitudeInput(void* id, char *str, void *data)
 	return false;
 }
 
+void ApolloRTCCMFD::menuGOSTEnterSXTData()
+{
+	bool GOSTEnterSXTDataInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter sextant data 1 or 2. Format: 1/2 Star Shaft Trunnion", GOSTEnterSXTDataInput, 0, 20, (void*)this);
+}
+
+bool GOSTEnterSXTDataInput(void* id, char *str, void *data)
+{
+	int num;
+	unsigned star;
+	double SA, TA;
+	if (sscanf(str, "%d %d %lf %lf", &num, &star, &SA, &TA) == 4)
+	{
+		std::string med;
+
+		med = "G12,CSM,";
+		if (num == 2)
+		{
+			med += ",,,";
+		}
+		med += std::to_string(star);
+		med += ",";
+		med += std::to_string(SA);
+		med += ",";
+		med += std::to_string(TA);
+		med += ";";
+
+		char Buff[64];
+		sprintf_s(Buff, 64, med.c_str());
+
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuGOSTShowStarVector()
 {
 	bool GOSTShowStarVectorInput(void* id, char *str, void *data);
