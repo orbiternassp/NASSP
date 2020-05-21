@@ -815,8 +815,16 @@ double TempMonitorInd::QueryValue()
 
 void TempMonitorInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
-{	
-	oapiBlt(drawSurface, NeedleSurface,  35, 112-((int)((v+100)*0.34)), 7, 0, 7, 7, SURF_PREDEF_CK);
+{
+	oapiBlt(drawSurface, NeedleSurface, 35, 112 - ((int)((v + 100)*0.34)), 7, 0, 7, 7, SURF_PREDEF_CK);
+}
+
+void TempMonitorInd::DoDrawSwitchVC(UINT anim)
+
+{
+	double v = ((GetDisplayValue() - minValue) * 0.97) / (maxValue - minValue);
+
+	lem->SetAnimation(anim, v);
 }
 
 // Engine Thrust Indicator

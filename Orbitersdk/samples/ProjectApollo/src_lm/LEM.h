@@ -127,6 +127,7 @@ const double P14_TILT = 25 * RAD;*/
 const VECTOR3	P1_CLICK = { 0, 0.0011, -0.0078 };
 const VECTOR3	P2_CLICK = { 0, 0.0011, -0.0078 };
 const VECTOR3	P3_CLICK = { 0, 0.0045, -0.0065 };
+const VECTOR3	P4_CLICK = { 0, 0.0056, -0.0056 };
 
 // Number of switches on each panel
 const int	P1_SWITCHCOUNT = 20;
@@ -147,6 +148,7 @@ const int   P4_PUSHBCOUNT = 19;
 // Number of indicator needles
 const int P1_NEEDLECOUNT = 6;
 const int P2_NEEDLECOUNT = 15;
+const int P3_NEEDLECOUNT = 1;
 
 // Number of rotaries
 const int	 P1_ROTCOUNT = 1;
@@ -205,6 +207,11 @@ const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
 // Panel 3 rotaries
 const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
 	{-0.34068, 0.15311, 1.51197}, {-0.19343, 0.163151, 1.52026}, {0.063658, 0.163679, 1.52046}, {0.27805, 0.151635, 1.51925}, {0.31772, 0.220734, 1.56811}
+};
+
+// Panel 4 switches
+const VECTOR3 P4_TOGGLE_POS[P4_SWITCHCOUNT] = {
+	{-0.132938, 0.070816, 1.44986}, {-0.132898, 0.015721, 1.39464}, {0.131333, 0.070756, 1.4498}, {0.131208, 0.015729, 1.39465}
 };
 
 // Panel 4 push-buttons
@@ -1717,6 +1724,8 @@ protected:
 	MGROUP_TRANSFORM *mgt_P2needles[P2_NEEDLECOUNT];
 	MGROUP_TRANSFORM *mgt_P3switch[P3_SWITCHCOUNT];
 	MGROUP_TRANSFORM *mgt_P3Rot[P3_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P3needles[P3_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P4switch[P4_SWITCHCOUNT];
 	UINT anim_P1switch[P1_SWITCHCOUNT];
 	UINT anim_P1_Rot[P1_ROTCOUNT];
 	UINT anim_P1needles[P1_NEEDLECOUNT];
@@ -1725,6 +1734,8 @@ protected:
 	UINT anim_P2needles[P2_NEEDLECOUNT];
 	UINT anim_P3switch[P3_SWITCHCOUNT];
 	UINT anim_P3_Rot[P3_ROTCOUNT];
+	UINT anim_P3needles[P3_NEEDLECOUNT];
+	UINT anim_P4switch[P4_SWITCHCOUNT];
 	UINT anim_TW_indicator;
 	UINT anim_Needle_Radar;
 	UINT anim_xpointerx_cdr;
@@ -1734,6 +1745,8 @@ protected:
 	UINT anim_abortbutton;
 	UINT anim_abortstagebutton;
 	UINT anim_abortstagecover;
+	UINT anim_rrslewsitch_x;
+	UINT anim_rrslewsitch_y;
 	UINT anim_fdaiR_cdr, anim_fdaiR_lmp;
 	UINT anim_fdaiP_cdr, anim_fdaiP_lmp;
 	UINT anim_fdaiY_cdr, anim_fdaiY_lmp;

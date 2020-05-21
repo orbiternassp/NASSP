@@ -692,10 +692,104 @@ bool FivePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+bool FivePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	int OldState = state;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (p.y > 0.5 && (p.x < 0.66 && p.x > 0.33)) {
+			// Down
+			if (state != FIVEPOSSWITCH_DOWN) {
+				SwitchTo(FIVEPOSSWITCH_DOWN, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if (p.y < 0.5 && (p.x < 0.66 && p.x > 0.33)) {
+			// Up
+			if (state != FIVEPOSSWITCH_UP) {
+				SwitchTo(FIVEPOSSWITCH_UP, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if (p.x > 0.66) {
+			// Right
+			if (state != FIVEPOSSWITCH_RIGHT) {
+				SwitchTo(FIVEPOSSWITCH_RIGHT, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if (p.x < 0.33) {
+			// Left
+			if (state != FIVEPOSSWITCH_LEFT) {
+				SwitchTo(FIVEPOSSWITCH_LEFT, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		// Otherwise
+		if (state != FIVEPOSSWITCH_CENTER) {
+			SwitchTo(FIVEPOSSWITCH_CENTER, true);
+			Sclick.play();
+		}
+	}
+	else if (IsSpringLoaded() && event == PANEL_MOUSE_LBUP && !IsHeld()) {
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(FIVEPOSSWITCH_DOWN, true);
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(FIVEPOSSWITCH_CENTER, true);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(FIVEPOSSWITCH_UP, true);
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == FIVEPOSSWITCH_UP)
+			SwitchTo(FIVEPOSSWITCH_CENTER, true);
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == FIVEPOSSWITCH_DOWN)
+			SwitchTo(FIVEPOSSWITCH_CENTER);
+	}
+	return true;
+}
+
 void FivePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 
 {
 	oapiBlt(DrawSurface, SwitchSurface, x, y, (state * width), 0, width, height, SURF_PREDEF_CK);
+}
+
+void FivePosSwitch::DrawSwitchVC(UINT animx, UINT animy)
+
+{
+	if (state == FIVEPOSSWITCH_UP) {
+		OurVessel->SetAnimation(animx, 0.5);
+		OurVessel->SetAnimation(animy, 1.0);
+	}
+	else if (state == FIVEPOSSWITCH_RIGHT) {
+		OurVessel->SetAnimation(animx, 1.0);
+		OurVessel->SetAnimation(animy, 0.5);
+	}
+	else if (state == FIVEPOSSWITCH_DOWN) {
+		OurVessel->SetAnimation(animx, 0.5);
+		OurVessel->SetAnimation(animy, 0.0);
+	}
+	else if (state == FIVEPOSSWITCH_LEFT) {
+		OurVessel->SetAnimation(animx, 0.0);
+		OurVessel->SetAnimation(animy, 0.5);
+	}
+	else {
+		OurVessel->SetAnimation(animx, 0.5);
+		OurVessel->SetAnimation(animy, 0.5);
+	}
 }
 
 bool FivePosSwitch::SwitchTo(int newState, bool dontspring)

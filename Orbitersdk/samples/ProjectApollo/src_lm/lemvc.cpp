@@ -375,6 +375,9 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	oapiVCRegisterArea(AID_VC_RDR_SIG_STR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_RR_NOTRACK, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_CONTACTLIGHT2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_RR_SLEW_SWITCH, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCRegisterArea(AID_VC_PANEL3_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_RR_SLEW_SWITCH, _V(-0.27271, 0.157539, 1.52055) + ofs, _V(-0.255647, 0.157539, 1.52055) + ofs, _V(-0.27271, 0.143561, 1.51076) + ofs, _V(-0.255647, 0.143561, 1.51076) + ofs);
 
 	// Panel 4
 	for (i = 0; i < P4_PUSHBCOUNT; i++)
@@ -383,14 +386,20 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P4_01 + i, P4_PUSHB_POS[i] + ofs, 0.008);
 	}
 
+	for (i = 0; i < P4_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P4_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P4_01 + i, P4_TOGGLE_POS[i] + P4_CLICK + ofs, 0.006);
+	}
+
 	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(309, 1520, 414, 1696), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS,  _R(165, 1525, 267, 1694), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 
 	MainPanelVC.ClearSwitches();
 
 	// Panel 1
-	MainPanelVC.AddSwitch(&EngGimbalEnableSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
-	MainPanelVC.AddSwitch(&RateErrorMonSwitch, AID_VC_SWITCH_P1_02, &anim_P1switch[1]);
+	MainPanelVC.AddSwitch(&RateErrorMonSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
+	MainPanelVC.AddSwitch(&AttitudeMonSwitch, AID_VC_SWITCH_P1_02, &anim_P1switch[1]);
 	MainPanelVC.AddSwitch(&LeftXPointerSwitch, AID_VC_SWITCH_P1_03, &anim_P1switch[2]);
 	MainPanelVC.AddSwitch(&GuidContSwitch, AID_VC_SWITCH_P1_04, &anim_P1switch[3]);
 	MainPanelVC.AddSwitch(&ModeSelSwitch, AID_VC_SWITCH_P1_05, &anim_P1switch[4]);
@@ -462,12 +471,12 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	MainPanelVC.AddSwitch(&FloodSwitch, AID_VC_SWITCH_P3_24, &anim_P3switch[23]);
 	MainPanelVC.AddSwitch(&RightXPointerSwitch, AID_VC_SWITCH_P3_25, &anim_P3switch[24]);
 	MainPanelVC.AddSwitch(&ExteriorLTGSwitch, AID_VC_SWITCH_P3_26, &anim_P3switch[25]);
-
 	MainPanelVC.AddSwitch(&TestMonitorRotary, AID_VC_ROT_P3_01, &anim_P3_Rot[0]);
 	MainPanelVC.AddSwitch(&RendezvousRadarRotary, AID_VC_ROT_P3_02, &anim_P3_Rot[1]);
 	MainPanelVC.AddSwitch(&TempMonitorRotary, AID_VC_ROT_P3_03, &anim_P3_Rot[2]);
 	MainPanelVC.AddSwitch(&LampToneTestRotary, AID_VC_ROT_P3_04, &anim_P3_Rot[3]);
 	MainPanelVC.AddSwitch(&FloodRotary, AID_VC_ROT_P3_05, &anim_P3_Rot[4]);
+
 
 	//Panel 4
 	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P4_01, NULL);
@@ -489,6 +498,10 @@ void LEM::RegisterActiveAreas(VECTOR3 ofs)
 	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P4_17, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P4_18, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P4_19, NULL);
+	MainPanelVC.AddSwitch(&LeftACA4JetSwitch, AID_VC_SWITCH_P4_01, &anim_P4switch[0]);
+	MainPanelVC.AddSwitch(&LeftTTCATranslSwitch, AID_VC_SWITCH_P4_02, &anim_P4switch[1]);
+	MainPanelVC.AddSwitch(&RightACA4JetSwitch, AID_VC_SWITCH_P4_03, &anim_P4switch[2]);
+	MainPanelVC.AddSwitch(&RightTTCATranslSwitch, AID_VC_SWITCH_P4_04, &anim_P4switch[3]);
 
 	//
 	// Initialize surfaces and switches
@@ -509,6 +522,10 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 
 		case AID_VC_ABORTSTAGE_BUTTON:
 			AbortStageSwitch.CheckMouseClickVC(event);
+			return true;
+
+		case AID_VC_RR_SLEW_SWITCH:
+			RadarSlewSwitch.CheckMouseClickVC(event, p);
 			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
@@ -964,6 +981,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_VC_ABORTSTAGE_BUTTON:
 		AbortStageSwitch.DrawSwitchVC(anim_abortstagebutton, anim_abortstagecover);
 		return true;
+
+	case AID_VC_PANEL3_NEEDLES:
+		TempMonitorInd.DoDrawSwitchVC(anim_P3needles[0]);
+		return true;
+
+	case AID_VC_RR_SLEW_SWITCH:
+		RadarSlewSwitch.DrawSwitchVC(anim_rrslewsitch_x, anim_rrslewsitch_y);
+		return true;
 	}
 
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
@@ -988,6 +1013,10 @@ void LEM::DeleteVCAnimations()
 	for (i = 0; i < P3_SWITCHCOUNT; i++) delete mgt_P3switch[i];
 
 	for (i = 0; i < P3_ROTCOUNT; i++) delete mgt_P3Rot[i];
+
+	for (i = 0; i < P3_NEEDLECOUNT; i++) delete mgt_P3needles[i];
+
+	for (i = 0; i < P4_SWITCHCOUNT; i++) delete mgt_P4switch[i];
 }
 
 void LEM::InitVCAnimations()
@@ -1042,7 +1071,7 @@ void LEM::InitVCAnimations()
 
 	for (int i = 0; i < P2_NEEDLECOUNT; i++)
 	{
-		const VECTOR3 xvector = { 0.00, 0.0625*cos(P1_TILT), 0.0625*sin(P1_TILT) };
+		const VECTOR3 xvector = { 0.00, 0.0625*cos(P2_TILT), 0.0625*sin(P2_TILT) };
 		meshgroup_P2needles[i] = VC_GRP_Needle_P2_01 + i;
 		mgt_P2needles[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P2needles[i], 1, xvector);
 		anim_P2needles[i] = CreateAnimation(0.0);
@@ -1050,7 +1079,7 @@ void LEM::InitVCAnimations()
 	}
 
 	// Panel 3 switches/rotaries/needles
-	static UINT meshgroup_P3switches[P3_SWITCHCOUNT], meshgroup_P3Rots[P3_ROTCOUNT];
+	static UINT meshgroup_P3switches[P3_SWITCHCOUNT], meshgroup_P3Rots[P3_ROTCOUNT], meshgroup_P3needles[P3_NEEDLECOUNT];
 	for (int i = 0; i < P3_SWITCHCOUNT; i++)
 	{
 		meshgroup_P3switches[i] = VC_GRP_Sw_P3_01 + i;
@@ -1067,6 +1096,25 @@ void LEM::InitVCAnimations()
 		AddAnimationComponent(anim_P3_Rot[i], 0.0f, 1.0f, mgt_P3Rot[i]);
 	}
 
+	for (int i = 0; i < P3_NEEDLECOUNT; i++)
+	{
+		const VECTOR3 xvector = { 0.00, 0.0625*cos(P3_TILT), 0.0625*sin(P3_TILT) };
+		meshgroup_P3needles[i] = VC_GRP_Needle_P3_01 + i;
+		mgt_P3needles[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P3needles[i], 1, xvector);
+		anim_P3needles[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P3needles[i], 0.0f, 1.0f, mgt_P3needles[i]);
+	}
+
+	// Panel 4 switches
+	static UINT meshgroup_P4switches[P4_SWITCHCOUNT];
+	for (int i = 0; i < P4_SWITCHCOUNT; i++)
+	{
+		meshgroup_P4switches[i] = VC_GRP_Sw_P4_01 + i;
+		mgt_P4switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P4switches[i], 1, P4_TOGGLE_POS[i], _V(1, 0, 0), (float)PI / 4);
+		anim_P4switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P4switch[i], 0.0f, 1.0f, mgt_P4switch[i]);
+	}
+
 	// Thrust-weight indicator
 	const VECTOR3 tw_xvector = { 0.00, 0.0925*cos(P1_TILT), 0.0925*sin(P1_TILT) };
 	static UINT meshgroup_TW_indicator = VC_GRP_Needle_P1_07;
@@ -1076,7 +1124,7 @@ void LEM::InitVCAnimations()
 
 	// Radar strength meter
 	static UINT meshgroup_Needle_Radar = VC_GRP_Needle_Radar;
-	static MGROUP_ROTATE mgt_Needle_Radar(mesh, &meshgroup_Needle_Radar, 1, _V(-0.264142, 0.235721, 1.57832), P3_ROT_AXIS, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_Needle_Radar(mesh, &meshgroup_Needle_Radar, 1, _V(-0.264141, 0.235696, 1.57835), P3_ROT_AXIS, (float)(RAD * 360));
 	anim_Needle_Radar = CreateAnimation(0.5);
 	AddAnimationComponent(anim_Needle_Radar, 0.0f, 1.0f, &mgt_Needle_Radar);
 
@@ -1116,6 +1164,16 @@ void LEM::InitVCAnimations()
 	static MGROUP_ROTATE mgt_Abortstage_Cover(mesh, &meshgroup_Abortstage_Cover, 1, _V(-0.045187, 0.468451, 1.63831), _V(1, 0, 0), (float)(RAD * 100));
 	anim_abortstagecover = CreateAnimation(0.0);
 	AddAnimationComponent(anim_abortstagecover, 0.0f, 1.0f, &mgt_Abortstage_Cover);
+
+	// RR slew switch
+	const VECTOR3 rrslewaxis_x = { -0.00, -sin(P3_TILT + (90.0 * RAD)), cos(P3_TILT + (90.0 * RAD)) };
+	static UINT meshgroup_RRslew_switch = VC_GRP_RR_slew_switch;
+	static MGROUP_ROTATE mgt_RRslew_SwitchX(mesh, &meshgroup_RRslew_switch, 1, _V(-0.264179, 0.149389, 1.51749), rrslewaxis_x, (float)PI / 4);
+	static MGROUP_ROTATE mgt_RRslew_SwitchY(mesh, &meshgroup_RRslew_switch, 1, _V(-0.264179, 0.149389, 1.51749), _V(1, 0, 0), (float)PI / 4);
+	anim_rrslewsitch_x = CreateAnimation(0.5);
+	anim_rrslewsitch_y = CreateAnimation(0.5);
+	AddAnimationComponent(anim_rrslewsitch_x, 0.0f, 1.0f, &mgt_RRslew_SwitchX);
+	AddAnimationComponent(anim_rrslewsitch_y, 0.0f, 1.0f, &mgt_RRslew_SwitchY);
 
 	InitFDAI(mesh);
 }

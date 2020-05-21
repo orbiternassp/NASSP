@@ -335,6 +335,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;

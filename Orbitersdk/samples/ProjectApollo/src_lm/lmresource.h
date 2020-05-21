@@ -925,7 +925,7 @@
 #define AID_VC_PANEL2_NEEDLES           3234
 
 // VC Active Areas (Panel 3)
-#define AID_VC_PANEL_3			((id >= 3300) && (id <= 3346))
+#define AID_VC_PANEL_3			((id >= 3300) && (id <= 3336))
 #define AID_VC_SWITCH_P3_01		3301	// Engine gimbal
 #define AID_VC_SWITCH_P3_02		3302	// Des eng command overide
 #define AID_VC_SWITCH_P3_03		3303	// LR antenna
@@ -952,41 +952,42 @@
 #define AID_VC_SWITCH_P3_24		3324	// Flood light
 #define AID_VC_SWITCH_P3_25		3325	// X-pointer scale LMP
 #define AID_VC_SWITCH_P3_26		3326	// Exterior lighting
-
-#define AID_VC_ROT_P3_01		3332    // Test monitor
-#define AID_VC_ROT_P3_02		3333    // Rendezvous radar
-#define AID_VC_ROT_P3_03		3334	// Temp monitor
-#define AID_VC_ROT_P3_04		3335    // Lamp/tone test
-#define AID_VC_ROT_P3_05		3336    // Flood lights
-#define AID_VC_RDR_SIG_STR      3337    // Radar signal strength
-#define AID_VC_RR_NOTRACK       3338    // RR No track light
-#define AID_VC_CONTACTLIGHT2    3339
+#define AID_VC_ROT_P3_01		3327    // Test monitor
+#define AID_VC_ROT_P3_02		3328    // Rendezvous radar
+#define AID_VC_ROT_P3_03		3329	// Temp monitor
+#define AID_VC_ROT_P3_04		3330    // Lamp/tone test
+#define AID_VC_ROT_P3_05		3331    // Flood lights
+#define AID_VC_RDR_SIG_STR      3332
+#define AID_VC_RR_NOTRACK       3333
+#define AID_VC_CONTACTLIGHT2    3334
+#define AID_VC_RR_SLEW_SWITCH   3335
+#define AID_VC_PANEL3_NEEDLES   3336
 
 // VC Active Areas (Panel 4)
 #define AID_VC_PANEL_4			((id >= 3400) && (id <= 3425))
-#define AID_VC_PUSHB_P4_01      3401    // Push Button 1
-#define AID_VC_PUSHB_P4_02      3402    // Push Button 1
-#define AID_VC_PUSHB_P4_03      3403    // Push Button 1
-#define AID_VC_PUSHB_P4_04      3404    // Push Button 1
-#define AID_VC_PUSHB_P4_05      3405    // Push Button 1
-#define AID_VC_PUSHB_P4_06      3406    // Push Button 1
-#define AID_VC_PUSHB_P4_07      3407    // Push Button 1
-#define AID_VC_PUSHB_P4_08      3408    // Push Button 1
-#define AID_VC_PUSHB_P4_09      3409    // Push Button 1
-#define AID_VC_PUSHB_P4_10      3410    // Push Button 1
-#define AID_VC_PUSHB_P4_11      3411    // Push Button 1
-#define AID_VC_PUSHB_P4_12      3412    // Push Button 1
-#define AID_VC_PUSHB_P4_13      3413    // Push Button 1
-#define AID_VC_PUSHB_P4_14      3414    // Push Button 1
-#define AID_VC_PUSHB_P4_15      3415    // Push Button 1
-#define AID_VC_PUSHB_P4_16      3416    // Push Button 1
-#define AID_VC_PUSHB_P4_17      3417    // Push Button 1
-#define AID_VC_PUSHB_P4_18      3418    // Push Button 1
-#define AID_VC_PUSHB_P4_19      3419    // Push Button 1
-#define AID_VC_SWITCH_P4_01		3420	//
-#define AID_VC_SWITCH_P4_02		3421	//
-#define AID_VC_SWITCH_P4_03		3422	//
-#define AID_VC_SWITCH_P4_04		3423	//
+#define AID_VC_PUSHB_P4_01      3401    // DSKY key Verb
+#define AID_VC_PUSHB_P4_02      3402    // DSKY key Noun
+#define AID_VC_PUSHB_P4_03      3403    // DSKY key +
+#define AID_VC_PUSHB_P4_04      3404    // DSKY key -
+#define AID_VC_PUSHB_P4_05      3405    // DSKY key 0
+#define AID_VC_PUSHB_P4_06      3406    // DSKY key 1
+#define AID_VC_PUSHB_P4_07      3407    // DSKY key 2
+#define AID_VC_PUSHB_P4_08      3408    // DSKY key 3
+#define AID_VC_PUSHB_P4_09      3409    // DSKY key 4
+#define AID_VC_PUSHB_P4_10      3410    // DSKY key 5
+#define AID_VC_PUSHB_P4_11      3411    // DSKY key 6
+#define AID_VC_PUSHB_P4_12      3412    // DSKY key 7
+#define AID_VC_PUSHB_P4_13      3413    // DSKY key 8
+#define AID_VC_PUSHB_P4_14      3414    // DSKY key 9
+#define AID_VC_PUSHB_P4_15      3415    // DSKY key Clear
+#define AID_VC_PUSHB_P4_16      3416    // DSKY key Pro
+#define AID_VC_PUSHB_P4_17      3417    // DSKY key k. rel
+#define AID_VC_PUSHB_P4_18      3418    // DSKY key Enter
+#define AID_VC_PUSHB_P4_19      3419    // DSKY key Reset
+#define AID_VC_SWITCH_P4_01		3420	// ACA/4 jet CDR
+#define AID_VC_SWITCH_P4_02		3421	// TTCA/TRANSL CDR
+#define AID_VC_SWITCH_P4_03		3422	// ACA/4 jet LMP
+#define AID_VC_SWITCH_P4_04		3423	// TTCA/TRANSL LMP
 #define AID_VC_DSKY_LIGHTS      3424
 #define AID_VC_DSKY_DISPLAY     3425
 

@@ -439,7 +439,9 @@ class FivePosSwitch: public ToggleSwitch {
 
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(UINT animx, UINT animy);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 	bool IsDown() { return (GetState() == FIVEPOSSWITCH_DOWN); };
