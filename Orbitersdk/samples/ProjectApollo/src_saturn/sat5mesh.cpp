@@ -1521,7 +1521,10 @@ void SaturnV::SeparateStage (int new_stage)
 		habort = oapiCreateVessel(VName, "ProjectApollo/Saturn5Abort3", vs1);
 
 		Sat5Abort3 *stage3 = static_cast<Sat5Abort3 *> (oapiGetVesselInterface(habort));
-		stage3->SetState(LowRes);
+		SMJCState sta, stb;
+		secs.SMJCA->GetState(sta);
+		secs.SMJCB->GetState(stb);
+		stage3->SetState(LowRes, VehicleNo, MainBusAController.IsSMBusPowered(), MainBusBController.IsSMBusPowered(), &sta, &stb);
 		
 		SetReentryStage();
 		ShiftCentreOfMass(_V(0, 0, 13.15 + 2.0499));
