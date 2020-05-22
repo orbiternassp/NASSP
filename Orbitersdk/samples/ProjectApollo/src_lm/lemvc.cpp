@@ -323,9 +323,9 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_THRUST_WEIGHT_IND, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	oapiVCRegisterArea(AID_VC_ABORT_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORT_BUTTON, _V(-0.10018, 0.436067, 1.63518) + ofs, 0.008);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORT_BUTTON, _V(-0.10018, 0.436067, 1.63518) + ofs, 0.01);
 	oapiVCRegisterArea(AID_VC_ABORTSTAGE_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORTSTAGE_BUTTON, _V(-0.047192, 0.437682, 1.63536) + ofs, 0.008);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORTSTAGE_BUTTON, _V(-0.047192, 0.437682, 1.63536) + ofs, 0.01);
 
 	// Panel 2
 	for (i = 0; i < P2_SWITCHCOUNT; i++)
@@ -1407,6 +1407,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 void LEM::AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY) {
 
 	double fdai_proc[3];
+	double rate_proc[3];
 
 	// Drive FDAI ball
 	fdai_proc[0] = -attitude.x / PI2; // 1.0 - attitude.x / PI2;
@@ -1425,8 +1426,17 @@ void LEM::AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT anim
 	SetAnimation(errorY, (errors.z + 46) / 92);
 
 	// Drive rate needles
-	SetAnimation(rateR, (rates.z + 1) / 2);
-	SetAnimation(rateP, (rates.x + 1) / 2);
-	SetAnimation(rateY, (-rates.y + 1) / 2);
+	rate_proc[0] = (rates.z + 1) / 2;
+	rate_proc[1] = (rates.x + 1) / 2;
+	rate_proc[2] = (-rates.y + 1) / 2;
+	if (rate_proc[0] < 0) rate_proc[0] = 0;
+	if (rate_proc[1] < 0) rate_proc[1] = 0;
+	if (rate_proc[2] < 0) rate_proc[2] = 0;
+	if (rate_proc[0] > 1) rate_proc[0] = 1;
+	if (rate_proc[1] > 1) rate_proc[1] = 1;
+	if (rate_proc[2] > 1) rate_proc[1] = 1;
+	SetAnimation(rateR, rate_proc[0]);
+	SetAnimation(rateP, rate_proc[1]);
+	SetAnimation(rateY, rate_proc[2]);
 }
 
