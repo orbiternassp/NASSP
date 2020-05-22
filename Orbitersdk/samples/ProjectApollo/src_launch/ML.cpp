@@ -127,6 +127,8 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	craneProc = 0;
 	cmarmProc = 0.00001;
+	s2aftarmState.Set(AnimState::CLOSED, 0.0);
+	damperarmState.Set(AnimState::CLOSED, 0.0);
 	s1cintertankarmState.Set(AnimState::CLOSED, 0.0);
 	s1cforwardarmState.Set(AnimState::CLOSED, 0.0);
 	swingarmState.Set(AnimState::CLOSED, 0.0);
@@ -204,6 +206,8 @@ void ML::clbkPostCreation()
 
 	SetAnimation(craneAnim, craneProc);
 	SetAnimation(cmarmAnim, cmarmProc);
+	SetAnimation(s2aftarmAnim, s2aftarmState.pos);
+	SetAnimation(damperarmAnim, damperarmState.pos);
 	SetAnimation(s1cintertankarmAnim, s1cintertankarmState.pos);
 	SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
 	SetAnimation(swingarmAnim, swingarmState.pos);
@@ -241,6 +245,19 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		s1cforwardarmState.Move(dp);
 		SetAnimation(s1cforwardarmAnim, s1cforwardarmState.pos);
 	}
+	if (s2aftarmState.Moving()) {
+		double dp;
+		if (s2aftarmState.Closing())
+		{
+			dp = simdt * ML_SWINGARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * ML_SWINGARM_RETRACT_SPEED;
+		}
+		s2aftarmState.Move(dp);
+		SetAnimation(s2aftarmAnim, s2aftarmState.pos);
+	}
 	if (swingarmState.Moving()) {
 		double dp;
 		if (swingarmState.Closing())
@@ -253,6 +270,19 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 		swingarmState.Move(dp);
 		SetAnimation(swingarmAnim, swingarmState.pos);
+	}
+	if (damperarmState.Moving()) {
+		double dp;
+		if (damperarmState.Closing())
+		{
+			dp = simdt * DAMPERARM_CONNECTING_SPEED;
+		}
+		else
+		{
+			dp = simdt * DAMPERARM_RETRACT_SPEED;
+		}
+		damperarmState.Move(dp);
+		SetAnimation(damperarmAnim, damperarmState.pos);
 	}
 	if (mastState.Moving()) {
 		double dp;
@@ -296,6 +326,8 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			cmarmProc = min(0.09, cmarmProc + simdt / 1000.0);
 			SetAnimation(cmarmAnim, cmarmProc);
 		}
+		if (damperarmState.action != AnimState::OPEN) damperarmState.action = AnimState::OPENING;
+		if (s2aftarmState.action != AnimState::OPEN) s2aftarmState.action = AnimState::OPENING;
 		if (swingarmState.action != AnimState::OPEN) swingarmState.action = AnimState::OPENING;
 		if (s1cintertankarmState.action != AnimState::OPEN) s1cintertankarmState.action = AnimState::OPENING;
 		if (s1cforwardarmState.action != AnimState::OPEN) s1cforwardarmState.action = AnimState::OPENING;
@@ -315,6 +347,8 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 			SetAnimation(cmarmAnim, cmarmProc);
 		}
 
+		if (damperarmState.action != AnimState::CLOSED) damperarmState.action = AnimState::CLOSING;
+		if (s2aftarmState.action != AnimState::CLOSED) s2aftarmState.action = AnimState::CLOSING;
 		if (swingarmState.action != AnimState::CLOSED) swingarmState.action = AnimState::CLOSING;
 		if (s1cintertankarmState.action != AnimState::CLOSED) s1cintertankarmState.action = AnimState::CLOSING;
 		if (s1cforwardarmState.action != AnimState::CLOSED) s1cforwardarmState.action = AnimState::CLOSING;
@@ -365,6 +399,13 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (craneProc < 1) {
 			craneProc = min(1.0, craneProc + simdt / 60.0);
 			SetAnimation(craneAnim, craneProc);
+
+			// Move S2 AFT forward arm
+			s2aftarmState.action = AnimState::OPENING;
+
+			// Move Damper arm
+			damperarmState.action = AnimState::OPENING;
+
 		}
 
 		// T-43min or later?
@@ -836,12 +877,21 @@ void ML::DefineAnimations() {
 
 	// Hammerhead crane
 	static UINT crane_groups[3] = { 21, 22, 50 };
-	static UINT damper_arm[1] = { 30 };
 	static MGROUP_ROTATE crane(meshindexML, crane_groups, 3, _V(0.0874, 57.8447, 14.0843), _V(0, 1, 0), (float)(0.5 * PI));
-	static MGROUP_ROTATE damperarm(meshindexML, damper_arm, 1, _V(0.2221, 42.1020, 6.8092), _V(1, 0, 0), (float)(90.0 / 180.0 * PI));
 	craneAnim = CreateAnimation(0.0);
 	AddAnimationComponent(craneAnim, 0, 1, &crane);
-	AddAnimationComponent(craneAnim, 0, 1, &damperarm);
+
+	// Damperarm
+	static UINT damper_arm[1] = { 30 };
+	static MGROUP_ROTATE damperarm(meshindexML, damper_arm, 1, _V(0.2221, 42.1020, 6.8092), _V(1, 0, 0), (float)(90.0 / 180.0 * PI));
+	damperarmAnim = CreateAnimation(0.0);
+	AddAnimationComponent(damperarmAnim, 0, 1, &damperarm);
+
+	// S2 Aft arm
+	static UINT s2aftarm_groups[2] = { 15, 53 };
+	static MGROUP_ROTATE s2aftarm(meshindexML, s2aftarm_groups, 2, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
+	s2aftarmAnim = CreateAnimation(0.0);
+	AddAnimationComponent(s2aftarmAnim, 0, 1, &s2aftarm);
 
 	// CM access arm
 	static UINT cmarm_groups[3] = { 11, 12, 51 };
@@ -864,8 +914,8 @@ void ML::DefineAnimations() {
 	AddAnimationComponent(s1cforwardarmAnim, 0, 1, &s1cforwardarm);
 
 	// Swingarms
-	static UINT swingarm_groups[12] = { 15, 16, 17, 18, 19, 20, 53, 54, 55, 56, 57, 58 };
-	static MGROUP_ROTATE swingarm(meshindexML, swingarm_groups, 12, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
+	static UINT swingarm_groups[10] = {16, 17, 18, 19, 20, 54, 55, 56, 57, 58 };
+	static MGROUP_ROTATE swingarm(meshindexML, swingarm_groups, 10, _V(5.5716, -16.5039, 6.1556), _V(0, 1, 0), (float)(71.0 / 180.0 * PI));
 	swingarmAnim = CreateAnimation(0.0);
 	AddAnimationComponent(swingarmAnim, 0, 1, &swingarm);
 
@@ -911,6 +961,10 @@ void ML::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 			sscanf (line + 9, "%lf", &craneProc);
 		} else if (!strnicmp (line, "CMARMPROC", 9)) {
 			sscanf (line + 9, "%lf", &cmarmProc);
+		} else if (!strnicmp(line, "S2AFTARMPROC", 12)) {
+			sscan_state(line + 12, s2aftarmState);
+		} else if (!strnicmp(line, "DAMPERARMPROC", 13)) {
+			sscan_state(line + 13, damperarmState);
 		} else if (!strnicmp (line, "S1CINTERTANKARMPROC", 19)) {
 			sscan_state(line + 19, s1cintertankarmState);
 		} else if (!strnicmp (line, "S1CFORWARDARMPROC", 17)) {
@@ -940,6 +994,8 @@ void ML::clbkSaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "TOUCHDOWNPOINTHEIGHT", touchdownPointHeight);
 	papiWriteScenario_double(scn, "CRANEPROC", craneProc);
 	papiWriteScenario_double(scn, "CMARMPROC", cmarmProc);
+	WriteScenario_state(scn, "S2AFTARMPROC", s2aftarmState);
+	WriteScenario_state(scn, "DAMPERARMPROC", damperarmState);
 	WriteScenario_state(scn, "S1CINTERTANKARMPROC", s1cintertankarmState);
 	WriteScenario_state(scn, "S1CFORWARDARMPROC", s1cforwardarmState);
 	WriteScenario_state(scn, "SWINGARMPROC", swingarmState);
