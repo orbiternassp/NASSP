@@ -292,6 +292,8 @@ SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 	f1engines[2] = &f1engine3;
 	f1engines[3] = &f1engine4;
 	f1engines[4] = &f1engine5;
+
+	TSMUmb = NULL;
 }
 
 SICSystems::~SICSystems()

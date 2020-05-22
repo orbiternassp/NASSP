@@ -536,14 +536,11 @@ void LVDC1B::Init(){
 	
 void LVDC1B::SwitchSelectorProcessing(std::vector<SwitchSelectorSet> table)
 {
-	if (CommandSequence < (int)table.size())
+	while (CommandSequence < (int)table.size() && LVDC_TB_ETime > table[CommandSequence].time)
 	{
-		if (LVDC_TB_ETime > table[CommandSequence].time)
-		{
-			lvda.SwitchSelector(table[CommandSequence].stage, table[CommandSequence].channel);
-			fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, table[CommandSequence].stage, table[CommandSequence].channel);
-			CommandSequence++;
-		}
+		lvda.SwitchSelector(table[CommandSequence].stage, table[CommandSequence].channel);
+		fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, table[CommandSequence].stage, table[CommandSequence].channel);
+		CommandSequence++;
 	}
 }
 
@@ -4538,14 +4535,11 @@ void LVDCSV::ReadFlightSequenceProgram(char *fspfile)
 
 void LVDCSV::SwitchSelectorProcessing(std::vector<SwitchSelectorSet> table)
 {
-	if (CommandSequence < (int)table.size())
+	while (CommandSequence < (int)table.size() && LVDC_TB_ETime > table[CommandSequence].time)
 	{
-		if (LVDC_TB_ETime > table[CommandSequence].time)
-		{
-			lvda.SwitchSelector(table[CommandSequence].stage, table[CommandSequence].channel);
-			fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, table[CommandSequence].stage, table[CommandSequence].channel);
-			CommandSequence++;
-		}
+		lvda.SwitchSelector(table[CommandSequence].stage, table[CommandSequence].channel);
+		fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, table[CommandSequence].stage, table[CommandSequence].channel);
+		CommandSequence++;
 	}
 }
 
