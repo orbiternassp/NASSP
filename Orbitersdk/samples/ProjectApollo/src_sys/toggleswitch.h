@@ -210,6 +210,9 @@ public:
 	virtual void Guard() {};
 
 	virtual	void SetHeld(bool s) {};
+
+	virtual void RedrawVC(UINT anim) {}
+	virtual bool ProcessMouseVC(int event, VECTOR3 &p) { return false; }
 	
 protected:
 	///
@@ -292,6 +295,9 @@ public:
 	void SetActive(bool s);
 	void SetSideways(int s) { Sideways = s; }
 	void SetDelayTime(double t) { delayTime = t; };
+
+	void RedrawVC(UINT anim);
+	bool ProcessMouseVC(int event, VECTOR3 &p);
 
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
@@ -419,6 +425,8 @@ public:
 	bool IsDown() { return (GetState() == THREEPOSSWITCH_DOWN); };
 	bool IsCenter() { return (GetState() == THREEPOSSWITCH_CENTER); };
 	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
+
+	bool ProcessMouseVC(int event, VECTOR3 &p);
 };
 
 ///
@@ -431,7 +439,9 @@ class FivePosSwitch: public ToggleSwitch {
 
 public:
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(UINT animx, UINT animy);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 
 	bool IsDown() { return (GetState() == FIVEPOSSWITCH_DOWN); };
@@ -674,6 +684,7 @@ class PushSwitch: public ToggleSwitch {
 public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool ProcessMouseVC(int event, VECTOR3 &p);
 
 protected:
 	virtual void InitSound(SoundLib *s);
@@ -1086,6 +1097,9 @@ public:
 	void SoundEnabled(bool on) { soundEnabled = on; };
 	void SetWraparound(bool w) { Wraparound = w; };
 
+	void RedrawVC(UINT anim);
+	bool ProcessMouseVC(int event, VECTOR3 &p);
+
 protected:
 	int	x;
 	int y;
@@ -1099,6 +1113,7 @@ protected:
 	SURFHANDLE switchSurface;
 	SURFHANDLE switchBorder;
 
+	VESSEL *OurVessel;
 	Sound sclick;
 	bool soundEnabled;
 	RotationalSwitchBitmap bitmaps[RotationalSwitchBitmapCount];
@@ -1150,6 +1165,7 @@ public:
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, bool failopen = false);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void DrawSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc);
 	bool CheckMouseClick(int event, int mx, int my);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
@@ -1352,6 +1368,20 @@ public:
 	virtual void PanelSwitchToggled(ToggleSwitch *s) = 0;
 	virtual void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) = 0;
 	virtual void PanelRotationalSwitchChanged(RotationalSwitch *s) = 0;
+};
+
+class PanelSwitchesVC
+{
+public:
+	PanelSwitchesVC() {}
+	bool VCMouseEvent(int id, int event, VECTOR3 &p);
+	bool VCRedrawEvent(int id, int event, SURFHANDLE surf);
+	void AddSwitch(PanelSwitchItem *s, int area, UINT * anim);
+	void ClearSwitches();
+protected:
+	std::vector<PanelSwitchItem*>SwitchList;
+	std::vector<int> SwitchArea;
+	std::vector<UINT *> SwitchAnim;
 };
 
 class PanelSwitches {

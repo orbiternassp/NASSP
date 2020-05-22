@@ -1196,6 +1196,16 @@ void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
 	oapiReleaseDC(surf, hDC);
 }
 
+void LEM::RedrawPanel_XPointerVC(CrossPointer *cp, UINT animx, UINT animy) {
+
+	double vx, vy;
+
+	cp->GetVelocities(vx, vy);
+
+	SetAnimation(animx, (vx / 40) + 0.5);
+	SetAnimation(animy, (vy / 40) + 0.5);
+}
+
 void LEM::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
 
 	HDC hDC = oapiGetDC (surf);
@@ -1225,11 +1235,19 @@ void LEM::clbkMFDMode (int mfd, int mode) {
 }
 
 void LEM::ReleaseSurfaces ()
-
 {
 	for (int i = 0; i < nsurf; i++)
 		if (srf[i]) {
 			oapiDestroySurface (srf[i]);
+			srf[i] = 0;
+		}
+}
+
+void LEM::ReleaseSurfacesVC()
+{
+	for (int i = 0; i < nsurfvc; i++)
+		if (srf[i]) {
+			oapiDestroySurface(srf[i]);
 			srf[i] = 0;
 		}
 }
@@ -1486,6 +1504,32 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey (srf[SRF_BORDER_286x197], g_Param.col[4]);
 
     SetSwitches(panel);
+}
+
+void LEM::InitPanelVC() {
+
+	// LM VC surfaces
+
+	srf[SRF_VC_DIGITALDISP] = oapiLoadTexture("ProjectApollo/VC/digitaldisp.dds");
+	srf[SRF_VC_DIGITALDISP2] = oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
+	srf[SRF_VC_DSKYDISP] = oapiLoadTexture("ProjectApollo/VC/dsky_disp.dds");
+	srf[SRF_VC_DSKY_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/dsky_lights.dds");
+	srf[SRF_VC_RADAR_TAPEA] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_a.dds");
+	srf[SRF_VC_RADAR_TAPEB] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_b.dds");
+	srf[SRF_VC_RADAR_TAPE2] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales2.dds");
+	srf[SFR_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/lem_cw_lights.dds");
+	srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
+	srf[SRF_INDICATORREDVC] = oapiLoadTexture("ProjectApollo/VC/IndicatorRed.dds");
+	srf[SRF_LEM_MASTERALARMVC] = oapiLoadTexture("ProjectApollo/VC/lem_master_alarm.dds");
+
+	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DSKYDISP], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DSKY_LIGHTS], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEA], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEB], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPE2], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SFR_VC_CW_LIGHTS], g_Param.col[4]);
 }
 
 bool LEM::clbkLoadPanel (int id) {
@@ -3327,10 +3371,6 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		} else {
 			oapiBlt(surf, srf[SRF_LEM_COAS2], 0, 0, 0, 540, 540, 540, SURF_PREDEF_CK);
 		}
-		return true;
-
-	case AID_XPOINTER:
-		RedrawPanel_XPointer(&crossPointerLeft, surf);
 		return true;
 
 	case AID_XPOINTERCDR:

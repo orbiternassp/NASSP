@@ -140,6 +140,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -152,6 +153,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -164,6 +166,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -176,6 +179,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -188,6 +192,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -200,6 +205,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -212,6 +218,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -224,6 +231,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -236,6 +244,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -248,6 +257,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -260,6 +270,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -272,6 +283,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -284,6 +296,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -296,6 +309,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -308,6 +322,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -320,6 +335,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -332,6 +348,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -344,6 +361,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -356,6 +374,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 	double AdjustForPower(double val);
 
 protected:
@@ -369,6 +388,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -382,6 +402,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -395,6 +416,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -408,6 +430,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -445,6 +468,7 @@ class LMAbortButton : public ToggleSwitch {
 public:
 	LMAbortButton() {};
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 protected:
 	LEM *lem;
@@ -456,7 +480,9 @@ public:
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(UINT anim, UINT animguard);
 protected:
 	LEM *lem;
 };
@@ -556,6 +582,7 @@ class LEMDPSDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };
@@ -580,6 +607,7 @@ public:
 	void Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l);
 	double QueryValue();
 	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	virtual void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };
