@@ -257,7 +257,7 @@ void LEM::SetView() {
 
 bool LEM::clbkLoadVC (int id)
 {
-	LoadVC();
+	RegisterActiveAreas();
 
 	switch (id) {
 	case 0:
@@ -273,18 +273,14 @@ bool LEM::clbkLoadVC (int id)
 		return false;
 	}
 }
-void LEM::LoadVC()
+
+void LEM::RegisterActiveAreas()
 {
+	int i = 0;
+
 	VECTOR3 ofs;
 	if (stage > 1) { ofs = _V(0.00, -0.76, 0.00); }
 	else { ofs = _V(0.00, 0.99, 0.00); }
-
-	RegisterActiveAreas(ofs);
-}
-
-void LEM::RegisterActiveAreas(VECTOR3 ofs)
-{
-	int i = 0;
 
 	//
 	// Release all surfaces
@@ -575,11 +571,11 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_RANGE_TAPE:
-		RadarTape.RenderRangeVC(surf, srf[SRF_VC_RADAR_TAPE], srf[SRF_VC_RADAR_TAPE2]);
+		RadarTape.RenderRangeVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB], srf[SRF_VC_RADAR_TAPE2]);
 		return true;
 
 	case AID_VC_RATE_TAPE:
-		RadarTape.RenderRateVC(surf, srf[SRF_VC_RADAR_TAPE]);
+		RadarTape.RenderRateVC(surf, srf[SRF_VC_RADAR_TAPEA], srf[SRF_VC_RADAR_TAPEB]);
 		return true;
 
 	case AID_VC_XPOINTERCDR:
@@ -994,6 +990,41 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
 }
 
+void LEM::InitVCAnimations() {
+
+	anim_P1switch[P1_SWITCHCOUNT] = -1;
+	anim_P1_Rot[P1_ROTCOUNT] = -1;
+	anim_P1needles[P1_NEEDLECOUNT] = -1;
+	anim_P2switch[P2_SWITCHCOUNT] = -1;
+	anim_P2_Rot[P2_ROTCOUNT] = -1;
+	anim_P2needles[P2_NEEDLECOUNT] = -1;
+	anim_P3switch[P3_SWITCHCOUNT] = -1;
+	anim_P3_Rot[P3_ROTCOUNT] = -1;
+	anim_P3needles[P3_NEEDLECOUNT] = -1;
+	anim_P4switch[P4_SWITCHCOUNT] = -1;
+	anim_TW_indicator = -1;
+	anim_Needle_Radar = -1;
+	anim_xpointerx_cdr = -1;
+	anim_xpointery_cdr = -1;
+	anim_xpointerx_lmp = -1;
+	anim_xpointery_lmp = -1;
+	anim_abortbutton = -1;
+	anim_abortstagebutton = -1;
+	anim_abortstagecover = -1;
+	anim_rrslewsitch_x = -1;
+	anim_rrslewsitch_y = -1;
+	anim_fdaiR_cdr = anim_fdaiR_lmp = -1;
+	anim_fdaiP_cdr = anim_fdaiP_lmp = -1;
+	anim_fdaiY_cdr = anim_fdaiY_lmp = -1;
+	anim_fdaiRerror_cdr = anim_fdaiRerror_lmp = -1;
+	anim_fdaiPerror_cdr = anim_fdaiPerror_lmp = -1;
+	anim_fdaiYerror_cdr = anim_fdaiYerror_lmp = -1;
+	anim_fdaiRrate_cdr = anim_fdaiRrate_lmp = -1;
+	anim_fdaiPrate_cdr = anim_fdaiPrate_lmp = -1;
+	anim_fdaiYrate_cdr = anim_fdaiYrate_lmp = -1;
+	anim_attflag_cdr = anim_attflag_lmp = -1;
+}
+
 void LEM::DeleteVCAnimations()
 {
 	int i = 0;
@@ -1019,7 +1050,7 @@ void LEM::DeleteVCAnimations()
 	for (i = 0; i < P4_SWITCHCOUNT; i++) delete mgt_P4switch[i];
 }
 
-void LEM::InitVCAnimations()
+void LEM::DefineVCAnimations()
 {
 	UINT mesh = vcidx;
 	int i = 0;

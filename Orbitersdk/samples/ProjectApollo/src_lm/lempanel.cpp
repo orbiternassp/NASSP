@@ -1247,7 +1247,7 @@ void LEM::ReleaseSurfacesVC()
 {
 	for (int i = 0; i < nsurfvc; i++)
 		if (srf[i]) {
-			oapiReleaseTexture(srf[i]);
+			oapiDestroySurface(srf[i]);
 			srf[i] = 0;
 		}
 }
@@ -1452,8 +1452,6 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey(srf[SRF_LEM_INTLK_OVRD],        g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_MASTERALARM],		g_Param.col[4]);
 
-		oapiSetSurfaceColourKey(srf[SRF_VC_DSKYDISP], g_Param.col[4]);
-
 		//
 		// Borders need to set the center color to transparent so only the outline
 		// is visible.
@@ -1516,7 +1514,8 @@ void LEM::InitPanelVC() {
 	srf[SRF_VC_DIGITALDISP2] = oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
 	srf[SRF_VC_DSKYDISP] = oapiLoadTexture("ProjectApollo/VC/dsky_disp.dds");
 	srf[SRF_VC_DSKY_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/dsky_lights.dds");
-	srf[SRF_VC_RADAR_TAPE] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales.dds");
+	srf[SRF_VC_RADAR_TAPEA] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_a.dds");
+	srf[SRF_VC_RADAR_TAPEB] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_b.dds");
 	srf[SRF_VC_RADAR_TAPE2] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales2.dds");
 	srf[SFR_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/lem_cw_lights.dds");
 	srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
@@ -1527,7 +1526,8 @@ void LEM::InitPanelVC() {
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], g_Param.col[4]);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DSKYDISP], g_Param.col[4]);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DSKY_LIGHTS], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPE], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEA], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEB], g_Param.col[4]);
 	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPE2], g_Param.col[4]);
 	oapiSetSurfaceColourKey(srf[SFR_VC_CW_LIGHTS], g_Param.col[4]);
 }

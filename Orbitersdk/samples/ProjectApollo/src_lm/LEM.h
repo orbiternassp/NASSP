@@ -277,8 +277,8 @@ public:
 	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf);
 	void RenderRate(SURFHANDLE surf);
-	void RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1, SURFHANDLE surf2);
-	void RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1);
+	void RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2);
+	void RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b);
 	void SetLGCAltitude(int val);
 	void SetLGCAltitudeRate(int val);
 
@@ -530,7 +530,8 @@ public:
 		SRF_VC_DSKY_LIGHTS,
 		SRF_VC_DIGITALDISP,
 		SRF_VC_DIGITALDISP2,
-		SRF_VC_RADAR_TAPE,
+		SRF_VC_RADAR_TAPEA,
+		SRF_VC_RADAR_TAPEB,
 		SRF_VC_RADAR_TAPE2,
 		SFR_VC_CW_LIGHTS,
 		SRF_INDICATORVC,
@@ -597,8 +598,7 @@ public:
 	void PostLoadSetup(bool define_anims = true);
 	void DefineAnimations();
 	void SetMeshes();
-	void LoadVC();
-	void RegisterActiveAreas(VECTOR3 ofs);
+	void RegisterActiveAreas();
 
 	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void PanelSwitchToggled(ToggleSwitch *s);
@@ -774,8 +774,9 @@ protected:
 	void GuardClick();
 	void AbortFire();
 	void InitSwitches();
-	void DeleteVCAnimations();
 	void InitVCAnimations();
+	void DeleteVCAnimations();
+	void DefineVCAnimations();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();

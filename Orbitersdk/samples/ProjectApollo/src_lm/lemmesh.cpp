@@ -281,7 +281,7 @@ void LEM::SetLmAscentHoverStage()
 
 {
 	ClearThrusterDefinitions();
-	ShiftCentreOfMass(_V(0.0,3.0,0.0));
+	ShiftCG(_V(0.0,1.75,0.0));
 	SetSize (5);
 	SetVisibilityLimit(1e-3, 3.8668e-4);
 	SetEmptyMass (AscentEmptyMassKg);
@@ -301,10 +301,8 @@ void LEM::SetLmAscentHoverStage()
 	ConfigTouchdownPoints(4495.0, 3, 3, -5.42, 0, 2.8, -0.5);
 
 	// Configure meshes if needed
-	VECTOR3 mesh_shift = _V(0.00, -1.75, 0.00);
 	DelMesh(dscidx);
 	dscidx = -1;
-	ShiftMeshes(mesh_shift);
 
 	if (!ph_Asc)
 	{
@@ -397,6 +395,7 @@ void LEM::SeparateStage (UINT stage)
 			dscstage->SetState(0);
 		}
 
+		ShiftCentreOfMass(_V(0.0, 1.25, 0.0));
 		SetLmAscentHoverStage();
 	}
 	
@@ -426,6 +425,7 @@ void LEM::SeparateStage (UINT stage)
 			
 			vs2.vrot.x = 5.32;
 			DefSetStateEx(&vs2);
+			ShiftCentreOfMass(_V(0.0, 1.25, 0.0));
 			SetLmAscentHoverStage();
 		}
 		else
@@ -447,13 +447,13 @@ void LEM::SeparateStage (UINT stage)
 			{
 				dscstage->SetState(11);
 			}
-			
+
+			ShiftCentreOfMass(_V(0.0, 1.25, 0.0));
 			SetLmAscentHoverStage();
 		}
 	}
 
 	CheckDescentStageSystems();
-	LoadVC();
 }
 
 void LEM::SetLmLandedMesh() {

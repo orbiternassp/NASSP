@@ -2830,20 +2830,32 @@ void LEM_RadarTape::RenderRate(SURFHANDLE surf)
     oapiBlt(surf,tape1,0,0,42, dispRate ,35,163, SURF_PREDEF_CK);
 }
 
-void LEM_RadarTape::RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1, SURFHANDLE surf2) {
+void LEM_RadarTape::RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2) {
 	if (TapeSwitch)
 	{
 		oapiBlt(surf, surf2, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
 	}
 	else
 	{
-		oapiBlt(surf, surf1, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
+		if (reqRange < 24231.6) {
+
+			oapiBlt(surf, surf1b, 0, 0, 0, dispRange - 3026, 43, 163, SURF_PREDEF_CK);
+		}
+		else {
+			oapiBlt(surf, surf1a, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
+		}
 	}
 }
 
-void LEM_RadarTape::RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1)
+void LEM_RadarTape::RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b)
 {
-	oapiBlt(surf, surf1, 0, 0, 42, dispRate, 35, 163, SURF_PREDEF_CK);
+	if (reqRate < -29.0 ) {
+
+		oapiBlt(surf, surf1b, 0, 0, 42, dispRate - 3026, 35, 163, SURF_PREDEF_CK);
+	}
+	else {
+		oapiBlt(surf, surf1a, 0, 0, 42, dispRate, 35, 163, SURF_PREDEF_CK);
+	}
 }
 
 //Cross Pointer

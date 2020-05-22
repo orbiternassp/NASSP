@@ -260,6 +260,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 LEM::~LEM()
 {
 	ReleaseSurfaces();
+	ReleaseSurfacesVC();
+	DeleteVCAnimations();
 
 	ClearMissionManagementMemory();
 
@@ -279,8 +281,6 @@ LEM::~LEM()
 		dx8ppv->Release();
 		dx8ppv = NULL;
 	}
-
-	DeleteVCAnimations();
 }
 
 void LEM::Init()
@@ -426,6 +426,7 @@ void LEM::Init()
 	// Do this stuff only once
 	if(!InitLEMCalled){
 		SystemsInit();
+		InitVCAnimations();
 
 		// Panel items
 		fdaiDisabled = false;
@@ -1639,7 +1640,7 @@ void LEM::DefineAnimations()
 	ForwardHatch.DefineAnimationsVC(vcidx);
 	if (stage < 2) DPS.DefineAnimations(dscidx);
 	if (stage < 1 && pMission->LMHasLegs()) eds.DefineAnimations(dscidx);
-	InitVCAnimations();
+	DefineVCAnimations();
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
