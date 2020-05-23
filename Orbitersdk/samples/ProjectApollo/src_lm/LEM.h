@@ -287,16 +287,17 @@ public:
 
 	bool IsPowered();
 private:
+	void TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 	LEM *lem;					// Pointer at LEM
 	e_object *dc_source;
 	e_object *ac_source;
 	double reqRange;
 	double reqRate;
-	int  dispRange;
-	int  dispRate;
+	double dispRange;
+	double  dispRate;
 	double lgc_alt, lgc_altrate;
 	SURFHANDLE tape1, tape2;
-	bool TapeSwitch;
+	double desRange, desRate;
 };
 
 class CrossPointer
