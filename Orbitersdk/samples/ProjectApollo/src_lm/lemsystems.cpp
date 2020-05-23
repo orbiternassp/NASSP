@@ -1453,7 +1453,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	optics.Timestep(simdt);
 	LR.Timestep(simdt);
 	RR.Timestep(simdt);
-	RadarTape.Timestep(MissionTime);
+	RadarTape.Timestep(simdt);
 	crossPointerLeft.Timestep(simdt);
 	crossPointerRight.Timestep(simdt);
 	SBandSteerable.Timestep(simdt);
@@ -2656,10 +2656,12 @@ LEM_RadarTape::LEM_RadarTape()
 	dc_source = NULL;
 	reqRange = 0;
 	reqRate = 0;
-	dispRange = 0;
-	dispRate = 0;
+	dispRange = 0.0;
+	dispRate = 0.0;
 	lgc_alt = 0;
 	lgc_altrate = 0;
+	desRange = 0.0;
+	desRate = 0.0;
 }
 
 void LEM_RadarTape::Init(LEM *s, e_object * dc_src, e_object *ac_src, SURFHANDLE surf1, SURFHANDLE surf2){
@@ -2712,23 +2714,71 @@ void LEM_RadarTape::Timestep(double simdt) {
 		}
 
 	}
-	//
-	//  Missing code to smooth out tape scrolling
-	TapeSwitch = false;
+	// Altitude/Range
 	if (reqRange < (1000.0 * 0.3048))
 	{
-		TapeSwitch = true;
-		dispRange = 2086 - 82 - (int)((reqRange * 3.2808399) * 40.0 * 50.0 / 1000.0);
+		desRange = 6317.0 + 2086.0 - 82.0 - ((reqRange * 3.2808399) * 40.0 * 50.0 / 1000.0);
 	}
 	else if (reqRange < (120000.0 * 0.3048) )
 	{
-		dispRange = 6443 - 82 - (int)((reqRange * 3.2808399) * 40.0 / 1000.0);
+		desRange = 6443.0 - 82.0 - ((reqRange * 3.2808399) * 40.0 / 1000.0);
 	}
 	else
 	{
-		dispRange = 81 + 1642 - 82 - (int)((reqRange * 0.000539956803*100.0)  * 40.0 / 1000.0);
+		desRange = 81.0 + 1642.0 - 82.0 - ((reqRange * 0.000539956803*100.0)  * 40.0 / 1000.0);
 	}
-	dispRate  = 2881 - 82 -  (int)(reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
+
+	TapeDrive(dispRange, desRange, 500.0, simdt);
+	if (dispRange < 0)
+	{
+		dispRange = 0;
+	}
+	else if (dispRange > 8486)
+	{
+		dispRange = 8486;
+	}
+
+	//Altitude Rate/Range Rate
+
+	//AOH Volume 2: "Range rate of 100 fps can mean rate of 100, 1100, 2100, etc., fps. Also, if rate is between 701 to 999, 1700 to 1999,
+	//etc., fps, the display will read 700 fps and recycle to zero when rate becomes 1000, 2000, etc., fps.
+
+	while (reqRate > 304.8)
+	{
+		reqRate -= 304.8;
+	}
+	while (reqRate < -304.8)
+	{
+		reqRate += 304.8;
+	}
+
+	desRate  = 2881.0 - 82.0 -  (reqRate * 3.2808399 * 40.0 * 100.0 / 1000.0);
+	TapeDrive(dispRate, desRate, 500.0, simdt);
+	if (dispRate < 0)
+	{
+		dispRate = 0;
+	}
+	else if (dispRate > 5599.0)
+	{
+		dispRate = 5599.0;
+	}
+}
+
+void LEM_RadarTape::TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt)
+{
+	double dposcmd, dpos;
+
+	dposcmd = AngleCmd - Angle;
+
+	if (abs(dposcmd) > RateLimit*simdt)
+	{
+		dpos = sign(AngleCmd - Angle)*RateLimit*simdt;
+	}
+	else
+	{
+		dpos = dposcmd;
+	}
+	Angle += dpos;
 }
 
 void LEM_RadarTape::SystemTimestep(double simdt) {
@@ -2785,76 +2835,70 @@ void LEM_RadarTape::SetLGCAltitudeRate(int val) {
 
 void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
 	oapiWriteLine(scn, start_str);
-	oapiWriteScenario_int(scn, "RDRTAPE_RANGE", dispRange);
+	papiWriteScenario_double(scn, "RDRTAPE_RANGE", dispRange);
 	oapiWriteScenario_float(scn, "RDRTAPE_RATE", dispRate);
-	papiWriteScenario_bool(scn, "TAPE_SWITCH", TapeSwitch);
 	oapiWriteLine(scn, end_str);
 }
 
 void LEM_RadarTape::LoadState(FILEHANDLE scn,char *end_str){
 	char *line;
 	int value = 0;
+	double lfValue = 0.0;
 	int end_len = strlen(end_str);
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, end_str, end_len))
 			return;
 		if (!strnicmp (line, "RDRTAPE_RANGE", 13)) {
-			sscanf(line + 13, "%d", &value);
-			dispRange = value;
+			sscanf(line + 13, "%lf", &lfValue);
+			dispRange = lfValue;
 		}
 		if (!strnicmp (line, "RDRTAPE_RATE", 12)) {
 			sscanf(line + 12, "%d", &value);
 			dispRate = value;
 		}
-		if (!strnicmp(line, "TAPE_SWITCH", 11)) {
-			sscanf(line + 11, "%d", &value);
-			TapeSwitch = value;
-		}
 	}
 }
 
 void LEM_RadarTape::RenderRange(SURFHANDLE surf) {
-	if (TapeSwitch)
+	if (dispRange > 6321.0)
 	{
-		oapiBlt(surf, tape2, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, tape2, 0, 0, 0, (int)(dispRange) - 6317, 43, 163, SURF_PREDEF_CK);
 	}
 	else
 	{
-		oapiBlt(surf, tape1, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, tape1, 0, 0, 0, (int)(dispRange), 43, 163, SURF_PREDEF_CK);
 	}
 }
 
 void LEM_RadarTape::RenderRate(SURFHANDLE surf)
 {
-    oapiBlt(surf,tape1,0,0,42, dispRate ,35,163, SURF_PREDEF_CK);
+    oapiBlt(surf,tape1,0,0,42, (int)(dispRate) ,35,163, SURF_PREDEF_CK);
 }
 
 void LEM_RadarTape::RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2) {
-	if (TapeSwitch)
+	if (dispRange > 6321.0)
 	{
-		oapiBlt(surf, surf2, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, surf2, 0, 0, 0, (int)(dispRange)-6317, 43, 163, SURF_PREDEF_CK);
+	}
+	else if (dispRange > 3181.0)
+	{
+		oapiBlt(surf, surf1b, 0, 0, 0, (int)(dispRange)-3026, 43, 163, SURF_PREDEF_CK);
 	}
 	else
 	{
-		if (reqRange < 24231.6) {
-
-			oapiBlt(surf, surf1b, 0, 0, 0, dispRange - 3026, 43, 163, SURF_PREDEF_CK);
-		}
-		else {
-			oapiBlt(surf, surf1a, 0, 0, 0, dispRange, 43, 163, SURF_PREDEF_CK);
-		}
+		oapiBlt(surf, surf1a, 0, 0, 0, (int)(dispRange), 43, 163, SURF_PREDEF_CK);
 	}
 }
 
 void LEM_RadarTape::RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b)
 {
-	if (reqRate < -29.0 ) {
+	if (dispRate > 3181.0) {
 
-		oapiBlt(surf, surf1b, 0, 0, 42, dispRate - 3026, 35, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1b, 0, 0, 42, (int)(dispRate) - 3026, 35, 163, SURF_PREDEF_CK);
 	}
 	else {
-		oapiBlt(surf, surf1a, 0, 0, 42, dispRate, 35, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1a, 0, 0, 42, (int)(dispRate), 35, 163, SURF_PREDEF_CK);
 	}
 }
 
