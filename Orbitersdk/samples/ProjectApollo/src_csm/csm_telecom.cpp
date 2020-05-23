@@ -67,6 +67,26 @@ void PMP::TimeStep(double simt){
 
 }
 
+double SBandAntenna::dBm2SignalStrength(double dBm)
+{
+	double SignalStrength;
+
+	if (dBm >= -50)
+	{
+		SignalStrength = 100.0;
+	}
+	else if (dBm <= -130)
+	{
+		SignalStrength = 0.0;
+	}
+	else
+	{
+		SignalStrength = (130.0 + dBm)*1.25; //convert from dBm to the 0-100% signal strength used in NASSP
+	}
+
+	return SignalStrength;
+}
+
 // Unifed S-Band System
 USB::USB(){
 	sat = NULL;
@@ -494,6 +514,7 @@ void USB::TimeStep(double simt) {
 		}
 	}
 
+	sprintf(oapiDebugString(), "rcvr_agc_voltage %lf", rcvr_agc_voltage);
 	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
 }
 
@@ -1000,7 +1021,7 @@ void HGA::TimeStep(double simt, double simdt)
 
 	RecvdHGAPower = Power85ft*Gain85ft*gain*pow(HGAWavelength/(4*PI*EarthSignalDist),2); //maximum recieved power to the HGA on axis in watts
 	RecvdHGAPower_dBm = 10*log10(1000*RecvdHGAPower);
-	SignalStrengthScaleFactor = HGA::dBm2SignalStrength(RecvdHGAPower_dBm);
+	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdHGAPower_dBm);
 
 	//sprintf(oapiDebugString(), "Received HGA Power: %lf fW, %lf dBm", RecvdHGAPower*1000000000000000, RecvdHGAPower_dBm); //show theoretical max HGA recieved in Femtowatts and dBm
 
@@ -1173,25 +1194,6 @@ void HGA::clbkPostCreation()
 	hga_proc_last[2] = hga_proc[2];
 }
 
-double HGA::dBm2SignalStrength(double dBm)
-{
-	double SignalStrength;
-
-	if (dBm >= -50)
-	{
-		SignalStrength = 100.0;
-	}
-	else if (dBm <= -130)
-	{
-		SignalStrength = 0.0;
-	}
-	else
-	{
-		SignalStrength = (130.0 + dBm)*1.25; //convert from dBm to the 0-100% signal strength used in NASSP
-	}
-
-	return SignalStrength;
-}
 
 // Load
 void HGA::LoadState(char *line) {
@@ -1218,11 +1220,22 @@ OMNI::OMNI(VECTOR3 dir)
 void OMNI::Init(Saturn *vessel) {
 	sat = vessel;
 
-	double beamwidth = 50.0*RAD;
+	SignalStrength = 0;
+
+	double beamwidth = 170*RAD;
+	OMNI_Gain = pow(10, (-3 / 10));
+
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
 
 	hMoon = oapiGetObjectByName("Moon");
 	hEarth = oapiGetObjectByName("Earth");
+
+	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
+	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
+	Gain30ft = pow(10, (43 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
+	Power30ft = 20000; //watts
+
+	
 }
 
 void OMNI::TimeStep()
@@ -1230,6 +1243,9 @@ void OMNI::TimeStep()
 	VECTOR3 U_RP, pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
 	double relang, Moonrelang;
+	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
+
+	double EarthSignalDist;
 
 	//Unit vector of antenna in vessel's local frame
 	U_RP = _V(direction.y, -direction.z, direction.x);
@@ -1245,9 +1261,15 @@ void OMNI::TimeStep()
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
 
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
+
+	RecvdOMNIPower = Power30ft * Gain30ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
+
 	if (relang < PI05 / hpbw_factor)
 	{
-		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*50.0;
+		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*SignalStrengthScaleFactor;
 	}
 	else
 	{

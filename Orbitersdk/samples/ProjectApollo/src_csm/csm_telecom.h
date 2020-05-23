@@ -346,6 +346,7 @@ class SBandAntenna
 public:
 	SBandAntenna() { SignalStrength = 0.0; }
 	double GetSignalStrength() { return SignalStrength; }
+	double dBm2SignalStrength(double dBm);
 protected:
 	double SignalStrength;						// Signal Strength (0-100)
 };
@@ -389,7 +390,6 @@ public:
 	bool ScanLimitWarning();
 	bool IsPowered();
 	void clbkPostCreation();
-	double dBm2SignalStrength(double dBm);
 	double ModeSwitchTimer;
 	int RcvBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
 	int XmtBeamWidthSelect = 0; // 0 = none, 1 = Wide, 2 = Med, 3 = Narrow
@@ -440,6 +440,11 @@ public:
 	OMNI(VECTOR3 dir);
 	void Init(Saturn *vessel);	// Initialization
 	void TimeStep();			// TimeStep
+	double OMNIWavelength;
+	double OMNIFrequency;
+	double Gain30ft;
+	double Power30ft;
+	double OMNI_Gain;
 protected:
 	Saturn *sat;				// Ship we're installed in
 	VECTOR3 direction;
