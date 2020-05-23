@@ -92,6 +92,136 @@ enum LMRCSThrusters
 #define LM_RCS_QUAD_3		2
 #define LM_RCS_QUAD_4		3
 
+// ==============================================================
+// VC Constants
+// ==============================================================
+
+// VC Comp light index
+#define LM_VC_COMP_LIGHT_1		0   // RR No track light
+#define LM_VC_COMP_LIGHT_2		1   // Glycol light
+#define LM_VC_COMP_LIGHT_3		2   // Suit fan light
+#define LM_VC_COMP_LIGHT_4		3   // CO2 light
+#define LM_VC_COMP_LIGHT_5		4   // H2O sep light
+
+// VC power failure light index
+#define LM_VC_PWRFAIL_LIGHT_1		0   // X-pointer left
+#define LM_VC_PWRFAIL_LIGHT_2  	    1   // Thrust
+#define LM_VC_PWRFAIL_LIGHT_3		2   // DPS press
+#define LM_VC_PWRFAIL_LIGHT_4		3   // RCS press
+#define LM_VC_PWRFAIL_LIGHT_5		4   // RCS quantity
+#define LM_VC_PWRFAIL_LIGHT_6		5   // ECS press
+#define LM_VC_PWRFAIL_LIGHT_7		6   // Glycol
+#define LM_VC_PWRFAIL_LIGHT_8		7   // ECS quantity
+#define LM_VC_PWRFAIL_LIGHT_9		8   // X-pointer right
+
+// Panel tilt
+const double P1_TILT = 7.95581 * RAD;
+const double P2_TILT = 7.95581 * RAD;
+const double P3_TILT = 35.2509 * RAD;
+const double P4_TILT = 45.0663 * RAD;
+/*const double P6_TILT = 10 * RAD;
+const double P12_TILT = 20 * RAD;
+const double P14_TILT = 25 * RAD;*/
+
+// Switch clickspot offset
+const VECTOR3	P1_CLICK = { 0, 0.0011, -0.0078 };
+const VECTOR3	P2_CLICK = { 0, 0.0011, -0.0078 };
+const VECTOR3	P3_CLICK = { 0, 0.0045, -0.0065 };
+const VECTOR3	P4_CLICK = { 0, 0.0056, -0.0056 };
+
+// Number of switches on each panel
+const int	P1_SWITCHCOUNT = 20;
+const int	P2_SWITCHCOUNT = 18;
+const int	P3_SWITCHCOUNT = 26;
+const int	P4_SWITCHCOUNT = 4;
+/*const int	P5_SWITCHCOUNT = 8;
+const int	P6_SWITCHCOUNT = 12;
+const int	P8_SWITCHCOUNT = 22;
+const int	P12_SWITCHCOUNT = 22;
+const int	P14_SWITCHCOUNT = 16;
+const int	LM_VC_NEEDLECOUNT = 19;*/
+
+// Number of push buttons
+
+const int   P4_PUSHBCOUNT = 19;
+
+// Number of indicator needles
+const int P1_NEEDLECOUNT = 6;
+const int P2_NEEDLECOUNT = 15;
+const int P3_NEEDLECOUNT = 1;
+
+// Number of rotaries
+const int	 P1_ROTCOUNT = 1;
+const int	 P2_ROTCOUNT = 4;
+const int	 P3_ROTCOUNT = 5;
+/*const int	 P5_ROTCOUNT = 1;
+const int	 P6_ROTCOUNT = 4;
+const int	 P8_ROTCOUNT = 0;
+const int	 P12_ROTCOUNT = 4;
+const int	 P14_ROTCOUNT = 1;*/
+
+// Rotary rotation axises
+const VECTOR3	P1_ROT_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
+const VECTOR3	P2_ROT_AXIS = { 0.00, sin(P2_TILT),-cos(P2_TILT) };
+const VECTOR3	P3_ROT_AXIS = { 0.00, sin(P3_TILT),-cos(P3_TILT) };
+/*const VECTOR3	P6_ROT_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
+const VECTOR3	P12_ROT_AXIS = { -sin(P12_TILT), cos(P12_TILT), 0.00 };
+const VECTOR3	P14_ROT_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };*/
+
+// Panel 1 switches
+const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
+	{-0.414641, 0.546586, 1.649172}, {-0.414770, 0.496147, 1.642049}, {-0.243260, 0.666534, 1.665854}, {-0.040785, 0.595291, 1.655927}, {-0.040025, 0.547691, 1.649348},
+	{-0.039420, 0.496879, 1.642121}, {-0.361350, 0.417043, 1.631146}, {-0.316536, 0.417075, 1.631118}, {-0.274721, 0.417141, 1.631057}, {-0.317088, 0.365357, 1.623783},
+	{-0.274707, 0.365293, 1.623774}, {-0.344825, 0.321379, 1.617756}, {-0.304150, 0.321385, 1.617736}, {-0.270978, 0.321355, 1.617717}, {-0.228567, 0.395044, 1.627975},
+	{-0.183200, 0.394991, 1.627967}, {-0.227949, 0.313448, 1.616632}, {-0.182563, 0.313463, 1.616498}, {-0.148754, 0.376823, 1.625450}, {-0.131680, 0.320759, 1.617584}
+};
+
+// Panel 1 rotaries
+const VECTOR3 P1_ROT_POS[P1_ROTCOUNT] = {
+	{-0.072168, 0.359422, 1.62335}
+};
+
+// Panel 2 switches
+const VECTOR3 P2_TOGGLE_POS[P2_SWITCHCOUNT] = {
+	{0.045885, 0.676289, 1.667328}, {0.088232, 0.676319, 1.667332}, {0.134322, 0.676356, 1.667329}, {0.176470, 0.676407, 1.667335}, {0.045959, 0.585804, 1.654680},
+	{0.088331, 0.585888, 1.654689}, {0.134278, 0.585964, 1.654702}, {0.176613, 0.585796, 1.654680}, {0.045969, 0.509331, 1.643991}, {0.088249, 0.509365, 1.643995},
+	{0.134309, 0.509290, 1.643981}, {0.176591, 0.509346, 1.643988}, {0.045998, 0.416488, 1.631014}, {0.131341, 0.415909, 1.630932}, {0.174630, 0.415624, 1.630883},
+	{0.174120, 0.361105, 1.623267}, {0.413899, 0.546290, 1.649150}, {0.413992, 0.495853, 1.642103}
+};
+
+// Panel 2 rotaries
+const VECTOR3 P2_ROT_POS[P2_ROTCOUNT] = {
+	{0.052147, 0.353926, 1.62237}, {0.243652, 0.400778, 1.62901}, {0.243665, 0.327141, 1.6187}, {0.356315, 0.364088, 1.62391}
+};
+
+// Panel 3 switches
+const VECTOR3 P3_TOGGLE_POS[P3_SWITCHCOUNT] = {
+	{-0.364743, 0.249154, 1.588}, {-0.371207, 0.202654, 1.55513}, {-0.323886, 0.249078, 1.58795}, {-0.322623, 0.202607, 1.5551}, {-0.263987, 0.184704, 1.54245},
+	{-0.113911, 0.251605, 1.58973}, {-0.059532, 0.251537, 1.58968}, {-0.002303, 0.251443, 1.58961}, {-0.113839, 0.204921, 1.55674}, {-0.059438, 0.204979, 1.55678},
+	{-0.002292, 0.204943, 1.55675}, {-0.113877, 0.152865, 1.51994}, {-0.05957, 0.152744, 1.51986}, {-0.002788, 0.153104, 1.52011}, {0.111952, 0.248089, 1.58724},
+	{0.143863, 0.248164, 1.5873}, {0.176712, 0.248192, 1.58732}, {0.210488, 0.248188, 1.58731}, {0.144625, 0.200656, 1.55372}, {0.178421, 0.200655, 1.55372},
+	{0.144484, 0.154658, 1.52121}, {0.178357, 0.154589, 1.52116}, {0.250217, 0.253498, 1.59107}, {0.25025, 0.220473, 1.56772}, {0.381213, 0.206949, 1.55817},
+	{0.369014, 0.151772, 1.51917}
+};
+
+// Panel 3 rotaries
+const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
+	{-0.34068, 0.15311, 1.51197}, {-0.19343, 0.163151, 1.52026}, {0.063658, 0.163679, 1.52046}, {0.27805, 0.151635, 1.51925}, {0.31772, 0.220734, 1.56811}
+};
+
+// Panel 4 switches
+const VECTOR3 P4_TOGGLE_POS[P4_SWITCHCOUNT] = {
+	{-0.132938, 0.070816, 1.44986}, {-0.132898, 0.015721, 1.39464}, {0.131333, 0.070756, 1.4498}, {0.131208, 0.015729, 1.39465}
+};
+
+// Panel 4 push-buttons
+const VECTOR3 P4_PUSHB_POS[P4_PUSHBCOUNT] = {
+	{-0.068631, 0.008015, 1.3869}, {-0.068537, -0.007544, 1.37132}, {-0.045774, 0.015927, 1.39483}, {-0.045737, 0.000295, 1.3791}, {-0.045635, -0.01525, 1.36354},
+	{-0.023046, -0.015110, 1.363551}, {-0.000177, -0.015110, 1.363551}, {0.022441,-0.015110,1.363551}, {-0.022966, 0.000311, 1.379174}, {-0.000208, 0.000311, 1.379174},
+	{0.022667, 0.000311, 1.379174}, {-0.023022, 0.015839, 1.394753}, {-0.000197, 0.015839, 1.394753}, {0.022350, 0.015839, 1.394753}, {0.045282, 0.015839, 1.394753},
+	{0.045019, 0.000180, 1.378975}, {0.045087, -0.015076, 1.363737}, {0.067903, 0.007901, 1.386722}, {0.067771, -0.007522, 1.371295}
+};
+
 // LM ECS status
 
 typedef struct {
@@ -147,6 +277,8 @@ public:
 	void setRate(double rate) { reqRate = rate ; }; 
 	void RenderRange(SURFHANDLE surf);
 	void RenderRate(SURFHANDLE surf);
+	void RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2);
+	void RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b);
 	void SetLGCAltitude(int val);
 	void SetLGCAltitudeRate(int val);
 
@@ -386,6 +518,32 @@ public:
 		nsurf	///< nsurf gives the count of surfaces for the array size calculation.
 	};
 
+	enum SurfaceID_VC
+	{
+		//
+		// First value in the enum must be set to one. Entry zero is not
+		// used.
+		//
+
+		// VC Sutfaces
+		SRF_VC_DSKYDISP,
+		SRF_VC_DSKY_LIGHTS,
+		SRF_VC_DIGITALDISP,
+		SRF_VC_DIGITALDISP2,
+		SRF_VC_RADAR_TAPEA,
+		SRF_VC_RADAR_TAPEB,
+		SRF_VC_RADAR_TAPE2,
+		SFR_VC_CW_LIGHTS,
+		SRF_INDICATORVC,
+		SRF_INDICATORREDVC,
+		SRF_LEM_MASTERALARMVC,
+
+		//
+		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
+		//
+		nsurfvc	///< nsurfvc gives the count of surfaces for the array size calculation.
+	};
+
 	LEM(OBJHANDLE hObj, int fmodel);
 	virtual ~LEM();
 
@@ -418,6 +576,10 @@ public:
 	bool clbkLoadVC(int id);
 	bool clbkPanelMouseEvent (int id, int event, int mx, int my);
 	bool clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf);
+
+	bool clbkVCMouseEvent(int id, int event, VECTOR3 &p);
+	bool clbkVCRedrawEvent(int id, int event, SURFHANDLE surf);
+
 	int  clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
@@ -436,6 +598,7 @@ public:
 	void PostLoadSetup(bool define_anims = true);
 	void DefineAnimations();
 	void SetMeshes();
+	void RegisterActiveAreas();
 
 	void RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump);
 	void PanelSwitchToggled(ToggleSwitch *s);
@@ -587,14 +750,17 @@ protected:
 
 	void RedrawPanel_Thrust (SURFHANDLE surf);
 	void RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf);
+	void RedrawPanel_XPointerVC(CrossPointer *cp, UINT animx, UINT animy);
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void ReleaseSurfaces ();
+	void ReleaseSurfacesVC();
 	void ResetThrusters();
 	virtual void SeparateStage (UINT stage);
 	void CheckDescentStageSystems();
 	void CreateMissionSpecificSystems();
 	void InitPanel (int panel);
+	void InitPanelVC();
 	void SetSwitches(int panel);
 	void AddRCS_LMH(double TRANY);
 	void ToggleEVA();
@@ -608,12 +774,20 @@ protected:
 	void GuardClick();
 	void AbortFire();
 	void InitSwitches();
+	void InitVCAnimations();
+	void DeleteVCAnimations();
+	void DefineVCAnimations();
 	void DoFirstTimestep();
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
 	// void GetDockStatus();
 	void JostleViewpoint(double amount);
 	void AddDust();
+	void SetCompLight(int m, bool state);
+	void SetContactLight(int m, bool state);
+	void SetPowerFailureLight(int m, bool state);
+	void InitFDAI(UINT mesh);
+	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	// LM touchdown points
 	// mass in kg, ro1 (distance from center of the middle points), ro2 (distance from center of footpad points), tdph (height of footpad points),
@@ -640,6 +814,7 @@ protected:
 
 	// Panel components
 	PanelSwitches MainPanel;
+	PanelSwitchesVC MainPanelVC;
 	PanelSwitchScenarioHandler PSH;
 
 	SwitchRow AbortSwitchesRow;
@@ -1539,6 +1714,50 @@ protected:
 	DEVMESHHANDLE drogue;
 	DEVMESHHANDLE cdrmesh;
 	DEVMESHHANDLE lmpmesh;
+	DEVMESHHANDLE vcmesh;
+
+	// VC animations
+	MGROUP_TRANSFORM *mgt_P1switch[P1_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P1Rot[P1_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P1needles[P1_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P2switch[P2_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P2Rot[P2_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P2needles[P2_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P3switch[P3_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P3Rot[P3_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P3needles[P3_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P4switch[P4_SWITCHCOUNT];
+	UINT anim_P1switch[P1_SWITCHCOUNT];
+	UINT anim_P1_Rot[P1_ROTCOUNT];
+	UINT anim_P1needles[P1_NEEDLECOUNT];
+	UINT anim_P2switch[P2_SWITCHCOUNT];
+	UINT anim_P2_Rot[P2_ROTCOUNT];
+	UINT anim_P2needles[P2_NEEDLECOUNT];
+	UINT anim_P3switch[P3_SWITCHCOUNT];
+	UINT anim_P3_Rot[P3_ROTCOUNT];
+	UINT anim_P3needles[P3_NEEDLECOUNT];
+	UINT anim_P4switch[P4_SWITCHCOUNT];
+	UINT anim_TW_indicator;
+	UINT anim_Needle_Radar;
+	UINT anim_xpointerx_cdr;
+	UINT anim_xpointery_cdr;
+	UINT anim_xpointerx_lmp;
+	UINT anim_xpointery_lmp;
+	UINT anim_abortbutton;
+	UINT anim_abortstagebutton;
+	UINT anim_abortstagecover;
+	UINT anim_rrslewsitch_x;
+	UINT anim_rrslewsitch_y;
+	UINT anim_fdaiR_cdr, anim_fdaiR_lmp;
+	UINT anim_fdaiP_cdr, anim_fdaiP_lmp;
+	UINT anim_fdaiY_cdr, anim_fdaiY_lmp;
+	UINT anim_fdaiRerror_cdr, anim_fdaiRerror_lmp;
+	UINT anim_fdaiPerror_cdr, anim_fdaiPerror_lmp;
+	UINT anim_fdaiYerror_cdr, anim_fdaiYerror_lmp;
+	UINT anim_fdaiRrate_cdr, anim_fdaiRrate_lmp;
+	UINT anim_fdaiPrate_cdr, anim_fdaiPrate_lmp;
+	UINT anim_fdaiYrate_cdr, anim_fdaiYrate_lmp;
+	UINT anim_attflag_cdr, anim_attflag_lmp;
 
 	// Dust particles
 	THRUSTER_HANDLE th_dust[4];
@@ -1901,10 +2120,17 @@ protected:
 	friend class LEMCrewStatus;
 
 	friend class ApolloRTCCMFD;
+	friend class ARCore;
 	friend class ProjectApolloMFD;
 	friend class MCC;
 	friend class RTCC;
 };
+
+extern MESHHANDLE hLMDescent;
+extern MESHHANDLE hLMDescentNoLeg;
+extern MESHHANDLE hLMAscent;
+extern MESHHANDLE hAstro1;
+extern MESHHANDLE hLMVC;
 
 extern void LEMLoadMeshes();
 extern void InitGParam(HINSTANCE hModule);

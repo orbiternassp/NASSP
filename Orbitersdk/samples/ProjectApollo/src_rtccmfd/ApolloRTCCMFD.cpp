@@ -51,6 +51,8 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
 	font2 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
 	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
+	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
+	font3 = oapiCreateFont(w / 22, true, "Courier", FONT_NORMAL, 0);
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
 	bool found = false;
@@ -83,6 +85,8 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font);
 	oapiReleaseFont(font2);
 	oapiReleaseFont(font2vert);
+	oapiReleaseFont(fonttest);
+	oapiReleaseFont(font3);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 }
@@ -114,15 +118,30 @@ bool ApolloRTCCMFD::ConsumeKeyBuffered(DWORD key)
 void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 {
 	char Buffer2[100];
+	int i;
 
 	//oapiWriteScenario_int(scn, "SCREEN", G->screen);
 	oapiWriteScenario_int(scn, "VESSELTYPE", G->vesseltype);
 	papiWriteScenario_double(scn, "SXTSTARDTIME", G->sxtstardtime);
-	papiWriteScenario_mx(scn, "REFSMMAT", G->REFSMMAT);
+
+	for (i = 0;i < 12;i++)
+	{
+		if (GC->rtcc->EZJGMTX1.data[i].ID > 0)
+		{
+			papiWriteScenario_REFS(scn, "REFSMMAT", 1, i, GC->rtcc->EZJGMTX1.data[i]);
+		}
+	}
+	for (i = 0;i < 12;i++)
+	{
+		if (GC->rtcc->EZJGMTX3.data[i].ID > 0)
+		{
+			papiWriteScenario_REFS(scn, "REFSMMAT", 3, i, GC->rtcc->EZJGMTX3.data[i]);
+		}
+	}
+
 	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMATTime", G->REFSMMATTime);
-	oapiWriteScenario_int(scn, "REFSMMATupl", G->REFSMMATupl);
 	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 	papiWriteScenario_double(scn, "T1", GC->rtcc->med_k30.StartTime);
 	papiWriteScenario_double(scn, "T2", GC->rtcc->med_k30.EndTime);
@@ -301,7 +320,8 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 	char Buffer2[100];
 	bool istarget = false;
 	double temp;
-	int inttemp;
+	int inttemp, inttemp2;
+	REFSMMATData refs;
 
 	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, "END_MFD", 7))
@@ -310,11 +330,22 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		//papiReadScenario_int(line, "SCREEN", G->screen);
 		papiReadScenario_int(line, "VESSELTYPE", G->vesseltype);
 		papiReadScenario_double(line, "SXTSTARDTIME", G->sxtstardtime);
-		papiReadScenario_mat(line, "REFSMMAT", G->REFSMMAT);
+		
+		if (papiReadScenario_REFS(line, "REFSMMAT", inttemp, inttemp2, refs))
+		{
+			if (inttemp == 1)
+			{
+				GC->rtcc->EZJGMTX1.data[inttemp2] = refs;
+			}
+			else
+			{
+				GC->rtcc->EZJGMTX3.data[inttemp2] = refs;
+			}
+		}
+
 		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMATTime", G->REFSMMATTime);
-		papiReadScenario_int(line, "REFSMMATupl", G->REFSMMATupl);
 		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 		papiReadScenario_double(line, "T1", GC->rtcc->med_k30.StartTime);
 		papiReadScenario_double(line, "T2", GC->rtcc->med_k30.EndTime);
@@ -613,6 +644,26 @@ void ApolloRTCCMFD::menuTLANDUplinkCalc()
 void ApolloRTCCMFD::menuTLANDUpload()
 {
 	G->TLANDUplink();
+}
+
+void ApolloRTCCMFD::Angle_Display(char *Buff, double angle, bool DispPlus)
+{
+	double angle2 = abs(round(angle));
+	if (time >= 0)
+	{
+		if (DispPlus)
+		{
+			sprintf_s(Buff, 32, "+%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+		}
+		else
+		{
+			sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+		}
+	}
+	else
+	{
+		sprintf_s(Buff, 32, "-%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+	}
 }
 
 void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display a time in the format hhh:mm:ss
@@ -1158,7 +1209,14 @@ void ApolloRTCCMFD::menuSetRetrofireEXDVUplinkPage()
 
 void ApolloRTCCMFD::menuSetREFSMMATUplinkPage()
 {
-	screen = 53;
+	if (G->vesseltype < 2)
+	{
+		screen = 53;
+	}
+	else
+	{
+		screen = 94;
+	}
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -1410,6 +1468,18 @@ void ApolloRTCCMFD::menuSetLunarLaunchTargetingPage()
 void ApolloRTCCMFD::menuSetTPITimesPage()
 {
 	screen = 92;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetVectorCompareDisplay()
+{
+	screen = 93;
+	coreButtons.SelectPage(this, screen);
+}
+
+void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
+{
+	screen = 95;
 	coreButtons.SelectPage(this, screen);
 }
 
@@ -2595,6 +2665,18 @@ void ApolloRTCCMFD::set_REFSMMATTime(double time)
 	this->G->REFSMMATTime = time;
 }
 
+void ApolloRTCCMFD::menuREFSMMATLockerMovement()
+{
+	bool REFSMMATLockerMovementInput(void *id, char *str, void *data);
+	oapiOpenInputBox("CSM/LEM REFSMMAT Locker Movement. Format: G00,Vehicle1,Matrix1,Vehicle2,Matrix2; (Codes: CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD)", REFSMMATLockerMovementInput, 0, 30, (void*)this);
+}
+
+bool REFSMMATLockerMovementInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::menuCycleTITable()
 {
 
@@ -3583,38 +3665,6 @@ void ApolloRTCCMFD::calcREFSMMAT()
 	G->REFSMMATCalc();
 }
 
-void ApolloRTCCMFD::menuSendREFSMMATToOtherVessel()
-{
-	if (G->target != NULL)
-	{
-		OBJHANDLE itertarget;
-		ARCore *core;
-
-		for (int i = 0;i < nGutsUsed;i++)
-		{
-			itertarget = GCoreVessel[i];
-
-			if (G->target == itertarget)
-			{
-				core = GCoreData[i];
-
-				core->REFSMMAT = G->REFSMMAT;
-				core->REFSMMATcur = G->REFSMMATcur;
-				core->REFSMMATopt = G->REFSMMATopt;
-
-				for (int i = 0;i < 20;i++)
-				{
-					core->REFSMMAToct[i] = G->REFSMMAToct[i];
-				}
-
-				core->REFSMMAToct[1] = core->REFSMMATUplinkAddress();
-
-				return;
-			}
-		}
-	}
-}
-
 void ApolloRTCCMFD::menuLSLat()
 {
 	bool LSLatInput(void* id, char *str, void *data);
@@ -4119,6 +4169,18 @@ bool TransferRTEInput(void *id, char *str, void *data)
 	return true;
 }
 
+void ApolloRTCCMFD::menuGeneralMEDRequest()
+{
+	bool GeneralMEDRequestInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Manual Entry Device Input:", GeneralMEDRequestInput, 0, 50, (void*)this);
+}
+
+bool GeneralMEDRequestInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
+}
+
 void ApolloRTCCMFD::GeneralMEDRequest(char *str)
 {
 	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, str);
@@ -4199,7 +4261,14 @@ void ApolloRTCCMFD::menuLSUpload()
 
 void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
 {
-	G->REFSMMATUplinkCalc();
+	bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Format: C12,VEH. COMPUTER,REFSMMAT,ADDRESS; VEH. COMPUTER = CMC, LGC. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
+}
+
+bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)
+{
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
+	return true;
 }
 
 void ApolloRTCCMFD::menuCycleTwoImpulseOption()
@@ -4478,7 +4547,7 @@ bool AGCEpochInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_AGCEpoch(double mjd)
 {
-	this->G->AGCEpoch = mjd;
+	this->GC->rtcc->AGCEpoch = mjd;
 }
 
 void ApolloRTCCMFD::menuChangeVesselType()
@@ -4571,18 +4640,6 @@ void ApolloRTCCMFD::menuUpdateLiftoffTime()
 	char Buff[128];
 	sprintf_s(Buff, "P10,CSM,%d:%d:%lf;", hh, mm, ss);
 	GC->rtcc->GMGMED(Buff);
-}
-
-void ApolloRTCCMFD::cycleREFSMMATupl()
-{
-	if (G->REFSMMATupl < 1)
-	{
-		G->REFSMMATupl++;
-	}
-	else
-	{
-		G->REFSMMATupl = 0;
-	}
 }
 
 void ApolloRTCCMFD::cycleREFSMMATHeadsUp()
@@ -4678,7 +4735,6 @@ ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
-	char buff[100];
 	agc_t* vagc;
 
 	if (G->vesseltype < 2)
@@ -4718,25 +4774,36 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 	REFSoct[18] = vagc->Erasable[0][REFSMMATaddress + 16];
 	REFSoct[19] = vagc->Erasable[0][REFSMMATaddress + 17];
 
-	for (int i = 2; i < 20; i++)
-	{
-		sprintf(buff, "%05o", REFSoct[i]);
-		G->REFSMMAToct[i] = atoi(buff);
-	}
+	MATRIX3 REFSMMAT;
 
-	G->REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
-	G->REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
-	G->REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
-	G->REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
-	G->REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
-	G->REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
-	G->REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
-	G->REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
-	G->REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
+	REFSMMAT.m11 = OrbMech::DecToDouble(REFSoct[2], REFSoct[3])*2.0;
+	REFSMMAT.m12 = OrbMech::DecToDouble(REFSoct[4], REFSoct[5])*2.0;
+	REFSMMAT.m13 = OrbMech::DecToDouble(REFSoct[6], REFSoct[7])*2.0;
+	REFSMMAT.m21 = OrbMech::DecToDouble(REFSoct[8], REFSoct[9])*2.0;
+	REFSMMAT.m22 = OrbMech::DecToDouble(REFSoct[10], REFSoct[11])*2.0;
+	REFSMMAT.m23 = OrbMech::DecToDouble(REFSoct[12], REFSoct[13])*2.0;
+	REFSMMAT.m31 = OrbMech::DecToDouble(REFSoct[14], REFSoct[15])*2.0;
+	REFSMMAT.m32 = OrbMech::DecToDouble(REFSoct[16], REFSoct[17])*2.0;
+	REFSMMAT.m33 = OrbMech::DecToDouble(REFSoct[18], REFSoct[19])*2.0;
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
 
-	G->REFSMMAT = mul(G->REFSMMAT, OrbMech::J2000EclToBRCS(G->AGCEpoch));
+	REFSMMAT = mul(REFSMMAT, OrbMech::J2000EclToBRCS(GC->rtcc->AGCEpoch));
+	if (G->vesseltype < 2)
+	{
+		GC->rtcc->BZSTLM.CMC_REFSMMAT = REFSMMAT;
+		GC->rtcc->BZSTLM.CMCRefsPresent = true;
+		GC->rtcc->EMSGSUPP(1, 1);
+		GeneralMEDRequest("G00,CSM,TLM,CSM,CUR;");
+	}
+	else
+	{
+		GC->rtcc->BZSTLM.LGC_REFSMMAT = REFSMMAT;
+		GC->rtcc->BZSTLM.LGCRefsPresent = true;
+		GC->rtcc->EMSLSUPP(1, 1);
+		GeneralMEDRequest("G00,LEM,TLM,LEM,CUR;");
+	}
+
 	G->REFSMMATcur = G->REFSMMATopt;
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
@@ -6671,6 +6738,70 @@ void ApolloRTCCMFD::set_SPQTPIDefinitionValue(double get)
 	GC->rtcc->GZGENCSN.TPIDefinitionValue = get;
 }
 
+void ApolloRTCCMFD::menuCycleSPQCDHPoint()
+{
+
+}
+
+void ApolloRTCCMFD::menuSPQCDHValue()
+{
+	bool SPQCDHValueInput(void* id, char *str, void *data);
+	if (GC->rtcc->med_k01.I_CDH == 1)
+	{
+		oapiOpenInputBox("No. of apsis since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
+	}
+	else if (GC->rtcc->med_k01.I_CDH == 2)
+	{
+		oapiOpenInputBox("GET of CDH:", SPQCDHValueInput, 0, 20, (void*)this);
+	}
+	else
+	{
+		oapiOpenInputBox("Angle from CSI to CDH:", SPQCDHValueInput, 0, 20, (void*)this);
+	}
+}
+
+bool SPQCDHValueInput(void* id, char *str, void *data)
+{
+	if (strlen(str) < 20)
+	{
+		return ((ApolloRTCCMFD*)data)->set_SPQCDHValue(str);
+	}
+	return false;
+}
+
+bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
+{
+	if (GC->rtcc->med_k01.I_CDH == 1)
+	{
+		int n;
+		if (sscanf(val, "%d", &n) == 1)
+		{
+			GC->rtcc->med_k01.CDH_Apsis = n;
+			return true;
+		}
+	}
+	else if (GC->rtcc->med_k01.I_CDH == 2)
+	{
+		int hh, mm;
+		double ss;
+		if (sscanf(val, "%d:%d:%lf", &hh, &mm, &ss) == 3)
+		{
+			GC->rtcc->med_k01.CDH_Time = ss + 60 * (mm + 60 * hh);
+			return true;
+		}
+	}
+	else
+	{
+		double angle;
+		if (sscanf(val, "%lf", &angle) == 1)
+		{
+			GC->rtcc->med_k01.CDH_Angle = angle * RAD;
+			return true;
+		}
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuSetDKIElevation()
 {
 	bool DKIElevInput(void* id, char *str, void *data);
@@ -7785,6 +7916,310 @@ void ApolloRTCCMFD::menuCalculateTPITime()
 	G->CalculateTPITime();
 }
 
+void ApolloRTCCMFD::menuVectorCompareDisplayCalc()
+{
+	G->VectorCompareDisplayCalc();
+}
+
+void ApolloRTCCMFD::menuVectorCompareColumn1()
+{
+	bool VectorCompareColumn1Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Select vector for column 1. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn1Input, 0, 20, (void*)this);
+}
+
+bool VectorCompareColumn1Input(void* id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_VectorCompareColumn(buf, 1);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::menuVectorCompareColumn2()
+{
+	bool VectorCompareColumn2Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Select vector for column 2. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn2Input, 0, 20, (void*)this);
+}
+
+bool VectorCompareColumn2Input(void* id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_VectorCompareColumn(buf, 2);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::menuVectorCompareColumn3()
+{
+	bool VectorCompareColumn3Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Select vector for column 3. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn3Input, 0, 20, (void*)this);
+}
+
+bool VectorCompareColumn3Input(void* id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_VectorCompareColumn(buf, 3);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::menuVectorCompareColumn4()
+{
+	bool VectorCompareColumn4Input(void* id, char *str, void *data);
+	oapiOpenInputBox("Select vector for column 4. EPHO = Orbit Ephemeris, CMC = CMC telemetry vector, LGC = LGC telemetry vector, HSR = high-speed radar (uses actual SV):", VectorCompareColumn4Input, 0, 20, (void*)this);
+}
+
+bool VectorCompareColumn4Input(void* id, char *str, void *data)
+{
+	if (strlen(str) < 8)
+	{
+		std::string buf(str);
+		((ApolloRTCCMFD*)data)->set_VectorCompareColumn(buf, 4);
+
+		return true;
+	}
+
+	return false;
+}
+
+void ApolloRTCCMFD::set_VectorCompareColumn(std::string vec, int col)
+{
+	GC->rtcc->med_s80.VID[col - 1] = vec;
+}
+
+void ApolloRTCCMFD::menuVectorCompareVehicle()
+{
+	if (GC->rtcc->med_s80.VEH == 1)
+	{
+		GC->rtcc->med_s80.VEH = 3;
+	}
+	else
+	{
+		GC->rtcc->med_s80.VEH = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuVectorCompareReference()
+{
+	if (GC->rtcc->med_s80.REF < 1)
+	{
+		GC->rtcc->med_s80.REF++;
+	}
+	else
+	{
+		GC->rtcc->med_s80.REF = 0;
+	}
+}
+
+void ApolloRTCCMFD::menuVectorCompareTime()
+{
+
+}
+
+void ApolloRTCCMFD::menuGOSTDisplayREFSMMAT()
+{
+	bool GOSTDisplayREFSMMATInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Select REFSMMAT to display (CUR, PCR, TLM, OST, MED, DMT, DOD or LCV):", GOSTDisplayREFSMMATInput, 0, 20, (void*)this);
+}
+
+bool GOSTDisplayREFSMMATInput(void* id, char *str, void *data)
+{
+	std::string mat, med;
+
+	mat.assign(str);
+	med = "G10,CSM,,,,," + mat + ";";
+	char Buff[64];
+	sprintf_s(Buff, 64, med.c_str());
+
+	((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+	return true;
+}
+
+void ApolloRTCCMFD::menuGOSTBoresightSCTCalc()
+{
+	bool GOSTBoresightSCTCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Boresight/SCT Data. Format: HHH:MM:SS NNN XXX (GET, Starting Star, REFSMMAT type)", GOSTBoresightSCTCalcInput, 0, 20, (void*)this);
+}
+
+bool GOSTBoresightSCTCalcInput(void* id, char *str, void *data)
+{
+	double ss;
+	int hh, mm, star;
+	char ref[16];
+
+	if (sscanf_s(str, "%d:%d:%lf %d %s", &hh, &mm, &ss, &star, &ref, _countof(ref)) == 5)
+	{
+		std::string med, med2;
+		med2.assign(ref);
+
+		med = "G10,CSM," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + std::to_string(star) + "," + med2 + ",,;";
+		char Buff[64];
+		sprintf_s(Buff, 64, med.c_str());
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTSXTCalc()
+{
+	bool GOSTSXTCalcInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Sextant Data. Format: HHH:MM:SS NNN XXX (GET, Starting Star, REFSMMAT type)", GOSTSXTCalcInput, 0, 20, (void*)this);
+}
+
+bool GOSTSXTCalcInput(void* id, char *str, void *data)
+{
+	double ss;
+	int hh, mm, star;
+	char ref[16];
+
+	if (sscanf_s(str, "%d:%d:%lf %d %s", &hh, &mm, &ss, &star, &ref, _countof(ref)) == 5)
+	{
+		std::string med, med2;
+		med2.assign(ref);
+
+		med = "G10,CSM," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + std::to_string(star) + ",," + med2 + ",;";
+		char Buff[64];
+		sprintf_s(Buff, 64, med.c_str());
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTEnterAttitude()
+{
+	bool GOSTEnterAttitudeInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter attitude 1 or 2. Format: 1 or 2 P Y R", GOSTEnterAttitudeInput, 0, 20, (void*)this);
+}
+
+bool GOSTEnterAttitudeInput(void* id, char *str, void *data)
+{
+	int num;
+	VECTOR3 Att;
+	if (sscanf(str, "%d %lf %lf %lf", &num, &Att.x, &Att.y, &Att.z) == 4)
+	{
+		std::string med;
+
+		med = "G12,CSM,,,,,,,";
+		if (num == 2)
+		{
+			med += ",,,";
+		}
+		med += std::to_string(Att.x);
+		med += ",";
+		med += std::to_string(Att.y);
+		med += ",";
+		med += std::to_string(Att.z);
+		med += ";";
+
+		char Buff[64];
+		sprintf_s(Buff, 64, med.c_str());
+
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTEnterSXTData()
+{
+	bool GOSTEnterSXTDataInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter sextant data 1 or 2. Format: 1/2 Star Shaft Trunnion", GOSTEnterSXTDataInput, 0, 20, (void*)this);
+}
+
+bool GOSTEnterSXTDataInput(void* id, char *str, void *data)
+{
+	int num;
+	unsigned star;
+	double SA, TA;
+	if (sscanf(str, "%d %d %lf %lf", &num, &star, &SA, &TA) == 4)
+	{
+		std::string med;
+
+		med = "G12,CSM,";
+		if (num == 2)
+		{
+			med += ",,,";
+		}
+		med += std::to_string(star);
+		med += ",";
+		med += std::to_string(SA);
+		med += ",";
+		med += std::to_string(TA);
+		med += ";";
+
+		char Buff[64];
+		sprintf_s(Buff, 64, med.c_str());
+
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTShowStarVector()
+{
+	bool GOSTShowStarVectorInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Enter number of star to display:", GOSTShowStarVectorInput, 0, 20, (void*)this);
+}
+
+bool GOSTShowStarVectorInput(void* id, char *str, void *data)
+{
+	unsigned star;
+	if (sscanf(str, "%d", &star) == 1)
+	{
+		std::string med;
+		med = "G14,CSM," + std::to_string(star) + ";";
+		char Buff[64];
+		sprintf_s(Buff, "%s", med.c_str());
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+		return true;
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::menuGOSTShowLandmarkVector()
+{
+	bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data);
+	oapiOpenInputBox("Landmark vector. Format: VEHICLE (CSM or LEM) GET BODY (S, M or E) LAT LONG HEIGHT (in feet)", GOSTShowLandmarkVectorInput, 0, 40, (void*)this);
+}
+
+bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data)
+{
+	int hh, mm;
+	double ss, lat = 0.0, lng = 0.0, height = 0.0;
+	char buff[16], body;
+	if (sscanf_s(str, "%s %d:%d:%lf %c %lf %lf %lf", buff, (unsigned)_countof(buff), &hh, &mm, &ss, &body, 1, &lat, &lng, &height) >= 3)
+	{
+		std::string med, med2;
+		med2.assign(buff);
+
+		med = "G14," + med2 + ",," + std::to_string(hh) + ":" + std::to_string(mm) + ":" + std::to_string(ss) + "," + body + "," + std::to_string(lat) + "," + std::to_string(lng) + "," + std::to_string(height) + ";";
+		char Buff[64];
+		sprintf_s(Buff, "%s", med.c_str());
+		((ApolloRTCCMFD*)data)->GeneralMEDRequest(Buff);
+
+		return true;
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuMSKRequest()
 {
 	bool MSKRequestInput(void* id, char *str, void *data);
@@ -7863,6 +8298,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 	case 88:
 		menuSetPredSiteAcquisitionLM2Page();
 		break;
+	case 229:
+		menuSetGuidanceOpticsSupportTablePage();
+		break;
 	case 1501:
 		menuSetMoonriseMoonsetTablePage();
 		break;
@@ -7874,6 +8312,9 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 		break;
 	case 1506:
 		menuSetExpSiteAcqPage();
+		break;
+	case 1590:
+		menuSetVectorCompareDisplay();
 		break;
 	case 1597:
 		menuSetSkeletonFlightPlanPage();
@@ -8171,6 +8612,32 @@ bool ApolloRTCCMFD::papiReadScenario_SV(char *line, char *item, EphemerisData &s
 			EphemerisData v;
 			if (sscanf(line, "%s %d %lf %lf %lf %lf %lf %lf %lf", buffer, &v.RBI, &v.GMT, &v.R.x, &v.R.y, &v.R.z, &v.V.x, &v.V.y, &v.V.z) == 9) {
 				sv = v;
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+void ApolloRTCCMFD::papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in)
+{
+	char buffer[256];
+
+	sprintf(buffer, "  %s %d %d %d %lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf %.12lf", item, tab, i, in.ID, in.GMT, in.REFSMMAT.m11, in.REFSMMAT.m12, in.REFSMMAT.m13, in.REFSMMAT.m21, in.REFSMMAT.m22,
+		in.REFSMMAT.m23, in.REFSMMAT.m31, in.REFSMMAT.m32, in.REFSMMAT.m33);
+	oapiWriteLine(scn, buffer);
+}
+
+bool ApolloRTCCMFD::papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1) {
+		if (!strcmp(buffer, item)) {
+			REFSMMATData v;
+			if (sscanf(line, "%s %d %d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", buffer, &tab, &i, &v.ID, &v.GMT, &v.REFSMMAT.m11, &v.REFSMMAT.m12, &v.REFSMMAT.m13, &v.REFSMMAT.m21, &v.REFSMMAT.m22,
+				&v.REFSMMAT.m23, &v.REFSMMAT.m31, &v.REFSMMAT.m32, &v.REFSMMAT.m33) == 14) {
+				out = v;
 				return true;
 			}
 		}

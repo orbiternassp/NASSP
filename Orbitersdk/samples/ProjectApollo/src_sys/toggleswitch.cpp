@@ -392,6 +392,57 @@ void ToggleSwitch::timestep(double missionTime)
 	SwitchTo(state);
 }
 
+bool ToggleSwitch::ProcessMouseVC(int event, VECTOR3 &p)
+{
+	int OldState = state;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+
+	if (event & PANEL_MOUSE_LBDOWN) {
+		if (state != TOGGLESWITCH_DOWN) {
+			SwitchTo(TOGGLESWITCH_DOWN, true);
+			Sclick.play();
+		}
+
+		else {
+			if (state != TOGGLESWITCH_UP) {
+				SwitchTo(TOGGLESWITCH_UP, true);
+				Sclick.play();
+			}
+		}
+	}
+	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
+	}
+	return true;
+}
+
+void ToggleSwitch::RedrawVC(UINT anim)
+{
+	if (IsUp()) {
+		OurVessel->SetAnimation(anim, 1.0);
+	}
+	else if (IsCenter())
+	{
+		OurVessel->SetAnimation(anim, 0.5);
+	}
+	else
+	{
+		OurVessel->SetAnimation(anim, 0.0);
+	}
+}
 
 //
 // Three pos switch.
@@ -447,6 +498,62 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 			SwitchTo(THREEPOSSWITCH_CENTER,true);
 
 		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)     
+			SwitchTo(THREEPOSSWITCH_CENTER);
+	}
+	return true;
+}
+
+bool ThreePosSwitch::ProcessMouseVC(int event, VECTOR3 &p)
+{
+	int OldState = state;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+	if (event & PANEL_MOUSE_LBDOWN) {
+		if (Sideways == 0 || Sideways == 2 ) {
+			if (state < 2) {
+				SwitchTo(state + 1, true);
+				Sclick.play();
+			}
+		} else {
+			if (state > 0) {
+				SwitchTo(state - 1, true);
+				Sclick.play();
+			}
+		}
+	} else if (event & PANEL_MOUSE_RBDOWN) {
+		if (Sideways == 1) {
+			if (state < 2) {
+				SwitchTo(state + 1, true);
+				Sclick.play();
+			}
+		} else {
+			if (state > 0) {
+				SwitchTo(state - 1, true);
+				Sclick.play();
+			}
+		}
+	}
+
+	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(THREEPOSSWITCH_DOWN, true);
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(THREEPOSSWITCH_CENTER, true);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(THREEPOSSWITCH_UP, true);
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == THREEPOSSWITCH_UP)
+			SwitchTo(THREEPOSSWITCH_CENTER, true);
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == THREEPOSSWITCH_DOWN)
 			SwitchTo(THREEPOSSWITCH_CENTER);
 	}
 	return true;
@@ -585,10 +692,104 @@ bool FivePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+bool FivePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	int OldState = state;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (p.y > 0.5 && (p.x < 0.66 && p.x > 0.33)) {
+			// Down
+			if (state != FIVEPOSSWITCH_DOWN) {
+				SwitchTo(FIVEPOSSWITCH_DOWN, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if (p.y < 0.5 && (p.x < 0.66 && p.x > 0.33)) {
+			// Up
+			if (state != FIVEPOSSWITCH_UP) {
+				SwitchTo(FIVEPOSSWITCH_UP, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if (p.x > 0.66) {
+			// Right
+			if (state != FIVEPOSSWITCH_RIGHT) {
+				SwitchTo(FIVEPOSSWITCH_RIGHT, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		if (p.x < 0.33) {
+			// Left
+			if (state != FIVEPOSSWITCH_LEFT) {
+				SwitchTo(FIVEPOSSWITCH_LEFT, true);
+				Sclick.play();
+			}
+			return true;
+		}
+		// Otherwise
+		if (state != FIVEPOSSWITCH_CENTER) {
+			SwitchTo(FIVEPOSSWITCH_CENTER, true);
+			Sclick.play();
+		}
+	}
+	else if (IsSpringLoaded() && event == PANEL_MOUSE_LBUP && !IsHeld()) {
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(FIVEPOSSWITCH_DOWN, true);
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER) SwitchTo(FIVEPOSSWITCH_CENTER, true);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(FIVEPOSSWITCH_UP, true);
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGUP && state == FIVEPOSSWITCH_UP)
+			SwitchTo(FIVEPOSSWITCH_CENTER, true);
+
+		if (springLoaded == SPRINGLOADEDSWITCH_CENTER_SPRINGDOWN && state == FIVEPOSSWITCH_DOWN)
+			SwitchTo(FIVEPOSSWITCH_CENTER);
+	}
+	return true;
+}
+
 void FivePosSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 
 {
 	oapiBlt(DrawSurface, SwitchSurface, x, y, (state * width), 0, width, height, SURF_PREDEF_CK);
+}
+
+void FivePosSwitch::DrawSwitchVC(UINT animx, UINT animy)
+
+{
+	if (state == FIVEPOSSWITCH_UP) {
+		OurVessel->SetAnimation(animx, 0.5);
+		OurVessel->SetAnimation(animy, 1.0);
+	}
+	else if (state == FIVEPOSSWITCH_RIGHT) {
+		OurVessel->SetAnimation(animx, 1.0);
+		OurVessel->SetAnimation(animy, 0.5);
+	}
+	else if (state == FIVEPOSSWITCH_DOWN) {
+		OurVessel->SetAnimation(animx, 0.5);
+		OurVessel->SetAnimation(animy, 0.0);
+	}
+	else if (state == FIVEPOSSWITCH_LEFT) {
+		OurVessel->SetAnimation(animx, 0.0);
+		OurVessel->SetAnimation(animy, 0.5);
+	}
+	else {
+		OurVessel->SetAnimation(animx, 0.5);
+		OurVessel->SetAnimation(animy, 0.5);
+	}
 }
 
 bool FivePosSwitch::SwitchTo(int newState, bool dontspring)
@@ -662,6 +863,28 @@ bool PushSwitch::CheckMouseClick(int event, int mx, int my) {
 		SwitchTo(1, true);
 		Sclick.play();
 	} else if (event == PANEL_MOUSE_LBUP && !IsHeld()) {
+		SwitchTo(0, true);
+	}
+	return true;
+}
+
+bool PushSwitch::ProcessMouseVC(int event, VECTOR3 &p) {
+
+	int OldState = state;
+
+	if (!visible) return false;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+	SetHeld((ctrlState & 0x8000) != 0);
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		SwitchTo(1, true);
+		Sclick.play();
+	}
+	else if (event == PANEL_MOUSE_LBUP && !IsHeld()) {
 		SwitchTo(0, true);
 	}
 	return true;
@@ -1071,6 +1294,46 @@ bool SwitchRow::DrawRow(int id, SURFHANDLE DrawSurface, bool FlashOn) {
 		s = s->GetNext();
 	}
 	return true;
+}
+
+bool PanelSwitchesVC::VCMouseEvent(int id, int event, VECTOR3 &p)
+{
+	for (unsigned i = 0;i < SwitchList.size();i++)
+	{
+		if (id == SwitchArea[i])
+		{
+			SwitchList[i]->ProcessMouseVC(event, p);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool PanelSwitchesVC::VCRedrawEvent(int id, int event, SURFHANDLE surf)
+{
+	for (unsigned i = 0;i < SwitchList.size();i++)
+	{
+		if (id == SwitchArea[i])
+		{
+			SwitchList[i]->RedrawVC(*SwitchAnim[i]);
+			return true;
+		}
+	}
+	return false;
+}
+
+void PanelSwitchesVC::AddSwitch(PanelSwitchItem *s, int area, UINT * anim)
+{
+	SwitchList.push_back(s);
+	SwitchArea.push_back(area);
+	SwitchAnim.push_back(anim);
+}
+
+void PanelSwitchesVC::ClearSwitches()
+{
+	SwitchList.clear();
+	SwitchArea.clear();
+	SwitchAnim.clear();
 }
 
 //
@@ -1804,6 +2067,8 @@ void RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	if (!sclick.isValid()) {
 		row.panelSwitches->soundlib->LoadSound(sclick, ROTARY_SOUND);
 	}
+
+	OurVessel = switchRow->panelSwitches->vessel;
 }
 
 void RotationalSwitch::AddPosition(int value, double angle) {
@@ -1962,6 +2227,38 @@ void RotationalSwitch::SetState(int value)
 	SwitchTo(value);
 }
 
+void RotationalSwitch::RedrawVC(UINT anim)
+{
+	double state = 0;
+
+	if (position) state = position->GetAngle();
+
+	OurVessel->SetAnimation(anim, state / 360);
+}
+
+bool RotationalSwitch::ProcessMouseVC(int event, VECTOR3 &p) {
+
+	int state = GetState();
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (state > 0) {
+			SwitchTo(state - 1);
+		}
+		else if (state == 0 && Wraparound) {
+			SwitchTo(maxState);
+		}
+	}
+	else if (event == PANEL_MOUSE_RBDOWN) {
+		if (state < maxState) {
+			SwitchTo(state + 1);
+		}
+		else if (state == maxState && Wraparound) {
+			SwitchTo(0);
+		}
+	}
+	return true;
+}
+
 RotationalSwitchPosition::RotationalSwitchPosition(int v, double a) {
 
 	value = v;
@@ -1970,7 +2267,6 @@ RotationalSwitchPosition::RotationalSwitchPosition(int v, double a) {
 
 RotationalSwitchPosition::~RotationalSwitchPosition() {
 }
-
 
 PowerStateRotationalSwitch::PowerStateRotationalSwitch()
 
@@ -2613,6 +2909,40 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 	}
 
 	oapiBlt(drawSurface, switchSurface, x, y, width * (int) displayState, 0, width, height);
+}
+
+void IndicatorSwitch::DrawSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc) {
+
+	int drawState = 0;
+
+	// Require power if wired
+	if (SRC != NULL) {
+		if (SRC->Voltage() > SP_MIN_DCVOLTAGE) {
+			drawState = GetState();
+		}
+		else {
+			drawState = (failOpen ? 1 : 0);
+		}
+	}
+	else {
+		drawState = GetState();
+	}
+
+	if (drawState && displayState < 3.0)
+		displayState += oapiGetSimStep() * 4.0;
+
+	if (!drawState && displayState > 0.0)
+		displayState -= oapiGetSimStep() * 4.0;
+
+	if (displayState > 3.0) displayState = 3.0;
+	if (displayState < 0.0) displayState = 0.0;
+
+	// Cheating beyond normal saves switch subclasses and associated etcetera
+	if (displayState == 3.0 && drawState > 1) {
+		displayState += (drawState - 1);
+	}
+
+	oapiBlt(drawSurface, switchsurfacevc, x, y, width * (int)displayState, 0, width, height);
 }
 
 void IndicatorSwitch::SaveState(FILEHANDLE scn) {

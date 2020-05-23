@@ -115,7 +115,6 @@ public:
 	void RetrofireEXDVUplink();
 	void EntryUpdateUplink(void);
 	void REFSMMATUplink(void);
-	void REFSMMATUplinkCalc();
 	void StateVectorUplink();
 	void TLANDUplinkCalc(void);
 	void TLANDUplink(void);
@@ -130,11 +129,12 @@ public:
 	void AP11AbortCoefUplink();
 	void AP12AbortCoefUplink();
 	int REFSMMATOctalAddress();
-	int REFSMMATUplinkAddress();
 	void DetermineGMPCode();
 	void NodeConvCalc();
 	void SendNodeToSFP();
 	void CalculateTPITime();
+	void GetStateVectorFromAGC(bool csm);
+	void VectorCompareDisplayCalc();
 
 	int startSubthread(int fcn);
 	int subThread();
@@ -162,7 +162,6 @@ public:
 	int targetnumber;		//Vessel index for target
 
 	//GENERAL PARAMETERS
-	double AGCEpoch;
 	double P30TIG;				//Maneuver GET
 	VECTOR3 dV_LVLH;			//LVLH maneuver vector
 	int vesseltype;				//0=CSM, 1=CSM/LM docked, 2 = LM, 3 = LM/CSM docked
@@ -241,12 +240,8 @@ public:
 
 	//REFSMMAT PAGE
 	double REFSMMATTime;
-	MATRIX3 REFSMMAT;
-	MATRIX3 REFSMMAT_BRCS;
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
-	int REFSMMAToct[20];
 	int REFSMMATcur; //Currently saved REFSMMAT
-	int REFSMMATupl; //0 = Desired REFSMMAT, 1 = REFSMMAT
 	bool REFSMMATHeadsUp;
 
 	//ENTY PAGE	

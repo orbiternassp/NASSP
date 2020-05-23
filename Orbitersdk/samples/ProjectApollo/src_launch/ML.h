@@ -44,6 +44,10 @@ const double ML_SWINGARM_CONNECTING_SPEED = 1.0 / 200.0;
 const double ML_SWINGARM_RETRACT_SPEED = 1.0 / 5.0;
 const double ML_TAIL_SERVICE_MAST_CONNECTING_SPEED = 1.0 / 100.0;
 const double ML_TAIL_SERVICE_MAST_RETRACT_SPEED = 1.0 / 2.0;
+const double ML_TAIL_SERVICE_MAST_COVERS_CONNECTING_SPEED = 1.0 / 100.0;
+const double ML_TAIL_SERVICE_MAST_COVERS_RETRACT_SPEED = 1.0 / 1;
+const double DAMPERARM_CONNECTING_SPEED = 1.0 / 1000.0;
+const double DAMPERARM_RETRACT_SPEED = 1.0 / 30.0;
 
 ///
 /// \ingroup Ground
@@ -114,16 +118,22 @@ protected:
 
 	UINT craneAnim;
 	UINT cmarmAnim;
+	UINT s2aftarmAnim;
+	UINT damperarmAnim;
 	UINT s1cintertankarmAnim;
 	UINT s1cforwardarmAnim;
 	UINT swingarmAnim;
 	UINT mastAnim;
+	UINT mastcoversAnim;
 	double craneProc;
 	double cmarmProc;
+	AnimState s2aftarmState;
+	AnimState damperarmState;
 	AnimState s1cintertankarmState;
 	AnimState s1cforwardarmState;
 	AnimState swingarmState;
 	AnimState mastState;
+	AnimState mastcoversState;
 
 	PSTREAM_HANDLE liftoffStream[2];
 	double liftoffStreamLevel;

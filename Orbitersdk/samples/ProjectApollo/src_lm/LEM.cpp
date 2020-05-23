@@ -260,6 +260,8 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 LEM::~LEM()
 {
 	ReleaseSurfaces();
+	ReleaseSurfacesVC();
+	DeleteVCAnimations();
 
 	ClearMissionManagementMemory();
 
@@ -361,6 +363,7 @@ void LEM::Init()
 	probes = NULL;
 	cdrmesh = NULL;
 	lmpmesh = NULL;
+	vcmesh = NULL;
 
 	pMCC = NULL;
 
@@ -423,6 +426,7 @@ void LEM::Init()
 	// Do this stuff only once
 	if(!InitLEMCalled){
 		SystemsInit();
+		InitVCAnimations();
 
 		// Panel items
 		fdaiDisabled = false;
@@ -965,7 +969,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Debug string for displaying descent flight info from VC view
-	if (!Landed && GetAltitude(ALTMODE_GROUND) < 12192.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL) {
+	if (!Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL) {
 
 		char pgnssw[256];
 		char thrsw[256];
@@ -1596,6 +1600,8 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 		probes = GetDevMesh(vis, dscidx);
 		HideProbes();
 	}
+
+	if (vcidx != -1) vcmesh = GetDevMesh(vis, vcidx);
 }
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
@@ -1604,6 +1610,7 @@ void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 	probes = NULL;
 	cdrmesh = NULL;
 	lmpmesh = NULL;
+	vcmesh = NULL;
 }
 
 void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
@@ -1633,6 +1640,7 @@ void LEM::DefineAnimations()
 	ForwardHatch.DefineAnimationsVC(vcidx);
 	if (stage < 2) DPS.DefineAnimations(dscidx);
 	if (stage < 1 && pMission->LMHasLegs()) eds.DefineAnimations(dscidx);
+	DefineVCAnimations();
 }
 
 bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)

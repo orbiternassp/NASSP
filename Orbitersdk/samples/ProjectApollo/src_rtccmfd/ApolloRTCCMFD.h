@@ -70,10 +70,10 @@ public:
 	void menuSetOrbAdjPage();
 	void menuSetMapUpdatePage();
 	void REFSMMATTimeDialogue();
-	void cycleREFSMMATHeadsUp();
 	void set_REFSMMATTime(double time);
+	void menuREFSMMATLockerMovement();
+	void cycleREFSMMATHeadsUp();
 	void calcREFSMMAT();
-	void menuSendREFSMMATToOtherVessel();
 	void GMPInput1Dialogue();
 	void set_GMPInput1(double val);
 	void GMPInput2Dialogue();
@@ -98,6 +98,7 @@ public:
 	void set_MissionNumber(int mission);
 	void SPQcalc();
 	void lambertcalc();
+	void Angle_Display(char *Buff, double angle, bool DispPlus = true);
 	void GET_Display(char * Buff, double time, bool DispGET = true);
 	void GET_Display2(char * Buff, double time);
 	void GET_Display3(char* Buff, double time);
@@ -140,6 +141,7 @@ public:
 	void menuDeorbitCalc();
 	void menuMoonRTECalc();
 	void menuTransferRTEToMPT();
+	void menuGeneralMEDRequest();
 	void GeneralMEDRequest(char *str);
 	void set_entryrange(double range);
 	void EntryRangeDialogue();
@@ -193,7 +195,6 @@ public:
 	void menuChangeVesselType();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
-	void cycleREFSMMATupl();
 	void set_svtarget();
 	void TwoImpulseOffset();
 	void GetREFSMMATfromAGC();
@@ -400,6 +401,9 @@ public:
 	void set_SPQTerminalPhaseAngle(double wt);
 	void menuSetSPQTPIDefinitionValue();
 	void set_SPQTPIDefinitionValue(double get);
+	void menuCycleSPQCDHPoint();
+	void menuSPQCDHValue();
+	bool set_SPQCDHValue(char* val);
 	void menuSetDKIElevation();
 	void set_DKIElevation(double elev);
 	void menuCycleDKIManeuverLine();
@@ -681,11 +685,31 @@ public:
 	void menuSetLunarLaunchTargetingPage();
 	void menuSetTPITimesPage();
 	void menuCalculateTPITime();
+	void menuSetVectorCompareDisplay();
+	void menuVectorCompareDisplayCalc();
+	void menuVectorCompareColumn1();
+	void menuVectorCompareColumn2();
+	void menuVectorCompareColumn3();
+	void menuVectorCompareColumn4();
+	void set_VectorCompareColumn(std::string vec, int col);
+	void menuVectorCompareVehicle();
+	void menuVectorCompareTime();
+	void menuVectorCompareReference();
+	void menuSetGuidanceOpticsSupportTablePage();
+	void menuGOSTDisplayREFSMMAT();
+	void menuGOSTEnterAttitude();
+	void menuGOSTEnterSXTData();
+	void menuGOSTBoresightSCTCalc();
+	void menuGOSTSXTCalc();
+	void menuGOSTShowStarVector();
+	void menuGOSTShowLandmarkVector();
 
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;
 	oapi::Font *font2vert;
+	oapi::Font *fonttest;
+	oapi::Font *font3;
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
 	Saturn *saturn;
@@ -701,6 +725,8 @@ private:
 
 	static void papiWriteScenario_SV(FILEHANDLE scn, char *item, EphemerisData sv);
 	static bool papiReadScenario_SV(char *line, char *item, EphemerisData &sv);
+	static void papiWriteScenario_REFS(FILEHANDLE scn, char *item, int tab, int i, REFSMMATData in);
+	static bool papiReadScenario_REFS(char *line, char *item, int &tab, int &i, REFSMMATData &out);
 
 	ARCore* G;
 	AR_GCore* GC;
