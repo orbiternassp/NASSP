@@ -514,7 +514,7 @@ void USB::TimeStep(double simt) {
 		}
 	}
 
-	sprintf(oapiDebugString(), "rcvr_agc_voltage %lf", rcvr_agc_voltage);
+	//sprintf(oapiDebugString(), "rcvr_agc_voltage %lf", rcvr_agc_voltage);
 	// sprintf(oapiDebugString(), "USB - pa_mode_1 %d pa_mode_2 %d", pa_mode_1, pa_mode_2);
 }
 
