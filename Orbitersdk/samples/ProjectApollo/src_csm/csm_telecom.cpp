@@ -1222,7 +1222,7 @@ void OMNI::Init(Saturn *vessel) {
 
 	SignalStrength = 0;
 
-	double beamwidth = 170*RAD;
+	double beamwidth = 45*RAD;
 	OMNI_Gain = pow(10, (-3 / 10));
 
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
@@ -1267,9 +1267,11 @@ void OMNI::TimeStep()
 	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
 	SignalStrengthScaleFactor = SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
-	if (relang < PI05 / hpbw_factor)
+	if (relang < 160*RAD)
 	{
-		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*SignalStrengthScaleFactor;
+		//very rough approximation of radiation pattern
+		//https://www.wolframalpha.com/input/?i=polar+plot+sin%5E2%28%28acos%28sqrt%28sqrt%280.5%29%29%29+%2F+%2845deg+%2F+2.0%29%29*theta%2F%281.309-e%5E-theta%5E2%29%29+from+-160deg+to+160deg
+		SignalStrength = sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*SignalStrengthScaleFactor;
 	}
 	else
 	{
