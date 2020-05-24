@@ -308,7 +308,7 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_RANGE_TAPE, _R(431, 633, 475, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_RATE_TAPE, _R(482, 633, 517, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_LEM_MA_LEFT, _R(30, 593, 77, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_LEFT, _V(-0.415919, 0.599307, 1.65252) + ofs, 0.008);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_LEFT, _V(-0.415919, 0.599307, 1.70252) + ofs, 0.008);
 	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_LEFT, _R(341, 891, 377, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_RIGHT, _R(415, 891, 451, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_MPS_OXID_QUANTITY_INDICATOR, _R(445, 218, 484, 239), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
@@ -323,9 +323,9 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_THRUST_WEIGHT_IND, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	oapiVCRegisterArea(AID_VC_ABORT_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORT_BUTTON, _V(-0.10018, 0.436067, 1.63518) + ofs, 0.01);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORT_BUTTON, _V(-0.10018, 0.436067, 1.68518) + ofs, 0.01);
 	oapiVCRegisterArea(AID_VC_ABORTSTAGE_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORTSTAGE_BUTTON, _V(-0.047192, 0.437682, 1.63536) + ofs, 0.01);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_ABORTSTAGE_BUTTON, _V(-0.047192, 0.437682, 1.68536) + ofs, 0.01);
 
 	// Panel 2
 	for (i = 0; i < P2_SWITCHCOUNT; i++)
@@ -347,7 +347,7 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_RCS_XFEED_TALKBACK, _R(795, 844, 818, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_MAIN_SOV_TALKBACKS, _R(934, 844, 1027, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
 	oapiVCRegisterArea(AID_VC_LEM_MA_RIGHT, _R(1384, 593, 1431, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_RIGHT, _V(0.414751, 0.59891, 1.65247) + ofs, 0.008);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_RIGHT, _V(0.414751, 0.59891, 1.70247) + ofs, 0.008);
 
 	oapiVCRegisterArea(AID_VC_PANEL2_COMPLIGHTS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_PWRFAIL_LIGHTS_P2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -373,7 +373,7 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_CONTACTLIGHT2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_RR_SLEW_SWITCH, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCRegisterArea(AID_VC_PANEL3_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_RR_SLEW_SWITCH, _V(-0.27271, 0.157539, 1.52055) + ofs, _V(-0.255647, 0.157539, 1.52055) + ofs, _V(-0.27271, 0.143561, 1.51076) + ofs, _V(-0.255647, 0.143561, 1.51076) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_RR_SLEW_SWITCH, _V(-0.27271, 0.157539, 1.57055) + ofs, _V(-0.255647, 0.157539, 1.57055) + ofs, _V(-0.27271, 0.143561, 1.56076) + ofs, _V(-0.255647, 0.143561, 1.56076) + ofs);
 
 	// Panel 4
 	for (i = 0; i < P4_PUSHBCOUNT; i++)
@@ -1155,7 +1155,7 @@ void LEM::DefineVCAnimations()
 
 	// Radar strength meter
 	static UINT meshgroup_Needle_Radar = VC_GRP_Needle_Radar;
-	static MGROUP_ROTATE mgt_Needle_Radar(mesh, &meshgroup_Needle_Radar, 1, _V(-0.264141, 0.235696, 1.57835), P3_ROT_AXIS, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_Needle_Radar(mesh, &meshgroup_Needle_Radar, 1, _V(-0.264141, 0.235696, 1.62835), P3_ROT_AXIS, (float)(RAD * 360));
 	anim_Needle_Radar = CreateAnimation(0.5);
 	AddAnimationComponent(anim_Needle_Radar, 0.0f, 1.0f, &mgt_Needle_Radar);
 
@@ -1192,15 +1192,15 @@ void LEM::DefineVCAnimations()
 
 	// Abort stage cover
 	static UINT meshgroup_Abortstage_Cover = VC_GRP_AbortStageCover;
-	static MGROUP_ROTATE mgt_Abortstage_Cover(mesh, &meshgroup_Abortstage_Cover, 1, _V(-0.045187, 0.468451, 1.63831), _V(1, 0, 0), (float)(RAD * 100));
+	static MGROUP_ROTATE mgt_Abortstage_Cover(mesh, &meshgroup_Abortstage_Cover, 1, _V(-0.045187, 0.468451, 1.68831), _V(1, 0, 0), (float)(RAD * 100));
 	anim_abortstagecover = CreateAnimation(0.0);
 	AddAnimationComponent(anim_abortstagecover, 0.0f, 1.0f, &mgt_Abortstage_Cover);
 
 	// RR slew switch
 	const VECTOR3 rrslewaxis_x = { -0.00, -sin(P3_TILT + (90.0 * RAD)), cos(P3_TILT + (90.0 * RAD)) };
 	static UINT meshgroup_RRslew_switch = VC_GRP_RR_slew_switch;
-	static MGROUP_ROTATE mgt_RRslew_SwitchX(mesh, &meshgroup_RRslew_switch, 1, _V(-0.264179, 0.149389, 1.51749), rrslewaxis_x, (float)PI / 4);
-	static MGROUP_ROTATE mgt_RRslew_SwitchY(mesh, &meshgroup_RRslew_switch, 1, _V(-0.264179, 0.149389, 1.51749), _V(1, 0, 0), (float)PI / 4);
+	static MGROUP_ROTATE mgt_RRslew_SwitchX(mesh, &meshgroup_RRslew_switch, 1, _V(-0.264179, 0.149389, 1.56749), rrslewaxis_x, (float)PI / 4);
+	static MGROUP_ROTATE mgt_RRslew_SwitchY(mesh, &meshgroup_RRslew_switch, 1, _V(-0.264179, 0.149389, 1.56749), _V(1, 0, 0), (float)PI / 4);
 	anim_rrslewsitch_x = CreateAnimation(0.5);
 	anim_rrslewsitch_y = CreateAnimation(0.5);
 	AddAnimationComponent(anim_rrslewsitch_x, 0.0f, 1.0f, &mgt_RRslew_SwitchX);
@@ -1220,8 +1220,8 @@ void LEM::InitFDAI(UINT mesh) {
 	const VECTOR3 needleyvector = { 0.05, 0, 0 };
 	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_TILT), 0.062*sin(P1_TILT) };
 	const VECTOR3 rateyvector = { 0.062, 0, 0 };
-	const VECTOR3 FDAI_PIVOTCDR = { -0.297851, 0.525802, 1.70639 }; // CDR FDAI Pivot Point
-	const VECTOR3 FDAI_PIVOTLMP = { 0.297069, 0.525802, 1.70565 }; // LMP FDAI Pivot Point
+	const VECTOR3 FDAI_PIVOTCDR = { -0.297851, 0.525802, 1.75639 }; // CDR FDAI Pivot Point
+	const VECTOR3 FDAI_PIVOTLMP = { 0.297069, 0.525802, 1.75565 }; // LMP FDAI Pivot Point
 	const VECTOR3 attflagvector = { 0.01, 0, 0 };
 
 	// CDR FDAI Ball
@@ -1328,7 +1328,7 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 6;
+	int lightmat = VC_NMAT - 8;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1355,7 +1355,7 @@ void LEM::SetContactLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 8;
+	int lightmat = VC_NMAT - 10;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1382,7 +1382,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 17;
+	int lightmat = VC_NMAT - 19;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 

@@ -1,16 +1,16 @@
 // ========================================================
 // Mesh resource file for LM_VC.msh
-// Generated with meshc on Thu May 21 11:15:25 2020
+// Generated with meshc on Sat May 23 18:43:34 2020
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 173
+#define VC_NGRP 175
 
 // Number of materials:
-#define VC_NMAT 26
+#define VC_NMAT 28
 
 // Number of textures:
-#define VC_NTEX 5
+#define VC_NTEX 6
 
 // Named mesh groups:
 #define VC_GRP_AbortButton 0
@@ -182,7 +182,9 @@
 #define VC_GRP_Tunnel 166
 #define VC_GRP_UpperHatch 167
 #define VC_GRP_Windows 168
-#define VC_GRP_XpointerX_cdr 169
-#define VC_GRP_XpointerX_lmp 170
-#define VC_GRP_XpointerY_cdr 171
-#define VC_GRP_XpointerY_lmp 172
+#define VC_GRP_WindowsInner 169
+#define VC_GRP_WindowsRim 170
+#define VC_GRP_XpointerX_cdr 171
+#define VC_GRP_XpointerX_lmp 172
+#define VC_GRP_XpointerY_cdr 173
+#define VC_GRP_XpointerY_lmp 174
