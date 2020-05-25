@@ -668,7 +668,7 @@ public:
 	double GetRCSThrusterLevel(int jet);
 
 	// DS20160916 Physical parameters updation
-	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update
+	VECTOR3 currentCoG; // 0,0,0 corresponds to CoG at center of mesh
 
 	//
 	// These functions must be virtual so they can be called from the Saturn V or the LEVA
@@ -794,6 +794,8 @@ protected:
 	// mass in kg, ro1 (distance from center of the middle points), ro2 (distance from center of footpad points), tdph (height of footpad points),
 	// probeh (height of the probes), height (of the top point), x_target (stiffness/damping factor, stable default is -0.5)
 	void ConfigTouchdownPoints(double mass, double ro1, double ro2, double tdph, double probeh, double height, double x_target = -0.5);
+
+	void CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG);
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -2136,5 +2138,10 @@ extern MESHHANDLE hLMVC;
 extern void LEMLoadMeshes();
 extern void InitGParam(HINSTANCE hModule);
 extern void FreeGParam();
+
+//Offset from center of LM mesh (full LM) to center of descent stage mesh (for staging)
+const VECTOR3 OFS_LM_DSC = { 0, -1.25, 0.0 };
+//Ofset from center of LM mesh (full LM) to center of ascent stage mesh (for staging)
+const VECTOR3 OFS_ASC_DSC = { 0, -1.75, 0 };
 
 #endif

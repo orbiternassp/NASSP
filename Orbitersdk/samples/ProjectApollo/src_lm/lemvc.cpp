@@ -104,8 +104,6 @@ void LEM::SetView() {
 		v.y += ViewOffsety;
 		v.z += ViewOffsetz;
 
-		SetCameraOffset(v);
-
 	} else {
 
 		if(InPanel)
@@ -114,26 +112,26 @@ void LEM::SetView() {
 			{
 				case LMPANEL_MAIN:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 0.15, 1.26));
+						v =_V(0, 0.15, 1.26);
 					}
 					else {
-						SetCameraOffset(_V(0, 1.90, 1.26));
+						v =_V(0, 1.90, 1.26);
 					}
 					break;
 				case LMPANEL_RIGHTWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(0.576, 0.15, 1.26));
+						v =_V(0.576, 0.15, 1.26);
 					}
 					else {
-						SetCameraOffset(_V(0.576, 1.90, 1.26));
+						v =_V(0.576, 1.90, 1.26);
 					}
 					break;
 				case LMPANEL_LEFTWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.576, 0.15, 1.26));
+						v =_V(-0.576, 0.15, 1.26);
 					}
 					else {
-						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+						v =_V(-0.576, 1.90, 1.26);
 					}
 					break;
 				case LMPANEL_LPDWINDOW:
@@ -146,81 +144,83 @@ void LEM::SetView() {
 					v.x += ViewOffsetx;
 					v.y += ViewOffsety;
 					v.z += ViewOffsetz;
-
-					SetCameraOffset(v);
 					break;
 				case LMPANEL_RNDZWINDOW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.598, 0.15, 1.106));
+						v =_V(-0.598, 0.15, 1.106);
 					}
 					else {
-						SetCameraOffset(_V(-0.598, 1.90, 1.106));
+						v =_V(-0.598, 1.90, 1.106);
 					}
 					break;
 				case LMPANEL_LEFTPANEL:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.576, 0.15, 1.26));
+						v =_V(-0.576, 0.15, 1.26);
 					}
 					else {
-						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+						v =_V(-0.576, 1.90, 1.26);
 					}
 					break;
 				case LMPANEL_AOTVIEW:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 1.13, 1.26));
+						v =_V(0, 1.13, 1.26);
 					}
 					else {
-						SetCameraOffset(_V(0, 2.88, 1.26));
+						v =_V(0, 2.88, 1.26);
 					}
 					break;
 				case LMPANEL_AOTZOOM:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, 1.13, 1.26));
+						v =_V(0, 1.13, 1.26);
 					}
 					else {
-						SetCameraOffset(_V(0, 2.88, 1.26));
+						v =_V(0, 2.88, 1.26);
 					}
 					break;
 				case LMPANEL_DOCKVIEW:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.598, 0.15, 1.106));
+						v =_V(-0.598, 0.15, 1.106);
 					}
 					else {
-						SetCameraOffset(_V(-0.598, 1.90, 1.106));
+						v =_V(-0.598, 1.90, 1.106);
 					}
 					break;
 				
 				case LMPANEL_LEFTZOOM:
 					if (stage == 2) {
-						SetCameraOffset(_V(-0.576, 0.15, 1.26));
+						v =_V(-0.576, 0.15, 1.26);
 					}
 					else {
-						SetCameraOffset(_V(-0.576, 1.90, 1.26));
+						v =_V(-0.576, 1.90, 1.26);
 					}
 					break;
 				case LMPANEL_UPPERHATCH:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, -0.55, 0));
+						v =_V(0, -0.55, 0);
 					}
 					else {
-						SetCameraOffset(_V(0, 1.20, 0));
+						v =_V(0, 1.20, 0);
 					}
 					SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
 					oapiCameraSetCockpitDir(180 * RAD, 0);
 					break;
 				case LMPANEL_FWDHATCH:
 					if (stage == 2) {
-						SetCameraOffset(_V(0, -1.4, 1.5));
+						v =_V(0, -1.4, 1.5);
 					}
 					else {
-						SetCameraOffset(_V(0, 0.35, 1.5));
+						v =_V(0, 0.35, 1.5);
 					}
 					break;
 			}
 		}
 		else
-			SetCameraOffset (_V(0, 0, 0));
+		{
+			v =_V(0, 0, 0);
+		}
 	}
+
+	SetCameraOffset(v - currentCoG);
 
 	//
 	// Change FOV for the LPD window and AOT zoom

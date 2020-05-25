@@ -164,7 +164,7 @@ void LEM::SetLmVesselDockStage()
 	}
 
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster (_V(0.0  , -2.0,  0.0),  _V(0,1,0), 46706.3, ph_Dsc, 3107);
+	th_hover[0] = CreateThruster(_V(0.0, -1.54, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
 
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
@@ -240,7 +240,7 @@ void LEM::SetLmVesselHoverStage()
 	}
 	
 	// orbiter main thrusters
-	th_hover[0] = CreateThruster(_V(0.0, -2.0, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
+	th_hover[0] = CreateThruster(_V(0.0, -1.54, 0.0), _V(0, 1, 0), 46706.3, ph_Dsc, 3107);
 
 	DelThrusterGroup(THGROUP_HOVER, true);
 	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
@@ -281,7 +281,9 @@ void LEM::SetLmAscentHoverStage()
 
 {
 	ClearThrusterDefinitions();
-	ShiftCG(_V(0.0,1.75,0.0));
+	ShiftCG(_V(0.0,1.75,0.0) + currentCoG);
+	//We have shifted everything to the center of the mesh. If currentCoG gets used by the ascent stage it will be updated on the next timestep
+	currentCoG = _V(0, 0, 0);
 	SetSize (5);
 	SetVisibilityLimit(1e-3, 3.8668e-4);
 	SetEmptyMass (AscentEmptyMassKg);
@@ -379,8 +381,9 @@ void LEM::SeparateStage (UINT stage)
 	vs2.version = 2;
 
 	if (stage == 0) {
-		ShiftCentreOfMass(_V(0.0, -1.25, 0.0));
 		GetStatusEx(&vs2);
+		Local2Rel(OFS_LM_DSC - currentCoG, vs2.rpos);
+
 		char VName[256];
 		strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 		hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
@@ -395,13 +398,12 @@ void LEM::SeparateStage (UINT stage)
 			dscstage->SetState(0);
 		}
 
-		ShiftCentreOfMass(_V(0.0, 1.25, 0.0));
 		SetLmAscentHoverStage();
 	}
 	
 	if (stage == 1)	{
-		ShiftCentreOfMass(_V(0.0, -1.25, 0.0));
 		GetStatusEx(&vs2);
+		Local2Rel(OFS_LM_DSC - currentCoG, vs2.rpos);
 		
 		if (vs2.status == 1) {
 			vs2.vrot.x = 2.32;
@@ -425,7 +427,6 @@ void LEM::SeparateStage (UINT stage)
 			
 			vs2.vrot.x = 5.32;
 			DefSetStateEx(&vs2);
-			ShiftCentreOfMass(_V(0.0, 1.25, 0.0));
 			SetLmAscentHoverStage();
 		}
 		else
@@ -448,7 +449,6 @@ void LEM::SeparateStage (UINT stage)
 				dscstage->SetState(11);
 			}
 
-			ShiftCentreOfMass(_V(0.0, 1.25, 0.0));
 			SetLmAscentHoverStage();
 		}
 	}
@@ -685,6 +685,11 @@ void LEM::ConfigTouchdownPoints(double mass, double ro1, double ro2, double tdph
 	td[11].pos.x = ro2;
 	td[11].pos.y = probeh;
 	td[11].pos.z = 0;
+
+	for (int i = 0;i < 12;i++)
+	{
+		td[i].pos -= currentCoG;
+	}
 
 	SetTouchdownPoints(td, 12);
 }
