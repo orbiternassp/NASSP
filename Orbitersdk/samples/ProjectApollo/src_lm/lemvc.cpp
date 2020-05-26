@@ -525,6 +525,7 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
+	//return false;
 }
 
 bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
@@ -988,6 +989,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	}
 
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
+	//return false;
 }
 
 void LEM::InitVCAnimations() {
@@ -1328,7 +1330,7 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 8;
+	int lightmat = VC_NMAT - 9;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1355,7 +1357,7 @@ void LEM::SetContactLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 10;
+	int lightmat = VC_NMAT - 11;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1382,7 +1384,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 19;
+	int lightmat = VC_NMAT - 20;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
