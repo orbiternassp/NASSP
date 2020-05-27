@@ -668,6 +668,7 @@ public:
 	double GetRCSThrusterLevel(int jet);
 
 	// DS20160916 Physical parameters updation
+	double CurrentFuelWeight, LastFuelWeight; // Fuel weights right now and at the last update
 	VECTOR3 currentCoG; // 0,0,0 corresponds to CoG at center of mesh
 
 	//

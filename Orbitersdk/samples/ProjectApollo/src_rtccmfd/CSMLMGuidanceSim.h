@@ -59,7 +59,7 @@ struct PMMRKJInputArray
 	//0 = two thrusters, 1 = four thrusters
 	bool UllageOption;
 	//Configuration code at maneuver initiation (1 for CSM, 12 for LM, 13 for CSM and LM)
-	int IC;
+	unsigned IC;
 	//DT of ullage (=0 for RCS)
 	double DTU = 0.0;
 	//DT of maneuver (no pure ullage or tailoff, =0 if DV is given)

@@ -913,6 +913,89 @@ RTCC::RTCC()
 
 	hEarth = oapiGetObjectByName("Earth");
 	hMoon = oapiGetObjectByName("Moon");
+
+	//CG tables
+	LMDSCCGTAB.Weight[0] = 6350.288000;
+	LMDSCCGTAB.CG[0] = _V(5.657285, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[1] = 6577.084000;
+	LMDSCCGTAB.CG[1] = _V(5.602462, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[2] = 6803.880000;
+	LMDSCCGTAB.CG[2] = _V(5.551295, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[3] = 7030.676000;
+	LMDSCCGTAB.CG[3] = _V(5.503428, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[4] = 7257.472000;
+	LMDSCCGTAB.CG[4] = _V(5.458553, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[5] = 7484.268000;
+	LMDSCCGTAB.CG[5] = _V(5.416398, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[6] = 7711.064000;
+	LMDSCCGTAB.CG[6] = _V(5.376722, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[7] = 7937.860000;
+	LMDSCCGTAB.CG[7] = _V(5.339314, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[8] = 8164.656000;
+	LMDSCCGTAB.CG[8] = _V(5.303984, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[9] = 8391.452000;
+	LMDSCCGTAB.CG[9] = _V(5.270563, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[10] = 8618.248000;
+	LMDSCCGTAB.CG[10] = _V(5.238902, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[11] = 8845.044000;
+	LMDSCCGTAB.CG[11] = _V(5.208864, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[12] = 9071.840000;
+	LMDSCCGTAB.CG[12] = _V(5.180328, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[13] = 9298.636000;
+	LMDSCCGTAB.CG[13] = _V(5.153184, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[14] = 9525.432000;
+	LMDSCCGTAB.CG[14] = _V(5.127333, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[15] = 9752.228000;
+	LMDSCCGTAB.CG[15] = _V(5.102684, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[16] = 9979.024000;
+	LMDSCCGTAB.CG[16] = _V(5.079156, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[17] = 10205.820000;
+	LMDSCCGTAB.CG[17] = _V(5.056673, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[18] = 10432.616000;
+	LMDSCCGTAB.CG[18] = _V(5.035167, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[19] = 10659.412000;
+	LMDSCCGTAB.CG[19] = _V(5.014577, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[20] = 10886.208000;
+	LMDSCCGTAB.CG[20] = _V(4.994845, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[21] = 11113.004000;
+	LMDSCCGTAB.CG[21] = _V(4.975918, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[22] = 11339.800000;
+	LMDSCCGTAB.CG[22] = _V(4.957748, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[23] = 11566.596000;
+	LMDSCCGTAB.CG[23] = _V(4.940291, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[24] = 11793.392000;
+	LMDSCCGTAB.CG[24] = _V(4.923505, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[25] = 12020.188000;
+	LMDSCCGTAB.CG[25] = _V(4.907353, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[26] = 12246.984000;
+	LMDSCCGTAB.CG[26] = _V(4.891799, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[27] = 12473.780000;
+	LMDSCCGTAB.CG[27] = _V(4.876810, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[28] = 12700.576000;
+	LMDSCCGTAB.CG[28] = _V(4.862357, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[29] = 12927.372000;
+	LMDSCCGTAB.CG[29] = _V(4.848411, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[30] = 13154.168000;
+	LMDSCCGTAB.CG[30] = _V(4.834946, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[31] = 13380.964000;
+	LMDSCCGTAB.CG[31] = _V(4.821937, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[32] = 13607.760000;
+	LMDSCCGTAB.CG[32] = _V(4.809362, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[33] = 13834.556000;
+	LMDSCCGTAB.CG[33] = _V(4.797199, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[34] = 14061.352000;
+	LMDSCCGTAB.CG[34] = _V(4.785429, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[35] = 14288.148000;
+	LMDSCCGTAB.CG[35] = _V(4.774032, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[36] = 14514.944000;
+	LMDSCCGTAB.CG[36] = _V(4.762991, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[37] = 14741.740000;
+	LMDSCCGTAB.CG[37] = _V(4.752290, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[38] = 14968.536000;
+	LMDSCCGTAB.CG[38] = _V(4.741913, 0.000000, 0.000000);
+	LMDSCCGTAB.Weight[39] = 15195.332000;
+	LMDSCCGTAB.CG[39] = _V(4.731846, 0.000000, 0.000000);
+	LMDSCCGTAB.N = 40;
 }
 
 RTCC::~RTCC()
@@ -2761,7 +2844,17 @@ void RTCC::AP11ManeuverPAD(AP11ManPADOpt *opt, AP11MNV &pad)
 
 	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
 	{
-		CalcSPSGimbalTrimAngles(sv1.mass, LMmass, p_T, y_T);
+		double T, WDOT;
+		unsigned IC;
+		if (LMmass > 0)
+		{
+			IC = 13;
+		}
+		else
+		{
+			IC = 1;
+		}
+		GIMGBL(sv1.mass, LMmass, p_T, y_T, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0, 0.0);
 
 		ManPADPTrim = p_T + 2.15*RAD;
 		ManPADYTrim = y_T - 0.95*RAD;
@@ -2931,7 +3024,17 @@ void RTCC::AP7ManeuverPAD(AP7ManPADOpt *opt, AP7MNV &pad)
 
 	if (opt->enginetype == RTCC_ENGINETYPE_CSMSPS)
 	{
-		CalcSPSGimbalTrimAngles(sv1.mass, LMmass, p_T, y_T);
+		double T, WDOT;
+		unsigned IC;
+		if (LMmass > 0)
+		{
+			IC = 13;
+		}
+		else
+		{
+			IC = 1;
+		}
+		GIMGBL(sv1.mass, LMmass, p_T, y_T, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0, 0.0);
 
 		ManPADPTrim = p_T + 2.15*RAD;
 		ManPADYTrim = y_T - 0.95*RAD;
@@ -3210,7 +3313,17 @@ void RTCC::CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad)
 	CSMmass = v->GetMass();
 	LMmass = GetDockedVesselMass(v);
 
-	CalcSPSGimbalTrimAngles(CSMmass, LMmass, p_T, y_T);
+	double T, WDOT;
+	unsigned IC;
+	if (LMmass > 0)
+	{
+		IC = 13;
+	}
+	else
+	{
+		IC = 1;
+	}
+	GIMGBL(CSMmass, LMmass, p_T, y_T, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0, 0.0);
 
 	pad.ThisVehicleWeight = CSMmass / 0.45359237;
 	pad.OtherVehicleWeight = LMmass / 0.45359237;
@@ -3958,7 +4071,17 @@ MATRIX3 RTCC::REFSMMATCalc(REFSMMATOpt *opt)
 				MATRIX3 M, M_R, M_RTM;
 				double p_T, y_T;
 
-				CalcSPSGimbalTrimAngles(sv4.mass, LMmass, p_T, y_T);
+				double T, WDOT;
+				unsigned IC;
+				if (LMmass > 0)
+				{
+					IC = 13;
+				}
+				else
+				{
+					IC = 1;
+				}
+				GIMGBL(sv4.mass, LMmass, p_T, y_T, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0, 0.0);
 
 				if (opt->REFSMMATopt == 0)
 				{
@@ -10134,15 +10257,6 @@ void RTCC::EntryUpdateCalc(SV sv0, double GETbase, double entryrange, bool highs
 	res->GET05G = t2 + t32 + dt22;
 }
 
-void RTCC::CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &p_T, double &y_T)
-{
-	double x1;
-
-	x1 = LMmass / (CSMmass + LMmass)*6.2;
-	p_T = atan2(-2.15 * RAD * 5.0, 5.0 + x1);
-	y_T = atan2(0.95 * RAD * 5.0, 5.0 + x1);
-}
-
 double RTCC::CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise)
 {
 	//tpimode: 0 = TPI on time, 1 = TPI at orbital midnight, 2 = TPI at X minutes before sunrise
@@ -14625,7 +14739,8 @@ RTCC_PMMMCD_12_1:
 					{
 						WTCXX = in.mpt->mantable.back().CommonBlock.CSMMass;
 					}
-					GIMGBL(WTCXX, WTLXX, P_G, Y_G, Thr, WDOT, in.Thruster, in.CCMI, IA, IJ, in.DockingAngle);
+					unsigned IC = in.CCMI.to_ulong();
+					GIMGBL(WTCXX, WTLXX, P_G, Y_G, Thr, WDOT, in.Thruster, IC, IA, IJ, in.DockingAngle);
 				}
 				man.dv = in.BurnParm72 / (cos(P_G)*cos(Y_G));
 			}
@@ -29530,7 +29645,7 @@ bool RTCC::RTEManeuverCodeLogic(char *code, double csmmass, double lmascmass, do
 	return false;
 }
 
-void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, const std::bitset<4> &IC, int IA, int IJ, double D)
+void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned &IC, int IA, int IJ, double D)
 {
 	//INPUTS:
 	//CSMWT and LMWT, CSM and LM weights
@@ -29566,13 +29681,13 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	VECTOR3 XCG[2], XI, K;
 
 	//CSM only
-	if (IC.to_ulong() == 1)
+	if (IC == 1)
 	{
 		W[0] = CSMWT;
 		W[1] = 0.0;
 	}
 	//LM only
-	else if (IC.to_ulong() == 12)
+	else if (IC == 12)
 	{
 		W[0] = 0.0;
 		W[1] = LMWT;
@@ -29598,9 +29713,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		IND = 2;
 		K = _V(K1, 0, 0);
 		//Use LM DSC CG Table
-		//GIMGB2();
-		XI = _V(5.9116, 0, 0);
-		
+		XI = GIMGB2(LMDSCCGTAB.Weight, LMDSCCGTAB.CG, LMDSCCGTAB.N, W[1]);		
 	}
 	else
 	{
@@ -29608,7 +29721,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		{
 			goto RTCC_GIMGBL_LABEL_3_4;
 		}
-		if (IC.to_ulong() == 1)
+		if (IC == 1)
 		{
 			IND = 2;
 		}
@@ -29625,7 +29738,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	XCG[IND - 1] = XI - K;
 
 	//CSM or LM, but not docked?
-	if (IC.to_ulong() <= 12)
+	if (IC <= 12)
 	{
 		goto RTCC_GIMGBL_LABEL_3_2;
 	}
@@ -29648,8 +29761,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		else
 		{
 			//Use LM w/ descent CG table
-			//GIMGB2();
-			XI = _V(5.9116, 0, 0);
+			XI = GIMGB2(LMDSCCGTAB.Weight, LMDSCCGTAB.CG, LMDSCCGTAB.N, W[1]);
 		}
 		IND = 2;
 		K = _V(K1 + K3, 0, 0);
@@ -29705,6 +29817,45 @@ RTCC_GIMGBL_LABEL_3_2:
 	}
 	//T = XI.x;
 	//WDOT = XI.y;
+}
+
+VECTOR3 RTCC::GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W)
+{
+	VECTOR3 XI;
+	int I;
+	if (W <= WArr[0])
+	{
+		I = 1;
+	RTCC_GIMGB2_4:
+		XI = VecArr[I - 1];
+		goto RTCC_GIMGB2_2;
+	}
+	if (W >= WArr[N - 1])
+	{
+		goto RTCC_GIMGB2_1;
+	}
+	I = 2;
+RTCC_GIMGB2_3:
+	if (W < WArr[I - 1])
+	{
+		//Linearly interpolate
+		XI = VecArr[I - 2] + (VecArr[I - 1] - VecArr[I - 2]) / (WArr[I - 1] - WArr[I - 2])*(W - WArr[I - 2]);
+		goto RTCC_GIMGB2_2;
+	}
+	if (W == WArr[I - 1])
+	{
+		goto RTCC_GIMGB2_4;
+	}
+	if (I < N)
+	{
+		I++;
+		goto RTCC_GIMGB2_3;
+	}
+RTCC_GIMGB2_1:
+	I = N;
+	goto RTCC_GIMGB2_4;
+RTCC_GIMGB2_2:
+	return XI;
 }
 
 void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)

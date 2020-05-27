@@ -169,16 +169,16 @@ void LEM::SetLmVesselDockStage()
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
 	
-	VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
+	//VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[0], NULL, &dpspos0, NULL, 10.0, 1.5, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
+		{ th_hover[0], NULL, NULL, NULL, 10.0, 1.5, 0.7, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);
 
 	AddDust();
 
-	SetCameraOffset(_V(-0.61, 1.625, 1.39)); // Has to be the same as LPD view
+	SetCameraOffset(_V(-0.61, 1.625, 1.39) - currentCoG); // Has to be the same as LPD view
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-5.4516);
 	status = 0;
@@ -245,16 +245,16 @@ void LEM::SetLmVesselHoverStage()
 	DelThrusterGroup(THGROUP_HOVER, true);
 	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
 
-	VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
+	//VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[0], NULL, &dpspos0, NULL, 10.0, 1.5, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
+		{ th_hover[0], NULL, NULL, NULL, 10.0, 1.5, 0.7, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);
 
 	AddDust();
 
-	SetCameraOffset(_V(-0.61, 1.625, 1.39)); // Has to be the same as LPD view
+	SetCameraOffset(_V(-0.61, 1.625, 1.39) - currentCoG); // Has to be the same as LPD view
 	status = 1;
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
@@ -281,9 +281,10 @@ void LEM::SetLmAscentHoverStage()
 
 {
 	ClearThrusterDefinitions();
-	ShiftCG(_V(0.0,1.75,0.0) + currentCoG);
+	ShiftCG(_V(0.0,1.75,0.0) - currentCoG);
 	//We have shifted everything to the center of the mesh. If currentCoG gets used by the ascent stage it will be updated on the next timestep
 	currentCoG = _V(0, 0, 0);
+	LastFuelWeight = 999999; // Ensure update at first opportunity
 	SetSize (5);
 	SetVisibilityLimit(1e-3, 3.8668e-4);
 	SetEmptyMass (AscentEmptyMassKg);
@@ -403,7 +404,6 @@ void LEM::SeparateStage (UINT stage)
 	
 	if (stage == 1)	{
 		GetStatusEx(&vs2);
-		Local2Rel(OFS_LM_DSC - currentCoG, vs2.rpos);
 		
 		if (vs2.status == 1) {
 			vs2.vrot.x = 2.32;
@@ -431,6 +431,8 @@ void LEM::SeparateStage (UINT stage)
 		}
 		else
 		{
+			Local2Rel(OFS_LM_DSC - currentCoG, vs2.rpos);
+
 			char VName[256];
 			strcpy(VName, GetName()); strcat(VName, "-DESCENTSTG");
 			hdsc = oapiCreateVesselEx(VName, "ProjectApollo/Sat5LMDSC", &vs2);
