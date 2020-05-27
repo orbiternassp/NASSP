@@ -169,7 +169,6 @@ void LEM::SetLmVesselDockStage()
 	DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
 	
-	//VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
 	EXHAUSTSPEC es_hover[1] = {
 		{ th_hover[0], NULL, NULL, NULL, 10.0, 1.5, 0.7, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
@@ -245,7 +244,6 @@ void LEM::SetLmVesselHoverStage()
 	DelThrusterGroup(THGROUP_HOVER, true);
 	thg_hover = CreateThrusterGroup(th_hover, 1, THGROUP_HOVER);
 
-	//VECTOR3 dpspos0 = _V(-0.000818, -2.696427, 0.001107);
 	EXHAUSTSPEC es_hover[1] = {
 		{ th_hover[0], NULL, NULL, NULL, 10.0, 1.5, 0.7, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
@@ -331,9 +329,8 @@ void LEM::SetLmAscentHoverStage()
     DelThrusterGroup(THGROUP_HOVER,true);
 	thg_hover = CreateThrusterGroup (th_hover, 1, THGROUP_HOVER);
 	
-	VECTOR3 apspos0 = _V(-0.000409, -2.0, -0.002488);
 	EXHAUSTSPEC es_hover[1] = {
-		{ th_hover[0], NULL, &apspos0, NULL, 6.0, 0.8, 0, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
+		{ th_hover[0], NULL, NULL, NULL, 6.0, 0.8, -0.5, 0.1, exhaustTex, EXHAUST_CONSTANTPOS }
 	};
 
 	AddExhaust(es_hover);

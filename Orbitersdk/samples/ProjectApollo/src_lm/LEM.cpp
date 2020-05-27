@@ -1067,10 +1067,28 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		ShiftCG(CoGShift);
 		SetPMI(pmi);
 		currentCoG = CoG;
-		if (stage == 1)
+
+		//Touchdown Points
+		if (stage == 0)
+		{
+			ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86, -0.25);
+		}
+		else if (stage == 1)
 		{
 			if (pMission->LMHasLegs()) ConfigTouchdownPoints(7137.75, 3.5, 4.25, -3.60, -5.31, 3.86, -0.25); // landing gear extended
 		}
+		else
+		{
+			ConfigTouchdownPoints(4495.0, 3, 3, -5.42, 0, 2.8, -0.5);
+		}
+
+		//Lights
+		*trackLight.pos -= CoGShift;
+		for (int i = 0;i < 5;i++)
+		{
+			*dockingLights[i].pos -= CoGShift;
+		}
+
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;
 	}
@@ -2096,6 +2114,7 @@ void LEM::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 
 		//5.4516 is the offset between the full LM mesh and the LM coordinate system
 		COG = _V(0.0, totaly - 5.4516, 0.0);
+		//COG = _V(0.0, 0.0, 0.0);
 		PMI = _V(2.5428, 2.2871, 2.7566);
 	}
 	//Ascent stage
