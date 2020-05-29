@@ -282,6 +282,9 @@ void LEM::RegisterActiveAreas()
 	if (stage > 1) { ofs = _V(0.00, -0.76, 0.00); }
 	else { ofs = _V(0.00, 0.99, 0.00); }
 
+	//Apply center of gravity offset here
+	ofs -= currentCoG;
+
 	//
 	// Release all surfaces
 	//

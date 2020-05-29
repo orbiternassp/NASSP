@@ -795,6 +795,7 @@ protected:
 	// mass in kg, ro1 (distance from center of the middle points), ro2 (distance from center of footpad points), tdph (height of footpad points),
 	// probeh (height of the probes), height (of the top point), x_target (stiffness/damping factor, stable default is -0.5)
 	void ConfigTouchdownPoints(double mass, double ro1, double ro2, double tdph, double probeh, double height, double x_target = -0.5);
+	void DefineTouchdownPoints(int s);
 
 	void CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG);
 
@@ -1770,6 +1771,9 @@ protected:
 	// Exterior light definitions
 	BEACONLIGHTSPEC trackLight;                   // tracking light
 	BEACONLIGHTSPEC dockingLights[5];             // docking lights
+
+	VECTOR3 trackLightPos;
+	VECTOR3 dockingLightsPos[5];
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1

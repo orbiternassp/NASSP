@@ -367,6 +367,12 @@ void LEM::Init()
 
 	pMCC = NULL;
 
+	trackLightPos = _V(0, 0, 0);
+	for (int i = 0;i < 5;i++)
+	{
+		dockingLightsPos[i] = _V(0, 0, 0);
+	}
+
 	//
 	// VAGC Mode settings
 	//
@@ -1069,24 +1075,13 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		currentCoG = CoG;
 
 		//Touchdown Points
-		if (stage == 0)
-		{
-			ConfigTouchdownPoints(7137.75, 3.5, 0.5, -3.60, 0, 3.86, -0.25);
-		}
-		else if (stage == 1)
-		{
-			if (pMission->LMHasLegs()) ConfigTouchdownPoints(7137.75, 3.5, 4.25, -3.60, -5.31, 3.86, -0.25); // landing gear extended
-		}
-		else
-		{
-			ConfigTouchdownPoints(4495.0, 3, 3, -5.42, 0, 2.8, -0.5);
-		}
+		DefineTouchdownPoints(stage);
 
 		//Lights
-		*trackLight.pos -= CoGShift;
+		trackLightPos -= CoGShift;
 		for (int i = 0;i < 5;i++)
 		{
-			*dockingLights[i].pos -= CoGShift;
+			dockingLightsPos[i] -= CoGShift;
 		}
 
 		// All done!
@@ -2133,7 +2128,7 @@ void LEM::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 		p.z = zaxis[0] * m*m + zaxis[1] * m + zaxis[2];
 		PMI = p;*/
 
-		SetPMI(_V(2.8, 2.29, 2.37));
+		PMI = _V(2.8, 2.29, 2.37);
 		COG = _V(0, 0, 0);
 	}
 }
