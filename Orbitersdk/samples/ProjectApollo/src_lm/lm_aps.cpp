@@ -328,55 +328,55 @@ void LEM_APS::Timestep(double simdt) {
 	if (lem == NULL) { return; }
 
 	ChamberPressure = 0.0;
+	ThrustDecay = 0.0;
+
+	//Thrust on and off delay
+	if (thrustOn && armedOn)
+	{
+		if (ActuatorIsolationValve < 1)
+		{
+			//Based on 0.384s engine on delay from GSOP section 6, should probably be smaller
+			ActuatorIsolationValve += 1.3089*simdt;
+			if (ActuatorIsolationValve > 1) ActuatorIsolationValve = 1.0;
+		}
+	}
+	else
+	{
+		if (ActuatorIsolationValve > 0)
+		{
+			// 17.65cs cutoff delay at 100% thrust in GSOP. To reach the same impulse, linear thrust decay over twice that time.
+			ActuatorIsolationValve -= 2.83286*simdt;
+			if (ActuatorIsolationValve < 0) ActuatorIsolationValve = 0.0;
+		}
+	}
+
+	if (ActuatorIsolationValve > 0)
+	{
+		//Thrust decay with low pressure
+		double FuelInletPressure = lem->GetAPSPropellant()->GetFuelTrimOrificeOutletPressurePSI();
+		double OxidInletPressure = lem->GetAPSPropellant()->GetOxidTrimOrificeOutletPressurePSI();
+		if (FuelInletPressure > OxidInletPressure)
+		{
+			ThrustDecay = OxidInletPressure / 170.0;
+		}
+		else
+		{
+			ThrustDecay = FuelInletPressure / 170.0;
+		}
+
+		ThrustDecay = min(1.0, ThrustDecay);
+	}
+	else
+	{
+		ThrustDecay = 0.0;
+	}
 
 	if (lem->stage > 1)
 	{
-		ThrustDecay = 0.0;
-
-		//Thrust on and off delay
-		if (thrustOn && armedOn)
-		{
-			if (ActuatorIsolationValve < 1)
-			{
-				//Based on 0.384s engine on delay from GSOP section 6, should probably be smaller
-				ActuatorIsolationValve += 1.3089*simdt;
-				if (ActuatorIsolationValve > 1) ActuatorIsolationValve = 1.0;
-			}
-		}
-		else
-		{
-			if (ActuatorIsolationValve > 0)
-			{
-				// 17.65cs cutoff delay at 100% thrust in GSOP. To reach the same impulse, linear thrust decay over twice that time.
-				ActuatorIsolationValve -= 2.83286*simdt;
-				if (ActuatorIsolationValve < 0) ActuatorIsolationValve = 0.0;
-			}
-		}
-
-		if (ActuatorIsolationValve > 0)
-		{
-			//Thrust decay with low pressure
-			double FuelInletPressure = lem->GetAPSPropellant()->GetFuelTrimOrificeOutletPressurePSI();
-			double OxidInletPressure = lem->GetAPSPropellant()->GetOxidTrimOrificeOutletPressurePSI();
-			if (FuelInletPressure > OxidInletPressure)
-			{
-				ThrustDecay = OxidInletPressure / 170.0;
-			}
-			else
-			{
-				ThrustDecay = FuelInletPressure / 170.0;
-			}
-
-			ThrustDecay = min(1.0, ThrustDecay);
-		}
-		else
-		{
-			ThrustDecay = 0.0;
-		}
-
 		lem->SetThrusterLevel(lem->th_hover[0], ActuatorIsolationValve*ThrustDecay);
-		ChamberPressure = ActuatorIsolationValve * ThrustDecay*120.0;
 	}
+
+	ChamberPressure = ActuatorIsolationValve * ThrustDecay*120.0;
 }
 
 double LEM_APS::GetThrustChamberPressurePSI()

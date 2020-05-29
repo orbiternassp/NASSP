@@ -367,6 +367,12 @@ void LEM::Init()
 
 	pMCC = NULL;
 
+	trackLightPos = _V(0, 0, 0);
+	for (int i = 0;i < 5;i++)
+	{
+		dockingLightsPos[i] = _V(0, 0, 0);
+	}
+
 	//
 	// VAGC Mode settings
 	//
@@ -377,6 +383,7 @@ void LEM::Init()
 	// DS20160916 Physical parameters updation
 	CurrentFuelWeight = 0;
 	LastFuelWeight = 999999; // Ensure update at first opportunity
+	currentCoG = _V(0, 0, 0);
 
 	LEMToCSMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
@@ -1057,9 +1064,26 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	// If the weight has changed by more than this value, update things.
 	// The value is to be adjusted such that the updates are not too frequent (impacting framerate)
 	//   but are sufficiently fine to keep the LGC happy.
-	if ((LastFuelWeight - CurrentFuelWeight) > 5) {
+	if ((LastFuelWeight - CurrentFuelWeight) > 100.0) {
 		// Update physical parameters
-		// Use SetPMI, ShiftCentreOfMass, etc.
+		VECTOR3 pmi, CoG;
+		CalculatePMIandCOG(pmi, CoG);
+		// Use SetPMI, ShiftCG, etc.
+		VECTOR3 CoGShift = CoG - currentCoG;
+		ShiftCG(CoGShift);
+		SetPMI(pmi);
+		currentCoG = CoG;
+
+		//Touchdown Points
+		DefineTouchdownPoints(stage);
+
+		//Lights
+		trackLightPos -= CoGShift;
+		for (int i = 0;i < 5;i++)
+		{
+			dockingLightsPos[i] -= CoGShift;
+		}
+
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;
 	}
@@ -2066,4 +2090,45 @@ void LEM::StartSeparationPyros()
 void LEM::StopSeparationPyros()
 {
 	LEMToSLAConnector.StopSeparationPyros();
+}
+
+void LEM::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
+{
+	double m = GetMass();
+
+	//Descent stage
+	if (stage < 2)
+	{
+		//Y-coordinate of DPS propellant tanks
+		double tanky = 4.067429;
+		//Y-coordinate of "rest" of the full LM (empirically derived)
+		double resty = 5.5;
+		double fm = GetPropellantMass(ph_Dsc);
+		double restmass = m - fm;
+		double totaly = (tanky*fm + resty * restmass) / m;
+
+		//5.4516 is the offset between the full LM mesh and the LM coordinate system
+		COG = _V(0.0, totaly - 5.4516, 0.0);
+		//COG = _V(0.0, 0.0, 0.0);
+		PMI = _V(2.5428, 2.2871, 2.7566);
+	}
+	//Ascent stage
+	else
+	{
+		//Use this when RCS minimum impulse behavior is better
+		/*static double xaxis[3] = { 3.9839365e-8, -5.363325e-4, 2.625888102 };
+		static double yaxis[3] = { -1.925907e-8, 2.1607777e-4, 1.255232416 };
+		static double zaxis[3] = { -9.068924e-8, 9.4558155e-4, -0.7852828715 };
+
+		COG = _V(0, -0.8755, 0);
+		VECTOR3 p;
+
+		p.x = xaxis[0] * m*m + xaxis[1] * m + xaxis[2];
+		p.y = yaxis[0] * m*m + yaxis[1] * m + yaxis[2];
+		p.z = zaxis[0] * m*m + zaxis[1] * m + zaxis[2];
+		PMI = p;*/
+
+		PMI = _V(2.8, 2.29, 2.37);
+		COG = _V(0, 0, 0);
+	}
 }

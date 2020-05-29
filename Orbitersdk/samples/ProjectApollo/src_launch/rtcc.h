@@ -2922,8 +2922,8 @@ public:
 	int PLAWDT(int L, double gmt, double &cfg_weight);
 	int PLAWDT(int L, double gmt, std::bitset<4> &cfg, double &cfg_weight, double &csm_weight, double &lm_asc_weight, double &lm_dsc_weight, double &sivb_weight);
 	//Gimbal, Thrust and Weight Loss Rate Subroutine
-	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, const std::bitset<4> &IC, int IA, int IJ, double D);
-	void CalcSPSGimbalTrimAngles(double CSMmass, double LMmass, double &ManPADPTrim, double &ManPADYTrim);
+	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned &IC, int IA, int IJ, double D);
+	VECTOR3 GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W);
 	double GetOnboardComputerThrust(int thruster);
 	void GetSystemGimbalAngles(int thruster, double &P_G, double &Y_G) const;
 	double RTCCPresentTimeGMT();
@@ -4757,6 +4757,16 @@ public:
 	int MCCLXS;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)
 	int MGRTAG;
+
+	struct CGTable
+	{
+		double Weight[40];
+		VECTOR3 CG[40];
+		int N;
+	};
+
+	//CG table of LM with descent stage
+	CGTable LMDSCCGTAB;
 };
 
 #endif
