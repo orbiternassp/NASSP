@@ -302,14 +302,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SwitchSelector(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_SI_SWITCH_SELECTOR:
 		if (OurVessel)
 		{

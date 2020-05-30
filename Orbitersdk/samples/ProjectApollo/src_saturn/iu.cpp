@@ -905,17 +905,6 @@ void IUToLVCommandConnector::SetSIVBThrusterDir(double yaw, double pitch)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SwitchSelector(int item)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SWITCH_SELECTOR;
-	cm.val1.iValue = item;
-
-	SendMessage(cm);
-}
-
 void IUToLVCommandConnector::SISwitchSelector(int channel)
 {
 	ConnectorMessage cm;

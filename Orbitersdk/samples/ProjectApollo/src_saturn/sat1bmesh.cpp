@@ -682,6 +682,8 @@ void Saturn1b::SeparateStage (int new_stage)
 		vs2.vrot.z = 0.0;
 		StageS.play();
 
+		CreateStageOne();
+
 		//
 		// Create S1b stage and set it up.
 		//

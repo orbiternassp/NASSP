@@ -93,7 +93,6 @@ enum IULVMessageType
 	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
 	IULV_SET_SII_THRUSTER_DIR,
 	IULV_SET_SIVB_THRUSTER_DIR,
-	IULV_SWITCH_SELECTOR,
 	IULV_SI_SWITCH_SELECTOR,
 	IULV_SII_SWITCH_SELECTOR,
 	IULV_SIVB_SWITCH_SELECTOR,
@@ -196,7 +195,6 @@ public:
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
 
-	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
 	void SIISwitchSelector(int channel);
 	void SIVBSwitchSelector(int channel);

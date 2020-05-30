@@ -1064,7 +1064,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	// If the weight has changed by more than this value, update things.
 	// The value is to be adjusted such that the updates are not too frequent (impacting framerate)
 	//   but are sufficiently fine to keep the LGC happy.
-	if ((LastFuelWeight - CurrentFuelWeight) > 100.0) {
+	//Require ph_Dsc to be defined for now, to keep the LEMSaturn class happy
+	if (ph_Dsc && (LastFuelWeight - CurrentFuelWeight) > 100.0) {
 		// Update physical parameters
 		VECTOR3 pmi, CoG;
 		CalculatePMIandCOG(pmi, CoG);
@@ -2103,7 +2104,8 @@ void LEM::CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG)
 		double tanky = 4.067429;
 		//Y-coordinate of "rest" of the full LM (empirically derived)
 		double resty = 5.5;
-		double fm = GetPropellantMass(ph_Dsc);
+		double fm = 0.0;
+		if (ph_Dsc != NULL) { fm = GetPropellantMass(ph_Dsc); }
 		double restmass = m - fm;
 		double totaly = (tanky*fm + resty * restmass) / m;
 

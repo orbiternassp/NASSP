@@ -602,7 +602,6 @@ void LVDC1B::TimeStep(double simdt) {
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
 					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
-					lvda.SwitchSelectorOld(12);
 					LVDC_Timebase = 0;								// Start TB0
 					LVDC_TB_ETime = 0;
 				}
@@ -657,7 +656,6 @@ void LVDC1B::TimeStep(double simdt) {
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1C thruster calibration
 					fprintf(lvlog,"[T+%f] S1C OECO\r\n", lvda.GetMissionTime());
-					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;

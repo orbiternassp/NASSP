@@ -389,6 +389,8 @@ void LEMSaturn::SeparateStage(UINT new_stage)
 		vs2.vrot.z = 0.0;
 		StageS.play();
 
+		CreateStageOne();
+
 		//
 		// Create S1b stage and set it up.
 		//
@@ -1503,29 +1505,6 @@ IU *LEMSaturn::GetIU()
 	return NULL;
 }
 
-void LEMSaturn::SwitchSelector(int item) {
-	int i = 0;
-
-	switch (item) {
-	case 12:
-		SetThrusterGroupLevel(thg_1st, 0);				// Ensure off
-		for (i = 0; i < 5; i++) {						// Reconnect fuel to S1C engines
-			SetThrusterResource(th_1st[i], ph_1st);
-		}
-		CreateStageOne();								// Create hidden stage one, for later use in staging
-		break;
-	case 17:
-		// Move hidden S1B
-		if (hstg1) {
-			VESSELSTATUS vs;
-			GetStatus(vs);
-			S1B *stage1 = (S1B *)oapiGetVesselInterface(hstg1);
-			stage1->DefSetState(&vs);
-		}
-		break;
-	}
-}
-
 LEMSaturnConnector::LEMSaturnConnector(LEMSaturn *l)
 
 {
@@ -1728,14 +1707,6 @@ bool LEMSaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMes
 		if (OurVessel)
 		{
 			m.val1.bValue = OurVessel->GetSIBLowLevelSensorsDry();
-			return true;
-		}
-		break;
-
-	case IULV_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SwitchSelector(m.val1.iValue);
 			return true;
 		}
 		break;

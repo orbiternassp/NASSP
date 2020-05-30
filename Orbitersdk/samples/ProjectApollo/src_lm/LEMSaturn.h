@@ -73,7 +73,6 @@ public:
 	bool GetSIOutboardEngineOut();
 	bool GetSIBLowLevelSensorsDry();
 	double GetFirstStageThrust() { return THRUST_FIRST_VAC; }
-	void SwitchSelector(int item);
 	void SISwitchSelector(int channel);
 	void SIVBSwitchSelector(int channel);
 	void SetAPSAttitudeEngine(int n, bool on);

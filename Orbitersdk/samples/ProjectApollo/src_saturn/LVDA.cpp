@@ -298,11 +298,6 @@ bool LVDA::LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double 
 	return false;
 }
 
-void LVDA::SwitchSelectorOld(int chan)
-{
-	iu->GetLVCommandConnector()->SwitchSelector(chan);
-}
-
 double LVDA::GetMissionTime()
 {
 	return iu->GetLVCommandConnector()->GetMissionTime();

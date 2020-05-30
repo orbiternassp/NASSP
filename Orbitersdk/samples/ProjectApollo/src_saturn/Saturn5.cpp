@@ -932,11 +932,6 @@ void SaturnV::LaunchVehicleUnbuild() {
 	}
 }
 
-// DS20150720 "SWITCH SELECTOR" STAGING SUPPORT FUNCTION
-void SaturnV::SwitchSelector(int item)
-{
-}
-
 void SaturnV::SISwitchSelector(int channel)
 {
 	if (stage > LAUNCH_STAGE_ONE) return;

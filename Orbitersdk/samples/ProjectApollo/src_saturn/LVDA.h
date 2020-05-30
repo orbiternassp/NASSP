@@ -100,7 +100,6 @@ public:
 	//Not real LVDA functions
 	void TLIBegun();
 	void TLIEnded();
-	void SwitchSelectorOld(int chan);
 	double GetMissionTime();
 	int GetStage();
 	void SetStage(int stage);
