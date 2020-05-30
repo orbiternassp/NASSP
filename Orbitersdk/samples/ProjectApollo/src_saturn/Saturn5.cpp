@@ -501,6 +501,13 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 		SeparateStage(LAUNCH_STAGE_TWO);
 		SetStage(LAUNCH_STAGE_TWO);
 		ActivateStagingVent();
+		NextMissionEventTime = MissionTime + 1.7;
+	}
+
+	//Deactivate S-IC/S-II staging vent
+	if (stagingvent[0] && MissionTime >= NextMissionEventTime)
+	{
+		DeactivateStagingVent();
 	}
 
 	//
@@ -926,31 +933,8 @@ void SaturnV::LaunchVehicleUnbuild() {
 }
 
 // DS20150720 "SWITCH SELECTOR" STAGING SUPPORT FUNCTION
-void SaturnV::SwitchSelector(int item){
-	int i=0;
-
-	switch(item){
-	case 12:
-		CreateStageOne();								// Create hidden stage one, for later use in staging
-		break;
-	case 17:
-		// Move hidden S1C
-		if (hstg1) {
-			VESSELSTATUS vs;
-			GetStatus(vs);
-			S1C *stage1 = (S1C *) oapiGetVesselInterface(hstg1);
-			stage1->DefSetState(&vs);
-		}
-		break;
-	case 19:
-		// S2 Engine Startup
-		DeactivateStagingVent();
-		break;
-	case 20:
-		// S2 Engine Startup P2
-		SepS.stop();
-		break;
-	}
+void SaturnV::SwitchSelector(int item)
+{
 }
 
 void SaturnV::SISwitchSelector(int channel)

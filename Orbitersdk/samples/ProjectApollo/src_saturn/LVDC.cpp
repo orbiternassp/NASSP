@@ -4620,7 +4620,6 @@ void LVDCSV::TimeStep(double simdt) {
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
-					lvda.SwitchSelectorOld(12);
 				}
 
 				// LIFTOFF
@@ -4673,7 +4672,6 @@ void LVDCSV::TimeStep(double simdt) {
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					fprintf(lvlog,"[T+%f] S1 OECO\r\n", lvda.GetMissionTime());
-					lvda.SwitchSelectorOld(17);
 					// Begin timebase 3
 					TB3 = TAS;
 					LVDC_Timebase = 3;
@@ -4692,11 +4690,7 @@ void LVDCSV::TimeStep(double simdt) {
 				SwitchSelectorProcessing(SSTTB[3]);
 
 				// S2 ENGINE STARTUP
-				if(lvda.GetStage() == LAUNCH_STAGE_TWO  && LVDC_TB_ETime >= 2.4 && LVDC_TB_ETime < 4.4){
-					lvda.SwitchSelectorOld(19);
-				}
 				if(LVDC_TB_ETime >= 5 && S2_IGNITION == false){
-					lvda.SwitchSelectorOld(20);
 					S2_IGNITION = true;
 				}
 
@@ -4704,6 +4698,7 @@ void LVDCSV::TimeStep(double simdt) {
 				{
 					if (LVDC_TB_ETime >= 1.4)
 					{
+						//S-II Engines Cutoff
 						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					}
 
