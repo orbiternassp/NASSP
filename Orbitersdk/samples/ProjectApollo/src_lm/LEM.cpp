@@ -783,10 +783,12 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 			case OAPI_KEY_MINUS:
 				//increase descent rate
 				agc.SetInputChannelBit(016, DescendMinus, 0);
+				Sclick.play();
 				break;
 			case OAPI_KEY_EQUALS:
 				//decrease descent rate
 				agc.SetInputChannelBit(016, DescendPlus, 0);
+				Sclick.play();
 				break;
 
 			case OAPI_KEY_NUMPAD0:
@@ -827,16 +829,6 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	case OAPI_KEY_E:
 		return 0;
-
-	case OAPI_KEY_6:
-		viewpos = LMVIEW_CDR;
-		SetView();
-		return 1;
-
-	case OAPI_KEY_7:
-		viewpos = LMVIEW_LMP;
-		SetView();
-		return 1;
 
 	//
 	// Used by P64
@@ -976,7 +968,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Debug string for displaying descent flight info from VC view
-	if (!Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL) {
+	if (!Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
 
 		char pgnssw[256];
 		char thrsw[256];

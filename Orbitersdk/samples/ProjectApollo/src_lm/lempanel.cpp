@@ -42,8 +42,6 @@
 
 #include "LEM.h"
  
-#define VIEWANGLE 30
-
 #define LOADBMP(id) (LoadBitmap (g_Param.hDLL, MAKEINTRESOURCE (id)))
 
 static GDIParams g_Param;

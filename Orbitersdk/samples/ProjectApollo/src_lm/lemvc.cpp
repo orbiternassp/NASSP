@@ -81,22 +81,32 @@ void LEM::SetView() {
 		switch (viewpos) {
 		case LMVIEW_CDR:
 			if (stage == 2) {
-				v = _V(-0.55, -0.07, 1.35);
+				v = _V(-0.45, -0.07, 1.25);
 			}
 			else {
-				v = _V(-0.55, 1.68, 1.35);
+				v = _V(-0.45, 1.68, 1.25);
 			}
 			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 			break;
 
 		case LMVIEW_LMP:
 			if (stage == 2) {
-				v = _V(0.55, -0.07, 1.35);
+				v = _V(0.45, -0.07, 1.25);
 			}
 			else {
-				v = _V(0.55, 1.68, 1.35);
+				v = _V(0.45, 1.68, 1.25);
 			}
 			SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
+			break;
+
+		case LMVIEW_LPD:
+			if (stage == 2) {
+				v = _V(-0.58, -0.15, 1.40);
+			}
+			else {
+				v = _V(-0.58, 1.60, 1.40);
+			}
+			SetCameraDefaultDirection(_V(0.0, -sin(VIEWANGLE * RAD), cos(VIEWANGLE * RAD)));
 			break;
 		}
 
@@ -260,8 +270,36 @@ bool LEM::clbkLoadVC (int id)
 	RegisterActiveAreas();
 
 	switch (id) {
-	case 0:
+	case LMVIEW_CDR:
+		viewpos = LMVIEW_CDR;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, LMVIEW_LMP, LMVIEW_LPD, -1);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+
+		return true;
+
+	case LMVIEW_LMP:
+		viewpos = LMVIEW_LMP;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(LMVIEW_CDR, -1, -1, -1);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+
+		return true;
+
+	case LMVIEW_LPD:
+		viewpos = LMVIEW_LPD;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.13, 0.0, 0.0), 0, 15 * RAD, _V(0.0, 0.0, 0.0), 0, 0, _V(0.58, -0.4, -0.1), 0, -10 * RAD);
+		oapiCameraSetAperture(30 * RAD);
+		oapiVCSetNeighbours(-1, -1, -1, LMVIEW_CDR);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -290,7 +328,7 @@ void LEM::RegisterActiveAreas()
 	//
 	ReleaseSurfacesVC();
 
-	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 1);
+	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 2);
 
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT; i++)
@@ -1333,7 +1371,7 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 9;
+	int lightmat = VC_NMAT - 12;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1360,7 +1398,7 @@ void LEM::SetContactLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 11;
+	int lightmat = VC_NMAT - 14;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1387,7 +1425,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 20;
+	int lightmat = VC_NMAT - 23;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 

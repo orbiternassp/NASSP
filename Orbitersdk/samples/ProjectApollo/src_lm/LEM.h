@@ -1623,6 +1623,9 @@ protected:
 
 #define LMVIEW_CDR		0
 #define LMVIEW_LMP		1
+#define LMVIEW_LPD		3
+
+#define VIEWANGLE 30
 
 	int	viewpos;
 	
