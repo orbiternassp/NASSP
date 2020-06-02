@@ -997,6 +997,103 @@
 
 // VC Active Areas (Panel 8)
 
+// VC Active Areas (Panel 11)
+#define AID_VC_PANEL_11			((id >= 4100) && (id <= 4199))
+// Row 1
+#define AID_VC_CB_P11R1_01      4101
+#define AID_VC_CB_P11R1_02      4102
+#define AID_VC_CB_P11R1_03      4103
+#define AID_VC_CB_P11R1_04      4104
+#define AID_VC_CB_P11R1_05      4105
+#define AID_VC_CB_P11R1_06      4106
+#define AID_VC_CB_P11R1_07      4107
+#define AID_VC_CB_P11R1_08      4108
+#define AID_VC_CB_P11R1_09      4109
+#define AID_VC_CB_P11R1_10      4110
+#define AID_VC_CB_P11R1_11      4111
+#define AID_VC_CB_P11R1_12      4112
+#define AID_VC_CB_P11R1_13      4113
+#define AID_VC_CB_P11R1_14      4114
+#define AID_VC_CB_P11R1_15      4115
+#define AID_VC_CB_P11R1_16      4116
+#define AID_VC_CB_P11R1_17      4117
+#define AID_VC_CB_P11R1_18      4118
+#define AID_VC_CB_P11R1_19      4119
+// Row 2
+#define AID_VC_CB_P11R2_01      4123
+#define AID_VC_CB_P11R2_02      4124
+#define AID_VC_CB_P11R2_03      4125
+#define AID_VC_CB_P11R2_04      4126
+#define AID_VC_CB_P11R2_05      4127
+#define AID_VC_CB_P11R2_06      4128
+#define AID_VC_CB_P11R2_07      4129
+#define AID_VC_CB_P11R2_08      4130
+#define AID_VC_CB_P11R2_09      4131
+#define AID_VC_CB_P11R2_10      4132
+#define AID_VC_CB_P11R2_11      4133
+#define AID_VC_CB_P11R2_12      4134
+#define AID_VC_CB_P11R2_13      4135
+#define AID_VC_CB_P11R2_14      4136
+#define AID_VC_CB_P11R2_15      4137
+#define AID_VC_CB_P11R2_16      4138
+#define AID_VC_CB_P11R2_17      4139
+#define AID_VC_CB_P11R2_18      4140
+#define AID_VC_CB_P11R2_19      4141
+// Row 3
+#define AID_VC_CB_P11R3_01      4145
+#define AID_VC_CB_P11R3_02      4146
+#define AID_VC_CB_P11R3_03      4147
+#define AID_VC_CB_P11R3_04      4148
+#define AID_VC_CB_P11R3_05      4149
+#define AID_VC_CB_P11R3_06      4150
+#define AID_VC_CB_P11R3_07      4151
+#define AID_VC_CB_P11R3_08      4152
+#define AID_VC_CB_P11R3_09      4153
+#define AID_VC_CB_P11R3_10      4154
+#define AID_VC_CB_P11R3_11      4155
+#define AID_VC_CB_P11R3_12      4156
+#define AID_VC_CB_P11R3_13      4157
+#define AID_VC_CB_P11R3_14      4158
+#define AID_VC_CB_P11R3_15      4159
+#define AID_VC_CB_P11R3_16      4160
+#define AID_VC_CB_P11R3_17      4161
+#define AID_VC_CB_P11R3_18      4162
+#define AID_VC_CB_P11R3_19      4163
+// Row 4
+#define AID_VC_CB_P11R4_01      4165
+#define AID_VC_CB_P11R4_02      4166
+#define AID_VC_CB_P11R4_03      4167
+#define AID_VC_CB_P11R4_04      4168
+#define AID_VC_CB_P11R4_05      4169
+#define AID_VC_CB_P11R4_06      4170
+#define AID_VC_CB_P11R4_07      4171
+#define AID_VC_CB_P11R4_08      4172
+#define AID_VC_CB_P11R4_09      4173
+#define AID_VC_CB_P11R4_10      4174
+#define AID_VC_CB_P11R4_11      4175
+#define AID_VC_CB_P11R4_12      4176
+#define AID_VC_CB_P11R4_13      4177
+#define AID_VC_CB_P11R4_14      4178
+#define AID_VC_CB_P11R4_15      4179
+#define AID_VC_CB_P11R4_16      4180
+#define AID_VC_CB_P11R4_17      4181
+#define AID_VC_CB_P11R4_18      4182
+#define AID_VC_CB_P11R4_19      4183
+#define AID_VC_CB_P11R4_20      4184
+#define AID_VC_CB_P11R4_21      4185
+// Row 5
+#define AID_VC_CB_P11R5_01      4187
+#define AID_VC_CB_P11R5_02      4188
+#define AID_VC_CB_P11R5_03      4189
+#define AID_VC_CB_P11R5_04      4190
+#define AID_VC_CB_P11R5_05      4191
+#define AID_VC_CB_P11R5_06      4192
+#define AID_VC_CB_P11R5_07      4193
+#define AID_VC_CB_P11R5_08      4194
+#define AID_VC_CB_P11R5_09      4195
+#define AID_VC_CB_P11R5_10      4196
+#define AID_VC_CB_P11R5_11      4197
+
 // VC Active Areas (Panel 12)
 
 // VC Active Areas (Panel 14)
