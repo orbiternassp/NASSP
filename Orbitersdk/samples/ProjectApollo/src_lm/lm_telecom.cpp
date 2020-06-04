@@ -2765,7 +2765,7 @@ VECTOR3 LEM_SteerableAnt::pitchYaw2GlobalVector(double pitch, double yaw)
 	return U_RP;
 }
 
-double LEM_SteerableAnt::dBm2SignalStrength(double dBm)
+double LM_SBandAntenna::dBm2SignalStrength(double dBm)
 {
 	double SignalStrength;
 
@@ -2815,11 +2815,18 @@ LM_OMNI::LM_OMNI(VECTOR3 dir)
 void LM_OMNI::Init(LEM *vessel) {
 	lem = vessel;
 
-	double beamwidth = 70.0*RAD;
+	double beamwidth = 45 * RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0); //Scaling for beamwidth
 
 	hMoon = oapiGetObjectByName("Moon");
 	hEarth = oapiGetObjectByName("Earth");
+
+	OMNI_Gain = pow(10, (-3 / 10));
+
+	OMNIFrequency = 2119; //MHz. Should this get set somewhere else?
+	OMNIWavelength = C0 / (OMNIFrequency * 1000000); //meters
+	Gain85ft = pow(10, (50 / 10)); //this is the gain, dB converted to ratio of the 30ft antennas on earth
+	Power85ft = 20000; //watts
 }
 
 void LM_OMNI::Timestep()
@@ -2827,6 +2834,8 @@ void LM_OMNI::Timestep()
 	VECTOR3 U_RP, pos, R_E, R_M, U_R;
 	MATRIX3 Rot;
 	double relang, Moonrelang;
+	double RecvdOMNIPower, RecvdOMNIPower_dBm, SignalStrengthScaleFactor;
+	double EarthSignalDist;
 
 	//Unit vector of antenna in vessel's local frame
 	U_RP = _V(direction.y, direction.x, direction.z);
@@ -2841,10 +2850,17 @@ void LM_OMNI::Timestep()
 	U_R = mul(Rot, U_RP);
 	//relative angle between antenna pointing vector and direction of Earth
 	relang = acos(dotp(U_R, unit(R_E - pos)));
+	EarthSignalDist = length(pos - R_E) - oapiGetSize(hEarth); //distance from earth's surface in meters
 
-	if (relang < PI05 / hpbw_factor)
+	RecvdOMNIPower = Power85ft * Gain85ft * OMNI_Gain * pow(OMNIWavelength / (4 * PI*EarthSignalDist), 2); //maximum recieved power to the HGA on axis in watts
+	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
+	SignalStrengthScaleFactor = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
+
+	if (relang < 160 * RAD) //this is a litteral copy of the CSM OMNI and needs to be fixed
 	{
-		SignalStrength = cos(hpbw_factor*relang)*cos(hpbw_factor*relang)*40.0;
+		//very rough approximation of radiation pattern
+		//https://www.wolframalpha.com/input/?i=polar+plot+sin%5E2%28%28acos%28sqrt%28sqrt%280.5%29%29%29+%2F+%2845deg+%2F+2.0%29%29*theta%2F%281.309-e%5E-theta%5E2%29%29+from+-160deg+to+160deg
+		SignalStrength = sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*sin(hpbw_factor*relang / ((75 * RAD) - exp(-(relang*relang))))*SignalStrengthScaleFactor;
 	}
 	else
 	{

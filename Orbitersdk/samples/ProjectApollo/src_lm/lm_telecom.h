@@ -240,6 +240,7 @@ class LM_SBandAntenna
 public:
 	LM_SBandAntenna() { SignalStrength = 0.0; }
 	double GetSignalStrength() { return SignalStrength; }
+	double dBm2SignalStrength(double dBm);
 protected:
 	double SignalStrength;						// Signal Strength (0-100)
 };
@@ -282,7 +283,6 @@ public:
 	double GetPitch() { return pitch*DEG; }
 	double GetYaw() { return yaw*DEG; }
 	VECTOR3 pitchYaw2GlobalVector(double pitch, double yaw);
-	double dBm2SignalStrength(double dBm);
 	double LEM_SteerableAntGain;
 	double LEM_SteerableAntFrequency;
 	double LEM_SteerableAntWavelength;
@@ -318,6 +318,12 @@ public:
 	LM_OMNI(VECTOR3 dir);
 	void Init(LEM *vessel);	// Initialization
 	void Timestep();			// Timestep
+
+	double OMNIWavelength;
+	double OMNIFrequency;
+	double Gain85ft;
+	double Power85ft;
+	double OMNI_Gain;
 protected:
 	LEM *lem;					// Ship we're installed in
 	VECTOR3 direction;
