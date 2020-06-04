@@ -845,7 +845,7 @@
 #define IDB_BORDER_286x197              2022
 
 // VC Active Areas (Panel 1)
-#define AID_PANEL_1				        ((id >= 3100) && (id <= 3140))
+#define AID_VC_PANEL_1				    ((id >= 3100) && (id <= 3140))
 #define AID_VC_SWITCH_P1_01		        3101	// Rate/error monitor CDR
 #define AID_VC_SWITCH_P1_02		        3102	// Attitude monitor CDR
 #define AID_VC_SWITCH_P1_03		        3103	// X-pointer scale CDR
@@ -888,7 +888,7 @@
 #define AID_VC_ABORTSTAGE_BUTTON        3140
 
 // VC Active Areas (Panel 2)
-#define AID_PANEL_2				        ((id >= 3200) && (id <= 3234))
+#define AID_VC_PANEL_2				    ((id >= 3200) && (id <= 3234))
 #define AID_VC_SWITCH_P2_01		        3201	// Sys A Asc fuel
 #define AID_VC_SWITCH_P2_02		        3202	// Sys A Asc oxid
 #define AID_VC_SWITCH_P2_03		        3203	// Sys B Asc fuel
@@ -1095,8 +1095,145 @@
 #define AID_VC_CB_P11R5_11      4197
 
 // VC Active Areas (Panel 12)
+#define AID_VC_PANEL_12			((id >= 4200) && (id <= 4240))
+#define AID_VC_TW_P12_01        4201
+#define AID_VC_TW_P12_02        4202
+#define AID_VC_TW_P12_03        4203
+#define AID_VC_TW_P12_04        4204
+#define AID_VC_TW_P12_05        4205
+#define AID_VC_TW_P12_06        4206
+#define AID_VC_TW_P12_07        4207
+#define AID_VC_TW_P12_08        4208
+#define AID_VC_SWITCH_P12_01    4209
+#define AID_VC_SWITCH_P12_02    4210
+#define AID_VC_SWITCH_P12_03    4211
+#define AID_VC_SWITCH_P12_04    4212
+#define AID_VC_SWITCH_P12_05    4213
+#define AID_VC_SWITCH_P12_06    4214
+#define AID_VC_SWITCH_P12_07    4215
+#define AID_VC_SWITCH_P12_08    4216
+#define AID_VC_SWITCH_P12_09    4217
+#define AID_VC_SWITCH_P12_10    4218
+#define AID_VC_SWITCH_P12_11    4219
+#define AID_VC_SWITCH_P12_12    4220
+#define AID_VC_SWITCH_P12_13    4221
+#define AID_VC_SWITCH_P12_14    4222
+#define AID_VC_SWITCH_P12_15    4223
+#define AID_VC_SWITCH_P12_16    4224
+#define AID_VC_SWITCH_P12_17    4225
+#define AID_VC_SWITCH_P12_18    4226
+#define AID_VC_SWITCH_P12_19    4227
+#define AID_VC_SWITCH_P12_20    4228
+#define AID_VC_SWITCH_P12_21    4229
+#define AID_VC_SWITCH_P12_22    4230
+#define AID_VC_ROT_P12_01		4231    //
+#define AID_VC_ROT_P12_02		4232    //
+#define AID_VC_ROT_P12_03		4233    //
+#define AID_VC_ROT_P12_04		4234    //
+#define AID_VC_PANEL12_NEEDLES  4235
+#define AID_VC_RECORDER_TALKBACK 4236
 
 // VC Active Areas (Panel 14)
+#define AID_VC_PANEL_14			((id >= 4400) && (id <= 4430))
+#define AID_VC_SWITCH_P14_01    4401
+#define AID_VC_SWITCH_P14_02    4402
+#define AID_VC_SWITCH_P14_03    4403
+#define AID_VC_SWITCH_P14_04    4404
+#define AID_VC_SWITCH_P14_05    4405
+#define AID_VC_SWITCH_P14_06    4406
+#define AID_VC_SWITCH_P14_07    4407
+#define AID_VC_SWITCH_P14_08    4408
+#define AID_VC_SWITCH_P14_09    4409
+#define AID_VC_SWITCH_P14_10    4410
+#define AID_VC_SWITCH_P14_11    4411
+#define AID_VC_SWITCH_P14_12    4412
+#define AID_VC_SWITCH_P14_13    4413
+#define AID_VC_SWITCH_P14_14    4414
+#define AID_VC_SWITCH_P14_15    4415
+#define AID_VC_SWITCH_P14_16    4416
+#define AID_VC_ROT_P14_01       4417
+#define AID_VC_PANEL14_COMPLIGHTS 4418
+#define AID_VC_PANEL14_NEEDLES  4419
+#define AID_VC_DSC_BATTERY_TALKBACKS 4420
+#define AID_VC_ASC_BATTERY_TALKBACKS 4421
+
+// VC Active Areas (Panel 16)
+#define AID_VC_PANEL_16			((id >= 4600) && (id <= 4699))
+// Row 1
+#define AID_VC_CB_P16R1_01      4601
+#define AID_VC_CB_P16R1_02      4602
+#define AID_VC_CB_P16R1_03      4603
+#define AID_VC_CB_P16R1_04      4604
+#define AID_VC_CB_P16R1_05      4605
+#define AID_VC_CB_P16R1_06      4606
+#define AID_VC_CB_P16R1_07      4607
+#define AID_VC_CB_P16R1_08      4608
+#define AID_VC_CB_P16R1_09      4609
+#define AID_VC_CB_P16R1_10      4610
+#define AID_VC_CB_P16R1_11      4611
+#define AID_VC_CB_P16R1_12      4612
+#define AID_VC_CB_P16R1_13      4613
+#define AID_VC_CB_P16R1_14      4614
+#define AID_VC_CB_P16R1_15      4615
+#define AID_VC_CB_P16R1_16      4616
+// Row 2
+#define AID_VC_CB_P16R2_01      4623
+#define AID_VC_CB_P16R2_02      4624
+#define AID_VC_CB_P16R2_03      4625
+#define AID_VC_CB_P16R2_04      4626
+#define AID_VC_CB_P16R2_05      4627
+#define AID_VC_CB_P16R2_06      4628
+#define AID_VC_CB_P16R2_07      4629
+#define AID_VC_CB_P16R2_08      4630
+#define AID_VC_CB_P16R2_09      4631
+#define AID_VC_CB_P16R2_10      4632
+#define AID_VC_CB_P16R2_11      4633
+#define AID_VC_CB_P16R2_12      4634
+#define AID_VC_CB_P16R2_13      4635
+#define AID_VC_CB_P16R2_14      4636
+#define AID_VC_CB_P16R2_15      4637
+#define AID_VC_CB_P16R2_16      4638
+#define AID_VC_CB_P16R2_17      4639
+#define AID_VC_CB_P16R2_18      4640
+// Row 3
+#define AID_VC_CB_P16R3_01      4645
+#define AID_VC_CB_P16R3_02      4646
+#define AID_VC_CB_P16R3_03      4647
+#define AID_VC_CB_P16R3_04      4648
+#define AID_VC_CB_P16R3_05      4649
+#define AID_VC_CB_P16R3_06      4650
+#define AID_VC_CB_P16R3_07      4651
+#define AID_VC_CB_P16R3_08      4652
+#define AID_VC_CB_P16R3_09      4653
+#define AID_VC_CB_P16R3_10      4654
+#define AID_VC_CB_P16R3_11      4655
+#define AID_VC_CB_P16R3_12      4656
+#define AID_VC_CB_P16R3_13      4657
+#define AID_VC_CB_P16R3_14      4658
+#define AID_VC_CB_P16R3_15      4659
+#define AID_VC_CB_P16R3_16      4660
+#define AID_VC_CB_P16R3_17      4661
+#define AID_VC_CB_P16R3_18      4662
+// Row 4
+#define AID_VC_CB_P16R4_01      4665
+#define AID_VC_CB_P16R4_02      4666
+#define AID_VC_CB_P16R4_03      4667
+#define AID_VC_CB_P16R4_04      4668
+#define AID_VC_CB_P16R4_05      4669
+#define AID_VC_CB_P16R4_06      4670
+#define AID_VC_CB_P16R4_07      4671
+#define AID_VC_CB_P16R4_08      4672
+#define AID_VC_CB_P16R4_09      4673
+#define AID_VC_CB_P16R4_10      4674
+#define AID_VC_CB_P16R4_11      4675
+#define AID_VC_CB_P16R4_12      4676
+#define AID_VC_CB_P16R4_13      4677
+#define AID_VC_CB_P16R4_14      4678
+#define AID_VC_CB_P16R4_15      4679
+#define AID_VC_CB_P16R4_16      4680
+#define AID_VC_CB_P16R4_17      4681
+#define AID_VC_CB_P16R4_18      4682
+#define AID_VC_CB_P16R4_19      4683
 
 #define IDB_LEM_FDAI_ROLL               10006
 

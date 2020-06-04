@@ -330,7 +330,8 @@ void LEM::RegisterActiveAreas()
 
 	MainPanelVC.ClearSwitches();
 
-	SURFHANDLE MainPanelTex = oapiGetTextureHandle(hLMVC, 2);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hLMVC, 2);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hLMVC, 8);
 
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT; i++)
@@ -345,18 +346,18 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS[i] + ofs, 0.02);
 	}
 
-	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238, 27, 559, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60, 259, 202, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(276, 259, 357, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_RANGE_TAPE, _R(431, 633, 475, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_RATE_TAPE, _R(482, 633, 517, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_LEM_MA_LEFT, _R(30, 593, 77, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238, 27, 559, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60, 259, 202, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(276, 259, 357, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RANGE_TAPE, _R(431, 633, 475, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RATE_TAPE, _R(482, 633, 517, 796), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LEM_MA_LEFT, _R(30, 593, 77, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_LEFT, _V(-0.415919, 0.599307, 1.70252) + ofs, 0.008);
-	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_LEFT, _R(341, 891, 377, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_RIGHT, _R(415, 891, 451, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_MPS_OXID_QUANTITY_INDICATOR, _R(445, 218, 484, 239), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_MPS_FUEL_QUANTITY_INDICATOR, _R(445, 270, 484, 292), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_MPS_HELIUM_PRESS_INDICATOR, _R(577, 259, 658, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_LEFT, _R(341, 891, 377, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_RIGHT, _R(415, 891, 451, 1098), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_OXID_QUANTITY_INDICATOR, _R(445, 218, 484, 239), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_FUEL_QUANTITY_INDICATOR, _R(445, 270, 484, 292), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_HELIUM_PRESS_INDICATOR, _R(577, 259, 658, 281), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	oapiVCRegisterArea(AID_VC_XPOINTERCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -405,13 +406,13 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + ofs, 0.02);
 	}
 
-	oapiVCRegisterArea(AID_VC_LM_CWS_RIGHT, _R(1075, 27, 1375, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_RCS_ASC_FEED_TALKBACKS, _R(794, 413, 1031, 436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_14_TALKBACKS, _R(794, 562, 1031, 585), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_23_TALKBACKS, _R(794, 688, 1031, 711), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_RCS_XFEED_TALKBACK, _R(795, 844, 818, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_MAIN_SOV_TALKBACKS, _R(934, 844, 1027, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_LEM_MA_RIGHT, _R(1384, 593, 1431, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_LM_CWS_RIGHT, _R(1075, 27, 1375, 153), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_ASC_FEED_TALKBACKS, _R(794, 413, 1031, 436), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_14_TALKBACKS, _R(794, 562, 1031, 585), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LGC_CMD_ENABLE_23_TALKBACKS, _R(794, 688, 1031, 711), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_XFEED_TALKBACK, _R(795, 844, 818, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MAIN_SOV_TALKBACKS, _R(934, 844, 1027, 867), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LEM_MA_RIGHT, _R(1384, 593, 1431, 636), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_RIGHT, _V(0.414751, 0.59891, 1.70247) + ofs, 0.008);
 
 	oapiVCRegisterArea(AID_VC_PANEL2_COMPLIGHTS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -508,8 +509,8 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P4_01 + i, P4_TOGGLE_POS[i] + P4_CLICK + ofs, 0.006);
 	}
 
-	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(309, 1520, 414, 1696), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
-	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS,  _R(165, 1525, 267, 1694), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex);
+	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(309, 1520, 414, 1696), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS,  _R(165, 1525, 267, 1694), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P4_01, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P4_02, NULL);
@@ -665,6 +666,207 @@ void LEM::RegisterActiveAreas()
 	MainPanelVC.AddSwitch(&CDRInverter1CB, AID_VC_CB_P11R5_10, &anim_P11R5cbs[9]);
 	MainPanelVC.AddSwitch(&CDRDCBusVoltCB, AID_VC_CB_P11R5_11, &anim_P11R5cbs[10]);
 
+	// Panel 12
+
+	for (i = 0; i < P12_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P12_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P12_01 + i, P12_TOGGLE_POS[i] + P12_CLICK + ofs, 0.006);
+	}
+
+	for (i = 0; i < P12_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P12_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P12_01 + i, P12_ROT_POS[i] + ofs, 0.02);
+	}
+
+	for (i = 0; i < P12_TWCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_TW_P12_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P12_01 + i, P12_TW_POS[i] + ofs, 0.02);
+	}
+
+	oapiVCRegisterArea(AID_VC_PANEL12_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	//oapiVCRegisterArea(AID_VC_RECORDER_TALKBACK, _R(806, 1460, 829, 1483), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	MainPanelVC.AddSwitch(&Panel12AudioCtlSwitch, AID_VC_SWITCH_P12_01, &anim_P12switch[0]);
+	MainPanelVC.AddSwitch(&Panel12UpdataLinkSwitch, AID_VC_SWITCH_P12_02, &anim_P12switch[1]);
+	MainPanelVC.AddSwitch(&LMPAudSBandSwitch, AID_VC_SWITCH_P12_03, &anim_P12switch[2]);
+	MainPanelVC.AddSwitch(&LMPAudICSSwitch, AID_VC_SWITCH_P12_04, &anim_P12switch[3]);
+	MainPanelVC.AddSwitch(&LMPAudRelaySwitch, AID_VC_SWITCH_P12_05, &anim_P12switch[4]);
+	MainPanelVC.AddSwitch(&LMPAudVHFASwitch, AID_VC_SWITCH_P12_06, &anim_P12switch[5]);
+	MainPanelVC.AddSwitch(&LMPAudVHFBSwitch, AID_VC_SWITCH_P12_07, &anim_P12switch[6]);
+	MainPanelVC.AddSwitch(&LMPAudVOXSwitch, AID_VC_SWITCH_P12_08, &anim_P12switch[7]);
+	MainPanelVC.AddSwitch(&SBandModulateSwitch, AID_VC_SWITCH_P12_09, &anim_P12switch[8]);
+	MainPanelVC.AddSwitch(&SBandXCvrSelSwitch, AID_VC_SWITCH_P12_10, &anim_P12switch[9]);
+	MainPanelVC.AddSwitch(&SBandPASelSwitch, AID_VC_SWITCH_P12_11, &anim_P12switch[10]);
+	MainPanelVC.AddSwitch(&SBandVoiceSwitch, AID_VC_SWITCH_P12_12, &anim_P12switch[11]);
+	MainPanelVC.AddSwitch(&SBandPCMSwitch, AID_VC_SWITCH_P12_13, &anim_P12switch[12]);
+	MainPanelVC.AddSwitch(&SBandRangeSwitch, AID_VC_SWITCH_P12_14, &anim_P12switch[13]);
+	MainPanelVC.AddSwitch(&VHFAVoiceSwitch, AID_VC_SWITCH_P12_15, &anim_P12switch[14]);
+	MainPanelVC.AddSwitch(&VHFARcvrSwtich, AID_VC_SWITCH_P12_16, &anim_P12switch[15]);
+	MainPanelVC.AddSwitch(&VHFBVoiceSwitch, AID_VC_SWITCH_P12_17, &anim_P12switch[16]);
+	MainPanelVC.AddSwitch(&VHFBRcvrSwtich, AID_VC_SWITCH_P12_18, &anim_P12switch[17]);
+	MainPanelVC.AddSwitch(&TLMBiomedSwtich, AID_VC_SWITCH_P12_19, &anim_P12switch[18]);
+	MainPanelVC.AddSwitch(&TLMBitrateSwitch, AID_VC_SWITCH_P12_20, &anim_P12switch[19]);
+	MainPanelVC.AddSwitch(&TapeRecorderSwitch, AID_VC_SWITCH_P12_21, &anim_P12switch[20]);
+	MainPanelVC.AddSwitch(&Panel12AntTrackModeSwitch, AID_VC_SWITCH_P12_22, &anim_P12switch[21]);
+
+	MainPanelVC.AddSwitch(&Panel12AntPitchKnob, AID_VC_ROT_P12_01, &anim_P12_Rot[0]);
+	MainPanelVC.AddSwitch(&Panel12AntYawKnob, AID_VC_ROT_P12_02, &anim_P12_Rot[1]);
+	MainPanelVC.AddSwitch(&Panel12SBandAntSelKnob, AID_VC_ROT_P12_03, &anim_P12_Rot[2]);
+	MainPanelVC.AddSwitch(&Panel12VHFAntSelKnob, AID_VC_ROT_P12_04, &anim_P12_Rot[3]);
+
+	MainPanelVC.AddSwitch(&LMPAudSBandVol, AID_VC_TW_P12_01, &anim_P12thumbwheels[0]);
+	MainPanelVC.AddSwitch(&LMPAudICSVol, AID_VC_TW_P12_02, &anim_P12thumbwheels[1]);
+	MainPanelVC.AddSwitch(&LMPAudVOXSens, AID_VC_TW_P12_03, &anim_P12thumbwheels[2]);
+	MainPanelVC.AddSwitch(&LMPAudVHFAVol, AID_VC_TW_P12_04, &anim_P12thumbwheels[3]);
+	MainPanelVC.AddSwitch(&LMPAudVHFBVol, AID_VC_TW_P12_05, &anim_P12thumbwheels[4]);
+	MainPanelVC.AddSwitch(&LMPAudMasterVol, AID_VC_TW_P12_06, &anim_P12thumbwheels[5]);
+	MainPanelVC.AddSwitch(&VHFASquelch, AID_VC_TW_P12_07, &anim_P12thumbwheels[6]);
+	MainPanelVC.AddSwitch(&VHFBSquelch, AID_VC_TW_P12_08, &anim_P12thumbwheels[7]);
+
+	// Panel 14
+
+	for (i = 0; i < P14_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P14_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P14_01 + i, P14_TOGGLE_POS[i] + P14_CLICK + ofs, 0.006);
+	}
+
+	for (i = 0; i < P14_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P14_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P14_01 + i, P14_ROT_POS[i] + ofs, 0.02);
+	}
+
+	oapiVCRegisterArea(AID_VC_PANEL14_COMPLIGHTS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_PANEL14_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_DSC_BATTERY_TALKBACKS, _R(550, 1002, 865, 1025), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_ASC_BATTERY_TALKBACKS, _R(932, 1027, 1176, 1050), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	MainPanelVC.AddSwitch(&EPSEDVoltSelect, AID_VC_SWITCH_P14_01, &anim_P14switch[0]);
+	MainPanelVC.AddSwitch(&EPSInverterSwitch, AID_VC_SWITCH_P14_02, &anim_P14switch[1]);
+	MainPanelVC.AddSwitch(&DSCSEBat1HVSwitch, AID_VC_SWITCH_P14_03, &anim_P14switch[2]);
+	MainPanelVC.AddSwitch(&DSCSEBat2HVSwitch, AID_VC_SWITCH_P14_04, &anim_P14switch[3]);
+	MainPanelVC.AddSwitch(&DSCCDRBat3HVSwitch, AID_VC_SWITCH_P14_05, &anim_P14switch[4]);
+	MainPanelVC.AddSwitch(&DSCCDRBat4HVSwitch, AID_VC_SWITCH_P14_06, &anim_P14switch[5]);
+	MainPanelVC.AddSwitch(&DSCSEBat1LVSwitch, AID_VC_SWITCH_P14_07, &anim_P14switch[6]);
+	MainPanelVC.AddSwitch(&DSCSEBat2LVSwitch, AID_VC_SWITCH_P14_08, &anim_P14switch[7]);
+	MainPanelVC.AddSwitch(&DSCCDRBat3LVSwitch, AID_VC_SWITCH_P14_09, &anim_P14switch[8]);
+	MainPanelVC.AddSwitch(&DSCCDRBat4LVSwitch, AID_VC_SWITCH_P14_10, &anim_P14switch[9]);
+	MainPanelVC.AddSwitch(&DSCBattFeedSwitch, AID_VC_SWITCH_P14_11, &anim_P14switch[10]);
+	MainPanelVC.AddSwitch(&ASCBat5SESwitch, AID_VC_SWITCH_P14_12, &anim_P14switch[11]);
+	MainPanelVC.AddSwitch(&ASCBat5CDRSwitch, AID_VC_SWITCH_P14_13, &anim_P14switch[12]);
+	MainPanelVC.AddSwitch(&ASCBat6CDRSwitch, AID_VC_SWITCH_P14_14, &anim_P14switch[13]);
+	MainPanelVC.AddSwitch(&ASCBat6SESwitch, AID_VC_SWITCH_P14_15, &anim_P14switch[14]);
+	MainPanelVC.AddSwitch(&UpDataSquelchSwitch, AID_VC_SWITCH_P14_16, &anim_P14switch[15]);
+	MainPanelVC.AddSwitch(&EPSMonitorSelectRotary, AID_VC_ROT_P14_01, &anim_P14_Rot[0]);
+
+	// Panel 16
+	// Row 1
+	for (i = 0; i < P16R1_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_P16R1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P16R1_01 + i, P16R1_CB_POS[i] + ofs, 0.008);
+	}
+
+	MainPanelVC.AddSwitch(&LMP_EVT_TMR_FDAI_DC_CB, AID_VC_CB_P16R1_01, &anim_P16R1cbs[0]);
+	MainPanelVC.AddSwitch(&SE_XPTR_DC_CB, AID_VC_CB_P16R1_02, &anim_P16R1cbs[1]);
+	MainPanelVC.AddSwitch(&RCS_B_ASC_FEED_1_CB, AID_VC_CB_P16R1_03, &anim_P16R1cbs[2]);
+	MainPanelVC.AddSwitch(&RCS_B_ASC_FEED_2_CB, AID_VC_CB_P16R1_04, &anim_P16R1cbs[3]);
+	MainPanelVC.AddSwitch(&RCS_B_ISOL_VLV_CB, AID_VC_CB_P16R1_05, &anim_P16R1cbs[4]);
+	MainPanelVC.AddSwitch(&RCS_B_QUAD1_TCA_CB, AID_VC_CB_P16R1_06, &anim_P16R1cbs[5]);
+	MainPanelVC.AddSwitch(&RCS_B_QUAD2_TCA_CB, AID_VC_CB_P16R1_07, &anim_P16R1cbs[6]);
+	MainPanelVC.AddSwitch(&RCS_B_QUAD3_TCA_CB, AID_VC_CB_P16R1_08, &anim_P16R1cbs[7]);
+	MainPanelVC.AddSwitch(&RCS_B_QUAD4_TCA_CB, AID_VC_CB_P16R1_09, &anim_P16R1cbs[8]);
+	MainPanelVC.AddSwitch(&RCS_B_CRSFD_CB, AID_VC_CB_P16R1_10, &anim_P16R1cbs[9]);
+	MainPanelVC.AddSwitch(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB, AID_VC_CB_P16R1_11, &anim_P16R1cbs[10]);
+	MainPanelVC.AddSwitch(&RCS_B_PQGS_DISP_CB, AID_VC_CB_P16R1_12, &anim_P16R1cbs[11]);
+	MainPanelVC.AddSwitch(&RCS_B_MAIN_SOV_CB, AID_VC_CB_P16R1_13, &anim_P16R1cbs[12]);
+	MainPanelVC.AddSwitch(&PROP_DISP_ENG_OVRD_LOGIC_CB, AID_VC_CB_P16R1_14, &anim_P16R1cbs[13]);
+	MainPanelVC.AddSwitch(&PROP_PQGS_CB, AID_VC_CB_P16R1_15, &anim_P16R1cbs[14]);
+	MainPanelVC.AddSwitch(&PROP_ASC_HE_REG_CB, AID_VC_CB_P16R1_16, &anim_P16R1cbs[15]);
+
+	// Row 2
+	for (i = 0; i < P16R2_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_P16R2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P16R2_01 + i, P16R2_CB_POS[i] + ofs, 0.008);
+	}
+
+	MainPanelVC.AddSwitch(&LTG_FLOOD_CB, AID_VC_CB_P16R2_01, &anim_P16R2cbs[0]);
+	MainPanelVC.AddSwitch(&LTG_TRACK_CB, AID_VC_CB_P16R2_02, &anim_P16R2cbs[1]);
+	MainPanelVC.AddSwitch(&LTG_ANUN_DOCK_COMPNT_CB, AID_VC_CB_P16R2_03, &anim_P16R2cbs[2]);
+	MainPanelVC.AddSwitch(&LTG_MASTER_ALARM_CB, AID_VC_CB_P16R2_04, &anim_P16R2cbs[3]);
+	MainPanelVC.AddSwitch(&EDS_CB_LOGIC_B, AID_VC_CB_P16R2_05, &anim_P16R2cbs[4]);
+	MainPanelVC.AddSwitch(&SCS_AEA_CB, AID_VC_CB_P16R2_06, &anim_P16R2cbs[5]);
+	MainPanelVC.AddSwitch(&SCS_ENG_ARM_CB, AID_VC_CB_P16R2_07, &anim_P16R2cbs[6]);
+	MainPanelVC.AddSwitch(&SCS_ASA_CB, AID_VC_CB_P16R2_08, &anim_P16R2cbs[7]);
+	MainPanelVC.AddSwitch(&SCS_AELD_CB, AID_VC_CB_P16R2_09, &anim_P16R2cbs[8]);
+	MainPanelVC.AddSwitch(&SCS_ATCA_CB, AID_VC_CB_P16R2_10, &anim_P16R2cbs[9]);
+	MainPanelVC.AddSwitch(&SCS_ABORT_STAGE_CB, AID_VC_CB_P16R2_11, &anim_P16R2cbs[10]);
+	MainPanelVC.AddSwitch(&SCS_ATCA_AGS_CB, AID_VC_CB_P16R2_12, &anim_P16R2cbs[11]);
+	MainPanelVC.AddSwitch(&SCS_DES_ENG_OVRD_CB, AID_VC_CB_P16R2_13, &anim_P16R2cbs[12]);
+	MainPanelVC.AddSwitch(&INST_CWEA_CB, AID_VC_CB_P16R2_14, &anim_P16R2cbs[13]);
+	MainPanelVC.AddSwitch(&INST_SIG_SENSOR_CB, AID_VC_CB_P16R2_15, &anim_P16R2cbs[14]);
+	MainPanelVC.AddSwitch(&INST_PCMTEA_CB, AID_VC_CB_P16R2_16, &anim_P16R2cbs[15]);
+	MainPanelVC.AddSwitch(&INST_SIG_CONDR_2_CB, AID_VC_CB_P16R2_17, &anim_P16R2cbs[16]);
+	MainPanelVC.AddSwitch(&ECS_SUIT_FLOW_CONT_CB, AID_VC_CB_P16R2_18, &anim_P16R2cbs[17]);
+
+	// Row 3
+	for (i = 0; i < P16R3_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_P16R3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P16R3_01 + i, P16R3_CB_POS[i] + ofs, 0.008);
+	}
+
+	MainPanelVC.AddSwitch(&COMM_DISP_CB, AID_VC_CB_P16R3_01, &anim_P16R3cbs[0]);
+	MainPanelVC.AddSwitch(&COMM_SE_AUDIO_CB, AID_VC_CB_P16R3_02, &anim_P16R3cbs[1]);
+	MainPanelVC.AddSwitch(&COMM_VHF_XMTR_A_CB, AID_VC_CB_P16R3_03, &anim_P16R3cbs[2]);
+	MainPanelVC.AddSwitch(&COMM_VHF_RCVR_B_CB, AID_VC_CB_P16R3_04, &anim_P16R3cbs[3]);
+	MainPanelVC.AddSwitch(&COMM_PRIM_SBAND_PA_CB, AID_VC_CB_P16R3_05, &anim_P16R3cbs[4]);
+	MainPanelVC.AddSwitch(&COMM_PRIM_SBAND_XCVR_CB, AID_VC_CB_P16R3_06, &anim_P16R3cbs[5]);
+	MainPanelVC.AddSwitch(&COMM_SBAND_ANT_CB, AID_VC_CB_P16R3_07, &anim_P16R3cbs[6]);
+	MainPanelVC.AddSwitch(&COMM_PMP_CB, AID_VC_CB_P16R3_08, &anim_P16R3cbs[7]);
+	MainPanelVC.AddSwitch(&COMM_TV_CB, AID_VC_CB_P16R3_09, &anim_P16R3cbs[8]);
+	MainPanelVC.AddSwitch(&ECS_DISP_CB, AID_VC_CB_P16R3_10, &anim_P16R3cbs[9]);
+	MainPanelVC.AddSwitch(&ECS_GLYCOL_PUMP_SEC_CB, AID_VC_CB_P16R3_11, &anim_P16R3cbs[10]);
+	MainPanelVC.AddSwitch(&ECS_LGC_PUMP_CB, AID_VC_CB_P16R3_12, &anim_P16R3cbs[11]);
+	MainPanelVC.AddSwitch(&ECS_CABIN_FAN_CONT_CB, AID_VC_CB_P16R3_13, &anim_P16R3cbs[12]);
+	MainPanelVC.AddSwitch(&ECS_CABIN_REPRESS_CB, AID_VC_CB_P16R3_14, &anim_P16R3cbs[13]);
+	MainPanelVC.AddSwitch(&ECS_SUIT_FAN_2_CB, AID_VC_CB_P16R3_15, &anim_P16R3cbs[14]);
+	MainPanelVC.AddSwitch(&ECS_SUIT_FAN_DP_CB, AID_VC_CB_P16R3_16, &anim_P16R3cbs[15]);
+	MainPanelVC.AddSwitch(&ECS_DIVERT_VLV_CB, AID_VC_CB_P16R3_17, &anim_P16R3cbs[16]);
+	MainPanelVC.AddSwitch(&ECS_CO2_SENSOR_CB, AID_VC_CB_P16R3_18, &anim_P16R3cbs[17]);
+
+	// Row 4
+	for (i = 0; i < P16R4_CBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_CB_P16R4_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_CB_P16R4_01 + i, P16R4_CB_POS[i] + ofs, 0.008);
+	}
+
+	MainPanelVC.AddSwitch(&RCS_QUAD_1_LMP_HTR_CB, AID_VC_CB_P16R4_01, &anim_P16R4cbs[0]);
+	MainPanelVC.AddSwitch(&RCS_QUAD_2_LMP_HTR_CB, AID_VC_CB_P16R4_02, &anim_P16R4cbs[1]);
+	MainPanelVC.AddSwitch(&RCS_QUAD_3_LMP_HTR_CB, AID_VC_CB_P16R4_03, &anim_P16R4cbs[2]);
+	MainPanelVC.AddSwitch(&RCS_QUAD_4_LMP_HTR_CB, AID_VC_CB_P16R4_04, &anim_P16R4cbs[3]);
+	MainPanelVC.AddSwitch(&HTR_DISP_CB, AID_VC_CB_P16R4_05, &anim_P16R4cbs[4]);
+	MainPanelVC.AddSwitch(&HTR_SBD_ANT_CB, AID_VC_CB_P16R4_06, &anim_P16R4cbs[5]);
+	MainPanelVC.AddSwitch(&CAMR_SEQ_CB, AID_VC_CB_P16R4_07, &anim_P16R4cbs[6]);
+	MainPanelVC.AddSwitch(&EPS_DISP_CB, AID_VC_CB_P16R4_08, &anim_P16R4cbs[7]);
+	MainPanelVC.AddSwitch(&LMPDCBusVoltCB, AID_VC_CB_P16R4_09, &anim_P16R4cbs[8]);
+	MainPanelVC.AddSwitch(&LMPInverter2CB, AID_VC_CB_P16R4_10, &anim_P16R4cbs[9]);
+	MainPanelVC.AddSwitch(&LMPAscECAMainCB, AID_VC_CB_P16R4_11, &anim_P16R4cbs[10]);
+	MainPanelVC.AddSwitch(&LMPAscECAContCB, AID_VC_CB_P16R4_12, &anim_P16R4cbs[11]);
+	MainPanelVC.AddSwitch(&LMPDesECAMainCB, AID_VC_CB_P16R4_13, &anim_P16R4cbs[12]);
+	MainPanelVC.AddSwitch(&LMPDesECAContCB, AID_VC_CB_P16R4_14, &anim_P16R4cbs[13]);
+	MainPanelVC.AddSwitch(&LMPXLunarBusTieCB, AID_VC_CB_P16R4_15, &anim_P16R4cbs[14]);
+	MainPanelVC.AddSwitch(&LMPCrossTieBusCB, AID_VC_CB_P16R4_16, &anim_P16R4cbs[15]);
+	MainPanelVC.AddSwitch(&LMPCrossTieBalCB, AID_VC_CB_P16R4_17, &anim_P16R4cbs[16]);
+	MainPanelVC.AddSwitch(&LMPBatteryFeedTieCB1, AID_VC_CB_P16R4_18, &anim_P16R4cbs[17]);
+	MainPanelVC.AddSwitch(&LMPBatteryFeedTieCB2, AID_VC_CB_P16R4_19, &anim_P16R4cbs[18]);
+
 	//
 	// Initialize surfaces and switches
 	//
@@ -734,7 +936,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_RDR_SIG_STR:
-		SetAnimation(anim_Needle_Radar, (RadarSignalStrengthMeter.GetDisplayValue() / 6.67) + 0.125);
+		SetAnimation(anim_Needle_Radar, RadarSignalStrengthMeter.GetDisplayValue() / 5);
 		return true;
 
 	case AID_VC_RANGE_TAPE:
@@ -942,7 +1144,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_VC_RR_NOTRACK:
 		if (lca.GetAnnunVoltage() > 2.25 && (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6)) { // The AC side is only needed for the transmitter
 			SetCompLight(LM_VC_COMP_LIGHT_1, true); // Light On
-		} else {
+		}
+		else {
 			SetCompLight(LM_VC_COMP_LIGHT_1, false); // Light Off
 		}
 		return true;
@@ -968,10 +1171,12 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			}
 			else if (CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
 				SetCompLight(LM_VC_COMP_LIGHT_4, true); // Light On
-			} else {
+			}
+			else {
 				SetCompLight(LM_VC_COMP_LIGHT_4, false); // Light Off
 			}
-		} else {
+		}
+		else {
 			SetCompLight(LM_VC_COMP_LIGHT_4, false); // Light Off
 		}
 
@@ -980,6 +1185,22 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		else {
 			SetCompLight(LM_VC_COMP_LIGHT_5, false); // Light Off
+		}
+		return true;
+
+	case AID_VC_PANEL14_COMPLIGHTS:
+		if (lca.GetCompDockVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6)) {
+			SetCompLight(LM_VC_COMP_LIGHT_6, true); // Light On
+		}
+		else {
+			SetCompLight(LM_VC_COMP_LIGHT_6, false); // Light Off
+		}
+
+		if (lca.GetAnnunVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6)) {
+			SetCompLight(LM_VC_COMP_LIGHT_7, true); // Light On
+		}
+		else {
+			SetCompLight(LM_VC_COMP_LIGHT_7, false); // Light Off
 		}
 		return true;
 
@@ -1106,6 +1327,15 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		MainHeliumPressureMeter.DoDrawSwitchVC(surf, srf[SRF_VC_DIGITALDISP2]);
 		return true;
 
+	case AID_VC_PANEL1_NEEDLES:
+		EngineThrustInd.DoDrawSwitchVC(anim_P1needles[0]);
+		CommandedThrustInd.DoDrawSwitchVC(anim_P1needles[1]);
+		MainFuelTempInd.DoDrawSwitchVC(anim_P1needles[2]);
+		MainOxidizerTempInd.DoDrawSwitchVC(anim_P1needles[3]);
+		MainFuelPressInd.DoDrawSwitchVC(anim_P1needles[4]);
+		MainOxidizerPressInd.DoDrawSwitchVC(anim_P1needles[5]);
+		return true;
+
 	case AID_VC_PANEL2_NEEDLES:
 		LMRCSATempInd.DoDrawSwitchVC(anim_P2needles[0]);
 		LMRCSBTempInd.DoDrawSwitchVC(anim_P2needles[1]);
@@ -1124,13 +1354,19 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		LMCO2Meter.DoDrawSwitchVC(anim_P2needles[14]);
 		return true;
 
-	case AID_VC_PANEL1_NEEDLES:
-		EngineThrustInd.DoDrawSwitchVC(anim_P1needles[0]);
-		CommandedThrustInd.DoDrawSwitchVC(anim_P1needles[1]);
-		MainFuelTempInd.DoDrawSwitchVC(anim_P1needles[2]);
-		MainOxidizerTempInd.DoDrawSwitchVC(anim_P1needles[3]);
-		MainFuelPressInd.DoDrawSwitchVC(anim_P1needles[4]);
-		MainOxidizerPressInd.DoDrawSwitchVC(anim_P1needles[5]);
+	case AID_VC_PANEL3_NEEDLES:
+		TempMonitorInd.DoDrawSwitchVC(anim_P3needles[0]);
+		return true;
+
+	case AID_VC_PANEL12_NEEDLES:
+		ComPitchMeter.DoDrawSwitchVC(anim_P12needles[0]);
+		ComYawMeter.DoDrawSwitchVC(anim_P12needles[1]);
+		Panel12SignalStrengthMeter.DoDrawSwitchVC(anim_P12needles[2]);
+		return true;
+
+	case AID_VC_PANEL14_NEEDLES:
+		EPSDCVoltMeter.DoDrawSwitchVC(anim_P14needles[0]);
+		EPSDCAmMeter.DoDrawSwitchVC(anim_P14needles[1]);
 		return true;
 
 	case AID_VC_THRUST_WEIGHT_IND:
@@ -1145,12 +1381,28 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		AbortStageSwitch.DrawSwitchVC(anim_abortstagebutton, anim_abortstagecover);
 		return true;
 
-	case AID_VC_PANEL3_NEEDLES:
-		TempMonitorInd.DoDrawSwitchVC(anim_P3needles[0]);
-		return true;
-
 	case AID_VC_RR_SLEW_SWITCH:
 		RadarSlewSwitch.DrawSwitchVC(anim_rrslewsitch_x, anim_rrslewsitch_y);
+		//SetAnimation(anim_P12needles[1], ttca_throttle_pos_dig);
+		return true;
+
+	/*case AID_VC_RECORDER_TALKBACK:
+		TapeRecorderTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		return true;*/
+
+	case AID_VC_DSC_BATTERY_TALKBACKS:
+		DSCBattery1TB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		DSCBattery2TB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		DSCBattery3TB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		DSCBattery4TB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		DSCBattFeedTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		return true;
+
+	case AID_VC_ASC_BATTERY_TALKBACKS:
+		ASCBattery5ATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		ASCBattery5BTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		ASCBattery6ATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		ASCBattery6BTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
 		return true;
 	}
 
@@ -1175,6 +1427,17 @@ void LEM::InitVCAnimations() {
 	anim_P11R3cbs[P11R3_CBCOUNT] = -1;
 	anim_P11R4cbs[P11R4_CBCOUNT] = -1;
 	anim_P11R5cbs[P11R5_CBCOUNT] = -1;
+	anim_P12switch[P12_SWITCHCOUNT] = -1;
+	anim_P12_Rot[P12_ROTCOUNT] = -1;
+	anim_P12thumbwheels[P12_TWCOUNT] = -1;
+	anim_P12needles[P12_NEEDLECOUNT] = -1;
+	anim_P14switch[P14_SWITCHCOUNT] = -1;
+	anim_P14_Rot[P14_ROTCOUNT] = -1;
+	anim_P14needles[P14_NEEDLECOUNT] = -1;
+	anim_P16R1cbs[P16R1_CBCOUNT] = -1;
+	anim_P16R2cbs[P16R2_CBCOUNT] = -1;
+	anim_P16R3cbs[P16R3_CBCOUNT] = -1;
+	anim_P16R4cbs[P16R4_CBCOUNT] = -1;
 	anim_TW_indicator = -1;
 	anim_Needle_Radar = -1;
 	anim_xpointerx_cdr = -1;
@@ -1231,6 +1494,28 @@ void LEM::DeleteVCAnimations()
 	for (i = 0; i < P11R4_CBCOUNT; i++) delete mgt_P11R4cbs[i];
 
 	for (i = 0; i < P11R5_CBCOUNT; i++) delete mgt_P11R5cbs[i];
+
+	for (i = 0; i < P12_SWITCHCOUNT; i++) delete mgt_P12switch[i];
+
+	for (i = 0; i < P12_ROTCOUNT; i++) delete mgt_P12Rot[i];
+
+	for (i = 0; i < P12_TWCOUNT; i++) delete mgt_P12thumbwheels[i];
+
+	for (i = 0; i < P12_NEEDLECOUNT; i++) delete mgt_P12needles[i];
+
+	for (i = 0; i < P14_SWITCHCOUNT; i++) delete mgt_P14switch[i];
+
+	for (i = 0; i < P14_ROTCOUNT; i++) delete mgt_P14Rot[i];
+
+	for (i = 0; i < P14_NEEDLECOUNT; i++) delete mgt_P14needles[i];
+
+	for (i = 0; i < P16R1_CBCOUNT; i++) delete mgt_P16R1cbs[i];
+
+	for (i = 0; i < P16R2_CBCOUNT; i++) delete mgt_P16R2cbs[i];
+
+	for (i = 0; i < P16R3_CBCOUNT; i++) delete mgt_P16R3cbs[i];
+
+	for (i = 0; i < P16R4_CBCOUNT; i++) delete mgt_P16R4cbs[i];
 }
 
 void LEM::DefineVCAnimations()
@@ -1377,6 +1662,105 @@ void LEM::DefineVCAnimations()
 		AddAnimationComponent(anim_P11R5cbs[i], 0.0f, 1.0f, mgt_P11R5cbs[i]);
 	}
 
+	// Panel 12 switches/rotaries/thumbwheels/needles
+	static UINT meshgroup_P12switches[P12_SWITCHCOUNT], meshgroup_P12Rots[P12_ROTCOUNT], meshgroup_P12thumbwheels[P12_TWCOUNT], meshgroup_P12needles[P12_NEEDLECOUNT];
+
+	for (int i = 0; i < P12_SWITCHCOUNT; i++)
+	{
+		meshgroup_P12switches[i] = VC_GRP_Sw_P12_01 + i;
+		mgt_P12switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P12switches[i], 1, P12_TOGGLE_POS[i] - P12_CLICK, _V(0, 0, -1), (float)PI / 4);
+		anim_P12switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P12switch[i], 0.0f, 1.0f, mgt_P12switch[i]);
+	}
+
+	for (i = 0; i < P12_ROTCOUNT; i++)
+	{
+		meshgroup_P12Rots[i] = VC_GRP_Rot_P12_01 + i;
+		mgt_P12Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P12Rots[i], 1, P12_ROT_POS[i], P12_ROT_AXIS, (float)(RAD * 360));
+		anim_P12_Rot[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P12_Rot[i], 0.0f, 1.0f, mgt_P12Rot[i]);
+	}
+
+	for (i = 0; i < P12_TWCOUNT; i++)
+	{
+		meshgroup_P12thumbwheels[i] = VC_GRP_TW_P12_01 + i;
+		mgt_P12thumbwheels[i] = new MGROUP_ROTATE(mesh, &meshgroup_P12thumbwheels[i], 1, P12_TW_POS[i], _V(0, 0, -1), (float)(RAD * 324));
+		anim_P12thumbwheels[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P12thumbwheels[i], 0.0f, 1.0f, mgt_P12thumbwheels[i]);
+	}
+
+	for (i = 0; i < P12_NEEDLECOUNT; i++)
+	{
+		meshgroup_P12needles[i] = VC_GRP_Needle_P12_01 + i;
+		mgt_P12needles[i] = new MGROUP_ROTATE(mesh, &meshgroup_P12needles[i], 1, P12_NEEDLE_POS[i], P12_ROT_AXIS, (float)(RAD * 270));
+		anim_P12needles[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P12needles[i], 0.0f, 1.0f, mgt_P12needles[i]);
+	}
+
+	// Panel 14 switches/rotaries/needles
+	static UINT meshgroup_P14switches[P14_SWITCHCOUNT], meshgroup_P14Rots[P14_ROTCOUNT], meshgroup_P14needles[P14_NEEDLECOUNT];
+	for (int i = 0; i < P14_SWITCHCOUNT; i++)
+	{
+		meshgroup_P14switches[i] = VC_GRP_Sw_P14_01 + i;
+		mgt_P14switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P14switches[i], 1, P14_TOGGLE_POS[i] - P14_CLICK, _V(0, 0, -1), (float)PI / 4);
+		anim_P14switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P14switch[i], 0.0f, 1.0f, mgt_P14switch[i]);
+	}
+
+	for (i = 0; i < P14_ROTCOUNT; i++)
+	{
+		meshgroup_P14Rots[i] = VC_GRP_Rot_P14_01 + i;
+		mgt_P14Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P14Rots[i], 1, P14_ROT_POS[i], P14_ROT_AXIS, (float)(RAD * 360));
+		anim_P14_Rot[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P14_Rot[i], 0.0f, 1.0f, mgt_P14Rot[i]);
+	}
+
+	for (i = 0; i < P14_NEEDLECOUNT; i++)
+	{
+		meshgroup_P14needles[i] = VC_GRP_Needle_P14_01 + i;
+		mgt_P14needles[i] = new MGROUP_ROTATE(mesh, &meshgroup_P14needles[i], 1, P14_NEEDLE_POS[i], P14_ROT_AXIS, (float)(RAD * 270));
+		anim_P14needles[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P14needles[i], 0.0f, 1.0f, mgt_P14needles[i]);
+	}
+
+	// Panel 16 circuit breakers
+	static UINT meshgroup_P16R1cb[P16R1_CBCOUNT], meshgroup_P16R2cb[P16R2_CBCOUNT], meshgroup_P16R3cb[P16R3_CBCOUNT], meshgroup_P16R4cb[P16R4_CBCOUNT];
+	for (int i = 0; i < P16R1_CBCOUNT; i++)
+	{
+		const VECTOR3 p11row1_vector = { 0.003 * -sin(P16R1_TILT - (90.0 * RAD)), 0.003 * cos(P16R1_TILT - (90.0 * RAD)), 0.0 };
+		meshgroup_P16R1cb[i] = VC_GRP_CB_P16R1_01 + i;
+		mgt_P16R1cbs[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P16R1cb[i], 1, p11row1_vector);
+		anim_P16R1cbs[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P16R1cbs[i], 0.0f, 1.0f, mgt_P16R1cbs[i]);
+	}
+
+	for (int i = 0; i < P16R2_CBCOUNT; i++)
+	{
+		const VECTOR3 p11row2_vector = { 0.003 * -sin(P16R2_TILT - (90.0 * RAD)), 0.003 * cos(P16R2_TILT - (90.0 * RAD)), 0.0 };
+		meshgroup_P16R2cb[i] = VC_GRP_CB_P16R2_01 + i;
+		mgt_P16R2cbs[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P16R2cb[i], 1, p11row2_vector);
+		anim_P16R2cbs[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P16R2cbs[i], 0.0f, 1.0f, mgt_P16R2cbs[i]);
+	}
+
+	for (int i = 0; i < P16R3_CBCOUNT; i++)
+	{
+		const VECTOR3 p11row3_vector = { 0.003 * -sin(P16R3_TILT - (90.0 * RAD)), 0.003 * cos(P16R3_TILT - (90.0 * RAD)), 0.0 };
+		meshgroup_P16R3cb[i] = VC_GRP_CB_P16R3_01 + i;
+		mgt_P16R3cbs[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P16R3cb[i], 1, p11row3_vector);
+		anim_P16R3cbs[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P16R3cbs[i], 0.0f, 1.0f, mgt_P16R3cbs[i]);
+	}
+
+	for (int i = 0; i < P16R4_CBCOUNT; i++)
+	{
+		const VECTOR3 p11row4_vector = { 0.003 * -sin(P16R4_TILT - (90.0 * RAD)), 0.003 * cos(P16R4_TILT - (90.0 * RAD)), 0.0 };
+		meshgroup_P16R4cb[i] = VC_GRP_CB_P16R4_01 + i;
+		mgt_P16R4cbs[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P16R4cb[i], 1, p11row4_vector);
+		anim_P16R4cbs[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P16R4cbs[i], 0.0f, 1.0f, mgt_P16R4cbs[i]);
+	}
+
 	// Thrust-weight indicator
 	const VECTOR3 tw_xvector = { 0.00, 0.0925*cos(P1_TILT), 0.0925*sin(P1_TILT) };
 	static UINT meshgroup_TW_indicator = VC_GRP_Needle_P1_07;
@@ -1386,7 +1770,7 @@ void LEM::DefineVCAnimations()
 
 	// Radar strength meter
 	static UINT meshgroup_Needle_Radar = VC_GRP_Needle_Radar;
-	static MGROUP_ROTATE mgt_Needle_Radar(mesh, &meshgroup_Needle_Radar, 1, _V(-0.264141, 0.235696, 1.62835), P3_ROT_AXIS, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_Needle_Radar(mesh, &meshgroup_Needle_Radar, 1, _V(-0.264141, 0.235696, 1.62835), P3_ROT_AXIS, (float)(RAD * 270));
 	anim_Needle_Radar = CreateAnimation(0.5);
 	AddAnimationComponent(anim_Needle_Radar, 0.0f, 1.0f, &mgt_Needle_Radar);
 
@@ -1559,7 +1943,7 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 12;
+	int lightmat = VC_NMAT - 15;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1586,7 +1970,7 @@ void LEM::SetContactLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 14;
+	int lightmat = VC_NMAT - 17;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1613,7 +1997,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 23;
+	int lightmat = VC_NMAT - 26;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 

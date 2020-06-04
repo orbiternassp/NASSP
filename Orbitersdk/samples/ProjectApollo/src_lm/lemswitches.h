@@ -115,6 +115,7 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 	SURFHANDLE FrameSurface;
 
@@ -127,6 +128,7 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 
 	SURFHANDLE FrameSurface;
 
@@ -515,6 +517,7 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 protected:
 	SURFHANDLE FrameSurface;
 };
@@ -524,6 +527,7 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 protected:
 	SURFHANDLE FrameSurface;
 };
@@ -533,6 +537,7 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(UINT anim);
 protected:
 	SURFHANDLE FrameSurface;
 };

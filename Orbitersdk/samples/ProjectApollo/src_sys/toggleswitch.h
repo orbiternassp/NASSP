@@ -1230,8 +1230,10 @@ public:
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);
+	void RedrawVC(UINT anim);
 	void DrawFlash(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool ProcessMouseVC(int event, VECTOR3 &p);
 	virtual bool SwitchTo(int newState);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
@@ -1252,6 +1254,7 @@ protected:
 	SURFHANDLE switchBorder;
 	Sound sclick;
 	SwitchRow *switchRow;
+	VESSEL *OurVessel;
 };
 
 class ContinuousThumbwheelSwitch : public ThumbwheelSwitch {

@@ -2478,6 +2478,7 @@ ThumbwheelSwitch::ThumbwheelSwitch() {
 	maxState = 0;
 	switchSurface = 0;
 	switchRow = 0;
+	OurVessel = 0;
 }
 
 ThumbwheelSwitch::~ThumbwheelSwitch() {
@@ -2513,6 +2514,8 @@ void ThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	if (!sclick.isValid()) {
 		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND);
 	}
+
+	OurVessel = switchRow->panelSwitches->vessel;
 }
 
 int ThumbwheelSwitch::GetState() {
@@ -2572,6 +2575,26 @@ bool ThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+bool ThumbwheelSwitch::ProcessMouseVC(int event, VECTOR3 &p) {
+
+	int OldState = state;
+
+	if (event == PANEL_MOUSE_LBDOWN) {
+		if (state < maxState) {
+			SwitchTo(state + 1);
+			sclick.play();
+		}
+	}
+	else {
+		if (state > 0) {
+			SwitchTo(state - 1);
+			sclick.play();
+		}
+	}
+
+	return true;
+}
+
 bool ThumbwheelSwitch::SwitchTo(int newState) {
 
 	if (newState >= 0 && newState <= maxState && state != newState) {
@@ -2587,6 +2610,12 @@ bool ThumbwheelSwitch::SwitchTo(int newState) {
 void ThumbwheelSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
 	oapiBlt(DrawSurface, switchSurface, x, y, state * width, 0, width, height, SURF_PREDEF_CK);
+}
+
+void ThumbwheelSwitch::RedrawVC(UINT anim) {
+
+	double s = ((double)state) / ((double)maxState);
+	OurVessel->SetAnimation(anim, s);
 }
 
 void ThumbwheelSwitch::DrawFlash(SURFHANDLE DrawSurface)

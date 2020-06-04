@@ -102,6 +102,8 @@ enum LMRCSThrusters
 #define LM_VC_COMP_LIGHT_3		2   // Suit fan light
 #define LM_VC_COMP_LIGHT_4		3   // CO2 light
 #define LM_VC_COMP_LIGHT_5		4   // H2O sep light
+#define LM_VC_COMP_LIGHT_6		5   // DC Bus fault light
+#define LM_VC_COMP_LIGHT_7		6   // Bat fault light
 
 // VC power failure light index
 #define LM_VC_PWRFAIL_LIGHT_1		0   // X-pointer left
@@ -119,52 +121,62 @@ const double P1_TILT = 7.95581 * RAD;
 const double P2_TILT = 7.95581 * RAD;
 const double P3_TILT = 35.2509 * RAD;
 const double P4_TILT = 45.0663 * RAD;
-
-const double P11R1_TILT = 326.84 * RAD; //56.84
-const double P11R2_TILT = 347.15 * RAD; //77.15
+//const double P5_6_TILT = 10 * RAD;
+//const double P8_TILT = 10 * RAD;
+const double P11R1_TILT = 326.84 * RAD;
+const double P11R2_TILT = 347.15 * RAD;
 const double P11R3_TILT =  0;
-const double P11R4_TILT = 7.75 * RAD; //97.75
-const double P11R5_TILT = 18.44 * RAD; //108.44
-/*const double P6_TILT = 10 * RAD;
-const double P12_TILT = 20 * RAD;
-const double P14_TILT = 25 * RAD;*/
+const double P11R4_TILT = 7.75 * RAD;
+const double P11R5_TILT = 18.44 * RAD;
+const double P12_TILT = 73.43 * RAD;
+const double P14_TILT = 50.1 * RAD;
+const double P16R1_TILT = 28.81 * RAD;
+const double P16R2_TILT = 23.59 * RAD;
+const double P16R3_TILT = 5.57 * RAD;
+const double P16R4_TILT = 0;
 
 // Switch clickspot offset
 const VECTOR3	P1_CLICK = { 0, 0.0011, -0.0078 };
 const VECTOR3	P2_CLICK = { 0, 0.0011, -0.0078 };
 const VECTOR3	P3_CLICK = { 0, 0.0045, -0.0065 };
 const VECTOR3	P4_CLICK = { 0, 0.0056, -0.0056 };
+const VECTOR3	P12_CLICK = { -0.0005, 0.0016, 0 };
+const VECTOR3	P14_CLICK = { -0.001, 0.0013, 0 };
 
 // Number of switches on each panel
 const int	P1_SWITCHCOUNT = 20;
 const int	P2_SWITCHCOUNT = 18;
 const int	P3_SWITCHCOUNT = 26;
 const int	P4_SWITCHCOUNT = 4;
-/*const int	P5_SWITCHCOUNT = 8;
-const int	P6_SWITCHCOUNT = 12;
-const int	P8_SWITCHCOUNT = 22;
+//const int	P5_SWITCHCOUNT = 8;
+//const int	P6_SWITCHCOUNT = 12;
+//const int	P8_SWITCHCOUNT = 22;
 const int	P12_SWITCHCOUNT = 22;
 const int	P14_SWITCHCOUNT = 16;
-const int	LM_VC_NEEDLECOUNT = 19;*/
+//const int	LM_VC_NEEDLECOUNT = 19;
 
 // Number of push buttons
 
 const int   P4_PUSHBCOUNT = 19;
 
-// Number of indicator needles
+// Number of indicator needles (tapemeter)
 const int P1_NEEDLECOUNT = 6;
 const int P2_NEEDLECOUNT = 15;
 const int P3_NEEDLECOUNT = 1;
+
+// Number of indicator needles (round)
+const int P12_NEEDLECOUNT = 3;
+const int P14_NEEDLECOUNT = 2;
 
 // Number of rotaries
 const int	 P1_ROTCOUNT = 1;
 const int	 P2_ROTCOUNT = 4;
 const int	 P3_ROTCOUNT = 5;
-/*const int	 P5_ROTCOUNT = 1;
-const int	 P6_ROTCOUNT = 4;
-const int	 P8_ROTCOUNT = 0;
+//const int	 P5_ROTCOUNT = 1;
+//const int	 P6_ROTCOUNT = 4;
+//const int	 P8_ROTCOUNT = 0;
 const int	 P12_ROTCOUNT = 4;
-const int	 P14_ROTCOUNT = 1;*/
+const int	 P14_ROTCOUNT = 1;
 
 // Number of circuit breakers
 const int P11R1_CBCOUNT = 19;
@@ -172,14 +184,21 @@ const int P11R2_CBCOUNT = 19;
 const int P11R3_CBCOUNT = 19;
 const int P11R4_CBCOUNT = 21;
 const int P11R5_CBCOUNT = 11;
+const int P16R1_CBCOUNT = 16;
+const int P16R2_CBCOUNT = 18;
+const int P16R3_CBCOUNT = 18;
+const int P16R4_CBCOUNT = 19;
 
-// Rotary rotation axises
+// Number of thumbwheels
+const int P12_TWCOUNT = 8;
+
+// Rotary/Needle rotation axises
 const VECTOR3	P1_ROT_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
 const VECTOR3	P2_ROT_AXIS = { 0.00, sin(P2_TILT),-cos(P2_TILT) };
 const VECTOR3	P3_ROT_AXIS = { 0.00, sin(P3_TILT),-cos(P3_TILT) };
-/*const VECTOR3	P6_ROT_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
-const VECTOR3	P12_ROT_AXIS = { -sin(P12_TILT), cos(P12_TILT), 0.00 };
-const VECTOR3	P14_ROT_AXIS = { -sin(P14_TILT), cos(P14_TILT), 0.00 };*/
+//const VECTOR3	P5_6_ROT_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
+const VECTOR3	P12_ROT_AXIS = { -sin((90 * RAD) - P12_TILT), cos((90 * RAD) - P12_TILT), 0.00 };
+const VECTOR3	P14_ROT_AXIS = { -sin((90 * RAD) - P14_TILT), cos((90 * RAD) - P14_TILT), 0.00 };
 
 // Panel 1 switches
 const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
@@ -271,6 +290,77 @@ const VECTOR3 P11R4_CB_POS[P11R4_CBCOUNT] = {
 const VECTOR3 P11R5_CB_POS[P11R5_CBCOUNT] = {
 {-0.9558, 0.3950, 0.7223}, {-0.9558, 0.3950, 0.7534}, {-0.9558, 0.3950, 0.7844}, {-0.9558, 0.3950, 0.8154}, {-0.9558, 0.3950, 0.8752}, {-0.9558, 0.3950, 0.9062},
 {-0.9558, 0.3950, 0.9373}, {-0.9558, 0.3950, 0.9684}, {-0.9558, 0.3950, 0.9995}, {-0.9558, 0.3950, 1.0304}, {-0.9558, 0.3950, 1.0616}
+};
+
+// Panel 12 switches
+const VECTOR3 P12_TOGGLE_POS[P12_SWITCHCOUNT] = {
+{1.0613, 0.0639, 1.5407}, {0.9870, 0.0419, 1.5557}, {1.1029, 0.0763, 1.4994}, {1.1027, 0.0763, 1.4439}, {1.1027, 0.0763, 1.3904}, {1.0209, 0.0519, 1.5002},
+{1.0207, 0.0519, 1.4448}, {1.0695, 0.0663, 1.3905}, {1.0919, 0.0730, 1.3526}, {1.0919, 0.0730, 1.3026}, {1.0919, 0.0730, 1.2570}, {1.0919, 0.0730, 1.2091},
+{1.0919, 0.0730, 1.1599}, {1.0919, 0.0730, 1.1195}, {1.0395, 0.0574, 1.2910}, {1.0395, 0.0574, 1.2556}, {1.0395, 0.0574, 1.2213}, {1.0395, 0.0574, 1.1862},
+{1.0395, 0.0574, 1.1519}, {1.0395, 0.0574, 1.1169}, {0.9806, 0.0399, 1.1178}, {1.0416, 0.0581, 1.0728}
+};
+
+// Panel 12 rotaries
+const VECTOR3 P12_ROT_POS[P12_ROTCOUNT] = {
+{0.9876, 0.0424, 1.0606}, {0.9828, 0.0409, 0.9785}, {0.9941, 0.0442, 0.9123}, {1.0780, 0.0693, 0.9122}
+};
+
+// Panel 12 needles
+const VECTOR3 P12_NEEDLE_POS[P12_NEEDLECOUNT] = {
+{1.09359, 0.072091, 1.05354}, {1.09359, 0.072091, 0.989483}, {1.0338, 0.054291, 1.01673}
+};
+
+// Panel 12 thumbwheels
+const VECTOR3 P12_TW_POS[P12_TWCOUNT] = {
+{1.0691, 0.0429, 1.5005}, {1.0689, 0.0430, 1.4452}, {1.0362, 0.0334, 1.3907}, {0.9843, 0.0186, 1.5001}, {0.9848, 0.0185, 1.4452}, {0.9848, 0.0182, 1.3907},
+{0.9842, 0.0186, 1.2568}, {0.9844, 0.0184, 1.1842}
+};
+
+// Panel 14 switches
+const VECTOR3 P14_TOGGLE_POS[P14_SWITCHCOUNT] = {
+{0.9641, 0.3106, 1.2910}, {0.9641, 0.3106, 1.2118}, {0.9960, 0.3373, 1.1471}, {0.9960, 0.3373, 1.1073}, {0.9960, 0.3373, 1.0597}, {0.9960, 0.3373, 1.0200},
+{0.9645, 0.3109, 1.1471}, {0.9645, 0.3109, 1.1074}, {0.9645, 0.3109, 1.0598}, {0.9645, 0.3109, 1.0201}, {0.9960, 0.3373, 0.9789}, {0.9831, 0.3265, 0.9271},
+{0.9831, 0.3265, 0.8872}, {0.9831, 0.3265, 0.8473}, {0.9831, 0.3265, 0.7995}, {0.9831, 0.3265, 0.7567}
+};
+
+// Panel 14 rotaries
+const VECTOR3 P14_ROT_POS[P14_ROTCOUNT] = {
+{1.0065, 0.3466, 1.2119}
+};
+
+// Panel 14 needles
+const VECTOR3 P14_NEEDLE_POS[P14_NEEDLECOUNT] = {
+{1.02176, 0.357098, 1.39294}, {0.972098, 0.31565, 1.39296}
+};
+
+// Panel 16 circuit breakers
+// Row 1
+const VECTOR3 P16R1_CB_POS[P16R1_CBCOUNT] = {
+{0.7723, 0.7006, 1.3166}, {0.7723, 0.7006, 1.2856}, {0.7723, 0.7006, 1.2546}, {0.7723, 0.7006, 1.2235}, {0.7723, 0.7006, 1.1922}, {0.7723, 0.7006, 1.1612},
+{0.7723, 0.7006, 1.1301}, {0.7723, 0.7006, 1.0990}, {0.7723, 0.7006, 1.0679}, {0.7723, 0.7006, 1.0368}, {0.7723, 0.7006, 1.0056}, {0.7723, 0.7006, 0.9745},
+{0.7723, 0.7006, 0.9434}, {0.7723, 0.7006, 0.9121}, {0.7723, 0.7006, 0.8811}, {0.7723, 0.7006, 0.8213}
+};
+
+// Row 2
+const VECTOR3 P16R2_CB_POS[P16R2_CBCOUNT] = {
+{0.8321, 0.6372, 1.3176}, {0.8321, 0.6372, 1.2864}, {0.8321, 0.6372, 1.2552}, {0.8321, 0.6372, 1.2239}, {0.8321, 0.6372, 1.1927}, {0.8321, 0.6372, 1.1615},
+{0.8321, 0.6372, 1.1304}, {0.8321, 0.6372, 1.0992}, {0.8321, 0.6372, 1.0680}, {0.8321, 0.6372, 1.0369}, {0.8321, 0.6372, 1.0057}, {0.8321, 0.6372, 0.9744},
+{0.8321, 0.6372, 0.9433}, {0.8321, 0.6372, 0.9120}, {0.8321, 0.6372, 0.8809}, {0.8321, 0.6372, 0.8212}, {0.8321, 0.6372, 0.7899}, {0.8321, 0.6372, 0.7588}
+};
+
+// Row 3
+const VECTOR3 P16R3_CB_POS[P16R3_CBCOUNT] = {
+{0.8730, 0.5736, 1.3179}, {0.8730, 0.5736, 1.2865}, {0.8730, 0.5736, 1.2554}, {0.8730, 0.5736, 1.2242}, {0.8730, 0.5736, 1.1931}, {0.8730, 0.5736, 1.1619},
+{0.8730, 0.5736, 1.1307}, {0.8730, 0.5736, 1.0995}, {0.8730, 0.5736, 1.0682}, {0.8730, 0.5736, 1.0370}, {0.8730, 0.5736, 1.0059}, {0.8730, 0.5736, 0.9436},
+{0.8730, 0.5736, 0.9124}, {0.8730, 0.5732, 0.8812}, {0.8730, 0.5736, 0.8212}, {0.8730, 0.5736, 0.7901}, {0.8730, 0.5736, 0.7588}, {0.8730, 0.5736, 0.7278}
+};
+
+// Row 4
+const VECTOR3 P16R4_CB_POS[P16R4_CBCOUNT] = {
+{0.9333, 0.4903, 1.3197}, {0.9333, 0.4903, 1.2884}, {0.9333, 0.4903, 1.2571}, {0.9333, 0.4903, 1.2259}, {0.9333, 0.4903, 1.1948}, {0.9333, 0.4903, 1.1634},
+{0.9333, 0.4903, 1.1321}, {0.9333, 0.4903, 1.1009}, {0.9333, 0.4903, 1.0696}, {0.9333, 0.4903, 1.0385}, {0.9333, 0.4903, 1.0071}, {0.9333, 0.4903, 0.9760},
+{0.9333, 0.4903, 0.9447}, {0.9333, 0.4903, 0.9135}, {0.9333, 0.4903, 0.8822}, {0.9333, 0.4903, 0.8223}, {0.9333, 0.4903, 0.7910}, {0.9333, 0.4903, 0.7598},
+{0.9333, 0.4903, 0.7285}
 };
 
 // LM ECS status
@@ -1791,6 +1881,17 @@ protected:
 	MGROUP_TRANSFORM *mgt_P11R3cbs[P11R3_CBCOUNT];
 	MGROUP_TRANSFORM *mgt_P11R4cbs[P11R4_CBCOUNT];
 	MGROUP_TRANSFORM *mgt_P11R5cbs[P11R5_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P12switch[P12_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P12Rot[P12_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P12thumbwheels[P12_TWCOUNT];
+	MGROUP_TRANSFORM *mgt_P12needles[P12_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P14switch[P14_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P14Rot[P14_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P14needles[P14_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P16R1cbs[P16R1_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P16R2cbs[P16R2_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P16R3cbs[P16R3_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P16R4cbs[P16R4_CBCOUNT];
 	UINT anim_P1switch[P1_SWITCHCOUNT];
 	UINT anim_P1_Rot[P1_ROTCOUNT];
 	UINT anim_P1needles[P1_NEEDLECOUNT];
@@ -1806,6 +1907,17 @@ protected:
 	UINT anim_P11R3cbs[P11R3_CBCOUNT];
 	UINT anim_P11R4cbs[P11R4_CBCOUNT];
 	UINT anim_P11R5cbs[P11R5_CBCOUNT];
+	UINT anim_P12switch[P12_SWITCHCOUNT];
+	UINT anim_P12_Rot[P12_ROTCOUNT];
+	UINT anim_P12thumbwheels[P12_TWCOUNT];
+	UINT anim_P12needles[P12_NEEDLECOUNT];
+	UINT anim_P14switch[P14_SWITCHCOUNT];
+	UINT anim_P14_Rot[P14_ROTCOUNT];
+	UINT anim_P14needles[P14_NEEDLECOUNT];
+	UINT anim_P16R1cbs[P16R1_CBCOUNT];
+	UINT anim_P16R2cbs[P16R2_CBCOUNT];
+	UINT anim_P16R3cbs[P16R3_CBCOUNT];
+	UINT anim_P16R4cbs[P16R4_CBCOUNT];
 	UINT anim_TW_indicator;
 	UINT anim_Needle_Radar;
 	UINT anim_xpointerx_cdr;
