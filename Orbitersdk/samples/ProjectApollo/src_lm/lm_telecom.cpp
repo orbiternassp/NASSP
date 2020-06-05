@@ -2856,7 +2856,7 @@ void LM_OMNI::Timestep()
 	RecvdOMNIPower_dBm = 10 * log10(1000 * RecvdOMNIPower);
 	SignalStrengthScaleFactor = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 
-	if (relang < 160 * RAD) //this is a litteral copy of the CSM OMNI and needs to be fixed
+	if (relang < 160 * RAD) //this is a litteral copy of the CSM OMNI but should be fairly close
 	{
 		//very rough approximation of radiation pattern
 		//https://www.wolframalpha.com/input/?i=polar+plot+sin%5E2%28%28acos%28sqrt%28sqrt%280.5%29%29%29+%2F+%2845deg+%2F+2.0%29%29*theta%2F%281.309-e%5E-theta%5E2%29%29+from+-160deg+to+160deg
