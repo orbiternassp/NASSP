@@ -489,6 +489,7 @@ LEM_DPS::LEM_DPS(THRUSTER_HANDLE *dps) :
 	engPreValvesArm = 0;
 	engArm = 0;
 	thrustcommand = 0;
+	thrustlevel = 0.0;
 	ThrustChamberPressurePSI = 0.0;
 	ActuatorValves = 0.0;
 
@@ -517,9 +518,9 @@ void LEM_DPS::ThrottleActuator(double manthrust, double autothrust)
 		{
 			thrustcommand = 1.0;
 		}
-		else if (thrustcommand < 0.1)
+		else if (thrustcommand < DPS_FMIN_RATIO)
 		{
-			thrustcommand = 0.1;
+			thrustcommand = DPS_FMIN_RATIO;
 		}
 	}
 	else
@@ -633,16 +634,36 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 			lem->SetThrusterResource(dpsThruster[0], NULL);
 		}
 
+		double desthrlev;
 		//Engine Fire Command
 		if (engPreValvesArm && thrustOn)
 		{
-			lem->SetThrusterLevel(dpsThruster[0], thrustcommand*ActuatorValves);
+			desthrlev = thrustcommand*ActuatorValves;
+			//lem->SetThrusterLevel(dpsThruster[0], thrustcommand*ActuatorValves);
 		}
 		else
 		{
-			lem->SetThrusterLevel(dpsThruster[0], 0.0);
+			desthrlev = 0.0;
+			//lem->SetThrusterLevel(dpsThruster[0], 0.0);
 		}
 
+		// First order lag
+		double deltathr = (desthrlev - thrustlevel)*simdt / DPS_WDENG;
+
+		if (deltathr > 0.000001) {
+			thrustlevel += deltathr;
+			if (thrustlevel > desthrlev)
+				thrustlevel = desthrlev;
+		}
+		else if (deltathr < -0.000001) {
+			thrustlevel += deltathr;
+			if (thrustlevel < desthrlev)
+				thrustlevel = desthrlev;
+		}
+		else
+			thrustlevel = desthrlev;
+
+		lem->SetThrusterLevel(dpsThruster[0], thrustlevel);
 		//103.4PSI at FTP (uneroded)
 		ThrustChamberPressurePSI = lem->GetThrusterMax(dpsThruster[0])*lem->GetThrusterLevel(dpsThruster[0])*103.4 / DPS_FCMAX;
 	}
@@ -669,7 +690,8 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 		{
 			//2.525 is rate of change of thrust (in Newtons per second) at full thrust command to simulation erosion effects
 			//TBD: Effects at lower throttle settings, scaled linearly with thrust command for now
-			Erosion += lem->GetThrusterLevel(dpsThruster[0])*2.525*simdt;
+			//Erosion += lem->GetThrusterLevel(dpsThruster[0])*2.525*simdt;
+			Erosion += lem->GetThrusterLevel(dpsThruster[0])*1.67*simdt;
 			//Set base thrust (FCMAX) plus erosion effect
 			lem->SetThrusterMax0(dpsThruster[0], DPS_FCMAX + Erosion);
 			//Recalculate and set ISP
@@ -720,17 +742,20 @@ double LEM_DPS::GetInjectorActuatorPosition()
 double LEM_DPS::RecalculateISP(double THRUST_FMAX)
 {
 	//Numbers from GSOP R-567 Section 6, except below 11.4% thrust, which just needed to not go below zero ISP
-	if (THRUST_FMAX >= 0.925) return (488.0 - 200.0*THRUST_FMAX);
+	if (THRUST_FMAX >= 0.945) return 299.0;
+	else if (THRUST_FMAX >= 0.925) return (488.0 - 200.0*THRUST_FMAX);
 	else if (THRUST_FMAX >= 0.401) return (288.8778626 + 15.26717557*THRUST_FMAX);
 	else if (THRUST_FMAX >= 0.252) return (291.2322148 + 9.395973154*THRUST_FMAX);
 	else if (THRUST_FMAX >= 0.115) return (291.9445255 + 6.569343066*THRUST_FMAX);
-	else if (THRUST_FMAX >= 0.05) return (-52.3 + 3000.0*THRUST_FMAX);
-	else return (97.7);
+	else if (THRUST_FMAX >= 0.114) return (-52.3 + 3000.0*THRUST_FMAX);
+	//else return (97.7);
+	else return (289.7);
 }
 
 void LEM_DPS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	oapiWriteScenario_int(scn, "THRUSTON", (thrustOn ? 1 : 0));
+	papiWriteScenario_double(scn, "THRUSTLEVEL", thrustlevel);
 	oapiWriteScenario_int(scn, "ENGPREVALVESARM", (engPreValvesArm ? 1 : 0));
 	oapiWriteScenario_int(scn, "ENGARM", (engArm ? 1 : 0));
 	papiWriteScenario_double(scn, "EROSION", Erosion);
@@ -746,6 +771,7 @@ void LEM_DPS::LoadState(FILEHANDLE scn, char *end_str) {
 			return;
 
 		papiReadScenario_bool(line, "THRUSTON", thrustOn);
+		papiReadScenario_double(line, "THRUSTLEVEL", thrustlevel);
 		papiReadScenario_bool(line, "ENGPREVALVESARM", engPreValvesArm);
 		papiReadScenario_bool(line, "ENGARM", engArm);
 		papiReadScenario_double(line, "EROSION", Erosion);

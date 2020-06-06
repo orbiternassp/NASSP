@@ -63,8 +63,8 @@ core
 !/Script/ProjectApollo
 /Textures/
 !/Textures/ProjectApollo/
-/Scenarios
-!/Scenarios/ProjectApollo - NASSP
+Scenarios/*
+!Scenarios/Project\ Apollo\ -\ NASSP
 
 # Stuff that wasn't previously ignored
 /Constell.bin

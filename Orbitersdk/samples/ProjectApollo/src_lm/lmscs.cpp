@@ -1451,14 +1451,19 @@ void DECA::Timestep(double simdt) {
 			ttca_throttle_pos = 0.0;
 		}
 
-		if (ttca_throttle_pos > 0.51 / 0.66)
+		if (ttca_throttle_pos < 0.773) //First breakpoint at 51 degs of TTCA handle, 0.773=51/66
 		{
-			ManualThrust = 1.993081081*ttca_throttle_pos - 0.9930810811;
+			ManualThrust = 0.5006*ttca_throttle_pos + 0.123;
+			//ManualThrust = 1.993081081*ttca_throttle_pos - 0.9930810811;
+		}
+		else if (ttca_throttle_pos < 0.939)
+		{
+			ManualThrust = 2.952*ttca_throttle_pos - 1.772;
+			//ManualThrust = 0.5785055644*ttca_throttle_pos + 0.1;
 		}
 		else
-		{
-			ManualThrust = 0.5785055644*ttca_throttle_pos + 0.1;
-		}
+			ManualThrust = 1.0;
+
 	}
 	else
 	{
@@ -1471,7 +1476,7 @@ void DECA::Timestep(double simdt) {
 	}
 
 	//TBD: Manual thrust also as a voltage. Throttle actuator input should be voltages eventually, too.
-	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust*0.9 / 12.0);
+	lem->DPS.ThrottleActuator(ManualThrust, AutoThrust*0.877 / 12.0);
 
 	//sprintf(oapiDebugString(), "engOn: %d engOff: %d Thrust: %f", engOn, engOff, dpsthrustcommand);
 	//sprintf(oapiDebugString(), "Manual: K1 %d K3 %d K7 %d K10 %d K16 %d K23 %d K28 %d", K1, K3, K7, K10, K16, K23, K28);

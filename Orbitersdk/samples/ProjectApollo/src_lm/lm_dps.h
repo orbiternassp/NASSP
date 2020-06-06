@@ -155,8 +155,25 @@ protected:
 	e_object *motorSource;
 };
 
-const double DPS_FCMAX = 43203.3;	//The uneroded maximum DPS thrust
+//const double DPS_FCMAX = 43203.3; //GSOP R-567 Sec 6 value
+
+// The uneroded maximum DPS thrust in newtons. The value
+// is some sort of "average" of different sources.
+// Additionally it is optimized to make throttle
+// recovery time close to the historical value of Apollo 11
+const double DPS_FCMAX = 43700.0;
 const double DPS_FMAX = 46703.3;	//The maximum DPS thrust
+
+//The minimum DPS thrust, based on GSOP R-567 Section 6
+const double DPS_FMIN_RATIO = 5337.9/DPS_FCMAX;	    
+
+// First order lag time of DPS thrust in seconds. Don
+// Eyles gives this value on Apollo 11 as 0.075 s. The
+// value used in simulator was 0.3 sec (see e.g.
+// R567 sec 6). Don explains this discrepancy and the
+// consequences here:
+// https://www.doneyles.com/LM/Tales.html
+const double DPS_WDENG = 0.075;
 
 // Descent Engine
 class LEM_DPS {
@@ -182,6 +199,7 @@ public:
 	bool engArm;				// Engine Arm Command
 	bool engPreValvesArm;		// Engine Prevalves Arm Command
 	double thrustcommand;		// DPS Thrust Command
+	double thrustlevel;         // Current DPS Thrust level
 	double ActuatorValves;
 
 	double ThrustChamberPressurePSI;
