@@ -41,9 +41,8 @@
 #include "papi.h"
 #include "thread.h"
 
-CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) :
-	ApolloGuidance(s, display, im, sc, tc, p), dsky2(display2)
-
+CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CMOptics &optics, PanelSDK &p) :
+	ApolloGuidance(true, s, display, im, p), dsky2(display2)
 {
 	isLGC = false;
 
@@ -54,6 +53,16 @@ CSMcomputer::CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CD
 	LastOut5 = 0;
 	LastOut6 = 0;
 	LastOut11 = 0;
+
+	double motor_speed_gain = 16*CDU_DAC_GAIN*30.8/12800.0; //"16" is an ad hoc multiplier to reduce oscillation
+	double motor_speed_max = 55 * 86 / 12800.0;
+	tcdu.SetAngleDevice(&optics.SextTrunion);
+	tcdu.driver_speed_gain = motor_speed_gain*2.0/ 11780.0;
+	tcdu.driver_speed_limit = motor_speed_max*2.0/ 11780.0;
+
+	scdu.SetAngleDevice(&optics.OpticsShaft);
+	scdu.driver_speed_gain = motor_speed_gain / 3011.0;
+	scdu.driver_speed_limit = motor_speed_max / 3011.0;
 
 	thread.Resume ();
 }
@@ -111,22 +120,52 @@ void CSMcomputer::agcTimestep(double simt, double simdt)
 	// Do single timesteps to maintain sync with telemetry engine
 	SingleTimestepPrep(simt, simdt);        // Setup
 	if (LastCycled == 0) {					// Use simdt as difference if new run
-		LastCycled = (simt - simdt); 
+		LastCycled = (simt - simdt);
 		sat->pcm.last_update = LastCycled;
-	}	  
+	}
 	double ThisTime = LastCycled;			// Save here
-	
+
 	long cycles = (long)((simt - LastCycled) / 0.00001171875);	// Get number of CPU cycles to do
 	LastCycled += (0.00001171875 * cycles);						// Preserve the remainder
-	long x = 0; 
-	while(x < cycles) {
+	long x = 0;
+	while (x < cycles) {
 		SingleTimestep();
+		if (vagc.ScalerChanged && ((vagc.Scaler & 3) == 1))
 		ThisTime += 0.00001171875;								// Add time
-		if((ThisTime - sat->pcm.last_update) > 0.00015625) {	// If a step is needed
+		if ((ThisTime - sat->pcm.last_update) > 0.00015625) {	// If a step is needed
 			sat->pcm.TimeStep(ThisTime);						// do it
 		}
 		x++;
 	}
+
+	//sprintf(
+	//	oapiDebugString(),
+	//	"T:%lf S:%lf Reg035: %hu Reg036: %hu",
+	//	sat->optics.SextTrunion, 
+	//	sat->optics.OpticsShaft,
+	//	vagc.Erasable[0][RegOPTY],
+	//	vagc.Erasable[0][RegOPTX]
+	//);
+	//sprintf(
+	//	oapiDebugString(),
+	//	"scaler:%10i scalercounter:%4i ChanSCALER1=%4hx",
+	//	vagc.Scaler, vagc.ScalerCounter,
+	//	vagc.InputChannel[077]);
+	/*sumdt += simdt;
+	stat1 += cnt3200pps;
+	if (sumdt > 2.0) {
+
+		sprintf(
+			oapiDebugString(),
+			"dt:%16lf sumdt=%6lf cnt3200pps=%6lf rate3200pps=%6lf",
+			simdt,
+			sumdt,
+			stat1,
+			stat1 / sumdt);
+		sumdt = 0.0;
+		stat1 = 0.0;
+		stat2 = 0.0;
+	}*/
 }
 
 void CSMcomputer::Run ()
@@ -540,16 +579,16 @@ void CSMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 		}
 
 		// Reset TVC
-		if (val12[TVCEnable]) {
-			if (val12[EnableOpticsCDUErrorCounters]) {
-				if (!sat->tvsa.IsCMCErrorCountersEnabled()) {
-					sat->tvsa.ZeroCMCPosition();
-					sat->tvsa.EnableCMCTVCErrorCounter();
-				}
-			} else {
-				sat->tvsa.DisableCMCTVCErrorCounter();
-			}
-		}
+//		if (val12[TVCEnable]) {
+//			if (val12[EnableOpticsCDUErrorCounters]) {
+////				if (!sat->tvsa.IsCMCErrorCountersEnabled()) {
+//			//		sat->tvsa.ZeroCMCPosition();
+//			//		sat->tvsa.EnableCMCTVCErrorCounter();
+//				}
+//			} else {
+//			//	sat->tvsa.DisableCMCTVCErrorCounter();
+//			}
+//		}
 		break;
 		
 	case 0174: // FDAI ROLL ERROR
@@ -616,10 +655,10 @@ void CSMcomputer::ProcessChannel140(ChannelValue val) {
 			tvc_pitch_pulses = valx&0777;
 			tvc_pitch_cmd = (double)0.023725 * tvc_pitch_pulses;
 		}		
-		sat->tvsa.ChangeCMCPitchPosition(tvc_pitch_cmd);
+		// sat->tvsa.ChangeCMCPitchPosition(tvc_pitch_cmd);
 
 	} else {
-		sat->optics.CMCShaftDrive(valx,val12.to_ulong());
+		// sat->optics.CMCShaftDrive(valx,val12.to_ulong());
 	}	
 }
 
@@ -644,10 +683,10 @@ void CSMcomputer::ProcessChannel141(ChannelValue val) {
 			tvc_yaw_pulses = valx&0777;
 			tvc_yaw_cmd = (double)0.023725 * tvc_yaw_pulses;
 		}				
-		sat->tvsa.ChangeCMCYawPosition(tvc_yaw_cmd);
+		// sat->tvsa.ChangeCMCYawPosition(tvc_yaw_cmd);
 
 	} else {
-		sat->optics.CMCTrunionDrive(valx,val12.to_ulong());
+		// sat->optics.CMCTrunionDrive(valx,val12.to_ulong());
 	}	
 }
 
@@ -688,8 +727,8 @@ CMOptics::CMOptics() {
 	OpticsShaft = 0.0;
 	SextTrunion = 0.0;
 	TeleTrunion = 0.0;
-	ShaftMoved = 0.0;
-	TrunionMoved = 0.0;
+	//ShaftMoved = 0.0;
+	//TrunionMoved = 0.0;
 	dTrunion = 0.0;
 	dShaft = 0.0;
 	OpticsManualMovement = 0;
@@ -739,49 +778,52 @@ void CMOptics::SystemTimestep(double simdt) {
 
 }
 
-void CMOptics::CMCTrunionDrive(int val,int ch12) {
+//void CMOptics::CMCTrunionDrive(int val,int ch12) {
+//
+//	int pulses;
+//	ChannelValue val12;
+//	val12 = ch12;
+//
+//	if (Powered == 0) { return; }
+//
+//	if (val&040000){ // Negative
+//		pulses = -((~val)&07777); 
+//	} else {
+//		pulses = val&07777; 
+//	}
+//	
+//	/*if (val12[EnableOpticsCDUErrorCounters]){
+//		sat->agc.vagc.Erasable[0][RegOPTY] += pulses;
+//		sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
+//	}*/
+//	SextTrunion += (OCDU_TRUNNION_STEP*pulses); 
+//	TrunionMoved = SextTrunion;
+//	//sat->agc.tcdu.SetAngle(SextTrunion);
+//	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
+//}
 
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-
-	if (Powered == 0) { return; }
-
-	if (val&040000){ // Negative
-		pulses = -((~val)&07777); 
-	} else {
-		pulses = val&07777; 
-	}
-	if (val12[EnableOpticsCDUErrorCounters]){
-		sat->agc.vagc.Erasable[0][RegOPTY] += pulses;
-		sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
-	}
-	SextTrunion += (OCDU_TRUNNION_STEP*pulses); 
-	TrunionMoved = SextTrunion;
-	// sprintf(oapiDebugString(),"TRUNNION: %o PULSES, POS %o", pulses&077777 ,sat->agc.vagc.Erasable[0][035]);		
-}
-
-void CMOptics::CMCShaftDrive(int val,int ch12) {
-
-	int pulses;
-	ChannelValue val12;
-	val12 = ch12;
-
-	if (Powered == 0) { return; }
-
-	if (val&040000){ // Negative
-		pulses = -((~val)&07777); 
-	} else {
-		pulses = val&07777; 
-	}
-	OpticsShaft += (OCDU_SHAFT_STEP*pulses);
-	ShaftMoved = OpticsShaft;
-	if (val12[EnableOpticsCDUErrorCounters]){
-		sat->agc.vagc.Erasable[0][RegOPTX] += pulses;
-		sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
-	}
-	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
-}
+//void CMOptics::CMCShaftDrive(int val,int ch12) {
+//
+//	int pulses;
+//	ChannelValue val12;
+//	val12 = ch12;
+//
+//	if (Powered == 0) { return; }
+//
+//	if (val&040000){ // Negative
+//		pulses = -((~val)&07777); 
+//	} else {
+//		pulses = val&07777; 
+//	}
+//	OpticsShaft += (OCDU_SHAFT_STEP*pulses);
+//	ShaftMoved = OpticsShaft;
+//	//sat->agc.scdu.SetAngle(OpticsShaft);
+//	/*if (val12[EnableOpticsCDUErrorCounters]){
+//		sat->agc.vagc.Erasable[0][RegOPTX] += pulses;
+//		sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+//	}*/
+//	// sprintf(oapiDebugString(),"SHAFT: %o PULSES, POS %o", pulses&077777, sat->agc.vagc.Erasable[0][036]);
+//}
 
 // Paint counters. The documentation is not clear if the displayed number is supposed to be decimal degrees or CDU counts.
 // The counters are mechanically connected to the telescope, so it is assumed to be decimal degrees.
@@ -845,6 +887,9 @@ void CMOptics::TimeStep(double simdt) {
 	double ShaftRate = 0;
 	double TrunRate = 0;
 
+	sat->agc.tcdu.flg_enable_drive = false;
+	sat->agc.scdu.flg_enable_drive = false;
+
 	SextDVTimer = SextDVTimer+simdt;
 	if (SextDVTimer >= 0.06666){
 		SextDVTimer = 0.0;
@@ -887,45 +932,49 @@ void CMOptics::TimeStep(double simdt) {
 		if (OpticsShaft > 0) {
 			if (OpticsShaft > OCDU_SHAFT_STEP*ShaftRate) {
 				OpticsShaft -= OCDU_SHAFT_STEP * ShaftRate;
-				ShaftMoved = OpticsShaft;
+				// ShaftMoved = OpticsShaft;
 			}
 			else {
 				OpticsShaft = 0;
-				ShaftMoved = 0;
+				// ShaftMoved = 0;
 			}
+			sat->agc.scdu.UpdateAngle();
 		}
 		if (OpticsShaft < 0) {
 			if (OpticsShaft < (-OCDU_SHAFT_STEP * ShaftRate)) {
 				OpticsShaft += OCDU_SHAFT_STEP * ShaftRate;
-				ShaftMoved = OpticsShaft;
+				// ShaftMoved = OpticsShaft;
 			}
 			else {
 				OpticsShaft = 0;
-				ShaftMoved = 0;
+				// ShaftMoved = 0;
 			}
+			sat->agc.scdu.UpdateAngle();
 		}
 		if (SextTrunion > 0) {
 			if (SextTrunion > OCDU_TRUNNION_STEP*TrunRate) {
 				SextTrunion -= OCDU_TRUNNION_STEP * TrunRate;
-				TrunionMoved = SextTrunion;
+				// TrunionMoved = SextTrunion;
 			}
 			else {
 				SextTrunion = 0;
-				TrunionMoved = 0;
+				// TrunionMoved = 0;
 			}
+			sat->agc.tcdu.UpdateAngle();
 		}
 		if (SextTrunion < 0) {
 			if (SextTrunion < (-OCDU_TRUNNION_STEP * TrunRate)) {
 				SextTrunion += OCDU_TRUNNION_STEP * TrunRate;
-				TrunionMoved = SextTrunion;
+				// TrunionMoved = SextTrunion;
 			}
 			else {
 				SextTrunion = 0;
-				TrunionMoved = 0;
+				// TrunionMoved = 0;
 			}
+			sat->agc.tcdu.UpdateAngle();
 		}
 	}
-	else if (sat->OpticsModeSwitch.IsDown())
+	else 
 	{
 		/* About "SextTrunion < (RAD*59.0)":
 
@@ -960,101 +1009,121 @@ void CMOptics::TimeStep(double simdt) {
 			http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2514.msg20287#msg20287
 			*/
 
-		dTrunion = 0.0;
-		dShaft = 0.0;
-
-		switch (sat->ControllerCouplingSwitch.GetState()) {
-		case TOGGLESWITCH_UP: // DIRECT
-
-			if ((OpticsManualMovement & 0x01) != 0 && SextTrunion < (RAD*59.0)) {
-				dTrunion = OCDU_TRUNNION_STEP * TrunRate;
+		if (sat->OpticsModeSwitch.IsUp()) {
+			ChannelValue val12 = sat->agc.GetOutputChannel(012);
+			if (val12[10] == 0) {
+				sat->agc.tcdu.flg_enable_drive = true;
+				sat->agc.scdu.flg_enable_drive = true;
 			}
-			if ((OpticsManualMovement & 0x02) != 0 && SextTrunion > 0) {
-				dTrunion = -OCDU_TRUNNION_STEP * TrunRate;
-			}
-			if ((OpticsManualMovement & 0x04) != 0 && OpticsShaft > -(RAD*270.0)) {
-				dShaft = -OCDU_SHAFT_STEP * ShaftRate;
-			}
-			if ((OpticsManualMovement & 0x08) != 0 && OpticsShaft < (RAD*270.0)) {
-				dShaft = OCDU_SHAFT_STEP * ShaftRate;
-			}
-			break;
-
-		case TOGGLESWITCH_DOWN: // RESOLVED
-			double A_t_dot, A_s_dot;
-			A_t_dot = 0.0;
-			A_s_dot = 0.0;
-
-			if ((OpticsManualMovement & 0x01) != 0) {// && SextTrunion < (RAD*59.0)) {
-				A_t_dot = OCDU_TRUNNION_STEP * TrunRate;
-			}
-			if ((OpticsManualMovement & 0x02) != 0) {//&& SextTrunion > 0) {
-				A_t_dot = -OCDU_TRUNNION_STEP * TrunRate;
-			}
-			if ((OpticsManualMovement & 0x04) != 0) {//&& OpticsShaft > -(RAD*270.0)) {
-				A_s_dot = -OCDU_SHAFT_STEP * ShaftRate;
-			}
-			if ((OpticsManualMovement & 0x08) != 0) {//&& OpticsShaft < (RAD*270.0)) {
-				A_s_dot = OCDU_SHAFT_STEP * ShaftRate;
-			}
-
-			dShaft = (A_s_dot*cos(OpticsShaft) - A_t_dot * sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
-			dTrunion = A_s_dot * sin(OpticsShaft) + A_t_dot * cos(OpticsShaft);
-
-			TrunRate = abs(dTrunion) / OCDU_TRUNNION_STEP;	//Just so that the telescope trunnion moves correctly
-
-			break;
 		}
+		else {
 
+			dTrunion = 0.0;
+			dShaft = 0.0;
+
+			switch (sat->ControllerCouplingSwitch.GetState()) {
+			case TOGGLESWITCH_UP: // DIRECT
+
+				if ((OpticsManualMovement & 0x01) != 0 && SextTrunion < (RAD*59.0)) {
+					dTrunion = OCDU_TRUNNION_STEP * TrunRate;
+				}
+				if ((OpticsManualMovement & 0x02) != 0 && SextTrunion > 0) {
+					dTrunion = -OCDU_TRUNNION_STEP * TrunRate;
+				}
+				if ((OpticsManualMovement & 0x04) != 0 && OpticsShaft > -(RAD*270.0)) {
+					dShaft = -OCDU_SHAFT_STEP * ShaftRate;
+				}
+				if ((OpticsManualMovement & 0x08) != 0 && OpticsShaft < (RAD*270.0)) {
+					dShaft = OCDU_SHAFT_STEP * ShaftRate;
+				}
+				break;
+
+			case TOGGLESWITCH_DOWN: // RESOLVED
+				double A_t_dot, A_s_dot;
+				A_t_dot = 0.0;
+				A_s_dot = 0.0;
+
+				if ((OpticsManualMovement & 0x01) != 0) {// && SextTrunion < (RAD*59.0)) {
+					A_t_dot = OCDU_TRUNNION_STEP * TrunRate;
+				}
+				if ((OpticsManualMovement & 0x02) != 0) {//&& SextTrunion > 0) {
+					A_t_dot = -OCDU_TRUNNION_STEP * TrunRate;
+				}
+				if ((OpticsManualMovement & 0x04) != 0) {//&& OpticsShaft > -(RAD*270.0)) {
+					A_s_dot = -OCDU_SHAFT_STEP * ShaftRate;
+				}
+				if ((OpticsManualMovement & 0x08) != 0) {//&& OpticsShaft < (RAD*270.0)) {
+					A_s_dot = OCDU_SHAFT_STEP * ShaftRate;
+				}
+
+				dShaft = (A_s_dot*cos(OpticsShaft) - A_t_dot * sin(OpticsShaft)) / max(sin(10.0*RAD), sin(SextTrunion));
+				dTrunion = A_s_dot * sin(OpticsShaft) + A_t_dot * cos(OpticsShaft);
+
+				TrunRate = abs(dTrunion) / OCDU_TRUNNION_STEP;	//Just so that the telescope trunnion moves correctly
+
+				break;
+			}
+		}
 		OpticsShaft += dShaft;
 		SextTrunion += dTrunion;
+		if(dTrunion != 0.0) sat->agc.tcdu.UpdateAngle();
+		if (dShaft != 0.0) sat->agc.scdu.UpdateAngle();
 
 		//Limits
 		if (OpticsShaft > 270.0*RAD)
 		{
 			OpticsShaft = 270.0*RAD;
+			sat->agc.scdu.UpdateAngle();
 		}
-		if (OpticsShaft < -270.0*RAD)
+		else if (OpticsShaft < -270.0*RAD)
 		{
 			OpticsShaft = -270.0*RAD;
+			sat->agc.scdu.UpdateAngle();
 		}
+
 		if (SextTrunion < 0.0)
 		{
 			SextTrunion = 0.0;
+			sat->agc.tcdu.UpdateAngle();
 		}
-		if (SextTrunion > 59.0*RAD)
+		else if (SextTrunion > 59.0*RAD)
 		{
 			SextTrunion = 59.0*RAD;
+			sat->agc.tcdu.UpdateAngle();
 		}
 
-		if (dTrunion > 0) {
+		/*if (dTrunion > 0) {
 			while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
-				sat->agc.vagc.Erasable[0][RegOPTY]++;
-				sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
+				//sat->agc.vagc.Erasable[0][RegOPTY]++;
+				//sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 				TrunionMoved += OCDU_TRUNNION_STEP;
+				sat->agc.tcdu.UpdateAngle();
 			}
 		}
 		if (dTrunion < 0) {
 			while (fabs(fabs(SextTrunion) - fabs(TrunionMoved)) >= OCDU_TRUNNION_STEP) {
-				sat->agc.vagc.Erasable[0][RegOPTY]--;
-				sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
+				//sat->agc.vagc.Erasable[0][RegOPTY]--;
+				//sat->agc.vagc.Erasable[0][RegOPTY] &= 077777;
 				TrunionMoved -= OCDU_TRUNNION_STEP;
+				sat->agc.tcdu.UpdateAngle();
 			}
 		}
 		if (dShaft < 0) {
 			while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
-				sat->agc.vagc.Erasable[0][RegOPTX]--;
-				sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+				//sat->agc.vagc.Erasable[0][RegOPTX]--;
+				//sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
 				ShaftMoved -= OCDU_SHAFT_STEP;
+				sat->agc.scdu.UpdateAngle();
 			}
 		}
 		if (dShaft > 0) {
 			while (fabs(fabs(OpticsShaft) - fabs(ShaftMoved)) >= OCDU_SHAFT_STEP) {
-				sat->agc.vagc.Erasable[0][RegOPTX]++;
-				sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
+				//sat->agc.vagc.Erasable[0][RegOPTX]++;
+				//sat->agc.vagc.Erasable[0][RegOPTX] &= 077777;
 				ShaftMoved += OCDU_SHAFT_STEP;
+				sat->agc.scdu.UpdateAngle();
 			}
-		}
+		}*/
 	}
 
 	// TELESCOPE TRUNNION MAINTENANCE (happens in all modes)
@@ -1073,16 +1142,18 @@ void CMOptics::TimeStep(double simdt) {
 			TeleTrunionTarget = SextTrunion + 0.218166156; // Add 12.5 degrees to sextant angle
 			break;
 	}
+
+	double dTeleTrun = 0.5*simdt;
 	if(TeleTrunion > TeleTrunionTarget){
-		if(TeleTrunion > TeleTrunionTarget-(OCDU_TRUNNION_STEP*TrunRate)){
-			TeleTrunion -= OCDU_TRUNNION_STEP*TrunRate;				
+		if(TeleTrunion > TeleTrunionTarget+dTeleTrun){
+			TeleTrunion -= dTeleTrun;				
 		}else{
 			TeleTrunion = TeleTrunionTarget;
 		}				
 	}
 	if(TeleTrunion < TeleTrunionTarget){
-		if(TeleTrunion < TeleTrunionTarget+(-OCDU_TRUNNION_STEP*TrunRate)){
-			TeleTrunion += OCDU_TRUNNION_STEP*TrunRate;
+		if(TeleTrunion < TeleTrunionTarget-dTeleTrun){
+			TeleTrunion += dTeleTrun;
 		}else{
 			TeleTrunion = TeleTrunionTarget;
 		}
@@ -1102,8 +1173,8 @@ void CMOptics::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "TELETRUNION", TeleTrunion);
 	papiWriteScenario_double(scn, "TARGETSHAFT", TargetShaft);
 	papiWriteScenario_double(scn, "TARGETTRUNION", TargetTrunion);
-	papiWriteScenario_double(scn, "SHAFTMOVED", ShaftMoved);
-	papiWriteScenario_double(scn, "TRUNIONMOVED", TrunionMoved);
+	//papiWriteScenario_double(scn, "SHAFTMOVED", ShaftMoved);
+	//papiWriteScenario_double(scn, "TRUNIONMOVED", TrunionMoved);
 	papiWriteScenario_bool(scn, "OPTICSCOVERED", OpticsCovered); 
 	oapiWriteLine(scn, CMOPTICS_END_STRING);
 }
@@ -1136,12 +1207,12 @@ void CMOptics::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "TARGETTRUNION", 13)) {
 			sscanf (line+13, "%lf", &TargetTrunion);
 		}
-		else if (!strnicmp (line, "SHAFTMOVED", 10)) {
-			sscanf (line+10, "%lf", &ShaftMoved);
-		}
-		else if (!strnicmp (line, "TRUNIONMOVED", 12)) {
-			sscanf (line+12, "%lf", &TrunionMoved);
-		} 
+		//else if (!strnicmp (line, "SHAFTMOVED", 10)) {
+		//	sscanf (line+10, "%lf", &ShaftMoved);
+		//}
+		//else if (!strnicmp (line, "TRUNIONMOVED", 12)) {
+		//	sscanf (line+12, "%lf", &TrunionMoved);
+		//} 
 		papiReadScenario_bool(line, "OPTICSCOVERED", OpticsCovered); 
 	}
 }

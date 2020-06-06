@@ -1423,8 +1423,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	aea.Timestep(MissionTime, simdt);
 	deda.Timestep(simdt);
 	imu.Timestep(simdt);								// Do work
-	tcdu.Timestep(simdt);
-	scdu.Timestep(simdt);
+
 	// Manage IMU standby heater and temperature
 	if(IMU_OPR_CB.Voltage() > 0){
 		// IMU is operating.
@@ -2473,8 +2472,11 @@ void LEM_LR::Timestep(double simdt){
 			velocityGood = 1;
 		}
 
-		//sprintf(oapiDebugString(), "Alt: %f, Range: %f, Velocity: %f %f %f", alt/0.3048, range, rate[0], rate[1], rate[2]);
 	}
+	// int agclrvelx = lem->agc.vagc.Erasable[2][0336];
+	// int agclrvely = lem->agc.vagc.Erasable[2][0337];
+	// int agclrvelz = lem->agc.vagc.Erasable[2][0340];
+	// sprintf(oapiDebugString(), "Range: %lf, Velocity: %lf %lf %lf AGC: %f %f %f",  range, rate[0], rate[1], rate[2], -0.6440*(agclrvelx - 12288.0), 1.212*(agclrvely - 12288.0), 0.8668*(agclrvelz - 12288.0));
 
 	// Computer interface
 	/*
@@ -2502,6 +2504,7 @@ void LEM_LR::Timestep(double simdt){
 	if(velocityGood == 1 && val33[LRVelocityDataGood] == 0){ val33[LRVelocityDataGood] = 1; lem->agc.SetInputChannel(033, val33);	}
 	if(velocityGood == 0 && val33[LRVelocityDataGood] == 1){ val33[LRVelocityDataGood] = 0; lem->agc.SetInputChannel(033, val33);	}
 
+	/*
 	// The computer wants something from the radar.
 	if(val13[RadarActivity] == 1){
 		int radarBits = 0;
@@ -2565,18 +2568,55 @@ void LEM_LR::Timestep(double simdt){
 			ruptSent = 7;
 
 			break;
-			/*
-		default:
-			sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
-			*/
 		}
 
 	}else{
 		ruptSent = 0;
 	}
-
+	*/
 
 	//sprintf(oapiDebugString(), "rangeGood: %d velocityGood: %d ruptSent: %d  RadarActivity: %d Position %f° Range: %f", rangeGood, velocityGood, ruptSent, val13[RadarActivity] == 1, antennaAngle, range);
+}
+
+int LEM_LR::GetRadarData(int radarB, int radarC) {
+	switch (radarB) {
+	case 0:
+		switch (radarC) {
+		case 0:
+			// LR (LR VEL X)
+			// 12288 COUNTS = -000000 F/S
+			// SIGN REVERSED				
+			// 0.644 F/S PER COUNT
+			return (int)round(12288.0 - (rate[0] / 0.644));
+		default:
+			// LR (LR VEL Y)
+			// 12288 COUNTS = +000000 F/S
+			// 1.212 F/S PER COUNT
+			return (int)round(12288.0 + (rate[1] / 1.212));
+		}
+	default:
+		switch (radarC) {
+		case 0:
+			// LR (LR VEL Z)
+			// 12288 COUNTS = +00000 F/S
+			// 0.8668 F/S PER COUNT
+			return (int)round(12288.0 + (rate[2] / 0.8668));
+		default:
+			ChannelValue val33 = lem->agc.GetInputChannel(033);
+			// LR (LR RANGE)
+			// High range is 5.395 feet per count
+			// Low range is 1.079 feet per count
+			if (val33[LRRangeLowScale] == 0) {
+				// Hi Range
+				return (int)round(range / 5.395);
+			}
+			else {
+				// Lo Range
+				return (int)round(range / 1.079);
+			}
+		}
+	}
+
 }
 
 void LEM_LR::SystemTimestep(double simdt)
@@ -2896,8 +2936,9 @@ void CrossPointer::Timestep(double simdt)
 		}
 		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
 		{
-			lgc_forward = 0.5571*(double)lem->scdu.GetAltOutput();
-			lgc_lateral = 0.5571*(double)lem->tcdu.GetAltOutput();
+			//TODO: test display bit
+			lgc_forward = 0.5571*(double)lem->agc.scdu.GetAltOutput();
+			lgc_lateral = 0.5571*(double)lem->agc.tcdu.GetAltOutput();
 
 			vx = lgc_forward*0.3048;
 			vy = lgc_lateral*0.3048;

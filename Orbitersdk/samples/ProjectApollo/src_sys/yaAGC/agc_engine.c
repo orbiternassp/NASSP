@@ -470,7 +470,7 @@ static const int InstructionTiming[32] = {
 // those cases.  The table figures 2 MCT for EDRUPT and 1 MCT for BZF/BZMF.
 static const int ExtracodeTiming[32] = {
   1, 1, 1, 1,			// Opcode = 010.
-  5, 0, 0, 0,			// Opcode = 011.
+  6, 0, 0, 0,			// Opcode = 011.
   1, 1, 1, 1,			// Opcode = 012.
   2, 2, 2, 2,			// Opcode = 013.
   2, 2, 2, 2,			// Opcode = 014.
@@ -1327,9 +1327,9 @@ CounterSHINC (int16_t * Counter)
   int16_t i;
   int Overflow = 0;
   i = *Counter;
-  if (020000 & i)
+  if (040000 & i)
     Overflow = 1;
-  i = (i << 1) & 037777;
+  i = (i << 1) & 077777;
   *Counter = i;
   return (Overflow);
 }
@@ -1341,9 +1341,9 @@ CounterSHANC (int16_t * Counter)
   int16_t i;
   int Overflow = 0;
   i = *Counter;
-  if (020000 & i)
+  if (040000 & i)
     Overflow = 1;
-  i = ((i << 1) + 1) & 037777;
+  i = ((i << 1) + 1) & 077777;
   *Counter = i;
   return (Overflow);
 }
@@ -1487,6 +1487,7 @@ PushCduFifo (agc_t *State, int Counter, int IncType)
   CduFifo->Counts[Next]++;
 }
 
+#if 0
 // Here's an auxiliary function to perform the next available PCDU or MCDU
 // from a CDU FIFO, if it is time to do so.  We only check one of the CDUs
 // each time around (in order to preserve proper cycle counts), so this function 
@@ -1567,6 +1568,8 @@ ServiceCduFifo (agc_t *State)
     
   return (RetVal);
 }
+#endif
+
 
 //----------------------------------------------------------------------------
 // This function is used to update the counter registers on the basis of 
@@ -1847,7 +1850,7 @@ SimulateDV(agc_t *State, uint16_t divisor)
 // it requires slightly more processing, in order to conform as obviously
 // as possible to the MIT docs.
 
-#define SCALER_OVERFLOW 80
+#define SCALER_OVERFLOW 20
 #define SCALER_DIVIDER 3
 
 // Fine-alignment.
@@ -1870,7 +1873,7 @@ static unsigned ImuChannel14 = 0;
 int
 agc_engine (agc_t * State)
 {
-  int i, j;
+  int j;
   uint16_t ProgramCounter, Instruction, /*OpCode,*/ QuarterCode, sExtraCode;
   int16_t *WhereWord;
   uint16_t Address12, Address10, Address9;
@@ -1926,75 +1929,31 @@ agc_engine (agc_t * State)
       ShiftToDeda (State, Data & 7);
     }
 
+  // Handle server stuff for socket connections used for i/o channel
+  // communications.  Stuff like listening for clients we only do
+  // every once and a while---nominally, every 100 ms.  Actually 
+  // processing input data is done every cycle.
+  if (State->ChannelRoutineCount == 0)
+	  ChannelRoutine(State);
+  State->ChannelRoutineCount = ((State->ChannelRoutineCount + 1) & 017777);
+
+  if (State->InputChannel[032] & 020000)
+  {
+	  State->SbyPressed = 0;
+	  State->SbyStillPressed = 0;
+  }
+
+
   //----------------------------------------------------------------------
   // Update the thingy that determines when 1/1600 second has passed.
   // 1/1600 is the basic timing used to drive timer registers.  1/1600
   // second happens to be 160/3 machine cycles.
 
   State->ScalerCounter += SCALER_DIVIDER;
+  State->ScalerChanged = 0;
   State->DskyTimer += SCALER_DIVIDER;
 
   //-------------------------------------------------------------------------
-
-  // Handle server stuff for socket connections used for i/o channel
-  // communications.  Stuff like listening for clients we only do
-  // every once and a while---nominally, every 100 ms.  Actually 
-  // processing input data is done every cycle.
-  if (State->ChannelRoutineCount == 0)
-    ChannelRoutine (State);
-  State->ChannelRoutineCount = ((State->ChannelRoutineCount + 1) & 017777);
-
-  // Update the various hardware-driven DSKY lights
-  UpdateDSKY(State);
-
-  // Get data from input channels.  Return immediately if a unprogrammed 
-  // counter-increment was performed.
-  if (ChannelInput (State))
-    return (0);
-
-  // If in --debug-dsky mode, don't want to take the chance of executing
-  // any AGC code, since there isn't any loaded anyway.
-  if (DebugDsky)
-    return (0);
-
-  //----------------------------------------------------------------------  
-  // This stuff takes care of extra CPU cycles used by some instructions.
-
-  // A little extra delay, needed sometimes after branch instructions that
-  // don't always take the same amount of time.
-  if (State->ExtraDelay)
-    {
-      State->ExtraDelay--;
-      return (0);
-    }
-
-  // If an instruction that takes more than one clock-cycle is in progress,
-  // we simply return.  We don't do any of the actual computations for such
-  // an instruction until the last clock cycle for it is reached.  
-  // (Except for a few weird cases dealt with by ExtraDelay as above.) 
-  if (State->PendFlag && State->PendDelay > 0)
-    {
-      State->PendDelay--;
-      return (0);
-    }
-
-  //----------------------------------------------------------------------
-  // Take care of any PCDU or MCDU operations that are lingering in CDU
-  // FIFOs.
-  if (ServiceCduFifo (State))
-    {
-      // A CDU counter was serviced, so a cycle was used up, and we must
-      // return.  
-      return (0);
-    }
-  
-  if (State->InputChannel[032] & 020000)
-    {
-	  State->SbyPressed = 0;
-	  State->SbyStillPressed = 0;
-    }
-
-
   //----------------------------------------------------------------------
   // Here we take care of counter-timers.  There is a basic 1/3200 second
   // clock that is used to drive the timers.  1/3200 second happens to
@@ -2008,274 +1967,363 @@ agc_engine (agc_t * State)
   {
 	  int TriggeredAlarm = 0;
 
+	  State->ScalerCounter -= SCALER_OVERFLOW;
+	  State->ScalerChanged = 1;
+	  State->Scaler++;
+
+	  //The real scaler is a 33-bits counter. As we omitted the first 3 of them, we mask 30 bits here
+	  State->Scaler = State->Scaler & 0x7FFFFFFF; 
+
+	  if ((State->Scaler & 3) == 3) { //3200pps stuff, going with F05A
+
 	  // First, update SCALER1 and SCALER2. These are direct views into
 	  // the clock dividers in the Scaler module, and so don't take CPU
 	  // time to 'increment'
-	  State->ScalerCounter -= SCALER_OVERFLOW;
-	  State->InputChannel[ChanSCALER1]++;
-	  if (State->InputChannel[ChanSCALER1] == 040000)
-	  {
-		  State->InputChannel[ChanSCALER1] = 0;
-		  State->InputChannel[ChanSCALER2] = (State->InputChannel[ChanSCALER2] + 1) & 037777;
-	  }
+	  //	  State->InputChannel[ChanSCALER1]++;
+	  // if (State->InputChannel[ChanSCALER1] == 040000)
+	  //	  {
+	  //		  State->InputChannel[ChanSCALER1] = 0;
+	  //		  State->InputChannel[ChanSCALER2] = (State->InputChannel[ChanSCALER2] + 1) & 037777;
+	  //	  }
+		  State->InputChannel[ChanSCALER1] = (State->Scaler >> 2 ) & 037777;
+		  State->InputChannel[ChanSCALER2] = (State->Scaler >> 16) & 037777;
 #ifdef _DEBUG
-	  fprintf(State->out_file, "T6RUPT\n");
+		  fprintf(State->out_file, "T6RUPT\n");
 #endif
 
-      // Check alarms first, since there's a chance we might go to standby
-	  if (04000 == (07777 & State->InputChannel[ChanSCALER1]))
-	  {
-		  // The Night Watchman begins looking once every 1.28s
-		  if (!State->Standby)
-			  State->NightWatchman = 1;
-
-		  // The standby circuit finishes checking to see if we're going to standby now
-		  // (it has the same period as but is 180 degrees out of phase with the Night Watchman)
-		  if (State->SbyPressed && ((State->InputChannel[013] & 002000) || State->Standby))
+		  // Check alarms first, since there's a chance we might go to standby
+		  if (020000 == (037777 & State->Scaler))
 		  {
+			  // The Night Watchman begins looking once every 1.28s
 			  if (!State->Standby)
-			  {
-				  // Standby is enabled, and PRO has been held down for the required amount of time.
-				  State->Standby = 1;
-				  State->SbyStillPressed = 1;
+				  State->NightWatchman = 1;
 
-				  // While this isn't technically an alarm, it causes GOJAM just like all the rest
+			  // The standby circuit finishes checking to see if we're going to standby now
+			  // (it has the same period as but is 180 degrees out of phase with the Night Watchman)
+			  if (State->SbyPressed && ((State->InputChannel[013] & 002000) || State->Standby))
+			  {
+				  if (!State->Standby)
+				  {
+					  // Standby is enabled, and PRO has been held down for the required amount of time.
+					  State->Standby = 1;
+					  State->SbyStillPressed = 1;
+
+					  // While this isn't technically an alarm, it causes GOJAM just like all the rest
+					  TriggeredAlarm = 1;
+
+					  // Turn on the STBY light, and switch off the EL segments
+					  State->DskyChannel163 |= DSKY_STBY | DSKY_EL_OFF;
+					  ChannelOutput(State, 0163, State->DskyChannel163);
+				  }
+				  else if (!State->SbyStillPressed)
+				  {
+					  // PRO was pressed for long enough to turn us back on. Let's get going!
+					  State->Standby = 0;
+
+					  // Turn off the STBY light
+					  State->DskyChannel163 &= ~(DSKY_STBY | DSKY_EL_OFF);
+					  ChannelOutput(State, 0163, State->DskyChannel163);
+				  }
+			  }
+		  }
+		  else if (00 == (037777 & State->Scaler))
+		  {
+			  // The standby circuit checks the SBY/PRO button state every 1.28s
+			  if (0 == (State->InputChannel[032] & 020000))
+				  State->SbyPressed = 1;
+
+			  // The Night Watchman finishes looking now
+			  if (!State->Standby && State->NightWatchman)
+			  {
+				  // NEWJOB wasn't checked before 0.64s elapsed. Sound the alarm!
 				  TriggeredAlarm = 1;
 
-				  // Turn on the STBY light, and switch off the EL segments
-				  State->DskyChannel163 |= DSKY_STBY | DSKY_EL_OFF;
-				  ChannelOutput(State, 0163, State->DskyChannel163);
+				  // Set the NIGHT WATCHMAN bit in channel 77. Don't go through CpuWriteIO() because
+				  // instructions writing to CH77 clear it. We'll broadcast changes to it in the
+				  // generic alarm handler a bit further down.
+				  State->InputChannel[077] |= CH77_NIGHT_WATCHMAN;
+				  State->NightWatchmanTripped = 1;
 			  }
-			  else if (!State->SbyStillPressed)
-			  {
-				  // PRO was pressed for long enough to turn us back on. Let's get going!
-				  State->Standby = 0;
-
-				  // Turn off the STBY light
-				  State->DskyChannel163 &= ~(DSKY_STBY | DSKY_EL_OFF);
-				  ChannelOutput(State, 0163, State->DskyChannel163);
-			  }
-		  }
-	  }
-	  else if (00000 == (07777 & State->InputChannel[ChanSCALER1]))
-	    {
-		  // The standby circuit checks the SBY/PRO button state every 1.28s
-		  if (0 == (State->InputChannel[032] & 020000))
-		    State->SbyPressed = 1;
-
-		  // The Night Watchman finishes looking now
-		  if (!State->Standby && State->NightWatchman)
-		  {
-			  // NEWJOB wasn't checked before 0.64s elapsed. Sound the alarm!
-			  TriggeredAlarm = 1;
-
-			  // Set the NIGHT WATCHMAN bit in channel 77. Don't go through CpuWriteIO() because
-			  // instructions writing to CH77 clear it. We'll broadcast changes to it in the
-			  // generic alarm handler a bit further down.
-			  State->InputChannel[077] |= CH77_NIGHT_WATCHMAN;
-			  State->NightWatchmanTripped = 1;
-		  }
-		  else
-			  // If it's been 1.28s since a Night Watchman alarm happened, stop asserting its
-			  // channel 77 bit
-			  State->NightWatchmanTripped = 0;
-	  }
-	  else if (00 == (07 & State->InputChannel[ChanSCALER1]))
-		{
-		  // Update the warning filter. Once every 160ms, if an input to the filter has been
-		  // generated (or if the light test is active), the filter is charged. Otherwise,
-		  // it slowly discharges. This is being modeled as a simple linear function right now,
-		  // and should be updated when we learn its real implementation details.
-		  if ((0400 == (0777 & State->InputChannel[ChanSCALER1])) &&
-			  (State->GeneratedWarning || (State->InputChannel[013] & 01000)))
-		  {
-			  State->GeneratedWarning = 0;
-			  State->WarningFilter += WARNING_FILTER_INCREMENT;
-			  if (State->WarningFilter > WARNING_FILTER_MAX)
-				  State->WarningFilter = WARNING_FILTER_MAX;
-		  }
-		  else
-		  {
-			  if (State->WarningFilter >= WARNING_FILTER_DECREMENT)
-				  State->WarningFilter -= WARNING_FILTER_DECREMENT;
 			  else
-				  State->WarningFilter = 0;
+				  // If it's been 1.28s since a Night Watchman alarm happened, stop asserting its
+				  // channel 77 bit
+				  State->NightWatchmanTripped = 0;
 		  }
-	  }
-	 
-	  // All the rest of this is switched off during standby.
-	  if (!State->Standby)
-	  {
-		if (0400 == (0777 & State->InputChannel[ChanSCALER1]))
+		  else if (000 == (037 & State->Scaler))
 		  {
-			  // The Rupt Lock alarm watches ISR state starting every 160mos
-			  State->RuptLock = 1;
-			  State->NoRupt = 1;
+			  // Update the warning filter. Once every 160ms, if an input to the filter has been
+			  // generated (or if the light test is active), the filter is charged. Otherwise,
+			  // it slowly discharges. This is being modeled as a simple linear function right now,
+			  // and should be updated when we learn its real implementation details.
+			  if ((02000 == (03777 & State->Scaler)) &&
+				  (State->GeneratedWarning || (State->InputChannel[013] & 01000)))
+			  {
+				  State->GeneratedWarning = 0;
+				  State->WarningFilter += WARNING_FILTER_INCREMENT;
+				  if (State->WarningFilter > WARNING_FILTER_MAX)
+					  State->WarningFilter = WARNING_FILTER_MAX;
+			  }
+			  else
+			  {
+				  if (State->WarningFilter >= WARNING_FILTER_DECREMENT)
+					  State->WarningFilter -= WARNING_FILTER_DECREMENT;
+				  else
+					  State->WarningFilter = 0;
+			  }
 		  }
-		else if ((State->RuptLock || State->NoRupt) && 0300 == (0777 & State->InputChannel[ChanSCALER1]))
-		  {
-			  // We've either had no interrupts, or stuck in one, for 140ms. Sound the alarm!
-			  TriggeredAlarm = 1;
 
-			  // Set the RUPT LOCK bit in channel 77.
-			  State->InputChannel[077] |= CH77_RUPT_LOCK;
-		  }
+		  // All the rest of this is switched off during standby.
+		  if (!State->Standby)
+		  {
+			  if (02000 == (03777 & State->Scaler))
+			  {
+				  // The Rupt Lock alarm watches ISR state starting every 160mos
+				  State->RuptLock = 1;
+				  State->NoRupt = 1;
+			  }
+			  else if ((State->RuptLock || State->NoRupt) && 01400 == (03777 & State->Scaler))
+			  {
+				  // We've either had no interrupts, or stuck in one, for 140ms. Sound the alarm!
+				  TriggeredAlarm = 1;
 
-		if (020 == (037 & State->InputChannel[ChanSCALER1]))
-		  {
-			  // The TC Trap alarm watches executing instructions every 5ms
-			  State->TCTrap = 1;
-			  State->NoTC = 1;
-		  }
-		else if ((State->TCTrap || State->NoTC) && 000 == (037 & State->InputChannel[ChanSCALER1]))
-		  {
-			  // We've either executed no TC at all, or only TCs, for the past 5ms. Sound the alarm!
-			  TriggeredAlarm = 1;
+				  // Set the RUPT LOCK bit in channel 77.
+				  State->InputChannel[077] |= CH77_RUPT_LOCK;
+			  }
 
-			  // Set the TC TRAP bit in channel 77.
-			  State->InputChannel[077] |= CH77_TC_TRAP;
-		  }
-		// Now that that's taken care of...
-		// Update the 10 ms. timers TIME1 and TIME3.
-		// Recall that the registers are in AGC integer format,
-		// and therefore are actually shifted left one space.
-		// When taking a reset, the real AGC would skip unprogrammed
-		// sequences and go straight to GOJAM. The requests, however,
-		// would be saved and the counts would happen immediately
-		// after the first instruction at 4000, so doing them now
-		// is not too inaccurate.
-		if (020 == (037 & State->InputChannel[ChanSCALER1]))
-		  {
-			  State->ExtraDelay++;
-			  if (CounterPINC(&c(RegTIME1)))
+			  if (0100 == (0177 & State->Scaler))
+			  {
+				  // The TC Trap alarm watches executing instructions every 5ms
+				  State->TCTrap = 1;
+				  State->NoTC = 1;
+			  }
+			  else if ((State->TCTrap || State->NoTC) && 000 == (0177 & State->Scaler))
+			  {
+				  // We've either executed no TC at all, or only TCs, for the past 5ms. Sound the alarm!
+				  TriggeredAlarm = 1;
+
+				  // Set the TC TRAP bit in channel 77.
+				  State->InputChannel[077] |= CH77_TC_TRAP;
+			  }
+			  // Now that that's taken care of...
+			  // Update the 10 ms. timers TIME1 and TIME3.
+			  // Recall that the registers are in AGC integer format,
+			  // and therefore are actually shifted left one space.
+			  // When taking a reset, the real AGC would skip unprogrammed
+			  // sequences and go straight to GOJAM. The requests, however,
+			  // would be saved and the counts would happen immediately
+			  // after the first instruction at 4000, so doing them now
+			  // is not too inaccurate.
+#if 0
+			  if (020 == (037 & State->InputChannel[ChanSCALER1]))
 			  {
 				  State->ExtraDelay++;
-				  CounterPINC(&c(RegTIME2));
+				  if (CounterPINC(&c(RegTIME1)))
+				  {
+					  State->ExtraDelay++;
+					  CounterPINC(&c(RegTIME2));
+				  }
+				  State->ExtraDelay++;
+				  if (CounterPINC(&c(RegTIME3)))
+					  State->InterruptRequests[3] = 1;
 			  }
-			  State->ExtraDelay++;
-			  if (CounterPINC(&c(RegTIME3)))
-				  State->InterruptRequests[3] = 1;
-		  }
-		// TIME5 is the same as TIME3, but 5 ms. out of phase.
-		if (000 == (037 & State->InputChannel[ChanSCALER1]))
-		  {
-			  State->ExtraDelay++;
-			  if (CounterPINC(&c(RegTIME5)))
-				  State->InterruptRequests[2] = 1;
-		  }
-		// TIME4 is the same as TIME3, but 7.5ms out of phase
-		if (010 == (037 & State->InputChannel[ChanSCALER1]))
-		  {
-			  State->ExtraDelay++;
-			  if (CounterPINC(&c(RegTIME4)))
-				  State->InterruptRequests[4] = 1;
-		  }
-		// TIME6 only increments when it has been enabled via CH13 bit 15.
-		// It increments 0.3125ms after TIME1/TIME3
-		if (040000 & State->InputChannel[013] && (State->InputChannel[ChanSCALER1] &01) == 01)
-		  {
-			  State->ExtraDelay++;
-			  if (CounterDINC(State, 0, &c(RegTIME6)))
+			  // TIME5 is the same as TIME3, but 5 ms. out of phase.
+			  if (000 == (037 & State->InputChannel[ChanSCALER1]))
 			  {
-				  State->InterruptRequests[1] = 1;
-				  // Triggering a T6RUPT disables T6 by clearing the CH13 bit
-				  CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
+				  State->ExtraDelay++;
+				  if (CounterPINC(&c(RegTIME5)))
+					  State->InterruptRequests[2] = 1;
+			  }
+			  // TIME4 is the same as TIME3, but 7.5ms out of phase
+			  if (010 == (037 & State->InputChannel[ChanSCALER1]))
+			  {
+				  State->ExtraDelay++;
+				  if (CounterPINC(&c(RegTIME4)))
+					  State->InterruptRequests[4] = 1;
+			  }
+			  // TIME6 only increments when it has been enabled via CH13 bit 15.
+			  // It increments 0.3125ms after TIME1/TIME3
+			  if (040000 & State->InputChannel[013] && (State->InputChannel[ChanSCALER1] & 01) == 01)
+			  {
+				  State->ExtraDelay++;
+				  if (CounterDINC(State, 0, &c(RegTIME6)))
+				  {
+					  State->InterruptRequests[1] = 1;
+					  // Triggering a T6RUPT disables T6 by clearing the CH13 bit
+					  CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
+				  }
+			  }
+#endif
+
+			  //The time increment pulses could be found on 19-2 (CNTRSB on 24-2, T6ON on 23-2)
+			  switch (State->Scaler & 0177) {
+			  case 0077: //T1P,T3P=F10B & SB2						 
+				  setCntrReqP(State, 1);
+				  setCntrReqP(State, 2);
+				  break;
+			  case 0037: //T4P=!FS10 & F09B & SB2
+				  setCntrReqP(State, 3);
+				  break;
+			  case 0177: //T5P=F10A & SB2
+				  setCntrReqP(State, 4);
+				  break;
+			  }
+
+			  if (((State->Scaler & 07) == 03) && ((State->InputChannel[013]) & 040000)) //T6P=F06B & T6ON(=CH13 bit 15)
+				  setCntrReqP(State, 5);
+
+			  // Check for HANDRUPT conditions (the actually timing is very slightly off
+			  // from this, but not enough to matter). The traps are reset upon triggering.
+			  if (State->Trap31A && ((State->InputChannel[031] & 000077) != 000077))
+			  {
+				  State->Trap31A = 0;
+				  State->InterruptRequests[10] = 1;
+			  }
+
+			  if (State->Trap31B && ((State->InputChannel[031] & 007700) != 007700))
+			  {
+				  State->Trap31B = 0;
+				  State->InterruptRequests[10] = 1;
+			  }
+
+			  if (State->Trap32 && ((State->InputChannel[032] & 001777) != 001777))
+			  {
+				  State->Trap32 = 0;
+				  State->InterruptRequests[10] = 1;
 			  }
 		  }
-		// Check for HANDRUPT conditions (the actually timing is very slightly off
-		// from this, but not enough to matter). The traps are reset upon triggering.
-		if (State->Trap31A && ((State->InputChannel[031] & 000077) != 000077))
+
+
+		  // If we triggered any alarms, simulate a GOJAM
+		  if (TriggeredAlarm || State->ParityFail)
 		  {
-			State->Trap31A = 0;
-			State->InterruptRequests[10] = 1;
+			  if (!InhibitAlarms) // ...but only if doing so isn't inhibited
+			  {
+				  int i;
+
+				  // Two single-MCT instruction sequences, GOJAM and TC 4000, are about to happen
+				  State->ExtraDelay += 2;
+
+				  // The net result of those two is Z = 4000. Interrupt state is cleared, and
+				  // interrupts are enabled. The TC 4000 has the beneficial side-effect of
+				  // storing the current Z in Q, where it can helpfully be recovered.
+				  c(RegQ) = c(RegZ);
+				  c(RegZ) = 04000;
+				  State->InIsr = 0;
+				  State->AllowInterrupt = 1;
+				  State->ParityFail = 0;
+
+				  // HANDRUPT traps are all disabled.
+				  State->Trap31A = 0;
+				  State->Trap31B = 0;
+				  State->Trap32 = 0;
+
+				  // All interrupt requests are cleared.
+				  for (i = 1; i <= NUM_INTERRUPT_TYPES; i++)
+					  State->InterruptRequests[i] = 0;
+
+				  // Clear channels 5, 6, 10, 11, 12, 13, and 14
+				  CpuWriteIO(State, 005, 0);
+				  CpuWriteIO(State, 006, 0);
+				  CpuWriteIO(State, 010, 0);
+				  CpuWriteIO(State, 011, 0);
+				  CpuWriteIO(State, 012, 0);
+				  CpuWriteIO(State, 013, 0);
+				  CpuWriteIO(State, 014, 0);
+
+				  // Clear the UPLINK TOO FAST bit (11) in channel 33
+				  State->InputChannel[033] |= 002000;
+
+				  // Clear channels 34 and 35, and don't let doing so generate a downrupt
+				  CpuWriteIO(State, 034, 0);
+				  CpuWriteIO(State, 035, 0);
+				  State->DownruptTimeValid = 0;
+
+				  // Light the RESTART light on the DSKY, if we're not going into standby
+				  if (!State->Standby)
+				  {
+					  State->RestartLight = 1;
+					  State->GeneratedWarning = 1;
+				  }
+
+			  }
+
+			  // Push the CH77 updates to the outside world
+			  ChannelOutput(State, 077, State->InputChannel[077]);
+
 		  }
 
-	    if (State->Trap31B && ((State->InputChannel[031] & 007700) != 007700))
-		  {
-			State->Trap31B = 0;
-			State->InterruptRequests[10] = 1;
-		  }
+		  int ichan14 = State->InputChannel[014];
+		  if (ichan14 & 040000)   // IMU Outer Gimbal, 23-2
+			  setCntrReqP(State, 024);
+		  if (ichan14 & 020000)   // IMU Middle Gimbal, 23-2
+			  setCntrReqP(State, 025);
+		  if (ichan14 & 010000)   // IMU Inner Gimbal, 23-2
+			  setCntrReqP(State, 026);
+		  if (ichan14 & 04000)   // TVC YAW / OPTICS TRUNNION, 23-2
+			  setCntrReqP(State, 027);
+		  if (ichan14 & 02000)   // TVC PITCH / OPTICS SHAFT, 23-2
+			  setCntrReqP(State, 030);
+		  if (ichan14 & 010)     // LGC THRUST DRIVE, 19-1
+			  setCntrReqP(State, 031);
 
-		if (State->Trap32 && ((State->InputChannel[032] & 001777) != 001777))
-		  {
-			State->Trap32 = 0;
-			State->InterruptRequests[10] = 1;
-		  }
+		  // It is not used by neither Colossus nor Luminary 
+		  // however it exists on 19-1 by name "EMSD"
+		  if (ichan14 & 020)  
+			  setCntrReqP(State, 032);
 	  }
 
-
-      // If we triggered any alarms, simulate a GOJAM
-	  if (TriggeredAlarm || State->ParityFail)
-	    {
-		  if (!InhibitAlarms) // ...but only if doing so isn't inhibited
-		    {
-          int i;
-
-			  // Two single-MCT instruction sequences, GOJAM and TC 4000, are about to happen
-		      State->ExtraDelay += 2;
-
-			  // The net result of those two is Z = 4000. Interrupt state is cleared, and
-			  // interrupts are enabled. The TC 4000 has the beneficial side-effect of
-			  // storing the current Z in Q, where it can helpfully be recovered.
-			  c(RegQ) = c(RegZ);
-			  c(RegZ) = 04000;
-			  State->InIsr = 0;
-			  State->AllowInterrupt = 1;
-			  State->ParityFail = 0;
-
-			  // HANDRUPT traps are all disabled.
-			  State->Trap31A = 0;
-			  State->Trap31B = 0;
-			  State->Trap32 = 0;
-
-        // All interrupt requests are cleared.
-        for (i = 1; i <= NUM_INTERRUPT_TYPES; i++)
-            State->InterruptRequests[i] = 0;
-
-        // Clear channels 5, 6, 10, 11, 12, 13, and 14
-        CpuWriteIO(State, 005, 0);
-        CpuWriteIO(State, 006, 0);
-        CpuWriteIO(State, 010, 0);
-        CpuWriteIO(State, 011, 0);
-        CpuWriteIO(State, 012, 0);
-        CpuWriteIO(State, 013, 0);
-        CpuWriteIO(State, 014, 0);
-
-        // Clear the UPLINK TOO FAST bit (11) in channel 33
-        State->InputChannel[033] |= 002000;
-
-        // Clear channels 34 and 35, and don't let doing so generate a downrupt
-        CpuWriteIO(State, 034, 0);
-        CpuWriteIO(State, 035, 0);
-        State->DownruptTimeValid = 0;
-
-			  // Light the RESTART light on the DSKY, if we're not going into standby
-			  if (!State->Standby)
-			    {
-				  State->RestartLight = 1;
-				  State->GeneratedWarning = 1;
-				}
-
-		    }
-
-		  // Push the CH77 updates to the outside world
-		  ChannelOutput(State, 077, State->InputChannel[077]);
-	    }
-
-
-	  if (State->ExtraDelay)
-	    {
-		  // Return, so as to account for the time occupied by updating the
-	      // counters and/or GOJAM.
-	      State->ExtraDelay--;
-		  return (0);
-	    }
-    }
+  }
 
   // If we're in standby mode, this is all we can accomplish --
   // everything else is switched off.
   if (State->Standby)
 	  return (0);
+
+  //----------------------------------------------------------------------  
+  // This stuff takes care of extra CPU cycles used by some instructions.
+  // Return, so as to account for the time occupied by updating the
+  // counters and/or GOJAM.
+
+  if (State->ExtraDelay)
+  {
+	  State->ExtraDelay--;
+	  return (0);
+  }
+
+  // If an instruction that takes more than one clock-cycle is in progress,
+  // we simply return.  We don't do any of the actual computations for such
+  // an instruction until the last clock cycle for it is reached.  
+  // (Except for a few weird cases dealt with by ExtraDelay as above.) 
+  if (State->PendFlag && State->PendDelay > 0)
+  {
+	  State->PendDelay--;
+	  return (0);
+  }
+
+  // Update the various hardware-driven DSKY lights
+  UpdateDSKY(State);  // This should ne handled by the scaler section as in the real hw
+
+  // Get data from input channels.  Return immediately if a unprogrammed 
+  // counter-increment was performed.
+  if (ChannelInput(State))
+	  return (0);
+
+  // If in --debug-dsky mode, don't want to take the chance of executing
+  // any AGC code, since there isn't any loaded anyway.
+  if (DebugDsky)
+	  return (0);
+
+#if 0
+  //----------------------------------------------------------------------
+  // Take care of any PCDU or MCDU operations that are lingering in CDU
+  // FIFOs.
+  if (ServiceCduFifo(State))
+  {
+	  // A CDU counter was serviced, so a cycle was used up, and we must
+	  // return.  
+	  return (0);
+  }
+#endif
 
   //----------------------------------------------------------------------
   // Same principle as for the counter-timers (above), but for handling 
@@ -2367,18 +2415,18 @@ agc_engine (agc_t * State)
     }
   else
     ImuCduCount++;
-#else // 0
-  i = (State->InputChannel[014] & 070000);	// Check IMU CDU drive bits.
-  if (ImuChannel14 == 0 && i != 0)		// If suddenly active, start drive.
-    ImuCduCount = State->CycleCounter - IMUCDU_BURST_CYCLES;
-  if (i != 0 && (State->CycleCounter - ImuCduCount) >= IMUCDU_BURST_CYCLES) // Time for next burst.
-    {
+//#else // 0
+   i = (State->InputChannel[014] & 070000);	// Check IMU CDU drive bits.
+    if (ImuChannel14 == 0 && i != 0)		// If suddenly active, start drive.
+      ImuCduCount = State->CycleCounter - IMUCDU_BURST_CYCLES;
+    if (i != 0 && (State->CycleCounter - ImuCduCount) >= IMUCDU_BURST_CYCLES) // Time for next burst.
+      {
       // Adjust the cycle counter.
-      ImuCduCount += IMUCDU_BURST_CYCLES;
+	       ImuCduCount += IMUCDU_BURST_CYCLES;
       // Determine how many pulses are wanted on each axis this burst.
-      ImuChannel14 = BurstOutput (State, 040000, RegCDUXCMD, 0174);
-      ImuChannel14 |= BurstOutput (State, 020000, RegCDUYCMD, 0175);
-      ImuChannel14 |= BurstOutput (State, 010000, RegCDUZCMD, 0176);
+	  ImuChannel14 = BurstOutput (State, 040000, RegCDUXCMD, 0174);
+	  ImuChannel14 |= BurstOutput (State, 020000, RegCDUYCMD, 0175);
+	  ImuChannel14 |= BurstOutput (State, 010000, RegCDUZCMD, 0176);
     }
 #endif // 0
 
@@ -2391,7 +2439,8 @@ agc_engine (agc_t * State)
   // DS20060225 Send optics shaft & trunnion angles on channels 160 & 161
   // NB20170308 Now 20 channels lower
   // Don't pulse negative-zero (77777)
-  if ((State->Erasable[0][054] != 0 && State->Erasable[0][054] != 077777) 
+
+  /*if ((State->Erasable[0][054] != 0 && State->Erasable[0][054] != 077777) 
 	  && 0 != (State->InputChannel[014] & 02000)){	  
     ChannelOutput (State, 0140, State->Erasable[0][054]); // TVC PITCH / OPTICS SHAFT 	  
     State->Erasable[0][054] = 0;
@@ -2412,6 +2461,142 @@ agc_engine (agc_t * State)
 	  && 0 != (State->InputChannel[014] & 04)) {
 	  ChannelOutput(State, 0143, State->Erasable[0][060]); // ALTITUDE METER DRIVE
 	  State->Erasable[0][060] = 0;
+  }
+  */
+
+  int cntridx = State->CntrPendIdx;
+  if(cntridx<NUM_CNT_REGS){	  
+	  int16_t *Ch;
+	  int *crq;
+	  crq = &(State->CntrReqP[cntridx]);
+	  if (*crq) {
+		  Ch = &State->Erasable[0][cntridx + 024];
+		  switch (cntridx) {
+		  case 00:
+			  CounterPINC(Ch);
+			  break;
+		  case 01:
+			  if (CounterPINC(Ch))
+				  setCntrReqP(State, 0);
+			  break;
+		  case 02:
+			  if (CounterPINC(Ch))
+				  State->InterruptRequests[3] = 1;
+			  break;
+		  case 03:
+			  if (CounterPINC(Ch))
+				  State->InterruptRequests[4] = 1;
+			  break;
+		  case 04:
+			  if (CounterPINC(Ch))
+				  State->InterruptRequests[2] = 1;
+			  break;
+		  case 05:
+			  if (CounterDINC(State, 0, Ch)){
+				  State->InterruptRequests[1] = 1;
+				  // Triggering a T6RUPT disables T6 by clearing the CH13 bit
+				  CpuWriteIO(State, 013, State->InputChannel[013] & 037777);
+			  }
+			  break;
+		  case 06:
+		  case 07:
+		  case 010:
+		  case 011:
+		  case 012:
+			  CounterPCDU(Ch);
+			  break;
+		  case 013:
+		  case 014:
+		  case 015:
+		  case 016:
+		  case 017:
+		  case 020:
+			  CounterPINC(Ch);
+			  break;
+		  case 021:
+		  case 022:
+			  CounterSHANC(Ch);
+			  break;
+		  case 023:
+			  if (CounterDINC(State, 01, Ch))
+				  CpuWriteIO(State, 014, (State->InputChannel[014]) & 037777);
+			  break;
+		  case 024:
+			  if (CounterDINC(State, 02, Ch))
+				  CpuWriteIO(State, 014, (State->InputChannel[014]) & 037777);
+			  break;
+		  case 025:
+			  if (CounterDINC(State, 03, Ch))
+				  CpuWriteIO(State, 014, (State->InputChannel[014]) & 057777);
+			  break;
+		  case 026:
+			  if (CounterDINC(State, 04, Ch))
+				  CpuWriteIO(State, 014, (State->InputChannel[014]) & 067777);
+			  break;
+		  case 027:
+			  if (CounterDINC(State, 05, Ch))
+				  CpuWriteIO(State, 014, (State->InputChannel[014]) & 073777);
+			  break;
+		  case 030:
+			  if (CounterDINC(State, 06, Ch))
+				  CpuWriteIO(State, 014, (State->InputChannel[014]) & 075777);
+			  break;
+		  case 031:
+			  if (CounterDINC(State, 07, Ch))
+				  CpuWriteIO(State, 014, (State->InputChannel[014]) & 077767);
+			  break;
+		  case 032:
+			  if (CounterDINC(State, 010, Ch))
+				  CpuWriteIO(State, 014, (State->InputChannel[014]) & 077757);
+			  break;
+		  case 033:
+			  CounterSHINC(Ch);
+			  break;
+		  case 034:
+			  if(CounterSHINC(Ch))
+				  ChannelOutput(State, 0x8A, 015);
+			  else
+				  ChannelOutput(State, 0x8A, 016);
+			  break;
+		  default:;
+		  }
+		  *crq=0;
+		  State->cntreqsum[cntridx]++;
+		  setCntrPendIdx(State);
+		  return (0);
+	  }
+
+	  crq = &(State->CntrReqM[cntridx]);
+	  if (*crq) {
+		  Ch = &State->Erasable[0][cntridx + 024];
+		  switch (cntridx) {
+		  case 06:
+		  case 07:
+		  case 010:
+		  case 011:
+		  case 012:
+			  CounterMCDU(Ch);
+			  break;
+		  case 013:
+		  case 014:
+		  case 015:
+		  case 016:
+		  case 017:
+		  case 020:
+			  CounterMINC(Ch);
+			  break;
+		  case 021:
+		  case 022:
+			  CounterSHINC(Ch);
+			  break;
+		  default:;
+		  }
+		  *crq=0;
+		  State->cntreqsum[cntridx]++;
+		  setCntrPendIdx(State);
+		  return (0);
+	  }
+
   }
 
   //----------------------------------------------------------------------  
@@ -2484,6 +2669,7 @@ agc_engine (agc_t * State)
 			  State->NextZ = 04000 + 4 * i;
 
 			  InterruptRequested = 1;
+			  State->rptreqsum[i]++;
 			  break;
 			}
 		}
@@ -2511,7 +2697,7 @@ agc_engine (agc_t * State)
 		  State->SubstituteInstruction = 0;
 		  // Vector to the interrupt.
 		  State->InIsr = 1;
-		  State->ExtraDelay++;
+		  State->ExtraDelay+=2;
 		  goto AllDone;
 		}
 	}
@@ -2521,23 +2707,21 @@ agc_engine (agc_t * State)
   // AFTER executing the instruction -- not because it's more logically
   // correct, just because it's easier. EDRUPT's timing is handled with
   // the interrupt logic.
-  if (!State->PendFlag)
-    {
+  if (!State->PendFlag){
       int i;
       i = QuarterCode >> 10;
       if (State->ExtraCode)
-	i = ExtracodeTiming[i];
+		  i = ExtracodeTiming[i];
       else
-	i = InstructionTiming[i];
-      if (i)
-	{
-	  State->PendFlag = 1;
-	  State->PendDelay = i-1;
-	  return (0);
-	}
-    }
+		  i = InstructionTiming[i];
+      if (i){
+		  State->PendFlag = 1;
+		  State->PendDelay = i-1;
+		  return (0);
+	  }
+  }
   else
-    State->PendFlag = 0;
+	  State->PendFlag = 0;
 
   // Now that the index value has been used, get rid of it.
   State->IndexValue = AGC_P0;
@@ -3487,6 +3671,10 @@ AllDone:
 
 	  State->TookBZF = JustTookBZF;
 	  State->TookBZMF = JustTookBZMF;
+	  if (JustTookBZF || JustTookBZMF) {
+		  State->PendFlag = 1;
+		  State->PendDelay = 1;
+	  }
     }
   return (0);
 }

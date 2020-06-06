@@ -32,6 +32,7 @@ public:
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void Timestep(double simdt);
+	int GetRadarData(int radarB, int radarC);
 	void SystemTimestep(double simdt);
 	void DefineAnimations(UINT idx);
 	double GetAntennaTempF();
@@ -52,6 +53,9 @@ public:
 	bool IsRadarDataGood() { return radarDataGood; };
 	bool GetNoTrackSignal() { return NoTrackSignal; }
 
+	double trunnionAngle;
+	double shaftAngle;
+
 private:
 
 	LEM * lem;					// Pointer at LEM
@@ -68,8 +72,6 @@ private:
 	int    isTracking;
 	bool   radarDataGood;
 	bool NoTrackSignal;
-	double trunnionAngle;
-	double shaftAngle;
 	double trunnionVel;
 	double shaftVel;
 	double range;
@@ -94,4 +96,6 @@ private:
 	UINT anim_RRPitch, anim_RRYaw;
 	double rr_proc[2];
 	double rr_proc_last[2];
+
+	bool enable_phase_bug;
 };

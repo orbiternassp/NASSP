@@ -40,7 +40,8 @@
 
 #include "lm_channels.h"
 
-LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : ApolloGuidance(s, display, im, sc, tc, p)
+LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, LEM_RR &lm_rr, PanelSDK &p) :
+	ApolloGuidance(false, s, display, im, p)
 
 {
 
@@ -48,9 +49,23 @@ LEMcomputer::LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, 
 
 	/* FIXME LOAD FILE SHOULD BE SET IN SCENARIO */
 	//InitVirtualAGC("Config/ProjectApollo/Luminary099.bin");
-
+	ffradgtset = 0;
+	ffactv = 0;
+	rdrcnt = 0;
+	rdrval = 0;
 	/* FIXME REMOVE THIS LATER, THIS IS TEMPORARY FOR TESTING ONLY AND SHOULD BE IN THE SCENARIO LATER */
 	/* LM PAD LOAD FOR LUMINARY 099 AND APOLLO 11  - OFFICIAL VERSION */
+
+	double speed_gain = 0.0004709/12800.0;
+	double speed_limit = speed_gain*348.0;
+
+	tcdu.SetAngleDevice(&lm_rr.trunnionAngle);
+	tcdu.driver_speed_gain = speed_gain;
+	tcdu.driver_speed_limit = speed_limit;
+
+	scdu.SetAngleDevice(&lm_rr.shaftAngle);
+	scdu.driver_speed_gain = speed_gain;
+	scdu.driver_speed_limit = speed_limit;
 
 	thread.Resume();
 }
@@ -122,6 +137,101 @@ void LEMcomputer::agcTimestep(double simt, double simdt)
 	LastCycled += (0.00001171875 * cycles);						// Preserve the remainder
 	long x = 0;
 	while (x < cycles) {
+		if (vagc.ScalerChanged) {
+//			char buf[256];
+			if ((vagc.Scaler & 0177) == 0177) {//F10A
+				ChannelValue val13 = GetInputChannel(013);
+				if (val13[RadarActivity] == 1) {
+					ffactv = 1;  //ACTV flipflop
+//					sprintf(buf, "scaler=%11o ffactv=1", vagc.Scaler);
+//					oapiWriteLog(buf);
+				}
+				else {
+//					sprintf(buf, "scaler=%11o ffactv=0", vagc.Scaler);
+//					if(ffactv) oapiWriteLog(buf);
+					ffactv = 0;
+
+				}
+				if (ffactv) {
+					rdrcnt++;
+//					sprintf(buf, "scaler=%11o increase rdrcnt=%d", vagc.Scaler, rdrcnt);
+//					oapiWriteLog(buf);
+				}
+
+				// In the real hw before passing data
+				// to LGC, the radar data is moved to
+				// an internal register of the radar
+				// itself. It happens gradually
+				// through "strobe signals" during
+				// rdrcnt goes form 1 and 8. However
+				// we only take a single value to avoid
+				// overcomplicating things. After this,
+				// radar data is ready for asynchronous
+				// transfer to LGC.
+				if (rdrcnt == 8) {
+					if (val13[RadarA] == 1)
+						rdrval = lem->LR.GetRadarData(val13[RadarB], val13[RadarC]);
+					else
+						rdrval = lem->RR.GetRadarData(val13[RadarB], val13[RadarC]);
+//					sprintf(buf, "scaler=%11o read radar rdrval=%5o", vagc.Scaler, rdrval);
+//					oapiWriteLog(buf);
+
+				}
+			}
+
+			int gtset = ((vagc.Scaler & 077) == 075); //GTSET=FS09 & FS08 & FS07 & FS06 & F05B
+			if (rdrcnt == 9 && gtset) { 
+				ffradgtset = 1;  //Radar's GTSET flipflop
+//				sprintf(buf, "scaler=%11o GTSET RNRAD=%5ho", vagc.Scaler, vagc.Erasable[0][RegRNRAD]);
+//				oapiWriteLog(buf);
+			}
+
+			if (ffradgtset) {
+				if ((vagc.Scaler & 3) == 3) { //F05A 
+					if (rdrval & 040000)
+						setCntrReqP(&vagc, 022);
+					else 
+						setCntrReqM(&vagc, 022);
+//					sprintf(buf, "scaler=%11o step rdrval=%5o RNRAD=%5ho", vagc.Scaler, rdrval, vagc.Erasable[0][RegRNRAD]);
+//					oapiWriteLog(buf);
+					rdrval = rdrval << 1;
+				}
+
+				if ((vagc.Scaler & 077) == 071) { //GTRST=FS09 & FS08 & FS07 & !FS06 & F05B
+//					sprintf(buf, "scaler=%11o increase GTRST RNRAD=%5ho", vagc.Scaler, vagc.Erasable[0][RegRNRAD]);
+//					oapiWriteLog(buf);
+					//RADRPT happens
+					ffradgtset = 0;
+					rdrcnt = 0;
+					SetInputChannelBit(013, RadarActivity, 0);
+					GenerateRadarupt();
+				}
+			}
+
+			if ((vagc.Scaler & 0177) == 0001) { //GTONE=!FS09 & !FS08 & !FS07A & !FS06 & F05B
+				ChannelValue val14 = GetInputChannel(014);
+				if (val14[AltitudeIndicator]) {
+					ffaltgtset = 1;
+					altval = 0;
+				}
+			}
+
+			if (ffaltgtset) {
+				ChannelValue val14 = GetInputChannel(014);
+				if ((vagc.Scaler & 3) == 3) { //F05A 
+					setCntrReqP(&vagc, 034);
+				}
+				else if (gtset) {
+					ffaltgtset = 0;
+					if (val14[AltitudeRate])
+						lem->RadarTape.SetLGCAltitudeRate(altval);
+					else
+						lem->RadarTape.SetLGCAltitude(altval);
+					SetInputChannelBit(014, AltitudeIndicator, 0);
+				}
+			}
+
+		}
 		SingleTimestep();
 		ThisTime += 0.00001171875;								// Add time
 		if ((ThisTime - lem->VHF.last_update) > 0.00015625) {	// If a step is needed
@@ -129,6 +239,33 @@ void LEMcomputer::agcTimestep(double simt, double simdt)
 		}
 		x++;
 	}
+	
+
+	if (sumdt > 2.0) {
+
+		for (int i = 0; i < NUM_CNT_REGS; i++) {
+			char buf[256];
+			sprintf(buf, "Pulses Reg0%2o %lf pulse/sec", i + 024, vagc.cntreqsum[i] / sumdt);
+			oapiWriteLog(buf);
+			vagc.cntreqsum[i] = 0;
+		}
+		char *name[NUM_INTERRUPT_TYPES+1] = {
+			"RSTRT", "T6RUPT", "T5RUPT", "T3RUPT" , "T4RUPT", "KEYRUPT1",
+			"KEYRUPT2", "UPRUPT", "DOWNRUPT", "RADRPUPT", "HANDRUPT"
+		};
+		for (int i = 0; i <= NUM_INTERRUPT_TYPES; i++) {
+			char buf[256];	
+			sprintf(buf, "Ruptreq %8s idx %2d %lf pulse/sec", name[i], i, vagc.rptreqsum[i] / sumdt);
+			oapiWriteLog(buf);
+			vagc.rptreqsum[i] = 0;
+		}
+		sumdt = 0;
+	}
+	else
+		sumdt += simdt;
+	//sprintf(oapiDebugString(), "Reg046: %hu",  vagc.Erasable[0][RegRNRAD]);
+	//int tmp = vagc.ExtraDelay;
+	//sprintf(oapiDebugString(), "scaler:%10i scalercounter:%4i ChanSCALER1=%4hx exdly=%d", vagc.Scaler, vagc.ScalerCounter, vagc.InputChannel[ChanSCALER1], tmp);
 }
 
 void LEMcomputer::Run ()
@@ -328,25 +465,33 @@ void LEMcomputer::ProcessChannel141(ChannelValue val) {
 	}*/
 }
 
-void LEMcomputer::ProcessChannel142(ChannelValue val) {
+void LEMcomputer::ProcessLGCThrustCommands(ChannelValue val) {
 
-	LEM *lem = (LEM *)OurVessel;
+	//LEM *lem = (LEM *)OurVessel;
 	lem->deca.ProcessLGCThrustCommands(val.to_ulong());
 }
 
-void LEMcomputer::ProcessChannel143(ChannelValue val) {
+void LEMcomputer::ProcessAltMeterBits(ChannelValue val) {
 
-	ChannelValue val14;
-	val14 = GetOutputChannel(014);
-	LEM *lem = (LEM *)OurVessel;
+	// ChannelValue val14;
+	// val14 = GetOutputChannel(014);
+	// LEM *lem = (LEM *)OurVessel;
 
-	if (val14[AltitudeRate])
-	{
-		lem->RadarTape.SetLGCAltitudeRate(val.to_ulong());
-	}
-	else
-	{
-		lem->RadarTape.SetLGCAltitude(val.to_ulong());
+	// if (val14[AltitudeRate])
+	// {
+	// 	lem->RadarTape.SetLGCAltitudeRate(val.to_ulong());
+	// }
+	// else
+	// 	{
+	// 	lem->RadarTape.SetLGCAltitude(val.to_ulong());
+	// }
+	switch (val.to_ullong()) {
+	case 015:
+		altval = (altval << 1) | 1;
+		break;
+	case 016:
+		altval = (altval << 1);
+		break;
 	}
 }
 
@@ -433,6 +578,31 @@ void LEMcomputer::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 		break;
 	}
 
+}
+
+void LEMcomputer::SaveVesselSpecific(FILEHANDLE scn) {
+	oapiWriteScenario_int(scn, "FFACTV", (int) ffactv);
+	oapiWriteScenario_int(scn, "FFRADGTSET", (int) ffradgtset);
+	oapiWriteScenario_int(scn, "FFALTGTSET", (int) ffaltgtset);
+	oapiWriteScenario_int(scn, "RDRCNT", (int) rdrcnt);
+	oapiWriteScenario_int(scn, "RDRVAL", rdrval);
+	oapiWriteScenario_int(scn, "ALTVAL", altval);
+}
+
+void LEMcomputer::LoadVesselSpecific(char *line) {
+	int tmp;
+	if (papiReadScenario_int(line, "FFACTV", tmp))
+		ffactv = tmp;
+	else if (papiReadScenario_int(line, "FFRADGTSET", tmp))
+		ffradgtset = tmp;
+	else if (papiReadScenario_int(line, "FFALTGTSET", tmp))
+		ffaltgtset = tmp;
+	else if (papiReadScenario_int(line, "RDRCNT", tmp))
+		rdrcnt = tmp;
+	else if (papiReadScenario_int(line, "RDRVAL", tmp))
+		rdrval = tmp;
+	else if (papiReadScenario_int(line, "ALTVAL", tmp))
+		altval = tmp;
 }
 
 VESSEL * LEMcomputer::GetCSM()
@@ -523,7 +693,6 @@ void LMOptics::Timestep(double simdt) {
 }
 
 void LMOptics::SaveState(FILEHANDLE scn) {
-
 	oapiWriteLine(scn, LMOPTICS_START_STRING);
 	papiWriteScenario_double(scn, "OPTICSSHAFT", OpticsShaft);
 	papiWriteScenario_double(scn, "OPTICSRETICLE", OpticsReticle);

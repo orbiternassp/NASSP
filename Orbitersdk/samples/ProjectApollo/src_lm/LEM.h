@@ -119,6 +119,7 @@ public:
 	double GetAltitudeRate() { return rate[0]*0.3048; };
 	double GetAltTransmitterPower();
 	double GetVelTransmitterPower();
+	int GetRadarData(int radarB, int radarC);
 
 	bool IsPowered(); 
 
@@ -1476,8 +1477,7 @@ protected:
 	h_Radiator *imucase; // IMU Case
 	h_HeatExchanger *imublower; // IMU Blower
 	IMU imu;
-	CDU tcdu;
-	CDU scdu;
+
 	LMOptics optics;
 
 	//Pyros

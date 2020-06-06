@@ -3659,8 +3659,6 @@ protected:
 	DSKY dsky2;
 	CSMcomputer agc;	
 	IMU imu;
-	CDU tcdu;
-	CDU scdu;
 	IU* iu;
 	SIVBSystems *sivb;
 	CSMCautionWarningSystem cws;

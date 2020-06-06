@@ -210,6 +210,12 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->InputChannel[032] = 077777;
   State->InputChannel[033] = 077777;
 
+  for (i = 0; i < NUM_CNT_REGS; i++) {
+	  State->CntrReqP[i] = 0;
+	  State->CntrReqM[i] = 0;
+  }
+  State->CntrPendIdx = NUM_CNT_REGS;
+
   // Clear erasable memory.
   for (Bank = 0; Bank < 8; Bank++)
     for (j = 0; j < 0400; j++)
@@ -249,6 +255,8 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
 
   State->NextZ = 0;
   State->ScalerCounter = 0;
+  State->Scaler = 0;
+  State->ScalerChanged = 0;
   State->ChannelRoutineCount = 0;
 
   State->DskyTimer = 0;

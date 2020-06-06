@@ -13,11 +13,11 @@
       <UniqueIdentifier>{6665b1a5-2ef5-43b2-ba33-76eef1853b1f}</UniqueIdentifier>
       <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
     </Filter>
-    <Filter Include="yaAGC">
-      <UniqueIdentifier>{0af792c1-c158-41a0-ab32-d7efe000754c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="IMFD">
       <UniqueIdentifier>{100899c2-ed1a-489d-bf47-d93b4712d124}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\yaAGC">
+      <UniqueIdentifier>{0af792c1-c158-41a0-ab32-d7efe000754c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -148,19 +148,19 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_sys\yaAGC\agc_engine.c">
-      <Filter>yaAGC</Filter>
+      <Filter>Source Files\yaAGC</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_sys\yaAGC\agc_engine_init.c">
-      <Filter>yaAGC</Filter>
+      <Filter>Source Files\yaAGC</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_sys\yaAGC\Backtrace.c">
-      <Filter>yaAGC</Filter>
+      <Filter>Source Files\yaAGC</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_sys\yaAGC\random.c">
-      <Filter>yaAGC</Filter>
+      <Filter>Source Files\yaAGC</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_sys\yaAGC\rfopen.c">
-      <Filter>yaAGC</Filter>
+      <Filter>Source Files\yaAGC</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_aux\IMFD\IMFD_Client.cpp">
       <Filter>IMFD</Filter>
@@ -363,10 +363,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h">
-      <Filter>yaAGC</Filter>
+      <Filter>Source Files\yaAGC</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_sys\yaAGC\yaAGC.h">
-      <Filter>yaAGC</Filter>
+      <Filter>Source Files\yaAGC</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_aux\IMFD\IMFD_IPC_com.h">
       <Filter>IMFD</Filter>

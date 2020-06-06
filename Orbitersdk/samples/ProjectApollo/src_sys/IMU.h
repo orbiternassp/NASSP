@@ -31,6 +31,29 @@
 
 #include "powersource.h"
 
+class PIPA {
+public:
+	PIPA(ApolloGuidance &comp);
+	void SetVessel(bool flgCSM, int Idx);
+	void setAccel(double accel);
+	void step3200pps();
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+protected:
+	ApolloGuidance &agc;
+	int idx;
+
+	double coeff_phi_pulse, coeff_phi_accel, coeff_phi_prev, coeff_phi_prevdot;
+	double coeff_phidot_pulse, coeff_phidot_accel, coeff_phidot_prevdot;
+	double coeff_phi_samp_pulse, coeff_phi_samp_accel, coeff_phi_samp_prev, coeff_phi_samp_prevdot;
+	double coeff_phidot_samp_pulse, coeff_phidot_samp_accel, coeff_phidot_samp_prevdot;
+
+	double accel, phi_accel, phidot_accel, phi_samp_accel, phidot_samp_accel;
+	double phi, phidot;
+	int flipflop;
+	int precounter;
+};
+
 class IMU {
 
 public:
@@ -40,10 +63,11 @@ public:
 	void Init();
 	void ChannelOutput(int address, ChannelValue value);
 	void Timestep(double simdt);
-	void SystemTimestep(double simdt); 
+	void SystemTimestep(double simdt);
+	void step3200pps();
 	void TurnOn();
 	void TurnOff();
-	void DriveGimbals(double x, double y, double z);
+	//void DriveGimbals(double x, double y, double z);
 	void SetVessel(VESSEL *v, bool LEMFlag);
 	void SetVesselFlag(bool LEMFlag);
 	VECTOR3 GetTotalAttitude();
@@ -61,19 +85,28 @@ public:
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
+	union {
+		struct {
+			double X;	//outer gimbal angle in rad
+			double Y;	//inner gimbal angle in rad
+			double Z;	//middle gimbal angle in rad
+		} Gimbal;
+		double Gimbals[3];
+	};
+
 protected:
 	
-	void DriveCDUX(int cducmd);
-	void DriveCDUY(int cducmd);
-	void DriveCDUZ(int cducmd);
-	void DriveCDU(int index, int RegCDU, int cducmd);
+	// void DriveCDUX(int cducmd);
+	// void DriveCDUY(int cducmd);
+	// void DriveCDUZ(int cducmd);
+	// void DriveCDU(int index, int RegCDU, int cducmd);
 	void DriveGimbalX(double angle);
 	void DriveGimbalY(double angle);
 	void DriveGimbalZ(double angle);
 	void DriveGimbal(int index, int RegCDU, double angle);
 	void PulsePIPA(int RegPIPA, int pulses);
 	void SetOrbiterAttitudeReference();
-	void DoZeroIMUCDUs();
+	// void DoZeroIMUCDUs();
 	void DoZeroIMUGimbals();
 	VECTOR3 GetGravityVector();
 
@@ -114,20 +147,11 @@ protected:
 	bool Initialized;
 	bool Caged;
 
-	union {
-		struct {
-			double X;	//outer gimbal angle in rad
-			double Y;	//inner gimbal angle in rad
-			double Z;	//middle gimbal angle in rad
-		} Gimbal;
-		double Gimbals[3];
-	};
-
-	struct {
+	/*struct {
 		double X;
 		double Y;
 		double Z;
-	} RemainingPIPA;
+	} RemainingPIPA;*/
 
 	struct {
 		struct {
@@ -149,10 +173,12 @@ protected:
 	h_HeatLoad *IMUHeat;
 	GuardedToggleSwitch *PowerSwitch;
 
-	double pipaRate;	// PIPA pulse representation of speed change
+	//double pipaRate;	// PIPA pulse representation of speed change
 	double LastSimDT;	// in seconds
 
 	double IMUTempF;
+
+	PIPA pipax, pipay, pipaz;
 
 	// Allow the MFD to touch our privates
 	friend class ProjectApolloMFD;

@@ -545,6 +545,10 @@ void GDC::Timestep(double simdt) {
 		return;
 	}
 
+	fdai_err_x = -sat->agc.ogcdu.GetErrorCounter();
+	fdai_err_y = sat->agc.mgcdu.GetErrorCounter();
+	fdai_err_z = -sat->agc.igcdu.GetErrorCounter();
+
 	//POWER
 	bool power, ac1power, ac2power, E1_504, E1_503, E1_502, E0_503PR, E0_503Y, E2_503, E2_502, EA_501, EB_501;
 
@@ -4454,14 +4458,15 @@ void ServoAmplifierModule::SystemTimestep(double simdt)
 	if (IsClutch2Powered()) DrawSystem2Power();
 }
 
+#define TVC_CMC_MUL 0.000414079365036
 //Thrust Vector Servo Amplifier Assembly
 TVSA::TVSA() :
 	pitchServoAmp(&A4K1, &A4K2, &A4K3, &A4K7),
 	yawServoAmp(&A4K4, &A4K5, &A4K6, &A4K8)
 {
-	cmcErrorCountersEnabled = false;
-	cmcPitchPosition = 0.0;
-	cmcYawPosition = 0.0;
+	//cmcErrorCountersEnabled = false;
+	//cmcPitchPosition = 0.0;
+	//cmcYawPosition = 0.0;
 	pitchGimbalTrim1 = 0.0;
 	pitchGimbalTrim2 = 0.0;
 	yawGimbalTrim1 = 0.0;
@@ -4490,15 +4495,15 @@ void TVSA::Init(Saturn *vessel) {
 	sat = vessel;
 }
 
-void TVSA::ChangeCMCPitchPosition(double delta) {
+//void TVSA::ChangeCMCPitchPosition(double delta) {
+//
+//	cmcPitchPosition += delta*RAD;
+//}
 
-	cmcPitchPosition += delta*RAD;
-}
-
-void TVSA::ChangeCMCYawPosition(double delta) {
-
-	cmcYawPosition += delta*RAD;
-}
+//void TVSA::ChangeCMCYawPosition(double delta) {
+//
+//	cmcYawPosition += delta*RAD;
+//}
 
 void TVSA::TimeStep(double simdt)
 {
@@ -4578,7 +4583,7 @@ void TVSA::TimeStep(double simdt)
 	}
 
 	//TBD: This should be a relay in the CDUs
-	tvcenable = !sat->THCRotary.IsClockwise() && sat->SCContSwitch.IsUp() && cmcErrorCountersEnabled;
+	tvcenable = !sat->THCRotary.IsClockwise() && sat->SCContSwitch.IsUp();
 
 	//Trim
 	if (acpower1)
@@ -4614,7 +4619,7 @@ void TVSA::TimeStep(double simdt)
 			PitchServo1Position = sat->eca.GetPitchMTVCPosition() + (T3QS2 ? sat->eca.GetPitchAutoTVCPosition() : 0.0) + (T3QS3 ? pitchGimbalTrim1 : 0.0);
 		}
 		//CMC in any case
-		if (tvcenable) PitchServo1Position += cmcPitchPosition;
+		if (tvcenable) PitchServo1Position += TVC_CMC_MUL *sat->agc.scdu.GetAltOutput();
 
 		//Yaw Servo No. 1
 		//SCS only if the logic is true
@@ -4623,7 +4628,7 @@ void TVSA::TimeStep(double simdt)
 			YawServo1Position = sat->eca.GetYawMTVCPosition() + (T2QS2 ? sat->eca.GetYawAutoTVCPosition() : 0.0) + (T2QS3 ? yawGimbalTrim1 : 0.0);
 		}
 		//CMC in any case
-		if (tvcenable) YawServo1Position += cmcYawPosition;
+		if (tvcenable) YawServo1Position += TVC_CMC_MUL *sat->agc.tcdu.GetAltOutput();
 
 		if (pitchServoAmp.IsClutch1Powered())
 		{
@@ -4651,7 +4656,7 @@ void TVSA::TimeStep(double simdt)
 			PitchServo2Position = sat->eca.GetPitchMTVCPosition() + (T3QS2 ? sat->eca.GetPitchAutoTVCPosition() : 0.0) + (T3QS3 ? pitchGimbalTrim2 : 0.0);
 		}
 		//CMC in any case
-		if (tvcenable) PitchServo2Position += cmcPitchPosition;
+		if (tvcenable) PitchServo2Position += TVC_CMC_MUL *sat->agc.scdu.GetAltOutput();
 
 		//Yaw Servo No. 2
 		//SCS only if the logic is true
@@ -4660,7 +4665,7 @@ void TVSA::TimeStep(double simdt)
 			YawServo2Position = sat->eca.GetYawMTVCPosition() + (T2QS2 ? sat->eca.GetYawAutoTVCPosition() : 0.0) + (T2QS3 ? yawGimbalTrim2 : 0.0);
 		}
 		//CMC in any case
-		if (tvcenable) YawServo2Position += cmcYawPosition;
+		if (tvcenable) YawServo2Position += TVC_CMC_MUL *sat->agc.tcdu.GetAltOutput();
 
 		if (pitchServoAmp.IsClutch2Powered())
 		{
@@ -4673,7 +4678,7 @@ void TVSA::TimeStep(double simdt)
 		}
 	}
 
-	//sprintf(oapiDebugString(), "%d %d %d %d %d %f %f", T2QS2, T2QS3, T3QS2, T3QS3, cmcErrorCountersEnabled, cmcPitchPosition*DEG, cmcYawPosition*DEG);
+	// sprintf(oapiDebugString(), "%d %d %d %d %f %f", T2QS2, T2QS3, T3QS2, T3QS3, 0.023725*sat->agc.scdu.GetErrorCounter()*DEG, 0.023725*sat->agc.tcdu.GetErrorCounter()*DEG);
 
 	//Transducers
 	if (acpower1)
@@ -4790,9 +4795,9 @@ void TVSA::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, TVSA_START_STRING);
 
 	papiWriteScenario_boolarr(scn, "RELAYS", arr, 8);
-	papiWriteScenario_bool(scn, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
-	papiWriteScenario_double(scn, "CMCPITCHPOSITION", cmcPitchPosition);
-	papiWriteScenario_double(scn, "CMCYAWPOSITION", cmcYawPosition);
+	//papiWriteScenario_bool(scn, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
+	//papiWriteScenario_double(scn, "CMCPITCHPOSITION", cmcPitchPosition);
+	//papiWriteScenario_double(scn, "CMCYAWPOSITION", cmcYawPosition);
 
 	oapiWriteLine(scn, TVSA_END_STRING);
 }
@@ -4808,9 +4813,9 @@ void TVSA::LoadState(FILEHANDLE scn) {
 		}
 
 		papiReadScenario_boolarr(line, "RELAYS", r, 8);
-		papiReadScenario_bool(line, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
-		papiReadScenario_double(line, "CMCPITCHPOSITION", cmcPitchPosition);
-		papiReadScenario_double(line, "CMCYAWPOSITION", cmcYawPosition);
+		//papiReadScenario_bool(line, "CMCERRORCOUNTERSENABLED", cmcErrorCountersEnabled);
+		//papiReadScenario_double(line, "CMCPITCHPOSITION", cmcPitchPosition);
+		//papiReadScenario_double(line, "CMCYAWPOSITION", cmcYawPosition);
 	}
 
 	A4K1 = r[0];

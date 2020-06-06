@@ -244,6 +244,10 @@ void ATCA::Timestep(double simt, double simdt){
 	translationCommands = _V(0, 0, 0);
 	if(lem == NULL){ return; }
 
+	lgc_err_x = -lem->agc.igcdu.GetErrorCounter();
+	lgc_err_y =  lem->agc.mgcdu.GetErrorCounter();
+	lgc_err_z =  lem->agc.ogcdu.GetErrorCounter();
+
 	// Determine ATCA power situation.
 	if (lem->CDR_SCS_ATCA_CB.IsPowered() && !lem->scca2.GetK12() && !lem->ModeControlPGNSSwitch.IsDown())
 	{
@@ -1477,20 +1481,29 @@ void DECA::Timestep(double simdt) {
 void DECA::ProcessLGCThrustCommands(int val) {
 
 	int pulses;
-	double thrust_cmd;
+	double thrust_cmd=0.0035;
 
-	if (powered == 0) { return; }
+	// if (powered == 0) { return; }
 
-	if (val & 040000) { // Negative
-		pulses = -((~val) & 077777);
+	// if (val & 040000) { // Negative
+	// 	pulses = -((~val) & 077777);
+	// }
+	// else {
+	// 	pulses = val & 077777;
+	// }
+
+	// thrust_cmd = (0.0035*pulses);
+	switch (val) {
+	case 015:
+		lgcAutoThrust += thrust_cmd;
+		break;
+	case 016:
+		lgcAutoThrust -= thrust_cmd;
+		break;
+	default:
+		break;
 	}
-	else {
-		pulses = val & 077777;
-	}
-
-	thrust_cmd = (0.0035*pulses);
-
-	lgcAutoThrust += thrust_cmd;
+	// lgcAutoThrust += thrust_cmd;
 
 	if (lgcAutoThrust > 12.0)
 	{

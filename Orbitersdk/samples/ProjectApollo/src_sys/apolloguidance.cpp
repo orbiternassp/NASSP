@@ -44,8 +44,16 @@
 
 #include "tracer.h"
 
-ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p) : soundlib(s), dsky(display), imu(im), DCPower(0, p), scdu(sc), tcdu(tc)
-
+ApolloGuidance::ApolloGuidance(bool flgCSM, SoundLib &s, DSKY &display, IMU &im, PanelSDK &p) :
+	soundlib(s),
+	dsky(display),
+	imu(im),
+	DCPower(0, p),
+	ogcdu(CDU(*this, flgCSM, 0, 0202)),
+	mgcdu(CDU(*this, flgCSM, 1, 0203)),
+	igcdu(CDU(*this, flgCSM, 2, 0204)),
+	tcdu(CDU(*this, flgCSM, 3, 0205)),
+	scdu(CDU(*this, flgCSM, 4, 0206))
 {
 	Reset = false;
 	CurrentTimestep = 0;
@@ -89,6 +97,13 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	vagc.agc_clientdata = this;
 	agc_engine_init(&vagc, NULL, NULL, 0);
 
+	ogcdu.SetAngleDevice(&(im.Gimbal.X));
+	mgcdu.SetAngleDevice(&(im.Gimbal.Y));
+	igcdu.SetAngleDevice(&(im.Gimbal.Z));
+
+	ogcdu.driver_speed_limit = 2.0 / 12800.0;
+	mgcdu.driver_speed_limit = 2.0 / 12800.0;
+	igcdu.driver_speed_limit = 2.0 / 12800.0;
 #ifdef _DEBUG
 	out_file = fopen("ProjectApollo AGC.log", "wt");
 	vagc.out_file = out_file;
@@ -188,7 +203,16 @@ bool ApolloGuidance::SingleTimestepPrep(double simt, double simdt){
 }
 
 bool ApolloGuidance::SingleTimestep() {
+	if (vagc.ScalerChanged) {
+		ogcdu.step_12800_pps();
+		mgcdu.step_12800_pps();
+		igcdu.step_12800_pps();
+		tcdu.step_12800_pps();
+		scdu.step_12800_pps();
 
+		if ((vagc.Scaler & 3) == 1) 
+			imu.step3200pps();
+	}
 	agc_engine(&vagc);
 	return TRUE;
 }
@@ -213,6 +237,9 @@ bool ApolloGuidance::GenericTimestep(double simt, double simdt)
 	for (i = 0; i < cycles; i++) {
 		agc_engine(&vagc);
 	}
+
+	//tcdu.Timestep(simdt);
+	//scdu.Timestep(simdt);
 
 	return true;
 }
@@ -445,6 +472,8 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_int (scn, "IDXV", vagc.IndexValue);
 	oapiWriteScenario_int (scn, "NEXTZ", vagc.NextZ);
 	oapiWriteScenario_int (scn, "SCALERCOUNTER", vagc.ScalerCounter);
+	oapiWriteScenario_int(scn, "SCALER", vagc.Scaler);
+	oapiWriteScenario_int(scn, "SCALERCHANGED", vagc.ScalerChanged ? 1 : 0);
 	oapiWriteScenario_int (scn, "CRCOUNT", vagc.ChannelRoutineCount);
 	oapiWriteScenario_int(scn, "DSKYCHANNEL163", vagc.DskyChannel163);
 	oapiWriteScenario_int(scn, "WARNINGFILTER", vagc.WarningFilter);
@@ -464,8 +493,26 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, fname, val);
 	}
 
+	for (i = 0; i < NUM_CNT_REGS; i++) {
+		sprintf(fname, "CNTREQP%02d", i);
+		oapiWriteScenario_int(scn, fname, vagc.CntrReqP[i]);
+	}
+
+	for (i = 0; i < NUM_CNT_REGS; i++) {
+		sprintf(fname, "CNTREQM%02d", i);
+		oapiWriteScenario_int(scn, fname, vagc.CntrReqM[i]);
+	}
+
+	ogcdu.SaveState(scn, "  OGCDU_START", "  CDU_END");
+	mgcdu.SaveState(scn, "  MGCDU_START", "  CDU_END");
+	igcdu.SaveState(scn, "  IGCDU_START", "  CDU_END");
+	scdu.SaveState(scn, "  SCDU_START", "  CDU_END");
+	tcdu.SaveState(scn, "  TCDU_START", "  CDU_END");
+
 	papiWriteScenario_bool(scn, "PROGALARM", ProgAlarm);
 	papiWriteScenario_bool(scn, "GIMBALLOCKALARM", GimbalLockAlarm);
+
+	SaveVesselSpecific(scn);
 
 	oapiWriteLine(scn, AGC_END_STRING);
 }
@@ -478,7 +525,14 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 	//
 	// Now load the data.
 	//
-
+	boolean
+		ogcduLoaded = false,
+		mgcduLoaded = false,
+		igcduLoaded = false,
+		tcduLoaded = false,
+		scduLoaded = false,
+		scalerLoaded = false
+		;
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, AGC_END_STRING, sizeof(AGC_END_STRING)))
 			break;
@@ -521,6 +575,15 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 		else if (!strnicmp (line, "SCALERCOUNTER", 13)) {
 			sscanf (line+13, "%d", &vagc.ScalerCounter);
+		}
+		else if (!strnicmp(line, "SCALER", 6)) {
+			sscanf(line + 6, "%d", &vagc.Scaler);
+			scalerLoaded = true;
+		}
+		else if (!strnicmp(line, "SCALERCHANGED", 6)) {
+			int tmp;
+			sscanf(line + 6, "%d", &tmp);
+			vagc.ScalerChanged = tmp;
 		}
 		else if (!strnicmp (line, "CRCOUNT", 7)) {
 			sscanf (line+7, "%d", &vagc.ChannelRoutineCount);
@@ -579,10 +642,63 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "ONAME", 5)) {
 			strncpy (OtherVesselName, line + 6, 64);
 		}
+		else if (!strnicmp(line, "CNTREQ", 6)) {
+			int num, val;
+			char dir;
+			sscanf(line + 6, "%c%0d %d",&dir, &num, &val);
+			if (num >= 0 && num < NUM_CNT_REGS) {
+				switch (dir) {
+				case 'P':
+					vagc.CntrReqP[num] = val;
+					break;
+				case 'M':
+					vagc.CntrReqM[num] = val;
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		else if (!strnicmp(line, "OGCDU_START", sizeof("OGCDU_START"))) {
+			ogcdu.LoadState(scn, "CDU_END");
+			ogcduLoaded = true;
+		}
+		else if (!strnicmp(line, "MGCDU_START", sizeof("MGCDU_START"))) {
+			mgcdu.LoadState(scn, "CDU_END");
+			mgcduLoaded = true;
+		}
+		else if (!strnicmp(line, "IGCDU_START", sizeof("IGCDU_START"))) {
+			igcdu.LoadState(scn, "CDU_END");
+			igcduLoaded = true;
+		}
+		else if (!strnicmp(line, "SCDU_START", sizeof("SCDU_START"))) {
+			scdu.LoadState(scn, "CDU_END");
+			scduLoaded = true;
+		}
+		else if (!strnicmp(line, "TCDU_START", sizeof("TCDU_START"))) {
+			tcdu.LoadState(scn, "CDU_END");
+			tcduLoaded = true;
+		}
 
 		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);
 		papiReadScenario_bool(line, "GIMBALLOCKALARM", GimbalLockAlarm);
+
+		LoadVesselSpecific(line);
 	}
+	if (!ogcduLoaded)
+		ogcdu.read_counter = vagc.Erasable[0][032] << 1;
+	if (!mgcduLoaded)
+		mgcdu.read_counter = vagc.Erasable[0][033] << 1;
+	if (!igcduLoaded)
+		igcdu.read_counter = vagc.Erasable[0][034] << 1;
+	if (!tcduLoaded)
+		tcdu.read_counter = vagc.Erasable[0][035] << 1;
+	if (!scduLoaded)
+		scdu.read_counter = vagc.Erasable[0][036] << 1;
+	if (!scalerLoaded)
+		vagc.Scaler = (vagc.InputChannel[ChanSCALER1] << 2) | (vagc.InputChannel[ChanSCALER2] << 16);
+	
+	setCntrPendIdx(&vagc);
 }
 
 //
@@ -769,7 +885,7 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 			// DS20060225 Enable SPS gimbal control
 			// TVC Enable does not disconnect the IMU from this channel			
 			// (Even though it probably doesn't matter)
-			imu.ChannelOutput(channel, val);
+			// imu.ChannelOutput(channel, val);
 			// DS20060829 Allow other stuff too
 			ProcessChannel14(val);
 		}
@@ -777,8 +893,39 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 
 	// Various control bits
 	case 012:
-		scdu.ChannelOutput(channel, val);
-		tcdu.ChannelOutput(channel, val);
+		ogcdu.ProcessChannel12(val);
+		mgcdu.ProcessChannel12(val);
+		igcdu.ProcessChannel12(val);
+		scdu.ProcessChannel12(val);
+		tcdu.ProcessChannel12(val);
+		imu.ChannelOutput(channel, val);
+		break;
+
+	// Fictious DINC channels
+	case 0202:
+		ogcdu.ProcessErrorChannel(val);
+		break;
+	case 0203:
+		mgcdu.ProcessErrorChannel(val);
+		break;
+	case 0204:
+		igcdu.ProcessErrorChannel(val);
+		break;
+	case 0205:
+		tcdu.ProcessErrorChannel(val);
+		break;
+	case 0206:
+		scdu.ProcessErrorChannel(val);
+		break;
+	case 0207:
+		ProcessLGCThrustCommands(val);
+		break;
+
+	// Process SHINC output of altimeter bits
+	case 0212:
+		ProcessAltMeterBits(val);
+		break;
+
 	// 174-177 are ficticious channels with the IMU CDU angles.
 	case 0174:  // FDAI ROLL CHANNEL
 	case 0175:  // FDAI PITCH CHANNEL
@@ -790,21 +937,21 @@ void ApolloGuidance::SetOutputChannel(int channel, ChannelValue val)
 
 	// DS20060225 Enable SPS gimbal control
 	// Ficticious channels 140 & 141 have the optics shaft & trunion angles.
-	case 0140:
-		ProcessChannel140(val);
-		scdu.ChannelOutput(channel, val);
-		break;
+	// case 0140:
+	// 	ProcessChannel140(val);
+	//	scdu.ChannelOutput(channel, val);
+	//	 	break;
 
-	case 0141:
-		ProcessChannel141(val);
-		tcdu.ChannelOutput(channel, val);
-		break;
-	case 0142:
-		ProcessChannel142(val);
-		break;
-	case 0143:
-		ProcessChannel143(val);
-		break;
+	// case 0141:
+	// 	ProcessChannel141(val);
+	// 	tcdu.ChannelOutput(channel, val);
+	// 	break;
+	// case 0142:
+	// 	ProcessLGCThrustCommands(val);
+	// 	break;
+	// case 0143:
+	// 	ProcessAltMeterBits(val);
+	// 	break;
 	case 0163:	//Virtual AGC DSKY stuff
 		ProcessChannel163(val);
 		break;
@@ -846,11 +993,11 @@ void ApolloGuidance::ProcessChannel141(ChannelValue val){
 }
 
 // Stub for LGC thrust drive
-void ApolloGuidance::ProcessChannel142(ChannelValue val) {
+void ApolloGuidance::ProcessLGCThrustCommands(ChannelValue val) {
 }
 
 // Stub for LGC altitude meter drive
-void ApolloGuidance::ProcessChannel143(ChannelValue val) {
+void ApolloGuidance::ProcessAltMeterBits(ChannelValue val) {
 }
 
 // DS20060308 Stub for FDAI
@@ -860,12 +1007,18 @@ void ApolloGuidance::ProcessIMUCDUErrorCount(int channel, ChannelValue val){
 void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
 }
 
+void ApolloGuidance::SaveVesselSpecific(FILEHANDLE scn) {
+}
+void ApolloGuidance::LoadVesselSpecific(char *line) {
+}
+
 void ApolloGuidance::GenerateHandrupt() {
 	GenerateHANDRUPT(&vagc);
 }
 
 // DS20060402 DOWNRUPT
 void ApolloGuidance::GenerateDownrupt(){
+	//oapiWriteLog("DOWNRUPT");
 	GenerateDOWNRUPT(&vagc);
 }
 
@@ -1021,7 +1174,12 @@ int16_t ApolloGuidance::ConvertDecimalToAGCOctal(double x, bool highByte)
 void ChannelOutput (agc_t * State, int Channel, int Value) 
 
 {
-
+	// if (Channel == 014 || Channel>0x80) {
+	// 	char buf[256];
+	// 	int ival = State->InputChannel[014];
+	// 	sprintf(buf, "Ch:%04o Val:%06o ICh14:%06o", Channel, Value, ival);
+	// 	oapiWriteLog(buf);
+	// }
   // Some output channels have purposes within the CPU, so we have to
   // account for those separately.
   if (Channel == 7)

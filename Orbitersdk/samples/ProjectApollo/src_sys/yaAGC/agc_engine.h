@@ -264,6 +264,7 @@ extern long random (void);
 #define DSKY_EL_OFF   001000
 
 #define NUM_INTERRUPT_TYPES 10
+#define NUM_CNT_REGS 29
 
 // Max number of 15-bit words in a downlink-telemetry list.
 #define MAX_DOWNLINK_LIST 260
@@ -379,6 +380,10 @@ typedef struct
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
   int NextZ;                    // Next value for the Z register
   int ScalerCounter;            // Counter to keep track of scaler increment timing
+
+  int Scaler;                   // The Scaler itself, first 3 unnecessary bits are omitted.
+                                // The lowest order bit is FS04, so it is increasing  with 12.8kpps
+  unsigned ScalerChanged : 1;
   int ChannelRoutineCount;      // Counter to keep track of channel interface routine timing
   unsigned DskyTimer;           // Timer for DSKY-related timing
   unsigned DskyFlash;           // DSKY flash counter (0 = flash occurring)
@@ -387,6 +392,11 @@ typedef struct
   // integration squad wants.  The Virtual AGC code proper doesn't use it
   // in any way.
   void *agc_clientdata;
+
+  int CntrPendIdx;
+  int CntrReqP[NUM_CNT_REGS], CntrReqM[NUM_CNT_REGS];
+  int cntreqsum[NUM_CNT_REGS];
+  int rptreqsum[NUM_INTERRUPT_TYPES+1];
 #ifdef _DEBUG
   FILE *out_file;
 #endif
@@ -761,6 +771,25 @@ int CounterPINC (int16_t * Counter);
 int CounterPCDU (int16_t * Counter);
 int CounterMCDU (int16_t * Counter);
 int CounterDINC (agc_t *State, int CounterNum, int16_t * Counter);
+
+inline void setCntrReqP(agc_t *State, int idx) {
+	State->CntrReqP[idx] = 1;
+	State->CntrPendIdx = ((State->CntrPendIdx) > idx) ? idx : State->CntrPendIdx;
+}
+
+inline void setCntrReqM(agc_t *State, int idx) {
+	State->CntrReqM[idx] = 1;
+	State->CntrPendIdx = ((State->CntrPendIdx) > idx) ? idx : State->CntrPendIdx;
+}
+
+inline void setCntrPendIdx(agc_t *State) {
+	int idx;
+	for (idx = 0; idx < NUM_CNT_REGS; idx++) {
+		if (State->CntrReqP[idx] || State->CntrReqM[idx])
+			break;
+	}
+	State->CntrPendIdx = idx;
+}
 
 #endif // AGC_ENGINE_H
 

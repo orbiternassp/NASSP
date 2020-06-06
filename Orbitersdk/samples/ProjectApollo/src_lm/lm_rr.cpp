@@ -99,6 +99,9 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 		SignalStrengthQuadrant[i] = 0.0;
 		U_RRL[i] = _V(0.0, 0.0, 0.0);
 	}
+
+	if (lem->ApolloNo <= 11) enable_phase_bug = true;
+	else enable_phase_bug = false;
 }
 
 bool LEM_RR::IsDCPowered()
@@ -159,6 +162,10 @@ double LEM_RR::GetTransmitterPower()
 }
 
 void LEM_RR::Timestep(double simdt) {
+	lem->agc.tcdu.flg_enable_drive = false;
+	lem->agc.scdu.flg_enable_drive = false;
+	lem->agc.tcdu.flg_phase_bug = false;
+	lem->agc.scdu.flg_phase_bug = false;
 
 	// RR mesh animation
 	rr_proc[0] = shaftAngle / PI2;
@@ -216,19 +223,19 @@ void LEM_RR::Timestep(double simdt) {
 		RangeLock = false;
 		range = 0.0;
 		rate = 0.0;
-		if (val13[RadarActivity] == 1) {
-			int radarBits = 0;
-			if (val13[RadarA] == 1) { radarBits |= 1; }
-			if (val13[RadarB] == 1) { radarBits |= 2; }
-			if (val13[RadarC] == 1) { radarBits |= 4; }
-			switch (radarBits) {
-			case 2:
-			case 4:
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
-				break;
-			}
-		}
+		// if (val13[RadarActivity] == 1) {
+		// 	int radarBits = 0;
+		// 	if (val13[RadarA] == 1) { radarBits |= 1; }
+		// 	if (val13[RadarB] == 1) { radarBits |= 2; }
+		// 	if (val13[RadarC] == 1) { radarBits |= 4; }
+		// 	switch (radarBits) {
+		// 	case 2:
+		// 	case 4:
+		// 		lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+		// 		lem->agc.GenerateRadarupt();
+		// 		break;
+		// 	}
+		// }
 		return;
 	}
 
@@ -374,19 +381,21 @@ void LEM_RR::Timestep(double simdt) {
 	}
 
 	//Auto Tracking Logic
-	if (lem->RendezvousRadarRotary.GetState() == 0)
-	{
+	switch (lem->RendezvousRadarRotary.GetState()) {
+	case 0:
 		AutoTrackEnabled = true;
-	}
-	else if (lem->RendezvousRadarRotary.GetState() == 2 && val12[RRAutoTrackOrEnable] == 1)
-	{
-		AutoTrackEnabled = true;
-	}
-	else
-	{
+		lem->agc.tcdu.flg_phase_bug = enable_phase_bug;
+		lem->agc.scdu.flg_phase_bug = enable_phase_bug;
+		break;
+	case 2:
+		if (val12[RRAutoTrackOrEnable] == 1)
+			AutoTrackEnabled = true;
+		break;
+	default:
 		AutoTrackEnabled = false;
+		lem->agc.tcdu.flg_phase_bug = enable_phase_bug;
+		lem->agc.scdu.flg_phase_bug = enable_phase_bug;
 	}
-
 	//Frequency Lock
 	if (AutoTrackEnabled && SignalStrength > 0.375 && internalrange > 80.0*0.3048 && internalrange < 400.0*1852.0)
 	{
@@ -458,17 +467,20 @@ void LEM_RR::Timestep(double simdt) {
 			break;
 		case 2: // AGC
 			{
-				int pulses;
+				lem->agc.tcdu.flg_enable_drive = true;
+				lem->agc.scdu.flg_enable_drive = true;
 
-				pulses = lem->scdu.GetErrorCounter();
+				// int pulses;
 
-				shaftVel = (RR_SHAFT_STEP*pulses);
-				shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
-
-				pulses = lem->tcdu.GetErrorCounter();
-
-				trunnionVel = (RR_SHAFT_STEP*pulses);
-				trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
+				// pulses = lem->agc.scdu.GetErrorCounter();
+				// 
+				// shaftVel = (RR_SHAFT_STEP*pulses);
+				// shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
+				// 
+				// pulses = lem->agc.tcdu.GetErrorCounter();
+				// 
+				// trunnionVel = (RR_SHAFT_STEP*pulses);
+				// trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
 			}
 			break;
 		}
@@ -525,7 +537,24 @@ void LEM_RR::Timestep(double simdt) {
 	//sprintf(oapiDebugString(), "Auto %d FreqLock %d Timer %f RLock %d DataGood %d", AutoTrackEnabled, FrequencyLock, RangeLockTimer, RangeLock, radarDataGood);
 
 	//Limits
-
+	// int
+	// 	cdut = lem->agc.vagc.Erasable[0][035],
+	// 	cdus = lem->agc.vagc.Erasable[0][036],
+	// 	cdutcmd = lem->agc.vagc.Erasable[0][053],
+	// 	cduscmd = lem->agc.vagc.Erasable[0][054];
+	// sprintf(oapiDebugString(), "tang:%6lf sang:%6lf cdut:%6d cdus:%6d cdutcmd:%6d cduscmd:%6d terr:%4d serr:%4d c12:%05o %s %s", 
+	// 	trunnionAngle / RAD, 
+	// 	shaftAngle / RAD,
+	// 	cdut,
+	// 	cdus,
+	// 	cdutcmd,
+	// 	cduscmd,
+	// 	lem->agc.tcdu.GetErrorCounter(),
+	// 	lem->agc.scdu.GetErrorCounter(),
+	// 	lem->agc.GetOutputChannel(012),
+	// 	lem->agc.tcdu.flg_phase_bug ? "T" : "F",
+	// 	lem->agc.scdu.flg_phase_bug ? "T" : "F"
+	// 	);
 	if (trunnionAngle > 70.0*RAD)
 	{
 		trunnionVel = 0.0;
@@ -558,8 +587,8 @@ void LEM_RR::Timestep(double simdt) {
 		mode = 2;
 	}
 
-	lem->tcdu.SetReadCounter(trunnionAngle);
-	lem->scdu.SetReadCounter(shaftAngle);
+	lem->agc.tcdu.UpdateAngle();
+	lem->agc.scdu.UpdateAngle();
 
 	if (lem->RendezvousRadarRotary.GetState() == 2)
 	{
@@ -599,70 +628,93 @@ void LEM_RR::Timestep(double simdt) {
 		*/
 
 		// The computer wants something from the radar.
-		if (val13[RadarActivity] == 1) {
-			int radarBits = 0;
-			if (val13[RadarA] == 1) { radarBits |= 1; }
-			if (val13[RadarB] == 1) { radarBits |= 2; }
-			if (val13[RadarC] == 1) { radarBits |= 4; }
-			switch (radarBits) {
-			case 1:
-				// LR (LR VEL X)
-				// Not our problem
-				break;
-			case 2:
-				// RR RANGE RATE
-				// Our center point is at 17000 counts.
-				// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
-				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0 - (rate / 0.191361));
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
-				ruptSent = 2;
+	//	if (val13[RadarActivity] == 1) {
+	//		int radarBits = 0;
+	//		if (val13[RadarA] == 1) { radarBits |= 1; }
+	//		if (val13[RadarB] == 1) { radarBits |= 2; }
+	//		if (val13[RadarC] == 1) { radarBits |= 4; }
+	//		switch (radarBits) {
+	//		case 1:
+	//			// LR (LR VEL X)
+	//			// Not our problem
+	//			break;
+	//		case 2:
+	//			// RR RANGE RATE
+	//			// Our center point is at 17000 counts.
+	//			// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
+	//			lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(17000.0 - (rate / 0.191361));
+	//			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+	//			lem->agc.GenerateRadarupt();
+	//			ruptSent = 2;
 
-				break;
-			case 3:
-				// LR (LR VEL Z)
-				// Not our problem
-				break;
-			case 4:
-				// RR RANGE
-				// We use high scale above 50.6nm, and low scale below that.
-				if (range > 93700) {
-					// HI SCALE
-					// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
-					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 22.8722);
-				}
-				else {
-					// LO SCALE
-					// Should be 9.38 feet/bit
-					lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 2.85902);
-				}
-				lem->agc.SetInputChannelBit(013, RadarActivity, 0);
-				lem->agc.GenerateRadarupt();
-				ruptSent = 4;
+	//			break;
+	//		case 3:
+	//			// LR (LR VEL Z)
+	//			// Not our problem
+	//			break;
+	//		case 4:
+	//			// RR RANGE
+	//			// We use high scale above 50.6nm, and low scale below that.
+	//			if (range > 93700) {
+	//				// HI SCALE
+	//				// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
+	//				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 22.8722);
+	//			}
+	//			else {
+	//				// LO SCALE
+	//				// Should be 9.38 feet/bit
+	//				lem->agc.vagc.Erasable[0][RegRNRAD] = (int16_t)(range / 2.85902);
+	//			}
+	//			lem->agc.SetInputChannelBit(013, RadarActivity, 0);
+	//			lem->agc.GenerateRadarupt();
+	//			ruptSent = 4;
 
-				break;
-			case 5:
-				// LR (LR VEL Y)
-				// Not our problem
-				break;
-			case 7:
-				// LR (LR RANGE)
-				// Not our problem
-				break;
-				/*
-				default:
-				sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
-				*/
-			}
+	//			break;
+	//		case 5:
+	//			// LR (LR VEL Y)
+	//			// Not our problem
+	//			break;
+	//		case 7:
+	//			// LR (LR RANGE)
+	//			// Not our problem
+	//			break;
+	//			/*
+	//			default:
+	//			sprintf(oapiDebugString(),"%s BADBITS",debugmsg);
+	//			*/
+	//		}
 
-		}
-		else {
-			ruptSent = 0;
-		}
+	//	}
+	//	else {
+	//		ruptSent = 0;
+	//	}
 	}
 
 	//sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
+}
+
+int LEM_RR::GetRadarData(int radarB, int radarC) {
+	if (radarB)
+		// RR RANGE RATE
+		// Our center point is at 17000 counts.
+		// Counts are 0.627826 F/COUNT, negative = positive rate, positive = negative rate
+		return  (int)(17000.0 - (rate / 0.191361));
+	else if (radarC) {
+		// RR RANGE
+		// We use high scale above 50.6nm, and low scale below that.
+		if (range > 93700) {
+			// HI SCALE
+			// Docs says this should be 75.04 feet/bit, or 22.8722 meters/bit
+			return (int)(range / 22.8722);
+		}
+		else {
+			// LO SCALE
+			// Should be 9.38 feet/bit
+			return (int)(range / 2.85902);
+		}
+	}
+		
 }
 
 void LEM_RR::SystemTimestep(double simdt) {
@@ -731,6 +783,7 @@ void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "RR_RADARDATAGOOD", radarDataGood);
 	papiWriteScenario_double(scn, "RR_RANGE", range);
 	papiWriteScenario_double(scn, "RR_RATE", rate);
+	papiWriteScenario_bool(scn, "RR_ENABLEPHASEBUG", enable_phase_bug);
 	oapiWriteLine(scn, end_str);
 }
 
@@ -750,5 +803,6 @@ void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "RR_RADARDATAGOOD", radarDataGood);
 		papiReadScenario_double(line, "RR_RANGE", range);
 		papiReadScenario_double(line, "RR_RATE", rate);
+		papiReadScenario_bool(line, "RR_ENABLEPHASEBUG", enable_phase_bug);
 	}
 }

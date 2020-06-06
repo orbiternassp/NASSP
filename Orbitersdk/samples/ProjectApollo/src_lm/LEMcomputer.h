@@ -27,6 +27,7 @@
 #include "thread.h"
 
 class LEM;
+class LEM_RR;
 
 ///
 /// \ingroup AGC
@@ -38,7 +39,7 @@ class LEMcomputer: public ApolloGuidance
 {
 public:
 
-	LEMcomputer(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p);
+	LEMcomputer(SoundLib &s, DSKY &display, IMU &im, LEM_RR &lm_rr, PanelSDK &p);
 	virtual ~LEMcomputer();
 
 	bool ReadMemory(unsigned int loc, int &val);
@@ -68,10 +69,17 @@ protected:
 	void ProcessIMUCDUReadCount(int channel, int val);
 	void ProcessChannel140(ChannelValue val);
 	void ProcessChannel141(ChannelValue val);
-	void ProcessChannel142(ChannelValue val);
-	void ProcessChannel143(ChannelValue val);
+	void ProcessLGCThrustCommands(ChannelValue val);
+	void ProcessAltMeterBits(ChannelValue val);
 	void ProcessChannel34(ChannelValue val);
+	void SaveVesselSpecific(FILEHANDLE scn);
+	void LoadVesselSpecific(char *line);
 
+	unsigned ffactv : 1;
+	unsigned ffradgtset : 1;
+	unsigned ffaltgtset : 1;
+	unsigned rdrcnt : 4;
+	int rdrval, altval;
 	//
 	// log file for autoland debugging
 	//

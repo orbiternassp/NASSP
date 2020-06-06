@@ -130,13 +130,13 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pLEM
 		}
 	}
 
-    if (pdidoi->guidType == GUID_RzAxis) {
+    /*if (pdidoi->guidType == GUID_RzAxis) {
 		if (lem->js_current == lem->rhc_id) {
 			lem->rhc_rot_id = 2;
 		} else {
 			lem->thc_rot_id = 2;
 		}
-	}
+	}*/
 
     if (pdidoi->guidType == GUID_POV) {
 		if (lem->js_current == lem->rhc_id) {
@@ -188,7 +188,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	RCSHeliumSupplyAPyrosFeeder("RCS-Helium-Supply-A-Pyros-Feeder", Panelsdk),
 	RCSHeliumSupplyBPyros("RCS-Helium-Supply-B-Pyros", Panelsdk),
 	RCSHeliumSupplyBPyrosFeeder("RCS-Helium-Supply-B-Pyros-Feeder", Panelsdk),
-	agc(soundlib, dsky, imu, scdu, tcdu, Panelsdk),
+	agc(soundlib, dsky, imu, RR, Panelsdk),
 	CSMToLEMPowerSource("CSMToLEMPower", Panelsdk),
 	ACVoltsAttenuator("AC-Volts-Attenuator", 62.5, 125.0, 20.0, 40.0),
 	RadarSignalStrengthAttenuator("RadarSignalStrengthAttenuator", 0.0, 5.0, 0.0, 5.0),
@@ -196,8 +196,6 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
 	imu(agc, Panelsdk),
-	scdu(agc, RegOPTX, 0140, 0),
-	tcdu(agc, RegOPTY, 0141, 0),
 	aea(Panelsdk, deda),
 	deda(this,soundlib, aea),
 	CWEA(soundlib, Bclick),
@@ -1301,12 +1299,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, IMU_START_STRING, sizeof(IMU_START_STRING))) {
 			imu.LoadState(scn);
 		}
-		else if (!strnicmp(line, "SCDU_START", sizeof("SCDU_START"))) {
-			scdu.LoadState(scn, "CDU_END");
-		}
-		else if (!strnicmp(line, "TCDU_START", sizeof("TCDU_START"))) {
-			tcdu.LoadState(scn, "CDU_END");
-		}
 		else if (!strnicmp(line, "DEDA_START", sizeof("DEDA_START"))) {
 			deda.LoadState(scn, "DEDA_END");
 		}
@@ -1741,8 +1733,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	dsky.SaveState(scn, DSKY_START_STRING, DSKY_END_STRING);
 	agc.SaveState(scn);
 	imu.SaveState(scn);
-	scdu.SaveState(scn, "SCDU_START", "CDU_END");
-	tcdu.SaveState(scn, "TCDU_START", "CDU_END");
 	deda.SaveState(scn, "DEDA_START", "DEDA_END");
 	if (!NoAEA)
 	{

@@ -81,6 +81,7 @@ class IU;
 class CSMToIUConnector;
 class CSMToSIVBControlConnector;
 class CDU;
+class CMOptics;
 
 //
 // Class definition.
@@ -110,7 +111,7 @@ public:
 	/// \param i The launch vehicle Instrument Unit connector for the launch vehicle autopilot.
 	/// \param sivb The CSM to SIVb command connector (e.g. for fuel venting).
 	///
-	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CDU &sc, CDU &tc, PanelSDK &p);
+	CSMcomputer(SoundLib &s, DSKY &display, DSKY &display2, IMU &im, CMOptics &optics, PanelSDK &p);
 	virtual ~CSMcomputer();
 
 	bool ReadMemory(unsigned int loc, int &val);
@@ -175,8 +176,8 @@ public:
 	void Init(Saturn *vessel);										// Initialization
 	void TimeStep(double simdt);                                    // Timestep
 	void SystemTimestep(double simdt);
-	void CMCShaftDrive(int val, int ch12);                          // CMC pulses
-	void CMCTrunionDrive(int val, int ch12); 
+	// void CMCShaftDrive(int val, int ch12);                          // CMC pulses
+	// void CMCTrunionDrive(int val, int ch12); 
 	bool PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits);		// Update panel image
 	bool PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
 	void OpticsSwitchToggled();
@@ -197,8 +198,8 @@ public:
 	double TeleTrunion;												// SCT Trunion
 	double TargetShaft;												// Reserved
 	double TargetTrunion;											// Reserved
-	double ShaftMoved;												// Movement counters for manual mode
-	double TrunionMoved;
+	// double ShaftMoved;												// Movement counters for manual mode
+	// double TrunionMoved;
 	double dShaft;
 	double dTrunion;
 	bool SextDualView;												// Toggle logical for sextant dual-view

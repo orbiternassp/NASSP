@@ -31,7 +31,7 @@
 
 class DSKY;
 class IMU;
-class CDU;
+//class CDU;
 class PanelSDK;
 
 #include <bitset>
@@ -40,6 +40,7 @@ class PanelSDK;
 #include "control.h"
 #include "yaAGC/agc_engine.h"
 #include "thread.h"
+#include "cdu.h"
 
 
 typedef std::bitset<16> ChannelValue;
@@ -60,7 +61,7 @@ public:
 	/// \param im Spacecraft Inertial Measurement Unit.
 	/// \param p Panel SDK we're connected to.
 	///
-	ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU &tc, PanelSDK &p);
+	ApolloGuidance(bool flgCSM, SoundLib &s, DSKY &display, IMU &im, /*CDU &sc, CDU &tc,*/ PanelSDK &p);
 
 	///
 	/// \brief Destructor.
@@ -341,10 +342,12 @@ protected:
 	virtual void ProcessChannel34(ChannelValue val);
 	virtual void ProcessChannel140(ChannelValue val);
 	virtual void ProcessChannel141(ChannelValue val);
-	virtual void ProcessChannel142(ChannelValue val);
-	virtual void ProcessChannel143(ChannelValue val);
+	virtual void ProcessLGCThrustCommands(ChannelValue val);
+	virtual void ProcessAltMeterBits(ChannelValue val);
 	virtual void ProcessChannel163(ChannelValue val);
 	virtual void ProcessIMUCDUErrorCount(int channel, ChannelValue val);
+	virtual void SaveVesselSpecific(FILEHANDLE scn);
+	virtual void LoadVesselSpecific(char *line);
 	public: virtual void GenerateHandrupt();
 	public: virtual void GenerateDownrupt();
 	public: virtual void GenerateUprupt();
@@ -383,8 +386,11 @@ protected:
 	///
 	IMU &imu;
 
-	CDU &tcdu;
-	CDU &scdu;
+	CDU ogcdu;
+	CDU mgcdu;
+	CDU igcdu;
+	CDU tcdu;
+	CDU scdu;
 
 	//
 	// Program data.
@@ -398,7 +404,7 @@ protected:
 	double LastTimestep;
 	double LastCycled;
 	double CurrentTimestep;
-
+	
 	bool isFirstTimestep;
 
 	bool isLGC;
@@ -409,7 +415,7 @@ protected:
 
 
 #define MAX_INPUT_CHANNELS	0200
-#define MAX_OUTPUT_CHANNELS	0200
+#define MAX_OUTPUT_CHANNELS	0400
 
 	///
 	/// \brief AGC output channel values.
@@ -472,6 +478,8 @@ protected:
 	///
 	bool ProgAlarm;
 	bool GimbalLockAlarm;
+
+	double sumdt = 0.0, stat1 = 0.0, stat2 = 0.0;
 };
 
 //
