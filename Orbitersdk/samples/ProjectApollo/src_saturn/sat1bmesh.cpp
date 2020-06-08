@@ -703,7 +703,6 @@ void Saturn1b::SeparateStage (int new_stage)
 			S1Config.RetroNum = 4;
 			S1Config.EmptyMass = SI_EmptyMass;
 			S1Config.MainFuelKg = GetPropellantMass(ph_1st);
-			S1Config.MissionTime = MissionTime;
 			S1Config.VehicleNo = VehicleNo;
 			S1Config.ISP_FIRST_SL = ISP_FIRST_SL;
 			S1Config.ISP_FIRST_VAC = ISP_FIRST_VAC;

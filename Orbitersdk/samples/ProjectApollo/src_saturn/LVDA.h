@@ -63,6 +63,7 @@ public:
 	VECTOR3 GetLVIMUPIPARegisters();
 	bool GetLVIMUFailure();
 	bool GetGuidanceReferenceFailure();
+	VECTOR3 GetTheodoliteAlignment(double azimuth);
 
 	bool GeneralizedSwitchSelector(int stage, int channel);
 	bool TimebaseUpdate(double dt);

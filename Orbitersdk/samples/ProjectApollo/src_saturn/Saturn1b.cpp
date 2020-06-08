@@ -480,7 +480,7 @@ void Saturn1b::CreateStageSpecificSystems()
 {
 	if (stage <= LAUNCH_STAGE_ONE)
 	{
-		sib = new SIBSystems(this, th_1st, ph_1st, SIBSIVBSepPyros, LaunchS, SShutS, contrailLevel);
+		sib = new SIBSystems(this, th_1st, ph_1st, SIBSIVBSepPyros, LaunchS, SShutS);
 	}
 	if (stage < CSM_LEM_STAGE)
 	{

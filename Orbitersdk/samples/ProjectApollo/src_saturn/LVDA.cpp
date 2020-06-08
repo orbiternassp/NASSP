@@ -86,6 +86,11 @@ VECTOR3 LVDA::GetLVIMUAttitude()
 	return iu->GetLVIMU()->GetTotalAttitude();
 }
 
+VECTOR3 LVDA::GetTheodoliteAlignment(double azimuth)
+{
+	return iu->GetTheodoliteAlignment(azimuth);
+}
+
 void LVDA::ZeroLVIMUPIPACounters()
 {
 	iu->GetLVIMU()->ZeroPIPACounters();

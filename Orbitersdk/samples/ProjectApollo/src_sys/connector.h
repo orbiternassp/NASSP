@@ -41,6 +41,8 @@ enum ConnectorType
 	CHECKLIST_DATA_INTERFACE,	///< Data connector from checklist controller to vessel
 	PAYLOAD_SLA_CONNECT,		///< Passes commands and data between payload and SIVb.
 	CSM_PAYLOAD_COMMAND,		///< Docking connector between CSM and Payload
+	SIVB_SI_COMMAND,			///< Docking connector between S-IVB and S-IB/S-II
+	SII_SIC_COMMAND,			///< Docking connector between S-II and S-IC
 };
 
 #define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.
@@ -333,6 +335,11 @@ protected:
 	/// \return True if registered, false if not (e.g. too many registered already).
 	///
 	bool RegisterConnector(int port, Connector *c);
+
+	///
+	///
+	///
+	bool UpdateConnectorDockingPort(int port, Connector *c);
 
 #define PACV_N_VALIDATION	0x5a715a75
 

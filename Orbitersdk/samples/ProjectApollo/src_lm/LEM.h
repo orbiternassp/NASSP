@@ -565,6 +565,7 @@ public:
 	void SetTrackLight();
 	void SetDockingLights();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
+	int GetApolloNo() { return ApolloNo; }
 	UINT GetStage() { return stage; }
 	virtual double GetAscentStageMass();
 	virtual void SendVHFRangingSignal(Saturn *sat, bool isAcquiring);
@@ -798,6 +799,7 @@ protected:
 	void DefineTouchdownPoints(int s);
 
 	void CalculatePMIandCOG(VECTOR3 &PMI, VECTOR3 &COG);
+	void CreateAirfoils();
 
 	void SystemsTimestep(double simt, double simdt);
 	void SystemsInit();
@@ -808,8 +810,6 @@ protected:
 	// Save/Load support functions.
 	//
 
-	virtual void SaveLEMSaturn(FILEHANDLE scn) {};
-	virtual void LoadLEMSaturn(FILEHANDLE scn) {};
 	int GetCSwitchState();
 	void SetCSwitchState(int s);
 
@@ -1616,7 +1616,6 @@ protected:
 
 	bool ToggleEva;
 	bool CDREVA_IP;
-	bool InvertStageBit;
 
 	int CDRinPLSS;
 	int LMPinPLSS;

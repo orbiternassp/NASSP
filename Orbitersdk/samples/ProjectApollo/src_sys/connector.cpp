@@ -297,6 +297,21 @@ bool ProjectApolloConnectorVessel::RegisterConnector(int port, Connector *c)
 	return false;
 }
 
+bool ProjectApolloConnectorVessel::UpdateConnectorDockingPort(int port, Connector *c)
+{
+	int i;
+	for (i = 0; i < PACV_N_CONNECTORS; i++)
+	{
+		if (c && ConnectorList[i].c == c)
+		{
+			ConnectorList[i].port = port;
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void ProjectApolloConnectorVessel::UndockConnectors(int port)
 
 {

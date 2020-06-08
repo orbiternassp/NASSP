@@ -278,6 +278,7 @@ public:
 	bool GetSIVBEngineOut();
 	bool IsUmbilicalConnected();
 	bool GetSCControlPoweredFlight() { return SCControlPoweredFlight; }
+	VECTOR3 GetTheodoliteAlignment(double azimuth);
 
 	virtual void ConnectUmbilical(IUUmbilical *umb);
 	virtual void DisconnectUmbilical();

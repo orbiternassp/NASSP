@@ -3338,9 +3338,7 @@ void RTCC::LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool asc)
 	if (asc)
 	{
 		if (!stricmp(v->GetClassName(), "ProjectApollo\\LEM") ||
-			!stricmp(v->GetClassName(), "ProjectApollo/LEM") ||
-			!stricmp(v->GetClassName(), "ProjectApollo\\LEMSaturn") ||
-			!stricmp(v->GetClassName(), "ProjectApollo/LEMSaturn")) {
+			!stricmp(v->GetClassName(), "ProjectApollo/LEM")) {
 			LEM *lem = (LEM *)v;
 			LMmass = lem->GetAscentStageMass();
 		}

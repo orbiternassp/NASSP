@@ -99,6 +99,40 @@ BOOL WINAPI DllMain (HINSTANCE hModule,
 	return TRUE;
 }
 
+DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
+
+{
+	LEM *lem;
+
+	if (!refcount++) {
+		LEMLoadMeshes();
+	}
+
+	// VESSELSOUND 
+
+	lem = new LEM(hvessel, flightmodel);
+	return static_cast<VESSEL *> (lem);
+}
+
+DLLCLBK void ovcExit(VESSEL *vessel)
+
+{
+	TRACESETUP("ovcExit LMPARKED");
+
+	--refcount;
+
+	if (!refcount) {
+		TRACE("refcount == 0");
+
+		//
+		// This code could tidy up allocations when refcount == 0
+		//
+
+	}
+
+	if (vessel) delete static_cast<LEM *> (vessel);
+}
+
 // DS20060302 DX8 callback for enumerating joysticks
 BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pLEM)
 {
@@ -294,7 +328,6 @@ void LEM::Init()
 	viewpos = LMVIEW_CDR;
 	stage = 0;
 	status = 0;
-	InvertStageBit = false;
 	CDRinPLSS = 0;
 	LMPinPLSS = 0;
 
@@ -1063,9 +1096,8 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	if (ph_RCSB != NULL) { CurrentFuelWeight += GetPropellantMass(ph_RCSB); }
 	// If the weight has changed by more than this value, update things.
 	// The value is to be adjusted such that the updates are not too frequent (impacting framerate)
-	//   but are sufficiently fine to keep the LGC happy.
-	//Require ph_Dsc to be defined for now, to keep the LEMSaturn class happy
-	if (ph_Dsc && (LastFuelWeight - CurrentFuelWeight) > 100.0) {
+	// but are sufficiently fine to keep the LGC happy.
+	if ((LastFuelWeight - CurrentFuelWeight) > 100.0) {
 		// Update physical parameters
 		VECTOR3 pmi, CoG;
 		CalculatePMIandCOG(pmi, CoG);
@@ -1558,9 +1590,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
-		else if (!strnicmp(line, "LEMSATURN_BEGIN", 15)) {
-			LoadLEMSaturn(scn);
-		}
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
 		{
 			checkControl.load(scn);
@@ -1609,6 +1638,8 @@ void LEM::clbkPostCreation()
 		DelDock(docksla);
 		docksla = NULL;
 	}
+
+	CreateAirfoils();
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
@@ -1650,6 +1681,7 @@ void LEM::clbkDockEvent(int dock, OBJHANDLE connected)
 		else
 		{
 			UndockConnectors(dock);
+			CreateAirfoils();
 		}
 	}
 }
@@ -1902,7 +1934,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	atca.SaveState(scn);
 	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
 	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);
-	SaveLEMSaturn(scn);
 	checkControl.save(scn);
 }
 

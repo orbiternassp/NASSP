@@ -636,7 +636,7 @@ void LVDC1B::TimeStep(double simdt) {
 
 				if (lvda.SpacecraftSeparationIndication())
 				{
-					LVDC_Stop = true;
+					//LVDC_Stop = true;
 				}
 
 				break;
@@ -664,7 +664,7 @@ void LVDC1B::TimeStep(double simdt) {
 
 				if (lvda.SpacecraftSeparationIndication())
 				{
-					LVDC_Stop = true;
+					//LVDC_Stop = true;
 				}
 
 				break;
@@ -673,7 +673,7 @@ void LVDC1B::TimeStep(double simdt) {
 
 				SwitchSelectorProcessing(SSTTB[3]);
 
-				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && lvda.GetStage() == LAUNCH_STAGE_SIVB){
+				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && (lvda.GetStage() == LAUNCH_STAGE_SIVB || lvda.GetStage() == STAGE_ORBIT_SIVB)){
 					S4B_IGN=true;
 				}
 
@@ -702,7 +702,7 @@ void LVDC1B::TimeStep(double simdt) {
 
 				if (lvda.SpacecraftSeparationIndication())
 				{
-					LVDC_Stop = true;
+					//LVDC_Stop = true;
 				}
 
 				break;
@@ -848,10 +848,10 @@ void LVDC1B::TimeStep(double simdt) {
 
 			MX_G = mul(MX_B,MX_A); // Matrix Multiply
 
-			Y_u= -(PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
+			Y_u= (PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
 			R = pow(pow(PosS.x,2)+pow(PosS.y,2)+pow(PosS.z,2),0.5);  //instantaneous distance from earth's center
 			S = (-mu/pow(R,3))*(1+J*pow(a/R,2)*(1-5*pow(Y_u/R,2)));
-			P = (mu/pow(R,2))*pow(a/R,2) *((2*J*Y_u)/R);
+			P = (-mu / pow(R, 2))*pow(a / R, 2) *(2.0 * J*(Y_u / R));
 			ddotG_last.x = PosS.x*S+MX_A.m21*P; //gravity acceleration vector
 			ddotG_last.y = PosS.y*S+MX_A.m22*P;
 			ddotG_last.z = PosS.z*S+MX_A.m23*P;
@@ -862,7 +862,9 @@ void LVDC1B::TimeStep(double simdt) {
 			sinceLastIGM = 0;
 
 			lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
-			lvda.DriveLVIMUGimbals(Azimuth - A_zL*RAD, 0, 0);	// Now bring to alignment
+			VECTOR3 align = lvda.GetTheodoliteAlignment(Azimuth);
+			lvda.DriveLVIMUGimbals(align.x, align.y, align.z); // Now bring to alignment
+			fprintf(lvlog, "Initial Attitude: %f %f %f \r\n", align.x*DEG, align.y*DEG, align.z*DEG);
 			lvda.ReleaseLVIMU();							// Release IMU
 			CountPIPA = true;								// Enable PIPA storage
 
@@ -890,10 +892,10 @@ void LVDC1B::TimeStep(double simdt) {
 			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2.0 + (DotG_last.x + ddotG_last.x * dt_c / 2.0)*dt_c + Dot0.x * dt_c; //position vector
 			PosS.y += (DotM_act.y + DotM_last.y) * dt_c / 2.0 + (DotG_last.y + ddotG_last.y * dt_c / 2.0)*dt_c + Dot0.y * dt_c;
 			PosS.z += (DotM_act.z + DotM_last.z) * dt_c / 2.0 + (DotG_last.z + ddotG_last.z * dt_c / 2.0)*dt_c + Dot0.z * dt_c;
-			Y_u= -(PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
+			Y_u= (PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
 			R = pow(pow(PosS.x,2)+pow(PosS.y,2)+pow(PosS.z,2),0.5); //instantaneous distance from earth's center
 			S = (-mu/pow(R,3))*(1+J*pow(a/R,2)*(1-5*pow(Y_u/R,2)));
-			P = (mu/pow(R,2))*pow(a/R,2) *((2*J*Y_u)/R);
+			P = (-mu/pow(R,2))*pow(a/R,2) *(2.0*J*(Y_u/R));
 			ddotG_act.x = PosS.x*S+MX_A.m21*P; //gravity acceleration vector
 			ddotG_act.y = PosS.y*S+MX_A.m22*P;
 			ddotG_act.z = PosS.z*S+MX_A.m23*P;
@@ -5206,20 +5208,22 @@ void LVDCSV::TimeStep(double simdt) {
 			fprintf(lvlog, "Initial Position = %f %f %f\r\n", PosS.x, PosS.y, PosS.z);
 			fprintf(lvlog, "Initial Velocity = %f %f %f\r\n", DotS.x, DotS.y, DotS.z);
 		
-			Y_u= -(PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
-			R = pow(pow(PosS.x,2)+pow(PosS.y,2)+pow(PosS.z,2),0.5); //instantaneous distance from earth's center
-			S = (-mu/pow(R,3))*(1+J*pow(a/R,2)*(1-5*pow(Y_u/R,2)));
-			P = (-mu/pow(R,2))*pow(a/R,2) *((2*J*Y_u)/R);
-			ddotG_last.x = PosS.x*S-MX_A.m21*P; //gravity acceleration vector
-			ddotG_last.y = PosS.y*S-MX_A.m22*P;
-			ddotG_last.z = PosS.z*S-MX_A.m23*P;
+			Y_u= (PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
+			R = length(PosS); //instantaneous distance from earth's center
+			S = (-mu/pow(R,3))*(1.0+J*pow(a/R,2)*(1.0-5.0*pow(Y_u/R,2)));
+			P = (-mu / pow(R, 2))*pow(a / R, 2) *(2.0*J*(Y_u / R));
+			ddotG_last.x = PosS.x*S + MX_A.m21*P; //gravity acceleration vector
+			ddotG_last.y = PosS.y*S + MX_A.m22*P;
+			ddotG_last.z = PosS.z*S + MX_A.m23*P;
 			DotG_last = DotS;
 			PCommandedAttitude.x = (1.5* PI) + Azimuth;
 			PCommandedAttitude.y = 0;
 			PCommandedAttitude.z = 0;
 
 			lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
-			lvda.DriveLVIMUGimbals(Azimuth - PI05, 0, 0);	// Now bring to alignment 
+			VECTOR3 align = lvda.GetTheodoliteAlignment(Azimuth);
+			lvda.DriveLVIMUGimbals(align.x, align.y, align.z);	// Now bring to alignment 
+			fprintf(lvlog, "Initial Attitude: %f %f %f \r\n", align.x*DEG, align.y*DEG, align.z*DEG);
 			lvda.ReleaseLVIMU();							// Release IMU
 			CountPIPA = true;								// Enable PIPA storage	
 
@@ -5251,13 +5255,13 @@ void LVDCSV::TimeStep(double simdt) {
 				DotM_act += lvda.GetLVIMUPIPARegisters();
 				Fm = pow((pow(((DotM_act.x - DotM_last.x) / dt_c), 2) + pow(((DotM_act.y - DotM_last.y) / dt_c), 2) + pow(((DotM_act.z - DotM_last.z) / dt_c), 2)), 0.5);
 				PosS = PosS + (DotM_act + DotM_last) * dt_c / 2.0 + (DotG_last + ddotG_last * dt_c / 2.0)*dt_c; //position vector
-				Y_u = -(PosS.x*MX_A.m21 + PosS.y*MX_A.m22 + PosS.z*MX_A.m23); //position component south of equator
 				R = length(PosS); //instantaneous distance from earth's center
+				Y_u = (PosS.x*MX_A.m21 + PosS.y*MX_A.m22 + PosS.z*MX_A.m23); //position component south of equator
 				S = (-mu / pow(R, 3))*(1.0 + J*pow(a / R, 2)*(1.0 - 5.0 * pow(Y_u / R, 2)));
-				P = (-mu / pow(R, 2))*pow(a / R, 2) *(2.0 * J*Y_u / R);
-				ddotG_act.x = PosS.x*S - MX_A.m21*P; //gravity acceleration vector
-				ddotG_act.y = PosS.y*S - MX_A.m22*P;
-				ddotG_act.z = PosS.z*S - MX_A.m23*P;
+				P = (-mu / pow(R, 2))*pow(a / R, 2) *(2.0 * J*(Y_u / R));
+				ddotG_act.x = PosS.x*S + MX_A.m21*P; //gravity acceleration vector
+				ddotG_act.y = PosS.y*S + MX_A.m22*P;
+				ddotG_act.z = PosS.z*S + MX_A.m23*P;
 				CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
 				DotG_act = DotG_last + (ddotG_act + ddotG_last)*dt_c / 2.0; //gravity velocity vector
 				DotS = DotM_act + DotG_act; //total velocity vector

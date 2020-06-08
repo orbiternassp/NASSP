@@ -39,7 +39,6 @@
 #include "IMU.h"
 #include "saturn.h"
 #include "LEM.h"
-#include "LEMSaturn.h"
 #include "Crawler.h"
 #include "sivb.h"
 #include "iu.h"
@@ -360,20 +359,21 @@ void UpdateClock()
 		int bytesRecv = SOCKET_ERROR;
 		char addr[256];
 		char buffer[8];
-		m_socket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );	
-		if ( m_socket == INVALID_SOCKET ) {
+		m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+		if (m_socket == INVALID_SOCKET) {
 			g_Data.updateClockReady = 0;
-			sprintf(debugWinsock,"ERROR AT SOCKET(): %ld", WSAGetLastError());
+			sprintf(debugWinsock, "ERROR AT SOCKET(): %ld", WSAGetLastError());
 			closesocket(m_socket);
 			return;
 		}
 		sprintf(addr, "127.0.0.1");
 		clientService.sin_family = AF_INET;
 		clientService.sin_addr.s_addr = inet_addr(addr);
-		if(g_Data.uplinkLEM > 0){ clientService.sin_port = htons( 14243 ); }else{ clientService.sin_port = htons( 14242 ); }
-		if (connect( m_socket, (SOCKADDR*) &clientService, sizeof(clientService)) == SOCKET_ERROR) {
+		if (g_Data.uplinkLEM > 0) { clientService.sin_port = htons(14243); }
+		else { clientService.sin_port = htons(14242); }
+		if (connect(m_socket, (SOCKADDR*)&clientService, sizeof(clientService)) == SOCKET_ERROR) {
 			g_Data.updateClockReady = 0;
-			sprintf(debugWinsock,"FAILED TO CONNECT, ERROR %ld",WSAGetLastError());
+			sprintf(debugWinsock, "FAILED TO CONNECT, ERROR %ld", WSAGetLastError());
 			closesocket(m_socket);
 			return;
 		}
@@ -391,22 +391,30 @@ void UpdateClock()
 		send_agc_key('5');
 		send_agc_key('E');
 		// reset clock
-		sprintf(buffer, "00000");		
+		sprintf(buffer, "00000");
 		send_agc_key('+');
 		uplink_word(buffer);
 		send_agc_key('+');
 		uplink_word(buffer);
 		send_agc_key('+');
-		uplink_word(buffer);		
+		uplink_word(buffer);
 		// Send until queue is empty, then continue 
 		// with V55 clock update
 		g_Data.connStatus = 2;
-	} else if (g_Data.connStatus == 2) {
+	}
+	else if (g_Data.connStatus == 2) {
 		// increment clock
 		g_Data.updateClockReady = 0;
 		char buffer[8];	
 		double mt;
-		if(g_Data.uplinkLEM > 0){ mt = g_Data.gorpVessel->GetMissionTime(); }else{ mt = g_Data.progVessel->GetMissionTime(); }
+		if(g_Data.uplinkLEM > 0)
+		{ 
+			mt = g_Data.gorpVessel->GetMissionTime();
+		}
+		else
+		{
+			mt = g_Data.progVessel->GetMissionTime();
+		}
 		char sign = '+';
 		if (mt < 0)
 			sign = '-';
@@ -594,9 +602,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD (w, 
 			g_Data.planet = crawler->GetGravityRef();
 	}
 	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEMSaturn")) {
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
 			lem = (LEM *)vessel;
 			g_Data.vessel = vessel;
 			g_Data.gorpVessel = lem;
@@ -656,6 +662,15 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 // Repaint the MFD
 void ProjectApolloMFD::Update (HDC hDC)
 {
+	/*if (g_Data.gorpVessel)
+	{
+		double agcclock = g_Data.gorpVessel->agc.vagc.Erasable[0][025] + g_Data.gorpVessel->agc.vagc.Erasable[0][024] * pow((double) 2., (double) 14.);
+		double iptr;
+		double fptr = modf(oapiGetSimMJD(), &iptr);
+		double desclock = fptr * 24.0*3600.0;
+		sprintf(oapiDebugString(), "%lf", desclock - agcclock / 100.0);
+	}*/
+
 	char buffer[100];
 
 	HDC hDCTemp = CreateCompatibleDC(hDC);
@@ -2491,13 +2506,6 @@ void ProjectApolloMFD::menuIUUplink()
 		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\Saturn1b") ||
 		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/Saturn1b")) {
 		Saturn *iuv = (Saturn *)g_Data.iuVessel;
-
-		iu = iuv->GetIU();
-	}
-	else if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/LEMSaturn"))
-	{
-		LEMSaturn *iuv = (LEMSaturn *)g_Data.iuVessel;
 
 		iu = iuv->GetIU();
 	}
