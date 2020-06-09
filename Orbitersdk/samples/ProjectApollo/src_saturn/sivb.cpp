@@ -1482,12 +1482,12 @@ void SIVB::clbkPostCreation()
 {
 	//Delete the connection to the lower stage (S-II or S-IB) if nothing is docked. S-IB/S-II are the active part of the connection, so there is no pyro to check.
 	//If putting stages together in the VAB or on the launchpad becomes supported (again) the docking port will have to be created again at that time
-	if (GetDockStatus(hDockSI) == NULL)
+	if (hDockSI && GetDockStatus(hDockSI) == NULL)
 	{
 		DelDock(hDockSI);
 		hDockSI = NULL;
 	}
-	if (SLADeployInitiator.Blown())
+	if (hDockCSM && SLADeployInitiator.Blown())
 	{
 		DelDock(hDockCSM);
 		hDockCSM = NULL;
