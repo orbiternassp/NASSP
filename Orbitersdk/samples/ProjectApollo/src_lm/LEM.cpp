@@ -130,13 +130,13 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pLEM
 		}
 	}
 
-    /*if (pdidoi->guidType == GUID_RzAxis) {
+    if (pdidoi->guidType == GUID_RzAxis) {
 		if (lem->js_current == lem->rhc_id) {
 			lem->rhc_rot_id = 2;
 		} else {
 			lem->thc_rot_id = 2;
 		}
-	}*/
+	}
 
     if (pdidoi->guidType == GUID_POV) {
 		if (lem->js_current == lem->rhc_id) {

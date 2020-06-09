@@ -1551,7 +1551,6 @@ void Saturn::JoystickTimestep()
 			rhc_x_pos = dx8_jstate[rhc_id].lX;
 			rhc_y_pos = dx8_jstate[rhc_id].lY;
 
-			rhc_rot_id = 0;
 			// Z-axis read.
 			if (rhc_rzx_id != -1 && rhc_rot_id == -1) { // Native Z-axis first unless rot is also set
 				rhc_rot_pos = dx8_jstate[rhc_id].lZ;
