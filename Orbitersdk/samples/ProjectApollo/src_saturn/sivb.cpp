@@ -153,9 +153,10 @@ void SIVbLoadMeshes()
 	seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 }
 
-SIVB::SIVB (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
-SLADeployInitiator("SLA-Deploy-Initiator",Panelsdk),
-LMSLASeparationInitiators("LM-SLA-Separation-Initiators",Panelsdk)
+SIVB::SIVB(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
+CSMLVSeparationInitiator("CSM-LV-Separation-Initiator", Panelsdk),
+LMSLASeparationInitiators("LM-SLA-Separation-Initiators", Panelsdk),
+SLAPanelDeployInitiator("SLA-Panel-Deploy-Initiator", Panelsdk)
 {
 	PanelSDKInitalised = false;
 
@@ -207,7 +208,6 @@ void SIVB::InitS4b()
 	LowRes = false;
 	IUSCContPermanentEnabled = true;
 	PayloadCreated = false;
-	SLASepFired = false;
 
 	ph_aps1 = 0;
 	ph_aps2 = 0;
@@ -222,7 +222,7 @@ void SIVB::InitS4b()
 	EmptyMass = 15000.0;
 	PayloadMass = 0.0;
 	MainFuel = 5000.0;
-	ApsFuel1Kg = ApsFuel1Kg = S4B_APS_FUEL_PER_TANK;
+	ApsFuel1Kg = ApsFuel2Kg = S4B_APS_FUEL_PER_TANK;
 
 	THRUST_THIRD_VAC = 1000.0;
 	ISP_THIRD_VAC = 300.0;
@@ -606,7 +606,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 	// Seperate or open the SLA panels.
 	//
 
-	if (SLASepFired)
+	if (SLAPanelDeployInitiator.Blown())
 	{
 		if (panelTimestepCount < 2) {
 			panelTimestepCount++;
@@ -957,7 +957,6 @@ int SIVB::GetMainState()
 	state.Payloaddatatransfer = Payloaddatatransfer;
 	state.IUSCContPermanentEnabled = IUSCContPermanentEnabled;
 	state.PayloadCreated = PayloadCreated;
-	state.SLASepFired = SLASepFired;
 
 	return state.word;
 }
@@ -1168,7 +1167,6 @@ void SIVB::SetMainState(int s)
 	Payloaddatatransfer = (state.Payloaddatatransfer != 0);
 	IUSCContPermanentEnabled = (state.IUSCContPermanentEnabled != 0);
 	PayloadCreated = (state.PayloadCreated != 0);
-	SLASepFired = (state.SLASepFired != 0);
 }
 
 void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
@@ -1487,7 +1485,7 @@ void SIVB::clbkPostCreation()
 		DelDock(hDockSI);
 		hDockSI = NULL;
 	}
-	if (hDockCSM && SLADeployInitiator.Blown())
+	if (hDockCSM && CSMLVSeparationInitiator.Blown())
 	{
 		DelDock(hDockCSM);
 		hDockCSM = NULL;
@@ -1619,8 +1617,9 @@ void SIVB::SetState(SIVBSettings &state)
 	}
 
 	State = SIVB_STATE_WAITING;
-	//Set this pyro as blown, otherwise the S-IVB wouldn't have been created by the Saturn class anyway
-	SLADeployInitiator.SetBlown(true);
+	//Set these pyros as blown, otherwise the S-IVB wouldn't have been created by the Saturn class anyway
+	CSMLVSeparationInitiator.SetBlown(true);
+	SLAPanelDeployInitiator.SetBlown(true);
 	//Set S-IVB here, including docking ports
 	SetS4b();
 	//docking port to CSM and S-IB/S-II got created in SetS4b, so now delete it again
@@ -1832,13 +1831,13 @@ void SIVB::StopSeparationPyros()
 
 void SIVB::StartSLASeparationPyros()
 {
-	SLASepFired = true;
+	SLAPanelDeployInitiator.SetBlown(true);
 }
 
 void SIVB::SeparateCSM()
 {
 	if (hDockCSM) {
-		SLADeployInitiator.SetBlown(true);
+		CSMLVSeparationInitiator.SetBlown(true);
 		UINT i;
 		if (GetDockingPortFromHandle(hDockCSM, i))
 		{

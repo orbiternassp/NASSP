@@ -677,7 +677,7 @@ void LVDC1B::TimeStep(double simdt) {
 					S4B_IGN=true;
 				}
 
-				if (LVDC_TB_ETime > 311.5 && MRS == false)
+				if (T_1 <= 0.0 && MRS == false)
 				{
 					MRS = true;
 				}

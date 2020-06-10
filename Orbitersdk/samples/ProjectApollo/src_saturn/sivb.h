@@ -223,7 +223,6 @@ public:
 			unsigned IUSCContPermanentEnabled:1;
 			unsigned PayloadCreated:1;
 			unsigned Payloaddatatransfer:1;
-			unsigned SLASepFired:1;
 		};
 		unsigned long word;
 	} MainState;
@@ -345,7 +344,7 @@ public:
 	///
 	void StopSeparationPyros();
 
-	virtual void StartSLASeparationPyros();
+	void StartSLASeparationPyros();
 	void SeparateCSM();
 
 protected:
@@ -423,7 +422,6 @@ protected:
 	bool LowRes;					///< Using low-res meshes.
 	bool IUSCContPermanentEnabled;
 	bool PayloadCreated;
-	bool SLASepFired;
 
 	double RotationLimit;			///< Panel rotation limit from 0.0 to 1.0 (1.0 = 180 degrees).
 	double CurrentThrust;			///< Current thrust level (0.0 to 1.0).
@@ -510,8 +508,9 @@ protected:
 
 	void HideAllMeshes();
 
-	Pyro SLADeployInitiator;
+	Pyro CSMLVSeparationInitiator;
 	Pyro LMSLASeparationInitiators;
+	Pyro SLAPanelDeployInitiator;
 };
 
 ///

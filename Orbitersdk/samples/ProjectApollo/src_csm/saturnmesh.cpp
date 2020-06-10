@@ -847,7 +847,6 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 
 	SIVB *SIVBVessel = static_cast<SIVB *> (oapiGetVesselInterface(hs4bM));
 	SIVBVessel->SetState(S4Config);
-	SIVBVessel->StartSLASeparationPyros();
 
 	PayloadDataTransfer = true;
 }
