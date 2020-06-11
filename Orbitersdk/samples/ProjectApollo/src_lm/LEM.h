@@ -105,6 +105,10 @@ enum LMRCSThrusters
 #define LM_VC_COMP_LIGHT_6		5   // DC Bus fault light
 #define LM_VC_COMP_LIGHT_7		6   // Bat fault light
 
+// Stage sequence relay lights
+#define LM_VC_STG_SEQ_A		    0   // Stage seq relay A
+#define LM_VC_STG_SEQ_B		    1   // Stage seq relay B
+
 // VC power failure light index
 #define LM_VC_PWRFAIL_LIGHT_1		0   // X-pointer left
 #define LM_VC_PWRFAIL_LIGHT_2  	    1   // Thrust
@@ -122,7 +126,7 @@ const double P2_TILT = 7.95581 * RAD;
 const double P3_TILT = 35.2509 * RAD;
 const double P4_TILT = 45.0663 * RAD;
 //const double P5_6_TILT = 10 * RAD;
-//const double P8_TILT = 10 * RAD;
+const double P8_TILT = 71.6 * RAD;
 const double P11R1_TILT = 326.84 * RAD;
 const double P11R2_TILT = 347.15 * RAD;
 const double P11R3_TILT =  0;
@@ -140,6 +144,7 @@ const VECTOR3	P1_CLICK = { 0, 0.0011, -0.0078 };
 const VECTOR3	P2_CLICK = { 0, 0.0011, -0.0078 };
 const VECTOR3	P3_CLICK = { 0, 0.0045, -0.0065 };
 const VECTOR3	P4_CLICK = { 0, 0.0056, -0.0056 };
+const VECTOR3	P8_CLICK = { 0.0005, 0.0015, 0 };
 const VECTOR3	P12_CLICK = { -0.0005, 0.0016, 0 };
 const VECTOR3	P14_CLICK = { -0.001, 0.0013, 0 };
 
@@ -150,13 +155,11 @@ const int	P3_SWITCHCOUNT = 26;
 const int	P4_SWITCHCOUNT = 4;
 //const int	P5_SWITCHCOUNT = 8;
 //const int	P6_SWITCHCOUNT = 12;
-//const int	P8_SWITCHCOUNT = 22;
+const int	P8_SWITCHCOUNT = 19;
 const int	P12_SWITCHCOUNT = 22;
 const int	P14_SWITCHCOUNT = 16;
-//const int	LM_VC_NEEDLECOUNT = 19;
 
 // Number of push buttons
-
 const int   P4_PUSHBCOUNT = 19;
 
 // Number of indicator needles (tapemeter)
@@ -191,6 +194,7 @@ const int P16R4_CBCOUNT = 19;
 
 // Number of thumbwheels
 const int P12_TWCOUNT = 8;
+const int P8_TWCOUNT = 6;
 
 // Rotary/Needle rotation axises
 const VECTOR3	P1_ROT_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
@@ -252,6 +256,19 @@ const VECTOR3 P4_PUSHB_POS[P4_PUSHBCOUNT] = {
 	{-0.023046, -0.015110, 1.413551}, {-0.000177, -0.015110, 1.413551}, {0.022441,-0.015110,1.413551}, {-0.022966, 0.000311, 1.429174}, {-0.000208, 0.000311, 1.429174},
 	{0.022667, 0.000311, 1.429174}, {-0.023022, 0.015839, 1.444753}, {-0.000197, 0.015839, 1.444753}, {0.022350, 0.015839, 1.444753}, {0.045282, 0.015839, 1.444753},
 	{0.045019, 0.000180, 1.428975}, {0.045087, -0.015076, 1.413737}, {0.067903, 0.007901, 1.436722}, {0.067771, -0.007522, 1.421295}
+};
+
+// Panel 8 switches
+const VECTOR3 P8_TOGGLE_POS[P8_SWITCHCOUNT] = {
+{-1.0669, 0.0697, 0.9742}, {-1.0669, 0.0697, 1.0143}, {-1.08451, 0.075547, 1.0709}, {-1.08451, 0.075547, 1.1904}, {-1.08451, 0.075547, 1.2312}, {-1.08451, 0.075547, 1.2680},
+{-1.03188, 0.058115, 1.1481}, {-1.03188, 0.058115, 1.1904}, {-1.03188, 0.058115, 1.2312}, {-1.03188, 0.058115, 1.2681}, {-0.977557, 0.040107, 1.2681}, {-1.1026, 0.0816, 1.3838},
+{-1.1026, 0.0816, 1.4388}, {-1.0147, 0.0525, 1.3839}, {-1.0147, 0.0525, 1.4385}, {-1.10563, 0.08257, 1.4974}, {-1.0668, 0.0697, 1.4967}, {-1.0668, 0.0697, 1.5436},
+{-0.977514, 0.040111, 1.5528}
+};
+
+// Panel 8 thumbwheels
+const VECTOR3 P8_TW_POS[P8_TWCOUNT] = {
+{-1.0666, 0.0476, 1.3820}, {-1.0666, 0.0476, 1.4368}, {-1.0311, 0.0361, 1.4949}, {-0.9791, 0.0185, 1.3820}, {-0.9791, 0.0185, 1.4367}, {-0.9791, 0.0185, 1.4949}
 };
 
 // Panel 11 circuit breakers
@@ -929,6 +946,7 @@ protected:
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
+	void SetStageSeqRelayLight(int m, bool state);
 	void InitFDAI(UINT mesh);
 	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
@@ -1876,6 +1894,8 @@ protected:
 	MGROUP_TRANSFORM *mgt_P3Rot[P3_ROTCOUNT];
 	MGROUP_TRANSFORM *mgt_P3needles[P3_NEEDLECOUNT];
 	MGROUP_TRANSFORM *mgt_P4switch[P4_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P8switch[P8_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P8thumbwheels[P8_TWCOUNT];
 	MGROUP_TRANSFORM *mgt_P11R1cbs[P11R1_CBCOUNT];
 	MGROUP_TRANSFORM *mgt_P11R2cbs[P11R2_CBCOUNT];
 	MGROUP_TRANSFORM *mgt_P11R3cbs[P11R3_CBCOUNT];
@@ -1902,6 +1922,8 @@ protected:
 	UINT anim_P3_Rot[P3_ROTCOUNT];
 	UINT anim_P3needles[P3_NEEDLECOUNT];
 	UINT anim_P4switch[P4_SWITCHCOUNT];
+	UINT anim_P8switch[P8_SWITCHCOUNT];
+	UINT anim_P8thumbwheels[P8_TWCOUNT];
 	UINT anim_P11R1cbs[P11R1_CBCOUNT];
 	UINT anim_P11R2cbs[P11R2_CBCOUNT];
 	UINT anim_P11R3cbs[P11R3_CBCOUNT];
@@ -1929,6 +1951,8 @@ protected:
 	UINT anim_abortstagecover;
 	UINT anim_rrslewsitch_x;
 	UINT anim_rrslewsitch_y;
+	UINT anim_stageswitch;
+	UINT anim_stagecover;
 	UINT anim_fdaiR_cdr, anim_fdaiR_lmp;
 	UINT anim_fdaiP_cdr, anim_fdaiP_lmp;
 	UINT anim_fdaiY_cdr, anim_fdaiY_lmp;

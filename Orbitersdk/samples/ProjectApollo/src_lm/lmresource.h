@@ -996,6 +996,35 @@
 // VC Active Areas (Panel 6)
 
 // VC Active Areas (Panel 8)
+#define AID_VC_PANEL_8			((id >= 3800) && (id <= 3840))
+#define AID_VC_TW_P8_01        3801
+#define AID_VC_TW_P8_02        3802
+#define AID_VC_TW_P8_03        3803
+#define AID_VC_TW_P8_04        3804
+#define AID_VC_TW_P8_05        3805
+#define AID_VC_TW_P8_06        3806
+#define AID_VC_SWITCH_P8_01    3809
+#define AID_VC_SWITCH_P8_02    3810
+#define AID_VC_SWITCH_P8_03    3811
+#define AID_VC_SWITCH_P8_04    3812
+#define AID_VC_SWITCH_P8_05    3813
+#define AID_VC_SWITCH_P8_06    3814
+#define AID_VC_SWITCH_P8_07    3815
+#define AID_VC_SWITCH_P8_08    3816
+#define AID_VC_SWITCH_P8_09    3817
+#define AID_VC_SWITCH_P8_10    3818
+#define AID_VC_SWITCH_P8_11    3819
+#define AID_VC_SWITCH_P8_12    3820
+#define AID_VC_SWITCH_P8_13    3821
+#define AID_VC_SWITCH_P8_14    3822
+#define AID_VC_SWITCH_P8_15    3823
+#define AID_VC_SWITCH_P8_16    3824
+#define AID_VC_SWITCH_P8_17    3825
+#define AID_VC_SWITCH_P8_18    3826
+#define AID_VC_SWITCH_P8_19    3827
+#define AID_VC_STAGE_SWITCH    3828
+#define AID_VC_SEQ_LIGHTS      3829
+#define AID_VC_PANEL8_TALKBACKS 3830
 
 // VC Active Areas (Panel 11)
 #define AID_VC_PANEL_11			((id >= 4100) && (id <= 4199))

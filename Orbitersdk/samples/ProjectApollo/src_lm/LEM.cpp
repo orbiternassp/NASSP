@@ -968,7 +968,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Debug string for displaying descent flight info from VC view
-	if (!Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
+	/*if (!Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
 
 		char pgnssw[256];
 		char thrsw[256];
@@ -994,7 +994,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		if (!VcInfoActive) return;
 		sprintf(oapiDebugString(), "");
 		VcInfoActive = false;
-	}
+	}*/
 }
 
 
@@ -1027,7 +1027,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 
 	if (th_hover[0] && !ExtView)
 	{
-		if ((GetThrusterLevel(th_hover[0]) > 0) && (InVC || (InPanel && PanelId == LMPANEL_LPDWINDOW)))
+		if ((GetThrusterLevel(th_hover[0]) > 0) && InVC)
 		{
 			double amt = max(0.02, GetThrusterLevel(th_hover[0]) / 20);
 			JostleViewpoint(amt);

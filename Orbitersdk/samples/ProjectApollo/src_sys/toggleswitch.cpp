@@ -1551,6 +1551,18 @@ void GuardedToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
+void GuardedToggleSwitch::DrawSwitchVC(UINT anim, UINT animguard) {
+
+	RedrawVC(anim);
+
+	if (guardState) {
+		OurVessel->SetAnimation(animguard, 1.0);
+	}
+	else {
+		OurVessel->SetAnimation(animguard, 0.0);
+	}
+}
+
 
 void GuardedToggleSwitch::DrawFlash(SURFHANDLE DrawSurface)
 
@@ -1604,6 +1616,28 @@ bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
 		if (guardState) {
 			return ToggleSwitch::CheckMouseClick(event, mx, my);
+		}
+	}
+	return false;
+}
+
+bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+
+		if (guardState) {
+			Guard();
+		}
+		else {
+			guardState = 1;
+		}
+		guardClick.play();
+		return true;
+
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
+		if (guardState) {
+			return ToggleSwitch::ProcessMouseVC(event, p);
 		}
 	}
 	return false;

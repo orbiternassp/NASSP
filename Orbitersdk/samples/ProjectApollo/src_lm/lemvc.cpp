@@ -146,14 +146,11 @@ void LEM::SetView() {
 					break;
 				case LMPANEL_LPDWINDOW:
 					if (stage == 2) {
-						v = _V(-0.61, -0.125, 1.39);
+						v = _V(-0.58, -0.15, 1.40);
 					}
 					else {
-						v = _V(-0.61, 1.625, 1.39);
+						v = _V(-0.58, 1.60, 1.40);
 					}
-					v.x += ViewOffsetx;
-					v.y += ViewOffsety;
-					v.z += ViewOffsetz;
 					break;
 				case LMPANEL_RNDZWINDOW:
 					if (stage == 2) {
@@ -536,6 +533,53 @@ void LEM::RegisterActiveAreas()
 	MainPanelVC.AddSwitch(&RightACA4JetSwitch, AID_VC_SWITCH_P4_03, &anim_P4switch[2]);
 	MainPanelVC.AddSwitch(&RightTTCATranslSwitch, AID_VC_SWITCH_P4_04, &anim_P4switch[3]);
 
+	// Panel 8
+
+	for (i = 0; i < P8_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P8_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P8_01 + i, P8_TOGGLE_POS[i] + P8_CLICK + ofs, 0.006);
+	}
+
+	for (i = 0; i < P8_TWCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_TW_P8_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P8_01 + i, P8_TW_POS[i] + ofs, 0.02);
+	}
+
+	oapiVCRegisterArea(AID_VC_SEQ_LIGHTS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_PANEL8_TALKBACKS, _R(1389, 8, 1772, 149), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	oapiVCRegisterArea(AID_VC_STAGE_SWITCH, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_STAGE_SWITCH, _V(-0.981771, 0.039868, 1.14749) + (P8_CLICK * 2) + ofs, 0.01);
+
+	MainPanelVC.AddSwitch(&EDDesFuelVent, AID_VC_SWITCH_P8_01, &anim_P8switch[0]);
+	MainPanelVC.AddSwitch(&EDDesOxidVent, AID_VC_SWITCH_P8_02, &anim_P8switch[1]);
+	MainPanelVC.AddSwitch(&EDDesPrpIsol, AID_VC_SWITCH_P8_03, &anim_P8switch[2]);
+	MainPanelVC.AddSwitch(&EDMasterArm, AID_VC_SWITCH_P8_04, &anim_P8switch[3]);
+	MainPanelVC.AddSwitch(&EDDesVent, AID_VC_SWITCH_P8_05, &anim_P8switch[4]);
+	MainPanelVC.AddSwitch(&EDASCHeSel, AID_VC_SWITCH_P8_06, &anim_P8switch[5]);
+	MainPanelVC.AddSwitch(&EDLGDeploy, AID_VC_SWITCH_P8_07, &anim_P8switch[6]);
+	MainPanelVC.AddSwitch(&EDHePressRCS, AID_VC_SWITCH_P8_08, &anim_P8switch[7]);
+	MainPanelVC.AddSwitch(&EDHePressDesStart, AID_VC_SWITCH_P8_09, &anim_P8switch[8]);
+	MainPanelVC.AddSwitch(&EDHePressASC, AID_VC_SWITCH_P8_10, &anim_P8switch[9]);
+	MainPanelVC.AddSwitch(&EDStageRelay, AID_VC_SWITCH_P8_11, &anim_P8switch[10]);
+	MainPanelVC.AddSwitch(&CDRAudSBandSwitch, AID_VC_SWITCH_P8_12, &anim_P8switch[11]);
+	MainPanelVC.AddSwitch(&CDRAudICSSwitch, AID_VC_SWITCH_P8_13, &anim_P8switch[12]);
+	MainPanelVC.AddSwitch(&CDRAudVHFASwitch, AID_VC_SWITCH_P8_14, &anim_P8switch[13]);
+	MainPanelVC.AddSwitch(&CDRAudVHFBSwitch, AID_VC_SWITCH_P8_15, &anim_P8switch[14]);
+	MainPanelVC.AddSwitch(&CDRAudRelaySwitch, AID_VC_SWITCH_P8_16, &anim_P8switch[15]);
+	MainPanelVC.AddSwitch(&CDRAudVOXSwitch, AID_VC_SWITCH_P8_17, &anim_P8switch[16]);
+	MainPanelVC.AddSwitch(&CDRAudioControlSwitch, AID_VC_SWITCH_P8_18, &anim_P8switch[17]);
+	MainPanelVC.AddSwitch(&CDRCOASSwitch, AID_VC_SWITCH_P8_19, &anim_P8switch[18]);
+
+	MainPanelVC.AddSwitch(&CDRAudSBandVol, AID_VC_TW_P8_01, &anim_P8thumbwheels[0]);
+	MainPanelVC.AddSwitch(&CDRAudICSVol, AID_VC_TW_P8_02, &anim_P8thumbwheels[1]);
+	MainPanelVC.AddSwitch(&CDRAudVOXSens, AID_VC_TW_P8_03, &anim_P8thumbwheels[2]);
+	MainPanelVC.AddSwitch(&CDRAudVHFAVol, AID_VC_TW_P8_04, &anim_P8thumbwheels[3]);
+	MainPanelVC.AddSwitch(&CDRAudVHFBVol, AID_VC_TW_P8_05, &anim_P8thumbwheels[4]);
+	MainPanelVC.AddSwitch(&CDRAudMasterVol, AID_VC_TW_P8_06, &anim_P8thumbwheels[5]);
+
 	// Panel 11
 	// Row 1
 	for (i = 0; i < P11R1_CBCOUNT; i++)
@@ -891,6 +935,10 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 		case AID_VC_RR_SLEW_SWITCH:
 			RadarSlewSwitch.CheckMouseClickVC(event, p);
 			return true;
+
+		case AID_VC_STAGE_SWITCH:
+			EDStage.CheckMouseClickVC(event, p);
+			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
 	//return false;
@@ -1204,6 +1252,22 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
+	case AID_VC_SEQ_LIGHTS:
+		if (lca.GetCompDockVoltage() > 2.25 && (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6)) {
+			SetStageSeqRelayLight(LM_VC_STG_SEQ_A, true); // Light On
+		}
+		else {
+			SetStageSeqRelayLight(LM_VC_STG_SEQ_A, false); // Light Off
+		}
+
+		if (lca.GetCompDockVoltage() > 2.25 && (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6)) {
+			SetStageSeqRelayLight(LM_VC_STG_SEQ_B, true); // Light On
+		}
+		else {
+			SetStageSeqRelayLight(LM_VC_STG_SEQ_B, false); // Light Off
+		}
+		return true;
+
 	case AID_VC_RCS_ASC_FEED_TALKBACKS:
 		RCSAscFeed1ATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
 		RCSAscFeed2ATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
@@ -1232,6 +1296,12 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_VC_MAIN_SOV_TALKBACKS:
 		RCSMainSovATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
 		RCSMainSovBTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		return true;
+
+	case AID_VC_PANEL8_TALKBACKS:
+		EDDesFuelVentTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		EDDesOxidVentTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
+		EDLGTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
 		return true;
 
 	case AID_VC_MPS_REG_CONTROLS_LEFT:
@@ -1383,7 +1453,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_RR_SLEW_SWITCH:
 		RadarSlewSwitch.DrawSwitchVC(anim_rrslewsitch_x, anim_rrslewsitch_y);
-		//SetAnimation(anim_P12needles[1], ttca_throttle_pos_dig);
+		//SetAnimation(anim_stagecover, ttca_throttle_pos_dig);
 		return true;
 
 	/*case AID_VC_RECORDER_TALKBACK:
@@ -1404,6 +1474,10 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		ASCBattery6ATB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
 		ASCBattery6BTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
 		return true;
+
+	case AID_VC_STAGE_SWITCH:
+		EDStage.DrawSwitchVC(anim_stageswitch, anim_stagecover);
+		return true;
 	}
 
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
@@ -1422,6 +1496,8 @@ void LEM::InitVCAnimations() {
 	anim_P3_Rot[P3_ROTCOUNT] = -1;
 	anim_P3needles[P3_NEEDLECOUNT] = -1;
 	anim_P4switch[P4_SWITCHCOUNT] = -1;
+	anim_P8switch[P8_SWITCHCOUNT] = -1;
+	anim_P8thumbwheels[P8_TWCOUNT] = -1;
 	anim_P11R1cbs[P11R1_CBCOUNT] = -1;
 	anim_P11R2cbs[P11R2_CBCOUNT] = -1;
 	anim_P11R3cbs[P11R3_CBCOUNT] = -1;
@@ -1449,6 +1525,8 @@ void LEM::InitVCAnimations() {
 	anim_abortstagecover = -1;
 	anim_rrslewsitch_x = -1;
 	anim_rrslewsitch_y = -1;
+	anim_stageswitch = -1;
+	anim_stagecover = -1;
 	anim_fdaiR_cdr = anim_fdaiR_lmp = -1;
 	anim_fdaiP_cdr = anim_fdaiP_lmp = -1;
 	anim_fdaiY_cdr = anim_fdaiY_lmp = -1;
@@ -1484,6 +1562,10 @@ void LEM::DeleteVCAnimations()
 	for (i = 0; i < P3_NEEDLECOUNT; i++) delete mgt_P3needles[i];
 
 	for (i = 0; i < P4_SWITCHCOUNT; i++) delete mgt_P4switch[i];
+
+	for (i = 0; i < P8_SWITCHCOUNT; i++) delete mgt_P8switch[i];
+
+	for (i = 0; i < P8_TWCOUNT; i++) delete mgt_P8thumbwheels[i];
 
 	for (i = 0; i < P11R1_CBCOUNT; i++) delete mgt_P11R1cbs[i];
 
@@ -1614,6 +1696,24 @@ void LEM::DefineVCAnimations()
 		AddAnimationComponent(anim_P4switch[i], 0.0f, 1.0f, mgt_P4switch[i]);
 	}
 
+	// Panel 8 switches/thumbwheels
+	static UINT meshgroup_P8switches[P8_SWITCHCOUNT], meshgroup_P8thumbwheels[P8_TWCOUNT];
+
+	for (int i = 0; i < P8_SWITCHCOUNT; i++)
+	{
+		meshgroup_P8switches[i] = VC_GRP_Sw_P8_01 + i;
+		mgt_P8switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P8switches[i], 1, P8_TOGGLE_POS[i] - P8_CLICK, _V(0, 0, 1), (float)PI / 4);
+		anim_P8switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P8switch[i], 0.0f, 1.0f, mgt_P8switch[i]);
+	}
+
+	for (i = 0; i < P8_TWCOUNT; i++)
+	{
+		meshgroup_P8thumbwheels[i] = VC_GRP_TW_P8_01 + i;
+		mgt_P8thumbwheels[i] = new MGROUP_ROTATE(mesh, &meshgroup_P8thumbwheels[i], 1, P8_TW_POS[i], _V(0, 0, 1), (float)(RAD * 324));
+		anim_P8thumbwheels[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P8thumbwheels[i], 0.0f, 1.0f, mgt_P8thumbwheels[i]);
+	}
 
 	// Panel 11 circuit breakers
 	static UINT meshgroup_P11R1cb[P11R1_CBCOUNT], meshgroup_P11R2cb[P11R2_CBCOUNT], meshgroup_P11R3cb[P11R3_CBCOUNT], meshgroup_P11R4cb[P11R4_CBCOUNT], meshgroup_P11R5cb[P11R5_CBCOUNT];
@@ -1821,6 +1921,19 @@ void LEM::DefineVCAnimations()
 	AddAnimationComponent(anim_rrslewsitch_x, 0.0f, 1.0f, &mgt_RRslew_SwitchX);
 	AddAnimationComponent(anim_rrslewsitch_y, 0.0f, 1.0f, &mgt_RRslew_SwitchY);
 
+	// Stage switch
+	static UINT  meshgroup_Stage_Switch = VC_GRP_StageSwitch;
+	static MGROUP_ROTATE mgt_Stage_switch(mesh, &meshgroup_Stage_Switch, 1, _V(-0.981771, 0.039868, 1.14749) , _V(0, 0, 1), (float)PI / 4);
+	anim_stageswitch = CreateAnimation(0.5);
+	AddAnimationComponent(anim_stageswitch, 0.0f, 1.0f, &mgt_Stage_switch);
+
+	// Stage switch cover
+	const VECTOR3 stagecoveraxis = { sin((180 * RAD) + P8_TILT), -cos((180 * RAD) + P8_TILT), 0.00 };
+	static UINT meshgroup_Stage_Cover = VC_GRP_StageCover;
+	static MGROUP_ROTATE mgt_Stage_Cover(mesh, &meshgroup_Stage_Cover, 1, _V(-0.990451, 0.042666, 1.12664), stagecoveraxis, (float)(RAD * 90));
+	anim_stagecover = CreateAnimation(0.0);
+	AddAnimationComponent(anim_stagecover, 0.0f, 1.0f, &mgt_Stage_Cover);
+
 	InitFDAI(mesh);
 }
 
@@ -1943,7 +2056,7 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 15;
+	int lightmat = VC_NMAT - 17;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1970,7 +2083,7 @@ void LEM::SetContactLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 17;
+	int lightmat = VC_NMAT - 19;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -1997,7 +2110,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 26;
+	int lightmat = VC_NMAT - 28;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -2013,6 +2126,33 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 		mat->emissive.r = 0.125f;
 		mat->emissive.g = 0;
 		mat->emissive.b = 0;
+		mat->emissive.a = 1;
+	}
+
+	oapiSetMaterial(vcmesh, lightmat + m, mat);
+}
+
+void LEM::SetStageSeqRelayLight(int m, bool state) {
+
+	if (!vcmesh)
+		return;
+
+	int lightmat = VC_NMAT - 10;
+
+	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
+
+	if (state == true)
+	{   // ON
+		mat->emissive.r = 1;
+		mat->emissive.g = 1;
+		mat->emissive.b = 1;
+		mat->emissive.a = 1;
+	}
+	else
+	{   // OFF
+		mat->emissive.r = 0.125f;
+		mat->emissive.g = 0.125f;
+		mat->emissive.b = 0.125f;
 		mat->emissive.a = 1;
 	}
 
