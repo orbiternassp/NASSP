@@ -198,14 +198,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_APOLLONO:
-		if (OurVessel)
-		{
-			m.val1.iValue = OurVessel->GetApolloNo();
-			return true;
-		}
-		break;
-
 	case IULV_GET_SI_THRUST_OK:
 		if (OurVessel)
 		{
@@ -298,14 +290,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			m.val1.dValue = OurVessel->GetSIVBLOXTankPressurePSI();
-			return true;
-		}
-		break;
-
-	case IULV_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SwitchSelector(m.val1.iValue);
 			return true;
 		}
 		break;

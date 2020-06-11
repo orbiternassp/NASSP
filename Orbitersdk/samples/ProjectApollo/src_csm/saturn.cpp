@@ -758,7 +758,6 @@ void Saturn::initSaturn()
 		th_ull[i] = 0;
 		th_sep[i] = 0;
 		th_sep2[i] = 0;
-		stagingvent[i] = NULL;
 	}
 
 	for (i = 0; i < 3; i++) {

@@ -133,7 +133,7 @@ void LEM::SetLmVesselDockStage()
 	SetVisibilityLimit(1e-3, 4.6401e-4);
 	SetPMI(_V(2.5428, 2.2871, 2.7566));
 	SetCrossSections (_V(24.53,21.92,24.40));
-	SetCW (0.1, 0.3, 1.4, 1.4);
+	CreateAirfoils();
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
@@ -186,7 +186,7 @@ void LEM::SetLmVesselDockStage()
 	InitNavRadios (4);
 
 	// Descent stage attached.
-	if (InvertStageBit)
+	if (pMission->IsLMStageBitInverted())
 	{
 		agc.SetInputChannelBit(030, DescendStageAttached, false);
 	}
@@ -210,7 +210,7 @@ void LEM::SetLmVesselHoverStage()
 	SetVisibilityLimit(1e-3, 5.4135e-4);
 	SetPMI(_V(2.5428, 2.2871, 2.7566));
 	SetCrossSections (_V(24.53,21.92,24.40));
-	SetCW (0.1, 0.3, 1.4, 1.4);
+	CreateAirfoils();
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
@@ -261,7 +261,7 @@ void LEM::SetLmVesselHoverStage()
 	InitNavRadios (4);
 
 	// Descent stage attached.
-	if (InvertStageBit)
+	if (pMission->IsLMStageBitInverted())
 	{
 		agc.SetInputChannelBit(030, DescendStageAttached, false);
 	}
@@ -288,7 +288,7 @@ void LEM::SetLmAscentHoverStage()
 	SetEmptyMass (AscentEmptyMassKg);
 	SetPMI(_V(2.8, 2.29, 2.37));
 	SetCrossSections (_V(21,23,17));
-	SetCW (0.1, 0.3, 1.4, 1.4);
+	CreateAirfoils();
 	SetRotDrag (_V(0.7,0.7,0.7));
 	SetPitchMomentScale (0);
 	SetYawMomentScale (0);
@@ -350,7 +350,7 @@ void LEM::SetLmAscentHoverStage()
 	InitNavRadios (4);
 
 	// Descent stage attached.
-	if (InvertStageBit)
+	if (pMission->IsLMStageBitInverted())
 	{
 		agc.SetInputChannelBit(030, DescendStageAttached, true);
 	}
@@ -764,6 +764,18 @@ void LEM::SetMeshes() {
 
 	// Descent Stage Mesh
 	dscidx = AddMesh(hLMDescent, &mesh_dsc);
+}
+
+void LEM::CreateAirfoils()
+{
+	if (docksla && GetDockStatus(docksla))
+	{
+		SetCW(0, 0, 0, 0);
+	}
+	else
+	{
+		SetCW(0.1, 0.3, 1.4, 1.4);
+	}
 }
 
 void LEMLoadMeshes()
