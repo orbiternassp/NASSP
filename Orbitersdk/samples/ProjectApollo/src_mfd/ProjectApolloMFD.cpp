@@ -662,15 +662,6 @@ bool ProjectApolloMFD::ConsumeButton (int bt, int event)
 // Repaint the MFD
 void ProjectApolloMFD::Update (HDC hDC)
 {
-	/*if (g_Data.gorpVessel)
-	{
-		double agcclock = g_Data.gorpVessel->agc.vagc.Erasable[0][025] + g_Data.gorpVessel->agc.vagc.Erasable[0][024] * pow((double) 2., (double) 14.);
-		double iptr;
-		double fptr = modf(oapiGetSimMJD(), &iptr);
-		double desclock = fptr * 24.0*3600.0;
-		sprintf(oapiDebugString(), "%lf", desclock - agcclock / 100.0);
-	}*/
-
 	char buffer[100];
 
 	HDC hDCTemp = CreateCompatibleDC(hDC);
@@ -2510,7 +2501,9 @@ void ProjectApolloMFD::menuIUUplink()
 		iu = iuv->GetIU();
 	}
 	else if (!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\sat5stg3") ||
-		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/sat5stg3"))
+		!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/sat5stg3") ||
+			!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+			!stricmp(g_Data.iuVessel->GetClassName(), "ProjectApollo/nsat1stg2"))
 	{
 		SIVB *iuv = (SIVB *)g_Data.iuVessel;
 

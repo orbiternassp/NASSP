@@ -112,7 +112,6 @@ enum IULVMessageType
 	IULV_GET_GLOBAL_VEL,					///< Get global vel
 	IULV_GET_ANGULARVEL,					///< Get angular velocity
 	IULV_GET_MISSIONTIME,
-	IULV_GET_APOLLONO,
 	IULV_GET_SI_THRUST_OK,
 	IULV_GET_SII_THRUST_OK,
 	IULV_GET_SIVB_THRUST_OK,
@@ -126,6 +125,7 @@ enum IULVMessageType
 	IULV_GET_SII_FUEL_TANK_PRESSURE,
 	IULV_GET_SIVB_FUEL_TANK_PRESSURE,
 	IULV_GET_SIVB_LOX_TANK_PRESSURE,
+	IULV_GET_VEHICLENO
 };
 
 ///
@@ -211,7 +211,7 @@ public:
 	void GetRotationMatrix(MATRIX3 &rot);
 	void GetAngularVel(VECTOR3 &avel);
 	double GetMissionTime();
-	int GetApolloNo();
+	int GetVehicleNo();
 	void GetSIThrustOK(bool *ok);
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();

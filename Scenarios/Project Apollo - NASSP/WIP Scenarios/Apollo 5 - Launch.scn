@@ -43,7 +43,7 @@ S-IVB-204:ProjectApollo/nsat1stg2
   DOCKINFO 2:0,AS-204-Nosecap
   NAVFREQ 0 0
   S4PL 0
-  APOLLONO 5
+  VECHNO 204
   NASSPVER 80000
   FUEL 1.000
   FMASS 105795
@@ -51,6 +51,7 @@ S-IVB-204:ProjectApollo/nsat1stg2
   APSFMASS2 29.0
   MISSNTIME -3600
   MAINSTATE 113
+  PAYLOADEJECTIONFORCE 1210.0
   LVDC_BEGIN
 		LVDC_FSPFileName Config\ProjectApollo\AS-204 Flight Sequence Program.txt
 		LVDC_A_zL 90.0

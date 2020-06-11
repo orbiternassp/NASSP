@@ -104,7 +104,7 @@ public:
 	double GetMissionTime();
 	int GetStage();
 	void SetStage(int stage);
-	int GetApolloNo();
+	int GetVehicleNo();
 	void GetRelativePos(VECTOR3 &v);
 	void GetRelativeVel(VECTOR3 &v);
 	bool GetSCControlPoweredFlight();

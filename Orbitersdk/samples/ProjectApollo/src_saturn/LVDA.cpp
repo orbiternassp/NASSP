@@ -318,9 +318,9 @@ void LVDA::SetStage(int stage)
 	iu->GetLVCommandConnector()->SetStage(stage);
 }
 
-int LVDA::GetApolloNo()
+int LVDA::GetVehicleNo()
 {
-	return iu->GetLVCommandConnector()->GetApolloNo();
+	return iu->GetLVCommandConnector()->GetVehicleNo();
 }
 
 void LVDA::GetRelativePos(VECTOR3 &v)

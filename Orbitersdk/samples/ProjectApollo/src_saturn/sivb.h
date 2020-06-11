@@ -281,6 +281,7 @@ public:
 	/// \return Mission time in seconds since launch.
 	///
 	double GetMissionTime();
+	int GetVehicleNo();
 
 	bool GetSIVBThrustOK();
 
@@ -428,6 +429,8 @@ protected:
 
 	double THRUST_THIRD_VAC;		///< J2 engine thrust vacuum level in Newtons.
 	double ISP_THIRD_VAC;			///< J2 engine ISP in vacuum.
+
+	double PayloadEjectionForce;	///< Force applied at "undocking" of the payload attached at the front of the SLA (CSM, nosecone etc.)
 
 	// Exterior light definitions
 	BEACONLIGHTSPEC dockingLights[5];             // docking lights

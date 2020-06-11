@@ -266,19 +266,22 @@ void S1B::AddEngines()
 	VECTOR3 m_exhaust_pos4= {2.5,-2.5, 20.2};
 	VECTOR3 m_exhaust_pos5= {2.5,2.5, 20.2};
 
+	//4x 267 lbm of propellant
 	if (!ph_retro)
-		ph_retro = CreatePropellantResource(200);
+		ph_retro = CreatePropellantResource(484.4);
 
 	if (!ph_main && MainFuel > 0.0)
 		ph_main = CreatePropellantResource(MainFuel);
 
-	double thrust = 100000;
+	//36720 lbf each
+	double thrust = 163338.7;
 
+	//2050 m/s ISP gives 1.52 seconds burn time
 	if (!th_retro[0]) {
-		th_retro[0] = CreateThruster (m_exhaust_pos2, _V(0.1, 0.1, -0.9), thrust, ph_retro, 4000);
-		th_retro[1] = CreateThruster (m_exhaust_pos3, _V(0.1, -0.1, -0.9), thrust, ph_retro, 4000);
-		th_retro[2] = CreateThruster (m_exhaust_pos4, _V(-0.1, 0.1, -0.9), thrust, ph_retro, 4000);
-		th_retro[3] = CreateThruster (m_exhaust_pos5, _V(-0.1, -0.1, -0.9), thrust, ph_retro, 4000);
+		th_retro[0] = CreateThruster (m_exhaust_pos2, _V(0.15, 0.15, -0.9), thrust, ph_retro, 2050.0);
+		th_retro[1] = CreateThruster (m_exhaust_pos3, _V(0.15, -0.15, -0.9), thrust, ph_retro, 2050.0);
+		th_retro[2] = CreateThruster (m_exhaust_pos4, _V(-0.15, 0.15, -0.9), thrust, ph_retro, 2050.0);
+		th_retro[3] = CreateThruster (m_exhaust_pos5, _V(-0.15, -0.15, -0.9), thrust, ph_retro, 2050.0);
 	}
 
 	thg_retro = CreateThrusterGroup(th_retro, 4, THGROUP_RETRO);

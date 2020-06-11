@@ -229,6 +229,7 @@ void SIVB::InitS4b()
 
 	CurrentThrust = 0;
 	RotationLimit = 0.25;
+	PayloadEjectionForce = 0.0;
 
 	FirstTimestep = false;
 	MissionTime = MINUS_INFINITY;
@@ -906,6 +907,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "PANELPROC", panelProc);
 	oapiWriteScenario_float (scn, "PANELPROCPLUSX", panelProcPlusX);
 	oapiWriteScenario_float (scn, "ROTL", RotationLimit);
+	oapiWriteScenario_float(scn, "PAYLOADEJECTIONFORCE", PayloadEjectionForce);
 
 	if (PayloadName[0])
 	{
@@ -1276,6 +1278,11 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
             sscanf (line + 9, "%f", &flt);
 			panelProc = flt;
 		}
+		else if (!strnicmp(line, "PAYLOADEJECTIONFORCE", 20))
+		{
+			sscanf(line + 20, "%f", &flt);
+			PayloadEjectionForce = flt;
+		}
 		else if (!strnicmp (line, "STATE", 5))
 		{
 			int i;
@@ -1633,9 +1640,13 @@ void SIVB::SetState(SIVBSettings &state)
 }
 
 double SIVB::GetMissionTime()
-
 {
 	return MissionTime;
+}
+
+int SIVB::GetVehicleNo()
+{
+	return VehicleNo;
 }
 
 void SIVB::SetSIVBThrusterDir(double yaw, double pitch)
@@ -1841,10 +1852,21 @@ void SIVB::SeparateCSM()
 		UINT i;
 		if (GetDockingPortFromHandle(hDockCSM, i))
 		{
-			Undock(i);
+			OBJHANDLE target;
+			VESSEL *vTgt = NULL;
+			if (target = GetDockStatus(hDockCSM))
+			{
+				vTgt = oapiGetVesselInterface(target);
+			}
 			DelDock(hDockCSM);
 			hDockCSM = NULL;
 			ReconnectDockingConnectors();
+
+			if (vTgt)
+			{
+				//Spring system
+				vTgt->AddForce(_V(0, 0, 1)*PayloadEjectionForce / oapiGetSimStep(), _V(0, 0, 0));
+			}
 		}
 	}
 }
@@ -2179,6 +2201,13 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			OurVessel->StartSLASeparationPyros();
+			return true;
+		}
+		break;
+	case IULV_GET_VEHICLENO:
+		if (OurVessel)
+		{
+			m.val1.iValue = OurVessel->GetVehicleNo();
 			return true;
 		}
 		break;

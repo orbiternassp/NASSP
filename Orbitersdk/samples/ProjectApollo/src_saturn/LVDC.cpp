@@ -961,7 +961,7 @@ void LVDC1B::TimeStep(double simdt) {
 			goto minorloop;
 		}
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
-			if(LVDC_Timebase == 4 && (LVDC_TB_ETime > TI5F2)){
+			if((LVDC_Timebase == 4 || LVDC_Timebase == 10) && (LVDC_TB_ETime > TI5F2)){
 				goto orbitalguidance;
 			}else{
 				goto minorloop;
@@ -2287,13 +2287,22 @@ bool LVDC1B::GeneralizedSwitchSelector(int stage, int channel)
 
 bool LVDC1B::LMAbort()
 {
-	if (lvda.GetApolloNo() == 5)
+	if (lvda.GetVehicleNo() == 204)
 	{
-		if (LVDC_Timebase >= 3 && LVDC_TB_ETime > 10.0)
+		if (LVDC_Timebase == 4 && LVDC_TB_ETime > 5.0)
 		{
+			//Issue S-IVB cutoff
 			LVDC_Timebase = 10;
 			LVDC_TB_ETime = 0;
 			CommandSequence = 0;
+			//Program attitude maneuver
+			TI5F2 = 5.0;
+			INH2 = false;
+			TA1 = 0.0;
+			TA2 = 0.0;
+			TA3 = 99999.9;
+			//Pitch up 10°
+			PCommandedAttitude.y += 10.0*RAD;
 			return true;
 		}
 	}

@@ -1180,12 +1180,12 @@ double IUToLVCommandConnector::GetMissionTime()
 	return 0.0;
 }
 
-int IUToLVCommandConnector::GetApolloNo()
+int IUToLVCommandConnector::GetVehicleNo()
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_APOLLONO;
+	cm.messageType = IULV_GET_VEHICLENO;
 
 	if (SendMessage(cm))
 	{
