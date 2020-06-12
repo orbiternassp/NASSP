@@ -131,6 +131,12 @@ bool SIBtoSIVBConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 			m.val1.bValue = OurVessel->GetSIPropellantDepletionEngineCutoff();
 		}
 		return true;
+	case SIVB_SI_GETSITHRUSTOK:
+		if (OurVessel)
+		{
+			OurVessel->GetSIThrustOK((bool *)m.val1.pValue);
+		}
+		return true;
 	}
 
 	return false;
@@ -465,7 +471,7 @@ void S1B::clbkSetClassCaps (FILEHANDLE cfg)
 
 	SetEmptyMass(EmptyMass);
 
-	double td_mass = 300000.0;
+	double td_mass = 450000.0;
 	double td_width = 10.0;
 	double td_tdph = -20.955 - 3.0;
 	double td_height = 40.0;
@@ -607,6 +613,11 @@ bool S1B::GetLowLevelSensorsDry()
 bool S1B::GetSIPropellantDepletionEngineCutoff()
 {
 	return sibsys.GetOutboardEnginesCutoff();
+}
+
+void S1B::GetSIThrustOK(bool *ok)
+{
+	sibsys.GetThrustOK(ok);
 }
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)

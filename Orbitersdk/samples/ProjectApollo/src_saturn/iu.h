@@ -212,7 +212,7 @@ public:
 	void GetAngularVel(VECTOR3 &avel);
 	double GetMissionTime();
 	int GetVehicleNo();
-	void GetSIThrustOK(bool *ok);
+	void GetSIThrustOK(bool *ok, int n);
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();

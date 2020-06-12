@@ -186,6 +186,7 @@ public:
 	void SwitchSelector(int channel);
 	bool GetLowLevelSensorsDry();
 	bool GetSIPropellantDepletionEngineCutoff();
+	void GetSIThrustOK(bool *ok);
 
 protected:
 

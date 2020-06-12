@@ -303,9 +303,9 @@ bool LVDA::LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double 
 	return false;
 }
 
-double LVDA::GetMissionTime()
+void LVDA::PrepareToLaunch()
 {
-	return iu->GetLVCommandConnector()->GetMissionTime();
+	if (iu->GetLVDC()) iu->GetLVDC()->PrepareToLaunch();
 }
 
 int LVDA::GetStage()

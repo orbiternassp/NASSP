@@ -209,6 +209,10 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 		{
 			IuESE->SetGuidanceReferenceRelease(true);
 		}
+		else
+		{
+			IuUmb->LVDCPrepareToLaunch();
+		}
 
 		if (MissionTime < -9)
 		{

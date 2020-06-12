@@ -75,6 +75,7 @@ public:
 	bool ExecuteCommManeuver();
 	bool SIVBIULunarImpact(double tig, double dt, double pitch, double yaw);
 	bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0);
+	virtual void PrepareToLaunch();
 
 	void SetOutputRegisterBit(int bit, bool state);
 	virtual bool GetOutputRegisterBit(int bit);
@@ -101,7 +102,6 @@ public:
 	//Not real LVDA functions
 	void TLIBegun();
 	void TLIEnded();
-	double GetMissionTime();
 	int GetStage();
 	void SetStage(int stage);
 	int GetVehicleNo();

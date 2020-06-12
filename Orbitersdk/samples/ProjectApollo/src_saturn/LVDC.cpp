@@ -40,7 +40,19 @@
 
 LVDC::LVDC(LVDA &lvd) : lvda(lvd)
 {
+	RealTimeClock = 0.0;
+	ReadyToLaunch = false;
+	TI = 0.0;
+}
 
+void LVDC::PrepareToLaunch()
+{
+	if (ReadyToLaunch == false)
+	{
+		double iptr;
+		RealTimeClock = modf(oapiGetSimMJD(), &iptr)*24.0*3600.0;
+		ReadyToLaunch = true;
+	}
 }
 
 // Constructor
@@ -557,17 +569,12 @@ void LVDC1B::TimeStep(double simdt) {
 	// Bail if uninitialized
 	if (Initialized == false) { return; }
 	
-	// Note that GenericTimestep will update MissionTime.
 	if(LVDC_Stop == false){
 
+		//Update real time clock
+		RealTimeClock += simdt;
 		// Update timebase ET
 		LVDC_TB_ETime += simdt;
-
-		//Engine failure code
-		if (!S1B_Engine_Out && ((LVDC_Timebase == 1 && LVDC_TB_ETime > 5.8) || LVDC_Timebase == 2))
-		{
-			S1B_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
-		}
 
 		/* **** LVDC GUIDANCE PROGRAM **** */
 		switch(LVDC_Timebase){
@@ -576,19 +583,14 @@ void LVDC1B::TimeStep(double simdt) {
 				if (oapiGetTimeAcceleration() > 100){ oapiSetTimeAcceleration(100); } 
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
-				{
-					double Source  = fabs(lvda.GetMissionTime());
-					double Minutes = Source/60;
-					double Hours   = (int)Minutes/60;				
-					double Seconds = Source - ((int)Minutes*60);
-					Minutes       -= Hours*60;
-					if (lvda.GetMissionTime() < -1200){
+				if (ReadyToLaunch == false){
 						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 						lvda.ZeroLVIMUCDUs();					// Zero IMU CDUs
 						break;
-					}else{
-						//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
-					}
+				}
+				else
+				{
+					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%.2f | AWAITING GRR",(int)Hours,(int)Minutes,Seconds);
 				}
 			
 				// WAIT FOR GRR
@@ -655,7 +657,7 @@ void LVDC1B::TimeStep(double simdt) {
 				// Done by low-level sensor.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					// For S1C thruster calibration
-					fprintf(lvlog,"[T+%f] S1C OECO\r\n", lvda.GetMissionTime());
+					fprintf(lvlog,"[T+%f] S1C OECO\r\n", t_clock);
 					// Begin timebase 3
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
@@ -673,7 +675,7 @@ void LVDC1B::TimeStep(double simdt) {
 
 				SwitchSelectorProcessing(SSTTB[3]);
 
-				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false && (lvda.GetStage() == LAUNCH_STAGE_SIVB || lvda.GetStage() == STAGE_ORBIT_SIVB)){
+				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false){
 					S4B_IGN=true;
 				}
 
@@ -761,6 +763,12 @@ void LVDC1B::TimeStep(double simdt) {
 		//No need to run the code below before GRR
 		if (LVDC_Timebase < 0) return;
 
+		//Engine failure code
+		if (!S1B_Engine_Out && ((LVDC_Timebase == 1 && LVDC_TB_ETime > 5.8) || LVDC_Timebase == 2))
+		{
+			S1B_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
+		}
+
 		if (GuidanceReferenceFailure == false)
 		{
 			if (LVDC_Timebase > 0 && lvda.GetLVIMUFailure())
@@ -786,14 +794,13 @@ void LVDC1B::TimeStep(double simdt) {
 
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && GRR_init == false){			
-			fprintf(lvlog,"[T%f] GRR received!\r\n", lvda.GetMissionTime());
+			fprintf(lvlog,"[GMT%+f] GRR received!\r\n", RealTimeClock);
 
 			// Time into launch window = launch time from midnight - reference time of launch from midnight
 
 			fprintf(lvlog, "Inclination = %f\r\n", Inclination);
 
-			double day = 0.0;
-			T_GRR = modf(oapiGetSimMJD(), &day)*24.0*3600.0;
+			T_GRR = RealTimeClock;
 			t_D = T_GRR - T_GRR0;
 			fprintf(lvlog, "Time into launch window (if applicable) = %f\r\n", t_D);
 
@@ -1597,6 +1604,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
+	oapiWriteScenario_int(scn, "LVDC_ReadyToLaunch", ReadyToLaunch);
 	// int
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
@@ -1744,6 +1752,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Q_Y", Q_Y);
 	papiWriteScenario_double(scn, "LVDC_Q_P", Q_P);
 	papiWriteScenario_double(scn, "LVDC_R", R);
+	papiWriteScenario_double(scn, "LVDC_RealTimeClock", RealTimeClock);
 	papiWriteScenario_double(scn, "LVDC_R_L", R_L);
 	papiWriteScenario_double(scn, "LVDC_ROV", ROV);
 	papiWriteScenario_double(scn, "LVDC_R_T", R_T);
@@ -1789,6 +1798,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
 	papiWriteScenario_double(scn, "LVDC_T_GRR", T_GRR);
 	papiWriteScenario_double(scn, "LVDC_T_GRR0", T_GRR0);
+	papiWriteScenario_double(scn, "LVDC_TI", TI);
 	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
 	papiWriteScenario_double(scn, "LVDC_T_L_apo", T_L_apo);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
@@ -1942,6 +1952,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
+		papiReadScenario_bool(line, "LVDC_ReadyToLaunch", ReadyToLaunch);
 
 		// DOUBLE
 		papiReadScenario_double(line, "LVDC_a", a);
@@ -2082,6 +2093,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Q_Y", Q_Y);
 		papiReadScenario_double(line, "LVDC_Q_P", Q_P);
 		papiReadScenario_double(line, "LVDC_R", R);
+		papiReadScenario_double(line, "LVDC_RealTimeClock", RealTimeClock);
 		papiReadScenario_double(line, "LVDC_R_L", R_L);
 		papiReadScenario_double(line, "LVDC_ROV", ROV);
 		papiReadScenario_double(line, "LVDC_R_T", R_T);
@@ -2127,6 +2139,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
 		papiReadScenario_double(line, "LVDC_T_GRR", T_GRR);
 		papiReadScenario_double(line, "LVDC_T_GRR0", T_GRR0);
+		papiReadScenario_double(line, "LVDC_TI", TI);
 		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
 		papiReadScenario_double(line, "LVDC_T_L_apo", T_L_apo);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
@@ -2971,9 +2984,7 @@ void LVDCSV::Init(){
 	T_ImpactBurn = 0;
 	dT_ImpactBurn = 0;
 	T_L = 0.0;
-
-	double day;
-	T_LO = modf(oapiGetSimMJD(), &day)*24.0*3600.0 - lvda.GetMissionTime() - 17.0;
+	T_LO = 0.0;
 	t_SD1 = 10984.2;
 	t_SD2 = 5518.9;
 	t_SD3 = 1233.6;
@@ -3185,6 +3196,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_OrbNavCycle", OrbNavCycle);
 	oapiWriteScenario_int(scn, "LVDC_PermanentSCControl", PermanentSCControl);
 	oapiWriteScenario_int(scn, "LVDC_poweredflight", poweredflight);
+	oapiWriteScenario_int(scn, "LVDC_ReadyToLaunch", ReadyToLaunch);
 	oapiWriteScenario_int(scn, "LVDC_ROT", ROT);
 	oapiWriteScenario_int(scn, "LVDC_ROTR", ROTR);
 	oapiWriteScenario_int(scn, "LVDC_S1_Engine_Out", S1_Engine_Out);
@@ -3576,6 +3588,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_RASB12", TABLE15[1].target[12].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 	papiWriteScenario_double(scn, "LVDC_RASB14", TABLE15[1].target[14].RAS);
+	papiWriteScenario_double(scn, "LVDC_RealTimeClock", RealTimeClock);
 	papiWriteScenario_double(scn, "LVDC_rho_c", rho_c);
 	papiWriteScenario_double(scn, "LVDC_Rho[0]", Rho[0]);
 	papiWriteScenario_double(scn, "LVDC_Rho[1]", Rho[1]);
@@ -3852,6 +3865,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_MRS", MRS);
 		papiReadScenario_bool(line, "LVDC_PermanentSCControl", PermanentSCControl);
 		papiReadScenario_bool(line, "LVDC_poweredflight", poweredflight);
+		papiReadScenario_bool(line, "LVDC_ReadyToLaunch", ReadyToLaunch);
 		papiReadScenario_bool(line, "LVDC_ROT", ROT);
 		papiReadScenario_bool(line, "LVDC_ROTR", ROTR);
 		papiReadScenario_bool(line, "LVDC_S1_Engine_Out", S1_Engine_Out);
@@ -4248,6 +4262,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_RASB12", TABLE15[1].target[12].RAS);
 		papiReadScenario_double(line, "LVDC_RASB13", TABLE15[1].target[13].RAS);
 		papiReadScenario_double(line, "LVDC_RASB14", TABLE15[1].target[14].RAS);
+		papiReadScenario_double(line, "LVDC_RealTimeClock", RealTimeClock);
 		papiReadScenario_double(line, "LVDC_rho_c", rho_c);
 		papiReadScenario_double(line, "LVDC_R_L", R_L);
 		papiReadScenario_double(line, "LVDC_R_N", R_N);
@@ -4566,6 +4581,9 @@ void LVDCSV::TimeStep(double simdt) {
 
 	// Is the LVDC running?
 	if(LVDC_Stop == 0){
+
+		//Update real time clock
+		RealTimeClock += simdt;
 		// Update timebase ET
 		LVDC_TB_ETime += simdt;	
 
@@ -4597,12 +4615,7 @@ void LVDCSV::TimeStep(double simdt) {
 				if (oapiGetTimeAcceleration() > 100) { oapiSetTimeAcceleration(100); }
 
 				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
-				if(lvda.GetMissionTime() < -1200){
-					double Source  = fabs(lvda.GetMissionTime());
-					double Minutes = Source/60;
-					double Hours   = (int)Minutes/60;				
-					double Seconds = Source - ((int)Minutes*60);
-					Minutes       -= Hours*60;
+				if(ReadyToLaunch == false){
 					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
 					lvda.ZeroLVIMUCDUs();						// Zero IMU CDUs
 					break;
@@ -4613,7 +4626,7 @@ void LVDCSV::TimeStep(double simdt) {
 
 				// BEFORE GRR (T-00:00:17) STOPS HERE
 				if (!lvda.GetGuidanceReferenceRelease()){
-					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",lvCommandConnector->GetMissionTime(),
+					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",RealTimeClock,
 						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
 						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
 					break;
@@ -4680,7 +4693,7 @@ void LVDCSV::TimeStep(double simdt) {
 				// Done by low-level sensor.
 				// Apollo 8 cut off at 32877, Apollo 11 cut off at 31995.
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
-					fprintf(lvlog,"[T+%f] S1 OECO\r\n", lvda.GetMissionTime());
+					fprintf(lvlog,"[T+%f] S1 OECO\r\n", t_clock);
 					// Begin timebase 3
 					TB3 = TAS;
 					LVDC_Timebase = 3;
@@ -4732,7 +4745,7 @@ void LVDCSV::TimeStep(double simdt) {
 
 				// Check for S2 OECO
 				if(LVDC_TB_ETime > 5.0 && lvda.GetSIIPropellantDepletionEngineCutoff()){
-					fprintf(lvlog,"[MT %f] TB4 Start\r\n", lvda.GetMissionTime());
+					fprintf(lvlog,"[MT %f] TB4 Start\r\n", t_clock);
 					// S2 OECO, start TB4
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					S2_BURNOUT = true;
@@ -5108,12 +5121,10 @@ void LVDCSV::TimeStep(double simdt) {
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
 		if(LVDC_GRR && init == false)
 		{
-			fprintf(lvlog,"[T%f] GRR received!\r\n", lvda.GetMissionTime());
+			fprintf(lvlog,"[GMT%+f] GRR received!\r\n", RealTimeClock);
 
 			// Ground launch targeting
-
-			double day = 0.0;
-			T_L = modf(oapiGetSimMJD(),&day)*24.0*3600.0;
+			T_L = RealTimeClock;
 			t_D = T_L - T_LO;
 			//t_D = TABLE15.target[tgt_index].t_D;
 

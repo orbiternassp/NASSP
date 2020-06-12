@@ -66,8 +66,12 @@ public:
 	virtual bool ExecuteCommManeuver() { return false; }
 	virtual bool LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double inc, double dsc, double dsc_dot, double t_grr0) { return false; }
 	virtual bool DiscreteOutputTest(int bit, bool on) = 0;
+	void PrepareToLaunch();
 protected:
-
+	double RealTimeClock;
+	bool ReadyToLaunch;
+	//Start time of current time base measured from GRR
+	double TI;
 	LVDA &lvda;
 };
 

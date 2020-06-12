@@ -1195,13 +1195,14 @@ int IUToLVCommandConnector::GetVehicleNo()
 	return 0;
 }
 
-void IUToLVCommandConnector::GetSIThrustOK(bool *ok)
+void IUToLVCommandConnector::GetSIThrustOK(bool *ok, int n)
 {
 	ConnectorMessage cm;
 
 	cm.destination = LV_IU_COMMAND;
 	cm.messageType = IULV_GET_SI_THRUST_OK;
 	cm.val1.pValue = ok;
+	cm.val2.iValue = n;
 
 	(SendMessage(cm));
 }
