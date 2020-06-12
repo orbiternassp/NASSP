@@ -1544,6 +1544,17 @@ bool EngineStartButton::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+bool EngineStartButton::CheckMouseClickVC(int event) {
+
+	int OldState = state;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		Push();
+	}
+	return true;
+}
+
 bool EngineStartButton::Push()
 
 {
@@ -1584,6 +1595,18 @@ void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
+void EngineStartButton::DoDrawSwitchVC(UINT anim) {
+
+	if (IsUp())
+	{
+		lem->SetAnimation(anim, 1.0);
+	}
+	else
+	{
+		lem->SetAnimation(anim, 0.0);
+	}
+}
+
 void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton, LEM *l) {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
@@ -1597,6 +1620,17 @@ bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
 	if (!visible) return false;
 	if (mx < x || my < y) return false;
 	if (mx >(x + width) || my >(y + height)) return false;
+
+	if (event == PANEL_MOUSE_LBDOWN)
+	{
+		Push();
+	}
+	return true;
+}
+
+bool EngineStopButton::CheckMouseClickVC(int event) {
+
+	int OldState = state;
 
 	if (event == PANEL_MOUSE_LBDOWN)
 	{
@@ -1646,6 +1680,18 @@ void EngineStopButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 		{
 			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset + width, yOffset, width, height, SURF_PREDEF_CK);
 		}
+	}
+}
+
+void EngineStopButton::DoDrawSwitchVC(UINT anim) {
+
+	if (IsUp())
+	{
+		lem->SetAnimation(anim, 1.0);
+	}
+	else
+	{
+		lem->SetAnimation(anim, 0.0);
 	}
 }
 

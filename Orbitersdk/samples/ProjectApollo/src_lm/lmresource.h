@@ -992,8 +992,45 @@
 #define AID_VC_DSKY_DISPLAY     3425
 
 // VC Active Areas (Panel 5)
+#define AID_VC_PANEL_5			((id >= 3500) && (id <= 3520))
+#define AID_VC_SWITCH_P5_01    3501
+#define AID_VC_SWITCH_P5_02    3502
+#define AID_VC_SWITCH_P5_03    3503
+#define AID_VC_SWITCH_P5_04    3504
+#define AID_VC_SWITCH_P5_05    3505
+#define AID_VC_SWITCH_P5_06    3506
+#define AID_VC_SWITCH_P5_07    3507
+#define AID_VC_SWITCH_P5_08    3508
+#define AID_VC_ROT_P5_01	   3509
+#define AID_VC_ROT_P5_02	   3510
+#define AID_VC_ROT_P5_03	   3511
+#define AID_VC_START_BUTTON    3512
+#define AID_VC_STOP_BUTTON_CDR 3513
+#define AID_VC_PLUSX_BUTTON    3514
 
 // VC Active Areas (Panel 6)
+#define AID_VC_PANEL_6			((id >= 3600) && (id <= 3630))
+#define AID_VC_PUSHB_P6_01      3601    //
+#define AID_VC_PUSHB_P6_02      3602    //
+#define AID_VC_PUSHB_P6_03      3603    //
+#define AID_VC_PUSHB_P6_04      3604    //
+#define AID_VC_PUSHB_P6_05      3605    //
+#define AID_VC_PUSHB_P6_06      3606    //
+#define AID_VC_PUSHB_P6_07      3607    //
+#define AID_VC_PUSHB_P6_08      3608    //
+#define AID_VC_PUSHB_P6_09      3609    //
+#define AID_VC_PUSHB_P6_10      3610    //
+#define AID_VC_PUSHB_P6_11      3611    //
+#define AID_VC_PUSHB_P6_12      3612    //
+#define AID_VC_PUSHB_P6_13      3613    //
+#define AID_VC_PUSHB_P6_14      3614    //
+#define AID_VC_PUSHB_P6_15      3615    //
+#define AID_VC_PUSHB_P6_16      3616    //
+#define AID_VC_SWITCH_P6_01		3617	//
+#define AID_VC_STOP_BUTTON_LMP  3618
+#define AID_VC_LM_DEDA_DISP     3619
+#define AID_VC_LM_DEDA_ADR      3620
+#define AID_VC_LM_DEDA_LIGHTS   3621
 
 // VC Active Areas (Panel 8)
 #define AID_VC_PANEL_8			((id >= 3800) && (id <= 3840))

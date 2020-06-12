@@ -125,7 +125,8 @@ const double P1_TILT = 7.95581 * RAD;
 const double P2_TILT = 7.95581 * RAD;
 const double P3_TILT = 35.2509 * RAD;
 const double P4_TILT = 45.0663 * RAD;
-//const double P5_6_TILT = 10 * RAD;
+const double P5_TILT = 80 * RAD;
+const double P6_TILT = 80 * RAD;
 const double P8_TILT = 71.6 * RAD;
 const double P11R1_TILT = 326.84 * RAD;
 const double P11R2_TILT = 347.15 * RAD;
@@ -144,6 +145,8 @@ const VECTOR3	P1_CLICK = { 0, 0.0011, -0.0078 };
 const VECTOR3	P2_CLICK = { 0, 0.0011, -0.0078 };
 const VECTOR3	P3_CLICK = { 0, 0.0045, -0.0065 };
 const VECTOR3	P4_CLICK = { 0, 0.0056, -0.0056 };
+const VECTOR3	P5_CLICK = { 0, 0.0015, -0.0002 };
+const VECTOR3	P6_CLICK = { 0, 0.0030, -0.0004 };
 const VECTOR3	P8_CLICK = { 0.0005, 0.0015, 0 };
 const VECTOR3	P12_CLICK = { -0.0005, 0.0016, 0 };
 const VECTOR3	P14_CLICK = { -0.001, 0.0013, 0 };
@@ -153,14 +156,15 @@ const int	P1_SWITCHCOUNT = 20;
 const int	P2_SWITCHCOUNT = 18;
 const int	P3_SWITCHCOUNT = 26;
 const int	P4_SWITCHCOUNT = 4;
-//const int	P5_SWITCHCOUNT = 8;
-//const int	P6_SWITCHCOUNT = 12;
+const int	P5_SWITCHCOUNT = 8;
+const int	P6_SWITCHCOUNT = 1;
 const int	P8_SWITCHCOUNT = 19;
 const int	P12_SWITCHCOUNT = 22;
 const int	P14_SWITCHCOUNT = 16;
 
 // Number of push buttons
 const int   P4_PUSHBCOUNT = 19;
+const int   P6_PUSHBCOUNT = 16;
 
 // Number of indicator needles (tapemeter)
 const int P1_NEEDLECOUNT = 6;
@@ -175,8 +179,7 @@ const int P14_NEEDLECOUNT = 2;
 const int	 P1_ROTCOUNT = 1;
 const int	 P2_ROTCOUNT = 4;
 const int	 P3_ROTCOUNT = 5;
-//const int	 P5_ROTCOUNT = 1;
-//const int	 P6_ROTCOUNT = 4;
+const int	 P5_ROTCOUNT = 3;
 //const int	 P8_ROTCOUNT = 0;
 const int	 P12_ROTCOUNT = 4;
 const int	 P14_ROTCOUNT = 1;
@@ -200,7 +203,7 @@ const int P8_TWCOUNT = 6;
 const VECTOR3	P1_ROT_AXIS = { 0.00, sin(P1_TILT),-cos(P1_TILT) };
 const VECTOR3	P2_ROT_AXIS = { 0.00, sin(P2_TILT),-cos(P2_TILT) };
 const VECTOR3	P3_ROT_AXIS = { 0.00, sin(P3_TILT),-cos(P3_TILT) };
-//const VECTOR3	P5_6_ROT_AXIS = { 0.00, cos(P6_TILT),-sin(P6_TILT) };
+const VECTOR3	P5_ROT_AXIS = { 0.00, sin(P5_TILT),-cos(P5_TILT) };
 const VECTOR3	P12_ROT_AXIS = { -sin((90 * RAD) - P12_TILT), cos((90 * RAD) - P12_TILT), 0.00 };
 const VECTOR3	P14_ROT_AXIS = { -sin((90 * RAD) - P14_TILT), cos((90 * RAD) - P14_TILT), 0.00 };
 
@@ -256,6 +259,29 @@ const VECTOR3 P4_PUSHB_POS[P4_PUSHBCOUNT] = {
 	{-0.023046, -0.015110, 1.413551}, {-0.000177, -0.015110, 1.413551}, {0.022441,-0.015110,1.413551}, {-0.022966, 0.000311, 1.429174}, {-0.000208, 0.000311, 1.429174},
 	{0.022667, 0.000311, 1.429174}, {-0.023022, 0.015839, 1.444753}, {-0.000197, 0.015839, 1.444753}, {0.022350, 0.015839, 1.444753}, {0.045282, 0.015839, 1.444753},
 	{0.045019, 0.000180, 1.428975}, {0.045087, -0.015076, 1.413737}, {0.067903, 0.007901, 1.436722}, {0.067771, -0.007522, 1.421295}
+};
+
+// Panel 5 switches
+const VECTOR3 P5_TOGGLE_POS[P5_SWITCHCOUNT] = {
+{-0.5664, 0.0055, 1.5272}, {-0.5120, 0.0055, 1.5272}, {-0.4727, 0.0055, 1.5272}, {-0.4334, 0.0055, 1.5272}, {-0.5172, -0.0044, 1.4713}, {-0.486466, -0.0044, 1.4713},
+{-0.455454, -0.0044, 1.4713}, {-0.424065, -0.0044, 1.4713}
+};
+
+// Panel 5 rotaries
+const VECTOR3 P5_ROT_POS[P5_ROTCOUNT] = {
+{-0.5854, -0.0136, 1.4165}, {-0.4982, -0.0136, 1.4164}, {-0.4304, -0.0136, 1.4164}
+};
+
+// Panel 6 switches
+const VECTOR3 P6_TOGGLE_POS[P6_SWITCHCOUNT] = {
+{0.478506, -0.016735, 1.41034}
+};
+
+// Panel 6 push-buttons
+const VECTOR3 P6_PUSHB_POS[P6_PUSHBCOUNT] = {
+{0.5432, 0.0012, 1.4746}, {0.5428, -0.0028, 1.4513}, {0.5428, -0.0070, 1.4279}, {0.5670, -0.0070, 1.4281}, {0.5910, -0.0070, 1.4281}, {0.6150, -0.0071, 1.4275},
+{0.5669, -0.0029, 1.4512}, {0.5911, -0.0029, 1.4511}, {0.6149, -0.0029, 1.4511}, {0.5668, 0.0014, 1.4751}, {0.5911, 0.0015, 1.4750}, {0.6148, 0.0017, 1.4748},
+{0.6391, 0.0012, 1.4747}, {0.6385, -0.0029, 1.4509}, {0.6389, -0.0070, 1.4280}, {0.5914, -0.0112, 1.4039}
 };
 
 // Panel 8 switches
@@ -696,6 +722,7 @@ public:
 		SRF_INDICATORVC,
 		SRF_INDICATORREDVC,
 		SRF_LEM_MASTERALARMVC,
+		SRF_DEDA_LIGHTSVC,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1893,6 +1920,9 @@ protected:
 	MGROUP_TRANSFORM *mgt_P3Rot[P3_ROTCOUNT];
 	MGROUP_TRANSFORM *mgt_P3needles[P3_NEEDLECOUNT];
 	MGROUP_TRANSFORM *mgt_P4switch[P4_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P5switch[P5_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P5Rot[P5_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P6switch[P6_SWITCHCOUNT];
 	MGROUP_TRANSFORM *mgt_P8switch[P8_SWITCHCOUNT];
 	MGROUP_TRANSFORM *mgt_P8thumbwheels[P8_TWCOUNT];
 	MGROUP_TRANSFORM *mgt_P11R1cbs[P11R1_CBCOUNT];
@@ -1921,6 +1951,9 @@ protected:
 	UINT anim_P3_Rot[P3_ROTCOUNT];
 	UINT anim_P3needles[P3_NEEDLECOUNT];
 	UINT anim_P4switch[P4_SWITCHCOUNT];
+	UINT anim_P5switch[P5_SWITCHCOUNT];
+	UINT anim_P5_Rot[P5_ROTCOUNT];
+	UINT anim_P6switch[P6_SWITCHCOUNT];
 	UINT anim_P8switch[P8_SWITCHCOUNT];
 	UINT anim_P8thumbwheels[P8_TWCOUNT];
 	UINT anim_P11R1cbs[P11R1_CBCOUNT];
@@ -1952,6 +1985,10 @@ protected:
 	UINT anim_rrslewsitch_y;
 	UINT anim_stageswitch;
 	UINT anim_stagecover;
+	UINT anim_startbutton;
+	UINT anim_stopbutton_cdr;
+	UINT anim_stopbutton_lmp;
+	UINT anim_plusxbutton;
 	UINT anim_fdaiR_cdr, anim_fdaiR_lmp;
 	UINT anim_fdaiP_cdr, anim_fdaiP_lmp;
 	UINT anim_fdaiY_cdr, anim_fdaiY_lmp;

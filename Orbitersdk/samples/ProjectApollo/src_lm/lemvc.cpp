@@ -533,6 +533,80 @@ void LEM::RegisterActiveAreas()
 	MainPanelVC.AddSwitch(&RightACA4JetSwitch, AID_VC_SWITCH_P4_03, &anim_P4switch[2]);
 	MainPanelVC.AddSwitch(&RightTTCATranslSwitch, AID_VC_SWITCH_P4_04, &anim_P4switch[3]);
 
+	// Panel 5
+
+	for (i = 0; i < P5_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P5_01 + i, P5_TOGGLE_POS[i] + P5_CLICK + ofs, 0.006);
+	}
+
+	for (i = 0; i < P5_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P5_01 + i, P5_ROT_POS[i] + ofs, 0.02);
+	}
+
+	oapiVCRegisterArea(AID_VC_START_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_START_BUTTON, _V(-0.644677, 0.073766, 1.48271) + ofs, 0.01);
+	oapiVCRegisterArea(AID_VC_STOP_BUTTON_CDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_STOP_BUTTON_CDR, _V(-0.694894, 0.085711, 1.53811) + ofs, 0.01);
+	oapiVCRegisterArea(AID_VC_PLUSX_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_PLUSX_BUTTON, _V(-0.65603, -0.017321, 1.41484) + ofs, 0.01);
+
+	MainPanelVC.AddSwitch(&TimerContSwitch, AID_VC_SWITCH_P5_01, &anim_P5switch[0]);
+	MainPanelVC.AddSwitch(&TimerSlewHours, AID_VC_SWITCH_P5_02, &anim_P5switch[1]);
+	MainPanelVC.AddSwitch(&TimerSlewMinutes, AID_VC_SWITCH_P5_03, &anim_P5switch[2]);
+	MainPanelVC.AddSwitch(&TimerSlewSeconds, AID_VC_SWITCH_P5_04, &anim_P5switch[3]);
+	MainPanelVC.AddSwitch(&LtgORideAnunSwitch, AID_VC_SWITCH_P5_05, &anim_P5switch[4]);
+	MainPanelVC.AddSwitch(&LtgORideNumSwitch, AID_VC_SWITCH_P5_06, &anim_P5switch[5]);
+	MainPanelVC.AddSwitch(&LtgORideIntegralSwitch, AID_VC_SWITCH_P5_07, &anim_P5switch[6]);
+	MainPanelVC.AddSwitch(&LtgSidePanelsSwitch, AID_VC_SWITCH_P5_08, &anim_P5switch[7]);
+
+	MainPanelVC.AddSwitch(&LtgFloodOhdFwdKnob, AID_VC_ROT_P5_01, &anim_P5_Rot[0]);
+	MainPanelVC.AddSwitch(&LtgAnunNumKnob, AID_VC_ROT_P5_02, &anim_P5_Rot[1]);
+	MainPanelVC.AddSwitch(&LtgIntegralKnob, AID_VC_ROT_P5_03, &anim_P5_Rot[2]);
+
+	// Panel 6
+
+	for (i = 0; i < P6_PUSHBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_PUSHB_P6_01 + i, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P6_01 + i, P6_PUSHB_POS[i] + ofs, 0.008);
+	}
+
+	for (i = 0; i < P6_SWITCHCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P6_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P6_01 + i, P6_TOGGLE_POS[i] + P6_CLICK + ofs, 0.006);
+	}
+
+	oapiVCRegisterArea(AID_VC_STOP_BUTTON_LMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_STOP_BUTTON_LMP, _V(0.421597, 0.077646, 1.50924) + ofs, 0.01);
+
+	oapiVCRegisterArea(AID_VC_LM_DEDA_DISP, _R(1803, 98, 1937, 120), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_DEDA_ADR, _R(1827, 53, 1885, 75), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_DEDA_LIGHTS, _R(1740, 96, 1787, 122), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+
+	MainPanelVC.AddSwitch(&DedaSwitchPlus, AID_VC_PUSHB_P6_01, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchMinus, AID_VC_PUSHB_P6_02, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchZero, AID_VC_PUSHB_P6_03, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchOne, AID_VC_PUSHB_P6_04, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchTwo, AID_VC_PUSHB_P6_05, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchThree, AID_VC_PUSHB_P6_06, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchFour, AID_VC_PUSHB_P6_07, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchFive, AID_VC_PUSHB_P6_08, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchSix, AID_VC_PUSHB_P6_09, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchSeven, AID_VC_PUSHB_P6_10, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchEight, AID_VC_PUSHB_P6_11, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchNine, AID_VC_PUSHB_P6_12, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchClear, AID_VC_PUSHB_P6_13, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchHold, AID_VC_PUSHB_P6_14, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchReadOut, AID_VC_PUSHB_P6_15, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchEnter, AID_VC_PUSHB_P6_16, NULL);
+
+	MainPanelVC.AddSwitch(&AGSOperateSwitch, AID_VC_SWITCH_P6_01, &anim_P6switch[0]);
+
 	// Panel 8
 
 	for (i = 0; i < P8_SWITCHCOUNT; i++)
@@ -939,6 +1013,22 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 		case AID_VC_STAGE_SWITCH:
 			EDStage.CheckMouseClickVC(event, p);
 			return true;
+
+		case AID_VC_START_BUTTON:
+			ManualEngineStart.CheckMouseClickVC(event);
+			return true;
+
+		case AID_VC_STOP_BUTTON_CDR:
+			CDRManualEngineStop.CheckMouseClickVC(event);
+			return true;
+
+		case AID_VC_STOP_BUTTON_LMP:
+			LMPManualEngineStop.CheckMouseClickVC(event);
+			return true;
+
+		case AID_VC_PLUSX_BUTTON:
+			PlusXTranslationButton.ProcessMouseVC(event, p);
+			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
 	//return false;
@@ -981,6 +1071,18 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		{
 			dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS], 0, 0, false);
 		}
+		return true;
+
+	case AID_VC_LM_DEDA_LIGHTS:
+		deda.RenderOprErr(surf, srf[SRF_DEDA_LIGHTSVC]);
+		return true;
+
+	case AID_VC_LM_DEDA_DISP:
+		deda.RenderData(surf, srf[SRF_VC_DIGITALDISP2]);
+		return true;
+
+	case AID_VC_LM_DEDA_ADR:
+		deda.RenderAdr(surf, srf[SRF_VC_DIGITALDISP2]);
 		return true;
 
 	case AID_VC_RDR_SIG_STR:
@@ -1453,7 +1555,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_RR_SLEW_SWITCH:
 		RadarSlewSwitch.DrawSwitchVC(anim_rrslewsitch_x, anim_rrslewsitch_y);
-		//SetAnimation(anim_stagecover, ttca_throttle_pos_dig);
+		//SetAnimation(anim_stopbutton_cdr, ttca_throttle_pos_dig);
 		return true;
 
 	/*case AID_VC_RECORDER_TALKBACK:
@@ -1478,6 +1580,22 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	case AID_VC_STAGE_SWITCH:
 		EDStage.DrawSwitchVC(anim_stageswitch, anim_stagecover);
 		return true;
+
+	case AID_VC_START_BUTTON:
+		ManualEngineStart.DoDrawSwitchVC(anim_startbutton);
+		return true;
+
+	case AID_VC_STOP_BUTTON_CDR:
+		CDRManualEngineStop.DoDrawSwitchVC(anim_stopbutton_cdr);
+		return true;
+
+	case AID_VC_STOP_BUTTON_LMP:
+		LMPManualEngineStop.DoDrawSwitchVC(anim_stopbutton_lmp);
+		return true;
+
+	case AID_VC_PLUSX_BUTTON:
+		PlusXTranslationButton.RedrawVC(anim_plusxbutton);
+		return true;
 	}
 
 	return MainPanelVC.VCRedrawEvent(id, event, surf);
@@ -1496,6 +1614,9 @@ void LEM::InitVCAnimations() {
 	anim_P3_Rot[P3_ROTCOUNT] = -1;
 	anim_P3needles[P3_NEEDLECOUNT] = -1;
 	anim_P4switch[P4_SWITCHCOUNT] = -1;
+	anim_P5switch[P5_SWITCHCOUNT] = -1;
+	anim_P5_Rot[P5_ROTCOUNT] = -1;
+	anim_P6switch[P6_SWITCHCOUNT] = -1;
 	anim_P8switch[P8_SWITCHCOUNT] = -1;
 	anim_P8thumbwheels[P8_TWCOUNT] = -1;
 	anim_P11R1cbs[P11R1_CBCOUNT] = -1;
@@ -1527,6 +1648,10 @@ void LEM::InitVCAnimations() {
 	anim_rrslewsitch_y = -1;
 	anim_stageswitch = -1;
 	anim_stagecover = -1;
+	anim_startbutton = -1;
+	anim_stopbutton_cdr = -1;
+	anim_stopbutton_lmp = -1;
+	anim_plusxbutton = -1;
 	anim_fdaiR_cdr = anim_fdaiR_lmp = -1;
 	anim_fdaiP_cdr = anim_fdaiP_lmp = -1;
 	anim_fdaiY_cdr = anim_fdaiY_lmp = -1;
@@ -1562,6 +1687,12 @@ void LEM::DeleteVCAnimations()
 	for (i = 0; i < P3_NEEDLECOUNT; i++) delete mgt_P3needles[i];
 
 	for (i = 0; i < P4_SWITCHCOUNT; i++) delete mgt_P4switch[i];
+
+	for (i = 0; i < P5_SWITCHCOUNT; i++) delete mgt_P5switch[i];
+
+	for (i = 0; i < P5_ROTCOUNT; i++) delete mgt_P5Rot[i];
+
+	for (i = 0; i < P6_SWITCHCOUNT; i++) delete mgt_P6switch[i];
 
 	for (i = 0; i < P8_SWITCHCOUNT; i++) delete mgt_P8switch[i];
 
@@ -1694,6 +1825,34 @@ void LEM::DefineVCAnimations()
 		mgt_P4switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P4switches[i], 1, P4_TOGGLE_POS[i], _V(1, 0, 0), (float)PI / 4);
 		anim_P4switch[i] = CreateAnimation(0.5);
 		AddAnimationComponent(anim_P4switch[i], 0.0f, 1.0f, mgt_P4switch[i]);
+	}
+
+	// Panel 5 switches/rotaries
+	static UINT meshgroup_P5switches[P5_SWITCHCOUNT], meshgroup_P5Rots[P5_ROTCOUNT];
+	for (int i = 0; i < P5_SWITCHCOUNT; i++)
+	{
+		meshgroup_P5switches[i] = VC_GRP_Sw_P5_01 + i;
+		mgt_P5switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P5switches[i], 1, P5_TOGGLE_POS[i] - P5_CLICK, _V(1, 0, 0), (float)PI / 4);
+		anim_P5switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P5switch[i], 0.0f, 1.0f, mgt_P5switch[i]);
+	}
+
+	for (i = 0; i < P5_ROTCOUNT; i++)
+	{
+		meshgroup_P5Rots[i] = VC_GRP_Rot_P5_01 + i;
+		mgt_P5Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P5Rots[i], 1, P5_ROT_POS[i], P5_ROT_AXIS, (float)(RAD * 360));
+		anim_P5_Rot[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P5_Rot[i], 0.0f, 1.0f, mgt_P5Rot[i]);
+	}
+
+	// Panel 6 switches
+	static UINT meshgroup_P6switches[P6_SWITCHCOUNT];
+	for (int i = 0; i < P6_SWITCHCOUNT; i++)
+	{
+		meshgroup_P6switches[i] = VC_GRP_Sw_P6_01 + i;
+		mgt_P6switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P6switches[i], 1, P6_TOGGLE_POS[i], _V(1, 0, 0), (float)PI / 4);
+		anim_P6switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P6switch[i], 0.0f, 1.0f, mgt_P6switch[i]);
 	}
 
 	// Panel 8 switches/thumbwheels
@@ -1933,6 +2092,34 @@ void LEM::DefineVCAnimations()
 	static MGROUP_ROTATE mgt_Stage_Cover(mesh, &meshgroup_Stage_Cover, 1, _V(-0.990451, 0.042666, 1.12664), stagecoveraxis, (float)(RAD * 90));
 	anim_stagecover = CreateAnimation(0.0);
 	AddAnimationComponent(anim_stagecover, 0.0f, 1.0f, &mgt_Stage_Cover);
+
+	// Start button
+	const VECTOR3 startbuttonvector = { 0.00, -0.004*cos(P5_TILT - (90.0 * RAD)), -0.004*sin(P5_TILT - (90.0 * RAD)) };
+	static UINT meshgroup_Start_Button = VC_GRP_StartButton;
+	static MGROUP_TRANSLATE mgt_Start_Button(mesh, &meshgroup_Start_Button, 1, startbuttonvector);
+	anim_startbutton = CreateAnimation(0.0);
+	AddAnimationComponent(anim_startbutton, 0.0f, 1.0f, &mgt_Start_Button);
+
+	// Stop button CDR
+	const VECTOR3 stopbuttonaxis_cdr = { -0.00, sin(P5_TILT + (90.0 * RAD)), -cos(P5_TILT + (90.0 * RAD)) };
+	static UINT meshgroup_Stop_Button_cdr = VC_GRP_StopButtonCDR;
+	static MGROUP_ROTATE mgt_Stop_Button_cdr(mesh, &meshgroup_Stop_Button_cdr, 1, _V(-0.703027, 0.102277, 1.53733), stopbuttonaxis_cdr, (float)(RAD * 5));
+	anim_stopbutton_cdr = CreateAnimation(0.0);
+	AddAnimationComponent(anim_stopbutton_cdr, 0.0f, 1.0f, &mgt_Stop_Button_cdr);
+
+	// Stop button LMP
+	const VECTOR3 stopbuttonaxis_lmp = { -0.00, sin(P6_TILT + (90.0 * RAD)), -cos(P6_TILT + (90.0 * RAD)) };
+	static UINT meshgroup_Stop_Button_lmp = VC_GRP_StopButtonLMP;
+	static MGROUP_ROTATE mgt_Stop_Button_lmp(mesh, &meshgroup_Stop_Button_lmp, 1, _V(0.413931, 0.098204, 1.50665), stopbuttonaxis_lmp, (float)(RAD * 5));
+	anim_stopbutton_lmp = CreateAnimation(0.0);
+	AddAnimationComponent(anim_stopbutton_lmp, 0.0f, 1.0f, &mgt_Stop_Button_lmp);
+
+	// Plus X button
+	const VECTOR3 plusxbuttonvector = { 0.00, -0.004*cos(P5_TILT - (90.0 * RAD)), -0.004*sin(P5_TILT - (90.0 * RAD)) };
+	static UINT meshgroup_PlusX_Button = VC_GRP_PlusXButton;
+	static MGROUP_TRANSLATE mgt_PlusX_Button(mesh, &meshgroup_PlusX_Button, 1, plusxbuttonvector);
+	anim_plusxbutton = CreateAnimation(0.0);
+	AddAnimationComponent(anim_plusxbutton, 0.0f, 1.0f, &mgt_PlusX_Button);
 
 	InitFDAI(mesh);
 }
