@@ -576,13 +576,13 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp (line, "SCALERCOUNTER", 13)) {
 			sscanf (line+13, "%d", &vagc.ScalerCounter);
 		}
-		else if (!strnicmp(line, "SCALER", 6)) {
+		else if (!strnicmp (line, "SCALER", 6)) {
 			sscanf(line + 6, "%d", &vagc.Scaler);
 			scalerLoaded = true;
 		}
-		else if (!strnicmp(line, "SCALERCHANGED", 6)) {
+		else if (!strnicmp (line, "SCALERCHANGED", 13)) {
 			int tmp;
-			sscanf(line + 6, "%d", &tmp);
+			sscanf(line + 13, "%d", &tmp);
 			vagc.ScalerChanged = tmp;
 		}
 		else if (!strnicmp (line, "CRCOUNT", 7)) {
