@@ -209,8 +209,6 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 
 	MissionTime = (oapiGetSimMJD() - LaunchMJD)*24.0*3600.0;
 
-	sprintf(oapiDebugString(), "%lf", MissionTime);
-
 	if (swingarmState.Moving()) {
 		double dp = simdt * 0.25;
 		swingarmState.Move(dp);

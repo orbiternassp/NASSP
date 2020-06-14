@@ -26,6 +26,8 @@
 
 #include <vector>
 
+#define LVDC_TIMESTEP 0.01
+
 class LVDA;
 
 struct SwitchSelectorSet
@@ -70,6 +72,8 @@ public:
 protected:
 	double RealTimeClock;
 	bool ReadyToLaunch;
+	int MinorLoopCounter;
+	int MinorLoopCycles;
 	//Start time of current time base measured from GRR
 	double TI;
 	LVDA &lvda;

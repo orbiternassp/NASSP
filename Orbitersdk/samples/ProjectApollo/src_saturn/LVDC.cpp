@@ -43,6 +43,8 @@ LVDC::LVDC(LVDA &lvd) : lvda(lvd)
 	RealTimeClock = 0.0;
 	ReadyToLaunch = false;
 	TI = 0.0;
+	MinorLoopCounter = 0;
+	MinorLoopCycles = 10; //Default to 10 for old scenarios in orbit
 }
 
 void LVDC::PrepareToLaunch()
@@ -606,6 +608,8 @@ void LVDC1B::TimeStep(double simdt) {
 					oapiSetTimeAcceleration (1);					// Set time acceleration to 1
 					LVDC_Timebase = 0;								// Start TB0
 					LVDC_TB_ETime = 0;
+					MinorLoopCycles = 4;
+					MinorLoopCounter = 0;
 				}
 				break;
 			case 0: // MORE TB0
@@ -725,8 +729,10 @@ void LVDC1B::TimeStep(double simdt) {
 					lvda.SetStage(STAGE_ORBIT_SIVB);
 				}
 
-				if(LVDC_TB_ETime > 100){
+				if(poweredflight && LVDC_TB_ETime > 15.0){
 					poweredflight = false; //powered flight nav off
+					MinorLoopCycles = 10;
+					MinorLoopCounter = 0;
 				}
 
 				//For now, disable LVDC at TB4+16,800 seconds
@@ -1030,7 +1036,7 @@ void LVDC1B::TimeStep(double simdt) {
 			}else{
 				CommandedAttitude.z = 0; //no yaw
 				CommandedAttitude.y = 0; //no pitch
-				CommandedAttitude.x = (360-100)*RAD + Azimuth; //no roll
+				CommandedAttitude.x = (360- A_zL)*RAD + Azimuth; //no roll
 				goto limittest;
 			}
 			//end of pre igm
@@ -1491,7 +1497,17 @@ limittest:
 		}
 		PCommandedAttitude = CommandedAttitude;
 
-minorloop: //minor loop;
+	minorloop: //minor loop;
+
+		//Only run minor loop 25 times per second during boost, 10 times per second during orbit phase
+		MinorLoopCounter++;
+		if (MinorLoopCounter < MinorLoopCycles)
+		{
+			return;
+		}
+		MinorLoopCounter = 0;
+		//fprintf(lvlog, "[%d+%f] *** Minor Loop ***\r\n", LVDC_Timebase, LVDC_TB_ETime);
+
 		if(T_GO - sinceLastIGM <= 0 && HSL == true && S4B_IGN == true){
 			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
 			S4B_IGN = false;
@@ -1608,6 +1624,8 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	// int
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
+	oapiWriteScenario_int(scn, "LVDC_MinorLoopCounter", MinorLoopCounter);
+	oapiWriteScenario_int(scn, "LVDC_MinorLoopCycles", MinorLoopCycles);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
 	oapiWriteScenario_int(scn, "LVDC_T_EO1", T_EO1);
 	oapiWriteScenario_int(scn, "LVDC_T_EO2", T_EO2);
@@ -1925,6 +1943,8 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		// INT
 		papiReadScenario_int(line, "LVDC_CommandSequence", CommandSequence);
 		papiReadScenario_int(line, "LVDC_IGMCycle", IGMCycle);
+		papiReadScenario_int(line, "LVDC_MinorLoopCounter", MinorLoopCounter);
+		papiReadScenario_int(line, "LVDC_MinorLoopCycles", MinorLoopCycles);
 		papiReadScenario_int(line, "LVDC_LVDC_Timebase", LVDC_Timebase);
 		papiReadScenario_int(line, "LVDC_T_EO1", T_EO1);
 		papiReadScenario_int(line, "LVDC_T_EO2", T_EO2);
@@ -3215,6 +3235,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_CommandSequenceStored", CommandSequenceStored);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
+	oapiWriteScenario_int(scn, "LVDC_MinorLoopCounter", MinorLoopCounter);
+	oapiWriteScenario_int(scn, "LVDC_MinorLoopCycles", MinorLoopCycles);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
 	oapiWriteScenario_int(scn, "LVDC_tgt_index", tgt_index);
@@ -3886,6 +3908,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_int(line, "LVDC_CommandSequence", CommandSequence);
 		papiReadScenario_int(line, "LVDC_CommandSequenceStored", CommandSequenceStored);
 		papiReadScenario_int(line, "LVDC_IGMCycle", IGMCycle);
+		papiReadScenario_int(line, "LVDC_MinorLoopCounter", MinorLoopCounter);
+		papiReadScenario_int(line, "LVDC_MinorLoopCycles", MinorLoopCycles);
 		papiReadScenario_int(line, "LVDC_OrbNavCycle", OrbNavCycle);
 		papiReadScenario_int(line, "LVDC_LVDC_Stop", LVDC_Stop);
 		papiReadScenario_int(line, "LVDC_LVDC_Timebase", LVDC_Timebase);
@@ -4642,6 +4666,8 @@ void LVDCSV::TimeStep(double simdt) {
 					BOOST = true;
 					LVDC_GRR = true;								// Mark event
 					poweredflight = true;
+					MinorLoopCycles = 4;
+					MinorLoopCounter = 0;
 				}
 
 				// LIFTOFF
@@ -4655,7 +4681,6 @@ void LVDCSV::TimeStep(double simdt) {
 					// Fall into TB1
 					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
 					lvda.SetOutputRegisterBit(FiringCommitEnable, false);
-					break;
 				}
 				break;
 
@@ -4809,19 +4834,16 @@ void LVDCSV::TimeStep(double simdt) {
 
 				CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
 
-				// Cutoff transient thrust
-				if(LVDC_TB_ETime < 2){
-					fprintf(lvlog,"S4B CUTOFF: Time %f Acceleration %f\r\n",LVDC_TB_ETime, Fm);
-				}
-
 				if (LVDC_TB_ETime > 10.0 && lvda.GetStage() == LAUNCH_STAGE_SIVB)
 				{
 					lvda.SetStage(STAGE_ORBIT_SIVB);
 				}
 
-				if(LVDC_TB_ETime > 100){
+				if(poweredflight && LVDC_TB_ETime > 100){
 					//powered flight nav off
 					poweredflight = false;
+					MinorLoopCycles = 10;
+					MinorLoopCounter = 0;
 				}
 
 				//CSM separation detection
@@ -4843,13 +4865,11 @@ void LVDCSV::TimeStep(double simdt) {
 				if (poweredflight == false)
 				{
 					poweredflight = true;
+					MinorLoopCycles = 4;
+					MinorLoopCounter = 0;
 					lvda.TLIBegun();
 				}
 
-
-				if (LVDC_TB_ETime >= T_RG && S4B_REIGN == false) {
-					fprintf(lvlog, "S4B IGNITION: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
-				}
 				if(LVDC_TB_ETime>=580.3 && S4B_REIGN==false)
 				{
 					S4B_REIGN = true;
@@ -4887,6 +4907,8 @@ void LVDCSV::TimeStep(double simdt) {
 						CommandSequence = CommandSequenceStored;
 
 						poweredflight = false;
+						MinorLoopCycles = 10;
+						MinorLoopCounter = 0;
 						//S-IVB Restart Alert Off
 						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
 						//S/C Control of Saturn Enable
@@ -4927,6 +4949,8 @@ void LVDCSV::TimeStep(double simdt) {
 					CommandSequenceStored = CommandSequence;
 					CommandSequence = 0;
 					poweredflight = false;
+					MinorLoopCycles = 10;
+					MinorLoopCounter = 0;
 				}
 				break;
 			case 7:
@@ -4942,6 +4966,8 @@ void LVDCSV::TimeStep(double simdt) {
 				if (LVDC_TB_ETime > BN4 && poweredflight) {
 					//powered flight nav off
 					poweredflight = false;
+					MinorLoopCycles = 10;
+					MinorLoopCounter = 0;
 				}
 
 				if (LVDC_TB_ETime > TI7F11 && LVDC_TB_ETime < TI7F11 + 300.0)
@@ -4963,6 +4989,8 @@ void LVDCSV::TimeStep(double simdt) {
 					CommandSequenceStored = CommandSequence;
 					CommandSequence = 0;
 					poweredflight = false;
+					MinorLoopCycles = 10;
+					MinorLoopCounter = 0;
 				}
 
 				if (Timebase8Enabled && LVDC_TB_ETime > t_TB8Start)
@@ -5102,6 +5130,9 @@ void LVDCSV::TimeStep(double simdt) {
 				break;
 
 		}
+
+		//No need to run the code below before GRR
+		if (LVDC_Timebase < 0) return;
 
 		if (GuidanceReferenceFailure == false)
 		{
@@ -6712,7 +6743,17 @@ O3precalc:
 		GATE3 = true;
 		goto orbitalguidance;
 	
-minorloop:
+	minorloop:
+
+		//Only run minor loop 25 times per second during boost, 10 times per second during orbit phase
+		MinorLoopCounter++;
+		if (MinorLoopCounter < MinorLoopCycles)
+		{
+			return;
+		}
+		MinorLoopCounter = 0;
+		//fprintf(lvlog, "[%d+%f] *** Minor Loop ***\r\n", LVDC_Timebase, LVDC_TB_ETime);
+
 		//minor loop; TBD: move IGM steering angles & HSL logic here
 		if(T_GO - sinceLastCycle <= 0 && HSL == true && S4B_IGN == true){
 			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
