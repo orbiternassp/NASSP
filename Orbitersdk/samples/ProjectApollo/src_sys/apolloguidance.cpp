@@ -645,7 +645,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		else if (!strnicmp(line, "CNTREQ", 6)) {
 			int num, val;
 			char dir;
-			sscanf(line + 6, "%c%0d %d",&dir, &num, &val);
+			sscanf(line + 6, "%c%d %d",&dir, &num, &val);
 			if (num >= 0 && num < NUM_CNT_REGS) {
 				switch (dir) {
 				case 'P':
