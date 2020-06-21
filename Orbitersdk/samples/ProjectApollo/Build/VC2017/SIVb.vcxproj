@@ -166,6 +166,7 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\..\src_sys\pyro.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
@@ -184,6 +185,7 @@
     <ClInclude Include="..\..\src_sys\DelayTimer.h" />
     <ClInclude Include="..\..\src_sys\powersource.h" />
     <ClInclude Include="..\..\src_saturn\sivb.h" />
+    <ClInclude Include="..\..\src_sys\pyro.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="PanelSDK.vcxproj">

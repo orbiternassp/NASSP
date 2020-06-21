@@ -86,6 +86,11 @@ VECTOR3 LVDA::GetLVIMUAttitude()
 	return iu->GetLVIMU()->GetTotalAttitude();
 }
 
+VECTOR3 LVDA::GetTheodoliteAlignment(double azimuth)
+{
+	return iu->GetTheodoliteAlignment(azimuth);
+}
+
 void LVDA::ZeroLVIMUPIPACounters()
 {
 	iu->GetLVIMU()->ZeroPIPACounters();
@@ -298,11 +303,6 @@ bool LVDA::LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double 
 	return false;
 }
 
-void LVDA::SwitchSelectorOld(int chan)
-{
-	iu->GetLVCommandConnector()->SwitchSelector(chan);
-}
-
 double LVDA::GetMissionTime()
 {
 	return iu->GetLVCommandConnector()->GetMissionTime();
@@ -318,9 +318,9 @@ void LVDA::SetStage(int stage)
 	iu->GetLVCommandConnector()->SetStage(stage);
 }
 
-int LVDA::GetApolloNo()
+int LVDA::GetVehicleNo()
 {
-	return iu->GetLVCommandConnector()->GetApolloNo();
+	return iu->GetLVCommandConnector()->GetVehicleNo();
 }
 
 void LVDA::GetRelativePos(VECTOR3 &v)

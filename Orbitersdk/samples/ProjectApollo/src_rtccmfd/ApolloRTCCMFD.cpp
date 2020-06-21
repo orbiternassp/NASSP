@@ -4570,9 +4570,7 @@ void ApolloRTCCMFD::menuChangeVesselType()
 		G->g_Data.uplinkLEM = 1;
 
 		if (!stricmp(G->vessel->GetClassName(), "ProjectApollo\\LEM") ||
-			!stricmp(G->vessel->GetClassName(), "ProjectApollo/LEM") ||
-			!stricmp(G->vessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
-			!stricmp(G->vessel->GetClassName(), "ProjectApollo/LEMSaturn")) {
+			!stricmp(G->vessel->GetClassName(), "ProjectApollo/LEM")) {
 			LEM *lem = (LEM *)G->vessel;
 			if (lem->GetStage() < 2)
 			{

@@ -1023,7 +1023,6 @@ public:
 	/// 
 	/// \brief LVDC "Switch Selector" staging support utility function
 	/// 
-	virtual void SwitchSelector(int item) = 0;
 	virtual void SISwitchSelector(int channel) = 0;
 	virtual void SIISwitchSelector(int channel) {}
 	void SIVBSwitchSelector(int channel);

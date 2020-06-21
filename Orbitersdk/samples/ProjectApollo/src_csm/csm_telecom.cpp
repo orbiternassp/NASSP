@@ -1596,7 +1596,7 @@ void PCM::Init(Saturn *vessel){
 	mcc_size = 0; mcc_offset = 0;
 	wsk_error = 0;
 	last_update = 0;
-	last_rx = 0;
+	last_rx = MINUS_INFINITY;
 	word_addr = 0;
 	pcm_rate_override = 0;
 	int iResult = WSAStartup( MAKEWORD(2,2), &wsaData );

@@ -737,9 +737,7 @@ void AR_GCore::MPTMassUpdate()
 		vesseltype = 0;
 	}
 	else if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
-		!stricmp(vessel->GetClassName(), "ProjectApollo/LEMSaturn"))
+		!stricmp(vessel->GetClassName(), "ProjectApollo/LEM"))
 	{
 		vesseltype = 1;
 	}
@@ -1006,9 +1004,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		g_Data.uplinkLEM = 1;
 
 		if (!stricmp(vessel->GetClassName(), "ProjectApollo\\LEM") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/LEM") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo\\LEMSaturn") ||
-			!stricmp(vessel->GetClassName(), "ProjectApollo/LEMSaturn")) {
+			!stricmp(vessel->GetClassName(), "ProjectApollo/LEM")) {
 			LEM *lem = (LEM *)vessel;
 			if (lem->GetStage() < 2)
 			{
