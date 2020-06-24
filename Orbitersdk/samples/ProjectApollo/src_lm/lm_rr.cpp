@@ -158,6 +158,22 @@ double LEM_RR::GetTransmitterPower()
 	return 3.7;
 }
 
+double LEM_RR::GetCSMGain(VESSEL *csm) //returns the gain of the csm RRT system for returned power calculations
+{
+	double gain = 6; //dB
+	double theta, phi;
+	
+	VECTOR3 CSMOrient, LEMPos, CSMPos;
+
+	csm->GetGlobalOrientation(CSMOrient);
+	csm->GetGlobalOrientation(CSMPos);
+	lem->GetGlobalPos(LEMPos);
+
+
+
+	return gain;
+}
+
 void LEM_RR::Timestep(double simdt) {
 
 	// RR mesh animation
@@ -296,22 +312,26 @@ void LEM_RR::Timestep(double simdt) {
 		SignalStrength = 0.0;
 
 		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, R;
-		MATRIX3 Rot;
+		MATRIX3 LMRot;
 		double relang;
+		double CSMReflectGain;
 
 		double anginc = 0.1*RAD;
 
 		VESSEL *csm = lem->agc.GetCSM();
 
+
 		if (csm)
 		{
+			CSMReflectGain = GetCSMGain(csm);
 
 			//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 			lem->GetGlobalPos(LMPos);
 			csm->GetGlobalPos(CSMPos);
 			//oapiGetGlobalPos(hEarth, &R_E);
 			//oapiGetGlobalPos(hMoon, &R_M);
-			lem->GetRotationMatrix(Rot);
+			lem->GetRotationMatrix(LMRot);
+			
 
 			//Vector pointing from LM to CSM
 			R = CSMPos - LMPos;
@@ -331,7 +351,7 @@ void LEM_RR::Timestep(double simdt) {
 				U_RRL[i] = _V(U_RRL[i].y, U_RRL[i].x, U_RRL[i].z);
 
 				//Calculate antenna pointing vector in global frame
-				U_RR = mul(Rot, U_RRL[i]);
+				U_RR = mul(LMRot, U_RRL[i]);
 
 				//relative angle between antenna pointing vector and direction of CSM
 				relang = acos(dotp(U_RR, U_R));
