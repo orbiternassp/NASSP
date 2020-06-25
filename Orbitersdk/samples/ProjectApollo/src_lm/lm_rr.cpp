@@ -158,17 +158,9 @@ double LEM_RR::GetTransmitterPower()
 	return 3.7;
 }
 
-double LEM_RR::GetCSMGain(VESSEL *csm) //returns the gain of the csm RRT system for returned power calculations
+double LEM_RR::GetCSMGain(double theta, double phi) //returns the gain of the csm RRT system for returned power calculations
 {
 	double gain = 6; //dB
-	double theta, phi;
-	
-	VECTOR3 CSMOrient, LEMPos, CSMPos;
-
-	csm->GetGlobalOrientation(CSMOrient);
-	csm->GetGlobalOrientation(CSMPos);
-	lem->GetGlobalPos(LEMPos);
-
 
 
 	return gain;
@@ -311,19 +303,17 @@ void LEM_RR::Timestep(double simdt) {
 		SignalStrengthQuadrant[3] = 0.0;
 		SignalStrength = 0.0;
 
-		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, R;
-		MATRIX3 LMRot;
+		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, U_RRT, R;
+		MATRIX3 LMRot, CSMRot;
 		double relang;
-		double CSMReflectGain;
+		double CSMReflectGain, theta, phi;
 
 		double anginc = 0.1*RAD;
 
 		VESSEL *csm = lem->agc.GetCSM();
 
-
 		if (csm)
 		{
-			CSMReflectGain = GetCSMGain(csm);
 
 			//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 			lem->GetGlobalPos(LMPos);
@@ -331,6 +321,7 @@ void LEM_RR::Timestep(double simdt) {
 			//oapiGetGlobalPos(hEarth, &R_E);
 			//oapiGetGlobalPos(hMoon, &R_M);
 			lem->GetRotationMatrix(LMRot);
+			csm->GetRotationMatrix(CSMRot);
 			
 
 			//Vector pointing from LM to CSM
@@ -344,6 +335,13 @@ void LEM_RR::Timestep(double simdt) {
 			U_RRL[1] = unit(_V(sin(shaftAngle - anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle - anginc)*cos(trunnionAngle)));
 			U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
 			U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
+
+			U_RRT = unit(mul(CSMRot, U_R)); // calculate the pointing vector from the CSM to the LM in the CSM's local frame
+
+			theta = atan2(U_RRT.z, U_RRT.x); //calculate the azmuth about the csm local frame
+			phi = acos(U_RRT.y)+90*RAD; //calculate the elevation about the csm local frame
+
+			sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf, X: %lf, Y: %lf, Z: %lf", theta*DEG, phi*DEG, U_RRT.x, U_RRT.y, U_RRT.z);
 
 			//In LM navigation base coordinates, left handed
 			for (int i = 0;i < 4;i++)

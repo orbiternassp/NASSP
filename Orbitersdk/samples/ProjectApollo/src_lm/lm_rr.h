@@ -45,7 +45,7 @@ public:
 	double GetShaftErrorSignal();
 	double GetTrunnionErrorSignal();
 	double GetTransmitterPower();
-	double GetCSMGain(VESSEL *csm); //returns the gain of the csm RRT system for returned power calculations
+	double GetCSMGain(double theta, double phi); //returns the gain of the csm RRT system for returned power calculations
 
 	bool IsPowered();
 	bool IsDCPowered();
