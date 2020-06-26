@@ -336,12 +336,20 @@ void LEM_RR::Timestep(double simdt) {
 			U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
 			U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
 
-			U_RRT = unit(mul(CSMRot, U_R)); // calculate the pointing vector from the CSM to the LM in the CSM's local frame
+			U_RRT = unit(tmul(CSMRot, -U_R)); // calculate the pointing vector from the CSM to the LM in the CSM's local frame
 
-			theta = atan2(U_RRT.z, U_RRT.x); //calculate the azmuth about the csm local frame
-			phi = acos(U_RRT.y)+90*RAD; //calculate the elevation about the csm local frame
+			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y);
 
-			sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf, X: %lf, Y: %lf, Z: %lf", theta*DEG, phi*DEG, U_RRT.x, U_RRT.y, U_RRT.z);
+			theta = abs(atan2(U_RRT.y, U_RRT.x)); //calculate the azmuth about the csm local frame
+			phi = atan2(U_RRT.y, -U_RRT.z); //calculate the elevation about the csm local frame
+			
+			if (phi < 0)
+			{
+				phi += RAD*360;
+			}
+
+
+			//sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf, X: %lf, Y: %lf, Z: %lf", theta*DEG, phi*DEG, U_RRT.x, U_RRT.y, U_RRT.z);
 
 			//In LM navigation base coordinates, left handed
 			for (int i = 0;i < 4;i++)
