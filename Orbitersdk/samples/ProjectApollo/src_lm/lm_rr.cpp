@@ -160,8 +160,61 @@ double LEM_RR::GetTransmitterPower()
 
 double LEM_RR::GetCSMGain(double theta, double phi) //returns the gain of the csm RRT system for returned power calculations
 {
-	double gain = 6; //dB
+	double gain; //dB
 
+	gain = 
+		(-0.31211) +
+		(-2.15239*phi) +
+		(-8.04079*theta) +
+		(0.06704*phi*phi) +
+		(0.54104*phi*theta) +
+		(0.95966*theta*theta) +
+		(-7.44E-04*phi*phi*phi) +
+		(-0.01377*phi*phi*theta) +
+		(-0.03972*phi*theta*theta) +
+		(-0.06686*theta*theta*theta) +
+		(1.82E-06*phi*phi*phi*phi) +
+		(2.11E-04*phi*phi*phi*theta) +
+		(6.97E-04*phi*phi*theta*theta) +
+		(0.00158*phi*theta*theta*theta) +
+		(0.00288*theta*theta*theta*theta) +
+		(1.83E-08*phi*phi*phi*phi*phi) +
+		(-1.80E-06*phi*phi*phi*phi*theta) +
+		(-8.25E-06*phi*phi*phi*theta*theta) +
+		(-1.73E-05*phi*phi*theta*theta*theta) +
+		(-3.81E-05*phi*theta*theta*theta*theta) +
+		(-7.84E-05*theta*theta*theta*theta*theta) +
+		(-1.11E-10*phi*phi*phi*phi*phi*phi) +
+		(7.94E-09*phi*phi*phi*phi*phi*theta) +
+		(5.98E-08*phi*phi*phi*phi*theta*theta) +
+		(1.24E-07*phi*phi*phi*theta*theta*theta) +
+		(2.80E-07*phi*phi*theta*theta*theta*theta) +
+		(5.42E-07*phi*theta*theta*theta*theta*theta) +
+		(1.35E-06*theta*theta*theta*theta*theta*theta) +
+		(1.54E-13*phi*phi*phi*phi*phi*phi*phi) +
+		(-1.67E-11*phi*phi*phi*phi*phi*phi*theta) +
+		(-2.17E-10*phi*phi*phi*phi*phi*theta*theta) +
+		(-6.85E-10*phi*phi*phi*phi*theta*theta*theta) +
+		(-9.18E-10*phi*phi*phi*theta*theta*theta*theta) +
+		(-3.03E-09*phi*phi*theta*theta*theta*theta*theta) +
+		(-4.28E-09*phi*theta*theta*theta*theta*theta*theta) +
+		(-1.41E-08*theta*theta*theta*theta*theta*theta*theta) +
+		(1.41E-14*phi*phi*phi*phi*phi*phi*phi*theta) +
+		(3.36E-13*phi*phi*phi*phi*phi*phi*theta*theta) +
+		(1.85E-12*phi*phi*phi*phi*phi*theta*theta*theta) +
+		(3.07E-12*phi*phi*phi*phi*theta*theta*theta*theta) +
+		(3.68E-12*phi*phi*phi*theta*theta*theta*theta*theta) +
+		(1.93E-11*phi*phi*theta*theta*theta*theta*theta*theta) +
+		(1.60E-11*phi*theta*theta*theta*theta*theta*theta*theta) +
+		(8.21E-11*theta*theta*theta*theta*theta*theta*theta*theta) +
+		(-1.73E-16*phi*phi*phi*phi*phi*phi*phi*theta*theta) +
+		(-1.58E-15*phi*phi*phi*phi*phi*phi*theta*theta*theta) +
+		(-4.62E-15*phi*phi*phi*phi*phi*theta*theta*theta*theta) +
+		(-5.04E-15*phi*phi*phi*phi*theta*theta*theta*theta*theta) +
+		(-5.67E-15*phi*phi*phi*theta*theta*theta*theta*theta*theta) +
+		(-5.46E-14*phi*phi*theta*theta*theta*theta*theta*theta*theta) +
+		(-1.58E-14*phi*theta*theta*theta*theta*theta*theta*theta*theta) +
+		(-2.02E-13*theta*theta*theta*theta*theta*theta*theta*theta*theta);
 
 	return gain;
 }
@@ -343,13 +396,16 @@ void LEM_RR::Timestep(double simdt) {
 			theta = abs(atan2(U_RRT.y, U_RRT.x)); //calculate the azmuth about the csm local frame
 			phi = atan2(U_RRT.y, -U_RRT.z); //calculate the elevation about the csm local frame
 			
+			CSMReflectGain = GetCSMGain(theta, phi);
+
 			if (phi < 0)
 			{
 				phi += RAD*360;
 			}
 
+			CSMReflectGain = GetCSMGain(theta/2, phi/2);
 
-			//sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf, X: %lf, Y: %lf, Z: %lf", theta*DEG, phi*DEG, U_RRT.x, U_RRT.y, U_RRT.z);
+			sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf, X: %lf, Y: %lf, Z: %lf, GAIN = %lf", theta*DEG, phi*DEG, U_RRT.x, U_RRT.y, U_RRT.z, CSMReflectGain);
 
 			//In LM navigation base coordinates, left handed
 			for (int i = 0;i < 4;i++)
