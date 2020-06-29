@@ -99,6 +99,11 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 		SignalStrengthQuadrant[i] = 0.0;
 		U_RRL[i] = _V(0.0, 0.0, 0.0);
 	}
+
+	AntennaGain = pow(10, (32 / 10)); //dB
+	AntennaPower = 0.3; //mW
+	AntennaFrequency = 9832; //MHz
+	AntennaWavelength = C0 / (AntennaFrequency * 1000000); //meters
 }
 
 bool LEM_RR::IsDCPowered()
@@ -160,15 +165,16 @@ double LEM_RR::GetTransmitterPower()
 
 double LEM_RR::GetCSMGain(VECTOR3 U_RRT, bool XPDRon)
 {
-	//this should eventually come from the CSM's class.
+	//this should eventually come from the CSM's class and would return a proper radar cross section.
+	//the gain it returns is higher than it needs it should need to be, but should allow for realistic power calculations
 
 	//U_RRT:	unit vector in the csm's coördinate system pointing at the LM
 
 	VECTOR3 XPDR;
 	double reangle;
-	double gain;
+	double gain = 0;
 
-	XPDR = unit(_V(1,1,-0.45)); //"pointing" vector of the RR transponder on the CSM approximately...
+	XPDR = unit(_V(1,1,0.45)); //"pointing" vector of the RR transponder on the CSM approximately...
 
 	reangle = acos(dotp(U_RRT, XPDR)); //relative angle between LM line of sight and transponder pointing vector;
 
@@ -176,21 +182,51 @@ double LEM_RR::GetCSMGain(VECTOR3 U_RRT, bool XPDRon)
 	{
 		if (reangle < 90 * RAD)
 		{
-			gain = cos(reangle*1.09217)*cos(reangle*1.09217);
-			gain = gain * 38;
-			gain = gain - 32;
+			gain = cos(reangle*1.09217)*cos(reangle*1.09217)*150-38; //determined experimentally
 		}
 		else
 		{
-			gain = -32.0; 
+			gain = 114; 
 		}
 	}
 	else
 	{
-		gain = -32.0;
+		gain = 114;
 	}
 
 	return gain;
+}
+
+double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
+{
+	double SignalStrength;
+
+	const double low_dBm = -122.0;
+	const double high_dBm = -70.0;
+	const double LowSignal = 0.375;
+	const double HighSignal = 1.0;
+
+	const double slope = (HighSignal - LowSignal)/(high_dBm - low_dBm);
+	const double intercept = LowSignal - slope * low_dBm;
+
+	if (RecvdRRPower_dBm > -70)
+	{
+		SignalStrength = 1.0;
+	}
+	else
+	{
+		SignalStrength = RecvdRRPower_dBm*slope+intercept;
+		if (SignalStrength > 1)
+		{
+			SignalStrength = 1;
+		}
+		else if (SignalStrength < 0)
+		{
+			SignalStrength = 0;
+		}
+	}
+	
+	return SignalStrength;
 }
 
 
@@ -335,7 +371,8 @@ void LEM_RR::Timestep(double simdt) {
 		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, U_RRT, R;
 		MATRIX3 LMRot, CSMRot;
 		double relang;
-		double CSMReflectGain, theta, phi;
+		double CSMReflectGain;
+		double RecvdRRPower, RecvdRRPower_dBm, SignalStrengthScaleFactor;
 
 		double anginc = 0.1*RAD;
 
@@ -369,9 +406,15 @@ void LEM_RR::Timestep(double simdt) {
 
 			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y); //swap out Orbiter's axes for the Apollo CSM's
 
-			CSMReflectGain = GetCSMGain(U_RRT, TRUE);
+			CSMReflectGain = GetCSMGain(U_RRT, TRUE); //get radar cross section gain of the CSM and transponder in dB
+			CSMReflectGain = pow(10, (CSMReflectGain / 10)); //convert to ratio from dB
+			const double RadarCrossSection = 120; //m^2 probably not a bad guess
 
-			sprintf(oapiDebugString(), "X: %lf, Y: %lf, Z: %lf, GAIN = %lf", U_RRT.x, U_RRT.y, U_RRT.z, CSMReflectGain);
+			RecvdRRPower = (AntennaPower*AntennaGain)/(4*PI*pow(length(R), 2))*(CSMReflectGain*RadarCrossSection/(AntennaWavelength * 4 * PI*pow(length(R), 2)));
+			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
+			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
+
+			sprintf(oapiDebugString(), "X: %lf, Y: %lf, Z: %lf, ReturnedPower: %lf", U_RRT.x, U_RRT.y, U_RRT.z, RecvdRRPower_dBm);
 
 			//In LM navigation base coordinates, left handed
 			for (int i = 0;i < 4;i++)
@@ -384,12 +427,12 @@ void LEM_RR::Timestep(double simdt) {
 				//relative angle between antenna pointing vector and direction of CSM
 				relang = acos(dotp(U_RR, U_R));
 
-				SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang);
+				SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang)*SignalStrengthScaleFactor;
 			}
 
 			SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
 
-			if (SignalStrength > 0.375 && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
+			if (RecvdRRPower_dBm < 122.0)
 			{
 				internalrange = length(R);
 

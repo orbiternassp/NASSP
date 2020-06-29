@@ -46,6 +46,7 @@ public:
 	double GetTrunnionErrorSignal();
 	double GetTransmitterPower();
 	double GetCSMGain(VECTOR3 U_RRT, bool XPDRon); //returns the gain of the csm RRT system for returned power calculations
+	double dBm2SignalStrength(double RecvdRRPower_dBm);
 
 	bool IsPowered();
 	bool IsDCPowered();
@@ -86,6 +87,7 @@ private:
 	double AntennaGain;
 	double AntennaPower;
 	double AntennaFrequency;
+	double AntennaWavelength;
 	VECTOR3 U_RRL[4];
 	bool AutoTrackEnabled;
 	bool FrequencyLock;
