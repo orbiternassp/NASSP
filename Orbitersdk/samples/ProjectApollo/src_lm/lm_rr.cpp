@@ -174,7 +174,7 @@ double LEM_RR::GetCSMGain(VECTOR3 U_RRT, bool XPDRon)
 
 	if (XPDRon)
 	{
-		if (reangle < 60 * RAD)
+		if (reangle < 90 * RAD)
 		{
 			gain = cos(reangle*1.09217)*cos(reangle*1.09217);
 			gain = gain * 38;
@@ -367,21 +367,11 @@ void LEM_RR::Timestep(double simdt) {
 
 			U_RRT = unit(tmul(CSMRot, -U_R)); // calculate the pointing vector from the CSM to the LM in the CSM's local frame
 
-			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y);
-
-			//theta = abs(atan2(U_RRT.y, U_RRT.x)); //calculate the azmuth about the csm local frame
-			//theta = acos(U_RRT.x); //calculate the azmuth about the csm local frame
-			//phi = atan2(U_RRT.y, -U_RRT.z); //calculate the elevation about the csm local frame
-			
-
-			//if (phi < 0)
-			//{
-			//	phi += RAD*360;
-			//}
+			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y); //swap out Orbiter's axes for the Apollo CSM's
 
 			CSMReflectGain = GetCSMGain(U_RRT, TRUE);
 
-			sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf, X: %lf, Y: %lf, Z: %lf, GAIN = %lf", theta*DEG, phi*DEG, U_RRT.x, U_RRT.y, U_RRT.z, CSMReflectGain);
+			sprintf(oapiDebugString(), "X: %lf, Y: %lf, Z: %lf, GAIN = %lf", U_RRT.x, U_RRT.y, U_RRT.z, CSMReflectGain);
 
 			//In LM navigation base coordinates, left handed
 			for (int i = 0;i < 4;i++)
