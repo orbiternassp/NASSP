@@ -158,12 +158,25 @@ double LEM_RR::GetTransmitterPower()
 	return 3.7;
 }
 
-double LEM_RR::GetCSMGain(double theta, double phi) //returns the gain of the csm RRT system for returned power calculations
+double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon) //returns the gain of the csm RRT system for returned power calculations
 {
+	// theta = 0 to 180deg "latitude" with the north pole pointing forward +X
+	// phi = 0 to 360 deg "longitude" with 0 -Z (up) direction and increasing to 360 with right-handedness with respect to +X
+
 	double gain; //dB
 
+	/* Below was my (n72.75) attempt at polynomial fit of actual radar cross section data with the transponder data.
+
+	this data came from 11116-H044-R0-00 "RANGE COVERAGE FOR THE CSM RENDEZVOUS RADAR TRANSPONDER ANTENNA RAISED 4" AND TILTED FORWARD 15°"
+
+	I couldn't get this approch to work, so I'll remove it in future commits. spherical harmonics would work better.
+
+	//inital grid was in 2deg steps so have to double input angles...because I forgot to in the preprocessing
+	theta = theta + theta;
+	phi = phi + phi;
+
 	gain = 
-		(-0.31211) +
+		(5.31211) +
 		(-2.15239*phi) +
 		(-8.04079*theta) +
 		(0.06704*phi*phi) +
@@ -215,6 +228,14 @@ double LEM_RR::GetCSMGain(double theta, double phi) //returns the gain of the cs
 		(-5.46E-14*phi*phi*theta*theta*theta*theta*theta*theta*theta) +
 		(-1.58E-14*phi*theta*theta*theta*theta*theta*theta*theta*theta) +
 		(-2.02E-13*theta*theta*theta*theta*theta*theta*theta*theta*theta);
+
+	gain = gain + gain; //fix another scaling error
+
+	*/
+
+	double AngleDiff;
+
+	AngleDiff = sqrt(theta * theta + phi * phi);
 
 	return gain;
 }
@@ -393,17 +414,17 @@ void LEM_RR::Timestep(double simdt) {
 
 			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y);
 
-			theta = abs(atan2(U_RRT.y, U_RRT.x)); //calculate the azmuth about the csm local frame
+			//theta = abs(atan2(U_RRT.y, U_RRT.x)); //calculate the azmuth about the csm local frame
+			theta = acos(U_RRT.x); //calculate the azmuth about the csm local frame
 			phi = atan2(U_RRT.y, -U_RRT.z); //calculate the elevation about the csm local frame
 			
-			CSMReflectGain = GetCSMGain(theta, phi);
 
-			if (phi < 0)
-			{
-				phi += RAD*360;
-			}
+			//if (phi < 0)
+			//{
+			//	phi += RAD*360;
+			//}
 
-			CSMReflectGain = GetCSMGain(theta/2, phi/2);
+			CSMReflectGain = GetCSMGain(theta, phi, TRUE);
 
 			sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf, X: %lf, Y: %lf, Z: %lf, GAIN = %lf", theta*DEG, phi*DEG, U_RRT.x, U_RRT.y, U_RRT.z, CSMReflectGain);
 
