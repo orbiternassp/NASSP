@@ -158,87 +158,42 @@ double LEM_RR::GetTransmitterPower()
 	return 3.7;
 }
 
-double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon) //returns the gain of the csm RRT system for returned power calculations
+double LEM_RR::GetCSMGain(VECTOR3 U_RRT, bool XPDRon)
 {
-	// theta = 0 to 180deg "latitude" with the north pole pointing forward +X
-	// phi = 0 to 360 deg "longitude" with 0 -Z (up) direction and increasing to 360 with right-handedness with respect to +X
+	//this should eventually come from the CSM's class.
 
-	double gain; //dB
+	//U_RRT:	unit vector in the csm's coördinate system pointing at the LM
 
-	/* Below was my (n72.75) attempt at polynomial fit of actual radar cross section data with the transponder data.
+	VECTOR3 XPDR;
+	double reangle;
+	double gain;
 
-	this data came from 11116-H044-R0-00 "RANGE COVERAGE FOR THE CSM RENDEZVOUS RADAR TRANSPONDER ANTENNA RAISED 4" AND TILTED FORWARD 15°"
+	XPDR = unit(_V(1,1,-0.45)); //"pointing" vector of the RR transponder on the CSM approximately...
 
-	I couldn't get this approch to work, so I'll remove it in future commits. spherical harmonics would work better.
+	reangle = acos(dotp(U_RRT, XPDR)); //relative angle between LM line of sight and transponder pointing vector;
 
-	//inital grid was in 2deg steps so have to double input angles...because I forgot to in the preprocessing
-	theta = theta + theta;
-	phi = phi + phi;
-
-	gain = 
-		(5.31211) +
-		(-2.15239*phi) +
-		(-8.04079*theta) +
-		(0.06704*phi*phi) +
-		(0.54104*phi*theta) +
-		(0.95966*theta*theta) +
-		(-7.44E-04*phi*phi*phi) +
-		(-0.01377*phi*phi*theta) +
-		(-0.03972*phi*theta*theta) +
-		(-0.06686*theta*theta*theta) +
-		(1.82E-06*phi*phi*phi*phi) +
-		(2.11E-04*phi*phi*phi*theta) +
-		(6.97E-04*phi*phi*theta*theta) +
-		(0.00158*phi*theta*theta*theta) +
-		(0.00288*theta*theta*theta*theta) +
-		(1.83E-08*phi*phi*phi*phi*phi) +
-		(-1.80E-06*phi*phi*phi*phi*theta) +
-		(-8.25E-06*phi*phi*phi*theta*theta) +
-		(-1.73E-05*phi*phi*theta*theta*theta) +
-		(-3.81E-05*phi*theta*theta*theta*theta) +
-		(-7.84E-05*theta*theta*theta*theta*theta) +
-		(-1.11E-10*phi*phi*phi*phi*phi*phi) +
-		(7.94E-09*phi*phi*phi*phi*phi*theta) +
-		(5.98E-08*phi*phi*phi*phi*theta*theta) +
-		(1.24E-07*phi*phi*phi*theta*theta*theta) +
-		(2.80E-07*phi*phi*theta*theta*theta*theta) +
-		(5.42E-07*phi*theta*theta*theta*theta*theta) +
-		(1.35E-06*theta*theta*theta*theta*theta*theta) +
-		(1.54E-13*phi*phi*phi*phi*phi*phi*phi) +
-		(-1.67E-11*phi*phi*phi*phi*phi*phi*theta) +
-		(-2.17E-10*phi*phi*phi*phi*phi*theta*theta) +
-		(-6.85E-10*phi*phi*phi*phi*theta*theta*theta) +
-		(-9.18E-10*phi*phi*phi*theta*theta*theta*theta) +
-		(-3.03E-09*phi*phi*theta*theta*theta*theta*theta) +
-		(-4.28E-09*phi*theta*theta*theta*theta*theta*theta) +
-		(-1.41E-08*theta*theta*theta*theta*theta*theta*theta) +
-		(1.41E-14*phi*phi*phi*phi*phi*phi*phi*theta) +
-		(3.36E-13*phi*phi*phi*phi*phi*phi*theta*theta) +
-		(1.85E-12*phi*phi*phi*phi*phi*theta*theta*theta) +
-		(3.07E-12*phi*phi*phi*phi*theta*theta*theta*theta) +
-		(3.68E-12*phi*phi*phi*theta*theta*theta*theta*theta) +
-		(1.93E-11*phi*phi*theta*theta*theta*theta*theta*theta) +
-		(1.60E-11*phi*theta*theta*theta*theta*theta*theta*theta) +
-		(8.21E-11*theta*theta*theta*theta*theta*theta*theta*theta) +
-		(-1.73E-16*phi*phi*phi*phi*phi*phi*phi*theta*theta) +
-		(-1.58E-15*phi*phi*phi*phi*phi*phi*theta*theta*theta) +
-		(-4.62E-15*phi*phi*phi*phi*phi*theta*theta*theta*theta) +
-		(-5.04E-15*phi*phi*phi*phi*theta*theta*theta*theta*theta) +
-		(-5.67E-15*phi*phi*phi*theta*theta*theta*theta*theta*theta) +
-		(-5.46E-14*phi*phi*theta*theta*theta*theta*theta*theta*theta) +
-		(-1.58E-14*phi*theta*theta*theta*theta*theta*theta*theta*theta) +
-		(-2.02E-13*theta*theta*theta*theta*theta*theta*theta*theta*theta);
-
-	gain = gain + gain; //fix another scaling error
-
-	*/
-
-	double AngleDiff;
-
-	AngleDiff = sqrt(theta * theta + phi * phi);
+	if (XPDRon)
+	{
+		if (reangle < 60 * RAD)
+		{
+			gain = cos(reangle*1.09217)*cos(reangle*1.09217);
+			gain = gain * 38;
+			gain = gain - 32;
+		}
+		else
+		{
+			gain = -32.0; 
+		}
+	}
+	else
+	{
+		gain = -32.0;
+	}
 
 	return gain;
 }
+
+
 
 void LEM_RR::Timestep(double simdt) {
 
@@ -415,8 +370,8 @@ void LEM_RR::Timestep(double simdt) {
 			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y);
 
 			//theta = abs(atan2(U_RRT.y, U_RRT.x)); //calculate the azmuth about the csm local frame
-			theta = acos(U_RRT.x); //calculate the azmuth about the csm local frame
-			phi = atan2(U_RRT.y, -U_RRT.z); //calculate the elevation about the csm local frame
+			//theta = acos(U_RRT.x); //calculate the azmuth about the csm local frame
+			//phi = atan2(U_RRT.y, -U_RRT.z); //calculate the elevation about the csm local frame
 			
 
 			//if (phi < 0)
@@ -424,7 +379,7 @@ void LEM_RR::Timestep(double simdt) {
 			//	phi += RAD*360;
 			//}
 
-			CSMReflectGain = GetCSMGain(theta, phi, TRUE);
+			CSMReflectGain = GetCSMGain(U_RRT, TRUE);
 
 			sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf, X: %lf, Y: %lf, Z: %lf, GAIN = %lf", theta*DEG, phi*DEG, U_RRT.x, U_RRT.y, U_RRT.z, CSMReflectGain);
 
