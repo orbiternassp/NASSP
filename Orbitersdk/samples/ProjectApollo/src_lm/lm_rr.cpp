@@ -172,8 +172,8 @@ double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
 	const double phiMax = 0 * RAD;
 	const double phiMin = 120 * RAD;
 
-	const double ThetaXPDR = 90.0*RAD;
-	const double PhiXPDR = 141.8*RAD;
+	const double ThetaXPDR = 85.0*RAD; //15 deg forward
+	const double PhiXPDR = 141.8*RAD; //
 
 
 	double gain;
@@ -183,8 +183,7 @@ double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
 		double AngleDiff = sqrt(((theta-ThetaXPDR)*(theta - ThetaXPDR))+((phi - PhiXPDR)*(phi - PhiXPDR))); //lm in view of the RR XPDR horns
 
 		gain = cos(AngleDiff*1.09217)*cos(AngleDiff*1.09217); //simple cos^2 model of transponder
-		gain = gain * 9;
-		gain = gain - 6;
+		gain = gain * 7;
 	}
 	else
 	{
@@ -201,10 +200,10 @@ double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
 	double SignalStrength;
 
 	//calibration for gauge
-	const double low_dBm = -122.0;
+	const double low_dBm = -122.0; //spec minimum 
 	const double high_dBm = -25;
-	const double LowSignal = 0.375;
-	const double HighSignal = 1.0;
+	const double LowSignal = 0.231; //0.76V
+	const double HighSignal = 1.0; //3.28V
 
 	const double slope = (HighSignal - LowSignal)/(high_dBm - low_dBm);
 	const double intercept = LowSignal - slope * low_dBm;
@@ -440,7 +439,7 @@ void LEM_RR::Timestep(double simdt) {
 
 			SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
 
-			if (SignalStrength > 0.1)
+			if (SignalStrength > 0.231 && length(R) > 80.0*0.3048)
 			{
 				internalrange = length(R);
 
@@ -487,7 +486,7 @@ void LEM_RR::Timestep(double simdt) {
 	}
 
 	//Frequency Lock
-	if (AutoTrackEnabled && SignalStrength > 0.1)
+	if (AutoTrackEnabled && SignalStrength > 0.231 && internalrange > 80.0*0.3048)
 	{
 		FrequencyLock = true;
 	}
