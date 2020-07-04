@@ -99,6 +99,8 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 
 void IU::LVDCTimestep(double simt, double simdt)
 {
+	//GetLVDC()->TimeStep(simdt);
+
 	if (LastCycled == 0) {					// Use simdt as difference if new run
 		LastCycled = (simt - simdt);
 	}

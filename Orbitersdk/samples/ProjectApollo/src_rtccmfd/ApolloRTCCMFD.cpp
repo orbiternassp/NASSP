@@ -1483,6 +1483,12 @@ void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetSLVNavigationUpdatePage()
+{
+	screen = 96;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -8216,6 +8222,16 @@ bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data)
 		return true;
 	}
 	return false;
+}
+
+void ApolloRTCCMFD::menuSLVNavigationUpdateCalc()
+{
+	G->SLVNavigationUpdateCalc();
+}
+
+void ApolloRTCCMFD::menuSLVNavigationUpdateUplink()
+{
+	G->SLVNavigationUpdateUplink();
 }
 
 void ApolloRTCCMFD::menuMSKRequest()

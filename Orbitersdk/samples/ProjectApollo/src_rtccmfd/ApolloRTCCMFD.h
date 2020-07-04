@@ -703,6 +703,9 @@ public:
 	void menuGOSTSXTCalc();
 	void menuGOSTShowStarVector();
 	void menuGOSTShowLandmarkVector();
+	void menuSetSLVNavigationUpdatePage();
+	void menuSLVNavigationUpdateCalc();
+	void menuSLVNavigationUpdateUplink();
 
 protected:
 	oapi::Font *font;

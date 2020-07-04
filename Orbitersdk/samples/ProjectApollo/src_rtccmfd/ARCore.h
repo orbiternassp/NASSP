@@ -102,6 +102,8 @@ public:
 	void MPTTLIDirectInput();
 	void TransferLOIorMCCtoMPT();
 	void TransferRTEToMPT();
+	void SLVNavigationUpdateCalc();
+	void SLVNavigationUpdateUplink();
 	bool vesselinLOS();
 	void MinorCycle(double SimT, double SimDT, double mjd);
 
