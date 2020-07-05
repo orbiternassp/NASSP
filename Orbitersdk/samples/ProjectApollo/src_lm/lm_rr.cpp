@@ -175,6 +175,10 @@ double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
 	const double ThetaXPDR = 85.0*RAD; //15 deg forward
 	const double PhiXPDR = 141.8*RAD; //
 
+	if (XPDRon = false)
+	{
+		return -32.0;
+	}
 
 	double gain;
 
@@ -189,9 +193,10 @@ double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
 	{
 		gain = -6;
 	}
+
+
 	
 	return gain;
-
 }
 
 
@@ -413,8 +418,12 @@ void LEM_RR::Timestep(double simdt) {
 			{
 				phi += RAD*360;
 			}
+
+
+			bool XPRD_State = true;
+			//bool XPRD_State = GetCSM_RR_XPDR_state()
 			
-			CSMReflectGain = GetCSMGain(theta, phi, TRUE);
+			CSMReflectGain = GetCSMGain(theta, phi, XPRD_State);
 			CSMReflectGain = pow(10, (CSMReflectGain / 10)); //convert to ratio from dB
 
 			RecvdRRPower = XPDRpower * AntennaGain*CSMReflectGain*pow(AntennaWavelength / (4 * PI*length(R)), 2);
