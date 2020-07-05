@@ -167,10 +167,10 @@ double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
 {
 
 	//values from AOH LM volume 2
-	const double thetaMax = 230 * RAD;
-	const double thetaMin = 80 * RAD;
-	const double phiMax = 0 * RAD;
-	const double phiMin = 120 * RAD;
+	const double thetaMax = 120 * RAD;
+	const double thetaMin = 0 * RAD;
+	const double phiMax = 230 * RAD;
+	const double phiMin = 80 * RAD;
 
 	const double ThetaXPDR = 85.0*RAD; //15 deg forward
 	const double PhiXPDR = 141.8*RAD; //
@@ -178,7 +178,7 @@ double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
 
 	double gain;
 
-	if ((theta > thetaMin && theta < thetaMax) && (phi > phiMax && phi < phiMin))
+	if ((theta > thetaMin && theta < thetaMax) && (phi > phiMin && phi < phiMax))
 	{
 		double AngleDiff = sqrt(((theta-ThetaXPDR)*(theta - ThetaXPDR))+((phi - PhiXPDR)*(phi - PhiXPDR))); //lm in view of the RR XPDR horns
 
