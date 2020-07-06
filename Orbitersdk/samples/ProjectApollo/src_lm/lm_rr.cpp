@@ -99,6 +99,11 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 		SignalStrengthQuadrant[i] = 0.0;
 		U_RRL[i] = _V(0.0, 0.0, 0.0);
 	}
+
+	AntennaGain = pow(10, (32 / 10)); //dB
+	XPDRpower = 0.240; //W
+	AntennaFrequency = 9832; //MHz
+	AntennaWavelength = C0 / (AntennaFrequency * 1000000); //meters
 }
 
 bool LEM_RR::IsDCPowered()
@@ -157,6 +162,78 @@ double LEM_RR::GetTransmitterPower()
 
 	return 3.7;
 }
+
+double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
+{
+
+	//values from AOH LM volume 2
+	const double thetaMax = 120 * RAD;
+	const double thetaMin = 0 * RAD;
+	const double phiMax = 230 * RAD;
+	const double phiMin = 80 * RAD;
+
+	const double ThetaXPDR = 85.0*RAD; //15 deg forward
+	const double PhiXPDR = 141.8*RAD; //
+
+	if (XPDRon = false)
+	{
+		return -32.0;
+	}
+
+	double gain;
+
+	if ((theta > thetaMin && theta < thetaMax) && (phi > phiMin && phi < phiMax))
+	{
+		double AngleDiff = sqrt(((theta-ThetaXPDR)*(theta - ThetaXPDR))+((phi - PhiXPDR)*(phi - PhiXPDR))); //lm in view of the RR XPDR horns
+
+		gain = cos(AngleDiff*1.09217)*cos(AngleDiff*1.09217); //simple cos^2 model of transponder
+		gain = gain * 7;
+	}
+	else
+	{
+		gain = -6;
+	}
+
+
+	
+	return gain;
+}
+
+
+double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
+{
+	double SignalStrength;
+
+	//calibration for gauge
+	const double low_dBm = -122.0; //spec minimum 
+	const double high_dBm = -25;
+	const double LowSignal = 0.231; //0.76V
+	const double HighSignal = 1.0; //3.28V
+
+	const double slope = (HighSignal - LowSignal)/(high_dBm - low_dBm);
+	const double intercept = LowSignal - slope * low_dBm;
+
+	if (RecvdRRPower_dBm > high_dBm)
+	{
+		SignalStrength = 1.0;
+	}
+	else
+	{
+		SignalStrength = RecvdRRPower_dBm*slope+intercept;
+		if (SignalStrength > HighSignal)
+		{
+			SignalStrength = HighSignal;
+		}
+		else if (SignalStrength < 0)
+		{
+			SignalStrength = 0;
+		}
+	}
+	
+	return SignalStrength;
+}
+
+
 
 void LEM_RR::Timestep(double simdt) {
 
@@ -295,9 +372,12 @@ void LEM_RR::Timestep(double simdt) {
 		SignalStrengthQuadrant[3] = 0.0;
 		SignalStrength = 0.0;
 
-		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, R;
-		MATRIX3 Rot;
+		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, U_RRT, R;
+		MATRIX3 LMRot, CSMRot;
 		double relang;
+		double CSMReflectGain;
+		double RecvdRRPower, RecvdRRPower_dBm, SignalStrengthScaleFactor;
+		double theta, phi;
 
 		double anginc = 0.1*RAD;
 
@@ -311,7 +391,9 @@ void LEM_RR::Timestep(double simdt) {
 			csm->GetGlobalPos(CSMPos);
 			//oapiGetGlobalPos(hEarth, &R_E);
 			//oapiGetGlobalPos(hMoon, &R_M);
-			lem->GetRotationMatrix(Rot);
+			lem->GetRotationMatrix(LMRot);
+			csm->GetRotationMatrix(CSMRot);
+			
 
 			//Vector pointing from LM to CSM
 			R = CSMPos - LMPos;
@@ -325,23 +407,48 @@ void LEM_RR::Timestep(double simdt) {
 			U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
 			U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
 
+			U_RRT = unit(tmul(CSMRot, -U_R)); // calculate the pointing vector from the CSM to the LM in the CSM's local frame
+
+			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y); //swap out Orbiter's axes for the Apollo CSM's
+
+			theta = acos(U_RRT.x); //calculate the azmuth about the csm local frame
+			phi = atan2(U_RRT.y, -U_RRT.z); //calculate the elevation about the csm local frame
+			
+			if (phi < 0)
+			{
+				phi += RAD*360;
+			}
+
+
+			bool XPRD_State = true;
+			//bool XPRD_State = GetCSM_RR_XPDR_state()
+			
+			CSMReflectGain = GetCSMGain(theta, phi, XPRD_State);
+			CSMReflectGain = pow(10, (CSMReflectGain / 10)); //convert to ratio from dB
+
+			RecvdRRPower = XPDRpower * AntennaGain*CSMReflectGain*pow(AntennaWavelength / (4 * PI*length(R)), 2);
+			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
+			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
+
+			//sprintf(oapiDebugString(), "X: %lf, Y: %lf, Z: %lf, Theta: %lf, Phi, %lf ReturnedPower: %lf, CSMGAIN %lf", U_RRT.x, U_RRT.y, U_RRT.z, theta*DEG, phi*DEG, RecvdRRPower_dBm, GetCSMGain(theta, phi, TRUE));
+
 			//In LM navigation base coordinates, left handed
 			for (int i = 0;i < 4;i++)
 			{
 				U_RRL[i] = _V(U_RRL[i].y, U_RRL[i].x, U_RRL[i].z);
 
 				//Calculate antenna pointing vector in global frame
-				U_RR = mul(Rot, U_RRL[i]);
+				U_RR = mul(LMRot, U_RRL[i]);
 
 				//relative angle between antenna pointing vector and direction of CSM
 				relang = acos(dotp(U_RR, U_R));
 
-				SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang);
+				SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang)*SignalStrengthScaleFactor;
 			}
 
 			SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
 
-			if (SignalStrength > 0.375 && length(R) > 80.0*0.3048 && length(R) < 400.0*1852.0)
+			if (SignalStrength > 0.231 && length(R) > 80.0*0.3048)
 			{
 				internalrange = length(R);
 
@@ -388,7 +495,7 @@ void LEM_RR::Timestep(double simdt) {
 	}
 
 	//Frequency Lock
-	if (AutoTrackEnabled && SignalStrength > 0.375 && internalrange > 80.0*0.3048 && internalrange < 400.0*1852.0)
+	if (AutoTrackEnabled && SignalStrength > 0.231 && internalrange > 80.0*0.3048)
 	{
 		FrequencyLock = true;
 	}
