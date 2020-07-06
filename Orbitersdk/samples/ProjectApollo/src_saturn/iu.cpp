@@ -48,6 +48,7 @@ ControlSignalProcessor(this)
 {
 	State = 0;
 	MissionTime = 0.0;
+	LastCycled = 0.0;
 
 	Crewed = true;
 	SCControlPoweredFlight = false;
@@ -93,6 +94,25 @@ void IU::Timestep(double misst, double simt, double simdt, double mjd)
 	if (GetControlDistributor()->GetGSECommandVehicleLiftoffIndicationInhibit() == false)
 	{
 		GetEngineCutoffEnableTimer()->SetRunning(true);
+	}
+}
+
+void IU::LVDCTimestep(double simt, double simdt)
+{
+	//GetLVDC()->TimeStep(simdt);
+
+	if (LastCycled == 0) {					// Use simdt as difference if new run
+		LastCycled = (simt - simdt);
+	}
+	double ThisTime = LastCycled;			// Save here
+
+	long cycles = (long)((simt - LastCycled) / LVDC_TIMESTEP);	// Get number of CPU cycles to do
+	LastCycled += (LVDC_TIMESTEP * cycles);						// Preserve the remainder
+	long x = 0;
+	while (x < cycles) {
+		GetLVDC()->TimeStep(LVDC_TIMESTEP);
+		ThisTime += LVDC_TIMESTEP;								// Add time
+		x++;
 	}
 }
 
@@ -1418,7 +1438,7 @@ void IU1B::Timestep(double misst, double simt, double simdt, double mjd)
 	ControlDistributor.Timestep(simdt);
 	ControlSignalProcessor.Timestep();
 	eds.Timestep(simdt);
-	lvdc.TimeStep(simdt);
+	LVDCTimestep(simt, simdt);
 	fcc.Timestep(simdt);
 }
 
@@ -1561,7 +1581,7 @@ void IUSV::Timestep(double misst, double simt, double simdt, double mjd)
 	ControlDistributor.Timestep(simdt);
 	ControlSignalProcessor.Timestep();
 	eds.Timestep(simdt);
-	lvdc.TimeStep(simdt);
+	LVDCTimestep(simt, simdt);
 	fcc.Timestep(simdt);
 }
 
