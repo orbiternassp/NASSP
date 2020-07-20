@@ -38,7 +38,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	bool scrubbed = false;
 
 	double AGCEpoch = 40221.525;
-	int LGCREFSAddrOffs = -2;
+	int LGCREFSAddrOffs = 0;
 
 	switch (fcn) {
 	case 1: //GENERIC CSM STATE VECTOR UPDATE

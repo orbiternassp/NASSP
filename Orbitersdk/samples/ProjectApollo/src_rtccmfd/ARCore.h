@@ -130,7 +130,6 @@ public:
 	void NavCheckPAD();
 	void AP11AbortCoefUplink();
 	void AP12AbortCoefUplink();
-	int REFSMMATOctalAddress();
 	void DetermineGMPCode();
 	void NodeConvCalc();
 	void SendNodeToSFP();

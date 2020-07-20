@@ -4740,24 +4740,22 @@ ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
 	agc_t* vagc;
+	int REFSMMATaddress;
 
 	if (G->vesseltype < 2)
 	{
 		saturn = (Saturn *)G->vessel;
-
 		vagc = &saturn->agc.vagc;
+		REFSMMATaddress = GC->rtcc->MCCCRF;
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
-
 		vagc = &lem->agc.vagc;
+		REFSMMATaddress = GC->rtcc->MCCLRF;
 	}
 
 	unsigned short REFSoct[20];
-	int REFSMMATaddress;
-
-	REFSMMATaddress = G->REFSMMATOctalAddress();
 
 	REFSoct[2] = vagc->Erasable[0][REFSMMATaddress];
 	REFSoct[3] = vagc->Erasable[0][REFSMMATaddress + 1];
