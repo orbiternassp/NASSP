@@ -514,3 +514,23 @@ protected:
 	ToggleSwitch *powerswitch;
 	ToggleSwitch *resetswitch;
 };
+
+class RendesvousRadarXPDR
+{
+public:
+	RendesvousRadarXPDR(Saturn *vessel);
+	void init();
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);
+	bool IsPowered();
+	void LoadState(char *line);
+	void SaveState(FILEHANDLE scn);
+
+protected:
+	Saturn *sat;
+	LEM *lem;
+
+	CircuitBrakerSwitch *filterHeaterCB;
+	ToggleSwitch *testOperateSW;
+	ThreePosSwitch *heaterPowerSW;
+};
