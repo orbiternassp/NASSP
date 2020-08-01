@@ -515,10 +515,13 @@ protected:
 	ToggleSwitch *resetswitch;
 };
 
-class RendesvousRadarXPDR
+class RNDZXPDRrcvr {};
+class RNDZXPDRxmtr {};
+
+class RNDZXPDRSystem
 {
 public:
-	RendesvousRadarXPDR(Saturn *vessel);
+	RNDZXPDRSystem(Saturn *vessel);
 	void init();
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
@@ -530,7 +533,9 @@ protected:
 	Saturn *sat;
 	LEM *lem;
 
-	CircuitBrakerSwitch *filterHeaterCB;
-	ToggleSwitch *testOperateSW;
-	ThreePosSwitch *heaterPowerSW;
+	CircuitBrakerSwitch *RNDZXPNDRFLTBusCB;
+	ToggleSwitch *RNDZXPDRSwitch; //test operate switch
+	ThreePosSwitch *Panel100RNDZXPDRSwitch; //heater/power switch
+	RotationalSwitch *LeftSystemTestRotarySwitch;
+	RotationalSwitch *RightSystemTestRotarySwitch;
 };
