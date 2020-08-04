@@ -515,14 +515,14 @@ protected:
 	ToggleSwitch *resetswitch;
 };
 
-class RNDZXPDRrcvr {};
-class RNDZXPDRxmtr {};
+
 
 class RNDZXPDRSystem
 {
 public:
-	RNDZXPDRSystem(Saturn *vessel);
-	void init();
+	RNDZXPDRSystem();
+	~RNDZXPDRSystem();
+	void Init(Saturn *vessel, CircuitBrakerSwitch *RNDZXPNDRFLTBusCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *RightSystemTestRotarySwitch);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	bool IsPowered();
@@ -531,11 +531,13 @@ public:
 
 protected:
 	Saturn *sat;
-	LEM *lem;
 
 	CircuitBrakerSwitch *RNDZXPNDRFLTBusCB;
 	ToggleSwitch *RNDZXPDRSwitch; //test operate switch
 	ThreePosSwitch *Panel100RNDZXPDRSwitch; //heater/power switch
 	RotationalSwitch *LeftSystemTestRotarySwitch;
 	RotationalSwitch *RightSystemTestRotarySwitch;
+
+	int numObjects;
+
 };

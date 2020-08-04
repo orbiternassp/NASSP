@@ -3506,6 +3506,7 @@ protected:
 	VHFAntenna vhfb;
 	VHFRangingSystem vhfranging;
 	VHFAMTransceiver vhftransceiver;
+	RNDZXPDRSystem RRTsystem;
 
 	//Instrumentation
 	SCE sce;

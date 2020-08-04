@@ -411,6 +411,7 @@ void Saturn::SystemsInit() {
 	pcm.Init(this);
 	vhfranging.Init(this, &VHFStationAudioRCB, &VHFRangingSwitch, &VHFRNGSwitch, &vhftransceiver);
 	vhftransceiver.Init(&VHFAMASwitch, &VHFAMBSwitch, &RCVOnlySwitch, &VHFStationAudioCTRCB);
+	RRTsystem.Init(this, &RNDZXPNDRFLTBusCB, &RNDZXPDRSwitch, &Panel100RNDZXPDRSwitch, &RightSystemTestRotarySwitch);
 
 	//Instrumentation
 	sce.Init(this);
@@ -665,6 +666,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		vhftransceiver.Timestep();
 		sce.Timestep();
 		dataRecorder.TimeStep( MissionTime, simdt );
+		RRTsystem.TimeStep(simdt);
 
 		//
 		// Systems state handling

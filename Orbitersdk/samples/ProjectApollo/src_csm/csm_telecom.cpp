@@ -5102,3 +5102,31 @@ void DSE::SaveState(FILEHANDLE scn) {
 	sprintf(buffer, "%lf %lf %lf %i %lf", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, lastEventTime); 
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
+
+// Rendesvous Radar Transponder System
+
+RNDZXPDRSystem::RNDZXPDRSystem()
+{
+	
+}
+
+RNDZXPDRSystem::~RNDZXPDRSystem()
+{
+
+}
+
+void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *RNDZXPNDRFLTBusCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *RightSystemTestRotarySwitch)
+{
+	return;
+}
+
+void RNDZXPDRSystem::TimeStep(double simdt)
+{
+	sprintf(oapiDebugString(), "%lf", simdt);
+	return;
+}
+
+void RNDZXPDRSystem::SystemTimestep(double simdt)
+{
+	return;
+}
