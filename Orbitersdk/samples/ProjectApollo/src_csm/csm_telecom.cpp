@@ -5147,11 +5147,7 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 	const double XPDRpowerDraw = 70.5; //watts
 	const double heater = 14.0; //watts
 
-	if (sat->RNDZXPNDRFLTBusCB.Voltage() < 25.0)
-	{
-		sat->RNDZXPNDRFLTBusCB.DrawPower(0.0);
-	}
-	else
+	if (sat->RNDZXPNDRFLTBusCB.Voltage() > 25.0)
 	{
 		if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP)
 		{
@@ -5165,6 +5161,10 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 		{
 			sat->RNDZXPNDRFLTBusCB.DrawPower(0.0);
 		}
+	}
+	else
+	{
+		sat->RNDZXPNDRFLTBusCB.DrawPower(0.0);
 	}
 }
 
