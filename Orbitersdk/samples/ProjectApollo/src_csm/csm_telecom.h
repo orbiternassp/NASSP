@@ -520,7 +520,7 @@ class RNDZXPDRSystem : public e_object
 public:
 	RNDZXPDRSystem();
 	~RNDZXPDRSystem();
-	void Init(Saturn *vessel, CircuitBrakerSwitch *RNDZXPNDRFLTBusCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch);
+	void Init(Saturn *vessel, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void LoadState(char *line);

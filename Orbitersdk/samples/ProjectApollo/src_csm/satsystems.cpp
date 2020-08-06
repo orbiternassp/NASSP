@@ -235,9 +235,8 @@ void Saturn::SystemsInit() {
 
 	FlightBusFeeder.WireToBuses(&FLTBusMNACB, &FLTBusMNBCB);
 	FlightBus.WireTo(&FlightBusFeeder);
-	RNDZXPNDRFLTBusCB.WireTo(&FlightBus);
 	Panelsdk.AddElectrical(&FlightBus, false);
-
+	RNDZXPNDRFLTBusCB.WireTo(&FlightBus);
 
 	// Feeder for LM umbilical
 	LMUmbilicalFeeder.WireToBuses(&MnbLMPWR1CircuitBraker,&MnbLMPWR2CircuitBraker);
@@ -413,7 +412,7 @@ void Saturn::SystemsInit() {
 	pcm.Init(this);
 	vhfranging.Init(this, &VHFStationAudioRCB, &VHFRangingSwitch, &VHFRNGSwitch, &vhftransceiver);
 	vhftransceiver.Init(&VHFAMASwitch, &VHFAMBSwitch, &RCVOnlySwitch, &VHFStationAudioCTRCB);
-	RRTsystem.Init(this, &RNDZXPNDRFLTBusCB, &RNDZXPDRSwitch, &Panel100RNDZXPDRSwitch, &LeftSystemTestRotarySwitch, &RightSystemTestRotarySwitch);
+	RRTsystem.Init(this, &RNDZXPDRSwitch, &Panel100RNDZXPDRSwitch, &LeftSystemTestRotarySwitch, &RightSystemTestRotarySwitch);
 
 	//Instrumentation
 	sce.Init(this);

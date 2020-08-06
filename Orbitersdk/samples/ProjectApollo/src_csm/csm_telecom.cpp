@@ -5109,7 +5109,6 @@ RNDZXPDRSystem::RNDZXPDRSystem()
 {
 	sat = NULL;
 	lem = NULL;
-	RRT_FLTBusCB = NULL;
 	TestOperateSwitch = NULL;
 	HeaterPowerSwitch = NULL;
 	RRT_LeftSystemTestRotarySwitch = NULL;
@@ -5121,12 +5120,11 @@ RNDZXPDRSystem::~RNDZXPDRSystem()
 
 }
 
-void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *RNDZXPNDRFLTBusCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
+void RNDZXPDRSystem::Init(Saturn *vessel, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
 {
 	sat = vessel;
 	VESSEL *lm = sat->agc.GetLM();
 	if (lm) lem = (static_cast<LEM*>(lm));
-	RRT_FLTBusCB = RNDZXPNDRFLTBusCB;
 	TestOperateSwitch = RNDZXPDRSwitch;
 	HeaterPowerSwitch = Panel100RNDZXPDRSwitch;
 	RRT_LeftSystemTestRotarySwitch = LeftSystemTestRotarySwitch;
@@ -5140,6 +5138,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		VESSEL *lm = sat->agc.GetLM();
 		if (lm) lem = (static_cast<LEM*>(lm));
 	}
+	sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", sat->RNDZXPNDRFLTBusCB.Current(), sat->RNDZXPNDRFLTBusCB.Voltage());
 
 }
 
@@ -5148,19 +5147,25 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 	const double XPDRpowerDraw = 70.5; //watts
 	const double heater = 14.0; //watts
 
-	if (RRT_FLTBusCB->Voltage() >= 25.0)
+	if (sat->RNDZXPNDRFLTBusCB.Voltage() < 25.0)
+	{
+		sat->RNDZXPNDRFLTBusCB.DrawPower(0.0);
+	}
+	else
 	{
 		if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP)
 		{
-			RRT_FLTBusCB->DrawPower(XPDRpowerDraw + heater);
+			sat->RNDZXPNDRFLTBusCB.DrawPower(XPDRpowerDraw + heater);
 		}
 		else if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_DOWN)
 		{
-			RRT_FLTBusCB->DrawPower(heater);
+			sat->RNDZXPNDRFLTBusCB.DrawPower(heater);
+		}
+		else
+		{
+			sat->RNDZXPNDRFLTBusCB.DrawPower(0.0);
 		}
 	}
-
-	sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", RRT_FLTBusCB->Current(), RRT_FLTBusCB->Voltage());
 }
 
 void RNDZXPDRSystem::LoadState(char *line)
