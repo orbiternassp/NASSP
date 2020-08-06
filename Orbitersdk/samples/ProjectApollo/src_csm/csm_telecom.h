@@ -515,29 +515,28 @@ protected:
 	ToggleSwitch *resetswitch;
 };
 
-
-
-class RNDZXPDRSystem
+class RNDZXPDRSystem : public e_object
 {
 public:
 	RNDZXPDRSystem();
 	~RNDZXPDRSystem();
-	void Init(Saturn *vessel, CircuitBrakerSwitch *RNDZXPNDRFLTBusCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *RightSystemTestRotarySwitch);
+	void Init(Saturn *vessel, CircuitBrakerSwitch *RNDZXPNDRFLTBusCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
-	bool IsPowered();
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
+	double GetCSM_RRTgain();
+
+	double CSM_RRTpower;
+	double CSM_RRTfrequency;
 
 protected:
 	Saturn *sat;
+	LEM *lem;
 
-	CircuitBrakerSwitch *RNDZXPNDRFLTBusCB;
-	ToggleSwitch *RNDZXPDRSwitch; //test operate switch
-	ThreePosSwitch *Panel100RNDZXPDRSwitch; //heater/power switch
-	RotationalSwitch *LeftSystemTestRotarySwitch;
-	RotationalSwitch *RightSystemTestRotarySwitch;
-
-	int numObjects;
-
+	CircuitBrakerSwitch *RRT_FLTBusCB;
+	ToggleSwitch *TestOperateSwitch; //test operate switch
+	ThreePosSwitch *HeaterPowerSwitch; //heater/power switch
+	RotationalSwitch *RRT_LeftSystemTestRotarySwitch;
+	RotationalSwitch *RRT_RightSystemTestRotarySwitch;
 };

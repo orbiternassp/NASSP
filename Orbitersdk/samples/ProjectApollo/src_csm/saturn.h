@@ -4442,6 +4442,7 @@ protected:
 	friend class SaturnSPSHeliumNitrogenPressMeter;
 	friend class SaturnLMDPGauge;
 	friend class VHFRangingSystem;
+	friend class RNDZXPDRSystem;
 	friend class DockingTargetSwitch;
 	friend class SCE;
 	// Friend class the MFD too so it can steal our data

@@ -5103,11 +5103,17 @@ void DSE::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
 
-// Rendesvous Radar Transponder System
+// Rendezvous Radar Transponder System
 
 RNDZXPDRSystem::RNDZXPDRSystem()
 {
-	
+	sat = NULL;
+	lem = NULL;
+	RRT_FLTBusCB = NULL;
+	TestOperateSwitch = NULL;
+	HeaterPowerSwitch = NULL;
+	RRT_LeftSystemTestRotarySwitch = NULL;
+	RRT_RightSystemTestRotarySwitch = NULL;
 }
 
 RNDZXPDRSystem::~RNDZXPDRSystem()
@@ -5115,18 +5121,54 @@ RNDZXPDRSystem::~RNDZXPDRSystem()
 
 }
 
-void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *RNDZXPNDRFLTBusCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *RightSystemTestRotarySwitch)
+void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *RNDZXPNDRFLTBusCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
 {
-	return;
+	sat = vessel;
+	VESSEL *lm = sat->agc.GetLM();
+	if (lm) lem = (static_cast<LEM*>(lm));
+	RRT_FLTBusCB = RNDZXPNDRFLTBusCB;
+	TestOperateSwitch = RNDZXPDRSwitch;
+	HeaterPowerSwitch = Panel100RNDZXPDRSwitch;
+	RRT_LeftSystemTestRotarySwitch = LeftSystemTestRotarySwitch;
+	RRT_RightSystemTestRotarySwitch = LeftSystemTestRotarySwitch;
 }
 
 void RNDZXPDRSystem::TimeStep(double simdt)
 {
-	sprintf(oapiDebugString(), "%lf", simdt);
-	return;
+	if (!lem)
+	{
+		VESSEL *lm = sat->agc.GetLM();
+		if (lm) lem = (static_cast<LEM*>(lm));
+	}
+
 }
 
 void RNDZXPDRSystem::SystemTimestep(double simdt)
 {
-	return;
+	const double XPDRpowerDraw = 70.5; //watts
+	const double heater = 14.0; //watts
+
+	if (RRT_FLTBusCB->Voltage() >= 25.0)
+	{
+		if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP)
+		{
+			RRT_FLTBusCB->DrawPower(XPDRpowerDraw + heater);
+		}
+		else if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_DOWN)
+		{
+			RRT_FLTBusCB->DrawPower(heater);
+		}
+	}
+
+	sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", RRT_FLTBusCB->Current(), RRT_FLTBusCB->Voltage());
+}
+
+void RNDZXPDRSystem::LoadState(char *line)
+{
+
+}
+
+void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
+{
+
 }
