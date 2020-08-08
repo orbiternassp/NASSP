@@ -989,12 +989,6 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 
 	SystemsTimestep(MissionTime, simdt);
 
-	//get some pointers into the RR instance so that we can look at them with the CSM 
-	//this isn't the best way to do this.
-	RRAntennaGain = &RR.AntennaGain;
-	RRpower = &RR.AntennaPower;
-	RRAntennaWavelength = &RR.AntennaPower;
-
 	// RCS propellant pressurization
 	// Descent Propellant Tank Prepressurization (ambient helium)
 	// Descent Propellant Tank Prepressurization (supercritical helium)
