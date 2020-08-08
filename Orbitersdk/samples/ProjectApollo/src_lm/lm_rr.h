@@ -54,6 +54,11 @@ public:
 	bool IsRadarDataGood() { return radarDataGood; };
 	bool GetNoTrackSignal() { return NoTrackSignal; }
 
+	//these are public because the CSM RR_XPNDR needs to look at them
+	double AntennaGain;
+	double AntennaWavelength;
+	double AntennaPower;
+
 private:
 
 	LEM * lem;					// Pointer at LEM
@@ -84,10 +89,8 @@ private:
 	double hpbw_factor;			//Beamwidth factor
 	double SignalStrength;
 	double SignalStrengthQuadrant[4];
-	double AntennaGain;
-	double XPDRpower;
 	double AntennaFrequency;
-	double AntennaWavelength;
+	double XPDRpower;
 	VECTOR3 U_RRL[4];
 	bool AutoTrackEnabled;
 	bool FrequencyLock;

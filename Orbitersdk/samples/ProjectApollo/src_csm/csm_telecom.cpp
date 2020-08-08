@@ -5113,6 +5113,7 @@ RNDZXPDRSystem::RNDZXPDRSystem()
 	HeaterPowerSwitch = NULL;
 	RRT_LeftSystemTestRotarySwitch = NULL;
 	RRT_RightSystemTestRotarySwitch = NULL;
+	RRT_FLTBusCB = NULL;
 }
 
 RNDZXPDRSystem::~RNDZXPDRSystem()
@@ -5120,7 +5121,7 @@ RNDZXPDRSystem::~RNDZXPDRSystem()
 
 }
 
-void RNDZXPDRSystem::Init(Saturn *vessel, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
+void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
 {
 	sat = vessel;
 	VESSEL *lm = sat->agc.GetLM();
@@ -5129,42 +5130,82 @@ void RNDZXPDRSystem::Init(Saturn *vessel, ToggleSwitch *RNDZXPDRSwitch, ThreePos
 	HeaterPowerSwitch = Panel100RNDZXPDRSwitch;
 	RRT_LeftSystemTestRotarySwitch = LeftSystemTestRotarySwitch;
 	RRT_RightSystemTestRotarySwitch = LeftSystemTestRotarySwitch;
+	RRT_FLTBusCB = PowerCB;
+
+	XPDRon = false;
+	XPDRheaterOn = false;
+
+	LEM_RRAntennaGain = NULL;
+	LEM_RRpower = NULL;
+	LEM_RRAntennaWavelength = NULL;
 }
 
 void RNDZXPDRSystem::TimeStep(double simdt)
 {
+	//if we didn't get our LEM at the start of the sceneriao, get one now.
 	if (!lem)
 	{
+		LEM_RRAntennaGain = NULL;
+		LEM_RRpower = NULL;
+		LEM_RRAntennaWavelength = NULL;
 		VESSEL *lm = sat->agc.GetLM();
-		if (lm) lem = (static_cast<LEM*>(lm));
+		if (lm) {
+			lem = (static_cast<LEM*>(lm));
+			LEM_RRAntennaGain = &lem->RRAntennaGain;
+			LEM_RRpower = &lem->RRpower;
+			LEM_RRAntennaWavelength = &lem->RRAntennaWavelength;
+		}
 	}
-	sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", sat->RNDZXPNDRFLTBusCB.Current(), sat->RNDZXPNDRFLTBusCB.Voltage());
+
+	//debug string to check the pointyness of our pointers
+	sprintf(oapiDebugString(), "LEM_RRAntennaGain = %lf", **LEM_RRAntennaGain);
+	
+	//make sure the power's on to the heater and the transponder
+	if (RRT_FLTBusCB->Voltage() > 25.0) //spec minimum for the RRT system
+	{
+		if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP)
+		{
+			XPDRon = true;
+			XPDRheaterOn = true;
+		}
+		else if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_DOWN)
+		{
+			XPDRon = false;
+			XPDRheaterOn = true;
+		}
+	}
+	else
+	{
+		XPDRon = false;
+		XPDRheaterOn = false;
+	}
+
+	//sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", RRT_FLTBusCB->Current(), RRT_FLTBusCB->Voltage());
+
+	if (XPDRon && XPDRheaterOn)
+	{
+
+	}
+
+
 
 }
 
 void RNDZXPDRSystem::SystemTimestep(double simdt)
 {
-	const double XPDRpowerDraw = 70.5; //watts
-	const double heater = 14.0; //watts
+	double XPDRpowerDraw = 70.5; //watts
+	double heater = 14.0; //watts
 
-	if (sat->RNDZXPNDRFLTBusCB.Voltage() > 25.0)
+	if (RRT_FLTBusCB->Voltage() > 25.0) //spec minimum for the RRT system
 	{
 		if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP)
 		{
-			sat->RNDZXPNDRFLTBusCB.DrawPower(XPDRpowerDraw + heater);
+			RRT_FLTBusCB->DrawPower(XPDRpowerDraw + heater);
 		}
 		else if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_DOWN)
 		{
-			sat->RNDZXPNDRFLTBusCB.DrawPower(heater);
+			RRT_FLTBusCB->DrawPower(heater);
 		}
-		else
-		{
-			sat->RNDZXPNDRFLTBusCB.DrawPower(0.0);
-		}
-	}
-	else
-	{
-		sat->RNDZXPNDRFLTBusCB.DrawPower(0.0);
 	}
 }
 

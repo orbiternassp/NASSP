@@ -520,7 +520,7 @@ class RNDZXPDRSystem : public e_object
 public:
 	RNDZXPDRSystem();
 	~RNDZXPDRSystem();
-	void Init(Saturn *vessel, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch);
+	void Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void LoadState(char *line);
@@ -529,6 +529,12 @@ public:
 
 	double CSM_RRTpower;
 	double CSM_RRTfrequency;
+	double **LEM_RRAntennaGain;
+	double **LEM_RRpower;
+	double **LEM_RRAntennaWavelength;
+
+	bool XPDRon;
+	bool XPDRheaterOn;
 
 protected:
 	Saturn *sat;

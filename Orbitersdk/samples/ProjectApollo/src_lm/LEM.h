@@ -735,6 +735,11 @@ public:
 	int ttca_throttle_vel;
 	int js_current;
 
+	//pointers for RR data
+	double *RRAntennaGain;
+	double *RRpower;
+	double *RRAntennaWavelength;
+
 	// Variables for checklists
 	char Checklist_Variable[16][32];
 

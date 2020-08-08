@@ -938,6 +938,9 @@ double CircuitBrakerSwitch::Current()
 		else 
 			Amperes = 0.0; 
 	}
+	else {
+		return 0.0; //remove the else part of this if it causes problems. the function is only ever called by debug strings and I find this implimentation to be more useful --n7275
+	}
 	return Amperes;
 }
 
