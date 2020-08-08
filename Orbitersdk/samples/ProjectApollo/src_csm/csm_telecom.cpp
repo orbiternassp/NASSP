@@ -5149,16 +5149,21 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		LEM_RRpower = NULL;
 		LEM_RRAntennaWavelength = NULL;
 		VESSEL *lm = sat->agc.GetLM();
+		
 		if (lm) {
 			lem = (static_cast<LEM*>(lm));
-			LEM_RRAntennaGain = &lem->RRAntennaGain;
-			LEM_RRpower = &lem->RRpower;
-			LEM_RRAntennaWavelength = &lem->RRAntennaWavelength;
 		}
 	}
 
-	//debug string to check the pointyness of our pointers
-	sprintf(oapiDebugString(), "LEM_RRAntennaGain = %lf", **LEM_RRAntennaGain);
+	/*
+
+	if (lem)
+	{
+		do code to get power and frequency recieved from LEM
+	}
+
+	*/
+
 	
 	//make sure the power's on to the heater and the transponder
 	if (RRT_FLTBusCB->Voltage() > 25.0) //spec minimum for the RRT system
