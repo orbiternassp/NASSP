@@ -5135,9 +5135,7 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	XPDRon = false;
 	XPDRheaterOn = false;
 
-	LEM_RRAntennaGain = NULL;
-	LEM_RRpower = NULL;
-	LEM_RRAntennaWavelength = NULL;
+
 }
 
 void RNDZXPDRSystem::TimeStep(double simdt)
@@ -5145,15 +5143,14 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 	//if we didn't get our LEM at the start of the sceneriao, get one now.
 	if (!lem)
 	{
-		LEM_RRAntennaGain = NULL;
-		LEM_RRpower = NULL;
-		LEM_RRAntennaWavelength = NULL;
 		VESSEL *lm = sat->agc.GetLM();
 		
 		if (lm) {
 			lem = (static_cast<LEM*>(lm));
 		}
 	}
+
+	
 
 	/*
 

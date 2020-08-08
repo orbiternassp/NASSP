@@ -515,7 +515,7 @@ protected:
 	ToggleSwitch *resetswitch;
 };
 
-class RNDZXPDRSystem : public e_object
+class RNDZXPDRSystem
 {
 public:
 	RNDZXPDRSystem();
@@ -526,12 +526,6 @@ public:
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	double GetCSM_RRTgain();
-
-	double CSM_RRTpower;
-	double CSM_RRTfrequency;
-	double **LEM_RRAntennaGain;
-	double **LEM_RRpower;
-	double **LEM_RRAntennaWavelength;
 
 	bool XPDRon;
 	bool XPDRheaterOn;
