@@ -186,9 +186,7 @@ double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
 	if ((theta > thetaMin && theta < thetaMax) && (phi > phiMin && phi < phiMax))
 	{
 		double AngleDiff = sqrt(((theta-ThetaXPDR)*(theta - ThetaXPDR))+((phi - PhiXPDR)*(phi - PhiXPDR))); //lm in view of the RR XPDR horns
-
-		gain = cos(AngleDiff*1.09217)*cos(AngleDiff*1.09217); //simple cos^2 model of transponder
-		gain = gain * 7;
+		gain = 7;
 	}
 	else
 	{
