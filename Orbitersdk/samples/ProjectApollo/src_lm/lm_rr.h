@@ -24,6 +24,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+class LM_RRtoCSM_RRT_Connector : public Connector
+{
+public:
+	bool SendRF(double freq, double XMITpow, double XMITgain);
+protected:
+	LEM_RR* lemrr; //pointer to the instance of the RR that's doing the sending
+};
+
 // Rendezvous Radar
 class LEM_RR : public e_object {
 public:
