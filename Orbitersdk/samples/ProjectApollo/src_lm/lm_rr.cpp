@@ -858,3 +858,28 @@ void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_double(line, "RR_RATE", rate);
 	}
 }
+
+LM_RRtoCSM_RRT_Connector::LM_RRtoCSM_RRT_Connector()
+{
+
+}
+
+LM_RRtoCSM_RRT_Connector::~LM_RRtoCSM_RRT_Connector()
+{
+
+}
+
+void LM_RRtoCSM_RRT_Connector::SendRF(double freq, double XMITpow, double XMITgain)
+{
+
+}
+
+bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
+	return false;
+}
+
+void LEM_RR::ConnectRRToCSM(Connector * LEM_rr_to_csm_connector)
+{
+
+}

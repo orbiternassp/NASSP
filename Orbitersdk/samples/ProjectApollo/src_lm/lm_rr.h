@@ -24,10 +24,27 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+///
+/// \ingroup Connectors
+/// \brief Message type to send to the CSM.
+///
+enum LM_RRmessageType{
+	CW_RADAR_SIGNAL ///< Continuous Wave Radar Signal
+};
+
+class LEM_RR;
+
 class LM_RRtoCSM_RRT_Connector : public Connector
 {
 public:
-	bool SendRF(double freq, double XMITpow, double XMITgain);
+	LM_RRtoCSM_RRT_Connector(); //constructor
+	~LM_RRtoCSM_RRT_Connector(); //descructor
+
+	void SendRF(double freq, double XMITpow, double XMITgain);
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+	void SetRR(LEM_RR* lm_rr) { lemrr = lm_rr; };
+
 protected:
 	LEM_RR* lemrr; //pointer to the instance of the RR that's doing the sending
 };
@@ -62,10 +79,15 @@ public:
 	bool IsRadarDataGood() { return radarDataGood; };
 	bool GetNoTrackSignal() { return NoTrackSignal; }
 
-	//these are public because the CSM RR_XPNDR needs to look at them
+	//these are public because the CSM RR_XPNDR needs to look at them //MOVE TO PRIVATE
 	double AntennaGain;
 	double AntennaWavelength;
 	double AntennaPower;
+
+
+	//TO DO !!!!!!!!!
+	virtual void ConnectRRToCSM(Connector *LEM_rr_to_csm_connector);
+	LM_RRtoCSM_RRT_Connector* GetRR_to_RRT_Connector() { return &lm_rr_to_csm_connector; };
 
 private:
 
@@ -111,4 +133,6 @@ private:
 	UINT anim_RRPitch, anim_RRYaw;
 	double rr_proc[2];
 	double rr_proc_last[2];
+	//connectors
+	LM_RRtoCSM_RRT_Connector lm_rr_to_csm_connector;
 };
