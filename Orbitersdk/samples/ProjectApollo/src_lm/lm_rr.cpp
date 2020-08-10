@@ -105,6 +105,8 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	AntennaPower = 0.240; //W
 	AntennaFrequency = 9832; //MHz
 	AntennaWavelength = C0 / (AntennaFrequency * 1000000); //meters
+
+	lm_rr_to_csm_connector.SetRR(this);
 }
 
 bool LEM_RR::IsDCPowered()
@@ -869,7 +871,7 @@ LM_RRtoCSM_RRT_Connector::~LM_RRtoCSM_RRT_Connector()
 
 }
 
-void LM_RRtoCSM_RRT_Connector::SendRF(double freq, double XMITpow, double XMITgain)
+void LM_RRtoCSM_RRT_Connector::SendRF(double freq, double XMITpow, double XMITgain, double Phase)
 {
 
 }
@@ -879,7 +881,7 @@ bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage
 	return false;
 }
 
-void LEM_RR::ConnectRRToCSM(Connector * LEM_rr_to_csm_connector)
+void LEM_RR::ConnectRRToCSM(Connector *csmRRTconnector)
 {
-
+	lm_rr_to_csm_connector.ConnectTo(csmRRTconnector);
 }

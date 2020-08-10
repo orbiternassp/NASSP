@@ -40,7 +40,7 @@ public:
 	LM_RRtoCSM_RRT_Connector(); //constructor
 	~LM_RRtoCSM_RRT_Connector(); //descructor
 
-	void SendRF(double freq, double XMITpow, double XMITgain);
+	void SendRF(double freq, double XMITpow, double XMITgain, double Phase);
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
 	void SetRR(LEM_RR* lm_rr) { lemrr = lm_rr; };
@@ -79,7 +79,8 @@ public:
 	bool IsRadarDataGood() { return radarDataGood; };
 	bool GetNoTrackSignal() { return NoTrackSignal; }
 
-	virtual void ConnectRRToCSM(Connector *LEM_rr_to_csm_connector);
+	virtual void ConnectRRToCSM(Connector *csmRRTconnector);
+
 	LM_RRtoCSM_RRT_Connector* GetRR_to_RRT_Connector() { return &lm_rr_to_csm_connector; };
 
 private:

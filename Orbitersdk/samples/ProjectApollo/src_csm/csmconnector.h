@@ -105,4 +105,21 @@ public:
 	void StopSeparationPyros();
 };
 
+class RNDZXPDRSystem;
+
+class CSM_RRTto_LM_RRConnector : public Connector
+{
+public:
+	CSM_RRTto_LM_RRConnector(); //constructor
+	~CSM_RRTto_LM_RRConnector(); //descructor
+
+	void SendRF(double freq, double XMITpow, double XMITgain, double Phase);
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+	void SetRRT(RNDZXPDRSystem* rrt) { csm_rrt = rrt; };
+
+protected:
+	RNDZXPDRSystem* csm_rrt; //pointer to the instance of the RR that's doing the sending
+};
+
 #endif // _PA_CSMCONNECTOR_H
