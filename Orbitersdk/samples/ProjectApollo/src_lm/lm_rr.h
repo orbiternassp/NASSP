@@ -118,6 +118,7 @@ private:
 	double AntennaGain;
 	double AntennaWavelength;
 	double AntennaPower;
+	double AntennaPhase;
 	VECTOR3 U_RRL[4];
 	bool AutoTrackEnabled;
 	bool FrequencyLock;

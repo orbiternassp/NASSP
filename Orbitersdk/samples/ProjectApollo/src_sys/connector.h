@@ -43,6 +43,7 @@ enum ConnectorType
 	CSM_PAYLOAD_COMMAND,		///< Docking connector between CSM and Payload
 	SIVB_SI_COMMAND,			///< Docking connector between S-IVB and S-IB/S-II
 	SII_SIC_COMMAND,			///< Docking connector between S-II and S-IC
+	RADAR_RF_SIGNAL,
 };
 
 #define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.

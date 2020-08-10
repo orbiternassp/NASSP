@@ -873,7 +873,17 @@ LM_RRtoCSM_RRT_Connector::~LM_RRtoCSM_RRT_Connector()
 
 void LM_RRtoCSM_RRT_Connector::SendRF(double freq, double XMITpow, double XMITgain, double Phase)
 {
+	ConnectorMessage cm;
 
+	cm.destination = RADAR_RF_SIGNAL;
+	cm.messageType = CW_RADAR_SIGNAL;
+
+	cm.val1.dValue = freq;
+	cm.val2.dValue = XMITpow;
+	cm.val3.dValue = XMITgain;
+	cm.val4.dValue = Phase;
+
+	SendMessage(cm);
 }
 
 bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
