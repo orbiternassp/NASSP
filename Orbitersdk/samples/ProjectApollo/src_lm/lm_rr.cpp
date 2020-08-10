@@ -106,7 +106,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	AntennaFrequency = 9832; //MHz
 	AntennaWavelength = C0 / (AntennaFrequency * 1000000); //meters
 
-	lm_rr_to_csm_connector.SetRR(this);
+	lm_rr_to_csm_connector.SetRR(this); //let our connector object know which LEM_RR it belongs to
 }
 
 bool LEM_RR::IsDCPowered()
