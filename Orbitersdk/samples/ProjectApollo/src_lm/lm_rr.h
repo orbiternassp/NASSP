@@ -79,13 +79,6 @@ public:
 	bool IsRadarDataGood() { return radarDataGood; };
 	bool GetNoTrackSignal() { return NoTrackSignal; }
 
-	//these are public because the CSM RR_XPNDR needs to look at them //MOVE TO PRIVATE
-	double AntennaGain;
-	double AntennaWavelength;
-	double AntennaPower;
-
-
-	//TO DO !!!!!!!!!
 	virtual void ConnectRRToCSM(Connector *LEM_rr_to_csm_connector);
 	LM_RRtoCSM_RRT_Connector* GetRR_to_RRT_Connector() { return &lm_rr_to_csm_connector; };
 
@@ -121,6 +114,9 @@ private:
 	double SignalStrengthQuadrant[4];
 	double AntennaFrequency;
 	double XPDRpower;
+	double AntennaGain;
+	double AntennaWavelength;
+	double AntennaPower;
 	VECTOR3 U_RRL[4];
 	bool AutoTrackEnabled;
 	bool FrequencyLock;
