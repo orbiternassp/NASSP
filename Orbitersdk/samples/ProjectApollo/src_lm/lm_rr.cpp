@@ -52,6 +52,8 @@ LEM_RR::LEM_RR()
 	rr_proc[1] = 0.0;
 	rr_proc_last[0] = 0.0;
 	rr_proc_last[1] = 0.0;
+
+	lm_rr_to_csm_connector.SetRR(this); //let our connector object know which LEM_RR it belongs to
 }
 
 void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
@@ -105,8 +107,6 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	AntennaPower = 0.240; //W
 	AntennaFrequency = 9832; //MHz
 	AntennaWavelength = C0 / (AntennaFrequency * 1000000); //meters
-
-	lm_rr_to_csm_connector.SetRR(this); //let our connector object know which LEM_RR it belongs to
 }
 
 bool LEM_RR::IsDCPowered()
@@ -884,6 +884,7 @@ void LM_RRtoCSM_RRT_Connector::SendRF(double freq, double XMITpow, double XMITga
 	cm.val4.dValue = Phase;
 
 	SendMessage(cm);
+
 }
 
 bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
