@@ -107,6 +107,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	AntennaPower = 0.240; //W
 	AntennaFrequency = 9832; //MHz
 	AntennaWavelength = C0 / (AntennaFrequency * 1000000); //meters
+	AntennaPhase = 0.0;
 }
 
 bool LEM_RR::IsDCPowered()
@@ -771,6 +772,9 @@ void LEM_RR::Timestep(double simdt) {
 
 	//sprintf(oapiDebugString(), "Shaft %f, Trunnion %f Mode %d", shaftAngle*DEG, trunnionAngle*DEG, mode);
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
+
+	//send data out to the CSM RRT
+	lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain, AntennaPhase);
 }
 
 void LEM_RR::SystemTimestep(double simdt) {
@@ -885,6 +889,8 @@ void LM_RRtoCSM_RRT_Connector::SendRF(double freq, double XMITpow, double XMITga
 
 	SendMessage(cm);
 
+	//sprintf(oapiDebugString(), "Hey this Function got called at %lf", oapiGetSimTime());
+	
 }
 
 bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
