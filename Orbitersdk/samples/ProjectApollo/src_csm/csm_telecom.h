@@ -515,6 +515,8 @@ protected:
 	ToggleSwitch *resetswitch;
 };
 
+class CSM_RRTto_LM_RRConnector;
+
 class RNDZXPDRSystem
 {
 public:
@@ -526,6 +528,9 @@ public:
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	double GetCSM_RRTgain();
+	CSM_RRTto_LM_RRConnector* getCSM_RRTto_LM_RRConnector() { return &csm_rrtTo_lm_rrConnector; };
+
+	virtual void connectRRTtoLEM(Connector *lemRRconnector);
 
 	bool XPDRon;
 	bool XPDRheaterOn;
@@ -539,4 +544,6 @@ protected:
 	ThreePosSwitch *HeaterPowerSwitch; //heater/power switch
 	RotationalSwitch *RRT_LeftSystemTestRotarySwitch;
 	RotationalSwitch *RRT_RightSystemTestRotarySwitch;
+
+	CSM_RRTto_LM_RRConnector csm_rrtTo_lm_rrConnector;
 };

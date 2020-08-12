@@ -5220,3 +5220,8 @@ void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 {
 
 }
+
+void RNDZXPDRSystem::connectRRTtoLEM(Connector *lemRRconnector)
+{
+	csm_rrtTo_lm_rrConnector.ConnectTo(lemRRconnector);
+}

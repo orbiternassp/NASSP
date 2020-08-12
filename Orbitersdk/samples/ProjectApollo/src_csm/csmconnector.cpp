@@ -830,3 +830,17 @@ void CSMToPayloadConnector::StopSeparationPyros()
 
 	SendMessage(cm);
 }
+
+CSM_RRTto_LM_RRConnector::CSM_RRTto_LM_RRConnector()
+{
+	csm_rrt = NULL;
+}
+
+CSM_RRTto_LM_RRConnector::~CSM_RRTto_LM_RRConnector()
+{
+}
+
+bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
+	return false;
+}
