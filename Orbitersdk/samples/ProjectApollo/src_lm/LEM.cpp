@@ -956,6 +956,12 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		return;
 	}
 
+	// Prevent Orbiter navmodes from doing stuff
+	if (GetNavmodeState(NAVMODE_HOLDALT))
+	{
+		DeactivateNavmode(NAVMODE_HOLDALT);
+	}
+
 	//
 	// Internal/External view check
 	//

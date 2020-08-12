@@ -185,16 +185,6 @@ void LEM::SetLmVesselDockStage()
 
 	InitNavRadios (4);
 
-	// Descent stage attached.
-	if (pMission->IsLMStageBitInverted())
-	{
-		agc.SetInputChannelBit(030, DescendStageAttached, false);
-	}
-	else
-	{
-		agc.SetInputChannelBit(030, DescendStageAttached, true);
-	}
-
 	// Exterior lights
 	SetTrackLight();
 	SetDockingLights();
@@ -259,16 +249,6 @@ void LEM::SetLmVesselHoverStage()
 	AddRCS_LMH(-5.4516);
 
 	InitNavRadios (4);
-
-	// Descent stage attached.
-	if (pMission->IsLMStageBitInverted())
-	{
-		agc.SetInputChannelBit(030, DescendStageAttached, false);
-	}
-	else
-	{
-		agc.SetInputChannelBit(030, DescendStageAttached, true);
-	}
 
 	// Exterior lights
 	SetTrackLight();
@@ -348,16 +328,6 @@ void LEM::SetLmAscentHoverStage()
 	
 	SetLmDockingPort(0.85);
 	InitNavRadios (4);
-
-	// Descent stage attached.
-	if (pMission->IsLMStageBitInverted())
-	{
-		agc.SetInputChannelBit(030, DescendStageAttached, true);
-	}
-	else
-	{
-		agc.SetInputChannelBit(030, DescendStageAttached, false);
-	}
 
 	// Exterior lights
 	SetTrackLight();

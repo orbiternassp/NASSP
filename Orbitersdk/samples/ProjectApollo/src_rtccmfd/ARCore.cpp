@@ -154,6 +154,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->GMGMED("P12,CSM,16:00:00,72.0;");
 
 		rtcc->MCCLEX = 3431;
+		rtcc->MCCLRF = 1735;
 	}
 	else if (mission == 10)
 	{
@@ -5086,26 +5087,6 @@ void ARCore::StopIMFDRequest() {
 
 	g_Data.isRequesting = false;
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
-}
-
-int ARCore::REFSMMATOctalAddress()
-{
-	int addr;
-
-	if (vesseltype < 2)
-	{
-		addr = 01735;
-	}
-	else
-	{
-		addr = 01733;
-	}
-	
-	if (GC->rtcc->AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
-	{
-		addr -= 02;
-	}
-	return addr;
 }
 
 void ARCore::DetermineGMPCode()
