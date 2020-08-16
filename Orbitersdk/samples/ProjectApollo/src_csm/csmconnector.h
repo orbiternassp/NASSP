@@ -107,10 +107,10 @@ public:
 
 class RNDZXPDRSystem;
 
-class CSM_RRTto_LM_RRConnector : public Connector
+class CSM_RRTto_LM_RRConnector : public SaturnConnector
 {
 public:
-	CSM_RRTto_LM_RRConnector(); //constructor
+	CSM_RRTto_LM_RRConnector(Saturn *s); //constructor
 	~CSM_RRTto_LM_RRConnector(); //descructor
 
 	void SendRF(double freq, double XMITpow, double XMITgain, double Phase);

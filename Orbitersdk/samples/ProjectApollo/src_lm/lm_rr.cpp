@@ -53,7 +53,7 @@ LEM_RR::LEM_RR()
 	rr_proc_last[0] = 0.0;
 	rr_proc_last[1] = 0.0;
 
-	lm_rr_to_csm_connector.SetRR(this); //let our connector object know which LEM_RR it belongs to
+	lem->lm_rr_to_csm_connector.SetRR(this); //let our connector object know which LEM_RR it belongs to
 }
 
 void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
@@ -387,6 +387,9 @@ void LEM_RR::Timestep(double simdt) {
 
 		if (csm)
 		{
+			//lm_rr_to_csm_connector.ConnectTo(pCSM_RRTto_LM_RRConnector)
+
+			//
 
 			//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 			lem->GetGlobalPos(LMPos);
@@ -774,7 +777,7 @@ void LEM_RR::Timestep(double simdt) {
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 
 	//send data out to the CSM RRT
-	lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain, AntennaPhase);
+	//lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain, AntennaPhase);
 }
 
 void LEM_RR::SystemTimestep(double simdt) {
@@ -863,42 +866,4 @@ void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_double(line, "RR_RANGE", range);
 		papiReadScenario_double(line, "RR_RATE", rate);
 	}
-}
-
-LM_RRtoCSM_RRT_Connector::LM_RRtoCSM_RRT_Connector()
-{
-
-}
-
-LM_RRtoCSM_RRT_Connector::~LM_RRtoCSM_RRT_Connector()
-{
-
-}
-
-void LM_RRtoCSM_RRT_Connector::SendRF(double freq, double XMITpow, double XMITgain, double Phase)
-{
-	ConnectorMessage cm;
-
-	cm.destination = RADAR_RF_SIGNAL;
-	cm.messageType = CW_RADAR_SIGNAL;
-
-	cm.val1.dValue = freq;
-	cm.val2.dValue = XMITpow;
-	cm.val3.dValue = XMITgain;
-	cm.val4.dValue = Phase;
-
-	SendMessage(cm);
-
-	//sprintf(oapiDebugString(), "Hey this Function got called at %lf", oapiGetSimTime());
-	
-}
-
-bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
-{
-	return false;
-}
-
-void LEM_RR::ConnectRRToCSM(Connector *csmRRTconnector)
-{
-	lm_rr_to_csm_connector.ConnectTo(csmRRTconnector);
 }

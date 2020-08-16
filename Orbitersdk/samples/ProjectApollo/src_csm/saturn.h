@@ -4317,6 +4317,8 @@ protected:
 	// Checklist Controller to CSM connector
 	ChecklistDataInterface cdi;
 
+	CSM_RRTto_LM_RRConnector CSM_RRTto_LM_RRConnector;
+
 	//
 	// PanelSDK pointers.
 	//

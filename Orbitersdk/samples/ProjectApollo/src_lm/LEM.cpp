@@ -262,6 +262,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	CSMToLEMPowerConnector(this),
 	LEMToSLAConnector(this),
 	CSMToLEMCommandConnector(this),
+	lm_rr_to_csm_connector(this),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
 {

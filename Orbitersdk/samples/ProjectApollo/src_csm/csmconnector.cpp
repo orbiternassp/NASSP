@@ -831,9 +831,12 @@ void CSMToPayloadConnector::StopSeparationPyros()
 	SendMessage(cm);
 }
 
-CSM_RRTto_LM_RRConnector::CSM_RRTto_LM_RRConnector()
+//connector for rendezvous radar transponder
+//****************************************************************************
+
+CSM_RRTto_LM_RRConnector::CSM_RRTto_LM_RRConnector(Saturn *s) : SaturnConnector(s)
 {
-	csm_rrt = NULL;
+	type = RADAR_RF_SIGNAL;
 }
 
 CSM_RRTto_LM_RRConnector::~CSM_RRTto_LM_RRConnector()
@@ -842,5 +845,32 @@ CSM_RRTto_LM_RRConnector::~CSM_RRTto_LM_RRConnector()
 
 bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
 {
+	sprintf(oapiDebugString(), "Hey this Function got called at %lf", oapiGetSimTime());
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	if (!csm_rrt)
+	{
+		return false;
+	}
+
+	LM_RRmessageType messageType;
+	messageType = (LM_RRmessageType)m.messageType;
+
+	switch (messageType)
+	{
+		case CW_RADAR_SIGNAL:
+		{
+			//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", m.val1.dValue);
+			return true;
+		}
+		case RR_XPDR_SIGNAL:
+		{
+			return false;
+		}
+	}
+
 	return false;
 }

@@ -5134,8 +5134,7 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 
 	XPDRon = false;
 	XPDRheaterOn = false;
-
-
+	
 }
 
 void RNDZXPDRSystem::TimeStep(double simdt)
@@ -5219,9 +5218,4 @@ void RNDZXPDRSystem::LoadState(char *line)
 void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 {
 
-}
-
-void RNDZXPDRSystem::connectRRTtoLEM(Connector *lemRRconnector)
-{
-	csm_rrtTo_lm_rrConnector.ConnectTo(lemRRconnector);
 }
