@@ -52,8 +52,6 @@ LEM_RR::LEM_RR()
 	rr_proc[1] = 0.0;
 	rr_proc_last[0] = 0.0;
 	rr_proc_last[1] = 0.0;
-
-	lem->lm_rr_to_csm_connector.SetRR(this); //let our connector object know which LEM_RR it belongs to
 }
 
 void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
@@ -387,9 +385,11 @@ void LEM_RR::Timestep(double simdt) {
 
 		if (csm)
 		{
-			//lm_rr_to_csm_connector.ConnectTo(pCSM_RRTto_LM_RRConnector)
-
-			//
+			//if the csm happens to pop into existance mid-sceneriao, this should connect to it
+			if (!(lem->lm_rr_to_csm_connector.connectedTo))
+			{
+				lem->lm_rr_to_csm_connector.ConnectTo(GetVesselConnector(csm,VIRTUAL_CONNECTOR_PORT,RADAR_RF_SIGNAL));
+			}
 
 			//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
 			lem->GetGlobalPos(LMPos);
@@ -777,7 +777,7 @@ void LEM_RR::Timestep(double simdt) {
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 
 	//send data out to the CSM RRT
-	//lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain, AntennaPhase);
+	lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain, AntennaPhase);
 }
 
 void LEM_RR::SystemTimestep(double simdt) {
