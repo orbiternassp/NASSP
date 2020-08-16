@@ -834,9 +834,10 @@ void CSMToPayloadConnector::StopSeparationPyros()
 //connector for rendezvous radar transponder
 //****************************************************************************
 
-CSM_RRTto_LM_RRConnector::CSM_RRTto_LM_RRConnector(Saturn *s) : SaturnConnector(s)
+CSM_RRTto_LM_RRConnector::CSM_RRTto_LM_RRConnector(Saturn *s, RNDZXPDRSystem *rrt) : SaturnConnector(s)
 {
 	type = RADAR_RF_SIGNAL;
+	csm_rrt = rrt;
 }
 
 CSM_RRTto_LM_RRConnector::~CSM_RRTto_LM_RRConnector()

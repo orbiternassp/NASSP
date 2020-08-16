@@ -211,7 +211,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	sivbCommandConnector(this),
 	lemECSConnector(this),
 	payloadCommandConnector(this),
-	CSM_RRTto_LM_RRConnector(this),
+	CSM_RRTto_LM_RRConnector(this, &RRTsystem),
 	cdi(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
@@ -321,6 +321,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &cdi);
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &lemECSConnector);
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &CSM_RRTto_LM_RRConnector);
 }
 
 Saturn::~Saturn()
@@ -550,12 +551,16 @@ void Saturn::initSaturn()
 
 	iuCommandConnector.SetSaturn(this);
 	sivbCommandConnector.SetSaturn(this);
+	CSM_RRTto_LM_RRConnector.SetSaturn(this);
+	CSM_RRTto_LM_RRConnector.SetRRT(&RRTsystem);
 
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
 	lemECSConnector.SetType(LEM_CSM_ECS);
 	payloadCommandConnector.SetType(CSM_PAYLOAD_COMMAND);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
+	CSM_RRTto_LM_RRConnector.SetType(RADAR_RF_SIGNAL);
+
 
 	//
 	// Propellant sources.
