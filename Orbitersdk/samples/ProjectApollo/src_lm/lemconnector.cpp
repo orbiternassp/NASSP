@@ -201,9 +201,10 @@ bool LEMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 	return false;
 }
 
-LM_RRtoCSM_RRT_Connector::LM_RRtoCSM_RRT_Connector(LEM *l) : LEMConnector(l)
+LM_RRtoCSM_RRT_Connector::LM_RRtoCSM_RRT_Connector(LEM *l, LEM_RR *lm_rr) : LEMConnector(l)
 {
 	type = RADAR_RF_SIGNAL;
+	lemrr = lm_rr;
 }
 
 LM_RRtoCSM_RRT_Connector::~LM_RRtoCSM_RRT_Connector()

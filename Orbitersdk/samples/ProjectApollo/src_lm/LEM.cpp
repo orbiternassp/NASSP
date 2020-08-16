@@ -262,7 +262,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	CSMToLEMPowerConnector(this),
 	LEMToSLAConnector(this),
 	CSMToLEMCommandConnector(this),
-	lm_rr_to_csm_connector(this),
+	lm_rr_to_csm_connector(this, &RR),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk)
 {
@@ -423,6 +423,7 @@ void LEM::Init()
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);
 	CSMToLEMECSConnector.SetType(LEM_CSM_ECS);
 	LEMToSLAConnector.SetType(PAYLOAD_SLA_CONNECT);
+	lm_rr_to_csm_connector.SetType(RADAR_RF_SIGNAL);
 
 	LEMToCSMConnector.AddTo(&CSMToLEMPowerConnector);
 	LEMToCSMConnector.AddTo(&CSMToLEMCommandConnector);

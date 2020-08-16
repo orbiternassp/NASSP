@@ -88,7 +88,7 @@ class LEM_RR;
 class LM_RRtoCSM_RRT_Connector : public LEMConnector
 {
 public:
-	LM_RRtoCSM_RRT_Connector(LEM *l); //constructor
+	LM_RRtoCSM_RRT_Connector(LEM *l, LEM_RR *lm_rr); //constructor
 	~LM_RRtoCSM_RRT_Connector(); //descructor
 
 	void SendRF(double freq, double XMITpow, double XMITgain, double Phase);
