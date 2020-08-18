@@ -532,6 +532,7 @@ public:
 
 	bool XPDRon;
 	bool XPDRheaterOn;
+	
 
 protected:
 	Saturn *sat;
@@ -541,6 +542,15 @@ protected:
 	double RCVDpow;
 	double RCVDgain;
 	double RCVDPhase;
+	double RCVDPowerdB;
+	double RadarDist; //distance from CSM to LEM;
+
+	double lockTimer;
+
+	bool haslock;
+
+	VECTOR3 lemPos;
+	VECTOR3 csmPos;
 
 	CircuitBrakerSwitch *RRT_FLTBusCB;
 	ToggleSwitch *TestOperateSwitch; //test operate switch

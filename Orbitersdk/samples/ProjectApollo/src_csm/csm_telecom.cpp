@@ -5140,6 +5140,11 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 
 	XPDRon = false;
 	XPDRheaterOn = false;
+
+	RadarDist = 0.0;
+
+	RCVDPowerdB = 0.0;
+	lockTimer = 0.0;
 	
 }
 
@@ -5155,13 +5160,14 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		}
 	}
 
-	//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", RCVDfreq);
-	sprintf(oapiDebugString(), "LEM RR Gain Received: %lf", RCVDgain);
-	
+	///
+	/// TODO: make heater heat, should be on for 15min before switching RRT on.
+	///
+
 	//make sure the power's on to the heater and the transponder
 	if (RRT_FLTBusCB->Voltage() > 25.0) //spec minimum for the RRT system
 	{
-		if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP)
+		if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP) 
 		{
 			XPDRon = true;
 			XPDRheaterOn = true;
@@ -5180,13 +5186,25 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 	//sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", RRT_FLTBusCB->Current(), RRT_FLTBusCB->Voltage());
 
-	if (XPDRon && XPDRheaterOn)
+	if (XPDRon && XPDRheaterOn && lem) //do transpondery things
 	{
+		//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", RCVDfreq);
+		//sprintf(oapiDebugString(), "LEM RR Gain Received: %lf", RCVDgain);
 
+		sat->GetGlobalPos(csmPos);
+		lem->GetGlobalPos(lemPos);
+
+		RadarDist = length(csmPos - lemPos);
+		//sprintf(oapiDebugString(), "LEM-CSM Distance: %lfm", RadarDist);
+
+		RCVDPowerdB = RCVDgain * 7.0 * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2);
+		sprintf(oapiDebugString(), "Power Receved: %lfdB", 10 * log10(1000 * RCVDPowerdB));
 	}
-
-
-
+	else
+	{
+		haslock = false;
+		lockTimer = 0.0;
+	}
 }
 
 void RNDZXPDRSystem::SystemTimestep(double simdt)

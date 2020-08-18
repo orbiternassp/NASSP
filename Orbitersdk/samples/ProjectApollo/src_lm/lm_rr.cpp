@@ -432,7 +432,7 @@ void LEM_RR::Timestep(double simdt) {
 			CSMReflectGain = GetCSMGain(theta, phi, XPRD_State);
 			CSMReflectGain = pow(10, (CSMReflectGain / 10)); //convert to ratio from dB
 
-			RecvdRRPower = XPDRpower * AntennaGain*CSMReflectGain*pow(AntennaWavelength / (4 * PI*length(R)), 2);
+			RecvdRRPower = XPDRpower * AntennaGain*CSMReflectGain*pow(AntennaWavelength / (4.0 * PI*length(R)), 2.0);
 			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
 			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
 
