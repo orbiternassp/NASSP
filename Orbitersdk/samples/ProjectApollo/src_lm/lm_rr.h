@@ -42,7 +42,7 @@ public:
 	double GetRadarShaftPos() { return -asin(sin(shaftAngle)); }
 	double GetRadarRange() { return range; };
 	double GetRadarRate() { return rate; };
-	double GetSignalStrength() { return SignalStrength * 4.0; }
+	double GetSignalStrength() { return SignalStrengthRCVD * 4.0; }
 	double GetShaftErrorSignal();
 	double GetTrunnionErrorSignal();
 	double GetTransmitterPower();
@@ -83,7 +83,7 @@ private:
 	int scratch[2];             // Scratch data
 	int mode;					//Mode I = false, Mode II = true
 	double hpbw_factor;			//Beamwidth factor
-	double SignalStrength;
+	double SignalStrengthRCVD;
 	double SignalStrengthQuadrant[4];
 	double AntennaFrequency;
 	double XPDRpower;
@@ -91,6 +91,7 @@ private:
 	double AntennaWavelength;
 	double AntennaPower;
 	double AntennaPhase;
+	double AntennaPolarValue;
 	VECTOR3 U_RRL[4];
 	bool AutoTrackEnabled;
 	bool FrequencyLock;

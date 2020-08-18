@@ -83,7 +83,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	}
 
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (3.5*RAD / 4.0);	//3.5° beamwidth
-	SignalStrength = 0.0;
+	SignalStrengthRCVD = 0.0;
 	AutoTrackEnabled = false;
 	ShaftErrorSignal = 0.0;
 	TrunnionErrorSignal = 0.0;
@@ -100,7 +100,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 		U_RRL[i] = _V(0.0, 0.0, 0.0);
 	}
 
-	AntennaGain = pow(10, (32 / 10)); //dB
+	AntennaGain = pow(10.0, (32.0 / 10.0)); //dB
 	XPDRpower = 0.240; //W
 	AntennaPower = 0.240; //W
 	AntennaFrequency = 9832; //MHz
@@ -202,7 +202,7 @@ double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
 
 double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
 {
-	double SignalStrength;
+	double SignalStrengthRCVD;
 
 	//calibration for gauge
 	const double low_dBm = -122.0; //spec minimum 
@@ -215,22 +215,22 @@ double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
 
 	if (RecvdRRPower_dBm > high_dBm)
 	{
-		SignalStrength = 1.0;
+		SignalStrengthRCVD = 1.0;
 	}
 	else
 	{
-		SignalStrength = RecvdRRPower_dBm*slope+intercept;
-		if (SignalStrength > HighSignal)
+		SignalStrengthRCVD = RecvdRRPower_dBm*slope+intercept;
+		if (SignalStrengthRCVD > HighSignal)
 		{
-			SignalStrength = HighSignal;
+			SignalStrengthRCVD = HighSignal;
 		}
-		else if (SignalStrength < 0)
+		else if (SignalStrengthRCVD < 0)
 		{
-			SignalStrength = 0;
+			SignalStrengthRCVD = 0;
 		}
 	}
 	
-	return SignalStrength;
+	return SignalStrengthRCVD;
 }
 
 
@@ -287,7 +287,7 @@ void LEM_RR::Timestep(double simdt) {
 		if (val33[RRPowerOnAuto]) { clobber = TRUE; val33[RRPowerOnAuto] = 0; }
 		if (val33[RRDataGood]) { clobber = TRUE; val33[RRDataGood] = 0; }
 		if (clobber == TRUE) { lem->agc.SetInputChannel(033, val33); }
-		SignalStrength = 0.0;
+		SignalStrengthRCVD = 0.0;
 		radarDataGood = false;
 		FrequencyLock = false;
 		RangeLock = false;
@@ -356,7 +356,7 @@ void LEM_RR::Timestep(double simdt) {
 			SignalStrengthQuadrant[3] = 0.41;
 		}
 
-		SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
+		SignalStrengthRCVD = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
 
 		//sprintf(oapiDebugString(),"RR TEST MODE TIMER %0.2f STATE T/S %d %d POS %0.2f %0.2f TPOS %0.2f %0.2f",tstime,tstate[0],tstate[1],shaftAngle*DEG,trunnionAngle*DEG,shaftTarget*DEG,trunnionTarget*DEG);
 	}
@@ -370,7 +370,7 @@ void LEM_RR::Timestep(double simdt) {
 		SignalStrengthQuadrant[1] = 0.0;
 		SignalStrengthQuadrant[2] = 0.0;
 		SignalStrengthQuadrant[3] = 0.0;
-		SignalStrength = 0.0;
+		SignalStrengthRCVD = 0.0;
 
 		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, U_RRT, R;
 		MATRIX3 LMRot, CSMRot;
@@ -449,12 +449,14 @@ void LEM_RR::Timestep(double simdt) {
 				//relative angle between antenna pointing vector and direction of CSM
 				relang = acos(dotp(U_RR, U_R));
 
-				SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang)*SignalStrengthScaleFactor;
+				SignalStrengthQuadrant[i] = (pow(cos(hpbw_factor*relang), 2.0) + 1.0) / 2.0*exp(-25.0*relang*relang);
+				//antenna polar looks like this https://www.wolframalpha.com/input/?i=polar+plot+%28%28cos%5E2%2837.446*theta%29%2B1%29%2F2%29*%28e%5E%28-25*theta%5E2%29%29
 			}
 
-			SignalStrength = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
+			AntennaPolarValue = (SignalStrengthQuadrant[0] + SignalStrengthQuadrant[1] + SignalStrengthQuadrant[2] + SignalStrengthQuadrant[3]) / 4.0;
+			SignalStrengthRCVD = AntennaPolarValue * SignalStrengthScaleFactor;
 
-			if (SignalStrength > 0.231 && length(R) > 80.0*0.3048)
+			if (SignalStrengthRCVD > 0.231 && length(R) > 80.0*0.3048)
 			{
 				internalrange = length(R);
 
@@ -464,7 +466,7 @@ void LEM_RR::Timestep(double simdt) {
 				internalrangerate = dotp(CSMVel - LMVel, U_R);
 			}
 
-			//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°, SignalStrength %f %f %f %f", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG, SignalStrengthQuadrant[0], SignalStrengthQuadrant[1], SignalStrengthQuadrant[2], SignalStrengthQuadrant[3]);
+			//sprintf(oapiDebugString(), "Shaft: %f, Trunnion: %f, Relative Angle: %f°, SignalStrengthRCVD %f %f %f %f", shaftAngle*DEG, trunnionAngle*DEG, relang*DEG, SignalStrengthQuadrant[0], SignalStrengthQuadrant[1], SignalStrengthQuadrant[2], SignalStrengthQuadrant[3]);
 
 		}
 	}
@@ -501,7 +503,7 @@ void LEM_RR::Timestep(double simdt) {
 	}
 
 	//Frequency Lock
-	if (AutoTrackEnabled && SignalStrength > 0.231 && internalrange > 80.0*0.3048)
+	if (AutoTrackEnabled && SignalStrengthRCVD > 0.231 && internalrange > 80.0*0.3048)
 	{
 		FrequencyLock = true;
 	}
@@ -778,7 +780,7 @@ void LEM_RR::Timestep(double simdt) {
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 
 	//send data out to the CSM RRT
-	lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain, AntennaPhase);
+	lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain*AntennaPolarValue, AntennaPhase);
 }
 
 void LEM_RR::SystemTimestep(double simdt) {

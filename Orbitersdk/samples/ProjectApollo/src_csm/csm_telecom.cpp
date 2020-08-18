@@ -5104,6 +5104,7 @@ void DSE::SaveState(FILEHANDLE scn) {
 }
 
 // Rendezvous Radar Transponder System
+// there is a connector, CSM_RRTto_LM_RRConnector, which is a member of the saturn class, that is recieving the radar RF properties from the LEM which is doing the sending.
 
 RNDZXPDRSystem::RNDZXPDRSystem()
 {
@@ -5154,7 +5155,8 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		}
 	}
 
-	sprintf(oapiDebugString(),"Frequency Received: %lf MHz", RCVDfreq);
+	//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", RCVDfreq);
+	sprintf(oapiDebugString(), "LEM RR Gain Received: %lf", RCVDgain);
 	
 	//make sure the power's on to the heater and the transponder
 	if (RRT_FLTBusCB->Voltage() > 25.0) //spec minimum for the RRT system

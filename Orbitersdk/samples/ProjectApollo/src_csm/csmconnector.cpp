@@ -865,11 +865,7 @@ bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage
 		case CW_RADAR_SIGNAL:
 		{
 			//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", m.val1.dValue);
-			//csm_rrt->SetRCVDrfProp(m.val1.dValue, m.val2.dValue, m.val3.dValue, m.val4.dValue);
-			csm_rrt->RCVDfreq = m.val1.dValue;
-			csm_rrt->RCVDpow = m.val2.dValue;
-			csm_rrt->RCVDgain = m.val3.dValue;
-			csm_rrt->RCVDPhase = m.val4.dValue;
+			csm_rrt->SetRCVDrfProp(m.val1.dValue, m.val2.dValue, m.val3.dValue, m.val4.dValue);
 
 			return true;
 		}
