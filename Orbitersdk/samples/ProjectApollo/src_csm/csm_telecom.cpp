@@ -5132,6 +5132,11 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	RRT_RightSystemTestRotarySwitch = LeftSystemTestRotarySwitch;
 	RRT_FLTBusCB = PowerCB;
 
+	RCVDfreq = 0.0;
+	RCVDpow = 0.0;
+	RCVDgain = 0.0;
+	RCVDPhase = 0.0;
+
 	XPDRon = false;
 	XPDRheaterOn = false;
 	
@@ -5149,17 +5154,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		}
 	}
 
-	
-
-	/*
-
-	if (lem)
-	{
-		do code to get power and frequency recieved from LEM
-	}
-
-	*/
-
+	sprintf(oapiDebugString(),"Frequency Received: %lf MHz", RCVDfreq);
 	
 	//make sure the power's on to the heater and the transponder
 	if (RRT_FLTBusCB->Voltage() > 25.0) //spec minimum for the RRT system

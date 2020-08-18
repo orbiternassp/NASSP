@@ -386,6 +386,7 @@ void LEM_RR::Timestep(double simdt) {
 		if (csm)
 		{
 			//if the csm happens to pop into existance mid-sceneriao, this should connect to it
+			//need a better solution for multiple CSMs/LEMs in the same sceneriao
 			if (!(lem->lm_rr_to_csm_connector.connectedTo))
 			{
 				lem->lm_rr_to_csm_connector.ConnectTo(GetVesselConnector(csm,VIRTUAL_CONNECTOR_PORT,RADAR_RF_SIGNAL));

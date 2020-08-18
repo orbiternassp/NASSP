@@ -528,8 +528,11 @@ public:
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	double GetCSM_RRTgain();
-
-	
+	//void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
+	double RCVDfreq;
+	double RCVDpow;
+	double RCVDgain;
+	double RCVDPhase;
 
 	bool XPDRon;
 	bool XPDRheaterOn;
@@ -537,6 +540,11 @@ public:
 protected:
 	Saturn *sat;
 	LEM *lem;
+
+	//double RCVDfreq;
+	//double RCVDpow;
+	//double RCVDgain;
+	//double RCVDPhase;
 
 	CircuitBrakerSwitch *RRT_FLTBusCB;
 	ToggleSwitch *TestOperateSwitch; //test operate switch
