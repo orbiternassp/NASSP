@@ -535,6 +535,8 @@ public:
 	
 
 protected:
+	double GetCSMGain(double theta, double phi, bool XPDRon); //returns the gain of the csm RRT system for returned power calculations
+
 	Saturn *sat;
 	LEM *lem;
 
@@ -543,6 +545,7 @@ protected:
 	double RCVDgain;
 	double RCVDPhase;
 	double RCVDPowerdB;
+	double RNDZXPDRGain;
 	double RadarDist; //distance from CSM to LEM;
 	double theta, phi;
 

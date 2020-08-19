@@ -5148,6 +5148,40 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	
 }
 
+double RNDZXPDRSystem::GetCSMGain(double theta, double phi, bool XPDRon)
+{
+
+	//values from AOH LM volume 2
+	const double thetaMax = 120 * RAD;
+	const double thetaMin = 0 * RAD;
+	const double phiMax = 230 * RAD;
+	const double phiMin = 80 * RAD;
+
+	const double ThetaXPDR = 85.0*RAD; //15 deg forward
+	const double PhiXPDR = 141.8*RAD; //
+
+	if (XPDRon = false)
+	{
+		return -32.0;
+	}
+
+	double gain;
+
+	if ((theta > thetaMin && theta < thetaMax) && (phi > phiMin && phi < phiMax))
+	{
+		double AngleDiff = sqrt(((theta - ThetaXPDR)*(theta - ThetaXPDR)) + ((phi - PhiXPDR)*(phi - PhiXPDR))); //lm in view of the RR XPDR horns
+		gain = 7;
+	}
+	else
+	{
+		gain = -6;
+	}
+
+
+
+	return gain;
+}
+
 void RNDZXPDRSystem::TimeStep(double simdt)
 {
 	//if we didn't get our LEM at the start of the sceneriao, get one now.
@@ -5213,8 +5247,10 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		RadarDist = length(R);
 		//sprintf(oapiDebugString(), "LEM-CSM Distance: %lfm", RadarDist);
 
-		RCVDPowerdB = RCVDgain * 7.0 * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2);
-		//sprintf(oapiDebugString(), "Power Receved: %lfdB", 10 * log10(1000 * RCVDPowerdB));
+		RNDZXPDRGain = RNDZXPDRSystem::GetCSMGain(theta, phi, XPDRon);
+
+		RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2);
+		sprintf(oapiDebugString(), "Power Receved: %lfdB", 10 * log10(1000 * RCVDPowerdB));
 	}
 	else
 	{
