@@ -5192,13 +5192,29 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		//sprintf(oapiDebugString(), "LEM RR Gain Received: %lf", RCVDgain);
 
 		sat->GetGlobalPos(csmPos);
+		sat->GetRotationMatrix(CSMRot);
 		lem->GetGlobalPos(lemPos);
 
-		RadarDist = length(csmPos - lemPos);
+		R = csmPos - lemPos;
+		U_R = unit(R);
+
+		U_R_RR = unit(tmul(CSMRot, -U_R)); // calculate the pointing vector from the CSM to the LM in the CSM's local frame
+		U_R_RR = _V(U_R_RR.z, U_R_RR.x, -U_R_RR.y); //swap out Orbiter's axes for the Apollo CSM's
+
+		theta = acos(U_R_RR.x); //calculate the azmuth about the csm local frame
+		phi = atan2(U_R_RR.y, -U_R_RR.z); //calculate the elevation about the csm local frame
+
+		if (phi < 0)
+		{
+			phi += RAD * 360;
+		}
+		//sprintf(oapiDebugString(), "Theta: %lf, Phi: %lf", theta*DEG, phi*DEG);
+
+		RadarDist = length(R);
 		//sprintf(oapiDebugString(), "LEM-CSM Distance: %lfm", RadarDist);
 
 		RCVDPowerdB = RCVDgain * 7.0 * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2);
-		sprintf(oapiDebugString(), "Power Receved: %lfdB", 10 * log10(1000 * RCVDPowerdB));
+		//sprintf(oapiDebugString(), "Power Receved: %lfdB", 10 * log10(1000 * RCVDPowerdB));
 	}
 	else
 	{

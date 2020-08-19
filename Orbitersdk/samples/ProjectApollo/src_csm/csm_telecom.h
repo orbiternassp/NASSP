@@ -544,6 +544,7 @@ protected:
 	double RCVDPhase;
 	double RCVDPowerdB;
 	double RadarDist; //distance from CSM to LEM;
+	double theta, phi;
 
 	double lockTimer;
 
@@ -551,6 +552,11 @@ protected:
 
 	VECTOR3 lemPos;
 	VECTOR3 csmPos;
+	VECTOR3 R;
+	VECTOR3 U_R;
+	VECTOR3 U_R_RR;
+	MATRIX3 LMRot, CSMRot;
+
 
 	CircuitBrakerSwitch *RRT_FLTBusCB;
 	ToggleSwitch *TestOperateSwitch; //test operate switch
