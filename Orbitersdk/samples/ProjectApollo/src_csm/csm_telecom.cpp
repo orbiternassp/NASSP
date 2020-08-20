@@ -5215,7 +5215,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 	//sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", RRT_FLTBusCB->Current(), RRT_FLTBusCB->Voltage());
 
-	if (XPDRon && XPDRheaterOn && lem) //do transpondery things
+	if (lem) //do transpondery things
 	{
 		//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", RCVDfreq);
 		//sprintf(oapiDebugString(), "LEM RR Gain Received: %lf", RCVDgain);
@@ -5244,16 +5244,29 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 		RNDZXPDRGain = RNDZXPDRSystem::GetCSMGain(theta, phi, XPDRon);
 
-		
+		RNDZXPDRGain = pow(10, (RNDZXPDRGain / 10)); //convert to ratio from dB
 
 		RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2);
 		sprintf(oapiDebugString(), "Power Receved: %lfdB", 10 * log10(1000 * RCVDPowerdB));
+		
+		if (10 * log10(1000 * RCVDPowerdB)>-122)
+		{
+			if (lockTimer < 1.3)
+			{
+				lockTimer += simdt;
+			}
+			else
+			{
+				lockTimer = true;
+			}
+		}
+		else
+		{
+			haslock = false;
+			lockTimer = 0.0;
+		}
 	}
-	else
-	{
-		haslock = false;
-		lockTimer = 0.0;
-	}
+
 }
 
 void RNDZXPDRSystem::SystemTimestep(double simdt)
