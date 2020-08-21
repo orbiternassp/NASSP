@@ -844,6 +844,21 @@ CSM_RRTto_LM_RRConnector::~CSM_RRTto_LM_RRConnector()
 {
 }
 
+void CSM_RRTto_LM_RRConnector::SendRF(double freq, double XMITpow, double XMITgain, double Phase)
+{
+	ConnectorMessage cm;
+
+	cm.destination = RADAR_RF_SIGNAL;
+	cm.messageType = RR_XPDR_SIGNAL;
+
+	cm.val1.dValue = freq;
+	cm.val2.dValue = XMITpow;
+	cm.val3.dValue = XMITgain;
+	cm.val4.dValue = Phase;
+
+	SendMessage(cm);
+}
+
 bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
 {
 	//sprintf(oapiDebugString(), "Hey this Function got called at %lf", oapiGetSimTime()); //debugging

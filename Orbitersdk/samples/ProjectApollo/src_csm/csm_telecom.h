@@ -531,11 +531,12 @@ public:
 	void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
 
 protected:
-	double GetCSMGain(double theta, double phi, bool XPDRon); //returns the gain of the csm RRT system for returned power calculations
+	double GetCSMGain(double theta, double phi); //returns the gain of the csm RRT system for returned power calculations
 
 	Saturn *sat;
 	LEM *lem;
 
+	double XMITpower;
 	double RCVDfreq;
 	double RCVDpow;
 	double RCVDgain;

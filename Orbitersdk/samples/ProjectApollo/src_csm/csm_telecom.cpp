@@ -5145,15 +5145,11 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 
 	RCVDPowerdB = 0.0;
 	lockTimer = 0.0;
-	
+	XMITpower = 0.240; //watts
 }
 
-double RNDZXPDRSystem::GetCSMGain(double theta, double phi, bool XPDRon)
+double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
 {
-	if (XPDRon == false)
-	{
-		return -32.0;
-	}
 
 	//values from AOH LM volume 2
 
@@ -5228,6 +5224,12 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		XPDRtest = false;
 	}
 
+	if (!XPDRon)
+	{
+		haslock = false;
+		lockTimer = 0.0;
+	}
+
 	//sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", RRT_FLTBusCB->Current(), RRT_FLTBusCB->Voltage());
 
 	if (lem) //do transpondery things
@@ -5257,19 +5259,18 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		RadarDist = length(R);
 		//sprintf(oapiDebugString(), "LEM-CSM Distance: %lfm", RadarDist);
 
-		RNDZXPDRGain = RNDZXPDRSystem::GetCSMGain(theta, phi, XPDRon);
+		RNDZXPDRGain = RNDZXPDRSystem::GetCSMGain(theta, phi);
 
 		RNDZXPDRGain = pow(10, (RNDZXPDRGain / 10)); //convert to ratio from dB
 
 		RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2); //watts
 		RCVDPowerdB = 10 * log10(1000 * RCVDPowerdB); //convert to dBm
 
-		if (RCVDPowerdB > -122.0)
+		if ((RCVDPowerdB > -122.0) && XPDRon)
 		{
 			if (lockTimer < 1.3)
 			{
 				lockTimer += simdt;
-				sprintf(oapiDebugString(), "Lock Timer: %lfsec", lockTimer);
 			}
 			else
 			{
@@ -5284,6 +5285,14 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 		sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);
 
+		if(XPDRon && haslock)
+		{
+			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq*(240.0/241.0),XMITpower, RNDZXPDRGain, 0.0); //act like a transponder
+		}
+		else
+		{
+			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(RCVDPowerdB/10.0,10.0)/1000)*0.999, -10, 0.0); //act like a radar reflector, this is also a function of orientation and skin temperature of the CSM, but this should work.
+		}
 	}
 }
 
