@@ -5196,21 +5196,36 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 	//make sure the power's on to the heater and the transponder
 	if (RRT_FLTBusCB->Voltage() > 25.0) //spec minimum for the RRT system
 	{
-		if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP) 
+		if ((HeaterPowerSwitch->GetState() == THREEPOSSWITCH_CENTER))
+		{
+		XPDRon = false;
+		XPDRheaterOn = false;
+		XPDRtest = false;
+		}
+		else if ((HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP) && (TestOperateSwitch->GetState() == TOGGLESWITCH_DOWN)) 
 		{
 			XPDRon = true;
 			XPDRheaterOn = true;
+			XPDRtest = false;
+		}
+		else if ((HeaterPowerSwitch->GetState() == THREEPOSSWITCH_UP) && (TestOperateSwitch->GetState() == TOGGLESWITCH_UP))
+		{
+			XPDRon = false;
+			XPDRheaterOn = true;
+			XPDRtest = true;
 		}
 		else if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_DOWN)
 		{
 			XPDRon = false;
 			XPDRheaterOn = true;
+			XPDRtest = false;
 		}
 	}
 	else
 	{
 		XPDRon = false;
 		XPDRheaterOn = false;
+		XPDRtest = false;
 	}
 
 	//sprintf(oapiDebugString(), "RRT_FLTBusCB Current = %lf A; Voltage = %lf V", RRT_FLTBusCB->Current(), RRT_FLTBusCB->Voltage());
@@ -5246,18 +5261,19 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 		RNDZXPDRGain = pow(10, (RNDZXPDRGain / 10)); //convert to ratio from dB
 
-		RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2);
-		sprintf(oapiDebugString(), "Power Receved: %lfdB", 10 * log10(1000 * RCVDPowerdB));
-		
-		if (10 * log10(1000 * RCVDPowerdB)>-122)
+		RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2); //watts
+		RCVDPowerdB = 10 * log10(1000 * RCVDPowerdB); //convert to dBm
+
+		if (RCVDPowerdB > -122.0)
 		{
 			if (lockTimer < 1.3)
 			{
 				lockTimer += simdt;
+				sprintf(oapiDebugString(), "Lock Timer: %lfsec", lockTimer);
 			}
 			else
 			{
-				lockTimer = true;
+				haslock = true;
 			}
 		}
 		else
@@ -5265,8 +5281,10 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 			haslock = false;
 			lockTimer = 0.0;
 		}
-	}
 
+		sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);
+
+	}
 }
 
 void RNDZXPDRSystem::SystemTimestep(double simdt)
@@ -5283,6 +5301,11 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 		else if (HeaterPowerSwitch->GetState() == THREEPOSSWITCH_DOWN)
 		{
 			RRT_FLTBusCB->DrawPower(heater);
+		}
+
+		if (haslock)
+		{
+			//send voltages to proper gauges.
 		}
 	}
 }

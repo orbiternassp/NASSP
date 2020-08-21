@@ -530,10 +530,6 @@ public:
 	double GetCSM_RRTgain();
 	void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
 
-	bool XPDRon;
-	bool XPDRheaterOn;
-	
-
 protected:
 	double GetCSMGain(double theta, double phi, bool XPDRon); //returns the gain of the csm RRT system for returned power calculations
 
@@ -552,6 +548,9 @@ protected:
 	double lockTimer;
 
 	bool haslock;
+	bool XPDRon;
+	bool XPDRheaterOn;
+	bool XPDRtest;
 
 	VECTOR3 lemPos;
 	VECTOR3 csmPos;
