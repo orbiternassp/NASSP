@@ -103,7 +103,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	AntennaGain = pow(10.0, (32.0 / 10.0)); //dB
 	XPDRpower = 0.240; //W
 	AntennaPower = 0.240; //W
-	AntennaFrequency = 9832; //MHz
+	AntennaFrequency = 9832.8; //MHz
 	AntennaWavelength = C0 / (AntennaFrequency * 1000000); //meters
 	AntennaPhase = 0.0;
 }

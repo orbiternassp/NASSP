@@ -559,6 +559,10 @@ protected:
 	VECTOR3 U_R_RR;
 	MATRIX3 LMRot, CSMRot;
 
+	//not implimented yet
+	//RRT_RFpowerXDUCER RFpowerXDUCER;
+	//RRT_AGC_XDUCER AGC_XDUCER;
+	//RRT_FREQLOCK_XDUCER FREQLOCK_XDUCER;
 
 	CircuitBrakerSwitch *RRT_FLTBusCB;
 	ToggleSwitch *TestOperateSwitch; //test operate switch
@@ -566,3 +570,19 @@ protected:
 	RotationalSwitch *RRT_LeftSystemTestRotarySwitch;
 	RotationalSwitch *RRT_RightSystemTestRotarySwitch;
 };
+
+//not implimented yet
+//class RRT_RFpowerXDUCER : public Transducer //RF power tranducer, converts a -122 to -18 dBm signal to a 2.1V to 5V output
+//{
+//	
+//};
+//
+//class RRT_AGC_XDUCER : public Transducer//Automatic Gain Control transducer, converts an -(-18) to -(-122) dBm signal to 0 to 4.5V output (AGV voltage down up when RF power received goes down)
+//{
+//
+//};
+//
+//class RRT_FREQLOCK_XDUCER : public Transducer //frequency lock transducer, output 4.5V when locked (use lockTimer as input to simulate freq locking)
+//{
+//
+//};
