@@ -5119,7 +5119,7 @@ RNDZXPDRSystem::RNDZXPDRSystem()
 
 RNDZXPDRSystem::~RNDZXPDRSystem()
 {
-
+	sat->CSM_RRTto_LM_RRConnector.Disconnect();
 }
 
 void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
@@ -5144,8 +5144,12 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	RadarDist = 0.0;
 
 	RCVDPowerdB = 0.0;
-	lockTimer = 0.0;
 	XMITpower = 0.240; //watts
+
+	if (!(sat->CSM_RRTto_LM_RRConnector.connectedTo))
+	{
+		sat->CSM_RRTto_LM_RRConnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
+	}
 }
 
 unsigned char RNDZXPDRSystem::GetScaledRFPower()
@@ -5153,7 +5157,7 @@ unsigned char RNDZXPDRSystem::GetScaledRFPower()
 	const double min_value = -122.0;
 	const double max_value = -18.0;
 	
-	if(XPDRon && haslock)
+	if(XPDRon && (haslock == LOCKED))
 	{ 
 		return static_cast<unsigned char>(((RCVDPowerdB - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
 	}
@@ -5168,7 +5172,7 @@ unsigned char RNDZXPDRSystem::GetScaledAGCPower()
 	const double min_value = 18.0;
 	const double max_value = 122.0;
 
-	if (XPDRon && haslock)
+	if (XPDRon && (haslock == LOCKED))
 	{
 		return static_cast<unsigned char>((abs(RCVDPowerdB)-min_value)/(max_value - min_value)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
 	}
@@ -5268,7 +5272,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 	if (!XPDRon)
 	{
-		haslock = false;
+		haslock = UNLOCKED;
 		lockTimer = 0.0;
 	}
 
@@ -5329,18 +5333,18 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 			}
 			else
 			{
-				haslock = true;
+				haslock = LOCKED;
 			}
 		}
 		else
 		{
-			haslock = false;
+			haslock = UNLOCKED;
 			lockTimer = 0.0;
 		}
 
 		//sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);
 
-		if(XPDRon && haslock)//act like a transponder
+		if(XPDRon && (haslock == LOCKED))//act like a transponder
 		{
 			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq*(240.0/241.0),XMITpower, RNDZXPDRGain, 0.0); 
 		}
@@ -5367,23 +5371,23 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 			RRT_FLTBusCB->DrawPower(heater);
 		}
 
-		if (haslock)
-		{
+		//if (haslock == LOCKED)
+		//{
 			//send voltages to proper gauges.
-		}
+		//}
 	}
 }
 
 void RNDZXPDRSystem::LoadState(char *line)
 {
-	//sscanf(line + 14, "%i %lf", &haslock, &lockTimer);
+	sscanf(line + 14, "%i %lf", &haslock, &lockTimer);
 }
 
 void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 {
-	//char buffer[256];
+	char buffer[256];
 
-	//sprintf(buffer, "%i %lf", haslock, lockTimer);
+	sprintf(buffer, "%i %lf", haslock, lockTimer);
 
-	//oapiWriteScenario_string(scn, "RNDZXPDRSystem", buffer);
+	oapiWriteScenario_string(scn, "RNDZXPDRSystem", buffer);
 }

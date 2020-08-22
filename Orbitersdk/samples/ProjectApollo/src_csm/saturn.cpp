@@ -1466,6 +1466,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	vhftransceiver.SaveState(scn);
 	if (pMission->CSMHasVHFRanging()) vhfranging.SaveState(scn);
 	dataRecorder.SaveState(scn);
+	RRTsystem.SaveState(scn);
 
 	Panelsdk.Save(scn);	
 
@@ -2159,6 +2160,9 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	    else if (!strnicmp (line, "DATARECORDER", 12)) {
 		    dataRecorder.LoadState(line);
 	    }
+		else if (!strnicmp(line, "RNDZXPDRSystem", 14)) {
+			RRTsystem.LoadState(line);
+		}
 		else if (!strnicmp(line, CMOPTICS_START_STRING, sizeof(CMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
 		} 

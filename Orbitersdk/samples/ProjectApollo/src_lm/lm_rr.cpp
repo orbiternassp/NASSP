@@ -39,6 +39,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 // Position and draw numbers are just guesses!
 LEM_RR::LEM_RR()
 {
+	csm = NULL;
 	lem = NULL;
 	RREHeat = 0;
 	RRESECHeat = 0;
@@ -54,8 +55,24 @@ LEM_RR::LEM_RR()
 	rr_proc_last[1] = 0.0;
 }
 
+LEM_RR::~LEM_RR()
+{
+	lem->lm_rr_to_csm_connector.Disconnect();
+}
+
 void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
 	lem = s;
+	if (!csm) 
+	{
+		VESSEL *csm = lem->agc.GetCSM();
+	}
+	else 
+	{
+		if (!(lem->lm_rr_to_csm_connector.connectedTo))
+		{
+			lem->lm_rr_to_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
+		}
+	}
 	// Set up antenna.
 	// RR antenna is designed to operate between 10F and 75F
 	// The standby heater switches on below -40F and turns it off again at 0F
@@ -347,8 +364,11 @@ void LEM_RR::Timestep(double simdt) {
 
 		double RecvdRRPower, RecvdRRPower_dBm, SignalStrengthScaleFactor;
 		double anginc = 0.1*RAD;
-
-		VESSEL *csm = lem->agc.GetCSM();
+		
+		if (!csm) {
+			csm = lem->agc.GetCSM();
+		}
+			
 
 		if (csm)
 		{

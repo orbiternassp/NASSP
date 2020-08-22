@@ -552,7 +552,12 @@ protected:
 
 	double lockTimer;
 
-	bool haslock;
+	enum FreqLock {
+		UNLOCKED,
+		LOCKED,
+	};
+
+	FreqLock haslock;
 	bool XPDRon;
 	bool XPDRheaterOn;
 	bool XPDRtest;
