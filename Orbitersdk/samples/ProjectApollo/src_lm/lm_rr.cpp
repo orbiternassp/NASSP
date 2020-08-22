@@ -168,40 +168,6 @@ double LEM_RR::GetTransmitterPower()
 	return 3.7;
 }
 
-double LEM_RR::GetCSMGain(double theta, double phi, bool XPDRon)
-{
-
-	//values from AOH LM volume 2
-	const double thetaMax = 120 * RAD;
-	const double thetaMin = 0 * RAD;
-	const double phiMax = 230 * RAD;
-	const double phiMin = 80 * RAD;
-
-	const double ThetaXPDR = 85.0*RAD; //15 deg forward
-	const double PhiXPDR = 141.8*RAD; //
-
-	if (XPDRon = false)
-	{
-		return -32.0;
-	}
-
-	double gain;
-
-	if ((theta > thetaMin && theta < thetaMax) && (phi > phiMin && phi < phiMax))
-	{
-		double AngleDiff = sqrt(((theta-ThetaXPDR)*(theta - ThetaXPDR))+((phi - PhiXPDR)*(phi - PhiXPDR))); //lm in view of the RR XPDR horns
-		gain = 7;
-	}
-	else
-	{
-		gain = -6;
-	}
-
-
-	
-	return gain;
-}
-
 
 double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
 {
@@ -379,12 +345,6 @@ void LEM_RR::Timestep(double simdt) {
 		MATRIX3 LMRot, CSMRot;
 		double relang;
 
-		//remove
-		/*
-		double CSMReflectGain;
-		double theta, phi;
-		*/
-
 		double RecvdRRPower, RecvdRRPower_dBm, SignalStrengthScaleFactor;
 		double anginc = 0.1*RAD;
 
@@ -419,27 +379,6 @@ void LEM_RR::Timestep(double simdt) {
 			U_RRL[1] = unit(_V(sin(shaftAngle - anginc)*cos(trunnionAngle), -sin(trunnionAngle), cos(shaftAngle - anginc)*cos(trunnionAngle)));
 			U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
 			U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
-
-			/*
-			U_RRT = unit(tmul(CSMRot, -U_R)); // calculate the pointing vector from the CSM to the LM in the CSM's local frame
-
-			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y); //swap out Orbiter's axes for the Apollo CSM's
-
-			theta = acos(U_RRT.x); //calculate the azmuth about the csm local frame
-			phi = atan2(U_RRT.y, -U_RRT.z); //calculate the elevation about the csm local frame
-			
-			if (phi < 0)
-			{
-				phi += RAD*360;
-			}
-
-
-			//bool XPRD_State = true;
-			//bool XPRD_State = GetCSM_RR_XPDR_state()
-			
-			CSMReflectGain = GetCSMGain(theta, phi, XPRD_State);
-
-			*/
 
 			RCVDgain = pow(10.0, (RCVDgain / 10.0)); //convert to ratio from dB
 
