@@ -5276,6 +5276,11 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 	if (lem) //do transpondery things
 	{
+		if (!(sat->CSM_RRTto_LM_RRConnector.connectedTo))
+		{
+			sat->CSM_RRTto_LM_RRConnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
+		}
+
 		//sprintf(oapiDebugString(),"Frequency Received: %lf MHz", RCVDfreq);
 		//sprintf(oapiDebugString(), "LEM RR Gain Received: %lf", RCVDgain);
 
@@ -5332,7 +5337,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 			lockTimer = 0.0;
 		}
 
-		sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);
+		//sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);
 
 		if(XPDRon && haslock)//act like a transponder
 		{
@@ -5340,7 +5345,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		}
 		else //act like a radar reflector, this is also a function of orientation and skin temperature of the CSM, but this should work.
 		{
-			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(RCVDPowerdB/10.0,10.0)/1000)*0.999*((sin(theta*RAD)+1)/2), -10, 0.0); //the gain is a guess
+			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(RCVDPowerdB/10.0,10.0)/1000)*0.999*((sin(theta*RAD)+1)/2), -32, 0.0); //the gain is a guess
 		}
 	}
 }

@@ -48,6 +48,7 @@ public:
 	double GetTransmitterPower();
 	double GetCSMGain(double theta, double phi, bool XPDRon); //returns the gain of the csm RRT system for returned power calculations
 	double dBm2SignalStrength(double RecvdRRPower_dBm);
+	void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
 
 	bool IsPowered();
 	bool IsDCPowered();
@@ -86,7 +87,10 @@ private:
 	double SignalStrengthRCVD;
 	double SignalStrengthQuadrant[4];
 	double AntennaFrequency;
-	double XPDRpower;
+	double RCVDfreq;
+	double RCVDpow;
+	double RCVDgain;
+	double RCVDPhase;
 	double AntennaGain;
 	double AntennaWavelength;
 	double AntennaPower;

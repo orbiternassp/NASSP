@@ -101,11 +101,14 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	}
 
 	AntennaGain = pow(10.0, (32.0 / 10.0)); //dB
-	XPDRpower = 0.240; //W
 	AntennaPower = 0.240; //W
 	AntennaFrequency = 9832.8; //MHz
-	AntennaWavelength = C0 / (AntennaFrequency * 1000000); //meters
 	AntennaPhase = 0.0;
+
+	RCVDfreq = 0.0;
+	RCVDpow = 0.0;
+	RCVDgain = 0.0;
+	RCVDPhase = 0.0;
 }
 
 bool LEM_RR::IsDCPowered()
@@ -375,10 +378,14 @@ void LEM_RR::Timestep(double simdt) {
 		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, U_RRT, R;
 		MATRIX3 LMRot, CSMRot;
 		double relang;
-		double CSMReflectGain;
-		double RecvdRRPower, RecvdRRPower_dBm, SignalStrengthScaleFactor;
-		double theta, phi;
 
+		//remove
+		/*
+		double CSMReflectGain;
+		double theta, phi;
+		*/
+
+		double RecvdRRPower, RecvdRRPower_dBm, SignalStrengthScaleFactor;
 		double anginc = 0.1*RAD;
 
 		VESSEL *csm = lem->agc.GetCSM();
@@ -413,6 +420,7 @@ void LEM_RR::Timestep(double simdt) {
 			U_RRL[2] = unit(_V(sin(shaftAngle)*cos(trunnionAngle + anginc), -sin(trunnionAngle + anginc), cos(shaftAngle)*cos(trunnionAngle + anginc)));
 			U_RRL[3] = unit(_V(sin(shaftAngle)*cos(trunnionAngle - anginc), -sin(trunnionAngle - anginc), cos(shaftAngle)*cos(trunnionAngle - anginc)));
 
+			/*
 			U_RRT = unit(tmul(CSMRot, -U_R)); // calculate the pointing vector from the CSM to the LM in the CSM's local frame
 
 			U_RRT = _V(U_RRT.z, U_RRT.x, -U_RRT.y); //swap out Orbiter's axes for the Apollo CSM's
@@ -426,13 +434,16 @@ void LEM_RR::Timestep(double simdt) {
 			}
 
 
-			bool XPRD_State = true;
+			//bool XPRD_State = true;
 			//bool XPRD_State = GetCSM_RR_XPDR_state()
 			
 			CSMReflectGain = GetCSMGain(theta, phi, XPRD_State);
-			CSMReflectGain = pow(10, (CSMReflectGain / 10)); //convert to ratio from dB
 
-			RecvdRRPower = XPDRpower * AntennaGain*CSMReflectGain*pow(AntennaWavelength / (4.0 * PI*length(R)), 2.0);
+			*/
+
+			RCVDgain = pow(10.0, (RCVDgain / 10.0)); //convert to ratio from dB
+
+			RecvdRRPower = RCVDpow*AntennaGain*RCVDgain*pow((C0 / (RCVDfreq * 1000000)) / (4.0 * PI*length(R)), 2.0);
 			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
 			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
 

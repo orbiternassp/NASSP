@@ -527,7 +527,6 @@ public:
 	void SystemTimestep(double simdt);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
-	double GetCSM_RRTgain();
 	void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
 
 	//these values are for the LEB101 test meter gauge

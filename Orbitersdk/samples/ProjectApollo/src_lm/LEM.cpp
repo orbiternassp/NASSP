@@ -464,6 +464,7 @@ void LEM::Init()
 	RegisterConnector(0, &LEMToCSMConnector);
 	RegisterConnector(0, &CSMToLEMECSConnector);
 	RegisterConnector(1, &LEMToSLAConnector);
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &lm_rr_to_csm_connector);
 
 	// Do this stuff only once
 	if(!InitLEMCalled){
