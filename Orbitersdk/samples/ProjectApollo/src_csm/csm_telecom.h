@@ -530,6 +530,11 @@ public:
 	double GetCSM_RRTgain();
 	void SetRCVDrfProp(double freq, double pow, double gain, double phase) { RCVDfreq = freq; RCVDpow = pow; RCVDgain = gain; RCVDPhase = phase; };
 
+	//these values are for the LEB101 test meter gauge
+	unsigned char GetScaledRFPower(); //RF power, converts a -122 to -18 dBm signal to a 2.1V to 5V output 
+	unsigned char GetScaledAGCPower(); //Automatic Gain Control, converts an - (-18) to - (-122) dBm signal to 0 to 4.5V output(AGV voltage down up when RF power received goes down)
+	unsigned char GetScaledFreqLock(); //frequency lock, output 4.5V when locked (use lockTimer as input to simulate freq locking)
+
 protected:
 	double GetCSMGain(double theta, double phi); //returns the gain of the csm RRT system for returned power calculations
 

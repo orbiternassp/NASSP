@@ -5148,6 +5148,48 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	XMITpower = 0.240; //watts
 }
 
+unsigned char RNDZXPDRSystem::GetScaledRFPower()
+{
+	const double min_value = -122.0;
+	const double max_value = -18.0;
+	
+	if(XPDRon && haslock)
+	{ 
+		return static_cast<unsigned char>(((RCVDPowerdB - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
+	}
+	else
+	{
+		return NULL;
+	}	
+}
+
+unsigned char RNDZXPDRSystem::GetScaledAGCPower()
+{
+	const double min_value = 18.0;
+	const double max_value = 122.0;
+
+	if (XPDRon && haslock)
+	{
+		return static_cast<unsigned char>((abs(RCVDPowerdB)-min_value)/(max_value - min_value)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+unsigned char RNDZXPDRSystem::GetScaledFreqLock()
+{
+	if (XPDRon )
+	{
+		return static_cast<unsigned char>((lockTimer/1.3)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
 double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
 {
 
@@ -5263,8 +5305,15 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 		RNDZXPDRGain = pow(10, (RNDZXPDRGain / 10)); //convert to ratio from dB
 
-		RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2); //watts
-		RCVDPowerdB = 10 * log10(1000 * RCVDPowerdB); //convert to dBm
+		if (RadarDist > 80.0*0.3048)
+		{
+			RCVDPowerdB = RCVDgain * RNDZXPDRGain * RCVDpow*pow((C0 / (RCVDfreq * 1000000)) / (4 * PI*RadarDist), 2); //watts
+			RCVDPowerdB = 10.0 * log10(1000.0 * RCVDPowerdB); //convert to dBm
+		}
+		else
+		{
+			RCVDPowerdB = -130; //technicially dB should decrease linearly with decreasing log(distance) as we enter the Rayleigh Region, but this works maybe simulate this better later
+		}
 
 		if ((RCVDPowerdB > -122.0) && XPDRon)
 		{
@@ -5285,13 +5334,13 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 		sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);
 
-		if(XPDRon && haslock)
+		if(XPDRon && haslock)//act like a transponder
 		{
-			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq*(240.0/241.0),XMITpower, RNDZXPDRGain, 0.0); //act like a transponder
+			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq*(240.0/241.0),XMITpower, RNDZXPDRGain, 0.0); 
 		}
-		else
+		else //act like a radar reflector, this is also a function of orientation and skin temperature of the CSM, but this should work.
 		{
-			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(RCVDPowerdB/10.0,10.0)/1000)*0.999, -10, 0.0); //act like a radar reflector, this is also a function of orientation and skin temperature of the CSM, but this should work.
+			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(RCVDPowerdB/10.0,10.0)/1000)*0.999*((sin(theta*RAD)+1)/2), -10, 0.0); //the gain is a guess
 		}
 	}
 }
@@ -5321,10 +5370,14 @@ void RNDZXPDRSystem::SystemTimestep(double simdt)
 
 void RNDZXPDRSystem::LoadState(char *line)
 {
-
+	//sscanf(line + 14, "%i %lf", &haslock, &lockTimer);
 }
 
 void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 {
+	//char buffer[256];
 
+	//sprintf(buffer, "%i %lf", haslock, lockTimer);
+
+	//oapiWriteScenario_string(scn, "RNDZXPDRSystem", buffer);
 }
