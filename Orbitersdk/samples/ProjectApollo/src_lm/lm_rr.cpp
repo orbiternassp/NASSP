@@ -341,7 +341,7 @@ void LEM_RR::Timestep(double simdt) {
 		SignalStrengthQuadrant[3] = 0.0;
 		SignalStrengthRCVD = 0.0;
 
-		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, U_RRT, R;
+		VECTOR3 CSMPos, CSMVel, LMPos, LMVel, U_R, U_RR, R;
 		MATRIX3 LMRot, CSMRot;
 		double relang;
 
@@ -384,9 +384,10 @@ void LEM_RR::Timestep(double simdt) {
 
 			RecvdRRPower = RCVDpow*AntennaGain*RCVDgain*pow((C0 / (RCVDfreq * 1000000)) / (4.0 * PI*length(R)), 2.0);
 			RecvdRRPower_dBm = 10 * log10(1000 * RecvdRRPower);
+			//sprintf(oapiDebugString(), "RecvdRRPower_dBm = %lf dBm", RecvdRRPower_dBm);
 			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
 
-			//sprintf(oapiDebugString(), "X: %lf, Y: %lf, Z: %lf, Theta: %lf, Phi, %lf ReturnedPower: %lf, CSMGAIN %lf", U_RRT.x, U_RRT.y, U_RRT.z, theta*DEG, phi*DEG, RecvdRRPower_dBm, GetCSMGain(theta, phi, TRUE));
+			//sprintf(oapiDebugString(), "X: %lf, Y: %lf, Z: %lf, ReturnedPower: %lf", U_RRT.x, U_RRT.y, U_RRT.z, RecvdRRPower_dBm));
 
 			//In LM navigation base coordinates, left handed
 			for (int i = 0;i < 4;i++)

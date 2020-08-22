@@ -5203,11 +5203,11 @@ double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
 
 	double gain;
 
-	double AngleMap = sqrt(((theta/60 - ThetaXPDR)*(theta/60 - ThetaXPDR)) + ((phi/90 - PhiXPDR)*(phi/90 - PhiXPDR))); 
+	double AngleMap = sqrt(((theta - ThetaXPDR)*(theta - ThetaXPDR)) + ((phi - PhiXPDR)*(phi - PhiXPDR))); 
 	
-	gain = exp(-AngleMap*AngleMap)*exp(-AngleMap*AngleMap); //close enough
+	gain = cos(AngleMap/2*RAD)*cos(AngleMap / 2 * RAD); //close enough
 
-	gain = gain * (gainMin - gainMax) - gainMin;
+	gain = gain * (gainMax - gainMin) + gainMin;
 
 
 
@@ -5307,6 +5307,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		//sprintf(oapiDebugString(), "LEM-CSM Distance: %lfm", RadarDist);
 
 		RNDZXPDRGain = RNDZXPDRSystem::GetCSMGain(theta, phi);
+		//sprintf(oapiDebugString(), "RNDZXPDRGain = %lf dBi", RNDZXPDRGain);
 
 		RNDZXPDRGain = pow(10, (RNDZXPDRGain / 10)); //convert to ratio from dB
 
@@ -5345,7 +5346,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 		}
 		else //act like a radar reflector, this is also a function of orientation and skin temperature of the CSM, but this should work.
 		{
-			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(RCVDPowerdB/10.0,10.0)/1000)*0.999*((sin(theta*RAD)+1)/2), -32, 0.0); //the gain is a guess
+			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(RCVDPowerdB/10.0,10.0)/1000)*0.85*((sin(theta*RAD)+1)/2), -250, 0.0); //the gain is a guess
 		}
 	}
 }
