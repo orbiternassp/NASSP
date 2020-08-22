@@ -5184,9 +5184,13 @@ unsigned char RNDZXPDRSystem::GetScaledAGCPower()
 
 unsigned char RNDZXPDRSystem::GetScaledFreqLock()
 {
-	if (XPDRon )
+	if (XPDRon && (haslock == LOCKED))
 	{
 		return static_cast<unsigned char>((lockTimer/1.3)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+	}
+	else if (XPDRon && (haslock == UNLOCKED))
+	{
+		return static_cast<unsigned char>(20.0); //Signal Search Mode.
 	}
 	else
 	{
