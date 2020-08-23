@@ -302,3 +302,8 @@ void IUUmbilical::SwitchSelector(int stage, int channel)
 {
 	iu->GetControlDistributor()->SwitchSelector(stage, channel);
 }
+
+void IUUmbilical::LVDCPrepareToLaunch()
+{
+	iu->GetLVDA()->PrepareToLaunch();
+}

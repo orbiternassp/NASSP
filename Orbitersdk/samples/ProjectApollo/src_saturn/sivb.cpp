@@ -321,12 +321,6 @@ void SIVB::InitS4b()
 	}
 
 	MainBattery = static_cast<Battery *> (Panelsdk.GetPointerByString("ELECTRIC:POWER_BATTERY"));
-
-	//
-	// Register docking connector so the payload can find it.
-	//
-	RegisterConnector(0, &payloadSeparationConnector);
-	RegisterConnector(1, &sivbSIConnector);
 }
 
 void SIVB::Boiloff()
@@ -361,29 +355,14 @@ bool SIVB::GetDockingPortFromHandle(OBJHANDLE port, UINT &num)
 	return false;
 }
 
-//Disconnects all docking connectors, updates the docking port number associated with each docking handle, and reconnects the docked conectors
-void SIVB::ReconnectDockingConnectors()
+bool SIVB::IsLowerStageDocked()
 {
-	UINT i;
-	for (i = 0;i < DockCount();i++)
+	if (hDockSI && GetDockStatus(hDockSI))
 	{
-		UndockConnectors(i);
+		return true;
 	}
-	if (GetDockingPortFromHandle(hDock, i))
-	{
-		UpdateConnectorDockingPort(i, &payloadSeparationConnector);
-	}
-	if (GetDockingPortFromHandle(hDockSI, i))
-	{
-		UpdateConnectorDockingPort(i, &sivbSIConnector);
-	}
-	for (i = 0;i < DockCount();i++)
-	{
-		if (DockingStatus(i))
-		{
-			DockConnectors(i);
-		}
-	}
+
+	return false;
 }
 
 void SIVB::CreateSISIVBInterface()
@@ -404,7 +383,7 @@ void SIVB::CreateAirfoils()
 	}
 	else
 	{
-		cw_z_pos = 0.1;
+		cw_z_pos = 0.2;
 	}
 	if (hDockSI && GetDockStatus(hDockSI))
 	{
@@ -512,6 +491,9 @@ void SIVB::SetS4b()
        }
 	}
 
+
+	int i = 0;
+
 	switch (PayloadType) {
 	case PAYLOAD_LEM:
 	case PAYLOAD_LM1:
@@ -519,6 +501,8 @@ void SIVB::SetS4b()
 		SetDockParams(dockpos, dockdir, dockrot);
 		hDock = GetDockHandle(0);
 		CreatePayload();
+		RegisterConnector(i, &payloadSeparationConnector);
+		i++;
 		break;
 
 	case PAYLOAD_LTA:
@@ -572,6 +556,7 @@ void SIVB::SetS4b()
 
 	//Docking port for the connection to the lower stage (S-IB or S-II)
 	CreateSISIVBInterface();
+	RegisterConnector(i, &sivbSIConnector);
 	//Docking port for the connection to the stage attached to the front of the SLA (usually CSM, also Apollo 5 nosecap)
 	hDockCSM = CreateDock(_V(0.0, 0, 14.8), _V(0, 0, 1), _V(1, 0, 0));
 
@@ -1505,7 +1490,6 @@ void SIVB::clbkPostCreation()
 			hDock = NULL;
 		}
 	}
-	ReconnectDockingConnectors();
 	CreateAirfoils();
 }
 
@@ -1634,14 +1618,8 @@ void SIVB::SetState(SIVBSettings &state)
 	hDockSI = NULL;
 	DelDock(hDockCSM);
 	hDockCSM = NULL;
-	ReconnectDockingConnectors();
 
 	FirstTimestep = true;
-}
-
-double SIVB::GetMissionTime()
-{
-	return MissionTime;
 }
 
 int SIVB::GetVehicleNo()
@@ -1827,7 +1805,6 @@ void SIVB::StartSeparationPyros()
 		{
 			DelDock(hDock);
 			hDock = NULL;
-			ReconnectDockingConnectors();
 		}
 	}
 }
@@ -1860,7 +1837,6 @@ void SIVB::SeparateCSM()
 			}
 			DelDock(hDockCSM);
 			hDockCSM = NULL;
-			ReconnectDockingConnectors();
 
 			if (vTgt)
 			{
@@ -2003,16 +1979,18 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 	{
 
 	case IULV_GET_STAGE:
-		if (OurVessel->DockingStatus(1))
+		if (OurVessel)
 		{
-			m.val1.iValue = LAUNCH_STAGE_ONE;
+			if (OurVessel->IsLowerStageDocked())
+			{
+				m.val1.iValue = LAUNCH_STAGE_ONE;
+			}
+			else
+			{
+				m.val1.iValue = STAGE_ORBIT_SIVB;
+			}
+			return true;
 		}
-		else
-		{
-			m.val1.iValue = STAGE_ORBIT_SIVB;
-		}
-		return true;
-
 	case IULV_GET_GLOBAL_ORIENTATION:
 		if (OurVessel)
 		{
@@ -2102,14 +2080,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			OurVessel->GetAngularVel(*(VECTOR3 *)m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_MISSIONTIME:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMissionTime();
 			return true;
 		}
 		break;
@@ -2208,6 +2178,13 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val1.iValue = OurVessel->GetVehicleNo();
+			return true;
+		}
+		break;
+	case IULV_GET_SI_THRUST_OK:
+		if (OurVessel)
+		{
+			OurVessel->GetSIVBSIConnector()->GetSIThrustOK((bool *)m.val1.pValue, m.val2.iValue);
 			return true;
 		}
 		break;
@@ -2325,4 +2302,23 @@ bool SIVBToSIConnector::GetSIPropellantDepletionEngineCutoff()
 	}
 
 	return false;
+}
+
+void SIVBToSIConnector::GetSIThrustOK(bool *ok, int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SI_COMMAND;
+	cm.messageType = SIVB_SI_GETSITHRUSTOK;
+	cm.val1.pValue = ok;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+
+	for (int i = 0;i < n;i++)
+	{
+		ok[i] = false;
+	}
 }

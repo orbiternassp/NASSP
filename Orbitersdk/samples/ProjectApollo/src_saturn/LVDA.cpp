@@ -303,9 +303,17 @@ bool LVDA::LaunchTargetingUpdate(double V_T, double R_T, double theta_T, double 
 	return false;
 }
 
-double LVDA::GetMissionTime()
+bool LVDA::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM)
 {
-	return iu->GetLVCommandConnector()->GetMissionTime();
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->NavigationUpdate(DCSRVEC, DCSVVEC, DCSNUPTIM);
+
+	return false;
+}
+
+void LVDA::PrepareToLaunch()
+{
+	if (iu->GetLVDC()) iu->GetLVDC()->PrepareToLaunch();
 }
 
 int LVDA::GetStage()

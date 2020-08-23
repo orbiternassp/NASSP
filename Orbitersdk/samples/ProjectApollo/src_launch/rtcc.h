@@ -2938,6 +2938,8 @@ public:
 	void CMMLXTDV(double GETIG, VECTOR3 DV_EXDV);
 	//CMC and LGC REFSMMAT Update Generator
 	void CMMRFMAT(int L, int id, int addr);
+	//SLV Navigation Update
+	void CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
 
 	//Trajectory Determination
 	//Vector Comparison Control
@@ -4230,6 +4232,13 @@ public:
 	{
 		REFSMMATUpdateMakeupTableBlock Block[2];
 	} CZREFMAT;
+
+	struct SLVNavigationMakeupTable
+	{
+		VECTOR3 PosS = _V(0, 0, 0);
+		VECTOR3 DotS = _V(0, 0, 0);
+		double NUPTIM = 0.0;
+	} CZNAVSLV;
 
 	struct FIDOLaunchAnalogNo1DisplayTable
 	{

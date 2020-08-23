@@ -31322,3 +31322,19 @@ void RTCC::EMDGSUPP(int err)
 		GOSTDisplayBuffer.data.SXT_TRN_RTCC[i] = EZJGSTTB.SXT_TRN_RTCC[i] * DEG;
 	}
 }
+
+void RTCC::CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
+{
+	double lambda = MCLGRA + MCGRIC *3600.0*OrbMech::w_Earth;
+	//Converts from equatorial coordinates (with launchpad longitude as 0) to RTCC ecliptic
+	MATRIX3 RMAT = mul(MatrixRH_LH(OrbMech::GetRotationMatrix(BODY_EARTH, GMTBASE)), _M(cos(lambda), -sin(lambda), 0, sin(lambda), cos(lambda), 0, 0, 0, 1));
+	//Converts from RTCC ecliptic to S-IVB ephemeral
+	MATRIX3 MRG = mul(_M(1, 0, 0, 0, 0, -1, 0, 1, 0), OrbMech::tmat(RMAT));
+	double phi_L = MDVSTP.PHIL;
+	MATRIX3 MSG = _M(cos(phi_L), sin(phi_L)*MCLSBN, -sin(phi_L)*MCLCBN, -sin(phi_L), cos(phi_L)*MCLSBN, -cos(phi_L)*MCLCBN, 0, MCLCBN, MCLSBN);
+	MATRIX3 MRS = mul(OrbMech::tmat(MSG), MRG);
+
+	CZNAVSLV.PosS = mul(MRS, R_ecl);
+	CZNAVSLV.DotS = mul(MRS, V_ecl);
+	CZNAVSLV.NUPTIM = GMT - MCGRIC * 3600.0;
+}

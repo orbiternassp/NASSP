@@ -170,7 +170,8 @@ enum SIVBSIMessageType
 	SIVB_SI_SWITCH_SELECTOR,
 	SIVB_SI_THRUSTER_DIR,
 	SIVB_SI_SIB_LOW_LEVEL_SENSORS_DRY,
-	SIVB_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF
+	SIVB_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	SIVB_SI_GETSITHRUSTOK
 };
 
 //S-IVB to S-IB or S-II Connector
@@ -185,6 +186,7 @@ public:
 
 	bool GetLowLevelSensorsDry();
 	bool GetSIPropellantDepletionEngineCutoff();
+	void GetSIThrustOK(bool *ok, int n);
 };
 
 ///
@@ -276,11 +278,6 @@ public:
 	///
 	virtual void SetState(SIVBSettings &state);
 
-	///
-	/// \brief Get mission time.
-	/// \return Mission time in seconds since launch.
-	///
-	double GetMissionTime();
 	int GetVehicleNo();
 
 	bool GetSIVBThrustOK();
@@ -347,6 +344,9 @@ public:
 
 	void StartSLASeparationPyros();
 	void SeparateCSM();
+	bool IsLowerStageDocked();
+
+	SIVBToSIConnector *GetSIVBSIConnector() { return &sivbSIConnector; }
 
 protected:
 	///
@@ -395,7 +395,6 @@ protected:
 
 	void CreateSISIVBInterface();
 	bool GetDockingPortFromHandle(OBJHANDLE port, UINT &num);
-	void ReconnectDockingConnectors();
 	void CreateAirfoils();
 
 	bool PayloadIsDetachable();		///< Is the payload detachable?

@@ -336,11 +336,6 @@ protected:
 	///
 	bool RegisterConnector(int port, Connector *c);
 
-	///
-	///
-	///
-	bool UpdateConnectorDockingPort(int port, Connector *c);
-
 #define PACV_N_VALIDATION	0x5a715a75
 
 	///
