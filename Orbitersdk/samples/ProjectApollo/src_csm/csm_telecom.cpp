@@ -5125,8 +5125,6 @@ RNDZXPDRSystem::~RNDZXPDRSystem()
 void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
 {
 	sat = vessel;
-	VESSEL *lm = sat->agc.GetLM();
-	if (lm) lem = (static_cast<LEM*>(lm));
 	TestOperateSwitch = RNDZXPDRSwitch;
 	HeaterPowerSwitch = Panel100RNDZXPDRSwitch;
 	RRT_LeftSystemTestRotarySwitch = LeftSystemTestRotarySwitch;
@@ -5225,7 +5223,28 @@ double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
 
 void RNDZXPDRSystem::TimeStep(double simdt)
 {
-	//if we didn't get our LEM at the start of the sceneriao, get one now.
+	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
+	bool isLem = false;
+
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		{
+			isLem = true;
+		}
+	}
+
+	if (!isLem)
+	{
+		lem = NULL;
+		haslock = UNLOCKED;
+		sat->CSM_RRTto_LM_RRConnector.Disconnect();
+	}
+	//
+
+	//get a pointer to the lem
 	if (!lem)
 	{
 		VESSEL *lm = sat->agc.GetLM();
