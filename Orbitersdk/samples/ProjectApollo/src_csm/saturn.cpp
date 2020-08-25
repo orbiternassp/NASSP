@@ -552,7 +552,7 @@ void Saturn::initSaturn()
 	iuCommandConnector.SetSaturn(this);
 	sivbCommandConnector.SetSaturn(this);
 	CSM_RRTto_LM_RRConnector.SetSaturn(this);
-	CSM_RRTto_LM_RRConnector.SetRRT(&RRTsystem);
+
 
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
 	CSMToLEMPowerConnector.SetType(LEM_CSM_POWER);

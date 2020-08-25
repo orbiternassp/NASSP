@@ -116,8 +116,6 @@ public:
 	void SendRF(double freq, double XMITpow, double XMITgain, double Phase);
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
-	void SetRRT(RNDZXPDRSystem* rrt) { csm_rrt = rrt; };
-
 protected:
 	RNDZXPDRSystem* csm_rrt; //pointer to the instance of the RR that's doing the sending
 };
