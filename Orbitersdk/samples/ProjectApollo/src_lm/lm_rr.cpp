@@ -62,17 +62,17 @@ LEM_RR::~LEM_RR()
 
 void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, Boiler *anheat, Boiler *stbyanheat, h_HeatLoad *rreh, h_HeatLoad *secrreh, h_HeatLoad *rrh) {
 	lem = s;
-	if (!csm) 
+
+	if (!csm)
 	{
-		VESSEL *csm = lem->agc.GetCSM();
+		csm = lem->agc.GetCSM();
 	}
-	else 
+
+	if (!(lem->lm_rr_to_csm_connector.connectedTo))
 	{
-		if (!(lem->lm_rr_to_csm_connector.connectedTo))
-		{
-			lem->lm_rr_to_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
-		}
+		lem->lm_rr_to_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
 	}
+
 	// Set up antenna.
 	// RR antenna is designed to operate between 10F and 75F
 	// The standby heater switches on below -40F and turns it off again at 0F
