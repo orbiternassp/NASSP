@@ -5125,6 +5125,13 @@ RNDZXPDRSystem::~RNDZXPDRSystem()
 void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
 {
 	sat = vessel;
+	if (!lem){
+		VESSEL *lm = sat->agc.GetLM();
+		if (lm) {
+			lem = (static_cast<LEM*>(lm));
+		}
+	}
+
 	TestOperateSwitch = RNDZXPDRSwitch;
 	HeaterPowerSwitch = Panel100RNDZXPDRSwitch;
 	RRT_LeftSystemTestRotarySwitch = LeftSystemTestRotarySwitch;
@@ -5148,6 +5155,8 @@ void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSw
 	{
 		sat->CSM_RRTto_LM_RRConnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
 	}
+
+	if(lem){ RNDZXPDRSystem::SendRF(); } //send inital info to the connector
 }
 
 unsigned char RNDZXPDRSystem::GetScaledRFPower()
@@ -5221,6 +5230,19 @@ double RNDZXPDRSystem::GetCSMGain(double theta, double phi)
 	return gain;
 }
 
+void RNDZXPDRSystem::SendRF()
+{
+	if (XPDRon && (haslock == LOCKED))//act like a transponder
+	{
+		sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq*(240.0 / 241.0), XMITpower, RNDZXPDRGain, 0.0);
+	}
+	else //act like a radar reflector, this is also a function of orientation and skin temperature of the CSM, but this should work.
+	{
+		//deleted. unless someone can find positive confirmation that the LM RR had the ability to skin-track the CSM
+		//sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(10.0, RCVDPowerdB / 10.0) / 1000)*0.85*((sin(theta*RAD) + 1) / 2), 45.4, 0.0); //should give a radar cross section of ~5m^2 side on, ~=5kM range
+	}
+}
+
 void RNDZXPDRSystem::TimeStep(double simdt)
 {
 	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
@@ -5245,10 +5267,8 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 	//
 
 	//get a pointer to the lem
-	if (!lem)
-	{
+	if (!lem){
 		VESSEL *lm = sat->agc.GetLM();
-		
 		if (lm) {
 			lem = (static_cast<LEM*>(lm));
 		}
@@ -5367,14 +5387,7 @@ void RNDZXPDRSystem::TimeStep(double simdt)
 
 		//sprintf(oapiDebugString(), "Power Receved: %lfdB ,Lock Timer: %lfsec", RCVDPowerdB, lockTimer);
 
-		if(XPDRon && (haslock == LOCKED))//act like a transponder
-		{
-			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq*(240.0/241.0),XMITpower, RNDZXPDRGain, 0.0); 
-		}
-		else //act like a radar reflector, this is also a function of orientation and skin temperature of the CSM, but this should work.
-		{
-			sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(RCVDPowerdB/10.0,10.0)/1000)*0.85*((sin(theta*RAD)+1)/2), -250, 0.0); //the gain is a guess
-		}
+		RNDZXPDRSystem::SendRF();
 	}
 }
 

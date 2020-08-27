@@ -126,6 +126,8 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	RCVDpow = 0.0;
 	RCVDgain = 0.0;
 	RCVDPhase = 0.0;
+
+	if(lem){ lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain*AntennaPolarValue, AntennaPhase); }//send inital data to the connector
 }
 
 bool LEM_RR::IsDCPowered()
@@ -407,7 +409,7 @@ void LEM_RR::Timestep(double simdt) {
 			//sprintf(oapiDebugString(), "RecvdRRPower_dBm = %lf dBm", RecvdRRPower_dBm);
 			SignalStrengthScaleFactor = LEM_RR::dBm2SignalStrength(RecvdRRPower_dBm);
 
-			//sprintf(oapiDebugString(), "X: %lf, Y: %lf, Z: %lf, ReturnedPower: %lf", U_RRT.x, U_RRT.y, U_RRT.z, RecvdRRPower_dBm));
+			//sprintf(oapiDebugString(), "ReturnedPower: %lf",  RecvdRRPower_dBm);
 
 			//In LM navigation base coordinates, left handed
 			for (int i = 0;i < 4;i++)
