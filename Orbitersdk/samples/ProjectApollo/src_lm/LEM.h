@@ -1864,6 +1864,8 @@ protected:
 	LMToSIVBConnector LEMToSLAConnector;
 	LEMCommandConnector CSMToLEMCommandConnector;
 
+	LM_RRtoCSM_RRT_Connector lm_rr_to_csm_connector;
+
 	// Checklist Controller to LEM connector
 	ChecklistDataInterface cdi;
 
