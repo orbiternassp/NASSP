@@ -5238,8 +5238,7 @@ void RNDZXPDRSystem::SendRF()
 	}
 	else //act like a radar reflector, this is also a function of orientation and skin temperature of the CSM, but this should work.
 	{
-		//deleted. unless someone can find positive confirmation that the LM RR had the ability to skin-track the CSM
-		//sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(10.0, RCVDPowerdB / 10.0) / 1000)*0.85*((sin(theta*RAD) + 1) / 2), 45.4, 0.0); //should give a radar cross section of ~5m^2 side on, ~=5kM range
+		sat->CSM_RRTto_LM_RRConnector.SendRF(RCVDfreq, (pow(10.0, RCVDPowerdB / 10.0) / 1000)*0.85*((sin(theta*RAD) + 1) / 2), 12.0, 0.0); //should give a radar cross section of ~5m^2 side on, ~=5kM range
 	}
 }
 
