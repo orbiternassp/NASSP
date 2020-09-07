@@ -9,6 +9,7 @@
 #include "iu.h"
 #include "LVDC.h"
 #include "LEM.h"
+#include "sivb.h"
 #include "mcc.h"
 #include "TLMCC.h"
 #include "rtcc.h"
@@ -153,6 +154,7 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->GMGMED("P12,CSM,16:00:00,72.0;");
 
 		rtcc->MCCLEX = 3431;
+		rtcc->MCCLRF = 1735;
 	}
 	else if (mission == 10)
 	{
@@ -1623,6 +1625,16 @@ void ARCore::CycleNextStationContactsDisplay()
 			startSubthread(36);
 		}
 	}
+}
+
+void ARCore::SLVNavigationUpdateCalc()
+{
+	startSubthread(27);
+}
+
+void ARCore::SLVNavigationUpdateUplink()
+{
+	startSubthread(28);
 }
 
 void ARCore::RTETradeoffDisplayCalc()
@@ -4319,13 +4331,133 @@ GC->rtcc->AP11LMManeuverPAD(&opt, lmmanpad);
 		Result = 0;
 	}
 	break;
-	case 27: //Spare
+	case 27: //SLV Navigation Update Calculation
 	{
+		if (svtarget == NULL)
+		{
+			Result = 0;
+			break;
+		}
+
+		IU *iu;
+		bool isSaturnV;
+
+		if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
+			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+		{
+			Saturn *iuv = (Saturn *)svtarget;
+			iu = iuv->GetIU();
+			isSaturnV = true;
+		}
+		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
+			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+		{
+			Saturn *iuv = (Saturn *)svtarget;
+			iu = iuv->GetIU();
+			isSaturnV = false;
+		}
+		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
+			!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+		{
+			SIVB *iuv = (SIVB *)svtarget;
+			iu = iuv->GetIU();
+			isSaturnV = true;
+		}
+		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+			!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+		{
+			SIVB *iuv = (SIVB *)svtarget;
+			iu = iuv->GetIU();
+			isSaturnV = false;
+		}
+		else
+		{
+			Result = 0;
+			break;
+		}
+
+		double A_Z, T_GRR;
+
+		if (isSaturnV)
+		{
+			LVDCSV* lvdc = (LVDCSV*)iu->GetLVDC();
+
+			GC->rtcc->MDVSTP.PHIL = lvdc->PHI;
+			A_Z = lvdc->Azimuth;
+			T_GRR = lvdc->T_L;
+		}
+		else
+		{
+			LVDC1B* lvdc = (LVDC1B*)iu->GetLVDC();
+
+			GC->rtcc->MDVSTP.PHIL = lvdc->PHI;
+			A_Z = lvdc->Azimuth;
+			T_GRR = lvdc->T_GRR;
+		}
+
+		char Buffer[64], Buffer2[64];
+		OrbMech::format_time_HHMMSS(Buffer, T_GRR);
+		sprintf_s(Buffer2, "P12,IU1,%s,%.4lf;", Buffer, A_Z*DEG);
+		GC->rtcc->GMGMED(Buffer2);
+
+		EphemerisData sv = GC->rtcc->StateVectorCalcEphem(svtarget);
+		EphemerisData sv2 = GC->rtcc->coast(sv,  GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT);
+
+		GC->rtcc->CMMSLVNAV(sv2.R, sv2.V, sv2.GMT);
+
 		Result = 0;
 	}
 	break;
-	case 28: //Spare
+	case 28: //SLV Navigation Update Uplink
 	{
+		if (GC->rtcc->CZNAVSLV.NUPTIM == 0.0)
+		{
+			Result = 0;
+			break;
+		}
+
+		IU *iu;
+
+		if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn5") ||
+			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn5"))
+		{
+			Saturn *iuv = (Saturn *)svtarget;
+			iu = iuv->GetIU();
+		}
+		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\Saturn1b") ||
+			!stricmp(svtarget->GetClassName(), "ProjectApollo/Saturn1b"))
+		{
+			Saturn *iuv = (Saturn *)svtarget;
+			iu = iuv->GetIU();
+		}
+		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\sat5stg3") ||
+			!stricmp(svtarget->GetClassName(), "ProjectApollo/sat5stg3"))
+		{
+			SIVB *iuv = (SIVB *)svtarget;
+			iu = iuv->GetIU();
+		}
+		else if (!stricmp(svtarget->GetClassName(), "ProjectApollo\\nsat1stg2") ||
+			!stricmp(svtarget->GetClassName(), "ProjectApollo/nsat1stg2"))
+		{
+			SIVB *iuv = (SIVB *)svtarget;
+			iu = iuv->GetIU();
+		}
+		else
+		{
+			Result = 0;
+			break;
+		}
+
+		void *uplink = NULL;
+		DCSSLVNAVUPDATE upl;
+
+		upl.PosS = GC->rtcc->CZNAVSLV.PosS;
+		upl.DotS = GC->rtcc->CZNAVSLV.DotS;
+		upl.NUPTIM = GC->rtcc->CZNAVSLV.NUPTIM;
+
+		uplink = &upl;
+		bool uplinkaccepted = iu->DCSUplink(DCSUPLINK_SLV_NAVIGATION_UPDATE, uplink);
+
 		Result = 0;
 	}
 	break;
@@ -4955,26 +5087,6 @@ void ARCore::StopIMFDRequest() {
 
 	g_Data.isRequesting = false;
 		g_Data.progVessel->GetIMFDClient()->StopBurnDataRequests();
-}
-
-int ARCore::REFSMMATOctalAddress()
-{
-	int addr;
-
-	if (vesseltype < 2)
-	{
-		addr = 01735;
-	}
-	else
-	{
-		addr = 01733;
-	}
-	
-	if (GC->rtcc->AGCEpoch > 40768.0)	//Luminary 210 and Artemis 072 both have the REFSMMAT two addresses earlier
-	{
-		addr -= 02;
-	}
-	return addr;
 }
 
 void ARCore::DetermineGMPCode()

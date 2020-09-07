@@ -212,7 +212,7 @@ public:
 	void GetAngularVel(VECTOR3 &avel);
 	double GetMissionTime();
 	int GetVehicleNo();
-	void GetSIThrustOK(bool *ok);
+	void GetSIThrustOK(bool *ok, int n);
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
@@ -260,6 +260,7 @@ public:
 	/// \param simdt The time in seconds since the last timestep call.
 	///
 	virtual void Timestep(double misst, double simt, double simdt, double mjd);
+	void LVDCTimestep(double simt, double simdt);
 	virtual void SwitchSelector(int item) = 0;
 	void PostStep(double simt, double simdt, double mjd);
 
@@ -337,6 +338,7 @@ protected:
 	/// \brief Mission Elapsed Time, passed into the IU from the spacecraft.
 	///
 	double MissionTime;
+	double LastCycled;
 
 	///
 	/// \brief Connector to CSM.

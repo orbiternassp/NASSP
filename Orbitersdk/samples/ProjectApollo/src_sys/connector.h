@@ -43,6 +43,7 @@ enum ConnectorType
 	CSM_PAYLOAD_COMMAND,		///< Docking connector between CSM and Payload
 	SIVB_SI_COMMAND,			///< Docking connector between S-IVB and S-IB/S-II
 	SII_SIC_COMMAND,			///< Docking connector between S-II and S-IC
+	RADAR_RF_SIGNAL,			///< Radar connector betwen LM rendezvous radar amd CSM rendezvous radar transponder
 };
 
 #define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.
@@ -336,11 +337,6 @@ protected:
 	///
 	bool RegisterConnector(int port, Connector *c);
 
-	///
-	///
-	///
-	bool UpdateConnectorDockingPort(int port, Connector *c);
-
 #define PACV_N_VALIDATION	0x5a715a75
 
 	///
@@ -371,5 +367,14 @@ protected:
 /// \return Connector if found, or NULL if not.
 ///
 extern Connector *GetVesselConnector(VESSEL *v, int port, ConnectorType t);
+
+///
+/// \ingroup Connectors
+/// \brief Radar Messages
+///
+enum LM_RRmessageType {
+	CW_RADAR_SIGNAL, ///< Continuous Wave Radar Signal
+	RR_XPDR_SIGNAL, ///< Radar Transponder Signal
+};
 
 #endif // _PA_CONNECTOR_H

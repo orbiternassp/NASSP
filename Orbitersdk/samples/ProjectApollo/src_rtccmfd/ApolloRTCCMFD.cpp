@@ -1483,6 +1483,12 @@ void ApolloRTCCMFD::menuSetGuidanceOpticsSupportTablePage()
 	coreButtons.SelectPage(this, screen);
 }
 
+void ApolloRTCCMFD::menuSetSLVNavigationUpdatePage()
+{
+	screen = 96;
+	coreButtons.SelectPage(this, screen);
+}
+
 void ApolloRTCCMFD::menuVoid() {}
 
 void ApolloRTCCMFD::menuCycleRTETradeoffPage()
@@ -4734,24 +4740,22 @@ ApolloRTCCMFD::ScreenData ApolloRTCCMFD::screenData = { 0 };
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
 	agc_t* vagc;
+	int REFSMMATaddress;
 
 	if (G->vesseltype < 2)
 	{
 		saturn = (Saturn *)G->vessel;
-
 		vagc = &saturn->agc.vagc;
+		REFSMMATaddress = GC->rtcc->MCCCRF;
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
-
 		vagc = &lem->agc.vagc;
+		REFSMMATaddress = GC->rtcc->MCCLRF;
 	}
 
 	unsigned short REFSoct[20];
-	int REFSMMATaddress;
-
-	REFSMMATaddress = G->REFSMMATOctalAddress();
 
 	REFSoct[2] = vagc->Erasable[0][REFSMMATaddress];
 	REFSoct[3] = vagc->Erasable[0][REFSMMATaddress + 1];
@@ -8216,6 +8220,16 @@ bool GOSTShowLandmarkVectorInput(void* id, char *str, void *data)
 		return true;
 	}
 	return false;
+}
+
+void ApolloRTCCMFD::menuSLVNavigationUpdateCalc()
+{
+	G->SLVNavigationUpdateCalc();
+}
+
+void ApolloRTCCMFD::menuSLVNavigationUpdateUplink()
+{
+	G->SLVNavigationUpdateUplink();
 }
 
 void ApolloRTCCMFD::menuMSKRequest()
