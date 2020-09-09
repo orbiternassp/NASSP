@@ -121,6 +121,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	AntennaPower = 0.240; //W
 	AntennaFrequency = 9832.8; //MHz
 	AntennaPhase = 0.0;
+	AntennaPolarValue = 1.0;
 
 	RCVDfreq = 0.0;
 	RCVDpow = 0.0;
@@ -294,6 +295,7 @@ void LEM_RR::Timestep(double simdt) {
 				break;
 			}
 		}
+		lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, 0.0, AntennaGain*AntennaPolarValue, AntennaPhase);
 		return;
 	}
 
@@ -753,7 +755,10 @@ void LEM_RR::Timestep(double simdt) {
 	//sprintf(oapiDebugString(), "RRDataGood: %d ruptSent: %d  RadarActivity: %d Range: %f", val33[RRDataGood] == 0, ruptSent, val13[RadarActivity] == 1, range);
 
 	//send data out to the CSM RRT
-	lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain*AntennaPolarValue, AntennaPhase);
+	if (IsPowered())
+	{
+		lem->lm_rr_to_csm_connector.SendRF(AntennaFrequency, AntennaPower, AntennaGain*AntennaPolarValue, AntennaPhase);
+	}
 }
 
 void LEM_RR::SystemTimestep(double simdt) {
