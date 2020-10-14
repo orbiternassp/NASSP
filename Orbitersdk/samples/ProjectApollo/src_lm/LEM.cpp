@@ -1010,7 +1010,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Debug string for displaying descent flight info from VC view
-	/*if (!Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
+	if (!Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
 
 		char pgnssw[256];
 		char thrsw[256];
@@ -1036,7 +1036,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		if (!VcInfoActive) return;
 		sprintf(oapiDebugString(), "");
 		VcInfoActive = false;
-	}*/
+	}
 }
 
 
