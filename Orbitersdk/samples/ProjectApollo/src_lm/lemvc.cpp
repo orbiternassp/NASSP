@@ -2243,7 +2243,7 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 17;
+	int lightmat = VC_NMAT - mat_L01 + 12;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -2270,7 +2270,7 @@ void LEM::SetContactLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 19;
+	int lightmat = VC_NMAT - mat_L01 + 10;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -2297,7 +2297,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 28;
+	int lightmat = VC_NMAT - mat_L01 + 0;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 
@@ -2324,7 +2324,7 @@ void LEM::SetStageSeqRelayLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - 10;
+	int lightmat = VC_NMAT - mat_L01 + 19;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
 

@@ -1,16 +1,16 @@
 // ========================================================
 // Mesh resource file for LM_VC.msh
-// Generated with meshc on Thu Jun 11 23:47:01 2020
+// Generated with meshc on Wed Oct 14 11:18:58 2020
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 454
+#define VC_NGRP 490
 
 // Number of materials:
-#define VC_NMAT 39
+#define VC_NMAT 50
 
 // Number of textures:
-#define VC_NTEX 10
+#define VC_NTEX 17
 
 // Named mesh groups:
 #define VC_GRP_AOT 0
@@ -459,11 +459,47 @@
 #define VC_GRP_XpointerX_lmp 443
 #define VC_GRP_XpointerY_cdr 444
 #define VC_GRP_XpointerY_lmp 445
-#define VC_GRP_zzzScrews_P1 446
-#define VC_GRP_zzzScrews_P2 447
-#define VC_GRP_zzzScrews_P3 448
-#define VC_GRP_zzzScrews_P4 449
-#define VC_GRP_zzzSwitchHolder_P1 450
-#define VC_GRP_zzzSwitchHolder_P2 451
-#define VC_GRP_zzzSwitchHolder_P3 452
-#define VC_GRP_zzzSwitchHolder_P4 453
+#define VC_GRP_zzaECS 446
+#define VC_GRP_zzaECS_BigCircle 447
+#define VC_GRP_zzaECS_BigCircle02 448
+#define VC_GRP_zzaECS_BigCircleInnerPart 449
+#define VC_GRP_zzaECS_BigCircleInnerPart2 450
+#define VC_GRP_zzaECS_DrehSchalter 451
+#define VC_GRP_zzaECS_DrehSchalter2 452
+#define VC_GRP_zzaECS_DrehschalterFront 453
+#define VC_GRP_zzaECS_InnerPart 454
+#define VC_GRP_zzaECS_Net3 455
+#define VC_GRP_zzaECS_Net3_001 456
+#define VC_GRP_zzaECS_YellowHandle 457
+#define VC_GRP_zzbECS_FrontConsole 458
+#define VC_GRP_zzbECS_FrontConsoleDrehSchalter 459
+#define VC_GRP_zzbECS_FrontConsolePart1_001 460
+#define VC_GRP_zzbECS_Pipe 461
+#define VC_GRP_zzbECS_Pipe_001 462
+#define VC_GRP_zzcUpperHatch 463
+#define VC_GRP_zzzBackObjects 464
+#define VC_GRP_zzzBags 465
+#define VC_GRP_zzzEngineCover 466
+#define VC_GRP_zzzHolderRahmen_P14 467
+#define VC_GRP_zzzLMVC_SideBagsLeft 468
+#define VC_GRP_zzzLMVC_SideBagsRight 469
+#define VC_GRP_zzzScrews_P1 470
+#define VC_GRP_zzzScrews_P12 471
+#define VC_GRP_zzzScrews_P14 472
+#define VC_GRP_zzzScrews_P2 473
+#define VC_GRP_zzzScrews_P3 474
+#define VC_GRP_zzzScrews_P4 475
+#define VC_GRP_zzzScrews_P5 476
+#define VC_GRP_zzzScrews_P6 477
+#define VC_GRP_zzzScrews_P8 478
+#define VC_GRP_zzzSwitchHolder_P1 479
+#define VC_GRP_zzzSwitchHolder_P11 480
+#define VC_GRP_zzzSwitchHolder_P12 481
+#define VC_GRP_zzzSwitchHolder_P14 482
+#define VC_GRP_zzzSwitchHolder_P16 483
+#define VC_GRP_zzzSwitchHolder_P2 484
+#define VC_GRP_zzzSwitchHolder_P3 485
+#define VC_GRP_zzzSwitchHolder_P4 486
+#define VC_GRP_zzzSwitchHolder_P5 487
+#define VC_GRP_zzzSwitchHolder_P6 488
+#define VC_GRP_zzzSwitchHolder_P8 489
