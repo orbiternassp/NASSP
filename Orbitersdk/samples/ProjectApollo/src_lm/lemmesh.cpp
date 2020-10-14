@@ -177,7 +177,7 @@ void LEM::SetLmVesselDockStage()
 
 	AddDust();
 
-	SetCameraOffset(_V(-0.61, 1.625, 1.39) - currentCoG); // Has to be the same as LPD view
+	SetCameraOffset(_V(-0.58, 1.60, 1.40) - currentCoG); // Has to be the same as LPD view
 	SetEngineLevel(ENGINE_HOVER,0);
 	AddRCS_LMH(-5.4516);
 	status = 0;
@@ -242,7 +242,7 @@ void LEM::SetLmVesselHoverStage()
 
 	AddDust();
 
-	SetCameraOffset(_V(-0.61, 1.625, 1.39) - currentCoG); // Has to be the same as LPD view
+	SetCameraOffset(_V(-0.58, 1.60, 1.40) - currentCoG); // Has to be the same as LPD view
 	status = 1;
 	stage = 1;
 	SetEngineLevel(ENGINE_HOVER,0);
@@ -315,7 +315,7 @@ void LEM::SetLmAscentHoverStage()
 
 	AddExhaust(es_hover);
 	
-	SetCameraOffset(_V(-0.61, -0.125, 1.39)); // Has to be the same as LPD view
+	SetCameraOffset(_V(-0.58, -0.15, 1.40)); // Has to be the same as LPD view
 	status = 2;
 	stage = 2;
 	SetEngineLevel(ENGINE_HOVER,0);
