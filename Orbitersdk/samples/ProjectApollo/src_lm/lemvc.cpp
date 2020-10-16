@@ -270,8 +270,8 @@ bool LEM::clbkLoadVC (int id)
 	case LMVIEW_CDR:
 		viewpos = LMVIEW_CDR;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, LMVIEW_LMP, LMVIEW_LPD, -1);
+		SetCameraMovement(_V(-0.1, 0.0, 0.1), 0, 0, _V(-0.1, -0.15, 0.0), 90.0 * RAD, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, LMVIEW_LMP, -1, LMVIEW_LPD);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -282,7 +282,7 @@ bool LEM::clbkLoadVC (int id)
 	case LMVIEW_LMP:
 		viewpos = LMVIEW_LMP;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
-		SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, 0.0, 0.0), 0, 0);
+		SetCameraMovement(_V(0.1, 0.0, 0.1), 0, 0, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, -0.15, 0.0), -90.0 * RAD, 0);
 		oapiVCSetNeighbours(LMVIEW_CDR, -1, -1, -1);
 		InVC = true;
 		InPanel = false;
@@ -296,7 +296,7 @@ bool LEM::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		SetCameraMovement(_V(0.13, 0.0, 0.0), 0, 15 * RAD, _V(0.0, 0.0, 0.0), 0, 0, _V(0.58, -0.4, -0.1), 0, -10 * RAD);
 		oapiCameraSetAperture(30 * RAD);
-		oapiVCSetNeighbours(-1, -1, -1, LMVIEW_CDR);
+		oapiVCSetNeighbours(-1, -1, LMVIEW_CDR, -1);
 		InVC = true;
 		InPanel = false;
 		SetView();
