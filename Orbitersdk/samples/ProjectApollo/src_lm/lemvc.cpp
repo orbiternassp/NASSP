@@ -601,9 +601,9 @@ void LEM::RegisterActiveAreas()
 	MainPanelVC.AddSwitch(&DedaSwitchEight, AID_VC_PUSHB_P6_11, NULL);
 	MainPanelVC.AddSwitch(&DedaSwitchNine, AID_VC_PUSHB_P6_12, NULL);
 	MainPanelVC.AddSwitch(&DedaSwitchClear, AID_VC_PUSHB_P6_13, NULL);
-	MainPanelVC.AddSwitch(&DedaSwitchHold, AID_VC_PUSHB_P6_14, NULL);
-	MainPanelVC.AddSwitch(&DedaSwitchReadOut, AID_VC_PUSHB_P6_15, NULL);
-	MainPanelVC.AddSwitch(&DedaSwitchEnter, AID_VC_PUSHB_P6_16, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchReadOut, AID_VC_PUSHB_P6_14, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchEnter, AID_VC_PUSHB_P6_15, NULL);
+	MainPanelVC.AddSwitch(&DedaSwitchHold, AID_VC_PUSHB_P6_16, NULL);
 
 	MainPanelVC.AddSwitch(&AGSOperateSwitch, AID_VC_SWITCH_P6_01, &anim_P6switch[0]);
 
