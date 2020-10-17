@@ -4756,12 +4756,12 @@ public:
 	int MCCCEX;
 	//LGC address for external DV uplink
 	int MCCLEX;
-	//CMC address for REFSMMAT uplink
-	int MCCCRF;
+	//CMC address for REFSMMAT uplink (and downlink)
+	int MCCCRF, MCCCRF_DL;
 	//CMC address for desired REFSMMAT uplink
 	int MCCCXS;
-	//LGC address for REFSMMAT uplink
-	int MCCLRF;
+	//LGC address for REFSMMAT uplink (and downlink)
+	int MCCLRF, MCCLRF_DL;
 	//LGC address for desired REFSMMAT uplink
 	int MCCLXS;
 	//Suppress C-band station contacts generation (0 = suppressed, 1 = unsuppressed)

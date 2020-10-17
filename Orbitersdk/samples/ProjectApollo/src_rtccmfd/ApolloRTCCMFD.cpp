@@ -4746,13 +4746,13 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 	{
 		saturn = (Saturn *)G->vessel;
 		vagc = &saturn->agc.vagc;
-		REFSMMATaddress = GC->rtcc->MCCCRF;
+		REFSMMATaddress = GC->rtcc->MCCCRF_DL;
 	}
 	else
 	{
 		lem = (LEM *)G->vessel;
 		vagc = &lem->agc.vagc;
-		REFSMMATaddress = GC->rtcc->MCCLRF;
+		REFSMMATaddress = GC->rtcc->MCCLRF_DL;
 	}
 
 	unsigned short REFSoct[20];

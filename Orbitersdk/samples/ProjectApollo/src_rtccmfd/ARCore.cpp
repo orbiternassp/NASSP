@@ -433,8 +433,10 @@ void AR_GCore::SetMissionSpecificParameters()
 		rtcc->AGCEpoch = 40952.009432;
 
 		rtcc->MCCCRF = 1733;
+		rtcc->MCCCRF_DL = 01733;
 		rtcc->MCCCXS = 306;
 		rtcc->MCCLRF = 1731;
+		rtcc->MCCLRF_DL = 01731;
 		rtcc->MCCLXS = 3606;
 
 		rtcc->BZLSDISP.lat[RTCC_LMPOS_BEST] = -3.672*RAD;
@@ -643,8 +645,10 @@ void AR_GCore::SetMissionSpecificParameters()
 	{
 		rtcc->AGCEpoch = 41317.251625;
 		rtcc->MCCCRF = 1733;
+		rtcc->MCCCRF_DL = 01733;
 		rtcc->MCCCXS = 306;
 		rtcc->MCCLRF = 1731;
+		rtcc->MCCLRF_DL = 01731;
 		rtcc->MCCLXS = 3606;
 		rtcc->RTCCDescentTargets.RBRFG = _V(-3.1183588e3, 0.0, -1.1741441e4)*0.3048;
 		rtcc->RTCCDescentTargets.VBRFG = _V(-1.9646916e2, 0.0, -1.6675997e2)*0.3048;
