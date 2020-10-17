@@ -120,4 +120,18 @@ protected:
 	RNDZXPDRSystem* csm_rrt; //pointer to the instance of the RR that's doing the sending
 };
 
+class VHFRangingSystem;
+
+class CSM_VHFto_LM_VHFConnector : public SaturnConnector
+{
+public:
+	CSM_VHFto_LM_VHFConnector(Saturn *s, VHFRangingSystem *vhf_system);
+	~CSM_VHFto_LM_VHFConnector();
+
+	void SendRF(double freq, double XMITpow, double XMITgain, double Phase);
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+protected:
+	VHFRangingSystem* pVHFRngSys;
+};
+
 #endif // _PA_CSMCONNECTOR_H
