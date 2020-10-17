@@ -25,7 +25,7 @@
 #ifndef SOUNDLIB_H
 #define SOUNDLIB_H
 
-#include "OrbiterSoundSDK50.h"
+#include "OrbiterSoundSDK40.h"
 
 ///
 /// \ingroup Sound
