@@ -300,14 +300,10 @@ void IUUmbilical::EDSGroupNo2Reset()
 
 void IUUmbilical::SwitchSelector(int stage, int channel)
 {
-	if (!IUUmbilicalConnected) return;
-
 	iu->GetControlDistributor()->SwitchSelector(stage, channel);
 }
 
 void IUUmbilical::LVDCPrepareToLaunch()
 {
-	if (!IUUmbilicalConnected) return;
-
 	iu->GetLVDA()->PrepareToLaunch();
 }

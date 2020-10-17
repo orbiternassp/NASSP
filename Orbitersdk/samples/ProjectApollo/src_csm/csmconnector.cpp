@@ -872,8 +872,8 @@ bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage
 		return false;
 	}
 
-	LM_RRmessageType messageType;
-	messageType = (LM_RRmessageType)m.messageType;
+	RFconnectorMessageType messageType;
+	messageType = (RFconnectorMessageType)m.messageType;
 
 	switch (messageType)
 	{
@@ -890,5 +890,25 @@ bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage
 		}
 	}
 
+	return false;
+}
+
+CSM_VHFto_LM_VHFConnector::CSM_VHFto_LM_VHFConnector(Saturn * s, VHFRangingSystem * vhf_system): SaturnConnector(s)
+{
+	type = VHF_RNG;
+	pVHFRngSys = vhf_system;
+}
+
+CSM_VHFto_LM_VHFConnector::~CSM_VHFto_LM_VHFConnector()
+{
+}
+
+void CSM_VHFto_LM_VHFConnector::SendRF(double freq, double XMITpow, double XMITgain, double Phase)
+{
+
+}
+
+bool CSM_VHFto_LM_VHFConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
 	return false;
 }

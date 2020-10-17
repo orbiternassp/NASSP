@@ -243,8 +243,8 @@ bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage
 		return false;
 	}
 
-	LM_RRmessageType messageType;
-	messageType = (LM_RRmessageType)m.messageType;
+	RFconnectorMessageType messageType;
+	messageType = (RFconnectorMessageType)m.messageType;
 
 	switch (messageType)
 	{

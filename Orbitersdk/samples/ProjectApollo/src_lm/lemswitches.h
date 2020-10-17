@@ -115,7 +115,6 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 	SURFHANDLE FrameSurface;
 
@@ -128,7 +127,6 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 	SURFHANDLE FrameSurface;
 
@@ -446,10 +444,8 @@ public:
 	EngineStartButton() {};
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event);
 	bool Push();
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
-	void DoDrawSwitchVC(UINT anim);
 protected:
 	ToggleSwitch* stopbutton;
 	LEM *lem;
@@ -461,10 +457,8 @@ public:
 	EngineStopButton() {};
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event);
 	bool Push();
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
-	void DoDrawSwitchVC(UINT anim);
 protected:
 	ToggleSwitch* startbutton;
 	LEM *lem;
@@ -521,7 +515,6 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 protected:
 	SURFHANDLE FrameSurface;
 };
@@ -531,7 +524,6 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 protected:
 	SURFHANDLE FrameSurface;
 };
@@ -541,7 +533,6 @@ public:
 	void Init(HPEN p0, HPEN p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 protected:
 	SURFHANDLE FrameSurface;
 };

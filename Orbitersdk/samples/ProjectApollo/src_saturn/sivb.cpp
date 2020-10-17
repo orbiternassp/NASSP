@@ -500,8 +500,8 @@ void SIVB::SetS4b()
 		dockpos = { 0, 0, 9.0 };
 		SetDockParams(dockpos, dockdir, dockrot);
 		hDock = GetDockHandle(0);
-		RegisterConnector(i, &payloadSeparationConnector);
 		CreatePayload();
+		RegisterConnector(i, &payloadSeparationConnector);
 		i++;
 		break;
 
