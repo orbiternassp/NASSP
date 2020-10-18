@@ -1464,9 +1464,11 @@ void VHFRangingSystem::TimeStep(double simdt)
 			if (abs(internalrange - newrange) < 1800.0*0.3048*simdt)
 			{
 				//Specification is 200NM range, but during the flights up to 320NM was achieved
-				if (newrange > 500.0*0.3048 && newrange < 320.0*1852.0)
+				//Max unambiguous range is 327.68NM https://repository.arizona.edu/bitstream/handle/10150/609749/ITC_1977_77-12-1.pdf?sequence=1&isAllowed=y page 10
+				if (newrange > 500.0*0.3048 && newrange < 327.68*1852.0)
 				{
-					lem->SendVHFRangingSignal(sat, false);
+					lem->SendVHFRangingSignal(sat, false); //REPLACE THIS ###########################################################
+					//sat->csm_vhfto_lm_vhfconnector.SendRF(0, 0, true); WITH THIS
 				}
 			}
 

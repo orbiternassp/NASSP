@@ -376,7 +376,8 @@ extern Connector *GetVesselConnector(VESSEL *v, int port, ConnectorType t);
 enum RFconnectorMessageType {
 	CW_RADAR_SIGNAL, ///< Continuous Wave Radar Signal
 	RR_XPDR_SIGNAL, ///< Radar Transponder Signal
-	VHF_RNG_SIGNAL,
+	VHF_RNG_SIGNAL_CSM,
+	VHF_RNG_SIGNAL_LM,
 };
 
 #endif // _PA_CONNECTOR_H

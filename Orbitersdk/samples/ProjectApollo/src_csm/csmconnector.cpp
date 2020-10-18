@@ -903,9 +903,18 @@ CSM_VHFto_LM_VHFConnector::~CSM_VHFto_LM_VHFConnector()
 {
 }
 
-void CSM_VHFto_LM_VHFConnector::SendRF(double freq, double XMITpow, double XMITgain, double Phase)
+void CSM_VHFto_LM_VHFConnector::SendRF(double freq, double XMITpow, bool RangeTone)
 {
+	ConnectorMessage cm;
 
+	cm.destination = VHF_RNG;
+	cm.messageType = VHF_RNG_SIGNAL_CSM;
+
+	cm.val1.dValue = freq; //MHz
+	cm.val2.dValue = XMITpow; //dBm
+	cm.val1.bValue = RangeTone; //
+
+	SendMessage(cm);
 }
 
 bool CSM_VHFto_LM_VHFConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
