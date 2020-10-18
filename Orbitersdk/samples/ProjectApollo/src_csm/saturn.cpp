@@ -323,6 +323,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &lemECSConnector);
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &CSM_RRTto_LM_RRConnector);
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &csm_vhfto_lm_vhfconnector);
 }
 
 Saturn::~Saturn()
@@ -553,6 +554,7 @@ void Saturn::initSaturn()
 	iuCommandConnector.SetSaturn(this);
 	sivbCommandConnector.SetSaturn(this);
 	CSM_RRTto_LM_RRConnector.SetSaturn(this);
+	csm_vhfto_lm_vhfconnector.SetSaturn(this);
 
 
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
@@ -561,6 +563,7 @@ void Saturn::initSaturn()
 	payloadCommandConnector.SetType(CSM_PAYLOAD_COMMAND);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
 	CSM_RRTto_LM_RRConnector.SetType(RADAR_RF_SIGNAL);
+	csm_vhfto_lm_vhfconnector.SetType(VHF_RNG);
 
 
 	//
