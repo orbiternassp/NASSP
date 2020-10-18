@@ -4317,7 +4317,9 @@ protected:
 	// Checklist Controller to CSM connector
 	ChecklistDataInterface cdi;
 
+	//RF connectors
 	CSM_RRTto_LM_RRConnector CSM_RRTto_LM_RRConnector;
+	CSM_VHFto_LM_VHFConnector csm_vhfto_lm_vhfconnector;
 
 	//
 	// PanelSDK pointers.
