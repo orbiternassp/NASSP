@@ -1033,9 +1033,10 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		if (!VcInfoActive) VcInfoActive = true;
 
 	} else {
-		if (!VcInfoActive) return;
-		sprintf(oapiDebugString(), "");
-		VcInfoActive = false;
+		if (VcInfoActive) {
+			sprintf(oapiDebugString(), "");
+			VcInfoActive = false;
+		}
 	}
 }
 
