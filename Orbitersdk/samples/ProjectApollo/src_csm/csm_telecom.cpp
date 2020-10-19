@@ -1289,6 +1289,11 @@ void OMNI::TimeStep()
 
 VHFAntenna::VHFAntenna(VECTOR3 dir)
 {
+	pointingVector = dir;
+}
+
+VHFAntenna::~VHFAntenna()
+{
 
 }
 

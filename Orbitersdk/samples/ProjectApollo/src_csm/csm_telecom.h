@@ -457,6 +457,11 @@ class VHFAntenna
 {
 public:
 	VHFAntenna(VECTOR3 dir);
+	~VHFAntenna();
+
+	double getPolar(double theta);
+private:
+	VECTOR3 pointingVector;
 };
 
 class VHFAMTransceiver

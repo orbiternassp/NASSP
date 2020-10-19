@@ -3502,8 +3502,8 @@ protected:
 	OMNI omnib;
 	OMNI omnic;
 	OMNI omnid;
-	VHFAntenna vhfa;
-	VHFAntenna vhfb;
+	VHFAntenna vhfAntRight;
+	VHFAntenna vhfAntLeft;
 	VHFRangingSystem vhfranging;
 	VHFAMTransceiver vhftransceiver;
 	RNDZXPDRSystem RRTsystem;
