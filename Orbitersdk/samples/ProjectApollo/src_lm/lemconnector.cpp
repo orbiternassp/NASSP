@@ -263,3 +263,26 @@ bool LM_RRtoCSM_RRT_Connector::ReceiveMessage(Connector * from, ConnectorMessage
 
 	return false;
 }
+
+//LEM VHF Connectors
+
+LM_VHFtoCSM_VHF_Connector::LM_VHFtoCSM_VHF_Connector(LEM * l, LM_VHF * VHFsys): LEMConnector(l)
+{
+	type = VHF_RNG;
+	pLM_VHFs = VHFsys;
+}
+
+LM_VHFtoCSM_VHF_Connector::~LM_VHFtoCSM_VHF_Connector()
+{
+
+}
+
+void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, bool RangeTone)
+{
+
+}
+
+bool LM_VHFtoCSM_VHF_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
+	return false;
+}
