@@ -4559,7 +4559,7 @@ void Saturn::TLI_Ended()
 	eventControl.TLI_DONE = MissionTime;
 }
 
-void Saturn::VHFRangingReturnSignal()
+void Saturn::VHFRangingReturnSignal() //DELETE ME WHEN YOU ADD THE CONNECTOR
 {
 	if (pMission->CSMHasVHFRanging()) vhfranging.RangingReturnSignal();
 }

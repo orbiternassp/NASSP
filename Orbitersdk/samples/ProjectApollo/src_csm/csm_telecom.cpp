@@ -1433,6 +1433,10 @@ VHFRangingSystem::VHFRangingSystem()
 	lem = NULL;
 	phaseLockTimer = 0.0;
 	hasLock = 0;
+
+	xmitFreq = 259.7; //MHz
+	xmitPower = 0.0;
+	rangeTone = false;
 }
 
 void VHFRangingSystem::Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc)
@@ -1494,7 +1498,6 @@ void VHFRangingSystem::TimeStep(double simdt)
 				if (newrange > 500.0*0.3048 && newrange < 327.68*1852.0)
 				{
 					lem->SendVHFRangingSignal(sat, false); //REPLACE THIS ###########################################################
-					//sat->csm_vhfto_lm_vhfconnector.SendRF(0, 0, true); WITH THIS
 				}
 			}
 
@@ -1517,6 +1520,8 @@ void VHFRangingSystem::TimeStep(double simdt)
 				range = internalrange;
 				dataGood = true;
 			}
+
+			sat->csm_vhfto_lm_vhfconnector.SendRF(0, 0, true);
 		}
 	}
 

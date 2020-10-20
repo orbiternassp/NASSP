@@ -512,6 +512,10 @@ protected:
 	double phaseLockTimer;
 	int hasLock;
 
+	double xmitFreq;
+	double xmitPower;
+	bool rangeTone;
+
 	Saturn *sat;
 	LEM *lem;
 	VHFAMTransceiver *transceiver;
