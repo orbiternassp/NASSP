@@ -459,7 +459,7 @@ public:
 	VHFAntenna(VECTOR3 dir);
 	~VHFAntenna();
 
-	double getPolar(double theta);
+	double getPolarGain(VECTOR3 target);
 private:
 	VECTOR3 pointingVector;
 };

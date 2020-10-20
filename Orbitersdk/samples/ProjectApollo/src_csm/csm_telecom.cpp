@@ -1297,6 +1297,27 @@ VHFAntenna::~VHFAntenna()
 
 }
 
+double VHFAntenna::getPolarGain(VECTOR3 target)
+{
+	double theta = 0.0;
+	double gain = 0.0;
+
+	const double maxGain = -9.0; //dB
+
+	theta = acos(dotp(unit(target),unit(pointingVector)));
+
+	if (theta < 90.0*RAD)
+	{
+		gain = pow(cos(theta / 10.0), 2.0)*maxGain;
+	}
+	else
+	{
+		gain = -150.0;
+	}
+
+	return gain;
+}
+
 VHFAMTransceiver::VHFAMTransceiver()
 {
 	vhfASwitch = NULL;
