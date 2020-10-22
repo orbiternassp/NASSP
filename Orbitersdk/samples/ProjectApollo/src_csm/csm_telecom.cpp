@@ -1332,16 +1332,36 @@ VHFAMTransceiver::VHFAMTransceiver()
 	transmitB = false;
 }
 
-void VHFAMTransceiver::Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb)
+void VHFAMTransceiver::Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt)
 {
 	vhfASwitch = vhfASw;
 	vhfBSwitch = vhfBSw;
 	rcvSwitch = rcvSw;
 	ctrPowerCB = ctrpowcb;
+	antSelectorSw = antSelSw;
+	leftAntenna = lAnt;
+	rightAntenna = rAnt;
+	activeAntenna = NULL;
 }
 
 void VHFAMTransceiver::Timestep()
 {
+	
+	sprintf(oapiDebugString(), "%d", antSelectorSw->GetState());
+
+	if (antSelectorSw->GetState() == 0)
+	{
+		//recovery antenna goes here...
+	}
+	else if (antSelectorSw->GetState() == 1)
+	{
+		activeAntenna = leftAntenna;
+	}
+	else
+	{
+		activeAntenna = rightAntenna;
+	}
+
 	if (vhfASwitch->GetState() != THREEPOSSWITCH_CENTER && ctrPowerCB->IsPowered())
 	{
 		K1 = true;
@@ -1497,7 +1517,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 				//Max unambiguous range is 327.68NM https://repository.arizona.edu/bitstream/handle/10150/609749/ITC_1977_77-12-1.pdf?sequence=1&isAllowed=y page 10
 				if (newrange > 500.0*0.3048 && newrange < 327.68*1852.0)
 				{
-					lem->SendVHFRangingSignal(sat, false); //REPLACE THIS ###########################################################
+					lem->SendVHFRangingSignal(sat, false); // ############################# REPLACE THIS ##############################
 				}
 			}
 
@@ -1521,7 +1541,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 				dataGood = true;
 			}
 
-			sat->csm_vhfto_lm_vhfconnector.SendRF(0, 0, true);
+			sat->csm_vhfto_lm_vhfconnector.SendRF(0, 0, true); // ##################### PUT THIS IN A DIFFERENT PLACE #####################
 		}
 	}
 

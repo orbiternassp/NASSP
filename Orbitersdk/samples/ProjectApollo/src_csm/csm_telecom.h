@@ -469,10 +469,12 @@ class VHFAMTransceiver
 public:
 	VHFAMTransceiver();
 	void Timestep();
-	void Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb);
+	void Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
+
+	VHFAntenna* GetActiveAntenna() { return activeAntenna; };
 protected:
 	bool K1;
 	bool K2;
@@ -486,6 +488,10 @@ protected:
 	ThreePosSwitch *vhfBSwitch;
 	ThreePosSwitch *rcvSwitch;
 	CircuitBrakerSwitch *ctrPowerCB;
+	RotationalSwitch *antSelectorSw;
+	VHFAntenna *leftAntenna;
+	VHFAntenna *rightAntenna;
+	VHFAntenna *activeAntenna;
 };
 
 class LEM;
@@ -502,7 +508,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 
 	double GetRange() { return range / 185.20; }
-	void RangingReturnSignal();
+	void RangingReturnSignal(); // ################# DELETE ME #######################
 protected:
 
 	bool dataGood;
