@@ -94,7 +94,7 @@ BEGIN
     CONTROL         "Enable automatic checklist execution",IDC_CHECK_VAGCCHECKLISTAUTOENABLED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,70,149,10
     GROUPBOX        "Other",IDC_STATIC,7,105,219,32
-    CONTROL         "Enable VC flight instruments in debug string (e. g. during PDI)",IDC_CHECK_VCINFOENABLED,
+    CONTROL         "Enable VC flight instruments in debug string (e.g. during PDI)",IDC_CHECK_VCINFOENABLED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,119,206,10
 END
 
