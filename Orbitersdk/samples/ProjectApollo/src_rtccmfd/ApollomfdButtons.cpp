@@ -3114,7 +3114,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu91, sizeof(mnu91) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("TTH", OAPI_KEY_H, &ApolloRTCCMFD::menuLLTPThresholdTime);
-	RegisterFunction("TV", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("VTI", OAPI_KEY_V, &ApolloRTCCMFD::menuLLTPVectorTime);
 	RegisterFunction("RDO", OAPI_KEY_R, &ApolloRTCCMFD::menuLunarLiftoffVVertInput);
 	RegisterFunction("DT", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLiftoffDT);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
