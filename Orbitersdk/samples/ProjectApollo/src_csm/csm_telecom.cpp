@@ -1347,11 +1347,12 @@ void VHFAMTransceiver::Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, Thre
 void VHFAMTransceiver::Timestep()
 {
 	
-	sprintf(oapiDebugString(), "%d", antSelectorSw->GetState());
+	//sprintf(oapiDebugString(), "%d", antSelectorSw->GetState());
 
 	if (antSelectorSw->GetState() == 0)
 	{
 		//recovery antenna goes here...
+		activeAntenna = NULL;
 	}
 	else if (antSelectorSw->GetState() == 1)
 	{
