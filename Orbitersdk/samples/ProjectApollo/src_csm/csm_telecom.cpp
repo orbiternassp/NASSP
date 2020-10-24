@@ -1542,7 +1542,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 				dataGood = true;
 			}
 
-			sat->csm_vhfto_lm_vhfconnector.SendRF(0, 0, true); // ##################### PUT THIS IN A DIFFERENT PLACE #####################
+			//sat->csm_vhfto_lm_vhfconnector.SendRF(0, 0, true); // ##################### PUT THIS IN A DIFFERENT PLACE #####################
 		}
 	}
 

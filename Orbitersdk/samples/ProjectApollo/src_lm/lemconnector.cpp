@@ -277,7 +277,7 @@ LM_VHFtoCSM_VHF_Connector::~LM_VHFtoCSM_VHF_Connector()
 
 }
 
-void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, bool RangeTone)
+void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone)
 {
 	ConnectorMessage cm;
 
@@ -285,8 +285,10 @@ void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, bool RangeTo
 	cm.messageType = VHF_RNG_SIGNAL_LM;
 
 	cm.val1.dValue = freq; //MHz
-	cm.val2.dValue = XMITpow; //dBm
-	cm.val1.bValue = RangeTone; //
+	cm.val2.dValue = XMITpow; //W
+	cm.val3.dValue = XMITgain; //dBi
+	cm.val4.dValue = XMITphase;
+	cm.val1.bValue = RangeTone; 
 
 	SendMessage(cm);
 }

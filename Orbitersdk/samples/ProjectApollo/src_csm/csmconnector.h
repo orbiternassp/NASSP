@@ -128,7 +128,7 @@ public:
 	CSM_VHFto_LM_VHFConnector(Saturn *s, VHFRangingSystem *vhf_system);
 	~CSM_VHFto_LM_VHFConnector();
 
-	void SendRF(double freq, double XMITpow, bool RangeTone);
+	void SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone);
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 protected:
 	VHFRangingSystem* pVHFRngSys;
