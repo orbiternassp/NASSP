@@ -1467,6 +1467,14 @@ void VHFRangingSystem::Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitc
 	powerswitch = powersw;
 	resetswitch = resetsw;
 	transceiver =  transc;
+
+	if (!lem) {
+		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
+		if (lm) {
+			lem = (static_cast<LEM*>(lm));
+			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+		}
+	}
 }
 
 void VHFRangingSystem::RangingReturnSignal()
@@ -1506,6 +1514,11 @@ void VHFRangingSystem::TimeStep(double simdt)
 	{
 		if (lem)
 		{
+			if (!(sat->csm_vhfto_lm_vhfconnector.connectedTo))
+			{
+				sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+			}
+
 			VECTOR3 R;
 			double newrange;
 
@@ -1519,6 +1532,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 				if (newrange > 500.0*0.3048 && newrange < 327.68*1852.0)
 				{
 					lem->SendVHFRangingSignal(sat, false); // ############################# REPLACE THIS ##############################
+					sat->csm_vhfto_lm_vhfconnector.SendRF(0.0, 0.0, 0.0, 0.0,true);
 				}
 			}
 
@@ -1541,8 +1555,6 @@ void VHFRangingSystem::TimeStep(double simdt)
 				range = internalrange;
 				dataGood = true;
 			}
-
-			//sat->csm_vhfto_lm_vhfconnector.SendRF(0, 0, true); // ##################### PUT THIS IN A DIFFERENT PLACE #####################
 		}
 	}
 

@@ -473,6 +473,8 @@ public:
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
+	const double freqXCVR_A = 296.8; //MHz;
+	const double freqXCVR_B = 259.7; //MHz;
 
 	VHFAntenna* GetActiveAntenna() { return activeAntenna; };
 protected:
@@ -483,6 +485,7 @@ protected:
 	bool receiveB;
 	bool transmitA;
 	bool transmitB;
+
 
 	ThreePosSwitch *vhfASwitch;
 	ThreePosSwitch *vhfBSwitch;

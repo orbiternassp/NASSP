@@ -274,7 +274,7 @@ void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
 {
 	if (isRanging && transmitA && receiveB)
 	{
-		sat->VHFRangingReturnSignal();
+		sat->VHFRangingReturnSignal(); //######################### DELETE ME ##################################
 	}
 }
 
