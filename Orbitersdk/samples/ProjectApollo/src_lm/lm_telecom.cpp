@@ -47,9 +47,45 @@
 #include "lm_channels.h"
 #include "LM_AscentStageResource.h"
 
+//VHF Antenna
+
+LM_VHFAntenna::LM_VHFAntenna(VECTOR3 dir, double maximumGain)
+{
+	pointingVector = dir;
+	maxGain = maximumGain;
+}
+
+LM_VHFAntenna::~LM_VHFAntenna()
+{
+}
+
+double LM_VHFAntenna::getPolarGain(VECTOR3 target)
+{
+	double theta = 0.0;
+	double gain = 0.0;
+
+	theta = acos(dotp(unit(target), unit(pointingVector)));
+
+	if (theta < 90.0*RAD)
+	{
+		gain = pow(cos(theta / 10.0), 2.0)*maxGain;
+	}
+	else
+	{
+		gain = -150.0;
+	}
+
+	return gain;
+}
+
 // VHF System (and shared stuff)
-LM_VHF::LM_VHF(){
+LM_VHF::LM_VHF():
+	fwdInflightVHF(_V(1.0, 1.0, 1.0), 0.0),
+	aftInflightVHF(_V(1.0, 1.0, 1.0), 0.0),
+	evaVHF(_V(1.0, 1.0, 1.0), 0.0)
+{
 	lem = NULL;
+	csm = NULL;
 	VHFHeat = 0;
 	VHFSECHeat = 0;
 	PCMHeat = 0;
@@ -65,6 +101,7 @@ LM_VHF::LM_VHF(){
 	receiveB = false;
 	transmitA = false;
 	transmitB = false;
+
 }
 
 bool LM_VHF::registerSocket(SOCKET sock)
@@ -84,6 +121,17 @@ bool LM_VHF::registerSocket(SOCKET sock)
 }
 void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh){
 	lem = vessel;
+
+	if (!csm)
+	{
+		csm = lem->agc.GetCSM();
+	}
+
+	if (!(lem->lm_rr_to_csm_connector.connectedTo))
+	{
+		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+	}
+
 	VHFHeat = vhfh;
 	VHFSECHeat = secvhfh;
 	PCMHeat = pcmh;
@@ -275,10 +323,22 @@ void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
 	if (isRanging && transmitA && receiveB)
 	{
 		sat->VHFRangingReturnSignal(); //######################### DELETE ME ##################################
+		lem->lm_vhf_to_csm_csm_connector.SendRF(0.0, 0.0, 0.0, 0.0, true);
 	}
 }
 
 void LM_VHF::Timestep(double simt){
+
+	if (!csm)
+	{
+		csm = lem->agc.GetCSM();
+	}
+
+	if (!(lem->lm_vhf_to_csm_csm_connector.connectedTo))
+	{
+		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+	}
+
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
 		sprintf(oapiDebugString(),"%s",wsk_emsg);
