@@ -102,6 +102,12 @@ LM_VHF::LM_VHF():
 	transmitA = false;
 	transmitB = false;
 
+	RCVDfreqRCVR_B = 0.0;
+	RCVDpowRCVR_B = 0.0;
+	RCVDgainRCVR_B = 0.0;
+	RCVDPhaseRCVR_B = 0.0;
+	RCVDRangeTone = false;
+
 }
 
 bool LM_VHF::registerSocket(SOCKET sock)

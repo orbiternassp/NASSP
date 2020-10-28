@@ -194,7 +194,10 @@ public:
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
-	void RangingSignal(Saturn *sat, bool isAcquiring);
+	void RangingSignal(Saturn *sat, bool isAcquiring); //############################# DELETE ME ###############################
+	
+	const double freqXCVR_A = 296.8; //MHz;
+	const double freqXCVR_B = 259.7; //MHz;
 
 	LEM *lem;					   // Ship we're installed in
 	VESSEL *csm;					//Pointer to CSM
@@ -213,11 +216,8 @@ public:
 	bool transmitB;
 	bool isRanging;
 
-	//Ranging RF properties
-	double RangingRCVDfreq;
-	double RangingRCVDpow;
-	double RangingRCVDgain;
-	double RangingRCVDPhase;
+	//void SetRCVDrfPropA(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_A = freq; RCVDpowRCVR_A = pow; RCVDgainRCVR_A = gain; RCVDPhaseRCVR_A = phase;  };
+	void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; RCVDRangeTone = tone;}; //not needed at the moment
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
@@ -255,6 +255,21 @@ public:
 	bool registerSocket(SOCKET sock);
 
 	friend class MCC;				// Allow MCC to write directly to buffer
+
+protected:
+	
+
+	//double RCVDfreqRCVR_A;
+	//double RCVDpowRCVR_A;
+	//double RCVDgainRCVR_A;
+	//double RCVDPhaseRCVR_A;
+
+	//Ranging RF properties
+	double RCVDfreqRCVR_B;
+	double RCVDpowRCVR_B;
+	double RCVDgainRCVR_B;
+	double RCVDPhaseRCVR_B;
+	bool RCVDRangeTone;
 };
 
 // Generic S-Band Antenna
