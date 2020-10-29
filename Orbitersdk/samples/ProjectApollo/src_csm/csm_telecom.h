@@ -469,7 +469,7 @@ class VHFAMTransceiver
 public:
 	VHFAMTransceiver();
 	void Timestep();
-	void Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt);
+	void Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
@@ -510,6 +510,7 @@ protected:
 	VHFAntenna *leftAntenna;
 	VHFAntenna *rightAntenna;
 	VHFAntenna *activeAntenna;
+	Saturn *sat;
 };
 
 class LEM;
