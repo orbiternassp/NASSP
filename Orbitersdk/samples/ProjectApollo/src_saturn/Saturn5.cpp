@@ -722,6 +722,13 @@ void SaturnV::clbkLoadStateEx (FILEHANDLE scn, void *status)
 	ClearMeshes();
 	SetupMeshes();
 
+	// Load the CM virtual vockpit only once here to ensure it is always in idx = 0
+	// This is to ensure the VC is not deleted at staging or else bad things happen to animations
+	// This should not be needed once a better way to handle staging is implemented (docked stages)
+	if (buildstatus == 6) {
+		LoadVC();
+	}
+
 	//
 	// This code all needs to be fixed up.
 	//

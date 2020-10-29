@@ -782,6 +782,12 @@
 #define IDB_CRYO_IND_J                                     1067
 #define IDB_SWITCHGUARDS90_RIGHT                           1068
 
+// VC Active Areas (Panel 1)
+#define AID_VC_FDAI_LEFT                                   3101
+
+// VC Active Areas (Panel 2)
+#define AID_VC_FDAI_RIGHT                                  3201
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

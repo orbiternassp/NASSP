@@ -359,6 +359,8 @@ Saturn::~Saturn()
 		dx8ppv = NULL;
 	}
 
+	DeleteVCAnimations();
+
 	//fclose(PanelsdkLogFile);
 }
 
@@ -859,6 +861,7 @@ void Saturn::initSaturn()
 	opticscoveridx = -1;
 	cmdocktgtidx = -1;
 	simbaypanelidx = -1;
+	vcidx = -1;
 
 	probe = NULL;
 
@@ -910,6 +913,8 @@ void Saturn::initSaturn()
 
 		// Initialize the internal systems
 		SystemsInit();
+
+		InitVCAnimations();
 
 		// Initialize the panel
 		fdaiDisabled = false;
@@ -3035,41 +3040,6 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		}
 	}
 
-	if (key == OAPI_KEY_9 && down == true && InVC && (stage == CSM_LEM_STAGE || stage == CM_RECOVERY_STAGE)) {
-		if (viewpos == SATVIEW_LEFTDOCK){
-			viewpos = SATVIEW_RIGHTDOCK;
-		}else{
-			viewpos = SATVIEW_LEFTDOCK;
-		}
-		SetView(true);
-		return 1;
-	}
-
-	if (key == OAPI_KEY_8 && down == true && InVC ) {
-		viewpos = SATVIEW_RIGHTSEAT;
-		SetView(true);
-		return 1;
-	}
-
-	if (key == OAPI_KEY_7 && down == true && InVC ) {
-		viewpos = SATVIEW_CENTERSEAT;
-		SetView(true);
-		return 1;
-	}
-
-	if (key == OAPI_KEY_6 && down == true && InVC ) {
-		viewpos = SATVIEW_LEFTSEAT;
-		SetView(true);
-		return 1;
-	}
-
-	if (key == OAPI_KEY_5 && down == true && InVC ) {
-		viewpos = SATVIEW_GNPANEL;
-		SetView(true);
-		return 1;
-	}
-
-
 	//
 	// We only allow this switch in VC mode, as we need to disable the panel when selecting these
 	// cameras.
@@ -3077,7 +3047,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	// For now this is limited to the Saturn V.
 	//
 
-	if (key == OAPI_KEY_1 && down == true && InVC && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
+	/*if (key == OAPI_KEY_1 && down == true && InVC && stage < LAUNCH_STAGE_TWO && stage >= LAUNCH_STAGE_ONE) {
 		viewpos = SATVIEW_ENG1;
 		SetView();
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
@@ -3121,7 +3091,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		oapiCameraAttach(GetHandle(), CAM_COCKPIT);
 		SetView();
 		return 1;
-	}
+	}*/
 	return 0;
 }
 

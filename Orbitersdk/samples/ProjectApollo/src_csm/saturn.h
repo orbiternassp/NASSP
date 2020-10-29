@@ -93,6 +93,13 @@ namespace mission
 #define RCS_CM_RING_1		4
 #define RCS_CM_RING_2		5
 
+// ==============================================================
+// VC Constants
+// ==============================================================
+
+// Panel tilt
+const double P1_3_TILT = 19 * RAD;
+
 ///
 /// \brief O2/H2 tank status.
 /// \ingroup InternalInterface
@@ -546,6 +553,22 @@ public:
 		nsurf	///< nsurf gives the count of surfaces for the array size calculation.
 	};
 
+	enum SurfaceID_VC
+	{
+		//
+		// First value in the enum must be set to one. Entry zero is not
+		// used.
+		//
+
+		// VC Sutfaces
+		//SRF_VC_DSKYDISP,
+
+		//
+		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
+		//
+		nsurfvc	///< nsurfvc gives the count of surfaces for the array size calculation.
+	};
+
 	//
 	// Random failure flags, copied into unions and extracted as ints (or vice-versa).
 	//
@@ -917,8 +940,9 @@ public:
 	///
 	/// \brief Initialise a virtual cockpit view.
 	///
-	void InitVC (int vc);
-	bool RegisterVC ();
+	void InitVC ();
+	void ReleaseSurfacesVC();
+	void RegisterActiveAreas();
 
 	void PanelSwitchToggled(ToggleSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
@@ -1257,6 +1281,8 @@ public:
 	IU *GetIU() { return iu; };
 	virtual SICSystems *GetSIC() { return NULL; }
 	SECS *GetSECS() { return &secs; }
+
+	void ClearMeshes();
 
 protected:
 
@@ -3454,6 +3480,7 @@ protected:
 	VECTOR3 normal;
 
 	PanelSwitches MainPanel;
+	PanelSwitchesVC MainPanelVC;
 	PanelSwitchScenarioHandler PSH;
 
 	SwitchRow SequencerSwitchesRow;
@@ -3766,6 +3793,96 @@ protected:
 	bool bRecovery;
 	bool DontDeleteIU;
 
+	// VC animations
+	/*MGROUP_TRANSFORM *mgt_P1switch[P1_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P1Rot[P1_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P1needles[P1_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P2switch[P2_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P2Rot[P2_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P2needles[P2_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P3switch[P3_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P3Rot[P3_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P3needles[P3_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P4switch[P4_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P5switch[P5_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P5Rot[P5_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P6switch[P6_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P8switch[P8_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P8thumbwheels[P8_TWCOUNT];
+	MGROUP_TRANSFORM *mgt_P11R1cbs[P11R1_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P11R2cbs[P11R2_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P11R3cbs[P11R3_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P11R4cbs[P11R4_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P11R5cbs[P11R5_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P12switch[P12_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P12Rot[P12_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P12thumbwheels[P12_TWCOUNT];
+	MGROUP_TRANSFORM *mgt_P12needles[P12_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P14switch[P14_SWITCHCOUNT];
+	MGROUP_TRANSFORM *mgt_P14Rot[P14_ROTCOUNT];
+	MGROUP_TRANSFORM *mgt_P14needles[P14_NEEDLECOUNT];
+	MGROUP_TRANSFORM *mgt_P16R1cbs[P16R1_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P16R2cbs[P16R2_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P16R3cbs[P16R3_CBCOUNT];
+	MGROUP_TRANSFORM *mgt_P16R4cbs[P16R4_CBCOUNT];
+	UINT anim_P1switch[P1_SWITCHCOUNT];
+	UINT anim_P1_Rot[P1_ROTCOUNT];
+	UINT anim_P1needles[P1_NEEDLECOUNT];
+	UINT anim_P2switch[P2_SWITCHCOUNT];
+	UINT anim_P2_Rot[P2_ROTCOUNT];
+	UINT anim_P2needles[P2_NEEDLECOUNT];
+	UINT anim_P3switch[P3_SWITCHCOUNT];
+	UINT anim_P3_Rot[P3_ROTCOUNT];
+	UINT anim_P3needles[P3_NEEDLECOUNT];
+	UINT anim_P4switch[P4_SWITCHCOUNT];
+	UINT anim_P5switch[P5_SWITCHCOUNT];
+	UINT anim_P5_Rot[P5_ROTCOUNT];
+	UINT anim_P6switch[P6_SWITCHCOUNT];
+	UINT anim_P8switch[P8_SWITCHCOUNT];
+	UINT anim_P8thumbwheels[P8_TWCOUNT];
+	UINT anim_P11R1cbs[P11R1_CBCOUNT];
+	UINT anim_P11R2cbs[P11R2_CBCOUNT];
+	UINT anim_P11R3cbs[P11R3_CBCOUNT];
+	UINT anim_P11R4cbs[P11R4_CBCOUNT];
+	UINT anim_P11R5cbs[P11R5_CBCOUNT];
+	UINT anim_P12switch[P12_SWITCHCOUNT];
+	UINT anim_P12_Rot[P12_ROTCOUNT];
+	UINT anim_P12thumbwheels[P12_TWCOUNT];
+	UINT anim_P12needles[P12_NEEDLECOUNT];
+	UINT anim_P14switch[P14_SWITCHCOUNT];
+	UINT anim_P14_Rot[P14_ROTCOUNT];
+	UINT anim_P14needles[P14_NEEDLECOUNT];
+	UINT anim_P16R1cbs[P16R1_CBCOUNT];
+	UINT anim_P16R2cbs[P16R2_CBCOUNT];
+	UINT anim_P16R3cbs[P16R3_CBCOUNT];
+	UINT anim_P16R4cbs[P16R4_CBCOUNT];
+	UINT anim_TW_indicator;
+	UINT anim_Needle_Radar;
+	UINT anim_xpointerx_cdr;
+	UINT anim_xpointery_cdr;
+	UINT anim_xpointerx_lmp;
+	UINT anim_xpointery_lmp;
+	UINT anim_abortbutton;
+	UINT anim_abortstagebutton;
+	UINT anim_abortstagecover;
+	UINT anim_rrslewsitch_x;
+	UINT anim_rrslewsitch_y;
+	UINT anim_stageswitch;
+	UINT anim_stagecover;
+	UINT anim_startbutton;
+	UINT anim_stopbutton_cdr;
+	UINT anim_stopbutton_lmp;
+	UINT anim_plusxbutton;*/
+	UINT anim_fdaiR_L, anim_fdaiR_R;
+	UINT anim_fdaiP_L, anim_fdaiP_R;
+	UINT anim_fdaiY_L, anim_fdaiY_R;
+	UINT anim_fdaiRerror_L, anim_fdaiRerror_R;
+	UINT anim_fdaiPerror_L, anim_fdaiPerror_R;
+	UINT anim_fdaiYerror_L, anim_fdaiYerror_R;
+	UINT anim_fdaiRrate_L, anim_fdaiRrate_R;
+	UINT anim_fdaiPrate_L, anim_fdaiPrate_R;
+	UINT anim_fdaiYrate_L, anim_fdaiYrate_R;
+
 	#define SATVIEW_LEFTSEAT		0
 	#define SATVIEW_RIGHTSEAT		1
 	#define SATVIEW_CENTERSEAT		2
@@ -3796,6 +3913,7 @@ protected:
 	int nosecapidx;
 	int meshLM_1;
 	int simbaypanelidx;
+	int vcidx;
 
 	DEVMESHHANDLE probe;
 
@@ -3853,7 +3971,6 @@ protected:
 	// Virtual cockpit
 	//
 
-	bool VCRegistered;
 	VECTOR3 VCCameraOffset;
 	VECTOR3 VCMeshOffset;
 
@@ -4005,6 +4122,13 @@ protected:
 	void GetApolloName(char *s);
 	void AddSM(double offet, bool showSPS);
 
+	void InitVCAnimations();
+	void DeleteVCAnimations();
+	void DefineVCAnimations();
+
+	void InitFDAI(UINT mesh);
+	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
+
 	//
 	// Systems functions.
 	//
@@ -4090,6 +4214,8 @@ protected:
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
+	void LoadVC();
+	void UpdateVC(VECTOR3 meshdir);
 
 	//
 	// Sounds
