@@ -173,18 +173,6 @@
 
 class Saturn;
 
-class LM_VHFAntenna
-{
-public:
-	LM_VHFAntenna(VECTOR3 dir, double maximumGain);
-	~LM_VHFAntenna();
-
-	double getPolarGain(VECTOR3 target);
-private:
-	VECTOR3 pointingVector;
-	double maxGain;
-};
-
 // VHF system (and shared stuff)
 class LM_VHF {
 public:
@@ -197,27 +185,16 @@ public:
 	void RangingSignal(Saturn *sat, bool isAcquiring);
 
 	LEM *lem;					   // Ship we're installed in
-	VESSEL *csm;					//Pointer to CSM
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
 	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
 	h_HeatLoad *PCMHeat;			//PCM Heat Load
 	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
-
-	LM_VHFAntenna fwdInflightVHF;
-	LM_VHFAntenna aftInflightVHF;
-	LM_VHFAntenna evaVHF;
 
 	bool receiveA;
 	bool receiveB;
 	bool transmitA;
 	bool transmitB;
 	bool isRanging;
-
-	//Ranging RF properties
-	double RangingRCVDfreq;
-	double RangingRCVDpow;
-	double RangingRCVDgain;
-	double RangingRCVDPhase;
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
