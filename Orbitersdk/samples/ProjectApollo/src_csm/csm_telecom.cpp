@@ -1330,6 +1330,15 @@ VHFAMTransceiver::VHFAMTransceiver()
 	receiveB = false;
 	transmitA = false;
 	transmitB = false;
+
+	activeAntenna = NULL;
+
+	RCVDfreqRCVR_A = 0.0;
+	RCVDpowRCVR_A = 0.0;
+	RCVDgainRCVR_A = 0.0;
+	RCVDPhaseRCVR_A = 0.0;
+	RCVDRangeTone = false;
+
 }
 
 void VHFAMTransceiver::Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt)
@@ -1352,7 +1361,7 @@ void VHFAMTransceiver::Timestep()
 	if (antSelectorSw->GetState() == 0)
 	{
 		//recovery antenna goes here...
-		activeAntenna = NULL;
+		activeAntenna = leftAntenna;
 	}
 	else if (antSelectorSw->GetState() == 1)
 	{
