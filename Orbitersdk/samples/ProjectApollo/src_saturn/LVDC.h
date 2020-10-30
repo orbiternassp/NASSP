@@ -91,7 +91,7 @@ public:
 	void ReadFlightSequenceProgram(char *fspfile);
 
 	void SwitchSelectorProcessing(const std::vector<SwitchSelectorSet> &table);
-	bool SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> table);
+	bool SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> &table);
 
 	bool GetGuidanceReferenceFailure() { return GuidanceReferenceFailure; }
 
@@ -117,8 +117,9 @@ private:								// Saturn LV
 
 	//Internal Functions
 	void SystemTimeUpdateRoutine();
-	void Timer1Interrupt();
-	void Timer2Interrupt(bool skiptasks);
+	void TimeBaseChangeRoutine();
+	void Timer1Interrupt(bool timer1schedule);
+	void Timer2Interrupt(bool timer2schedule);
 	VECTOR3 GravitationSubroutine(VECTOR3 Rvec, bool J2only);
 	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec);
 	void SIVBCutoffSequence();
@@ -135,6 +136,10 @@ private:								// Saturn LV
 	void Phase24ApplicationProgramInit();
 	//Events Processor (EP)
 	void EventsProcessor(int entry);
+	//Minor Loop (ML)
+	void MinorLoop(int entry);
+	//Switch Selector Processor (SS)
+	void SwitchSelectorProcessor(int entry);
 	//Time Base 2 (TB2)
 	void StartTimeBase2();
 
@@ -155,11 +160,44 @@ private:								// Saturn LV
 	int EPTINDX;
 	//Time of execution for an event
 	double EPTTIM[131];
+	//Non-interrupt sequence task table (phase 1/3)
+	//0 = Accelerometer Read (AR)
+	//1 = Simulated Accelerometers (SA)
+	//2 = Accelerometer Processing (AP)
+	//3 = F/M Calculations (DV)
+	//4 = Discrete Processor (DP)
+	//5 = Boost Navigation (NE)
+	//6 = Restart Calculations (TC)
+	//7 = Phase Activator (PA)
+	//8 = Time Tilt Guidance (TT)
+	//9 = Chi Computations (CC1)
+	//10 = IGM (IG)
+	//11 = S-IVB Cutoff Prediction (HS)
+	//12 = Orbit Guidance (OG)
+	//13 = Target Update (TG)
+	//14 = Time-to-Go to Restart and Beta Test (RS)
+	//15 = Time Base 6 Check (CS)
+	//16 = Time Base 1 (TB1)
+	//17 = Time Base 5/7 (TB57)
+	//18 = Minor Loop Support (MS)
+	//19 = Simulated Platoform Gimbal Angles (PG)
+	//20 = Etc Btc (EB)
+	bool NISTAT[21];
 
 	//Timer stuff
 
+	//Real time clock (RTC) reading associated with TAS
+	double ACT;
+	//Real time clock associated with last time update
+	double RTC;
+	//Real time clock reading at last interrupt
+	double TEX;
 	//Elapsed time in mission from GRR at last time update
 	double TMM;
+	//Mission time at start of reference
+	double TMR;
+	//Timer 1 function to be scheduled
+	int GST1M;
 	//Timer 2 function to be scheduled
 	int DGST2;
 	//Time for next timer 2 function
@@ -168,6 +206,24 @@ private:								// Saturn LV
 	double VTOLD;
 	//Timer 2 interrupt level in progress indicator
 	bool DFIL1;
+	//Timer 1 interrupt level in progress indicator
+	bool DFIL3;
+	//Minor loop initial rate
+	double MIR;
+	//Minor loop orbit rate
+	double MOR;
+	//Minor loop rate
+	double MLD;
+	//Execution time for next minor loop
+	double MLT;
+	//Periodic processor current mission time
+	double POT;
+	//Switch selector execution time
+	double SST;
+	//Switch selector function to be scheduled
+	int SSM;
+	//Minor loop function to be scheduled (0 = Normal Minor Loop, 1 = Flight Simulation Minor Loop, 2 = Minor Loop with Liftoff Search)
+	int MLM;
 
 	int LVDC_Timebase;								// Time Base
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
@@ -246,10 +302,10 @@ private:								// Saturn LV
 	bool TU10;										// Gate for processing ten-paramemter targeting update
 	bool first_op;									// switch for first TLI opportunity
 	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
-	bool Timebase8Enabled;							// Timebase 8 has been enabled
 	bool ImpactBurnEnabled;							// Lunar impact burn has been enabled
 	bool ImpactBurnInProgress;						// Lunar impact burn is in progress
 	std::bitset<26> ModeCode24, ModeCode25, ModeCode26, ModeCode27;
+	std::bitset<26> DPM;							//Mask word that specifies which DIN's are to be processed when they change from OFF to ON
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
@@ -559,6 +615,15 @@ private:								// Saturn LV
 	int tgt_index;				// Non-LVDC variable to enable selecting the correct set of injection parameters
 
 	// TABLE25 is apparently only used on direct-ascent
+
+	//Interrupts:
+
+	//Discrete Inputs
+	enum SV_DiscreteInput_Bits
+	{
+		DIN9_SCControlOfSaturn = 8,
+		DIN24_Liftoff = 23
+	};
 
 	//Mode Code Bits
 	enum ModeCode25_Bits
