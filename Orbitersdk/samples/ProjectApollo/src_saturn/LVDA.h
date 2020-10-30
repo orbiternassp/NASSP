@@ -56,6 +56,7 @@ public:
 	void SetFCCAttitudeError(VECTOR3 atterr);
 	VECTOR3 GetLVIMUAttitude();
 	void ZeroLVIMUPIPACounters();
+	double GetLVIMULastTime();
 	void ZeroLVIMUCDUs();
 	void ReleaseLVIMUCDUs();
 	void ReleaseLVIMU();

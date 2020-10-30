@@ -468,6 +468,7 @@ Columbia:ProjectApollo\Saturn5
 	LVDC_eps_2 35.0
 	LVDC_eps_2R 30.0
 	LVDC_eps_3R 30.0
+	LVDC_eps_4 8.0
 	LVDC_FA 14.4909
 	LVDC_FB 13.8871494
 	LVDC_Fx[0][0] 0.000000000000
@@ -579,6 +580,7 @@ Columbia:ProjectApollo\Saturn5
 	LVDC_tau3N 769.4
 	LVDC_TAU3RA 533.0518
 	LVDC_TAU3RB 627.8661
+	LVDC_T_c 6.5
 	LVDC_t_D0 0.0
 	LVDC_t_D1 0.0
 	LVDC_t_D2 1.277213e4

@@ -198,6 +198,7 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	MSK16 = 0;
 	MSK5 = 0;
 	MSK6 = 0;
+	MSLIM1 = MSLIM2 = 0.0;
 	mu = 0;
 	NUPTIM = 0;
 	omega_E = 0;
@@ -539,6 +540,11 @@ void LVDC1B::Init(){
 	DT_N6 = 1.0;
 	OrbitalGuidanceCycle = 0;
 	MLR = 25.0;
+	MSLIM1 = 0.06*RAD;
+	MSLIM2 = 0.04*RAD;
+	MinorLoopCycles = 10;
+	MSK5 = 0.48*RAD;
+	MSK6 = MSK16 = 15.3*RAD;
 
 	// Set up remainder
 	LVDC_Timebase = -1;										// Start up halted in pre-PTL wait
@@ -557,7 +563,7 @@ void LVDC1B::Init(){
 	Initialized = true;
 }
 	
-void LVDC1B::SwitchSelectorProcessing(std::vector<SwitchSelectorSet> table)
+void LVDC1B::SwitchSelectorProcessing(const std::vector<SwitchSelectorSet> &table)
 {
 	while (CommandSequence < (int)table.size() && LVDC_TB_ETime > table[CommandSequence].time)
 	{
@@ -850,6 +856,7 @@ void LVDC1B::TimeStep(double simdt) {
 
 			ddotG_last = GravitationSubroutine(PosS, true);
 			lvda.ZeroLVIMUPIPACounters();
+			LVIMUMJD = lvda.GetLVIMULastTime();
 			sinceLastIGM = 0;
 
 			lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
@@ -889,7 +896,12 @@ void LVDC1B::TimeStep(double simdt) {
 			DotM_act += lvda.GetLVIMUPIPARegisters(); //read the PIPA CDUs
 			//TAS is time of last accelerometer sampling
 			TAS = RealTimeClock - T_GRR;
-			Fm = pow((pow(((DotM_act.x - DotM_last.x)/dt_c),2)+ pow(((DotM_act.y - DotM_last.y)/dt_c),2)+ pow(((DotM_act.z - DotM_last.z)/dt_c),2)),0.5);
+
+			//dt_c is the LVDC guidance cycle time. The LV IMU currently runs once per Orbiter timestep, so to get a stable Fm reading we need to take the time difference of the LV IMU measurements
+			DTTEMP = (lvda.GetLVIMULastTime() - LVIMUMJD)*24.0*3600.0;
+			LVIMUMJD = lvda.GetLVIMULastTime();
+			Fm = pow((pow(((DotM_act.x - DotM_last.x) / DTTEMP), 2) + pow(((DotM_act.y - DotM_last.y) / DTTEMP), 2) + pow(((DotM_act.z - DotM_last.z) / DTTEMP), 2)), 0.5);
+
 			PosS.x += (DotM_act.x + DotM_last.x) * dt_c / 2.0 + (DotG_last.x + ddotG_last.x * dt_c / 2.0)*dt_c + Dot0.x * dt_c; //position vector
 			PosS.y += (DotM_act.y + DotM_last.y) * dt_c / 2.0 + (DotG_last.y + ddotG_last.y * dt_c / 2.0)*dt_c + Dot0.y * dt_c;
 			PosS.z += (DotM_act.z + DotM_last.z) * dt_c / 2.0 + (DotG_last.z + ddotG_last.z * dt_c / 2.0)*dt_c + Dot0.z * dt_c;
@@ -1324,7 +1336,7 @@ gtupdate:	// Target of jump from further down
 
 		//sprintf(oapiDebugString(),"IGM: K_1 %f K_2 %f K_3 %f K_4 %f",K_1,K_2,K_3,K_4);
 		Xtt_y = ((tchi_y) - K_3 + (K_4 * DT_N));
-		Xtt_p = ((tchi_p)-K_1 + (K_2 * DT_N)) - phi_T - PI05;
+		Xtt_p = ((tchi_p) - K_1 + (K_2 * DT_N)) - phi_T - PI05;
 		fprintf(lvlog,"Xtt_y = %f, Xtt_p = %f\r\n",Xtt_y,Xtt_p);
 
 		sin_chi_Yit = sin(Xtt_p);
@@ -1497,9 +1509,9 @@ gtupdate:	// Target of jump from further down
 		//Discrete Input 9 Check (S&C Control of Saturn)		
 		if (ModeCode27[MC27_GRFDiscretesSet] && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && ModeCode27[MC27_SCControlAfterGRF] == false)
 		{
-lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
-ModeCode27[MC27_SCControlAfterGRF] = true;
-fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 18);
+			ModeCode27[MC27_SCControlAfterGRF] = true;
+			fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n", LVDC_Timebase, LVDC_TB_ETime);
 		}
 
 		if (ModeCode27[MC27_SCInControl] == false && lvda.GetCMCSIVBTakeover())
@@ -2056,6 +2068,7 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dt_c", dt_c);
 	papiWriteScenario_double(scn, "LVDC_dT_F", dT_F);
 	papiWriteScenario_double(scn, "LVDC_dt_LET", dt_LET);
+	papiWriteScenario_double(scn, "LVDC_DT_N", DT_N);
 	papiWriteScenario_double(scn, "LVDC_dtt_1", dtt_1);
 	papiWriteScenario_double(scn, "LVDC_dtt_2", dtt_2);
 	papiWriteScenario_double(scn, "LVDC_dV", dV);
@@ -2123,12 +2136,16 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_L_Y", L_Y);
 	papiWriteScenario_double(scn, "LVDC_Lt_Y", Lt_Y);
 	papiWriteScenario_double(scn, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
+	papiWriteScenario_double(scn, "LVDC_MLR", MLR);
+	papiWriteScenario_double(scn, "LVDC_MS04DT", MS04DT);
+	papiWriteScenario_double(scn, "LVDC_MS25DT", MS25DT);
 	papiWriteScenario_double(scn, "LVDC_MSK5", MSK5);
 	papiWriteScenario_double(scn, "LVDC_MSK6", MSK6);
 	papiWriteScenario_double(scn, "LVDC_MSK16", MSK16);
 	papiWriteScenario_double(scn, "LVDC_MSLIM1", MSLIM1);
 	papiWriteScenario_double(scn, "LVDC_MSLIM2", MSLIM2);
 	papiWriteScenario_double(scn, "LVDC_mu", mu);
+	papiWriteScenario_double(scn, "LVDC_NUPTIM", NUPTIM);
 	papiWriteScenario_double(scn, "LVDC_omega_E", omega_E);
 	papiWriteScenario_double(scn, "LVDC_p", p);
 	papiWriteScenario_double(scn, "LVDC_P_1", P_1);
@@ -2254,8 +2271,10 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LVDC_DotXEZ", DotXEZ);
 	papiWriteScenario_vec(scn, "LVDC_PCommandedAttitude", PCommandedAttitude);
 	papiWriteScenario_vec(scn, "LVDC_Pos4", Pos4);
+	papiWriteScenario_vec(scn, "LVDC_Pos_Nav", Pos_Nav);
 	papiWriteScenario_vec(scn, "LVDC_PosS", PosS);
 	papiWriteScenario_vec(scn, "LVDC_PosXEZ", PosXEZ);
+	papiWriteScenario_vec(scn, "LVDC_Vel_Nav", Vel_Nav);
 	// MATRIX3
 	papiWriteScenario_mx(scn, "LVDC_MX_A", MX_A);
 	papiWriteScenario_mx(scn, "LVDC_MX_B", MX_B);
@@ -2412,6 +2431,7 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_dt_c", dt_c);
 		papiReadScenario_double(line, "LVDC_dT_F", dT_F);
 		papiReadScenario_double(line, "LVDC_dt_LET", dt_LET);
+		papiReadScenario_double(line, "LVDC_DT_N", DT_N);
 		papiReadScenario_double(line, "LVDC_dtt_1", dtt_1);
 		papiReadScenario_double(line, "LVDC_dtt_2", dtt_2);
 		papiReadScenario_double(line, "LVDC_dV", dV);
@@ -2479,12 +2499,16 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_L_Y", L_Y);
 		papiReadScenario_double(line, "LVDC_Lt_Y", Lt_Y);
 		papiReadScenario_double(line, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
+		papiReadScenario_double(line, "LVDC_MLR", MLR);
+		papiReadScenario_double(line, "LVDC_MS04DT", MS04DT);
+		papiReadScenario_double(line, "LVDC_MS25DT", MS25DT);
 		papiReadScenario_double(line, "LVDC_MSK5", MSK5);
 		papiReadScenario_double(line, "LVDC_MSK6", MSK6);
 		papiReadScenario_double(line, "LVDC_MSK16", MSK16);
 		papiReadScenario_double(line, "LVDC_MSLIM1", MSLIM1);
 		papiReadScenario_double(line, "LVDC_MSLIM2", MSLIM2);
 		papiReadScenario_double(line, "LVDC_mu", mu);
+		papiReadScenario_double(line, "LVDC_NUPTIM", NUPTIM);
 		papiReadScenario_double(line, "LVDC_omega_E", omega_E);
 		papiReadScenario_double(line, "LVDC_p", p);
 		papiReadScenario_double(line, "LVDC_P_1", P_1);
@@ -2611,8 +2635,10 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_vec(line, "LVDC_DotXEZ", DotXEZ);
 		papiReadScenario_vec(line, "LVDC_PCommandedAttitude", PCommandedAttitude);
 		papiReadScenario_vec(line, "LVDC_Pos4", Pos4);
+		papiReadScenario_vec(line, "LVDC_Pos_Nav", Pos_Nav);
 		papiReadScenario_vec(line, "LVDC_PosS", PosS);
 		papiReadScenario_vec(line, "LVDC_PosXEZ", PosXEZ);
+		papiReadScenario_vec(line, "LVDC_Vel_Nav", Vel_Nav);
 
 		// MATRIX3
 		papiReadScenario_mat(line, "LVDC_MX_A", MX_A);
@@ -2837,14 +2863,11 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	alpha_D_op = false;
 	BOOST = false;
 	CountPIPA = false;
+	DFIL1 = false;
 	Direct_Ascent = false;
-	directstageint = false;
-	directstagereset = false;
 	GuidanceReferenceFailure = false;
 	first_op = false;
 	TerminalConditions = false;
-	PermanentSCControl = false;
-	SCControlOfSaturn = false;
 	Timebase8Enabled = false;
 	ImpactBurnEnabled = false;
 	ImpactBurnInProgress = false;
@@ -2853,20 +2876,14 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	GATE1 = false;
 	GATE2 = false;
 	GATE3 = false;
-	GATE4 = false;
 	GATE5 = false;
-	GATE6 = false;
 	HSL = false;
-	INH = false;
 	INH1 = false;
 	INH2 = false;
-	INH3 = false;
 	INH4 = false;
 	INH5 = false;
 	init = false;
 	i_op = false;
-	liftoff = false;
-	LVDC_GRR = false;
 	MRS = false;
 	poweredflight = false;
 	ROT = false;
@@ -2875,20 +2892,36 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	S2_ENGINE_OUT = false;
 	S2_IGNITION = false;
 	S4B_IGN = false;
+	for (int i = 0;i < 11;i++)
+	{
+		T2STAT[i] = false;
+	}
 	theta_N_op = false;
 	TU = false;
 	TU10 = false;
 	// Integers
+	DGST2 = 0;
 	IGMCycle = 0;
 	LVDC_Stop = 0;
 	LVDC_Timebase = 0;
+	MinorLoopCounter = 0;
+	MinorLoopCycles = 0;
+	Timer1Counter = 0;
+	Timer2Counter = 0;
 	T_EO1 = 0;
 	T_EO2 = 0;
 	UP = 0;
+	OrbitalGuidanceCycle = 0;
+	AttitudeManeuverState = 0;
 	// doubles
 	a = 0;
 	a_1 = 0;
 	a_2 = 0;
+	A1 = 0;
+	A2 = 0;
+	A3 = 0;
+	A4 = 0;
+	A5 = 0;
 	alpha_1 = 0;
 	alpha_2 = 0;
 	alpha_D = 0;
@@ -2899,12 +2932,13 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	B_21 = 0;
 	B_12 = 0;
 	B_22 = 0;
-	BN4 = 0;
 	C_2 = 0;
 	C_4 = 0;
 	C_3 = 0;
 	Cf = 0;
 	CG = 0;
+	Chi_xp_apo = 0.0;
+	Chi_zp_apo = 0.0;
 	cos_chi_Yit = 0;
 	cos_chi_Zit = 0;
 	cos_sigma = 0.0;
@@ -2916,6 +2950,10 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	ddot_xi_GT = 0;
 	DEC = 0;
 	deta = 0;
+	for (int i = 0;i < 11;i++)
+	{
+		DLTTL[i] = 0.0;
+	}
 	dxi = 0;
 	dot_dxi = 0;
 	dot_deta = 0;
@@ -2933,7 +2971,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	dot_zeta_T = 0;
 	dot_xi_T = 0;
 	dot_eta_T = 0;
-	dt = 0;
 	dT_3 = 0;
 	dT_4 = 0;
 	dt_c = 0;
@@ -2947,6 +2984,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	dTt_4 = 0;
 	dV = 0;
 	dV_B = 0;
+	DV2TG = 0;
 	e = 0;
 	e_N = 0;
 	eps_1 = 0;
@@ -2957,6 +2995,11 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	eps_2R = 0;
 	eps_3R = 0;
 	eps_4R = 0;
+	EPTINDX = 0;
+	for (int i = 0;i < 131;i++)
+	{
+		EPTTIM[i] = 0.0;
+	}
 	f = 0;
 	F = 0;
 	Fm = 0;
@@ -3039,9 +3082,25 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	Lt_3 = 0;
 	L_12 = 0;
 	L_P = 0;
+	LVIMUMJD = 0.0;
 	L_Y = 0;
 	Lt_Y = 0;
 	LVDC_TB_ETime = 0;
+	DT_N = 0.0;
+	DT_N1 = DT_N2 = DT_N3 = DT_N4 = DT_N5 = DT_N6 = 0.0;
+	for (x = 0;x < 9;x++)
+	{
+		MFK[x] = 0.0;
+	}
+	MFS = 0.0;
+	MLR = 0.0;
+	MS25DT = 0.0;
+	MS04DT = 0.0;
+	MSK16 = 0;
+	MSK5 = 0;
+	MSK6 = 0;
+	MSLIM1 = MSLIM2 = 0.0;
+	NUPTIM = 0.0;
 	mu = 0;
 	omega_E = 0;
 	p = 0;
@@ -3074,7 +3133,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	S_P = 0;
 	S_Y = 0;
 	sinceLastCycle = 0;
-	sinceLastGuidanceCycle = 0;
 	sin_chi_Yit = 0;
 	sin_chi_Zit = 0;
 	sin_gam = 0;
@@ -3084,7 +3142,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	S_34 = 0;
 	P = 0;
 	P_34 = 0;
-	t = 0;
 	T_0 = 0;
 	t_1 = 0;
 	T_1 = 0;
@@ -3100,8 +3157,6 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	T_4N = 0;
 	t_5 = 0;
 	t_6 = 0;
-	TA1 = 0;
-	TA2 = 0;
 	T_ar = 0;
 	TAS = 0;
 	tau1 = 0;
@@ -3137,16 +3192,15 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	t_fail = 0;
 	T_GO = 0;
 	theta_N = 0;
-	TI5F2 = 0;
-	TI7AF1 = 0;
-	TI7AF2 = 0;
-	TI7F10 = 0;
-	TI7F11 = 0;
+	theta_xa = 0.0;
+	theta_za = 0.0;
+	TI = 0.0;
 	T_IGM = 0;
 	T_ImpactBurn = 0;
 	dT_ImpactBurn = 0;
-	T_L = 0;
+	T_L = 0.0;
 	T_LET = 0;
+	TMM = 0;
 	T_RG = 0;
 	T_RP = 0;
 	T_S1 = 0;
@@ -3156,6 +3210,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	TS4BS = 0;
 	TSMC1 = 0;
 	TSMC2 = 0;
+	T_SON = 0.0;
 	T_ST = 0;
 	T_T = 0;
 	t_TB8Start = 0;
@@ -3181,6 +3236,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	V_S2T = 0;
 	V_T = 0;
 	V_TC = 0;
+	VTOLD = 0.0;
 	xi_T = 0;
 	eta_T = 0;
 	zeta_T = 0;
@@ -3195,15 +3251,15 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	X_Yi = 0;
 	Y_u = 0;
 	// VECTOR3
-	ACommandedAttitude = _V(0,0,0);
 	AttitudeError = _V(0,0,0);
+	AttitudeErrorOld = _V(0, 0, 0);
 	CommandedAttitude = _V(0,0,0);
-	CommandRateLimits = _V(0,0,0);
 	CurrentAttitude = _V(0,0,0);
+	DChi = DChi_apo = _V(0, 0, 0);
+	DeltaAtt = _V(0, 0, 0);
 	ddotG_act = _V(0,0,0);
 	ddotG_last = _V(0,0,0);
-	ddotM_act = _V(0,0,0);
-	ddotM_last = _V(0,0,0);
+	ddotS = _V(0, 0, 0);
 	DDotXEZ_G = _V(0,0,0);
 	DotG_act = _V(0,0,0);
 	DotG_last = _V(0,0,0);
@@ -3213,9 +3269,12 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	DotXEZ = _V(0,0,0);
 	PCommandedAttitude = _V(0,0,0);
 	Pos4 = _V(0,0,0);
+	Pos_Nav = _V(0, 0, 0);
 	PosS = _V(0,0,0);
 	PosXEZ = _V(0,0,0);
+	R_OG = _V(0, 0, 0);
 	TargetVector = _V(0, 0, 0);
+	Vel_Nav = _V(0, 0, 0);
 	WV = _V(0,0,0);
 	XLunarAttitude = _V(0,0,0);
 	XLunarSlingshotAttitude = _V(0, 0, 0);
@@ -3256,17 +3315,11 @@ void LVDCSV::Init(){
 	GATE1 = false;							// allows single pass through out-of-orbit targeting calculations when false
 	GATE2 = false;							// logic switch for first or second opportunity out-of-orbit targeting; false for first
 	GATE3 = false;							// allows single pass through out-of-orbit IGM precalculations when false
-	GATE4 = false;							// allows single pass through direct-staging guidance update when false
 	GATE5 = false;							// allows single pass through HSL initialization when false
-	GATE6 = false;
-	INH = false;							// inhibits restart preparations; set by x-lunar inject/inhibit switch
 	INH1 = true;							// inhibits first EPO roll/pitch maneuver
 	INH2 = true;							// inhibits second EPO roll/pitch maneuver
-	INH3 = false;
 	INH4 = false;
 	INH5 = true;
-	TA1 = 2700;								//time for TB5 start to first maneuver
-	TA2 = 5160;								//time for TB5 start to second maneuver
 	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB5a = TB6 = TB6a = TB6b = TB6c = TB7 = TB8 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
 	T_LET = 40.6;							// LET Jettison Time, i.e. the time IGM starts after start of TB3
 	TU = false;								// flag indicating target update has been received from ground
@@ -3276,11 +3329,8 @@ void LVDCSV::Init(){
 	i_op = true;							// flag for selecting method of EPO inclination calculation
 	theta_N_op = true;						// flag for selecting method of EPO descending node calculation
 	TerminalConditions = true;
-	PermanentSCControl = false;
 	Timebase8Enabled = false;
-	directstagereset = true;
 	GuidanceReferenceFailure = false;
-	SCControlOfSaturn = false;
 	ImpactBurnEnabled = false;
 	ImpactBurnInProgress = false;
 	CommandSequence = 0;
@@ -3330,13 +3380,11 @@ void LVDCSV::Init(){
 	T_S3 = 95.6;							// dto.
 	T_EO1 = 0;								// switching constant for SIC engine-out handling
 	T_EO2 = 0;								// allows single pass through IGM engine-out presettings when 0
-	dt = 1.7;								// Nominal powered-flight or coast-guidance computation-cycle interval
 	dT_F=0;									// Period of frozen pitch in S1C
 	dt_LET = 35.1;							// Nominal time between SII ign and LET jet
 	t_fail =0;								// S1C Engine Failure time
 	t_S1C_CECO = 125.9;
 	t_TB8Start = 3600.0;
-	CommandRateLimits=_V(1*RAD,1*RAD,1*RAD);// Radians per second
 	//IGM BOOST TO ORBIT
 	Ct = 0;
 	Ct_o = 10;
@@ -3391,6 +3439,10 @@ void LVDCSV::Init(){
 	ROTR = true;
 	dV_B = 1.782; // AP11// dV_B = 2.0275; // AP9// Velocity cutoff bias for orbital insertion
 	dV_BR = 2.8816;
+	MSLIM1 = 0.06*RAD;
+	MSLIM2 = 0.04*RAD;
+	MSK6 = MSK16 = 15.3*RAD;
+	MSK5 = 0.48*RAD;
 	rho = 0;
 	rho_c = 0.5e-7;
 	ROV = 1.48119724870249; //0.75-17
@@ -3416,7 +3468,6 @@ void LVDCSV::Init(){
 	Tt_3 = T_4N;							// Estimated third or fifth stage burn time
 	Tt_3R = 315.0;//340.0;
 	Tt_T = T_1c + Tt_3;						// Time-To-Go computed using Tt_3
-	t = 1.7;								// Time from accelerometer reading to next steering command
 	t_B1 = 4;								// Transition time for the S2 mixture ratio to shift from 5.5 to 4.7
 	t_B2 = 0;
 	t_B3 = 0;								// Time from second S2 MRS signal
@@ -3431,14 +3482,8 @@ void LVDCSV::Init(){
 	t_DS2 = 16503.1;
 	t_DS3 = 0.0;
 	theta_EO = 0.0;
-	TI5F2 = 20.0;
-	TI7AF1 = 6540.0;
-	TI7AF2 = 3705.0;
-	TI7F10 = 20.0;
-	TI7F11 = 900.0;
 	T_ImpactBurn = 0;
 	dT_ImpactBurn = 0;
-	T_L = 0.0;
 	T_LO = 0.0;
 	t_SD1 = 10984.2;
 	t_SD2 = 5518.9;
@@ -3495,7 +3540,6 @@ void LVDCSV::Init(){
 
 	//'real' software variable, i.e. those are computed at runtime
 	// Software flags
-	liftoff = false;
 	poweredflight = false;
 	HSL=false;								// High-Speed Loop flag
 	BOOST=false;							// Boost To Orbit
@@ -3504,7 +3548,6 @@ void LVDCSV::Init(){
 	S2_IGNITION=false;						// S2 Ignition
 	S2_ENGINE_OUT=false;					// S2 Engine Failure
 	S2_BURNOUT=false;						// SII Burn Out
-	LVDC_GRR = false;
 	S1_Engine_Out = false;
 	tau1 = 1.0;								// Time to consume all fuel before S2 MRS
 	Fm=0;									// sensed total accel
@@ -3547,8 +3590,6 @@ void LVDCSV::Init(){
 	PosS=_V(0,0,0);							// Position in the earth-centered plumbline system. SPACE-FIXED.
 	DotS=_V(0,0,0);							// VELOCITY in the earth-centered plumbline system
 	DotM_act=_V(0,0,0);						// actual sensed velocity from platform
-	ddotM_act =_V(0,0,0);
-	ddotM_last =_V(0,0,0);
 	ddotG_act=_V(0,0,0);					// actual computed acceleration from gravity
 	DotG_act=_V(0,0,0);						// actual computed velocity from gravity
 	DotM_last=_V(0,0,0);					// last sensed velocity from platform
@@ -3570,7 +3611,6 @@ void LVDCSV::Init(){
 	h = 0;
 	h_1 = 1.5e5;
 	h_2 = 3.0e5;
-	BN4 = 20.0;
 	
 	tchi_y=0; tchi_p=0;						// Angles to null velocity deficiencies without regard to terminal data
 	dot_zeta_T=0; dot_xi_T=0; dot_eta_T=0;	// I don't know.
@@ -3583,7 +3623,6 @@ void LVDCSV::Init(){
 	sin_gam=0; cos_gam=0;					// Sine and cosine of upsilon (flight-path angle)
 	dot_phi_1=0; dot_phi_T=0; 				// ???
 	dtt_1=0; dtt_2=0;						// Used in TGO determination
-	dt = 1.7;								// Nominal powered-flight or coast-guidance computation-cycle interval
 	a_1=0; a_2=0;							// Acceleration terms used to determine TGO
 	T_GO=0;									// Time before S4B shutdown
 	T_CO=0;									// Predicted time of S4B shutdown, from GRR
@@ -3591,9 +3630,43 @@ void LVDCSV::Init(){
 	t_21 = 0;
 	TAS=0;
 	t_clock = 0;
+	DT_N = 1.0;
+	DT_N1 = 0.77;
+	DT_N2 = 0.75;
+	DT_N3 = 1.7;
+	DT_N4 = 1.3;
+	DT_N5 = 0.98;
+	DT_N6 = 1.0;
+	OrbitalGuidanceCycle = 0;
+	MinorLoopCycles = 10;
+	MLR = 25.0;
+	AttitudeManeuverState = 2;
 
 	XLunarSlingshotAttitude = _V(PI, PI, 0.0);
 	XLunarCommAttitude = _V(PI, PI, 0);
+
+	//Filter
+	MFK[0] = 0.39254895;
+	MFK[1] = -0.3135895;
+	MFK[2] = 0.0;
+	MFK[3] = 0.0;
+	MFK[4] = 0.0;
+	MFK[5] = 1.56507857;
+	MFK[6] = -0.64403642;
+	MFK[7] = 0.0;
+	MFK[8] = 0.0;
+
+	//Default Event Table
+	EPTTIM[0] = 0.0; EPTTIM[1] = 16.0; EPTTIM[2] = 17.0; EPTTIM[3] = 17.5; EPTTIM[4] = 0.0; //TB0
+	EPTTIM[5] = 0.0; EPTTIM[6] = 1.0; EPTTIM[7] = 6.0; EPTTIM[8] = 9.0; EPTTIM[9] = 10.0; EPTTIM[10] = 14.0; EPTTIM[11] = 134.7; EPTTIM[12] = 0.0; //TB1
+	EPTTIM[13] = 0.0; EPTTIM[14] = 0.0; EPTTIM[15] = 18.4; EPTTIM[16] = 27.5; EPTTIM[17] = 0.0; //TB2
+	EPTTIM[18] = 0.0; EPTTIM[19] = 0.0; EPTTIM[20] = 0.0; EPTTIM[21] = 0.0; EPTTIM[22] = 0.0; EPTTIM[23] = 0.0; EPTTIM[24] = 1.4; EPTTIM[25] = 4.4; EPTTIM[26] = 4.4; EPTTIM[27] = 6.7; //TB3
+	EPTTIM[28] = 6.7; EPTTIM[29] = 6.7; EPTTIM[30] = 40.6; EPTTIM[31] = 40.6; EPTTIM[32] = 58.6; EPTTIM[33] = 60.6; EPTTIM[34] = 299.0; EPTTIM[35] = 355.0; EPTTIM[36] = 388.5; EPTTIM[37] = 0.0; //TB3
+	EPTTIM[38] = 0.0; EPTTIM[39] = 6.5; EPTTIM[40] = 12.0; EPTTIM[41] = 15.0; //TB4
+	EPTTIM[55] = 0.0; EPTTIM[56] = 20.0; EPTTIM[57] = 100.0; EPTTIM[58] = 2700.0; EPTTIM[59] = 5160.0;//TB5
+	EPTTIM[71] = 0.0; EPTTIM[72] = 41.0; EPTTIM[73] = 497.3; EPTTIM[74] = 560.0; EPTTIM[75] = 580.3;//TB6
+	EPTTIM[93] = 0.0;  EPTTIM[94] = 20.0;  EPTTIM[95] = 20.0; EPTTIM[96] = 900.0; EPTTIM[97] = 900.0; EPTTIM[98] = 6540.0; //TB7
+	EPTTIM[107] = 0.0; EPTTIM[108] = 3705.0;//TB8
 
 	// Set up remainder
 	LVDC_Timebase = -1;						// Start up halted in pre-launch pre-GRR loop
@@ -3601,8 +3674,6 @@ void LVDCSV::Init(){
 	LVDC_Stop = 0;
 	IGMCycle = 0;
 	sinceLastCycle = 0;
-	sinceLastGuidanceCycle = 0;
-	OrbNavCycle = 0;
 	// INTERNAL (NON-REAL-LVDC) FLAGS
 	CountPIPA = false;
 	SIICenterEngineCutoff = false;
@@ -3621,8 +3692,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
-	oapiWriteScenario_int(scn, "LVDC_directstageint", directstageint);
-	oapiWriteScenario_int(scn, "LVDC_directstagereset", directstagereset);
 	oapiWriteScenario_int(scn, "LVDC_first_op", first_op);
 	oapiWriteScenario_int(scn, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
@@ -3630,26 +3699,19 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_GATE1", GATE1);
 	oapiWriteScenario_int(scn, "LVDC_GATE2", GATE2);
 	oapiWriteScenario_int(scn, "LVDC_GATE3", GATE3);
-	oapiWriteScenario_int(scn, "LVDC_GATE4", GATE4);
 	oapiWriteScenario_int(scn, "LVDC_GATE5", GATE5);
-	oapiWriteScenario_int(scn, "LVDC_GATE6", GATE6);
 	oapiWriteScenario_int(scn, "LVDC_HSL", HSL);
 	oapiWriteScenario_int(scn, "LVDC_GuidanceReferenceFailure", GuidanceReferenceFailure);
 	oapiWriteScenario_int(scn, "LVDC_ImpactBurnEnabled", ImpactBurnEnabled);
 	oapiWriteScenario_int(scn, "LVDC_ImpactBurnInProgress", ImpactBurnInProgress);
-	oapiWriteScenario_int(scn, "LVDC_INH", INH);
 	oapiWriteScenario_int(scn, "LVDC_INH1", INH1);
 	oapiWriteScenario_int(scn, "LVDC_INH2", INH2);
-	oapiWriteScenario_int(scn, "LVDC_INH3", INH3);
 	oapiWriteScenario_int(scn, "LVDC_INH4", INH4);
 	oapiWriteScenario_int(scn, "LVDC_INH5", INH5);
 	oapiWriteScenario_int(scn, "LVDC_init", init);
 	oapiWriteScenario_int(scn, "LVDC_i_op", i_op);
-	oapiWriteScenario_int(scn, "LVDC_liftoff", liftoff);
-	oapiWriteScenario_int(scn, "LVDC_LVDC_GRR", LVDC_GRR);
 	oapiWriteScenario_int(scn, "LVDC_MRS", MRS);
-	oapiWriteScenario_int(scn, "LVDC_OrbNavCycle", OrbNavCycle);
-	oapiWriteScenario_int(scn, "LVDC_PermanentSCControl", PermanentSCControl);
+	oapiWriteScenario_int(scn, "LVDC_OrbitalGuidanceCycle", OrbitalGuidanceCycle);
 	oapiWriteScenario_int(scn, "LVDC_poweredflight", poweredflight);
 	oapiWriteScenario_int(scn, "LVDC_ReadyToLaunch", ReadyToLaunch);
 	oapiWriteScenario_int(scn, "LVDC_ROT", ROT);
@@ -3660,27 +3722,48 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S2_IGNITION", S2_IGNITION);
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
-	oapiWriteScenario_int(scn, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 	oapiWriteScenario_int(scn, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
+	papiWriteScenario_boolarr(scn, "LVDC_T2STAT", T2STAT, 11);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_Timebase8Enabled", Timebase8Enabled);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
+	oapiWriteScenario_int(scn, "LVDC_AttitudeManeuverState", AttitudeManeuverState);
 	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
 	oapiWriteScenario_int(scn, "LVDC_CommandSequenceStored", CommandSequenceStored);
+	oapiWriteScenario_int(scn, "LVDC_DGST2", DGST2);
+	oapiWriteScenario_int(scn, "LVDC_EPTINDX", EPTINDX);
 	oapiWriteScenario_int(scn, "LVDC_IGMCycle", IGMCycle);
 	oapiWriteScenario_int(scn, "LVDC_MinorLoopCounter", MinorLoopCounter);
 	oapiWriteScenario_int(scn, "LVDC_MinorLoopCycles", MinorLoopCycles);
+	oapiWriteScenario_int(scn, "LVDC_ModeCode24", ModeCode24.to_ulong());
+	oapiWriteScenario_int(scn, "LVDC_ModeCode25", ModeCode25.to_ulong());
+	oapiWriteScenario_int(scn, "LVDC_ModeCode26", ModeCode26.to_ulong());
+	oapiWriteScenario_int(scn, "LVDC_ModeCode27", ModeCode27.to_ulong());
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
+	oapiWriteScenario_int(scn, "LVDC_Timer1Counter", Timer1Counter);
+	oapiWriteScenario_int(scn, "LVDC_Timer2Counter", Timer2Counter);
 	oapiWriteScenario_int(scn, "LVDC_tgt_index", tgt_index);
 	oapiWriteScenario_int(scn, "LVDC_T_EO1", T_EO1);
 	oapiWriteScenario_int(scn, "LVDC_T_EO2", T_EO2);
 	oapiWriteScenario_int(scn, "LVDC_UP", UP);
+	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM0", EPTTIM, 20); //Save EPTTIM before any other double, in case we want something in the load function to overwrite it
+	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM1", EPTTIM + 20, 20);
+	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM2", EPTTIM + 40, 20);
+	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM3", EPTTIM + 60, 20);
+	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM4", EPTTIM + 80, 20);
+	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM5", EPTTIM + 100, 20);
+	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM6", EPTTIM + 120, 11);
 	papiWriteScenario_double(scn, "LVDC_a", a);
 	papiWriteScenario_double(scn, "LVDC_a_1", a_1);
 	papiWriteScenario_double(scn, "LVDC_a_2", a_2);
+	papiWriteScenario_double(scn, "LVDC_A1", A1);
+	papiWriteScenario_double(scn, "LVDC_A2", A2);
+	papiWriteScenario_double(scn, "LVDC_A3", A3);
+	papiWriteScenario_double(scn, "LVDC_A4", A4);
+	papiWriteScenario_double(scn, "LVDC_A5", A5);
 	papiWriteScenario_double(scn, "LVDC_alpha_1", alpha_1);
 	papiWriteScenario_double(scn, "LVDC_alpha_2", alpha_2);
 	papiWriteScenario_double(scn, "LVDC_alpha_D", alpha_D);
@@ -3697,7 +3780,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_beta", beta);
 	papiWriteScenario_double(scn, "LVDC_BETAA", TABLE15[0].beta);
 	papiWriteScenario_double(scn, "LVDC_BETAB", TABLE15[1].beta);
-	papiWriteScenario_double(scn, "LVDC_BN4", BN4);
 	papiWriteScenario_double(scn, "LVDC_C_2", C_2);
 	papiWriteScenario_double(scn, "LVDC_C_3", C_3);
 	papiWriteScenario_double(scn, "LVDC_C_4", C_4);
@@ -3804,6 +3886,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_DECB13", TABLE15[1].target[13].DEC);
 	papiWriteScenario_double(scn, "LVDC_DECB14", TABLE15[1].target[14].DEC);
 	papiWriteScenario_double(scn, "LVDC_deta", deta);
+	papiWriteScenario_doublearr(scn, "LVDC_DLTTL", DLTTL, 11);
 	papiWriteScenario_double(scn, "LVDC_dxi", dxi);
 	papiWriteScenario_double(scn, "LVDC_dot_dxi", dot_dxi);
 	papiWriteScenario_double(scn, "LVDC_dot_deta", dot_deta);
@@ -3826,7 +3909,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Drag_Area[2]", Drag_Area[2]);
 	papiWriteScenario_double(scn, "LVDC_Drag_Area[3]", Drag_Area[3]);
 	papiWriteScenario_double(scn, "LVDC_Drag_Area[4]", Drag_Area[4]);
-	papiWriteScenario_double(scn, "LVDC_dt", dt);
 	papiWriteScenario_double(scn, "LVDC_dT_3", dT_3);
 	papiWriteScenario_double(scn, "LVDC_dT_4", dT_4);
 	papiWriteScenario_double(scn, "LVDC_dt_c", dt_c);
@@ -3836,6 +3918,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dT_ImpactBurn", dT_ImpactBurn);
 	papiWriteScenario_double(scn, "LVDC_dt_LET", dt_LET);
 	papiWriteScenario_double(scn, "LVDC_dT_LIM", dT_LIM);
+	papiWriteScenario_double(scn, "LVDC_DT_N", DT_N);
 	papiWriteScenario_double(scn, "LVDC_dtt_1", dtt_1);
 	papiWriteScenario_double(scn, "LVDC_dtt_2", dtt_2);
 	papiWriteScenario_double(scn, "LVDC_dTt_4", dTt_4);
@@ -3993,10 +4076,20 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_Lt_3", Lt_3);
 	papiWriteScenario_double(scn, "LVDC_L_12", L_12);
 	papiWriteScenario_double(scn, "LVDC_L_P", L_P);
+	papiWriteScenario_double(scn, "LVDC_LVIMUMJD", LVIMUMJD);
 	papiWriteScenario_double(scn, "LVDC_L_Y", L_Y);
 	papiWriteScenario_double(scn, "LVDC_Lt_Y", Lt_Y);
 	papiWriteScenario_double(scn, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
+	papiWriteScenario_double(scn, "LVDC_MLR", MLR);
+	papiWriteScenario_double(scn, "LVDC_MS04DT", MS04DT);
+	papiWriteScenario_double(scn, "LVDC_MS25DT", MS25DT);
+	papiWriteScenario_double(scn, "LVDC_MSK5", MSK5);
+	papiWriteScenario_double(scn, "LVDC_MSK6", MSK6);
+	papiWriteScenario_double(scn, "LVDC_MSK16", MSK16);
+	papiWriteScenario_double(scn, "LVDC_MSLIM1", MSLIM1);
+	papiWriteScenario_double(scn, "LVDC_MSLIM2", MSLIM2);
 	papiWriteScenario_double(scn, "LVDC_mu", mu);
+	papiWriteScenario_double(scn, "LVDC_NUPTIM", NUPTIM);
 	papiWriteScenario_double(scn, "LVDC_omega_E", omega_E);
 	papiWriteScenario_double(scn, "LVDC_p", p);
 	papiWriteScenario_double(scn, "LVDC_P_1", P_1);
@@ -4067,7 +4160,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_S_P", S_P);
 	papiWriteScenario_double(scn, "LVDC_S_Y", S_Y);
 	papiWriteScenario_double(scn, "LVDC_sinceLastCycle", sinceLastCycle);
-	papiWriteScenario_double(scn, "LVDC_sinceLastGuidanceCycle", sinceLastGuidanceCycle);
 	papiWriteScenario_double(scn, "LVDC_sin_chi_Yit", sin_chi_Yit);
 	papiWriteScenario_double(scn, "LVDC_sin_chi_Zit", sin_chi_Zit);
 	papiWriteScenario_double(scn, "LVDC_sin_gam", sin_gam);
@@ -4077,7 +4169,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_P", P);
 	papiWriteScenario_double(scn, "LVDC_S_34", S_34);
 	papiWriteScenario_double(scn, "LVDC_P_34", P_34);
-	papiWriteScenario_double(scn, "LVDC_t", t);
 	papiWriteScenario_double(scn, "LVDC_T_0", T_0);
 	papiWriteScenario_double(scn, "LVDC_t_1", t_1);
 	papiWriteScenario_double(scn, "LVDC_T_1", T_1);
@@ -4097,8 +4188,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T2IRB", TABLE15[1].T2IR);
 	papiWriteScenario_double(scn, "LVDC_T3PRA", TABLE15[0].T3PR);
 	papiWriteScenario_double(scn, "LVDC_T3PRB", TABLE15[1].T3PR);
-	papiWriteScenario_double(scn, "LVDC_TA1", TA1);
-	papiWriteScenario_double(scn, "LVDC_TA2", TA2);
 	papiWriteScenario_double(scn, "LVDC_T_ar", T_ar);
 	papiWriteScenario_double(scn, "LVDC_TAS", TAS);
 	papiWriteScenario_double(scn, "LVDC_tau1", tau1);
@@ -4146,16 +4235,13 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_GO", T_GO);
 	papiWriteScenario_double(scn, "LVDC_TETEO", theta_EO);
 	papiWriteScenario_double(scn, "LVDC_theta_N", theta_N);
-	papiWriteScenario_double(scn, "LVDC_TI5F2", TI5F2);
-	papiWriteScenario_double(scn, "LVDC_TI7AF1", TI7AF1);
-	papiWriteScenario_double(scn, "LVDC_TI7AF2", TI7AF2);
-	papiWriteScenario_double(scn, "LVDC_TI7F10", TI7F10);
-	papiWriteScenario_double(scn, "LVDC_TI7F11", TI7F11);
+	papiWriteScenario_double(scn, "LVDC_TI", TI);
 	papiWriteScenario_double(scn, "LVDC_T_ImpactBurn", T_ImpactBurn);
 	papiWriteScenario_double(scn, "LVDC_T_IGM", T_IGM);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
 	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
 	papiWriteScenario_double(scn, "LVDC_T_LO", T_LO);
+	papiWriteScenario_double(scn, "LVDC_TMM", TMM);
 	papiWriteScenario_double(scn, "LVDC_TPA0", TABLE15[0].target[0].t_D);
 	papiWriteScenario_double(scn, "LVDC_TPA1", TABLE15[0].target[1].t_D);
 	papiWriteScenario_double(scn, "LVDC_TPA2", TABLE15[0].target[2].t_D);
@@ -4225,6 +4311,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_V_S2T", V_S2T);
 	papiWriteScenario_double(scn, "LVDC_V_T", V_T);
 	papiWriteScenario_double(scn, "LVDC_V_TC", V_TC);
+	papiWriteScenario_double(scn, "LVDC_VTOLD", VTOLD);
 	papiWriteScenario_double(scn, "LVDC_xi_T", xi_T);
 	papiWriteScenario_double(scn, "LVDC_eta_T", eta_T);
 	papiWriteScenario_double(scn, "LVDC_zeta_T", zeta_T);
@@ -4236,15 +4323,14 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_X_Zi", X_Zi);
 	papiWriteScenario_double(scn, "LVDC_X_Yi", X_Yi);
 	papiWriteScenario_double(scn, "LVDC_Y_u", Y_u);
-	papiWriteScenario_vec(scn, "LVDC_ACommandedAttitude", ACommandedAttitude);
 	papiWriteScenario_vec(scn, "LVDC_AttitudeError", AttitudeError);
+	papiWriteScenario_vec(scn, "LVDC_AttitudeErrorOld", AttitudeErrorOld);
 	papiWriteScenario_vec(scn, "LVDC_CommandedAttitude", CommandedAttitude);
-	papiWriteScenario_vec(scn, "LVDC_CommandRateLimits", CommandRateLimits);
 	papiWriteScenario_vec(scn, "LVDC_CurrentAttitude", CurrentAttitude);
+	papiWriteScenario_vec(scn, "LVDC_DChi_apo", DChi_apo);
 	papiWriteScenario_vec(scn, "LVDC_ddotG_act", ddotG_act);
 	papiWriteScenario_vec(scn, "LVDC_ddotG_last", ddotG_last);
-	papiWriteScenario_vec(scn, "LVDC_ddotM_act", ddotM_act);
-	papiWriteScenario_vec(scn, "LVDC_ddotM_last", ddotM_last);
+	papiWriteScenario_vec(scn, "LVDC_ddotS", ddotS);
 	papiWriteScenario_vec(scn, "LVDC_DDotXEZ_G", DDotXEZ_G);
 	papiWriteScenario_vec(scn, "LVDC_DotG_act", DotG_act);
 	papiWriteScenario_vec(scn, "LVDC_DotG_last", DotG_last);
@@ -4254,9 +4340,11 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_vec(scn, "LVDC_DotXEZ", DotXEZ);
 	papiWriteScenario_vec(scn, "LVDC_PCommandedAttitude", PCommandedAttitude);
 	papiWriteScenario_vec(scn, "LVDC_Pos4", Pos4);
+	papiWriteScenario_vec(scn, "LVDC_Pos_Nav", Pos_Nav);
 	papiWriteScenario_vec(scn, "LVDC_PosS", PosS);
 	papiWriteScenario_vec(scn, "LVDC_PosXEZ", PosXEZ);
 	papiWriteScenario_vec(scn, "LVDC_TargetVector", TargetVector);
+	papiWriteScenario_vec(scn, "LVDC_Vel_Nav", Vel_Nav);
 	papiWriteScenario_vec(scn, "LVDC_WV", WV);
 	papiWriteScenario_vec(scn, "LVDC_XLunarAttitude", XLunarAttitude);
 	papiWriteScenario_vec(scn, "LVDC_XLunarCommAttitude", XLunarCommAttitude);
@@ -4292,8 +4380,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_Direct_Ascent", Direct_Ascent);
-		papiReadScenario_bool(line, "LVDC_directstageint", directstageint);
-		papiReadScenario_bool(line, "LVDC_directstagereset", directstagereset);
 		papiReadScenario_bool(line, "LVDC_first_op", first_op);
 		papiReadScenario_bool(line, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
@@ -4301,25 +4387,18 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_GATE1", GATE1);
 		papiReadScenario_bool(line, "LVDC_GATE2", GATE2);
 		papiReadScenario_bool(line, "LVDC_GATE3", GATE3);
-		papiReadScenario_bool(line, "LVDC_GATE4", GATE4);
 		papiReadScenario_bool(line, "LVDC_GATE5", GATE5);
-		papiReadScenario_bool(line, "LVDC_GATE6", GATE6);
 		papiReadScenario_bool(line, "LVDC_HSL", HSL);
 		papiReadScenario_bool(line, "LVDC_GuidanceReferenceFailure", GuidanceReferenceFailure);
 		papiReadScenario_bool(line, "LVDC_ImpactBurnEnabled", ImpactBurnEnabled);
 		papiReadScenario_bool(line, "LVDC_ImpactBurnInProgress", ImpactBurnInProgress);
-		papiReadScenario_bool(line, "LVDC_INH", INH);
 		papiReadScenario_bool(line, "LVDC_INH1", INH1);
 		papiReadScenario_bool(line, "LVDC_INH2", INH2);
-		papiReadScenario_bool(line, "LVDC_INH3", INH3);
 		papiReadScenario_bool(line, "LVDC_INH4", INH4);
 		papiReadScenario_bool(line, "LVDC_INH5", INH5);
 		papiReadScenario_bool(line, "LVDC_init", init);
 		papiReadScenario_bool(line, "LVDC_i_op", i_op);
-		papiReadScenario_bool(line, "LVDC_liftoff", liftoff);
-		papiReadScenario_bool(line, "LVDC_LVDC_GRR", LVDC_GRR);
 		papiReadScenario_bool(line, "LVDC_MRS", MRS);
-		papiReadScenario_bool(line, "LVDC_PermanentSCControl", PermanentSCControl);
 		papiReadScenario_bool(line, "LVDC_poweredflight", poweredflight);
 		papiReadScenario_bool(line, "LVDC_ReadyToLaunch", ReadyToLaunch);
 		papiReadScenario_bool(line, "LVDC_ROT", ROT);
@@ -4330,8 +4409,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_S2_IGNITION", S2_IGNITION);
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
-		papiReadScenario_bool(line, "LVDC_SCControlOfSaturn", SCControlOfSaturn);
 		papiReadScenario_bool(line, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
+		papiReadScenario_boolarr(line, "LVDC_T2STAT", T2STAT, 11);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_Timebase8Enabled", Timebase8Enabled);
@@ -4339,23 +4418,56 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_TU10", TU10);
 
 		// integers
+		papiReadScenario_int(line, "LVDC_AttitudeManeuverState", AttitudeManeuverState);
 		papiReadScenario_int(line, "LVDC_CommandSequence", CommandSequence);
 		papiReadScenario_int(line, "LVDC_CommandSequenceStored", CommandSequenceStored);
+		papiReadScenario_int(line, "LVDC_DGST2", DGST2);
+		papiReadScenario_int(line, "LVDC_EPTINDX", EPTINDX);
 		papiReadScenario_int(line, "LVDC_IGMCycle", IGMCycle);
 		papiReadScenario_int(line, "LVDC_MinorLoopCounter", MinorLoopCounter);
 		papiReadScenario_int(line, "LVDC_MinorLoopCycles", MinorLoopCycles);
-		papiReadScenario_int(line, "LVDC_OrbNavCycle", OrbNavCycle);
+		if (papiReadScenario_int(line, "LVDC_ModeCode24", tmp))
+		{
+			ModeCode24 = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_ModeCode25", tmp))
+		{
+			ModeCode25 = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_ModeCode26", tmp))
+		{
+			ModeCode26 = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_ModeCode27", tmp))
+		{
+			ModeCode27 = tmp;
+		}
+		papiReadScenario_int(line, "LVDC_OrbitalGuidanceCycle", OrbitalGuidanceCycle);
 		papiReadScenario_int(line, "LVDC_LVDC_Stop", LVDC_Stop);
 		papiReadScenario_int(line, "LVDC_LVDC_Timebase", LVDC_Timebase);
+		papiReadScenario_int(line, "LVDC_Timer1Counter", Timer1Counter);
+		papiReadScenario_int(line, "LVDC_Timer2Counter", Timer2Counter);
 		papiReadScenario_int(line, "LVDC_tgt_index", tgt_index);
 		papiReadScenario_int(line, "LVDC_T_EO1", T_EO1);
 		papiReadScenario_int(line, "LVDC_T_EO2", T_EO2);
 		papiReadScenario_int(line, "LVDC_UP", UP);
 
 		// doubles
+		papiReadScenario_doublearr(line, "LVDC_EPTTIM0", EPTTIM, 20);
+		papiReadScenario_doublearr(line, "LVDC_EPTTIM1", EPTTIM + 20, 20);
+		papiReadScenario_doublearr(line, "LVDC_EPTTIM2", EPTTIM + 40, 20);
+		papiReadScenario_doublearr(line, "LVDC_EPTTIM3", EPTTIM + 60, 20);
+		papiReadScenario_doublearr(line, "LVDC_EPTTIM4", EPTTIM + 80, 20);
+		papiReadScenario_doublearr(line, "LVDC_EPTTIM5", EPTTIM + 100, 20);
+		papiReadScenario_doublearr(line, "LVDC_EPTTIM6", EPTTIM + 120, 11);
 		papiReadScenario_double(line, "LVDC_a", a);
 		papiReadScenario_double(line, "LVDC_a_1", a_1);
 		papiReadScenario_double(line, "LVDC_a_2", a_2);
+		papiReadScenario_double(line, "LVDC_A1", A1);
+		papiReadScenario_double(line, "LVDC_A2", A2);
+		papiReadScenario_double(line, "LVDC_A3", A3);
+		papiReadScenario_double(line, "LVDC_A4", A4);
+		papiReadScenario_double(line, "LVDC_A5", A5);
 		papiReadScenario_double(line, "LVDC_alpha_1", alpha_1);
 		papiReadScenario_double(line, "LVDC_alpha_2", alpha_2);
 		papiReadScenario_double(line, "LVDC_alpha_D", alpha_D);
@@ -4372,7 +4484,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_beta", beta);
 		papiReadScenario_double(line, "LVDC_BETAA", TABLE15[0].beta);
 		papiReadScenario_double(line, "LVDC_BETAB", TABLE15[1].beta);
-		papiReadScenario_double(line, "LVDC_BN4", BN4);
+		papiReadScenario_double(line, "LVDC_BN4", EPTTIM[94]);
 		papiReadScenario_double(line, "LVDC_C_2", C_2);
 		papiReadScenario_double(line, "LVDC_C_3", C_3);
 		papiReadScenario_double(line, "LVDC_C_4", C_4);
@@ -4479,6 +4591,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_DECB13", TABLE15[1].target[13].DEC);
 		papiReadScenario_double(line, "LVDC_DECB14", TABLE15[1].target[14].DEC);
 		papiReadScenario_double(line, "LVDC_deta", deta);
+		papiReadScenario_doublearr(line, "LVDC_DLTTL", DLTTL, 11);
 		papiReadScenario_double(line, "LVDC_dxi", dxi);
 		papiReadScenario_double(line, "LVDC_dot_dxi", dot_dxi);
 		papiReadScenario_double(line, "LVDC_dot_deta", dot_deta);
@@ -4501,7 +4614,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Drag_Area[2]", Drag_Area[2]);
 		papiReadScenario_double(line, "LVDC_Drag_Area[3]", Drag_Area[3]);
 		papiReadScenario_double(line, "LVDC_Drag_Area[4]", Drag_Area[4]);
-		papiReadScenario_double(line, "LVDC_dt", dt);
 		papiReadScenario_double(line, "LVDC_dT_3", dT_3);
 		papiReadScenario_double(line, "LVDC_dT_4", dT_4);
 		papiReadScenario_double(line, "LVDC_dt_c", dt_c);
@@ -4511,6 +4623,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_dT_ImpactBurn", dT_ImpactBurn);
 		papiReadScenario_double(line, "LVDC_dt_LET", dt_LET);
 		papiReadScenario_double(line, "LVDC_dT_LIM", dT_LIM);
+		papiReadScenario_double(line, "LVDC_DT_N", DT_N);
 		papiReadScenario_double(line, "LVDC_dtt_1", dtt_1);
 		papiReadScenario_double(line, "LVDC_dtt_2", dtt_2);
 		papiReadScenario_double(line, "LVDC_dTt_4", dTt_4);
@@ -4668,10 +4781,20 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Lt_3", Lt_3);
 		papiReadScenario_double(line, "LVDC_L_12", L_12);
 		papiReadScenario_double(line, "LVDC_L_P", L_P);
+		papiReadScenario_double(line, "LVDC_LVIMUMJD", LVIMUMJD);
 		papiReadScenario_double(line, "LVDC_L_Y", L_Y);
 		papiReadScenario_double(line, "LVDC_Lt_Y", Lt_Y);
 		papiReadScenario_double(line, "LVDC_LVDC_TB_ETime", LVDC_TB_ETime);
+		papiReadScenario_double(line, "LVDC_MLR", MLR);
+		papiReadScenario_double(line, "LVDC_MS04DT", MS04DT);
+		papiReadScenario_double(line, "LVDC_MS25DT", MS25DT);
+		papiReadScenario_double(line, "LVDC_MSK5", MSK5);
+		papiReadScenario_double(line, "LVDC_MSK6", MSK6);
+		papiReadScenario_double(line, "LVDC_MSK16", MSK16);
+		papiReadScenario_double(line, "LVDC_MSLIM1", MSLIM1);
+		papiReadScenario_double(line, "LVDC_MSLIM2", MSLIM2);
 		papiReadScenario_double(line, "LVDC_mu", mu);
+		papiReadScenario_double(line, "LVDC_NUPTIM", NUPTIM);
 		papiReadScenario_double(line, "LVDC_omega_E", omega_E);
 		papiReadScenario_double(line, "LVDC_p", p);
 		papiReadScenario_double(line, "LVDC_P_1", P_1);
@@ -4742,7 +4865,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_S_P", S_P);
 		papiReadScenario_double(line, "LVDC_S_Y", S_Y);
 		papiReadScenario_double(line, "LVDC_sinceLastCycle", sinceLastCycle);
-		papiReadScenario_double(line, "LVDC_sinceLastGuidanceCycle", sinceLastGuidanceCycle);
 		papiReadScenario_double(line, "LVDC_sin_chi_Yit", sin_chi_Yit);
 		papiReadScenario_double(line, "LVDC_sin_chi_Zit", sin_chi_Zit);
 		papiReadScenario_double(line, "LVDC_sin_gam", sin_gam);
@@ -4752,7 +4874,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_P", P);
 		papiReadScenario_double(line, "LVDC_S_34", S_34);
 		papiReadScenario_double(line, "LVDC_P_34", P_34);
-		papiReadScenario_double(line, "LVDC_t", t);
 		papiReadScenario_double(line, "LVDC_T_0", T_0);
 		papiReadScenario_double(line, "LVDC_t_1", t_1);
 		papiReadScenario_double(line, "LVDC_T_1", T_1);
@@ -4772,8 +4893,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T2IRB", TABLE15[1].T2IR);
 		papiReadScenario_double(line, "LVDC_T3PRA", TABLE15[0].T3PR);
 		papiReadScenario_double(line, "LVDC_T3PRB", TABLE15[1].T3PR);
-		papiReadScenario_double(line, "LVDC_TA1", TA1);
-		papiReadScenario_double(line, "LVDC_TA2", TA2);
+		papiReadScenario_double(line, "LVDC_TA1", EPTTIM[58]);
+		papiReadScenario_double(line, "LVDC_TA2", EPTTIM[59]);
 		papiReadScenario_double(line, "LVDC_T_ar", T_ar);
 		papiReadScenario_double(line, "LVDC_TAS", TAS);
 		papiReadScenario_double(line, "LVDC_tau1", tau1);
@@ -4821,16 +4942,18 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_GO", T_GO);
 		papiReadScenario_double(line, "LVDC_TETEO", theta_EO);
 		papiReadScenario_double(line, "LVDC_theta_N", theta_N);
-		papiReadScenario_double(line, "LVDC_TI5F2", TI5F2);
-		papiReadScenario_double(line, "LVDC_TI7AF1", TI7AF1);
-		papiReadScenario_double(line, "LVDC_TI7AF2", TI7AF2);
-		papiReadScenario_double(line, "LVDC_TI7F10", TI7F10);
-		papiReadScenario_double(line, "LVDC_TI7F11", TI7F11);
+		papiReadScenario_double(line, "LVDC_TI", TI);
+		papiReadScenario_double(line, "LVDC_TI5F2", EPTTIM[56]); //Events Processor: TB5, event 2
+		papiReadScenario_double(line, "LVDC_TI7AF1", EPTTIM[107]); //Events Processor: TB8, event 1
+		papiReadScenario_double(line, "LVDC_TI7AF2", EPTTIM[108]); //Events Processor: TB8, event 2
+		papiReadScenario_double(line, "LVDC_TI7F10", EPTTIM[95]); //Events Processor: TB7, event 3
+		papiReadScenario_double(line, "LVDC_TI7F11", EPTTIM[96]); //Events Processor: TB7, event 4
 		papiReadScenario_double(line, "LVDC_T_IGM", T_IGM);
 		papiReadScenario_double(line, "LVDC_T_ImpactBurn", T_ImpactBurn);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
 		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
 		papiReadScenario_double(line, "LVDC_T_LO", T_LO);
+		papiReadScenario_double(line, "LVDC_TMM", TMM);
 		papiReadScenario_double(line, "LVDC_TPA0", TABLE15[0].target[0].t_D);
 		papiReadScenario_double(line, "LVDC_TPA1", TABLE15[0].target[1].t_D);
 		papiReadScenario_double(line, "LVDC_TPA2", TABLE15[0].target[2].t_D);
@@ -4900,6 +5023,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_V_S2T", V_S2T);
 		papiReadScenario_double(line, "LVDC_V_T", V_T);
 		papiReadScenario_double(line, "LVDC_V_TC", V_TC);
+		papiReadScenario_double(line, "LVDC_VTOLD", VTOLD);
 		papiReadScenario_double(line, "LVDC_xi_T", xi_T);
 		papiReadScenario_double(line, "LVDC_eta_T", eta_T);
 		papiReadScenario_double(line, "LVDC_zeta_T", zeta_T);
@@ -4913,15 +5037,14 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_Y_u", Y_u);
 
 		// VECTOR3
-		papiReadScenario_vec(line, "LVDC_ACommandedAttitude", ACommandedAttitude);
 		papiReadScenario_vec(line, "LVDC_AttitudeError", AttitudeError);
+		papiReadScenario_vec(line, "LVDC_AttitudeErrorOld", AttitudeErrorOld);
 		papiReadScenario_vec(line, "LVDC_CommandedAttitude", CommandedAttitude);
-		papiReadScenario_vec(line, "LVDC_CommandRateLimits", CommandRateLimits);
 		papiReadScenario_vec(line, "LVDC_CurrentAttitude", CurrentAttitude);
+		papiReadScenario_vec(line, "LVDC_DChi_apo", DChi_apo);
 		papiReadScenario_vec(line, "LVDC_ddotG_act", ddotG_act);
 		papiReadScenario_vec(line, "LVDC_ddotG_last", ddotG_last);
-		papiReadScenario_vec(line, "LVDC_ddotM_act", ddotM_act);
-		papiReadScenario_vec(line, "LVDC_ddotM_last", ddotM_last);
+		papiReadScenario_vec(line, "LVDC_ddotS", ddotS);
 		papiReadScenario_vec(line, "LVDC_DDotXEZ_G", DDotXEZ_G);
 		papiReadScenario_vec(line, "LVDC_DotG_act", DotG_act);
 		papiReadScenario_vec(line, "LVDC_DotG_last", DotG_last);
@@ -4931,9 +5054,11 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_vec(line, "LVDC_DotXEZ", DotXEZ);
 		papiReadScenario_vec(line, "LVDC_PCommandedAttitude", PCommandedAttitude);
 		papiReadScenario_vec(line, "LVDC_Pos4", Pos4);
+		papiReadScenario_vec(line, "LVDC_Pos_Nav", Pos_Nav);
 		papiReadScenario_vec(line, "LVDC_PosS", PosS);
 		papiReadScenario_vec(line, "LVDC_PosXEZ", PosXEZ);
 		papiReadScenario_vec(line, "LVDC_TargetVector", TargetVector);
+		papiReadScenario_vec(line, "LVDC_Vel_Nav", Vel_Nav);
 		papiReadScenario_vec(line, "LVDC_WV", WV);
 		papiReadScenario_vec(line, "LVDC_XLunarAttitude", XLunarAttitude);
 		papiReadScenario_vec(line, "LVDC_XLunarCommAttitude", XLunarCommAttitude);
@@ -4949,6 +5074,13 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 	}
 
 	ReadFlightSequenceProgram(FSPFileName);
+
+	//For old scenarios
+	if (RealTimeClock == 0.0)
+	{
+		double xtemp;
+		RealTimeClock = modf(oapiGetSimMJD(), &xtemp)*24.0*3600.0;
+	}
 
 	return;
 }
@@ -5014,7 +5146,7 @@ void LVDCSV::ReadFlightSequenceProgram(char *fspfile)
 	file.close();
 }
 
-void LVDCSV::SwitchSelectorProcessing(std::vector<SwitchSelectorSet> table)
+void LVDCSV::SwitchSelectorProcessing(const std::vector<SwitchSelectorSet> &table)
 {
 	while (CommandSequence < (int)table.size() && LVDC_TB_ETime > table[CommandSequence].time)
 	{
@@ -5041,84 +5173,55 @@ void LVDCSV::TimeStep(double simdt) {
 
 		//Update real time clock
 		RealTimeClock += simdt;
-		// Update timebase ET
-		LVDC_TB_ETime += simdt;	
 
-		// Note that GenericTimestep will update MissionTime.
-
-		//Switch Check
-		INH = lvda.SIVBInjectionDelay();
-		
-		//Reset Direct Staging switch for S-IVB shutdown
-		if (directstageint && !directstagereset && !lvda.SCInitiationOfSIISIVBSeparation())
+		//LVDC PREFLIGHT PROGRAM
+		if (LVDC_Timebase == -1)
 		{
-			directstagereset = true;
+			// Limit time accel to 100x
+			if (oapiGetTimeAcceleration() > 100) { oapiSetTimeAcceleration(100); }
+
+			// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
+			if (ReadyToLaunch == false) {
+				//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
+				lvda.ZeroLVIMUCDUs();						// Zero IMU CDUs
+				return;
+			}
+
+			// Between PTL signal and GRR, we monitor the IMU for any failure signals and do vehicle self-tests.
+			// At GRR we transfer control to the flight program and start TB0.
+
+			// BEFORE GRR (T-00:00:17) STOPS HERE
+			if (!lvda.GetGuidanceReferenceRelease()) {
+				//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",RealTimeClock,
+					//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
+					//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
+				return;
+			}
+			else {
+				//Flight Program Initialization
+				PhaseActivator(1);
+			}
 		}
 
-		//Engine failure code
-		if (LVDC_Timebase == 1 && LVDC_TB_ETime > t_2)
+		//LVDC FLIGHT PROGRAM
+		SystemTimeUpdateRoutine();
+		Timer1Counter--;
+		if (Timer1Counter <= 0)
 		{
-			S1_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
+			Timer1Interrupt();
 		}
-		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
+		Timer2Counter--;
+		if (Timer2Counter <= 0)
 		{
-			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
+			Timer2Interrupt(false);
 		}
 
 		/* **** LVDC GUIDANCE PROGRAM **** */		
 		switch(LVDC_Timebase){//this is the sequential event control logic
-			case -1: // LOOP WAITING FOR PTL
-				// Limit time accel to 100x
-				if (oapiGetTimeAcceleration() > 100) { oapiSetTimeAcceleration(100); }
-
-				// BEFORE PTL COMMAND (T-00:20:00) STOPS HERE
-				if(ReadyToLaunch == false){
-					//sprintf(oapiDebugString(),"LVDC: T - %d:%d:%f | AWAITING PTL INTERRUPT",(int)Hours,(int)Minutes,Seconds);
-					lvda.ZeroLVIMUCDUs();						// Zero IMU CDUs
-					break;
-				}
-
-				// Between PTL signal and GRR, we monitor the IMU for any failure signals and do vehicle self-tests.
-				// At GRR we transfer control to the flight program and start TB0.
-
-				// BEFORE GRR (T-00:00:17) STOPS HERE
-				if (!lvda.GetGuidanceReferenceRelease()){
-					//sprintf(oapiDebugString(),"LVDC: T %f | IMU XYZ %f %f %f PIPA %f %f %f | TV %f | AWAITING GRR",RealTimeClock,
-						//lvimu.CDURegisters[LVRegCDUX],lvimu.CDURegisters[LVRegCDUY],lvimu.CDURegisters[LVRegCDUZ],
-						//lvimu.CDURegisters[LVRegPIPAX],lvimu.CDURegisters[LVRegPIPAY],lvimu.CDURegisters[LVRegPIPAZ],atan((double)45));
-					break;
-				}else{
-					LVDC_Timebase = 0;
-					LVDC_TB_ETime = 0;
-					oapiSetTimeAcceleration(1);					// Set time acceleration to 1
-					break;
-				}			
-
 			case 0: 
-				if(LVDC_GRR == false){		
-					BOOST = true;
-					LVDC_GRR = true;								// Mark event
-					poweredflight = true;
-					MinorLoopCycles = 4;
-					MinorLoopCounter = 0;
-				}
-
-				// LIFTOFF
-				if(LVDC_TB_ETime > 16.0 && lvda.GetLiftoff()){
-					TB1 = TAS;
-					LVDC_Timebase = 1;
-					LVDC_TB_ETime = 0;
-					CommandSequence = 0;
-
-					liftoff = true;
-					// Fall into TB1
-					lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
-					lvda.SetOutputRegisterBit(FiringCommitEnable, false);
-				}
 				break;
 
 			case 1: // LIFTOFF TIME
-
 				SwitchSelectorProcessing(SSTTB[1]);
 
 				// S1C CECO TRIGGER:
@@ -5129,10 +5232,12 @@ void LVDCSV::TimeStep(double simdt) {
 
 				// Begin timebase 2
 				if(((!GuidanceReferenceFailure && DotS.z > 500.0) || (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())) && lvda.GetSICInboardEngineCutoff()){
-					TB2 = TAS;
+					TB2 = RealTimeClock - T_L;
+					TI = TB2;
 					LVDC_Timebase = 2;
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
+					EventsProcessor(1);
 					break;
 				}
 
@@ -5153,10 +5258,12 @@ void LVDCSV::TimeStep(double simdt) {
 				if (lvda.GetSIPropellantDepletionEngineCutoff()){
 					fprintf(lvlog,"[T+%f] S1 OECO\r\n", t_clock);
 					// Begin timebase 3
-					TB3 = TAS;
+					TB3 = RealTimeClock - T_L;
+					TI = TB3;
 					LVDC_Timebase = 3;
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
+					EventsProcessor(1);
 				}
 				break;
 
@@ -5172,6 +5279,15 @@ void LVDCSV::TimeStep(double simdt) {
 				// S2 ENGINE STARTUP
 				if(LVDC_TB_ETime >= 5 && S2_IGNITION == false){
 					S2_IGNITION = true;
+				}
+
+				//IGM
+				if (ModeCode25[MC25_SII_IGMBeforeEMRC] == false && LVDC_TB_ETime > T_LET)
+				{
+					DT_N = DT_N3;
+					MS25DT = 25.0*DT_N;
+					MS04DT = 0.04 / DT_N;
+					ModeCode25[MC25_SII_IGMBeforeEMRC] = true;
 				}
 
 				if (lvda.SpacecraftSeparationIndication())
@@ -5190,6 +5306,9 @@ void LVDCSV::TimeStep(double simdt) {
 				{
 					S2_ENGINE_OUT = true;
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 15);
+					//Hack so that T_1 and T_2 stay at the desired value
+					T_1 = T_1 * 4.0 / 5.0;
+					T_2 = T_2 * 4.0 / 5.0;
 				}
 			
 				// MR Shift
@@ -5208,25 +5327,14 @@ void LVDCSV::TimeStep(double simdt) {
 					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 					S2_BURNOUT = true;
 					MRS = false;
-					TB4 = TAS;
+					TB4 = RealTimeClock - T_L;
+					TI = TB4;
 					LVDC_Timebase = 4;
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
+					EventsProcessor(1);
 				}
 				
-				if (LVDC_TB_ETime >= 1.4 && lvda.SCInitiationOfSIISIVBSeparation())
-				{
-					lvda.SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
-					directstageint = true;
-					directstagereset = false;
-					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
-					S2_BURNOUT = true;
-					MRS = false;
-					TB4a = TAS;
-					LVDC_Timebase = 40;
-					LVDC_TB_ETime = 0;
-					CommandSequence = 0;
-				}
 				break;
 
 			case 4:	//Timebase 4
@@ -5235,25 +5343,6 @@ void LVDCSV::TimeStep(double simdt) {
 			
 				if(LVDC_TB_ETime >= 8.6 && S4B_IGN == false){
 					S4B_IGN=true;
-				}
-
-				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvda.GetSIVBEngineOut()))
-				{
-					S4B_IGN = false;
-					TB5 = TAS;
-					LVDC_Timebase = 5;
-					LVDC_TB_ETime = 0;
-					CommandSequence = 0;
-
-					//HSL Exit settings
-					GATE = false;
-					GATE5 = false;
-					Tt_T = 1000;
-					HSL = false;
-					BOOST = false;
-
-					fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
 				}
 
 				if (lvda.SpacecraftSeparationIndication())
@@ -5265,24 +5354,16 @@ void LVDCSV::TimeStep(double simdt) {
 
 				SwitchSelectorProcessing(SSTTB[5]);
 
-				CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
-
 				if (LVDC_TB_ETime > 10.0 && lvda.GetStage() == LAUNCH_STAGE_SIVB)
 				{
 					lvda.SetStage(STAGE_ORBIT_SIVB);
 				}
 
-				if(poweredflight && LVDC_TB_ETime > 100){
-					//powered flight nav off
-					poweredflight = false;
-					MinorLoopCycles = 10;
-					MinorLoopCounter = 0;
-				}
-
 				//CSM separation detection
-				if (lvda.SpacecraftSeparationIndication() && TB5a >= 99999.0)
+				if (SSTTB5A.size() > 0 && lvda.SpacecraftSeparationIndication() && TB5a >= 99999.0)
 				{
-					TB5a = TAS;
+					TB5a = RealTimeClock - T_L;
+					TI = TB5a;
 					LVDC_TB_ETime = 0;
 					LVDC_Timebase = 50;
 					CommandSequenceStored = CommandSequence;
@@ -5297,15 +5378,33 @@ void LVDCSV::TimeStep(double simdt) {
 
 				if (poweredflight == false)
 				{
-					poweredflight = true;
-					MinorLoopCycles = 4;
-					MinorLoopCounter = 0;
+					//Powered nav initialization
+					PhaseActivator(3);
+					sinceLastCycle = (RealTimeClock - T_L) - TAS;
+					DT_N = DT_N5;
+					MS25DT = 10.0*DT_N;
+					MS04DT = 0.1 / DT_N;
+					MSK5 = 0.48*RAD;
+					MSK6 = MSK16 = 15.3*RAD;
+					MSLIM1 = 0.024*RAD;
+					MSLIM2 = 0.016*RAD;
+					ddotG_last = ddotS;
+					DotM_act = _V(0.0, 0.0, 0.0);
+					DotM_last = _V(0.0, 0.0, 0.0);
+					DotG_last = DotS;
+					LVIMUMJD = lvda.GetLVIMULastTime();
+					lvda.ZeroLVIMUPIPACounters();
 					lvda.TLIBegun();
 				}
 
 				if(LVDC_TB_ETime>=580.3 && S4B_REIGN==false)
 				{
 					S4B_REIGN = true;
+					MSLIM1 = 0.04*RAD;
+					MSLIM2 = 0.04*RAD;
+					DT_N = DT_N3;
+					MS25DT = 10.0*DT_N;
+					MS04DT = 0.1 / DT_N;
 				}
 				if (S4B_REIGN && MRS == false && T_2 <= 0.0)
 				{
@@ -5314,76 +5413,45 @@ void LVDCSV::TimeStep(double simdt) {
 				}
 
 				//TLI Inhibit check
-				if (INH)
+				if (lvda.SIVBInjectionDelay())
 				{
 					if (LVDC_TB_ETime > 560.0)
 					{
 						//TLI commit, inhibit will be ignored
 					}
-					else if (LVDC_TB_ETime > 497.3)
+					else if ((LVDC_TB_ETime >= 41.0 && LVDC_TB_ETime <= 41.1) || LVDC_TB_ETime > 497.3)
 					{
 						//Inhibit after 41 seconds will be accepted at 8min 17.3sec
 
 						//Switch to TB6c
-						TB6c = TAS;
+						TB6c = RealTimeClock - T_L;
+						TI = TB6c;
 						LVDC_TB_ETime = 0.0;
 						LVDC_Timebase = 62;
 						CommandSequence = 0;
-
-						TB6 = 100000;
-					}
-					else if (LVDC_TB_ETime < 41.0)
-					{
-						//Return to TB5
-						LVDC_TB_ETime = TAS - TB5;
-						LVDC_Timebase = 5;
-						CommandSequence = CommandSequenceStored;
-
-						poweredflight = false;
-						MinorLoopCycles = 10;
-						MinorLoopCounter = 0;
-						//S-IVB Restart Alert Off
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
-						//S/C Control of Saturn Enable
-						lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
-
-						TB6 = 100000;
+						//Disable Events Processor
+						T2STAT[2] = false;
+						Timer2Interrupt(true);
 					}
 				}
 
 				//Manual S-IVB Shutdown
-				if (LVDC_Timebase == 6 && S4B_REIGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset)
-					|| (lvda.GetSIVBEngineOut() && LVDC_TB_ETime > 590.0) || lvda.GetCMCSIVBCutoff()))
+				if (LVDC_Timebase == 6 && S4B_REIGN == true && (lvda.GetSIVBEngineOut() && LVDC_TB_ETime > 590.0) || lvda.GetCMCSIVBCutoff())
 				{
-					S4B_REIGN = false;
-					TB7 = TAS;
-					LVDC_Timebase = 7;
-					LVDC_TB_ETime = 0;
-					CommandSequence = 0;
-
-					//HSL Exit settings
-					GATE = false;
-					GATE5 = false;
-					Tt_T = 1000;
-					HSL = false;
-					BOOST = false;
-
 					fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
-					lvda.TLIEnded();
+					StartTimebase7();
 				}
 
 				//CSM separation detection
-				if (lvda.SpacecraftSeparationIndication() && LVDC_TB_ETime < 560.0 && TB5a > 99999.9 && LVDC_Timebase == 6)
+				if (SSTTB5A.size() > 0 && lvda.SpacecraftSeparationIndication() && LVDC_TB_ETime < 560.0 && TB5a > 99999.9 && LVDC_Timebase == 6)
 				{
 					fprintf(lvlog, "[TB%d+%f] CSM SEPARATION SENSED\r\n", LVDC_Timebase, LVDC_TB_ETime);
-					TB5a = TAS;
+					TB5a = RealTimeClock - T_L;
+					TI = TB5a;
 					LVDC_TB_ETime = 0;
 					LVDC_Timebase = 50;
 					CommandSequenceStored = CommandSequence;
 					CommandSequence = 0;
-					poweredflight = false;
-					MinorLoopCycles = 10;
-					MinorLoopCounter = 0;
 				}
 				break;
 			case 7:
@@ -5396,27 +5464,12 @@ void LVDCSV::TimeStep(double simdt) {
 					fprintf(lvlog, "S4B CUTOFF: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
 				}
 
-				if (LVDC_TB_ETime > BN4 && poweredflight) {
-					//powered flight nav off
-					poweredflight = false;
-					MinorLoopCycles = 10;
-					MinorLoopCounter = 0;
-				}
-
-				if (LVDC_TB_ETime > TI7F11 && LVDC_TB_ETime < TI7F11 + 300.0)
-				{
-					CommandRateLimits = _V(1.0*RAD, 1.0*RAD, 1.0*RAD);
-				}
-				else
-				{
-					CommandRateLimits = _V(0.5*RAD, 0.3*RAD, 0.3*RAD);
-				}
-
 				//CSM separation detection
-				if (lvda.SpacecraftSeparationIndication() && TB5a > 99999.9)
+				if (SSTTB5A.size() > 0 && lvda.SpacecraftSeparationIndication() && TB5a > 99999.9)
 				{
 					fprintf(lvlog, "[TB%d+%f] CSM SEPARATION SENSED\r\n", LVDC_Timebase, LVDC_TB_ETime);
-					TB5a = TAS;
+					TB5a = RealTimeClock - T_L;
+					TI = TB5a;
 					LVDC_TB_ETime = 0;
 					LVDC_Timebase = 50;
 					CommandSequenceStored = CommandSequence;
@@ -5424,14 +5477,18 @@ void LVDCSV::TimeStep(double simdt) {
 					poweredflight = false;
 					MinorLoopCycles = 10;
 					MinorLoopCounter = 0;
+					MSLIM1 = 0.06*RAD;
+					MSLIM2 = 0.04*RAD;
 				}
 
 				if (Timebase8Enabled && LVDC_TB_ETime > t_TB8Start)
 				{
-					TB8 = TAS;
+					TB8 = RealTimeClock - T_L;
+					TI = TB8;
 					LVDC_Timebase = 8;
 					LVDC_TB_ETime = 0;
 					CommandSequence = 0;
+					EventsProcessor(1);
 				}
 
 				//For now, disable LVDC at TB7+11,729 seconds
@@ -5479,25 +5536,6 @@ void LVDCSV::TimeStep(double simdt) {
 				if (LVDC_TB_ETime >= 13.3 && S4B_IGN == false) {
 					S4B_IGN = true;
 				}
-
-				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && ((lvda.SCInitiationOfSIISIVBSeparation() && directstagereset) || lvda.GetSIVBEngineOut()))
-				{
-					S4B_IGN = false;
-					TB5 = TAS;
-					LVDC_Timebase = 5;
-					LVDC_TB_ETime = 0;
-					CommandSequence = 0;
-
-					//HSL Exit settings
-					GATE = false;
-					GATE5 = false;
-					Tt_T = 1000;
-					HSL = false;
-					BOOST = false;
-
-					fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
-				}
 				break;
 			case 50:
 
@@ -5508,15 +5546,11 @@ void LVDCSV::TimeStep(double simdt) {
 					//Return to TB5 or TB7
 					if (TB7 > 99999.9)
 					{
-						LVDC_TB_ETime = TAS - TB5;
-						LVDC_Timebase = 5;
-						CommandSequence = CommandSequenceStored;
+						StartTimebase5();
 					}
 					else
 					{
-						LVDC_TB_ETime = TAS - TB7;
-						LVDC_Timebase = 7;
-						CommandSequence = CommandSequenceStored;
+						StartTimebase7();
 					}
 				}
 
@@ -5529,9 +5563,7 @@ void LVDCSV::TimeStep(double simdt) {
 				if (SwitchSelectorSequenceComplete(SSTTB6A))
 				{
 					//Return to TB5
-					LVDC_TB_ETime = TAS - TB5;
-					LVDC_Timebase = 5;
-					CommandSequence = CommandSequenceStored;
+					StartTimebase5();
 				}
 				break;
 
@@ -5542,9 +5574,7 @@ void LVDCSV::TimeStep(double simdt) {
 				if (SwitchSelectorSequenceComplete(SSTTB6B))
 				{
 					//Return to TB5
-					LVDC_TB_ETime = TAS - TB5;
-					LVDC_Timebase = 5;
-					CommandSequence = CommandSequenceStored;
+					StartTimebase5();
 				}
 				break;
 
@@ -5555,40 +5585,18 @@ void LVDCSV::TimeStep(double simdt) {
 				if (SwitchSelectorSequenceComplete(SSTTB6C))
 				{
 					//Return to TB5
-					LVDC_TB_ETime = TAS - TB5;
-					LVDC_Timebase = 5;
-					CommandSequence = CommandSequenceStored;
-					lvda.SwitchSelector(SWITCH_SELECTOR_IU, 81);
+					StartTimebase5();
 				}
 				break;
 
 		}
 
-		//No need to run the code below before GRR
-		if (LVDC_Timebase < 0) return;
-
-		if (GuidanceReferenceFailure == false)
-		{
-			if (LVDC_Timebase > 0 && lvda.GetLVIMUFailure())
-			{
-				GuidanceReferenceFailure = true;
-				lvda.SetOutputRegisterBit(GuidanceReferenceFailureA, true);
-				lvda.SetOutputRegisterBit(GuidanceReferenceFailureB, true);
-			}
-
-			if (!GuidanceReferenceFailure)
-			{
-				CurrentAttitude = lvda.GetLVIMUAttitude();
-			}
-		}
-
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
-		if(LVDC_GRR && init == false)
+		if(ModeCode25[MC25_BeginTB0] && init == false)
 		{
 			fprintf(lvlog,"[GMT%+f] GRR received!\r\n", RealTimeClock);
 
 			// Ground launch targeting
-			T_L = RealTimeClock;
 			t_D = T_L - T_LO;
 			//t_D = TABLE15.target[tgt_index].t_D;
 
@@ -5692,17 +5700,8 @@ void LVDCSV::TimeStep(double simdt) {
 			fprintf(lvlog, "Initial Position = %f %f %f\r\n", PosS.x, PosS.y, PosS.z);
 			fprintf(lvlog, "Initial Velocity = %f %f %f\r\n", DotS.x, DotS.y, DotS.z);
 		
-			Y_u= (PosS.x*MX_A.m21+PosS.y*MX_A.m22+PosS.z*MX_A.m23); //position component south of equator
-			R = length(PosS); //instantaneous distance from earth's center
-			S = (-mu/pow(R,3))*(1.0+J*pow(a/R,2)*(1.0-5.0*pow(Y_u/R,2)));
-			P = (-mu / pow(R, 2))*pow(a / R, 2) *(2.0*J*(Y_u / R));
-			ddotG_last.x = PosS.x*S + MX_A.m21*P; //gravity acceleration vector
-			ddotG_last.y = PosS.y*S + MX_A.m22*P;
-			ddotG_last.z = PosS.z*S + MX_A.m23*P;
+			ddotG_last = GravitationSubroutine(PosS, true);
 			DotG_last = DotS;
-			PCommandedAttitude.x = (1.5* PI) + Azimuth;
-			PCommandedAttitude.y = 0;
-			PCommandedAttitude.z = 0;
 
 			lvda.ReleaseLVIMUCDUs();						// Release IMU CDUs
 			VECTOR3 align = lvda.GetTheodoliteAlignment(Azimuth);
@@ -5711,7 +5710,19 @@ void LVDCSV::TimeStep(double simdt) {
 			lvda.ReleaseLVIMU();							// Release IMU
 			CountPIPA = true;								// Enable PIPA storage	
 
+			PCommandedAttitude.x = align.x;
+			PCommandedAttitude.y = 0;
+			PCommandedAttitude.z = 0;
+			CommandedAttitude = PCommandedAttitude;
+			//VCCYA = PCommandedAttitude.y;
+			//VCCZA = PCommandedAttitude.z;
+			DChi_apo = _V(0, 0, 0);
+
+			MF[0] = MF[1] = MF[2] = MF[3] = MFSArr[0] = MFSArr[1] = MFSArr[2] = MFSArr[3] = 0.154;
+
 			lvda.ZeroLVIMUPIPACounters();
+			LVIMUMJD = lvda.GetLVIMULastTime();
+
 			sinceLastCycle = 0;
 			init = true;
 			lvda.SetOutputRegisterBit(FiringCommitEnable, true);
@@ -5719,308 +5730,173 @@ void LVDCSV::TimeStep(double simdt) {
 			goto minorloop;
 		}
 
-		if(LVDC_GRR == true){TAS += simdt;} //time since GRR
-		if(liftoff == true){t_clock += simdt;} //time since liftoff
+		if(ModeCode25[MC25_BeginTB1] == true){t_clock += simdt;} //time since liftoff
 		if(S2_IGNITION == true && t_21 == 0){t_21 = t_clock;} //I hope this is the right way to determine t_21; the boeing doc is silent on that
 		
-		//Major loop(s)
-		if(LVDC_GRR == true){
-			if (poweredflight == true)
-			{
-				//powered flight nav
-				sinceLastCycle += simdt;
-				if (sinceLastCycle < 1.7)
-				{ goto minorloop; }
-				dt_c = sinceLastCycle;
-				sinceLastCycle = 0;
-				IGMCycle++;				// For debugging
-				fprintf(lvlog, "[%d+%f] *** Major Loop (powered) %d ***\r\n", LVDC_Timebase, LVDC_TB_ETime, IGMCycle);
-				//read the PIPA CDUs
-				DotM_act += lvda.GetLVIMUPIPARegisters();
-				Fm = pow((pow(((DotM_act.x - DotM_last.x) / dt_c), 2) + pow(((DotM_act.y - DotM_last.y) / dt_c), 2) + pow(((DotM_act.z - DotM_last.z) / dt_c), 2)), 0.5);
-				PosS = PosS + (DotM_act + DotM_last) * dt_c / 2.0 + (DotG_last + ddotG_last * dt_c / 2.0)*dt_c; //position vector
-				R = length(PosS); //instantaneous distance from earth's center
-				Y_u = (PosS.x*MX_A.m21 + PosS.y*MX_A.m22 + PosS.z*MX_A.m23); //position component south of equator
-				S = (-mu / pow(R, 3))*(1.0 + J*pow(a / R, 2)*(1.0 - 5.0 * pow(Y_u / R, 2)));
-				P = (-mu / pow(R, 2))*pow(a / R, 2) *(2.0 * J*(Y_u / R));
-				ddotG_act.x = PosS.x*S + MX_A.m21*P; //gravity acceleration vector
-				ddotG_act.y = PosS.y*S + MX_A.m22*P;
-				ddotG_act.z = PosS.z*S + MX_A.m23*P;
-				CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
-				DotG_act = DotG_last + (ddotG_act + ddotG_last)*dt_c / 2.0; //gravity velocity vector
-				DotS = DotM_act + DotG_act; //total velocity vector
-				V = length(DotS);
-				//save the 'actual' variables as 'last' variables for the next step
-				DotM_last = DotM_act;
-				DotG_last = DotG_act;
-				ddotG_last = ddotG_act;
-
-				ddotM_act = ddotG_last; //For orbital nav initialization
-
-				fprintf(lvlog, "Powered Navigation \r\n");
-				fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
-				fprintf(lvlog, "DotM: %f %f %f \r\n", DotM_act.x, DotM_act.y, DotM_act.z);
-				fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n", lvda.GetLVIMUPIPARegisters().x, lvda.GetLVIMUPIPARegisters().y, lvda.GetLVIMUPIPARegisters().z);
-				fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
-				fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
-				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
-				fprintf(lvlog, "EarthRel Velocity: %f %f %f \r\n", DotS.x, DotS.y, DotS.z);
-				fprintf(lvlog, "Sensed Acceleration: %f \r\n", Fm);
-				fprintf(lvlog, "Gravity Acceleration: %f \r\n", CG);
-				fprintf(lvlog, "Total Velocity: %f \r\n", V);
-				fprintf(lvlog, "Dist. from Earth's Center: %f \r\n", R);
-				fprintf(lvlog, "S: %f \r\n", S);
-				fprintf(lvlog, "P: %f \r\n", P);
-				lvda.ZeroLVIMUPIPACounters();
-			}
-			else
-			{
-				//Orbital navigation
-				sinceLastCycle += simdt;
-				sinceLastGuidanceCycle += simdt;
-				if (sinceLastCycle < 8.0)
-				{
-					if (sinceLastGuidanceCycle < 1.0)
-					{
-						goto minorloop;
-					}
-					else
-					{
-						dt_g = sinceLastGuidanceCycle;
-						sinceLastGuidanceCycle = 0.0;
-						goto GuidanceLoop;
-					}
-				}
-				dt_c = sinceLastCycle;
-				sinceLastCycle = 0.0;
-				OrbNavCycle++;		//For debugging
-				fprintf(lvlog, "[%d+%f] *** Major Loop (orbital) %d ***\r\n", LVDC_Timebase, LVDC_TB_ETime, OrbNavCycle);
-				//4-second intermediate integration
-				PosS_4sec = PosS + DotS*dt_c / 2.0 + ddotM_act*dt_c*dt_c/8.0;
-				DotS_4sec = DotS + ddotM_act*dt_c / 2.0;
-
-				//Gravity (4sec)
-				Y_u = -(PosS_4sec.x*MX_A.m21 + PosS_4sec.y*MX_A.m22 + PosS_4sec.z*MX_A.m23); //position component south of equator
-				R = length(PosS_4sec); //instantaneous distance from earth's center
-				S_34 = H*pow(a / R, 3)*(Y_u / R)*(3.0 - 7.0*pow(Y_u / R, 2)) + (D / 7.0)*pow(a / R, 4)*(3.0 - 42.0*pow(Y_u / R, 2) + 63.0*pow(Y_u / R, 4));
-				S = (-mu / pow(R, 3))*(1.0 + J*pow(a / R, 2)*(1.0 - 5.0 * pow(Y_u / R, 2)) + S_34);
-				P_34 = (H / 5.0)*pow(a / R, 2)*(15.0*Y_u / R - 3.0) + (D / 7.0)*pow(a / R, 2)*Y_u / R*(12.0 - 28.0*pow(Y_u / R, 2));
-				P = (-mu / pow(R, 2))*pow(a / R, 2) *((2.0 * J*Y_u) / R + P_34);
-				ddotG_act.x = PosS_4sec.x*S - MX_A.m21*P; //gravity acceleration vector
-				ddotG_act.y = PosS_4sec.y*S - MX_A.m22*P;
-				ddotG_act.z = PosS_4sec.z*S - MX_A.m23*P;
-
-				//Drag (4sec)
-				h = R - a;
-				if (h > h_2)
-				{
-					rho = 0.0;
-				}
-				else if (h < h_1)
-				{
-					rho = rho_c;
-				}
-				else
-				{
-					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
-				}
-				DotS_R = _V(DotS_4sec.x + omega_E*(MX_A.m23*PosS_4sec.z - MX_A.m21*PosS_4sec.y), DotS_4sec.y + omega_E*(MX_A.m21*PosS_4sec.x - MX_A.m22*PosS_4sec.z), DotS_4sec.z + omega_E*(MX_A.m22*PosS_4sec.y - MX_A.m23*PosS_4sec.x));
-				V_R = length(DotS_R);
-				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z)+DotS_R.y*sin(CurrentAttitude.z)-DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
-				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
-				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
-
-				DDotS_4sec = ddotG_act + DDotS_D;
-
-				//8-second intermediate integration
-				PosS_8secP = PosS + DotS*dt_c + DDotS_4sec*dt_c*dt_c/2.0;
-				DotS_8secP = DotS_4sec + DDotS_4sec*dt_c;
-
-				//Gravity (8sec intermediate)
-				Y_u = -(PosS_8secP.x*MX_A.m21 + PosS_8secP.y*MX_A.m22 + PosS_8secP.z*MX_A.m23); //position component south of equator
-				R = length(PosS_8secP); //instantaneous distance from earth's center
-				S_34 = H*pow(a / R, 3)*(Y_u / R)*(3.0 - 7.0*pow(Y_u / R, 2)) + (D / 7.0)*pow(a / R, 4)*(3.0 - 42.0*pow(Y_u / R, 2) + 63.0*pow(Y_u / R, 4));
-				S = (-mu / pow(R, 3))*(1.0 + J*pow(a / R, 2)*(1.0 - 5.0 * pow(Y_u / R, 2)) + S_34);
-				P_34 = (H / 5.0)*pow(a / R, 2)*(15.0*Y_u / R - 3.0) + (D / 7.0)*pow(a / R, 2)*Y_u / R*(12.0 - 28.0*pow(Y_u / R, 2));
-				P = (-mu / pow(R, 2))*pow(a / R, 2) *((2.0 * J*Y_u) / R + P_34);
-				ddotG_act.x = PosS_8secP.x*S - MX_A.m21*P; //gravity acceleration vector
-				ddotG_act.y = PosS_8secP.y*S - MX_A.m22*P;
-				ddotG_act.z = PosS_8secP.z*S - MX_A.m23*P;
-
-				//Drag (8sec intermediate)
-				h = R - a;
-				if (h > h_2)
-				{
-					rho = 0.0;
-				}
-				else if (h < h_1)
-				{
-					rho = rho_c;
-				}
-				else
-				{
-					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
-				}
-				DotS_R = _V(DotS_8secP.x + omega_E*(MX_A.m23*PosS_8secP.z - MX_A.m21*PosS_8secP.y), DotS_8secP.y + omega_E*(MX_A.m21*PosS_8secP.x - MX_A.m22*PosS_8secP.z), DotS_8secP.z + omega_E*(MX_A.m22*PosS_8secP.y - MX_A.m23*PosS_8secP.x));
-				V_R = length(DotS_R);
-				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z) + DotS_R.y*sin(CurrentAttitude.z) - DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
-				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
-				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
-
-				DDotS_8secP = ddotG_act + DDotS_D;
-
-				//8-second final integration
-				PosS_8sec = PosS + DotS*dt_c + (ddotM_act + DDotS_4sec*2.0)*dt_c*dt_c / 6.0;
-				DotS_8sec = DotS + (ddotM_act + DDotS_4sec*4.0 + DDotS_8secP)*dt_c / 6.0;
-
-				//Gravity (8sec final)
-				Y_u = -(PosS_8sec.x*MX_A.m21 + PosS_8sec.y*MX_A.m22 + PosS_8sec.z*MX_A.m23); //position component south of equator
-				R = length(PosS_8sec); //instantaneous distance from earth's center
-				S_34 = H*pow(a / R, 3)*(Y_u / R)*(3.0 - 7.0*pow(Y_u / R, 2)) + (D / 7.0)*pow(a / R, 4)*(3.0 - 42.0*pow(Y_u / R, 2) + 63.0*pow(Y_u / R, 4));
-				S = (-mu / pow(R, 3))*(1.0 + J*pow(a / R, 2)*(1.0 - 5.0 * pow(Y_u / R, 2)) + S_34);
-				P_34 = (H / 5.0)*pow(a / R, 2)*(15.0*Y_u / R - 3.0) + (D / 7.0)*pow(a / R, 2)*Y_u / R*(12.0 - 28.0*pow(Y_u / R, 2));
-				P = (-mu / pow(R, 2))*pow(a / R, 2) *((2.0 * J*Y_u) / R + P_34);
-				ddotG_act.x = PosS_8sec.x*S - MX_A.m21*P; //gravity acceleration vector
-				ddotG_act.y = PosS_8sec.y*S - MX_A.m22*P;
-				ddotG_act.z = PosS_8sec.z*S - MX_A.m23*P;
-
-				//Drag (8sec final)
-				h = R - a;
-				if (h > h_2)
-				{
-					rho = 0.0;
-				}
-				else if (h < h_1)
-				{
-					rho = rho_c;
-				}
-				else
-				{
-					rho = Rho[0] + Rho[1] * h + Rho[2] * pow(h, 2) + Rho[3] * pow(h, 3) + Rho[4] * pow(h, 4) + Rho[5] * pow(h, 5);
-				}
-				DotS_R = _V(DotS_8sec.x + omega_E*(MX_A.m23*PosS_8sec.z - MX_A.m21*PosS_8sec.y), DotS_8sec.y + omega_E*(MX_A.m21*PosS_8sec.x - MX_A.m22*PosS_8sec.z), DotS_8sec.z + omega_E*(MX_A.m22*PosS_8sec.y - MX_A.m23*PosS_8sec.x));
-				V_R = length(DotS_R);
-				cos_alpha = 1.0 / V_R*(DotS_R.x*cos(CurrentAttitude.y)*cos(CurrentAttitude.z) + DotS_R.y*sin(CurrentAttitude.z) - DotS_R.z*sin(CurrentAttitude.y)*cos(CurrentAttitude.z));
-				drag_area = Drag_Area[0] + Drag_Area[1] * cos_alpha + Drag_Area[2] * pow(cos_alpha, 2) + Drag_Area[3] * pow(cos_alpha, 3) + Drag_Area[4] * pow(cos_alpha, 4);
-				DDotS_D = -DotS_R*rho*drag_area*K_D*V_R;
-
-				ddotM_act = ddotG_act + DDotS_D;
-				// The messy RK3 having been done, we now commit the integrated position and velocity into platform data
-				PosS = PosS_8sec;
-				DotS = DotS_8sec;
-				R = length(PosS);
-				V = length(DotS);
-
-				if (OrbNavCycle == 1) //State Vector update
-				{
-					VECTOR3 pos, vel;
-					MATRIX3 mat;
-					double day;
-					modf(oapiGetSimMJD(), &day);
-					mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, PHI, KSCLNG, Azimuth);
-					lvda.GetRelativePos(pos);
-					lvda.GetRelativeVel(vel);
-					PosS = mul(mat, pos);
-					DotS = mul(mat, vel);
-				}
-
-				CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
-				R = pow(pow(PosS.x, 2) + pow(PosS.y, 2) + pow(PosS.z, 2), 0.5);
-				V = pow(pow(DotS.x, 2) + pow(DotS.y, 2) + pow(DotS.z, 2), 0.5);
-
-				ddotG_last = ddotM_act; //For powered nav initialization
-				DotM_act = _V(0.0, 0.0, 0.0);
-				DotM_last = _V(0.0, 0.0, 0.0);
-				DotG_last = DotS;
-				lvda.ZeroLVIMUPIPACounters();
-
-				fprintf(lvlog, "Orbital Navigation \r\n");
-				fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
-				fprintf(lvlog, "DDotM: %f %f %f \r\n", ddotM_act.x, ddotM_act.y, ddotM_act.z);
-				fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
-				fprintf(lvlog, "SV Accuracy: %f \r\n", SVCompare());
-				fprintf(lvlog, "EarthRel Velocity: %f %f %f \r\n", DotS.x, DotS.y, DotS.z);
-				fprintf(lvlog, "Drag Acceleration: %f \r\n", length(DDotS_D));
-				fprintf(lvlog, "Gravity Acceleration: %f \r\n", CG);
-				fprintf(lvlog, "Total Velocity: %f \r\n", V);
-				fprintf(lvlog, "Dist. from Earth's Center: %f \r\n", R);
-				fprintf(lvlog, "S: %f \r\n", S);
-				fprintf(lvlog, "P: %f \r\n", P);
-			}
-			
-		}
-GuidanceLoop:
-
-		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !PermanentSCControl)
+		//Orbital Processing
+		if (poweredflight == false)
 		{
-			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
-			PermanentSCControl = true;
-			fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n",LVDC_Timebase, LVDC_TB_ETime);
-		}
-
-		if (!SCControlOfSaturn && lvda.GetCMCSIVBTakeover())
-		{
-			if ((LVDC_Timebase == 5 || LVDC_Timebase == 7) && LVDC_TB_ETime > 5.0)
-			{
-				SCControlOfSaturn = true;
-				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (coasting flight)\r\n", LVDC_Timebase, LVDC_TB_ETime);
-			}
-			else if (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())
-			{
-				SCControlOfSaturn = true;
-				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (GRF)\r\n", LVDC_Timebase, LVDC_TB_ETime);
-			}
-		}
-		else if (SCControlOfSaturn && !PermanentSCControl && (!lvda.GetCMCSIVBTakeover() || LVDC_Timebase == 6))
-		{
-			SCControlOfSaturn = false;
-			fprintf(lvlog, "[%d+%f] Saturn control returned to LVDC\r\n", LVDC_Timebase, LVDC_TB_ETime);
-		}
-
-		if(liftoff == false){//liftoff not received; initial roll command for FCC
-			CommandedAttitude.x =  (1.5* PI) + Azimuth;
-			CommandedAttitude.y =  0;
-			CommandedAttitude.z =  0;
-			//Just clogs the lvlog
-			//fprintf(lvlog,"[%d+%f] Initial roll command: %f\r\n",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.x*DEG);
 			goto minorloop;
 		}
+
+		//This code causes the major loop to run at the correct rate
+		sprintf(oapiDebugString(), "Powered: TMM %.2lf TAS %.2lf", TMM, TAS);
+		sinceLastCycle += simdt;
+		if (sinceLastCycle < DT_N)
+		{
+			goto minorloop;
+		}
+		//Reset sinceLastCycle for boost major loop timing
+		sinceLastCycle = 0;
+
+		//BOOST MAJOR LOOP
+		IGMCycle++;				// For debugging
+		fprintf(lvlog, "[%d+%f] *** Major Loop (powered) %d ***\r\n", LVDC_Timebase, LVDC_TB_ETime, IGMCycle);
+
+		//ACCELEROMETER READ
+		//Read X, Y, Z accelerometers
+		//DVAC = lvda.GetLVIMUPIPARegisters();
+		DotM_act += lvda.GetLVIMUPIPARegisters();
+		//TBD: Telemeter time from GRR current time base set
+		//Save last time of accelerometer sampling
+		double TEMP = TAS;
+		//Compute time in mission at accelerometer read
+		TAS = TMM;
+		//Compute time in time base at accelerometer read
+		LVDC_TB_ETime = TAS - TI;
+		//Compute time since last accelerometer read
+		dt_c = TAS - TEMP;
+		//TBD: Telemeter time in time base at accelerometer read
+		//Reset accelerometer bits for MC24
+		ModeCode24 = 0;
+		//TBD: Telemeter X and Y accelerometer reading
+		//Is time base 1 set?
+		/*if (ModeCode25[MC25_BeginTB1] == false)
+		{
+			//No, Calculate FMC as negative of X component of gravity acceleration
+			DVFMC = -ddotG_last.x;
+		}
+		else
+		{
+			//Yes, Compute mass of the vehicle at accelerometer read
+			DVMAS = DVMAS - DVEOF * FMR*dt_c;
+			//Calculate FMC
+			DVFMC = DVEOF * DVFOR / DVMAS;
+		}*/
+		//Compute Average Chi's for SMC Calculations
+		//DVCA.z = (PCommandedAttitude.z + VCCZA) / 2.0;
+		//VCCZA = PCommandedAttitude.z;
+		//DVCA.y = (PCommandedAttitude.y + VCCYA) / 2.0;
+		//if (abs(PCommandedAttitude.y - VCCYA) > PI05)
+		//{
+		//	DVCA.y = DVCA.y + PI;
+		//	if (DVCA.y >= PI2)
+		//	{
+		//		DVCA.y -= PI2;
+		//	}
+		//}
+		//VCCYA = PCommandedAttitude.z;
+		//VCC = PCommandedAttitude;
+		//TBD: Telemeter Z accelerometer reading
+		//TBD: Compute A&B acceleration change for X, Y, Z
+		//TBD: Telemeter RTC reading at accelerometer reading
+		//TBD: Compute expected velocity changes
+
+		//ACCELEROMETER PROCESSING
+
+		//F/M CALCULATIONS
+		//dt_c is the LVDC guidance cycle time. The LV IMU currently runs once per Orbiter timestep, so to get a stable Fm reading we need to take the time difference of the LV IMU measurements
+		DTTEMP = (lvda.GetLVIMULastTime() - LVIMUMJD)*24.0*3600.0;
+		LVIMUMJD = lvda.GetLVIMULastTime();
+		Fm = pow((pow(((DotM_act.x - DotM_last.x) / DTTEMP), 2) + pow(((DotM_act.y - DotM_last.y) / DTTEMP), 2) + pow(((DotM_act.z - DotM_last.z) / DTTEMP), 2)), 0.5);
+
+		//Reciprocal Acceleration Filter (TBD)
+		if (LVDC_Timebase == 3 && LVDC_TB_ETime > 6.7)
+		{
+			MF[0] = 1.0 / Fm;
+			MFS = MFK[0] * MF[0] + MFK[1] * MF[1] + MFK[2] * MF[2] + MFK[3] * MF[3] + MFK[3] * MF[4] + MFK[5] * MFSArr[0] + MFK[6] * MFSArr[1] + MFK[7] * MFSArr[2] + MFK[8] * MFSArr[3];
+
+			MFSArr[3] = MFSArr[2];
+			MFSArr[2] = MFSArr[1];
+			MFSArr[1] = MFSArr[0];
+			MFSArr[0] = MFS;
+			MF[4] = MF[3];
+			MF[3] = MF[2];
+			MF[2] = MF[1];
+			MF[1] = MF[0];
+		}
+
+		//BOOST NAVIGATION
+		fprintf(lvlog, "BOOST NAVIGATION \r\n");
+		//Compute New Space Fixed Position
+		PosS = PosS + (DotM_act + DotM_last) * dt_c / 2.0 + (DotG_last + ddotG_last * dt_c / 2.0)*dt_c; //position vector
+		R = length(PosS); //instantaneous distance from earth's center
+		//Gravitation Subroutine
+		ddotG_act = GravitationSubroutine(PosS, true);
+		CG = pow((pow(ddotG_act.x, 2) + pow(ddotG_act.y, 2) + pow(ddotG_act.z, 2)), 0.5);
+		//Compute Gravitational Velocity
+		DotG_act = DotG_last + (ddotG_act + ddotG_last)*dt_c / 2.0;
+		//Compute Space-Fixed Velocity
+		DotS = DotM_act + DotG_act; //total velocity vector
+		V = length(DotS);
+		//save the 'actual' variables as 'last' variables for the next step
+		DotM_last = DotM_act;
+		DotG_last = DotG_act;
+		ddotG_last = ddotG_act;
+
+		fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
+		fprintf(lvlog, "DotM: %f %f %f \r\n", DotM_act.x, DotM_act.y, DotM_act.z);
+		fprintf(lvlog, "Accelerometer readings: %f %f %f\r\n", lvda.GetLVIMUPIPARegisters().x, lvda.GetLVIMUPIPARegisters().y, lvda.GetLVIMUPIPARegisters().z);
+		fprintf(lvlog, "Gravity velocity: %f %f %f \r\n", DotG_act.x, DotG_act.y, DotG_act.z);
+		VECTOR3 drtest = SVCompare();
+		fprintf(lvlog, "SV Accuracy: %f %f %f\r\n", drtest.x, drtest.y, drtest.z);
+		fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
+		fprintf(lvlog, "EarthRel Velocity: %f %f %f \r\n", DotS.x, DotS.y, DotS.z);
+		fprintf(lvlog, "State vector time: %f \r\n", TAS);
+		fprintf(lvlog, "Sensed Acceleration: %f \r\n", Fm);
+		fprintf(lvlog, "Gravity Acceleration: %f \r\n", CG);
+		fprintf(lvlog, "Total Velocity: %f \r\n", V);
+		fprintf(lvlog, "Dist. from Earth's Center: %f \r\n", R);
+		fprintf(lvlog, "S: %f \r\n", S);
+		fprintf(lvlog, "P: %f \r\n", P);
+		lvda.ZeroLVIMUPIPACounters();
+
+		//Before liftoff, nothing else to do than going to minor loop support
+		if(ModeCode25[MC25_BeginTB1] == false)
+		{
+			goto limittest;
+		}
+
 		if(BOOST == false){//i.e. we're either in orbit or boosting out of orbit
 			if(TAS - TB7<0){
-				if(TAS - TB5 < TI5F2){ goto minorloop; }
+				//From TB5+0 to TB5+100, and TB6 and later
 				if(TAS - TB6 - T_IGM<0)
 				{
+					//Before TB6 + T_IGM
+					R_OG = PosS;
 					goto restartprep;
 				}
 				else
 				{
+					//IGM for out-of-orbit
 					if (!GuidanceReferenceFailure)
 					{
 						goto IGM;
 					}
 					else
 					{
-						goto minorloop;
+						goto limittest;
 					}
 				};
 			}else{
-				if (TAS - TB7 < TI7F10) { goto minorloop; }else{goto orbitalguidance;}
+				//Timebase 7 or later
+				//Orbital guidance post TLI
+				R_OG = PosS;
+				goto orbitalguidance;
 			}
 		} //TBD: 
-		if(directstageint == true){//direct stage interrupt update
-			if(GATE4 == false){//check if we haven't gone through it before
-				Tt_3 = Tt_3 + Cf * (V_S2T - V) + dT_cost;
-				T_1 = 0;
-				T_2 = 0;
-				T_c = 0;
-				T_1c = 0;
-				Tt_T = Tt_3;
-				ROV = ROVs;
-				//S4B_IGN = true;
-				GATE4 = true;
-				fprintf(lvlog,"[%d+%f] Direct stage interrupt received! Guidance update executed!\r\n",LVDC_Timebase,LVDC_TB_ETime);
-			}
-			if(TAS-TB4a-TS4BS < 0){ goto minorloop; }else{ goto IGM; }
+		if(LVDC_Timebase == 40){//Special Timebase 4a logic
+			if(TAS-TB4a-TS4BS < 0){ goto limittest; }else{ goto IGM; }
 		}
 		if(TAS-TB3-T_LET < 0){
 			// Pre-IGM guidance:
@@ -6058,13 +5934,13 @@ GuidanceLoop:
 							CommandedAttitude.x = 360 * RAD;
 							CommandedAttitude.z = 0;
 							fprintf(lvlog,"[%d+%f] Pre-IGM SII engine out interrupt received!\r\n",LVDC_Timebase,LVDC_TB_ETime);
-							goto minorloop;
+							goto limittest;
 						}else{
 							fprintf(lvlog,"[%d+%f] Pitch freeze! \r\n",LVDC_Timebase,LVDC_TB_ETime);
 							CommandedAttitude.y = PCommandedAttitude.y;
 							CommandedAttitude.x = 360 * RAD;
 							CommandedAttitude.z = 0;
-							goto minorloop;
+							goto limittest;
 						}
 					}else{
 						//Pre-IGM steering
@@ -6082,25 +5958,18 @@ GuidanceLoop:
 						CommandedAttitude.x = 360 * RAD;
 						CommandedAttitude.z = 0;
 						fprintf(lvlog,"[%d+%f] Roll/pitch programm %f \r\n",LVDC_Timebase,LVDC_TB_ETime,cmd);
-						goto minorloop;
+						goto limittest;
 					}
 				}else{CommandedAttitude.y = PCommandedAttitude.y;
 					  CommandedAttitude.x = 360 * RAD;
 					  CommandedAttitude.z = 0;
-					  goto minorloop;
+					  goto limittest;
 				}
 			}else{
-				// S-IC yaw maneuver
-				fprintf(lvlog,"[%d+%f] Yaw maneuver\r\n",LVDC_Timebase,LVDC_TB_ETime);
-				if(1 <= t_clock && t_clock < 8.75){
-					//yaw command issued between t +1s and t+8.75s
-					CommandedAttitude.z = 1.25*RAD;
-				}else{
-					CommandedAttitude.z = 0;
-				}
+				//Yaw maneuver in Events Processor
 				CommandedAttitude.y = 0; //no pitch
 				CommandedAttitude.x = (1.5* PI) + Azimuth; //no roll
-				goto minorloop;
+				goto limittest;
 			}
 		}
 		//end of pre igm
@@ -6262,17 +6131,12 @@ IGM:	if(HSL == false){
 				fprintf(lvlog, "FIXED ATT BURN: T_2 = %f, Tt_3 = %f \r\n", T_2, Tt_3);
 
 				if (Tt_3 <= 0 && S4B_REIGN == true) {
-					//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
-					S4B_REIGN = false;
-					TB7 = TAS;
-					LVDC_Timebase = 7;
-					LVDC_TB_ETime = 0;
-					CommandSequence = 0;
+					//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second		
+					StartTimebase7();
 					fprintf(lvlog, "SIVB SCHEDULED CUTOFF! TAS = %f \r\n", TAS);
-					lvda.TLIEnded();
 				}
 
-				goto minorloop;
+				goto limittest;
 			}
 			
 			fprintf(lvlog, "--- STAGE INTEGRAL LOGIC ---\r\n");
@@ -6310,7 +6174,7 @@ IGM:	if(HSL == false){
 			{
 				GuidanceReferenceFailure = true;
 				fprintf(lvlog, "IGM Error Detected! \r\n");
-				goto minorloop;
+				goto limittest;
 			}
 
 			Jt_3 = (Lt_3 * tau3) - (V_ex3 * Tt_3);
@@ -6483,9 +6347,17 @@ gtupdate:	// Target of jump from further down
 			UP = -1;
 			fprintf(lvlog,"L_Y = %f, tchi_y = %f, tchi_p = %f, UP = -1\r\n",L_Y,tchi_y,tchi_p);
 
+			if (ModeCode25[MC25_TerminalGuidance] == false && Tt_T <= eps_2)
+			{
+				ModeCode25[MC25_TerminalGuidance] = true;
+				DT_N = DT_N4;
+				MS25DT = 25.0*DT_N;
+				MS04DT = 0.04 / DT_N;
+			}
+
 			// *** END OF CHI-TILDE LOGIC ***
 			// Is it time for chi-tilde mode?
-			if(Tt_T <= eps_2){
+			if(ModeCode25[MC25_TerminalGuidance]){
 				fprintf(lvlog,"CHI BAR STERRING ON, REMOVE ALTITUDE CONSTRAINS (K_1-4 = 0)\r\n");
 				// Yes
 				// Go to the test that we would be testing if HSL was true
@@ -6582,7 +6454,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					// TRANSLUNAR INJECTION VELOCITY
 					fprintf(lvlog,"TRANSLUNAR INJECTION\r\n");
 					double dotR = dotp(PosS, DotS) / R;
-					R_T = R + dotR*(T_3 - dt);
+					R_T = R + dotR*(T_3 - DT_N);
 					V_T = sqrt(C_3 + 2.0*mu / R_T);
 					dV_B = dV_BR;
 					//sprintf(oapiDebugString(),"LVDC: HISPEED LOOP, TLI VELOCITY: %f %f %f %f %f",Tt_T,eps_4,V,V_TC,V_T);
@@ -6599,7 +6471,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 				fprintf(lvlog,"a_2 = %f, a_1 = %f, T_GO = %f, T_CO = %f, V_T = %f\r\n",a_2,a_1,T_GO,T_CO,V_T);
 
 				// S4B CUTOFF?
-				if(S4B_IGN == false && (LVDC_Timebase < 6 || LVDC_Timebase == 40)){
+				/*if(S4B_IGN == false && (LVDC_Timebase < 6 || LVDC_Timebase == 40)){
 					fprintf(lvlog,"*** HSL EXIT SETTINGS ***\r\n");
 					GATE = false;
 					GATE5 = false;
@@ -6617,10 +6489,10 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 					HSL = false;
 					BOOST = false;
 					goto minorloop;
-				}
+				}*/
 				// Done, go to navigation
 				//sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
-				goto minorloop;
+				goto limittest;
 			}
 			// End of high-speed loop
 		}
@@ -6641,7 +6513,7 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 						}else{
 							// Here if t_B1 is bigger.
 							fprintf(lvlog,"t_B1 = %f, t_B3 = %f\r\n",t_B1,t_B3);
-							T_1 = (((dotM_1*(t_B3-t_B1))-(dotM_2*t_B3))*dt)/(dotM_1*t_B1);
+							T_1 = (((dotM_1*(t_B3-t_B1))-(dotM_2*t_B3))*DT_N)/(dotM_1*t_B1);
 						}
 					}
 				}
@@ -6677,504 +6549,271 @@ hsl:		// HIGH-SPEED LOOP ENTRY
 			// FREEZE CHI
 			fprintf(lvlog,"Thru GATE; CHI FREEZE\r\n");
 			//sprintf(oapiDebugString(),"LVDC: CHI FREEZE");
-			goto minorloop;
+			goto limittest;
 		}else{
 			// IGM STEERING ANGLES
 			fprintf(lvlog,"--- IGM STEERING ANGLES ---\r\n");
 
 			//sprintf(oapiDebugString(),"IGM: K_1 %f K_2 %f K_3 %f K_4 %f",K_1,K_2,K_3,K_4);
-			Xtt_y = ((tchi_y) - K_3 + (K_4 * t));
-			Xtt_p = ((tchi_p) - K_1 + (K_2 * t));
-			fprintf(lvlog,"Xtt_y = %f, Xtt_p = %f\r\n",Xtt_y,Xtt_p);
+			Xtt_y = ((tchi_y) - K_3 + (K_4 * DT_N));
+			Xtt_p = ((tchi_p) - K_1 + (K_2 * DT_N)) - phi_T - PI05;
+			fprintf(lvlog, "Xtt_y = %f, Xtt_p = %f\r\n", Xtt_y, Xtt_p);
+			sin_chi_Yit = sin(Xtt_p);
+			cos_chi_Yit = cos(Xtt_p);
+			sin_chi_Zit = sin(Xtt_y);
+			cos_chi_Zit = cos(Xtt_y);
 
-			VECTOR3 VT; 
-			VT.x = (sin(Xtt_p)*cos(Xtt_y));
-			VT.y = (sin(Xtt_y));
-			VT.z = (cos(Xtt_p)*cos(Xtt_y));
-			fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT.x,VT.y,VT.z);
-
-			VT = tmul(MX_K,VT);
-			fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
+			CommandedAttitude.x = 360 * RAD;    // ROLL
+		thrustvectransentry:
+			VECTOR3 VT;
+			VT = tmul(MX_G, _V(cos_chi_Yit*cos_chi_Zit, sin_chi_Zit, -sin_chi_Yit * cos_chi_Zit));
+			//fprintf(lvlog, "VT (mul) = %f %f %f\r\n", VT.x, VT.y, VT.z);
 
 			X_S1 = VT.x;
 			X_S2 = VT.y;
 			X_S3 = VT.z;
-			fprintf(lvlog,"X_S1-3 = %f %f %f\r\n",X_S1,X_S2,X_S3);
+			fprintf(lvlog, "X_S1-3 = %f %f %f\r\n", X_S1, X_S2, X_S3);
 
 			// FINALLY - COMMANDS!
 			X_Zi = asin(X_S2);			// Yaw
-			X_Yi = atan2(-X_S3,X_S1);	// Pitch
+			if (X_Zi < 0)
+			{
+				X_Zi += PI2;
+			}
+			X_Yi = atan2(-X_S3, X_S1);	// Pitch
+			if (X_Yi < 0)
+			{
+				X_Yi += PI2;
+			}
+
 			fprintf(lvlog,"*** COMMAND ISSUED ***\r\n");
-			fprintf(lvlog,"PITCH = %f, YAW = %f\r\n\r\n",X_Yi*DEG,X_Zi*DEG);
+			fprintf(lvlog,"PITCH = %f, YAW = %f\r\n",X_Yi*DEG,X_Zi*DEG);
 			// IGM is supposed to generate attitude directly.
-			CommandedAttitude.x = 360 * RAD;    // ROLL
 			CommandedAttitude.y = X_Yi; // PITCH
 			CommandedAttitude.z = X_Zi; // YAW;	
-			goto minorloop;
-		}					
+		}	
 
-orbitalguidance: 
-		//orbital guidance logic
-		fprintf(lvlog,"*** ORBITAL GUIDANCE ***\r\n");
+	limittest:
+		//command rate test; part of major loop;
+		if (CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD) { CommandedAttitude.z = -45 * RAD; }
+		if (CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD) { CommandedAttitude.z = 45 * RAD; }
 
-		if (LVDC_Timebase == 5)
+		//Attitude Increments
+		fprintf(lvlog, "MINOR LOOP SUPPORT\r\n");
+		DChi = CommandedAttitude - PCommandedAttitude;
+		for (int i = 0;i < 3;i++)
 		{
-			if (LVDC_TB_ETime < TA1)
+			if (DChi.data[i] > PI)
 			{
-				alpha_1 = 0 * RAD;
-				alpha_2 = 0 * RAD;
-				CommandedAttitude.x = 360 * RAD;
-				fprintf(lvlog, "Maintain orbrate\r\n");
-				goto orbatt;
+				DChi.data[i] -= PI2;
 			}
-			else if (LVDC_TB_ETime < TA2)
+			else if (DChi.data[i] < -PI)
 			{
-				if (INH1) {
-					alpha_1 = 0 * RAD;
-					alpha_2 = 0 * RAD;
-					CommandedAttitude.x = 360 * RAD;
-					fprintf(lvlog, "No pitch down, maintain orbrate\r\n");
-					goto orbatt;
-				}
-				else {
-					alpha_1 = XLunarAttitude.y;
-					alpha_2 = XLunarAttitude.z;
-					CommandedAttitude.x = XLunarAttitude.x;
-					fprintf(lvlog, "Pitch down\r\n");
-					goto orbatt;
+				DChi.data[i] += PI2;
+			}
+		}
+		fprintf(lvlog, "DChi = %f %f %f\r\n", DChi.x*DEG, DChi.y*DEG, DChi.z*DEG);
+
+		DChi_apo.x = (DChi.x) / (MLR*DT_N);
+		DChi_apo.y = (DChi.y) / (MLR*DT_N);
+		DChi_apo.z = (DChi.z) / (MLR*DT_N);
+		fprintf(lvlog, "DChi_apo = %f %f %f\r\n", DChi_apo.x*DEG, DChi_apo.y*DEG, DChi_apo.z*DEG);
+		ModeCode26[MC26_SMCActive] = true;
+		//Magnitude limit
+		if (abs(DChi_apo.x) > MSLIM1)
+		{
+			fprintf(lvlog, "Roll magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.x*DEG, MSLIM1*DEG);
+			ModeCode26[MC26_SMCActive] = false;
+			if (DChi_apo.x > 0)
+			{
+				DChi_apo.x = MSLIM1;
+			}
+			else
+			{
+				DChi_apo.x = -MSLIM1;
+			}
+		}
+		if (abs(DChi_apo.y) > MSLIM2)
+		{
+			fprintf(lvlog, "Pitch magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.y*DEG, MSLIM2*DEG);
+			ModeCode26[MC26_SMCActive] = false;
+			if (DChi_apo.y > 0)
+			{
+				DChi_apo.y = MSLIM2;
+			}
+			else
+			{
+				DChi_apo.y = -MSLIM2;
+			}
+		}
+		if (abs(DChi_apo.z) > MSLIM2)
+		{
+			fprintf(lvlog, "Yaw magnitude limit. Magnitude = %f Limit = %f\r\n", DChi_apo.z*DEG, MSLIM2*DEG);
+			ModeCode26[MC26_SMCActive] = false;
+			if (DChi_apo.z > 0)
+			{
+				DChi_apo.z = MSLIM2;
+			}
+			else
+			{
+				DChi_apo.z = -MSLIM2;
+			}
+		}
+		//Gimbal-to-Body Transformation
+		Chi_xp_apo = PCommandedAttitude.x + DChi_apo.x*MLR*DT_N;
+		Chi_zp_apo = PCommandedAttitude.z + DChi_apo.z*MLR*DT_N;
+		//fprintf(lvlog, "Gimbal-to-Body Transformation. Chi_xp_apo = %f Chi_zp_apo = %f\r\n", Chi_xp_apo*DEG, Chi_zp_apo*DEG);
+		theta_xa = 0.5*(Chi_xp_apo + CurrentAttitude.x);
+		if (abs(Chi_xp_apo - CurrentAttitude.x) > PI05)
+		{
+			theta_xa += PI;
+		}
+		if (theta_xa >= PI2)
+		{
+			theta_xa -= PI2;
+		}
+		theta_za = 0.5*(Chi_zp_apo + CurrentAttitude.z);
+		if (abs(Chi_zp_apo - CurrentAttitude.z) > PI05)
+		{
+			theta_za += PI;
+		}
+		if (theta_za >= PI2)
+		{
+			theta_za -= PI2;
+		}
+		//fprintf(lvlog, "Gimbal-to-Body Transformation. theta_xa = %f theta_za = %f\r\n", theta_xa*DEG, theta_za*DEG);
+		A1 = cos(theta_xa) * cos(theta_za);
+		A2 = sin(theta_xa);
+		A3 = sin(theta_za);
+		A4 = sin(theta_xa) * cos(theta_za);
+		A5 = cos(theta_xa);
+		//fprintf(lvlog, "Euler Correction. A1 = %f A2 = %f A3 = %f A4 = %f A5 = %f\r\n", A1, A2, A3, A4, A5);
+
+		//DISCRETE BACKUPS
+
+		//Backup liftoff
+		if (ModeCode25[MC25_BeginTB1] == false)
+		{
+			if (LVDC_TB_ETime > 17.5 && LVDC_TB_ETime < 150.0)
+			{
+				//TBD
+			}
+		}
+
+		//Timebase 4A start
+		if (LVDC_Timebase == 3 && LVDC_TB_ETime >= 1.4)
+		{
+			if (lvda.SCInitiationOfSIISIVBSeparation())
+			{
+				if (ModeCode25[MC25_SII_SIVB_Separation] == false)
+				{
+					StartTimebase4A();
+					ModeCode25[MC25_SII_SIVB_Separation] = true;
 				}
 			}
 			else
 			{
-				if (INH2) {
-					alpha_1 = 0 * RAD;
-					alpha_2 = 0 * RAD;
-					CommandedAttitude.x = 360 * RAD;
-					fprintf(lvlog, "inhibit attitude hold, maintain orbrate\r\n");
-					goto orbatt;
-				}
-				else {
-					CommandedAttitude = ACommandedAttitude;
-					fprintf(lvlog, "Attitude hold\r\n");
-					goto minorloop;
-				}
-			}
-		}
-		else if (LVDC_Timebase == 6)
-		{
-			if (first_op) {
-				alpha_1 = K_P1 + K_P2 * dTt_4; //restart angles
-				alpha_2 = K_Y1 + K_Y2 * dTt_4;
-				CommandedAttitude.x = 360 * RAD;
-				fprintf(lvlog, "Orient for restart\r\n");
-				goto orbatt;
-			}
-			else {
-				alpha_1 = 0 * RAD;
-				alpha_2 = 0 * RAD;
-				CommandedAttitude.x = 360 * RAD;
-				fprintf(lvlog, "Maintain orbrate\r\n");
-				goto orbatt;
-			}
-		}
-		else if (LVDC_Timebase == 7)
-		{
-			if (LVDC_TB_ETime < TI7F11)
-			{
-				alpha_1 = 0 * RAD;
-				alpha_2 = 0 * RAD;
-				CommandedAttitude.x = 360 * RAD;
-				fprintf(lvlog, "Maintain orbrate\r\n");
-				goto orbatt;
-			}
-			else if (LVDC_TB_ETime < TI7AF1 || INH5)
-			{
-				if (INH4) {
-					alpha_1 = 0 * RAD;
-					alpha_2 = 0 * RAD;
-					CommandedAttitude.x = 360 * RAD;
-					fprintf(lvlog, "No maneuver to sep attitude, maintain orbrate\r\n");
-					goto orbatt;
-				}
-				else
+				if (ModeCode25[MC25_SII_SIVB_Separation] == true)
 				{
-					if (GATE6)
-					{
-						//attitude hold for T&D
-						CommandedAttitude = ACommandedAttitude;
-						fprintf(lvlog, "T&D attitude hold\r\n");
-						goto minorloop;
-					}
-					else
-					{
-						//attitude for T&D
-						alpha_1 = XLunarAttitude.y;
-						alpha_2 = XLunarAttitude.z;
-						CommandedAttitude.x = XLunarAttitude.x;
-						GATE6 = true;
-						fprintf(lvlog, "T&D attitude\r\n");
-						goto orbatt;
-					}
+					ModeCode25[MC25_SII_SIVB_Separation] = false;
+				}
+			}
+		}
+		//S-IVB manual cutoff
+		if (((LVDC_Timebase == 4 || LVDC_Timebase == 40) && S4B_IGN) || (LVDC_Timebase == 6 && S4B_REIGN))
+		{
+			if (lvda.SCInitiationOfSIISIVBSeparation())
+			{
+				if (ModeCode25[MC25_SII_SIVB_Separation] == false)
+				{
+					SIVBCutoffSequence();
+					ModeCode25[MC25_SII_SIVB_Separation] = true;
 				}
 			}
 			else
 			{
-				alpha_1 = XLunarSlingshotAttitude.y;
-				alpha_2 = XLunarSlingshotAttitude.z;
-				CommandedAttitude.x = XLunarSlingshotAttitude.x;
-				fprintf(lvlog, "Slingshot attitude\r\n");
-				goto orbatt;
+				if (ModeCode25[MC25_SII_SIVB_Separation] == true)
+				{
+					ModeCode25[MC25_SII_SIVB_Separation] = false;
+				}
 			}
 		}
-		else if (LVDC_Timebase == 8)
+
+		//Manual S-IVB Shutdown
+		if ((LVDC_Timebase == 4 || LVDC_Timebase == 40) && S4B_IGN == true && lvda.GetSIVBEngineOut())
 		{
-			if (LVDC_TB_ETime < TI7AF1)
+			StartTimebase5();
+			fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
+		}
+		if (LVDC_Timebase == 6 && S4B_REIGN == true && lvda.GetSIVBEngineOut())
+		{
+			StartTimebase7();
+			fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
+		}
+
+		//Engine failure code
+		if (LVDC_Timebase == 1 && LVDC_TB_ETime > t_2)
+		{
+			S1_Engine_Out = lvda.GetSIInboardEngineOut() || lvda.GetSIOutboardEngineOut();
+		}
+		if (LVDC_Timebase == 3 && LVDC_TB_ETime > T_LET)
+		{
+			S2_ENGINE_OUT = lvda.GetSIIEngineOut();
+		}
+
+		if (GuidanceReferenceFailure && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !ModeCode26[MC26_SCControlAfterGRF])
+		{
+			lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
+			ModeCode26[MC26_SCControlAfterGRF] = true;
+			fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		}
+
+		if (!ModeCode27[MC27_SCInControl] && lvda.GetCMCSIVBTakeover())
+		{
+			if ((LVDC_Timebase == 5 || LVDC_Timebase == 7) && LVDC_TB_ETime > 5.0)
 			{
-				CommandedAttitude = ACommandedAttitude;
-				fprintf(lvlog, "Evasive maneuver attitude hold\r\n");
-				goto minorloop;
+				ModeCode27[MC27_SCInControl] = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (coasting flight)\r\n", LVDC_Timebase, LVDC_TB_ETime);
 			}
-			else if (LVDC_TB_ETime < TI7AF2)
+			else if (GuidanceReferenceFailure && lvda.GetSCControlPoweredFlight())
 			{
-				alpha_1 = XLunarSlingshotAttitude.y;
-				alpha_2 = XLunarSlingshotAttitude.z;
-				CommandedAttitude.x = XLunarSlingshotAttitude.x;
-				fprintf(lvlog, "Slingshot attitude\r\n");
-				goto orbatt;
+				ModeCode27[MC27_SCInControl] = true;
+				fprintf(lvlog, "[%d+%f] SC has taken control of Saturn (GRF)\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			}
+		}
+		else if (ModeCode27[MC27_SCInControl] && !ModeCode26[MC26_SCControlAfterGRF] && !lvda.GetCMCSIVBTakeover())
+		{
+			ModeCode27[MC27_SCInControl] = false;
+			fprintf(lvlog, "[%d+%f] Saturn control returned to LVDC\r\n", LVDC_Timebase, LVDC_TB_ETime);
+
+			//We shouldn't get here if control was taken over during powered flight
+			if (ModeCode27[MC27_TrackLocalHoriz] || ModeCode27[MC27_AttHoldWrtLocalContRetFromSC])
+			{
+				CommandedAttitude.x = CurrentAttitude.x;
+				sin_chi_Yit = sin(CurrentAttitude.y);
+				cos_chi_Yit = cos(CurrentAttitude.y);
+				sin_chi_Zit = sin(CurrentAttitude.z);
+				cos_chi_Zit = cos(CurrentAttitude.z);
+
+				VECTOR3 P4;
+				P4 = mul(MX_G, _V(cos_chi_Yit*cos_chi_Zit, sin_chi_Zit, -sin_chi_Yit * cos_chi_Zit));
+				alpha_2 = atan2(P4.y, sqrt(1.0 - P4.y*P4.y));
+				Pos4 = mul(MX_G, R_OG);
+				alpha_1 = atan2(Pos4.z, Pos4.x) + atan2(-P4.z, P4.x) + PI05;
+				fprintf(lvlog, "New local referenced attitude: R %.2lf P %.2lf Y %.2lf\r\n", CommandedAttitude.x*DEG, alpha_1*DEG, alpha_2*DEG);
+
+				ModeCode27[MC27_AttHoldWrtInertialContRetFromSC] = false;
+				ModeCode27[MC27_AttHoldWrtLocalContRetFromSC] = true;
 			}
 			else
 			{
-				alpha_1 = XLunarCommAttitude.y;
-				alpha_2 = XLunarCommAttitude.z;
-				CommandedAttitude.x = XLunarCommAttitude.x;
-				fprintf(lvlog, "Communications attitude\r\n");
-				goto orbatt;
+				CommandedAttitude = PCommandedAttitude = CurrentAttitude;
+				ModeCode27[MC27_AttHoldWrtInertialContRetFromSC] = true;
+				ModeCode27[MC27_AttHoldWrtLocalContRetFromSC] = false;
 			}
+			ModeCode27[MC27_InertialHoldInProgress] = false;
+			ModeCode27[MC27_TrackLocalHoriz] = false;
 		}
-		goto minorloop;
-
-orbatt: Pos4 = mul(MX_G,PosS); //here we compute the steering angles...
-		sin_chi_Yit = (Pos4.x * cos(alpha_1) + Pos4.z * sin(alpha_1))/(-R);
-		cos_chi_Yit = (Pos4.z * cos(alpha_1) - Pos4.x * sin(alpha_1))/(-R);
-		sin_chi_Zit = sin(alpha_2);
-		cos_chi_Zit = cos(alpha_2);
-
-		VECTOR3 VT; 
-		VT.x = (cos_chi_Yit * cos_chi_Zit);
-		VT.y = (sin_chi_Zit);
-		VT.z = (-sin_chi_Yit * cos_chi_Zit);
-		fprintf(lvlog,"VT (set) = %f %f %f\r\n",VT.x,VT.y,VT.z);
-
-		VT = tmul(MX_G,VT);
-		fprintf(lvlog,"VT (mul) = %f %f %f\r\n",VT.x,VT.y,VT.z);
-
-		X_S1 = VT.x;
-		X_S2 = VT.y;
-		X_S3 = VT.z;
-		fprintf(lvlog,"X_S1-3 = %f %f %f\r\n",X_S1,X_S2,X_S3);
-
-		// FINALLY - COMMANDS!
-		X_Zi = asin(X_S2);			// Yaw
-		X_Yi = atan2(-X_S3,X_S1);	// Pitch
-		fprintf(lvlog,"*** COMMAND ISSUED ***\r\n");
-		fprintf(lvlog,"PITCH = %f, YAW = %f\r\n\r\n",X_Yi*DEG,X_Zi*DEG);
-		CommandedAttitude.y = X_Yi; // PITCH
-		CommandedAttitude.z = X_Zi; // YAW;
-		ACommandedAttitude = CommandedAttitude;
-		goto minorloop;
-
-restartprep:
-		{
-			// TLI restart & targeting logic;
-
-			//Manual TB6 Initiation
-			if (lvda.GetCMCSIVBIgnitionSequenceStart() && GuidanceReferenceFailure && LVDC_Timebase == 5 && LVDC_TB_ETime > 100.0)
-			{
-				fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
-				goto INHcheck;
-			}
-
-			//Determine if XLUNAR-INHIBIT
-			if (GATE0)	//Restart prep enabled?
-			{
-				goto INHcheck;
-			}
-			if (!GATE1)	//OOB targeting enabled?
-			{
-				if (GATE2)	//First opportunity targeting passed?
-				{
-					//Second opportunity targeting from TABLE
-
-					tgt_index = 0;
-					while (t_D > TABLE15[1].target[tgt_index].t_D)
-					{
-						tgt_index++;
-					}
-					fprintf(lvlog, "Target index = %d \r\n", tgt_index);
-
-					double tdint0, tdint1;
-
-					tdint0 = TABLE15[1].target[tgt_index - 1].t_D;
-					tdint1 = TABLE15[1].target[tgt_index].t_D;
-
-					RAS = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].RAS*RAD, TABLE15[1].target[tgt_index].RAS*RAD, t_D);
-					DEC = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].DEC*RAD, TABLE15[1].target[tgt_index].DEC*RAD, t_D);
-					C_3 = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].C_3, TABLE15[1].target[tgt_index].C_3, t_D);
-					cos_sigma = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].cos_sigma, TABLE15[1].target[tgt_index].cos_sigma, t_D);
-					e_N = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].e_N, TABLE15[1].target[tgt_index].e_N, t_D);
-
-					fprintf(lvlog, "Selected TLI Targeting Parameters (Second Opportunity): \r\n");
-					fprintf(lvlog, "RAS: %f, DEC: %f, C_3 = %f, cos_sigma = %f, e_N = %f \r\n", RAS*DEG, DEC*DEG, C_3, cos_sigma, e_N);
-
-					f = TABLE15[1].f*RAD;
-					beta = TABLE15[1].beta*RAD;
-					alpha_TS = TABLE15[1].alphaS_TS*RAD;
-					T_ST = TABLE15[1].T_ST;
-					R_N = TABLE15[1].R_N;
-					tau3R = TABLE15[1].TAU3R;
-					Tt_3R = TABLE15[1].T3PR;
-					T_2R = TABLE15[1].T2IR;
-					dV_BR = TABLE15[1].dV_BR;
-					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
-					GATE1 = true;
-				}
-				else
-				{
-					//First opportunity targeting from TABLE
-
-					tgt_index = 0;
-					while (t_D > TABLE15[0].target[tgt_index].t_D)
-					{
-						tgt_index++;
-					}
-					fprintf(lvlog, "Target index = %d \r\n", tgt_index);
-
-					double tdint0, tdint1;
-
-					tdint0 = TABLE15[0].target[tgt_index - 1].t_D;
-					tdint1 = TABLE15[0].target[tgt_index].t_D;
-
-					RAS = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].RAS*RAD, TABLE15[0].target[tgt_index].RAS*RAD, t_D);
-					DEC = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].DEC*RAD, TABLE15[0].target[tgt_index].DEC*RAD, t_D);
-					C_3 = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].C_3, TABLE15[0].target[tgt_index].C_3, t_D);
-					cos_sigma = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].cos_sigma, TABLE15[0].target[tgt_index].cos_sigma, t_D);
-					e_N = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].e_N, TABLE15[0].target[tgt_index].e_N, t_D);
-
-					fprintf(lvlog, "Selected TLI Targeting Parameters (First Opportunity): \r\n");
-					fprintf(lvlog, "RAS: %f, DEC: %f, C_3 = %f, cos_sigma = %f, e_N = %f \r\n", RAS*DEG, DEC*DEG, C_3, cos_sigma, e_N);
-
-					f = TABLE15[0].f*RAD;
-					beta = TABLE15[0].beta*RAD;
-					alpha_TS = TABLE15[0].alphaS_TS*RAD;
-					T_ST = TABLE15[0].T_ST;
-					R_N = TABLE15[0].R_N;
-					tau3R = TABLE15[0].TAU3R;
-					T_2R = TABLE15[0].T2IR;
-					Tt_3R = TABLE15[0].T3PR;
-					dV_BR = TABLE15[0].dV_BR;
-					TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
-					GATE1 = GATE2 = true;
-				}
-			}
-
-			//Did ground (MCC/RTCC) provide a target update?
-			if (TU)
-			{
-				//Check for 7- or 10-parameter update
-				if (TU10)
-				{
-					/*
-					Target uploading parameters go here; depends on RTCC socketing
-
-					10-parameter update relies on the LVDC to determine the restart time, through the so-called S*T_p test. This starts TB6 when the dot product of the target vector and the burn node
-					(pseudonodal) vector is less than a specified magnitude, effectively determining that the cross-plane error in vectors is sufficiently small.
-
-					Needs 10 parameters:
-					T_X,Y,Z		Target vector in ephemeral coordinates
-					alpha_TS	Desired angle between unit target vector and unit nodal vector
-					beta		Angle between pseudonodal vector and radius vector, inplane at restart time
-					theta_N		Angle of descending node of transfer ellipse, referenced from launch point
-					C_3			Vis-viva energy of transfer ellipse
-					f			True anomaly of transfer ellipse
-					cos_sigma	Cosine of angle between perigee vector and target vector
-					T_ST		Time constant for S*T_P test (determines reignition time and validity of transfer solution)
-					*/
-				}
-				else
-				{
-					/*
-					Target uploading parameters go here; depends on RTCC socketing
-
-					7-parameter update provides a pre-calculated ellipse and TB6 time, using the preloaded T_RG to select the ignition time. This bypasses the S*T_P test, and goes straight into IGM pre-calcs
-					without further ado, aside from the INHIBIT checks. alpha_D_op is also set to 0 to bypass onboard calculation of alpha_D.
-
-					Needs 7 parameters:
-					T_RP		Time to initate restart preparations (TB6)
-					C_3			Vis-viva energy of transfer ellipse
-					Inclination	Desired inclination of transfer ellipse, equatorial ref.
-					e_N			Eccentricity of the nominal transfer ellipse
-					alpha_D		Angle between perigee and descending nodal vector of transfer ellipse
-					f			True anomaly of transfer ellipse
-					*/
-
-					fprintf(lvlog, "7-parameter update: T_RP: %f, C_3: %f, Inc: %f°, e: %f, alpha_D: %f°, f: %f°, theta_N: %f° \r\n", T_RP, C_3, Inclination*DEG, e, alpha_D*DEG, f*DEG, theta_N*DEG);
-
-					alpha_D_op = 0;
-					first_op = false;
-
-					if (TAS - TB5 - T_RP < 0) //Sufficient time after TB6?
-					{
-						goto O3precalc;
-					}
-					else
-					{
-						goto INHcheck;
-					}
-				}
-			}
-			
-			if (INH3) //TLI permanently disabled?
-			{
-				goto orbitalguidance;
-			}
-
-			if (TAS - TB5 - T_ST < 0) //Sufficient time before S*T_P test?
-			{
-				fprintf(lvlog, "Time until first TB6 check = %f \r\n", TAS - TB5 - T_ST);
-				goto orbitalguidance;
-			}
-
-			//Determination of S-bar and S-bar-dot
-			theta_E = theta_EO + TVRATE * t_D;
-
-			MX_EPH = mul(OrbMech::tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
-
-			T_P = mul(MX_EPH, unit(TargetVector));
-			N = unit(crossp(PosS, DotS));
-			PosP = crossp(N,unit(PosS));
-			Sbar = unit(PosS)*cos(beta) + PosP*sin(beta);
-			DotP = crossp(N, DotS / length(PosS));
-
-			Sbardot = DotS / length(PosS)*cos(beta) + DotP*sin(beta);
-
-			if(dotp(Sbardot,T_P)<0 && dotp(Sbar,T_P)<=cos(alpha_TS))
-			{
-				goto INHcheck;
-			}
-			else
-			{goto orbitalguidance;}
-			
-		INHcheck:
-			 if (INH && LVDC_Timebase != 6)	//XLUNAR switch to INHIBIT in the CSM?
-			{
-				 if (first_op == false)
-				 {
-					 //Permanent TLI inhibt
-					 GATE0 = false;
-					 INH3 = true;
-					 goto orbitalguidance;
-				 }
-				 else
-				 {
-					 //Select second opportunity targeting
-					 GATE0 = GATE1 = false;
-					 first_op = false;
-					 goto orbitalguidance;
-				 }
-			}
-			else if (!GATE0)
-			{
-				GATE0 = true;	//Bypass targeting routines
-				TB6 = TAS;
-				LVDC_TB_ETime = 0;
-				LVDC_Timebase = 6;
-				CommandSequenceStored = CommandSequence;
-				CommandSequence = 0;
-				goto restartprep;
-			}
-			else if (TAS - TB6 - T_RG < 0) //Time elapsed enough for TB6?
-			{goto orbitalguidance;}
-		}
-
-O3precalc:
-		//Calculates IGM parameters for out-of-orbit burn
-		if (GATE3) //IGM Targeting enabled?
-		{goto orbitalguidance;}
-		if (TU)
-		{
-			if (!TU10)
-			{
-				p = (mu / C_3)*(pow(e,2) - 1);
-				goto O3GMatrix;
-			}
-		}
-
-		//Nominal ellipse calculations go here
-		cos_psiT = dotp(Sbar, T_P);
-		sin_psiT = sqrt(1.0 - pow(cos_psiT, 2));
-		Sbar_1 = (Sbar*cos_psiT - T_P)*(1.0 / sin_psiT);
-		Cbar_1 = crossp(Sbar_1, Sbar);
-		Inclination = acos(dotp(_V(MX_A.m21, MX_A.m22, MX_A.m23),Cbar_1));
-		X_1 = dotp(_V(MX_A.m31, MX_A.m32, MX_A.m33),crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
-		X_2 = dotp(_V(MX_A.m11, MX_A.m12, MX_A.m13),crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
-		theta_N = atan2(X_1, X_2);
-		p_N = mu / C_3*(pow(e_N, 2) - 1.0);
-		T_M = p_N / (1.0 - e_N*cos_sigma);
-		R = length(PosS);
-		e = R/R_N*(e_N-1)+1.0;
-		p = mu / C_3*(pow(e, 2) - 1.0);
-
-		if (alpha_D_op)
-		{
-			//alpha_D = acos(dotp(Sbar, T_P)) - acos((1.0 - p / T_M) / e) + atan2(X_1, X_2);
-			alpha_D = acos(dotp(Sbar, T_P)) - acos((1.0 - p / T_M) / e) + atan2(dotp(Sbar_1, crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23))), dotp(Sbar, crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23))));
-		}
-		else
-		{
-			alpha_D = TABLE15[1].target[tgt_index].alpha_D;
-		}
-
-		fprintf(lvlog, "Elliptic parameters: Inc: %f°, e: %f, p: %f, theta_N: %f°, alpha_D: %f°, f: %f°\r\n", Inclination*DEG, e, p, theta_N*DEG, alpha_D*DEG, f*DEG);
-
-	O3GMatrix:
-		MX_B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(Inclination), cos(Inclination), -cos(theta_N)*sin(Inclination),
-			-sin(theta_N)*cos(Inclination), sin(Inclination), cos(theta_N)*cos(Inclination));
-		MX_G = mul(MX_B, MX_A);
-		R_T = p / (1.0 + e*cos(f));
-		K_5 = sqrt(mu / p);
-		V_T = K_5*sqrt(1.0 + 2.0 * e*cos(f) + pow(e, 2));
-		gamma_T = atan((e*sin(f)) / (1.0 + e * cos(f)));
-		G_T = -mu / pow(R_T, 2);
-
-		fprintf(lvlog, "TLI Targets: R_T: %f, V_T: %f, gamma_T: %f, G_T: %f\r\n", R_T, V_T, gamma_T, G_T);
-
-		//Update IGM parameters
-		Ct = 0.0;
-		dotM_2 = dotM_2R;
-		dotM_3 = dotM_3R;
-		P_c = 0.0;
-		ROT = ROTR;
-		ROV = ROVR;
-		T_2 = T_2R;
-		T_1c = T_2;
-		Tt_3 = Tt_3R - K_T3*dTt_4;
-		Tt_T = T_2 + Tt_3;
-		t_B4 = 0.0;
-		V_ex2 = V_ex2R;
-		V_ex3 = V_ex3R;
-		V_TC = 150;
-		eps_1 = eps_1R;
-		eps_2 = eps_2R;
-		eps_3 = eps_3R;
-		eps_4 = eps_4R;
-		tau3 = tau3R - dTt_4;
-
-		fprintf(lvlog, "Tt_3 = %f, dTt_4 = %f\r\n", Tt_3, dTt_4);
-
-		//Bypass further burn calculations
-
-		GATE3 = true;
-		goto orbitalguidance;
 	
 	minorloop:
 
@@ -7189,103 +6828,130 @@ O3precalc:
 
 		//minor loop; TBD: move IGM steering angles & HSL logic here
 		if(T_GO - sinceLastCycle <= 0 && HSL == true && S4B_IGN == true){
-			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
-			S4B_IGN = false;
-			TB5 = TAS;
-			LVDC_Timebase = 5;
-			LVDC_TB_ETime = 0;
-			CommandSequence = 0;
-			lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
+			StartTimebase5();
+			SIVBCutoffSequence();
 			fprintf(lvlog,"SIVB VELOCITY CUTOFF! TAS = %f \r\n",TAS);
 		}
 		if (T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true) {
 			//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second			
-			S4B_REIGN = false;
-			TB7 = TAS;
-			LVDC_Timebase = 7;
-			LVDC_TB_ETime = 0;
-			CommandSequence = 0;
-			lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
+			StartTimebase7();
+			SIVBCutoffSequence();
 			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TAS = %f \r\n", TAS);
-			lvda.TLIEnded();
 		}
 
-		if (CommandedAttitude.z < -45 * RAD && CommandedAttitude.z >= -180 * RAD) { CommandedAttitude.z = -45 * RAD; } //yaw limits
-		if (CommandedAttitude.z > 45 * RAD && CommandedAttitude.z <= 180 * RAD) { CommandedAttitude.z = 45 * RAD; }
-		double diff; //aux variable for limit test
-		diff = fmod((CommandedAttitude.x - PCommandedAttitude.x + TWO_PI),TWO_PI);
-		if(diff > PI){ diff -= TWO_PI; }
-		if(abs(diff/dt_g) > CommandRateLimits.x){
-			fprintf(lvlog, "Rate limit x-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.x*DEG, PCommandedAttitude.x*DEG, diff*DEG, dt_g);
-			if(diff > 0){
-				CommandedAttitude.x = fmod(PCommandedAttitude.x + CommandRateLimits.x * dt_g, PI2);
-			}else{
-				CommandedAttitude.x = fmod(PCommandedAttitude.x - CommandRateLimits.x * dt_g, PI2);
-			}
-		}
-		diff = fmod((CommandedAttitude.y - PCommandedAttitude.y + TWO_PI),TWO_PI);
-		if(diff > PI){ diff -= TWO_PI; }
-		if(abs(diff/dt_g) > CommandRateLimits.y){
-			fprintf(lvlog, "Rate limit y-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.y*DEG, PCommandedAttitude.y*DEG, diff*DEG, dt_g);
-			if(diff > 0){
-				CommandedAttitude.y = fmod(PCommandedAttitude.y + CommandRateLimits.y * dt_g, PI2);
-			}else{
-				CommandedAttitude.y = fmod(PCommandedAttitude.y - CommandRateLimits.y * dt_g, PI2);
-			}
-			if (CommandedAttitude.y > PI) CommandedAttitude.y -= PI2;
-			if (CommandedAttitude.y < -PI) CommandedAttitude.y += PI2;
-		}
-		diff = fmod((CommandedAttitude.z - PCommandedAttitude.z + TWO_PI),TWO_PI);
-		if(diff > PI){ diff -= TWO_PI; }
-		if(abs(diff/dt_g) > CommandRateLimits.z){
-			fprintf(lvlog, "Rate limit z-axis: Cmd: %f° Prev: %f° diff: %f° dt_g: %f\r\n", CommandedAttitude.z*DEG, PCommandedAttitude.z*DEG, diff*DEG, dt_g);
-			if(diff > 0){
-				CommandedAttitude.z = fmod(PCommandedAttitude.z + CommandRateLimits.z * dt_g, PI2);
-			}else{
-				CommandedAttitude.z = fmod(PCommandedAttitude.z - CommandRateLimits.z * dt_g, PI2);
-			}
-			if (CommandedAttitude.z > PI) CommandedAttitude.z -= PI2;
-			if (CommandedAttitude.z < -PI) CommandedAttitude.z += PI2;
-		}
-		PCommandedAttitude = CommandedAttitude;
-
-		/* **** LVDA **** */
-		VECTOR3 DeltaAtt;
-		double A1, A2, A3, A4, A5;
-		//calculate delta attitude
-		DeltaAtt.x = fmod((CurrentAttitude.x - CommandedAttitude.x + TWO_PI), TWO_PI);
-		if (DeltaAtt.x > PI) { DeltaAtt.x -= TWO_PI; }
-		DeltaAtt.y = fmod((CurrentAttitude.y - CommandedAttitude.y + TWO_PI), TWO_PI);
-		if (DeltaAtt.y > PI) { DeltaAtt.y -= TWO_PI; }
-		DeltaAtt.z = fmod((CurrentAttitude.z - CommandedAttitude.z + TWO_PI), TWO_PI);
-		if (DeltaAtt.z > PI) { DeltaAtt.z -= TWO_PI; }
-
-		//-euler correction-
-		//calculate correction factors
-		A1 = cos(CurrentAttitude.x) * cos(CurrentAttitude.z);
-		A2 = sin(CurrentAttitude.x);
-		A3 = sin(CurrentAttitude.z);
-		A4 = sin(CurrentAttitude.x) * cos(CurrentAttitude.z);
-		A5 = cos(CurrentAttitude.x);
-
-		if (SCControlOfSaturn || PermanentSCControl)
+		//Liftoff search
+		if (LVDC_Timebase == 0 && LVDC_TB_ETime > 16.0 && LVDC_TB_ETime < 150.0 && lvda.GetLiftoff())
 		{
-			PCommandedAttitude = CurrentAttitude;
-			if (PCommandedAttitude.y > PI) PCommandedAttitude.y -= PI2;
-			if (PCommandedAttitude.y < -PI) PCommandedAttitude.y += PI2;
-			if (PCommandedAttitude.z > PI) PCommandedAttitude.z -= PI2;
-			if (PCommandedAttitude.z < -PI) PCommandedAttitude.z += PI2;
-			CommandedAttitude = ACommandedAttitude = PCommandedAttitude;
-			AttitudeError = _V(0.0, 0.0, 0.0);
+			StartTimebase1();
 		}
-		else if (!GuidanceReferenceFailure)
+
+		if (ModeCode26[MC26_Guidance_Reference_Failure] == false)
 		{
+			if (LVDC_Timebase > 0 && lvda.GetLVIMUFailure())
+			{
+				ModeCode26[MC26_Guidance_Reference_Failure] = true;
+				lvda.SetOutputRegisterBit(GuidanceReferenceFailureA, true);
+				lvda.SetOutputRegisterBit(GuidanceReferenceFailureB, true);
+			}
+
+			if (!ModeCode26[MC26_Guidance_Reference_Failure])
+			{
+				CurrentAttitude = lvda.GetLVIMUAttitude();
+			}
+		}
+
+		if (ModeCode27[MC27_SCInControl] || ModeCode26[MC26_SCControlAfterGRF])
+		{
+			PCommandedAttitude = CommandedAttitude = CurrentAttitude;
+			AttitudeError = AttitudeErrorOld = _V(0.0, 0.0, 0.0);
+		}
+		else if (!ModeCode26[MC26_Guidance_Reference_Failure])
+		{
+			//Attitude error commands
+			PCommandedAttitude = PCommandedAttitude + DChi_apo;
+			for (int i = 0;i < 3;i++)
+			{
+				if (PCommandedAttitude.data[i] >= PI2)
+				{
+					PCommandedAttitude.data[i] -= PI2;
+				}
+				if (PCommandedAttitude.data[i] < 0)
+				{
+					PCommandedAttitude.data[i] += PI2;
+				}
+			}
+
+			//sprintf(oapiDebugString(), "FM %.4lf FMS %.4lf TGO: %.4lf CUR: %.4lf %.4lf %.4lf ACMD: %.4lf %.4lf %.4lf CMD: %.4lf %.4lf %.4lf", Fm, 1.0/ MFS, Tt_T, CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG,
+			//	CommandedAttitude.x*DEG, CommandedAttitude.y*DEG, CommandedAttitude.z*DEG, PCommandedAttitude.x*DEG, PCommandedAttitude.y*DEG, PCommandedAttitude.z*DEG);
+
+			//calculate delta attitude
+			DeltaAtt.x = fmod((CurrentAttitude.x - PCommandedAttitude.x + TWO_PI), TWO_PI);
+			if (DeltaAtt.x > PI) { DeltaAtt.x -= TWO_PI; }
+			DeltaAtt.y = fmod((CurrentAttitude.y - PCommandedAttitude.y + TWO_PI), TWO_PI);
+			if (DeltaAtt.y > PI) { DeltaAtt.y -= TWO_PI; }
+			DeltaAtt.z = fmod((CurrentAttitude.z - PCommandedAttitude.z + TWO_PI), TWO_PI);
+			if (DeltaAtt.z > PI) { DeltaAtt.z -= TWO_PI; }
+
 			// ROLL ERROR
 			AttitudeError.x = -(DeltaAtt.x + A3 * DeltaAtt.y);
 			// PITCH ERROR
 			AttitudeError.y = -(A1 * DeltaAtt.y + A2 * DeltaAtt.z);
 			// YAW ERROR
 			AttitudeError.z = -(-A4 * DeltaAtt.y + A5 * DeltaAtt.z);
+
+			//Magnitude limit
+			if (abs(AttitudeError.x) > MSK16)
+			{
+				fprintf(lvlog, "Minor Loop: Roll magnitude limited. Magnitude = %f Limit = %f\r\n", AttitudeError.x*DEG, MSK16*DEG);
+				if (AttitudeError.x > 0)
+				{
+					AttitudeError.x = MSK16;
+				}
+				else
+				{
+					AttitudeError.x = -MSK16;
+				}
+			}
+			if (abs(AttitudeError.y) > MSK6)
+			{
+				fprintf(lvlog, "Minor Loop: Pitch magnitude limited. Magnitude = %f Limit = %f\r\n", AttitudeError.y*DEG, MSK6*DEG);
+				if (AttitudeError.y > 0)
+				{
+					AttitudeError.y = MSK6;
+				}
+				else
+				{
+					AttitudeError.y = -MSK6;
+				}
+			}
+			if (abs(AttitudeError.z) > MSK6)
+			{
+				fprintf(lvlog, "Minor Loop: Yaw magnitude limited. Magnitude = %f Limit = %f\r\n", AttitudeError.z*DEG, MSK6*DEG);
+				if (AttitudeError.z > 0)
+				{
+					AttitudeError.z = MSK6;
+				}
+				else
+				{
+					AttitudeError.z = -MSK6;
+				}
+			}
+			//Rate limit
+			for (int i = 0;i < 3;i++)
+			{
+				if (AttitudeError.data[i] - AttitudeErrorOld.data[i] > MSK5)
+				{
+					fprintf(lvlog, "Minor Loop: Rate limited. Axis = %d Magnitude = %f Limit = %f\r\n", i + 1, (AttitudeError.data[i] - AttitudeErrorOld.data[i])*DEG, MSK5*DEG);
+					AttitudeError.data[i] = AttitudeErrorOld.data[i] + MSK5;
+				}
+				else if (AttitudeError.data[i] - AttitudeErrorOld.data[i] < -MSK5)
+				{
+					fprintf(lvlog, "Minor Loop: Rate limited. Axis = %d Magnitude = %f Limit = %f\r\n", i + 1, (AttitudeError.data[i] - AttitudeErrorOld.data[i])*DEG, MSK5*DEG);
+					AttitudeError.data[i] = AttitudeErrorOld.data[i] - MSK5;
+				}
+			}
+
+			AttitudeErrorOld = AttitudeError;
 		}
 
 		if (LVDC_Timebase > 0)
@@ -7295,6 +6961,439 @@ O3precalc:
 		else
 		{
 			lvda.SetFCCAttitudeError(_V(0, 0, 0));
+		}
+
+		if (poweredflight)
+		{
+			return;
+		}
+
+		//ORBITAL PROCESSING
+		sprintf(oapiDebugString(), "Coasting: TMM %.2lf TAS %.2lf", TMM, TAS);
+		T_SON = RealTimeClock - TAS - T_L;
+		if (T_SON >= 8.0)
+		{
+			//Orbital Navigation
+			fprintf(lvlog, "[%d+%f] ORBITAL NAVIGATION\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			RTEMP1 = PosS + DotS * 4.0 + ddotS * 8.0;
+			VTEMP1 = DotS + ddotS * 4.0;
+			ATEMP1 = GravitationSubroutine(RTEMP1, false) + DragSubroutine(RTEMP1, VTEMP1);
+			RPT = PosS + DotS * 8.0 + ATEMP1 * 32.0;
+			VPT = VTEMP1 + ATEMP1 * 8.0;
+			APT = GravitationSubroutine(RPT, false) + DragSubroutine(RPT, VPT);
+			DRT = DotS * 8.0 + (ddotS + ATEMP1 * 2.0)*32.0 / 3.0;
+			PosS = PosS + DRT;
+			DVT = (ddotS + ATEMP1 * 4.0 + APT)*4.0 / 3.0;
+			DotS = DotS + DVT;
+			ddotS = GravitationSubroutine(PosS, false) + DragSubroutine(PosS, DotS);
+			TAS = TAS + 8.0;
+			R = length(PosS);
+			V = length(DotS);
+			CG = length(ddotS);
+
+			fprintf(lvlog, "Inertial Attitude: %f %f %f \r\n", CurrentAttitude.x*DEG, CurrentAttitude.y*DEG, CurrentAttitude.z*DEG);
+			fprintf(lvlog, "EarthRel Position: %f %f %f \r\n", PosS.x, PosS.y, PosS.z);
+			fprintf(lvlog, "EarthRel Velocity: %f %f %f \r\n", DotS.x, DotS.y, DotS.z);
+			fprintf(lvlog, "EarthRel Acceleration: %f %f %f \r\n", ddotS.x, ddotS.y, ddotS.z);
+			fprintf(lvlog, "State vector time: %f \r\n", TAS);
+			fprintf(lvlog, "Gravity Acceleration: %f \r\n", CG);
+			fprintf(lvlog, "Total Velocity: %f \r\n", V);
+			fprintf(lvlog, "Dist. from Earth's Center: %f \r\n", R);
+			fprintf(lvlog, "S: %f \r\n", S);
+			fprintf(lvlog, "P: %f \r\n", P);
+			VECTOR3 drtest = SVCompare();
+			fprintf(lvlog, "SV Accuracy: %f %f %f\r\n", drtest.x, drtest.y, drtest.z);
+		}
+		OrbitalGuidanceCycle++;
+		if (OrbitalGuidanceCycle >= 10)
+		{
+			OrbitalGuidanceCycle = 0;
+			//Orbital Guidance
+			R_OG = PosS + DotS * T_SON;
+
+			//TIME-TO-GO TO RESTART AND BETA TEST (RS)
+		restartprep:
+			{
+				// TLI restart & targeting logic;
+
+				//Manual TB6 Initiation
+				if (lvda.GetCMCSIVBIgnitionSequenceStart() && GuidanceReferenceFailure && LVDC_Timebase == 5 && LVDC_TB_ETime > 100.0)
+				{
+					fprintf(lvlog, "CMC has commanded S-IVB Ignition Sequence Start! \r\n");
+					goto INHcheck;
+				}
+
+				//Determine if XLUNAR-INHIBIT
+				if (GATE0)	//Restart prep enabled?
+				{
+					goto INHcheck;
+				}
+				if (!GATE1)	//OOB targeting enabled?
+				{
+					if (GATE2)	//First opportunity targeting passed?
+					{
+						//Second opportunity targeting from TABLE
+
+						tgt_index = 0;
+						while (t_D > TABLE15[1].target[tgt_index].t_D)
+						{
+							tgt_index++;
+						}
+						fprintf(lvlog, "Target index = %d \r\n", tgt_index);
+
+						double tdint0, tdint1;
+
+						tdint0 = TABLE15[1].target[tgt_index - 1].t_D;
+						tdint1 = TABLE15[1].target[tgt_index].t_D;
+
+						RAS = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].RAS*RAD, TABLE15[1].target[tgt_index].RAS*RAD, t_D);
+						DEC = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].DEC*RAD, TABLE15[1].target[tgt_index].DEC*RAD, t_D);
+						C_3 = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].C_3, TABLE15[1].target[tgt_index].C_3, t_D);
+						cos_sigma = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].cos_sigma, TABLE15[1].target[tgt_index].cos_sigma, t_D);
+						e_N = LinInter(tdint0, tdint1, TABLE15[1].target[tgt_index - 1].e_N, TABLE15[1].target[tgt_index].e_N, t_D);
+
+						fprintf(lvlog, "Selected TLI Targeting Parameters (Second Opportunity): \r\n");
+						fprintf(lvlog, "RAS: %f, DEC: %f, C_3 = %f, cos_sigma = %f, e_N = %f \r\n", RAS*DEG, DEC*DEG, C_3, cos_sigma, e_N);
+
+						f = TABLE15[1].f*RAD;
+						beta = TABLE15[1].beta*RAD;
+						alpha_TS = TABLE15[1].alphaS_TS*RAD;
+						T_ST = TABLE15[1].T_ST;
+						R_N = TABLE15[1].R_N;
+						tau3R = TABLE15[1].TAU3R;
+						Tt_3R = TABLE15[1].T3PR;
+						T_2R = TABLE15[1].T2IR;
+						dV_BR = TABLE15[1].dV_BR;
+						TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
+						GATE1 = true;
+					}
+					else
+					{
+						//First opportunity targeting from TABLE
+
+						tgt_index = 0;
+						while (t_D > TABLE15[0].target[tgt_index].t_D)
+						{
+							tgt_index++;
+						}
+						fprintf(lvlog, "Target index = %d \r\n", tgt_index);
+
+						double tdint0, tdint1;
+
+						tdint0 = TABLE15[0].target[tgt_index - 1].t_D;
+						tdint1 = TABLE15[0].target[tgt_index].t_D;
+
+						RAS = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].RAS*RAD, TABLE15[0].target[tgt_index].RAS*RAD, t_D);
+						DEC = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].DEC*RAD, TABLE15[0].target[tgt_index].DEC*RAD, t_D);
+						C_3 = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].C_3, TABLE15[0].target[tgt_index].C_3, t_D);
+						cos_sigma = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].cos_sigma, TABLE15[0].target[tgt_index].cos_sigma, t_D);
+						e_N = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].e_N, TABLE15[0].target[tgt_index].e_N, t_D);
+
+						fprintf(lvlog, "Selected TLI Targeting Parameters (First Opportunity): \r\n");
+						fprintf(lvlog, "RAS: %f, DEC: %f, C_3 = %f, cos_sigma = %f, e_N = %f \r\n", RAS*DEG, DEC*DEG, C_3, cos_sigma, e_N);
+
+						f = TABLE15[0].f*RAD;
+						beta = TABLE15[0].beta*RAD;
+						alpha_TS = TABLE15[0].alphaS_TS*RAD;
+						T_ST = TABLE15[0].T_ST;
+						R_N = TABLE15[0].R_N;
+						tau3R = TABLE15[0].TAU3R;
+						T_2R = TABLE15[0].T2IR;
+						Tt_3R = TABLE15[0].T3PR;
+						dV_BR = TABLE15[0].dV_BR;
+						TargetVector = _V(cos(RAS)*cos(DEC), sin(RAS)*cos(DEC), sin(DEC));
+						GATE1 = GATE2 = true;
+					}
+				}
+
+				//Did ground (MCC/RTCC) provide a target update?
+				if (TU)
+				{
+					//Check for 7- or 10-parameter update
+					if (TU10)
+					{
+						/*
+						Target uploading parameters go here; depends on RTCC socketing
+
+						10-parameter update relies on the LVDC to determine the restart time, through the so-called S*T_p test. This starts TB6 when the dot product of the target vector and the burn node
+						(pseudonodal) vector is less than a specified magnitude, effectively determining that the cross-plane error in vectors is sufficiently small.
+
+						Needs 10 parameters:
+						T_X,Y,Z		Target vector in ephemeral coordinates
+						alpha_TS	Desired angle between unit target vector and unit nodal vector
+						beta		Angle between pseudonodal vector and radius vector, inplane at restart time
+						theta_N		Angle of descending node of transfer ellipse, referenced from launch point
+						C_3			Vis-viva energy of transfer ellipse
+						f			True anomaly of transfer ellipse
+						cos_sigma	Cosine of angle between perigee vector and target vector
+						T_ST		Time constant for S*T_P test (determines reignition time and validity of transfer solution)
+						*/
+					}
+					else
+					{
+						/*
+						Target uploading parameters go here; depends on RTCC socketing
+
+						7-parameter update provides a pre-calculated ellipse and TB6 time, using the preloaded T_RG to select the ignition time. This bypasses the S*T_P test, and goes straight into IGM pre-calcs
+						without further ado, aside from the INHIBIT checks. alpha_D_op is also set to 0 to bypass onboard calculation of alpha_D.
+
+						Needs 7 parameters:
+						T_RP		Time to initate restart preparations (TB6)
+						C_3			Vis-viva energy of transfer ellipse
+						Inclination	Desired inclination of transfer ellipse, equatorial ref.
+						e_N			Eccentricity of the nominal transfer ellipse
+						alpha_D		Angle between perigee and descending nodal vector of transfer ellipse
+						f			True anomaly of transfer ellipse
+						*/
+
+						fprintf(lvlog, "7-parameter update: T_RP: %f, C_3: %f, Inc: %f°, e: %f, alpha_D: %f°, f: %f°, theta_N: %f° \r\n", T_RP, C_3, Inclination*DEG, e, alpha_D*DEG, f*DEG, theta_N*DEG);
+
+						alpha_D_op = 0;
+						first_op = false;
+
+						if (TAS - TB5 - T_RP < 0) //Sufficient time after TB6?
+						{
+							goto O3precalc;
+						}
+						else
+						{
+							goto INHcheck;
+						}
+					}
+				}
+
+				if (ModeCode27[MC27_TDE_Enable]) //TLI permanently disabled?
+				{
+					goto orbitalguidance;
+				}
+
+				if (LVDC_TB_ETime - T_ST < 0) //Sufficient time before S*T_P test?
+				{
+					fprintf(lvlog, "Time until first TB6 check = %f \r\n", LVDC_TB_ETime - T_ST);
+					goto orbitalguidance;
+				}
+
+				//Determination of S-bar and S-bar-dot
+				theta_E = theta_EO + TVRATE * t_D;
+
+				MX_EPH = mul(OrbMech::tmat(MX_A), _M(cos(theta_E), sin(theta_E), 0, 0, 0, -1, -sin(theta_E), cos(theta_E), 0));
+
+				T_P = mul(MX_EPH, unit(TargetVector));
+				N = unit(crossp(PosS, DotS));
+				PosP = crossp(N, unit(PosS));
+				Sbar = unit(PosS)*cos(beta) + PosP * sin(beta);
+				DotP = crossp(N, DotS / length(PosS));
+
+				Sbardot = DotS / length(PosS)*cos(beta) + DotP * sin(beta);
+
+				if (dotp(Sbardot, T_P) < 0 && dotp(Sbar, T_P) <= cos(alpha_TS))
+				{
+					goto INHcheck;
+				}
+				else
+				{
+					goto orbitalguidance;
+				}
+
+			INHcheck:
+				if (lvda.SIVBInjectionDelay() && LVDC_Timebase != 6)	//XLUNAR switch to INHIBIT in the CSM?
+				{
+					if (first_op == false)
+					{
+						//Permanent TLI inhibt
+						GATE0 = false;
+						ModeCode27[MC27_TDE_Enable] = true;
+						goto orbitalguidance;
+					}
+					else
+					{
+						//Select second opportunity targeting
+						GATE0 = GATE1 = false;
+						first_op = false;
+						goto orbitalguidance;
+					}
+				}
+				else if (!GATE0)
+				{
+					GATE0 = true;	//Bypass targeting routines
+					TB6 = RealTimeClock - T_L;
+					TI = TB6;
+					LVDC_TB_ETime = 0;
+					LVDC_Timebase = 6;
+					CommandSequenceStored = CommandSequence;
+					CommandSequence = 0;
+					EventsProcessor(1);
+					goto restartprep;
+				}
+				else if (TAS - TB6 - T_RG < 0) //Time elapsed enough for TB6?
+				{
+					goto orbitalguidance;
+				}
+			}
+
+		O3precalc:
+			//Calculates IGM parameters for out-of-orbit burn
+			if (GATE3) //IGM Targeting enabled?
+			{
+				goto orbitalguidance;
+			}
+			if (TU)
+			{
+				if (!TU10)
+				{
+					p = (mu / C_3)*(pow(e, 2) - 1);
+					goto O3GMatrix;
+				}
+			}
+
+			//Nominal ellipse calculations go here
+			cos_psiT = dotp(Sbar, T_P);
+			sin_psiT = sqrt(1.0 - pow(cos_psiT, 2));
+			Sbar_1 = (Sbar*cos_psiT - T_P)*(1.0 / sin_psiT);
+			Cbar_1 = crossp(Sbar_1, Sbar);
+			Inclination = acos(dotp(_V(MX_A.m21, MX_A.m22, MX_A.m23), Cbar_1));
+			X_1 = dotp(_V(MX_A.m31, MX_A.m32, MX_A.m33), crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
+			X_2 = dotp(_V(MX_A.m11, MX_A.m12, MX_A.m13), crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23)));
+			theta_N = atan2(X_1, X_2);
+			p_N = mu / C_3 * (pow(e_N, 2) - 1.0);
+			T_M = p_N / (1.0 - e_N * cos_sigma);
+			R = length(PosS);
+			e = R / R_N * (e_N - 1) + 1.0;
+			p = mu / C_3 * (pow(e, 2) - 1.0);
+
+			if (alpha_D_op)
+			{
+				//alpha_D = acos(dotp(Sbar, T_P)) - acos((1.0 - p / T_M) / e) + atan2(X_1, X_2);
+				alpha_D = acos(dotp(Sbar, T_P)) - acos((1.0 - p / T_M) / e) + atan2(dotp(Sbar_1, crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23))), dotp(Sbar, crossp(Cbar_1, _V(MX_A.m21, MX_A.m22, MX_A.m23))));
+			}
+			else
+			{
+				alpha_D = TABLE15[1].target[tgt_index].alpha_D;
+			}
+
+			fprintf(lvlog, "Elliptic parameters: Inc: %f°, e: %f, p: %f, theta_N: %f°, alpha_D: %f°, f: %f°\r\n", Inclination*DEG, e, p, theta_N*DEG, alpha_D*DEG, f*DEG);
+
+		O3GMatrix:
+			MX_B = _M(cos(theta_N), 0, sin(theta_N), sin(theta_N)*sin(Inclination), cos(Inclination), -cos(theta_N)*sin(Inclination),
+				-sin(theta_N)*cos(Inclination), sin(Inclination), cos(theta_N)*cos(Inclination));
+			MX_G = mul(MX_B, MX_A);
+			R_T = p / (1.0 + e * cos(f));
+			K_5 = sqrt(mu / p);
+			V_T = K_5 * sqrt(1.0 + 2.0 * e*cos(f) + pow(e, 2));
+			gamma_T = atan((e*sin(f)) / (1.0 + e * cos(f)));
+			G_T = -mu / pow(R_T, 2);
+
+			fprintf(lvlog, "TLI Targets: R_T: %f, V_T: %f, gamma_T: %f, G_T: %f\r\n", R_T, V_T, gamma_T, G_T);
+
+			//Update IGM parameters
+			Ct = 0.0;
+			dotM_2 = dotM_2R;
+			dotM_3 = dotM_3R;
+			P_c = 0.0;
+			ROT = ROTR;
+			ROV = ROVR;
+			T_2 = T_2R;
+			T_1c = T_2;
+			Tt_3 = Tt_3R - K_T3 * dTt_4;
+			Tt_T = T_2 + Tt_3;
+			t_B4 = 0.0;
+			V_ex2 = V_ex2R;
+			V_ex3 = V_ex3R;
+			V_TC = 150;
+			eps_1 = eps_1R;
+			eps_2 = eps_2R;
+			eps_3 = eps_3R;
+			eps_4 = eps_4R;
+			tau3 = tau3R - dTt_4;
+
+			fprintf(lvlog, "Tt_3 = %f, dTt_4 = %f\r\n", Tt_3, dTt_4);
+
+			//Bypass further burn calculations
+			GATE3 = true;
+
+		orbitalguidance:
+			//orbital guidance logic
+			fprintf(lvlog, "*** ORBITAL GUIDANCE ***\r\n");
+
+			if (AttitudeManeuverState != 2)
+			{
+				//-2 = inertial hold of local reference, -1 = local reference, 0 = chi freeze, 1 = inertial reference
+				switch (AttitudeManeuverState)
+				{
+				case -2:
+					fprintf(lvlog, "Initiate inertial hold of local reference\r\n");
+					ModeCode27[MC27_InertialHoldInProgress] = true;
+					ModeCode27[MC27_TrackLocalHoriz] = false;
+					ModeCode27[MC27_AttHoldWrtLocalContRetFromSC] = false;
+					ModeCode27[MC27_AttHoldWrtInertialContRetFromSC] = false;
+
+					//Calculate this once
+					Pos4 = mul(MX_G, R_OG);
+					R4 = sqrt(Pos4.x*Pos4.x + Pos4.z*Pos4.z);
+					sin_chi_Yit = (Pos4.x * cos(alpha_1) + Pos4.z * sin(alpha_1)) / (-R4);
+					cos_chi_Yit = (Pos4.z * cos(alpha_1) - Pos4.x * sin(alpha_1)) / (-R4);
+					sin_chi_Zit = sin(alpha_2);
+					cos_chi_Zit = cos(alpha_2);
+					VECTOR3 VT;
+					VT = tmul(MX_G, _V(cos_chi_Yit*cos_chi_Zit, sin_chi_Zit, -sin_chi_Yit * cos_chi_Zit));
+					X_S1 = VT.x;
+					X_S2 = VT.y;
+					X_S3 = VT.z;
+					X_Zi = asin(X_S2);
+					if (X_Zi < 0)
+					{
+						X_Zi += PI2;
+					}
+					X_Yi = atan2(-X_S3, X_S1);
+					if (X_Yi < 0)
+					{
+						X_Yi += PI2;
+					}
+					CommandedAttitude.y = X_Yi;
+					CommandedAttitude.z = X_Zi;
+					break;
+				case -1:
+					fprintf(lvlog, "Initiate tracking of local reference\r\n");
+					ModeCode27[MC27_InertialHoldInProgress] = false;
+					ModeCode27[MC27_TrackLocalHoriz] = true;
+					ModeCode27[MC27_AttHoldWrtLocalContRetFromSC] = false;
+					ModeCode27[MC27_AttHoldWrtInertialContRetFromSC] = false;
+					break;
+				case 0:
+					fprintf(lvlog, "Initiate chi freeze\r\n");
+					ModeCode27[MC27_InertialHoldInProgress] = true;
+					ModeCode27[MC27_TrackLocalHoriz] = false;
+					ModeCode27[MC27_AttHoldWrtLocalContRetFromSC] = false;
+					ModeCode27[MC27_AttHoldWrtInertialContRetFromSC] = false;
+					break;
+				case 1:
+					fprintf(lvlog, "Initiate inertial hold\r\n");
+					ModeCode27[MC27_InertialHoldInProgress] = true;
+					ModeCode27[MC27_TrackLocalHoriz] = false;
+					ModeCode27[MC27_AttHoldWrtLocalContRetFromSC] = false;
+					ModeCode27[MC27_AttHoldWrtInertialContRetFromSC] = false;
+					break;
+				}
+
+				AttitudeManeuverState = 2;
+			}
+
+			if (ModeCode27[MC27_SCInControl] == false)
+			{
+				if (ModeCode27[MC27_TrackLocalHoriz] || ModeCode27[MC27_AttHoldWrtLocalContRetFromSC])
+				{
+					fprintf(lvlog, "Maintain orbrate\r\n");
+					Pos4 = mul(MX_G, R_OG); //here we compute the steering angles...
+					R4 = sqrt(Pos4.x*Pos4.x + Pos4.z*Pos4.z);
+					sin_chi_Yit = (Pos4.x * cos(alpha_1) + Pos4.z * sin(alpha_1)) / (-R4);
+					cos_chi_Yit = (Pos4.z * cos(alpha_1) - Pos4.x * sin(alpha_1)) / (-R4);
+					sin_chi_Zit = sin(alpha_2);
+					cos_chi_Zit = cos(alpha_2);
+					goto thrustvectransentry;
+				}
+			}
+			fprintf(lvlog, "Inertial attitude hold or SC takeover\r\n");
+			goto limittest;
 		}
 
 		// Debug if we're launched
@@ -7331,17 +7430,573 @@ O3precalc:
 	}
 }
 
-double LVDCSV::SVCompare()
+void LVDCSV::PhaseActivator(int phase)
 {
-	VECTOR3 pos, newpos;
-	MATRIX3 mat;
-	double day;
-	modf(oapiGetSimMJD(), &day);
-	mat = OrbMech::Orbiter2PACSS13(day + T_L / 24.0 / 3600.0, PHI, KSCLNG, Azimuth);
-	lvda.GetRelativePos(pos);
-	newpos = mul(mat, pos);
+	//Mission Initialization
+	if (phase == 1)
+	{
+		BOOST = true;
+		ModeCode25[MC25_BeginTB0] = true;								// Mark event
+		LVDC_Timebase = 0;
+		LVDC_TB_ETime = 0;
+		MinorLoopCounter = 0;
+		DT_N = DT_N1;
+		MS25DT = 25.0*DT_N;
+		MS04DT = 0.04 / DT_N;
+		MSK5 = 0.48*RAD;
+		MSK6 = MSK16 = 15.3*RAD;
+		MSLIM1 = 0.04*RAD;
+		MSLIM2 = 0.04*RAD;
+		T_L = RealTimeClock;
+		TAS = TI = 0.0;
+		oapiSetTimeAcceleration(1);					// Set time acceleration to 1
+		ModeCode25[MC25_BeginTB0] = true;
+		SystemTimeUpdateRoutine();
+		DFIL1 = false;
+		Timer1Counter = (int)(4.03 / LVDC_TIMESTEP);
+		Timer2Counter = (int)(4.03 / LVDC_TIMESTEP);
+		for (int i = 0;i < 11;i++)
+		{
+			T2STAT[i] = false;
+		}
+		//Events Processor On
+		EventsProcessor(1);
+	}
+	//Phase transition
+	switch (phase)
+	{
+	case 1:
+	case 3:
+		//TBD: Set initial status of non-interrupt sequence tasks
+		//TBD: Set initial time, status of periodic processor tasks
+		//Set initial status of timer 2 tasks
+		//for (int i = 0;i < 11;i++)
+		//{
+		//	T2STAT[i] = false;
+		//}
+		//Dequeue pending navigation update
+		T2STAT[4] = false;
+		Phase13ApplicationProgramInit();
+		//Schedule next timer 2 function
+		Timer2Interrupt(true);
+		DFIL1 = false;
+		break;
+	case 2:
+	case 4:
+		Phase24ApplicationProgramInit();
+		//Schedule next timer 2 function
+		Timer2Interrupt(true);
+		DFIL1 = false;
+		break;
+	}
+}
 
-	return length(PosS - newpos);
+void LVDCSV::Phase13ApplicationProgramInit()
+{
+	poweredflight = true;
+	MinorLoopCycles = 4;
+	MLR = 25.0;
+}
+
+void LVDCSV::Phase24ApplicationProgramInit()
+{
+	poweredflight = false;
+	MinorLoopCycles = 10;
+	MLR = 10.0;
+}
+
+void LVDCSV::SystemTimeUpdateRoutine()
+{
+	TMM = RealTimeClock - T_L;
+	LVDC_TB_ETime = TMM - TI;
+}
+
+void LVDCSV::Timer1Interrupt()
+{
+	Timer1Counter = (int)(4.03 / LVDC_TIMESTEP);
+	//fprintf(lvlog, "T1 Interrupt. Counter %d\r\n", Timer1Counter);
+}
+
+void LVDCSV::Timer2Interrupt(bool skiptasks)
+{
+	if (skiptasks == false)
+	{
+		fprintf(lvlog, "T2 Interrupt at GRR+%lf\r\n", TMM);
+		//TBD: Lock T2 Interrupt
+		//Set T2 interrupt in progress indicator
+		DFIL1 = true;
+		switch (DGST2)
+		{
+		case 0: //Time Update
+			break;
+		case 1: //Ladder Ramp Processor
+			break;
+		case 2: //Events Processor
+			EventsProcessor(0);
+			break;
+		case 3: //Time Tilt Guidance
+			break;
+		case 4: //Navigation Update Implementation
+			fprintf(lvlog, "[%d+%f] Navigation Update implemented!\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			ModeCode27[MC27_DCSNavigationUpdateAccepted] = false;
+			TAS = NUPTIM;
+			PosS = Pos_Nav;
+			DotS = Vel_Nav;
+			ddotS = GravitationSubroutine(PosS, false) + DragSubroutine(PosS, DotS);
+			R = length(PosS);
+			V = length(DotS);
+			CG = length(ddotS);
+			T2STAT[4] = false;
+			DLTTL[4] = 0.0;
+			break;
+		case 5: //Time Base 8 Enable
+			break;
+		case 6: //Phase 2/4 Control Module
+			break;
+		case 7: //Phase 2/4 Control Module
+			break;
+		case 8: //Phase 2/4 Control Module
+			break;
+		case 9: //Water Methanol Activate
+			break;
+		case 10: //Extra Accelerometer Read
+			break;
+		}
+		DFIL1 = false;
+	}
+
+	//None of the above
+	DGST2 = 11;
+	//Select T2 Scheduler to use Interrupt in 4 seconds
+	DV2TG = TMM + 4.03;
+	//Find the next module to execute
+	for (int i = 0;i < 11;i++)
+	{
+		if (T2STAT[i])
+		{
+			if (DLTTL[i] < DV2TG)
+			{
+				DGST2 = i;
+				DV2TG = DLTTL[i];
+			}
+		}
+	}
+
+	//Schedule next T2 interrupt
+	Timer2Counter = (int)(round((DV2TG - TMM) / LVDC_TIMESTEP));
+	if (Timer2Counter < 1)
+	{
+		Timer2Counter = 1;
+	}
+
+	if (skiptasks)
+	{
+		fprintf(lvlog, "T2 Scheduler. Next interrupt at GRR+%lf Task %d Counter %d\r\n", DV2TG, DGST2, Timer2Counter);
+	}
+	else
+	{
+		fprintf(lvlog, "T2 Interrupt. Next interrupt at GRR+%lf Task %d Counter %d\r\n", DV2TG, DGST2, Timer2Counter);
+	}
+}
+
+void LVDCSV::EventsProcessor(int entry)
+{
+	//entry: 0 = timer 2 entry, 1 = time base change entry, 2 = reschedule entry
+
+	const static int EPTTBINDX[10] = { 0, 5, 13, 18, 38, 55, 71, 93, 107, 110 };
+	const static int EPTABLE[131] = {1, 2, 3, 4, 0, //TB0
+									 5, 6, 7, 8, 9, 10, 11, 0, //TB1
+									 12, 13, 15, 16, 0, //TB2
+									 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, //TB3
+									 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 0, //TB4
+									 52, 53, 54, 55, 56, 0, 58, 59, 60, 61, 62, 63, 64, 65, 66, 0, //TB5,
+									 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 0, //TB6
+									 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 0, //TB7
+									 101, 102, 0, //TB8
+									 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //TB4a
+
+	//Timer 2 Entry
+	if (entry == 0)
+	{
+	EP00:
+		fprintf(lvlog, "Events Processor: TB%d+%.3lf IDX %d Task %d\r\n", LVDC_Timebase, LVDC_TB_ETime, EPTINDX, EPTABLE[EPTINDX]);
+		switch (EPTABLE[EPTINDX])
+		{
+		case 1: //Schedule Water Methanol
+			break;
+		case 2: //Start looking for liftoff
+			//TBD: Enqueue liftoff module
+			break;
+		case 3: //Nominal liftoff (flight simulation)
+			break;
+		case 4: //Start looking for backup liftoff acceleration
+			break;
+		case 5: //Time Base 1 Setup
+			break;
+		case 6: //Command Init of Yaw Maneuver
+			fprintf(lvlog, "[%d+%f] Yaw maneuver\r\n", LVDC_Timebase, LVDC_TB_ETime);
+			CommandedAttitude.z = 1.25*RAD;
+			break;
+		case 7: //???
+			break;
+		case 8: //Command Term of Yaw Maneuver
+			CommandedAttitude.z = 0.0*RAD;
+			break;
+		case 9: //Set Accel Reason. Test
+			break;
+		case 52: //Time Base 5 Start
+			AttitudeManeuverState = 0;
+			break;
+		case 53: //Maneuver to local horizontal
+			fprintf(lvlog, "Initiate orbrate\r\n");
+			AttitudeManeuverState = -1;
+			alpha_1 = 0.0;
+			alpha_2 = 0.0;
+			CommandedAttitude.x = 0.0;
+			break;
+		case 54: //Transition to coasting flight
+			fprintf(lvlog, "Orbit Initialization\r\n");
+			poweredflight = false; //powered flight nav off
+			MinorLoopCycles = 10;
+			MLR = 10.0;
+			//MinorLoopCounter = 0;
+			DT_N = DT_N6;
+			MSLIM1 = 0.06*RAD;
+			MSLIM2 = 0.04*RAD;
+			MS25DT = 10.0*DT_N;
+			MS04DT = 0.1 / DT_N;
+			if (ModeCode26[MC26_Guidance_Reference_Failure] == false)
+			{
+				MSK5 = 0.24*RAD;
+			}
+
+			//Orbit Init
+			ddotS = ddotG_act;
+			fprintf(lvlog, "EarthRel Acceleration: %f %f %f \r\n", ddotS.x, ddotS.y, ddotS.z);
+			break;
+		case 55: //Maneuver to TD&E attitude in Earth orbit
+			if (INH1 == false)
+			{
+				AttitudeManeuverState = -1;
+				alpha_1 = XLunarAttitude.y;
+				alpha_2 = XLunarAttitude.z;
+				CommandedAttitude.x = XLunarAttitude.x;
+			}
+			break;
+		case 56: //Attitude Hold for TD&E
+			if (INH2 == false)
+			{
+				AttitudeManeuverState = 0;
+			}
+			break;
+		case 67: //Time Base 6 start
+			ModeCode27[MC27_SCInControl] = false;
+			AttitudeManeuverState = -1;
+			if (first_op) {
+				alpha_1 = K_P1 + K_P2 * dTt_4; //restart angles
+				alpha_2 = K_Y1 + K_Y2 * dTt_4;
+				CommandedAttitude.x = 360 * RAD;
+				fprintf(lvlog, "Orient for restart\r\n");
+			}
+			else {
+				alpha_1 = 0 * RAD;
+				alpha_2 = 0 * RAD;
+				CommandedAttitude.x = 360 * RAD;
+				fprintf(lvlog, "Maintain orbrate\r\n");
+			}
+			break;
+		case 88: //Start Time Base 7
+			break;
+		case 89: //Time in Timebase 7 to begin maneuver to local horizontal attitude
+			AttitudeManeuverState = -1;
+			alpha_1 = 0.0;
+			alpha_2 = 0.0;
+			CommandedAttitude.x = 0.0;
+			break;
+		case 90: //Time in Timebase 7 to enter orbit initialize and resume orbit navigation
+			fprintf(lvlog, "Orbit Initialization\r\n");
+			PhaseActivator(4);
+			DT_N = DT_N6;
+			MSLIM1 = 0.06*RAD;
+			MSLIM2 = 0.04*RAD;
+			MS25DT = 10.0*DT_N;
+			MS04DT = 0.1 / DT_N;
+			if (ModeCode26[MC26_Guidance_Reference_Failure] == false)
+			{
+				MSK5 = 0.24*RAD;
+			}
+
+			//Orbit Init
+			ddotS = ddotG_act;
+			fprintf(lvlog, "EarthRel Acceleration: %f %f %f \r\n", ddotS.x, ddotS.y, ddotS.z);
+			break;
+		case 91: //Set attitude rate limits for maneuver to sep attitude
+			MSLIM1 = 0.1*RAD;
+			MSLIM2 = 0.1*RAD;
+			break;
+		case 92: //Maneuver to separation attitude
+			if (INH4 == false)
+			{
+				AttitudeManeuverState = -2;
+				alpha_1 = XLunarAttitude.y;
+				alpha_2 = XLunarAttitude.z;
+				CommandedAttitude.x = XLunarAttitude.x;
+				fprintf(lvlog, "T&D attitude\r\n");
+			}
+			break;
+		case 93: //Maneuver to slingshot attitude
+			if (INH5 == false)
+			{
+				AttitudeManeuverState = -1;
+				alpha_1 = XLunarSlingshotAttitude.y;
+				alpha_2 = XLunarSlingshotAttitude.z;
+				CommandedAttitude.x = XLunarSlingshotAttitude.x;
+				fprintf(lvlog, "Slingshot attitude\r\n");
+			}
+			break;
+		case 101: //Maneuver to slingshot attitude (TB8)
+			AttitudeManeuverState = -1;
+			alpha_1 = XLunarSlingshotAttitude.y;
+			alpha_2 = XLunarSlingshotAttitude.z;
+			CommandedAttitude.x = XLunarSlingshotAttitude.x;
+			fprintf(lvlog, "Slingshot attitude\r\n");
+			break;
+		case 102: //Maneuver to comm attitude (TB8)
+			AttitudeManeuverState = -1;
+			alpha_1 = XLunarCommAttitude.y;
+			alpha_2 = XLunarCommAttitude.z;
+			CommandedAttitude.x = XLunarCommAttitude.x;
+			fprintf(lvlog, "Communications attitude\r\n");
+			break;
+		}
+		//Next event
+		EPTINDX++;
+		if (EPTABLE[EPTINDX])
+		{
+			if (EPTTIM[EPTINDX] == VTOLD)
+			{
+				goto EP00;
+			}
+			VTOLD = EPTTIM[EPTINDX];
+			DLTTL[2] = TI + VTOLD;
+		}
+		else
+		{
+			T2STAT[2] = false;
+			fprintf(lvlog, "Events Processor Disabled. TB%d+%.3lf IDX %d\r\n", LVDC_Timebase, LVDC_TB_ETime, EPTINDX);
+		}
+		if (DFIL1 == false)
+		{
+			Timer2Interrupt(true);
+		}
+	}
+	//Time Base Change Entry or Reschedule Entry
+	else
+	{
+		if (entry == 1)
+		{
+			fprintf(lvlog, "Events Processor Time Base Change Entry\r\n");
+			//Special timebase 4a code
+			if (LVDC_Timebase == 40)
+			{
+				EPTINDX = EPTTBINDX[9] - 1;
+			}
+			else
+			{
+				EPTINDX = EPTTBINDX[LVDC_Timebase] - 1;
+			}
+		}
+		else
+		{
+			fprintf(lvlog, "Events Processor Reschedule Entry\r\n");
+		}
+		EPTINDX++;
+		if (EPTABLE[EPTINDX])
+		{
+			VTOLD = EPTTIM[EPTINDX];
+			DLTTL[2] = TI + VTOLD;
+			T2STAT[2] = true;
+
+			fprintf(lvlog, "Events Processor scheduled for GRR+%.3lf IDX %d\r\n", DLTTL[2], EPTINDX);
+
+			if (DFIL1 == false)
+			{
+				Timer2Interrupt(true);
+			}
+		}
+	}
+}
+
+void LVDCSV::SIVBCutoffSequence()
+{
+	//COMMAND S-IVB ENGINE CUTOFF ON
+	lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
+}
+
+void LVDCSV::StartTimebase1()
+{
+	TB1 = RealTimeClock - T_L;
+	LVDC_Timebase = 1;
+	LVDC_TB_ETime = 0;
+	TI = TB1;
+	DT_N = DT_N2;
+	MS25DT = 25.0*DT_N;
+	MS04DT = 0.04 / DT_N;
+	CommandSequence = 0;
+	ModeCode25[MC25_BeginTB1] = true;
+	lvda.SwitchSelector(SWITCH_SELECTOR_SI, 0);
+	lvda.SetOutputRegisterBit(FiringCommitEnable, false);
+	EventsProcessor(1);
+}
+
+void LVDCSV::StartTimeBase2()
+{
+
+}
+
+void LVDCSV::StartTimebase4A()
+{
+	lvda.SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
+	lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
+	S2_BURNOUT = true;
+	MRS = false;
+	TB4a = RealTimeClock - T_L;
+	TI = TB4a;
+	LVDC_Timebase = 40;
+	LVDC_TB_ETime = 0;
+	CommandSequence = 0;
+
+	Tt_3 = Tt_3 + Cf * (V_S2T - V) + dT_cost;
+	T_1 = 0;
+	T_2 = 0;
+	T_c = 0;
+	T_1c = 0;
+	Tt_T = Tt_3;
+	ROV = ROVs;
+	fprintf(lvlog, "[%d+%f] Direct stage interrupt received! Guidance update executed!\r\n", LVDC_Timebase, LVDC_TB_ETime);
+}
+
+void LVDCSV::StartTimebase5()
+{
+	LVDC_Timebase = 5;
+	if (ModeCode25[MC25_BeginTB5])
+	{
+		//Return to TB5 from TB5a, TB6a, TB6b or TB6c
+		LVDC_TB_ETime = (RealTimeClock - T_L) - TB5;
+		CommandSequence = CommandSequenceStored;
+		DT_N = DT_N6;
+		MS25DT = 10.0*DT_N;
+		MS04DT = 0.1 / DT_N;
+		MSLIM1 = 0.06*RAD;
+		MSLIM2 = 0.04*RAD;
+		TB6 = 100000;
+		TI = TB5;
+		PhaseActivator(2);
+		ddotS = ddotG_act;
+		fprintf(lvlog, "Returning to TB5 at TMM %.2lf TB %.2lf\r\n", TMM, LVDC_TB_ETime);
+	}
+	else
+	{
+		//Start TB5 from TB4 or TB4a
+		LVDC_TB_ETime = 0;
+		CommandSequence = 0;
+		TB5 = RealTimeClock - T_L;
+		TI = TB5;
+		EventsProcessor(1);
+		S4B_IGN = false;
+		//HSL Exit settings
+		GATE = false;
+		GATE5 = false;
+		Tt_T = 1000;
+		HSL = false;
+		BOOST = false;
+		ModeCode25[MC25_TerminalGuidance] = false;
+
+		DT_N = DT_N5;
+		MS25DT = 25.0*DT_N;
+		MS04DT = 0.04 / DT_N;
+		MSLIM1 = 0.024*RAD;
+		MSLIM2 = 0.016*RAD;
+		ModeCode25[MC25_BeginTB5] = true;
+		fprintf(lvlog, "TB5 started at TMM %.2lf\r\n", TMM);
+	}
+}
+
+void LVDCSV::StartTimebase7()
+{
+	LVDC_Timebase = 7;
+	if (ModeCode26[MC26_TB7_Started])
+	{
+		//Return to TB7 from TB5a
+		LVDC_TB_ETime = (RealTimeClock - T_L) - TB7;
+		TI = TB7;
+		CommandSequence = CommandSequenceStored;
+	}
+	else
+	{
+		//Start TB7 from TB6
+		S4B_REIGN = false;
+		TB7 = RealTimeClock - T_L;
+		TI = TB7;
+		LVDC_TB_ETime = 0;
+		CommandSequence = 0;
+		EventsProcessor(1);
+
+		//HSL Exit settings
+		GATE = false;
+		GATE5 = false;
+		Tt_T = 1000;
+		HSL = false;
+		BOOST = false;
+
+		//Timing settings
+		DT_N = DT_N5;
+		MS25DT = 25.0*DT_N;
+		MS04DT = 0.04 / DT_N;
+		MSLIM1 = 0.024*RAD;
+		MSLIM2 = 0.016*RAD;
+		ModeCode26[MC26_TB7_Started] = true;
+
+		//Chi freeze
+		AttitudeManeuverState = 0;
+
+		fprintf(lvlog, "SIVB BACKUP CUTOFF! TAS = %f \r\n", TAS);
+		lvda.TLIEnded();
+	}
+}
+
+VECTOR3 LVDCSV::SVCompare()
+{
+	VECTOR3 pos, vel, newpos, newvel;
+	MATRIX3 mat;
+	double MJD_L, MJD_cur, MJD_LD, xtemp, GMT_GRR, MJD_GRR, DT_GRR_act, DT_TAS;
+	//Actual current MJD
+	MJD_cur = oapiGetSimMJD();
+	//GMT of GRR (doesn't have to be accurate)
+	GMT_GRR = RealTimeClock - T_L;
+	//MJD of GRR (doesn't have to be accurate)
+	MJD_GRR = MJD_cur - GMT_GRR / 3600.0 / 24.0;
+	//MJD_LD, MJD at midnight of liftoff day
+	xtemp = modf(MJD_GRR, &MJD_LD);
+	//Precise MJD of GRR
+	MJD_L = MJD_LD + T_L / 3600.0 / 24.0;
+	//Actual time since GRR
+	DT_GRR_act = (MJD_cur - MJD_L)*24.0*3600.0;
+	//Difference to state vector time
+	DT_TAS = DT_GRR_act - TAS;
+	mat = OrbMech::Orbiter2PACSS13(MJD_L, PHI, KSCLNG, Azimuth);
+	lvda.GetRelativePos(pos);
+	lvda.GetRelativeVel(vel);
+	newpos = mul(mat, pos);
+	newvel = mul(mat, vel);
+
+	VECTOR3 i, j, k;
+	j = unit(crossp(newvel, newpos));
+	k = unit(-newpos);
+	i = crossp(j, k);
+	MATRIX3 Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z); //rotation matrix to LVLH
+
+	return mul(Q_Xx, PosS + DotS * DT_TAS - newpos);
 }
 
 double LVDCSV::LinInter(double x0, double x1, double y0, double y1, double x)
@@ -7381,7 +8036,7 @@ bool LVDCSV::RestartManeuverEnable()
 {
 	if (LVDC_Timebase == 5)
 	{
-		INH3 = false;
+		ModeCode27[MC27_TDE_Enable] = false;
 
 		return true;
 	}
@@ -7414,26 +8069,14 @@ bool LVDCSV::InhibitSeparationManeuver()
 	return false;
 }
 
-bool LVDCSV::SeparationManeuverUpdate(double time)
-{
-	if (LVDC_Timebase == 5 || LVDC_Timebase == 7)
-	{
-		TI7F11 = time;
-		INH4 = false;
-
-		return true;
-	}
-
-	return false;
-}
-
 bool LVDCSV::EvasiveManeuverEnable()
 {
 	if (LVDC_Timebase == 7)
 	{
-		if (ACommandedAttitude.z*XLunarAttitude.z >= 0.0)
+		//This prevents the yaw attitude from being reversed twice
+		if (CommandedAttitude.z*XLunarAttitude.z >= 0.0)
 		{
-			ACommandedAttitude.z = -ACommandedAttitude.z;
+			CommandedAttitude.z = -CommandedAttitude.z;
 
 			return true;
 		}
@@ -7463,11 +8106,11 @@ bool LVDCSV::SIVBIULunarImpact(double tig, double dt, double pitch, double yaw)
 		{
 			if (!ImpactBurnInProgress)
 			{
-				XLunarSlingshotAttitude.y = pitch;
-				XLunarSlingshotAttitude.z = yaw;
+				AttitudeManeuverState = -1;
+				alpha_1 = pitch;
+				alpha_2 = yaw;
 				T_ImpactBurn = tig;
 				dT_ImpactBurn = dt;
-				TI7AF2 = 999999.9;
 				ImpactBurnEnabled = true;
 
 				return true;
@@ -7484,7 +8127,10 @@ bool LVDCSV::ExecuteCommManeuver()
 	{
 		if (!ImpactBurnInProgress)
 		{
-			TI7AF2 = 0.0;
+			AttitudeManeuverState = -1;
+			alpha_1 = XLunarCommAttitude.y;
+			alpha_2 = XLunarCommAttitude.z;
+			CommandedAttitude.x = XLunarCommAttitude.x;
 			ImpactBurnEnabled = false;
 
 			return true;
@@ -7502,4 +8148,51 @@ bool LVDCSV::DiscreteOutputTest(int bit, bool on)
 		return true;
 	}
 	return false;
+}
+
+bool LVDCSV::NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM)
+{
+	if ((LVDC_Timebase == 5 || LVDC_Timebase == 7) && poweredflight == false && DCSNUPTIM > TAS + 10.0)
+	{
+		NUPTIM = DCSNUPTIM;
+		Pos_Nav = DCSRVEC;
+		Vel_Nav = DCSVVEC;
+		ModeCode27[MC27_DCSNavigationUpdateAccepted] = true;
+		T2STAT[4] = true;
+		DLTTL[4] = NUPTIM;
+		Timer2Interrupt(true);
+		fprintf(lvlog, "Navigation update received! R %f %f %f V %f %f %f T %f \r\n", DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSRVEC.x, DCSRVEC.y, DCSRVEC.z, DCSNUPTIM);
+	}
+	return false;
+}
+
+VECTOR3 LVDCSV::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
+{
+	VECTOR3 GTEMP;
+	double P_34, S_34;
+	double Y_G = (Rvec.x*MX_A.m21 + Rvec.y*MX_A.m22 + Rvec.z*MX_A.m23); //position component south of equator
+	double rtemp = length(Rvec); //instantaneous distance from earth's center
+	double AoverR = a / rtemp;
+	double YoverR = Y_G / rtemp;
+	if (J2only)
+	{
+		S_34 = 0.0;
+		P_34 = 0.0;
+	}
+	else
+	{
+		S_34 = H * pow(AoverR, 3)*(YoverR)*(3.0 - 7.0*pow(YoverR, 2)) + D / 7.0*pow(AoverR, 4)*(3.0 - 42.0*pow(YoverR, 2) + 63.0*pow(YoverR, 4));
+		P_34 = H / 5.0*pow(AoverR, 2)*(15.0*(YoverR)-3.0) + D / 7.0*pow(AoverR, 2)*YoverR*(12.0 - 28.0*pow(YoverR, 2));
+	}
+	S = (-mu / pow(rtemp, 3))*(1.0 + J * pow(AoverR, 2)*(1.0 - 5.0 * pow(YoverR, 2)) + S_34);
+	P = (-mu / pow(rtemp, 2))*pow(AoverR, 2) *(2.0*J*(YoverR)+P_34);
+	GTEMP.x = Rvec.x*S + MX_A.m21*P; //gravity acceleration vector
+	GTEMP.y = Rvec.y*S + MX_A.m22*P;
+	GTEMP.z = Rvec.z*S + MX_A.m23*P;
+	return GTEMP;
+}
+
+VECTOR3 LVDCSV::DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec)
+{
+	return _V(0, 0, 0);
 }
