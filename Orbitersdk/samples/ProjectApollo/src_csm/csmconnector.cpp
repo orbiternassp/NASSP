@@ -893,11 +893,10 @@ bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage
 	return false;
 }
 
-CSM_VHFto_LM_VHFConnector::CSM_VHFto_LM_VHFConnector(Saturn *s, VHFAMTransceiver *VHFxcvr, VHFRangingSystem *vhf_system): SaturnConnector(s)
+CSM_VHFto_LM_VHFConnector::CSM_VHFto_LM_VHFConnector(Saturn * s, VHFRangingSystem * vhf_system): SaturnConnector(s)
 {
 	type = VHF_RNG;
 	pVHFRngSys = vhf_system;
-	pVHFxcvr = VHFxcvr;
 }
 
 CSM_VHFto_LM_VHFConnector::~CSM_VHFto_LM_VHFConnector()
