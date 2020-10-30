@@ -476,9 +476,6 @@ public:
 	const double freqXCVR_A = 296.8; //MHz;
 	const double freqXCVR_B = 259.7; //MHz;
 
-	void SetRCVDrfPropA(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_A = freq; RCVDpowRCVR_A = pow; RCVDgainRCVR_A = gain; RCVDPhaseRCVR_A = phase; RCVDRangeTone = tone; };
-	//void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; }; //not needed at the moment
-
 	VHFAntenna* GetActiveAntenna() { return activeAntenna; };
 protected:
 	bool K1;
@@ -488,18 +485,6 @@ protected:
 	bool receiveB;
 	bool transmitA;
 	bool transmitB;
-
-	double RCVDfreqRCVR_A;
-	double RCVDpowRCVR_A;
-	double RCVDgainRCVR_A;
-	double RCVDPhaseRCVR_A;
-	bool RCVDRangeTone;
-
-	//not needed at the moment
-	//double RCVDfreqRCVR_B;
-	//double RCVDpowRCVR_B;
-	//double RCVDgainRCVR_B;
-	//double RCVDPhaseRCVR_B;
 
 
 	ThreePosSwitch *vhfASwitch;
