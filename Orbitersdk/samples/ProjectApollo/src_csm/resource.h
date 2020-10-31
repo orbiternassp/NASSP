@@ -784,9 +784,37 @@
 
 // VC Active Areas (Panel 1)
 #define AID_VC_FDAI_LEFT                                   3101
+#define AID_VC_MASTER_ALARM                                3102
 
 // VC Active Areas (Panel 2)
-#define AID_VC_FDAI_RIGHT                                  3201
+#define AID_VC_PANEL_2			((id >= 3200) && (id <= 3299))
+#define AID_VC_PUSHB_P2_01      3201    // DSKY key Verb
+#define AID_VC_PUSHB_P2_02      3202    // DSKY key Noun
+#define AID_VC_PUSHB_P2_03      3203    // DSKY key +
+#define AID_VC_PUSHB_P2_04      3204    // DSKY key -
+#define AID_VC_PUSHB_P2_05      3205    // DSKY key 0
+#define AID_VC_PUSHB_P2_06      3206    // DSKY key 1
+#define AID_VC_PUSHB_P2_07      3207    // DSKY key 2
+#define AID_VC_PUSHB_P2_08      3208    // DSKY key 3
+#define AID_VC_PUSHB_P2_09      3209    // DSKY key 4
+#define AID_VC_PUSHB_P2_10      3210    // DSKY key 5
+#define AID_VC_PUSHB_P2_11      3211    // DSKY key 6
+#define AID_VC_PUSHB_P2_12      3212    // DSKY key 7
+#define AID_VC_PUSHB_P2_13      3213    // DSKY key 8
+#define AID_VC_PUSHB_P2_14      3214    // DSKY key 9
+#define AID_VC_PUSHB_P2_15      3215    // DSKY key Clear
+#define AID_VC_PUSHB_P2_16      3216    // DSKY key Pro
+#define AID_VC_PUSHB_P2_17      3217    // DSKY key k. rel
+#define AID_VC_PUSHB_P2_18      3218    // DSKY key Enter
+#define AID_VC_PUSHB_P2_19      3219    // DSKY key Reset
+
+#define AID_VC_FDAI_RIGHT       3220
+#define AID_VC_DSKY_LIGHTS      3221
+#define AID_VC_DSKY_DISPLAY     3222
+#define AID_VC_DSKY_KEY         3223
+
+// VC Active Areas (Panel 3)
+#define AID_VC_MASTER_ALARM2                               3301
 
 // Next default values for new objects
 //

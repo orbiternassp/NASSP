@@ -100,6 +100,17 @@ namespace mission
 // Panel tilt
 const double P1_3_TILT = 19 * RAD;
 
+// Number of push buttons
+const int   P2_PUSHBCOUNT = 19;
+
+// Panel 2 push-buttons
+const VECTOR3 P2_PUSHB_POS[P2_PUSHBCOUNT] = {
+	{-0.4100, 0.5333, 0.3029}, {-0.4101, 0.5117, 0.2957}, {-0.3850, 0.5444, 0.3066}, {-0.3850, 0.5221, 0.2991}, {-0.3850, 0.5000, 0.2917},
+    {-0.3614, 0.5001, 0.2918}, {-0.3367, 0.5002, 0.2918}, {-0.3120, 0.5003, 0.2918}, {-0.3615, 0.5222, 0.2992}, {-0.3367, 0.5223, 0.2992},
+    {-0.3120, 0.5224, 0.2992}, {-0.3615, 0.5444, 0.3066}, {-0.3368, 0.5444, 0.3066}, {-0.3121, 0.5444, 0.3066}, {-0.2884, 0.5444, 0.3066},
+    {-0.2883, 0.5224, 0.2993}, {-0.2881, 0.5003, 0.2919}, {-0.2632, 0.5330, 0.3028}, {-0.2630, 0.5113, 0.2955}
+};
+
 ///
 /// \brief O2/H2 tank status.
 /// \ingroup InternalInterface
@@ -561,7 +572,9 @@ public:
 		//
 
 		// VC Sutfaces
-		//SRF_VC_DSKYDISP,
+		SRF_VC_DSKYDISP,
+		SRF_VC_DSKY_LIGHTS,
+		SRF_VC_DIGITALDISP,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -940,7 +953,7 @@ public:
 	///
 	/// \brief Initialise a virtual cockpit view.
 	///
-	void InitVC ();
+	void InitVC();
 	void ReleaseSurfacesVC();
 	void RegisterActiveAreas();
 

@@ -2551,7 +2551,9 @@ void Saturn::SetStage(int s)
 
 	CheckSMSystemsState();
 	CheckSaturnSystemsState();
-	
+
+	if (InVC) RegisterActiveAreas();
+
 	//
 	// Event management
 	//

@@ -46,18 +46,53 @@
 #include "CM_VC_Resource.h"
 
 
-void Saturn::InitVC ()
+void Saturn::InitVC()
 {
 	//int i;
 	TRACESETUP("Saturn::InitVC");
 
+	ReleaseSurfacesVC();
+
+	DWORD ck = oapiGetColour(255, 0, 255);
+
 	// Load CM VC surfaces
 
-	//srf[SRF_VC_DIGITALDISP] = oapiLoadTexture("ProjectApollo/VC/digitaldisp.dds");
+	srf[SRF_VC_DIGITALDISP] = oapiLoadTexture("ProjectApollo/VC/digitaldisp.dds");
+	//srf[SRF_VC_DIGITALDISP2] = oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
+	srf[SRF_VC_DSKYDISP] = oapiLoadTexture("ProjectApollo/VC/dsky_disp.dds");
+	srf[SRF_VC_DSKY_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/dsky_lights.dds");
 
-	//oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], 0);
+	/*srf[SRF_VC_RADAR_TAPEA] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_a.dds");
+	srf[SRF_VC_RADAR_TAPEB] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_b.dds");
+	srf[SRF_VC_RADAR_TAPE2] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales2.dds");
+	srf[SFR_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/lem_cw_lights.dds");
+	srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
+	srf[SRF_INDICATORREDVC] = oapiLoadTexture("ProjectApollo/VC/IndicatorRed.dds");
+	srf[SRF_LEM_MASTERALARMVC] = oapiLoadTexture("ProjectApollo/VC/lem_master_alarm.dds");
+	srf[SRF_DEDA_LIGHTSVC] = oapiLoadTexture("ProjectApollo/VC/ags_lights.dds");*/
+
+	// Set Colour Key
+
+	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], ck);
+	//oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DSKYDISP], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DSKY_LIGHTS], ck);
+
+	/*oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEA], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEB], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPE2], g_Param.col[4]);
+	oapiSetSurfaceColourKey(srf[SFR_VC_CW_LIGHTS], g_Param.col[4]);*/
+
+	//
+	// Register active areas for repainting here
+	//
 		
-	//reset state flags (see DeltaGlider for similar)
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 12);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 1);
+
+	// Panel 2
+	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254, 1235, 359, 1411), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS, _R(110, 1240, 212, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 }
 
@@ -88,6 +123,7 @@ bool Saturn::clbkLoadVC (int id)
 	//SetCameraShiftRange (_V(#,#,#), _V(#,#,#), _V(#,#,#));
 	// leaning forward/left/right
 
+	InitVC();
 	RegisterActiveAreas();
 
 	switch (id) {
@@ -166,57 +202,67 @@ void Saturn::RegisterActiveAreas() {
 
 	int i = 0;
 
-	VECTOR3 ofs;
-	ofs = _V(0.0, 0.0, CurrentViewOffset); // double check offset should be in 3rd bracket
+	VECTOR3 ofs = _V(0.0, 0.0, 0.0);
+	//if (vcidx != -1) GetMeshOffset(vcidx, ofs);
 
-	ReleaseSurfacesVC();
+	if (stage < 12) {
+		ofs.z = 43.65;
+	} else if (stage < 20) {
+		ofs.z = 28.5;
+	} else if (stage < 30) {
+		ofs.z = 15.25;
+	} else if (stage < 40) {
+		ofs.z = 2.1;
+	} else if (stage < 42) {
+		ofs.z = 0.0;
+	} else {
+		ofs.z = -1.2;
+	}
+
+	sprintf(oapiDebugString(), "OFS %lf", ofs.z);
 
 	MainPanelVC.ClearSwitches();
 
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 6);
-	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 8);
+	//
+	// Register active areas for switches/animations here
+	//
 
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
-	//register areas and AreaClickmodes
-		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
-		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
-		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
-	oapiVCRegisterArea(AID_MASTER_ALARM, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_MASTER_ALARM, _V(-0.205, -0.243, 0.61), 0.015);
-	oapiVCRegisterArea(AID_DSKY_KEY, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_DSKY_KEY, _V(0.162, -0.397, 0.557), _V(0.34, -0.397, 0.557), _V(0.162, -0.474, 0.53), _V(0.34, -0.474, 0.53));
+	oapiVCRegisterArea(AID_VC_MASTER_ALARM, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, 0.008);
 
+	oapiVCRegisterArea(AID_VC_MASTER_ALARM2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
 
-	//register areas and AreaClickmodes
-		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
-		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
-		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
-	oapiVCRegisterArea(AID_MASTER_ALARM, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_MASTER_ALARM, _V(0.804, 0.653, 0.463), 0.015);
-	oapiVCRegisterArea(AID_DSKY_KEY, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_DSKY_KEY, _V(0.442, 0.5, 0.407), _V(0.258, 0.5, 0.407), _V(0.258, 0.424, 0.38), _V(0.442, 0.424, 0.38));
+	//Panel 2
 
+	for (i = 0; i < P2_PUSHBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P2_01 + i, P2_PUSHB_POS[i] + ofs, 0.008);
+	}
 
-	//register areas and AreaClickmodes
-		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
-		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
-		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
-
-
-	//register areas and AreaClickmodes
-		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
-		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
-		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
-
-
-	//register areas and AreaClickmodes
-		//oapiVCRegisterArea (areaidentifier, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_"event1"|PANEL_MOUSE_"event2");
-		//oapiVCSetAreaClickmode_Spherical (areaidentifier, _V(#x,#y,#z,#radius);
-		//oapiVCSetAreaClickmode_Quadrilateral (areaidentifier, _V(uplftvect), _V(uprtvect), _V(lwrlftvect), _V(lwrrtvect));
-
-	InitVC();
+	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P2_01, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P2_02, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchPlus, AID_VC_PUSHB_P2_03, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchMinus, AID_VC_PUSHB_P2_04, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchZero, AID_VC_PUSHB_P2_05, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchOne, AID_VC_PUSHB_P2_06, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchTwo, AID_VC_PUSHB_P2_07, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchThree, AID_VC_PUSHB_P2_08, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchFour, AID_VC_PUSHB_P2_09, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchFive, AID_VC_PUSHB_P2_10, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchSix, AID_VC_PUSHB_P2_11, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchSeven, AID_VC_PUSHB_P2_12, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchEight, AID_VC_PUSHB_P2_13, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchNine, AID_VC_PUSHB_P2_14, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchClear, AID_VC_PUSHB_P2_15, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P2_16, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P2_17, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18, NULL);
+	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19, NULL);
 }
 
 // --------------------------------------------------------------
@@ -226,44 +272,15 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 {
 	TRACESETUP("Saturn::clbkVCMouseEvent");
 	switch (id) {
-	//case areaidentifier:
-	    //event stuff here
-		//return true;
-	//case areaidentifier:
-		//blah blah blah
-		//return true;
-	//}
 
-	case AID_MASTER_ALARM:
-	//case AID_MASTER_ALARM2:
-	//case AID_MASTER_ALARM3:
-		sprintf(oapiDebugString(), "Alarming...");
+	case AID_VC_MASTER_ALARM:
+	case AID_VC_MASTER_ALARM2:
+	//case AID_VC_MASTER_ALARM3:
+
 		return cws.CheckMasterAlarmMouseClick(event);
-
-	case AID_DSKY_KEY:
-		sprintf(oapiDebugString(), "DSKY-ing...");
-		int mx;
-		int my;
-
-		mx = int(p.x * 288);
-		my = int(p.y * 121);
-
-		if (event & PANEL_MOUSE_LBDOWN) {
-			dsky.ProcessKeyPress(mx, my);
-		} else if (event & PANEL_MOUSE_LBUP) {
-			dsky.ProcessKeyRelease(mx, my);
-		}
-		return true;
-
-	/*case AID_DSKY2_KEY:
-		if (event & PANEL_MOUSE_LBDOWN) {
-			dsky2.ProcessKeyPress(mx, my);
-		} else if (event & PANEL_MOUSE_LBUP) {
-			dsky2.ProcessKeyRelease(mx, my);
-		}
-		return true;*/
 	}
-	return false;
+	return MainPanelVC.VCMouseEvent(id, event, p);
+	//return false;
 }
 
 // --------------------------------------------------------------
@@ -280,52 +297,40 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//	return true if dynamic texture modified, false if not
 
 	case AID_VC_FDAI_LEFT:
-		if (!fdaiDisabled) {  // Is this FDAI enabled?
-			VECTOR3 euler_rates;
-			VECTOR3 attitude;
-			VECTOR3 errors;
 
-			euler_rates = eda.GetFDAI1AttitudeRate();
-			attitude = eda.GetFDAI1Attitude();
-			errors = eda.GetFDAI1AttitudeError();
+		VECTOR3 euler_rates_L;
+		VECTOR3 attitude_L;
+		VECTOR3 errors_L;
 
-			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
-			/*if (errors.x > 41) { errors.x = 41; }
-			else { if (errors.x < -41) { errors.x = -41; } }
-			if (errors.y > 41) { errors.y = 41; }
-			else { if (errors.y < -41) { errors.y = -41; } }
-			if (errors.z > 41) { errors.z = 41; }
-			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiLeft.PaintMe(attitude, 0, euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);*/
+		euler_rates_L = eda.GetFDAI1AttitudeRate();
+		attitude_L = eda.GetFDAI1Attitude();
+		errors_L = eda.GetFDAI1AttitudeError();
 
-			AnimateFDAI(attitude, euler_rates, errors, anim_fdaiR_L, anim_fdaiP_L, anim_fdaiY_L, anim_fdaiRerror_L, anim_fdaiPerror_L, anim_fdaiYerror_L, anim_fdaiRrate_L, anim_fdaiPrate_L, anim_fdaiYrate_L);
-		}
+		AnimateFDAI(attitude_L, euler_rates_L, errors_L, anim_fdaiR_L, anim_fdaiP_L, anim_fdaiY_L, anim_fdaiRerror_L, anim_fdaiPerror_L, anim_fdaiYerror_L, anim_fdaiRrate_L, anim_fdaiPrate_L, anim_fdaiYrate_L);
+
 		return true;
 
 	case AID_VC_FDAI_RIGHT:
-		if (!fdaiDisabled) {  // Is this FDAI enabled?
-			VECTOR3 euler_rates;
-			VECTOR3 attitude;
-			VECTOR3 errors;
 
-			euler_rates = eda.GetFDAI2AttitudeRate();
-			attitude = eda.GetFDAI2Attitude();
-			errors = eda.GetFDAI2AttitudeError();
+		VECTOR3 euler_rates_R;
+		VECTOR3 attitude_R;
+		VECTOR3 errors_R;
 
-			// ERRORS IN PIXELS -- ENFORCE LIMITS HERE
-			/*if (errors.x > 41) { errors.x = 41; }
-			else { if (errors.x < -41) { errors.x = -41; } }
-			if (errors.y > 41) { errors.y = 41; }
-			else { if (errors.y < -41) { errors.y = -41; } }
-			if (errors.z > 41) { errors.z = 41; }
-			else { if (errors.z < -41) { errors.z = -41; } }
-			fdaiRight.PaintMe(attitude, 0, euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], hBmpFDAIRollIndicator, fdaiSmooth);*/
+		euler_rates_R = eda.GetFDAI2AttitudeRate();
+		attitude_R = eda.GetFDAI2Attitude();
+		errors_R = eda.GetFDAI2AttitudeError();
 
-			AnimateFDAI(attitude, euler_rates, errors, anim_fdaiR_R, anim_fdaiP_R, anim_fdaiY_R, anim_fdaiRerror_R, anim_fdaiPerror_R, anim_fdaiYerror_R, anim_fdaiRrate_R, anim_fdaiPrate_R, anim_fdaiYrate_R);
-		}
+		AnimateFDAI(attitude_R, euler_rates_R, errors_R, anim_fdaiR_R, anim_fdaiP_R, anim_fdaiY_R, anim_fdaiRerror_R, anim_fdaiPerror_R, anim_fdaiYerror_R, anim_fdaiRrate_R, anim_fdaiPrate_R, anim_fdaiYrate_R);
+
 		return true;
 
+	case AID_VC_DSKY_DISPLAY:
+		dsky.RenderData(surf, srf[SRF_VC_DIGITALDISP], srf[SRF_VC_DSKYDISP]);
+		return true;
 
+	case AID_VC_DSKY_LIGHTS:
+		dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS]);
+		return true;
 
 
 	/*
@@ -353,11 +358,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 	case AID_MASTER_ALARM3:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
-		return true;
-
-
-	case AID_MASTER_ALARM:  //temp place holder so C++ doesn't complain
-		return false;*/
+		return true;*/
 
 	default:
 		return false;
@@ -783,17 +784,17 @@ void Saturn::InitFDAI(UINT mesh)
 	const VECTOR3 needleyvector = { 0.05, 0, 0 };
 	const VECTOR3 ratexvector = { 0.00, 0.062*cos(P1_3_TILT), 0.062*sin(P1_3_TILT) };
 	const VECTOR3 rateyvector = { 0.062, 0, 0 };
-	const VECTOR3 FDAI_PIVOTCDR = { -0.673236, 0.563893, 0.385934 }; // CDR FDAI Pivot Point
-	const VECTOR3 FDAI_PIVOTLMP = { -0.340246, 0.750031, 0.44815 }; // LMP FDAI Pivot Point
+	const VECTOR3 FDAI_PIVOT_L = { -0.673236, 0.563893, 0.385934 }; // L FDAI Pivot Point
+	const VECTOR3 FDAI_PIVOT_R = { -0.340246, 0.750031, 0.44815 }; // R FDAI Pivot Point
 
 	// L FDAI Ball
 	ANIMATIONCOMPONENT_HANDLE	ach_FDAIroll_L, ach_FDAIpitch_L, ach_FDAIyaw_L;
 	static UINT meshgroup_Fdai1_L = { VC_GRP_FDAIBall1_L }; // Roll gimbal meshgroup (includes roll incicator)
 	static UINT meshgroup_Fdai2_L = { VC_GRP_FDAIBall_L };  // Pitch gimbal meshgroup (visible ball)
 	static UINT meshgroup_Fdai3_L = { VC_GRP_FDAIBall2_L }; // Yaw gimbal meshgroup
-	static MGROUP_ROTATE mgt_FDAIRoll_L(mesh, &meshgroup_Fdai1_L, 1, FDAI_PIVOTCDR, fdairollaxis, (float)(RAD * 360));
-	static MGROUP_ROTATE mgt_FDAIPitch_L(mesh, &meshgroup_Fdai2_L, 1, FDAI_PIVOTCDR, _V(-1, 0, 0), (float)(RAD * 360));
-	static MGROUP_ROTATE mgt_FDAIYaw_L(mesh, &meshgroup_Fdai3_L, 1, FDAI_PIVOTCDR, fdaiyawvaxis, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIRoll_L(mesh, &meshgroup_Fdai1_L, 1, FDAI_PIVOT_L, fdairollaxis, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIPitch_L(mesh, &meshgroup_Fdai2_L, 1, FDAI_PIVOT_L, _V(-1, 0, 0), (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIYaw_L(mesh, &meshgroup_Fdai3_L, 1, FDAI_PIVOT_L, fdaiyawvaxis, (float)(RAD * 360));
 	anim_fdaiR_L = CreateAnimation(0.0);
 	anim_fdaiP_L = CreateAnimation(0.0);
 	anim_fdaiY_L = CreateAnimation(0.0);
@@ -834,9 +835,9 @@ void Saturn::InitFDAI(UINT mesh)
 	static UINT meshgroup_Fdai1_R = { VC_GRP_FDAIBall1_R }; // Roll gimbal meshgroup (includes roll incicator)
 	static UINT meshgroup_Fdai2_R = { VC_GRP_FDAIBall_R };  // Pitch gimbal meshgroup (visible ball)
 	static UINT meshgroup_Fdai3_R = { VC_GRP_FDAIBall2_R }; // Yaw gimbal meshgroup
-	static MGROUP_ROTATE mgt_FDAIRoll_R(mesh, &meshgroup_Fdai1_R, 1, FDAI_PIVOTLMP, fdairollaxis, (float)(RAD * 360));
-	static MGROUP_ROTATE mgt_FDAIPitch_R(mesh, &meshgroup_Fdai2_R, 1, FDAI_PIVOTLMP, _V(-1, 0, 0), (float)(RAD * 360));
-	static MGROUP_ROTATE mgt_FDAIYaw_R(mesh, &meshgroup_Fdai3_R, 1, FDAI_PIVOTLMP, fdaiyawvaxis, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIRoll_R(mesh, &meshgroup_Fdai1_R, 1, FDAI_PIVOT_R, fdairollaxis, (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIPitch_R(mesh, &meshgroup_Fdai2_R, 1, FDAI_PIVOT_R, _V(-1, 0, 0), (float)(RAD * 360));
+	static MGROUP_ROTATE mgt_FDAIYaw_R(mesh, &meshgroup_Fdai3_R, 1, FDAI_PIVOT_R, fdaiyawvaxis, (float)(RAD * 360));
 	anim_fdaiR_R = CreateAnimation(0.0);
 	anim_fdaiP_R = CreateAnimation(0.0);
 	anim_fdaiY_R = CreateAnimation(0.0);

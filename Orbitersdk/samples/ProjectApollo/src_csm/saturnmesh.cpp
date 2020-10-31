@@ -707,6 +707,7 @@ void Saturn::SetCSMStage ()
 
 	// VC
 	UpdateVC(mesh_dir);
+	VCMeshOffset = mesh_dir;
 
 	//Interior
 	meshidx = AddMesh(hCMInt, &mesh_dir);
@@ -1516,6 +1517,7 @@ void Saturn::SetRecovery()
 
 	// VC
 	UpdateVC(mesh_dir);
+	VCMeshOffset = mesh_dir;
 
 	if (Crewed) {
 		mesh_dir =_V(2.7,1.8,-1.5);
@@ -1824,20 +1826,14 @@ void Saturn::LoadVC()
 	VECTOR3 mesh_dir = _V(0, 0, 0);
 	vcidx = AddMesh(hCMVC, &mesh_dir);
 	SetMeshVisibilityMode(vcidx, MESHVIS_VC);
-	VCMeshOffset = mesh_dir;
 	DefineVCAnimations();
 }
 
 void Saturn::UpdateVC(VECTOR3 meshdir)
 {
-	VECTOR3 vcofs;
-	VECTOR3 vcdir;
-	GetMeshOffset(vcidx, vcofs);
-	vcdir.x = meshdir.x - vcofs.x;
-	vcdir.y = meshdir.y - vcofs.y;
-	vcdir.z = meshdir.z - vcofs.z;
-	ShiftMesh(vcidx, vcdir);
-	VCMeshOffset = meshdir;
+	VECTOR3 ofs;
+	GetMeshOffset(vcidx, ofs);
+	ShiftMesh(vcidx, meshdir - ofs);
 }
 
 void Saturn::ClearMeshes() {
