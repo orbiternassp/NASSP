@@ -236,6 +236,61 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_MASTER_ALARM2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
 
+	// Panel 1
+	for (i = 0; i < P1_SWITCHCOUNT_C; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS_C[i] /*+ P1_CLICK*/ + ofs, 0.006);
+	}
+
+	MainPanelVC.AddSwitch(&EMSModeSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
+	MainPanelVC.AddSwitch(&CMCAttSwitch, AID_VC_SWITCH_P1_02, &anim_P1switch[1]);
+	MainPanelVC.AddSwitch(&FDAIScaleSwitch, AID_VC_SWITCH_P1_03, &anim_P1switch[2]);
+	MainPanelVC.AddSwitch(&FDAISelectSwitch, AID_VC_SWITCH_P1_04, &anim_P1switch[3]);
+	MainPanelVC.AddSwitch(&FDAISourceSwitch, AID_VC_SWITCH_P1_05, &anim_P1switch[4]);
+	MainPanelVC.AddSwitch(&FDAIAttSetSwitch, AID_VC_SWITCH_P1_06, &anim_P1switch[5]);
+	MainPanelVC.AddSwitch(&ManualAttRollSwitch, AID_VC_SWITCH_P1_07, &anim_P1switch[6]);
+	MainPanelVC.AddSwitch(&ManualAttPitchSwitch, AID_VC_SWITCH_P1_08, &anim_P1switch[7]);
+	MainPanelVC.AddSwitch(&ManualAttYawSwitch, AID_VC_SWITCH_P1_09, &anim_P1switch[8]);
+	MainPanelVC.AddSwitch(&LimitCycleSwitch, AID_VC_SWITCH_P1_10, &anim_P1switch[9]);
+	MainPanelVC.AddSwitch(&AttDeadbandSwitch, AID_VC_SWITCH_P1_11, &anim_P1switch[10]);
+	MainPanelVC.AddSwitch(&AttRateSwitch, AID_VC_SWITCH_P1_12, &anim_P1switch[11]);
+	MainPanelVC.AddSwitch(&TransContrSwitch, AID_VC_SWITCH_P1_13, &anim_P1switch[12]);
+	MainPanelVC.AddSwitch(&RotPowerNormal1Switch, AID_VC_SWITCH_P1_14, &anim_P1switch[13]);
+	MainPanelVC.AddSwitch(&RotPowerNormal2Switch, AID_VC_SWITCH_P1_15, &anim_P1switch[14]);
+	MainPanelVC.AddSwitch(&RotPowerDirect1Switch, AID_VC_SWITCH_P1_16, &anim_P1switch[15]);
+	MainPanelVC.AddSwitch(&RotPowerDirect2Switch, AID_VC_SWITCH_P1_17, &anim_P1switch[16]);
+	MainPanelVC.AddSwitch(&SCContSwitch, AID_VC_SWITCH_P1_18, &anim_P1switch[17]);
+	MainPanelVC.AddSwitch(&CMCModeSwitch, AID_VC_SWITCH_P1_19, &anim_P1switch[18]);
+	MainPanelVC.AddSwitch(&BMAGRollSwitch, AID_VC_SWITCH_P1_20, &anim_P1switch[19]);
+	MainPanelVC.AddSwitch(&BMAGPitchSwitch, AID_VC_SWITCH_P1_21, &anim_P1switch[20]);
+	MainPanelVC.AddSwitch(&BMAGYawSwitch, AID_VC_SWITCH_P1_22, &anim_P1switch[21]);
+	MainPanelVC.AddSwitch(&dVThrust1Switch, AID_VC_SWITCH_P1_23, &anim_P1switch[22]);
+	MainPanelVC.AddSwitch(&dVThrust2Switch, AID_VC_SWITCH_P1_24, &anim_P1switch[23]);
+	MainPanelVC.AddSwitch(&SCSTvcPitchSwitch, AID_VC_SWITCH_P1_25, &anim_P1switch[24]);
+	MainPanelVC.AddSwitch(&SCSTvcYawSwitch, AID_VC_SWITCH_P1_26, &anim_P1switch[25]);
+	MainPanelVC.AddSwitch(&Pitch1Switch, AID_VC_SWITCH_P1_27, &anim_P1switch[26]);
+	MainPanelVC.AddSwitch(&Pitch2Switch, AID_VC_SWITCH_P1_28, &anim_P1switch[27]);
+	MainPanelVC.AddSwitch(&Yaw1Switch, AID_VC_SWITCH_P1_29, &anim_P1switch[28]);
+	MainPanelVC.AddSwitch(&Yaw2Switch, AID_VC_SWITCH_P1_30, &anim_P1switch[29]);
+	MainPanelVC.AddSwitch(&CGSwitch, AID_VC_SWITCH_P1_31, &anim_P1switch[30]);
+	MainPanelVC.AddSwitch(&ELSLogicSwitch, AID_VC_SWITCH_P1_32, &anim_P1switch[31]);
+	MainPanelVC.AddSwitch(&ELSAutoSwitch, AID_VC_SWITCH_P1_33, &anim_P1switch[32]);
+	MainPanelVC.AddSwitch(&CMRCSLogicSwitch, AID_VC_SWITCH_P1_34, &anim_P1switch[33]);
+	MainPanelVC.AddSwitch(&CMPropDumpSwitch, AID_VC_SWITCH_P1_35, &anim_P1switch[34]);
+	MainPanelVC.AddSwitch(&CMPropPurgeSwitch, AID_VC_SWITCH_P1_36, &anim_P1switch[35]);
+	MainPanelVC.AddSwitch(&IMUGuardedCageSwitch, AID_VC_SWITCH_P1_37, &anim_P1switch[36]);
+	MainPanelVC.AddSwitch(&EMSRollSwitch, AID_VC_SWITCH_P1_38, &anim_P1switch[37]);
+	MainPanelVC.AddSwitch(&GSwitch, AID_VC_SWITCH_P1_39, &anim_P1switch[38]);
+	MainPanelVC.AddSwitch(&LVSPSPcIndicatorSwitch, AID_VC_SWITCH_P1_40, &anim_P1switch[39]);
+	MainPanelVC.AddSwitch(&LVFuelTankPressIndicatorSwitch, AID_VC_SWITCH_P1_41, &anim_P1switch[40]);
+	MainPanelVC.AddSwitch(&TVCGimbalDrivePitchSwitch, AID_VC_SWITCH_P1_42, &anim_P1switch[41]);
+	MainPanelVC.AddSwitch(&TVCGimbalDriveYawSwitch, AID_VC_SWITCH_P1_43, &anim_P1switch[42]);
+	MainPanelVC.AddSwitch(&EventTimerUpDownSwitch, AID_VC_SWITCH_P1_44, &anim_P1switch[43]);
+	MainPanelVC.AddSwitch(&EventTimerContSwitch, AID_VC_SWITCH_P1_45, &anim_P1switch[44]);
+	MainPanelVC.AddSwitch(&EventTimerMinutesSwitch, AID_VC_SWITCH_P1_46, &anim_P1switch[45]);
+	MainPanelVC.AddSwitch(&EventTimerSecondsSwitch, AID_VC_SWITCH_P1_47, &anim_P1switch[46]);
+
 	//Panel 2
 
 	for (i = 0; i < P2_PUSHBCOUNT; i++)
@@ -360,9 +415,12 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
 		return true;*/
 
-	default:
-		return false;
+	/*default:
+		return false;*/
 	}
+
+	return MainPanelVC.VCRedrawEvent(id, event, surf);
+	//return false;
 }
 
 
@@ -639,8 +697,8 @@ void Saturn::SetView(double offset, bool update_direction)
 
 void Saturn::InitVCAnimations() {
 
-	/*anim_P1switch[P1_SWITCHCOUNT] = -1;
-	anim_P1_Rot[P1_ROTCOUNT] = -1;
+	anim_P1switch[P1_SWITCHCOUNT_C] = -1;
+	/*anim_P1_Rot[P1_ROTCOUNT] = -1;
 	anim_P1needles[P1_NEEDLECOUNT] = -1;
 	anim_P2switch[P2_SWITCHCOUNT] = -1;
 	anim_P2_Rot[P2_ROTCOUNT] = -1;
@@ -700,11 +758,11 @@ void Saturn::InitVCAnimations() {
 
 void Saturn::DeleteVCAnimations()
 {
-	/*int i = 0;
+	int i = 0;
 
-	for (i = 0; i < P1_SWITCHCOUNT; i++) delete mgt_P1switch[i];
+	for (i = 0; i < P1_SWITCHCOUNT_C; i++) delete mgt_P1switch[i];
 
-	for (i = 0; i < P1_ROTCOUNT; i++) delete mgt_P1Rot[i];
+	/*for (i = 0; i < P1_ROTCOUNT; i++) delete mgt_P1Rot[i];
 
 	for (i = 0; i < P1_NEEDLECOUNT; i++) delete mgt_P1needles[i];
 
@@ -769,6 +827,17 @@ void Saturn::DefineVCAnimations()
 
 {
 	UINT mesh = vcidx;
+
+	// Panel 1 switches/rotaries/needles
+	static UINT meshgroup_P1switches[P1_SWITCHCOUNT_C]/*, meshgroup_P1Rots[P1_ROTCOUNT], meshgroup_P1needles[P1_NEEDLECOUNT]*/;
+	for (int i = 0; i < P1_SWITCHCOUNT_C; i++)
+	{
+		meshgroup_P1switches[i] = VC_GRP_Sw_P1_01 + i;
+		mgt_P1switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1switches[i], 1, P1_TOGGLE_POS_C[i], _V(1, 0, 0), (float)PI / 4);
+		anim_P1switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P1switch[i], 0.0f, 1.0f, mgt_P1switch[i]);
+	}
+
 	InitFDAI(mesh);
 }
 

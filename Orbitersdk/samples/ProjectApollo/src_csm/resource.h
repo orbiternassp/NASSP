@@ -783,8 +783,58 @@
 #define IDB_SWITCHGUARDS90_RIGHT                           1068
 
 // VC Active Areas (Panel 1)
-#define AID_VC_FDAI_LEFT                                   3101
-#define AID_VC_MASTER_ALARM                                3102
+
+#define AID_VC_PANEL_1				    ((id >= 3100) && (id <= 3199))
+#define AID_VC_SWITCH_P1_01		        3101
+#define AID_VC_SWITCH_P1_02		        3102
+#define AID_VC_SWITCH_P1_03		        3103
+#define AID_VC_SWITCH_P1_04		        3104
+#define AID_VC_SWITCH_P1_05		        3105
+#define AID_VC_SWITCH_P1_06		        3106
+#define AID_VC_SWITCH_P1_07		        3107
+#define AID_VC_SWITCH_P1_08		        3108
+#define AID_VC_SWITCH_P1_09		        3109
+#define AID_VC_SWITCH_P1_10		        3110
+#define AID_VC_SWITCH_P1_11		        3111
+#define AID_VC_SWITCH_P1_12		        3112
+#define AID_VC_SWITCH_P1_13		        3113
+#define AID_VC_SWITCH_P1_14		        3114
+#define AID_VC_SWITCH_P1_15		        3115
+#define AID_VC_SWITCH_P1_16		        3116
+#define AID_VC_SWITCH_P1_17		        3117
+#define AID_VC_SWITCH_P1_18		        3118
+#define AID_VC_SWITCH_P1_19		        3119
+#define AID_VC_SWITCH_P1_20		        3120
+#define AID_VC_SWITCH_P1_21		        3121
+#define AID_VC_SWITCH_P1_22		        3122
+#define AID_VC_SWITCH_P1_23		        3123
+#define AID_VC_SWITCH_P1_24		        3124
+#define AID_VC_SWITCH_P1_25		        3125
+#define AID_VC_SWITCH_P1_26		        3126
+#define AID_VC_SWITCH_P1_27		        3127
+#define AID_VC_SWITCH_P1_28		        3128
+#define AID_VC_SWITCH_P1_29		        3129
+#define AID_VC_SWITCH_P1_30		        3130
+#define AID_VC_SWITCH_P1_31		        3131
+#define AID_VC_SWITCH_P1_32		        3132
+#define AID_VC_SWITCH_P1_33		        3133
+#define AID_VC_SWITCH_P1_34		        3134
+#define AID_VC_SWITCH_P1_35		        3135
+#define AID_VC_SWITCH_P1_36		        3136
+#define AID_VC_SWITCH_P1_37		        3137
+#define AID_VC_SWITCH_P1_38		        3138
+#define AID_VC_SWITCH_P1_39		        3139
+#define AID_VC_SWITCH_P1_40		        3140
+#define AID_VC_SWITCH_P1_41		        3141
+#define AID_VC_SWITCH_P1_42		        3142
+#define AID_VC_SWITCH_P1_43		        3143
+#define AID_VC_SWITCH_P1_44		        3144
+#define AID_VC_SWITCH_P1_45		        3145
+#define AID_VC_SWITCH_P1_46		        3146
+#define AID_VC_SWITCH_P1_47		        3147
+
+#define AID_VC_FDAI_LEFT                3148
+#define AID_VC_MASTER_ALARM             3149
 
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 3200) && (id <= 3299))
