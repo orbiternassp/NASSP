@@ -375,7 +375,6 @@ typedef struct
   unsigned Trap31B:1;           // Enable flag for Trap 31B
   unsigned Trap32:1;            // Enable flag for Trap 32
   uint32_t WarningFilter;       // Current voltage of the AGC warning filter
-  int VoltageAlarm;         // AGC Voltage Alarm
   uint64_t /*unsigned long long */ DownruptTime;	// Time when next DOWNRUPT occurs.
   int NextZ;                    // Next value for the Z register
   int ScalerCounter;            // Counter to keep track of scaler increment timing
