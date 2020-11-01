@@ -1341,6 +1341,7 @@ VHFAMTransceiver::VHFAMTransceiver()
 	RCVDPhaseRCVR_A = 0.0;
 	RCVDRangeTone = false;
 
+	lem = NULL;
 }
 
 void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt)
@@ -1353,12 +1354,25 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 	antSelectorSw = antSelSw;
 	leftAntenna = lAnt;
 	rightAntenna = rAnt;
+
+	if (!lem) {
+		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
+		if (lm) {
+			lem = (static_cast<LEM*>(lm));
+			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+		}
+	}
 }
 
 void VHFAMTransceiver::Timestep()
 {
-	
-	//sprintf(oapiDebugString(), "%d", antSelectorSw->GetState());
+	if (!lem) {
+		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
+		if (lm) {
+			lem = (static_cast<LEM*>(lm));
+			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+		}
+	}
 
 	if (antSelectorSw->GetState() == 0)
 	{
@@ -1431,6 +1445,10 @@ void VHFAMTransceiver::Timestep()
 	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", K1, K2, transmitA, transmitB, receiveA, receiveB);
 }
 
+void VHFAMTransceiver::sendRanging()
+{
+
+}
 // Load
 void VHFAMTransceiver::LoadState(char *line) {
 	int one, two, three, four, five, six;
@@ -1478,14 +1496,6 @@ void VHFRangingSystem::Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitc
 	powerswitch = powersw;
 	resetswitch = resetsw;
 	transceiver =  transc;
-
-	if (!lem) {
-		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
-		if (lm) {
-			lem = (static_cast<LEM*>(lm));
-			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
-		}
-	}
 }
 
 void VHFRangingSystem::RangingReturnSignal()
@@ -1543,7 +1553,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 				if (newrange > 500.0*0.3048 && newrange < 327.68*1852.0)
 				{
 					lem->SendVHFRangingSignal(sat, false); // ############################# REPLACE THIS ##############################
-					sat->csm_vhfto_lm_vhfconnector.SendRF(0.0, 0.0, 0.0, 0.0,true);
+					//VHFAMTransceiver::sendRanging();
 				}
 			}
 

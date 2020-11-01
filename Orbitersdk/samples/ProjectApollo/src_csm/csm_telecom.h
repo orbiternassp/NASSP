@@ -464,6 +464,8 @@ private:
 	VECTOR3 pointingVector;
 };
 
+class LEM;
+
 class VHFAMTransceiver
 {
 public:
@@ -475,6 +477,7 @@ public:
 	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
 	const double freqXCVR_A = 296.8; //MHz;
 	const double freqXCVR_B = 259.7; //MHz;
+	void sendRanging();
 
 	void SetRCVDrfPropA(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_A = freq; RCVDpowRCVR_A = pow; RCVDgainRCVR_A = gain; RCVDPhaseRCVR_A = phase; RCVDRangeTone = tone; };
 	//void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; }; //not needed at the moment
@@ -511,9 +514,9 @@ protected:
 	VHFAntenna *rightAntenna;
 	VHFAntenna *activeAntenna;
 	Saturn *sat;
+	LEM *lem;
 };
 
-class LEM;
 
 class VHFRangingSystem
 {
