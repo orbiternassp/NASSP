@@ -858,10 +858,26 @@
 #define AID_VC_PUSHB_P2_18      3218    // DSKY key Enter
 #define AID_VC_PUSHB_P2_19      3219    // DSKY key Reset
 
-#define AID_VC_FDAI_RIGHT       3220
-#define AID_VC_DSKY_LIGHTS      3221
-#define AID_VC_DSKY_DISPLAY     3222
-#define AID_VC_DSKY_KEY         3223
+#define AID_VC_SWITCH_P2_01		3220
+#define AID_VC_SWITCH_P2_02	    3221
+#define AID_VC_SWITCH_P2_03		3222
+#define AID_VC_SWITCH_P2_04		3223
+#define AID_VC_SWITCH_P2_05	    3224
+#define AID_VC_SWITCH_P2_06		3225
+#define AID_VC_SWITCH_P2_07		3226
+#define AID_VC_SWITCH_P2_08		3227
+#define AID_VC_SWITCH_P2_09		3228
+#define AID_VC_SWITCH_P2_10		3229
+#define AID_VC_SWITCH_P2_11		3230
+#define AID_VC_SWITCH_P2_12		3231
+#define AID_VC_SWITCH_P2_13		3232
+#define AID_VC_SWITCH_P2_14		3233
+#define AID_VC_SWITCH_P2_15		3234
+
+#define AID_VC_FDAI_RIGHT       3235
+#define AID_VC_DSKY_LIGHTS      3236
+#define AID_VC_DSKY_DISPLAY     3237
+#define AID_VC_DSKY_KEY         3238
 
 // VC Active Areas (Panel 3)
 #define AID_VC_MASTER_ALARM2                               3301

@@ -1,10 +1,10 @@
 // ========================================================
 // Mesh resource file for CM-VC.msh
-// Generated with meshc on Sat Oct 31 15:43:29 2020
+// Generated with meshc on Sat Oct 31 19:36:23 2020
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 183
+#define VC_NGRP 193
 
 // Number of materials:
 #define VC_NMAT 28
@@ -187,12 +187,22 @@
 #define VC_GRP_Sw_P1_45 171
 #define VC_GRP_Sw_P1_46 172
 #define VC_GRP_Sw_P1_47 173
-#define VC_GRP_zzzSwitchGuard_P1 174
-#define VC_GRP_zzzSwitchGuardbak 175
-#define VC_GRP_zzzSwitchGuardbak1 176
-#define VC_GRP_zzzSwitchHolder_1bak 177
-#define VC_GRP_zzzSwitchHolder_2bak 178
-#define VC_GRP_zzzSwitchHolder_3bak 179
-#define VC_GRP_zzzSwitchHolder_P1 180
-#define VC_GRP_zzzSwitch_1bak 181
-#define VC_GRP_zzzSwitch_2bak 182
+#define VC_GRP_Sw_P2_01 174
+#define VC_GRP_Sw_P2_02 175
+#define VC_GRP_Sw_P2_03 176
+#define VC_GRP_Sw_P2_04 177
+#define VC_GRP_Sw_P2_05 178
+#define VC_GRP_Sw_P2_06 179
+#define VC_GRP_Sw_P2_07 180
+#define VC_GRP_Sw_P2_08 181
+#define VC_GRP_Sw_P2_09 182
+#define VC_GRP_Sw_P2_10 183
+#define VC_GRP_Sw_P2_11 184
+#define VC_GRP_Sw_P2_12 185
+#define VC_GRP_Sw_P2_13 186
+#define VC_GRP_Sw_P2_14 187
+#define VC_GRP_Sw_P2_15 188
+#define VC_GRP_zzzSwitchGuard_P1 189
+#define VC_GRP_zzzSwitchGuard_P2 190
+#define VC_GRP_zzzSwitchHolder_P1 191
+#define VC_GRP_zzzSwitchHolder_P2 192

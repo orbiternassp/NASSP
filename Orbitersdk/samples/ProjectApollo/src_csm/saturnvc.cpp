@@ -293,11 +293,33 @@ void Saturn::RegisterActiveAreas() {
 
 	//Panel 2
 
+	for (i = 0; i < P2_SWITCHCOUNT_C; i++)
+	{
+		oapiVCRegisterArea(AID_VC_SWITCH_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS_C[i] /*+ P2_CLICK*/ + ofs, 0.006);
+	}
+
 	for (i = 0; i < P2_PUSHBCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P2_01 + i, P2_PUSHB_POS[i] + ofs, 0.008);
 	}
+
+	MainPanelVC.AddSwitch(&EDSSwitch, AID_VC_SWITCH_P2_01, &anim_P2switch[0]);
+	MainPanelVC.AddSwitch(&CsmLmFinalSep1Switch, AID_VC_SWITCH_P2_02, &anim_P2switch[1]);
+	MainPanelVC.AddSwitch(&CsmLmFinalSep2Switch, AID_VC_SWITCH_P2_03, &anim_P2switch[2]);
+	MainPanelVC.AddSwitch(&CmSmSep1Switch, AID_VC_SWITCH_P2_04, &anim_P2switch[3]);
+	MainPanelVC.AddSwitch(&CmSmSep2Switch, AID_VC_SWITCH_P2_05, &anim_P2switch[4]);
+	MainPanelVC.AddSwitch(&SIVBPayloadSepSwitch, AID_VC_SWITCH_P2_06, &anim_P2switch[5]);
+	MainPanelVC.AddSwitch(&PropDumpAutoSwitch, AID_VC_SWITCH_P2_07, &anim_P2switch[6]);
+	MainPanelVC.AddSwitch(&TwoEngineOutAutoSwitch, AID_VC_SWITCH_P2_08, &anim_P2switch[7]);
+	MainPanelVC.AddSwitch(&LVRateAutoSwitch, AID_VC_SWITCH_P2_09, &anim_P2switch[8]);
+	MainPanelVC.AddSwitch(&TowerJett1Switch, AID_VC_SWITCH_P2_10, &anim_P2switch[9]);
+	MainPanelVC.AddSwitch(&TowerJett2Switch, AID_VC_SWITCH_P2_11, &anim_P2switch[10]);
+	MainPanelVC.AddSwitch(&LVGuidanceSwitch, AID_VC_SWITCH_P2_12, &anim_P2switch[11]);
+	MainPanelVC.AddSwitch(&SIISIVBSepSwitch, AID_VC_SWITCH_P2_13, &anim_P2switch[12]); // Fix: Change for Apollo 7
+	MainPanelVC.AddSwitch(&TLIEnableSwitch, AID_VC_SWITCH_P2_14, &anim_P2switch[13]); // Fix: Change for Apollo 7
+	MainPanelVC.AddSwitch(&MainReleaseSwitch, AID_VC_SWITCH_P2_15, &anim_P2switch[14]);
 
 	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P2_01, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P2_02, NULL);
@@ -699,9 +721,9 @@ void Saturn::InitVCAnimations() {
 
 	anim_P1switch[P1_SWITCHCOUNT_C] = -1;
 	/*anim_P1_Rot[P1_ROTCOUNT] = -1;
-	anim_P1needles[P1_NEEDLECOUNT] = -1;
-	anim_P2switch[P2_SWITCHCOUNT] = -1;
-	anim_P2_Rot[P2_ROTCOUNT] = -1;
+	anim_P1needles[P1_NEEDLECOUNT] = -1;*/
+	anim_P2switch[P2_SWITCHCOUNT_C] = -1;
+	/*anim_P2_Rot[P2_ROTCOUNT] = -1;
 	anim_P2needles[P2_NEEDLECOUNT] = -1;
 	anim_P3switch[P3_SWITCHCOUNT] = -1;
 	anim_P3_Rot[P3_ROTCOUNT] = -1;
@@ -764,11 +786,11 @@ void Saturn::DeleteVCAnimations()
 
 	/*for (i = 0; i < P1_ROTCOUNT; i++) delete mgt_P1Rot[i];
 
-	for (i = 0; i < P1_NEEDLECOUNT; i++) delete mgt_P1needles[i];
+	for (i = 0; i < P1_NEEDLECOUNT; i++) delete mgt_P1needles[i];*/
 
-	for (i = 0; i < P2_SWITCHCOUNT; i++) delete mgt_P2switch[i];
+	for (i = 0; i < P2_SWITCHCOUNT_C; i++) delete mgt_P2switch[i];
 
-	for (i = 0; i < P2_ROTCOUNT; i++) delete mgt_P2Rot[i];
+	/*for (i = 0; i < P2_ROTCOUNT; i++) delete mgt_P2Rot[i];
 
 	for (i = 0; i < P2_NEEDLECOUNT; i++) delete mgt_P2needles[i];
 
@@ -836,6 +858,16 @@ void Saturn::DefineVCAnimations()
 		mgt_P1switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1switches[i], 1, P1_TOGGLE_POS_C[i], _V(1, 0, 0), (float)PI / 4);
 		anim_P1switch[i] = CreateAnimation(0.5);
 		AddAnimationComponent(anim_P1switch[i], 0.0f, 1.0f, mgt_P1switch[i]);
+	}
+
+	// Panel 2 switches/rotaries/needles
+	static UINT meshgroup_P2switches[P2_SWITCHCOUNT_C]/*, meshgroup_P2Rots[P2_ROTCOUNT], meshgroup_P2needles[P2_NEEDLECOUNT]*/;
+	for (int i = 0; i < P2_SWITCHCOUNT_C; i++)
+	{
+		meshgroup_P2switches[i] = VC_GRP_Sw_P2_01 + i;
+		mgt_P2switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P2switches[i], 1, P2_TOGGLE_POS_C[i], _V(1, 0, 0), (float)PI / 4);
+		anim_P2switch[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P2switch[i], 0.0f, 1.0f, mgt_P2switch[i]);
 	}
 
 	InitFDAI(mesh);
