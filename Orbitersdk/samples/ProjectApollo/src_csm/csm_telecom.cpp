@@ -1340,6 +1340,7 @@ VHFAMTransceiver::VHFAMTransceiver()
 	RCVDgainRCVR_A = 0.0;
 	RCVDPhaseRCVR_A = 0.0;
 	RCVDRangeTone = false;
+	XMITRangeTone = false;
 
 	lem = NULL;
 }
@@ -1442,14 +1443,14 @@ void VHFAMTransceiver::Timestep()
 		receiveB = false;
 	}
 
-	sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, true);
-
+	sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, XMITRangeTone);
+	XMITRangeTone = false;
 	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", K1, K2, transmitA, transmitB, receiveA, receiveB);
 }
 
 void VHFAMTransceiver::sendRanging()
 {
-
+	XMITRangeTone = true;
 }
 
 // Load
@@ -1488,7 +1489,7 @@ VHFRangingSystem::VHFRangingSystem()
 	hasLock = 0;
 
 	xmitFreq = 259.7; //MHz
-	xmitPower = 0.0;
+	xmitPower = 5.0; //watts
 	rangeTone = false;
 }
 

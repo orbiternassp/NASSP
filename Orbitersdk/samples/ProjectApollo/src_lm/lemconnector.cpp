@@ -295,6 +295,6 @@ void LM_VHFtoCSM_VHF_Connector::SendRF(double freq, double XMITpow, double XMITg
 
 bool LM_VHFtoCSM_VHF_Connector::ReceiveMessage(Connector * from, ConnectorMessage & m)
 {
-	sprintf(oapiDebugString(), "%lf",m.val1.dValue);
+	sprintf(oapiDebugString(), "%d", m.val1.bValue);
 	return false;
 }

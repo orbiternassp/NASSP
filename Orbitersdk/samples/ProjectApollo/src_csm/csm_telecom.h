@@ -497,6 +497,7 @@ protected:
 	double RCVDgainRCVR_A;
 	double RCVDPhaseRCVR_A;
 	bool RCVDRangeTone;
+	bool XMITRangeTone;
 
 	//not needed at the moment
 	//double RCVDfreqRCVR_B;
