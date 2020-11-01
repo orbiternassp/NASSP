@@ -647,6 +647,9 @@ void LEM::RegisterActiveAreas()
 	MainPanelVC.AddSwitch(&CDRAudioControlSwitch, AID_VC_SWITCH_P8_18, &anim_P8switch[17]);
 	MainPanelVC.AddSwitch(&CDRCOASSwitch, AID_VC_SWITCH_P8_19, &anim_P8switch[18]);
 
+	MainPanelVC.AddSwitch(&EDStage, AID_VC_STAGE_SWITCH, &anim_stageswitch);
+	EDStage.InitGuardVC(anim_stagecover);
+
 	MainPanelVC.AddSwitch(&CDRAudSBandVol, AID_VC_TW_P8_01, &anim_P8thumbwheels[0]);
 	MainPanelVC.AddSwitch(&CDRAudICSVol, AID_VC_TW_P8_02, &anim_P8thumbwheels[1]);
 	MainPanelVC.AddSwitch(&CDRAudVOXSens, AID_VC_TW_P8_03, &anim_P8thumbwheels[2]);
@@ -1010,10 +1013,6 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			RadarSlewSwitch.CheckMouseClickVC(event, p);
 			return true;
 
-		case AID_VC_STAGE_SWITCH:
-			EDStage.CheckMouseClickVC(event, p);
-			return true;
-
 		case AID_VC_START_BUTTON:
 			ManualEngineStart.CheckMouseClickVC(event);
 			return true;
@@ -1027,7 +1026,7 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			return true;
 
 		case AID_VC_PLUSX_BUTTON:
-			PlusXTranslationButton.ProcessMouseVC(event, p);
+			PlusXTranslationButton.CheckMouseClickVC(event, p);
 			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
@@ -1546,7 +1545,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_ABORT_BUTTON:
-		AbortSwitch.RedrawVC(anim_abortbutton);
+		AbortSwitch.DrawSwitchVC(anim_abortbutton);
 		return true;
 
 	case AID_VC_ABORTSTAGE_BUTTON:
@@ -1577,10 +1576,6 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		ASCBattery6BTB.DrawSwitchVC(surf, srf[SRF_INDICATORVC]);
 		return true;
 
-	case AID_VC_STAGE_SWITCH:
-		EDStage.DrawSwitchVC(anim_stageswitch, anim_stagecover);
-		return true;
-
 	case AID_VC_START_BUTTON:
 		ManualEngineStart.DoDrawSwitchVC(anim_startbutton);
 		return true;
@@ -1594,7 +1589,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_PLUSX_BUTTON:
-		PlusXTranslationButton.RedrawVC(anim_plusxbutton);
+		PlusXTranslationButton.DrawSwitchVC(anim_plusxbutton);
 		return true;
 	}
 

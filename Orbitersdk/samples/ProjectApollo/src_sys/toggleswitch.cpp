@@ -308,6 +308,48 @@ bool ToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 		return false;
 }
 
+bool ToggleSwitch::DoCheckMouseClickVC(int event, VECTOR3 &p)
+{
+	int OldState = state;
+
+	///
+	/// \todo Get CTRL state properly if and when Orbiter supports it.
+	///
+	SHORT ctrlState = GetKeyState(VK_SHIFT);
+
+	if (IsSpringLoaded())
+		SetHeld((ctrlState & 0x8000) != 0);
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+
+	if (event & PANEL_MOUSE_LBDOWN) {
+		if (state != TOGGLESWITCH_DOWN) {
+			SwitchTo(TOGGLESWITCH_DOWN, true);
+			Sclick.play();
+		}
+
+		else {
+			if (state != TOGGLESWITCH_UP) {
+				SwitchTo(TOGGLESWITCH_UP, true);
+				Sclick.play();
+			}
+		}
+	}
+	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
+		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
+		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
+	}
+	return true;
+}
+
+bool ToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
+{
+	return DoCheckMouseClickVC(event, p);
+}
+
 void ToggleSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
 {
@@ -326,6 +368,26 @@ void ToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface)
 {
 	if (visible) 
 		DoDrawSwitch(DrawSurface);
+}
+
+void ToggleSwitch::DoDrawSwitchVC(UINT anim)
+{
+	if (IsUp()) {
+		OurVessel->SetAnimation(anim, 1.0);
+	}
+	else if (IsCenter())
+	{
+		OurVessel->SetAnimation(anim, 0.5);
+	}
+	else
+	{
+		OurVessel->SetAnimation(anim, 0.0);
+	}
+}
+
+void ToggleSwitch::DrawSwitchVC(UINT anim)
+{
+	DoDrawSwitchVC(anim);
 }
 
 //
@@ -392,58 +454,6 @@ void ToggleSwitch::timestep(double missionTime)
 	SwitchTo(state);
 }
 
-bool ToggleSwitch::ProcessMouseVC(int event, VECTOR3 &p)
-{
-	int OldState = state;
-
-	///
-	/// \todo Get CTRL state properly if and when Orbiter supports it.
-	///
-	SHORT ctrlState = GetKeyState(VK_SHIFT);
-
-	if (IsSpringLoaded())
-		SetHeld((ctrlState & 0x8000) != 0);
-
-	//
-	// Yes, so now we just need to check whether it's an on or
-	// off click.
-	//
-
-	if (event & PANEL_MOUSE_LBDOWN) {
-		if (state != TOGGLESWITCH_DOWN) {
-			SwitchTo(TOGGLESWITCH_DOWN, true);
-			Sclick.play();
-		}
-
-		else {
-			if (state != TOGGLESWITCH_UP) {
-				SwitchTo(TOGGLESWITCH_UP, true);
-				Sclick.play();
-			}
-		}
-	}
-	else if (IsSpringLoaded() && ((event & (PANEL_MOUSE_LBUP | PANEL_MOUSE_RBUP)) != 0) && !IsHeld()) {
-		if (springLoaded == SPRINGLOADEDSWITCH_DOWN)   SwitchTo(TOGGLESWITCH_DOWN);
-		if (springLoaded == SPRINGLOADEDSWITCH_UP)     SwitchTo(TOGGLESWITCH_UP);
-	}
-	return true;
-}
-
-void ToggleSwitch::RedrawVC(UINT anim)
-{
-	if (IsUp()) {
-		OurVessel->SetAnimation(anim, 1.0);
-	}
-	else if (IsCenter())
-	{
-		OurVessel->SetAnimation(anim, 0.5);
-	}
-	else
-	{
-		OurVessel->SetAnimation(anim, 0.0);
-	}
-}
-
 //
 // Three pos switch.
 //
@@ -503,7 +513,7 @@ bool ThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
-bool ThreePosSwitch::ProcessMouseVC(int event, VECTOR3 &p)
+bool ThreePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 {
 	int OldState = state;
 
@@ -868,7 +878,7 @@ bool PushSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
-bool PushSwitch::ProcessMouseVC(int event, VECTOR3 &p) {
+bool PushSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	int OldState = state;
 
@@ -1305,7 +1315,7 @@ bool PanelSwitchesVC::VCMouseEvent(int id, int event, VECTOR3 &p)
 	{
 		if (id == SwitchArea[i])
 		{
-			SwitchList[i]->ProcessMouseVC(event, p);
+			SwitchList[i]->CheckMouseClickVC(event, p);
 			return true;
 		}
 	}
@@ -1318,7 +1328,7 @@ bool PanelSwitchesVC::VCRedrawEvent(int id, int event, SURFHANDLE surf)
 	{
 		if (id == SwitchArea[i])
 		{
-			SwitchList[i]->RedrawVC(*SwitchAnim[i]);
+			SwitchList[i]->DrawSwitchVC(*SwitchAnim[i]);
 			return true;
 		}
 	}
@@ -1499,6 +1509,7 @@ GuardedToggleSwitch::GuardedToggleSwitch() {
 	guardSurface = 0;
 	guardState = 0;
 	guardResetsState = true;
+	guardAnim = -1;
 }
 
 GuardedToggleSwitch::~GuardedToggleSwitch() {
@@ -1528,6 +1539,11 @@ void GuardedToggleSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE sur
 		switchRow->panelSwitches->soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
 }
 
+void GuardedToggleSwitch::InitGuardVC(UINT anim) {
+
+	guardAnim = anim;
+}
+
 void GuardedToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
 	if (!visible) return;
@@ -1554,18 +1570,19 @@ void GuardedToggleSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
-void GuardedToggleSwitch::DrawSwitchVC(UINT anim, UINT animguard) {
+void GuardedToggleSwitch::DrawSwitchVC(UINT anim) {
 
-	RedrawVC(anim);
+	DoDrawSwitchVC(anim);
 
-	if (guardState) {
-		OurVessel->SetAnimation(animguard, 1.0);
-	}
-	else {
-		OurVessel->SetAnimation(animguard, 0.0);
+	if (guardAnim != -1) {
+		if (guardState) {
+			OurVessel->SetAnimation(guardAnim, 1.0);
+		}
+		else {
+			OurVessel->SetAnimation(guardAnim, 0.0);
+		}
 	}
 }
-
 
 void GuardedToggleSwitch::DrawFlash(SURFHANDLE DrawSurface)
 
@@ -1640,7 +1657,7 @@ bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 	}
 	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
 		if (guardState) {
-			return ToggleSwitch::ProcessMouseVC(event, p);
+			return ToggleSwitch::CheckMouseClickVC(event, p);
 		}
 	}
 	return false;
@@ -2264,7 +2281,7 @@ void RotationalSwitch::SetState(int value)
 	SwitchTo(value);
 }
 
-void RotationalSwitch::RedrawVC(UINT anim)
+void RotationalSwitch::DrawSwitchVC(UINT anim)
 {
 	double state = 0;
 
@@ -2273,7 +2290,7 @@ void RotationalSwitch::RedrawVC(UINT anim)
 	OurVessel->SetAnimation(anim, state / 360);
 }
 
-bool RotationalSwitch::ProcessMouseVC(int event, VECTOR3 &p) {
+bool RotationalSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	int state = GetState();
 
@@ -2612,7 +2629,7 @@ bool ThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
-bool ThumbwheelSwitch::ProcessMouseVC(int event, VECTOR3 &p) {
+bool ThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	int OldState = state;
 
@@ -2649,7 +2666,7 @@ void ThumbwheelSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	oapiBlt(DrawSurface, switchSurface, x, y, state * width, 0, width, height, SURF_PREDEF_CK);
 }
 
-void ThumbwheelSwitch::RedrawVC(UINT anim) {
+void ThumbwheelSwitch::DrawSwitchVC(UINT anim) {
 
 	double s = ((double)state) / ((double)maxState);
 	OurVessel->SetAnimation(anim, s);

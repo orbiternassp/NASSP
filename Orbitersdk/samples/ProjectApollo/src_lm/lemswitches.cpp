@@ -1776,7 +1776,7 @@ void LMAbortStageButton::DrawSwitch(SURFHANDLE DrawSurface) {
 
 void LMAbortStageButton::DrawSwitchVC(UINT anim, UINT animguard) {
 
-	RedrawVC(anim);
+	DoDrawSwitchVC(anim);
 
 	if (guardState) {
 		lem->SetAnimation(animguard, 1.0);

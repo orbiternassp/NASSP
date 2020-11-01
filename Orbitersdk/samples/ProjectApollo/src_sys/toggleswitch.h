@@ -211,8 +211,8 @@ public:
 
 	virtual	void SetHeld(bool s) {};
 
-	virtual void RedrawVC(UINT anim) {}
-	virtual bool ProcessMouseVC(int event, VECTOR3 &p) { return false; }
+	virtual void DrawSwitchVC(UINT anim) {}
+	virtual bool CheckMouseClickVC(int event, VECTOR3 &p) { return false; }
 	
 protected:
 	///
@@ -296,9 +296,6 @@ public:
 	void SetSideways(int s) { Sideways = s; }
 	void SetDelayTime(double t) { delayTime = t; };
 
-	void RedrawVC(UINT anim);
-	bool ProcessMouseVC(int event, VECTOR3 &p);
-
 	bool Toggled() { return SwitchToggled; };
 	void ClearToggled() { SwitchToggled = false; };
 	
@@ -311,7 +308,9 @@ public:
 
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 	virtual void DrawSwitch(SURFHANDLE DrawSurface);
+	virtual void DrawSwitchVC(UINT anim);
 	virtual bool CheckMouseClick(int event, int mx, int my);
+	virtual bool CheckMouseClickVC(int event, VECTOR3 &p);
 	virtual void SaveState(FILEHANDLE scn);
 	virtual void LoadState(char *line);
 	virtual void SetState(int value); //Needed to properly process set states from toggle switches.
@@ -320,7 +319,9 @@ public:
 protected:
 	virtual void InitSound(SoundLib *s);
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
+	virtual void DoDrawSwitchVC(UINT anim);
 	bool DoCheckMouseClick(int event, int mx, int my);
+	bool DoCheckMouseClickVC(int event, VECTOR3 &p);
 
 	virtual unsigned int GetFlags();
 	virtual void SetFlags(unsigned int f);
@@ -426,7 +427,7 @@ public:
 	bool IsCenter() { return (GetState() == THREEPOSSWITCH_CENTER); };
 	bool IsUp() { return (GetState() == THREEPOSSWITCH_UP); };
 
-	bool ProcessMouseVC(int event, VECTOR3 &p);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 };
 
 ///
@@ -684,7 +685,7 @@ class PushSwitch: public ToggleSwitch {
 public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, char *dname = 0);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool ProcessMouseVC(int event, VECTOR3 &p);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 
 protected:
 	virtual void InitSound(SoundLib *s);
@@ -855,8 +856,9 @@ public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded = SPRINGLOADEDSWITCH_NONE);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf,
 				   int xOffset = 0, int yOffset = 0);
+	void InitGuardVC(UINT anim);
 	void DrawSwitch(SURFHANDLE DrawSurface);
-	void DrawSwitchVC(UINT anim, UINT animguard);
+	void DrawSwitchVC(UINT anim);
 	void DrawFlash(SURFHANDLE DrawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
@@ -878,6 +880,8 @@ protected:
 
 	SURFHANDLE guardSurface;
 	SURFHANDLE guardBorder;
+
+	UINT guardAnim;
 
 	int guardXOffset;
 	int guardYOffset;
@@ -1099,8 +1103,8 @@ public:
 	void SoundEnabled(bool on) { soundEnabled = on; };
 	void SetWraparound(bool w) { Wraparound = w; };
 
-	void RedrawVC(UINT anim);
-	bool ProcessMouseVC(int event, VECTOR3 &p);
+	void DrawSwitchVC(UINT anim);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 
 protected:
 	int	x;
@@ -1232,10 +1236,10 @@ public:
 	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
 	void DrawSwitch(SURFHANDLE drawSurface);
-	void RedrawVC(UINT anim);
+	void DrawSwitchVC(UINT anim);
 	void DrawFlash(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool ProcessMouseVC(int event, VECTOR3 &p);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	virtual bool SwitchTo(int newState);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);

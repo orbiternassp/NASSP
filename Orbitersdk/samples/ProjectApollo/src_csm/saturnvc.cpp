@@ -317,8 +317,8 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&TowerJett1Switch, AID_VC_SWITCH_P2_10, &anim_P2switch[9]);
 	MainPanelVC.AddSwitch(&TowerJett2Switch, AID_VC_SWITCH_P2_11, &anim_P2switch[10]);
 	MainPanelVC.AddSwitch(&LVGuidanceSwitch, AID_VC_SWITCH_P2_12, &anim_P2switch[11]);
-	MainPanelVC.AddSwitch(&SIISIVBSepSwitch, AID_VC_SWITCH_P2_13, &anim_P2switch[12]); // Fix: Change for Apollo 7
-	MainPanelVC.AddSwitch(&TLIEnableSwitch, AID_VC_SWITCH_P2_14, &anim_P2switch[13]); // Fix: Change for Apollo 7
+	MainPanelVC.AddSwitch(&SIISIVBSepSwitch, AID_VC_SWITCH_P2_13, &anim_P2switch[12]);
+	MainPanelVC.AddSwitch(&TLIEnableSwitch, AID_VC_SWITCH_P2_14, &anim_P2switch[13]);
 	MainPanelVC.AddSwitch(&MainReleaseSwitch, AID_VC_SWITCH_P2_15, &anim_P2switch[14]);
 
 	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P2_01, NULL);
