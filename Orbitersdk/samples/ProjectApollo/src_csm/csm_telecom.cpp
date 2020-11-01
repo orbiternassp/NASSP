@@ -1442,6 +1442,8 @@ void VHFAMTransceiver::Timestep()
 		receiveB = false;
 	}
 
+	sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, true);
+
 	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", K1, K2, transmitA, transmitB, receiveA, receiveB);
 }
 
@@ -1449,6 +1451,7 @@ void VHFAMTransceiver::sendRanging()
 {
 
 }
+
 // Load
 void VHFAMTransceiver::LoadState(char *line) {
 	int one, two, three, four, five, six;
@@ -1553,7 +1556,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 				if (newrange > 500.0*0.3048 && newrange < 327.68*1852.0)
 				{
 					lem->SendVHFRangingSignal(sat, false); // ############################# REPLACE THIS ##############################
-					//VHFAMTransceiver::sendRanging();
+					transceiver->sendRanging();
 				}
 			}
 
