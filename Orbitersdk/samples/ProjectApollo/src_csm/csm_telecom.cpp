@@ -1341,6 +1341,7 @@ VHFAMTransceiver::VHFAMTransceiver()
 	RCVDPhaseRCVR_A = 0.0;
 	RCVDRangeTone = false;
 	XMITRangeTone = false;
+	xmitPower = 5.0;
 
 	lem = NULL;
 }
@@ -1444,6 +1445,7 @@ void VHFAMTransceiver::Timestep()
 	}
 
 	sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, XMITRangeTone);
+	
 	XMITRangeTone = false;
 	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", K1, K2, transmitA, transmitB, receiveA, receiveB);
 }
@@ -1488,8 +1490,6 @@ VHFRangingSystem::VHFRangingSystem()
 	phaseLockTimer = 0.0;
 	hasLock = 0;
 
-	xmitFreq = 259.7; //MHz
-	xmitPower = 5.0; //watts
 	rangeTone = false;
 }
 

@@ -475,8 +475,6 @@ public:
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
-	const double freqXCVR_A = 296.8; //MHz;
-	const double freqXCVR_B = 259.7; //MHz;
 	void sendRanging();
 
 	void SetRCVDrfPropA(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_A = freq; RCVDpowRCVR_A = pow; RCVDgainRCVR_A = gain; RCVDPhaseRCVR_A = phase; RCVDRangeTone = tone; };
@@ -498,6 +496,10 @@ protected:
 	double RCVDPhaseRCVR_A;
 	bool RCVDRangeTone;
 	bool XMITRangeTone;
+
+	const double freqXCVR_A = 296.8; //MHz;
+	const double freqXCVR_B = 259.7; //MHz;
+	double xmitPower;
 
 	//not needed at the moment
 	//double RCVDfreqRCVR_B;
@@ -541,8 +543,6 @@ protected:
 	double phaseLockTimer;
 	int hasLock;
 
-	double xmitFreq;
-	double xmitPower;
 	bool rangeTone;
 
 	Saturn *sat;
