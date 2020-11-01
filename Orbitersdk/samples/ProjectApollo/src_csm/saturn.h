@@ -4445,6 +4445,7 @@ protected:
 	friend class SaturnLVSPSPcMeter;
 	friend class SaturnSPSHeliumNitrogenPressMeter;
 	friend class SaturnLMDPGauge;
+	friend class VHFAMTransceiver;
 	friend class VHFRangingSystem;
 	friend class RNDZXPDRSystem;
 	friend class DockingTargetSwitch;
