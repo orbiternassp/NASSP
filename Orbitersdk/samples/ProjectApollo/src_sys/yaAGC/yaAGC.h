@@ -1,6 +1,6 @@
 /*
-  Copyright 2003-2005 Ronald S. Burkey <info@sandroid.org>
-  
+  Copyright 2003-2005,2009 Ronald S. Burkey <info@sandroid.org>
+
   This file is part of yaAGC.
 
   yaAGC is free software; you can redistribute it and/or modify
@@ -18,14 +18,14 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   In addition, as a special exception, Ronald S. Burkey gives permission to
-  link the code of this program with the Orbiter SDK library (or with 
-  modified versions of the Orbiter SDK library that use the same license as 
-  the Orbiter SDK library), and distribute linked combinations including 
-  the two. You must obey the GNU General Public License in all respects for 
-  all of the code used other than the Orbiter SDK library. If you modify 
-  this file, you may extend this exception to your version of the file, 
-  but you are not obligated to do so. If you do not wish to do so, delete 
-  this exception statement from your version. 
+  link the code of this program with the Orbiter SDK library (or with
+  modified versions of the Orbiter SDK library that use the same license as
+  the Orbiter SDK library), and distribute linked combinations including
+  the two. You must obey the GNU General Public License in all respects for
+  all of the code used other than the Orbiter SDK library. If you modify
+  this file, you may extend this exception to your version of the file,
+  but you are not obligated to do so. If you do not wish to do so, delete
+  this exception statement from your version.
 
   Filename:	yaAGC.h
   Purpose:	Header file for common yaAGC-project functionality.
@@ -33,16 +33,18 @@
   Compiler:	GNU gcc
   Reference:	http://www.ibiblio.org/apollo/index.html
   Mods:		04/21/03 RSB.	Began.
-  		08/20/03 RSB.	Added uBit to ParseIoPacket.
+		08/20/03 RSB.	Added uBit to ParseIoPacket.
 		10/20/03 RSB.	Defined MSG_NOSIGNAL for Win32.
 		11/24/03 RSB.	Began trying to adjust for Mac OS X.
 		07/12/04 RSB	Q is now 16 bits
 		08/18/04 RSB	Added the __embedded__ type system.
 		02/27/05 RSB	Added the license exception, as required by
 				the GPL, for linking to Orbiter SDK libraries.
-		05/29/05 RSB	Added AGS equivalents for a couple of 
+		05/29/05 RSB	Added AGS equivalents for a couple of
 				AGC packet functions.
 		08/13/05 RSB	Added the extern "C" stuff.
+		02/28/09 RSB	Added FORMAT_64U, FORMAT_64O for bypassing
+				some compiler warnings on 64-bit machines.
 */
 
 #ifdef __cplusplus
@@ -56,45 +58,70 @@ extern "C" {
 #define unix
 #endif
 
-// Figure out the right include-files for socket stuff..
+	// Figure out the right include-files for socket stuff.
 #if defined(unix)
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <fcntl.h>
-#elif defined(WIN32)
-#include <windows.h>
-#include <winsock.h>
-#elif defined(__embedded__)
-#elif defined(SDCC)
+#include <stdint.h>
+#ifdef __APPLE_CC__
+#define FORMAT_64U "%llu"
+#define FORMAT_64O "%llo"
+#elif !defined(__WORDSIZE)
+#define FORMAT_64U "%llu"
+#define FORMAT_64O "%llo"
+#elif __WORDSIZE < 64
+#define FORMAT_64U "%llu"
+#define FORMAT_64O "%llo"
 #else
+#define FORMAT_64U "%lu"
+#define FORMAT_64O "%lo"
+#endif
+
+#elif defined(WIN32)
+
+#include <winsock2.h>
+#include <windows.h>
+
+#define FORMAT_64U "%llu"
+#define FORMAT_64O "%llo"
+
+#elif defined(__embedded__)
+
+#define FORMAT_64U "%llu"
+#define FORMAT_64O "%llo"
+
+#elif defined(SDCC)
+
+#else
+
 #error Sorry, cannot determine the target operating system.
 #endif
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
+
 #endif
 
 //--------------------------------------------------------------------------
 // Function prototypes.
 
-int FormIoPacket (int Channel, int Value, unsigned char *Packet);
-int ParseIoPacket (unsigned char *Packet, int *Channel, int *Value,
-		   int *uBit);
-int FormIoPacketAGS (int Type, int Data, unsigned char *Packet);
-int ParseIoPacketAGS (unsigned char *Packet, int *Type, int *Data);
+	int FormIoPacket(int Channel, int Value, unsigned char *Packet);
+	int ParseIoPacket(unsigned char *Packet, int *Channel, int *Value,
+		int *uBit);
+	int FormIoPacketAGS(int Type, int Data, unsigned char *Packet);
+	int ParseIoPacketAGS(unsigned char *Packet, int *Type, int *Data);
 
-int InitializeSocketSystem (void);
-void UnblockSocket (int SocketNum);
-int EstablishSocket (unsigned short portnum, int MaxClients);
-int CallSocket (char *hostname, unsigned short portnum);
-
+	int InitializeSocketSystem(void);
+	void UnblockSocket(int SocketNum);
+	int EstablishSocket(unsigned short portnum, int MaxClients);
+	int CallSocket(char *hostname, unsigned short portnum);
 
 #endif // YAAGC_H
 
 #ifdef __cplusplus
 }
 #endif
-
-

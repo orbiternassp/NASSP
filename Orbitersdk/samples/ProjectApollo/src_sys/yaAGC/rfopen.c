@@ -1,5 +1,5 @@
 /*
-  Copyright 2004-2005 Ronald S. Burkey <info@sandroid.org>
+  Copyright 2004-2005,2009 Ronald S. Burkey <info@sandroid.org>
 
   This file is part of yaAGC.
 
@@ -18,34 +18,32 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
   In addition, as a special exception, Ronald S. Burkey gives permission to
-  link the code of this program with the Orbiter SDK library (or with 
-  modified versions of the Orbiter SDK library that use the same license as 
-  the Orbiter SDK library), and distribute linked combinations including 
-  the two. You must obey the GNU General Public License in all respects for 
-  all of the code used other than the Orbiter SDK library. If you modify 
-  this file, you may extend this exception to your version of the file, 
-  but you are not obligated to do so. If you do not wish to do so, delete 
-  this exception statement from your version. 
- 
+  link the code of this program with the Orbiter SDK library (or with
+  modified versions of the Orbiter SDK library that use the same license as
+  the Orbiter SDK library), and distribute linked combinations including
+  the two. You must obey the GNU General Public License in all respects for
+  all of the code used other than the Orbiter SDK library. If you modify
+  this file, you may extend this exception to your version of the file,
+  but you are not obligated to do so. If you do not wish to do so, delete
+  this exception statement from your version.
+
   Filename:	rfopen.c
-  Purpose:	A replacement for fopen which looks in the installation 
-  		directory if the file isn't in the current directory.
+  Purpose:	A replacement for fopen which looks in the installation
+		directory if the file isn't in the current directory.
   Compiler:	GNU gcc.
   Contact:	Ron Burkey <info@sandroid.org>
   Reference:	http://www.ibiblio.org/apollo/index.html
   Mods:		05/06/04 RSB.	Began.
-  		05/14/04 RSB.	Added INSTALLDIR.
+		05/14/04 RSB.	Added INSTALLDIR.
 		05/30/04 RSB	Added some missing header files.
 		08/11/04 RSB	Default install dir in Win32 changed
 				(from /usr/local/bin) to c:/mingw/bin.
 		02/27/05 RSB	Added the license exception, as required by
 				the GPL, for linking to Orbiter SDK libraries.
 		05/14/05 RSB	Corrected website references
+		03/12/09 RSB	Change of initializer for InstallationPath
+				to avoid a compiler warning.
 */
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
-#define _CRT_SECURE_NO_DEPRECATE 
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -68,25 +66,26 @@
 #define INSTALLDIR "/usr/local/bin"
 #endif
 #endif
-char *InstallationPath = INSTALLDIR;
+static char DefaultInstallationPath[] = INSTALLDIR;
+char *InstallationPath = DefaultInstallationPath;
 
 FILE *
-rfopen (const char *Filename, const char *mode)
+rfopen(const char *Filename, const char *mode)
 {
-  char *NewFilename;
-  FILE *fp;
-  //printf ("\'%s\'\n", INSTALLDIR);
-  fp = fopen (Filename, mode);
-  if (fp != NULL)
-    return (fp);
-  NewFilename =
-    (char *) malloc (2 + strlen (Filename) + strlen (InstallationPath));
-  if (NewFilename == NULL)
-    return (NULL);
-  strcpy (NewFilename, InstallationPath);
-  strcat (NewFilename, "/");
-  strcat (NewFilename, Filename);
-  fp = fopen (NewFilename, mode);
-  free (NewFilename);
-  return (fp);
+	char *NewFilename;
+	FILE *fp;
+	//printf ("\'%s\'\n", INSTALLDIR);
+	fp = fopen(Filename, mode);
+	if (fp != NULL)
+		return (fp);
+	NewFilename =
+		(char *)malloc(2 + strlen(Filename) + strlen(InstallationPath));
+	if (NewFilename == NULL)
+		return (NULL);
+	strcpy(NewFilename, InstallationPath);
+	strcat(NewFilename, "/");
+	strcat(NewFilename, Filename);
+	fp = fopen(NewFilename, mode);
+	free(NewFilename);
+	return (fp);
 }
