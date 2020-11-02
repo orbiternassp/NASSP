@@ -836,41 +836,23 @@ void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
 }
 
 void ApolloGuidance::GenerateHandrupt() {
-	GenerateHANDRUPT(&vagc);
+	vagc.InterruptRequests[10] = 1;
 }
 
-// DS20060402 DOWNRUPT
 void ApolloGuidance::GenerateDownrupt(){
-	GenerateDOWNRUPT(&vagc);
+	vagc.InterruptRequests[8] = 1;
 }
 
 void ApolloGuidance::GenerateUprupt(){
-	GenerateUPRUPT(&vagc);
+	vagc.InterruptRequests[7] = 1;
 }
 
 void ApolloGuidance::GenerateRadarupt(){
-	GenerateRADARUPT(&vagc);
+	vagc.InterruptRequests[9] = 1;
 }
 
 bool ApolloGuidance::IsUpruptActive() {
-	return (IsUPRUPTActive(&vagc) == 1);
-}
-
-// DS20060903 PINC, DINC, ETC
-int ApolloGuidance::DoPINC(int16_t *Counter){
-	return(CounterPINC(Counter));
-}
-
-int ApolloGuidance::DoPCDU(int16_t *Counter){
-	return(CounterPCDU(Counter));
-}
-
-int ApolloGuidance::DoMCDU(int16_t *Counter){
-	return(CounterMCDU(Counter));
-}
-
-int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
-	return(CounterDINC(&vagc,CounterNum,Counter));
+	return vagc.InterruptRequests[7] == 1;
 }
 
 bool ApolloGuidance::GetInputChannelBit(int channel, int bit)
