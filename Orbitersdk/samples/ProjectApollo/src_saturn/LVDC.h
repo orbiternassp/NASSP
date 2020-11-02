@@ -116,32 +116,63 @@ public:
 private:								// Saturn LV
 
 	//Internal Functions
+	bool GetInterrupt(int rupt);
+	void ProcessInterrupt(int rupt);
 	void SystemTimeUpdateRoutine();
 	void TimeBaseChangeRoutine();
 	void Timer1Interrupt(bool timer1schedule);
 	void Timer2Interrupt(bool timer2schedule);
+	void NonInterruptSequencer(bool phase13);
+
 	VECTOR3 GravitationSubroutine(VECTOR3 Rvec, bool J2only);
 	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec);
 	void SIVBCutoffSequence();
-	void StartTimebase1();
 	void StartTimebase4A();
 	void StartTimebase5();
 	void StartTimebase7();
+	void SCInitiationOfSIISIVBSeparationInterrupt();
 
-	//Modules
-
+	//MODULES
 	//Phase Activator (PA)
 	void PhaseActivator(int phase);
 	void Phase13ApplicationProgramInit();
 	void Phase24ApplicationProgramInit();
+	//Acelerometer Read (AR)
+	void AccelerometerRead();
+	//Simulated Accelerometers (SA)
+	void SimulatedAccelerometers();
+	//AccelerometerProcessing (AP)
+	void AccelerometerProcessing();
+	//Periodic Processor (PP)
+	void PeriodicProcessor();
 	//Events Processor (EP)
 	void EventsProcessor(int entry);
 	//Minor Loop (ML)
 	void MinorLoop(int entry);
+	//Minor Loop Support (MS)
+	void MinorLoopSupport();
 	//Switch Selector Processor (SS)
 	void SwitchSelectorProcessor(int entry);
+	//Time Base 1 (TB1)
+	void StartTimeBase1(int entry);
 	//Time Base 2 (TB2)
 	void StartTimeBase2();
+	//Time Base 3 (TB3)
+	void StartTimeBase3();
+	//Time Base 4 (TB4)
+	void StartTimeBase4();
+	//Time Base 5/7 (TB57)
+	void CheckTimeBase57();
+	//Phase II and IV Control (CM)
+	void PhaseIIandIVControl(int entry);
+	//Orbit Navigation (NZ)
+	void OrbitNavigation();
+	//NavigationExtrapolation (NI)
+	void NavigationExtrapolation();
+	//Cutoff Logic (CO)
+	void CutoffLogic();
+	//Chi Computations (CC)
+	void ChiComputations(int entry);
 
 	FILE* lvlog;									// LV Log file
 	char FSPFileName[256];
@@ -306,6 +337,8 @@ private:								// Saturn LV
 	bool ImpactBurnInProgress;						// Lunar impact burn is in progress
 	std::bitset<26> ModeCode24, ModeCode25, ModeCode26, ModeCode27;
 	std::bitset<26> DPM;							//Mask word that specifies which DIN's are to be processed when they change from OFF to ON
+	std::bitset<12> DVIH;							//Interrupt inhibit
+	std::bitset<12> InterruptState;					//To prevent continual interrupts
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
@@ -616,13 +649,38 @@ private:								// Saturn LV
 
 	// TABLE25 is apparently only used on direct-ascent
 
-	//Interrupts:
+	//Interrupts
+	enum SV_Interrupt_Bits
+	{
+		INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA = 1,
+		INT4_SIVBEngineOutB = 3,
+		INT5_SICOutboardEnginesCutoffA,
+		INT6_SIIEnginesCutoff,
+		INT7_GuidanceReferenceRelease,
+	};
 
 	//Discrete Inputs
 	enum SV_DiscreteInput_Bits
 	{
+		DIN3_O2H2BurnerMalfunction = 2,
+		DIN5_SIVBEngineOutA = 4,
+		DIN6_TLI_Inhibit,
 		DIN9_SCControlOfSaturn = 8,
-		DIN24_Liftoff = 23
+		DIN10_SIISIVBSeparation,
+		DIN11_SICInboardEngineOutB,
+		DIN12_SICSIISeparation,
+		DIN13_SIIInboardEngineOut,
+		DIN14_SICOutboardEngineOut,
+		DIN15_SIIAftInterstageSeparation,
+		DIN16_GRRAlert,
+		DIN17_SICInboardEngineOutA,
+		DIN18_SICOutboardEngineCutoffB,
+		DIN19_SIIEnginesOut,
+		DIN20_SIVBIgnitionSequenceStart,
+		DIN21_SIIOutboardEngineOut,
+		DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB,
+		DIN23_SCInitiationOfSIVBEngineCutoff,
+		DIN24_Liftoff
 	};
 
 	//Mode Code Bits
@@ -630,7 +688,8 @@ private:								// Saturn LV
 	{
 		MC25_BeginTB6 = 0,
 		MC25_BeginTB5,
-		MC25_TerminalGuidance = 3,
+		MC25_FirstSIVBCutoffCommand,
+		MC25_TerminalGuidance,
 		MC25_SII_SIVB_Separation = 8,
 		MC25_SII_IGMBeforeEMRC = 13,
 		MC25_BeginTB1 = 24,
@@ -648,9 +707,11 @@ private:								// Saturn LV
 		MC26_Memory_Failure,
 		MC26_TB6a_Started,
 		MC26_SMCActive,
-		MC26_SCControlAfterGRF = 18,
+		MC26_SCInitOfSIISIVBSeparation = 17,
+		MC26_SCControlAfterGRF,
 		MC26_SCInitOfSIVBCutoff,
-		MC26_TB7_Started
+		MC26_TB7_Started,
+		MC26_SecondSIVBCutoffCommand = 22
 	};
 
 	enum ModeCode27_Bits
