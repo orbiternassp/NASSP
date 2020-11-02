@@ -337,10 +337,6 @@ protected:
 	public: virtual void GenerateUprupt();
     public: virtual void GenerateRadarupt();
 	public: virtual bool IsUpruptActive();
-	public: virtual int DoPINC(int16_t *Counter);
-	public: virtual int DoPCDU(int16_t *Counter);
-	public: virtual int DoMCDU(int16_t *Counter);
-	public: virtual int DoDINC(int CounterNum, int16_t *Counter);
 
 	//
 	// Odds and ends.
