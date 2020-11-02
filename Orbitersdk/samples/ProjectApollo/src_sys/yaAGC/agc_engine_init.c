@@ -228,9 +228,6 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->ExtraDelay = 0;
   //State->RegQ16 = 0;
 
-  // Reset voltage alarm
-  State->VoltageAlarm = 0;
-
   State->NightWatchman = 0;
   State->NightWatchmanTripped = 0;
   State->RuptLock = 0;

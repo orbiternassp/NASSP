@@ -74,6 +74,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	PadLoaded = false;
 
 	ProgAlarm = false;
+	TrackerAlarm = false;
 	GimbalLockAlarm = false;
 
 	//
@@ -449,6 +450,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	}
 
 	papiWriteScenario_bool(scn, "PROGALARM", ProgAlarm);
+	papiWriteScenario_bool(scn, "TRACKERALARM", TrackerAlarm);
 	papiWriteScenario_bool(scn, "GIMBALLOCKALARM", GimbalLockAlarm);
 
 	oapiWriteLine(scn, AGC_END_STRING);
@@ -565,6 +567,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 
 		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);
+		papiReadScenario_bool(line, "TRACKERALARM", TrackerAlarm);
 		papiReadScenario_bool(line, "GIMBALLOCKALARM", GimbalLockAlarm);
 	}
 }
