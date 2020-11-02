@@ -183,7 +183,6 @@ void CSMcomputer::Timestep(double simt, double simdt)
 			// Also, simulate the operation of the VOLTAGE ALARM, turn off STBY and RESTART light while power is off.
 			// The RESTART light will come on as soon as the AGC receives power again.
 			// This happens externally to the AGC program. See CSM 104 SYS HBK pg 399
-			vagc.VoltageAlarm = 1;
 			vagc.RestartLight = 1;
 			dsky.ClearRestart();
 			dsky2.ClearRestart();
@@ -346,6 +345,8 @@ void CSMcomputer::ProcessChannel10(ChannelValue val){
 	if (val10.Bits.a == 12) {
 		// Gimbal Lock
 		GimbalLockAlarm = ((val10.Value & (1 << 5)) != 0);
+		// Tracker alarm
+		TrackerAlarm = ((val10.Value & (1 << 7)) != 0);
 		// Prog alarm
 		ProgAlarm = ((val10.Value & (1 << 8)) != 0);
 	}
