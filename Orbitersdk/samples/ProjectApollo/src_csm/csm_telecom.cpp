@@ -1341,7 +1341,7 @@ VHFAMTransceiver::VHFAMTransceiver()
 	RCVDPhaseRCVR_A = 0.0;
 	RCVDRangeTone = false;
 	XMITRangeTone = false;
-	xmitPower = 5.0;
+	xmitPower = 5.0; //watts
 
 	lem = NULL;
 }
@@ -1444,8 +1444,18 @@ void VHFAMTransceiver::Timestep()
 		receiveB = false;
 	}
 
-	sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, XMITRangeTone);
-	
+	//send RF properties to the connector
+	if (lem)
+	{
+		VECTOR3 U_R;
+
+		oapiGetRelativePos(sat->GetHandle(), lem->GetHandle(), &U_R); //vector to the LM
+		U_R = unit(U_R); //normalize it
+
+		sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, false); //XCVR A
+		sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, XMITRangeTone); //XCVR B
+	}
+
 	XMITRangeTone = false;
 	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", K1, K2, transmitA, transmitB, receiveA, receiveB);
 }

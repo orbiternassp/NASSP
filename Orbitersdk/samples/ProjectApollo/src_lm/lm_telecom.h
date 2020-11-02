@@ -219,11 +219,23 @@ public:
 	//void SetRCVDrfPropA(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_A = freq; RCVDpowRCVR_A = pow; RCVDgainRCVR_A = gain; RCVDPhaseRCVR_A = phase;  }; //not needed at the moment
 	void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; RCVDRangeTone = tone; }; 
 
-	//Ranging RF properties
-	double RangingRCVDfreq;
-	double RangingRCVDpow;
-	double RangingRCVDgain;
-	double RangingRCVDPhase;
+	//Recvd RF properties*********
+	double RCVDfreqRCVR_A; //frequency received by rcvr A
+	double RCVDpowRCVR_A; //power radiated at rcvr A MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_A; //gain of the transmitter senting to rcvr A
+	double RCVDPhaseRCVR_A; //phase of the signal sending to rcvr A
+	//
+	double RCVDfreqRCVR_B; //Frequency received by rcvr B
+	double RCVDpowRCVR_B; //Power radiated at B MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_B; //Gain of the transmitter senting to rcvr B
+	double RCVDPhaseRCVR_B; //Phase of the signal sending to rcvr B
+	bool RCVDRangeTone; // Receiving a ranging tone from the CSM?
+
+	double RCVDinputPowRCVR_A; //Power received by transmitter A in dBm
+	double RCVDinputPowRCVR_B;//Power received by transmitter B in dBm
+	
+	//****************************
+
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data
@@ -261,20 +273,6 @@ public:
 	bool registerSocket(SOCKET sock);
 
 	friend class MCC;				// Allow MCC to write directly to buffer
-
-protected:
-
-	//double RCVDfreqRCVR_A;
-	//double RCVDpowRCVR_A;
-	//double RCVDgainRCVR_A;
-	//double RCVDPhaseRCVR_A;
-
-	//Ranging RF properties
-	double RCVDfreqRCVR_B;
-	double RCVDpowRCVR_B;
-	double RCVDgainRCVR_B;
-	double RCVDPhaseRCVR_B;
-	bool RCVDRangeTone;
 };
 
 // Generic S-Band Antenna

@@ -499,6 +499,7 @@ protected:
 
 	const double freqXCVR_A = 296.8; //MHz;
 	const double freqXCVR_B = 259.7; //MHz;
+	
 	double xmitPower;
 
 	//not needed at the moment

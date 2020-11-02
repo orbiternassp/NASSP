@@ -47,6 +47,8 @@
 #include "lm_channels.h"
 #include "LM_AscentStageResource.h"
 
+#include "RF_calc.h"
+
 //VHF Antenna
 
 LM_VHFAntenna::LM_VHFAntenna(VECTOR3 dir, double maximumGain)
@@ -101,6 +103,19 @@ LM_VHF::LM_VHF():
 	receiveB = false;
 	transmitA = false;
 	transmitB = false;
+
+	RCVDfreqRCVR_A = 0.0;
+	RCVDpowRCVR_A = 0.0;
+	RCVDgainRCVR_A = 0.0;
+	RCVDPhaseRCVR_A = 0.0;
+	RCVDfreqRCVR_B = 0.0;
+	RCVDpowRCVR_B = 0.0;
+	RCVDgainRCVR_B = 0.0;
+	RCVDPhaseRCVR_B = 0.0;
+	RCVDRangeTone = false;
+
+	RCVDinputPowRCVR_A = 0.0;
+	RCVDinputPowRCVR_B = 0.0;
 
 }
 
@@ -323,11 +338,13 @@ void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
 	if (isRanging && transmitA && receiveB)
 	{
 		sat->VHFRangingReturnSignal(); //######################### DELETE ME ##################################
-		lem->lm_vhf_to_csm_csm_connector.SendRF(0.0, 0.0, 0.0, 0.0, true);
+		//lem->lm_vhf_to_csm_csm_connector.SendRF(0.0, 0.0, 0.0, 0.0, true);
 	}
 }
 
-void LM_VHF::Timestep(double simt){
+void LM_VHF::Timestep(double simt)
+{
+	VECTOR3 R = _V(0,0,0);
 
 	if (!csm)
 	{
@@ -338,6 +355,14 @@ void LM_VHF::Timestep(double simt){
 	{
 		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
+	
+	if (csm)
+	{
+		oapiGetRelativePos(csm->GetHandle(), lem->GetHandle(), &R); //vector to the LM
+		RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, -9.0, RCVDfreqRCVR_A, length(R));
+		RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, -9.0, RCVDfreqRCVR_B, length(R));
+	}
+	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
