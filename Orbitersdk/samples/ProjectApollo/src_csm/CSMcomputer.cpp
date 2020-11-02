@@ -345,6 +345,8 @@ void CSMcomputer::ProcessChannel10(ChannelValue val){
 	if (val10.Bits.a == 12) {
 		// Gimbal Lock
 		GimbalLockAlarm = ((val10.Value & (1 << 5)) != 0);
+		// Tracker alarm
+		TrackerAlarm = ((val10.Value & (1 << 7)) != 0);
 		// Prog alarm
 		ProgAlarm = ((val10.Value & (1 << 8)) != 0);
 	}

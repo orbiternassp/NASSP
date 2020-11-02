@@ -3595,6 +3595,9 @@ void Saturn::GetAGCWarningStatus(AGCWarningStatus &aws)
 	// Restart alarm
 	if (agc.vagc.RestartLight)
 		aws.PGNSWarning = true;
+	// Tracker alarm
+	if (agc.GetTrackerAlarm())
+		aws.PGNSWarning = true;
 	// Gimbal Lock 
 	if (agc.GetGimbalLockAlarm()) 
 		aws.PGNSWarning = true;
