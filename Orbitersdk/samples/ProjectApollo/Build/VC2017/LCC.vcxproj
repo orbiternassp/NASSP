@@ -97,7 +97,7 @@
       <ObjectFileName>.\Release\LCC/</ObjectFileName>
       <ProgramDataBaseFileName>.\Release\LCC/</ProgramDataBaseFileName>
       <AdditionalIncludeDirectories>../../src_rtccmfd;../../src_sys;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
