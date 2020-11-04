@@ -1850,6 +1850,7 @@ GuardedThreePosSwitch::GuardedThreePosSwitch() {
 	guardHeight = 0;
 	guardSurface = 0;
 	guardState = 0;
+	guardAnim = -1;
 }
 
 GuardedThreePosSwitch::~GuardedThreePosSwitch() {
@@ -1904,6 +1905,20 @@ void GuardedThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
+void GuardedThreePosSwitch::DrawSwitchVC(UINT anim) {
+
+	DoDrawSwitchVC(anim);
+
+	if (guardAnim != -1) {
+		if (guardState) {
+			OurVessel->SetAnimation(guardAnim, 1.0);
+		}
+		else {
+			OurVessel->SetAnimation(guardAnim, 0.0);
+		}
+	}
+}
+
 void GuardedThreePosSwitch::Guard() {
 
 	if (guardState) {
@@ -1947,6 +1962,28 @@ bool GuardedThreePosSwitch::CheckMouseClick(int event, int mx, int my) {
 	} else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
 		if (guardState) {
 			return ThreePosSwitch::CheckMouseClick(event, mx, my);
+		}
+	}
+	return false;
+}
+
+bool GuardedThreePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	if (event & PANEL_MOUSE_RBDOWN && p.x > 0.004) {
+
+		if (guardState) {
+			Guard();
+		}
+		else {
+			guardState = 1;
+		}
+		guardClick.play();
+		return true;
+
+	}
+	else if (event) {
+		if (guardState) {
+			return ThreePosSwitch::CheckMouseClickVC(event, p);
 		}
 	}
 	return false;

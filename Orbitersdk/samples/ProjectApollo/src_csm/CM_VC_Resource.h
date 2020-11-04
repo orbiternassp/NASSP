@@ -1,10 +1,10 @@
 // ========================================================
 // Mesh resource file for CM-VC.msh
-// Generated with meshc on Sat Oct 31 19:36:23 2020
+// Generated with meshc on Wed Nov 04 00:04:37 2020
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 193
+#define VC_NGRP 206
 
 // Number of materials:
 #define VC_NMAT 28
@@ -202,7 +202,20 @@
 #define VC_GRP_Sw_P2_13 186
 #define VC_GRP_Sw_P2_14 187
 #define VC_GRP_Sw_P2_15 188
-#define VC_GRP_zzzSwitchGuard_P1 189
-#define VC_GRP_zzzSwitchGuard_P2 190
-#define VC_GRP_zzzSwitchHolder_P1 191
-#define VC_GRP_zzzSwitchHolder_P2 192
+#define VC_GRP_SwitchCover_P1_3_01 189
+#define VC_GRP_SwitchCover_P1_3_02 190
+#define VC_GRP_SwitchCover_P1_3_03 191
+#define VC_GRP_SwitchCover_P1_3_04 192
+#define VC_GRP_SwitchCover_P1_3_05 193
+#define VC_GRP_SwitchCover_P1_3_06 194
+#define VC_GRP_SwitchCover_P1_3_07 195
+#define VC_GRP_SwitchCover_P1_3_08 196
+#define VC_GRP_SwitchCover_P1_3_09 197
+#define VC_GRP_SwitchCover_P1_3_10 198
+#define VC_GRP_SwitchCover_P1_3_11 199
+#define VC_GRP_SwitchCover_P1_3_12 200
+#define VC_GRP_SwitchCover_P1_3_13 201
+#define VC_GRP_SwitchGuard_P1 202
+#define VC_GRP_SwitchGuard_P2 203
+#define VC_GRP_SwitchHolder_P1 204
+#define VC_GRP_SwitchHolder_P2 205

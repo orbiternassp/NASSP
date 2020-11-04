@@ -107,6 +107,12 @@ const int	P2_SWITCHCOUNT_C = 15;
 // Number of push buttons
 const int   P2_PUSHBCOUNT = 19;
 
+// Number of switch covers
+const int   SWITCHCOVERCOUNT_C = 13;
+
+// Switch clickspot offset
+const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*sin(P1_3_TILT - (90.0 * RAD)) };
+
 // Panel 1 switches
 const VECTOR3 P1_TOGGLE_POS_C[P1_SWITCHCOUNT_C] = {
 {-0.7016, 0.7637, 0.3847}, {-0.8518, 0.6303, 0.3430}, {-0.8983, 0.5705, 0.3200}, {-0.8724, 0.5705, 0.3200}, {-0.8132, 0.5705, 0.3200},
@@ -134,6 +140,13 @@ const VECTOR3 P2_PUSHB_POS[P2_PUSHBCOUNT] = {
     {-0.3614, 0.5001, 0.2918}, {-0.3367, 0.5002, 0.2918}, {-0.3120, 0.5003, 0.2918}, {-0.3615, 0.5222, 0.2992}, {-0.3367, 0.5223, 0.2992},
     {-0.3120, 0.5224, 0.2992}, {-0.3615, 0.5444, 0.3066}, {-0.3368, 0.5444, 0.3066}, {-0.3121, 0.5444, 0.3066}, {-0.2884, 0.5444, 0.3066},
     {-0.2883, 0.5224, 0.2993}, {-0.2881, 0.5003, 0.2919}, {-0.2632, 0.5330, 0.3028}, {-0.2630, 0.5113, 0.2955}
+};
+
+// Switch Covers
+const VECTOR3 COVERS_POS_C[SWITCHCOVERCOUNT_C] = {
+{-0.897739, 0.291494, 0.218991}, {-0.807395, 0.400065, 0.255313}, {-0.807395, 0.400065, 0.255313}, {-0.650851, 0.339981, 0.235209}, {-0.650851, 0.339981, 0.235209},
+{-0.650851, 0.339981, 0.235209}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106},
+{-0.42006, 0.46232, 0.276106}, {-0.447059, 0.346822, 0.237434}, {-0.447372, 0.295628, 0.220297}
 };
 
 ///
@@ -3863,6 +3876,7 @@ protected:
 	MGROUP_TRANSFORM *mgt_P16R2cbs[P16R2_CBCOUNT];
 	MGROUP_TRANSFORM *mgt_P16R3cbs[P16R3_CBCOUNT];
 	MGROUP_TRANSFORM *mgt_P16R4cbs[P16R4_CBCOUNT];*/
+	MGROUP_TRANSFORM *mgt_switchcovers[SWITCHCOVERCOUNT_C];
 	UINT anim_P1switch[P1_SWITCHCOUNT_C];
 	/*UINT anim_P1_Rot[P1_ROTCOUNT];
 	UINT anim_P1needles[P1_NEEDLECOUNT];*/
@@ -3911,6 +3925,7 @@ protected:
 	UINT anim_stopbutton_cdr;
 	UINT anim_stopbutton_lmp;
 	UINT anim_plusxbutton;*/
+	UINT anim_switchcovers[SWITCHCOVERCOUNT_C];
 	UINT anim_fdaiR_L, anim_fdaiR_R;
 	UINT anim_fdaiP_L, anim_fdaiP_R;
 	UINT anim_fdaiY_L, anim_fdaiY_R;

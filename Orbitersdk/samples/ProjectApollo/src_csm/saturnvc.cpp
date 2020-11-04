@@ -240,7 +240,7 @@ void Saturn::RegisterActiveAreas() {
 	for (i = 0; i < P1_SWITCHCOUNT_C; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS_C[i] /*+ P1_CLICK*/ + ofs, 0.006);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS_C[i] + P1_3_CLICK + ofs, 0.006);
 	}
 
 	MainPanelVC.AddSwitch(&EMSModeSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
@@ -291,12 +291,19 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&EventTimerMinutesSwitch, AID_VC_SWITCH_P1_46, &anim_P1switch[45]);
 	MainPanelVC.AddSwitch(&EventTimerSecondsSwitch, AID_VC_SWITCH_P1_47, &anim_P1switch[46]);
 
+	IMUGuardedCageSwitch.InitGuardVC(anim_switchcovers[0]);
+	dVThrust1Switch.InitGuardVC(anim_switchcovers[1]);
+	dVThrust2Switch.InitGuardVC(anim_switchcovers[2]);
+	ELSLogicSwitch.InitGuardVC(anim_switchcovers[3]);
+	CMPropDumpSwitch.InitGuardVC(anim_switchcovers[4]);
+	CMPropPurgeSwitch.InitGuardVC(anim_switchcovers[5]);
+
 	//Panel 2
 
 	for (i = 0; i < P2_SWITCHCOUNT_C; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS_C[i] /*+ P2_CLICK*/ + ofs, 0.006);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS_C[i] + P1_3_CLICK + ofs, 0.008);
 	}
 
 	for (i = 0; i < P2_PUSHBCOUNT; i++)
@@ -340,6 +347,14 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P2_17, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19, NULL);
+
+	CsmLmFinalSep1Switch.InitGuardVC(anim_switchcovers[6]);
+	CsmLmFinalSep2Switch.InitGuardVC(anim_switchcovers[7]);
+	CmSmSep1Switch.InitGuardVC(anim_switchcovers[8]);
+	CmSmSep2Switch.InitGuardVC(anim_switchcovers[9]);
+	SIVBPayloadSepSwitch.InitGuardVC(anim_switchcovers[10]);
+	SIISIVBSepSwitch.InitGuardVC(anim_switchcovers[11]);
+	MainReleaseSwitch.InitGuardVC(anim_switchcovers[12]);
 }
 
 // --------------------------------------------------------------
@@ -767,6 +782,7 @@ void Saturn::InitVCAnimations() {
 	anim_stopbutton_cdr = -1;
 	anim_stopbutton_lmp = -1;
 	anim_plusxbutton = -1;*/
+	anim_switchcovers[SWITCHCOVERCOUNT_C] = -1;
 	anim_fdaiR_L = anim_fdaiR_R = -1;
 	anim_fdaiP_L = anim_fdaiP_R = -1;
 	anim_fdaiY_L = anim_fdaiY_R = -1;
@@ -843,6 +859,8 @@ void Saturn::DeleteVCAnimations()
 	for (i = 0; i < P16R3_CBCOUNT; i++) delete mgt_P16R3cbs[i];
 
 	for (i = 0; i < P16R4_CBCOUNT; i++) delete mgt_P16R4cbs[i];*/
+
+	for (i = 0; i < SWITCHCOVERCOUNT_C; i++) delete mgt_switchcovers[i];
 }
 
 void Saturn::DefineVCAnimations()
@@ -868,6 +886,17 @@ void Saturn::DefineVCAnimations()
 		mgt_P2switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P2switches[i], 1, P2_TOGGLE_POS_C[i], _V(1, 0, 0), (float)PI / 4);
 		anim_P2switch[i] = CreateAnimation(0.5);
 		AddAnimationComponent(anim_P2switch[i], 0.0f, 1.0f, mgt_P2switch[i]);
+	}
+
+	// Panel 1-3 Switch covers
+
+	static UINT meshgroup_switchcovers[SWITCHCOVERCOUNT_C];
+	for (int i = 0; i < SWITCHCOVERCOUNT_C; i++)
+	{
+		meshgroup_switchcovers[i] = VC_GRP_SwitchCover_P1_3_01 + i;
+		mgt_switchcovers[i] = new MGROUP_ROTATE(mesh, &meshgroup_switchcovers[i], 1, COVERS_POS_C[i], _V(1, 0, 0), (float)(RAD * 90));
+		anim_switchcovers[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_switchcovers[i], 0.0f, 1.0f, mgt_switchcovers[i]);
 	}
 
 	InitFDAI(mesh);
