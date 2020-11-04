@@ -331,6 +331,8 @@ void LM_VHF::SystemTimestep(double simdt) {
 		PCMHeat->GenerateHeat(5.15);  
 		PCMSECHeat->GenerateHeat(5.15);
 	}
+
+	lem->lm_vhf_to_csm_csm_connector.SendRF(0.0,0.0,0.0,0.0,(isRanging && transmitA && receiveB && RCVDRangeTone));
 }
 
 void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
