@@ -174,11 +174,7 @@ void DSKY::Reset()
 	TempLight = false;
 	GimbalLockLight = false;
 	ProgLight = false;
-	if(agc.vagc.VoltageAlarm != 0){
-		RestartLight = true;
-	}else{
-		RestartLight = false;
-	}
+	RestartLight = false;
 	TrackerLight = false;
 	VelLight = false;
 	AltLight = false;
@@ -370,10 +366,6 @@ void DSKY::ResetPressed()
 {
 	KeyClick();
 	SendKeyCode(18);
-
-	if(agc.vagc.VoltageAlarm != 0){
-		agc.vagc.VoltageAlarm = 0;
-	}
 }
 
 void DSKY::NumberPressed(int n)
