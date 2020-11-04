@@ -852,7 +852,15 @@ void ApolloGuidance::GenerateRadarupt(){
 }
 
 bool ApolloGuidance::IsUpruptActive() {
-	return vagc.InterruptRequests[7] == 1;
+	// UPRUPT waiting to be processed
+	if (vagc.InterruptRequests[7] == 1)
+		return 1;
+
+	// UPRUPT currently being processed
+	if (vagc.InIsr && vagc.InterruptRequests[0] == 7)
+		return 1;
+
+	return 0;
 }
 
 bool ApolloGuidance::GetInputChannelBit(int channel, int bit)
