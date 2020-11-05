@@ -114,8 +114,8 @@ LM_VHF::LM_VHF():
 	RCVDPhaseRCVR_B = 0.0;
 	RCVDRangeTone = false;
 
-	RCVDinputPowRCVR_A = 0.0;
-	RCVDinputPowRCVR_B = 0.0;
+	RCVDinputPowRCVR_A = -150.0;
+	RCVDinputPowRCVR_B = -150.0;
 
 }
 
@@ -331,8 +331,6 @@ void LM_VHF::SystemTimestep(double simdt) {
 		PCMHeat->GenerateHeat(5.15);  
 		PCMSECHeat->GenerateHeat(5.15);
 	}
-
-	lem->lm_vhf_to_csm_csm_connector.SendRF(0.0,0.0,0.0,0.0,(isRanging && transmitA && receiveB && RCVDRangeTone));
 }
 
 void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
@@ -353,17 +351,34 @@ void LM_VHF::Timestep(double simt)
 		csm = lem->agc.GetCSM();
 	}
 
+	if (csm)
+	{
+		oapiGetRelativePos(csm->GetHandle(), lem->GetHandle(), &R); //vector to the LM
+	}
+
 	if (!(lem->lm_vhf_to_csm_csm_connector.connectedTo))
 	{
 		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
 	
-	if (csm)
+	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && receiveA)
 	{
-		oapiGetRelativePos(csm->GetHandle(), lem->GetHandle(), &R); //vector to the LM
 		RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, -9.0, RCVDfreqRCVR_A, length(R));
+	}
+	else
+	{
+		RCVDinputPowRCVR_A = -150.0;
+	}
+
+	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && receiveB)
+	{
 		RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, -9.0, RCVDfreqRCVR_B, length(R));
 	}
+	else
+	{
+		RCVDinputPowRCVR_B = -150.0;
+	}
+
 	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	// This stuff has to happen every timestep, regardless of system status.
@@ -415,6 +430,11 @@ void LM_VHF::Timestep(double simt)
 				perform_io(simt);
 			}
 		}
+	}
+
+	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
+	{
+		lem->lm_vhf_to_csm_csm_connector.SendRF(0.0, 0.0, 0.0, 0.0, true); //(isRanging && transmitA && receiveB && RCVDRangeTone)
 	}
 }
 
