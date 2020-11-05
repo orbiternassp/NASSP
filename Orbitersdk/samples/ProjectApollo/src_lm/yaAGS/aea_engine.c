@@ -81,9 +81,6 @@
 
 #define AEA_ENGINE_C
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
-#define _CRT_SECURE_NO_DEPRECATE 
-#endif
 #ifdef WIN32
 typedef unsigned short uint16_t;
 #endif
