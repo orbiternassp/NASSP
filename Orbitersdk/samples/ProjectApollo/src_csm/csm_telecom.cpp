@@ -1452,8 +1452,15 @@ void VHFAMTransceiver::Timestep()
 		oapiGetRelativePos(sat->GetHandle(), lem->GetHandle(), &U_R); //vector to the LM
 		U_R = unit(U_R); //normalize it
 
-		sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, false); //XCVR A
-		sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, XMITRangeTone); //XCVR B
+		if (transmitA)
+		{
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, false); //XCVR A
+		}
+
+		if (transmitB)
+		{
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, XMITRangeTone); //XCVR B
+		}
 	}
 
 	XMITRangeTone = false;
