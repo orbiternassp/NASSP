@@ -65,6 +65,7 @@ core
 !/Textures/ProjectApollo/
 /Scenarios
 !/Scenarios/ProjectApollo - NASSP
+*.vcxproj.user
 
 # Stuff that wasn't previously ignored
 /Constell.bin

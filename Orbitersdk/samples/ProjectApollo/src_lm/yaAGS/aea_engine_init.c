@@ -28,9 +28,6 @@
 		2005-06-02 RSB	Added Accumulator, Index registers.
 		2005-06-04 RSB	Added 20 ms. timing signal.
 */
-#if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
-#define _CRT_SECURE_NO_DEPRECATE 
-#endif
 
 #include <stdio.h>
 #include "aea_engine.h"
