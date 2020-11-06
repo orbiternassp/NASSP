@@ -361,22 +361,25 @@ void LM_VHF::Timestep(double simt)
 		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
 	
-	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && receiveA)
+	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo))
 	{
-		RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, -9.0, RCVDfreqRCVR_A, length(R));
-	}
-	else
-	{
-		RCVDinputPowRCVR_A = -150.0;
-	}
+		if (receiveA)
+		{
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, -9.0, RCVDfreqRCVR_A, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_A = -150.0;
+		}
 
-	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && receiveB)
-	{
-		RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, -9.0, RCVDfreqRCVR_B, length(R));
-	}
-	else
-	{
-		RCVDinputPowRCVR_B = -150.0;
+		if (receiveB)
+		{
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, -9.0, RCVDfreqRCVR_B, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_B = -150.0;
+		}
 	}
 
 	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
@@ -434,7 +437,15 @@ void LM_VHF::Timestep(double simt)
 
 	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
 	{
-		lem->lm_vhf_to_csm_csm_connector.SendRF(0.0, 0.0, 0.0, 0.0, true); //(isRanging && transmitA && receiveB && RCVDRangeTone)
+		if (transmitA)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, true);
+		}
+
+		if (transmitB)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, true); //(isRanging && transmitA && receiveB && RCVDRangeTone)
+		}
 	}
 }
 

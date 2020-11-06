@@ -217,7 +217,7 @@ public:
 	bool isRanging;
 
 	//void SetRCVDrfPropA(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_A = freq; RCVDpowRCVR_A = pow; RCVDgainRCVR_A = gain; RCVDPhaseRCVR_A = phase;  }; //not needed at the moment
-	void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; RCVDRangeTone = tone; }; 
+	//void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; RCVDRangeTone = tone; }; 
 
 	//Recvd RF properties*********
 	double RCVDfreqRCVR_A; //frequency received by rcvr A
