@@ -70,7 +70,7 @@ double LM_VHFAntenna::getPolarGain(VECTOR3 target)
 
 	if (theta < 90.0*RAD)
 	{
-		gain = pow(cos(theta / 10.0), 2.0)*maxGain;
+		gain = pow(cos(theta / 10.0), 2.0)*maxGain; //probably a toroidal polar, but this is close enough for now
 	}
 	else
 	{
@@ -82,9 +82,9 @@ double LM_VHFAntenna::getPolarGain(VECTOR3 target)
 
 // VHF System (and shared stuff)
 LM_VHF::LM_VHF():
-	fwdInflightVHF(_V(1.0, 1.0, 1.0), 0.0),
-	aftInflightVHF(_V(1.0, 1.0, 1.0), 0.0),
-	evaVHF(_V(1.0, 1.0, 1.0), 0.0)
+	fwdInflightVHF(unit(_V(-1.0, 0.5, 0.0)), -10.0), // rough positions for testing
+	aftInflightVHF(unit(_V(0.1, 0.5, -1.0)), -10.0),
+	evaVHF(_V(0.0, 1.0, 0.0), 0.0)
 {
 	lem = NULL;
 	csm = NULL;
