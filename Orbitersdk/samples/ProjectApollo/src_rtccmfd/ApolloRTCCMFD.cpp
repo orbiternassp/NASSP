@@ -592,11 +592,10 @@ void ApolloRTCCMFD::menuIUUplink()
 	testves = (SaturnV*)G->g_Data.progVessel;
 	LVDCSV *lvdc = (LVDCSV*)testves->iu->GetLVDC();
 
-	coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, GC->rtcc->CalcGETBase(), G->P30TIG, lvdc->TB5, lvdc->mu, lvdc->T_RG);
+	coe = GC->rtcc->TLICutoffToLVDCParameters(G->R_TLI, G->V_TLI, GC->rtcc->CalcGETBase(), G->P30TIG, lvdc->TB5, lvdc->mu, 578.6);
 
 	lvdc->TU = true;
 	lvdc->TU10 = false;
-	lvdc->GATE3 = false;
 
 	lvdc->T_RP = coe.T_RP;
 	lvdc->C_3 = coe.C3;
@@ -4275,11 +4274,49 @@ void ApolloRTCCMFD::menuLSUpload()
 
 void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
 {
-	bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Format: C12,VEH. COMPUTER,REFSMMAT,ADDRESS; VEH. COMPUTER = CMC, LGC. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
+	if (GC->MissionPlanningActive)
+	{
+		bool REFSMMATUplinkCalcMPTInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Format: C12,VEH. COMPUTER,REFSMMAT,ADDRESS; VEH. COMPUTER = CMC, LGC. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcMPTInput, 0, 20, (void*)this);
+	}
+	else
+	{
+		bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Format: 1 for actual REFSMMAT, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
+	}
 }
 
 bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->REFSMMATUplinkCalc(str);
+}
+
+bool ApolloRTCCMFD::REFSMMATUplinkCalc(char *str)
+{
+	int type;
+	if (sscanf(str, "%d", &type) == 1)
+	{
+		if (type >= 1 && type <= 2)
+		{
+			char veh[4];
+			char str2[32];
+			if (G->vesseltype < 2)
+			{
+				sprintf_s(veh, "CMC");
+			}
+			else
+			{
+				sprintf_s(veh, "LGC");
+			}
+			sprintf_s(str2, 32, "C12,%s,CUR,%d;", veh, type);
+			GeneralMEDRequest(str2);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool REFSMMATUplinkCalcMPTInput(void *id, char *str, void *data)
 {
 	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
 	return true;

@@ -71,11 +71,12 @@ public:
 	virtual bool DiscreteOutputTest(int bit, bool on) = 0;
 	virtual bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM) = 0;
 	void PrepareToLaunch();
+
+	//Mathematical functions
+	double log(double a);
 protected:
 	double RealTimeClock;
 	bool ReadyToLaunch;
-	int MinorLoopCounter;
-	int MinorLoopCycles;
 	//Start time of current time base measured from GRR
 	double TI;
 	LVDA &lvda;
@@ -93,7 +94,7 @@ public:
 	void SwitchSelectorProcessing(const std::vector<SwitchSelectorSet> &table);
 	bool SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> &table);
 
-	bool GetGuidanceReferenceFailure() { return GuidanceReferenceFailure; }
+	bool GetGuidanceReferenceFailure() { return ModeCode26[MC26_Guidance_Reference_Failure]; }
 
 	VECTOR3 SVCompare();
 	double LinInter(double x0, double x1, double y0, double y1, double x);
@@ -124,7 +125,6 @@ private:								// Saturn LV
 	void Timer2Interrupt(bool timer2schedule);
 	void NonInterruptSequencer(bool phase13);
 
-	VECTOR3 GravitationSubroutine(VECTOR3 Rvec, bool J2only);
 	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec);
 	void SIVBCutoffSequence();
 	void StartTimebase4A();
@@ -134,7 +134,7 @@ private:								// Saturn LV
 
 	//MODULES
 	//Phase Activator (PA)
-	void PhaseActivator(int phase);
+	void PhaseActivator(bool init);
 	void Phase13ApplicationProgramInit();
 	void Phase24ApplicationProgramInit();
 	//Acelerometer Read (AR)
@@ -173,6 +173,30 @@ private:								// Saturn LV
 	void CutoffLogic();
 	//Chi Computations (CC)
 	void ChiComputations(int entry);
+	//Time-to-go to Restart and Beta Test (RS)
+	void TimeToGoToRestartAndBetaTest();
+	//Orbit Guidance (OG)
+	void OrbitGuidance();
+	//F/M Calculations (DV)
+	void FMCalculations();
+	//Discrete Processor (DP)
+	void DiscreteProcessor();
+	//Discrete Inputs 11, 14 and 17 (S-IC engine out)
+	void DiscreteProcessor1();
+	//Discrete Inputs 13 and 21 (S-II engine out)
+	void DiscreteProcessor2();
+	//Bost Navigation (NE)
+	void BoostNavigation();
+	//Time Tilt Guidance (TT)
+	void TimeTiltGuidance();
+	//Iterative Guidance Mode (IG)
+	void IterativeGuidanceMode();
+	//Variable Launch Window (LA)
+	void VariableLaunchWindow();
+	//Gravitation Acceleration (GR)
+	VECTOR3 GravitationSubroutine(VECTOR3 Rvec, bool J2only);
+	//Restart Calculations (TC)
+	void RestartCalculations();
 
 	FILE* lvlog;									// LV Log file
 	char FSPFileName[256];
@@ -183,6 +207,8 @@ private:								// Saturn LV
 
 	//Task tables and indizes
 
+	//Flight phase indicator
+	int DVP;
 	//Timer 2 task status table
 	bool T2STAT[11];
 	//Timer 2 task execution time table
@@ -211,7 +237,7 @@ private:								// Saturn LV
 	//16 = Time Base 1 (TB1)
 	//17 = Time Base 5/7 (TB57)
 	//18 = Minor Loop Support (MS)
-	//19 = Simulated Platoform Gimbal Angles (PG)
+	//19 = Simulated Platform Gimbal Angles (PG)
 	//20 = Etc Btc (EB)
 	bool NISTAT[21];
 
@@ -263,7 +289,6 @@ private:								// Saturn LV
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool CountPIPA;									// PIPA Counter Enable
-	bool GuidanceReferenceFailure;
 	
 	// These are variables that are not really part of the LVDC software.
 	VECTOR3 AttitudeError;                          // Attitude Error
@@ -280,7 +305,6 @@ private:								// Saturn LV
 	double t_TB8Start;
 
 	// Event Times
-	double t_fail;									// S1C Engine Failure time
 	double T_ar;									// S1C Tilt Arrest Time
 	double t_1;										// Backup timer for Pre-IGM pitch maneuver
 	double t_2;										// Time to initiate pitch freeze for S1C engine failure
@@ -288,7 +312,7 @@ private:								// Saturn LV
 	double t_3i;									// Clock time at S4B ignition
 	double t_4;										// Upper bound of validity for first segment of pitch freeze
 	double t_5;										// Upper bound of validity for second segment of pitch freeze
-	double t_6;										// Time to terminate pitch freeze after S1C engine failure
+	double TMEFRZ;									// Time to terminate pitch freeze after S1C engine failure
 	double t_21;									// Time of S2 ignition from lift off
 	double dT_F;									// Period of frozen pitch in S1C
 	double T_S1,T_S2,T_S3;							// Times for Pre-IGM pitch polynomial
@@ -307,15 +331,15 @@ private:								// Saturn LV
 	bool init;										// GRR initialization done
 	bool poweredflight;								// Powered flight flag
 	bool Direct_Ascent;                             // Direct Ascent Mode flag
-	bool S1_Engine_Out;								// S1B/C Engine Failure Flag
 	bool HSL;										// High-Speed Loop flag
-	int  T_EO1,T_EO2;								// Pre-IGM Engine-Out Constant
+	double T_EO1;
+	int T_EO2;										// Pre-IGM Engine-Out Constant
 	bool ROT;										// Rotate terminal conditions
 	bool ROTR;										// Rotate terminal conditions during out-of-orbit burn
 	int  UP;										// IGM target parameters updated
 	bool BOOST;										// Boost To Orbit
+	bool CHIBARSTEER;								// Terminal guidance flag
 	bool S2_IGNITION;								// SII Ignition flag
-	bool S2_ENGINE_OUT;								// SII Engine out flag
 	bool S4B_IGN;									// SIVB Ignition
 	bool S4B_REIGN;									// SIVB Reignition
 	bool S2_BURNOUT;								// SII Burn Out
@@ -324,7 +348,6 @@ private:								// Saturn LV
 	bool GATE0;										// Permit entry to restart preparation
 	bool GATE1;										// Permit entry to out-of-orbit targeting
 	bool GATE2;										// Permit only one pass through 1st-opportunity targeting
-	bool GATE3;										// Permit entry to IGM out-of-orbit targeting
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
 	bool INH1,INH2;									// Dunno yet (INH appears to be the manual XLUNAR INHIBIT signal, at least)
 	bool INH4;										// Inhibit maneuver to separation attitude
@@ -381,8 +404,6 @@ private:								// Saturn LV
 	double TB6c;									// Time of TB6c
 	double TB7;										// Time of TB7
 	double TB8;										// Time of TB8
-	double T_IGM;									// Time from start of TB6 to IGM start during second SIVB burn
-	double T_RG;									// Time from TB6 start to reignition for second SIVB burn
 	double T_RP;									// Time for restart preparation (TB6 start)
 	double T_ST;									// Time for the S*T_P test in 10-parameter targeting
 	double T_1c;									// Burn time of IGM first, second, and coast guidance stages
@@ -436,9 +457,13 @@ private:								// Saturn LV
 	double h_2;										// Upper limit of h for atmospheric density polynomial
 	double T_ImpactBurn;							// Time of ignition of lunar impact burn
 	double dT_ImpactBurn;							// Burn duration of lunar impact burn
-	double DT_N1, DT_N2, DT_N3, DT_N4, DT_N5, DT_N6;// Nominal DT for various mission phases
+	double DT_N1;									// Nominal DT from T0+0.0 until T1+0.0
+	double DT_N2;									// Nominal DT from T1+0.0 until T3+T3_IGM
+	double DT_N3;									// Nominal DT from T3+T3_IGM until T5-eps2 and T6+T_IGM until T7-eps2
+	double DT_N4;									// Nominal DT from T5-eps2 until T5+0 and T7-eps2 until T7+0
+	double DT_N5;									// Nominal DT from T5+0.0 until T5+BN5 and T6+0 until T6+T_IGM
+	double DT_N6;									// Nominal DT from T5+BN5 until T6+0 and T7+BN4 until EOM
 	double T_SON;									// Time since last orbital navigation pass
-	int OrbitalGuidanceCycle;						// Number of minor loops since since last guidance run during orbital flight
 	// Normally set to 2, set to the desired type in the events processor. -2 = inertial hold of local reference, -1 = local reference, 0 = chi freeze, 1 = inertial reference
 	int AttitudeManeuverState;
 	
@@ -652,11 +677,18 @@ private:								// Saturn LV
 	//Interrupts
 	enum SV_Interrupt_Bits
 	{
-		INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA = 1,
-		INT4_SIVBEngineOutB = 3,
+		INT1_CommandLVDARCA110Interrupt,
+		INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA,
+		INT3_RCA110AInterrupt,
+		INT4_SIVBEngineOutB,
 		INT5_SICOutboardEnginesCutoffA,
 		INT6_SIIEnginesCutoff,
 		INT7_GuidanceReferenceRelease,
+		INT8_CommandDecoderInterrupt,
+		INT9_TLCMemoryError,
+		INT10_DataReadyFromCIU,
+		INT11_Timer2Interrupt,
+		INT12_Timer1Interrupt
 	};
 
 	//Discrete Inputs
@@ -689,10 +721,21 @@ private:								// Saturn LV
 		MC25_BeginTB6 = 0,
 		MC25_BeginTB5,
 		MC25_FirstSIVBCutoffCommand,
-		MC25_TerminalGuidance,
+		MC25_TerminalGuidanceFirstBurn,
 		MC25_SII_SIVB_Separation = 8,
+		MC25_SIIInboardEngineOut,
+		MC25_SIIOutboardEngineOut,
 		MC25_SII_IGMBeforeEMRC = 13,
-		MC25_BeginTB1 = 24,
+		MC25_SIISkirtSeparation,
+		MC25_SIICutoff,
+		MC25_SIC_OutboardEngineCutoff = 16,
+		MC25_SIC_InboardEngineCutoff,
+		MC25_BeginTB3,
+		MC25_BeginTB2,
+		MC25_StopPitchManeuver,
+		MC25_StopRollManeuver = 22,
+		MC25_StartPitchAndRollManeuver,
+		MC25_BeginTB1,
 		MC25_BeginTB0
 	};
 
@@ -701,17 +744,19 @@ private:								// Saturn LV
 		MC26_Preflight_Abort = 0,
 		MC26_TB6b_Started = 2,
 		MC26_StartTB6_DIN20,
+		MC26_StartTB6C,
 		MC26_First_TLI_Inhibited,
 		MC26_Second_TLI_Inhibited,
 		MC26_Guidance_Reference_Failure,
 		MC26_Memory_Failure,
 		MC26_TB6a_Started,
 		MC26_SMCActive,
-		MC26_SCInitOfSIISIVBSeparation = 17,
+		MC26_SCInitOfSIISIVBSeparation = 16,
 		MC26_SCControlAfterGRF,
 		MC26_SCInitOfSIVBCutoff,
 		MC26_TB7_Started,
-		MC26_SecondSIVBCutoffCommand = 22
+		MC26_SecondSIVBCutoffCommand = 21,
+		MC26_TerminalGuidanceSecondBurn
 	};
 
 	enum ModeCode27_Bits
@@ -831,6 +876,8 @@ private:
 	bool GATE5;										// Logic gate that ensures only one pass through cutoff initialization
 	bool TerminalConditions;						// Use preset terminal conditions (R_T, V_T, gamma_T and G_T) for into-orbit targeting
 	std::bitset<26> ModeCode24, ModeCode25, ModeCode27;
+	int MinorLoopCounter;
+	int MinorLoopCycles;
 
 	// LVDC software variables, PAD-LOADED BUT NOT NECESSARILY CONSTANT!
 	double A_zL;									// Position I Azimuth
