@@ -1032,6 +1032,7 @@ public:
 				  int springloaded = SPRINGLOADEDSWITCH_NONE);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 				   int xOffset = 0, int yOffset = 0);
+	void InitGuardVC(UINT anim);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	void DrawSwitchVC(UINT anim);
 	bool CheckMouseClick(int event, int mx, int my);

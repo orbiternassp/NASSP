@@ -684,6 +684,7 @@ public:
 	void Init(SURFHANDLE digits, SwitchRow &row, Saturn *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DoDrawSwitchVC(SURFHANDLE surf, double v, SURFHANDLE drawSurface);
 
 	int GetState();
 	void SetState(int value);

@@ -45,6 +45,7 @@
 #include "papi.h"
 #include "CM_VC_Resource.h"
 
+extern GDIParams g_Param;
 
 void Saturn::InitVC()
 {
@@ -58,30 +59,35 @@ void Saturn::InitVC()
 	// Load CM VC surfaces
 
 	srf[SRF_VC_DIGITALDISP] = oapiLoadTexture("ProjectApollo/VC/digitaldisp.dds");
-	//srf[SRF_VC_DIGITALDISP2] = oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
+	srf[SRF_VC_DIGITALDISP2] = oapiLoadTexture("ProjectApollo/VC/digitaldisp_2.dds");
 	srf[SRF_VC_DSKYDISP] = oapiLoadTexture("ProjectApollo/VC/dsky_disp.dds");
 	srf[SRF_VC_DSKY_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/dsky_lights.dds");
+	srf[SRF_VC_MASTERALARM] = oapiLoadTexture("ProjectApollo/VC/masteralarmbright.dds");
+	srf[SRF_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/cw_lights.dds");
+	srf[SRF_VC_LVENGLIGHTS] = oapiLoadTexture("ProjectApollo/VC/lv_eng.dds");
+	srf[SRF_VC_EVENT_TIMER_DIGITS] = oapiLoadTexture("ProjectApollo/VC/event_timer.dds");
+	srf[SRF_VC_EMS_SCROLL_LEO] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_LEO.dds");
+	srf[SRF_VC_EMS_SCROLL_BORDER] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_border.dds");
+	srf[SRF_VC_EMS_SCROLL_BUG] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_bug.dds");
+	srf[SRF_VC_EMS_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/ems_lights.dds");
 
-	/*srf[SRF_VC_RADAR_TAPEA] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_a.dds");
-	srf[SRF_VC_RADAR_TAPEB] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales_b.dds");
-	srf[SRF_VC_RADAR_TAPE2] = oapiLoadTexture("ProjectApollo/VC/lm_range_rate_indicator_scales2.dds");
-	srf[SFR_VC_CW_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/lem_cw_lights.dds");
-	srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
-	srf[SRF_INDICATORREDVC] = oapiLoadTexture("ProjectApollo/VC/IndicatorRed.dds");
-	srf[SRF_LEM_MASTERALARMVC] = oapiLoadTexture("ProjectApollo/VC/lem_master_alarm.dds");
-	srf[SRF_DEDA_LIGHTSVC] = oapiLoadTexture("ProjectApollo/VC/ags_lights.dds");*/
+
+	//srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
+	//srf[SRF_INDICATORREDVC] = oapiLoadTexture("ProjectApollo/VC/IndicatorRed.dds");
 
 	// Set Colour Key
 
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], ck);
-	//oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DSKYDISP], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DSKY_LIGHTS], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_MASTERALARM], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_CW_LIGHTS], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_LVENGLIGHTS], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_EMS_SCROLL_BORDER], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_EMS_SCROLL_BUG], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_EMS_LIGHTS], ck);
 
-	/*oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEA], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPEB], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SRF_VC_RADAR_TAPE2], g_Param.col[4]);
-	oapiSetSurfaceColourKey(srf[SFR_VC_CW_LIGHTS], g_Param.col[4]);*/
 
 	//
 	// Register active areas for repainting here
@@ -90,9 +96,25 @@ void Saturn::InitVC()
 	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 12);
 	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 1);
 
+	// Panel 1
+
+	oapiVCRegisterArea(AID_VC_MASTER_ALARM, _R(1489, 1183, 1534, 1219), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_LVENG_LIGHTS, _R(1868, 1421, 1969, 1565), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(1891, 1356, 1962, 1374), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EMS_SCROLL_LEO, _R(1756, 982, 1900, 1134), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPS_LIGHT, _R(1840, 1142, 1881, 1158), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_PT05G_LIGHT, _R(1774, 1142, 1815, 1158), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EMSDVDISPLAY, _R(1768, 1204, 1925, 1225), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
 	// Panel 2
 	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254, 1235, 359, 1411), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS, _R(110, 1240, 212, 1360), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(849, 949, 992, 972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_LEFT, _R(555, 743, 767, 1851), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_RIGHT, _R(810, 743, 1023, 851), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+
+	// Panel 3
+	oapiVCRegisterArea(AID_VC_MASTER_ALARM2, _R(433, 1339, 478, 1375), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 }
 
@@ -230,10 +252,8 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
-	oapiVCRegisterArea(AID_VC_MASTER_ALARM, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, 0.008);
 
-	oapiVCRegisterArea(AID_VC_MASTER_ALARM2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
 
 	// Panel 1
@@ -291,13 +311,6 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&EventTimerMinutesSwitch, AID_VC_SWITCH_P1_46, &anim_P1switch[45]);
 	MainPanelVC.AddSwitch(&EventTimerSecondsSwitch, AID_VC_SWITCH_P1_47, &anim_P1switch[46]);
 
-	IMUGuardedCageSwitch.InitGuardVC(anim_switchcovers[0]);
-	dVThrust1Switch.InitGuardVC(anim_switchcovers[1]);
-	dVThrust2Switch.InitGuardVC(anim_switchcovers[2]);
-	ELSLogicSwitch.InitGuardVC(anim_switchcovers[3]);
-	CMPropDumpSwitch.InitGuardVC(anim_switchcovers[4]);
-	CMPropPurgeSwitch.InitGuardVC(anim_switchcovers[5]);
-
 	//Panel 2
 
 	for (i = 0; i < P2_SWITCHCOUNT_C; i++)
@@ -327,6 +340,81 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&SIISIVBSepSwitch, AID_VC_SWITCH_P2_13, &anim_P2switch[12]);
 	MainPanelVC.AddSwitch(&TLIEnableSwitch, AID_VC_SWITCH_P2_14, &anim_P2switch[13]);
 	MainPanelVC.AddSwitch(&MainReleaseSwitch, AID_VC_SWITCH_P2_15, &anim_P2switch[14]);
+	MainPanelVC.AddSwitch(&DockingProbeExtdRelSwitch, AID_VC_SWITCH_P2_16, &anim_P2switch[15]);
+	MainPanelVC.AddSwitch(&DockingProbeRetractPrimSwitch, AID_VC_SWITCH_P2_17, &anim_P2switch[16]);
+	MainPanelVC.AddSwitch(&DockingProbeRetractSecSwitch, AID_VC_SWITCH_P2_18, &anim_P2switch[17]);
+	MainPanelVC.AddSwitch(&RunEVALightSwitch, AID_VC_SWITCH_P2_19, &anim_P2switch[18]);
+	MainPanelVC.AddSwitch(&RndzLightSwitch, AID_VC_SWITCH_P2_20, &anim_P2switch[19]);
+	MainPanelVC.AddSwitch(&TunnelLightSwitch, AID_VC_SWITCH_P2_21, &anim_P2switch[20]);
+	MainPanelVC.AddSwitch(&LMPowerSwitch, AID_VC_SWITCH_P2_22, &anim_P2switch[21]);
+	MainPanelVC.AddSwitch(&SMRCSHelium1ASwitch, AID_VC_SWITCH_P2_23, &anim_P2switch[22]);
+	MainPanelVC.AddSwitch(&SMRCSHelium1BSwitch, AID_VC_SWITCH_P2_24, &anim_P2switch[23]);
+	MainPanelVC.AddSwitch(&SMRCSHelium1CSwitch, AID_VC_SWITCH_P2_25, &anim_P2switch[24]);
+	MainPanelVC.AddSwitch(&SMRCSHelium1DSwitch, AID_VC_SWITCH_P2_26, &anim_P2switch[25]);
+	MainPanelVC.AddSwitch(&CMUplinkSwitch, AID_VC_SWITCH_P2_27, &anim_P2switch[26]);
+	MainPanelVC.AddSwitch(&IUUplinkSwitch, AID_VC_SWITCH_P2_28, &anim_P2switch[27]);
+	MainPanelVC.AddSwitch(&CMRCSPressSwitch, AID_VC_SWITCH_P2_29, &anim_P2switch[28]);
+	MainPanelVC.AddSwitch(&SMRCSIndSwitch, AID_VC_SWITCH_P2_30, &anim_P2switch[29]);
+	MainPanelVC.AddSwitch(&SMRCSHelium2ASwitch, AID_VC_SWITCH_P2_31, &anim_P2switch[30]);
+	MainPanelVC.AddSwitch(&SMRCSHelium2BSwitch, AID_VC_SWITCH_P2_32, &anim_P2switch[31]);
+	MainPanelVC.AddSwitch(&SMRCSHelium2CSwitch, AID_VC_SWITCH_P2_33, &anim_P2switch[32]);
+	MainPanelVC.AddSwitch(&SMRCSHelium2DSwitch, AID_VC_SWITCH_P2_34, &anim_P2switch[33]);
+	MainPanelVC.AddSwitch(&SMRCSHeaterASwitch, AID_VC_SWITCH_P2_35, &anim_P2switch[34]);
+	MainPanelVC.AddSwitch(&SMRCSHeaterBSwitch, AID_VC_SWITCH_P2_36, &anim_P2switch[35]);
+	MainPanelVC.AddSwitch(&SMRCSHeaterCSwitch, AID_VC_SWITCH_P2_37, &anim_P2switch[36]);
+	MainPanelVC.AddSwitch(&SMRCSHeaterDSwitch, AID_VC_SWITCH_P2_38, &anim_P2switch[37]);
+	MainPanelVC.AddSwitch(&SMRCSProp1ASwitch, AID_VC_SWITCH_P2_39, &anim_P2switch[38]);
+	MainPanelVC.AddSwitch(&SMRCSProp1BSwitch, AID_VC_SWITCH_P2_40, &anim_P2switch[39]);
+	MainPanelVC.AddSwitch(&SMRCSProp1CSwitch, AID_VC_SWITCH_P2_41, &anim_P2switch[40]);
+	MainPanelVC.AddSwitch(&SMRCSProp1DSwitch, AID_VC_SWITCH_P2_42, &anim_P2switch[41]);
+	MainPanelVC.AddSwitch(&RCSCMDSwitch, AID_VC_SWITCH_P2_43, &anim_P2switch[42]);
+	MainPanelVC.AddSwitch(&RCSTrnfrSwitch, AID_VC_SWITCH_P2_44, &anim_P2switch[43]);
+	MainPanelVC.AddSwitch(&CMRCSProp1Switch, AID_VC_SWITCH_P2_45, &anim_P2switch[44]);
+	MainPanelVC.AddSwitch(&CMRCSProp2Switch, AID_VC_SWITCH_P2_46, &anim_P2switch[45]);
+	MainPanelVC.AddSwitch(&SMRCSProp2ASwitch, AID_VC_SWITCH_P2_47, &anim_P2switch[46]);
+	MainPanelVC.AddSwitch(&SMRCSProp2BSwitch, AID_VC_SWITCH_P2_48, &anim_P2switch[47]);
+	MainPanelVC.AddSwitch(&SMRCSProp2CSwitch, AID_VC_SWITCH_P2_49, &anim_P2switch[48]);
+	MainPanelVC.AddSwitch(&SMRCSProp2DSwitch, AID_VC_SWITCH_P2_50, &anim_P2switch[49]);
+	MainPanelVC.AddSwitch(&MissionTimerHoursSwitch, AID_VC_SWITCH_P2_51, &anim_P2switch[50]);
+	MainPanelVC.AddSwitch(&MissionTimerMinutesSwitch, AID_VC_SWITCH_P2_52, &anim_P2switch[51]);
+	MainPanelVC.AddSwitch(&MissionTimerSecondsSwitch, AID_VC_SWITCH_P2_53, &anim_P2switch[52]);
+	MainPanelVC.AddSwitch(&CautionWarningModeSwitch, AID_VC_SWITCH_P2_54, &anim_P2switch[53]);
+	MainPanelVC.AddSwitch(&CautionWarningCMCSMSwitch, AID_VC_SWITCH_P2_55, &anim_P2switch[54]);
+	MainPanelVC.AddSwitch(&CautionWarningPowerSwitch, AID_VC_SWITCH_P2_56, &anim_P2switch[55]);
+	MainPanelVC.AddSwitch(&CautionWarningLightTestSwitch, AID_VC_SWITCH_P2_57, &anim_P2switch[56]);
+	MainPanelVC.AddSwitch(&MissionTimerSwitch, AID_VC_SWITCH_P2_58, &anim_P2switch[57]);
+	MainPanelVC.AddSwitch(&CabinFan1Switch, AID_VC_SWITCH_P2_59, &anim_P2switch[58]);
+	MainPanelVC.AddSwitch(&CabinFan2Switch, AID_VC_SWITCH_P2_60, &anim_P2switch[59]);
+	MainPanelVC.AddSwitch(&H2Heater1Switch, AID_VC_SWITCH_P2_61, &anim_P2switch[60]);
+	MainPanelVC.AddSwitch(&H2Heater2Switch, AID_VC_SWITCH_P2_62, &anim_P2switch[61]);
+	MainPanelVC.AddSwitch(&O2Heater1Switch, AID_VC_SWITCH_P2_63, &anim_P2switch[62]);
+	MainPanelVC.AddSwitch(&O2Heater2Switch, AID_VC_SWITCH_P2_64, &anim_P2switch[63]);
+	MainPanelVC.AddSwitch(&O2PressIndSwitch, AID_VC_SWITCH_P2_65, &anim_P2switch[64]);
+	MainPanelVC.AddSwitch(&H2Fan1Switch, AID_VC_SWITCH_P2_66, &anim_P2switch[65]);
+	MainPanelVC.AddSwitch(&H2Fan2Switch, AID_VC_SWITCH_P2_67, &anim_P2switch[66]);
+	MainPanelVC.AddSwitch(&O2Fan1Switch, AID_VC_SWITCH_P2_68, &anim_P2switch[67]);
+	MainPanelVC.AddSwitch(&O2Fan2Switch, AID_VC_SWITCH_P2_69, &anim_P2switch[68]);
+	MainPanelVC.AddSwitch(&EcsRadiatorsFlowContAutoSwitch, AID_VC_SWITCH_P2_70, &anim_P2switch[69]);
+	MainPanelVC.AddSwitch(&EcsRadiatorsFlowContPwrSwitch, AID_VC_SWITCH_P2_71, &anim_P2switch[70]);
+	MainPanelVC.AddSwitch(&EcsRadiatorsManSelSwitch, AID_VC_SWITCH_P2_72, &anim_P2switch[71]);
+	MainPanelVC.AddSwitch(&EcsRadiatorsHeaterPrimSwitch, AID_VC_SWITCH_P2_73, &anim_P2switch[72]);
+	MainPanelVC.AddSwitch(&EcsRadiatorsHeaterSecSwitch, AID_VC_SWITCH_P2_74, &anim_P2switch[73]);
+	MainPanelVC.AddSwitch(&PotH2oHtrSwitch, AID_VC_SWITCH_P2_75, &anim_P2switch[74]);
+	MainPanelVC.AddSwitch(&SuitCircuitH2oAccumAutoSwitch, AID_VC_SWITCH_P2_76, &anim_P2switch[75]);
+	MainPanelVC.AddSwitch(&SuitCircuitH2oAccumOnSwitch, AID_VC_SWITCH_P2_77, &anim_P2switch[76]);
+	MainPanelVC.AddSwitch(&SuitCircuitHeatExchSwitch, AID_VC_SWITCH_P2_78, &anim_P2switch[77]);
+	MainPanelVC.AddSwitch(&SecCoolantLoopEvapSwitch, AID_VC_SWITCH_P2_79, &anim_P2switch[78]);
+	MainPanelVC.AddSwitch(&SecCoolantLoopPumpSwitch, AID_VC_SWITCH_P2_80, &anim_P2switch[79]);
+	MainPanelVC.AddSwitch(&H2oQtyIndSwitch, AID_VC_SWITCH_P2_81, &anim_P2switch[80]);
+	MainPanelVC.AddSwitch(&GlycolEvapTempInSwitch, AID_VC_SWITCH_P2_82, &anim_P2switch[81]);
+	MainPanelVC.AddSwitch(&GlycolEvapSteamPressAutoManSwitch, AID_VC_SWITCH_P2_83, &anim_P2switch[82]);
+	MainPanelVC.AddSwitch(&GlycolEvapSteamPressIncrDecrSwitch, AID_VC_SWITCH_P2_84, &anim_P2switch[83]);
+	MainPanelVC.AddSwitch(&GlycolEvapH2oFlowSwitch, AID_VC_SWITCH_P2_85, &anim_P2switch[84]);
+	MainPanelVC.AddSwitch(&CabinTempAutoManSwitch, AID_VC_SWITCH_P2_86, &anim_P2switch[85]);
+	MainPanelVC.AddSwitch(&GHATrackSwitch, AID_VC_SWITCH_P2_87, &anim_P2switch[86]);
+	MainPanelVC.AddSwitch(&GHABeamSwitch, AID_VC_SWITCH_P2_88, &anim_P2switch[87]);
+	MainPanelVC.AddSwitch(&GHAPowerSwitch, AID_VC_SWITCH_P2_89, &anim_P2switch[88]);
+	MainPanelVC.AddSwitch(&GHAServoElecSwitch, AID_VC_SWITCH_P2_90, &anim_P2switch[89]);
 
 	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P2_01, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P2_02, NULL);
@@ -348,13 +436,25 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19, NULL);
 
+	// Switch Covers
+	IMUGuardedCageSwitch.InitGuardVC(anim_switchcovers[0]);
+	dVThrust1Switch.InitGuardVC(anim_switchcovers[1]);
+	dVThrust2Switch.InitGuardVC(anim_switchcovers[2]);
+	ELSLogicSwitch.InitGuardVC(anim_switchcovers[3]);
+	CMPropDumpSwitch.InitGuardVC(anim_switchcovers[4]);
+	CMPropPurgeSwitch.InitGuardVC(anim_switchcovers[5]);
 	CsmLmFinalSep1Switch.InitGuardVC(anim_switchcovers[6]);
 	CsmLmFinalSep2Switch.InitGuardVC(anim_switchcovers[7]);
 	CmSmSep1Switch.InitGuardVC(anim_switchcovers[8]);
 	CmSmSep2Switch.InitGuardVC(anim_switchcovers[9]);
 	SIVBPayloadSepSwitch.InitGuardVC(anim_switchcovers[10]);
-	SIISIVBSepSwitch.InitGuardVC(anim_switchcovers[11]);
-	MainReleaseSwitch.InitGuardVC(anim_switchcovers[12]);
+	TowerJett1Switch.InitGuardVC(anim_switchcovers[11]);
+	TowerJett2Switch.InitGuardVC(anim_switchcovers[12]);
+	LVGuidanceSwitch.InitGuardVC(anim_switchcovers[13]);
+	SIISIVBSepSwitch.InitGuardVC(anim_switchcovers[14]);
+	MainReleaseSwitch.InitGuardVC(anim_switchcovers[15]);
+	DockingProbeExtdRelSwitch.InitGuardVC(anim_switchcovers[16]);
+	CMRCSPressSwitch.InitGuardVC(anim_switchcovers[17]);
 }
 
 // --------------------------------------------------------------
@@ -424,31 +524,182 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		dsky.RenderLights(surf, srf[SRF_VC_DSKY_LIGHTS]);
 		return true;
 
-
-	/*
-	
-	case AID_DSKY_KEY:
-		dsky.RenderKeys(surf, srf[SRF_DSKYKEY]);
-		return true;
-
-	case AID_ABORT_BUTTON:
+	/*case AID_ABORT_BUTTON:
 		if (ABORT_IND) {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 62, 0, 62, 31);
 		}
 		else {
 			oapiBlt(surf,srf[SRF_ABORT], 0, 0, 0, 0, 62, 31);
 		}
-		return true;
+		return true;*/
 		
-	case AID_MASTER_ALARM:
-		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_LEFT);
+	case AID_VC_MASTER_ALARM:
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_LEFT);
 		return true;
 
-	case AID_MASTER_ALARM2:
-		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_RIGHT);
+	case AID_VC_MASTER_ALARM2:
+		cws.RenderMasterAlarm(surf, srf[SRF_VC_MASTERALARM], NULL, CWS_MASTERALARMPOSITION_RIGHT);
 		return true;
 
-	case AID_MASTER_ALARM3:
+	case AID_VC_LVENG_LIGHTS:
+	{
+		if (SI_EngineNum > 5)
+		{
+			/*RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 42);
+			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 98);
+			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 8, 98);
+			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 7, 43);
+			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 41);
+			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 51, 69);
+			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 98);
+			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 22, 69);*/
+		}
+		else
+		{
+			if (ENGIND[0])
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55, 44, 55, 44, 27, 27);
+			}
+			else
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55, 44, 157, 44, 27, 27);
+			}
+
+			if (ENGIND[1])
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55, 98, 55, 98, 27, 27);
+			}
+			else
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55, 98, 157, 98, 27, 27);
+			}
+			if (ENGIND[2])
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20, 98, 20, 98, 27, 27);
+			}
+			else
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20, 98, 122, 98, 27, 27);
+			}
+			if (ENGIND[3])
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20, 44, 20, 44, 27, 27);
+			}
+			else
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20, 44, 122, 44, 27, 27);
+			}
+			if (ENGIND[4])
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37, 71, 37, 71, 27, 27);
+			}
+			else
+			{
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37, 71, 140, 71, 27, 27);
+			}
+		}
+	}
+
+	if (LVRateLight)
+	{
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6, 4, 6, 4, 27, 27);
+	}
+	else
+	{
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6, 4, 108, 4, 27, 27);
+	}
+
+	//
+	// Saturn 1b doesn't have an SII sep light.
+	//
+
+	if (SaturnType == SAT_SATURNV)
+	{
+		if (SIISepState)
+		{
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37, 4, 37, 4, 27, 27);
+		}
+		else
+		{
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37, 4, 139, 4, 27, 27);
+		}
+	}
+
+	if (LVGuidLight)
+	{
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69, 4, 69, 4, 27, 27);
+	}
+	else
+	{
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69, 4, 171, 4, 27, 27);
+	}
+	return true;
+
+	case AID_VC_MISSION_CLOCK:
+		MissionTimerDisplay.Render(surf, srf[SRF_VC_DIGITALDISP2], true);
+		return true;
+
+	/*case AID_MISSION_CLOCK306:
+		MissionTimer306Display.Render90(surf, srf[SRF_DIGITAL90], true);
+		return true;*/
+
+	case AID_VC_EVENT_TIMER:
+		EventTimerDisplay.Render(surf, srf[SRF_VC_EVENT_TIMER_DIGITS]);
+		return true;
+
+	case AID_VC_CWS_LIGHTS_LEFT:
+		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], true);
+		return true;
+
+	case AID_VC_CWS_LIGHTS_RIGHT:
+		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], false);
+		return true;
+
+	case AID_VC_SPS_LIGHT:
+		if (ems.SPSThrustLight()) {
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 41, 16, 41, 16);
+		}
+		else {
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 16, 41, 16);
+		}
+		return true;
+
+	case AID_VC_PT05G_LIGHT:
+		if (ems.pt05GLight()) {
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 41, 0, 41, 16);
+		}
+		else {
+			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 0, 0, 41, 16);
+		}
+		return true;
+
+
+	case AID_VC_EMSDVDISPLAY:
+		EMSDvDisplay.DoDrawSwitchVC(surf, EMSDvDisplay.QueryValue(), srf[SRF_VC_DIGITALDISP]);
+		return true;
+
+	case AID_VC_EMS_SCROLL_LEO:
+	{
+
+		HDC hDC;
+
+		hDC = oapiGetDC(srf[SRF_VC_EMS_SCROLL_LEO]);
+
+		SetBkMode(hDC, TRANSPARENT);
+		HGDIOBJ oldObj = SelectObject(hDC, g_Param.pen[2]);
+
+		Polyline(hDC, ems.ScribePntArray, ems.ScribePntCnt);
+
+		SelectObject(hDC, oldObj);
+		oapiReleaseDC(srf[SRF_VC_EMS_SCROLL_LEO], hDC);
+
+		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_LEO], 5, 4, ems.GetScrollOffset(), 0, 132, 143);
+		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BUG], 42, ems.GetGScribe() + 2, 0, 0, 5, 5, SURF_PREDEF_CK);
+		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
+		return true;
+	}
+
+	/*case AID_MASTER_ALARM3:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
 		return true;*/
 

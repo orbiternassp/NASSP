@@ -833,11 +833,17 @@
 #define AID_VC_SWITCH_P1_46		        3146
 #define AID_VC_SWITCH_P1_47		        3147
 
-#define AID_VC_FDAI_LEFT                3148
-#define AID_VC_MASTER_ALARM             3149
+#define AID_VC_FDAI_LEFT                3160
+#define AID_VC_MASTER_ALARM             3161
+#define AID_VC_LVENG_LIGHTS             3162
+#define AID_VC_EVENT_TIMER              3163
+#define AID_VC_EMS_SCROLL_LEO           3164
+#define AID_VC_SPS_LIGHT                3165
+#define AID_VC_PT05G_LIGHT              3166
+#define AID_VC_EMSDVDISPLAY             3167
 
 // VC Active Areas (Panel 2)
-#define AID_VC_PANEL_2			((id >= 3200) && (id <= 3299))
+#define AID_VC_PANEL_2			((id >= 3200) && (id <= 3399))
 #define AID_VC_PUSHB_P2_01      3201    // DSKY key Verb
 #define AID_VC_PUSHB_P2_02      3202    // DSKY key Noun
 #define AID_VC_PUSHB_P2_03      3203    // DSKY key +
@@ -873,14 +879,92 @@
 #define AID_VC_SWITCH_P2_13		3232
 #define AID_VC_SWITCH_P2_14		3233
 #define AID_VC_SWITCH_P2_15		3234
+#define AID_VC_SWITCH_P2_16		3235
+#define AID_VC_SWITCH_P2_17		3236
+#define AID_VC_SWITCH_P2_18		3237
+#define AID_VC_SWITCH_P2_19		3238
+#define AID_VC_SWITCH_P2_20		3239
+#define AID_VC_SWITCH_P2_21		3240
+#define AID_VC_SWITCH_P2_22		3241
+#define AID_VC_SWITCH_P2_23		3242
+#define AID_VC_SWITCH_P2_24		3243
+#define AID_VC_SWITCH_P2_25		3244
+#define AID_VC_SWITCH_P2_26		3245
+#define AID_VC_SWITCH_P2_27		3246
+#define AID_VC_SWITCH_P2_28		3247
+#define AID_VC_SWITCH_P2_29		3248
+#define AID_VC_SWITCH_P2_30		3249
+#define AID_VC_SWITCH_P2_31		3250
+#define AID_VC_SWITCH_P2_32		3251
+#define AID_VC_SWITCH_P2_33		3252
+#define AID_VC_SWITCH_P2_34		3253
+#define AID_VC_SWITCH_P2_35		3254
+#define AID_VC_SWITCH_P2_36		3255
+#define AID_VC_SWITCH_P2_37		3256
+#define AID_VC_SWITCH_P2_38		3257
+#define AID_VC_SWITCH_P2_39		3258
+#define AID_VC_SWITCH_P2_40		3259
+#define AID_VC_SWITCH_P2_41		3260
+#define AID_VC_SWITCH_P2_42		3261
+#define AID_VC_SWITCH_P2_43		3262
+#define AID_VC_SWITCH_P2_44		3263
+#define AID_VC_SWITCH_P2_45		3264
+#define AID_VC_SWITCH_P2_46		3265
+#define AID_VC_SWITCH_P2_47		3266
+#define AID_VC_SWITCH_P2_48		3267
+#define AID_VC_SWITCH_P2_49		3268
+#define AID_VC_SWITCH_P2_50		3269
+#define AID_VC_SWITCH_P2_51		3270
+#define AID_VC_SWITCH_P2_52		3271
+#define AID_VC_SWITCH_P2_53		3272
+#define AID_VC_SWITCH_P2_54		3273
+#define AID_VC_SWITCH_P2_55		3274
+#define AID_VC_SWITCH_P2_56		3275
+#define AID_VC_SWITCH_P2_57		3276
+#define AID_VC_SWITCH_P2_58		3277
+#define AID_VC_SWITCH_P2_59		3278
+#define AID_VC_SWITCH_P2_60		3279
+#define AID_VC_SWITCH_P2_61		3280
+#define AID_VC_SWITCH_P2_62		3281
+#define AID_VC_SWITCH_P2_63		3282
+#define AID_VC_SWITCH_P2_64		3283
+#define AID_VC_SWITCH_P2_65		3284
+#define AID_VC_SWITCH_P2_66		3285
+#define AID_VC_SWITCH_P2_67		3286
+#define AID_VC_SWITCH_P2_68		3287
+#define AID_VC_SWITCH_P2_69		3288
+#define AID_VC_SWITCH_P2_70		3289
+#define AID_VC_SWITCH_P2_71		3290
+#define AID_VC_SWITCH_P2_72		3291
+#define AID_VC_SWITCH_P2_73		3292
+#define AID_VC_SWITCH_P2_74		3293
+#define AID_VC_SWITCH_P2_75		3294
+#define AID_VC_SWITCH_P2_76		3295
+#define AID_VC_SWITCH_P2_77		3296
+#define AID_VC_SWITCH_P2_78		3297
+#define AID_VC_SWITCH_P2_79		3298
+#define AID_VC_SWITCH_P2_80		3299
+#define AID_VC_SWITCH_P2_81		3300
+#define AID_VC_SWITCH_P2_82		3301
+#define AID_VC_SWITCH_P2_83		3302
+#define AID_VC_SWITCH_P2_84		3303
+#define AID_VC_SWITCH_P2_85		3304
+#define AID_VC_SWITCH_P2_86		3305
+#define AID_VC_SWITCH_P2_87		3306
+#define AID_VC_SWITCH_P2_88		3307
+#define AID_VC_SWITCH_P2_89		3308
+#define AID_VC_SWITCH_P2_90		3309
 
-#define AID_VC_FDAI_RIGHT       3235
-#define AID_VC_DSKY_LIGHTS      3236
-#define AID_VC_DSKY_DISPLAY     3237
-#define AID_VC_DSKY_KEY         3238
+#define AID_VC_FDAI_RIGHT       3340
+#define AID_VC_DSKY_LIGHTS      3341
+#define AID_VC_DSKY_DISPLAY     3342
+#define AID_VC_DSKY_KEY         3343
+#define AID_VC_MISSION_CLOCK    3344
+#define AID_VC_CWS_LIGHTS_LEFT  3345
+#define AID_VC_CWS_LIGHTS_RIGHT 3346
 
 // VC Active Areas (Panel 3)
-#define AID_VC_MASTER_ALARM2                               3301
+#define AID_VC_MASTER_ALARM2    3401
 
 // Next default values for new objects
 //

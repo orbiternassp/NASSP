@@ -1712,6 +1712,31 @@ void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	}
 }
 
+void SaturnEMSDvDisplay::DoDrawSwitchVC(SURFHANDLE surf, double v, SURFHANDLE drawSurface)
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || Sat->ems.IsOff() || !Sat->ems.IsDisplayPowered()) return;
+
+	if (v < 0) {
+		oapiBlt(surf, drawSurface, 0, 0, 161, 0, 10, 19);
+	}
+
+	int i, Curdigit;
+	char buffer[100];
+	sprintf(buffer, "%7.1f", fabs(v));
+	for (i = 0; i < 7; i++) {
+		if (buffer[i] >= '0' && buffer[i] <= '9') {
+			Curdigit = buffer[i] - '0';
+			oapiBlt(surf, drawSurface, (i == 6 ? 0 : 10) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
+		}
+		else if (buffer[i] == '.') {
+			if (!Sat->ems.IsDecimalPointBlanked())
+			{
+				oapiBlt(surf, drawSurface, 10 + 16 * i, 0, 200, 0, 4, 19);
+			}
+		}
+	}
+}
+
 double SaturnEMSDvDisplay::QueryValue() {
 	return Sat->ems.GetdVRangeCounter();
 }

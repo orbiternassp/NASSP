@@ -1878,6 +1878,11 @@ void GuardedThreePosSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE s
 		switchRow->panelSwitches->soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
 }
 
+void GuardedThreePosSwitch::InitGuardVC(UINT anim) {
+
+	guardAnim = anim;
+}
+
 void GuardedThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 
 	if (!visible) return;
@@ -1981,7 +1986,7 @@ bool GuardedThreePosSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 		return true;
 
 	}
-	else if (event) {
+	else if (event & (PANEL_MOUSE_DOWN | PANEL_MOUSE_UP)) {
 		if (guardState) {
 			return ThreePosSwitch::CheckMouseClickVC(event, p);
 		}
