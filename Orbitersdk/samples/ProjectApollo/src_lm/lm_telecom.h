@@ -217,6 +217,7 @@ public:
 	bool isRanging;
 
 	double xmitPower;
+	const double minimumRCVDPower = -122.0; //dB
 
 	//Recvd RF properties*********
 	double RCVDfreqRCVR_A; //frequency received by rcvr A

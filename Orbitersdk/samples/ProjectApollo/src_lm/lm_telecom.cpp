@@ -440,12 +440,12 @@ void LM_VHF::Timestep(double simt)
 	{
 		if (transmitA)
 		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, 0.0, 0.0, 0.0, true);
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, 0.0, 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B>minimumRCVDPower)));
 		}
 
 		if (transmitB)
 		{
-			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, 0.0, 0.0, 0.0, true); //(isRanging && transmitA && receiveB && RCVDRangeTone)
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, 0.0, 0.0, false); 
 		}
 	}
 }
