@@ -103,20 +103,6 @@ LM_VHF::LM_VHF():
 	receiveB = false;
 	transmitA = false;
 	transmitB = false;
-
-	RCVDfreqRCVR_A = 0.0;
-	RCVDpowRCVR_A = 0.0;
-	RCVDgainRCVR_A = 0.0;
-	RCVDPhaseRCVR_A = 0.0;
-	RCVDfreqRCVR_B = 0.0;
-	RCVDpowRCVR_B = 0.0;
-	RCVDgainRCVR_B = 0.0;
-	RCVDPhaseRCVR_B = 0.0;
-	RCVDRangeTone = false;
-
-	RCVDinputPowRCVR_A = -150.0;
-	RCVDinputPowRCVR_B = -150.0;
-
 }
 
 bool LM_VHF::registerSocket(SOCKET sock)
@@ -146,6 +132,21 @@ void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad
 	{
 		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
+
+	RCVDfreqRCVR_A = 0.0;
+	RCVDpowRCVR_A = 0.0;
+	RCVDgainRCVR_A = 0.0;
+	RCVDPhaseRCVR_A = 0.0;
+	RCVDfreqRCVR_B = 0.0;
+	RCVDpowRCVR_B = 0.0;
+	RCVDgainRCVR_B = 0.0;
+	RCVDPhaseRCVR_B = 0.0;
+	RCVDRangeTone = false;
+
+	RCVDinputPowRCVR_A = -150.0;
+	RCVDinputPowRCVR_B = -150.0;
+
+	xmitPower = 5; //watts
 
 	VHFHeat = vhfh;
 	VHFSECHeat = secvhfh;
@@ -382,7 +383,7 @@ void LM_VHF::Timestep(double simt)
 		}
 	}
 
-	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
