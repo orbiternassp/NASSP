@@ -196,8 +196,8 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void RangingSignal(Saturn *sat, bool isAcquiring); //############################# DELETE ME ###############################
 
-	const double freqXCVR_A = 296.8; //MHz;
-	const double freqXCVR_B = 259.7; //MHz;
+	const double freqXCVR_A = 296.8E6; //MHz;
+	const double freqXCVR_B = 259.7E6; //MHz;
 
 	LEM *lem;					   // Ship we're installed in
 	VESSEL *csm;					//Pointer to CSM
@@ -209,6 +209,8 @@ public:
 	LM_VHFAntenna fwdInflightVHF;
 	LM_VHFAntenna aftInflightVHF;
 	LM_VHFAntenna evaVHF;
+	LM_VHFAntenna *activeAntenna;
+	RotationalSwitch *AntennaSelectorSW;
 
 	bool receiveA;
 	bool receiveB;

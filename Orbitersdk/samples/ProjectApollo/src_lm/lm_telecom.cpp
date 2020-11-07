@@ -84,10 +84,12 @@ double LM_VHFAntenna::getPolarGain(VECTOR3 target)
 LM_VHF::LM_VHF():
 	fwdInflightVHF(unit(_V(-1.0, 0.5, 0.0)), -10.0), // rough positions for testing
 	aftInflightVHF(unit(_V(0.1, 0.5, -1.0)), -10.0),
-	evaVHF(_V(0.0, 1.0, 0.0), 0.0)
+	evaVHF(_V(0.0, 1.0, 0.0), -15.0)
 {
 	lem = NULL;
 	csm = NULL;
+	AntennaSelectorSW = NULL;
+
 	VHFHeat = 0;
 	VHFSECHeat = 0;
 	PCMHeat = 0;
@@ -121,7 +123,9 @@ bool LM_VHF::registerSocket(SOCKET sock)
 	return true;
 }
 void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh){
+	
 	lem = vessel;
+	AntennaSelectorSW = &lem->Panel12VHFAntSelKnob;
 
 	if (!csm)
 	{
@@ -345,6 +349,19 @@ void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
 
 void LM_VHF::Timestep(double simt)
 {
+	if (AntennaSelectorSW->GetState() == 0)
+	{
+		activeAntenna = &aftInflightVHF;
+	}
+	else if (AntennaSelectorSW->GetState() == 1)
+	{
+		activeAntenna = &fwdInflightVHF;
+	}
+	else
+	{
+		activeAntenna = &evaVHF;
+	}
+
 	VECTOR3 R = _V(0,0,0);
 
 	if (!csm)
@@ -366,7 +383,7 @@ void LM_VHF::Timestep(double simt)
 	{
 		if (receiveA)
 		{
-			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, -9.0, RCVDfreqRCVR_A, length(R));
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(R), RCVDfreqRCVR_A, length(R));
 		}
 		else
 		{
@@ -375,7 +392,7 @@ void LM_VHF::Timestep(double simt)
 
 		if (receiveB)
 		{
-			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, -9.0, RCVDfreqRCVR_B, length(R));
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(R), RCVDfreqRCVR_B, length(R));
 		}
 		else
 		{
@@ -383,7 +400,7 @@ void LM_VHF::Timestep(double simt)
 		}
 	}
 
-	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
