@@ -832,6 +832,13 @@
 #define AID_VC_SWITCH_P1_45		        3145
 #define AID_VC_SWITCH_P1_46		        3146
 #define AID_VC_SWITCH_P1_47		        3147
+#define AID_VC_SWITCH_P1_48		        3148
+
+#define AID_VC_ROT_P1_3_01		        3150
+#define AID_VC_ROT_P1_3_02		        3151
+#define AID_VC_ROT_P1_3_03		        3152
+#define AID_VC_ROT_P1_3_04		        3153
+#define AID_VC_ROT_P1_3_05		        3154
 
 #define AID_VC_FDAI_LEFT                3160
 #define AID_VC_MASTER_ALARM             3161
@@ -841,6 +848,8 @@
 #define AID_VC_SPS_LIGHT                3165
 #define AID_VC_PT05G_LIGHT              3166
 #define AID_VC_EMSDVDISPLAY             3167
+#define AID_VC_EMS_RSI_BKGRND           3168
+#define AID_VC_EMS_DVSET                3169
 
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 3200) && (id <= 3399))

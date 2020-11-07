@@ -1869,6 +1869,34 @@ bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my)
 	return true;
 }
 
+bool SaturnEMSDvSetSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	int oldPos = position;
+	switch (event) {
+	case PANEL_MOUSE_LBPRESSED:
+		if (p.x < 0.0125)
+			position = 2;
+		else
+			position = 1;
+		break;
+
+	case PANEL_MOUSE_RBPRESSED:
+		if (p.x < 0.0125)
+			position = 4;
+		else
+			position = 3;
+		break;
+
+	case PANEL_MOUSE_LBUP:
+	case PANEL_MOUSE_RBUP:
+		position = 0;
+		break;
+	}
+	if (position && position != oldPos)
+		ClickSound.play();
+	return true;
+}
+
 
 void SaturnCabinPressureReliefLever::InitGuard(SURFHANDLE surf, SoundLib *soundlib)
 {	

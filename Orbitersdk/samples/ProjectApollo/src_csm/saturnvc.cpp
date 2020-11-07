@@ -105,6 +105,7 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_SPS_LIGHT, _R(1840, 1142, 1881, 1158), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_PT05G_LIGHT, _R(1774, 1142, 1815, 1158), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_EMSDVDISPLAY, _R(1768, 1204, 1925, 1225), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EMS_RSI_BKGRND, _R(1627, 1149, 1715, 1236), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// Panel 2
 	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254, 1235, 359, 1411), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
@@ -249,12 +250,9 @@ void Saturn::RegisterActiveAreas() {
 	// Register active areas for switches/animations here
 	//
 
+	// FDAI's
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-
-	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, 0.008);
-
-	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
 
 	// Panel 1
 	for (i = 0; i < P1_SWITCHCOUNT_C; i++)
@@ -262,6 +260,17 @@ void Saturn::RegisterActiveAreas() {
 		oapiVCRegisterArea(AID_VC_SWITCH_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS_C[i] + P1_3_CLICK + ofs, 0.006);
 	}
+
+	for (i = 0; i < P1_3_ROTCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P1_3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_3_01 + i, P1_3_ROT_POS[i] + ofs, 0.02);
+	}
+
+	oapiVCRegisterArea(AID_VC_EMS_DVSET, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_EMS_DVSET, _V(-0.507344, 0.732746, 0.370513) + ofs, 0.025);
+
+	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, 0.008);
 
 	MainPanelVC.AddSwitch(&EMSModeSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
 	MainPanelVC.AddSwitch(&CMCAttSwitch, AID_VC_SWITCH_P1_02, &anim_P1switch[1]);
@@ -310,6 +319,13 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&EventTimerContSwitch, AID_VC_SWITCH_P1_45, &anim_P1switch[44]);
 	MainPanelVC.AddSwitch(&EventTimerMinutesSwitch, AID_VC_SWITCH_P1_46, &anim_P1switch[45]);
 	MainPanelVC.AddSwitch(&EventTimerSecondsSwitch, AID_VC_SWITCH_P1_47, &anim_P1switch[46]);
+	MainPanelVC.AddSwitch(&GTASwitch, AID_VC_SWITCH_P1_48, &anim_P1switch[47]);
+
+	MainPanelVC.AddSwitch(&EMSFunctionSwitch, AID_VC_ROT_P1_3_01, &anim_P1_3_Rot[0]);
+	MainPanelVC.AddSwitch(&RCSIndicatorsSwitch, AID_VC_ROT_P1_3_02, &anim_P1_3_Rot[1]);
+	MainPanelVC.AddSwitch(&ECSIndicatorsSwitch, AID_VC_ROT_P1_3_03, &anim_P1_3_Rot[2]);
+	MainPanelVC.AddSwitch(&HighGainAntennaPitchPositionSwitch, AID_VC_ROT_P1_3_04, &anim_P1_3_Rot[3]);
+	MainPanelVC.AddSwitch(&HighGainAntennaYawPositionSwitch, AID_VC_ROT_P1_3_05, &anim_P1_3_Rot[4]);
 
 	//Panel 2
 
@@ -436,6 +452,10 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19, NULL);
 
+	// Panel 3
+
+	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
+
 	// Switch Covers
 	IMUGuardedCageSwitch.InitGuardVC(anim_switchcovers[0]);
 	dVThrust1Switch.InitGuardVC(anim_switchcovers[1]);
@@ -455,6 +475,7 @@ void Saturn::RegisterActiveAreas() {
 	MainReleaseSwitch.InitGuardVC(anim_switchcovers[15]);
 	DockingProbeExtdRelSwitch.InitGuardVC(anim_switchcovers[16]);
 	CMRCSPressSwitch.InitGuardVC(anim_switchcovers[17]);
+	GTASwitch.InitGuardVC(anim_switchcovers[18]);
 }
 
 // --------------------------------------------------------------
@@ -470,6 +491,9 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 	//case AID_VC_MASTER_ALARM3:
 
 		return cws.CheckMasterAlarmMouseClick(event);
+
+	case AID_VC_EMS_DVSET:
+		return EMSDvSetSwitch.CheckMouseClickVC(event, p);
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
 	//return false;
@@ -698,6 +722,45 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142, 150, SURF_PREDEF_CK);
 		return true;
 	}
+
+	case AID_VC_EMS_RSI_BKGRND:
+	{
+		switch (ems.LiftVectLight()) {
+		case 1:
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33, 8, 82, 6, 20, 6);
+			break;
+		case -1:
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32, 69, 82, 22, 22, 10);
+			break;
+		case 0:
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33, 8, 82, 0, 20, 6);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32, 69, 82, 12, 22, 10);
+			break;
+		}
+
+		SetAnimation(anim_RSI_indicator, ems.GetRSIRotation() / PI2);
+		return true;
+	}
+
+	case AID_VC_EMS_DVSET:
+		switch ((int)EMSDvSetSwitch.GetPosition()) {
+		case 1:
+			SetAnimation(anim_emsdvsetswitch, 1.0);
+			break;
+		case 2:
+			SetAnimation(anim_emsdvsetswitch, 0.75);
+			break;
+		case 3:
+			SetAnimation(anim_emsdvsetswitch, 0.0);
+			break;
+		case 4:
+			SetAnimation(anim_emsdvsetswitch, 0.25);
+			break;
+		default:
+			SetAnimation(anim_emsdvsetswitch, 0.5);
+			break;
+		}
+		return true;
 
 	/*case AID_MASTER_ALARM3:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
@@ -986,8 +1049,8 @@ void Saturn::SetView(double offset, bool update_direction)
 void Saturn::InitVCAnimations() {
 
 	anim_P1switch[P1_SWITCHCOUNT_C] = -1;
-	/*anim_P1_Rot[P1_ROTCOUNT] = -1;
-	anim_P1needles[P1_NEEDLECOUNT] = -1;*/
+	anim_P1_3_Rot[P1_3_ROTCOUNT] = -1;
+	/*anim_P1needles[P1_NEEDLECOUNT] = -1;*/
 	anim_P2switch[P2_SWITCHCOUNT_C] = -1;
 	/*anim_P2_Rot[P2_ROTCOUNT] = -1;
 	anim_P2needles[P2_NEEDLECOUNT] = -1;
@@ -1033,6 +1096,8 @@ void Saturn::InitVCAnimations() {
 	anim_stopbutton_cdr = -1;
 	anim_stopbutton_lmp = -1;
 	anim_plusxbutton = -1;*/
+	anim_RSI_indicator = -1;
+	anim_emsdvsetswitch = -1;
 	anim_switchcovers[SWITCHCOVERCOUNT_C] = -1;
 	anim_fdaiR_L = anim_fdaiR_R = -1;
 	anim_fdaiP_L = anim_fdaiP_R = -1;
@@ -1051,9 +1116,9 @@ void Saturn::DeleteVCAnimations()
 
 	for (i = 0; i < P1_SWITCHCOUNT_C; i++) delete mgt_P1switch[i];
 
-	/*for (i = 0; i < P1_ROTCOUNT; i++) delete mgt_P1Rot[i];
+	for (i = 0; i < P1_3_ROTCOUNT; i++) delete mgt_P1_3Rot[i];
 
-	for (i = 0; i < P1_NEEDLECOUNT; i++) delete mgt_P1needles[i];*/
+	/*for (i = 0; i < P1_NEEDLECOUNT; i++) delete mgt_P1needles[i];*/
 
 	for (i = 0; i < P2_SWITCHCOUNT_C; i++) delete mgt_P2switch[i];
 
@@ -1119,8 +1184,8 @@ void Saturn::DefineVCAnimations()
 {
 	UINT mesh = vcidx;
 
-	// Panel 1 switches/rotaries/needles
-	static UINT meshgroup_P1switches[P1_SWITCHCOUNT_C]/*, meshgroup_P1Rots[P1_ROTCOUNT], meshgroup_P1needles[P1_NEEDLECOUNT]*/;
+	// Panel 1 switches/needles
+	static UINT meshgroup_P1switches[P1_SWITCHCOUNT_C]/*, meshgroup_P1needles[P1_NEEDLECOUNT]*/;
 	for (int i = 0; i < P1_SWITCHCOUNT_C; i++)
 	{
 		meshgroup_P1switches[i] = VC_GRP_Sw_P1_01 + i;
@@ -1129,7 +1194,7 @@ void Saturn::DefineVCAnimations()
 		AddAnimationComponent(anim_P1switch[i], 0.0f, 1.0f, mgt_P1switch[i]);
 	}
 
-	// Panel 2 switches/rotaries/needles
+	// Panel 2 switches/needles
 	static UINT meshgroup_P2switches[P2_SWITCHCOUNT_C]/*, meshgroup_P2Rots[P2_ROTCOUNT], meshgroup_P2needles[P2_NEEDLECOUNT]*/;
 	for (int i = 0; i < P2_SWITCHCOUNT_C; i++)
 	{
@@ -1137,6 +1202,16 @@ void Saturn::DefineVCAnimations()
 		mgt_P2switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P2switches[i], 1, P2_TOGGLE_POS_C[i], _V(1, 0, 0), (float)PI / 4);
 		anim_P2switch[i] = CreateAnimation(0.5);
 		AddAnimationComponent(anim_P2switch[i], 0.0f, 1.0f, mgt_P2switch[i]);
+	}
+
+	// Panel 1-3 rotaries
+	static UINT meshgroup_P1_3_Rots[P1_3_ROTCOUNT];
+	for (int i = 0; i < P1_3_ROTCOUNT; i++)
+	{
+		meshgroup_P1_3_Rots[i] = VC_GRP_Rot_P1_3_01 + i;
+		mgt_P1_3Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1_3_Rots[i], 1, P1_3_ROT_POS[i], P1_3_ROT_AXIS, (float)(RAD * 360));
+		anim_P1_3_Rot[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P1_3_Rot[i], 0.0f, 1.0f, mgt_P1_3Rot[i]);
 	}
 
 	// Panel 1-3 Switch covers
@@ -1149,6 +1224,18 @@ void Saturn::DefineVCAnimations()
 		anim_switchcovers[i] = CreateAnimation(0.0);
 		AddAnimationComponent(anim_switchcovers[i], 0.0f, 1.0f, mgt_switchcovers[i]);
 	}
+
+	// RSI indicator
+	static UINT meshgroup_RSI_indicator = VC_GRP_RSI_Indicator;
+	static MGROUP_ROTATE mgt_RSI_indicator(mesh, &meshgroup_RSI_indicator, 1, _V(-0.680414, 0.71462, 0.365469), P1_3_ROT_AXIS, (float)(RAD * 360));
+	anim_RSI_indicator = CreateAnimation(0.0);
+	AddAnimationComponent(anim_RSI_indicator, 0.0f, 1.0f, &mgt_RSI_indicator);
+
+	// EMS Set switch
+	static UINT  meshgroup_EMS_DVSet_Switch = VC_GRP_EMSDV_Set_switch;
+	static MGROUP_ROTATE mgt_EMS_DVSet_Switch(mesh, &meshgroup_EMS_DVSet_Switch, 1, _V(-0.507344, 0.732746, 0.370513), _V(1, 0, 0), (float)(RAD * 10));
+	anim_emsdvsetswitch = CreateAnimation(0.5);
+	AddAnimationComponent(anim_emsdvsetswitch, 0.0f, 1.0f, &mgt_EMS_DVSet_Switch);
 
 	InitFDAI(mesh);
 }

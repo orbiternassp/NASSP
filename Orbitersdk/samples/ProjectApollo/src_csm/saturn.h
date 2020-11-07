@@ -101,17 +101,28 @@ namespace mission
 const double P1_3_TILT = 19 * RAD;
 
 // Number of switches on each panel
-const int	P1_SWITCHCOUNT_C = 47;
+const int	P1_SWITCHCOUNT_C = 48;
 const int	P2_SWITCHCOUNT_C = 90;
 
 // Number of push buttons
 const int   P2_PUSHBCOUNT = 19;
 
 // Number of switch covers
-const int   SWITCHCOVERCOUNT_C = 18;
+const int   SWITCHCOVERCOUNT_C = 19;
+
+// Number of rotaries
+const int	 P1_3_ROTCOUNT = 5;
 
 // Switch clickspot offset
 const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*sin(P1_3_TILT - (90.0 * RAD)) };
+
+// Rotary/Needle rotation axises
+const VECTOR3	P1_3_ROT_AXIS = { 0.00, sin(P1_3_TILT),-cos(P1_3_TILT) };
+
+// Panel 1-3 rotaries
+const VECTOR3 P1_3_ROT_POS[P1_3_ROTCOUNT] = {
+	{-0.6834, 0.8195, 0.3925}, {0.0297, 0.7256, 0.3614}, {0.0297, 0.6477, 0.3354}, {0.3195, 0.4008, 0.2527}, {0.3974, 0.4010, 0.2527}
+};
 
 // Panel 1 switches
 const VECTOR3 P1_TOGGLE_POS_C[P1_SWITCHCOUNT_C] = {
@@ -124,7 +135,7 @@ const VECTOR3 P1_TOGGLE_POS_C[P1_SWITCHCOUNT_C] = {
 {-0.6361, 0.3254, 0.2379}, {-0.6097, 0.3254, 0.2379}, {-0.5832, 0.3254, 0.2379}, {-0.5573, 0.3254, 0.2379}, {-0.5315, 0.3254, 0.2379},
 {-0.5042, 0.3254, 0.2379}, {-0.8827, 0.2762, 0.2214}, {-0.8556, 0.2762, 0.2214}, {-0.8296, 0.2762, 0.2214}, {-0.8035, 0.2762, 0.2214},
 {-0.7778, 0.2762, 0.2214}, {-0.7521, 0.2762, 0.2214}, {-0.7264, 0.2762, 0.2214}, {-0.5853, 0.2762, 0.2214}, {-0.5591, 0.2762, 0.2214},
-{-0.5339, 0.2762, 0.2214},{-0.5077, 0.2762, 0.2214}
+{-0.5339, 0.2762, 0.2214},{-0.5077, 0.2762, 0.2214}, {-0.508397, 0.798359, 0.406069}
 };
 
 // Panel 2 switches
@@ -162,7 +173,7 @@ const VECTOR3 COVERS_POS_C[SWITCHCOVERCOUNT_C] = {
 {-0.897739, 0.291494, 0.218991}, {-0.807395, 0.400065, 0.255313}, {-0.807395, 0.400065, 0.255313}, {-0.650851, 0.339981, 0.235209}, {-0.650851, 0.339981, 0.235209},
 {-0.650851, 0.339981, 0.235209}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106},
 {-0.42006, 0.46232, 0.276106}, {-0.342684, 0.413289, 0.259907}, {-0.342684, 0.413289, 0.259907}, {-0.412789, 0.34966, 0.238427}, {-0.412789, 0.34966, 0.238427},
-{-0.447372, 0.295628, 0.220297}, {-0.234966, 0.851656, 0.406449}, {-0.169936, 0.675647, 0.347563}
+{-0.447372, 0.295628, 0.220297}, {-0.234966, 0.851656, 0.406449}, {-0.169936, 0.675647, 0.347563}, {-0.523385, 0.837354, 0.401598}
 };
 
 ///
@@ -3872,8 +3883,8 @@ protected:
 
 	// VC animations
 	MGROUP_TRANSFORM *mgt_P1switch[P1_SWITCHCOUNT_C];
-	/*MGROUP_TRANSFORM *mgt_P1Rot[P1_ROTCOUNT];
-	MGROUP_TRANSFORM *mgt_P1needles[P1_NEEDLECOUNT];*/
+	MGROUP_TRANSFORM *mgt_P1_3Rot[P1_3_ROTCOUNT];
+	/*MGROUP_TRANSFORM *mgt_P1needles[P1_NEEDLECOUNT];*/
 	MGROUP_TRANSFORM *mgt_P2switch[P2_SWITCHCOUNT_C];
 	/*MGROUP_TRANSFORM *mgt_P2Rot[P2_ROTCOUNT];
 	MGROUP_TRANSFORM *mgt_P2needles[P2_NEEDLECOUNT];
@@ -3904,8 +3915,8 @@ protected:
 	MGROUP_TRANSFORM *mgt_P16R4cbs[P16R4_CBCOUNT];*/
 	MGROUP_TRANSFORM *mgt_switchcovers[SWITCHCOVERCOUNT_C];
 	UINT anim_P1switch[P1_SWITCHCOUNT_C];
-	/*UINT anim_P1_Rot[P1_ROTCOUNT];
-	UINT anim_P1needles[P1_NEEDLECOUNT];*/
+	UINT anim_P1_3_Rot[P1_3_ROTCOUNT];
+	/*UINT anim_P1needles[P1_NEEDLECOUNT];*/
 	UINT anim_P2switch[P2_SWITCHCOUNT_C];
 	/*UINT anim_P2_Rot[P2_ROTCOUNT];
 	UINT anim_P2needles[P2_NEEDLECOUNT];
@@ -3949,8 +3960,9 @@ protected:
 	UINT anim_stagecover;
 	UINT anim_startbutton;
 	UINT anim_stopbutton_cdr;
-	UINT anim_stopbutton_lmp;
-	UINT anim_plusxbutton;*/
+	UINT anim_stopbutton_lmp;*/
+	UINT anim_emsdvsetswitch;
+	UINT anim_RSI_indicator;
 	UINT anim_switchcovers[SWITCHCOVERCOUNT_C];
 	UINT anim_fdaiR_L, anim_fdaiR_R;
 	UINT anim_fdaiP_L, anim_fdaiP_R;

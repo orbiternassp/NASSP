@@ -785,6 +785,7 @@ public:
 	void Init(Saturn *s) { sat = s; };
 	int GetPosition() { return position; };
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 
 protected:
 	int position;

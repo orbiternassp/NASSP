@@ -840,6 +840,7 @@ public:
 	bool IsdVMode();
 	bool WriteScrollToFile();
 	bool IsDecimalPointBlanked();
+	double GetRSIRotation() { return RSIRotation; };
 	
 protected:
 	bool IsPowered();
