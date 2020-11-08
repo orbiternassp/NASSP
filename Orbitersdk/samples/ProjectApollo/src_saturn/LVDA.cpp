@@ -213,6 +213,11 @@ bool LVDA::GetGuidanceReferenceRelease()
 	return iu->ESEGetGuidanceReferenceRelease();
 }
 
+bool LVDA::GetSIVBO2H2BurnerMalfunction()
+{
+	return false;
+}
+
 bool LVDA::GetSICInboardEngineCutoff()
 {
 	return iu->GetSIInboardEngineOut();

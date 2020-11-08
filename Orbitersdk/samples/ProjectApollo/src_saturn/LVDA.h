@@ -100,6 +100,7 @@ public:
 	bool SIBLowLevelSensorsDry();
 	bool GetLiftoff();
 	bool GetGuidanceReferenceRelease();
+	bool GetSIVBO2H2BurnerMalfunction();
 
 	//Not real LVDA functions
 	void TLIBegun();

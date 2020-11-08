@@ -185,6 +185,8 @@ private:								// Saturn LV
 	void DiscreteProcessor1();
 	//Discrete Inputs 13 and 21 (S-II engine out)
 	void DiscreteProcessor2();
+	//Discrete Input 22 (S-II/S-IVB direct staging and S-IVB cutoff)
+	void DiscreteProcessor3();
 	//Bost Navigation (NE)
 	void BoostNavigation();
 	//Time Tilt Guidance (TT)
@@ -197,6 +199,8 @@ private:								// Saturn LV
 	VECTOR3 GravitationSubroutine(VECTOR3 Rvec, bool J2only);
 	//Restart Calculations (TC)
 	void RestartCalculations();
+	//Acquisition Gain/Loss (GL)
+	void AcquisitionGainLoss();
 
 	FILE* lvlog;									// LV Log file
 	char FSPFileName[256];
@@ -289,6 +293,7 @@ private:								// Saturn LV
 
 	// These are boolean flags that are NOT real flags in the LVDC SOFTWARE. (I.E. Hardware flags)
 	bool CountPIPA;									// PIPA Counter Enable
+	bool directstagereset;							// Direct Stage Reset
 	
 	// These are variables that are not really part of the LVDC software.
 	VECTOR3 AttitudeError;                          // Attitude Error

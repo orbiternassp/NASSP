@@ -2865,6 +2865,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	CountPIPA = false;
 	DFIL1 = false;
 	Direct_Ascent = false;
+	directstagereset = false;
 	first_op = false;
 	TerminalConditions = false;
 	ImpactBurnEnabled = false;
@@ -3657,7 +3658,7 @@ void LVDCSV::Init(){
 	EPTTIM[28] = 6.7; EPTTIM[29] = 6.7; EPTTIM[30] = 40.6; EPTTIM[31] = 40.6; EPTTIM[32] = 58.6; EPTTIM[33] = 60.6; EPTTIM[34] = 299.0; EPTTIM[35] = 355.0; EPTTIM[36] = 388.5; EPTTIM[37] = 0.0; //TB3
 	EPTTIM[38] = 0.0; EPTTIM[39] = 6.5; EPTTIM[40] = 8.6; EPTTIM[41] = 10.0; EPTTIM[42] = 12.0; EPTTIM[43] = 15.0; //TB4
 	EPTTIM[55] = 0.0; EPTTIM[56] = 10.0; EPTTIM[57] = 20.0; EPTTIM[58] = 100.0; EPTTIM[59] = 2700.0; EPTTIM[60] = 5160.0;//TB5
-	EPTTIM[71] = 0.0; EPTTIM[72] = 41.0; EPTTIM[73] = 497.3; EPTTIM[74] = 560.0; EPTTIM[75] = 578.6; EPTTIM[76] = 580.3; EPTTIM[77] = 583.0; EPTTIM[78] = 584.0; EPTTIM[79] = 590.0;//TB6
+	EPTTIM[71] = 0.0; EPTTIM[72] = 41.0; EPTTIM[73] = 48.0; EPTTIM[74] = 341.3; EPTTIM[75] = 496.7; EPTTIM[76] = 497.3; EPTTIM[77] = 560.0; EPTTIM[78] = 578.6; EPTTIM[79] = 580.3; EPTTIM[80] = 583.0; EPTTIM[81] = 584.0; EPTTIM[82] = 590.0;//TB6
 	EPTTIM[93] = 0.0;  EPTTIM[94] = 20.0;  EPTTIM[95] = 20.0; EPTTIM[96] = 900.0; EPTTIM[97] = 900.0; EPTTIM[98] = 6540.0; //TB7
 	EPTTIM[107] = 0.0; EPTTIM[108] = 3705.0;//TB8
 	EPTTIM[109] = 0.0; EPTTIM[110] = 11.5; EPTTIM[111] = 13.3; EPTTIM[112] = 15.0; //TB4a
@@ -3688,6 +3689,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_CHIBARSTEER", CHIBARSTEER);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
+	oapiWriteScenario_int(scn, "LVDC_directstagereset", directstagereset);
 	oapiWriteScenario_int(scn, "LVDC_first_op", first_op);
 	oapiWriteScenario_int(scn, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
@@ -4378,6 +4380,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_CHIBARSTEER", CHIBARSTEER);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_Direct_Ascent", Direct_Ascent);
+		papiReadScenario_bool(line, "LVDC_directstagereset", directstagereset);
 		papiReadScenario_bool(line, "LVDC_first_op", first_op);
 		papiReadScenario_bool(line, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
@@ -5333,13 +5336,6 @@ void LVDCSV::TimeStep(double simdt) {
 			case 7:
 				// TB7 timed events
 
-				//SwitchSelectorProcessing(SSTTB[7]);
-
-				// Cutoff transient thrust
-				if (LVDC_TB_ETime < 2) {
-					fprintf(lvlog, "S4B CUTOFF: Time %f Acceleration %f\r\n", LVDC_TB_ETime, Fm);
-				}
-
 				//CSM separation detection
 				if (SSTTB5A.size() > 0 && lvda.SpacecraftSeparationIndication() && TB5a > 99999.9)
 				{
@@ -6168,22 +6164,16 @@ void LVDCSV::FMCalculations()
 
 void LVDCSV::DiscreteProcessor()
 {
-	fprintf(lvlog, "DISCRETE PROCESSOR \r\n");
+	//fprintf(lvlog, "DISCRETE PROCESSOR \r\n");
 	if (DVP == 1)
 	{
 		DiscreteProcessor1();
 		DiscreteProcessor2();
 		//DiscreteProcessor4();
-
-		//Backup start of TB4a
-		if (DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] == false && lvda.SCInitiationOfSIISIVBSeparation())
-		{
-			SCInitiationOfSIISIVBSeparationInterrupt();
-		}
 	}
 	if (DVP == 1 || DVP == 3)
 	{
-		//DiscreteProcessor3();
+		DiscreteProcessor3();
 	}
 
 	if (ModeCode26[MC26_Guidance_Reference_Failure] && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !ModeCode26[MC26_SCControlAfterGRF])
@@ -6240,7 +6230,7 @@ void LVDCSV::DiscreteProcessor()
 		ModeCode27[MC27_TrackLocalHoriz] = false;
 	}
 
-	//Manual S-IVB Shutdown
+	//CMC controlled S-IVB Shutdown
 	if (DPM[DIN23_SCInitiationOfSIVBEngineCutoff] == false && lvda.GetCMCSIVBCutoff())
 	{
 		if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false)
@@ -6249,6 +6239,12 @@ void LVDCSV::DiscreteProcessor()
 			ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
 			SIVBCutoffSequence();
 		}
+	}
+
+	//S-IVB O2/H2 Burner Malfunction
+	if (DPM[DIN3_O2H2BurnerMalfunction] == false && lvda.GetSIVBO2H2BurnerMalfunction())
+	{
+		//TBD: Start TB6a or TB6b
 	}
 }
 
@@ -6274,16 +6270,6 @@ void LVDCSV::DiscreteProcessor1()
 		{
 			T_EO1 = TAS - TB1;
 			fprintf(lvlog, "[%d+%f] S1C engine out discrete received! t_fail = %f\r\n", LVDC_Timebase, LVDC_TB_ETime, T_EO1);
-			
-			if (T_EO1 <= t_2) { dT_F = t_3; }
-			if (t_2 < T_EO1 && T_EO1 <= t_4) { dT_F = (B_11 * T_EO1) + B_12; }
-			if (t_4 < T_EO1 && T_EO1 <= t_5) { dT_F = (B_21 * T_EO1) + B_22; }
-			if (t_5 < T_EO1) { dT_F = 0; }
-
-			t_clock = TAS - TB1;
-			TMEFRZ = t_clock + dT_F;
-			T_ar = T_ar + dT_F;
-			fprintf(lvlog, "[%d+%f] Freeze time recalculated! TMEFRZ = %f dT_F = %f T_ar = %f\r\n", LVDC_Timebase, LVDC_TB_ETime, TMEFRZ, dT_F, T_ar);
 		}
 	}
 }
@@ -6324,8 +6310,23 @@ void LVDCSV::DiscreteProcessor2()
 				T_1 = 5.0 * T_1 / 4.0;
 				T_2 = 5.0 * T_2 / 4.0;
 				tau2 = 5.0 * tau2 / 4.0;
+				fprintf(lvlog, "[%d+%f] SII engine out interrupt received!\r\n", LVDC_Timebase, LVDC_TB_ETime);
 			}
 		}
+	}
+}
+
+void LVDCSV::DiscreteProcessor3()
+{
+	//Backup start of TB4a or S-IVB cutoff
+	if (directstagereset && lvda.SCInitiationOfSIISIVBSeparation() == false)
+	{
+		directstagereset = true;
+	}
+	if (DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] == false && directstagereset == false && lvda.SCInitiationOfSIISIVBSeparation())
+	{
+		directstagereset = true;
+		SCInitiationOfSIISIVBSeparationInterrupt();
 	}
 }
 
@@ -6398,6 +6399,19 @@ void LVDCSV::TimeTiltGuidance()
 			}
 			CommandedAttitude.y = cmd * RAD;
 			fprintf(lvlog, "[%d+%f] Roll/pitch programm %f \r\n", LVDC_Timebase, LVDC_TB_ETime, cmd);
+
+			//Engine-out freeze time
+			if (t_clock > t_4 && T_EO1 > 0.0 && T_EO1 < t_5 && dT_F == 0.0)
+			{
+				if (T_EO1 <= t_2) { dT_F = t_3; }
+				if (t_2 < T_EO1 && T_EO1 <= t_4) { dT_F = (B_11 * T_EO1) + B_12; }
+				if (t_4 < T_EO1 && T_EO1 <= t_5) { dT_F = (B_21 * T_EO1) + B_22; }
+				if (t_5 < T_EO1) { dT_F = 0; }
+
+				TMEFRZ = t_clock + dT_F;
+				T_ar = T_ar + dT_F;
+				fprintf(lvlog, "[%d+%f] Freeze time recalculated! TMEFRZ = %f dT_F = %f T_ar = %f\r\n", LVDC_Timebase, LVDC_TB_ETime, TMEFRZ, dT_F, T_ar);
+			}
 		}
 		if (t_clock >= T_ar)
 		{
@@ -6924,27 +6938,6 @@ void LVDCSV::IterativeGuidanceMode()
 			T_CO = TAS + T_GO;
 			fprintf(lvlog, "a_2 = %f, a_1 = %f, T_GO = %f, T_CO = %f, V_T = %f\r\n", a_2, a_1, T_GO, T_CO, V_T);
 
-			// S4B CUTOFF?
-			/*if(S4B_IGN == false && (LVDC_Timebase < 6 || LVDC_Timebase == 40)){
-				fprintf(lvlog,"*** HSL EXIT SETTINGS ***\r\n");
-				GATE = false;
-				GATE5 = false;
-				Tt_T = 1000;
-				HSL = false;
-				BOOST = false;
-				goto minorloop;
-			}
-			// S4B 2ND CUTOFF?
-			if(S4B_REIGN == false && (LVDC_Timebase >= 6 && LVDC_Timebase != 40)) {
-				fprintf(lvlog, "*** HSL EXIT SETTINGS ***\r\n");
-				GATE = false;
-				GATE5 = false;
-				Tt_T = 1000;
-				HSL = false;
-				BOOST = false;
-				goto minorloop;
-			}*/
-			// Done, go to navigation
 			//sprintf(oapiDebugString(),"TB%d+%f | CP/Y %f %f | -HSL- TGO %f",LVDC_Timebase,LVDC_TB_ETime,CommandedAttitude.y,CommandedAttitude.z,T_GO);
 			return;
 		}
@@ -7102,7 +7095,7 @@ void LVDCSV::SwitchSelectorProcessor(int entry)
 		//Schedule next switch selector command
 		SST = TMR + table->at(CommandSequence).time;
 		SSM = 8;
-		fprintf(lvlog, "[TB%d+%f] Switch Selector command scheduled: Time %.3lf\r\n", LVDC_Timebase, LVDC_TB_ETime, SST);
+		fprintf(lvlog, "[TB%d+%f] Switch Selector command scheduled: Time %.3lf\r\n", LVDC_Timebase, LVDC_TB_ETime, table->at(CommandSequence).time);
 	}
 }
 
@@ -7120,7 +7113,7 @@ void LVDCSV::EventsProcessor(int entry)
 									 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 0, //TB6
 									 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 0, //TB7
 									 101, 102, 0, //TB8
-									 103, 104, 105, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //TB4a
+									 103, 104, 105, 106, 107, 108, 109, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //TB4a
 
 	//Timer 2 Entry
 	if (entry == 0)
@@ -7131,41 +7124,49 @@ void LVDCSV::EventsProcessor(int entry)
 		{
 		case 1: //Schedule Water Methanol
 			break;
-		case 2: //Start looking for liftoff
+		case 2: //Start looking for liftoff (TB0+16.0)
 			DPM[DIN24_Liftoff] = false;
 			MLM = 2;
 			break;
-		case 3: //Nominal liftoff (flight simulation)
+		case 3: //Nominal liftoff (flight simulation) (TB0+17.0)
 			break;
-		case 4: //Start looking for backup liftoff acceleration
+		case 4: //Start looking for backup liftoff acceleration (TB0+17.5)
 			NISTAT[16] = true;
 			break;
-		case 5: //Time Base 1 Setup
+		case 5: //Time Base 1 Setup (TB1+0.0)
 			NISTAT[8] = true;
 			break;
-		case 6: //Command Init of Yaw Maneuver
+		case 6: //Command Init of Yaw Maneuver (TB1+1.0)
 			fprintf(lvlog, "[%d+%f] Yaw maneuver\r\n", LVDC_Timebase, LVDC_TB_ETime);
 			CommandedAttitude.z = 1.25*RAD;
 			break;
-		case 7: //Start checking for engine failure
+		case 7: //Start checking for engine failure (TB1+6.0)
 			DPM[DIN11_SICInboardEngineOutB] = false;
 			DPM[DIN14_SICOutboardEngineOut] = false;
 			break;
-		case 8: //Command Term of Yaw Maneuver
+		case 8: //Command Term of Yaw Maneuver (TB1+9.0)
 			CommandedAttitude.z = 0.0*RAD;
 			break;
-		case 9: //Set Accel Reason. Test
+		case 9: //Set Accel Reason. Test (TB1+10.0)
 			break;
-		case 10: //Something with multiple engines cutoff?
+		case 10: //Something with multiple engines cutoff?  (TB1+14.0)
 			break;
-		case 11: //Start Time Base 2
+		case 11: //Start Time Base 2 (TB1+X.X, mission dependant)
 			StartTimeBase2();
 			break;
-		case 12: //Maybe inhibit on S-IC IECO interrupt?
+		case 12: //Maybe inhibit on S-IC IECO interrupt? (TB2+0.0)
 			break;
-		case 13: //Enable DIN
+		case 13: //Enable INT5 and DIN 18 (TB2+0.0)
 			DVIH[INT5_SICOutboardEnginesCutoffA] = false;
 			DPM[DIN18_SICOutboardEngineCutoffB] = false;
+			break;
+		case 14: // (TB2+0.0)
+			break;
+		case 15: // (TB2+18.4)
+			//TBD: Start looking for INT5 and DIN18 here instead of above? Only in actual flight
+			break;
+		case 16: // (TB2+27.5)
+			//TBD: Likely flight simulation start of TB3
 			break;
 		case 17: //Time Base 3 Setup (TB3+0)
 			DPM[DIN11_SICInboardEngineOutB] = true;
@@ -7197,8 +7198,8 @@ void LVDCSV::EventsProcessor(int entry)
 			DPM[DIN19_SIIEnginesOut] = false;
 			break;
 		case 27: //Something at TB3+6.7, probably for only flight sim or real flight
-			DPM[DIN13_SIIInboardEngineOut] = true;
-			DPM[DIN21_SIIOutboardEngineOut] = true;
+			DPM[DIN13_SIIInboardEngineOut] = false;
+			DPM[DIN21_SIIOutboardEngineOut] = false;
 			break;
 		case 28: //Enqueue F/M Calc, Smoothing (TB3+6.7)
 			NISTAT[3] = true;
@@ -7216,8 +7217,7 @@ void LVDCSV::EventsProcessor(int entry)
 			break;
 		case 32: //Enqueue SMC (TB3+60.6)
 			break;
-		case 33: //TB3+299.0 (S-II IECO)
-			// IECO
+		case 33: //S-II IECO (TB3+299.0), actual flight only
 			if (SIICenterEngineCutoff)
 			{
 				ModeCode25[MC25_SIIInboardEngineOut] = true;
@@ -7231,12 +7231,11 @@ void LVDCSV::EventsProcessor(int entry)
 		case 35: //TB3+388.5 (flight sim S-II cutoff?)
 			break;
 		case 36: //TB4+0
-			DPM[DIN13_SIIInboardEngineOut] = false;
-			DPM[DIN21_SIIOutboardEngineOut] = false;
+			DPM[DIN13_SIIInboardEngineOut] = true;
+			DPM[DIN21_SIIOutboardEngineOut] = true;
 			break;
 		case 37: //TB4+6.5
 			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
-			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
 			break;
 		case 38: //TB4+8.6
 			S4B_IGN = true;
@@ -7259,6 +7258,8 @@ void LVDCSV::EventsProcessor(int entry)
 			//Inhibit manual initiation of S-IVB engine cutoff
 			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
 			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
+			//Stop F/M Calculations
+			NISTAT[3] = false;
 			//Stop IGM and S-IVB Cutoff Prediction
 			NISTAT[10] = false;
 			NISTAT[11] = false;
@@ -7323,19 +7324,27 @@ void LVDCSV::EventsProcessor(int entry)
 				fprintf(lvlog, "Maintain orbrate\r\n");
 			}
 			break;
-		case 68: //TB6+41
+		case 68: //Check on TLI Inhibit(TB6+41.0)
 			break;
-		case 69: //TB6+497.3
+		case 69: //Enable DIN3 (TB6+48.0)
+			DPM[DIN3_O2H2BurnerMalfunction] = false;
 			break;
-		case 70: //TB6+560
+		case 70: //Switch point between TB6a and TB6b (TB6+341.3)
 			break;
-		case 71: //TB6+578.6 (Restart Calculations)
+		case 71: //Disable DIN3 (TB6+496.7)
+			DPM[DIN3_O2H2BurnerMalfunction] = true;
+			break;
+		case 72: //Start checking on TLI Inhibit all the time(TB6+497.3)
+			break;
+		case 73: //Stop checking on TLI inhibit(TB6+560.0)
+			break;
+		case 74: //Restart Calculations (TB6+578.6)
 			if (!TU || TU10)
 			{
 				NISTAT[6] = true;
 			}
 			break;
-		case 72: //TB6+580.3
+		case 75: //TB6+580.3
 			NISTAT[3] = true;
 			S4B_REIGN = true;
 			MSLIM1 = 0.04*RAD;
@@ -7344,24 +7353,40 @@ void LVDCSV::EventsProcessor(int entry)
 			MS25DT = 10.0*DT_N;
 			MS04DT = 0.1 / DT_N;
 			break;
-		case 73: //TB6+583
+		case 76: //TB6+583
 			//Start detecting S-IVB engine out
 			DVIH[INT4_SIVBEngineOutB] = false;
 			DPM[DIN5_SIVBEngineOutA] = false;
 			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
 			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
 			break;
-		case 74: //TB6+584
+		case 77: //TB6+584
 			//Enqueue IGM
 			NISTAT[10] = true;
 			NISTAT[12] = false;
 			break;
-		case 75: //TB6+590
+		case 78: //TB6+590
 			DPM[DIN23_SCInitiationOfSIVBEngineCutoff] = false;
 			break;
 		case 88: //Start Time Base 7
+			//Start chi freeze
+			AttitudeManeuverState = 0;
+			//Inhibit detection of S-IVB engine out
+			DVIH[INT4_SIVBEngineOutB] = true;
+			DPM[DIN5_SIVBEngineOutA] = true;
+			//Inhibit manual initiation of S-IVB engine cutoff
 			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
 			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
+			//Stop F/M Calculations
+			NISTAT[3] = false;
+			//Stop IGM and S-IVB Cutoff Prediction
+			NISTAT[10] = false;
+			NISTAT[11] = false;
+			//Start Orbit Guidance
+			NISTAT[12] = true;
+			//Start TLI calculations
+			NISTAT[14] = true;
+			//Disable CMC cutoff
 			DPM[DIN23_SCInitiationOfSIVBEngineCutoff] = true;
 			break;
 		case 89: //Time in Timebase 7 to begin maneuver to local horizontal attitude
@@ -7429,7 +7454,6 @@ void LVDCSV::EventsProcessor(int entry)
 			break;
 		case 104: //TB4a+11.5
 			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
-			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
 			break;
 		case 105: //TB4a+13.3
 			S4B_IGN = true;
@@ -7648,7 +7672,7 @@ void LVDCSV::CutoffLogic()
 	{
 		SIVBCutoffSequence();
 		fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-		ModeCode25[MC26_SecondSIVBCutoffCommand] = true;
+		ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
 	}
 }
 
@@ -7799,6 +7823,7 @@ void LVDCSV::StartTimeBase2()
 	TimeBaseChangeRoutine();
 	TB2 = TI;
 	ModeCode25[MC25_BeginTB2] = true;
+	DPM[DIN11_SICInboardEngineOutB] = true;
 }
 
 void LVDCSV::StartTimeBase3()
@@ -7828,7 +7853,6 @@ void LVDCSV::StartTimeBase4()
 	DVIH[INT6_SIIEnginesCutoff] = true;
 	DPM[DIN19_SIIEnginesOut] = true;
 	DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
-	DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
 }
 
 void LVDCSV::CheckTimeBase57()
@@ -7888,7 +7912,6 @@ void LVDCSV::StartTimebase4A()
 	fprintf(lvlog, "[%d+%f] Direct stage interrupt received! Guidance update executed!\r\n", LVDC_Timebase, LVDC_TB_ETime);
 
 	DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
-	DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
 
 	ModeCode26[MC26_SCInitOfSIISIVBSeparation] = true;
 }
@@ -7985,6 +8008,7 @@ void LVDCSV::PhaseIIandIVControl(int entry)
 	{
 	case 1: //Every 8 seconds in phases II and IV
 		OrbitNavigation();
+		AcquisitionGainLoss();
 		DLTTL[6] = TAS + 8.0;
 		break;
 	case 2: //Once per second in phases II and IV
@@ -8032,6 +8056,30 @@ void LVDCSV::OrbitNavigation()
 	fprintf(lvlog, "P: %f \r\n", P);
 	VECTOR3 drtest = SVCompare();
 	fprintf(lvlog, "SV Accuracy: %f %f %f\r\n", drtest.x, drtest.y, drtest.z);
+}
+
+void LVDCSV::AcquisitionGainLoss()
+{
+	/*theta_R = omega_E * TAS;
+	MX_GA = _M(cos(theta_R), 0, sin(theta_R), 0, 1, 0, -sin(theta_R), 0, cos(theta_R));
+	MX_SA = mul(MX_A, MX_GA);
+	PosA = mul(MX_SA, PosS);
+	C_A = C_A_ARR[i];
+	d_A = dotp(PosA, C_A) - R_STA;
+	if (d_A >= 0)
+	{
+		if (TBA > TBL)
+		{
+			//AOS
+		}
+	}
+	else
+	{
+		if (TBL > TBA)
+		{
+			//LOS
+		}
+	}*/
 }
 
 void LVDCSV::NavigationExtrapolation()
