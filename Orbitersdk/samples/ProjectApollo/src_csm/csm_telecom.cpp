@@ -1592,7 +1592,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 
 	if (!lem)
 	{
-		lem = sat->agc.GetLM();
+		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
 
 	if (resetswitch->IsUp())

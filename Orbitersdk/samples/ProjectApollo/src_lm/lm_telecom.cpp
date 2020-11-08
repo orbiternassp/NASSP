@@ -357,7 +357,7 @@ void LM_VHF::Timestep(double simt)
 
 	if (!csm)
 	{
-		csm = lem->agc.GetCSM();
+		csm = lem->agc.GetCSM(); //############################ FIXME ################################
 	}
 
 	if (csm)

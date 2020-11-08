@@ -213,9 +213,6 @@
     <ClCompile Include="..\..\src_aux\Mission.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src_aux\RF_calc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\apolloguidance.h">

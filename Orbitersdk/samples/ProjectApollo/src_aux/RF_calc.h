@@ -24,7 +24,8 @@
   **************************************************************************/
 
 #pragma once
-
+#include "math.h"
+#include "OrbiterAPI.h"
 /// \brief Calcluate Received Power
 ///
 /// This function is a simple inplimentation of Friis transmission equation.
@@ -35,4 +36,17 @@
 /// \param frequency The frequency of the signal being transmitted in Hz
 /// \param distance  The distance between the transmitter and the receiver in meters
 /// \return The power recieved by the receiver in watts RMS
-double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance);
+inline double RFCALC_rcvdPower(double xmitrPower, double xmitrGain, double rcvrGain, double frequency, double distance)
+{
+	double rcvdPower = 0;
+	double wavelength = 0;
+
+	rcvrGain = pow(10.0, (rcvrGain / 10.0));
+	xmitrGain = pow(10.0, (xmitrGain / 10.0));
+
+	wavelength = C0 / (frequency);
+
+	rcvdPower = xmitrPower * xmitrGain * rcvrGain * pow((wavelength / (4 * PI * distance)), 2);
+
+	return (10.0 * log10(1000.0 * rcvdPower));
+}
