@@ -922,5 +922,36 @@ void CSM_VHFto_LM_VHFConnector::SendRF(double freq, double XMITpow, double XMITg
 
 bool CSM_VHFto_LM_VHFConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
 {
-	return false;
+	if ((!pVHFRngSys) || (!pVHFxcvr)) //No more segfaults
+	{
+		return false;
+	}
+
+	//this checks that the incoming frequencies from the csm connector are within 1% of the tuned frequencies of the receivers
+	//in actuality it should be something more like a resonance responce centered around the tuned receiver frequency, but this waaay more simple
+	//and easy to compute every timestep
+
+	if (m.val1.dValue > pVHFxcvr->freqXCVR_A*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_A*1.01f)
+	{
+		//sprintf(oapiDebugString(), "A");
+		pVHFxcvr->RCVDfreqRCVR_A = m.val1.dValue;
+		pVHFxcvr->RCVDpowRCVR_A = m.val2.dValue;
+		pVHFxcvr->RCVDgainRCVR_A = m.val3.dValue;
+		pVHFxcvr->RCVDPhaseRCVR_A = m.val4.dValue;
+		pVHFxcvr->RCVDRangeTone = m.val1.bValue;
+		return true;
+	}
+	else if (m.val1.dValue > pVHFxcvr->freqXCVR_B*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_B*1.01f)
+	{
+		//sprintf(oapiDebugString(), "B");
+		pVHFxcvr->RCVDfreqRCVR_B = m.val1.dValue;
+		pVHFxcvr->RCVDpowRCVR_B = m.val2.dValue;
+		pVHFxcvr->RCVDgainRCVR_B = m.val3.dValue;
+		pVHFxcvr->RCVDPhaseRCVR_B = m.val4.dValue;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

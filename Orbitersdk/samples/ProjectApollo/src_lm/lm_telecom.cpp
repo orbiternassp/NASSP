@@ -374,12 +374,12 @@ void LM_VHF::Timestep(double simt)
 		oapiGetRelativePos(csm->GetHandle(), lem->GetHandle(), &R); //vector to the LM
 	}
 
-	if (!(lem->lm_vhf_to_csm_csm_connector.connectedTo))
+	if (!(lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
 	{
 		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
 	
-	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo))
+	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
 	{
 		if (receiveA)
 		{
@@ -400,7 +400,7 @@ void LM_VHF::Timestep(double simt)
 		}
 	}
 
-	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){

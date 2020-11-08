@@ -481,6 +481,28 @@ public:
 	//void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; }; //not needed at the moment
 
 	VHFAntenna* GetActiveAntenna() { return activeAntenna; };
+
+	const double freqXCVR_A = 296.8E6; //MHz;
+	const double freqXCVR_B = 259.7E6; //MHz;
+
+	const double xmitPower = 5; //watts
+
+	//Recvd RF properties*********
+	double RCVDfreqRCVR_A; //frequency received by rcvr A
+	double RCVDpowRCVR_A; //power radiated at rcvr A MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_A; //gain of the transmitter senting to rcvr A
+	double RCVDPhaseRCVR_A; //phase of the signal sending to rcvr A
+	//
+	double RCVDfreqRCVR_B; //Frequency received by rcvr B
+	double RCVDpowRCVR_B; //Power radiated at B MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_B; //Gain of the transmitter senting to rcvr B
+	double RCVDPhaseRCVR_B; //Phase of the signal sending to rcvr B
+	bool RCVDRangeTone; // Receiving a ranging tone from the CSM?
+
+	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
+	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
+	//****************************
+
 protected:
 	bool K1;
 	bool K2;
@@ -490,17 +512,9 @@ protected:
 	bool transmitA;
 	bool transmitB;
 
-	double RCVDfreqRCVR_A;
-	double RCVDpowRCVR_A;
-	double RCVDgainRCVR_A;
-	double RCVDPhaseRCVR_A;
-	bool RCVDRangeTone;
 	bool XMITRangeTone;
 
-	const double freqXCVR_A = 296.8E6; //MHz;
-	const double freqXCVR_B = 259.7E6; //MHz;
-	
-	double xmitPower;
+
 
 	//not needed at the moment
 	//double RCVDfreqRCVR_B;

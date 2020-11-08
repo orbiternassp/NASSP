@@ -233,8 +233,8 @@ public:
 	double RCVDPhaseRCVR_B; //Phase of the signal sending to rcvr B
 	bool RCVDRangeTone; // Receiving a ranging tone from the CSM?
 
-	double RCVDinputPowRCVR_A; //Power received by transmitter A in dBm
-	double RCVDinputPowRCVR_B;//Power received by transmitter B in dBm
+	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
+	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
 	
 	//****************************
 

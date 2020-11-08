@@ -38,6 +38,7 @@
 #include "ioChannels.h"
 #include "tracer.h"
 #include "Mission.h"
+#include "RF_calc.h"
 
 // DS20060326 TELECOM OBJECTS
 
@@ -1335,13 +1336,7 @@ VHFAMTransceiver::VHFAMTransceiver()
 	rightAntenna = NULL;
 	activeAntenna = NULL;
 
-	RCVDfreqRCVR_A = 0.0;
-	RCVDpowRCVR_A = 0.0;
-	RCVDgainRCVR_A = 0.0;
-	RCVDPhaseRCVR_A = 0.0;
-	RCVDRangeTone = false;
-	XMITRangeTone = false;
-	xmitPower = 5.0; //watts
+
 
 	lem = NULL;
 }
@@ -1357,6 +1352,22 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 	leftAntenna = lAnt;
 	rightAntenna = rAnt;
 
+	RCVDfreqRCVR_A = 0.0;
+	RCVDpowRCVR_A = 0.0;
+	RCVDgainRCVR_A = 0.0;
+	RCVDPhaseRCVR_A = 0.0;
+
+	RCVDfreqRCVR_B = 0.0;
+	RCVDpowRCVR_B = 0.0;
+	RCVDgainRCVR_B = 0.0;
+	RCVDPhaseRCVR_B = 0.0;
+
+	RCVDinputPowRCVR_A = 0.0;
+	RCVDinputPowRCVR_B = 0.0;
+
+	RCVDRangeTone = false;
+	XMITRangeTone = false;
+
 	if (!lem) {
 		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
 		if (lm) {
@@ -1368,13 +1379,28 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 
 void VHFAMTransceiver::Timestep()
 {
-	if (!lem) {
-		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
+	if (!lem)
+	{
+		//lem = sat->agc.GetLM(); //need to change type of "lem" to "VESSEL" before uncommenting
+		VESSEL *lm = sat->agc.GetLM(); 
 		if (lm) {
-			lem = (static_cast<LEM*>(lm));
-			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+			lem = (static_cast<LEM*>(lm)); //################################# DELETE ME #######################################
 		}
 	}
+
+	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo && lem)
+	{
+		sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+	}
+
+	VECTOR3 R = _V(0, 0, 0);
+
+	if(lem)
+	{
+		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
+	}
+
+	sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
 
 	if (antSelectorSw->GetState() == 0)
 	{
@@ -1443,6 +1469,29 @@ void VHFAMTransceiver::Timestep()
 	{
 		receiveB = false;
 	}
+
+	if ((sat->csm_vhfto_lm_vhfconnector.connectedTo) && lem)
+	{
+		if (receiveA)
+		{
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(R), RCVDfreqRCVR_A, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_A = -150.0;
+		}
+
+		if (receiveB)
+		{
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(R), RCVDfreqRCVR_B, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_B = -150.0;
+		}
+	}
+
+	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	//send RF properties to the connector
 	if (lem)
@@ -1556,11 +1605,6 @@ void VHFRangingSystem::TimeStep(double simdt)
 	{
 		if (lem)
 		{
-			if (!(sat->csm_vhfto_lm_vhfconnector.connectedTo))
-			{
-				sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
-			}
-
 			VECTOR3 R;
 			double newrange;
 
