@@ -2113,11 +2113,6 @@ double LEM::GetAscentStageMass()
 	return GetMass();
 }
 
-void LEM::SendVHFRangingSignal(Saturn *sat, bool isAcquiring)
-{
-	VHF.RangingSignal(sat, isAcquiring);
-}
-
 void LEM::StartSeparationPyros()
 {
 	LEMToSLAConnector.StartSeparationPyros();

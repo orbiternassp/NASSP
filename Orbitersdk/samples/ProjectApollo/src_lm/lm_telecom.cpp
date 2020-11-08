@@ -338,15 +338,6 @@ void LM_VHF::SystemTimestep(double simdt) {
 	}
 }
 
-void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
-{
-	if (isRanging && transmitA && receiveB)
-	{
-		sat->VHFRangingReturnSignal(); //######################### DELETE ME ##################################
-		//lem->lm_vhf_to_csm_csm_connector.SendRF(0.0, 0.0, 0.0, 0.0, true);
-	}
-}
-
 void LM_VHF::Timestep(double simt)
 {
 	if (AntennaSelectorSW->GetState() == 0)

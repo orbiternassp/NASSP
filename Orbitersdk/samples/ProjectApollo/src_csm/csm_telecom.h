@@ -561,7 +561,7 @@ protected:
 	bool rangeTone;
 
 	Saturn *sat;
-	LEM *lem;
+	VESSEL *lem;
 	VHFAMTransceiver *transceiver;
 	CircuitBrakerSwitch *powercb;
 	ToggleSwitch *powerswitch;

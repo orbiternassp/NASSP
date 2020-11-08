@@ -1592,8 +1592,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 
 	if (!lem)
 	{
-		VESSEL *lm = sat->agc.GetLM();
-		if (lm) lem = (static_cast<LEM*>(lm));
+		lem = sat->agc.GetLM();
 	}
 
 	if (resetswitch->IsUp())
@@ -1605,6 +1604,8 @@ void VHFRangingSystem::TimeStep(double simdt)
 	{
 		if (lem)
 		{
+			transceiver->sendRanging(); //turn transcever range tone on
+
 			VECTOR3 R;
 			double newrange;
 
@@ -1615,10 +1616,12 @@ void VHFRangingSystem::TimeStep(double simdt)
 			{
 				//Specification is 200NM range, but during the flights up to 320NM was achieved
 				//Max unambiguous range is 327.68NM https://repository.arizona.edu/bitstream/handle/10150/609749/ITC_1977_77-12-1.pdf?sequence=1&isAllowed=y page 10
-				if (newrange > 500.0*0.3048 && newrange < 327.68*1852.0)
-				{
-					lem->SendVHFRangingSignal(sat, false); // ############################# REPLACE THIS ##############################
-					transceiver->sendRanging();
+				if (newrange > 500.0*0.3048)
+				{		
+					if(transceiver->RCVDinputPowRCVR_A > -122.0)
+					{
+						RangingReturnSignal();
+					}
 				}
 			}
 

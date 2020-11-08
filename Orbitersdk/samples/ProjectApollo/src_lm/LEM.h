@@ -756,7 +756,6 @@ public:
 	int GetApolloNo() { return ApolloNo; }
 	UINT GetStage() { return stage; }
 	virtual double GetAscentStageMass();
-	virtual void SendVHFRangingSignal(Saturn *sat, bool isAcquiring); //################################ DELETE ME ###########################################
 
 	virtual void PlayCountSound(bool StartStop) {};
 	virtual void PlaySepsSound(bool StartStop) {};

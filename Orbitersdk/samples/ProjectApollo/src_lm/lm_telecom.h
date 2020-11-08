@@ -194,7 +194,6 @@ public:
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
-	void RangingSignal(Saturn *sat, bool isAcquiring); //############################# DELETE ME ###############################
 
 	const double freqXCVR_A = 296.8E6; //MHz;
 	const double freqXCVR_B = 259.7E6; //MHz;
