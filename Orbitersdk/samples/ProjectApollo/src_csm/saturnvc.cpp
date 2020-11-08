@@ -285,10 +285,18 @@ void Saturn::RegisterActiveAreas() {
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P1_01 + i, P1_PUSHB_POS[i] + ofs, 0.008);
 	}
 
+	for (i = 0; i < P1_TWCOUNT_C; i++)
+	{
+		oapiVCRegisterArea(AID_VC_TW_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P1_01 + i, P1_TW_POS_C[i] + ofs, 0.02);
+	}
+
 	oapiVCRegisterArea(AID_VC_EMS_DVSET, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_EMS_DVSET, _V(-0.507344, 0.732746, 0.370513) + ofs, 0.025);
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, 0.008);
+
+	oapiVCRegisterArea(AID_VC_PANEL1_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	MainPanelVC.AddSwitch(&EMSModeSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
 	MainPanelVC.AddSwitch(&CMCAttSwitch, AID_VC_SWITCH_P1_02, &anim_P1switch[1]);
@@ -349,6 +357,9 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&DrogueDeploySwitch, AID_VC_PUSHB_P1_06, &anim_P1pushbuttons[5]);
 	MainPanelVC.AddSwitch(&MainDeploySwitch, AID_VC_PUSHB_P1_07, &anim_P1pushbuttons[6]);
 	MainPanelVC.AddSwitch(&CmRcsHeDumpSwitch, AID_VC_PUSHB_P1_08, &anim_P1pushbuttons[7]);
+
+	MainPanelVC.AddSwitch(&SPSGimbalPitchThumbwheel, AID_VC_TW_P1_01, &anim_P1thumbwheels[0]);
+	MainPanelVC.AddSwitch(&SPSGimbalYawThumbwheel, AID_VC_TW_P1_02, &anim_P1thumbwheels[1]);
 
 	//Panel 2
 
@@ -849,6 +860,13 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		LiftoffNoAutoAbortSwitch.RepaintSwitchVC(surf, srf[SRF_VC_SEQUENCERSWITCHES]);
 		return true;
 
+	case AID_VC_PANEL1_NEEDLES:
+		GPFPIPitch1Meter.DoDrawSwitchVC(anim_P1needles[0]);
+		GPFPIPitch2Meter.DoDrawSwitchVC(anim_P1needles[1]);
+		GPFPIYaw1Meter.DoDrawSwitchVC(anim_P1needles[2]);
+		GPFPIYaw2Meter.DoDrawSwitchVC(anim_P1needles[3]);
+		return true;
+
 	/*case AID_MASTER_ALARM3:
 		cws.RenderMasterAlarm(surf, srf[SRF_MASTERALARM_BRIGHT], CWS_MASTERALARMPOSITION_NONE);
 		return true;*/
@@ -1134,13 +1152,13 @@ void Saturn::SetView(double offset, bool update_direction)
 }
 
 void Saturn::InitVCAnimations() {
-	//anim_P2needles[P2_NEEDLECOUNT] = -1;
-	//anim_P8thumbwheels[P8_TWCOUNT] = -1;
+
 	//anim_P11R1cbs[P11R1_CBCOUNT] = -1;
 
 	anim_P1switch[P1_SWITCHCOUNT_C] = -1;
 	anim_P1rot[P1_ROTCOUNT_C] = -1;
 	anim_P1pushbuttons[P1_PUSHBCOUNT] = -1;
+	anim_P1needles[P1_NEEDLECOUNT_C] = -1;
 	anim_P2switch[P2_SWITCHCOUNT_C] = -1;
 	anim_P2rot[P2_ROTCOUNT_C] = -1;
 	anim_RSI_indicator = -1;
@@ -1161,10 +1179,6 @@ void Saturn::DeleteVCAnimations()
 {
 	int i = 0;
 
-	//for (i = 0; i < P2_NEEDLECOUNT; i++) delete mgt_P2needles[i];
-
-	//for (i = 0; i < P8_TWCOUNT; i++) delete mgt_P8thumbwheels[i];
-
 	//for (i = 0; i < P11R1_CBCOUNT; i++) delete mgt_P11R1cbs[i];
 
 	for (i = 0; i < P1_SWITCHCOUNT_C; i++) delete mgt_P1switch[i];
@@ -1172,6 +1186,10 @@ void Saturn::DeleteVCAnimations()
 	for (i = 0; i < P1_ROTCOUNT_C; i++) delete mgt_P1Rot[i];
 
 	for (i = 0; i < P1_PUSHBCOUNT; i++) delete mgt_P1pushbuttons[i];
+
+	for (i = 0; i < P1_TWCOUNT_C; i++) delete mgt_P1thumbwheels[i];
+
+	for (i = 0; i < P1_NEEDLECOUNT_C; i++) delete mgt_P1needles[i];
 
 	for (i = 0; i < P2_SWITCHCOUNT_C; i++) delete mgt_P2switch[i];
 
@@ -1185,8 +1203,8 @@ void Saturn::DefineVCAnimations()
 {
 	UINT mesh = vcidx;
 
-	// Panel 1 switches/needles/rotaries/pushbuttons
-	static UINT meshgroup_P1switches[P1_SWITCHCOUNT_C], meshgroup_P1pushbuttons[P1_PUSHBCOUNT], meshgroup_P1_Rots[P1_ROTCOUNT_C];
+	// Panel 1 switches/needles/rotaries/pushbuttons/thumbwheels
+	static UINT meshgroup_P1switches[P1_SWITCHCOUNT_C], meshgroup_P1pushbuttons[P1_PUSHBCOUNT], meshgroup_P1_Rots[P1_ROTCOUNT_C], meshgroup_P1thumbwheels[P1_TWCOUNT_C], meshgroup_P1needles[P1_NEEDLECOUNT_C];
 	for (int i = 0; i < P1_SWITCHCOUNT_C; i++)
 	{
 		meshgroup_P1switches[i] = VC_GRP_Sw_P1_01 + i;
@@ -1203,12 +1221,36 @@ void Saturn::DefineVCAnimations()
 		AddAnimationComponent(anim_P1pushbuttons[i], 0.0f, 1.0f, mgt_P1pushbuttons[i]);
 	}
 
+	for (int i = 0; i < 1; i++)
+	{
+		meshgroup_P1thumbwheels[i] = VC_GRP_TW_P1_01 + i;
+		mgt_P1thumbwheels[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1thumbwheels[i], 1, P1_TW_POS_C[i], _V(1, 0, 0), (float)(RAD * 293));
+		anim_P1thumbwheels[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P1thumbwheels[i], 0.0f, 1.0f, mgt_P1thumbwheels[i]);
+	}
+
+	for (int i = 1; i < P1_TWCOUNT_C; i++)
+	{
+		meshgroup_P1thumbwheels[i] = VC_GRP_TW_P1_01 + i;
+		mgt_P1thumbwheels[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1thumbwheels[i], 1, P1_TW_POS_C[i], TW_SPSYAW_AXIS, (float)(RAD * 293));
+		anim_P1thumbwheels[i] = CreateAnimation(0.5);
+		AddAnimationComponent(anim_P1thumbwheels[i], 0.0f, 1.0f, mgt_P1thumbwheels[i]);
+	}
+
 	for (int i = 0; i < P1_ROTCOUNT_C; i++)
 	{
 		meshgroup_P1_Rots[i] = VC_GRP_Rot_P1_01 + i;
 		mgt_P1Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1_Rots[i], 1, P1_ROT_POS_C[i], P1_3_ROT_AXIS, (float)(RAD * 360));
 		anim_P1rot[i] = CreateAnimation(0.0);
 		AddAnimationComponent(anim_P1rot[i], 0.0f, 1.0f, mgt_P1Rot[i]);
+	}
+
+	for (int i = 0; i < P1_NEEDLECOUNT_C; i++)
+	{
+		meshgroup_P1needles[i] = VC_GRP_Needle_P1_01 + i;
+		mgt_P1needles[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1needles[i], 1, P1_NEEDLE_POS_C[i], _V(1, 0, 0), (float)(RAD * 34));
+		anim_P1needles[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P1needles[i], 0.0f, 1.0f, mgt_P1needles[i]);
 	}
 
 	// Panel 2 switches/needles/rotaries
