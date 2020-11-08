@@ -1699,6 +1699,8 @@ GuardedPushSwitch::GuardedPushSwitch() {
 	guardState = 0;
 
 	lit = false;
+
+	guardAnim = -1;
 }
 
 void GuardedPushSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, int lxoffset, int lyoffset)
@@ -1737,6 +1739,11 @@ void GuardedPushSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 		switchRow->panelSwitches->soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
 }
 
+void GuardedPushSwitch::InitGuardVC(UINT anim) {
+
+	guardAnim = anim;
+}
+
 void GuardedPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
 {
@@ -1761,6 +1768,20 @@ void GuardedPushSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	{
 		DoDrawSwitch(DrawSurface);
 		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
+	}
+}
+
+void GuardedPushSwitch::DrawSwitchVC(UINT anim) {
+
+	ToggleSwitch::DoDrawSwitchVC(anim);
+
+	if (guardAnim != -1) {
+		if (guardState) {
+			OurVessel->SetAnimation(guardAnim, 1.0);
+		}
+		else {
+			OurVessel->SetAnimation(guardAnim, 0.0);
+		}
 	}
 }
 
@@ -1806,6 +1827,28 @@ bool GuardedPushSwitch::CheckMouseClick(int event, int mx, int my)
 	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
 		if (guardState) {
 			return PushSwitch::CheckMouseClick(event, mx, my);
+		}
+	}
+	return false;
+}
+
+bool GuardedPushSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	if (event & PANEL_MOUSE_RBDOWN) {
+
+		if (guardState) {
+			Guard();
+		}
+		else {
+			guardState = 1;
+		}
+		guardClick.play();
+		return true;
+
+	}
+	else if (event & (PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP)) {
+		if (guardState) {
+			return PushSwitch::CheckMouseClickVC(event, p);
 		}
 	}
 	return false;
@@ -3039,6 +3082,12 @@ void IndicatorSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 void IndicatorSwitch::DrawSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc) {
 
 	int drawState = 0;
+	if (switchRow) {
+		if (switchRow->panelSwitches->listener)
+			switchRow->panelSwitches->listener->PanelIndicatorSwitchStateRequested(this);
+	}
+	if (callback)
+		callback->call(this);
 
 	// Require power if wired
 	if (SRC != NULL) {

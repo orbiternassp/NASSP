@@ -2302,6 +2302,20 @@ void SaturnLiftoffNoAutoAbortSwitch::DoDrawSwitch(SURFHANDLE drawSurface)
 	GuardedPushSwitch::DoDrawSwitch(drawSurface);
 }
 
+void SaturnLiftoffNoAutoAbortSwitch::RepaintSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc)
+{
+	int ofs = 4;
+	if (secs->LiftoffLightPower()) {
+		if (!secs->NoAutoAbortLightPower())
+			oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 117 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+		else
+			oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 273 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+	}
+	else {
+		oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 39 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+	}
+}
+
 void SaturnPanel181::Register(PanelSwitchScenarioHandler *PSH)
 {
 	SMSector1Cryo3ACPowerSwitch.Register(*PSH, "SMSector1Cryo3ACPowerSwitch", TOGGLESWITCH_UP);

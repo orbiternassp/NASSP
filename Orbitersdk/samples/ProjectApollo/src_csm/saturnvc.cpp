@@ -70,7 +70,9 @@ void Saturn::InitVC()
 	srf[SRF_VC_EMS_SCROLL_BORDER] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_border.dds");
 	srf[SRF_VC_EMS_SCROLL_BUG] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_bug.dds");
 	srf[SRF_VC_EMS_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/ems_lights.dds");
-
+	srf[SRF_VC_INDICATOR] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
+	srf[SRF_VC_ECSINDICATOR] = oapiLoadTexture("ProjectApollo/VC/ECSIndicator.dds");
+	srf[SRF_VC_SEQUENCERSWITCHES] = oapiLoadTexture("ProjectApollo/VC/SequencerSwitches.dds");
 
 	//srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
 	//srf[SRF_INDICATORREDVC] = oapiLoadTexture("ProjectApollo/VC/IndicatorRed.dds");
@@ -87,6 +89,8 @@ void Saturn::InitVC()
 	oapiSetSurfaceColourKey(srf[SRF_VC_EMS_SCROLL_BORDER], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_EMS_SCROLL_BUG], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_EMS_LIGHTS], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_ECSINDICATOR], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_SEQUENCERSWITCHES], ck);
 
 
 	//
@@ -106,6 +110,7 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_PT05G_LIGHT, _R(1774, 1142, 1815, 1158), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_EMSDVDISPLAY, _R(1768, 1204, 1925, 1225), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_EMS_RSI_BKGRND, _R(1627, 1149, 1715, 1236), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SEQUENCERSWITCHES, _R(1847, 1606, 1886, 1644), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// Panel 2
 	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254, 1235, 359, 1411), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
@@ -113,6 +118,13 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(849, 949, 992, 972), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_LEFT, _R(555, 743, 767, 1851), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_RIGHT, _R(810, 743, 1023, 851), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+
+	oapiVCRegisterArea(AID_VC_RCS_HELIUM1_TB, _R(606, 1014, 756, 1037), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_HELIUM2_TB, _R(606, 1172, 756, 1195), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_PROP1_TB, _R(606, 1305, 756, 1328), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_RCS_PROP2_TB, _R(518, 1438, 754, 1461), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_ECSRADIATORIND, _R(814, 1329, 837, 1352), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_DOCKINGPROBEIND, _R(411, 825, 434, 875), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Panel 3
 	oapiVCRegisterArea(AID_VC_MASTER_ALARM2, _R(433, 1339, 478, 1375), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
@@ -261,10 +273,16 @@ void Saturn::RegisterActiveAreas() {
 		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS_C[i] + P1_3_CLICK + ofs, 0.006);
 	}
 
-	for (i = 0; i < P1_3_ROTCOUNT; i++)
+	for (i = 0; i < P1_ROTCOUNT_C; i++)
 	{
-		oapiVCRegisterArea(AID_VC_ROT_P1_3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_3_01 + i, P1_3_ROT_POS[i] + ofs, 0.02);
+		oapiVCRegisterArea(AID_VC_ROT_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS_C[i] + ofs, 0.02);
+	}
+
+	for (i = 0; i < P1_PUSHBCOUNT; i++)
+	{
+		oapiVCRegisterArea(AID_VC_PUSHB_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P1_01 + i, P1_PUSHB_POS[i] + ofs, 0.008);
 	}
 
 	oapiVCRegisterArea(AID_VC_EMS_DVSET, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED | PANEL_MOUSE_UP);
@@ -321,11 +339,16 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&EventTimerSecondsSwitch, AID_VC_SWITCH_P1_47, &anim_P1switch[46]);
 	MainPanelVC.AddSwitch(&GTASwitch, AID_VC_SWITCH_P1_48, &anim_P1switch[47]);
 
-	MainPanelVC.AddSwitch(&EMSFunctionSwitch, AID_VC_ROT_P1_3_01, &anim_P1_3_Rot[0]);
-	MainPanelVC.AddSwitch(&RCSIndicatorsSwitch, AID_VC_ROT_P1_3_02, &anim_P1_3_Rot[1]);
-	MainPanelVC.AddSwitch(&ECSIndicatorsSwitch, AID_VC_ROT_P1_3_03, &anim_P1_3_Rot[2]);
-	MainPanelVC.AddSwitch(&HighGainAntennaPitchPositionSwitch, AID_VC_ROT_P1_3_04, &anim_P1_3_Rot[3]);
-	MainPanelVC.AddSwitch(&HighGainAntennaYawPositionSwitch, AID_VC_ROT_P1_3_05, &anim_P1_3_Rot[4]);
+	MainPanelVC.AddSwitch(&EMSFunctionSwitch, AID_VC_ROT_P1_01, &anim_P1rot[0]);
+
+	MainPanelVC.AddSwitch(&LiftoffNoAutoAbortSwitch, AID_VC_PUSHB_P1_01, &anim_P1pushbuttons[0]);
+	MainPanelVC.AddSwitch(&LesMotorFireSwitch, AID_VC_PUSHB_P1_02, &anim_P1pushbuttons[1]);
+	MainPanelVC.AddSwitch(&CanardDeploySwitch, AID_VC_PUSHB_P1_03, &anim_P1pushbuttons[2]);
+	MainPanelVC.AddSwitch(&CsmLvSepSwitch, AID_VC_PUSHB_P1_04, &anim_P1pushbuttons[3]);
+	MainPanelVC.AddSwitch(&ApexCoverJettSwitch, AID_VC_PUSHB_P1_05, &anim_P1pushbuttons[4]);
+	MainPanelVC.AddSwitch(&DrogueDeploySwitch, AID_VC_PUSHB_P1_06, &anim_P1pushbuttons[5]);
+	MainPanelVC.AddSwitch(&MainDeploySwitch, AID_VC_PUSHB_P1_07, &anim_P1pushbuttons[6]);
+	MainPanelVC.AddSwitch(&CmRcsHeDumpSwitch, AID_VC_PUSHB_P1_08, &anim_P1pushbuttons[7]);
 
 	//Panel 2
 
@@ -333,6 +356,12 @@ void Saturn::RegisterActiveAreas() {
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS_C[i] + P1_3_CLICK + ofs, 0.008);
+	}
+
+	for (i = 0; i < P2_ROTCOUNT_C; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS_C[i] + ofs, 0.02);
 	}
 
 	for (i = 0; i < P2_PUSHBCOUNT; i++)
@@ -452,6 +481,11 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18, NULL);
 	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19, NULL);
 
+	MainPanelVC.AddSwitch(&RCSIndicatorsSwitch, AID_VC_ROT_P2_01, &anim_P2rot[0]);
+	MainPanelVC.AddSwitch(&ECSIndicatorsSwitch, AID_VC_ROT_P2_02, &anim_P2rot[1]);
+	MainPanelVC.AddSwitch(&HighGainAntennaPitchPositionSwitch, AID_VC_ROT_P2_03, &anim_P2rot[2]);
+	MainPanelVC.AddSwitch(&HighGainAntennaYawPositionSwitch, AID_VC_ROT_P2_04, &anim_P2rot[3]);
+
 	// Panel 3
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
@@ -476,6 +510,16 @@ void Saturn::RegisterActiveAreas() {
 	DockingProbeExtdRelSwitch.InitGuardVC(anim_switchcovers[16]);
 	CMRCSPressSwitch.InitGuardVC(anim_switchcovers[17]);
 	GTASwitch.InitGuardVC(anim_switchcovers[18]);
+
+	// SEQS switch covers
+	LiftoffNoAutoAbortSwitch.InitGuardVC(anim_switchcovers[19]);
+	LesMotorFireSwitch.InitGuardVC(anim_switchcovers[20]);
+	CanardDeploySwitch.InitGuardVC(anim_switchcovers[21]);
+	CsmLvSepSwitch.InitGuardVC(anim_switchcovers[22]);
+	ApexCoverJettSwitch.InitGuardVC(anim_switchcovers[23]);
+	DrogueDeploySwitch.InitGuardVC(anim_switchcovers[24]);
+	MainDeploySwitch.InitGuardVC(anim_switchcovers[25]);
+	CmRcsHeDumpSwitch.InitGuardVC(anim_switchcovers[26]);
 }
 
 // --------------------------------------------------------------
@@ -760,6 +804,49 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 			SetAnimation(anim_emsdvsetswitch, 0.5);
 			break;
 		}
+		return true;
+
+	case AID_VC_RCS_HELIUM1_TB:
+		SMRCSHelium1ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSHelium1BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSHelium1CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSHelium1DTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		return true;
+
+	case AID_VC_RCS_HELIUM2_TB:
+		SMRCSHelium2ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSHelium2BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSHelium2CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSHelium2DTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		return true;
+
+	case AID_VC_RCS_PROP1_TB:
+		SMRCSProp1ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSProp1BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSProp1CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSProp1DTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		return true;
+
+	case AID_VC_RCS_PROP2_TB:
+		CMRCSProp1Talkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		CMRCSProp2Talkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSProp2ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSProp2BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSProp2CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		SMRCSProp2DTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		return true;
+
+	case AID_VC_ECSRADIATORIND:
+		EcsRadiatorIndicator.DrawSwitchVC(surf, srf[SRF_VC_ECSINDICATOR]);
+		return true;
+
+	case AID_VC_DOCKINGPROBEIND:
+		DockingProbeAIndicator.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		DockingProbeBIndicator.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
+		return true;
+
+	case AID_VC_SEQUENCERSWITCHES:
+		LiftoffNoAutoAbortSwitch.RepaintSwitchVC(surf, srf[SRF_VC_SEQUENCERSWITCHES]);
 		return true;
 
 	/*case AID_MASTER_ALARM3:
@@ -1047,55 +1134,15 @@ void Saturn::SetView(double offset, bool update_direction)
 }
 
 void Saturn::InitVCAnimations() {
+	//anim_P2needles[P2_NEEDLECOUNT] = -1;
+	//anim_P8thumbwheels[P8_TWCOUNT] = -1;
+	//anim_P11R1cbs[P11R1_CBCOUNT] = -1;
 
 	anim_P1switch[P1_SWITCHCOUNT_C] = -1;
-	anim_P1_3_Rot[P1_3_ROTCOUNT] = -1;
-	/*anim_P1needles[P1_NEEDLECOUNT] = -1;*/
+	anim_P1rot[P1_ROTCOUNT_C] = -1;
+	anim_P1pushbuttons[P1_PUSHBCOUNT] = -1;
 	anim_P2switch[P2_SWITCHCOUNT_C] = -1;
-	/*anim_P2_Rot[P2_ROTCOUNT] = -1;
-	anim_P2needles[P2_NEEDLECOUNT] = -1;
-	anim_P3switch[P3_SWITCHCOUNT] = -1;
-	anim_P3_Rot[P3_ROTCOUNT] = -1;
-	anim_P3needles[P3_NEEDLECOUNT] = -1;
-	anim_P4switch[P4_SWITCHCOUNT] = -1;
-	anim_P5switch[P5_SWITCHCOUNT] = -1;
-	anim_P5_Rot[P5_ROTCOUNT] = -1;
-	anim_P6switch[P6_SWITCHCOUNT] = -1;
-	anim_P8switch[P8_SWITCHCOUNT] = -1;
-	anim_P8thumbwheels[P8_TWCOUNT] = -1;
-	anim_P11R1cbs[P11R1_CBCOUNT] = -1;
-	anim_P11R2cbs[P11R2_CBCOUNT] = -1;
-	anim_P11R3cbs[P11R3_CBCOUNT] = -1;
-	anim_P11R4cbs[P11R4_CBCOUNT] = -1;
-	anim_P11R5cbs[P11R5_CBCOUNT] = -1;
-	anim_P12switch[P12_SWITCHCOUNT] = -1;
-	anim_P12_Rot[P12_ROTCOUNT] = -1;
-	anim_P12thumbwheels[P12_TWCOUNT] = -1;
-	anim_P12needles[P12_NEEDLECOUNT] = -1;
-	anim_P14switch[P14_SWITCHCOUNT] = -1;
-	anim_P14_Rot[P14_ROTCOUNT] = -1;
-	anim_P14needles[P14_NEEDLECOUNT] = -1;
-	anim_P16R1cbs[P16R1_CBCOUNT] = -1;
-	anim_P16R2cbs[P16R2_CBCOUNT] = -1;
-	anim_P16R3cbs[P16R3_CBCOUNT] = -1;
-	anim_P16R4cbs[P16R4_CBCOUNT] = -1;
-	anim_TW_indicator = -1;
-	anim_Needle_Radar = -1;
-	anim_xpointerx_cdr = -1;
-	anim_xpointery_cdr = -1;
-	anim_xpointerx_lmp = -1;
-	anim_xpointery_lmp = -1;
-	anim_abortbutton = -1;
-	anim_abortstagebutton = -1;
-	anim_abortstagecover = -1;
-	anim_rrslewsitch_x = -1;
-	anim_rrslewsitch_y = -1;
-	anim_stageswitch = -1;
-	anim_stagecover = -1;
-	anim_startbutton = -1;
-	anim_stopbutton_cdr = -1;
-	anim_stopbutton_lmp = -1;
-	anim_plusxbutton = -1;*/
+	anim_P2rot[P2_ROTCOUNT_C] = -1;
 	anim_RSI_indicator = -1;
 	anim_emsdvsetswitch = -1;
 	anim_switchcovers[SWITCHCOVERCOUNT_C] = -1;
@@ -1114,67 +1161,21 @@ void Saturn::DeleteVCAnimations()
 {
 	int i = 0;
 
+	//for (i = 0; i < P2_NEEDLECOUNT; i++) delete mgt_P2needles[i];
+
+	//for (i = 0; i < P8_TWCOUNT; i++) delete mgt_P8thumbwheels[i];
+
+	//for (i = 0; i < P11R1_CBCOUNT; i++) delete mgt_P11R1cbs[i];
+
 	for (i = 0; i < P1_SWITCHCOUNT_C; i++) delete mgt_P1switch[i];
 
-	for (i = 0; i < P1_3_ROTCOUNT; i++) delete mgt_P1_3Rot[i];
+	for (i = 0; i < P1_ROTCOUNT_C; i++) delete mgt_P1Rot[i];
 
-	/*for (i = 0; i < P1_NEEDLECOUNT; i++) delete mgt_P1needles[i];*/
+	for (i = 0; i < P1_PUSHBCOUNT; i++) delete mgt_P1pushbuttons[i];
 
 	for (i = 0; i < P2_SWITCHCOUNT_C; i++) delete mgt_P2switch[i];
 
-	/*for (i = 0; i < P2_ROTCOUNT; i++) delete mgt_P2Rot[i];
-
-	for (i = 0; i < P2_NEEDLECOUNT; i++) delete mgt_P2needles[i];
-
-	for (i = 0; i < P3_SWITCHCOUNT; i++) delete mgt_P3switch[i];
-
-	for (i = 0; i < P3_ROTCOUNT; i++) delete mgt_P3Rot[i];
-
-	for (i = 0; i < P3_NEEDLECOUNT; i++) delete mgt_P3needles[i];
-
-	for (i = 0; i < P4_SWITCHCOUNT; i++) delete mgt_P4switch[i];
-
-	for (i = 0; i < P5_SWITCHCOUNT; i++) delete mgt_P5switch[i];
-
-	for (i = 0; i < P5_ROTCOUNT; i++) delete mgt_P5Rot[i];
-
-	for (i = 0; i < P6_SWITCHCOUNT; i++) delete mgt_P6switch[i];
-
-	for (i = 0; i < P8_SWITCHCOUNT; i++) delete mgt_P8switch[i];
-
-	for (i = 0; i < P8_TWCOUNT; i++) delete mgt_P8thumbwheels[i];
-
-	for (i = 0; i < P11R1_CBCOUNT; i++) delete mgt_P11R1cbs[i];
-
-	for (i = 0; i < P11R2_CBCOUNT; i++) delete mgt_P11R2cbs[i];
-
-	for (i = 0; i < P11R3_CBCOUNT; i++) delete mgt_P11R3cbs[i];
-
-	for (i = 0; i < P11R4_CBCOUNT; i++) delete mgt_P11R4cbs[i];
-
-	for (i = 0; i < P11R5_CBCOUNT; i++) delete mgt_P11R5cbs[i];
-
-	for (i = 0; i < P12_SWITCHCOUNT; i++) delete mgt_P12switch[i];
-
-	for (i = 0; i < P12_ROTCOUNT; i++) delete mgt_P12Rot[i];
-
-	for (i = 0; i < P12_TWCOUNT; i++) delete mgt_P12thumbwheels[i];
-
-	for (i = 0; i < P12_NEEDLECOUNT; i++) delete mgt_P12needles[i];
-
-	for (i = 0; i < P14_SWITCHCOUNT; i++) delete mgt_P14switch[i];
-
-	for (i = 0; i < P14_ROTCOUNT; i++) delete mgt_P14Rot[i];
-
-	for (i = 0; i < P14_NEEDLECOUNT; i++) delete mgt_P14needles[i];
-
-	for (i = 0; i < P16R1_CBCOUNT; i++) delete mgt_P16R1cbs[i];
-
-	for (i = 0; i < P16R2_CBCOUNT; i++) delete mgt_P16R2cbs[i];
-
-	for (i = 0; i < P16R3_CBCOUNT; i++) delete mgt_P16R3cbs[i];
-
-	for (i = 0; i < P16R4_CBCOUNT; i++) delete mgt_P16R4cbs[i];*/
+	for (i = 0; i < P2_ROTCOUNT_C; i++) delete mgt_P2Rot[i];
 
 	for (i = 0; i < SWITCHCOVERCOUNT_C; i++) delete mgt_switchcovers[i];
 }
@@ -1184,8 +1185,8 @@ void Saturn::DefineVCAnimations()
 {
 	UINT mesh = vcidx;
 
-	// Panel 1 switches/needles
-	static UINT meshgroup_P1switches[P1_SWITCHCOUNT_C]/*, meshgroup_P1needles[P1_NEEDLECOUNT]*/;
+	// Panel 1 switches/needles/rotaries/pushbuttons
+	static UINT meshgroup_P1switches[P1_SWITCHCOUNT_C], meshgroup_P1pushbuttons[P1_PUSHBCOUNT], meshgroup_P1_Rots[P1_ROTCOUNT_C];
 	for (int i = 0; i < P1_SWITCHCOUNT_C; i++)
 	{
 		meshgroup_P1switches[i] = VC_GRP_Sw_P1_01 + i;
@@ -1194,8 +1195,24 @@ void Saturn::DefineVCAnimations()
 		AddAnimationComponent(anim_P1switch[i], 0.0f, 1.0f, mgt_P1switch[i]);
 	}
 
-	// Panel 2 switches/needles
-	static UINT meshgroup_P2switches[P2_SWITCHCOUNT_C]/*, meshgroup_P2Rots[P2_ROTCOUNT], meshgroup_P2needles[P2_NEEDLECOUNT]*/;
+	for (int i = 0; i < P1_PUSHBCOUNT; i++)
+	{
+		meshgroup_P1pushbuttons[i] = VC_GRP_PB_P1_01 + i;
+		mgt_P1pushbuttons[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P1pushbuttons[i], 1, P1_3_PB_VECT);
+		anim_P1pushbuttons[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P1pushbuttons[i], 0.0f, 1.0f, mgt_P1pushbuttons[i]);
+	}
+
+	for (int i = 0; i < P1_ROTCOUNT_C; i++)
+	{
+		meshgroup_P1_Rots[i] = VC_GRP_Rot_P1_01 + i;
+		mgt_P1Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1_Rots[i], 1, P1_ROT_POS_C[i], P1_3_ROT_AXIS, (float)(RAD * 360));
+		anim_P1rot[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P1rot[i], 0.0f, 1.0f, mgt_P1Rot[i]);
+	}
+
+	// Panel 2 switches/needles/rotaries
+	static UINT meshgroup_P2switches[P2_SWITCHCOUNT_C], meshgroup_P2_Rots[P2_ROTCOUNT_C];
 	for (int i = 0; i < P2_SWITCHCOUNT_C; i++)
 	{
 		meshgroup_P2switches[i] = VC_GRP_Sw_P2_01 + i;
@@ -1204,23 +1221,37 @@ void Saturn::DefineVCAnimations()
 		AddAnimationComponent(anim_P2switch[i], 0.0f, 1.0f, mgt_P2switch[i]);
 	}
 
-	// Panel 1-3 rotaries
-	static UINT meshgroup_P1_3_Rots[P1_3_ROTCOUNT];
-	for (int i = 0; i < P1_3_ROTCOUNT; i++)
+	for (int i = 0; i < P2_ROTCOUNT_C; i++)
 	{
-		meshgroup_P1_3_Rots[i] = VC_GRP_Rot_P1_3_01 + i;
-		mgt_P1_3Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1_3_Rots[i], 1, P1_3_ROT_POS[i], P1_3_ROT_AXIS, (float)(RAD * 360));
-		anim_P1_3_Rot[i] = CreateAnimation(0.0);
-		AddAnimationComponent(anim_P1_3_Rot[i], 0.0f, 1.0f, mgt_P1_3Rot[i]);
+		meshgroup_P2_Rots[i] = VC_GRP_Rot_P2_01 + i;
+		mgt_P2Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P2_Rots[i], 1, P2_ROT_POS_C[i], P1_3_ROT_AXIS, (float)(RAD * 360));
+		anim_P2rot[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_P2rot[i], 0.0f, 1.0f, mgt_P2Rot[i]);
 	}
 
 	// Panel 1-3 Switch covers
 
 	static UINT meshgroup_switchcovers[SWITCHCOVERCOUNT_C];
-	for (int i = 0; i < SWITCHCOVERCOUNT_C; i++)
+	for (int i = 0; i < 19; i++) // Normal switch covers are numbered 1-19
 	{
 		meshgroup_switchcovers[i] = VC_GRP_SwitchCover_P1_3_01 + i;
 		mgt_switchcovers[i] = new MGROUP_ROTATE(mesh, &meshgroup_switchcovers[i], 1, COVERS_POS_C[i], _V(1, 0, 0), (float)(RAD * 90));
+		anim_switchcovers[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_switchcovers[i], 0.0f, 1.0f, mgt_switchcovers[i]);
+	}
+
+	for (int i = 19; i < 23; i++) // 20-23 are SEQS button covers (left)
+	{
+		meshgroup_switchcovers[i] = VC_GRP_SwitchCover_P1_3_01 + i;
+		mgt_switchcovers[i] = new MGROUP_ROTATE(mesh, &meshgroup_switchcovers[i], 1, COVERS_POS_C[i], SEQS_COVER_AXIS_L, (float)(RAD * 70));
+		anim_switchcovers[i] = CreateAnimation(0.0);
+		AddAnimationComponent(anim_switchcovers[i], 0.0f, 1.0f, mgt_switchcovers[i]);
+	}
+
+	for (int i = 23; i < SWITCHCOVERCOUNT_C; i++) // 24-27 are SEQS button covers (right)
+	{
+		meshgroup_switchcovers[i] = VC_GRP_SwitchCover_P1_3_01 + i;
+		mgt_switchcovers[i] = new MGROUP_ROTATE(mesh, &meshgroup_switchcovers[i], 1, COVERS_POS_C[i], SEQS_COVER_AXIS_R, (float)(RAD * 70));
 		anim_switchcovers[i] = CreateAnimation(0.0);
 		AddAnimationComponent(anim_switchcovers[i], 0.0f, 1.0f, mgt_switchcovers[i]);
 	}

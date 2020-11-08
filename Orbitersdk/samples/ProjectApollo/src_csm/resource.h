@@ -834,143 +834,160 @@
 #define AID_VC_SWITCH_P1_47		        3147
 #define AID_VC_SWITCH_P1_48		        3148
 
-#define AID_VC_ROT_P1_3_01		        3150
-#define AID_VC_ROT_P1_3_02		        3151
-#define AID_VC_ROT_P1_3_03		        3152
-#define AID_VC_ROT_P1_3_04		        3153
-#define AID_VC_ROT_P1_3_05		        3154
+#define AID_VC_ROT_P1_01		        3150
 
-#define AID_VC_FDAI_LEFT                3160
-#define AID_VC_MASTER_ALARM             3161
-#define AID_VC_LVENG_LIGHTS             3162
-#define AID_VC_EVENT_TIMER              3163
-#define AID_VC_EMS_SCROLL_LEO           3164
-#define AID_VC_SPS_LIGHT                3165
-#define AID_VC_PT05G_LIGHT              3166
-#define AID_VC_EMSDVDISPLAY             3167
-#define AID_VC_EMS_RSI_BKGRND           3168
-#define AID_VC_EMS_DVSET                3169
+#define AID_VC_PUSHB_P1_01              3151
+#define AID_VC_PUSHB_P1_02              3152
+#define AID_VC_PUSHB_P1_03              3153
+#define AID_VC_PUSHB_P1_04              3154
+#define AID_VC_PUSHB_P1_05              3155
+#define AID_VC_PUSHB_P1_06              3156
+#define AID_VC_PUSHB_P1_07              3157
+#define AID_VC_PUSHB_P1_08              3158
+
+#define AID_VC_FDAI_LEFT                3165
+#define AID_VC_MASTER_ALARM             3166
+#define AID_VC_LVENG_LIGHTS             3167
+#define AID_VC_EVENT_TIMER              3168
+#define AID_VC_EMS_SCROLL_LEO           3169
+#define AID_VC_SPS_LIGHT                3170
+#define AID_VC_PT05G_LIGHT              3171
+#define AID_VC_EMSDVDISPLAY             3172
+#define AID_VC_EMS_RSI_BKGRND           3173
+#define AID_VC_EMS_DVSET                3174
+#define AID_VC_SEQUENCERSWITCHES        3175
 
 // VC Active Areas (Panel 2)
-#define AID_VC_PANEL_2			((id >= 3200) && (id <= 3399))
-#define AID_VC_PUSHB_P2_01      3201    // DSKY key Verb
-#define AID_VC_PUSHB_P2_02      3202    // DSKY key Noun
-#define AID_VC_PUSHB_P2_03      3203    // DSKY key +
-#define AID_VC_PUSHB_P2_04      3204    // DSKY key -
-#define AID_VC_PUSHB_P2_05      3205    // DSKY key 0
-#define AID_VC_PUSHB_P2_06      3206    // DSKY key 1
-#define AID_VC_PUSHB_P2_07      3207    // DSKY key 2
-#define AID_VC_PUSHB_P2_08      3208    // DSKY key 3
-#define AID_VC_PUSHB_P2_09      3209    // DSKY key 4
-#define AID_VC_PUSHB_P2_10      3210    // DSKY key 5
-#define AID_VC_PUSHB_P2_11      3211    // DSKY key 6
-#define AID_VC_PUSHB_P2_12      3212    // DSKY key 7
-#define AID_VC_PUSHB_P2_13      3213    // DSKY key 8
-#define AID_VC_PUSHB_P2_14      3214    // DSKY key 9
-#define AID_VC_PUSHB_P2_15      3215    // DSKY key Clear
-#define AID_VC_PUSHB_P2_16      3216    // DSKY key Pro
-#define AID_VC_PUSHB_P2_17      3217    // DSKY key k. rel
-#define AID_VC_PUSHB_P2_18      3218    // DSKY key Enter
-#define AID_VC_PUSHB_P2_19      3219    // DSKY key Reset
+#define AID_VC_PANEL_2			((id >= 4800) && (id <= 4999))
+#define AID_VC_PUSHB_P2_01      4801    // DSKY key Verb
+#define AID_VC_PUSHB_P2_02      4802    // DSKY key Noun
+#define AID_VC_PUSHB_P2_03      4803    // DSKY key +
+#define AID_VC_PUSHB_P2_04      4804    // DSKY key -
+#define AID_VC_PUSHB_P2_05      4805    // DSKY key 0
+#define AID_VC_PUSHB_P2_06      4806    // DSKY key 1
+#define AID_VC_PUSHB_P2_07      4807    // DSKY key 2
+#define AID_VC_PUSHB_P2_08      4808    // DSKY key 3
+#define AID_VC_PUSHB_P2_09      4809    // DSKY key 4
+#define AID_VC_PUSHB_P2_10      4810    // DSKY key 5
+#define AID_VC_PUSHB_P2_11      4811    // DSKY key 6
+#define AID_VC_PUSHB_P2_12      4812    // DSKY key 7
+#define AID_VC_PUSHB_P2_13      4813    // DSKY key 8
+#define AID_VC_PUSHB_P2_14      4814    // DSKY key 9
+#define AID_VC_PUSHB_P2_15      4815    // DSKY key Clear
+#define AID_VC_PUSHB_P2_16      4816    // DSKY key Pro
+#define AID_VC_PUSHB_P2_17      4817    // DSKY key k. rel
+#define AID_VC_PUSHB_P2_18      4818    // DSKY key Enter
+#define AID_VC_PUSHB_P2_19      4819    // DSKY key Reset
 
-#define AID_VC_SWITCH_P2_01		3220
-#define AID_VC_SWITCH_P2_02	    3221
-#define AID_VC_SWITCH_P2_03		3222
-#define AID_VC_SWITCH_P2_04		3223
-#define AID_VC_SWITCH_P2_05	    3224
-#define AID_VC_SWITCH_P2_06		3225
-#define AID_VC_SWITCH_P2_07		3226
-#define AID_VC_SWITCH_P2_08		3227
-#define AID_VC_SWITCH_P2_09		3228
-#define AID_VC_SWITCH_P2_10		3229
-#define AID_VC_SWITCH_P2_11		3230
-#define AID_VC_SWITCH_P2_12		3231
-#define AID_VC_SWITCH_P2_13		3232
-#define AID_VC_SWITCH_P2_14		3233
-#define AID_VC_SWITCH_P2_15		3234
-#define AID_VC_SWITCH_P2_16		3235
-#define AID_VC_SWITCH_P2_17		3236
-#define AID_VC_SWITCH_P2_18		3237
-#define AID_VC_SWITCH_P2_19		3238
-#define AID_VC_SWITCH_P2_20		3239
-#define AID_VC_SWITCH_P2_21		3240
-#define AID_VC_SWITCH_P2_22		3241
-#define AID_VC_SWITCH_P2_23		3242
-#define AID_VC_SWITCH_P2_24		3243
-#define AID_VC_SWITCH_P2_25		3244
-#define AID_VC_SWITCH_P2_26		3245
-#define AID_VC_SWITCH_P2_27		3246
-#define AID_VC_SWITCH_P2_28		3247
-#define AID_VC_SWITCH_P2_29		3248
-#define AID_VC_SWITCH_P2_30		3249
-#define AID_VC_SWITCH_P2_31		3250
-#define AID_VC_SWITCH_P2_32		3251
-#define AID_VC_SWITCH_P2_33		3252
-#define AID_VC_SWITCH_P2_34		3253
-#define AID_VC_SWITCH_P2_35		3254
-#define AID_VC_SWITCH_P2_36		3255
-#define AID_VC_SWITCH_P2_37		3256
-#define AID_VC_SWITCH_P2_38		3257
-#define AID_VC_SWITCH_P2_39		3258
-#define AID_VC_SWITCH_P2_40		3259
-#define AID_VC_SWITCH_P2_41		3260
-#define AID_VC_SWITCH_P2_42		3261
-#define AID_VC_SWITCH_P2_43		3262
-#define AID_VC_SWITCH_P2_44		3263
-#define AID_VC_SWITCH_P2_45		3264
-#define AID_VC_SWITCH_P2_46		3265
-#define AID_VC_SWITCH_P2_47		3266
-#define AID_VC_SWITCH_P2_48		3267
-#define AID_VC_SWITCH_P2_49		3268
-#define AID_VC_SWITCH_P2_50		3269
-#define AID_VC_SWITCH_P2_51		3270
-#define AID_VC_SWITCH_P2_52		3271
-#define AID_VC_SWITCH_P2_53		3272
-#define AID_VC_SWITCH_P2_54		3273
-#define AID_VC_SWITCH_P2_55		3274
-#define AID_VC_SWITCH_P2_56		3275
-#define AID_VC_SWITCH_P2_57		3276
-#define AID_VC_SWITCH_P2_58		3277
-#define AID_VC_SWITCH_P2_59		3278
-#define AID_VC_SWITCH_P2_60		3279
-#define AID_VC_SWITCH_P2_61		3280
-#define AID_VC_SWITCH_P2_62		3281
-#define AID_VC_SWITCH_P2_63		3282
-#define AID_VC_SWITCH_P2_64		3283
-#define AID_VC_SWITCH_P2_65		3284
-#define AID_VC_SWITCH_P2_66		3285
-#define AID_VC_SWITCH_P2_67		3286
-#define AID_VC_SWITCH_P2_68		3287
-#define AID_VC_SWITCH_P2_69		3288
-#define AID_VC_SWITCH_P2_70		3289
-#define AID_VC_SWITCH_P2_71		3290
-#define AID_VC_SWITCH_P2_72		3291
-#define AID_VC_SWITCH_P2_73		3292
-#define AID_VC_SWITCH_P2_74		3293
-#define AID_VC_SWITCH_P2_75		3294
-#define AID_VC_SWITCH_P2_76		3295
-#define AID_VC_SWITCH_P2_77		3296
-#define AID_VC_SWITCH_P2_78		3297
-#define AID_VC_SWITCH_P2_79		3298
-#define AID_VC_SWITCH_P2_80		3299
-#define AID_VC_SWITCH_P2_81		3300
-#define AID_VC_SWITCH_P2_82		3301
-#define AID_VC_SWITCH_P2_83		3302
-#define AID_VC_SWITCH_P2_84		3303
-#define AID_VC_SWITCH_P2_85		3304
-#define AID_VC_SWITCH_P2_86		3305
-#define AID_VC_SWITCH_P2_87		3306
-#define AID_VC_SWITCH_P2_88		3307
-#define AID_VC_SWITCH_P2_89		3308
-#define AID_VC_SWITCH_P2_90		3309
+#define AID_VC_SWITCH_P2_01		4820
+#define AID_VC_SWITCH_P2_02	    4821
+#define AID_VC_SWITCH_P2_03		4822
+#define AID_VC_SWITCH_P2_04		4823
+#define AID_VC_SWITCH_P2_05	    4824
+#define AID_VC_SWITCH_P2_06		4825
+#define AID_VC_SWITCH_P2_07		4826
+#define AID_VC_SWITCH_P2_08		4827
+#define AID_VC_SWITCH_P2_09		4828
+#define AID_VC_SWITCH_P2_10		4829
+#define AID_VC_SWITCH_P2_11		4830
+#define AID_VC_SWITCH_P2_12		4831
+#define AID_VC_SWITCH_P2_13		4832
+#define AID_VC_SWITCH_P2_14		4833
+#define AID_VC_SWITCH_P2_15		4834
+#define AID_VC_SWITCH_P2_16		4835
+#define AID_VC_SWITCH_P2_17		4836
+#define AID_VC_SWITCH_P2_18		4837
+#define AID_VC_SWITCH_P2_19		4838
+#define AID_VC_SWITCH_P2_20		4839
+#define AID_VC_SWITCH_P2_21		4840
+#define AID_VC_SWITCH_P2_22		4841
+#define AID_VC_SWITCH_P2_23		4842
+#define AID_VC_SWITCH_P2_24		4843
+#define AID_VC_SWITCH_P2_25		4844
+#define AID_VC_SWITCH_P2_26		4845
+#define AID_VC_SWITCH_P2_27		4846
+#define AID_VC_SWITCH_P2_28		4847
+#define AID_VC_SWITCH_P2_29		4848
+#define AID_VC_SWITCH_P2_30		4849
+#define AID_VC_SWITCH_P2_31		4850
+#define AID_VC_SWITCH_P2_32		4851
+#define AID_VC_SWITCH_P2_33		4852
+#define AID_VC_SWITCH_P2_34		4853
+#define AID_VC_SWITCH_P2_35		4854
+#define AID_VC_SWITCH_P2_36		4855
+#define AID_VC_SWITCH_P2_37		4856
+#define AID_VC_SWITCH_P2_38		4857
+#define AID_VC_SWITCH_P2_39		4858
+#define AID_VC_SWITCH_P2_40		4859
+#define AID_VC_SWITCH_P2_41		4860
+#define AID_VC_SWITCH_P2_42		4861
+#define AID_VC_SWITCH_P2_43		4862
+#define AID_VC_SWITCH_P2_44		4863
+#define AID_VC_SWITCH_P2_45		4864
+#define AID_VC_SWITCH_P2_46		4865
+#define AID_VC_SWITCH_P2_47		4866
+#define AID_VC_SWITCH_P2_48		4867
+#define AID_VC_SWITCH_P2_49		4868
+#define AID_VC_SWITCH_P2_50		4869
+#define AID_VC_SWITCH_P2_51		4870
+#define AID_VC_SWITCH_P2_52		4871
+#define AID_VC_SWITCH_P2_53		4872
+#define AID_VC_SWITCH_P2_54		4873
+#define AID_VC_SWITCH_P2_55		4874
+#define AID_VC_SWITCH_P2_56		4875
+#define AID_VC_SWITCH_P2_57		4876
+#define AID_VC_SWITCH_P2_58		4877
+#define AID_VC_SWITCH_P2_59		4878
+#define AID_VC_SWITCH_P2_60		4879
+#define AID_VC_SWITCH_P2_61		4880
+#define AID_VC_SWITCH_P2_62		4881
+#define AID_VC_SWITCH_P2_63		4882
+#define AID_VC_SWITCH_P2_64		4883
+#define AID_VC_SWITCH_P2_65		4884
+#define AID_VC_SWITCH_P2_66		4885
+#define AID_VC_SWITCH_P2_67		4886
+#define AID_VC_SWITCH_P2_68		4887
+#define AID_VC_SWITCH_P2_69		4888
+#define AID_VC_SWITCH_P2_70		4889
+#define AID_VC_SWITCH_P2_71		4890
+#define AID_VC_SWITCH_P2_72		4891
+#define AID_VC_SWITCH_P2_73		4892
+#define AID_VC_SWITCH_P2_74		4893
+#define AID_VC_SWITCH_P2_75		4894
+#define AID_VC_SWITCH_P2_76		4895
+#define AID_VC_SWITCH_P2_77		4896
+#define AID_VC_SWITCH_P2_78		4897
+#define AID_VC_SWITCH_P2_79		4898
+#define AID_VC_SWITCH_P2_80		4899
+#define AID_VC_SWITCH_P2_81		4900
+#define AID_VC_SWITCH_P2_82		4901
+#define AID_VC_SWITCH_P2_83		4902
+#define AID_VC_SWITCH_P2_84		4903
+#define AID_VC_SWITCH_P2_85		4904
+#define AID_VC_SWITCH_P2_86		4905
+#define AID_VC_SWITCH_P2_87		4906
+#define AID_VC_SWITCH_P2_88		4907
+#define AID_VC_SWITCH_P2_89		4908
+#define AID_VC_SWITCH_P2_90		4909
 
-#define AID_VC_FDAI_RIGHT       3340
-#define AID_VC_DSKY_LIGHTS      3341
-#define AID_VC_DSKY_DISPLAY     3342
-#define AID_VC_DSKY_KEY         3343
-#define AID_VC_MISSION_CLOCK    3344
-#define AID_VC_CWS_LIGHTS_LEFT  3345
-#define AID_VC_CWS_LIGHTS_RIGHT 3346
+#define AID_VC_ROT_P2_01		4920
+#define AID_VC_ROT_P2_02	    4921
+#define AID_VC_ROT_P2_03		4922
+#define AID_VC_ROT_P2_04		4923
+
+#define AID_VC_FDAI_RIGHT       4940
+#define AID_VC_DSKY_LIGHTS      4941
+#define AID_VC_DSKY_DISPLAY     4942
+#define AID_VC_DSKY_KEY         4943
+#define AID_VC_MISSION_CLOCK    4944
+#define AID_VC_CWS_LIGHTS_LEFT  4945
+#define AID_VC_CWS_LIGHTS_RIGHT 4946
+#define AID_VC_RCS_HELIUM1_TB   4947
+#define AID_VC_RCS_HELIUM2_TB   4948
+#define AID_VC_RCS_PROP1_TB     4949
+#define AID_VC_RCS_PROP2_TB     4950
+#define AID_VC_ECSRADIATORIND   4951
+#define AID_VC_DOCKINGPROBEIND  4952
 
 // VC Active Areas (Panel 3)
 #define AID_VC_MASTER_ALARM2    3401

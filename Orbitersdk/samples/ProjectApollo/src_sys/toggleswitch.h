@@ -987,10 +987,13 @@ public:
 	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE dsurf,
 				   int xOffset = 0, int yOffset = 0);
+	void InitGuardVC(UINT anim);
 	void DrawSwitch(SURFHANDLE DrawSurface);
+	void DrawSwitchVC(UINT anim);
 	void DrawFlash(SURFHANDLE DrawSurface);
 	void DoDrawSwitch(SURFHANDLE drawSurface);
 	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 	int GetGuardState() { return guardState; };
@@ -1019,6 +1022,7 @@ protected:
 	int guardXOffset;
 	int guardYOffset;
 	Sound guardClick;
+	UINT guardAnim;
 };
 
 
