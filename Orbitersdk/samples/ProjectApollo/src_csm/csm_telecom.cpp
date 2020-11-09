@@ -1379,14 +1379,17 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 
 void VHFAMTransceiver::Timestep()
 {
-	if (!lem)
-	{
-		//lem = sat->agc.GetLM(); //need to change type of "lem" to "VESSEL" before uncommenting
-		VESSEL *lm = sat->agc.GetLM(); 
-		if (lm) {
-			lem = (static_cast<LEM*>(lm)); //################################# DELETE ME #######################################
-		}
-	}
+	//if (!lem)
+	//{
+	//	//lem = sat->agc.GetLM(); //need to change type of "lem" to "VESSEL" before uncommenting
+	//	VESSEL *lm = sat->agc.GetLM(); 
+	//	if (lm) {
+	//		lem = (static_cast<LEM*>(lm)); //################################# DELETE ME #######################################
+	//	}
+	//}
+
+	bool isLEM = GetShipAndConnector(sat, lem, &(static_cast<Connector>(sat->csm_vhfto_lm_vhfconnector)), "ProjectApollo\LEM");
+	sprintf(oapiDebugString(), "islem = %d", isLEM);
 
 	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo && lem)
 	{
@@ -1400,7 +1403,7 @@ void VHFAMTransceiver::Timestep()
 		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
 	}
 
-	sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
+	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
 
 	if (antSelectorSw->GetState() == 0)
 	{
@@ -1595,6 +1598,9 @@ void VHFRangingSystem::TimeStep(double simdt)
 		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
 
+	bool isLEM = false;
+	isLEM = GetShipAndConnector(sat, lem, "ProjectApollo\LEM");
+
 	if (resetswitch->IsUp())
 	{
 		isRanging = true;
@@ -1602,7 +1608,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 
 	if (isRanging && transceiver->IsVHFRangingConfig())
 	{
-		if (lem)
+		if (isLEM)
 		{
 			transceiver->sendRanging(); //turn transcever range tone on
 
