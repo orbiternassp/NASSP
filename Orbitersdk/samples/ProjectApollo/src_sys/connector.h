@@ -380,49 +380,53 @@ enum RFconnectorMessageType {
 	VHF_RNG_SIGNAL_LM,
 };
 
-inline bool GetShipAndConnector(VESSEL *ourShip, VESSEL *otherShip, Connector* con, const char* name)
-{
-	bool isSHIP = false;
+//needs work to be functional!
 
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
-	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), name, 256))
-		{
-			isSHIP = true;
-			return isSHIP;
-		}
-	}
-
-	if (!isSHIP)
-	{
-		otherShip = NULL;
-		con->Disconnect();
-	}
-	return isSHIP;
-}
-
-inline bool GetShipAndConnector(VESSEL *ourShip, VESSEL *otherShip, const char* name)
-{
-	bool isSHIP = false;
-
-	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
-	{
-		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
-		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), name, 256))
-		{
-			isSHIP = true;
-			return isSHIP;
-		}
-	}
-
-	if (!isSHIP)
-	{
-		otherShip = NULL;
-	}
-	return isSHIP;
-}
+//inline bool GetShipAndConnector(VESSEL *ourShip, VESSEL *otherShip, Connector* con, char* name)
+//{
+//	bool isSHIP = false;
+//
+//	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+//	{
+//		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+//		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+//		if (!_strnicmp(pVessel->GetClassName(), name, 256))
+//		{
+//			isSHIP = true;
+//			otherShip = pVessel;
+//			return isSHIP;
+//		}
+//	}
+//
+//	if (!isSHIP)
+//	{
+//		otherShip = NULL;
+//		con->Disconnect();
+//	}
+//	return isSHIP;
+//}
+//
+//inline bool GetShipAndConnector(VESSEL *ourShip, VESSEL *otherShip, char* name)
+//{
+//	bool isSHIP = false;
+//
+//	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+//	{
+//		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+//		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+//		if (!_strnicmp(pVessel->GetClassName(), name, 256))
+//		{
+//			isSHIP = true;
+//			otherShip = pVessel;
+//			return isSHIP;
+//		}
+//	}
+//
+//	if (!isSHIP)
+//	{
+//		otherShip = NULL;
+//	}
+//	return isSHIP;
+//}
 
 #endif // _PA_CONNECTOR_H

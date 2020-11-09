@@ -1379,17 +1379,34 @@ void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwit
 
 void VHFAMTransceiver::Timestep()
 {
-	//if (!lem)
-	//{
-	//	//lem = sat->agc.GetLM(); //need to change type of "lem" to "VESSEL" before uncommenting
-	//	VESSEL *lm = sat->agc.GetLM(); 
-	//	if (lm) {
-	//		lem = (static_cast<LEM*>(lm)); //################################# DELETE ME #######################################
-	//	}
-	//}
+	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
+	bool isLem = false;
 
-	bool isLEM = GetShipAndConnector(sat, lem, &(static_cast<Connector>(sat->csm_vhfto_lm_vhfconnector)), "ProjectApollo\LEM");
-	sprintf(oapiDebugString(), "islem = %d", isLEM);
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		{
+			isLem = true;
+		}
+	}
+
+	if (!isLem)
+	{
+		lem = NULL;
+		sat->csm_vhfto_lm_vhfconnector.Disconnect();
+	}
+	//
+
+	if (!lem)
+	{
+		//lem = sat->agc.GetLM(); //need to change type of "lem" to "VESSEL" before uncommenting
+		VESSEL *lm = sat->agc.GetLM(); 
+		if (lm) {
+			lem = (static_cast<LEM*>(lm)); //################################# DELETE ME #######################################
+		}
+	}
 
 	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo && lem)
 	{
@@ -1494,7 +1511,7 @@ void VHFAMTransceiver::Timestep()
 		}
 	}
 
-	sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	//send RF properties to the connector
 	if (lem)
@@ -1593,13 +1610,29 @@ void VHFRangingSystem::TimeStep(double simdt)
 		return;
 	}
 
+	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
+	bool isLem = false;
+
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		{
+			isLem = true;
+		}
+	}
+
+	if (!isLem)
+	{
+		lem = NULL;
+	}
+	//
+
 	if (!lem)
 	{
 		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
-
-	bool isLEM = false;
-	isLEM = GetShipAndConnector(sat, lem, "ProjectApollo\LEM");
 
 	if (resetswitch->IsUp())
 	{
@@ -1608,7 +1641,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 
 	if (isRanging && transceiver->IsVHFRangingConfig())
 	{
-		if (isLEM)
+		if (lem)
 		{
 			transceiver->sendRanging(); //turn transcever range tone on
 
