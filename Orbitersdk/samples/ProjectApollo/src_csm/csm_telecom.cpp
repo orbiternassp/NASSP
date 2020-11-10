@@ -1425,16 +1425,32 @@ void VHFAMTransceiver::Timestep()
 	if (antSelectorSw->GetState() == 0)
 	{
 		//recovery antenna goes here...
-		activeAntenna = leftAntenna;
+		activeAntenna = NULL;
 	}
 	else if (antSelectorSw->GetState() == 1)
 	{
-		activeAntenna = leftAntenna;
+		if(sat->stage <= CSM_LEM_STAGE)
+		{
+			activeAntenna = leftAntenna;
+		}
+		else
+		{
+			activeAntenna = NULL;
+		}
 	}
 	else
 	{
-		activeAntenna = rightAntenna;
+		if (sat->stage <= CSM_LEM_STAGE)
+		{
+			activeAntenna = rightAntenna;
+		}
+		else
+		{
+			activeAntenna = NULL;
+		}
 	}
+
+	sprintf(oapiDebugString(), "%d", antSelectorSw->GetState());
 
 	if (vhfASwitch->GetState() != THREEPOSSWITCH_CENTER && ctrPowerCB->IsPowered())
 	{
@@ -1490,7 +1506,7 @@ void VHFAMTransceiver::Timestep()
 		receiveB = false;
 	}
 
-	if ((sat->csm_vhfto_lm_vhfconnector.connectedTo) && lem)
+	if ((sat->csm_vhfto_lm_vhfconnector.connectedTo) && lem && activeAntenna)
 	{
 		if (receiveA)
 		{
@@ -1514,7 +1530,7 @@ void VHFAMTransceiver::Timestep()
 	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
 
 	//send RF properties to the connector
-	if (lem)
+	if (lem && activeAntenna)
 	{
 		VECTOR3 U_R;
 
@@ -1654,10 +1670,9 @@ void VHFRangingSystem::TimeStep(double simdt)
 			if (abs(internalrange - newrange) < 1800.0*0.3048*simdt)
 			{
 				//Specification is 200NM range, but during the flights up to 320NM was achieved
-				//Max unambiguous range is 327.68NM https://repository.arizona.edu/bitstream/handle/10150/609749/ITC_1977_77-12-1.pdf?sequence=1&isAllowed=y page 10
 				if (newrange > 500.0*0.3048)
 				{		
-					if(transceiver->RCVDinputPowRCVR_A > -122.0)
+					if(transceiver->RCVDinputPowRCVR_A > -122.0 && transceiver->GetActiveAntenna())
 					{
 						RangingReturnSignal();
 					}
