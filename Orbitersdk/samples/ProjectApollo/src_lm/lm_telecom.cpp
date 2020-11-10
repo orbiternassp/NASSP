@@ -353,6 +353,26 @@ void LM_VHF::Timestep(double simt)
 		activeAntenna = &evaVHF;
 	}
 
+	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
+	bool isCSM = false;
+
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\Saturn5", 21))
+		{
+			isCSM = true;
+		}
+	}
+
+	if (!isCSM)
+	{
+		csm = NULL;
+		lem->lm_vhf_to_csm_csm_connector.Disconnect();
+	}
+	//
+
 	VECTOR3 R = _V(0,0,0);
 
 	if (!csm)
