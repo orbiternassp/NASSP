@@ -2038,6 +2038,7 @@ protected:
 	bool CheckPanelIdInTimestep;
 	bool RefreshPanelIdInTimestep;
 	bool VcInfoActive;
+	bool VcInfoEnabled;
 
 	//
 	// Random motion.

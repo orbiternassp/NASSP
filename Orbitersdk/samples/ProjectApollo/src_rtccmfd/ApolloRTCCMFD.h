@@ -360,6 +360,8 @@ public:
 	void set_LiftoffDT(double dt);
 	void menuLLTPThresholdTime();
 	void set_LLTPThresholdTime(double get);
+	void menuLLTPVectorTime();
+	void set_LLTPVectorTime(double get);
 	void set_TPIguess(double time);
 	void menuLunarLiftoffVHorInput();
 	void set_LunarLiftoffVHorInput(double v_lh);

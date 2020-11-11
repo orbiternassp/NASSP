@@ -73,10 +73,6 @@
 		07/13/17 MAS	Added initialization of the three HANDRUPT traps.
 */
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
-#define _CRT_SECURE_NO_DEPRECATE 
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include "agc_engine.h"
@@ -227,9 +223,6 @@ agc_engine_init (agc_t * State, const char *RomImage, const char *CoreDump,
   State->PendDelay = 0;
   State->ExtraDelay = 0;
   //State->RegQ16 = 0;
-
-  // Reset voltage alarm
-  State->VoltageAlarm = 0;
 
   State->NightWatchman = 0;
   State->NightWatchmanTripped = 0;

@@ -74,6 +74,7 @@ ApolloGuidance::ApolloGuidance(SoundLib &s, DSKY &display, IMU &im, CDU &sc, CDU
 	PadLoaded = false;
 
 	ProgAlarm = false;
+	TrackerAlarm = false;
 	GimbalLockAlarm = false;
 
 	//
@@ -449,6 +450,7 @@ void ApolloGuidance::SaveState(FILEHANDLE scn)
 	}
 
 	papiWriteScenario_bool(scn, "PROGALARM", ProgAlarm);
+	papiWriteScenario_bool(scn, "TRACKERALARM", TrackerAlarm);
 	papiWriteScenario_bool(scn, "GIMBALLOCKALARM", GimbalLockAlarm);
 
 	oapiWriteLine(scn, AGC_END_STRING);
@@ -565,6 +567,7 @@ void ApolloGuidance::LoadState(FILEHANDLE scn)
 		}
 
 		papiReadScenario_bool(line, "PROGALARM", ProgAlarm);
+		papiReadScenario_bool(line, "TRACKERALARM", TrackerAlarm);
 		papiReadScenario_bool(line, "GIMBALLOCKALARM", GimbalLockAlarm);
 	}
 }
@@ -833,41 +836,31 @@ void ApolloGuidance::ProcessIMUCDUReadCount(int channel, int val) {
 }
 
 void ApolloGuidance::GenerateHandrupt() {
-	GenerateHANDRUPT(&vagc);
+	vagc.InterruptRequests[10] = 1;
 }
 
-// DS20060402 DOWNRUPT
 void ApolloGuidance::GenerateDownrupt(){
-	GenerateDOWNRUPT(&vagc);
+	vagc.InterruptRequests[8] = 1;
 }
 
 void ApolloGuidance::GenerateUprupt(){
-	GenerateUPRUPT(&vagc);
+	vagc.InterruptRequests[7] = 1;
 }
 
 void ApolloGuidance::GenerateRadarupt(){
-	GenerateRADARUPT(&vagc);
+	vagc.InterruptRequests[9] = 1;
 }
 
 bool ApolloGuidance::IsUpruptActive() {
-	return (IsUPRUPTActive(&vagc) == 1);
-}
+	// UPRUPT waiting to be processed
+	if (vagc.InterruptRequests[7] == 1)
+		return 1;
 
-// DS20060903 PINC, DINC, ETC
-int ApolloGuidance::DoPINC(int16_t *Counter){
-	return(CounterPINC(Counter));
-}
+	// UPRUPT currently being processed
+	if (vagc.InIsr && vagc.InterruptRequests[0] == 7)
+		return 1;
 
-int ApolloGuidance::DoPCDU(int16_t *Counter){
-	return(CounterPCDU(Counter));
-}
-
-int ApolloGuidance::DoMCDU(int16_t *Counter){
-	return(CounterMCDU(Counter));
-}
-
-int ApolloGuidance::DoDINC(int CounterNum, int16_t *Counter){
-	return(CounterDINC(&vagc,CounterNum,Counter));
+	return 0;
 }
 
 bool ApolloGuidance::GetInputChannelBit(int channel, int bit)

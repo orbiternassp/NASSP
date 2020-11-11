@@ -340,6 +340,7 @@ void LEM::Init()
 	InFOV = true;
 	SaveFOV = 0;
 	VcInfoActive = false;
+	VcInfoEnabled = false;
 
 	Crewed = true;
 	AutoSlow = false;
@@ -1010,7 +1011,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Debug string for displaying descent flight info from VC view
-	if (!Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
+	if (VcInfoEnabled && !Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
 
 		char pgnssw[256];
 		char thrsw[256];
@@ -1033,9 +1034,10 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		if (!VcInfoActive) VcInfoActive = true;
 
 	} else {
-		if (!VcInfoActive) return;
-		sprintf(oapiDebugString(), "");
-		VcInfoActive = false;
+		if (VcInfoActive) {
+			sprintf(oapiDebugString(), "");
+			VcInfoActive = false;
+		}
 	}
 }
 
@@ -1785,6 +1787,11 @@ bool LEM::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 				break;
 			}
 		}
+	}
+	else if (!strnicmp(line, "VCINFOENABLED", 13)) {
+		int i;
+		sscanf(line + 13, "%d", &i);
+		VcInfoEnabled = (i != 0);
 	}
 	return true;
 }
