@@ -115,6 +115,12 @@ const int   SWITCHCOVERCOUNT_C = 27;
 const int	 P1_ROTCOUNT_C = 1;
 const int	 P2_ROTCOUNT_C = 4;
 
+// Number of thumbwheels
+const int	 P1_TWCOUNT_C = 2;
+
+// Number of needles
+const int	 P1_NEEDLECOUNT_C = 4;
+
 // Switch clickspot offset
 const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*sin(P1_3_TILT - (90.0 * RAD)) };
 
@@ -122,6 +128,7 @@ const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*si
 const VECTOR3	P1_3_ROT_AXIS = { 0.00, sin(P1_3_TILT),-cos(P1_3_TILT) };
 const VECTOR3	SEQS_COVER_AXIS_L = { -0.00, -sin(P1_3_TILT + (90.0 * RAD)), cos(P1_3_TILT + (90.0 * RAD)) };
 const VECTOR3	SEQS_COVER_AXIS_R = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
+const VECTOR3	TW_SPSYAW_AXIS = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
 
 // Pushbutton vectors
 const VECTOR3	P1_3_PB_VECT = { 0.00, 0.002*cos(P1_3_TILT + (90.0 * RAD)), 0.002*sin(P1_3_TILT + (90.0 * RAD)) };
@@ -154,6 +161,16 @@ const VECTOR3 P1_TOGGLE_POS_C[P1_SWITCHCOUNT_C] = {
 const VECTOR3 P1_PUSHB_POS[P1_PUSHBCOUNT] = {
 	{-0.5622, 0.4689, 0.2789}, {-0.5623, 0.4425, 0.2701}, {-0.5623, 0.4163, 0.2613}, {-0.5623, 0.3901, 0.2526}, {-0.4982, 0.4687, 0.2788},
     {-0.4981, 0.4425, 0.2701}, {-0.4981, 0.4163, 0.2613}, {-0.4982, 0.3903, 0.2526}
+};
+
+// Panel 1 thumbwheels
+const VECTOR3 P1_TW_POS_C[P1_TWCOUNT_C] = {
+	{-0.669255, 0.382236, 0.280385}, {-0.613206, 0.382088, 0.280445}
+};
+
+// Panel 1 needles
+const VECTOR3 P1_NEEDLE_POS_C[P1_NEEDLECOUNT_C] = {
+	{-0.640937, 0.4098, 0.355623}, {-0.640937, 0.4098, 0.355623}, {-0.640937, 0.4098, 0.355623}, {-0.640937, 0.4098, 0.355623}
 };
 
 // Panel 2 switches
@@ -3911,17 +3928,19 @@ protected:
 	MGROUP_TRANSFORM *mgt_P1switch[P1_SWITCHCOUNT_C];
 	MGROUP_TRANSFORM *mgt_P1Rot[P1_ROTCOUNT_C];
 	MGROUP_TRANSFORM *mgt_P1pushbuttons[P1_PUSHBCOUNT];
+	MGROUP_TRANSFORM *mgt_P1thumbwheels[P1_TWCOUNT_C];
+	MGROUP_TRANSFORM *mgt_P1needles[P1_NEEDLECOUNT_C];
 	MGROUP_TRANSFORM *mgt_P2switch[P2_SWITCHCOUNT_C];
 	MGROUP_TRANSFORM *mgt_P2Rot[P2_ROTCOUNT_C];
 	MGROUP_TRANSFORM *mgt_switchcovers[SWITCHCOVERCOUNT_C];
 
-	//UINT anim_P2needles[P2_NEEDLECOUNT];
-	//UINT anim_P8thumbwheels[P8_TWCOUNT];
 	//UINT anim_P11R1cbs[P11R1_CBCOUNT];
 
 	UINT anim_P1switch[P1_SWITCHCOUNT_C];
 	UINT anim_P1rot[P1_ROTCOUNT_C];
 	UINT anim_P1pushbuttons[P1_PUSHBCOUNT];
+	UINT anim_P1thumbwheels[P1_TWCOUNT_C];
+	UINT anim_P1needles[P1_NEEDLECOUNT_C];
 	UINT anim_P2switch[P2_SWITCHCOUNT_C];
 	UINT anim_P2rot[P2_ROTCOUNT_C];
 	UINT anim_emsdvsetswitch;

@@ -1338,6 +1338,12 @@ void SaturnGPFPIMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface, xOffset + 12, 93 - (int)v,  3, 1, 7, 8, SURF_PREDEF_CK);
 }
 
+void SaturnGPFPIMeter::DoDrawSwitchVC(UINT anim)
+{
+	double v = ((GetDisplayValue() - minValue) * 1.04) / (maxValue - minValue);
+
+	Sat->SetAnimation(anim, v);
+}
 
 double SaturnGPFPIPitchMeter::QueryValue()
 {

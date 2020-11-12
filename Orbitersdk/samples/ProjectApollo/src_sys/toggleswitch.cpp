@@ -3192,6 +3192,77 @@ bool ContinuousThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	if (p.x < 0.01)
+	{
+		if (event == PANEL_MOUSE_LBDOWN) {
+			if (isHorizontal) {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
+					sclick.play();
+				}
+			}
+			else {
+				if (position > 0) {
+					SwitchTo(position - 1);
+					sclick.play();
+				}
+			}
+		}
+		else if (event == PANEL_MOUSE_RBDOWN)
+		{
+			if (isHorizontal) {
+				if (position > 0) {
+					SwitchTo(position - 1);
+					sclick.play();
+				}
+			}
+			else {
+				if (position < numPositions) {
+					SwitchTo(position + 1);
+					sclick.play();
+				}
+			}
+		}
+
+	}
+	else
+	{
+		if (event == PANEL_MOUSE_LBDOWN) {
+			if (isHorizontal) {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
+					sclick.play();
+				}
+			}
+			else {
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
+					sclick.play();
+				}
+			}
+		}
+		else if (event == PANEL_MOUSE_RBDOWN)
+		{
+			if (isHorizontal) {
+				if (position - multiplicator >= 0) {
+					SwitchTo(position - multiplicator);
+					sclick.play();
+				}
+			}
+			else {
+				if (position + multiplicator <= numPositions) {
+					SwitchTo(position + multiplicator);
+					sclick.play();
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 bool ContinuousThumbwheelSwitch::SwitchTo(int newPosition) {
 
 	if (newPosition >= 0 && newPosition <= numPositions && position != newPosition) {

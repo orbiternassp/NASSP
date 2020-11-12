@@ -845,6 +845,9 @@
 #define AID_VC_PUSHB_P1_07              3157
 #define AID_VC_PUSHB_P1_08              3158
 
+#define AID_VC_TW_P1_01                 3159
+#define AID_VC_TW_P1_02                 3160
+
 #define AID_VC_FDAI_LEFT                3165
 #define AID_VC_MASTER_ALARM             3166
 #define AID_VC_LVENG_LIGHTS             3167
@@ -856,6 +859,7 @@
 #define AID_VC_EMS_RSI_BKGRND           3173
 #define AID_VC_EMS_DVSET                3174
 #define AID_VC_SEQUENCERSWITCHES        3175
+#define AID_VC_PANEL1_NEEDLES           3176
 
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 4800) && (id <= 4999))
