@@ -136,247 +136,243 @@ protected:
 	double AdjustForPower(double val) { return val; } // These are always powered by definition.	
 };
 
-class LMSuitTempMeter : public MeterSwitch {
+class LMSuitTempMeter : public LinearMeter {
 public:
 	LMSuitTempMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCabinTempMeter : public MeterSwitch {
+class LMCabinTempMeter : public LinearMeter {
 public:
 	LMCabinTempMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMSuitPressMeter : public MeterSwitch {
+class LMSuitPressMeter : public LinearMeter {
 public:
 	LMSuitPressMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCabinPressMeter : public MeterSwitch {
+class LMCabinPressMeter : public LinearMeter {
 public:
 	LMCabinPressMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMCO2Meter : public MeterSwitch {
+class LMCO2Meter : public LinearMeter {
 public:
 	LMCO2Meter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMGlycolTempMeter : public MeterSwitch {
+class LMGlycolTempMeter : public LinearMeter {
 public:
 	LMGlycolTempMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMGlycolPressMeter : public MeterSwitch {
+class LMGlycolPressMeter : public LinearMeter {
 public:
 	LMGlycolPressMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMOxygenQtyMeter : public MeterSwitch {
+class LMOxygenQtyMeter : public LinearMeter {
 public:
 	LMOxygenQtyMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMWaterQtyMeter : public MeterSwitch {
+class LMWaterQtyMeter : public LinearMeter {
 public:
 	LMWaterQtyMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSATempInd : public MeterSwitch {
+class LMRCSATempInd : public LinearMeter {
 public:
 	LMRCSATempInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSBTempInd : public MeterSwitch {
+class LMRCSBTempInd : public LinearMeter {
 public:
 	LMRCSBTempInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSAPressInd : public MeterSwitch {
+class LMRCSAPressInd : public LinearMeter {
 public:
 	LMRCSAPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSBPressInd : public MeterSwitch {
+class LMRCSBPressInd : public LinearMeter {
 public:
 	LMRCSBPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSAQtyInd : public MeterSwitch {
+class LMRCSAQtyInd : public LinearMeter {
 public:
 	LMRCSAQtyInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class LMRCSBQtyInd : public MeterSwitch {
+class LMRCSBQtyInd : public LinearMeter {
 public:
 	LMRCSBQtyInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class TempMonitorInd : public MeterSwitch {
+class TempMonitorInd : public LinearMeter {
 public:
 	TempMonitorInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class EngineThrustInd : public MeterSwitch {
+class EngineThrustInd : public LinearMeter {
 public:
 	EngineThrustInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class CommandedThrustInd : public MeterSwitch {
+class CommandedThrustInd : public LinearMeter {
 public:
 	CommandedThrustInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	LEM *lem;
 	SURFHANDLE NeedleSurface;
 };
 
-class ThrustWeightInd : public MeterSwitch {
+class ThrustWeightInd : public LinearMeter {
 public:
 	ThrustWeightInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 	double AdjustForPower(double val);
 
 protected:
@@ -384,13 +380,12 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class MainFuelTempInd : public MeterSwitch {
+class MainFuelTempInd : public LinearMeter {
 public:
 	MainFuelTempInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -398,13 +393,12 @@ protected:
 	ThreePosSwitch *monswitch;
 };
 
-class MainFuelPressInd : public MeterSwitch {
+class MainFuelPressInd : public LinearMeter {
 public:
 	MainFuelPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -412,13 +406,12 @@ protected:
 	ThreePosSwitch *monswitch;
 };
 
-class MainOxidizerTempInd : public MeterSwitch {
+class MainOxidizerTempInd : public LinearMeter {
 public:
 	MainOxidizerTempInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -426,13 +419,12 @@ protected:
 	ThreePosSwitch *monswitch;
 };
 
-class MainOxidizerPressInd : public MeterSwitch {
+class MainOxidizerPressInd : public LinearMeter {
 public:
 	MainOxidizerPressInd();
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *s, ThreePosSwitch *temppressmonswitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
 
 protected:
 	LEM *lem;
@@ -440,16 +432,15 @@ protected:
 	ThreePosSwitch *monswitch;
 };
 
-class EngineStartButton : public ToggleSwitch {
+class EngineStartButton : public SimplePushSwitch {
 
 public:
 	EngineStartButton() {};
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	bool Push();
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
-	void DoDrawSwitchVC(UINT anim);
 protected:
 	ToggleSwitch* stopbutton;
 	LEM *lem;
@@ -459,36 +450,34 @@ class EngineStopButton : public ToggleSwitch {
 
 public:
 	EngineStopButton() {};
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton, LEM *l);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, SimplePushSwitch* startbutton, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	bool Push();
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
-	void DoDrawSwitchVC(UINT anim);
 protected:
-	ToggleSwitch* startbutton;
+	SimplePushSwitch* startbutton;
 	LEM *lem;
 };
 
-class LMAbortButton : public ToggleSwitch {
+class LMAbortButton : public PushSwitch {
 public:
 	LMAbortButton() {};
 	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 protected:
 	LEM *lem;
 };
 
-class LMAbortStageButton : public GuardedToggleSwitch {
+class LMAbortStageButton : public GuardedPushSwitch {
 public:
 	LMAbortStageButton();
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void DrawSwitch(SURFHANDLE DrawSurface);
-	void DrawSwitchVC(UINT anim, UINT animguard);
 protected:
 	LEM *lem;
 };
@@ -590,13 +579,14 @@ protected:
 class LEMDPSDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
+	void InitVC(SURFHANDLE surf);
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };
 
-	SURFHANDLE Digits;
+	SURFHANDLE Digits, DigitsVC;
 	LEM *lem;
 };
 
@@ -614,15 +604,16 @@ class LEMDigitalHeliumPressureMeter : public MeterSwitch {
 public:
 	LEMDigitalHeliumPressureMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l);
+	void InitVC(SURFHANDLE surf);
 	double QueryValue();
 	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	virtual void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits);
+	virtual void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };
 
 	RotationalSwitch *source;
-	SURFHANDLE Digits;
+	SURFHANDLE Digits, DigitsVC;
 	LEM *lem;
 };
 

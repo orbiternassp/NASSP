@@ -290,7 +290,7 @@ void Saturn::RegisterActiveAreas() {
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, 0.008);
 
-	MainPanelVC.AddSwitch(&EMSModeSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
+	/*MainPanelVC.AddSwitch(&EMSModeSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
 	MainPanelVC.AddSwitch(&CMCAttSwitch, AID_VC_SWITCH_P1_02, &anim_P1switch[1]);
 	MainPanelVC.AddSwitch(&FDAIScaleSwitch, AID_VC_SWITCH_P1_03, &anim_P1switch[2]);
 	MainPanelVC.AddSwitch(&FDAISelectSwitch, AID_VC_SWITCH_P1_04, &anim_P1switch[3]);
@@ -484,14 +484,14 @@ void Saturn::RegisterActiveAreas() {
 	MainPanelVC.AddSwitch(&RCSIndicatorsSwitch, AID_VC_ROT_P2_01, &anim_P2rot[0]);
 	MainPanelVC.AddSwitch(&ECSIndicatorsSwitch, AID_VC_ROT_P2_02, &anim_P2rot[1]);
 	MainPanelVC.AddSwitch(&HighGainAntennaPitchPositionSwitch, AID_VC_ROT_P2_03, &anim_P2rot[2]);
-	MainPanelVC.AddSwitch(&HighGainAntennaYawPositionSwitch, AID_VC_ROT_P2_04, &anim_P2rot[3]);
+	MainPanelVC.AddSwitch(&HighGainAntennaYawPositionSwitch, AID_VC_ROT_P2_04, &anim_P2rot[3]);*/
 
 	// Panel 3
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
 
 	// Switch Covers
-	IMUGuardedCageSwitch.InitGuardVC(anim_switchcovers[0]);
+	/*IMUGuardedCageSwitch.InitGuardVC(anim_switchcovers[0]);
 	dVThrust1Switch.InitGuardVC(anim_switchcovers[1]);
 	dVThrust2Switch.InitGuardVC(anim_switchcovers[2]);
 	ELSLogicSwitch.InitGuardVC(anim_switchcovers[3]);
@@ -509,17 +509,17 @@ void Saturn::RegisterActiveAreas() {
 	MainReleaseSwitch.InitGuardVC(anim_switchcovers[15]);
 	DockingProbeExtdRelSwitch.InitGuardVC(anim_switchcovers[16]);
 	CMRCSPressSwitch.InitGuardVC(anim_switchcovers[17]);
-	GTASwitch.InitGuardVC(anim_switchcovers[18]);
+	GTASwitch.InitGuardVC(anim_switchcovers[18]);*/
 
 	// SEQS switch covers
-	LiftoffNoAutoAbortSwitch.InitGuardVC(anim_switchcovers[19]);
+	/*LiftoffNoAutoAbortSwitch.InitGuardVC(anim_switchcovers[19]);
 	LesMotorFireSwitch.InitGuardVC(anim_switchcovers[20]);
 	CanardDeploySwitch.InitGuardVC(anim_switchcovers[21]);
 	CsmLvSepSwitch.InitGuardVC(anim_switchcovers[22]);
 	ApexCoverJettSwitch.InitGuardVC(anim_switchcovers[23]);
 	DrogueDeploySwitch.InitGuardVC(anim_switchcovers[24]);
 	MainDeploySwitch.InitGuardVC(anim_switchcovers[25]);
-	CmRcsHeDumpSwitch.InitGuardVC(anim_switchcovers[26]);
+	CmRcsHeDumpSwitch.InitGuardVC(anim_switchcovers[26]);*/
 }
 
 // --------------------------------------------------------------
@@ -806,7 +806,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_VC_RCS_HELIUM1_TB:
+	/*case AID_VC_RCS_HELIUM1_TB:
 		SMRCSHelium1ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
 		SMRCSHelium1BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
 		SMRCSHelium1CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);

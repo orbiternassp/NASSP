@@ -1054,7 +1054,7 @@ public:
 	void ReleaseSurfacesVC();
 	void RegisterActiveAreas();
 
-	void PanelSwitchToggled(ToggleSwitch *s);
+	void PanelSwitchToggled(TwoPositionSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelRefreshForwardHatch();
@@ -4131,9 +4131,9 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Alt2 (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
-	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
+	void CryoTankHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
+	void FuelCellHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
+	void FuelCellReactantsSwitchToggled(TwoPositionSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void initSaturn();
 	void SwitchClick();

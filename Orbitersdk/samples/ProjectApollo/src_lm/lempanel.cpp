@@ -159,6 +159,7 @@ void LEM::InitSwitches() {
 	AbortSwitch.Register     (PSH, "AbortSwitch", true);
 	AbortStageSwitch.Register(PSH, "AbortStageSwitch", true, false);
 	AbortStageSwitch.SetGuardResetsState(false);
+	AbortStageSwitch.SetSpringLoaded(0);
 
 	EngineArmSwitch.Register(PSH, "EngineArmSwitch", THREEPOSSWITCH_CENTER);
 	EngineDescentCommandOverrideSwitch.Register(PSH, "EngineDescentCommandOverrideSwitch", TOGGLESWITCH_DOWN);
@@ -1192,16 +1193,6 @@ void LEM::RedrawPanel_XPointer (CrossPointer *cp, SURFHANDLE surf) {
 	LineTo(hDC, 67 + iy, 131);
 	DeleteObject(pen);
 	oapiReleaseDC(surf, hDC);
-}
-
-void LEM::RedrawPanel_XPointerVC(CrossPointer *cp, UINT animx, UINT animy) {
-
-	double vx, vy;
-
-	cp->GetVelocities(vx, vy);
-
-	SetAnimation(animx, (vx / 40) + 0.5);
-	SetAnimation(animy, (vy / 40) + 0.5);
 }
 
 void LEM::RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset) {
@@ -2818,7 +2809,7 @@ void LEM::SetSwitches(int panel) {
 	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB, srf[SRF_RADAR_TAPE], srf[SRF_RADAR_TAPE2]);
 }
 
-void LEM::RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
+void LEM::RCSHeaterSwitchToggled(TwoPositionSwitch *s, int *pump) {
 
 	if (s->IsUp())
 		*pump = SP_PUMP_AUTO;
@@ -2828,7 +2819,7 @@ void LEM::RCSHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
 		*pump = SP_PUMP_ON;
 }
 
-void LEM::PanelSwitchToggled(ToggleSwitch *s) {
+void LEM::PanelSwitchToggled(TwoPositionSwitch *s) {
 
 	//RCS Switchable Heaters//
 

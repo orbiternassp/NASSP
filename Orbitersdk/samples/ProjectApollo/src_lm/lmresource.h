@@ -882,10 +882,8 @@
 #define AID_VC_MPS_OXID_QUANTITY_INDICATOR   3134
 #define AID_VC_MPS_FUEL_QUANTITY_INDICATOR   3135
 #define AID_VC_MPS_HELIUM_PRESS_INDICATOR   3136
-#define AID_VC_PANEL1_NEEDLES           3137
-#define AID_VC_THRUST_WEIGHT_IND        3138
-#define AID_VC_ABORT_BUTTON             3139
-#define AID_VC_ABORTSTAGE_BUTTON        3140
+#define AID_VC_ABORT_BUTTON             3137
+#define AID_VC_ABORTSTAGE_BUTTON        3138
 
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2				    ((id >= 3200) && (id <= 3234))
@@ -922,7 +920,6 @@
 #define AID_VC_PANEL2_COMPLIGHTS        3231
 #define AID_VC_PWRFAIL_LIGHTS_P2        3232
 #define AID_VC_LEM_MA_RIGHT             3233
-#define AID_VC_PANEL2_NEEDLES           3234
 
 // VC Active Areas (Panel 3)
 #define AID_VC_PANEL_3			((id >= 3300) && (id <= 3336))
@@ -957,11 +954,9 @@
 #define AID_VC_ROT_P3_03		3329	// Temp monitor
 #define AID_VC_ROT_P3_04		3330    // Lamp/tone test
 #define AID_VC_ROT_P3_05		3331    // Flood lights
-#define AID_VC_RDR_SIG_STR      3332
-#define AID_VC_RR_NOTRACK       3333
-#define AID_VC_CONTACTLIGHT2    3334
-#define AID_VC_RR_SLEW_SWITCH   3335
-#define AID_VC_PANEL3_NEEDLES   3336
+#define AID_VC_RR_NOTRACK       3332
+#define AID_VC_CONTACTLIGHT2    3333
+#define AID_VC_RR_SLEW_SWITCH   3334
 
 // VC Active Areas (Panel 4)
 #define AID_VC_PANEL_4			((id >= 3400) && (id <= 3425))
@@ -1196,8 +1191,7 @@
 #define AID_VC_ROT_P12_02		4232    //
 #define AID_VC_ROT_P12_03		4233    //
 #define AID_VC_ROT_P12_04		4234    //
-#define AID_VC_PANEL12_NEEDLES  4235
-#define AID_VC_RECORDER_TALKBACK 4236
+#define AID_VC_RECORDER_TALKBACK 4235
 
 // VC Active Areas (Panel 14)
 #define AID_VC_PANEL_14			((id >= 4400) && (id <= 4430))
@@ -1219,9 +1213,8 @@
 #define AID_VC_SWITCH_P14_16    4416
 #define AID_VC_ROT_P14_01       4417
 #define AID_VC_PANEL14_COMPLIGHTS 4418
-#define AID_VC_PANEL14_NEEDLES  4419
-#define AID_VC_DSC_BATTERY_TALKBACKS 4420
-#define AID_VC_ASC_BATTERY_TALKBACKS 4421
+#define AID_VC_DSC_BATTERY_TALKBACKS 4419
+#define AID_VC_ASC_BATTERY_TALKBACKS 4420
 
 // VC Active Areas (Panel 16)
 #define AID_VC_PANEL_16			((id >= 4600) && (id <= 4699))
