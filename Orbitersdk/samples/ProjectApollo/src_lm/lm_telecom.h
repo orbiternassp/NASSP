@@ -173,6 +173,18 @@
 
 class Saturn;
 
+class LM_VHFAntenna
+{
+public:
+	LM_VHFAntenna(VECTOR3 dir, double maximumGain);
+	~LM_VHFAntenna();
+
+	double getPolarGain(VECTOR3 target);
+private:
+	VECTOR3 pointingVector;
+	double maxGain;
+};
+
 // VHF system (and shared stuff)
 class LM_VHF {
 public:
@@ -182,19 +194,49 @@ public:
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
-	void RangingSignal(Saturn *sat, bool isAcquiring);
+
+	const double freqXCVR_A = 296.8E6; //MHz;
+	const double freqXCVR_B = 259.7E6; //MHz;
 
 	LEM *lem;					   // Ship we're installed in
+	VESSEL *csm;					//Pointer to CSM
 	h_HeatLoad *VHFHeat;			//VHF Heat Load
 	h_HeatLoad *VHFSECHeat;			//VHF Heat Load
 	h_HeatLoad *PCMHeat;			//PCM Heat Load
 	h_HeatLoad *PCMSECHeat;			//PCM Heat Load
+
+	LM_VHFAntenna fwdInflightVHF;
+	LM_VHFAntenna aftInflightVHF;
+	LM_VHFAntenna evaVHF;
+	LM_VHFAntenna *activeAntenna;
+	RotationalSwitch *AntennaSelectorSW;
 
 	bool receiveA;
 	bool receiveB;
 	bool transmitA;
 	bool transmitB;
 	bool isRanging;
+
+	double xmitPower;
+	const double minimumRCVDPower = -122.0; //dB
+
+	//Recvd RF properties*********
+	double RCVDfreqRCVR_A; //frequency received by rcvr A
+	double RCVDpowRCVR_A; //power radiated at rcvr A MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_A; //gain of the transmitter senting to rcvr A
+	double RCVDPhaseRCVR_A; //phase of the signal sending to rcvr A
+	//
+	double RCVDfreqRCVR_B; //Frequency received by rcvr B
+	double RCVDpowRCVR_B; //Power radiated at B MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_B; //Gain of the transmitter senting to rcvr B
+	double RCVDPhaseRCVR_B; //Phase of the signal sending to rcvr B
+	bool RCVDRangeTone; // Receiving a ranging tone from the CSM?
+
+	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
+	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
+	
+	//****************************
+
 
 	// Winsock2
 	WSADATA wsaData;				// Winsock subsystem data

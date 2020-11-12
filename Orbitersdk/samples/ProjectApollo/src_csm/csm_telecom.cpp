@@ -38,6 +38,7 @@
 #include "ioChannels.h"
 #include "tracer.h"
 #include "Mission.h"
+#include "RF_calc.h"
 
 // DS20060326 TELECOM OBJECTS
 
@@ -1289,7 +1290,33 @@ void OMNI::TimeStep()
 
 VHFAntenna::VHFAntenna(VECTOR3 dir)
 {
+	pointingVector = dir;
+}
 
+VHFAntenna::~VHFAntenna()
+{
+
+}
+
+double VHFAntenna::getPolarGain(VECTOR3 target)
+{
+	double theta = 0.0;
+	double gain = 0.0;
+
+	const double maxGain = -9.0; //dB
+
+	theta = acos(dotp(unit(target),unit(pointingVector)));
+
+	if (theta < 90.0*RAD)
+	{
+		gain = pow(cos(theta / 10.0), 2.0)*maxGain;
+	}
+	else
+	{
+		gain = -150.0;
+	}
+
+	return gain;
 }
 
 VHFAMTransceiver::VHFAMTransceiver()
@@ -1304,18 +1331,127 @@ VHFAMTransceiver::VHFAMTransceiver()
 	receiveB = false;
 	transmitA = false;
 	transmitB = false;
+
+	leftAntenna = NULL;
+	rightAntenna = NULL;
+	activeAntenna = NULL;
+
+
+
+	lem = NULL;
 }
 
-void VHFAMTransceiver::Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb)
+void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt)
 {
+	sat = vessel;
 	vhfASwitch = vhfASw;
 	vhfBSwitch = vhfBSw;
 	rcvSwitch = rcvSw;
 	ctrPowerCB = ctrpowcb;
+	antSelectorSw = antSelSw;
+	leftAntenna = lAnt;
+	rightAntenna = rAnt;
+
+	RCVDfreqRCVR_A = 0.0;
+	RCVDpowRCVR_A = 0.0;
+	RCVDgainRCVR_A = 0.0;
+	RCVDPhaseRCVR_A = 0.0;
+
+	RCVDfreqRCVR_B = 0.0;
+	RCVDpowRCVR_B = 0.0;
+	RCVDgainRCVR_B = 0.0;
+	RCVDPhaseRCVR_B = 0.0;
+
+	RCVDinputPowRCVR_A = 0.0;
+	RCVDinputPowRCVR_B = 0.0;
+
+	RCVDRangeTone = false;
+	XMITRangeTone = false;
+
+	if (!lem) {
+		VESSEL *lm = sat->agc.GetLM(); // Replace me with multi-lem code
+		if (lm) {
+			lem = (static_cast<LEM*>(lm));
+			sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+		}
+	}
 }
 
 void VHFAMTransceiver::Timestep()
 {
+	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
+	bool isLem = false;
+
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		{
+			isLem = true;
+		}
+	}
+
+	if (!isLem)
+	{
+		lem = NULL;
+		sat->csm_vhfto_lm_vhfconnector.Disconnect();
+	}
+	//
+
+	if (!lem)
+	{
+		//lem = sat->agc.GetLM(); //need to change type of "lem" to "VESSEL" before uncommenting
+		VESSEL *lm = sat->agc.GetLM(); 
+		if (lm) {
+			lem = (static_cast<LEM*>(lm)); //################################# DELETE ME #######################################
+		}
+	}
+
+	if (!sat->csm_vhfto_lm_vhfconnector.connectedTo && lem)
+	{
+		sat->csm_vhfto_lm_vhfconnector.ConnectTo(GetVesselConnector(lem, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+	}
+
+	VECTOR3 R = _V(0, 0, 0);
+
+	if(lem)
+	{
+		oapiGetRelativePos(lem->GetHandle(), sat->GetHandle(), &R); //vector to the LM
+	}
+
+	//sprintf(oapiDebugString(), "Distance from CSM to LM: %lf m", length(R));
+
+	if (antSelectorSw->GetState() == 0)
+	{
+		//recovery antenna goes here...
+		activeAntenna = NULL;
+	}
+	else if (antSelectorSw->GetState() == 1)
+	{
+		if(sat->stage <= CSM_LEM_STAGE)
+		{
+			activeAntenna = leftAntenna;
+		}
+		else
+		{
+			activeAntenna = NULL;
+		}
+	}
+	else
+	{
+		if (sat->stage <= CSM_LEM_STAGE)
+		{
+			activeAntenna = rightAntenna;
+		}
+		else
+		{
+			activeAntenna = NULL;
+		}
+	}
+
+	sprintf(oapiDebugString(), "%d", antSelectorSw->GetState());
+
 	if (vhfASwitch->GetState() != THREEPOSSWITCH_CENTER && ctrPowerCB->IsPowered())
 	{
 		K1 = true;
@@ -1370,7 +1506,55 @@ void VHFAMTransceiver::Timestep()
 		receiveB = false;
 	}
 
+	if ((sat->csm_vhfto_lm_vhfconnector.connectedTo) && lem && activeAntenna)
+	{
+		if (receiveA)
+		{
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(R), RCVDfreqRCVR_A, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_A = -150.0;
+		}
+
+		if (receiveB)
+		{
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(R), RCVDfreqRCVR_B, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_B = -150.0;
+		}
+	}
+
+	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+
+	//send RF properties to the connector
+	if (lem && activeAntenna)
+	{
+		VECTOR3 U_R;
+
+		oapiGetRelativePos(sat->GetHandle(), lem->GetHandle(), &U_R); //vector to the LM
+		U_R = unit(U_R); //normalize it
+
+		if (transmitA)
+		{
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, false); //XCVR A
+		}
+
+		if (transmitB)
+		{
+			sat->csm_vhfto_lm_vhfconnector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(U_R), 0.0, XMITRangeTone); //XCVR B
+		}
+	}
+
+	XMITRangeTone = false;
 	//sprintf(oapiDebugString(), "%d %d %d %d %d %d", K1, K2, transmitA, transmitB, receiveA, receiveB);
+}
+
+void VHFAMTransceiver::sendRanging()
+{
+	XMITRangeTone = true;
 }
 
 // Load
@@ -1407,6 +1591,8 @@ VHFRangingSystem::VHFRangingSystem()
 	lem = NULL;
 	phaseLockTimer = 0.0;
 	hasLock = 0;
+
+	rangeTone = false;
 }
 
 void VHFRangingSystem::Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc)
@@ -1440,10 +1626,28 @@ void VHFRangingSystem::TimeStep(double simdt)
 		return;
 	}
 
+	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
+	bool isLem = false;
+
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo/LEM", 17))
+		{
+			isLem = true;
+		}
+	}
+
+	if (!isLem)
+	{
+		lem = NULL;
+	}
+	//
+
 	if (!lem)
 	{
-		VESSEL *lm = sat->agc.GetLM();
-		if (lm) lem = (static_cast<LEM*>(lm));
+		lem = sat->agc.GetLM(); //############################ FIXME ################################
 	}
 
 	if (resetswitch->IsUp())
@@ -1455,6 +1659,8 @@ void VHFRangingSystem::TimeStep(double simdt)
 	{
 		if (lem)
 		{
+			transceiver->sendRanging(); //turn transcever range tone on
+
 			VECTOR3 R;
 			double newrange;
 
@@ -1464,9 +1670,12 @@ void VHFRangingSystem::TimeStep(double simdt)
 			if (abs(internalrange - newrange) < 1800.0*0.3048*simdt)
 			{
 				//Specification is 200NM range, but during the flights up to 320NM was achieved
-				if (newrange > 500.0*0.3048 && newrange < 320.0*1852.0)
-				{
-					lem->SendVHFRangingSignal(sat, false);
+				if (newrange > 500.0*0.3048)
+				{		
+					if(transceiver->RCVDinputPowRCVR_A > -122.0 && transceiver->GetActiveAntenna())
+					{
+						RangingReturnSignal();
+					}
 				}
 			}
 

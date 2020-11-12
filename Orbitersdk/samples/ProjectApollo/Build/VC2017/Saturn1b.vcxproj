@@ -448,6 +448,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_aux\Mission.h" />
+    <ClInclude Include="..\..\src_aux\RF_calc.h" />
     <ClInclude Include="..\..\src_csm\csmsensors.h" />
     <ClInclude Include="..\..\src_csm\rhc.h" />
     <ClInclude Include="..\..\src_csm\sce.h" />

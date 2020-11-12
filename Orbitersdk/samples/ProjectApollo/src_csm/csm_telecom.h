@@ -457,17 +457,52 @@ class VHFAntenna
 {
 public:
 	VHFAntenna(VECTOR3 dir);
+	~VHFAntenna();
+
+	double getPolarGain(VECTOR3 target);
+private:
+	VECTOR3 pointingVector;
 };
+
+class LEM;
 
 class VHFAMTransceiver
 {
 public:
 	VHFAMTransceiver();
 	void Timestep();
-	void Init(ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb);
+	void Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
+	void sendRanging();
+
+	void SetRCVDrfPropA(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_A = freq; RCVDpowRCVR_A = pow; RCVDgainRCVR_A = gain; RCVDPhaseRCVR_A = phase; RCVDRangeTone = tone; };
+	//void SetRCVDrfPropB(double freq, double pow, double gain, double phase, bool tone) { RCVDfreqRCVR_B = freq; RCVDpowRCVR_B = pow; RCVDgainRCVR_B = gain; RCVDPhaseRCVR_B = phase; }; //not needed at the moment
+
+	VHFAntenna* GetActiveAntenna() { return activeAntenna; };
+
+	const double freqXCVR_A = 296.8E6; //MHz;
+	const double freqXCVR_B = 259.7E6; //MHz;
+
+	const double xmitPower = 5; //watts
+
+	//Recvd RF properties*********
+	double RCVDfreqRCVR_A; //frequency received by rcvr A
+	double RCVDpowRCVR_A; //power radiated at rcvr A MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_A; //gain of the transmitter senting to rcvr A
+	double RCVDPhaseRCVR_A; //phase of the signal sending to rcvr A
+	//
+	double RCVDfreqRCVR_B; //Frequency received by rcvr B
+	double RCVDpowRCVR_B; //Power radiated at B MEASURED AT THE TRANSMITTER
+	double RCVDgainRCVR_B; //Gain of the transmitter senting to rcvr B
+	double RCVDPhaseRCVR_B; //Phase of the signal sending to rcvr B
+	bool RCVDRangeTone; // Receiving a ranging tone from the CSM?
+
+	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
+	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
+	//****************************
+
 protected:
 	bool K1;
 	bool K2;
@@ -477,13 +512,29 @@ protected:
 	bool transmitA;
 	bool transmitB;
 
+	bool XMITRangeTone;
+
+
+
+	//not needed at the moment
+	//double RCVDfreqRCVR_B;
+	//double RCVDpowRCVR_B;
+	//double RCVDgainRCVR_B;
+	//double RCVDPhaseRCVR_B;
+
+
 	ThreePosSwitch *vhfASwitch;
 	ThreePosSwitch *vhfBSwitch;
 	ThreePosSwitch *rcvSwitch;
 	CircuitBrakerSwitch *ctrPowerCB;
+	RotationalSwitch *antSelectorSw;
+	VHFAntenna *leftAntenna;
+	VHFAntenna *rightAntenna;
+	VHFAntenna *activeAntenna;
+	Saturn *sat;
+	LEM *lem;
 };
 
-class LEM;
 
 class VHFRangingSystem
 {
@@ -497,7 +548,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 
 	double GetRange() { return range / 185.20; }
-	void RangingReturnSignal();
+	void RangingReturnSignal(); // ################# DELETE ME #######################
 protected:
 
 	bool dataGood;
@@ -507,8 +558,10 @@ protected:
 	double phaseLockTimer;
 	int hasLock;
 
+	bool rangeTone;
+
 	Saturn *sat;
-	LEM *lem;
+	VESSEL *lem;
 	VHFAMTransceiver *transceiver;
 	CircuitBrakerSwitch *powercb;
 	ToggleSwitch *powerswitch;
