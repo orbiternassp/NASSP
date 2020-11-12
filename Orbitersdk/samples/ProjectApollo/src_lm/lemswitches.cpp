@@ -199,13 +199,6 @@ void LMSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  3, 115-((int)((v-40)*1.7)), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMSuitTempMeter::DoDrawSwitchVC(UINT anim) {
-
-	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
-
-	lem->SetAnimation(anim, v);
-}
-
 // ECS indicator, cabin temp
 LMCabinTempMeter::LMCabinTempMeter()
 
@@ -232,13 +225,6 @@ void LMCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {
 	oapiBlt(drawSurface, NeedleSurface,  58, 115-((int)((v-40)*1.7)), 7, 0, 7, 7, SURF_PREDEF_CK);
-}
-
-void LMCabinTempMeter::DoDrawSwitchVC(UINT anim) {
-
-	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
-
-	lem->SetAnimation(anim, v);
 }
 
 // ECS indicator, suit pressure
@@ -268,11 +254,11 @@ void LMSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  94, 115-((int)(v*10.2)), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMSuitPressMeter::DoDrawSwitchVC(UINT anim) {
+void LMSuitPressMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() * 0.99) - minValue) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // ECS indicator, cabin pressure
@@ -303,11 +289,11 @@ void LMCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  149, 115-((int)(v*10.2)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMCabinPressMeter::DoDrawSwitchVC(UINT anim) {
+void LMCabinPressMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // ECS indicator, cabin CO2 level
@@ -368,13 +354,13 @@ void LMCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  267, btm-((int)((v-cf)*sf)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMCO2Meter::DoDrawSwitchVC(UINT anim)
+void LMCO2Meter::OnPostStep(double SimT, double DeltaT, double MJD)
 
 {
 	double v = ((GetDisplayValue() - minValue) * 0.98) / (maxValue - minValue);
 	// Still needs scale factor, right now its wrongly 1:1 for entire range
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // ECS indicator, Glycol Temp Meter
@@ -405,11 +391,11 @@ void LMGlycolTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  3, 111-((int)(v*1.2)), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMGlycolTempMeter::DoDrawSwitchVC(UINT anim) {
+void LMGlycolTempMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.94) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // ECS indicator, Glycol Pressure Meter
@@ -437,13 +423,6 @@ void LMGlycolPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {
 	oapiBlt(drawSurface, NeedleSurface,  58, 111-((int)(v*1.2)), 7, 0, 7, 7, SURF_PREDEF_CK);
-}
-
-void LMGlycolPressMeter::DoDrawSwitchVC(UINT anim) {
-
-	double v = ((GetDisplayValue() - minValue) - minValue) / (maxValue - minValue);
-
-	lem->SetAnimation(anim, v);
 }
 
 // ECS indicator, Oxygen Quantity Meter
@@ -487,11 +466,11 @@ void LMOxygenQtyMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  94, 113-((int)(v*1.01)), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMOxygenQtyMeter::DoDrawSwitchVC(UINT anim) {
+void LMOxygenQtyMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // ECS indicator, Water Quantity Meter
@@ -532,11 +511,11 @@ void LMWaterQtyMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  149, 113-((int)(v*1.01)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMWaterQtyMeter::DoDrawSwitchVC(UINT anim) {
+void LMWaterQtyMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // RCS indicator, RCS A Temp
@@ -569,11 +548,11 @@ void LMRCSATempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  3, 114-((int)((v-20)*1.01)), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMRCSATempInd::DoDrawSwitchVC(UINT anim) {
+void LMRCSATempInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // RCS indicator, RCS B Temp
@@ -606,11 +585,11 @@ void LMRCSBTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  58, 114-((int)((v-20)*1.01)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMRCSBTempInd::DoDrawSwitchVC(UINT anim) {
+void LMRCSBTempInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // RCS indicator, RCS A Press
@@ -652,11 +631,11 @@ void LMRCSAPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  94, 101-((int)(v*0.22)), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMRCSAPressInd::DoDrawSwitchVC(UINT anim) {
+void LMRCSAPressInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.86) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // RCS indicator, RCS B Press
@@ -698,11 +677,11 @@ void LMRCSBPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  149, 101-((int)(v*0.22)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMRCSBPressInd::DoDrawSwitchVC(UINT anim) {
+void LMRCSBPressInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.86) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // RCS indicator, RCS A Qty
@@ -732,11 +711,11 @@ void LMRCSAQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  185, 97-((int)(v*0.8)), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMRCSAQtyInd::DoDrawSwitchVC(UINT anim) {
+void LMRCSAQtyInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.79) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // RCS indicator, RCS B Qty
@@ -766,11 +745,11 @@ void LMRCSBQtyInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  240, 97-((int)(v*0.8)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void LMRCSBQtyInd::DoDrawSwitchVC(UINT anim) {
+void LMRCSBQtyInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.79) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // Temperature Monitor Indicator
@@ -819,12 +798,12 @@ void TempMonitorInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface, 35, 112 - ((int)((v + 100)*0.34)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void TempMonitorInd::DoDrawSwitchVC(UINT anim)
+void TempMonitorInd::OnPostStep(double SimT, double DeltaT, double MJD)
 
 {
 	double v = ((GetDisplayValue() - minValue) * 0.97) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // Engine Thrust Indicator
@@ -853,11 +832,11 @@ void EngineThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  3, 114-((int)v), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void EngineThrustInd::DoDrawSwitchVC(UINT anim) {
+void EngineThrustInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // Commanded Thrust Indicator
@@ -890,11 +869,11 @@ void CommandedThrustInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  58, 114-((int)v), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void CommandedThrustInd::DoDrawSwitchVC(UINT anim) {
+void CommandedThrustInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = ((GetDisplayValue() - minValue) * 0.99) / (maxValue - minValue);
 
-	lem->SetAnimation(anim, v);
+	lem->SetAnimation(anim_switch, v);
 }
 
 // Thrust/Weight Indicator
@@ -922,13 +901,6 @@ void ThrustWeightInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {
 	oapiBlt(drawSurface, NeedleSurface, 20, (int)(161.5 - 25.0*v), 0, 0, 8, 7, SURF_PREDEF_CK);
-}
-
-void ThrustWeightInd::DoDrawSwitchVC(UINT anim) {
-
-	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
-
-	lem->SetAnimation(anim, v);
 }
 
 double ThrustWeightInd::AdjustForPower(double val)
@@ -979,13 +951,6 @@ void MainFuelTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  94, 115-((int)((v-40)*1.7)), 0, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void MainFuelTempInd::DoDrawSwitchVC(UINT anim) {
-
-	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
-
-	lem->SetAnimation(anim, v);
-}
-
 // Main Fuel Pressure Indicator
 MainFuelPressInd::MainFuelPressInd()
 
@@ -1022,13 +987,6 @@ void MainFuelPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {	
 	oapiBlt(drawSurface, NeedleSurface,  185, 115-((int)(v*0.34)), 0, 0, 7, 7, SURF_PREDEF_CK);
-}
-
-void MainFuelPressInd::DoDrawSwitchVC(UINT anim) {
-
-	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
-
-	lem->SetAnimation(anim, v);
 }
 
 // Main Oxidizer Temperature Indicator
@@ -1074,13 +1032,6 @@ void MainOxidizerTempInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface,  149, 115-((int)((v-40)*1.7)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
-void MainOxidizerTempInd::DoDrawSwitchVC(UINT anim) {
-
-	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
-
-	lem->SetAnimation(anim, v);
-}
-
 // Main Oxidizer Pressure Indicator
 MainOxidizerPressInd::MainOxidizerPressInd()
 
@@ -1117,13 +1068,6 @@ void MainOxidizerPressInd::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 {	
 	oapiBlt(drawSurface, NeedleSurface,  240, 115-((int)(v*0.34)), 7, 0, 7, 7, SURF_PREDEF_CK);
-}
-
-void MainOxidizerPressInd::DoDrawSwitchVC(UINT anim) {
-
-	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
-
-	lem->SetAnimation(anim, v);
 }
 
 void LEMBatterySwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, LEM *s,
@@ -1524,7 +1468,7 @@ double LEMVoltCB::Current()
 }
 
 void EngineStartButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton, LEM *l) {
-	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	SimplePushSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
 	this->stopbutton = stopbutton;
 }
@@ -1544,7 +1488,7 @@ bool EngineStartButton::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
-bool EngineStartButton::CheckMouseClickVC(int event) {
+bool EngineStartButton::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	int OldState = state;
 
@@ -1561,7 +1505,7 @@ bool EngineStartButton::Push()
 	//Can only be switched when off and engine stop button is also off
 	if (stopbutton->GetState() == 0 && state == 0)
 	{
-		if (ToggleSwitch::SwitchTo(1)) {
+		if (SimplePushSwitch::SwitchTo(1)) {
 
 			Sclick.play();
 			return true;
@@ -1595,19 +1539,7 @@ void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
-void EngineStartButton::DoDrawSwitchVC(UINT anim) {
-
-	if (IsUp())
-	{
-		lem->SetAnimation(anim, 1.0);
-	}
-	else
-	{
-		lem->SetAnimation(anim, 0.0);
-	}
-}
-
-void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* startbutton, LEM *l) {
+void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, SimplePushSwitch* startbutton, LEM *l) {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
 	this->startbutton = startbutton;
@@ -1628,7 +1560,7 @@ bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
-bool EngineStopButton::CheckMouseClickVC(int event) {
+bool EngineStopButton::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	int OldState = state;
 
@@ -1683,18 +1615,6 @@ void EngineStopButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
-void EngineStopButton::DoDrawSwitchVC(UINT anim) {
-
-	if (IsUp())
-	{
-		lem->SetAnimation(anim, 1.0);
-	}
-	else
-	{
-		lem->SetAnimation(anim, 0.0);
-	}
-}
-
 bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
 
 	int OldState = state;
@@ -1721,7 +1641,7 @@ bool LMAbortButton::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
-bool LMAbortButton::CheckMouseClickVC(int event) {
+bool LMAbortButton::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	int OldState = state;
 
@@ -1746,19 +1666,19 @@ bool LMAbortButton::CheckMouseClickVC(int event) {
 void LMAbortButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	PushSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
 }
 
 LMAbortStageButton::LMAbortStageButton() 
 { 
-	lem = 0; 
+	lem = 0;
 };
 
 void LMAbortStageButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l)
 
 {
-	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
+	GuardedPushSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
 }
 
@@ -1771,18 +1691,6 @@ void LMAbortStageButton::DrawSwitch(SURFHANDLE DrawSurface) {
 	}
 	else {
 		oapiBlt(DrawSurface, guardSurface, guardX, guardY, guardXOffset, guardYOffset, guardWidth, guardHeight, SURF_PREDEF_CK);
-	}
-}
-
-void LMAbortStageButton::DrawSwitchVC(UINT anim, UINT animguard) {
-
-	DoDrawSwitchVC(anim);
-
-	if (guardState) {
-		lem->SetAnimation(animguard, 1.0);
-	}
-	else {
-		lem->SetAnimation(animguard, 0.0);
 	}
 }
 
@@ -1825,7 +1733,7 @@ bool LMAbortStageButton::CheckMouseClick(int event, int mx, int my) {
 	return false;
 }
 
-bool LMAbortStageButton::CheckMouseClickVC(int event) {
+bool LMAbortStageButton::CheckMouseClickVC(int event, VECTOR3 &p) {
 
 	if (event & PANEL_MOUSE_RBDOWN) {
 
@@ -2098,6 +2006,11 @@ void LEMDPSDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
 	lem = l;
 }
 
+void LEMDPSDigitalMeter::InitVC(SURFHANDLE surf)
+{
+	DigitsVC = surf;
+}
+
 void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (lem->stage > 1) return;
@@ -2112,7 +2025,7 @@ void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, Digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
 }
 
-void LEMDPSDigitalMeter::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits)
+void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
 	if (lem->stage > 1) return;
 	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.GetNumericVoltage() < 25.0) return;
@@ -2122,8 +2035,8 @@ void LEMDPSDigitalMeter::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits)
 	int Curdigit2 = (int)percent;
 	int Curdigit = (int)percent / 10;
 
-	oapiBlt(surf, digits, 0, 0, 19 * Curdigit, 0, 19, 21);
-	oapiBlt(surf, digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+	oapiBlt(surf, DigitsVC, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(surf, DigitsVC, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
 }
 
 double LEMDPSOxidPercentMeter::QueryValue()
@@ -2197,7 +2110,12 @@ void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 	oapiBlt(drawSurface, Digits, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
 }
 
-void LEMDigitalHeliumPressureMeter::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE digits)
+void LEMDigitalHeliumPressureMeter::InitVC(SURFHANDLE surf)
+{
+	DigitsVC = surf;
+}
+
+void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
 	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.GetNumericVoltage() < 25.0) return;
 
@@ -2208,10 +2126,10 @@ void LEMDigitalHeliumPressureMeter::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE d
 	int Curdigit2 = (int)v / 100;
 	int Curdigit = (int)v / 1000;
 
-	oapiBlt(surf, digits, 0, 0, 19 * Curdigit, 0, 19, 21);
-	oapiBlt(surf, digits, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
-	oapiBlt(surf, digits, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
-	oapiBlt(surf, digits, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
+	oapiBlt(surf, DigitsVC, 0, 0, 19 * Curdigit, 0, 19, 21);
+	oapiBlt(surf, DigitsVC, 20, 0, 19 * (Curdigit2 - (Curdigit * 10)), 0, 19, 21);
+	oapiBlt(surf, DigitsVC, 40, 0, 19 * (Curdigit3 - (Curdigit2 * 10)), 0, 19, 21);
+	oapiBlt(surf, DigitsVC, 60, 0, 19 * (Curdigit4 - (Curdigit3 * 10)), 0, 19, 21);
 }
 
 void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
