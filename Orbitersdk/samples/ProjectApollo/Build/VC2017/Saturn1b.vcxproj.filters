@@ -434,6 +434,9 @@
     <ClInclude Include="..\..\src_saturn\IUControlSignalProcessor.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_aux\RF_calc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\abort.bmp">

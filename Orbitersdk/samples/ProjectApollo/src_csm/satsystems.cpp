@@ -411,7 +411,7 @@ void Saturn::SystemsInit() {
 	dataRecorder.Init(this);
 	pcm.Init(this);
 	vhfranging.Init(this, &VHFStationAudioRCB, &VHFRangingSwitch, &VHFRNGSwitch, &vhftransceiver);
-	vhftransceiver.Init(&VHFAMASwitch, &VHFAMBSwitch, &RCVOnlySwitch, &VHFStationAudioCTRCB);
+	vhftransceiver.Init(this, &VHFAMASwitch, &VHFAMBSwitch, &RCVOnlySwitch, &VHFStationAudioCTRCB, &VHFAntennaRotarySwitch, &vhfAntLeft, &vhfAntRight);
 	RRTsystem.Init(this, &RNDZXPNDRFLTBusCB, &RNDZXPDRSwitch, &Panel100RNDZXPDRSwitch, &LeftSystemTestRotarySwitch, &RightSystemTestRotarySwitch);
 
 	//Instrumentation
