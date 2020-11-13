@@ -172,6 +172,7 @@ AS-504:ProjectApollo\Saturn5
 LVDC_BEGIN
   LVDC_FSPFileName Config\ProjectApollo\AS-504 Flight Sequence Program.txt
   LVDC_ALFTSA 2.126
+  LVDC_ART 5.0
   LVDC_BETAA 36.05354
   LVDC_C3A0 -49979032.1
   LVDC_C3A1 -49979032.1

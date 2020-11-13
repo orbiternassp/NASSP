@@ -136,6 +136,11 @@ bool LVDA::GetSIOutboardEngineOut()
 	return iu->GetSIOutboardEngineOut();
 }
 
+bool LVDA::GetSIIInboardEngineOut()
+{
+	return iu->GetSIIInboardEngineOut();
+}
+
 bool LVDA::GetSIIEngineOut()
 {
 	return iu->GetSIIEngineOut();

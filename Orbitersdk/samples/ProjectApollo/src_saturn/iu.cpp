@@ -191,6 +191,11 @@ bool IU::GetSIOutboardEngineOut()
 	return lvCommandConnector.GetSIOutboardEngineOut();
 }
 
+bool IU::GetSIIInboardEngineOut()
+{
+	return false;
+}
+
 bool IU::SIBLowLevelSensorsDry()
 {
 	return false;
@@ -1606,6 +1611,11 @@ bool IUSV::GetSIIPropellantDepletionEngineCutoff()
 bool IUSV::GetSIIEngineOut()
 {
 	return lvCommandConnector.GetSIIEngineOut();
+}
+
+bool IUSV::GetSIIInboardEngineOut()
+{
+	return eds.GetSIIInboardEngineOut();
 }
 
 bool IUSV::ESEGetSICOutboardEnginesCantInhibit()

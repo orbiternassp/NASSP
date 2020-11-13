@@ -275,6 +275,7 @@ public:
 	virtual bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIInboardEngineOut();
 	bool GetSIOutboardEngineOut();
+	virtual bool GetSIIInboardEngineOut();
 	virtual bool GetSIIEngineOut();
 	bool GetSIVBEngineOut();
 	bool IsUmbilicalConnected();
@@ -406,6 +407,7 @@ public:
 	void Timestep(double misst, double simt, double simdt, double mjd);
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool GetSIIEngineOut();
+	bool GetSIIInboardEngineOut();
 	void SwitchSelector(int item);
 	void LoadLVDC(FILEHANDLE scn);
 

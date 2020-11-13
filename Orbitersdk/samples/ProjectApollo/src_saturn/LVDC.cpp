@@ -2925,6 +2925,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	alpha_1 = 0;
 	alpha_2 = 0;
 	alpha_D = 0;
+	ART = 0;
 	Azimuth = 0;
 	Azo = 0;
 	Azs = 0;
@@ -3767,6 +3768,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_alpha_TS", alpha_TS);
 	papiWriteScenario_double(scn, "LVDC_ALFTSA", TABLE15[0].alphaS_TS);
 	papiWriteScenario_double(scn, "LVDC_ALFTSB", TABLE15[1].alphaS_TS);
+	papiWriteScenario_double(scn, "LVDC_ART", ART);
 	papiWriteScenario_double(scn, "LVDC_Azimuth", Azimuth);
 	papiWriteScenario_double(scn, "LVDC_Azo", Azo);
 	papiWriteScenario_double(scn, "LVDC_Azs", Azs);
@@ -4483,6 +4485,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_alpha_TS", alpha_TS);
 		papiReadScenario_double(line, "LVDC_ALFTSA", TABLE15[0].alphaS_TS);
 		papiReadScenario_double(line, "LVDC_ALFTSB", TABLE15[1].alphaS_TS);
+		papiReadScenario_double(line, "LVDC_ART", ART);
 		papiReadScenario_double(line, "LVDC_Azimuth", Azimuth);
 		papiReadScenario_double(line, "LVDC_Azo", Azo);
 		papiReadScenario_double(line, "LVDC_Azs", Azs);
@@ -6277,7 +6280,7 @@ void LVDCSV::DiscreteProcessor1()
 void LVDCSV::DiscreteProcessor2()
 {
 	bool fail = false;
-	if (DPM[DIN13_SIIInboardEngineOut] == false && lvda.GetSIInboardEngineOut())
+	if (DPM[DIN13_SIIInboardEngineOut] == false && lvda.GetSIIInboardEngineOut())
 	{
 		fail = true;
 		DPM[DIN13_SIIInboardEngineOut] = true;
@@ -6301,7 +6304,7 @@ void LVDCSV::DiscreteProcessor2()
 				T_0 = t_21 + dt_LET - TMM;
 				T_1 = (T_0 / 4) + ((5 * T_1) / 4);
 				T_2 = 5 * T_2 / 4;
-				tau3 = 5 * tau2 / 4;
+				tau2 = 5 * tau2 / 4;
 				fprintf(lvlog, "[%d+%f] Pre-IGM SII engine out interrupt received!\r\n", LVDC_Timebase, LVDC_TB_ETime);
 			}
 			else
@@ -6543,7 +6546,7 @@ void LVDCSV::IterativeGuidanceMode()
 				fprintf(lvlog, "T_1 = 0, T_2 = 0\r\n");
 				// Go to CHI-TILDE LOGIC
 			}
-			if (T_2 < 11 && !S4B_REIGN) { GATE = true; }//pre SIVB-staging chi-freeze
+			if (T_2 <= ART && !S4B_REIGN) { GATE = true; }//pre SIVB-staging chi-freeze
 		}
 		else {
 			fprintf(lvlog, "Pre-MRS\n");
@@ -7221,6 +7224,7 @@ void LVDCSV::EventsProcessor(int entry)
 			if (SIICenterEngineCutoff)
 			{
 				ModeCode25[MC25_SIIInboardEngineOut] = true;
+				DPM[DIN13_SIIInboardEngineOut] = true;
 				T_EO2 = 1;
 				lvda.SwitchSelector(SWITCH_SELECTOR_SII, 15);
 			}

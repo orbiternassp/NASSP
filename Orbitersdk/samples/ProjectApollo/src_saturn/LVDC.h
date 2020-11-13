@@ -372,6 +372,7 @@ private:								// Saturn LV
 	VECTOR3 XLunarAttitude;							// Attitude the SIVB enters when TLI is done, i.e. at start of TB7
 	VECTOR3 XLunarSlingshotAttitude;				// Attitude the SIVB enters for slingshot maneuver.
 	VECTOR3 XLunarCommAttitude;						// Attitude the SIVB enters for communication.
+	double ART;										// Time-to-go in S-II stage at which guidance is arrested
 	double B_11,B_21;								// Coefficients for determining freeze time after S1C engine failure
 	double B_12,B_22;								// Coefficients for determining freeze time after S1C engine failure	
 	double V_ex1,V_ex2,V_ex3;						// IGM Exhaust Velocities
