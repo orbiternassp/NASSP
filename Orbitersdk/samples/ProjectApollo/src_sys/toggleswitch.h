@@ -909,7 +909,28 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
-class GuardedToggleSwitch: public ToggleSwitch {
+class SwitchCover
+{
+public:
+	SwitchCover();
+	virtual ~SwitchCover();
+
+	void SetCoverRotationAngle(const double rot);
+
+protected:
+	const double& GetCoverRotation() const;
+	const VECTOR3& GetCoverReference() const;
+	const VECTOR3& GetCoverDirection() const;
+
+	UINT guardAnim;
+	MGROUP_ROTATE* pcoverrot;
+	UINT coverGrpIndex;
+	VECTOR3 coverreference;
+	VECTOR3 coverdir;
+	double coverrotation;
+};
+
+class GuardedToggleSwitch: public ToggleSwitch, public SwitchCover {
 
 public:
 	GuardedToggleSwitch();
@@ -934,8 +955,6 @@ public:
 	void DefineVCAnimations(UINT vc_idx);
 	void DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex);
 	void SetReference(const VECTOR3& ref, const VECTOR3& coverref, const VECTOR3& dir, const VECTOR3& coverdir);
-	const VECTOR3& GetCoverReference() const;
-	const VECTOR3& GetCoverDirection() const;
 
 protected:
 	int	guardX;
@@ -947,12 +966,6 @@ protected:
 
 	SURFHANDLE guardSurface;
 	SURFHANDLE guardBorder;
-
-	UINT guardAnim;
-	MGROUP_ROTATE* pcoverrot;
-	UINT coverGrpIndex;
-	VECTOR3 coverreference;
-	VECTOR3 coverdir;
 
 	int guardXOffset;
 	int guardYOffset;
@@ -1046,7 +1059,7 @@ protected:
 	void SetIMU();
 };
 
-class GuardedPushSwitch: public PushSwitch {
+class GuardedPushSwitch: public PushSwitch, public SwitchCover {
 
 public:
 	GuardedPushSwitch();
@@ -1059,7 +1072,6 @@ public:
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE dsurf,
 				   int xOffset = 0, int yOffset = 0);
 	void DrawSwitch(SURFHANDLE DrawSurface);
-	void DefineVCAnimations(UINT vc_idx);
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	void DrawFlash(SURFHANDLE DrawSurface);
 	void DoDrawSwitch(SURFHANDLE drawSurface);
@@ -1076,17 +1088,11 @@ public:
 	void SetLit(bool l) { lit = l; };
 	bool IsLit() { return lit; };
 
+	void DefineVCAnimations(UINT vc_idx);
 	void SetReference(const VECTOR3& _dir, const VECTOR3& coverref, const VECTOR3& _coverdir);
-	void SetCoverRotationAngle(const double rot);
-
 	void DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex);
 
 protected:
-
-	const VECTOR3& GetCoverReference() const;
-	const VECTOR3& GetCoverDirection() const;
-	const double& GetCoverRotation() const;
-
 	int	guardX;
 	int guardY;
 	int guardWidth;
@@ -1105,18 +1111,10 @@ protected:
 	int guardXOffset;
 	int guardYOffset;
 	Sound guardClick;
-
-	UINT coverGrpIndex;
-	MGROUP_ROTATE* pcoverrot;
-	UINT guardAnim;
-
-	VECTOR3 coverreference;
-	VECTOR3 coverdir;
-	double coverrotation;
 };
 
 
-class GuardedThreePosSwitch: public ThreePosSwitch {
+class GuardedThreePosSwitch: public ThreePosSwitch, public SwitchCover {
 
 public:
 	GuardedThreePosSwitch();
@@ -1126,7 +1124,6 @@ public:
 				  int springloaded = SPRINGLOADEDSWITCH_NONE);
 	void InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 				   int xOffset = 0, int yOffset = 0);
-	void InitGuardVC(UINT anim);
 	void DrawSwitch(SURFHANDLE DrawSurface);
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	bool CheckMouseClick(int event, int mx, int my);
@@ -1139,6 +1136,10 @@ public:
 	void Unguard() { guardState = 1; };
 	void Guard();
 
+	void DefineVCAnimations(UINT vc_idx);
+	void SetReference(const VECTOR3& ref, const VECTOR3& coverref, const VECTOR3& dir, const VECTOR3& coverdir);
+	void DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex);
+
 protected:
 	int	guardX;
 	int guardY;
@@ -1150,7 +1151,6 @@ protected:
 	int guardXOffset;
 	int guardYOffset;
 	Sound guardClick;
-	UINT guardAnim;
 };
 
 

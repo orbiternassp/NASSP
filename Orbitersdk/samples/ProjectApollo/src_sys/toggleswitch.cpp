@@ -1668,6 +1668,42 @@ bool PanelSwitches::SetState(const char *n, int value, bool guard, bool hold)
 
 }
 
+SwitchCover::SwitchCover()
+{
+	guardAnim = -1;
+	pcoverrot = NULL;
+	coverGrpIndex = 0;
+	coverreference = _V(0, 0, 0);
+	coverdir = _V(0, 0, 0);
+	coverrotation = 0.0;
+}
+
+SwitchCover::~SwitchCover()
+{
+	if (pcoverrot)
+		delete pcoverrot;
+}
+
+const VECTOR3& SwitchCover::GetCoverReference() const
+{
+	return coverreference;
+}
+
+const VECTOR3& SwitchCover::GetCoverDirection() const
+{
+	return coverdir;
+}
+
+void SwitchCover::SetCoverRotationAngle(const double rot)
+{
+	coverrotation = rot;
+}
+
+const double& SwitchCover::GetCoverRotation() const
+{
+	return coverrotation;
+}
+
 //
 // Guarded toggle switch.
 //
@@ -1681,16 +1717,9 @@ GuardedToggleSwitch::GuardedToggleSwitch() {
 	guardSurface = 0;
 	guardState = 0;
 	guardResetsState = true;
-	guardAnim = -1;
-	pcoverrot = NULL;
-	coverGrpIndex = 0;
-	coverreference = _V(0, 0, 0);
-	coverdir = _V(0, 0, 0);
 }
 
 GuardedToggleSwitch::~GuardedToggleSwitch() {
-	if (pcoverrot)
-		delete pcoverrot;
 	guardClick.done();
 }
 
@@ -1830,16 +1859,6 @@ void GuardedToggleSwitch::SetReference(const VECTOR3& ref, const VECTOR3& coverr
 	dir = _dir;
 }
 
-const VECTOR3& GuardedToggleSwitch::GetCoverReference() const
-{
-	return coverreference;
-}
-
-const VECTOR3& GuardedToggleSwitch::GetCoverDirection() const
-{
-	return coverdir;
-}
-
 void GuardedToggleSwitch::DefineVCAnimations(UINT vc_idx)
 {
 	if (bHasReference && bHasDirection && !bHasAnimations)
@@ -1911,18 +1930,9 @@ GuardedPushSwitch::GuardedPushSwitch() {
 	guardResetsState = true;
 
 	lit = false;
-
-	guardAnim = -1;
-	coverGrpIndex = 0;
-	pcoverrot = NULL;
-	coverreference = _V(0, 0, 0);
-	coverdir = _V(0, 0, 0);
-	coverrotation = 0.0;
 }
 
 GuardedPushSwitch::~GuardedPushSwitch() {
-	if (pcoverrot)
-		delete pcoverrot;
 	guardClick.done();
 }
 
@@ -1998,26 +2008,6 @@ void GuardedPushSwitch::SetReference(const VECTOR3& _dir, const VECTOR3& coverre
 	dir = _dir;
 	coverreference = coverref;
 	coverdir = _coverdir;
-}
-
-void GuardedPushSwitch::SetCoverRotationAngle(const double rot)
-{
-	coverrotation = rot;
-}
-
-const double& GuardedPushSwitch::GetCoverRotation() const
-{
-	return coverrotation;
-}
-
-const VECTOR3& GuardedPushSwitch::GetCoverReference() const
-{
-	return coverreference;
-}
-
-const VECTOR3& GuardedPushSwitch::GetCoverDirection() const
-{
-	return coverdir;
 }
 
 void GuardedPushSwitch::DefineVCAnimations(UINT vc_idx)
@@ -2154,7 +2144,6 @@ GuardedThreePosSwitch::GuardedThreePosSwitch() {
 	guardHeight = 0;
 	guardSurface = 0;
 	guardState = 0;
-	guardAnim = -1;
 }
 
 GuardedThreePosSwitch::~GuardedThreePosSwitch() {
@@ -2182,9 +2171,32 @@ void GuardedThreePosSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE s
 		switchRow->panelSwitches->soundlib->LoadSound(guardClick, GUARD_SOUND, INTERNAL_ONLY);
 }
 
-void GuardedThreePosSwitch::InitGuardVC(UINT anim) {
+void GuardedThreePosSwitch::DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex)
+{
+	grpIndex = _grpIndex;
+	coverGrpIndex = _coverGrpIndex;
+}
 
-	guardAnim = anim;
+void GuardedThreePosSwitch::SetReference(const VECTOR3& ref, const VECTOR3& coverref, const VECTOR3& _dir, const VECTOR3& _coverdir)
+{
+	bHasReference = true;
+	bHasDirection = true;
+	reference = ref;
+	coverreference = coverref;
+	coverdir = _coverdir;
+	dir = _dir;
+}
+
+void GuardedThreePosSwitch::DefineVCAnimations(UINT vc_idx)
+{
+	if (bHasReference && bHasDirection && !bHasAnimations)
+	{
+		ToggleSwitch::DefineVCAnimations(vc_idx);
+		pcoverrot = new MGROUP_ROTATE(vc_idx, &coverGrpIndex, 1, GetCoverReference(), GetCoverDirection(), (float)(RAD * 90));
+		guardAnim = OurVessel->CreateAnimation(0.0);
+		OurVessel->AddAnimationComponent(guardAnim, 0.0f, 1.0f, pcoverrot);
+		VerifyAnimations();
+	}
 }
 
 void GuardedThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
