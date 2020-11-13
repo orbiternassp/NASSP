@@ -361,8 +361,6 @@ Saturn::~Saturn()
 		dx8ppv = NULL;
 	}
 
-	DeleteVCAnimations();
-
 	//fclose(PanelsdkLogFile);
 }
 
@@ -1225,6 +1223,12 @@ void Saturn::clbkPostStep (double simt, double simdt, double mjd)
 	// Order is important, otherwise delayed springloaded switches are reset immediately
 	MainPanel.timestep(MissionTime);
 	checkControl.timestep(MissionTime,eventControl);
+
+	// Update VC animations
+	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
+	{
+		MainPanelVC.OnPostStep(simt, simdt, mjd);
+	}
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 
 	TRACE(buffer);
