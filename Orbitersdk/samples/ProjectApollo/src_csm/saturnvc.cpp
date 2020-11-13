@@ -1367,13 +1367,13 @@ void Saturn::DefineVCAnimations()
 	LVRateAutoSwitch.SetReference(P2_TOGGLE_POS[8], _V(1, 0, 0));
 	LVRateAutoSwitch.DefineMeshGroup(VC_GRP_Sw_P2_09);
 
-	/*MainPanelVC.AddSwitch(&TowerJett1Switch, AID_VC_SWITCH_P2_10);
+	MainPanelVC.AddSwitch(&TowerJett1Switch, AID_VC_SWITCH_P2_10);
 	TowerJett1Switch.SetReference(P2_TOGGLE_POS[9], P2_COVERS_POS[5], _V(1, 0, 0), _V(1, 0, 0));
 	TowerJett1Switch.DefineMeshGroup(VC_GRP_Sw_P2_10, VC_GRP_SwitchCover_P2_06);
 
 	MainPanelVC.AddSwitch(&TowerJett2Switch, AID_VC_SWITCH_P2_11);
 	TowerJett2Switch.SetReference(P2_TOGGLE_POS[10], P2_COVERS_POS[6], _V(1, 0, 0), _V(1, 0, 0));
-	TowerJett2Switch.DefineMeshGroup(VC_GRP_Sw_P2_11, VC_GRP_SwitchCover_P2_07);*/
+	TowerJett2Switch.DefineMeshGroup(VC_GRP_Sw_P2_11, VC_GRP_SwitchCover_P2_07);
 
 	MainPanelVC.AddSwitch(&LVGuidanceSwitch, AID_VC_SWITCH_P2_12);
 	LVGuidanceSwitch.SetReference(P2_TOGGLE_POS[11], P2_COVERS_POS[7], _V(1, 0, 0), _V(1, 0, 0));
@@ -1391,9 +1391,9 @@ void Saturn::DefineVCAnimations()
 	MainReleaseSwitch.SetReference(P2_TOGGLE_POS[14], P2_COVERS_POS[9], _V(1, 0, 0), _V(1, 0, 0));
 	MainReleaseSwitch.DefineMeshGroup(VC_GRP_Sw_P2_15, VC_GRP_SwitchCover_P2_10);
 
-	/*MainPanelVC.AddSwitch(&DockingProbeExtdRelSwitch, AID_VC_SWITCH_P2_16);
+	MainPanelVC.AddSwitch(&DockingProbeExtdRelSwitch, AID_VC_SWITCH_P2_16);
 	DockingProbeExtdRelSwitch.SetReference(P2_TOGGLE_POS[15], P2_COVERS_POS[10], _V(1, 0, 0), _V(1, 0, 0));
-	DockingProbeExtdRelSwitch.DefineMeshGroup(VC_GRP_Sw_P2_16, VC_GRP_SwitchCover_P2_11);*/
+	DockingProbeExtdRelSwitch.DefineMeshGroup(VC_GRP_Sw_P2_16, VC_GRP_SwitchCover_P2_11);
 
 	MainPanelVC.AddSwitch(&DockingProbeRetractPrimSwitch, AID_VC_SWITCH_P2_17);
 	DockingProbeRetractPrimSwitch.SetReference(P2_TOGGLE_POS[16], _V(1, 0, 0));
