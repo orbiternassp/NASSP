@@ -45,6 +45,130 @@
 #include "papi.h"
 #include "CM_VC_Resource.h"
 
+// ==============================================================
+// VC Constants
+// ==============================================================
+
+// Panel tilt
+const double P1_3_TILT = 18.4 * RAD;
+
+// Number of switches on each panel
+const int	P1_SWITCHCOUNT = 48;
+const int	P2_SWITCHCOUNT = 90;
+
+// Number of push buttons
+const int   P1_PUSHBCOUNT = 8;
+const int   P2_PUSHBCOUNT = 19;
+
+// Number of switch covers
+const int   P1_SWITCHCOVERCOUNT = 15;
+const int   P2_SWITCHCOVERCOUNT = 12;
+
+// Number of rotaries
+const int	 P1_ROTCOUNT = 1;
+const int	 P2_ROTCOUNT = 4;
+
+// Number of thumbwheels
+const int	 P1_TWCOUNT = 2;
+
+// Number of needles
+const int	 P1_NEEDLECOUNT = 4;
+
+// Switch clickspot offset
+const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*sin(P1_3_TILT - (90.0 * RAD)) };
+
+// Rotary/Needle rotation axises
+const VECTOR3	P1_3_ROT_AXIS = { 0.00, sin(P1_3_TILT),-cos(P1_3_TILT) };
+const VECTOR3	SEQS_COVER_AXIS_L = { -0.00, -sin(P1_3_TILT + (90.0 * RAD)), cos(P1_3_TILT + (90.0 * RAD)) };
+const VECTOR3	SEQS_COVER_AXIS_R = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
+const VECTOR3	TW_SPSYAW_AXIS = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
+
+// Pushbutton vectors
+const VECTOR3	P1_3_PB_VECT = { 0.00, 0.002*cos(P1_3_TILT + (90.0 * RAD)), 0.002*sin(P1_3_TILT + (90.0 * RAD)) };
+
+// Panel 1 rotaries
+const VECTOR3 P1_ROT_POS[P1_ROTCOUNT] = {
+	{-0.6834, 0.8195, 0.3925}
+};
+
+// Panel 2 rotaries
+const VECTOR3 P2_ROT_POS[P2_ROTCOUNT] = {
+	{0.0297, 0.7256, 0.3614}, { 0.0297, 0.6477, 0.3354 }, { 0.3195, 0.4008, 0.2527 }, { 0.3974, 0.4010, 0.2527 }
+};
+
+// Panel 1 switches
+const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
+{-0.7016, 0.7637, 0.3847}, {-0.8518, 0.6303, 0.3430}, {-0.8983, 0.5705, 0.3200}, {-0.8724, 0.5705, 0.3200}, {-0.8132, 0.5705, 0.3200},
+{-0.7873, 0.5705, 0.3200}, {-0.9430, 0.5160, 0.3017}, {-0.9171, 0.5160, 0.3017}, {-0.8914, 0.5160, 0.3017}, {-0.8656, 0.5160, 0.3017},
+{-0.8399, 0.5160, 0.3017}, {-0.8141, 0.5160, 0.3017}, {-0.7885, 0.5160, 0.3017}, {-0.9943, 0.4533, 0.2807}, {-0.9588, 0.4533, 0.2807},
+{-0.9237, 0.4533, 0.2807}, {-0.8826, 0.4533, 0.2807}, {-0.8273, 0.4533, 0.2807}, {-0.8014, 0.4533, 0.2807}, {-0.9816, 0.4031, 0.2640},
+{-0.9529, 0.4031, 0.2640}, {-0.9224, 0.4031, 0.2640}, {-0.7916, 0.3850, 0.2580}, {-0.7342, 0.3850, 0.2580}, {-0.8293, 0.3254, 0.2379},
+{-0.8035, 0.3254, 0.2379}, {-0.7738, 0.3254, 0.2379}, {-0.7446, 0.3254, 0.2379}, {-0.7151, 0.3254, 0.2379}, {-0.6855, 0.3254, 0.2379},
+{-0.6361, 0.3254, 0.2379}, {-0.6097, 0.3254, 0.2379}, {-0.5832, 0.3254, 0.2379}, {-0.5573, 0.3254, 0.2379}, {-0.5315, 0.3254, 0.2379},
+{-0.5042, 0.3254, 0.2379}, {-0.8827, 0.2762, 0.2214}, {-0.8556, 0.2762, 0.2214}, {-0.8296, 0.2762, 0.2214}, {-0.8035, 0.2762, 0.2214},
+{-0.7778, 0.2762, 0.2214}, {-0.7521, 0.2762, 0.2214}, {-0.7264, 0.2762, 0.2214}, {-0.5853, 0.2762, 0.2214}, {-0.5591, 0.2762, 0.2214},
+{-0.5339, 0.2762, 0.2214},{-0.5077, 0.2762, 0.2214}, {-0.508397, 0.798359, 0.406069}
+};
+
+// Panel 1 push-buttons
+const VECTOR3 P1_PUSHB_POS[P1_PUSHBCOUNT] = {
+	{-0.5622, 0.4689, 0.2789}, {-0.5623, 0.4425, 0.2701}, {-0.5623, 0.4163, 0.2613}, {-0.5623, 0.3901, 0.2526}, {-0.4982, 0.4687, 0.2788},
+	{-0.4981, 0.4425, 0.2701}, {-0.4981, 0.4163, 0.2613}, {-0.4982, 0.3903, 0.2526}
+};
+
+// Panel 1 thumbwheels
+const VECTOR3 P1_TW_POS[P1_TWCOUNT] = {
+	{-0.669255, 0.382236, 0.280385}, {-0.613206, 0.382088, 0.280445}
+};
+
+// Panel 1 needles
+const VECTOR3 P1_NEEDLE_POS[P1_NEEDLECOUNT] = {
+	{-0.640937, 0.4098, 0.355623}, {-0.640937, 0.4098, 0.355623}, {-0.640937, 0.4098, 0.355623}, {-0.640937, 0.4098, 0.355623}
+};
+
+// Panel 2 switches
+const VECTOR3 P2_TOGGLE_POS[P2_SWITCHCOUNT] = {
+{-0.4057, 0.4478, 0.2790}, {-0.3799, 0.4478, 0.2790}, {-0.3533, 0.4478, 0.2790}, {-0.3271, 0.4478, 0.2790}, {-0.3007, 0.4478, 0.2790},
+{-0.2745, 0.4478, 0.2790}, {-0.4323, 0.3955, 0.2615}, {-0.4029, 0.3955, 0.2615}, {-0.3668, 0.3955, 0.2615}, {-0.3324, 0.3955, 0.2615},
+{-0.3017, 0.3955, 0.2615}, {-0.4313, 0.3325, 0.2403}, {-0.4027, 0.3325, 0.2403}, {-0.3743, 0.3325, 0.2403}, {-0.4321, 0.2813, 0.2232},
+{-0.2246, 0.8341, 0.4082}, {-0.1988, 0.8341, 0.4082}, {-0.1731, 0.8341, 0.4082}, {-0.1473, 0.8341, 0.4082}, {-0.1131, 0.8341, 0.4082},
+{-0.0808, 0.8341, 0.4082}, {-0.0430, 0.8341, 0.4082}, {-0.1072, 0.7482, 0.3795}, {-0.0814, 0.7482, 0.3795}, {-0.0556, 0.7482, 0.3795},
+{-0.0299, 0.7482, 0.3795}, {-0.2115, 0.6588, 0.3496}, {-0.1854, 0.6588, 0.3496}, {-0.1594, 0.6588, 0.3496}, {-0.1330, 0.6588, 0.3496},
+{-0.1071, 0.6588, 0.3496}, {-0.0813, 0.6588, 0.3496}, {-0.0557, 0.6588, 0.3496}, {-0.0298, 0.6588, 0.3496}, {-0.2103, 0.5845, 0.3247},
+{-0.1845, 0.5845, 0.3247}, {-0.1587, 0.5845, 0.3247}, {-0.1330, 0.5845, 0.3247}, {-0.1072, 0.5845, 0.3247}, {-0.0814, 0.5845, 0.3247},
+{-0.0557, 0.5845, 0.3247}, {-0.0299, 0.5845, 0.3247}, {-0.2103, 0.5106, 0.3000}, {-0.1846, 0.5106, 0.3000}, {-0.1588, 0.5106, 0.3000},
+{-0.1330, 0.5106, 0.3000}, {-0.1072, 0.5106, 0.3000}, {-0.0814, 0.5106, 0.3000}, {-0.0556, 0.5106, 0.3000}, {-0.0299, 0.5106, 0.3000},
+{0.1531, 0.8225, 0.4044}, {0.1788, 0.8225, 0.4044}, {0.2046, 0.8225, 0.4044}, {0.0907, 0.7652, 0.3852}, {0.1194, 0.7652, 0.3852},
+{0.1488, 0.7652, 0.3852}, {0.1746, 0.7652, 0.3852}, {0.2004, 0.7652, 0.3852}, {0.0889, 0.7141, 0.3681}, {0.1243, 0.7141, 0.3681},
+{0.1572, 0.7141, 0.3681}, {0.1830, 0.7141, 0.3681}, {0.2088, 0.7141, 0.3681}, {0.2388, 0.7141, 0.3681}, {0.2646, 0.7141, 0.3681},
+{0.2982, 0.7141, 0.3681}, {0.3366, 0.7141, 0.3681}, {0.3755, 0.7141, 0.3681}, {0.4133, 0.7141, 0.3681}, {0.0193, 0.5702, 0.3200},
+{0.0493, 0.5702, 0.3200}, {0.0793, 0.5702, 0.3200}, {0.1093, 0.5702, 0.3200}, {0.1351, 0.5702, 0.3200}, {0.0139, 0.5104, 0.2999},
+{0.0397, 0.5104, 0.2999}, {0.0655, 0.5104, 0.2999}, {0.0912, 0.5104, 0.2999}, {0.1171, 0.5104, 0.2999}, {0.1465, 0.5104, 0.2999},
+{0.1758, 0.5104, 0.2999}, {0.2016, 0.5104, 0.2999}, {0.2322, 0.5104, 0.2999}, {0.2604, 0.5104, 0.2999}, {0.2874, 0.5104, 0.2999},
+{0.3173, 0.5104, 0.2999}, {0.2526, 0.4565, 0.2819}, {0.2784, 0.4565, 0.2819}, {0.3701, 0.3348, 0.2411}, {0.3959, 0.3348, 0.2411}
+};
+
+// Panel 2 push-buttons
+const VECTOR3 P2_PUSHB_POS[P2_PUSHBCOUNT] = {
+	{-0.4100, 0.5333, 0.3029}, {-0.4101, 0.5117, 0.2957}, {-0.3850, 0.5444, 0.3066}, {-0.3850, 0.5221, 0.2991}, {-0.3850, 0.5000, 0.2917},
+	{-0.3614, 0.5001, 0.2918}, {-0.3367, 0.5002, 0.2918}, {-0.3120, 0.5003, 0.2918}, {-0.3615, 0.5222, 0.2992}, {-0.3367, 0.5223, 0.2992},
+	{-0.3120, 0.5224, 0.2992}, {-0.3615, 0.5444, 0.3066}, {-0.3368, 0.5444, 0.3066}, {-0.3121, 0.5444, 0.3066}, {-0.2884, 0.5444, 0.3066},
+	{-0.2883, 0.5224, 0.2993}, {-0.2881, 0.5003, 0.2919}, {-0.2632, 0.5330, 0.3028}, {-0.2630, 0.5113, 0.2955}
+};
+
+// Switch Covers
+const VECTOR3 P1_COVERS_POS[P1_SWITCHCOVERCOUNT] = {
+{-0.523385, 0.837354, 0.401598}, {-0.897739, 0.291494, 0.218991}, {-0.807395, 0.400065, 0.255313}, {-0.807395, 0.400065, 0.255313}, {-0.650851, 0.339981, 0.235209}, 
+{-0.650851, 0.339981, 0.235209}, {-0.650851, 0.339981, 0.235209}, {-0.530182, 0.427677, 0.267877}, {-0.530182, 0.427677, 0.267877}, {-0.530182, 0.427677, 0.267877}, 
+{-0.530182, 0.427677, 0.267877}, {-0.530182, 0.427677, 0.267877}, {-0.530182, 0.427677, 0.267877}, {-0.530182, 0.427677, 0.267877}, {-0.530182, 0.427677, 0.267877}
+};
+
+const VECTOR3 P2_COVERS_POS[P2_SWITCHCOVERCOUNT] = {
+{-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106}, {-0.42006, 0.46232, 0.276106}, 
+{-0.342684, 0.413289, 0.259907}, {-0.342684, 0.413289, 0.259907}, {-0.412789, 0.34966, 0.238427}, {-0.412789, 0.34966, 0.238427}, {-0.447372, 0.295628, 0.220297}, 
+{-0.234966, 0.851656, 0.406449}, {-0.169936, 0.675647, 0.347563}
+};
+
 extern GDIParams g_Param;
 
 void Saturn::InitVC()
@@ -128,6 +252,35 @@ void Saturn::InitVC()
 
 	// Panel 3
 	oapiVCRegisterArea(AID_VC_MASTER_ALARM2, _R(433, 1339, 478, 1375), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	// Initialize surfaces
+
+	SMRCSHelium1ATalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSHelium1BTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSHelium1CTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSHelium1DTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+
+	SMRCSHelium2ATalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSHelium2BTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSHelium2CTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSHelium2DTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+
+	SMRCSProp1ATalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSProp1BTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSProp1CTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSProp1DTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+
+	CMRCSProp1Talkback.InitVC(srf[SRF_VC_INDICATOR]);
+	CMRCSProp2Talkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSProp2ATalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSProp2BTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSProp2CTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+	SMRCSProp2DTalkback.InitVC(srf[SRF_VC_INDICATOR]);
+
+	EcsRadiatorIndicator.InitVC(srf[SRF_VC_ECSINDICATOR]);
+
+	DockingProbeAIndicator.InitVC(srf[SRF_VC_INDICATOR]);
+	DockingProbeBIndicator.InitVC(srf[SRF_VC_INDICATOR]);
 
 }
 
@@ -256,8 +409,6 @@ void Saturn::RegisterActiveAreas() {
 
 	sprintf(oapiDebugString(), "OFS %lf", ofs.z);
 
-	MainPanelVC.ClearSwitches();
-
 	//
 	// Register active areas for switches/animations here
 	//
@@ -267,16 +418,16 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_FDAI_RIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Panel 1
-	for (i = 0; i < P1_SWITCHCOUNT_C; i++)
+	for (i = 0; i < P1_SWITCHCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS_C[i] + P1_3_CLICK + ofs, 0.006);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P1_01 + i, P1_TOGGLE_POS[i] + P1_3_CLICK + ofs, 0.006);
 	}
 
-	for (i = 0; i < P1_ROTCOUNT_C; i++)
+	for (i = 0; i < P1_ROTCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_ROT_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS_C[i] + ofs, 0.02);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS[i] + ofs, 0.02);
 	}
 
 	for (i = 0; i < P1_PUSHBCOUNT; i++)
@@ -285,10 +436,10 @@ void Saturn::RegisterActiveAreas() {
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P1_01 + i, P1_PUSHB_POS[i] + ofs, 0.008);
 	}
 
-	for (i = 0; i < P1_TWCOUNT_C; i++)
+	for (i = 0; i < P1_TWCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_TW_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P1_01 + i, P1_TW_POS_C[i] + ofs, 0.02);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P1_01 + i, P1_TW_POS[i] + ofs, 0.02);
 	}
 
 	oapiVCRegisterArea(AID_VC_EMS_DVSET, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED | PANEL_MOUSE_UP);
@@ -298,81 +449,19 @@ void Saturn::RegisterActiveAreas() {
 
 	oapiVCRegisterArea(AID_VC_PANEL1_NEEDLES, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
-	/*MainPanelVC.AddSwitch(&EMSModeSwitch, AID_VC_SWITCH_P1_01, &anim_P1switch[0]);
-	MainPanelVC.AddSwitch(&CMCAttSwitch, AID_VC_SWITCH_P1_02, &anim_P1switch[1]);
-	MainPanelVC.AddSwitch(&FDAIScaleSwitch, AID_VC_SWITCH_P1_03, &anim_P1switch[2]);
-	MainPanelVC.AddSwitch(&FDAISelectSwitch, AID_VC_SWITCH_P1_04, &anim_P1switch[3]);
-	MainPanelVC.AddSwitch(&FDAISourceSwitch, AID_VC_SWITCH_P1_05, &anim_P1switch[4]);
-	MainPanelVC.AddSwitch(&FDAIAttSetSwitch, AID_VC_SWITCH_P1_06, &anim_P1switch[5]);
-	MainPanelVC.AddSwitch(&ManualAttRollSwitch, AID_VC_SWITCH_P1_07, &anim_P1switch[6]);
-	MainPanelVC.AddSwitch(&ManualAttPitchSwitch, AID_VC_SWITCH_P1_08, &anim_P1switch[7]);
-	MainPanelVC.AddSwitch(&ManualAttYawSwitch, AID_VC_SWITCH_P1_09, &anim_P1switch[8]);
-	MainPanelVC.AddSwitch(&LimitCycleSwitch, AID_VC_SWITCH_P1_10, &anim_P1switch[9]);
-	MainPanelVC.AddSwitch(&AttDeadbandSwitch, AID_VC_SWITCH_P1_11, &anim_P1switch[10]);
-	MainPanelVC.AddSwitch(&AttRateSwitch, AID_VC_SWITCH_P1_12, &anim_P1switch[11]);
-	MainPanelVC.AddSwitch(&TransContrSwitch, AID_VC_SWITCH_P1_13, &anim_P1switch[12]);
-	MainPanelVC.AddSwitch(&RotPowerNormal1Switch, AID_VC_SWITCH_P1_14, &anim_P1switch[13]);
-	MainPanelVC.AddSwitch(&RotPowerNormal2Switch, AID_VC_SWITCH_P1_15, &anim_P1switch[14]);
-	MainPanelVC.AddSwitch(&RotPowerDirect1Switch, AID_VC_SWITCH_P1_16, &anim_P1switch[15]);
-	MainPanelVC.AddSwitch(&RotPowerDirect2Switch, AID_VC_SWITCH_P1_17, &anim_P1switch[16]);
-	MainPanelVC.AddSwitch(&SCContSwitch, AID_VC_SWITCH_P1_18, &anim_P1switch[17]);
-	MainPanelVC.AddSwitch(&CMCModeSwitch, AID_VC_SWITCH_P1_19, &anim_P1switch[18]);
-	MainPanelVC.AddSwitch(&BMAGRollSwitch, AID_VC_SWITCH_P1_20, &anim_P1switch[19]);
-	MainPanelVC.AddSwitch(&BMAGPitchSwitch, AID_VC_SWITCH_P1_21, &anim_P1switch[20]);
-	MainPanelVC.AddSwitch(&BMAGYawSwitch, AID_VC_SWITCH_P1_22, &anim_P1switch[21]);
-	MainPanelVC.AddSwitch(&dVThrust1Switch, AID_VC_SWITCH_P1_23, &anim_P1switch[22]);
-	MainPanelVC.AddSwitch(&dVThrust2Switch, AID_VC_SWITCH_P1_24, &anim_P1switch[23]);
-	MainPanelVC.AddSwitch(&SCSTvcPitchSwitch, AID_VC_SWITCH_P1_25, &anim_P1switch[24]);
-	MainPanelVC.AddSwitch(&SCSTvcYawSwitch, AID_VC_SWITCH_P1_26, &anim_P1switch[25]);
-	MainPanelVC.AddSwitch(&Pitch1Switch, AID_VC_SWITCH_P1_27, &anim_P1switch[26]);
-	MainPanelVC.AddSwitch(&Pitch2Switch, AID_VC_SWITCH_P1_28, &anim_P1switch[27]);
-	MainPanelVC.AddSwitch(&Yaw1Switch, AID_VC_SWITCH_P1_29, &anim_P1switch[28]);
-	MainPanelVC.AddSwitch(&Yaw2Switch, AID_VC_SWITCH_P1_30, &anim_P1switch[29]);
-	MainPanelVC.AddSwitch(&CGSwitch, AID_VC_SWITCH_P1_31, &anim_P1switch[30]);
-	MainPanelVC.AddSwitch(&ELSLogicSwitch, AID_VC_SWITCH_P1_32, &anim_P1switch[31]);
-	MainPanelVC.AddSwitch(&ELSAutoSwitch, AID_VC_SWITCH_P1_33, &anim_P1switch[32]);
-	MainPanelVC.AddSwitch(&CMRCSLogicSwitch, AID_VC_SWITCH_P1_34, &anim_P1switch[33]);
-	MainPanelVC.AddSwitch(&CMPropDumpSwitch, AID_VC_SWITCH_P1_35, &anim_P1switch[34]);
-	MainPanelVC.AddSwitch(&CMPropPurgeSwitch, AID_VC_SWITCH_P1_36, &anim_P1switch[35]);
-	MainPanelVC.AddSwitch(&IMUGuardedCageSwitch, AID_VC_SWITCH_P1_37, &anim_P1switch[36]);
-	MainPanelVC.AddSwitch(&EMSRollSwitch, AID_VC_SWITCH_P1_38, &anim_P1switch[37]);
-	MainPanelVC.AddSwitch(&GSwitch, AID_VC_SWITCH_P1_39, &anim_P1switch[38]);
-	MainPanelVC.AddSwitch(&LVSPSPcIndicatorSwitch, AID_VC_SWITCH_P1_40, &anim_P1switch[39]);
-	MainPanelVC.AddSwitch(&LVFuelTankPressIndicatorSwitch, AID_VC_SWITCH_P1_41, &anim_P1switch[40]);
-	MainPanelVC.AddSwitch(&TVCGimbalDrivePitchSwitch, AID_VC_SWITCH_P1_42, &anim_P1switch[41]);
-	MainPanelVC.AddSwitch(&TVCGimbalDriveYawSwitch, AID_VC_SWITCH_P1_43, &anim_P1switch[42]);
-	MainPanelVC.AddSwitch(&EventTimerUpDownSwitch, AID_VC_SWITCH_P1_44, &anim_P1switch[43]);
-	MainPanelVC.AddSwitch(&EventTimerContSwitch, AID_VC_SWITCH_P1_45, &anim_P1switch[44]);
-	MainPanelVC.AddSwitch(&EventTimerMinutesSwitch, AID_VC_SWITCH_P1_46, &anim_P1switch[45]);
-	MainPanelVC.AddSwitch(&EventTimerSecondsSwitch, AID_VC_SWITCH_P1_47, &anim_P1switch[46]);
-	MainPanelVC.AddSwitch(&GTASwitch, AID_VC_SWITCH_P1_48, &anim_P1switch[47]);
-
-	MainPanelVC.AddSwitch(&EMSFunctionSwitch, AID_VC_ROT_P1_01, &anim_P1rot[0]);
-
-	MainPanelVC.AddSwitch(&LiftoffNoAutoAbortSwitch, AID_VC_PUSHB_P1_01, &anim_P1pushbuttons[0]);
-	MainPanelVC.AddSwitch(&LesMotorFireSwitch, AID_VC_PUSHB_P1_02, &anim_P1pushbuttons[1]);
-	MainPanelVC.AddSwitch(&CanardDeploySwitch, AID_VC_PUSHB_P1_03, &anim_P1pushbuttons[2]);
-	MainPanelVC.AddSwitch(&CsmLvSepSwitch, AID_VC_PUSHB_P1_04, &anim_P1pushbuttons[3]);
-	MainPanelVC.AddSwitch(&ApexCoverJettSwitch, AID_VC_PUSHB_P1_05, &anim_P1pushbuttons[4]);
-	MainPanelVC.AddSwitch(&DrogueDeploySwitch, AID_VC_PUSHB_P1_06, &anim_P1pushbuttons[5]);
-	MainPanelVC.AddSwitch(&MainDeploySwitch, AID_VC_PUSHB_P1_07, &anim_P1pushbuttons[6]);
-	MainPanelVC.AddSwitch(&CmRcsHeDumpSwitch, AID_VC_PUSHB_P1_08, &anim_P1pushbuttons[7]);
-
-	MainPanelVC.AddSwitch(&SPSGimbalPitchThumbwheel, AID_VC_TW_P1_01, &anim_P1thumbwheels[0]);
-	MainPanelVC.AddSwitch(&SPSGimbalYawThumbwheel, AID_VC_TW_P1_02, &anim_P1thumbwheels[1]);
 
 	//Panel 2
 
-	for (i = 0; i < P2_SWITCHCOUNT_C; i++)
+	for (i = 0; i < P2_SWITCHCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_SWITCH_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS_C[i] + P1_3_CLICK + ofs, 0.008);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS[i] + P1_3_CLICK + ofs, 0.008);
 	}
 
-	for (i = 0; i < P2_ROTCOUNT_C; i++)
+	for (i = 0; i < P2_ROTCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_ROT_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS_C[i] + ofs, 0.02);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + ofs, 0.02);
 	}
 
 	for (i = 0; i < P2_PUSHBCOUNT; i++)
@@ -381,156 +470,10 @@ void Saturn::RegisterActiveAreas() {
 		oapiVCSetAreaClickmode_Spherical(AID_VC_PUSHB_P2_01 + i, P2_PUSHB_POS[i] + ofs, 0.008);
 	}
 
-	MainPanelVC.AddSwitch(&EDSSwitch, AID_VC_SWITCH_P2_01, &anim_P2switch[0]);
-	MainPanelVC.AddSwitch(&CsmLmFinalSep1Switch, AID_VC_SWITCH_P2_02, &anim_P2switch[1]);
-	MainPanelVC.AddSwitch(&CsmLmFinalSep2Switch, AID_VC_SWITCH_P2_03, &anim_P2switch[2]);
-	MainPanelVC.AddSwitch(&CmSmSep1Switch, AID_VC_SWITCH_P2_04, &anim_P2switch[3]);
-	MainPanelVC.AddSwitch(&CmSmSep2Switch, AID_VC_SWITCH_P2_05, &anim_P2switch[4]);
-	MainPanelVC.AddSwitch(&SIVBPayloadSepSwitch, AID_VC_SWITCH_P2_06, &anim_P2switch[5]);
-	MainPanelVC.AddSwitch(&PropDumpAutoSwitch, AID_VC_SWITCH_P2_07, &anim_P2switch[6]);
-	MainPanelVC.AddSwitch(&TwoEngineOutAutoSwitch, AID_VC_SWITCH_P2_08, &anim_P2switch[7]);
-	MainPanelVC.AddSwitch(&LVRateAutoSwitch, AID_VC_SWITCH_P2_09, &anim_P2switch[8]);
-	MainPanelVC.AddSwitch(&TowerJett1Switch, AID_VC_SWITCH_P2_10, &anim_P2switch[9]);
-	MainPanelVC.AddSwitch(&TowerJett2Switch, AID_VC_SWITCH_P2_11, &anim_P2switch[10]);
-	MainPanelVC.AddSwitch(&LVGuidanceSwitch, AID_VC_SWITCH_P2_12, &anim_P2switch[11]);
-	MainPanelVC.AddSwitch(&SIISIVBSepSwitch, AID_VC_SWITCH_P2_13, &anim_P2switch[12]);
-	MainPanelVC.AddSwitch(&TLIEnableSwitch, AID_VC_SWITCH_P2_14, &anim_P2switch[13]);
-	MainPanelVC.AddSwitch(&MainReleaseSwitch, AID_VC_SWITCH_P2_15, &anim_P2switch[14]);
-	MainPanelVC.AddSwitch(&DockingProbeExtdRelSwitch, AID_VC_SWITCH_P2_16, &anim_P2switch[15]);
-	MainPanelVC.AddSwitch(&DockingProbeRetractPrimSwitch, AID_VC_SWITCH_P2_17, &anim_P2switch[16]);
-	MainPanelVC.AddSwitch(&DockingProbeRetractSecSwitch, AID_VC_SWITCH_P2_18, &anim_P2switch[17]);
-	MainPanelVC.AddSwitch(&RunEVALightSwitch, AID_VC_SWITCH_P2_19, &anim_P2switch[18]);
-	MainPanelVC.AddSwitch(&RndzLightSwitch, AID_VC_SWITCH_P2_20, &anim_P2switch[19]);
-	MainPanelVC.AddSwitch(&TunnelLightSwitch, AID_VC_SWITCH_P2_21, &anim_P2switch[20]);
-	MainPanelVC.AddSwitch(&LMPowerSwitch, AID_VC_SWITCH_P2_22, &anim_P2switch[21]);
-	MainPanelVC.AddSwitch(&SMRCSHelium1ASwitch, AID_VC_SWITCH_P2_23, &anim_P2switch[22]);
-	MainPanelVC.AddSwitch(&SMRCSHelium1BSwitch, AID_VC_SWITCH_P2_24, &anim_P2switch[23]);
-	MainPanelVC.AddSwitch(&SMRCSHelium1CSwitch, AID_VC_SWITCH_P2_25, &anim_P2switch[24]);
-	MainPanelVC.AddSwitch(&SMRCSHelium1DSwitch, AID_VC_SWITCH_P2_26, &anim_P2switch[25]);
-	MainPanelVC.AddSwitch(&CMUplinkSwitch, AID_VC_SWITCH_P2_27, &anim_P2switch[26]);
-	MainPanelVC.AddSwitch(&IUUplinkSwitch, AID_VC_SWITCH_P2_28, &anim_P2switch[27]);
-	MainPanelVC.AddSwitch(&CMRCSPressSwitch, AID_VC_SWITCH_P2_29, &anim_P2switch[28]);
-	MainPanelVC.AddSwitch(&SMRCSIndSwitch, AID_VC_SWITCH_P2_30, &anim_P2switch[29]);
-	MainPanelVC.AddSwitch(&SMRCSHelium2ASwitch, AID_VC_SWITCH_P2_31, &anim_P2switch[30]);
-	MainPanelVC.AddSwitch(&SMRCSHelium2BSwitch, AID_VC_SWITCH_P2_32, &anim_P2switch[31]);
-	MainPanelVC.AddSwitch(&SMRCSHelium2CSwitch, AID_VC_SWITCH_P2_33, &anim_P2switch[32]);
-	MainPanelVC.AddSwitch(&SMRCSHelium2DSwitch, AID_VC_SWITCH_P2_34, &anim_P2switch[33]);
-	MainPanelVC.AddSwitch(&SMRCSHeaterASwitch, AID_VC_SWITCH_P2_35, &anim_P2switch[34]);
-	MainPanelVC.AddSwitch(&SMRCSHeaterBSwitch, AID_VC_SWITCH_P2_36, &anim_P2switch[35]);
-	MainPanelVC.AddSwitch(&SMRCSHeaterCSwitch, AID_VC_SWITCH_P2_37, &anim_P2switch[36]);
-	MainPanelVC.AddSwitch(&SMRCSHeaterDSwitch, AID_VC_SWITCH_P2_38, &anim_P2switch[37]);
-	MainPanelVC.AddSwitch(&SMRCSProp1ASwitch, AID_VC_SWITCH_P2_39, &anim_P2switch[38]);
-	MainPanelVC.AddSwitch(&SMRCSProp1BSwitch, AID_VC_SWITCH_P2_40, &anim_P2switch[39]);
-	MainPanelVC.AddSwitch(&SMRCSProp1CSwitch, AID_VC_SWITCH_P2_41, &anim_P2switch[40]);
-	MainPanelVC.AddSwitch(&SMRCSProp1DSwitch, AID_VC_SWITCH_P2_42, &anim_P2switch[41]);
-	MainPanelVC.AddSwitch(&RCSCMDSwitch, AID_VC_SWITCH_P2_43, &anim_P2switch[42]);
-	MainPanelVC.AddSwitch(&RCSTrnfrSwitch, AID_VC_SWITCH_P2_44, &anim_P2switch[43]);
-	MainPanelVC.AddSwitch(&CMRCSProp1Switch, AID_VC_SWITCH_P2_45, &anim_P2switch[44]);
-	MainPanelVC.AddSwitch(&CMRCSProp2Switch, AID_VC_SWITCH_P2_46, &anim_P2switch[45]);
-	MainPanelVC.AddSwitch(&SMRCSProp2ASwitch, AID_VC_SWITCH_P2_47, &anim_P2switch[46]);
-	MainPanelVC.AddSwitch(&SMRCSProp2BSwitch, AID_VC_SWITCH_P2_48, &anim_P2switch[47]);
-	MainPanelVC.AddSwitch(&SMRCSProp2CSwitch, AID_VC_SWITCH_P2_49, &anim_P2switch[48]);
-	MainPanelVC.AddSwitch(&SMRCSProp2DSwitch, AID_VC_SWITCH_P2_50, &anim_P2switch[49]);
-	MainPanelVC.AddSwitch(&MissionTimerHoursSwitch, AID_VC_SWITCH_P2_51, &anim_P2switch[50]);
-	MainPanelVC.AddSwitch(&MissionTimerMinutesSwitch, AID_VC_SWITCH_P2_52, &anim_P2switch[51]);
-	MainPanelVC.AddSwitch(&MissionTimerSecondsSwitch, AID_VC_SWITCH_P2_53, &anim_P2switch[52]);
-	MainPanelVC.AddSwitch(&CautionWarningModeSwitch, AID_VC_SWITCH_P2_54, &anim_P2switch[53]);
-	MainPanelVC.AddSwitch(&CautionWarningCMCSMSwitch, AID_VC_SWITCH_P2_55, &anim_P2switch[54]);
-	MainPanelVC.AddSwitch(&CautionWarningPowerSwitch, AID_VC_SWITCH_P2_56, &anim_P2switch[55]);
-	MainPanelVC.AddSwitch(&CautionWarningLightTestSwitch, AID_VC_SWITCH_P2_57, &anim_P2switch[56]);
-	MainPanelVC.AddSwitch(&MissionTimerSwitch, AID_VC_SWITCH_P2_58, &anim_P2switch[57]);
-	MainPanelVC.AddSwitch(&CabinFan1Switch, AID_VC_SWITCH_P2_59, &anim_P2switch[58]);
-	MainPanelVC.AddSwitch(&CabinFan2Switch, AID_VC_SWITCH_P2_60, &anim_P2switch[59]);
-	MainPanelVC.AddSwitch(&H2Heater1Switch, AID_VC_SWITCH_P2_61, &anim_P2switch[60]);
-	MainPanelVC.AddSwitch(&H2Heater2Switch, AID_VC_SWITCH_P2_62, &anim_P2switch[61]);
-	MainPanelVC.AddSwitch(&O2Heater1Switch, AID_VC_SWITCH_P2_63, &anim_P2switch[62]);
-	MainPanelVC.AddSwitch(&O2Heater2Switch, AID_VC_SWITCH_P2_64, &anim_P2switch[63]);
-	MainPanelVC.AddSwitch(&O2PressIndSwitch, AID_VC_SWITCH_P2_65, &anim_P2switch[64]);
-	MainPanelVC.AddSwitch(&H2Fan1Switch, AID_VC_SWITCH_P2_66, &anim_P2switch[65]);
-	MainPanelVC.AddSwitch(&H2Fan2Switch, AID_VC_SWITCH_P2_67, &anim_P2switch[66]);
-	MainPanelVC.AddSwitch(&O2Fan1Switch, AID_VC_SWITCH_P2_68, &anim_P2switch[67]);
-	MainPanelVC.AddSwitch(&O2Fan2Switch, AID_VC_SWITCH_P2_69, &anim_P2switch[68]);
-	MainPanelVC.AddSwitch(&EcsRadiatorsFlowContAutoSwitch, AID_VC_SWITCH_P2_70, &anim_P2switch[69]);
-	MainPanelVC.AddSwitch(&EcsRadiatorsFlowContPwrSwitch, AID_VC_SWITCH_P2_71, &anim_P2switch[70]);
-	MainPanelVC.AddSwitch(&EcsRadiatorsManSelSwitch, AID_VC_SWITCH_P2_72, &anim_P2switch[71]);
-	MainPanelVC.AddSwitch(&EcsRadiatorsHeaterPrimSwitch, AID_VC_SWITCH_P2_73, &anim_P2switch[72]);
-	MainPanelVC.AddSwitch(&EcsRadiatorsHeaterSecSwitch, AID_VC_SWITCH_P2_74, &anim_P2switch[73]);
-	MainPanelVC.AddSwitch(&PotH2oHtrSwitch, AID_VC_SWITCH_P2_75, &anim_P2switch[74]);
-	MainPanelVC.AddSwitch(&SuitCircuitH2oAccumAutoSwitch, AID_VC_SWITCH_P2_76, &anim_P2switch[75]);
-	MainPanelVC.AddSwitch(&SuitCircuitH2oAccumOnSwitch, AID_VC_SWITCH_P2_77, &anim_P2switch[76]);
-	MainPanelVC.AddSwitch(&SuitCircuitHeatExchSwitch, AID_VC_SWITCH_P2_78, &anim_P2switch[77]);
-	MainPanelVC.AddSwitch(&SecCoolantLoopEvapSwitch, AID_VC_SWITCH_P2_79, &anim_P2switch[78]);
-	MainPanelVC.AddSwitch(&SecCoolantLoopPumpSwitch, AID_VC_SWITCH_P2_80, &anim_P2switch[79]);
-	MainPanelVC.AddSwitch(&H2oQtyIndSwitch, AID_VC_SWITCH_P2_81, &anim_P2switch[80]);
-	MainPanelVC.AddSwitch(&GlycolEvapTempInSwitch, AID_VC_SWITCH_P2_82, &anim_P2switch[81]);
-	MainPanelVC.AddSwitch(&GlycolEvapSteamPressAutoManSwitch, AID_VC_SWITCH_P2_83, &anim_P2switch[82]);
-	MainPanelVC.AddSwitch(&GlycolEvapSteamPressIncrDecrSwitch, AID_VC_SWITCH_P2_84, &anim_P2switch[83]);
-	MainPanelVC.AddSwitch(&GlycolEvapH2oFlowSwitch, AID_VC_SWITCH_P2_85, &anim_P2switch[84]);
-	MainPanelVC.AddSwitch(&CabinTempAutoManSwitch, AID_VC_SWITCH_P2_86, &anim_P2switch[85]);
-	MainPanelVC.AddSwitch(&GHATrackSwitch, AID_VC_SWITCH_P2_87, &anim_P2switch[86]);
-	MainPanelVC.AddSwitch(&GHABeamSwitch, AID_VC_SWITCH_P2_88, &anim_P2switch[87]);
-	MainPanelVC.AddSwitch(&GHAPowerSwitch, AID_VC_SWITCH_P2_89, &anim_P2switch[88]);
-	MainPanelVC.AddSwitch(&GHAServoElecSwitch, AID_VC_SWITCH_P2_90, &anim_P2switch[89]);
-
-	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P2_01, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P2_02, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchPlus, AID_VC_PUSHB_P2_03, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchMinus, AID_VC_PUSHB_P2_04, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchZero, AID_VC_PUSHB_P2_05, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchOne, AID_VC_PUSHB_P2_06, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchTwo, AID_VC_PUSHB_P2_07, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchThree, AID_VC_PUSHB_P2_08, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchFour, AID_VC_PUSHB_P2_09, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchFive, AID_VC_PUSHB_P2_10, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchSix, AID_VC_PUSHB_P2_11, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchSeven, AID_VC_PUSHB_P2_12, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchEight, AID_VC_PUSHB_P2_13, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchNine, AID_VC_PUSHB_P2_14, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchClear, AID_VC_PUSHB_P2_15, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P2_16, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P2_17, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18, NULL);
-	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19, NULL);
-
-	MainPanelVC.AddSwitch(&RCSIndicatorsSwitch, AID_VC_ROT_P2_01, &anim_P2rot[0]);
-	MainPanelVC.AddSwitch(&ECSIndicatorsSwitch, AID_VC_ROT_P2_02, &anim_P2rot[1]);
-	MainPanelVC.AddSwitch(&HighGainAntennaPitchPositionSwitch, AID_VC_ROT_P2_03, &anim_P2rot[2]);
-	MainPanelVC.AddSwitch(&HighGainAntennaYawPositionSwitch, AID_VC_ROT_P2_04, &anim_P2rot[3]);*/
-
 	// Panel 3
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM2, _V(0.720346, 0.621423, 0.332349) + ofs, 0.008);
 
-	// Switch Covers
-	/*IMUGuardedCageSwitch.InitGuardVC(anim_switchcovers[0]);
-	dVThrust1Switch.InitGuardVC(anim_switchcovers[1]);
-	dVThrust2Switch.InitGuardVC(anim_switchcovers[2]);
-	ELSLogicSwitch.InitGuardVC(anim_switchcovers[3]);
-	CMPropDumpSwitch.InitGuardVC(anim_switchcovers[4]);
-	CMPropPurgeSwitch.InitGuardVC(anim_switchcovers[5]);
-	CsmLmFinalSep1Switch.InitGuardVC(anim_switchcovers[6]);
-	CsmLmFinalSep2Switch.InitGuardVC(anim_switchcovers[7]);
-	CmSmSep1Switch.InitGuardVC(anim_switchcovers[8]);
-	CmSmSep2Switch.InitGuardVC(anim_switchcovers[9]);
-	SIVBPayloadSepSwitch.InitGuardVC(anim_switchcovers[10]);
-	TowerJett1Switch.InitGuardVC(anim_switchcovers[11]);
-	TowerJett2Switch.InitGuardVC(anim_switchcovers[12]);
-	LVGuidanceSwitch.InitGuardVC(anim_switchcovers[13]);
-	SIISIVBSepSwitch.InitGuardVC(anim_switchcovers[14]);
-	MainReleaseSwitch.InitGuardVC(anim_switchcovers[15]);
-	DockingProbeExtdRelSwitch.InitGuardVC(anim_switchcovers[16]);
-	CMRCSPressSwitch.InitGuardVC(anim_switchcovers[17]);
-	GTASwitch.InitGuardVC(anim_switchcovers[18]);*/
-
-	// SEQS switch covers
-	/*LiftoffNoAutoAbortSwitch.InitGuardVC(anim_switchcovers[19]);
-	LesMotorFireSwitch.InitGuardVC(anim_switchcovers[20]);
-	CanardDeploySwitch.InitGuardVC(anim_switchcovers[21]);
-	CsmLvSepSwitch.InitGuardVC(anim_switchcovers[22]);
-	ApexCoverJettSwitch.InitGuardVC(anim_switchcovers[23]);
-	DrogueDeploySwitch.InitGuardVC(anim_switchcovers[24]);
-	MainDeploySwitch.InitGuardVC(anim_switchcovers[25]);
-	CmRcsHeDumpSwitch.InitGuardVC(anim_switchcovers[26]);*/
 }
 
 // --------------------------------------------------------------
@@ -734,6 +677,10 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		cws.RenderLights(surf, srf[SRF_VC_CW_LIGHTS], false);
 		return true;
 
+	case AID_VC_SEQUENCERSWITCHES:
+		LiftoffNoAutoAbortSwitch.RepaintSwitchVC(surf, srf[SRF_VC_SEQUENCERSWITCHES]);
+		return true;
+
 	case AID_VC_SPS_LIGHT:
 		if (ems.SPSThrustLight()) {
 			oapiBlt(surf, srf[SRF_EMS_LIGHTS], 0, 0, 41, 16, 41, 16);
@@ -778,7 +725,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 	}
 
-	case AID_VC_EMS_RSI_BKGRND:
+	/*case AID_VC_EMS_RSI_BKGRND:
 	{
 		switch (ems.LiftVectLight()) {
 		case 1:
@@ -815,52 +762,9 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 			SetAnimation(anim_emsdvsetswitch, 0.5);
 			break;
 		}
-		return true;
+		return true;*/
 
-	/*case AID_VC_RCS_HELIUM1_TB:
-		SMRCSHelium1ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSHelium1BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSHelium1CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSHelium1DTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		return true;
-
-	case AID_VC_RCS_HELIUM2_TB:
-		SMRCSHelium2ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSHelium2BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSHelium2CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSHelium2DTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		return true;
-
-	case AID_VC_RCS_PROP1_TB:
-		SMRCSProp1ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSProp1BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSProp1CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSProp1DTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		return true;
-
-	case AID_VC_RCS_PROP2_TB:
-		CMRCSProp1Talkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		CMRCSProp2Talkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSProp2ATalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSProp2BTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSProp2CTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		SMRCSProp2DTalkback.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		return true;
-
-	case AID_VC_ECSRADIATORIND:
-		EcsRadiatorIndicator.DrawSwitchVC(surf, srf[SRF_VC_ECSINDICATOR]);
-		return true;
-
-	case AID_VC_DOCKINGPROBEIND:
-		DockingProbeAIndicator.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		DockingProbeBIndicator.DrawSwitchVC(surf, srf[SRF_VC_INDICATOR]);
-		return true;
-
-	case AID_VC_SEQUENCERSWITCHES:
-		LiftoffNoAutoAbortSwitch.RepaintSwitchVC(surf, srf[SRF_VC_SEQUENCERSWITCHES]);
-		return true;
-
-	case AID_VC_PANEL1_NEEDLES:
+	/*case AID_VC_PANEL1_NEEDLES:
 		GPFPIPitch1Meter.DoDrawSwitchVC(anim_P1needles[0]);
 		GPFPIPitch2Meter.DoDrawSwitchVC(anim_P1needles[1]);
 		GPFPIYaw1Meter.DoDrawSwitchVC(anim_P1needles[2]);
@@ -1153,17 +1057,6 @@ void Saturn::SetView(double offset, bool update_direction)
 
 void Saturn::InitVCAnimations() {
 
-	//anim_P11R1cbs[P11R1_CBCOUNT] = -1;
-
-	anim_P1switch[P1_SWITCHCOUNT_C] = -1;
-	anim_P1rot[P1_ROTCOUNT_C] = -1;
-	anim_P1pushbuttons[P1_PUSHBCOUNT] = -1;
-	anim_P1needles[P1_NEEDLECOUNT_C] = -1;
-	anim_P2switch[P2_SWITCHCOUNT_C] = -1;
-	anim_P2rot[P2_ROTCOUNT_C] = -1;
-	anim_RSI_indicator = -1;
-	anim_emsdvsetswitch = -1;
-	anim_switchcovers[SWITCHCOVERCOUNT_C] = -1;
 	anim_fdaiR_L = anim_fdaiR_R = -1;
 	anim_fdaiP_L = anim_fdaiP_R = -1;
 	anim_fdaiY_L = anim_fdaiY_R = -1;
@@ -1175,131 +1068,694 @@ void Saturn::InitVCAnimations() {
 	anim_fdaiYrate_L = anim_fdaiYrate_R = -1;
 }
 
-void Saturn::DeleteVCAnimations()
-{
-	int i = 0;
-
-	//for (i = 0; i < P11R1_CBCOUNT; i++) delete mgt_P11R1cbs[i];
-
-	for (i = 0; i < P1_SWITCHCOUNT_C; i++) delete mgt_P1switch[i];
-
-	for (i = 0; i < P1_ROTCOUNT_C; i++) delete mgt_P1Rot[i];
-
-	for (i = 0; i < P1_PUSHBCOUNT; i++) delete mgt_P1pushbuttons[i];
-
-	for (i = 0; i < P1_TWCOUNT_C; i++) delete mgt_P1thumbwheels[i];
-
-	for (i = 0; i < P1_NEEDLECOUNT_C; i++) delete mgt_P1needles[i];
-
-	for (i = 0; i < P2_SWITCHCOUNT_C; i++) delete mgt_P2switch[i];
-
-	for (i = 0; i < P2_ROTCOUNT_C; i++) delete mgt_P2Rot[i];
-
-	for (i = 0; i < SWITCHCOVERCOUNT_C; i++) delete mgt_switchcovers[i];
-}
-
 void Saturn::DefineVCAnimations()
 
 {
-	UINT mesh = vcidx;
+	MainPanelVC.ClearSwitches();
 
-	// Panel 1 switches/needles/rotaries/pushbuttons/thumbwheels
-	static UINT meshgroup_P1switches[P1_SWITCHCOUNT_C], meshgroup_P1pushbuttons[P1_PUSHBCOUNT], meshgroup_P1_Rots[P1_ROTCOUNT_C], meshgroup_P1thumbwheels[P1_TWCOUNT_C], meshgroup_P1needles[P1_NEEDLECOUNT_C];
-	for (int i = 0; i < P1_SWITCHCOUNT_C; i++)
-	{
-		meshgroup_P1switches[i] = VC_GRP_Sw_P1_01 + i;
-		mgt_P1switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1switches[i], 1, P1_TOGGLE_POS_C[i], _V(1, 0, 0), (float)PI / 4);
-		anim_P1switch[i] = CreateAnimation(0.5);
-		AddAnimationComponent(anim_P1switch[i], 0.0f, 1.0f, mgt_P1switch[i]);
-	}
+	// Panel 1
 
-	for (int i = 0; i < P1_PUSHBCOUNT; i++)
-	{
-		meshgroup_P1pushbuttons[i] = VC_GRP_PB_P1_01 + i;
-		mgt_P1pushbuttons[i] = new MGROUP_TRANSLATE(mesh, &meshgroup_P1pushbuttons[i], 1, P1_3_PB_VECT);
-		anim_P1pushbuttons[i] = CreateAnimation(0.0);
-		AddAnimationComponent(anim_P1pushbuttons[i], 0.0f, 1.0f, mgt_P1pushbuttons[i]);
-	}
+	MainPanelVC.AddSwitch(&EMSModeSwitch, AID_VC_SWITCH_P1_01);
+	EMSModeSwitch.SetReference(P1_TOGGLE_POS[0], _V(1, 0, 0));
+	EMSModeSwitch.DefineMeshGroup(VC_GRP_Sw_P1_01);
 
-	for (int i = 0; i < 1; i++)
-	{
-		meshgroup_P1thumbwheels[i] = VC_GRP_TW_P1_01 + i;
-		mgt_P1thumbwheels[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1thumbwheels[i], 1, P1_TW_POS_C[i], _V(1, 0, 0), (float)(RAD * 293));
-		anim_P1thumbwheels[i] = CreateAnimation(0.5);
-		AddAnimationComponent(anim_P1thumbwheels[i], 0.0f, 1.0f, mgt_P1thumbwheels[i]);
-	}
+	MainPanelVC.AddSwitch(&CMCAttSwitch, AID_VC_SWITCH_P1_02);
+	CMCAttSwitch.SetReference(P1_TOGGLE_POS[1], _V(1, 0, 0));
+	CMCAttSwitch.DefineMeshGroup(VC_GRP_Sw_P1_02);
 
-	for (int i = 1; i < P1_TWCOUNT_C; i++)
-	{
-		meshgroup_P1thumbwheels[i] = VC_GRP_TW_P1_01 + i;
-		mgt_P1thumbwheels[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1thumbwheels[i], 1, P1_TW_POS_C[i], TW_SPSYAW_AXIS, (float)(RAD * 293));
-		anim_P1thumbwheels[i] = CreateAnimation(0.5);
-		AddAnimationComponent(anim_P1thumbwheels[i], 0.0f, 1.0f, mgt_P1thumbwheels[i]);
-	}
+	MainPanelVC.AddSwitch(&FDAIScaleSwitch, AID_VC_SWITCH_P1_03);
+	FDAIScaleSwitch.SetReference(P1_TOGGLE_POS[2], _V(1, 0, 0));
+	FDAIScaleSwitch.DefineMeshGroup(VC_GRP_Sw_P1_03);
 
-	for (int i = 0; i < P1_ROTCOUNT_C; i++)
-	{
-		meshgroup_P1_Rots[i] = VC_GRP_Rot_P1_01 + i;
-		mgt_P1Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1_Rots[i], 1, P1_ROT_POS_C[i], P1_3_ROT_AXIS, (float)(RAD * 360));
-		anim_P1rot[i] = CreateAnimation(0.0);
-		AddAnimationComponent(anim_P1rot[i], 0.0f, 1.0f, mgt_P1Rot[i]);
-	}
+	MainPanelVC.AddSwitch(&FDAISelectSwitch, AID_VC_SWITCH_P1_04);
+	FDAISelectSwitch.SetReference(P1_TOGGLE_POS[3], _V(1, 0, 0));
+	FDAISelectSwitch.DefineMeshGroup(VC_GRP_Sw_P1_04);
 
-	for (int i = 0; i < P1_NEEDLECOUNT_C; i++)
+	MainPanelVC.AddSwitch(&FDAISourceSwitch, AID_VC_SWITCH_P1_05);
+	FDAISourceSwitch.SetReference(P1_TOGGLE_POS[4], _V(1, 0, 0));
+	FDAISourceSwitch.DefineMeshGroup(VC_GRP_Sw_P1_05);
+
+	MainPanelVC.AddSwitch(&FDAIAttSetSwitch, AID_VC_SWITCH_P1_06);
+	FDAIAttSetSwitch.SetReference(P1_TOGGLE_POS[5], _V(1, 0, 0));
+	FDAIAttSetSwitch.DefineMeshGroup(VC_GRP_Sw_P1_06);
+
+	MainPanelVC.AddSwitch(&ManualAttRollSwitch, AID_VC_SWITCH_P1_07);
+	ManualAttRollSwitch.SetReference(P1_TOGGLE_POS[6], _V(1, 0, 0));
+	ManualAttRollSwitch.DefineMeshGroup(VC_GRP_Sw_P1_07);
+
+	MainPanelVC.AddSwitch(&ManualAttPitchSwitch, AID_VC_SWITCH_P1_08);
+	ManualAttPitchSwitch.SetReference(P1_TOGGLE_POS[7], _V(1, 0, 0));
+	ManualAttPitchSwitch.DefineMeshGroup(VC_GRP_Sw_P1_08);
+
+	MainPanelVC.AddSwitch(&ManualAttYawSwitch, AID_VC_SWITCH_P1_09);
+	ManualAttYawSwitch.SetReference(P1_TOGGLE_POS[8], _V(1, 0, 0));
+	ManualAttYawSwitch.DefineMeshGroup(VC_GRP_Sw_P1_09);
+
+	MainPanelVC.AddSwitch(&LimitCycleSwitch, AID_VC_SWITCH_P1_10);
+	LimitCycleSwitch.SetReference(P1_TOGGLE_POS[9], _V(1, 0, 0));
+	LimitCycleSwitch.DefineMeshGroup(VC_GRP_Sw_P1_10);
+
+	MainPanelVC.AddSwitch(&AttDeadbandSwitch, AID_VC_SWITCH_P1_11);
+	AttDeadbandSwitch.SetReference(P1_TOGGLE_POS[10], _V(1, 0, 0));
+	AttDeadbandSwitch.DefineMeshGroup(VC_GRP_Sw_P1_11);
+
+	MainPanelVC.AddSwitch(&AttRateSwitch, AID_VC_SWITCH_P1_12);
+	AttRateSwitch.SetReference(P1_TOGGLE_POS[11], _V(1, 0, 0));
+	AttRateSwitch.DefineMeshGroup(VC_GRP_Sw_P1_12);
+
+	MainPanelVC.AddSwitch(&TransContrSwitch, AID_VC_SWITCH_P1_13);
+	TransContrSwitch.SetReference(P1_TOGGLE_POS[12], _V(1, 0, 0));
+	TransContrSwitch.DefineMeshGroup(VC_GRP_Sw_P1_13);
+
+	MainPanelVC.AddSwitch(&RotPowerNormal1Switch, AID_VC_SWITCH_P1_14);
+	RotPowerNormal1Switch.SetReference(P1_TOGGLE_POS[13], _V(1, 0, 0));
+	RotPowerNormal1Switch.DefineMeshGroup(VC_GRP_Sw_P1_14);
+
+	MainPanelVC.AddSwitch(&RotPowerNormal2Switch, AID_VC_SWITCH_P1_15);
+	RotPowerNormal2Switch.SetReference(P1_TOGGLE_POS[14], _V(1, 0, 0));
+	RotPowerNormal2Switch.DefineMeshGroup(VC_GRP_Sw_P1_15);
+
+	MainPanelVC.AddSwitch(&RotPowerDirect1Switch, AID_VC_SWITCH_P1_16);
+	RotPowerDirect1Switch.SetReference(P1_TOGGLE_POS[15], _V(1, 0, 0));
+	RotPowerDirect1Switch.DefineMeshGroup(VC_GRP_Sw_P1_16);
+
+	MainPanelVC.AddSwitch(&RotPowerDirect2Switch, AID_VC_SWITCH_P1_17);
+	RotPowerDirect2Switch.SetReference(P1_TOGGLE_POS[16], _V(1, 0, 0));
+	RotPowerDirect2Switch.DefineMeshGroup(VC_GRP_Sw_P1_17);
+
+	MainPanelVC.AddSwitch(&SCContSwitch, AID_VC_SWITCH_P1_18);
+	SCContSwitch.SetReference(P1_TOGGLE_POS[17], _V(1, 0, 0));
+	SCContSwitch.DefineMeshGroup(VC_GRP_Sw_P1_18);
+
+	MainPanelVC.AddSwitch(&CMCModeSwitch, AID_VC_SWITCH_P1_19);
+	CMCModeSwitch.SetReference(P1_TOGGLE_POS[18], _V(1, 0, 0));
+	CMCModeSwitch.DefineMeshGroup(VC_GRP_Sw_P1_19);
+
+	MainPanelVC.AddSwitch(&BMAGRollSwitch, AID_VC_SWITCH_P1_20);
+	BMAGRollSwitch.SetReference(P1_TOGGLE_POS[19], _V(1, 0, 0));
+	BMAGRollSwitch.DefineMeshGroup(VC_GRP_Sw_P1_20);
+
+	MainPanelVC.AddSwitch(&BMAGPitchSwitch, AID_VC_SWITCH_P1_21);
+	BMAGPitchSwitch.SetReference(P1_TOGGLE_POS[20], _V(1, 0, 0));
+	BMAGPitchSwitch.DefineMeshGroup(VC_GRP_Sw_P1_21);
+
+	MainPanelVC.AddSwitch(&BMAGYawSwitch, AID_VC_SWITCH_P1_22);
+	BMAGYawSwitch.SetReference(P1_TOGGLE_POS[21], _V(1, 0, 0));
+	BMAGYawSwitch.DefineMeshGroup(VC_GRP_Sw_P1_22);
+
+	MainPanelVC.AddSwitch(&dVThrust1Switch, AID_VC_SWITCH_P1_23);
+	dVThrust1Switch.SetReference(P1_TOGGLE_POS[22], P1_COVERS_POS[2], _V(1, 0, 0), _V(1, 0, 0));
+	dVThrust1Switch.DefineMeshGroup(VC_GRP_Sw_P1_23, VC_GRP_SwitchCover_P1_03);
+
+	MainPanelVC.AddSwitch(&dVThrust2Switch, AID_VC_SWITCH_P1_24);
+	dVThrust2Switch.SetReference(P1_TOGGLE_POS[23], P1_COVERS_POS[3], _V(1, 0, 0), _V(1, 0, 0));
+	dVThrust2Switch.DefineMeshGroup(VC_GRP_Sw_P1_24, VC_GRP_SwitchCover_P1_04);
+
+	MainPanelVC.AddSwitch(&SCSTvcPitchSwitch, AID_VC_SWITCH_P1_25);
+	SCSTvcPitchSwitch.SetReference(P1_TOGGLE_POS[24], _V(1, 0, 0));
+	SCSTvcPitchSwitch.DefineMeshGroup(VC_GRP_Sw_P1_25);
+
+	MainPanelVC.AddSwitch(&SCSTvcYawSwitch, AID_VC_SWITCH_P1_26);
+	SCSTvcYawSwitch.SetReference(P1_TOGGLE_POS[25], _V(1, 0, 0));
+	SCSTvcYawSwitch.DefineMeshGroup(VC_GRP_Sw_P1_26);
+
+	MainPanelVC.AddSwitch(&Pitch1Switch, AID_VC_SWITCH_P1_27);
+	Pitch1Switch.SetReference(P1_TOGGLE_POS[26], _V(1, 0, 0));
+	Pitch1Switch.DefineMeshGroup(VC_GRP_Sw_P1_27);
+
+	MainPanelVC.AddSwitch(&Pitch2Switch, AID_VC_SWITCH_P1_28);
+	Pitch2Switch.SetReference(P1_TOGGLE_POS[27], _V(1, 0, 0));
+	Pitch2Switch.DefineMeshGroup(VC_GRP_Sw_P1_28);
+
+	MainPanelVC.AddSwitch(&Yaw1Switch, AID_VC_SWITCH_P1_29);
+	Yaw1Switch.SetReference(P1_TOGGLE_POS[28], _V(1, 0, 0));
+	Yaw1Switch.DefineMeshGroup(VC_GRP_Sw_P1_29);
+
+	MainPanelVC.AddSwitch(&Yaw2Switch, AID_VC_SWITCH_P1_30);
+	Yaw2Switch.SetReference(P1_TOGGLE_POS[29], _V(1, 0, 0));
+	Yaw2Switch.DefineMeshGroup(VC_GRP_Sw_P1_30);
+
+	MainPanelVC.AddSwitch(&CGSwitch, AID_VC_SWITCH_P1_31);
+	CGSwitch.SetReference(P1_TOGGLE_POS[30], _V(1, 0, 0));
+	CGSwitch.DefineMeshGroup(VC_GRP_Sw_P1_31);
+
+	MainPanelVC.AddSwitch(&ELSLogicSwitch, AID_VC_SWITCH_P1_32);
+	ELSLogicSwitch.SetReference(P1_TOGGLE_POS[31], P1_COVERS_POS[04], _V(1, 0, 0), _V(1, 0, 0));
+	ELSLogicSwitch.DefineMeshGroup(VC_GRP_Sw_P1_32, VC_GRP_SwitchCover_P1_05);
+
+	MainPanelVC.AddSwitch(&ELSAutoSwitch, AID_VC_SWITCH_P1_33);
+	ELSAutoSwitch.SetReference(P1_TOGGLE_POS[32], _V(1, 0, 0));
+	ELSAutoSwitch.DefineMeshGroup(VC_GRP_Sw_P1_33);
+
+	MainPanelVC.AddSwitch(&CMRCSLogicSwitch, AID_VC_SWITCH_P1_34);
+	CMRCSLogicSwitch.SetReference(P1_TOGGLE_POS[33], _V(1, 0, 0));
+	CMRCSLogicSwitch.DefineMeshGroup(VC_GRP_Sw_P1_34);
+
+	MainPanelVC.AddSwitch(&CMPropDumpSwitch, AID_VC_SWITCH_P1_35);
+	CMPropDumpSwitch.SetReference(P1_TOGGLE_POS[34], P1_COVERS_POS[05], _V(1, 0, 0), _V(1, 0, 0));
+	CMPropDumpSwitch.DefineMeshGroup(VC_GRP_Sw_P1_35, VC_GRP_SwitchCover_P1_06);
+
+	MainPanelVC.AddSwitch(&CMPropPurgeSwitch, AID_VC_SWITCH_P1_36);
+	CMPropPurgeSwitch.SetReference(P1_TOGGLE_POS[35], P1_COVERS_POS[06], _V(1, 0, 0), _V(1, 0, 0));
+	CMPropPurgeSwitch.DefineMeshGroup(VC_GRP_Sw_P1_36, VC_GRP_SwitchCover_P1_07);
+
+	MainPanelVC.AddSwitch(&IMUGuardedCageSwitch, AID_VC_SWITCH_P1_37);
+	IMUGuardedCageSwitch.SetReference(P1_TOGGLE_POS[36], P1_COVERS_POS[01], _V(1, 0, 0), _V(1, 0, 0));
+	IMUGuardedCageSwitch.DefineMeshGroup(VC_GRP_Sw_P1_37, VC_GRP_SwitchCover_P1_02);
+
+	MainPanelVC.AddSwitch(&EMSRollSwitch, AID_VC_SWITCH_P1_38);
+	EMSRollSwitch.SetReference(P1_TOGGLE_POS[37], _V(1, 0, 0));
+	EMSRollSwitch.DefineMeshGroup(VC_GRP_Sw_P1_38);
+
+	MainPanelVC.AddSwitch(&GSwitch, AID_VC_SWITCH_P1_39);
+	GSwitch.SetReference(P1_TOGGLE_POS[38], _V(1, 0, 0));
+	GSwitch.DefineMeshGroup(VC_GRP_Sw_P1_39);
+
+	MainPanelVC.AddSwitch(&LVSPSPcIndicatorSwitch, AID_VC_SWITCH_P1_40);
+	LVSPSPcIndicatorSwitch.SetReference(P1_TOGGLE_POS[39], _V(1, 0, 0));
+	LVSPSPcIndicatorSwitch.DefineMeshGroup(VC_GRP_Sw_P1_40);
+
+	MainPanelVC.AddSwitch(&LVFuelTankPressIndicatorSwitch, AID_VC_SWITCH_P1_41);
+	LVFuelTankPressIndicatorSwitch.SetReference(P1_TOGGLE_POS[40], _V(1, 0, 0));
+	LVFuelTankPressIndicatorSwitch.DefineMeshGroup(VC_GRP_Sw_P1_41);
+
+	MainPanelVC.AddSwitch(&TVCGimbalDrivePitchSwitch, AID_VC_SWITCH_P1_42);
+	TVCGimbalDrivePitchSwitch.SetReference(P1_TOGGLE_POS[41], _V(1, 0, 0));
+	TVCGimbalDrivePitchSwitch.DefineMeshGroup(VC_GRP_Sw_P1_42);
+
+	MainPanelVC.AddSwitch(&TVCGimbalDriveYawSwitch, AID_VC_SWITCH_P1_43);
+	TVCGimbalDriveYawSwitch.SetReference(P1_TOGGLE_POS[42], _V(1, 0, 0));
+	TVCGimbalDriveYawSwitch.DefineMeshGroup(VC_GRP_Sw_P1_43);
+
+	MainPanelVC.AddSwitch(&EventTimerUpDownSwitch, AID_VC_SWITCH_P1_44);
+	EventTimerUpDownSwitch.SetReference(P1_TOGGLE_POS[43], _V(1, 0, 0));
+	EventTimerUpDownSwitch.DefineMeshGroup(VC_GRP_Sw_P1_44);
+
+	MainPanelVC.AddSwitch(&EventTimerContSwitch, AID_VC_SWITCH_P1_45);
+	EventTimerContSwitch.SetReference(P1_TOGGLE_POS[44], _V(1, 0, 0));
+	EventTimerContSwitch.DefineMeshGroup(VC_GRP_Sw_P1_45);
+
+	MainPanelVC.AddSwitch(&EventTimerMinutesSwitch, AID_VC_SWITCH_P1_46);
+	EventTimerMinutesSwitch.SetReference(P1_TOGGLE_POS[45], _V(1, 0, 0));
+	EventTimerMinutesSwitch.DefineMeshGroup(VC_GRP_Sw_P1_46);
+
+	MainPanelVC.AddSwitch(&EventTimerSecondsSwitch, AID_VC_SWITCH_P1_47);
+	EventTimerSecondsSwitch.SetReference(P1_TOGGLE_POS[46], _V(1, 0, 0));
+	EventTimerSecondsSwitch.DefineMeshGroup(VC_GRP_Sw_P1_47);
+
+	MainPanelVC.AddSwitch(&GTASwitch, AID_VC_SWITCH_P1_48);
+	GTASwitch.SetReference(P1_TOGGLE_POS[47], P1_COVERS_POS[0], _V(1, 0, 0), _V(1, 0, 0));
+	GTASwitch.DefineMeshGroup(VC_GRP_Sw_P1_48, VC_GRP_SwitchCover_P1_01);
+
+	MainPanelVC.AddSwitch(&LiftoffNoAutoAbortSwitch, AID_VC_PUSHB_P1_01);
+	LiftoffNoAutoAbortSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[7], SEQS_COVER_AXIS_L);
+	LiftoffNoAutoAbortSwitch.SetCoverRotationAngle(70.0*RAD);
+	LiftoffNoAutoAbortSwitch.DefineMeshGroup(VC_GRP_PB_P1_01, VC_GRP_SwitchCover_P1_08);
+
+	MainPanelVC.AddSwitch(&LesMotorFireSwitch, AID_VC_PUSHB_P1_02);
+	LesMotorFireSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[8], SEQS_COVER_AXIS_L);
+	LesMotorFireSwitch.SetCoverRotationAngle(70.0*RAD);
+	LesMotorFireSwitch.DefineMeshGroup(VC_GRP_PB_P1_02, VC_GRP_SwitchCover_P1_09);
+
+	MainPanelVC.AddSwitch(&CanardDeploySwitch, AID_VC_PUSHB_P1_03);
+	CanardDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[9], SEQS_COVER_AXIS_L);
+	CanardDeploySwitch.SetCoverRotationAngle(70.0*RAD);
+	CanardDeploySwitch.DefineMeshGroup(VC_GRP_PB_P1_03, VC_GRP_SwitchCover_P1_10);
+
+	MainPanelVC.AddSwitch(&CsmLvSepSwitch, AID_VC_PUSHB_P1_04);
+	CsmLvSepSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[10], SEQS_COVER_AXIS_L);
+	CsmLvSepSwitch.SetCoverRotationAngle(70.0*RAD);
+	CsmLvSepSwitch.DefineMeshGroup(VC_GRP_PB_P1_04, VC_GRP_SwitchCover_P1_11);
+
+	MainPanelVC.AddSwitch(&ApexCoverJettSwitch, AID_VC_PUSHB_P1_05);
+	ApexCoverJettSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[11], SEQS_COVER_AXIS_R);
+	ApexCoverJettSwitch.SetCoverRotationAngle(70.0*RAD);
+	ApexCoverJettSwitch.DefineMeshGroup(VC_GRP_PB_P1_05, VC_GRP_SwitchCover_P1_12);
+
+	MainPanelVC.AddSwitch(&DrogueDeploySwitch, AID_VC_PUSHB_P1_06);
+	DrogueDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[12], SEQS_COVER_AXIS_R);
+	DrogueDeploySwitch.SetCoverRotationAngle(70.0*RAD);
+	DrogueDeploySwitch.DefineMeshGroup(VC_GRP_PB_P1_06, VC_GRP_SwitchCover_P1_13);
+
+	MainPanelVC.AddSwitch(&MainDeploySwitch, AID_VC_PUSHB_P1_07);
+	MainDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[13], SEQS_COVER_AXIS_R);
+	MainDeploySwitch.SetCoverRotationAngle(70.0*RAD);
+	MainDeploySwitch.DefineMeshGroup(VC_GRP_PB_P1_07, VC_GRP_SwitchCover_P1_14);
+
+	MainPanelVC.AddSwitch(&CmRcsHeDumpSwitch, AID_VC_PUSHB_P1_08);
+	CmRcsHeDumpSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[14], SEQS_COVER_AXIS_R);
+	CmRcsHeDumpSwitch.SetCoverRotationAngle(70.0*RAD);
+	CmRcsHeDumpSwitch.DefineMeshGroup(VC_GRP_PB_P1_08, VC_GRP_SwitchCover_P1_15);
+
+	MainPanelVC.AddSwitch(&SPSGimbalPitchThumbwheel, AID_VC_TW_P1_01); // TODO: Set rotation range of RAD * 293
+	SPSGimbalPitchThumbwheel.SetReference(P1_TW_POS[0], _V(1, 0, 0));
+	SPSGimbalPitchThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_01);
+	//SPSGimbalPitchThumbwheel.SetInitialAnimState(0.5); //FIXME
+
+	MainPanelVC.AddSwitch(&SPSGimbalYawThumbwheel, AID_VC_TW_P1_02);  // TODO: Set rotation range of RAD * 293
+	SPSGimbalYawThumbwheel.SetReference(P1_TW_POS[1], TW_SPSYAW_AXIS);
+	SPSGimbalYawThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_02);
+	//SPSGimbalYawThumbwheel.SetInitialAnimState(0.5); //FIXME
+
+	MainPanelVC.AddSwitch(&EMSFunctionSwitch, AID_VC_ROT_P1_01);
+	EMSFunctionSwitch.SetReference(P1_ROT_POS[0], P1_3_ROT_AXIS);
+	EMSFunctionSwitch.DefineMeshGroup(VC_GRP_Rot_P1_01);
+
+	/*for (int i = 0; i < P1_NEEDLECOUNT_C; i++)
 	{
 		meshgroup_P1needles[i] = VC_GRP_Needle_P1_01 + i;
 		mgt_P1needles[i] = new MGROUP_ROTATE(mesh, &meshgroup_P1needles[i], 1, P1_NEEDLE_POS_C[i], _V(1, 0, 0), (float)(RAD * 34));
 		anim_P1needles[i] = CreateAnimation(0.0);
 		AddAnimationComponent(anim_P1needles[i], 0.0f, 1.0f, mgt_P1needles[i]);
-	}
+	}*/
 
-	// Panel 2 switches/needles/rotaries
-	static UINT meshgroup_P2switches[P2_SWITCHCOUNT_C], meshgroup_P2_Rots[P2_ROTCOUNT_C];
-	for (int i = 0; i < P2_SWITCHCOUNT_C; i++)
-	{
-		meshgroup_P2switches[i] = VC_GRP_Sw_P2_01 + i;
-		mgt_P2switch[i] = new MGROUP_ROTATE(mesh, &meshgroup_P2switches[i], 1, P2_TOGGLE_POS_C[i], _V(1, 0, 0), (float)PI / 4);
-		anim_P2switch[i] = CreateAnimation(0.5);
-		AddAnimationComponent(anim_P2switch[i], 0.0f, 1.0f, mgt_P2switch[i]);
-	}
+	// Panel 2
 
-	for (int i = 0; i < P2_ROTCOUNT_C; i++)
-	{
-		meshgroup_P2_Rots[i] = VC_GRP_Rot_P2_01 + i;
-		mgt_P2Rot[i] = new MGROUP_ROTATE(mesh, &meshgroup_P2_Rots[i], 1, P2_ROT_POS_C[i], P1_3_ROT_AXIS, (float)(RAD * 360));
-		anim_P2rot[i] = CreateAnimation(0.0);
-		AddAnimationComponent(anim_P2rot[i], 0.0f, 1.0f, mgt_P2Rot[i]);
-	}
+	MainPanelVC.AddSwitch(&EDSSwitch, AID_VC_SWITCH_P2_01);
+	EDSSwitch.SetReference(P2_TOGGLE_POS[0], _V(1, 0, 0));
+	EDSSwitch.DefineMeshGroup(VC_GRP_Sw_P2_01);
 
-	// Panel 1-3 Switch covers
+	MainPanelVC.AddSwitch(&CsmLmFinalSep1Switch, AID_VC_SWITCH_P2_02);
+	CsmLmFinalSep1Switch.SetReference(P2_TOGGLE_POS[1], P2_COVERS_POS[0], _V(1, 0, 0), _V(1, 0, 0));
+	CsmLmFinalSep1Switch.DefineMeshGroup(VC_GRP_Sw_P2_02, VC_GRP_SwitchCover_P2_01);
 
-	static UINT meshgroup_switchcovers[SWITCHCOVERCOUNT_C];
-	for (int i = 0; i < 19; i++) // Normal switch covers are numbered 1-19
-	{
-		meshgroup_switchcovers[i] = VC_GRP_SwitchCover_P1_3_01 + i;
-		mgt_switchcovers[i] = new MGROUP_ROTATE(mesh, &meshgroup_switchcovers[i], 1, COVERS_POS_C[i], _V(1, 0, 0), (float)(RAD * 90));
-		anim_switchcovers[i] = CreateAnimation(0.0);
-		AddAnimationComponent(anim_switchcovers[i], 0.0f, 1.0f, mgt_switchcovers[i]);
-	}
+	MainPanelVC.AddSwitch(&CsmLmFinalSep2Switch, AID_VC_SWITCH_P2_03);
+	CsmLmFinalSep2Switch.SetReference(P2_TOGGLE_POS[2], P2_COVERS_POS[1], _V(1, 0, 0), _V(1, 0, 0));
+	CsmLmFinalSep2Switch.DefineMeshGroup(VC_GRP_Sw_P2_03, VC_GRP_SwitchCover_P2_02);
 
-	for (int i = 19; i < 23; i++) // 20-23 are SEQS button covers (left)
-	{
-		meshgroup_switchcovers[i] = VC_GRP_SwitchCover_P1_3_01 + i;
-		mgt_switchcovers[i] = new MGROUP_ROTATE(mesh, &meshgroup_switchcovers[i], 1, COVERS_POS_C[i], SEQS_COVER_AXIS_L, (float)(RAD * 70));
-		anim_switchcovers[i] = CreateAnimation(0.0);
-		AddAnimationComponent(anim_switchcovers[i], 0.0f, 1.0f, mgt_switchcovers[i]);
-	}
+	MainPanelVC.AddSwitch(&CmSmSep1Switch, AID_VC_SWITCH_P2_04);
+	CmSmSep1Switch.SetReference(P2_TOGGLE_POS[3], P2_COVERS_POS[2], _V(1, 0, 0), _V(1, 0, 0));
+	CmSmSep1Switch.DefineMeshGroup(VC_GRP_Sw_P2_04, VC_GRP_SwitchCover_P2_03);
 
-	for (int i = 23; i < SWITCHCOVERCOUNT_C; i++) // 24-27 are SEQS button covers (right)
-	{
-		meshgroup_switchcovers[i] = VC_GRP_SwitchCover_P1_3_01 + i;
-		mgt_switchcovers[i] = new MGROUP_ROTATE(mesh, &meshgroup_switchcovers[i], 1, COVERS_POS_C[i], SEQS_COVER_AXIS_R, (float)(RAD * 70));
-		anim_switchcovers[i] = CreateAnimation(0.0);
-		AddAnimationComponent(anim_switchcovers[i], 0.0f, 1.0f, mgt_switchcovers[i]);
-	}
+	MainPanelVC.AddSwitch(&CmSmSep2Switch, AID_VC_SWITCH_P2_05);
+	CmSmSep2Switch.SetReference(P2_TOGGLE_POS[4], P2_COVERS_POS[3], _V(1, 0, 0), _V(1, 0, 0));
+	CmSmSep2Switch.DefineMeshGroup(VC_GRP_Sw_P2_05, VC_GRP_SwitchCover_P2_04);
+
+	MainPanelVC.AddSwitch(&SIVBPayloadSepSwitch, AID_VC_SWITCH_P2_06);
+	SIVBPayloadSepSwitch.SetReference(P2_TOGGLE_POS[5], P2_COVERS_POS[4], _V(1, 0, 0), _V(1, 0, 0));
+	SIVBPayloadSepSwitch.DefineMeshGroup(VC_GRP_Sw_P2_06, VC_GRP_SwitchCover_P2_05);
+
+	MainPanelVC.AddSwitch(&PropDumpAutoSwitch, AID_VC_SWITCH_P2_07);
+	PropDumpAutoSwitch.SetReference(P2_TOGGLE_POS[6], _V(1, 0, 0));
+	PropDumpAutoSwitch.DefineMeshGroup(VC_GRP_Sw_P2_07);
+
+	MainPanelVC.AddSwitch(&TwoEngineOutAutoSwitch, AID_VC_SWITCH_P2_08);
+	TwoEngineOutAutoSwitch.SetReference(P2_TOGGLE_POS[7], _V(1, 0, 0));
+	TwoEngineOutAutoSwitch.DefineMeshGroup(VC_GRP_Sw_P2_08);
+
+	MainPanelVC.AddSwitch(&LVRateAutoSwitch, AID_VC_SWITCH_P2_09);
+	LVRateAutoSwitch.SetReference(P2_TOGGLE_POS[8], _V(1, 0, 0));
+	LVRateAutoSwitch.DefineMeshGroup(VC_GRP_Sw_P2_09);
+
+	/*MainPanelVC.AddSwitch(&TowerJett1Switch, AID_VC_SWITCH_P2_10);
+	TowerJett1Switch.SetReference(P2_TOGGLE_POS[9], P2_COVERS_POS[5], _V(1, 0, 0), _V(1, 0, 0));
+	TowerJett1Switch.DefineMeshGroup(VC_GRP_Sw_P2_10, VC_GRP_SwitchCover_P2_06);
+
+	MainPanelVC.AddSwitch(&TowerJett2Switch, AID_VC_SWITCH_P2_11);
+	TowerJett2Switch.SetReference(P2_TOGGLE_POS[10], P2_COVERS_POS[6], _V(1, 0, 0), _V(1, 0, 0));
+	TowerJett2Switch.DefineMeshGroup(VC_GRP_Sw_P2_11, VC_GRP_SwitchCover_P2_07);*/
+
+	MainPanelVC.AddSwitch(&LVGuidanceSwitch, AID_VC_SWITCH_P2_12);
+	LVGuidanceSwitch.SetReference(P2_TOGGLE_POS[11], P2_COVERS_POS[7], _V(1, 0, 0), _V(1, 0, 0));
+	LVGuidanceSwitch.DefineMeshGroup(VC_GRP_Sw_P2_12, VC_GRP_SwitchCover_P2_08);
+
+	MainPanelVC.AddSwitch(&SIISIVBSepSwitch, AID_VC_SWITCH_P2_13);
+	SIISIVBSepSwitch.SetReference(P2_TOGGLE_POS[12], P2_COVERS_POS[8], _V(1, 0, 0), _V(1, 0, 0));
+	SIISIVBSepSwitch.DefineMeshGroup(VC_GRP_Sw_P2_13, VC_GRP_SwitchCover_P2_09);
+
+	MainPanelVC.AddSwitch(&TLIEnableSwitch, AID_VC_SWITCH_P2_14);
+	TLIEnableSwitch.SetReference(P2_TOGGLE_POS[13], _V(1, 0, 0));
+	TLIEnableSwitch.DefineMeshGroup(VC_GRP_Sw_P2_14);
+
+	MainPanelVC.AddSwitch(&MainReleaseSwitch, AID_VC_SWITCH_P2_15);
+	MainReleaseSwitch.SetReference(P2_TOGGLE_POS[14], P2_COVERS_POS[9], _V(1, 0, 0), _V(1, 0, 0));
+	MainReleaseSwitch.DefineMeshGroup(VC_GRP_Sw_P2_15, VC_GRP_SwitchCover_P2_10);
+
+	/*MainPanelVC.AddSwitch(&DockingProbeExtdRelSwitch, AID_VC_SWITCH_P2_16);
+	DockingProbeExtdRelSwitch.SetReference(P2_TOGGLE_POS[15], P2_COVERS_POS[10], _V(1, 0, 0), _V(1, 0, 0));
+	DockingProbeExtdRelSwitch.DefineMeshGroup(VC_GRP_Sw_P2_16, VC_GRP_SwitchCover_P2_11);*/
+
+	MainPanelVC.AddSwitch(&DockingProbeRetractPrimSwitch, AID_VC_SWITCH_P2_17);
+	DockingProbeRetractPrimSwitch.SetReference(P2_TOGGLE_POS[16], _V(1, 0, 0));
+	DockingProbeRetractPrimSwitch.DefineMeshGroup(VC_GRP_Sw_P2_17);
+
+	MainPanelVC.AddSwitch(&DockingProbeRetractSecSwitch, AID_VC_SWITCH_P2_18);
+	DockingProbeRetractSecSwitch.SetReference(P2_TOGGLE_POS[17], _V(1, 0, 0));
+	DockingProbeRetractSecSwitch.DefineMeshGroup(VC_GRP_Sw_P2_18);
+
+	MainPanelVC.AddSwitch(&RunEVALightSwitch, AID_VC_SWITCH_P2_19);
+	RunEVALightSwitch.SetReference(P2_TOGGLE_POS[18], _V(1, 0, 0));
+	RunEVALightSwitch.DefineMeshGroup(VC_GRP_Sw_P2_19);
+
+	MainPanelVC.AddSwitch(&RndzLightSwitch, AID_VC_SWITCH_P2_20);
+	RndzLightSwitch.SetReference(P2_TOGGLE_POS[19], _V(1, 0, 0));
+	RndzLightSwitch.DefineMeshGroup(VC_GRP_Sw_P2_20);
+
+	MainPanelVC.AddSwitch(&TunnelLightSwitch, AID_VC_SWITCH_P2_21);
+	TunnelLightSwitch.SetReference(P2_TOGGLE_POS[20], _V(1, 0, 0));
+	TunnelLightSwitch.DefineMeshGroup(VC_GRP_Sw_P2_21);
+
+	MainPanelVC.AddSwitch(&LMPowerSwitch, AID_VC_SWITCH_P2_22);
+	LMPowerSwitch.SetReference(P2_TOGGLE_POS[21], _V(1, 0, 0));
+	LMPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P2_22);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium1ASwitch, AID_VC_SWITCH_P2_23);
+	SMRCSHelium1ASwitch.SetReference(P2_TOGGLE_POS[22], _V(1, 0, 0));
+	SMRCSHelium1ASwitch.DefineMeshGroup(VC_GRP_Sw_P2_23);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium1BSwitch, AID_VC_SWITCH_P2_24);
+	SMRCSHelium1BSwitch.SetReference(P2_TOGGLE_POS[23], _V(1, 0, 0));
+	SMRCSHelium1BSwitch.DefineMeshGroup(VC_GRP_Sw_P2_24);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium1CSwitch, AID_VC_SWITCH_P2_25);
+	SMRCSHelium1CSwitch.SetReference(P2_TOGGLE_POS[24], _V(1, 0, 0));
+	SMRCSHelium1CSwitch.DefineMeshGroup(VC_GRP_Sw_P2_25);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium1DSwitch, AID_VC_SWITCH_P2_26);
+	SMRCSHelium1DSwitch.SetReference(P2_TOGGLE_POS[25], _V(1, 0, 0));
+	SMRCSHelium1DSwitch.DefineMeshGroup(VC_GRP_Sw_P2_26);
+
+	MainPanelVC.AddSwitch(&CMUplinkSwitch, AID_VC_SWITCH_P2_27);
+	CMUplinkSwitch.SetReference(P2_TOGGLE_POS[26], _V(1, 0, 0));
+	CMUplinkSwitch.DefineMeshGroup(VC_GRP_Sw_P2_27);
+
+	MainPanelVC.AddSwitch(&IUUplinkSwitch, AID_VC_SWITCH_P2_28);
+	IUUplinkSwitch.SetReference(P2_TOGGLE_POS[27], _V(1, 0, 0));
+	IUUplinkSwitch.DefineMeshGroup(VC_GRP_Sw_P2_28);
+
+	MainPanelVC.AddSwitch(&CMRCSPressSwitch, AID_VC_SWITCH_P2_29);
+	CMRCSPressSwitch.SetReference(P2_TOGGLE_POS[28], P2_COVERS_POS[11], _V(1, 0, 0), _V(1, 0, 0));
+	CMRCSPressSwitch.DefineMeshGroup(VC_GRP_Sw_P2_29, VC_GRP_SwitchCover_P2_12);
+
+	MainPanelVC.AddSwitch(&SMRCSIndSwitch, AID_VC_SWITCH_P2_30);
+	SMRCSIndSwitch.SetReference(P2_TOGGLE_POS[29], _V(1, 0, 0));
+	SMRCSIndSwitch.DefineMeshGroup(VC_GRP_Sw_P2_30);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium2ASwitch, AID_VC_SWITCH_P2_31);
+	SMRCSHelium2ASwitch.SetReference(P2_TOGGLE_POS[30], _V(1, 0, 0));
+	SMRCSHelium2ASwitch.DefineMeshGroup(VC_GRP_Sw_P2_31);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium2BSwitch, AID_VC_SWITCH_P2_32);
+	SMRCSHelium2BSwitch.SetReference(P2_TOGGLE_POS[31], _V(1, 0, 0));
+	SMRCSHelium2BSwitch.DefineMeshGroup(VC_GRP_Sw_P2_32);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium2CSwitch, AID_VC_SWITCH_P2_33);
+	SMRCSHelium2CSwitch.SetReference(P2_TOGGLE_POS[32], _V(1, 0, 0));
+	SMRCSHelium2CSwitch.DefineMeshGroup(VC_GRP_Sw_P2_33);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium2DSwitch, AID_VC_SWITCH_P2_34);
+	SMRCSHelium2DSwitch.SetReference(P2_TOGGLE_POS[33], _V(1, 0, 0));
+	SMRCSHelium2DSwitch.DefineMeshGroup(VC_GRP_Sw_P2_34);
+
+	MainPanelVC.AddSwitch(&SMRCSHeaterASwitch, AID_VC_SWITCH_P2_35);
+	SMRCSHeaterASwitch.SetReference(P2_TOGGLE_POS[34], _V(1, 0, 0));
+	SMRCSHeaterASwitch.DefineMeshGroup(VC_GRP_Sw_P2_35);
+
+	MainPanelVC.AddSwitch(&SMRCSHeaterBSwitch, AID_VC_SWITCH_P2_36);
+	SMRCSHeaterBSwitch.SetReference(P2_TOGGLE_POS[35], _V(1, 0, 0));
+	SMRCSHeaterBSwitch.DefineMeshGroup(VC_GRP_Sw_P2_36);
+
+	MainPanelVC.AddSwitch(&SMRCSHeaterCSwitch, AID_VC_SWITCH_P2_37);
+	SMRCSHeaterCSwitch.SetReference(P2_TOGGLE_POS[36], _V(1, 0, 0));
+	SMRCSHeaterCSwitch.DefineMeshGroup(VC_GRP_Sw_P2_37);
+
+	MainPanelVC.AddSwitch(&SMRCSHeaterDSwitch, AID_VC_SWITCH_P2_38);
+	SMRCSHeaterDSwitch.SetReference(P2_TOGGLE_POS[37], _V(1, 0, 0));
+	SMRCSHeaterDSwitch.DefineMeshGroup(VC_GRP_Sw_P2_38);
+
+	MainPanelVC.AddSwitch(&SMRCSProp1ASwitch, AID_VC_SWITCH_P2_39);
+	SMRCSProp1ASwitch.SetReference(P2_TOGGLE_POS[38], _V(1, 0, 0));
+	SMRCSProp1ASwitch.DefineMeshGroup(VC_GRP_Sw_P2_39);
+
+	MainPanelVC.AddSwitch(&SMRCSProp1BSwitch, AID_VC_SWITCH_P2_40);
+	SMRCSProp1BSwitch.SetReference(P2_TOGGLE_POS[39], _V(1, 0, 0));
+	SMRCSProp1BSwitch.DefineMeshGroup(VC_GRP_Sw_P2_40);
+
+	MainPanelVC.AddSwitch(&SMRCSProp1CSwitch, AID_VC_SWITCH_P2_41);
+	SMRCSProp1CSwitch.SetReference(P2_TOGGLE_POS[40], _V(1, 0, 0));
+	SMRCSProp1CSwitch.DefineMeshGroup(VC_GRP_Sw_P2_41);
+
+	MainPanelVC.AddSwitch(&SMRCSProp1DSwitch, AID_VC_SWITCH_P2_42);
+	SMRCSProp1DSwitch.SetReference(P2_TOGGLE_POS[41], _V(1, 0, 0));
+	SMRCSProp1DSwitch.DefineMeshGroup(VC_GRP_Sw_P2_42);
+
+	MainPanelVC.AddSwitch(&RCSCMDSwitch, AID_VC_SWITCH_P2_43);
+	RCSCMDSwitch.SetReference(P2_TOGGLE_POS[42], _V(1, 0, 0));
+	RCSCMDSwitch.DefineMeshGroup(VC_GRP_Sw_P2_43);
+
+	MainPanelVC.AddSwitch(&RCSTrnfrSwitch, AID_VC_SWITCH_P2_44);
+	RCSTrnfrSwitch.SetReference(P2_TOGGLE_POS[43], _V(1, 0, 0));
+	RCSTrnfrSwitch.DefineMeshGroup(VC_GRP_Sw_P2_44);
+
+	MainPanelVC.AddSwitch(&CMRCSProp1Switch, AID_VC_SWITCH_P2_45);
+	CMRCSProp1Switch.SetReference(P2_TOGGLE_POS[44], _V(1, 0, 0));
+	CMRCSProp1Switch.DefineMeshGroup(VC_GRP_Sw_P2_45);
+
+	MainPanelVC.AddSwitch(&CMRCSProp2Switch, AID_VC_SWITCH_P2_46);
+	CMRCSProp2Switch.SetReference(P2_TOGGLE_POS[45], _V(1, 0, 0));
+	CMRCSProp2Switch.DefineMeshGroup(VC_GRP_Sw_P2_46);
+
+	MainPanelVC.AddSwitch(&SMRCSProp2ASwitch, AID_VC_SWITCH_P2_47);
+	SMRCSProp2ASwitch.SetReference(P2_TOGGLE_POS[46], _V(1, 0, 0));
+	SMRCSProp2ASwitch.DefineMeshGroup(VC_GRP_Sw_P2_47);
+
+	MainPanelVC.AddSwitch(&SMRCSProp2BSwitch, AID_VC_SWITCH_P2_48);
+	SMRCSProp2BSwitch.SetReference(P2_TOGGLE_POS[47], _V(1, 0, 0));
+	SMRCSProp2BSwitch.DefineMeshGroup(VC_GRP_Sw_P2_48);
+
+	MainPanelVC.AddSwitch(&SMRCSProp2CSwitch, AID_VC_SWITCH_P2_49);
+	SMRCSProp2CSwitch.SetReference(P2_TOGGLE_POS[48], _V(1, 0, 0));
+	SMRCSProp2CSwitch.DefineMeshGroup(VC_GRP_Sw_P2_49);
+
+	MainPanelVC.AddSwitch(&SMRCSProp2DSwitch, AID_VC_SWITCH_P2_50);
+	SMRCSProp2DSwitch.SetReference(P2_TOGGLE_POS[49], _V(1, 0, 0));
+	SMRCSProp2DSwitch.DefineMeshGroup(VC_GRP_Sw_P2_50);
+
+	MainPanelVC.AddSwitch(&MissionTimerHoursSwitch, AID_VC_SWITCH_P2_51);
+	MissionTimerHoursSwitch.SetReference(P2_TOGGLE_POS[50], _V(1, 0, 0));
+	MissionTimerHoursSwitch.DefineMeshGroup(VC_GRP_Sw_P2_51);
+
+	MainPanelVC.AddSwitch(&MissionTimerMinutesSwitch, AID_VC_SWITCH_P2_52);
+	MissionTimerMinutesSwitch.SetReference(P2_TOGGLE_POS[51], _V(1, 0, 0));
+	MissionTimerMinutesSwitch.DefineMeshGroup(VC_GRP_Sw_P2_52);
+
+	MainPanelVC.AddSwitch(&MissionTimerSecondsSwitch, AID_VC_SWITCH_P2_53);
+	MissionTimerSecondsSwitch.SetReference(P2_TOGGLE_POS[52], _V(1, 0, 0));
+	MissionTimerSecondsSwitch.DefineMeshGroup(VC_GRP_Sw_P2_53);
+
+	MainPanelVC.AddSwitch(&CautionWarningModeSwitch, AID_VC_SWITCH_P2_54);
+	CautionWarningModeSwitch.SetReference(P2_TOGGLE_POS[53], _V(1, 0, 0));
+	CautionWarningModeSwitch.DefineMeshGroup(VC_GRP_Sw_P2_54);
+
+	MainPanelVC.AddSwitch(&CautionWarningCMCSMSwitch, AID_VC_SWITCH_P2_55);
+	CautionWarningCMCSMSwitch.SetReference(P2_TOGGLE_POS[54], _V(1, 0, 0));
+	CautionWarningCMCSMSwitch.DefineMeshGroup(VC_GRP_Sw_P2_55);
+
+	MainPanelVC.AddSwitch(&CautionWarningPowerSwitch, AID_VC_SWITCH_P2_56);
+	CautionWarningPowerSwitch.SetReference(P2_TOGGLE_POS[55], _V(1, 0, 0));
+	CautionWarningPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P2_56);
+
+	MainPanelVC.AddSwitch(&CautionWarningLightTestSwitch, AID_VC_SWITCH_P2_57);
+	CautionWarningLightTestSwitch.SetReference(P2_TOGGLE_POS[56], _V(1, 0, 0));
+	CautionWarningLightTestSwitch.DefineMeshGroup(VC_GRP_Sw_P2_57);
+
+	MainPanelVC.AddSwitch(&MissionTimerSwitch, AID_VC_SWITCH_P2_58);
+	MissionTimerSwitch.SetReference(P2_TOGGLE_POS[57], _V(1, 0, 0));
+	MissionTimerSwitch.DefineMeshGroup(VC_GRP_Sw_P2_58);
+
+	MainPanelVC.AddSwitch(&CabinFan1Switch, AID_VC_SWITCH_P2_59);
+	CabinFan1Switch.SetReference(P2_TOGGLE_POS[58], _V(1, 0, 0));
+	CabinFan1Switch.DefineMeshGroup(VC_GRP_Sw_P2_59);
+
+	MainPanelVC.AddSwitch(&CabinFan2Switch, AID_VC_SWITCH_P2_60);
+	CabinFan2Switch.SetReference(P2_TOGGLE_POS[59], _V(1, 0, 0));
+	CabinFan2Switch.DefineMeshGroup(VC_GRP_Sw_P2_60);
+
+	MainPanelVC.AddSwitch(&H2Heater1Switch, AID_VC_SWITCH_P2_61);
+	H2Heater1Switch.SetReference(P2_TOGGLE_POS[60], _V(1, 0, 0));
+	H2Heater1Switch.DefineMeshGroup(VC_GRP_Sw_P2_61);
+
+	MainPanelVC.AddSwitch(&H2Heater2Switch, AID_VC_SWITCH_P2_62);
+	H2Heater2Switch.SetReference(P2_TOGGLE_POS[61], _V(1, 0, 0));
+	H2Heater2Switch.DefineMeshGroup(VC_GRP_Sw_P2_62);
+
+	MainPanelVC.AddSwitch(&O2Heater1Switch, AID_VC_SWITCH_P2_63);
+	O2Heater1Switch.SetReference(P2_TOGGLE_POS[62], _V(1, 0, 0));
+	O2Heater1Switch.DefineMeshGroup(VC_GRP_Sw_P2_63);
+
+	MainPanelVC.AddSwitch(&O2Heater2Switch, AID_VC_SWITCH_P2_64);
+	O2Heater2Switch.SetReference(P2_TOGGLE_POS[63], _V(1, 0, 0));
+	O2Heater2Switch.DefineMeshGroup(VC_GRP_Sw_P2_64);
+
+	MainPanelVC.AddSwitch(&O2PressIndSwitch, AID_VC_SWITCH_P2_65);
+	O2PressIndSwitch.SetReference(P2_TOGGLE_POS[64], _V(1, 0, 0));
+	O2PressIndSwitch.DefineMeshGroup(VC_GRP_Sw_P2_65);
+
+	MainPanelVC.AddSwitch(&H2Fan1Switch, AID_VC_SWITCH_P2_66);
+	H2Fan1Switch.SetReference(P2_TOGGLE_POS[65], _V(1, 0, 0));
+	H2Fan1Switch.DefineMeshGroup(VC_GRP_Sw_P2_66);
+
+	MainPanelVC.AddSwitch(&H2Fan2Switch, AID_VC_SWITCH_P2_67);
+	H2Fan2Switch.SetReference(P2_TOGGLE_POS[66], _V(1, 0, 0));
+	H2Fan2Switch.DefineMeshGroup(VC_GRP_Sw_P2_67);
+
+	MainPanelVC.AddSwitch(&O2Fan1Switch, AID_VC_SWITCH_P2_68);
+	O2Fan1Switch.SetReference(P2_TOGGLE_POS[67], _V(1, 0, 0));
+	O2Fan1Switch.DefineMeshGroup(VC_GRP_Sw_P2_68);
+
+	MainPanelVC.AddSwitch(&O2Fan2Switch, AID_VC_SWITCH_P2_69);
+	O2Fan2Switch.SetReference(P2_TOGGLE_POS[68], _V(1, 0, 0));
+	O2Fan2Switch.DefineMeshGroup(VC_GRP_Sw_P2_69);
+
+	MainPanelVC.AddSwitch(&EcsRadiatorsFlowContAutoSwitch, AID_VC_SWITCH_P2_70);
+	EcsRadiatorsFlowContAutoSwitch.SetReference(P2_TOGGLE_POS[69], _V(1, 0, 0));
+	EcsRadiatorsFlowContAutoSwitch.DefineMeshGroup(VC_GRP_Sw_P2_70);
+
+	MainPanelVC.AddSwitch(&EcsRadiatorsFlowContPwrSwitch, AID_VC_SWITCH_P2_71);
+	EcsRadiatorsFlowContPwrSwitch.SetReference(P2_TOGGLE_POS[70], _V(1, 0, 0));
+	EcsRadiatorsFlowContPwrSwitch.DefineMeshGroup(VC_GRP_Sw_P2_71);
+
+	MainPanelVC.AddSwitch(&EcsRadiatorsManSelSwitch, AID_VC_SWITCH_P2_72);
+	EcsRadiatorsManSelSwitch.SetReference(P2_TOGGLE_POS[71], _V(1, 0, 0));
+	EcsRadiatorsManSelSwitch.DefineMeshGroup(VC_GRP_Sw_P2_72);
+
+	MainPanelVC.AddSwitch(&EcsRadiatorsHeaterPrimSwitch, AID_VC_SWITCH_P2_73);
+	EcsRadiatorsHeaterPrimSwitch.SetReference(P2_TOGGLE_POS[72], _V(1, 0, 0));
+	EcsRadiatorsHeaterPrimSwitch.DefineMeshGroup(VC_GRP_Sw_P2_73);
+
+	MainPanelVC.AddSwitch(&EcsRadiatorsHeaterSecSwitch, AID_VC_SWITCH_P2_74);
+	EcsRadiatorsHeaterSecSwitch.SetReference(P2_TOGGLE_POS[73], _V(1, 0, 0));
+	EcsRadiatorsHeaterSecSwitch.DefineMeshGroup(VC_GRP_Sw_P2_74);
+
+	MainPanelVC.AddSwitch(&PotH2oHtrSwitch, AID_VC_SWITCH_P2_75);
+	PotH2oHtrSwitch.SetReference(P2_TOGGLE_POS[74], _V(1, 0, 0));
+	PotH2oHtrSwitch.DefineMeshGroup(VC_GRP_Sw_P2_75);
+
+	MainPanelVC.AddSwitch(&SuitCircuitH2oAccumAutoSwitch, AID_VC_SWITCH_P2_76);
+	SuitCircuitH2oAccumAutoSwitch.SetReference(P2_TOGGLE_POS[75], _V(1, 0, 0));
+	SuitCircuitH2oAccumAutoSwitch.DefineMeshGroup(VC_GRP_Sw_P2_76);
+
+	MainPanelVC.AddSwitch(&SuitCircuitH2oAccumOnSwitch, AID_VC_SWITCH_P2_77);
+	SuitCircuitH2oAccumOnSwitch.SetReference(P2_TOGGLE_POS[76], _V(1, 0, 0));
+	SuitCircuitH2oAccumOnSwitch.DefineMeshGroup(VC_GRP_Sw_P2_77);
+
+	MainPanelVC.AddSwitch(&SuitCircuitHeatExchSwitch, AID_VC_SWITCH_P2_78);
+	SuitCircuitHeatExchSwitch.SetReference(P2_TOGGLE_POS[77], _V(1, 0, 0));
+	SuitCircuitHeatExchSwitch.DefineMeshGroup(VC_GRP_Sw_P2_78);
+
+	MainPanelVC.AddSwitch(&SecCoolantLoopEvapSwitch, AID_VC_SWITCH_P2_79);
+	SecCoolantLoopEvapSwitch.SetReference(P2_TOGGLE_POS[78], _V(1, 0, 0));
+	SecCoolantLoopEvapSwitch.DefineMeshGroup(VC_GRP_Sw_P2_79);
+
+	MainPanelVC.AddSwitch(&SecCoolantLoopPumpSwitch, AID_VC_SWITCH_P2_80);
+	SecCoolantLoopPumpSwitch.SetReference(P2_TOGGLE_POS[79], _V(1, 0, 0));
+	SecCoolantLoopPumpSwitch.DefineMeshGroup(VC_GRP_Sw_P2_80);
+
+	MainPanelVC.AddSwitch(&H2oQtyIndSwitch, AID_VC_SWITCH_P2_81);
+	H2oQtyIndSwitch.SetReference(P2_TOGGLE_POS[80], _V(1, 0, 0));
+	H2oQtyIndSwitch.DefineMeshGroup(VC_GRP_Sw_P2_81);
+
+	MainPanelVC.AddSwitch(&GlycolEvapTempInSwitch, AID_VC_SWITCH_P2_82);
+	GlycolEvapTempInSwitch.SetReference(P2_TOGGLE_POS[81], _V(1, 0, 0));
+	GlycolEvapTempInSwitch.DefineMeshGroup(VC_GRP_Sw_P2_82);
+
+	MainPanelVC.AddSwitch(&GlycolEvapSteamPressAutoManSwitch, AID_VC_SWITCH_P2_83);
+	GlycolEvapSteamPressAutoManSwitch.SetReference(P2_TOGGLE_POS[82], _V(1, 0, 0));
+	GlycolEvapSteamPressAutoManSwitch.DefineMeshGroup(VC_GRP_Sw_P2_83);
+
+	MainPanelVC.AddSwitch(&GlycolEvapSteamPressIncrDecrSwitch, AID_VC_SWITCH_P2_84);
+	GlycolEvapSteamPressIncrDecrSwitch.SetReference(P2_TOGGLE_POS[83], _V(1, 0, 0));
+	GlycolEvapSteamPressIncrDecrSwitch.DefineMeshGroup(VC_GRP_Sw_P2_84);
+
+	MainPanelVC.AddSwitch(&GlycolEvapH2oFlowSwitch, AID_VC_SWITCH_P2_85);
+	GlycolEvapH2oFlowSwitch.SetReference(P2_TOGGLE_POS[84], _V(1, 0, 0));
+	GlycolEvapH2oFlowSwitch.DefineMeshGroup(VC_GRP_Sw_P2_85);
+
+	MainPanelVC.AddSwitch(&CabinTempAutoManSwitch, AID_VC_SWITCH_P2_86);
+	CabinTempAutoManSwitch.SetReference(P2_TOGGLE_POS[85], _V(1, 0, 0));
+	CabinTempAutoManSwitch.DefineMeshGroup(VC_GRP_Sw_P2_86);
+
+	MainPanelVC.AddSwitch(&GHATrackSwitch, AID_VC_SWITCH_P2_87);
+	GHATrackSwitch.SetReference(P2_TOGGLE_POS[86], _V(1, 0, 0));
+	GHATrackSwitch.DefineMeshGroup(VC_GRP_Sw_P2_87);
+
+	MainPanelVC.AddSwitch(&GHABeamSwitch, AID_VC_SWITCH_P2_88);
+	GHABeamSwitch.SetReference(P2_TOGGLE_POS[87], _V(1, 0, 0));
+	GHABeamSwitch.DefineMeshGroup(VC_GRP_Sw_P2_88);
+
+	MainPanelVC.AddSwitch(&GHAPowerSwitch, AID_VC_SWITCH_P2_89);
+	GHAPowerSwitch.SetReference(P2_TOGGLE_POS[88], _V(1, 0, 0));
+	GHAPowerSwitch.DefineMeshGroup(VC_GRP_Sw_P2_89);
+
+	MainPanelVC.AddSwitch(&GHAServoElecSwitch, AID_VC_SWITCH_P2_90);
+	GHAServoElecSwitch.SetReference(P2_TOGGLE_POS[89], _V(1, 0, 0));
+	GHAServoElecSwitch.DefineMeshGroup(VC_GRP_Sw_P2_90);
+
+	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P2_01);
+	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P2_02);
+	MainPanelVC.AddSwitch(&DskySwitchPlus, AID_VC_PUSHB_P2_03);
+	MainPanelVC.AddSwitch(&DskySwitchMinus, AID_VC_PUSHB_P2_04);
+	MainPanelVC.AddSwitch(&DskySwitchZero, AID_VC_PUSHB_P2_05);
+	MainPanelVC.AddSwitch(&DskySwitchOne, AID_VC_PUSHB_P2_06);
+	MainPanelVC.AddSwitch(&DskySwitchTwo, AID_VC_PUSHB_P2_07);
+	MainPanelVC.AddSwitch(&DskySwitchThree, AID_VC_PUSHB_P2_08);
+	MainPanelVC.AddSwitch(&DskySwitchFour, AID_VC_PUSHB_P2_09);
+	MainPanelVC.AddSwitch(&DskySwitchFive, AID_VC_PUSHB_P2_10);
+	MainPanelVC.AddSwitch(&DskySwitchSix, AID_VC_PUSHB_P2_11);
+	MainPanelVC.AddSwitch(&DskySwitchSeven, AID_VC_PUSHB_P2_12);
+	MainPanelVC.AddSwitch(&DskySwitchEight, AID_VC_PUSHB_P2_13);
+	MainPanelVC.AddSwitch(&DskySwitchNine, AID_VC_PUSHB_P2_14);
+	MainPanelVC.AddSwitch(&DskySwitchClear, AID_VC_PUSHB_P2_15);
+	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P2_16);
+	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P2_17);
+	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18);
+	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19);
+
+	MainPanelVC.AddSwitch(&RCSIndicatorsSwitch, AID_VC_ROT_P2_01);
+	RCSIndicatorsSwitch.SetReference(P2_ROT_POS[0], P1_3_ROT_AXIS);
+	RCSIndicatorsSwitch.DefineMeshGroup(VC_GRP_Rot_P2_01);
+
+	MainPanelVC.AddSwitch(&ECSIndicatorsSwitch, AID_VC_ROT_P2_02);
+	ECSIndicatorsSwitch.SetReference(P2_ROT_POS[1], P1_3_ROT_AXIS);
+	ECSIndicatorsSwitch.DefineMeshGroup(VC_GRP_Rot_P2_02);
+
+	MainPanelVC.AddSwitch(&HighGainAntennaPitchPositionSwitch, AID_VC_ROT_P2_03);
+	HighGainAntennaPitchPositionSwitch.SetReference(P2_ROT_POS[2], P1_3_ROT_AXIS);
+	HighGainAntennaPitchPositionSwitch.DefineMeshGroup(VC_GRP_Rot_P2_03);
+
+	MainPanelVC.AddSwitch(&HighGainAntennaYawPositionSwitch, AID_VC_ROT_P2_04);
+	HighGainAntennaYawPositionSwitch.SetReference(P2_ROT_POS[3], P1_3_ROT_AXIS);
+	HighGainAntennaYawPositionSwitch.DefineMeshGroup(VC_GRP_Rot_P2_04);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium1ATalkback, AID_VC_RCS_HELIUM1_TB);
+	MainPanelVC.AddSwitch(&SMRCSHelium1BTalkback, AID_VC_RCS_HELIUM1_TB);
+	MainPanelVC.AddSwitch(&SMRCSHelium1CTalkback, AID_VC_RCS_HELIUM1_TB);
+	MainPanelVC.AddSwitch(&SMRCSHelium1DTalkback, AID_VC_RCS_HELIUM1_TB);
+
+	MainPanelVC.AddSwitch(&SMRCSHelium2ATalkback, AID_VC_RCS_HELIUM2_TB);
+	MainPanelVC.AddSwitch(&SMRCSHelium2BTalkback, AID_VC_RCS_HELIUM2_TB);
+	MainPanelVC.AddSwitch(&SMRCSHelium2CTalkback, AID_VC_RCS_HELIUM2_TB);
+	MainPanelVC.AddSwitch(&SMRCSHelium2DTalkback, AID_VC_RCS_HELIUM2_TB);
+
+	MainPanelVC.AddSwitch(&SMRCSProp1ATalkback, AID_VC_RCS_PROP1_TB);
+	MainPanelVC.AddSwitch(&SMRCSProp1BTalkback, AID_VC_RCS_PROP1_TB);
+	MainPanelVC.AddSwitch(&SMRCSProp1CTalkback, AID_VC_RCS_PROP1_TB);
+	MainPanelVC.AddSwitch(&SMRCSProp1DTalkback, AID_VC_RCS_PROP1_TB);
+
+	MainPanelVC.AddSwitch(&CMRCSProp1Talkback, AID_VC_RCS_PROP2_TB);
+	MainPanelVC.AddSwitch(&CMRCSProp2Talkback, AID_VC_RCS_PROP2_TB);
+	MainPanelVC.AddSwitch(&SMRCSProp2ATalkback, AID_VC_RCS_PROP2_TB);
+	MainPanelVC.AddSwitch(&SMRCSProp2BTalkback, AID_VC_RCS_PROP2_TB);
+	MainPanelVC.AddSwitch(&SMRCSProp2CTalkback, AID_VC_RCS_PROP2_TB);
+	MainPanelVC.AddSwitch(&SMRCSProp2DTalkback, AID_VC_RCS_PROP2_TB);
+
+	MainPanelVC.AddSwitch(&EcsRadiatorIndicator, AID_VC_ECSRADIATORIND);
+
+	MainPanelVC.AddSwitch(&DockingProbeAIndicator, AID_VC_DOCKINGPROBEIND);
+	MainPanelVC.AddSwitch(&DockingProbeBIndicator, AID_VC_DOCKINGPROBEIND);
 
 	// RSI indicator
-	static UINT meshgroup_RSI_indicator = VC_GRP_RSI_Indicator;
+	/*static UINT meshgroup_RSI_indicator = VC_GRP_RSI_Indicator;
 	static MGROUP_ROTATE mgt_RSI_indicator(mesh, &meshgroup_RSI_indicator, 1, _V(-0.680414, 0.71462, 0.365469), P1_3_ROT_AXIS, (float)(RAD * 360));
 	anim_RSI_indicator = CreateAnimation(0.0);
 	AddAnimationComponent(anim_RSI_indicator, 0.0f, 1.0f, &mgt_RSI_indicator);
@@ -1308,9 +1764,11 @@ void Saturn::DefineVCAnimations()
 	static UINT  meshgroup_EMS_DVSet_Switch = VC_GRP_EMSDV_Set_switch;
 	static MGROUP_ROTATE mgt_EMS_DVSet_Switch(mesh, &meshgroup_EMS_DVSet_Switch, 1, _V(-0.507344, 0.732746, 0.370513), _V(1, 0, 0), (float)(RAD * 10));
 	anim_emsdvsetswitch = CreateAnimation(0.5);
-	AddAnimationComponent(anim_emsdvsetswitch, 0.0f, 1.0f, &mgt_EMS_DVSet_Switch);
+	AddAnimationComponent(anim_emsdvsetswitch, 0.0f, 1.0f, &mgt_EMS_DVSet_Switch);*/
 
-	InitFDAI(mesh);
+    MainPanelVC.DefineVCAnimations(vcidx);
+
+	InitFDAI(vcidx);
 }
 
 void Saturn::InitFDAI(UINT mesh)

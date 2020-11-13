@@ -1,6 +1,6 @@
 // ========================================================
 // Mesh resource file for CM-VC.msh
-// Generated with meshc on Wed Nov 11 20:40:32 2020
+// Generated with meshc on Thu Nov 12 16:35:34 2020
 // ========================================================
 
 // Number of mesh groups:
@@ -356,33 +356,33 @@
 #define VC_GRP_Sw_P3_62 340
 #define VC_GRP_Sw_P3_63 341
 #define VC_GRP_Sw_P3_64 342
-#define VC_GRP_SwitchCover_P1_3_01 343
-#define VC_GRP_SwitchCover_P1_3_02 344
-#define VC_GRP_SwitchCover_P1_3_03 345
-#define VC_GRP_SwitchCover_P1_3_04 346
-#define VC_GRP_SwitchCover_P1_3_05 347
-#define VC_GRP_SwitchCover_P1_3_06 348
-#define VC_GRP_SwitchCover_P1_3_07 349
-#define VC_GRP_SwitchCover_P1_3_08 350
-#define VC_GRP_SwitchCover_P1_3_09 351
-#define VC_GRP_SwitchCover_P1_3_10 352
-#define VC_GRP_SwitchCover_P1_3_11 353
-#define VC_GRP_SwitchCover_P1_3_12 354
-#define VC_GRP_SwitchCover_P1_3_13 355
-#define VC_GRP_SwitchCover_P1_3_14 356
-#define VC_GRP_SwitchCover_P1_3_15 357
-#define VC_GRP_SwitchCover_P1_3_16 358
-#define VC_GRP_SwitchCover_P1_3_17 359
-#define VC_GRP_SwitchCover_P1_3_18 360
-#define VC_GRP_SwitchCover_P1_3_19 361
-#define VC_GRP_SwitchCover_P1_3_20 362
-#define VC_GRP_SwitchCover_P1_3_21 363
-#define VC_GRP_SwitchCover_P1_3_22 364
-#define VC_GRP_SwitchCover_P1_3_23 365
-#define VC_GRP_SwitchCover_P1_3_24 366
-#define VC_GRP_SwitchCover_P1_3_25 367
-#define VC_GRP_SwitchCover_P1_3_26 368
-#define VC_GRP_SwitchCover_P1_3_27 369
+#define VC_GRP_SwitchCover_P1_01 343
+#define VC_GRP_SwitchCover_P1_02 344
+#define VC_GRP_SwitchCover_P1_03 345
+#define VC_GRP_SwitchCover_P1_04 346
+#define VC_GRP_SwitchCover_P1_05 347
+#define VC_GRP_SwitchCover_P1_06 348
+#define VC_GRP_SwitchCover_P1_07 349
+#define VC_GRP_SwitchCover_P1_08 350
+#define VC_GRP_SwitchCover_P1_09 351
+#define VC_GRP_SwitchCover_P1_10 352
+#define VC_GRP_SwitchCover_P1_11 353
+#define VC_GRP_SwitchCover_P1_12 354
+#define VC_GRP_SwitchCover_P1_13 355
+#define VC_GRP_SwitchCover_P1_14 356
+#define VC_GRP_SwitchCover_P1_15 357
+#define VC_GRP_SwitchCover_P2_01 358
+#define VC_GRP_SwitchCover_P2_02 359
+#define VC_GRP_SwitchCover_P2_03 360
+#define VC_GRP_SwitchCover_P2_04 361
+#define VC_GRP_SwitchCover_P2_05 362
+#define VC_GRP_SwitchCover_P2_06 363
+#define VC_GRP_SwitchCover_P2_07 364
+#define VC_GRP_SwitchCover_P2_08 365
+#define VC_GRP_SwitchCover_P2_09 366
+#define VC_GRP_SwitchCover_P2_10 367
+#define VC_GRP_SwitchCover_P2_11 368
+#define VC_GRP_SwitchCover_P2_12 369
 #define VC_GRP_SwitchGuard_P1 370
 #define VC_GRP_SwitchGuard_P2 371
 #define VC_GRP_SwitchGuard_P3 372
