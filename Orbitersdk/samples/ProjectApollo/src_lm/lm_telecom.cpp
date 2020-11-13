@@ -360,7 +360,7 @@ void LM_VHF::Timestep(double simt)
 	{
 		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
 		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
-		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\Saturn5", 21)) //some day: if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\CSM", 17))
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\\Saturn5", 21)) //some day: if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\CSM", 17))
 		{
 			isCSM = true;
 		}
