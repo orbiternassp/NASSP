@@ -3656,8 +3656,8 @@ protected:
 	OMNI omnib;
 	OMNI omnic;
 	OMNI omnid;
-	VHFAntenna vhfa;
-	VHFAntenna vhfb;
+	VHFAntenna vhfAntRight;
+	VHFAntenna vhfAntLeft;
 	VHFRangingSystem vhfranging;
 	VHFAMTransceiver vhftransceiver;
 	RNDZXPDRSystem RRTsystem;
@@ -4516,7 +4516,9 @@ protected:
 	// Checklist Controller to CSM connector
 	ChecklistDataInterface cdi;
 
+	//RF connectors
 	CSM_RRTto_LM_RRConnector CSM_RRTto_LM_RRConnector;
+	CSM_VHFto_LM_VHFConnector csm_vhfto_lm_vhfconnector;
 
 	//
 	// PanelSDK pointers.
@@ -4642,6 +4644,7 @@ protected:
 	friend class SaturnLVSPSPcMeter;
 	friend class SaturnSPSHeliumNitrogenPressMeter;
 	friend class SaturnLMDPGauge;
+	friend class VHFAMTransceiver;
 	friend class VHFRangingSystem;
 	friend class RNDZXPDRSystem;
 	friend class DockingTargetSwitch;

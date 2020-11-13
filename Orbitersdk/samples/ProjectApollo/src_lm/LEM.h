@@ -451,7 +451,6 @@ public:
 	int GetApolloNo() { return ApolloNo; }
 	UINT GetStage() { return stage; }
 	virtual double GetAscentStageMass();
-	virtual void SendVHFRangingSignal(Saturn *sat, bool isAcquiring);
 
 	virtual void PlayCountSound(bool StartStop) {};
 	virtual void PlaySepsSound(bool StartStop) {};
@@ -1720,6 +1719,7 @@ protected:
 	LEMCommandConnector CSMToLEMCommandConnector;
 
 	LM_RRtoCSM_RRT_Connector lm_rr_to_csm_connector;
+	LM_VHFtoCSM_VHF_Connector lm_vhf_to_csm_csm_connector;
 
 	// Checklist Controller to LEM connector
 	ChecklistDataInterface cdi;

@@ -401,6 +401,7 @@
     <ClInclude Include="..\..\src_aux\IMFD\IMFD_Client.h" />
     <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_csm\CM_VC_Resource.h" />
+    <ClInclude Include="..\..\src_aux\RF_calc.h" />
     <ClInclude Include="..\..\src_csm\csmsensors.h" />
     <ClInclude Include="..\..\src_csm\rhc.h" />
     <ClInclude Include="..\..\src_csm\sce.h" />

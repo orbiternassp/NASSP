@@ -450,6 +450,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_csm\CM_VC_Resource.h">
+	  <Filter>Header Files</Filter>
+	</ClInclude>
+    <ClInclude Include="..\..\src_aux\RF_calc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -872,8 +872,8 @@ bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage
 		return false;
 	}
 
-	LM_RRmessageType messageType;
-	messageType = (LM_RRmessageType)m.messageType;
+	RFconnectorMessageType messageType;
+	messageType = (RFconnectorMessageType)m.messageType;
 
 	switch (messageType)
 	{
@@ -891,4 +891,67 @@ bool CSM_RRTto_LM_RRConnector::ReceiveMessage(Connector * from, ConnectorMessage
 	}
 
 	return false;
+}
+
+CSM_VHFto_LM_VHFConnector::CSM_VHFto_LM_VHFConnector(Saturn *s, VHFAMTransceiver *VHFxcvr, VHFRangingSystem  *vhf_system): SaturnConnector(s)
+{
+	type = VHF_RNG;
+	pVHFRngSys = vhf_system;
+	pVHFxcvr = VHFxcvr;
+}
+
+CSM_VHFto_LM_VHFConnector::~CSM_VHFto_LM_VHFConnector()
+{
+}
+
+void CSM_VHFto_LM_VHFConnector::SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone)
+{
+	ConnectorMessage cm;
+
+	cm.destination = VHF_RNG;
+	cm.messageType = VHF_RNG_SIGNAL_CSM;
+
+	cm.val1.dValue = freq; //MHz
+	cm.val2.dValue = XMITpow; //W
+	cm.val3.dValue = XMITgain; //dBi
+	cm.val4.dValue = XMITphase;
+	cm.val1.bValue = RangeTone;
+
+	SendMessage(cm);
+}
+
+bool CSM_VHFto_LM_VHFConnector::ReceiveMessage(Connector * from, ConnectorMessage & m)
+{
+	if ((!pVHFRngSys) || (!pVHFxcvr)) //No more segfaults
+	{
+		return false;
+	}
+
+	//this checks that the incoming frequencies from the csm connector are within 1% of the tuned frequencies of the receivers
+	//in actuality it should be something more like a resonance responce centered around the tuned receiver frequency, but this waaay more simple
+	//and easy to compute every timestep
+
+	if (m.val1.dValue > pVHFxcvr->freqXCVR_A*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_A*1.01f)
+	{
+		//sprintf(oapiDebugString(), "A");
+		pVHFxcvr->RCVDfreqRCVR_A = m.val1.dValue;
+		pVHFxcvr->RCVDpowRCVR_A = m.val2.dValue;
+		pVHFxcvr->RCVDgainRCVR_A = m.val3.dValue;
+		pVHFxcvr->RCVDPhaseRCVR_A = m.val4.dValue;
+		pVHFxcvr->RCVDRangeTone = m.val1.bValue;
+		return true;
+	}
+	else if (m.val1.dValue > pVHFxcvr->freqXCVR_B*0.99f && m.val1.dValue < pVHFxcvr->freqXCVR_B*1.01f)
+	{
+		//sprintf(oapiDebugString(), "B");
+		pVHFxcvr->RCVDfreqRCVR_B = m.val1.dValue;
+		pVHFxcvr->RCVDpowRCVR_B = m.val2.dValue;
+		pVHFxcvr->RCVDgainRCVR_B = m.val3.dValue;
+		pVHFxcvr->RCVDPhaseRCVR_B = m.val4.dValue;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

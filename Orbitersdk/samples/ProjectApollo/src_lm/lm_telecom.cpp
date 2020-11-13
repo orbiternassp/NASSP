@@ -47,9 +47,49 @@
 #include "lm_channels.h"
 #include "LM_AscentStageResource.h"
 
+#include "RF_calc.h"
+
+//VHF Antenna
+
+LM_VHFAntenna::LM_VHFAntenna(VECTOR3 dir, double maximumGain)
+{
+	pointingVector = dir;
+	maxGain = maximumGain;
+}
+
+LM_VHFAntenna::~LM_VHFAntenna()
+{
+}
+
+double LM_VHFAntenna::getPolarGain(VECTOR3 target)
+{
+	double theta = 0.0;
+	double gain = 0.0;
+
+	theta = acos(dotp(unit(target), unit(pointingVector)));
+
+	if (theta < 90.0*RAD)
+	{
+		gain = pow(cos(theta / 10.0), 2.0)*maxGain; //probably a toroidal polar, but this is close enough for now
+	}
+	else
+	{
+		gain = -150.0;
+	}
+
+	return gain;
+}
+
 // VHF System (and shared stuff)
-LM_VHF::LM_VHF(){
+LM_VHF::LM_VHF():
+	fwdInflightVHF(unit(_V(-1.0, 0.5, 0.0)), -10.0), // rough positions for testing
+	aftInflightVHF(unit(_V(0.1, 0.5, -1.0)), -10.0),
+	evaVHF(_V(0.0, 1.0, 0.0), -15.0)
+{
 	lem = NULL;
+	csm = NULL;
+	AntennaSelectorSW = NULL;
+
 	VHFHeat = 0;
 	VHFSECHeat = 0;
 	PCMHeat = 0;
@@ -83,7 +123,35 @@ bool LM_VHF::registerSocket(SOCKET sock)
 	return true;
 }
 void LM_VHF::Init(LEM *vessel, h_HeatLoad *vhfh, h_HeatLoad *secvhfh, h_HeatLoad *pcmh, h_HeatLoad *secpcmh){
+	
 	lem = vessel;
+	AntennaSelectorSW = &lem->Panel12VHFAntSelKnob;
+
+	if (!csm)
+	{
+		csm = lem->agc.GetCSM();
+	}
+
+	if (!(lem->lm_rr_to_csm_connector.connectedTo))
+	{
+		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+	}
+
+	RCVDfreqRCVR_A = 0.0;
+	RCVDpowRCVR_A = 0.0;
+	RCVDgainRCVR_A = 0.0;
+	RCVDPhaseRCVR_A = 0.0;
+	RCVDfreqRCVR_B = 0.0;
+	RCVDpowRCVR_B = 0.0;
+	RCVDgainRCVR_B = 0.0;
+	RCVDPhaseRCVR_B = 0.0;
+	RCVDRangeTone = false;
+
+	RCVDinputPowRCVR_A = -150.0;
+	RCVDinputPowRCVR_B = -150.0;
+
+	xmitPower = 5; //watts
+
 	VHFHeat = vhfh;
 	VHFSECHeat = secvhfh;
 	PCMHeat = pcmh;
@@ -270,15 +338,81 @@ void LM_VHF::SystemTimestep(double simdt) {
 	}
 }
 
-void LM_VHF::RangingSignal(Saturn *sat, bool isAcquiring)
+void LM_VHF::Timestep(double simt)
 {
-	if (isRanging && transmitA && receiveB)
+	if (AntennaSelectorSW->GetState() == 0)
 	{
-		sat->VHFRangingReturnSignal();
+		activeAntenna = &aftInflightVHF;
 	}
-}
+	else if (AntennaSelectorSW->GetState() == 1)
+	{
+		activeAntenna = &fwdInflightVHF;
+	}
+	else
+	{
+		activeAntenna = &evaVHF;
+	}
 
-void LM_VHF::Timestep(double simt){
+	//this block of code checks to see if the LEM has somehow been deleted mid sceneriao, and sets the lem pointer to null
+	bool isCSM = false;
+
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\Saturn5", 21)) //some day: if (!_strnicmp(pVessel->GetClassName(), "ProjectApollo\CSM", 17))
+		{
+			isCSM = true;
+		}
+	}
+
+	if (!isCSM)
+	{
+		csm = NULL;
+		lem->lm_vhf_to_csm_csm_connector.Disconnect();
+	}
+	//
+
+	VECTOR3 R = _V(0,0,0);
+
+	if (!csm)
+	{
+		csm = lem->agc.GetCSM(); //############################ FIXME ################################
+	}
+
+	if (csm)
+	{
+		oapiGetRelativePos(csm->GetHandle(), lem->GetHandle(), &R); //vector to the LM
+	}
+
+	if (!(lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
+	{
+		lem->lm_vhf_to_csm_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
+	}
+	
+	if ((lem->lm_vhf_to_csm_csm_connector.connectedTo) && csm)
+	{
+		if (receiveA)
+		{
+			RCVDinputPowRCVR_A = RFCALC_rcvdPower(RCVDpowRCVR_A, RCVDgainRCVR_A, activeAntenna->getPolarGain(R), RCVDfreqRCVR_A, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_A = -150.0;
+		}
+
+		if (receiveB)
+		{
+			RCVDinputPowRCVR_B = RFCALC_rcvdPower(RCVDpowRCVR_B, RCVDgainRCVR_B, activeAntenna->getPolarGain(R), RCVDfreqRCVR_B, length(R));
+		}
+		else
+		{
+			RCVDinputPowRCVR_B = -150.0;
+		}
+	}
+
+	//sprintf(oapiDebugString(), "RCVR A: %lf dbm     RCVR B: %lf dBm", RCVDinputPowRCVR_A, RCVDinputPowRCVR_B);
+
 	// This stuff has to happen every timestep, regardless of system status.
 	if(wsk_error != 0){
 		sprintf(oapiDebugString(),"%s",wsk_emsg);
@@ -327,6 +461,19 @@ void LM_VHF::Timestep(double simt){
 				}			
 				perform_io(simt);
 			}
+		}
+	}
+
+	if (lem->lm_vhf_to_csm_csm_connector.connectedTo)
+	{
+		if (transmitA)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_A, xmitPower, activeAntenna->getPolarGain(R), 0.0, (isRanging && !transmitB && RCVDRangeTone && (RCVDinputPowRCVR_B>minimumRCVDPower)));
+		}
+
+		if (transmitB)
+		{
+			lem->lm_vhf_to_csm_csm_connector.SendRF(freqXCVR_B, xmitPower, activeAntenna->getPolarGain(R), 0.0, false);
 		}
 	}
 }

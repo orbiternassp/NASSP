@@ -99,3 +99,17 @@ public:
 protected:
 	LEM_RR* lemrr; //pointer to the instance of the RR that's doing the sending
 };
+
+class LM_VHF;
+
+class LM_VHFtoCSM_VHF_Connector : public LEMConnector
+{
+public:
+	LM_VHFtoCSM_VHF_Connector(LEM *l, LM_VHF *VHFsys);
+	~LM_VHFtoCSM_VHF_Connector();
+
+	void SendRF(double freq, double XMITpow, double XMITgain, double XMITphase, bool RangeTone);
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+protected:
+	LM_VHF *pLM_VHFs;
+};
