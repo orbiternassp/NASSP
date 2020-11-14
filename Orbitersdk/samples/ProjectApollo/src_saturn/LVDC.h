@@ -516,6 +516,7 @@ private:								// Saturn LV
 	double R;										// Instantaneous Radius Magnitude
 	double R_T;										// Desired terminal radius
 	double V;										// Instantaneous vehicle velocity
+	double VOLD;									// Vehicle velocity during previous major loop
 	double V_T;										// Desired terminal velocity
 	double V_R;										// Velocity referenced to atmosphere (true airspeed)
 	double V_i,V_0,V_1,V_2;							// Parameters for cutoff velocity computation

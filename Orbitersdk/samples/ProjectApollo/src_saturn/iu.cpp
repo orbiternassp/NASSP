@@ -211,19 +211,6 @@ bool IU::GetSIIEngineOut()
 	return false;
 }
 
-bool IU::GetSIVBEngineOut()
-{
-	int stage = lvCommandConnector.GetStage();
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
-
-	if (lvCommandConnector.GetSIVBThrustOK() == false)
-	{
-		return true;
-	}
-
-	return false;
-}
-
 VECTOR3 IU::GetTheodoliteAlignment(double azimuth)
 {
 	MATRIX3 R, R_left, Rot;

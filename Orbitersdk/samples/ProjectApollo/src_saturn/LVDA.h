@@ -96,7 +96,8 @@ public:
 	bool SCInitiationOfSIISIVBSeparation();
 	bool GetSIIPropellantDepletionEngineCutoff();
 	bool SpacecraftSeparationIndication();
-	bool GetSIVBEngineOut();
+	bool GetSIVBEngineOutA();
+	bool GetSIVBEngineOutB();
 	bool GetSIPropellantDepletionEngineCutoff();
 	bool SIBLowLevelSensorsDry();
 	bool GetLiftoff();

@@ -193,9 +193,14 @@ bool LVDA::SpacecraftSeparationIndication()
 	return iu->GetLVCommandConnector()->CSMSeparationSensed();
 }
 
-bool LVDA::GetSIVBEngineOut()
+bool LVDA::GetSIVBEngineOutA()
 {
-	return iu->GetSIVBEngineOut();
+	return iu->GetControlDistributor()->GetSIVBEngineOutA();
+}
+
+bool LVDA::GetSIVBEngineOutB()
+{
+	return iu->GetControlDistributor()->GetSIVBEngineOutB();
 }
 
 bool LVDA::GetSIPropellantDepletionEngineCutoff()

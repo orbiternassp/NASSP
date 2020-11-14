@@ -277,7 +277,6 @@ public:
 	bool GetSIOutboardEngineOut();
 	virtual bool GetSIIInboardEngineOut();
 	virtual bool GetSIIEngineOut();
-	bool GetSIVBEngineOut();
 	bool IsUmbilicalConnected();
 	bool GetSCControlPoweredFlight() { return SCControlPoweredFlight; }
 	VECTOR3 GetTheodoliteAlignment(double azimuth);

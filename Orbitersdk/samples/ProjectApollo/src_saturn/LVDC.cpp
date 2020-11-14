@@ -718,7 +718,7 @@ void LVDC1B::TimeStep(double simdt) {
 				}
 
 				//Manual S-IVB Shutdown
-				if (S4B_IGN == true && lvda.GetSIVBEngineOut())
+				if (S4B_IGN == true && lvda.GetSIVBEngineOutA())
 				{
 					S4B_IGN = false;
 					LVDC_Timebase = 4;
@@ -3236,6 +3236,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	V_0 = 0;
 	V_1 = 0;
 	V_2 = 0;
+	VOLD = 0;
 	V_S2T = 0;
 	V_T = 0;
 	V_TC = 0;
@@ -4308,6 +4309,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_V_0", V_0);
 	papiWriteScenario_double(scn, "LVDC_V_1", V_1);
 	papiWriteScenario_double(scn, "LVDC_V_2", V_2);
+	papiWriteScenario_double(scn, "LVDC_VOLD", VOLD);
 	papiWriteScenario_double(scn, "LVDC_V_S2T", V_S2T);
 	papiWriteScenario_double(scn, "LVDC_V_T", V_T);
 	papiWriteScenario_double(scn, "LVDC_V_TC", V_TC);
@@ -5034,6 +5036,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_V_0", V_0);
 		papiReadScenario_double(line, "LVDC_V_1", V_1);
 		papiReadScenario_double(line, "LVDC_V_2", V_2);
+		papiReadScenario_double(line, "LVDC_VOLD", VOLD);
 		papiReadScenario_double(line, "LVDC_V_S2T", V_S2T);
 		papiReadScenario_double(line, "LVDC_V_T", V_T);
 		papiReadScenario_double(line, "LVDC_V_TC", V_TC);
@@ -5656,7 +5659,7 @@ void LVDCSV::PhaseActivator(bool init)
 	{
 	case 1:
 	case 3:
-		//TBD: Set initial status of non-interrupt sequence tasks
+		//Set initial status of non-interrupt sequence tasks
 		NISTAT[0] = true;
 		NISTAT[1] = false;
 		NISTAT[2] = true;
@@ -5862,7 +5865,7 @@ bool LVDCSV::GetInterrupt(int rupt)
 		return lvda.SCInitiationOfSIISIVBSeparation();
 		break;
 	case INT4_SIVBEngineOutB:
-		return lvda.GetSIVBEngineOut();
+		return lvda.GetSIVBEngineOutB();
 		break;
 	case INT5_SICOutboardEnginesCutoffA:
 		return lvda.GetSIPropellantDepletionEngineCutoff();
@@ -6346,6 +6349,8 @@ void LVDCSV::BoostNavigation()
 	DotG_act = DotG_last + (ddotG_act + ddotG_last)*dt_c / 2.0;
 	//Compute Space-Fixed Velocity
 	DotS = DotM_act + DotG_act; //total velocity vector
+	//Save old velocity for Timebase 5/7 check
+	VOLD = V;
 	V = length(DotS);
 	//save the 'actual' variables as 'last' variables for the next step
 	DotM_last = DotM_act;
@@ -6645,8 +6650,6 @@ void LVDCSV::IterativeGuidanceMode()
 			fprintf(lvlog, "RANGE ANGLE 2\r\n");
 			//sprintf(oapiDebugString(),"LVDC: RANGE ANGLE 2: %f %f",Tt_T,eps_1);
 			// LVDC_GP_PC = 30; // STOP
-			V = length(DotS);
-			R = length(PosS);
 			sin_gam = ((PosS.x*DotS.x) + (PosS.y*DotS.y) + (PosS.z*DotS.z)) / (R*V);
 			cos_gam = pow(1.0 - pow(sin_gam, 2), 0.5);
 			dot_phi_1 = (V*cos_gam) / R;
@@ -7244,7 +7247,7 @@ void LVDCSV::EventsProcessor(int entry)
 		case 38: //TB4+8.6
 			S4B_IGN = true;
 			break;
-		case 39: //TB4+10
+		case 39: //Start checking for TB5 (TB4+10)
 			DVIH[INT4_SIVBEngineOutB] = false;
 			DPM[DIN5_SIVBEngineOutA] = false;
 			NISTAT[17] = true;
@@ -7455,6 +7458,8 @@ void LVDCSV::EventsProcessor(int entry)
 			fprintf(lvlog, "Communications attitude\r\n");
 			break;
 		case 103: //TB4a+0
+			DPM[DIN13_SIIInboardEngineOut] = true;
+			DPM[DIN21_SIIOutboardEngineOut] = true;
 			break;
 		case 104: //TB4a+11.5
 			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
@@ -7462,7 +7467,7 @@ void LVDCSV::EventsProcessor(int entry)
 		case 105: //TB4a+13.3
 			S4B_IGN = true;
 			break;
-		case 106: //TB4a+15
+		case 106: //Start checking for TB5 (TB4a+15)
 			DVIH[INT4_SIVBEngineOutB] = false;
 			DPM[DIN5_SIVBEngineOutA] = false;
 			NISTAT[17] = true;
@@ -7863,11 +7868,30 @@ void LVDCSV::CheckTimeBase57()
 {
 	int cut = 0;
 	//Interrupt 4
-	if (DVIH[INT4_SIVBEngineOutB] == false && lvda.GetSIVBEngineOut()) cut++;
+	if (DVIH[INT4_SIVBEngineOutB] == false && lvda.GetSIVBEngineOutB()) cut++;
 	//DIN 5
-	if (DPM[DIN5_SIVBEngineOutA] == false && lvda.GetSIVBEngineOut()) cut++;
+	if (DPM[DIN5_SIVBEngineOutA] == false && lvda.GetSIVBEngineOutA()) cut++;
 	//Velocity cutoff by LVDC
-	//TBD: Acceleration less than 1 m/s in last boost major loop
+	if (S4B_IGN)
+	{
+		if (ModeCode25[MC25_FirstSIVBCutoffCommand])
+		{
+			cut++;
+		}
+	}
+	else if (S4B_REIGN)
+	{
+		if (ModeCode26[MC26_SecondSIVBCutoffCommand])
+		{
+			cut++;
+		}
+	}
+	//Acceleration less than 1 m/s in last boost major loop
+	if (V < VOLD + 1.0)
+	{
+		cut++;
+	}
+
 	if (cut >= 2)
 	{
 		if (LVDC_Timebase == 4 || LVDC_Timebase == 40)
@@ -7988,7 +8012,6 @@ void LVDCSV::StartTimebase7()
 		GATE5 = false;
 		Tt_T = 1000;
 		HSL = false;
-		BOOST = false;
 		S4B_REIGN = false;
 
 		//Timing settings
