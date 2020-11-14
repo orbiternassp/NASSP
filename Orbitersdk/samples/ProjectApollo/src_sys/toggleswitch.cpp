@@ -2915,6 +2915,8 @@ ThumbwheelSwitch::ThumbwheelSwitch() {
 	pswitchrot = NULL;
 	grpIndex = 0;
 	anim_switch = 0;
+
+	RotationRange = RAD * 324;
 }
 
 ThumbwheelSwitch::~ThumbwheelSwitch() {
@@ -3013,6 +3015,16 @@ bool ThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
+void ThumbwheelSwitch::SetRotationRange(const double range)
+{
+	RotationRange = range;
+}
+
+const double ThumbwheelSwitch::GetRotationRange() const
+{
+	return RotationRange;
+}
+
 void ThumbwheelSwitch::DefineMeshGroup(UINT _grpIndex)
 {
 	grpIndex = _grpIndex;
@@ -3022,8 +3034,8 @@ void ThumbwheelSwitch::DefineVCAnimations(UINT vc_idx)
 {
 	if (bHasReference && bHasDirection && !bHasAnimations)
 	{
-		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(RAD * 324));
-		anim_switch = OurVessel->CreateAnimation(0.0);
+		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(GetRotationRange()));
+		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
 		VerifyAnimations();
 	}
@@ -3206,7 +3218,7 @@ bool ContinuousThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
 
 bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	if (p.x < 0.01)
+	if (p.x < 0.005)
 	{
 		if (event == PANEL_MOUSE_LBDOWN) {
 			if (isHorizontal) {

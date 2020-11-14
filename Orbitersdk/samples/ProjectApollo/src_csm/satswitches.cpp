@@ -1681,12 +1681,6 @@ void SaturnSCControlSetter::SetSCControl(Saturn *sat)
 	}
 }
 
-
-SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch(Sound &clicksound) : ClickSound(clicksound)
-{
-	position = 0;
-}
-
 void SaturnEMSDvDisplay::Init(SURFHANDLE digits, SwitchRow &row, Saturn *s)
 {
 	MeterSwitch::Init(row);
@@ -1847,6 +1841,20 @@ void SaturnASCPSwitch::SetState(int value) {
 	Sat->ascp.output.data[Axis] = value / 10.;
 }
 
+SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch(Sound &clicksound) : ClickSound(clicksound)
+{
+	sat = NULL;
+	position = 0;
+	anim_emsdvsetswitch = -1;
+	grp = 0;
+	dvswitchrot = NULL;
+}
+
+SaturnEMSDvSetSwitch::~SaturnEMSDvSetSwitch()
+{
+	if (dvswitchrot) delete dvswitchrot;
+}
+
 bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my)
 {
 	int oldPos = position;
@@ -1903,6 +1911,50 @@ bool SaturnEMSDvSetSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 	return true;
 }
 
+void SaturnEMSDvSetSwitch::SetReference(const VECTOR3& ref)
+{
+	reference = ref;
+}
+
+void SaturnEMSDvSetSwitch::DefineMeshGroup(UINT _grp)
+{
+	grp = _grp;
+}
+
+const VECTOR3& SaturnEMSDvSetSwitch::GetReference() const
+{
+	return reference;
+}
+
+void SaturnEMSDvSetSwitch::DefineVCAnimations(UINT vc_idx)
+{
+	dvswitchrot = new MGROUP_ROTATE(vc_idx, &grp, 1, GetReference(), _V(1, 0, 0), (float)(RAD * 10));
+	anim_emsdvsetswitch = sat->CreateAnimation(0.5);
+	sat->AddAnimationComponent(anim_emsdvsetswitch, 0.0f, 1.0f, dvswitchrot);
+}
+
+void SaturnEMSDvSetSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	if (anim_emsdvsetswitch != 1) {
+		switch ((int)GetPosition()) {
+		case 1:
+			sat->SetAnimation(anim_emsdvsetswitch, 1.0);
+			break;
+		case 2:
+			sat->SetAnimation(anim_emsdvsetswitch, 0.75);
+			break;
+		case 3:
+			sat->SetAnimation(anim_emsdvsetswitch, 0.0);
+			break;
+		case 4:
+			sat->SetAnimation(anim_emsdvsetswitch, 0.25);
+			break;
+		default:
+			sat->SetAnimation(anim_emsdvsetswitch, 0.5);
+			break;
+		}
+	}
+}
 
 void SaturnCabinPressureReliefLever::InitGuard(SURFHANDLE surf, SoundLib *soundlib)
 {	

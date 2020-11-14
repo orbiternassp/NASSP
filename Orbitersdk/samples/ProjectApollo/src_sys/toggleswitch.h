@@ -1377,6 +1377,7 @@ public:
 
 	void DefineVCAnimations(UINT vc_idx);
 	void DefineMeshGroup(UINT _grpIndex);
+	void SetRotationRange(const double range);
 
 protected:
 	int	x;
@@ -1392,9 +1393,11 @@ protected:
 	SwitchRow *switchRow;
 	VESSEL *OurVessel;
 
+	const double GetRotationRange() const;
 	MGROUP_ROTATE* pswitchrot;
 	UINT grpIndex;
 	UINT anim_switch;
+	double RotationRange;
 };
 
 class ContinuousThumbwheelSwitch : public ThumbwheelSwitch {

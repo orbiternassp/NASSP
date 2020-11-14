@@ -783,13 +783,30 @@ class SaturnEMSDvSetSwitch {
 
 public:
 	SaturnEMSDvSetSwitch(Sound &clicksound);
+	virtual ~SaturnEMSDvSetSwitch();
 	void Init(Saturn *s) { sat = s; };
 	int GetPosition() { return position; };
 	bool CheckMouseClick(int event, int mx, int my);
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
 
+	void DefineVCAnimations(UINT vc_idx);
+	void SetReference(const VECTOR3& ref);
+	void DefineMeshGroup(UINT _grp);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+
 protected:
 	int position;
+
+	const VECTOR3& GetReference() const;
+
+	VECTOR3 reference;
+	VECTOR3 dir;
+
+	UINT anim_emsdvsetswitch;
+	UINT grp;
+
+	MGROUP_ROTATE *dvswitchrot;
+
 	Saturn *sat;
 	Sound &ClickSound;
 };
