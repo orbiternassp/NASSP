@@ -844,22 +844,27 @@
 #define AID_VC_PUSHB_P1_06              3156
 #define AID_VC_PUSHB_P1_07              3157
 #define AID_VC_PUSHB_P1_08              3158
+#define AID_VC_PUSHB_P1_09              3159
+#define AID_VC_PUSHB_P1_10              3160
+#define AID_VC_PUSHB_P1_11              3161
 
-#define AID_VC_TW_P1_01                 3159
-#define AID_VC_TW_P1_02                 3160
+#define AID_VC_TW_P1_01                 3163
+#define AID_VC_TW_P1_02                 3164
+#define AID_VC_TW_P1_03                 3165
+#define AID_VC_TW_P1_04                 3166
+#define AID_VC_TW_P1_05                 3167
 
-#define AID_VC_FDAI_LEFT                3165
-#define AID_VC_MASTER_ALARM             3166
-#define AID_VC_LVENG_LIGHTS             3167
-#define AID_VC_EVENT_TIMER              3168
-#define AID_VC_EMS_SCROLL_LEO           3169
-#define AID_VC_SPS_LIGHT                3170
-#define AID_VC_PT05G_LIGHT              3171
-#define AID_VC_EMSDVDISPLAY             3172
-#define AID_VC_EMS_RSI_BKGRND           3173
-#define AID_VC_EMS_DVSET                3174
-#define AID_VC_SEQUENCERSWITCHES        3175
-#define AID_VC_PANEL1_NEEDLES           3176
+#define AID_VC_FDAI_LEFT                3168
+#define AID_VC_MASTER_ALARM             3169
+#define AID_VC_LVENG_LIGHTS             3170
+#define AID_VC_EVENT_TIMER              3171
+#define AID_VC_EMS_SCROLL_LEO           3172
+#define AID_VC_SPS_LIGHT                3173
+#define AID_VC_PT05G_LIGHT              3174
+#define AID_VC_EMSDVDISPLAY             3175
+#define AID_VC_EMS_RSI_BKGRND           3176
+#define AID_VC_EMS_DVSET                3177
+#define AID_VC_SEQUENCERSWITCHES        3178
 
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 4800) && (id <= 4999))
@@ -979,6 +984,8 @@
 #define AID_VC_ROT_P2_03		4922
 #define AID_VC_ROT_P2_04		4923
 
+#define AID_VC_TW_P2_01         4930
+
 #define AID_VC_FDAI_RIGHT       4940
 #define AID_VC_DSKY_LIGHTS      4941
 #define AID_VC_DSKY_DISPLAY     4942
@@ -1065,6 +1072,9 @@
 #define AID_VC_ROT_P3_03		3372
 #define AID_VC_ROT_P3_04		3373
 #define AID_VC_ROT_P3_05		3374
+
+#define AID_VC_TW_P3_01         3377
+#define AID_VC_TW_P3_02         3378
 
 #define AID_VC_MASTER_ALARM2    3381
 #define AID_VC_FCPHRADTEMPIND   3382

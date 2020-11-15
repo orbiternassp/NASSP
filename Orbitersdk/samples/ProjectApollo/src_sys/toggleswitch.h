@@ -1340,6 +1340,23 @@ protected:
 	UINT anim_switch;
 };
 
+class CurvedMeter : public MeterSwitch {
+
+public:
+	CurvedMeter();
+	virtual ~CurvedMeter();
+
+	void DefineVCAnimations(UINT vc_idx);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
+	void SetRotationRange(const double range);
+
+protected:
+	const double GetRotationRange() const;
+
+	double RotationRange;
+	MGROUP_ROTATE* pswitchrot;
+};
+
 class LinearMeter : public MeterSwitch
 {
 public:

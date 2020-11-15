@@ -3680,6 +3680,44 @@ void MeterSwitch::LoadState(char *line) {
 	}
 }
 
+CurvedMeter::CurvedMeter()
+{
+	pswitchrot = NULL;
+	RotationRange = RAD * 34;
+}
+
+CurvedMeter::~CurvedMeter()
+{
+	if (pswitchrot)
+		delete pswitchrot;
+}
+
+void CurvedMeter::SetRotationRange(const double range)
+{
+	RotationRange = range;
+}
+
+const double CurvedMeter::GetRotationRange() const
+{
+	return RotationRange;
+}
+
+void CurvedMeter::DefineVCAnimations(UINT vc_idx)
+{
+	if (bHasReference && !bHasAnimations)
+	{
+		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(1, 0, 0), (float)(GetRotationRange()));
+		anim_switch = OurVessel->CreateAnimation(0.0);
+		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
+		VerifyAnimations();
+	}
+}
+
+void CurvedMeter::OnPostStep(double SimT, double DeltaT, double MJD)
+{
+	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
+	OurVessel->SetAnimation(anim_switch, v);
+}
 
 LinearMeter::LinearMeter()
 {

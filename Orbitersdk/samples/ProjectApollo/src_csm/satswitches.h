@@ -67,7 +67,7 @@ public:
 	virtual bool SwitchTo(int newState, bool dontspring = false);
 };
 
-class SaturnH2PressureMeter : public MeterSwitch {
+class SaturnH2PressureMeter : public CurvedMeter {
 public:
 	void Init(int i, SURFHANDLE surf, SwitchRow &row, Saturn *s);
 	double QueryValue();
@@ -79,7 +79,7 @@ protected:
 	Saturn *Sat;
 };
 
-class SaturnO2PressureMeter : public MeterSwitch {
+class SaturnO2PressureMeter : public CurvedMeter {
 public:
 	void Init(int i, SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *o2PressIndSwitch);
 	double QueryValue();
@@ -94,7 +94,7 @@ protected:
 	void DoDrawSwitch(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle);
 };
 
-class SaturnCryoQuantityMeter : public MeterSwitch {
+class SaturnCryoQuantityMeter : public CurvedMeter {
 public:
 	void Init(char *sub, int i, SURFHANDLE surf, SwitchRow &row, Saturn *s);
 	double QueryValue();
@@ -136,7 +136,7 @@ protected:
 	SMRCSPropellantSource *SMSources[7];
 };
 
-class RCSQuantityMeter : public MeterSwitch {
+class RCSQuantityMeter : public CurvedMeter {
 public:
 	RCSQuantityMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s, ToggleSwitch *indswitch);
@@ -149,7 +149,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class RCSFuelPressMeter : public MeterSwitch {
+class RCSFuelPressMeter : public CurvedMeter {
 public:
 	RCSFuelPressMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s);
@@ -161,7 +161,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class RCSHeliumPressMeter : public MeterSwitch {
+class RCSHeliumPressMeter : public CurvedMeter {
 public:
 	RCSHeliumPressMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s);
@@ -173,7 +173,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class RCSTempMeter : public MeterSwitch {
+class RCSTempMeter : public CurvedMeter {
 public:
 	RCSTempMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, PropellantRotationalSwitch *s);
@@ -185,7 +185,7 @@ protected:
 	SURFHANDLE NeedleSurface;
 };
 
-class SaturnFuelCellMeter : public MeterSwitch {
+class SaturnFuelCellMeter : public CurvedMeter {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, RotationalSwitch *fuelCellIndicatorsSwitch);
 
@@ -219,7 +219,7 @@ public:
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 };
 
-class SaturnCabinMeter : public MeterSwitch {
+class SaturnCabinMeter : public CurvedMeter {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s);
 
@@ -549,7 +549,7 @@ protected:
 	virtual double AdjustForPower(double val) { return val; };
 };
 
-class SaturnSPSPropellantPressMeter : public MeterSwitch {
+class SaturnSPSPropellantPressMeter : public CurvedMeter {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, 	Saturn *s, bool fuel, e_object *p);
 	double QueryValue();
@@ -561,7 +561,7 @@ protected:
 	bool Fuel;
 };
 
-class SaturnSPSTempMeter : public MeterSwitch {
+class SaturnSPSTempMeter : public CurvedMeter {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, e_object *p);
 	double QueryValue();
@@ -572,7 +572,7 @@ protected:
 	Saturn *Sat;
 };
 
-class SaturnSPSHeliumNitrogenPressMeter : public MeterSwitch {
+class SaturnSPSHeliumNitrogenPressMeter : public CurvedMeter {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, ThreePosSwitch *spspressindswitch);
 	double QueryValue();
@@ -595,12 +595,12 @@ protected:
 	SURFHANDLE FrameSurface;
 };
 
-class SaturnGPFPIMeter : public MeterSwitch {
+class SaturnGPFPIMeter : public CurvedMeter {
 public:
 	SaturnGPFPIMeter() { DCSource = 0; ACSource = 0; system = 0; }
 	void Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, int sys, int xoffset);
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
-	void DoDrawSwitchVC(UINT anim);
+	void OnPostStep(double SimT, double DeltaT, double MJD);
 	void WireTo(e_object *dc, e_object *ac) { DCSource = dc; ACSource = ac; };
 	virtual double AdjustForPower(double val);
 
