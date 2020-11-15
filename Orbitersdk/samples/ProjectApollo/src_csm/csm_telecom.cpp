@@ -1450,7 +1450,7 @@ void VHFAMTransceiver::Timestep()
 		}
 	}
 
-	sprintf(oapiDebugString(), "%d", antSelectorSw->GetState());
+	//sprintf(oapiDebugString(), "%d", antSelectorSw->GetState());
 
 	if (vhfASwitch->GetState() != THREEPOSSWITCH_CENTER && ctrPowerCB->IsPowered())
 	{
