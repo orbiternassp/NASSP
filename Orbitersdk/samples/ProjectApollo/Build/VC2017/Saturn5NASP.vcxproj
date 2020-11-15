@@ -113,7 +113,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;SATURN5NASP_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;SATURN5NASP_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -400,6 +400,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\src_aux\IMFD\IMFD_Client.h" />
     <ClInclude Include="..\..\src_aux\Mission.h" />
+    <ClInclude Include="..\..\src_aux\RF_calc.h" />
     <ClInclude Include="..\..\src_csm\csmsensors.h" />
     <ClInclude Include="..\..\src_csm\rhc.h" />
     <ClInclude Include="..\..\src_csm\sce.h" />

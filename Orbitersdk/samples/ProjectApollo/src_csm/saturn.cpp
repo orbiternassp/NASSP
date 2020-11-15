@@ -212,6 +212,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	lemECSConnector(this),
 	payloadCommandConnector(this),
 	CSM_RRTto_LM_RRConnector(this, &RRTsystem),
+	csm_vhfto_lm_vhfconnector(this, &vhftransceiver, &vhfranging),
 	cdi(this),
 	checkControl(soundlib),
 	MFDToPanelConnector(MainPanel, checkControl),
@@ -235,8 +236,8 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	omnib(_V(0.0, -0.707108, 0.707108)),
 	omnic(_V(0.0, -0.707108, -0.707108)),
 	omnid(_V(0.0, 0.707108, -0.707108)),
-	vhfa(_V(0.0, 0.7716246, 0.63607822)),
-	vhfb(_V(0.0, -0.7716246, -0.63607822)),
+	vhfAntRight(_V(0.0, 0.7716246, 0.63607822)),
+	vhfAntLeft(_V(0.0, -0.7716246, -0.63607822)),
 	LogicPowerSwitch(2),
 	H2Tank1TempSensor("H2Tank1-Temp-Sensor", -425.0, -200.0),
 	H2Tank2TempSensor("H2Tank2-Temp-Sensor", -425.0, -200.0),
@@ -322,6 +323,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	RegisterConnector(0, &CSMToLEMConnector);
 	RegisterConnector(0, &lemECSConnector);
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &CSM_RRTto_LM_RRConnector);
+	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &csm_vhfto_lm_vhfconnector);
 }
 
 Saturn::~Saturn()
@@ -552,6 +554,7 @@ void Saturn::initSaturn()
 	iuCommandConnector.SetSaturn(this);
 	sivbCommandConnector.SetSaturn(this);
 	CSM_RRTto_LM_RRConnector.SetSaturn(this);
+	csm_vhfto_lm_vhfconnector.SetSaturn(this);
 
 
 	CSMToLEMConnector.SetType(CSM_LEM_DOCKING);
@@ -560,6 +563,7 @@ void Saturn::initSaturn()
 	payloadCommandConnector.SetType(CSM_PAYLOAD_COMMAND);
 	CSMToLEMPowerConnector.SetPowerDrain(&CSMToLEMPowerDrain);
 	CSM_RRTto_LM_RRConnector.SetType(RADAR_RF_SIGNAL);
+	csm_vhfto_lm_vhfconnector.SetType(VHF_RNG);
 
 
 	//
@@ -4555,7 +4559,7 @@ void Saturn::TLI_Ended()
 	eventControl.TLI_DONE = MissionTime;
 }
 
-void Saturn::VHFRangingReturnSignal()
+void Saturn::VHFRangingReturnSignal() //DELETE ME WHEN YOU ADD THE CONNECTOR
 {
 	if (pMission->CSMHasVHFRanging()) vhfranging.RangingReturnSignal();
 }

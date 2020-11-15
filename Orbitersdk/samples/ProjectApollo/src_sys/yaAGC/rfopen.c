@@ -43,10 +43,6 @@
 		05/14/05 RSB	Corrected website references
 */
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1300 ) // Microsoft Visual Studio Version 2003 and higher
-#define _CRT_SECURE_NO_DEPRECATE 
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
