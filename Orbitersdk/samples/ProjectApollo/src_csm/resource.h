@@ -863,9 +863,13 @@
 #define AID_VC_EMS_RSI_BKGRND           3176
 #define AID_VC_EMS_DVSET                3177
 #define AID_VC_SEQUENCERSWITCHES        3178
-//#define AID_VC_ASCPROLL                 3179
-//#define AID_VC_ASCPPITCH                3180
-//#define AID_VC_ASCPYAW                  3181
+#define AID_VC_ASCPROLL                 3179
+#define AID_VC_ASCPPITCH                3180
+#define AID_VC_ASCPYAW                  3181
+#define AID_VC_ASCPDISPLAYROLL          3182
+#define AID_VC_ASCPDISPLAYPITCH         3183
+#define AID_VC_ASCPDISPLAYYAW           3184
+#define AID_VC_POSTLDGVENTHANDLE        3185
 
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 4800) && (id <= 4999))

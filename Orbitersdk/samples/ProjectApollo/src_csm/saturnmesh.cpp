@@ -1831,6 +1831,9 @@ void Saturn::LoadVC()
 
 void Saturn::UpdateVC(VECTOR3 meshdir)
 {
+	if (vcidx == -1)
+		return;
+
 	VECTOR3 ofs;
 	GetMeshOffset(vcidx, ofs);
 	ShiftMesh(vcidx, meshdir - ofs);

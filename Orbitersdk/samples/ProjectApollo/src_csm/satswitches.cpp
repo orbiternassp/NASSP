@@ -1961,7 +1961,7 @@ void SaturnEMSDvSetSwitch::DefineVCAnimations(UINT vc_idx)
 
 void SaturnEMSDvSetSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	if (anim_emsdvsetswitch != 1) {
+	if (anim_emsdvsetswitch != -1) {
 		switch ((int)GetPosition()) {
 		case 1:
 			sat->SetAnimation(anim_emsdvsetswitch, 1.0);
