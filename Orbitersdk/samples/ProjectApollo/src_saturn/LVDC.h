@@ -91,7 +91,6 @@ public:
 	void LoadState(FILEHANDLE scn);
 	void ReadFlightSequenceProgram(char *fspfile);
 
-	void SwitchSelectorProcessing(const std::vector<SwitchSelectorSet> &table);
 	bool SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> &table);
 
 	bool GetGuidanceReferenceFailure() { return ModeCode26[MC26_Guidance_Reference_Failure]; }
@@ -768,6 +767,7 @@ private:								// Saturn LV
 
 	enum ModeCode27_Bits
 	{
+		MC27_InhibitManeuver13 = 1,
 		MC27_H2OControlValveLogicActive = 7,
 		MC27_AttHoldWrtInertialContRetFromSC,
 		MC27_AttHoldWrtLocalContRetFromSC,

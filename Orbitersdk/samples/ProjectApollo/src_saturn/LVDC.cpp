@@ -3205,6 +3205,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	T_L = 0.0;
 	T_LET = 0;
 	TMM = 0;
+	TMR = 0;
 	T_RP = 0;
 	T_S1 = 0;
 	T_S2 = 0;
@@ -4244,6 +4245,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_T_LO", T_LO);
 	papiWriteScenario_double(scn, "LVDC_TMEFRZ", TMEFRZ);
 	papiWriteScenario_double(scn, "LVDC_TMM", TMM);
+	papiWriteScenario_double(scn, "LVDC_TMR", TMR);
 	papiWriteScenario_double(scn, "LVDC_TPA0", TABLE15[0].target[0].t_D);
 	papiWriteScenario_double(scn, "LVDC_TPA1", TABLE15[0].target[1].t_D);
 	papiWriteScenario_double(scn, "LVDC_TPA2", TABLE15[0].target[2].t_D);
@@ -4971,6 +4973,7 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_T_LO", T_LO);
 		papiReadScenario_double(line, "LVDC_TMEFRZ", TMEFRZ);
 		papiReadScenario_double(line, "LVDC_TMM", TMM);
+		papiReadScenario_double(line, "LVDC_TMR", TMR);
 		papiReadScenario_double(line, "LVDC_TPA0", TABLE15[0].target[0].t_D);
 		papiReadScenario_double(line, "LVDC_TPA1", TABLE15[0].target[1].t_D);
 		papiReadScenario_double(line, "LVDC_TPA2", TABLE15[0].target[2].t_D);
@@ -6057,16 +6060,6 @@ void LVDCSV::Timer2Interrupt(bool timer2schedule)
 	else
 	{
 		//fprintf(lvlog, "T2 Interrupt. Next interrupt at GRR+%lf Task %d Counter %d\r\n", DV2TG, DGST2, Timer2Counter);
-	}
-}
-
-void LVDCSV::SwitchSelectorProcessing(const std::vector<SwitchSelectorSet> &table)
-{
-	while (CommandSequence < (int)table.size() && LVDC_TB_ETime > table[CommandSequence].time)
-	{
-		lvda.SwitchSelector(table[CommandSequence].stage, table[CommandSequence].channel);
-		fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, table[CommandSequence].stage, table[CommandSequence].channel);
-		CommandSequence++;
 	}
 }
 
@@ -8255,6 +8248,10 @@ restartprep:
 			{
 				tgt_index++;
 			}
+			if (tgt_index < 1)
+			{
+				tgt_index = 1;
+			}
 			fprintf(lvlog, "Target index = %d \r\n", tgt_index);
 
 			double tdint0, tdint1;
@@ -8291,6 +8288,10 @@ restartprep:
 			while (t_D > TABLE15[0].target[tgt_index].t_D)
 			{
 				tgt_index++;
+			}
+			if (tgt_index < 1)
+			{
+				tgt_index = 1;
 			}
 			fprintf(lvlog, "Target index = %d \r\n", tgt_index);
 
@@ -8622,13 +8623,12 @@ bool LVDCSV::InhibitSeparationManeuver()
 
 bool LVDCSV::EvasiveManeuverEnable()
 {
-	if (LVDC_Timebase == 7)
+	if (LVDC_Timebase == 7 && LVDC_TB_ETime > 3600.0)
 	{
-		//This prevents the yaw attitude from being reversed twice
-		if (CommandedAttitude.z*XLunarAttitude.z >= 0.0)
+		if (ModeCode27[MC27_InhibitManeuver13] == false)
 		{
-			CommandedAttitude.z = -CommandedAttitude.z;
-
+			CommandedAttitude.z = PI2 - CommandedAttitude.z;
+			ModeCode27[MC27_InhibitManeuver13] = true;
 			return true;
 		}
 	}
