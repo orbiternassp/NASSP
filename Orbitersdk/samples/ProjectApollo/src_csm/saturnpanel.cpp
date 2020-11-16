@@ -3787,7 +3787,7 @@ bool Saturn::clbkPanelMouseEvent (int id, int event, int mx, int my)
 	return false;
 }
 
-void Saturn::PanelSwitchToggled(ToggleSwitch *s) {
+void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 
 	if (s == &O2Heater1Switch) {
 		CryoTankHeaterSwitchToggled(s,
@@ -4089,7 +4089,7 @@ void Saturn::PanelRotationalSwitchChanged(RotationalSwitch *s) {
 	}
 }
 
-void Saturn::CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
+void Saturn::CryoTankHeaterSwitchToggled(TwoPositionSwitch *s, int *pump) {
 
 	if (s->IsUp())
 		*pump = SP_PUMP_AUTO;
@@ -4099,7 +4099,7 @@ void Saturn::CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
 		*pump = SP_PUMP_ON;
 }
 
-void Saturn::FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
+void Saturn::FuelCellHeaterSwitchToggled(TwoPositionSwitch *s, int *pump) {
 
 	if (s->IsUp())
 		*pump = SP_PUMP_AUTO;
@@ -4107,7 +4107,7 @@ void Saturn::FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump) {
 		*pump = SP_PUMP_OFF;
 }
 
-void Saturn::FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open) {
+void Saturn::FuelCellReactantsSwitchToggled(TwoPositionSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open) {
 
 	// Is the reactants valve latched?
 	if (s->IsDown() && FCReacsValvesSwitch.IsDown() && cbLatch->IsPowered()) return;

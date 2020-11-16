@@ -2914,6 +2914,19 @@ CrossPointer::CrossPointer()
 	vel_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
+	anim_xpointerx = -1;
+	anim_xpointery = -1;
+	xvector = _V(0, 0, 0);
+	yvector = _V(0, 0, 0);
+	grpX = 0;
+	grpY = 0;
+	xtrans = ytrans = NULL;
+}
+
+CrossPointer::~CrossPointer()
+{
+	if (xtrans) delete xtrans;
+	if (ytrans) delete ytrans;
 }
 
 void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
@@ -3020,6 +3033,34 @@ void CrossPointer::GetVelocities(double &vx, double &vy)
 {
 	vx = vel_x;
 	vy = vel_y;
+}
+
+void CrossPointer::SetDirection(const VECTOR3 &xvec, const VECTOR3 &yvec)
+{
+	xvector = xvec;
+	yvector = yvec;
+}
+
+void CrossPointer::DefineMeshGroup(UINT _grpX, UINT _grpY)
+{
+	grpX = _grpX;
+	grpY = _grpY;
+}
+
+void CrossPointer::DefineVCAnimations(UINT vc_idx)
+{
+	xtrans = new MGROUP_TRANSLATE(vc_idx, &grpX, 1, xvector);
+	ytrans = new MGROUP_TRANSLATE(vc_idx, &grpY, 1, yvector);
+	anim_xpointerx = lem->CreateAnimation(0.5);
+	anim_xpointery = lem->CreateAnimation(0.5);
+	lem->AddAnimationComponent(anim_xpointerx, 0.0f, 1.0f, xtrans);
+	lem->AddAnimationComponent(anim_xpointery, 0.0f, 1.0f, ytrans);
+}
+
+void CrossPointer::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	if (anim_xpointerx != 1) lem->SetAnimation(anim_xpointerx, (vel_x / 40) + 0.5);
+	if (anim_xpointery != 1) lem->SetAnimation(anim_xpointery, (vel_y / 40) + 0.5);
 }
 
 void CrossPointer::SaveState(FILEHANDLE scn) {
