@@ -53,7 +53,7 @@
 const double P1_3_TILT = 18.4 * RAD;
 
 // Number of switches on each panel
-const int	P1_SWITCHCOUNT = 48;
+const int	P1_SWITCHCOUNT = 49;
 const int	P2_SWITCHCOUNT = 90;
 const int	P3_SWITCHCOUNT = 64;
 
@@ -71,12 +71,12 @@ const int	 P2_ROTCOUNT = 4;
 const int	 P3_ROTCOUNT = 5;
 
 // Number of thumbwheels
-const int	 P1_TWCOUNT = 5;
+const int	 P1_TWCOUNT = 2;
 const int	 P2_TWCOUNT = 1;
 const int	 P3_TWCOUNT = 2;
 
 // Number of needles
-const int	 P1_NEEDLECOUNT = 4;
+const int	 P1_NEEDLECOUNT = 5;
 
 // Switch clickspot offset
 const VECTOR3	P1_3_CLICK = { 0.00, 0.009*cos(P1_3_TILT - (90.0 * RAD)), 0.009*sin(P1_3_TILT - (90.0 * RAD)) };
@@ -84,9 +84,10 @@ const VECTOR3	P1_3_TWCLICK = { 0.00, 0.024*cos(P1_3_TILT - (90.0 * RAD)), 0.024*
 
 // Rotary/Needle rotation axises
 const VECTOR3	P1_3_ROT_AXIS = { 0.00, sin(P1_3_TILT),-cos(P1_3_TILT) };
+const VECTOR3	P1_3_ROT_AXIS_NEG = { 0.00, -sin(P1_3_TILT),cos(P1_3_TILT) };
 
 // Pushbutton vectors
-const VECTOR3	P1_3_PB_VECT = { 0.00, 0.002*cos(P1_3_TILT + (90.0 * RAD)), 0.002*sin(P1_3_TILT + (90.0 * RAD)) };
+const VECTOR3	P1_3_PB_VECT = { 0.00, 0.001*cos(P1_3_TILT + (90.0 * RAD)), 0.001*sin(P1_3_TILT + (90.0 * RAD)) };
 
 // Panel 1 switches
 const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
@@ -99,7 +100,7 @@ const VECTOR3 P1_TOGGLE_POS[P1_SWITCHCOUNT] = {
 {-0.6361, 0.3254, 0.2379}, {-0.6097, 0.3254, 0.2379}, {-0.5832, 0.3254, 0.2379}, {-0.5573, 0.3254, 0.2379}, {-0.5315, 0.3254, 0.2379},
 {-0.5042, 0.3254, 0.2379}, {-0.8827, 0.2762, 0.2214}, {-0.8556, 0.2762, 0.2214}, {-0.8296, 0.2762, 0.2214}, {-0.8035, 0.2762, 0.2214},
 {-0.7778, 0.2762, 0.2214}, {-0.7521, 0.2762, 0.2214}, {-0.7264, 0.2762, 0.2214}, {-0.5853, 0.2762, 0.2214}, {-0.5591, 0.2762, 0.2214},
-{-0.5339, 0.2762, 0.2214},{-0.5077, 0.2762, 0.2214}, {-0.508397, 0.798359, 0.406069}
+{-0.5339, 0.2762, 0.2214},{-0.5077, 0.2762, 0.2214}, {-0.508397, 0.798359, 0.406069}, {-0.8767, 0.3880, 0.2590}
 };
 
 // Panel 1 rotaries
@@ -116,7 +117,7 @@ const VECTOR3 P1_PUSHB_POS[P1_PUSHBCOUNT] = {
 
 // Panel 1 thumbwheels
 const VECTOR3 P1_TW_POS[P1_TWCOUNT] = {
-	{-0.669255, 0.382236, 0.280385}, {-0.613206, 0.382088, 0.280445}, {-0.9876, 0.3434, 0.2668}, {-0.9877, 0.3081, 0.2551}, {-0.9878, 0.2723, 0.2435}
+	{-0.669255, 0.382236, 0.280385}, {-0.613206, 0.382088, 0.280445}
 };
 
 // Panel 2 switches
@@ -227,9 +228,11 @@ void Saturn::InitVC()
 	srf[SRF_VC_INDICATOR] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
 	srf[SRF_VC_ECSINDICATOR] = oapiLoadTexture("ProjectApollo/VC/ECSIndicator.dds");
 	srf[SRF_VC_SEQUENCERSWITCHES] = oapiLoadTexture("ProjectApollo/VC/SequencerSwitches.dds");
-
-	//srf[SRF_INDICATORVC] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
-	//srf[SRF_INDICATORREDVC] = oapiLoadTexture("ProjectApollo/VC/IndicatorRed.dds");
+	srf[SRF_VC_SPS_FONT_BLACK] = oapiLoadTexture("ProjectApollo/VC/fonts_black.dds");
+	srf[SRF_VC_SPS_FONT_WHITE] = oapiLoadTexture("ProjectApollo/VC/fonts_white.dds");
+	srf[SRF_VC_SPS_INJ_VLV] = oapiLoadTexture("ProjectApollo/VC/sps_injector_indicators.dds");
+	srf[SRF_VC_SPSMAXINDICATOR] = oapiLoadTexture("ProjectApollo/VC/SPSmax_indicator.dds");
+	srf[SRF_VC_SPSMININDICATOR] = oapiLoadTexture("ProjectApollo/VC/SPSmin_indicator.dds");
 
 	// Set Colour Key
 
@@ -245,7 +248,11 @@ void Saturn::InitVC()
 	oapiSetSurfaceColourKey(srf[SRF_VC_EMS_LIGHTS], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_ECSINDICATOR], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SEQUENCERSWITCHES], ck);
-
+	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_FONT_BLACK], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_FONT_WHITE], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_INJ_VLV], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_SPSMAXINDICATOR], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_SPSMININDICATOR], ck);
 
 	//
 	// Register active areas for repainting here
@@ -289,6 +296,10 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_SPSHEVALVEIND, _R(71, 1583, 137, 1606), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_FCREACTANTSIND, _R(296, 1580, 534, 1604), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_TELECOMTB, _R(592, 1729, 615, 1802), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPS_OXID_PCT, _R(137, 1315, 175, 1328), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPS_FUEL_PCT, _R(137, 1344, 175, 1357), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPSOXIDFLOWIND, _R(78, 1479, 100, 1521), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_SPS_INJ_VLV, _R(69, 1210, 247, 1244), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// Initialize surfaces
 
@@ -342,6 +353,17 @@ void Saturn::InitVC()
 
 	PwrAmplTB.InitVC(srf[SRF_VC_INDICATOR]);
 	DseTapeTB.InitVC(srf[SRF_VC_INDICATOR]);
+
+	SPSOxidPercentMeter.InitVC(srf[SRF_VC_SPS_FONT_BLACK], srf[SRF_VC_SPS_FONT_WHITE]);
+	SPSFuelPercentMeter.InitVC(srf[SRF_VC_SPS_FONT_BLACK], srf[SRF_VC_SPS_FONT_WHITE]);
+
+	SPSOxidFlowValveMaxIndicator.InitVC(srf[SRF_VC_SPSMAXINDICATOR]);
+	SPSOxidFlowValveMinIndicator.InitVC(srf[SRF_VC_SPSMININDICATOR]);
+
+	SPSInjectorValve1Indicator.InitVC(srf[SRF_VC_SPS_INJ_VLV]);
+	SPSInjectorValve2Indicator.InitVC(srf[SRF_VC_SPS_INJ_VLV]);
+	SPSInjectorValve3Indicator.InitVC(srf[SRF_VC_SPS_INJ_VLV]);
+	SPSInjectorValve4Indicator.InitVC(srf[SRF_VC_SPS_INJ_VLV]);
 }
 
 void Saturn::ReleaseSurfacesVC()
@@ -507,6 +529,15 @@ void Saturn::RegisterActiveAreas() {
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM, _V(-0.775435, 0.709185, 0.361746) + ofs, 0.008);
 
+	/*oapiVCRegisterArea(AID_VC_ASCPROLL, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ASCPROLL, _V(-0.993077, 0.360405, 0.251007) + ofs, _V(-0.982356, 0.360405, 0.251007) + ofs, _V(-0.993077, 0.339763, 0.244102) + ofs, _V(-0.982356, 0.339763, 0.244102) + ofs);
+
+	oapiVCRegisterArea(AID_VC_ASCPPITCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ASCPPITCH, _V(-0.27271, 0.157539, 1.57055) + ofs, _V(-0.255647, 0.157539, 1.57055) + ofs, _V(-0.27271, 0.143561, 1.56076) + ofs, _V(-0.255647, 0.143561, 1.56076) + ofs);
+
+	oapiVCRegisterArea(AID_VC_ASCPYAW, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ASCPYAW, _V(-0.27271, 0.157539, 1.57055) + ofs, _V(-0.255647, 0.157539, 1.57055) + ofs, _V(-0.27271, 0.143561, 1.56076) + ofs, _V(-0.255647, 0.143561, 1.56076) + ofs);*/
+
 	//Panel 2
 
 	for (i = 0; i < P2_SWITCHCOUNT; i++)
@@ -573,7 +604,50 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 
 	case AID_VC_EMS_DVSET:
 		return EMSDvSetSwitch.CheckMouseClickVC(event, p);
+
+	/*case AID_VC_ASCPROLL:
+	{
+		int mx = 0;
+		int my;
+		if (p.y > 0.5) {
+			my = 19;
+		}
+		else {
+			my = 17;
+		}
+		ascp.RollClick(event, mx, my);
+		return true;
 	}
+
+	case AID_VC_ASCPPITCH:
+	{
+		int mx = 0;
+		int my;
+		if (p.y > 0.5) {
+			my = 19;
+		}
+		else {
+			my = 17;
+		}
+		ascp.PitchClick(event, mx, my);
+		return true;
+	}
+	case AID_VC_ASCPYAW:
+	{
+		int mx = 0;
+		int my;
+		if (p.y > 0.5) {
+			my = 19;
+		}
+		else {
+			my = 17;
+		}
+		ascp.YawClick(event, mx, my);
+		return true;
+	}*/
+
+	}
+
 	return MainPanelVC.VCMouseEvent(id, event, p);
 	//return false;
 }
@@ -1327,6 +1401,10 @@ void Saturn::DefineVCAnimations()
 	GTASwitch.SetReference(P1_TOGGLE_POS[47], P1_COVERS_POS[0], _V(1, 0, 0), _V(1, 0, 0));
 	GTASwitch.DefineMeshGroup(VC_GRP_Sw_P1_48, VC_GRP_SwitchCover_P1_01);
 
+	MainPanelVC.AddSwitch(&SPSswitch, AID_VC_SWITCH_P1_49);
+	SPSswitch.SetReference(P1_TOGGLE_POS[48], _V(1, 0, 0));
+	SPSswitch.DefineMeshGroup(VC_GRP_Sw_P1_49);
+
 	VECTOR3	SEQS_COVER_AXIS = { -0.00, -sin(P1_3_TILT + (90.0 * RAD)), cos(P1_3_TILT + (90.0 * RAD)) };
 
 	MainPanelVC.AddSwitch(&LiftoffNoAutoAbortSwitch, AID_VC_PUSHB_P1_01);
@@ -1396,24 +1474,6 @@ void Saturn::DefineVCAnimations()
 	SPSGimbalYawThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_02);
 	SPSGimbalYawThumbwheel.SetInitialAnimState(0.5);
 
-	/*MainPanelVC.AddSwitch(&SPSGimbalPitchThumbwheel, AID_VC_TW_P1_03);
-	SPSGimbalPitchThumbwheel.SetReference(P1_TW_POS[2], _V(1, 0, 0));
-	//SPSGimbalPitchThumbwheel.SetRotationRange(RAD * 293);
-	SPSGimbalPitchThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_03);
-	//SPSGimbalPitchThumbwheel.SetInitialAnimState(0.5);
-
-	MainPanelVC.AddSwitch(&SPSGimbalPitchThumbwheel, AID_VC_TW_P1_04);
-	SPSGimbalPitchThumbwheel.SetReference(P1_TW_POS[3], _V(1, 0, 0));
-	//SPSGimbalPitchThumbwheel.SetRotationRange(RAD * 293);
-	SPSGimbalPitchThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_04);
-	//SPSGimbalPitchThumbwheel.SetInitialAnimState(0.5);
-
-	MainPanelVC.AddSwitch(&SPSGimbalPitchThumbwheel, AID_VC_TW_P1_05);
-	SPSGimbalPitchThumbwheel.SetReference(P1_TW_POS[4], _V(1, 0, 0));
-	//SPSGimbalPitchThumbwheel.SetRotationRange(RAD * 293);
-	SPSGimbalPitchThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_05);
-	//SPSGimbalPitchThumbwheel.SetInitialAnimState(0.5);*/
-
 	MainPanelVC.AddSwitch(&EMSFunctionSwitch, AID_VC_ROT_P1_01);
 	EMSFunctionSwitch.SetReference(P1_ROT_POS[0], P1_3_ROT_AXIS);
 	EMSFunctionSwitch.DefineMeshGroup(VC_GRP_Rot_P1_01);
@@ -1435,6 +1495,20 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&GPFPIYaw2Meter);
 	GPFPIYaw2Meter.SetReference(NEEDLE_POS);
 	GPFPIYaw2Meter.DefineMeshGroup(VC_GRP_Needle_P1_04);
+
+	NEEDLE_POS = { -0.7400, 0.4536, 0.2764 };
+
+	MainPanelVC.AddSwitch(&LVSPSPcMeter);
+	LVSPSPcMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	LVSPSPcMeter.SetRotationRange(RAD * 255);
+	LVSPSPcMeter.DefineMeshGroup(VC_GRP_Needle_P1_05);
+
+	NEEDLE_POS = { -0.801428, 0.634486, 0.345593 };
+
+	MainPanelVC.AddSwitch(&AccelGMeter);
+	AccelGMeter.SetReference(NEEDLE_POS, _V(0, 0, -1));
+	AccelGMeter.SetRotationRange(RAD * 240);
+	AccelGMeter.DefineMeshGroup(VC_GRP_Needle_P1_06);
 
 	const VECTOR3 rsiref = { -0.680414, 0.71462, 0.365469 };
 	ems.SetReference(rsiref, P1_3_ROT_AXIS);
@@ -1934,6 +2008,111 @@ void Saturn::DefineVCAnimations()
 	PartPressCO2Meter.SetRotationRange(RAD * 38.7);
 	PartPressCO2Meter.DefineMeshGroup(VC_GRP_Needle_P2_17);
 
+	NEEDLE_POS = { -0.2005, 0.9289, 0.4364 };
+
+	MainPanelVC.AddSwitch(&SuitCabinDeltaPMeter);
+	SuitCabinDeltaPMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
+	SuitCabinDeltaPMeter.SetRotationRange(RAD * 110);
+	SuitCabinDeltaPMeter.DefineMeshGroup(VC_GRP_Needle_P2_18);
+
+	NEEDLE_POS = { -0.1741, 0.9289, 0.4364 };
+
+	MainPanelVC.AddSwitch(&RightO2FlowMeter);
+	RightO2FlowMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	RightO2FlowMeter.SetRotationRange(RAD * 110);
+	RightO2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P2_19);
+
+	NEEDLE_POS = { 0.1030, 0.6457, 0.3416 };
+
+	MainPanelVC.AddSwitch(&EcsRadTempInletMeter);
+	EcsRadTempInletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
+	EcsRadTempInletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempInletMeter.DefineMeshGroup(VC_GRP_Needle_P2_20);
+
+	NEEDLE_POS = { 0.1294, 0.6457, 0.3416 };
+
+	MainPanelVC.AddSwitch(&EcsRadTempPrimOutletMeter);
+	EcsRadTempPrimOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	EcsRadTempPrimOutletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempPrimOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_21);
+
+	NEEDLE_POS = { 0.1740, 0.6457, 0.3416 };
+
+	MainPanelVC.AddSwitch(&EcsRadTempSecOutletMeter);
+	EcsRadTempSecOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
+	EcsRadTempSecOutletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempSecOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_22);
+
+	NEEDLE_POS = { 0.2004, 0.6457, 0.3416 };
+
+	MainPanelVC.AddSwitch(&GlyEvapTempOutletMeter);
+	GlyEvapTempOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	GlyEvapTempOutletMeter.SetRotationRange(RAD * 110);
+	GlyEvapTempOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_23);
+
+	NEEDLE_POS = { 0.2438, 0.6457, 0.3416 };
+
+	MainPanelVC.AddSwitch(&GlyEvapSteamPressMeter);
+	GlyEvapSteamPressMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
+	GlyEvapSteamPressMeter.SetRotationRange(RAD * 110);
+	GlyEvapSteamPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_24);
+
+	NEEDLE_POS = { 0.2702, 0.6457, 0.3416 };
+
+	MainPanelVC.AddSwitch(&GlycolDischPressMeter);
+	GlycolDischPressMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	GlycolDischPressMeter.SetRotationRange(RAD * 110);
+	GlycolDischPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_25);
+
+	NEEDLE_POS = { 0.1737, 0.5763, 0.3183 };
+
+	MainPanelVC.AddSwitch(&LeftO2FlowMeter);
+	LeftO2FlowMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
+	LeftO2FlowMeter.SetRotationRange(RAD * 110);
+	LeftO2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P2_26);
+
+	NEEDLE_POS = { 0.2000, 0.5763, 0.3183 };
+
+	MainPanelVC.AddSwitch(&SuitComprDeltaPMeter);
+	SuitComprDeltaPMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	SuitComprDeltaPMeter.SetRotationRange(RAD * 110);
+	SuitComprDeltaPMeter.DefineMeshGroup(VC_GRP_Needle_P2_27);
+
+	NEEDLE_POS = { 0.2439, 0.5763, 0.3183 };
+
+	MainPanelVC.AddSwitch(&AccumQuantityMeter);
+	AccumQuantityMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
+	AccumQuantityMeter.SetRotationRange(RAD * 110);
+	AccumQuantityMeter.DefineMeshGroup(VC_GRP_Needle_P2_28);
+
+	NEEDLE_POS = { 0.2702, 0.5763, 0.3183 };
+
+	MainPanelVC.AddSwitch(&H2oQuantityMeter);
+	H2oQuantityMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	H2oQuantityMeter.SetRotationRange(RAD * 110);
+	H2oQuantityMeter.DefineMeshGroup(VC_GRP_Needle_P2_29);
+
+	NEEDLE_POS = { 0.3197, 0.4567, 0.2790 };
+
+	MainPanelVC.AddSwitch(&HighGainAntennaPitchMeter);
+	HighGainAntennaPitchMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
+	HighGainAntennaPitchMeter.SetRotationRange(RAD * 180);
+	HighGainAntennaPitchMeter.DefineMeshGroup(VC_GRP_Needle_P2_30);
+
+	NEEDLE_POS = { 0.3663, 0.4568, 0.2790 };
+
+	MainPanelVC.AddSwitch(&HighGainAntennaStrengthMeter);
+	HighGainAntennaStrengthMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	HighGainAntennaStrengthMeter.SetRotationRange(RAD * 180);
+	HighGainAntennaStrengthMeter.DefineMeshGroup(VC_GRP_Needle_P2_31);
+
+	NEEDLE_POS = { 0.4127, 0.4568, 0.2790 };
+
+	MainPanelVC.AddSwitch(&HighGainAntennaYawMeter);
+	HighGainAntennaYawMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	HighGainAntennaYawMeter.SetRotationRange(RAD * 255);
+	HighGainAntennaYawMeter.DefineMeshGroup(VC_GRP_Needle_P2_32);
+
 	MainPanelVC.AddSwitch(&CabinTempAutoControlSwitch, AID_VC_TW_P2_01);
 	CabinTempAutoControlSwitch.SetReference(P2_TW_POS[0], _V(1, 0, 0));
 	CabinTempAutoControlSwitch.DefineMeshGroup(VC_GRP_TW_P2_01);
@@ -2285,6 +2464,32 @@ void Saturn::DefineVCAnimations()
 	FuelCellCondenserTempMeter.SetRotationRange(RAD * 40.7);
 	FuelCellCondenserTempMeter.DefineMeshGroup(VC_GRP_Needle_P3_08);
 
+	NEEDLE_POS = { 0.8420, 0.6010, 0.3265 };
+
+	MainPanelVC.AddSwitch(&DCAmpMeter);
+	DCAmpMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	DCAmpMeter.SetRotationRange(RAD * 225);
+	DCAmpMeter.DefineMeshGroup(VC_GRP_Needle_P3_09);
+
+	NEEDLE_POS = { 0.8533, 0.5413, 0.3066 };
+
+	MainPanelVC.AddSwitch(&CSMDCVoltMeter);
+	CSMDCVoltMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	CSMDCVoltMeter.DefineMeshGroup(VC_GRP_Needle_P3_10);
+
+	NEEDLE_POS = { 0.9799, 0.3656, 0.2478 };
+
+	MainPanelVC.AddSwitch(&CSMACVoltMeter);
+	CSMACVoltMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	CSMACVoltMeter.DefineMeshGroup(VC_GRP_Needle_P3_11);
+
+	NEEDLE_POS = { 0.520752, 0.588298, 0.323995 };
+
+	MainPanelVC.AddSwitch(&SPSOxidUnbalMeter);
+	SPSOxidUnbalMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+	SPSOxidUnbalMeter.SetRotationRange(RAD * 235);
+	SPSOxidUnbalMeter.DefineMeshGroup(VC_GRP_Needle_P3_12);
+
 	MainPanelVC.AddSwitch(&SquelchAThumbwheel, AID_VC_TW_P3_01);
 	SquelchAThumbwheel.SetReference(P3_TW_POS[0], _V(1, 0, 0));
 	SquelchAThumbwheel.DefineMeshGroup(VC_GRP_TW_P3_01);
@@ -2316,6 +2521,17 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&PwrAmplTB, AID_VC_TELECOMTB);
 	MainPanelVC.AddSwitch(&DseTapeTB, AID_VC_TELECOMTB);
+
+	MainPanelVC.AddSwitch(&SPSOxidPercentMeter, AID_VC_SPS_OXID_PCT);
+	MainPanelVC.AddSwitch(&SPSFuelPercentMeter, AID_VC_SPS_FUEL_PCT);
+
+	MainPanelVC.AddSwitch(&SPSOxidFlowValveMaxIndicator, AID_VC_SPSOXIDFLOWIND);
+	MainPanelVC.AddSwitch(&SPSOxidFlowValveMinIndicator, AID_VC_SPSOXIDFLOWIND);
+
+	MainPanelVC.AddSwitch(&SPSInjectorValve1Indicator, AID_VC_SPS_INJ_VLV);
+	MainPanelVC.AddSwitch(&SPSInjectorValve2Indicator, AID_VC_SPS_INJ_VLV);
+	MainPanelVC.AddSwitch(&SPSInjectorValve3Indicator, AID_VC_SPS_INJ_VLV);
+	MainPanelVC.AddSwitch(&SPSInjectorValve4Indicator, AID_VC_SPS_INJ_VLV);
 
 
     MainPanelVC.DefineVCAnimations(vcidx);

@@ -1033,6 +1033,12 @@ void SaturnSPSPercentMeter::Init(SURFHANDLE blackFontSurf, SURFHANDLE whiteFontS
 	Sat = s;
 }
 
+void SaturnSPSPercentMeter::InitVC(SURFHANDLE blackFontSurf, SURFHANDLE whiteFontSurf)
+{
+	BlackFontSurfacevc = blackFontSurf;
+	WhiteFontSurfacevc = whiteFontSurf;
+}
+
 void SaturnSPSPercentMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	int percent = (int) (v * 1000.0);
@@ -1053,6 +1059,26 @@ void SaturnSPSPercentMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, WhiteFontSurface, 26, 0, 11 * digit3, 0, 11, 12);
 }
 
+void SaturnSPSPercentMeter::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface)
+{
+	double v = GetDisplayValue();
+	int percent = (int)(v * 1000.0);
+
+	// What should the panel display with full tanks? Looks like 99.9 is the maximum.
+	if (percent > 999) {
+		percent = 999;
+	}
+
+	int digit1 = percent / 100;
+	percent -= (digit1 * 100);
+
+	int digit2 = percent / 10;
+	int digit3 = percent - (digit2 * 10);
+
+	oapiBlt(drawSurface, BlackFontSurfacevc, 0, 0, 10 * digit1, 0, 10, 12);
+	oapiBlt(drawSurface, BlackFontSurfacevc, 13, 0, 10 * digit2, 0, 10, 12);
+	oapiBlt(drawSurface, WhiteFontSurfacevc, 26, 0, 11 * digit3, 0, 11, 12);
+}
 
 double SaturnSPSOxidPercentMeter::QueryValue()
 {

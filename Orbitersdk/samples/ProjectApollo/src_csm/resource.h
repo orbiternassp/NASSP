@@ -833,6 +833,7 @@
 #define AID_VC_SWITCH_P1_46		        3146
 #define AID_VC_SWITCH_P1_47		        3147
 #define AID_VC_SWITCH_P1_48		        3148
+#define AID_VC_SWITCH_P1_49		        3149
 
 #define AID_VC_ROT_P1_01		        3150
 
@@ -850,9 +851,6 @@
 
 #define AID_VC_TW_P1_01                 3163
 #define AID_VC_TW_P1_02                 3164
-#define AID_VC_TW_P1_03                 3165
-#define AID_VC_TW_P1_04                 3166
-#define AID_VC_TW_P1_05                 3167
 
 #define AID_VC_FDAI_LEFT                3168
 #define AID_VC_MASTER_ALARM             3169
@@ -865,6 +863,9 @@
 #define AID_VC_EMS_RSI_BKGRND           3176
 #define AID_VC_EMS_DVSET                3177
 #define AID_VC_SEQUENCERSWITCHES        3178
+//#define AID_VC_ASCPROLL                 3179
+//#define AID_VC_ASCPPITCH                3180
+//#define AID_VC_ASCPYAW                  3181
 
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 4800) && (id <= 4999))
@@ -1083,6 +1084,10 @@
 #define AID_VC_SPSHEVALVEIND    3385
 #define AID_VC_FCREACTANTSIND   3386
 #define AID_VC_TELECOMTB        3387
+#define AID_VC_SPS_OXID_PCT     3388
+#define AID_VC_SPS_FUEL_PCT     3389
+#define AID_VC_SPSOXIDFLOWIND   3390
+#define AID_VC_SPS_INJ_VLV      3391
 
 // Next default values for new objects
 //

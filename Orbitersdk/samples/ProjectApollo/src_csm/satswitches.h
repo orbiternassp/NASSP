@@ -516,7 +516,9 @@ protected:
 class SaturnSPSPercentMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE blackFontSurf, SURFHANDLE whiteFontSurf, SwitchRow &row, Saturn *s);
+	void InitVC(SURFHANDLE blackFontSurf, SURFHANDLE whiteFontSurf);
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
 
 protected:
 	// Power is handled in SPSPropellantSource
@@ -526,6 +528,8 @@ protected:
 
 	SURFHANDLE BlackFontSurface;
 	SURFHANDLE WhiteFontSurface;
+	SURFHANDLE BlackFontSurfacevc;
+	SURFHANDLE WhiteFontSurfacevc;
 	Saturn *Sat;
 };
 

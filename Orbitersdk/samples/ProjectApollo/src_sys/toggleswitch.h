@@ -1624,6 +1624,7 @@ public:
 	virtual ~RoundMeter();
 	void Init(HPEN p0, HPEN p1, SwitchRow &row);
 	void DefineVCAnimations(UINT vc_idx);
+	void SetRotationRange(const double range);
 	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
 	
 protected:
@@ -1632,6 +1633,8 @@ protected:
 
 	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
 
+	const double GetRotationRange() const;
+	double RotationRange;
 	MGROUP_ROTATE* pswitchrot;
 };
 
