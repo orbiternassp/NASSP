@@ -1033,6 +1033,12 @@ void SaturnSPSPercentMeter::Init(SURFHANDLE blackFontSurf, SURFHANDLE whiteFontS
 	Sat = s;
 }
 
+void SaturnSPSPercentMeter::InitVC(SURFHANDLE blackFontSurf, SURFHANDLE whiteFontSurf)
+{
+	BlackFontSurfacevc = blackFontSurf;
+	WhiteFontSurfacevc = whiteFontSurf;
+}
+
 void SaturnSPSPercentMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	int percent = (int) (v * 1000.0);
@@ -1053,6 +1059,26 @@ void SaturnSPSPercentMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, WhiteFontSurface, 26, 0, 11 * digit3, 0, 11, 12);
 }
 
+void SaturnSPSPercentMeter::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface)
+{
+	double v = GetDisplayValue();
+	int percent = (int)(v * 1000.0);
+
+	// What should the panel display with full tanks? Looks like 99.9 is the maximum.
+	if (percent > 999) {
+		percent = 999;
+	}
+
+	int digit1 = percent / 100;
+	percent -= (digit1 * 100);
+
+	int digit2 = percent / 10;
+	int digit3 = percent - (digit2 * 10);
+
+	oapiBlt(drawSurface, BlackFontSurfacevc, 0, 0, 10 * digit1, 0, 10, 12);
+	oapiBlt(drawSurface, BlackFontSurfacevc, 13, 0, 10 * digit2, 0, 10, 12);
+	oapiBlt(drawSurface, WhiteFontSurfacevc, 26, 0, 11 * digit3, 0, 11, 12);
+}
 
 double SaturnSPSOxidPercentMeter::QueryValue()
 {
@@ -1338,6 +1364,12 @@ void SaturnGPFPIMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	oapiBlt(drawSurface, NeedleSurface, xOffset + 12, 93 - (int)v,  3, 1, 7, 8, SURF_PREDEF_CK);
 }
 
+void SaturnGPFPIMeter::OnPostStep(double SimT, double DeltaT, double MJD)
+{
+	double v = ((GetDisplayValue() - minValue) * 1.04) / (maxValue - minValue);
+
+	Sat->SetAnimation(anim_switch, v);
+}
 
 double SaturnGPFPIPitchMeter::QueryValue()
 {
@@ -1675,12 +1707,6 @@ void SaturnSCControlSetter::SetSCControl(Saturn *sat)
 	}
 }
 
-
-SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch(Sound &clicksound) : ClickSound(clicksound)
-{
-	position = 0;
-}
-
 void SaturnEMSDvDisplay::Init(SURFHANDLE digits, SwitchRow &row, Saturn *s)
 {
 	MeterSwitch::Init(row);
@@ -1707,6 +1733,31 @@ void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 			if (!Sat->ems.IsDecimalPointBlanked())
 			{
 				oapiBlt(drawSurface, Digits, 10 + 16 * i, 0, 200, 0, 4, 19);
+			}
+		}
+	}
+}
+
+void SaturnEMSDvDisplay::DoDrawSwitchVC(SURFHANDLE surf, double v, SURFHANDLE drawSurface)
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || Sat->ems.IsOff() || !Sat->ems.IsDisplayPowered()) return;
+
+	if (v < 0) {
+		oapiBlt(surf, drawSurface, 0, 0, 161, 0, 10, 19);
+	}
+
+	int i, Curdigit;
+	char buffer[100];
+	sprintf(buffer, "%7.1f", fabs(v));
+	for (i = 0; i < 7; i++) {
+		if (buffer[i] >= '0' && buffer[i] <= '9') {
+			Curdigit = buffer[i] - '0';
+			oapiBlt(surf, drawSurface, (i == 6 ? 0 : 10) + 16 * i, 0, 16 * Curdigit, 0, 16, 19);
+		}
+		else if (buffer[i] == '.') {
+			if (!Sat->ems.IsDecimalPointBlanked())
+			{
+				oapiBlt(surf, drawSurface, 10 + 16 * i, 0, 200, 0, 4, 19);
 			}
 		}
 	}
@@ -1816,6 +1867,20 @@ void SaturnASCPSwitch::SetState(int value) {
 	Sat->ascp.output.data[Axis] = value / 10.;
 }
 
+SaturnEMSDvSetSwitch::SaturnEMSDvSetSwitch(Sound &clicksound) : ClickSound(clicksound)
+{
+	sat = NULL;
+	position = 0;
+	anim_emsdvsetswitch = -1;
+	grp = 0;
+	dvswitchrot = NULL;
+}
+
+SaturnEMSDvSetSwitch::~SaturnEMSDvSetSwitch()
+{
+	if (dvswitchrot) delete dvswitchrot;
+}
+
 bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my)
 {
 	int oldPos = position;
@@ -1844,6 +1909,78 @@ bool SaturnEMSDvSetSwitch::CheckMouseClick(int event, int mx, int my)
 	return true;
 }
 
+bool SaturnEMSDvSetSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
+
+	int oldPos = position;
+	switch (event) {
+	case PANEL_MOUSE_LBPRESSED:
+		if (p.x < 0.0125)
+			position = 2;
+		else
+			position = 1;
+		break;
+
+	case PANEL_MOUSE_RBPRESSED:
+		if (p.x < 0.0125)
+			position = 4;
+		else
+			position = 3;
+		break;
+
+	case PANEL_MOUSE_LBUP:
+	case PANEL_MOUSE_RBUP:
+		position = 0;
+		break;
+	}
+	if (position && position != oldPos)
+		ClickSound.play();
+	return true;
+}
+
+void SaturnEMSDvSetSwitch::SetReference(const VECTOR3& ref)
+{
+	reference = ref;
+}
+
+void SaturnEMSDvSetSwitch::DefineMeshGroup(UINT _grp)
+{
+	grp = _grp;
+}
+
+const VECTOR3& SaturnEMSDvSetSwitch::GetReference() const
+{
+	return reference;
+}
+
+void SaturnEMSDvSetSwitch::DefineVCAnimations(UINT vc_idx)
+{
+	dvswitchrot = new MGROUP_ROTATE(vc_idx, &grp, 1, GetReference(), _V(1, 0, 0), (float)(RAD * 10));
+	anim_emsdvsetswitch = sat->CreateAnimation(0.5);
+	sat->AddAnimationComponent(anim_emsdvsetswitch, 0.0f, 1.0f, dvswitchrot);
+}
+
+void SaturnEMSDvSetSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	if (anim_emsdvsetswitch != -1) {
+		switch ((int)GetPosition()) {
+		case 1:
+			sat->SetAnimation(anim_emsdvsetswitch, 1.0);
+			break;
+		case 2:
+			sat->SetAnimation(anim_emsdvsetswitch, 0.75);
+			break;
+		case 3:
+			sat->SetAnimation(anim_emsdvsetswitch, 0.0);
+			break;
+		case 4:
+			sat->SetAnimation(anim_emsdvsetswitch, 0.25);
+			break;
+		default:
+			sat->SetAnimation(anim_emsdvsetswitch, 0.5);
+			break;
+		}
+	}
+}
 
 void SaturnCabinPressureReliefLever::InitGuard(SURFHANDLE surf, SoundLib *soundlib)
 {	
@@ -2247,6 +2384,20 @@ void SaturnLiftoffNoAutoAbortSwitch::DoDrawSwitch(SURFHANDLE drawSurface)
 	}
 
 	GuardedPushSwitch::DoDrawSwitch(drawSurface);
+}
+
+void SaturnLiftoffNoAutoAbortSwitch::RepaintSwitchVC(SURFHANDLE drawSurface, SURFHANDLE switchsurfacevc)
+{
+	int ofs = 4;
+	if (secs->LiftoffLightPower()) {
+		if (!secs->NoAutoAbortLightPower())
+			oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 117 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+		else
+			oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 273 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+	}
+	else {
+		oapiBlt(drawSurface, switchsurfacevc, 0 + ofs - 1, 0 + ofs, 39 + ofs, 1 + ofs, width - ofs, height - ofs, SURF_PREDEF_CK);
+	}
 }
 
 void SaturnPanel181::Register(PanelSwitchScenarioHandler *PSH)

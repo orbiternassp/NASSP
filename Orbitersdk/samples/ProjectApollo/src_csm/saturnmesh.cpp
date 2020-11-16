@@ -705,8 +705,8 @@ void Saturn::SetCSMStage ()
 	fwdhatchidx = AddMesh(hFHF, &mesh_dir);
 	SetFwdHatchMesh();
 
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	// VC
+	UpdateVC(mesh_dir);
 	VCMeshOffset = mesh_dir;
 
 	//Interior
@@ -1224,8 +1224,8 @@ void Saturn::SetReentryMeshes() {
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	// VC
+	UpdateVC(mesh_dir);
 
 	//
 	// Docking probe
@@ -1515,8 +1515,8 @@ void Saturn::SetRecovery()
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
+	// VC
+	UpdateVC(mesh_dir);
 	VCMeshOffset = mesh_dir;
 
 	if (Crewed) {
@@ -1819,4 +1819,33 @@ void Saturn::ConfigTouchdownPoints(double mass, double ro, double tdph, double h
 	td[3].pos.z = tdph + height;
 
 	SetTouchdownPoints(td, 4);
+}
+
+void Saturn::LoadVC()
+{
+	VECTOR3 mesh_dir = _V(0, 0, 0);
+	vcidx = AddMesh(hCMVC, &mesh_dir);
+	SetMeshVisibilityMode(vcidx, MESHVIS_VC);
+	DefineVCAnimations();
+}
+
+void Saturn::UpdateVC(VECTOR3 meshdir)
+{
+	if (vcidx == -1)
+		return;
+
+	VECTOR3 ofs;
+	GetMeshOffset(vcidx, ofs);
+	ShiftMesh(vcidx, meshdir - ofs);
+}
+
+void Saturn::ClearMeshes() {
+	// Clear all meshes EXCEPT the VC mesh (idx = 0) in order to not screw up the VC animations when a ClearMeshes() is called i.e. staging
+	// This should not be needed once a better way to handle staging is implemented (docked stages)
+	int meshcount = GetMeshCount();
+
+	for (int i = 1; i < meshcount; i++)
+	{
+		DelMesh(i);
+	}
 }

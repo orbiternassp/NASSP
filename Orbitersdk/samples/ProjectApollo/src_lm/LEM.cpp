@@ -297,7 +297,6 @@ LEM::~LEM()
 {
 	ReleaseSurfaces();
 	ReleaseSurfacesVC();
-	DeleteVCAnimations();
 
 	ClearMissionManagementMemory();
 
@@ -473,7 +472,6 @@ void LEM::Init()
 	// Do this stuff only once
 	if(!InitLEMCalled){
 		SystemsInit();
-		InitVCAnimations();
 
 		// Panel items
 		fdaiDisabled = false;
@@ -495,7 +493,6 @@ void LEM::Init()
 }
 
 void LEM::DoFirstTimestep()
-
 {
 	checkControl.linktoVessel(this);
 	// Load sounds in case of dynamic creation, otherwise during clbkLoadStageEx
@@ -1064,6 +1061,12 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 		}
 	}
 
+	// Update VC animations
+	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
+	{
+		MainPanelVC.OnPostStep(simt, simdt, mjd);
+	}
+
 	//
 	// Camera jostle.
 	//
@@ -1095,37 +1098,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	}
 
 	// DS20160916 Physical parameters updation
-	CurrentFuelWeight = 0;
-	if (ph_Asc != NULL) { CurrentFuelWeight += GetPropellantMass(ph_Asc); }
-	if (ph_Dsc != NULL) { CurrentFuelWeight += GetPropellantMass(ph_Dsc); }
-	if (ph_RCSA != NULL) { CurrentFuelWeight += GetPropellantMass(ph_RCSA); }
-	if (ph_RCSB != NULL) { CurrentFuelWeight += GetPropellantMass(ph_RCSB); }
-	// If the weight has changed by more than this value, update things.
-	// The value is to be adjusted such that the updates are not too frequent (impacting framerate)
-	// but are sufficiently fine to keep the LGC happy.
-	if ((LastFuelWeight - CurrentFuelWeight) > 100.0) {
-		// Update physical parameters
-		VECTOR3 pmi, CoG;
-		CalculatePMIandCOG(pmi, CoG);
-		// Use SetPMI, ShiftCG, etc.
-		VECTOR3 CoGShift = CoG - currentCoG;
-		ShiftCG(CoGShift);
-		SetPMI(pmi);
-		currentCoG = CoG;
-
-		//Touchdown Points
-		DefineTouchdownPoints(stage);
-
-		//Lights
-		trackLightPos -= CoGShift;
-		for (int i = 0;i < 5;i++)
-		{
-			dockingLightsPos[i] -= CoGShift;
-		}
-
-		// All done!
-		LastFuelWeight = CurrentFuelWeight;
-	}
+	UpdateMassAndCoG();
 
 	//
 	// Play RCS sound in case of Orbiter's attitude control is disabled
@@ -2107,6 +2080,41 @@ void LEM::RCSSoundTimestep() {
 	}
 	else {
 		RCSSustainSound.stop();
+	}
+}
+
+void LEM::UpdateMassAndCoG()
+{
+	CurrentFuelWeight = 0;
+	if (ph_Asc != NULL) { CurrentFuelWeight += GetPropellantMass(ph_Asc); }
+	if (ph_Dsc != NULL) { CurrentFuelWeight += GetPropellantMass(ph_Dsc); }
+	if (ph_RCSA != NULL) { CurrentFuelWeight += GetPropellantMass(ph_RCSA); }
+	if (ph_RCSB != NULL) { CurrentFuelWeight += GetPropellantMass(ph_RCSB); }
+	// If the weight has changed by more than this value, update things.
+	// The value is to be adjusted such that the updates are not too frequent (impacting framerate)
+	// but are sufficiently fine to keep the LGC happy.
+	if ((LastFuelWeight - CurrentFuelWeight) > 100.0) {
+		// Update physical parameters
+		VECTOR3 pmi, CoG;
+		CalculatePMIandCOG(pmi, CoG);
+		// Use SetPMI, ShiftCG, etc.
+		VECTOR3 CoGShift = CoG - currentCoG;
+		ShiftCG(CoGShift);
+		SetPMI(pmi);
+		currentCoG = CoG;
+
+		//Touchdown Points
+		DefineTouchdownPoints(stage);
+
+		//Lights
+		trackLightPos -= CoGShift;
+		for (int i = 0;i < 5;i++)
+		{
+			dockingLightsPos[i] -= CoGShift;
+		}
+
+		// All done!
+		LastFuelWeight = CurrentFuelWeight;
 	}
 }
 

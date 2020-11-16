@@ -546,6 +546,42 @@ public:
 		nsurf	///< nsurf gives the count of surfaces for the array size calculation.
 	};
 
+	enum SurfaceID_VC
+	{
+		//
+		// First value in the enum must be set to one. Entry zero is not
+		// used.
+		//
+
+		// VC Sutfaces
+		SRF_VC_DSKYDISP,
+		SRF_VC_DSKY_LIGHTS,
+		SRF_VC_DIGITALDISP,
+		SRF_VC_DIGITALDISP2,
+		SRF_VC_MASTERALARM,
+		SRF_VC_CW_LIGHTS,
+		SRF_VC_LVENGLIGHTS,
+		SRF_VC_EVENT_TIMER_DIGITS,
+		SRF_VC_EMS_SCROLL_LEO,
+		SRF_VC_EMS_SCROLL_BORDER,
+		SRF_VC_EMS_SCROLL_BUG,
+		SRF_VC_EMS_LIGHTS,
+		SRF_VC_INDICATOR,
+		SRF_VC_ECSINDICATOR,
+		SRF_VC_SEQUENCERSWITCHES,
+		SRF_VC_SPS_FONT_BLACK,
+		SRF_VC_SPS_FONT_WHITE,
+		SRF_VC_SPS_INJ_VLV,
+		SRF_VC_SPSMAXINDICATOR,
+		SRF_VC_SPSMININDICATOR,
+		SRF_VC_THUMBWHEEL_LARGEFONTSINV,
+
+		//
+		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
+		//
+		nsurfvc	///< nsurfvc gives the count of surfaces for the array size calculation.
+	};
+
 	//
 	// Random failure flags, copied into unions and extracted as ints (or vice-versa).
 	//
@@ -917,10 +953,11 @@ public:
 	///
 	/// \brief Initialise a virtual cockpit view.
 	///
-	void InitVC (int vc);
-	bool RegisterVC ();
+	void InitVC();
+	void ReleaseSurfacesVC();
+	void RegisterActiveAreas();
 
-	void PanelSwitchToggled(ToggleSwitch *s);
+	void PanelSwitchToggled(TwoPositionSwitch *s);
 	void PanelIndicatorSwitchStateRequested(IndicatorSwitch *s); 
 	void PanelRotationalSwitchChanged(RotationalSwitch *s);
 	void PanelRefreshForwardHatch();
@@ -1257,6 +1294,8 @@ public:
 	IU *GetIU() { return iu; };
 	virtual SICSystems *GetSIC() { return NULL; }
 	SECS *GetSECS() { return &secs; }
+
+	void ClearMeshes();
 
 protected:
 
@@ -3454,6 +3493,7 @@ protected:
 	VECTOR3 normal;
 
 	PanelSwitches MainPanel;
+	PanelSwitchesVC MainPanelVC;
 	PanelSwitchScenarioHandler PSH;
 
 	SwitchRow SequencerSwitchesRow;
@@ -3766,6 +3806,18 @@ protected:
 	bool bRecovery;
 	bool DontDeleteIU;
 
+	// VC animations
+
+	UINT anim_fdaiR_L, anim_fdaiR_R;
+	UINT anim_fdaiP_L, anim_fdaiP_R;
+	UINT anim_fdaiY_L, anim_fdaiY_R;
+	UINT anim_fdaiRerror_L, anim_fdaiRerror_R;
+	UINT anim_fdaiPerror_L, anim_fdaiPerror_R;
+	UINT anim_fdaiYerror_L, anim_fdaiYerror_R;
+	UINT anim_fdaiRrate_L, anim_fdaiRrate_R;
+	UINT anim_fdaiPrate_L, anim_fdaiPrate_R;
+	UINT anim_fdaiYrate_L, anim_fdaiYrate_R;
+
 	#define SATVIEW_LEFTSEAT		0
 	#define SATVIEW_RIGHTSEAT		1
 	#define SATVIEW_CENTERSEAT		2
@@ -3796,6 +3848,7 @@ protected:
 	int nosecapidx;
 	int meshLM_1;
 	int simbaypanelidx;
+	int vcidx;
 
 	DEVMESHHANDLE probe;
 
@@ -3853,7 +3906,6 @@ protected:
 	// Virtual cockpit
 	//
 
-	bool VCRegistered;
 	VECTOR3 VCCameraOffset;
 	VECTOR3 VCMeshOffset;
 
@@ -3960,9 +4012,9 @@ protected:
 	void RedrawPanel_Alt (SURFHANDLE surf);
 	void RedrawPanel_Alt2 (SURFHANDLE surf);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
-	void CryoTankHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellHeaterSwitchToggled(ToggleSwitch *s, int *pump);
-	void FuelCellReactantsSwitchToggled(ToggleSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
+	void CryoTankHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
+	void FuelCellHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
+	void FuelCellReactantsSwitchToggled(TwoPositionSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void initSaturn();
 	void SwitchClick();
@@ -4004,6 +4056,12 @@ protected:
 	void GetPayloadName(char *s);
 	void GetApolloName(char *s);
 	void AddSM(double offet, bool showSPS);
+
+	void InitVCAnimations();
+	void DefineVCAnimations();
+
+	void InitFDAI(UINT mesh);
+	void AnimateFDAI(VECTOR3 attitude, VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UINT animY, UINT errorR, UINT errorP, UINT errorY, UINT rateR, UINT rateP, UINT rateY);
 
 	//
 	// Systems functions.
@@ -4090,6 +4148,8 @@ protected:
 	void FireSeperationThrusters(THRUSTER_HANDLE *pth);
 	void LoadDefaultSounds();
 	void RCSSoundTimestep();
+	void LoadVC();
+	void UpdateVC(VECTOR3 meshdir);
 
 	//
 	// Sounds

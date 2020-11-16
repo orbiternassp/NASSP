@@ -836,9 +836,8 @@ void SaturnV::SetThirdStageMesh (double offset)
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
-	meshidx = AddMesh (hCMVC, &mesh_dir);
-	SetMeshVisibilityMode (meshidx, MESHVIS_VC);
-	VCMeshOffset = mesh_dir;
+	// VC
+	UpdateVC(mesh_dir);
 
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);

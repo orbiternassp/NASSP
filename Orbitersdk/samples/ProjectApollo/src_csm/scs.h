@@ -819,6 +819,7 @@ class EMS : public e_object {
 
 public:
 	EMS(PanelSDK &p);
+	virtual ~EMS();
 	void Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
@@ -840,6 +841,11 @@ public:
 	bool IsdVMode();
 	bool WriteScrollToFile();
 	bool IsDecimalPointBlanked();
+
+	void DefineVCAnimations(UINT vc_idx);
+	void SetReference(const VECTOR3& ref, const VECTOR3& _dir);
+	void DefineMeshGroup(UINT _grp);
+	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	
 protected:
 	bool IsPowered();
@@ -870,6 +876,17 @@ protected:
 
 	bool pt05GLightOn;
 	bool pt05GFailed;
+
+	const VECTOR3& GetReference() const;
+	const VECTOR3& GetDirection() const;
+
+	VECTOR3 reference;
+	VECTOR3 dir;
+
+	UINT anim_RSI_indicator;
+	UINT grp;
+
+	MGROUP_ROTATE *rsirot;
 
 	//Comparator Circuits
 	bool pt05GComparator(double simdt);
