@@ -4888,6 +4888,15 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	ScrollBitmapLength = 2500; //Pixels
 	ScrollBitmapHeight = 145; //Pixels
 	ScrollScaling = 0.03; // pixels per ft/sec
+
+	anim_RSI_indicator = -1;
+	grp = 0;
+	rsirot = NULL;
+}
+
+EMS::~EMS()
+{
+	if (rsirot) delete rsirot;
 }
 
 void EMS::Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c) {
@@ -5621,6 +5630,39 @@ bool EMS::WriteScrollToFile() {
 	DeleteObject(hBitmap);
 	DeleteDC(hMemDC);
 	return ret;
+}
+
+void EMS::SetReference(const VECTOR3& ref, const VECTOR3& _dir)
+{
+	reference = ref;
+	dir = _dir;
+}
+
+void EMS::DefineMeshGroup(UINT _grp)
+{
+	grp = _grp;
+}
+
+const VECTOR3& EMS::GetReference() const
+{
+	return reference;
+}
+
+const VECTOR3& EMS::GetDirection() const
+{
+	return dir;
+}
+
+void EMS::DefineVCAnimations(UINT vc_idx) {
+
+	rsirot = new MGROUP_ROTATE(vc_idx, &grp, 1, GetReference(), GetDirection(), (float)(RAD * 360));
+	anim_RSI_indicator = sat->CreateAnimation(0.0);
+	sat->AddAnimationComponent(anim_RSI_indicator, 0.0f, 1.0f, rsirot);
+}
+
+void EMS::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	if (anim_RSI_indicator != 1) sat->SetAnimation(anim_RSI_indicator, RSIRotation / PI2);
 }
 
 // The following code was found and supplied by computerex at orbiter-forum.  The code is from the MSDN sample code library.

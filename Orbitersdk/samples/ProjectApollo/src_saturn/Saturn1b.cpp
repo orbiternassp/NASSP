@@ -440,6 +440,7 @@ void Saturn1b::clbkLoadStateEx (FILEHANDLE scn, void *vs){
 	GetScenarioState(scn, vs);
 
 	SetupMeshes();
+	LoadVC();
 
 	switch (stage) {
 
