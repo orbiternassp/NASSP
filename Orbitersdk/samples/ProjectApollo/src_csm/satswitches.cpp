@@ -2273,8 +2273,16 @@ bool CSMLMPowerSwitch::SwitchTo(int newState, bool dontspring)
 	return false;
 }
 
-double SaturnHighGainAntennaPitchMeter::QueryValue(){
-	return Sat->hga.GetResolvedPitch();
+double SaturnHighGainAntennaPitchMeter::QueryValue()
+{
+	if (Sat->GetStage() == CSM_LEM_STAGE)
+	{
+		return Sat->hga.GetResolvedPitch();
+	}
+	else
+	{
+		return 0.0;
+	}
 }
 
 void SaturnHighGainAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){
@@ -2293,8 +2301,16 @@ void SaturnHighGainAntennaStrengthMeter::DoDrawSwitch(double v, SURFHANDLE drawS
 	DrawNeedle(drawSurface, 107, 25, 20.0, v * RAD);
 }
 
-double SaturnHighGainAntennaYawMeter::QueryValue(){
-	return Sat->hga.GetResolvedYaw();
+double SaturnHighGainAntennaYawMeter::QueryValue()
+{
+	if (Sat->GetStage() == CSM_LEM_STAGE)
+	{
+		return Sat->hga.GetResolvedYaw();
+	}
+	else
+	{
+		return 0.0;
+	}
 }
 
 void SaturnHighGainAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface){

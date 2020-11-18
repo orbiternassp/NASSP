@@ -286,7 +286,14 @@ void USB::TimeStep(double simt) {
 	}
 	else if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_DOWN)
 	{
-		ant = &sat->hga;
+		if (sat->GetStage() == CSM_LEM_STAGE)
+		{
+			ant = &sat->hga;
+		}
+		else
+		{
+			ant = NULL;
+		}
 	}
 	 
 	// Power Amplifier #1 
