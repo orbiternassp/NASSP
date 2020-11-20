@@ -286,7 +286,14 @@ void USB::TimeStep(double simt) {
 	}
 	else if (sat->SBandAntennaSwitch2.GetState() == THREEPOSSWITCH_DOWN)
 	{
-		ant = &sat->hga;
+		if (sat->GetStage() == CSM_LEM_STAGE)
+		{
+			ant = &sat->hga;
+		}
+		else
+		{
+			ant = NULL;
+		}
 	}
 	 
 	// Power Amplifier #1 
@@ -679,7 +686,13 @@ void HGA::DeleteAnimations() {
 void HGA::TimeStep(double simt, double simdt)
 {
 	if (!sat->pMission->CSMHasHGA()) return;
-	if (sat->GetStage() != CSM_LEM_STAGE) return;
+
+	if (sat->GetStage() != CSM_LEM_STAGE)
+	{
+		PitchRes = 0.0;
+		YawRes = 0.0;
+		return;
+	}
 
 	// HGA mesh animation
 	hga_proc[0] = Alpha / PI2;
