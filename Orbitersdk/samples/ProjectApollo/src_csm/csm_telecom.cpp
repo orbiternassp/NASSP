@@ -686,7 +686,13 @@ void HGA::DeleteAnimations() {
 void HGA::TimeStep(double simt, double simdt)
 {
 	if (!sat->pMission->CSMHasHGA()) return;
-	if (sat->GetStage() != CSM_LEM_STAGE) return;
+
+	if (sat->GetStage() != CSM_LEM_STAGE)
+	{
+		PitchRes = 0.0;
+		YawRes = 0.0;
+		return;
+	}
 
 	// HGA mesh animation
 	hga_proc[0] = Alpha / PI2;
