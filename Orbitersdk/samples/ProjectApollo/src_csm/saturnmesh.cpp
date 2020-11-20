@@ -1844,8 +1844,15 @@ void Saturn::ClearMeshes() {
 	// This should not be needed once a better way to handle staging is implemented (docked stages)
 	int meshcount = GetMeshCount();
 
-	for (int i = 1; i < meshcount; i++)
-	{
-		DelMesh(i);
+	if (buildstatus < 6) {
+		for (int i = 0; i < meshcount; i++)
+		{
+			DelMesh(i);
+		}
+	} else {
+		for (int i = 1; i < meshcount; i++)
+		{
+			DelMesh(i);
+		}
 	}
 }
