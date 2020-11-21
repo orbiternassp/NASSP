@@ -260,6 +260,7 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	H2_SRC = h2;
 	H20_waste = waste;
 
+	outputImpedance = 0.0346667; //ohms
 	SetTemp(475.0); 
 	condenserTemp = 345.0;
 	tempTooLowCount = 0;
@@ -392,6 +393,7 @@ void FCell::UpdateFlow(double dt)
 
 	//first we check the start_handle;
 	double thrust = 0.0;
+	double loadResistance = 0.0;
 	if (start_handle == -1) status = 2; //stopped
 	if (start_handle == 1)	status = 1; //starting
 	if ((purge_handle == 1) && (status == 0 || status == 4)) status = 3; //H2 purging;
@@ -436,7 +438,7 @@ void FCell::UpdateFlow(double dt)
 		}
 
 		if (reaction > 0.3) {
-			Volts = 28.8 * reaction;
+			Volts = 31.0 * reaction;
 			Amperes = (power_load / Volts);
 		} else {
 			Volts = 0;
@@ -465,6 +467,8 @@ void FCell::UpdateFlow(double dt)
 		if (reaction && Volts > 0.0)
 		{
 			Amperes = (power_load / Volts);
+			loadResistance = power_load / (Amperes*Amperes);
+			Volts = Volts * (loadResistance / (loadResistance + outputImpedance));
 		}
 		else
 		{
