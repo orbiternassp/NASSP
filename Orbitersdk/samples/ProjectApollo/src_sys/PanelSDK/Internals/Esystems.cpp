@@ -333,13 +333,13 @@ void FCell::Reaction(double dt, double thrust)
 	if (status == 3)
 	{
 		H2_flow += __min(0.67 / 7.93665 * dt, H2_maxflow - H2_flow);
-		H2_clogging -= H2_clogging * 0.5 * dt; //take approximately 2 minutes to purge
+		H2_clogging -= H2_clogging * 0.05 * dt; //take approximately 2 minutes to purge
 	}
 
 	if (status == 4)
 	{
 		O2_flow += __min(0.6 / 7.93665 * dt, O2_maxflow - O2_flow);
-		O2_clogging -= O2_clogging * 0.5 * dt; //take approximately 2 minutes to purge
+		O2_clogging -= O2_clogging * 0.05 * dt; //take approximately 2 minutes to purge
 	}
 
 	H2_flowPerSecond = H2_flow / dt;
