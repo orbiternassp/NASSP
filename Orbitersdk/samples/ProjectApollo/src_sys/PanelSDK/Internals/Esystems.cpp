@@ -479,10 +479,6 @@ void FCell::UpdateFlow(double dt)
 		// sprintf(oapiDebugString(), "thrust %f, log(1+clogg) %f clogg %f", thrust, log(1+clogg), clogg);
 
 		Volts = 31.0; //we are trying to get 31.0V (1V per cell)
-		//if (thrust > 1.0) {	//set voltage to manage overmax loads
-		//	Volts=31.0 / thrust; 
-		//	thrust = 1.0;
-		//}
 
 		Reaction(dt, thrust);
 		running = 0;
