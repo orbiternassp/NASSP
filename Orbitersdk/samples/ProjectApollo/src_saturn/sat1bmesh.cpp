@@ -400,8 +400,6 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 
 		AddSM(17.05 + offset, false);
 
-		WORD CMMode = MESHVIS_VCEXTERNAL;
-
 		if (LESAttached)
 		{
 			TowerOffset = 26.15 + offset;
@@ -413,7 +411,6 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 			// If the LES is attached, no point drawing things in the external view which can't
 			// actually be seen...
 			//
-			CMMode = MESHVIS_VC;
 		}
 		else if (HasProbe)
 		{
@@ -441,7 +438,10 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		}
 
 		meshidx = AddMesh (hCMInt, &mesh_dir);
-		SetMeshVisibilityMode (meshidx, CMMode);
+		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+		// VC
+		UpdateVC(mesh_dir);
 
 		//
 		// Don't Forget the Hatch

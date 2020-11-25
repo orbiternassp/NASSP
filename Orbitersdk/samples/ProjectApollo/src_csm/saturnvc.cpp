@@ -228,6 +228,7 @@ void Saturn::InitVC()
 	srf[SRF_VC_INDICATOR] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
 	srf[SRF_VC_ECSINDICATOR] = oapiLoadTexture("ProjectApollo/VC/ECSIndicator.dds");
 	srf[SRF_VC_SEQUENCERSWITCHES] = oapiLoadTexture("ProjectApollo/VC/SequencerSwitches.dds");
+	srf[SRF_VC_LVENGLIGHTS_S1B] = oapiLoadTexture("ProjectApollo/VC/lv_eng_s1b.dds");
 	srf[SRF_VC_SPS_FONT_BLACK] = oapiLoadTexture("ProjectApollo/VC/fonts_black.dds");
 	srf[SRF_VC_SPS_FONT_WHITE] = oapiLoadTexture("ProjectApollo/VC/fonts_white.dds");
 	srf[SRF_VC_SPS_INJ_VLV] = oapiLoadTexture("ProjectApollo/VC/sps_injector_indicators.dds");
@@ -249,6 +250,7 @@ void Saturn::InitVC()
 	oapiSetSurfaceColourKey(srf[SRF_VC_EMS_LIGHTS], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_ECSINDICATOR], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SEQUENCERSWITCHES], ck);
+	oapiSetSurfaceColourKey(srf[SRF_VC_LVENGLIGHTS_S1B], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_FONT_BLACK], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_FONT_WHITE], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_INJ_VLV], ck);
@@ -278,11 +280,6 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_ASCPDISPLAYROLL, _R(1224, 1830, 1254, 1842), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_ASCPDISPLAYPITCH, _R(1224, 1892, 1254, 1904), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_ASCPDISPLAYYAW, _R(1224, 1954, 1254, 1966), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-
-
-	//oapiRegisterPanelArea(AID_ASCPDISPLAYROLL, _R(199, 1144, 229, 1156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-	//oapiRegisterPanelArea(AID_ASCPDISPLAYPITCH, _R(199, 1206, 229, 1218), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
-	//oapiRegisterPanelArea(AID_ASCPDISPLAYYAW, _R(199, 1268, 229, 1280), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN, PANEL_MAP_BACKGROUND);
 
 	// Panel 2
 	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254, 1235, 359, 1411), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
@@ -484,9 +481,9 @@ void Saturn::RegisterActiveAreas() {
 	int i = 0;
 
 	VECTOR3 ofs = _V(0.0, 0.0, 0.0);
-	//if (vcidx != -1) GetMeshOffset(vcidx, ofs);
+	if (vcidx != -1) GetMeshOffset(vcidx, ofs);
 
-	if (stage < 12) {
+	/*if (stage < 12) {
 		ofs.z = 43.65;
 	} else if (stage < 20) {
 		ofs.z = 28.5;
@@ -498,7 +495,7 @@ void Saturn::RegisterActiveAreas() {
 		ofs.z = 0.0;
 	} else {
 		ofs.z = -1.2;
-	}
+	}*/
 
 	//sprintf(oapiDebugString(), "OFS %lf", ofs.z);
 
@@ -738,14 +735,14 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		if (SI_EngineNum > 5)
 		{
-			/*RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 42);
+			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 42);
 			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 98);
 			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 8, 98);
 			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 7, 43);
 			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 41);
 			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 51, 69);
 			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 98);
-			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 22, 69);*/
+			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 22, 69);
 		}
 		else
 		{
