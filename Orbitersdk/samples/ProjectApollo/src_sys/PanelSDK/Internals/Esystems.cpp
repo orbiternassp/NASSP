@@ -469,9 +469,9 @@ void FCell::UpdateFlow(double dt)
 		running = 1;
 		break;
 
+	case 3: // O2 purging
+	case 4: // H2 purging
 	case 0: // normal running
-	case 3: // H2 purging
-	case 4: // O2 purging
 		//---- throttle of the fuel cell [0..1]
 		thrust = power_load / max_power;
 
@@ -485,14 +485,15 @@ void FCell::UpdateFlow(double dt)
 		Volts = Volts * min(1.0, reaction); //case of reaction problems :-)
 		if (reaction && Volts > 0.0)
 		{
-			Amperes = (power_load / Volts);
-			loadResistance = power_load / (Amperes*Amperes);
-			Volts = Volts * (loadResistance / (loadResistance + outputImpedance));
-			Volts = Volts - (5.2 * (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities))/26.0); //make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
-																														//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
-																														//here we're simulating the effect by mahing the O2 clogging effect the voltage drop 25x as much as the H2
+		//make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
 
-			Amperes = (power_load / Volts); //chicken, egg, recalculate (power load (all the drawpower functions) is really just electrical system impedance)
+			Amperes = (power_load / Volts)-(2.25*clogg);
+	
+			loadResistance = (power_load) / (Amperes*Amperes);
+			Volts = Volts * (loadResistance / (loadResistance + outputImpedance))-(5.2*clogg);
+
+			power_load = Amperes * Volts;
+			
 		}
 		else
 		{
@@ -531,7 +532,10 @@ void FCell::Clogging(double dt)
 	{
 		O2_clogging = 0.0; //cannot be negative	
 	}
-		
+
+	//O2 impurities effect voltage drop substantially more than H2(not detectable according to AOH)
+	//here we're simulating the effect by making the O2 clogging effect the voltage drop 25x as much as the H2
+	clogg = (25 * (O2_clogging / O2_max_impurities) + (H2_clogging / H2_max_impurities)) / 26.0;
 }
 
 void FCell::Load(char *line)
