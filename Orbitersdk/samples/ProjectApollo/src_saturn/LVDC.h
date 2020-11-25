@@ -74,6 +74,8 @@ public:
 
 	//Mathematical functions
 	double log(double a);
+
+	FILE* lvlog;									// LV Log file
 protected:
 	double RealTimeClock;
 	bool ReadyToLaunch;
@@ -90,8 +92,6 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void ReadFlightSequenceProgram(char *fspfile);
-
-	bool SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> &table);
 
 	bool GetGuidanceReferenceFailure() { return ModeCode26[MC26_Guidance_Reference_Failure]; }
 
@@ -125,7 +125,6 @@ private:								// Saturn LV
 	void NonInterruptSequencer(bool phase13);
 
 	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec);
-	void SIVBCutoffSequence();
 	void StartTimebase4A();
 	void StartTimebase5();
 	void StartTimebase7();
@@ -152,6 +151,10 @@ private:								// Saturn LV
 	void MinorLoopSupport();
 	//Switch Selector Processor (SS)
 	void SwitchSelectorProcessor(int entry);
+	void SSTUPD(double &time);
+	void SSTUPQ(double BIAS);
+	void AdvanceToNextSSRoutine();
+	void SSSelectionAndSetupRoutine();
 	//Time Base 1 (TB1)
 	void StartTimeBase1(int entry);
 	//Time Base 2 (TB2)
@@ -201,7 +204,6 @@ private:								// Saturn LV
 	//Acquisition Gain/Loss (GL)
 	void AcquisitionGainLoss();
 
-	FILE* lvlog;									// LV Log file
 	char FSPFileName[256];
 	bool Initialized;								// Clobberness flag
 
@@ -246,10 +248,11 @@ private:								// Saturn LV
 
 	//Timer stuff
 
-	//Real time clock (RTC) reading associated with TAS
-	double ACT;
-	//Real time clock associated with last time update
-	double RTC;
+	double DVACT; //Real time clock (RTC) reading associated with TAS
+	double DVRTC; //Real time clock associated with last time update
+	double DVTRR; //Elapsed total time in current reference
+	double DVERT; //Time error associated with time update
+	double DVTRB; //Elapsed time in current time base including ground bias updates
 	//Real time clock reading at last interrupt
 	double TEX;
 	//Elapsed time in mission from GRR at last time update
@@ -266,6 +269,8 @@ private:								// Saturn LV
 	double VTOLD;
 	//Timer 2 interrupt level in progress indicator
 	bool DFIL1;
+	//External interrupt level in progress indicator
+	bool DFIL2;
 	//Timer 1 interrupt level in progress indicator
 	bool DFIL3;
 	//Minor loop initial rate
@@ -279,11 +284,46 @@ private:								// Saturn LV
 	//Periodic processor current mission time
 	double POT;
 	//Switch selector execution time
-	double SST;
+	double DVSST;
 	//Switch selector function to be scheduled
 	int SSM;
 	//Minor loop function to be scheduled (0 = Normal Minor Loop, 1 = Flight Simulation Minor Loop, 2 = Minor Loop with Liftoff Search)
 	int MLM;
+	//Accumulated ground bias time update
+	double DVTGB;
+	//Time base change indicator for events processor
+	bool DFTBCEP;
+
+	//Switch selector
+
+	unsigned DVASW;		//Switch selector request status
+	unsigned VASPI;		//Alternate sequence in progress status word
+	double VSSTM;		//Temporary SS time storage
+	double VSSRT;		//Switch selector time of issuance
+	double VATRR;		//Alternate SS sequence time start
+	double VATR4;		//Class 4 sequence time start
+	bool FTADV;			//Normal or class 4 table advance flag
+	bool FCLS4;			//Class 4 SS sequence in progress flag
+	unsigned SST1PTR;	//Normal switch selector table pointer
+	unsigned SST2PTR;	//Class 4 switch selector table pointer
+	int VSNA1;			//Storage for next SS stage
+	int VSNA2;			//Storage for next SS channel
+	int VHSTW1;			//Storage for last SS stage
+	int VHSTW2;			//Storage for last SS channel
+	bool FSSAC;			//Switch selector processing in progress flag
+	bool FASE;			//Alternate sequence in progress flag
+	double VSTGO;		//Time-to-go to next SS function
+	unsigned SSTTBPTR[9];	//Table of pointers to switch selector table for each time base
+	double VSSW;			//Bias time
+	//Indizes for switch selector table
+	unsigned KSSINDXTB7A, KSSINDXTB6A, KSSINDXTB6B, KSSINDXTB6C, KSSINDXTB3A, KSSINDXTB5A, KSSINDXTB5B, KSSINDXSIVA, KSSINDXSIVB, KSSINDXS4C1, KSSINDXGSS;
+	unsigned KSSINDXSBLO, KSSINDXSBHI, KSSINDXSBOM, KSSINDXECSV, KSSINDXECS1, KSSINDXGAIN, KSSINDXTB6D, KSSINDXALU;
+	double KSSB1, KSSB2, KSSB3, KCSSK;
+	bool DFTUP;				//Time update waiting indicator
+	double VGBIA;			//Time base bias to be implemented
+	//Class 1/3 temporary storage for SST1PTR, VASPI, VATRR
+	unsigned VSC30, VSC31, VSC10, VSC11;
+	double VSC32, VSC12;
 
 	int LVDC_Timebase;								// Time Base
 	double LVDC_TB_ETime;                           // Time elapsed since timebase start
@@ -302,8 +342,6 @@ private:								// Saturn LV
 	double sinceLastCycle;							// Time since last IGM run
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 	double t_S1C_CECO;								// Time since launch for S-1C center engine cutoff
-	int CommandSequence;
-	int CommandSequenceStored;
 	bool SIICenterEngineCutoff;
 	bool FixedAttitudeBurn;
 	double t_TB8Start;
@@ -320,7 +358,6 @@ private:								// Saturn LV
 	double t_21;									// Time of S2 ignition from lift off
 	double dT_F;									// Period of frozen pitch in S1C
 	double T_S1,T_S2,T_S3;							// Times for Pre-IGM pitch polynomial
-	double T_LET;									// LET Jettison Time
 	double dt_LET;									// Nominal interval between S2 ignition and LET jettison
 	double dT_cost;									// Parameter for direct stageing guidance update; value and sense unkown
 	// IGM event times
@@ -402,11 +439,7 @@ private:								// Saturn LV
 	double TB4;										// Time of TB4
 	double TB4a;									// Time of TB4a
 	double TB5;										// Time of TB5
-	double TB5a;									// Time of TB5a
 	double TB6;										// Time of TB6
-	double TB6a;									// Time of TB6a
-	double TB6b;									// Time of TB6b
-	double TB6c;									// Time of TB6c
 	double TB7;										// Time of TB7
 	double TB8;										// Time of TB8
 	double T_RP;									// Time for restart preparation (TB6 start)
@@ -532,8 +565,11 @@ private:								// Saturn LV
 	MATRIX3 MX_K;									// Transform matrix from earth-centered plumbline to terminal
 	MATRIX3 MX_phi_T;								// Matrix made from phi_T
 	MATRIX3 MX_EPH;									// Transform matrix from ephemeral to earth-centered plumbline
+	MATRIX3 MGA;									// Transformation matrix from G-system to A-system
+	MATRIX3 MSA;									// Transformation matrix from S-system to A-system
 	double phi_T;									// Angle used to estimate location of terminal radius in orbital plane
 	VECTOR3 Pos4;									// Position in the orbital reference system
+	VECTOR3 PosA;									// Position in earth-fixed telemetry station system
 	VECTOR3 PosS;									// Position in the earth-centered plumbline system
 	VECTOR3 PosS_4sec;								// Estimated position in earth-centered plumbline after 4 seconds
 	VECTOR3 PosS_8secP;								// Estimated position in earth-centered plumbline after 8 seconds, initial
@@ -559,6 +595,7 @@ private:								// Saturn LV
 	VECTOR3 ddotG_last;								// last computed acceleration from gravity
 	VECTOR3 DotG_last;								// last computed velocity from gravity
 	VECTOR3 DDotV;									// Precomputed venting acceleration
+	VECTOR3 C_A[11];								// Array of telemetry station unit vectors
 	double Y_u;										// position component south of equator
 	double S,P, S_34, P_34;							// intermediate variables for gravity calculation
 	double a;										// earth equatorial radius
@@ -575,7 +612,7 @@ private:								// Saturn LV
 	double G_T;										// Magnitude of desired terminal gravitational acceleration
 	double rho;										// Atmospheric density
 	double drag_area;								// Drag area of the vehicle
-	double xi_T,eta_T,zeta_T;						// Desired position components in the terminal reference system
+	double xi_T;									// Desired position component in the terminal reference system
 	VECTOR3 PosXEZ;									// Position components in the terminal reference system
 	VECTOR3 DotXEZ;									// Instantaneous velocity components in the terminal reference system
 	double deta,dxi;								// Position components to be gained in this axis
@@ -634,14 +671,16 @@ private:								// Saturn LV
 	double R4;
 	double NUPTIM;									// Time from GRR at which a DCS Navigation Update is to be implemented
 	VECTOR3 Pos_Nav, Vel_Nav;
+	double TEMP;
+	int i;
+	double theta_R;									// Total angular rotation of earth since GRR
+	double d_A;										// Altitude of the vehicle above the horizon of a telemetry station
+	double R_STA;									// Mean radius of telemetry stations
+	double TBA;										// Time of station acquisition in TB5
+	double TBL;										// Time of station loss in TB5
 
-	//Switch Selector Tables
-	std::vector<SwitchSelectorSet> SSTTB[9];	// [1...8] 0 never used!
-	std::vector<SwitchSelectorSet> SSTTB4A;
-	std::vector<SwitchSelectorSet> SSTTB5A;
-	std::vector<SwitchSelectorSet> SSTTB6A;
-	std::vector<SwitchSelectorSet> SSTTB6B;
-	std::vector<SwitchSelectorSet> SSTTB6C;
+	//Switch Selector Table
+	std::vector<SwitchSelectorSet> SSTABLE;
 
 	// TABLE15
 	/*
@@ -700,10 +739,15 @@ private:								// Saturn LV
 	//Discrete Inputs
 	enum SV_DiscreteInput_Bits
 	{
-		DIN3_O2H2BurnerMalfunction = 2,
-		DIN5_SIVBEngineOutA = 4,
+		DIN1_RCA110Sync = 0,
+		DIN2_CommandDecoder,
+		DIN3_O2H2BurnerMalfunction,
+		DIN4_SpacecraftSeparation,
+		DIN5_SIVBEngineOutA,
 		DIN6_TLI_Inhibit,
-		DIN9_SCControlOfSaturn = 8,
+		DIN7_Spare,
+		DIN8_Spare,
+		DIN9_SCControlOfSaturn,
 		DIN10_SIISIVBSeparation,
 		DIN11_SICInboardEngineOutB,
 		DIN12_SICSIISeparation,
@@ -784,6 +828,44 @@ private:								// Saturn LV
 		MC27_PoweredFlightDCSInhibitRemoved
 	};
 
+	//Masks
+	static const unsigned MSKSSCLS1 = 0000003770U; //Class 1 mask
+	static const unsigned MSKSSCLS3 = 0077574000U; //Class 3 mask (NTRS document had 077774000, but that would make TB6D class 3, which is not the case)
+	static const unsigned MSKSSWV   = 0003000000U; //Water valve mask
+	//DVASW
+
+	//Class 1
+	static const unsigned MSKSSS4C0 = 0400000000U; //S-IVB cutoff
+	static const unsigned MSKSSSPEC = 0200000000U; //S-IVB pump purge
+	static const unsigned MSKSSTB6C = 0100000000U; //TB6C alternate sequence
+	//Class 3
+	static const unsigned MSKSSGNSS = 0040000000U; //Generalized switch selector
+	static const unsigned MSKSSSBLO = 0020000000U; //S-Band antenna to low
+	static const unsigned MSKSSSBHI = 0010000000U; //S-Band antenna to high
+	static const unsigned MSKSSSBOM = 0004000000U; //S-Band antenna to omni
+	static const unsigned MSKSSECSV = 0002000000U; //ECS water valve close
+	static const unsigned MSKSSECS1 = 0001000000U; //ECS water valve open
+	static const unsigned MSKSST3A  = 0000400000U; //S-II MRS sequence
+	static const unsigned MSKSSTB6D = 0000200000U; //TB6D alternate sequence
+	static const unsigned MSKSSTB5A = 0000100000U; //TB5A alternate sequence (Apollo 8 only)
+	//5 spare
+
+	//Class 2
+	static const unsigned MSKSSTB6A = 0000002000U; //TB6A alternate sequence
+	static const unsigned MSKSSTB6B = 0000001000U; //TB6B alternate sequence
+	static const unsigned MSKSSS4C1 = 0000000400U; //S-IVB special cutoff
+	//5 spare
+
+	//Class 4
+	static const unsigned MSKSSACQU = 0000000004U;
+	static const unsigned MSKSSLI   = 0000000002U;
+	//1 spare
+
+	//VASPI
+	static const unsigned MSKSSCL3  = 0100000000U;
+	static const unsigned MSKSSCL1  = 0040000000U;
+	static const unsigned MSKSST6C  = 0004000000U;
+
 	friend class MCC;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
@@ -830,7 +912,6 @@ private:
 	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec);
 
 	bool Initialized;								// Clobberness flag
-	FILE* lvlog;									// LV Log file
 	char FSPFileName[256];
 
 	bool LVDC_Stop;									// Program Stop Flag
@@ -984,7 +1065,7 @@ private:
 	double alpha_D;									// Angle from perigee to DN vector
 	bool alpha_D_op;								// Option to determine alpha_D or load it
 	double G_T;										// Magnitude of desired terminal gravitational acceleration
-	double xi_T,eta_T,zeta_T;						// Desired position components in the terminal reference system
+	double xi_T;									// Desired position component in the terminal reference system
 	VECTOR3 PosXEZ;									// Position components in the terminal reference system
 	VECTOR3 DotXEZ;									// Instantaneous something
 	double deta,dxi;								// Position components to be gained in this axis

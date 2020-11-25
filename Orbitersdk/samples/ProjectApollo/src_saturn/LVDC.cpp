@@ -47,8 +47,16 @@ LVDC::LVDC(LVDA &lvd) : lvda(lvd)
 
 double LVDC::log(double a)
 {
-	if (a < 0.125) return std::log(0.125);
-	if (a > 8.0) return std::log(8.0);
+	if (a < 0.125)
+	{
+		fprintf(lvlog, "Logarithm outside limit! %lf\r\n", a);
+		return std::log(0.125);
+	}
+	if (a > 8.0)
+	{
+		fprintf(lvlog, "Logarithm outside limit! %lf\r\n", a);
+		return std::log(8.0);
+	}
 	return std::log(a);
 }
 
@@ -288,8 +296,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	V_T = 0;
 	V_TC = 0;
 	xi_T = 0;
-	eta_T = 0;
-	zeta_T = 0;
 	X_S1 = 0;
 	X_S2 = 0;
 	X_S3 = 0;
@@ -513,7 +519,7 @@ void LVDC1B::Init(){
 	alpha_D=0;								// Angle from perigee to DN vector
 	alpha_D_op=true;						// Option to determine alpha_D or load it
 	G_T= -9.255;							// Magnitude of desired terminal gravitational acceleration
-	xi_T=0; eta_T=0; zeta_T=0;				// Desired position components in the terminal reference system
+	xi_T=0;									// Desired position component in the terminal reference system
 	PosXEZ=_V(0,0,0);						// Position components in the terminal reference system
 	DotXEZ=_V(0,0,0);						// Instantaneous something
 	deta=0; dxi=0;							// Position components to be gained in this axis
@@ -2224,8 +2230,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_V_T", V_T);
 	papiWriteScenario_double(scn, "LVDC_V_TC", V_TC);
 	papiWriteScenario_double(scn, "LVDC_xi_T", xi_T);
-	papiWriteScenario_double(scn, "LVDC_eta_T", eta_T);
-	papiWriteScenario_double(scn, "LVDC_zeta_T", zeta_T);
 	papiWriteScenario_double(scn, "LVDC_X_S1", X_S1);
 	papiWriteScenario_double(scn, "LVDC_X_S2", X_S2);
 	papiWriteScenario_double(scn, "LVDC_X_S3", X_S3);
@@ -2587,8 +2591,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_V_T", V_T);
 		papiReadScenario_double(line, "LVDC_V_TC", V_TC);
 		papiReadScenario_double(line, "LVDC_xi_T", xi_T);
-		papiReadScenario_double(line, "LVDC_eta_T", eta_T);
-		papiReadScenario_double(line, "LVDC_zeta_T", zeta_T);
 		papiReadScenario_double(line, "LVDC_X_S1", X_S1);
 		papiReadScenario_double(line, "LVDC_X_S2", X_S2);
 		papiReadScenario_double(line, "LVDC_X_S3", X_S3);
@@ -2864,9 +2866,16 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	CHIBARSTEER = false;
 	CountPIPA = false;
 	DFIL1 = false;
+	DFIL3 = false;
+	DFTBCEP = false;
+	DFTUP = false;
 	Direct_Ascent = false;
 	directstagereset = false;
+	FASE = false;
 	first_op = false;
+	FCLS4 = false;
+	FSSAC = false;
+	FTADV = false;
 	TerminalConditions = false;
 	ImpactBurnEnabled = false;
 	ImpactBurnInProgress = false;
@@ -2882,6 +2891,8 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	INH5 = false;
 	init = false;
 	i_op = false;
+	KSSINDXTB7A = KSSINDXTB6A = KSSINDXTB6B = KSSINDXTB6C = KSSINDXTB3A = KSSINDXTB5A = KSSINDXTB5B = KSSINDXSIVA = KSSINDXSIVB = KSSINDXS4C1 = KSSINDXGSS = 0;
+	KSSINDXSBLO = KSSINDXSBHI = KSSINDXSBOM = KSSINDXECSV = KSSINDXECS1 = KSSINDXGAIN = KSSINDXTB6D = KSSINDXALU = 0;
 	MRS = false;
 	for (int i = 0;i < 21;i++)
 	{
@@ -2901,17 +2912,31 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	TU10 = false;
 	// Integers
 	DGST2 = 0;
+	DVASW = 0;
 	DVP = 0;
+	DVSST = 0;
 	GST1M = 0;
 	IGMCycle = 0;
 	LVDC_Stop = 0;
 	LVDC_Timebase = 0;
 	MLM = 0;
+	SSM = 0;
+	SST1PTR = 0;
+	SST2PTR = 0;
 	Timer1Counter = 0;
 	Timer2Counter = 0;
-	SST = 0;
 	T_EO2 = 0;
+	for (int i = 0;i < 9;i++)
+	{
+		SSTTBPTR[i] = 0;
+	}
 	UP = 0;
+	VASPI = 0;
+	VHSTW1 = 0;
+	VHSTW2 = 0;
+	VSC30 = VSC31 = VSC10 = VSC11 = 0;
+	VSNA1 = 0;
+	VSNA2 = 0;
 	AttitudeManeuverState = 0;
 	// doubles
 	a = 0;
@@ -2947,6 +2972,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	Ct_o = 0;
 	D = 0;
 	d2 = 0;
+	d_A = 0;
 	ddot_zeta_GT = 0;
 	ddot_xi_GT = 0;
 	DEC = 0;
@@ -2986,6 +3012,9 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	dV = 0;
 	dV_B = 0;
 	DV2TG = 0;
+	DVACT = 0;
+	DVRTC = 0;
+	DVTGB = 0;
 	e = 0;
 	e_N = 0;
 	eps_1 = 0;
@@ -3065,9 +3094,11 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	K_3 = 0;
 	K_4 = 0;
 	K_5 = 0;
+	KCSSK = 0;
 	K_D = 0;
 	K_P1 = 0;
 	K_P2 = 0;
+	KSSB1 = KSSB2 = KSSB3 = 0;
 	K_T3 = 0;
 	K_Y1 = 0;
 	K_Y2 = 0;
@@ -3130,6 +3161,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	ROV = 0;
 	ROVR = 0;
 	ROVs = 0;
+	R_STA = 0;
 	R_T = 0;
 	S_1 = 0;
 	S_2 = 0;
@@ -3180,13 +3212,11 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	TB4 = 0;
 	TB4a = 0;
 	TB5 = 0;
-	TB5a = 0;
 	TB6 = 0;
-	TB6a = 0;
-	TB6b = 0;
-	TB6c = 0;
 	TB7 = 0;
 	TB8 = 0;
+	TBA = 0;
+	TBL = 0;
 	T_c = 0;
 	tchi_y_last = 0;
 	tchi_p_last = 0;
@@ -3197,13 +3227,13 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	T_EO1 = 0;
 	T_GO = 0;
 	theta_N = 0;
+	theta_R = 0;
 	theta_xa = 0.0;
 	theta_za = 0.0;
 	TI = 0.0;
 	T_ImpactBurn = 0;
 	dT_ImpactBurn = 0;
 	T_L = 0.0;
-	T_LET = 0;
 	TMM = 0;
 	TMR = 0;
 	T_RP = 0;
@@ -3237,14 +3267,20 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	V_0 = 0;
 	V_1 = 0;
 	V_2 = 0;
+	VATR4 = 0;
+	VATRR = 0;
+	VGBIA = 0;
 	VOLD = 0;
 	V_S2T = 0;
+	VSC32 = VSC12 = 0;
+	VSSRT = 0;
+	VSSTM = 0;
+	VSSW = 0;
+	VSTGO = 0;
 	V_T = 0;
 	V_TC = 0;
 	VTOLD = 0.0;
 	xi_T = 0;
-	eta_T = 0;
-	zeta_T = 0;
 	X_1 = 0;
 	X_2 = 0;
 	X_S1 = 0;
@@ -3258,6 +3294,10 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	// VECTOR3
 	AttitudeError = _V(0,0,0);
 	AttitudeErrorOld = _V(0, 0, 0);
+	for (int i = 0;i < 11;i++)
+	{
+		C_A[i] = _V(0, 0, 0);
+	}
 	CommandedAttitude = _V(0,0,0);
 	CurrentAttitude = _V(0,0,0);
 	DChi = DChi_apo = _V(0, 0, 0);
@@ -3273,6 +3313,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	DotS = _V(0,0,0);
 	DotXEZ = _V(0,0,0);
 	PCommandedAttitude = _V(0,0,0);
+	PosA = _V(0, 0, 0);
 	Pos4 = _V(0,0,0);
 	Pos_Nav = _V(0, 0, 0);
 	PosS = _V(0,0,0);
@@ -3290,12 +3331,12 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	MX_G = _M(0,0,0,0,0,0,0,0,0);
 	MX_K = _M(0,0,0,0,0,0,0,0,0);
 	MX_phi_T = _M(0,0,0,0,0,0,0,0,0);
+	MGA = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	MSA = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
 	//TABLE15 and TABLE 25
 	TABLE15[0] = {};
 	TABLE15[1] = {};
 	tgt_index = 0;
-	CommandSequence = 0;
-	CommandSequenceStored = 0;
 	SIICenterEngineCutoff = false;
 	FixedAttitudeBurn = false;
 }
@@ -3324,8 +3365,7 @@ void LVDCSV::Init(){
 	INH2 = true;							// inhibits second EPO roll/pitch maneuver
 	INH4 = false;
 	INH5 = true;
-	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB5a = TB6 = TB6a = TB6b = TB6c = TB7 = TB8 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
-	T_LET = 40.6;							// LET Jettison Time, i.e. the time IGM starts after start of TB3
+	TB1 = TB2 = TB3 = TB4 = TB4a = TB5 = TB6 = TB7 = TB8 = 100000; //LVDC's elapsed timebase times; set to 0 when resp. TB starts
 	TU = false;								// flag indicating target update has been received from ground
 	TU10 = false;							// flag indicating 10-parameter target update has been received
 	UP = 0;									// switching variable for Tt_t parameter update
@@ -3335,7 +3375,6 @@ void LVDCSV::Init(){
 	TerminalConditions = true;
 	ImpactBurnEnabled = false;
 	ImpactBurnInProgress = false;
-	CommandSequence = 0;
 
 	//PRE_IGM GUIDANCE
 	B_11 = -1.2;							// Coefficients for determining freeze time after S1C engine failure
@@ -3594,7 +3633,7 @@ void LVDCSV::Init(){
 	alpha_D=0;								// Angle from perigee to DN vector
 	alpha_D_op=true;						// Option to determine alpha_D or load it
 	G_T= -9.255;							// Magnitude of desired terminal gravitational acceleration
-	xi_T=0; eta_T=0; zeta_T=0;				// Desired position components in the terminal reference system
+	xi_T=0;									// Desired position component in the terminal reference system
 	PosXEZ=_V(0,0,0);						// Position components in the terminal reference system
 	DotXEZ=_V(0,0,0);						// Instantaneous something
 	deta=0; dxi=0;							// Position components to be gained in this axis
@@ -3662,9 +3701,31 @@ void LVDCSV::Init(){
 	EPTTIM[38] = 0.0; EPTTIM[39] = 6.5; EPTTIM[40] = 8.6; EPTTIM[41] = 10.0; EPTTIM[42] = 12.0; EPTTIM[43] = 15.0; //TB4
 	EPTTIM[55] = 0.0; EPTTIM[56] = 10.0; EPTTIM[57] = 20.0; EPTTIM[58] = 100.0; EPTTIM[59] = 2700.0; EPTTIM[60] = 5160.0;//TB5
 	EPTTIM[71] = 0.0; EPTTIM[72] = 41.0; EPTTIM[73] = 48.0; EPTTIM[74] = 341.3; EPTTIM[75] = 496.7; EPTTIM[76] = 497.3; EPTTIM[77] = 560.0; EPTTIM[78] = 578.6; EPTTIM[79] = 580.3; EPTTIM[80] = 583.0; EPTTIM[81] = 584.0; EPTTIM[82] = 590.0;//TB6
-	EPTTIM[93] = 0.0;  EPTTIM[94] = 20.0;  EPTTIM[95] = 20.0; EPTTIM[96] = 900.0; EPTTIM[97] = 900.0; EPTTIM[98] = 6540.0; //TB7
+	EPTTIM[93] = 0.0;  EPTTIM[94] = 20.0;  EPTTIM[95] = 20.0; EPTTIM[96] = 900.0; EPTTIM[97] = 900.0; EPTTIM[98] = 900.0; EPTTIM[99] = 6540.0; //TB7
 	EPTTIM[107] = 0.0; EPTTIM[108] = 3705.0;//TB8
 	EPTTIM[109] = 0.0; EPTTIM[110] = 11.5; EPTTIM[111] = 13.3; EPTTIM[112] = 15.0; //TB4a
+
+	//Switch selector
+	KSSB1 = 0.018;
+	KSSB2 = 0.026;
+	KSSB3 = 0.017;
+	KCSSK = 0.2;
+	KSSINDXTB7A = KSSINDXTB6A = KSSINDXTB6B = KSSINDXTB6C = KSSINDXTB3A = KSSINDXTB5A = KSSINDXTB5B = KSSINDXSIVA = KSSINDXSIVB = KSSINDXS4C1 = KSSINDXGSS = -1;
+	KSSINDXSBLO = KSSINDXSBHI = KSSINDXSBOM = KSSINDXECSV = KSSINDXECS1 = KSSINDXGAIN = KSSINDXTB6D = KSSINDXALU = -1;
+
+	//Telemetry stations
+	C_A[0] = _V(0.87981, -0.47532, -0.00134);
+	C_A[1] = _V(0.81395, -0.53253, 0.23214);
+	C_A[2] = _V(0.37533, -0.46339, 0.80275);
+	C_A[3] = _V(0.39895, 0.13748, 0.90661);
+	C_A[4] = _V(0.17931, -0.64631, 0.74171);
+	C_A[5] = _V(-0.87993, 0.41883, -0.2243);
+	C_A[6] = _V(-0.68462, -0.22874, -0.69208);
+	C_A[7] = _V(-0.52869, 0.57948, -0.62023);
+	C_A[8] = _V(0.17552, -0.37445, -0.91048);
+	C_A[9] = _V(0.65891, -0.57586, -0.48396);
+	C_A[10] = _V(0.84918, -0.46168, -0.25641);
+	R_STA = 6374932.0;
 
 	// Set up remainder
 	LVDC_Timebase = -1;						// Start up halted in pre-launch pre-GRR loop
@@ -3691,9 +3752,13 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CHIBARSTEER", CHIBARSTEER);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
+	oapiWriteScenario_int(scn, "LVDC_DFTUP", DFTUP);
 	oapiWriteScenario_int(scn, "LVDC_Direct_Ascent", Direct_Ascent);
 	oapiWriteScenario_int(scn, "LVDC_directstagereset", directstagereset);
 	oapiWriteScenario_int(scn, "LVDC_first_op", first_op);
+	oapiWriteScenario_int(scn, "LVDC_FCLS4", FCLS4);
+	oapiWriteScenario_int(scn, "LVDC_FSSAC", FSSAC);
+	oapiWriteScenario_int(scn, "LVDC_FTADV", FTADV);
 	oapiWriteScenario_int(scn, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
 	oapiWriteScenario_int(scn, "LVDC_GATE0", GATE0);
@@ -3726,10 +3791,9 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
 	oapiWriteScenario_int(scn, "LVDC_AttitudeManeuverState", AttitudeManeuverState);
-	oapiWriteScenario_int(scn, "LVDC_CommandSequence", CommandSequence);
-	oapiWriteScenario_int(scn, "LVDC_CommandSequenceStored", CommandSequenceStored);
 	oapiWriteScenario_int(scn, "LVDC_DGST2", DGST2);
 	oapiWriteScenario_int(scn, "LVDC_DPM", DPM.to_ulong());
+	oapiWriteScenario_int(scn, "LVDC_DVASW", DVASW);
 	oapiWriteScenario_int(scn, "LVDC_DVIH", DVIH.to_ulong());
 	oapiWriteScenario_int(scn, "LVDC_DVP", DVP);
 	oapiWriteScenario_int(scn, "LVDC_EPTINDX", EPTINDX);
@@ -3744,11 +3808,20 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Stop", LVDC_Stop);
 	oapiWriteScenario_int(scn, "LVDC_LVDC_Timebase", LVDC_Timebase);
 	oapiWriteScenario_int(scn, "LVDC_SSM", SSM);
+	oapiWriteScenario_int(scn, "LVDC_SST1PTR", SST1PTR);
+	oapiWriteScenario_int(scn, "LVDC_SST2PTR", SST2PTR);
 	oapiWriteScenario_int(scn, "LVDC_Timer1Counter", Timer1Counter);
 	oapiWriteScenario_int(scn, "LVDC_Timer2Counter", Timer2Counter);
 	oapiWriteScenario_int(scn, "LVDC_tgt_index", tgt_index);
 	oapiWriteScenario_int(scn, "LVDC_T_EO2", T_EO2);
 	oapiWriteScenario_int(scn, "LVDC_UP", UP);
+	oapiWriteScenario_int(scn, "LVDC_VASPI", VASPI);
+	oapiWriteScenario_int(scn, "LVDC_VSC10", VSC10);
+	oapiWriteScenario_int(scn, "LVDC_VSC11", VSC11);
+	oapiWriteScenario_int(scn, "LVDC_VSC30", VSC30);
+	oapiWriteScenario_int(scn, "LVDC_VSC31", VSC31);
+	oapiWriteScenario_int(scn, "LVDC_VSNA1", VSNA1);
+	oapiWriteScenario_int(scn, "LVDC_VSNA2", VSNA2);
 	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM0", EPTTIM, 20); //Save EPTTIM before any other double, in case we want something in the load function to overwrite it
 	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM1", EPTTIM + 20, 20);
 	papiWriteScenario_doublearr(scn, "LVDC_EPTTIM2", EPTTIM + 40, 20);
@@ -3928,6 +4001,8 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dV_BR", dV_BR);
 	papiWriteScenario_double(scn, "LVDC_DVBRA", TABLE15[0].dV_BR);
 	papiWriteScenario_double(scn, "LVDC_DVBRB", TABLE15[1].dV_BR);
+	papiWriteScenario_double(scn, "LVDC_DVSST", DVSST);
+	papiWriteScenario_double(scn, "LVDC_DVTGB", DVTGB);
 	papiWriteScenario_double(scn, "LVDC_e", e);
 	papiWriteScenario_double(scn, "LVDC_e_N", e_N);
 	papiWriteScenario_double(scn, "LVDC_ENA0", TABLE15[0].target[0].e_N);
@@ -4169,7 +4244,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_cos_gam", cos_gam);
 	papiWriteScenario_double(scn, "LVDC_S", S);
 	papiWriteScenario_double(scn, "LVDC_SMCG", SMCG);
-	papiWriteScenario_double(scn, "LVDC_SST", SST);
 	papiWriteScenario_double(scn, "LVDC_P", P);
 	papiWriteScenario_double(scn, "LVDC_S_34", S_34);
 	papiWriteScenario_double(scn, "LVDC_P_34", P_34);
@@ -4211,13 +4285,11 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TB4", TB4);
 	papiWriteScenario_double(scn, "LVDC_TB4a", TB4a);
 	papiWriteScenario_double(scn, "LVDC_TB5", TB5);
-	papiWriteScenario_double(scn, "LVDC_TB5a", TB5a);
 	papiWriteScenario_double(scn, "LVDC_TB6", TB6);
-	papiWriteScenario_double(scn, "LVDC_TB6a", TB6a);
-	papiWriteScenario_double(scn, "LVDC_TB6b", TB6b);
-	papiWriteScenario_double(scn, "LVDC_TB6c", TB6c);
 	papiWriteScenario_double(scn, "LVDC_TB7", TB7);
 	papiWriteScenario_double(scn, "LVDC_TB8", TB8);
+	papiWriteScenario_double(scn, "LVDC_TBA", TBA);
+	papiWriteScenario_double(scn, "LVDC_TBL", TBL);
 	papiWriteScenario_double(scn, "LVDC_T_c", T_c);
 	papiWriteScenario_double(scn, "LVDC_tchi_y_last", tchi_y_last);
 	papiWriteScenario_double(scn, "LVDC_tchi_p_last", tchi_p_last);
@@ -4241,7 +4313,6 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_TI", TI);
 	papiWriteScenario_double(scn, "LVDC_T_ImpactBurn", T_ImpactBurn);
 	papiWriteScenario_double(scn, "LVDC_T_L", T_L);
-	papiWriteScenario_double(scn, "LVDC_T_LET", T_LET);
 	papiWriteScenario_double(scn, "LVDC_T_LO", T_LO);
 	papiWriteScenario_double(scn, "LVDC_TMEFRZ", TMEFRZ);
 	papiWriteScenario_double(scn, "LVDC_TMM", TMM);
@@ -4307,26 +4378,23 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_V_ex2R", V_ex2R);
 	papiWriteScenario_double(scn, "LVDC_V_ex3", V_ex3);
 	papiWriteScenario_double(scn, "LVDC_V_ex3R", V_ex3R);
+	papiWriteScenario_double(scn, "LVDC_VGBIA", VGBIA);
 	papiWriteScenario_double(scn, "LVDC_V_i", V_i);
 	papiWriteScenario_double(scn, "LVDC_V_0", V_0);
 	papiWriteScenario_double(scn, "LVDC_V_1", V_1);
 	papiWriteScenario_double(scn, "LVDC_V_2", V_2);
+	papiWriteScenario_double(scn, "LVDC_VATR4", VATR4);
+	papiWriteScenario_double(scn, "LVDC_VATRR", VATRR);
 	papiWriteScenario_double(scn, "LVDC_VOLD", VOLD);
 	papiWriteScenario_double(scn, "LVDC_V_S2T", V_S2T);
+	papiWriteScenario_double(scn, "LVDC_VSC12", VSC12);
+	papiWriteScenario_double(scn, "LVDC_VSC32", VSC32);
+	papiWriteScenario_double(scn, "LVDC_VSSRT", VSSRT);
+	papiWriteScenario_double(scn, "LVDC_VSSW", VSSW);
 	papiWriteScenario_double(scn, "LVDC_V_T", V_T);
 	papiWriteScenario_double(scn, "LVDC_V_TC", V_TC);
 	papiWriteScenario_double(scn, "LVDC_VTOLD", VTOLD);
 	papiWriteScenario_double(scn, "LVDC_xi_T", xi_T);
-	papiWriteScenario_double(scn, "LVDC_eta_T", eta_T);
-	papiWriteScenario_double(scn, "LVDC_zeta_T", zeta_T);
-	papiWriteScenario_double(scn, "LVDC_X_S1", X_S1);
-	papiWriteScenario_double(scn, "LVDC_X_S2", X_S2);
-	papiWriteScenario_double(scn, "LVDC_X_S3", X_S3);
-	papiWriteScenario_double(scn, "LVDC_Xtt_y", Xtt_y);
-	papiWriteScenario_double(scn, "LVDC_Xtt_p", Xtt_p);
-	papiWriteScenario_double(scn, "LVDC_X_Zi", X_Zi);
-	papiWriteScenario_double(scn, "LVDC_X_Yi", X_Yi);
-	papiWriteScenario_double(scn, "LVDC_Y_u", Y_u);
 	papiWriteScenario_vec(scn, "LVDC_AttitudeError", AttitudeError);
 	papiWriteScenario_vec(scn, "LVDC_AttitudeErrorOld", AttitudeErrorOld);
 	papiWriteScenario_vec(scn, "LVDC_CommandedAttitude", CommandedAttitude);
@@ -4363,15 +4431,15 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteLine(scn, LVDC_END_STRING);
 }
 
-void LVDCSV::LoadState(FILEHANDLE scn){
-	char *line;	
-	int tmp=0; // for bool loader
-	if(Initialized){
-		fprintf(lvlog,"LoadState() called\r\n");
+void LVDCSV::LoadState(FILEHANDLE scn) {
+	char *line;
+	int tmp = 0; // for bool loader
+	if (Initialized) {
+		fprintf(lvlog, "LoadState() called\r\n");
 		fflush(lvlog);
 	}
-	while (oapiReadScenario_nextline (scn, line)) {
-		if (!strnicmp(line, LVDC_END_STRING, sizeof(LVDC_END_STRING))){
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, LVDC_END_STRING, sizeof(LVDC_END_STRING))) {
 			break;
 		}
 		// are we there yet?
@@ -4385,10 +4453,14 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CHIBARSTEER", CHIBARSTEER);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
+		papiReadScenario_bool(line, "LVDC_DFTUP", DFTUP);
 		papiReadScenario_bool(line, "LVDC_Direct_Ascent", Direct_Ascent);
 		papiReadScenario_bool(line, "LVDC_directstagereset", directstagereset);
+		papiReadScenario_bool(line, "LVDC_FCLS4", FCLS4);
 		papiReadScenario_bool(line, "LVDC_first_op", first_op);
 		papiReadScenario_bool(line, "LVDC_FixedAttitudeBurn", FixedAttitudeBurn);
+		papiReadScenario_bool(line, "LVDC_FSSAC", FSSAC);
+		papiReadScenario_bool(line, "LVDC_FTADV", FTADV);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
 		papiReadScenario_bool(line, "LVDC_GATE0", GATE0);
 		papiReadScenario_bool(line, "LVDC_GATE1", GATE1);
@@ -4422,12 +4494,14 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 
 		// integers
 		papiReadScenario_int(line, "LVDC_AttitudeManeuverState", AttitudeManeuverState);
-		papiReadScenario_int(line, "LVDC_CommandSequence", CommandSequence);
-		papiReadScenario_int(line, "LVDC_CommandSequenceStored", CommandSequenceStored);
 		papiReadScenario_int(line, "LVDC_DGST2", DGST2);
 		if (papiReadScenario_int(line, "LVDC_DPM", tmp))
 		{
 			DPM = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_DVASW", tmp))
+		{
+			DVASW = tmp;
 		}
 		if (papiReadScenario_int(line, "LVDC_DVIH", tmp))
 		{
@@ -4459,6 +4533,14 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 			ModeCode27 = tmp;
 		}
 		papiReadScenario_int(line, "LVDC_SSM", SSM);
+		if (papiReadScenario_int(line, "LVDC_SST1PTR", tmp))
+		{
+			SST1PTR = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_SST2PTR", tmp))
+		{
+			SST2PTR = tmp;
+		}
 		papiReadScenario_int(line, "LVDC_LVDC_Stop", LVDC_Stop);
 		papiReadScenario_int(line, "LVDC_LVDC_Timebase", LVDC_Timebase);
 		papiReadScenario_int(line, "LVDC_Timer1Counter", Timer1Counter);
@@ -4466,7 +4548,28 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_int(line, "LVDC_tgt_index", tgt_index);
 		papiReadScenario_int(line, "LVDC_T_EO2", T_EO2);
 		papiReadScenario_int(line, "LVDC_UP", UP);
-
+		if (papiReadScenario_int(line, "LVDC_VASPI", tmp))
+		{
+			VASPI = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_VSC10", tmp))
+		{
+			VSC10 = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_VSC11", tmp))
+		{
+			VSC11 = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_VSC30", tmp))
+		{
+			VSC30 = tmp;
+		}
+		if (papiReadScenario_int(line, "LVDC_VSC31", tmp))
+		{
+			VSC31 = tmp;
+		}
+		papiReadScenario_int(line, "LVDC_VSNA1", VSNA1);
+		papiReadScenario_int(line, "LVDC_VSNA2", VSNA2);
 		// doubles
 		papiReadScenario_doublearr(line, "LVDC_EPTTIM0", EPTTIM, 20);
 		papiReadScenario_doublearr(line, "LVDC_EPTTIM1", EPTTIM + 20, 20);
@@ -4648,6 +4751,8 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_dV_BR", dV_BR);
 		papiReadScenario_double(line, "LVDC_DVBRA", TABLE15[0].dV_BR);
 		papiReadScenario_double(line, "LVDC_DVBRB", TABLE15[1].dV_BR);
+		papiReadScenario_double(line, "LVDC_DVSST", DVSST);
+		papiReadScenario_double(line, "LVDC_DVTGB", DVTGB);
 		papiReadScenario_double(line, "LVDC_e", e);
 		papiReadScenario_double(line, "LVDC_e_N", e_N);
 		papiReadScenario_double(line, "LVDC_ENA0", TABLE15[0].target[0].e_N);
@@ -4890,7 +4995,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_cos_gam", cos_gam);
 		papiReadScenario_double(line, "LVDC_S", S);
 		papiReadScenario_double(line, "LVDC_SMCG", SMCG);
-		papiReadScenario_double(line, "LVDC_SST", SST);
 		papiReadScenario_double(line, "LVDC_P", P);
 		papiReadScenario_double(line, "LVDC_S_34", S_34);
 		papiReadScenario_double(line, "LVDC_P_34", P_34);
@@ -4934,13 +5038,11 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TB4", TB4);
 		papiReadScenario_double(line, "LVDC_TB4a", TB4a);
 		papiReadScenario_double(line, "LVDC_TB5", TB5);
-		papiReadScenario_double(line, "LVDC_TB5a", TB5a);
 		papiReadScenario_double(line, "LVDC_TB6", TB6);
-		papiReadScenario_double(line, "LVDC_TB6a", TB6a);
-		papiReadScenario_double(line, "LVDC_TB6b", TB6b);
-		papiReadScenario_double(line, "LVDC_TB6c", TB6c);
 		papiReadScenario_double(line, "LVDC_TB7", TB7);
 		papiReadScenario_double(line, "LVDC_TB8", TB8);
+		papiReadScenario_double(line, "LVDC_TBA", TBA);
+		papiReadScenario_double(line, "LVDC_TBL", TBL);
 		papiReadScenario_double(line, "LVDC_T_c", T_c);
 		papiReadScenario_double(line, "LVDC_tchi_p_last", tchi_p_last);
 		papiReadScenario_double(line, "LVDC_tchi_y_last", tchi_y_last);
@@ -4969,7 +5071,6 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_TI7F11", EPTTIM[96]); //Events Processor: TB7, event 4
 		papiReadScenario_double(line, "LVDC_T_ImpactBurn", T_ImpactBurn);
 		papiReadScenario_double(line, "LVDC_T_L", T_L);
-		papiReadScenario_double(line, "LVDC_T_LET", T_LET);
 		papiReadScenario_double(line, "LVDC_T_LO", T_LO);
 		papiReadScenario_double(line, "LVDC_TMEFRZ", TMEFRZ);
 		papiReadScenario_double(line, "LVDC_TMM", TMM);
@@ -5039,22 +5140,19 @@ void LVDCSV::LoadState(FILEHANDLE scn){
 		papiReadScenario_double(line, "LVDC_V_0", V_0);
 		papiReadScenario_double(line, "LVDC_V_1", V_1);
 		papiReadScenario_double(line, "LVDC_V_2", V_2);
+		papiReadScenario_double(line, "LVDC_VATR4", VATR4);
+		papiReadScenario_double(line, "LVDC_VATRR", VATRR);
+		papiReadScenario_double(line, "LVDC_VGBIA", VGBIA);
 		papiReadScenario_double(line, "LVDC_VOLD", VOLD);
 		papiReadScenario_double(line, "LVDC_V_S2T", V_S2T);
+		papiReadScenario_double(line, "LVDC_VSC12", VSC12);
+		papiReadScenario_double(line, "LVDC_VSC32", VSC32);
+		papiReadScenario_double(line, "LVDC_VSSRT", VSSRT);
+		papiReadScenario_double(line, "LVDC_VSSW", VSSW);
 		papiReadScenario_double(line, "LVDC_V_T", V_T);
 		papiReadScenario_double(line, "LVDC_V_TC", V_TC);
 		papiReadScenario_double(line, "LVDC_VTOLD", VTOLD);
 		papiReadScenario_double(line, "LVDC_xi_T", xi_T);
-		papiReadScenario_double(line, "LVDC_eta_T", eta_T);
-		papiReadScenario_double(line, "LVDC_zeta_T", zeta_T);
-		papiReadScenario_double(line, "LVDC_X_S1", X_S1);
-		papiReadScenario_double(line, "LVDC_X_S2", X_S2);
-		papiReadScenario_double(line, "LVDC_X_S3", X_S3);
-		papiReadScenario_double(line, "LVDC_Xtt_p", Xtt_p);
-		papiReadScenario_double(line, "LVDC_Xtt_y", Xtt_y);
-		papiReadScenario_double(line, "LVDC_X_Zi", X_Zi);
-		papiReadScenario_double(line, "LVDC_X_Yi", X_Yi);
-		papiReadScenario_double(line, "LVDC_Y_u", Y_u);
 
 		// VECTOR3
 		papiReadScenario_vec(line, "LVDC_AttitudeError", AttitudeError);
@@ -5110,56 +5208,138 @@ void LVDCSV::ReadFlightSequenceProgram(char *fspfile)
 {
 	using namespace std;
 
-	std::vector<SwitchSelectorSet> v;
-
 	SwitchSelectorSet ssset;
-
-	bool first = true;
-	int tb, tbtemp;
-
 	string line;
 	ifstream file(fspfile);
+
+	SSTABLE.clear();
+
 	if (file.is_open())
 	{
 		while (getline(file, line))
 		{
-			if (sscanf(line.c_str(), "TB%d", &tbtemp) == 1 || line.compare("END") == 0)
+			if (line.compare("END") == 0)
 			{
-				if (first == false)
+				break;
+			}
+			else if ((line.substr(0, 3)).compare("SST") == 0)
+			{
+				if (line.compare("SSTTB1") == 0)
 				{
-					if (tb >= 1 && tb <= 8)
-					{
-						SSTTB[tb] = v;
-					}
-					else if (tb == 40)
-					{
-						SSTTB4A = v;
-					}
-					else if (tb == 50)
-					{
-						SSTTB5A = v;
-					}
-					else if (tb == 60)
-					{
-						SSTTB6A = v;
-					}
-					else if (tb == 61)
-					{
-						SSTTB6B = v;
-					}
-					else if (tb == 62)
-					{
-						SSTTB6C = v;
-					}
+					SSTTBPTR[0] = SSTABLE.size();
 				}
-
-				v.clear();
-				tb = tbtemp;
-				first = false;
+				else if (line.compare("SSTTB2") == 0)
+				{
+					SSTTBPTR[1] = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB3") == 0)
+				{
+					SSTTBPTR[2] = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB4") == 0)
+				{
+					SSTTBPTR[3] = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB5") == 0)
+				{
+					SSTTBPTR[4] = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB6") == 0)
+				{
+					SSTTBPTR[5] = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB7") == 0)
+				{
+					SSTTBPTR[6] = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB8") == 0)
+				{
+					SSTTBPTR[7] = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB3A") == 0)
+				{
+					KSSINDXTB3A = SSTABLE.size();
+				}
+				else if (line.compare("SSTS4C1") == 0)
+				{
+					KSSINDXS4C1 = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB4A") == 0)
+				{
+					SSTTBPTR[8] = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB6A") == 0)
+				{
+					KSSINDXTB6A = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB6B") == 0)
+				{
+					KSSINDXTB6B = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB6C") == 0)
+				{
+					KSSINDXTB6C = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB6D") == 0)
+				{
+					KSSINDXTB6D = SSTABLE.size();
+				}
+				else if (line.compare("SSTGSS") == 0)
+				{
+					KSSINDXGSS = SSTABLE.size();
+				}
+				else if (line.compare("SSTSIVA") == 0)
+				{
+					KSSINDXSIVA = SSTABLE.size();
+				}
+				else if (line.compare("SSTSIVB") == 0)
+				{
+					KSSINDXSIVB = SSTABLE.size();
+				}
+				else if (line.compare("SSTECS1") == 0)
+				{
+					KSSINDXECS1 = SSTABLE.size();
+				}
+				else if (line.compare("SSTECSV") == 0)
+				{
+					KSSINDXECSV = SSTABLE.size();
+				}
+				else if (line.compare("SSTSBHI") == 0)
+				{
+					KSSINDXSBHI = SSTABLE.size();
+				}
+				else if (line.compare("SSTSBLO") == 0)
+				{
+					KSSINDXSBLO = SSTABLE.size();
+				}
+				else if (line.compare("SSTSBOM") == 0)
+				{
+					KSSINDXSBOM = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB5A") == 0)
+				{
+					KSSINDXTB5A = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB5B") == 0)
+				{
+					KSSINDXTB5B = SSTABLE.size();
+				}
+				else if (line.compare("SSTGAIN") == 0)
+				{
+					KSSINDXGAIN = SSTABLE.size();
+				}
+				else if (line.compare("SSTALU") == 0)
+				{
+					KSSINDXALU = SSTABLE.size();
+				}
+				else if (line.compare("SSTTB7A") == 0)
+				{
+					KSSINDXTB7A = SSTABLE.size();
+				}
 			}
 			else if (sscanf(line.c_str(), "%lf,%d,%d", &ssset.time, &ssset.stage, &ssset.channel) == 3)
 			{
-				v.push_back(ssset);
+				SSTABLE.push_back(ssset);
 			}
 		}
 	}
@@ -5239,21 +5419,14 @@ void LVDCSV::TimeStep(double simdt) {
 			case 3:
 				if (lvda.SpacecraftSeparationIndication())
 				{
-					if (LVDC_TB_ETime >= 1.4)
-					{
-						//S-II Engines Cutoff
-						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
-					}
-
 					LVDC_Stop = true;
 				}
 			
 				// MR Shift
 				if(T_1 <= 0.0 && MRS == false){
 					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
-					// sprintf(oapiDebugString(),"LVDC: EMR SHIFT"); LVDC_GP_PC = 30; break;
-					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 58);
-					lvda.SwitchSelector(SWITCH_SELECTOR_SII, 56);
+					DVASW = DVASW | MSKSST3A;
+					SwitchSelectorProcessor(0);
 					MRS = true;
 				}
 				
@@ -5266,17 +5439,6 @@ void LVDCSV::TimeStep(double simdt) {
 				}
 				break;
 			case 5:
-				//CSM separation detection
-				if (SSTTB5A.size() > 0 && lvda.SpacecraftSeparationIndication() && TB5a >= 99999.0)
-				{
-					TB5a = RealTimeClock - T_L;
-					TI = TB5a;
-					LVDC_TB_ETime = 0;
-					LVDC_Timebase = 50;
-					CommandSequenceStored = CommandSequence;
-					CommandSequence = 0;
-				}
-
 				break;
 			case 6:
 				//TB6 timed events
@@ -5318,57 +5480,29 @@ void LVDCSV::TimeStep(double simdt) {
 					{
 						//Inhibit after 41 seconds will be accepted at 8min 17.3sec
 
-						//Switch to TB6c
-						TB6c = RealTimeClock - T_L;
-						TI = TB6c;
-						LVDC_TB_ETime = 0.0;
-						LVDC_Timebase = 62;
-						CommandSequence = 0;
-						//Disable Events Processor
-						T2STAT[2] = false;
-						Timer2Interrupt(true);
+						//Start TB6c
+						if (ModeCode26[MC26_StartTB6C] == false)
+						{
+							//Disable events processor
+							T2STAT[2] = false;
+							Timer2Interrupt(true);
+
+							DVASW = DVASW | MSKSSTB6C;
+							SwitchSelectorProcessor(0);
+						}
 					}
 				}
 
-				//CSM separation detection
-				if (SSTTB5A.size() > 0 && lvda.SpacecraftSeparationIndication() && LVDC_TB_ETime < 560.0 && TB5a > 99999.9 && LVDC_Timebase == 6)
-				{
-					fprintf(lvlog, "[TB%d+%f] CSM SEPARATION SENSED\r\n", LVDC_Timebase, LVDC_TB_ETime);
-					TB5a = RealTimeClock - T_L;
-					TI = TB5a;
-					LVDC_TB_ETime = 0;
-					LVDC_Timebase = 50;
-					CommandSequenceStored = CommandSequence;
-					CommandSequence = 0;
-				}
 				break;
 			case 7:
 				// TB7 timed events
 
-				//CSM separation detection
-				if (SSTTB5A.size() > 0 && lvda.SpacecraftSeparationIndication() && TB5a > 99999.9)
-				{
-					fprintf(lvlog, "[TB%d+%f] CSM SEPARATION SENSED\r\n", LVDC_Timebase, LVDC_TB_ETime);
-					TB5a = RealTimeClock - T_L;
-					TI = TB5a;
-					LVDC_TB_ETime = 0;
-					LVDC_Timebase = 50;
-					CommandSequenceStored = CommandSequence;
-					CommandSequence = 0;
-					poweredflight = false;
-					MLD = MOR;
-					MSLIM1 = 0.06*RAD;
-					MSLIM2 = 0.04*RAD;
-				}
-
 				if (ModeCode27[MC27_TB8EnableDCSCmdEnable] && LVDC_TB_ETime > t_TB8Start)
 				{
-					TB8 = RealTimeClock - T_L;
-					TI = TB8;
 					LVDC_Timebase = 8;
-					LVDC_TB_ETime = 0;
-					CommandSequence = 0;
-					EventsProcessor(1);
+					TimeBaseChangeRoutine();
+					TB8 = TI;
+					ModeCode27[MC27_TB8_Started] = true;
 				}
 
 				//For now, disable LVDC at TB7+11,729 seconds
@@ -5408,64 +5542,6 @@ void LVDCSV::TimeStep(double simdt) {
 					return;
 				}
 				break;
-
-			case 40:
-
-				//SwitchSelectorProcessing(SSTTB4A);
-
-				break;
-			case 50:
-
-				//SwitchSelectorProcessing(SSTTB5A);
-
-				if (SwitchSelectorSequenceComplete(SSTTB5A))
-				{
-					//Return to TB5 or TB7
-					if (TB7 > 99999.9)
-					{
-						StartTimebase5();
-					}
-					else
-					{
-						StartTimebase7();
-					}
-				}
-
-				break;
-
-			case 60: //Timebase 6a
-
-				//SwitchSelectorProcessing(SSTTB6A);
-
-				if (SwitchSelectorSequenceComplete(SSTTB6A))
-				{
-					//Return to TB5
-					StartTimebase5();
-				}
-				break;
-
-			case 61: //Timebase 6b
-
-				//SwitchSelectorProcessing(SSTTB6B);
-
-				if (SwitchSelectorSequenceComplete(SSTTB6B))
-				{
-					//Return to TB5
-					StartTimebase5();
-				}
-				break;
-
-			case 62: //Timebase 6c
-
-				//SwitchSelectorProcessing(SSTTB6C);
-
-				if (SwitchSelectorSequenceComplete(SSTTB6C))
-				{
-					//Return to TB5
-					StartTimebase5();
-				}
-				break;
-
 		}
 
 		//This is the actual LVDC code & logic; has to be independent from any of the above events
@@ -5612,16 +5688,16 @@ void LVDCSV::PhaseActivator(bool init)
 		fprintf(lvlog, "MISSION INITIALIZATION\r\n");
 		DVIH.set();
 		DPM.set();
-		ACT = RealTimeClock;
-		RTC = TEX = POT = ACT;
-		TMM = TMR = 0.0;
+		DVACT = RealTimeClock;
+		DVRTC = TEX = POT = DVACT;
+		TMM = TMR = DVERT = 0.0;
 		DFIL1 = DFIL3 = true;
 		//Activate interrupt processor
 		DVIH[INT11_Timer2Interrupt] = false;
 		DVIH[INT12_Timer1Interrupt] = false;
-		//TBD: Activate TLC interrupt
+		DVIH[INT9_TLCMemoryError] = false;
 		//TBD: Set G&C steering switch off
-		SST = 1.0e10;
+		DVSST = 1.0e10;
 		MLT = MLD = MIR;
 		Timer1Interrupt(true);
 		//Phase indicator to 1
@@ -5645,7 +5721,7 @@ void LVDCSV::PhaseActivator(bool init)
 		SystemTimeUpdateRoutine();
 		DFIL1 = false;
 		Timer2Counter = (int)(4.03 / LVDC_TIMESTEP);
-		for (int i = 0;i < 11;i++)
+		for (i = 0;i < 11;i++)
 		{
 			T2STAT[i] = false;
 		}
@@ -5654,6 +5730,21 @@ void LVDCSV::PhaseActivator(bool init)
 	}
 	else
 	{
+		//TBD: Set phase change in progress flag
+		//Inhibit all interrupts: TBD, check if this is good to do
+		//DVIH.set();
+		//Load Timer 2 with a large value
+		Timer2Counter = 0377776;
+		//Reset any pending timer 2 interrupt
+		for (i = 0;i < 11;i++)
+		{
+			T2STAT[i] = false;
+		}
+		//Set interrupt level 2 in prog. indicator
+		DFIL1 = DFIL2 = true;
+		//Release TLC and timer 1. interrupt
+		DVIH[INT9_TLCMemoryError] = false;
+		DVIH[INT12_Timer1Interrupt] = false;
 		//Phase transition
 		DVP = DVP + 1;
 	}
@@ -5694,7 +5785,9 @@ void LVDCSV::PhaseActivator(bool init)
 		Phase13ApplicationProgramInit();
 		//Schedule next timer 2 function
 		Timer2Interrupt(true);
-		DFIL1 = DFIL3 = false;
+		DFIL1 = DFIL2 = DFIL3 = false;
+		//Release all previously enabled interrupts
+		DVIH[INT11_Timer2Interrupt] = false;
 		break;
 	case 2:
 	case 4:
@@ -5703,7 +5796,9 @@ void LVDCSV::PhaseActivator(bool init)
 		Phase24ApplicationProgramInit();
 		//Schedule next timer 2 function
 		Timer2Interrupt(true);
-		DFIL1 = DFIL3 = false;
+		DFIL1 = DFIL2 = DFIL3 = false;
+		//Release all previously enabled interrupts
+		DVIH[INT11_Timer2Interrupt] = false;
 		break;
 	}
 }
@@ -5823,7 +5918,7 @@ void LVDCSV::NonInterruptSequencer(bool phase13)
 		if (NISTAT[4]) { DiscreteProcessor(); PeriodicProcessor(); }
 		if (NISTAT[5]) { BoostNavigation(); PeriodicProcessor(); }
 		if (NISTAT[6]) { RestartCalculations(); PeriodicProcessor(); }
-		if (NISTAT[7]) { PhaseActivator(false); PeriodicProcessor(); }
+		if (NISTAT[7]) { PhaseActivator(false); return; }
 		if (NISTAT[8]) { TimeTiltGuidance(); PeriodicProcessor(); }
 		if (NISTAT[9]) { ChiComputations(2); PeriodicProcessor(); }
 		if (NISTAT[10]){ IterativeGuidanceMode(); PeriodicProcessor(); }
@@ -5846,18 +5941,18 @@ void LVDCSV::NonInterruptSequencer(bool phase13)
 
 void LVDCSV::SystemTimeUpdateRoutine()
 {
-	RTC = RealTimeClock;
-	TMM = RTC - T_L;
-	LVDC_TB_ETime = TMM - TMR;
+	DVRTC = RealTimeClock;
+	TMM = DVRTC - T_L;
+	LVDC_TB_ETime = DVTRR = TMM - TMR; //Remove TB from here later
 }
 
 void LVDCSV::TimeBaseChangeRoutine()
 {
+	fprintf(lvlog, "TB%d started at TMM %.2lf\r\n", LVDC_Timebase, TMM);
 	TMR = TI = RealTimeClock - T_L;
-	LVDC_TB_ETime = 0;
+	SystemTimeUpdateRoutine();
 	EventsProcessor(1);
 	SwitchSelectorProcessor(2);
-	fprintf(lvlog, "TB%d started at TMM %.2lf\r\n", LVDC_Timebase, TMM);
 }
 
 bool LVDCSV::GetInterrupt(int rupt)
@@ -5877,7 +5972,7 @@ bool LVDCSV::GetInterrupt(int rupt)
 		return lvda.GetSIIPropellantDepletionEngineCutoff();
 		break;
 	case INT7_GuidanceReferenceRelease:
-		return lvda.GetGuidanceReferenceRelease();
+		return lvda.GetCMCSIVBCutoff();
 		break;
 	case INT11_Timer2Interrupt:
 		return (Timer2Counter <= 0);
@@ -5906,7 +6001,17 @@ void LVDCSV::ProcessInterrupt(int rupt)
 		StartTimeBase4();
 		break;
 	case INT7_GuidanceReferenceRelease:
-		PhaseActivator(true);
+		if (LVDC_Timebase == 6)
+		{
+			if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false)
+			{
+				fprintf(lvlog, "SIVB BACKUP CUTOFF! TMM = %f \r\n", TMM);
+				ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+
+				DVASW = DVASW | MSKSSS4C1;
+				SwitchSelectorProcessor(0);
+			}
+		}
 		break;
 	case INT11_Timer2Interrupt:
 		Timer2Counter = 403; //Automatically generates an interrupt every 4.032 seconds if not under program control
@@ -5951,7 +6056,7 @@ void LVDCSV::Timer1Interrupt(bool timer1schedule)
 	else
 	{
 		//+LVDC_TIMESTEP/2.0 because of rounding errors
-		if (MLT <= SST + LVDC_TIMESTEP / 2.0)
+		if (MLT <= DVSST + LVDC_TIMESTEP / 2.0)
 		{
 			//Minor loop takes precedence
 			Timer1Counter = (int)(round((MLT - TMM) / LVDC_TIMESTEP));
@@ -5961,13 +6066,13 @@ void LVDCSV::Timer1Interrupt(bool timer1schedule)
 		{
 			//Switch selector next
 			GST1M = SSM;
-			if (SST <= TMM)
+			if (DVSST <= TMM)
 			{
 				Timer1Counter = 1;
 			}
 			else
 			{
-				Timer1Counter = (int)(round((SST - TMM) / LVDC_TIMESTEP));
+				Timer1Counter = (int)(round((DVSST - TMM) / LVDC_TIMESTEP));
 			}
 		}
 	}
@@ -6061,14 +6166,6 @@ void LVDCSV::Timer2Interrupt(bool timer2schedule)
 	{
 		//fprintf(lvlog, "T2 Interrupt. Next interrupt at GRR+%lf Task %d Counter %d\r\n", DV2TG, DGST2, Timer2Counter);
 	}
-}
-
-bool LVDCSV::SwitchSelectorSequenceComplete(std::vector<SwitchSelectorSet> &table)
-{
-	if (CommandSequence >= (int)table.size())
-		return true;
-
-	return false;
 }
 
 void LVDCSV::AccelerometerRead()
@@ -6177,7 +6274,6 @@ void LVDCSV::DiscreteProcessor()
 
 	if (ModeCode26[MC26_Guidance_Reference_Failure] && lvda.GetCMCSIVBTakeover() && lvda.GetSCControlPoweredFlight() && !ModeCode26[MC26_SCControlAfterGRF])
 	{
-		lvda.SwitchSelector(SWITCH_SELECTOR_IU, 68);
 		ModeCode26[MC26_SCControlAfterGRF] = true;
 		fprintf(lvlog, "[%d+%f] Permanent SC Control bit set\r\n", LVDC_Timebase, LVDC_TB_ETime);
 	}
@@ -6236,7 +6332,9 @@ void LVDCSV::DiscreteProcessor()
 		{
 			fprintf(lvlog, "SIVB BACKUP CUTOFF! TMM = %f \r\n", TMM);
 			ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
-			SIVBCutoffSequence();
+
+			DVASW = DVASW | MSKSSS4C1;
+			SwitchSelectorProcessor(0);
 		}
 	}
 
@@ -6244,6 +6342,14 @@ void LVDCSV::DiscreteProcessor()
 	if (DPM[DIN3_O2H2BurnerMalfunction] == false && lvda.GetSIVBO2H2BurnerMalfunction())
 	{
 		//TBD: Start TB6a or TB6b
+	}
+
+	//Discrete 6: Spacecraft separation sensed
+	if (KSSINDXTB7A >= 0 && DPM[DIN4_SpacecraftSeparation] == false && lvda.SpacecraftSeparationIndication())
+	{
+		DPM[DIN4_SpacecraftSeparation] = true;
+		DVASW = DVASW | MSKSSTB5A;
+		SwitchSelectorProcessor(0);
 	}
 }
 
@@ -6591,7 +6697,8 @@ void LVDCSV::IterativeGuidanceMode()
 
 			if (Tt_3 <= 0 && S4B_REIGN == true) {
 				//Time for S4B cutoff? We need to check that here -IGM runs every 2 sec only, but cutoff has to be on the second		
-				SIVBCutoffSequence();
+				DVASW = DVASW | MSKSSS4C0;
+				SwitchSelectorProcessor(0);
 				fprintf(lvlog, "SIVB SCHEDULED CUTOFF! TMM = %f \r\n", TMM);
 			}
 
@@ -6893,6 +7000,12 @@ void LVDCSV::IterativeGuidanceMode()
 				GATE5 = true;
 				T_GO = T_3;
 				fprintf(lvlog, "HSL = true, GATE5 = true, T_GO = %f\r\n", T_GO);
+				//Set up engine pump purge control valve enable on sequence on first S-IVB burn
+				if (BOOST)
+				{
+					DVASW = DVASW | MSKSSSPEC;
+					SwitchSelectorProcessor(0);
+				}
 			}
 			if (BOOST == true) {
 				fprintf(lvlog, "BOOST-TO-ORBIT ACTIVE\r\n");
@@ -7020,6 +7133,7 @@ void LVDCSV::IterativeGuidanceMode()
 	}
 }
 
+//Main reference for this was NTRS 19720013551
 void LVDCSV::SwitchSelectorProcessor(int entry)
 {
 	//entry:
@@ -7035,67 +7149,466 @@ void LVDCSV::SwitchSelectorProcessor(int entry)
 	//9 = Switch selector reset
 	//10 = Switch selector complement stage and address
 
-	std::vector<SwitchSelectorSet> *table = NULL;
+	fprintf(lvlog, "[TB%d+%f] Switch Selector Processor Entry %d\r\n", LVDC_Timebase, LVDC_TB_ETime, entry);
 
-	switch (LVDC_Timebase)
+	switch (entry)
 	{
 	case 1:
+		goto MSS05;
 	case 2:
+		goto MSS10;
 	case 3:
+		goto MSS20;
 	case 4:
+		goto MSS30;
 	case 5:
+		goto MSS40;
 	case 6:
+		goto MSS50;
 	case 7:
+		goto MSS55;
 	case 8:
-		table = &SSTTB[LVDC_Timebase];
-		break;
-	case 40:
-		table = &SSTTB4A;
-		break;
-	case 50:
-		table = &SSTTB5A;
-		break;
-	case 60:
-		table = &SSTTB6A;
-		break;
-	case 61:
-		table = &SSTTB6B;
-		break;
-	case 62:
-		table = &SSTTB6C;
-		break;
-	default:
+		goto MSS60;
+	case 9:
+		goto MSS70;
+	}
+
+	//MSS00: Switch selector check for alternate sequence
+	FASE = false;
+	//S-IVB cutoff requested?
+	if (DVASW & MSKSSS4C0)
+	{
+		DVASW = DVASW & MSKSSWV;
+		if (VASPI & MSKSSS4C0) goto SS0060;
+		//Timer1Interrupt(true);
+		VASPI = MSKSSS4C0;
+		SST1PTR = KSSINDXSIVB;
+		goto SS1050;
+	}
+	//Pump purge alternate sequence requested?
+	if (DVASW & MSKSSSPEC)
+	{
+		DVASW = DVASW & MSKSSWV;
+		//Timer1Interrupt(true);
+		VASPI = MSKSSSPEC;
+		SST1PTR = KSSINDXSIVA;
+		goto SS1050;
+	}
+	//Alternate time base 6C requested?
+	if (DVASW & MSKSSTB6C)
+	{
+		DVASW = DVASW & (~MSKSSTB6C);
+		VASPI = VASPI | MSKSST6C;
+		ModeCode26[MC26_StartTB6C] = true;
+		SST1PTR = KSSINDXTB6C;
+		SSTUPD(VATRR);
+		goto SS1050;
+	}
+	//Class 1 alternate sequence requested?
+	if (DVASW & MSKSSCLS1)
+	{
+		//Save current table in progress pointers in class 1
+		VSC10 = SST1PTR;
+		//Save current alt. seq. in progress indicator
+		VSC11 = VASPI;
+		//Save time in TB at start of alt. seq.
+		VSC12 = VATRR;
+		//Set alt. seq. in prog ind for class 1
+		VASPI = MSKSSCL1;
+		//Switch selector time update
+		SSTUPD(VATRR);
+		//Set table advance route for class 1 alt. seq.
+		FTADV = true;
+		//Alternate time base 6A requested?
+		if (DVASW & MSKSSTB6A)
+		{
+			//Reset time base 6A request bit
+			DVASW = DVASW & (~MSKSSTB6A);
+			//Set bit in mode code 26 for TB6A
+			ModeCode26[MC26_TB6a_Started] = true;
+			//Set SS table pointers for TB6A alt. seq.
+			SST1PTR = KSSINDXTB6A;
+		}
+		else if (DVASW & MSKSSS4C1)
+		{
+			//Reset special S-IVB cutoff bit
+			DVASW = DVASW & (~MSKSSS4C1);
+			//Set SS table pointers for S-IVB cutoff
+			SST1PTR = KSSINDXS4C1;
+		}
+		else
+		{
+			//Reset time base 6B requested bit
+			DVASW = DVASW & (~MSKSSTB6B);
+			//Set bit in mode code 26 for TB6B
+			ModeCode26[MC26_TB6b_Started] = true;
+			//Set SS table pointers for TB6B alt. seq.
+			SST1PTR = KSSINDXTB6B;
+		}
+		goto SS1050;
+	}
+	if (FSSAC) goto SS0060;
+	goto SS0000;
+MSS05:
+	FSSAC = false;
+SS0000:
+	//In the actual code this is a check on equality with the maximum positive number
+	if (SSTABLE[SST1PTR].time < 10000000.0)
+	{
+	SS0010:
+		//Switch selector time update
+		SSTUPD(VSTGO);
+		//Save time-to-go to next SS
+		VSTGO = VSSRT - VSTGO;
+		//Within 500 ms of next SS?
+		if (VSTGO < 0.5) goto MSS30;
+		//Time update requested?
+		if (DFTUP)
+		{
+			DVTGB = DVTGB + VGBIA;
+			VGBIA = 0.0;
+			DFTUP = false;
+			goto SS0010;
+		}
+		//Alternative sequence requested?
+		if (DVASW != 0) goto SS0170;
+		//Compute time for hung stage test
+		VSSTM = VSTGO + DVTRB - DVTGB - KCSSK;
+		DVSST = VSSTM + TMR;
+		SSM = 4 + 3;
+		if (DFIL3 == false)
+		{
+			//Reschedule T1
+			Timer1Interrupt(true);
+		}
+		goto SS0060;
+	}
+//SS0015:
+	if (DVASW != 0) goto SS0170;
+	//Schedule switch selector check
+	TEMP = RealTimeClock;
+	DVSST = TMM + 500.0 + (TEMP - DVRTC);
+	SSM = 1 + 3;
+	if (DFIL3 == false)
+	{
+		Timer1Interrupt(true);
+	}
+	goto SS0060;
+SS0170:
+	//Process alternate sequence
+	//Is a class 3 alt. sequence requested?
+	if (!(DVASW & MSKSSCLS3))
+	{
+		//SS0191: process a class 4 alt. sequence request
+		//Acquisition gain requested?
+		if (DVASW & MSKSSACQU)
+		{
+			DVASW = DVASW & (~MSKSSACQU);
+			SST2PTR = KSSINDXGAIN;
+			SSTUPD(VATR4);
+		}
+		//Time base 6D requested?
+		else if (DVASW & MSKSSTB6D)
+		{
+			DVASW = DVASW & (~MSKSSTB6D);
+			SST2PTR = KSSINDXTB6D;
+			SSTUPD(VATR4);
+		}
+		//Lunar impact sequence
+		else
+		{
+			DVASW = DVASW & (~MSKSSLI);
+			SST2PTR = KSSINDXALU;
+			VATR4 = 0.0;
+		}
+		FCLS4 = true;
+		FTADV = false;
+		//FHST = true;
+		SSSelectionAndSetupRoutine();
+		goto SS0000;
+	}
+	//Is an alternate sequence requested?
+	if (VASPI != 0) goto SS0060;
+	//SS0221: Process a class 3 alt. sequence request
+	VSC30 = SST1PTR;
+	VSC31 = VASPI;
+	VSC32 = VATRR;
+	VASPI = MSKSSCL3;
+	SSTUPD(VATRR);
+	FTADV = true;
+	//FHST = true;
+	//Generalized switch selector requested
+	if (DVASW & MSKSSGNSS)
+	{
+		DVASW = DVASW & (~MSKSSGNSS);
+		SST1PTR = KSSINDXGSS;
+		goto SS0230;
+	}
+	//S-band antenna to low requested
+	if (DVASW & MSKSSSBLO)
+	{
+		DVASW = DVASW & (~MSKSSSBLO);
+		SST1PTR = KSSINDXSBLO;
+		goto SS0230;
+	}
+	//S-band antenna to high requested
+	if (DVASW & MSKSSSBHI)
+	{
+		DVASW = DVASW & (~MSKSSSBHI);
+		SST1PTR = KSSINDXSBHI;
+		goto SS0230;
+	}
+	//S-band antenna to omni requested
+	if (DVASW & MSKSSSBOM)
+	{
+		DVASW = DVASW & (~MSKSSSBOM);
+		SST1PTR = KSSINDXSBLO;
+		goto SS0230;
+	}
+	//ECS water valve close requested
+	if (DVASW & MSKSSECSV)
+	{
+		SST1PTR = KSSINDXECSV;
+		goto SS0230;
+	}
+	//ECS water valve open requested
+	if (DVASW & MSKSSECS1)
+	{
+		SST1PTR = KSSINDXECS1;
+		goto SS0230;
+	}
+	//Is TB5A requested?
+	if (DVASW & MSKSSTB5A)
+	{
+		DVASW = DVASW & (~MSKSSTB5A);
+		SST1PTR = KSSINDXTB7A;
+		goto SS0230;
+	}
+	//S-II MRS requested
+	SST1PTR = KSSINDXTB3A;
+	DVASW = DVASW & (~MSKSST3A);
+SS0230:
+	SSSelectionAndSetupRoutine();
+	goto SS0000;
+SS0060:
+	if (FASE == false)
+	{
+		FASE = true;
+		//TBD: Release previously enabled interrupts
+	}
+	return;
+MSS10: // Switch selector initialization for time base set
+	VASPI = 0;
+	VATRR = 0.0;
+	FCLS4 = false;
+	DVASW = DVASW & MSKSSWV;
+	FTADV = true;
+	if (LVDC_Timebase == 40)
+	{
+		SST1PTR = SSTTBPTR[8];
+	}
+	else
+	{
+		SST1PTR = SSTTBPTR[LVDC_Timebase - 1];
+	}
+SS1050:
+	SSSelectionAndSetupRoutine();
+	if (FSSAC) goto MSS20;
+	VSSW = KSSB1;
+	//FHST = true;
+	goto SS0000;
+MSS20: //Switch selector forced reset
+	return;
+MSS30: //Switch selector hung stage test
+	FSSAC = true;
+	if (VSNA1 == 0 && VSNA2 == 0)
+	{
+		FSSAC = false;
+		AdvanceToNextSSRoutine();
+		goto SS0000;
+	}
+	goto SS4000;
+MSS40: //Switch selector stage and address issuance
+	//Real LVDC does a delay here
+SS4000:
+	//Issue switch selector stage and address
+	//TBD: Write to LVDA here maybe
+	//Schedule verify address
+	SSM = 6 + 3;
+	SSTUPQ(VSSW);
+	goto SS0060;
+MSS50: //Switch selector verify address
+	goto MSS55;
+MSS55: //Switch selector read time check
+	//S-IVB cutoff SS requested?
+	if (VASPI & MSKSSS4C0)
+	{
+		DVSST = 1e10;
 		return;
 	}
-
-	//Issue command
-	if (entry == 5)
+	if (VSSRT == 0.0) goto MSS60;
+	//Switch selector time update
+	SSTUPD(DVTRB);
+	//Within bias time of read?
+	if (VSSRT - DVTRB <= 0.0) goto MSS60;
+	//Schedule read command
+	VSSTM = VSSRT - DVTGB - 0.0; //KSSRB here and in the if above at some point
+	DVSST = VSSTM + TMR;
+	SSM = 8 + 3;
+	if (DFIL3 == false)
 	{
-		lvda.SwitchSelector(table->at(CommandSequence).stage, table->at(CommandSequence).channel);
-		fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, table->at(CommandSequence).stage, table->at(CommandSequence).channel);
-		CommandSequence++;
+		Timer1Interrupt(true);
 	}
-	//Time Base Change
+	return;
+MSS60: //Switch selector read issuance
+	//Issue read command and stage selected
+	lvda.SwitchSelector(VSNA1, VSNA2);
+	fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, VSNA1, VSNA2);
+	//Schedule reset read
+	SSM = 9 + 3;
+	SSTUPQ(KSSB2);
+	//S-IVB cutoff SS in progress?
+	if (VASPI & MSKSSS4C0)
+	{
+		VASPI = 0;
+		//DFILE = DFILE or MSKFPSCORD
+	}
+	//TBD
+	return;
+MSS70:
+	//Schedule normal SS check
+	SSM = 1 + 3;
+	SSTUPQ(KSSB3);
+	AdvanceToNextSSRoutine();
+	VSSW = KSSB1;
+	//TBD: FHST = something
+	//Open water valve issued?
+	if (VSNA1 == SWITCH_SELECTOR_IU && VSNA2 == 107)
+	{
+		DVASW = DVASW & (~MSKSSECS1);
+		//DFWV = false;
+	}
+	//Close water valve issued?
+	else if (VSNA1 == SWITCH_SELECTOR_IU && VSNA2 == 108)
+	{
+		DVASW = DVASW & (~MSKSSECSV);
+		//DFWV = true;
+	}
+	//Enable S/C control of Saturn SS issued?
+	else if (VSNA1 == SWITCH_SELECTOR_IU && VSNA2 == 68)
+	{
+		DPM[DIN9_SCControlOfSaturn] = false;
+	}
+	return;
+}
+
+void LVDCSV::SSTUPD(double &time)
+{
+	TEMP = RealTimeClock;
+	time = DVTRB = DVTGB + DVTRR + (TEMP - DVRTC);
+}
+
+void LVDCSV::SSTUPQ(double BIAS)
+{
+	TEMP = RealTimeClock;
+	DVTRB = DVTGB + DVTRR + (TEMP - DVRTC);
+	VSSTM = BIAS + DVTRR + (TEMP - DVRTC);
+	DVSST = VSSTM + TMR;
+	if (DFIL3 == false)
+	{
+		Timer1Interrupt(true);
+	}
+}
+
+void LVDCSV::AdvanceToNextSSRoutine()
+{
+	if (FTADV)
+	{
+		SST1PTR++;
+	}
 	else
 	{
-		CommandSequenceStored = CommandSequence;
-		CommandSequence = 0;
+		SST2PTR++;
 	}
+	SSSelectionAndSetupRoutine();
+}
 
-	//Test if table is done
-	if (CommandSequence >= (int)table->size())
+void LVDCSV::SSSelectionAndSetupRoutine()
+{
+	//SS210
+	if (FTADV) goto SS2020;
+//SS2160:
+	if (SSTABLE[SST2PTR].time >= 0) goto SS2070;
+	FCLS4 = false;
+	//TBD: Some mode code bits
+	goto SS2090;
+SS2020:
+	if (SSTABLE[SST1PTR].time >= 0) goto SS2030;
+	//SS0111
+	//Process return from alternate sequence
+	//Pump purge alt seq in progress?
+	if (VASPI & MSKSSSPEC)
 	{
-		//Table done
-		SST = 1e10;
-		SSM = 4;
+		VASPI = MSKSSS4C0;
+		DVASW = DVASW & MSKSSWV;
+		SST1PTR = KSSINDXSIVB;
+		goto SS2020;
+	}
+	//Class 3 alt sequence in progress?
+	if (VASPI & MSKSSCL3)
+	{
+		SST1PTR = VSC30;
+		VASPI = VSC31;
+		VATRR = VSC32;
+		goto SS2020;
+	}
+	//Class 1 alt sequence in progress?
+	if (VASPI & MSKSSCL1)
+	{
+		SST1PTR = VSC10;
+		VASPI = VSC11;
+		VATRR = VSC12;
+		goto SS2020;
+	}
+	//Reset alternate sequence in progress indicator
+	VASPI = 0;
+	//Reset alternate time base reference
+	VATRR = 0.0;
+	//T6 return to T5
+	if (first_op)
+	{
+		SST1PTR = KSSINDXTB5A;
 	}
 	else
 	{
-		//Schedule next switch selector command
-		SST = TMR + table->at(CommandSequence).time;
-		SSM = 8;
-		fprintf(lvlog, "[TB%d+%f] Switch Selector command scheduled: Time %.3lf\r\n", LVDC_Timebase, LVDC_TB_ETime, table->at(CommandSequence).time);
+		SST1PTR = KSSINDXTB5B;
 	}
+	//Should this be here?
+	StartTimebase5();
+	goto SS2020;
+SS2030:
+	if (FCLS4 == false) goto SS2040;
+SS2070:
+	if (SSTABLE[SST1PTR].time + VATRR - 0.5 >= SSTABLE[SST2PTR].time + VATR4)
+	{
+		FTADV = false;
+		VSSRT = SSTABLE[SST2PTR].time + VATR4;
+		VSNA1 = SSTABLE[SST2PTR].stage;
+		VSNA2 = SSTABLE[SST2PTR].channel;
+	}
+	else
+	{
+	SS2090:
+		FTADV = true;
+	SS2040:
+		VSSRT = SSTABLE[SST1PTR].time + VATRR;
+		VSNA1 = SSTABLE[SST1PTR].stage;
+		VSNA2 = SSTABLE[SST1PTR].channel;
+	}
+//SS2050:
+	VHSTW1 = VSNA1;
+	VHSTW2 = VSNA2;
+	return;
 }
 
 void LVDCSV::EventsProcessor(int entry)
@@ -7103,7 +7616,7 @@ void LVDCSV::EventsProcessor(int entry)
 	//entry: 0 = timer 2 entry, 1 = time base change entry, 2 = reschedule entry
 
 	const static int EPTTBINDX[10] = { 0, 5, 13, 18, 38, 55, 71, 93, 107, 110 };
-	const static int EPTABLE[131] = {1, 2, 3, 4, 0, //TB0
+	const static int EPTABLE[131] = { 1, 2, 3, 4, 0, //TB0
 									 5, 6, 7, 8, 9, 10, 11, 0, //TB1
 									 12, 13, 15, 16, 0, //TB2
 									 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 0, //TB3
@@ -7112,416 +7625,472 @@ void LVDCSV::EventsProcessor(int entry)
 									 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 0, //TB6
 									 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 0, //TB7
 									 101, 102, 0, //TB8
-									 103, 104, 105, 106, 107, 108, 109, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //TB4a
+									 103, 104, 105, 106, 107, 108, 109, 110, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; //TB4a
+
+	if (entry == 1)
+	{
+		goto MEP05;
+	}
+	else if (entry == 2)
+	{
+		goto MEP10;
+	}
 
 	//Timer 2 Entry
-	if (entry == 0)
+EP00:
+	if (DFTBCEP == true)
 	{
-	EP00:
-		fprintf(lvlog, "Events Processor: TB%d+%.3lf IDX %d Task %d\r\n", LVDC_Timebase, LVDC_TB_ETime, EPTINDX, EPTABLE[EPTINDX]);
-		switch (EPTABLE[EPTINDX])
+	EP04A:
+		DFTBCEP = false;
+		goto EP02;
+	}
+	fprintf(lvlog, "Events Processor: TB%d+%.3lf IDX %d Task %d\r\n", LVDC_Timebase, LVDC_TB_ETime, EPTINDX, EPTABLE[EPTINDX]);
+	switch (EPTABLE[EPTINDX])
+	{
+	case 1: //Schedule Water Methanol
+		break;
+	case 2: //Start looking for liftoff (TB0+16.0)
+		DPM[DIN24_Liftoff] = false;
+		MLM = 2;
+		break;
+	case 3: //Nominal liftoff (flight simulation) (TB0+17.0)
+		break;
+	case 4: //Start looking for backup liftoff acceleration (TB0+17.5)
+		NISTAT[16] = true;
+		break;
+	case 5: //Time Base 1 Setup (TB1+0.0)
+		NISTAT[8] = true;
+		break;
+	case 6: //Command Init of Yaw Maneuver (TB1+1.0)
+		fprintf(lvlog, "[%d+%f] Yaw maneuver\r\n", LVDC_Timebase, LVDC_TB_ETime);
+		CommandedAttitude.z = 1.25*RAD;
+		break;
+	case 7: //Start checking for engine failure (TB1+6.0)
+		DPM[DIN11_SICInboardEngineOutB] = false;
+		DPM[DIN14_SICOutboardEngineOut] = false;
+		break;
+	case 8: //Command Term of Yaw Maneuver (TB1+9.0)
+		CommandedAttitude.z = 0.0*RAD;
+		break;
+	case 9: //Set Accel Reason. Test (TB1+10.0)
+		break;
+	case 10: //Something with multiple engines cutoff?  (TB1+14.0)
+		break;
+	case 11: //Start Time Base 2 (TB1+X.X, mission dependant)
+		StartTimeBase2();
+		break;
+	case 12: //Maybe inhibit on S-IC IECO interrupt? (TB2+0.0)
+		break;
+	case 13: //Enable INT5 and DIN 18 (TB2+0.0)
+		DVIH[INT5_SICOutboardEnginesCutoffA] = false;
+		DPM[DIN18_SICOutboardEngineCutoffB] = false;
+		break;
+	case 14: // (TB2+0.0)
+		break;
+	case 15: // (TB2+18.4)
+		//TBD: Start looking for INT5 and DIN18 here instead of above? Only in actual flight
+		break;
+	case 16: // (TB2+27.5)
+		//TBD: Likely flight simulation start of TB3
+		break;
+	case 17: //Time Base 3 Setup (TB3+0)
+		DPM[DIN11_SICInboardEngineOutB] = true;
+		DPM[DIN14_SICOutboardEngineOut] = true;
+		break;
+	case 18: //Set accelerometer reasonability test constants (TB3+0)
+		break;
+	case 19: //Change gimbal reasonability test constants (TB3+0)
+		break;
+	case 20: //Something at TB3+0, probably for only flight sim or real flight
+		break;
+	case 21: //Dequeue time tilt (TB3+0)
+		NISTAT[8] = false;
+		ModeCode25[MC25_StopPitchManeuver] = true;
+		break;
+	case 22: //F/M uncertainty for thrust misalignment (TB3+0)
+		break;
+	case 23: //Enable DIN 22 and INT 2 (TB3+1.4)
+		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
+		DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
+		break;
+	case 24: //Set acceleration backup profile (TB3+4.4)
+		S2_IGNITION = true;
+		t_21 = TMM;
+		break;
+	case 25: //Set accelerometer reasonability test constants (TB3+4.4)
+		break;
+	case 26: //Enable DIN 19 (TB3+6.7)
+		DPM[DIN19_SIIEnginesOut] = false;
+		break;
+	case 27: //Something at TB3+6.7, probably for only flight sim or real flight
+		DPM[DIN13_SIIInboardEngineOut] = false;
+		DPM[DIN21_SIIOutboardEngineOut] = false;
+		break;
+	case 28: //Enqueue F/M Calc, Smoothing (TB3+6.7)
+		NISTAT[3] = true;
+		break;
+	case 29: //Enqueue IGM (TB3+40.6)
+		NISTAT[10] = true;
+		ModeCode25[MC25_SII_IGMBeforeEMRC] = true;
+		break;
+	case 30: //Set Minor Loop Parameters (TB3+40.6)
+		DT_N = DT_N3;
+		MS25DT = 25.0*DT_N;
+		MS04DT = 0.04 / DT_N;
+		break;
+	case 31: //Set SMC Flag (TB3+58.6)
+		break;
+	case 32: //Enqueue SMC (TB3+60.6)
+		break;
+	case 33: //S-II IECO (TB3+299.0), actual flight only
+		if (SIICenterEngineCutoff)
 		{
-		case 1: //Schedule Water Methanol
-			break;
-		case 2: //Start looking for liftoff (TB0+16.0)
-			DPM[DIN24_Liftoff] = false;
-			MLM = 2;
-			break;
-		case 3: //Nominal liftoff (flight simulation) (TB0+17.0)
-			break;
-		case 4: //Start looking for backup liftoff acceleration (TB0+17.5)
-			NISTAT[16] = true;
-			break;
-		case 5: //Time Base 1 Setup (TB1+0.0)
-			NISTAT[8] = true;
-			break;
-		case 6: //Command Init of Yaw Maneuver (TB1+1.0)
-			fprintf(lvlog, "[%d+%f] Yaw maneuver\r\n", LVDC_Timebase, LVDC_TB_ETime);
-			CommandedAttitude.z = 1.25*RAD;
-			break;
-		case 7: //Start checking for engine failure (TB1+6.0)
-			DPM[DIN11_SICInboardEngineOutB] = false;
-			DPM[DIN14_SICOutboardEngineOut] = false;
-			break;
-		case 8: //Command Term of Yaw Maneuver (TB1+9.0)
-			CommandedAttitude.z = 0.0*RAD;
-			break;
-		case 9: //Set Accel Reason. Test (TB1+10.0)
-			break;
-		case 10: //Something with multiple engines cutoff?  (TB1+14.0)
-			break;
-		case 11: //Start Time Base 2 (TB1+X.X, mission dependant)
-			StartTimeBase2();
-			break;
-		case 12: //Maybe inhibit on S-IC IECO interrupt? (TB2+0.0)
-			break;
-		case 13: //Enable INT5 and DIN 18 (TB2+0.0)
-			DVIH[INT5_SICOutboardEnginesCutoffA] = false;
-			DPM[DIN18_SICOutboardEngineCutoffB] = false;
-			break;
-		case 14: // (TB2+0.0)
-			break;
-		case 15: // (TB2+18.4)
-			//TBD: Start looking for INT5 and DIN18 here instead of above? Only in actual flight
-			break;
-		case 16: // (TB2+27.5)
-			//TBD: Likely flight simulation start of TB3
-			break;
-		case 17: //Time Base 3 Setup (TB3+0)
-			DPM[DIN11_SICInboardEngineOutB] = true;
-			DPM[DIN14_SICOutboardEngineOut] = true;
-			break;
-		case 18: //Set accelerometer reasonability test constants (TB3+0)
-			break;
-		case 19: //Change gimbal reasonability test constants (TB3+0)
-			break;
-		case 20: //Something at TB3+0, probably for only flight sim or real flight
-			break;
-		case 21: //Dequeue time tilt (TB3+0)
-			NISTAT[8] = false;
-			ModeCode25[MC25_StopPitchManeuver] = true;
-			break;
-		case 22: //F/M uncertainty for thrust misalignment (TB3+0)
-			break;
-		case 23: //Enable DIN 22 and INT 2 (TB3+1.4)
-			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
-			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
-			break;
-		case 24: //Set acceleration backup profile (TB3+4.4)
-			S2_IGNITION = true;
-			t_21 = TMM;
-			break;
-		case 25: //Set accelerometer reasonability test constants (TB3+4.4)
-			break;
-		case 26: //Enable DIN 19 (TB3+6.7)
-			DPM[DIN19_SIIEnginesOut] = false;
-			break;
-		case 27: //Something at TB3+6.7, probably for only flight sim or real flight
-			DPM[DIN13_SIIInboardEngineOut] = false;
-			DPM[DIN21_SIIOutboardEngineOut] = false;
-			break;
-		case 28: //Enqueue F/M Calc, Smoothing (TB3+6.7)
-			NISTAT[3] = true;
-			break;
-		case 29: //Enqueue IGM (TB3+40.6)
-			NISTAT[10] = true;
-			ModeCode25[MC25_SII_IGMBeforeEMRC] = true;
-			break;
-		case 30: //Set Minor Loop Parameters (TB3+40.6)
-			DT_N = DT_N3;
-			MS25DT = 25.0*DT_N;
-			MS04DT = 0.04 / DT_N;
-			break;
-		case 31: //Set SMC Flag (TB3+58.6)
-			break;
-		case 32: //Enqueue SMC (TB3+60.6)
-			break;
-		case 33: //S-II IECO (TB3+299.0), actual flight only
-			if (SIICenterEngineCutoff)
-			{
-				ModeCode25[MC25_SIIInboardEngineOut] = true;
-				DPM[DIN13_SIIInboardEngineOut] = true;
-				T_EO2 = 1;
-				lvda.SwitchSelector(SWITCH_SELECTOR_SII, 15);
-			}
-			break;
-		case 34: //TB3+355.0 Enable INT6
-			DVIH[INT6_SIIEnginesCutoff] = false;
-			break;
-		case 35: //TB3+388.5 (flight sim S-II cutoff?)
-			break;
-		case 36: //TB4+0
+			ModeCode25[MC25_SIIInboardEngineOut] = true;
 			DPM[DIN13_SIIInboardEngineOut] = true;
-			DPM[DIN21_SIIOutboardEngineOut] = true;
-			break;
-		case 37: //TB4+6.5
-			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
-			break;
-		case 38: //TB4+8.6
-			S4B_IGN = true;
-			break;
-		case 39: //Start checking for TB5 (TB4+10)
-			DVIH[INT4_SIVBEngineOutB] = false;
-			DPM[DIN5_SIVBEngineOutA] = false;
-			NISTAT[17] = true;
-			break;
-		case 40: //TB4+12
-			break;
-		case 41: //TB4+15
-			break;
-		case 52: //Time Base 5 Start
-			//Start chi freeze
-			AttitudeManeuverState = 0;
-			//Inhibit detection of S-IVB engine out
-			DVIH[INT4_SIVBEngineOutB] = true;
-			DPM[DIN5_SIVBEngineOutA] = true;
-			//Inhibit manual initiation of S-IVB engine cutoff
-			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
-			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
-			//Stop F/M Calculations
-			NISTAT[3] = false;
-			//Stop IGM and S-IVB Cutoff Prediction
-			NISTAT[10] = false;
-			NISTAT[11] = false;
-			//Start Orbit Guidance
-			NISTAT[12] = true;
-			//Start TLI calculations
-			NISTAT[14] = true;
-			break;
-		case 53: //TB5+10
-			lvda.SetStage(STAGE_ORBIT_SIVB);
-			break;
-		case 54: //Maneuver to local horizontal (TB5+20)
-			fprintf(lvlog, "Initiate orbrate\r\n");
-			AttitudeManeuverState = -1;
-			alpha_1 = 0.0;
-			alpha_2 = 0.0;
-			CommandedAttitude.x = 0.0;
-			break;
-		case 55: //Transition to coasting flight (TB5+100)
-			fprintf(lvlog, "Orbit Initialization\r\n");
-			PhaseActivator(false);
-			DT_N = DT_N6;
-			MSLIM1 = 0.06*RAD;
-			MSLIM2 = 0.04*RAD;
-			MS25DT = 10.0*DT_N;
-			MS04DT = 0.1 / DT_N;
-			if (ModeCode26[MC26_Guidance_Reference_Failure] == false)
-			{
-				MSK5 = 0.24*RAD;
-			}
-			DPM[DIN20_SIVBIgnitionSequenceStart] = false;
-			break;
-		case 56: //Maneuver to TD&E attitude in Earth orbit
-			if (INH1 == false)
-			{
-				AttitudeManeuverState = -1;
-				alpha_1 = XLunarAttitude.y;
-				alpha_2 = XLunarAttitude.z;
-				CommandedAttitude.x = XLunarAttitude.x;
-			}
-			break;
-		case 57: //Attitude Hold for TD&E
-			if (INH2 == false)
-			{
-				AttitudeManeuverState = 0;
-			}
-			break;
-		case 67: //Time Base 6 start
-			ModeCode27[MC27_SCInControl] = false;
-			DPM[DIN20_SIVBIgnitionSequenceStart] = true;
-			AttitudeManeuverState = -1;
-			if (first_op) {
-				alpha_1 = K_P1 + K_P2 * dTt_4; //restart angles
-				alpha_2 = K_Y1 + K_Y2 * dTt_4;
-				CommandedAttitude.x = 360 * RAD;
-				fprintf(lvlog, "Orient for restart\r\n");
-			}
-			else {
-				alpha_1 = 0 * RAD;
-				alpha_2 = 0 * RAD;
-				CommandedAttitude.x = 360 * RAD;
-				fprintf(lvlog, "Maintain orbrate\r\n");
-			}
-			break;
-		case 68: //Check on TLI Inhibit(TB6+41.0)
-			break;
-		case 69: //Enable DIN3 (TB6+48.0)
-			DPM[DIN3_O2H2BurnerMalfunction] = false;
-			break;
-		case 70: //Switch point between TB6a and TB6b (TB6+341.3)
-			break;
-		case 71: //Disable DIN3 (TB6+496.7)
-			DPM[DIN3_O2H2BurnerMalfunction] = true;
-			break;
-		case 72: //Start checking on TLI Inhibit all the time(TB6+497.3)
-			break;
-		case 73: //Stop checking on TLI inhibit(TB6+560.0)
-			break;
-		case 74: //Restart Calculations (TB6+578.6)
-			if (!TU || TU10)
-			{
-				NISTAT[6] = true;
-			}
-			break;
-		case 75: //TB6+580.3
-			NISTAT[3] = true;
-			S4B_REIGN = true;
-			MSLIM1 = 0.04*RAD;
-			MSLIM2 = 0.04*RAD;
-			DT_N = DT_N3;
-			MS25DT = 10.0*DT_N;
-			MS04DT = 0.1 / DT_N;
-			break;
-		case 76: //TB6+583
-			//Start detecting S-IVB engine out
-			DVIH[INT4_SIVBEngineOutB] = false;
-			DPM[DIN5_SIVBEngineOutA] = false;
-			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
-			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
-			break;
-		case 77: //TB6+584
-			//Enqueue IGM
-			NISTAT[10] = true;
-			NISTAT[12] = false;
-			break;
-		case 78: //TB6+590
-			DPM[DIN23_SCInitiationOfSIVBEngineCutoff] = false;
-			break;
-		case 88: //Start Time Base 7
-			//Start chi freeze
-			AttitudeManeuverState = 0;
-			//Inhibit detection of S-IVB engine out
-			DVIH[INT4_SIVBEngineOutB] = true;
-			DPM[DIN5_SIVBEngineOutA] = true;
-			//Inhibit manual initiation of S-IVB engine cutoff
-			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
-			DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
-			//Stop F/M Calculations
-			NISTAT[3] = false;
-			//Stop IGM and S-IVB Cutoff Prediction
-			NISTAT[10] = false;
-			NISTAT[11] = false;
-			//Start Orbit Guidance
-			NISTAT[12] = true;
-			//Start TLI calculations
-			NISTAT[14] = true;
-			//Disable CMC cutoff
-			DPM[DIN23_SCInitiationOfSIVBEngineCutoff] = true;
-			break;
-		case 89: //Time in Timebase 7 to begin maneuver to local horizontal attitude
-			AttitudeManeuverState = -1;
-			alpha_1 = 0.0;
-			alpha_2 = 0.0;
-			CommandedAttitude.x = 0.0;
-			break;
-		case 90: //Time in Timebase 7 to enter orbit initialize and resume orbit navigation
-			fprintf(lvlog, "Orbit Initialization\r\n");
-			PhaseActivator(false);
-			DT_N = DT_N6;
-			MSLIM1 = 0.06*RAD;
-			MSLIM2 = 0.04*RAD;
-			MS25DT = 10.0*DT_N;
-			MS04DT = 0.1 / DT_N;
-			if (ModeCode26[MC26_Guidance_Reference_Failure] == false)
-			{
-				MSK5 = 0.24*RAD;
-			}
+			T_EO2 = 1;
+		}
+		break;
+	case 34: //TB3+355.0 Enable INT6
+		DVIH[INT6_SIIEnginesCutoff] = false;
+		break;
+	case 35: //TB3+388.5 (flight sim S-II cutoff?)
+		break;
+	case 36: //TB4+0
+		DPM[DIN13_SIIInboardEngineOut] = true;
+		DPM[DIN21_SIIOutboardEngineOut] = true;
+		break;
+	case 37: //TB4+6.5
+		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
+		break;
+	case 38: //TB4+8.6
+		S4B_IGN = true;
+		break;
+	case 39: //Start checking for TB5 (TB4+10)
+		DVIH[INT4_SIVBEngineOutB] = false;
+		DPM[DIN5_SIVBEngineOutA] = false;
+		NISTAT[17] = true;
+		break;
+	case 40: //TB4+12
+		break;
+	case 41: //TB4+15
+		break;
+	case 52: //Time Base 5 Start
+		//Start chi freeze
+		AttitudeManeuverState = 0;
+		//Inhibit detection of S-IVB engine out
+		DVIH[INT4_SIVBEngineOutB] = true;
+		DPM[DIN5_SIVBEngineOutA] = true;
+		//Inhibit manual initiation of S-IVB engine cutoff
+		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
+		DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
+		//Stop F/M Calculations
+		NISTAT[3] = false;
+		//Stop IGM and S-IVB Cutoff Prediction
+		NISTAT[10] = false;
+		NISTAT[11] = false;
+		//Start Orbit Guidance
+		NISTAT[12] = true;
+		//Start TLI calculations
+		NISTAT[14] = true;
+		//Start looking for S/C separation (for Apollo 8)
+		DPM[DIN4_SpacecraftSeparation] = false;
 
-			//Orbit Init
-			ddotS = ddotG_act;
-			fprintf(lvlog, "EarthRel Acceleration: %f %f %f \r\n", ddotS.x, ddotS.y, ddotS.z);
-			break;
-		case 91: //Set attitude rate limits for maneuver to sep attitude
-			MSLIM1 = 0.1*RAD;
-			MSLIM2 = 0.1*RAD;
-			break;
-		case 92: //Maneuver to separation attitude
-			if (INH4 == false)
-			{
-				AttitudeManeuverState = -2;
-				alpha_1 = XLunarAttitude.y;
-				alpha_2 = XLunarAttitude.z;
-				CommandedAttitude.x = XLunarAttitude.x;
-				fprintf(lvlog, "T&D attitude\r\n");
-			}
-			break;
-		case 93: //Maneuver to slingshot attitude
-			if (INH5 == false)
-			{
-				AttitudeManeuverState = -1;
-				alpha_1 = XLunarSlingshotAttitude.y;
-				alpha_2 = XLunarSlingshotAttitude.z;
-				CommandedAttitude.x = XLunarSlingshotAttitude.x;
-				fprintf(lvlog, "Slingshot attitude\r\n");
-			}
-			break;
-		case 101: //Maneuver to slingshot attitude (TB8)
+		//HSL Exit settings
+		S4B_IGN = false;
+		GATE = false;
+		GATE5 = false;
+		Tt_T = 1000;
+		HSL = false;
+		BOOST = false;
+		CHIBARSTEER = false;
+
+		DT_N = DT_N5;
+		MS25DT = 25.0*DT_N;
+		MS04DT = 0.04 / DT_N;
+		MSLIM1 = 0.024*RAD;
+		MSLIM2 = 0.016*RAD;
+		break;
+	case 53: //TB5+10
+		lvda.SetStage(STAGE_ORBIT_SIVB);
+		break;
+	case 54: //Maneuver to local horizontal (TB5+20)
+		fprintf(lvlog, "Initiate orbrate\r\n");
+		AttitudeManeuverState = -1;
+		alpha_1 = 0.0;
+		alpha_2 = 0.0;
+		CommandedAttitude.x = 0.0;
+		break;
+	case 55: //Transition to coasting flight (TB5+100)
+		fprintf(lvlog, "Orbit Initialization\r\n");
+		PhaseActivator(false);
+		DT_N = DT_N6;
+		MSLIM1 = 0.06*RAD;
+		MSLIM2 = 0.04*RAD;
+		MS25DT = 10.0*DT_N;
+		MS04DT = 0.1 / DT_N;
+		if (ModeCode26[MC26_Guidance_Reference_Failure] == false)
+		{
+			MSK5 = 0.24*RAD;
+		}
+		DPM[DIN20_SIVBIgnitionSequenceStart] = false;
+		break;
+	case 56: //Maneuver to TD&E attitude in Earth orbit
+		if (INH1 == false)
+		{
+			AttitudeManeuverState = -1;
+			alpha_1 = XLunarAttitude.y;
+			alpha_2 = XLunarAttitude.z;
+			CommandedAttitude.x = XLunarAttitude.x;
+		}
+		break;
+	case 57: //Attitude Hold for TD&E
+		if (INH2 == false)
+		{
+			AttitudeManeuverState = 0;
+		}
+		break;
+	case 67: //Time Base 6 start
+		ModeCode27[MC27_SCInControl] = false;
+		DPM[DIN20_SIVBIgnitionSequenceStart] = true;
+		ModeCode26[MC26_SCInitOfSIVBCutoff] = false;
+		//Reset TB6a, b and c bits
+		ModeCode26[MC26_TB6a_Started] = false;
+		ModeCode26[MC26_TB6b_Started] = false;
+		ModeCode26[MC26_StartTB6C] = false;
+		AttitudeManeuverState = -1;
+		if (first_op) {
+			alpha_1 = K_P1 + K_P2 * dTt_4; //restart angles
+			alpha_2 = K_Y1 + K_Y2 * dTt_4;
+			CommandedAttitude.x = 360 * RAD;
+			fprintf(lvlog, "Orient for restart\r\n");
+		}
+		else {
+			alpha_1 = 0 * RAD;
+			alpha_2 = 0 * RAD;
+			CommandedAttitude.x = 360 * RAD;
+			fprintf(lvlog, "Maintain orbrate\r\n");
+		}
+		break;
+	case 68: //Check on TLI Inhibit(TB6+41.0)
+		break;
+	case 69: //Enable DIN3 (TB6+48.0)
+		DPM[DIN3_O2H2BurnerMalfunction] = false;
+		break;
+	case 70: //Switch point between TB6a and TB6b (TB6+341.3)
+		break;
+	case 71: //Disable DIN3 (TB6+496.7)
+		DPM[DIN3_O2H2BurnerMalfunction] = true;
+		break;
+	case 72: //Start checking on TLI Inhibit all the time(TB6+497.3)
+		break;
+	case 73: //Stop checking on TLI inhibit(TB6+560.0)
+		DPM[DIN6_TLI_Inhibit] = true;
+		DPM[DIN4_SpacecraftSeparation] = true;
+		break;
+	case 74: //Restart Calculations (TB6+578.6)
+		if (!TU || TU10)
+		{
+			NISTAT[6] = true;
+		}
+		break;
+	case 75: //TB6+580.3
+		NISTAT[3] = true;
+		S4B_REIGN = true;
+		MSLIM1 = 0.04*RAD;
+		MSLIM2 = 0.04*RAD;
+		DT_N = DT_N3;
+		MS25DT = 10.0*DT_N;
+		MS04DT = 0.1 / DT_N;
+		break;
+	case 76: //TB6+583
+		//Start detecting S-IVB engine out
+		DVIH[INT4_SIVBEngineOutB] = false;
+		DPM[DIN5_SIVBEngineOutA] = false;
+		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
+		DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = false;
+		break;
+	case 77: //TB6+584
+		//Enqueue IGM
+		NISTAT[10] = true;
+		NISTAT[12] = false;
+		break;
+	case 78: //TB6+590
+		DPM[DIN23_SCInitiationOfSIVBEngineCutoff] = false;
+		DVIH[INT7_GuidanceReferenceRelease] = false;
+
+		break;
+	case 88: //Start Time Base 7
+		//Start chi freeze
+		AttitudeManeuverState = 0;
+		//Inhibit detection of S-IVB engine out
+		DVIH[INT4_SIVBEngineOutB] = true;
+		DPM[DIN5_SIVBEngineOutA] = true;
+		//Inhibit manual initiation of S-IVB engine cutoff
+		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
+		DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
+		//Stop F/M Calculations
+		NISTAT[3] = false;
+		//Stop IGM and S-IVB Cutoff Prediction
+		NISTAT[10] = false;
+		NISTAT[11] = false;
+		//Start Orbit Guidance
+		NISTAT[12] = true;
+		//Start TLI calculations
+		NISTAT[14] = true;
+		//Disable CMC cutoff
+		DPM[DIN23_SCInitiationOfSIVBEngineCutoff] = true;
+		DVIH[INT7_GuidanceReferenceRelease] = true;
+		//Start looking for S/C separation (for Apollo 8)
+		DPM[DIN4_SpacecraftSeparation] = false;
+		break;
+	case 89: //Time in Timebase 7 to begin maneuver to local horizontal attitude
+		AttitudeManeuverState = -1;
+		alpha_1 = 0.0;
+		alpha_2 = 0.0;
+		CommandedAttitude.x = 0.0;
+		break;
+	case 90: //Time in Timebase 7 to enter orbit initialize and resume orbit navigation
+		fprintf(lvlog, "Orbit Initialization\r\n");
+		PhaseActivator(false);
+		DT_N = DT_N6;
+		MSLIM1 = 0.06*RAD;
+		MSLIM2 = 0.04*RAD;
+		MS25DT = 10.0*DT_N;
+		MS04DT = 0.1 / DT_N;
+		if (ModeCode26[MC26_Guidance_Reference_Failure] == false)
+		{
+			MSK5 = 0.24*RAD;
+		}
+
+		//Orbit Init
+		ddotS = ddotG_act;
+		fprintf(lvlog, "EarthRel Acceleration: %f %f %f \r\n", ddotS.x, ddotS.y, ddotS.z);
+		break;
+	case 91: //Set attitude rate limits for maneuver to sep attitude (TB7+900.0)
+		MSLIM1 = 0.1*RAD;
+		MSLIM2 = 0.1*RAD;
+		break;
+	case 92: //Maneuver to separation attitude (TB7+900.0)
+		if (INH4 == false)
+		{
+			AttitudeManeuverState = -2;
+			alpha_1 = XLunarAttitude.y;
+			alpha_2 = XLunarAttitude.z;
+			CommandedAttitude.x = XLunarAttitude.x;
+			fprintf(lvlog, "T&D attitude\r\n");
+		}
+		break;
+	case 93: //Reset attitude rate limits (TB7+1200.0)
+		MSLIM1 = 0.06*RAD;
+		MSLIM2 = 0.04*RAD;
+		break;
+	case 94: //Maneuver to slingshot attitude
+		if (INH5 == false)
+		{
 			AttitudeManeuverState = -1;
 			alpha_1 = XLunarSlingshotAttitude.y;
 			alpha_2 = XLunarSlingshotAttitude.z;
 			CommandedAttitude.x = XLunarSlingshotAttitude.x;
 			fprintf(lvlog, "Slingshot attitude\r\n");
-			break;
-		case 102: //Maneuver to comm attitude (TB8)
-			AttitudeManeuverState = -1;
-			alpha_1 = XLunarCommAttitude.y;
-			alpha_2 = XLunarCommAttitude.z;
-			CommandedAttitude.x = XLunarCommAttitude.x;
-			fprintf(lvlog, "Communications attitude\r\n");
-			break;
-		case 103: //TB4a+0
-			DPM[DIN13_SIIInboardEngineOut] = true;
-			DPM[DIN21_SIIOutboardEngineOut] = true;
-			break;
-		case 104: //TB4a+11.5
-			DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
-			break;
-		case 105: //TB4a+13.3
-			S4B_IGN = true;
-			break;
-		case 106: //Start checking for TB5 (TB4a+15)
-			DVIH[INT4_SIVBEngineOutB] = false;
-			DPM[DIN5_SIVBEngineOutA] = false;
-			NISTAT[17] = true;
-			break;
 		}
-		//Next event
-		EPTINDX++;
-		if (EPTABLE[EPTINDX])
-		{
-			if (EPTTIM[EPTINDX] == VTOLD)
-			{
-				goto EP00;
-			}
-			VTOLD = EPTTIM[EPTINDX];
-			DLTTL[2] = TI + VTOLD;
-		}
-		else
-		{
-			T2STAT[2] = false;
-			fprintf(lvlog, "Events Processor Disabled. TB%d+%.3lf IDX %d\r\n", LVDC_Timebase, LVDC_TB_ETime, EPTINDX);
-		}
-		if (DFIL1 == false)
-		{
-			Timer2Interrupt(true);
-		}
+		break;
+	case 101: //Maneuver to slingshot attitude (TB8)
+		AttitudeManeuverState = -1;
+		alpha_1 = XLunarSlingshotAttitude.y;
+		alpha_2 = XLunarSlingshotAttitude.z;
+		CommandedAttitude.x = XLunarSlingshotAttitude.x;
+		fprintf(lvlog, "Slingshot attitude\r\n");
+		break;
+	case 102: //Maneuver to comm attitude (TB8)
+		AttitudeManeuverState = -1;
+		alpha_1 = XLunarCommAttitude.y;
+		alpha_2 = XLunarCommAttitude.z;
+		CommandedAttitude.x = XLunarCommAttitude.x;
+		fprintf(lvlog, "Communications attitude\r\n");
+		break;
+	case 103: //TB4a+0
+		DPM[DIN13_SIIInboardEngineOut] = true;
+		DPM[DIN21_SIIOutboardEngineOut] = true;
+		break;
+	case 104: //TB4a+11.5
+		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
+		NISTAT[3] = true;
+		break;
+	case 105: //TB4a+13.3
+		S4B_IGN = true;
+		//Enqueue IGM
+		NISTAT[10] = true;
+		ModeCode25[MC25_SII_IGMBeforeEMRC] = true;
+		DT_N = DT_N3;
+		MS25DT = 25.0*DT_N;
+		MS04DT = 0.04 / DT_N;
+		break;
+	case 106: //Start checking for TB5 (TB4a+15)
+		DVIH[INT4_SIVBEngineOutB] = false;
+		DPM[DIN5_SIVBEngineOutA] = false;
+		NISTAT[17] = true;
+		break;
 	}
-	//Time Base Change Entry or Reschedule Entry
+	if (DFTBCEP == true)
+	{
+		goto EP04A;
+	}
+	//Next event
+	EPTINDX++;
+	if (EPTABLE[EPTINDX])
+	{
+		goto EP03;
+	}
+	T2STAT[2] = false;
+	fprintf(lvlog, "Events Processor Disabled. TB%d+%.3lf IDX %d\r\n", LVDC_Timebase, LVDC_TB_ETime, EPTINDX);
+	if (DFIL1 == false)
+	{
+		Timer2Interrupt(true);
+	}
+EP02:
+	//TBD: Release previously enabled interrupts
+	return;
+EP03:
+	if (EPTTIM[EPTINDX] == VTOLD)
+	{
+		//TBD: Release previously enabled interrupts
+		goto EP00;
+	}
+	VTOLD = EPTTIM[EPTINDX];
+	DLTTL[2] = TMR + VTOLD;
+	goto EP02;
+MEP05://Time Base Change Entry
+	fprintf(lvlog, "Events Processor Time Base Change Entry\r\n");
+	//Special timebase 4a code
+	if (LVDC_Timebase == 40)
+	{
+		EPTINDX = EPTTBINDX[9] - 1;
+	}
 	else
 	{
-		if (entry == 1)
-		{
-			fprintf(lvlog, "Events Processor Time Base Change Entry\r\n");
-			//Special timebase 4a code
-			if (LVDC_Timebase == 40)
-			{
-				EPTINDX = EPTTBINDX[9] - 1;
-			}
-			else
-			{
-				EPTINDX = EPTTBINDX[LVDC_Timebase] - 1;
-			}
-		}
-		else
-		{
-			fprintf(lvlog, "Events Processor Reschedule Entry\r\n");
-		}
-		EPTINDX++;
-		if (EPTABLE[EPTINDX])
-		{
-			VTOLD = EPTTIM[EPTINDX];
-			DLTTL[2] = TI + VTOLD;
-			T2STAT[2] = true;
-
-			fprintf(lvlog, "Events Processor scheduled for GRR+%.3lf IDX %d\r\n", DLTTL[2], EPTINDX);
-
-			if (DFIL1 == false)
-			{
-				Timer2Interrupt(true);
-			}
-		}
+		EPTINDX = EPTTBINDX[LVDC_Timebase] - 1;
 	}
+MEP10: //Reschedule Entry
+	EPTINDX++;
+	if (EPTABLE[EPTINDX])
+	{
+		goto EP08;
+	}
+	T2STAT[2] = false;
+	fprintf(lvlog, "Events Processor Disabled. TB%d+%.3lf IDX %d\r\n", LVDC_Timebase, LVDC_TB_ETime, EPTINDX);
+EP20:
+	if (DFIL1 == false)
+	{
+		Timer2Interrupt(true);
+	}
+	return;
+EP08:
+	VTOLD = EPTTIM[EPTINDX];
+	DLTTL[2] = TI + VTOLD;
+	T2STAT[2] = true;
+	fprintf(lvlog, "Events Processor scheduled for GRR+%.3lf IDX %d\r\n", DLTTL[2], EPTINDX);
+	goto EP20;
+//EGP07
 }
 
 void LVDCSV::PeriodicProcessor()
@@ -7666,13 +8235,14 @@ void LVDCSV::CutoffLogic()
 {
 	if (ModeCode25[MC25_FirstSIVBCutoffCommand] == false && T_GO - sinceLastCycle <= 0 && HSL == true && S4B_IGN == true)
 	{
-		SIVBCutoffSequence();
+		SwitchSelectorProcessor(8);
 		fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
 		ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
 	}
 	if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false && T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true)
 	{
-		SIVBCutoffSequence();
+		DVASW = DVASW | MSKSSS4C0;
+		SwitchSelectorProcessor(0);
 		fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
 		ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
 	}
@@ -7773,12 +8343,6 @@ void LVDCSV::MinorLoopSupport()
 	//fprintf(lvlog, "Euler Correction. A1 = %f A2 = %f A3 = %f A4 = %f A5 = %f\r\n", A1, A2, A3, A4, A5);
 }
 
-void LVDCSV::SIVBCutoffSequence()
-{
-	//COMMAND S-IVB ENGINE CUTOFF ON
-	lvda.SwitchSelector(SWITCH_SELECTOR_SIVB, 12);
-}
-
 void LVDCSV::StartTimeBase1(int entry)
 {
 	//entry:
@@ -7843,7 +8407,6 @@ void LVDCSV::StartTimeBase4()
 {
 	// S2 OECO, start TB4
 	//Is this needed?
-	lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 	S2_BURNOUT = true;
 	MRS = false;
 
@@ -7908,15 +8471,18 @@ void LVDCSV::SCInitiationOfSIISIVBSeparationInterrupt()
 	}
 	else
 	{
-		SIVBCutoffSequence();
-		ModeCode26[MC26_SCInitOfSIVBCutoff] = true;
+		if (ModeCode26[MC26_SCInitOfSIVBCutoff] == false)
+		{
+			DVASW = DVASW | MSKSSS4C1;
+			SwitchSelectorProcessor(0);
+			ModeCode26[MC26_SCInitOfSIVBCutoff] = true;
+		}
 	}
 }
 
 void LVDCSV::StartTimebase4A()
 {
 	lvda.SetStage(LAUNCH_STAGE_TWO_ISTG_JET);
-	lvda.SwitchSelector(SWITCH_SELECTOR_SII, 18);
 	S2_BURNOUT = true;
 	MRS = false;
 	LVDC_Timebase = 40;
@@ -7944,16 +8510,15 @@ void LVDCSV::StartTimebase5()
 	NISTAT[17] = false;
 	if (ModeCode25[MC25_BeginTB5])
 	{
-		//Return to TB5 from TB5a, TB6a, TB6b or TB6c
-		LVDC_TB_ETime = (RealTimeClock - T_L) - TB5;
-		CommandSequence = CommandSequenceStored;
+		//Return to TB5 from TB6c
 		DT_N = DT_N6;
 		MS25DT = 10.0*DT_N;
 		MS04DT = 0.1 / DT_N;
 		MSLIM1 = 0.06*RAD;
 		MSLIM2 = 0.04*RAD;
 		TB6 = 100000;
-		TI = TB5;
+		TI = TMR = TB5;
+		SystemTimeUpdateRoutine();
 		//Set phase to 1, so that phase activator goes to phase 2
 		DVP = 1;
 		PhaseActivator(false);
@@ -7964,20 +8529,6 @@ void LVDCSV::StartTimebase5()
 		//Start TB5 from TB4 or TB4a
 		TimeBaseChangeRoutine();
 		TB5 = TI;
-		S4B_IGN = false;
-		//HSL Exit settings
-		GATE = false;
-		GATE5 = false;
-		Tt_T = 1000;
-		HSL = false;
-		BOOST = false;
-		CHIBARSTEER = false;
-
-		DT_N = DT_N5;
-		MS25DT = 25.0*DT_N;
-		MS04DT = 0.04 / DT_N;
-		MSLIM1 = 0.024*RAD;
-		MSLIM2 = 0.016*RAD;
 		ModeCode25[MC25_BeginTB5] = true;
 	}
 }
@@ -7987,39 +8538,28 @@ void LVDCSV::StartTimebase7()
 	LVDC_Timebase = 7;
 	//Dequeue Time Base 5/7 module
 	NISTAT[17] = false;
-	if (ModeCode26[MC26_TB7_Started])
-	{
-		//Return to TB7 from TB5a
-		LVDC_TB_ETime = (RealTimeClock - T_L) - TB7;
-		TI = TB7;
-		CommandSequence = CommandSequenceStored;
-	}
-	else
-	{
-		//Start TB7 from TB6
-		TimeBaseChangeRoutine();
-		TB7 = TI;
+	TimeBaseChangeRoutine();
+	TB7 = TI;
 
-		//HSL Exit settings
-		GATE = false;
-		GATE5 = false;
-		Tt_T = 1000;
-		HSL = false;
-		S4B_REIGN = false;
+	//HSL Exit settings
+	GATE = false;
+	GATE5 = false;
+	Tt_T = 1000;
+	HSL = false;
+	S4B_REIGN = false;
 
-		//Timing settings
-		DT_N = DT_N5;
-		MS25DT = 25.0*DT_N;
-		MS04DT = 0.04 / DT_N;
-		MSLIM1 = 0.024*RAD;
-		MSLIM2 = 0.016*RAD;
-		ModeCode26[MC26_TB7_Started] = true;
+	//Timing settings
+	DT_N = DT_N5;
+	MS25DT = 25.0*DT_N;
+	MS04DT = 0.04 / DT_N;
+	MSLIM1 = 0.024*RAD;
+	MSLIM2 = 0.016*RAD;
+	ModeCode26[MC26_TB7_Started] = true;
 
-		//Chi freeze
-		AttitudeManeuverState = 0;
+	//Chi freeze
+	AttitudeManeuverState = 0;
 
-		lvda.TLIEnded();
-	}
+	lvda.TLIEnded();
 }
 
 void LVDCSV::PhaseIIandIVControl(int entry)
@@ -8080,26 +8620,41 @@ void LVDCSV::OrbitNavigation()
 
 void LVDCSV::AcquisitionGainLoss()
 {
-	/*theta_R = omega_E * TAS;
-	MX_GA = _M(cos(theta_R), 0, sin(theta_R), 0, 1, 0, -sin(theta_R), 0, cos(theta_R));
-	MX_SA = mul(MX_A, MX_GA);
-	PosA = mul(MX_SA, PosS);
-	C_A = C_A_ARR[i];
-	d_A = dotp(PosA, C_A) - R_STA;
-	if (d_A >= 0)
+	theta_R = omega_E * TAS;
+	MGA = _M(cos(theta_R), 0, sin(theta_R), 0, 1, 0, -sin(theta_R), 0, cos(theta_R));
+	MSA = mul(MX_A, MGA);
+	PosA = mul(MSA, PosS);
+
+	bool acquisition = false;
+	for (int i = 0;i < 11;i++)
 	{
-		if (TBA > TBL)
+		d_A = dotp(PosA, C_A[i]) - R_STA;
+		if (d_A >= 0)
+		{
+			acquisition = true;
+		}
+	}
+	
+	if (acquisition)
+	{
+		if (TBA <= TBL)
 		{
 			//AOS
+			DVASW = DVASW | MSKSSACQU;
+			SwitchSelectorProcessor(0);
+			TBA = DVTRR;
+			fprintf(lvlog, "[%d+%f] Acquisition of Signal\r\n", LVDC_Timebase, LVDC_TB_ETime);
 		}
 	}
 	else
 	{
-		if (TBL > TBA)
+		if (TBL <= TBA)
 		{
 			//LOS
+			TBL = DVTRR;
+			fprintf(lvlog, "[%d+%f] Loss of Signal\r\n", LVDC_Timebase, LVDC_TB_ETime);
 		}
-	}*/
+	}
 }
 
 void LVDCSV::NavigationExtrapolation()
@@ -8560,7 +9115,8 @@ bool LVDCSV::TimebaseUpdate(double dt)
 {
 	if (LVDC_Timebase == 5 || LVDC_Timebase == 7 || LVDC_Timebase == 8)
 	{
-		LVDC_TB_ETime += dt;
+		VGBIA = dt;
+		DFTUP = true;
 		return true;
 	}
 
@@ -8575,7 +9131,11 @@ bool LVDCSV::GeneralizedSwitchSelector(int stage, int channel)
 		{
 			if (channel > 0 && channel < 113)
 			{
-				lvda.SwitchSelector(stage, channel);
+				SSTABLE[KSSINDXGSS].time = 0.0;
+				SSTABLE[KSSINDXGSS].stage = stage;
+				SSTABLE[KSSINDXGSS].channel = channel;
+				DVASW = DVASW | MSKSSGNSS;
+				SwitchSelectorProcessor(0);
 				return true;
 			}
 		}
@@ -8639,7 +9199,7 @@ bool LVDCSV::TimeBase8Enable()
 {
 	if (LVDC_Timebase == 7)
 	{
-		if (SSTTB[8].size() > 0)
+		if (SSTTBPTR[7] != 0)
 		{
 			ModeCode27[MC27_TB8EnableDCSCmdEnable] = true;
 
@@ -8721,10 +9281,10 @@ VECTOR3 LVDCSV::GravitationSubroutine(VECTOR3 Rvec, bool J2only)
 {
 	VECTOR3 GTEMP;
 	double P_34, S_34;
-	double Y_G = (Rvec.x*MX_A.m21 + Rvec.y*MX_A.m22 + Rvec.z*MX_A.m23); //position component south of equator
+	Y_u = (Rvec.x*MX_A.m21 + Rvec.y*MX_A.m22 + Rvec.z*MX_A.m23); //position component south of equator
 	double rtemp = length(Rvec); //instantaneous distance from earth's center
 	double AoverR = a / rtemp;
-	double YoverR = Y_G / rtemp;
+	double YoverR = Y_u / rtemp;
 	if (J2only)
 	{
 		S_34 = 0.0;
