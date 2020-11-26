@@ -3098,7 +3098,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	K_D = 0;
 	K_P1 = 0;
 	K_P2 = 0;
-	KSSB1 = KSSB2 = KSSB3 = 0;
+	KSSB1 = KSSB2 = KSSB3 = KSSB5 = KSSB8 = 0;
 	K_T3 = 0;
 	K_Y1 = 0;
 	K_Y2 = 0;
@@ -3701,7 +3701,7 @@ void LVDCSV::Init(){
 	EPTTIM[38] = 0.0; EPTTIM[39] = 6.5; EPTTIM[40] = 8.6; EPTTIM[41] = 10.0; EPTTIM[42] = 12.0; EPTTIM[43] = 15.0; //TB4
 	EPTTIM[55] = 0.0; EPTTIM[56] = 10.0; EPTTIM[57] = 20.0; EPTTIM[58] = 100.0; EPTTIM[59] = 2700.0; EPTTIM[60] = 5160.0;//TB5
 	EPTTIM[71] = 0.0; EPTTIM[72] = 41.0; EPTTIM[73] = 48.0; EPTTIM[74] = 341.3; EPTTIM[75] = 496.7; EPTTIM[76] = 497.3; EPTTIM[77] = 560.0; EPTTIM[78] = 578.6; EPTTIM[79] = 580.3; EPTTIM[80] = 583.0; EPTTIM[81] = 584.0; EPTTIM[82] = 590.0;//TB6
-	EPTTIM[93] = 0.0;  EPTTIM[94] = 20.0;  EPTTIM[95] = 20.0; EPTTIM[96] = 900.0; EPTTIM[97] = 900.0; EPTTIM[98] = 900.0; EPTTIM[99] = 6540.0; //TB7
+	EPTTIM[93] = 0.0;  EPTTIM[94] = 20.0;  EPTTIM[95] = 20.0; EPTTIM[96] = 900.0; EPTTIM[97] = 900.0; EPTTIM[98] = 1200.0; EPTTIM[99] = 6540.0; //TB7
 	EPTTIM[107] = 0.0; EPTTIM[108] = 3705.0;//TB8
 	EPTTIM[109] = 0.0; EPTTIM[110] = 11.5; EPTTIM[111] = 13.3; EPTTIM[112] = 15.0; //TB4a
 
@@ -3709,6 +3709,8 @@ void LVDCSV::Init(){
 	KSSB1 = 0.018;
 	KSSB2 = 0.026;
 	KSSB3 = 0.017;
+	KSSB5 = 0.0256;
+	KSSB8 = 0.0108;
 	KCSSK = 0.2;
 	KSSINDXTB7A = KSSINDXTB6A = KSSINDXTB6B = KSSINDXTB6C = KSSINDXTB3A = KSSINDXTB5A = KSSINDXTB5B = KSSINDXSIVA = KSSINDXSIVB = KSSINDXS4C1 = KSSINDXGSS = -1;
 	KSSINDXSBLO = KSSINDXSBHI = KSSINDXSBOM = KSSINDXECSV = KSSINDXECS1 = KSSINDXGAIN = KSSINDXTB6D = KSSINDXALU = -1;
@@ -5782,6 +5784,8 @@ void LVDCSV::PhaseActivator(bool init)
 		{
 			T2STAT[i] = false;
 		}
+		//Enable events processor
+		T2STAT[2] = true;
 		Phase13ApplicationProgramInit();
 		//Schedule next timer 2 function
 		Timer2Interrupt(true);
@@ -5791,6 +5795,7 @@ void LVDCSV::PhaseActivator(bool init)
 		break;
 	case 2:
 	case 4:
+		T2STAT[2] = true;
 		T2STAT[6] = true;
 		T2STAT[7] = true;
 		Phase24ApplicationProgramInit();
@@ -5805,8 +5810,6 @@ void LVDCSV::PhaseActivator(bool init)
 
 void LVDCSV::Phase13ApplicationProgramInit()
 {
-	//Enable events processor
-	T2STAT[2] = true;
 	poweredflight = true;
 	MLR = 25.0;
 	MLD = MIR;
@@ -7149,7 +7152,7 @@ void LVDCSV::SwitchSelectorProcessor(int entry)
 	//9 = Switch selector reset
 	//10 = Switch selector complement stage and address
 
-	fprintf(lvlog, "[TB%d+%f] Switch Selector Processor Entry %d\r\n", LVDC_Timebase, LVDC_TB_ETime, entry);
+	//fprintf(lvlog, "[TB%d+%f] Switch Selector Processor Entry %d\r\n", LVDC_Timebase, LVDC_TB_ETime, entry);
 
 	switch (entry)
 	{
@@ -7418,7 +7421,13 @@ SS1050:
 	//FHST = true;
 	goto SS0000;
 MSS20: //Switch selector forced reset
-	return;
+	//Issue forced reset
+	//FHST = false;
+	//Schedule switch selector check
+	SSM = 1 + 3;
+	SSTUPQ(KSSB8);
+	VSSW = KSSB5;
+	goto SS0060;
 MSS30: //Switch selector hung stage test
 	FSSAC = true;
 	if (VSNA1 == 0 && VSNA2 == 0)
@@ -7783,15 +7792,6 @@ EP00:
 		//Inhibit manual initiation of S-IVB engine cutoff
 		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
 		DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
-		//Stop F/M Calculations
-		NISTAT[3] = false;
-		//Stop IGM and S-IVB Cutoff Prediction
-		NISTAT[10] = false;
-		NISTAT[11] = false;
-		//Start Orbit Guidance
-		NISTAT[12] = true;
-		//Start TLI calculations
-		NISTAT[14] = true;
 		//Start looking for S/C separation (for Apollo 8)
 		DPM[DIN4_SpacecraftSeparation] = false;
 
@@ -7928,15 +7928,6 @@ EP00:
 		//Inhibit manual initiation of S-IVB engine cutoff
 		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = true;
 		DPM[DIN22_SCInitSIISIVBSepB_SIVBEngineCutoffB] = true;
-		//Stop F/M Calculations
-		NISTAT[3] = false;
-		//Stop IGM and S-IVB Cutoff Prediction
-		NISTAT[10] = false;
-		NISTAT[11] = false;
-		//Start Orbit Guidance
-		NISTAT[12] = true;
-		//Start TLI calculations
-		NISTAT[14] = true;
 		//Disable CMC cutoff
 		DPM[DIN23_SCInitiationOfSIVBEngineCutoff] = true;
 		DVIH[INT7_GuidanceReferenceRelease] = true;
@@ -7984,7 +7975,7 @@ EP00:
 		MSLIM1 = 0.06*RAD;
 		MSLIM2 = 0.04*RAD;
 		break;
-	case 94: //Maneuver to slingshot attitude
+	case 94: //Maneuver to slingshot attitude (TB7)
 		if (INH5 == false)
 		{
 			AttitudeManeuverState = -1;
@@ -8014,6 +8005,7 @@ EP00:
 		break;
 	case 104: //TB4a+11.5
 		DVIH[INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA] = false;
+		//Enqueue F/M calculations
 		NISTAT[3] = true;
 		break;
 	case 105: //TB4a+13.3
@@ -8241,7 +8233,7 @@ void LVDCSV::CutoffLogic()
 	}
 	if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false && T_GO - sinceLastCycle <= 0 && HSL == true && S4B_REIGN == true)
 	{
-		DVASW = DVASW | MSKSSS4C0;
+		DVASW = DVASW | MSKSSS4C1;
 		SwitchSelectorProcessor(0);
 		fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
 		ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
@@ -8530,6 +8522,16 @@ void LVDCSV::StartTimebase5()
 		TimeBaseChangeRoutine();
 		TB5 = TI;
 		ModeCode25[MC25_BeginTB5] = true;
+
+		//Stop F/M Calculations
+		NISTAT[3] = false;
+		//Stop IGM and S-IVB Cutoff Prediction
+		NISTAT[10] = false;
+		NISTAT[11] = false;
+		//Start Orbit Guidance
+		NISTAT[12] = true;
+		//Start TLI calculations
+		NISTAT[14] = true;
 	}
 }
 
@@ -8538,6 +8540,15 @@ void LVDCSV::StartTimebase7()
 	LVDC_Timebase = 7;
 	//Dequeue Time Base 5/7 module
 	NISTAT[17] = false;
+	//Stop F/M Calculations
+	NISTAT[3] = false;
+	//Stop IGM and S-IVB Cutoff Prediction
+	NISTAT[10] = false;
+	NISTAT[11] = false;
+	//Start Orbit Guidance
+	NISTAT[12] = true;
+	//Start TLI calculations
+	NISTAT[14] = true;
 	TimeBaseChangeRoutine();
 	TB7 = TI;
 
@@ -8558,6 +8569,9 @@ void LVDCSV::StartTimebase7()
 
 	//Chi freeze
 	AttitudeManeuverState = 0;
+
+	//Reset telemetry acquisition/loss times
+	TBA = TBL = 0.0;
 
 	lvda.TLIEnded();
 }
@@ -8675,7 +8689,7 @@ void LVDCSV::ChiComputations(int entry)
 	X_S1 = VT.x;
 	X_S2 = VT.y;
 	X_S3 = VT.z;
-	fprintf(lvlog, "X_S1-3 = %f %f %f\r\n", X_S1, X_S2, X_S3);
+	//fprintf(lvlog, "X_S1-3 = %f %f %f\r\n", X_S1, X_S2, X_S3);
 
 	// FINALLY - COMMANDS!
 	X_Zi = asin(X_S2);			// Yaw

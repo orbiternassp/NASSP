@@ -318,7 +318,7 @@ private:								// Saturn LV
 	//Indizes for switch selector table
 	unsigned KSSINDXTB7A, KSSINDXTB6A, KSSINDXTB6B, KSSINDXTB6C, KSSINDXTB3A, KSSINDXTB5A, KSSINDXTB5B, KSSINDXSIVA, KSSINDXSIVB, KSSINDXS4C1, KSSINDXGSS;
 	unsigned KSSINDXSBLO, KSSINDXSBHI, KSSINDXSBOM, KSSINDXECSV, KSSINDXECS1, KSSINDXGAIN, KSSINDXTB6D, KSSINDXALU;
-	double KSSB1, KSSB2, KSSB3, KCSSK;
+	double KSSB1, KSSB2, KSSB3, KSSB5, KSSB8, KCSSK;
 	bool DFTUP;				//Time update waiting indicator
 	double VGBIA;			//Time base bias to be implemented
 	//Class 1/3 temporary storage for SST1PTR, VASPI, VATRR
