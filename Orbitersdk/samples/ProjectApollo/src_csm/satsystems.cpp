@@ -1431,6 +1431,18 @@ void Saturn::SystemsInternalTimestep(double simdt)
 	//FuelCellH2Manifold[0]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
 	//FuelCellH2Manifold[1]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
 	//FuelCellH2Manifold[2]->BoilAllAndSetTemp(315);		//Needs to be done using heat exchanger, heated to above 100F
+
+	if (this->systemsState < SATSYSTEMS_GSECONNECTED_1)
+	{
+		//need better solution
+
+		//keep the fuel cells from cooling prior to launch.
+		//this should be done by GSE, not this hacky piece of code
+
+		FuelCells[0]->SetTemp(475.0);
+		FuelCells[1]->SetTemp(475.0);
+		FuelCells[2]->SetTemp(475.0);
+	}
 }
 
 void Saturn::JoystickTimestep()
