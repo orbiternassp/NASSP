@@ -260,7 +260,6 @@ FCell::FCell(char *i_name, int i_status, vector3 i_pos, h_Valve *o2, h_Valve *h2
 	H20_waste = waste;
 
 	outputImpedance = 0.0346667; //ohms
-	cloggingChange = 0.0;
 
 	H2_clogging = 0.0;
 	O2_clogging = 0.0;
@@ -453,9 +452,9 @@ void FCell::UpdateFlow(double dt)
 		running = 1; //ie. not running
 		break;
 
-	case 1:// starting;
+	case 1:// starting; is this even used? it almost doesnt make physical sense to have it
 		Reaction(dt, 1.0);
-		status = 2;
+		//status = 2; //don't do this, it makes the fuel cells stop
 		if (reaction > 0.96) {
 			status = 0; //started
 			start_handle = 2;
@@ -499,7 +498,7 @@ void FCell::UpdateFlow(double dt)
 		}
 		else
 		{
-			status = 2;
+			//status = 2;
 			Amperes = 0;
 		}
 

@@ -243,7 +243,6 @@ public:
 	double condenserTemp;	// condenser exhaust temp, only for display
 	int tempTooLowCount; 
 	double outputImpedance;
-	double cloggingChange;
 
 	double H2_clogging;
 	double O2_clogging;
