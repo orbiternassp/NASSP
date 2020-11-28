@@ -371,11 +371,10 @@ void FCell::Reaction(double dt, double thrust)
 	h2o_volume.composition[SUBSTANCE_H2O].SetTemp(300.0);
 	h2o_volume.GetQ(); 
 	
-	thermic(heat); //from the reaction
+	thermic(heat); //heat from the reaction
 	H20_waste->Flow(h2o_volume);
 
-	// TSCH clogging disabled
-    Clogging(dt);
+	Clogging(dt); //simulate reactant impurity accumulation
 
 	// TSCH
 	/* sprintf(oapiDebugString(), "m %f Q %f Q/m %f", H2_SRC->parent->space.composition[SUBSTANCE_H2].mass,
@@ -486,19 +485,18 @@ void FCell::UpdateFlow(double dt)
 		Volts = Volts * min(1.0, reaction); //case of reaction problems :-)
 		if (reaction && Volts > 0.0)
 		{
-		//make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
+			//make voltage (and current) drop by 5.2V over 1 day of normal impurity accumulation
 
 			Amperes = (power_load / Volts)-(2.25*clogg);
 	
 			loadResistance = (power_load) / (Amperes*Amperes);
 			Volts = Volts * (loadResistance / (loadResistance + outputImpedance))-(5.2*clogg);
 
-			power_load = Amperes * Volts;
+			power_load = Amperes * Volts; //recalculate power_load
 			
 		}
 		else
 		{
-			//status = 2;
 			Amperes = 0;
 		}
 
