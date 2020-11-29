@@ -540,7 +540,7 @@ void FCell::Clogging(double dt)
 void FCell::Load(char *line)
 {
 	double temp;
-	sscanf(line, "    <FCELL> %s %i %*lf %lf %lf %lf %lf", name, &status, &temp, &power_load, &H2_clogging, &O2_clogging);
+	sscanf(line, "    <FCELL> %s %i %*lf %lf %lf %lf %lf", name, &status, &temp, &power_load, &H2_clogging, &O2_clogging); // Third parameter is ignored, replaced by H2_- and O2_clogging
 	SetTemp(temp);
 	if (status == 0 || status >=3) running = 0;
 }
