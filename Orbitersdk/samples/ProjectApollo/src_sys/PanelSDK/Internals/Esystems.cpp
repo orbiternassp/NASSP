@@ -540,7 +540,7 @@ void FCell::Clogging(double dt)
 void FCell::Load(char *line)
 {
 	double temp;
-	sscanf(line, "    <FCELL> %s %i %*lf %lf %lf %lf %lf", name, &status, &temp, &power_load, &H2_clogging, &O2_clogging); // Third parameter is ignored, replaced by H2_- and O2_clogging
+	sscanf(line, "    <FCELL> %s %i %lf %lf %lf %lf", name, &status, &H2_clogging, &temp, &power_load, &O2_clogging);
 	SetTemp(temp);
 	if (status == 0 || status >=3) running = 0;
 }
@@ -548,7 +548,7 @@ void FCell::Load(char *line)
 void FCell::Save(FILEHANDLE scn)
 {
 	char cbuf[1000];
-	sprintf(cbuf, "%s %i 0 %0.4f %0.4f %0.10f %0.10f", name, status, Temp, power_load, H2_clogging, O2_clogging);
+	sprintf(cbuf, "%s %i %0.10f %0.4f %0.4f %0.10f", name, status, H2_clogging, Temp, power_load, O2_clogging);
 	oapiWriteScenario_string (scn, "    <FCELL> ", cbuf);
 }
 
