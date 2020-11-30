@@ -30,5 +30,5 @@ To contribute, see the [developer installation instructions].
 Releases will be provided as ZIP files to be unzipped into an existing 
 Orbiter installation as is usual for Orbiter addons.
 
-[our forums]: http://www.ibiblio.org/mscorbit/mscforum/index.php
+[our forums]: https://www.orbiter-forum.com/forums/project-apollo-nassp.40/
 [developer installation instructions]: http://www.ibiblio.org/mscorbit/mscforum/index.php?topic=2864
