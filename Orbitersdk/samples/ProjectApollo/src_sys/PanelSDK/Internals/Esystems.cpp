@@ -439,8 +439,10 @@ void FCell::UpdateFlow(double dt)
 		H2_flowPerSecond = 0;
 		O2_flowPerSecond = 0;
 
+		//Conductive heat transfer
 		if (Temp > 300.0)
 			thermic((300.0 - Temp) * 0.1 * dt);
+		//
 
 		running = 1; //ie. not running
 		break;
